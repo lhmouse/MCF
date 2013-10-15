@@ -1,6 +1,6 @@
 // Copyleft 2013, LH_Mouse. All wrongs reserved.
 
-#include "General.hpp"
+#include "PreCompiled.hpp"
 #include <cstdarg>
 #include <memory>
 #include <vector>
@@ -21,8 +21,6 @@ namespace {
 }
 
 namespace MCFBuild {
-	extern DWORD g_dwMainThreadID;
-
 	int Print(const wchar_t *s, std::size_t len, bool to_stderr){
 		int nRet = -1;
 		const HANDLE hOut = ::GetStdHandle(to_stderr ? STD_ERROR_HANDLE : STD_OUTPUT_HANDLE);

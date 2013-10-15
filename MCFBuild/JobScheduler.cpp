@@ -1,6 +1,5 @@
 // Copyleft 2013, LH_Mouse. All wrongs reserved.
 
-#include "General.hpp"
 #include "JobScheduler.hpp"
 #include <memory>
 #include <algorithm>

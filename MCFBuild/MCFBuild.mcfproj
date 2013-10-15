@@ -64,7 +64,7 @@
 ;    (*) 在命令行中可以使用“变量”。
 ;        每一个在配置包根路径下定义的值都是一个变量。变量可以通过 $变量名$ 的方式加以引用。
 ;        如果要在命令行中使用 $ 字面值，请使用 $$。
-;        在命令行中使用 $$IN 表示输入文件，$$OUT 表示输出文件。
+;        在命令行中使用 %IN% 表示输入文件，%OUT% 表示输出文件。
 
 Default = Debug
 
@@ -76,26 +76,33 @@ General {
 	CFlags				= $CompilerFlags$ -c -std=c11
 	CPPFlags			= $CompilerFlags$ -c -std=c++11
 
-	Ignored				= .* *.a *.bak *.cmd *.exe *.h *.hpp *.mcfproj *.o
+	Ignored				= test .Built* make.cmd a.exe *.h *.hpp *.mcfproj
+
+	PreCompiledHeader {
+		File			= PreCompiled.hpp
+		CommandLine		= g++ $CPPFlags$ %IN% -o %OUT%
+	}
 
 	Compilers {
 		c {
-			CommandLine	= gcc $CFlags$ $$IN -o $$OUT
-			Dependency	= gcc $CFlags$ $$IN -MM
+			CommandLine	= gcc $CFlags$ %IN% -o %OUT%
+			Dependency	= gcc $CFlags$ %IN% -MM
 		}
 		cpp cxx cc {
-			CommandLine	= g++ $CPPFlags$ $$IN -o $$OUT
-			Dependency	= g++ $CPPFlags$ $$IN -MM
+			CommandLine	= g++ $CPPFlags$ %GCH% %IN% -o %OUT%
+			Dependency	= g++ $CPPFlags$ %IN% -MM
 		}
 		rc {
-			CommandLine	= windres -O coff -i $$IN -o $$OUT
+			CommandLine	= windres -O coff -i %IN% -o %OUT%
 			Dependency	=
 		}
 	}
+
 	Linkers {
-		Partial			= ld -r $$IN -o $$OUT
-		Full			= g++ $LinkerFlags$ $$IN $ExtraLibs$ -o $$OUT
+		Partial			= ld -r %IN% -o %OUT%
+		Full			= g++ $LinkerFlags$ %IN% $ExtraLibs$ -o %OUT%
 	}
+
 	DefaultOutput		= MCFBuild.exe
 }
 

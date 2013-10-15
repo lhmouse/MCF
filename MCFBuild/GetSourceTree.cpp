@@ -1,6 +1,6 @@
 // Copyleft 2013, LH_Mouse. All wrongs reserved.
 
-#include "General.hpp"
+#include "PreCompiled.hpp"
 #include <algorithm>
 #include <shlwapi.h>
 #include "RAIIWrapperTemplate.hpp"

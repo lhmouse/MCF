@@ -1,13 +1,12 @@
 // Copyleft 2013, LH_Mouse. All wrongs reserved.
 
-#include "General.hpp"
 #include "ProcessProxy.hpp"
 #include <vector>
 #include <algorithm>
 using namespace MCFBuild;
 
 DWORD WINAPI ProcessProxy::xStdOutDaemonProc(LPVOID pParam){
-	Context *const pContext = (Context *)pParam;
+	xContext *const pContext = (xContext *)pParam;
 	for(;;){
 		char achBuffer[0x400];
 		DWORD dwBytesRead;
@@ -19,7 +18,7 @@ DWORD WINAPI ProcessProxy::xStdOutDaemonProc(LPVOID pParam){
 	return 0;
 }
 DWORD WINAPI ProcessProxy::xStdErrDaemonProc(LPVOID pParam){
-	Context *const pContext = (Context *)pParam;
+	xContext *const pContext = (xContext *)pParam;
 	for(;;){
 		char achBuffer[0x400];
 		DWORD dwBytesRead;
@@ -55,7 +54,7 @@ void ProcessProxy::Fork(const std::wstring &wcsCmdLine){
 	std::vector<wchar_t> vecCmdLine(wcsCmdLine.begin(), wcsCmdLine.end());
 	vecCmdLine.push_back(0);
 
-	std::unique_ptr<Context> pNewContext(new Context);
+	std::unique_ptr<xContext> pNewContext(new xContext);
 
 	auto StdOutPipe = xCreateInputPipe();
 	pNewContext->hStdOutRead = std::move(StdOutPipe.first);

@@ -1,6 +1,6 @@
 // Copyleft 2013, LH_Mouse. All wrongs reserved.
 
-#include "General.hpp"
+#include "PreCompiled.hpp"
 
 namespace MCFBuild {
 	extern void DoBuild(
@@ -187,18 +187,18 @@ namespace MCFBuild {
 			ulProcessCount = 16;
 		}
 
-		Output(L"项目文件      ：" + wcsProjFile);
-		Output(L"配置包        ：" + wcsConfig);
-		Output(L"源文件根目录  ：" + wcsSrcRoot);
+		Output(L"项目文件　　　：" + wcsProjFile);
+		Output(L"配置包　　　　：" + wcsConfig);
+		Output(L"源文件根目录　：" + wcsSrcRoot);
 		Output(L"目标文件根目录：" + wcsDstRoot);
 
 		if(bUseDefaultOutput){
-			Output(L"输出文件路径  ：<使用项目缺省值>");
+			Output(L"输出文件路径　：<使用项目缺省值>");
 		} else {
-			Output(L"输出文件路径  ：" + wcsOutputPath);
+			Output(L"输出文件路径　：" + wcsOutputPath);
 		}
 
-		Output(L"进程数        ：%lu", ulProcessCount);
+		Output(L"进程数　　　　：%lu", ulProcessCount);
 
 		if(!mapVars.empty()){
 			Output(L"定义的变量：");

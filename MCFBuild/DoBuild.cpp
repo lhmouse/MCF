@@ -1,6 +1,6 @@
 // Copyleft 2013, LH_Mouse. All wrongs reserved.
 
-#include "General.hpp"
+#include "PreCompiled.hpp"
 
 namespace MCFBuild {
 	extern PROJECT SetupEnv(
@@ -24,15 +24,10 @@ namespace MCFBuild {
 		bool bRebuildAll,
 		bool bVerbose
 	);
-	extern void Compile(
+	extern void CompileAndLink(
 		const BUILD_JOBS &BuildJobs,
 		const PROJECT &Project,
 		unsigned long ulProcessCount,
-		bool bVerbose
-	);
-	extern void Link(
-		const BUILD_JOBS &BuildJobs,
-		const PROJECT &Project,
 		bool bVerbose
 	);
 
@@ -53,13 +48,10 @@ namespace MCFBuild {
 		Output(L"正在分析源文件目录树...");
 		const auto SourceTree = GetSourceTree(wcsSrcRoot, Project, bVerbose);
 		Output(L"----------------------------------------");
-		Output(L"正在使用 %lu 个进程统计构建任务...", ulProcessCount);
+		Output(L"正在统计构建任务...");
 		const auto BuildJobs = CountBuildJobs(wcsSrcRoot, SourceTree, wcsDstRoot, Project, ulProcessCount, bRebuildAll, bVerbose);
 		Output(L"----------------------------------------");
-		Output(L"正在使用 %lu 个进程编译...", ulProcessCount);
-		Compile(BuildJobs, Project, ulProcessCount, bVerbose);
-		Output(L"----------------------------------------");
-		Output(L"正在链接...");
-		Link(BuildJobs, Project, bVerbose);
+		Output(L"开始构建...");
+		CompileAndLink(BuildJobs, Project, ulProcessCount, bVerbose);
 	}
 }

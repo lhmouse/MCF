@@ -1,6 +1,6 @@
 // Copyleft 2013, LH_Mouse. All wrongs reserved.
 
-#include "General.hpp"
+#include "PreCompiled.hpp"
 #include <vector>
 #include <set>
 #include <iterator>
@@ -37,16 +37,17 @@ namespace {
 			throw Exception(ERROR_INVALID_DATA, L"文件“" + wcsProjFile + L"”太大。");
 		}
 
-		std::vector<char> vecRet((std::size_t)liFileSize.QuadPart);
+		const std::size_t uFileSize = (std::size_t)liFileSize.QuadPart;
+		std::vector<char> vecRet(uFileSize);
 
-		DWORD dwBytesTotal = 0;
+		std::size_t uBytesTotal = 0;
 		DWORD dwBytesRead;
 		do {
-			if(::ReadFile(hProjFile, vecRet.data() + dwBytesTotal, (DWORD)(liFileSize.QuadPart - dwBytesTotal), &dwBytesRead, nullptr) == FALSE){
+			if(::ReadFile(hProjFile, vecRet.data() + uBytesTotal, (DWORD)(uFileSize - uBytesTotal), &dwBytesRead, nullptr) == FALSE){
 				const DWORD dwError = ::GetLastError();
 				throw Exception(dwError, L"读取文件“" + wcsProjFile + L"”时出错。");
 			}
-			dwBytesTotal += dwBytesRead;
+			uBytesTotal += dwBytesRead;
 		} while(dwBytesRead != 0);
 
 		if(pllTimestamp != nullptr){
@@ -101,10 +102,7 @@ namespace {
 				awchInfo,
 				COUNTOF(awchInfo),
 				L"在第 %lu 个字节处发生错误 %ls。",
-				(unsigned long)(
-					(ParseError.second - vecSrc.data())
-					+ (std::lower_bound(vecCRLFBreaks.cbegin(), vecCRLFBreaks.cend(), ParseError.second) - vecCRLFBreaks.cbegin())
-				),
+				(unsigned long)((ParseError.second - vecSrc.data()) +(std::lower_bound(vecCRLFBreaks.cbegin(), vecCRLFBreaks.cend(), ParseError.second) - vecCRLFBreaks.cbegin())),
 				((std::size_t)ParseError.first < COUNTOF(PARSE_ERROR_TABLE)) ? PARSE_ERROR_TABLE[(std::size_t)ParseError.first] : PARSE_ERROR_TABLE[0]
 			);
 			throw Exception(ERROR_INVALID_DATA, std::wstring(L"解析项目文件时出错，") + awchInfo);
@@ -244,49 +242,49 @@ namespace {
 					const wchar_t ch = *(iterRead++);
 					if(ch != L'$'){
 						wcsTemp.push_back(ch);
-					} else {
-						auto iterNameEnd = iterRead;
-						for(;;){
-							if(iterNameEnd == wcsToExpand.cend()){
-								throw Exception(ERROR_INVALID_DATA, L"“" + wcsToExpand + L"”中的 $ 不匹配。");
-							}
-							if(*iterNameEnd == L'$'){
-								break;
-							}
-							++iterNameEnd;
-						}
-						if(iterNameEnd == iterRead){
-							wcsTemp.push_back(L'$');
-							++iterRead;
-							continue;
-						}
-
-						std::wstring wcsVarName(iterRead, iterNameEnd);
-						iterRead = iterNameEnd;
-						++iterRead;
-
-						const auto iterHistory = std::find(vecHistory.cbegin(), vecHistory.cend(), wcsVarName);
-						if(iterHistory != vecHistory.cend()){
-							if(setWarned.find(wcsVarName) == setWarned.end()){
-								Error(L"  警告：侦测到变量“" + wcsVarName + L"”的递归展开，已替换为空字符串。");
-								setWarned.insert(std::move(wcsVarName));
-							}
-							continue;
-						}
-						const auto iter = mapValues.find(wcsVarName);
-						if(iter == mapValues.end()){
-							Error(L"  警告：变量“" + wcsVarName + L"”没有定义，已替换为空字符串。");
-							continue;
-						}
-
-						std::wstring wcsExpanded(iter->second);
-						vecHistory.push_back(std::move(wcsVarName));
-						ExpandString(wcsExpanded, mapValues, vecHistory, setWarned);
-						vecHistory.pop_back();
-						wcsTemp.append(wcsExpanded);
+						continue;
 					}
+
+					auto iterNameEnd = iterRead;
+					for(;;){
+						if(iterNameEnd == wcsToExpand.cend()){
+							throw Exception(ERROR_INVALID_DATA, L"“" + wcsToExpand + L"”中的 $ 不匹配。");
+						}
+						if(*iterNameEnd == L'$'){
+							break;
+						}
+						++iterNameEnd;
+					}
+					if(iterNameEnd == iterRead){
+						wcsTemp.push_back(L'$');
+						++iterRead;
+						continue;
+					}
+
+					std::wstring wcsVarName(iterRead, iterNameEnd);
+					iterRead = ++iterNameEnd;
+
+					const auto iterHistory = std::find(vecHistory.cbegin(), vecHistory.cend(), wcsVarName);
+					if(iterHistory != vecHistory.cend()){
+						if(setWarned.find(wcsVarName) == setWarned.end()){
+							Error(L"  警告：侦测到变量“" + wcsVarName + L"”的递归展开，已替换为空字符串。");
+							setWarned.insert(std::move(wcsVarName));
+						}
+						continue;
+					}
+					const auto iterVar = mapValues.find(wcsVarName);
+					if(iterVar == mapValues.end()){
+						Error(L"  警告：变量“" + wcsVarName + L"”没有定义，已替换为空字符串。");
+						continue;
+					}
+
+					std::wstring wcsExpanded(iterVar->second);
+					vecHistory.push_back(std::move(wcsVarName));
+					ExpandString(wcsExpanded, mapValues, vecHistory, setWarned);
+					vecHistory.pop_back();
+					wcsTemp.append(wcsExpanded);
 				}
-				wcsToExpand.swap(wcsTemp);
+				wcsToExpand = std::move(wcsTemp);
 			}
 		};
 
@@ -424,6 +422,15 @@ namespace MCFBuild {
 			}
 		}
 
+		if(!(ret.PreCompiledHeader.wcsFile = GetExpandedValue(pkgTop, nullptr, false, L"PreCompiledHeader", L"File")).empty()){
+			ret.PreCompiledHeader.wcsCommandLine = GetExpandedValue(pkgTop, nullptr, true, L"PreCompiledHeader", L"CommandLine");
+		}
+		if(bVerbose){
+			Output(L"  预编译头：");
+			Output(L"    文件　：" + ret.PreCompiledHeader.wcsFile);
+			Output(L"    命令行：" + ret.PreCompiledHeader.wcsCommandLine);
+		}
+
 		const auto &mapRawCompilers = GetPackage(pkgTop, nullptr, true, L"Compilers")->mapPackages;
 		for(const auto &RawCompilerItem : mapRawCompilers){
 			const std::wstring wcsPrefix(L"Compilers/" + RawCompilerItem.first + L'/');
@@ -449,7 +456,7 @@ namespace MCFBuild {
 			Output(L"  编译器：");
 			for(const auto &CompilerItem : ret.mapCompilers){
 				Output(L"    扩展名“" + CompilerItem.first + L"”：");
-				Output(L"      构建命令行：" + CompilerItem.second.wcsCommandLine);
+				Output(L"      命令行　　：" + CompilerItem.second.wcsCommandLine);
 				Output(L"      依赖性检测：" + CompilerItem.second.wcsDependency);
 			}
 		}

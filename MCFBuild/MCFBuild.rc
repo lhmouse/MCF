@@ -2,8 +2,8 @@
 
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 VS_VERSION_INFO VERSIONINFO
-    FILEVERSION     0,1,0,3
-    PRODUCTVERSION  0,1,0,3
+    FILEVERSION     0,2,0,0
+    PRODUCTVERSION  0,2,0,0
     FILEOS          VOS_NT_WINDOWS32
     FILETYPE        VFT_APP
     FILESUBTYPE     VFT2_UNKNOWN
@@ -20,12 +20,12 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "LH_Mouse"
             VALUE "FileDescription", "MCF 构建实用工具"
-            VALUE "FileVersion", "0.1.0.3"
+            VALUE "FileVersion", "0.2.0.0"
             VALUE "InternalName", "MCFBuild"
             VALUE "LegalCopyright", "Copyleft 2013. All wrongs reserved."
             VALUE "OriginalFilename", "MCFBuild.exe"
             VALUE "ProductName", "MCFBuild"
-            VALUE "ProductVersion", "0.1.0.3"
+            VALUE "ProductVersion", "0.2.0.0"
         END
     END
     BLOCK "VarFileInfo"

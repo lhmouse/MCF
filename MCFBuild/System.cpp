@@ -70,9 +70,7 @@ namespace MCFBuild {
 				continue;
 			}
 
-			wcsRet.push_back(L' ');
 			wcsRet.append(iterMacro->second);
-			wcsRet.push_back(L' ');
 		}
 
 		return std::move(wcsRet);

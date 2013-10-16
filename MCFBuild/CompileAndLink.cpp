@@ -138,8 +138,20 @@ namespace {
 			throw Exception(ERROR_PROCESS_ABORTED, L"预编译器返回非零状态码。");
 		}
 
-		Output(L"    正在创建预编译头桩文件...");
-		PutFileContents(BuildJobs.wcsGCHStub, "#error Failed to load precompiled header file.");
+		Output(L"    正在创建桩文件“" + BuildJobs.wcsGCHStub + L"”...");
+
+		std::string u8sStubContents("#warning Failed to load precompiled header file.\n");
+		u8sStubContents.append("#include \"");
+		const std::string u8sGCHSrc(WcsToU8s(BuildJobs.wcsGCHSrc));
+		for(auto iter = u8sGCHSrc.cbegin(); iter != u8sGCHSrc.cend(); ++iter){
+			const char ch = *iter;
+			if(ch == '\\'){
+				u8sStubContents.push_back('\\');
+			}
+			u8sStubContents.push_back(ch);
+		}
+		u8sStubContents.append("\"\n");
+		PutFileContents(BuildJobs.wcsGCHStub, u8sStubContents);
 	}
 
 	void Compile(

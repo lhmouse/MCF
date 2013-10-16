@@ -234,28 +234,32 @@ namespace MCFBuild {
 		}
 
 		if(!Project.PreCompiledHeader.wcsFile.empty()){
+			Output(L"  正在检测预编译头...");
+
 			std::wstring wcsGCHSrc(wcsSrcRoot + Project.PreCompiledHeader.wcsFile);
 			std::wstring wcsGCHStub(wcsDstRoot + Project.PreCompiledHeader.wcsFile);
 
-			bool bBuildGCH = false;
-
 			const long long llGCHSrcTimestamp = GetFileTimestamp(wcsGCHSrc);
 			if(llGCHSrcTimestamp == LLONG_MIN){
-				Error(L"  警告：访问预编译头源文件“" + wcsGCHSrc + L"”失败，将不使用预编译头构建。");
-			} else if(bRebuildAll){
-				bBuildGCH = true;
-			} else if(std::max(Project.llProjectFileTimestamp, llGCHSrcTimestamp) >= GetFileTimestamp(wcsGCHStub + L".gch")){
-				Output(L"  预编译头文件已经更改，需要全部重新构建。");
-				bBuildGCH = true;
-				bRebuildAll = true;
+				Error(L"    警告：访问预编译头源文件“" + wcsGCHSrc + L"”失败，将不使用预编译头构建。");
 			} else {
-				Output(L"  预编译头文件已为最新。");
-			}
-			if(bBuildGCH){
-				BuildJobs.wcsGCHSrc = std::move(wcsGCHSrc);
-			}
+				if(!bRebuildAll){
+					if(std::max(Project.llProjectFileTimestamp, llGCHSrcTimestamp) >= GetFileTimestamp(wcsGCHStub + L".gch")){
+						Output(L"    预编译头源文件已经更改，需要全部重新构建。");
+						bRebuildAll = true;
+					} else {
+						Output(L"    预编译头文件已为最新。");
+					}
+				}
+				if(bRebuildAll){
+					if(bVerbose){
+						Output(L"    预编译头源文件：" + wcsGCHSrc);
+					}
+					BuildJobs.wcsGCHSrc = std::move(wcsGCHSrc);
+				}
 
-			BuildJobs.wcsGCHStub = std::move(wcsGCHStub);
+				BuildJobs.wcsGCHStub = std::move(wcsGCHStub);
+			}
 		}
 
 		long long llMaxObjFileTimestamp = LLONG_MIN;

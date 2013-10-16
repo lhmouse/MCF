@@ -76,7 +76,7 @@ General {
 	CFlags				= $CompilerFlags$ -c -std=c11
 	CPPFlags			= $CompilerFlags$ -c -std=c++11
 
-	Ignored				= test .Built* make.cmd a.exe *.h *.hpp *.mcfproj
+	Ignored				= .Built* make.cmd a.exe *.h *.hpp *.mcfproj
 
 	PreCompiledHeader {
 		File			= PreCompiled.hpp

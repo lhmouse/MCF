@@ -63,26 +63,17 @@ namespace {
 	}
 
 	void GetVersion(unsigned short *pushVersion, HINSTANCE hInstance){
-		struct EnumVersionResNameProc {
-			static BOOL CALLBACK Proc(HMODULE, LPCWSTR, LPWSTR lpwszName, LONG_PTR lParam){
-				*(LPWSTR *)lParam = lpwszName;
-				return FALSE;
-			}
-		};
-
 		std::fill_n(pushVersion, 4, 0);
 
-		LPCWSTR pwszResourceName = nullptr;
-		::EnumResourceNamesW(hInstance, (LPCWSTR)16, &EnumVersionResNameProc::Proc, (LONG_PTR)&pwszResourceName);
-		if(pwszResourceName == nullptr){
+		const HRSRC hVersion = ::FindResourceW(hInstance, MAKEINTRESOURCEW(VS_VERSION_INFO), MAKEINTRESOURCEW(16));
+		if(hVersion == NULL){
 			return;
 		}
 
-		const HRSRC hVersionResource = ::FindResourceW(hInstance, pwszResourceName, (LPCWSTR)16);
-		const LPVOID pFileVersionBuffer = ::LockResource(::LoadResource(hInstance, hVersionResource));
+		const LPVOID pFileVersion = ::LockResource(::LoadResource(hInstance, hVersion));
 		VS_FIXEDFILEINFO *pFixedFileInfo;
 		UINT uFixedFileInfoSize;
-		if(::VerQueryValueW(pFileVersionBuffer, L"\\", (LPVOID *)&pFixedFileInfo, &uFixedFileInfoSize) != FALSE){
+		if(::VerQueryValueW(pFileVersion, L"\\", (LPVOID *)&pFixedFileInfo, &uFixedFileInfoSize) != FALSE){
 			pushVersion[0] = HIWORD(pFixedFileInfo->dwFileVersionMS);
 			pushVersion[1] = LOWORD(pFixedFileInfo->dwFileVersionMS);
 			pushVersion[2] = HIWORD(pFixedFileInfo->dwFileVersionLS);

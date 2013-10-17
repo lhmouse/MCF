@@ -2,34 +2,41 @@
 
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 VS_VERSION_INFO VERSIONINFO
-    FILEVERSION     0,2,0,0
-    PRODUCTVERSION  0,2,0,0
-    FILEOS          VOS_NT_WINDOWS32
-    FILETYPE        VFT_APP
-    FILESUBTYPE     VFT2_UNKNOWN
-    FILEFLAGSMASK   0x00000001
+	FILEVERSION		0,2,0,1
+	PRODUCTVERSION	0,2,0,1
+	FILEOS			VOS_NT_WINDOWS32
+	FILETYPE		VFT_APP
+	FILESUBTYPE		VFT2_UNKNOWN
+	FILEFLAGSMASK	0x00000001
 #ifndef NDEBUG
-    FILEFLAGS       0x00000001
+	FILEFLAGS		0x00000001
 #else
-    FILEFLAGS       0x00000000
+	FILEFLAGS		0x00000000
 #endif
 BEGIN
-    BLOCK "StringFileInfo"
-    BEGIN
-        BLOCK "080403A8"
-        BEGIN
-            VALUE "CompanyName", "LH_Mouse"
-            VALUE "FileDescription", "MCF 构建实用工具"
-            VALUE "FileVersion", "0.2.0.0"
-            VALUE "InternalName", "MCFBuild"
-            VALUE "LegalCopyright", "Copyleft 2013. All wrongs reserved."
-            VALUE "OriginalFilename", "MCFBuild.exe"
-            VALUE "ProductName", "MCFBuild"
-            VALUE "ProductVersion", "0.2.0.0"
-        END
-    END
-    BLOCK "VarFileInfo"
-    BEGIN
-        VALUE "Translation", 0x0804, 0x03A8
-    END
+	BLOCK "StringFileInfo"
+	BEGIN
+		BLOCK "080403A8"
+		BEGIN
+			VALUE "CompanyName", "LH_Mouse"
+			VALUE "FileDescription", "MCF 构建实用工具"
+			VALUE "LegalCopyright", "Copyleft 2013. All wrongs reserved."
+			VALUE "OriginalFilename", "MCFBuild.exe"
+			VALUE "ProductName", "MCFBuild"
+		END
+
+		BLOCK "040901B5"
+		BEGIN
+			VALUE "CompanyName", "LH_Mouse"
+			VALUE "FileDescription", "MCF Build Utility"
+			VALUE "LegalCopyright", "Copyleft 2013. All wrongs reserved."
+			VALUE "OriginalFilename", "MCFBuild.exe"
+			VALUE "ProductName", "MCFBuild"
+		END
+	END
+
+	BLOCK "VarFileInfo"
+	BEGIN
+		VALUE "Translation", 0x0804, 0x03A8
+	END
 END

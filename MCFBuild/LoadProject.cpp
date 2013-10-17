@@ -457,7 +457,11 @@ namespace MCFBuild {
 			for(const auto &CompilerItem : ret.mapCompilers){
 				Output(L"    扩展名“" + CompilerItem.first + L"”：");
 				Output(L"      命令行　　：" + CompilerItem.second.wcsCommandLine);
-				Output(L"      依赖性检测：" + CompilerItem.second.wcsDependency);
+				if(CompilerItem.second.wcsDependency.empty()){
+					Output(L"      依赖性检测：<无依赖关系>");
+				} else {
+					Output(L"      依赖性检测：" + CompilerItem.second.wcsDependency);
+				}
 			}
 		}
 

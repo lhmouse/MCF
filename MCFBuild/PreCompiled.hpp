@@ -150,7 +150,7 @@ namespace MCFBuild {
 		};
 
 		long long llProjectFileTimestamp;
-		std::set<std::wstring, WcsComparerNoCase> setIgnored;
+		std::set<std::wstring, WcsComparerNoCase> setIgnoredFiles;
 		PRECOMPILED_HEADER PreCompiledHeader;
 		std::map<std::wstring, COMPILER, WcsComparerNoCase> mapCompilers;
 		LINKERS Linkers;

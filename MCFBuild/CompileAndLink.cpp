@@ -103,12 +103,14 @@ namespace {
 		const PROJECT &Project,
 		bool bVerbose
 	){
-		if(BuildJobs.wcsGCHSrc.empty()){
-			Output(L"  不使用预编译头或预编译头已为最新，已忽略。");
+		if(Project.PreCompiledHeader.wcsFile.empty()){
+			Output(L"    不使用预编译头，已跳过。");
 			return;
 		}
-
-		Output(L"  正在构建预编译头...");
+		if(BuildJobs.wcsGCHSrc.empty()){
+			Output(L"    预编译头已为最新，已跳过。");
+			return;
+		}
 
 		std::map<std::wstring, std::wstring> mapCommandLineReplacements;
 		mapCommandLineReplacements.emplace(L"IN", L'\"' + BuildJobs.wcsGCHSrc + L'\"');
@@ -138,7 +140,7 @@ namespace {
 			throw Exception(ERROR_PROCESS_ABORTED, L"预编译器返回非零状态码。");
 		}
 
-		Output(L"    正在创建桩文件“" + BuildJobs.wcsGCHStub + L"”...");
+		Output(L"    桩文件：" + BuildJobs.wcsGCHStub);
 
 		std::string u8sStubContents("#warning Failed to load precompiled header file.\n");
 		u8sStubContents.append("#include \"");
@@ -150,7 +152,8 @@ namespace {
 			}
 			u8sStubContents.push_back(ch);
 		}
-		u8sStubContents.append("\"\n");
+		u8sStubContents.push_back('\"');
+		u8sStubContents.push_back('\n');
 		PutFileContents(BuildJobs.wcsGCHStub, u8sStubContents);
 	}
 
@@ -161,11 +164,9 @@ namespace {
 		bool bVerbose
 	){
 		if(BuildJobs.lstFilesToCompile.empty()){
-			Output(L"  没有需要编译的文件。");
+			Output(L"    没有需要编译的文件，已跳过。");
 			return;
 		}
-
-		Output(L"  正在编译...");
 
 		JobScheduler Scheduler;
 
@@ -224,13 +225,16 @@ namespace {
 		bool bVerbose
 	){
 		if(BuildJobs.lstFilesToLink.empty()){
-			Output(L"  没有需要链接的文件。");
+			Output(L"    没有需要链接的文件，已跳过。");
 			return;
 		}
 
-		Output(L"  正在链接...");
-
-		::DeleteFileW(Project.wcsOutputPath.c_str());
+		if(::DeleteFileW(Project.wcsOutputPath.c_str()) == FALSE){
+			const DWORD dwError = ::GetLastError();
+			if(dwError != ERROR_NOT_FOUND){
+				throw Exception(dwError, L"对输出文件“" + Project.wcsOutputPath + L"”的访问失败。");
+			}
+		}
 
 		unsigned long ulPartIndex = 1;
 
@@ -256,7 +260,7 @@ namespace {
 				wcsInputFiles.push_back(L' ');
 
 				lstFilesLinked.splice(lstFilesLinked.end(), lstFilesToLink, lstFilesToLink.begin());
-			} while(!lstFilesToLink.empty() && (wcsInputFiles.size() < 8 * 0x400));
+			} while(!lstFilesToLink.empty() && (wcsInputFiles.size() < 28 * 0x400));	// Windows 命令行长度上限为 32K 个字符。
 			wcsInputFiles.pop_back();
 
 			std::map<std::wstring, std::wstring> mapCommandLineReplacements;
@@ -321,8 +325,13 @@ namespace MCFBuild {
 		unsigned long ulProcessCount,
 		bool bVerbose
 	){
+		Output(L"  正在构建预编译头...");
 		BuildPreCompiledHeader(BuildJobs, Project, bVerbose);
+
+		Output(L"  正在编译...");
 		Compile(BuildJobs, Project, ulProcessCount, bVerbose);
+
+		Output(L"  正在链接...");
 		Link(BuildJobs, Project, bVerbose);
 
 		Output(L"  文件“" + Project.wcsOutputPath + L"”构建成功。");

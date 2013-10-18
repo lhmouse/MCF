@@ -30,12 +30,12 @@ namespace {
 					continue;
 				}
 				if(std::find_if(
-					Project.setIgnored.cbegin(),
-					Project.setIgnored.cend(),
+					Project.setIgnoredFiles.cbegin(),
+					Project.setIgnoredFiles.cend(),
 					[&FindData](const std::wstring &wcsExpression) -> bool {
 						return ::PathMatchSpecW(FindData.cFileName, wcsExpression.c_str()) != FALSE;
 					}
-				) != Project.setIgnored.end()){
+				) != Project.setIgnoredFiles.end()){
 					continue;
 				}
 

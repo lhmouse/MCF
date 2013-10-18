@@ -244,27 +244,33 @@ namespace MCFBuild {
 				Error(L"    警告：访问预编译头源文件“" + wcsGCHSrc + L"”失败，将不使用预编译头构建。");
 			} else {
 				if(!bRebuildAll){
-					if(std::max(Project.llProjectFileTimestamp, llGCHSrcTimestamp) >= GetFileTimestamp(wcsGCHStub + L".gch")){
+					const long long llGCHTimestamp = GetFileTimestamp(wcsGCHStub + L".gch");
+					if(Project.llProjectFileTimestamp >= llGCHTimestamp){
+						Output(L"    项目文件已经更改，需要全部重新构建。");
+						bRebuildAll = true;
+					} else if(llGCHSrcTimestamp >= llGCHTimestamp){
 						Output(L"    预编译头源文件已经更改，需要全部重新构建。");
 						bRebuildAll = true;
-					} else {
-						Output(L"    预编译头文件已为最新。");
 					}
 				}
 				if(bRebuildAll){
 					if(bVerbose){
 						Output(L"    预编译头源文件：" + wcsGCHSrc);
+					} else {
+						Output(L"    将构建预编译头。");
 					}
 					BuildJobs.wcsGCHSrc = std::move(wcsGCHSrc);
+				} else {
+					Output(L"    预编译头已为最新。");
 				}
-
 				BuildJobs.wcsGCHStub = std::move(wcsGCHStub);
 			}
 		}
 
+		Output(L"  正在统计需要重新编译的文件列表...");
+
 		long long llMaxObjFileTimestamp = LLONG_MIN;
 		if(bRebuildAll){
-			Output(L"  正在生成目标文件列表...");
 			while(!lstCompilableFiles.empty()){
 				const auto &wcsSrcFile = lstCompilableFiles.front().first;
 
@@ -280,10 +286,8 @@ namespace MCFBuild {
 				lstCompilableFiles.pop_front();
 			}
 		} else {
-			Output(L"  正在分析源文件依赖关系...");
 			CheckDependencies(lstCompilableFiles, Project, ulProcessCount);
 
-			Output(L"  正在比对文件时间戳...");
 			std::list<std::wstring> lstObjFilesUnneededToRebuild;
 			while(!lstCompilableFiles.empty()){
 				auto &wcsSrcFile = lstCompilableFiles.front().first;
@@ -314,24 +318,15 @@ namespace MCFBuild {
 			}
 			bool bNeedLinking = false;
 			if(!BuildJobs.lstFilesToCompile.empty()){
-				Output(L"    部分源文件已经更改，需要重新编译并链接。");
 				bNeedLinking = true;
 			} else if(llMaxObjFileTimestamp >= GetFileTimestamp(Project.wcsOutputPath)){
-				Output(L"    部分目标文件已经更改，需要重新链接。");
 				bNeedLinking = true;
 			}
 			if(bNeedLinking){
-				Output(L"  正在生成目标文件列表...");
 				BuildJobs.lstFilesToLink.splice(BuildJobs.lstFilesToLink.end(), lstObjFilesUnneededToRebuild);
 			} else {
-				Output(L"  输出文件“" + Project.wcsOutputPath + L"”已为最新。");
 				BuildJobs.lstFilesToLink.clear();
 			}
-		}
-
-		Output(L"  统计结果：");
-		if(!BuildJobs.wcsGCHSrc.empty()){
-			Output(L"    将构建预编译头。");
 		}
 		Output(L"    将编译 %lu 个文件。", (unsigned long)BuildJobs.lstFilesToCompile.size());
 		Output(L"    将链接 %lu 个文件。", (unsigned long)BuildJobs.lstFilesToLink.size());

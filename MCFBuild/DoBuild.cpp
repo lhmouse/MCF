@@ -3,10 +3,10 @@
 #include "PreCompiled.hpp"
 
 namespace MCFBuild {
-	extern PROJECT SetupEnv(
+	extern PROJECT LoadProject(
 		const std::wstring &wcsProjFile,
 		const std::wstring &wcsConfig,
-		const std::map<std::wstring, std::wstring> &mapVars,
+		std::map<std::wstring, std::wstring> &&mapOverridingVars,
 		const std::wstring &wcsOutputPath,
 		bool bVerbose
 	);
@@ -43,14 +43,24 @@ namespace MCFBuild {
 		bool bRebuildAll
 	){
 		Output(L"正在配置构建环境...");
-		const auto Project = SetupEnv(wcsProjFile, wcsConfig, mapVars, wcsOutputPath, bVerbose);
+		std::map<std::wstring, std::wstring> mapOverridingVars(mapVars);
+		mapOverridingVars[L"_CONFIG"]	= L'\"' + wcsConfig + L'\"';
+		mapOverridingVars[L"_SRCDIR"]	= L'\"' + wcsSrcRoot + L'\"';
+		mapOverridingVars[L"_OBJDIR"]	= L'\"' + wcsDstRoot + L'\"';
+		const auto Project = LoadProject(wcsProjFile, wcsConfig, std::move(mapOverridingVars), wcsOutputPath, bVerbose);
+
 		Output(L"----------------------------------------");
+
 		Output(L"正在分析源文件目录树...");
 		const auto SourceTree = GetSourceTree(wcsSrcRoot, Project, bVerbose);
+
 		Output(L"----------------------------------------");
+
 		Output(L"正在统计构建任务...");
 		const auto BuildJobs = CountBuildJobs(wcsSrcRoot, SourceTree, wcsDstRoot, Project, ulProcessCount, bRebuildAll, bVerbose);
+
 		Output(L"----------------------------------------");
+
 		Output(L"开始构建...");
 		CompileAndLink(BuildJobs, Project, ulProcessCount, bVerbose);
 	}

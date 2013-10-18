@@ -61,8 +61,8 @@ void ProcessProxy::Fork(const std::wstring &wcsCmdLine){
 	auto StdErrPipe = xCreateInputPipe();
 	pNewContext->hStdErrRead = std::move(StdErrPipe.first);
 
-	pNewContext->hStdOutDaemonThread = ::CreateThread(nullptr, 0, &xStdOutDaemonProc, pNewContext.get(), 0, nullptr);
-	pNewContext->hStdErrDaemonThread = ::CreateThread(nullptr, 0, &xStdErrDaemonProc, pNewContext.get(), 0, nullptr);
+	pNewContext->hStdOutDaemonThread.Reset(::CreateThread(nullptr, 0, &xStdOutDaemonProc, pNewContext.get(), 0, nullptr));
+	pNewContext->hStdErrDaemonThread.Reset( ::CreateThread(nullptr, 0, &xStdErrDaemonProc, pNewContext.get(), 0, nullptr));
 
 	STARTUPINFOW StartupInfo;
 	StartupInfo.cb			= sizeof(StartupInfo);
@@ -83,8 +83,8 @@ void ProcessProxy::Fork(const std::wstring &wcsCmdLine){
 	}
 	::CloseHandle(ProcessInfo.hThread);
 
-	pNewContext->hProcess			= ProcessInfo.hProcess;
-	pNewContext->dwProcessGroupID	= ProcessInfo.dwProcessId;
+	pNewContext->hProcess.Reset(ProcessInfo.hProcess);
+	pNewContext->dwProcessGroupID = ProcessInfo.dwProcessId;
 
 	Kill();
 	xm_pContext.swap(pNewContext);

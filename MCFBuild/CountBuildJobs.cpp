@@ -233,11 +233,11 @@ namespace MCFBuild {
 			Output(L"  已配置为全部重新构建。");
 		}
 
-		if(!Project.PreCompiledHeader.wcsFile.empty()){
+		if(!Project.PreCompiledHeader.wcsSourceFile.empty()){
 			Output(L"  正在检测预编译头...");
 
-			std::wstring wcsGCHSrc(wcsSrcRoot + Project.PreCompiledHeader.wcsFile);
-			std::wstring wcsGCHStub(wcsDstRoot + Project.PreCompiledHeader.wcsFile);
+			std::wstring wcsGCHSrc(wcsSrcRoot + Project.PreCompiledHeader.wcsSourceFile);
+			std::wstring wcsGCHStub(wcsDstRoot + Project.PreCompiledHeader.wcsSourceFile);
 
 			const long long llGCHSrcTimestamp = GetFileTimestamp(wcsGCHSrc);
 			if(llGCHSrcTimestamp == LLONG_MIN){
@@ -291,13 +291,13 @@ namespace MCFBuild {
 			std::list<std::wstring> lstObjFilesUnneededToRebuild;
 			while(!lstCompilableFiles.empty()){
 				auto &wcsSrcFile = lstCompilableFiles.front().first;
-				auto llTimestamp = std::max(Project.llProjectFileTimestamp, lstCompilableFiles.front().second);
+				auto &llTimestamp = lstCompilableFiles.front().second;
 
 				std::wstring wcsSrcFilePath(wcsSrcRoot + wcsSrcFile);
 				std::wstring wcsObjFilePath(wcsDstRoot + wcsSrcFile + L'.' + L'o');
 
 				const long long llObjFileTimestamp = GetFileTimestamp(wcsObjFilePath);
-				if(llTimestamp >= llObjFileTimestamp){
+				if(std::max(Project.llProjectFileTimestamp, llTimestamp) >= llObjFileTimestamp){
 					if(bVerbose){
 						Output(L"    将编译：" + wcsSrcFilePath);
 					}

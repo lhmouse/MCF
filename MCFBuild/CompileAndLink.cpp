@@ -103,7 +103,7 @@ namespace {
 		const PROJECT &Project,
 		bool bVerbose
 	){
-		if(Project.PreCompiledHeader.wcsFile.empty()){
+		if(Project.PreCompiledHeader.wcsSourceFile.empty()){
 			Output(L"    不使用预编译头，已跳过。");
 			return;
 		}

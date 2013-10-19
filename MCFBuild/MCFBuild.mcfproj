@@ -19,7 +19,7 @@ General {
 	IgnoredFiles		= .Built* make.cmd a.exe *.h *.hpp *.mcfproj
 
 	PreCompiledHeader {
-		File			= PreCompiled.hpp
+		SourceFile		= General.hpp
 		CommandLine		= g++ $CPPFlags$ %IN% -o %OUT%
 	}
 

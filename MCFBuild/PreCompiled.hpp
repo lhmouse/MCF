@@ -137,7 +137,7 @@ namespace MCFBuild {
 
 	struct PROJECT {
 		struct PRECOMPILED_HEADER {
-			std::wstring wcsFile;
+			std::wstring wcsSourceFile;
 			std::wstring wcsCommandLine;
 		};
 		struct COMPILER {

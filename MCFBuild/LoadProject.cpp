@@ -429,12 +429,12 @@ namespace MCFBuild {
 			}
 		}
 
-		if(!(ret.PreCompiledHeader.wcsFile = GetExpandedValue(pkgTop, nullptr, false, L"PreCompiledHeader", L"File")).empty()){
+		if(!(ret.PreCompiledHeader.wcsSourceFile = GetExpandedValue(pkgTop, nullptr, false, L"PreCompiledHeader", L"SourceFile")).empty()){
 			ret.PreCompiledHeader.wcsCommandLine = GetExpandedValue(pkgTop, nullptr, true, L"PreCompiledHeader", L"CommandLine");
 		}
 		if(bVerbose){
 			Output(L"  预编译头：");
-			Output(L"    文件　：" + ret.PreCompiledHeader.wcsFile);
+			Output(L"    文件　：" + ret.PreCompiledHeader.wcsSourceFile);
 			Output(L"    命令行：" + ret.PreCompiledHeader.wcsCommandLine);
 		}
 

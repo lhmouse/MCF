@@ -51,6 +51,8 @@ ProcessProxy::~ProcessProxy(){
 }
 
 void ProcessProxy::Fork(const std::wstring &wcsCmdLine){
+	Kill();
+
 	std::vector<wchar_t> vecCmdLine(wcsCmdLine.begin(), wcsCmdLine.end());
 	vecCmdLine.push_back(0);
 
@@ -86,7 +88,6 @@ void ProcessProxy::Fork(const std::wstring &wcsCmdLine){
 	pNewContext->hProcess.Reset(ProcessInfo.hProcess);
 	pNewContext->dwProcessGroupID = ProcessInfo.dwProcessId;
 
-	Kill();
 	xm_pContext.swap(pNewContext);
 }
 std::unique_ptr<ProcessProxy::ExitInfo> ProcessProxy::Join(){

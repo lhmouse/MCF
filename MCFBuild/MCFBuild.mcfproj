@@ -8,14 +8,6 @@ General {
 	CFlags				= $CompilerFlags$ -c -std=c11
 	CPPFlags			= $CompilerFlags$ -c -std=c++11
 
-	Dependencies {
-		libmcf.a {
-			ProjectFile	=
-			SourceDir	=
-			ObjectDir	=
-		}
-	}
-
 	IgnoredFiles		= .Built* make.cmd a.exe *.h *.hpp *.mcfproj
 
 	PreCompiledHeader {

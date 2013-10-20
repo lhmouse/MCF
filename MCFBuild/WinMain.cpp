@@ -62,23 +62,23 @@ namespace {
 		return std::move(vecRet);
 	}
 
-	void GetVersion(unsigned short *pushVersion, HINSTANCE hInstance){
-		std::fill_n(pushVersion, 4, 0);
-
+	bool GetVersion(VS_FIXEDFILEINFO *pBuffer, HINSTANCE hInstance){
 		const HRSRC hVersion = ::FindResourceW(hInstance, MAKEINTRESOURCEW(VS_VERSION_INFO), MAKEINTRESOURCEW(16));
 		if(hVersion == NULL){
-			return;
+			return false;
 		}
 
 		const LPVOID pFileVersion = ::LockResource(::LoadResource(hInstance, hVersion));
 		VS_FIXEDFILEINFO *pFixedFileInfo;
 		UINT uFixedFileInfoSize;
-		if(::VerQueryValueW(pFileVersion, L"\\", (LPVOID *)&pFixedFileInfo, &uFixedFileInfoSize) != FALSE){
-			pushVersion[0] = HIWORD(pFixedFileInfo->dwFileVersionMS);
-			pushVersion[1] = LOWORD(pFixedFileInfo->dwFileVersionMS);
-			pushVersion[2] = HIWORD(pFixedFileInfo->dwFileVersionLS);
-			pushVersion[3] = LOWORD(pFixedFileInfo->dwFileVersionLS);
+		if(::VerQueryValueW(pFileVersion, L"\\", (LPVOID *)&pFixedFileInfo, &uFixedFileInfoSize) == FALSE){
+			return false;
 		}
+		if(uFixedFileInfoSize != sizeof(VS_FIXEDFILEINFO)){
+			return false;
+		}
+		std::memcpy(pBuffer, pFixedFileInfo, sizeof(VS_FIXEDFILEINFO));
+		return true;
 	}
 }
 
@@ -87,17 +87,19 @@ namespace MCFBuild {
 }
 
 extern "C" int WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int){
-	unsigned short aushVersion[4];
-	GetVersion(aushVersion, hInstance);
+	VS_FIXEDFILEINFO FixedFileInfo;
+	std::memset(&FixedFileInfo, 0, sizeof(FixedFileInfo));
+	GetVersion(&FixedFileInfo, hInstance);
 	wchar_t awchWelcome[0x100];
 	std::swprintf(
 		awchWelcome,
 		COUNTOF(awchWelcome),
-		L"MCF Build [版本 %hu.%hu.%hu.%hu]\nCopyleft 2013, LH_Mouse. All wrongs reserved.",
-		aushVersion[0],
-		aushVersion[1],
-		aushVersion[2],
-		aushVersion[3]
+		L"MCF Build [版本 %u.%u.%u.%u%ls]\nCopyleft 2013, LH_Mouse. All wrongs reserved.",
+		(unsigned int)HIWORD(FixedFileInfo.dwFileVersionMS),
+		(unsigned int)LOWORD(FixedFileInfo.dwFileVersionMS),
+		(unsigned int)HIWORD(FixedFileInfo.dwFileVersionLS),
+		(unsigned int)LOWORD(FixedFileInfo.dwFileVersionLS),
+		((FixedFileInfo.dwFileFlagsMask & FixedFileInfo.dwFileFlags & VS_FF_DEBUG) != 0) ? L" Debug" : L""
 	);
 	Print(awchWelcome);
 

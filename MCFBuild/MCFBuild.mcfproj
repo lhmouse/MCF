@@ -21,8 +21,8 @@ General {
 			Dependency	= gcc $CFlags$ %IN% -MM
 		}
 		cpp cxx cc {
-			CommandLine	= g++ $CPPFlags$ %GCH% %IN% -o %OUT%
-			Dependency	= g++ $CPPFlags$ %IN% -MM
+			CommandLine	= gcc $CPPFlags$ %GCH% %IN% -o %OUT%
+			Dependency	= gcc $CPPFlags$ %IN% -MM
 		}
 		rc {
 			CommandLine	= windres -O coff -i %IN% -o %OUT%

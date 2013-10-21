@@ -453,9 +453,9 @@ namespace MCFBuild {
 				::PathRemoveArgsW(pwszTok);
 				::PathUnquoteSpacesW(pwszTok);
 				if(pwszTok[0] != 0){
-					auto pCompiler = &ret.mapCompilers[&pwszTok[0]];
-					pCompiler->wcsCommandLine = std::move(wcsCommandLine);
-					pCompiler->wcsDependency = std::move(wcsDependency);
+					auto &Compiler = ret.mapCompilers[&pwszTok[0]];
+					Compiler.wcsCommandLine = std::move(wcsCommandLine);
+					Compiler.wcsDependency = std::move(wcsDependency);
 				}
 			} while(pwszNextTok[0] != 0);
 		}
@@ -465,9 +465,9 @@ namespace MCFBuild {
 				Output(L"    扩展名“" + CompilerItem.first + L"”：");
 				Output(L"      命令行　　：" + CompilerItem.second.wcsCommandLine);
 				if(CompilerItem.second.wcsDependency.empty()){
-					Output(L"      依赖性检测：<无依赖关系>");
+					Output(L"      依赖检查器：<无依赖关系>");
 				} else {
-					Output(L"      依赖性检测：" + CompilerItem.second.wcsDependency);
+					Output(L"      依赖检查器：" + CompilerItem.second.wcsDependency);
 				}
 			}
 		}

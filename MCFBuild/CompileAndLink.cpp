@@ -231,7 +231,7 @@ namespace {
 
 		if(::DeleteFileW(Project.wcsOutputPath.c_str()) == FALSE){
 			const DWORD dwError = ::GetLastError();
-			if(dwError != ERROR_NOT_FOUND){
+			if(dwError != ERROR_FILE_NOT_FOUND){
 				throw Exception(dwError, L"对输出文件“" + Project.wcsOutputPath + L"”的访问失败。");
 			}
 		}

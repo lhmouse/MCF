@@ -163,7 +163,7 @@ namespace MCFBuild {
 		FixPath(wcsProjFile);
 
 		if(wcsDstRoot.empty()){
-			wcsDstRoot = L".Built-" + wcsConfig;
+			wcsDstRoot = L".\\.Built-" + wcsConfig;
 		}
 		FixPath(wcsDstRoot);
 		if(wcsDstRoot.back() != L'\\'){

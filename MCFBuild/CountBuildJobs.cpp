@@ -18,14 +18,13 @@ namespace {
 		const PROJECT &Project
 	){
 		for(const auto &val : SrcTree.mapSubFolders){
-			CountCompilableFiles(lstCompilableFiles, wcsSrcRoot, val.second, wcsSrcRoot + wcsPrefix + val.first + L'\\', Project);
+			CountCompilableFiles(lstCompilableFiles, wcsSrcRoot, val.second, wcsPrefix + val.first + L'\\', Project);
 		}
 		for(const auto &val : SrcTree.mapFiles){
 			const auto &wcsSrcFilePath = val.first;
 			const auto &llTimestamp = val.second;
 
 			std::wstring wcsRelativePath(wcsPrefix + wcsSrcFilePath);
-
 			const std::wstring wcsPath(wcsSrcRoot + wcsRelativePath);
 			const std::wstring wcsExtension(GetFileExtension(wcsSrcFilePath));
 			if(wcsExtension.empty()){
@@ -63,6 +62,7 @@ namespace {
 
 	void CheckDependencies(
 		std::list<std::pair<std::wstring, long long>> &lstCompilableFiles,
+		const std::wstring &wcsSrcRoot,
 		const PROJECT &Project,
 		unsigned long ulProcessCount
 	){
@@ -74,9 +74,9 @@ namespace {
 			const std::wstring wcsExtension(wcsPath.substr(wcsPath.rfind(L'.') + 1));
 			const auto &wcsDependency = Project.mapCompilers.at(wcsExtension).wcsDependency;
 			if(!wcsDependency.empty()){
-				Scheduler.PushJob([&wcsPath, &llTimestamp, &wcsDependency, &Project](std::size_t uThreadIndex){
+				Scheduler.PushJob([&wcsPath, &llTimestamp, &wcsDependency, wcsSrcRoot, &Project](std::size_t uThreadIndex){
 					std::map<std::wstring, std::wstring> mapCommandLineReplacements;
-					mapCommandLineReplacements.emplace(L"IN", L'\"' + wcsPath + L'\"');
+					mapCommandLineReplacements.emplace(L"IN", L'\"' + wcsSrcRoot + wcsPath + L'\"');
 
 					ProcessProxy Process;
 					Process.Fork(MakeCommandLine(
@@ -286,7 +286,7 @@ namespace MCFBuild {
 				lstCompilableFiles.pop_front();
 			}
 		} else {
-			CheckDependencies(lstCompilableFiles, Project, ulProcessCount);
+			CheckDependencies(lstCompilableFiles, wcsSrcRoot, Project, ulProcessCount);
 
 			std::list<std::wstring> lstObjFilesUnneededToRebuild;
 			while(!lstCompilableFiles.empty()){

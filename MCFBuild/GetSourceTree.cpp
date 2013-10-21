@@ -12,9 +12,10 @@ namespace {
 		std::size_t &uTotal,
 		const std::wstring &wcsPath,
 		const PROJECT &Project,
+		const std::wstring &wcsPrefix,
 		bool bVerbose
 	){
-		Output(L"  正在统计目录“" + wcsPath + L"”...");
+		Output(wcsPrefix + L"正在统计目录“" + wcsPath + L"”...");
 
 		struct FindCloser {
 			constexpr static HANDLE Null(){ return INVALID_HANDLE_VALUE; }
@@ -44,17 +45,18 @@ namespace {
 					++ulFileCount;
 					__builtin_memcpy(&(ret.mapFiles[std::move(wcsName)]), &FindData.ftLastWriteTime, sizeof(long long));
 				} else {
-					GetTreeRecur(ret.mapSubFolders[std::move(wcsName)], uTotal, wcsPath + wcsName + L'\\', Project, bVerbose);
+					const std::wstring wcsNextPath(wcsPath + wcsName + L'\\');
+					GetTreeRecur(ret.mapSubFolders[std::move(wcsName)], uTotal, wcsNextPath, Project, wcsPrefix + L"  ", bVerbose);
 				}
 			} while(::FindNextFileW(hFindFile, &FindData) != FALSE);
 
 			if(bVerbose){
-				Output(L"    目录“%ls”中共有 %lu 个文件。", wcsPath.c_str(), ulFileCount);
+				Output(L"%ls  目录“%ls”中共有 %lu 个文件。", wcsPrefix.c_str(), wcsPath.c_str(), ulFileCount);
 			}
 			uTotal += ulFileCount;
 		} else {
 			if(bVerbose){
-				Error(L"    打开目录“" + wcsPath + L"”失败。");
+				Error(wcsPrefix + L"  打开目录“" + wcsPath + L"”失败。");
 			}
 		}
 	}
@@ -69,7 +71,7 @@ namespace MCFBuild {
 		FOLDER_TREE ret;
 
 		std::size_t uTotal = 0;
-		GetTreeRecur(ret, uTotal, wcsPath, Project, bVerbose);
+		GetTreeRecur(ret, uTotal, wcsPath, Project, L"  ", bVerbose);
 		Output(L"  共发现 %lu 个文件。", uTotal);
 
 		return std::move(ret);

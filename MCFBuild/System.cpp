@@ -1,6 +1,6 @@
 // Copyleft 2013, LH_Mouse. All wrongs reserved.
 
-#include "PreCompiled.hpp"
+#include "General.hpp"
 #include <string>
 using namespace MCFBuild;
 

@@ -7,6 +7,7 @@ General {
 
 	CFlags				= $CompilerFlags$ -c -std=c11
 	CPPFlags			= $CompilerFlags$ -c -std=c++11
+	RCFlags				=
 
 	IgnoredFiles		= .Built* make.cmd a.exe *.h *.hpp *.mcfproj
 
@@ -25,7 +26,7 @@ General {
 			Dependency	= gcc $CPPFlags$ %IN% -MM
 		}
 		rc {
-			CommandLine	= windres -O coff -i %IN% -o %OUT%
+			CommandLine	= windres $RCFlags$ -O coff -i %IN% -o %OUT%
 			Dependency	=
 		}
 	}
@@ -46,4 +47,5 @@ Debug = General {
 Release = General {
 	CompilerFlags		=> -DNDEBUG -O3 -ffunction-sections -fdata-sections
 	LinkerFlags			=> -O3 -Wl,-s,-gc-sections
+	RCFlags				=> -DNDEBUG
 }

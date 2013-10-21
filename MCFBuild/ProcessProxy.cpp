@@ -53,7 +53,7 @@ ProcessProxy::~ProcessProxy(){
 void ProcessProxy::Fork(const std::wstring &wcsCmdLine){
 	Kill();
 
-	std::vector<wchar_t> vecCmdLine(wcsCmdLine.begin(), wcsCmdLine.end());
+	std::vector<wchar_t> vecCmdLine(wcsCmdLine.cbegin(), wcsCmdLine.cend());
 	vecCmdLine.push_back(0);
 
 	std::unique_ptr<xContext> pNewContext(new xContext);

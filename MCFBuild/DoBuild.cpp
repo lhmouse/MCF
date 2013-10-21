@@ -6,7 +6,9 @@ namespace MCFBuild {
 	extern PROJECT LoadProject(
 		const std::wstring &wcsProjFile,
 		const std::wstring &wcsConfig,
-		std::map<std::wstring, std::wstring> &&mapOverridingVars,
+		const std::wstring &wcsSrcRoot,
+		const std::wstring &wcsDstRoot,
+		const std::map<std::wstring, std::wstring> &mapVars,
 		const std::wstring &wcsOutputPath,
 		bool bVerbose
 	);
@@ -43,11 +45,7 @@ namespace MCFBuild {
 		bool bRebuildAll
 	){
 		Output(L"正在配置构建环境...");
-		std::map<std::wstring, std::wstring> mapOverridingVars(mapVars);
-		mapOverridingVars[L"_CONFIG"]	= L'\"' + wcsConfig + L'\"';
-		mapOverridingVars[L"_SRCDIR"]	= L'\"' + wcsSrcRoot + L'\"';
-		mapOverridingVars[L"_OBJDIR"]	= L'\"' + wcsDstRoot + L'\"';
-		const auto Project = LoadProject(wcsProjFile, wcsConfig, std::move(mapOverridingVars), wcsOutputPath, bVerbose);
+		const auto Project = LoadProject(wcsProjFile, wcsConfig, wcsSrcRoot, wcsDstRoot, mapVars, wcsOutputPath, bVerbose);
 
 		Output(L"----------------------------------------");
 

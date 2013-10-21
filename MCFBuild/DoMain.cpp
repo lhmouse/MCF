@@ -21,7 +21,6 @@ namespace MCFBuild {
 		std::wstring wcsConfig;
 		std::wstring wcsSrcRoot;
 		std::wstring wcsDstRoot;
-		bool bUseDefaultOutput = true;
 		std::wstring wcsOutputPath;
 		unsigned long ulProcessCount = 0;
 		std::map<std::wstring, std::wstring> mapVars;
@@ -63,7 +62,6 @@ namespace MCFBuild {
 				if(pwszParam[2] == 0) {
 					throw Exception(ERROR_INVALID_PARAMETER, std::wstring(L"参数“") + pwszParam + L"”缺少路径。");
 				}
-				bUseDefaultOutput = false;
 				wcsOutputPath = pwszParam + 2;
 				break;
 			case L'j':
@@ -108,40 +106,36 @@ namespace MCFBuild {
 			}
 		}
 
-		Print(L"");
-
 		if(bShowHelp){
-			PrintCR(
-				L"命令行：\n"
-				"MCFBuild [-h] [-p项目文件] [配置包] [-s源文件根目录] [-d目标文件根目录]\n"
-				"         [-o输出文件路径] [-j进程数] [-D变量名[=值]] [-v] [-R]\n"
-				"\n"
-				"  -h                显示此帮助信息。\n"
-				"  -p项目文件        指定保存有项目配置信息的文件。\n"
-				"                    如果使用相对路径，MCFBuild 将在当前目录中搜索。\n"
-				"                    此参数的默认值是 [源文件根目录]\\MCFBuild.mcfproj。\n"
-				"  配置包            指定使用的配置包。配置包必须在项目文件中定义。\n"
-				"                    此参数的默认值是 Default。\n"
-				"  -s源文件根目录    指定所有源文件的位置。\n"
-				"                    MCFBuild 以该目录为根节点递归构建所有文件。\n"
-				"                    此参数的默认值是当前目录。\n"
-				"  -d目标文件根目录  指定生成的目标文件（object files）的根目录。\n"
-				"                    MCFBuild 在此目录中建立一个和源文件目录结构相同的目录树。\n"
-				"                    此参数的默认值是当前目录下的 .Built-[配置包]。\n"
-				"  -o输出文件路径    指定最终生成的二进制文件相对于当前目录的路径。\n"
-				"                    如果省略此参数，将使用项目文件中定义的缺省输出路径。\n"
-				"                    如果项目文件中没有定义缺省输出路径，则必须指定此参数。\n"
-				"  -j进程数          指定多进程编译时的并发进程数。\n"
-				"                    如果设为 0，MCFBuild 将根据当前 CPU 的逻辑核心数自动选择合适\n"
-				"                    的值。\n"
-				"                    此参数的默认值是 0。\n"
-				"  -D变量名[=值]     定义一个变量。如果指定的配置包中有同名变量，处理规则和配置包\n"
-				"                    继承时遇到同名变量的处理规则一致。\n"
-				"  -v                显示生成细节。\n"
-				"  -R                重新生成所有文件。\n"
-				"\n"
-				"除路径以外，如无特殊说明，其他参数都是大小写敏感的。\n"
-			);
+			Output(L"命令行：");
+			Output(L"MCFBuild [-h] [-p项目文件] [配置包] [-s源文件根目录] [-d目标文件根目录]");
+			Output(L"         [-o输出文件路径] [-j进程数] [-D变量名[=值]] [-v] [-R]");
+			Output();
+			Output(L"  -h                显示此帮助信息。");
+			Output(L"  -p项目文件        指定保存有项目配置信息的文件。");
+			Output(L"                    如果使用相对路径，MCFBuild 将在当前目录中搜索。");
+			Output(L"                    此参数的默认值是 [源文件根目录]\\MCFBuild.mcfproj。");
+			Output(L"  配置包            指定使用的配置包。配置包必须在项目文件中定义。");
+			Output(L"                    此参数的默认值是 Default。");
+			Output(L"  -s源文件根目录    指定所有源文件的位置。");
+			Output(L"                    MCFBuild 以该目录为根节点递归构建所有文件。");
+			Output(L"                    此参数的默认值是当前目录。");
+			Output(L"  -d目标文件根目录  指定生成的目标文件（object files）的根目录。");
+			Output(L"                    MCFBuild 在此目录中建立一个和源文件目录结构相同的目录树。");
+			Output(L"                    此参数的默认值是当前目录下的 .Built-[配置包]。");
+			Output(L"  -o输出文件路径    指定最终生成的二进制文件相对于当前目录的路径。");
+			Output(L"                    如果省略此参数，将使用项目文件中定义的缺省输出路径。");
+			Output(L"                    如果项目文件中没有定义缺省输出路径，则必须指定此参数。");
+			Output(L"  -j进程数          指定多进程编译时的并发进程数。");
+			Output(L"                    如果设为 0，MCFBuild 将根据当前 CPU 的逻辑核心数自动选择合适");
+			Output(L"                    的值。");
+			Output(L"                    此参数的默认值是 0。");
+			Output(L"  -D变量名[=值]     定义一个变量。如果指定的配置包中有同名变量，处理规则和配置包");
+			Output(L"                    继承时遇到同名变量的处理规则一致。");
+			Output(L"  -v                显示生成细节。");
+			Output(L"  -R                重新生成所有文件。");
+			Output();
+			Output(L"除路径以外，如无特殊说明，其他参数都是大小写敏感的。");
 			return;
 		}
 
@@ -170,10 +164,14 @@ namespace MCFBuild {
 			wcsDstRoot.push_back(L'\\');
 		}
 
-		if(bUseDefaultOutput){
+		if(wcsOutputPath.empty()){
 			wcsOutputPath = wcsDstRoot;
 		} else {
+			const bool bEndsWithSlash = (wcsOutputPath.back() == L'\\') || (wcsOutputPath.back() == L'/');
 			FixPath(wcsOutputPath);
+			if(bEndsWithSlash){
+				wcsOutputPath.push_back(L'\\');
+			}
 		}
 
 		if(ulProcessCount == 0){
@@ -193,8 +191,8 @@ namespace MCFBuild {
 		Output(L"源文件根目录　：" + wcsSrcRoot);
 		Output(L"目标文件根目录：" + wcsDstRoot);
 
-		if(bUseDefaultOutput){
-			Output(L"输出文件路径　：<使用项目缺省值>");
+		if(wcsOutputPath.back() == L'\\'){
+			Output(L"输出文件路径　：" + wcsOutputPath + L"<使用项目缺省值>");
 		} else {
 			Output(L"输出文件路径　：" + wcsOutputPath);
 		}

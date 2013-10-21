@@ -391,7 +391,9 @@ namespace MCFBuild {
 	PROJECT LoadProject(
 		const std::wstring &wcsProjFile,
 		const std::wstring &wcsConfig,
-		std::map<std::wstring, std::wstring> &&mapOverridingVars,
+		const std::wstring &wcsSrcRoot,
+		const std::wstring &wcsDstRoot,
+		const std::map<std::wstring, std::wstring> &mapVars,
 		const std::wstring &wcsOutputPath,
 		bool bVerbose
 	){
@@ -405,7 +407,13 @@ namespace MCFBuild {
 			MergePackage(pkgTop, std::move(vecPackages.back().second));
 			vecPackages.pop_back();
 		}
-		MergePackage(pkgTop, PACKAGEW{ { }, std::move(mapOverridingVars) });
+
+		PACKAGEW pkgFinal;
+		pkgFinal.mapValues = mapVars;
+		pkgFinal.mapValues[L"_CONFIG"]	= wcsConfig;
+		pkgFinal.mapValues[L"_SRCDIR"]	= L'\"' + wcsSrcRoot.substr(0, wcsSrcRoot.size() - 1) + L'\"';
+		pkgFinal.mapValues[L"_OBJDIR"]	= L'\"' + wcsDstRoot.substr(0, wcsDstRoot.size() - 1) + L'\"';
+		MergePackage(pkgTop, std::move(pkgFinal));
 
 		auto wcsRawIgnoredFiles = GetExpandedValue(pkgTop, nullptr, false, L"IgnoredFiles");
 		if(!wcsRawIgnoredFiles.empty()){
@@ -434,8 +442,12 @@ namespace MCFBuild {
 		}
 		if(bVerbose){
 			Output(L"  预编译头：");
-			Output(L"    文件　：" + ret.PreCompiledHeader.wcsSourceFile);
-			Output(L"    命令行：" + ret.PreCompiledHeader.wcsCommandLine);
+			if(ret.PreCompiledHeader.wcsSourceFile.empty()){
+				Output(L"    不使用预编译头。");
+			} else {
+				Output(L"    文件　：" + ret.PreCompiledHeader.wcsSourceFile);
+				Output(L"    命令行：" + ret.PreCompiledHeader.wcsCommandLine);
+			}
 		}
 
 		const auto &mapRawCompilers = GetPackage(pkgTop, nullptr, true, L"Compilers")->mapPackages;

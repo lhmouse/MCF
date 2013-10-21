@@ -5,6 +5,13 @@
 using namespace MCFBuild;
 
 namespace {
+	struct VERSION_INFO {
+		std::wstring wcsFileDescription;
+		unsigned short aushVersion[4];
+		bool bDebug;
+		std::wstring wcsLegalCopyright;
+	};
+
 	std::vector<const wchar_t *> GetArgV(std::vector<wchar_t> &vecCmdLine){
 		std::vector<const wchar_t *> vecRet;
 
@@ -62,23 +69,45 @@ namespace {
 		return std::move(vecRet);
 	}
 
-	bool GetVersion(VS_FIXEDFILEINFO *pBuffer, HINSTANCE hInstance){
+	VERSION_INFO GetVersionInfo(HINSTANCE hInstance){
+		VERSION_INFO ret;
+
 		const HRSRC hVersion = ::FindResourceW(hInstance, MAKEINTRESOURCEW(VS_VERSION_INFO), MAKEINTRESOURCEW(16));
-		if(hVersion == NULL){
-			return false;
+		if(hVersion != NULL){
+			const LPVOID pFileVersion = ::LockResource(::LoadResource(hInstance, hVersion));
+			void *pBuffer;
+			UINT uSize;
+
+			if(::VerQueryValueW(pFileVersion, L"\\", &pBuffer, &uSize) != FALSE){
+				const auto pFixedFileInfo = (const VS_FIXEDFILEINFO *)pBuffer;
+
+				ret.aushVersion[0]	= HIWORD(pFixedFileInfo->dwFileVersionMS);
+				ret.aushVersion[1]	= LOWORD(pFixedFileInfo->dwFileVersionMS);
+				ret.aushVersion[2]	= HIWORD(pFixedFileInfo->dwFileVersionLS);
+				ret.aushVersion[3]	= LOWORD(pFixedFileInfo->dwFileVersionLS);
+				ret.bDebug			= (pFixedFileInfo->dwFileFlagsMask & pFixedFileInfo->dwFileFlags & VS_FF_DEBUG) != 0;
+			}
+
+			if(::VerQueryValueW(pFileVersion, L"\\VarFileInfo\\Translation", &pBuffer, &uSize) != FALSE){
+				std::wstring wcsPrefix(64, 0);
+				wcsPrefix.resize((std::size_t)std::swprintf(
+					&wcsPrefix[0],
+					wcsPrefix.size(),
+					L"\\StringFileInfo\\%04X%04X\\",
+					(unsigned int)((const WORD *)pBuffer)[0],
+					(unsigned int)((const WORD *)pBuffer)[1]
+				));
+
+				if(::VerQueryValueW(pFileVersion, (wcsPrefix + L"FileDescription").c_str(), &pBuffer, &uSize) != FALSE){
+					ret.wcsFileDescription.assign((const wchar_t *)pBuffer, uSize);
+				}
+				if(::VerQueryValueW(pFileVersion, (wcsPrefix + L"LegalCopyright").c_str(), &pBuffer, &uSize) != FALSE){
+					ret.wcsLegalCopyright.assign((const wchar_t *)pBuffer, uSize);
+				}
+			}
 		}
 
-		const LPVOID pFileVersion = ::LockResource(::LoadResource(hInstance, hVersion));
-		VS_FIXEDFILEINFO *pFixedFileInfo;
-		UINT uFixedFileInfoSize;
-		if(::VerQueryValueW(pFileVersion, L"\\", (LPVOID *)&pFixedFileInfo, &uFixedFileInfoSize) == FALSE){
-			return false;
-		}
-		if(uFixedFileInfoSize != sizeof(VS_FIXEDFILEINFO)){
-			return false;
-		}
-		std::memcpy(pBuffer, pFixedFileInfo, sizeof(VS_FIXEDFILEINFO));
-		return true;
+		return std::move(ret);
 	}
 }
 
@@ -87,21 +116,19 @@ namespace MCFBuild {
 }
 
 extern "C" int WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int){
-	VS_FIXEDFILEINFO FixedFileInfo;
-	std::memset(&FixedFileInfo, 0, sizeof(FixedFileInfo));
-	GetVersion(&FixedFileInfo, hInstance);
-	wchar_t awchWelcome[0x100];
-	std::swprintf(
-		awchWelcome,
-		COUNTOF(awchWelcome),
-		L"MCF Build [版本 %u.%u.%u.%u%ls]\nCopyleft 2013, LH_Mouse. All wrongs reserved.",
-		(unsigned int)HIWORD(FixedFileInfo.dwFileVersionMS),
-		(unsigned int)LOWORD(FixedFileInfo.dwFileVersionMS),
-		(unsigned int)HIWORD(FixedFileInfo.dwFileVersionLS),
-		(unsigned int)LOWORD(FixedFileInfo.dwFileVersionLS),
-		((FixedFileInfo.dwFileFlagsMask & FixedFileInfo.dwFileFlags & VS_FF_DEBUG) != 0) ? L" Debug" : L""
+	const VERSION_INFO VersionInfo = GetVersionInfo(hInstance);
+
+	Output(
+		L"%ls [版本 %hu.%hu.%hu.%hu%ls]",
+		VersionInfo.wcsFileDescription.c_str(),
+		VersionInfo.aushVersion[0],
+		VersionInfo.aushVersion[1],
+		VersionInfo.aushVersion[2],
+		VersionInfo.aushVersion[3],
+		VersionInfo.bDebug ? L" Debug" : L""
 	);
-	Print(awchWelcome);
+	Output(VersionInfo.wcsLegalCopyright);
+	Output();
 
 	int nMainRet = 0;
 	try {
@@ -111,7 +138,6 @@ extern "C" int WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int){
 
 		DoMain(vecArgs.size() - 1, vecArgs.data());
 	} catch(Exception &e){
-		Error();
 		Error(L"错误：" + e.wcsDescription);
 
 		PVOID pDescription;

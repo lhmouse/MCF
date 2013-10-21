@@ -136,6 +136,12 @@ namespace MCFBuild {
 	};
 
 	struct PROJECT {
+		struct DEPENDENCY {
+			std::wstring wcsSourceDir;
+			std::wstring wcsProjectFile;
+			std::wstring wcsObjectDir;
+			std::wstring wcsOutputFile;
+		};
 		struct PRECOMPILED_HEADER {
 			std::wstring wcsSourceFile;
 			std::wstring wcsCommandLine;
@@ -150,6 +156,7 @@ namespace MCFBuild {
 		};
 
 		long long llProjectFileTimestamp;
+		std::map<std::wstring, DEPENDENCY> mapDependencies;
 		std::set<std::wstring, WcsComparerNoCase> setIgnoredFiles;
 		PRECOMPILED_HEADER PreCompiledHeader;
 		std::map<std::wstring, COMPILER, WcsComparerNoCase> mapCompilers;

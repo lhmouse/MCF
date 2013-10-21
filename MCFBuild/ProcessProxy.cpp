@@ -88,7 +88,7 @@ void ProcessProxy::Fork(const std::wstring &wcsCmdLine){
 	pNewContext->hProcess.Reset(ProcessInfo.hProcess);
 	pNewContext->dwProcessGroupID = ProcessInfo.dwProcessId;
 
-	xm_pContext.swap(pNewContext);
+	xm_pContext = std::move(pNewContext);
 }
 std::unique_ptr<ProcessProxy::ExitInfo> ProcessProxy::Join(){
 	std::unique_ptr<ExitInfo> pRet;

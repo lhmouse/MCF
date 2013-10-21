@@ -411,8 +411,8 @@ namespace MCFBuild {
 		PACKAGEW pkgFinal;
 		pkgFinal.mapValues = mapVars;
 		pkgFinal.mapValues[L"_CONFIG"]	= wcsConfig;
-		pkgFinal.mapValues[L"_SRCDIR"]	= L'\"' + wcsSrcRoot.substr(0, wcsSrcRoot.size() - 1) + L'\"';
-		pkgFinal.mapValues[L"_OBJDIR"]	= L'\"' + wcsDstRoot.substr(0, wcsDstRoot.size() - 1) + L'\"';
+		pkgFinal.mapValues[L"_SRCDIR"]	= wcsSrcRoot;
+		pkgFinal.mapValues[L"_OBJDIR"]	= wcsDstRoot;
 		MergePackage(pkgTop, std::move(pkgFinal));
 
 		auto wcsRawIgnoredFiles = GetExpandedValue(pkgTop, nullptr, false, L"IgnoredFiles");

@@ -5,6 +5,13 @@
 using namespace MCFBuild;
 
 namespace {
+	struct VERSION_INFO {
+		std::wstring wcsFileDescription;
+		unsigned short aushVersion[4];
+		bool bDebug;
+		std::wstring wcsLegalCopyright;
+	};
+
 	std::vector<const wchar_t *> GetArgV(std::vector<wchar_t> &vecCmdLine){
 		std::vector<const wchar_t *> vecRet;
 
@@ -62,32 +69,45 @@ namespace {
 		return std::move(vecRet);
 	}
 
-	void GetVersion(unsigned short *pushVersion, HINSTANCE hInstance){
-		struct EnumVersionResNameProc {
-			static BOOL CALLBACK Proc(HMODULE, LPCWSTR, LPWSTR lpwszName, LONG_PTR lParam){
-				*(LPWSTR *)lParam = lpwszName;
-				return FALSE;
+	VERSION_INFO GetVersionInfo(HINSTANCE hInstance){
+		VERSION_INFO ret;
+
+		const HRSRC hVersion = ::FindResourceW(hInstance, MAKEINTRESOURCEW(VS_VERSION_INFO), MAKEINTRESOURCEW(16));
+		if(hVersion != NULL){
+			const LPVOID pFileVersion = ::LockResource(::LoadResource(hInstance, hVersion));
+			void *pBuffer;
+			UINT uSize;
+
+			if(::VerQueryValueW(pFileVersion, L"\\", &pBuffer, &uSize) != FALSE){
+				const auto pFixedFileInfo = (const VS_FIXEDFILEINFO *)pBuffer;
+
+				ret.aushVersion[0]	= HIWORD(pFixedFileInfo->dwFileVersionMS);
+				ret.aushVersion[1]	= LOWORD(pFixedFileInfo->dwFileVersionMS);
+				ret.aushVersion[2]	= HIWORD(pFixedFileInfo->dwFileVersionLS);
+				ret.aushVersion[3]	= LOWORD(pFixedFileInfo->dwFileVersionLS);
+				ret.bDebug			= (pFixedFileInfo->dwFileFlagsMask & pFixedFileInfo->dwFileFlags & VS_FF_DEBUG) != 0;
 			}
-		};
 
-		std::fill_n(pushVersion, 4, 0);
+			if(::VerQueryValueW(pFileVersion, L"\\VarFileInfo\\Translation", &pBuffer, &uSize) != FALSE){
+				std::wstring wcsPrefix(64, 0);
+				wcsPrefix.resize((std::size_t)std::swprintf(
+					&wcsPrefix[0],
+					wcsPrefix.size(),
+					L"\\StringFileInfo\\%04X%04X\\",
+					(unsigned int)((const WORD *)pBuffer)[0],
+					(unsigned int)((const WORD *)pBuffer)[1]
+				));
 
-		LPCWSTR pwszResourceName = nullptr;
-		::EnumResourceNamesW(hInstance, (LPCWSTR)16, &EnumVersionResNameProc::Proc, (LONG_PTR)&pwszResourceName);
-		if(pwszResourceName == nullptr){
-			return;
+				if(::VerQueryValueW(pFileVersion, (wcsPrefix + L"FileDescription").c_str(), &pBuffer, &uSize) != FALSE){
+					ret.wcsFileDescription.assign((const wchar_t *)pBuffer, uSize);
+				}
+				if(::VerQueryValueW(pFileVersion, (wcsPrefix + L"LegalCopyright").c_str(), &pBuffer, &uSize) != FALSE){
+					ret.wcsLegalCopyright.assign((const wchar_t *)pBuffer, uSize);
+				}
+			}
 		}
 
-		const HRSRC hVersionResource = ::FindResourceW(hInstance, pwszResourceName, (LPCWSTR)16);
-		const LPVOID pFileVersionBuffer = ::LockResource(::LoadResource(hInstance, hVersionResource));
-		VS_FIXEDFILEINFO *pFixedFileInfo;
-		UINT uFixedFileInfoSize;
-		if(::VerQueryValueW(pFileVersionBuffer, L"\\", (LPVOID *)&pFixedFileInfo, &uFixedFileInfoSize) != FALSE){
-			pushVersion[0] = HIWORD(pFixedFileInfo->dwFileVersionMS);
-			pushVersion[1] = LOWORD(pFixedFileInfo->dwFileVersionMS);
-			pushVersion[2] = HIWORD(pFixedFileInfo->dwFileVersionLS);
-			pushVersion[3] = LOWORD(pFixedFileInfo->dwFileVersionLS);
-		}
+		return std::move(ret);
 	}
 }
 
@@ -96,19 +116,19 @@ namespace MCFBuild {
 }
 
 extern "C" int WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int){
-	unsigned short aushVersion[4];
-	GetVersion(aushVersion, hInstance);
-	wchar_t awchWelcome[0x100];
-	std::swprintf(
-		awchWelcome,
-		COUNTOF(awchWelcome),
-		L"MCF Build [版本 %hu.%hu.%hu.%hu]\nCopyleft 2013, LH_Mouse. All wrongs reserved.",
-		aushVersion[0],
-		aushVersion[1],
-		aushVersion[2],
-		aushVersion[3]
+	const VERSION_INFO VersionInfo = GetVersionInfo(hInstance);
+
+	Output(
+		L"%ls [版本 %hu.%hu.%hu.%hu%ls]",
+		VersionInfo.wcsFileDescription.c_str(),
+		VersionInfo.aushVersion[0],
+		VersionInfo.aushVersion[1],
+		VersionInfo.aushVersion[2],
+		VersionInfo.aushVersion[3],
+		VersionInfo.bDebug ? L" Debug" : L""
 	);
-	Print(awchWelcome);
+	Output(VersionInfo.wcsLegalCopyright);
+	Output();
 
 	int nMainRet = 0;
 	try {
@@ -118,7 +138,6 @@ extern "C" int WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int){
 
 		DoMain(vecArgs.size() - 1, vecArgs.data());
 	} catch(Exception &e){
-		Error();
 		Error(L"错误：" + e.wcsDescription);
 
 		PVOID pDescription;

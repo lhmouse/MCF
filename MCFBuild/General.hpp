@@ -17,25 +17,16 @@
 #include <list>
 #include <type_traits>
 #include <windows.h>
+
 #include "countof.hpp"
 
 namespace MCFBuild {
-	extern DWORD g_dwMainThreadID;
-
 	extern int Print(const wchar_t *s, std::size_t len = (std::size_t)-1, bool to_stderr = false);
 	extern int VPrint(const wchar_t *fmt, bool to_stderr = false, ...);
 	extern int PrintCR(const wchar_t *s, std::size_t len = (std::size_t)-1);
 	extern int VPrintCR(const wchar_t *fmt, ...);
 
 	CRITICAL_SECTION &GetPrintLock();
-
-	struct Exception {
-		unsigned long ulCode;
-		std::wstring wcsDescription;
-
-		Exception(long code, std::wstring &&desc) : ulCode((unsigned long)code), wcsDescription(std::move(desc)) { }
-		Exception(unsigned long code, std::wstring &&desc) : ulCode(code), wcsDescription(std::move(desc)) { }
-	};
 
 	template<typename... T>
 	static inline int Output(const wchar_t *fmt, T... args){
@@ -79,24 +70,16 @@ namespace MCFBuild {
 		return Status(L"");
 	}
 
-	static inline std::string WcsToU8s(const std::wstring &src){
-		std::string ret;
-		const int nConvLen = ::WideCharToMultiByte(CP_UTF8, 0, src.c_str(), src.size(), nullptr, 0, nullptr, nullptr);
-		if(nConvLen > 0){
-			ret.resize(nConvLen);
-			::WideCharToMultiByte(CP_UTF8, 0, src.c_str(), src.size(), &ret[0], nConvLen, nullptr, nullptr);
-		}
-		return std::move(ret);
-	}
-	static inline std::wstring U8sToWcs(const std::string &src){
-		std::wstring ret;
-		const int nConvLen = ::MultiByteToWideChar(CP_UTF8, 0, src.c_str(), src.size(), nullptr, 0);
-		if(nConvLen > 0){
-			ret.resize(nConvLen);
-			::MultiByteToWideChar(CP_UTF8, 0, src.c_str(), src.size(), &ret[0], nConvLen);
-		}
-		return std::move(ret);
-	}
+	struct Exception {
+		unsigned long ulCode;
+		std::wstring wcsDescription;
+
+		Exception(long code, std::wstring &&desc) : ulCode((unsigned long)code), wcsDescription(std::move(desc)) { }
+		Exception(unsigned long code, std::wstring &&desc) : ulCode(code), wcsDescription(std::move(desc)) { }
+	};
+
+	extern std::string WcsToU8s(const std::wstring &src);
+	extern std::wstring U8sToWcs(const std::string &src);
 
 	class CriticalSectionHelper {
 	private:
@@ -133,27 +116,6 @@ namespace MCFBuild {
 
 #define	LOCK_THROUGH(cs)	const ::MCFBuild::CriticalSectionHelper __LOCK__(&cs)
 
-	static inline void FixPath(std::wstring &wcsSrc){
-		if(!wcsSrc.empty()){
-			const DWORD dwSize = ::GetFullPathNameW(wcsSrc.c_str(), 0, nullptr, nullptr);
-			std::wstring wcsTemp(dwSize, 0);
-			wcsTemp.resize(::GetFullPathNameW(wcsSrc.c_str(), wcsTemp.size(), &wcsTemp[0], nullptr));
-			wcsTemp.swap(wcsSrc);
-		}
-	};
-	static inline std::wstring GetFileExtension(const std::wstring &wcsPath){
-		for(std::size_t i = wcsPath.size(); i != 0; --i){
-			switch(wcsPath[i - 1]){
-			case L'.':
-				return wcsPath.substr(i);
-			case L'\\':
-			case L' ':
-				break;
-			}
-		}
-		return std::wstring();
-	}
-
 	struct WcsComparerNoCase {
 		bool operator()(const std::wstring &lhs, const std::wstring &rhs) const {
 			auto iter1 = lhs.cbegin();
@@ -174,6 +136,10 @@ namespace MCFBuild {
 	};
 
 	struct PROJECT {
+		struct PRECOMPILED_HEADER {
+			std::wstring wcsSourceFile;
+			std::wstring wcsCommandLine;
+		};
 		struct COMPILER {
 			std::wstring wcsCommandLine;
 			std::wstring wcsDependency;
@@ -184,7 +150,8 @@ namespace MCFBuild {
 		};
 
 		long long llProjectFileTimestamp;
-		std::set<std::wstring, WcsComparerNoCase> setIgnored;
+		std::set<std::wstring, WcsComparerNoCase> setIgnoredFiles;
+		PRECOMPILED_HEADER PreCompiledHeader;
 		std::map<std::wstring, COMPILER, WcsComparerNoCase> mapCompilers;
 		LINKERS Linkers;
 		std::wstring wcsOutputPath;
@@ -196,9 +163,19 @@ namespace MCFBuild {
 	};
 
 	struct BUILD_JOBS {
+		std::wstring wcsGCHSrc;
+		std::wstring wcsGCHStub;
 		std::list<std::wstring> lstFilesToCompile;
 		std::list<std::wstring> lstFilesToLink;
 	};
+
+	extern void FixPath(std::wstring &wcsSrc);
+	extern std::wstring GetFileExtension(const std::wstring &wcsPath);
+	extern std::wstring MakeCommandLine(
+		const std::wstring &wcsBase,
+		const std::map<std::wstring, std::wstring> &mapReplacements,
+		const wchar_t *pwszPrefix
+	);
 }
 
 #endif

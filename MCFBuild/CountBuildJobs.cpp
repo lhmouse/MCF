@@ -12,36 +12,38 @@ using namespace MCFBuild;
 namespace {
 	void CountCompilableFiles(
 		std::list<std::pair<std::wstring, long long>> &lstCompilableFiles,
+		const std::wstring &wcsSrcRoot,
 		const FOLDER_TREE &SrcTree,
 		const std::wstring &wcsPrefix,
 		const PROJECT &Project
 	){
 		for(const auto &val : SrcTree.mapSubFolders){
-			CountCompilableFiles(lstCompilableFiles, val.second, wcsPrefix + val.first + L'\\', Project);
+			CountCompilableFiles(lstCompilableFiles, wcsSrcRoot, val.second, wcsPrefix + val.first + L'\\', Project);
 		}
 		for(const auto &val : SrcTree.mapFiles){
 			const auto &wcsSrcFilePath = val.first;
 			const auto &llTimestamp = val.second;
 
-			std::wstring wcsPath(wcsPrefix + wcsSrcFilePath);
+			std::wstring wcsRelativePath(wcsPrefix + wcsSrcFilePath);
+			const std::wstring wcsPath(wcsSrcRoot + wcsRelativePath);
 			const std::wstring wcsExtension(GetFileExtension(wcsSrcFilePath));
 			if(wcsExtension.empty()){
-				Error(L"    警告：已跳过没有扩展名的文件“" + wcsPath + L"”。");
+				Error(L"    警告：已忽略没有扩展名的文件“" + wcsPath + L"”。");
 				continue;
 			}
 			if(Project.mapCompilers.find(wcsExtension) == Project.mapCompilers.end()){
-				Error(L"    警告：没有合适的编译器用于构建文件“" + wcsPath + L"”，已跳过。");
+				Error(L"    警告：没有合适的编译器用于构建文件“" + wcsPath + L"”，已忽略。");
 				continue;
 			}
 
-			lstCompilableFiles.emplace_back(std::move(wcsPath), llTimestamp);
+			lstCompilableFiles.emplace_back(std::move(wcsRelativePath), llTimestamp);
 		}
 	}
 
 	long long GetFileTimestamp(const std::wstring &wcsPath){
 		long long llWriteTime = LLONG_MIN;
 
-		const HANDLE hFile = ::CreateFileW(wcsPath.c_str(), GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING, 0, NULL);
+		const auto hFile = ::CreateFileW(wcsPath.c_str(), GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING, 0, NULL);
 		if(hFile != INVALID_HANDLE_VALUE){
 			union {
 				FILETIME ft;
@@ -58,23 +60,9 @@ namespace {
 		return llWriteTime;
 	}
 
-	std::wstring MakeDependencyCheckerCmdLine(const std::wstring &wcsBase, const std::wstring &wcsInFile, const std::wstring &wcsHint){
-		std::wstring wcsCommandLine;
-		wcsCommandLine.reserve(wcsBase.size() + wcsInFile.size());
-		wcsCommandLine.append(wcsBase);
-
-		const std::size_t uInPos = wcsCommandLine.find(L"$IN");
-		if(uInPos == std::wstring::npos){
-			Error(L"    警告：" + wcsHint + L"的命令行中没有指定 $$IN 参数。（这是否是故意的？）");
-		} else {
-			wcsCommandLine.replace(uInPos, 3, wcsInFile);
-		}
-
-		return std::move(wcsCommandLine);
-	}
-
 	void CheckDependencies(
 		std::list<std::pair<std::wstring, long long>> &lstCompilableFiles,
+		const std::wstring &wcsSrcRoot,
 		const PROJECT &Project,
 		unsigned long ulProcessCount
 	){
@@ -86,11 +74,16 @@ namespace {
 			const std::wstring wcsExtension(wcsPath.substr(wcsPath.rfind(L'.') + 1));
 			const auto &wcsDependency = Project.mapCompilers.at(wcsExtension).wcsDependency;
 			if(!wcsDependency.empty()){
-				Scheduler.PushJob([&wcsPath, &llTimestamp, &wcsDependency, &Project](std::size_t uThreadIndex){
-					const std::wstring wcsHint(L"用于源文件“" + wcsPath + L"”的依赖检查器");
+				Scheduler.PushJob([&wcsPath, &llTimestamp, &wcsDependency, wcsSrcRoot, &Project](std::size_t uThreadIndex){
+					std::map<std::wstring, std::wstring> mapCommandLineReplacements;
+					mapCommandLineReplacements.emplace(L"IN", L'\"' + wcsSrcRoot + wcsPath + L'\"');
 
 					ProcessProxy Process;
-					Process.Fork(MakeDependencyCheckerCmdLine(wcsDependency, L'\"' + wcsPath + L'\"', wcsHint));
+					Process.Fork(MakeCommandLine(
+						wcsDependency,
+						mapCommandLineReplacements,
+						L"    "
+					));
 					const auto pResult = Process.Join();
 
 					wchar_t awchPrefix[8];
@@ -117,13 +110,13 @@ namespace {
 					}
 
 					if(pResult->nExitCode != 0){
-						throw Exception(ERROR_PROCESS_ABORTED, wcsHint + L"返回非零状态码。");
+						throw Exception(ERROR_PROCESS_ABORTED, L"依赖检查器返回非零状态码。");
 					}
 
 					const auto wcsStdOut = U8sToWcs(pResult->strStdOut);
 					const std::size_t uColonPos = wcsStdOut.find(L':');
 					if(uColonPos == std::wstring::npos){
-						throw Exception(ERROR_PROCESS_ABORTED, wcsHint + L"返回无法识别的数据。");
+						throw Exception(ERROR_PROCESS_ABORTED, L"依赖检查器返回无法识别的数据。");
 					}
 					auto iterRead = wcsStdOut.cbegin() + uColonPos + 1;
 					bool bFirst = true;
@@ -154,53 +147,53 @@ namespace {
 
 							if(uCountToIgnore != 0){
 								--uCountToIgnore;
-							} else {
-								switch(chCur){
-								case L' ':
+								continue;
+							}
+							switch(chCur){
+							case L' ':
+								if(!wcsFile.empty()){
+									UpdateDependency(wcsFile);
+									wcsFile.clear();
+								}
+								break;
+							case L'\\':
+								uCountToIgnore = 1;
+								switch(chNext){
+								case L'\n':
 									if(!wcsFile.empty()){
 										UpdateDependency(wcsFile);
 										wcsFile.clear();
 									}
 									break;
-								case L'\\':
-									uCountToIgnore = 1;
-									switch(chNext){
-									case L'\n':
-										if(!wcsFile.empty()){
-											UpdateDependency(wcsFile);
-											wcsFile.clear();
-										}
-										break;
-									default:
-										wcsFile.push_back(L'\\');
-									case L' ':
-									case L'$':
-									case L'%':
-									case L'?':
-									case L'*':
-									case L'[':
-									case L']':
-									case L'\\':
-									case L'~':
-									case L'#':
-										wcsFile.push_back(chNext);
-										break;
-									}
-									break;
-								case L'$':
-									uCountToIgnore = 1;
-									wcsFile.push_back(L'$');
-									if(chNext != L'$'){
-										wcsFile.push_back(chNext);
-									}
-									break;
-								case L'\n':
-									iterRead = wcsStdOut.cend();
-									break;
 								default:
-									wcsFile.push_back(chCur);
+									wcsFile.push_back(L'\\');
+								case L' ':
+								case L'$':
+								case L'%':
+								case L'?':
+								case L'*':
+								case L'[':
+								case L']':
+								case L'\\':
+								case L'~':
+								case L'#':
+									wcsFile.push_back(chNext);
 									break;
 								}
+								break;
+							case L'$':
+								uCountToIgnore = 1;
+								wcsFile.push_back(L'$');
+								if(chNext != L'$'){
+									wcsFile.push_back(chNext);
+								}
+								break;
+							case L'\n':
+								iterRead = wcsStdOut.cend();
+								break;
+							default:
+								wcsFile.push_back(chCur);
+								break;
 							}
 
 							if(iterRead == wcsStdOut.cend()){
@@ -231,22 +224,58 @@ namespace MCFBuild {
 		BUILD_JOBS BuildJobs;
 
 		std::list<std::pair<std::wstring, long long>> lstCompilableFiles;
-		long long llMaxObjFileTimestamp = LLONG_MIN;
 
 		Output(L"  正在统计可编译文件列表...");
-		CountCompilableFiles(lstCompilableFiles, SrcTree, wcsSrcRoot, Project);
+		CountCompilableFiles(lstCompilableFiles, wcsSrcRoot, SrcTree, std::wstring(), Project);
 		Output(L"    共有 %lu 个可编译文件。", (unsigned long)lstCompilableFiles.size());
 
 		if(bRebuildAll){
-			Output(L"  已配置为全部重新生成。");
+			Output(L"  已配置为全部重新构建。");
+		}
 
+		if(!Project.PreCompiledHeader.wcsSourceFile.empty()){
+			Output(L"  正在检测预编译头...");
+
+			std::wstring wcsGCHSrc(wcsSrcRoot + Project.PreCompiledHeader.wcsSourceFile);
+			std::wstring wcsGCHStub(wcsDstRoot + Project.PreCompiledHeader.wcsSourceFile);
+
+			const long long llGCHSrcTimestamp = GetFileTimestamp(wcsGCHSrc);
+			if(llGCHSrcTimestamp == LLONG_MIN){
+				Error(L"    警告：访问预编译头源文件“" + wcsGCHSrc + L"”失败，将不使用预编译头构建。");
+			} else {
+				if(!bRebuildAll){
+					const long long llGCHTimestamp = GetFileTimestamp(wcsGCHStub + L".gch");
+					if(Project.llProjectFileTimestamp >= llGCHTimestamp){
+						Output(L"    项目文件已经更改，需要全部重新构建。");
+						bRebuildAll = true;
+					} else if(llGCHSrcTimestamp >= llGCHTimestamp){
+						Output(L"    预编译头源文件已经更改，需要全部重新构建。");
+						bRebuildAll = true;
+					}
+				}
+				if(bRebuildAll){
+					if(bVerbose){
+						Output(L"    预编译头源文件：" + wcsGCHSrc);
+					} else {
+						Output(L"    将构建预编译头。");
+					}
+					BuildJobs.wcsGCHSrc = std::move(wcsGCHSrc);
+				} else {
+					Output(L"    预编译头已为最新。");
+				}
+				BuildJobs.wcsGCHStub = std::move(wcsGCHStub);
+			}
+		}
+
+		Output(L"  正在统计需要重新编译的文件列表...");
+
+		long long llMaxObjFileTimestamp = LLONG_MIN;
+		if(bRebuildAll){
 			while(!lstCompilableFiles.empty()){
-				auto &wcsSrcFilePath = lstCompilableFiles.front().first;
+				const auto &wcsSrcFile = lstCompilableFiles.front().first;
 
-				std::wstring wcsObjFilePath(wcsDstRoot);
-				wcsObjFilePath.append(wcsSrcFilePath.cbegin() + wcsSrcRoot.size(), wcsSrcFilePath.cend());
-				wcsObjFilePath.push_back(L'.');
-				wcsObjFilePath.push_back(L'o');
+				std::wstring wcsSrcFilePath(wcsSrcRoot + wcsSrcFile);
+				std::wstring wcsObjFilePath(wcsDstRoot + wcsSrcFile + L'.' + L'o');
 
 				if(bVerbose){
 					Output(L"    将编译：" + wcsSrcFilePath);
@@ -257,22 +286,18 @@ namespace MCFBuild {
 				lstCompilableFiles.pop_front();
 			}
 		} else {
-			Output(L"  正在分析依赖关系...");
-			CheckDependencies(lstCompilableFiles, Project, ulProcessCount);
+			CheckDependencies(lstCompilableFiles, wcsSrcRoot, Project, ulProcessCount);
 
-			Output(L"  正在比对文件时间戳...");
 			std::list<std::wstring> lstObjFilesUnneededToRebuild;
 			while(!lstCompilableFiles.empty()){
-				auto &wcsSrcFilePath = lstCompilableFiles.front().first;
+				auto &wcsSrcFile = lstCompilableFiles.front().first;
 				auto &llTimestamp = lstCompilableFiles.front().second;
 
-				std::wstring wcsObjFilePath(wcsDstRoot);
-				wcsObjFilePath.append(wcsSrcFilePath.cbegin() + wcsSrcRoot.size(), wcsSrcFilePath.cend());
-				wcsObjFilePath.push_back(L'.');
-				wcsObjFilePath.push_back(L'o');
+				std::wstring wcsSrcFilePath(wcsSrcRoot + wcsSrcFile);
+				std::wstring wcsObjFilePath(wcsDstRoot + wcsSrcFile + L'.' + L'o');
 
 				const long long llObjFileTimestamp = GetFileTimestamp(wcsObjFilePath);
-				if(llTimestamp >= llObjFileTimestamp){
+				if(std::max(Project.llProjectFileTimestamp, llTimestamp) >= llObjFileTimestamp){
 					if(bVerbose){
 						Output(L"    将编译：" + wcsSrcFilePath);
 					}
@@ -284,31 +309,25 @@ namespace MCFBuild {
 					}
 
 					if(bVerbose){
-						Output(L"    已跳过：" + wcsSrcFilePath);
+						Output(L"    已忽略：" + wcsSrcFilePath);
 					}
 					lstObjFilesUnneededToRebuild.emplace_back(std::move(wcsObjFilePath));
 				}
 
 				lstCompilableFiles.pop_front();
 			}
-			const long long llOutputTimestamp = GetFileTimestamp(Project.wcsOutputPath);
 			bool bNeedLinking = false;
-			if(!BuildJobs.lstFilesToCompile.empty() || (llMaxObjFileTimestamp >= llOutputTimestamp)){
-				Output(L"    自上次构建以来，部分源文件已更改，需重新编译并链接。");
+			if(!BuildJobs.lstFilesToCompile.empty()){
 				bNeedLinking = true;
-			} else if(Project.llProjectFileTimestamp >= llOutputTimestamp){
-				Output(L"    自上次构建以来，项目文件已更改，需重新链接。");
+			} else if(llMaxObjFileTimestamp >= GetFileTimestamp(Project.wcsOutputPath)){
 				bNeedLinking = true;
 			}
 			if(bNeedLinking){
 				BuildJobs.lstFilesToLink.splice(BuildJobs.lstFilesToLink.end(), lstObjFilesUnneededToRebuild);
 			} else {
-				Output(L"    文件“" + Project.wcsOutputPath + L"”已为最新。");
 				BuildJobs.lstFilesToLink.clear();
 			}
 		}
-
-		Output(L"  总计：");
 		Output(L"    将编译 %lu 个文件。", (unsigned long)BuildJobs.lstFilesToCompile.size());
 		Output(L"    将链接 %lu 个文件。", (unsigned long)BuildJobs.lstFilesToLink.size());
 

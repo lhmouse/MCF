@@ -1,13 +1,12 @@
 // Copyleft 2013, LH_Mouse. All wrongs reserved.
 
-#include "General.hpp"
 #include "ProcessProxy.hpp"
 #include <vector>
 #include <algorithm>
 using namespace MCFBuild;
 
 DWORD WINAPI ProcessProxy::xStdOutDaemonProc(LPVOID pParam){
-	Context *const pContext = (Context *)pParam;
+	xContext *const pContext = (xContext *)pParam;
 	for(;;){
 		char achBuffer[0x400];
 		DWORD dwBytesRead;
@@ -19,7 +18,7 @@ DWORD WINAPI ProcessProxy::xStdOutDaemonProc(LPVOID pParam){
 	return 0;
 }
 DWORD WINAPI ProcessProxy::xStdErrDaemonProc(LPVOID pParam){
-	Context *const pContext = (Context *)pParam;
+	xContext *const pContext = (xContext *)pParam;
 	for(;;){
 		char achBuffer[0x400];
 		DWORD dwBytesRead;
@@ -52,18 +51,20 @@ ProcessProxy::~ProcessProxy(){
 }
 
 void ProcessProxy::Fork(const std::wstring &wcsCmdLine){
-	std::vector<wchar_t> vecCmdLine(wcsCmdLine.begin(), wcsCmdLine.end());
+	Kill();
+
+	std::vector<wchar_t> vecCmdLine(wcsCmdLine.cbegin(), wcsCmdLine.cend());
 	vecCmdLine.push_back(0);
 
-	std::unique_ptr<Context> pNewContext(new Context);
+	std::unique_ptr<xContext> pNewContext(new xContext);
 
 	auto StdOutPipe = xCreateInputPipe();
 	pNewContext->hStdOutRead = std::move(StdOutPipe.first);
 	auto StdErrPipe = xCreateInputPipe();
 	pNewContext->hStdErrRead = std::move(StdErrPipe.first);
 
-	pNewContext->hStdOutDaemonThread = ::CreateThread(nullptr, 0, &xStdOutDaemonProc, pNewContext.get(), 0, nullptr);
-	pNewContext->hStdErrDaemonThread = ::CreateThread(nullptr, 0, &xStdErrDaemonProc, pNewContext.get(), 0, nullptr);
+	pNewContext->hStdOutDaemonThread.Reset(::CreateThread(nullptr, 0, &xStdOutDaemonProc, pNewContext.get(), 0, nullptr));
+	pNewContext->hStdErrDaemonThread.Reset( ::CreateThread(nullptr, 0, &xStdErrDaemonProc, pNewContext.get(), 0, nullptr));
 
 	STARTUPINFOW StartupInfo;
 	StartupInfo.cb			= sizeof(StartupInfo);
@@ -84,11 +85,10 @@ void ProcessProxy::Fork(const std::wstring &wcsCmdLine){
 	}
 	::CloseHandle(ProcessInfo.hThread);
 
-	pNewContext->hProcess			= ProcessInfo.hProcess;
-	pNewContext->dwProcessGroupID	= ProcessInfo.dwProcessId;
+	pNewContext->hProcess.Reset(ProcessInfo.hProcess);
+	pNewContext->dwProcessGroupID = ProcessInfo.dwProcessId;
 
-	Kill();
-	xm_pContext.swap(pNewContext);
+	xm_pContext = std::move(pNewContext);
 }
 std::unique_ptr<ProcessProxy::ExitInfo> ProcessProxy::Join(){
 	std::unique_ptr<ExitInfo> pRet;

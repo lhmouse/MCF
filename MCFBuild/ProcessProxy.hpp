@@ -3,7 +3,6 @@
 #ifndef __PROCESS_PROXY_HPP__
 #define __PROCESS_PROXY_HPP__
 
-#include "General.hpp"
 #include <memory>
 #include "RAIIWrapperTemplate.hpp"
 
@@ -22,7 +21,7 @@ namespace MCFBuild {
 		};
 		typedef MCF::RAIIWrapper<HANDLE, xHandleCloser> xUniqueHandle;
 
-		struct Context {
+		struct xContext {
 			std::string strStdOut;
 			std::string strStdErr;
 
@@ -41,7 +40,7 @@ namespace MCFBuild {
 
 		static std::pair<xUniqueHandle, xUniqueHandle> xCreateInputPipe();
 	private:
-		std::unique_ptr<Context> xm_pContext;
+		std::unique_ptr<xContext> xm_pContext;
 	public:
 		ProcessProxy();
 		ProcessProxy(const std::wstring &wcsCmdLine);

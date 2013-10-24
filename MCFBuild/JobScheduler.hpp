@@ -3,7 +3,6 @@
 #ifndef __JOB_SCHEDULER_HPP__
 #define __JOB_SCHEDULER_HPP__
 
-#include "General.hpp"
 #include <list>
 #include <vector>
 #include <memory>

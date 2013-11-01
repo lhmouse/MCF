@@ -305,10 +305,10 @@ namespace MCFBuild {
 
 		Output(L"  正在统计需要重新编译的文件列表...");
 
-		const std::wstring wcsDatabasePath(wcsDstRoot + L"Timestamps.db");
+		const std::wstring wcsDatabasePath(wcsDstRoot + L"Dependencies.db");
 		long long llMaxObjFileTimestamp = LLONG_MIN;
 		if(bRebuildAll){
-			Output(L"    指定了全部重新构建，正在删除时间戳数据库...");
+			Output(L"    指定了全部重新构建，正在删除依赖关系数据库...");
 			if(::DeleteFileW(wcsDatabasePath.c_str()) == FALSE){
 				const DWORD dwError = ::GetLastError();
 				if(dwError != ERROR_FILE_NOT_FOUND){

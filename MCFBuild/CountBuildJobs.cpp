@@ -334,6 +334,7 @@ namespace MCFBuild {
 			Output(L"    正在分析源文件依赖关系...");
 			CheckDependencies(lstCompilableFiles, wcsSrcRoot, Project, ulProcessCount, wcsDatabasePath, bVerbose);
 
+			Output(L"    正在比对文件时间戳...");
 			std::list<std::wstring> lstObjFilesUnneededToRebuild;
 			while(!lstCompilableFiles.empty()){
 				auto &wcsSrcFile = lstCompilableFiles.front().first;

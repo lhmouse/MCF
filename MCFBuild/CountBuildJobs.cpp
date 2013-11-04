@@ -265,10 +265,6 @@ namespace MCFBuild {
 		CountCompilableFiles(lstCompilableFiles, wcsSrcRoot, SrcTree, std::wstring(), Project);
 		Output(L"    共有 %lu 个可编译文件。", (unsigned long)lstCompilableFiles.size());
 
-		if(bRebuildAll){
-			Output(L"  已配置为全部重新构建。");
-		}
-
 		if(!Project.PreCompiledHeader.wcsSourceFile.empty()){
 			Output(L"  正在检测预编译头...");
 
@@ -306,75 +302,76 @@ namespace MCFBuild {
 		Output(L"  正在统计需要重新编译的文件列表...");
 
 		const std::wstring wcsDatabasePath(wcsDstRoot + L"Dependencies.db");
-		long long llMaxObjFileTimestamp = LLONG_MIN;
 		if(bRebuildAll){
-			Output(L"    指定了全部重新构建，正在删除依赖关系数据库...");
+			Output(L"    正在删除旧的依赖关系数据库...");
 			if(::DeleteFileW(wcsDatabasePath.c_str()) == FALSE){
 				const DWORD dwError = ::GetLastError();
 				if(dwError != ERROR_FILE_NOT_FOUND){
 					throw Exception(dwError, L"删除文件“" + wcsDatabasePath + L"”失败。");
 				}
 			}
+		}
 
-			while(!lstCompilableFiles.empty()){
-				const auto &wcsSrcFile = lstCompilableFiles.front().first;
+		Output(L"    正在分析源文件依赖关系...");
+		CheckDependencies(lstCompilableFiles, wcsSrcRoot, Project, ulProcessCount, wcsDatabasePath, bVerbose);
 
-				std::wstring wcsSrcFilePath(wcsSrcRoot + wcsSrcFile);
-				std::wstring wcsObjFilePath(wcsDstRoot + wcsSrcFile + L'.' + L'o');
+		long long llMaxObjFileTimestamp;
+		if(bRebuildAll){
+			Output(L"  已配置为全部重新构建。");
+			llMaxObjFileTimestamp = LLONG_MAX;
+		} else {
+			Output(L"    正在比对文件时间戳...");
+			llMaxObjFileTimestamp = LLONG_MIN;
+		}
+		std::list<std::wstring> lstObjFilesUnneededToRebuild;
+		while(!lstCompilableFiles.empty()){
+			auto &wcsSrcFile = lstCompilableFiles.front().first;
+			auto &llTimestamp = lstCompilableFiles.front().second;
 
+			std::wstring wcsSrcFilePath(wcsSrcRoot + wcsSrcFile);
+			std::wstring wcsObjFilePath(wcsDstRoot + wcsSrcFile + L'.' + L'o');
+
+			long long llObjFileTimestamp;
+			bool bNeedCompiling = false;
+			if(bRebuildAll){
+				bNeedCompiling = true;
+			} else {
+				llObjFileTimestamp = GetFileTimestamp(wcsObjFilePath);
+				if(std::max(Project.llProjectFileTimestamp, llTimestamp) >= llObjFileTimestamp){
+					bNeedCompiling = true;
+				}
+			}
+			if(bNeedCompiling){
 				if(bVerbose){
-					Output(L"    将编译：" + wcsSrcFilePath);
+					Output(L"      将编译：" + wcsSrcFilePath);
 				}
 				BuildJobs.lstFilesToCompile.emplace_back(std::move(wcsSrcFilePath));
 				BuildJobs.lstFilesToLink.emplace_back(std::move(wcsObjFilePath));
-
-				lstCompilableFiles.pop_front();
-			}
-		} else {
-			Output(L"    正在分析源文件依赖关系...");
-			CheckDependencies(lstCompilableFiles, wcsSrcRoot, Project, ulProcessCount, wcsDatabasePath, bVerbose);
-
-			Output(L"    正在比对文件时间戳...");
-			std::list<std::wstring> lstObjFilesUnneededToRebuild;
-			while(!lstCompilableFiles.empty()){
-				auto &wcsSrcFile = lstCompilableFiles.front().first;
-				auto &llTimestamp = lstCompilableFiles.front().second;
-
-				std::wstring wcsSrcFilePath(wcsSrcRoot + wcsSrcFile);
-				std::wstring wcsObjFilePath(wcsDstRoot + wcsSrcFile + L'.' + L'o');
-
-				const long long llObjFileTimestamp = GetFileTimestamp(wcsObjFilePath);
-				if(std::max(Project.llProjectFileTimestamp, llTimestamp) >= llObjFileTimestamp){
-					if(bVerbose){
-						Output(L"      将编译：" + wcsSrcFilePath);
-					}
-					BuildJobs.lstFilesToCompile.emplace_back(std::move(wcsSrcFilePath));
-					BuildJobs.lstFilesToLink.emplace_back(std::move(wcsObjFilePath));
-				} else {
-					if(llMaxObjFileTimestamp < llObjFileTimestamp){
-						llMaxObjFileTimestamp = llObjFileTimestamp;
-					}
-
-					if(bVerbose){
-						Output(L"      已最新：" + wcsSrcFilePath);
-					}
-					lstObjFilesUnneededToRebuild.emplace_back(std::move(wcsObjFilePath));
-				}
-
-				lstCompilableFiles.pop_front();
-			}
-			bool bNeedLinking = false;
-			if(!BuildJobs.lstFilesToCompile.empty()){
-				bNeedLinking = true;
-			} else if(llMaxObjFileTimestamp >= GetFileTimestamp(Project.wcsOutputPath)){
-				bNeedLinking = true;
-			}
-			if(bNeedLinking){
-				BuildJobs.lstFilesToLink.splice(BuildJobs.lstFilesToLink.end(), lstObjFilesUnneededToRebuild);
 			} else {
-				BuildJobs.lstFilesToLink.clear();
+				if(llMaxObjFileTimestamp < llObjFileTimestamp){
+					llMaxObjFileTimestamp = llObjFileTimestamp;
+				}
+				if(bVerbose){
+					Output(L"      已最新：" + wcsSrcFilePath);
+				}
+				lstObjFilesUnneededToRebuild.emplace_back(std::move(wcsObjFilePath));
 			}
+
+			lstCompilableFiles.pop_front();
 		}
+
+		bool bNeedLinking = false;
+		if(!BuildJobs.lstFilesToCompile.empty()){
+			bNeedLinking = true;
+		} else if(llMaxObjFileTimestamp >= GetFileTimestamp(Project.wcsOutputPath)){
+			bNeedLinking = true;
+		}
+		if(bNeedLinking){
+			BuildJobs.lstFilesToLink.splice(BuildJobs.lstFilesToLink.end(), lstObjFilesUnneededToRebuild);
+		} else {
+			BuildJobs.lstFilesToLink.clear();
+		}
+
 		Output(L"    将编译 %lu 个文件。", (unsigned long)BuildJobs.lstFilesToCompile.size());
 		Output(L"    将链接 %lu 个文件。", (unsigned long)BuildJobs.lstFilesToLink.size());
 

@@ -188,6 +188,7 @@ namespace MCFBuild {
 		const std::map<std::wstring, std::wstring> &mapReplacements,
 		const wchar_t *pwszPrefix
 	);
+	extern void TouchFolder(const std::wstring &wcsPath);
 }
 
 #endif

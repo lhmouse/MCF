@@ -302,6 +302,10 @@ namespace MCFBuild {
 		Output(L"  正在统计需要重新编译的文件列表...");
 
 		const std::wstring wcsDatabasePath(wcsDstRoot + L"Dependencies.db");
+		std::size_t uBackSlashPos = wcsDatabasePath.rfind(L'\\');
+		if(uBackSlashPos != std::wstring::npos){
+			TouchFolder(wcsDatabasePath.substr(0, uBackSlashPos));
+		}
 		if(bRebuildAll){
 			Output(L"    正在删除旧的依赖关系数据库...");
 			if(::DeleteFileW(wcsDatabasePath.c_str()) == FALSE){

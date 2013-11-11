@@ -239,6 +239,9 @@ namespace {
 					{
 						LOCK_THROUGH(csNewDatabaseLock);
 
+						if(!bCached){
+							llTimestamp = LLONG_MAX;
+						}
 						NewDatabase.GetRawMap().emplace(wcsPath, std::move(Dependencies));
 					}
 				});
@@ -377,11 +380,13 @@ namespace MCFBuild {
 
 		bool bNeedLinking = false;
 		if(!BuildJobs.lstFilesToCompile.empty()){
+			Output(L"    部分源文件已更改，需重新链接。");
 			bNeedLinking = true;
 		} else if(llMaxObjFileTimestamp >= GetFileTimestamp(Project.wcsOutputPath)){
+			Output(L"    部分目标文件已更改，需重新链接。");
 			bNeedLinking = true;
 		} else if(bSourceFilesDeleted){
-			Output(L"      部分源文件已删除，需重新链接。");
+			Output(L"    部分源文件已删除，需重新链接。");
 			bNeedLinking = true;
 		}
 		if(bNeedLinking){

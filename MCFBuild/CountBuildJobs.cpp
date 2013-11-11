@@ -61,7 +61,7 @@ namespace {
 		return llWriteTime;
 	}
 
-	void CheckDependencies(
+	bool CheckDependencies(
 		std::list<std::pair<std::wstring, long long>> &lstCompilableFiles,
 		const std::wstring &wcsSrcRoot,
 		const PROJECT &Project,
@@ -86,16 +86,19 @@ namespace {
 				Scheduler.PushJob([&](std::size_t uThreadIndex){
 					const auto llSourceTimestamp = GetFileTimestamp(wcsPath);
 
-					DependencyDatabase::Dependencies Dependencies;
-					Dependencies.m_llTimestamp = llSourceTimestamp;
+					DependencyDatabase::Dependencies Dependencies{ LLONG_MIN, { } };
 
-					const auto pRecord = OldDatabase.Get(wcsPath);
-					if((pRecord != nullptr) && (pRecord->m_llTimestamp >= llSourceTimestamp)){
+					const auto iterDBItem = OldDatabase.GetRawMap().find(wcsPath);
+					bool bCached = false;
+					if(iterDBItem != OldDatabase.GetRawMap().end()){
+						Dependencies = std::move(iterDBItem->second);
+						OldDatabase.GetRawMap().erase(iterDBItem);
+						bCached = true;
+					}
+					if(bCached && (Dependencies.m_llTimestamp >= llSourceTimestamp)){
 						if(bVerbose){
 							Output(L"      已缓存：" + wcsPath);
 						}
-
-						Dependencies.m_setDependencyFiles = pRecord->m_setDependencyFiles;
 					} else {
 						if(bVerbose){
 							Output(L"      重分析：" + wcsPath);
@@ -148,6 +151,8 @@ namespace {
 						bool bFirst = true;
 
 						if(iterRead != wcsStdOut.cend()){
+							Dependencies.m_llTimestamp = llSourceTimestamp;
+
 							std::wstring wcsDependencyFile;
 							const auto Submit = [&]() -> void {
 								if(wcsDependencyFile.empty()){
@@ -164,6 +169,7 @@ namespace {
 									}
 									std::wstring wcsTemp;
 									wcsTemp.swap(wcsDependencyFile);
+
 									Dependencies.m_setDependencyFiles.insert(std::move(wcsTemp));
 								}
 							};
@@ -227,16 +233,13 @@ namespace {
 						}
 					}
 					for(const auto &wcsDependencyFile : Dependencies.m_setDependencyFiles){
-						const auto llDependencyTimestamp = GetFileTimestamp(wcsDependencyFile);
-						if(llTimestamp < llDependencyTimestamp){
-							llTimestamp = llDependencyTimestamp;
-						}
+						llTimestamp = std::max(llTimestamp, GetFileTimestamp(wcsDependencyFile));
 					}
 
 					{
 						LOCK_THROUGH(csNewDatabaseLock);
 
-						NewDatabase.Add(std::wstring(wcsPath)) = std::move(Dependencies);
+						NewDatabase.GetRawMap().emplace(wcsPath, std::move(Dependencies));
 					}
 				});
 			}
@@ -244,6 +247,14 @@ namespace {
 		Scheduler.Commit(ulProcessCount, L"      已分析文件：");
 
 		NewDatabase.SaveToFile(wcsDatabasePath);
+
+		if(bVerbose){
+			for(const auto &DBItem : OldDatabase.GetRawMap()){
+				Output(L"      已删除：" + DBItem.first);
+			}
+		}
+
+		return !OldDatabase.GetRawMap().empty();
 	}
 }
 
@@ -317,11 +328,11 @@ namespace MCFBuild {
 		}
 
 		Output(L"    正在分析源文件依赖关系...");
-		CheckDependencies(lstCompilableFiles, wcsSrcRoot, Project, ulProcessCount, wcsDatabasePath, bVerbose);
+		const bool bSourceFilesDeleted = CheckDependencies(lstCompilableFiles, wcsSrcRoot, Project, ulProcessCount, wcsDatabasePath, bVerbose);
 
 		long long llMaxObjFileTimestamp;
 		if(bRebuildAll){
-			Output(L"  已配置为全部重新构建。");
+			Output(L"    已配置为全部重新构建。");
 			llMaxObjFileTimestamp = LLONG_MAX;
 		} else {
 			Output(L"    正在比对文件时间戳...");
@@ -368,6 +379,9 @@ namespace MCFBuild {
 		if(!BuildJobs.lstFilesToCompile.empty()){
 			bNeedLinking = true;
 		} else if(llMaxObjFileTimestamp >= GetFileTimestamp(Project.wcsOutputPath)){
+			bNeedLinking = true;
+		} else if(bSourceFilesDeleted){
+			Output(L"      部分源文件已删除，需重新链接。");
 			bNeedLinking = true;
 		}
 		if(bNeedLinking){

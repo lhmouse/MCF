@@ -14,15 +14,20 @@ namespace MCFBuild {
 			long long m_llTimestamp;
 			std::set<std::wstring> m_setDependencyFiles;
 		};
+
+		typedef std::map<std::wstring, Dependencies> DEPENDENCY_MAP;
 	private:
-		std::map<std::wstring, Dependencies> xm_mapDependencies;
+		DEPENDENCY_MAP xm_mapDependencies;
+	public:
+		const DEPENDENCY_MAP &GetRawMap() const {
+			return xm_mapDependencies;
+		}
+		DEPENDENCY_MAP &GetRawMap(){
+			return xm_mapDependencies;
+		}
 	public:
 		void SaveToFile(const std::wstring &wcsPath) const;
 		void LoadFromFile(const std::wstring &wcsPath);
-
-		const Dependencies *Get(const std::wstring &wcsKey) const;
-		Dependencies &Add(std::wstring &&wcsKey);
-		bool Remove(const std::wstring &wcsKey);
 	};
 }
 

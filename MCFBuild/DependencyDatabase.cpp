@@ -117,22 +117,3 @@ void DependencyDatabase::LoadFromFile(const std::wstring &wcsPath){
 
 	xm_mapDependencies.swap(mapDependencies);
 }
-
-const DependencyDatabase::Dependencies *DependencyDatabase::Get(const std::wstring &wcsKey) const {
-	const auto iter = xm_mapDependencies.find(wcsKey);
-	if(iter == xm_mapDependencies.end()){
-		return nullptr;
-	}
-	return &iter->second;
-}
-DependencyDatabase::Dependencies &DependencyDatabase::Add(std::wstring &&wcsKey){
-	return xm_mapDependencies[std::move(wcsKey)];
-}
-bool DependencyDatabase::Remove(const std::wstring &wcsKey){
-	const auto iter = xm_mapDependencies.find(wcsKey);
-	if(iter == xm_mapDependencies.end()){
-		return false;
-	}
-	xm_mapDependencies.erase(iter);
-	return true;
-}

@@ -133,7 +133,7 @@ namespace {
 			const auto wcsInheritedFrom(U8sToWcs(*pu8sInheritedFrom));
 			std::size_t uPos = 0;
 			do {
-				const auto uBegin = uPos;
+				auto uBegin = uPos;
 				auto uEnd = wcsInheritedFrom.find(L',', uPos + 1);
 				if(uEnd == std::wstring::npos){
 					uEnd = wcsInheritedFrom.size();
@@ -141,15 +141,21 @@ namespace {
 				} else {
 					uPos = uEnd + 1;
 				}
+				while(uBegin != uEnd){
+					if((wcsInheritedFrom[uBegin] == L' ') || (wcsInheritedFrom[uBegin] == L'\t')){
+						++uBegin;
+					} else if((wcsInheritedFrom[uEnd - 1] == L' ') || (wcsInheritedFrom[uEnd - 1] == L'\t')){
+						--uEnd;
+					} else {
+						break;
+					}
+				}
 				if(uBegin == uEnd){
 					Error(wcsPrefix + L"配置包“" + wcsID + L"”指定了一个空的继承包，已忽略。");
 				} else {
 					auto wcsSingleInheritedFrom(wcsInheritedFrom.substr(uBegin, uEnd));
 					if(wcsSingleInheritedFrom == wcsID){
 						throw Exception(ERROR_INVALID_DATA, L"配置包“" + wcsID + L"”指定了自身作为继承包。");
-					}
-					if(bVerbose){
-						Output(wcsPrefix + L"  继承自：" + wcsSingleInheritedFrom);
 					}
 					vecInheritedFrom.emplace_back(std::move(wcsSingleInheritedFrom));
 				}
@@ -164,7 +170,7 @@ namespace {
 
 		for(const auto &pkgHistory : vecPackages){
 			if(pkgHistory.first == wcsID){
-				throw Exception(ERROR_INVALID_DATA, L"加载配置包“" + wcsID + L"”时侦测到循环继承。");
+				throw Exception(ERROR_INVALID_DATA, L"加载配置包“" + wcsID + L"”时侦测到重复继承。");
 			}
 		}
 		vecPackages.emplace_back(std::move(wcsID), PACKAGEW());
@@ -184,8 +190,9 @@ namespace {
 			Wrapper::LoadPackage(vecPackages.back().second, *pPackage);
 		}
 
-		for(const auto &wcsSingleInheritedFrom : vecInheritedFrom){
-			LoadPackages(vecPackages, Project, wcsSingleInheritedFrom, wcsPrefix + L"  ", bVerbose);
+		while(!vecInheritedFrom.empty()){
+			LoadPackages(vecPackages, Project, vecInheritedFrom.back(), wcsPrefix + L"  ", bVerbose);
+			vecInheritedFrom.pop_back();
 		}
 	}
 

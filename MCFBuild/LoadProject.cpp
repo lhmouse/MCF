@@ -117,30 +117,49 @@ namespace {
 	void LoadPackages(
 		std::vector<std::pair<std::wstring, PACKAGEW>> &vecPackages,
 		const MCF::NotationClass &Project,
-		std::wstring &&wcsID
+		const std::wstring &wcsID,
+		const std::wstring &wcsPrefix,
+		bool bVerbose
 	){
-		const std::string u8sID(WcsToU8s(wcsID));
+		Output(wcsPrefix + L"正在加载配置包“" + wcsID + L"”...");
+
+		const auto u8sID(WcsToU8s(wcsID));
 
 		const MCF::NotationClass::Package *const pPackage = Project.OpenPackage(u8sID.c_str());
-		const std::string *const pu8sInheritedFrom = Project.GetValue(nullptr, u8sID.c_str());
-		std::wstring wcsInheritedFrom;
 
-		if(pu8sInheritedFrom == nullptr){
+		std::vector<std::wstring> vecInheritedFrom;
+		const std::string *const pu8sInheritedFrom = Project.GetValue(nullptr, u8sID.c_str());
+		if(pu8sInheritedFrom != nullptr){
+			const auto wcsInheritedFrom(U8sToWcs(*pu8sInheritedFrom));
+			std::size_t uPos = 0;
+			do {
+				const auto uBegin = uPos;
+				auto uEnd = wcsInheritedFrom.find(L',', uPos + 1);
+				if(uEnd == std::wstring::npos){
+					uEnd = wcsInheritedFrom.size();
+					uPos = std::wstring::npos;
+				} else {
+					uPos = uEnd + 1;
+				}
+				if(uBegin == uEnd){
+					Error(wcsPrefix + L"配置包“" + wcsID + L"”指定了一个空的继承包，已忽略。");
+				} else {
+					auto wcsSingleInheritedFrom(wcsInheritedFrom.substr(uBegin, uEnd));
+					if(wcsSingleInheritedFrom == wcsID){
+						throw Exception(ERROR_INVALID_DATA, L"配置包“" + wcsID + L"”指定了自身作为继承包。");
+					}
+					if(bVerbose){
+						Output(wcsPrefix + L"  继承自：" + wcsSingleInheritedFrom);
+					}
+					vecInheritedFrom.emplace_back(std::move(wcsSingleInheritedFrom));
+				}
+			} while(uPos != std::wstring::npos);
+		}
+
+		if(vecInheritedFrom.empty()){
 			if(pPackage == nullptr){
 				throw Exception(ERROR_INVALID_DATA, L"配置包“" + wcsID + L"”没有定义。");
 			}
-
-			Output(L"  正在加载配置包“" + wcsID + L"”...");
-		} else {
-			wcsInheritedFrom = U8sToWcs(*pu8sInheritedFrom);
-
-			if(pu8sInheritedFrom->empty()){
-				throw Exception(ERROR_INVALID_DATA, L"配置包“" + wcsID + L"”指定了继承选项，但没有指定被继承的配置包。");
-			} else if(*pu8sInheritedFrom == u8sID){
-				throw Exception(ERROR_INVALID_DATA, L"配置包“" + wcsID + L"”继承自自身。");
-			}
-
-			Output(L"  正在加载配置包“" + wcsID + L"”（继承自“" + wcsInheritedFrom + L"”）...");
 		}
 
 		for(const auto &pkgHistory : vecPackages){
@@ -164,8 +183,9 @@ namespace {
 
 			Wrapper::LoadPackage(vecPackages.back().second, *pPackage);
 		}
-		if(pu8sInheritedFrom != nullptr){
-			LoadPackages(vecPackages, Project, std::move(wcsInheritedFrom));
+
+		for(const auto &wcsSingleInheritedFrom : vecInheritedFrom){
+			LoadPackages(vecPackages, Project, wcsSingleInheritedFrom, wcsPrefix + L"  ", bVerbose);
 		}
 	}
 
@@ -405,7 +425,7 @@ namespace MCFBuild {
 		PROJECT ret;
 
 		std::vector<std::pair<std::wstring, PACKAGEW>> vecPackages;
-		LoadPackages(vecPackages, ParseProject(GetProjFileContents(&ret.llProjectFileTimestamp, wcsProjFile)), std::wstring(wcsConfig));
+		LoadPackages(vecPackages, ParseProject(GetProjFileContents(&ret.llProjectFileTimestamp, wcsProjFile)), wcsConfig, L"  ", bVerbose);
 
 		PACKAGEW pkgTop;
 		while(!vecPackages.empty()){

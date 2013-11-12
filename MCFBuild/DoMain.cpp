@@ -192,7 +192,7 @@ namespace MCFBuild {
 		Output(L"目标文件根目录：" + wcsDstRoot);
 
 		if(wcsOutputPath.back() == L'\\'){
-			Output(L"输出文件路径　：" + wcsOutputPath + L"<使用项目缺省值>");
+			Output(L"输出文件路径　：<使用项目缺省值>");
 		} else {
 			Output(L"输出文件路径　：" + wcsOutputPath);
 		}

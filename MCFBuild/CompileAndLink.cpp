@@ -144,28 +144,31 @@ namespace {
 		auto iterSrcFile = BuildJobs.lstFilesToCompile.cbegin();
 		auto iterObjFile = BuildJobs.lstFilesToLink.cbegin();
 		do {
-			Scheduler.PushJob([iterSrcFile, iterObjFile, &BuildJobs, &Project, bVerbose](std::size_t uThreadIndex){
+			const std::wstring wcsSrcFile(*iterSrcFile);
+			const std::wstring wcsObjFile(*iterObjFile);
+
+			Scheduler.PushJob([wcsSrcFile, wcsObjFile, &BuildJobs, &Project, bVerbose](std::size_t uThreadIndex){
 				std::map<std::wstring, std::wstring> mapCommandLineReplacements;
 				if(!BuildJobs.wcsGCHStub.empty()){
 					mapCommandLineReplacements.emplace(L"GCH", L"-include \"" + BuildJobs.wcsGCHStub + L'\"');
 				}
-				mapCommandLineReplacements.emplace(L"IN", L'\"' + *iterSrcFile + L'\"');
-				mapCommandLineReplacements.emplace(L"OUT", L'\"' + *iterObjFile + L'\"');
+				mapCommandLineReplacements.emplace(L"IN", L'\"' + wcsSrcFile + L'\"');
+				mapCommandLineReplacements.emplace(L"OUT", L'\"' + wcsObjFile + L'\"');
 
 				const auto wcsCommandLine = MakeCommandLine(
-					Project.mapCompilers.at(GetFileExtension(*iterSrcFile)).wcsCommandLine,
+					Project.mapCompilers.at(GetFileExtension(wcsSrcFile)).wcsCommandLine,
 					mapCommandLineReplacements,
 					L"    "
 				);
 				if(bVerbose){
 					Output(L"    命令行：" + wcsCommandLine);
 				} else {
-					Output(L"    文件：" + *iterSrcFile);
+					Output(L"    文件：" + wcsSrcFile);
 				}
 
-				const std::size_t uBackSlashPos = iterObjFile->rfind(L'\\');
+				const std::size_t uBackSlashPos = wcsObjFile.rfind(L'\\');
 				if(uBackSlashPos != std::wstring::npos){
-					TouchFolder(iterObjFile->substr(0, uBackSlashPos));
+					TouchFolder(wcsObjFile.substr(0, uBackSlashPos));
 				}
 
 				ProcessProxy Process;

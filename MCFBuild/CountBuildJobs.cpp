@@ -379,7 +379,9 @@ namespace MCFBuild {
 		}
 
 		bool bNeedLinking = false;
-		if(!BuildJobs.lstFilesToCompile.empty()){
+		if(bRebuildAll){
+			bNeedLinking = true;
+		} else if(!BuildJobs.lstFilesToCompile.empty()){
 			Output(L"    部分源文件已更改，需重新链接。");
 			bNeedLinking = true;
 		} else if(llMaxObjFileTimestamp >= GetFileTimestamp(Project.wcsOutputPath)){

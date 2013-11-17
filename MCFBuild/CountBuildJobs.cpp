@@ -291,7 +291,10 @@ namespace MCFBuild {
 			} else {
 				if(!bRebuildAll){
 					const long long llGCHTimestamp = GetFileTimestamp(wcsGCHStub + L".gch");
-					if(Project.llProjectFileTimestamp >= llGCHTimestamp){
+					if(llGCHTimestamp == LLONG_MIN){
+						Output(L"    预编译头文件不存在，需要全部重新构建。");
+						bRebuildAll = true;
+					} else if(Project.llProjectFileTimestamp >= llGCHTimestamp){
 						Output(L"    项目文件已经更改，需要全部重新构建。");
 						bRebuildAll = true;
 					} else if(llGCHSrcTimestamp >= llGCHTimestamp){
@@ -382,13 +385,13 @@ namespace MCFBuild {
 		if(bRebuildAll){
 			bNeedLinking = true;
 		} else if(!BuildJobs.lstFilesToCompile.empty()){
-			Output(L"    部分源文件已更改，需重新链接。");
+			Output(L"      部分源文件已更改，需重新链接。");
 			bNeedLinking = true;
 		} else if(llMaxObjFileTimestamp >= GetFileTimestamp(Project.wcsOutputPath)){
-			Output(L"    部分目标文件已更改，需重新链接。");
+			Output(L"      部分目标文件已更改，需重新链接。");
 			bNeedLinking = true;
 		} else if(bSourceFilesDeleted){
-			Output(L"    部分源文件已删除，需重新链接。");
+			Output(L"      部分源文件已删除，需重新链接。");
 			bNeedLinking = true;
 		}
 		if(bNeedLinking){

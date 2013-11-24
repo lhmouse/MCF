@@ -100,9 +100,11 @@ namespace {
 
 				if(::VerQueryValueW(pFileVersion, (wcsPrefix + L"FileDescription").c_str(), &pBuffer, &uSize) != FALSE){
 					ret.wcsFileDescription.assign((const wchar_t *)pBuffer, uSize);
+					ret.wcsFileDescription.resize(std::wcslen(ret.wcsFileDescription.c_str()));
 				}
 				if(::VerQueryValueW(pFileVersion, (wcsPrefix + L"LegalCopyright").c_str(), &pBuffer, &uSize) != FALSE){
 					ret.wcsLegalCopyright.assign((const wchar_t *)pBuffer, uSize);
+					ret.wcsLegalCopyright.resize(std::wcslen(ret.wcsLegalCopyright.c_str()));
 				}
 			}
 		}

@@ -1,0 +1,14 @@
+// 这个文件是 MCF 的一部分。
+// 有关具体授权说明，请参阅 MCFLicense.txt。
+// Copyleft 2013. LH_Mouse. All wrongs reserved.
+
+#include "../../env/_crtdef.h"
+#include "../../env/heap.h"
+
+__MCF_CRT_NOINLINE void *realloc(void *ptr, size_t cb){
+	if(ptr == NULL){
+		return __MCF_CRTHeapAlloc(cb, __builtin_return_address(0));
+	} else {
+		return __MCF_CRTHeapReAlloc((unsigned char *)ptr, cb, __builtin_return_address(0));
+	}
+}

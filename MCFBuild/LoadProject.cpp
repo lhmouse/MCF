@@ -384,22 +384,48 @@ namespace {
 	}
 
 	template<typename... T>
-	const PACKAGEW *GetPackage(const PACKAGEW &pkgTop, const wchar_t *pwszPrefix, bool bRequired, T... PathParts){
+		const PACKAGEW *GetPackage(
+		const PACKAGEW &pkgTop,
+		const wchar_t *pwszPrefix,
+		bool bRequired,
+		T... PathParts
+	){
 		std::wstring wcsHistory;
 		if(pwszPrefix != nullptr){
 			wcsHistory.assign(pwszPrefix);
 		}
-		return DoGetPackage(pkgTop, bRequired, wcsHistory, nullptr, static_cast<const wchar_t *>(PathParts)..., nullptr);
+		return DoGetPackage(
+			pkgTop,
+			bRequired,
+			wcsHistory,
+			nullptr,
+			static_cast<const wchar_t *>(PathParts)...,
+			nullptr
+		);
 	}
 
 	template<typename P, typename... T>
-	std::wstring GetExpandedValue(const PACKAGEW &pkgTop, const PACKAGEW &pkgExpandFrom, const wchar_t *pwszPrefix, bool bRequired, P Placeholder, T... PathParts){
+		std::wstring GetExpandedValue(
+		const PACKAGEW &pkgTop,
+		const PACKAGEW &pkgExpandFrom,
+		const wchar_t *pwszPrefix,
+		bool bRequired,
+		P Placeholder,
+		T... PathParts
+	){
 		std::wstring wcsHistory;
 		if(pwszPrefix != nullptr){
 			wcsHistory.assign(pwszPrefix);
 		}
 		const wchar_t *pwszID = nullptr;
-		const PACKAGEW *const ppkgInWhich = DoGetPackage(pkgTop, bRequired, wcsHistory, &pwszID, static_cast<const wchar_t *>(Placeholder), static_cast<const wchar_t *>(PathParts)...);
+		const PACKAGEW *const ppkgInWhich = DoGetPackage(
+			pkgTop,
+			bRequired,
+			wcsHistory,
+			&pwszID,
+			static_cast<const wchar_t *>(Placeholder),
+			static_cast<const wchar_t *>(PathParts)...
+		);
 		if(ppkgInWhich != nullptr){
 			const auto iter = ppkgInWhich->mapValues.find(pwszID);
 			if(iter != ppkgInWhich->mapValues.end()){
@@ -414,7 +440,13 @@ namespace {
 		return std::wstring();
 	}
 	template<typename P, typename... T>
-	std::wstring GetExpandedValue(const PACKAGEW &pkgTop, const wchar_t *pwszPrefix, bool bRequired, P Placeholder, T... PathParts){
+		std::wstring GetExpandedValue(
+		const PACKAGEW &pkgTop,
+		const wchar_t *pwszPrefix,
+		bool bRequired,
+		P Placeholder,
+		T... PathParts
+	){
 		return GetExpandedValue(pkgTop, pkgTop, pwszPrefix, bRequired, Placeholder, PathParts...);
 	}
 }

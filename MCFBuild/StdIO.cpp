@@ -25,17 +25,9 @@ namespace MCFBuild {
 			wcsTemp.push_back(L'\n');
 
 			DWORD dwBytesWritten;
-			CONSOLE_SCREEN_BUFFER_INFO ConsoleScreenBufferInfo;
-			if(::GetConsoleScreenBufferInfo(hOut, &ConsoleScreenBufferInfo) != FALSE){
+			DWORD dwMode;
+			if(::GetConsoleMode(hOut, &dwMode) != FALSE){
 				LOCK_THROUGH(g_PrintLock);
-
-				const std::size_t uColumnsM1 = (std::size_t)ConsoleScreenBufferInfo.srWindow.Right;
-				std::wstring wcsBlankLine;
-				wcsBlankLine.reserve(uColumnsM1 + 1);
-				wcsBlankLine.push_back(L'\r');
-				wcsBlankLine.append(uColumnsM1, L' ');
-				wcsBlankLine.push_back(L'\r');
-				WriteConsoleW(hOut, wcsBlankLine.c_str(), wcsBlankLine.size(), &dwBytesWritten, nullptr);
 
 				nRet = ::WriteConsoleW(hOut, wcsTemp.c_str(), wcsTemp.size(), &dwBytesWritten, nullptr);
 			} else {

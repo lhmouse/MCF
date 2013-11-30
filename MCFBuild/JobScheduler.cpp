@@ -64,7 +64,7 @@ void JobScheduler::xPrintStatus(bool bStartsNewLine) const {
 	}
 
 	Status(
-		L"%ls%*lu / %lu %6lu%%%lc",
+		L"%ls%*lu / %lu %6lu%%%lc  ",
 		xm_pwszPrefix,
 		nDigitCount,
 		(unsigned long)xm_uCountCompleted,
@@ -117,7 +117,7 @@ void JobScheduler::Commit(std::size_t uProcessCount, const wchar_t *pwszPrefix){
 	for(std::size_t i = 0; i < uProcessCount; ++i){
 		::ResumeThread(vecNakedHandles[i]);
 	}
-	while(::WaitForMultipleObjects(vecNakedHandles.size(), vecNakedHandles.data(), TRUE, 15) == WAIT_TIMEOUT){
+	while(::WaitForMultipleObjects(vecNakedHandles.size(), vecNakedHandles.data(), TRUE, 100) == WAIT_TIMEOUT){
 		LOCK_THROUGH(xm_csLock);
 
 		xPrintStatus(false);

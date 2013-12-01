@@ -505,22 +505,24 @@ namespace MCFBuild {
 			}
 		}
 
-		const auto &mapRawPreCompiledHeaders = GetPackage(pkgTop, nullptr, true, L"PreCompiledHeaders")->mapPackages;
-		for(const auto &RawPreCompiledHeaderItem : mapRawPreCompiledHeaders){
-			const std::wstring wcsPrefix(L"PreCompiledHeaders/" + RawPreCompiledHeaderItem.first + L'/');
-			auto wcsSourceFile = GetExpandedValue(RawPreCompiledHeaderItem.second, pkgTop, wcsPrefix.c_str(), true, L"SourceFile");
-			auto wcsCommandLine = GetExpandedValue(RawPreCompiledHeaderItem.second, pkgTop, wcsPrefix.c_str(), true, L"CommandLine");
+		const auto pmapRawPreCompiledHeaders = GetPackage(pkgTop, nullptr, false, L"PreCompiledHeaders");
+		if(pmapRawPreCompiledHeaders != nullptr){
+			for(const auto &RawPreCompiledHeaderItem : pmapRawPreCompiledHeaders->mapPackages){
+				const std::wstring wcsPrefix(L"PreCompiledHeaders/" + RawPreCompiledHeaderItem.first + L'/');
+				auto wcsSourceFile = GetExpandedValue(RawPreCompiledHeaderItem.second, pkgTop, wcsPrefix.c_str(), true, L"SourceFile");
+				auto wcsCommandLine = GetExpandedValue(RawPreCompiledHeaderItem.second, pkgTop, wcsPrefix.c_str(), true, L"CommandLine");
 
-			auto &PreCompiledHeader = ret.mapPreCompiledHeaders[RawPreCompiledHeaderItem.first];
-			PreCompiledHeader.wcsSourceFile		= std::move(wcsSourceFile);
-			PreCompiledHeader.wcsCommandLine	= std::move(wcsCommandLine);
-		}
-		if(bVerbose){
-			Output(L"  预编译头：");
-			for(const auto &PreCompiledHeaderItem : ret.mapPreCompiledHeaders){
-				Output(L"    名称“" + PreCompiledHeaderItem.first + L"”：");
-				Output(L"      源文件：" + PreCompiledHeaderItem.second.wcsSourceFile);
-				Output(L"      命令行：" + PreCompiledHeaderItem.second.wcsCommandLine);
+				auto &PreCompiledHeader = ret.mapPreCompiledHeaders[RawPreCompiledHeaderItem.first];
+				PreCompiledHeader.wcsSourceFile		= std::move(wcsSourceFile);
+				PreCompiledHeader.wcsCommandLine	= std::move(wcsCommandLine);
+			}
+			if(bVerbose){
+				Output(L"  预编译头：");
+				for(const auto &PreCompiledHeaderItem : ret.mapPreCompiledHeaders){
+					Output(L"    名称“" + PreCompiledHeaderItem.first + L"”：");
+					Output(L"      源文件：" + PreCompiledHeaderItem.second.wcsSourceFile);
+					Output(L"      命令行：" + PreCompiledHeaderItem.second.wcsCommandLine);
+				}
 			}
 		}
 

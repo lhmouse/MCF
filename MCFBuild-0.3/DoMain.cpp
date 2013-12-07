@@ -19,6 +19,7 @@ namespace MCFBuild {
 		bool bShowHelp = false;
 		std::wstring wcsProjFile;
 		std::wstring wcsConfig;
+		std::wstring wcsSwitchToPath;
 		std::wstring wcsSrcRoot;
 		std::wstring wcsDstRoot;
 		std::wstring wcsOutputPath;
@@ -45,6 +46,12 @@ namespace MCFBuild {
 					throw Exception(ERROR_INVALID_PARAMETER, std::wstring(L"参数“") + pwszParam + L"”缺少路径。");
 				}
 				wcsProjFile = pwszParam + 2;
+				break;
+			case L'C':
+				if(pwszParam[2] == 0) {
+					throw Exception(ERROR_INVALID_PARAMETER, std::wstring(L"参数“") + pwszParam + L"”缺少路径。");
+				}
+				wcsSwitchToPath = pwszParam + 2;
 				break;
 			case L's':
 				if(pwszParam[2] == 0) {
@@ -108,8 +115,9 @@ namespace MCFBuild {
 
 		if(bShowHelp){
 			Output(L"命令行：");
-			Output(L"MCFBuild [-h] [-p项目文件] [配置包] [-s源文件根目录] [-d目标文件根目录]");
-			Output(L"         [-o输出文件路径] [-j进程数] [-D变量名[=值]] [-v] [-R]");
+			Output(L"MCFBuild [-h] [-p项目文件] [配置包] [-C临时切换至路径]");
+			Output(L"         [-s源文件根目录] [-d目标文件根目录] [-o输出文件路径]");
+			Output(L"         [-j进程数] [-D变量名[=值]] [-v] [-R]");
 			Output();
 			Output(L"  -h                显示此帮助信息。");
 			Output(L"  -p项目文件        指定保存有项目配置信息的文件。");
@@ -117,6 +125,7 @@ namespace MCFBuild {
 			Output(L"                    此参数的默认值是 [源文件根目录]\\MCFBuild.mcfproj。");
 			Output(L"  配置包            指定使用的配置包。配置包必须在项目文件中定义。");
 			Output(L"                    此参数的默认值是 Default。");
+			Output(L"  -C临时切换至路径  在构建以前切换工作目录到这个路径。");
 			Output(L"  -s源文件根目录    指定所有源文件的位置。");
 			Output(L"                    MCFBuild 以该目录为根节点递归构建所有文件。");
 			Output(L"                    此参数的默认值是当前目录。");
@@ -137,6 +146,13 @@ namespace MCFBuild {
 			Output();
 			Output(L"除路径以外，如无特殊说明，其他参数都是大小写敏感的。");
 			return;
+		}
+
+		if(!wcsSwitchToPath.empty()){
+			if(::SetCurrentDirectoryW(wcsSwitchToPath.c_str()) == FALSE){
+				const DWORD dwError = ::GetLastError();
+				throw Exception(dwError, L"切换到目录“" + wcsSwitchToPath + L"”失败。");
+			}
 		}
 
 		if(wcsConfig.empty()){

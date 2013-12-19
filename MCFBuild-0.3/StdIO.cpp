@@ -38,6 +38,7 @@ namespace MCFBuild {
 					nRet = ::WriteFile(hOut, u8sConvtered.c_str(), u8sConvtered.size(), &dwBytesWritten, nullptr);
 				}
 			}
+			::FlushFileBuffers(hOut);
 		}
 		return nRet;
 	}
@@ -84,6 +85,7 @@ namespace MCFBuild {
 				DWORD dwBytesWritten;
 				nRet = ::WriteConsoleW(hOut, wcsTemp.c_str(), wcsTemp.size(), &dwBytesWritten, nullptr);
 			}
+			::FlushFileBuffers(hOut);
 		}
 		return nRet;
 	}

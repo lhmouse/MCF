@@ -7,24 +7,16 @@
 
 #include "../../env/_crtdef.h"
 
-__MCF_CRT_EXTERN char *_strcpyn(char *__restrict__ dst, size_t cap, const char *__restrict__ src);
-__MCF_CRT_EXTERN wchar_t *_wcscpyn(wchar_t *__restrict__ dst, size_t cap, const wchar_t *__restrict__ src);
+__MCF_CRT_EXTERN char *_strcpyout(char *restrict dst, const char *restrict src);
+__MCF_CRT_EXTERN wchar_t *_wcscpyout(wchar_t *restrict dst, const wchar_t *restrict src);
 #ifndef _UNICODE
-#	define	_tcscpyn	_strcpyn
+#	define	_tcscpyout	_strcpyout
 #else
-#	define	_tcscpyn	_wcscpyn
+#	define	_tcscpyout	_wcscpyout
 #endif
 
-__MCF_CRT_EXTERN void _strcatp(char *__restrict__ *pdst, const char *end, const char *__restrict__ src);
-__MCF_CRT_EXTERN void _wcscatp(wchar_t *__restrict__ *pdst, const wchar_t *end, const wchar_t *__restrict__ src);
-#ifndef _UNICODE
-#	define	_tcscatp	_strcatp
-#else
-#	define	_tcscatp	_wcscatp
-#endif
-
-__MCF_CRT_EXTERN char *_strtok_r(char *__restrict__ s1, const char *__restrict__ s2, char **ctx);
-__MCF_CRT_EXTERN wchar_t *_wcstok_r(wchar_t *__restrict__ s1, const wchar_t *__restrict__ s2, wchar_t **ctx);
+__MCF_CRT_EXTERN char *_strtok_r(char *restrict s1, const char *restrict s2, char **ctx);
+__MCF_CRT_EXTERN wchar_t *_wcstok_r(wchar_t *restrict s1, const wchar_t *restrict s2, wchar_t **ctx);
 #ifndef _UNICODE
 #	define	_tcstok_r	_strtok_r
 #else

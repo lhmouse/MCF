@@ -41,16 +41,23 @@ static void PumpAtExits(){
 	}
 }
 
-__MCF_CRT_EXTERN void __MCF_CRTBegin(){
-	__MCF_CRTDaemonInitialize();
-	__MCF_CRTHeapInitialize();
-	__MCF_CRTTlsEnvInitialize();
+__MCF_CRT_EXTERN unsigned long __MCF_CRTBegin(){
+	DWORD dwRet;
 
-	__main();
-	__MCF_CRTThreadInitialize();
+	if((dwRet = __MCF_CRTDaemonInitialize()) == ERROR_SUCCESS){
+		if((dwRet = __MCF_CRTHeapInitialize()) == ERROR_SUCCESS){
+			if((dwRet = __MCF_CRTTlsEnvInitialize()) == ERROR_SUCCESS){
+				__main();
+				return ERROR_SUCCESS;
+			}
+			__MCF_CRTHeapUninitialize();
+		}
+		__MCF_CRTDaemonUninitialize();
+	}
+
+	return dwRet;
 }
 __MCF_CRT_EXTERN void __MCF_CRTEnd(){
-	__MCF_CRTThreadUninitialize();
 	PumpAtExits();
 
 	__MCF_CRTTlsEnvUninitialize();

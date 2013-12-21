@@ -17,6 +17,6 @@ namespace MCF {
 	}
 }
 
-#define COUNTOF(ar)	(sizeof(*::MCF::__MCF::CountOfHelper((ar))))
+#define COUNTOF(ar)		(sizeof(*::MCF::__MCF::CountOfHelper((ar))))
 
 #endif

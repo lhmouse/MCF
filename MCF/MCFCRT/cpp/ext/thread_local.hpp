@@ -10,6 +10,7 @@
 #include <tuple>
 #include <type_traits>
 #include "../../env/thread.h"
+#include "../../env/daemon.h"
 
 namespace MCF {
 	namespace __MCF {
@@ -43,14 +44,31 @@ namespace MCF {
 			const std::intptr_t xm_nUniqueID;
 			const std::tuple<CTOR_PARAM_T...> xm_CtorParams;
 		public:
-			TlsWrapper(CTOR_PARAM_T ...Params) : xm_nUniqueID(__sync_add_and_fetch(&s_nCounter, 1)), xm_CtorParams(std::move(Params)...) { }
+			TlsWrapper(CTOR_PARAM_T ...Params) :
+				xm_nUniqueID(__sync_add_and_fetch(&s_nCounter, 1)),
+				xm_CtorParams(std::move(Params)...)
+			{
+			}
 			~TlsWrapper(){ ::__MCF_CRTDeleteTls(xm_nUniqueID); }
 
 			TlsWrapper(const TlsWrapper &) = delete;
 			void operator=(const TlsWrapper &) = delete;
 		public:
 			OBJECT_T *Get() const {
-				return (OBJECT_T *)::__MCF_CRTRetrieveTls(xm_nUniqueID, sizeof(OBJECT_T), &xCtorJumper, (std::intptr_t)this, &xDtorJumper);
+				const auto pRet = (OBJECT_T *)::__MCF_CRTRetrieveTls(
+					xm_nUniqueID,
+					sizeof(OBJECT_T),
+					&xCtorJumper,
+					(std::intptr_t)this,
+					&xDtorJumper
+				);
+				if(pRet == nullptr){
+					::__MCF_Bail(
+						L"__MCF_CRTRetrieveTls() 返回了一个空指针。\n"
+						"如果这不是由于系统内存不足造成的，请确保不要在静态对象的构造函数或析构函数中访问 TLS。"
+					);
+				}
+				return pRet;
 			}
 			void Release() const {
 				::__MCF_CRTDeleteTls(xm_nUniqueID);
@@ -67,11 +85,12 @@ namespace MCF {
 		template<class OBJECT_T, class... CTOR_PARAM_T>
 		volatile std::intptr_t TlsWrapper<OBJECT_T, CTOR_PARAM_T...>::s_nCounter = 0;
 
-		template<class OBJ_T, class... CTOR_PARAM_T>
-		auto TlsWrapperTypeHelper(const CTOR_PARAM_T &...) -> TlsWrapper<OBJ_T, typename std::decay<const CTOR_PARAM_T>::type...>;
+		template<class OBJECT_T, class... CTOR_PARAM_T>
+		auto TlsWrapperTypeHelper(const CTOR_PARAM_T &...)
+			-> TlsWrapper<OBJECT_T, typename std::decay<const CTOR_PARAM_T>::type...>;
 	}
 }
 
-#define THREAD_LOCAL(type, id, ...)	decltype(::MCF::__MCF::TlsWrapperTypeHelper<type>(__VA_ARGS__)) id{__VA_ARGS__}
+#define THREAD_LOCAL(type, id, ...)		decltype(::MCF::__MCF::TlsWrapperTypeHelper<type>(__VA_ARGS__)) id{__VA_ARGS__}
 
 #endif

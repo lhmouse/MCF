@@ -6,14 +6,13 @@
 
 #include "heap.h"
 #include "heap_dbg.h"
-#include <assert.h>
 #include <string.h>
 #include <windows.h>
 
 static CRITICAL_SECTION			g_csHeapLock;
 static __MCF_BAD_ALLOC_HANDLER	g_BadAllocHandler;
 
-__MCF_CRT_EXTERN void __MCF_CRTHeapInitialize(){
+__MCF_CRT_EXTERN unsigned long __MCF_CRTHeapInitialize(){
 	InitializeCriticalSectionAndSpinCount(&g_csHeapLock, 0x400);
 	g_BadAllocHandler.pfnProc = NULL;
 
@@ -31,6 +30,8 @@ __MCF_CRT_EXTERN void __MCF_CRTHeapInitialize(){
 		HeapSetInformation(hProcessHeap, HeapEnableTerminationOnCorruption, NULL, 0);
 	}
 #endif
+
+	return ERROR_SUCCESS;
 }
 __MCF_CRT_EXTERN void __MCF_CRTHeapUninitialize(){
 #ifdef __MCF_CRT_HEAPDBG_ON
@@ -41,13 +42,9 @@ __MCF_CRT_EXTERN void __MCF_CRTHeapUninitialize(){
 }
 
 __MCF_CRT_EXTERN unsigned char *__MCF_CRTHeapAlloc(size_t uSize, const void *pRetAddr __attribute__((unused))){
-	if(uSize > 0x7FFFFFFFul){
-		return NULL;
-	}
-
 #ifdef __MCF_CRT_HEAPDBG_ON
 	const size_t uRawSize = __MCF_CRTHeapDbgGetRawSize(uSize);
-	if(uRawSize > 0x7FFFFFFFul){
+	if((uSize & ~uRawSize & ((size_t)1 << (sizeof(size_t) * 8 - 1))) != 0){
 		return NULL;
 	}
 #else
@@ -72,13 +69,9 @@ __MCF_CRT_EXTERN unsigned char *__MCF_CRTHeapAlloc(size_t uSize, const void *pRe
 	return pRet;
 }
 __MCF_CRT_EXTERN unsigned char *__MCF_CRTHeapReAlloc(unsigned char *pBlock /* NON-NULL */, size_t uSize, const void *pRetAddr __attribute__((unused))){
-	if(uSize > 0x7FFFFFFFul){
-		return NULL;
-	}
-
 #ifdef __MCF_CRT_HEAPDBG_ON
 	const size_t uRawSize = __MCF_CRTHeapDbgGetRawSize(uSize);
-	if(uRawSize > 0x7FFFFFFFul){
+	if((uSize & ~uRawSize & ((size_t)1 << (sizeof(size_t) * 8 - 1))) != 0){
 		return NULL;
 	}
 #else

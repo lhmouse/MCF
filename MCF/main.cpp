@@ -1,13 +1,19 @@
+#include "StdMCF.hpp"
 //#include "Core/Format.hpp"
 #include "MCFCRT/MCFCRT.h"
 #include <cstdlib>
 #include <cstdio>
 #include <cstring>
+#include <cwchar>
+#include <vector>
+#include <string>
+#include <windows.h>
 
-extern "C" int MCFMain(std::size_t, const wchar_t *const *){
-	int *const p = new int[5];
-	p[5] = 0;
-	delete[] p;
-
+unsigned int MCFMain(){
+	wchar_t buf1[100];
+	wchar_t buf2[100] = L"0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ/*-+%";
+	std::wcscpy(buf1, buf2);
+	std::fputws(buf1, stdout);
+	::__MCF_Bail(buf1);
 	return 0;
 }

@@ -4,8 +4,8 @@
 
 #include "../../env/_crtdef.h"
 
-__MCF_CRT_EXTERN void *memcpy(void *__restrict__ dst, const void *__restrict__ src, size_t cb);
+__MCF_CRT_EXTERN void *memcpy(void *restrict dst, const void *restrict src, size_t cb);
 
-__MCF_CRT_EXTERN wchar_t *wmemcpy(wchar_t *__restrict__ dst, const wchar_t *__restrict__ src, size_t cnt){
+__MCF_CRT_EXTERN wchar_t *wmemcpy(wchar_t *restrict dst, const wchar_t *restrict src, size_t cnt){
 	return (wchar_t *)memcpy(dst, src, cnt * sizeof(wchar_t));
 }

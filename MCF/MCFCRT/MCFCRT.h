@@ -13,7 +13,7 @@
 
 #include "env/envinclude.h"
 
-__MCF_CRT_EXTERN void __MCF_CRTBegin();
+__MCF_CRT_EXTERN unsigned long __MCF_CRTBegin();
 __MCF_CRT_EXTERN void __MCF_CRTEnd();
 
 __MCF_CRT_EXTERN void *__MCF_GetModuleBase();

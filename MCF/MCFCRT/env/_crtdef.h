@@ -6,25 +6,28 @@
 #define __MCF_CRT_CRTDEF_H__
 
 #ifdef __cplusplus
-
 #	include <cstddef>
 #	include <cstdint>
+#else
+#	include <stddef.h>
+#	include <stdint.h>
+#endif
 
+#ifdef __cplusplus
 #	define	__MCF_CRT_EXTERN		extern "C" __attribute__((cdecl))
 #	define	__MCF_CRT_NOINLINE		extern "C" __attribute__((noinline, cdecl))
 #	define	__MCF_EXTERN			extern "C"
 #	define	__MCF_STD				::std::
-
 #else
-
-#	include <stddef.h>
-#	include <stdint.h>
-
 #	define	__MCF_CRT_EXTERN		extern __attribute__((cdecl))
 #	define	__MCF_CRT_NOINLINE		extern __attribute__((noinline, cdecl))
 #	define	__MCF_EXTERN			extern
 #	define	__MCF_STD
+#endif
 
+// C++11 目前还不支持 C99 的 restrict 限定符。
+#ifdef __cplusplus
+#	define	restrict				__restrict__
 #endif
 
 #endif

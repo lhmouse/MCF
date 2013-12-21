@@ -7,6 +7,5 @@
 
 #include "ext/tchar.h"
 #include "ext/unref_param.h"
-#include "ext/realloc_s.h"
 
 #endif

@@ -5,24 +5,27 @@
 #define WIN32_LEAN_AND_MEAN
 
 #include "heap_dbg.h"
+#include "daemon.h"
 
 #ifdef __MCF_CRT_HEAPDBG_ON
 
-#include "daemon.h"
+#include <wchar.h>
 #include <windows.h>
 
-#define GUARD_BAND_SIZE		0x10ul
+#define GUARD_BAND_SIZE		0x20ul
 
 static HANDLE		g_hAllocator;
 static AVL_ROOT		g_pRoot;
 
-__MCF_CRT_EXTERN void __MCF_CRTHeapDbgInitContext(){
+__MCF_CRT_EXTERN unsigned long __MCF_CRTHeapDbgInitContext(){
 	g_hAllocator = HeapCreate(HEAP_NO_SERIALIZE, 0, 0);
 	if(g_hAllocator == NULL){
-		__MCF_Bail(L"__MCF_CRTHeapDbgInitContext() 失败：CreateHeap() 失败。");
+		return GetLastError();
 	}
 
 	g_pRoot = NULL;
+
+	return ERROR_SUCCESS;
 }
 __MCF_CRT_EXTERN void __MCF_CRTHeapDbgUninitContext(){
 	const __MCF_HEAPDBG_BLOCK_INFO *pBlockInfo = (const __MCF_HEAPDBG_BLOCK_INFO *)AVLBegin(g_pRoot);
@@ -33,27 +36,27 @@ __MCF_CRT_EXTERN void __MCF_CRTHeapDbgUninitContext(){
 		);
 
 		do {
-			wchar_t awchBuffer[1025];
+			wchar_t awchBuffer[256];
 
 			const BYTE *pbyDump = __MCF_CRTHeapDbgGetContents(pBlockInfo);
-			wchar_t *pWrite = awchBuffer + wsprintfW(
+			wchar_t *pWrite = awchBuffer + swprintf(
 				awchBuffer,
-				L"地址 0x%p  大小 0x%08X  首字节 ",
+				128,
+				L"地址 0x%p  大小 0x%08X  首字节",
 				(const void *)pbyDump,
 				pBlockInfo->uSize
 			);
 			for(size_t i = 0; i < 16; ++i){
+				*(pWrite++) = L' ';
 				if(IsBadReadPtr(pbyDump, 1)){
 					*(pWrite++) = L'?';
 					*(pWrite++) = L'?';
-					*(pWrite++) = L' ';
 				} else {
 					const unsigned int uHi = (*pbyDump) >> 4;
 					const unsigned int uLo = (*pbyDump) & 0x0F;
 
 					*(pWrite++) = L'0' + uHi + ((uHi >= 0x0A) ? (L'A' - L'0' - 0x0A) : 0);
 					*(pWrite++) = L'0' + uLo + ((uLo >= 0x0A) ? (L'A' - L'0' - 0x0A) : 0);
-					*(pWrite++) = L' ';
 				}
 				++pbyDump;
 			}

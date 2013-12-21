@@ -7,7 +7,7 @@
 
 #include "_crtdef.h"
 
-__MCF_CRT_EXTERN void __MCF_CRTDaemonInitialize();
+__MCF_CRT_EXTERN unsigned long __MCF_CRTDaemonInitialize();
 __MCF_CRT_EXTERN void __MCF_CRTDaemonUninitialize();
 
 typedef __MCF_STD intptr_t (*__MCF_CRT_DAEMON_CALLBACK)(__MCF_STD intptr_t);

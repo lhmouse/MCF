@@ -7,7 +7,7 @@
 
 #include "_crtdef.h"
 
-__MCF_CRT_EXTERN void __MCF_CRTHeapInitialize();
+__MCF_CRT_EXTERN unsigned long __MCF_CRTHeapInitialize();
 __MCF_CRT_EXTERN void __MCF_CRTHeapUninitialize();
 
 __MCF_CRT_EXTERN unsigned char *__MCF_CRTHeapAlloc(__MCF_STD size_t uSize, const void *pRetAddr);

@@ -6,8 +6,14 @@
 #define __MCF_STD_MCF_HPP__
 
 #ifdef UNICODE
-#	define _UNICODE
+#	define _UNICODE			1
 #endif
+
+#ifndef NDEBUG
+#	define _GLIBCXX_DEBUG	1
+#endif
+
+#define WIN32_LEAN_AND_MEAN
 
 #include "MCFCRT/MCFCRT.h"
 
@@ -25,9 +31,7 @@
 #include <functional>
 #include <type_traits>
 
-#define WIN32_LEAN_AND_MEAN
 #include <windows.h>
-
 #include <tchar.h>
 
 #undef	NULL

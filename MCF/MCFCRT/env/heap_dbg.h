@@ -19,7 +19,7 @@ typedef struct tagHeapDbgBlockInfo {
 	const void *pRetAddr;
 } __MCF_HEAPDBG_BLOCK_INFO;
 
-__MCF_CRT_EXTERN void __MCF_CRTHeapDbgInitContext();
+__MCF_CRT_EXTERN unsigned long __MCF_CRTHeapDbgInitContext();
 __MCF_CRT_EXTERN void __MCF_CRTHeapDbgUninitContext();
 
 __MCF_CRT_EXTERN __MCF_STD size_t __MCF_CRTHeapDbgGetRawSize(

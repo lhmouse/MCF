@@ -5,7 +5,7 @@
 #include "../../env/_crtdef.h"
 #include "_stringasm.h"
 
-__MCF_CRT_EXTERN void *memcpy(void *__restrict__ dst, const void *__restrict__ src, size_t cb){
+__MCF_CRT_EXTERN void *memcpy(void *restrict dst, const void *restrict src, size_t cb){
 	uintptr_t unused;
 	__asm__ __volatile__(
 		"cmp %5, 64 \n"

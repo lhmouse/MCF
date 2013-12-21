@@ -7,10 +7,10 @@
 
 #include "_crtdef.h"
 
-__MCF_CRT_EXTERN void __MCF_CRTTlsEnvInitialize();
+__MCF_CRT_EXTERN unsigned long __MCF_CRTTlsEnvInitialize();
 __MCF_CRT_EXTERN void __MCF_CRTTlsEnvUninitialize();
 
-__MCF_CRT_EXTERN void __MCF_CRTThreadInitialize();
+__MCF_CRT_EXTERN unsigned long __MCF_CRTThreadInitialize();
 __MCF_CRT_EXTERN void __MCF_CRTThreadUninitialize();
 
 __MCF_CRT_EXTERN void *__MCF_CreateCRTThread(

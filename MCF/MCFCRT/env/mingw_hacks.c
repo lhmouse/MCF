@@ -4,6 +4,7 @@
 
 #define WIN32_LEAN_AND_MEAN
 
+#include "_crtdef.h"
 #include "thread.h"
 #include <windows.h>
 
@@ -23,7 +24,7 @@ static void node_dtor(void *mem){
 	}
 }
 
-extern int __mingwthr_key_dtor(unsigned long key, DTOR dtor){
+__MCF_CRT_EXTERN int __mingwthr_key_dtor(unsigned long key, DTOR dtor){
 	if(dtor == NULL){
 		return -1;
 	}
@@ -38,7 +39,11 @@ extern int __mingwthr_key_dtor(unsigned long key, DTOR dtor){
 
 	return 0;
 }
-int __mingwthr_remove_key_dtor(unsigned long key){
+__MCF_CRT_EXTERN int __mingwthr_remove_key_dtor(unsigned long key){
 	__MCF_CRTDeleteTls((intptr_t)key);
+	return 0;
+}
+
+__MCF_CRT_EXTERN unsigned int _get_output_format(){
 	return 0;
 }

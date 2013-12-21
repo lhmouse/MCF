@@ -9,6 +9,6 @@
 
 __MCF_CRT_EXTERN void __MCF_CRTFEnvInitialize();
 // __MCF_CRT_EXTERN void __MCF_CRTFEnvUninitialize();
-#define	__MCF_CRTFEnvUninitialize()		((void)0)
+#define __MCF_CRTFEnvUninitialize()		((void)0)
 
 #endif

@@ -12,6 +12,28 @@ __MCF_CRT_EXTERN int wmemcmp(const wchar_t *p1, const wchar_t *p2, size_t cnt){
 	++wcnt;
 	for(;;){
 
+#define COMPARE_LOWORD_AND_SHIFT	\
+		{	\
+			const int delta = (int)(int16_t)((wrd1 - wrd2) & 0xFFFF);	\
+			if(delta != 0){	\
+				return (delta >> (sizeof(int) * 8 - 1)) | 1;	\
+			}	\
+			wrd1 >>= 16;	\
+			wrd2 >>= 16;	\
+		}
+
+#ifdef __amd64__
+#	define	COMPARE_UINTPTR	\
+		COMPARE_LOWORD_AND_SHIFT	\
+		COMPARE_LOWORD_AND_SHIFT	\
+		COMPARE_LOWORD_AND_SHIFT	\
+		COMPARE_LOWORD_AND_SHIFT
+#else
+#	define	COMPARE_UINTPTR	\
+		COMPARE_LOWORD_AND_SHIFT	\
+		COMPARE_LOWORD_AND_SHIFT
+#endif
+
 #define UNROLLED(index)	\
 		{	\
 			if(--wcnt == 0){	\
@@ -25,28 +47,6 @@ __MCF_CRT_EXTERN int wmemcmp(const wchar_t *p1, const wchar_t *p2, size_t cnt){
 				COMPARE_UINTPTR	\
 			}	\
 		}
-
-#ifdef __amd64__
-#	define	COMPARE_UINTPTR	\
-				COMPARE_LOWORD_AND_SHIFT	\
-				COMPARE_LOWORD_AND_SHIFT	\
-				COMPARE_LOWORD_AND_SHIFT	\
-				COMPARE_LOWORD_AND_SHIFT
-#else
-#	define	COMPARE_UINTPTR	\
-				COMPARE_LOWORD_AND_SHIFT	\
-				COMPARE_LOWORD_AND_SHIFT
-#endif
-
-#define COMPARE_LOWORD_AND_SHIFT	\
-				{	\
-					const int delta = (int)(int16_t)((wrd1 - wrd2) & 0xFFFF);	\
-					if(delta != 0){	\
-						return (delta >> (sizeof(int) * 8 - 1)) | 1;	\
-					}	\
-					wrd1 >>= 16;	\
-					wrd2 >>= 16;	\
-				}
 
 		UNROLLED(0)
 		UNROLLED(1)
@@ -62,10 +62,9 @@ __MCF_CRT_EXTERN int wmemcmp(const wchar_t *p1, const wchar_t *p2, size_t cnt){
 	}
 	size_t rem = cnt % (sizeof(uintptr_t) / sizeof(wchar_t));
 	while(rem-- != 0){
-		const int ch1 = *(rp1++);
-		const int ch2 = *(rp2++);
-		if(ch1 != ch2){
-			return (ch1 > ch2) ? 1 : -1;
+		const int delta = (int)(int16_t)(*(rp1++) - *(rp2++));
+		if(delta != 0){
+			return (delta >> (sizeof(int) * 8 - 1)) | 1;
 		}
 	}
 	return 0;

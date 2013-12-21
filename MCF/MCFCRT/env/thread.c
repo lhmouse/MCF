@@ -6,7 +6,6 @@
 
 #include "thread.h"
 #include "fenv.h"
-#include "daemon.h"
 #include <stdlib.h>
 #include <windows.h>
 
@@ -45,57 +44,58 @@ static DWORD WINAPI CRTThreadProc(LPVOID pParam){
 	return dwExitCode;
 }
 
-__MCF_CRT_EXTERN void __MCF_CRTTlsEnvInitialize(){
+__MCF_CRT_EXTERN unsigned long __MCF_CRTTlsEnvInitialize(){
 	g_dwTlsIndex = TlsAlloc();
 	if(g_dwTlsIndex == TLS_OUT_OF_INDEXES){
-		__MCF_Bail(L"__MCF_CRTTlsEnvInitialize() 失败：动态 TLS 数量超过限制。");
+		return GetLastError();
 	}
+	return ERROR_SUCCESS;
 }
 __MCF_CRT_EXTERN void __MCF_CRTTlsEnvUninitialize(){
 	TlsFree(g_dwTlsIndex);
 	g_dwTlsIndex = TLS_OUT_OF_INDEXES;
 }
 
-__MCF_CRT_EXTERN void __MCF_CRTThreadInitialize(){
+__MCF_CRT_EXTERN unsigned long __MCF_CRTThreadInitialize(){
 	__MCF_CRTFEnvInitialize();
 
 	THREAD_ENV *const pNewThreadEnv = (THREAD_ENV *)malloc(sizeof(THREAD_ENV));
 	if(pNewThreadEnv == NULL){
-		__MCF_Bail(L"__MCF_CRTThreadInitialize() 失败：内存不足。");
+		return GetLastError();
 	}
 
 	pNewThreadEnv->pAtExitHead		= NULL;
 	pNewThreadEnv->pTlsObjectHead	= NULL;
 
 	TlsSetValue(g_dwTlsIndex, pNewThreadEnv);
+
+	return ERROR_SUCCESS;
 }
 __MCF_CRT_EXTERN void __MCF_CRTThreadUninitialize(){
 	THREAD_ENV *const pThreadEnv = (THREAD_ENV *)TlsGetValue(g_dwTlsIndex);
-	if(GetLastError() != ERROR_SUCCESS){
-		__MCF_Bail(L"__MCF_CRTThreadUninitialize() 失败：TlsGetValue() 错误。");
-	}
-
-	register AT_EXIT_NODE *pAtExitHead = pThreadEnv->pAtExitHead;
-	while(pAtExitHead != NULL){
-		AT_EXIT_NODE *const pNext = pAtExitHead->pNext;
-		(*pAtExitHead->pfnProc)(pAtExitHead->nContext);
-		free(pAtExitHead);
-		pAtExitHead = pNext;
-	}
-
-	register TLS_OBJECT *pTlsObjectHead = pThreadEnv->pTlsObjectHead;
-	while(pTlsObjectHead != NULL){
-		TLS_OBJECT *const pNext = pTlsObjectHead->pNext;
-		if(pTlsObjectHead->pfnDestructor != NULL){
-			(*pTlsObjectHead->pfnDestructor)(pTlsObjectHead->pMem);
+	if(GetLastError() == ERROR_SUCCESS){
+		register AT_EXIT_NODE *pAtExitHead = pThreadEnv->pAtExitHead;
+		while(pAtExitHead != NULL){
+			AT_EXIT_NODE *const pNext = pAtExitHead->pNext;
+			(*pAtExitHead->pfnProc)(pAtExitHead->nContext);
+			free(pAtExitHead);
+			pAtExitHead = pNext;
 		}
-		free(pTlsObjectHead->pMem);
-		free(pTlsObjectHead);
-		pTlsObjectHead = pNext;
-	}
 
-	TlsSetValue(g_dwTlsIndex, NULL);
-	free(pThreadEnv);
+		register TLS_OBJECT *pTlsObjectHead = pThreadEnv->pTlsObjectHead;
+		while(pTlsObjectHead != NULL){
+			TLS_OBJECT *const pNext = pTlsObjectHead->pNext;
+			if(pTlsObjectHead->pfnDestructor != NULL){
+				(*pTlsObjectHead->pfnDestructor)(pTlsObjectHead->pMem);
+			}
+			free(pTlsObjectHead->pMem);
+			free(pTlsObjectHead);
+			pTlsObjectHead = pNext;
+		}
+
+		TlsSetValue(g_dwTlsIndex, NULL);
+		free(pThreadEnv);
+	}
 
 	__MCF_CRTFEnvUninitialize();
 }

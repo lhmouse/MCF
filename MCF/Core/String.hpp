@@ -230,14 +230,20 @@ namespace MCF {
 		explicit GenericString(std::size_t uInitCap) : GenericString() {
 			Reserve(uInitCap);
 		}
-		explicit GenericString(std::size_t uCount, CHAR_T ch) : GenericString() {
-			Assign(uCount, ch);
+		explicit GenericString(CHAR_T ch, std::size_t uCount = 1) : GenericString() {
+			Assign(ch, uCount);
 		}
 		GenericString(PCSTR_T pszSrc) : GenericString() {
 			Assign(pszSrc);
 		}
 		GenericString(PCCHAR_T pchSrc, std::size_t uSrcLen) : GenericString() {
 			Assign(pchSrc, uSrcLen);
+		}
+		GenericString(const GenericString &rhs) : GenericString() {
+			Assign(rhs);
+		}
+		GenericString(GenericString &&rhs) noexcept : GenericString() {
+			Assign(std::move(rhs));
 		}
 		template<typename OTHER_C, String::ENCODING OTHER_E>
 		GenericString(const GenericString<OTHER_C, OTHER_E> &rhs) : GenericString() {
@@ -246,6 +252,22 @@ namespace MCF {
 		template<typename OTHER_C, String::ENCODING OTHER_E>
 		GenericString(GenericString<OTHER_C, OTHER_E> &&rhs) noexcept : GenericString() {
 			Assign(std::move(rhs));
+		}
+		GenericString &operator=(CHAR_T ch){
+			Assign(ch, 1);
+			return *this;
+		}
+		GenericString &operator=(PCSTR_T pszSrc){
+			Assign(pszSrc);
+			return *this;
+		}
+		GenericString &operator=(const GenericString &rhs){
+			Assign(rhs);
+			return *this;
+		}
+		GenericString &operator=(GenericString &&rhs) noexcept {
+			Assign(std::move(rhs));
+			return *this;
 		}
 		template<typename OTHER_C, String::ENCODING OTHER_E>
 		GenericString &operator=(const GenericString<OTHER_C, OTHER_E> &rhs){
@@ -259,20 +281,20 @@ namespace MCF {
 		}
 	private:
 		PCSTR_T xGetBufferBegin() const noexcept {
-			return !!xm_pchLong ? xm_pchLong.get() : std::begin(xm_achShort);
+			return xm_pchLong ? xm_pchLong.get() : std::begin(xm_achShort);
 		}
 		PSTR_T xGetBufferBegin() noexcept {
-			return !!xm_pchLong ? xm_pchLong.get() : std::begin(xm_achShort);
+			return xm_pchLong ? xm_pchLong.get() : std::begin(xm_achShort);
 		}
 		PCSTR_T xGetBufferEnd() const noexcept {
-			return !!xm_pchLong ? (xm_pchLong.get() + xm_uLongCap) : std::end(xm_achShort);
+			return xm_pchLong ? (xm_pchLong.get() + xm_uLongCap) : std::end(xm_achShort);
 		}
 		PSTR_T xGetBufferEnd() noexcept {
-			return !!xm_pchLong ? (xm_pchLong.get() + xm_uLongCap) : std::end(xm_achShort);
+			return xm_pchLong ? (xm_pchLong.get() + xm_uLongCap) : std::end(xm_achShort);
 		}
 
 		std::size_t xGetRealCapacity() const noexcept {
-			return !!xm_pchLong ? xm_uLongCap : COUNTOF(xm_achShort);
+			return xm_pchLong ? xm_uLongCap : COUNTOF(xm_achShort);
 		}
 		void xRealReserve(std::size_t uNewCap, std::size_t uMoveOffset){
 			// http://graphics.stanford.edu/~seander/bithacks.html#RoundUpPowerOf2
@@ -351,7 +373,7 @@ namespace MCF {
 			xRealReserve(xGetRealCapacity() + uLeading + uTrailing, uLeading);
 		}
 
-		void Assign(std::size_t uCount, CHAR_T ch){
+		void Assign(CHAR_T ch, std::size_t uCount){
 			Reserve(uCount + 1);
 			xFillN(xm_pchFront, ch, uCount);
 			xm_pchFront[uCount] = CHAR_T();
@@ -371,7 +393,6 @@ namespace MCF {
 			if(&rhs == this){
 				return;
 			}
-
 			Assign(rhs.GetCStr(), rhs.GetLength());
 		}
 		void Assign(GenericString &&rhs){
@@ -418,137 +439,87 @@ namespace MCF {
 			}
 		}
 
-		void Append(CHAR_T ch, std::size_t *puContext = nullptr){
-			Append(ch, 1, puContext);
-		}
-		void Append(std::size_t uCount, CHAR_T ch, std::size_t *puContext = nullptr){
-			std::size_t uEnd = NPOS;
-			if(puContext != nullptr){
-				uEnd = *puContext;
-			}
+		std::size_t Append(CHAR_T ch, std::size_t uCount = 1, std::size_t uContext = NPOS){
+			std::size_t uEnd = uContext;
 			if(uEnd == NPOS){
 				uEnd = GetLength();
 			}
 			const std::size_t uNewEnd = uEnd + uCount;
-
 			ReserveInc(0, uCount);
 			xFillN(xm_pchFront + uEnd, ch, uCount);
 			xm_pchFront[uNewEnd] = CHAR_T();
-
-			if(puContext != nullptr){
-				*puContext = uNewEnd;
-			}
+			return uNewEnd;
 		}
-		void Append(PCSTR_T pszSrc, std::size_t *puContext = nullptr){
-			Append(pszSrc, xStrLen(pszSrc), puContext);
+		std::size_t Append(PCSTR_T pszSrc, std::size_t uContext = NPOS){
+			return Append(pszSrc, xStrLen(pszSrc), uContext);
 		}
-		void Append(PCCHAR_T pchSrc, std::size_t uSrcLen, std::size_t *puContext = nullptr){
-			std::size_t uEnd = NPOS;
-			if(puContext != nullptr){
-				uEnd = *puContext;
-			}
+		std::size_t Append(PCCHAR_T pchSrc, std::size_t uSrcLen, std::size_t uContext){
+			std::size_t uEnd = uContext;
 			if(uEnd == NPOS){
 				uEnd = GetLength();
 			}
 			const std::size_t uNewEnd = uEnd + uSrcLen;
-
 			ReserveInc(0, uSrcLen);
 			xCopyN(xm_pchFront + uEnd, pchSrc, uSrcLen)[0] = CHAR_T();
-
-			if(puContext != nullptr){
-				*puContext = uNewEnd;
-			}
+			return uNewEnd;
 		}
-		void Append(const GenericString &rhs, std::size_t *puContext = nullptr){
+		std::size_t Append(const GenericString &rhs, std::size_t uContext = NPOS){
 			const auto uLen = rhs.GetLength();
 			if(&rhs == this){
 				ReserveInc(0, uLen);
 			}
-
-			Append(rhs.GetCStr(), uLen, puContext);
+			return Append(rhs.GetCStr(), uLen, uContext);
 		}
-		void Truncate(std::size_t uCount, std::size_t *puContext = nullptr) noexcept {
-			std::size_t uEnd = NPOS;
-			if(puContext != nullptr){
-				uEnd = *puContext;
-			}
+		std::size_t Truncate(std::size_t uCount, std::size_t uContext = NPOS) noexcept {
+			std::size_t uEnd = uContext;
 			if(uEnd == NPOS){
 				uEnd = GetLength();
 			}
 			const std::size_t uNewEnd = (uEnd <= uCount) ? 0 : (uEnd - uCount);
-
 			xm_pchFront[uNewEnd] = CHAR_T();
-
-			if(puContext != nullptr){
-				*puContext = uNewEnd;
-			}
+			return uNewEnd;
 		}
 
-		void Unshift(CHAR_T ch, std::size_t *puContext = nullptr){
-			Unshift(ch, 1, puContext);
-		}
-		void Unshift(std::size_t uCount, CHAR_T ch, std::size_t *puContext = nullptr){
-			std::size_t uEnd = NPOS;
-			if(puContext != nullptr){
-				uEnd = *puContext;
-			}
+		std::size_t Unshift(CHAR_T ch, std::size_t uCount = 1, std::size_t uContext = NPOS){
+			std::size_t uEnd = uContext;
 			if(uEnd == NPOS){
 				uEnd = GetLength();
 			}
 			const std::size_t uNewEnd = uEnd + uCount;
-
 			ReserveInc(uCount, 0);
 			xm_pchFront -= uCount;
 			xFillN(xm_pchFront, ch, uCount);
-
-			if(puContext != nullptr){
-				*puContext = uNewEnd;
-			}
+			return uNewEnd;
 		}
-		void Unshift(PCSTR_T pszSrc, std::size_t *puContext = nullptr){
-			Unshift(pszSrc, xStrLen(pszSrc), puContext);
+		std::size_t Unshift(PCSTR_T pszSrc, std::size_t uContext = NPOS){
+			return Unshift(pszSrc, xStrLen(pszSrc), uContext);
 		}
-		void Unshift(PCCHAR_T pchSrc, std::size_t uSrcLen, std::size_t *puContext = nullptr){
-			std::size_t uEnd = NPOS;
-			if(puContext != nullptr){
-				uEnd = *puContext;
-			}
+		std::size_t Unshift(PCCHAR_T pchSrc, std::size_t uSrcLen, std::size_t uContext){
+			std::size_t uEnd = uContext;
 			if(uEnd == NPOS){
 				uEnd = GetLength();
 			}
 			const std::size_t uNewEnd = uEnd + uSrcLen;
-
 			ReserveInc(uSrcLen, 0);
 			xm_pchFront -= uSrcLen;
 			xCopyN(xm_pchFront, pchSrc, uSrcLen);
-
-			if(puContext != nullptr){
-				*puContext = uNewEnd;
-			}
+			return uNewEnd;
 		}
-		void Unshift(const GenericString &rhs, std::size_t *puContext = nullptr){
+		std::size_t Unshift(const GenericString &rhs, std::size_t uContext = NPOS){
 			const auto uLen = rhs.GetLength();
 			if(&rhs == this){
 				ReserveInc(uLen);
 			}
-
-			Unshift(rhs.GetCStr(), uLen, puContext);
+			return Unshift(rhs.GetCStr(), uLen, uContext);
 		}
-		void Shift(std::size_t uCount, std::size_t *puContext = nullptr) noexcept {
-			std::size_t uEnd = NPOS;
-			if(puContext != nullptr){
-				uEnd = *puContext;
-			}
+		std::size_t Shift(std::size_t uCount, std::size_t uContext = NPOS) noexcept {
+			std::size_t uEnd = uContext;
 			if(uEnd == NPOS){
 				uEnd = GetLength();
 			}
 			const std::size_t uNewEnd = (uEnd <= uCount) ? 0 : (uEnd - uCount);
-
 			xm_pchFront += uEnd - uNewEnd;
-
-			if(puContext != nullptr){
-				*puContext = uNewEnd;
-			}
+			return uNewEnd;
 		}
 
 		int Compare(PCSTR_T rhs) const noexcept {

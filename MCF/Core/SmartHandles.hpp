@@ -2,8 +2,8 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2013. LH_Mouse. All wrongs reserved.
 
-#ifndef __MCF_RAII_WRAPPER_HPP__
-#define __MCF_RAII_WRAPPER_HPP__
+#ifndef __MCF_SMART_HANDLES_HPP__
+#define __MCF_SMART_HANDLES_HPP__
 
 #include <utility>
 
@@ -249,9 +249,6 @@ namespace MCF {
 			}
 		}
 	public:
-		bool IsGood() const {
-			return (xm_pNode != nullptr) && xm_pNode->m_hObj.IsGood();
-		}
 		StrongHandle Lock() const {
 			StrongHandle hRet;
 			hRet.xJoin(xm_pNode);
@@ -281,10 +278,6 @@ namespace MCF {
 		}
 		void Swap(WeakHandle &&rhs){
 			Swap(rhs);
-		}
-	public:
-		explicit operator bool() const {
-			return IsGood();
 		}
 	};
 }

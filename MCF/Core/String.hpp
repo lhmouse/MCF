@@ -381,12 +381,12 @@ namespace MCF {
 		void Assign(PCSTR_T pszSrc){
 			Assign(pszSrc, xStrLen(pszSrc));
 		}
-		void Assign(PCSTR_T PCHAR_T, std::size_t uSrcLen){
+		void Assign(PCSTR_T pchSrc, std::size_t uSrcLen){
 			if(uSrcLen == 0){
 				Clear();
 			} else {
 				Reserve(uSrcLen + 1);
-				xCopyN(xm_pchFront, PCHAR_T, uSrcLen)[0] = CHAR_T();
+				xCopyN(xm_pchFront, pchSrc, uSrcLen)[0] = CHAR_T();
 			}
 		}
 		void Assign(const GenericString &rhs){
@@ -439,49 +439,64 @@ namespace MCF {
 			}
 		}
 
-		std::size_t Append(CHAR_T ch, std::size_t uCount = 1, std::size_t uContext = NPOS){
-			std::size_t uEnd = uContext;
-			if(uEnd == NPOS){
-				uEnd = GetLength();
+		void Append(CHAR_T ch, std::size_t uCount = 1, std::size_t *puContext = nullptr){
+			std::size_t uEnd = NPOS;
+			if(puContext != nullptr){
+				uEnd = *puContext;
 			}
 			const std::size_t uNewEnd = uEnd + uCount;
 			ReserveInc(0, uCount);
 			xFillN(xm_pchFront + uEnd, ch, uCount);
 			xm_pchFront[uNewEnd] = CHAR_T();
-			return uNewEnd;
+			if(puContext != nullptr){
+				*puContext = uNewEnd;
+			}
 		}
-		std::size_t Append(PCSTR_T pszSrc, std::size_t uContext = NPOS){
-			return Append(pszSrc, xStrLen(pszSrc), uContext);
+		void Append(PCSTR_T pszSrc, std::size_t *puContext = nullptr){
+			Append(pszSrc, xStrLen(pszSrc), puContext);
 		}
-		std::size_t Append(PCCHAR_T pchSrc, std::size_t uSrcLen, std::size_t uContext){
-			std::size_t uEnd = uContext;
+		void Append(PCCHAR_T pchSrc, std::size_t uSrcLen, std::size_t *puContext = nullptr){
+			std::size_t uEnd = NPOS;
+			if(puContext != nullptr){
+				uEnd = *puContext;
+			}
 			if(uEnd == NPOS){
 				uEnd = GetLength();
 			}
 			const std::size_t uNewEnd = uEnd + uSrcLen;
 			ReserveInc(0, uSrcLen);
 			xCopyN(xm_pchFront + uEnd, pchSrc, uSrcLen)[0] = CHAR_T();
-			return uNewEnd;
+			if(puContext != nullptr){
+				*puContext = uNewEnd;
+			}
 		}
-		std::size_t Append(const GenericString &rhs, std::size_t uContext = NPOS){
+		void Append(const GenericString &rhs, std::size_t *puContext = nullptr){
 			const auto uLen = rhs.GetLength();
 			if(&rhs == this){
 				ReserveInc(0, uLen);
 			}
-			return Append(rhs.GetCStr(), uLen, uContext);
+			Append(rhs.GetCStr(), uLen, puContext);
 		}
-		std::size_t Truncate(std::size_t uCount, std::size_t uContext = NPOS) noexcept {
-			std::size_t uEnd = uContext;
+		void Truncate(std::size_t uCount, std::size_t *puContext = nullptr) noexcept {
+			std::size_t uEnd = NPOS;
+			if(puContext != nullptr){
+				uEnd = *puContext;
+			}
 			if(uEnd == NPOS){
 				uEnd = GetLength();
 			}
 			const std::size_t uNewEnd = (uEnd <= uCount) ? 0 : (uEnd - uCount);
 			xm_pchFront[uNewEnd] = CHAR_T();
-			return uNewEnd;
+			if(puContext != nullptr){
+				*puContext = uNewEnd;
+			}
 		}
 
-		std::size_t Unshift(CHAR_T ch, std::size_t uCount = 1, std::size_t uContext = NPOS){
-			std::size_t uEnd = uContext;
+		void Unshift(CHAR_T ch, std::size_t uCount = 1, std::size_t *puContext = nullptr){
+			std::size_t uEnd = NPOS;
+			if(puContext != nullptr){
+				uEnd = *puContext;
+			}
 			if(uEnd == NPOS){
 				uEnd = GetLength();
 			}
@@ -489,13 +504,18 @@ namespace MCF {
 			ReserveInc(uCount, 0);
 			xm_pchFront -= uCount;
 			xFillN(xm_pchFront, ch, uCount);
-			return uNewEnd;
+			if(puContext != nullptr){
+				*puContext = uNewEnd;
+			}
 		}
-		std::size_t Unshift(PCSTR_T pszSrc, std::size_t uContext = NPOS){
-			return Unshift(pszSrc, xStrLen(pszSrc), uContext);
+		void Unshift(PCSTR_T pszSrc, std::size_t *puContext = nullptr){
+			Unshift(pszSrc, xStrLen(pszSrc), puContext);
 		}
-		std::size_t Unshift(PCCHAR_T pchSrc, std::size_t uSrcLen, std::size_t uContext){
-			std::size_t uEnd = uContext;
+		void Unshift(PCCHAR_T pchSrc, std::size_t uSrcLen, std::size_t *puContext = nullptr){
+			std::size_t uEnd = NPOS;
+			if(puContext != nullptr){
+				uEnd = *puContext;
+			}
 			if(uEnd == NPOS){
 				uEnd = GetLength();
 			}
@@ -503,23 +523,30 @@ namespace MCF {
 			ReserveInc(uSrcLen, 0);
 			xm_pchFront -= uSrcLen;
 			xCopyN(xm_pchFront, pchSrc, uSrcLen);
-			return uNewEnd;
+			if(puContext != nullptr){
+				*puContext = uNewEnd;
+			}
 		}
-		std::size_t Unshift(const GenericString &rhs, std::size_t uContext = NPOS){
+		void Unshift(const GenericString &rhs, std::size_t *puContext = nullptr){
 			const auto uLen = rhs.GetLength();
 			if(&rhs == this){
 				ReserveInc(uLen);
 			}
-			return Unshift(rhs.GetCStr(), uLen, uContext);
+			Unshift(rhs.GetCStr(), uLen, puContext);
 		}
-		std::size_t Shift(std::size_t uCount, std::size_t uContext = NPOS) noexcept {
-			std::size_t uEnd = uContext;
+		void Shift(std::size_t uCount, std::size_t *puContext = nullptr) noexcept {
+			std::size_t uEnd = NPOS;
+			if(puContext != nullptr){
+				uEnd = *puContext;
+			}
 			if(uEnd == NPOS){
 				uEnd = GetLength();
 			}
 			const std::size_t uNewEnd = (uEnd <= uCount) ? 0 : (uEnd - uCount);
 			xm_pchFront += uEnd - uNewEnd;
-			return uNewEnd;
+			if(puContext != nullptr){
+				*puContext = uNewEnd;
+			}
 		}
 
 		int Compare(PCSTR_T rhs) const noexcept {

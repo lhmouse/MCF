@@ -11,50 +11,50 @@ namespace MCF {
 	template class GenericString<wchar_t,	String::ENC_UTF16>;
 
 	template<>
-	std::vector<wchar_t> UTF8String::xUnify() const {
-		std::vector<wchar_t> ret;
+	UNIFIED_CHAR_SEQ UTF8String::xUnify() const {
+		UNIFIED_CHAR_SEQ ret;
 		const auto pszBuffer = GetCStr();
 		const auto uLength = GetLength();
 		const auto uUniLength = (std::size_t)::MultiByteToWideChar(CP_UTF8, 0, pszBuffer, (int)uLength, nullptr, 0);
-		ret.resize(uUniLength);
-		::MultiByteToWideChar(CP_UTF8, 0, pszBuffer, (int)uLength, ret.data(), (int)uUniLength);
+		ret.Resize(uUniLength);
+		::MultiByteToWideChar(CP_UTF8, 0, pszBuffer, (int)uLength, ret.GetData(), (int)uUniLength);
 		return std::move(ret);
 	}
 	template<>
-	void UTF8String::xDisunify(const std::vector<wchar_t> &vecUnified){
-		const auto uDisuniLength = (std::size_t)::WideCharToMultiByte(CP_UTF8, 0, vecUnified.data(), (int)vecUnified.size(), nullptr, 0, nullptr, nullptr);
+	void UTF8String::xDisunify(UNIFIED_CHAR_SEQ &&ucsUnified){
+		const auto uDisuniLength = (std::size_t)::WideCharToMultiByte(CP_UTF8, 0, ucsUnified.GetData(), (int)ucsUnified.GetSize(), nullptr, 0, nullptr, nullptr);
 		Reserve(uDisuniLength + 1);
 		const auto pszBuffer = GetCStr();
-		::WideCharToMultiByte(CP_UTF8, 0, vecUnified.data(), (int)vecUnified.size(), pszBuffer, (int)uDisuniLength, nullptr, nullptr);
+		::WideCharToMultiByte(CP_UTF8, 0, ucsUnified.GetData(), (int)ucsUnified.GetSize(), pszBuffer, (int)uDisuniLength, nullptr, nullptr);
 		pszBuffer[uDisuniLength] = 0;
 	}
 
 	template<>
-	std::vector<wchar_t> ANSIString::xUnify() const {
-		std::vector<wchar_t> ret;
+	UNIFIED_CHAR_SEQ ANSIString::xUnify() const {
+		UNIFIED_CHAR_SEQ ret;
 		const auto pszBuffer = GetCStr();
 		const auto uLength = GetLength();
 		const auto uUniLength = (std::size_t)::MultiByteToWideChar(CP_ACP, 0, pszBuffer, (int)uLength, nullptr, 0);
-		ret.resize(uUniLength);
-		::MultiByteToWideChar(CP_ACP, 0, pszBuffer, (int)uLength, ret.data(), (int)uUniLength);
+		ret.Resize(uUniLength);
+		::MultiByteToWideChar(CP_ACP, 0, pszBuffer, (int)uLength, ret.GetData(), (int)uUniLength);
 		return std::move(ret);
 	}
 	template<>
-	void ANSIString::xDisunify(const std::vector<wchar_t> &vecUnified){
-		const auto uDisuniLength = (std::size_t)::WideCharToMultiByte(CP_ACP, 0, vecUnified.data(), (int)vecUnified.size(), nullptr, 0, nullptr, nullptr);
+	void ANSIString::xDisunify(UNIFIED_CHAR_SEQ &&ucsUnified){
+		const auto uDisuniLength = (std::size_t)::WideCharToMultiByte(CP_ACP, 0, ucsUnified.GetData(), (int)ucsUnified.GetSize(), nullptr, 0, nullptr, nullptr);
 		Reserve(uDisuniLength + 1);
 		const auto pszBuffer = GetCStr();
-		::WideCharToMultiByte(CP_ACP, 0, vecUnified.data(), (int)vecUnified.size(), pszBuffer, (int)uDisuniLength, nullptr, nullptr);
+		::WideCharToMultiByte(CP_ACP, 0, ucsUnified.GetData(), (int)ucsUnified.GetSize(), pszBuffer, (int)uDisuniLength, nullptr, nullptr);
 		pszBuffer[uDisuniLength] = 0;
 	}
 
 	template<>
-	std::vector<wchar_t> UTF16String::xUnify() const {
+	UNIFIED_CHAR_SEQ UTF16String::xUnify() const {
 		const auto pszBuffer = GetCStr();
-		return std::vector<wchar_t>(pszBuffer, pszBuffer + GetLength());
+		return UNIFIED_CHAR_SEQ(pszBuffer, GetLength());
 	}
 	template<>
-	void UTF16String::xDisunify(const std::vector<wchar_t> &vecUnified){
-		Assign(vecUnified.data(), vecUnified.size());
+	void UTF16String::xDisunify(UNIFIED_CHAR_SEQ &&ucsUnified){
+		Assign(ucsUnified.GetData(), ucsUnified.GetSize());
 	}
 }

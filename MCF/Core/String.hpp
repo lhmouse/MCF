@@ -8,7 +8,6 @@
 #include <algorithm>
 #include <memory>
 #include <utility>
-#include <vector>
 #include <iterator>
 #include <type_traits>
 #include <cassert>
@@ -25,14 +24,16 @@ namespace MCF {
 		} ENCODING;
 	}
 
-	template<typename C, String::ENCODING E>
+	typedef VVector<wchar_t, 256> UNIFIED_CHAR_SEQ;
+
+	template<typename C_PARAM, String::ENCODING E_PARAM>
 	class GenericString {
 		template<typename OTHER_C, String::ENCODING OTHER_E>
 		friend class GenericString;
 	public:
-		typedef C CHAR_T;
+		typedef C_PARAM CHAR_T;
 		enum {
-			CHAR_ENC = E
+			CHAR_ENC = E_PARAM
 		};
 
 		typedef CHAR_T			*PCHAR_T,	*PSTR_T;
@@ -330,8 +331,8 @@ namespace MCF {
 			}
 		}
 
-		std::vector<wchar_t> xUnify() const;
-		void xDisunify(const std::vector<wchar_t> &vecUnified);
+		UNIFIED_CHAR_SEQ xUnify() const;
+		void xDisunify(UNIFIED_CHAR_SEQ &&ucsUnified);
 	public:
 		PCSTR_T GetCStr() const noexcept {
 			return xm_pchFront;
@@ -444,8 +445,13 @@ namespace MCF {
 			if(puContext != nullptr){
 				uEnd = *puContext;
 			}
+			if(uEnd == NPOS){
+				uEnd = GetLength();
+			}
 			const std::size_t uNewEnd = uEnd + uCount;
-			ReserveInc(0, uCount);
+			if(uNewEnd >= GetCapacity()){
+				xRealReserve(uNewEnd + 1, 0);
+			}
 			xFillN(xm_pchFront + uEnd, ch, uCount);
 			xm_pchFront[uNewEnd] = CHAR_T();
 			if(puContext != nullptr){
@@ -464,7 +470,9 @@ namespace MCF {
 				uEnd = GetLength();
 			}
 			const std::size_t uNewEnd = uEnd + uSrcLen;
-			ReserveInc(0, uSrcLen);
+			if(uNewEnd >= GetCapacity()){
+				xRealReserve(uNewEnd + 1, 0);
+			}
 			xCopyN(xm_pchFront + uEnd, pchSrc, uSrcLen)[0] = CHAR_T();
 			if(puContext != nullptr){
 				*puContext = uNewEnd;
@@ -473,7 +481,7 @@ namespace MCF {
 		void Append(const GenericString &rhs, std::size_t *puContext = nullptr){
 			const auto uLen = rhs.GetLength();
 			if(&rhs == this){
-				ReserveInc(0, uLen);
+				xRealReserve(uLen * 2, 0);
 			}
 			Append(rhs.GetCStr(), uLen, puContext);
 		}
@@ -501,7 +509,10 @@ namespace MCF {
 				uEnd = GetLength();
 			}
 			const std::size_t uNewEnd = uEnd + uCount;
-			ReserveInc(uCount, 0);
+			const std::size_t uLeadingGaps = GetLeadingGaps();
+			if(uCount > uLeadingGaps){
+				xRealReserve(uCount + uNewEnd + 1, uCount - uLeadingGaps);
+			}
 			xm_pchFront -= uCount;
 			xFillN(xm_pchFront, ch, uCount);
 			if(puContext != nullptr){
@@ -520,7 +531,10 @@ namespace MCF {
 				uEnd = GetLength();
 			}
 			const std::size_t uNewEnd = uEnd + uSrcLen;
-			ReserveInc(uSrcLen, 0);
+			const std::size_t uLeadingGaps = GetLeadingGaps();
+			if(uSrcLen > uLeadingGaps){
+				xRealReserve(uSrcLen + uNewEnd + 1, uSrcLen - uLeadingGaps);
+			}
 			xm_pchFront -= uSrcLen;
 			xCopyN(xm_pchFront, pchSrc, uSrcLen);
 			if(puContext != nullptr){
@@ -530,7 +544,7 @@ namespace MCF {
 		void Unshift(const GenericString &rhs, std::size_t *puContext = nullptr){
 			const auto uLen = rhs.GetLength();
 			if(&rhs == this){
-				ReserveInc(uLen);
+				xRealReserve(uLen * 2, 0);
 			}
 			Unshift(rhs.GetCStr(), uLen, puContext);
 		}

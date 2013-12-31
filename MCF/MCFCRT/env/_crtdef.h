@@ -8,9 +8,11 @@
 #ifdef __cplusplus
 #	include <cstddef>
 #	include <cstdint>
+#	include <climits>
 #else
 #	include <stddef.h>
 #	include <stdint.h>
+#	include <limits.h>
 #endif
 
 #ifdef __cplusplus

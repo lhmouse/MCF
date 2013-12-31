@@ -5,16 +5,16 @@
 #include "../../env/_crtdef.h"
 
 __MCF_CRT_EXTERN int abs(int i){
-	const unsigned int mask = (unsigned int)(i >> (sizeof(int) * 8 - 1));
+	register const unsigned int mask = (unsigned int)(i >> (sizeof(int) * CHAR_BIT - 1));
 	return (int)(((unsigned int)i ^ mask) - mask);
 }
 
 __MCF_CRT_EXTERN long labs(long i){
-	const unsigned long mask = (unsigned long)(i >> (sizeof(long) * 8 - 1));
+	register const unsigned long mask = (unsigned long)(i >> (sizeof(long) * CHAR_BIT - 1));
 	return (long)(((unsigned long)i ^ mask) - mask);
 }
 
 __MCF_CRT_EXTERN long long llabs(long long i){
-	const unsigned long long mask = (unsigned long long)(i >> (sizeof(long long) * 8 - 1));
+	register const unsigned long long mask = (unsigned long long)(i >> (sizeof(long long) * CHAR_BIT - 1));
 	return (long long)(((unsigned long long)i ^ mask) - mask);
 }

@@ -7,5 +7,6 @@
 
 #include "ext/tchar.h"
 #include "ext/unref_param.h"
+#include "ext/noop.h"
 
 #endif

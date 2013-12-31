@@ -5,8 +5,8 @@
 #ifndef __MCF_NOTATION_CLASS_HPP__
 #define __MCF_NOTATION_CLASS_HPP__
 
-#include "../StdMCF.hpp"
-
+#include "../MCFCRT/MCFCRT.h"
+#include "../Core/String.hpp"
 #include <utility>
 #include <map>
 
@@ -24,8 +24,8 @@ namespace MCF {
 		} ERROR_TYPE;
 
 		struct Package {
-			std::map<MCF::WCString, Package> mapPackages;
-			std::map<MCF::WCString, MCF::WCString> mapValues;
+			std::map<WCString, Package> mapPackages;
+			std::map<WCString, WCString> mapValues;
 
 			bool IsEmpty() const {
 				return mapPackages.empty() && mapValues.empty();
@@ -36,19 +36,25 @@ namespace MCF {
 			}
 		};
 	private:
-		static void xEscapeAndAppend(std::string &strAppendTo, const std::string &strSrc);
-		static std::string xUnescapeAndConstruct(const char *pBegin, const char *pEnd);
-		static void xExportPackageRecur(std::string &strAppendTo, const Package &pkgWhich, const std::string &strPrefix);
+		static void xEscapeAndAppend(VVector<wchar_t> &vecAppendTo, const WCString &wcsSrc);
+		static WCString xUnescapeAndConstruct(const wchar_t *pwchBegin, const wchar_t *pwchEnd);
+		static void xExportPackageRecur(
+			VVector<wchar_t> &vecAppendTo,
+			const Package &pkgWhich,
+			VVector<wchar_t> &Prefix,
+			const wchar_t *pwchIndent,
+			std::size_t uIndentLen
+		);
 	private:
 		Package xm_Root;
 	public:
 		NotationClass();
-		explicit NotationClass(const char *pszText);
-		NotationClass(const char *pchText, std::size_t uLen);
+		explicit NotationClass(const wchar_t *pwszText);
+		NotationClass(const wchar_t *pwchText, std::size_t uLen);
 	public:
-		std::pair<ERROR_TYPE, const char *> Parse(const char *pszText);
-		std::pair<ERROR_TYPE, const char *> Parse(const char *pchText, std::size_t uLen);
-		std::string Export() const;
+		std::pair<ERROR_TYPE, const wchar_t *> Parse(const wchar_t *pwszText);
+		std::pair<ERROR_TYPE, const wchar_t *> Parse(const wchar_t *pwchText, std::size_t uLen);
+		WCString Export(const wchar_t *pwchIndent = L"\t") const;
 
 		bool IsEmpty() const {
 			return xm_Root.IsEmpty();
@@ -64,15 +70,15 @@ namespace MCF {
 			return &xm_Root;
 		}
 
-		const Package *OpenPackage(const char *pszPackagePath) const;
-		Package *OpenPackage(const char *pszPackagePath);
-		Package *CreatePackage(const char *pszPackagePath, bool bClearExisting);
+		const Package *OpenPackage(const wchar_t *pwszPackagePath) const;
+		Package *OpenPackage(const wchar_t *pwszPackagePath);
+		Package *CreatePackage(const wchar_t *pwszPackagePath, bool bClearExisting);
 
-		const std::string *GetValue(const char *pszPackagePath, const char *pszName) const;
-		std::string *GetValue(const char *pszPackagePath, const char *pszName);
-		std::string *SetValue(const char *pszPackagePath, const char *pszName, const char *pszValue);
-		std::string *SetValue(const char *pszPackagePath, const char *pszName, const std::string &strValue);
-		std::string *SetValue(const char *pszPackagePath, const char *pszName, std::string &&strValue);
+		const WCString *GetValue(const wchar_t *pwszPackagePath, const wchar_t *pwszName) const;
+		WCString *GetValue(const wchar_t *pwszPackagePath, const wchar_t *pwszName);
+		WCString *SetValue(const wchar_t *pwszPackagePath, const wchar_t *pwszName, const wchar_t *pwszValue);
+		WCString *SetValue(const wchar_t *pwszPackagePath, const wchar_t *pwszName, const WCString &wcsValue);
+		WCString *SetValue(const wchar_t *pwszPackagePath, const wchar_t *pwszName, WCString &&wcsValue);
 	};
 }
 

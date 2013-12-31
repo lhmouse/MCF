@@ -10,9 +10,9 @@ __MCF_CRT_EXTERN int strcmp(const char *s1, const char *s2){
 #define UNROLLED(index)	\
 		{	\
 			const char ch1 = s1[index];	\
-			const int delta = (int)(signed char)(ch1 - s2[index]);	\
+			const int delta = (int)(unsigned char)ch1 - (int)(unsigned char)s2[index];	\
 			if(delta != 0){	\
-				return (delta >> (sizeof(int) * 8 - 1)) | 1;	\
+				return (delta >> (sizeof(int) * CHAR_BIT - 1)) | 1;	\
 			}	\
 			if(ch1 == 0){	\
 				return 0;	\

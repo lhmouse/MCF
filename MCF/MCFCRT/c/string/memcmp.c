@@ -46,9 +46,9 @@ __MCF_CRT_EXTERN int memcmp(const void *p1, const void *p2, size_t cb){
 	}
 	size_t rem = cb % sizeof(uintptr_t);
 	while(rem-- != 0){
-		const int delta = (int)(signed char)(*(rp1++) - *(rp2++));
+		const int delta = (int)(unsigned char)*(rp1++) - (int)(unsigned char)*(rp2++);
 		if(delta != 0){
-			return (delta >> (sizeof(int) * 8 - 1)) | 1;
+			return (delta >> (sizeof(int) * CHAR_BIT - 1)) | 1;
 		}
 	}
 	return 0;

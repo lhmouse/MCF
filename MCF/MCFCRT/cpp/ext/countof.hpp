@@ -2,21 +2,23 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2013. LH_Mouse. All wrongs reserved.
 
-#ifndef __MCF_CRTCOUNTOF_HPP__
-#define __MCF_CRTCOUNTOF_HPP__
+#ifndef __MCF_CRT_COUNTOF_HPP__
+#define __MCF_CRT_COUNTOF_HPP__
 
 #include <cstddef>
 
 namespace MCF {
-	namespace __MCF {
-		template<typename T, std::size_t N>
-		char (*CountOfHelper(T (&)[N]))[N];
 
-		template<typename T, std::size_t N>
-		char (*CountOfHelper(T (&&)[N]))[N];
-	}
+namespace __MCF {
+	template<typename T, std::size_t N>
+	char (*CountOfHelper(T (&)[N]))[N];
+
+	template<typename T, std::size_t N>
+	char (*CountOfHelper(T (&&)[N]))[N];
 }
 
-#define COUNTOF(ar)		(sizeof(*::MCF::__MCF::CountOfHelper((ar))))
+}
+
+#define COUNT_OF(ar)		(sizeof(*::MCF::__MCF::CountOfHelper((ar))))
 
 #endif

@@ -14,9 +14,9 @@ __MCF_CRT_EXTERN int wmemcmp(const wchar_t *p1, const wchar_t *p2, size_t cnt){
 
 #define COMPARE_LOWORD_AND_SHIFT	\
 		{	\
-			const int delta = (int)(int16_t)((wrd1 - wrd2) & 0xFFFF);	\
+			const int delta = (int)(uint16_t)wrd1 - (int)(uint16_t)wrd2;	\
 			if(delta != 0){	\
-				return (delta >> (sizeof(int) * 8 - 1)) | 1;	\
+				return (delta >> (sizeof(int) * CHAR_BIT - 1)) | 1;	\
 			}	\
 			wrd1 >>= 16;	\
 			wrd2 >>= 16;	\
@@ -62,9 +62,9 @@ __MCF_CRT_EXTERN int wmemcmp(const wchar_t *p1, const wchar_t *p2, size_t cnt){
 	}
 	size_t rem = cnt % (sizeof(uintptr_t) / sizeof(wchar_t));
 	while(rem-- != 0){
-		const int delta = (int)(int16_t)(*(rp1++) - *(rp2++));
+		const int delta = (int)(uint16_t)*(rp1++) - (int)(uint16_t)*(rp2++);
 		if(delta != 0){
-			return (delta >> (sizeof(int) * 8 - 1)) | 1;
+			return (delta >> (sizeof(int) * CHAR_BIT - 1)) | 1;
 		}
 	}
 	return 0;

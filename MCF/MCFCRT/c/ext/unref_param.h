@@ -7,4 +7,6 @@
 
 #define UNREF_PARAM(param)	((void)(param))
 
+#define UNREF_PARAMS(...)	((void)(__VA_ARGS__))
+
 #endif

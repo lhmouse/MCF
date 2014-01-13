@@ -5,13 +5,13 @@
 #ifndef __MCF_CRT_VVECTOR_HPP__
 #define __MCF_CRT_VVECTOR_HPP__
 
+#include "../../c/ext/assert.h"
 #include <memory>
 #include <initializer_list>
 #include <type_traits>
 #include <iterator>
 #include <utility>
 #include <cstddef>
-#include <cassert>
 
 namespace MCF {
 
@@ -25,7 +25,7 @@ private:
 	ELEMENT_T *xm_pEnd;
 	const ELEMENT_T *xm_pEndOfStor;
 public:
-	VVector(){
+	VVector() noexcept {
 		xm_pBegin		= (ELEMENT_T *)std::begin(xm_aSmall);
 		xm_pEnd			= (ELEMENT_T *)std::begin(xm_aSmall);
 		xm_pEndOfStor	= (ELEMENT_T *)std::end(xm_aSmall);
@@ -40,13 +40,21 @@ public:
 	VVector(std::initializer_list<ELEMENT_T> rhs) : VVector() {
 		Reserve(rhs.size());
 		for(auto iter = rhs.begin(); iter != rhs.end(); ++iter){
-			xPushNoCheck(*iter);
+			PushNoCheck(*iter);
 		}
 	}
 	VVector(const VVector &rhs) : VVector() {
-		*this = rhs;
+		CopyToEnd(rhs.GetData(), rhs.GetSize());
 	}
 	VVector(VVector &&rhs) : VVector() {
+		*this = std::move(rhs);
+	}
+	template<std::size_t OTHER_ALT_STOR_THLD>
+	VVector(const VVector<ELEMENT_T, OTHER_ALT_STOR_THLD> &rhs) : VVector() {
+		CopyToEnd(rhs.GetData(), rhs.GetSize());
+	}
+	template<std::size_t OTHER_ALT_STOR_THLD>
+	VVector(VVector<ELEMENT_T, OTHER_ALT_STOR_THLD> &&rhs) : VVector() {
 		*this = std::move(rhs);
 	}
 	VVector &operator=(const VVector &rhs){
@@ -71,20 +79,32 @@ public:
 			} else {
 				for(auto pRead = rhs.xm_pBegin; pRead != rhs.xm_pEnd; ++pRead){
 					if(std::is_nothrow_move_constructible<ELEMENT_T>::value){
-						xPushNoCheck(std::move(*pRead));
+						PushNoCheck(std::move(*pRead));
 					} else {
-						xPushNoCheck(*pRead);
+						PushNoCheck(*pRead);
 					}
 				}
 			}
 		}
 		return *this;
 	}
+	template<std::size_t OTHER_ALT_STOR_THLD>
+	VVector &operator=(const VVector<ELEMENT_T, OTHER_ALT_STOR_THLD> &rhs){
+		Clear();
+		CopyToEnd(rhs.GetData(), rhs.GetSize());
+		return *this;
+	}
+	template<std::size_t OTHER_ALT_STOR_THLD>
+	VVector &operator=(VVector<ELEMENT_T, OTHER_ALT_STOR_THLD> &&rhs){
+		Clear();
+		MoveToEnd(rhs.GetData(), rhs.GetSize());
+		return *this;
+	}
 	VVector &operator=(std::initializer_list<ELEMENT_T> rhs){
 		Clear();
 		Reserve(rhs.size());
 		for(auto iter = rhs.begin(); iter != rhs.end(); ++iter){
-			xPushNoCheck(*iter);
+			PushNoCheck(*iter);
 		}
 		return *this;
 	}
@@ -143,13 +163,6 @@ private:
 			xm_pEndOfStor	= pWriteBegin + uNewCapacity;
 		}
 	}
-	template<typename... PARAM_T>
-	void xPushNoCheck(PARAM_T &&...Params){
-		new(xm_pEnd++) ELEMENT_T(std::forward<PARAM_T>(Params)...);
-	}
-	void xPopNoCheck(){
-		(--xm_pEnd)->~ELEMENT_T();
-	}
 public:
 	const ELEMENT_T *GetBegin() const noexcept {
 		return xm_pBegin;
@@ -187,7 +200,7 @@ public:
 	}
 	void Clear() noexcept {
 		while(!IsEmpty()){
-			xPopNoCheck();
+			PopNoCheck();
 		}
 	}
 
@@ -199,41 +212,49 @@ public:
 	}
 
 	template<typename... PARAM_T>
+	void PushNoCheck(PARAM_T &&...Params){
+		new(xm_pEnd++) ELEMENT_T(std::forward<PARAM_T>(Params)...);
+	}
+	void PopNoCheck(){
+		(--xm_pEnd)->~ELEMENT_T();
+	}
+
+	template<typename... PARAM_T>
 	void Push(PARAM_T &&...Params){
 		Reserve(GetSize() + 1);
-		xPushNoCheck(std::forward<PARAM_T>(Params)...);
+		PushNoCheck(std::forward<PARAM_T>(Params)...);
 	}
 	void Pop() noexcept {
-		assert(!IsEmpty());
+		ASSERT(!IsEmpty());
 
-		xPopNoCheck();
+		PopNoCheck();
 	}
 	template<typename... PARAM_T>
 	void FillAtEnd(std::size_t uCount, const PARAM_T &...Params){
 		Reserve(GetSize() + uCount);
 		for(std::size_t i = 0; i < uCount; ++i){
-			xPushNoCheck(Params...);
+			PushNoCheck(Params...);
 		}
 	}
 	void CopyToEnd(const ELEMENT_T *pFrom, std::size_t uCount){
 		Reserve(GetSize() + uCount);
 		auto pRead = pFrom;
 		for(std::size_t i = 0; i < uCount; ++i){
-			xPushNoCheck(*(pRead++));
+			PushNoCheck(*(pRead++));
 		}
 	}
 	void MoveToEnd(ELEMENT_T *pFrom, std::size_t uCount){
 		Reserve(GetSize() + uCount);
 		auto pRead = pFrom;
 		for(std::size_t i = 0; i < uCount; ++i){
-			xPushNoCheck(std::move(*(pRead++)));
+			PushNoCheck(std::move(*(pRead++)));
 		}
 	}
 	void TruncateFromEnd(std::size_t uCount) noexcept {
-		assert(GetSize() >= uCount);
+		ASSERT(GetSize() >= uCount);
 
 		for(std::size_t i = 0; i < uCount; ++i){
-			xPopNoCheck();
+			PopNoCheck();
 		}
 	}
 
@@ -317,9 +338,6 @@ public:
 			}
 		}
 	}
-	void Swap(VVector &&rhs){
-		Swap(rhs);
-	}
 public:
 	explicit operator const ELEMENT_T *() const noexcept {
 		return xm_pBegin;
@@ -328,40 +346,40 @@ public:
 		return xm_pBegin;
 	}
 	const ELEMENT_T &operator[](std::size_t uIndex) const noexcept {
-		assert(uIndex < GetSize());
+		ASSERT(uIndex < GetSize());
 
 		return xm_pBegin[uIndex];
 	}
 	ELEMENT_T &operator[](std::size_t uIndex) noexcept {
-		assert(uIndex < GetSize());
+		ASSERT(uIndex < GetSize());
 
 		return xm_pBegin[uIndex];
 	}
 };
 
 template<typename ELEMENT_T, std::size_t ALT_STOR_THLD>
-const ELEMENT_T *begin(const VVector<ELEMENT_T, ALT_STOR_THLD> &vec){
+const ELEMENT_T *begin(const VVector<ELEMENT_T, ALT_STOR_THLD> &vec) noexcept {
 	return vec.GetBegin();
 }
 template<typename ELEMENT_T, std::size_t ALT_STOR_THLD>
-ELEMENT_T *begin(VVector<ELEMENT_T, ALT_STOR_THLD> &vec){
+ELEMENT_T *begin(VVector<ELEMENT_T, ALT_STOR_THLD> &vec) noexcept {
 	return vec.GetBegin();
 }
 template<typename ELEMENT_T, std::size_t ALT_STOR_THLD>
-const ELEMENT_T *cbegin(const VVector<ELEMENT_T, ALT_STOR_THLD> &vec){
+const ELEMENT_T *cbegin(const VVector<ELEMENT_T, ALT_STOR_THLD> &vec) noexcept {
 	return vec.GetBegin();
 }
 
 template<typename ELEMENT_T, std::size_t ALT_STOR_THLD>
-const ELEMENT_T *end(const VVector<ELEMENT_T, ALT_STOR_THLD> &vec){
+const ELEMENT_T *end(const VVector<ELEMENT_T, ALT_STOR_THLD> &vec) noexcept {
 	return vec.GetEnd();
 }
 template<typename ELEMENT_T, std::size_t ALT_STOR_THLD>
-ELEMENT_T *end(VVector<ELEMENT_T, ALT_STOR_THLD> &vec){
+ELEMENT_T *end(VVector<ELEMENT_T, ALT_STOR_THLD> &vec) noexcept {
 	return vec.GetEnd();
 }
 template<typename ELEMENT_T, std::size_t ALT_STOR_THLD>
-const ELEMENT_T *cend(const VVector<ELEMENT_T, ALT_STOR_THLD> &vec){
+const ELEMENT_T *cend(const VVector<ELEMENT_T, ALT_STOR_THLD> &vec) noexcept {
 	return vec.GetEnd();
 }
 

@@ -1,19 +1,18 @@
-// Õâ¸öÎÄ¼şÊÇ MCF µÄÒ»²¿·Ö¡£
-// ÓĞ¹Ø¾ßÌåÊÚÈ¨ËµÃ÷£¬Çë²ÎÔÄ MCFLicense.txt¡£
+// è¿™ä¸ªæ–‡ä»¶æ˜¯ MCF çš„ä¸€éƒ¨åˆ†ã€‚
+// æœ‰å…³å…·ä½“æˆæƒè¯´æ˜ï¼Œè¯·å‚é˜… MCFLicense.txtã€‚
 // Copyleft 2013. LH_Mouse. All wrongs reserved.
 
 #include "../StdMCF.hpp"
 #include "NotationClass.hpp"
-#include <cassert>
 #include <cwchar>
 using namespace MCF;
 
-void NotationClass::xEscapeAndAppend(VVector<wchar_t> &vecAppendTo, const WCString &wcsSrc){
-	const auto uSrcLen = wcsSrc.GetLength();
-	vecAppendTo.Reserve(vecAppendTo.GetSize() + uSrcLen * 2);
-	auto pwchRead = wcsSrc.GetCStr();
-	for(std::size_t i = 0; i < uSrcLen; ++i){
-		const wchar_t ch = *(pwchRead++);
+// é™æ€æˆå‘˜å‡½æ•°ã€‚
+void NotationClass::xEscapeAndAppend(VVector<wchar_t> &vecAppendTo, const wchar_t *pwchBegin, std::size_t uLength){
+	vecAppendTo.Reserve(vecAppendTo.GetSize() + uLength * 2);
+
+	for(std::size_t i = 0; i < uLength; ++i){
+		const auto ch = pwchBegin[i];
 		switch(ch){
 		case L'\\':
 		case L'=':
@@ -45,9 +44,9 @@ void NotationClass::xEscapeAndAppend(VVector<wchar_t> &vecAppendTo, const WCStri
 		}
 	}
 }
-WCString NotationClass::xUnescapeAndConstruct(const wchar_t *pBegin, const wchar_t *pEnd){
+WCString NotationClass::xUnescapeAndConstruct(const wchar_t *pwchBegin, std::size_t uLength){
 	WCString wcsRet;
-	wcsRet.Reserve((std::size_t)(pEnd - pBegin + 1));
+	wcsRet.Reserve(uLength + 1);
 	auto pwchWrite = wcsRet.GetCStr();
 
 	enum STATE {
@@ -61,8 +60,8 @@ WCString NotationClass::xUnescapeAndConstruct(const wchar_t *pBegin, const wchar
 	wchar_t awchHexBuffer[sizeof(wchar_t) * CHAR_BIT / 4 - 1];
 	std::size_t uBufferIndex = 0;
 
-	for(const wchar_t *pCur = pBegin; pCur != pEnd; ++pCur){
-		const wchar_t ch = *pCur;
+	for(std::size_t i = 0; i < uLength; ++i){
+		const auto ch = pwchBegin[i];
 		switch(eState){
 		case NORMAL:
 			if(ch == L'\\'){
@@ -127,16 +126,11 @@ WCString NotationClass::xUnescapeAndConstruct(const wchar_t *pBegin, const wchar
 			break;
 		}
 	}
-	if(eState == HEX_WAIT_FOR_NEXT){
-		*(pwchWrite++) = L'x';
-		for(std::size_t i = 0; i < uBufferIndex; ++i){
-			*(pwchWrite++) = awchHexBuffer[i];
-		}
-	}
 	*pwchWrite = 0;
 
 	return std::move(wcsRet);
 }
+
 void NotationClass::xExportPackageRecur(
 	VVector<wchar_t> &vecAppendTo,
 	const NotationClass::Package &pkgWhich,
@@ -147,15 +141,15 @@ void NotationClass::xExportPackageRecur(
 	const auto uCurrentPrefixLen = vecPrefix.GetSize();
 	auto pwchCurrentPrefix = vecPrefix.GetData();
 
-	if(!pkgWhich.mapPackages.empty()){
+	if(!pkgWhich.xm_mapPackages.empty()){
 		if(pwchIndent != nullptr){
 			vecPrefix.CopyToEnd(pwchIndent, uIndentLen);
 		}
 		pwchCurrentPrefix = vecPrefix.GetData();
 
-		for(const auto &SubPackageItem : pkgWhich.mapPackages){
+		for(const auto &SubPackageItem : pkgWhich.xm_mapPackages){
 			vecAppendTo.CopyToEnd(pwchCurrentPrefix, uCurrentPrefixLen);
-			xEscapeAndAppend(vecAppendTo, SubPackageItem.first);
+			xEscapeAndAppend(vecAppendTo, SubPackageItem.first.m_pwchBegin, SubPackageItem.first.m_uLength);
 			vecAppendTo.CopyToEnd(L" {\n", 3);
 
 			xExportPackageRecur(vecAppendTo, SubPackageItem.second, vecPrefix, pwchIndent, uIndentLen);
@@ -169,16 +163,16 @@ void NotationClass::xExportPackageRecur(
 		}
 	}
 
-	for(const auto &ValueItem : pkgWhich.mapValues){
+	for(const auto &ValueItem : pkgWhich.xm_mapValues){
 		vecAppendTo.CopyToEnd(pwchCurrentPrefix, uCurrentPrefixLen);
-		xEscapeAndAppend(vecAppendTo, ValueItem.first);
+		xEscapeAndAppend(vecAppendTo, ValueItem.first.m_pwchBegin, ValueItem.first.m_uLength);
 		vecAppendTo.CopyToEnd(L" = ", 3);
-		xEscapeAndAppend(vecAppendTo, ValueItem.second);
+		xEscapeAndAppend(vecAppendTo, ValueItem.second.GetCStr(), ValueItem.second.GetLength());
 		vecAppendTo.Push(L'\n');
 	}
 }
 
-// ¹¹Ôìº¯ÊıºÍÎö¹¹º¯Êı¡£
+// æ„é€ å‡½æ•°å’Œææ„å‡½æ•°ã€‚
 NotationClass::NotationClass(){
 }
 NotationClass::NotationClass(const wchar_t *pwszText){
@@ -188,12 +182,12 @@ NotationClass::NotationClass(const wchar_t *pwchText, std::size_t uLen){
 	Parse(pwchText, uLen);
 }
 
-// ÆäËû·Ç¾²Ì¬³ÉÔ±º¯Êı¡£
+// å…¶ä»–éé™æ€æˆå‘˜å‡½æ•°ã€‚
 std::pair<NotationClass::ERROR_TYPE, const wchar_t *> NotationClass::Parse(const wchar_t *pwszText){
 	return Parse(pwszText, std::wcslen(pwszText));
 }
 std::pair<NotationClass::ERROR_TYPE, const wchar_t *> NotationClass::Parse(const wchar_t *pwchText, std::size_t uLen){
-	xm_Root.Clear();
+	Clear();
 
 	if(uLen == 0){
 		return std::make_pair(ERR_NONE, nullptr);
@@ -203,7 +197,7 @@ std::pair<NotationClass::ERROR_TYPE, const wchar_t *> NotationClass::Parse(const
 
 	Package NewRoot;
 	MCF::VVector<Package *> vecPackageStack;
-	vecPackageStack.Push(&NewRoot);
+	vecPackageStack.Push(this);
 
 	const wchar_t *pNameBegin = pwszRead;
 	const wchar_t *pNameEnd = pwszRead;
@@ -221,15 +215,17 @@ std::pair<NotationClass::ERROR_TYPE, const wchar_t *> NotationClass::Parse(const
 	bool bEscaped = false;
 
 	const auto PushPackage = [&]() -> void {
-		assert(pNameBegin != pNameEnd);
+		ASSERT(pNameBegin != pNameEnd);
 
-		vecPackageStack.Push(&(vecPackageStack.GetEnd()[-1]->mapPackages[xUnescapeAndConstruct(pNameBegin, pNameEnd)] = Package()));
+		auto wcsName = xUnescapeAndConstruct(pNameBegin, (std::size_t)(pNameEnd - pNameBegin));
+		auto &pkgNew = vecPackageStack.GetEnd()[-1]->xm_mapPackages.emplace(std::move(wcsName), Package()).first->second;
+		vecPackageStack.Push(&pkgNew);
 
 		pNameBegin = pwszRead;
 		pNameEnd = pwszRead;
 	};
 	const auto PopPackage = [&]() -> void {
-		assert(vecPackageStack.GetSize() > 0);
+		ASSERT(vecPackageStack.GetSize() > 0);
 
 		vecPackageStack.Pop();
 
@@ -237,9 +233,11 @@ std::pair<NotationClass::ERROR_TYPE, const wchar_t *> NotationClass::Parse(const
 		pNameEnd = pwszRead;
 	};
 	const auto SubmitValue = [&]() -> void {
-		assert(pNameBegin != pNameEnd);
+		ASSERT(pNameBegin != pNameEnd);
 
-		vecPackageStack.GetEnd()[-1]->mapValues[xUnescapeAndConstruct(pNameBegin, pNameEnd)] = xUnescapeAndConstruct(pValueBegin, pValueEnd);
+		auto wcsName = xUnescapeAndConstruct(pNameBegin, (std::size_t)(pNameEnd - pNameBegin));
+		auto wcsValue = xUnescapeAndConstruct(pValueBegin, (std::size_t)(pValueEnd - pValueBegin));
+		vecPackageStack.GetEnd()[-1]->xm_mapValues[std::move(wcsName)] = std::move(wcsValue);
 
 		pValueBegin = pwszRead;
 		pValueEnd = pwszRead;
@@ -432,19 +430,12 @@ std::pair<NotationClass::ERROR_TYPE, const wchar_t *> NotationClass::Parse(const
 		break;
 	};
 
-	xm_Root = std::move(NewRoot);
-
 	return std::make_pair(ERR_NONE, nullptr);
 }
 WCString NotationClass::Export(const wchar_t *pwchIndent) const {
-	VVector<wchar_t> vecTemp;
+	VVector<wchar_t> vecResult;
 	VVector<wchar_t> vecPrefix;
-	xExportPackageRecur(
-		vecTemp,
-		xm_Root,
-		vecPrefix,
-		pwchIndent,
-		(pwchIndent == nullptr) ? (std::size_t)0 : std::wcslen(pwchIndent)
-	);
-	return WCString(vecTemp.GetData(), vecTemp.GetSize());
+	const std::size_t uIndentLength = (pwchIndent == nullptr) ? (std::size_t)0 : std::wcslen(pwchIndent);
+	xExportPackageRecur(vecResult, *this, vecPrefix, pwchIndent, uIndentLength);
+	return WCString(vecResult.GetData(), vecResult.GetSize());
 }

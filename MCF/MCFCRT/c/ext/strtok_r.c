@@ -19,14 +19,14 @@ __MCF_CRT_EXTERN char *_strtok_r(char *restrict s1, const char *restrict s2, cha
 	}
 
 	unsigned char table[0x100];
-	__MCF_CRTStrBuildTable(table, s2);
+	__MCF_CRT_StrBuildTable(table, s2);
 
-	from = __MCF_CRTStrFindFirstNotOf(from, table);
+	from = __MCF_CRT_StrFindFirstNotOf(from, table);
 	if(*from == 0){
 		return NULL;
 	}
 
-	char *const delim = __MCF_CRTStrFindFirstOf(from, table);
+	char *const delim = __MCF_CRT_StrFindFirstOf(from, table);
 	if(*delim == 0){
 		*ctx = NULL;
 	} else {

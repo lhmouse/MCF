@@ -7,7 +7,7 @@
 
 #include "fenv.h"
 #include "heap.h"
-#include "daemon.h"
+#include "bail.h"
 #include "thread.h"
 
 #endif

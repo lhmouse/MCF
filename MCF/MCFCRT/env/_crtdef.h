@@ -27,6 +27,12 @@
 #	define	__MCF_STD
 #endif
 
+#ifdef __cplusplus
+#	define	__MCF_CRT_TYPEDEF_PROC	extern "C" typedef
+#else
+#	define	__MCF_CRT_TYPEDEF_PROC	typedef
+#endif
+
 // C++11 目前还不支持 C99 的 restrict 限定符。
 #ifdef __cplusplus
 #	define	restrict				__restrict__

@@ -1,5 +1,5 @@
-// Õâ¸öÎÄ¼şÊÇ MCF µÄÒ»²¿·Ö¡£
-// ÓĞ¹Ø¾ßÌåÊÚÈ¨ËµÃ÷£¬Çë²ÎÔÄ MCFLicense.txt¡£
+// è¿™ä¸ªæ–‡ä»¶æ˜¯ MCF çš„ä¸€éƒ¨åˆ†ã€‚
+// æœ‰å…³å…·ä½“æˆæƒè¯´æ˜ï¼Œè¯·å‚é˜… MCFLicense.txtã€‚
 // Copyleft 2013. LH_Mouse. All wrongs reserved.
 
 #ifndef __MCF_NO_COPY_HPP__
@@ -12,6 +12,8 @@ namespace __MCF {
 		NonCopyable() = default;
 		~NonCopyable() = default;
 
+		NonCopyable(const NonCopyable &) = delete;
+		void operator=(const NonCopyable &) = delete;
 		NonCopyable(NonCopyable &&) = delete;
 		void operator=(NonCopyable &&) = delete;
 	};

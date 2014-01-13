@@ -5,25 +5,14 @@
 #ifndef __MCF_SHARED_HANDLE_HPP__
 #define __MCF_SHARED_HANDLE_HPP__
 
-#include "Manipulaters.hpp"
+#include "../MCFCRT/MCFCRT.h"
 #include <new>
-#include <cassert>
 #include <cstddef>
 
 namespace MCF {
 
 namespace __MCF {
-/*
-	struct HandleCloser {
-		constexpr HANDLE_T operator()() const {
-			return NULL_HANDLE_VALUE;
-		}
-		void operator()(HANDLE_T h) const {
-			CLOSE_HANDLE(h);
-		}
-	};
-*/
-	template<typename HANDLE_T, class CLOSER_T, class MANIPULATER_T>
+	template<typename HANDLE_T, class CLOSER_T>
 	class SharedNode {
 	public:
 		static SharedNode *Create(HANDLE_T hObj){
@@ -44,16 +33,16 @@ namespace __MCF {
 			return new SharedNode(hObj);
 		}
 		static SharedNode *AddWeakRef(SharedNode *pNode) noexcept {
-			if(pNode == nullptr){
+			if((pNode == nullptr) || !pNode->xAddWeakRef()){
 				return nullptr;
 			}
-			return pNode->xAddWeakRef() ? pNode : nullptr;
+			return pNode;
 		}
 		static SharedNode *AddRef(SharedNode *pNode) noexcept {
-			if(pNode == nullptr){
+			if((pNode == nullptr) || !pNode->xAddRef()){
 				return nullptr;
 			}
-			return pNode->xAddRef() ? pNode : nullptr;
+			return pNode;
 		}
 		static void DropRef(SharedNode *pNode) noexcept {
 			if(pNode == nullptr){
@@ -71,275 +60,305 @@ namespace __MCF {
 				delete pNode;
 			}
 		}
+
+		static const HANDLE_T *ToPHandle(SharedNode *pNode){
+			if(pNode == nullptr){
+				return nullptr;
+			}
+			return (const HANDLE_T *)((std::intptr_t)pNode + offsetof(SharedNode, xm_hObj));
+		}
+		static SharedNode *FromPHandle(const HANDLE_T *pHandle){
+			if(pHandle == nullptr){
+				return nullptr;
+			}
+			return (SharedNode *)((std::intptr_t)pHandle - offsetof(SharedNode, xm_hObj));
+		}
 	private:
 		HANDLE_T xm_hObj;
-		typename MANIPULATER_T::template Rebind<std::size_t>::Type xm_WeakCount;
-		typename MANIPULATER_T::template Rebind<std::size_t>::Type xm_StrongCount;
+		volatile std::size_t xm_uWeakCount;
+		volatile std::size_t xm_uCount;
+#ifndef NDEBUG
+		// 用于在手动调用 AddRef() 和 DropRef() 时检测多次释放。
+		SharedNode *xm_pDebugInfo;
+#endif
 	private:
-		explicit SharedNode(HANDLE_T hObj) : xm_hObj(hObj), xm_WeakCount(1), xm_StrongCount(1) { }
+		explicit constexpr SharedNode(HANDLE_T hObj) noexcept
+			: xm_hObj(hObj), xm_uWeakCount(1), xm_uCount(1)
+#ifndef NDEBUG
+			, xm_pDebugInfo(this)
+#endif
+		{
+		}
+#ifndef NDEBUG
+		~SharedNode(){
+			ASSERT(xm_pDebugInfo == this);
+			xm_pDebugInfo = nullptr;
+		}
+#endif
 	private:
+		void xValidate() const noexcept {
+#ifndef NDEBUG
+			if(xm_pDebugInfo != this){
+				__MCF_Bail(L"SharedNodeNTS::xValidate() 失败：侦测到堆损坏或二次释放。");
+			}
+#endif
+		}
+
 		bool xAddWeakRef() noexcept {
-			std::size_t uOldCount;
-			do {
-				uOldCount = xm_WeakCount.Get();
+			xValidate();
+
+			register std::size_t uOldCount;
+			for(;;){
+				uOldCount = xm_uWeakCount;
 				if(uOldCount == 0){
 					return false;
 				}
-			} while(!xm_WeakCount.CompareExchange(uOldCount, uOldCount + 1));
-
-			assert(xm_WeakCount.Get() > 1);
-
-			return true;
+				if(__sync_bool_compare_and_swap(&xm_uWeakCount, uOldCount, uOldCount + 1)){
+					return true;
+				}
+			}
 		}
 		bool xAddRef() noexcept {
+			xValidate();
+
 			if(!xAddWeakRef()){
 				return false;
 			}
-
-			std::size_t uOldCount;
-			do {
-				uOldCount = xm_StrongCount.Get();
+			register std::size_t uOldCount;
+			for(;;){
+				uOldCount = xm_uCount;
 				if(uOldCount == 0){
 					xDropWeakRef();
 					return false;
 				}
-			} while(!xm_StrongCount.CompareExchange(uOldCount, uOldCount + 1));
-
-			assert(xm_StrongCount.Get() > 1);
-
-			return true;
+				if(__sync_bool_compare_and_swap(&xm_uCount, uOldCount, uOldCount + 1)){
+					return true;
+				}
+			}
 		}
 		bool xDropRef() noexcept {
-			assert(xm_StrongCount.Get() != 0);
+			xValidate();
 
-			if(--xm_StrongCount == 0){
+			ASSERT(xm_uCount != 0);
+
+			if(__sync_sub_and_fetch(&xm_uCount, 1) == 0){
 				CLOSER_T()(xm_hObj);
 				xm_hObj = CLOSER_T()();
 			}
 			return xDropWeakRef();
 		}
 		bool xDropWeakRef() noexcept {
-			assert(xm_WeakCount.Get() != 0);
+			xValidate();
 
-			const bool bRet = (--xm_WeakCount == 0);
+			ASSERT(xm_uWeakCount != 0);
 
-			assert(!(bRet && (xm_StrongCount.Get() != 0)));
+			const bool bRet = (__sync_sub_and_fetch(&xm_uWeakCount, 1) == 0);
+
+			ASSERT(!bRet || (xm_uCount == 0));
 
 			return bRet;
 		}
 	public:
 		HANDLE_T Get() const noexcept {
+			xValidate();
+
 			return xm_hObj;
-		}
-	};
-
-	template<typename HANDLE_T, class CLOSER_T, class MANIPULATER_T>
-	class SharedHandle;
-
-	template<typename HANDLE_T, class CLOSER_T, class MANIPULATER_T>
-	class WeakHandle {
-		friend class SharedHandle<HANDLE_T, CLOSER_T, MANIPULATER_T>;
-	private:
-		typedef SharedNode<HANDLE_T, CLOSER_T, MANIPULATER_T> xSharedNode;
-		typedef SharedHandle<HANDLE_T, CLOSER_T, MANIPULATER_T> xStrongHandle;
-	private:
-		typename MANIPULATER_T::template Rebind<xSharedNode *>::Type xm_pNode;
-	private:
-		WeakHandle(xSharedNode *pNode) noexcept : xm_pNode(pNode) {
-		}
-	public:
-		constexpr WeakHandle() noexcept : WeakHandle((xSharedNode *)nullptr) {
-		}
-		WeakHandle(const xStrongHandle &rhs) noexcept : WeakHandle(xSharedNode::AddWeakRef(rhs.xm_pNode.Get())) {
-		}
-		WeakHandle(const WeakHandle &rhs) noexcept : WeakHandle(xSharedNode::AddWeakRef(rhs.xm_pNode.Get())) {
-		}
-		WeakHandle(WeakHandle &&rhs) noexcept : WeakHandle(rhs.xReleaseNode()) {
-		}
-		WeakHandle &operator=(const xStrongHandle &rhs) noexcept {
-			Reset(rhs);
-			return *this;
-		}
-		WeakHandle &operator=(const WeakHandle &rhs) noexcept {
-			Reset(rhs);
-			return *this;
-		}
-		WeakHandle &operator=(WeakHandle &&rhs) noexcept {
-			Reset(std::move(rhs));
-			return *this;
-		}
-		~WeakHandle(){
-			Reset();
-		}
-	public:
-		xStrongHandle Lock() const noexcept {
-			return xStrongHandle(xSharedNode::AddRef(xm_pNode.Get()));
-		}
-
-		void Reset() noexcept {
-			xSharedNode::DropWeakRef(xm_pNode.Exchange(nullptr));
-		}
-		void Reset(const xStrongHandle &rhs) noexcept {
-			xSharedNode::DropWeakRef(xm_pNode.Exchange(xSharedNode::AddWeakRef(rhs.xm_pNode.Get())));
-		}
-		void Reset(const WeakHandle &rhs) noexcept {
-			if(&rhs == this){
-				return;
-			}
-			xSharedNode::DropWeakRef(xm_pNode.Exchange(xSharedNode::AddWeakRef(rhs.xm_pNode.Get())));
-		}
-		void Reset(WeakHandle &&rhs) noexcept {
-			if(&rhs == this){
-				return;
-			}
-			xSharedNode::DropWeakRef(xm_pNode.Exchange(rhs.xm_pNode.Exchange(nullptr)));
-		}
-
-		// rhs 使用原子置换，但是 *this 首先被置空，然后才获得 rhs 的值。
-		// 因此中间会出现“闪断”。
-		void Swap(WeakHandle &rhs) noexcept {
-			if(&rhs == this){
-				return;
-			}
-			xSharedNode::DropWeakRef(xm_pNode.Exchange(rhs.xm_pNode.Exchange(xm_pNode.Exchange(nullptr))));
-		}
-		void Swap(WeakHandle &&rhs) noexcept {
-			Swap(rhs);
-		}
-	};
-
-	template<typename HANDLE_T, class CLOSER_T, class MANIPULATER_T>
-	class SharedHandle {
-		friend class WeakHandle<HANDLE_T, CLOSER_T, MANIPULATER_T>;
-	private:
-		typedef SharedNode<HANDLE_T, CLOSER_T, MANIPULATER_T> xSharedNode;
-		typedef WeakHandle<HANDLE_T, CLOSER_T, MANIPULATER_T> xWeakHandle;
-	private:
-		typename MANIPULATER_T::template Rebind<xSharedNode *>::Type xm_pNode;
-	private:
-		SharedHandle(xSharedNode *pNode) noexcept : xm_pNode(pNode) {
-		}
-	public:
-		constexpr SharedHandle() noexcept : SharedHandle((xSharedNode *)nullptr) {
-		}
-		constexpr explicit SharedHandle(HANDLE_T hObj) noexcept : SharedHandle(xSharedNode::Create(hObj)) {
-		}
-		SharedHandle(const xWeakHandle &rhs) noexcept : SharedHandle(xSharedNode::AddRef(rhs.xm_pNode.Get())) {
-		}
-		SharedHandle(const SharedHandle &rhs) noexcept : SharedHandle(xSharedNode::AddRef(rhs.xm_pNode.Get())) {
-		}
-		SharedHandle(SharedHandle &&rhs) noexcept : SharedHandle(rhs.xm_pNode.Exchange(nullptr)) {
-		}
-		SharedHandle &operator=(HANDLE_T hObj){
-			Reset(hObj);
-			return *this;
-		}
-		SharedHandle &operator=(const xWeakHandle &rhs) noexcept {
-			Reset(rhs);
-			return *this;
-		}
-		SharedHandle &operator=(const SharedHandle &rhs) noexcept {
-			Reset(rhs);
-			return *this;
-		}
-		SharedHandle &operator=(SharedHandle &&rhs) noexcept {
-			Reset(std::move(rhs));
-			return *this;
-		}
-		~SharedHandle(){
-			Reset();
-		}
-	public:
-		bool IsGood() const noexcept {
-			return Get() != CLOSER_T()();
-		}
-		HANDLE_T Get() const noexcept {
-			const auto pNode = xm_pNode.Get();
-			if(pNode == nullptr){
-				return CLOSER_T()();
-			}
-			return pNode->Get();
-		}
-
-		void Reset(HANDLE_T hObj = CLOSER_T()()){
-			xm_pNode = xSharedNode::Recreate(xm_pNode.Exchange(nullptr), hObj);
-		}
-		void Reset(const xWeakHandle &rhs) noexcept {
-			xSharedNode::DropRef(xm_pNode.Exchange(xSharedNode::AddRef(rhs.xm_pNode.Get())));
-		}
-		void Reset(const SharedHandle &rhs) noexcept {
-			if(&rhs == this){
-				return;
-			}
-			xSharedNode::DropRef(xm_pNode.Exchange(xSharedNode::AddRef(rhs.xm_pNode.Get())));
-		}
-		void Reset(SharedHandle &&rhs) noexcept {
-			if(&rhs == this){
-				return;
-			}
-			xSharedNode::DropRef(xm_pNode.Exchange(rhs.xm_pNode.Exchange(nullptr)));
-		}
-
-		// rhs 使用原子置换，但是 *this 首先被置空，然后才获得 rhs 的值。
-		// 因此中间会出现“闪断”。
-		void Swap(SharedHandle &rhs) noexcept {
-			if(&rhs == this){
-				return;
-			}
-			xSharedNode::DropRef(xm_pNode.Exchange(rhs.xm_pNode.Exchange(xm_pNode.Exchange(nullptr))));
-		}
-		void Swap(SharedHandle &&rhs) noexcept {
-			Swap(rhs);
-		}
-	public:
-		explicit operator bool() const noexcept {
-			return IsGood();
-		}
-		operator HANDLE_T() const noexcept {
-			return Get();
-		}
-
-		bool operator==(const SharedHandle &rhs) const noexcept {
-			return Get() == rhs.Get();
-		}
-		bool operator!=(const SharedHandle &rhs) const noexcept {
-			return Get() != rhs.Get();
-		}
-		bool operator<(const SharedHandle &rhs) const noexcept {
-			return Get() < rhs.Get();
-		}
-		bool operator<=(const SharedHandle &rhs) const noexcept {
-			return Get() <= rhs.Get();
-		}
-		bool operator>(const SharedHandle &rhs) const noexcept {
-			return Get() > rhs.Get();
-		}
-		bool operator>=(const SharedHandle &rhs) const noexcept {
-			return Get() >= rhs.Get();
 		}
 	};
 }
 
-// Non-Thread-Safe
 template<typename HANDLE_T, class CLOSER_T>
-using WeakHandleNTS = __MCF::WeakHandle<HANDLE_T, CLOSER_T, __MCF::NormalManipulater<int>>;
+class SharedHandle;
 
 template<typename HANDLE_T, class CLOSER_T>
-using SharedHandleNTS = __MCF::SharedHandle<HANDLE_T, CLOSER_T, __MCF::NormalManipulater<int>>;
+class WeakHandle {
+	friend class SharedHandle<HANDLE_T, CLOSER_T>;
+private:
+	typedef __MCF::SharedNode<HANDLE_T, CLOSER_T> xSharedNode;
+	typedef SharedHandle<HANDLE_T, CLOSER_T> xStrongHandle;
+private:
+	xSharedNode *xm_pNode;
+private:
+	WeakHandle(xSharedNode *pNode) noexcept : xm_pNode(pNode) {
+	}
+public:
+	constexpr WeakHandle() noexcept : xm_pNode() {
+	}
+	WeakHandle(const xStrongHandle &rhs) noexcept : WeakHandle(xSharedNode::AddWeakRef(rhs.xm_pNode)) {
+	}
+	WeakHandle(const WeakHandle &rhs) noexcept : WeakHandle(xSharedNode::AddWeakRef(rhs.xm_pNode)) {
+	}
+	WeakHandle(WeakHandle &&rhs) noexcept : WeakHandle(rhs.xm_pNode) {
+		rhs.xm_pNode = nullptr;
+	}
+	WeakHandle &operator=(const xStrongHandle &rhs) noexcept {
+		Reset(rhs);
+		return *this;
+	}
+	WeakHandle &operator=(const WeakHandle &rhs) noexcept {
+		Reset(rhs);
+		return *this;
+	}
+	WeakHandle &operator=(WeakHandle &&rhs) noexcept {
+		Reset(std::move(rhs));
+		return *this;
+	}
+	~WeakHandle(){
+		Reset();
+	}
+public:
+	xStrongHandle Lock() const noexcept {
+		return xStrongHandle(xSharedNode::AddRef(xm_pNode));
+	}
 
-// Thread-Safe
-template<typename HANDLE_T, class CLOSER_T>
-using WeakHandleTS = __MCF::WeakHandle<HANDLE_T, CLOSER_T, __MCF::AtomicManipulater<int>>;
+	void Reset() noexcept {
+		xSharedNode::DropWeakRef(xm_pNode);
+		xm_pNode = nullptr;
+	}
+	void Reset(const xStrongHandle &rhs) noexcept {
+		xSharedNode::DropWeakRef(xm_pNode);
+		xm_pNode = xSharedNode::AddWeakRef(rhs.xm_pNode);
+	}
+	void Reset(const WeakHandle &rhs) noexcept {
+		if(&rhs == this){
+			return;
+		}
+		xSharedNode::DropWeakRef(xm_pNode);
+		xm_pNode = xSharedNode::AddWeakRef(rhs.xm_pNode);
+	}
+	void Reset(WeakHandle &&rhs) noexcept {
+		if(&rhs == this){
+			return;
+		}
+		xSharedNode::DropWeakRef(xm_pNode);
+		xm_pNode = rhs.xm_pNode;
+		rhs.xm_pNode = nullptr;
+	}
+
+	void Swap(WeakHandle &rhs) noexcept {
+		if(&rhs == this){
+			return;
+		}
+		std::swap(xm_pNode, rhs.xm_pNode);
+	}
+};
 
 template<typename HANDLE_T, class CLOSER_T>
-using SharedHandleTS = __MCF::SharedHandle<HANDLE_T, CLOSER_T, __MCF::AtomicManipulater<int>>;
+class SharedHandle {
+	friend class WeakHandle<HANDLE_T, CLOSER_T>;
+private:
+	typedef __MCF::SharedNode<HANDLE_T, CLOSER_T> xSharedNode;
+	typedef WeakHandle<HANDLE_T, CLOSER_T> xWeakHandle;
+public:
+	static void AddRef(const HANDLE_T *pHandle) noexcept {
+		xSharedNode::AddRef(xSharedNode::FromPHandle(pHandle));
+	}
+	static void DropRef(const HANDLE_T *pHandle) noexcept {
+		xSharedNode::DropRef(xSharedNode::FromPHandle(pHandle));
+	}
+private:
+	xSharedNode *xm_pNode;
+private:
+	SharedHandle(xSharedNode *pNode) noexcept : xm_pNode(pNode) {
+	}
+public:
+	constexpr SharedHandle() noexcept : xm_pNode() {
+	}
+	constexpr explicit SharedHandle(HANDLE_T hObj) noexcept : SharedHandle(xSharedNode::Create(hObj)) {
+	}
+	SharedHandle(const xWeakHandle &rhs) noexcept : SharedHandle(xSharedNode::AddRef(rhs.xm_pNode)) {
+	}
+	SharedHandle(const SharedHandle &rhs) noexcept : SharedHandle(xSharedNode::AddRef(rhs.xm_pNode)) {
+	}
+	SharedHandle(SharedHandle &&rhs) noexcept : SharedHandle(rhs.xm_pNode) {
+		rhs.xm_pNode = nullptr;
+	}
+	SharedHandle &operator=(HANDLE_T hObj){
+		Reset(hObj);
+		return *this;
+	}
+	SharedHandle &operator=(const xWeakHandle &rhs) noexcept {
+		Reset(rhs);
+		return *this;
+	}
+	SharedHandle &operator=(const SharedHandle &rhs) noexcept {
+		Reset(rhs);
+		return *this;
+	}
+	SharedHandle &operator=(SharedHandle &&rhs) noexcept {
+		Reset(std::move(rhs));
+		return *this;
+	}
+	~SharedHandle(){
+		Reset();
+	}
+public:
+	bool IsGood() const noexcept {
+		return Get() != CLOSER_T()();
+	}
+	HANDLE_T Get() const noexcept {
+		return (xm_pNode == nullptr) ? CLOSER_T()() : xm_pNode->Get();
+	}
+	const HANDLE_T *AddRef() const noexcept {
+		return xSharedNode::ToPHandle(xSharedNode::AddRef(xm_pNode));
+	}
 
-// 出于习惯原因，WeakHandle 和 SharedHandle 是部分线程安全版的。
-template<typename HANDLE_T, class CLOSER_T>
-using WeakHandle = WeakHandleTS<HANDLE_T, CLOSER_T>;
+	void Reset(HANDLE_T hObj = CLOSER_T()()){
+		xm_pNode = xSharedNode::Recreate(xm_pNode, hObj);
+	}
+	void Reset(const xWeakHandle &rhs) noexcept {
+		xSharedNode::DropRef(xm_pNode);
+		xm_pNode = xSharedNode::AddRef(rhs.xm_pNode);
+	}
+	void Reset(const SharedHandle &rhs) noexcept {
+		if(&rhs == this){
+			return;
+		}
+		xSharedNode::DropRef(xm_pNode);
+		xm_pNode = xSharedNode::AddRef(rhs.xm_pNode);
+	}
+	void Reset(SharedHandle &&rhs) noexcept {
+		if(&rhs == this){
+			return;
+		}
+		xSharedNode::DropRef(xm_pNode);
+		xm_pNode = rhs.xm_pNode;
+		rhs.xm_pNode = nullptr;
+	}
 
-template<typename HANDLE_T, class CLOSER_T>
-using SharedHandle = SharedHandleTS<HANDLE_T, CLOSER_T>;
+	void Swap(SharedHandle &rhs) noexcept {
+		if(&rhs == this){
+			return;
+		}
+		std::swap(xm_pNode, rhs.xm_pNode);
+	}
+public:
+	explicit operator bool() const noexcept {
+		return IsGood();
+	}
+	operator HANDLE_T() const noexcept {
+		return Get();
+	}
+
+	bool operator==(const SharedHandle &rhs) const noexcept {
+		return Get() == rhs.Get();
+	}
+	bool operator!=(const SharedHandle &rhs) const noexcept {
+		return Get() != rhs.Get();
+	}
+	bool operator<(const SharedHandle &rhs) const noexcept {
+		return Get() < rhs.Get();
+	}
+	bool operator<=(const SharedHandle &rhs) const noexcept {
+		return Get() <= rhs.Get();
+	}
+	bool operator>(const SharedHandle &rhs) const noexcept {
+		return Get() > rhs.Get();
+	}
+	bool operator>=(const SharedHandle &rhs) const noexcept {
+		return Get() >= rhs.Get();
+	}
+};
 
 }
 

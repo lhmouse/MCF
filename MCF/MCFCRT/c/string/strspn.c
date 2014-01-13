@@ -7,6 +7,6 @@
 
 __MCF_CRT_EXTERN size_t strspn(const char *s1, const char *s2){
 	unsigned char table[256];
-	__MCF_CRTStrBuildTable(table, s2);
-	return (size_t)(__MCF_CRTStrFindFirstNotOf(s1, table) - s1);
+	__MCF_CRT_StrBuildTable(table, s2);
+	return (size_t)(__MCF_CRT_StrFindFirstNotOf(s1, table) - s1);
 }

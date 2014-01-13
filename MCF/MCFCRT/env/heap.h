@@ -7,12 +7,12 @@
 
 #include "_crtdef.h"
 
-__MCF_CRT_EXTERN unsigned long __MCF_CRTHeapInitialize();
-__MCF_CRT_EXTERN void __MCF_CRTHeapUninitialize();
+__MCF_CRT_EXTERN unsigned long __MCF_CRT_HeapInitialize();
+__MCF_CRT_EXTERN void __MCF_CRT_HeapUninitialize();
 
-__MCF_CRT_EXTERN unsigned char *__MCF_CRTHeapAlloc(__MCF_STD size_t uSize, const void *pRetAddr);
-__MCF_CRT_EXTERN unsigned char *__MCF_CRTHeapReAlloc(unsigned char *pBlock /* NON-NULL */, __MCF_STD size_t uSize, const void *pRetAddr);
-__MCF_CRT_EXTERN void __MCF_CRTHeapFree(unsigned char *pBlock /* NON-NULL */, const void *pRetAddr);
+__MCF_CRT_EXTERN unsigned char *__MCF_CRT_HeapAlloc(__MCF_STD size_t uSize, const void *pRetAddr);
+__MCF_CRT_EXTERN unsigned char *__MCF_CRT_HeapReAlloc(unsigned char *pBlock /* NON-NULL */, __MCF_STD size_t uSize, const void *pRetAddr);
+__MCF_CRT_EXTERN void __MCF_CRT_HeapFree(unsigned char *pBlock /* NON-NULL */, const void *pRetAddr);
 
 typedef struct tagBadAllocHandler {
 	int (*pfnProc)(__MCF_STD intptr_t);

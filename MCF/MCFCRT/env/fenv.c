@@ -13,21 +13,21 @@
 #define PRCS_DOUBLE		2				// 53 位。
 #define PRCS_EXTENDED	3				// 64 位。
 
-#define EXCP_PM			(1 << 5)		// 精度损失异常。
-#define EXCP_UM			(1 << 4)		// 下溢异常。
-#define EXCP_OM			(1 << 3)		// 上溢异常。
-#define EXCP_ZM			(1 << 2)		// 除以零异常。
-#define EXCP_DM			(1 << 1)		// 非规格化数异常。
-#define EXCP_IM			(1 << 0)		// 无效操作异常。
+#define EXCEPT_PM		(1 << 5)		// 精度损失异常。
+#define EXCEPT_UM		(1 << 4)		// 下溢异常。
+#define EXCEPT_OM		(1 << 3)		// 上溢异常。
+#define EXCEPT_ZM		(1 << 2)		// 除以零异常。
+#define EXCEPT_DM		(1 << 1)		// 非规格化数异常。
+#define EXCEPT_IM		(1 << 0)		// 无效操作异常。
 
 #define ROUNDING		RND_ZERO
 #define PRECISION		PRCS_EXTENDED
-#define EXCP_MASK		(EXCP_PM | EXCP_DM)
+#define EXCEPT_MASK		(EXCEPT_PM | EXCEPT_DM)
 
-static const uint16_t FPU_CONTROL_WORD	= (ROUNDING << 10) | (PRECISION << 8) | (EXCP_MASK);
-static const uint32_t MXCSR_REGISTER	= (ROUNDING << 13) |                    (EXCP_MASK << 7);
+static const uint16_t FPU_CONTROL_WORD	= (ROUNDING << 10) | (PRECISION << 8) | (EXCEPT_MASK);
+static const uint32_t MXCSR_REGISTER	= (ROUNDING << 13) |                    (EXCEPT_MASK << 7);
 
-__MCF_CRT_EXTERN void __MCF_CRTFEnvInitialize(){
+__MCF_CRT_EXTERN void __MCF_CRT_FEnvInitialize(){
 	__asm__ __volatile__("fldcw word ptr[%0]		\n" : : "m"(FPU_CONTROL_WORD));
 	__asm__ __volatile__("ldmxcsr dword ptr[%0]		\n" : : "m"(MXCSR_REGISTER));
 }

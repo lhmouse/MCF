@@ -82,54 +82,54 @@ public:
 		return xm_pEnd;
 	}
 
-	const ELEMENT_T *GetData() const {
+	const ELEMENT_T *GetData() const noexcept {
 		return xm_pBegin;
 	}
-	ELEMENT_T *GetData(){
+	ELEMENT_T *GetData() noexcept {
 		return xm_pBegin;
 	}
-	std::size_t GetSize() const {
+	std::size_t GetSize() const noexcept {
 		return (std::size_t)(xm_pEnd - xm_pBegin);
 	}
 public:
-	operator const ELEMENT_T *() const {
+	operator const ELEMENT_T *() const noexcept {
 		return xm_pBegin;
 	}
-	operator ELEMENT_T *(){
+	operator ELEMENT_T *() noexcept {
 		return xm_pBegin;
 	}
-/*	const ELEMENT_T &operator[](std::size_t uIndex) const {
+/*	const ELEMENT_T &operator[](std::size_t uIndex) const noexcept {
 		return xm_pBegin[uIndex];
 	}
-	ELEMENT_T &operator[](std::size_t uIndex){
+	ELEMENT_T &operator[](std::size_t uIndex) noexcept {
 		return xm_pBegin[uIndex];
 	}*/
 };
 
 
 template<typename ELEMENT_T, std::size_t ALT_STOR_THLD>
-const ELEMENT_T *begin(const VLA<ELEMENT_T, ALT_STOR_THLD> &vec){
+const ELEMENT_T *begin(const VLA<ELEMENT_T, ALT_STOR_THLD> &vec) noexcept {
 	return vec.GetBegin();
 }
 template<typename ELEMENT_T, std::size_t ALT_STOR_THLD>
-ELEMENT_T *begin(VLA<ELEMENT_T, ALT_STOR_THLD> &vec){
+ELEMENT_T *begin(VLA<ELEMENT_T, ALT_STOR_THLD> &vec) noexcept {
 	return vec.GetBegin();
 }
 template<typename ELEMENT_T, std::size_t ALT_STOR_THLD>
-const ELEMENT_T *cbegin(const VLA<ELEMENT_T, ALT_STOR_THLD> &vec){
+const ELEMENT_T *cbegin(const VLA<ELEMENT_T, ALT_STOR_THLD> &vec) noexcept {
 	return vec.GetBegin();
 }
 
 template<typename ELEMENT_T, std::size_t ALT_STOR_THLD>
-const ELEMENT_T *end(const VLA<ELEMENT_T, ALT_STOR_THLD> &vec){
+const ELEMENT_T *end(const VLA<ELEMENT_T, ALT_STOR_THLD> &vec) noexcept {
 	return vec.GetEnd();
 }
 template<typename ELEMENT_T, std::size_t ALT_STOR_THLD>
-ELEMENT_T *end(VLA<ELEMENT_T, ALT_STOR_THLD> &vec){
+ELEMENT_T *end(VLA<ELEMENT_T, ALT_STOR_THLD> &vec) noexcept {
 	return vec.GetEnd();
 }
 template<typename ELEMENT_T, std::size_t ALT_STOR_THLD>
-const ELEMENT_T *cend(const VLA<ELEMENT_T, ALT_STOR_THLD> &vec){
+const ELEMENT_T *cend(const VLA<ELEMENT_T, ALT_STOR_THLD> &vec) noexcept {
 	return vec.GetEnd();
 }
 

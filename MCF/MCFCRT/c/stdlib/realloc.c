@@ -7,8 +7,8 @@
 
 __MCF_CRT_NOINLINE void *realloc(void *ptr, size_t cb){
 	if(ptr == NULL){
-		return __MCF_CRTHeapAlloc(cb, __builtin_return_address(0));
+		return __MCF_CRT_HeapAlloc(cb, __builtin_return_address(0));
 	} else {
-		return __MCF_CRTHeapReAlloc((unsigned char *)ptr, cb, __builtin_return_address(0));
+		return __MCF_CRT_HeapReAlloc((unsigned char *)ptr, cb, __builtin_return_address(0));
 	}
 }

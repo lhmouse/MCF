@@ -38,26 +38,26 @@ static DWORD g_dwTlsIndex = TLS_OUT_OF_INDEXES;
 
 static DWORD WINAPI CRTThreadProc(LPVOID pParam){
 	const THREAD_INIT_INFO *const pThreadInitInfo = (const THREAD_INIT_INFO *)pParam;
-	__MCF_CRTThreadInitialize();
+	__MCF_CRT_ThreadInitialize();
 	const DWORD dwExitCode = (*pThreadInitInfo->pfnProc)(pThreadInitInfo->nParam);
-	__MCF_CRTThreadUninitialize();
+	__MCF_CRT_ThreadUninitialize();
 	return dwExitCode;
 }
 
-__MCF_CRT_EXTERN unsigned long __MCF_CRTTlsEnvInitialize(){
+__MCF_CRT_EXTERN unsigned long __MCF_CRT_TlsEnvInitialize(){
 	g_dwTlsIndex = TlsAlloc();
 	if(g_dwTlsIndex == TLS_OUT_OF_INDEXES){
 		return GetLastError();
 	}
 	return ERROR_SUCCESS;
 }
-__MCF_CRT_EXTERN void __MCF_CRTTlsEnvUninitialize(){
+__MCF_CRT_EXTERN void __MCF_CRT_TlsEnvUninitialize(){
 	TlsFree(g_dwTlsIndex);
 	g_dwTlsIndex = TLS_OUT_OF_INDEXES;
 }
 
-__MCF_CRT_EXTERN unsigned long __MCF_CRTThreadInitialize(){
-	__MCF_CRTFEnvInitialize();
+__MCF_CRT_EXTERN unsigned long __MCF_CRT_ThreadInitialize(){
+	__MCF_CRT_FEnvInitialize();
 
 	THREAD_ENV *const pNewThreadEnv = (THREAD_ENV *)malloc(sizeof(THREAD_ENV));
 	if(pNewThreadEnv == NULL){
@@ -71,7 +71,7 @@ __MCF_CRT_EXTERN unsigned long __MCF_CRTThreadInitialize(){
 
 	return ERROR_SUCCESS;
 }
-__MCF_CRT_EXTERN void __MCF_CRTThreadUninitialize(){
+__MCF_CRT_EXTERN void __MCF_CRT_ThreadUninitialize(){
 	THREAD_ENV *const pThreadEnv = (THREAD_ENV *)TlsGetValue(g_dwTlsIndex);
 	if(GetLastError() == ERROR_SUCCESS){
 		register AT_EXIT_NODE *pAtExitHead = pThreadEnv->pAtExitHead;
@@ -97,7 +97,7 @@ __MCF_CRT_EXTERN void __MCF_CRTThreadUninitialize(){
 		free(pThreadEnv);
 	}
 
-	__MCF_CRTFEnvUninitialize();
+	__MCF_CRT_FEnvUninitialize();
 }
 
 __MCF_CRT_EXTERN void *__MCF_CreateCRTThread(
@@ -135,7 +135,7 @@ __MCF_CRT_EXTERN int __MCF_AtCRTThreadExit(
 	return 0;
 }
 
-__MCF_CRT_EXTERN void *__MCF_CRTRetrieveTls(
+__MCF_CRT_EXTERN void *__MCF_CRT_RetrieveTls(
 	intptr_t nKey,
 	size_t uSizeToAlloc,
 	void (*pfnConstructor)(void *, intptr_t),
@@ -170,7 +170,7 @@ __MCF_CRT_EXTERN void *__MCF_CRTRetrieveTls(
 
 	return pMem;
 }
-__MCF_CRT_EXTERN void __MCF_CRTDeleteTls(
+__MCF_CRT_EXTERN void __MCF_CRT_DeleteTls(
 	intptr_t nKey
 ){
 	THREAD_ENV *const pThreadEnv = (THREAD_ENV *)TlsGetValue(g_dwTlsIndex);

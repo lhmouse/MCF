@@ -3,43 +3,43 @@
 // Copyleft 2013. LH_Mouse. All wrongs reserved.
 
 #include "avl.h"
-#include <assert.h>
+#include "../c/ext/assert.h"
 
-static inline size_t GetHeight(const AVL_NODE_HEADER *pWhere){
+static inline size_t GetHeight(const __MCF_AVL_NODE_HEADER *pWhere){
 	return (pWhere == NULL) ? 0 : pWhere->uHeight;
 }
 static inline size_t Max(size_t lhs, size_t rhs){
 	return (lhs > rhs) ? lhs : rhs;
 }
-static void UpdateRecur(AVL_NODE_HEADER *pWhere){
-	assert(pWhere != NULL);
+static void UpdateRecur(__MCF_AVL_NODE_HEADER *pWhere){
+	ASSERT(pWhere != NULL);
 
-	AVL_NODE_HEADER *pNode = pWhere;
+	__MCF_AVL_NODE_HEADER *pNode = pWhere;
 	size_t uLeftHeight = GetHeight(pWhere->pLeft);
 	size_t uRightHeight = GetHeight(pWhere->pRight);
 	for(;;){
 		const size_t uOldHeight = pNode->uHeight;
 
-		AVL_NODE_HEADER *const pParent = pNode->pParent;
-		AVL_NODE_HEADER **const ppRefl = pNode->ppRefl;
-		AVL_NODE_HEADER *const pLeft = pNode->pLeft;
-		AVL_NODE_HEADER *const pRight = pNode->pRight;
+		__MCF_AVL_NODE_HEADER *const pParent = pNode->pParent;
+		__MCF_AVL_NODE_HEADER **const ppRefl = pNode->ppRefl;
+		__MCF_AVL_NODE_HEADER *const pLeft = pNode->pLeft;
+		__MCF_AVL_NODE_HEADER *const pRight = pNode->pRight;
 
 		if(uLeftHeight > uRightHeight){
-			assert(uLeftHeight - uRightHeight <= 2);
+			ASSERT(uLeftHeight - uRightHeight <= 2);
 
 			if(uLeftHeight - uRightHeight <= 1){
 				pNode->uHeight = uLeftHeight + 1;
 			} else {
-				assert(pLeft != NULL);
+				ASSERT(pLeft != NULL);
 
-				AVL_NODE_HEADER *const pLL = pLeft->pLeft;
-				AVL_NODE_HEADER *const pLR = pLeft->pRight;
+				__MCF_AVL_NODE_HEADER *const pLL = pLeft->pLeft;
+				__MCF_AVL_NODE_HEADER *const pLR = pLeft->pRight;
 
 				const size_t uLLHeight = GetHeight(pLL);
 				const size_t uLRHeight = GetHeight(pLR);
 				if(uLLHeight >= uLRHeight){
-					assert(pLL != NULL);
+					ASSERT(pLL != NULL);
 
 					/*-------------+-------------*\
 					|     node     |  left        |
@@ -72,7 +72,7 @@ static void UpdateRecur(AVL_NODE_HEADER *pWhere){
 					*ppRefl = pLeft;
 					pNode = pLeft;
 				} else {
-					assert(pLR != NULL);
+					ASSERT(pLR != NULL);
 
 					/*-------------+--------------------*\
 					|     node     |      __lr__         |
@@ -84,8 +84,8 @@ static void UpdateRecur(AVL_NODE_HEADER *pWhere){
 					|  lrl  lrr    |                     |
 					\*-------------+--------------------*/
 
-					AVL_NODE_HEADER *const pLRL = pLR->pLeft;
-					AVL_NODE_HEADER *const pLRR = pLR->pRight;
+					__MCF_AVL_NODE_HEADER *const pLRL = pLR->pLeft;
+					__MCF_AVL_NODE_HEADER *const pLRR = pLR->pRight;
 
 					size_t uLRLHeight = 0;
 					if(pLRL != NULL){
@@ -122,21 +122,21 @@ static void UpdateRecur(AVL_NODE_HEADER *pWhere){
 				}
 			}
 		} else {
-			assert(uRightHeight - uLeftHeight <= 2);
+			ASSERT(uRightHeight - uLeftHeight <= 2);
 
 			if(uRightHeight - uLeftHeight <= 1){
 				pNode->uHeight = uRightHeight + 1;
 			} else {
-				assert(pRight != NULL);
-				assert(GetHeight(pRight) - GetHeight(pNode->pLeft) == 2);
+				ASSERT(pRight != NULL);
+				ASSERT(GetHeight(pRight) - GetHeight(pNode->pLeft) == 2);
 
-				AVL_NODE_HEADER *const pRR = pRight->pRight;
-				AVL_NODE_HEADER *const pRL = pRight->pLeft;
+				__MCF_AVL_NODE_HEADER *const pRR = pRight->pRight;
+				__MCF_AVL_NODE_HEADER *const pRL = pRight->pLeft;
 
 				const size_t uRRHeight = GetHeight(pRR);
 				const size_t uRLHeight = GetHeight(pRL);
 				if(uRRHeight >= uRLHeight){
-					assert(pRR != NULL);
+					ASSERT(pRR != NULL);
 
 					if(pRL != NULL){
 						pRL->pParent = pNode;
@@ -159,10 +159,10 @@ static void UpdateRecur(AVL_NODE_HEADER *pWhere){
 					*ppRefl = pRight;
 					pNode = pRight;
 				} else {
-					assert(pRL != NULL);
+					ASSERT(pRL != NULL);
 
-					AVL_NODE_HEADER *const pRLR = pRL->pRight;
-					AVL_NODE_HEADER *const pRLL = pRL->pLeft;
+					__MCF_AVL_NODE_HEADER *const pRLR = pRL->pRight;
+					__MCF_AVL_NODE_HEADER *const pRLL = pRL->pLeft;
 
 					size_t uRLRHeight = 0;
 					if(pRLR != NULL){
@@ -219,26 +219,26 @@ static void UpdateRecur(AVL_NODE_HEADER *pWhere){
 	}
 }
 
-__MCF_CRT_EXTERN int AVLAttach(
-	AVL_NODE_HEADER **ppRoot,
+__MCF_CRT_EXTERN __MCF_AVL_NODE_HEADER *__MCF_AVLAttach(
+	__MCF_AVL_NODE_HEADER **ppRoot,
 	intptr_t nKey,
-	AVL_NODE_HEADER *pNode
+	__MCF_AVL_NODE_HEADER *pNode
 ){
-	AVL_NODE_HEADER *pParent = NULL;
-	AVL_NODE_HEADER **ppIns = ppRoot;
+	__MCF_AVL_NODE_HEADER *pParent = NULL;
+	__MCF_AVL_NODE_HEADER **ppIns = ppRoot;
 	for(;;){
-		AVL_NODE_HEADER *const pNode = *ppIns;
-		if(pNode == NULL){
+		__MCF_AVL_NODE_HEADER *const pCur = *ppIns;
+		if(pCur == NULL){
 			break;
 		}
-		if(nKey < pNode->nKey){
-			pParent = pNode;
-			ppIns = &(pNode->pLeft);
-		} else if(nKey > pNode->nKey){
-			pParent = pNode;
-			ppIns = &(pNode->pRight);
+		if(nKey < pCur->nKey){
+			pParent = pCur;
+			ppIns = &(pCur->pLeft);
+		} else if(pCur->nKey < nKey){
+			pParent = pCur;
+			ppIns = &(pCur->pRight);
 		} else {
-			return 0;
+			return pCur;
 		}
 	}
 	*ppIns = pNode;
@@ -253,16 +253,52 @@ __MCF_CRT_EXTERN int AVLAttach(
 	if(pParent != NULL){
 		UpdateRecur(pParent);
 	}
-
-	return -1;
+	return NULL;
 }
-__MCF_CRT_EXTERN void AVLDetach(
-	const AVL_NODE_HEADER *pWhere
+__MCF_CRT_EXTERN __MCF_AVL_NODE_HEADER *__MCF_AVLAttachCustomComp(
+	__MCF_AVL_NODE_HEADER **ppRoot,
+	intptr_t nKey,
+	__MCF_AVL_NODE_HEADER *pNode,
+	__MCF_AVL_KEY_COMPARER pfnKeyComparer
 ){
-	AVL_NODE_HEADER *const pParent = pWhere->pParent;
-	AVL_NODE_HEADER **const ppRefl = pWhere->ppRefl;
-	AVL_NODE_HEADER *const pLeft = pWhere->pLeft;
-	AVL_NODE_HEADER *const pRight = pWhere->pRight;
+	__MCF_AVL_NODE_HEADER *pParent = NULL;
+	__MCF_AVL_NODE_HEADER **ppIns = ppRoot;
+	for(;;){
+		__MCF_AVL_NODE_HEADER *const pCur = *ppIns;
+		if(pCur == NULL){
+			break;
+		}
+		if((*pfnKeyComparer)(nKey, pCur->nKey) != 0){
+			pParent = pCur;
+			ppIns = &(pCur->pLeft);
+		} else if((*pfnKeyComparer)(pCur->nKey, nKey) != 0){
+			pParent = pCur;
+			ppIns = &(pCur->pRight);
+		} else {
+			return pCur;
+		}
+	}
+	*ppIns = pNode;
+
+	pNode->nKey		= nKey;
+	pNode->pParent	= pParent;
+	pNode->ppRefl	= ppIns;
+	pNode->pLeft	= NULL;
+	pNode->pRight	= NULL;
+	pNode->uHeight	= 1;
+
+	if(pParent != NULL){
+		UpdateRecur(pParent);
+	}
+	return NULL;
+}
+__MCF_CRT_EXTERN void __MCF_AVLDetach(
+	const __MCF_AVL_NODE_HEADER *pWhere
+){
+	__MCF_AVL_NODE_HEADER *const pParent = pWhere->pParent;
+	__MCF_AVL_NODE_HEADER **const ppRefl = pWhere->ppRefl;
+	__MCF_AVL_NODE_HEADER *const pLeft = pWhere->pLeft;
+	__MCF_AVL_NODE_HEADER *const pRight = pWhere->pRight;
 
 	if(pLeft == NULL){
 		/*----------+------*\
@@ -282,9 +318,9 @@ __MCF_CRT_EXTERN void AVLDetach(
 			UpdateRecur(pParent);
 		}
 	} else {
-		AVL_NODE_HEADER *pMaxBefore = pLeft;
+		__MCF_AVL_NODE_HEADER *pMaxBefore = pLeft;
 		for(;;){
-			AVL_NODE_HEADER *const pNext = pMaxBefore->pRight;
+			__MCF_AVL_NODE_HEADER *const pNext = pMaxBefore->pRight;
 			if(pNext == NULL){
 				break;
 			}
@@ -323,11 +359,11 @@ __MCF_CRT_EXTERN void AVLDetach(
 			|   mbl          |                |
 			\*---------------+---------------*/
 
-			AVL_NODE_HEADER *const pMaxBfParent = pMaxBefore->pParent;
-			AVL_NODE_HEADER **const ppMaxBfRefl = pMaxBefore->ppRefl;
-			AVL_NODE_HEADER *const pMaxBfLeft = pMaxBefore->pLeft;
+			__MCF_AVL_NODE_HEADER *const pMaxBfParent = pMaxBefore->pParent;
+			__MCF_AVL_NODE_HEADER **const ppMaxBfRefl = pMaxBefore->ppRefl;
+			__MCF_AVL_NODE_HEADER *const pMaxBfLeft = pMaxBefore->pLeft;
 
-			assert(pMaxBfParent != NULL);
+			ASSERT(pMaxBfParent != NULL);
 
 			*ppRefl = pMaxBefore;
 
@@ -358,30 +394,50 @@ __MCF_CRT_EXTERN void AVLDetach(
 		}
 	}
 }
-__MCF_CRT_EXTERN AVL_NODE_HEADER *AVLFind(
-	const AVL_NODE_HEADER *pRoot,
+__MCF_CRT_EXTERN __MCF_AVL_NODE_HEADER *__MCF_AVLFind(
+	const __MCF_AVL_NODE_HEADER *pRoot,
 	intptr_t nKey
 ){
-	const AVL_NODE_HEADER *pCur = pRoot;
+	const __MCF_AVL_NODE_HEADER *pCur = pRoot;
 	for(;;){
 		if(pCur == NULL){
 			return NULL;
-		} else if(nKey < pCur->nKey){
+		}
+		if(nKey < pCur->nKey){
 			pCur = pCur->pLeft;
-		} else if(nKey > pCur->nKey){
+		} else if(pCur->nKey < nKey){
 			pCur = pCur->pRight;
 		} else {
-			return (AVL_NODE_HEADER *)pCur;
+			return (__MCF_AVL_NODE_HEADER *)pCur;
+		}
+	}
+}
+__MCF_CRT_EXTERN __MCF_AVL_NODE_HEADER *__MCF_AVLFindCustomComp(
+	const __MCF_AVL_NODE_HEADER *pRoot,
+	intptr_t nKey,
+	__MCF_AVL_KEY_COMPARER pfnKeyComparer
+){
+	const __MCF_AVL_NODE_HEADER *pCur = pRoot;
+	for(;;){
+		if(pCur == NULL){
+			return NULL;
+		}
+		if((*pfnKeyComparer)(nKey, pCur->nKey) != 0){
+			pCur = pCur->pLeft;
+		} else if((*pfnKeyComparer)(pCur->nKey, nKey) != 0){
+			pCur = pCur->pRight;
+		} else {
+			return (__MCF_AVL_NODE_HEADER *)pCur;
 		}
 	}
 }
 
-__MCF_CRT_EXTERN void AVLSwap(
-	AVL_NODE_HEADER **ppRoot1,
-	AVL_NODE_HEADER **ppRoot2
+__MCF_CRT_EXTERN void __MCF_AVLSwap(
+	__MCF_AVL_NODE_HEADER **ppRoot1,
+	__MCF_AVL_NODE_HEADER **ppRoot2
 ){
-	AVL_NODE_HEADER *const pRoot1 = *ppRoot1;
-	AVL_NODE_HEADER *const pRoot2 = *ppRoot2;
+	__MCF_AVL_NODE_HEADER *const pRoot1 = *ppRoot1;
+	__MCF_AVL_NODE_HEADER *const pRoot2 = *ppRoot2;
 
 	*ppRoot2 = pRoot1;
 	if(pRoot1 != NULL){
@@ -394,109 +450,109 @@ __MCF_CRT_EXTERN void AVLSwap(
 	}
 }
 
-__MCF_CRT_EXTERN AVL_NODE_HEADER *AVLBegin(
-	const AVL_NODE_HEADER *pRoot
+__MCF_CRT_EXTERN __MCF_AVL_NODE_HEADER *__MCF_AVLBegin(
+	const __MCF_AVL_NODE_HEADER *pRoot
 ){
-	const AVL_NODE_HEADER *pCur = pRoot;
+	const __MCF_AVL_NODE_HEADER *pCur = pRoot;
 	if(pCur == NULL){
 		return NULL;
 	}
 	for(;;){
-		const AVL_NODE_HEADER *const pLeft = pCur->pLeft;
+		const __MCF_AVL_NODE_HEADER *const pLeft = pCur->pLeft;
 		if(pLeft == NULL){
-			return (AVL_NODE_HEADER *)pCur;
+			return (__MCF_AVL_NODE_HEADER *)pCur;
 		}
 		pCur = pLeft;
 	}
 }
-__MCF_CRT_EXTERN AVL_NODE_HEADER *AVLRBegin(
-	const AVL_NODE_HEADER *pRoot
+__MCF_CRT_EXTERN __MCF_AVL_NODE_HEADER *__MCF_AVLRBegin(
+	const __MCF_AVL_NODE_HEADER *pRoot
 ){
-	const AVL_NODE_HEADER *pCur = pRoot;
+	const __MCF_AVL_NODE_HEADER *pCur = pRoot;
 	if(pCur == NULL){
 		return NULL;
 	}
 	for(;;){
-		const AVL_NODE_HEADER *const pRight = pCur->pRight;
+		const __MCF_AVL_NODE_HEADER *const pRight = pCur->pRight;
 		if(pRight == NULL){
-			return (AVL_NODE_HEADER *)pCur;
+			return (__MCF_AVL_NODE_HEADER *)pCur;
 		}
 		pCur = pRight;
 	}
 }
-__MCF_CRT_EXTERN AVL_NODE_HEADER *AVLNext(
-	const AVL_NODE_HEADER *pWhere
+__MCF_CRT_EXTERN __MCF_AVL_NODE_HEADER *__MCF_AVLNext(
+	const __MCF_AVL_NODE_HEADER *pWhere
 ){
-	const AVL_NODE_HEADER *pCur = pWhere;
+	const __MCF_AVL_NODE_HEADER *pCur = pWhere;
 
-	const AVL_NODE_HEADER *const pRight = pCur->pRight;
+	const __MCF_AVL_NODE_HEADER *const pRight = pCur->pRight;
 	if(pRight != NULL){
 		pCur = pRight;
 		for(;;){
-			const AVL_NODE_HEADER *const pLeft = pCur->pLeft;
+			const __MCF_AVL_NODE_HEADER *const pLeft = pCur->pLeft;
 			if(pLeft == NULL){
-				return (AVL_NODE_HEADER *)pCur;
+				return (__MCF_AVL_NODE_HEADER *)pCur;
 			}
 			pCur = pLeft;
 		}
 	}
 
 	for(;;){
-		const AVL_NODE_HEADER *const pParent = pCur->pParent;
+		const __MCF_AVL_NODE_HEADER *const pParent = pCur->pParent;
 		if(pParent == NULL){
 			return NULL;
 		}
 		if(pCur->ppRefl == &(pParent->pLeft)){
-			return (AVL_NODE_HEADER *)pParent;
+			return (__MCF_AVL_NODE_HEADER *)pParent;
 		}
 		pCur = pParent;
 	}
 }
-__MCF_CRT_EXTERN AVL_NODE_HEADER *AVLPrev(
-	const AVL_NODE_HEADER *pWhere
+__MCF_CRT_EXTERN __MCF_AVL_NODE_HEADER *__MCF_AVLPrev(
+	const __MCF_AVL_NODE_HEADER *pWhere
 ){
-	const AVL_NODE_HEADER *pCur = pWhere;
+	const __MCF_AVL_NODE_HEADER *pCur = pWhere;
 
-	const AVL_NODE_HEADER *const pLeft = pCur->pLeft;
+	const __MCF_AVL_NODE_HEADER *const pLeft = pCur->pLeft;
 	if(pLeft != NULL){
 		pCur = pLeft;
 		for(;;){
-			const AVL_NODE_HEADER *const pRight = pCur->pRight;
+			const __MCF_AVL_NODE_HEADER *const pRight = pCur->pRight;
 			if(pRight == NULL){
-				return (AVL_NODE_HEADER *)pCur;
+				return (__MCF_AVL_NODE_HEADER *)pCur;
 			}
 			pCur = pRight;
 		}
 	}
 
 	for(;;){
-		const AVL_NODE_HEADER *const pParent = pCur->pParent;
+		const __MCF_AVL_NODE_HEADER *const pParent = pCur->pParent;
 		if(pParent == NULL){
 			return NULL;
 		}
 		if(pCur->ppRefl == &(pParent->pRight)){
-			return (AVL_NODE_HEADER *)pParent;
+			return (__MCF_AVL_NODE_HEADER *)pParent;
 		}
 		pCur = pParent;
 	}
 }
 
-__MCF_CRT_EXTERN int AVLTraverse(
-	const AVL_NODE_HEADER *pRoot,
-	int (*pfnCallback)(AVL_NODE_HEADER *, intptr_t),
+__MCF_CRT_EXTERN int __MCF_AVLTraverse(
+	const __MCF_AVL_NODE_HEADER *pRoot,
+	int (*pfnCallback)(__MCF_AVL_NODE_HEADER *, intptr_t),
 	intptr_t nParam
 ){
 	if(pRoot != NULL){
-		AVL_NODE_HEADER *const pLeft = pRoot->pLeft;
-		AVL_NODE_HEADER *const pRight = pRoot->pRight;
+		__MCF_AVL_NODE_HEADER *const pLeft = pRoot->pLeft;
+		__MCF_AVL_NODE_HEADER *const pRight = pRoot->pRight;
 
-		if(AVLTraverse(pLeft, pfnCallback, nParam) == 0){
+		if(__MCF_AVLTraverse(pLeft, pfnCallback, nParam) == 0){
 			return 0;
 		}
-		if((*pfnCallback)((AVL_NODE_HEADER *)pRoot, nParam) == 0){
+		if((*pfnCallback)((__MCF_AVL_NODE_HEADER *)pRoot, nParam) == 0){
 			return 0;
 		}
-		if(AVLTraverse(pRight, pfnCallback, nParam) == 0){
+		if(__MCF_AVLTraverse(pRight, pfnCallback, nParam) == 0){
 			return 0;
 		}
 	}

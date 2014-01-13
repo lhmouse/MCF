@@ -24,8 +24,7 @@ UNIFIED_CHAR_SEQ UTF8String::xUnify() const {
 template<>
 void UTF8String::xDisunify(UNIFIED_CHAR_SEQ &&ucsUnified){
 	const auto uDisuniLength = (std::size_t)::WideCharToMultiByte(CP_UTF8, 0, ucsUnified.GetData(), (int)ucsUnified.GetSize(), nullptr, 0, nullptr, nullptr);
-	Reserve(uDisuniLength + 1);
-	const auto pszBuffer = GetCStr();
+	const auto pszBuffer = Reserve(uDisuniLength + 1);
 	::WideCharToMultiByte(CP_UTF8, 0, ucsUnified.GetData(), (int)ucsUnified.GetSize(), pszBuffer, (int)uDisuniLength, nullptr, nullptr);
 	pszBuffer[uDisuniLength] = 0;
 }
@@ -43,8 +42,7 @@ UNIFIED_CHAR_SEQ ANSIString::xUnify() const {
 template<>
 void ANSIString::xDisunify(UNIFIED_CHAR_SEQ &&ucsUnified){
 	const auto uDisuniLength = (std::size_t)::WideCharToMultiByte(CP_ACP, 0, ucsUnified.GetData(), (int)ucsUnified.GetSize(), nullptr, 0, nullptr, nullptr);
-	Reserve(uDisuniLength + 1);
-	const auto pszBuffer = GetCStr();
+	const auto pszBuffer = Reserve(uDisuniLength + 1);
 	::WideCharToMultiByte(CP_ACP, 0, ucsUnified.GetData(), (int)ucsUnified.GetSize(), pszBuffer, (int)uDisuniLength, nullptr, nullptr);
 	pszBuffer[uDisuniLength] = 0;
 }

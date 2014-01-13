@@ -41,28 +41,22 @@ static void PumpAtExits(){
 	}
 }
 
-__MCF_CRT_EXTERN unsigned long __MCF_CRTBegin(){
+__MCF_CRT_EXTERN unsigned long __MCF_CRT_Begin(){
 	DWORD dwRet;
-
-	if((dwRet = __MCF_CRTDaemonInitialize()) == ERROR_SUCCESS){
-		if((dwRet = __MCF_CRTHeapInitialize()) == ERROR_SUCCESS){
-			if((dwRet = __MCF_CRTTlsEnvInitialize()) == ERROR_SUCCESS){
-				__main();
-				return ERROR_SUCCESS;
-			}
-			__MCF_CRTHeapUninitialize();
+	if((dwRet = __MCF_CRT_HeapInitialize()) == ERROR_SUCCESS){
+		if((dwRet = __MCF_CRT_TlsEnvInitialize()) == ERROR_SUCCESS){
+			__main();
+			return ERROR_SUCCESS;
 		}
-		__MCF_CRTDaemonUninitialize();
+		__MCF_CRT_HeapUninitialize();
 	}
-
 	return dwRet;
 }
-__MCF_CRT_EXTERN void __MCF_CRTEnd(){
+__MCF_CRT_EXTERN void __MCF_CRT_End(){
 	PumpAtExits();
 
-	__MCF_CRTTlsEnvUninitialize();
-	__MCF_CRTHeapUninitialize();
-	__MCF_CRTDaemonUninitialize();
+	__MCF_CRT_TlsEnvUninitialize();
+	__MCF_CRT_HeapUninitialize();
 }
 
 __MCF_CRT_EXTERN void *__MCF_GetModuleBase(){

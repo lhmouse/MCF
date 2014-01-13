@@ -10,7 +10,7 @@
 #include <tuple>
 #include <type_traits>
 #include "../../env/thread.h"
-#include "../../env/daemon.h"
+#include "../../env/bail.h"
 
 namespace MCF {
 
@@ -38,41 +38,36 @@ namespace __MCF {
 		static void xCtorJumper(void *pMem, std::intptr_t nContext){
 			xCtorWrapper<0, sizeof...(CTOR_PARAM_T)>::Construct(pMem, ((const TlsWrapper *)nContext)->xm_CtorParams);
 		}
-		static void xDtorJumper(void *pMem){
+		static void xDtorJumper(void *pMem) noexcept {
 			((OBJECT_T *)pMem)->~OBJECT_T();
 		}
 	private:
 		const std::intptr_t xm_nUniqueID;
 		const std::tuple<CTOR_PARAM_T...> xm_CtorParams;
 	public:
-		TlsWrapper(CTOR_PARAM_T ...CtorParam) :
-			xm_nUniqueID(__sync_add_and_fetch(&s_nCounter, 1)),
-			xm_CtorParams(std::move(CtorParam)...)
+		TlsWrapper(CTOR_PARAM_T ...CtorParam) noexcept
+			: xm_nUniqueID(__sync_add_and_fetch(&s_nCounter, 1)), xm_CtorParams(std::move(CtorParam)...)
 		{
 		}
-		~TlsWrapper(){ ::__MCF_CRTDeleteTls(xm_nUniqueID); }
+		~TlsWrapper(){
+			::__MCF_CRT_DeleteTls(xm_nUniqueID);
+		}
 
 		TlsWrapper(const TlsWrapper &) = delete;
 		void operator=(const TlsWrapper &) = delete;
 	public:
 		OBJECT_T *Get() const {
-			const auto pRet = (OBJECT_T *)::__MCF_CRTRetrieveTls(
-				xm_nUniqueID,
-				sizeof(OBJECT_T),
-				&xCtorJumper,
-				(std::intptr_t)this,
-				&xDtorJumper
-			);
+			const auto pRet = (OBJECT_T *)::__MCF_CRT_RetrieveTls(xm_nUniqueID, sizeof(OBJECT_T), &xCtorJumper, (std::intptr_t)this, &xDtorJumper);
 			if(pRet == nullptr){
 				::__MCF_Bail(
-					L"__MCF_CRTRetrieveTls() 返回了一个空指针。\n"
+					L"__MCF_CRT_RetrieveTls() 返回了一个空指针。\n"
 					"如果这不是由于系统内存不足造成的，请确保不要在静态对象的构造函数或析构函数中访问 TLS。"
 				);
 			}
 			return pRet;
 		}
-		void Release() const {
-			::__MCF_CRTDeleteTls(xm_nUniqueID);
+		void Release() const noexcept {
+			::__MCF_CRT_DeleteTls(xm_nUniqueID);
 		}
 	public:
 		OBJECT_T *operator->() const {
@@ -87,8 +82,7 @@ namespace __MCF {
 	volatile std::intptr_t TlsWrapper<OBJECT_T, CTOR_PARAM_T...>::s_nCounter = 0;
 
 	template<class OBJECT_T, class... CTOR_PARAM_T>
-	auto TlsWrapperTypeHelper(const CTOR_PARAM_T &...)
-		-> TlsWrapper<OBJECT_T, typename std::decay<const CTOR_PARAM_T>::type...>;
+	auto TlsWrapperTypeHelper(const CTOR_PARAM_T &...) -> TlsWrapper<OBJECT_T, typename std::decay<const CTOR_PARAM_T>::type...>;
 }
 
 }

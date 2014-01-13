@@ -29,20 +29,23 @@ struct StringInserterBase {
 
 template<typename SOURCE_T, typename CHAR_T, StringEncoding CHAR_ENC>
 struct StringInserter : public StringInserterBase<CHAR_T, CHAR_ENC> {
+	using typename StringInserterBase<CHAR_T, CHAR_ENC>::PARAMS;
+
 	StringInserter(const SOURCE_T &Source);
 
 	virtual std::size_t operator()(const PARAMS &Params);
 	virtual bool operator()(CHAR_T *&pchDst, const PARAMS &Params) const;
 };
 
-template<typename CHAR_T, StringEncoding CHAR_ENC, typename INSERTER_ITERATOR_T>
+template<typename CHAR_T, StringEncoding CHAR_ENC, class INSERTER_ITER>
 bool FormatVector(
 	GenericString<CHAR_T, CHAR_ENC> &strRet,
 	const CHAR_T *pszFormat,
-	INSERTER_ITERATOR_T *pInserterIterators,
+	INSERTER_ITER *pInserterIterators,
 	std::size_t uInserterCount
 ){
-	typedef typename StringInserterBase<CHAR_T, CHAR_EN>::PARAMS PARAMS;
+	typedef StringInserterBase<CHAR_T, CHAR_ENC> InserterBase;
+	typedef typename InserterBase::PARAMS PARAMS;
 
 	bool bNoError = true;
 /*	VVector<PARAMS> vecParams;

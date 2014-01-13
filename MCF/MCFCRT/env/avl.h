@@ -14,44 +14,58 @@ typedef struct tagAVLNodeHeader{
 	struct tagAVLNodeHeader *pLeft;
 	struct tagAVLNodeHeader *pRight;
 	__MCF_STD size_t uHeight;
-} AVL_NODE_HEADER, *AVL_ROOT;
+} __MCF_AVL_NODE_HEADER, *__MCF_AVL_ROOT;
 
-__MCF_CRT_EXTERN int AVLAttach(
-	AVL_NODE_HEADER **ppRoot,
+// 若 arg0 < arg1 应返回非零值，否则应返回零。
+__MCF_CRT_TYPEDEF_PROC int (*__MCF_AVL_KEY_COMPARER)(__MCF_STD intptr_t, __MCF_STD intptr_t);
+
+__MCF_CRT_EXTERN __MCF_AVL_NODE_HEADER *__MCF_AVLAttach(
+	__MCF_AVL_NODE_HEADER **ppRoot,
 	__MCF_STD intptr_t nKey,
-	AVL_NODE_HEADER *pNode
+	__MCF_AVL_NODE_HEADER *pNode
 );
-__MCF_CRT_EXTERN void AVLDetach(
-	const AVL_NODE_HEADER *pWhere
+__MCF_CRT_EXTERN __MCF_AVL_NODE_HEADER *__MCF_AVLAttachCustomComp(
+	__MCF_AVL_NODE_HEADER **ppRoot,
+	__MCF_STD intptr_t nKey,
+	__MCF_AVL_NODE_HEADER *pNode,
+	__MCF_AVL_KEY_COMPARER pfnKeyComparer
 );
-__MCF_CRT_EXTERN AVL_NODE_HEADER *AVLFind(
-	// Q: 为什么这里是 const AVL_NODE_HEADER * 而不是 AVL_NODE_HEADER * 呢？
+__MCF_CRT_EXTERN void __MCF_AVLDetach(
+	const __MCF_AVL_NODE_HEADER *pWhere
+);
+__MCF_CRT_EXTERN __MCF_AVL_NODE_HEADER *__MCF_AVLFind(
+	// Q: 为什么这里是 const __MCF_AVL_NODE_HEADER * 而不是 __MCF_AVL_NODE_HEADER * 呢？
 	// A: 参考 strchr 函数。
-	const AVL_NODE_HEADER *pRoot,
+	const __MCF_AVL_NODE_HEADER *pRoot,
 	__MCF_STD intptr_t nKey
 );
-
-__MCF_CRT_EXTERN void AVLSwap(
-	AVL_NODE_HEADER **ppRoot1,
-	AVL_NODE_HEADER **ppRoot2
+__MCF_CRT_EXTERN __MCF_AVL_NODE_HEADER *__MCF_AVLFindCustomComp(
+	const __MCF_AVL_NODE_HEADER *pRoot,
+	__MCF_STD intptr_t nKey,
+	__MCF_AVL_KEY_COMPARER pfnKeyComparer
 );
 
-__MCF_CRT_EXTERN AVL_NODE_HEADER *AVLBegin(
-	const AVL_NODE_HEADER *pRoot
-);
-__MCF_CRT_EXTERN AVL_NODE_HEADER *AVLRBegin(
-	const AVL_NODE_HEADER *pRoot
-);
-__MCF_CRT_EXTERN AVL_NODE_HEADER *AVLNext(
-	const AVL_NODE_HEADER *pWhere
-);
-__MCF_CRT_EXTERN AVL_NODE_HEADER *AVLPrev(
-	const AVL_NODE_HEADER *pWhere
+__MCF_CRT_EXTERN void __MCF_AVLSwap(
+	__MCF_AVL_NODE_HEADER **ppRoot1,
+	__MCF_AVL_NODE_HEADER **ppRoot2
 );
 
-__MCF_CRT_EXTERN int AVLTraverse(
-	const AVL_NODE_HEADER *pRoot,
-	int (*pfnCallback)(AVL_NODE_HEADER *, __MCF_STD intptr_t),
+__MCF_CRT_EXTERN __MCF_AVL_NODE_HEADER *__MCF_AVLBegin(
+	const __MCF_AVL_NODE_HEADER *pRoot
+);
+__MCF_CRT_EXTERN __MCF_AVL_NODE_HEADER *__MCF_AVLRBegin(
+	const __MCF_AVL_NODE_HEADER *pRoot
+);
+__MCF_CRT_EXTERN __MCF_AVL_NODE_HEADER *__MCF_AVLNext(
+	const __MCF_AVL_NODE_HEADER *pWhere
+);
+__MCF_CRT_EXTERN __MCF_AVL_NODE_HEADER *__MCF_AVLPrev(
+	const __MCF_AVL_NODE_HEADER *pWhere
+);
+
+__MCF_CRT_EXTERN int __MCF_AVLTraverse(
+	const __MCF_AVL_NODE_HEADER *pRoot,
+	int (*pfnCallback)(__MCF_AVL_NODE_HEADER *, __MCF_STD intptr_t),
 	__MCF_STD intptr_t nParam
 );
 

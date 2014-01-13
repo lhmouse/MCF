@@ -7,7 +7,7 @@
 
 #include "../../env/_crtdef.h"
 
-static inline __attribute__((always_inline)) void __MCF_CRTStrBuildTable(unsigned char *table, const char *s){
+static inline __attribute__((always_inline)) void __MCF_CRT_StrBuildTable(unsigned char *table, const char *s){
 	__builtin_memset(table, 0, 0x100);
 
 	const char *rp = s;
@@ -21,7 +21,7 @@ static inline __attribute__((always_inline)) void __MCF_CRTStrBuildTable(unsigne
 	}
 }
 
-static inline __attribute__((always_inline)) char *__MCF_CRTStrFindFirstOf(const char *s, const unsigned char *table){
+static inline __attribute__((always_inline)) char *__MCF_CRT_StrFindFirstOf(const char *s, const unsigned char *table){
 	const char *rp = s;
 	for(;;){
 		const char ch = *rp;
@@ -36,7 +36,7 @@ static inline __attribute__((always_inline)) char *__MCF_CRTStrFindFirstOf(const
 	return (char *)rp;
 }
 
-static inline __attribute__((always_inline)) char *__MCF_CRTStrFindFirstNotOf(const char *s, const unsigned char *table){
+static inline __attribute__((always_inline)) char *__MCF_CRT_StrFindFirstNotOf(const char *s, const unsigned char *table){
 	const char *rp = s;
 	for(;;){
 		const char ch = *rp;

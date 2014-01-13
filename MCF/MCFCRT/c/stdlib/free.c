@@ -7,6 +7,6 @@
 
 __MCF_CRT_NOINLINE void free(void *ptr){
 	if(ptr != NULL){
-		__MCF_CRTHeapFree((unsigned char *)ptr, __builtin_return_address(0));
+		__MCF_CRT_HeapFree((unsigned char *)ptr, __builtin_return_address(0));
 	}
 }

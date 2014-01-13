@@ -1,5 +1,5 @@
-// Õâ¸öÎÄ¼şÊÇ MCF µÄÒ»²¿·Ö¡£
-// ÓĞ¹Ø¾ßÌåÊÚÈ¨ËµÃ÷£¬Çë²ÎÔÄ MCFLicense.txt¡£
+// è¿™ä¸ªæ–‡ä»¶æ˜¯ MCF çš„ä¸€éƒ¨åˆ†ã€‚
+// æœ‰å…³å…·ä½“æˆæƒè¯´æ˜ï¼Œè¯·å‚é˜… MCFLicense.txtã€‚
 // Copyleft 2013. LH_Mouse. All wrongs reserved.
 
 #define WIN32_LEAN_AND_MEAN
@@ -29,7 +29,7 @@ __MCF_CRT_EXTERN int __mingwthr_key_dtor(unsigned long key, DTOR dtor){
 		return -1;
 	}
 
-	NODE *const pNode = (NODE *)__MCF_CRTRetrieveTls((intptr_t)key, sizeof(NODE), NULL, 0, &node_dtor);
+	NODE *const pNode = (NODE *)__MCF_CRT_RetrieveTls((intptr_t)key, sizeof(NODE), NULL, 0, &node_dtor);
 	if(pNode == NULL){
 		return -1;
 	}
@@ -40,7 +40,7 @@ __MCF_CRT_EXTERN int __mingwthr_key_dtor(unsigned long key, DTOR dtor){
 	return 0;
 }
 __MCF_CRT_EXTERN int __mingwthr_remove_key_dtor(unsigned long key){
-	__MCF_CRTDeleteTls((intptr_t)key);
+	__MCF_CRT_DeleteTls((intptr_t)key);
 	return 0;
 }
 

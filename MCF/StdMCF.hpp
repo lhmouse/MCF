@@ -1,5 +1,5 @@
-// Õâ¸öÎÄ¼şÊÇ MCF µÄÒ»²¿·Ö¡£
-// ÓĞ¹Ø¾ßÌåÊÚÈ¨ËµÃ÷£¬Çë²ÎÔÄ MCFLicense.txt¡£
+// è¿™ä¸ªæ–‡ä»¶æ˜¯ MCF çš„ä¸€éƒ¨åˆ†ã€‚
+// æœ‰å…³å…·ä½“æˆæƒè¯´æ˜ï¼Œè¯·å‚é˜… MCFLicense.txtã€‚
 // Copyleft 2013. LH_Mouse. All wrongs reserved.
 
 #ifndef __MCF_STD_MCF_HPP__
@@ -21,7 +21,6 @@
 #include <cstdint>
 #include <cstdlib>
 #include <climits>
-#include <cassert>
 
 #include <memory>
 #include <atomic>

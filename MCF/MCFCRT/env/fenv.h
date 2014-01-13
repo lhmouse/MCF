@@ -7,8 +7,8 @@
 
 #include "_crtdef.h"
 
-__MCF_CRT_EXTERN void __MCF_CRTFEnvInitialize();
-// __MCF_CRT_EXTERN void __MCF_CRTFEnvUninitialize();
-#define __MCF_CRTFEnvUninitialize()		((void)0)
+__MCF_CRT_EXTERN void __MCF_CRT_FEnvInitialize();
+// __MCF_CRT_EXTERN void __MCF_CRT_FEnvUninitialize();
+#define __MCF_CRT_FEnvUninitialize()		((void)0)
 
 #endif

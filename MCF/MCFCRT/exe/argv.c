@@ -14,13 +14,15 @@ static wchar_t			*	g_pwszArgBuffer;
 static volatile size_t		g_uArgC;
 static wchar_t			**	g_ppwszArgV;
 
-__MCF_CRT_EXTERN void __MCF_CRTExeInitializeArgV(){
+__MCF_CRT_EXTERN unsigned long __MCF_CRT_ExeInitializeArgV(){
 	InitializeCriticalSection(&g_csMutex);
 	g_pwszArgBuffer = NULL;
 	g_uArgC = 0;
 	g_ppwszArgV = NULL;
+
+	return ERROR_SUCCESS;
 }
-__MCF_CRT_EXTERN void __MCF_CRTExeUninitializeArgV(){
+__MCF_CRT_EXTERN void __MCF_CRT_ExeUninitializeArgV(){
 	free(g_ppwszArgV);
 	g_ppwszArgV = NULL;
 	g_uArgC = 0;

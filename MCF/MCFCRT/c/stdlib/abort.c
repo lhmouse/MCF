@@ -3,7 +3,7 @@
 // Copyleft 2013. LH_Mouse. All wrongs reserved.
 
 #include "../../env/_crtdef.h"
-#include "../../env/daemon.h"
+#include "../../env/bail.h"
 #include <windows.h>
 
 __MCF_CRT_EXTERN __attribute__((noreturn, used)) void abort(){

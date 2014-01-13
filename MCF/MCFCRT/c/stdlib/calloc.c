@@ -13,7 +13,7 @@ __MCF_CRT_NOINLINE void *calloc(size_t nmemb, size_t cnt){
 	if(cb > SIZE_MAX){
 		return NULL;
 	}
-	void *const ret = __MCF_CRTHeapAlloc(cb, __builtin_return_address(0));
+	void *const ret = __MCF_CRT_HeapAlloc(cb, __builtin_return_address(0));
 	if(ret != NULL){
 		memset(ret, 0, cb);
 	}

@@ -12,12 +12,12 @@
 static CRITICAL_SECTION			g_csHeapLock;
 static __MCF_BAD_ALLOC_HANDLER	g_BadAllocHandler;
 
-__MCF_CRT_EXTERN unsigned long __MCF_CRTHeapInitialize(){
+__MCF_CRT_EXTERN unsigned long __MCF_CRT_HeapInitialize(){
 	InitializeCriticalSectionAndSpinCount(&g_csHeapLock, 0x400);
 	g_BadAllocHandler.pfnProc = NULL;
 
 #ifdef __MCF_CRT_HEAPDBG_ON
-	__MCF_CRTHeapDbgInitContext();
+	__MCF_CRT_HeapDbgInitContext();
 #endif
 
 	const HANDLE hProcessHeap = GetProcessHeap();
@@ -33,17 +33,17 @@ __MCF_CRT_EXTERN unsigned long __MCF_CRTHeapInitialize(){
 
 	return ERROR_SUCCESS;
 }
-__MCF_CRT_EXTERN void __MCF_CRTHeapUninitialize(){
+__MCF_CRT_EXTERN void __MCF_CRT_HeapUninitialize(){
 #ifdef __MCF_CRT_HEAPDBG_ON
-	__MCF_CRTHeapDbgUninitContext();
+	__MCF_CRT_HeapDbgUninitContext();
 #endif
 
 	DeleteCriticalSection(&g_csHeapLock);
 }
 
-__MCF_CRT_EXTERN unsigned char *__MCF_CRTHeapAlloc(size_t uSize, const void *pRetAddr __attribute__((unused))){
+__MCF_CRT_EXTERN unsigned char *__MCF_CRT_HeapAlloc(size_t uSize, const void *pRetAddr __attribute__((unused))){
 #ifdef __MCF_CRT_HEAPDBG_ON
-	const size_t uRawSize = __MCF_CRTHeapDbgGetRawSize(uSize);
+	const size_t uRawSize = __MCF_CRT_HeapDbgGetRawSize(uSize);
 	if((uSize & ~uRawSize & ((size_t)1 << (sizeof(size_t) * 8 - 1))) != 0){
 		return NULL;
 	}
@@ -57,7 +57,7 @@ __MCF_CRT_EXTERN unsigned char *__MCF_CRTHeapAlloc(size_t uSize, const void *pRe
 			unsigned char *const pRaw = (unsigned char *)HeapAlloc(GetProcessHeap(), 0, uRawSize);
 			if(pRaw != NULL){
 #ifdef __MCF_CRT_HEAPDBG_ON
-				__MCF_CRTHeapDbgAddGuardsAndRegister(&pRet, pRaw, uSize, pRetAddr);
+				__MCF_CRT_HeapDbgAddGuardsAndRegister(&pRet, pRaw, uSize, pRetAddr);
 				memset(pRet, 0xCD, uSize);
 #else
 				pRet = pRaw;
@@ -68,9 +68,9 @@ __MCF_CRT_EXTERN unsigned char *__MCF_CRTHeapAlloc(size_t uSize, const void *pRe
 	LeaveCriticalSection(&g_csHeapLock);
 	return pRet;
 }
-__MCF_CRT_EXTERN unsigned char *__MCF_CRTHeapReAlloc(unsigned char *pBlock /* NON-NULL */, size_t uSize, const void *pRetAddr __attribute__((unused))){
+__MCF_CRT_EXTERN unsigned char *__MCF_CRT_HeapReAlloc(unsigned char *pBlock /* NON-NULL */, size_t uSize, const void *pRetAddr __attribute__((unused))){
 #ifdef __MCF_CRT_HEAPDBG_ON
-	const size_t uRawSize = __MCF_CRTHeapDbgGetRawSize(uSize);
+	const size_t uRawSize = __MCF_CRT_HeapDbgGetRawSize(uSize);
 	if((uSize & ~uRawSize & ((size_t)1 << (sizeof(size_t) * 8 - 1))) != 0){
 		return NULL;
 	}
@@ -82,7 +82,7 @@ __MCF_CRT_EXTERN unsigned char *__MCF_CRTHeapReAlloc(unsigned char *pBlock /* NO
 	EnterCriticalSection(&g_csHeapLock);
 #ifdef __MCF_CRT_HEAPDBG_ON
 		unsigned char *pRawOriginal;
-		const __MCF_HEAPDBG_BLOCK_INFO *const pBlockInfo = __MCF_CRTHeapDbgValidate(&pRawOriginal, pBlock, pRetAddr);
+		const __MCF_HEAPDBG_BLOCK_INFO *const pBlockInfo = __MCF_CRT_HeapDbgValidate(&pRawOriginal, pBlock, pRetAddr);
 #else
 		unsigned char *const pRawOriginal = pBlock;
 #endif
@@ -92,9 +92,9 @@ __MCF_CRT_EXTERN unsigned char *__MCF_CRTHeapReAlloc(unsigned char *pBlock /* NO
 			if(pRaw != NULL){
 #ifdef __MCF_CRT_HEAPDBG_ON
 				const size_t uOriginalSize = pBlockInfo->uSize;
-				__MCF_CRTHeapDbgUnregister(pBlockInfo);
+				__MCF_CRT_HeapDbgUnregister(pBlockInfo);
 
-				__MCF_CRTHeapDbgAddGuardsAndRegister(&pRet, pRaw, uSize, pRetAddr);
+				__MCF_CRT_HeapDbgAddGuardsAndRegister(&pRet, pRaw, uSize, pRetAddr);
 				if(uOriginalSize < uSize){
 					memset(pRet + uOriginalSize, 0xCD, uSize - uOriginalSize);
 				}
@@ -107,15 +107,15 @@ __MCF_CRT_EXTERN unsigned char *__MCF_CRTHeapReAlloc(unsigned char *pBlock /* NO
 	LeaveCriticalSection(&g_csHeapLock);
 	return pRet;
 }
-__MCF_CRT_EXTERN void __MCF_CRTHeapFree(unsigned char *pBlock /* NON-NULL */, const void *pRetAddr __attribute__((unused))){
+__MCF_CRT_EXTERN void __MCF_CRT_HeapFree(unsigned char *pBlock /* NON-NULL */, const void *pRetAddr __attribute__((unused))){
 	EnterCriticalSection(&g_csHeapLock);
 #ifdef __MCF_CRT_HEAPDBG_ON
 		unsigned char *pRaw;
-		const __MCF_HEAPDBG_BLOCK_INFO *const pBlockInfo = __MCF_CRTHeapDbgValidate(&pRaw, pBlock, pRetAddr);
+		const __MCF_HEAPDBG_BLOCK_INFO *const pBlockInfo = __MCF_CRT_HeapDbgValidate(&pRaw, pBlock, pRetAddr);
 
 		memset(pBlock, 0xFE, pBlockInfo->uSize);
 
-		__MCF_CRTHeapDbgUnregister(pBlockInfo);
+		__MCF_CRT_HeapDbgUnregister(pBlockInfo);
 #else
 		unsigned char *const pRaw = pBlock;
 #endif

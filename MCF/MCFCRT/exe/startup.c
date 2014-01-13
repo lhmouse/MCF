@@ -9,27 +9,29 @@
 
 // -static -nostartfiles -Wl,-e__MCFExeStartup,--disable-runtime-pseudo-reloc,--disable-auto-import,-lmcfcrt,-lstdc++,-lgcc,-lgcc_eh,-lmingwex,-lmcfcrt
 
-__MCF_CRT_EXTERN void __MCF_CRTExeInitializeArgV();
-__MCF_CRT_EXTERN void __MCF_CRTExeUninitializeArgV();
+__MCF_CRT_EXTERN unsigned long __MCF_CRT_ExeInitializeArgV();
+__MCF_CRT_EXTERN void __MCF_CRT_ExeUninitializeArgV();
 
-extern unsigned int __cdecl MCFMain();
+extern unsigned int MCFMain();
 
-extern __attribute__((noreturn)) void __stdcall __MCFExeStartup(){
+extern int __stdcall __MCFExeStartup(){
 	DWORD dwExitCode;
 
-	if((dwExitCode = __MCF_CRTBegin()) == ERROR_SUCCESS){
-		if((dwExitCode = __MCF_CRTThreadInitialize()) == ERROR_SUCCESS){
-			__MCF_CRTExeInitializeArgV();
-			MCFMain();
-			__MCF_CRTExeUninitializeArgV();
+#define TRY(exp)		if((dwExitCode = (exp)) == ERROR_SUCCESS){ ((void)0)
+#define CLEANUP(exp)	(exp); } ((void)0)
 
-			__MCF_CRTThreadUninitialize();
-		}
-		__MCF_CRTEnd();
-	}
+	TRY(__MCF_CRT_Begin());
+	TRY(__MCF_CRT_ThreadInitialize());
+	TRY(__MCF_CRT_ExeInitializeArgV());
+
+	dwExitCode = MCFMain();
+
+	CLEANUP(__MCF_CRT_ExeUninitializeArgV());
+	CLEANUP(__MCF_CRT_ThreadUninitialize());
+	CLEANUP(__MCF_CRT_End());
 
 	ExitProcess(dwExitCode);
-	for(;;);
+	return (int)dwExitCode;		// 这有什么意义吗？
 }
 
 #ifndef __amd64__

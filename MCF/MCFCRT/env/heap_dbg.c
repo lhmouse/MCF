@@ -5,7 +5,7 @@
 #define WIN32_LEAN_AND_MEAN
 
 #include "heap_dbg.h"
-#include "daemon.h"
+#include "bail.h"
 
 #ifdef __MCF_CRT_HEAPDBG_ON
 
@@ -15,9 +15,9 @@
 #define GUARD_BAND_SIZE		0x20ul
 
 static HANDLE		g_hAllocator;
-static AVL_ROOT		g_pRoot;
+static __MCF_AVL_ROOT		g_pRoot;
 
-__MCF_CRT_EXTERN unsigned long __MCF_CRTHeapDbgInitContext(){
+__MCF_CRT_EXTERN unsigned long __MCF_CRT_HeapDbgInitContext(){
 	g_hAllocator = HeapCreate(HEAP_NO_SERIALIZE, 0, 0);
 	if(g_hAllocator == NULL){
 		return GetLastError();
@@ -27,21 +27,20 @@ __MCF_CRT_EXTERN unsigned long __MCF_CRTHeapDbgInitContext(){
 
 	return ERROR_SUCCESS;
 }
-__MCF_CRT_EXTERN void __MCF_CRTHeapDbgUninitContext(){
-	const __MCF_HEAPDBG_BLOCK_INFO *pBlockInfo = (const __MCF_HEAPDBG_BLOCK_INFO *)AVLBegin(g_pRoot);
+__MCF_CRT_EXTERN void __MCF_CRT_HeapDbgUninitContext(){
+	const __MCF_HEAPDBG_BLOCK_INFO *pBlockInfo = (const __MCF_HEAPDBG_BLOCK_INFO *)__MCF_AVLBegin(g_pRoot);
 	if(pBlockInfo != NULL){
 		__MCF_Bail(
-			L"__MCF_CRTHeapDbgUninitContext() 失败：侦测到内存泄漏。\n\n"
+			L"__MCF_CRT_HeapDbgUninitContext() 失败：侦测到内存泄漏。\n\n"
 			"如果您选择调试应用程序，MCF CRT 将尝试使用 OutputDebugString() 导出内存泄漏的详细信息。"
 		);
 
 		do {
 			wchar_t awchBuffer[256];
 
-			const BYTE *pbyDump = __MCF_CRTHeapDbgGetContents(pBlockInfo);
-			wchar_t *pWrite = awchBuffer + swprintf(
+			const BYTE *pbyDump = __MCF_CRT_HeapDbgGetContents(pBlockInfo);
+			wchar_t *pWrite = awchBuffer + wsprintfW(
 				awchBuffer,
-				128,
 				L"地址 0x%p  大小 0x%08X  首字节",
 				(const void *)pbyDump,
 				pBlockInfo->uSize
@@ -63,19 +62,19 @@ __MCF_CRT_EXTERN void __MCF_CRTHeapDbgUninitContext(){
 			*pWrite = 0;
 
 			OutputDebugStringW(awchBuffer);
-		} while((pBlockInfo = (const __MCF_HEAPDBG_BLOCK_INFO *)AVLNext((const AVL_NODE_HEADER *)pBlockInfo)) != NULL);
+		} while((pBlockInfo = (const __MCF_HEAPDBG_BLOCK_INFO *)__MCF_AVLNext((const __MCF_AVL_NODE_HEADER *)pBlockInfo)) != NULL);
 		__asm__ __volatile__("int 3 \n");
 	}
 
 	HeapDestroy(g_hAllocator);
 }
 
-__MCF_CRT_EXTERN size_t __MCF_CRTHeapDbgGetRawSize(
+__MCF_CRT_EXTERN size_t __MCF_CRT_HeapDbgGetRawSize(
 	size_t uContentSize
 ){
 	return uContentSize + GUARD_BAND_SIZE * 2;
 }
-__MCF_CRT_EXTERN void __MCF_CRTHeapDbgAddGuardsAndRegister(
+__MCF_CRT_EXTERN void __MCF_CRT_HeapDbgAddGuardsAndRegister(
 	unsigned char **ppContents,
 	unsigned char *pRaw,
 	size_t uContentSize,
@@ -97,16 +96,16 @@ __MCF_CRT_EXTERN void __MCF_CRTHeapDbgAddGuardsAndRegister(
 
 	__MCF_HEAPDBG_BLOCK_INFO *const pBlockInfo = (__MCF_HEAPDBG_BLOCK_INFO *)HeapAlloc(g_hAllocator, 0, sizeof(__MCF_HEAPDBG_BLOCK_INFO));
 	if(pBlockInfo == NULL){
-		__MCF_BailF(L"__MCF_CRTHeapDbgAddGuardsAndRegister() 失败：内存不足。\n调用返回地址：%p", pRetAddr);
+		__MCF_BailF(L"__MCF_CRT_HeapDbgAddGuardsAndRegister() 失败：内存不足。\n调用返回地址：%p", pRetAddr);
 	}
-	if(!AVLAttach(&g_pRoot, (intptr_t)pContents, (AVL_NODE_HEADER *)pBlockInfo)){
-		__MCF_BailF(L"__MCF_CRTHeapDbgAddGuardsAndRegister() 失败：传入的指针的记录已存在。\n调用返回地址：%p", pRetAddr);
+	if(__MCF_AVLAttach(&g_pRoot, (intptr_t)pContents, (__MCF_AVL_NODE_HEADER *)pBlockInfo) != NULL){
+		__MCF_BailF(L"__MCF_CRT_HeapDbgAddGuardsAndRegister() 失败：传入的指针的记录已存在。\n调用返回地址：%p", pRetAddr);
 	}
 
 	pBlockInfo->uSize = uContentSize;
 	pBlockInfo->pRetAddr = pRetAddr;
 }
-__MCF_CRT_EXTERN const __MCF_HEAPDBG_BLOCK_INFO *__MCF_CRTHeapDbgValidate(
+__MCF_CRT_EXTERN const __MCF_HEAPDBG_BLOCK_INFO *__MCF_CRT_HeapDbgValidate(
 	unsigned char **ppRaw,
 	unsigned char *pContents,
 	const void *pRetAddr
@@ -114,9 +113,9 @@ __MCF_CRT_EXTERN const __MCF_HEAPDBG_BLOCK_INFO *__MCF_CRTHeapDbgValidate(
 	unsigned char *const pRaw = pContents - GUARD_BAND_SIZE;
 	*ppRaw = pRaw;
 
-	const __MCF_HEAPDBG_BLOCK_INFO *pBlockInfo = (const __MCF_HEAPDBG_BLOCK_INFO *)AVLFind(g_pRoot, (intptr_t)pContents);
+	const __MCF_HEAPDBG_BLOCK_INFO *pBlockInfo = (const __MCF_HEAPDBG_BLOCK_INFO *)__MCF_AVLFind(g_pRoot, (intptr_t)pContents);
 	if(pBlockInfo == NULL){
-		__MCF_BailF(L"__MCF_CRTHeapDbgValidate() 失败：传入的指针无效。\n调用返回地址：%p", pRetAddr);
+		__MCF_BailF(L"__MCF_CRT_HeapDbgValidate() 失败：传入的指针无效。\n调用返回地址：%p", pRetAddr);
 	}
 
 	void *const *ppGuard1 = (void *const *)pContents;
@@ -125,7 +124,7 @@ __MCF_CRT_EXTERN const __MCF_HEAPDBG_BLOCK_INFO *__MCF_CRTHeapDbgValidate(
 		--ppGuard1;
 
 		if((DecodePointer(*ppGuard1) != ppGuard2) || (DecodePointer(*ppGuard2) != ppGuard1)){
-			__MCF_BailF(L"__MCF_CRTHeapDbgValidate() 失败：侦测到堆损坏。\n调用返回地址：%p", pRetAddr);
+			__MCF_BailF(L"__MCF_CRT_HeapDbgValidate() 失败：侦测到堆损坏。\n调用返回地址：%p", pRetAddr);
 		}
 
 		++ppGuard2;
@@ -133,15 +132,15 @@ __MCF_CRT_EXTERN const __MCF_HEAPDBG_BLOCK_INFO *__MCF_CRTHeapDbgValidate(
 
 	return pBlockInfo;
 }
-__MCF_CRT_EXTERN const unsigned char *__MCF_CRTHeapDbgGetContents(
+__MCF_CRT_EXTERN const unsigned char *__MCF_CRT_HeapDbgGetContents(
 	const __MCF_HEAPDBG_BLOCK_INFO *pBlockInfo
 ){
-	return (const unsigned char *)pBlockInfo->AVLNodeHeader.nKey;
+	return (const unsigned char *)pBlockInfo->__MCF_AVLNodeHeader.nKey;
 }
-__MCF_CRT_EXTERN void __MCF_CRTHeapDbgUnregister(
+__MCF_CRT_EXTERN void __MCF_CRT_HeapDbgUnregister(
 	const __MCF_HEAPDBG_BLOCK_INFO *pBlockInfo
 ){
-	AVLDetach((const AVL_NODE_HEADER *)pBlockInfo);
+	__MCF_AVLDetach((const __MCF_AVL_NODE_HEADER *)pBlockInfo);
 
 	HeapFree(g_hAllocator, 0, (void *)pBlockInfo);
 }

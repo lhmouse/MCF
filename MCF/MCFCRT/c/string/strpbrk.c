@@ -7,8 +7,8 @@
 
 __MCF_CRT_EXTERN char *strpbrk(const char *s1, const char *s2){
 	unsigned char table[256];
-	__MCF_CRTStrBuildTable(table, s2);
-	const char *const pos = __MCF_CRTStrFindFirstOf(s1, table);
+	__MCF_CRT_StrBuildTable(table, s2);
+	const char *const pos = __MCF_CRT_StrFindFirstOf(s1, table);
 	if(*pos == 0){
 		return NULL;
 	}

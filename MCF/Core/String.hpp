@@ -11,7 +11,6 @@
 #include <utility>
 #include <iterator>
 #include <type_traits>
-#include <cassert>
 #include <cstring>
 #include <cstddef>
 #include <cstdint>
@@ -112,14 +111,14 @@ private:
 		pchOut += uCount;
 		pchBegin += uCount;
 		for(auto i = uCount; i != 0; --i){
-			*(--pchOut) = *(--pchBegin);
+			*--pchOut = *--pchBegin;
 		}
 		return pchOut + uCount;
 	}
 	static PCHAR_T xRevCopy(PCHAR_T pchOut, PCCHAR_T pchBegin, std::size_t uCount) noexcept {
 		pchBegin += uCount;
 		for(auto i = uCount; i != 0; --i){
-			*(pchOut++) = *(--pchBegin);
+			*(pchOut++) = *--pchBegin;
 		}
 		return pchOut;
 	}
@@ -133,10 +132,13 @@ private:
 	static void xCopyZFwd(PCHAR_T pchOut, PCCHAR_T pchBegin) noexcept {
 		while((*(pchOut++) = *(pchBegin++)) != CHAR_T()); // 空的。
 	}
+	static void xCopyZBwd(PCHAR_T pchOut, PCCHAR_T pchBegin) noexcept {
+		xCopyBwd(pchOut, pchBegin, xLen(pchBegin) + 1);
+	}
 
 	template<typename ITER_T>
 	static PCCHAR_T xKMPFind(ITER_T s, std::size_t slen, ITER_T w, std::size_t wlen) noexcept {
-		assert(wlen > 0);
+		ASSERT(wlen > 0);
 
 		if(slen < wlen){
 			return nullptr;
@@ -219,6 +221,8 @@ private:
 
 		CHAR_T Small[sizeof(LARGE) / sizeof(CHAR_T)];
 	} xm_Storage;
+
+	static_assert(sizeof(xm_Storage) % sizeof(std::uintptr_t) == 0, "");
 public:
 	GenericString() noexcept {
 		xm_Storage.Small[0] = CHAR_T();
@@ -286,8 +290,14 @@ private:
 		return std::end(xm_Storage.Small)[-1] == CHAR_T();
 	}
 
-	void xReserveUnshift(std::size_t uCapacity, std::size_t uUnshift){
-		if(uCapacity > GetCapacity()){
+	PCHAR_T xReserveUnshift(std::size_t uCapacity, std::size_t uUnshift){
+		ASSERT(uUnshift + 1 < uCapacity);
+
+		const auto pszOldBegin = GetCStr();
+		if(uCapacity <= GetCapacity()){
+			xCopyZBwd(pszOldBegin + uUnshift, pszOldBegin);
+			return pszOldBegin;
+		} else {
 			std::size_t uRealCapacity = std::max(uCapacity, COUNT_OF(xm_Storage.Small));
 			if(sizeof(std::size_t) == 8){
 				uRealCapacity = (std::size_t)1 << (64u - __builtin_clzll(uRealCapacity - 1));
@@ -295,7 +305,7 @@ private:
 				uRealCapacity = (std::size_t)1 << (32u - __builtin_clzl(uRealCapacity - 1));
 			}
 			const PCHAR_T pchNewStor = new CHAR_T[uRealCapacity];
-			xCopyZFwd(pchNewStor + uUnshift, GetCStr());
+			xCopyZFwd(pchNewStor + uUnshift, pszOldBegin);	// 没必要用 xCopyZBwd()，因为它需要扫描两次。
 			if(xIsSmall()){
 				std::end(xm_Storage.Small)[-1] = (CHAR_T)-1;
 			} else {
@@ -303,6 +313,7 @@ private:
 			}
 			xm_Storage.Large.pchBegin = pchNewStor;
 			xm_Storage.Large.uCapacity = uRealCapacity;
+			return pchNewStor;
 		}
 	}
 
@@ -328,30 +339,27 @@ public:
 	std::size_t GetCapacity() const {
 		return xIsSmall() ? COUNT_OF(xm_Storage.Small) : xm_Storage.Large.uCapacity;
 	}
-	void Reserve(std::size_t uCapacity){
-		xReserveUnshift(uCapacity, 0);
+	PCHAR_T Reserve(std::size_t uCapacity){
+		return xReserveUnshift(uCapacity, 0);
 	}
 
 	void Swap(GenericString &rhs) noexcept {
 		if(&rhs == this){
 			return;
 		}
-		static_assert(sizeof(xm_Storage) % sizeof(std::uintptr_t) == 0, "");
 		for(std::size_t i = 0; i < sizeof(xm_Storage) / sizeof(std::uintptr_t); ++i){
 			std::swap(((std::uintptr_t *)&xm_Storage)[i], ((std::uintptr_t *)&rhs.xm_Storage)[i]);
 		}
 	}
 
 	void Assign(CHAR_T ch, std::size_t uCount){
-		Reserve(uCount + 1);
-		*xFill(GetCStr(), ch, uCount) = CHAR_T();
+		xFill(Reserve(uCount + 1), ch, uCount)[0] = CHAR_T();
 	}
 	void Assign(PCSTR_T pszSrc){
 		Assign(pszSrc, xLen(pszSrc));
 	}
 	void Assign(PCSTR_T pchSrc, std::size_t uSrcLen){
-		Reserve(uSrcLen + 1);
-		*xCopyFwd(GetCStr(), pchSrc, uSrcLen) = CHAR_T();
+		xCopyFwd(Reserve(uSrcLen + 1), pchSrc, uSrcLen)[0] = CHAR_T();
 	}
 	void Assign(const GenericString &rhs){
 		if(&rhs == this){
@@ -373,22 +381,19 @@ public:
 
 	void Append(CHAR_T ch, std::size_t uCount = 1){
 		const std::size_t uLen = GetLength();
-		Reserve(uLen + uCount + 1);
-		*xFill(GetCStr() + uLen, ch, uCount) = CHAR_T();
+		xFill(Reserve(uLen + uCount + 1) + uLen, ch, uCount)[0] = CHAR_T();
 	}
 	void Append(PCSTR_T pszSrc){
 		Append(pszSrc, xLen(pszSrc));
 	}
 	void Append(PCCHAR_T pchSrc, std::size_t uSrcLen){
 		const std::size_t uLen = GetLength();
-		Reserve(uLen + uSrcLen + 1);
-		*xCopyFwd(GetCStr() + uLen, pchSrc, uSrcLen) = CHAR_T();
+		xCopyFwd(Reserve(uLen + uSrcLen + 1) + uLen, pchSrc, uSrcLen)[0] = CHAR_T();
 	}
 	void Append(const GenericString &rhs){
 		const std::size_t uLen = GetLength();
 		if(&rhs == this){
-			Reserve(uLen * 2 + 1);
-			const auto pchBegin = GetCStr();
+			const auto pchBegin = Reserve(uLen * 2 + 1);
 			*xCopyFwd(pchBegin + uLen, pchBegin, uLen) = CHAR_T();
 		} else {
 			Append(rhs.GetCStr(), uLen);
@@ -416,16 +421,14 @@ public:
 
 	void Unshift(CHAR_T ch, std::size_t uCount = 1){
 		const std::size_t uLen = GetLength();
-		xReserveUnshift(uLen + uCount + 1, uCount);
-		xFill(GetCStr(), ch, uCount);
+		xFill(xReserveUnshift(uLen + uCount + 1, uCount), ch, uCount);
 	}
 	void Unshift(PCSTR_T pszSrc){
 		Unshift(pszSrc, xLen(pszSrc));
 	}
 	void Unshift(PCCHAR_T pchSrc, std::size_t uSrcLen){
 		const std::size_t uLen = GetLength();
-		xReserveUnshift(uLen + uSrcLen + 1, uSrcLen);
-		xCopyFwd(GetCStr(), pchSrc, uSrcLen);
+		xCopyFwd(xReserveUnshift(uLen + uSrcLen + 1, uSrcLen), pchSrc, uSrcLen);
 	}
 	void Unshift(const GenericString &rhs){
 		if(&rhs == this){
@@ -487,12 +490,10 @@ public:
 		const auto uRealEnd = xTranslateOffset(uLen, nEnd);
 		if(uRealBegin < uRealEnd){
 			const auto uCount = uRealEnd - uRealBegin;
-			strRet.Reserve(uCount + 1);
-			*xCopyFwd(strRet.GetCStr(), pchBegin + uRealBegin, uCount) = CHAR_T();
+			xCopyFwd(strRet.Reserve(uCount + 1), pchBegin + uRealBegin, uCount)[0] = CHAR_T();
 		} else if(uRealBegin > uRealEnd){
 			const auto uCount = uRealBegin - uRealEnd;
-			strRet.Reserve(uCount + 1);
-			*xCopyFwd(strRet.GetCStr(), pchBegin + uRealEnd, uCount) = CHAR_T();
+			xCopyFwd(strRet.Reserve(uCount + 1), pchBegin + uRealEnd, uCount)[0] = CHAR_T();
 		}
 		return std::move(strRet);
 	}
@@ -600,8 +601,7 @@ public:
 		if(uRealBegin < uRealEnd){
 			const auto uOldCount = uRealEnd - uRealBegin;
 			if(uRepCount > uOldCount){
-				Reserve(uLen + (uRepCount - uOldCount) + 1);
-				const auto pRepDst = GetCStr() + uRealBegin;
+				const auto pRepDst = Reserve(uLen + (uRepCount - uOldCount) + 1) + uRealBegin;
 				xCopyBwd(pRepDst + uRepCount, pRepDst + uOldCount, uLen - uRealEnd + 1);
 				xFill(pRepDst, chRep, uRepCount);
 			} else if(uRepCount < uOldCount){
@@ -612,8 +612,7 @@ public:
 		} else if(uRealBegin > uRealEnd){
 			const auto uOldCount = uRealBegin - uRealEnd;
 			if(uRepCount > uOldCount){
-				Reserve(uLen + (uRepCount - uOldCount) + 1);
-				const auto pRepDst = GetCStr() + uRealEnd;
+				const auto pRepDst = Reserve(uLen + (uRepCount - uOldCount) + 1) + uRealEnd;
 				xCopyBwd(pRepDst + uRepCount, pRepDst + uOldCount, uLen - uRealBegin + 1);
 				xFill(pRepDst, chRep, uRepCount);
 			} else if(uRepCount < uOldCount){
@@ -634,8 +633,7 @@ public:
 		if(uRealBegin < uRealEnd){
 			const auto uOldCount = uRealEnd - uRealBegin;
 			if(uRepLen > uOldCount){
-				Reserve(uLen + (uRepLen - uOldCount) + 1);
-				const auto pRepDst = GetCStr() + uRealBegin;
+				const auto pRepDst = Reserve(uLen + (uRepLen - uOldCount) + 1) + uRealBegin;
 				xCopyBwd(pRepDst + uRepLen, pRepDst + uOldCount, uLen - uRealEnd + 1);
 				xCopyFwd(pRepDst, pchRep, uRepLen);
 			} else if(uRepLen < uOldCount){
@@ -646,8 +644,7 @@ public:
 		} else if(uRealBegin > uRealEnd){
 			const auto uOldCount = uRealBegin - uRealEnd;
 			if(uRepLen > uOldCount){
-				Reserve(uLen + (uRepLen - uOldCount) + 1);
-				const auto pRepDst = GetCStr() + uRealEnd;
+				const auto pRepDst = Reserve(uLen + (uRepLen - uOldCount) + 1) + uRealEnd;
 				xCopyBwd(pRepDst + uRepLen, pRepDst + uOldCount, uLen - uRealBegin + 1);
 				xRevCopy(pRepDst, pchRep, uRepLen);
 			} else if(uRepLen < uOldCount){

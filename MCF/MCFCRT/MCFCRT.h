@@ -13,8 +13,8 @@
 
 #include "env/envinclude.h"
 
-__MCF_CRT_EXTERN unsigned long __MCF_CRTBegin();
-__MCF_CRT_EXTERN void __MCF_CRTEnd();
+__MCF_CRT_EXTERN unsigned long __MCF_CRT_Begin();
+__MCF_CRT_EXTERN void __MCF_CRT_End();
 
 __MCF_CRT_EXTERN void *__MCF_GetModuleBase();
 __MCF_CRT_EXTERN int __MCF_AtCRTEnd(void (*pfnProc)(__MCF_STD intptr_t), __MCF_STD intptr_t nContext);

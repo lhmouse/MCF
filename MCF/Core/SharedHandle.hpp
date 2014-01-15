@@ -5,7 +5,7 @@
 #ifndef __MCF_SHARED_HANDLE_HPP__
 #define __MCF_SHARED_HANDLE_HPP__
 
-#include "../MCFCRT/MCFCRT.h"
+#include "../../MCFCRT/MCFCRT.h"
 #include <new>
 #include <cstddef>
 
@@ -92,6 +92,7 @@ namespace __MCF {
 #ifndef NDEBUG
 		~SharedNode(){
 			ASSERT(xm_pDebugInfo == this);
+
 			xm_pDebugInfo = nullptr;
 		}
 #endif
@@ -303,7 +304,11 @@ public:
 		return xSharedNode::ToPHandle(xSharedNode::AddRef(xm_pNode));
 	}
 
-	void Reset(HANDLE_T hObj = CLOSER_T()()){
+	void Reset() noexcept {
+		xSharedNode::DropRef(xm_pNode);
+		xm_pNode = nullptr;
+	}
+	void Reset(HANDLE_T hObj){
 		xm_pNode = xSharedNode::Recreate(xm_pNode, hObj);
 	}
 	void Reset(const xWeakHandle &rhs) noexcept {

@@ -12,48 +12,56 @@ template class GenericString<char,		StringEncoding::ENC_ANSI>;
 template class GenericString<wchar_t,	StringEncoding::ENC_UTF16>;
 
 template<>
-UNIFIED_CHAR_SEQ UTF8String::xUnify() const {
-	UNIFIED_CHAR_SEQ ret;
-	const auto pszBuffer = GetCStr();
-	const auto uLength = GetLength();
-	const auto uUniLength = (std::size_t)::MultiByteToWideChar(CP_UTF8, 0, pszBuffer, (int)uLength, nullptr, 0);
-	ret.Resize(uUniLength);
-	::MultiByteToWideChar(CP_UTF8, 0, pszBuffer, (int)uLength, ret.GetData(), (int)uUniLength);
-	return std::move(ret);
+UnifiedString &UTF8String::xUnify(UnifiedString &ucsTemp) const {
+	const auto pszSource = GetCStr();
+	const auto nLength = (int)GetLength();
+	const auto nUnifiedLength = ::MultiByteToWideChar(CP_UTF8, 0, pszSource, nLength, nullptr, 0);
+	ucsTemp.Resize(::MultiByteToWideChar(CP_UTF8, 0, pszSource, nLength, ucsTemp.Reserve(nUnifiedLength), nUnifiedLength));
+	return ucsTemp;
 }
 template<>
-void UTF8String::xDisunify(UNIFIED_CHAR_SEQ &&ucsUnified){
-	const auto uDisuniLength = (std::size_t)::WideCharToMultiByte(CP_UTF8, 0, ucsUnified.GetData(), (int)ucsUnified.GetSize(), nullptr, 0, nullptr, nullptr);
-	const auto pszBuffer = Reserve(uDisuniLength + 1);
-	::WideCharToMultiByte(CP_UTF8, 0, ucsUnified.GetData(), (int)ucsUnified.GetSize(), pszBuffer, (int)uDisuniLength, nullptr, nullptr);
-	pszBuffer[uDisuniLength] = 0;
-}
-
-template<>
-UNIFIED_CHAR_SEQ ANSIString::xUnify() const {
-	UNIFIED_CHAR_SEQ ret;
-	const auto pszBuffer = GetCStr();
-	const auto uLength = GetLength();
-	const auto uUniLength = (std::size_t)::MultiByteToWideChar(CP_ACP, 0, pszBuffer, (int)uLength, nullptr, 0);
-	ret.Resize(uUniLength);
-	::MultiByteToWideChar(CP_ACP, 0, pszBuffer, (int)uLength, ret.GetData(), (int)uUniLength);
-	return std::move(ret);
+void UTF8String::xDisunify(const UnifiedString &ucsTemp){
+	const auto pszSource = ucsTemp.GetCStr();
+	const auto nLength = (int)ucsTemp.GetLength();
+	const auto nDisunifiedLength = ::WideCharToMultiByte(CP_UTF8, 0, pszSource, nLength, nullptr, 0, nullptr, nullptr);
+	Resize(::WideCharToMultiByte(CP_UTF8, 0, pszSource, nLength, Reserve(nDisunifiedLength), nDisunifiedLength, nullptr, nullptr));
 }
 template<>
-void ANSIString::xDisunify(UNIFIED_CHAR_SEQ &&ucsUnified){
-	const auto uDisuniLength = (std::size_t)::WideCharToMultiByte(CP_ACP, 0, ucsUnified.GetData(), (int)ucsUnified.GetSize(), nullptr, 0, nullptr, nullptr);
-	const auto pszBuffer = Reserve(uDisuniLength + 1);
-	::WideCharToMultiByte(CP_ACP, 0, ucsUnified.GetData(), (int)ucsUnified.GetSize(), pszBuffer, (int)uDisuniLength, nullptr, nullptr);
-	pszBuffer[uDisuniLength] = 0;
+void UTF8String::xDisunify(UnifiedString &&ucsTemp){
+	xDisunify(ucsTemp);
 }
 
 template<>
-UNIFIED_CHAR_SEQ UTF16String::xUnify() const {
-	return UNIFIED_CHAR_SEQ(GetCStr(), GetLength());
+UnifiedString &ANSIString::xUnify(UnifiedString &ucsTemp) const {
+	const auto pszSource = GetCStr();
+	const auto nLength = (int)GetLength();
+	const auto nUnifiedLength = ::MultiByteToWideChar(CP_ACP, 0, pszSource, nLength, nullptr, 0);
+	ucsTemp.Resize(::MultiByteToWideChar(CP_ACP, 0, pszSource, nLength, ucsTemp.Reserve(nUnifiedLength), nUnifiedLength));
+	return ucsTemp;
 }
 template<>
-void UTF16String::xDisunify(UNIFIED_CHAR_SEQ &&ucsUnified){
-	Assign(ucsUnified.GetData(), ucsUnified.GetSize());
+void ANSIString::xDisunify(const UnifiedString &ucsTemp){
+	const auto pszSource = ucsTemp.GetCStr();
+	const auto nLength = (int)ucsTemp.GetLength();
+	const auto nDisunifiedLength = ::WideCharToMultiByte(CP_ACP, 0, pszSource, nLength, nullptr, 0, nullptr, nullptr);
+	Resize(::WideCharToMultiByte(CP_ACP, 0, pszSource, nLength, Reserve(nDisunifiedLength), nDisunifiedLength, nullptr, nullptr));
+}
+template<>
+void ANSIString::xDisunify(UnifiedString &&ucsTemp){
+	xDisunify(ucsTemp);
+}
+
+template<>
+UnifiedString &UnifiedString::xUnify(UnifiedString & /* ucsTemp */) const {
+	return *(UnifiedString *)this;
+}
+template<>
+void UnifiedString::xDisunify(const UnifiedString &ucsTemp){
+	Assign(ucsTemp);
+}
+template<>
+void UnifiedString::xDisunify(UnifiedString &&ucsTemp){
+	Assign(std::move(ucsTemp));
 }
 
 }

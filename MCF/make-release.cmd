@@ -1,1 +1,0 @@
-@mcfbuild -C"mcfcrt" Release %* && g++ -DNDEBUG -O3 -std=c++11 -Wall -Wextra -ffunction-sections -fdata-sections main.cpp Core\*.cpp Components\*.cpp -Lmcfcrt\.built-release\ -static -nostartfiles -Wl,-gc-sections,-s,-e__MCFExeStartup,--disable-runtime-pseudo-reloc,--disable-auto-import,-lmcfcrt,-lstdc++,-lgcc,-lgcc_eh,-lmingwex,-lmcfcrt

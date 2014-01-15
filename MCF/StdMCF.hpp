@@ -15,7 +15,7 @@
 
 #define WIN32_LEAN_AND_MEAN
 
-#include "MCFCRT/MCFCRT.h"
+#include "../MCFCRT/MCFCRT.h"
 
 #include <cstddef>
 #include <cstdint>
@@ -23,7 +23,6 @@
 #include <climits>
 
 #include <memory>
-#include <atomic>
 #include <algorithm>
 #include <limits>
 #include <utility>

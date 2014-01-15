@@ -1,0 +1,31 @@
+Default = Debug
+
+General {
+	CompilerFlags		= -Wall -Wextra -pipe -mfpmath=sse,387 -msse2 -masm=intel
+
+	CFlags				= $CompilerFlags$ -c -std=c11
+
+	IgnoredFiles		= .Built* *.h *.mcfproj
+
+	Compilers {
+		c {
+			CommandLine	= gcc $CFlags$ %IN% -o %OUT%
+			Dependency	= gcc $CFlags$ %IN% -MM
+		}
+	}
+
+	Linkers {
+		Partial			= ld -r %IN% -o %OUT%
+		Full			= ar rcs %OUT% %IN%
+	}
+
+	DefaultOutput		= libz.a
+}
+
+Debug = General {
+	CompilerFlags		=> -DNO_GZIP -fno-builtin -g -O0
+}
+
+Release = General {
+	CompilerFlags		=> -DNO_GZIP -DNDEBUG -O3 -ffunction-sections -fdata-sections
+}

@@ -1,0 +1,38 @@
+Default = Debug
+
+General {
+	CompilerFlags		= -Wall -Wextra -pipe -mfpmath=sse,387 -msse2 -masm=intel
+
+	CPPFlags			= $CompilerFlags$ -c -std=c++11
+
+	IgnoredFiles		= .Built* *.h *.hpp *.mcfproj
+
+	PreCompiledHeaders {
+		CPP {
+			SourceFile	= StdMCF.hpp
+			CommandLine	= g++ $CPPFlags$ %IN% -o %OUT%
+		}
+	}
+
+	Compilers {
+		cpp cxx cc {
+			CommandLine	= g++ $CPPFlags$ %GCH.CPP% %IN% -o %OUT%
+			Dependency	= g++ $CPPFlags$ %IN% -MM
+		}
+	}
+
+	Linkers {
+		Partial			= ld -r %IN% -o %OUT%
+		Full			= ar rcs %OUT% %IN%
+	}
+
+	DefaultOutput		= libmcf.a
+}
+
+Debug = General {
+	CompilerFlags		=> -fno-builtin -g -O0
+}
+
+Release = General {
+	CompilerFlags		=> -DNDEBUG -O3 -ffunction-sections -fdata-sections
+}

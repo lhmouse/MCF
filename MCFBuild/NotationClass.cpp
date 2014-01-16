@@ -11,7 +11,7 @@
 using namespace MCF;
 
 // ¾²Ì¬³ÉÔ±º¯Êý¡£
-__attribute__((noinline)) char *NotationClass::xStrTokS(char *s, char ch, char **ctx){
+char *__attribute__((noinline)) NotationClass::xStrTokS(char *s, char ch, char **ctx){
 	char *from;
 	if(s != nullptr){
 		from = s;

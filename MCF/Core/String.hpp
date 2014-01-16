@@ -141,7 +141,7 @@ private:
 		return std::reverse_copy(pchBegin, pchBegin + uCount, pchOut);
 	}
 	static PCHAR_T xFill(PCHAR_T pchOut, CHAR_T ch, std::size_t uCount) noexcept {
-		return std::fill_n(pchOut, ch, uCount);
+		return std::fill_n(pchOut, uCount, ch);
 	}
 
 	template<typename ITER_T>
@@ -220,14 +220,14 @@ private:
 	}
 private:
 	union {
-		struct LARGE {
+		struct {
 			PCHAR_T pchBegin;
 			std::size_t uCapacity;
 
 			void *(Padding_DoNotUse[2]);
 		} Large;
 
-		CHAR_T Small[sizeof(LARGE) / sizeof(CHAR_T)];
+		CHAR_T Small[sizeof(Large) / sizeof(CHAR_T)];
 	} xm_Storage;
 	std::size_t xm_uLength;
 

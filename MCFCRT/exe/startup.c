@@ -14,7 +14,7 @@ __MCF_CRT_EXTERN void __MCF_CRT_ExeUninitializeArgV();
 
 extern unsigned int MCFMain();
 
-extern int __stdcall __MCFExeStartup(){
+static int __attribute__((stdcall, unused)) MCFExeStartup(){
 	DWORD dwExitCode;
 
 #define TRY(exp)		if((dwExitCode = (exp)) == ERROR_SUCCESS){ ((void)0)
@@ -34,6 +34,8 @@ extern int __stdcall __MCFExeStartup(){
 	return (int)dwExitCode;		// 这有什么意义吗？
 }
 
-#ifndef __amd64__
-extern __attribute__((noreturn, alias("__MCFExeStartup@0"))) void __cdecl _MCFExeStartup();
+#ifdef __amd64__
+extern __attribute__((alias("MCFExeStartup@0"))) void __cdecl __MCFExeStartup();
+#else
+extern __attribute__((alias("MCFExeStartup@0"))) void __cdecl _MCFExeStartup();
 #endif

@@ -7,7 +7,11 @@
 
 #include "_crtdef.h"
 
-__MCF_CRT_EXTERN void __MCF_Bail(const wchar_t *pwszDescription);
-__MCF_CRT_EXTERN void __MCF_BailF(const wchar_t *pwszFormat, ...);
+__MCF_EXTERN_C_BEGIN
+
+extern void __MCF_Bail(const wchar_t *pwszDescription);
+extern void __MCF_BailF(const wchar_t *pwszFormat, ...);
+
+__MCF_EXTERN_C_END
 
 #endif

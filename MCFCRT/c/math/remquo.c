@@ -5,7 +5,7 @@
 #include "../../env/_crtdef.h"
 #include "_mathasm.h"
 
-__MCF_CRT_EXTERN float remquof(float x, float y, int *quo){
+float remquof(float x, float y, int *quo){
 	register float ret;
 	__asm__ __volatile__(
 		"fld dword ptr[%2] \n"
@@ -39,7 +39,7 @@ __MCF_CRT_EXTERN float remquof(float x, float y, int *quo){
 	return ret;
 }
 
-__MCF_CRT_EXTERN double remquo(double x, double y, int *quo){
+double remquo(double x, double y, int *quo){
 	register double ret;
 	__asm__ __volatile__(
 		"fld qword ptr[%2] \n"
@@ -73,7 +73,7 @@ __MCF_CRT_EXTERN double remquo(double x, double y, int *quo){
 	return ret;
 }
 
-__MCF_CRT_EXTERN __LDBL_DECL(remquol, long double x, long double y, int *quo){
+__LDBL_DECL(remquol, long double x, long double y, int *quo){
 	register long double ret;
 	__asm__ __volatile__(
 		"fld tbyte ptr[%2] \n"

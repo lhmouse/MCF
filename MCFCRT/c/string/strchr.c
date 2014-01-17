@@ -4,7 +4,7 @@
 
 #include "../../env/_crtdef.h"
 
-__MCF_CRT_EXTERN char *strchr(const char *s, int ch){
+char *strchr(const char *s, int ch){
 	register const char *rp = s;
 
 	// 如果 rp 是对齐到字的，就不用考虑越界的问题。

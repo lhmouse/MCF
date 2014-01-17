@@ -8,9 +8,11 @@
 #ifndef NDEBUG
 
 #include "_crtdef.h"
-#include "avl.h"
+#include "avl_tree.h"
 
 #define __MCF_CRT_HEAPDBG_ON	1
+
+__MCF_EXTERN_C_BEGIN
 
 typedef struct tagHeapDbgBlockInfo {
 	__MCF_AVL_NODE_HEADER __MCF_AVLNodeHeader;
@@ -19,30 +21,32 @@ typedef struct tagHeapDbgBlockInfo {
 	const void *pRetAddr;
 } __MCF_HEAPDBG_BLOCK_INFO;
 
-__MCF_CRT_EXTERN unsigned long __MCF_CRT_HeapDbgInitContext();
-__MCF_CRT_EXTERN void __MCF_CRT_HeapDbgUninitContext();
+extern unsigned long __MCF_CRT_HeapDbgInitContext(void);
+extern void __MCF_CRT_HeapDbgUninitContext(void);
 
-__MCF_CRT_EXTERN __MCF_STD size_t __MCF_CRT_HeapDbgGetRawSize(
+extern __MCF_STD size_t __MCF_CRT_HeapDbgGetRawSize(
 	__MCF_STD size_t uContentSize
 );
-__MCF_CRT_EXTERN void __MCF_CRT_HeapDbgAddGuardsAndRegister(
+extern void __MCF_CRT_HeapDbgAddGuardsAndRegister(
 	unsigned char **ppContents,
 	unsigned char *pRaw,
 	__MCF_STD size_t uContentSize,
 	const void *pRetAddr
 );
-__MCF_CRT_EXTERN const __MCF_HEAPDBG_BLOCK_INFO *__MCF_CRT_HeapDbgValidate(
+extern const __MCF_HEAPDBG_BLOCK_INFO *__MCF_CRT_HeapDbgValidate(
 	unsigned char **ppRaw,
 	unsigned char *pContents,
 	const void *pRetAddr
 );
-__MCF_CRT_EXTERN const unsigned char *__MCF_CRT_HeapDbgGetContents(
+extern const unsigned char *__MCF_CRT_HeapDbgGetContents(
 	const __MCF_HEAPDBG_BLOCK_INFO *pBlockInfo
 );
-__MCF_CRT_EXTERN void __MCF_CRT_HeapDbgUnregister(
+extern void __MCF_CRT_HeapDbgUnregister(
 	const __MCF_HEAPDBG_BLOCK_INFO *pBlockInfo
 );
 
-#endif
+__MCF_EXTERN_C_END
+
+#endif // NDEBUG
 
 #endif

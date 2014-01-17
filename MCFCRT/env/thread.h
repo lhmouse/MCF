@@ -7,33 +7,37 @@
 
 #include "_crtdef.h"
 
-__MCF_CRT_EXTERN unsigned long __MCF_CRT_TlsEnvInitialize();
-__MCF_CRT_EXTERN void __MCF_CRT_TlsEnvUninitialize();
+__MCF_EXTERN_C_BEGIN
 
-__MCF_CRT_EXTERN unsigned long __MCF_CRT_ThreadInitialize();
-__MCF_CRT_EXTERN void __MCF_CRT_ThreadUninitialize();
+extern unsigned long __MCF_CRT_TlsEnvInitialize(void);
+extern void __MCF_CRT_TlsEnvUninitialize(void);
 
-__MCF_CRT_EXTERN void *__MCF_CreateCRTThread(
+extern unsigned long __MCF_CRT_ThreadInitialize(void);
+extern void __MCF_CRT_ThreadUninitialize(void);
+
+extern void *__MCF_CreateCRTThread(
 	unsigned int (*pfnProc)(__MCF_STD intptr_t),
 	__MCF_STD intptr_t nParam,
 	unsigned long ulFlags,
-	unsigned long *pulThreadID
+	unsigned long *pulThreadId
 );
 
-__MCF_CRT_EXTERN int __MCF_AtCRTThreadExit(
+extern int __MCF_AtCRTThreadExit(
 	void (*pfnProc)(__MCF_STD intptr_t),
 	__MCF_STD intptr_t nContext
 );
 
-__MCF_CRT_EXTERN void *__MCF_CRT_RetrieveTls(
+extern void *__MCF_CRT_RetrieveTls(
 	__MCF_STD intptr_t nKey,
 	__MCF_STD size_t uSizeToAlloc,
 	void (*pfnConstructor)(void *, __MCF_STD intptr_t),
 	__MCF_STD intptr_t nParam,
 	void (*pfnDestructor)(void *)
 );
-__MCF_CRT_EXTERN void __MCF_CRT_DeleteTls(
+extern void __MCF_CRT_DeleteTls(
 	__MCF_STD intptr_t nKey
 );
+
+__MCF_EXTERN_C_END
 
 #endif

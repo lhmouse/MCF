@@ -4,18 +4,18 @@
 
 #include "../../env/_crtdef.h"
 
-__MCF_CRT_EXTERN float logbf(float x);
-__MCF_CRT_EXTERN double logb(double x);
-__MCF_CRT_EXTERN long double logbl(long double x);
+extern float logbf(float x);
+extern double logb(double x);
+extern long double logbl(long double x);
 
-__MCF_CRT_EXTERN int ilogbf(float x){
+int ilogbf(float x){
 	return (int)logbf(x);
 }
 
-__MCF_CRT_EXTERN int ilogb(double x){
+int ilogb(double x){
 	return (int)logb(x);
 }
 
-__MCF_CRT_EXTERN int ilogbl(long double x){
+int ilogbl(long double x){
 	return (int)logbl(x);
 }

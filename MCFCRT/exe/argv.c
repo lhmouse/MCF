@@ -14,7 +14,7 @@ static wchar_t			*	g_pwszArgBuffer;
 static volatile size_t		g_uArgC;
 static wchar_t			**	g_ppwszArgV;
 
-__MCF_CRT_EXTERN unsigned long __MCF_CRT_ExeInitializeArgV(){
+unsigned long __MCF_CRT_ExeInitializeArgV(){
 	InitializeCriticalSection(&g_csMutex);
 	g_pwszArgBuffer = NULL;
 	g_uArgC = 0;
@@ -22,7 +22,7 @@ __MCF_CRT_EXTERN unsigned long __MCF_CRT_ExeInitializeArgV(){
 
 	return ERROR_SUCCESS;
 }
-__MCF_CRT_EXTERN void __MCF_CRT_ExeUninitializeArgV(){
+void __MCF_CRT_ExeUninitializeArgV(){
 	free(g_ppwszArgV);
 	g_ppwszArgV = NULL;
 	g_uArgC = 0;
@@ -31,7 +31,7 @@ __MCF_CRT_EXTERN void __MCF_CRT_ExeUninitializeArgV(){
 	DeleteCriticalSection(&g_csMutex);
 }
 
-__MCF_CRT_EXTERN size_t __MCF_GetArgV(const wchar_t *const **pppwszArgV){
+size_t __MCF_GetArgV(const wchar_t *const **pppwszArgV){
 	if(g_ppwszArgV == NULL){
 		EnterCriticalSection(&g_csMutex);
 			if(g_ppwszArgV == NULL){

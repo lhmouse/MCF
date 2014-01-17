@@ -4,7 +4,7 @@
 
 #include "../../env/_crtdef.h"
 
-__MCF_CRT_EXTERN char *strrchr(const char *s, int ch){
+char *strrchr(const char *s, int ch){
 	char *ret = NULL;
 	register const char *rp = s;
 

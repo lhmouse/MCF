@@ -8,7 +8,7 @@
 static const double NEG_THRESHOLD = -0.292892;
 static const double POS_THRESHOLD =  0.292892;
 
-__MCF_CRT_EXTERN float log1pf(float x){
+float log1pf(float x){
 	register float ret;
 	__asm__ __volatile__(
 		"fldln2 \n"
@@ -36,7 +36,7 @@ __MCF_CRT_EXTERN float log1pf(float x){
 	return ret;
 }
 
-__MCF_CRT_EXTERN double log1p(double x){
+double log1p(double x){
 	register double ret;
 	__asm__ __volatile__(
 		"fldln2 \n"
@@ -64,7 +64,7 @@ __MCF_CRT_EXTERN double log1p(double x){
 	return ret;
 }
 
-__MCF_CRT_EXTERN __LDBL_DECL(log1pl, long double x){
+__LDBL_DECL(log1pl, long double x){
 	register long double ret;
 	__asm__ __volatile__(
 		"fldln2 \n"

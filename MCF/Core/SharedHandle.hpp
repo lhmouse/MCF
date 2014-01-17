@@ -5,7 +5,6 @@
 #ifndef __MCF_SHARED_HANDLE_HPP__
 #define __MCF_SHARED_HANDLE_HPP__
 
-#include "../../MCFCRT/MCFCRT.h"
 #include <new>
 #include <cstddef>
 
@@ -108,13 +107,12 @@ namespace __MCF {
 		bool xAddWeakRef() noexcept {
 			xValidate();
 
-			register std::size_t uOldCount;
+			register std::size_t uOldWeakCount = xm_uWeakCount;
 			for(;;){
-				uOldCount = xm_uWeakCount;
-				if(uOldCount == 0){
+				if(uOldWeakCount == 0){
 					return false;
 				}
-				if(__sync_bool_compare_and_swap(&xm_uWeakCount, uOldCount, uOldCount + 1)){
+				if(__atomic_compare_exchange_n(&xm_uWeakCount, &uOldWeakCount, uOldWeakCount + 1, true, __ATOMIC_RELAXED, __ATOMIC_RELAXED)){
 					return true;
 				}
 			}
@@ -125,14 +123,13 @@ namespace __MCF {
 			if(!xAddWeakRef()){
 				return false;
 			}
-			register std::size_t uOldCount;
+			register std::size_t uOldCount = xm_uCount;
 			for(;;){
-				uOldCount = xm_uCount;
 				if(uOldCount == 0){
 					xDropWeakRef();
 					return false;
 				}
-				if(__sync_bool_compare_and_swap(&xm_uCount, uOldCount, uOldCount + 1)){
+				if(__atomic_compare_exchange_n(&xm_uCount, &uOldCount, uOldCount + 1, true, __ATOMIC_RELAXED, __ATOMIC_RELAXED)){
 					return true;
 				}
 			}
@@ -142,7 +139,7 @@ namespace __MCF {
 
 			ASSERT(xm_uCount != 0);
 
-			if(__sync_sub_and_fetch(&xm_uCount, 1) == 0){
+			if(__atomic_sub_fetch(&xm_uCount, 1) == 0){
 				CLOSER_T()(xm_hObj);
 				xm_hObj = CLOSER_T()();
 			}
@@ -153,7 +150,7 @@ namespace __MCF {
 
 			ASSERT(xm_uWeakCount != 0);
 
-			const bool bRet = (__sync_sub_and_fetch(&xm_uWeakCount, 1) == 0);
+			const bool bRet = (__atomic_sub_fetch(&xm_uWeakCount, 1) == 0);
 
 			ASSERT(!bRet || (xm_uCount == 0));
 

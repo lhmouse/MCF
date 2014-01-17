@@ -5,7 +5,7 @@
 #include "../../env/_crtdef.h"
 #include "_stringasm.h"
 
-__MCF_CRT_EXTERN wchar_t *wmemset(wchar_t *dst, wchar_t ch, size_t cnt){
+wchar_t *wmemset(wchar_t *dst, wchar_t ch, size_t cnt){
 	uintptr_t unused;
 	__asm__ __volatile__(
 		"mov "__CX__", %5 \n"

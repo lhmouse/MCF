@@ -42,22 +42,22 @@ namespace __MCF {
 			((OBJECT_T *)pMem)->~OBJECT_T();
 		}
 	private:
-		const std::intptr_t xm_nUniqueID;
+		const std::intptr_t xm_nUniqueId;
 		const std::tuple<CTOR_PARAM_T...> xm_CtorParams;
 	public:
 		TlsWrapper(CTOR_PARAM_T ...CtorParam) noexcept
-			: xm_nUniqueID(__sync_add_and_fetch(&s_nCounter, 1)), xm_CtorParams(std::move(CtorParam)...)
+			: xm_nUniqueId(__atomic_add_fetch(&s_nCounter, 1, __ATOMIC_RELAXED)), xm_CtorParams(std::move(CtorParam)...)
 		{
 		}
 		~TlsWrapper(){
-			::__MCF_CRT_DeleteTls(xm_nUniqueID);
+			::__MCF_CRT_DeleteTls(xm_nUniqueId);
 		}
 
 		TlsWrapper(const TlsWrapper &) = delete;
 		void operator=(const TlsWrapper &) = delete;
 	public:
 		OBJECT_T *Get() const {
-			const auto pRet = (OBJECT_T *)::__MCF_CRT_RetrieveTls(xm_nUniqueID, sizeof(OBJECT_T), &xCtorJumper, (std::intptr_t)this, &xDtorJumper);
+			const auto pRet = (OBJECT_T *)::__MCF_CRT_RetrieveTls(xm_nUniqueId, sizeof(OBJECT_T), &xCtorJumper, (std::intptr_t)this, &xDtorJumper);
 			if(pRet == nullptr){
 				::__MCF_Bail(
 					L"__MCF_CRT_RetrieveTls() 返回了一个空指针。\n"
@@ -67,7 +67,7 @@ namespace __MCF {
 			return pRet;
 		}
 		void Release() const noexcept {
-			::__MCF_CRT_DeleteTls(xm_nUniqueID);
+			::__MCF_CRT_DeleteTls(xm_nUniqueId);
 		}
 	public:
 		OBJECT_T *operator->() const {

@@ -146,7 +146,7 @@ static __attribute__((cdecl)) __LDBL_DECL(ppowl, double x, double y){
 	__LDBL_RETURN(ret);
 }
 
-__MCF_CRT_EXTERN float powf(float x, float y){
+float powf(float x, float y){
 	if(y == 0){
 		return 1.0f;
 	}
@@ -208,7 +208,7 @@ __MCF_CRT_EXTERN float powf(float x, float y){
 		}
 	}
 }
-__MCF_CRT_EXTERN double pow(double x, double y){
+double pow(double x, double y){
 	if(y == 0){
 		return 1.0;
 	}
@@ -270,7 +270,7 @@ __MCF_CRT_EXTERN double pow(double x, double y){
 		}
 	}
 }
-__MCF_CRT_EXTERN long double powl(long double x, long double y){
+long double powl(long double x, long double y){
 	if(y == 0){
 		return 1.0l;
 	}

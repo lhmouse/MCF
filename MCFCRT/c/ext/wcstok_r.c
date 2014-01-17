@@ -5,7 +5,7 @@
 #include "../../env/_crtdef.h"
 #include <wchar.h>
 
-__MCF_CRT_EXTERN wchar_t *_wcstok_r(wchar_t *restrict s1, const wchar_t *restrict s2, wchar_t **ctx){
+wchar_t *_wcstok_r(wchar_t *restrict s1, const wchar_t *restrict s2, wchar_t **ctx){
 	wchar_t *from;
 	if(s1 != NULL){
 		from = s1;

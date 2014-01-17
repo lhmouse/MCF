@@ -6,9 +6,9 @@
 #include "../../env/heap.h"
 #include <limits.h>
 
-__MCF_CRT_EXTERN void *memset(void *dst, int ch, size_t cb);
+extern void *memset(void *dst, int ch, size_t cb);
 
-__MCF_CRT_NOINLINE void *calloc(size_t nmemb, size_t cnt){
+void *__attribute__((noinline)) calloc(size_t nmemb, size_t cnt){
 	const uint64_t cb = ((uint64_t)nmemb) * cnt;
 	if(cb > SIZE_MAX){
 		return NULL;

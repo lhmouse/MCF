@@ -4,7 +4,7 @@
 
 #include "../../env/_crtdef.h"
 
-__MCF_CRT_EXTERN int wmemcmp(const wchar_t *p1, const wchar_t *p2, size_t cnt){
+int wmemcmp(const wchar_t *p1, const wchar_t *p2, size_t cnt){
 	const uint16_t *rp1 = (const uint16_t *)p1;
 	const uint16_t *rp2 = (const uint16_t *)p2;
 

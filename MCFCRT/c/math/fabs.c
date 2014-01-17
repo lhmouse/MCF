@@ -5,7 +5,7 @@
 #include "../../env/_crtdef.h"
 #include "_mathasm.h"
 
-__MCF_CRT_EXTERN float fabsf(float x){
+float fabsf(float x){
 	register float ret;
 	__asm__ __volatile__(
 		"and byte ptr[%1 + 3], 0x7F \n"
@@ -20,7 +20,7 @@ __MCF_CRT_EXTERN float fabsf(float x){
 	return ret;
 }
 
-__MCF_CRT_EXTERN double fabs(double x){
+double fabs(double x){
 	register double ret;
 	__asm__ __volatile__(
 		"and byte ptr[%1 + 7], 0x7F \n"
@@ -35,7 +35,7 @@ __MCF_CRT_EXTERN double fabs(double x){
 	return ret;
 }
 
-__MCF_CRT_EXTERN __LDBL_DECL(fabsl, long double x){
+__LDBL_DECL(fabsl, long double x){
 	register long double ret;
 	__asm__ __volatile__(
 		"and byte ptr[%1 + 9], 0x7F \n"

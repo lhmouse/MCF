@@ -5,6 +5,8 @@
 #define WIN32_LEAN_AND_MEAN
 
 #include "MCFCRT.h"
+#include "env/lockfree_list.h"
+#include "env/mingw_hacks.h"
 #include <stdlib.h>
 #include <windows.h>
 
@@ -19,50 +21,52 @@ extern char IMAGE_BASE;
 extern void __cdecl __main();
 
 typedef struct tagAtExitNode {
+	__MCF_LFLIST_NODE_HEADER LFListHeader;
+
 	void (__cdecl *pfnProc)(intptr_t);
 	intptr_t nContext;
-	struct tagAtExitNode *pNext;
 } AT_EXIT_NODE;
 
-static AT_EXIT_NODE *volatile g_pAtExitHead = NULL;
+static __MCF_LFLIST_PHEAD g_pAtExitHeader;
 
-static void PumpAtExits(){
+unsigned long __MCF_CRT_Begin(){
+	DWORD dwExitCode;
+
+#define INIT(exp)		if((dwExitCode = (exp)) == ERROR_SUCCESS){ ((void)0)
+#define CLEANUP(exp)	(exp); } ((void)0)
+
+	INIT(__MCF_CRT_HeapInitialize());
+	INIT(__MCF_CRT_TlsEnvInitialize());
+	INIT(__MCF_CRT_EmutlsInitialize());
+
+	__main();
+	return ERROR_SUCCESS;
+
+	CLEANUP(__MCF_CRT_EmutlsUninitialize());
+	CLEANUP(__MCF_CRT_TlsEnvUninitialize());
+	CLEANUP(__MCF_CRT_HeapUninitialize());
+
+	return dwExitCode;
+}
+void __MCF_CRT_End(){
 	for(;;){
-		AT_EXIT_NODE *pNode;
-		do {
-			pNode = g_pAtExitHead;
-			if(pNode == NULL){
-				return;
-			}
-		} while(!__sync_bool_compare_and_swap(&g_pAtExitHead, pNode, pNode->pNext));
-
+		AT_EXIT_NODE *const pNode = (AT_EXIT_NODE *)__MCF_LFListPopFront(&g_pAtExitHeader);
+		if(pNode == NULL){
+			break;
+		}
 		(*pNode->pfnProc)(pNode->nContext);
 		free(pNode);
 	}
-}
 
-__MCF_CRT_EXTERN unsigned long __MCF_CRT_Begin(){
-	DWORD dwRet;
-	if((dwRet = __MCF_CRT_HeapInitialize()) == ERROR_SUCCESS){
-		if((dwRet = __MCF_CRT_TlsEnvInitialize()) == ERROR_SUCCESS){
-			__main();
-			return ERROR_SUCCESS;
-		}
-		__MCF_CRT_HeapUninitialize();
-	}
-	return dwRet;
-}
-__MCF_CRT_EXTERN void __MCF_CRT_End(){
-	PumpAtExits();
-
+	__MCF_CRT_EmutlsUninitialize();
 	__MCF_CRT_TlsEnvUninitialize();
 	__MCF_CRT_HeapUninitialize();
 }
 
-__MCF_CRT_EXTERN void *__MCF_GetModuleBase(){
+void *__MCF_GetModuleBase(){
 	return &IMAGE_BASE;
 }
-__MCF_CRT_EXTERN int __MCF_AtCRTEnd(void (__cdecl *pfnProc)(intptr_t), intptr_t nContext){
+int __MCF_AtCRTEnd(void (__cdecl *pfnProc)(intptr_t), intptr_t nContext){
 	AT_EXIT_NODE *const pNode = (AT_EXIT_NODE *)malloc(sizeof(AT_EXIT_NODE));
 	if(pNode == NULL){
 		return -1;
@@ -70,11 +74,7 @@ __MCF_CRT_EXTERN int __MCF_AtCRTEnd(void (__cdecl *pfnProc)(intptr_t), intptr_t 
 	pNode->pfnProc = pfnProc;
 	pNode->nContext = nContext;
 
-	AT_EXIT_NODE *pOldHead;
-	do {
-		pOldHead = g_pAtExitHead;
-		pNode->pNext = pOldHead;
-	} while(!__sync_bool_compare_and_swap(&g_pAtExitHead, pOldHead, pNode));
+	__MCF_LFListPushFront(&g_pAtExitHeader, (__MCF_LFLIST_NODE_HEADER *)pNode);
 
 	return 0;
 }

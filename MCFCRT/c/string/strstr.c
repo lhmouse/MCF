@@ -4,13 +4,13 @@
 
 #include "../../env/_crtdef.h"
 
-__MCF_CRT_EXTERN size_t strlen(const char *s);
+extern size_t strlen(const char *s);
 
-__MCF_CRT_EXTERN void *malloc(size_t cb);
-__MCF_CRT_EXTERN void free(void *ptr);
-__MCF_CRT_EXTERN int memcmp(const void *p1, const void *p2, size_t cb);
+extern void *malloc(size_t cb);
+extern void free(void *ptr);
+extern int memcmp(const void *p1, const void *p2, size_t cb);
 
-__MCF_CRT_EXTERN char *strstr(const char *s1, const char *s2){
+char *strstr(const char *s1, const char *s2){
 	// http://en.wikipedia.org/wiki/Knuth–Morris–Pratt_algorithm
 	const char *s = s1;
 	const size_t slen = strlen(s1);

@@ -4,7 +4,7 @@
 
 #include "../../env/_crtdef.h"
 
-__MCF_CRT_EXTERN void *memchr(const void *s, int ch, size_t cb){
+void *memchr(const void *s, int ch, size_t cb){
 	register const unsigned char *rp = (const unsigned char *)s;
 	const unsigned char *const end = rp + cb;
 

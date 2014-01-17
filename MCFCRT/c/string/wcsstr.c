@@ -5,13 +5,13 @@
 #include "../../env/_crtdef.h"
 #include <wchar.h>
 
-__MCF_CRT_EXTERN size_t wcslen(const wchar_t *s);
+extern size_t wcslen(const wchar_t *s);
 
-__MCF_CRT_EXTERN void *malloc(size_t cb);
-__MCF_CRT_EXTERN void free(void *ptr);
-__MCF_CRT_EXTERN int wmemcmp(const wchar_t *p1, const wchar_t *p2, size_t cnt);
+extern void *malloc(size_t cb);
+extern void free(void *ptr);
+extern int wmemcmp(const wchar_t *p1, const wchar_t *p2, size_t cnt);
 
-__MCF_CRT_EXTERN wchar_t *wcsstr(const wchar_t *s1, const wchar_t *s2){
+wchar_t *wcsstr(const wchar_t *s1, const wchar_t *s2){
 	// http://en.wikipedia.org/wiki/Knuth–Morris–Pratt_algorithm
 	const wchar_t *s = s1;
 	const size_t slen = wcslen(s1);

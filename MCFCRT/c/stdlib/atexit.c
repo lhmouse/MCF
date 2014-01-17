@@ -9,6 +9,6 @@ static void atexitWrapper(intptr_t nContext){
 	(*((void (*)(void))nContext))();
 }
 
-__MCF_CRT_EXTERN int atexit(void (*func)(void)){
+int atexit(void (*func)(void)){
 	return __MCF_AtCRTEnd(&atexitWrapper, (intptr_t)func);
 }

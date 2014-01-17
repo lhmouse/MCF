@@ -5,7 +5,7 @@
 #include "../../env/_crtdef.h"
 #include "_stringasm.h"
 
-__MCF_CRT_EXTERN size_t wcslen(const wchar_t *s){
+size_t wcslen(const wchar_t *s){
 	register const wchar_t *rp = s;
 
 	if(((uintptr_t)rp & 1) != 0){

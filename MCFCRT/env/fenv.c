@@ -27,7 +27,7 @@
 static const uint16_t FPU_CONTROL_WORD	= (ROUNDING << 10) | (PRECISION << 8) | (EXCEPT_MASK);
 static const uint32_t MXCSR_REGISTER	= (ROUNDING << 13) |                    (EXCEPT_MASK << 7);
 
-__MCF_CRT_EXTERN void __MCF_CRT_FEnvInitialize(){
+void __MCF_CRT_FEnvInitialize(){
 	__asm__ __volatile__("fldcw word ptr[%0]		\n" : : "m"(FPU_CONTROL_WORD));
 	__asm__ __volatile__("ldmxcsr dword ptr[%0]		\n" : : "m"(MXCSR_REGISTER));
 }

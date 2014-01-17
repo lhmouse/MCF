@@ -5,7 +5,7 @@
 #include "../../env/_crtdef.h"
 #include "../string/_strmanip.h"
 
-__MCF_CRT_EXTERN char *_strtok_r(char *restrict s1, const char *restrict s2, char **ctx){
+char *_strtok_r(char *restrict s1, const char *restrict s2, char **ctx){
 	char *from;
 	if(s1 != NULL){
 		from = s1;

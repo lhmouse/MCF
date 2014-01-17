@@ -1,13 +1,24 @@
 #include <StdMCF.hpp>
-//#include <Core/Format.hpp>
-#include <Core/String.hpp>
+#include <Core/Thread.hpp>
 #include <cstdio>
 
+void foo(){
+	std::puts("foo()");
+	throw 12345;
+}
+
 unsigned int MCFMain(){
-	MCF::UTF8String u8s;
-	for(char i = 'z' + 1; i-- != 'a'; ){
-		u8s.Unshift(i);
+	{
+		try {
+			MCF::Thread thrd;
+			thrd.Start(&foo);
+			thrd.Join();
+
+			std::puts("exception uncaught");
+		} catch(int e){
+			std::printf("exception caught, e = %d\n", e);
+		}
 	}
-	std::puts(MCF::ANSIString(u8s).GetCStr());
+	std::puts("return from main");
 	return 0;
 }

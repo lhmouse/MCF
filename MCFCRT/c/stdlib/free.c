@@ -5,7 +5,7 @@
 #include "../../env/_crtdef.h"
 #include "../../env/heap.h"
 
-__MCF_CRT_NOINLINE void free(void *ptr){
+void __attribute__((noinline)) free(void *ptr){
 	if(ptr != NULL){
 		__MCF_CRT_HeapFree((unsigned char *)ptr, __builtin_return_address(0));
 	}

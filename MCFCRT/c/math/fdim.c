@@ -5,7 +5,7 @@
 #include "../../env/_crtdef.h"
 #include "_mathasm.h"
 
-__MCF_CRT_EXTERN float fdimf(float x, float y){
+float fdimf(float x, float y){
 	register float ret;
 	__asm__ __volatile__(
 #ifdef __amd64__
@@ -34,7 +34,7 @@ __MCF_CRT_EXTERN float fdimf(float x, float y){
 	return ret;
 }
 
-__MCF_CRT_EXTERN double fdim(double x, double y){
+double fdim(double x, double y){
 	register double ret;
 	__asm__ __volatile__(
 #ifdef __amd64__
@@ -64,7 +64,7 @@ __MCF_CRT_EXTERN double fdim(double x, double y){
 	return ret;
 }
 
-__MCF_CRT_EXTERN __LDBL_DECL(fdiml, long double x, long double y){
+__LDBL_DECL(fdiml, long double x, long double y){
 	register long double ret;
 	__asm__ __volatile__(
 		"fld tbyte ptr[%1] \n"

@@ -5,7 +5,7 @@
 #include "../../env/_crtdef.h"
 #include "_mathasm.h"
 
-__MCF_CRT_EXTERN float log10f(float x){
+float log10f(float x){
 	register float ret;
 	__asm__ __volatile__(
 		"fldlg2 \n"
@@ -18,7 +18,7 @@ __MCF_CRT_EXTERN float log10f(float x){
 	return ret;
 }
 
-__MCF_CRT_EXTERN double log10(double x){
+double log10(double x){
 	register double ret;
 	__asm__ __volatile__(
 		"fldlg2 \n"
@@ -31,7 +31,7 @@ __MCF_CRT_EXTERN double log10(double x){
 	return ret;
 }
 
-__MCF_CRT_EXTERN __LDBL_DECL(log10l, long double x){
+__LDBL_DECL(log10l, long double x){
 	register long double ret;
 	__asm__ __volatile__(
 		"fldlg2 \n"

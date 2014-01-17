@@ -5,7 +5,7 @@
 #include "../../env/_crtdef.h"
 #include <wchar.h>
 
-__MCF_CRT_EXTERN wchar_t *wcspbrk(const wchar_t *s1, const wchar_t *s2){
+wchar_t *wcspbrk(const wchar_t *s1, const wchar_t *s2){
 	const wchar_t *rp = s1;
 	for(;;){
 		const wchar_t ch = *rp;

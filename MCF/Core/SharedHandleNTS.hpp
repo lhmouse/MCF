@@ -5,7 +5,6 @@
 #ifndef __MCF_SHARED_HANDLE_NTS_HPP__
 #define __MCF_SHARED_HANDLE_NTS_HPP__
 
-#include "../../MCFCRT/MCFCRT.h"
 #include <new>
 #include <cstddef>
 

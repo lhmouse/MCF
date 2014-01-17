@@ -5,7 +5,7 @@
 #include "../../env/_crtdef.h"
 #include "_mathasm.h"
 
-__MCF_CRT_EXTERN float fminf(float x, float y){
+float fminf(float x, float y){
 	register float ret;
 	uintptr_t unused;
 	__asm__ __volatile__(
@@ -36,7 +36,7 @@ __MCF_CRT_EXTERN float fminf(float x, float y){
 	return ret;
 }
 
-__MCF_CRT_EXTERN double fmin(double x, double y){
+double fmin(double x, double y){
 	register double ret;
 	uintptr_t unused;
 	__asm__ __volatile__(
@@ -67,7 +67,7 @@ __MCF_CRT_EXTERN double fmin(double x, double y){
 	return ret;
 }
 
-__MCF_CRT_EXTERN __LDBL_DECL(fminl, long double x, long double y){
+__LDBL_DECL(fminl, long double x, long double y){
 	register long double ret;
 	uintptr_t unused;
 	__asm__ __volatile__(

@@ -5,7 +5,7 @@
 #include "../../env/_crtdef.h"
 #include "_mathasm.h"
 
-__MCF_CRT_EXTERN float fmodf(float x, float y){
+float fmodf(float x, float y){
 	register float ret;
 	__asm__ __volatile__(
 		"fld dword ptr[%2] \n"
@@ -24,7 +24,7 @@ __MCF_CRT_EXTERN float fmodf(float x, float y){
 	return ret;
 }
 
-__MCF_CRT_EXTERN double fmod(double x, double y){
+double fmod(double x, double y){
 	register double ret;
 	__asm__ __volatile__(
 		"fld qword ptr[%2] \n"
@@ -43,7 +43,7 @@ __MCF_CRT_EXTERN double fmod(double x, double y){
 	return ret;
 }
 
-__MCF_CRT_EXTERN __LDBL_DECL(fmodl, long double x, long double y){
+__LDBL_DECL(fmodl, long double x, long double y){
 	register long double ret;
 	__asm__ __volatile__(
 		"fld tbyte ptr[%2] \n"

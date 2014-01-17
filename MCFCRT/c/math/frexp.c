@@ -7,7 +7,7 @@
 
 static const double HALF = 0.5;
 
-__MCF_CRT_EXTERN float frexpf(float x, int *exp){
+float frexpf(float x, int *exp){
 	register float ret;
 	__asm__ __volatile__(
 		"fld dword ptr[%1] \n"
@@ -33,7 +33,7 @@ __MCF_CRT_EXTERN float frexpf(float x, int *exp){
 	return ret;
 }
 
-__MCF_CRT_EXTERN double frexp(double x, int *exp){
+double frexp(double x, int *exp){
 	register double ret;
 	__asm__ __volatile__(
 		"fld qword ptr[%1] \n"
@@ -59,7 +59,7 @@ __MCF_CRT_EXTERN double frexp(double x, int *exp){
 	return ret;
 }
 
-__MCF_CRT_EXTERN __LDBL_DECL(frexpl, long double x, int *exp){
+__LDBL_DECL(frexpl, long double x, int *exp){
 	register long double ret;
 	__asm__ __volatile__(
 		"fld tbyte ptr[%1] \n"

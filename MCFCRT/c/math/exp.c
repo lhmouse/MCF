@@ -5,7 +5,7 @@
 #include "../../env/_crtdef.h"
 #include "_mathasm.h"
 
-__MCF_CRT_EXTERN float expf(float x){
+float expf(float x){
 	register float ret;
 	__asm__ __volatile__(
 		"fldl2e \n"
@@ -28,7 +28,7 @@ __MCF_CRT_EXTERN float expf(float x){
 	return ret;
 }
 
-__MCF_CRT_EXTERN double exp(double x){
+double exp(double x){
 	register double ret;
 	__asm__ __volatile__(
 		"fldl2e \n"
@@ -51,7 +51,7 @@ __MCF_CRT_EXTERN double exp(double x){
 	return ret;
 }
 
-__MCF_CRT_EXTERN __LDBL_DECL(expl, long double x){
+__LDBL_DECL(expl, long double x){
 	register long double ret;
 	__asm__ __volatile__(
 		"fld tbyte ptr[%1] \n"

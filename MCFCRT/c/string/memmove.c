@@ -5,7 +5,7 @@
 #include "../../env/_crtdef.h"
 #include "_stringasm.h"
 
-__MCF_CRT_EXTERN void *memmove(void *dst, const void *src, size_t cb){
+void *memmove(void *dst, const void *src, size_t cb){
 	uintptr_t unused;
 	__asm__ __volatile__(
 		"cmp "__SI__", "__DI__" \n"

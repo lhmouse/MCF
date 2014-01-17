@@ -59,5 +59,6 @@ void CriticalSection::xLeave(){
 }
 
 CriticalSection::LockHolder CriticalSection::Lock() noexcept {
+	xEnter();
 	return LockHolder(this);
 }

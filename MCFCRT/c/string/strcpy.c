@@ -4,9 +4,9 @@
 
 #include "../../env/_crtdef.h"
 
-__MCF_CRT_EXTERN char *_strcpyout(char *restrict dst, const char *restrict src);
+extern char *_strcpyout(char *restrict dst, const char *restrict src);
 
-__MCF_CRT_EXTERN char *strcpy(char *restrict dst, const char *restrict src){
+char *strcpy(char *restrict dst, const char *restrict src){
 	_strcpyout(dst, src);
 	return dst;
 }

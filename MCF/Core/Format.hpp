@@ -5,7 +5,6 @@
 #ifndef __MCF_FORMAT_HPP__
 #define __MCF_FORMAT_HPP__
 
-#include "../../MCFCRT/MCFCRT.h"
 #include "String.hpp"
 #include <utility>
 

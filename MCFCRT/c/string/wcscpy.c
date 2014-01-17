@@ -4,9 +4,9 @@
 
 #include "../../env/_crtdef.h"
 
-__MCF_CRT_EXTERN wchar_t *_wcscpyout(wchar_t *restrict dst, const wchar_t *restrict src);
+extern wchar_t *_wcscpyout(wchar_t *restrict dst, const wchar_t *restrict src);
 
-__MCF_CRT_EXTERN wchar_t *wcscpy(wchar_t *restrict dst, const wchar_t *restrict src){
+wchar_t *wcscpy(wchar_t *restrict dst, const wchar_t *restrict src){
 	_wcscpyout(dst, src);
 	return dst;
 }

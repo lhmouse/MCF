@@ -4,7 +4,7 @@
 
 #include "../../env/_crtdef.h"
 
-__MCF_CRT_EXTERN int strncmp(const char *s1, const char *s2, size_t n){
+int strncmp(const char *s1, const char *s2, size_t n){
 	size_t cnt = n;
 	++cnt;
 	for(;;){

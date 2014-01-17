@@ -8,7 +8,7 @@
 static const double NEG_THRESHOLD = -1.0;
 static const double POS_THRESHOLD =  1.0;
 
-__MCF_CRT_EXTERN float expm1f(float x){
+float expm1f(float x){
 	register float ret;
 	__asm__ __volatile__(
 		"fldl2e \n"
@@ -44,7 +44,7 @@ __MCF_CRT_EXTERN float expm1f(float x){
 	return ret;
 }
 
-__MCF_CRT_EXTERN double expm1(double x){
+double expm1(double x){
 	register double ret;
 	__asm__ __volatile__(
 		"fldl2e \n"
@@ -80,7 +80,7 @@ __MCF_CRT_EXTERN double expm1(double x){
 	return ret;
 }
 
-__MCF_CRT_EXTERN __LDBL_DECL(expm1l, long double x){
+__LDBL_DECL(expm1l, long double x){
 	register long double ret;
 	__asm__ __volatile__(
 		"fld tbyte ptr[%1] \n"

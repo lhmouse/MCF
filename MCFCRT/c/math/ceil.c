@@ -5,7 +5,7 @@
 #include "../../env/_crtdef.h"
 #include "_mathasm.h"
 
-__MCF_CRT_EXTERN float ceilf(float x){
+float ceilf(float x){
 	register float ret;
 	uint16_t fcw;
 	__asm__ __volatile__(
@@ -28,7 +28,7 @@ __MCF_CRT_EXTERN float ceilf(float x){
 	return ret;
 }
 
-__MCF_CRT_EXTERN double ceil(double x){
+double ceil(double x){
 	register double ret;
 	uint16_t fcw;
 	__asm__ __volatile__(
@@ -51,7 +51,7 @@ __MCF_CRT_EXTERN double ceil(double x){
 	return ret;
 }
 
-__MCF_CRT_EXTERN __LDBL_DECL(ceill, long double x){
+__LDBL_DECL(ceill, long double x){
 	register long double ret;
 	uint16_t fcw;
 	__asm__ __volatile__(

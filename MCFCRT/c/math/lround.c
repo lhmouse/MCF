@@ -7,7 +7,7 @@
 static const double POS_HALF = 0.5;
 static const double NEG_HALF = -0.5;
 
-__MCF_CRT_EXTERN long lroundf(float x){
+long lroundf(float x){
 	long ret;
 	uintptr_t unused;
 	uint16_t fcw;
@@ -43,7 +43,7 @@ __MCF_CRT_EXTERN long lroundf(float x){
 	return ret;
 }
 
-__MCF_CRT_EXTERN long lround(double x){
+long lround(double x){
 	long ret;
 	uintptr_t unused;
 	uint16_t fcw;
@@ -79,7 +79,7 @@ __MCF_CRT_EXTERN long lround(double x){
 	return ret;
 }
 
-__MCF_CRT_EXTERN long lroundl(long double x){
+long lroundl(long double x){
 	long ret;
 	uintptr_t unused;
 	uint16_t fcw;

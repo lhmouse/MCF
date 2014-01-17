@@ -55,10 +55,10 @@ static void DoBail(const wchar_t *pwszDescription){
 	__asm__ __volatile__("int 3 \n");
 }
 
-__MCF_CRT_EXTERN void __MCF_Bail(const wchar_t *pwszDescription){
+void __MCF_Bail(const wchar_t *pwszDescription){
 	DoBail(pwszDescription);
 }
-__MCF_CRT_EXTERN void __MCF_BailF(const wchar_t *pwszFormat, ...){
+void __MCF_BailF(const wchar_t *pwszFormat, ...){
 	wchar_t awchBuffer[1024];
 	va_list ap;
 	va_start(ap, pwszFormat);

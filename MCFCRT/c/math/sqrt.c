@@ -5,7 +5,7 @@
 #include "../../env/_crtdef.h"
 #include "_mathasm.h"
 
-__MCF_CRT_EXTERN float sqrtf(float x){
+float sqrtf(float x){
 	register float ret;
 	__asm__ __volatile__(
 		"fld dword ptr[%1] \n"
@@ -17,7 +17,7 @@ __MCF_CRT_EXTERN float sqrtf(float x){
 	return ret;
 }
 
-__MCF_CRT_EXTERN double sqrt(double x){
+double sqrt(double x){
 	register double ret;
 	__asm__ __volatile__(
 		"fld qword ptr[%1] \n"
@@ -29,7 +29,7 @@ __MCF_CRT_EXTERN double sqrt(double x){
 	return ret;
 }
 
-__MCF_CRT_EXTERN __LDBL_DECL(sqrtl, long double x){
+__LDBL_DECL(sqrtl, long double x){
 	register long double ret;
 	__asm__ __volatile__(
 		"fld tbyte ptr[%1] \n"

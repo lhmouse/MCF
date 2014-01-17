@@ -7,19 +7,23 @@
 
 #include "_crtdef.h"
 
-__MCF_CRT_EXTERN unsigned long __MCF_CRT_HeapInitialize();
-__MCF_CRT_EXTERN void __MCF_CRT_HeapUninitialize();
+__MCF_EXTERN_C_BEGIN
 
-__MCF_CRT_EXTERN unsigned char *__MCF_CRT_HeapAlloc(__MCF_STD size_t uSize, const void *pRetAddr);
-__MCF_CRT_EXTERN unsigned char *__MCF_CRT_HeapReAlloc(unsigned char *pBlock /* NON-NULL */, __MCF_STD size_t uSize, const void *pRetAddr);
-__MCF_CRT_EXTERN void __MCF_CRT_HeapFree(unsigned char *pBlock /* NON-NULL */, const void *pRetAddr);
+extern unsigned long __MCF_CRT_HeapInitialize(void);
+extern void __MCF_CRT_HeapUninitialize(void);
+
+extern unsigned char *__MCF_CRT_HeapAlloc(__MCF_STD size_t uSize, const void *pRetAddr);
+extern unsigned char *__MCF_CRT_HeapReAlloc(unsigned char *pBlock /* NON-NULL */, __MCF_STD size_t uSize, const void *pRetAddr);
+extern void __MCF_CRT_HeapFree(unsigned char *pBlock /* NON-NULL */, const void *pRetAddr);
 
 typedef struct tagBadAllocHandler {
 	int (*pfnProc)(__MCF_STD intptr_t);
 	__MCF_STD intptr_t nContext;
 } __MCF_BAD_ALLOC_HANDLER;
 
-__MCF_CRT_EXTERN __MCF_BAD_ALLOC_HANDLER __MCF_GetBadAllocHandler();
-__MCF_CRT_EXTERN __MCF_BAD_ALLOC_HANDLER __MCF_SetBadAllocHandler(__MCF_BAD_ALLOC_HANDLER NewHandler);
+extern __MCF_BAD_ALLOC_HANDLER __MCF_GetBadAllocHandler(void);
+extern __MCF_BAD_ALLOC_HANDLER __MCF_SetBadAllocHandler(__MCF_BAD_ALLOC_HANDLER NewHandler);
+
+__MCF_EXTERN_C_END
 
 #endif

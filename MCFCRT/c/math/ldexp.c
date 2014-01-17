@@ -4,18 +4,18 @@
 
 #include "../../env/_crtdef.h"
 
-__MCF_CRT_EXTERN float scalblnf(float x, long n);
-__MCF_CRT_EXTERN double scalbln(double x, long n);
-__MCF_CRT_EXTERN long double scalblnl(long double x, long n);
+extern float scalblnf(float x, long n);
+extern double scalbln(double x, long n);
+extern long double scalblnl(long double x, long n);
 
-__MCF_CRT_EXTERN float ldexpf(float x, int n){
+float ldexpf(float x, int n){
 	return scalblnf(x, n);
 }
 
-__MCF_CRT_EXTERN double ldexp(double x, int n){
+double ldexp(double x, int n){
 	return scalbln(x, n);
 }
 
-__MCF_CRT_EXTERN long double ldexpl(long double x, int n){
+long double ldexpl(long double x, int n){
 	return scalblnl(x, n);
 }

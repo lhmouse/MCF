@@ -5,7 +5,7 @@
 #include "../../env/_crtdef.h"
 #include "_mathasm.h"
 
-__MCF_CRT_EXTERN float truncf(float x){
+float truncf(float x){
 	register float ret;
 	uint16_t fcw;
 	__asm__ __volatile__(
@@ -27,7 +27,7 @@ __MCF_CRT_EXTERN float truncf(float x){
 	return ret;
 }
 
-__MCF_CRT_EXTERN double trunc(double x){
+double trunc(double x){
 	register double ret;
 	uint16_t fcw;
 	__asm__ __volatile__(
@@ -49,7 +49,7 @@ __MCF_CRT_EXTERN double trunc(double x){
 	return ret;
 }
 
-__MCF_CRT_EXTERN __LDBL_DECL(truncl, long double x){
+__LDBL_DECL(truncl, long double x){
 	register long double ret;
 	uint16_t fcw;
 	__asm__ __volatile__(

@@ -9,20 +9,20 @@
 
 // -static -nostartfiles -Wl,-e__MCFExeStartup,--disable-runtime-pseudo-reloc,--disable-auto-import,-lmcfcrt,-lstdc++,-lgcc,-lgcc_eh,-lmingwex,-lmcfcrt
 
-__MCF_CRT_EXTERN unsigned long __MCF_CRT_ExeInitializeArgV();
-__MCF_CRT_EXTERN void __MCF_CRT_ExeUninitializeArgV();
+extern unsigned long __MCF_CRT_ExeInitializeArgV();
+extern void __MCF_CRT_ExeUninitializeArgV();
 
 extern unsigned int MCFMain();
 
 static int __attribute__((stdcall, unused)) MCFExeStartup(){
 	DWORD dwExitCode;
 
-#define TRY(exp)		if((dwExitCode = (exp)) == ERROR_SUCCESS){ ((void)0)
+#define INIT(exp)		if((dwExitCode = (exp)) == ERROR_SUCCESS){ ((void)0)
 #define CLEANUP(exp)	(exp); } ((void)0)
 
-	TRY(__MCF_CRT_Begin());
-	TRY(__MCF_CRT_ThreadInitialize());
-	TRY(__MCF_CRT_ExeInitializeArgV());
+	INIT(__MCF_CRT_Begin());
+	INIT(__MCF_CRT_ThreadInitialize());
+	INIT(__MCF_CRT_ExeInitializeArgV());
 
 	dwExitCode = MCFMain();
 
@@ -35,7 +35,7 @@ static int __attribute__((stdcall, unused)) MCFExeStartup(){
 }
 
 #ifdef __amd64__
-extern __attribute__((alias("MCFExeStartup@0"))) void __cdecl __MCFExeStartup();
+extern __attribute__((alias("MCFExeStartup"))) void __cdecl __MCFExeStartup();
 #else
 extern __attribute__((alias("MCFExeStartup@0"))) void __cdecl _MCFExeStartup();
 #endif

@@ -5,7 +5,7 @@
 #include "../../env/_crtdef.h"
 #include "_mathasm.h"
 
-__MCF_CRT_EXTERN float sinf(float x){
+float sinf(float x){
 	register float ret;
 	__asm__ __volatile__(
 		"fld dword ptr[%1] \n"
@@ -32,7 +32,7 @@ __MCF_CRT_EXTERN float sinf(float x){
 	return ret;
 }
 
-__MCF_CRT_EXTERN double sin(double x){
+double sin(double x){
 	register double ret;
 	__asm__ __volatile__(
 		"fld qword ptr[%1] \n"
@@ -59,7 +59,7 @@ __MCF_CRT_EXTERN double sin(double x){
 	return ret;
 }
 
-__MCF_CRT_EXTERN __LDBL_DECL(sinl, long double x){
+__LDBL_DECL(sinl, long double x){
 	register long double ret;
 	__asm__ __volatile__(
 		"fld tbyte ptr[%1] \n"

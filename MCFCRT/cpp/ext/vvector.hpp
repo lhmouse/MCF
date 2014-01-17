@@ -213,9 +213,13 @@ public:
 
 	template<typename... PARAM_T>
 	void PushNoCheck(PARAM_T &&...Params){
+		ASSERT_MSG(xm_pEnd != xm_pEndOfStor, L"VVector::PushNoCheck() 失败：容器已满。");
+
 		new(xm_pEnd++) ELEMENT_T(std::forward<PARAM_T>(Params)...);
 	}
 	void PopNoCheck(){
+		ASSERT_MSG(xm_pEnd != xm_pBegin, L"VVector::PopNoCheck() 失败：容器为空。");
+
 		(--xm_pEnd)->~ELEMENT_T();
 	}
 
@@ -346,12 +350,12 @@ public:
 		return xm_pBegin;
 	}
 	const ELEMENT_T &operator[](std::size_t uIndex) const noexcept {
-		ASSERT(uIndex < GetSize());
+		ASSERT_MSG(uIndex < GetSize(), L"VVector::operator[]() 失败：索引越界。");
 
 		return xm_pBegin[uIndex];
 	}
 	ELEMENT_T &operator[](std::size_t uIndex) noexcept {
-		ASSERT(uIndex < GetSize());
+		ASSERT_MSG(uIndex < GetSize(), L"VVector::operator[]() 失败：索引越界。");
 
 		return xm_pBegin[uIndex];
 	}

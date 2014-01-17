@@ -6,7 +6,7 @@
 #include "../../env/bail.h"
 #include <windows.h>
 
-__MCF_CRT_EXTERN __attribute__((noreturn, used)) void abort(){
+__attribute__((noreturn, used)) void abort(){
 	__MCF_Bail(L"应用程序调用 abort() 异常终止。");
 
 	TerminateProcess(GetCurrentProcess(), ERROR_PROCESS_ABORTED);

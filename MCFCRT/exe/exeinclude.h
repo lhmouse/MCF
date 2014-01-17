@@ -7,6 +7,10 @@
 
 #include "../env/_crtdef.h"
 
-__MCF_CRT_EXTERN __MCF_STD size_t __MCF_GetArgV(const wchar_t *const **pppwszArgV);
+__MCF_EXTERN_C_BEGIN
+
+extern __MCF_STD size_t __MCF_GetArgV(const wchar_t *const **pppwszArgV);
+
+__MCF_EXTERN_C_END
 
 #endif

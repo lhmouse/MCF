@@ -6,44 +6,63 @@
 
 #include "_crtdef.h"
 #include "thread.h"
+#include "lockfree_list.h"
+#include <stdlib.h>
 #include <windows.h>
 
-typedef void (*DTOR)(void *);
+typedef struct tagKeyDtorNode {
+	__MCF_LFLIST_NODE_HEADER LFListHeader;
 
-typedef struct tagNode {
-	DTOR dtor;
-	DWORD key;
-} NODE;
+	unsigned long ulKey;
+	void (*pfnDtor)(void *);
+} KEY_DTOR_NODE;
 
-static void node_dtor(void *mem){
-	NODE *const pNode = (NODE *)mem;
+static __MCF_LFLIST_PHEAD g_pDtorHeader;
 
-	const LPVOID val = TlsGetValue(pNode->key);
-	if((GetLastError() == ERROR_SUCCESS) && (val != NULL)){
-		(*pNode->dtor)(val);
+void __MCF_CRT_EmutlsInitialize(){
+}
+void __MCF_CRT_EmutlsUninitialize(){
+	for(;;){
+		KEY_DTOR_NODE *const pNode = (KEY_DTOR_NODE *)__MCF_LFListPopFront(&g_pDtorHeader);
+		if(pNode == NULL){
+			break;
+		}
+		free(pNode);
 	}
 }
 
-__MCF_CRT_EXTERN int __mingwthr_key_dtor(unsigned long key, DTOR dtor){
-	if(dtor == NULL){
-		return -1;
+void __MCF_CRT_RunEmutlsThreadDtors(){
+	const KEY_DTOR_NODE *pNode = (const KEY_DTOR_NODE *)g_pDtorHeader;
+	while(pNode != NULL){
+		const KEY_DTOR_NODE *const pNext = (const KEY_DTOR_NODE *)__MCF_LFListNext((const __MCF_LFLIST_NODE_HEADER *)pNode);
+
+		const LPVOID pMem = TlsGetValue(pNode->ulKey);
+		if(pMem != NULL){
+			(*pNode->pfnDtor)(pMem);
+		}
+
+		pNode = pNext;
 	}
+}
 
-	NODE *const pNode = (NODE *)__MCF_CRT_RetrieveTls((intptr_t)key, sizeof(NODE), NULL, 0, &node_dtor);
-	if(pNode == NULL){
-		return -1;
+int __mingwthr_key_dtor(unsigned long ulKey, void (*pfnDtor)(void *)){
+	if(pfnDtor != NULL){
+		KEY_DTOR_NODE *const pNode = (KEY_DTOR_NODE *)malloc(sizeof(KEY_DTOR_NODE));
+		if(pNode == NULL){
+			return -1;
+		}
+		pNode->ulKey = ulKey;
+		pNode->pfnDtor = pfnDtor;
+
+		__MCF_LFListPushFront(&g_pDtorHeader, (__MCF_LFLIST_NODE_HEADER *)pNode);
 	}
-
-	pNode->dtor	= dtor;
-	pNode->key	= key;
-
 	return 0;
 }
-__MCF_CRT_EXTERN int __mingwthr_remove_key_dtor(unsigned long key){
-	__MCF_CRT_DeleteTls((intptr_t)key);
-	return 0;
+/*
+int __mingwthr_remove_key_dtor(unsigned long ulKey){
+	// 这个函数有用吗？
 }
-
-__MCF_CRT_EXTERN unsigned int _get_output_format(){
+*/
+unsigned int _get_output_format(){
 	return 0;
 }

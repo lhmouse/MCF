@@ -4,7 +4,7 @@
 
 #include "../../env/_crtdef.h"
 
-__MCF_CRT_EXTERN int wcscmp(const wchar_t *s1, const wchar_t *s2){
+int wcscmp(const wchar_t *s1, const wchar_t *s2){
 	for(;;){
 
 #define UNROLLED(index)	\

@@ -4,7 +4,7 @@
 
 #include "../../env/_crtdef.h"
 
-__MCF_CRT_EXTERN wchar_t *wcsrchr(const wchar_t *s, wchar_t ch){
+wchar_t *wcsrchr(const wchar_t *s, wchar_t ch){
 	wchar_t *ret = NULL;
 	register const wchar_t *rp = s;
 

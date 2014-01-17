@@ -4,7 +4,7 @@
 
 #include "../../env/_crtdef.h"
 
-__MCF_CRT_EXTERN wchar_t *_wcscpyout(wchar_t *restrict dst, const wchar_t *restrict src){
+wchar_t *_wcscpyout(wchar_t *restrict dst, const wchar_t *restrict src){
 	register const wchar_t *rp = src;
 	register wchar_t *wp = dst;
 

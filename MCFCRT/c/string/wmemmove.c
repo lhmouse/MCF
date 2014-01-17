@@ -4,8 +4,8 @@
 
 #include "../../env/_crtdef.h"
 
-__MCF_CRT_EXTERN void *memmove(void *dst, const void *src, size_t cb);
+extern void *memmove(void *dst, const void *src, size_t cb);
 
-__MCF_CRT_EXTERN wchar_t *wmemmove(wchar_t *dst, const wchar_t *src, size_t cnt){
+wchar_t *wmemmove(wchar_t *dst, const wchar_t *src, size_t cnt){
 	return (wchar_t *)memmove(dst, src, cnt * sizeof(wchar_t));
 }

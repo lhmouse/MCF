@@ -4,18 +4,18 @@
 
 #include "../../env/_crtdef.h"
 
-__MCF_CRT_EXTERN float sqrtf(float x);
-__MCF_CRT_EXTERN double sqrt(double x);
-__MCF_CRT_EXTERN long double sqrtl(long double x);
+extern float sqrtf(float x);
+extern double sqrt(double x);
+extern long double sqrtl(long double x);
 
-__MCF_CRT_EXTERN float hypotf(float x, float y){
+float hypotf(float x, float y){
 	return sqrtf(x * x + y * y);
 }
 
-__MCF_CRT_EXTERN double hypot(double x, double y){
+double hypot(double x, double y){
 	return sqrt(x * x + y * y);
 }
 
-__MCF_CRT_EXTERN long double hypotl(long double x, long double y){
+long double hypotl(long double x, long double y){
 	return sqrtl(x * x + y * y);
 }

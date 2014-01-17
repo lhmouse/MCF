@@ -10,7 +10,7 @@
 #	define	BSWAP_PTR(val)	__builtin_bswap32(val)
 #endif
 
-__MCF_CRT_EXTERN int memcmp(const void *p1, const void *p2, size_t cb){
+int memcmp(const void *p1, const void *p2, size_t cb){
 	const unsigned char *rp1 = (const unsigned char *)p1;
 	const unsigned char *rp2 = (const unsigned char *)p2;
 

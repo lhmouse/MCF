@@ -5,7 +5,7 @@
 #include "../../env/_crtdef.h"
 #include "_mathasm.h"
 
-__MCF_CRT_EXTERN float scalblnf(float x, long n){
+float scalblnf(float x, long n){
 	register float ret;
 	__asm__ __volatile__(
 		"fild dword ptr[%2] \n"
@@ -19,7 +19,7 @@ __MCF_CRT_EXTERN float scalblnf(float x, long n){
 	return ret;
 }
 
-__MCF_CRT_EXTERN double scalbln(double x, long n){
+double scalbln(double x, long n){
 	register double ret;
 	__asm__ __volatile__(
 		"fild dword ptr[%2] \n"
@@ -33,7 +33,7 @@ __MCF_CRT_EXTERN double scalbln(double x, long n){
 	return ret;
 }
 
-__MCF_CRT_EXTERN __LDBL_DECL(scalblnl, long double x, long n){
+__LDBL_DECL(scalblnl, long double x, long n){
 	register long double ret;
 	__asm__ __volatile__(
 		"fild dword ptr[%2] \n"

@@ -5,7 +5,6 @@
 #ifndef __MCF_STRING_HPP__
 #define __MCF_STRING_HPP__
 
-#include "../../MCFCRT/MCFCRT.h"
 #include <algorithm>
 #include <memory>
 #include <utility>
@@ -713,11 +712,13 @@ public:
 		return GetCStr();
 	}
 	const CHAR_T &operator[](std::size_t uIndex) const noexcept {
-		ASSERT(uIndex <= GetLength());
+		ASSERT_MSG(uIndex <= GetLength(), L"GenericString::operator[]() 失败：索引越界。");
+
 		return GetCStr()[uIndex];
 	}
 	CHAR_T &operator[](std::size_t uIndex) noexcept {
-		ASSERT(uIndex <= GetLength());
+		ASSERT_MSG(uIndex <= GetLength(), L"GenericString::operator[]() 失败：索引越界。");
+
 		return GetCStr()[uIndex];
 	}
 

@@ -8,7 +8,7 @@
 static const double POS_HALF = 0.5;
 static const double NEG_HALF = -0.5;
 
-__MCF_CRT_EXTERN float roundf(float x){
+float roundf(float x){
 	register float ret;
 	uintptr_t unused;
 	uint16_t fcw;
@@ -44,7 +44,7 @@ __MCF_CRT_EXTERN float roundf(float x){
 	return ret;
 }
 
-__MCF_CRT_EXTERN double round(double x){
+double round(double x){
 	register double ret;
 	uintptr_t unused;
 	uint16_t fcw;
@@ -80,7 +80,7 @@ __MCF_CRT_EXTERN double round(double x){
 	return ret;
 }
 
-__MCF_CRT_EXTERN __LDBL_DECL(roundl, long double x){
+__LDBL_DECL(roundl, long double x){
 	register long double ret;
 	uintptr_t unused;
 	uint16_t fcw;

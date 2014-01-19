@@ -5,7 +5,6 @@
 #ifndef __MCF_NOTATION_CLASS_HPP__
 #define __MCF_NOTATION_CLASS_HPP__
 
-#include "../../MCFCRT/MCFCRT.h"
 #include "../Core/String.hpp"
 #include <utility>
 #include <map>

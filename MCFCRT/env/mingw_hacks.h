@@ -11,10 +11,8 @@
 
 __MCF_EXTERN_C_BEGIN
 
-extern unsigned long __MCF_CRT_EmutlsInitialize(void);
-extern void __MCF_CRT_EmutlsUninitialize(void);
-
 extern void __MCF_CRT_RunEmutlsThreadDtors(void);
+extern unsigned long __MCF_CRT_EmutlsCleanup(void);
 
 __MCF_EXTERN_C_END
 

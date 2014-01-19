@@ -1,24 +1,19 @@
 #include <StdMCF.hpp>
 #include <Core/Thread.hpp>
 #include <cstdio>
-
-void foo(){
-	std::puts("foo()");
-	throw 12345;
-}
+#include <cstdlib>
 
 unsigned int MCFMain(){
-	{
-		try {
-			MCF::Thread thrd;
-			thrd.Start(&foo);
-			thrd.Join();
-
-			std::puts("exception uncaught");
-		} catch(int e){
-			std::printf("exception caught, e = %d\n", e);
-		}
+	MCF::Thread thrd;
+	thrd.Start([]{
+		std::puts("in thread");
+		throw 12345;
+	});
+	try {
+		thrd.Join();
+		std::puts("no exception caught");
+	} catch(int e){
+		std::printf("exception caught, e = %d\n", e);
 	}
-	std::puts("return from main");
 	return 0;
 }

@@ -19,18 +19,6 @@ typedef struct tagKeyDtorNode {
 
 static __MCF_LFLIST_PHEAD g_pDtorHeader;
 
-void __MCF_CRT_EmutlsInitialize(){
-}
-void __MCF_CRT_EmutlsUninitialize(){
-	for(;;){
-		KEY_DTOR_NODE *const pNode = (KEY_DTOR_NODE *)__MCF_LFListPopFront(&g_pDtorHeader);
-		if(pNode == NULL){
-			break;
-		}
-		free(pNode);
-	}
-}
-
 void __MCF_CRT_RunEmutlsThreadDtors(){
 	const KEY_DTOR_NODE *pNode = (const KEY_DTOR_NODE *)g_pDtorHeader;
 	while(pNode != NULL){
@@ -42,6 +30,16 @@ void __MCF_CRT_RunEmutlsThreadDtors(){
 		}
 
 		pNode = pNext;
+	}
+}
+
+void __MCF_CRT_EmutlsCleanup(){
+	for(;;){
+		KEY_DTOR_NODE *const pNode = (KEY_DTOR_NODE *)__MCF_LFListPopFront(&g_pDtorHeader);
+		if(pNode == NULL){
+			break;
+		}
+		free(pNode);
 	}
 }
 

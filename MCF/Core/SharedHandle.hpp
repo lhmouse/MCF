@@ -107,7 +107,7 @@ namespace __MCF {
 		bool xAddWeakRef() noexcept {
 			xValidate();
 
-			register std::size_t uOldWeakCount = xm_uWeakCount;
+			std::size_t uOldWeakCount = xm_uWeakCount;
 			for(;;){
 				if(uOldWeakCount == 0){
 					return false;
@@ -123,7 +123,7 @@ namespace __MCF {
 			if(!xAddWeakRef()){
 				return false;
 			}
-			register std::size_t uOldCount = xm_uCount;
+			std::size_t uOldCount = xm_uCount;
 			for(;;){
 				if(uOldCount == 0){
 					xDropWeakRef();

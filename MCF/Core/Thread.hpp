@@ -6,7 +6,6 @@
 #define __MCF_THREAD_HPP__
 
 #include "NoCopy.hpp"
-#include "UniqueHandle.hpp"
 #include "Exception.hpp"
 #include <functional>
 #include <exception>
@@ -28,6 +27,7 @@ public:
 	void WaitTimeout(unsigned long ulMilliSeconds) const noexcept;
 	void Join() const; // 如果线程中有被捕获的异常，抛出异常。
 	void Detach() noexcept;
+	void JoinDetach() noexcept;
 
 	void Suspend() noexcept;
 	void Resume() noexcept;

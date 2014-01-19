@@ -37,12 +37,10 @@ unsigned long __MCF_CRT_Begin(){
 
 	INIT(__MCF_CRT_HeapInitialize());
 	INIT(__MCF_CRT_TlsEnvInitialize());
-	INIT(__MCF_CRT_EmutlsInitialize());
 
 	__main();
 	return ERROR_SUCCESS;
 
-	CLEANUP(__MCF_CRT_EmutlsUninitialize());
 	CLEANUP(__MCF_CRT_TlsEnvUninitialize());
 	CLEANUP(__MCF_CRT_HeapUninitialize());
 
@@ -58,7 +56,7 @@ void __MCF_CRT_End(){
 		free(pNode);
 	}
 
-	__MCF_CRT_EmutlsUninitialize();
+	__MCF_CRT_EmutlsCleanup();
 	__MCF_CRT_TlsEnvUninitialize();
 	__MCF_CRT_HeapUninitialize();
 }

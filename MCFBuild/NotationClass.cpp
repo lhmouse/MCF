@@ -2,6 +2,7 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2012 - 2013. LH_Mouse. All wrongs reserved.
 
+#include "General.hpp"
 #include "NotationClass.hpp"
 #include <list>
 #include <stack>

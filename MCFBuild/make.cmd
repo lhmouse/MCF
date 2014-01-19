@@ -7,7 +7,7 @@ set ExtraLibs=-lversion -lshlwapi
 set CFlags=%CompilerFlags% -std=c11
 set CPPFlags=%CompilerFlags% -std=c++11
 
-if not "%1"=="release" (
+if not "%1"=="Release" (
 	set CompilerFlags=%CompilerFlags% -fno-builtin -g -O0
 	set LinkerFlags=%LinkerFlags% -O0
 ) else (

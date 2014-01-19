@@ -218,24 +218,21 @@ private:
 		return found;
 	}
 private:
-	union {
-		struct {
-			PCHAR_T pchBegin;
-			std::size_t uCapacity;
-
-			void *(Padding_DoNotUse[2]);
-		} Large;
-
-		CHAR_T Small[sizeof(Large) / sizeof(CHAR_T)];
+	struct {
+		union {
+			CHAR_T Small[7 * sizeof(std::size_t) / sizeof(CHAR_T)];
+			struct {
+				PCHAR_T pchBegin;
+				std::size_t uCapacity;
+			} Large;
+		};
+		std::size_t uLength;
 	} xm_Storage;
-	std::size_t xm_uLength;
-
-	static_assert(sizeof(xm_Storage) % sizeof(std::uintptr_t) == 0, "");
 public:
 	GenericString() noexcept {
 		xm_Storage.Small[0] = CHAR_T();
 		std::end(xm_Storage.Small)[-1] = CHAR_T();
-		xm_uLength = 0;
+		xm_Storage.uLength = 0;
 	}
 	explicit GenericString(CHAR_T ch, std::size_t uCount = 1) : GenericString() {
 		Assign(ch, uCount);
@@ -345,16 +342,16 @@ public:
 	}
 
 	std::size_t GetLength() const noexcept {
-		return xm_uLength;
+		return xm_Storage.uLength;
 	}
 	PCHAR_T Resize(std::size_t uSize){
 		const auto pchNewBegin = Reserve(uSize);
 		pchNewBegin[uSize] = CHAR_T();
-		xm_uLength = uSize;
+		xm_Storage.uLength = uSize;
 		return pchNewBegin;
 	}
 	void Trim() noexcept {
-		xm_uLength = __MCF::StrLen(GetCStr());
+		xm_Storage.uLength = __MCF::StrLen(GetCStr());
 	}
 
 	std::size_t GetCapacity() const {
@@ -368,22 +365,20 @@ public:
 		if(&rhs == this){
 			return;
 		}
-		for(std::size_t i = 0; i < sizeof(xm_Storage) / sizeof(std::uintptr_t); ++i){
-			std::swap(((std::uintptr_t *)&xm_Storage)[i], ((std::uintptr_t *)&rhs.xm_Storage)[i]);
-		}
-		std::swap(xm_uLength, rhs.xm_uLength);
+		typedef std::uintptr_t BLOCK[sizeof(xm_Storage) / sizeof(std::uintptr_t)];
+		std::swap((BLOCK &)xm_Storage, (BLOCK &)rhs.xm_Storage);
 	}
 
 	void Assign(CHAR_T ch, std::size_t uCount){
 		xFill(Reserve(uCount), ch, uCount)[0] = CHAR_T();
-		xm_uLength = uCount;
+		xm_Storage.uLength = uCount;
 	}
 	void Assign(PCSTR_T pszSrc){
 		Assign(pszSrc, __MCF::StrLen(pszSrc));
 	}
 	void Assign(PCSTR_T pchSrc, std::size_t uSrcLen){
 		xCopyFwd(Reserve(uSrcLen), pchSrc, uSrcLen)[0] = CHAR_T();
-		xm_uLength = uSrcLen;
+		xm_Storage.uLength = uSrcLen;
 	}
 	void Assign(const GenericString &rhs){
 		if(&rhs == this){
@@ -397,11 +392,10 @@ public:
 		}
 
 		__builtin_memcpy(&xm_Storage, &rhs.xm_Storage, sizeof(xm_Storage));
-		std::end(rhs.xm_Storage.Small)[-1] = CHAR_T();
-		xm_uLength = rhs.xm_uLength;
 
 		std::begin(rhs.xm_Storage.Small)[0] = CHAR_T();
-		rhs.xm_uLength = 0;
+		std::end(rhs.xm_Storage.Small)[-1] = CHAR_T();
+		rhs.xm_Storage.uLength = 0;
 	}
 	template<typename OTHER_C, StringEncoding OTHER_E>
 	void Assign(const GenericString<OTHER_C, OTHER_E> &rhs){
@@ -418,7 +412,7 @@ public:
 		const auto uLength = GetLength();
 		const auto uNewLength = uLength + uCount;
 		xFill(Reserve(uNewLength) + uLength, ch, uCount)[0] = CHAR_T();
-		xm_uLength = uNewLength;
+		xm_Storage.uLength = uNewLength;
 	}
 	void Append(PCSTR_T pszSrc){
 		Append(pszSrc, __MCF::StrLen(pszSrc));
@@ -427,7 +421,7 @@ public:
 		const auto uLength = GetLength();
 		const auto uNewLength = uLength + uSrcLen;
 		xCopyFwd(Reserve(uNewLength) + uLength, pchSrc, uSrcLen)[0] = CHAR_T();
-		xm_uLength = uNewLength;
+		xm_Storage.uLength = uNewLength;
 	}
 	void Append(const GenericString &rhs){
 		const auto uLength = GetLength();
@@ -435,7 +429,7 @@ public:
 			const auto uNewLength = uLength * 2;
 			const auto pchBegin = Reserve(uNewLength);
 			xCopyFwd(pchBegin + uLength, pchBegin, uLength)[0] = CHAR_T();
-			xm_uLength = uNewLength;
+			xm_Storage.uLength = uNewLength;
 		} else {
 			Append(rhs.GetCStr(), rhs.GetLength());
 		}
@@ -455,14 +449,14 @@ public:
 		const auto pchWrite = GetCStr();
 		const auto uNewLength = (uCount >= uLength) ? 0 : (uLength - uCount);
 		pchWrite[uNewLength] = CHAR_T();
-		xm_uLength = uNewLength;
+		xm_Storage.uLength = uNewLength;
 	}
 
 	void Unshift(CHAR_T ch, std::size_t uCount = 1){
 		const auto uLength = GetLength();
 		const auto uNewLength = uLength + uCount;
 		xFill(xReserveUnshift(uNewLength + 1, uCount), ch, uCount);
-		xm_uLength = uNewLength;
+		xm_Storage.uLength = uNewLength;
 	}
 	void Unshift(PCSTR_T pszSrc){
 		Unshift(pszSrc, __MCF::StrLen(pszSrc));
@@ -471,7 +465,7 @@ public:
 		const auto uLength = GetLength();
 		const auto uNewLength = uLength + uSrcLen;
 		xCopyFwd(xReserveUnshift(uNewLength + 1, uSrcLen), pchSrc, uSrcLen);
-		xm_uLength = uNewLength;
+		xm_Storage.uLength = uNewLength;
 	}
 	void Unshift(const GenericString &rhs){
 		if(&rhs == this){
@@ -495,12 +489,12 @@ public:
 		const auto pchWrite = GetCStr();
 		if(uCount >= uLength){
 			pchWrite[0] = CHAR_T();
-			xm_uLength = 0;
+			xm_Storage.uLength = 0;
 		} else {
-			const auto uNewLength = xm_uLength - uCount;
+			const auto uNewLength = xm_Storage.uLength - uCount;
 			xCopyFwd(pchWrite, pchWrite + uCount, uNewLength);
 			pchWrite[uNewLength] = CHAR_T();
-			xm_uLength = uNewLength;
+			xm_Storage.uLength = uNewLength;
 		}
 	}
 

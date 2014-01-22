@@ -24,7 +24,7 @@ void *memchr(const void *s, int ch, size_t cb){
 		const unsigned char *const wend = (const unsigned char *)((uintptr_t)end & ~(sizeof(uintptr_t) - 1));
 		do {
 
-#ifdef __amd64__
+#ifdef _WIN64
 #	define	MASK	0x0101010101010101ull
 #else
 #	define	MASK	0x01010101ul

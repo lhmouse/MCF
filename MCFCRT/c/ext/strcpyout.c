@@ -20,7 +20,7 @@ char *_strcpyout(char *restrict dst, const char *restrict src){
 
 	for(;;){
 
-#ifdef __amd64__
+#ifdef _WIN64
 #	define	MASK	0x0101010101010101ull
 #else
 #	define	MASK	0x01010101ul

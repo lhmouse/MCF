@@ -2,15 +2,16 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2013. LH_Mouse. All wrongs reserved.
 
-#ifndef __MCF_CRITICAL_SECTION_HPP__
-#define __MCF_CRITICAL_SECTION_HPP__
+#ifndef __MCF_SEMAPHORE_HPP__
+#define __MCF_SEMAPHORE_HPP__
 
 #include "NoCopy.hpp"
+#include "../../MCFCRT/cpp/ext/vvector.hpp"
 #include <memory>
 
 namespace MCF {
 
-class CriticalSection : NO_COPY {
+class Semaphore : NO_COPY {
 private:
 	class xDelegate;
 
@@ -26,11 +27,13 @@ public:
 private:
 	const std::unique_ptr<xDelegate> xm_pDelegate;
 public:
-	CriticalSection(unsigned long ulSpinCount = 0x400);
-	~CriticalSection();
+	Semaphore(long lInitCount, long lMaxCount);
+	~Semaphore();
 public:
-	LockHolder Try() noexcept;
-	LockHolder Lock() noexcept;
+	LockHolder WaitTimeOut(unsigned long ulMilliSeconds) noexcept;
+	MCF::VVector<LockHolder> WaitTimeOut(long lWaitCount, unsigned long ulMilliSeconds) noexcept;
+	LockHolder Wait() noexcept;
+	MCF::VVector<LockHolder> Wait(long lWaitCount) noexcept;
 };
 
 }

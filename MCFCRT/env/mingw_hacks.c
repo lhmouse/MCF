@@ -21,11 +21,11 @@ static __MCF_LFLIST_PHEAD g_pDtorHeader;
 
 void __MCF_CRT_RunEmutlsThreadDtors(){
 	const KEY_DTOR_NODE *pNode = (const KEY_DTOR_NODE *)g_pDtorHeader;
-	while(pNode != NULL){
+	while(pNode){
 		const KEY_DTOR_NODE *const pNext = (const KEY_DTOR_NODE *)__MCF_LFListNext((const __MCF_LFLIST_NODE_HEADER *)pNode);
 
 		const LPVOID pMem = TlsGetValue(pNode->ulKey);
-		if(pMem != NULL){
+		if((GetLastError() == ERROR_SUCCESS) && pMem){
 			(*pNode->pfnDtor)(pMem);
 		}
 
@@ -36,7 +36,7 @@ void __MCF_CRT_RunEmutlsThreadDtors(){
 void __MCF_CRT_EmutlsCleanup(){
 	for(;;){
 		KEY_DTOR_NODE *const pNode = (KEY_DTOR_NODE *)__MCF_LFListPopFront(&g_pDtorHeader);
-		if(pNode == NULL){
+		if(!pNode){
 			break;
 		}
 		free(pNode);
@@ -44,9 +44,9 @@ void __MCF_CRT_EmutlsCleanup(){
 }
 
 int __mingwthr_key_dtor(unsigned long ulKey, void (*pfnDtor)(void *)){
-	if(pfnDtor != NULL){
+	if(pfnDtor){
 		KEY_DTOR_NODE *const pNode = (KEY_DTOR_NODE *)malloc(sizeof(KEY_DTOR_NODE));
-		if(pNode == NULL){
+		if(!pNode){
 			return -1;
 		}
 		pNode->ulKey = ulKey;

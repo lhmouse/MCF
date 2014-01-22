@@ -8,7 +8,6 @@
 #include "fenv.h"
 #include "mingw_hacks.h"
 #include "avl_tree.h"
-#include "lockfree_list.h"
 #include "bail.h"
 #include <stdlib.h>
 #include <windows.h>
@@ -19,20 +18,21 @@ typedef struct tagThreadInitInfo {
 } THREAD_INIT_INFO;
 
 typedef struct tagAtExitNode {
+	__MCF_AVL_NODE_HEADER AvlNodeHeader;
+	struct tagAtExitNode *pPrev;
+	struct tagAtExitNode *pNext;
+
 	void (*pfnProc)(intptr_t);
 	intptr_t nContext;
-
-	struct tagAtExitNode *pNext;
 } AT_EXIT_NODE;
 
 typedef struct tagTlsObject {
 	__MCF_AVL_NODE_HEADER AvlNodeHeader;
+	struct tagTlsObject *pPrev;
+	struct tagTlsObject *pNext;
 
 	void *pMem;
 	void (*pfnDtor)(void *);
-
-	struct tagTlsObject *pPrev;
-	struct tagTlsObject *pNext;
 #ifndef NDEBUG
 	size_t uMemSize;
 #endif
@@ -40,8 +40,7 @@ typedef struct tagTlsObject {
 
 typedef struct tagThreadEnv {
 	AT_EXIT_NODE *pAtExitHead;
-
-	__MCF_AVL_PROOT pObjectMap;
+	__MCF_AVL_PROOT mapObjects;
 	TLS_OBJECT *pLastObject;
 } THREAD_ENV;
 
@@ -81,11 +80,11 @@ unsigned long __MCF_CRT_ThreadInitialize(){
 	__MCF_CRT_FEnvInitialize();
 
 	THREAD_ENV *const pNewThreadEnv = (THREAD_ENV *)malloc(sizeof(THREAD_ENV));
-	if(pNewThreadEnv == NULL){
+	if(!pNewThreadEnv){
 		return GetLastError();
 	}
 	pNewThreadEnv->pAtExitHead	= NULL;
-	pNewThreadEnv->pObjectMap	= NULL;
+	pNewThreadEnv->mapObjects	= NULL;
 	pNewThreadEnv->pLastObject	= NULL;
 
 	TlsSetValue(g_dwTlsIndex, pNewThreadEnv);
@@ -97,7 +96,7 @@ void __MCF_CRT_ThreadUninitialize(){
 	THREAD_ENV *const pThreadEnv = (THREAD_ENV *)TlsGetValue(g_dwTlsIndex);
 	if(GetLastError() == ERROR_SUCCESS){
 		register AT_EXIT_NODE *pAtExitHead = pThreadEnv->pAtExitHead;
-		while(pAtExitHead != NULL){
+		while(pAtExitHead){
 			AT_EXIT_NODE *const pNext = pAtExitHead->pNext;
 			(*pAtExitHead->pfnProc)(pAtExitHead->nContext);
 			free(pAtExitHead);
@@ -105,9 +104,9 @@ void __MCF_CRT_ThreadUninitialize(){
 		}
 
 		register TLS_OBJECT *pObject = pThreadEnv->pLastObject;
-		while(pObject != NULL){
+		while(pObject){
 			TLS_OBJECT *const pPrev = pObject->pPrev;
-			if(pObject->pfnDtor != NULL){
+			if(pObject->pfnDtor){
 				(*pObject->pfnDtor)(pObject->pMem);
 			}
 			free(pObject->pMem);
@@ -128,14 +127,14 @@ void *__MCF_CreateCRTThread(
 	unsigned long *pulThreadId
 ){
 	THREAD_INIT_INFO *const pThreadInitInfo = (THREAD_INIT_INFO *)malloc(sizeof(THREAD_INIT_INFO));
-	if(pThreadInitInfo == NULL){
+	if(!pThreadInitInfo){
 		return NULL;
 	}
 	pThreadInitInfo->pfnProc = pfnProc;
 	pThreadInitInfo->nParam = nParam;
 
 	const HANDLE hThread = CreateThread(NULL, 0, &CRTThreadProc, pThreadInitInfo, ulFlags, pulThreadId);
-	if(hThread == NULL){
+	if(!hThread){
 		const DWORD dwErrorCode = GetLastError();
 		free(pThreadInitInfo);
 		SetLastError(dwErrorCode);
@@ -148,12 +147,12 @@ int __MCF_AtCRTThreadExit(
 	intptr_t nContext
 ){
 	THREAD_ENV *const pThreadEnv = (THREAD_ENV *)TlsGetValue(g_dwTlsIndex);
-	if((pThreadEnv == NULL) || (GetLastError() != ERROR_SUCCESS)){
+	if((GetLastError() != ERROR_SUCCESS) || !pThreadEnv){
 		return -1;
 	}
 
 	AT_EXIT_NODE *const pNewNode = (AT_EXIT_NODE *)malloc(sizeof(AT_EXIT_NODE));
-	if(pNewNode == NULL){
+	if(!pNewNode){
 		return -1;
 	}
 
@@ -174,52 +173,50 @@ void *__MCF_CRT_RetrieveTls(
 	void (*pfnDestructor)(void *)
 ){
 	THREAD_ENV *const pThreadEnv = (THREAD_ENV *)TlsGetValue(g_dwTlsIndex);
-	if((pThreadEnv == NULL) || (GetLastError() != ERROR_SUCCESS)){
+	if((GetLastError() != ERROR_SUCCESS) || !pThreadEnv){
 		return NULL;
 	}
 
-	TLS_OBJECT *pObject = (TLS_OBJECT *)__MCF_AVLFind(pThreadEnv->pObjectMap, nKey);
-	if(pObject == NULL){
+	TLS_OBJECT *pObject = (TLS_OBJECT *)__MCF_AVLFind(&pThreadEnv->mapObjects, nKey);
+	if(!pObject){
 		pObject = (TLS_OBJECT *)malloc(sizeof(TLS_OBJECT));
-		if(pObject == NULL){
+		if(!pObject){
 			return NULL;
 		}
 
 		void *const pMem = malloc((uSizeToAlloc == 0) ? 1 : uSizeToAlloc);
-		if(pMem == NULL){
+		if(!pMem){
 			free(pObject);
 			return NULL;
 		}
-		if(pfnConstructor != NULL){
+		if(pfnConstructor){
 			(*pfnConstructor)(pMem, nParam);
+		}
+
+		TLS_OBJECT *const pPrev = pThreadEnv->pLastObject;
+		pObject->pPrev = pPrev;
+		pObject->pNext = NULL;
+		if(pPrev){
+			pPrev->pNext = pObject;
 		}
 
 		pObject->pMem = pMem;
 		pObject->pfnDtor = pfnDestructor;
-
-		TLS_OBJECT *const pPrev = pThreadEnv->pLastObject;
-
-		pObject->pPrev = pPrev;
-		pObject->pNext = NULL;
-
 #ifndef NDEBUG
 		pObject->uMemSize = uSizeToAlloc;
 #endif
 
-		if(pPrev != NULL){
-			pPrev->pNext = pObject;
-		}
 		pThreadEnv->pLastObject = pObject;
 
-		__MCF_AVLAttach(&pThreadEnv->pObjectMap, nKey, (__MCF_AVL_NODE_HEADER *)pObject);
+		__MCF_AVLAttach(&pThreadEnv->mapObjects, nKey, (__MCF_AVL_NODE_HEADER *)pObject);
 	}
 #ifndef NDEBUG
 	if(pObject->uMemSize != uSizeToAlloc){
 		__MCF_BailF(
 			L"__MCF_CRT_RetrieveTls() 失败：两次试图使用相同的键获得 TLS，但指定的大小不一致。\n\n"
-			"键：0x%p\n"
-			"该 TLS 创建时的大小：0x%p\n"
-			"本次调用指定的大小 ：0x%p\n",
+			"键：%p\n"
+			"该 TLS 创建时的大小：%p\n"
+			"本次调用指定的大小 ：%p\n",
 			(void *)nKey,
 			(void *)pObject->uMemSize,
 			(void *)uSizeToAlloc
@@ -232,24 +229,24 @@ void __MCF_CRT_DeleteTls(
 	intptr_t nKey
 ){
 	THREAD_ENV *const pThreadEnv = (THREAD_ENV *)TlsGetValue(g_dwTlsIndex);
-	if((pThreadEnv == NULL) || (GetLastError() != ERROR_SUCCESS)){
+	if((GetLastError() != ERROR_SUCCESS) || !pThreadEnv){
 		return;
 	}
 
-	TLS_OBJECT *pObject = (TLS_OBJECT *)__MCF_AVLFind(pThreadEnv->pObjectMap, nKey);
-	if(pObject != NULL){
+	TLS_OBJECT *pObject = (TLS_OBJECT *)__MCF_AVLFind(&pThreadEnv->mapObjects, nKey);
+	if(pObject){
 		TLS_OBJECT *const pPrev = pObject->pPrev;
 		TLS_OBJECT *const pNext = pObject->pNext;
-		if(pPrev != NULL){
+		if(pPrev){
 			pPrev->pNext = pNext;
 		}
-		if(pNext != NULL){
+		if(pNext){
 			pNext->pPrev = pPrev;
 		}
 		if(pThreadEnv->pLastObject == pObject){
 			pThreadEnv->pLastObject = pPrev;
 		}
-		if(pObject->pfnDtor != NULL){
+		if(pObject->pfnDtor){
 			(*pObject->pfnDtor)(pObject->pMem);
 		}
 		free(pObject->pMem);

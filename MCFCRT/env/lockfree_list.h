@@ -13,12 +13,15 @@ __MCF_EXTERN_C_BEGIN
 
 typedef struct tagLFListNodeHeader {
 	struct tagLFListNodeHeader *pNext;
-} __MCF_LFLIST_NODE_HEADER, *volatile __MCF_LFLIST_PHEAD;
+} __MCF_LFLIST_NODE_HEADER;
+
+typedef __MCF_LFLIST_NODE_HEADER *volatile __MCF_LFLIST_PHEAD;
 
 extern void __MCF_LFListPushFront(__MCF_LFLIST_PHEAD *ppHead, __MCF_LFLIST_NODE_HEADER *pNode);
 extern __MCF_LFLIST_NODE_HEADER *__MCF_LFListPopFront(__MCF_LFLIST_PHEAD *ppHead);
 
-extern __MCF_LFLIST_NODE_HEADER *__MCF_LFListNext(const __MCF_LFLIST_NODE_HEADER *pHead);
+extern __MCF_LFLIST_NODE_HEADER *__MCF_LFListBegin(const __MCF_LFLIST_PHEAD *ppHead);
+extern __MCF_LFLIST_NODE_HEADER *__MCF_LFListNext(const __MCF_LFLIST_NODE_HEADER *pNode);
 
 __MCF_EXTERN_C_END
 

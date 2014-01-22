@@ -39,7 +39,7 @@ void *memmove(void *dst, const void *src, size_t cb){
 		"		jnz 3b \n"
 		"	1: \n"
 		"	mov "__CX__", %5 \n"
-#ifdef __amd64__
+#ifdef _WIN64
 		"	shr rcx, 3 \n"
 		"	rep movsq \n"
 		"	mov rcx, %5 \n"
@@ -90,7 +90,7 @@ void *memmove(void *dst, const void *src, size_t cb){
 		"	jnz 8b \n"
 		"6: \n"
 		"mov "__CX__", %5 \n"
-#ifdef __amd64__
+#ifdef _WIN64
 		"lea "__SI__", dword ptr["__SI__" - 8] \n"
 		"shr rcx, 3 \n"
 		"lea "__DI__", dword ptr["__DI__" - 8] \n"

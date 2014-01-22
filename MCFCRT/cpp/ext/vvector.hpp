@@ -18,6 +18,52 @@ namespace MCF {
 template<typename ELEMENT_T, std::size_t ALT_STOR_THLD = 0x400ul / sizeof(ELEMENT_T)>
 class VVector {
 private:
+	static const bool xNOEXCEPT_MOVEABLE = std::is_nothrow_move_constructible<ELEMENT_T>::value || !std::is_copy_constructible<ELEMENT_T>::value;
+
+	template<typename TEST_T = int>
+	static ELEMENT_T *xMoveArray(
+		ELEMENT_T *pOut,
+		ELEMENT_T *pBegin,
+		ELEMENT_T *pEnd,
+		typename std::enable_if<!xNOEXCEPT_MOVEABLE, TEST_T>::type = 0
+	){
+		auto pWrite = pOut;
+		auto pRead = pBegin;
+		try {
+			while(pRead != pEnd){
+				new(pWrite) ELEMENT_T(*pRead);
+				++pWrite;
+				++pRead;
+			}
+		} catch(...){
+			while(pWrite != pOut){
+				(--pWrite)->~ELEMENT_T();
+			}
+			throw;
+		}
+		while(pRead != pBegin){
+			(--pRead)->~ELEMENT_T();
+		}
+		return pWrite;
+	}
+	template<typename TEST_T = int>
+	static ELEMENT_T *xMoveArray(
+		ELEMENT_T *pOut,
+		ELEMENT_T *pBegin,
+		ELEMENT_T *pEnd,
+		typename std::enable_if<xNOEXCEPT_MOVEABLE, TEST_T>::type = 0
+	) noexcept(std::is_nothrow_move_constructible<ELEMENT_T>::value) {
+		auto pWrite = pOut;
+		auto pRead = pBegin;
+		while(pRead != pEnd){
+			new(pWrite++) ELEMENT_T(std::move(*(pRead++)));
+		}
+		while(pRead != pBegin){
+			(--pRead)->~ELEMENT_T();
+		}
+		return pWrite;
+	}
+private:
 	unsigned char xm_aSmall[sizeof(ELEMENT_T) * ALT_STOR_THLD];
 	std::unique_ptr<unsigned char[]> xm_pLarge;
 
@@ -78,11 +124,7 @@ public:
 				rhs.xm_pEndOfStor = (ELEMENT_T *)std::end(rhs.xm_aSmall);
 			} else {
 				for(auto pRead = rhs.xm_pBegin; pRead != rhs.xm_pEnd; ++pRead){
-					if(std::is_nothrow_move_constructible<ELEMENT_T>::value){
-						PushNoCheck(std::move(*pRead));
-					} else {
-						PushNoCheck(*pRead);
-					}
+					PushNoCheck(std::move_if_noexcept(*pRead));
 				}
 			}
 		}
@@ -122,46 +164,63 @@ private:
 			uNewCapacity |= uNewCapacity >> 4;
 			uNewCapacity |= uNewCapacity >> 8;
 			uNewCapacity |= uNewCapacity >> 16;
-#ifdef __amd64__
+#ifdef _WIN64
 			uNewCapacity |= uNewCapacity >> 32;
 #endif
 			++uNewCapacity;
 
 			std::unique_ptr<unsigned char[]> pNewLarge(new unsigned char[sizeof(ELEMENT_T) * uNewCapacity]);
 			const auto pWriteBegin = (ELEMENT_T *)pNewLarge.get();
-			const std::size_t uSize = (std::size_t)(xm_pEnd - xm_pBegin);
-
-			auto pRead = xm_pBegin;
-			auto pWrite = pWriteBegin;
-			if(std::is_nothrow_move_constructible<ELEMENT_T>::value){
-				while(pRead != xm_pEnd){
-					new(pWrite) ELEMENT_T(std::move(*pRead));
-					++pRead;
-					++pWrite;
-				}
-			} else {
-				try {
-					while(pRead != xm_pEnd){
-						new(pWrite) ELEMENT_T(*(const ELEMENT_T *)pRead);
-						++pRead;
-						++pWrite;
-					}
-				} catch(...){
-					while(pWrite != pWriteBegin){
-						(--pWrite)->~ELEMENT_T();
-					}
-					throw;
-				}
-			}
-			while(pRead != xm_pBegin){
-				(--pRead)->~ELEMENT_T();
-			}
+			const auto pWriteEnd = xMoveArray(pWriteBegin, xm_pBegin, xm_pEnd);
 
 			xm_pLarge.swap(pNewLarge);
 			xm_pBegin		= pWriteBegin;
-			xm_pEnd			= pWriteBegin + uSize;
+			xm_pEnd			= pWriteEnd;
 			xm_pEndOfStor	= pWriteBegin + uNewCapacity;
 		}
+	}
+
+	bool xIsSmall() const noexcept {
+		return xm_pBegin == (ELEMENT_T *)std::begin(xm_aSmall);
+	}
+
+	void xSwapWithLarge(VVector &rhs) noexcept(std::is_nothrow_move_constructible<ELEMENT_T>::value) {
+		ASSERT(xIsSmall() && !rhs.xIsSmall());
+
+		const auto pWriteBegin = (ELEMENT_T *)std::begin(rhs.xm_aSmall);
+		const auto pWriteEnd = xMoveArray(pWriteBegin, xm_pBegin, xm_pEnd);
+
+		std::swap(xm_pLarge, rhs.xm_pLarge);
+		xm_pBegin			= rhs.xm_pBegin;
+		xm_pEnd				= rhs.xm_pEnd;
+		xm_pEndOfStor		= rhs.xm_pEndOfStor;
+		rhs.xm_pBegin		= pWriteBegin;
+		rhs.xm_pEnd			= pWriteEnd;
+		rhs.xm_pEndOfStor	= (ELEMENT_T *)std::end(rhs.xm_aSmall);
+	}
+	template<typename TEST_T = int>
+	void xSwapSmall(
+		VVector &rhs,
+		typename std::enable_if<!xNOEXCEPT_MOVEABLE, TEST_T>::type = 0
+	){
+		ASSERT(xIsSmall() && rhs.xIsSmall());
+
+		rhs.Reserve(ALT_STOR_THLD + 1);
+		xSwapWithLarge(rhs);
+	}
+	template<typename TEST_T = int>
+	void xSwapSmall(
+		VVector &rhs,
+		typename std::enable_if<xNOEXCEPT_MOVEABLE, TEST_T>::type = 0
+	) noexcept(std::is_nothrow_move_constructible<ELEMENT_T>::value) {
+		ASSERT(xIsSmall() && rhs.xIsSmall());
+
+		unsigned char aTemp[sizeof(ELEMENT_T) * ALT_STOR_THLD];
+
+		const auto pTempBegin = (ELEMENT_T *)std::begin(aTemp);
+		const auto pTempEnd = xMoveArray(pTempBegin, xm_pBegin, xm_pEnd);
+		xm_pEnd = xMoveArray(xm_pBegin, rhs.xm_pBegin, rhs.xm_pEnd);
+		rhs.xm_pEnd = xMoveArray(rhs.xm_pBegin, pTempBegin, pTempEnd);
 	}
 public:
 	const ELEMENT_T *GetBegin() const noexcept {
@@ -215,9 +274,10 @@ public:
 	void PushNoCheck(PARAM_T &&...Params){
 		ASSERT_MSG(xm_pEnd != xm_pEndOfStor, L"VVector::PushNoCheck() 失败：容器已满。");
 
-		new(xm_pEnd++) ELEMENT_T(std::forward<PARAM_T>(Params)...);
+		new(xm_pEnd) ELEMENT_T(std::forward<PARAM_T>(Params)...);
+		++xm_pEnd;
 	}
-	void PopNoCheck(){
+	void PopNoCheck() noexcept {
 		ASSERT_MSG(xm_pEnd != xm_pBegin, L"VVector::PopNoCheck() 失败：容器为空。");
 
 		(--xm_pEnd)->~ELEMENT_T();
@@ -244,10 +304,11 @@ public:
 		Reserve(GetSize() + uCount);
 		auto pRead = pFrom;
 		for(std::size_t i = 0; i < uCount; ++i){
-			PushNoCheck(*(pRead++));
+			PushNoCheck(*pRead);
+			++pRead;
 		}
 	}
-	void MoveToEnd(ELEMENT_T *pFrom, std::size_t uCount){
+	void MoveToEnd(ELEMENT_T *pFrom, std::size_t uCount) noexcept(std::is_nothrow_move_constructible<ELEMENT_T>::value) {
 		Reserve(GetSize() + uCount);
 		auto pRead = pFrom;
 		for(std::size_t i = 0; i < uCount; ++i){
@@ -262,83 +323,25 @@ public:
 		}
 	}
 
-	void Swap(VVector &rhs){
+	void Swap(VVector &rhs) noexcept(std::is_nothrow_move_constructible<ELEMENT_T>::value) {
 		if(&rhs == this){
 			return;
 		}
 
-		const auto SwapSmallAndLarge = [](VVector &vecSmall, VVector &vecLarge) -> void {
-			const auto pWriteBegin = (ELEMENT_T *)std::begin(vecLarge.xm_aSmall);
-			auto pRead = vecSmall.xm_pBegin;
-			auto pWrite = pWriteBegin;
-			if(std::is_nothrow_move_constructible<ELEMENT_T>::value){
-				while(pRead != vecSmall.xm_pEnd){
-					new(pWrite) ELEMENT_T(std::move(*pRead));
-					++pRead;
-					++pWrite;
-				}
-			} else {
-				try {
-					while(pRead != vecSmall.xm_pEnd){
-						new(pWrite) ELEMENT_T(*(const ELEMENT_T *)pRead);
-						++pRead;
-						++pWrite;
-					}
-				} catch(...){
-					while(pWrite != pWriteBegin){
-						(--pWrite)->~ELEMENT_T();
-					}
-					throw;
-				}
-			}
-			while(pRead != vecSmall.xm_pBegin){
-				(--pRead)->~ELEMENT_T();
-			}
-
-			std::swap(vecSmall.xm_pLarge, vecLarge.xm_pLarge);
-			vecSmall.xm_pBegin = vecLarge.xm_pBegin;
-			vecSmall.xm_pEnd = vecLarge.xm_pEnd;
-			vecSmall.xm_pEndOfStor = vecLarge.xm_pEndOfStor;
-			vecLarge.xm_pBegin = pWriteBegin;
-			vecLarge.xm_pEnd = pWrite;
-			vecLarge.xm_pEndOfStor = (ELEMENT_T *)std::end(vecLarge.xm_aSmall);
-		};
-
-		if(xm_pBegin != (ELEMENT_T *)std::begin(xm_aSmall)){
+		if(xIsSmall()){
 			if(rhs.xm_pBegin != (ELEMENT_T *)std::begin(rhs.xm_aSmall)){
 				std::swap(xm_pLarge, rhs.xm_pLarge);
 				std::swap(xm_pBegin, rhs.xm_pBegin);
 				std::swap(xm_pEnd, rhs.xm_pEnd);
 				std::swap(xm_pEndOfStor, rhs.xm_pEndOfStor);
 			} else {
-				SwapSmallAndLarge(rhs, *this);
+				xSwapWithLarge(rhs);
 			}
 		} else {
 			if(rhs.xm_pBegin != (ELEMENT_T *)std::begin(rhs.xm_aSmall)){
-				SwapSmallAndLarge(*this, rhs);
+				rhs.xSwapWithLarge(*this);
 			} else {
-				if(std::is_nothrow_move_constructible<ELEMENT_T>::value){
-					unsigned char aTemp[sizeof(ELEMENT_T) * ALT_STOR_THLD];
-
-					const auto MoveAndDestroy = [](ELEMENT_T *&pOut, ELEMENT_T *pBegin, ELEMENT_T *&pEnd){
-						for(auto pRead = pBegin; pRead != pEnd; ++pRead){
-							new(pOut++) ELEMENT_T(std::move(*pRead));
-						}
-						while(pEnd != pBegin){
-							(--pEnd)->~ELEMENT_T();
-						}
-					};
-
-					const auto pTempBegin = (ELEMENT_T *)std::begin(aTemp);
-					auto pTempEnd = pTempBegin;
-
-					MoveAndDestroy(pTempEnd, xm_pBegin, xm_pEnd);
-					MoveAndDestroy(xm_pEnd, rhs.xm_pBegin, rhs.xm_pEnd);
-					MoveAndDestroy(rhs.xm_pEnd, pTempBegin, pTempEnd);
-				} else {
-					rhs.Reserve(ALT_STOR_THLD + 1);
-					SwapSmallAndLarge(*this, rhs);
-				}
+				xSwapSmall(rhs);
 			}
 		}
 	}

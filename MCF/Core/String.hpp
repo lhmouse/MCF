@@ -158,7 +158,7 @@ private:
 			t = t_sm;
 		} else {
 			t = new(std::nothrow) std::size_t[wlen];
-			if(t == nullptr){
+			if(!t){
 				// 内存不足，使用暴力搜索方法。
 				const auto till = s  + (slen - wlen);
 				auto p = s;
@@ -561,7 +561,7 @@ public:
 			return NPOS;
 		}
 		const auto pchPos = xKMPFind(pchBegin + uRealBegin, uLength - uRealBegin, pchToFind, uLenToFind);
-		return (pchPos == nullptr) ? NPOS : (std::size_t)(pchPos - pchBegin);
+		return pchPos ? (std::size_t)(pchPos - pchBegin) : NPOS;
 	}
 	std::size_t FindLastBefore(PCSTR_T pszToFind, std::ptrdiff_t nOffsetEnd = -1) const noexcept {
 		return FindLastBefore(pszToFind, __MCF::StrLen(pszToFind), nOffsetEnd);
@@ -581,7 +581,7 @@ public:
 		}
 		typedef std::reverse_iterator<PCCHAR_T> RPCHAR_T;
 		const auto pchPos = xKMPFind(RPCHAR_T(pchBegin + uRealEnd), uRealEnd, RPCHAR_T(pchToFind + uLenToFind), uLenToFind);
-		return (pchPos == nullptr) ? NPOS : (std::size_t)(pchPos - pchBegin);
+		return pchPos ? (std::size_t)(pchPos - pchBegin) : NPOS;
 	}
 
 	// 举例：
@@ -889,8 +889,8 @@ extern template class GenericString<char,		StringEncoding::ENC_ANSI>;
 extern template class GenericString<wchar_t,	StringEncoding::ENC_UTF16>;
 
 typedef GenericString<char,		StringEncoding::ENC_UTF8>		UTF8String;
-typedef GenericString<char,		StringEncoding::ENC_ANSI>		ANSIString, NarrowString, NCString;
-typedef GenericString<wchar_t,	StringEncoding::ENC_UTF16>		UTF16String, WideString, WCString;
+typedef GenericString<char,		StringEncoding::ENC_ANSI>		ANSIString;
+typedef GenericString<wchar_t,	StringEncoding::ENC_UTF16>		UTF16String;
 
 }
 

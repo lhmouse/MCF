@@ -19,12 +19,12 @@ namespace __MCF {
 		}
 		static SharedNode *Recreate(SharedNode *pNode, HANDLE_T hObj){
 			if(hObj == CLOSER_T()()){
-				if((pNode != nullptr) && (pNode->xDropRef())){
+				if(pNode && (pNode->xDropRef())){
 					delete pNode;
 				}
 				return nullptr;
 			}
-			if((pNode != nullptr) && (pNode->xDropRef())){
+			if(pNode && (pNode->xDropRef())){
 				pNode->~SharedNode();
 				new(pNode) SharedNode(hObj);
 				return pNode;
@@ -32,45 +32,39 @@ namespace __MCF {
 			return new SharedNode(hObj);
 		}
 		static SharedNode *AddWeakRef(SharedNode *pNode) noexcept {
-			if((pNode == nullptr) || !pNode->xAddWeakRef()){
-				return nullptr;
+			if(pNode && pNode->xAddWeakRef()){
+				return pNode;
 			}
-			return pNode;
+			return nullptr;
 		}
 		static SharedNode *AddRef(SharedNode *pNode) noexcept {
-			if((pNode == nullptr) || !pNode->xAddRef()){
-				return nullptr;
+			if(pNode && pNode->xAddRef()){
+				return pNode;
 			}
-			return pNode;
+			return nullptr;
 		}
 		static void DropRef(SharedNode *pNode) noexcept {
-			if(pNode == nullptr){
-				return;
-			}
-			if(pNode->xDropRef()){
+			if(pNode && pNode->xDropRef()){
 				delete pNode;
 			}
 		}
 		static void DropWeakRef(SharedNode *pNode) noexcept {
-			if(pNode == nullptr){
-				return;
-			}
-			if(pNode->xDropWeakRef()){
+			if(pNode && pNode->xDropWeakRef()){
 				delete pNode;
 			}
 		}
 
 		static const HANDLE_T *ToPHandle(SharedNode *pNode){
-			if(pNode == nullptr){
-				return nullptr;
+			if(pNode){
+				return (const HANDLE_T *)((std::intptr_t)pNode + offsetof(SharedNode, xm_hObj));
 			}
-			return (const HANDLE_T *)((std::intptr_t)pNode + offsetof(SharedNode, xm_hObj));
+			return nullptr;
 		}
 		static SharedNode *FromPHandle(const HANDLE_T *pHandle){
-			if(pHandle == nullptr){
-				return nullptr;
+			if(pHandle){
+				return (SharedNode *)((std::intptr_t)pHandle - offsetof(SharedNode, xm_hObj));
 			}
-			return (SharedNode *)((std::intptr_t)pHandle - offsetof(SharedNode, xm_hObj));
+			return nullptr;
 		}
 	private:
 		HANDLE_T xm_hObj;
@@ -107,7 +101,7 @@ namespace __MCF {
 		bool xAddWeakRef() noexcept {
 			xValidate();
 
-			std::size_t uOldWeakCount = xm_uWeakCount;
+			std::size_t uOldWeakCount = __atomic_load_n(&xm_uWeakCount, __ATOMIC_RELAXED);
 			for(;;){
 				if(uOldWeakCount == 0){
 					return false;
@@ -123,7 +117,7 @@ namespace __MCF {
 			if(!xAddWeakRef()){
 				return false;
 			}
-			std::size_t uOldCount = xm_uCount;
+			std::size_t uOldCount = __atomic_load_n(&xm_uCount, __ATOMIC_RELAXED);
 			for(;;){
 				if(uOldCount == 0){
 					xDropWeakRef();
@@ -295,7 +289,7 @@ public:
 		return Get() != CLOSER_T()();
 	}
 	HANDLE_T Get() const noexcept {
-		return (xm_pNode == nullptr) ? CLOSER_T()() : xm_pNode->Get();
+		return xm_pNode ? xm_pNode->Get() : CLOSER_T()();
 	}
 	const HANDLE_T *AddRef() const noexcept {
 		return xSharedNode::ToPHandle(xSharedNode::AddRef(xm_pNode));

@@ -13,7 +13,7 @@ long lroundf(float x){
 	uint16_t fcw;
 	__asm__ __volatile__(
 		"fstcw word ptr[%3] \n"
-#ifdef __amd64__
+#ifdef _WIN64
 		"movsx rdx, dword ptr[%2] \n"
 		"sar rdx, 63 \n"
 		"xor %4, %5 \n"
@@ -49,7 +49,7 @@ long lround(double x){
 	uint16_t fcw;
 	__asm__ __volatile__(
 		"fstcw word ptr[%3] \n"
-#ifdef __amd64__
+#ifdef _WIN64
 		"movsx rdx, dword ptr[%2 + 4] \n"
 		"sar rdx, 63 \n"
 		"xor %4, %5 \n"
@@ -85,7 +85,7 @@ long lroundl(long double x){
 	uint16_t fcw;
 	__asm__ __volatile__(
 		"fstcw word ptr[%3] \n"
-#ifdef __amd64__
+#ifdef _WIN64
 		"movsx rdx, word ptr[%2 + 8] \n"
 		"sar rdx, 63 \n"
 		"xor %4, %5 \n"

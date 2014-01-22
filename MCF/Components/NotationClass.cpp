@@ -44,8 +44,8 @@ void NotationClass::xEscapeAndAppend(VVector<wchar_t> &vecAppendTo, const wchar_
 		}
 	}
 }
-WCString NotationClass::xUnescapeAndConstruct(const wchar_t *pwchBegin, std::size_t uLength){
-	WCString wcsRet;
+UTF16String NotationClass::xUnescapeAndConstruct(const wchar_t *pwchBegin, std::size_t uLength){
+	UTF16String wcsRet;
 	wcsRet.Reserve(uLength + 1);
 	auto pwchWrite = wcsRet.GetCStr();
 
@@ -142,7 +142,7 @@ void NotationClass::xExportPackageRecur(
 	auto pwchCurrentPrefix = vecPrefix.GetData();
 
 	if(!pkgWhich.xm_mapPackages.empty()){
-		if(pwchIndent != nullptr){
+		if(pwchIndent){
 			vecPrefix.CopyToEnd(pwchIndent, uIndentLen);
 		}
 		pwchCurrentPrefix = vecPrefix.GetData();
@@ -158,7 +158,7 @@ void NotationClass::xExportPackageRecur(
 			vecAppendTo.CopyToEnd(L"}\n", 2);
 		}
 
-		if(pwchIndent != nullptr){
+		if(pwchIndent){
 			vecPrefix.TruncateFromEnd(uIndentLen);
 		}
 	}
@@ -432,10 +432,10 @@ std::pair<NotationClass::ERROR_TYPE, const wchar_t *> NotationClass::Parse(const
 
 	return std::make_pair(ERR_NONE, nullptr);
 }
-WCString NotationClass::Export(const wchar_t *pwchIndent) const {
+UTF16String NotationClass::Export(const wchar_t *pwchIndent) const {
 	VVector<wchar_t> vecResult;
 	VVector<wchar_t> vecPrefix;
-	const std::size_t uIndentLength = (pwchIndent == nullptr) ? (std::size_t)0 : std::wcslen(pwchIndent);
+	const std::size_t uIndentLength = pwchIndent ? (std::size_t)0 : std::wcslen(pwchIndent);
 	xExportPackageRecur(vecResult, *this, vecPrefix, pwchIndent, uIndentLength);
-	return WCString(vecResult.GetData(), vecResult.GetSize());
+	return UTF16String(vecResult.GetData(), vecResult.GetSize());
 }

@@ -27,7 +27,7 @@ size_t wcslen(const wchar_t *s){
 
 	for(;;){
 
-#ifdef __amd64__
+#ifdef _WIN64
 #	define	MASK	0x0001000100010001ull
 #else
 #	define	MASK	0x00010001ul

@@ -12,7 +12,7 @@ size_t wcscspn(const wchar_t *s1, const wchar_t *s2){
 		if(ch == 0){
 			break;
 		}
-		if(wcschr(s2, ch) != NULL){
+		if(wcschr(s2, ch)){
 			break;
 		}
 		++rp;

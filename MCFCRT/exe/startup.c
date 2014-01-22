@@ -34,7 +34,7 @@ static int __attribute__((stdcall, unused)) MCFExeStartup(){
 	return (int)dwExitCode;		// 这有什么意义吗？
 }
 
-#ifdef __amd64__
+#ifdef _WIN64
 extern __attribute__((alias("MCFExeStartup"))) void __cdecl __MCFExeStartup();
 #else
 extern __attribute__((alias("MCFExeStartup@0"))) void __cdecl _MCFExeStartup();

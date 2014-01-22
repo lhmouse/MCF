@@ -9,7 +9,7 @@ float fmaxf(float x, float y){
 	register float ret;
 	uintptr_t unused;
 	__asm__ __volatile__(
-#ifdef __amd64__
+#ifdef _WIN64
 		"movss xmm0, dword ptr[%3] \n"
 		"movss xmm1, xmm0 \n"
 		"movss xmm2, dword ptr[%4] \n"
@@ -40,7 +40,7 @@ double fmax(double x, double y){
 	register double ret;
 	uintptr_t unused;
 	__asm__ __volatile__(
-#ifdef __amd64__
+#ifdef _WIN64
 		"movsd xmm0, qword ptr[%3] \n"
 		"movsd xmm1, xmm0 \n"
 		"movsd xmm2, qword ptr[%4] \n"
@@ -77,7 +77,7 @@ __LDBL_DECL(fmaxl, long double x, long double y){
 		"fstsw ax \n"
 		"and ah, 0x41 \n"
 		"neg ah \n"
-#ifdef __amd64__
+#ifdef _WIN64
 		"sbb rax, rax \n"
 		"xor %4, %3 \n"
 		"and %4, rax \n"

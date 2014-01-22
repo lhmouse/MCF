@@ -24,7 +24,7 @@ wchar_t *wmemchr(const wchar_t *s, wchar_t ch, size_t cnt){
 		const wchar_t *const wend = (const wchar_t *)((uintptr_t)end & ~(sizeof(uintptr_t) - 1));
 		do {
 
-#ifdef __amd64__
+#ifdef _WIN64
 #	define	MASK	0x0001000100010001ull
 #else
 #	define	MASK	0x00010001ul

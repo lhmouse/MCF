@@ -8,7 +8,7 @@
 float fdimf(float x, float y){
 	register float ret;
 	__asm__ __volatile__(
-#ifdef __amd64__
+#ifdef _WIN64
 		"movss xmm0, dword ptr[%1] \n"
 		"subss xmm0, dword ptr[%2] \n"
 		"xorps xmm1, xmm1 \n"
@@ -37,7 +37,7 @@ float fdimf(float x, float y){
 double fdim(double x, double y){
 	register double ret;
 	__asm__ __volatile__(
-#ifdef __amd64__
+#ifdef _WIN64
 		"movsd xmm0, qword ptr[%1] \n"
 		"subsd xmm0, qword ptr[%2] \n"
 		"xorpd xmm1, xmm1 \n"
@@ -75,7 +75,7 @@ __LDBL_DECL(fdiml, long double x, long double y){
 		"fstp tbyte ptr[%1] \n"
 		"and ah, 0x41 \n"
 		"neg ah \n"
-#ifdef __amd64__
+#ifdef _WIN64
 		"sbb rax, rax \n"
 		"not rax \n"
 		"and qword ptr[%1], rax \n"

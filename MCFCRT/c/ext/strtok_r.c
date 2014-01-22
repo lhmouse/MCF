@@ -7,9 +7,9 @@
 
 char *_strtok_r(char *restrict s1, const char *restrict s2, char **ctx){
 	char *from;
-	if(s1 != NULL){
+	if(s1){
 		from = s1;
-	} else if(*ctx != NULL){
+	} else if(*ctx){
 		from = *ctx;
 	} else {
 		return NULL;

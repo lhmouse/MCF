@@ -1,19 +1,17 @@
-#include <StdMCF.hpp>
-#include <Core/String.hpp>
+#include <MCFCRT/MCFCRT.h>
+#include <MCF/Core/Thread.hpp>
 #include <cstdio>
 #include <cstdlib>
 
+THREAD_LOCAL(int) i = 9;
+
 unsigned int MCFMain(){
-	MCF::UTF16String s1, s2;
-	s1 = L"looooooooooooooooooooooooooooooooooooooooong";
-	s2 = L"meow";
-
-	std::puts("---------- before swap ----------");
-	s1.Swap(s2);
-	std::puts("---------- after swap ----------");
-
-	std::fputws(s1.GetCStr(), stdout);
-	std::fputws(s2.GetCStr(), stdout);
-
+	MCF::Thread thrd;
+	thrd.Start([&]{
+		*i = 200;
+		std::printf("i = %d\n", *i);
+	});
+	thrd.Join();
+	std::printf("i = %d\n", *i);
 	return 0;
 }

@@ -10,21 +10,21 @@
 namespace MCF {
 
 struct Exception {
+	const char *pszFunction;
 	unsigned long ulCode;
-#ifndef NDEBUG
-	struct {
-		const char *pszFile;
-		std::size_t uLine;
-	} DebugInfo;
-#endif
+	const wchar_t *pwszMessage;
 };
+
+static inline void __attribute__((noreturn, always_inline)) Throw(
+	const char *pszFunction,
+	unsigned long ulCode,
+	const wchar_t *pwszMessage = L""
+){
+	throw ::MCF::Exception{pszFunction, ulCode, pwszMessage};
+}
 
 }
 
-#ifdef NDEBUG
-#define MCF_THROW(code)		throw ::MCF::Exception{code}
-#else
-#define MCF_THROW(code)		throw ::MCF::Exception{code, __FILE__, __LINE__}
-#endif
+#define MCF_THROW(...)	::MCF::Throw(__PRETTY_FUNCTION__, __VA_ARGS__)
 
 #endif

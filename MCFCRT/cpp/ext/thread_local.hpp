@@ -15,50 +15,30 @@
 namespace MCF {
 
 namespace __MCF {
-	template<class OBJECT_T, class... CTOR_PARAM_T>
+	template<class OBJECT_T>
 	class TlsWrapper {
 	private:
-		static volatile std::intptr_t s_nCounter;
-	private:
-		template<std::size_t N, std::size_t MAX_N, class... UNPACKED_T>
-		struct xCtorWrapper {
-			static inline void Construct(void *pMem, const std::tuple<CTOR_PARAM_T...> &CtorParam, const UNPACKED_T &...Unpacked){
-				xCtorWrapper<
-					N + 1, MAX_N, UNPACKED_T..., typename std::tuple_element<N, std::tuple<CTOR_PARAM_T...>>::type
-				>::Construct(pMem, CtorParam, Unpacked..., std::get<N>(CtorParam));
-			}
-		};
-		template<std::size_t MAX_N, class... UNPACKED_T>
-		struct xCtorWrapper<MAX_N, MAX_N, UNPACKED_T...> {
-			static inline void Construct(void *pMem, const std::tuple<CTOR_PARAM_T...> &, const UNPACKED_T &...Unpacked){
-				new(pMem) OBJECT_T(Unpacked...);
-			}
-		};
-	private:
-		static void xCtorJumper(void *pMem, std::intptr_t nContext){
-			xCtorWrapper<0, sizeof...(CTOR_PARAM_T)>::Construct(pMem, ((const TlsWrapper *)nContext)->xm_CtorParams);
+		static void xCtorWrapper(void *pObj, std::intptr_t nParam){
+			new(pObj) OBJECT_T(((const TlsWrapper *)nParam)->xm_Template);
 		}
-		static void xDtorJumper(void *pMem) noexcept {
-			((OBJECT_T *)pMem)->~OBJECT_T();
+		static void xDtorWrapper(void *pObj) noexcept {
+			((OBJECT_T *)pObj)->~OBJECT_T();
 		}
 	private:
-		const std::intptr_t xm_nUniqueId;
-		const std::tuple<CTOR_PARAM_T...> xm_CtorParams;
+		OBJECT_T xm_Template;
 	public:
-		TlsWrapper(CTOR_PARAM_T ...CtorParam) noexcept
-			: xm_nUniqueId(__atomic_add_fetch(&s_nCounter, 1, __ATOMIC_RELAXED)), xm_CtorParams(std::move(CtorParam)...)
+		template<class... PARAMS_T>
+		constexpr TlsWrapper(PARAMS_T ...Params) noexcept(noexcept(OBJECT_T(std::move(Params)...)))
+			: xm_Template(std::move(Params)...)
 		{
 		}
 		~TlsWrapper(){
-			::__MCF_CRT_DeleteTls(xm_nUniqueId);
+			Release();
 		}
-
-		TlsWrapper(const TlsWrapper &) = delete;
-		void operator=(const TlsWrapper &) = delete;
 	public:
-		OBJECT_T *Get() const {
-			const auto pRet = (OBJECT_T *)::__MCF_CRT_RetrieveTls(xm_nUniqueId, sizeof(OBJECT_T), &xCtorJumper, (std::intptr_t)this, &xDtorJumper);
-			if(pRet == nullptr){
+		OBJECT_T *Get() const noexcept {
+			const auto pRet = (OBJECT_T *)::__MCF_CRT_RetrieveTls((std::intptr_t)this, sizeof(OBJECT_T), &xCtorWrapper, (std::intptr_t)this, &xDtorWrapper);
+			if(!pRet){
 				::__MCF_Bail(
 					L"__MCF_CRT_RetrieveTls() 返回了一个空指针。\n"
 					"如果这不是由于系统内存不足造成的，请确保不要在静态对象的构造函数或析构函数中访问 TLS。"
@@ -67,7 +47,7 @@ namespace __MCF {
 			return pRet;
 		}
 		void Release() const noexcept {
-			::__MCF_CRT_DeleteTls(xm_nUniqueId);
+			::__MCF_CRT_DeleteTls((std::intptr_t)this);
 		}
 	public:
 		OBJECT_T *operator->() const {
@@ -77,16 +57,10 @@ namespace __MCF {
 			return Get();
 		}
 	};
-
-	template<class OBJECT_T, class... CTOR_PARAM_T>
-	volatile std::intptr_t TlsWrapper<OBJECT_T, CTOR_PARAM_T...>::s_nCounter = 0;
-
-	template<class OBJECT_T, class... CTOR_PARAM_T>
-	auto TlsWrapperTypeHelper(const CTOR_PARAM_T &...) -> TlsWrapper<OBJECT_T, typename std::decay<const CTOR_PARAM_T>::type...>;
 }
 
 }
 
-#define THREAD_LOCAL(type, id, ...)		decltype(::MCF::__MCF::TlsWrapperTypeHelper<type>(__VA_ARGS__)) id{__VA_ARGS__}
+#define THREAD_LOCAL(type)	::MCF::__MCF::TlsWrapper<type>
 
 #endif

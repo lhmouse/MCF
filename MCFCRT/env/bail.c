@@ -15,7 +15,7 @@ static DWORD APIENTRY ThreadProc(LPVOID pParam){
 
 	wchar_t awchBuffer[1025];
 	wchar_t *pwchWrite = _wcscpyout(awchBuffer, L"应用程序异常终止。请联系作者寻求协助。");
-	if(pwszDescription != NULL){
+	if(pwszDescription){
 		pwchWrite = _wcscpyout(pwchWrite, L"\r\n\r\n错误描述：\r\n");
 
 		size_t uLen = wcslen(pwszDescription);
@@ -37,7 +37,7 @@ static DWORD APIENTRY ThreadProc(LPVOID pParam){
 }
 static void DoBail(const wchar_t *pwszDescription){
 	const HANDLE hThread = CreateThread(NULL, 0, &ThreadProc, (LPVOID)pwszDescription, 0, NULL);
-	if(hThread != NULL){
+	if(hThread){
 		WaitForSingleObject(hThread, INFINITE);
 
 		DWORD dwExitCode;
@@ -59,10 +59,10 @@ void __MCF_Bail(const wchar_t *pwszDescription){
 	DoBail(pwszDescription);
 }
 void __MCF_BailF(const wchar_t *pwszFormat, ...){
-	wchar_t awchBuffer[1024];
+	wchar_t awchBuffer[1025];
 	va_list ap;
 	va_start(ap, pwszFormat);
-	vswprintf(awchBuffer, sizeof(awchBuffer) / sizeof(wchar_t), pwszFormat, ap);
+	__mingw_vsnwprintf(awchBuffer, sizeof(awchBuffer) / sizeof(wchar_t), pwszFormat, ap);
 	va_end(ap);
 	DoBail(awchBuffer);
 }

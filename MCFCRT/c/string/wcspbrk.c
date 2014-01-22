@@ -12,7 +12,7 @@ wchar_t *wcspbrk(const wchar_t *s1, const wchar_t *s2){
 		if(ch == 0){
 			return NULL;
 		}
-		if(wcschr(s2, ch) != NULL){
+		if(wcschr(s2, ch)){
 			return (wchar_t *)rp;
 		}
 		++rp;

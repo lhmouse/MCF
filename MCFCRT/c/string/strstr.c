@@ -24,7 +24,7 @@ char *strstr(const char *s1, const char *s2){
 		t = t_sm;
 	} else {
 		t = (size_t *)malloc(wlen * sizeof(size_t));
-		if(t == NULL){
+		if(!t){
 			const char *till = s  + (slen - wlen);
 			const char *p = s;
 			do {

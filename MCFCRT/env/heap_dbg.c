@@ -5,69 +5,71 @@
 #define WIN32_LEAN_AND_MEAN
 
 #include "heap_dbg.h"
-#include "bail.h"
 
 #ifdef __MCF_CRT_HEAPDBG_ON
 
+#include "bail.h"
+#include "../c/ext/tchar.h"
 #include <wchar.h>
 #include <windows.h>
 
 #define GUARD_BAND_SIZE		0x20ul
 
-static HANDLE				g_hMapAllocator;
-static __MCF_AVL_PROOT		g_pMapRoot;
+static HANDLE							g_hMapAllocator;
+static __MCF_AVL_PROOT					g_mapBlocks;
+static const __MCF_HEAPDBG_BLOCK_INFO	*g_pBlockHead;
 
 unsigned long __MCF_CRT_HeapDbgInitContext(){
 	g_hMapAllocator = HeapCreate(HEAP_NO_SERIALIZE, 0, 0);
-	if(g_hMapAllocator == NULL){
+	if(!g_hMapAllocator){
 		return GetLastError();
 	}
-
-	g_pMapRoot = NULL;
 
 	return ERROR_SUCCESS;
 }
 void __MCF_CRT_HeapDbgUninitContext(){
-	const __MCF_HEAPDBG_BLOCK_INFO *pBlockInfo = (const __MCF_HEAPDBG_BLOCK_INFO *)__MCF_AVLBegin(g_pMapRoot);
-	if(pBlockInfo != NULL){
+	const __MCF_HEAPDBG_BLOCK_INFO *pBlockInfo = g_pBlockHead;
+	if(pBlockInfo){
 		__MCF_Bail(
 			L"__MCF_CRT_HeapDbgUninitContext() 失败：侦测到内存泄漏。\n\n"
 			"如果您选择调试应用程序，MCF CRT 将尝试使用 OutputDebugString() 导出内存泄漏的详细信息。"
 		);
 
+		wchar_t awchBuffer[256];
 		do {
-			wchar_t awchBuffer[256];
-
 			const BYTE *pbyDump = __MCF_CRT_HeapDbgGetContents(pBlockInfo);
-			wchar_t *pWrite = awchBuffer + wsprintfW(
+			wchar_t *pwchWrite = awchBuffer + __mingw_snwprintf(
 				awchBuffer,
-				L"地址 0x%p  大小 0x%p  调用返回地址 0x%p  首字节",
+				sizeof(awchBuffer) / sizeof(wchar_t),
+				L"地址 %p  大小 %p  调用返回地址 %p  首字节 ",
 				(void *)pbyDump,
 				(void *)pBlockInfo->uSize,
-				pBlockInfo->pRetAddr
+				(void *)pBlockInfo->pRetAddr
 			);
 			for(size_t i = 0; i < 16; ++i){
-				*(pWrite++) = L' ';
+				*(pwchWrite++) = L' ';
 				if(IsBadReadPtr(pbyDump, 1)){
-					*(pWrite++) = L'?';
-					*(pWrite++) = L'?';
+					*(pwchWrite++) = L'?';
+					*(pwchWrite++) = L'?';
 				} else {
-					const unsigned int uHi = (*pbyDump) >> 4;
-					const unsigned int uLo = (*pbyDump) & 0x0F;
-
-					*(pWrite++) = L'0' + uHi + ((uHi >= 0x0A) ? (L'A' - L'0' - 0x0A) : 0);
-					*(pWrite++) = L'0' + uLo + ((uLo >= 0x0A) ? (L'A' - L'0' - 0x0A) : 0);
+					static const wchar_t HEX_TABLE[] = L"0123456789ABCDEF";
+					*(pwchWrite++) = HEX_TABLE[(*pbyDump >> 4) & 0xF0];
+					*(pwchWrite++) = HEX_TABLE[*pbyDump & 0x0F];
 				}
 				++pbyDump;
 			}
-			*pWrite = 0;
+			*pwchWrite = 0;
 
 			OutputDebugStringW(awchBuffer);
-		} while((pBlockInfo = (const __MCF_HEAPDBG_BLOCK_INFO *)__MCF_AVLNext((const __MCF_AVL_NODE_HEADER *)pBlockInfo)) != NULL);
+		} while(!!(pBlockInfo = (const __MCF_HEAPDBG_BLOCK_INFO *)__MCF_AVLNext((const __MCF_AVL_NODE_HEADER *)pBlockInfo)));
 		__asm__ __volatile__("int 3 \n");
 	}
 
 	HeapDestroy(g_hMapAllocator);
+
+	g_pBlockHead	= NULL;
+	g_mapBlocks		= NULL;
+	g_hMapAllocator	= NULL;
 }
 
 size_t __MCF_CRT_HeapDbgGetRawSize(
@@ -96,15 +98,18 @@ void __MCF_CRT_HeapDbgAddGuardsAndRegister(
 	}
 
 	__MCF_HEAPDBG_BLOCK_INFO *const pBlockInfo = (__MCF_HEAPDBG_BLOCK_INFO *)HeapAlloc(g_hMapAllocator, 0, sizeof(__MCF_HEAPDBG_BLOCK_INFO));
-	if(pBlockInfo == NULL){
+	if(!pBlockInfo){
 		__MCF_BailF(L"__MCF_CRT_HeapDbgAddGuardsAndRegister() 失败：内存不足。\n调用返回地址：%p", pRetAddr);
 	}
-	if(__MCF_AVLAttach(&g_pMapRoot, (intptr_t)pContents, (__MCF_AVL_NODE_HEADER *)pBlockInfo) != NULL){
-		__MCF_BailF(L"__MCF_CRT_HeapDbgAddGuardsAndRegister() 失败：传入的指针的记录已存在。\n调用返回地址：%p", pRetAddr);
-	}
-
 	pBlockInfo->uSize = uContentSize;
 	pBlockInfo->pRetAddr = pRetAddr;
+
+	if(__MCF_AVLAttach(&g_mapBlocks, (intptr_t)pContents, (__MCF_AVL_NODE_HEADER *)pBlockInfo)){
+		__MCF_BailF(L"__MCF_CRT_HeapDbgAddGuardsAndRegister() 失败：传入的指针的记录已存在。\n调用返回地址：%p", pRetAddr);
+	}
+	if(!__MCF_AVLPrev((__MCF_AVL_NODE_HEADER *)pBlockInfo)){
+		g_pBlockHead = pBlockInfo;
+	}
 }
 const __MCF_HEAPDBG_BLOCK_INFO *__MCF_CRT_HeapDbgValidate(
 	unsigned char **ppRaw,
@@ -114,8 +119,8 @@ const __MCF_HEAPDBG_BLOCK_INFO *__MCF_CRT_HeapDbgValidate(
 	unsigned char *const pRaw = pContents - GUARD_BAND_SIZE;
 	*ppRaw = pRaw;
 
-	const __MCF_HEAPDBG_BLOCK_INFO *pBlockInfo = (const __MCF_HEAPDBG_BLOCK_INFO *)__MCF_AVLFind(g_pMapRoot, (intptr_t)pContents);
-	if(pBlockInfo == NULL){
+	const __MCF_HEAPDBG_BLOCK_INFO *pBlockInfo = (const __MCF_HEAPDBG_BLOCK_INFO *)__MCF_AVLFind(&g_mapBlocks, (intptr_t)pContents);
+	if(!pBlockInfo){
 		__MCF_BailF(L"__MCF_CRT_HeapDbgValidate() 失败：传入的指针无效。\n调用返回地址：%p", pRetAddr);
 	}
 
@@ -141,6 +146,9 @@ const unsigned char *__MCF_CRT_HeapDbgGetContents(
 void __MCF_CRT_HeapDbgUnregister(
 	const __MCF_HEAPDBG_BLOCK_INFO *pBlockInfo
 ){
+	if(g_pBlockHead == pBlockInfo){
+		g_pBlockHead = (__MCF_HEAPDBG_BLOCK_INFO *)__MCF_AVLNext((__MCF_AVL_NODE_HEADER *)pBlockInfo);
+	}
 	__MCF_AVLDetach((const __MCF_AVL_NODE_HEADER *)pBlockInfo);
 
 	HeapFree(g_hMapAllocator, 0, (void *)pBlockInfo);

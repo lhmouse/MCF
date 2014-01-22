@@ -44,7 +44,7 @@ void __MCF_CRT_HeapUninitialize(){
 unsigned char *__MCF_CRT_HeapAlloc(size_t uSize, const void *pRetAddr __attribute__((unused))){
 #ifdef __MCF_CRT_HEAPDBG_ON
 	const size_t uRawSize = __MCF_CRT_HeapDbgGetRawSize(uSize);
-	if((uSize & ~uRawSize & ((size_t)1 << (sizeof(size_t) * 8 - 1))) != 0){
+	if(uSize & ~uRawSize & ((size_t)1 << (sizeof(size_t) * 8 - 1))){
 		return NULL;
 	}
 #else
@@ -55,7 +55,7 @@ unsigned char *__MCF_CRT_HeapAlloc(size_t uSize, const void *pRetAddr __attribut
 	EnterCriticalSection(&g_csHeapLock);
 		do {
 			unsigned char *const pRaw = (unsigned char *)HeapAlloc(GetProcessHeap(), 0, uRawSize);
-			if(pRaw != NULL){
+			if(pRaw){
 #ifdef __MCF_CRT_HEAPDBG_ON
 				__MCF_CRT_HeapDbgAddGuardsAndRegister(&pRet, pRaw, uSize, pRetAddr);
 				memset(pRet, 0xCD, uSize);
@@ -64,14 +64,14 @@ unsigned char *__MCF_CRT_HeapAlloc(size_t uSize, const void *pRetAddr __attribut
 #endif
 				break;
 			}
-		} while((g_BadAllocHandler.pfnProc != NULL) && ((*g_BadAllocHandler.pfnProc)(g_BadAllocHandler.nContext) != 0));
+		} while((g_BadAllocHandler.pfnProc) && (*g_BadAllocHandler.pfnProc)(g_BadAllocHandler.nContext));
 	LeaveCriticalSection(&g_csHeapLock);
 	return pRet;
 }
 unsigned char *__MCF_CRT_HeapReAlloc(unsigned char *pBlock /* NON-NULL */, size_t uSize, const void *pRetAddr __attribute__((unused))){
 #ifdef __MCF_CRT_HEAPDBG_ON
 	const size_t uRawSize = __MCF_CRT_HeapDbgGetRawSize(uSize);
-	if((uSize & ~uRawSize & ((size_t)1 << (sizeof(size_t) * 8 - 1))) != 0){
+	if(uSize & ~uRawSize & ((size_t)1 << (sizeof(size_t) * 8 - 1))){
 		return NULL;
 	}
 #else
@@ -89,7 +89,7 @@ unsigned char *__MCF_CRT_HeapReAlloc(unsigned char *pBlock /* NON-NULL */, size_
 
 		do {
 			unsigned char *const pRaw = (unsigned char *)HeapReAlloc(GetProcessHeap(), 0, pRawOriginal, uRawSize);
-			if(pRaw != NULL){
+			if(pRaw){
 #ifdef __MCF_CRT_HEAPDBG_ON
 				const size_t uOriginalSize = pBlockInfo->uSize;
 				__MCF_CRT_HeapDbgUnregister(pBlockInfo);
@@ -103,7 +103,7 @@ unsigned char *__MCF_CRT_HeapReAlloc(unsigned char *pBlock /* NON-NULL */, size_
 #endif
 				break;
 			}
-		} while((g_BadAllocHandler.pfnProc != NULL) && ((*g_BadAllocHandler.pfnProc)(g_BadAllocHandler.nContext) != 0));
+		} while((g_BadAllocHandler.pfnProc) && (*g_BadAllocHandler.pfnProc)(g_BadAllocHandler.nContext));
 	LeaveCriticalSection(&g_csHeapLock);
 	return pRet;
 }
@@ -119,7 +119,6 @@ void __MCF_CRT_HeapFree(unsigned char *pBlock /* NON-NULL */, const void *pRetAd
 #else
 		unsigned char *const pRaw = pBlock;
 #endif
-
 		HeapFree(GetProcessHeap(), 0, pRaw);
 	LeaveCriticalSection(&g_csHeapLock);
 }

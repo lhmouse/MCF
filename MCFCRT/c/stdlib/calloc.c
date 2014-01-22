@@ -14,7 +14,7 @@ void *__attribute__((noinline)) calloc(size_t nmemb, size_t cnt){
 		return NULL;
 	}
 	void *const ret = __MCF_CRT_HeapAlloc(cb, __builtin_return_address(0));
-	if(ret != NULL){
+	if(ret){
 		memset(ret, 0, cb);
 	}
 	return ret;

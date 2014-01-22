@@ -6,7 +6,6 @@
 #define __MCF_THREAD_HPP__
 
 #include "NoCopy.hpp"
-#include "Exception.hpp"
 #include <functional>
 #include <exception>
 #include <memory>

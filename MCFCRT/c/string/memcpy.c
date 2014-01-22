@@ -37,7 +37,7 @@ void *memcpy(void *restrict dst, const void *restrict src, size_t cb){
 		"	jnz 3b \n"
 		"1: \n"
 		"mov "__CX__", %5 \n"
-#ifdef __amd64__
+#ifdef _WIN64
 		"shr rcx, 3 \n"
 		"rep movsq \n"
 		"mov rcx, %5 \n"

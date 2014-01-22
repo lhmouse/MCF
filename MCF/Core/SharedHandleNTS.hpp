@@ -19,12 +19,12 @@ namespace __MCF {
 		}
 		static SharedNodeNTS *Recreate(SharedNodeNTS *pNode, HANDLE_T hObj){
 			if(hObj == CLOSER_T()()){
-				if((pNode != nullptr) && (pNode->xDropRef())){
+				if(pNode && (pNode->xDropRef())){
 					delete pNode;
 				}
 				return nullptr;
 			}
-			if((pNode != nullptr) && (pNode->xDropRef())){
+			if(pNode && (pNode->xDropRef())){
 				pNode->~SharedNodeNTS();
 				new(pNode) SharedNodeNTS(hObj);
 				return pNode;
@@ -32,45 +32,39 @@ namespace __MCF {
 			return new SharedNodeNTS(hObj);
 		}
 		static SharedNodeNTS *AddWeakRef(SharedNodeNTS *pNode) noexcept {
-			if((pNode == nullptr) || !pNode->xAddWeakRef()){
-				return nullptr;
+			if(pNode && pNode->xAddWeakRef()){
+				return pNode;
 			}
-			return pNode;
+			return nullptr;
 		}
 		static SharedNodeNTS *AddRef(SharedNodeNTS *pNode) noexcept {
-			if((pNode == nullptr) || !pNode->xAddRef()){
-				return nullptr;
+			if(pNode && pNode->xAddRef()){
+				return pNode;
 			}
-			return pNode;
+			return nullptr;
 		}
 		static void DropRef(SharedNodeNTS *pNode) noexcept {
-			if(pNode == nullptr){
-				return;
-			}
-			if(pNode->xDropRef()){
+			if(pNode && pNode->xDropRef()){
 				delete pNode;
 			}
 		}
 		static void DropWeakRef(SharedNodeNTS *pNode) noexcept {
-			if(pNode == nullptr){
-				return;
-			}
-			if(pNode->xDropWeakRef()){
+			if(pNode && pNode->pNode()){
 				delete pNode;
 			}
 		}
 
 		static const HANDLE_T *ToPHandle(SharedNodeNTS *pNode){
-			if(pNode == nullptr){
-				return nullptr;
+			if(pNode){
+				return (const HANDLE_T *)((std::intptr_t)pNode + offsetof(SharedNodeNTS, xm_hObj));
 			}
-			return (const HANDLE_T *)((std::intptr_t)pNode + offsetof(SharedNodeNTS, xm_hObj));
+			return nullptr;
 		}
 		static SharedNodeNTS *FromPHandle(const HANDLE_T *pHandle){
-			if(pHandle == nullptr){
-				return nullptr;
+			if(pHandle){
+				return (SharedNodeNTS *)((std::intptr_t)pHandle - offsetof(SharedNodeNTS, xm_hObj));
 			}
-			return (SharedNodeNTS *)((std::intptr_t)pHandle - offsetof(SharedNodeNTS, xm_hObj));
+			return nullptr;
 		}
 	private:
 		HANDLE_T xm_hObj;
@@ -283,7 +277,7 @@ public:
 		return Get() != CLOSER_T()();
 	}
 	HANDLE_T Get() const noexcept {
-		return (xm_pNode == nullptr) ? CLOSER_T()() : xm_pNode->Get();
+		return xm_pNode ? xm_pNode->Get() : CLOSER_T()();
 	}
 	const HANDLE_T *AddRef() const noexcept {
 		return xSharedNodeNTS::ToPHandle(xSharedNodeNTS::AddRef(xm_pNode));

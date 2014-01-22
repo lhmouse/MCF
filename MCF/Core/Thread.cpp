@@ -4,13 +4,14 @@
 
 #include "../StdMCF.hpp"
 #include "Thread.hpp"
+#include "Exception.hpp"
 #include "UniqueHandle.hpp"
 using namespace MCF;
 
 // 嵌套类定义。
 class Thread::xDelegate {
 private:
-	struct xHandleCloser {
+	struct xThreadCloser {
 		constexpr HANDLE operator()() const {
 			return NULL;
 		}
@@ -19,40 +20,34 @@ private:
 		}
 	};
 private:
-	static unsigned int xThreadProc(std::intptr_t nParam){
+	static unsigned int xThreadProc(std::intptr_t nParam) noexcept {
 		auto *const pThis = (xDelegate *)nParam;
-		const std::shared_ptr<xDelegate> pInstance(std::move(pThis->xm_pLock));
-		pThis->xm_pLock.reset(); // 打破循环引用。
-
-		pInstance->xRun();
-
+		try {
+			const std::shared_ptr<xDelegate> pInstance(std::move(pThis->xm_pLock));
+			pThis->xm_pLock.reset(); // 打破循环引用。
+			pThis->xm_fnProc();
+		} catch(...){
+			pThis->xm_pException = std::current_exception();
+		}
 		return 0;
 	}
 public:
 	static std::shared_ptr<xDelegate> Create(std::function<void()> &&fnProc){
 		std::shared_ptr<xDelegate> pRet(new xDelegate(std::move(fnProc)));
-		const auto hThread = (HANDLE)::__MCF_CreateCRTThread(&xThreadProc, (std::intptr_t)pRet.get(), CREATE_SUSPENDED, &pRet->xm_ulThreadId);
-		if(hThread == NULL){
-			MCF_THROW(::GetLastError());
+		UniqueHandle<HANDLE, xThreadCloser> hThread(::__MCF_CreateCRTThread(&xThreadProc, (std::intptr_t)pRet.get(), CREATE_SUSPENDED, &pRet->xm_ulThreadId));
+		if(!hThread){
+			MCF_THROW(::GetLastError(), L"__MCF_CreateCRTThread() 失败。");
 		}
 		pRet->xm_pLock = pRet; // 制造循环引用。这样代理对象就不会被删掉。
-		pRet->xm_hThread.Reset(hThread);
+		pRet->xm_hThread = std::move(hThread);
 		return std::move(pRet);
 	}
 private:
 	std::shared_ptr<xDelegate> xm_pLock;
 	std::function<void()> xm_fnProc;
-	UniqueHandle<HANDLE, xHandleCloser> xm_hThread;
+	UniqueHandle<HANDLE, xThreadCloser> xm_hThread;
 	unsigned long xm_ulThreadId;
 	std::exception_ptr xm_pException;
-private:
-	void xRun() noexcept {
-		try {
-			xm_fnProc();
-		} catch(...){
-			xm_pException = std::current_exception();
-		}
-	}
 private:
 	explicit xDelegate(std::function<void()> &&fnProc) noexcept
 		: xm_fnProc(std::move(fnProc))

@@ -11,7 +11,7 @@
 #include <windows.h>
 
 // ld 自动添加此符号。
-#ifdef __amd64__
+#ifdef _WIN64
 #	define IMAGE_BASE __image_base__
 #else
 #	define IMAGE_BASE _image_base__
@@ -49,7 +49,7 @@ unsigned long __MCF_CRT_Begin(){
 void __MCF_CRT_End(){
 	for(;;){
 		AT_EXIT_NODE *const pNode = (AT_EXIT_NODE *)__MCF_LFListPopFront(&g_pAtExitHeader);
-		if(pNode == NULL){
+		if(!pNode){
 			break;
 		}
 		(*pNode->pfnProc)(pNode->nContext);
@@ -66,7 +66,7 @@ void *__MCF_GetModuleBase(){
 }
 int __MCF_AtCRTEnd(void (__cdecl *pfnProc)(intptr_t), intptr_t nContext){
 	AT_EXIT_NODE *const pNode = (AT_EXIT_NODE *)malloc(sizeof(AT_EXIT_NODE));
-	if(pNode == NULL){
+	if(!pNode){
 		return -1;
 	}
 	pNode->pfnProc = pfnProc;

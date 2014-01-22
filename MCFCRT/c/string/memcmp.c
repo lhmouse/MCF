@@ -4,7 +4,7 @@
 
 #include "../../env/_crtdef.h"
 
-#ifdef __amd64__
+#ifdef _WIN64
 #	define	BSWAP_PTR(val)	__builtin_bswap64(val)
 #else
 #	define	BSWAP_PTR(val)	__builtin_bswap32(val)

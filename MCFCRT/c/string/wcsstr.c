@@ -25,7 +25,7 @@ wchar_t *wcsstr(const wchar_t *s1, const wchar_t *s2){
 		t = t_sm;
 	} else {
 		t = (size_t *)malloc(wlen * sizeof(size_t));
-		if(t == NULL){
+		if(!t){
 			const wchar_t *till = s  + (slen - wlen);
 			const wchar_t *p = s;
 			do {

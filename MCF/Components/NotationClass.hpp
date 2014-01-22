@@ -20,9 +20,9 @@ namespace MCF {
 		struct xKey {
 			const wchar_t *m_pwchBegin;
 			std::size_t m_uLength;
-			WCString m_wcsPermanent;
+			UTF16String m_wcsPermanent;
 
-			xKey(WCString &&wcsContents) noexcept {
+			xKey(UTF16String &&wcsContents) noexcept {
 				m_wcsPermanent = std::move(wcsContents);
 				m_pwchBegin = m_wcsPermanent.GetCStr();
 				m_uLength = m_wcsPermanent.GetLength();
@@ -65,7 +65,7 @@ namespace MCF {
 		};
 	private:
 		std::map<xKey, Package> xm_mapPackages;
-		std::map<xKey, WCString> xm_mapValues;
+		std::map<xKey, UTF16String> xm_mapValues;
 	private:
 		Package() = default;
 	public:
@@ -83,25 +83,25 @@ namespace MCF {
 			return &(xm_mapPackages.emplace_hint(iterHint, std::move(Key), Package())->second);
 		}
 
-		const WCString *GetValue(const wchar_t *pwszName) const noexcept {
+		const UTF16String *GetValue(const wchar_t *pwszName) const noexcept {
 			const auto iter = xm_mapValues.find(xKey(pwszName, std::wcslen(pwszName)));
 			return (iter == xm_mapValues.end()) ? nullptr : &(iter->second);
 		}
-		WCString *GetValue(const wchar_t *pwszName) noexcept {
+		UTF16String *GetValue(const wchar_t *pwszName) noexcept {
 			const auto iter = xm_mapValues.find(xKey(pwszName, std::wcslen(pwszName)));
 			return (iter == xm_mapValues.end()) ? nullptr : &(iter->second);
 		}
-		WCString *CreateValue(const wchar_t *pwszName){
+		UTF16String *CreateValue(const wchar_t *pwszName){
 			xKey Key(pwszName, std::wcslen(pwszName));
 			const auto iterHint = xm_mapValues.upper_bound(Key);
-			return &(xm_mapValues.emplace_hint(iterHint, std::move(Key), WCString())->second);
+			return &(xm_mapValues.emplace_hint(iterHint, std::move(Key), UTF16String())->second);
 		}
 
 		template<class PATH_SEGMENT_ITER>
 		const Package *GetPackage(PATH_SEGMENT_ITER iterSegBegin, PATH_SEGMENT_ITER iterSegEnd) const noexcept {
 			auto ppkgCur = this;
 			for(auto iter = iterSegBegin; iter != iterSegEnd; ++iter){
-				if((ppkgCur = ppkgCur->GetPackage(*iter)) == nullptr){
+				if(!(ppkgCur = ppkgCur->GetPackage(*iter))){
 					return nullptr;
 				}
 			}
@@ -111,7 +111,7 @@ namespace MCF {
 		Package *GetPackage(PATH_SEGMENT_ITER iterSegBegin, PATH_SEGMENT_ITER iterSegEnd) noexcept {
 			auto ppkgCur = this;
 			for(auto iter = iterSegBegin; iter != iterSegEnd; ++iter){
-				if((ppkgCur = ppkgCur->GetPackage(*iter)) == nullptr){
+				if(!(ppkgCur = ppkgCur->GetPackage(*iter))){
 					return nullptr;
 				}
 			}
@@ -127,33 +127,33 @@ namespace MCF {
 		}
 
 		template<class PATH_SEGMENT_ITER>
-		const WCString *GetValue(PATH_SEGMENT_ITER iterSegBegin, PATH_SEGMENT_ITER iterSegEnd) const noexcept {
+		const UTF16String *GetValue(PATH_SEGMENT_ITER iterSegBegin, PATH_SEGMENT_ITER iterSegEnd) const noexcept {
 			if(iterSegBegin == iterSegEnd){
 				return nullptr;
 			}
 			auto iterName = iterSegEnd;
 			--iterName;
 			const auto ppkgParent = GetPackage(iterSegBegin, iterName);
-			if(ppkgParent == nullptr){
+			if(ppkgParent){
 				return nullptr;
 			}
 			return ppkgParent->GetValue(*iterName);
 		}
 		template<class PATH_SEGMENT_ITER>
-		WCString *GetValue(PATH_SEGMENT_ITER iterSegBegin, PATH_SEGMENT_ITER iterSegEnd) noexcept {
+		UTF16String *GetValue(PATH_SEGMENT_ITER iterSegBegin, PATH_SEGMENT_ITER iterSegEnd) noexcept {
 			if(iterSegBegin == iterSegEnd){
 				return nullptr;
 			}
 			auto iterName = iterSegEnd;
 			--iterName;
 			const auto ppkgParent = GetPackage(iterSegBegin, iterName);
-			if(ppkgParent == nullptr){
+			if(ppkgParent){
 				return nullptr;
 			}
 			return ppkgParent->GetValue(*iterName);
 		}
 		template<class PATH_SEGMENT_ITER>
-		WCString *CreateValue(PATH_SEGMENT_ITER iterSegBegin, PATH_SEGMENT_ITER iterSegEnd){
+		UTF16String *CreateValue(PATH_SEGMENT_ITER iterSegBegin, PATH_SEGMENT_ITER iterSegEnd){
 			if(iterSegBegin == iterSegEnd){
 				return nullptr;
 			}
@@ -173,13 +173,13 @@ namespace MCF {
 			return CreatePackage(ilPath.begin(), ilPath.end());
 		}
 
-		const WCString *GetValue(std::initializer_list<const wchar_t *> ilPath) const noexcept {
+		const UTF16String *GetValue(std::initializer_list<const wchar_t *> ilPath) const noexcept {
 			return GetValue(ilPath.begin(), ilPath.end());
 		}
-		WCString *GetValue(std::initializer_list<const wchar_t *> ilPath) noexcept {
+		UTF16String *GetValue(std::initializer_list<const wchar_t *> ilPath) noexcept {
 			return GetValue(ilPath.begin(), ilPath.end());
 		}
-		WCString *CreateValue(std::initializer_list<const wchar_t *> ilPath){
+		UTF16String *CreateValue(std::initializer_list<const wchar_t *> ilPath){
 			return CreateValue(ilPath.begin(), ilPath.end());
 		}
 
@@ -202,7 +202,7 @@ namespace MCF {
 		} ERROR_TYPE;
 	private:
 		static void xEscapeAndAppend(VVector<wchar_t> &vecAppendTo, const wchar_t *pwchBegin, std::size_t uLength);
-		static WCString xUnescapeAndConstruct(const wchar_t *pwchBegin, std::size_t uLength);
+		static UTF16String xUnescapeAndConstruct(const wchar_t *pwchBegin, std::size_t uLength);
 
 		static void xExportPackageRecur(VVector<wchar_t> &vecAppendTo, const Package &pkgWhich, VVector<wchar_t> &Prefix, const wchar_t *pwchIndent, std::size_t uIndentLen);
 	public:
@@ -212,7 +212,7 @@ namespace MCF {
 	public:
 		std::pair<ERROR_TYPE, const wchar_t *> Parse(const wchar_t *pwszText);
 		std::pair<ERROR_TYPE, const wchar_t *> Parse(const wchar_t *pwchText, std::size_t uLen);
-		WCString Export(const wchar_t *pwchIndent = L"\t") const;
+		UTF16String Export(const wchar_t *pwchIndent = L"\t") const;
 	};
 }
 

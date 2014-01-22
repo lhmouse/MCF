@@ -32,14 +32,14 @@ void __MCF_CRT_ExeUninitializeArgV(){
 }
 
 size_t __MCF_GetArgV(const wchar_t *const **pppwszArgV){
-	if(g_ppwszArgV == NULL){
+	if(!g_ppwszArgV){
 		EnterCriticalSection(&g_csMutex);
-			if(g_ppwszArgV == NULL){
+			if(!g_ppwszArgV){
 				const wchar_t *const pwszCommandLine = GetCommandLineW();
 				const size_t uCommandLineLen = wcslen(pwszCommandLine);
 
 				g_pwszArgBuffer = (wchar_t *)malloc((uCommandLineLen + 1) * sizeof(wchar_t));
-				if(g_pwszArgBuffer == NULL){
+				if(!g_pwszArgBuffer){
 					__MCF_Bail(L"__MCF_GetArgV() 失败：内存不足。");
 				}
 				wmemcpy(g_pwszArgBuffer, pwszCommandLine, uCommandLineLen + 1);
@@ -47,7 +47,7 @@ size_t __MCF_GetArgV(const wchar_t *const **pppwszArgV){
 				size_t uIndex = 0;
 				size_t uCapacity = 4;
 				wchar_t **ppArgV = (wchar_t **)malloc(uCapacity * sizeof(wchar_t *));
-				if(ppArgV == NULL){
+				if(!ppArgV){
 					__MCF_Bail(L"__MCF_GetArgV() 失败：内存不足。");
 				}
 
@@ -187,7 +187,7 @@ size_t __MCF_GetArgV(const wchar_t *const **pppwszArgV){
 						if(uIndex + 2 >= uCapacity){
 							uCapacity *= 2;
 							wchar_t **ppNewArgV = (wchar_t **)realloc(ppArgV, uCapacity * sizeof(wchar_t *));
-							if(ppNewArgV == NULL){
+							if(!ppNewArgV){
 								__MCF_Bail(L"__MCF_GetArgV() 失败：内存不足。");
 							}
 							ppArgV = ppNewArgV;

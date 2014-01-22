@@ -7,9 +7,9 @@
 
 wchar_t *_wcstok_r(wchar_t *restrict s1, const wchar_t *restrict s2, wchar_t **ctx){
 	wchar_t *from;
-	if(s1 != NULL){
+	if(s1){
 		from = s1;
-	} else if(*ctx != NULL){
+	} else if(*ctx){
 		from = *ctx;
 	} else {
 		return NULL;
@@ -24,7 +24,7 @@ wchar_t *_wcstok_r(wchar_t *restrict s1, const wchar_t *restrict s2, wchar_t **c
 	}
 
 	wchar_t *const delim = wcspbrk(from, s2);
-	if((delim == NULL) || (*delim == 0)){
+	if(!delim || !*delim){
 		*ctx = NULL;
 	} else {
 		*delim = 0;

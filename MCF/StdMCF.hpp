@@ -30,7 +30,6 @@
 #include <type_traits>
 
 #include <windows.h>
-#include <tchar.h>
 
 #undef	NULL
 #define	NULL	nullptr

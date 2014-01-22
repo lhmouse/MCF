@@ -11,7 +11,7 @@ void *memset(void *dst, int ch, size_t cb){
 		"mov "__CX__", %5 \n"
 		"cmp "__CX__", 16 \n"
 		"jb 1f  \n"
-#ifdef __amd64__
+#ifdef _WIN64
 		"test "__DI__", 7 \n"
 #else
 		"test "__DI__", 3 \n"
@@ -20,7 +20,7 @@ void *memset(void *dst, int ch, size_t cb){
 		"	3: \n"
 		"	stosb \n"
 		"	dec %5 \n"
-#ifdef __amd64__
+#ifdef _WIN64
 		"	test "__DI__", 7 \n"
 #else
 		"	test "__DI__", 3 \n"
@@ -32,12 +32,12 @@ void *memset(void *dst, int ch, size_t cb){
 		"movzx "__CX__", ax \n"
 		"shl "__CX__", 16 \n"
 		"or "__AX__", "__CX__" \n"
-#ifdef __amd64__
+#ifdef _WIN64
 		"shl rcx, 32 \n"
 		"or rax, rcx \n"
 #endif
 		"mov "__CX__", %5 \n"
-#ifdef __amd64__
+#ifdef _WIN64
 		"shr rcx, 3 \n"
 		"rep stosq \n"
 		"mov rcx, %5 \n"

@@ -19,7 +19,7 @@ wchar_t *wmemset(wchar_t *dst, wchar_t ch, size_t cnt){
 		"	inc "__DI__" \n"
 		"	dec %5 \n"
 		"4: \n"
-#ifdef __amd64__
+#ifdef _WIN64
 		"test "__DI__", 7 \n"
 #else
 		"test "__DI__", 3 \n"
@@ -28,7 +28,7 @@ wchar_t *wmemset(wchar_t *dst, wchar_t ch, size_t cnt){
 		"	3: \n"
 		"	stosw \n"
 		"	dec %5 \n"
-#ifdef __amd64__
+#ifdef _WIN64
 		"	test "__DI__", 7 \n"
 #else
 		"	test "__DI__", 3 \n"
@@ -38,12 +38,12 @@ wchar_t *wmemset(wchar_t *dst, wchar_t ch, size_t cnt){
 		"movzx "__CX__", ax \n"
 		"shl "__CX__", 16 \n"
 		"or "__AX__", "__CX__" \n"
-#ifdef __amd64__
+#ifdef _WIN64
 		"shl rcx, 32 \n"
 		"or rax, rcx \n"
 #endif
 		"mov "__CX__", %5 \n"
-#ifdef __amd64__
+#ifdef _WIN64
 		"shr rcx, 2 \n"
 		"rep stosq \n"
 		"mov rcx, %5 \n"

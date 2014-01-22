@@ -40,7 +40,7 @@ wchar_t *wcsrchr(const wchar_t *s, wchar_t ch){
 
 	for(;;){
 
-#ifdef __amd64__
+#ifdef _WIN64
 #	define	MASK	0x0001000100010001ull
 #else
 #	define	MASK	0x00010001ul

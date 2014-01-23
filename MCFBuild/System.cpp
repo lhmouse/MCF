@@ -274,7 +274,7 @@ namespace MCFBuild {
 		StartupInfo.dwFlags		= STARTF_USESTDHANDLES;
 		StartupInfo.cbReserved2	= 0;
 		StartupInfo.lpReserved2	= nullptr;
-		StartupInfo.hStdInput	= ::GetStdHandle(STD_INPUT_HANDLE);
+		StartupInfo.hStdInput	= INVALID_HANDLE_VALUE;
 		StartupInfo.hStdOutput	= StdOutPipe.second;
 		StartupInfo.hStdError	= StdErrPipe.second;
 

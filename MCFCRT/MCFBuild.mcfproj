@@ -11,22 +11,22 @@ General {
 	PreCompiledHeaders {
 		C {
 			SourceFile	= env\\_crtdef.h
-			CommandLine	= gcc $CFlags$ %IN% -o %OUT%
+			CommandLine	= gcc -x c-header $CFlags$ %IN% -o %OUT%
 		}
 		CPP {
 			SourceFile	= env\\_crtdef.hpp
-			CommandLine	= g++ $CPPFlags$ %IN% -o %OUT%
+			CommandLine	= g++ -x c++-header $CPPFlags$ %IN% -o %OUT%
 		}
 	}
 
 	Compilers {
 		c {
-			CommandLine	= gcc $CFlags$ %GCH.C% %IN% -o %OUT%
-			Dependency	= gcc $CFlags$ %IN% -MM
+			CommandLine	= gcc -x c $CFlags$ %GCH.C% %IN% -o %OUT%
+			Dependency	= gcc -x c $CFlags$ %IN% -MM
 		}
 		cpp cxx cc {
-			CommandLine	= g++ $CPPFlags$ %GCH.CPP% %IN% -o %OUT%
-			Dependency	= g++ $CPPFlags$ %IN% -MM
+			CommandLine	= g++ -x c++ $CPPFlags$ %GCH.CPP% %IN% -o %OUT%
+			Dependency	= g++ -x c++ $CPPFlags$ %IN% -MM
 		}
 	}
 

@@ -10,14 +10,14 @@ General {
 	PreCompiledHeaders {
 		CPP {
 			SourceFile	= StdMCF.hpp
-			CommandLine	= g++ $CPPFlags$ %IN% -o %OUT%
+			CommandLine	= g++ -x c++ $CPPFlags$ %IN% -o %OUT%
 		}
 	}
 
 	Compilers {
 		cpp cxx cc {
-			CommandLine	= g++ $CPPFlags$ %GCH.CPP% %IN% -o %OUT%
-			Dependency	= g++ $CPPFlags$ %IN% -MM
+			CommandLine	= g++ -x c++ $CPPFlags$ %GCH.CPP% %IN% -o %OUT%
+			Dependency	= g++ -x c++ $CPPFlags$ %IN% -MM
 		}
 	}
 

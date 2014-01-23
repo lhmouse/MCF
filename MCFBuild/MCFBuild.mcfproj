@@ -14,18 +14,14 @@ General {
 	PreCompiledHeaders {
 		General {
 			SourceFile	= General.hpp
-			CommandLine	= g++ $CPPFlags$ %IN% -o %OUT%
+			CommandLine	= g++ -x c++-header $CPPFlags$ %IN% -o %OUT%
 		}
 	}
 
 	Compilers {
-		c {
-			CommandLine	= gcc $CFlags$ %IN% -o %OUT%
-			Dependency	= gcc $CFlags$ %IN% -MM
-		}
 		cpp cxx cc {
-			CommandLine	= gcc $CPPFlags$ %GCH.General% %IN% -o %OUT%
-			Dependency	= gcc $CPPFlags$ %IN% -MM
+			CommandLine	= gcc -x c++ $CPPFlags$ %GCH.General% %IN% -o %OUT%
+			Dependency	= gcc -x c++ $CPPFlags$ %IN% -MM
 		}
 		rc {
 			CommandLine	= windres $RCFlags$ -O coff -i %IN% -o %OUT%

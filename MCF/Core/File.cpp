@@ -49,7 +49,7 @@ public:
 			(bToRead ? GENERIC_READ : 0) | (bToWrite ? GENERIC_WRITE : 0),
 			bToWrite ? 0 : FILE_SHARE_READ,
 			nullptr,
-			bAutoCreate ? OPEN_ALWAYS : OPEN_EXISTING,
+			(bToWrite && bAutoCreate) ? OPEN_ALWAYS : OPEN_EXISTING,
 			FILE_ATTRIBUTE_NORMAL | FILE_FLAG_OVERLAPPED,
 			NULL
 		));

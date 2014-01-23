@@ -5,6 +5,7 @@
 #ifndef __MCF_STRING_HPP__
 #define __MCF_STRING_HPP__
 
+#include "../../MCFCRT/c/ext/assert.h"
 #include <algorithm>
 #include <memory>
 #include <utility>

@@ -528,14 +528,3 @@ __MCF_AVL_NODE_HEADER *__MCF_AVLFindCustomComp(
 	}
 	return (__MCF_AVL_NODE_HEADER *)pNode;
 }
-
-__MCF_AVL_NODE_HEADER *__MCF_AVLPrev(
-	const __MCF_AVL_NODE_HEADER *pNode
-){
-	return pNode->pPrev;
-}
-__MCF_AVL_NODE_HEADER *__MCF_AVLNext(
-	const __MCF_AVL_NODE_HEADER *pNode
-){
-	return pNode->pNext;
-}

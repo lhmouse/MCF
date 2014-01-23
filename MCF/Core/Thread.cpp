@@ -9,7 +9,7 @@
 using namespace MCF;
 
 // 嵌套类定义。
-class Thread::xDelegate {
+class Thread::xDelegate : NO_COPY {
 private:
 	struct xThreadCloser {
 		constexpr HANDLE operator()() const {

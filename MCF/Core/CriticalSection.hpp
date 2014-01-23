@@ -7,6 +7,7 @@
 
 #include "NoCopy.hpp"
 #include <memory>
+#include <utility>
 
 namespace MCF {
 
@@ -34,5 +35,11 @@ public:
 };
 
 }
+
+#define CRITICAL_SECTION_SCOPE(cs)	\
+	for(auto __MCF_LOCK__ = ::std::make_pair((cs).Lock(), true);\
+		__MCF_LOCK__.second;	\
+		__MCF_LOCK__.second = false	\
+	)
 
 #endif

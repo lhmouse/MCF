@@ -6,7 +6,10 @@
 #define __MCF_FILE_HPP__
 
 #include "NoCopy.hpp"
+#include "Event.hpp"
+#include <utility>
 #include <memory>
+#include <functional>
 #include <cstddef>
 
 namespace MCF {
@@ -14,8 +17,10 @@ namespace MCF {
 class File : NO_COPY {
 public:
 	enum : unsigned long long {
-		INVALID_SIZE = -1ull
+		INVALID_SIZE = (unsigned long long)-1
 	};
+
+	typedef std::function<void()> ASYNC_PROC;
 private:
 	class xDelegate;
 private:
@@ -25,20 +30,17 @@ public:
 	~File();
 public:
 	bool IsOpen() const noexcept;
-	bool Open(const wchar_t *pwszPath, bool bToRead, bool bToWrite, bool bCreatesIfNotExist) noexcept;
+	bool Open(const wchar_t *pwszPath, bool bToRead, bool bToWrite, bool bAutoCreate) noexcept;
 	void Close() noexcept;
 
-	unsigned long long GetSize() const noexcept;
-	bool Resize(unsigned long long llNewSize) noexcept;
+	std::uint64_t GetSize() const noexcept;
+	bool Resize(std::uint64_t u64NewSize) noexcept;
 
-	unsigned long GetErrorCode() noexcept;
+	std::uint32_t Read(void *pBuffer, std::uint64_t u64Offset, std::uint32_t u32BytesToRead) const noexcept;
+	std::uint32_t Write(std::uint64_t u64Offset, const void *pBuffer, std::uint32_t u32BytesToWrite) noexcept;
 
-	bool IsIdle() const noexcept;
-	bool WaitTimeout(unsigned long ulMilliSeconds) const noexcept;
-	void Wait() const noexcept;
-
-	void Read(unsigned char *pbyBuffer, unsigned long long ullOffset, std::size_t uBytesToRead) noexcept;
-	void Write(unsigned long long ullOffset, const unsigned char *pbyBuffer, std::size_t uBytesToWrite) noexcept;
+	std::uint32_t Read(void *pBuffer, std::uint64_t u64Offset, std::uint32_t u32BytesToRead, ASYNC_PROC fnAsyncProc) const;
+	std::uint32_t Write(std::uint64_t u64Offset, const void *pBuffer, std::uint32_t u32BytesToWrite, ASYNC_PROC fnAsyncProc);
 };
 
 }

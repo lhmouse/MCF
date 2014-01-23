@@ -8,6 +8,7 @@
 #include "NoCopy.hpp"
 #include "../../MCFCRT/cpp/ext/vvector.hpp"
 #include <memory>
+#include <utility>
 
 namespace MCF {
 
@@ -37,5 +38,11 @@ public:
 };
 
 }
+
+#define SEMAPHORE_SCOPE(sem, cnt)	\
+	for(auto __MCF_LOCK__ = ::std::make_pair((sem).Wait((cnt)), true);	\
+		__MCF_LOCK__.second;	\
+		__MCF_LOCK__.second = false	\
+	)
 
 #endif

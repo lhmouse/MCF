@@ -133,7 +133,7 @@ namespace __MCF {
 
 			ASSERT(xm_uCount != 0);
 
-			if(__atomic_sub_fetch(&xm_uCount, 1) == 0){
+			if(__atomic_sub_fetch(&xm_uCount, 1, __ATOMIC_RELAXED) == 0){
 				CLOSER_T()(xm_hObj);
 				xm_hObj = CLOSER_T()();
 			}
@@ -144,7 +144,7 @@ namespace __MCF {
 
 			ASSERT(xm_uWeakCount != 0);
 
-			const bool bRet = (__atomic_sub_fetch(&xm_uWeakCount, 1) == 0);
+			const bool bRet = (__atomic_sub_fetch(&xm_uWeakCount, 1, __ATOMIC_RELAXED) == 0);
 
 			ASSERT(!bRet || (xm_uCount == 0));
 

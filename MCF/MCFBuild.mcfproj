@@ -10,7 +10,7 @@ General {
 	PreCompiledHeaders {
 		CPP {
 			SourceFile	= StdMCF.hpp
-			CommandLine	= g++ -x c++ $CPPFlags$ %IN% -o %OUT%
+			CommandLine	= g++ -x c++-header $CPPFlags$ %IN% -o %OUT%
 		}
 	}
 

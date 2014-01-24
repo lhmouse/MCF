@@ -521,7 +521,7 @@ __MCF_AVL_NODE_HEADER *__MCF_AVLFind(
 			break;
 		}
 	}
-	return (__MCF_AVL_NODE_HEADER *)pRet;
+	return (__MCF_AVL_NODE_HEADER *)pCur;
 }
 __MCF_AVL_NODE_HEADER *__MCF_AVLFindCustomComp(
 	const __MCF_AVL_PROOT *ppRoot,
@@ -538,5 +538,5 @@ __MCF_AVL_NODE_HEADER *__MCF_AVLFindCustomComp(
 			break;
 		}
 	}
-	return (__MCF_AVL_NODE_HEADER *)pRet;
+	return (__MCF_AVL_NODE_HEADER *)pCur;
 }

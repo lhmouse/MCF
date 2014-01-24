@@ -37,9 +37,9 @@ public:
 }
 
 #define MUTEX_SCOPE(mtx)	\
-	for(auto __MCF_LOCK__ = ::std::make_pair((mtx).Lock(), true);	\
-		__MCF_LOCK__.second;	\
-		__MCF_LOCK__.second = false	\
+	for(auto __MCF_LOCK__ = (mtx).Lock();	\
+		__MCF_LOCK__;	\
+		__MCF_LOCK__.reset()	\
 	)
 
 #endif

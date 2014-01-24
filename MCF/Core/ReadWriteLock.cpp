@@ -21,69 +21,47 @@ private:
 			::CloseHandle(hMutex);
 		}
 	};
+
+	struct xLockHolder {
+		DWORD dwThreadId;
+		DWORD dwReentryCount;
+	};
 private:
 	const unsigned long xm_ulSpinCount;
 
 	// http://en.wikipedia.org/wiki/Readers–writers_problem#The_third_readers-writers_problem
 	CriticalSection xm_csNoWaiting;
 	Semaphore xm_semNoAccessing;
-	DWORD xm_dwWriterId;
-	std::size_t xm_uReentryCount;
 	volatile std::size_t xm_uReaders;
 public:
 	xDelegate(unsigned long ulSpinCount) noexcept
 		: xm_ulSpinCount(ulSpinCount)
 		, xm_csNoWaiting(ulSpinCount)
 		, xm_semNoAccessing(1, 1)
-		, xm_dwWriterId(0)
-		, xm_uReentryCount(0)
 		, xm_uReaders(0)
 	{
-	}
-private:
-	void xAcquireMutex() noexcept {
-		for(unsigned long i = 0; i < xm_ulSpinCount; ++i){
-			if(__atomic_load_n(&xm_dwWriterId, __ATOMIC_RELAXED) == 0){
-				break;
-			}
-		}
-		xm_semNoAccessing.Wait();
-
-		ASSERT(xm_dwWriterId == 0);
-	}
-	void xReleaseMutex() noexcept {
-		ASSERT(xm_dwWriterId == 0);
-
-		xm_semNoAccessing.Signal();
 	}
 public:
 	void LockRead() noexcept {
 		CRITICAL_SECTION_SCOPE(xm_csNoWaiting){
 			if(__atomic_add_fetch(&xm_uReaders, 1, __ATOMIC_ACQ_REL) == 1){
-				xAcquireMutex();
+				xm_semNoAccessing.Wait();
 			}
 		}
 	}
 	void UnlockRead() noexcept {
 		if(__atomic_sub_fetch(&xm_uReaders, 1, __ATOMIC_SEQ_CST) == 0){
-			xReleaseMutex();
+			xm_semNoAccessing.Signal();
 		}
 	}
 
 	void LockWrite() noexcept {
 		CRITICAL_SECTION_SCOPE(xm_csNoWaiting){
-			xAcquireMutex();
-			xm_dwWriterId = ::GetCurrentThreadId();
+			xm_semNoAccessing.Wait();
 		}
-		++xm_uReentryCount;
 	}
 	void UnlockWrite() noexcept {
-		ASSERT(xm_dwWriterId == ::GetCurrentThreadId());
-
-		if(--xm_uReentryCount == 0){
-			xm_dwWriterId = 0;
-			xReleaseMutex();
-		}
+		xm_semNoAccessing.Signal();
 	}
 };
 

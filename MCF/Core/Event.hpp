@@ -16,7 +16,7 @@ private:
 private:
 	const std::unique_ptr<xDelegate> xm_pDelegate;
 public:
-	Event(bool bInitSet);
+	Event(bool bInitSet, const wchar_t *pwszName = nullptr);
 	~Event();
 public:
 	bool IsSet() const noexcept;

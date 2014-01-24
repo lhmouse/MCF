@@ -22,12 +22,13 @@ private:
 private:
 	UniqueHandle<HANDLE, xSemaphoreCloser> xm_hSemaphore;
 public:
-	xDelegate(long lInitCount, long lMaxCount){
-		UniqueHandle<HANDLE, xSemaphoreCloser> hSemaphore(::CreateSemaphoreW(nullptr, lInitCount, lMaxCount, nullptr));
-		if(!hSemaphore){
+	xDelegate(std::size_t uInitCount, std::size_t uMaxCount, const wchar_t *pwszName){
+		ASSERT((uInitCount <= LONG_MAX) && (uMaxCount <= LONG_MAX));
+
+		xm_hSemaphore.Reset(::CreateSemaphoreW(nullptr, (long)uInitCount, (long)uMaxCount, pwszName));
+		if(!xm_hSemaphore){
 			MCF_THROW(::GetLastError(), L"CreateSemaphoreW() 失败。");
 		}
-		xm_hSemaphore = std::move(hSemaphore);
 	}
 public:
 	HANDLE GetHandle() const noexcept {
@@ -35,51 +36,43 @@ public:
 	}
 };
 
-// 静态成员函数。
-void Semaphore::xUnlock(Semaphore::xDelegate *pDelegate) noexcept {
-	if(pDelegate){
-		::ReleaseSemaphore(pDelegate->GetHandle(), 1, nullptr);
-	}
-}
-
 // 构造函数和析构函数。
-Semaphore::Semaphore(long lInitCount, long lMaxCount)
-	: xm_pDelegate(new xDelegate(lInitCount, lMaxCount))
+Semaphore::Semaphore(std::size_t uInitCount, std::size_t uMaxCount, const wchar_t *pwszName)
+	: xm_pDelegate(new xDelegate(uInitCount, uMaxCount, pwszName))
 {
 }
 Semaphore::~Semaphore(){
 }
 
 // 其他非静态成员函数。
-Semaphore::LockHolder Semaphore::WaitTimeOut(unsigned long ulMilliSeconds) noexcept {
-	if(::WaitForSingleObject(xm_pDelegate->GetHandle(), ulMilliSeconds) == WAIT_TIMEOUT){
-		return nullptr;
-	}
-	return LockHolder(xm_pDelegate.get());
-}
-MCF::VVector<Semaphore::LockHolder> Semaphore::WaitTimeOut(long lWaitCount, unsigned long ulMilliSeconds) noexcept {
-	MCF::VVector<Semaphore::LockHolder> vecRet;
+std::size_t Semaphore::WaitTimeOut(unsigned long ulMilliSeconds, std::size_t uWaitCount) noexcept {
+	std::size_t uSucceeded = 0;
 	if(ulMilliSeconds == INFINITE){
-		for(long i = 0; i < lWaitCount; ++i){
+		for(std::size_t i = 0; i < uWaitCount; ++i){
 			::WaitForSingleObject(xm_pDelegate->GetHandle(), INFINITE);
-			vecRet.Push(xm_pDelegate.get());
+			++uSucceeded;
 		}
 	} else {
 		const auto ulWaitUntil = ::GetTickCount() + ulMilliSeconds;
 		unsigned long ulTimeToWait = ulMilliSeconds;
-		for(long i = 0; i < lWaitCount; ++i){
-			if(::WaitForSingleObject(xm_pDelegate->GetHandle(), ulTimeToWait) == WAIT_TIMEOUT){
+		for(std::size_t i = 0; i < uWaitCount; ++i){
+			if(::WaitForSingleObject(xm_pDelegate->GetHandle(), ulMilliSeconds) == WAIT_TIMEOUT){
 				break;
 			}
-			vecRet.Push(xm_pDelegate.get());
+			++uSucceeded;
 			ulTimeToWait = ulWaitUntil - ::GetTickCount();
+			if((long)ulTimeToWait < 0){
+				break;
+			}
 		}
 	}
-	return std::move(vecRet);
+	return uSucceeded;
 }
-Semaphore::LockHolder Semaphore::Wait() noexcept {
-	return WaitTimeOut(INFINITE);
+void Semaphore::Wait(std::size_t uWaitCount) noexcept {
+	WaitTimeOut(INFINITE, uWaitCount);
 }
-MCF::VVector<Semaphore::LockHolder> Semaphore::Wait(long lWaitCount) noexcept {
-	return WaitTimeOut(lWaitCount, INFINITE);
+void Semaphore::Signal(std::size_t uSignalCount) noexcept {
+	const auto __attribute__((unused)) bSucceeded = ::ReleaseSemaphore(xm_pDelegate->GetHandle(), uSignalCount, nullptr);
+
+	ASSERT(bSucceeded);
 }

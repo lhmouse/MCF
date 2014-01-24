@@ -27,6 +27,7 @@ private:
 	const std::unique_ptr<xDelegate> xm_pDelegate;
 public:
 	File();
+	File(const wchar_t *pwszPath, bool bToRead, bool bToWrite, bool bAutoCreate);
 	~File();
 public:
 	bool IsOpen() const noexcept;
@@ -37,9 +38,8 @@ public:
 	bool Resize(std::uint64_t u64NewSize) noexcept;
 
 	std::uint32_t Read(void *pBuffer, std::uint64_t u64Offset, std::uint32_t u32BytesToRead) const noexcept;
-	std::uint32_t Write(std::uint64_t u64Offset, const void *pBuffer, std::uint32_t u32BytesToWrite) noexcept;
-
 	std::uint32_t Read(void *pBuffer, std::uint64_t u64Offset, std::uint32_t u32BytesToRead, ASYNC_PROC fnAsyncProc) const;
+	std::uint32_t Write(std::uint64_t u64Offset, const void *pBuffer, std::uint32_t u32BytesToWrite) noexcept;
 	std::uint32_t Write(std::uint64_t u64Offset, const void *pBuffer, std::uint32_t u32BytesToWrite, ASYNC_PROC fnAsyncProc);
 };
 

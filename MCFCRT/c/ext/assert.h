@@ -20,7 +20,7 @@ static inline void __MCF_CRT_OnAssertFail(const wchar_t *pwszExpression, const c
 	__MCF_BailF(L"调试断言失败。\n\n表达式：%ls\n文件　：%hs\n行号　：%lu\n描述　：%ls", pwszExpression, pszFile, ulLine, pwszMessage);
 }
 
-#define ASSERT(exp)						__MCF_ASSERT_MSG(#exp, (exp), L"")
-#define ASSERT_MSG(exp, msg)			__MCF_ASSERT_MSG(#exp, (exp), (msg))
+#define ASSERT(exp)				__MCF_ASSERT_MSG(#exp, (exp), L"")
+#define ASSERT_MSG(exp, msg)	__MCF_ASSERT_MSG(#exp, (exp), (msg))
 
 #endif

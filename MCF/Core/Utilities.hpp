@@ -14,7 +14,17 @@ extern UTF16String GetWin32ErrorDesc(unsigned long ulErrorCode);
 
 extern unsigned int GetUNIXTime() noexcept;
 extern std::uint32_t GenRandSeed() noexcept;
-extern std::uint64_t GetHiResTimer() noexcept;
+
+
+typedef struct tagHiResCounter {
+	enum : std::size_t {
+		SECOND_BITS = 40
+	};
+	std::uint64_t u40Sec : SECOND_BITS;
+	std::uint32_t u24Rem : 64 - SECOND_BITS;
+} HI_RES_COUNTER;
+
+extern HI_RES_COUNTER GetHiResCounter() noexcept;
 
 template<typename T>
 inline void __attribute__((always_inline)) ZeroObject(T &dst) noexcept {

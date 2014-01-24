@@ -5,6 +5,7 @@
 #include "../StdMCF.hpp"
 #include "Utilities.hpp"
 #include "UniqueHandle.hpp"
+#include <cmath>
 using namespace MCF;
 
 namespace MCF {
@@ -49,26 +50,30 @@ std::uint32_t GenRandSeed() noexcept {
 	::GetSystemTimeAsFileTime(&ft);
 	return (std::uint32_t)ft.dwLowDateTime;
 }
-std::uint64_t GetHiResTimer() noexcept {
+
+HI_RES_COUNTER GetHiResCounter() noexcept {
 	static bool s_bInited = false;
-	static std::uint32_t s_u32Freq;
-	static std::uint64_t s_u64FreqRecip;
+	static long double s_llfFreq;
+	static long double s_llfFreqRecip;
+	static long double s_llfRemainderCoef;
 
 	LARGE_INTEGER liTemp;
 
 	if(!__atomic_load_n(&s_bInited, __ATOMIC_ACQUIRE)){
 		::QueryPerformanceFrequency(&liTemp);
-		s_u32Freq = (std::uint32_t)liTemp.QuadPart;
-		s_u64FreqRecip = 0xFFFFFFFFFFFFFFFFull / (std::uint64_t)liTemp.QuadPart + 1;
+		const auto llFreq = (long double)liTemp.QuadPart;
+		s_llfFreq = llFreq;
+		s_llfFreqRecip = 1.0l / llFreq;
+		s_llfRemainderCoef = (1ull << (64 - HI_RES_COUNTER::SECOND_BITS)) / llFreq;
 
 		__atomic_store_n(&s_bInited, true, __ATOMIC_RELEASE);
 	}
 
 	::QueryPerformanceCounter(&liTemp);
-	const auto u64Counter = (std::uint64_t)liTemp.QuadPart;
-	const auto u32Seconds = (std::uint32_t)((u64Counter * (s_u64FreqRecip >> 32)) >> 32);
-	const auto u32Remainder = (std::uint32_t)(((u64Counter - ((std::uint64_t)u32Seconds) * s_u32Freq) * s_u64FreqRecip) >> 32);
-	return ((std::uint64_t)u32Seconds << 32) | u32Remainder;
+	const auto llfCounter = (long double)liTemp.QuadPart;
+	const auto u64Seconds = (std::uint64_t)(llfCounter * s_llfFreqRecip);
+	const auto u32Remainder = (std::uint32_t)((llfCounter - u64Seconds * s_llfFreq) * s_llfRemainderCoef);
+	return HI_RES_COUNTER{u64Seconds, u32Remainder};
 }
 
 }

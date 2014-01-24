@@ -22,12 +22,11 @@ private:
 private:
 	UniqueHandle<HANDLE, xEventCloser> xm_hEvent;
 public:
-	xDelegate(bool bInitSet){
-		UniqueHandle<HANDLE, xEventCloser> hEvent(::CreateEventW(nullptr, false, bInitSet, nullptr));
-		if(!hEvent){
+	xDelegate(bool bInitSet, const wchar_t *pwszName){
+		xm_hEvent.Reset(::CreateEventW(nullptr, false, bInitSet, pwszName));
+		if(!xm_hEvent){
 			MCF_THROW(::GetLastError(), L"CreateEventW() 失败。");
 		}
-		xm_hEvent = std::move(hEvent);
 	}
 public:
 	HANDLE GetHandle() const noexcept {
@@ -36,8 +35,8 @@ public:
 };
 
 // 构造函数和析构函数。
-Event::Event(bool bInitSet)
-	: xm_pDelegate(new xDelegate(bInitSet))
+Event::Event(bool bInitSet, const wchar_t *pwszName)
+	: xm_pDelegate(new xDelegate(bInitSet, pwszName))
 {
 }
 Event::~Event(){

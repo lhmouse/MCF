@@ -271,7 +271,7 @@ namespace MCFBuild {
 		StartupInfo.lpReserved	= nullptr;
 		StartupInfo.lpDesktop	= nullptr;
 		StartupInfo.lpTitle		= nullptr;
-		StartupInfo.dwFlags		= STARTF_USESTDHANDLES;
+		StartupInfo.dwFlags		= STARTF_USESTDHANDLES | DETACHED_PROCESS;
 		StartupInfo.cbReserved2	= 0;
 		StartupInfo.lpReserved2	= nullptr;
 		StartupInfo.hStdInput	= INVALID_HANDLE_VALUE;

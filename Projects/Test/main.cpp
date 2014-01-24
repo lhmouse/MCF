@@ -1,32 +1,26 @@
-#include <MCF/StdMCF.hpp>
-#include <MCF/Core/File.hpp>
+#include <MCFCRT/MCFCRT.h>
+#include <MCF/Core/Mutex.hpp>
+#include <MCF/Core/Thread.hpp>
+#include <memory>
 #include <cstdio>
 #include <cstdlib>
+#include <windows.h>
+
+MCF::Mutex mtx;
+
+void proc(){
+	::Sleep(100);
+	MUTEX_SCOPE(mtx){
+		std::fprintf(stderr, "thread %lu - entered\n", ::GetCurrentThreadId());
+		::Sleep(100);
+		std::fprintf(stderr, "thread %lu - left\n", ::GetCurrentThreadId());
+	}
+}
 
 unsigned int MCFMain(){
-	MCF::File f;
-	f.Open(L"E:\\Desktop\\123.txt", true, false, false);
-	std::printf("is open = %d, err = %lu\n", (int)f.IsOpen(), ::GetLastError());
-
-	const auto fsize = f.GetSize();
-	std::printf("file size = %llu\n", fsize);
-	char *buffer = new char[fsize];
-
-	unsigned long to_read;
-	unsigned long long offset;
-	unsigned long cb_read;
-
-	try {
-		to_read = fsize;
-		offset = 0;
-		std::printf("reading %lu bytes from offset %llu...\n", to_read, offset);
-		cb_read = f.Read(buffer, offset, to_read, []{ std::puts("-- throw in async proc"); throw 5; });
-		std::printf("%lu bytes read, err = %lu\n", cb_read, ::GetLastError());
-	} catch(int e){
-		std::printf("exception caught, e = %d\n", e);
+	MCF::Thread threads[32];
+	for(auto &thrd : threads){
+		thrd.Start(proc);
 	}
-
-	delete[] buffer;
-
 	return 0;
 }

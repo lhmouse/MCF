@@ -44,7 +44,7 @@ public:
 		return xm_hFile.IsGood();
 	}
 	bool Open(const wchar_t *pwszPath, bool bToRead, bool bToWrite, bool bAutoCreate) noexcept {
-		UniqueHandle<HANDLE, xFileCloser> hFile(::CreateFileW(
+		xm_hFile.Reset(::CreateFileW(
 			pwszPath,
 			(bToRead ? GENERIC_READ : 0) | (bToWrite ? GENERIC_WRITE : 0),
 			bToWrite ? 0 : FILE_SHARE_READ,
@@ -53,10 +53,9 @@ public:
 			FILE_ATTRIBUTE_NORMAL | FILE_FLAG_OVERLAPPED,
 			NULL
 		));
-		if(!hFile){
+		if(!xm_hFile){
 			return false;
 		}
-		xm_hFile = std::move(hFile);
 		return true;
 	}
 	void Close() noexcept {
@@ -103,9 +102,11 @@ public:
 		Overlapped.OffsetHigh = (DWORD)(u64Offset >> 32);
 		Overlapped.hEvent = (HANDLE)&ApcResult;
 		const bool bSucceeds = ::ReadFileEx(xm_hFile, pBuffer, u32BytesToRead, &Overlapped, &xAIOCallback);
+		if(!bSucceeds){
+			ApcResult.dwErrorCode = ::GetLastError();
+		}
 		std::exception_ptr ep;
 		if(pfnAsyncProc){
-			ApcResult.dwErrorCode = ::GetLastError();
 			try {
 				(*pfnAsyncProc)();
 			} catch(...){
@@ -118,8 +119,9 @@ public:
 		if(ep){
 			std::rethrow_exception(ep);
 		}
-
-		::SetLastError(ApcResult.dwErrorCode);
+		if(!bSucceeds){
+			::SetLastError(ApcResult.dwErrorCode);
+		}
 		return ApcResult.u32BytesTransferred;
 	}
 	std::uint32_t Write(std::uint64_t u64Offset, const void *pBuffer, std::uint32_t u32BytesToWrite, ASYNC_PROC *pfnAsyncProc){
@@ -133,9 +135,11 @@ public:
 		Overlapped.OffsetHigh = (DWORD)(u64Offset >> 32);
 		Overlapped.hEvent = (HANDLE)&ApcResult;
 		const bool bSucceeds = ::WriteFileEx(xm_hFile, pBuffer, u32BytesToWrite, &Overlapped, &xAIOCallback);
+		if(!bSucceeds){
+			ApcResult.dwErrorCode = ::GetLastError();
+		}
 		std::exception_ptr ep;
 		if(pfnAsyncProc){
-			ApcResult.dwErrorCode = ::GetLastError();
 			try {
 				(*pfnAsyncProc)();
 			} catch(...){
@@ -148,8 +152,9 @@ public:
 		if(ep){
 			std::rethrow_exception(ep);
 		}
-
-		::SetLastError(ApcResult.dwErrorCode);
+		if(!bSucceeds){
+			::SetLastError(ApcResult.dwErrorCode);
+		}
 		return ApcResult.u32BytesTransferred;
 	}
 };
@@ -158,6 +163,11 @@ public:
 File::File()
 	: xm_pDelegate(new xDelegate)
 {
+}
+File::File(const wchar_t *pwszPath, bool bToRead, bool bToWrite, bool bAutoCreate)
+	: File()
+{
+	Open(pwszPath, bToRead, bToWrite, bAutoCreate);
 }
 File::~File(){
 	Close();
@@ -184,12 +194,11 @@ bool File::Resize(std::uint64_t u64NewSize) noexcept {
 std::uint32_t File::Read(void *pBuffer, std::uint64_t u64Offset, std::uint32_t u32BytesToRead) const noexcept {
 	return xm_pDelegate->Read(pBuffer, u64Offset, u32BytesToRead, nullptr);
 }
-std::uint32_t File::Write(std::uint64_t u64Offset, const void *pBuffer, std::uint32_t u32BytesToWrite) noexcept {
-	return xm_pDelegate->Write(u64Offset, pBuffer, u32BytesToWrite, nullptr);
-}
-
 std::uint32_t File::Read(void *pBuffer, std::uint64_t u64Offset, std::uint32_t u32BytesToRead, File::ASYNC_PROC fnAsyncProc) const {
 	return xm_pDelegate->Read(pBuffer, u64Offset, u32BytesToRead, &fnAsyncProc);
+}
+std::uint32_t File::Write(std::uint64_t u64Offset, const void *pBuffer, std::uint32_t u32BytesToWrite) noexcept {
+	return xm_pDelegate->Write(u64Offset, pBuffer, u32BytesToWrite, nullptr);
 }
 std::uint32_t File::Write(std::uint64_t u64Offset, const void *pBuffer, std::uint32_t u32BytesToWrite, File::ASYNC_PROC fnAsyncProc){
 	return xm_pDelegate->Write(u64Offset, pBuffer, u32BytesToWrite, &fnAsyncProc);

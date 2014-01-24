@@ -2,8 +2,8 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2013. LH_Mouse. All wrongs reserved.
 
-#ifndef __MCF_CRITICAL_SECTION_HPP__
-#define __MCF_CRITICAL_SECTION_HPP__
+#ifndef __MCF_MUTEX_HPP__
+#define __MCF_MUTEX_HPP__
 
 #include "NoCopy.hpp"
 #include <memory>
@@ -11,7 +11,7 @@
 
 namespace MCF {
 
-class CriticalSection : NO_COPY {
+class Mutex : NO_COPY {
 private:
 	class xDelegate;
 
@@ -27,8 +27,8 @@ public:
 private:
 	const std::unique_ptr<xDelegate> xm_pDelegate;
 public:
-	CriticalSection(unsigned long ulSpinCount = 0x400);
-	~CriticalSection();
+	Mutex(const wchar_t *pwszName = nullptr);
+	~Mutex();
 public:
 	LockHolder Try() noexcept;
 	LockHolder Lock() noexcept;
@@ -36,8 +36,8 @@ public:
 
 }
 
-#define CRITICAL_SECTION_SCOPE(cs)	\
-	for(auto __MCF_LOCK__ = ::std::make_pair((cs).Lock(), true);	\
+#define MUTEX_SCOPE(mtx)	\
+	for(auto __MCF_LOCK__ = ::std::make_pair((mtx).Lock(), true);	\
 		__MCF_LOCK__.second;	\
 		__MCF_LOCK__.second = false	\
 	)

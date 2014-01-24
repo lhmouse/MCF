@@ -511,20 +511,32 @@ __MCF_AVL_NODE_HEADER *__MCF_AVLFind(
 	const __MCF_AVL_PROOT *ppRoot,
 	intptr_t nKey
 ){
-	const __MCF_AVL_NODE_HEADER *const pNode = __MCF_AVLLowerBound(ppRoot, nKey);
-	if(!pNode || (nKey < pNode->nKey)){
-		return NULL;
+	const __MCF_AVL_NODE_HEADER *pCur = *ppRoot;
+	while(pCur){
+		if(pCur->nKey < nKey){
+			pCur = pCur->pRight;
+		} else if(nKey < pCur->nKey){
+			pCur = pCur->pLeft;
+		} else {
+			break;
+		}
 	}
-	return (__MCF_AVL_NODE_HEADER *)pNode;
+	return (__MCF_AVL_NODE_HEADER *)pRet;
 }
 __MCF_AVL_NODE_HEADER *__MCF_AVLFindCustomComp(
 	const __MCF_AVL_PROOT *ppRoot,
 	intptr_t nKey,
 	__MCF_AVL_KEY_COMPARER pfnKeyComparer
 ){
-	const __MCF_AVL_NODE_HEADER *const pNode = __MCF_AVLLowerBoundCustomComp(ppRoot, nKey, pfnKeyComparer);
-	if(!pNode || (*pfnKeyComparer)(nKey, pNode->nKey)){
-		return NULL;
+	const __MCF_AVL_NODE_HEADER *pCur = *ppRoot;
+	while(pCur){
+		if((*pfnKeyComparer)(pCur->nKey, nKey)){
+			pCur = pCur->pRight;
+		} else if((*pfnKeyComparer)(nKey, pCur->nKey)){
+			pCur = pCur->pLeft;
+		} else {
+			break;
+		}
 	}
-	return (__MCF_AVL_NODE_HEADER *)pNode;
+	return (__MCF_AVL_NODE_HEADER *)pRet;
 }

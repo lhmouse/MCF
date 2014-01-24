@@ -42,6 +42,11 @@ public:
 	}
 private:
 	void xAcquireMutex() noexcept {
+		for(unsigned long i = 0; i < xm_ulSpinCount; ++i){
+			if(__atomic_load_n(&xm_dwWriterId, __ATOMIC_RELAXED) == 0){
+				break;
+			}
+		}
 		xm_semNoAccessing.Wait();
 
 		ASSERT(xm_dwWriterId == 0);

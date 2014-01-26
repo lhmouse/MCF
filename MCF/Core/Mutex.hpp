@@ -27,7 +27,7 @@ public:
 private:
 	const std::unique_ptr<xDelegate> xm_pDelegate;
 public:
-	Mutex(const wchar_t *pwszName = nullptr);
+	explicit Mutex(const wchar_t *pwszName = nullptr);
 	~Mutex();
 public:
 	LockHolder Try() noexcept;
@@ -37,9 +37,8 @@ public:
 }
 
 #define MUTEX_SCOPE(mtx)	\
-	for(auto __MCF_LOCK__ = (mtx).Lock();	\
-		__MCF_LOCK__;	\
-		__MCF_LOCK__.reset()	\
-	)
+	for(auto __MCF_LOCK__ = std::make_pair(static_cast<::MCF::Mutex &>(mtx).Lock(), true);	\
+		__MCF_LOCK__.second;	\
+		__MCF_LOCK__.second = false)
 
 #endif

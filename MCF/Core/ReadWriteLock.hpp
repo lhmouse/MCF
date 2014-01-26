@@ -14,7 +14,7 @@ namespace MCF {
 class ReadWriteLock : NO_COPY {
 public:
 	enum : std::size_t {
-		MAXIMUM_CONCURRENT_READS = 32u
+		MAXIMUM_CONCURRENT_READS = 16u
 	};
 private:
 	class xDelegate;
@@ -48,15 +48,13 @@ public:
 }
 
 #define READ_LOCK_SCOPE(rwl)	\
-	for(auto __MCF_LOCK__ = (rwl).GetReadLock();	\
-		__MCF_LOCK__;	\
-		__MCF_LOCK__.reset()	\
-	)
+	for(auto __MCF_LOCK__ = std::make_pair(static_cast<::MCF::ReadWriteLock &>(rwl).GetReadLock(), true);	\
+		__MCF_LOCK__.second;	\
+		__MCF_LOCK__.second = false)
 
 #define WRITE_LOCK_SCOPE(rwl)	\
-	for(auto __MCF_LOCK__ = (rwl).GetWriteLock();	\
-		__MCF_LOCK__;	\
-		__MCF_LOCK__.reset()	\
-	)
+	for(auto __MCF_LOCK__ = std::make_pair(static_cast<::MCF::ReadWriteLock &>(rwl).GetWriteLock(), true);	\
+		__MCF_LOCK__.second;	\
+		__MCF_LOCK__.second = false)
 
 #endif

@@ -72,7 +72,7 @@ void Semaphore::Wait(std::size_t uWaitCount) noexcept {
 	WaitTimeOut(INFINITE, uWaitCount);
 }
 void Semaphore::Signal(std::size_t uSignalCount) noexcept {
-	const auto __attribute__((unused)) bSucceeded = ::ReleaseSemaphore(xm_pDelegate->GetHandle(), uSignalCount, nullptr);
-
-	ASSERT(bSucceeded);
+	if(!::ReleaseSemaphore(xm_pDelegate->GetHandle(), uSignalCount, nullptr)){
+		ASSERT_MSG(false, L"ReleaseSemaphore() 失败。");
+	}
 }

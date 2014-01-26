@@ -4,64 +4,153 @@
 
 #include "../StdMCF.hpp"
 #include "ReadWriteLock.hpp"
-#include "Exception.hpp"
-#include "UniqueHandle.hpp"
 #include "CriticalSection.hpp"
 #include "Semaphore.hpp"
 using namespace MCF;
 
+static_assert(ReadWriteLock::MAXIMUM_CONCURRENT_READS > 1, "MAXIMUM_CONCURRENT_READS <= 1 : There exist potential deadlocks.");
+
 // 嵌套类定义。
 class ReadWriteLock::xDelegate : NO_COPY {
 private:
-	struct xMutexCloser {
-		constexpr HANDLE operator()() const {
-			return NULL;
-		}
-		void operator()(HANDLE hMutex) const {
-			::CloseHandle(hMutex);
-		}
-	};
-
-	struct xLockHolder {
-		DWORD dwThreadId;
-		DWORD dwReentryCount;
+	struct xReentryInfo {
+		volatile DWORD dwThreadId;
+		std::size_t uReentryCount;
 	};
 private:
-	const unsigned long xm_ulSpinCount;
-
 	// http://en.wikipedia.org/wiki/Readers–writers_problem#The_third_readers-writers_problem
-	CriticalSection xm_csNoWaiting;
-	Semaphore xm_semNoAccessing;
-	volatile std::size_t xm_uReaders;
+	CriticalSection xm_csNoWaiting; // 用于内部同步。
+	Semaphore xm_semNoAccessing; // 当且仅当没有读者且没有写者“拥有”锁时为激发态。
+	volatile std::size_t xm_uReaders; // “试图”获取锁的读者数。
+
+	// 重入支持。
+	Semaphore xm_semMostOneReader; // 至多有一个读者“拥有”锁时为激发态。
+	volatile std::size_t xm_uCurrentReaders; // “已经”拥有锁的读者数。
+
+	xReentryInfo xm_aReaderInfos[MAXIMUM_CONCURRENT_READS]; // 读者重入计数。
+	Semaphore xm_semReaderInfoCount;
+	xReentryInfo xm_uWriterInfo; // 写者重入计数。
 public:
-	xDelegate(unsigned long ulSpinCount) noexcept
-		: xm_ulSpinCount(ulSpinCount)
-		, xm_csNoWaiting(ulSpinCount)
+	xDelegate(unsigned long ulSpinCount)
+		: xm_csNoWaiting(ulSpinCount)
 		, xm_semNoAccessing(1, 1)
 		, xm_uReaders(0)
+		, xm_semMostOneReader(1, 1)
+		, xm_uCurrentReaders(0)
+		, xm_aReaderInfos()
+		, xm_semReaderInfoCount(MAXIMUM_CONCURRENT_READS, MAXIMUM_CONCURRENT_READS)
+		, xm_uWriterInfo()
 	{
 	}
-public:
-	void LockRead() noexcept {
-		CRITICAL_SECTION_SCOPE(xm_csNoWaiting){
-			if(__atomic_add_fetch(&xm_uReaders, 1, __ATOMIC_ACQ_REL) == 1){
-				xm_semNoAccessing.Wait();
+private:
+	xReentryInfo *xGetReaderReentryInfo(DWORD dwThreadId) noexcept {
+		for(auto &ReaderInfo : xm_aReaderInfos){
+			if(__atomic_load_n(&ReaderInfo.dwThreadId, __ATOMIC_RELAXED) == dwThreadId){
+				return &ReaderInfo;
+			}
+		}
+		return nullptr;
+	}
+	xReentryInfo *xAllocReaderReentryInfo(DWORD dwThreadId) noexcept {
+		const auto pExisting = xGetReaderReentryInfo(dwThreadId);
+		if(pExisting){
+			return pExisting;
+		}
+		for(;;){
+			xm_semReaderInfoCount.Wait();
+			for(auto &ReaderInfo : xm_aReaderInfos){
+				DWORD dwExpected = 0;
+				if(__atomic_compare_exchange_n(&ReaderInfo.dwThreadId, &dwExpected, dwThreadId, true, __ATOMIC_RELAXED, __ATOMIC_RELAXED)){
+					return &ReaderInfo;
+				}
 			}
 		}
 	}
+	void xDeleteReaderReentryInfo(xReentryInfo *pReentryInfo) noexcept {
+		ASSERT(__atomic_load_n(&pReentryInfo->dwThreadId, __ATOMIC_RELAXED) == ::GetCurrentThreadId());
+
+		__atomic_store_n(&pReentryInfo->dwThreadId, 0, __ATOMIC_RELAXED);
+		xm_semReaderInfoCount.Signal();
+	}
+public:
+	void LockRead() noexcept {
+		const auto dwCurrentThreadId = ::GetCurrentThreadId();
+		auto pReaderReentryInfo = xGetReaderReentryInfo(dwCurrentThreadId);
+		if(!pReaderReentryInfo){
+			if(__atomic_load_n(&xm_uWriterInfo.dwThreadId, __ATOMIC_ACQUIRE) == dwCurrentThreadId){
+				__atomic_fetch_add(&xm_uReaders, 1, __ATOMIC_SEQ_CST);
+			} else {
+				CRITICAL_SECTION_SCOPE(xm_csNoWaiting){
+					switch(__atomic_fetch_add(&xm_uReaders, 1, __ATOMIC_SEQ_CST)){
+					case 0:
+						xm_semNoAccessing.Wait();
+						break;
+					case 1:
+						xm_semMostOneReader.Wait();
+						break;
+					}
+				}
+			}
+			__atomic_fetch_add(&xm_uCurrentReaders, 1, __ATOMIC_RELAXED);
+
+			pReaderReentryInfo = xAllocReaderReentryInfo(dwCurrentThreadId);
+		}
+		++pReaderReentryInfo->uReentryCount;
+	}
 	void UnlockRead() noexcept {
-		if(__atomic_sub_fetch(&xm_uReaders, 1, __ATOMIC_SEQ_CST) == 0){
-			xm_semNoAccessing.Signal();
+		const auto dwCurrentThreadId = ::GetCurrentThreadId();
+		const auto pReaderReentryInfo = xGetReaderReentryInfo(dwCurrentThreadId);
+
+		ASSERT(pReaderReentryInfo != nullptr);
+
+		if(--pReaderReentryInfo->uReentryCount == 0){
+			xDeleteReaderReentryInfo(pReaderReentryInfo);
+
+			if(__atomic_load_n(&xm_uWriterInfo.dwThreadId, __ATOMIC_ACQUIRE) == dwCurrentThreadId){
+				__atomic_sub_fetch(&xm_uCurrentReaders, 1, __ATOMIC_SEQ_CST);
+			} else {
+				switch(__atomic_sub_fetch(&xm_uCurrentReaders, 1, __ATOMIC_SEQ_CST)){
+				case 0:
+					xm_semNoAccessing.Signal();
+					break;
+				case 1:
+					xm_semMostOneReader.Signal();
+					break;
+				}
+			}
+			__atomic_sub_fetch(&xm_uReaders, 1, __ATOMIC_RELAXED);
 		}
 	}
 
 	void LockWrite() noexcept {
-		CRITICAL_SECTION_SCOPE(xm_csNoWaiting){
-			xm_semNoAccessing.Wait();
+		const auto dwCurrentThreadId = ::GetCurrentThreadId();
+		if(__atomic_load_n(&xm_uWriterInfo.dwThreadId, __ATOMIC_ACQUIRE) != dwCurrentThreadId){
+			const auto pReaderReentryInfo = xGetReaderReentryInfo(dwCurrentThreadId);
+			if(pReaderReentryInfo){
+				xm_semMostOneReader.Wait();
+				xm_semMostOneReader.Signal();
+			} else {
+				CRITICAL_SECTION_SCOPE(xm_csNoWaiting){
+					xm_semNoAccessing.Wait();
+				}
+			}
+			__atomic_store_n(&xm_uWriterInfo.dwThreadId, dwCurrentThreadId, __ATOMIC_RELEASE);
+
+			ASSERT(xm_uWriterInfo.uReentryCount == 0);
 		}
+		++xm_uWriterInfo.uReentryCount;
 	}
 	void UnlockWrite() noexcept {
-		xm_semNoAccessing.Signal();
+		ASSERT(__atomic_load_n(&xm_uWriterInfo.dwThreadId, __ATOMIC_ACQUIRE) == ::GetCurrentThreadId());
+
+		if(--xm_uWriterInfo.uReentryCount == 0){
+			__atomic_store_n(&xm_uWriterInfo.dwThreadId, 0, __ATOMIC_RELEASE);
+			const auto dwCurrentThreadId = ::GetCurrentThreadId();
+			const auto pReaderReentryInfo = xGetReaderReentryInfo(dwCurrentThreadId);
+			if(!pReaderReentryInfo){
+				xm_semNoAccessing.Signal();
+			}
+		}
 	}
 };
 

@@ -16,7 +16,7 @@ private:
 private:
 	const std::unique_ptr<xDelegate> xm_pDelegate;
 public:
-	Semaphore(std::size_t uInitCount, std::size_t uMaxCount, const wchar_t *pwszName = nullptr);
+	explicit Semaphore(std::size_t uInitCount, std::size_t uMaxCount, const wchar_t *pwszName = nullptr);
 	~Semaphore();
 public:
 	std::size_t WaitTimeOut(unsigned long ulMilliSeconds, std::size_t uWaitCount = 1) noexcept;

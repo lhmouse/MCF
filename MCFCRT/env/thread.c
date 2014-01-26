@@ -39,6 +39,7 @@ typedef struct tagTlsObject {
 } TLS_OBJECT;
 
 typedef struct tagThreadEnv {
+	size_t uReentryCount;
 	AT_EXIT_NODE *pAtExitHead;
 	__MCF_AVL_PROOT mapObjects;
 	TLS_OBJECT *pLastObject;
@@ -77,24 +78,38 @@ void __MCF_CRT_TlsEnvUninitialize(){
 }
 
 unsigned long __MCF_CRT_ThreadInitialize(){
-	__MCF_CRT_FEnvInitialize();
-
-	THREAD_ENV *const pNewThreadEnv = (THREAD_ENV *)malloc(sizeof(THREAD_ENV));
-	if(!pNewThreadEnv){
-		return GetLastError();
+	THREAD_ENV *pThreadEnv = (THREAD_ENV *)TlsGetValue(g_dwTlsIndex);
+	const DWORD dwErrorCode = GetLastError();
+	if(dwErrorCode != ERROR_SUCCESS){
+		return dwErrorCode;
 	}
-	pNewThreadEnv->pAtExitHead	= NULL;
-	pNewThreadEnv->mapObjects	= NULL;
-	pNewThreadEnv->pLastObject	= NULL;
 
-	TlsSetValue(g_dwTlsIndex, pNewThreadEnv);
+	if(pThreadEnv == NULL){
+		__MCF_CRT_FEnvInitialize();
+
+		pThreadEnv = (THREAD_ENV *)malloc(sizeof(THREAD_ENV));
+		if(!pThreadEnv){
+			return ERROR_NOT_ENOUGH_MEMORY;
+		}
+		pThreadEnv->uReentryCount	= 0;
+		pThreadEnv->pAtExitHead		= NULL;
+		pThreadEnv->mapObjects		= NULL;
+		pThreadEnv->pLastObject		= NULL;
+
+		TlsSetValue(g_dwTlsIndex, pThreadEnv);
+	}
+	++pThreadEnv->uReentryCount;
 
 	return ERROR_SUCCESS;
 }
 
 void __MCF_CRT_ThreadUninitialize(){
 	THREAD_ENV *const pThreadEnv = (THREAD_ENV *)TlsGetValue(g_dwTlsIndex);
-	if(GetLastError() == ERROR_SUCCESS){
+	if(GetLastError() != ERROR_SUCCESS){
+		return;
+	}
+
+	if(--pThreadEnv->uReentryCount == 0){
 		register AT_EXIT_NODE *pAtExitHead = pThreadEnv->pAtExitHead;
 		while(pAtExitHead){
 			AT_EXIT_NODE *const pNext = pAtExitHead->pNext;
@@ -116,8 +131,9 @@ void __MCF_CRT_ThreadUninitialize(){
 
 		TlsSetValue(g_dwTlsIndex, NULL);
 		free(pThreadEnv);
+
+		__MCF_CRT_RunEmutlsThreadDtors();
 	}
-	__MCF_CRT_RunEmutlsThreadDtors();
 }
 
 void *__MCF_CreateCRTThread(

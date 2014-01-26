@@ -11,41 +11,88 @@ MCF::CriticalSection cs;
 MCF::ReadWriteLock rwl;
 
 void reader(int i){
-	::Sleep(100);
+	::Sleep(10);
 	READ_LOCK_SCOPE(rwl){
+		::Sleep(10);
 		CRITICAL_SECTION_SCOPE(cs){
-			std::fprintf(stderr, "reader   %d - thread %lu - entered\n", i, ::GetCurrentThreadId());
+			std::fprintf(stderr, "reader    %2d - thread %5lu - entered\n", i, ::GetCurrentThreadId());
 		}
+		::Sleep(10);
 		READ_LOCK_SCOPE(rwl){
+			::Sleep(10);
 			READ_LOCK_SCOPE(rwl){
-				CRITICAL_SECTION_SCOPE(cs){
-					std::fprintf(stderr, "reader   %d - thread %lu - reading\n", i, ::GetCurrentThreadId());
+				::Sleep(10);
+				READ_LOCK_SCOPE(rwl){
+					::Sleep(100);
+					CRITICAL_SECTION_SCOPE(cs){
+						std::fprintf(stderr, " reader   %2d - thread %5lu - reading\n", i, ::GetCurrentThreadId());
+					}
+					::Sleep(100);
+					CRITICAL_SECTION_SCOPE(cs){
+						std::fprintf(stderr, "  reader  %2d - thread %5lu - done\n", i, ::GetCurrentThreadId());
+					}
 				}
-				::Sleep(100);
 			}
 		}
+		::Sleep(10);
 		CRITICAL_SECTION_SCOPE(cs){
-			std::fprintf(stderr, "reader   %d - thread %lu - left\n", i, ::GetCurrentThreadId());
+			std::fprintf(stderr, "   reader %2d - thread %5lu - left\n", i, ::GetCurrentThreadId());
 		}
 	}
 }
 
 void writer(int i){
-	::Sleep(99);
-	WRITE_LOCK_SCOPE(rwl){
+	::Sleep(9);
+
+	auto l1 = rwl.GetWriteLock();
 		CRITICAL_SECTION_SCOPE(cs){
-			std::fprintf(stderr, "  writer %d - thread %lu - entered\n", i, ::GetCurrentThreadId());
+			std::fprintf(stderr, "writer    %2d - thread %5lu - entered\n", i, ::GetCurrentThreadId());
 		}
+		::Sleep(10);
+		auto l2 = rwl.GetReadLock();
+			::Sleep(10);
+			auto l3 = rwl.GetWriteLock();
+				::Sleep(10);
+				auto l4 = rwl.GetReadLock();
+					::Sleep(100);
+					CRITICAL_SECTION_SCOPE(cs){
+						std::fprintf(stderr, " writer   %2d - thread %5lu - writing\n", i, ::GetCurrentThreadId());
+					}
+					::Sleep(100);
+					CRITICAL_SECTION_SCOPE(cs){
+						std::fprintf(stderr, "  writer  %2d - thread %5lu - done\n", i, ::GetCurrentThreadId());
+					}
+				l1.reset();
+			l2.reset();
+		l3.reset();
+		::Sleep(10);
+		CRITICAL_SECTION_SCOPE(cs){
+			std::fprintf(stderr, "   writer %2d - thread %5lu - left\n", i, ::GetCurrentThreadId());
+		}
+	l4.reset();
+}
+
+void foo(){
+	READ_LOCK_SCOPE(rwl){
+		CRITICAL_SECTION_SCOPE(cs){
+			std::fprintf(stderr, "foo          - thread %5lu - entered ********************\n",	 ::GetCurrentThreadId());
+		}
+		::Sleep(100);
 		WRITE_LOCK_SCOPE(rwl){
-			WRITE_LOCK_SCOPE(rwl){
-				CRITICAL_SECTION_SCOPE(cs){
-					std::fprintf(stderr, "  writer %d - thread %lu - writing\n", i, ::GetCurrentThreadId());
+			READ_LOCK_SCOPE(rwl){
+				READ_LOCK_SCOPE(rwl){
+					CRITICAL_SECTION_SCOPE(cs){
+						std::fprintf(stderr, " foo         - thread %5lu - reading ********************\n", ::GetCurrentThreadId());
+					}
+					::Sleep(1000);
+					CRITICAL_SECTION_SCOPE(cs){
+						std::fprintf(stderr, "  foo        - thread %5lu - done ********************\n", ::GetCurrentThreadId());
+					}
 				}
-				::Sleep(100);
 			}
 		}
 		CRITICAL_SECTION_SCOPE(cs){
-			std::fprintf(stderr, "  writer %d - thread %lu - left\n", i, ::GetCurrentThreadId());
+			std::fprintf(stderr, "   foo       - thread %5lu - left ********************\n", ::GetCurrentThreadId());
 		}
 	}
 }
@@ -61,5 +108,7 @@ unsigned int MCFMain(){
 		threads[i].Start(std::bind(writer, i));
 		++i;
 	}
+	MCF::Thread spec;
+	spec.Start(foo);
 	return 0;
 }

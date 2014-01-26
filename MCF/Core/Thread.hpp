@@ -19,7 +19,7 @@ private:
 private:
 	std::shared_ptr<xDelegate> xm_pDelegate;
 public:
-	explicit Thread();
+	Thread();
 	~Thread();
 public:
 	void Start(std::function<void()> fnProc, bool bSuspended = false);

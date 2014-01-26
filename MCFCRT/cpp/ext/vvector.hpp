@@ -24,18 +24,13 @@ private:
 		ELEMENT_T *pBegin,
 		ELEMENT_T *pEnd,
 		typename std::enable_if<std::is_nothrow_move_constructible<ELEMENT_T>::value, TEST_T>::type = 0
-	) noexcept(std::is_nothrow_move_constructible<ELEMENT_T>::value) {
-		auto pWrite = pOut;
-		auto pRead = pBegin;
-		while(pRead != pEnd){
-			new(pWrite) ELEMENT_T(std::move(*pRead));
-			++pWrite;
-			++pRead;
+	) noexcept {
+		const auto pNewEnd = std::move(pBegin, pEnd, pOut);
+		auto pToDestroy = pEnd;
+		while(pToDestroy != pBegin){
+			(--pToDestroy)->~ELEMENT_T();
 		}
-		while(pRead != pBegin){
-			(--pRead)->~ELEMENT_T();
-		}
-		return pWrite;
+		return pNewEnd;
 	}
 	template<typename TEST_T = int>
 	static ELEMENT_T *xMoveArray(

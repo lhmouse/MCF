@@ -12,7 +12,11 @@ private:
 	CRITICAL_SECTION xm_cs;
 public:
 	xDelegate(unsigned long ulSpinCount) noexcept {
+#if defined(NDEBUG) && (_WIN32_WINNT >= 0x0600)
+		::InitializeCriticalSectionEx(&xm_cs, ulSpinCount, CRITICAL_SECTION_NO_DEBUG_INFO);
+#else
 		::InitializeCriticalSectionAndSpinCount(&xm_cs, ulSpinCount);
+#endif
 	}
 	~xDelegate(){
 		::DeleteCriticalSection(&xm_cs);

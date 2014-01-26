@@ -26,7 +26,7 @@ public:
 private:
 	const std::unique_ptr<xDelegate> xm_pDelegate;
 public:
-	CriticalSection(unsigned long ulSpinCount = 0x400);
+	explicit CriticalSection(unsigned long ulSpinCount = 0x400);
 	~CriticalSection();
 public:
 	LockHolder Try() noexcept;
@@ -36,9 +36,8 @@ public:
 }
 
 #define CRITICAL_SECTION_SCOPE(cs)	\
-	for(auto __MCF_LOCK__ = (cs).Lock();	\
-		__MCF_LOCK__;	\
-		__MCF_LOCK__.reset()	\
-	)
+	for(auto __MCF_LOCK__ = std::make_pair(static_cast<::MCF::CriticalSection &>(cs).Lock(), true);	\
+		__MCF_LOCK__.second;	\
+		__MCF_LOCK__.second = false)
 
 #endif

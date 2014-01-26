@@ -37,7 +37,7 @@ public:
 
 		if(!std::is_pod<ELEMENT_T>::value){
 			for(auto p = xm_pBegin; p != xm_pEnd; ++p){
-				new(p++) ELEMENT_T();
+				new(p) ELEMENT_T();
 			}
 		}
 	}
@@ -46,7 +46,7 @@ public:
 		xInitStorage(uCount);
 
 		for(auto p = xm_pBegin; p != xm_pEnd; ++p){
-			new(p++) ELEMENT_T(Params...);
+			new(p) ELEMENT_T(Params...);
 		}
 	}
 	explicit VLA(std::initializer_list<ELEMENT_T> InitList){

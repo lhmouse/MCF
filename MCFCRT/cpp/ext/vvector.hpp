@@ -18,14 +18,31 @@ namespace MCF {
 template<typename ELEMENT_T, std::size_t ALT_STOR_THLD = 0x400ul / sizeof(ELEMENT_T)>
 class VVector {
 private:
-	static const bool xNOEXCEPT_MOVEABLE = std::is_nothrow_move_constructible<ELEMENT_T>::value || !std::is_copy_constructible<ELEMENT_T>::value;
-
 	template<typename TEST_T = int>
 	static ELEMENT_T *xMoveArray(
 		ELEMENT_T *pOut,
 		ELEMENT_T *pBegin,
 		ELEMENT_T *pEnd,
-		typename std::enable_if<!xNOEXCEPT_MOVEABLE, TEST_T>::type = 0
+		typename std::enable_if<std::is_nothrow_move_constructible<ELEMENT_T>::value, TEST_T>::type = 0
+	) noexcept(std::is_nothrow_move_constructible<ELEMENT_T>::value) {
+		auto pWrite = pOut;
+		auto pRead = pBegin;
+		while(pRead != pEnd){
+			new(pWrite) ELEMENT_T(std::move(*pRead));
+			++pWrite;
+			++pRead;
+		}
+		while(pRead != pBegin){
+			(--pRead)->~ELEMENT_T();
+		}
+		return pWrite;
+	}
+	template<typename TEST_T = int>
+	static ELEMENT_T *xMoveArray(
+		ELEMENT_T *pOut,
+		ELEMENT_T *pBegin,
+		ELEMENT_T *pEnd,
+		typename std::enable_if<!std::is_nothrow_move_constructible<ELEMENT_T>::value, TEST_T>::type = 0
 	){
 		auto pWrite = pOut;
 		auto pRead = pBegin;
@@ -46,23 +63,6 @@ private:
 		}
 		return pWrite;
 	}
-	template<typename TEST_T = int>
-	static ELEMENT_T *xMoveArray(
-		ELEMENT_T *pOut,
-		ELEMENT_T *pBegin,
-		ELEMENT_T *pEnd,
-		typename std::enable_if<xNOEXCEPT_MOVEABLE, TEST_T>::type = 0
-	) noexcept(std::is_nothrow_move_constructible<ELEMENT_T>::value) {
-		auto pWrite = pOut;
-		auto pRead = pBegin;
-		while(pRead != pEnd){
-			new(pWrite++) ELEMENT_T(std::move(*(pRead++)));
-		}
-		while(pRead != pBegin){
-			(--pRead)->~ELEMENT_T();
-		}
-		return pWrite;
-	}
 private:
 	unsigned char xm_aSmall[sizeof(ELEMENT_T) * ALT_STOR_THLD];
 	std::unique_ptr<unsigned char[]> xm_pLarge;
@@ -71,10 +71,11 @@ private:
 	ELEMENT_T *xm_pEnd;
 	const ELEMENT_T *xm_pEndOfStor;
 public:
-	VVector() noexcept {
-		xm_pBegin		= (ELEMENT_T *)std::begin(xm_aSmall);
-		xm_pEnd			= (ELEMENT_T *)std::begin(xm_aSmall);
-		xm_pEndOfStor	= (ELEMENT_T *)std::end(xm_aSmall);
+	constexpr VVector() noexcept
+		: xm_pBegin((ELEMENT_T *)std::begin(xm_aSmall))
+		, xm_pEnd((ELEMENT_T *)std::begin(xm_aSmall))
+		, xm_pEndOfStor((ELEMENT_T *)std::end(xm_aSmall))
+	{
 	}
 	template<typename... PARAM_T>
 	VVector(std::size_t uCount, const PARAM_T &...Params) : VVector() {
@@ -201,17 +202,7 @@ private:
 	template<typename TEST_T = int>
 	void xSwapSmall(
 		VVector &rhs,
-		typename std::enable_if<!xNOEXCEPT_MOVEABLE, TEST_T>::type = 0
-	){
-		ASSERT(xIsSmall() && rhs.xIsSmall());
-
-		rhs.Reserve(ALT_STOR_THLD + 1);
-		xSwapWithLarge(rhs);
-	}
-	template<typename TEST_T = int>
-	void xSwapSmall(
-		VVector &rhs,
-		typename std::enable_if<xNOEXCEPT_MOVEABLE, TEST_T>::type = 0
+		typename std::enable_if<std::is_nothrow_move_constructible<ELEMENT_T>::value>::type = 0
 	) noexcept(std::is_nothrow_move_constructible<ELEMENT_T>::value) {
 		ASSERT(xIsSmall() && rhs.xIsSmall());
 
@@ -221,6 +212,16 @@ private:
 		const auto pTempEnd = xMoveArray(pTempBegin, xm_pBegin, xm_pEnd);
 		xm_pEnd = xMoveArray(xm_pBegin, rhs.xm_pBegin, rhs.xm_pEnd);
 		rhs.xm_pEnd = xMoveArray(rhs.xm_pBegin, pTempBegin, pTempEnd);
+	}
+	template<typename TEST_T = int>
+	void xSwapSmall(
+		VVector &rhs,
+		typename std::enable_if<!std::is_nothrow_move_constructible<ELEMENT_T>::value>::type = 0
+	){
+		ASSERT(xIsSmall() && rhs.xIsSmall());
+
+		rhs.Reserve(ALT_STOR_THLD + 1);
+		xSwapWithLarge(rhs);
 	}
 public:
 	const ELEMENT_T *GetBegin() const noexcept {

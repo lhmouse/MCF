@@ -21,11 +21,11 @@ private:
 	// http://en.wikipedia.org/wiki/Readers–writers_problem#The_third_readers-writers_problem
 	CriticalSection xm_csNoWaiting; // 用于内部同步。
 	Semaphore xm_semNoAccessing; // 当且仅当没有读者且没有写者“拥有”锁时为激发态。
-	volatile std::size_t xm_uReaders; // “试图”获取锁的读者数。
+	volatile std::size_t xm_uReaders; // “试图拥有”锁的读者数。
 
 	// 重入支持。
 	Semaphore xm_semMostOneReader; // 至多有一个读者“拥有”锁时为激发态。
-	volatile std::size_t xm_uCurrentReaders; // “已经”拥有锁的读者数。
+	volatile std::size_t xm_uCurrentReaders; // “已经拥有”锁的读者数。
 
 	xReentryInfo xm_aReaderInfos[MAXIMUM_CONCURRENT_READS]; // 读者重入计数。
 	Semaphore xm_semReaderInfoCount;

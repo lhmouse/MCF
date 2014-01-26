@@ -202,7 +202,7 @@ private:
 	template<typename TEST_T = int>
 	void xSwapSmall(
 		VVector &rhs,
-		typename std::enable_if<std::is_nothrow_move_constructible<ELEMENT_T>::value>::type = 0
+		typename std::enable_if<std::is_nothrow_move_constructible<ELEMENT_T>::value, TEST_T>::type = 0
 	) noexcept(std::is_nothrow_move_constructible<ELEMENT_T>::value) {
 		ASSERT(xIsSmall() && rhs.xIsSmall());
 
@@ -216,7 +216,7 @@ private:
 	template<typename TEST_T = int>
 	void xSwapSmall(
 		VVector &rhs,
-		typename std::enable_if<!std::is_nothrow_move_constructible<ELEMENT_T>::value>::type = 0
+		typename std::enable_if<!std::is_nothrow_move_constructible<ELEMENT_T>::value, TEST_T>::type = 0
 	){
 		ASSERT(xIsSmall() && rhs.xIsSmall());
 

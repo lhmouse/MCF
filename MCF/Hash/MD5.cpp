@@ -357,24 +357,23 @@ void MD5::Update(const void *pData, std::size_t uSize) noexcept {
 	if(!xm_bInited){
 		xm_bInited = true;
 
-		xm_auResult[0] = 0x67452301;
-		xm_auResult[1] = 0xEFCDAB89;
-		xm_auResult[2] = 0x98BADCFE;
-		xm_auResult[3] = 0x10325476;
+		xm_auResult[0] = 0x67452301u;
+		xm_auResult[1] = 0xEFCDAB89u;
+		xm_auResult[2] = 0x98BADCFEu;
+		xm_auResult[3] = 0x10325476u;
 
 		xm_uBytesInChunk = 0;
 		xm_uBytesTotal = 0;
 	}
 
-	register auto pbyRead = (const unsigned char *)pData;
+	auto pbyRead = (const unsigned char *)pData;
 	std::size_t uBytesRemaining = uSize;
 	const std::size_t uBytesFree = sizeof(xm_abyChunk) - xm_uBytesInChunk;
 	if(uBytesRemaining >= uBytesFree){
 		if(xm_uBytesInChunk != 0){
 			std::memcpy(xm_abyChunk + xm_uBytesInChunk, pbyRead, uBytesFree);
-			xm_uBytesInChunk = 0;
-
 			DoMD5Chunk(xm_auResult, xm_abyChunk);
+			xm_uBytesInChunk = 0;
 			pbyRead += uBytesFree;
 			uBytesRemaining -= uBytesFree;
 		}
@@ -386,7 +385,7 @@ void MD5::Update(const void *pData, std::size_t uSize) noexcept {
 	}
 	if(uBytesRemaining != 0){
 		std::memcpy(xm_abyChunk + xm_uBytesInChunk, pbyRead, uBytesRemaining);
-		xm_uBytesInChunk = uBytesRemaining;
+		xm_uBytesInChunk += uBytesRemaining;
 	}
 	xm_uBytesTotal += uSize;
 }

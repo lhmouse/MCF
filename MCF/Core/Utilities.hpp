@@ -12,7 +12,7 @@ namespace MCF {
 
 extern UTF16String GetWin32ErrorDesc(unsigned long ulErrorCode);
 
-extern unsigned int GetUNIXTime() noexcept;
+extern unsigned int GetUnixTime() noexcept;
 extern std::uint32_t GenRandSeed() noexcept;
 
 

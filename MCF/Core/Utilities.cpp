@@ -36,7 +36,7 @@ UTF16String GetWin32ErrorDesc(unsigned long ulErrorCode){
 	return std::move(u16sRet);
 }
 
-unsigned int GetUNIXTime() noexcept {
+unsigned int GetUnixTime() noexcept {
 	union {
 		FILETIME ft;
 		ULARGE_INTEGER uli;

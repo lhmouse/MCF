@@ -1,0 +1,36 @@
+// 这个文件是 MCF 的一部分。
+// 有关具体授权说明，请参阅 MCFLicense.txt。
+// Copyleft 2012 - 2013. LH_Mouse. All wrongs reserved.
+
+#ifndef __MCF_SHA256_HPP__
+#define __MCF_SHA256_HPP__
+
+#include <cstddef>
+
+namespace MCF {
+
+class SHA256 {
+public:
+private:
+	bool xm_bInited;
+	std::uint32_t xm_auResult[8];
+
+	union {
+		unsigned char xm_abyChunk[64];
+		struct {
+			unsigned char xm_abyFirstPart[56];
+			std::uint64_t xm_uBitsTotal;
+		};
+	};
+	std::size_t xm_uBytesInChunk;
+	std::uint64_t xm_uBytesTotal;
+public:
+	SHA256() noexcept;
+public:
+	void Update(const void *pData, std::size_t uSize) noexcept;
+	void Finalize(unsigned char (&abyOutput)[32]) noexcept;
+};
+
+}
+
+#endif

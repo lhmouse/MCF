@@ -448,14 +448,14 @@ __declspec(naked) void __fastcall SHA256Hasher::xHashChunk(DWORD (* /* pardwOutp
 void SHA256Hasher::xInitialize(void *pOutput){
 	DWORD (&adwDigest)[8] = *(DWORD (*)[8])pOutput;
 
-	adwDigest[0] = 0x6A09E667;
-	adwDigest[1] = 0xBB67AE85;
-	adwDigest[2] = 0x3C6EF372;
-	adwDigest[3] = 0xA54FF53A,
-	adwDigest[4] = 0x510E527F;
-	adwDigest[5] = 0x9B05688C;
-	adwDigest[6] = 0x1F83D9AB;
-	adwDigest[7] = 0x5BE0CD19;
+	adwDigest[0] = 0x6A09E667u;
+	adwDigest[1] = 0xBB67AE85u;
+	adwDigest[2] = 0x3C6EF372u;
+	adwDigest[3] = 0xA54FF53Au;
+	adwDigest[4] = 0x510E527Fu;
+	adwDigest[5] = 0x9B05688Cu;
+	adwDigest[6] = 0x1F83D9ABu;
+	adwDigest[7] = 0x5BE0CD19u;
 
 	xm_uBytesInLastChunk = 0;
 	xm_uBytesTotal = 0;

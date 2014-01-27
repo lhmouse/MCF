@@ -19,7 +19,7 @@ float remainderf(float x, float y){
 		__FLT_RET_ST("%1")
 		: __FLT_RET_CONS(ret)
 		: "m"(x), "m"(y)
-		: "eax"
+		: "ax"
 	);
 	return ret;
 }
@@ -38,7 +38,7 @@ double remainder(double x, double y){
 		__DBL_RET_ST("%1")
 		: __DBL_RET_CONS(ret)
 		: "m"(x), "m"(y)
-		: "eax"
+		: "ax"
 	);
 	return ret;
 }
@@ -57,7 +57,7 @@ __LDBL_DECL(remainderl, long double x, long double y){
 		__LDBL_RET_ST()
 		: __LDBL_RET_CONS(ret)
 		: "m"(x), "m"(y), __LDBL_RET_CONS_IN()
-		: "eax"
+		: "ax"
 	);
 	__LDBL_RETURN(ret);
 }

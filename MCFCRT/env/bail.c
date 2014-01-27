@@ -6,9 +6,10 @@
 
 #include "bail.h"
 #include "../c/cinclude.h"
+#include <windows.h>
 #include <stdarg.h>
 #include <wchar.h>
-#include <windows.h>
+#include <stdlib.h>
 
 static DWORD APIENTRY ThreadProc(LPVOID pParam){
 	const LPCWSTR pwszDescription = (LPCWSTR)pParam;
@@ -55,14 +56,16 @@ static void DoBail(const wchar_t *pwszDescription){
 	__asm__ __volatile__("int 3 \n");
 }
 
-void __MCF_Bail(const wchar_t *pwszDescription){
+__MCF_NORETURN_IF_NDEBUG void __MCF_Bail(const wchar_t *pwszDescription){
 	DoBail(pwszDescription);
+	abort();
 }
-void __MCF_BailF(const wchar_t *pwszFormat, ...){
+__MCF_NORETURN_IF_NDEBUG void __MCF_BailF(const wchar_t *pwszFormat, ...){
 	wchar_t awchBuffer[1025];
 	va_list ap;
 	va_start(ap, pwszFormat);
 	__mingw_vsnwprintf(awchBuffer, sizeof(awchBuffer) / sizeof(wchar_t), pwszFormat, ap);
 	va_end(ap);
 	DoBail(awchBuffer);
+	abort();
 }

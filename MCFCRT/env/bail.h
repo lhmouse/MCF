@@ -9,8 +9,14 @@
 
 __MCF_EXTERN_C_BEGIN
 
-extern void __MCF_Bail(const wchar_t *pwszDescription);
-extern void __MCF_BailF(const wchar_t *pwszFormat, ...);
+#ifdef NDEBUG
+#	define	__MCF_NORETURN_IF_NDEBUG	__attribute__((noreturn))
+#else
+#	define	__MCF_NORETURN_IF_NDEBUG
+#endif
+
+extern __MCF_NORETURN_IF_NDEBUG void __MCF_Bail(const wchar_t *pwszDescription);
+extern __MCF_NORETURN_IF_NDEBUG void __MCF_BailF(const wchar_t *pwszFormat, ...);
 
 __MCF_EXTERN_C_END
 

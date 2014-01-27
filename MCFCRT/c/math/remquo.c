@@ -34,7 +34,7 @@ float remquof(float x, float y, int *quo){
 		"mov dword ptr[%3], ecx \n"
 		: __FLT_RET_CONS(ret)
 		: "m"(x), "m"(y), "r"(quo)
-		: "eax", "ecx"
+		: "ax", "cx"
 	);
 	return ret;
 }
@@ -68,7 +68,7 @@ double remquo(double x, double y, int *quo){
 		"mov dword ptr[%3], ecx \n"
 		: __DBL_RET_CONS(ret)
 		: "m"(x), "m"(y), "r"(quo)
-		: "eax", "ecx"
+		: "ax", "cx"
 	);
 	return ret;
 }
@@ -103,7 +103,7 @@ __LDBL_DECL(remquol, long double x, long double y, int *quo){
 		"mov dword ptr[%3], ecx \n"
 		: __LDBL_RET_CONS(ret)
 		: "m"(x), "m"(y), "r"(quo), __LDBL_RET_CONS_IN()
-		: "eax", "ecx"
+		: "ax", "cx"
 	);
 	__LDBL_RETURN(ret);
 }

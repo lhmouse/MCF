@@ -40,7 +40,7 @@ __LDBL_DECL(log10l, long double x){
 		__LDBL_RET_ST()
 		: __LDBL_RET_CONS(ret)
 		: "m"(x), __LDBL_RET_CONS_IN()
-		: "eax"
+		: "ax"
 	);
 	__LDBL_RETURN(ret);
 }

@@ -29,7 +29,7 @@ float fdimf(float x, float y){
 #endif
 		: __FLT_RET_CONS(ret)
 		: "m"(x), "m"(y)
-		: "eax"
+		: "ax"
 	);
 	return ret;
 }
@@ -59,7 +59,7 @@ double fdim(double x, double y){
 #endif
 		: __DBL_RET_CONS(ret)
 		: "m"(x), "m"(y)
-		: "eax"
+		: "ax"
 	);
 	return ret;
 }
@@ -89,7 +89,7 @@ __LDBL_DECL(fdiml, long double x, long double y){
 		__LDBL_RET_MEM("%1", "a")
 		: __LDBL_RET_CONS(ret)
 		: "m"(x), "m"(y), __LDBL_RET_CONS_IN()
-		: "eax"
+		: "ax"
 	);
 	__LDBL_RETURN(ret);
 }

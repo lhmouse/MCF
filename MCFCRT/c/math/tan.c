@@ -27,7 +27,7 @@ float tanf(float x){
 		__FLT_RET_ST("%1")
 		: __FLT_RET_CONS(ret)
 		: "m"(x)
-		: "eax"
+		: "ax"
 	);
 	return ret;
 }
@@ -54,7 +54,7 @@ double tan(double x){
 		__DBL_RET_ST("%1")
 		: __DBL_RET_CONS(ret)
 		: "m"(x)
-		: "eax"
+		: "ax"
 	);
 	return ret;
 }
@@ -81,7 +81,7 @@ __LDBL_DECL(tanl, long double x){
 		__LDBL_RET_ST()
 		: __LDBL_RET_CONS(ret)
 		: "m"(x), __LDBL_RET_CONS_IN()
-		: "eax"
+		: "ax"
 	);
 	__LDBL_RETURN(ret);
 }

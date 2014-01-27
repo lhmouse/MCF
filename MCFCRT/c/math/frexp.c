@@ -28,7 +28,7 @@ float frexpf(float x, int *exp){
 		__FLT_RET_ST("%1")
 		: __FLT_RET_CONS(ret)
 		: "m"(x), "r"(exp), "m"(HALF)
-		: "eax"
+		: "ax"
 	);
 	return ret;
 }
@@ -54,7 +54,7 @@ double frexp(double x, int *exp){
 		__DBL_RET_ST("%1")
 		: __DBL_RET_CONS(ret)
 		: "m"(x), "r"(exp), "m"(HALF)
-		: "eax"
+		: "ax"
 	);
 	return ret;
 }
@@ -80,7 +80,7 @@ __LDBL_DECL(frexpl, long double x, int *exp){
 		__LDBL_RET_ST()
 		: __LDBL_RET_CONS(ret)
 		: "m"(x), "r"(exp), "m"(HALF), __LDBL_RET_CONS_IN()
-		: "eax"
+		: "ax"
 	);
 	__LDBL_RETURN(ret);
 }

@@ -39,7 +39,7 @@ float expm1f(float x){
 		__FLT_RET_ST("%1")
 		: __FLT_RET_CONS(ret)
 		: "m"(x), "m"(NEG_THRESHOLD), "m"(POS_THRESHOLD)
-		: "eax"
+		: "ax"
 	);
 	return ret;
 }
@@ -75,7 +75,7 @@ double expm1(double x){
 		__DBL_RET_ST("%1")
 		: __DBL_RET_CONS(ret)
 		: "m"(x), "m"(NEG_THRESHOLD), "m"(POS_THRESHOLD)
-		: "eax"
+		: "ax"
 	);
 	return ret;
 }
@@ -112,7 +112,7 @@ __LDBL_DECL(expm1l, long double x){
 		__LDBL_RET_ST()
 		: __LDBL_RET_CONS(ret)
 		: "m"(x), "m"(NEG_THRESHOLD), "m"(POS_THRESHOLD), __LDBL_RET_CONS_IN()
-		: "eax"
+		: "ax"
 	);
 	__LDBL_RETURN(ret);
 }

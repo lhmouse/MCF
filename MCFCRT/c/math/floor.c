@@ -23,7 +23,7 @@ float floorf(float x){
 		"fldcw word ptr[%2] \n"
 		: __FLT_RET_CONS(ret)
 		: "m"(x), "m"(fcw)
-		: "eax", "ecx"
+		: "ax", "cx"
 	);
 	return ret;
 }
@@ -46,7 +46,7 @@ double floor(double x){
 		"fldcw word ptr[%2] \n"
 		: __DBL_RET_CONS(ret)
 		: "m"(x), "m"(fcw)
-		: "eax", "ecx"
+		: "ax", "cx"
 	);
 	return ret;
 }
@@ -69,7 +69,7 @@ __LDBL_DECL(floorl, long double x){
 		"fldcw word ptr[%2] \n"
 		: __LDBL_RET_CONS(ret)
 		: "m"(x), "m"(fcw), __LDBL_RET_CONS_IN()
-		: "eax", "ecx"
+		: "ax", "cx"
 	);
 	__LDBL_RETURN(ret);
 }

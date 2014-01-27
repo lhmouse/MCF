@@ -1,5 +1,5 @@
 #include <MCFCRT/MCFCRT.h>
-#include <MCF/Core/CRC32.hpp>
+#include <MCF/Hash/SHA1.hpp>
 #include <MCF/Core/File.hpp>
 #include <memory>
 #include <cstdio>
@@ -8,33 +8,27 @@
 
 unsigned int MCFMain(){
 	MCF::File f;
-	f.Open(L"F:\\Downloads\\VMware-workstation-full-v10.0.0-1295980.zip", true, false, false);
+	f.Open(L"F:\\Downloads\\6.0.6001.18000.367-KRMSDK_EN.iso", true, false, false);
 	ASSERT(f);
+	const long long fsize = f.GetSize();
+	std::unique_ptr<unsigned char[]> buffer(new unsigned char[fsize]);
+	const std::size_t cbRead = f.Read(buffer.get(), 0, fsize);
+	ASSERT(cbRead == fsize);
 
-	long long offset = 0;
+	LARGE_INTEGER cnt1, cnt2;
 
-	MCF::CRC32 crc;
-	char buffer1[0x1000];
-	char buffer2[0x1000];
-	std::size_t cbRead = 0;
-	for(;;){
-		cbRead = f.Read(buffer1, offset, sizeof(buffer1), [&crc, cbRead, &buffer2]{
-			crc.Update(buffer2, cbRead, false);
-		});
-		if(cbRead == 0){
-			break;
-		}
-		offset += cbRead;
+	unsigned char result[20];
+	MCF::SHA1 SHA1;
+	::QueryPerformanceCounter(&cnt1);
+	SHA1.Update(buffer.get(), fsize);
+	SHA1.Finalize(result);
+	::QueryPerformanceCounter(&cnt2);
 
-		cbRead = f.Read(buffer2, offset, sizeof(buffer2), [&crc, cbRead, &buffer1]{
-			crc.Update(buffer1, cbRead, false);
-		});
-		if(cbRead == 0){
-			break;
-		}
-		offset += cbRead;
+	std::printf("SHA1 = ");
+	for(const auto &x : result){
+		std::printf("%02X", (unsigned int)x);
 	}
-	std::printf("crc = %08lX\n", (unsigned long)crc.GetResult());
+	std::printf("\ntime = %lld\n", cnt2.QuadPart - cnt1.QuadPart);
 
 	return 0;
 }

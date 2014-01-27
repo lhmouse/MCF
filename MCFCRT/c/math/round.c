@@ -39,7 +39,7 @@ float roundf(float x){
 		"fldcw word ptr[%3] \n"
 		: __FLT_RET_CONS(ret), "=r"(unused)
 		: "m"(x), "m"(fcw), "1"(&NEG_HALF), "r"(&POS_HALF)
-		: "eax", "ecx", "edx"
+		: "ax", "cx", "dx"
 	);
 	return ret;
 }
@@ -75,7 +75,7 @@ double round(double x){
 		"fldcw word ptr[%3] \n"
 		: __DBL_RET_CONS(ret), "=r"(unused)
 		: "m"(x), "m"(fcw), "1"(&NEG_HALF), "r"(&POS_HALF)
-		: "eax", "ecx", "edx"
+		: "ax", "cx", "dx"
 	);
 	return ret;
 }
@@ -111,7 +111,7 @@ __LDBL_DECL(roundl, long double x){
 		"fldcw word ptr[%3] \n"
 		: __LDBL_RET_CONS(ret), "=r"(unused)
 		: "m"(x), "m"(fcw), "1"(&NEG_HALF), "r"(&POS_HALF), __LDBL_RET_CONS_IN()
-		: "eax", "ecx", "edx"
+		: "ax", "cx", "dx"
 	);
 	__LDBL_RETURN(ret);
 }

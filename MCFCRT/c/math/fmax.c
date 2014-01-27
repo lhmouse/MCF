@@ -31,7 +31,7 @@ float fmaxf(float x, float y){
 #endif
 		: "=r"(unused), "=r"(unused), __FLT_RET_CONS(ret)
 		: "0"(&x), "1"(&y)
-		: "eax"
+		: "ax"
 	);
 	return ret;
 }
@@ -62,7 +62,7 @@ double fmax(double x, double y){
 #endif
 		: "=r"(unused), "=r"(unused), __DBL_RET_CONS(ret)
 		: "0"(&x), "1"(&y)
-		: "eax"
+		: "ax"
 	);
 	return ret;
 }
@@ -91,7 +91,7 @@ __LDBL_DECL(fmaxl, long double x, long double y){
 		__LDBL_RET_MEM("%4", "a")
 		: "=r"(unused), "=r"(unused), __LDBL_RET_CONS(ret)
 		: "0"(&x), "1"(&y), __LDBL_RET_CONS_IN()
-		: "eax"
+		: "ax"
 	);
 	__LDBL_RETURN(ret);
 }

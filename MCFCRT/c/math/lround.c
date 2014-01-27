@@ -38,7 +38,7 @@ long lroundf(float x){
 		"fldcw word ptr[%3] \n"
 		: "=m"(ret), "=r"(unused)
 		: "m"(x), "m"(fcw), "1"(&NEG_HALF), "r"(&POS_HALF)
-		: "eax", "ecx", "edx"
+		: "ax", "cx", "dx"
 	);
 	return ret;
 }
@@ -74,7 +74,7 @@ long lround(double x){
 		"fldcw word ptr[%3] \n"
 		: "=m"(ret), "=r"(unused)
 		: "m"(x), "m"(fcw), "1"(&NEG_HALF), "r"(&POS_HALF)
-		: "eax", "ecx", "edx"
+		: "ax", "cx", "dx"
 	);
 	return ret;
 }
@@ -110,7 +110,7 @@ long lroundl(long double x){
 		"fldcw word ptr[%3] \n"
 		: "=m"(ret), "=r"(unused)
 		: "m"(x), "m"(fcw), "1"(&NEG_HALF), "r"(&POS_HALF)
-		: "eax", "ecx", "edx"
+		: "ax", "cx", "dx"
 	);
 	return ret;
 }

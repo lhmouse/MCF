@@ -10,7 +10,6 @@
 namespace MCF {
 
 class SHA256 {
-public:
 private:
 	bool xm_bInited;
 	std::uint32_t xm_auResult[8];

@@ -212,20 +212,15 @@ namespace {
 #define K_63	"0xEB86D391"
 #define K(i)	K_##i
 
-		register std::uint32_t a __asm__("ax") = auResult[0];
-		register std::uint32_t b __asm__("bx") = auResult[1];
-		register std::uint32_t c __asm__("cx") = auResult[2];
-		register std::uint32_t d __asm__("dx") = auResult[3];
+		register std::uint32_t a = auResult[0];
+		register std::uint32_t b = auResult[1];
+		register std::uint32_t c = auResult[2];
+		register std::uint32_t d = auResult[3];
 
-#ifdef _WIN64
-#	define SI	"rsi"
-#else
-#	define SI	"esi"
-#endif
 		__asm__ __volatile__(
 
-#define STEP_0(i, ra, rb, rc, rd)	\
-			"add " ra ", dword ptr[" SI " + (" #i ") * 4] \n"	\
+#define STEP_A(i, ra, rb, rc, rd)	\
+			"add " ra ", dword ptr[%4 + (" #i ") * 4] \n"	\
 			"mov edi, " rc " \n"	\
 			"xor edi, " rd " \n"	\
 			"and edi, " rb " \n"	\
@@ -235,8 +230,8 @@ namespace {
 			"rol " ra ", " R(i) " \n"	\
 			"add " ra ", " rb " \n"
 
-#define STEP_1(i, ra, rb, rc, rd)	\
-			"add " ra ", dword ptr[" SI " + ((5 * (" #i ") + 1) %% 16) * 4] \n"	\
+#define STEP_B(i, ra, rb, rc, rd)	\
+			"add " ra ", dword ptr[%4 + ((5 * (" #i ") + 1) %% 16) * 4] \n"	\
 			"mov edi, " rb " \n"	\
 			"xor edi, " rc " \n"	\
 			"and edi, " rd " \n"	\
@@ -246,8 +241,8 @@ namespace {
 			"rol " ra ", " R(i) " \n"	\
 			"add " ra ", " rb " \n"
 
-#define STEP_2(i, ra, rb, rc, rd)	\
-			"add " ra ", dword ptr[" SI " + ((3 * (" #i ") + 5) %% 16) * 4] \n"	\
+#define STEP_C(i, ra, rb, rc, rd)	\
+			"add " ra ", dword ptr[%4 + ((3 * (" #i ") + 5) %% 16) * 4] \n"	\
 			"mov edi, " rb " \n"	\
 			"xor edi, " rc " \n"	\
 			"xor edi, " rd " \n"	\
@@ -256,8 +251,8 @@ namespace {
 			"rol " ra ", " R(i) " \n"	\
 			"add " ra ", " rb " \n"
 
-#define STEP_3(i, ra, rb, rc, rd)	\
-			"add " ra ", dword ptr[" SI " + ((7 * (" #i ")) %% 16) * 4] \n"	\
+#define STEP_D(i, ra, rb, rc, rd)	\
+			"add " ra ", dword ptr[%4 + ((7 * (" #i ")) %% 16) * 4] \n"	\
 			"mov edi, " rd " \n"	\
 			"not edi \n"	\
 			"or edi, " rb " \n"	\
@@ -267,76 +262,76 @@ namespace {
 			"rol " ra ", " R(i) " \n"	\
 			"add " ra ", " rb " \n"
 
-			STEP_0(0 , "eax", "ebx", "ecx", "edx")
-			STEP_0(1 , "edx", "eax", "ebx", "ecx")
-			STEP_0(2 , "ecx", "edx", "eax", "ebx")
-			STEP_0(3 , "ebx", "ecx", "edx", "eax")
-			STEP_0(4 , "eax", "ebx", "ecx", "edx")
-			STEP_0(5 , "edx", "eax", "ebx", "ecx")
-			STEP_0(6 , "ecx", "edx", "eax", "ebx")
-			STEP_0(7 , "ebx", "ecx", "edx", "eax")
-			STEP_0(8 , "eax", "ebx", "ecx", "edx")
-			STEP_0(9 , "edx", "eax", "ebx", "ecx")
-			STEP_0(10, "ecx", "edx", "eax", "ebx")
-			STEP_0(11, "ebx", "ecx", "edx", "eax")
-			STEP_0(12, "eax", "ebx", "ecx", "edx")
-			STEP_0(13, "edx", "eax", "ebx", "ecx")
-			STEP_0(14, "ecx", "edx", "eax", "ebx")
-			STEP_0(15, "ebx", "ecx", "edx", "eax")
+			STEP_A(0 , "%0", "%1", "%2", "%3")
+			STEP_A(1 , "%3", "%0", "%1", "%2")
+			STEP_A(2 , "%2", "%3", "%0", "%1")
+			STEP_A(3 , "%1", "%2", "%3", "%0")
+			STEP_A(4 , "%0", "%1", "%2", "%3")
+			STEP_A(5 , "%3", "%0", "%1", "%2")
+			STEP_A(6 , "%2", "%3", "%0", "%1")
+			STEP_A(7 , "%1", "%2", "%3", "%0")
+			STEP_A(8 , "%0", "%1", "%2", "%3")
+			STEP_A(9 , "%3", "%0", "%1", "%2")
+			STEP_A(10, "%2", "%3", "%0", "%1")
+			STEP_A(11, "%1", "%2", "%3", "%0")
+			STEP_A(12, "%0", "%1", "%2", "%3")
+			STEP_A(13, "%3", "%0", "%1", "%2")
+			STEP_A(14, "%2", "%3", "%0", "%1")
+			STEP_A(15, "%1", "%2", "%3", "%0")
 
-			STEP_1(16, "eax", "ebx", "ecx", "edx")
-			STEP_1(17, "edx", "eax", "ebx", "ecx")
-			STEP_1(18, "ecx", "edx", "eax", "ebx")
-			STEP_1(19, "ebx", "ecx", "edx", "eax")
-			STEP_1(20, "eax", "ebx", "ecx", "edx")
-			STEP_1(21, "edx", "eax", "ebx", "ecx")
-			STEP_1(22, "ecx", "edx", "eax", "ebx")
-			STEP_1(23, "ebx", "ecx", "edx", "eax")
-			STEP_1(24, "eax", "ebx", "ecx", "edx")
-			STEP_1(25, "edx", "eax", "ebx", "ecx")
-			STEP_1(26, "ecx", "edx", "eax", "ebx")
-			STEP_1(27, "ebx", "ecx", "edx", "eax")
-			STEP_1(28, "eax", "ebx", "ecx", "edx")
-			STEP_1(29, "edx", "eax", "ebx", "ecx")
-			STEP_1(30, "ecx", "edx", "eax", "ebx")
-			STEP_1(31, "ebx", "ecx", "edx", "eax")
+			STEP_B(16, "%0", "%1", "%2", "%3")
+			STEP_B(17, "%3", "%0", "%1", "%2")
+			STEP_B(18, "%2", "%3", "%0", "%1")
+			STEP_B(19, "%1", "%2", "%3", "%0")
+			STEP_B(20, "%0", "%1", "%2", "%3")
+			STEP_B(21, "%3", "%0", "%1", "%2")
+			STEP_B(22, "%2", "%3", "%0", "%1")
+			STEP_B(23, "%1", "%2", "%3", "%0")
+			STEP_B(24, "%0", "%1", "%2", "%3")
+			STEP_B(25, "%3", "%0", "%1", "%2")
+			STEP_B(26, "%2", "%3", "%0", "%1")
+			STEP_B(27, "%1", "%2", "%3", "%0")
+			STEP_B(28, "%0", "%1", "%2", "%3")
+			STEP_B(29, "%3", "%0", "%1", "%2")
+			STEP_B(30, "%2", "%3", "%0", "%1")
+			STEP_B(31, "%1", "%2", "%3", "%0")
 
-			STEP_2(32, "eax", "ebx", "ecx", "edx")
-			STEP_2(33, "edx", "eax", "ebx", "ecx")
-			STEP_2(34, "ecx", "edx", "eax", "ebx")
-			STEP_2(35, "ebx", "ecx", "edx", "eax")
-			STEP_2(36, "eax", "ebx", "ecx", "edx")
-			STEP_2(37, "edx", "eax", "ebx", "ecx")
-			STEP_2(38, "ecx", "edx", "eax", "ebx")
-			STEP_2(39, "ebx", "ecx", "edx", "eax")
-			STEP_2(40, "eax", "ebx", "ecx", "edx")
-			STEP_2(41, "edx", "eax", "ebx", "ecx")
-			STEP_2(42, "ecx", "edx", "eax", "ebx")
-			STEP_2(43, "ebx", "ecx", "edx", "eax")
-			STEP_2(44, "eax", "ebx", "ecx", "edx")
-			STEP_2(45, "edx", "eax", "ebx", "ecx")
-			STEP_2(46, "ecx", "edx", "eax", "ebx")
-			STEP_2(47, "ebx", "ecx", "edx", "eax")
+			STEP_C(32, "%0", "%1", "%2", "%3")
+			STEP_C(33, "%3", "%0", "%1", "%2")
+			STEP_C(34, "%2", "%3", "%0", "%1")
+			STEP_C(35, "%1", "%2", "%3", "%0")
+			STEP_C(36, "%0", "%1", "%2", "%3")
+			STEP_C(37, "%3", "%0", "%1", "%2")
+			STEP_C(38, "%2", "%3", "%0", "%1")
+			STEP_C(39, "%1", "%2", "%3", "%0")
+			STEP_C(40, "%0", "%1", "%2", "%3")
+			STEP_C(41, "%3", "%0", "%1", "%2")
+			STEP_C(42, "%2", "%3", "%0", "%1")
+			STEP_C(43, "%1", "%2", "%3", "%0")
+			STEP_C(44, "%0", "%1", "%2", "%3")
+			STEP_C(45, "%3", "%0", "%1", "%2")
+			STEP_C(46, "%2", "%3", "%0", "%1")
+			STEP_C(47, "%1", "%2", "%3", "%0")
 
-			STEP_3(48, "eax", "ebx", "ecx", "edx")
-			STEP_3(49, "edx", "eax", "ebx", "ecx")
-			STEP_3(50, "ecx", "edx", "eax", "ebx")
-			STEP_3(51, "ebx", "ecx", "edx", "eax")
-			STEP_3(52, "eax", "ebx", "ecx", "edx")
-			STEP_3(53, "edx", "eax", "ebx", "ecx")
-			STEP_3(54, "ecx", "edx", "eax", "ebx")
-			STEP_3(55, "ebx", "ecx", "edx", "eax")
-			STEP_3(56, "eax", "ebx", "ecx", "edx")
-			STEP_3(57, "edx", "eax", "ebx", "ecx")
-			STEP_3(58, "ecx", "edx", "eax", "ebx")
-			STEP_3(59, "ebx", "ecx", "edx", "eax")
-			STEP_3(60, "eax", "ebx", "ecx", "edx")
-			STEP_3(61, "edx", "eax", "ebx", "ecx")
-			STEP_3(62, "ecx", "edx", "eax", "ebx")
-			STEP_3(63, "ebx", "ecx", "edx", "eax")
+			STEP_D(48, "%0", "%1", "%2", "%3")
+			STEP_D(49, "%3", "%0", "%1", "%2")
+			STEP_D(50, "%2", "%3", "%0", "%1")
+			STEP_D(51, "%1", "%2", "%3", "%0")
+			STEP_D(52, "%0", "%1", "%2", "%3")
+			STEP_D(53, "%3", "%0", "%1", "%2")
+			STEP_D(54, "%2", "%3", "%0", "%1")
+			STEP_D(55, "%1", "%2", "%3", "%0")
+			STEP_D(56, "%0", "%1", "%2", "%3")
+			STEP_D(57, "%3", "%0", "%1", "%2")
+			STEP_D(58, "%2", "%3", "%0", "%1")
+			STEP_D(59, "%1", "%2", "%3", "%0")
+			STEP_D(60, "%0", "%1", "%2", "%3")
+			STEP_D(61, "%3", "%0", "%1", "%2")
+			STEP_D(62, "%2", "%3", "%0", "%1")
+			STEP_D(63, "%1", "%2", "%3", "%0")
 
-			: "=a"(a), "=b"(b), "=c"(c), "=d"(d)
-			: "0"(a), "1"(b), "2"(c), "3"(d), "S"(pbyChunk)
+			: "=r"(a), "=r"(b), "=r"(c), "=r"(d)
+			: "r"(pbyChunk), "0"(a), "1"(b), "2"(c), "3"(d)
 			: "di"
 		);
 

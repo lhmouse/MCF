@@ -36,29 +36,28 @@ static DWORD APIENTRY ThreadProc(LPVOID pParam){
 #endif
 	return (DWORD)nRet;
 }
-static void DoBail(const wchar_t *pwszDescription){
+static __MCF_NORETURN_IF_NDEBUG void DoBail(const wchar_t *pwszDescription){
+	DWORD dwExitCode = IDOK;
 	const HANDLE hThread = CreateThread(NULL, 0, &ThreadProc, (LPVOID)pwszDescription, 0, NULL);
 	if(hThread){
 		WaitForSingleObject(hThread, INFINITE);
 
-		DWORD dwExitCode;
 		GetExitCodeThread(hThread, &dwExitCode);
 		CloseHandle(hThread);
-
-#ifndef NDEBUG
-		if(dwExitCode == IDOK){
-#endif
-			TerminateProcess(GetCurrentProcess(), ERROR_PROCESS_ABORTED);
-#ifndef NDEBUG
-		}
-#endif
 	}
+#ifndef NDEBUG
+	if(dwExitCode == IDOK){
+#endif
+		TerminateProcess(GetCurrentProcess(), ERROR_PROCESS_ABORTED);
+		__builtin_unreachable();
+#ifndef NDEBUG
+	}
+#endif
 	__asm__ __volatile__("int 3 \n");
 }
 
 __MCF_NORETURN_IF_NDEBUG void __MCF_Bail(const wchar_t *pwszDescription){
 	DoBail(pwszDescription);
-	abort();
 }
 __MCF_NORETURN_IF_NDEBUG void __MCF_BailF(const wchar_t *pwszFormat, ...){
 	wchar_t awchBuffer[1025];
@@ -67,5 +66,4 @@ __MCF_NORETURN_IF_NDEBUG void __MCF_BailF(const wchar_t *pwszFormat, ...){
 	__mingw_vsnwprintf(awchBuffer, sizeof(awchBuffer) / sizeof(wchar_t), pwszFormat, ap);
 	va_end(ap);
 	DoBail(awchBuffer);
-	abort();
 }

@@ -8,7 +8,7 @@
 using namespace MCF;
 
 namespace {
-	void DoSHA256Chunk(std::uint32_t (&auResult)[8], const unsigned char *pbyChunk){
+	void DoSHA256Chunk(std::uint32_t (&auResult)[8], const unsigned char *pbyChunk) noexcept {
 		// https://en.wikipedia.org/wiki/SHA-2
 		// http://download.intel.com/embedded/processor/whitepaper/327457.pdf
 /*

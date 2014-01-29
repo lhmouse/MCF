@@ -72,10 +72,6 @@ public:
 		return (std::uint64_t)liFileSize.QuadPart;
 	}
 	bool Resize(std::uint64_t u64NewSize) noexcept {
-		if(!xm_hFile){
-			::SetLastError(ERROR_INVALID_HANDLE);
-			return false;
-		}
 		if(u64NewSize > (std::uint64_t)LLONG_MAX){
 			::SetLastError(ERROR_INVALID_PARAMETER);
 			return false;
@@ -160,9 +156,7 @@ public:
 };
 
 // 构造函数和析构函数。
-File::File()
-	: xm_pDelegate(new xDelegate)
-{
+File::File() noexcept {
 }
 File::File(const wchar_t *pwszPath, bool bToRead, bool bToWrite, bool bAutoCreate)
 	: File()
@@ -175,31 +169,62 @@ File::~File(){
 
 // 其他非静态成员函数。
 bool File::IsOpen() const noexcept {
+	if(!xm_pDelegate){
+		return false;
+	}
 	return xm_pDelegate->IsOpen();
 }
 bool File::Open(const wchar_t *pwszPath, bool bToRead, bool bToWrite, bool bAutoCreate) noexcept {
+	if(!xm_pDelegate){
+		xm_pDelegate.reset(new xDelegate);
+	}
 	return xm_pDelegate->Open(pwszPath, bToRead, bToWrite, bAutoCreate);
 }
 void File::Close() noexcept {
+	if(!xm_pDelegate){
+		return;
+	}
 	xm_pDelegate->Close();
 }
 
 std::uint64_t File::GetSize() const noexcept {
+	if(!xm_pDelegate){
+		return INVALID_SIZE;
+	}
 	return xm_pDelegate->GetSize();
 }
 bool File::Resize(std::uint64_t u64NewSize) noexcept {
+	if(!xm_pDelegate){
+		return false;
+	}
 	return xm_pDelegate->Resize(u64NewSize);
 }
 
 std::uint32_t File::Read(void *pBuffer, std::uint64_t u64Offset, std::uint32_t u32BytesToRead) const noexcept {
+	if(!xm_pDelegate){
+		::SetLastError(ERROR_INVALID_HANDLE);
+		return 0;
+	}
 	return xm_pDelegate->Read(pBuffer, u64Offset, u32BytesToRead, nullptr);
 }
 std::uint32_t File::Read(void *pBuffer, std::uint64_t u64Offset, std::uint32_t u32BytesToRead, File::ASYNC_PROC fnAsyncProc) const {
+	if(!xm_pDelegate){
+		::SetLastError(ERROR_INVALID_HANDLE);
+		return 0;
+	}
 	return xm_pDelegate->Read(pBuffer, u64Offset, u32BytesToRead, &fnAsyncProc);
 }
 std::uint32_t File::Write(std::uint64_t u64Offset, const void *pBuffer, std::uint32_t u32BytesToWrite) noexcept {
+	if(!xm_pDelegate){
+		::SetLastError(ERROR_INVALID_HANDLE);
+		return 0;
+	}
 	return xm_pDelegate->Write(u64Offset, pBuffer, u32BytesToWrite, nullptr);
 }
 std::uint32_t File::Write(std::uint64_t u64Offset, const void *pBuffer, std::uint32_t u32BytesToWrite, File::ASYNC_PROC fnAsyncProc){
+	if(!xm_pDelegate){
+		::SetLastError(ERROR_INVALID_HANDLE);
+		return 0;
+	}
 	return xm_pDelegate->Write(u64Offset, pBuffer, u32BytesToWrite, &fnAsyncProc);
 }

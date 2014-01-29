@@ -6,6 +6,7 @@
 #define __MCF_UTILITIES_HPP__
 
 #include "String.hpp"
+#include <type_traits>
 #include <cstddef>
 
 namespace MCF {
@@ -28,6 +29,7 @@ extern HI_RES_COUNTER GetHiResCounter() noexcept;
 
 template<typename T>
 inline void __attribute__((always_inline)) ZeroObject(T &dst) noexcept {
+	static_assert(std::is_trivial<T>::value, "ZeroObject(): Only trivial types are supported");
 	__builtin_memset(&dst, 0, sizeof(dst));
 }
 

@@ -6,8 +6,6 @@
 #define __MCF_FILE_HPP__
 
 #include "NoCopy.hpp"
-#include "Event.hpp"
-#include <utility>
 #include <memory>
 #include <functional>
 #include <cstddef>
@@ -24,9 +22,9 @@ public:
 private:
 	class xDelegate;
 private:
-	const std::unique_ptr<xDelegate> xm_pDelegate;
+	std::unique_ptr<xDelegate> xm_pDelegate;
 public:
-	File();
+	File() noexcept;
 	File(const wchar_t *pwszPath, bool bToRead, bool bToWrite, bool bAutoCreate);
 	~File();
 public:

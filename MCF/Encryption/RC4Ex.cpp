@@ -41,6 +41,7 @@ namespace {
 			abyOutput[j] = b0;
 		}
 	}
+/*
 	inline unsigned char RotateByteLeft(unsigned char by, unsigned char shift) noexcept {
 		register unsigned char ret;
 		__asm__ __volatile__(
@@ -59,6 +60,7 @@ namespace {
 		);
 		return ret;
 	}
+/*
 }
 
 // ========== RC4ExEncoder ==========

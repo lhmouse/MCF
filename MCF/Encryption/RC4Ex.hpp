@@ -15,10 +15,9 @@ class RC4ExEncoder {
 private:
 	const std::function<void *(std::size_t)> xm_fnDataCallback;
 	unsigned char xm_abyInitBox[256];
-	// bool xm_bInited;
+	bool xm_bInited;
 
 	unsigned char xm_abyBox[256];
-	bool xm_bInited;
 	unsigned char xm_byI;
 	unsigned char xm_byJ;
 public:
@@ -32,10 +31,9 @@ class RC4ExDecoder {
 private:
 	const std::function<void *(std::size_t)> xm_fnDataCallback;
 	unsigned char xm_abyInitBox[256];
-	// bool xm_bInited;
+	bool xm_bInited;
 
 	unsigned char xm_abyBox[256];
-	bool xm_bInited;
 	unsigned char xm_byI;
 	unsigned char xm_byJ;
 public:

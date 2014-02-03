@@ -924,7 +924,7 @@ void SHA256::Update(const void *pData, std::size_t uSize) noexcept {
 		xm_auResult[7] = 0x5BE0CD19u;
 
 		xm_uBytesInChunk = 0;
-		xm_uBytesTotal = 0;
+		xm_u64BytesTotal = 0;
 	}
 
 	auto pbyRead = (const unsigned char *)pData;
@@ -948,7 +948,7 @@ void SHA256::Update(const void *pData, std::size_t uSize) noexcept {
 		std::memcpy(xm_abyChunk + xm_uBytesInChunk, pbyRead, uBytesRemaining);
 		xm_uBytesInChunk += uBytesRemaining;
 	}
-	xm_uBytesTotal += uSize;
+	xm_u64BytesTotal += uSize;
 }
 void SHA256::Finalize(unsigned char (&abyOutput)[32]) noexcept {
 	if(xm_bInited){
@@ -963,7 +963,7 @@ void SHA256::Finalize(unsigned char (&abyOutput)[32]) noexcept {
 		if(xm_uBytesInChunk < sizeof(xm_abyFirstPart)){
 			std::memset(xm_abyChunk + xm_uBytesInChunk, 0, sizeof(xm_abyFirstPart) - xm_uBytesInChunk);
 		}
-		xm_uBitsTotal = __builtin_bswap64(xm_uBytesTotal * CHAR_BIT);
+		xm_uBitsTotal = __builtin_bswap64(xm_u64BytesTotal * CHAR_BIT);
 		DoSHA256Chunk(xm_auResult, xm_abyChunk);
 
 		for(auto &u : xm_auResult){

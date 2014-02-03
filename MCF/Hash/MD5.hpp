@@ -10,7 +10,6 @@
 namespace MCF {
 
 class MD5 {
-public:
 private:
 	bool xm_bInited;
 	std::uint32_t xm_auResult[4];
@@ -23,7 +22,7 @@ private:
 		};
 	};
 	std::size_t xm_uBytesInChunk;
-	std::uint64_t xm_uBytesTotal;
+	std::uint64_t xm_u64BytesTotal;
 public:
 	MD5() noexcept;
 public:

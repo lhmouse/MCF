@@ -46,9 +46,9 @@ unsigned int GetUnixTime() noexcept {
 	return (unsigned int)((u.uli.QuadPart - 0x019DB1DED53E8000ull) / 10000000ull);
 }
 std::uint32_t GenRandSeed() noexcept {
-	FILETIME ft;
-	::GetSystemTimeAsFileTime(&ft);
-	return (std::uint32_t)ft.dwLowDateTime;
+	LARGE_INTEGER liTemp;
+	::QueryPerformanceCounter(&liTemp);
+	return (std::uint32_t)liTemp.QuadPart;
 }
 
 HI_RES_COUNTER GetHiResCounter() noexcept {

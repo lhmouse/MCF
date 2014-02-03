@@ -358,7 +358,7 @@ void MD5::Update(const void *pData, std::size_t uSize) noexcept {
 		xm_auResult[3] = 0x10325476u;
 
 		xm_uBytesInChunk = 0;
-		xm_uBytesTotal = 0;
+		xm_u64BytesTotal = 0;
 	}
 
 	auto pbyRead = (const unsigned char *)pData;
@@ -382,7 +382,7 @@ void MD5::Update(const void *pData, std::size_t uSize) noexcept {
 		std::memcpy(xm_abyChunk + xm_uBytesInChunk, pbyRead, uBytesRemaining);
 		xm_uBytesInChunk += uBytesRemaining;
 	}
-	xm_uBytesTotal += uSize;
+	xm_u64BytesTotal += uSize;
 }
 void MD5::Finalize(unsigned char (&abyOutput)[16]) noexcept {
 	if(xm_bInited){
@@ -397,7 +397,7 @@ void MD5::Finalize(unsigned char (&abyOutput)[16]) noexcept {
 		if(xm_uBytesInChunk < sizeof(xm_abyFirstPart)){
 			std::memset(xm_abyChunk + xm_uBytesInChunk, 0, sizeof(xm_abyFirstPart) - xm_uBytesInChunk);
 		}
-		xm_uBitsTotal = xm_uBytesTotal * CHAR_BIT;
+		xm_uBitsTotal = xm_u64BytesTotal * CHAR_BIT;
 		DoMD5Chunk(xm_auResult, xm_abyChunk);
 	}
 	__builtin_memcpy(abyOutput, xm_auResult, sizeof(xm_auResult));

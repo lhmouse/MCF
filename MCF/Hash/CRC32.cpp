@@ -24,18 +24,18 @@ namespace {
 				__asm__ __volatile__(
 					"shr %0, 1 \n"
 					"sbb eax, eax \n"
-					"and eax, %2 \n"
+					"and eax, %1 \n"
 					"xor %0, eax \n"
 					: "=r"(u32Reg)
-					: "0"(u32Reg), "r"(u32Divisor)
-					: "eax"
+					: "r"(u32Divisor), "0"(u32Reg)
+					: "ax"
 				);
 			}
 			au32Table[i] = u32Reg;
 		}
 	}
 	inline void DoCRC32Byte(std::uint32_t &u32Reg, const std::uint32_t (&au32Table)[0x100], unsigned char byData) noexcept {
-		u32Reg = au32Table[(u32Reg & 0xFF) ^ byData] ^ (u32Reg >> 8);
+		u32Reg = au32Table[(u32Reg ^ byData) & 0xFF] ^ (u32Reg >> 8);
 	}
 }
 

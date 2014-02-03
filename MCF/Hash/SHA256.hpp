@@ -22,7 +22,7 @@ private:
 		};
 	};
 	std::size_t xm_uBytesInChunk;
-	std::uint64_t xm_uBytesTotal;
+	std::uint64_t xm_u64BytesTotal;
 public:
 	SHA256() noexcept;
 public:

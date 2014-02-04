@@ -60,7 +60,7 @@ namespace {
 		);
 		return ret;
 	}
-/*
+*/
 }
 
 // ========== RC4ExEncoder ==========
@@ -125,9 +125,9 @@ void RC4ExEncoder::Update(const void *pData, std::size_t uSize){
 		"	rol r8b, cl \n"
 		"	lea rdi, dword ptr[rdi + 1] \n"
 		"	xor r8b, bl \n"
-		"	movzx r8, r8b \n"
-		"	mov byte ptr[rdi - 1], r8b \n"
-		"	lea rdx, dword ptr[rdx + r8] \n"
+ 		"	mov byte ptr[rdi - 1], r8b \n"
+		"	movzx rdx, dl \n"
+		"	add dl, r8b \n"
 		"	dec %4 \n"
 		"	jnz 2b \n"
 		"1: \n"

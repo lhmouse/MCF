@@ -13,7 +13,7 @@ unsigned int MCFMain(){
 	std::srand(MCF::GenRandSeed());
 
 	MCF::CRC32 crc;
-	MCF::File f(L"E:\\Download\\WinXP_SP3.iso", true, false, false);
+	MCF::File f(L"F:\\Downloads\\WinXP_SP3.iso", true, false, false);
 	std::vector<unsigned char> decoded;
 	const auto fsize = f.GetSize();
 	std::printf("File size: %lld\n", (long long)fsize);

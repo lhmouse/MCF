@@ -15,7 +15,7 @@ const char *__MCF::Base64Base::ENCODED_CHARS_REGEXP	= "ABCDEFGHIJKLMNOPQRSTUVWXY
 
 // ========== Base64Encoder ==========
 // 构造函数和析构函数。
-Base64Encoder::Base64Encoder(std::function<void *(std::size_t)> fnDataCallback, const char *pchEncodedChars) noexcept
+Base64Encoder::Base64Encoder(std::function<void *(std::size_t)> fnDataCallback, const char *pchEncodedChars)
 	: xm_fnDataCallback(std::move(fnDataCallback))
 {
 	__builtin_memcpy(xm_achTable, pchEncodedChars, sizeof(xm_achTable));
@@ -102,7 +102,7 @@ void Base64Encoder::Finalize(){
 
 // ========== Base64Decoder ==========
 // 构造函数和析构函数。
-Base64Decoder::Base64Decoder(std::function<void *(std::size_t)> fnDataCallback, const char *pchEncodedChars) noexcept
+Base64Decoder::Base64Decoder(std::function<void *(std::size_t)> fnDataCallback, const char *pchEncodedChars)
 	: xm_fnDataCallback(std::move(fnDataCallback))
 {
 	__builtin_memset(xm_achTable, 0xFF, sizeof(xm_achTable));

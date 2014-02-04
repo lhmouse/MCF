@@ -21,7 +21,7 @@ private:
 	unsigned char xm_byI;
 	unsigned char xm_byJ;
 public:
-	RC4ExEncoder(std::function<void *(std::size_t)> fnDataCallback, const void *pKey, std::size_t uKeyLen, std::uint64_t u64Nonce) noexcept;
+	RC4ExEncoder(std::function<void *(std::size_t)> fnDataCallback, const void *pKey, std::size_t uKeyLen, std::uint64_t u64Nonce);
 public:
 	void Update(const void *pData, std::size_t uSize);
 	void Finalize();
@@ -37,7 +37,7 @@ private:
 	unsigned char xm_byI;
 	unsigned char xm_byJ;
 public:
-	RC4ExDecoder(std::function<void *(std::size_t)> fnDataCallback, const void *pKey, std::size_t uKeyLen, std::uint64_t u64Nonce) noexcept;
+	RC4ExDecoder(std::function<void *(std::size_t)> fnDataCallback, const void *pKey, std::size_t uKeyLen, std::uint64_t u64Nonce);
 public:
 	void Update(const void *pData, std::size_t uSize);
 	void Finalize();

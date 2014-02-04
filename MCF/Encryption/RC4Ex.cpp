@@ -65,7 +65,7 @@ namespace {
 
 // ========== RC4ExEncoder ==========
 // 构造函数和析构函数。
-RC4ExEncoder::RC4ExEncoder(std::function<void *(std::size_t)> fnDataCallback, const void *pKey, std::size_t uKeyLen, std::uint64_t u64Nonce) noexcept
+RC4ExEncoder::RC4ExEncoder(std::function<void *(std::size_t)> fnDataCallback, const void *pKey, std::size_t uKeyLen, std::uint64_t u64Nonce)
 	: xm_fnDataCallback(std::move(fnDataCallback))
 {
 	GenInitBox(xm_abyInitBox, pKey, uKeyLen, u64Nonce);
@@ -178,7 +178,7 @@ void RC4ExEncoder::Finalize(){
 
 // ========== RC4ExDecoder ==========
 // 构造函数和析构函数。
-RC4ExDecoder::RC4ExDecoder(std::function<void *(std::size_t)> fnDataCallback, const void *pKey, std::size_t uKeyLen, std::uint64_t u64Nonce) noexcept
+RC4ExDecoder::RC4ExDecoder(std::function<void *(std::size_t)> fnDataCallback, const void *pKey, std::size_t uKeyLen, std::uint64_t u64Nonce)
 	: xm_fnDataCallback(std::move(fnDataCallback))
 {
 	GenInitBox(xm_abyInitBox, pKey, uKeyLen, u64Nonce);

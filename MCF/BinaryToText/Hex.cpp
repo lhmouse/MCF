@@ -9,7 +9,7 @@ using namespace MCF;
 
 // ========== HexEncoder ==========
 // 构造函数和析构函数。
-HexEncoder::HexEncoder(std::function<void *(std::size_t)> fnDataCallback, bool bUpperCase) noexcept
+HexEncoder::HexEncoder(std::function<void *(std::size_t)> fnDataCallback, bool bUpperCase)
 	: xm_fnDataCallback(std::move(fnDataCallback))
 	, xm_byDelta((bUpperCase ? 'A' : 'a') - ('9' + 1))
 {
@@ -53,7 +53,7 @@ void HexEncoder::Finalize(){
 
 // ========== HexDecoder ==========
 // 构造函数和析构函数。
-HexDecoder::HexDecoder(std::function<void *(std::size_t)> fnDataCallback) noexcept
+HexDecoder::HexDecoder(std::function<void *(std::size_t)> fnDataCallback)
 	: xm_fnDataCallback(std::move(fnDataCallback))
 {
 	xm_bInited = false;

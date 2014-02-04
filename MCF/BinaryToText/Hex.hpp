@@ -15,7 +15,7 @@ private:
 	const std::function<void *(std::size_t)> xm_fnDataCallback;
 	const unsigned char xm_byDelta;
 public:
-	HexEncoder(std::function<void *(std::size_t)> fnDataCallback, bool bUpperCase) noexcept;
+	HexEncoder(std::function<void *(std::size_t)> fnDataCallback, bool bUpperCase);
 public:
 	void Update(const void *pData, std::size_t uSize);
 	void Finalize();
@@ -28,7 +28,7 @@ private:
 
 	unsigned char xm_uchLastDigit;
 public:
-	HexDecoder(std::function<void *(std::size_t)> fnDataCallback) noexcept;
+	HexDecoder(std::function<void *(std::size_t)> fnDataCallback);
 public:
 	void Update(const void *pData, std::size_t uSize);
 	void Finalize();

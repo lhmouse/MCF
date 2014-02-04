@@ -27,7 +27,7 @@ private:
 	std::uint32_t xm_u32Word;
 	std::size_t xm_uState;
 public:
-	Base64Encoder(std::function<void *(std::size_t)> fnDataCallback, const char *pchEncodedChars = ENCODED_CHARS_MIME) noexcept;
+	Base64Encoder(std::function<void *(std::size_t)> fnDataCallback, const char *pchEncodedChars = ENCODED_CHARS_MIME);
 public:
 	void Update(const void *pData, std::size_t uSize);
 	void Finalize();
@@ -42,7 +42,7 @@ private:
 	std::uint32_t xm_u32Word;
 	std::size_t xm_uState;
 public:
-	Base64Decoder(std::function<void *(std::size_t)> fnDataCallback, const char *pchEncodedChars = ENCODED_CHARS_MIME) noexcept;
+	Base64Decoder(std::function<void *(std::size_t)> fnDataCallback, const char *pchEncodedChars = ENCODED_CHARS_MIME);
 public:
 	void Update(const void *pData, std::size_t uSize);
 	void Finalize();

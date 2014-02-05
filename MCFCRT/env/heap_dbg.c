@@ -104,9 +104,7 @@ void __MCF_CRT_HeapDbgAddGuardsAndRegister(
 	pBlockInfo->uSize = uContentSize;
 	pBlockInfo->pRetAddr = pRetAddr;
 
-	if(__MCF_AVLAttach(&g_mapBlocks, (intptr_t)pContents, (__MCF_AVL_NODE_HEADER *)pBlockInfo)){
-		__MCF_BailF(L"__MCF_CRT_HeapDbgAddGuardsAndRegister() 失败：传入的指针的记录已存在。\n调用返回地址：%p", pRetAddr);
-	}
+	__MCF_AVLAttach(&g_mapBlocks, (intptr_t)pContents, (__MCF_AVL_NODE_HEADER *)pBlockInfo);
 	if(!__MCF_AVLPrev((__MCF_AVL_NODE_HEADER *)pBlockInfo)){
 		g_pBlockHead = pBlockInfo;
 	}
@@ -154,4 +152,4 @@ void __MCF_CRT_HeapDbgUnregister(
 	HeapFree(g_hMapAllocator, 0, (void *)pBlockInfo);
 }
 
-#endif
+#endif // __MCF_CRT_HEAPDBG_ON

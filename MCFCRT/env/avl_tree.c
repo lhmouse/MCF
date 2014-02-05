@@ -278,7 +278,7 @@ void __MCF_AVLSwap(
 	}
 }
 
-__MCF_AVL_NODE_HEADER *__MCF_AVLAttach(
+void __MCF_AVLAttach(
 	__MCF_AVL_PROOT *ppRoot,
 	intptr_t nKey,
 	__MCF_AVL_NODE_HEADER *pNode
@@ -293,17 +293,14 @@ __MCF_AVL_NODE_HEADER *__MCF_AVLAttach(
 		if(nKey < pCur->nKey){
 			pParent = pCur;
 			ppIns = &(pCur->pLeft);
-		} else if(pCur->nKey < nKey){
+		} else {
 			pParent = pCur;
 			ppIns = &(pCur->pRight);
-		} else {
-			return pCur;
 		}
 	}
 	Insert(pNode, nKey, pParent, ppIns);
-	return NULL;
 }
-__MCF_AVL_NODE_HEADER *__MCF_AVLAttachCustomComp(
+void __MCF_AVLAttachCustomComp(
 	__MCF_AVL_PROOT *ppRoot,
 	intptr_t nKey,
 	__MCF_AVL_NODE_HEADER *pNode,
@@ -319,15 +316,12 @@ __MCF_AVL_NODE_HEADER *__MCF_AVLAttachCustomComp(
 		if((*pfnKeyComparer)(nKey, pCur->nKey)){
 			pParent = pCur;
 			ppIns = &(pCur->pLeft);
-		} else if((*pfnKeyComparer)(pCur->nKey, nKey)){
+		} else {
 			pParent = pCur;
 			ppIns = &(pCur->pRight);
-		} else {
-			return pCur;
 		}
 	}
 	Insert(pNode, nKey, pParent, ppIns);
-	return NULL;
 }
 void __MCF_AVLDetach(
 	const __MCF_AVL_NODE_HEADER *pNode

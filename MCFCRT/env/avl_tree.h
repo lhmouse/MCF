@@ -34,12 +34,12 @@ extern void __MCF_AVLSwap(__MCF_AVL_PROOT *ppRoot1, __MCF_AVL_PROOT *ppRoot2);
 // 若 arg0 < arg1 应返回非零值，否则应返回零。
 typedef int (*__MCF_AVL_KEY_COMPARER)(__MCF_STD intptr_t, __MCF_STD intptr_t);
 
-extern __MCF_AVL_NODE_HEADER *__MCF_AVLAttach(
+extern void __MCF_AVLAttach(
 	__MCF_AVL_PROOT *ppRoot,
 	__MCF_STD intptr_t nKey,
 	__MCF_AVL_NODE_HEADER *pNode
 );
-extern __MCF_AVL_NODE_HEADER *__MCF_AVLAttachCustomComp(
+extern void __MCF_AVLAttachCustomComp(
 	__MCF_AVL_PROOT *ppRoot,
 	__MCF_STD intptr_t nKey,
 	__MCF_AVL_NODE_HEADER *pNode,

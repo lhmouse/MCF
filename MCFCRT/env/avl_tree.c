@@ -481,7 +481,7 @@ __MCF_AVL_NODE_HEADER *__MCF_AVLUpperBound(
 	const __MCF_AVL_NODE_HEADER *pRet = NULL;
 	const __MCF_AVL_NODE_HEADER *pCur = *ppRoot;
 	while(pCur){
-		if(!(nKey > pCur->nKey)){
+		if(!(nKey < pCur->nKey)){
 			pCur = pCur->pRight;
 		} else {
 			pRet = pCur;

@@ -2,14 +2,15 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2014. LH_Mouse. All wrongs reserved.
 
-#ifndef __MCF_CRT_FENV_H__
-#define __MCF_CRT_FENV_H__
+#ifndef __MCF_CRT_LAST_ERROR_H__
+#define __MCF_CRT_LAST_ERROR_H__
 
 #include "_crtdef.h"
 
 __MCF_EXTERN_C_BEGIN
 
-extern void __MCF_CRT_FEnvInitialize(void);
+extern unsigned long __MCF_CRT_GetLastError(void);
+extern void __MCF_CRT_SetLastError(unsigned long ulErrorCode);
 
 __MCF_EXTERN_C_END
 

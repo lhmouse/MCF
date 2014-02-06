@@ -88,18 +88,6 @@ namespace {
 		register std::uint32_t d = auResult[3];
 		register std::uint32_t e = auResult[4];
 
-#ifdef _WIN64
-#	define TMP			"r8d"
-#	define SAVE_TMP
-#	define RESTORE_TMP
-#	define TMP_CLOB		, "r8"
-#else
-#	define TMP			"ebp"
-#	define SAVE_TMP		"push ebp"
-#	define RESTORE_TMP	"pop ebp"
-#	define TMP_CLOB
-#endif
-
 		__asm__ __volatile__(
 			"movdqa xmm4, xmmword ptr[%5 + 28 * 4] \n"
 			"movdqa xmm3, xmmword ptr[%5 + 24 * 4] \n"
@@ -154,6 +142,19 @@ namespace {
 			"add " re ", edi \n"	\
 			"rol " rb ", 30 \n"
 
+#ifdef _WIN64
+#	define EDI_OREQ_RC_AND_RD(rc, rd)	\
+			"mov r8d, " rc " \n"	\
+			"and r8d, " rd " \n"	\
+			"or edi, r8d \n"
+#else
+#	define EDI_OREQ_RC_AND_RD(rc, rd)	\
+			"push " rc " \n"	\
+			"and " rc ", " rd " \n"	\
+			"or edi, " rc " \n"	\
+			"pop " rc " \n"
+#endif
+
 #define STEP_2(i, ra, rb, rc, rd, re)	\
 			"mov edi, " ra " \n"	\
 			"rol edi, 5 \n"	\
@@ -163,11 +164,7 @@ namespace {
 			"mov edi, " rc " \n"	\
 			"or edi, " rd " \n"	\
 			"and edi, " rb " \n"	\
-			SAVE_TMP " \n"	\
-			"mov " TMP ", " rc " \n"	\
-			"and " TMP ", " rd " \n"	\
-			"or edi, " TMP " \n"	\
-			RESTORE_TMP " \n"	\
+			EDI_OREQ_RC_AND_RD(rc, rd)	\
 			"add " re ", edi \n"	\
 			"rol " rb ", 30 \n"
 
@@ -269,7 +266,10 @@ namespace {
 
 			: "=r"(a), "=r"(b), "=r"(c), "=r"(d), "=r"(e), "=m"(w)
 			: "0"(a), "1"(b), "2"(c), "3"(d), "4"(e), "m"(w)
-			: "di" TMP_CLOB
+			: "di"
+#ifdef _WIN64
+				, "r8"
+#endif
 		);
 
 		auResult[0] += a;

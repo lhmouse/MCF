@@ -142,7 +142,7 @@ namespace {
 #define K_63	"0xC67178F2"
 #define K(i)	K_##i
 
-		__attribute__((aligned(16))) std::uint32_t w[64];
+		alignas(16) std::uint32_t w[64];
 		for(std::size_t i = 0; i < 16; ++i){
 			w[i] = __builtin_bswap32(((const std::uint32_t *)pbyChunk)[i]);
 		}

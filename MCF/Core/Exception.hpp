@@ -16,7 +16,8 @@ struct Exception {
 	const wchar_t *pwszMessage;
 };
 
-static inline void __attribute__((noreturn, always_inline)) Throw(
+[[noreturn]]
+inline void Throw(
 	const char *pszFunction,
 	unsigned long ulCode,
 	const wchar_t *pwszMessage = L""

@@ -41,26 +41,61 @@ namespace {
 			abyOutput[j] = b0;
 		}
 	}
-/*
-	inline unsigned char RotateByteLeft(unsigned char by, unsigned char shift) noexcept {
-		register unsigned char ret;
-		__asm__ __volatile__(
-			"rol %b0, cl \n"
-			: "=q"(ret)
-			: "c"(shift), "0"(by)
-		);
-		return ret;
+
+	void Encode(void *pOut, const void *pIn, std::size_t uSize, unsigned char *pbyBox, unsigned char *pbyI, unsigned char *pbyJ) noexcept {
+		auto pbyRead = (const unsigned char *)pIn;
+		auto pbyWrite = (unsigned char *)pOut;
+
+		auto i = *pbyI;
+		auto j = *pbyJ;
+
+		for(std::size_t k = 0; k < uSize; ++k){
+			++i;
+			const auto b0 = pbyBox[i];
+			j += b0;
+			const auto b1 = pbyBox[j];
+			pbyBox[i] = b1;
+			pbyBox[j] = b0;
+			register unsigned char ch;
+			__asm__ __volatile__(
+				"rol %b0, cl \n"
+				: "=q"(ch)
+				: "0"(*(pbyRead++)), "c"(b1 & 7)
+			);
+			ch ^= pbyBox[(unsigned char)(b0 + b1)];
+			*(pbyWrite++) = ch;
+			j += ch;
+		}
+
+		*pbyI = i;
+		*pbyJ = j;
 	}
-	inline unsigned char RotateByteRight(unsigned char by, unsigned char shift) noexcept {
-		register unsigned char ret;
-		__asm__ __volatile__(
-			"ror %b0, cl \n"
-			: "=q"(ret)
-			: "c"(shift), "0"(by)
-		);
-		return ret;
+	void Decode(void *pOut, const void *pIn, std::size_t uSize, unsigned char *pbyBox, unsigned char *pbyI, unsigned char *pbyJ) noexcept {
+		auto pbyRead = (const unsigned char *)pIn;
+		auto pbyWrite = (unsigned char *)pOut;
+
+		auto i = *pbyI;
+		auto j = *pbyJ;
+
+		for(std::size_t k = 0; k < uSize; ++k){
+			++i;
+			const auto b0 = pbyBox[i];
+			j += b0;
+			const auto b1 = pbyBox[j];
+			pbyBox[i] = b1;
+			pbyBox[j] = b0;
+			const unsigned char ch = *(pbyRead++);
+			__asm__ __volatile__(
+				"ror %b0, cl \n"
+				: "=q"(*(pbyWrite++))
+				: "0"(ch ^ pbyBox[(unsigned char)(b0 + b1)]), "c"(b1 & 7)
+			);
+			j += ch;
+		}
+
+		*pbyI = i;
+		*pbyJ = j;
 	}
-*/
 }
 
 // ========== RC4ExEncoder ==========
@@ -80,95 +115,7 @@ void RC4ExEncoder::Update(const void *pData, std::size_t uSize){
 		xm_byI = 0;
 		xm_byJ = 0;
 	}
-
-	auto pbyRead = (const unsigned char *)pData;
-	auto pbyWrite = (unsigned char *)xm_fnDataCallback(uSize);
-/*
-	auto i = xm_byI;
-	auto j = xm_byJ;
-
-	for(std::size_t k = 0; k < uSize; ++k){
-		++i;
-		const auto b0 = xm_abyBox[i];
-		j += b0;
-		const auto b1 = xm_abyBox[j];
-		xm_abyBox[i] = b1;
-		xm_abyBox[j] = b0;
-		const unsigned char ch = RotateByteLeft(*(pbyRead++), b1 & 7) ^ (b0 + b1);
-		*(pbyWrite++) = ch;
-		j += ch;
-	}
-
-	xm_byI = i;
-	xm_byJ = j;
-*/
-	std::uintptr_t unused;
-	__asm__ __volatile__(
-#ifdef _WIN64
-		"test %4, %4 \n"
-		"jz 1f \n"
-		"	.align 16 \n"
-		"	2: \n"
-		"	inc rax \n"
-		"	movzx rax, al \n"
-		"	movzx rbx, byte ptr[%5 + rax] \n"
-		"	movzx r8, byte ptr[rsi] \n"
-		"	movzx rdx, dl \n"
-		"	add dl, bl \n"
-		"	inc rsi \n"
-		"	movzx rcx, byte ptr[%5 + rdx] \n"
-		"	mov byte ptr[%5 + rdx], bl \n"
-		"	add rbx, rcx \n"
-		"	mov byte ptr[%5 + rax], cl \n"
-		"	and rcx, 7 \n"
-		"	movzx r8, r8b \n"
-		"	rol r8b, cl \n"
-		"	lea rdi, dword ptr[rdi + 1] \n"
-		"	xor r8b, bl \n"
- 		"	mov byte ptr[rdi - 1], r8b \n"
-		"	movzx rdx, dl \n"
-		"	add dl, r8b \n"
-		"	dec %4 \n"
-		"	jnz 2b \n"
-		"1: \n"
-		: "=a"(xm_byI), "=d"(xm_byJ), "=S"(unused), "=D"(unused), "=r"(unused)
-		: "r"(&xm_abyBox), "0"(xm_byI), "1"(xm_byJ), "2"(pbyRead), "3"(pbyWrite), "4"(uSize)
-		: "cx", "bx", "r8"
-#else
-		"mov ecx, dword ptr[%4] \n"
-		"test ecx, ecx \n"
-		"jz 1f \n"
-		"	push ebp \n"
-		"	mov ebp, ecx \n"
-		"	.align 16 \n"
-		"	2: \n"
-		"	inc al \n"
-		"	movzx eax, al \n"
-		"	movzx ecx, byte ptr[ebx + eax] \n"
-		"	movzx edx, dl \n"
-		"	add dl, cl \n"
-		"	shl ecx, 8 \n"
-		"	mov cl, byte ptr[ebx + edx] \n"
-		"	mov byte ptr[ebx + edx], ch \n"
-		"	add ch, cl \n"
-		"	mov byte ptr[ebx + eax], cl \n"
-		"	and cl, 7 \n"
-		"	mov dh, byte ptr[esi] \n"
-		"	inc esi \n"
-		"	rol dh, cl \n"
-		"	lea edi, dword ptr[edi + 1] \n"
-		"	xor dh, ch \n"
-		"	mov byte ptr[edi - 1], dh \n"
-		"	add dl, dh \n"
-		"	dec ebp \n"
-		"	jnz 2b \n"
-		"	pop ebp \n"
-		"1: \n"
-		: "=a"(xm_byI), "=d"(xm_byJ), "=S"(unused), "=D"(unused)
-		: "m"(uSize), "b"(&xm_abyBox), "0"(xm_byI), "1"(xm_byJ), "2"(pbyRead), "3"(pbyWrite)
-		: "cx"
-#endif
-	);
+	Encode(xm_fnDataCallback(uSize), pData, uSize, xm_abyBox, &xm_byI, &xm_byJ);
 }
 void RC4ExEncoder::Finalize(){
 	if(xm_bInited){
@@ -193,94 +140,7 @@ void RC4ExDecoder::Update(const void *pData, std::size_t uSize){
 		xm_byI = 0;
 		xm_byJ = 0;
 	}
-
-	auto pbyRead = (const unsigned char *)pData;
-	auto pbyWrite = (unsigned char *)xm_fnDataCallback(uSize);
-/*
-	auto i = xm_byI;
-	auto j = xm_byJ;
-
-	for(std::size_t k = 0; k < uSize; ++k){
-		++i;
-		const auto b0 = xm_abyBox[i];
-		j += b0;
-		const auto b1 = xm_abyBox[j];
-		xm_abyBox[i] = b1;
-		xm_abyBox[j] = b0;
-		const unsigned char ch = *(pbyRead++);
-		*(pbyWrite++) = RotateByteRight(ch ^ (b0 + b1), b1 & 7);
-		j += ch;
-	}
-
-	xm_byI = i;
-	xm_byJ = j;
-*/
-	std::uintptr_t unused;
-	__asm__ __volatile__(
-#ifdef _WIN64
-		"test %4, %4 \n"
-		"jz 1f \n"
-		"	.align 16 \n"
-		"	2: \n"
-		"	inc rax \n"
-		"	movzx rax, al \n"
-		"	movzx rbx, byte ptr[%5 + rax] \n"
-		"	movzx r8, byte ptr[rsi] \n"
-		"	movzx rdx, dl \n"
-		"	add dl, bl \n"
-		"	inc rsi \n"
-		"	movzx rcx, byte ptr[%5 + rdx] \n"
-		"	mov byte ptr[%5 + rdx], bl \n"
-		"	add rbx, rcx \n"
-		"	mov byte ptr[%5 + rax], cl \n"
-		"	and rcx, 7 \n"
-		"	movzx r9, r8b \n"
-		"	xor r9b, bl \n"
-		"	lea rdi, dword ptr[rdi + 1] \n"
-		"	ror r9b, cl \n"
-		"	mov byte ptr[rdi - 1], r9b \n"
-		"	lea rdx, dword ptr[rdx + r8] \n"
-		"	dec %4 \n"
-		"	jnz 2b \n"
-		"1: \n"
-		: "=a"(xm_byI), "=d"(xm_byJ), "=S"(unused), "=D"(unused), "=r"(unused)
-		: "r"(&xm_abyBox), "0"(xm_byI), "1"(xm_byJ), "2"(pbyRead), "3"(pbyWrite), "4"(uSize)
-		: "cx", "bx", "r8", "r9"
-#else
-		"mov ecx, dword ptr[%4] \n"
-		"test ecx, ecx \n"
-		"jz 1f \n"
-		"	push ebp \n"
-		"	mov ebp, ecx \n"
-		"	.align 16 \n"
-		"	2: \n"
-		"	inc al \n"
-		"	movzx eax, al \n"
-		"	movzx ecx, byte ptr[ebx + eax] \n"
-		"	movzx edx, dl \n"
-		"	add dl, cl \n"
-		"	shl ecx, 8 \n"
-		"	mov cl, byte ptr[ebx + edx] \n"
-		"	mov byte ptr[ebx + edx], ch \n"
-		"	add ch, cl \n"
-		"	mov byte ptr[ebx + eax], cl \n"
-		"	and cl, 7 \n"
-		"	mov dh, byte ptr[esi] \n"
-		"	inc esi \n"
-		"	add dl, dh \n"
-		"	xor dh, ch \n"
-		"	lea edi, dword ptr[edi + 1] \n"
-		"	ror dh, cl \n"
-		"	mov byte ptr[edi - 1], dh \n"
-		"	dec ebp \n"
-		"	jnz 2b \n"
-		"	pop ebp \n"
-		"1: \n"
-		: "=a"(xm_byI), "=d"(xm_byJ), "=S"(unused), "=D"(unused)
-		: "m"(uSize), "b"(&xm_abyBox), "0"(xm_byI), "1"(xm_byJ), "2"(pbyRead), "3"(pbyWrite)
-		: "cx"
-#endif
-	);
+	Decode(xm_fnDataCallback(uSize), pData, uSize, xm_abyBox, &xm_byI, &xm_byJ);
 }
 void RC4ExDecoder::Finalize(){
 	if(xm_bInited){

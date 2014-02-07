@@ -68,7 +68,7 @@ namespace {
 		auResult[4] += e;
 */
 
-		__attribute__((aligned(16))) std::uint32_t w[80];
+		alignas(16) std::uint32_t w[80];
 
 		for(std::size_t i = 0; i < 16; ++i){
 			w[i] = __builtin_bswap32(((const std::uint32_t *)pbyChunk)[i]);

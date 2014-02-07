@@ -32,7 +32,7 @@ void Base64Encoder::Update(const void *pData, std::size_t uSize){
 	std::uint32_t u32Word = xm_u32Word;
 	std::size_t uState = xm_uState;
 
-	__attribute__((aligned(16))) char achBuffer[64];
+	alignas(16) char achBuffer[64];
 	auto pchWrite = std::begin(achBuffer);
 
 	auto pbyRead = (const unsigned char *)pData;
@@ -122,7 +122,7 @@ void Base64Decoder::Update(const void *pData, std::size_t uSize){
 	std::uint32_t u32Word = xm_u32Word;
 	std::size_t uState = xm_uState;
 
-	__attribute__((aligned(16))) unsigned char abyBuffer[48];
+	alignas(16) unsigned char abyBuffer[48];
 	auto pbyWrite = std::begin(abyBuffer);
 
 	auto pbyRead = (const unsigned char *)pData;

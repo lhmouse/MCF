@@ -5,10 +5,18 @@
 #include "../StdMCF.hpp"
 #include "Utilities.hpp"
 #include "UniqueHandle.hpp"
+#include "../../MCFCRT/env/bail.h"
 #include <cmath>
 using namespace MCF;
 
 namespace MCF {
+
+#ifdef NDEBUG
+[[noreturn]]
+#endif
+void Bail(const wchar_t *pwszDescription){
+	::__MCF_Bail(pwszDescription);
+}
 
 UTF16String GetWin32ErrorDesc(unsigned long ulErrorCode){
 	struct LocalFreer {

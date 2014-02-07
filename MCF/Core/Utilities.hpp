@@ -8,8 +8,14 @@
 #include "String.hpp"
 #include <type_traits>
 #include <cstddef>
+#include <cstdint>
 
 namespace MCF {
+
+#ifdef NDEBUG
+[[noreturn]]
+#endif
+extern void Bail(const wchar_t *pwszDescription);
 
 extern UTF16String GetWin32ErrorDesc(unsigned long ulErrorCode);
 
@@ -22,13 +28,13 @@ typedef struct tagHiResCounter {
 		SECOND_BITS = 40
 	};
 	std::uint64_t u40Sec : SECOND_BITS;
-	std::uint32_t u24Rem : 64 - SECOND_BITS;
+	std::uint64_t u24Rem : 64 - SECOND_BITS;
 } HI_RES_COUNTER;
 
 extern HI_RES_COUNTER GetHiResCounter() noexcept;
 
 template<typename T>
-inline void __attribute__((always_inline)) ZeroObject(T &dst) noexcept {
+inline void ZeroObject(T &dst) noexcept {
 	static_assert(std::is_trivial<T>::value, "ZeroObject(): Only trivial types are supported");
 	__builtin_memset(&dst, 0, sizeof(dst));
 }

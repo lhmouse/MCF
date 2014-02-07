@@ -22,14 +22,11 @@ static __MCF_LFLIST_PHEAD g_pDtorHeader;
 void __MCF_CRT_RunEmutlsThreadDtors(){
 	const KEY_DTOR_NODE *pNode = (const KEY_DTOR_NODE *)g_pDtorHeader;
 	while(pNode){
-		const KEY_DTOR_NODE *const pNext = (const KEY_DTOR_NODE *)__MCF_LFListNext((const __MCF_LFLIST_NODE_HEADER *)pNode);
-
 		const LPVOID pMem = TlsGetValue(pNode->ulKey);
 		if((GetLastError() == ERROR_SUCCESS) && pMem){
 			(*pNode->pfnDtor)(pMem);
 		}
-
-		pNode = pNext;
+		pNode = (const KEY_DTOR_NODE *)__MCF_LFListNext((const __MCF_LFLIST_NODE_HEADER *)pNode);
 	}
 }
 

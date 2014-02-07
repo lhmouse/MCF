@@ -17,7 +17,7 @@ HexEncoder::HexEncoder(std::function<void *(std::size_t)> fnDataCallback, bool b
 
 // 其他非静态成员函数。
 void HexEncoder::Update(const void *pData, std::size_t uSize){
-	__attribute__((aligned(16))) char achBuffer[64];
+	alignas(16) char achBuffer[64];
 	auto pchWrite = std::begin(achBuffer);
 
 	auto pbyRead = (const unsigned char *)pData;
@@ -68,7 +68,7 @@ void HexDecoder::Update(const void *pData, std::size_t uSize){
 
 	auto uchLastDigit = xm_uchLastDigit;
 
-	__attribute__((aligned(16))) unsigned char abyBuffer[64];
+	alignas(16) unsigned char abyBuffer[64];
 	auto pbyWrite = std::begin(abyBuffer);
 
 	auto pbyRead = (const unsigned char *)pData;

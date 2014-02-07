@@ -62,7 +62,7 @@ bool FormatVector(
 
 namespace __MCF {
 	template<typename CHAR_T, StringEncoding CHAR_ENC, class... INSERTER_T>
-	static inline __attribute__((always_inline)) bool FormatHelper(
+	inline bool FormatHelper(
 		GenericString<CHAR_T, CHAR_ENC> &strRet,
 		const CHAR_T *pszFormat,
 		INSERTER_T &&... Inserter

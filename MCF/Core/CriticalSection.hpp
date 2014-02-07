@@ -6,7 +6,9 @@
 #define __MCF_CRITICAL_SECTION_HPP__
 
 #include "NoCopy.hpp"
+#include "UniqueHandle.hpp"
 #include <memory>
+#include <utility>
 
 namespace MCF {
 
@@ -15,14 +17,17 @@ private:
 	class xDelegate;
 
 	struct xUnlocker {
-		void operator()(xDelegate *pDelegate) const noexcept {
-			xUnlock(pDelegate);
+		constexpr void *operator()() const noexcept {
+			return nullptr;
+		}
+		void operator()(void *pDelegate) const noexcept {
+			xUnlock((xDelegate *)pDelegate);
 		}
 	};
 private:
 	static void xUnlock(xDelegate *pDelegate) noexcept;
 public:
-	typedef std::unique_ptr<xDelegate, xUnlocker> LockHolder;
+	typedef UniqueHandle<void *, xUnlocker> LockHolder;
 private:
 	const std::unique_ptr<xDelegate> xm_pDelegate;
 public:

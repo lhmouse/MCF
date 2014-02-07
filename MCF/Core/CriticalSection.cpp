@@ -45,7 +45,7 @@ CriticalSection::~CriticalSection(){
 // 其他非静态成员函数。
 CriticalSection::LockHolder CriticalSection::Try() noexcept {
 	if(!::TryEnterCriticalSection(xm_pDelegate->GetCriticalSecion())){
-		return nullptr;
+		return LockHolder();
 	}
 	return LockHolder(xm_pDelegate.get());
 }

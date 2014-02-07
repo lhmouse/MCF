@@ -52,7 +52,7 @@ Mutex::~Mutex(){
 // 其他非静态成员函数。
 Mutex::LockHolder Mutex::Try() noexcept {
 	if(::WaitForSingleObject(xm_pDelegate->GetHandle(), 0) == WAIT_TIMEOUT){
-		return nullptr;
+		return LockHolder();
 	}
 	return LockHolder(xm_pDelegate.get());
 }

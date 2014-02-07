@@ -6,12 +6,14 @@
 extern unsigned int MCFMain();
 
 namespace MCF {
-	// 拥有 C 链接性的 MCFMain() 函数定义。
-	extern "C" unsigned int MCFMain(){
-		// 如果用户仅仅定义了具有 C++ 链接性的 MCFMain() 函数，
-		// 则链接器会将 MCFCRT 链接到这里定义的具有 C 链接性的 MCFMain() 函数。
-		// 我们通过这个“跳板”调用对应的具有 C++ 链接性的 MCFMain() 函数。
-		// 由于两个函数仅仅链接性不同，我们不能在同一个命名空间中进行这个操作。
-		return ::MCFMain();
-	}
+
+// 拥有 C 链接性的 MCFMain() 函数定义。
+extern "C" unsigned int MCFMain(){
+	// 如果用户仅仅定义了具有 C++ 链接性的 MCFMain() 函数，
+	// 则链接器会将 MCFCRT 链接到这里定义的具有 C 链接性的 MCFMain() 函数。
+	// 我们通过这个“跳板”调用对应的具有 C++ 链接性的 MCFMain() 函数。
+	// 由于两个函数仅仅链接性不同，我们不能在同一个命名空间中进行这个操作。
+	return ::MCFMain();
+}
+
 }

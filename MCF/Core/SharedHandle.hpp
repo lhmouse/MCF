@@ -156,6 +156,9 @@ namespace __MCF {
 
 			return xm_hObj;
 		}
+		std::size_t GetRefCount() const noexcept {
+			return xm_uCount;
+		}
 	};
 }
 
@@ -290,6 +293,9 @@ public:
 	}
 	HANDLE_T Get() const noexcept {
 		return xm_pNode ? xm_pNode->Get() : CLOSER_T()();
+	}
+	std::size_t GetRefCount() const noexcept {
+		return xm_pNode ? xm_pNode->GetRefCount() : 0;
 	}
 	const HANDLE_T *AddRef() const noexcept {
 		return xSharedNode::ToPHandle(xSharedNode::AddRef(xm_pNode));

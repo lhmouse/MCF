@@ -56,15 +56,16 @@ namespace {
 			const auto b1 = pbyBox[j];
 			pbyBox[i] = b1;
 			pbyBox[j] = b0;
-			register unsigned char ch;
+
+			register auto ch = *(pbyRead++);
 			__asm__ __volatile__(
 				"rol %b0, cl \n"
-				: "=q"(ch)
-				: "0"(*(pbyRead++)), "c"(b1 & 7)
+				: "+q"(ch)
+				: "c"(b1 & 7)
 			);
 			ch ^= pbyBox[(unsigned char)(b0 + b1)];
-			*(pbyWrite++) = ch;
 			j += ch;
+			*(pbyWrite++) = ch;
 		}
 
 		*pbyI = i;
@@ -84,13 +85,16 @@ namespace {
 			const auto b1 = pbyBox[j];
 			pbyBox[i] = b1;
 			pbyBox[j] = b0;
-			const unsigned char ch = *(pbyRead++);
+
+			register auto ch = *(pbyRead++);
+			j += ch;
+			ch ^= pbyBox[(unsigned char)(b0 + b1)];
 			__asm__ __volatile__(
 				"ror %b0, cl \n"
-				: "=q"(*(pbyWrite++))
-				: "0"(ch ^ pbyBox[(unsigned char)(b0 + b1)]), "c"(b1 & 7)
+				: "+q"(ch)
+				: "c"(b1 & 7)
 			);
-			j += ch;
+			*(pbyWrite++) = ch;
 		}
 
 		*pbyI = i;

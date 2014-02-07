@@ -6,6 +6,7 @@
 #define __MCF_READ_WRITE_LOCK_HPP__
 
 #include "NoCopy.hpp"
+#include "UniqueHandle.hpp"
 #include <memory>
 #include <utility>
 
@@ -20,21 +21,27 @@ private:
 	class xDelegate;
 
 	struct xReadUnlocker {
-		void operator()(xDelegate *pDelegate) const noexcept {
-			xUnlockRead(pDelegate);
+		constexpr void *operator()() const noexcept {
+			return nullptr;
+		}
+		void operator()(void *pDelegate) const noexcept {
+			xUnlockRead((xDelegate *)pDelegate);
 		}
 	};
 	struct xWriteUnlocker {
-		void operator()(xDelegate *pDelegate) const noexcept {
-			xUnlockWrite(pDelegate);
+		constexpr void *operator()() const noexcept {
+			return nullptr;
+		}
+		void operator()(void *pDelegate) const noexcept {
+			xUnlockWrite((xDelegate *)pDelegate);
 		}
 	};
 private:
 	static void xUnlockRead(xDelegate *pDelegate) noexcept;
 	static void xUnlockWrite(xDelegate *pDelegate) noexcept;
 public:
-	typedef std::unique_ptr<xDelegate, xReadUnlocker> ReadLockHolder;
-	typedef std::unique_ptr<xDelegate, xWriteUnlocker> WriteLockHolder;
+	typedef UniqueHandle<void *, xReadUnlocker> ReadLockHolder;
+	typedef UniqueHandle<void *, xWriteUnlocker> WriteLockHolder;
 private:
 	const std::unique_ptr<xDelegate> xm_pDelegate;
 public:

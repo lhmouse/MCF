@@ -22,58 +22,71 @@ typedef struct tagAVLNodeHeader {
 
 typedef __MCF_AVL_NODE_HEADER *__MCF_AVL_PROOT;
 
-static inline __MCF_AVL_NODE_HEADER *__MCF_AVLPrev(const __MCF_AVL_NODE_HEADER *pNode){
+static inline __MCF_AVL_NODE_HEADER *__MCF_AvlPrev(const __MCF_AVL_NODE_HEADER *pNode){
 	return pNode->pPrev;
 }
-static inline __MCF_AVL_NODE_HEADER *__MCF_AVLNext(const __MCF_AVL_NODE_HEADER *pNode){
+static inline __MCF_AVL_NODE_HEADER *__MCF_AvlNext(const __MCF_AVL_NODE_HEADER *pNode){
 	return pNode->pNext;
 }
 
-extern void __MCF_AVLSwap(__MCF_AVL_PROOT *ppRoot1, __MCF_AVL_PROOT *ppRoot2);
+extern void __MCF_AvlSwap(__MCF_AVL_PROOT *ppRoot1, __MCF_AVL_PROOT *ppRoot2);
 
 // 若 arg0 < arg1 应返回非零值，否则应返回零。
 typedef int (*__MCF_AVL_KEY_COMPARER)(__MCF_STD intptr_t, __MCF_STD intptr_t);
 
-extern void __MCF_AVLAttach(
+extern void __MCF_AvlAttach(
 	__MCF_AVL_PROOT *ppRoot,
 	__MCF_STD intptr_t nKey,
 	__MCF_AVL_NODE_HEADER *pNode
 );
-extern void __MCF_AVLAttachCustomComp(
+extern void __MCF_AvlAttachCustomComp(
 	__MCF_AVL_PROOT *ppRoot,
 	__MCF_STD intptr_t nKey,
 	__MCF_AVL_NODE_HEADER *pNode,
 	__MCF_AVL_KEY_COMPARER pfnKeyComparer
 );
-extern void __MCF_AVLDetach(
+extern void __MCF_AvlDetach(
 	const __MCF_AVL_NODE_HEADER *pNode
 );
 
 // Q: 为什么这里是 const __MCF_AVL_NODE_HEADER * 而不是 __MCF_AVL_NODE_HEADER * 呢？
 // A: 参考 strchr 函数。
-extern __MCF_AVL_NODE_HEADER *__MCF_AVLLowerBound(
+extern __MCF_AVL_NODE_HEADER *__MCF_AvlLowerBound(
 	const __MCF_AVL_PROOT *ppRoot,
 	__MCF_STD intptr_t nKey
 );
-extern __MCF_AVL_NODE_HEADER *__MCF_AVLLowerBoundCustomComp(
+extern __MCF_AVL_NODE_HEADER *__MCF_AvlLowerBoundCustomComp(
 	const __MCF_AVL_PROOT *ppRoot,
 	__MCF_STD intptr_t nKey,
 	__MCF_AVL_KEY_COMPARER pfnKeyComparer
 );
-extern __MCF_AVL_NODE_HEADER *__MCF_AVLUpperBound(
+extern __MCF_AVL_NODE_HEADER *__MCF_AvlUpperBound(
 	const __MCF_AVL_PROOT *ppRoot,
 	__MCF_STD intptr_t nKey
 );
-extern __MCF_AVL_NODE_HEADER *__MCF_AVLUpperBoundCustomComp(
+extern __MCF_AVL_NODE_HEADER *__MCF_AvlUpperBoundCustomComp(
 	const __MCF_AVL_PROOT *ppRoot,
 	__MCF_STD intptr_t nKey,
 	__MCF_AVL_KEY_COMPARER pfnKeyComparer
 );
-extern __MCF_AVL_NODE_HEADER *__MCF_AVLFind(
+extern __MCF_AVL_NODE_HEADER *__MCF_AvlFind(
 	const __MCF_AVL_PROOT *ppRoot,
 	__MCF_STD intptr_t nKey
 );
-extern __MCF_AVL_NODE_HEADER *__MCF_AVLFindCustomComp(
+extern __MCF_AVL_NODE_HEADER *__MCF_AvlFindCustomComp(
+	const __MCF_AVL_PROOT *ppRoot,
+	__MCF_STD intptr_t nKey,
+	__MCF_AVL_KEY_COMPARER pfnKeyComparer
+);
+extern void __MCF_AvlEqualRange(
+	__MCF_AVL_NODE_HEADER **ppFrom,
+	__MCF_AVL_NODE_HEADER **ppTo,
+	const __MCF_AVL_PROOT *ppRoot,
+	__MCF_STD intptr_t nKey
+);
+extern void __MCF_AvlEqualRangeCustomComp(
+	__MCF_AVL_NODE_HEADER **ppFrom,
+	__MCF_AVL_NODE_HEADER **ppTo,
 	const __MCF_AVL_PROOT *ppRoot,
 	__MCF_STD intptr_t nKey,
 	__MCF_AVL_KEY_COMPARER pfnKeyComparer

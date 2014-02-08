@@ -193,7 +193,7 @@ void *__MCF_CRT_RetrieveTls(
 		return NULL;
 	}
 
-	TLS_OBJECT *pObject = (TLS_OBJECT *)__MCF_AVLFind(&pThreadEnv->mapObjects, nKey);
+	TLS_OBJECT *pObject = (TLS_OBJECT *)__MCF_AvlFind(&pThreadEnv->mapObjects, nKey);
 	if(!pObject){
 		pObject = (TLS_OBJECT *)malloc(sizeof(TLS_OBJECT));
 		if(!pObject){
@@ -224,7 +224,7 @@ void *__MCF_CRT_RetrieveTls(
 
 		pThreadEnv->pLastObject = pObject;
 
-		__MCF_AVLAttach(&pThreadEnv->mapObjects, nKey, (__MCF_AVL_NODE_HEADER *)pObject);
+		__MCF_AvlAttach(&pThreadEnv->mapObjects, nKey, (__MCF_AVL_NODE_HEADER *)pObject);
 	}
 #ifndef NDEBUG
 	if(pObject->uMemSize != uSizeToAlloc){
@@ -249,7 +249,7 @@ void __MCF_CRT_DeleteTls(
 		return;
 	}
 
-	TLS_OBJECT *pObject = (TLS_OBJECT *)__MCF_AVLFind(&pThreadEnv->mapObjects, nKey);
+	TLS_OBJECT *pObject = (TLS_OBJECT *)__MCF_AvlFind(&pThreadEnv->mapObjects, nKey);
 	if(pObject){
 		TLS_OBJECT *const pPrev = pObject->pPrev;
 		TLS_OBJECT *const pNext = pObject->pNext;

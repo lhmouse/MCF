@@ -15,7 +15,7 @@
 __MCF_EXTERN_C_BEGIN
 
 typedef struct tagHeapDbgBlockInfo {
-	__MCF_AVL_NODE_HEADER __MCF_AVLNodeHeader;
+	__MCF_AVL_NODE_HEADER __MCF_AvlNodeHeader;
 
 	__MCF_STD size_t uSize;
 	const void *pRetAddr;

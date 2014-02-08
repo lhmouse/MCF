@@ -1,33 +1,27 @@
 #include <MCFCRT/MCFCRT.h>
+#include <MCFCRT/env/avl_tree.h>
 #include <MCF/Core/Thread.hpp>
 #include <MCF/Components/EventDriver.hpp>
-#include <vector>
 #include <cstdio>
 
-void ThreadProc(){
-	for(;;){
-		std::puts("-----");
-		MCF::RaiseEvent(1, 12345);
-	}
-}
-
 unsigned int MCFMain(){
-	MCF::Thread thread;
-	thread.Start(&ThreadProc);
+	__MCF_AVL_PROOT pRoot = NULL;
+	for(int i = 0; i < 10; ++i){
+		__MCF_AvlAttach(&pRoot, i % 3, new __MCF_AVL_NODE_HEADER);
+	}
 
-	const auto fn = [](int id, std::uintptr_t ctx){
-		std::printf("handler, id = %d, ctx = %zu\n", id, ctx);
-		return false;
-	};
+	__MCF_AVL_NODE_HEADER *pFrom, *pTo;
+	__MCF_AvlEqualRange(&pFrom, &pTo, &pRoot, 0);
+	std::printf("from = %p, to = %p\n", pFrom, pTo);
+	while(pFrom != pTo){
+		std::printf("%d\n", pFrom->nKey);
+		pFrom = __MCF_AvlNext(pFrom);
+	}
 
-	std::vector<MCF::EventHandlerHolder> v;
-	for(;;){
-		const int ch = std::getchar();
-		if(ch == 'z'){
-			v.clear();
-		} else {
-			v.push_back(MCF::RegisterEventHandler(1, std::bind(fn, ch, std::placeholders::_1)));
-		}
+	while(pRoot){
+		const auto p = pRoot;
+		__MCF_AvlDetach(p);
+		delete p;
 	}
 
 	return 0;

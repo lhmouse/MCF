@@ -260,7 +260,7 @@ static void Insert(
 	}
 }
 
-void __MCF_AVLSwap(
+void __MCF_AvlSwap(
 	__MCF_AVL_PROOT *ppRoot1,
 	__MCF_AVL_PROOT *ppRoot2
 ){
@@ -278,7 +278,7 @@ void __MCF_AVLSwap(
 	}
 }
 
-void __MCF_AVLAttach(
+void __MCF_AvlAttach(
 	__MCF_AVL_PROOT *ppRoot,
 	intptr_t nKey,
 	__MCF_AVL_NODE_HEADER *pNode
@@ -300,7 +300,7 @@ void __MCF_AVLAttach(
 	}
 	Insert(pNode, nKey, pParent, ppIns);
 }
-void __MCF_AVLAttachCustomComp(
+void __MCF_AvlAttachCustomComp(
 	__MCF_AVL_PROOT *ppRoot,
 	intptr_t nKey,
 	__MCF_AVL_NODE_HEADER *pNode,
@@ -323,7 +323,7 @@ void __MCF_AVLAttachCustomComp(
 	}
 	Insert(pNode, nKey, pParent, ppIns);
 }
-void __MCF_AVLDetach(
+void __MCF_AvlDetach(
 	const __MCF_AVL_NODE_HEADER *pNode
 ){
 	__MCF_AVL_NODE_HEADER *const pParent = pNode->pParent;
@@ -435,7 +435,7 @@ void __MCF_AVLDetach(
 	}
 }
 
-__MCF_AVL_NODE_HEADER *__MCF_AVLLowerBound(
+__MCF_AVL_NODE_HEADER *__MCF_AvlLowerBound(
 	const __MCF_AVL_PROOT *ppRoot,
 	intptr_t nKey
 ){
@@ -451,7 +451,7 @@ __MCF_AVL_NODE_HEADER *__MCF_AVLLowerBound(
 	}
 	return (__MCF_AVL_NODE_HEADER *)pRet;
 }
-__MCF_AVL_NODE_HEADER *__MCF_AVLLowerBoundCustomComp(
+__MCF_AVL_NODE_HEADER *__MCF_AvlLowerBoundCustomComp(
 	const __MCF_AVL_PROOT *ppRoot,
 	intptr_t nKey,
 	__MCF_AVL_KEY_COMPARER pfnKeyComparer
@@ -468,7 +468,7 @@ __MCF_AVL_NODE_HEADER *__MCF_AVLLowerBoundCustomComp(
 	}
 	return (__MCF_AVL_NODE_HEADER *)pRet;
 }
-__MCF_AVL_NODE_HEADER *__MCF_AVLUpperBound(
+__MCF_AVL_NODE_HEADER *__MCF_AvlUpperBound(
 	const __MCF_AVL_PROOT *ppRoot,
 	intptr_t nKey
 ){
@@ -484,7 +484,7 @@ __MCF_AVL_NODE_HEADER *__MCF_AVLUpperBound(
 	}
 	return (__MCF_AVL_NODE_HEADER *)pRet;
 }
-__MCF_AVL_NODE_HEADER *__MCF_AVLUpperBoundCustomComp(
+__MCF_AVL_NODE_HEADER *__MCF_AvlUpperBoundCustomComp(
 	const __MCF_AVL_PROOT *ppRoot,
 	intptr_t nKey,
 	__MCF_AVL_KEY_COMPARER pfnKeyComparer
@@ -501,7 +501,7 @@ __MCF_AVL_NODE_HEADER *__MCF_AVLUpperBoundCustomComp(
 	}
 	return (__MCF_AVL_NODE_HEADER *)pRet;
 }
-__MCF_AVL_NODE_HEADER *__MCF_AVLFind(
+__MCF_AVL_NODE_HEADER *__MCF_AvlFind(
 	const __MCF_AVL_PROOT *ppRoot,
 	intptr_t nKey
 ){
@@ -517,7 +517,7 @@ __MCF_AVL_NODE_HEADER *__MCF_AVLFind(
 	}
 	return (__MCF_AVL_NODE_HEADER *)pCur;
 }
-__MCF_AVL_NODE_HEADER *__MCF_AVLFindCustomComp(
+__MCF_AVL_NODE_HEADER *__MCF_AvlFindCustomComp(
 	const __MCF_AVL_PROOT *ppRoot,
 	intptr_t nKey,
 	__MCF_AVL_KEY_COMPARER pfnKeyComparer
@@ -533,4 +533,69 @@ __MCF_AVL_NODE_HEADER *__MCF_AVLFindCustomComp(
 		}
 	}
 	return (__MCF_AVL_NODE_HEADER *)pCur;
+}
+void __MCF_AvlEqualRange(
+	__MCF_AVL_NODE_HEADER **ppFrom,
+	__MCF_AVL_NODE_HEADER **ppTo,
+	const __MCF_AVL_PROOT *ppRoot,
+	__MCF_STD intptr_t nKey
+){
+	const __MCF_AVL_NODE_HEADER *const pTop = __MCF_AvlFind(ppRoot, nKey);
+	if(pTop){
+		const __MCF_AVL_NODE_HEADER *pCur = pTop;
+		for(;;){
+			const __MCF_AVL_NODE_HEADER *const pLower = pCur->pLeft;
+			if(!pLower || (pLower->nKey < nKey)){
+				break;
+			}
+			pCur = pLower;
+		}
+		*ppFrom = (__MCF_AVL_NODE_HEADER *)pCur;
+
+		pCur = pTop;
+		for(;;){
+			const __MCF_AVL_NODE_HEADER *const pUpper = pCur->pRight;
+			if(!pUpper || (nKey < pUpper->nKey)){
+				break;
+			}
+			pCur = pUpper;
+		}
+		*ppTo = (__MCF_AVL_NODE_HEADER *)(pCur ? pCur->pNext : NULL);
+	} else {
+		*ppFrom = NULL;
+		*ppTo = NULL;
+	}
+}
+void __MCF_AvlEqualRangeCustomComp(
+	__MCF_AVL_NODE_HEADER **ppFrom,
+	__MCF_AVL_NODE_HEADER **ppTo,
+	const __MCF_AVL_PROOT *ppRoot,
+	__MCF_STD intptr_t nKey,
+	__MCF_AVL_KEY_COMPARER pfnKeyComparer
+){
+	const __MCF_AVL_NODE_HEADER *const pTop = __MCF_AvlFindCustomComp(ppRoot, nKey, pfnKeyComparer);
+	if(pTop){
+		const __MCF_AVL_NODE_HEADER *pCur = pTop;
+		for(;;){
+			const __MCF_AVL_NODE_HEADER *const pLower = pCur->pLeft;
+			if(!pLower || (*pfnKeyComparer)(pLower->nKey, nKey)){
+				break;
+			}
+			pCur = pLower;
+		}
+		*ppFrom = (__MCF_AVL_NODE_HEADER *)pCur;
+
+		pCur = pTop;
+		for(;;){
+			const __MCF_AVL_NODE_HEADER *const pUpper = pCur->pRight;
+			if(!pUpper || (*pfnKeyComparer)(nKey, pUpper->nKey)){
+				break;
+			}
+			pCur = pUpper;
+		}
+		*ppTo = (__MCF_AVL_NODE_HEADER *)(pCur ? pCur->pNext : NULL);
+	} else {
+		*ppFrom = NULL;
+		*ppTo = NULL;
+	}
 }

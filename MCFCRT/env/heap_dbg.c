@@ -61,7 +61,7 @@ void __MCF_CRT_HeapDbgUninitContext(){
 			*pwchWrite = 0;
 
 			OutputDebugStringW(awchBuffer);
-		} while(!!(pBlockInfo = (const __MCF_HEAPDBG_BLOCK_INFO *)__MCF_AVLNext((const __MCF_AVL_NODE_HEADER *)pBlockInfo)));
+		} while(!!(pBlockInfo = (const __MCF_HEAPDBG_BLOCK_INFO *)__MCF_AvlNext((const __MCF_AVL_NODE_HEADER *)pBlockInfo)));
 		__asm__ __volatile__("int 3 \n");
 	}
 
@@ -104,8 +104,8 @@ void __MCF_CRT_HeapDbgAddGuardsAndRegister(
 	pBlockInfo->uSize = uContentSize;
 	pBlockInfo->pRetAddr = pRetAddr;
 
-	__MCF_AVLAttach(&g_mapBlocks, (intptr_t)pContents, (__MCF_AVL_NODE_HEADER *)pBlockInfo);
-	if(!__MCF_AVLPrev((__MCF_AVL_NODE_HEADER *)pBlockInfo)){
+	__MCF_AvlAttach(&g_mapBlocks, (intptr_t)pContents, (__MCF_AVL_NODE_HEADER *)pBlockInfo);
+	if(!__MCF_AvlPrev((__MCF_AVL_NODE_HEADER *)pBlockInfo)){
 		g_pBlockHead = pBlockInfo;
 	}
 }
@@ -117,7 +117,7 @@ const __MCF_HEAPDBG_BLOCK_INFO *__MCF_CRT_HeapDbgValidate(
 	unsigned char *const pRaw = pContents - GUARD_BAND_SIZE;
 	*ppRaw = pRaw;
 
-	const __MCF_HEAPDBG_BLOCK_INFO *pBlockInfo = (const __MCF_HEAPDBG_BLOCK_INFO *)__MCF_AVLFind(&g_mapBlocks, (intptr_t)pContents);
+	const __MCF_HEAPDBG_BLOCK_INFO *pBlockInfo = (const __MCF_HEAPDBG_BLOCK_INFO *)__MCF_AvlFind(&g_mapBlocks, (intptr_t)pContents);
 	if(!pBlockInfo){
 		__MCF_BailF(L"__MCF_CRT_HeapDbgValidate() 失败：传入的指针无效。\n调用返回地址：%p", pRetAddr);
 	}
@@ -139,15 +139,15 @@ const __MCF_HEAPDBG_BLOCK_INFO *__MCF_CRT_HeapDbgValidate(
 const unsigned char *__MCF_CRT_HeapDbgGetContents(
 	const __MCF_HEAPDBG_BLOCK_INFO *pBlockInfo
 ){
-	return (const unsigned char *)pBlockInfo->__MCF_AVLNodeHeader.nKey;
+	return (const unsigned char *)pBlockInfo->__MCF_AvlNodeHeader.nKey;
 }
 void __MCF_CRT_HeapDbgUnregister(
 	const __MCF_HEAPDBG_BLOCK_INFO *pBlockInfo
 ){
 	if(g_pBlockHead == pBlockInfo){
-		g_pBlockHead = (__MCF_HEAPDBG_BLOCK_INFO *)__MCF_AVLNext((__MCF_AVL_NODE_HEADER *)pBlockInfo);
+		g_pBlockHead = (__MCF_HEAPDBG_BLOCK_INFO *)__MCF_AvlNext((__MCF_AVL_NODE_HEADER *)pBlockInfo);
 	}
-	__MCF_AVLDetach((const __MCF_AVL_NODE_HEADER *)pBlockInfo);
+	__MCF_AvlDetach((const __MCF_AVL_NODE_HEADER *)pBlockInfo);
 
 	HeapFree(g_hMapAllocator, 0, (void *)pBlockInfo);
 }

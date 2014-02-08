@@ -54,9 +54,14 @@ unsigned int GetUnixTime() noexcept {
 	return (unsigned int)((u.uli.QuadPart - 0x019DB1DED53E8000ull) / 10000000ull);
 }
 std::uint32_t GenRandSeed() noexcept {
-	LARGE_INTEGER liTemp;
-	::QueryPerformanceCounter(&liTemp);
-	return (std::uint32_t)liTemp.QuadPart;
+	register std::uint32_t ret __asm__("ax");
+	__asm__ __volatile__(
+		"rdtsc \n"
+		: "=a"(ret)
+		:
+		: "dx"
+	);
+	return ret;
 }
 
 HI_RES_COUNTER GetHiResCounter() noexcept {

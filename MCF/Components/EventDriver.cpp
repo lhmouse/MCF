@@ -81,7 +81,7 @@ namespace __MCF {
 			}
 			pNewDelegate->UnregisterEventHandler(pInternal);
 			CRITICAL_SECTION_SCOPE(g_csReadLock){
-				g_pDelegate.swap(pNewDelegate);
+				g_pDelegate = std::move(pNewDelegate);
 			}
 		}
 	}
@@ -102,7 +102,7 @@ EventHandlerHolder RegisterEventHandler(std::uintptr_t uEventId, std::function<b
 		}
 		ret = pNewDelegate->RegisterHandler(uEventId, std::move(fnHandler));
 		CRITICAL_SECTION_SCOPE(g_csReadLock){
-			g_pDelegate.swap(pNewDelegate);
+			g_pDelegate = std::move(pNewDelegate);
 		}
 	}
 	return std::move(ret);

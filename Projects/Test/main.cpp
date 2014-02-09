@@ -1,28 +1,27 @@
 #include <MCFCRT/MCFCRT.h>
-#include <MCFCRT/env/avl_tree.h>
-#include <MCF/Core/Thread.hpp>
 #include <MCF/Components/EventDriver.hpp>
 #include <cstdio>
 
+bool foo(int id, std::uintptr_t ctx){
+	std::printf("foo(%d, %zu)\n", id, ctx);
+	return false;
+}
+
 unsigned int MCFMain(){
-	__MCF_AVL_PROOT pRoot = NULL;
-	for(int i = 0; i < 10; ++i){
-		__MCF_AvlAttach(&pRoot, i % 3, new __MCF_AVL_NODE_HEADER);
-	}
+	auto h0 = MCF::RegisterEventHandler(1, std::bind(&foo, 0, std::placeholders::_1));
+	auto h1 = MCF::RegisterEventHandler(1, std::bind(&foo, 1, std::placeholders::_1));
+	auto h2 = MCF::RegisterEventHandler(1, std::bind(&foo, 2, std::placeholders::_1));
 
-	__MCF_AVL_NODE_HEADER *pFrom, *pTo;
-	__MCF_AvlEqualRange(&pFrom, &pTo, &pRoot, 0);
-	std::printf("from = %p, to = %p\n", pFrom, pTo);
-	while(pFrom != pTo){
-		std::printf("%d\n", pFrom->nKey);
-		pFrom = __MCF_AvlNext(pFrom);
-	}
+	MCF::RaiseEvent(1, 12345);
+	std::puts("------");
 
-	while(pRoot){
-		const auto p = pRoot;
-		__MCF_AvlDetach(p);
-		delete p;
-	}
+	h1.Reset();
+	MCF::RaiseEvent(1, 12345);
+	std::puts("------");
+
+	h2.Reset();
+	h0.Reset();
+	MCF::RaiseEvent(1, 12345);
 
 	return 0;
 }

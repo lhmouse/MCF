@@ -16,14 +16,14 @@ namespace MCF {
 namespace __MCF {
 	typedef std::pair<std::uintptr_t, void *> EVENT_HANDLER_HANDLE;
 
-	extern void UnregisterEventHandler(const EVENT_HANDLER_HANDLE &Internal) noexcept;
+	extern void UnregisterEventHandler(const EVENT_HANDLER_HANDLE &Handle) noexcept;
 
 	struct EventHandlerDeleter {
 		constexpr EVENT_HANDLER_HANDLE operator()() const noexcept {
-			return std::make_pair(0, nullptr);
+			return EVENT_HANDLER_HANDLE();
 		}
-		void operator()(const EVENT_HANDLER_HANDLE &Internal) const noexcept {
-			UnregisterEventHandler(Internal);
+		void operator()(const EVENT_HANDLER_HANDLE &Handle) const noexcept {
+			UnregisterEventHandler(Handle);
 		}
 	};
 }

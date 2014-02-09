@@ -13,103 +13,87 @@
 using namespace MCF;
 
 namespace {
-	class EventDelegate {
-	private:
-		std::map<
-			std::uintptr_t,
-			std::list<std::shared_ptr<std::function<bool(std::uintptr_t)>>>
-		> xm_mapHandlers;
-	public:
-		EventHandlerHolder RegisterHandler(std::uintptr_t uEventId, std::function<bool(std::uintptr_t)> &&fnHandler){
-			auto pHandler = std::make_shared<std::function<bool(std::uintptr_t)>>(std::move(fnHandler));
-			const auto pRaw = pHandler.get();
-			xm_mapHandlers[uEventId].emplace_front(std::move(pHandler));
-			return EventHandlerHolder(std::make_pair(uEventId, pRaw));
-		}
-		void UnregisterEventHandler(const __MCF::EVENT_HANDLER_HANDLE &Internal) noexcept {
-			if(Internal.second){
-				const auto it = xm_mapHandlers.find(Internal.first);
-				if(it != xm_mapHandlers.end()){
-					auto &lstHandlers = it->second;
-					for(auto it2 = lstHandlers.cbegin(); it2 != lstHandlers.cend(); ++it2){
-						if(it2->get() == Internal.second){
-							lstHandlers.erase(it2);
-							break;
-						}
-					}
-				}
-			}
-		}
-
-		void RaiseEvent(std::uintptr_t uEventId, std::uintptr_t uContext) const {
-			const auto it = xm_mapHandlers.find(uEventId);
-			if(it != xm_mapHandlers.end()){
-				auto &lstHandlers = it->second;
-				for(const auto &pHandler : lstHandlers){
-					if((*pHandler)(uContext)){
-						break;
-					}
-				}
-			}
-		}
-	};
+	typedef std::shared_ptr<std::function<bool(std::uintptr_t)>> PHANDLER_PROC;
+	typedef std::list<PHANDLER_PROC> HANDLER_LIST;
+	typedef std::shared_ptr<const HANDLER_LIST> PCHANDLER_LIST;
+	typedef std::shared_ptr<HANDLER_LIST> PHANDLER_LIST;
 
 	// 使用 Copy-On-Write 策略。
 	CriticalSection g_csWriteLock;
 	CriticalSection g_csReadLock;
-	std::shared_ptr<const EventDelegate> g_pDelegate;
+	std::map<std::uintptr_t, PCHANDLER_LIST> g_mapDelegates;
 }
 
 namespace MCF {
 
 namespace __MCF {
-	void UnregisterEventHandler(const EVENT_HANDLER_HANDLE &Internal) noexcept {
+	void UnregisterEventHandler(const EVENT_HANDLER_HANDLE &Handle) noexcept {
+		if(!Handle.second){
+			return;
+		}
 		CRITICAL_SECTION_SCOPE(g_csWriteLock){
-			std::shared_ptr<const EventDelegate> pDelegate;
+			PCHANDLER_LIST *ppList = nullptr;
 			CRITICAL_SECTION_SCOPE(g_csReadLock){
-				pDelegate = g_pDelegate;
+				const auto itList = g_mapDelegates.find(Handle.first);
+				if(itList != g_mapDelegates.end()){
+					ppList = &(itList->second);
+				}
 			}
-			std::shared_ptr<EventDelegate> pNewDelegate;
-			if(pDelegate){
-				pNewDelegate.reset(new EventDelegate(*pDelegate));
-			} else {
-				pNewDelegate.reset(new EventDelegate);
-			}
-			pNewDelegate->UnregisterEventHandler(Internal);
-			CRITICAL_SECTION_SCOPE(g_csReadLock){
-				g_pDelegate = std::move(pNewDelegate);
+			if(ppList && *ppList){
+				PHANDLER_LIST pNewList(new HANDLER_LIST(**ppList));
+				for(auto it = pNewList->cbegin(); it != pNewList->cend(); ++it){
+					if(it->get() == Handle.second){
+						pNewList->erase(it);
+						break;
+					}
+				}
+				CRITICAL_SECTION_SCOPE(g_csReadLock){
+					const auto itList = g_mapDelegates.find(Handle.first);
+
+					ASSERT(itList != g_mapDelegates.end());
+
+					if(pNewList->empty()){
+						g_mapDelegates.erase(itList);
+					} else {
+						itList->second = std::move(pNewList);
+					}
+				}
 			}
 		}
 	}
 }
 
 EventHandlerHolder RegisterEventHandler(std::uintptr_t uEventId, std::function<bool(std::uintptr_t)> fnHandler){
-	EventHandlerHolder ret;
+	EventHandlerHolder Holder;
 	CRITICAL_SECTION_SCOPE(g_csWriteLock){
-		std::shared_ptr<const EventDelegate> pDelegate;
+		PCHANDLER_LIST *ppList;
 		CRITICAL_SECTION_SCOPE(g_csReadLock){
-			pDelegate = g_pDelegate;
+			ppList = &g_mapDelegates[uEventId];
 		}
-		std::shared_ptr<EventDelegate> pNewDelegate;
-		if(pDelegate){
-			pNewDelegate.reset(new EventDelegate(*pDelegate));
-		} else {
-			pNewDelegate.reset(new EventDelegate);
-		}
-		ret = pNewDelegate->RegisterHandler(uEventId, std::move(fnHandler));
+		PHANDLER_LIST pNewList(*ppList ? new HANDLER_LIST(**ppList) : new HANDLER_LIST());
+		pNewList->emplace_front(new auto(std::move(fnHandler)));
+		const auto pRaw = pNewList->front().get();
 		CRITICAL_SECTION_SCOPE(g_csReadLock){
-			g_pDelegate = std::move(pNewDelegate);
+			*ppList = std::move(pNewList);
 		}
+		Holder = std::make_pair(uEventId, pRaw);
 	}
-	return std::move(ret);
+	return std::move(Holder);
 }
 void RaiseEvent(std::uintptr_t uEventId, std::uintptr_t uContext){
-	std::shared_ptr<const EventDelegate> pDelegate;
+	PCHANDLER_LIST pList;
 	CRITICAL_SECTION_SCOPE(g_csReadLock){
-		pDelegate = g_pDelegate;
+		const auto itList = g_mapDelegates.find(uEventId);
+		if(itList != g_mapDelegates.end()){
+			pList = itList->second;
+		}
 	}
-	if(pDelegate){
-		pDelegate->RaiseEvent(uEventId, uContext);
+	if(pList){
+		for(const auto &pHandler : *pList){
+			if((*pHandler)(uContext)){
+				break;
+			}
+		}
 	}
 }
 

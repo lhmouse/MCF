@@ -81,8 +81,8 @@ public:
 	}
 	VVector(std::initializer_list<ELEMENT_T> rhs) : VVector() {
 		Reserve(rhs.size());
-		for(auto iter = rhs.begin(); iter != rhs.end(); ++iter){
-			PushNoCheck(std::move(*iter));
+		for(auto it = rhs.begin(); it != rhs.end(); ++it){
+			PushNoCheck(std::move(*it));
 		}
 	}
 	VVector(const VVector &rhs) : VVector() {
@@ -142,8 +142,8 @@ public:
 	VVector &operator=(std::initializer_list<ELEMENT_T> rhs){
 		Clear();
 		Reserve(rhs.size());
-		for(auto iter = rhs.begin(); iter != rhs.end(); ++iter){
-			PushNoCheck(*iter);
+		for(auto it = rhs.begin(); it != rhs.end(); ++it){
+			PushNoCheck(std::move(*it));
 		}
 		return *this;
 	}

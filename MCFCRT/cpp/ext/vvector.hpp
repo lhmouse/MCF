@@ -82,7 +82,7 @@ public:
 	VVector(std::initializer_list<ELEMENT_T> rhs) : VVector() {
 		Reserve(rhs.size());
 		for(auto iter = rhs.begin(); iter != rhs.end(); ++iter){
-			PushNoCheck(*iter);
+			PushNoCheck(std::move(*iter));
 		}
 	}
 	VVector(const VVector &rhs) : VVector() {

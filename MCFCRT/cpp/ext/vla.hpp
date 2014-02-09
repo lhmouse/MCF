@@ -54,7 +54,7 @@ public:
 
 		auto p = xm_pBegin;
 		for(auto iter = InitList.begin(); iter != InitList.end(); ++iter){
-			new(p++) ELEMENT_T(*iter);
+			new(p++) ELEMENT_T(std::move(*iter));
 		}
 	}
 	~VLA(){

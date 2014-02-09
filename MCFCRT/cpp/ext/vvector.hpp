@@ -119,6 +119,7 @@ public:
 				rhs.xm_pEnd = (ELEMENT_T *)std::begin(rhs.xm_aSmall);
 				rhs.xm_pEndOfStor = (ELEMENT_T *)std::end(rhs.xm_aSmall);
 			} else {
+				Reserve((std::size_t)(rhs.xm_pEnd - rhs.xm_pBegin));
 				for(auto pRead = rhs.xm_pBegin; pRead != rhs.xm_pEnd; ++pRead){
 					PushNoCheck(std::move_if_noexcept(*pRead));
 				}

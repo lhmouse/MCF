@@ -17,26 +17,22 @@ namespace {
 	private:
 		std::map<
 			std::uintptr_t,
-			std::list<std::shared_ptr<std::pair<
-				std::uintptr_t,
-				std::function<bool(std::uintptr_t)>
-			>>>
+			std::list<std::shared_ptr<std::function<bool(std::uintptr_t)>>>
 		> xm_mapHandlers;
 	public:
 		EventHandlerHolder RegisterHandler(std::uintptr_t uEventId, std::function<bool(std::uintptr_t)> &&fnHandler){
-			auto pPair = std::make_shared<std::pair<std::uintptr_t, std::function<bool(std::uintptr_t)>>>(uEventId, std::move(fnHandler));
-			const auto pRaw = pPair.get();
-			xm_mapHandlers[uEventId].emplace_front(std::move(pPair));
-			return EventHandlerHolder(pRaw);
+			auto pHandler = std::make_shared<std::function<bool(std::uintptr_t)>>(std::move(fnHandler));
+			const auto pRaw = pHandler.get();
+			xm_mapHandlers[uEventId].emplace_front(std::move(pHandler));
+			return EventHandlerHolder(std::make_pair(uEventId, pRaw));
 		}
-		void UnregisterEventHandler(void *pInternal) noexcept {
-			if(pInternal){
-				const auto pPair = (const std::pair<std::uintptr_t, std::function<bool(std::uintptr_t)>> *)pInternal;
-				const auto it = xm_mapHandlers.find(pPair->first);
+		void UnregisterEventHandler(const __MCF::EVENT_HANDLER_HANDLE &Internal) noexcept {
+			if(Internal.second){
+				const auto it = xm_mapHandlers.find(Internal.first);
 				if(it != xm_mapHandlers.end()){
 					auto &lstHandlers = it->second;
 					for(auto it2 = lstHandlers.cbegin(); it2 != lstHandlers.cend(); ++it2){
-						if(it2->get() == pPair){
+						if(it2->get() == Internal.second){
 							lstHandlers.erase(it2);
 							break;
 						}
@@ -49,8 +45,8 @@ namespace {
 			const auto it = xm_mapHandlers.find(uEventId);
 			if(it != xm_mapHandlers.end()){
 				auto &lstHandlers = it->second;
-				for(const auto &pPair : lstHandlers){
-					if(pPair->second(uContext)){
+				for(const auto &pHandler : lstHandlers){
+					if((*pHandler)(uContext)){
 						break;
 					}
 				}
@@ -67,7 +63,7 @@ namespace {
 namespace MCF {
 
 namespace __MCF {
-	void UnregisterEventHandler(void *pInternal) noexcept {
+	void UnregisterEventHandler(const EVENT_HANDLER_HANDLE &Internal) noexcept {
 		CRITICAL_SECTION_SCOPE(g_csWriteLock){
 			std::shared_ptr<const EventDelegate> pDelegate;
 			CRITICAL_SECTION_SCOPE(g_csReadLock){
@@ -79,7 +75,7 @@ namespace __MCF {
 			} else {
 				pNewDelegate.reset(new EventDelegate);
 			}
-			pNewDelegate->UnregisterEventHandler(pInternal);
+			pNewDelegate->UnregisterEventHandler(Internal);
 			CRITICAL_SECTION_SCOPE(g_csReadLock){
 				g_pDelegate = std::move(pNewDelegate);
 			}

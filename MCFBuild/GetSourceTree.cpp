@@ -9,7 +9,7 @@ using namespace MCFBuild;
 namespace {
 	void GetTreeRecur(
 		FOLDER_TREE &ret,
-		std::size_t &uTotal,
+		unsigned long &ulTotal,
 		const wvstring &wcsPath,
 		const PROJECT &Project,
 		const wvstring &wcsPrefix,
@@ -50,14 +50,14 @@ namespace {
 					__builtin_memcpy(&(ret.mapFiles[std::move(wcsName)]), &FindData.ftLastWriteTime, sizeof(long long));
 				} else {
 					const wvstring wcsNextPath(wcsPath + wcsName + L'\\');
-					GetTreeRecur(ret.mapSubFolders[std::move(wcsName)], uTotal, wcsNextPath, Project, wcsPrefix + L"  ", bVerbose);
+					GetTreeRecur(ret.mapSubFolders[std::move(wcsName)], ulTotal, wcsNextPath, Project, wcsPrefix + L"  ", bVerbose);
 				}
 			} while(::FindNextFileW(hFindFile, &FindData) != FALSE);
 
 			if(bVerbose){
 				Output(L"%ls  目录“%ls”中共有 %lu 个文件。", wcsPrefix.c_str(), wcsPath.c_str(), ulFileCount);
 			}
-			uTotal += ulFileCount;
+			ulTotal += ulFileCount;
 		} else {
 			if(bVerbose){
 				Error(wcsPrefix + L"  打开目录“" + wcsPath + L"”失败。");
@@ -74,9 +74,9 @@ namespace MCFBuild {
 	){
 		FOLDER_TREE ret;
 
-		std::size_t uTotal = 0;
-		GetTreeRecur(ret, uTotal, wcsPath, Project, L"  ", bVerbose);
-		Output(L"  共发现 %lu 个文件。", uTotal);
+		unsigned long ulTotal = 0;
+		GetTreeRecur(ret, ulTotal, wcsPath, Project, L"  ", bVerbose);
+		Output(L"  共发现 %lu 个文件。", ulTotal);
 
 		return std::move(ret);
 	}

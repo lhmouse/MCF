@@ -2,7 +2,7 @@
 #include <MCF/Components/EventDriver.hpp>
 #include <cstdio>
 
-bool foo(int id, std::uintptr_t ctx){
+bool foo(int id, std::uintptr_t ctx) noexcept {
 	std::printf("foo(%d, %zu)\n", id, ctx);
 	return false;
 }

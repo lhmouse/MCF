@@ -14,7 +14,7 @@
 namespace MCF {
 
 namespace __MCF {
-	typedef std::pair<std::uintptr_t, void *> EVENT_HANDLER_HANDLE;
+	typedef std::pair<std::uintptr_t, const void *> EVENT_HANDLER_HANDLE;
 
 	extern void UnregisterEventHandler(const EVENT_HANDLER_HANDLE &Handle) noexcept;
 

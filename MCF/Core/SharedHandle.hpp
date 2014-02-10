@@ -261,7 +261,7 @@ public:
 	}
 	constexpr explicit SharedHandle(HANDLE_T hObj) noexcept : SharedHandle(xSharedNode::Create(hObj)) {
 	}
-	SharedHandle(const xWeakHandle &rhs) noexcept : SharedHandle(xSharedNode::AddRef(rhs.xm_pNode)) {
+	explicit SharedHandle(const xWeakHandle &rhs) noexcept : SharedHandle(xSharedNode::AddRef(rhs.xm_pNode)) {
 	}
 	SharedHandle(const SharedHandle &rhs) noexcept : SharedHandle(xSharedNode::AddRef(rhs.xm_pNode)) {
 	}

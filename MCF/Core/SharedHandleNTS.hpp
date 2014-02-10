@@ -249,7 +249,7 @@ public:
 	}
 	constexpr explicit SharedHandleNTS(HANDLE_T hObj) noexcept : SharedHandleNTS(xSharedNodeNTS::Create(hObj)) {
 	}
-	SharedHandleNTS(const xWeakHandleNTS &rhs) noexcept : SharedHandleNTS(xSharedNodeNTS::AddRef(rhs.xm_pNode)) {
+	explicit SharedHandleNTS(const xWeakHandleNTS &rhs) noexcept : SharedHandleNTS(xSharedNodeNTS::AddRef(rhs.xm_pNode)) {
 	}
 	SharedHandleNTS(const SharedHandleNTS &rhs) noexcept : SharedHandleNTS(xSharedNodeNTS::AddRef(rhs.xm_pNode)) {
 	}

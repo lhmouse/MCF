@@ -6,9 +6,17 @@
 #define __MCF_EXCEPTION_HPP__
 
 #include "String.hpp"
+#include "../../MCFCRT/env/last_error.h"
 #include <cstddef>
 
 namespace MCF {
+
+inline unsigned long GetLastError() noexcept {
+	return ::__MCF_CRT_GetLastError();
+}
+inline void SetLastError(unsigned long ulErrorCode) noexcept {
+	::__MCF_CRT_SetLastError(ulErrorCode);
+}
 
 struct Exception {
 	const char *pszFunction;

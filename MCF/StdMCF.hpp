@@ -15,8 +15,6 @@
 
 #define WIN32_LEAN_AND_MEAN
 
-#include "../MCFCRT/MCFCRT.h"
-
 #include <cstddef>
 #include <cstdint>
 #include <cstdlib>
@@ -30,6 +28,8 @@
 #include <type_traits>
 
 #include <windows.h>
+
+#include <MCFCRT/MCFCRT.h>
 
 #undef	NULL
 #define	NULL	nullptr

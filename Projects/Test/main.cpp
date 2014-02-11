@@ -1,27 +1,52 @@
+#define ZLIB_CONST
 #include <MCFCRT/MCFCRT.h>
-#include <MCF/Components/EventDriver.hpp>
+#include <External/zlib/zlib.h>
 #include <cstdio>
-
-bool foo(int id, std::uintptr_t ctx) noexcept {
-	std::printf("foo(%d, %zu)\n", id, ctx);
-	return false;
-}
+#include <cstring>
+#include <cstddef>
 
 unsigned int MCFMain(){
-	auto h0 = MCF::RegisterEventHandler(1, std::bind(&foo, 0, std::placeholders::_1));
-	auto h1 = MCF::RegisterEventHandler(1, std::bind(&foo, 1, std::placeholders::_1));
-	auto h2 = MCF::RegisterEventHandler(1, std::bind(&foo, 2, std::placeholders::_1));
+	const unsigned char *src = (const unsigned char *)"Hello world!";
+	unsigned char dst[256];
+	const size_t len = std::strlen((const char *)src);
 
-	MCF::RaiseEvent(1, 12345);
-	std::puts("------");
+	std::printf("src = %s$\n", src);
 
-	h1.Reset();
-	MCF::RaiseEvent(1, 12345);
-	std::puts("------");
+	unsigned char compressed[256];
+	size_t compressed_len;
 
-	h2.Reset();
-	h0.Reset();
-	MCF::RaiseEvent(1, 12345);
+	z_stream ctx;
+	ctx.zalloc = Z_NULL;
+	ctx.zfree = Z_NULL;
+	ctx.opaque = Z_NULL;
+	::deflateInit2(&ctx, 9, Z_DEFLATED, -15, 9, Z_DEFAULT_STRATEGY);
+
+	ctx.next_in = src;
+	ctx.avail_in = len;
+	ctx.next_out = compressed;
+	ctx.avail_out = sizeof(compressed);
+	::deflate(&ctx, Z_FINISH);
+
+	::deflateEnd(&ctx);
+	compressed_len = ctx.total_out;
+
+	std::printf("compressed len = %u\n", (unsigned int)compressed_len);
+
+	ctx.next_in = compressed;
+	ctx.avail_in = compressed_len;
+	ctx.zalloc = Z_NULL;
+	ctx.zfree = Z_NULL;
+	ctx.opaque = Z_NULL;
+	::inflateInit2(&ctx, -15);
+
+	ctx.next_out = dst;
+	ctx.avail_out = sizeof(dst);
+	::inflate(&ctx, Z_FINISH);
+
+	::inflateEnd(&ctx);
+	dst[ctx.total_out] = 0;
+
+	std::printf("dst = %s$\n", dst);
 
 	return 0;
 }

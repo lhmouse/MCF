@@ -1,16 +1,19 @@
 Default = Debug
 
 General {
-	CompilerFlags		= -Wall -Wextra -pipe -mfpmath=sse,387 -msse2 -masm=intel
+	CompilerFlags		= -Wall -Wextra -pipe -mfpmath=sse,387 -msse2
 
 	CFlags				= $CompilerFlags$ -c -std=c11
 
 	IgnoredFiles		= .Built* *.h *.mcfproj
 
 	Compilers {
+		S {
+			CommandLine	= gcc -x assembler -c $CompilerFlags$ %IN% -o %OUT%
+		}
 		c {
-			CommandLine	= gcc $CFlags$ %IN% -o %OUT%
-			Dependency	= gcc $CFlags$ %IN% -MM
+			CommandLine	= gcc -x c $CFlags$ %IN% -o %OUT%
+			Dependency	= gcc -x c $CFlags$ %IN% -MM
 		}
 	}
 
@@ -23,9 +26,9 @@ General {
 }
 
 Debug = General {
-	CompilerFlags		=> -DNO_GZIP -fno-builtin -g -O0
+	CompilerFlags		=> -fno-builtin -g -O0
 }
 
 Release = General {
-	CompilerFlags		=> -DNO_GZIP -DNDEBUG -O3 -ffunction-sections -fdata-sections
+	CompilerFlags		=> -DNDEBUG -O3 -ffunction-sections -fdata-sections
 }

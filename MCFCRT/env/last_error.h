@@ -14,4 +14,8 @@ extern void __MCF_CRT_SetLastError(unsigned long ulErrorCode);
 
 __MCF_EXTERN_C_END
 
+#ifndef ERROR_SUCCESS
+#	define ERROR_SUCCESS	0
+#endif
+
 #endif

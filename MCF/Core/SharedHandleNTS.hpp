@@ -29,7 +29,14 @@ namespace __MCF {
 				new(pNode) SharedNodeNTS(hObj);
 				return pNode;
 			}
-			return new SharedNodeNTS(hObj);
+			SharedNodeNTS *pNewNode;
+			try {
+				pNewNode = new SharedNodeNTS(hObj);
+			} catch(...){
+				CLOSER_T()(hObj);
+				throw;
+			}
+			return pNewNode;
 		}
 		static SharedNodeNTS *AddWeakRef(SharedNodeNTS *pNode) noexcept {
 			if(pNode && pNode->xAddWeakRef()){

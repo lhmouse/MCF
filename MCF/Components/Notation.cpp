@@ -4,12 +4,13 @@
 
 #include "../StdMCF.hpp"
 #include "Notation.hpp"
+#include "../../MCFCRT/cpp/ext/vvector.hpp"
 #include <cwchar>
 using namespace MCF;
 
 // 静态成员函数。
-void Notation::xEscapeAndAppend(VVector<wchar_t> &vecAppendTo, const wchar_t *pwchBegin, std::size_t uLength){
-	vecAppendTo.Reserve(vecAppendTo.GetSize() + uLength * 2);
+void Notation::xEscapeAndAppend(UTF16String &wcsAppendTo, const wchar_t *pwchBegin, std::size_t uLength){
+	wcsAppendTo.Reserve(wcsAppendTo.GetLength() + uLength * 2);
 
 	for(std::size_t i = 0; i < uLength; ++i){
 		const auto ch = pwchBegin[i];
@@ -19,27 +20,27 @@ void Notation::xEscapeAndAppend(VVector<wchar_t> &vecAppendTo, const wchar_t *pw
 		case L'{':
 		case L'}':
 		case L';':
-			vecAppendTo.Push(L'\\');
-			vecAppendTo.Push(ch);
+			wcsAppendTo.Append(L'\\');
+			wcsAppendTo.Append(ch);
 			break;
 		case L'\n':
-			vecAppendTo.Push(L'\\');
-			vecAppendTo.Push(L'n');
+			wcsAppendTo.Append(L'\\');
+			wcsAppendTo.Append(L'n');
 			break;
 		case L'\b':
-			vecAppendTo.Push(L'\\');
-			vecAppendTo.Push(L'b');
+			wcsAppendTo.Append(L'\\');
+			wcsAppendTo.Append(L'b');
 			break;
 		case L'\r':
-			vecAppendTo.Push(L'\\');
-			vecAppendTo.Push(L'r');
+			wcsAppendTo.Append(L'\\');
+			wcsAppendTo.Append(L'r');
 			break;
 		case L'\t':
-			vecAppendTo.Push(L'\\');
-			vecAppendTo.Push(L't');
+			wcsAppendTo.Append(L'\\');
+			wcsAppendTo.Append(L't');
 			break;
 		default:
-			vecAppendTo.Push(ch);
+			wcsAppendTo.Append(ch);
 			break;
 		}
 	}
@@ -132,43 +133,43 @@ UTF16String Notation::xUnescapeAndConstruct(const wchar_t *pwchBegin, std::size_
 }
 
 void Notation::xExportPackageRecur(
-	VVector<wchar_t> &vecAppendTo,
+	UTF16String &wcsAppendTo,
 	const Notation::Package &pkgWhich,
-	VVector<wchar_t> &vecPrefix,
+	UTF16String &wcsPrefix,
 	const wchar_t *pwchIndent,
 	std::size_t uIndentLen
 ){
-	const auto uCurrentPrefixLen = vecPrefix.GetSize();
-	auto pwchCurrentPrefix = vecPrefix.GetData();
+	const auto uCurrentPrefixLen = wcsPrefix.GetLength();
+	auto pwchCurrentPrefix = wcsPrefix.GetCStr();
 
 	if(!pkgWhich.xm_mapPackages.empty()){
 		if(pwchIndent){
-			vecPrefix.CopyToEnd(pwchIndent, uIndentLen);
+			wcsPrefix.Append(pwchIndent, uIndentLen);
 		}
-		pwchCurrentPrefix = vecPrefix.GetData();
+		pwchCurrentPrefix = wcsPrefix.GetCStr();
 
 		for(const auto &SubPackageItem : pkgWhich.xm_mapPackages){
-			vecAppendTo.CopyToEnd(pwchCurrentPrefix, uCurrentPrefixLen);
-			xEscapeAndAppend(vecAppendTo, SubPackageItem.first.m_pwchBegin, SubPackageItem.first.m_uLength);
-			vecAppendTo.CopyToEnd(L" {\n", 3);
+			wcsAppendTo.Append(pwchCurrentPrefix, uCurrentPrefixLen);
+			xEscapeAndAppend(wcsAppendTo, SubPackageItem.first.m_pwchBegin, SubPackageItem.first.m_uLength);
+			wcsAppendTo.Append(L" {\n", 3);
 
-			xExportPackageRecur(vecAppendTo, SubPackageItem.second, vecPrefix, pwchIndent, uIndentLen);
+			xExportPackageRecur(wcsAppendTo, SubPackageItem.second, wcsPrefix, pwchIndent, uIndentLen);
 
-			vecAppendTo.CopyToEnd(pwchCurrentPrefix, uCurrentPrefixLen);
-			vecAppendTo.CopyToEnd(L"}\n", 2);
+			wcsAppendTo.Append(pwchCurrentPrefix, uCurrentPrefixLen);
+			wcsAppendTo.Append(L"}\n", 2);
 		}
 
 		if(pwchIndent){
-			vecPrefix.TruncateFromEnd(uIndentLen);
+			wcsPrefix.Pop(uIndentLen);
 		}
 	}
 
 	for(const auto &ValueItem : pkgWhich.xm_mapValues){
-		vecAppendTo.CopyToEnd(pwchCurrentPrefix, uCurrentPrefixLen);
-		xEscapeAndAppend(vecAppendTo, ValueItem.first.m_pwchBegin, ValueItem.first.m_uLength);
-		vecAppendTo.CopyToEnd(L" = ", 3);
-		xEscapeAndAppend(vecAppendTo, ValueItem.second.GetCStr(), ValueItem.second.GetLength());
-		vecAppendTo.Push(L'\n');
+		wcsAppendTo.Append(pwchCurrentPrefix, uCurrentPrefixLen);
+		xEscapeAndAppend(wcsAppendTo, ValueItem.first.m_pwchBegin, ValueItem.first.m_uLength);
+		wcsAppendTo.Append(L" = ", 3);
+		xEscapeAndAppend(wcsAppendTo, ValueItem.second.GetCStr(), ValueItem.second.GetLength());
+		wcsAppendTo.Append(L'\n');
 	}
 }
 
@@ -433,9 +434,9 @@ std::pair<Notation::ERROR_TYPE, const wchar_t *> Notation::Parse(const wchar_t *
 	return std::make_pair(ERR_NONE, nullptr);
 }
 UTF16String Notation::Export(const wchar_t *pwchIndent) const {
-	VVector<wchar_t> vecResult;
-	VVector<wchar_t> vecPrefix;
+	UTF16String wcsResult;
+	UTF16String wcsPrefix;
 	const std::size_t uIndentLength = pwchIndent ? (std::size_t)0 : std::wcslen(pwchIndent);
-	xExportPackageRecur(vecResult, *this, vecPrefix, pwchIndent, uIndentLength);
-	return UTF16String(vecResult.GetData(), vecResult.GetSize());
+	xExportPackageRecur(wcsResult, *this, wcsPrefix, pwchIndent, uIndentLength);
+	return std::move(wcsResult);
 }

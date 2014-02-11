@@ -201,10 +201,10 @@ namespace MCF {
 			ERR_ESCAPE_AT_EOF
 		} ERROR_TYPE;
 	private:
-		static void xEscapeAndAppend(VVector<wchar_t> &vecAppendTo, const wchar_t *pwchBegin, std::size_t uLength);
+		static void xEscapeAndAppend(UTF16String &wcsAppendTo, const wchar_t *pwchBegin, std::size_t uLength);
 		static UTF16String xUnescapeAndConstruct(const wchar_t *pwchBegin, std::size_t uLength);
 
-		static void xExportPackageRecur(VVector<wchar_t> &vecAppendTo, const Package &pkgWhich, VVector<wchar_t> &Prefix, const wchar_t *pwchIndent, std::size_t uIndentLen);
+		static void xExportPackageRecur(UTF16String &wcsAppendTo, const Package &pkgWhich, UTF16String &wcsPrefix, const wchar_t *pwchIndent, std::size_t uIndentLen);
 	public:
 		Notation();
 		explicit Notation(const wchar_t *pwszText);

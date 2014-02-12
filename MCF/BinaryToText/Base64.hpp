@@ -6,6 +6,7 @@
 #define __MCF_BASE64_HPP__
 
 #include <memory>
+#include <utility>
 #include <cstddef>
 
 namespace MCF {
@@ -20,30 +21,32 @@ namespace __MCF {
 
 class Base64Encoder : public __MCF::Base64Base {
 private:
-	const std::function<void *(std::size_t)> xm_fnDataCallback;
+	const std::function<std::pair<void *, std::size_t>(std::size_t)> xm_fnDataCallback;
 	char xm_achTable[65];
 	bool xm_bInited;
 
 	std::uint32_t xm_u32Word;
 	std::size_t xm_uState;
 public:
-	Base64Encoder(std::function<void *(std::size_t)> fnDataCallback, const char *pchEncodedChars = ENCODED_CHARS_MIME);
+	Base64Encoder(std::function<std::pair<void *, std::size_t>(std::size_t)> fnDataCallback, const char *pchEncodedChars = ENCODED_CHARS_MIME);
 public:
+	void Abort() noexcept;
 	void Update(const void *pData, std::size_t uSize);
 	void Finalize();
 };
 
 class Base64Decoder : public __MCF::Base64Base {
 private:
-	const std::function<void *(std::size_t)> xm_fnDataCallback;
+	const std::function<std::pair<void *, std::size_t>(std::size_t)> xm_fnDataCallback;
 	unsigned char xm_achTable[0x100];
 	bool xm_bInited;
 
 	std::uint32_t xm_u32Word;
 	std::size_t xm_uState;
 public:
-	Base64Decoder(std::function<void *(std::size_t)> fnDataCallback, const char *pchEncodedChars = ENCODED_CHARS_MIME);
+	Base64Decoder(std::function<std::pair<void *, std::size_t>(std::size_t)> fnDataCallback, const char *pchEncodedChars = ENCODED_CHARS_MIME);
 public:
+	void Abort() noexcept;
 	void Update(const void *pData, std::size_t uSize);
 	void Finalize();
 };

@@ -104,50 +104,72 @@ namespace {
 
 // ========== RC4ExEncoder ==========
 // 构造函数和析构函数。
-RC4ExEncoder::RC4ExEncoder(std::function<void *(std::size_t)> fnDataCallback, const void *pKey, std::size_t uKeyLen, std::uint64_t u64Nonce)
+RC4ExEncoder::RC4ExEncoder(std::function<std::pair<void *, std::size_t>(std::size_t)> fnDataCallback, const void *pKey, std::size_t uKeyLen, std::uint64_t u64Nonce)
 	: xm_fnDataCallback(std::move(fnDataCallback))
+	, xm_bInited(false)
 {
 	GenInitBox(xm_abyInitBox, pKey, uKeyLen, u64Nonce);
-	xm_bInited = false;
 }
 
 // 其他非静态成员函数。
+void RC4ExEncoder::Abort() noexcept{
+	xm_bInited = false;
+}
 void RC4ExEncoder::Update(const void *pData, std::size_t uSize){
 	if(!xm_bInited){
-		xm_bInited = true;
 		__builtin_memcpy(xm_abyBox, xm_abyInitBox, sizeof(xm_abyBox));
 		xm_byI = 0;
 		xm_byJ = 0;
+
+		xm_bInited = true;
 	}
-	Encode(xm_fnDataCallback(uSize), pData, uSize, xm_abyBox, &xm_byI, &xm_byJ);
+
+	auto pbyRead = (const unsigned char *)pData;
+	const auto pbyEnd = pbyRead + uSize;
+	while(pbyRead != pbyEnd){
+		const std::size_t uBytesRemaining = pbyEnd - pbyRead;
+		const auto Result = xm_fnDataCallback(uBytesRemaining);
+		const std::size_t uBytesToProcessThisTime = std::min(Result.second, uBytesRemaining);
+		Encode(Result.first, pbyRead, uBytesToProcessThisTime, xm_abyBox, &xm_byI, &xm_byJ);
+		pbyRead += uBytesToProcessThisTime;
+	}
 }
 void RC4ExEncoder::Finalize(){
-	if(xm_bInited){
-		xm_bInited = false;
-	}
+	xm_bInited = false;
 }
 
 // ========== RC4ExDecoder ==========
 // 构造函数和析构函数。
-RC4ExDecoder::RC4ExDecoder(std::function<void *(std::size_t)> fnDataCallback, const void *pKey, std::size_t uKeyLen, std::uint64_t u64Nonce)
+RC4ExDecoder::RC4ExDecoder(std::function<std::pair<void *, std::size_t>(std::size_t)> fnDataCallback, const void *pKey, std::size_t uKeyLen, std::uint64_t u64Nonce)
 	: xm_fnDataCallback(std::move(fnDataCallback))
+	, xm_bInited(false)
 {
 	GenInitBox(xm_abyInitBox, pKey, uKeyLen, u64Nonce);
-	xm_bInited = false;
 }
 
 // 其他非静态成员函数。
+void RC4ExDecoder::Abort() noexcept{
+	xm_bInited = false;
+}
 void RC4ExDecoder::Update(const void *pData, std::size_t uSize){
 	if(!xm_bInited){
-		xm_bInited = true;
 		__builtin_memcpy(xm_abyBox, xm_abyInitBox, sizeof(xm_abyBox));
 		xm_byI = 0;
 		xm_byJ = 0;
+
+		xm_bInited = true;
 	}
-	Decode(xm_fnDataCallback(uSize), pData, uSize, xm_abyBox, &xm_byI, &xm_byJ);
+
+	auto pbyRead = (const unsigned char *)pData;
+	const auto pbyEnd = pbyRead + uSize;
+	while(pbyRead != pbyEnd){
+		const std::size_t uBytesRemaining = pbyEnd - pbyRead;
+		const auto Result = xm_fnDataCallback(uBytesRemaining);
+		const std::size_t uBytesToProcessThisTime = std::min(Result.second, uBytesRemaining);
+		Decode(Result.first, pbyRead, uBytesToProcessThisTime, xm_abyBox, &xm_byI, &xm_byJ);
+		pbyRead += uBytesToProcessThisTime;
+	}
 }
 void RC4ExDecoder::Finalize(){
-	if(xm_bInited){
-		xm_bInited = false;
-	}
+	xm_bInited = false;
 }

@@ -7,13 +7,14 @@
 
 #include <memory>
 #include <functional>
+#include <utility>
 #include <cstddef>
 
 namespace MCF {
 
 class RC4ExEncoder {
 private:
-	const std::function<void *(std::size_t)> xm_fnDataCallback;
+	const std::function<std::pair<void *, std::size_t>(std::size_t)> xm_fnDataCallback;
 	unsigned char xm_abyInitBox[256];
 	bool xm_bInited;
 
@@ -21,15 +22,16 @@ private:
 	unsigned char xm_byI;
 	unsigned char xm_byJ;
 public:
-	RC4ExEncoder(std::function<void *(std::size_t)> fnDataCallback, const void *pKey, std::size_t uKeyLen, std::uint64_t u64Nonce);
+	RC4ExEncoder(std::function<std::pair<void *, std::size_t>(std::size_t)> fnDataCallback, const void *pKey, std::size_t uKeyLen, std::uint64_t u64Nonce);
 public:
+	void Abort() noexcept;
 	void Update(const void *pData, std::size_t uSize);
 	void Finalize();
 };
 
 class RC4ExDecoder {
 private:
-	const std::function<void *(std::size_t)> xm_fnDataCallback;
+	const std::function<std::pair<void *, std::size_t>(std::size_t)> xm_fnDataCallback;
 	unsigned char xm_abyInitBox[256];
 	bool xm_bInited;
 
@@ -37,8 +39,9 @@ private:
 	unsigned char xm_byI;
 	unsigned char xm_byJ;
 public:
-	RC4ExDecoder(std::function<void *(std::size_t)> fnDataCallback, const void *pKey, std::size_t uKeyLen, std::uint64_t u64Nonce);
+	RC4ExDecoder(std::function<std::pair<void *, std::size_t>(std::size_t)> fnDataCallback, const void *pKey, std::size_t uKeyLen, std::uint64_t u64Nonce);
 public:
+	void Abort() noexcept;
 	void Update(const void *pData, std::size_t uSize);
 	void Finalize();
 };

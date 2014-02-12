@@ -23,6 +23,7 @@ private:
 public:
 	CRC32(std::uint32_t u32Divisor = DIVISOR_IEEE_802_3) noexcept;
 public:
+	void Abort() noexcept;
 	void Update(const void *pData, std::size_t uSize) noexcept;
 	std::uint32_t Finalize() noexcept;
 };

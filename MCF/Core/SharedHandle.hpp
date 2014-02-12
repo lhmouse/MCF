@@ -24,6 +24,7 @@ namespace __MCF {
 				}
 				return nullptr;
 			}
+
 			if(pNode && (pNode->xDropRef())){
 				pNode->~SharedNode();
 				new(pNode) SharedNode(hObj);

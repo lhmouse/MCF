@@ -7,15 +7,30 @@
 #include <cstring>
 using namespace MCF;
 
+namespace {
+	inline void CopyOut(const std::function<std::pair<void *, std::size_t>(std::size_t)> &fnDataCallback, const void *pSrc, std::size_t uBytesToCopy){
+		std::size_t uBytesCopied = 0;
+		while(uBytesCopied < uBytesToCopy){
+			const std::size_t uBytesRemaining = uBytesToCopy - uBytesCopied;
+			const auto Result = fnDataCallback(uBytesRemaining);
+			const std::size_t uBytesToCopyThisTime = std::min(Result.second, uBytesRemaining);
+			__builtin_memcpy(Result.first, (const unsigned char *)pSrc + uBytesCopied, uBytesToCopyThisTime);
+			uBytesCopied += uBytesToCopyThisTime;
+		}
+	};
+}
+
 // ========== HexEncoder ==========
 // 构造函数和析构函数。
-HexEncoder::HexEncoder(std::function<void *(std::size_t)> fnDataCallback, bool bUpperCase)
+HexEncoder::HexEncoder(std::function<std::pair<void *, std::size_t>(std::size_t)> fnDataCallback, bool bUpperCase)
 	: xm_fnDataCallback(std::move(fnDataCallback))
 	, xm_byDelta((bUpperCase ? 'A' : 'a') - ('9' + 1))
 {
 }
 
 // 其他非静态成员函数。
+void HexEncoder::Abort() noexcept{
+}
 void HexEncoder::Update(const void *pData, std::size_t uSize){
 	alignas(16) char achBuffer[64];
 	auto pchWrite = std::begin(achBuffer);
@@ -38,14 +53,14 @@ void HexEncoder::Update(const void *pData, std::size_t uSize){
 		pchWrite += 2;
 
 		if(pchWrite == std::end(achBuffer)){
+			CopyOut(xm_fnDataCallback, achBuffer, sizeof(achBuffer));
 			pchWrite = std::begin(achBuffer);
-			__builtin_memcpy(xm_fnDataCallback(sizeof(achBuffer)), achBuffer, sizeof(achBuffer));
 		}
 	}
 
 	const auto uBytesInBuffer = (std::size_t)(pchWrite - std::begin(achBuffer));
 	if(uBytesInBuffer > 0){
-		std::memcpy(xm_fnDataCallback(uBytesInBuffer), achBuffer, uBytesInBuffer);
+		CopyOut(xm_fnDataCallback, achBuffer, uBytesInBuffer);
 	}
 }
 void HexEncoder::Finalize(){
@@ -53,17 +68,21 @@ void HexEncoder::Finalize(){
 
 // ========== HexDecoder ==========
 // 构造函数和析构函数。
-HexDecoder::HexDecoder(std::function<void *(std::size_t)> fnDataCallback)
+HexDecoder::HexDecoder(std::function<std::pair<void *, std::size_t>(std::size_t)> fnDataCallback)
 	: xm_fnDataCallback(std::move(fnDataCallback))
+	, xm_bInited(false)
 {
-	xm_bInited = false;
 }
 
 // 其他非静态成员函数。
+void HexDecoder::Abort() noexcept{
+	xm_bInited = false;
+}
 void HexDecoder::Update(const void *pData, std::size_t uSize){
 	if(!xm_bInited){
-		xm_bInited = true;
 		xm_uchLastDigit = 0xFF;
+
+		xm_bInited = true;
 	}
 
 	auto uchLastDigit = xm_uchLastDigit;
@@ -93,24 +112,22 @@ void HexDecoder::Update(const void *pData, std::size_t uSize){
 			uchLastDigit = uchDecoded;
 			continue;
 		}
-		*pbyWrite = (uchLastDigit << 4) | uchDecoded;
+		*(pbyWrite++) = (uchLastDigit << 4) | uchDecoded;
 		uchLastDigit = 0xFF;
 
-		if(++pbyWrite == std::end(abyBuffer)){
+		if(pbyWrite == std::end(abyBuffer)){
+			CopyOut(xm_fnDataCallback, abyBuffer, sizeof(abyBuffer));
 			pbyWrite = std::begin(abyBuffer);
-			__builtin_memcpy(xm_fnDataCallback(sizeof(abyBuffer)), abyBuffer, sizeof(abyBuffer));
 		}
 	}
 
 	const auto uBytesInBuffer = (std::size_t)(pbyWrite - std::begin(abyBuffer));
 	if(uBytesInBuffer > 0){
-		std::memcpy(xm_fnDataCallback(uBytesInBuffer), abyBuffer, uBytesInBuffer);
+		CopyOut(xm_fnDataCallback, abyBuffer, uBytesInBuffer);
 	}
 
 	xm_uchLastDigit = uchLastDigit;
 }
 void HexDecoder::Finalize(){
-	if(xm_bInited){
-		xm_bInited = false;
-	}
+	xm_bInited = false;
 }

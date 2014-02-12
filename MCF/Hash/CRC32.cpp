@@ -40,18 +40,23 @@ namespace {
 }
 
 // 构造函数和析构函数。
-CRC32::CRC32(std::uint32_t u32Divisor) noexcept {
+CRC32::CRC32(std::uint32_t u32Divisor) noexcept
+	: xm_bInited(false)
+{
 	ASSERT(u32Divisor != 0);
 
 	BuildCRC32Table(xm_au32Table, u32Divisor);
-	xm_bInited = false;
 }
 
 // 其他非静态成员函数。
+void CRC32::Abort() noexcept{
+	xm_bInited = false;
+}
 void CRC32::Update(const void *pData, std::size_t uSize) noexcept {
 	if(!xm_bInited){
-		xm_bInited = true;
 		xm_u32Reg = ~(std::uint32_t)0;
+
+		xm_bInited = true;
 	}
 
 	register auto pbyRead = (const unsigned char *)pData;
@@ -79,6 +84,7 @@ void CRC32::Update(const void *pData, std::size_t uSize) noexcept {
 std::uint32_t CRC32::Finalize() noexcept {
 	if(xm_bInited){
 		xm_u32Reg = ~xm_u32Reg;
+
 		xm_bInited = false;
 	}
 	return xm_u32Reg;

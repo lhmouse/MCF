@@ -1,52 +1,53 @@
-#define ZLIB_CONST
 #include <MCFCRT/MCFCRT.h>
-#include <External/zlib/zlib.h>
+#include <MCF/Core/File.hpp>
+#include <MCF/Compression/Z.hpp>
+#include <MCF/Hash/CRC32.hpp>
+#include <string>
 #include <cstdio>
 #include <cstring>
 #include <cstddef>
 
 unsigned int MCFMain(){
-	const unsigned char *src = (const unsigned char *)"Hello world!";
-	unsigned char dst[256];
-	const size_t len = std::strlen((const char *)src);
+	MCF::File f(L"E:\\笑傲江湖.txt", true, false, false);
+	ASSERT(f);
 
-	std::printf("src = %s$\n", src);
+	std::string compressed;
+	std::string plain;
 
-	unsigned char compressed[256];
-	size_t compressed_len;
+	MCF::ZEncoder zenc([&compressed](std::size_t requested){
+		const auto old = compressed.size();
+		compressed.resize(old + requested);
+		return std::make_pair(&compressed[old], requested);
+	});
+	const auto fsize = f.GetSize();
+	unsigned long long offset = 0;
+	while(offset < fsize){
+		unsigned char buffer[1024];
 
-	z_stream ctx;
-	ctx.zalloc = Z_NULL;
-	ctx.zfree = Z_NULL;
-	ctx.opaque = Z_NULL;
-	::deflateInit2(&ctx, 9, Z_DEFLATED, -15, 9, Z_DEFAULT_STRATEGY);
+		const auto bytes = f.Read(buffer, offset, sizeof(buffer));
+		ASSERT(bytes);
 
-	ctx.next_in = src;
-	ctx.avail_in = len;
-	ctx.next_out = compressed;
-	ctx.avail_out = sizeof(compressed);
-	::deflate(&ctx, Z_FINISH);
+		zenc.Update(buffer, bytes);
+		offset += bytes;
+	}
+	zenc.Finalize();
 
-	::deflateEnd(&ctx);
-	compressed_len = ctx.total_out;
+	std::printf("compressed size = %zu bytes\n", compressed.size());
 
-	std::printf("compressed len = %u\n", (unsigned int)compressed_len);
+	MCF::ZDecoder zdec([&plain](std::size_t requested){
+		const auto old = plain.size();
+		plain.resize(old + requested);
+		return std::make_pair(&plain[old], requested);
+	});
+	zdec.Update(compressed.data(), compressed.size());
+	zdec.Finalize();
 
-	ctx.next_in = compressed;
-	ctx.avail_in = compressed_len;
-	ctx.zalloc = Z_NULL;
-	ctx.zfree = Z_NULL;
-	ctx.opaque = Z_NULL;
-	::inflateInit2(&ctx, -15);
+	std::printf("decompressed size = %zu bytes\n", plain.size());
 
-	ctx.next_out = dst;
-	ctx.avail_out = sizeof(dst);
-	::inflate(&ctx, Z_FINISH);
-
-	::inflateEnd(&ctx);
-	dst[ctx.total_out] = 0;
-
-	std::printf("dst = %s$\n", dst);
+	MCF::CRC32 crc;
+	crc.Update(plain.data(), plain.size());
+	crc.Finalize();
+	std::printf("  crc = %08lX\n", (unsigned long)crc.Finalize());
 
 	return 0;
 }

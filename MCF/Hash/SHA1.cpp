@@ -281,15 +281,17 @@ namespace {
 }
 
 // 构造函数和析构函数。
-SHA1::SHA1() noexcept {
-	xm_bInited = false;
+SHA1::SHA1() noexcept
+	: xm_bInited(false)
+{
 }
 
 // 其他非静态成员函数。
+void SHA1::Abort() noexcept {
+	xm_bInited = false;
+}
 void SHA1::Update(const void *pData, std::size_t uSize) noexcept {
 	if(!xm_bInited){
-		xm_bInited = true;
-
 		xm_auResult[0] = 0x67452301u;
 		xm_auResult[1] = 0xEFCDAB89u;
 		xm_auResult[2] = 0x98BADCFEu;
@@ -298,6 +300,8 @@ void SHA1::Update(const void *pData, std::size_t uSize) noexcept {
 
 		xm_uBytesInChunk = 0;
 		xm_u64BytesTotal = 0;
+
+		xm_bInited = true;
 	}
 
 	auto pbyRead = (const unsigned char *)pData;
@@ -325,8 +329,6 @@ void SHA1::Update(const void *pData, std::size_t uSize) noexcept {
 }
 void SHA1::Finalize(unsigned char (&abyOutput)[20]) noexcept {
 	if(xm_bInited){
-		xm_bInited = false;
-
 		xm_abyChunk[xm_uBytesInChunk++] = 0x80;
 		if(xm_uBytesInChunk > sizeof(xm_abyFirstPart)){
 			std::memset(xm_abyChunk + xm_uBytesInChunk, 0, sizeof(xm_abyChunk) - xm_uBytesInChunk);
@@ -342,6 +344,8 @@ void SHA1::Finalize(unsigned char (&abyOutput)[20]) noexcept {
 		for(auto &u : xm_auResult){
 			u = __builtin_bswap32(u);
 		}
+
+		xm_bInited = false;
 	}
 	__builtin_memcpy(abyOutput, xm_auResult, sizeof(xm_auResult));
 }

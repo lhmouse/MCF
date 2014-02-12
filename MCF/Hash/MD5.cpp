@@ -343,15 +343,17 @@ namespace {
 }
 
 // 构造函数和析构函数。
-MD5::MD5() noexcept {
-	xm_bInited = false;
+MD5::MD5() noexcept
+	: xm_bInited(false)
+{
 }
 
 // 其他非静态成员函数。
+void MD5::Abort() noexcept{
+	xm_bInited = false;
+}
 void MD5::Update(const void *pData, std::size_t uSize) noexcept {
 	if(!xm_bInited){
-		xm_bInited = true;
-
 		xm_auResult[0] = 0x67452301u;
 		xm_auResult[1] = 0xEFCDAB89u;
 		xm_auResult[2] = 0x98BADCFEu;
@@ -359,6 +361,8 @@ void MD5::Update(const void *pData, std::size_t uSize) noexcept {
 
 		xm_uBytesInChunk = 0;
 		xm_u64BytesTotal = 0;
+
+		xm_bInited = true;
 	}
 
 	auto pbyRead = (const unsigned char *)pData;
@@ -386,8 +390,6 @@ void MD5::Update(const void *pData, std::size_t uSize) noexcept {
 }
 void MD5::Finalize(unsigned char (&abyOutput)[16]) noexcept {
 	if(xm_bInited){
-		xm_bInited = false;
-
 		xm_abyChunk[xm_uBytesInChunk++] = 0x80;
 		if(xm_uBytesInChunk > sizeof(xm_abyFirstPart)){
 			std::memset(xm_abyChunk + xm_uBytesInChunk, 0, sizeof(xm_abyChunk) - xm_uBytesInChunk);
@@ -399,6 +401,8 @@ void MD5::Finalize(unsigned char (&abyOutput)[16]) noexcept {
 		}
 		xm_uBitsTotal = xm_u64BytesTotal * CHAR_BIT;
 		DoMD5Chunk(xm_auResult, xm_abyChunk);
+
+		xm_bInited = false;
 	}
 	__builtin_memcpy(abyOutput, xm_auResult, sizeof(xm_auResult));
 }

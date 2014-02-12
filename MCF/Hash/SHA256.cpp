@@ -905,15 +905,17 @@ namespace {
 }
 
 // 构造函数和析构函数。
-SHA256::SHA256() noexcept {
-	xm_bInited = false;
+SHA256::SHA256() noexcept
+	: xm_bInited(false)
+{
 }
 
 // 其他非静态成员函数。
+void SHA256::Abort() noexcept {
+	xm_bInited = false;
+}
 void SHA256::Update(const void *pData, std::size_t uSize) noexcept {
 	if(!xm_bInited){
-		xm_bInited = true;
-
 		xm_auResult[0] = 0x6A09E667u;
 		xm_auResult[1] = 0xBB67AE85u;
 		xm_auResult[2] = 0x3C6EF372u;
@@ -925,6 +927,8 @@ void SHA256::Update(const void *pData, std::size_t uSize) noexcept {
 
 		xm_uBytesInChunk = 0;
 		xm_u64BytesTotal = 0;
+
+		xm_bInited = true;
 	}
 
 	auto pbyRead = (const unsigned char *)pData;
@@ -952,8 +956,6 @@ void SHA256::Update(const void *pData, std::size_t uSize) noexcept {
 }
 void SHA256::Finalize(unsigned char (&abyOutput)[32]) noexcept {
 	if(xm_bInited){
-		xm_bInited = false;
-
 		xm_abyChunk[xm_uBytesInChunk++] = 0x80;
 		if(xm_uBytesInChunk > sizeof(xm_abyFirstPart)){
 			std::memset(xm_abyChunk + xm_uBytesInChunk, 0, sizeof(xm_abyChunk) - xm_uBytesInChunk);
@@ -969,6 +971,8 @@ void SHA256::Finalize(unsigned char (&abyOutput)[32]) noexcept {
 		for(auto &u : xm_auResult){
 			u = __builtin_bswap32(u);
 		}
+
+		xm_bInited = false;
 	}
 	__builtin_memcpy(abyOutput, xm_auResult, sizeof(xm_auResult));
 }

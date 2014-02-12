@@ -26,6 +26,7 @@ private:
 public:
 	MD5() noexcept;
 public:
+	void Abort() noexcept;
 	void Update(const void *pData, std::size_t uSize) noexcept;
 	void Finalize(unsigned char (&abyOutput)[16]) noexcept;
 };

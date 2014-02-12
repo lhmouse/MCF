@@ -102,6 +102,9 @@ public:
 				avail_in = uBytesToProcess;
 				do {
 					const auto ulErrorCode = ZErrorToWin32Error(::deflate(this, Z_NO_FLUSH));
+					if(ulErrorCode == ERROR_HANDLE_EOF){
+						break;
+					}
 					if(ulErrorCode != ERROR_SUCCESS){
 						MCF_THROW(ulErrorCode, L"::deflate() 失败。");
 					}
@@ -212,7 +215,10 @@ public:
 				avail_in = uBytesToProcess;
 				do {
 					const auto ulErrorCode = ZErrorToWin32Error(::inflate(this, Z_NO_FLUSH));
-					if((ulErrorCode != ERROR_SUCCESS) && (ulErrorCode != ERROR_HANDLE_EOF)){
+					if(ulErrorCode == ERROR_HANDLE_EOF){
+						break;
+					}
+					if(ulErrorCode != ERROR_SUCCESS){
 						MCF_THROW(ulErrorCode, L"::inflate() 失败。");
 					}
 					if(avail_out == 0){
@@ -220,9 +226,6 @@ public:
 
 						next_out = xm_abyTemp;
 						avail_out = sizeof(xm_abyTemp);
-					}
-					if(ulErrorCode == ERROR_HANDLE_EOF){
-						break;
 					}
 				} while(avail_in != 0);
 
@@ -235,7 +238,10 @@ public:
 			unsigned long ulErrorCode;
 			for(;;){
 				ulErrorCode = ZErrorToWin32Error(::inflate(this, Z_FINISH));
-				if((ulErrorCode != ERROR_SUCCESS) && (ulErrorCode != ERROR_HANDLE_EOF)){
+				if(ulErrorCode == ERROR_HANDLE_EOF){
+					break;
+				}
+				if(ulErrorCode != ERROR_SUCCESS){
 					MCF_THROW(ulErrorCode, L"::inflate() 失败。");
 				}
 				if(avail_out == 0){
@@ -243,9 +249,6 @@ public:
 
 					next_out = xm_abyTemp;
 					avail_out = sizeof(xm_abyTemp);
-				}
-				if(ulErrorCode == ERROR_HANDLE_EOF){
-					break;
 				}
 			}
 			if(avail_out < sizeof(xm_abyTemp)){

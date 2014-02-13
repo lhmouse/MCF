@@ -11,11 +11,11 @@
 
 namespace MCF {
 
-inline unsigned long GetLastError() noexcept {
-	return ::__MCF_CRT_GetLastError();
+inline unsigned long GetWin32LastError() noexcept {
+	return ::__MCF_CRT_GetWin32LastError();
 }
-inline void SetLastError(unsigned long ulErrorCode) noexcept {
-	::__MCF_CRT_SetLastError(ulErrorCode);
+inline void SetWin32LastError(unsigned long ulErrorCode) noexcept {
+	::__MCF_CRT_SetWin32LastError(ulErrorCode);
 }
 
 struct Exception {

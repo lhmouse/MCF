@@ -7,9 +7,9 @@
 #include "last_error.h"
 #include <windows.h>
 
-unsigned long __MCF_CRT_GetLastError(void){
+unsigned long __MCF_CRT_GetWin32LastError(void){
 	return GetLastError();
 }
-void __MCF_CRT_SetLastError(unsigned long ulErrorCode){
+void __MCF_CRT_SetWin32LastError(unsigned long ulErrorCode){
 	SetLastError(ulErrorCode);
 }

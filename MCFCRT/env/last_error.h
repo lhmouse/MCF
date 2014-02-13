@@ -9,8 +9,8 @@
 
 __MCF_EXTERN_C_BEGIN
 
-extern unsigned long __MCF_CRT_GetLastError(void);
-extern void __MCF_CRT_SetLastError(unsigned long ulErrorCode);
+extern unsigned long __MCF_CRT_GetWin32LastError(void);
+extern void __MCF_CRT_SetWin32LastError(unsigned long ulErrorCode);
 
 __MCF_EXTERN_C_END
 

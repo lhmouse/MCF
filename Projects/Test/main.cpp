@@ -8,7 +8,7 @@
 #include <cstddef>
 #include <MCF/Compression/Lzma.hpp>
 
-static unsigned char buffer[16 * 0x400 * 0x400];
+static unsigned char buffer[0x10000];
 
 unsigned int MCFMain(){
 	MCF::File f(L"E:\\笑傲江湖.txt", true, false, false);

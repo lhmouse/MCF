@@ -194,13 +194,6 @@ public:
 	}
 	void Finalize(){
 		if(xm_bInited){
-			xDataSink vSink(xm_fnDataCallback);
-			xDataSource vSource(nullptr, 0);
-			const auto ulErrorCode = LzmaErrorToWin32Error(::LzmaEnc_Encode(xm_hEncoder, &vSink, &vSource, nullptr, &g_AllocSmall, &g_AllocLarge));
-			if(ulErrorCode != ERROR_SUCCESS){
-				MCF_THROW(ulErrorCode, L"::LzmaEnc_Encode() 失败。");
-			}
-
 			xm_bInited = false;
 		}
 	}
@@ -294,11 +287,11 @@ public:
 				MCF_THROW(ulErrorCode, L"::LzmaDec_DecodeToBuf() 失败。");
 			}
 			CopyOut(xm_fnDataCallback, xm_abyTemp, uDecoded);
+			pbyRead += uToDecode;
 
 			if(vStatus == LZMA_STATUS_FINISHED_WITH_MARK){
-				break;
+				::LzmaDec_Init(xm_pDecoder);
 			}
-			pbyRead += uToDecode;
 		}
 	}
 	void Finalize(){

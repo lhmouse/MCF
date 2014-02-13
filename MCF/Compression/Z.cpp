@@ -20,9 +20,9 @@ namespace {
 		std::size_t uBytesCopied = 0;
 		while(uBytesCopied < uBytesToCopy){
 			const std::size_t uBytesRemaining = uBytesToCopy - uBytesCopied;
-			const auto Result = fnDataCallback(uBytesRemaining);
-			const std::size_t uBytesToCopyThisTime = std::min(Result.second, uBytesRemaining);
-			__builtin_memcpy(Result.first, (const unsigned char *)pSrc + uBytesCopied, uBytesToCopyThisTime);
+			const auto vResult = fnDataCallback(uBytesRemaining);
+			const std::size_t uBytesToCopyThisTime = std::min(vResult.second, uBytesRemaining);
+			__builtin_memcpy(vResult.first, (const unsigned char *)pSrc + uBytesCopied, uBytesToCopyThisTime);
 			uBytesCopied += uBytesToCopyThisTime;
 		}
 	};
@@ -82,9 +82,16 @@ public:
 	void Abort() noexcept {
 		xm_bInited = false;
 	}
-	void Update(const void *pData, std::size_t uSize){
+	void Update(const void *pData, std::size_t uSize, const void *pDict, std::size_t uDictSize){
 		if(!xm_bInited){
 			::deflateReset(this);
+
+			if(uDictSize != 0){
+				const auto ulErrorCode = ZErrorToWin32Error(::deflateSetDictionary(this, (const unsigned char *)pDict, uDictSize));
+				if(ulErrorCode != ERROR_SUCCESS){
+					MCF_THROW(ulErrorCode, L"::deflateSetDictionary() 失败。");
+				}
+			}
 
 			next_out = xm_abyTemp;
 			avail_out = sizeof(xm_abyTemp);
@@ -156,8 +163,8 @@ ZEncoder::~ZEncoder(){
 }
 
 // 其他非静态成员函数。
-void ZEncoder::Update(const void *pData, std::size_t uSize){
-	xm_pDelegate->Update(pData, uSize);
+void ZEncoder::Update(const void *pData, std::size_t uSize, const void *pDict, std::size_t uDictSize){
+	xm_pDelegate->Update(pData, uSize, pDict, uDictSize);
 }
 void ZEncoder::Finalize(){
 	xm_pDelegate->Finalize();
@@ -195,9 +202,16 @@ public:
 	void Abort() noexcept {
 		xm_bInited = false;
 	}
-	void Update(const void *pData, std::size_t uSize){
+	void Update(const void *pData, std::size_t uSize, const void *pDict, std::size_t uDictSize){
 		if(!xm_bInited){
 			::inflateReset(this);
+
+			if(uDictSize != 0){
+				const auto ulErrorCode = ZErrorToWin32Error(::inflateSetDictionary(this, (const unsigned char *)pDict, uDictSize));
+				if(ulErrorCode != ERROR_SUCCESS){
+					MCF_THROW(ulErrorCode, L"::inflateSetDictionary() 失败。");
+				}
+			}
 
 			next_out = xm_abyTemp;
 			avail_out = sizeof(xm_abyTemp);
@@ -269,8 +283,8 @@ ZDecoder::~ZDecoder(){
 }
 
 // 其他非静态成员函数。
-void ZDecoder::Update(const void *pData, std::size_t uSize){
-	xm_pDelegate->Update(pData, uSize);
+void ZDecoder::Update(const void *pData, std::size_t uSize, const void *pDict, std::size_t uDictSize){
+	xm_pDelegate->Update(pData, uSize, pDict, uDictSize);
 }
 void ZDecoder::Finalize(){
 	xm_pDelegate->Finalize();

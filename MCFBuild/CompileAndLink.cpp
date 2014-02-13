@@ -7,8 +7,8 @@
 using namespace MCFBuild;
 
 namespace {
-	void CopyStdOutErr(const PROCESS_EXIT_INFO &Result, const wvstring &wcsPrefix){
-		const auto wcsStdOut = U8sToWcs(Result.strStdOut);
+	void CopyStdOutErr(const PROCESS_EXIT_INFO &vResult, const wvstring &wcsPrefix){
+		const auto wcsStdOut = U8sToWcs(vResult.strStdOut);
 		if(!wcsStdOut.empty()){
 			LOCK_THROUGH(GetPrintLock());
 
@@ -26,7 +26,7 @@ namespace {
 				uCur = uLFPos + 1;
 			}
 		}
-		const auto wcsStdErr = U8sToWcs(Result.strStdErr);
+		const auto wcsStdErr = U8sToWcs(vResult.strStdErr);
 		if(!wcsStdErr.empty()){
 			LOCK_THROUGH(GetPrintLock());
 

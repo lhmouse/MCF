@@ -1,11 +1,11 @@
 Default = Debug
 
 General {
-	CompilerFlags		= -Wall -Wextra -pipe -mfpmath=sse,387 -msse2 -DZ_PREFIX
+	CompilerFlags		= -Wall -Wextra -pipe -mfpmath=sse,387 -msse2 -D_7ZIP_ST -D_LZMA_PROB32
 
 	CFlags				= $CompilerFlags$ -c -std=c11
 
-	IgnoredFiles		= .Built* *.h *.mcfproj
+	IgnoredFiles		= .Built* *.h *.mcfproj *.txt
 
 	Compilers {
 		c {
@@ -19,7 +19,7 @@ General {
 		Full			= ar rcs %OUT% %IN%
 	}
 
-	DefaultOutput		= libz.a
+	DefaultOutput		= liblzma.a
 }
 
 Debug = General {

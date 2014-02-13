@@ -13,9 +13,9 @@ namespace {
 		std::size_t uBytesCopied = 0;
 		while(uBytesCopied < uBytesToCopy){
 			const std::size_t uBytesRemaining = uBytesToCopy - uBytesCopied;
-			const auto Result = fnDataCallback(uBytesRemaining);
-			const std::size_t uBytesToCopyThisTime = std::min(Result.second, uBytesRemaining);
-			__builtin_memcpy(Result.first, (const unsigned char *)pSrc + uBytesCopied, uBytesToCopyThisTime);
+			const auto vResult = fnDataCallback(uBytesRemaining);
+			const std::size_t uBytesToCopyThisTime = std::min(vResult.second, uBytesRemaining);
+			__builtin_memcpy(vResult.first, (const unsigned char *)pSrc + uBytesCopied, uBytesToCopyThisTime);
 			uBytesCopied += uBytesToCopyThisTime;
 		}
 	};

@@ -2,8 +2,8 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2014. LH_Mouse. All wrongs reserved.
 
-#ifndef __MCF_Z_HPP__
-#define __MCF_Z_HPP__
+#ifndef __MCF_LZMA_HPP__
+#define __MCF_LZMA_HPP__
 
 #include <memory>
 #include <functional>
@@ -12,31 +12,31 @@
 
 namespace MCF {
 
-class ZEncoder {
+class LzmaEncoder {
 private:
 	class xDelegate;
 private:
 	const std::unique_ptr<xDelegate> xm_pDelegate;
 public:
-	ZEncoder(std::function<std::pair<void *, std::size_t>(std::size_t)> fnDataCallback, int nLevel = 6);
-	~ZEncoder();
+	LzmaEncoder(std::function<std::pair<void *, std::size_t>(std::size_t)> fnDataCallback, int nLevel = 5, std::uint32_t u32DictSize = 1u << 24);
+	~LzmaEncoder();
 public:
 	void Abort() noexcept;
-	void Update(const void *pData, std::size_t uSize, const void *pDict = nullptr, std::size_t uDictSize = 0);
+	void Update(const void *pData, std::size_t uSize);
 	void Finalize();
 };
 
-class ZDecoder {
+class LzmaDecoder {
 private:
 	class xDelegate;
 private:
 	const std::unique_ptr<xDelegate> xm_pDelegate;
 public:
-	ZDecoder(std::function<std::pair<void *, std::size_t>(std::size_t)> fnDataCallback);
-	~ZDecoder();
+	LzmaDecoder(std::function<std::pair<void *, std::size_t>(std::size_t)> fnDataCallback);
+	~LzmaDecoder();
 public:
 	void Abort() noexcept;
-	void Update(const void *pData, std::size_t uSize, const void *pDict = nullptr, std::size_t uDictSize = 0);
+	void Update(const void *pData, std::size_t uSize);
 	void Finalize();
 };
 

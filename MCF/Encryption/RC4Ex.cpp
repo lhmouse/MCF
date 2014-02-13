@@ -128,9 +128,9 @@ void RC4ExEncoder::Update(const void *pData, std::size_t uSize){
 	const auto pbyEnd = pbyRead + uSize;
 	while(pbyRead != pbyEnd){
 		const std::size_t uBytesRemaining = pbyEnd - pbyRead;
-		const auto Result = xm_fnDataCallback(uBytesRemaining);
-		const std::size_t uBytesToProcessThisTime = std::min(Result.second, uBytesRemaining);
-		Encode(Result.first, pbyRead, uBytesToProcessThisTime, xm_abyBox, &xm_byI, &xm_byJ);
+		const auto vResult = xm_fnDataCallback(uBytesRemaining);
+		const std::size_t uBytesToProcessThisTime = std::min(vResult.second, uBytesRemaining);
+		Encode(vResult.first, pbyRead, uBytesToProcessThisTime, xm_abyBox, &xm_byI, &xm_byJ);
 		pbyRead += uBytesToProcessThisTime;
 	}
 }
@@ -164,9 +164,9 @@ void RC4ExDecoder::Update(const void *pData, std::size_t uSize){
 	const auto pbyEnd = pbyRead + uSize;
 	while(pbyRead != pbyEnd){
 		const std::size_t uBytesRemaining = pbyEnd - pbyRead;
-		const auto Result = xm_fnDataCallback(uBytesRemaining);
-		const std::size_t uBytesToProcessThisTime = std::min(Result.second, uBytesRemaining);
-		Decode(Result.first, pbyRead, uBytesToProcessThisTime, xm_abyBox, &xm_byI, &xm_byJ);
+		const auto vResult = xm_fnDataCallback(uBytesRemaining);
+		const std::size_t uBytesToProcessThisTime = std::min(vResult.second, uBytesRemaining);
+		Decode(vResult.first, pbyRead, uBytesToProcessThisTime, xm_abyBox, &xm_byI, &xm_byJ);
 		pbyRead += uBytesToProcessThisTime;
 	}
 }

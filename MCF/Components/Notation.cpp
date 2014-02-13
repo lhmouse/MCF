@@ -196,7 +196,6 @@ std::pair<Notation::ERROR_TYPE, const wchar_t *> Notation::Parse(const wchar_t *
 
 	const wchar_t *pwszRead = pwchText;
 
-	Package NewRoot;
 	MCF::VVector<Package *> vecPackageStack;
 	vecPackageStack.Push(this);
 

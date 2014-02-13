@@ -9,6 +9,8 @@
 #include <map>
 #include <list>
 #include <functional>
+#include <algorithm>
+#include <iterator>
 #include <climits>
 using namespace MCF;
 
@@ -32,30 +34,39 @@ namespace __MCF {
 			return;
 		}
 		CRITICAL_SECTION_SCOPE(g_csWriteLock){
-			PCHANDLER_LIST *ppList = nullptr;
+			PCHANDLER_LIST pOldList;
 			CRITICAL_SECTION_SCOPE(g_csReadLock){
 				const auto itList = g_mapDelegates.find(Handle.first);
 				if(itList != g_mapDelegates.end()){
-					ppList = &(itList->second);
+					pOldList = itList->second;
 				}
 			}
-			if(ppList && *ppList){
-				PHANDLER_LIST pNewList(new HANDLER_LIST(**ppList));
-				for(auto it = pNewList->cbegin(); it != pNewList->cend(); ++it){
+			if(pOldList){
+				PHANDLER_LIST pNewList;
+
+				auto it = pOldList->cbegin();
+				while(it != pOldList->cend()){
 					if(it->get() == Handle.second){
-						pNewList->erase(it);
+						pNewList.reset(new HANDLER_LIST);
+						std::copy(pOldList->cbegin(), it, std::back_inserter(*pNewList));
+						++it;
+						std::copy(it, pOldList->cend(), std::back_inserter(*pNewList));
 						break;
 					}
+					++it;
 				}
-				CRITICAL_SECTION_SCOPE(g_csReadLock){
-					const auto itList = g_mapDelegates.find(Handle.first);
 
-					ASSERT(itList != g_mapDelegates.end());
+				if(pNewList){
+					CRITICAL_SECTION_SCOPE(g_csReadLock){
+						const auto itList = g_mapDelegates.find(Handle.first);
 
-					if(pNewList->empty()){
-						g_mapDelegates.erase(itList);
-					} else {
-						itList->second = std::move(pNewList);
+						ASSERT(itList != g_mapDelegates.end());
+
+						if(pNewList->empty()){
+							g_mapDelegates.erase(itList);
+						} else {
+							itList->second = std::move(pNewList);
+						}
 					}
 				}
 			}
@@ -66,15 +77,18 @@ namespace __MCF {
 EventHandlerHolder RegisterEventHandler(std::uintptr_t uEventId, std::function<bool(std::uintptr_t)> fnHandler){
 	EventHandlerHolder Holder;
 	CRITICAL_SECTION_SCOPE(g_csWriteLock){
-		PCHANDLER_LIST *ppList;
+		PCHANDLER_LIST pOldList;
 		CRITICAL_SECTION_SCOPE(g_csReadLock){
-			ppList = &g_mapDelegates[uEventId];
+			const auto itList = g_mapDelegates.find(uEventId);
+			if(itList != g_mapDelegates.end()){
+				pOldList = itList->second;
+			}
 		}
-		PHANDLER_LIST pNewList(*ppList ? new HANDLER_LIST(**ppList) : new HANDLER_LIST());
+		PHANDLER_LIST pNewList(pOldList ? new HANDLER_LIST(*pOldList) : new HANDLER_LIST());
 		pNewList->emplace_front(new auto(std::move(fnHandler)));
 		const auto pRaw = pNewList->front().get();
 		CRITICAL_SECTION_SCOPE(g_csReadLock){
-			*ppList = std::move(pNewList);
+			g_mapDelegates[uEventId] = std::move(pNewList);
 		}
 		Holder = std::make_pair(uEventId, pRaw);
 	}

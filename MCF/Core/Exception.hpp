@@ -19,22 +19,24 @@ inline void SetWin32LastError(unsigned long ulErrorCode) noexcept {
 }
 
 struct Exception {
-	const char *pszFunction;
-	unsigned long ulCode;
-	const wchar_t *pwszMessage;
+	const char *m_pszFunction;
+	unsigned long m_ulCode;
+	const wchar_t *m_pwszMessage;
+
+	constexpr Exception(
+		const char *pszFunction,
+		unsigned long ulCode,
+		const wchar_t *pwszMessage = L""
+	) noexcept
+		: m_pszFunction(pszFunction)
+		, m_ulCode(ulCode)
+		, m_pwszMessage(pwszMessage)
+	{
+	}
 };
 
-[[noreturn]]
-inline void Throw(
-	const char *pszFunction,
-	unsigned long ulCode,
-	const wchar_t *pwszMessage = L""
-){
-	throw ::MCF::Exception{pszFunction, ulCode, pwszMessage};
 }
 
-}
-
-#define MCF_THROW(...)	::MCF::Throw(__PRETTY_FUNCTION__, __VA_ARGS__)
+#define MCF_THROW(...)	throw ::MCF::Exception(__PRETTY_FUNCTION__, __VA_ARGS__)
 
 #endif

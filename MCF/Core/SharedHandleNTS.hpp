@@ -5,6 +5,7 @@
 #ifndef __MCF_SHARED_HANDLE_NTS_HPP__
 #define __MCF_SHARED_HANDLE_NTS_HPP__
 
+#include "../../MCFCRT/c/ext/offset_of.h"
 #include <new>
 #include <cstddef>
 
@@ -64,13 +65,13 @@ namespace __MCF {
 
 		static const HANDLE_T *ToPHandle(SharedNodeNTS *pNode){
 			if(pNode){
-				return (const HANDLE_T *)((std::intptr_t)pNode + offsetof(SharedNodeNTS, xm_hObj));
+				return (const HANDLE_T *)((std::intptr_t)pNode + OFFSET_OF(SharedNodeNTS, xm_hObj));
 			}
 			return nullptr;
 		}
 		static SharedNodeNTS *FromPHandle(const HANDLE_T *pHandle){
 			if(pHandle){
-				return (SharedNodeNTS *)((std::intptr_t)pHandle - offsetof(SharedNodeNTS, xm_hObj));
+				return (SharedNodeNTS *)((std::intptr_t)pHandle - OFFSET_OF(SharedNodeNTS, xm_hObj));
 			}
 			return nullptr;
 		}

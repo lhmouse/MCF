@@ -24,6 +24,7 @@ public:
 public:
 	void Abort() noexcept;
 	void Update(const void *pData, std::size_t uSize);
+	std::size_t QueryBytesProcessed() const noexcept;
 	void Finalize();
 };
 
@@ -38,6 +39,7 @@ public:
 public:
 	void Abort() noexcept;
 	void Update(const void *pData, std::size_t uSize);
+	std::size_t QueryBytesProcessed() const noexcept;
 	void Finalize();
 };
 

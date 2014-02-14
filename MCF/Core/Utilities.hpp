@@ -29,6 +29,25 @@ typedef struct tagHiResCounter {
 	};
 	std::uint64_t u40Sec : SECOND_BITS;
 	std::uint64_t u24Rem : 64 - SECOND_BITS;
+
+	struct tagHiResCounter &operator+=(struct tagHiResCounter &rhs) noexcept {
+		const std::uint64_t u64Low = u24Rem + rhs.u24Rem;
+		u24Rem = u64Low;
+		u40Sec += rhs.u40Sec + (u64Low >> (64 - SECOND_BITS) != 0);
+		return *this;
+	}
+	struct tagHiResCounter &operator-=(struct tagHiResCounter &rhs) noexcept {
+		const std::uint64_t u64Low = u24Rem - rhs.u24Rem;
+		u24Rem = u64Low;
+		u40Sec -= rhs.u40Sec + (u64Low >> (64 - SECOND_BITS) != 0);
+		return *this;
+	}
+	struct tagHiResCounter operator+(struct tagHiResCounter &rhs) noexcept {
+		return tagHiResCounter(*this) += rhs;
+	}
+	struct tagHiResCounter operator-(struct tagHiResCounter &rhs) noexcept {
+		return tagHiResCounter(*this) -= rhs;
+	}
 } HI_RES_COUNTER;
 
 extern HI_RES_COUNTER GetHiResCounter() noexcept;

@@ -61,6 +61,7 @@ private:
 	bool xm_bInited;
 
 	unsigned char xm_abyTemp[0x1000];
+	std::size_t xm_uBytesProcessed;
 public:
 	xDelegate(std::function<std::pair<void *, std::size_t>(std::size_t)> &&fnDataCallback, int nLevel)
 		: xm_fnDataCallback(std::move(fnDataCallback))
@@ -99,6 +100,7 @@ public:
 			xm_bInited = true;
 		}
 
+		xm_uBytesProcessed = 0;
 		if(uSize != 0){
 			auto pbyRead = (const unsigned char *)pData;
 			const auto pbyEnd = pbyRead + uSize;
@@ -124,8 +126,12 @@ public:
 				} while(avail_in != 0);
 
 				pbyRead += uBytesToProcess;
+				xm_uBytesProcessed += uBytesToProcess;
 			} while(pbyRead != pbyEnd);
 		}
+	}
+	std::size_t QueryBytesProcessed() const noexcept {
+		return xm_uBytesProcessed;
 	}
 	void Finalize(){
 		if(xm_bInited){
@@ -166,6 +172,9 @@ ZEncoder::~ZEncoder(){
 void ZEncoder::Update(const void *pData, std::size_t uSize, const void *pDict, std::size_t uDictSize){
 	xm_pDelegate->Update(pData, uSize, pDict, uDictSize);
 }
+std::size_t ZEncoder::QueryBytesProcessed() const noexcept {
+	return xm_pDelegate->QueryBytesProcessed();
+}
 void ZEncoder::Finalize(){
 	xm_pDelegate->Finalize();
 }
@@ -178,6 +187,7 @@ private:
 	bool xm_bInited;
 
 	unsigned char xm_abyTemp[0x1000];
+	std::size_t xm_uBytesProcessed;
 public:
 	xDelegate(std::function<std::pair<void *, std::size_t>(std::size_t)> &&fnDataCallback)
 		: xm_fnDataCallback(std::move(fnDataCallback))
@@ -219,6 +229,7 @@ public:
 			xm_bInited = true;
 		}
 
+		xm_uBytesProcessed = 0;
 		if(uSize != 0){
 			auto pbyRead = (const unsigned char *)pData;
 			const auto pbyEnd = pbyRead + uSize;
@@ -244,8 +255,12 @@ public:
 				} while(avail_in != 0);
 
 				pbyRead += uBytesToProcess;
+				xm_uBytesProcessed += uBytesToProcess;
 			} while(pbyRead != pbyEnd);
 		}
+	}
+	std::size_t QueryBytesProcessed() const noexcept {
+		return xm_uBytesProcessed;
 	}
 	void Finalize(){
 		if(xm_bInited){
@@ -285,6 +300,9 @@ ZDecoder::~ZDecoder(){
 // 其他非静态成员函数。
 void ZDecoder::Update(const void *pData, std::size_t uSize, const void *pDict, std::size_t uDictSize){
 	xm_pDelegate->Update(pData, uSize, pDict, uDictSize);
+}
+std::size_t ZDecoder::QueryBytesProcessed() const noexcept {
+	return xm_pDelegate->QueryBytesProcessed();
 }
 void ZDecoder::Finalize(){
 	xm_pDelegate->Finalize();

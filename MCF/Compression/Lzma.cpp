@@ -110,6 +110,7 @@ private:
 		Thread xm_thrdWorker;
 		const unsigned char *xm_pbyData;
 		std::size_t xm_uSize;
+		std::size_t xm_uBytesProcessed;
 		Event xm_evnProducer;
 		Event xm_evnConsumer;
 
@@ -148,12 +149,13 @@ private:
 			if(xm_uSize == 0){
 				*puSize = 0;
 			} else {
-				const auto uToCopy = std::min(*puSize, xm_uSize);
+				const auto uToCopy = std::min(std::min(*puSize, xm_uSize), (std::size_t)0x1000000);
 				std::memcpy(pBuffer, xm_pbyData, uToCopy);
 				*puSize = uToCopy;
 
 				xm_pbyData += uToCopy;
 				xm_uSize -= uToCopy;
+				xm_uBytesProcessed += uToCopy;
 			}
 			if(xm_uSize == 0){
 				xm_evnProducer.Reset();
@@ -177,13 +179,10 @@ private:
 				xm_uSize = 0;
 				xm_evnConsumer.Reset();
 				xm_evnProducer.Set();
-
 				xm_evnConsumer.Wait();
 				xm_thrdWorker.JoinDetach();
 				xm_pException = std::exception_ptr();
 			}
-			xm_evnProducer.Reset();
-			xm_evnConsumer.Reset();
 		}
 		void Init(::CLzmaEncHandle hEncoder){
 			Abort();
@@ -193,17 +192,20 @@ private:
 		void Update(const void *pData, std::size_t uSize){
 			ASSERT(xm_thrdWorker.IsAlive());
 
+			xm_uBytesProcessed = 0;
 			if(uSize != 0){
 				xm_pbyData = (const unsigned char *)pData;
 				xm_uSize = uSize;
 				xm_evnConsumer.Reset();
 				xm_evnProducer.Set();
-
 				xm_evnConsumer.Wait();
 				if(xm_pException){
 					std::rethrow_exception(xm_pException);
 				}
 			}
+		}
+		std::size_t QueryBytesProcessed() const noexcept {
+			return xm_uBytesProcessed;
 		}
 		void Finalize(){
 			ASSERT(xm_thrdWorker.IsAlive());
@@ -212,7 +214,6 @@ private:
 			xm_uSize = 0;
 			xm_evnConsumer.Reset();
 			xm_evnProducer.Set();
-
 			xm_evnConsumer.Wait();
 			if(xm_pException){
 				std::rethrow_exception(xm_pException);
@@ -272,6 +273,9 @@ public:
 
 		xm_vWorker.Update(pData, uSize);
 	}
+	std::size_t QueryBytesProcessed() const noexcept {
+		return xm_vWorker.QueryBytesProcessed();
+	}
 	void Finalize(){
 		if(xm_bInited){
 			xm_vWorker.Finalize();
@@ -292,6 +296,9 @@ LzmaEncoder::~LzmaEncoder(){
 // 其他非静态成员函数。
 void LzmaEncoder::Update(const void *pData, std::size_t uSize){
 	xm_pDelegate->Update(pData, uSize);
+}
+std::size_t LzmaEncoder::QueryBytesProcessed() const noexcept {
+	return xm_pDelegate->QueryBytesProcessed();
 }
 void LzmaEncoder::Finalize(){
 	xm_pDelegate->Finalize();
@@ -316,6 +323,7 @@ private:
 
 	UniqueHandle<::CLzmaDec *, xLzmaDecHandleCloser> xm_pDecoder;
 	unsigned char xm_abyTemp[0x10000];
+	std::size_t xm_uBytesProcessed;
 public:
 	xDelegate(std::function<std::pair<void *, std::size_t>(std::size_t)> &&fnDataCallback)
 		: xm_fnDataCallback(std::move(fnDataCallback))
@@ -352,6 +360,7 @@ public:
 			xm_bInited = true;
 		}
 
+		xm_uBytesProcessed = 0;
 		while(pbyRead != pbyEnd){
 			::ELzmaStatus vStatus;
 			std::size_t uDecoded = sizeof(xm_abyTemp);
@@ -370,11 +379,15 @@ public:
 			}
 			CopyOut(xm_fnDataCallback, xm_abyTemp, uDecoded);
 			pbyRead += uToDecode;
+			xm_uBytesProcessed += uToDecode;
 
 			if(vStatus == LZMA_STATUS_FINISHED_WITH_MARK){
 				::LzmaDec_Init(xm_pDecoder);
 			}
 		}
+	}
+	std::size_t QueryBytesProcessed() const noexcept {
+		return xm_uBytesProcessed;
 	}
 	void Finalize(){
 		if(xm_bInited){
@@ -394,6 +407,9 @@ LzmaDecoder::~LzmaDecoder(){
 // 其他非静态成员函数。
 void LzmaDecoder::Update(const void *pData, std::size_t uSize){
 	xm_pDelegate->Update(pData, uSize);
+}
+std::size_t LzmaDecoder::QueryBytesProcessed() const noexcept {
+	return xm_pDelegate->QueryBytesProcessed();
 }
 void LzmaDecoder::Finalize(){
 	xm_pDelegate->Finalize();

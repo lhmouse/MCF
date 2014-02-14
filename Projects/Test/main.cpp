@@ -1,53 +1,63 @@
 #include <MCFCRT/MCFCRT.h>
 #include <MCF/Core/File.hpp>
+#include <MCF/Core/Utilities.hpp>
 #include <MCF/Hash/CRC32.hpp>
-#include <vector>
+#include <memory>
+#include <string>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <cstddef>
 #include <MCF/Compression/Lzma.hpp>
-
-static unsigned char buffer[0x10000];
+#include <MCF/Compression/Z.hpp>
 
 unsigned int MCFMain(){
-	MCF::File f(L"E:\\笑傲江湖.txt", true, false, false);
+	MCF::File f(L"E:\\enwik8", true, false, false);
 	ASSERT(f);
 
+	std::string origin;
+	origin.resize(f.GetSize());
+	f.Read(&origin[0], 0, origin.size());
+
 	std::string compressed;
+	compressed.reserve(100 * 0x400 * 0x400);
 	std::string plain;
+	plain.reserve(100 * 0x400 * 0x400);
+
+	MCF::HI_RES_COUNTER t1, t2;
 
 	MCF::LzmaEncoder enc([&compressed](std::size_t requested){
 		const auto old = compressed.size();
 		compressed.resize(old + requested);
 		return std::make_pair(&compressed[old], requested);
 	});
-	const auto fsize = f.GetSize();
-	unsigned long long offset = 0;
-	while(offset < fsize){
-		const auto bytes = f.Read(buffer, offset, sizeof(buffer));
-		ASSERT(bytes);
-
-		enc.Update(buffer, bytes);
-		offset += bytes;
-	}
+	t1 = MCF::GetHiResCounter();
+	enc.Update(origin.data(), origin.size());
 	enc.Finalize();
+	t2 = MCF::GetHiResCounter();
+	t2 -= t1;
 
 	std::printf("compressed size = %zu bytes\n", compressed.size());
+	std::printf("  time elasped = %llX.%06llX seconds\n", t2.u40Sec, t2.u24Rem);
 
-	MCF::LzmaDecoder dec([&plain](std::size_t){
-		plain.push_back(0);
-		return std::make_pair(&plain.back(), 1);
+	MCF::LzmaDecoder dec([&plain](std::size_t requested){
+		const auto old = plain.size();
+		plain.resize(old + requested);
+		return std::make_pair(&plain[old], requested);
 	});
+	t1 = MCF::GetHiResCounter();
 	dec.Update(compressed.data(), compressed.size());
 	dec.Finalize();
+	t2 = MCF::GetHiResCounter();
+	t2 -= t1;
 
 	std::printf("decompressed size = %zu bytes\n", plain.size());
+	std::printf("  time elasped = %llX.%06llX seconds\n", t2.u40Sec, t2.u24Rem);
 
 	MCF::CRC32 crc;
 	crc.Update(plain.data(), plain.size());
 	crc.Finalize();
-	std::printf("  crc = %08lX\n", (unsigned long)crc.Finalize());
+	std::printf("  crc32 = %08lX\n", (unsigned long)crc.Finalize());
 
 	return 0;
 }

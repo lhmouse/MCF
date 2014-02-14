@@ -23,7 +23,7 @@ private:
 	UniqueHandle<HANDLE, xEventCloser> xm_hEvent;
 public:
 	xDelegate(bool bInitSet, const wchar_t *pwszName){
-		xm_hEvent.Reset(::CreateEventW(nullptr, false, bInitSet, pwszName));
+		xm_hEvent.Reset(::CreateEventW(nullptr, true, bInitSet, pwszName));
 		if(!xm_hEvent){
 			MCF_THROW(::GetLastError(), L"CreateEventW() 失败。");
 		}

@@ -100,7 +100,6 @@ public:
 	void UnlockRead() noexcept {
 		const auto dwCurrentThreadId = ::GetCurrentThreadId();
 		const auto pReaderReentryInfo = xGetReaderReentryInfo(dwCurrentThreadId);
-
 		ASSERT(pReaderReentryInfo != nullptr);
 
 		if(--pReaderReentryInfo->uReentryCount == 0){

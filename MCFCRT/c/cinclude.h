@@ -9,5 +9,6 @@
 #include "ext/unref_param.h"
 #include "ext/noop.h"
 #include "ext/assert.h"
+#include "ext/offset_of.h"
 
 #endif

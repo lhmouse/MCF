@@ -228,12 +228,12 @@ private:
 			} Large;
 		};
 		std::size_t uLength;
-	} xm_Storage;
+	} xm_vStorage;
 public:
 	GenericString() noexcept {
-		xm_Storage.Small[0] = CHAR_T();
-		std::end(xm_Storage.Small)[-1] = CHAR_T();
-		xm_Storage.uLength = 0;
+		xm_vStorage.Small[0] = CHAR_T();
+		std::end(xm_vStorage.Small)[-1] = CHAR_T();
+		xm_vStorage.uLength = 0;
 	}
 	explicit GenericString(CHAR_T ch, std::size_t uCount = 1) : GenericString() {
 		Assign(ch, uCount);
@@ -286,12 +286,12 @@ public:
 	}
 	~GenericString(){
 		if(!xIsSmall()){
-			delete[] xm_Storage.Large.pchBegin;
+			delete[] xm_vStorage.Large.pchBegin;
 		}
 	}
 private:
 	bool xIsSmall() const {
-		return std::end(xm_Storage.Small)[-1] == CHAR_T();
+		return std::end(xm_vStorage.Small)[-1] == CHAR_T();
 	}
 
 	PCHAR_T xReserveUnshift(std::size_t uCapacity, std::size_t uUnshift){
@@ -304,7 +304,7 @@ private:
 			}
 			return pszOldBegin;
 		} else {
-			auto uRealCapacity = std::max(uCapacity, COUNT_OF(xm_Storage.Small));
+			auto uRealCapacity = std::max(uCapacity, COUNT_OF(xm_vStorage.Small));
 			if(sizeof(std::size_t) == 8){
 				uRealCapacity = (std::size_t)1 << (64u - __builtin_clzll(uRealCapacity - 1));
 			} else {
@@ -313,12 +313,12 @@ private:
 			const PCHAR_T pchNewStor = new CHAR_T[uRealCapacity];
 			xCopyFwd(pchNewStor + uUnshift, pszOldBegin, GetLength() + 1);
 			if(xIsSmall()){
-				std::end(xm_Storage.Small)[-1] = (CHAR_T)-1;
+				std::end(xm_vStorage.Small)[-1] = (CHAR_T)-1;
 			} else {
-				delete[] xm_Storage.Large.pchBegin;
+				delete[] xm_vStorage.Large.pchBegin;
 			}
-			xm_Storage.Large.pchBegin = pchNewStor;
-			xm_Storage.Large.uCapacity = uRealCapacity;
+			xm_vStorage.Large.pchBegin = pchNewStor;
+			xm_vStorage.Large.uCapacity = uRealCapacity;
 			return pchNewStor;
 		}
 	}
@@ -330,10 +330,10 @@ private:
 	void xDisunify(UnifiedString &&ucsTemp);
 public:
 	PCSTR_T GetCStr() const noexcept {
-		return xIsSmall() ? xm_Storage.Small : xm_Storage.Large.pchBegin;
+		return xIsSmall() ? xm_vStorage.Small : xm_vStorage.Large.pchBegin;
 	}
 	PSTR_T GetCStr() noexcept {
-		return xIsSmall() ? xm_Storage.Small : xm_Storage.Large.pchBegin;
+		return xIsSmall() ? xm_vStorage.Small : xm_vStorage.Large.pchBegin;
 	}
 	bool IsEmpty() const noexcept {
 		return GetCStr()[0] == CHAR_T();
@@ -343,20 +343,20 @@ public:
 	}
 
 	std::size_t GetLength() const noexcept {
-		return xm_Storage.uLength;
+		return xm_vStorage.uLength;
 	}
 	PCHAR_T Resize(std::size_t uSize){
 		const auto pchNewBegin = Reserve(uSize);
 		pchNewBegin[uSize] = CHAR_T();
-		xm_Storage.uLength = uSize;
+		xm_vStorage.uLength = uSize;
 		return pchNewBegin;
 	}
 	void Trim() noexcept {
-		xm_Storage.uLength = __MCF::StrLen(GetCStr());
+		xm_vStorage.uLength = __MCF::StrLen(GetCStr());
 	}
 
 	std::size_t GetCapacity() const {
-		return xIsSmall() ? COUNT_OF(xm_Storage.Small) : xm_Storage.Large.uCapacity;
+		return xIsSmall() ? COUNT_OF(xm_vStorage.Small) : xm_vStorage.Large.uCapacity;
 	}
 	PCHAR_T Reserve(std::size_t uCapacity){
 		return xReserveUnshift(uCapacity + 1, 0);
@@ -366,20 +366,20 @@ public:
 		if(&rhs == this){
 			return;
 		}
-		typedef std::uintptr_t BLOCK[sizeof(xm_Storage) / sizeof(std::uintptr_t)];
-		std::swap((BLOCK &)xm_Storage, (BLOCK &)rhs.xm_Storage);
+		typedef std::uintptr_t BLOCK[sizeof(xm_vStorage) / sizeof(std::uintptr_t)];
+		std::swap((BLOCK &)xm_vStorage, (BLOCK &)rhs.xm_vStorage);
 	}
 
 	void Assign(CHAR_T ch, std::size_t uCount){
 		xFill(Reserve(uCount), ch, uCount)[0] = CHAR_T();
-		xm_Storage.uLength = uCount;
+		xm_vStorage.uLength = uCount;
 	}
 	void Assign(PCSTR_T pszSrc){
 		Assign(pszSrc, __MCF::StrLen(pszSrc));
 	}
 	void Assign(PCSTR_T pchSrc, std::size_t uSrcLen){
 		xCopyFwd(Reserve(uSrcLen), pchSrc, uSrcLen)[0] = CHAR_T();
-		xm_Storage.uLength = uSrcLen;
+		xm_vStorage.uLength = uSrcLen;
 	}
 	void Assign(const GenericString &rhs){
 		if(&rhs == this){
@@ -392,11 +392,11 @@ public:
 			return;
 		}
 
-		__builtin_memcpy(&xm_Storage, &rhs.xm_Storage, sizeof(xm_Storage));
+		__builtin_memcpy(&xm_vStorage, &rhs.xm_vStorage, sizeof(xm_vStorage));
 
-		std::begin(rhs.xm_Storage.Small)[0] = CHAR_T();
-		std::end(rhs.xm_Storage.Small)[-1] = CHAR_T();
-		rhs.xm_Storage.uLength = 0;
+		std::begin(rhs.xm_vStorage.Small)[0] = CHAR_T();
+		std::end(rhs.xm_vStorage.Small)[-1] = CHAR_T();
+		rhs.xm_vStorage.uLength = 0;
 	}
 	template<typename OTHER_C, StringEncoding OTHER_E>
 	void Assign(const GenericString<OTHER_C, OTHER_E> &rhs){
@@ -413,7 +413,7 @@ public:
 		const auto uLength = GetLength();
 		const auto uNewLength = uLength + uCount;
 		xFill(Reserve(uNewLength) + uLength, ch, uCount)[0] = CHAR_T();
-		xm_Storage.uLength = uNewLength;
+		xm_vStorage.uLength = uNewLength;
 	}
 	void Append(PCSTR_T pszSrc){
 		Append(pszSrc, __MCF::StrLen(pszSrc));
@@ -422,7 +422,7 @@ public:
 		const auto uLength = GetLength();
 		const auto uNewLength = uLength + uSrcLen;
 		xCopyFwd(Reserve(uNewLength) + uLength, pchSrc, uSrcLen)[0] = CHAR_T();
-		xm_Storage.uLength = uNewLength;
+		xm_vStorage.uLength = uNewLength;
 	}
 	void Append(const GenericString &rhs){
 		const auto uLength = GetLength();
@@ -430,7 +430,7 @@ public:
 			const auto uNewLength = uLength * 2;
 			const auto pchBegin = Reserve(uNewLength);
 			xCopyFwd(pchBegin + uLength, pchBegin, uLength)[0] = CHAR_T();
-			xm_Storage.uLength = uNewLength;
+			xm_vStorage.uLength = uNewLength;
 		} else {
 			Append(rhs.GetCStr(), rhs.GetLength());
 		}
@@ -450,14 +450,14 @@ public:
 		const auto pchWrite = GetCStr();
 		const auto uNewLength = (uCount >= uLength) ? 0 : (uLength - uCount);
 		pchWrite[uNewLength] = CHAR_T();
-		xm_Storage.uLength = uNewLength;
+		xm_vStorage.uLength = uNewLength;
 	}
 
 	void Unshift(CHAR_T ch, std::size_t uCount = 1){
 		const auto uLength = GetLength();
 		const auto uNewLength = uLength + uCount;
 		xFill(xReserveUnshift(uNewLength + 1, uCount), ch, uCount);
-		xm_Storage.uLength = uNewLength;
+		xm_vStorage.uLength = uNewLength;
 	}
 	void Unshift(PCSTR_T pszSrc){
 		Unshift(pszSrc, __MCF::StrLen(pszSrc));
@@ -466,7 +466,7 @@ public:
 		const auto uLength = GetLength();
 		const auto uNewLength = uLength + uSrcLen;
 		xCopyFwd(xReserveUnshift(uNewLength + 1, uSrcLen), pchSrc, uSrcLen);
-		xm_Storage.uLength = uNewLength;
+		xm_vStorage.uLength = uNewLength;
 	}
 	void Unshift(const GenericString &rhs){
 		if(&rhs == this){
@@ -490,12 +490,12 @@ public:
 		const auto pchWrite = GetCStr();
 		if(uCount >= uLength){
 			pchWrite[0] = CHAR_T();
-			xm_Storage.uLength = 0;
+			xm_vStorage.uLength = 0;
 		} else {
-			const auto uNewLength = xm_Storage.uLength - uCount;
+			const auto uNewLength = xm_vStorage.uLength - uCount;
 			xCopyFwd(pchWrite, pchWrite + uCount, uNewLength);
 			pchWrite[uNewLength] = CHAR_T();
-			xm_Storage.uLength = uNewLength;
+			xm_vStorage.uLength = uNewLength;
 		}
 	}
 

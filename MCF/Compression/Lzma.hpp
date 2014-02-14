@@ -5,6 +5,7 @@
 #ifndef __MCF_LZMA_HPP__
 #define __MCF_LZMA_HPP__
 
+#include "../Core/NoCopy.hpp"
 #include <memory>
 #include <functional>
 #include <utility>
@@ -12,7 +13,7 @@
 
 namespace MCF {
 
-class LzmaEncoder {
+class LzmaEncoder : NO_COPY {
 private:
 	class xDelegate;
 private:
@@ -26,7 +27,7 @@ public:
 	void Finalize();
 };
 
-class LzmaDecoder {
+class LzmaDecoder : NO_COPY {
 private:
 	class xDelegate;
 private:

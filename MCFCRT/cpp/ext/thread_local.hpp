@@ -19,17 +19,17 @@ namespace __MCF {
 	class TlsWrapper {
 	private:
 		static void xCtorWrapper(void *pObj, std::intptr_t nParam){
-			new(pObj) OBJECT_T(((const TlsWrapper *)nParam)->xm_Template);
+			new(pObj) OBJECT_T(((const TlsWrapper *)nParam)->xm_vTemplate);
 		}
 		static void xDtorWrapper(void *pObj) noexcept {
 			((OBJECT_T *)pObj)->~OBJECT_T();
 		}
 	private:
-		OBJECT_T xm_Template;
+		OBJECT_T xm_vTemplate;
 	public:
 		template<class... PARAMS_T>
 		constexpr TlsWrapper(PARAMS_T ...Params) noexcept(noexcept(OBJECT_T(std::move(Params)...)))
-			: xm_Template(std::move(Params)...)
+			: xm_vTemplate(std::move(Params)...)
 		{
 		}
 		~TlsWrapper(){

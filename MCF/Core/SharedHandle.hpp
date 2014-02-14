@@ -139,7 +139,7 @@ namespace __MCF {
 		bool xDropRef() noexcept {
 			xValidate();
 
-			ASSERT(xm_uCount != 0);
+			ASSERT(__atomic_load_n(&xm_uCount, __ATOMIC_RELAXED) != 0);
 
 			if(__atomic_sub_fetch(&xm_uCount, 1, __ATOMIC_RELAXED) == 0){
 				CLOSER_T()(xm_hObj);
@@ -150,11 +150,9 @@ namespace __MCF {
 		bool xDropWeakRef() noexcept {
 			xValidate();
 
-			ASSERT(xm_uWeakCount != 0);
-
+			ASSERT(__atomic_load_n(&xm_uWeakCount, __ATOMIC_RELAXED) != 0);
 			const bool bRet = (__atomic_sub_fetch(&xm_uWeakCount, 1, __ATOMIC_RELAXED) == 0);
-
-			ASSERT(!bRet || (xm_uCount == 0));
+			ASSERT(!bRet || (__atomic_load_n(&xm_uCount, __ATOMIC_RELAXED) == 0));
 
 			return bRet;
 		}

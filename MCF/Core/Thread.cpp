@@ -29,6 +29,7 @@ private:
 		} catch(...){
 			pThis->xm_pException = std::current_exception();
 		}
+		pThis->xm_ulThreadId = 0;
 		return 0;
 	}
 public:
@@ -106,13 +107,6 @@ void Thread::JoinDetach() noexcept {
 	}
 }
 
-unsigned long Thread::GetThreadId() const noexcept {
-	if(xm_pDelegate){
-		return xm_pDelegate->GetId();
-	}
-	return 0;
-}
-
 void Thread::Suspend() noexcept {
 	if(xm_pDelegate){
 		::SuspendThread(xm_pDelegate->GetHandle());
@@ -122,4 +116,14 @@ void Thread::Resume() noexcept {
 	if(xm_pDelegate){
 		::ResumeThread(xm_pDelegate->GetHandle());
 	}
+}
+
+bool Thread::IsAlive() const noexcept {
+	return GetThreadId() != 0;
+}
+unsigned long Thread::GetThreadId() const noexcept {
+	if(xm_pDelegate){
+		return xm_pDelegate->GetId();
+	}
+	return 0;
 }

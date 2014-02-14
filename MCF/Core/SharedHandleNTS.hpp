@@ -139,9 +139,7 @@ namespace __MCF {
 			xValidate();
 
 			ASSERT(xm_uWeakCount != 0);
-
 			const bool bRet = (--xm_uWeakCount == 0);
-
 			ASSERT(!bRet || (xm_uCount == 0));
 
 			return bRet;

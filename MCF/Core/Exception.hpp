@@ -7,6 +7,7 @@
 
 #include "String.hpp"
 #include "../../MCFCRT/env/last_error.h"
+#include <exception>
 #include <cstddef>
 
 namespace MCF {
@@ -37,6 +38,10 @@ struct Exception {
 
 }
 
-#define MCF_THROW(...)	throw ::MCF::Exception(__PRETTY_FUNCTION__, __VA_ARGS__)
+#define MCF_THROW(...)	\
+	throw ::MCF::Exception(__PRETTY_FUNCTION__, __VA_ARGS__)
+
+#define MCF_MAKE_EXCEPTION_PTR(...)	\
+	std::make_exception_ptr(::MCF::Exception(__PRETTY_FUNCTION__, __VA_ARGS__))
 
 #endif

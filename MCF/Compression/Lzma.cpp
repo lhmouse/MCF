@@ -6,15 +6,17 @@
 #include "Lzma.hpp"
 #include "../Core/UniqueHandle.hpp"
 #include "../Core/Exception.hpp"
+#include "../Core/Thread.hpp"
+#include "../Core/Event.hpp"
 
 #define _7ZIP_ST
 #define _LZMA_PROB32
 #include "../../External/Lzma/LzmaEnc.h"
 #include "../../External/Lzma/LzmaDec.h"
 
-#include <iterator>
 #include <new>
 #include <memory>
+#include <exception>
 using namespace MCF;
 
 namespace {
@@ -45,7 +47,8 @@ namespace {
 			return ERROR_INVALID_PARAMETER;
 		case SZ_ERROR_INPUT_EOF:
 			return ERROR_HANDLE_EOF;
-		// case SZ_ERROR_OUTPUT_EOF:
+		case SZ_ERROR_OUTPUT_EOF:
+			return ERROR_MORE_DATA;
 		// case SZ_ERROR_READ:
 		// case SZ_ERROR_WRITE:
 		// case SZ_ERROR_PROGRESS:
@@ -72,8 +75,8 @@ namespace {
 		}
 	}
 
-	::ISzAlloc g_AllocSmall = {&SmallAlloc, &SmallFree};
-	::ISzAlloc g_AllocLarge = {&LargeAlloc, &LargeFree};
+	::ISzAlloc g_vAllocSmall = {&SmallAlloc, &SmallFree};
+	::ISzAlloc g_vAllocLarge = {&LargeAlloc, &LargeFree};
 }
 
 // ========== LzmaEncoder ==========
@@ -85,89 +88,171 @@ private:
 			return nullptr;
 		}
 		void operator()(::CLzmaEncHandle hLzma) const noexcept {
-			::LzmaEnc_Destroy(hLzma, &g_AllocSmall, &g_AllocLarge);
+			::LzmaEnc_Destroy(hLzma, &g_vAllocSmall, &g_vAllocLarge);
 		}
 	};
 
-	class xDataSource : public ::ISeqInStream {
+	class xWorker : NO_COPY {
 	private:
-		static ::SRes xReadWrapper(void *pThis, void *pBuffer, size_t *puSize) noexcept {
-			return ((xDataSource *)pThis)->xRead(pBuffer, puSize);
+		static ::SRes xReadWrapper(void *psisSource, void *pBuffer, size_t *puSize) noexcept {
+			const auto pWorker = (xWorker *)((std::uintptr_t)psisSource - OFFSET_OF(xWorker, xm_sisSource));
+			return pWorker->xRead(pBuffer, puSize);
 		}
-	private:
-		const unsigned char *xm_pbyRead;
-		std::size_t xm_uRemaining;
-	public:
-		xDataSource(const void *pData, std::size_t uSize) noexcept
-			: ISeqInStream{&xReadWrapper}
-			, xm_pbyRead((const unsigned char *)pData)
-			, xm_uRemaining(uSize)
-		{
-		}
-	private:
-		::SRes xRead(void *pBuffer, size_t *puSize) noexcept {
-			const auto uBytesToCopy = std::min(*puSize, xm_uRemaining);
-			std::memcpy(pBuffer, xm_pbyRead, uBytesToCopy);
-			xm_pbyRead += uBytesToCopy;
-			xm_uRemaining -= uBytesToCopy;
-			*puSize = uBytesToCopy;
-			return SZ_OK;
-		}
-	};
-
-	class xDataSink : public ::ISeqOutStream {
-	private:
-		static std::size_t xWriteWrapper(void *pThis, const void *pBuffer, size_t uSize) noexcept {
-			return ((xDataSink *)pThis)->xWrite(pBuffer, uSize);
+		static std::size_t xWriteWrapper(void *psosSink, const void *pBuffer, size_t uSize) noexcept {
+			const auto pWorker = (xWorker *)((std::uintptr_t)psosSink - OFFSET_OF(xWorker, xm_sosSink));
+			return pWorker->xWrite(pBuffer, uSize);
 		}
 	private:
 		const std::function<std::pair<void *, std::size_t>(std::size_t)> &xm_fnDataCallback;
+		::ISeqInStream xm_sisSource;
+		::ISeqOutStream xm_sosSink;
+
+		Thread xm_thrdWorker;
+		const unsigned char *xm_pbyData;
+		std::size_t xm_uSize;
+		Event xm_evnProducer;
+		Event xm_evnConsumer;
+
+		std::exception_ptr xm_pException;
 	public:
-		xDataSink(const std::function<std::pair<void *, std::size_t>(std::size_t)> &fnDataCallback) noexcept
-			: ISeqOutStream{&xWriteWrapper}
-			, xm_fnDataCallback(fnDataCallback)
+		xWorker(const std::function<std::pair<void *, std::size_t>(std::size_t)> &fnDataCallback)
+			: xm_fnDataCallback(fnDataCallback)
+			, xm_sisSource{&xReadWrapper}
+			, xm_sosSink{&xWriteWrapper}
+			, xm_thrdWorker()
+			, xm_evnProducer(false)
+			, xm_evnConsumer(false)
 		{
 		}
+		~xWorker(){
+			Abort();
+		}
 	private:
+		void xThreadProc(::CLzmaEncHandle hEncoder) noexcept {
+			const auto ulErrorCode = LzmaErrorToWin32Error(::LzmaEnc_Encode(
+				hEncoder,
+				&xm_sosSink,
+				&xm_sisSource,
+				nullptr,
+				&g_vAllocSmall,
+				&g_vAllocLarge
+			));
+			if(!xm_pException && (ulErrorCode != ERROR_SUCCESS)){
+				xm_pException = MCF_MAKE_EXCEPTION_PTR(ulErrorCode, L"::LzmaEnc_Encode() 失败。");
+			}
+			xm_evnConsumer.Set();
+		}
+
+		::SRes xRead(void *pBuffer, size_t *puSize) noexcept {
+			xm_evnProducer.Wait();
+			if(xm_uSize == 0){
+				*puSize = 0;
+			} else {
+				const auto uToCopy = std::min(*puSize, xm_uSize);
+				std::memcpy(pBuffer, xm_pbyData, uToCopy);
+				*puSize = uToCopy;
+
+				xm_pbyData += uToCopy;
+				xm_uSize -= uToCopy;
+			}
+			if(xm_uSize == 0){
+				xm_evnProducer.Reset();
+				xm_evnConsumer.Set();
+			}
+			return SZ_OK;
+		}
 		std::size_t xWrite(const void *pBuffer, size_t uSize) noexcept {
 			try {
 				CopyOut(xm_fnDataCallback, pBuffer, uSize);
 				return uSize;
 			} catch(...){
+				xm_pException = std::current_exception();
 				return 0;
+			}
+		}
+	public:
+		void Abort() noexcept {
+			if(xm_thrdWorker.IsAlive()){
+				xm_pbyData = nullptr;
+				xm_uSize = 0;
+				xm_evnConsumer.Reset();
+				xm_evnProducer.Set();
+
+				xm_evnConsumer.Wait();
+				xm_thrdWorker.JoinDetach();
+				xm_pException = std::exception_ptr();
+			}
+			xm_evnProducer.Reset();
+			xm_evnConsumer.Reset();
+		}
+		void Init(::CLzmaEncHandle hEncoder){
+			Abort();
+
+			xm_thrdWorker.Start(std::bind(&xWorker::xThreadProc, this, hEncoder));
+		}
+		void Update(const void *pData, std::size_t uSize){
+			ASSERT(xm_thrdWorker.IsAlive());
+
+			if(uSize != 0){
+				xm_pbyData = (const unsigned char *)pData;
+				xm_uSize = uSize;
+				xm_evnConsumer.Reset();
+				xm_evnProducer.Set();
+
+				xm_evnConsumer.Wait();
+				if(xm_pException){
+					std::rethrow_exception(xm_pException);
+				}
+			}
+		}
+		void Finalize(){
+			ASSERT(xm_thrdWorker.IsAlive());
+
+			xm_pbyData = nullptr;
+			xm_uSize = 0;
+			xm_evnConsumer.Reset();
+			xm_evnProducer.Set();
+
+			xm_evnConsumer.Wait();
+			if(xm_pException){
+				std::rethrow_exception(xm_pException);
 			}
 		}
 	};
 private:
 	const std::function<std::pair<void *, std::size_t>(std::size_t)> xm_fnDataCallback;
-	::CLzmaEncProps xm_EncProps;
+	::CLzmaEncProps xm_vEncProps;
+	xWorker xm_vWorker;
 	bool xm_bInited;
 
 	UniqueHandle<::CLzmaEncHandle, xLzmaEncHandleCloser> xm_hEncoder;
 public:
 	xDelegate(std::function<std::pair<void *, std::size_t>(std::size_t)> &&fnDataCallback, int nLevel, std::uint32_t u32DictSize)
 		: xm_fnDataCallback(std::move(fnDataCallback))
+		, xm_vWorker(xm_fnDataCallback)
 		, xm_bInited(false)
 	{
-		::LzmaEncProps_Init(&xm_EncProps);
-		xm_EncProps.level = nLevel;
-		xm_EncProps.dictSize = u32DictSize;
-		xm_EncProps.writeEndMark = 1;
+		::LzmaEncProps_Init(&xm_vEncProps);
+		xm_vEncProps.level = nLevel;
+		xm_vEncProps.dictSize = u32DictSize;
+		xm_vEncProps.writeEndMark = 1;
 	}
 public:
 	void Abort() noexcept {
+		xm_vWorker.Abort();
+
 		xm_bInited = false;
 	}
 	void Update(const void *pData, std::size_t uSize){
 		unsigned long ulErrorCode;
 
 		if(!xm_bInited){
-			xm_hEncoder.Reset(::LzmaEnc_Create(&g_AllocSmall));
+			xm_hEncoder.Reset(::LzmaEnc_Create(&g_vAllocSmall));
 			if(!xm_hEncoder){
 				MCF_THROW(ERROR_NOT_ENOUGH_MEMORY, L"::LzmaEnc_Create() 失败。");
 			}
 
-			ulErrorCode = LzmaErrorToWin32Error(::LzmaEnc_SetProps(xm_hEncoder, &xm_EncProps));
+			ulErrorCode = LzmaErrorToWin32Error(::LzmaEnc_SetProps(xm_hEncoder, &xm_vEncProps));
 			if(ulErrorCode != ERROR_SUCCESS){
 				MCF_THROW(ulErrorCode, L"::LzmaEnc_SetProps() 失败。");
 			}
@@ -180,20 +265,17 @@ public:
 			}
 			CopyOut(xm_fnDataCallback, abyHeader, uHeaderSize);
 
+			xm_vWorker.Init(xm_hEncoder);
+
 			xm_bInited = true;
 		}
 
-		if(uSize != 0){
-			xDataSink vSink(xm_fnDataCallback);
-			xDataSource vSource(pData, uSize);
-			ulErrorCode = LzmaErrorToWin32Error(::LzmaEnc_Encode(xm_hEncoder, &vSink, &vSource, nullptr, &g_AllocSmall, &g_AllocLarge));
-			if(ulErrorCode != ERROR_SUCCESS){
-				MCF_THROW(ulErrorCode, L"::LzmaEnc_Encode() 失败。");
-			}
-		}
+		xm_vWorker.Update(pData, uSize);
 	}
 	void Finalize(){
 		if(xm_bInited){
+			xm_vWorker.Finalize();
+
 			xm_bInited = false;
 		}
 	}
@@ -224,12 +306,12 @@ private:
 			return nullptr;
 		}
 		void operator()(::CLzmaDec *pDecoder) const noexcept {
-			::LzmaDec_Free(pDecoder, &g_AllocSmall);
+			::LzmaDec_Free(pDecoder, &g_vAllocSmall);
 		}
 	};
 private:
 	const std::function<std::pair<void *, std::size_t>(std::size_t)> xm_fnDataCallback;
-	::CLzmaDec xm_Decoder;
+	::CLzmaDec xm_vDecoder;
 	bool xm_bInited;
 
 	UniqueHandle<::CLzmaDec *, xLzmaDecHandleCloser> xm_pDecoder;
@@ -239,7 +321,7 @@ public:
 		: xm_fnDataCallback(std::move(fnDataCallback))
 		, xm_bInited(false)
 	{
-		LzmaDec_Construct(&xm_Decoder); // 这是宏？！
+		LzmaDec_Construct(&xm_vDecoder); // 这是宏？！
 	}
 public:
 	void Abort() noexcept {
@@ -259,11 +341,11 @@ public:
 			__builtin_memcpy(abyHeader, pbyRead, sizeof(abyHeader));
 			pbyRead += sizeof(abyHeader);
 
-			ulErrorCode = ::LzmaDec_Allocate(&xm_Decoder, abyHeader, sizeof(abyHeader), &g_AllocSmall);
+			ulErrorCode = ::LzmaDec_Allocate(&xm_vDecoder, abyHeader, sizeof(abyHeader), &g_vAllocSmall);
 			if(ulErrorCode != ERROR_SUCCESS){
 				MCF_THROW(ulErrorCode, L"::LzmaDec_Allocate() 失败。");
 			}
-			xm_pDecoder.Reset(&xm_Decoder);
+			xm_pDecoder.Reset(&xm_vDecoder);
 
 			::LzmaDec_Init(xm_pDecoder);
 

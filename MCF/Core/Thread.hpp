@@ -31,7 +31,12 @@ public:
 	void Suspend() noexcept;
 	void Resume() noexcept;
 
+	bool IsAlive() const noexcept;
 	unsigned long GetThreadId() const noexcept;
+public:
+	explicit operator bool() const noexcept {
+		return IsAlive();
+	}
 };
 
 }

@@ -59,7 +59,6 @@ namespace __MCF {
 				if(pNewList){
 					CRITICAL_SECTION_SCOPE(g_csReadLock){
 						const auto itList = g_mapDelegates.find(Handle.first);
-
 						ASSERT(itList != g_mapDelegates.end());
 
 						if(pNewList->empty()){

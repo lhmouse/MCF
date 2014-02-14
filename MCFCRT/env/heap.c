@@ -10,11 +10,11 @@
 #include <windows.h>
 
 static CRITICAL_SECTION			g_csHeapLock;
-static __MCF_BAD_ALLOC_HANDLER	g_BadAllocHandler;
+static __MCF_BAD_ALLOC_HANDLER	g_vBadAllocHandler;
 
 unsigned long __MCF_CRT_HeapInitialize(){
 	InitializeCriticalSectionAndSpinCount(&g_csHeapLock, 0x400);
-	g_BadAllocHandler.pfnProc = NULL;
+	g_vBadAllocHandler.pfnProc = NULL;
 
 #ifdef __MCF_CRT_HEAPDBG_ON
 	__MCF_CRT_HeapDbgInitContext();
@@ -64,7 +64,7 @@ unsigned char *__MCF_CRT_HeapAlloc(size_t uSize, const void *pRetAddr __attribut
 #endif
 				break;
 			}
-		} while((g_BadAllocHandler.pfnProc) && (*g_BadAllocHandler.pfnProc)(g_BadAllocHandler.nContext));
+		} while((g_vBadAllocHandler.pfnProc) && (*g_vBadAllocHandler.pfnProc)(g_vBadAllocHandler.nContext));
 	LeaveCriticalSection(&g_csHeapLock);
 	return pRet;
 }
@@ -103,7 +103,7 @@ unsigned char *__MCF_CRT_HeapReAlloc(unsigned char *pBlock /* NON-NULL */, size_
 #endif
 				break;
 			}
-		} while((g_BadAllocHandler.pfnProc) && (*g_BadAllocHandler.pfnProc)(g_BadAllocHandler.nContext));
+		} while((g_vBadAllocHandler.pfnProc) && (*g_vBadAllocHandler.pfnProc)(g_vBadAllocHandler.nContext));
 	LeaveCriticalSection(&g_csHeapLock);
 	return pRet;
 }
@@ -128,14 +128,14 @@ void __MCF_CRT_HeapFree(unsigned char *pBlock /* NON-NULL */, const void *pRetAd
 //    如果线程 B 在线程 A 更改响应函数之后调用了旧的响应函数，结果将是不可预测的。
 __MCF_BAD_ALLOC_HANDLER __MCF_GetBadAllocHandler(){
 	EnterCriticalSection(&g_csHeapLock);
-		const __MCF_BAD_ALLOC_HANDLER Handler = g_BadAllocHandler;
+		const __MCF_BAD_ALLOC_HANDLER Handler = g_vBadAllocHandler;
 	LeaveCriticalSection(&g_csHeapLock);
 	return Handler;
 }
 __MCF_BAD_ALLOC_HANDLER __MCF_SetBadAllocHandler(__MCF_BAD_ALLOC_HANDLER NewHandler){
 	EnterCriticalSection(&g_csHeapLock);
-		const __MCF_BAD_ALLOC_HANDLER OldHandler = g_BadAllocHandler;
-		g_BadAllocHandler = NewHandler;
+		const __MCF_BAD_ALLOC_HANDLER OldHandler = g_vBadAllocHandler;
+		g_vBadAllocHandler = NewHandler;
 	LeaveCriticalSection(&g_csHeapLock);
 	return OldHandler;
 }

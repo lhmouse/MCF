@@ -5,6 +5,7 @@
 #ifndef __MCF_Z_HPP__
 #define __MCF_Z_HPP__
 
+#include "../Core/NoCopy.hpp"
 #include <memory>
 #include <functional>
 #include <utility>
@@ -12,7 +13,7 @@
 
 namespace MCF {
 
-class ZEncoder {
+class ZEncoder : NO_COPY {
 private:
 	class xDelegate;
 private:
@@ -26,7 +27,7 @@ public:
 	void Finalize();
 };
 
-class ZDecoder {
+class ZDecoder : NO_COPY {
 private:
 	class xDelegate;
 private:

@@ -24,7 +24,7 @@ unsigned int MCFMain(){
 	std::string plain;
 	plain.reserve(100 * 0x400 * 0x400);
 
-	MCF::HI_RES_COUNTER t1, t2;
+	std::uint64_t t1, t2;
 
 	MCF::LzmaEncoder enc([&compressed](std::size_t requested){
 		const auto old = compressed.size();
@@ -38,7 +38,7 @@ unsigned int MCFMain(){
 	t2 -= t1;
 
 	std::printf("compressed size = %zu bytes\n", compressed.size());
-	std::printf("  time elasped = %llX.%06llX seconds\n", t2.u40Sec, t2.u24Rem);
+	std::printf("  time elasped = %llX.%06llX seconds\n", t2 >> 24, t2 & 0xFFFFFF);
 
 	MCF::LzmaDecoder dec([&plain](std::size_t requested){
 		const auto old = plain.size();
@@ -52,7 +52,7 @@ unsigned int MCFMain(){
 	t2 -= t1;
 
 	std::printf("decompressed size = %zu bytes\n", plain.size());
-	std::printf("  time elasped = %llX.%06llX seconds\n", t2.u40Sec, t2.u24Rem);
+	std::printf("  time elasped = %llX.%06llX seconds\n", t2 >> 24, t2 & 0xFFFFFF);
 
 	MCF::CRC32 crc;
 	crc.Update(plain.data(), plain.size());

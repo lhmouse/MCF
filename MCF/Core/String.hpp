@@ -802,7 +802,6 @@ GenericString<CHAR_T, CHAR_ENC> operator+(GenericString<CHAR_T, CHAR_ENC> &&lhs,
 }
 template<typename CHAR_T, StringEncoding CHAR_ENC>
 GenericString<CHAR_T, CHAR_ENC> operator+(const CHAR_T *lhs, const GenericString<CHAR_T, CHAR_ENC> &rhs){
-
 	auto p = lhs;
 	while(*p != CHAR_T()){
 		++p;

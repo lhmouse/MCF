@@ -64,7 +64,7 @@ std::uint32_t GenRandSeed() noexcept {
 	return ret;
 }
 
-HI_RES_COUNTER GetHiResCounter() noexcept {
+std::uint64_t GetHiResCounter() noexcept {
 	static bool s_bInited = false;
 	static long double s_llfFreq;
 	static long double s_llfFreqRecip;
@@ -77,7 +77,7 @@ HI_RES_COUNTER GetHiResCounter() noexcept {
 		const auto llFreq = (long double)liTemp.QuadPart;
 		s_llfFreq = llFreq;
 		s_llfFreqRecip = 1.0l / llFreq;
-		s_llfRemainderCoef = (1ull << (64 - HI_RES_COUNTER::SECOND_BITS)) / llFreq;
+		s_llfRemainderCoef = (1ull << (64 - HI_RES_COUNTER_SECOND_BITS)) / llFreq;
 
 		__atomic_store_n(&s_bInited, true, __ATOMIC_RELEASE);
 	}
@@ -86,7 +86,7 @@ HI_RES_COUNTER GetHiResCounter() noexcept {
 	const auto llfCounter = (long double)liTemp.QuadPart;
 	const auto u64Seconds = (std::uint64_t)(llfCounter * s_llfFreqRecip);
 	const auto u32Remainder = (std::uint32_t)((llfCounter - u64Seconds * s_llfFreq) * s_llfRemainderCoef);
-	return HI_RES_COUNTER{u64Seconds, u32Remainder};
+	return (u64Seconds << (64 - HI_RES_COUNTER_SECOND_BITS)) | u32Remainder;
 }
 
 }

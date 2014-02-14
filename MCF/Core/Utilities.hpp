@@ -22,41 +22,21 @@ extern UTF16String GetWin32ErrorDesc(unsigned long ulErrorCode);
 extern unsigned int GetUnixTime() noexcept;
 extern std::uint32_t GenRandSeed() noexcept;
 
-
-typedef struct tagHiResCounter {
-	enum : std::size_t {
-		SECOND_BITS = 40
-	};
-	std::uint64_t u40Sec : SECOND_BITS;
-	std::uint64_t u24Rem : 64 - SECOND_BITS;
-
-	struct tagHiResCounter &operator+=(struct tagHiResCounter &rhs) noexcept {
-		const std::uint64_t u64Low = u24Rem + rhs.u24Rem;
-		u24Rem = u64Low;
-		u40Sec += rhs.u40Sec + (u64Low >> (64 - SECOND_BITS) != 0);
-		return *this;
-	}
-	struct tagHiResCounter &operator-=(struct tagHiResCounter &rhs) noexcept {
-		const std::uint64_t u64Low = u24Rem - rhs.u24Rem;
-		u24Rem = u64Low;
-		u40Sec -= rhs.u40Sec + (u64Low >> (64 - SECOND_BITS) != 0);
-		return *this;
-	}
-	struct tagHiResCounter operator+(struct tagHiResCounter &rhs) noexcept {
-		return tagHiResCounter(*this) += rhs;
-	}
-	struct tagHiResCounter operator-(struct tagHiResCounter &rhs) noexcept {
-		return tagHiResCounter(*this) -= rhs;
-	}
-} HI_RES_COUNTER;
-
-extern HI_RES_COUNTER GetHiResCounter() noexcept;
+template<typename T>
+inline auto Clone(T &&vSrc) -> typename std::remove_cv<typename std::remove_reference<T>::type>::type {
+	return std::forward<T>(vSrc);
+}
 
 template<typename T>
-inline void ZeroObject(T &dst) noexcept {
-	static_assert(std::is_trivial<T>::value, "ZeroObject(): Only trivial types are supported");
-	__builtin_memset(&dst, 0, sizeof(dst));
+inline void Zero(T &vDst) noexcept {
+	static_assert(std::is_trivial<T>::value, "MCF::Zero(): Only trivial types are supported");
+	__builtin_memset(&vDst, 0, sizeof(vDst));
 }
+
+enum {
+	HI_RES_COUNTER_SECOND_BITS = 40
+};
+extern std::uint64_t GetHiResCounter() noexcept;
 
 }
 

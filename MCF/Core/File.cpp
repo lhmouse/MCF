@@ -93,7 +93,7 @@ public:
 		ApcResult.dwErrorCode = ERROR_SUCCESS;
 
 		OVERLAPPED Overlapped;
-		ZeroObject(Overlapped);
+		Zero(Overlapped);
 		Overlapped.Offset = (DWORD)u64Offset;
 		Overlapped.OffsetHigh = (DWORD)(u64Offset >> 32);
 		Overlapped.hEvent = (HANDLE)&ApcResult;
@@ -126,7 +126,7 @@ public:
 		ApcResult.dwErrorCode = ERROR_SUCCESS;
 
 		OVERLAPPED Overlapped;
-		ZeroObject(Overlapped);
+		Zero(Overlapped);
 		Overlapped.Offset = (DWORD)u64Offset;
 		Overlapped.OffsetHigh = (DWORD)(u64Offset >> 32);
 		Overlapped.hEvent = (HANDLE)&ApcResult;

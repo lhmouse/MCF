@@ -5,8 +5,7 @@ General {
 	LinkerFlags			= -Wall -Wextra -static
 	ExtraLibs			= -lversion -lshlwapi
 
-	CFlags				= $CompilerFlags$ -c -std=c11
-	CPPFlags			= $CompilerFlags$ -c -std=c++11
+	CPPFlags			= -std=c++11
 	RCFlags				=
 
 	IgnoredFiles		= .Built* make.cmd a.exe *.h *.hpp *.mcfproj
@@ -14,14 +13,14 @@ General {
 	PreCompiledHeaders {
 		General {
 			SourceFile	= General.hpp
-			CommandLine	= g++ -x c++-header $CPPFlags$ %IN% -o %OUT%
+			CommandLine	= g++ -x c++-header $CompilerFlags$ $CPPFlags$ %IN% -o %OUT%
 		}
 	}
 
 	Compilers {
 		cpp cxx cc {
-			CommandLine	= gcc -x c++ $CPPFlags$ %GCH.General% %IN% -o %OUT%
-			Dependency	= gcc -x c++ $CPPFlags$ %IN% -MM
+			CommandLine	= gcc -x c++ -c $CompilerFlags$ $CPPFlags$ %GCH.General% %IN% -o %OUT%
+			Dependency	= gcc -x c++ -c $CompilerFlags$ $CPPFlags$ %IN% -MM
 		}
 		rc {
 			CommandLine	= windres $RCFlags$ -O coff -i %IN% -o %OUT%

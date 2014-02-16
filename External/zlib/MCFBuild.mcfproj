@@ -3,14 +3,14 @@ Default = Debug
 General {
 	CompilerFlags		= -Wall -Wextra -pipe -mfpmath=sse,387 -msse2 -DZ_PREFIX
 
-	CFlags				= $CompilerFlags$ -c -std=c11
+	CFlags				= -std=c11
 
 	IgnoredFiles		= .Built* *.h *.mcfproj
 
 	Compilers {
 		c {
-			CommandLine	= gcc -x c $CFlags$ %IN% -o %OUT%
-			Dependency	= gcc -x c $CFlags$ %IN% -MM
+			CommandLine	= gcc -x c -c $CompilerFlags$ $CFlags$ %IN% -o %OUT%
+			Dependency	= gcc -x c -c $CompilerFlags$ $CFlags$ %IN% -MM
 		}
 	}
 

@@ -105,7 +105,7 @@ public:
 			auto pbyRead = (const unsigned char *)pData;
 			const auto pbyEnd = pbyRead + uSize;
 			do {
-				const auto uBytesToProcess = std::min<std::size_t>(0x100000, pbyEnd - pbyRead);
+				const auto uBytesToProcess = std::min<std::size_t>(pbyEnd - pbyRead, 0x10000);
 
 				next_in = pbyRead;
 				avail_in = uBytesToProcess;
@@ -169,6 +169,9 @@ ZEncoder::~ZEncoder(){
 }
 
 // 其他非静态成员函数。
+void ZEncoder::Abort() noexcept {
+	xm_pDelegate->Abort();
+}
 void ZEncoder::Update(const void *pData, std::size_t uSize, const void *pDict, std::size_t uDictSize){
 	xm_pDelegate->Update(pData, uSize, pDict, uDictSize);
 }
@@ -234,7 +237,7 @@ public:
 			auto pbyRead = (const unsigned char *)pData;
 			const auto pbyEnd = pbyRead + uSize;
 			do {
-				const auto uBytesToProcess = std::min<std::size_t>(0x100000, pbyEnd - pbyRead);
+				const auto uBytesToProcess = std::min<std::size_t>(pbyEnd - pbyRead, 0x10000);
 
 				next_in = pbyRead;
 				avail_in = uBytesToProcess;
@@ -265,7 +268,7 @@ public:
 	void Finalize(){
 		if(xm_bInited){
 			unsigned long ulErrorCode;
-			for(;;){
+			while(avail_in != 0){
 				ulErrorCode = ZErrorToWin32Error(::inflate(this, Z_FINISH));
 				if(ulErrorCode == ERROR_HANDLE_EOF){
 					break;
@@ -298,6 +301,9 @@ ZDecoder::~ZDecoder(){
 }
 
 // 其他非静态成员函数。
+void ZDecoder::Abort() noexcept {
+	xm_pDelegate->Abort();
+}
 void ZDecoder::Update(const void *pData, std::size_t uSize, const void *pDict, std::size_t uDictSize){
 	xm_pDelegate->Update(pData, uSize, pDict, uDictSize);
 }

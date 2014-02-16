@@ -3,21 +3,26 @@ Default = Debug
 General {
 	CompilerFlags		= -Wall -Wextra -pipe -mfpmath=sse,387 -msse2 -masm=intel -I../..
 
-	CPPFlags			= $CompilerFlags$ -c -std=c++11
+	CFlags				= -std=c11
+	CPPFlags			= -std=c++11
 
 	IgnoredFiles		= .Built* *.h *.hpp *.mcfproj
 
 	PreCompiledHeaders {
 		CPP {
 			SourceFile	= StdMCF.hpp
-			CommandLine	= g++ -x c++-header $CPPFlags$ %IN% -o %OUT%
+			CommandLine	= g++ -x c++-header $CompilerFlags$ $CPPFlags$ %IN% -o %OUT%
 		}
 	}
 
 	Compilers {
+		c {
+			CommandLine	= gcc -x c -c $CompilerFlags$ $CFlags$ %IN% -o %OUT%
+			Dependency	= gcc -x c -c $CompilerFlags$ $CFlags$ %IN% -MM
+		}
 		cpp cxx cc {
-			CommandLine	= g++ -x c++ $CPPFlags$ %GCH.CPP% %IN% -o %OUT%
-			Dependency	= g++ -x c++ $CPPFlags$ %IN% -MM
+			CommandLine	= g++ -x c++ -c $CompilerFlags$ $CPPFlags$ %GCH.CPP% %IN% -o %OUT%
+			Dependency	= g++ -x c++ -c $CompilerFlags$ $CPPFlags$ %IN% -MM
 		}
 	}
 

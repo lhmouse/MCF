@@ -6,6 +6,7 @@
 #include "Thread.hpp"
 #include "Exception.hpp"
 #include "UniqueHandle.hpp"
+#include <exception>
 using namespace MCF;
 
 // 嵌套类定义。

@@ -5,12 +5,12 @@
 #ifndef __MCF_CRT_THREAD_LOCAL_HPP__
 #define __MCF_CRT_THREAD_LOCAL_HPP__
 
+#include "../../env/thread.h"
+#include "../../env/bail.h"
 #include <cstddef>
 #include <new>
 #include <tuple>
 #include <type_traits>
-#include "../../env/thread.h"
-#include "../../env/bail.h"
 
 namespace MCF {
 

@@ -2,17 +2,18 @@
 #include <MCF/Core/File.hpp>
 #include <MCF/Core/Utilities.hpp>
 #include <MCF/Hash/CRC32.hpp>
+#include <MCF/Compression/Lzma.hpp>
+#include <MCF/Compression/Z.hpp>
 #include <memory>
 #include <string>
+#include <cstddef>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
-#include <cstddef>
-#include <MCF/Compression/Lzma.hpp>
-#include <MCF/Compression/Z.hpp>
+#include <windows.h>
 
 unsigned int MCFMain(){
-	MCF::File f(L"E:\\enwik8", true, false, false);
+	MCF::File f(L"E:\\microarchitecture.pdf", true, false, false);
 	ASSERT(f);
 
 	std::string origin;
@@ -32,6 +33,9 @@ unsigned int MCFMain(){
 		return std::make_pair(&compressed[old], requested);
 	});
 	t1 = MCF::GetHiResCounter();
+enc.Update(origin.data(), 10);
+enc.Finalize();
+compressed.clear();
 	enc.Update(origin.data(), origin.size());
 	enc.Finalize();
 	t2 = MCF::GetHiResCounter();
@@ -46,6 +50,9 @@ unsigned int MCFMain(){
 		return std::make_pair(&plain[old], requested);
 	});
 	t1 = MCF::GetHiResCounter();
+dec.Update(compressed.data(), 10);
+dec.Finalize();
+plain.clear();
 	dec.Update(compressed.data(), compressed.size());
 	dec.Finalize();
 	t2 = MCF::GetHiResCounter();

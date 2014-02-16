@@ -8,7 +8,7 @@ extern unsigned int MCFMain();
 namespace MCF {
 
 // 拥有 C 链接性的 MCFMain() 函数定义。
-extern "C" unsigned int MCFMain(){
+extern "C" unsigned int MCFMain() noexcept {
 	// 如果用户仅仅定义了具有 C++ 链接性的 MCFMain() 函数，
 	// 则链接器会将 MCFCRT 链接到这里定义的具有 C 链接性的 MCFMain() 函数。
 	// 我们通过这个“跳板”调用对应的具有 C++ 链接性的 MCFMain() 函数。

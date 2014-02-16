@@ -321,18 +321,21 @@ private:
 	const std::function<std::pair<void *, std::size_t>(std::size_t)> xm_fnDataCallback;
 	::CLzmaDec xm_vDecoder;
 
+	unsigned char xm_abyHeader[LZMA_PROPS_SIZE];
+	std::size_t xm_uHeaderSize;
 	UniqueHandle<::CLzmaDec *, xLzmaDecHandleCloser> xm_pDecoder;
 	unsigned char xm_abyTemp[0x10000];
 	std::size_t xm_uBytesProcessed;
 public:
 	xDelegate(std::function<std::pair<void *, std::size_t>(std::size_t)> &&fnDataCallback)
 		: xm_fnDataCallback(std::move(fnDataCallback))
+		, xm_uHeaderSize(0)
 	{
 		LzmaDec_Construct(&xm_vDecoder); // 这是宏？！
 	}
 public:
 	void Abort() noexcept {
-		xm_pDecoder.Reset();
+		xm_uHeaderSize = 0;
 	}
 	void Update(const void *pData, std::size_t uSize){
 		auto pbyRead = (const unsigned char *)pData;
@@ -340,40 +343,43 @@ public:
 
 		unsigned long ulErrorCode;
 
-		if(!xm_pDecoder){
-			unsigned char abyHeader[LZMA_PROPS_SIZE];
-			if((std::size_t)(pbyEnd - pbyRead) < sizeof(abyHeader)){
-				MCF_THROW(ERROR_INVALID_DATA, L"::LZMA 头丢失。");
-			}
-			__builtin_memcpy(abyHeader, pbyRead, sizeof(abyHeader));
-			pbyRead += sizeof(abyHeader);
-
-			ulErrorCode = ::LzmaDec_Allocate(&xm_vDecoder, abyHeader, sizeof(abyHeader), &g_vAllocSmall);
-			if(ulErrorCode != ERROR_SUCCESS){
-				MCF_THROW(ulErrorCode, L"::LzmaDec_Allocate() 失败。");
-			}
-			::LzmaDec_Init(&xm_vDecoder);
-
-			xm_pDecoder.Reset(&xm_vDecoder);
-		}
-
 		xm_uBytesProcessed = 0;
-		while(pbyRead != pbyEnd){
-			::ELzmaStatus vStatus;
-			std::size_t uDecoded = sizeof(xm_abyTemp);
-			std::size_t uToDecode = (std::size_t)(pbyEnd - pbyRead);
+		if(xm_uHeaderSize < sizeof(xm_abyHeader)){
+			const auto uBytesToCopy = std::min<std::size_t>(pbyEnd - pbyRead, sizeof(xm_abyHeader) - xm_uHeaderSize);
+			__builtin_memcpy(xm_abyHeader + xm_uHeaderSize, pbyRead, uBytesToCopy);
+			pbyRead += uBytesToCopy;
+			xm_uBytesProcessed += uBytesToCopy;
 
-			ulErrorCode = LzmaErrorToWin32Error(::LzmaDec_DecodeToBuf(xm_pDecoder, xm_abyTemp, &uDecoded, pbyRead, &uToDecode, LZMA_FINISH_ANY, &vStatus));
-			if(ulErrorCode != ERROR_SUCCESS){
-				MCF_THROW(ulErrorCode, L"::LzmaDec_DecodeToBuf() 失败。");
+			xm_uHeaderSize += uBytesToCopy;
+			if(xm_uHeaderSize == sizeof(xm_abyHeader)){
+				xm_pDecoder.Reset();
+
+				ulErrorCode = ::LzmaDec_Allocate(&xm_vDecoder, xm_abyHeader, sizeof(xm_abyHeader), &g_vAllocSmall);
+				if(ulErrorCode != ERROR_SUCCESS){
+					MCF_THROW(ulErrorCode, L"::LzmaDec_Allocate() 失败。");
+				}
+				::LzmaDec_Init(&xm_vDecoder);
+				xm_pDecoder.Reset(&xm_vDecoder);
 			}
+		}
+		if(xm_uHeaderSize == sizeof(xm_abyHeader)){
+			while(pbyRead != pbyEnd){
+				::ELzmaStatus vStatus;
+				std::size_t uDecoded = sizeof(xm_abyTemp);
+				std::size_t uToDecode = (std::size_t)(pbyEnd - pbyRead);
 
-			CopyOut(xm_fnDataCallback, xm_abyTemp, uDecoded);
-			pbyRead += uToDecode;
-			xm_uBytesProcessed += uToDecode;
+				ulErrorCode = LzmaErrorToWin32Error(::LzmaDec_DecodeToBuf(xm_pDecoder, xm_abyTemp, &uDecoded, pbyRead, &uToDecode, LZMA_FINISH_ANY, &vStatus));
+				if(ulErrorCode != ERROR_SUCCESS){
+					MCF_THROW(ulErrorCode, L"::LzmaDec_DecodeToBuf() 失败。");
+				}
 
-			if(vStatus == LZMA_STATUS_FINISHED_WITH_MARK){
-				::LzmaDec_Init(xm_pDecoder);
+				CopyOut(xm_fnDataCallback, xm_abyTemp, uDecoded);
+				pbyRead += uToDecode;
+				xm_uBytesProcessed += uToDecode;
+
+				if(vStatus == LZMA_STATUS_FINISHED_WITH_MARK){
+					::LzmaDec_Init(xm_pDecoder);
+				}
 			}
 		}
 	}
@@ -381,7 +387,7 @@ public:
 		return xm_uBytesProcessed;
 	}
 	void Finalize(){
-		xm_pDecoder.Reset();
+		xm_uHeaderSize = 0;
 	}
 };
 

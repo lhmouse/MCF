@@ -136,7 +136,7 @@ void __MCF_CRT_ThreadUninitialize(){
 	}
 }
 
-void *__MCF_CreateCRTThread(
+void *__MCF_CRT_CreateThread(
 	unsigned int (*pfnProc)(intptr_t),
 	intptr_t nParam,
 	unsigned long ulFlags,
@@ -158,7 +158,7 @@ void *__MCF_CreateCRTThread(
 	return (void *)hThread;
 }
 
-int __MCF_AtCRTThreadExit(
+int __MCF_CRT_AtThreadExit(
 	void (*pfnProc)(intptr_t),
 	intptr_t nContext
 ){
@@ -228,7 +228,7 @@ void *__MCF_CRT_RetrieveTls(
 	}
 #ifndef NDEBUG
 	if(pObject->uMemSize != uSizeToAlloc){
-		__MCF_BailF(
+		__MCF_CRT_BailF(
 			L"__MCF_CRT_RetrieveTls() 失败：两次试图使用相同的键获得 TLS，但指定的大小不一致。\n\n"
 			"键：%p\n"
 			"该 TLS 创建时的大小：%p\n"

@@ -40,7 +40,7 @@ size_t __MCF_GetArgV(const wchar_t *const **pppwszArgV){
 
 				g_pwszArgBuffer = (wchar_t *)malloc((uCommandLineLen + 1) * sizeof(wchar_t));
 				if(!g_pwszArgBuffer){
-					__MCF_Bail(L"__MCF_GetArgV() 失败：内存不足。");
+					__MCF_CRT_Bail(L"__MCF_GetArgV() 失败：内存不足。");
 				}
 				wmemcpy(g_pwszArgBuffer, pwszCommandLine, uCommandLineLen + 1);
 
@@ -48,7 +48,7 @@ size_t __MCF_GetArgV(const wchar_t *const **pppwszArgV){
 				size_t uCapacity = 4;
 				wchar_t **ppArgV = (wchar_t **)malloc(uCapacity * sizeof(wchar_t *));
 				if(!ppArgV){
-					__MCF_Bail(L"__MCF_GetArgV() 失败：内存不足。");
+					__MCF_CRT_Bail(L"__MCF_GetArgV() 失败：内存不足。");
 				}
 
 				enum tagState {
@@ -188,7 +188,7 @@ size_t __MCF_GetArgV(const wchar_t *const **pppwszArgV){
 							uCapacity *= 2;
 							wchar_t **ppNewArgV = (wchar_t **)realloc(ppArgV, uCapacity * sizeof(wchar_t *));
 							if(!ppNewArgV){
-								__MCF_Bail(L"__MCF_GetArgV() 失败：内存不足。");
+								__MCF_CRT_Bail(L"__MCF_GetArgV() 失败：内存不足。");
 							}
 							ppArgV = ppNewArgV;
 						}

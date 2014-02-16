@@ -30,7 +30,7 @@ unsigned long __MCF_CRT_HeapDbgInitContext(){
 void __MCF_CRT_HeapDbgUninitContext(){
 	const __MCF_HEAPDBG_BLOCK_INFO *pBlockInfo = g_pBlockHead;
 	if(pBlockInfo){
-		__MCF_Bail(
+		__MCF_CRT_Bail(
 			L"__MCF_CRT_HeapDbgUninitContext() 失败：侦测到内存泄漏。\n\n"
 			"如果您选择调试应用程序，MCF CRT 将尝试使用 OutputDebugString() 导出内存泄漏的详细信息。"
 		);
@@ -99,7 +99,7 @@ void __MCF_CRT_HeapDbgAddGuardsAndRegister(
 
 	__MCF_HEAPDBG_BLOCK_INFO *const pBlockInfo = (__MCF_HEAPDBG_BLOCK_INFO *)HeapAlloc(g_hMapAllocator, 0, sizeof(__MCF_HEAPDBG_BLOCK_INFO));
 	if(!pBlockInfo){
-		__MCF_BailF(L"__MCF_CRT_HeapDbgAddGuardsAndRegister() 失败：内存不足。\n调用返回地址：%p", pRetAddr);
+		__MCF_CRT_BailF(L"__MCF_CRT_HeapDbgAddGuardsAndRegister() 失败：内存不足。\n调用返回地址：%p", pRetAddr);
 	}
 	pBlockInfo->uSize = uContentSize;
 	pBlockInfo->pRetAddr = pRetAddr;
@@ -119,7 +119,7 @@ const __MCF_HEAPDBG_BLOCK_INFO *__MCF_CRT_HeapDbgValidate(
 
 	const __MCF_HEAPDBG_BLOCK_INFO *pBlockInfo = (const __MCF_HEAPDBG_BLOCK_INFO *)__MCF_AvlFind(&g_mapBlocks, (intptr_t)pContents);
 	if(!pBlockInfo){
-		__MCF_BailF(L"__MCF_CRT_HeapDbgValidate() 失败：传入的指针无效。\n调用返回地址：%p", pRetAddr);
+		__MCF_CRT_BailF(L"__MCF_CRT_HeapDbgValidate() 失败：传入的指针无效。\n调用返回地址：%p", pRetAddr);
 	}
 
 	void *const *ppGuard1 = (void *const *)pContents;
@@ -128,7 +128,7 @@ const __MCF_HEAPDBG_BLOCK_INFO *__MCF_CRT_HeapDbgValidate(
 		--ppGuard1;
 
 		if((DecodePointer(*ppGuard1) != ppGuard2) || (DecodePointer(*ppGuard2) != ppGuard1)){
-			__MCF_BailF(L"__MCF_CRT_HeapDbgValidate() 失败：侦测到堆损坏。\n调用返回地址：%p", pRetAddr);
+			__MCF_CRT_BailF(L"__MCF_CRT_HeapDbgValidate() 失败：侦测到堆损坏。\n调用返回地址：%p", pRetAddr);
 		}
 
 		++ppGuard2;

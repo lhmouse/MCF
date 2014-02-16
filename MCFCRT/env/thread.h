@@ -15,14 +15,14 @@ extern void __MCF_CRT_TlsEnvUninitialize(void);
 extern unsigned long __MCF_CRT_ThreadInitialize(void);
 extern void __MCF_CRT_ThreadUninitialize(void);
 
-extern void *__MCF_CreateCRTThread(
+extern void *__MCF_CRT_CreateThread(
 	unsigned int (*pfnProc)(__MCF_STD intptr_t),
 	__MCF_STD intptr_t nParam,
 	unsigned long ulFlags,
 	unsigned long *pulThreadId
 );
 
-extern int __MCF_AtCRTThreadExit(
+extern int __MCF_CRT_AtThreadExit(
 	void (*pfnProc)(__MCF_STD intptr_t),
 	__MCF_STD intptr_t nContext
 );

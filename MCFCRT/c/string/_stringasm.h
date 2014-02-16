@@ -28,9 +28,7 @@
 #	define	RDI		"edi"
 
 #else
-
 #	error Oops, this platform is not supported.
-
 #endif
 
 #endif

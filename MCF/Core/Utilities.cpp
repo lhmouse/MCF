@@ -15,7 +15,7 @@ namespace MCF {
 [[noreturn]]
 #endif
 void Bail(const wchar_t *pwszDescription){
-	::__MCF_Bail(pwszDescription);
+	::__MCF_CRT_Bail(pwszDescription);
 }
 
 UTF16String GetWin32ErrorDesc(unsigned long ulErrorCode){

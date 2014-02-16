@@ -36,9 +36,9 @@ private:
 public:
 	static std::shared_ptr<xDelegate> Create(std::function<void()> &&fnProc){
 		std::shared_ptr<xDelegate> pRet(new xDelegate(std::move(fnProc)));
-		pRet->xm_hThread.Reset(::__MCF_CreateCRTThread(&xThreadProc, (std::intptr_t)pRet.get(), CREATE_SUSPENDED, &pRet->xm_ulThreadId));
+		pRet->xm_hThread.Reset(::__MCF_CRT_CreateThread(&xThreadProc, (std::intptr_t)pRet.get(), CREATE_SUSPENDED, &pRet->xm_ulThreadId));
 		if(!pRet->xm_hThread){
-			MCF_THROW(::GetLastError(), L"__MCF_CreateCRTThread() 失败。");
+			MCF_THROW(::GetLastError(), L"__MCF_CRT_CreateThread() 失败。");
 		}
 		pRet->xm_pLock = pRet; // 制造循环引用。这样代理对象就不会被删掉。
 		return std::move(pRet);

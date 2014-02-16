@@ -15,7 +15,7 @@
 using namespace MCF;
 
 namespace {
-	typedef std::shared_ptr<std::function<bool(std::uintptr_t)>> PHANDLER_PROC;
+	typedef std::shared_ptr<std::function<bool(std::intptr_t)>> PHANDLER_PROC;
 	typedef std::list<PHANDLER_PROC> HANDLER_LIST;
 	typedef std::shared_ptr<const HANDLER_LIST> PCHANDLER_LIST;
 	typedef std::shared_ptr<HANDLER_LIST> PHANDLER_LIST;
@@ -23,7 +23,7 @@ namespace {
 	// 使用 Copy-On-Write 策略。
 	CriticalSection g_csWriteLock;
 	CriticalSection g_csReadLock;
-	std::map<std::uintptr_t, PCHANDLER_LIST> g_mapDelegates;
+	std::map<std::intptr_t, PCHANDLER_LIST> g_mapDelegates;
 }
 
 namespace MCF {
@@ -73,12 +73,12 @@ namespace __MCF {
 	}
 }
 
-EventHandlerHolder RegisterEventHandler(std::uintptr_t uEventId, std::function<bool(std::uintptr_t)> fnHandler){
+EventHandlerHolder RegisterEventHandler(std::intptr_t nEventId, std::function<bool(std::intptr_t)> fnHandler){
 	EventHandlerHolder Holder;
 	CRITICAL_SECTION_SCOPE(g_csWriteLock){
 		PCHANDLER_LIST pOldList;
 		CRITICAL_SECTION_SCOPE(g_csReadLock){
-			const auto itList = g_mapDelegates.find(uEventId);
+			const auto itList = g_mapDelegates.find(nEventId);
 			if(itList != g_mapDelegates.end()){
 				pOldList = itList->second;
 			}
@@ -87,23 +87,23 @@ EventHandlerHolder RegisterEventHandler(std::uintptr_t uEventId, std::function<b
 		pNewList->emplace_front(new auto(std::move(fnHandler)));
 		const auto pRaw = pNewList->front().get();
 		CRITICAL_SECTION_SCOPE(g_csReadLock){
-			g_mapDelegates[uEventId] = std::move(pNewList);
+			g_mapDelegates[nEventId] = std::move(pNewList);
 		}
-		Holder = std::make_pair(uEventId, pRaw);
+		Holder = std::make_pair(nEventId, pRaw);
 	}
 	return std::move(Holder);
 }
-void RaiseEvent(std::uintptr_t uEventId, std::uintptr_t uContext){
+void RaiseEvent(std::intptr_t nEventId, std::intptr_t nContext){
 	PCHANDLER_LIST pList;
 	CRITICAL_SECTION_SCOPE(g_csReadLock){
-		const auto itList = g_mapDelegates.find(uEventId);
+		const auto itList = g_mapDelegates.find(nEventId);
 		if(itList != g_mapDelegates.end()){
 			pList = itList->second;
 		}
 	}
 	if(pList){
 		for(const auto &pHandler : *pList){
-			if((*pHandler)(uContext)){
+			if((*pHandler)(nContext)){
 				break;
 			}
 		}

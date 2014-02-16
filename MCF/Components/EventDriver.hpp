@@ -14,7 +14,7 @@
 namespace MCF {
 
 namespace __MCF {
-	typedef std::pair<std::uintptr_t, const void *> EVENT_HANDLER_HANDLE;
+	typedef std::pair<std::intptr_t, const void *> EVENT_HANDLER_HANDLE;
 
 	extern void UnregisterEventHandler(const EVENT_HANDLER_HANDLE &Handle) noexcept;
 
@@ -30,8 +30,8 @@ namespace __MCF {
 
 typedef UniqueHandle<__MCF::EVENT_HANDLER_HANDLE, __MCF::EventHandlerDeleter> EventHandlerHolder;
 
-extern EventHandlerHolder RegisterEventHandler(std::uintptr_t uEventId, std::function<bool(std::uintptr_t)> fnHandler);
-extern void RaiseEvent(std::uintptr_t uEventId, std::uintptr_t uContext);
+extern EventHandlerHolder RegisterEventHandler(std::intptr_t nEventId, std::function<bool(std::intptr_t)> fnHandler);
+extern void RaiseEvent(std::intptr_t nEventId, std::intptr_t nContext);
 
 }
 

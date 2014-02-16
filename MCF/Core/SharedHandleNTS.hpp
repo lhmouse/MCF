@@ -102,7 +102,7 @@ namespace __MCF {
 		void xValidate() const noexcept {
 #ifndef NDEBUG
 			if(xm_pDebugInfo != this){
-				__MCF_Bail(L"SharedNodeNTS::xValidate() 失败：侦测到堆损坏或二次释放。");
+				__MCF_CRT_Bail(L"SharedNodeNTS::xValidate() 失败：侦测到堆损坏或二次释放。");
 			}
 #endif
 		}

@@ -5,13 +5,12 @@
 #ifndef __MCF_CRT_MCFCRT_H__
 #define __MCF_CRT_MCFCRT_H__
 
-#include "c/cinclude.h"
+#include "c/c_include.h"
+#include "env/env_include.h"
 
 #ifdef __cplusplus
-#	include "cpp/cppinclude.hpp"
+#	include "cpp/cpp_include.hpp"
 #endif
-
-#include "env/envinclude.h"
 
 __MCF_EXTERN_C_BEGIN
 

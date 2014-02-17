@@ -6,12 +6,10 @@
 #include "Lzma.hpp"
 #include "../Core/UniqueHandle.hpp"
 #include "../Core/Exception.hpp"
-#include "../Core/Thread.hpp"
-#include "../Core/Event.hpp"
 
 #define _7ZIP_ST
 #define _LZMA_PROB32
-#include "../../External/Lzma/LzmaEnc.h"
+#include "../../External/Lzma/NewLzmaEnc.h"
 #include "../../External/Lzma/LzmaDec.h"
 
 #include <new>
@@ -92,166 +90,59 @@ private:
 		}
 	};
 
-	class xWorker : NO_COPY {
-	private:
-		static ::SRes xReadWrapper(void *psisSource, void *pBuffer, size_t *puSize) noexcept {
-			const auto pWorker = (xWorker *)((std::uintptr_t)psisSource - OFFSET_OF(xWorker, xm_sisSource));
-			return pWorker->xRead(pBuffer, puSize);
+	struct xNewLzmaEncodeContextDeleter {
+		constexpr void *operator()() const noexcept {
+			return nullptr;
 		}
-		static std::size_t xWriteWrapper(void *psosSink, const void *pBuffer, size_t uSize) noexcept {
-			const auto pWorker = (xWorker *)((std::uintptr_t)psosSink - OFFSET_OF(xWorker, xm_sosSink));
-			return pWorker->xWrite(pBuffer, uSize);
-		}
-	private:
-		const std::function<std::pair<void *, std::size_t>(std::size_t)> &xm_fnDataCallback;
-		::ISeqInStream xm_sisSource;
-		::ISeqOutStream xm_sosSink;
-
-		Thread xm_thrdWorker;
-		const unsigned char *xm_pbyData;
-		std::size_t xm_uSize;
-		Event xm_evnProducer;
-		Event xm_evnConsumer;
-		std::size_t xm_uBytesProcessed;
-
-		std::exception_ptr xm_pException;
-	public:
-		xWorker(const std::function<std::pair<void *, std::size_t>(std::size_t)> &fnDataCallback)
-			: xm_fnDataCallback(fnDataCallback)
-			, xm_sisSource{&xReadWrapper}
-			, xm_sosSink{&xWriteWrapper}
-			, xm_thrdWorker()
-			, xm_evnProducer(false)
-			, xm_evnConsumer(false)
-		{
-		}
-		~xWorker(){
-			Abort();
-		}
-	private:
-		void xThreadProc(::CLzmaEncHandle hEncoder) noexcept {
-			const auto ulErrorCode = LzmaErrorToWin32Error(::LzmaEnc_Encode(hEncoder, &xm_sosSink, &xm_sisSource, nullptr, &g_vAllocSmall, &g_vAllocLarge));
-			if(!xm_pException && (ulErrorCode != ERROR_SUCCESS)){
-				xm_pException = MCF_MAKE_EXCEPTION_PTR(ulErrorCode, L"::LzmaEnc_Encode() 失败。");
-			}
-			xm_evnConsumer.Set();
-		}
-
-		::SRes xRead(void *pBuffer, size_t *puSize) noexcept {
-			xm_evnProducer.Wait();
-			if(xm_uSize == 0){
-				*puSize = 0;
-			} else {
-				const auto uToCopy = std::min(*puSize, xm_uSize);
-				std::memcpy(pBuffer, xm_pbyData, uToCopy);
-				*puSize = uToCopy;
-
-				xm_pbyData += uToCopy;
-				xm_uSize -= uToCopy;
-				xm_uBytesProcessed += uToCopy;
-			}
-			if(xm_uSize == 0){
-				xm_evnProducer.Reset();
-				xm_evnConsumer.Set();
-			}
-			return SZ_OK;
-		}
-		std::size_t xWrite(const void *pBuffer, size_t uSize) noexcept {
-			std::size_t uBytesCopied = 0;
-			try {
-				CopyOut(xm_fnDataCallback, pBuffer, uSize);
-				uBytesCopied = uSize;
-			} catch(...){
-				xm_pException = std::current_exception();
-			}
-			return uBytesCopied;
-		}
-	public:
-		bool IsInited() const noexcept {
-			return xm_thrdWorker.IsAlive();
-		}
-
-		void Abort() noexcept {
-			if(xm_thrdWorker.IsAlive()){
-				xm_pbyData = nullptr;
-				xm_uSize = 0;
-				xm_evnConsumer.Reset();
-				xm_evnProducer.Set();
-				xm_evnConsumer.Wait();
-
-				xm_thrdWorker.JoinDetach();
-				xm_pException = std::exception_ptr();
-			}
-
-			xm_evnProducer.Reset();
-			xm_evnConsumer.Reset();
-		}
-		void Init(::CLzmaEncHandle hEncoder){
-			Abort();
-
-			xm_thrdWorker.Start(std::bind(&xWorker::xThreadProc, this, hEncoder));
-		}
-		void Update(const void *pData, std::size_t uSize){
-			ASSERT(IsInited());
-
-			xm_uBytesProcessed = 0;
-			if(uSize != 0){
-				xm_pbyData = (const unsigned char *)pData;
-				xm_uSize = uSize;
-				xm_evnConsumer.Reset();
-				xm_evnProducer.Set();
-				xm_evnConsumer.Wait();
-
-				if(xm_pException){
-					std::rethrow_exception(xm_pException);
-				}
-			}
-		}
-		std::size_t QueryBytesProcessed() const noexcept {
-			return xm_uBytesProcessed;
-		}
-		void Finalize(){
-			ASSERT(IsInited());
-
-			xm_pbyData = nullptr;
-			xm_uSize = 0;
-			xm_evnConsumer.Reset();
-			xm_evnProducer.Set();
-			xm_evnConsumer.Wait();
-
-			xm_thrdWorker.Join();
-			if(xm_pException){
-				std::rethrow_exception(xm_pException);
-			}
-
-			xm_evnProducer.Reset();
-			xm_evnConsumer.Reset();
+		void operator()(void *pContext) const noexcept {
+			::LzmaEnc_NewEncodeDestroyContext(pContext);
 		}
 	};
 private:
+	static std::size_t xWriteCallback(void *pDataSink, const void *pData, std::size_t uSize) noexcept {
+		const auto pDelegate = (xDelegate *)((unsigned char *)pDataSink - OFFSET_OF(xDelegate, xm_sosOutputter));
+		return pDelegate->xWrite(pData, uSize);
+	}
+private:
 	const std::function<std::pair<void *, std::size_t>(std::size_t)> xm_fnDataCallback;
+	::ISeqOutStream xm_sosOutputter;
 	::CLzmaEncProps xm_vEncProps;
 
-	xWorker xm_vWorker;
 	UniqueHandle<::CLzmaEncHandle, xLzmaEncHandleCloser> xm_hEncoder;
+	UniqueHandle<void *, xNewLzmaEncodeContextDeleter> xm_pContext;
+	std::size_t xm_uBytesProcessed;
+
+	std::exception_ptr xm_pException;
 public:
 	xDelegate(std::function<std::pair<void *, std::size_t>(std::size_t)> &&fnDataCallback, int nLevel, std::uint32_t u32DictSize)
 		: xm_fnDataCallback(std::move(fnDataCallback))
-		, xm_vWorker(xm_fnDataCallback)
 	{
+		xm_sosOutputter.Write = &xWriteCallback;
+
 		::LzmaEncProps_Init(&xm_vEncProps);
 		xm_vEncProps.level = nLevel;
 		xm_vEncProps.dictSize = u32DictSize;
 		xm_vEncProps.writeEndMark = 1;
 	}
+private:
+	std::size_t xWrite(const void *pData, std::size_t uSize) noexcept {
+		std::size_t uBytesWritten = 0;
+		try {
+			CopyOut(xm_fnDataCallback, pData, uSize);
+			uBytesWritten = uSize;
+		} catch(...){
+			xm_pException = std::current_exception();
+		}
+		return uBytesWritten;
+	}
 public:
 	void Abort() noexcept {
-		xm_vWorker.Abort();
+		xm_pContext.Reset();
 	}
 	void Update(const void *pData, std::size_t uSize){
 		unsigned long ulErrorCode;
 
-		if(!xm_vWorker.IsInited()){
+		if(!xm_pContext){
 			xm_hEncoder.Reset(::LzmaEnc_Create(&g_vAllocSmall));
 			if(!xm_hEncoder){
 				MCF_THROW(ERROR_NOT_ENOUGH_MEMORY, L"::LzmaEnc_Create() 失败。");
@@ -270,16 +161,48 @@ public:
 			}
 			CopyOut(xm_fnDataCallback, abyHeader, uHeaderSize);
 
-			xm_vWorker.Init(xm_hEncoder);
+			xm_pContext.Reset(::LzmaEnc_NewEncodeCreateContext(xm_hEncoder, &xm_sosOutputter, nullptr, &g_vAllocSmall, &g_vAllocLarge));
+			if(!xm_pContext){
+				MCF_THROW(ERROR_NOT_ENOUGH_MEMORY, L"::LzmaEnc_NewEncodeCreateContext() 失败。");
+			}
+
+			xm_pException = std::exception_ptr();
 		}
 
-		xm_vWorker.Update(pData, uSize);
+		auto pbyRead = (const unsigned char *)pData;
+		const auto pbyEnd = pbyRead + uSize;
+
+		xm_uBytesProcessed = 0;
+		while(pbyRead != pbyEnd){
+			const auto uBytesToProcess = std::min<std::size_t>(pbyEnd - pbyRead, 0x10000);
+
+			ulErrorCode = LzmaErrorToWin32Error(::LzmaEnc_NewEncode(xm_pContext, pbyRead, uBytesToProcess));
+			if(xm_pException){
+				std::rethrow_exception(xm_pException);
+			}
+			if(ulErrorCode != ERROR_SUCCESS){
+				MCF_THROW(ulErrorCode, L"::LzmaEnc_NewEncode() 失败。");
+			}
+
+			pbyRead += uBytesToProcess;
+			xm_uBytesProcessed += uBytesToProcess;
+		}
 	}
 	std::size_t QueryBytesProcessed() const noexcept {
-		return xm_vWorker.QueryBytesProcessed();
+		return xm_uBytesProcessed;
 	}
 	void Finalize(){
-		xm_vWorker.Finalize();
+		if(xm_pContext){
+			const auto ulErrorCode = LzmaErrorToWin32Error(::LzmaEnc_NewEncodeEnd(xm_pContext));
+			if(xm_pException){
+				std::rethrow_exception(xm_pException);
+			}
+			if(ulErrorCode != ERROR_SUCCESS){
+				MCF_THROW(ulErrorCode, L"::LzmaEnc_NewEncodeEnd() 失败。");
+			}
+
+			xm_pContext.Reset();
+		}
 	}
 };
 

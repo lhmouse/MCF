@@ -193,12 +193,12 @@ public:
 	}
 	void Finalize(){
 		if(xm_pContext){
-			const auto ulErrorCode = LzmaErrorToWin32Error(::LzmaEnc_NewEncodeEnd(xm_pContext));
+			const auto ulErrorCode = LzmaErrorToWin32Error(::LzmaEnc_NewEncode(xm_pContext, nullptr, 0));
 			if(xm_pException){
 				std::rethrow_exception(xm_pException);
 			}
 			if(ulErrorCode != ERROR_SUCCESS){
-				MCF_THROW(ulErrorCode, L"::LzmaEnc_NewEncodeEnd() 失败。");
+				MCF_THROW(ulErrorCode, L"::LzmaEnc_NewEncode() 失败。");
 			}
 
 			xm_pContext.Reset();

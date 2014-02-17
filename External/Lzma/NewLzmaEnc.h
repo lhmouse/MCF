@@ -13,7 +13,6 @@ void *LzmaEnc_NewEncodeCreateContext(CLzmaEncHandle p, ISeqOutStream *outStream,
 void LzmaEnc_NewEncodeDestroyContext(void *ctx);
 
 SRes LzmaEnc_NewEncode(void *ctx, const Byte *src, SizeT srcLen);
-SRes LzmaEnc_NewEncodeEnd(void *ctx);
 
 #ifdef __cplusplus
 }

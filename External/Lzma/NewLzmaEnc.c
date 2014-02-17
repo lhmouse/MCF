@@ -130,6 +130,9 @@ static SRes ContextRead(void *sis, void *buf, size_t *size){
 		pHeader->res = SZ_OK;
 		CoroutineSwitchTo(pHeader->orgSp, &pHeader->crSp);
 	}
+	if(!pIs->src && (pIs->srcAvail != 0)){
+		return SZ_ERROR_READ;
+	}
 	size_t uBytesToRead = pIs->srcAvail;
 	if(uBytesToRead > *size){
 		uBytesToRead = *size;
@@ -147,11 +150,9 @@ static SRes ContextRead(void *sis, void *buf, size_t *size){
 
 static __attribute__((noreturn)) void __cdecl CoroutineProc(void *pParam){
 	CONTEXT_HEADER *const pHeader = (CONTEXT_HEADER *)pParam;
-
-	pHeader->res = LzmaEnc_Encode(pHeader->p, pHeader->os, &(pHeader->is.sis), pHeader->progress, pHeader->alloc, pHeader->allocBig);
 	for(;;){
+		pHeader->res = LzmaEnc_Encode(pHeader->p, pHeader->os, &(pHeader->is.sis), pHeader->progress, pHeader->alloc, pHeader->allocBig);
 		CoroutineSwitchTo(pHeader->orgSp, &pHeader->crSp);
-		pHeader->res = SZ_ERROR_INPUT_EOF;
 	}
 }
 
@@ -183,7 +184,7 @@ void LzmaEnc_NewEncodeDestroyContext(void *ctx){
 	if(ctx != NULL){
 		CONTEXT_HEADER *const pHeader = (CONTEXT_HEADER *)ctx;
 		pHeader->is.src = NULL;
-		pHeader->is.srcAvail = 0;
+		pHeader->is.srcAvail = 1;
 		CoroutineSwitchTo(pHeader->crSp, &pHeader->orgSp);
 
 		VirtualFree(ctx, 0, MEM_RELEASE);
@@ -197,7 +198,4 @@ SRes LzmaEnc_NewEncode(void *ctx, const Byte *src, SizeT srcLen){
 	CoroutineSwitchTo(pHeader->crSp, &pHeader->orgSp);
 
 	return pHeader->res;
-}
-SRes LzmaEnc_NewEncodeEnd(void *ctx){
-	return LzmaEnc_NewEncode(ctx, NULL, 0);
 }

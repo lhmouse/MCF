@@ -15,7 +15,7 @@
 
 unsigned int MCFMain(){
 	try {
-		MCF::File f(L"E:\\enwik8", true, false, false);
+		MCF::File f(L"E:\\microarchitecture.pdf", true, false, false);
 		ASSERT(f);
 
 		std::string origin;

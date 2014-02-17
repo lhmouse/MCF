@@ -268,7 +268,7 @@ namespace {
 			: "0"(a), "1"(b), "2"(c), "3"(d), "4"(e), "m"(w)
 			: "di"
 #ifdef _WIN64
-				, "r8"
+				, "r8", "xmm6", "xmm7"
 #endif
 		);
 

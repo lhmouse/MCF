@@ -9,7 +9,6 @@
 #include <utility>
 #include <cstddef>
 
-
 namespace MCF {
 
 template<typename HANDLE_T, class CLOSER_T>

@@ -5,8 +5,11 @@
 #ifndef __MCF_SHARED_HANDLE_HPP__
 #define __MCF_SHARED_HANDLE_HPP__
 
+#include "../../MCFCRT/c/ext/assert.h"
 #include "../../MCFCRT/c/ext/offset_of.h"
+#include "../../MCFCRT/env/bail.h"
 #include <new>
+#include <utility>
 #include <cstddef>
 
 namespace MCF {

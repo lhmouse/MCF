@@ -5,6 +5,11 @@
 #ifndef __MCF_UNIQUE_HANDLE_HPP__
 #define __MCF_UNIQUE_HANDLE_HPP__
 
+#include <new>
+#include <utility>
+#include <cstddef>
+
+
 namespace MCF {
 
 template<typename HANDLE_T, class CLOSER_T>

@@ -29,7 +29,7 @@ __asm__("InitCoroutineProc: \n"
 	"mov ecx, dword ptr[esp + 0x08] \n"		// pfnProc
 	"mov dword ptr[eax + 0x10], ecx \n"
 	"xor edx, edx \n"
-	"mov dword ptr[eax + 0x14], edx \n"		// pfnProc 的返回地址，这里使用零。
+	"mov dword ptr[eax + 0x14], edx \n"		// Return address of pfnProc. Coroutine procs must not return. Use NULL here.
 	"mov ecx, dword ptr[esp + 0x0C] \n"		// pParam
 	"mov dword ptr[eax + 0x18], ecx \n"
 	"ret \n"

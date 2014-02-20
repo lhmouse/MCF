@@ -6,15 +6,11 @@
 #include "Utilities.hpp"
 #include "UniqueHandle.hpp"
 #include "../../MCFCRT/env/bail.h"
-#include <cmath>
 using namespace MCF;
 
 namespace MCF {
 
-#ifdef NDEBUG
-[[noreturn]]
-#endif
-void Bail(const wchar_t *pwszDescription){
+__MCF_CPP_NORETURN_IF_NDEBUG void Bail(const wchar_t *pwszDescription){
 	::__MCF_CRT_Bail(pwszDescription);
 }
 
@@ -42,51 +38,6 @@ UTF16String GetWin32ErrorDesc(unsigned long ulErrorCode){
 	const UniqueHandle<HLOCAL, LocalFreer> hLocal((HLOCAL)pDescBuffer); // RAII
 	u16sRet.Assign((LPCWSTR)pDescBuffer, uLen);
 	return std::move(u16sRet);
-}
-
-unsigned int GetUnixTime() noexcept {
-	union {
-		FILETIME ft;
-		ULARGE_INTEGER uli;
-	} u;
-	::GetSystemTimeAsFileTime(&u.ft);
-	// 0x019DB1DED53E8000 = 从 1601-01-01 到 1970-01-01 经历的时间纳秒数。
-	return (unsigned int)((u.uli.QuadPart - 0x019DB1DED53E8000ull) / 10000000ull);
-}
-std::uint32_t GenRandSeed() noexcept {
-	register std::uint32_t ret __asm__("ax");
-	__asm__ __volatile__(
-		"rdtsc \n"
-		: "=a"(ret)
-		:
-		: "dx"
-	);
-	return ret;
-}
-
-std::uint64_t GetHiResCounter() noexcept {
-	static bool s_bInited = false;
-	static long double s_llfFreq;
-	static long double s_llfFreqRecip;
-	static long double s_llfRemainderCoef;
-
-	LARGE_INTEGER liTemp;
-
-	if(!__atomic_load_n(&s_bInited, __ATOMIC_ACQUIRE)){
-		::QueryPerformanceFrequency(&liTemp);
-		const auto llFreq = (long double)liTemp.QuadPart;
-		s_llfFreq = llFreq;
-		s_llfFreqRecip = 1.0l / llFreq;
-		s_llfRemainderCoef = (1ull << (64 - HI_RES_COUNTER_SECOND_BITS)) / llFreq;
-
-		__atomic_store_n(&s_bInited, true, __ATOMIC_RELEASE);
-	}
-
-	::QueryPerformanceCounter(&liTemp);
-	const auto llfCounter = (long double)liTemp.QuadPart;
-	const auto u64Seconds = (std::uint64_t)(llfCounter * s_llfFreqRecip);
-	const auto u32Remainder = (std::uint32_t)((llfCounter - u64Seconds * s_llfFreq) * s_llfRemainderCoef);
-	return (u64Seconds << (64 - HI_RES_COUNTER_SECOND_BITS)) | u32Remainder;
 }
 
 }

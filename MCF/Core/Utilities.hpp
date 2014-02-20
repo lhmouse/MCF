@@ -13,14 +13,14 @@
 namespace MCF {
 
 #ifdef NDEBUG
-[[noreturn]]
+#	define __MCF_CPP_NORETURN_IF_NDEBUG	[[noreturn]]
+#else
+#	define __MCF_CPP_NORETURN_IF_NDEBUG
 #endif
-extern void Bail(const wchar_t *pwszDescription);
+
+__MCF_CPP_NORETURN_IF_NDEBUG extern void Bail(const wchar_t *pwszDescription);
 
 extern UTF16String GetWin32ErrorDesc(unsigned long ulErrorCode);
-
-extern unsigned int GetUnixTime() noexcept;
-extern std::uint32_t GenRandSeed() noexcept;
 
 template<typename T>
 inline auto Clone(T &&vSrc) -> typename std::remove_cv<typename std::remove_reference<T>::type>::type {
@@ -32,11 +32,6 @@ inline void Zero(T &vDst) noexcept {
 	static_assert(std::is_trivial<T>::value, "MCF::Zero(): Only trivial types are supported");
 	__builtin_memset(&vDst, 0, sizeof(vDst));
 }
-
-enum {
-	HI_RES_COUNTER_SECOND_BITS = 40
-};
-extern std::uint64_t GetHiResCounter() noexcept;
 
 }
 

@@ -42,6 +42,6 @@ struct Exception {
 	throw ::MCF::Exception(__PRETTY_FUNCTION__, __VA_ARGS__)
 
 #define MCF_MAKE_EXCEPTION_PTR(...)	\
-	std::make_exception_ptr(::MCF::Exception(__PRETTY_FUNCTION__, __VA_ARGS__))
+	::std::make_exception_ptr(::MCF::Exception(__PRETTY_FUNCTION__, __VA_ARGS__))
 
 #endif

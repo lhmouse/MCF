@@ -161,13 +161,13 @@ float powf(float x, float y){
 		if(y > INT_MAX){
 			return ppowf(x, y);
 		} else if(y < INT_MIN){
-			return ppowf(1.0f / x, -y);
+			return 1.0f / ppowf(x, -y);
 		} else {
 			float ret;
 			if(y > 0){
 				ret = ppowfu(x, (unsigned int)whole);
 			} else {
-				ret = ppowfu(1.0f / x, (unsigned int)-whole);
+				ret = 1.0f / ppowfu(x, (unsigned int)-whole);
 			}
 			if(frac != 0){
 				ret *= ppowf(x, frac);
@@ -186,9 +186,9 @@ float powf(float x, float y){
 			}
 		} else if(y < INT_MIN){
 			if(__builtin_fmodf(whole, 2.0f) == 0.0f){
-				return ppowf(-1.0f / x, whole);
+				return 1.0f / ppowf(-x, whole);
 			} else {
-				return -ppowf(-1.0f / x, whole);
+				return -1.0f / ppowf(-x, whole);
 			}
 		} else {
 			if(whole > 0){
@@ -201,9 +201,9 @@ float powf(float x, float y){
 			} else {
 				const unsigned int idx = (unsigned int)-whole;
 				if(idx % 2 == 0){
-					return ppowfu(-1.0f / x, idx);
+					return 1.0f / ppowfu(-x, idx);
 				} else {
-					return -ppowfu(-1.0f / x, idx);
+					return -1.0f / ppowfu(-x, idx);
 				}
 			}
 		}
@@ -223,13 +223,13 @@ double pow(double x, double y){
 		if(y > INT_MAX){
 			return ppowd(x, y);
 		} else if(y < INT_MIN){
-			return ppowd(1.0 / x, -y);
+			return 1.0 / ppowd(x, -y);
 		} else {
 			double ret;
 			if(y > 0){
 				ret = ppowdu(x, (unsigned int)whole);
 			} else {
-				ret = ppowdu(1.0 / x, (unsigned int)-whole);
+				ret = 1.0 / ppowdu(x, (unsigned int)-whole);
 			}
 			if(frac != 0){
 				ret *= ppowd(x, frac);
@@ -248,9 +248,9 @@ double pow(double x, double y){
 			}
 		} else if(y < INT_MIN){
 			if(__builtin_fmod(whole, 2.0) == 0.0){
-				return ppowd(-1.0 / x, whole);
+				return 1.0 / ppowd(-x, whole);
 			} else {
-				return -ppowd(-1.0 / x, whole);
+				return -1.0 / ppowd(-x, whole);
 			}
 		} else {
 			if(whole > 0){
@@ -263,9 +263,9 @@ double pow(double x, double y){
 			} else {
 				const unsigned int idx = (unsigned int)-whole;
 				if(idx % 2 == 0){
-					return ppowdu(-1.0 / x, idx);
+					return 1.0 / ppowdu(-x, idx);
 				} else {
-					return -ppowdu(-1.0 / x, idx);
+					return -1.0 / ppowdu(-x, idx);
 				}
 			}
 		}
@@ -285,13 +285,13 @@ long double powl(long double x, long double y){
 		if(y > INT_MAX){
 			return ppowl(x, y);
 		} else if(y < INT_MIN){
-			return ppowl(1.0l / x, -y);
+			return 1.0l / ppowl(x, -y);
 		} else {
 			long double ret;
 			if(y > 0){
 				ret = ppowlu(x, (unsigned int)whole);
 			} else {
-				ret = ppowlu(1.0l / x, (unsigned int)-whole);
+				ret = 1.0l / ppowlu(x, (unsigned int)-whole);
 			}
 			if(lrac != 0){
 				ret *= ppowl(x, lrac);
@@ -310,9 +310,9 @@ long double powl(long double x, long double y){
 			}
 		} else if(y < INT_MIN){
 			if(__builtin_fmodl(whole, 2.0l) == 0.0l){
-				return ppowl(-1.0l / x, whole);
+				return 1.0l / ppowl(-x, whole);
 			} else {
-				return -ppowl(-1.0l / x, whole);
+				return -1.0l / ppowl(-x, whole);
 			}
 		} else {
 			if(whole > 0){
@@ -325,9 +325,9 @@ long double powl(long double x, long double y){
 			} else {
 				const unsigned int idx = (unsigned int)-whole;
 				if(idx % 2 == 0){
-					return ppowlu(-1.0l / x, idx);
+					return 1.0l / ppowlu(-x, idx);
 				} else {
-					return -ppowlu(-1.0l / x, idx);
+					return -1.0l / ppowlu(-x, idx);
 				}
 			}
 		}

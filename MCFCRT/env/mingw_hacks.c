@@ -42,7 +42,7 @@ void __MCF_CRT_EmutlsCleanup(){
 
 int __mingwthr_key_dtor(unsigned long ulKey, void (*pfnDtor)(void *)){
 	if(pfnDtor){
-		KEY_DTOR_NODE *const pNode = (KEY_DTOR_NODE *)malloc(sizeof(KEY_DTOR_NODE));
+		KEY_DTOR_NODE *const pNode = malloc(sizeof(KEY_DTOR_NODE));
 		if(!pNode){
 			return -1;
 		}

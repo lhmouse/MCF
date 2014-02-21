@@ -38,7 +38,7 @@ size_t __MCF_GetArgV(const wchar_t *const **pppwszArgV){
 				const wchar_t *const pwszCommandLine = GetCommandLineW();
 				const size_t uCommandLineLen = wcslen(pwszCommandLine);
 
-				g_pwszArgBuffer = (wchar_t *)malloc((uCommandLineLen + 1) * sizeof(wchar_t));
+				g_pwszArgBuffer = malloc((uCommandLineLen + 1) * sizeof(wchar_t));
 				if(!g_pwszArgBuffer){
 					__MCF_CRT_Bail(L"__MCF_GetArgV() 失败：内存不足。");
 				}
@@ -46,7 +46,7 @@ size_t __MCF_GetArgV(const wchar_t *const **pppwszArgV){
 
 				size_t uIndex = 0;
 				size_t uCapacity = 4;
-				wchar_t **ppArgV = (wchar_t **)malloc(uCapacity * sizeof(wchar_t *));
+				wchar_t **ppArgV = malloc(uCapacity * sizeof(wchar_t *));
 				if(!ppArgV){
 					__MCF_CRT_Bail(L"__MCF_GetArgV() 失败：内存不足。");
 				}

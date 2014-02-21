@@ -65,7 +65,7 @@ void *__MCF_GetModuleBase(){
 	return &IMAGE_BASE;
 }
 int __MCF_AtCRTEnd(void (__cdecl *pfnProc)(intptr_t), intptr_t nContext){
-	AT_EXIT_NODE *const pNode = (AT_EXIT_NODE *)malloc(sizeof(AT_EXIT_NODE));
+	AT_EXIT_NODE *const pNode = malloc(sizeof(AT_EXIT_NODE));
 	if(!pNode){
 		return -1;
 	}

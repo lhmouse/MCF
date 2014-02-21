@@ -87,7 +87,7 @@ unsigned long __MCF_CRT_ThreadInitialize(){
 	if(pThreadEnv == NULL){
 		__MCF_CRT_FEnvInitialize();
 
-		pThreadEnv = (THREAD_ENV *)malloc(sizeof(THREAD_ENV));
+		pThreadEnv = malloc(sizeof(THREAD_ENV));
 		if(!pThreadEnv){
 			return ERROR_NOT_ENOUGH_MEMORY;
 		}
@@ -142,7 +142,7 @@ void *__MCF_CRT_CreateThread(
 	unsigned long ulFlags,
 	unsigned long *pulThreadId
 ){
-	THREAD_INIT_INFO *const pThreadInitInfo = (THREAD_INIT_INFO *)malloc(sizeof(THREAD_INIT_INFO));
+	THREAD_INIT_INFO *const pThreadInitInfo = malloc(sizeof(THREAD_INIT_INFO));
 	if(!pThreadInitInfo){
 		return NULL;
 	}
@@ -167,7 +167,7 @@ int __MCF_CRT_AtThreadExit(
 		return -1;
 	}
 
-	AT_EXIT_NODE *const pNewNode = (AT_EXIT_NODE *)malloc(sizeof(AT_EXIT_NODE));
+	AT_EXIT_NODE *const pNewNode = malloc(sizeof(AT_EXIT_NODE));
 	if(!pNewNode){
 		return -1;
 	}
@@ -195,7 +195,7 @@ void *__MCF_CRT_RetrieveTls(
 
 	TLS_OBJECT *pObject = (TLS_OBJECT *)__MCF_AvlFind(&pThreadEnv->mapObjects, nKey);
 	if(!pObject){
-		pObject = (TLS_OBJECT *)malloc(sizeof(TLS_OBJECT));
+		pObject = malloc(sizeof(TLS_OBJECT));
 		if(!pObject){
 			return NULL;
 		}

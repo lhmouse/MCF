@@ -23,7 +23,7 @@ char *strstr(const char *s1, const char *s2){
 	if(wlen <= sizeof(t_sm) / sizeof(t_sm[0])){
 		t = t_sm;
 	} else {
-		t = (size_t *)malloc(wlen * sizeof(size_t));
+		t = malloc(wlen * sizeof(size_t));
 		if(!t){
 			const char *till = s  + (slen - wlen);
 			const char *p = s;

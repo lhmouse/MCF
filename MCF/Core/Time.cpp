@@ -8,7 +8,7 @@ using namespace MCF;
 
 namespace MCF {
 
-std::uint64_t GetUTCUnixTime() noexcept {
+std::uint64_t GetUnixTime() noexcept {
 	union {
 		FILETIME ft;
 		ULARGE_INTEGER uli;

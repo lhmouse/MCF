@@ -9,7 +9,7 @@
 
 namespace MCF {
 
-extern std::uint64_t GetUTCUnixTime() noexcept;
+extern std::uint64_t GetUnixTime() noexcept;
 
 enum {
 	// 这里使用定点数格式。

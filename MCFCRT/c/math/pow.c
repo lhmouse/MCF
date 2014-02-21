@@ -7,6 +7,7 @@
 #include <limits.h>
 
 // postive pow float unsigned
+
 #define UNROLLED	\
 		if(++i == 32){	\
 			break;	\
@@ -36,7 +37,7 @@ static float ppowfu(float x, unsigned int y){
 	}
 	return ret;
 }
-static double powpdu(double x, unsigned int y){
+static double ppowdu(double x, unsigned int y){
 	if(y == 0){
 		return 1.0;
 	}
@@ -55,7 +56,7 @@ static double powpdu(double x, unsigned int y){
 	}
 	return ret;
 }
-static long double powplu(long double x, unsigned int y){
+static long double ppowlu(long double x, unsigned int y){
 	if(y == 0){
 		return 1.0l;
 	}
@@ -175,7 +176,7 @@ float powf(float x, float y){
 		}
 	} else {
 		if(frac != 0){
-			__asm__ __volatile__("int 3 \n");
+			__builtin_trap();
 		}
 		if(y > INT_MAX){
 			if(__builtin_fmodf(whole, 2.0f) == 0.0f){
@@ -226,9 +227,9 @@ double pow(double x, double y){
 		} else {
 			double ret;
 			if(y > 0){
-				ret = powpdu(x, (unsigned int)whole);
+				ret = ppowdu(x, (unsigned int)whole);
 			} else {
-				ret = 1.0 / powpdu(x, (unsigned int)-whole);
+				ret = 1.0 / ppowdu(x, (unsigned int)-whole);
 			}
 			if(frac != 0){
 				ret *= ppowd(x, frac);
@@ -237,7 +238,7 @@ double pow(double x, double y){
 		}
 	} else {
 		if(frac != 0){
-			__asm__ __volatile__("int 3 \n");
+			__builtin_trap();
 		}
 		if(y > INT_MAX){
 			if(__builtin_fmod(whole, 2.0) == 0.0){
@@ -255,16 +256,16 @@ double pow(double x, double y){
 			if(whole > 0){
 				const unsigned int idx = (unsigned int)whole;
 				if(idx % 2 == 0){
-					return powpdu(-x, idx);
+					return ppowdu(-x, idx);
 				} else {
-					return -powpdu(-x, idx);
+					return -ppowdu(-x, idx);
 				}
 			} else {
 				const unsigned int idx = (unsigned int)-whole;
 				if(idx % 2 == 0){
-					return 1.0 / powpdu(-x, idx);
+					return 1.0 / ppowdu(-x, idx);
 				} else {
-					return -1.0 / powpdu(-x, idx);
+					return -1.0 / ppowdu(-x, idx);
 				}
 			}
 		}
@@ -288,9 +289,9 @@ long double powl(long double x, long double y){
 		} else {
 			long double ret;
 			if(y > 0){
-				ret = powplu(x, (unsigned int)whole);
+				ret = ppowlu(x, (unsigned int)whole);
 			} else {
-				ret = 1.0l / powplu(x, (unsigned int)-whole);
+				ret = 1.0l / ppowlu(x, (unsigned int)-whole);
 			}
 			if(lrac != 0){
 				ret *= ppowl(x, lrac);
@@ -299,7 +300,7 @@ long double powl(long double x, long double y){
 		}
 	} else {
 		if(lrac != 0){
-			__asm__ __volatile__("int 3 \n");
+			__builtin_trap();
 		}
 		if(y > INT_MAX){
 			if(__builtin_fmodl(whole, 2.0l) == 0.0l){
@@ -317,16 +318,16 @@ long double powl(long double x, long double y){
 			if(whole > 0){
 				const unsigned int idx = (unsigned int)whole;
 				if(idx % 2 == 0){
-					return powplu(-x, idx);
+					return ppowlu(-x, idx);
 				} else {
-					return -powplu(-x, idx);
+					return -ppowlu(-x, idx);
 				}
 			} else {
 				const unsigned int idx = (unsigned int)-whole;
 				if(idx % 2 == 0){
-					return 1.0l / powplu(-x, idx);
+					return 1.0l / ppowlu(-x, idx);
 				} else {
-					return -1.0l / powplu(-x, idx);
+					return -1.0l / ppowlu(-x, idx);
 				}
 			}
 		}

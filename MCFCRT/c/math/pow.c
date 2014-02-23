@@ -24,7 +24,7 @@ static float ppowfu(float x, unsigned int y){
 	}
 	register float ret = x;
 	unsigned int i = (unsigned int)__builtin_clz(y);
-	unsigned int mask = 0x80000000 >> i;
+	unsigned int mask = 0x80000000u >> i;
 	for(;;){
 		UNROLLED
 		UNROLLED
@@ -43,7 +43,7 @@ static double ppowdu(double x, unsigned int y){
 	}
 	register double ret = x;
 	unsigned int i = (unsigned int)__builtin_clz(y);
-	unsigned int mask = 0x80000000 >> i;
+	unsigned int mask = 0x80000000u >> i;
 	for(;;){
 		UNROLLED
 		UNROLLED
@@ -62,7 +62,7 @@ static long double ppowlu(long double x, unsigned int y){
 	}
 	register long double ret = x;
 	unsigned int i = (unsigned int)__builtin_clz(y);
-	unsigned int mask = 0x80000000 >> i;
+	unsigned int mask = 0x80000000u >> i;
 	for(;;){
 		UNROLLED
 		UNROLLED

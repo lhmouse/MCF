@@ -5,12 +5,36 @@
 #ifndef __MCF_RANDOM_HPP__
 #define __MCF_RANDOM_HPP__
 
+#include <type_traits>
 #include <cstdint>
 #include <cstddef>
 
 namespace MCF {
 
 extern std::uint32_t GenRandomSeed() noexcept;
+
+class Random {
+private:
+	// http://en.wikipedia.org/wiki/RC4
+	unsigned char xm_abyBox[0x100];
+	unsigned char xm_byI;
+	unsigned char xm_byJ;
+public:
+	Random(std::uint32_t u32Seed = GenRandomSeed()) noexcept;
+private:
+	std::uint8_t xGetByte() noexcept;
+public:
+	template<typename T>
+	T Get() noexcept {
+		typedef typename std::make_unsigned<T>::type U;
+		U vTemp = 0;
+		for(std::size_t i = 0; i < sizeof(U); ++i){
+			vTemp <<= 8;
+			vTemp |= xGetByte();
+		}
+		return (T)vTemp;
+	}
+};
 
 }
 

@@ -174,7 +174,7 @@ bool File::IsOpen() const noexcept {
 	}
 	return xm_pDelegate->IsOpen();
 }
-bool File::Open(const wchar_t *pwszPath, bool bToRead, bool bToWrite, bool bAutoCreate) noexcept {
+bool File::Open(const wchar_t *pwszPath, bool bToRead, bool bToWrite, bool bAutoCreate){
 	if(!xm_pDelegate){
 		xm_pDelegate.reset(new xDelegate);
 	}

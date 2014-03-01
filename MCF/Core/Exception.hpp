@@ -5,7 +5,6 @@
 #ifndef __MCF_EXCEPTION_HPP__
 #define __MCF_EXCEPTION_HPP__
 
-#include "String.hpp"
 #include "../../MCFCRT/env/last_error.h"
 #include <exception>
 #include <cstddef>

@@ -89,15 +89,15 @@ namespace __MCF {
 }
 
 enum class StringEncoding {
-	ENC_UTF8,
-	ENC_ANSI,
-	ENC_UTF16
+	UTF8,
+	ANSI,
+	UTF16
 };
 
 template<typename CHAR_T, StringEncoding CHAR_ENC>
 class GenericString;
 
-typedef GenericString<wchar_t, StringEncoding::ENC_UTF16> UnifiedString;
+typedef GenericString<wchar_t, StringEncoding::UTF16> UnifiedString;
 
 template<typename CHAR_T, StringEncoding CHAR_ENC>
 class GenericString {
@@ -884,13 +884,13 @@ bool operator>=(const CHAR_T *lhs, const GenericString<CHAR_T, CHAR_ENC> &rhs) n
 	return rhs < lhs;
 }
 
-extern template class GenericString<char,		StringEncoding::ENC_UTF8>;
-extern template class GenericString<char,		StringEncoding::ENC_ANSI>;
-extern template class GenericString<wchar_t,	StringEncoding::ENC_UTF16>;
+extern template class GenericString<char,		StringEncoding::UTF8>;
+extern template class GenericString<char,		StringEncoding::ANSI>;
+extern template class GenericString<wchar_t,	StringEncoding::UTF16>;
 
-typedef GenericString<char,		StringEncoding::ENC_UTF8>		UTF8String;
-typedef GenericString<char,		StringEncoding::ENC_ANSI>		ANSIString;
-typedef GenericString<wchar_t,	StringEncoding::ENC_UTF16>		UTF16String;
+typedef GenericString<char,		StringEncoding::UTF8>		UTF8String;
+typedef GenericString<char,		StringEncoding::ANSI>		ANSIString;
+typedef GenericString<wchar_t,	StringEncoding::UTF16>		UTF16String;
 
 }
 

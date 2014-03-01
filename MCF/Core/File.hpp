@@ -15,8 +15,8 @@ namespace MCF {
 
 class File : NO_COPY {
 public:
-	enum : unsigned long long {
-		INVALID_SIZE = (unsigned long long)-1
+	enum : std::uint64_t {
+		INVALID_SIZE = (std::uint64_t)-1
 	};
 
 	typedef std::function<void()> ASYNC_PROC;
@@ -30,7 +30,7 @@ public:
 	~File();
 public:
 	bool IsOpen() const noexcept;
-	bool Open(const wchar_t *pwszPath, bool bToRead, bool bToWrite, bool bAutoCreate) noexcept;
+	bool Open(const wchar_t *pwszPath, bool bToRead, bool bToWrite, bool bAutoCreate);
 	void Close() noexcept;
 
 	std::uint64_t GetSize() const noexcept;

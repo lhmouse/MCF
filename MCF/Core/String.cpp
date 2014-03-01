@@ -7,9 +7,9 @@
 
 namespace MCF {
 
-template class GenericString<char,		StringEncoding::ENC_UTF8>;
-template class GenericString<char,		StringEncoding::ENC_ANSI>;
-template class GenericString<wchar_t,	StringEncoding::ENC_UTF16>;
+template class GenericString<char,		StringEncoding::UTF8>;
+template class GenericString<char,		StringEncoding::ANSI>;
+template class GenericString<wchar_t,	StringEncoding::UTF16>;
 
 template<>
 UnifiedString &UTF8String::xUnify(UnifiedString &ucsTemp) const {

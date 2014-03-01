@@ -14,7 +14,7 @@ extern void __MCF_CRT_ExeUninitializeArgV();
 
 extern unsigned int MCFMain();
 
-static int __attribute__((stdcall, unused)) MCFExeStartup(){
+static __attribute__((cdecl, unused, noreturn)) int AlignedStartup(){
 	DWORD dwExitCode;
 
 #define INIT(exp)		if((dwExitCode = (exp)) == ERROR_SUCCESS){ ((void)0)
@@ -31,11 +31,19 @@ static int __attribute__((stdcall, unused)) MCFExeStartup(){
 	CLEANUP(__MCF_CRT_End());
 
 	ExitProcess(dwExitCode);
-	return (int)dwExitCode;		// 这有什么意义吗？
+	__builtin_trap();
 }
 
+__asm__(
+	"	.align 16 \n"
+	".global __MCFExeStartup \n"
+	"__MCFExeStartup: \n"
 #ifdef _WIN64
-extern __attribute__((alias("MCFExeStartup"))) void __cdecl __MCFExeStartup();
+	"	and rsp, -0x10 \n"
+	"	sub rsp, 0x10 \n"
+	"	call AlignedStartup \n"
 #else
-extern __attribute__((alias("MCFExeStartup@0"))) void __cdecl _MCFExeStartup();
+	"	and esp, -0x10 \n"
+	"	call _AlignedStartup \n"
 #endif
+);

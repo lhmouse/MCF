@@ -39,7 +39,6 @@ typedef struct tagTlsObject {
 } TLS_OBJECT;
 
 typedef struct tagThreadEnv {
-	size_t uReentryCount;
 	AT_EXIT_NODE *pAtExitHead;
 	__MCF_AVL_PROOT mapObjects;
 	TLS_OBJECT *pLastObject;
@@ -47,7 +46,7 @@ typedef struct tagThreadEnv {
 
 static DWORD g_dwTlsIndex = TLS_OUT_OF_INDEXES;
 
-static DWORD WINAPI CRTThreadProc(LPVOID pParam){
+static __attribute__((cdecl, unused, noreturn)) DWORD AlignedCRTThreadProc(LPVOID pParam){
 	const THREAD_INIT_INFO ThreadInitInfo = *(const THREAD_INIT_INFO *)pParam;
 	free(pParam);
 
@@ -62,14 +61,37 @@ static DWORD WINAPI CRTThreadProc(LPVOID pParam){
 
 	CLEANUP(__MCF_CRT_ThreadUninitialize());
 
-	return dwExitCode;
+	ExitThread(dwExitCode);
+	__builtin_trap();
 }
+
+extern __attribute__((stdcall, noreturn)) DWORD CRTThreadProc(LPVOID pParam) __asm__("CRTThreadProc");
+__asm__(
+	"	.align 16 \n"
+	"CRTThreadProc: \n"
+#ifdef _WIN64
+	"	push rbp \n"
+	"	mov rbp, rsp \n"
+	"	and rsp, -0x10 \n"
+	"	sub rsp, 0x10 \n"
+	"	call AlignedCRTThreadProc \n"
+#else
+	"	mov eax, dword ptr[esp + 4] \n"
+	"	push ebp \n"
+	"	mov ebp, esp \n"
+	"	and esp, -0x10 \n"
+	"	sub esp, 0x10 \n"
+	"	mov dword ptr[esp], eax \n"
+	"	call _AlignedCRTThreadProc \n"
+#endif
+);
 
 unsigned long __MCF_CRT_TlsEnvInitialize(){
 	g_dwTlsIndex = TlsAlloc();
 	if(g_dwTlsIndex == TLS_OUT_OF_INDEXES){
 		return GetLastError();
 	}
+
 	return ERROR_SUCCESS;
 }
 void __MCF_CRT_TlsEnvUninitialize(){
@@ -78,62 +100,54 @@ void __MCF_CRT_TlsEnvUninitialize(){
 }
 
 unsigned long __MCF_CRT_ThreadInitialize(){
-	THREAD_ENV *pThreadEnv = (THREAD_ENV *)TlsGetValue(g_dwTlsIndex);
-	const DWORD dwErrorCode = GetLastError();
-	if(dwErrorCode != ERROR_SUCCESS){
-		return dwErrorCode;
+	__MCF_CRT_FEnvInitialize();
+
+	THREAD_ENV *const pThreadEnv = malloc(sizeof(THREAD_ENV));
+	if(!pThreadEnv){
+		return ERROR_NOT_ENOUGH_MEMORY;
 	}
+	pThreadEnv->pAtExitHead		= NULL;
+	pThreadEnv->mapObjects		= NULL;
+	pThreadEnv->pLastObject		= NULL;
 
-	if(pThreadEnv == NULL){
-		__MCF_CRT_FEnvInitialize();
-
-		pThreadEnv = malloc(sizeof(THREAD_ENV));
-		if(!pThreadEnv){
-			return ERROR_NOT_ENOUGH_MEMORY;
-		}
-		pThreadEnv->uReentryCount	= 0;
-		pThreadEnv->pAtExitHead		= NULL;
-		pThreadEnv->mapObjects		= NULL;
-		pThreadEnv->pLastObject		= NULL;
-
-		TlsSetValue(g_dwTlsIndex, pThreadEnv);
+	if(!TlsSetValue(g_dwTlsIndex, pThreadEnv)){
+		const unsigned long ulErrorCode = GetLastError();
+		free(pThreadEnv);
+		return ulErrorCode;
 	}
-	++pThreadEnv->uReentryCount;
 
 	return ERROR_SUCCESS;
 }
 
 void __MCF_CRT_ThreadUninitialize(){
-	THREAD_ENV *const pThreadEnv = (THREAD_ENV *)TlsGetValue(g_dwTlsIndex);
+	THREAD_ENV *const pThreadEnv = TlsGetValue(g_dwTlsIndex);
 	if(GetLastError() != ERROR_SUCCESS){
 		return;
 	}
 
-	if(--pThreadEnv->uReentryCount == 0){
-		register AT_EXIT_NODE *pAtExitHead = pThreadEnv->pAtExitHead;
-		while(pAtExitHead){
-			AT_EXIT_NODE *const pNext = pAtExitHead->pNext;
-			(*pAtExitHead->pfnProc)(pAtExitHead->nContext);
-			free(pAtExitHead);
-			pAtExitHead = pNext;
-		}
-
-		register TLS_OBJECT *pObject = pThreadEnv->pLastObject;
-		while(pObject){
-			TLS_OBJECT *const pPrev = pObject->pPrev;
-			if(pObject->pfnDtor){
-				(*pObject->pfnDtor)(pObject->pMem);
-			}
-			free(pObject->pMem);
-			free(pObject);
-			pObject = pPrev;
-		}
-
-		TlsSetValue(g_dwTlsIndex, NULL);
-		free(pThreadEnv);
-
-		__MCF_CRT_RunEmutlsThreadDtors();
+	register AT_EXIT_NODE *pAtExitHead = pThreadEnv->pAtExitHead;
+	while(pAtExitHead){
+		AT_EXIT_NODE *const pNext = pAtExitHead->pNext;
+		(*pAtExitHead->pfnProc)(pAtExitHead->nContext);
+		free(pAtExitHead);
+		pAtExitHead = pNext;
 	}
+
+	register TLS_OBJECT *pObject = pThreadEnv->pLastObject;
+	while(pObject){
+		TLS_OBJECT *const pPrev = pObject->pPrev;
+		if(pObject->pfnDtor){
+			(*pObject->pfnDtor)(pObject->pMem);
+		}
+		free(pObject->pMem);
+		free(pObject);
+		pObject = pPrev;
+	}
+
+	TlsSetValue(g_dwTlsIndex, NULL);
+	free(pThreadEnv);
+
+	__MCF_CRT_RunEmutlsThreadDtors();
 }
 
 void *__MCF_CRT_CreateThread(
@@ -162,7 +176,7 @@ int __MCF_CRT_AtThreadExit(
 	void (*pfnProc)(intptr_t),
 	intptr_t nContext
 ){
-	THREAD_ENV *const pThreadEnv = (THREAD_ENV *)TlsGetValue(g_dwTlsIndex);
+	THREAD_ENV *const pThreadEnv = TlsGetValue(g_dwTlsIndex);
 	if((GetLastError() != ERROR_SUCCESS) || !pThreadEnv){
 		return -1;
 	}
@@ -188,7 +202,7 @@ void *__MCF_CRT_RetrieveTls(
 	intptr_t nParam,
 	void (*pfnDestructor)(void *)
 ){
-	THREAD_ENV *const pThreadEnv = (THREAD_ENV *)TlsGetValue(g_dwTlsIndex);
+	THREAD_ENV *const pThreadEnv = TlsGetValue(g_dwTlsIndex);
 	if((GetLastError() != ERROR_SUCCESS) || !pThreadEnv){
 		return NULL;
 	}
@@ -244,7 +258,7 @@ void *__MCF_CRT_RetrieveTls(
 void __MCF_CRT_DeleteTls(
 	intptr_t nKey
 ){
-	THREAD_ENV *const pThreadEnv = (THREAD_ENV *)TlsGetValue(g_dwTlsIndex);
+	THREAD_ENV *const pThreadEnv = TlsGetValue(g_dwTlsIndex);
 	if((GetLastError() != ERROR_SUCCESS) || !pThreadEnv){
 		return;
 	}

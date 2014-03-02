@@ -46,7 +46,7 @@ typedef struct tagThreadEnv {
 
 static DWORD g_dwTlsIndex = TLS_OUT_OF_INDEXES;
 
-static __attribute__((cdecl, unused, noreturn)) DWORD AlignedCRTThreadProc(LPVOID pParam){
+static __attribute__((cdecl, used, noreturn)) DWORD AlignedCRTThreadProc(LPVOID pParam){
 	const THREAD_INIT_INFO ThreadInitInfo = *(const THREAD_INIT_INFO *)pParam;
 	free(pParam);
 

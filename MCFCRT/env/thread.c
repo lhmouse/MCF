@@ -70,15 +70,11 @@ __asm__(
 	"	.align 16 \n"
 	"CRTThreadProc: \n"
 #ifdef _WIN64
-	"	push rbp \n"
-	"	mov rbp, rsp \n"
 	"	and rsp, -0x10 \n"
 	"	sub rsp, 0x10 \n"
 	"	call AlignedCRTThreadProc \n"
 #else
 	"	mov eax, dword ptr[esp + 4] \n"
-	"	push ebp \n"
-	"	mov ebp, esp \n"
 	"	and esp, -0x10 \n"
 	"	sub esp, 0x10 \n"
 	"	mov dword ptr[esp], eax \n"

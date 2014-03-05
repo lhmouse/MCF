@@ -16,7 +16,7 @@
 using namespace MCF;
 
 namespace {
-	inline void CopyOut(const std::function<std::pair<void *, std::size_t>(std::size_t)> &fnDataCallback, const void *pSrc, std::size_t uBytesToCopy){
+	inline void CopyOut(const std::function<std::pair<void *, std::size_t> (std::size_t)> &fnDataCallback, const void *pSrc, std::size_t uBytesToCopy){
 		std::size_t uBytesCopied = 0;
 		while(uBytesCopied < uBytesToCopy){
 			const std::size_t uBytesRemaining = uBytesToCopy - uBytesCopied;
@@ -57,13 +57,13 @@ namespace {
 // 嵌套类定义。
 class ZEncoder::xDelegate : private ::z_stream, NO_COPY {
 private:
-	const std::function<std::pair<void *, std::size_t>(std::size_t)> xm_fnDataCallback;
+	const std::function<std::pair<void *, std::size_t> (std::size_t)> xm_fnDataCallback;
 	bool xm_bInited;
 
 	unsigned char xm_abyTemp[0x1000];
 	std::size_t xm_uBytesProcessed;
 public:
-	xDelegate(std::function<std::pair<void *, std::size_t>(std::size_t)> &&fnDataCallback, int nLevel)
+	xDelegate(std::function<std::pair<void *, std::size_t> (std::size_t)> &&fnDataCallback, int nLevel)
 		: xm_fnDataCallback(std::move(fnDataCallback))
 		, xm_bInited(false)
 	{
@@ -161,7 +161,7 @@ public:
 };
 
 // 构造函数和析构函数。
-ZEncoder::ZEncoder(std::function<std::pair<void *, std::size_t>(std::size_t)> fnDataCallback, int nLevel)
+ZEncoder::ZEncoder(std::function<std::pair<void *, std::size_t> (std::size_t)> fnDataCallback, int nLevel)
 	: xm_pDelegate(new xDelegate(std::move(fnDataCallback), nLevel))
 {
 }
@@ -186,13 +186,13 @@ void ZEncoder::Finalize(){
 // 嵌套类定义。
 class ZDecoder::xDelegate : private ::z_stream, NO_COPY {
 private:
-	const std::function<std::pair<void *, std::size_t>(std::size_t)> xm_fnDataCallback;
+	const std::function<std::pair<void *, std::size_t> (std::size_t)> xm_fnDataCallback;
 	bool xm_bInited;
 
 	unsigned char xm_abyTemp[0x1000];
 	std::size_t xm_uBytesProcessed;
 public:
-	xDelegate(std::function<std::pair<void *, std::size_t>(std::size_t)> &&fnDataCallback)
+	xDelegate(std::function<std::pair<void *, std::size_t> (std::size_t)> &&fnDataCallback)
 		: xm_fnDataCallback(std::move(fnDataCallback))
 		, xm_bInited(false)
 	{
@@ -293,7 +293,7 @@ public:
 };
 
 // 构造函数和析构函数。
-ZDecoder::ZDecoder(std::function<std::pair<void *, std::size_t>(std::size_t)> fnDataCallback)
+ZDecoder::ZDecoder(std::function<std::pair<void *, std::size_t> (std::size_t)> fnDataCallback)
 	:  xm_pDelegate(new xDelegate(std::move(fnDataCallback)))
 {
 }

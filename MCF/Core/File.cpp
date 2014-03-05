@@ -43,7 +43,7 @@ public:
 	bool IsOpen() const noexcept {
 		return xm_hFile.IsGood();
 	}
-	bool Open(const wchar_t *pwszPath, bool bToRead, bool bToWrite, bool bAutoCreate) noexcept {
+	unsigned long Open(const wchar_t *pwszPath, bool bToRead, bool bToWrite, bool bAutoCreate) noexcept {
 		xm_hFile.Reset(::CreateFileW(
 			pwszPath,
 			(bToRead ? GENERIC_READ : 0) | (bToWrite ? GENERIC_WRITE : 0),
@@ -54,9 +54,9 @@ public:
 			NULL
 		));
 		if(!xm_hFile){
-			return false;
+			return ::GetLastError();
 		}
-		return true;
+		return ERROR_SUCCESS;
 	}
 	void Close() noexcept {
 		if(xm_hFile){
@@ -64,27 +64,25 @@ public:
 		}
 	}
 
-	std::uint64_t GetSize() const noexcept {
+	std::uint64_t GetSize() const {
 		LARGE_INTEGER liFileSize;
-		if(!::GetFileSizeEx(xm_hFile, &liFileSize)){
-			return INVALID_SIZE;
+		if(!::GetFileSizeEx(xm_hFile.Get(), &liFileSize)){
+			MCF_THROW(::GetLastError(), L"::GetFileSizeEx() 失败。");
 		}
 		return (std::uint64_t)liFileSize.QuadPart;
 	}
-	bool Resize(std::uint64_t u64NewSize) noexcept {
+	void Resize(std::uint64_t u64NewSize){
 		if(u64NewSize > (std::uint64_t)LLONG_MAX){
-			::SetLastError(ERROR_INVALID_PARAMETER);
-			return false;
+			MCF_THROW(ERROR_INVALID_PARAMETER, L"调整文件大小时指定的大小无效。");
 		}
 		LARGE_INTEGER liNewSize;
 		liNewSize.QuadPart = (long long)u64NewSize;
-		if(!::SetFilePointerEx(xm_hFile, liNewSize, nullptr, FILE_BEGIN)){
-			return false;
+		if(!::SetFilePointerEx(xm_hFile.Get(), liNewSize, nullptr, FILE_BEGIN)){
+			MCF_THROW(::GetLastError(), L"::SetFilePointerEx() 失败。");
 		}
-		if(!::SetEndOfFile(xm_hFile)){
-			return false;
+		if(!::SetEndOfFile(xm_hFile.Get())){
+			MCF_THROW(::GetLastError(), L"::SetEndOfFile() 失败。");
 		}
-		return true;
 	}
 
 	std::uint32_t Read(void *pBuffer, std::uint64_t u64Offset, std::uint32_t u32BytesToRead, ASYNC_PROC *pfnAsyncProc) const {
@@ -97,7 +95,7 @@ public:
 		Overlapped.Offset = (DWORD)u64Offset;
 		Overlapped.OffsetHigh = (DWORD)(u64Offset >> 32);
 		Overlapped.hEvent = (HANDLE)&ApcResult;
-		const bool bSucceeds = ::ReadFileEx(xm_hFile, pBuffer, u32BytesToRead, &Overlapped, &xAIOCallback);
+		const bool bSucceeds = ::ReadFileEx(xm_hFile.Get(), pBuffer, u32BytesToRead, &Overlapped, &xAIOCallback);
 		if(!bSucceeds){
 			ApcResult.dwErrorCode = ::GetLastError();
 		}
@@ -116,11 +114,11 @@ public:
 			std::rethrow_exception(ep);
 		}
 		if(!bSucceeds){
-			::SetLastError(ApcResult.dwErrorCode);
+			MCF_THROW(ApcResult.dwErrorCode, L"::ReadFileEx() 失败。");
 		}
 		return ApcResult.u32BytesTransferred;
 	}
-	std::uint32_t Write(std::uint64_t u64Offset, const void *pBuffer, std::uint32_t u32BytesToWrite, ASYNC_PROC *pfnAsyncProc){
+	void Write(std::uint64_t u64Offset, const void *pBuffer, std::uint32_t u32BytesToWrite, ASYNC_PROC *pfnAsyncProc){
 		xAPC_RESULT ApcResult;
 		ApcResult.u32BytesTransferred = 0;
 		ApcResult.dwErrorCode = ERROR_SUCCESS;
@@ -130,7 +128,7 @@ public:
 		Overlapped.Offset = (DWORD)u64Offset;
 		Overlapped.OffsetHigh = (DWORD)(u64Offset >> 32);
 		Overlapped.hEvent = (HANDLE)&ApcResult;
-		const bool bSucceeds = ::WriteFileEx(xm_hFile, pBuffer, u32BytesToWrite, &Overlapped, &xAIOCallback);
+		const bool bSucceeds = ::WriteFileEx(xm_hFile.Get(), pBuffer, u32BytesToWrite, &Overlapped, &xAIOCallback);
 		if(!bSucceeds){
 			ApcResult.dwErrorCode = ::GetLastError();
 		}
@@ -149,9 +147,8 @@ public:
 			std::rethrow_exception(ep);
 		}
 		if(!bSucceeds){
-			::SetLastError(ApcResult.dwErrorCode);
+			MCF_THROW(ApcResult.dwErrorCode, L"::WriteFileEx() 失败。");
 		}
-		return ApcResult.u32BytesTransferred;
 	}
 };
 
@@ -174,7 +171,7 @@ bool File::IsOpen() const noexcept {
 	}
 	return xm_pDelegate->IsOpen();
 }
-bool File::Open(const wchar_t *pwszPath, bool bToRead, bool bToWrite, bool bAutoCreate){
+unsigned long File::Open(const wchar_t *pwszPath, bool bToRead, bool bToWrite, bool bAutoCreate){
 	if(!xm_pDelegate){
 		xm_pDelegate.reset(new xDelegate);
 	}
@@ -187,44 +184,40 @@ void File::Close() noexcept {
 	xm_pDelegate->Close();
 }
 
-std::uint64_t File::GetSize() const noexcept {
+std::uint64_t File::GetSize() const {
 	if(!xm_pDelegate){
-		return INVALID_SIZE;
+		MCF_THROW(ERROR_INVALID_HANDLE, L"没有打开文件。");
 	}
 	return xm_pDelegate->GetSize();
 }
-bool File::Resize(std::uint64_t u64NewSize) noexcept {
+void File::Resize(std::uint64_t u64NewSize){
 	if(!xm_pDelegate){
-		return false;
+		MCF_THROW(ERROR_INVALID_HANDLE, L"没有打开文件。");
 	}
 	return xm_pDelegate->Resize(u64NewSize);
 }
 
-std::uint32_t File::Read(void *pBuffer, std::uint64_t u64Offset, std::uint32_t u32BytesToRead) const noexcept {
+std::uint32_t File::Read(void *pBuffer, std::uint64_t u64Offset, std::uint32_t u32BytesToRead) const {
 	if(!xm_pDelegate){
-		::SetLastError(ERROR_INVALID_HANDLE);
-		return 0;
+		MCF_THROW(ERROR_INVALID_HANDLE, L"没有打开文件。");
 	}
 	return xm_pDelegate->Read(pBuffer, u64Offset, u32BytesToRead, nullptr);
 }
 std::uint32_t File::Read(void *pBuffer, std::uint64_t u64Offset, std::uint32_t u32BytesToRead, File::ASYNC_PROC fnAsyncProc) const {
 	if(!xm_pDelegate){
-		::SetLastError(ERROR_INVALID_HANDLE);
-		return 0;
+		MCF_THROW(ERROR_INVALID_HANDLE, L"没有打开文件。");
 	}
 	return xm_pDelegate->Read(pBuffer, u64Offset, u32BytesToRead, &fnAsyncProc);
 }
-std::uint32_t File::Write(std::uint64_t u64Offset, const void *pBuffer, std::uint32_t u32BytesToWrite) noexcept {
+void File::Write(std::uint64_t u64Offset, const void *pBuffer, std::uint32_t u32BytesToWrite){
 	if(!xm_pDelegate){
-		::SetLastError(ERROR_INVALID_HANDLE);
-		return 0;
+		MCF_THROW(ERROR_INVALID_HANDLE, L"没有打开文件。");
 	}
-	return xm_pDelegate->Write(u64Offset, pBuffer, u32BytesToWrite, nullptr);
+	xm_pDelegate->Write(u64Offset, pBuffer, u32BytesToWrite, nullptr);
 }
-std::uint32_t File::Write(std::uint64_t u64Offset, const void *pBuffer, std::uint32_t u32BytesToWrite, File::ASYNC_PROC fnAsyncProc){
+void File::Write(std::uint64_t u64Offset, const void *pBuffer, std::uint32_t u32BytesToWrite, File::ASYNC_PROC fnAsyncProc){
 	if(!xm_pDelegate){
-		::SetLastError(ERROR_INVALID_HANDLE);
-		return 0;
+		MCF_THROW(ERROR_INVALID_HANDLE, L"没有打开文件。");
 	}
-	return xm_pDelegate->Write(u64Offset, pBuffer, u32BytesToWrite, &fnAsyncProc);
+	xm_pDelegate->Write(u64Offset, pBuffer, u32BytesToWrite, &fnAsyncProc);
 }

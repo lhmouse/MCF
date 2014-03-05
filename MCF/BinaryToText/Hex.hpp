@@ -13,10 +13,10 @@ namespace MCF {
 
 class HexEncoder {
 private:
-	const std::function<std::pair<void *, std::size_t>(std::size_t)> xm_fnDataCallback;
+	const std::function<std::pair<void *, std::size_t> (std::size_t)> xm_fnDataCallback;
 	const unsigned char xm_byDelta;
 public:
-	HexEncoder(std::function<std::pair<void *, std::size_t>(std::size_t)> fnDataCallback, bool bUpperCase);
+	HexEncoder(std::function<std::pair<void *, std::size_t> (std::size_t)> fnDataCallback, bool bUpperCase);
 public:
 	void Abort() noexcept;
 	void Update(const void *pData, std::size_t uSize);
@@ -25,12 +25,12 @@ public:
 
 class HexDecoder {
 private:
-	const std::function<std::pair<void *, std::size_t>(std::size_t)> xm_fnDataCallback;
+	const std::function<std::pair<void *, std::size_t> (std::size_t)> xm_fnDataCallback;
 	bool xm_bInited;
 
 	unsigned char xm_uchLastDigit;
 public:
-	HexDecoder(std::function<std::pair<void *, std::size_t>(std::size_t)> fnDataCallback);
+	HexDecoder(std::function<std::pair<void *, std::size_t> (std::size_t)> fnDataCallback);
 public:
 	void Abort() noexcept;
 	void Update(const void *pData, std::size_t uSize);

@@ -30,7 +30,7 @@ public:
 	}
 public:
 	HANDLE GetHandle() const noexcept {
-		return xm_hMutex;
+		return xm_hMutex.Get();
 	}
 };
 

@@ -31,7 +31,7 @@ template<typename TX, typename TY>
 inline void BCopy(TX &vDst, const TY &vSrc) noexcept {
 	static_assert(std::is_trivial<TX>::value && std::is_trivial<TY>::value, "MCF::BCopy(): Only trivial types are supported");
 	static_assert(sizeof(vDst) == sizeof(vSrc), "MCF::BCopy(): Source and destination sizes do not match.");
-	__builtin_memcpy(&vDst, vSrc, sizeof(vDst));
+	__builtin_memcpy(&vDst, &vSrc, sizeof(vDst));
 }
 
 template<typename T>

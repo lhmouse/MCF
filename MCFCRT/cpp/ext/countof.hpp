@@ -11,14 +11,14 @@ namespace MCF {
 
 namespace __MCF {
 	template<typename T, std::size_t N>
-	char (*CountOfHelper(T (&)[N]))[N];
+	auto CountOfHelper(T (&)[N]) -> char (&)[N];
 
 	template<typename T, std::size_t N>
-	char (*CountOfHelper(T (&&)[N]))[N];
+	auto CountOfHelper(T (&&)[N]) -> char (&)[N];
 }
 
 }
 
-#define COUNT_OF(ar)		(sizeof(*::MCF::__MCF::CountOfHelper((ar))))
+#define COUNT_OF(ar)		(sizeof(::MCF::__MCF::CountOfHelper((ar))))
 
 #endif

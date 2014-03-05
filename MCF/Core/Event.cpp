@@ -30,7 +30,7 @@ public:
 	}
 public:
 	HANDLE GetHandle() const noexcept {
-		return xm_hEvent;
+		return xm_hEvent.Get();
 	}
 };
 

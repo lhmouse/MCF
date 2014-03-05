@@ -30,7 +30,7 @@ namespace __MCF {
 
 typedef UniqueHandle<__MCF::EVENT_HANDLER_HANDLE, __MCF::EventHandlerDeleter> EventHandlerHolder;
 
-extern EventHandlerHolder RegisterEventHandler(std::intptr_t nEventId, std::function<bool(std::intptr_t)> fnHandler);
+extern EventHandlerHolder RegisterEventHandler(std::intptr_t nEventId, std::function<bool (std::intptr_t)> fnHandler);
 extern void RaiseEvent(std::intptr_t nEventId, std::intptr_t nContext);
 
 }

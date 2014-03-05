@@ -9,7 +9,7 @@
 using namespace MCF;
 
 namespace {
-	inline void CopyOut(const std::function<std::pair<void *, std::size_t>(std::size_t)> &fnDataCallback, const void *pSrc, std::size_t uBytesToCopy){
+	inline void CopyOut(const std::function<std::pair<void *, std::size_t> (std::size_t)> &fnDataCallback, const void *pSrc, std::size_t uBytesToCopy){
 		std::size_t uBytesCopied = 0;
 		while(uBytesCopied < uBytesToCopy){
 			const std::size_t uBytesRemaining = uBytesToCopy - uBytesCopied;
@@ -28,7 +28,7 @@ const char *__MCF::Base64Base::ENCODED_CHARS_REGEXP	= "ABCDEFGHIJKLMNOPQRSTUVWXY
 
 // ========== Base64Encoder ==========
 // 构造函数和析构函数。
-Base64Encoder::Base64Encoder(std::function<std::pair<void *, std::size_t>(std::size_t)> fnDataCallback, const char *pchEncodedChars)
+Base64Encoder::Base64Encoder(std::function<std::pair<void *, std::size_t> (std::size_t)> fnDataCallback, const char *pchEncodedChars)
 	: xm_fnDataCallback(std::move(fnDataCallback))
 	, xm_bInited(false)
 {
@@ -121,7 +121,7 @@ void Base64Encoder::Finalize(){
 
 // ========== Base64Decoder ==========
 // 构造函数和析构函数。
-Base64Decoder::Base64Decoder(std::function<std::pair<void *, std::size_t>(std::size_t)> fnDataCallback, const char *pchEncodedChars)
+Base64Decoder::Base64Decoder(std::function<std::pair<void *, std::size_t> (std::size_t)> fnDataCallback, const char *pchEncodedChars)
 	: xm_fnDataCallback(std::move(fnDataCallback))
 	, xm_bInited(false)
 {

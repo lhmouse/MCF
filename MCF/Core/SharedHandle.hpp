@@ -348,7 +348,7 @@ public:
 	explicit operator bool() const noexcept {
 		return IsGood();
 	}
-	operator HANDLE_T() const noexcept {
+	explicit operator HANDLE_T() const noexcept {
 		return Get();
 	}
 

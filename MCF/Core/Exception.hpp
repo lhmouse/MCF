@@ -38,7 +38,10 @@ struct Exception {
 }
 
 #define MCF_THROW(...)	\
-	throw ::MCF::Exception(__PRETTY_FUNCTION__, __VA_ARGS__)
+	do {	\
+		::MCF::Exception __MCF_TEMP_EXCEPTION__(__PRETTY_FUNCTION__, __VA_ARGS__);	\
+		throw __MCF_TEMP_EXCEPTION__;	\
+	} while(false)
 
 #define MCF_MAKE_EXCEPTION_PTR(...)	\
 	::std::make_exception_ptr(::MCF::Exception(__PRETTY_FUNCTION__, __VA_ARGS__))

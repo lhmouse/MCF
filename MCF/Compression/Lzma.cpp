@@ -18,7 +18,7 @@
 using namespace MCF;
 
 namespace {
-	inline void CopyOut(const std::function<std::pair<void *, std::size_t>(std::size_t)> &fnDataCallback, const void *pSrc, std::size_t uBytesToCopy){
+	inline void CopyOut(const std::function<std::pair<void *, std::size_t> (std::size_t)> &fnDataCallback, const void *pSrc, std::size_t uBytesToCopy){
 		std::size_t uBytesCopied = 0;
 		while(uBytesCopied < uBytesToCopy){
 			const std::size_t uBytesRemaining = uBytesToCopy - uBytesCopied;
@@ -104,7 +104,7 @@ private:
 		return pDelegate->xWrite(pData, uSize);
 	}
 private:
-	const std::function<std::pair<void *, std::size_t>(std::size_t)> xm_fnDataCallback;
+	const std::function<std::pair<void *, std::size_t> (std::size_t)> xm_fnDataCallback;
 	::ISeqOutStream xm_sosOutputter;
 	::CLzmaEncProps xm_vEncProps;
 
@@ -114,7 +114,7 @@ private:
 
 	std::exception_ptr xm_pException;
 public:
-	xDelegate(std::function<std::pair<void *, std::size_t>(std::size_t)> &&fnDataCallback, int nLevel, std::uint32_t u32DictSize)
+	xDelegate(std::function<std::pair<void *, std::size_t> (std::size_t)> &&fnDataCallback, int nLevel, std::uint32_t u32DictSize)
 		: xm_fnDataCallback(std::move(fnDataCallback))
 	{
 		xm_sosOutputter.Write = &xWriteCallback;
@@ -148,20 +148,20 @@ public:
 				MCF_THROW(ERROR_NOT_ENOUGH_MEMORY, L"::LzmaEnc_Create() 失败。");
 			}
 
-			ulErrorCode = LzmaErrorToWin32Error(::LzmaEnc_SetProps(xm_hEncoder, &xm_vEncProps));
+			ulErrorCode = LzmaErrorToWin32Error(::LzmaEnc_SetProps(xm_hEncoder.Get(), &xm_vEncProps));
 			if(ulErrorCode != ERROR_SUCCESS){
 				MCF_THROW(ulErrorCode, L"::LzmaEnc_SetProps() 失败。");
 			}
 
 			unsigned char abyHeader[LZMA_PROPS_SIZE];
 			std::size_t uHeaderSize = sizeof(abyHeader);
-			ulErrorCode = LzmaErrorToWin32Error(::LzmaEnc_WriteProperties(xm_hEncoder, abyHeader, &uHeaderSize));
+			ulErrorCode = LzmaErrorToWin32Error(::LzmaEnc_WriteProperties(xm_hEncoder.Get(), abyHeader, &uHeaderSize));
 			if(ulErrorCode != ERROR_SUCCESS){
 				MCF_THROW(ulErrorCode, L"::LzmaEnc_WriteProperties() 失败。");
 			}
 			CopyOut(xm_fnDataCallback, abyHeader, uHeaderSize);
 
-			xm_pContext.Reset(::LzmaEnc_NewEncodeCreateContext(xm_hEncoder, &xm_sosOutputter, nullptr, &g_vAllocSmall, &g_vAllocLarge));
+			xm_pContext.Reset(::LzmaEnc_NewEncodeCreateContext(xm_hEncoder.Get(), &xm_sosOutputter, nullptr, &g_vAllocSmall, &g_vAllocLarge));
 			if(!xm_pContext){
 				MCF_THROW(ERROR_NOT_ENOUGH_MEMORY, L"::LzmaEnc_NewEncodeCreateContext() 失败。");
 			}
@@ -176,7 +176,7 @@ public:
 		while(pbyRead != pbyEnd){
 			const auto uBytesToProcess = std::min<std::size_t>(pbyEnd - pbyRead, 0x10000);
 
-			ulErrorCode = LzmaErrorToWin32Error(::LzmaEnc_NewEncode(xm_pContext, pbyRead, uBytesToProcess));
+			ulErrorCode = LzmaErrorToWin32Error(::LzmaEnc_NewEncode(xm_pContext.Get(), pbyRead, uBytesToProcess));
 			if(xm_pException){
 				std::rethrow_exception(xm_pException);
 			}
@@ -193,7 +193,7 @@ public:
 	}
 	void Finalize(){
 		if(xm_pContext){
-			const auto ulErrorCode = LzmaErrorToWin32Error(::LzmaEnc_NewEncode(xm_pContext, nullptr, 0));
+			const auto ulErrorCode = LzmaErrorToWin32Error(::LzmaEnc_NewEncode(xm_pContext.Get(), nullptr, 0));
 			if(xm_pException){
 				std::rethrow_exception(xm_pException);
 			}
@@ -207,7 +207,7 @@ public:
 };
 
 // 构造函数和析构函数。
-LzmaEncoder::LzmaEncoder(std::function<std::pair<void *, std::size_t>(std::size_t)> fnDataCallback, int nLevel, std::uint32_t u32DictSize)
+LzmaEncoder::LzmaEncoder(std::function<std::pair<void *, std::size_t> (std::size_t)> fnDataCallback, int nLevel, std::uint32_t u32DictSize)
 	: xm_pDelegate(new xDelegate(std::move(fnDataCallback), nLevel, u32DictSize))
 {
 }
@@ -241,7 +241,7 @@ private:
 		}
 	};
 private:
-	const std::function<std::pair<void *, std::size_t>(std::size_t)> xm_fnDataCallback;
+	const std::function<std::pair<void *, std::size_t> (std::size_t)> xm_fnDataCallback;
 	::CLzmaDec xm_vDecoder;
 
 	unsigned char xm_abyHeader[LZMA_PROPS_SIZE];
@@ -250,7 +250,7 @@ private:
 	unsigned char xm_abyTemp[0x10000];
 	std::size_t xm_uBytesProcessed;
 public:
-	xDelegate(std::function<std::pair<void *, std::size_t>(std::size_t)> &&fnDataCallback)
+	xDelegate(std::function<std::pair<void *, std::size_t> (std::size_t)> &&fnDataCallback)
 		: xm_fnDataCallback(std::move(fnDataCallback))
 		, xm_uHeaderSize(0)
 	{
@@ -291,7 +291,7 @@ public:
 				std::size_t uDecoded = sizeof(xm_abyTemp);
 				std::size_t uToDecode = (std::size_t)(pbyEnd - pbyRead);
 
-				ulErrorCode = LzmaErrorToWin32Error(::LzmaDec_DecodeToBuf(xm_pDecoder, xm_abyTemp, &uDecoded, pbyRead, &uToDecode, LZMA_FINISH_ANY, &vStatus));
+				ulErrorCode = LzmaErrorToWin32Error(::LzmaDec_DecodeToBuf(xm_pDecoder.Get(), xm_abyTemp, &uDecoded, pbyRead, &uToDecode, LZMA_FINISH_ANY, &vStatus));
 				if(ulErrorCode != ERROR_SUCCESS){
 					MCF_THROW(ulErrorCode, L"::LzmaDec_DecodeToBuf() 失败。");
 				}
@@ -301,7 +301,7 @@ public:
 				xm_uBytesProcessed += uToDecode;
 
 				if(vStatus == LZMA_STATUS_FINISHED_WITH_MARK){
-					::LzmaDec_Init(xm_pDecoder);
+					::LzmaDec_Init(xm_pDecoder.Get());
 				}
 			}
 		}
@@ -315,7 +315,7 @@ public:
 };
 
 // 构造函数和析构函数。
-LzmaDecoder::LzmaDecoder(std::function<std::pair<void *, std::size_t>(std::size_t)> fnDataCallback)
+LzmaDecoder::LzmaDecoder(std::function<std::pair<void *, std::size_t> (std::size_t)> fnDataCallback)
 	:  xm_pDelegate(new xDelegate(std::move(fnDataCallback)))
 {
 }

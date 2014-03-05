@@ -13,13 +13,13 @@
 
 namespace MCF {
 
-class ZEncoder : NO_COPY {
+class ZEncoder : MOVABLE {
 private:
 	class xDelegate;
 private:
 	const std::unique_ptr<xDelegate> xm_pDelegate;
 public:
-	ZEncoder(std::function<std::pair<void *, std::size_t>(std::size_t)> fnDataCallback, int nLevel = 6);
+	ZEncoder(std::function<std::pair<void *, std::size_t> (std::size_t)> fnDataCallback, int nLevel = 6);
 	~ZEncoder();
 public:
 	void Abort() noexcept;
@@ -28,13 +28,13 @@ public:
 	void Finalize();
 };
 
-class ZDecoder : NO_COPY {
+class ZDecoder : MOVABLE {
 private:
 	class xDelegate;
 private:
 	const std::unique_ptr<xDelegate> xm_pDelegate;
 public:
-	ZDecoder(std::function<std::pair<void *, std::size_t>(std::size_t)> fnDataCallback);
+	ZDecoder(std::function<std::pair<void *, std::size_t> (std::size_t)> fnDataCallback);
 	~ZDecoder();
 public:
 	void Abort() noexcept;

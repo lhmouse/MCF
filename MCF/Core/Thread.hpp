@@ -12,16 +12,16 @@
 
 namespace MCF {
 
-class Thread : NO_COPY {
+class Thread : MOVABLE {
 private:
 	class xDelegate;
 private:
 	std::shared_ptr<xDelegate> xm_pDelegate;
 public:
-	Thread();
+	Thread() = default;
 	~Thread();
 public:
-	void Start(std::function<void()> fnProc, bool bSuspended = false);
+	void Start(std::function<void ()> fnProc, bool bSuspended = false);
 	void WaitTimeout(unsigned long ulMilliSeconds) const noexcept;
 	void Join() const; // 如果线程中有被捕获的异常，抛出异常。
 	void Detach() noexcept;

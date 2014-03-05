@@ -32,7 +32,7 @@ public:
 	}
 public:
 	HANDLE GetHandle() const noexcept {
-		return xm_hSemaphore;
+		return xm_hSemaphore.Get();
 	}
 };
 

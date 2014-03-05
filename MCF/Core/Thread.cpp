@@ -34,7 +34,7 @@ private:
 		return 0;
 	}
 public:
-	static std::shared_ptr<xDelegate> Create(std::function<void()> &&fnProc){
+	static std::shared_ptr<xDelegate> Create(std::function<void ()> &&fnProc){
 		std::shared_ptr<xDelegate> pRet(new xDelegate(std::move(fnProc)));
 		pRet->xm_hThread.Reset(::__MCF_CRT_CreateThread(&xThreadProc, (std::intptr_t)pRet.get(), CREATE_SUSPENDED, &pRet->xm_ulThreadId));
 		if(!pRet->xm_hThread){
@@ -45,18 +45,18 @@ public:
 	}
 private:
 	std::shared_ptr<xDelegate> xm_pLock;
-	std::function<void()> xm_fnProc;
+	std::function<void ()> xm_fnProc;
 	UniqueHandle<HANDLE, xThreadCloser> xm_hThread;
 	unsigned long xm_ulThreadId;
 	std::exception_ptr xm_pException;
 private:
-	explicit xDelegate(std::function<void()> &&fnProc) noexcept
+	explicit xDelegate(std::function<void ()> &&fnProc) noexcept
 		: xm_fnProc(std::move(fnProc))
 	{
 	}
 public:
 	HANDLE GetHandle() const noexcept {
-		return xm_hThread;
+		return xm_hThread.Get();
 	}
 	unsigned long GetId() const noexcept {
 		return xm_ulThreadId;
@@ -70,14 +70,12 @@ public:
 };
 
 // 构造函数和析构函数。
-Thread::Thread(){
-}
 Thread::~Thread(){
 	JoinDetach();
 }
 
 // 其他非静态成员函数。
-void Thread::Start(std::function<void()> fnProc, bool bSuspended){
+void Thread::Start(std::function<void ()> fnProc, bool bSuspended){
 	xm_pDelegate = xDelegate::Create(std::move(fnProc));
 	if(!bSuspended){
 		::ResumeThread(xm_pDelegate->GetHandle());

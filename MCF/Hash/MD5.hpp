@@ -6,6 +6,7 @@
 #define __MCF_MD5_HPP__
 
 #include <cstddef>
+#include <cstdint>
 
 namespace MCF {
 

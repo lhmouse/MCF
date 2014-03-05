@@ -19,9 +19,10 @@ std::uint32_t GenRandomSeed() noexcept {
 	return ret;
 }
 
-// Random
+// ========== Random ==========
 // http://en.wikipedia.org/wiki/RC4
-//   构造函数和析构函数。
+
+// 构造函数和析构函数。
 Random::Random(std::uint32_t u32Seed) noexcept {
 	for(std::size_t i = 0; i < 256; ++i){
 		xm_abyBox[i] = i;
@@ -40,7 +41,7 @@ Random::Random(std::uint32_t u32Seed) noexcept {
 	xm_byJ = 0;
 }
 
-//   其他非静态成员函数。
+// 其他非静态成员函数。
 std::uint8_t Random::xGetByte() noexcept {
 	++xm_byI;
 	const unsigned char b0 = xm_abyBox[xm_byI];

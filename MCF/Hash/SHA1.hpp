@@ -6,6 +6,7 @@
 #define __MCF_SHA1_HPP__
 
 #include <cstddef>
+#include <cstdint>
 
 namespace MCF {
 

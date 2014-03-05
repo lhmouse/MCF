@@ -8,7 +8,7 @@
 using namespace MCF;
 
 namespace {
-	inline void CopyOut(const std::function<std::pair<void *, std::size_t>(std::size_t)> &fnDataCallback, const void *pSrc, std::size_t uBytesToCopy){
+	inline void CopyOut(const std::function<std::pair<void *, std::size_t> (std::size_t)> &fnDataCallback, const void *pSrc, std::size_t uBytesToCopy){
 		std::size_t uBytesCopied = 0;
 		while(uBytesCopied < uBytesToCopy){
 			const std::size_t uBytesRemaining = uBytesToCopy - uBytesCopied;
@@ -22,7 +22,7 @@ namespace {
 
 // ========== HexEncoder ==========
 // 构造函数和析构函数。
-HexEncoder::HexEncoder(std::function<std::pair<void *, std::size_t>(std::size_t)> fnDataCallback, bool bUpperCase)
+HexEncoder::HexEncoder(std::function<std::pair<void *, std::size_t> (std::size_t)> fnDataCallback, bool bUpperCase)
 	: xm_fnDataCallback(std::move(fnDataCallback))
 	, xm_byDelta((bUpperCase ? 'A' : 'a') - ('9' + 1))
 {
@@ -68,7 +68,7 @@ void HexEncoder::Finalize(){
 
 // ========== HexDecoder ==========
 // 构造函数和析构函数。
-HexDecoder::HexDecoder(std::function<std::pair<void *, std::size_t>(std::size_t)> fnDataCallback)
+HexDecoder::HexDecoder(std::function<std::pair<void *, std::size_t> (std::size_t)> fnDataCallback)
 	: xm_fnDataCallback(std::move(fnDataCallback))
 	, xm_bInited(false)
 {

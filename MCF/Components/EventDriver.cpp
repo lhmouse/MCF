@@ -15,7 +15,7 @@
 using namespace MCF;
 
 namespace {
-	typedef std::shared_ptr<std::function<bool(std::intptr_t)>> PHANDLER_PROC;
+	typedef std::shared_ptr<std::function<bool (std::intptr_t)>> PHANDLER_PROC;
 	typedef std::list<PHANDLER_PROC> HANDLER_LIST;
 	typedef std::shared_ptr<const HANDLER_LIST> PCHANDLER_LIST;
 	typedef std::shared_ptr<HANDLER_LIST> PHANDLER_LIST;
@@ -73,7 +73,7 @@ namespace __MCF {
 	}
 }
 
-EventHandlerHolder RegisterEventHandler(std::intptr_t nEventId, std::function<bool(std::intptr_t)> fnHandler){
+EventHandlerHolder RegisterEventHandler(std::intptr_t nEventId, std::function<bool (std::intptr_t)> fnHandler){
 	EventHandlerHolder Holder;
 	CRITICAL_SECTION_SCOPE(g_csWriteLock){
 		PCHANDLER_LIST pOldList;

@@ -104,7 +104,7 @@ namespace {
 
 // ========== RC4ExEncoder ==========
 // 构造函数和析构函数。
-RC4ExEncoder::RC4ExEncoder(std::function<std::pair<void *, std::size_t>(std::size_t)> fnDataCallback, const void *pKey, std::size_t uKeyLen, std::uint64_t u64Nonce)
+RC4ExEncoder::RC4ExEncoder(std::function<std::pair<void *, std::size_t> (std::size_t)> fnDataCallback, const void *pKey, std::size_t uKeyLen, std::uint64_t u64Nonce)
 	: xm_fnDataCallback(std::move(fnDataCallback))
 	, xm_bInited(false)
 {
@@ -140,7 +140,7 @@ void RC4ExEncoder::Finalize(){
 
 // ========== RC4ExDecoder ==========
 // 构造函数和析构函数。
-RC4ExDecoder::RC4ExDecoder(std::function<std::pair<void *, std::size_t>(std::size_t)> fnDataCallback, const void *pKey, std::size_t uKeyLen, std::uint64_t u64Nonce)
+RC4ExDecoder::RC4ExDecoder(std::function<std::pair<void *, std::size_t> (std::size_t)> fnDataCallback, const void *pKey, std::size_t uKeyLen, std::uint64_t u64Nonce)
 	: xm_fnDataCallback(std::move(fnDataCallback))
 	, xm_bInited(false)
 {

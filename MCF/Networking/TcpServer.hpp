@@ -15,10 +15,6 @@
 namespace MCF {
 
 class TcpServer : NO_COPY {
-public:
-	enum : std::size_t {
-		MAX_THREAD_COUNT = 16
-	};
 private:
 	class xDelegate;
 private:
@@ -29,7 +25,7 @@ public:
 	~TcpServer();
 public:
 	bool IsRunning() const noexcept;
-	void Start(const PeerInfoIPv4 &vPeerInfo, std::size_t uThreadCount);
+	void Start(const PeerInfo &vBoundOnto, std::size_t uThreadCount, bool bForceIPv6 = false);
 	void Stop() noexcept;
 };
 

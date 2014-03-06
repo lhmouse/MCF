@@ -4,31 +4,45 @@
 
 #include "../StdMCF.hpp"
 #include "TcpPeer.hpp"
+#include "../../MCFCRT/c/ext/assert.h"
 #include "../Core/Exception.hpp"
 #include "../Core/Utilities.hpp"
 #include "_NetworkingUtils.hpp"
 using namespace MCF;
 
+
 // 嵌套类定义。
 class TcpPeer::xDelegate : NO_COPY {
 private:
-	UniqueSocket xm_sockPeer;
+	__MCF::UniqueSocket xm_sockPeer;
 public:
-	explicit xDelegate(UniqueSocket &&sockPeer) :
+	explicit xDelegate(__MCF::UniqueSocket &&sockPeer) :
 		xm_sockPeer(std::move(sockPeer))
 	{
 	}
 public:
-	PeerInfoIPv4 GetPeerInfo() const noexcept {
-		PeerInfoIPv4 vRet;
-		Zero(vRet);
-		SOCKADDR_IN vName;
-		int nNameLen = sizeof(vName);
-		if(!::getpeername(xm_sockPeer.Get(), (SOCKADDR *)&vName, &nNameLen) && (vName.sin_family == AF_INET)){
-			BCopy(vRet.au8IP, vName.sin_addr.S_un.S_un_b);
-			vRet.u16Port = vName.sin_port;
+	PeerInfo GetPeerInfo() const noexcept {
+		SOCKADDR_STORAGE vSockAddr;
+		int nNameLen = sizeof(vSockAddr);
+		if(::getpeername(xm_sockPeer.Get(), (SOCKADDR *)&vSockAddr, &nNameLen)){
+			MCF_THROW(::WSAGetLastError(), L"::getpeername() 失败。");
 		}
-		return std::move(vRet);
+
+		PeerInfo vPeerInfo;
+		if(vSockAddr.ss_family == AF_INET){
+			const auto &vSockAddrIn = reinterpret_cast<const SOCKADDR_IN &>(vSockAddr);
+			BSet(vPeerInfo.xm_au16IPv4Zeros, false);
+			BSet(vPeerInfo.xm_u16IPv4Ones, true);
+			BCopy(vPeerInfo.m_au8IPv4, vSockAddrIn.sin_addr);
+			BCopy(vPeerInfo.m_u16Port, vSockAddrIn.sin_port);
+		} else if(vSockAddr.ss_family == AF_INET6){
+			const auto &vSockAddrIn6 = reinterpret_cast<const SOCKADDR_IN6 &>(vSockAddr);
+			BCopy(vPeerInfo.m_au16IPv6, vSockAddrIn6.sin6_addr);
+			BCopy(vPeerInfo.m_u16Port, vSockAddrIn6.sin6_port);
+		} else {
+			MCF_THROW(ERROR_NOT_SUPPORTED, L"不支持该协议。");
+		}
+		return std::move(vPeerInfo);
 	}
 
 	std::size_t Read(void *pData, std::size_t uSize){
@@ -79,14 +93,14 @@ public:
 
 // 构造函数和析构函数。
 TcpPeer::TcpPeer(const void *pImpl)
-	: xm_pDelegate(new xDelegate(std::move(*(UniqueSocket *)pImpl)))
+	: xm_pDelegate(new xDelegate(std::move(*(__MCF::UniqueSocket *)pImpl)))
 {
 }
 TcpPeer::~TcpPeer(){
 }
 
 // 其他非静态成员函数。
-PeerInfoIPv4 TcpPeer::GetPeerInfo() const noexcept {
+PeerInfo TcpPeer::GetPeerInfo() const noexcept {
 	return xm_pDelegate->GetPeerInfo();
 }
 

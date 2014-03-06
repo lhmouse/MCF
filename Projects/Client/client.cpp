@@ -5,7 +5,8 @@
 unsigned int MCFMain(){
 	try {
 		MCF::TcpClient clnt;
-		clnt.Connect({ 192, 168, 1, 2, 9010});
+		clnt.Connect(MCF::PeerInfo::FromIPv4({127, 0, 0, 1}, 8001));
+//		clnt.Connect(MCF::PeerInfo::FromIPv6({0, 0, 0, 0, 0, 0, 0, 1}, 8001));
 
 		std::uint32_t data[2] = { 2, 3 };
 		clnt.Write(&data, sizeof(data));

@@ -24,20 +24,29 @@ TcpClient::~TcpClient(){
 bool TcpClient::IsConnected() const noexcept {
 	return (bool)xm_pPeer;
 }
-unsigned long TcpClient::Connect(const PeerInfoIPv4 &vPeerInfo){
-	UniqueSocket sockServer;
+unsigned long TcpClient::Connect(const PeerInfo &vServerInfo){
+	xm_pPeer.reset();
 
-	sockServer.Reset(::socket(AF_INET, SOCK_STREAM, IPPROTO_TCP));
+	const short shFamily = vServerInfo.IsIPv4() ? AF_INET : AF_INET6;
+
+	__MCF::UniqueSocket sockServer(::socket(shFamily, SOCK_STREAM, IPPROTO_TCP));
 	if(!sockServer){
 		return ::WSAGetLastError();
 	}
 
-	SOCKADDR_IN vSockAddrIn;
-	vSockAddrIn.sin_family = AF_INET;
-	vSockAddrIn.sin_port = htons(vPeerInfo.u16Port);
-	BCopy(vSockAddrIn.sin_addr, vPeerInfo.au8IP);
-	Zero(vSockAddrIn.sin_zero);
-	if(::connect(sockServer.Get(), (const SOCKADDR *)&vSockAddrIn, sizeof(vSockAddrIn))){
+	SOCKADDR_STORAGE vSockAddr;
+	BZero(vSockAddr);
+	vSockAddr.ss_family = shFamily;
+	if(shFamily == AF_INET){
+		auto &vSockAddrIn = reinterpret_cast<SOCKADDR_IN &>(vSockAddr);
+		BCopy(vSockAddrIn.sin_addr, vServerInfo.m_au8IPv4);
+		BCopy(vSockAddrIn.sin_port, vServerInfo.m_u16Port);
+	} else {
+		auto &vSockAddrIn6 = reinterpret_cast<SOCKADDR_IN6 &>(vSockAddr);
+		BCopy(vSockAddrIn6.sin6_addr, vServerInfo.m_au16IPv6);
+		BCopy(vSockAddrIn6.sin6_port, vServerInfo.m_u16Port);
+	}
+	if(::connect(sockServer.Get(), (const SOCKADDR *)&vSockAddr, sizeof(vSockAddr))){
 		return ::WSAGetLastError();
 	}
 
@@ -48,14 +57,11 @@ void TcpClient::Shutdown() noexcept {
 	xm_pPeer.reset();
 }
 
-PeerInfoIPv4 TcpClient::GetPeerInfo() const noexcept {
-	PeerInfoIPv4 vRet;
-	if(xm_pPeer){
-		vRet = xm_pPeer->GetPeerInfo();
-	} else {
-		Zero(vRet);
+PeerInfo TcpClient::GetPeerInfo() const noexcept {
+	if(!xm_pPeer){
+		MCF_THROW(WSA_INVALID_HANDLE, L"TcpClient 未连接到服务器。");
 	}
-	return std::move(vRet);
+	return xm_pPeer->GetPeerInfo();
 }
 
 std::size_t TcpClient::Read(void *pData, std::size_t uSize){

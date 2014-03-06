@@ -15,7 +15,8 @@ static void foo(std::unique_ptr<MCF::TcpPeer> client) noexcept {
 unsigned int MCFMain(){
 	try {
 		MCF::TcpServer srvr(foo);
-		srvr.Start({ 192, 168, 1, 2, 9010}, 8);
+		srvr.Start(MCF::PeerInfo::FromIPv4({127, 0, 0, 1}, 8001), 8, true);
+//		srvr.Start(MCF::PeerInfo::FromIPv6({0, 0, 0, 0, 0, 0, 0, 1}, 8001), 8, true);
 		while(srvr.IsRunning()){
 			::Sleep(1000);
 		}

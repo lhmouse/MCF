@@ -6,16 +6,11 @@
 #define __MCF_TCP_PEER_HPP__
 
 #include "../Core/NoCopy.hpp"
+#include "PeerInfo.hpp"
 #include <memory>
 #include <cstddef>
-#include <cstdint>
 
 namespace MCF {
-
-struct PeerInfoIPv4 {
-	std::uint8_t au8IP[4];
-	std::uint16_t u16Port;
-};
 
 class TcpServer;
 class TcpClient;
@@ -32,7 +27,7 @@ private:
 public:
 	~TcpPeer();
 public:
-	PeerInfoIPv4 GetPeerInfo() const noexcept;
+	PeerInfo GetPeerInfo() const noexcept;
 
 	std::size_t Read(void *pData, std::size_t uSize);
 	void ShutdownRead() noexcept;

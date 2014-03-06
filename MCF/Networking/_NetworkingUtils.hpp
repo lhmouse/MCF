@@ -5,23 +5,28 @@
 #ifndef __MCF_NETWORKING_UTILS_HPP__
 #define __MCF_NETWORKING_UTILS_HPP__
 
+#include "PeerInfo.hpp"
+#include "../../MCFCRT/c/ext/assert.h"
 #include "../Core/UniqueHandle.hpp"
-#include "../Core/SharedHandle.hpp"
+#include "../Core/Utilities.hpp"
+#include <cstdint>
 #include <winsock2.h>
+#include <ws2tcpip.h>
 
 namespace MCF {
 
-struct SocketCloser {
-	constexpr SOCKET operator()() const noexcept {
-		return INVALID_SOCKET;
-	}
-	void operator()(SOCKET s) const noexcept {
-		::closesocket(s);
-	}
-};
+namespace __MCF {
+	struct SocketCloser {
+		constexpr SOCKET operator()() const noexcept {
+			return INVALID_SOCKET;
+		}
+		void operator()(SOCKET s) const noexcept {
+			::closesocket(s);
+		}
+	};
 
-typedef UniqueHandle<SOCKET, SocketCloser> UniqueSocket;
-typedef SharedHandle<SOCKET, SocketCloser> SharedSocket;
+	typedef UniqueHandle<SOCKET, SocketCloser> UniqueSocket;
+}
 
 }
 

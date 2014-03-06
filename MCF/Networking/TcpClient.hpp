@@ -21,10 +21,10 @@ public:
 	~TcpClient();
 public:
 	bool IsConnected() const noexcept;
-	unsigned long Connect(const PeerInfoIPv4 &vPeerInfo);
+	unsigned long Connect(const PeerInfo &vServerInfo);
 	void Shutdown() noexcept;
 
-	PeerInfoIPv4 GetPeerInfo() const noexcept;
+	PeerInfo GetPeerInfo() const noexcept;
 
 	std::size_t Read(void *pData, std::size_t uSize);
 	void ShutdownRead() noexcept;

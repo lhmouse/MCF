@@ -23,8 +23,8 @@ private:
 	const std::function<void (std::unique_ptr<TcpPeer>)> &xm_fnConnProc;
 
 	State xm_eState;
-	UniqueSocket xm_sockListen;
-	std::array<Thread, MAX_THREAD_COUNT> xm_arThreads;
+	__MCF::UniqueSocket xm_sockListen;
+	std::unique_ptr<Thread[]> xm_pThreads;
 public:
 	xDelegate(const std::function<void (std::unique_ptr<TcpPeer>)> &fnConnProc)
 		: xm_fnConnProc(fnConnProc)
@@ -36,11 +36,7 @@ public:
 private:
 	void xThreadProc() const noexcept {
 		while(xm_eState == State::RUNNING){
-			UniqueSocket sockClient;
-
-			SOCKADDR vSockAddr;
-			int nAddrLen = sizeof(vSockAddr);
-			sockClient.Reset(::accept(xm_sockListen.Get(), &vSockAddr, &nAddrLen));
+			__MCF::UniqueSocket sockClient(::accept(xm_sockListen.Get(), nullptr, nullptr));
 			if(!sockClient){
 				continue;
 			}
@@ -53,20 +49,39 @@ public:
 	bool IsRunning() const noexcept {
 		return xm_eState == State::RUNNING;
 	}
-	void Start(const PeerInfoIPv4 &vPeerInfo, std::size_t uThreadCount){
+	void Start(const PeerInfo &vBoundOnto, std::size_t uThreadCount, bool bForceIPv6){
+		static const DWORD FALSE_VALUE = 0;
+
 		Stop();
 
-		xm_sockListen.Reset(::socket(AF_INET, SOCK_STREAM, IPPROTO_TCP));
+		short shFamily = AF_INET6;
+		if(!bForceIPv6 && vBoundOnto.IsIPv4()){
+			shFamily = AF_INET;
+		}
+
+		xm_sockListen.Reset(::socket(shFamily, SOCK_STREAM, IPPROTO_TCP));
 		if(!xm_sockListen){
 			MCF_THROW(::WSAGetLastError(), L"::socket() 失败。");
 		}
+		if(shFamily == AF_INET6){
+			if(::setsockopt(xm_sockListen.Get(), IPPROTO_IPV6, IPV6_V6ONLY, (const char *)&FALSE_VALUE, sizeof(FALSE_VALUE))){
+				MCF_THROW(::WSAGetLastError(), L"::setsockopt() 失败。");
+			}
+		}
 
-		SOCKADDR_IN vSockAddrIn;
-		vSockAddrIn.sin_family = AF_INET;
-		vSockAddrIn.sin_port = htons(vPeerInfo.u16Port);
-		BCopy(vSockAddrIn.sin_addr, vPeerInfo.au8IP);
-		Zero(vSockAddrIn.sin_zero);
-		if(::bind(xm_sockListen.Get(), (const SOCKADDR *)&vSockAddrIn, sizeof(vSockAddrIn))){
+		SOCKADDR_STORAGE vSockAddr;
+		BZero(vSockAddr);
+		vSockAddr.ss_family = shFamily;
+		if(shFamily == AF_INET){
+			auto &vSockAddrIn = reinterpret_cast<SOCKADDR_IN &>(vSockAddr);
+			BCopy(vSockAddrIn.sin_addr, vBoundOnto.m_au8IPv4);
+			BCopy(vSockAddrIn.sin_port, vBoundOnto.m_u16Port);
+		} else {
+			auto &vSockAddrIn6 = reinterpret_cast<SOCKADDR_IN6 &>(vSockAddr);
+			BCopy(vSockAddrIn6.sin6_addr, vBoundOnto.m_au16IPv6);
+			BCopy(vSockAddrIn6.sin6_port, vBoundOnto.m_u16Port);
+		}
+		if(::bind(xm_sockListen.Get(), (const SOCKADDR *)&vSockAddr, sizeof(vSockAddr))){
 			MCF_THROW(::WSAGetLastError(), L"::bind() 失败。");
 		}
 
@@ -74,8 +89,9 @@ public:
 			MCF_THROW(::WSAGetLastError(), L"::listen() 失败。");
 		}
 
-		for(std::size_t i = 0; i < uThreadCount && i < xm_arThreads.size(); ++i){
-			xm_arThreads[i].Start(std::bind(&xDelegate::xThreadProc, this));
+		xm_pThreads.reset(new Thread[uThreadCount]);
+		for(std::size_t i = 0; i < uThreadCount; ++i){
+			xm_pThreads[i].Start(std::bind(&xDelegate::xThreadProc, this));
 		}
 
 		xm_eState = State::RUNNING;
@@ -83,9 +99,8 @@ public:
 	void Stop() noexcept {
 		if(xm_eState != State::STOPPED){
 			xm_eState = State::STOPPING;
-			for(auto &vThread : xm_arThreads){
-				vThread.Join();
-			}
+
+			xm_pThreads.reset();
 			xm_sockListen.Reset();
 
 			xm_eState = State::STOPPED;
@@ -111,8 +126,8 @@ TcpServer::~TcpServer(){
 bool TcpServer::IsRunning() const noexcept {
 	return xm_pDelegate->IsRunning();
 }
-void TcpServer::Start(const PeerInfoIPv4 &vPeerInfo, std::size_t uThreadCount){
-	xm_pDelegate->Start(vPeerInfo, uThreadCount);
+void TcpServer::Start(const PeerInfo &vBoundOnto, std::size_t uThreadCount, bool bForceIPv6){
+	xm_pDelegate->Start(vBoundOnto, uThreadCount, bForceIPv6);
 }
 void TcpServer::Stop() noexcept {
 	xm_pDelegate->Stop();

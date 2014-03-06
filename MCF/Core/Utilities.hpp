@@ -35,9 +35,14 @@ inline void BCopy(TX &vDst, const TY &vSrc) noexcept {
 }
 
 template<typename T>
-inline void Zero(T &vDst) noexcept {
-	static_assert(std::is_trivial<T>::value, "MCF::Zero(): Only trivial types are supported");
-	__builtin_memset(&vDst, 0, sizeof(vDst));
+inline void BSet(T &vDst, bool bVal) noexcept {
+	static_assert(std::is_trivial<T>::value, "MCF::BSet(): Only trivial types are supported");
+	__builtin_memset(&vDst, bVal ? -1 : 0, sizeof(vDst));
+}
+
+template<typename T>
+inline void BZero(T &vDst) noexcept {
+	BSet(vDst, false);
 }
 
 }

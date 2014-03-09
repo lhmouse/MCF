@@ -17,6 +17,7 @@ class Notation;
 
 class Package {
 	friend class Notation;
+
 private:
 	struct xKey {
 		const wchar_t *m_pwchBegin;
@@ -64,11 +65,14 @@ private:
 			return std::wmemcmp(m_pwchBegin, rhs.m_pwchBegin, m_uLength) < 0;
 		}
 	};
+
 private:
 	std::map<xKey, Package> xm_mapPackages;
 	std::map<xKey, UTF16String> xm_mapValues;
+
 private:
 	Package() = default;
+
 public:
 	const Package *GetPackage(const wchar_t *pwszName) const noexcept {
 		const auto it = xm_mapPackages.find(xKey(pwszName, std::wcslen(pwszName)));
@@ -190,7 +194,8 @@ public:
 	}
 };
 
-class Notation : public Package {
+class Notation :
+public Package {
 public:
 	typedef enum {
 		ERR_NONE,
@@ -201,15 +206,18 @@ public:
 		ERR_UNCLOSED_PACKAGE,
 		ERR_ESCAPE_AT_EOF
 	} ERROR_TYPE;
+
 private:
 	static void xEscapeAndAppend(UTF16String &wcsAppendTo, const wchar_t *pwchBegin, std::size_t uLength);
 	static UTF16String xUnescapeAndConstruct(const wchar_t *pwchBegin, std::size_t uLength);
 
 	static void xExportPackageRecur(UTF16String &wcsAppendTo, const Package &pkgWhich, UTF16String &wcsPrefix, const wchar_t *pwchIndent, std::size_t uIndentLen);
+
 public:
 	Notation();
 	explicit Notation(const wchar_t *pwszText);
 	Notation(const wchar_t *pwchText, std::size_t uLen);
+
 public:
 	std::pair<ERROR_TYPE, const wchar_t *> Parse(const wchar_t *pwszText);
 	std::pair<ERROR_TYPE, const wchar_t *> Parse(const wchar_t *pwchText, std::size_t uLen);

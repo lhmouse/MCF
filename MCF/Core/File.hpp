@@ -13,21 +13,27 @@
 
 namespace MCF {
 
-class File : MOVABLE {
+class File : NO_COPY {
 public:
 	enum : std::uint64_t {
 		INVALID_SIZE = (std::uint64_t)-1
 	};
 
 	typedef std::function<void ()> ASYNC_PROC;
+
 private:
 	class xDelegate;
+
 private:
 	std::unique_ptr<xDelegate> xm_pDelegate;
+
 public:
 	File() noexcept;
 	File(const wchar_t *pwszPath, bool bToRead, bool bToWrite, bool bAutoCreate);
+	File(File &&rhs) noexcept;
+	File &operator=(File &&rhs) noexcept;
 	~File();
+
 public:
 	bool IsOpen() const noexcept;
 	unsigned long Open(const wchar_t *pwszPath, bool bToRead, bool bToWrite, bool bAutoCreate);
@@ -40,6 +46,7 @@ public:
 	std::uint32_t Read(void *pBuffer, std::uint64_t u64Offset, std::uint32_t u32BytesToRead, ASYNC_PROC fnAsyncProc) const;
 	void Write(std::uint64_t u64Offset, const void *pBuffer, std::uint32_t u32BytesToWrite);
 	void Write(std::uint64_t u64Offset, const void *pBuffer, std::uint32_t u32BytesToWrite, ASYNC_PROC fnAsyncProc);
+
 public:
 	explicit operator bool() const noexcept {
 		return IsOpen();

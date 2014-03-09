@@ -78,6 +78,7 @@ namespace __MCF {
 			}
 			return nullptr;
 		}
+
 	private:
 		HANDLE_T xm_hObj;
 		volatile std::size_t xm_uWeakCount;
@@ -86,6 +87,7 @@ namespace __MCF {
 		// 用于在手动调用 AddRef() 和 DropRef() 时检测多次释放。
 		SharedNode *xm_pDebugInfo;
 #endif
+
 	private:
 		explicit constexpr SharedNode(HANDLE_T hObj) noexcept
 			: xm_hObj(hObj), xm_uWeakCount(1), xm_uCount(1)
@@ -101,6 +103,7 @@ namespace __MCF {
 			xm_pDebugInfo = nullptr;
 		}
 #endif
+
 	private:
 		void xValidate() const noexcept {
 #ifndef NDEBUG
@@ -160,6 +163,7 @@ namespace __MCF {
 
 			return bRet;
 		}
+
 	public:
 		HANDLE_T Get() const noexcept {
 			xValidate();
@@ -178,14 +182,18 @@ class SharedHandle;
 template<typename HANDLE_T, class CLOSER_T>
 class WeakHandle {
 	friend class SharedHandle<HANDLE_T, CLOSER_T>;
+
 private:
 	typedef __MCF::SharedNode<HANDLE_T, CLOSER_T> xSharedNode;
 	typedef SharedHandle<HANDLE_T, CLOSER_T> xStrongHandle;
+
 private:
 	xSharedNode *xm_pNode;
+
 private:
 	WeakHandle(xSharedNode *pNode) noexcept : xm_pNode(pNode) {
 	}
+
 public:
 	constexpr WeakHandle() noexcept : xm_pNode() {
 	}
@@ -211,6 +219,7 @@ public:
 	~WeakHandle(){
 		Reset();
 	}
+
 public:
 	xStrongHandle Lock() const noexcept {
 		return xStrongHandle(xSharedNode::AddRef(xm_pNode));
@@ -251,9 +260,11 @@ public:
 template<typename HANDLE_T, class CLOSER_T>
 class SharedHandle {
 	friend class WeakHandle<HANDLE_T, CLOSER_T>;
+
 private:
 	typedef __MCF::SharedNode<HANDLE_T, CLOSER_T> xSharedNode;
 	typedef WeakHandle<HANDLE_T, CLOSER_T> xWeakHandle;
+
 public:
 	static void AddRef(const HANDLE_T *pHandle) noexcept {
 		xSharedNode::AddRef(xSharedNode::FromPHandle(pHandle));
@@ -261,11 +272,14 @@ public:
 	static void DropRef(const HANDLE_T *pHandle) noexcept {
 		xSharedNode::DropRef(xSharedNode::FromPHandle(pHandle));
 	}
+
 private:
 	xSharedNode *xm_pNode;
+
 private:
 	SharedHandle(xSharedNode *pNode) noexcept : xm_pNode(pNode) {
 	}
+
 public:
 	constexpr SharedHandle() noexcept : xm_pNode() {
 	}
@@ -297,6 +311,7 @@ public:
 	~SharedHandle(){
 		Reset();
 	}
+
 public:
 	bool IsGood() const noexcept {
 		return Get() != CLOSER_T()();
@@ -344,6 +359,7 @@ public:
 		}
 		std::swap(xm_pNode, rhs.xm_pNode);
 	}
+
 public:
 	explicit operator bool() const noexcept {
 		return IsGood();

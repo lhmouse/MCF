@@ -12,14 +12,19 @@
 
 namespace MCF {
 
-class Thread : MOVABLE {
+class Thread : NO_COPY {
 private:
 	class xDelegate;
+
 private:
 	std::shared_ptr<xDelegate> xm_pDelegate;
+
 public:
-	Thread() = default;
+	Thread() noexcept;
+	Thread(Thread &&rhs) noexcept;
+	Thread &operator=(Thread &&rhs) noexcept;
 	~Thread();
+
 public:
 	void Start(std::function<void ()> fnProc, bool bSuspended = false);
 	void WaitTimeout(unsigned long ulMilliSeconds) const noexcept;
@@ -32,6 +37,7 @@ public:
 
 	bool IsAlive() const noexcept;
 	unsigned long GetThreadId() const noexcept;
+
 public:
 	explicit operator bool() const noexcept {
 		return IsAlive();

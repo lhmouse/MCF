@@ -19,8 +19,10 @@ private:
 			::CloseHandle(hSemaphore);
 		}
 	};
+
 private:
 	UniqueHandle<HANDLE, xSemaphoreCloser> xm_hSemaphore;
+
 public:
 	xDelegate(std::size_t uInitCount, std::size_t uMaxCount, const wchar_t *pwszName){
 		ASSERT((uInitCount <= LONG_MAX) && (uMaxCount <= LONG_MAX));
@@ -30,6 +32,7 @@ public:
 			MCF_THROW(::GetLastError(), L"CreateSemaphoreW() 失败。");
 		}
 	}
+
 public:
 	HANDLE GetHandle() const noexcept {
 		return xm_hSemaphore.Get();
@@ -41,11 +44,23 @@ Semaphore::Semaphore(std::size_t uInitCount, std::size_t uMaxCount, const wchar_
 	: xm_pDelegate(new xDelegate(uInitCount, uMaxCount, pwszName))
 {
 }
+Semaphore::Semaphore(Semaphore &&rhs) noexcept
+	: xm_pDelegate(std::move(rhs.xm_pDelegate))
+{
+}
+Semaphore &Semaphore::operator=(Semaphore &&rhs) noexcept {
+	if(&rhs != this){
+		xm_pDelegate = std::move(rhs.xm_pDelegate);
+	}
+	return *this;
+}
 Semaphore::~Semaphore(){
 }
 
 // 其他非静态成员函数。
-std::size_t Semaphore::WaitTimeOut(unsigned long ulMilliSeconds, std::size_t uWaitCount) noexcept {
+std::size_t Semaphore::WaitTimeout(unsigned long ulMilliSeconds, std::size_t uWaitCount) noexcept {
+	ASSERT(xm_pDelegate);
+
 	std::size_t uSucceeded = 0;
 	if(ulMilliSeconds == INFINITE){
 		for(std::size_t i = 0; i < uWaitCount; ++i){
@@ -69,9 +84,13 @@ std::size_t Semaphore::WaitTimeOut(unsigned long ulMilliSeconds, std::size_t uWa
 	return uSucceeded;
 }
 void Semaphore::Wait(std::size_t uWaitCount) noexcept {
-	WaitTimeOut(INFINITE, uWaitCount);
+	ASSERT(xm_pDelegate);
+
+	WaitTimeout(INFINITE, uWaitCount);
 }
 void Semaphore::Signal(std::size_t uSignalCount) noexcept {
+	ASSERT(xm_pDelegate);
+
 	if(!::ReleaseSemaphore(xm_pDelegate->GetHandle(), uSignalCount, nullptr)){
 		ASSERT_MSG(false, L"ReleaseSemaphore() 失败。");
 	}

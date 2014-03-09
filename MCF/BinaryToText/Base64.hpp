@@ -27,8 +27,10 @@ private:
 
 	std::uint32_t xm_u32Word;
 	std::size_t xm_uState;
+
 public:
 	Base64Encoder(std::function<std::pair<void *, std::size_t> (std::size_t)> fnDataCallback, const char *pchEncodedChars = ENCODED_CHARS_MIME);
+
 public:
 	void Abort() noexcept;
 	void Update(const void *pData, std::size_t uSize);
@@ -43,8 +45,10 @@ private:
 
 	std::uint32_t xm_u32Word;
 	std::size_t xm_uState;
+
 public:
 	Base64Decoder(std::function<std::pair<void *, std::size_t> (std::size_t)> fnDataCallback, const char *pchEncodedChars = ENCODED_CHARS_MIME);
+
 public:
 	void Abort() noexcept;
 	void Update(const void *pData, std::size_t uSize);

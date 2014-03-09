@@ -19,8 +19,10 @@ private:
 			::CloseHandle(hEvent);
 		}
 	};
+
 private:
 	UniqueHandle<HANDLE, xEventCloser> xm_hEvent;
+
 public:
 	xDelegate(bool bInitSet, const wchar_t *pwszName){
 		xm_hEvent.Reset(::CreateEventW(nullptr, true, bInitSet, pwszName));
@@ -28,6 +30,7 @@ public:
 			MCF_THROW(::GetLastError(), L"CreateEventW() 失败。");
 		}
 	}
+
 public:
 	HANDLE GetHandle() const noexcept {
 		return xm_hEvent.Get();
@@ -39,23 +42,41 @@ Event::Event(bool bInitSet, const wchar_t *pwszName)
 	: xm_pDelegate(new xDelegate(bInitSet, pwszName))
 {
 }
+Event::Event(Event &&rhs) noexcept
+	: xm_pDelegate(std::move(rhs.xm_pDelegate))
+{
+}
+Event &Event::operator=(Event &&rhs) noexcept {
+	if(&rhs != this){
+		xm_pDelegate = std::move(rhs.xm_pDelegate);
+	}
+	return *this;
+}
 Event::~Event(){
 }
 
 // 其他非静态成员函数。
 bool Event::IsSet() const noexcept {
-	return WaitTimeOut(0);
+	ASSERT(xm_pDelegate);
+
+	return WaitTimeout(0);
 }
 void Event::Set() noexcept {
+	ASSERT(xm_pDelegate);
+
 	::SetEvent(xm_pDelegate->GetHandle());
 }
-void Event::Reset() noexcept {
+void Event::Clear() noexcept {
+	ASSERT(xm_pDelegate);
+
 	::ResetEvent(xm_pDelegate->GetHandle());
 }
 
-bool Event::WaitTimeOut(unsigned long ulMilliSeconds) const noexcept {
+bool Event::WaitTimeout(unsigned long ulMilliSeconds) const noexcept {
+	ASSERT(xm_pDelegate);
+
 	return ::WaitForSingleObject(xm_pDelegate->GetHandle(), ulMilliSeconds) != WAIT_TIMEOUT;
 }
 void Event::Wait() const noexcept {
-	WaitTimeOut(INFINITE);
+	WaitTimeout(INFINITE);
 }

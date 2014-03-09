@@ -15,6 +15,7 @@ template<typename HANDLE_T, class CLOSER_T>
 class UniqueHandle {
 private:
 	HANDLE_T xm_hObj;
+
 public:
 	constexpr UniqueHandle() noexcept : UniqueHandle(CLOSER_T()()) {
 	}
@@ -36,6 +37,7 @@ public:
 
 	UniqueHandle(const UniqueHandle &) = delete;
 	void operator=(const UniqueHandle &) = delete;
+
 public:
 	bool IsGood() const noexcept {
 		return Get() != CLOSER_T()();
@@ -69,6 +71,7 @@ public:
 		}
 		std::swap(xm_hObj, rhs.xm_hObj);
 	}
+
 public:
 	explicit operator bool() const noexcept {
 		return IsGood();

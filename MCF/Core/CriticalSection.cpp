@@ -10,6 +10,7 @@ using namespace MCF;
 class CriticalSection::xDelegate : NO_COPY {
 private:
 	CRITICAL_SECTION xm_cs;
+
 public:
 	xDelegate(unsigned long ulSpinCount) noexcept {
 #if defined(NDEBUG) && (_WIN32_WINNT >= 0x0600)
@@ -21,6 +22,7 @@ public:
 	~xDelegate(){
 		::DeleteCriticalSection(&xm_cs);
 	}
+
 public:
 	CRITICAL_SECTION *GetCriticalSecion() noexcept {
 		return &xm_cs;
@@ -39,17 +41,31 @@ CriticalSection::CriticalSection(unsigned long ulSpinCount)
 	: xm_pDelegate(new xDelegate(ulSpinCount))
 {
 }
+CriticalSection::CriticalSection(CriticalSection &&rhs) noexcept
+	: xm_pDelegate(std::move(rhs.xm_pDelegate))
+{
+}
+CriticalSection &CriticalSection::operator=(CriticalSection &&rhs) noexcept {
+	if(&rhs != this){
+		xm_pDelegate = std::move(rhs.xm_pDelegate);
+	}
+	return *this;
+}
 CriticalSection::~CriticalSection(){
 }
 
 // 其他非静态成员函数。
 CriticalSection::LockHolder CriticalSection::Try() noexcept {
+	ASSERT(xm_pDelegate);
+
 	if(!::TryEnterCriticalSection(xm_pDelegate->GetCriticalSecion())){
 		return LockHolder();
 	}
 	return LockHolder(xm_pDelegate.get());
 }
 CriticalSection::LockHolder CriticalSection::Lock() noexcept {
+	ASSERT(xm_pDelegate);
+
 	::EnterCriticalSection(xm_pDelegate->GetCriticalSecion());
 	return LockHolder(xm_pDelegate.get());
 }

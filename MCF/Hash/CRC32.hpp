@@ -16,13 +16,16 @@ public:
 		DIVISOR_IEEE_802_3 	= 0xEDB88320,
 		DIVISOR_CASTAGNOLI	= 0x82F63B78
 	};
+
 private:
 	std::uint32_t xm_au32Table[0x100];
 
 	bool xm_bInited;
 	std::uint32_t xm_u32Reg;
+
 public:
 	CRC32(std::uint32_t u32Divisor = DIVISOR_IEEE_802_3) noexcept;
+
 public:
 	void Abort() noexcept;
 	void Update(const void *pData, std::size_t uSize) noexcept;

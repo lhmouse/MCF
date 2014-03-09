@@ -5,11 +5,9 @@
 #ifndef __MCF_NETWORKING_UTILS_HPP__
 #define __MCF_NETWORKING_UTILS_HPP__
 
-#include "PeerInfo.hpp"
-#include "../../MCFCRT/c/ext/assert.h"
 #include "../Core/UniqueHandle.hpp"
-#include "../Core/Utilities.hpp"
-#include <cstdint>
+#include "../Core/Exception.hpp"
+#include "../Core/NoCopy.hpp"
 #include <winsock2.h>
 #include <ws2tcpip.h>
 
@@ -26,6 +24,18 @@ namespace __MCF {
 	};
 
 	typedef UniqueHandle<SOCKET, SocketCloser> UniqueSocket;
+
+	struct WSAInitializer : NO_COPY {
+		WSAInitializer(){
+			WSADATA vWsaData;
+			if(::WSAStartup(MAKEWORD(2, 2), &vWsaData)){
+				MCF_THROW(::WSAGetLastError(), L"::WSAStartup() 失败。");
+			}
+		}
+		~WSAInitializer(){
+			::WSACleanup();
+		}
+	};
 }
 
 }

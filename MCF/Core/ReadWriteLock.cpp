@@ -17,6 +17,7 @@ private:
 		volatile DWORD dwThreadId;
 		std::size_t uReentryCount;
 	};
+
 private:
 	// http://en.wikipedia.org/wiki/Readers–writers_problem#The_third_readers-writers_problem
 	CriticalSection xm_csNoWaiting; // 用于内部同步。
@@ -30,6 +31,7 @@ private:
 	xReentryInfo xm_aReaderInfos[MAXIMUM_CONCURRENT_READS]; // 读者重入计数。
 	Semaphore xm_semReaderInfoCount;
 	xReentryInfo xm_uWriterInfo; // 写者重入计数。
+
 public:
 	xDelegate(unsigned long ulSpinCount)
 		: xm_csNoWaiting(ulSpinCount)
@@ -42,6 +44,7 @@ public:
 		, xm_uWriterInfo()
 	{
 	}
+
 private:
 	xReentryInfo *xGetReaderReentryInfo(DWORD dwThreadId) noexcept {
 		for(auto &ReaderInfo : xm_aReaderInfos){
@@ -72,6 +75,7 @@ private:
 		__atomic_store_n(&pReentryInfo->dwThreadId, 0, __ATOMIC_RELAXED);
 		xm_semReaderInfoCount.Signal();
 	}
+
 public:
 	void LockRead() noexcept {
 		const auto dwCurrentThreadId = ::GetCurrentThreadId();
@@ -170,15 +174,29 @@ ReadWriteLock::ReadWriteLock(unsigned long ulSpinCount)
 	: xm_pDelegate(new xDelegate(ulSpinCount))
 {
 }
+ReadWriteLock::ReadWriteLock(ReadWriteLock &&rhs) noexcept
+	: xm_pDelegate(std::move(rhs.xm_pDelegate))
+{
+}
+ReadWriteLock &ReadWriteLock::operator=(ReadWriteLock &&rhs) noexcept {
+	if(&rhs != this){
+		xm_pDelegate = std::move(rhs.xm_pDelegate);
+	}
+	return *this;
+}
 ReadWriteLock::~ReadWriteLock(){
 }
 
 // 其他非静态成员函数。
 ReadWriteLock::ReadLockHolder ReadWriteLock::GetReadLock() const noexcept {
+	ASSERT(xm_pDelegate);
+
 	xm_pDelegate->LockRead();
 	return ReadLockHolder(xm_pDelegate.get());
 }
 ReadWriteLock::WriteLockHolder ReadWriteLock::GetWriteLock() noexcept {
+	ASSERT(xm_pDelegate);
+
 	xm_pDelegate->LockWrite();
 	return WriteLockHolder(xm_pDelegate.get());
 }

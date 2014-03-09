@@ -13,14 +13,19 @@
 
 namespace MCF {
 
-class LzmaEncoder : MOVABLE {
+class LzmaEncoder : NO_COPY {
 private:
 	class xDelegate;
+
 private:
-	const std::unique_ptr<xDelegate> xm_pDelegate;
+	std::unique_ptr<xDelegate> xm_pDelegate;
+
 public:
 	LzmaEncoder(std::function<std::pair<void *, std::size_t> (std::size_t)> fnDataCallback, int nLevel = 5, std::uint32_t u32DictSize = 1u << 24);
+	LzmaEncoder(LzmaEncoder &&rhs) noexcept;
+	LzmaEncoder &operator=(LzmaEncoder &&rhs) noexcept;
 	~LzmaEncoder();
+
 public:
 	void Abort() noexcept;
 	void Update(const void *pData, std::size_t uSize);
@@ -28,14 +33,19 @@ public:
 	void Finalize();
 };
 
-class LzmaDecoder : MOVABLE {
+class LzmaDecoder : NO_COPY {
 private:
 	class xDelegate;
+
 private:
-	const std::unique_ptr<xDelegate> xm_pDelegate;
+	std::unique_ptr<xDelegate> xm_pDelegate;
+
 public:
 	LzmaDecoder(std::function<std::pair<void *, std::size_t> (std::size_t)> fnDataCallback);
+	LzmaDecoder(LzmaDecoder &&rhs) noexcept;
+	LzmaDecoder &operator=(LzmaDecoder &&rhs) noexcept;
 	~LzmaDecoder();
+
 public:
 	void Abort() noexcept;
 	void Update(const void *pData, std::size_t uSize);

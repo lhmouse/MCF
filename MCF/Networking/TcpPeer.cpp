@@ -10,110 +10,183 @@
 #include "_NetworkingUtils.hpp"
 using namespace MCF;
 
-
 // 嵌套类定义。
 class TcpPeer::xDelegate : NO_COPY {
 private:
+	enum : std::uintptr_t {
+		FLAG_READABLE	= 0x0001,
+		FLAG_WRITABLE	= 0x0002
+	};
+
+private:
+	__MCF::WSAInitializer xm_vInitializer;
+
 	__MCF::UniqueSocket xm_sockPeer;
+	PeerInfo xm_vPeerInfo;
+	std::uintptr_t xm_uFlags;
+
 public:
-	explicit xDelegate(__MCF::UniqueSocket &&sockPeer) :
-		xm_sockPeer(std::move(sockPeer))
+	explicit xDelegate(__MCF::UniqueSocket &&sockPeer, const void *pSockAddr, std::size_t uSockAddrLen)
+		: xm_sockPeer(std::move(sockPeer))
+		, xm_vPeerInfo(pSockAddr, uSockAddrLen)
+		, xm_uFlags(FLAG_READABLE | FLAG_WRITABLE)
 	{
 	}
-public:
-	PeerInfo GetPeerInfo() const noexcept {
-		SOCKADDR_STORAGE vSockAddr;
-		int nNameLen = sizeof(vSockAddr);
-		if(::getpeername(xm_sockPeer.Get(), (SOCKADDR *)&vSockAddr, &nNameLen)){
-			MCF_THROW(::WSAGetLastError(), L"::getpeername() 失败。");
-		}
 
-		PeerInfo vPeerInfo;
-		if(vSockAddr.ss_family == AF_INET){
-			const auto &vSockAddrIn = reinterpret_cast<const SOCKADDR_IN &>(vSockAddr);
-			BSet(vPeerInfo.xm_au16IPv4Zeros, false);
-			BSet(vPeerInfo.xm_u16IPv4Ones, true);
-			BCopy(vPeerInfo.m_au8IPv4, vSockAddrIn.sin_addr);
-			BCopy(vPeerInfo.m_u16Port, vSockAddrIn.sin_port);
-		} else if(vSockAddr.ss_family == AF_INET6){
-			const auto &vSockAddrIn6 = reinterpret_cast<const SOCKADDR_IN6 &>(vSockAddr);
-			BCopy(vPeerInfo.m_au16IPv6, vSockAddrIn6.sin6_addr);
-			BCopy(vPeerInfo.m_u16Port, vSockAddrIn6.sin6_port);
-		} else {
-			MCF_THROW(ERROR_NOT_SUPPORTED, L"不支持该协议。");
-		}
-		return std::move(vPeerInfo);
+public:
+	const PeerInfo &GetPeerInfo() const noexcept {
+		return xm_vPeerInfo;
 	}
 
 	std::size_t Read(void *pData, std::size_t uSize){
-		auto pWrite = (char *)pData;
-		const auto pEnd = pWrite + uSize;
+		auto pCur = (char *)pData;
+		const auto pEnd = pCur + uSize;
 		for(;;){
-			const int nBytesToRead = pEnd - pWrite;
+			const int nBytesToRead = pEnd - pCur;
 			if(nBytesToRead == 0){
 				break;
 			}
-			const int nBytesRead = ::recv(xm_sockPeer.Get(), pWrite, nBytesToRead, 0);
+			const int nBytesRead = ::recv(xm_sockPeer.Get(), pCur, nBytesToRead, 0);
 			if(nBytesRead == 0){
 				break;
 			}
 			if(nBytesRead == SOCKET_ERROR){
 				MCF_THROW(::WSAGetLastError(), L"::recv() 失败。");
 			}
-			pWrite += nBytesRead;
+			pCur += nBytesRead;
 		}
-		return (std::size_t)(pWrite - (char *)pData);
+		return (std::size_t)(pCur - (char *)pData);
 	}
-	void ShutdownRead() noexcept {
-		::shutdown(xm_sockPeer.Get(), SD_RECEIVE);
+	bool ShutdownRead() noexcept {
+		if(xm_uFlags & FLAG_READABLE){
+			::shutdown(xm_sockPeer.Get(), SD_RECEIVE);
+			xm_uFlags &= ~FLAG_READABLE;
+		}
+		return xm_uFlags;
 	}
 
 	void Write(const void *pData, std::size_t uSize){
-		auto pRead = (const char *)pData;
-		const auto pEnd = pRead + uSize;
+		auto pCur = (const char *)pData;
+		const auto pEnd = pCur + uSize;
 		for(;;){
-			const int nBytesToWrite = pEnd - pRead;
+			const int nBytesToWrite = pEnd - pCur;
 			if(nBytesToWrite == 0){
 				break;
 			}
-			const int nBytesWritten = ::send(xm_sockPeer.Get(), pRead, nBytesToWrite, 0);
+			const int nBytesWritten = ::send(xm_sockPeer.Get(), pCur, nBytesToWrite, 0);
 			if(nBytesWritten == 0){
 				break;
 			}
 			if(nBytesWritten == SOCKET_ERROR){
 				MCF_THROW(::WSAGetLastError(), L"::send() 失败。");
 			}
-			pRead += nBytesWritten;
+			pCur += nBytesWritten;
 		}
 	}
-	void ShutdownWrite() noexcept {
-		::shutdown(xm_sockPeer.Get(), SD_SEND);
+	bool ShutdownWrite() noexcept {
+		if(xm_uFlags & FLAG_WRITABLE){
+			::shutdown(xm_sockPeer.Get(), SD_SEND);
+			xm_uFlags &= ~FLAG_WRITABLE;
+		}
+		return xm_uFlags;
 	}
 };
 
 // 构造函数和析构函数。
-TcpPeer::TcpPeer(const void *pImpl)
-	: xm_pDelegate(new xDelegate(std::move(*(__MCF::UniqueSocket *)pImpl)))
+TcpPeer::TcpPeer() noexcept {
+}
+TcpPeer::TcpPeer(const PeerInfo &vServerInfo){
+	const auto ulErrorCode = Connect(vServerInfo);
+	if(ulErrorCode != ERROR_SUCCESS){
+		MCF_THROW(ulErrorCode, L"连接到服务器失败。");
+	}
+}
+TcpPeer::TcpPeer(TcpPeer &&rhs) noexcept
+	: xm_pDelegate(std::move(rhs.xm_pDelegate))
 {
+}
+TcpPeer &TcpPeer::operator=(TcpPeer &&rhs) noexcept {
+	if(&rhs != this){
+		xm_pDelegate = std::move(rhs.xm_pDelegate);
+	}
+	return *this;
 }
 TcpPeer::~TcpPeer(){
 }
 
 // 其他非静态成员函数。
-PeerInfo TcpPeer::GetPeerInfo() const noexcept {
+void TcpPeer::xAssign(void *ppSocket, const void *pSockAddr, std::size_t uSockAddrLen){
+	xm_pDelegate.reset(new xDelegate(std::move(*(__MCF::UniqueSocket *)ppSocket), pSockAddr, uSockAddrLen));
+}
+
+bool TcpPeer::IsConnected() const noexcept {
+	return (bool)xm_pDelegate;
+}
+unsigned long TcpPeer::Connect(const PeerInfo &vServerInfo){
+	Disconnect();
+
+	__MCF::WSAInitializer vInitializer;
+
+	const short shFamily = vServerInfo.IsIPv4() ? AF_INET : AF_INET6;
+
+	__MCF::UniqueSocket sockServer(::socket(shFamily, SOCK_STREAM, IPPROTO_TCP));
+	if(!sockServer){
+		return ::WSAGetLastError();
+	}
+
+	SOCKADDR_STORAGE vSockAddr;
+	std::size_t uSockAddrLen;
+	BZero(vSockAddr);
+	vSockAddr.ss_family = shFamily;
+	if(shFamily == AF_INET){
+		auto &vSockAddrIn = reinterpret_cast<SOCKADDR_IN &>(vSockAddr);
+		BCopy(vSockAddrIn.sin_addr, vServerInfo.m_au8IPv4);
+		BCopy(vSockAddrIn.sin_port, vServerInfo.m_u16Port);
+		uSockAddrLen = sizeof(SOCKADDR_IN);
+	} else {
+		auto &vSockAddrIn6 = reinterpret_cast<SOCKADDR_IN6 &>(vSockAddr);
+		BCopy(vSockAddrIn6.sin6_addr, vServerInfo.m_au16IPv6);
+		BCopy(vSockAddrIn6.sin6_port, vServerInfo.m_u16Port);
+		uSockAddrLen = sizeof(SOCKADDR_IN6);
+	}
+	if(::connect(sockServer.Get(), (const SOCKADDR *)&vSockAddr, uSockAddrLen)){
+		return ::WSAGetLastError();
+	}
+
+	xAssign(&sockServer, &vSockAddr, uSockAddrLen);
+	return ERROR_SUCCESS;
+}
+void TcpPeer::Disconnect() noexcept {
+	xm_pDelegate.reset();
+}
+
+const PeerInfo &TcpPeer::GetPeerInfo() const {
+	if(!xm_pDelegate){
+		MCF_THROW(WSAENOTCONN, L"TcpPeer 未连接。");
+	}
 	return xm_pDelegate->GetPeerInfo();
 }
 
 std::size_t TcpPeer::Read(void *pData, std::size_t uSize){
+	if(!xm_pDelegate){
+		MCF_THROW(WSAENOTCONN, L"TcpPeer 未连接。");
+	}
 	return xm_pDelegate->Read(pData, uSize);
 }
 void TcpPeer::ShutdownRead() noexcept {
-	xm_pDelegate->ShutdownRead();
+	if(xm_pDelegate && !xm_pDelegate->ShutdownRead()){
+		xm_pDelegate.reset();
+	}
 }
 
 void TcpPeer::Write(const void *pData, std::size_t uSize){
+	if(!xm_pDelegate){
+		MCF_THROW(WSAENOTCONN, L"TcpPeer 未连接。");
+	}
 	xm_pDelegate->Write(pData, uSize);
 }
 void TcpPeer::ShutdownWrite() noexcept {
-	xm_pDelegate->ShutdownWrite();
+	if(xm_pDelegate && !xm_pDelegate->ShutdownWrite()){
+		xm_pDelegate.reset();
+	}
 }

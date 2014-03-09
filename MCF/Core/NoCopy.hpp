@@ -9,7 +9,7 @@ namespace MCF {
 
 namespace __MCF {
 	struct NonCopyable {
-		NonCopyable() = default;
+		constexpr NonCopyable() noexcept = default;
 		~NonCopyable() = default;
 
 		NonCopyable(const NonCopyable &) = delete;
@@ -17,21 +17,10 @@ namespace __MCF {
 		NonCopyable(NonCopyable &&) = delete;
 		void operator=(NonCopyable &&) = delete;
 	};
-
-	struct MovableOnly {
-		MovableOnly() = default;
-		~MovableOnly() = default;
-
-		MovableOnly(const MovableOnly &) = delete;
-		MovableOnly &operator=(const MovableOnly &) = delete;
-		MovableOnly(MovableOnly &&) noexcept = default;
-		MovableOnly &operator=(MovableOnly &&) noexcept = default;
-	};
 }
 
 }
 
 #define NO_COPY		private ::MCF::__MCF::NonCopyable
-#define MOVABLE		private ::MCF::__MCF::MovableOnly
 
 #endif

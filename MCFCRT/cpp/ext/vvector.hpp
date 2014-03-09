@@ -58,6 +58,7 @@ private:
 		}
 		return pWrite;
 	}
+
 private:
 	unsigned char xm_aSmall[sizeof(ELEMENT_T) * ALT_STOR_THLD];
 	std::unique_ptr<unsigned char[]> xm_pLarge;
@@ -65,6 +66,7 @@ private:
 	ELEMENT_T *xm_pBegin;
 	ELEMENT_T *xm_pEnd;
 	const ELEMENT_T *xm_pEndOfStor;
+
 public:
 	constexpr VVector() noexcept
 		: xm_pBegin((ELEMENT_T *)std::begin(xm_aSmall))
@@ -150,6 +152,7 @@ public:
 	~VVector(){
 		Clear();
 	}
+
 private:
 	void xCheckCapacity(std::size_t uRequired){
 		if(GetCapacity() < uRequired){
@@ -219,6 +222,7 @@ private:
 		rhs.Reserve(ALT_STOR_THLD + 1);
 		xSwapWithLarge(rhs);
 	}
+
 public:
 	const ELEMENT_T *GetBegin() const noexcept {
 		return xm_pBegin;
@@ -342,6 +346,7 @@ public:
 			}
 		}
 	}
+
 public:
 	explicit operator const ELEMENT_T *() const noexcept {
 		return xm_pBegin;

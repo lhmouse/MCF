@@ -24,15 +24,22 @@ private:
 			xUnlock((xDelegate *)pDelegate);
 		}
 	};
+
 private:
 	static void xUnlock(xDelegate *pDelegate) noexcept;
+
 public:
 	typedef UniqueHandle<void *, xUnlocker> LockHolder;
+
 private:
-	const std::unique_ptr<xDelegate> xm_pDelegate;
+	std::unique_ptr<xDelegate> xm_pDelegate;
+
 public:
 	explicit Mutex(const wchar_t *pwszName = nullptr);
+	Mutex(Mutex &&rhs) noexcept;
+	Mutex &operator=(Mutex &&rhs) noexcept;
 	~Mutex();
+
 public:
 	LockHolder Try() noexcept;
 	LockHolder Lock() noexcept;

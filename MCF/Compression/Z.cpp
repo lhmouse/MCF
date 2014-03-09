@@ -55,13 +55,15 @@ namespace {
 
 // ========== ZEncoder ==========
 // 嵌套类定义。
-class ZEncoder::xDelegate : private ::z_stream, NO_COPY {
+class ZEncoder::xDelegate :
+private ::z_stream, NO_COPY {
 private:
 	const std::function<std::pair<void *, std::size_t> (std::size_t)> xm_fnDataCallback;
 	bool xm_bInited;
 
 	unsigned char xm_abyTemp[0x1000];
 	std::size_t xm_uBytesProcessed;
+
 public:
 	xDelegate(std::function<std::pair<void *, std::size_t> (std::size_t)> &&fnDataCallback, int nLevel)
 		: xm_fnDataCallback(std::move(fnDataCallback))
@@ -79,6 +81,7 @@ public:
 	~xDelegate(){
 		::deflateEnd(this);
 	}
+
 public:
 	void Abort() noexcept {
 		xm_bInited = false;
@@ -165,32 +168,52 @@ ZEncoder::ZEncoder(std::function<std::pair<void *, std::size_t> (std::size_t)> f
 	: xm_pDelegate(new xDelegate(std::move(fnDataCallback), nLevel))
 {
 }
+ZEncoder::ZEncoder(ZEncoder &&rhs) noexcept
+	: xm_pDelegate(std::move(rhs.xm_pDelegate))
+{
+}
+ZEncoder &ZEncoder::operator=(ZEncoder &&rhs) noexcept {
+	if(&rhs != this){
+		xm_pDelegate = std::move(rhs.xm_pDelegate);
+	}
+	return *this;
+}
 ZEncoder::~ZEncoder(){
 }
 
 // 其他非静态成员函数。
 void ZEncoder::Abort() noexcept {
+	ASSERT(xm_pDelegate);
+
 	xm_pDelegate->Abort();
 }
 void ZEncoder::Update(const void *pData, std::size_t uSize, const void *pDict, std::size_t uDictSize){
+	ASSERT(xm_pDelegate);
+
 	xm_pDelegate->Update(pData, uSize, pDict, uDictSize);
 }
 std::size_t ZEncoder::QueryBytesProcessed() const noexcept {
+	ASSERT(xm_pDelegate);
+
 	return xm_pDelegate->QueryBytesProcessed();
 }
 void ZEncoder::Finalize(){
+	ASSERT(xm_pDelegate);
+
 	xm_pDelegate->Finalize();
 }
 
 // ========== ZDecoder ==========
 // 嵌套类定义。
-class ZDecoder::xDelegate : private ::z_stream, NO_COPY {
+class ZDecoder::xDelegate :
+private ::z_stream, NO_COPY {
 private:
 	const std::function<std::pair<void *, std::size_t> (std::size_t)> xm_fnDataCallback;
 	bool xm_bInited;
 
 	unsigned char xm_abyTemp[0x1000];
 	std::size_t xm_uBytesProcessed;
+
 public:
 	xDelegate(std::function<std::pair<void *, std::size_t> (std::size_t)> &&fnDataCallback)
 		: xm_fnDataCallback(std::move(fnDataCallback))
@@ -211,6 +234,7 @@ public:
 	~xDelegate(){
 		::inflateEnd(this);
 	}
+
 public:
 	void Abort() noexcept {
 		xm_bInited = false;
@@ -294,22 +318,40 @@ public:
 
 // 构造函数和析构函数。
 ZDecoder::ZDecoder(std::function<std::pair<void *, std::size_t> (std::size_t)> fnDataCallback)
-	:  xm_pDelegate(new xDelegate(std::move(fnDataCallback)))
+	: xm_pDelegate(new xDelegate(std::move(fnDataCallback)))
 {
+}
+ZDecoder::ZDecoder(ZDecoder &&rhs) noexcept
+	: xm_pDelegate(std::move(rhs.xm_pDelegate))
+{
+}
+ZDecoder &ZDecoder::operator=(ZDecoder &&rhs) noexcept {
+	if(&rhs != this){
+		xm_pDelegate = std::move(rhs.xm_pDelegate);
+	}
+	return *this;
 }
 ZDecoder::~ZDecoder(){
 }
 
 // 其他非静态成员函数。
 void ZDecoder::Abort() noexcept {
+	ASSERT(xm_pDelegate);
+
 	xm_pDelegate->Abort();
 }
 void ZDecoder::Update(const void *pData, std::size_t uSize, const void *pDict, std::size_t uDictSize){
+	ASSERT(xm_pDelegate);
+
 	xm_pDelegate->Update(pData, uSize, pDict, uDictSize);
 }
 std::size_t ZDecoder::QueryBytesProcessed() const noexcept {
+	ASSERT(xm_pDelegate);
+
 	return xm_pDelegate->QueryBytesProcessed();
 }
 void ZDecoder::Finalize(){
+	ASSERT(xm_pDelegate);
+
 	xm_pDelegate->Finalize();
 }

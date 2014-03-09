@@ -27,18 +27,22 @@ private:
 		std::uint32_t u32BytesTransferred;
 		DWORD dwErrorCode;
 	} xAPC_RESULT;
+
 private:
 	static void __stdcall xAIOCallback(DWORD dwErrorCode, DWORD dwBytesTransferred, LPOVERLAPPED pOverlapped) noexcept {
 		const auto pApcResult = (xAPC_RESULT *)pOverlapped->hEvent;
 		pApcResult->dwErrorCode = dwErrorCode;
 		pApcResult->u32BytesTransferred = dwBytesTransferred;
 	}
+
 private:
 	UniqueHandle<HANDLE, xFileCloser> xm_hFile;
+
 public:
 	~xDelegate(){
 		Close();
 	}
+
 public:
 	bool IsOpen() const noexcept {
 		return xm_hFile.IsGood();
@@ -155,13 +159,20 @@ public:
 // 构造函数和析构函数。
 File::File() noexcept {
 }
-File::File(const wchar_t *pwszPath, bool bToRead, bool bToWrite, bool bAutoCreate)
-	: File()
-{
+File::File(const wchar_t *pwszPath, bool bToRead, bool bToWrite, bool bAutoCreate){
 	Open(pwszPath, bToRead, bToWrite, bAutoCreate);
 }
+File::File(File &&rhs) noexcept
+	: xm_pDelegate(std::move(rhs.xm_pDelegate))
+{
+}
+File &File::operator=(File &&rhs) noexcept {
+	if(&rhs != this){
+		xm_pDelegate = std::move(rhs.xm_pDelegate);
+	}
+	return *this;
+}
 File::~File(){
-	Close();
 }
 
 // 其他非静态成员函数。

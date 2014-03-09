@@ -24,15 +24,22 @@ private:
 			xUnlock((xDelegate *)pDelegate);
 		}
 	};
+
 private:
 	static void xUnlock(xDelegate *pDelegate) noexcept;
+
 public:
 	typedef UniqueHandle<void *, xUnlocker> LockHolder;
+
 private:
-	const std::unique_ptr<xDelegate> xm_pDelegate;
+	std::unique_ptr<xDelegate> xm_pDelegate;
+
 public:
 	explicit CriticalSection(unsigned long ulSpinCount = 0x400);
+	CriticalSection(CriticalSection &&rhs) noexcept;
+	CriticalSection &operator=(CriticalSection &&rhs) noexcept;
 	~CriticalSection();
+
 public:
 	LockHolder Try() noexcept;
 	LockHolder Lock() noexcept;

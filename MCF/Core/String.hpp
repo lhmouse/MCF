@@ -105,6 +105,7 @@ class GenericString {
 
 	template<typename OTHER_C, StringEncoding OTHER_E>
 	friend class GenericString;
+
 public:
 	typedef CHAR_T			*PCHAR_T,	*PSTR_T;
 	typedef const CHAR_T	*PCCHAR_T,	*PCSTR_T;
@@ -115,6 +116,7 @@ public:
 	enum : std::size_t {
 		NPOS = (std::size_t)-1
 	};
+
 private:
 	static std::size_t xTranslateOffset(std::size_t uLength, std::ptrdiff_t nBegin) noexcept {
 		std::ptrdiff_t nRet = nBegin;
@@ -218,6 +220,7 @@ private:
 		}
 		return found;
 	}
+
 private:
 	struct {
 		union {
@@ -229,6 +232,7 @@ private:
 		};
 		std::size_t uLength;
 	} xm_vStorage;
+
 public:
 	GenericString() noexcept {
 		xm_vStorage.Small[0] = CHAR_T();
@@ -289,6 +293,7 @@ public:
 			delete[] xm_vStorage.Large.pchBegin;
 		}
 	}
+
 private:
 	bool xIsSmall() const {
 		return std::end(xm_vStorage.Small)[-1] == CHAR_T();
@@ -328,6 +333,7 @@ private:
 	UnifiedString &xUnify(UnifiedString &ucsTemp) const;
 	void xDisunify(const UnifiedString &ucsTemp);
 	void xDisunify(UnifiedString &&ucsTemp);
+
 public:
 	PCSTR_T GetCStr() const noexcept {
 		return xIsSmall() ? xm_vStorage.Small : xm_vStorage.Large.pchBegin;
@@ -696,6 +702,7 @@ public:
 			}
 		}
 	}
+
 public:
 	explicit operator bool() const noexcept {
 		return !IsEmpty();

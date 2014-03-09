@@ -11,7 +11,7 @@
 
 namespace MCF {
 
-extern std::uint32_t GenRandomSeed() noexcept;
+extern std::uint32_t GenRandSeed() noexcept;
 
 class Random {
 private:
@@ -19,10 +19,13 @@ private:
 	unsigned char xm_abyBox[0x100];
 	unsigned char xm_byI;
 	unsigned char xm_byJ;
+
 public:
-	Random(std::uint32_t u32Seed = GenRandomSeed()) noexcept;
+	Random(std::uint32_t u32Seed = GenRandSeed()) noexcept;
+
 private:
 	std::uint8_t xGetByte() noexcept;
+
 public:
 	template<typename T>
 	T Get() noexcept {

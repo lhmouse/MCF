@@ -15,7 +15,8 @@
 using namespace MCF;
 
 namespace {
-	typedef std::shared_ptr<std::function<bool (std::intptr_t)>> PHANDLER_PROC;
+	typedef std::function<bool (std::intptr_t)> HANDLER_PROC;
+	typedef std::shared_ptr<HANDLER_PROC> PHANDLER_PROC;
 	typedef std::list<PHANDLER_PROC> HANDLER_LIST;
 	typedef std::shared_ptr<const HANDLER_LIST> PCHANDLER_LIST;
 	typedef std::shared_ptr<HANDLER_LIST> PHANDLER_LIST;
@@ -47,7 +48,7 @@ namespace __MCF {
 				auto it = pOldList->cbegin();
 				while(it != pOldList->cend()){
 					if(it->get() == Handle.second){
-						pNewList.reset(new HANDLER_LIST);
+						pNewList = std::make_shared<HANDLER_LIST>();
 						std::copy(pOldList->cbegin(), it, std::back_inserter(*pNewList));
 						++it;
 						std::copy(it, pOldList->cend(), std::back_inserter(*pNewList));
@@ -83,8 +84,13 @@ EventHandlerHolder RegisterEventHandler(std::intptr_t nEventId, std::function<bo
 				pOldList = itList->second;
 			}
 		}
-		PHANDLER_LIST pNewList(pOldList ? new HANDLER_LIST(*pOldList) : new HANDLER_LIST());
-		pNewList->emplace_front(new auto(std::move(fnHandler)));
+		PHANDLER_LIST pNewList;
+		if(pOldList){
+			pNewList = std::make_shared<HANDLER_LIST>(*pOldList);
+		} else {
+			pNewList = std::make_shared<HANDLER_LIST>();
+		}
+		pNewList->emplace_front(std::make_shared<HANDLER_PROC>(std::move(fnHandler)));
 		const auto pRaw = pNewList->front().get();
 		CRITICAL_SECTION_SCOPE(g_csReadLock){
 			g_mapDelegates[nEventId] = std::move(pNewList);

@@ -13,17 +13,22 @@ namespace MCF {
 class Event : NO_COPY {
 private:
 	class xDelegate;
+
 private:
-	const std::unique_ptr<xDelegate> xm_pDelegate;
+	std::unique_ptr<xDelegate> xm_pDelegate;
+
 public:
 	explicit Event(bool bInitSet, const wchar_t *pwszName = nullptr);
+	Event(Event &&rhs) noexcept;
+	Event &operator=(Event &&rhs) noexcept;
 	~Event();
+
 public:
 	bool IsSet() const noexcept;
 	void Set() noexcept;
-	void Reset() noexcept;
+	void Clear() noexcept;
 
-	bool WaitTimeOut(unsigned long ulMilliSeconds) const noexcept;
+	bool WaitTimeout(unsigned long ulMilliSeconds) const noexcept;
 	void Wait() const noexcept;
 };
 

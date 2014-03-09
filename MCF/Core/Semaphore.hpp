@@ -13,13 +13,18 @@ namespace MCF {
 class Semaphore : NO_COPY {
 private:
 	class xDelegate;
+
 private:
-	const std::unique_ptr<xDelegate> xm_pDelegate;
+	std::unique_ptr<xDelegate> xm_pDelegate;
+
 public:
 	explicit Semaphore(std::size_t uInitCount, std::size_t uMaxCount, const wchar_t *pwszName = nullptr);
+	Semaphore(Semaphore &&rhs) noexcept;
+	Semaphore &operator=(Semaphore &&rhs) noexcept;
 	~Semaphore();
+
 public:
-	std::size_t WaitTimeOut(unsigned long ulMilliSeconds, std::size_t uWaitCount = 1) noexcept;
+	std::size_t WaitTimeout(unsigned long ulMilliSeconds, std::size_t uWaitCount = 1) noexcept;
 	void Wait(std::size_t uWaitCount = 1) noexcept;
 	void Signal(std::size_t uSignalCount = 1) noexcept;
 };

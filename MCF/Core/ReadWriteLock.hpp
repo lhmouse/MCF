@@ -17,6 +17,7 @@ public:
 	enum : std::size_t {
 		MAXIMUM_CONCURRENT_READS = 16u
 	};
+
 private:
 	class xDelegate;
 
@@ -36,17 +37,24 @@ private:
 			xUnlockWrite((xDelegate *)pDelegate);
 		}
 	};
+
 private:
 	static void xUnlockRead(xDelegate *pDelegate) noexcept;
 	static void xUnlockWrite(xDelegate *pDelegate) noexcept;
+
 public:
 	typedef UniqueHandle<void *, xReadUnlocker> ReadLockHolder;
 	typedef UniqueHandle<void *, xWriteUnlocker> WriteLockHolder;
+
 private:
-	const std::unique_ptr<xDelegate> xm_pDelegate;
+	std::unique_ptr<xDelegate> xm_pDelegate;
+
 public:
-	ReadWriteLock(unsigned long ulSpinCount = 0x400);
+	explicit ReadWriteLock(unsigned long ulSpinCount = 0x400);
+	ReadWriteLock(ReadWriteLock &&rhs) noexcept;
+	ReadWriteLock &operator=(ReadWriteLock &&rhs) noexcept;
 	~ReadWriteLock();
+
 public:
 	ReadLockHolder GetReadLock() const noexcept;
 	WriteLockHolder GetWriteLock() noexcept;

@@ -78,6 +78,7 @@ namespace __MCF {
 			}
 			return nullptr;
 		}
+
 	private:
 		HANDLE_T xm_hObj;
 		std::size_t xm_uWeakCount;
@@ -86,6 +87,7 @@ namespace __MCF {
 		// 用于在手动调用 AddRef() 和 DropRef() 时检测多次释放。
 		SharedNodeNTS *xm_pDebugInfo;
 #endif
+
 	private:
 		explicit constexpr SharedNodeNTS(HANDLE_T hObj) noexcept
 			: xm_hObj(hObj), xm_uWeakCount(1), xm_uCount(1)
@@ -101,6 +103,7 @@ namespace __MCF {
 			xm_pDebugInfo = nullptr;
 		}
 #endif
+
 	private:
 		void xValidate() const noexcept {
 #ifndef NDEBUG
@@ -148,6 +151,7 @@ namespace __MCF {
 
 			return bRet;
 		}
+
 	public:
 		HANDLE_T Get() const noexcept {
 			xValidate();
@@ -166,14 +170,18 @@ class SharedHandleNTS;
 template<typename HANDLE_T, class CLOSER_T>
 class WeakHandleNTS {
 	friend class SharedHandleNTS<HANDLE_T, CLOSER_T>;
+
 private:
 	typedef __MCF::SharedNodeNTS<HANDLE_T, CLOSER_T> xSharedNodeNTS;
 	typedef SharedHandleNTS<HANDLE_T, CLOSER_T> xStrongHandleNTS;
+
 private:
 	xSharedNodeNTS *xm_pNode;
+
 private:
 	WeakHandleNTS(xSharedNodeNTS *pNode) noexcept : xm_pNode(pNode) {
 	}
+
 public:
 	constexpr WeakHandleNTS() noexcept : xm_pNode() {
 	}
@@ -199,6 +207,7 @@ public:
 	~WeakHandleNTS(){
 		Reset();
 	}
+
 public:
 	xStrongHandleNTS Lock() const noexcept {
 		return xStrongHandleNTS(xSharedNodeNTS::AddRef(xm_pNode));
@@ -239,9 +248,11 @@ public:
 template<typename HANDLE_T, class CLOSER_T>
 class SharedHandleNTS {
 	friend class WeakHandleNTS<HANDLE_T, CLOSER_T>;
+
 private:
 	typedef __MCF::SharedNodeNTS<HANDLE_T, CLOSER_T> xSharedNodeNTS;
 	typedef WeakHandleNTS<HANDLE_T, CLOSER_T> xWeakHandleNTS;
+
 public:
 	static void AddRef(const HANDLE_T *pHandle) noexcept {
 		xSharedNodeNTS::AddRef(xSharedNodeNTS::FromPHandle(pHandle));
@@ -249,11 +260,14 @@ public:
 	static void DropRef(const HANDLE_T *pHandle) noexcept {
 		xSharedNodeNTS::DropRef(xSharedNodeNTS::FromPHandle(pHandle));
 	}
+
 private:
 	xSharedNodeNTS *xm_pNode;
+
 private:
 	SharedHandleNTS(xSharedNodeNTS *pNode) noexcept : xm_pNode(pNode) {
 	}
+
 public:
 	constexpr SharedHandleNTS() noexcept : xm_pNode() {
 	}
@@ -285,6 +299,7 @@ public:
 	~SharedHandleNTS(){
 		Reset();
 	}
+
 public:
 	bool IsGood() const noexcept {
 		return Get() != CLOSER_T()();
@@ -332,6 +347,7 @@ public:
 		}
 		std::swap(xm_pNode, rhs.xm_pNode);
 	}
+
 public:
 	explicit operator bool() const noexcept {
 		return IsGood();

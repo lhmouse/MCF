@@ -35,14 +35,21 @@ inline void BCopy(TX &vDst, const TY &vSrc) noexcept {
 }
 
 template<typename T>
-inline void BSet(T &vDst, bool bVal) noexcept {
-	static_assert(std::is_trivial<T>::value, "MCF::BSet(): Only trivial types are supported");
+inline void BFill(T &vDst, bool bVal) noexcept {
+	static_assert(std::is_trivial<T>::value, "MCF::BFill(): Only trivial types are supported");
 	__builtin_memset(&vDst, bVal ? -1 : 0, sizeof(vDst));
 }
 
 template<typename T>
 inline void BZero(T &vDst) noexcept {
-	BSet(vDst, false);
+	BFill(vDst, false);
+}
+
+template<typename TX, typename TY>
+inline int BCompare(const TX &vDst, const TY &vSrc) noexcept {
+	static_assert(std::is_trivial<TX>::value && std::is_trivial<TY>::value, "MCF::BCompare(): Only trivial types are supported");
+	static_assert(sizeof(vDst) == sizeof(vSrc), "MCF::BCompare(): Source and destination sizes do not match.");
+	return __builtin_memcmp(&vDst, &vSrc, sizeof(vDst));
 }
 
 }

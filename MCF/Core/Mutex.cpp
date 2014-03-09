@@ -19,8 +19,10 @@ private:
 			::CloseHandle(hMutex);
 		}
 	};
+
 private:
 	UniqueHandle<HANDLE, xMutexCloser> xm_hMutex;
+
 public:
 	xDelegate(const wchar_t *pwszName){
 		xm_hMutex.Reset(::CreateMutexW(nullptr, FALSE, pwszName));
@@ -28,6 +30,7 @@ public:
 			MCF_THROW(::GetLastError(), L"CreateMutexW() 失败。");
 		}
 	}
+
 public:
 	HANDLE GetHandle() const noexcept {
 		return xm_hMutex.Get();
@@ -46,17 +49,31 @@ Mutex::Mutex(const wchar_t *pwszName)
 	: xm_pDelegate(new xDelegate(pwszName))
 {
 }
+Mutex::Mutex(Mutex &&rhs) noexcept
+	: xm_pDelegate(std::move(rhs.xm_pDelegate))
+{
+}
+Mutex &Mutex::operator=(Mutex &&rhs) noexcept {
+	if(&rhs != this){
+		xm_pDelegate = std::move(rhs.xm_pDelegate);
+	}
+	return *this;
+}
 Mutex::~Mutex(){
 }
 
 // 其他非静态成员函数。
 Mutex::LockHolder Mutex::Try() noexcept {
+	ASSERT(xm_pDelegate);
+
 	if(::WaitForSingleObject(xm_pDelegate->GetHandle(), 0) == WAIT_TIMEOUT){
 		return LockHolder();
 	}
 	return LockHolder(xm_pDelegate.get());
 }
 Mutex::LockHolder Mutex::Lock() noexcept {
+	ASSERT(xm_pDelegate);
+
 	::WaitForSingleObject(xm_pDelegate->GetHandle(), INFINITE);
 	return LockHolder(xm_pDelegate.get());
 }

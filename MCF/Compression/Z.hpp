@@ -13,14 +13,19 @@
 
 namespace MCF {
 
-class ZEncoder : MOVABLE {
+class ZEncoder : NO_COPY {
 private:
 	class xDelegate;
+
 private:
-	const std::unique_ptr<xDelegate> xm_pDelegate;
+	std::unique_ptr<xDelegate> xm_pDelegate;
+
 public:
 	ZEncoder(std::function<std::pair<void *, std::size_t> (std::size_t)> fnDataCallback, int nLevel = 6);
+	ZEncoder(ZEncoder &&rhs) noexcept;
+	ZEncoder &operator=(ZEncoder &&rhs) noexcept;
 	~ZEncoder();
+
 public:
 	void Abort() noexcept;
 	void Update(const void *pData, std::size_t uSize, const void *pDict = nullptr, std::size_t uDictSize = 0);
@@ -28,14 +33,19 @@ public:
 	void Finalize();
 };
 
-class ZDecoder : MOVABLE {
+class ZDecoder : NO_COPY {
 private:
 	class xDelegate;
+
 private:
-	const std::unique_ptr<xDelegate> xm_pDelegate;
+	std::unique_ptr<xDelegate> xm_pDelegate;
+
 public:
 	ZDecoder(std::function<std::pair<void *, std::size_t> (std::size_t)> fnDataCallback);
+	ZDecoder(ZDecoder &&rhs) noexcept;
+	ZDecoder &operator=(ZDecoder &&rhs) noexcept;
 	~ZDecoder();
+
 public:
 	void Abort() noexcept;
 	void Update(const void *pData, std::size_t uSize, const void *pDict = nullptr, std::size_t uDictSize = 0);

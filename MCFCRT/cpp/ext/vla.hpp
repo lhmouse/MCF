@@ -21,6 +21,7 @@ private:
 
 	ELEMENT_T *xm_pBegin;
 	ELEMENT_T *xm_pEnd;
+
 private:
 	void xInitStorage(std::size_t uCount){
 		if(uCount <= ALT_STOR_THLD){
@@ -31,6 +32,7 @@ private:
 		}
 		xm_pEnd = xm_pBegin + uCount;
 	}
+
 public:
 	explicit VLA(std::size_t uCount){
 		xInitStorage(uCount);
@@ -68,6 +70,7 @@ public:
 	VLA(VLA &&) = delete;
 	void operator=(const VLA &) = delete;
 	void operator=(VLA &&) = delete;
+
 public:
 	const ELEMENT_T *GetBegin() const noexcept {
 		return xm_pBegin;
@@ -91,11 +94,12 @@ public:
 	std::size_t GetSize() const noexcept {
 		return (std::size_t)(xm_pEnd - xm_pBegin);
 	}
+
 public:
-	operator const ELEMENT_T *() const noexcept {
+	explicit operator const ELEMENT_T *() const noexcept {
 		return xm_pBegin;
 	}
-	operator ELEMENT_T *() noexcept {
+	explicit operator ELEMENT_T *() noexcept {
 		return xm_pBegin;
 	}
 /*	const ELEMENT_T &operator[](std::size_t uIndex) const noexcept {

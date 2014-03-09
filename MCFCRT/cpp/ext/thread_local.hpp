@@ -23,8 +23,10 @@ private:
 	static void xDtorWrapper(void *pObj) noexcept {
 		((OBJECT_T *)pObj)->~OBJECT_T();
 	}
+
 private:
 	OBJECT_T xm_vTemplate;
+
 public:
 	template<class... PARAMS_T>
 	constexpr TheadLocal(PARAMS_T ...Params) noexcept(noexcept(OBJECT_T(std::move(Params)...)))
@@ -34,6 +36,7 @@ public:
 	~TheadLocal(){
 		Release();
 	}
+
 public:
 	OBJECT_T *Get() const noexcept {
 		const auto pRet = (OBJECT_T *)::__MCF_CRT_RetrieveTls((std::intptr_t)this, sizeof(OBJECT_T), &xCtorWrapper, (std::intptr_t)this, &xDtorWrapper);
@@ -48,6 +51,7 @@ public:
 	void Release() const noexcept {
 		::__MCF_CRT_DeleteTls((std::intptr_t)this);
 	}
+
 public:
 	OBJECT_T *operator->() const {
 		return Get();

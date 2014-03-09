@@ -20,6 +20,7 @@ private:
 			::CloseHandle(hThread);
 		}
 	};
+
 private:
 	static unsigned int xThreadProc(std::intptr_t nParam) noexcept {
 		auto *const pThis = (xDelegate *)nParam;
@@ -33,27 +34,23 @@ private:
 		pThis->xm_ulThreadId = 0;
 		return 0;
 	}
+
 public:
-	static std::shared_ptr<xDelegate> Create(std::function<void ()> &&fnProc){
-		std::shared_ptr<xDelegate> pRet(new xDelegate(std::move(fnProc)));
-		pRet->xm_hThread.Reset(::__MCF_CRT_CreateThread(&xThreadProc, (std::intptr_t)pRet.get(), CREATE_SUSPENDED, &pRet->xm_ulThreadId));
-		if(!pRet->xm_hThread){
-			MCF_THROW(::GetLastError(), L"__MCF_CRT_CreateThread() 失败。");
-		}
-		pRet->xm_pLock = pRet; // 制造循环引用。这样代理对象就不会被删掉。
-		return std::move(pRet);
-	}
+	static std::shared_ptr<xDelegate> Create(std::function<void ()> &&fnProc);
+
 private:
 	std::shared_ptr<xDelegate> xm_pLock;
 	std::function<void ()> xm_fnProc;
 	UniqueHandle<HANDLE, xThreadCloser> xm_hThread;
 	unsigned long xm_ulThreadId;
 	std::exception_ptr xm_pException;
+
 private:
 	explicit xDelegate(std::function<void ()> &&fnProc) noexcept
 		: xm_fnProc(std::move(fnProc))
 	{
 	}
+
 public:
 	HANDLE GetHandle() const noexcept {
 		return xm_hThread.Get();
@@ -69,7 +66,33 @@ public:
 	}
 };
 
+inline std::shared_ptr<Thread::xDelegate> Thread::xDelegate::Create(std::function<void ()> &&fnProc){
+	struct Helper : public xDelegate {
+		Helper(std::function<void ()> &&fnProc) : xDelegate(std::move(fnProc)) { }
+	};
+	auto pRet(std::make_shared<Helper>(std::move(fnProc)));
+
+	pRet->xm_hThread.Reset(::__MCF_CRT_CreateThread(&xThreadProc, (std::intptr_t)pRet.get(), CREATE_SUSPENDED, &pRet->xm_ulThreadId));
+	if(!pRet->xm_hThread){
+		MCF_THROW(::GetLastError(), L"__MCF_CRT_CreateThread() 失败。");
+	}
+	pRet->xm_pLock = pRet; // 制造循环引用。这样代理对象就不会被删掉。
+	return std::move(pRet);
+}
+
 // 构造函数和析构函数。
+Thread::Thread() noexcept {
+}
+Thread::Thread(Thread &&rhs) noexcept
+	: xm_pDelegate(std::move(rhs.xm_pDelegate))
+{
+}
+Thread &Thread::operator=(Thread &&rhs) noexcept {
+	if(&rhs != this){
+		xm_pDelegate = std::move(rhs.xm_pDelegate);
+	}
+	return *this;
+}
 Thread::~Thread(){
 	JoinDetach();
 }
@@ -107,14 +130,14 @@ void Thread::JoinDetach() noexcept {
 }
 
 void Thread::Suspend() noexcept {
-	if(xm_pDelegate){
-		::SuspendThread(xm_pDelegate->GetHandle());
-	}
+	ASSERT(xm_pDelegate);
+
+	::SuspendThread(xm_pDelegate->GetHandle());
 }
 void Thread::Resume() noexcept {
-	if(xm_pDelegate){
-		::ResumeThread(xm_pDelegate->GetHandle());
-	}
+	ASSERT(xm_pDelegate);
+
+	::ResumeThread(xm_pDelegate->GetHandle());
 }
 
 bool Thread::IsAlive() const noexcept {

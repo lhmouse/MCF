@@ -7,26 +7,29 @@
 
 #include "TcpPeer.hpp"
 #include "../Core/NoCopy.hpp"
-#include <functional>
 #include <memory>
 #include <cstddef>
-#include <cstdint>
 
 namespace MCF {
 
 class TcpServer : NO_COPY {
 private:
 	class xDelegate;
+
 private:
-	const std::function<void (std::unique_ptr<TcpPeer>)> xm_fnConnProc;
-	const std::unique_ptr<xDelegate> xm_pDelegate;
+	std::unique_ptr<xDelegate> xm_pDelegate;
+
 public:
-	TcpServer(std::function<void (std::unique_ptr<TcpPeer>)> fnConnProc);
+	TcpServer();
 	~TcpServer();
+
 public:
 	bool IsRunning() const noexcept;
-	void Start(const PeerInfo &vBoundOnto, std::size_t uThreadCount, bool bForceIPv6 = false);
+	void Start(const PeerInfo &vBoundOnto);
 	void Stop() noexcept;
+
+	TcpPeer GetPeerTimeout(unsigned long ulMilliSeconds) noexcept;
+	TcpPeer GetPeer() noexcept;
 };
 
 }

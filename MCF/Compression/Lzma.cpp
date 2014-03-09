@@ -98,11 +98,13 @@ private:
 			::LzmaEnc_NewEncodeDestroyContext(pContext);
 		}
 	};
+
 private:
 	static std::size_t xWriteCallback(void *pDataSink, const void *pData, std::size_t uSize) noexcept {
 		const auto pDelegate = (xDelegate *)((unsigned char *)pDataSink - OFFSET_OF(xDelegate, xm_sosOutputter));
 		return pDelegate->xWrite(pData, uSize);
 	}
+
 private:
 	const std::function<std::pair<void *, std::size_t> (std::size_t)> xm_fnDataCallback;
 	::ISeqOutStream xm_sosOutputter;
@@ -113,6 +115,7 @@ private:
 	std::size_t xm_uBytesProcessed;
 
 	std::exception_ptr xm_pException;
+
 public:
 	xDelegate(std::function<std::pair<void *, std::size_t> (std::size_t)> &&fnDataCallback, int nLevel, std::uint32_t u32DictSize)
 		: xm_fnDataCallback(std::move(fnDataCallback))
@@ -124,6 +127,7 @@ public:
 		xm_vEncProps.dictSize = u32DictSize;
 		xm_vEncProps.writeEndMark = 1;
 	}
+
 private:
 	std::size_t xWrite(const void *pData, std::size_t uSize) noexcept {
 		std::size_t uBytesWritten = 0;
@@ -135,6 +139,7 @@ private:
 		}
 		return uBytesWritten;
 	}
+
 public:
 	void Abort() noexcept {
 		xm_pContext.Reset();
@@ -211,20 +216,38 @@ LzmaEncoder::LzmaEncoder(std::function<std::pair<void *, std::size_t> (std::size
 	: xm_pDelegate(new xDelegate(std::move(fnDataCallback), nLevel, u32DictSize))
 {
 }
+LzmaEncoder::LzmaEncoder(LzmaEncoder &&rhs) noexcept
+	: xm_pDelegate(std::move(rhs.xm_pDelegate))
+{
+}
+LzmaEncoder &LzmaEncoder::operator=(LzmaEncoder &&rhs) noexcept {
+	if(&rhs != this){
+		xm_pDelegate = std::move(rhs.xm_pDelegate);
+	}
+	return *this;
+}
 LzmaEncoder::~LzmaEncoder(){
 }
 
 // 其他非静态成员函数。
 void LzmaEncoder::Abort() noexcept {
+	ASSERT(xm_pDelegate);
+
 	xm_pDelegate->Abort();
 }
 void LzmaEncoder::Update(const void *pData, std::size_t uSize){
+	ASSERT(xm_pDelegate);
+
 	xm_pDelegate->Update(pData, uSize);
 }
 std::size_t LzmaEncoder::QueryBytesProcessed() const noexcept {
+	ASSERT(xm_pDelegate);
+
 	return xm_pDelegate->QueryBytesProcessed();
 }
 void LzmaEncoder::Finalize(){
+	ASSERT(xm_pDelegate);
+
 	xm_pDelegate->Finalize();
 }
 
@@ -240,6 +263,7 @@ private:
 			::LzmaDec_Free(pDecoder, &g_vAllocSmall);
 		}
 	};
+
 private:
 	const std::function<std::pair<void *, std::size_t> (std::size_t)> xm_fnDataCallback;
 	::CLzmaDec xm_vDecoder;
@@ -249,6 +273,7 @@ private:
 	UniqueHandle<::CLzmaDec *, xLzmaDecHandleCloser> xm_pDecoder;
 	unsigned char xm_abyTemp[0x10000];
 	std::size_t xm_uBytesProcessed;
+
 public:
 	xDelegate(std::function<std::pair<void *, std::size_t> (std::size_t)> &&fnDataCallback)
 		: xm_fnDataCallback(std::move(fnDataCallback))
@@ -256,6 +281,7 @@ public:
 	{
 		LzmaDec_Construct(&xm_vDecoder); // 这是宏？！
 	}
+
 public:
 	void Abort() noexcept {
 		xm_uHeaderSize = 0;
@@ -316,22 +342,40 @@ public:
 
 // 构造函数和析构函数。
 LzmaDecoder::LzmaDecoder(std::function<std::pair<void *, std::size_t> (std::size_t)> fnDataCallback)
-	:  xm_pDelegate(new xDelegate(std::move(fnDataCallback)))
+	: xm_pDelegate(new xDelegate(std::move(fnDataCallback)))
 {
+}
+LzmaDecoder::LzmaDecoder(LzmaDecoder &&rhs) noexcept
+	: xm_pDelegate(std::move(rhs.xm_pDelegate))
+{
+}
+LzmaDecoder &LzmaDecoder::operator=(LzmaDecoder &&rhs) noexcept {
+	if(&rhs != this){
+		xm_pDelegate = std::move(rhs.xm_pDelegate);
+	}
+	return *this;
 }
 LzmaDecoder::~LzmaDecoder(){
 }
 
 // 其他非静态成员函数。
 void LzmaDecoder::Abort() noexcept {
+	ASSERT(xm_pDelegate);
+
 	xm_pDelegate->Abort();
 }
 void LzmaDecoder::Update(const void *pData, std::size_t uSize){
+	ASSERT(xm_pDelegate);
+
 	xm_pDelegate->Update(pData, uSize);
 }
 std::size_t LzmaDecoder::QueryBytesProcessed() const noexcept {
+	ASSERT(xm_pDelegate);
+
 	return xm_pDelegate->QueryBytesProcessed();
 }
 void LzmaDecoder::Finalize(){
+	ASSERT(xm_pDelegate);
+
 	xm_pDelegate->Finalize();
 }

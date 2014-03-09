@@ -24,8 +24,10 @@ private:
 	};
 	std::size_t xm_uBytesInChunk;
 	std::uint64_t xm_u64BytesTotal;
+
 public:
 	SHA1() noexcept;
+
 public:
 	void Abort() noexcept;
 	void Update(const void *pData, std::size_t uSize) noexcept;

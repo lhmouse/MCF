@@ -69,16 +69,17 @@ std::size_t Semaphore::WaitTimeout(unsigned long ulMilliSeconds, std::size_t uWa
 		}
 	} else {
 		const auto ulWaitUntil = ::GetTickCount() + ulMilliSeconds;
-		unsigned long ulTimeToWait = ulMilliSeconds;
+		auto ulTimeToWait = ulMilliSeconds;
 		for(std::size_t i = 0; i < uWaitCount; ++i){
-			if(::WaitForSingleObject(xm_pDelegate->GetHandle(), ulMilliSeconds) == WAIT_TIMEOUT){
+			if(::WaitForSingleObject(xm_pDelegate->GetHandle(), ulTimeToWait) == WAIT_TIMEOUT){
 				break;
 			}
 			++uSucceeded;
-			ulTimeToWait = ulWaitUntil - ::GetTickCount();
-			if((long)ulTimeToWait < 0){
+			const auto ulCurrent = ::GetTickCount();
+			if(ulWaitUntil <= ulCurrent){
 				break;
 			}
+			ulTimeToWait = ulWaitUntil - ulCurrent;
 		}
 	}
 	return uSucceeded;

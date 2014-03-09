@@ -25,7 +25,7 @@ char *strstr(const char *s1, const char *s2){
 	} else {
 		t = malloc(wlen * sizeof(size_t));
 		if(!t){
-			const char *till = s  + (slen - wlen);
+			const char *const till = s  + (slen - wlen);
 			const char *p = s;
 			do {
 				if(memcmp(p, w, wlen) == 0){

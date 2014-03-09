@@ -30,7 +30,7 @@ unsigned int MCFMain(){
 		const unsigned short ipv6[] = {0, 0, 0, 0, 0, 0, 0, 1};
 
 		MCF::TcpPeer client;
-		client.Connect(MCF::PeerInfo(ipv4, 8001));
+		client.Connect(MCF::PeerInfo(ipv6, 8001));
 
 		const std::uint32_t data[2] = { 2, 3 };
 		for(;;){

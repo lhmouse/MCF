@@ -23,15 +23,15 @@ private:
 private:
 	std::unique_ptr<xDelegate> xm_pDelegate;
 
+private:
+	TcpPeer(void *ppSocket, const void *pSockAddr, std::size_t uSockAddrLen);
+
 public:
 	TcpPeer() noexcept;
 	TcpPeer(const PeerInfo &vServerInfo);
 	TcpPeer(TcpPeer &&rhs) noexcept;
 	TcpPeer &operator=(TcpPeer &&rhs) noexcept;
 	~TcpPeer();
-
-private:
-	void xAssign(void *ppSocket, const void *pSockAddr, std::size_t uSockAddrLen);
 
 public:
 	bool IsConnected() const noexcept;
@@ -43,7 +43,7 @@ public:
 	std::size_t Read(void *pData, std::size_t uSize);
 	void ShutdownRead() noexcept;
 
-	void Write(const void *pData, std::size_t uSize);
+	void Write(const void *pData, std::size_t uSize, bool bNoDelay = false);
 	void ShutdownWrite() noexcept;
 
 public:

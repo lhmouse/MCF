@@ -45,16 +45,18 @@ public:
 
 private:
 	void xListenerProc() noexcept {
+		::SetThreadPriority(::GetCurrentThread(), THREAD_PRIORITY_HIGHEST);
+
 		unsigned long ulSleepTime = 0;
 		while(__atomic_load_n(&xm_eState, __ATOMIC_ACQUIRE) == State::RUNNING){
 			try {
 				if(ulSleepTime == 0){
 					ulSleepTime = 1;
 				} else {
-					if(ulSleepTime < 0x40){
+					::Sleep(ulSleepTime);
+					if(ulSleepTime < 0x20){
 						ulSleepTime <<= 1;
 					}
-					::Sleep(ulSleepTime);
 				}
 
 				SOCKADDR_STORAGE vSockAddr;
@@ -68,8 +70,7 @@ private:
 					continue;
 				}
 
-				TcpPeer vPeer;
-				vPeer.xAssign(&sockClient, &vSockAddr, nSockAddrSize);
+				TcpPeer vPeer(&sockClient, &vSockAddr, nSockAddrSize);
 				CRITICAL_SECTION_SCOPE(xm_csQueueLock){
 					xm_deqPeers.emplace_back(std::move(vPeer));
 					xm_evnPeersAvailable.Set();
@@ -85,6 +86,9 @@ public:
 		return __atomic_load_n(&xm_eState, __ATOMIC_ACQUIRE) != State::STOPPED;
 	}
 	void Start(const PeerInfo &vBoundOnto){
+		static const DWORD TRUE_VALUE	= 1;
+		static const DWORD FALSE_VALUE	= 0;
+
 		Stop();
 
 		const short shFamily = vBoundOnto.IsIPv4() ? AF_INET : AF_INET6;
@@ -93,9 +97,11 @@ public:
 		if(!xm_sockListen){
 			MCF_THROW(::WSAGetLastError(), L"::socket() 失败。");
 		}
+		if(::setsockopt(xm_sockListen.Get(), SOL_SOCKET, SO_CONDITIONAL_ACCEPT, (const char *)&TRUE_VALUE, sizeof(TRUE_VALUE))){
+			MCF_THROW(::WSAGetLastError(), L"::setsockopt() 失败。");
+		}
 		if(shFamily == AF_INET6){
-			const DWORD dwFalseValue = 0;
-			if(::setsockopt(xm_sockListen.Get(), IPPROTO_IPV6, IPV6_V6ONLY, (const char *)&dwFalseValue, sizeof(dwFalseValue))){
+			if(::setsockopt(xm_sockListen.Get(), IPPROTO_IPV6, IPV6_V6ONLY, (const char *)&FALSE_VALUE, sizeof(FALSE_VALUE))){
 				MCF_THROW(::WSAGetLastError(), L"::setsockopt() 失败。");
 			}
 		}
@@ -184,6 +190,16 @@ public:
 TcpServer::TcpServer()
 	: xm_pDelegate(new xDelegate)
 {
+}
+TcpServer::TcpServer(TcpServer &&rhs) noexcept
+	: xm_pDelegate(std::move(rhs.xm_pDelegate))
+{
+}
+TcpServer &TcpServer::operator=(TcpServer &&rhs) noexcept {
+	if(&rhs != this){
+		xm_pDelegate = std::move(rhs.xm_pDelegate);
+	}
+	return *this;
 }
 TcpServer::~TcpServer(){
 }

@@ -68,7 +68,7 @@ void PeerInfo::ToIPv6(std::uint16_t (&au16IPv6)[8], std::uint16_t &u16Port) cons
 }
 
 bool PeerInfo::IsIPv4() const noexcept {
-	return BCompare(m_au16IPv4Prefix, IPV4_MAPPING_PREFIX) == 0;
+	return BComp(m_au16IPv4Prefix, IPV4_MAPPING_PREFIX) == 0;
 }
 void PeerInfo::ToIPv4(std::uint8_t (&au8IPv4)[4], std::uint16_t &u16Port) const noexcept {
 	ASSERT(IsIPv4());

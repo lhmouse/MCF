@@ -1,6 +1,6 @@
 #include <MCF/StdMCF.hpp>
 #include <MCF/Core/Exception.hpp>
-#include <MCF/Networking/TcpServer.hpp>
+#include <MCF/Networking/UdpServer.hpp>
 #include <MCF/Networking/PeerInfo.hpp>
 
 static void print_pi(const MCF::PeerInfo &pi) noexcept {
@@ -24,34 +24,21 @@ static void print_pi(const MCF::PeerInfo &pi) noexcept {
 	}
 }
 
-static void foo(MCF::TcpPeer client) noexcept {
-	try {
-		for(;;){
-			std::puts("--- peer info --");
-			print_pi(client.GetPeerInfo());
+static void foo(MCF::UdpPacket packet) noexcept {
+	std::printf("--- peer info - ");
+	print_pi(packet.GetPeerInfo());
 
-			std::uint32_t src[2];
-			client.Read(&src, sizeof(src));
-
-			std::printf("from client: %u, %u\n", src[0], src[1]);
-
-			const std::uint32_t res = src[0] + src[1];
-			client.Write(&res, sizeof(res));
-		}
-	} catch(...){
-	}
+	packet.GetBuffer().Push(0);
+	std::printf("--- data - %s\n", packet.GetBuffer().GetData());
 }
 
 unsigned int MCFMain(){
 	try {
-		MCF::TcpServer srvr;
-//		srvr.Start(MCF::PeerInfo({127, 0, 0, 1}, 8001));
+		MCF::UdpServer srvr;
 		srvr.Start(MCF::PeerInfo(true, 8001));
-//		srvr.Start(MCF::PeerInfo({0, 0, 0, 0, 0, 0, 0, 1}, 8001));
 		for(;;){
-			foo(srvr.GetPeer());
+			foo(srvr.GetPacket());
 		}
-		srvr.Stop();
 	} catch(MCF::Exception &e){
 		::__MCF_CRT_BailF(L"func = %s\nerr  = %lu\ndesc = %ls", e.m_pszFunction, e.m_ulCode, e.m_pwszMessage);
 	}

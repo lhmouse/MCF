@@ -24,7 +24,7 @@ private:
 	};
 
 private:
-	__MCF::WSAInitializer xm_vInitializer;
+	__MCF::WSAInitializer xm_vWSAInitializer;
 
 	volatile State xm_eState;
 	__MCF::UniqueSocket xm_sockListen;

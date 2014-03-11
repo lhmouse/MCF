@@ -6,6 +6,7 @@
 #define __MCF_NETWORKING_UTILS_HPP__
 
 #include "../Core/UniqueHandle.hpp"
+#include "../Core/SharedHandle.hpp"
 #include "../Core/Exception.hpp"
 #include "../Core/NoCopy.hpp"
 #include <winsock2.h>
@@ -24,6 +25,7 @@ namespace __MCF {
 	};
 
 	typedef UniqueHandle<SOCKET, SocketCloser> UniqueSocket;
+	typedef SharedHandle<SOCKET, SocketCloser> SharedSocket;
 
 	struct WSAInitializer : NO_COPY {
 		WSAInitializer(){

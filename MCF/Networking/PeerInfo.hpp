@@ -33,6 +33,34 @@ public:
 
 	bool IsIPv4() const noexcept;
 	void ToIPv4(std::uint8_t (&au8IPv4)[4], std::uint16_t &u16Port) const noexcept;
+
+public:
+	bool operator<(const PeerInfo &rhs) const noexcept {
+		const int nResult = BComp(m_au16IPv6, rhs.m_au16IPv6);
+		if(nResult != 0){
+			return nResult < 0;
+		}
+		return m_u16Port < rhs.m_u16Port;
+	}
+	bool operator>=(const PeerInfo &rhs) const noexcept {
+		return !(*this < rhs);
+	}
+	bool operator>(const PeerInfo &rhs) const noexcept {
+		return rhs < *this;
+	}
+	bool operator<=(const PeerInfo &rhs) const noexcept {
+		return !(rhs < *this);
+	}
+	bool operator==(const PeerInfo &rhs) const noexcept {
+		const int nResult = BComp(m_au16IPv6, rhs.m_au16IPv6);
+		if(nResult != 0){
+			return false;
+		}
+		return m_u16Port == rhs.m_u16Port;
+	}
+	bool operator!=(const PeerInfo &rhs) const noexcept {
+		return !(*this == rhs);
+	}
 };
 
 }

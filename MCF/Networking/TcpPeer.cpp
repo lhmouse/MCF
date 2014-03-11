@@ -19,7 +19,7 @@ private:
 	};
 
 private:
-	__MCF::WSAInitializer xm_vInitializer;
+	__MCF::WSAInitializer xm_vWSAInitializer;
 
 	__MCF::UniqueSocket xm_sockPeer;
 	PeerInfo xm_vPeerInfo;
@@ -27,7 +27,7 @@ private:
 	std::uintptr_t xm_uFlags;
 
 public:
-	explicit xDelegate(__MCF::UniqueSocket &&sockPeer, const void *pSockAddr, std::size_t uSockAddrLen)
+	xDelegate(__MCF::UniqueSocket &&sockPeer, const void *pSockAddr, std::size_t uSockAddrLen)
 		: xm_sockPeer(std::move(sockPeer))
 		, xm_vPeerInfo(pSockAddr, uSockAddrLen)
 		, xm_bNoDelay(false)
@@ -52,7 +52,7 @@ public:
 			if(nBytesRead == 0){
 				break;
 			}
-			if(nBytesRead == SOCKET_ERROR){
+			if(nBytesRead < 0){
 				MCF_THROW(::WSAGetLastError(), L"::recv() 失败。");
 			}
 			pCur += nBytesRead;
@@ -88,7 +88,7 @@ public:
 			if(nBytesWritten == 0){
 				break;
 			}
-			if(nBytesWritten == SOCKET_ERROR){
+			if(nBytesWritten < 0){
 				MCF_THROW(::WSAGetLastError(), L"::send() 失败。");
 			}
 			pCur += nBytesWritten;
@@ -134,16 +134,22 @@ TcpPeer::~TcpPeer(){
 bool TcpPeer::IsConnected() const noexcept {
 	return (bool)xm_pDelegate;
 }
+const PeerInfo &TcpPeer::GetPeerInfo() const {
+	if(!xm_pDelegate){
+		MCF_THROW(WSAENOTCONN, L"TcpPeer 未连接。");
+	}
+	return xm_pDelegate->GetPeerInfo();
+}
 unsigned long TcpPeer::Connect(const PeerInfo &vServerInfo){
 	Disconnect();
 
-	__MCF::WSAInitializer vInitializer;
+	__MCF::WSAInitializer vWSAInitializer;
 
 	const short shFamily = vServerInfo.IsIPv4() ? AF_INET : AF_INET6;
 
 	__MCF::UniqueSocket sockServer(::socket(shFamily, SOCK_STREAM, IPPROTO_TCP));
 	if(!sockServer){
-		return ::WSAGetLastError();
+		MCF_THROW(::WSAGetLastError(), L"::socket() 失败。");
 	}
 
 	SOCKADDR_STORAGE vSockAddr;
@@ -171,13 +177,6 @@ unsigned long TcpPeer::Connect(const PeerInfo &vServerInfo){
 }
 void TcpPeer::Disconnect() noexcept {
 	xm_pDelegate.reset();
-}
-
-const PeerInfo &TcpPeer::GetPeerInfo() const {
-	if(!xm_pDelegate){
-		MCF_THROW(WSAENOTCONN, L"TcpPeer 未连接。");
-	}
-	return xm_pDelegate->GetPeerInfo();
 }
 
 std::size_t TcpPeer::Read(void *pData, std::size_t uSize){

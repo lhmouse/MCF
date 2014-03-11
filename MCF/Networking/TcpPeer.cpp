@@ -7,7 +7,7 @@
 #include "../../MCFCRT/c/ext/assert.h"
 #include "../Core/Exception.hpp"
 #include "../Core/Utilities.hpp"
-#include "_NetworkingUtils.hpp"
+#include "_SocketUtils.hpp"
 using namespace MCF;
 
 // 嵌套类定义。

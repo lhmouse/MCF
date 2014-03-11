@@ -10,7 +10,7 @@
 #include "../Core/Utilities.hpp"
 #include "../Core/Event.hpp"
 #include "../Core/CriticalSection.hpp"
-#include "_NetworkingUtils.hpp"
+#include "_SocketUtils.hpp"
 #include <deque>
 using namespace MCF;
 

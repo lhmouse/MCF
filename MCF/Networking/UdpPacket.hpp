@@ -43,6 +43,7 @@ public:
 	bool IsValid() const noexcept;
 
 	void Send() const;
+	void SendTo(const PeerInfo &vServerInfo);
 	const PeerInfo &GetPeerInfo() const;
 
 	const VVector<std::uint8_t> &GetBuffer() const noexcept {

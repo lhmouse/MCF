@@ -156,18 +156,9 @@ public:
 private:
 	void xCheckCapacity(std::size_t uRequired){
 		if(GetCapacity() < uRequired){
-			// http://graphics.stanford.edu/~seander/bithacks.html#RoundUpPowerOf2
 			std::size_t uNewCapacity = uRequired;
-			--uNewCapacity;
-			uNewCapacity |= uNewCapacity >> 1;
-			uNewCapacity |= uNewCapacity >> 2;
-			uNewCapacity |= uNewCapacity >> 4;
-			uNewCapacity |= uNewCapacity >> 8;
-			uNewCapacity |= uNewCapacity >> 16;
-#ifdef _WIN64
-			uNewCapacity |= uNewCapacity >> 32;
-#endif
-			++uNewCapacity;
+			uNewCapacity += (uNewCapacity >> 1);
+			uNewCapacity = (uNewCapacity + 0xF) & -0x10;
 
 			std::unique_ptr<unsigned char[]> pNewLarge(new unsigned char[sizeof(ELEMENT_T) * uNewCapacity]);
 			const auto pWriteBegin = (ELEMENT_T *)pNewLarge.get();

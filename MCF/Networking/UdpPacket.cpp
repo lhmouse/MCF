@@ -7,7 +7,7 @@
 #include "../../MCFCRT/c/ext/assert.h"
 #include "../Core/Exception.hpp"
 #include "../Core/Utilities.hpp"
-#include "_NetworkingUtils.hpp"
+#include "_SocketUtils.hpp"
 using namespace MCF;
 
 // 嵌套类定义。
@@ -103,6 +103,12 @@ bool UdpPacket::IsValid() const noexcept {
 void UdpPacket::Send() const {
 	if(!xm_pDelegate){
 		MCF_THROW(WSAENOTCONN, L"UdpPacket 无效。");
+	}
+	xm_pDelegate->Send(xm_vecBuffer);
+}
+void UdpPacket::SendTo(const PeerInfo &vServerInfo){
+	if(!xm_pDelegate || (xm_pDelegate->GetPeerInfo() != vServerInfo)){
+		xm_pDelegate = std::make_shared<xDelegate>(vServerInfo);
 	}
 	xm_pDelegate->Send(xm_vecBuffer);
 }

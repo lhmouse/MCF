@@ -55,13 +55,13 @@ struct ThunkDeallocator {
 namespace MCF {
 
 std::shared_ptr<void> AllocateThunk(std::size_t uSize){
-	std::unique_ptr<void, ThunkDeallocator> pThunk;
-	pThunk.reset(::HeapAlloc(g_vThunkHeap.m_hHeap.Get(), 0, uSize));
+	UniqueHandle<ThunkDeallocator> pThunk;
+	pThunk.Reset(::HeapAlloc(g_vThunkHeap.m_hHeap.Get(), 0, uSize));
 	if(!pThunk){
 		MCF_THROW(::GetLastError(), L"HeapAlloc() 失败。");
 	}
-	std::shared_ptr<void> pRet(pThunk.get(), ThunkDeallocator());
-	pThunk.release();
+	std::shared_ptr<void> pRet(pThunk.Get(), ThunkDeallocator());
+	pThunk.Release();
 	return std::move(pRet);
 }
 

@@ -39,12 +39,14 @@ extern void __MCF_AvlAttach(
 	__MCF_STD intptr_t nKey,
 	__MCF_AVL_NODE_HEADER *pNode
 ) __MCF_NOEXCEPT;
+
 extern void __MCF_AvlAttachCustomComp(
 	__MCF_AVL_PROOT *ppRoot,
 	__MCF_STD intptr_t nKey,
 	__MCF_AVL_NODE_HEADER *pNode,
 	__MCF_AVL_KEY_COMPARER pfnKeyComparer
 ) __MCF_NOEXCEPT;
+
 extern void __MCF_AvlDetach(
 	const __MCF_AVL_NODE_HEADER *pNode
 ) __MCF_NOEXCEPT;
@@ -55,35 +57,42 @@ extern __MCF_AVL_NODE_HEADER *__MCF_AvlLowerBound(
 	const __MCF_AVL_PROOT *ppRoot,
 	__MCF_STD intptr_t nKey
 ) __MCF_NOEXCEPT;
+
 extern __MCF_AVL_NODE_HEADER *__MCF_AvlLowerBoundCustomComp(
 	const __MCF_AVL_PROOT *ppRoot,
 	__MCF_STD intptr_t nKey,
 	__MCF_AVL_KEY_COMPARER pfnKeyComparer
 ) __MCF_NOEXCEPT;
+
 extern __MCF_AVL_NODE_HEADER *__MCF_AvlUpperBound(
 	const __MCF_AVL_PROOT *ppRoot,
 	__MCF_STD intptr_t nKey
 ) __MCF_NOEXCEPT;
+
 extern __MCF_AVL_NODE_HEADER *__MCF_AvlUpperBoundCustomComp(
 	const __MCF_AVL_PROOT *ppRoot,
 	__MCF_STD intptr_t nKey,
 	__MCF_AVL_KEY_COMPARER pfnKeyComparer
 ) __MCF_NOEXCEPT;
+
 extern __MCF_AVL_NODE_HEADER *__MCF_AvlFind(
 	const __MCF_AVL_PROOT *ppRoot,
 	__MCF_STD intptr_t nKey
 ) __MCF_NOEXCEPT;
+
 extern __MCF_AVL_NODE_HEADER *__MCF_AvlFindCustomComp(
 	const __MCF_AVL_PROOT *ppRoot,
 	__MCF_STD intptr_t nKey,
 	__MCF_AVL_KEY_COMPARER pfnKeyComparer
 ) __MCF_NOEXCEPT;
+
 extern void __MCF_AvlEqualRange(
 	__MCF_AVL_NODE_HEADER **ppFrom,
 	__MCF_AVL_NODE_HEADER **ppTo,
 	const __MCF_AVL_PROOT *ppRoot,
 	__MCF_STD intptr_t nKey
 ) __MCF_NOEXCEPT;
+
 extern void __MCF_AvlEqualRangeCustomComp(
 	__MCF_AVL_NODE_HEADER **ppFrom,
 	__MCF_AVL_NODE_HEADER **ppTo,

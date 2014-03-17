@@ -1,22 +1,35 @@
 #include <MCF/StdMCF.hpp>
-#include <MCF/Core/Thunk.hpp>
 
-extern const char from __asm__("FROM"), to __asm__("TO");
-
-__asm__(
-	"FROM: \n"
-	"	lea eax, dword ptr[ecx + edx] \n"
-	"	ret \n"
-	"TO: \n"
-);
+template class MCF::MultiIndexedMap<char, int, double>;
 
 unsigned int MCFMain(){
-	const std::size_t cb = &to - &from;
-	auto p = MCF::AllocateThunk(cb);
-	__builtin_memcpy(p.get(), &from, cb);
+	MCF::MultiIndexedMap<char, int, double> m, n;
 
-	int res = (*(int (__fastcall *)(int, int))p.get())(4, 6);
-	std::printf("res = %d\n", res);
+	n.Insert('a', 1, 1.1);
+	n.Insert('b', 1, 2.2);
+	n.Insert('c', 1, 3.3);
+	n.Insert('d', 1, 1.1);
+	n.Insert('e', 2, 1.1);
+	n.Insert('f', 3, 1.1);
+
+	m = n;
+/*
+	auto q = m.Find<1>(3.3);
+	m.SetIndex<1>(q, 0.4);
+*/
+	std::puts("--- iterate by int ---");
+	auto p = m.Front<0>();
+	while(p){
+		std::printf("%c, %d, %f\n", p->GetElement(), p->GetIndex<0>(), p->GetIndex<1>());
+		p = m.Next<0>(p);
+	}
+
+	std::puts("--- iterate by double ---");
+	p = m.Front<1>();
+	while(p){
+		std::printf("%c, %d, %f\n", p->GetElement(), p->GetIndex<0>(), p->GetIndex<1>());
+		p = m.Next<1>(p);
+	}
 
 	return 0;
 }

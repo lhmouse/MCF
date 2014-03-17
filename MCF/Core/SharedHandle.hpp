@@ -18,13 +18,13 @@ namespace __MCF {
 	template<class Closer_t>
 	class SharedNode {
 	public:
-		typedef decltype(Closer_t()()) Handle_t;
+		typedef decltype(Closer_t()()) Handle;
 
 	public:
-		static SharedNode *Create(Handle_t hObj){
+		static SharedNode *Create(Handle hObj){
 			return Recreate(nullptr, hObj);
 		}
-		static SharedNode *Recreate(SharedNode *pNode, Handle_t hObj){
+		static SharedNode *Recreate(SharedNode *pNode, Handle hObj){
 			if(hObj == Closer_t()()){
 				if(pNode && (pNode->xDropRef())){
 					delete pNode;
@@ -69,13 +69,13 @@ namespace __MCF {
 			}
 		}
 
-		static const Handle_t *ToPHandle(SharedNode *pNode){
+		static const Handle *ToPHandle(SharedNode *pNode){
 			if(pNode){
-				return (const Handle_t *)((std::intptr_t)pNode + OFFSET_OF(SharedNode, xm_hObj));
+				return (const Handle *)((std::intptr_t)pNode + OFFSET_OF(SharedNode, xm_hObj));
 			}
 			return nullptr;
 		}
-		static SharedNode *FromPHandle(const Handle_t *pHandle){
+		static SharedNode *FromPHandle(const Handle *pHandle){
 			if(pHandle){
 				return (SharedNode *)((std::intptr_t)pHandle - OFFSET_OF(SharedNode, xm_hObj));
 			}
@@ -83,7 +83,7 @@ namespace __MCF {
 		}
 
 	private:
-		Handle_t xm_hObj;
+		Handle xm_hObj;
 		volatile std::size_t xm_uWeakCount;
 		volatile std::size_t xm_uCount;
 #ifndef NDEBUG
@@ -92,7 +92,7 @@ namespace __MCF {
 #endif
 
 	private:
-		explicit constexpr SharedNode(Handle_t hObj) noexcept
+		explicit constexpr SharedNode(Handle hObj) noexcept
 			: xm_hObj(hObj), xm_uWeakCount(1), xm_uCount(1)
 #ifndef NDEBUG
 			, xm_pDebugInfo(this)
@@ -168,7 +168,7 @@ namespace __MCF {
 		}
 
 	public:
-		Handle_t Get() const noexcept {
+		Handle Get() const noexcept {
 			xValidate();
 
 			return xm_hObj;
@@ -187,7 +187,7 @@ class WeakHandle {
 	friend class SharedHandle<Closer_t>;
 
 public:
-	typedef decltype(Closer_t()()) Handle_t;
+	typedef decltype(Closer_t()()) Handle;
 
 private:
 	typedef __MCF::SharedNode<Closer_t> xSharedNode;
@@ -268,17 +268,17 @@ class SharedHandle {
 	friend class WeakHandle<Closer_t>;
 
 public:
-	typedef decltype(Closer_t()()) Handle_t;
+	typedef decltype(Closer_t()()) Handle;
 
 private:
 	typedef __MCF::SharedNode<Closer_t> xSharedNode;
 	typedef WeakHandle<Closer_t> xWeakHandle;
 
 public:
-	static void AddRef(const Handle_t *pHandle) noexcept {
+	static void AddRef(const Handle *pHandle) noexcept {
 		xSharedNode::AddRef(xSharedNode::FromPHandle(pHandle));
 	}
-	static void DropRef(const Handle_t *pHandle) noexcept {
+	static void DropRef(const Handle *pHandle) noexcept {
 		xSharedNode::DropRef(xSharedNode::FromPHandle(pHandle));
 	}
 
@@ -292,7 +292,7 @@ private:
 public:
 	constexpr SharedHandle() noexcept : xm_pNode() {
 	}
-	constexpr explicit SharedHandle(Handle_t hObj) noexcept : SharedHandle(xSharedNode::Create(hObj)) {
+	constexpr explicit SharedHandle(Handle hObj) noexcept : SharedHandle(xSharedNode::Create(hObj)) {
 	}
 	explicit SharedHandle(const xWeakHandle &rhs) noexcept : SharedHandle(xSharedNode::AddRef(rhs.xm_pNode)) {
 	}
@@ -301,7 +301,7 @@ public:
 	SharedHandle(SharedHandle &&rhs) noexcept : SharedHandle(rhs.xm_pNode) {
 		rhs.xm_pNode = nullptr;
 	}
-	SharedHandle &operator=(Handle_t hObj){
+	SharedHandle &operator=(Handle hObj){
 		Reset(hObj);
 		return *this;
 	}
@@ -325,13 +325,13 @@ public:
 	bool IsGood() const noexcept {
 		return Get() != Closer_t()();
 	}
-	Handle_t Get() const noexcept {
+	Handle Get() const noexcept {
 		return xm_pNode ? xm_pNode->Get() : Closer_t()();
 	}
 	std::size_t GetRefCount() const noexcept {
 		return xm_pNode ? xm_pNode->GetRefCount() : 0;
 	}
-	const Handle_t *AddRef() const noexcept {
+	const Handle *AddRef() const noexcept {
 		return xSharedNode::ToPHandle(xSharedNode::AddRef(xm_pNode));
 	}
 
@@ -339,7 +339,7 @@ public:
 		xSharedNode::DropRef(xm_pNode);
 		xm_pNode = nullptr;
 	}
-	void Reset(Handle_t hObj){
+	void Reset(Handle hObj){
 		xm_pNode = xSharedNode::Recreate(xm_pNode, hObj);
 	}
 	void Reset(const xWeakHandle &rhs) noexcept {
@@ -373,7 +373,7 @@ public:
 	explicit operator bool() const noexcept {
 		return IsGood();
 	}
-	explicit operator Handle_t() const noexcept {
+	explicit operator Handle() const noexcept {
 		return Get();
 	}
 

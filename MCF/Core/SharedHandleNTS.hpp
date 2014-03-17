@@ -18,13 +18,13 @@ namespace __MCF {
 	template<class Closer_t>
 	class SharedNodeNTS {
 	public:
-		typedef decltype(Closer_t()()) Handle_t;
+		typedef decltype(Closer_t()()) Handle;
 
 	public:
-		static SharedNodeNTS *Create(Handle_t hObj){
+		static SharedNodeNTS *Create(Handle hObj){
 			return Recreate(nullptr, hObj);
 		}
-		static SharedNodeNTS *Recreate(SharedNodeNTS *pNode, Handle_t hObj){
+		static SharedNodeNTS *Recreate(SharedNodeNTS *pNode, Handle hObj){
 			if(hObj == Closer_t()()){
 				if(pNode && (pNode->xDropRef())){
 					delete pNode;
@@ -69,13 +69,13 @@ namespace __MCF {
 			}
 		}
 
-		static const Handle_t *ToPHandle(SharedNodeNTS *pNode){
+		static const Handle *ToPHandle(SharedNodeNTS *pNode){
 			if(pNode){
-				return (const Handle_t *)((std::intptr_t)pNode + OFFSET_OF(SharedNodeNTS, xm_hObj));
+				return (const Handle *)((std::intptr_t)pNode + OFFSET_OF(SharedNodeNTS, xm_hObj));
 			}
 			return nullptr;
 		}
-		static SharedNodeNTS *FromPHandle(const Handle_t *pHandle){
+		static SharedNodeNTS *FromPHandle(const Handle *pHandle){
 			if(pHandle){
 				return (SharedNodeNTS *)((std::intptr_t)pHandle - OFFSET_OF(SharedNodeNTS, xm_hObj));
 			}
@@ -83,7 +83,7 @@ namespace __MCF {
 		}
 
 	private:
-		Handle_t xm_hObj;
+		Handle xm_hObj;
 		std::size_t xm_uWeakCount;
 		std::size_t xm_uCount;
 #ifndef NDEBUG
@@ -92,7 +92,7 @@ namespace __MCF {
 #endif
 
 	private:
-		explicit constexpr SharedNodeNTS(Handle_t hObj) noexcept
+		explicit constexpr SharedNodeNTS(Handle hObj) noexcept
 			: xm_hObj(hObj), xm_uWeakCount(1), xm_uCount(1)
 #ifndef NDEBUG
 			, xm_pDebugInfo(this)
@@ -156,7 +156,7 @@ namespace __MCF {
 		}
 
 	public:
-		Handle_t Get() const noexcept {
+		Handle Get() const noexcept {
 			xValidate();
 
 			return xm_hObj;
@@ -175,7 +175,7 @@ class WeakHandleNTS {
 	friend class SharedHandleNTS<Closer_t>;
 
 public:
-	typedef decltype(Closer_t()()) Handle_t;
+	typedef decltype(Closer_t()()) Handle;
 
 private:
 	typedef __MCF::SharedNodeNTS<Closer_t> xSharedNodeNTS;
@@ -256,17 +256,17 @@ class SharedHandleNTS {
 	friend class WeakHandleNTS<Closer_t>;
 
 public:
-	typedef decltype(Closer_t()()) Handle_t;
+	typedef decltype(Closer_t()()) Handle;
 
 private:
 	typedef __MCF::SharedNodeNTS<Closer_t> xSharedNodeNTS;
 	typedef WeakHandleNTS<Closer_t> xWeakHandleNTS;
 
 public:
-	static void AddRef(const Handle_t *pHandle) noexcept {
+	static void AddRef(const Handle *pHandle) noexcept {
 		xSharedNodeNTS::AddRef(xSharedNodeNTS::FromPHandle(pHandle));
 	}
-	static void DropRef(const Handle_t *pHandle) noexcept {
+	static void DropRef(const Handle *pHandle) noexcept {
 		xSharedNodeNTS::DropRef(xSharedNodeNTS::FromPHandle(pHandle));
 	}
 
@@ -280,7 +280,7 @@ private:
 public:
 	constexpr SharedHandleNTS() noexcept : xm_pNode() {
 	}
-	constexpr explicit SharedHandleNTS(Handle_t hObj) noexcept : SharedHandleNTS(xSharedNodeNTS::Create(hObj)) {
+	constexpr explicit SharedHandleNTS(Handle hObj) noexcept : SharedHandleNTS(xSharedNodeNTS::Create(hObj)) {
 	}
 	explicit SharedHandleNTS(const xWeakHandleNTS &rhs) noexcept : SharedHandleNTS(xSharedNodeNTS::AddRef(rhs.xm_pNode)) {
 	}
@@ -289,7 +289,7 @@ public:
 	SharedHandleNTS(SharedHandleNTS &&rhs) noexcept : SharedHandleNTS(rhs.xm_pNode) {
 		rhs.xm_pNode = nullptr;
 	}
-	SharedHandleNTS &operator=(Handle_t hObj){
+	SharedHandleNTS &operator=(Handle hObj){
 		Reset(hObj);
 		return *this;
 	}
@@ -313,13 +313,13 @@ public:
 	bool IsGood() const noexcept {
 		return Get() != Closer_t()();
 	}
-	Handle_t Get() const noexcept {
+	Handle Get() const noexcept {
 		return xm_pNode ? xm_pNode->Get() : Closer_t()();
 	}
 	std::size_t GetRefCount() const noexcept {
 		return xm_pNode ? xm_pNode->GetRefCount() : 0;
 	}
-	const Handle_t *AddRef() const noexcept {
+	const Handle *AddRef() const noexcept {
 		return xSharedNodeNTS::ToPHandle(xSharedNodeNTS::AddRef(xm_pNode));
 	}
 
@@ -327,7 +327,7 @@ public:
 		xSharedNodeNTS::DropRef(xm_pNode);
 		xm_pNode = nullptr;
 	}
-	void Reset(Handle_t hObj){
+	void Reset(Handle hObj){
 		xm_pNode = xSharedNodeNTS::Recreate(xm_pNode, hObj);
 	}
 	void Reset(const xWeakHandleNTS &rhs) noexcept {
@@ -361,7 +361,7 @@ public:
 	explicit operator bool() const noexcept {
 		return IsGood();
 	}
-	explicit operator Handle_t() const noexcept {
+	explicit operator Handle() const noexcept {
 		return Get();
 	}
 

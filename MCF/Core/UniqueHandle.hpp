@@ -14,19 +14,19 @@ namespace MCF {
 template<class Closer_t>
 class UniqueHandle {
 public:
-	typedef decltype(Closer_t()()) Handle_t;
+	typedef decltype(Closer_t()()) Handle;
 
 private:
-	Handle_t xm_hObj;
+	Handle xm_hObj;
 
 public:
 	constexpr UniqueHandle() noexcept : UniqueHandle(Closer_t()()) {
 	}
-	constexpr explicit UniqueHandle(Handle_t hObj) noexcept : xm_hObj(hObj) {
+	constexpr explicit UniqueHandle(Handle hObj) noexcept : xm_hObj(hObj) {
 	}
 	UniqueHandle(UniqueHandle &&rhs) noexcept : UniqueHandle(rhs.Release()) {
 	}
-	UniqueHandle &operator=(Handle_t hObj) noexcept {
+	UniqueHandle &operator=(Handle hObj) noexcept {
 		Reset(hObj);
 		return *this;
 	}
@@ -45,17 +45,17 @@ public:
 	bool IsGood() const noexcept {
 		return Get() != Closer_t()();
 	}
-	Handle_t Get() const noexcept {
+	Handle Get() const noexcept {
 		return xm_hObj;
 	}
-	Handle_t Release() noexcept {
-		const Handle_t hOld = xm_hObj;
+	Handle Release() noexcept {
+		const Handle hOld = xm_hObj;
 		xm_hObj = Closer_t()();
 		return hOld;
 	}
 
-	void Reset(Handle_t hObj = Closer_t()()) noexcept {
-		const Handle_t hOld = xm_hObj;
+	void Reset(Handle hObj = Closer_t()()) noexcept {
+		const Handle hOld = xm_hObj;
 		xm_hObj = hObj;
 		if(hOld != Closer_t()()){
 			Closer_t()(hOld);
@@ -79,7 +79,7 @@ public:
 	explicit operator bool() const noexcept {
 		return IsGood();
 	}
-	explicit operator Handle_t() const noexcept {
+	explicit operator Handle() const noexcept {
 		return Get();
 	}
 

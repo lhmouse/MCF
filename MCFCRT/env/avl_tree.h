@@ -32,7 +32,7 @@ static inline __MCF_AVL_NODE_HEADER *__MCF_AvlNext(const __MCF_AVL_NODE_HEADER *
 extern void __MCF_AvlSwap(__MCF_AVL_PROOT *ppRoot1, __MCF_AVL_PROOT *ppRoot2) __MCF_NOEXCEPT;
 
 // 若 arg0 < arg1 应返回非零值，否则应返回零。
-typedef int (*__MCF_AVL_KEY_COMPARER)(__MCF_STD intptr_t, __MCF_STD intptr_t) __MCF_NOEXCEPT;
+typedef int (*__MCF_AVL_KEY_COMPARER)(__MCF_STD intptr_t, __MCF_STD intptr_t);
 
 extern void __MCF_AvlAttach(
 	__MCF_AVL_PROOT *ppRoot,

@@ -15,7 +15,8 @@ public:
 	union {
 		std::uint16_t m_au16IPv6[8];
 		struct {
-			std::uint16_t m_au16IPv4Prefix[6];
+			std::uint16_t m_au16IPv4Zeroes[5];
+			std::uint16_t m_au16IPv4Ones;
 			std::uint8_t m_au8IPv4[4];
 		};
 	};
@@ -24,17 +25,25 @@ public:
 public:
 	PeerInfo(const void *pSockAddr, std::size_t uSockAddrLen);
 
-	PeerInfo(bool bIPv6, std::uint16_t u16Port) noexcept; // IPv4_Any 或  IPv6_Any。
+	PeerInfo(bool bIPv6, std::uint16_t u16Port) noexcept; // 空地址.
 	PeerInfo(const std::uint16_t (&au16IPv6)[8], std::uint16_t u16Port) noexcept;
 	PeerInfo(const std::uint8_t (&au8IPv4)[4], std::uint16_t u16Port) noexcept;
 
 public:
+	bool IsNull() const noexcept;
+	bool IsIPv6Null() const noexcept;
+	bool IsIPv4Null() const noexcept;
+
 	void ToIPv6(std::uint16_t (&au16IPv6)[8], std::uint16_t &u16Port) const noexcept;
 
 	bool IsIPv4() const noexcept;
 	void ToIPv4(std::uint8_t (&au8IPv4)[4], std::uint16_t &u16Port) const noexcept;
 
 public:
+	explicit operator bool() const noexcept {
+		return !IsNull();
+	}
+
 	bool operator<(const PeerInfo &rhs) const noexcept {
 		const int nResult = BComp(m_au16IPv6, rhs.m_au16IPv6);
 		if(nResult != 0){

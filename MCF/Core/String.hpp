@@ -18,106 +18,44 @@
 
 namespace MCF {
 
-namespace __MCF {
-	template<typename CHAR_T>
-	inline std::size_t StrLen(const CHAR_T *s) noexcept {
-		auto rp = s;
-		while(*rp != CHAR_T()){
-			++rp;
-		}
-		return (std::size_t)(rp - s);
-	}
-	template<>
-	inline std::size_t StrLen<char>(const char *s) noexcept {
-		return std::strlen(s);
-	}
-	template<>
-	inline std::size_t StrLen<wchar_t>(const wchar_t *s) noexcept {
-		return std::wcslen(s);
-	}
-
-	template<typename CHAR_T>
-	inline int StrCmp(const CHAR_T *s1, const CHAR_T *s2) noexcept {
-		auto rp1 = s1;
-		auto rp2 = s2;
-		typename std::make_unsigned<CHAR_T>::type ch1, ch2;
-		do {
-			ch1 = *(rp1++);
-			ch2 = *(rp2++);
-			if(ch1 != ch2){
-				return (ch1 > ch2) ? 1 : -1;
-			}
-		} while(ch1 != 0);
-		return 0;
-	}
-	template<>
-	inline int StrCmp<char>(const char *s1, const char *s2) noexcept {
-		return std::strcmp(s1, s2);
-	}
-	template<>
-	inline int StrCmp<wchar_t>(const wchar_t *s1, const wchar_t *s2) noexcept {
-		return std::wcscmp(s1, s2);
-	}
-
-	template<typename CHAR_T>
-	inline int StrNCmp(const CHAR_T *s1, const CHAR_T *s2, std::size_t cnt) noexcept {
-		auto rp1 = s1;
-		auto rp2 = s2;
-		auto i = cnt;
-		typename std::make_unsigned<CHAR_T>::type ch1, ch2;
-		do {
-			if(i == 0){
-				break;
-			}
-			--i;
-			ch1 = *(rp1++);
-			ch2 = *(rp2++);
-			if(ch1 != ch2){
-				return (ch1 > ch2) ? 1 : -1;
-			}
-		} while(ch1 != 0);
-		return 0;
-	}
-	template<>
-	inline int StrNCmp<char>(const char *s1, const char *s2, std::size_t cnt) noexcept {
-		return std::strncmp(s1, s2, cnt);
-	}
-	template<>
-	inline int StrNCmp<wchar_t>(const wchar_t *s1, const wchar_t *s2, std::size_t cnt) noexcept {
-		return std::wcsncmp(s1, s2, cnt);
-	}
-}
-
 enum class StringEncoding {
 	UTF8,
 	ANSI,
 	UTF16
 };
 
-template<typename CHAR_T, StringEncoding CHAR_ENC>
+template<typename Char_t, StringEncoding ENCODING>
 class GenericString;
 
 typedef GenericString<wchar_t, StringEncoding::UTF16> UnifiedString;
 
-template<typename CHAR_T, StringEncoding CHAR_ENC>
+template<typename Char_t, StringEncoding ENCODING>
 class GenericString {
-	static_assert(std::is_arithmetic<CHAR_T>::value, "What do you want?");
+	static_assert(std::is_arithmetic<Char_t>::value, "Char_t muse be an arithmetic type.");
 
-	template<typename OTHER_C, StringEncoding OTHER_E>
+	template<typename C, StringEncoding E>
 	friend class GenericString;
 
 public:
-	typedef CHAR_T			*PCHAR_T,	*PSTR_T;
-	typedef const CHAR_T	*PCCHAR_T,	*PCSTR_T;
+	typedef Char_t			*PChar_t,	*PStr_t;
+	typedef const Char_t	*PCChar_t,	*PCStr_t;
 
-	typedef typename std::make_signed<CHAR_T>::type		SCHAR_T, *PSCHAR_T;
-	typedef typename std::make_unsigned<CHAR_T>::type	UCHAR_T, *PUCHAR_T;
+	typedef typename std::make_signed<Char_t>::type		SChar_t, *PSChar_t;
+	typedef typename std::make_unsigned<Char_t>::type	UChar_t, *PUChar_t;
 
 	enum : std::size_t {
 		NPOS = (std::size_t)-1
 	};
 
 private:
+	static std::size_t xLen(const Char_t *s) noexcept {
+		auto rp = s;
+		while(*rp != Char_t()){
+			++rp;
+		}
+		return (std::size_t)(rp - s);
+	}
+
 	static std::size_t xTranslateOffset(std::size_t uLength, std::ptrdiff_t nBegin) noexcept {
 		std::ptrdiff_t nRet = nBegin;
 		if(nRet < 0){
@@ -131,23 +69,23 @@ private:
 		return (std::size_t)nRet;
 	}
 
-	static PCHAR_T xCopyFwd(PCHAR_T pchOut, PCCHAR_T pchBegin, std::size_t uCount) noexcept {
+	static PChar_t xCopyFwd(PChar_t pchOut, PCChar_t pchBegin, std::size_t uCount) noexcept {
 		return std::copy(pchBegin, pchBegin + uCount, pchOut);
 	}
-	static PCHAR_T xCopyBwd(PCHAR_T pchOut, PCCHAR_T pchBegin, std::size_t uCount) noexcept {
+	static PChar_t xCopyBwd(PChar_t pchOut, PCChar_t pchBegin, std::size_t uCount) noexcept {
 		const auto pchRet = pchOut + uCount;
 		std::copy_backward(pchBegin, pchBegin + uCount, pchRet);
 		return pchRet;
 	}
-	static PCHAR_T xRevCopy(PCHAR_T pchOut, PCCHAR_T pchBegin, std::size_t uCount) noexcept {
+	static PChar_t xRevCopy(PChar_t pchOut, PCChar_t pchBegin, std::size_t uCount) noexcept {
 		return std::reverse_copy(pchBegin, pchBegin + uCount, pchOut);
 	}
-	static PCHAR_T xFill(PCHAR_T pchOut, CHAR_T ch, std::size_t uCount) noexcept {
+	static PChar_t xFill(PChar_t pchOut, Char_t ch, std::size_t uCount) noexcept {
 		return std::fill_n(pchOut, uCount, ch);
 	}
 
 	template<typename ITER_T>
-	static PCCHAR_T xKMPFind(ITER_T s, std::size_t slen, ITER_T w, std::size_t wlen) noexcept {
+	static PCChar_t xKMPFind(ITER_T s, std::size_t slen, ITER_T w, std::size_t wlen) noexcept {
 		ASSERT(wlen > 0);
 
 		if(slen < wlen){
@@ -193,7 +131,7 @@ private:
 			}
 		}
 
-		PCCHAR_T found = nullptr;
+		PCChar_t found = nullptr;
 
 		std::size_t m = 0;
 		std::size_t i = 0;
@@ -224,9 +162,9 @@ private:
 private:
 	struct {
 		union {
-			CHAR_T Small[7 * sizeof(std::size_t) / sizeof(CHAR_T)];
+			Char_t Small[7 * sizeof(std::size_t) / sizeof(Char_t)];
 			struct {
-				PCHAR_T pchBegin;
+				PChar_t pchBegin;
 				std::size_t uCapacity;
 			} Large;
 		};
@@ -235,17 +173,17 @@ private:
 
 public:
 	GenericString() noexcept {
-		xm_vStorage.Small[0] = CHAR_T();
-		std::end(xm_vStorage.Small)[-1] = CHAR_T();
+		xm_vStorage.Small[0] = Char_t();
+		std::end(xm_vStorage.Small)[-1] = Char_t();
 		xm_vStorage.uLength = 0;
 	}
-	explicit GenericString(CHAR_T ch, std::size_t uCount = 1) : GenericString() {
+	explicit GenericString(Char_t ch, std::size_t uCount = 1) : GenericString() {
 		Assign(ch, uCount);
 	}
-	GenericString(PCSTR_T pszSrc) : GenericString() {
+	GenericString(PCStr_t pszSrc) : GenericString() {
 		Assign(pszSrc);
 	}
-	GenericString(PCCHAR_T pchSrc, std::size_t uSrcLen) : GenericString() {
+	GenericString(PCChar_t pchSrc, std::size_t uSrcLen) : GenericString() {
 		Assign(pchSrc, uSrcLen);
 	}
 	GenericString(const GenericString &rhs) : GenericString() {
@@ -262,11 +200,11 @@ public:
 	GenericString(GenericString<OTHER_C, OTHER_E> &&rhs) noexcept : GenericString() {
 		Assign(std::move(rhs));
 	}
-	GenericString &operator=(CHAR_T ch){
+	GenericString &operator=(Char_t ch){
 		Assign(ch, 1);
 		return *this;
 	}
-	GenericString &operator=(PCSTR_T pszSrc){
+	GenericString &operator=(PCStr_t pszSrc){
 		Assign(pszSrc);
 		return *this;
 	}
@@ -296,10 +234,10 @@ public:
 
 private:
 	bool xIsSmall() const {
-		return std::end(xm_vStorage.Small)[-1] == CHAR_T();
+		return std::end(xm_vStorage.Small)[-1] == Char_t();
 	}
 
-	PCHAR_T xReserveUnshift(std::size_t uCapacity, std::size_t uUnshift){
+	PChar_t xReserveUnshift(std::size_t uCapacity, std::size_t uUnshift){
 		ASSERT(uUnshift + GetLength() < uCapacity);
 
 		const auto pszOldBegin = GetCStr();
@@ -310,15 +248,13 @@ private:
 			return pszOldBegin;
 		} else {
 			auto uRealCapacity = std::max(uCapacity, COUNT_OF(xm_vStorage.Small));
-			if(sizeof(std::size_t) == 8){
-				uRealCapacity = (std::size_t)1 << (64u - __builtin_clzll(uRealCapacity - 1));
-			} else {
-				uRealCapacity = (std::size_t)1 << (32u - __builtin_clzl(uRealCapacity - 1));
-			}
-			const PCHAR_T pchNewStor = new CHAR_T[uRealCapacity];
+			uRealCapacity += (uRealCapacity >> 1);
+			uRealCapacity = (uRealCapacity + 0xF) & -0x10;
+
+ 			const PChar_t pchNewStor = new Char_t[uRealCapacity];
 			xCopyFwd(pchNewStor + uUnshift, pszOldBegin, GetLength() + 1);
 			if(xIsSmall()){
-				std::end(xm_vStorage.Small)[-1] = (CHAR_T)-1;
+				std::end(xm_vStorage.Small)[-1] = (Char_t)-1;
 			} else {
 				delete[] xm_vStorage.Large.pchBegin;
 			}
@@ -335,36 +271,36 @@ private:
 	void xDisunify(UnifiedString &&ucsTemp);
 
 public:
-	PCSTR_T GetCStr() const noexcept {
+	PCStr_t GetCStr() const noexcept {
 		return xIsSmall() ? xm_vStorage.Small : xm_vStorage.Large.pchBegin;
 	}
-	PSTR_T GetCStr() noexcept {
+	PStr_t GetCStr() noexcept {
 		return xIsSmall() ? xm_vStorage.Small : xm_vStorage.Large.pchBegin;
 	}
 	bool IsEmpty() const noexcept {
-		return GetCStr()[0] == CHAR_T();
+		return GetCStr()[0] == Char_t();
 	}
 	void Clear() noexcept {
-		GetCStr()[0] = CHAR_T();
+		GetCStr()[0] = Char_t();
 	}
 
 	std::size_t GetLength() const noexcept {
 		return xm_vStorage.uLength;
 	}
-	PCHAR_T Resize(std::size_t uSize){
+	PChar_t Resize(std::size_t uSize){
 		const auto pchNewBegin = Reserve(uSize);
-		pchNewBegin[uSize] = CHAR_T();
+		pchNewBegin[uSize] = Char_t();
 		xm_vStorage.uLength = uSize;
 		return pchNewBegin;
 	}
 	void Trim() noexcept {
-		xm_vStorage.uLength = __MCF::StrLen(GetCStr());
+		xm_vStorage.uLength = xLen(GetCStr());
 	}
 
 	std::size_t GetCapacity() const {
 		return xIsSmall() ? COUNT_OF(xm_vStorage.Small) : xm_vStorage.Large.uCapacity;
 	}
-	PCHAR_T Reserve(std::size_t uCapacity){
+	PChar_t Reserve(std::size_t uCapacity){
 		return xReserveUnshift(uCapacity + 1, 0);
 	}
 
@@ -372,19 +308,19 @@ public:
 		if(&rhs == this){
 			return;
 		}
-		typedef std::uintptr_t BLOCK[sizeof(xm_vStorage) / sizeof(std::uintptr_t)];
-		std::swap((BLOCK &)xm_vStorage, (BLOCK &)rhs.xm_vStorage);
+		typedef std::uintptr_t Block[sizeof(xm_vStorage) / sizeof(std::uintptr_t)];
+		std::swap((Block &)xm_vStorage, (Block &)rhs.xm_vStorage);
 	}
 
-	void Assign(CHAR_T ch, std::size_t uCount){
-		xFill(Reserve(uCount), ch, uCount)[0] = CHAR_T();
+	void Assign(Char_t ch, std::size_t uCount){
+		xFill(Reserve(uCount), ch, uCount)[0] = Char_t();
 		xm_vStorage.uLength = uCount;
 	}
-	void Assign(PCSTR_T pszSrc){
-		Assign(pszSrc, __MCF::StrLen(pszSrc));
+	void Assign(PCStr_t pszSrc){
+		Assign(pszSrc, xLen(pszSrc));
 	}
-	void Assign(PCSTR_T pchSrc, std::size_t uSrcLen){
-		xCopyFwd(Reserve(uSrcLen), pchSrc, uSrcLen)[0] = CHAR_T();
+	void Assign(PCStr_t pchSrc, std::size_t uSrcLen){
+		xCopyFwd(Reserve(uSrcLen), pchSrc, uSrcLen)[0] = Char_t();
 		xm_vStorage.uLength = uSrcLen;
 	}
 	void Assign(const GenericString &rhs){
@@ -400,8 +336,8 @@ public:
 
 		__builtin_memcpy(&xm_vStorage, &rhs.xm_vStorage, sizeof(xm_vStorage));
 
-		std::begin(rhs.xm_vStorage.Small)[0] = CHAR_T();
-		std::end(rhs.xm_vStorage.Small)[-1] = CHAR_T();
+		std::begin(rhs.xm_vStorage.Small)[0] = Char_t();
+		std::end(rhs.xm_vStorage.Small)[-1] = Char_t();
 		rhs.xm_vStorage.uLength = 0;
 	}
 	template<typename OTHER_C, StringEncoding OTHER_E>
@@ -415,19 +351,19 @@ public:
 		}
 	}
 
-	void Append(CHAR_T ch, std::size_t uCount = 1){
+	void Append(Char_t ch, std::size_t uCount = 1){
 		const auto uLength = GetLength();
 		const auto uNewLength = uLength + uCount;
-		xFill(Reserve(uNewLength) + uLength, ch, uCount)[0] = CHAR_T();
+		xFill(Reserve(uNewLength) + uLength, ch, uCount)[0] = Char_t();
 		xm_vStorage.uLength = uNewLength;
 	}
-	void Append(PCSTR_T pszSrc){
-		Append(pszSrc, __MCF::StrLen(pszSrc));
+	void Append(PCStr_t pszSrc){
+		Append(pszSrc, xLen(pszSrc));
 	}
-	void Append(PCCHAR_T pchSrc, std::size_t uSrcLen){
+	void Append(PCChar_t pchSrc, std::size_t uSrcLen){
 		const auto uLength = GetLength();
 		const auto uNewLength = uLength + uSrcLen;
-		xCopyFwd(Reserve(uNewLength) + uLength, pchSrc, uSrcLen)[0] = CHAR_T();
+		xCopyFwd(Reserve(uNewLength) + uLength, pchSrc, uSrcLen)[0] = Char_t();
 		xm_vStorage.uLength = uNewLength;
 	}
 	void Append(const GenericString &rhs){
@@ -435,7 +371,7 @@ public:
 		if(&rhs == this){
 			const auto uNewLength = uLength * 2;
 			const auto pchBegin = Reserve(uNewLength);
-			xCopyFwd(pchBegin + uLength, pchBegin, uLength)[0] = CHAR_T();
+			xCopyFwd(pchBegin + uLength, pchBegin, uLength)[0] = Char_t();
 			xm_vStorage.uLength = uNewLength;
 		} else {
 			Append(rhs.GetCStr(), rhs.GetLength());
@@ -455,20 +391,20 @@ public:
 		const auto uLength = GetLength();
 		const auto pchWrite = GetCStr();
 		const auto uNewLength = (uCount >= uLength) ? 0 : (uLength - uCount);
-		pchWrite[uNewLength] = CHAR_T();
+		pchWrite[uNewLength] = Char_t();
 		xm_vStorage.uLength = uNewLength;
 	}
 
-	void Unshift(CHAR_T ch, std::size_t uCount = 1){
+	void Unshift(Char_t ch, std::size_t uCount = 1){
 		const auto uLength = GetLength();
 		const auto uNewLength = uLength + uCount;
 		xFill(xReserveUnshift(uNewLength + 1, uCount), ch, uCount);
 		xm_vStorage.uLength = uNewLength;
 	}
-	void Unshift(PCSTR_T pszSrc){
-		Unshift(pszSrc, __MCF::StrLen(pszSrc));
+	void Unshift(PCStr_t pszSrc){
+		Unshift(pszSrc, xLen(pszSrc));
 	}
-	void Unshift(PCCHAR_T pchSrc, std::size_t uSrcLen){
+	void Unshift(PCChar_t pchSrc, std::size_t uSrcLen){
 		const auto uLength = GetLength();
 		const auto uNewLength = uLength + uSrcLen;
 		xCopyFwd(xReserveUnshift(uNewLength + 1, uSrcLen), pchSrc, uSrcLen);
@@ -495,27 +431,43 @@ public:
 		const auto uLength = GetLength();
 		const auto pchWrite = GetCStr();
 		if(uCount >= uLength){
-			pchWrite[0] = CHAR_T();
+			pchWrite[0] = Char_t();
 			xm_vStorage.uLength = 0;
 		} else {
 			const auto uNewLength = xm_vStorage.uLength - uCount;
 			xCopyFwd(pchWrite, pchWrite + uCount, uNewLength);
-			pchWrite[uNewLength] = CHAR_T();
+			pchWrite[uNewLength] = Char_t();
 			xm_vStorage.uLength = uNewLength;
 		}
 	}
 
-	int Compare(PCSTR_T rhs) const noexcept {
-		return __MCF::StrCmp(GetCStr(), rhs);
+	int Compare(PCStr_t rhs) const noexcept {
+		return Compare(rhs, xLen(rhs));
 	}
 	int Compare(const GenericString &rhs) const noexcept {
-		return __MCF::StrCmp(GetCStr(), rhs.GetCStr());
+		return Compare(rhs.GetCStr(), rhs.GetLength());
 	}
-	int Compare(PCSTR_T rhs, std::size_t uMaxCount) const noexcept {
-		return __MCF::StrNCmp(GetCStr(), rhs, uMaxCount);
+	int Compare(PCStr_t rhs, std::size_t uMaxCount) const noexcept {
+		auto pLRead = GetCStr();
+		auto uLLen = GetLength();
+		auto pRRead = rhs;
+		auto uRLen = uMaxCount;
+		for(;;){
+			if(uLLen == 0){
+				return (uRLen == 0) ? 0 : -1;
+			} else if(uRLen == 0){
+				return 1;
+			}
+
+			const auto chL = (UChar_t)*(pLRead++);
+			const auto chR = (UChar_t)*(pRRead++);
+			if(chL != chR){
+				return (chL < chR) ? -1 : 1;
+			}
+		}
 	}
 	int Compare(const GenericString &rhs, std::size_t uMaxCount) const noexcept {
-		return __MCF::StrNCmp(GetCStr(), rhs.GetCStr(), uMaxCount);
+		return Compare(rhs.GetCStr(), uMaxCount);
 	}
 
 	// 为了方便理解，想象此处使用的是所谓“插入式光标”：
@@ -538,10 +490,10 @@ public:
 		const auto uRealEnd = xTranslateOffset(uLength, nEnd);
 		if(uRealBegin < uRealEnd){
 			const auto uCount = uRealEnd - uRealBegin;
-			xCopyFwd(strRet.Reserve(uCount), pchBegin + uRealBegin, uCount)[0] = CHAR_T();
+			xCopyFwd(strRet.Reserve(uCount), pchBegin + uRealBegin, uCount)[0] = Char_t();
 		} else if(uRealBegin > uRealEnd){
 			const auto uCount = uRealBegin - uRealEnd;
-			xCopyFwd(strRet.Reserve(uCount), pchBegin + uRealEnd, uCount)[0] = CHAR_T();
+			xCopyFwd(strRet.Reserve(uCount), pchBegin + uRealEnd, uCount)[0] = Char_t();
 		}
 		return std::move(strRet);
 	}
@@ -551,14 +503,14 @@ public:
 	//   FindFirstAfter("def", 4)   返回 NPOS；
 	//   FindLastBefore("def", 5)   返回 NPOS；
 	//   FindLastBefore("def", 6)   返回 3。
-	std::size_t FindFirstAfter(PCSTR_T pszToFind, std::ptrdiff_t nOffsetBegin = 0) const noexcept {
-		return FindFirstAfter(pszToFind, __MCF::StrLen(pszToFind), nOffsetBegin);
+	std::size_t FindFirstAfter(PCStr_t pszToFind, std::ptrdiff_t nOffsetBegin = 0) const noexcept {
+		return FindFirstAfter(pszToFind, xLen(pszToFind), nOffsetBegin);
 	}
-	std::size_t FindFirstAfter(PCCHAR_T pchToFind, std::size_t uLenToFind, std::ptrdiff_t nOffsetBegin = 0) const noexcept {
+	std::size_t FindFirstAfter(PCChar_t pchToFind, std::size_t uLenToFind, std::ptrdiff_t nOffsetBegin = 0) const noexcept {
 		if(uLenToFind == 0){
 			return 0;
 		}
-		const PCCHAR_T pchBegin = GetCStr();
+		const PCChar_t pchBegin = GetCStr();
 		const auto uLength = GetLength();
 		if(uLength < uLenToFind){
 			return NPOS;
@@ -570,10 +522,10 @@ public:
 		const auto pchPos = xKMPFind(pchBegin + uRealBegin, uLength - uRealBegin, pchToFind, uLenToFind);
 		return pchPos ? (std::size_t)(pchPos - pchBegin) : NPOS;
 	}
-	std::size_t FindLastBefore(PCSTR_T pszToFind, std::ptrdiff_t nOffsetEnd = -1) const noexcept {
-		return FindLastBefore(pszToFind, __MCF::StrLen(pszToFind), nOffsetEnd);
+	std::size_t FindLastBefore(PCStr_t pszToFind, std::ptrdiff_t nOffsetEnd = -1) const noexcept {
+		return FindLastBefore(pszToFind, xLen(pszToFind), nOffsetEnd);
 	}
-	std::size_t FindLastBefore(PCCHAR_T pchToFind, std::size_t uLenToFind, std::ptrdiff_t nOffsetEnd = -1) const noexcept {
+	std::size_t FindLastBefore(PCChar_t pchToFind, std::size_t uLenToFind, std::ptrdiff_t nOffsetEnd = -1) const noexcept {
 		const auto pchBegin = GetCStr();
 		const auto uLength = GetLength();
 		if(uLenToFind == 0){
@@ -586,8 +538,8 @@ public:
 		if(uRealEnd < uLenToFind){
 			return NPOS;
 		}
-		typedef std::reverse_iterator<PCCHAR_T> RPCHAR_T;
-		const auto pchPos = xKMPFind(RPCHAR_T(pchBegin + uRealEnd), uRealEnd, RPCHAR_T(pchToFind + uLenToFind), uLenToFind);
+		typedef std::reverse_iterator<PCChar_t> RPChar_t;
+		const auto pchPos = xKMPFind(RPChar_t(pchBegin + uRealEnd), uRealEnd, RPChar_t(pchToFind + uLenToFind), uLenToFind);
 		return pchPos ? (std::size_t)(pchPos - pchBegin) : NPOS;
 	}
 
@@ -596,7 +548,7 @@ public:
 	//   FindFirstAfter('d', 3)   返回 3；
 	//   FindLastBefore('c', 3)   返回 2；
 	//   FindLastBefore('d', 3)   返回 NPOS。
-	std::size_t FindFirstAfter(CHAR_T chToFind, std::ptrdiff_t nOffsetBegin = 0) const noexcept {
+	std::size_t FindFirstAfter(Char_t chToFind, std::ptrdiff_t nOffsetBegin = 0) const noexcept {
 		const auto pchBegin = GetCStr();
 		const auto uLength = GetLength();
 		if(uLength == 0){
@@ -618,7 +570,7 @@ public:
 			++pchRead;
 		}
 	}
-	std::size_t FindLastBefore(CHAR_T chToFind, std::ptrdiff_t nOffsetEnd = -1) const noexcept {
+	std::size_t FindLastBefore(Char_t chToFind, std::ptrdiff_t nOffsetEnd = -1) const noexcept {
 		const auto pchBegin = GetCStr();
 		const auto uLength = GetLength();
 		if(uLength == 0){
@@ -641,7 +593,7 @@ public:
 	}
 
 	// 参考 Slice。
-	void Replace(std::ptrdiff_t nBegin, std::ptrdiff_t nEnd, CHAR_T chRep, std::size_t uRepCount = 1){
+	void Replace(std::ptrdiff_t nBegin, std::ptrdiff_t nEnd, Char_t chRep, std::size_t uRepCount = 1){
 		const auto pchBegin = GetCStr();
 		const auto uLength = GetLength();
 		const auto uRealBegin = xTranslateOffset(uLength, nBegin);
@@ -670,10 +622,10 @@ public:
 			}
 		}
 	}
-	void Replace(std::ptrdiff_t nBegin, std::ptrdiff_t nEnd, PCSTR_T pszRep){
-		Replace(nBegin, nEnd, pszRep, __MCF::StrLen(pszRep));
+	void Replace(std::ptrdiff_t nBegin, std::ptrdiff_t nEnd, PCStr_t pszRep){
+		Replace(nBegin, nEnd, pszRep, xLen(pszRep));
 	}
-	void Replace(std::ptrdiff_t nBegin, std::ptrdiff_t nEnd, PCCHAR_T pchRep, std::size_t uRepLen){
+	void Replace(std::ptrdiff_t nBegin, std::ptrdiff_t nEnd, PCChar_t pchRep, std::size_t uRepLen){
 		const auto pchBegin = GetCStr();
 		const auto uLength = GetLength();
 		const auto uRealBegin = xTranslateOffset(uLength, nBegin);
@@ -707,28 +659,28 @@ public:
 	explicit operator bool() const noexcept {
 		return !IsEmpty();
 	}
-	explicit operator PCSTR_T() const noexcept {
+	explicit operator PCStr_t() const noexcept {
 		return GetCStr();
 	}
-	explicit operator PSTR_T() noexcept {
+	explicit operator PStr_t() noexcept {
 		return GetCStr();
 	}
-	const CHAR_T &operator[](std::size_t uIndex) const noexcept {
+	const Char_t &operator[](std::size_t uIndex) const noexcept {
 		ASSERT_MSG(uIndex <= GetLength(), L"GenericString::operator[]() 失败：索引越界。");
 
 		return GetCStr()[uIndex];
 	}
-	CHAR_T &operator[](std::size_t uIndex) noexcept {
+	Char_t &operator[](std::size_t uIndex) noexcept {
 		ASSERT_MSG(uIndex <= GetLength(), L"GenericString::operator[]() 失败：索引越界。");
 
 		return GetCStr()[uIndex];
 	}
 
-	GenericString &operator+=(CHAR_T rhs){
+	GenericString &operator+=(Char_t rhs){
 		Append(rhs);
 		return *this;
 	}
-	GenericString &operator+=(PCSTR_T rhs){
+	GenericString &operator+=(PCStr_t rhs){
 		Append(rhs);
 		return *this;
 	}
@@ -741,37 +693,37 @@ public:
 		return *this;
 	}
 
-	bool operator==(PCSTR_T rhs) const noexcept {
+	bool operator==(PCStr_t rhs) const noexcept {
 		return Compare(rhs) == 0;
 	}
 	bool operator==(const GenericString &rhs) const noexcept {
 		return Compare(rhs) == 0;
 	}
-	bool operator!=(PCSTR_T rhs) const noexcept {
+	bool operator!=(PCStr_t rhs) const noexcept {
 		return Compare(rhs) != 0;
 	}
 	bool operator!=(const GenericString &rhs) const noexcept {
 		return Compare(rhs) != 0;
 	}
-	bool operator<(PCSTR_T rhs) const noexcept {
+	bool operator<(PCStr_t rhs) const noexcept {
 		return Compare(rhs) < 0;
 	}
 	bool operator<(const GenericString &rhs) const noexcept {
 		return Compare(rhs) < 0;
 	}
-	bool operator>(PCSTR_T rhs) const noexcept {
+	bool operator>(PCStr_t rhs) const noexcept {
 		return Compare(rhs) > 0;
 	}
 	bool operator>(const GenericString &rhs) const noexcept {
 		return Compare(rhs) > 0;
 	}
-	bool operator<=(PCSTR_T rhs) const noexcept {
+	bool operator<=(PCStr_t rhs) const noexcept {
 		return Compare(rhs) <= 0;
 	}
 	bool operator<=(const GenericString &rhs) const noexcept {
 		return Compare(rhs) <= 0;
 	}
-	bool operator>=(PCSTR_T rhs) const noexcept {
+	bool operator>=(PCStr_t rhs) const noexcept {
 		return Compare(rhs) >= 0;
 	}
 	bool operator>=(const GenericString &rhs) const noexcept {
@@ -779,26 +731,26 @@ public:
 	}
 };
 
-template<typename CHAR_T, StringEncoding CHAR_ENC>
-GenericString<CHAR_T, CHAR_ENC> operator+(const GenericString<CHAR_T, CHAR_ENC> &lhs, const GenericString<CHAR_T, CHAR_ENC> &rhs){
-	GenericString<CHAR_T, CHAR_ENC> tmp;
+template<typename Char_t, StringEncoding ENCODING>
+GenericString<Char_t, ENCODING> operator+(const GenericString<Char_t, ENCODING> &lhs, const GenericString<Char_t, ENCODING> &rhs){
+	GenericString<Char_t, ENCODING> tmp;
 	tmp.Reserve(lhs.GetLength() + rhs.GetLength());
 	tmp.Assign(lhs);
 	tmp.Append(rhs);
 	return std::move(tmp);
 }
-template<typename CHAR_T, StringEncoding CHAR_ENC>
-GenericString<CHAR_T, CHAR_ENC> operator+(GenericString<CHAR_T, CHAR_ENC> &&lhs, const GenericString<CHAR_T, CHAR_ENC> &rhs){
+template<typename Char_t, StringEncoding ENCODING>
+GenericString<Char_t, ENCODING> operator+(GenericString<Char_t, ENCODING> &&lhs, const GenericString<Char_t, ENCODING> &rhs){
 	lhs.Append(rhs);
 	return std::move(lhs);
 }
-template<typename CHAR_T, StringEncoding CHAR_ENC>
-GenericString<CHAR_T, CHAR_ENC> operator+(const GenericString<CHAR_T, CHAR_ENC> &lhs, GenericString<CHAR_T, CHAR_ENC> &&rhs){
+template<typename Char_t, StringEncoding ENCODING>
+GenericString<Char_t, ENCODING> operator+(const GenericString<Char_t, ENCODING> &lhs, GenericString<Char_t, ENCODING> &&rhs){
 	rhs.Unshift(lhs);
 	return std::move(rhs);
 }
-template<typename CHAR_T, StringEncoding CHAR_ENC>
-GenericString<CHAR_T, CHAR_ENC> operator+(GenericString<CHAR_T, CHAR_ENC> &&lhs, GenericString<CHAR_T, CHAR_ENC> &&rhs){
+template<typename Char_t, StringEncoding ENCODING>
+GenericString<Char_t, ENCODING> operator+(GenericString<Char_t, ENCODING> &&lhs, GenericString<Char_t, ENCODING> &&rhs){
 	if(lhs.GetCapacity() >= rhs.GetCapacity()){
 		lhs.Append(rhs);
 		return std::move(lhs);
@@ -807,87 +759,87 @@ GenericString<CHAR_T, CHAR_ENC> operator+(GenericString<CHAR_T, CHAR_ENC> &&lhs,
 		return std::move(rhs);
 	}
 }
-template<typename CHAR_T, StringEncoding CHAR_ENC>
-GenericString<CHAR_T, CHAR_ENC> operator+(const CHAR_T *lhs, const GenericString<CHAR_T, CHAR_ENC> &rhs){
+template<typename Char_t, StringEncoding ENCODING>
+GenericString<Char_t, ENCODING> operator+(const Char_t *lhs, const GenericString<Char_t, ENCODING> &rhs){
 	auto p = lhs;
-	while(*p != CHAR_T()){
+	while(*p != Char_t()){
 		++p;
 	}
-	GenericString<CHAR_T, CHAR_ENC> tmp;
+	GenericString<Char_t, ENCODING> tmp;
 	tmp.Reserve((std::size_t)(p - lhs) + rhs.GetLength());
 	tmp.Assign(lhs);
 	tmp.Append(rhs);
 	return std::move(tmp);
 }
-template<typename CHAR_T, StringEncoding CHAR_ENC>
-GenericString<CHAR_T, CHAR_ENC> operator+(const CHAR_T *lhs, GenericString<CHAR_T, CHAR_ENC> &&rhs){
+template<typename Char_t, StringEncoding ENCODING>
+GenericString<Char_t, ENCODING> operator+(const Char_t *lhs, GenericString<Char_t, ENCODING> &&rhs){
 	rhs.Unshift(lhs);
 	return std::move(rhs);
 }
-template<typename CHAR_T, StringEncoding CHAR_ENC>
-GenericString<CHAR_T, CHAR_ENC> operator+(CHAR_T lhs, const GenericString<CHAR_T, CHAR_ENC> &rhs){
-	GenericString<CHAR_T, CHAR_ENC> tmp;
+template<typename Char_t, StringEncoding ENCODING>
+GenericString<Char_t, ENCODING> operator+(Char_t lhs, const GenericString<Char_t, ENCODING> &rhs){
+	GenericString<Char_t, ENCODING> tmp;
 	tmp.Reserve(1 + rhs.GetLength());
 	tmp.Assign(lhs);
 	tmp.Append(rhs);
 	return std::move(tmp);
 }
-template<typename CHAR_T, StringEncoding CHAR_ENC>
-GenericString<CHAR_T, CHAR_ENC> operator+(CHAR_T lhs, GenericString<CHAR_T, CHAR_ENC> &&rhs){
+template<typename Char_t, StringEncoding ENCODING>
+GenericString<Char_t, ENCODING> operator+(Char_t lhs, GenericString<Char_t, ENCODING> &&rhs){
 	rhs.Unshift(lhs);
 	return std::move(rhs);
 }
-template<typename CHAR_T, StringEncoding CHAR_ENC>
-GenericString<CHAR_T, CHAR_ENC> operator+(const GenericString<CHAR_T, CHAR_ENC> &lhs, const CHAR_T *rhs){
+template<typename Char_t, StringEncoding ENCODING>
+GenericString<Char_t, ENCODING> operator+(const GenericString<Char_t, ENCODING> &lhs, const Char_t *rhs){
 	auto p = rhs;
-	while(*p != CHAR_T()){
+	while(*p != Char_t()){
 		++p;
 	}
-	GenericString<CHAR_T, CHAR_ENC> tmp;
+	GenericString<Char_t, ENCODING> tmp;
 	tmp.Reserve(lhs.GetLength(), (std::size_t)(p - rhs));
 	tmp.Assign(lhs);
 	tmp.Append(rhs);
 	return std::move(tmp);
 }
-template<typename CHAR_T, StringEncoding CHAR_ENC>
-GenericString<CHAR_T, CHAR_ENC> operator+(GenericString<CHAR_T, CHAR_ENC> &&lhs, const CHAR_T *rhs){
+template<typename Char_t, StringEncoding ENCODING>
+GenericString<Char_t, ENCODING> operator+(GenericString<Char_t, ENCODING> &&lhs, const Char_t *rhs){
 	lhs.Append(rhs);
 	return std::move(lhs);
 }
-template<typename CHAR_T, StringEncoding CHAR_ENC>
-GenericString<CHAR_T, CHAR_ENC> operator+(const GenericString<CHAR_T, CHAR_ENC> &lhs, CHAR_T rhs){
+template<typename Char_t, StringEncoding ENCODING>
+GenericString<Char_t, ENCODING> operator+(const GenericString<Char_t, ENCODING> &lhs, Char_t rhs){
 	auto tmp(lhs);
 	tmp.Append(rhs);
 	return std::move(tmp);
 }
-template<typename CHAR_T, StringEncoding CHAR_ENC>
-GenericString<CHAR_T, CHAR_ENC> operator+(GenericString<CHAR_T, CHAR_ENC> &&lhs, CHAR_T rhs){
+template<typename Char_t, StringEncoding ENCODING>
+GenericString<Char_t, ENCODING> operator+(GenericString<Char_t, ENCODING> &&lhs, Char_t rhs){
 	lhs.Append(rhs);
 	return std::move(lhs);
 }
 
-template<typename CHAR_T, StringEncoding CHAR_ENC>
-bool operator==(const CHAR_T *lhs, const GenericString<CHAR_T, CHAR_ENC> &rhs) noexcept {
+template<typename Char_t, StringEncoding ENCODING>
+bool operator==(const Char_t *lhs, const GenericString<Char_t, ENCODING> &rhs) noexcept {
 	return rhs == lhs;
 }
-template<typename CHAR_T, StringEncoding CHAR_ENC>
-bool operator!=(const CHAR_T *lhs, const GenericString<CHAR_T, CHAR_ENC> &rhs) noexcept {
+template<typename Char_t, StringEncoding ENCODING>
+bool operator!=(const Char_t *lhs, const GenericString<Char_t, ENCODING> &rhs) noexcept {
 	return rhs != lhs;
 }
-template<typename CHAR_T, StringEncoding CHAR_ENC>
-bool operator<(const CHAR_T *lhs, const GenericString<CHAR_T, CHAR_ENC> &rhs) noexcept {
+template<typename Char_t, StringEncoding ENCODING>
+bool operator<(const Char_t *lhs, const GenericString<Char_t, ENCODING> &rhs) noexcept {
 	return rhs >= lhs;
 }
-template<typename CHAR_T, StringEncoding CHAR_ENC>
-bool operator>(const CHAR_T *lhs, const GenericString<CHAR_T, CHAR_ENC> &rhs) noexcept {
+template<typename Char_t, StringEncoding ENCODING>
+bool operator>(const Char_t *lhs, const GenericString<Char_t, ENCODING> &rhs) noexcept {
 	return rhs <= lhs;
 }
-template<typename CHAR_T, StringEncoding CHAR_ENC>
-bool operator<=(const CHAR_T *lhs, const GenericString<CHAR_T, CHAR_ENC> &rhs) noexcept {
+template<typename Char_t, StringEncoding ENCODING>
+bool operator<=(const Char_t *lhs, const GenericString<Char_t, ENCODING> &rhs) noexcept {
 	return rhs > lhs;
 }
-template<typename CHAR_T, StringEncoding CHAR_ENC>
-bool operator>=(const CHAR_T *lhs, const GenericString<CHAR_T, CHAR_ENC> &rhs) noexcept {
+template<typename Char_t, StringEncoding ENCODING>
+bool operator>=(const Char_t *lhs, const GenericString<Char_t, ENCODING> &rhs) noexcept {
 	return rhs < lhs;
 }
 

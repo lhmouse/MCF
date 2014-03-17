@@ -184,10 +184,10 @@ Notation::Notation(const wchar_t *pwchText, std::size_t uLen){
 }
 
 // 其他非静态成员函数。
-std::pair<Notation::ERROR_TYPE, const wchar_t *> Notation::Parse(const wchar_t *pwszText){
+std::pair<Notation::ErrorType, const wchar_t *> Notation::Parse(const wchar_t *pwszText){
 	return Parse(pwszText, std::wcslen(pwszText));
 }
-std::pair<Notation::ERROR_TYPE, const wchar_t *> Notation::Parse(const wchar_t *pwchText, std::size_t uLen){
+std::pair<Notation::ErrorType, const wchar_t *> Notation::Parse(const wchar_t *pwchText, std::size_t uLen){
 	Clear();
 
 	if(uLen == 0){

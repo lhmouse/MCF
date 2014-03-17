@@ -112,10 +112,7 @@ TcpPeer::TcpPeer(void *ppSocket, const void *pSockAddr, std::size_t uSockAddrLen
 TcpPeer::TcpPeer() noexcept {
 }
 TcpPeer::TcpPeer(const PeerInfo &vServerInfo){
-	const auto ulErrorCode = Connect(vServerInfo);
-	if(ulErrorCode != ERROR_SUCCESS){
-		MCF_THROW(ulErrorCode, L"连接到服务器失败。");
-	}
+	Connect(vServerInfo);
 }
 TcpPeer::TcpPeer(TcpPeer &&rhs) noexcept
 	: xm_pDelegate(std::move(rhs.xm_pDelegate))
@@ -140,7 +137,7 @@ const PeerInfo &TcpPeer::GetPeerInfo() const {
 	}
 	return xm_pDelegate->GetPeerInfo();
 }
-unsigned long TcpPeer::Connect(const PeerInfo &vServerInfo){
+unsigned long TcpPeer::ConnectNoThrow(const PeerInfo &vServerInfo){
 	Disconnect();
 
 	__MCF::WSAInitializer vWSAInitializer;
@@ -174,6 +171,12 @@ unsigned long TcpPeer::Connect(const PeerInfo &vServerInfo){
 	*this = TcpPeer(&sockServer, &vSockAddr, uSockAddrLen);
 
 	return ERROR_SUCCESS;
+}
+void TcpPeer::Connect(const PeerInfo &vServerInfo){
+	const auto ulErrorCode = ConnectNoThrow(vServerInfo);
+	if(ulErrorCode != ERROR_SUCCESS){
+		MCF_THROW(ulErrorCode, L"连接到服务器失败。");
+	}
 }
 void TcpPeer::Disconnect() noexcept {
 	xm_pDelegate.reset();

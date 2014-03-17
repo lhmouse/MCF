@@ -6,6 +6,7 @@
 #define __MCF_UTILITIES_HPP__
 
 #include "String.hpp"
+#include "../../MCFCRT/c/ext/memcchr.h"
 #include <type_traits>
 #include <cstddef>
 #include <cstdint>
@@ -42,7 +43,14 @@ inline void BFill(T &vDst, bool bVal) noexcept {
 
 template<typename T>
 inline void BZero(T &vDst) noexcept {
-	BFill(vDst, false);
+	static_assert(std::is_trivial<T>::value, "MCF::BZero(): Only trivial types are supported");
+	__builtin_memset(&vDst, 0, sizeof(vDst));
+}
+
+template<typename T>
+inline bool BTest(const T &vSrc) noexcept {
+	static_assert(std::is_trivial<T>::value, "MCF::BTest(): Only trivial types are supported");
+	return ::_memcchr(&vSrc, 0, sizeof(vSrc)) == nullptr;
 }
 
 template<typename TX, typename TY>

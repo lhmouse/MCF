@@ -21,7 +21,7 @@ private:
 	};
 
 private:
-	UniqueHandle<HANDLE, xMutexCloser> xm_hMutex;
+	UniqueHandle<xMutexCloser> xm_hMutex;
 
 public:
 	xDelegate(const wchar_t *pwszName){

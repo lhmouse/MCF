@@ -29,7 +29,7 @@ private:
 	static void xUnlock(xDelegate *pDelegate) noexcept;
 
 public:
-	typedef UniqueHandle<void *, xUnlocker> LockHolder;
+	typedef UniqueHandle<xUnlocker> LockHolder;
 
 private:
 	std::unique_ptr<xDelegate> xm_pDelegate;

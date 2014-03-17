@@ -43,8 +43,8 @@ private:
 	static void xUnlockWrite(xDelegate *pDelegate) noexcept;
 
 public:
-	typedef UniqueHandle<void *, xReadUnlocker> ReadLockHolder;
-	typedef UniqueHandle<void *, xWriteUnlocker> WriteLockHolder;
+	typedef UniqueHandle<xReadUnlocker> ReadLockHolder;
+	typedef UniqueHandle<xWriteUnlocker> WriteLockHolder;
 
 private:
 	std::unique_ptr<xDelegate> xm_pDelegate;

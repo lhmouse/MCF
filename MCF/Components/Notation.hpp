@@ -139,7 +139,7 @@ public:
 		auto itName = itSegEnd;
 		--itName;
 		const auto ppkgParent = GetPackage(itSegBegin, itName);
-		if(ppkgParent){
+		if(!ppkgParent){
 			return nullptr;
 		}
 		return ppkgParent->GetValue(*itName);
@@ -152,7 +152,7 @@ public:
 		auto itName = itSegEnd;
 		--itName;
 		const auto ppkgParent = GetPackage(itSegBegin, itName);
-		if(ppkgParent){
+		if(!ppkgParent){
 			return nullptr;
 		}
 		return ppkgParent->GetValue(*itName);
@@ -205,7 +205,7 @@ public:
 		ERR_EQU_EXPECTED,
 		ERR_UNCLOSED_PACKAGE,
 		ERR_ESCAPE_AT_EOF
-	} ERROR_TYPE;
+	} ErrorType;
 
 private:
 	static void xEscapeAndAppend(UTF16String &wcsAppendTo, const wchar_t *pwchBegin, std::size_t uLength);
@@ -219,8 +219,8 @@ public:
 	Notation(const wchar_t *pwchText, std::size_t uLen);
 
 public:
-	std::pair<ERROR_TYPE, const wchar_t *> Parse(const wchar_t *pwszText);
-	std::pair<ERROR_TYPE, const wchar_t *> Parse(const wchar_t *pwchText, std::size_t uLen);
+	std::pair<ErrorType, const wchar_t *> Parse(const wchar_t *pwszText);
+	std::pair<ErrorType, const wchar_t *> Parse(const wchar_t *pwchText, std::size_t uLen);
 	UTF16String Export(const wchar_t *pwchIndent = L"\t") const;
 };
 

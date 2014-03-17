@@ -35,7 +35,7 @@ UTF16String GetWin32ErrorDesc(unsigned long ulErrorCode){
 		0,
 		nullptr
 	);
-	const UniqueHandle<HLOCAL, LocalFreer> hLocal((HLOCAL)pDescBuffer); // RAII
+	const UniqueHandle<LocalFreer> hLocal((HLOCAL)pDescBuffer); // RAII
 	u16sRet.Assign((LPCWSTR)pDescBuffer, uLen);
 	return std::move(u16sRet);
 }

@@ -14,21 +14,21 @@
 namespace MCF {
 
 namespace __MCF {
-	typedef std::pair<std::intptr_t, const void *> EVENT_HANDLER_HANDLE;
+	typedef std::pair<std::intptr_t, const void *> EventHandlerHandle;
 
-	extern void UnregisterEventHandler(const EVENT_HANDLER_HANDLE &Handle) noexcept;
+	extern void UnregisterEventHandler(const EventHandlerHandle &Handle) noexcept;
 
 	struct EventHandlerDeleter {
-		constexpr EVENT_HANDLER_HANDLE operator()() const noexcept {
-			return EVENT_HANDLER_HANDLE();
+		constexpr EventHandlerHandle operator()() const noexcept {
+			return EventHandlerHandle();
 		}
-		void operator()(const EVENT_HANDLER_HANDLE &Handle) const noexcept {
+		void operator()(const EventHandlerHandle &Handle) const noexcept {
 			UnregisterEventHandler(Handle);
 		}
 	};
 }
 
-typedef UniqueHandle<__MCF::EVENT_HANDLER_HANDLE, __MCF::EventHandlerDeleter> EventHandlerHolder;
+typedef UniqueHandle<__MCF::EventHandlerDeleter> EventHandlerHolder;
 
 extern EventHandlerHolder RegisterEventHandler(std::intptr_t nEventId, std::function<bool (std::intptr_t)> fnHandler);
 extern void RaiseEvent(std::intptr_t nEventId, std::intptr_t nContext);

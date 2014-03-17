@@ -24,8 +24,8 @@ namespace __MCF {
 		}
 	};
 
-	typedef UniqueHandle<SOCKET, SocketCloser> UniqueSocket;
-	typedef SharedHandle<SOCKET, SocketCloser> SharedSocket;
+	typedef UniqueHandle<SocketCloser> UniqueSocket;
+	typedef SharedHandle<SocketCloser> SharedSocket;
 
 	struct WSAInitializer : NO_COPY {
 		WSAInitializer(){

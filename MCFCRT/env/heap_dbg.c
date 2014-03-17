@@ -15,6 +15,12 @@
 
 #define GUARD_BAND_SIZE		0x20ul
 
+#ifdef _WIN64
+#	define UINTPTR_FORMAT	"0x%016zX"
+#else
+#	define UINTPTR_FORMAT	"0x%08zX"
+#endif
+
 static HANDLE							g_hMapAllocator;
 static __MCF_AVL_PROOT					g_mapBlocks;
 static const __MCF_HEAPDBG_BLOCK_INFO	*g_pBlockHead;
@@ -41,7 +47,7 @@ void __MCF_CRT_HeapDbgUninitContext(){
 			wchar_t *pwchWrite = awchBuffer + __mingw_snwprintf(
 				awchBuffer,
 				sizeof(awchBuffer) / sizeof(wchar_t),
-				L"地址 %p  大小 %p  调用返回地址 %p  首字节 ",
+				L"地址 " UINTPTR_FORMAT "  大小 " UINTPTR_FORMAT "  调用返回地址 " UINTPTR_FORMAT "  首字节 ",
 				(void *)pbyDump,
 				(void *)pBlockInfo->uSize,
 				(void *)pBlockInfo->pRetAddr
@@ -52,7 +58,7 @@ void __MCF_CRT_HeapDbgUninitContext(){
 					*(pwchWrite++) = L'?';
 					*(pwchWrite++) = L'?';
 				} else {
-					static const wchar_t HEX_TABLE[] = L"0123456789ABCDEF";
+					static const wchar_t HEX_TABLE[16] = L"0123456789ABCDEF";
 					*(pwchWrite++) = HEX_TABLE[(*pbyDump >> 4) & 0xF0];
 					*(pwchWrite++) = HEX_TABLE[*pbyDump & 0x0F];
 				}
@@ -99,7 +105,7 @@ void __MCF_CRT_HeapDbgAddGuardsAndRegister(
 
 	__MCF_HEAPDBG_BLOCK_INFO *const pBlockInfo = (__MCF_HEAPDBG_BLOCK_INFO *)HeapAlloc(g_hMapAllocator, 0, sizeof(__MCF_HEAPDBG_BLOCK_INFO));
 	if(!pBlockInfo){
-		__MCF_CRT_BailF(L"__MCF_CRT_HeapDbgAddGuardsAndRegister() 失败：内存不足。\n调用返回地址：%p", pRetAddr);
+		__MCF_CRT_BailF(L"__MCF_CRT_HeapDbgAddGuardsAndRegister() 失败：内存不足。\n调用返回地址：" UINTPTR_FORMAT, (uintptr_t)pRetAddr);
 	}
 	pBlockInfo->uSize = uContentSize;
 	pBlockInfo->pRetAddr = pRetAddr;
@@ -119,7 +125,7 @@ const __MCF_HEAPDBG_BLOCK_INFO *__MCF_CRT_HeapDbgValidate(
 
 	const __MCF_HEAPDBG_BLOCK_INFO *pBlockInfo = (const __MCF_HEAPDBG_BLOCK_INFO *)__MCF_AvlFind(&g_mapBlocks, (intptr_t)pContents);
 	if(!pBlockInfo){
-		__MCF_CRT_BailF(L"__MCF_CRT_HeapDbgValidate() 失败：传入的指针无效。\n调用返回地址：%p", pRetAddr);
+		__MCF_CRT_BailF(L"__MCF_CRT_HeapDbgValidate() 失败：传入的指针无效。\n调用返回地址：" UINTPTR_FORMAT, (uintptr_t)pRetAddr);
 	}
 
 	void *const *ppGuard1 = (void *const *)pContents;
@@ -128,7 +134,7 @@ const __MCF_HEAPDBG_BLOCK_INFO *__MCF_CRT_HeapDbgValidate(
 		--ppGuard1;
 
 		if((DecodePointer(*ppGuard1) != ppGuard2) || (DecodePointer(*ppGuard2) != ppGuard1)){
-			__MCF_CRT_BailF(L"__MCF_CRT_HeapDbgValidate() 失败：侦测到堆损坏。\n调用返回地址：%p", pRetAddr);
+			__MCF_CRT_BailF(L"__MCF_CRT_HeapDbgValidate() 失败：侦测到堆损坏。\n调用返回地址：" UINTPTR_FORMAT, (uintptr_t)pRetAddr);
 		}
 
 		++ppGuard2;

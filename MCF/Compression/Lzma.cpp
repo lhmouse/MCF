@@ -110,8 +110,8 @@ private:
 	::ISeqOutStream xm_sosOutputter;
 	::CLzmaEncProps xm_vEncProps;
 
-	UniqueHandle<::CLzmaEncHandle, xLzmaEncHandleCloser> xm_hEncoder;
-	UniqueHandle<void *, xNewLzmaEncodeContextDeleter> xm_pContext;
+	UniqueHandle<xLzmaEncHandleCloser> xm_hEncoder;
+	UniqueHandle<xNewLzmaEncodeContextDeleter> xm_pContext;
 	std::size_t xm_uBytesProcessed;
 
 	std::exception_ptr xm_pException;
@@ -270,7 +270,7 @@ private:
 
 	unsigned char xm_abyHeader[LZMA_PROPS_SIZE];
 	std::size_t xm_uHeaderSize;
-	UniqueHandle<::CLzmaDec *, xLzmaDecHandleCloser> xm_pDecoder;
+	UniqueHandle<xLzmaDecHandleCloser> xm_pDecoder;
 	unsigned char xm_abyTemp[0x10000];
 	std::size_t xm_uBytesProcessed;
 

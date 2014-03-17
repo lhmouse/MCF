@@ -41,7 +41,7 @@ public:
 private:
 	std::shared_ptr<xDelegate> xm_pLock;
 	std::function<void ()> xm_fnProc;
-	UniqueHandle<HANDLE, xThreadCloser> xm_hThread;
+	UniqueHandle<xThreadCloser> xm_hThread;
 	unsigned long xm_ulThreadId;
 	std::exception_ptr xm_pException;
 

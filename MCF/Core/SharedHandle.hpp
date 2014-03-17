@@ -15,14 +15,17 @@
 namespace MCF {
 
 namespace __MCF {
-	template<typename HANDLE_T, class CLOSER_T>
+	template<class Closer_t>
 	class SharedNode {
 	public:
-		static SharedNode *Create(HANDLE_T hObj){
+		typedef decltype(Closer_t()()) Handle_t;
+
+	public:
+		static SharedNode *Create(Handle_t hObj){
 			return Recreate(nullptr, hObj);
 		}
-		static SharedNode *Recreate(SharedNode *pNode, HANDLE_T hObj){
-			if(hObj == CLOSER_T()()){
+		static SharedNode *Recreate(SharedNode *pNode, Handle_t hObj){
+			if(hObj == Closer_t()()){
 				if(pNode && (pNode->xDropRef())){
 					delete pNode;
 				}
@@ -38,7 +41,7 @@ namespace __MCF {
 			try {
 				pNewNode = new SharedNode(hObj);
 			} catch(...){
-				CLOSER_T()(hObj);
+				Closer_t()(hObj);
 				throw;
 			}
 			return pNewNode;
@@ -66,13 +69,13 @@ namespace __MCF {
 			}
 		}
 
-		static const HANDLE_T *ToPHandle(SharedNode *pNode){
+		static const Handle_t *ToPHandle(SharedNode *pNode){
 			if(pNode){
-				return (const HANDLE_T *)((std::intptr_t)pNode + OFFSET_OF(SharedNode, xm_hObj));
+				return (const Handle_t *)((std::intptr_t)pNode + OFFSET_OF(SharedNode, xm_hObj));
 			}
 			return nullptr;
 		}
-		static SharedNode *FromPHandle(const HANDLE_T *pHandle){
+		static SharedNode *FromPHandle(const Handle_t *pHandle){
 			if(pHandle){
 				return (SharedNode *)((std::intptr_t)pHandle - OFFSET_OF(SharedNode, xm_hObj));
 			}
@@ -80,7 +83,7 @@ namespace __MCF {
 		}
 
 	private:
-		HANDLE_T xm_hObj;
+		Handle_t xm_hObj;
 		volatile std::size_t xm_uWeakCount;
 		volatile std::size_t xm_uCount;
 #ifndef NDEBUG
@@ -89,7 +92,7 @@ namespace __MCF {
 #endif
 
 	private:
-		explicit constexpr SharedNode(HANDLE_T hObj) noexcept
+		explicit constexpr SharedNode(Handle_t hObj) noexcept
 			: xm_hObj(hObj), xm_uWeakCount(1), xm_uCount(1)
 #ifndef NDEBUG
 			, xm_pDebugInfo(this)
@@ -149,8 +152,8 @@ namespace __MCF {
 			ASSERT(__atomic_load_n(&xm_uCount, __ATOMIC_RELAXED) != 0);
 
 			if(__atomic_sub_fetch(&xm_uCount, 1, __ATOMIC_RELAXED) == 0){
-				CLOSER_T()(xm_hObj);
-				xm_hObj = CLOSER_T()();
+				Closer_t()(xm_hObj);
+				xm_hObj = Closer_t()();
 			}
 			return xDropWeakRef();
 		}
@@ -165,7 +168,7 @@ namespace __MCF {
 		}
 
 	public:
-		HANDLE_T Get() const noexcept {
+		Handle_t Get() const noexcept {
 			xValidate();
 
 			return xm_hObj;
@@ -176,16 +179,19 @@ namespace __MCF {
 	};
 }
 
-template<typename HANDLE_T, class CLOSER_T>
+template<class Closer_t>
 class SharedHandle;
 
-template<typename HANDLE_T, class CLOSER_T>
+template<class Closer_t>
 class WeakHandle {
-	friend class SharedHandle<HANDLE_T, CLOSER_T>;
+	friend class SharedHandle<Closer_t>;
+
+public:
+	typedef decltype(Closer_t()()) Handle_t;
 
 private:
-	typedef __MCF::SharedNode<HANDLE_T, CLOSER_T> xSharedNode;
-	typedef SharedHandle<HANDLE_T, CLOSER_T> xStrongHandle;
+	typedef __MCF::SharedNode<Closer_t> xSharedNode;
+	typedef SharedHandle<Closer_t> xStrongHandle;
 
 private:
 	xSharedNode *xm_pNode;
@@ -257,19 +263,22 @@ public:
 	}
 };
 
-template<typename HANDLE_T, class CLOSER_T>
+template<class Closer_t>
 class SharedHandle {
-	friend class WeakHandle<HANDLE_T, CLOSER_T>;
-
-private:
-	typedef __MCF::SharedNode<HANDLE_T, CLOSER_T> xSharedNode;
-	typedef WeakHandle<HANDLE_T, CLOSER_T> xWeakHandle;
+	friend class WeakHandle<Closer_t>;
 
 public:
-	static void AddRef(const HANDLE_T *pHandle) noexcept {
+	typedef decltype(Closer_t()()) Handle_t;
+
+private:
+	typedef __MCF::SharedNode<Closer_t> xSharedNode;
+	typedef WeakHandle<Closer_t> xWeakHandle;
+
+public:
+	static void AddRef(const Handle_t *pHandle) noexcept {
 		xSharedNode::AddRef(xSharedNode::FromPHandle(pHandle));
 	}
-	static void DropRef(const HANDLE_T *pHandle) noexcept {
+	static void DropRef(const Handle_t *pHandle) noexcept {
 		xSharedNode::DropRef(xSharedNode::FromPHandle(pHandle));
 	}
 
@@ -283,7 +292,7 @@ private:
 public:
 	constexpr SharedHandle() noexcept : xm_pNode() {
 	}
-	constexpr explicit SharedHandle(HANDLE_T hObj) noexcept : SharedHandle(xSharedNode::Create(hObj)) {
+	constexpr explicit SharedHandle(Handle_t hObj) noexcept : SharedHandle(xSharedNode::Create(hObj)) {
 	}
 	explicit SharedHandle(const xWeakHandle &rhs) noexcept : SharedHandle(xSharedNode::AddRef(rhs.xm_pNode)) {
 	}
@@ -292,7 +301,7 @@ public:
 	SharedHandle(SharedHandle &&rhs) noexcept : SharedHandle(rhs.xm_pNode) {
 		rhs.xm_pNode = nullptr;
 	}
-	SharedHandle &operator=(HANDLE_T hObj){
+	SharedHandle &operator=(Handle_t hObj){
 		Reset(hObj);
 		return *this;
 	}
@@ -314,15 +323,15 @@ public:
 
 public:
 	bool IsGood() const noexcept {
-		return Get() != CLOSER_T()();
+		return Get() != Closer_t()();
 	}
-	HANDLE_T Get() const noexcept {
-		return xm_pNode ? xm_pNode->Get() : CLOSER_T()();
+	Handle_t Get() const noexcept {
+		return xm_pNode ? xm_pNode->Get() : Closer_t()();
 	}
 	std::size_t GetRefCount() const noexcept {
 		return xm_pNode ? xm_pNode->GetRefCount() : 0;
 	}
-	const HANDLE_T *AddRef() const noexcept {
+	const Handle_t *AddRef() const noexcept {
 		return xSharedNode::ToPHandle(xSharedNode::AddRef(xm_pNode));
 	}
 
@@ -330,7 +339,7 @@ public:
 		xSharedNode::DropRef(xm_pNode);
 		xm_pNode = nullptr;
 	}
-	void Reset(HANDLE_T hObj){
+	void Reset(Handle_t hObj){
 		xm_pNode = xSharedNode::Recreate(xm_pNode, hObj);
 	}
 	void Reset(const xWeakHandle &rhs) noexcept {
@@ -364,7 +373,7 @@ public:
 	explicit operator bool() const noexcept {
 		return IsGood();
 	}
-	explicit operator HANDLE_T() const noexcept {
+	explicit operator Handle_t() const noexcept {
 		return Get();
 	}
 

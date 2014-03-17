@@ -21,7 +21,7 @@ private:
 	};
 
 private:
-	UniqueHandle<HANDLE, xEventCloser> xm_hEvent;
+	UniqueHandle<xEventCloser> xm_hEvent;
 
 public:
 	xDelegate(bool bInitSet, const wchar_t *pwszName){

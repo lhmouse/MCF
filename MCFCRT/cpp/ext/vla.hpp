@@ -13,82 +13,82 @@
 
 namespace MCF {
 
-template<typename ELEMENT_T, std::size_t ALT_STOR_THLD = 64>
-class VLA {
+template<typename Element_t, std::size_t ALT_STOR_THLD = 64>
+class Vla {
 private:
-	unsigned char xm_aSmall[sizeof(ELEMENT_T) * ALT_STOR_THLD];
-	std::unique_ptr<unsigned char[]> xm_pLarge;
+	unsigned char xm_aSmall[sizeof(Element_t) * ALT_STOR_THLD];
+	std::unique_ptr<unsigned char []> xm_pLarge;
 
-	ELEMENT_T *xm_pBegin;
-	ELEMENT_T *xm_pEnd;
+	Element_t *xm_pBegin;
+	Element_t *xm_pEnd;
 
 private:
 	void xInitStorage(std::size_t uCount){
 		if(uCount <= ALT_STOR_THLD){
-			xm_pBegin = (ELEMENT_T *)std::begin(xm_aSmall);
+			xm_pBegin = (Element_t *)std::begin(xm_aSmall);
 		} else {
-			xm_pLarge.reset(new unsigned char[sizeof(ELEMENT_T) * uCount]);
-			xm_pBegin = (ELEMENT_T *)xm_pLarge.get();
+			xm_pLarge.reset(new unsigned char[sizeof(Element_t) * uCount]);
+			xm_pBegin = (Element_t *)xm_pLarge.get();
 		}
 		xm_pEnd = xm_pBegin + uCount;
 	}
 
 public:
-	explicit VLA(std::size_t uCount){
+	explicit Vla(std::size_t uCount){
 		xInitStorage(uCount);
 
-		if(!std::is_pod<ELEMENT_T>::value){
+		if(!std::is_pod<Element_t>::value){
 			for(auto p = xm_pBegin; p != xm_pEnd; ++p){
-				new(p) ELEMENT_T();
+				new(p) Element_t();
 			}
 		}
 	}
-	template<typename... PARAM_T>
-	VLA(std::size_t uCount, const PARAM_T &...Params){
+	template<typename... Params_t>
+	Vla(std::size_t uCount, const Params_t &...Params){
 		xInitStorage(uCount);
 
 		for(auto p = xm_pBegin; p != xm_pEnd; ++p){
-			new(p) ELEMENT_T(Params...);
+			new(p) Element_t(Params...);
 		}
 	}
-	explicit VLA(std::initializer_list<ELEMENT_T> InitList){
+	explicit Vla(std::initializer_list<Element_t> InitList){
 		xInitStorage(InitList.size());
 
 		auto p = xm_pBegin;
 		for(auto iter = InitList.begin(); iter != InitList.end(); ++iter){
-			new(p++) ELEMENT_T(std::move(*iter));
+			new(p++) Element_t(std::move(*iter));
 		}
 	}
-	~VLA(){
+	~Vla(){
 		auto p = xm_pEnd;
 		while(p != xm_pBegin){
-			(--p)->~ELEMENT_T();
+			(--p)->~Element_t();
 		}
 	}
 
-	VLA(const VLA &) = delete;
-	VLA(VLA &&) = delete;
-	void operator=(const VLA &) = delete;
-	void operator=(VLA &&) = delete;
+	Vla(const Vla &) = delete;
+	Vla(Vla &&) = delete;
+	void operator=(const Vla &) = delete;
+	void operator=(Vla &&) = delete;
 
 public:
-	const ELEMENT_T *GetBegin() const noexcept {
+	const Element_t *GetBegin() const noexcept {
 		return xm_pBegin;
 	}
-	ELEMENT_T *GetBegin() noexcept {
+	Element_t *GetBegin() noexcept {
 		return xm_pBegin;
 	}
-	const ELEMENT_T *GetEnd() const noexcept {
+	const Element_t *GetEnd() const noexcept {
 		return xm_pEnd;
 	}
-	ELEMENT_T *GetEnd() noexcept {
+	Element_t *GetEnd() noexcept {
 		return xm_pEnd;
 	}
 
-	const ELEMENT_T *GetData() const noexcept {
+	const Element_t *GetData() const noexcept {
 		return xm_pBegin;
 	}
-	ELEMENT_T *GetData() noexcept {
+	Element_t *GetData() noexcept {
 		return xm_pBegin;
 	}
 	std::size_t GetSize() const noexcept {
@@ -96,44 +96,44 @@ public:
 	}
 
 public:
-	explicit operator const ELEMENT_T *() const noexcept {
+	explicit operator const Element_t *() const noexcept {
 		return xm_pBegin;
 	}
-	explicit operator ELEMENT_T *() noexcept {
+	explicit operator Element_t *() noexcept {
 		return xm_pBegin;
 	}
-/*	const ELEMENT_T &operator[](std::size_t uIndex) const noexcept {
+/*	const Element_t &operator[](std::size_t uIndex) const noexcept {
 		return xm_pBegin[uIndex];
 	}
-	ELEMENT_T &operator[](std::size_t uIndex) noexcept {
+	Element_t &operator[](std::size_t uIndex) noexcept {
 		return xm_pBegin[uIndex];
 	}*/
 };
 
 
-template<typename ELEMENT_T, std::size_t ALT_STOR_THLD>
-const ELEMENT_T *begin(const VLA<ELEMENT_T, ALT_STOR_THLD> &vec) noexcept {
+template<typename Element_t, std::size_t ALT_STOR_THLD>
+const Element_t *begin(const Vla<Element_t, ALT_STOR_THLD> &vec) noexcept {
 	return vec.GetBegin();
 }
-template<typename ELEMENT_T, std::size_t ALT_STOR_THLD>
-ELEMENT_T *begin(VLA<ELEMENT_T, ALT_STOR_THLD> &vec) noexcept {
+template<typename Element_t, std::size_t ALT_STOR_THLD>
+Element_t *begin(Vla<Element_t, ALT_STOR_THLD> &vec) noexcept {
 	return vec.GetBegin();
 }
-template<typename ELEMENT_T, std::size_t ALT_STOR_THLD>
-const ELEMENT_T *cbegin(const VLA<ELEMENT_T, ALT_STOR_THLD> &vec) noexcept {
+template<typename Element_t, std::size_t ALT_STOR_THLD>
+const Element_t *cbegin(const Vla<Element_t, ALT_STOR_THLD> &vec) noexcept {
 	return vec.GetBegin();
 }
 
-template<typename ELEMENT_T, std::size_t ALT_STOR_THLD>
-const ELEMENT_T *end(const VLA<ELEMENT_T, ALT_STOR_THLD> &vec) noexcept {
+template<typename Element_t, std::size_t ALT_STOR_THLD>
+const Element_t *end(const Vla<Element_t, ALT_STOR_THLD> &vec) noexcept {
 	return vec.GetEnd();
 }
-template<typename ELEMENT_T, std::size_t ALT_STOR_THLD>
-ELEMENT_T *end(VLA<ELEMENT_T, ALT_STOR_THLD> &vec) noexcept {
+template<typename Element_t, std::size_t ALT_STOR_THLD>
+Element_t *end(Vla<Element_t, ALT_STOR_THLD> &vec) noexcept {
 	return vec.GetEnd();
 }
-template<typename ELEMENT_T, std::size_t ALT_STOR_THLD>
-const ELEMENT_T *cend(const VLA<ELEMENT_T, ALT_STOR_THLD> &vec) noexcept {
+template<typename Element_t, std::size_t ALT_STOR_THLD>
+const Element_t *cend(const Vla<Element_t, ALT_STOR_THLD> &vec) noexcept {
 	return vec.GetEnd();
 }
 

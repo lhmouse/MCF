@@ -23,20 +23,20 @@ private:
 		}
 	};
 
-	typedef struct xtagApcResult {
+	struct xApcResult {
 		std::uint32_t u32BytesTransferred;
 		DWORD dwErrorCode;
-	} xAPC_RESULT;
+	};
 
 private:
 	static void __stdcall xAIOCallback(DWORD dwErrorCode, DWORD dwBytesTransferred, LPOVERLAPPED pOverlapped) noexcept {
-		const auto pApcResult = (xAPC_RESULT *)pOverlapped->hEvent;
+		const auto pApcResult = (xApcResult *)pOverlapped->hEvent;
 		pApcResult->dwErrorCode = dwErrorCode;
 		pApcResult->u32BytesTransferred = dwBytesTransferred;
 	}
 
 private:
-	UniqueHandle<HANDLE, xFileCloser> xm_hFile;
+	UniqueHandle<xFileCloser> xm_hFile;
 
 public:
 	~xDelegate(){
@@ -89,8 +89,8 @@ public:
 		}
 	}
 
-	std::uint32_t Read(void *pBuffer, std::uint64_t u64Offset, std::uint32_t u32BytesToRead, ASYNC_PROC *pfnAsyncProc) const {
-		xAPC_RESULT ApcResult;
+	std::uint32_t Read(void *pBuffer, std::uint64_t u64Offset, std::uint32_t u32BytesToRead, AsyncProc *pfnAsyncProc) const {
+		xApcResult ApcResult;
 		ApcResult.u32BytesTransferred = 0;
 		ApcResult.dwErrorCode = ERROR_SUCCESS;
 
@@ -122,8 +122,8 @@ public:
 		}
 		return ApcResult.u32BytesTransferred;
 	}
-	void Write(std::uint64_t u64Offset, const void *pBuffer, std::uint32_t u32BytesToWrite, ASYNC_PROC *pfnAsyncProc){
-		xAPC_RESULT ApcResult;
+	void Write(std::uint64_t u64Offset, const void *pBuffer, std::uint32_t u32BytesToWrite, AsyncProc *pfnAsyncProc){
+		xApcResult ApcResult;
 		ApcResult.u32BytesTransferred = 0;
 		ApcResult.dwErrorCode = ERROR_SUCCESS;
 
@@ -182,11 +182,17 @@ bool File::IsOpen() const noexcept {
 	}
 	return xm_pDelegate->IsOpen();
 }
-unsigned long File::Open(const wchar_t *pwszPath, bool bToRead, bool bToWrite, bool bAutoCreate){
+unsigned long File::OpenNoThrow(const wchar_t *pwszPath, bool bToRead, bool bToWrite, bool bAutoCreate){
 	if(!xm_pDelegate){
 		xm_pDelegate.reset(new xDelegate);
 	}
 	return xm_pDelegate->Open(pwszPath, bToRead, bToWrite, bAutoCreate);
+}
+void File::Open(const wchar_t *pwszPath, bool bToRead, bool bToWrite, bool bAutoCreate){
+	const auto ulErrorCode = OpenNoThrow(pwszPath, bToRead, bToWrite, bAutoCreate);
+	if(ulErrorCode != ERROR_SUCCESS){
+		MCF_THROW(ulErrorCode, L"打开文件失败。");
+	}
 }
 void File::Close() noexcept {
 	if(!xm_pDelegate){
@@ -214,7 +220,7 @@ std::uint32_t File::Read(void *pBuffer, std::uint64_t u64Offset, std::uint32_t u
 	}
 	return xm_pDelegate->Read(pBuffer, u64Offset, u32BytesToRead, nullptr);
 }
-std::uint32_t File::Read(void *pBuffer, std::uint64_t u64Offset, std::uint32_t u32BytesToRead, File::ASYNC_PROC fnAsyncProc) const {
+std::uint32_t File::Read(void *pBuffer, std::uint64_t u64Offset, std::uint32_t u32BytesToRead, File::AsyncProc fnAsyncProc) const {
 	if(!xm_pDelegate){
 		MCF_THROW(ERROR_INVALID_HANDLE, L"没有打开文件。");
 	}
@@ -226,7 +232,7 @@ void File::Write(std::uint64_t u64Offset, const void *pBuffer, std::uint32_t u32
 	}
 	xm_pDelegate->Write(u64Offset, pBuffer, u32BytesToWrite, nullptr);
 }
-void File::Write(std::uint64_t u64Offset, const void *pBuffer, std::uint32_t u32BytesToWrite, File::ASYNC_PROC fnAsyncProc){
+void File::Write(std::uint64_t u64Offset, const void *pBuffer, std::uint32_t u32BytesToWrite, File::AsyncProc fnAsyncProc){
 	if(!xm_pDelegate){
 		MCF_THROW(ERROR_INVALID_HANDLE, L"没有打开文件。");
 	}

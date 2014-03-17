@@ -12,6 +12,12 @@
 #include <stdlib.h>
 #include <windows.h>
 
+#ifdef _WIN64
+#	define UINTPTR_FORMAT	"0x%016zX"
+#else
+#	define UINTPTR_FORMAT	"0x%08zX"
+#endif
+
 typedef struct tagThreadInitInfo {
 	unsigned int (*pfnProc)(intptr_t);
 	intptr_t nParam;
@@ -240,12 +246,12 @@ void *__MCF_CRT_RetrieveTls(
 	if(pObject->uMemSize != uSizeToAlloc){
 		__MCF_CRT_BailF(
 			L"__MCF_CRT_RetrieveTls() 失败：两次试图使用相同的键获得 TLS，但指定的大小不一致。\n\n"
-			"键：%p\n"
-			"该 TLS 创建时的大小：%p\n"
-			"本次调用指定的大小 ：%p\n",
-			(void *)nKey,
-			(void *)pObject->uMemSize,
-			(void *)uSizeToAlloc
+			"键：" UINTPTR_FORMAT "\n"
+			"该 TLS 创建时的大小：" UINTPTR_FORMAT "\n"
+			"本次调用指定的大小 ：" UINTPTR_FORMAT "\n",
+			(uintptr_t)nKey,
+			(uintptr_t)pObject->uMemSize,
+			(uintptr_t)uSizeToAlloc
 		);
 	}
 #endif

@@ -21,7 +21,7 @@ private:
 	};
 
 private:
-	UniqueHandle<HANDLE, xSemaphoreCloser> xm_hSemaphore;
+	UniqueHandle<xSemaphoreCloser> xm_hSemaphore;
 
 public:
 	xDelegate(std::size_t uInitCount, std::size_t uMaxCount, const wchar_t *pwszName){

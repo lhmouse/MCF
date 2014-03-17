@@ -10,5 +10,6 @@
 #include "ext/noop.h"
 #include "ext/assert.h"
 #include "ext/offset_of.h"
+#include "ext/memcchr.h"
 
 #endif

@@ -28,7 +28,7 @@ private:
 
 public:
 	TcpPeer() noexcept;
-	TcpPeer(const PeerInfo &vServerInfo);
+	explicit TcpPeer(const PeerInfo &vServerInfo);
 	TcpPeer(TcpPeer &&rhs) noexcept;
 	TcpPeer &operator=(TcpPeer &&rhs) noexcept;
 	~TcpPeer();
@@ -36,7 +36,8 @@ public:
 public:
 	bool IsConnected() const noexcept;
 	const PeerInfo &GetPeerInfo() const;
-	unsigned long Connect(const PeerInfo &vServerInfo);
+	unsigned long ConnectNoThrow(const PeerInfo &vServerInfo);
+	void Connect(const PeerInfo &vServerInfo);
 	void Disconnect() noexcept;
 
 	std::size_t Read(void *pData, std::size_t uSize);

@@ -14,23 +14,23 @@
 
 namespace MCF {
 
-template<class OBJECT_T>
+template<class Object_t>
 class TheadLocal {
 private:
 	static void xCtorWrapper(void *pObj, std::intptr_t nParam){
-		new(pObj) OBJECT_T(((const TheadLocal *)nParam)->xm_vTemplate);
+		new(pObj) Object_t(((const TheadLocal *)nParam)->xm_vTemplate);
 	}
 	static void xDtorWrapper(void *pObj) noexcept {
-		((OBJECT_T *)pObj)->~OBJECT_T();
+		((Object_t *)pObj)->~Object_t();
 	}
 
 private:
-	OBJECT_T xm_vTemplate;
+	Object_t xm_vTemplate;
 
 public:
-	template<class... PARAMS_T>
-	constexpr TheadLocal(PARAMS_T ...Params) noexcept(noexcept(OBJECT_T(std::move(Params)...)))
-		: xm_vTemplate(std::move(Params)...)
+	template<class... Params_t>
+	constexpr TheadLocal(Params_t ...vParams) noexcept(noexcept(Object_t(std::move(vParams)...)))
+		: xm_vTemplate(std::move(vParams)...)
 	{
 	}
 	~TheadLocal(){
@@ -38,8 +38,8 @@ public:
 	}
 
 public:
-	OBJECT_T *Get() const noexcept {
-		const auto pRet = (OBJECT_T *)::__MCF_CRT_RetrieveTls((std::intptr_t)this, sizeof(OBJECT_T), &xCtorWrapper, (std::intptr_t)this, &xDtorWrapper);
+	Object_t *Get() const noexcept {
+		const auto pRet = (Object_t *)::__MCF_CRT_RetrieveTls((std::intptr_t)this, sizeof(Object_t), &xCtorWrapper, (std::intptr_t)this, &xDtorWrapper);
 		if(!pRet){
 			::__MCF_CRT_Bail(
 				L"__MCF_CRT_RetrieveTls() 返回了一个空指针。\n"
@@ -53,10 +53,10 @@ public:
 	}
 
 public:
-	OBJECT_T *operator->() const {
+	Object_t *operator->() const {
 		return Get();
 	}
-	operator OBJECT_T *() const {
+	operator Object_t *() const {
 		return Get();
 	}
 };

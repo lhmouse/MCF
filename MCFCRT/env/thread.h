@@ -34,6 +34,7 @@ extern void *__MCF_CRT_RetrieveTls(
 	__MCF_STD intptr_t nParam,
 	void (*pfnDestructor)(void *)
 ) __MCF_NOEXCEPT;
+
 extern void __MCF_CRT_DeleteTls(
 	__MCF_STD intptr_t nKey
 ) __MCF_NOEXCEPT;

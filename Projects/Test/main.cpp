@@ -1,34 +1,21 @@
 #include <MCF/StdMCF.hpp>
-
-template class MCF::MultiIndexedMap<char, int, double>;
+#include <MCF/Core/String.hpp>
+#include <MCFCRT/cpp/ext/multi_indexed_map.hpp>
+using namespace MCF;
 
 unsigned int MCFMain(){
-	MCF::MultiIndexedMap<char, int, double> m, n;
+	MultiIndexedMap<int, UTF8String> mim;
 
-	n.Insert('a', 1, 1.1);
-	n.Insert('b', 1, 2.2);
-	n.Insert('c', 1, 3.3);
-	n.Insert('d', 1, 1.1);
-	n.Insert('e', 2, 1.1);
-	n.Insert('f', 3, 1.1);
+	mim.Insert(1, "1");
+	mim.Insert(2, "4");
+	mim.Insert(3, "9");
+	mim.Insert(4, "16");
 
-	m = n;
-/*
-	auto q = m.Find<1>(3.3);
-	m.SetIndex<1>(q, 0.4);
-*/
-	std::puts("--- iterate by int ---");
-	auto p = m.Front<0>();
-	while(p){
-		std::printf("%c, %d, %f\n", p->GetElement(), p->GetIndex<0>(), p->GetIndex<1>());
-		p = m.Next<0>(p);
-	}
-
-	std::puts("--- iterate by double ---");
-	p = m.Front<1>();
-	while(p){
-		std::printf("%c, %d, %f\n", p->GetElement(), p->GetIndex<0>(), p->GetIndex<1>());
-		p = m.Next<1>(p);
+	const char *const str = "16";
+	const auto p = mim.Find<0>(str);
+	std::printf("search for %s, result is %p\n", str, p);
+	if(p){
+		std::printf("  val = %d\n", p->GetElement());
 	}
 
 	return 0;

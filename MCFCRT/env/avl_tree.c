@@ -538,7 +538,7 @@ void __MCF_AvlEqualRange(
 	__MCF_AVL_NODE_HEADER **ppFrom,
 	__MCF_AVL_NODE_HEADER **ppTo,
 	const __MCF_AVL_PROOT *ppRoot,
-	__MCF_STD intptr_t nKey
+	intptr_t nKey
 ){
 	const __MCF_AVL_NODE_HEADER *const pTop = __MCF_AvlFind(ppRoot, nKey);
 	if(pTop){
@@ -570,7 +570,7 @@ void __MCF_AvlEqualRangeCustomComp(
 	__MCF_AVL_NODE_HEADER **ppFrom,
 	__MCF_AVL_NODE_HEADER **ppTo,
 	const __MCF_AVL_PROOT *ppRoot,
-	__MCF_STD intptr_t nKey,
+	intptr_t nKey,
 	__MCF_AVL_KEY_COMPARER pfnKeyComparer
 ){
 	const __MCF_AVL_NODE_HEADER *const pTop = __MCF_AvlFindCustomComp(ppRoot, nKey, pfnKeyComparer);

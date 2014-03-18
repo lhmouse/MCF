@@ -1,4 +1,4 @@
-// 这个文件是 MCF 的一部分。
+/*// 这个文件是 MCF 的一部分。
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2014. LH_Mouse. All wrongs reserved.
 
@@ -10,7 +10,7 @@
 #include "../Core/Utilities.hpp"
 #include <winhttp.h>
 using namespace MCF;
-/*
+
 // 嵌套类定义。
 class HttpClient::xDelegate : NO_COPY {
 private:
@@ -73,8 +73,10 @@ public:
 		return xm_mapCookies;
 	}
 
-	const std::map<UTF16String, std::vector<unsigned char>> &GetOutgoingData() const noexcept;
-	std::map<UTF16String, std::vector<unsigned char>> &GetOutgoingData() noexcept;
+	const MimeData &GetOutgoingData() const noexcept {
+	}
+	MimeData &GetOutgoingData() noexcept {
+	}
 
 	unsigned long Connect(const wchar_t *pwszVerb, const wchar_t *pwszUrl, std::size_t uUrlLen){
 	}
@@ -82,8 +84,7 @@ public:
 	unsigned int GetStatusCode() const {
 		return xm_uStatusCode;
 	}
-	const std::map<UTF16String, std::vector<unsigned char>> &GetIncomingData() const noexcept {
-		return xm_mapIncomingData;
+	std::size_t Read(void *pData, std::size_t uSize){
 	}
 	void Disconnect() noexcept {
 		xm_hRequest.Reset();
@@ -122,10 +123,10 @@ std::map<HttpClient::CookieKey, HttpClient::CookieItem> &HttpClient::GetCookies(
 	return xm_pDelegate->GetCookies();
 }
 
-const std::map<UTF16String, std::vector<unsigned char>> &HttpClient::GetOutgoingData() const noexcept {
+const HttpClient::MimeData &HttpClient::GetOutgoingData() const noexcept {
 	return xm_pDelegate->GetOutgoingData();
 }
-std::map<UTF16String, std::vector<unsigned char>> &HttpClient::GetOutgoingData() noexcept {
+HttpClient::MimeData &HttpClient::GetOutgoingData() noexcept {
 	return xm_pDelegate->GetOutgoingData();
 }
 
@@ -142,8 +143,8 @@ void HttpClient::Connect(const wchar_t *pwszVerb, const wchar_t *pwszUrl, std::s
 unsigned int HttpClient::GetStatusCode() const {
 	return xm_pDelegate->GetStatusCode();
 }
-const std::map<UTF16String, std::vector<unsigned char>> &HttpClient::GetIncomingData() const noexcept {
-	return xm_pDelegate->GetIncomingData();
+std::size_t HttpClient::Read(void *pData, std::size_t uSize){
+	return xm_pDelegate->Read(pData, uSize);
 }
 void HttpClient::Disconnect() noexcept {
 	xm_pDelegate->Disconnect();

@@ -8,13 +8,13 @@
 #include "../Core/NoCopy.hpp"
 #include "../Core/String.hpp"
 #include "../../MCFCRT/cpp/ext/vvector.hpp"
+#include "../../MCFCRT/cpp/ext/multi_indexed_map.hpp"
 #include "PeerInfo.hpp"
 #include <memory>
-#include <map>
-#include <vector>
+#include <deque>
 #include <cstddef>
 #include <cstdint>
-/*
+
 namespace MCF {
 
 class HttpClient : NO_COPY {
@@ -22,32 +22,19 @@ private:
 	class xDelegate;
 
 public:
-	struct CookieKey {
-		UTF16String u16sName;
-		VVector<UTF16String, 8> u16sPath;
-		VVector<UTF16String, 4> vecDomain;
-
-		bool operator<(const CookieKey &rhs) const noexcept {
-			const std::size_t uPathSize = u16sPath.GetSize();
-			if(uPathSize != rhs.u16sPath.GetSize()){
-				return uPathSize < rhs.u16sPath.GetSize();
-			}
-			for(std::size_t i = 0; i < uPathSize; ++i){
-				const int nResult = u16sPath[i].Compare(rhs.u16sPath[i]);
-				if(nResult != 0){
-					return nResult < 0;
-				}
-			}
-			return u16sName < rhs.u16sName;
-		}
-	};
-
 	struct CookieItem {
 		UTF16String u16sValue;
-		std::uint64_t u64Expires;
 		bool bSecure;
 		bool bHttpOnly;
 	};
+
+	typedef MultiIndexedMap<
+		CookieItem,
+		UTF16String,	// name
+		UTF16String,	// path
+		UTF16String,	// domain
+		std::uint64_t	// expires
+	> CookieMap;
 
 	struct MimeData {
 		UTF16String u16sMimeType;
@@ -71,17 +58,17 @@ public:
 	const std::map<CookieKey, CookieItem> &GetCookies() const noexcept;
 	std::map<CookieKey, CookieItem> &GetCookies() noexcept;
 
-	const MimeData &GetIncomingData() const noexcept;
-	MimeData &GetIncomingData() noexcept;
+	const MimeData &GetOutgoingData() const noexcept;
+	MimeData &GetOutgoingData() noexcept;
 
 	unsigned long ConnectNoThrow(const wchar_t *pwszVerb, const wchar_t *pwszUrl, std::size_t uUrlLen = (std::size_t)-1);
 	void Connect(const wchar_t *pwszVerb, const wchar_t *pwszUrl, std::size_t uUrlLen = (std::size_t)-1);
 
 	unsigned int GetStatusCode() const;
-	const MimeData &GetIncomingData() const noexcept;
+	std::size_t Read(void *pData, std::size_t uSize);
 	void Disconnect() noexcept;
 };
 
 }
-*/
+
 #endif

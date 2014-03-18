@@ -464,6 +464,8 @@ public:
 			if(chL != chR){
 				return (chL < chR) ? -1 : 1;
 			}
+			--uLLen;
+			--uRLen;
 		}
 	}
 	int Compare(const GenericString &rhs, std::size_t uMaxCount) const noexcept {

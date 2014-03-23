@@ -6,10 +6,9 @@
 #define __MCF_NOTATION_HPP__
 
 #include "../Core/String.hpp"
+#include "../../MCFCRT/cpp/ext/multi_indexed_map.hpp"
 #include <utility>
-#include <map>
 #include <initializer_list>
-#include <cwchar>
 
 namespace MCF {
 
@@ -19,91 +18,65 @@ class Package {
 	friend class Notation;
 
 private:
-	struct xKey {
-		const wchar_t *m_pwchBegin;
-		std::size_t m_uLength;
-		UTF16String m_wcsPermanent;
-
-		xKey(UTF16String &&wcsContents) noexcept {
-			m_wcsPermanent = std::move(wcsContents);
-			m_pwchBegin = m_wcsPermanent.GetCStr();
-			m_uLength = m_wcsPermanent.GetLength();
-		}
-		xKey(const wchar_t *pwchBegin, std::size_t uLength) noexcept {
-			m_pwchBegin = pwchBegin;
-			m_uLength = uLength;
-		}
-
-		xKey(const xKey &rhs){
-			*this = rhs;
-		}
-		xKey(xKey &&rhs) noexcept {
-			*this = std::move(rhs);
-		}
-
-		xKey &operator=(const xKey &rhs){
-			m_wcsPermanent.Assign(rhs.m_pwchBegin, rhs.m_uLength);
-			m_pwchBegin = m_wcsPermanent.GetCStr();
-			m_uLength = rhs.m_uLength;
-			return *this;
-		}
-		xKey &operator=(xKey &&rhs) noexcept {
-			if(rhs.m_wcsPermanent.IsEmpty()){
-				m_wcsPermanent.Assign(rhs.m_pwchBegin, rhs.m_uLength);
-			} else {
-				m_wcsPermanent = std::move(rhs.m_wcsPermanent);
-			}
-			m_pwchBegin = m_wcsPermanent.GetCStr();
-			m_uLength = rhs.m_uLength;
-			return *this;
-		}
-
-		bool operator<(const xKey &rhs) const noexcept {
-			if(m_uLength != rhs.m_uLength){
-				return m_uLength < rhs.m_uLength;
-			}
-			return std::wmemcmp(m_pwchBegin, rhs.m_pwchBegin, m_uLength) < 0;
-		}
-	};
-
-private:
-	std::map<xKey, Package> xm_mapPackages;
-	std::map<xKey, UTF16String> xm_mapValues;
+	MultiIndexedMap<Package, Utf16String> xm_mapPackages;
+	MultiIndexedMap<Utf16String, Utf16String> xm_mapValues;
 
 private:
 	Package() = default;
 
 public:
-	const Package *GetPackage(const wchar_t *pwszName) const noexcept {
-		const auto it = xm_mapPackages.find(xKey(pwszName, std::wcslen(pwszName)));
-		return (it == xm_mapPackages.end()) ? nullptr : &(it->second);
+	template<typename Name_t>
+	const Package *GetPackage(const Name_t &vName) const noexcept {
+		const auto pNode = xm_mapPackages.Find<0>(vName);
+		if(!pNode){
+			return nullptr;
+		}
+		return &(pNode->GetElement());
 	}
-	Package *GetPackage(const wchar_t *pwszName) noexcept {
-		const auto it = xm_mapPackages.find(xKey(pwszName, std::wcslen(pwszName)));
-		return (it == xm_mapPackages.end()) ? nullptr : &(it->second);
+	template<typename Name_t>
+	Package *GetPackage(const Name_t &vName) noexcept {
+		const auto pNode = xm_mapPackages.Find<0>(vName);
+		if(!pNode){
+			return nullptr;
+		}
+		return &(pNode->GetElement());
 	}
-	Package *CreatePackage(const wchar_t *pwszName){
-		xKey Key(pwszName, std::wcslen(pwszName));
-		const auto itHint = xm_mapPackages.upper_bound(Key);
-		return &(xm_mapPackages.emplace_hint(itHint, std::move(Key), Package())->second);
-	}
-
-	const UTF16String *GetValue(const wchar_t *pwszName) const noexcept {
-		const auto it = xm_mapValues.find(xKey(pwszName, std::wcslen(pwszName)));
-		return (it == xm_mapValues.end()) ? nullptr : &(it->second);
-	}
-	UTF16String *GetValue(const wchar_t *pwszName) noexcept {
-		const auto it = xm_mapValues.find(xKey(pwszName, std::wcslen(pwszName)));
-		return (it == xm_mapValues.end()) ? nullptr : &(it->second);
-	}
-	UTF16String *CreateValue(const wchar_t *pwszName){
-		xKey Key(pwszName, std::wcslen(pwszName));
-		const auto itHint = xm_mapValues.upper_bound(Key);
-		return &(xm_mapValues.emplace_hint(itHint, std::move(Key), UTF16String())->second);
+	template<typename Name_t>
+	Package *CreatePackage(Name_t &&vName){
+		auto pNode = xm_mapPackages.Find<0>(vName);
+		if(!pNode){
+			pNode = xm_mapPackages.Insert(Package(), std::forward<Name_t>(vName));
+		}
+		return &(pNode->GetElement());
 	}
 
-	template<class PATH_SEGMENT_ITER>
-	const Package *GetPackage(PATH_SEGMENT_ITER itSegBegin, PATH_SEGMENT_ITER itSegEnd) const noexcept {
+	template<typename Name_t>
+	const Utf16String *GetValue(const Name_t &vName) const noexcept {
+		const auto pNode = xm_mapValues.Find<0>(vName);
+		if(!pNode){
+			return nullptr;
+		}
+		return &(pNode->GetElement());
+	}
+	template<typename Name_t>
+	Utf16String *GetValue(const Name_t &vName) noexcept {
+		const auto pNode = xm_mapValues.Find<0>(vName);
+		if(!pNode){
+			return nullptr;
+		}
+		return &(pNode->GetElement());
+	}
+	template<typename Name_t, typename InitValue_t>
+	Utf16String *CreateValue(Name_t &&vName, InitValue_t &&vInitValue = Utf16String()){
+		auto pNode = xm_mapValues.Find<0>(vName);
+		if(!pNode){
+			pNode = xm_mapValues.Insert(std::forward<InitValue_t>(vInitValue), std::forward<Name_t>(vName));
+		}
+		return &(pNode->GetElement());
+	}
+
+	template<class PathSegmentIterator_t>
+	const Package *GetPackage(PathSegmentIterator_t itSegBegin, PathSegmentIterator_t itSegEnd) const noexcept {
 		auto ppkgCur = this;
 		for(auto it = itSegBegin; it != itSegEnd; ++it){
 			if(!(ppkgCur = ppkgCur->GetPackage(*it))){
@@ -112,8 +85,8 @@ public:
 		}
 		return ppkgCur;
 	}
-	template<class PATH_SEGMENT_ITER>
-	Package *GetPackage(PATH_SEGMENT_ITER itSegBegin, PATH_SEGMENT_ITER itSegEnd) noexcept {
+	template<class PathSegmentIterator_t>
+	Package *GetPackage(PathSegmentIterator_t itSegBegin, PathSegmentIterator_t itSegEnd) noexcept {
 		auto ppkgCur = this;
 		for(auto it = itSegBegin; it != itSegEnd; ++it){
 			if(!(ppkgCur = ppkgCur->GetPackage(*it))){
@@ -122,8 +95,8 @@ public:
 		}
 		return ppkgCur;
 	}
-	template<class PATH_SEGMENT_ITER>
-	Package *CreatePackage(PATH_SEGMENT_ITER itSegBegin, PATH_SEGMENT_ITER itSegEnd){
+	template<class PathSegmentIterator_t>
+	Package *CreatePackage(PathSegmentIterator_t itSegBegin, PathSegmentIterator_t itSegEnd){
 		auto ppkgCur = this;
 		for(auto it = itSegBegin; it != itSegEnd; ++it){
 			ppkgCur = ppkgCur->CreatePackage(*it);
@@ -131,8 +104,8 @@ public:
 		return ppkgCur;
 	}
 
-	template<class PATH_SEGMENT_ITER>
-	const UTF16String *GetValue(PATH_SEGMENT_ITER itSegBegin, PATH_SEGMENT_ITER itSegEnd) const noexcept {
+	template<class PathSegmentIterator_t>
+	const Utf16String *GetValue(PathSegmentIterator_t itSegBegin, PathSegmentIterator_t itSegEnd) const noexcept {
 		if(itSegBegin == itSegEnd){
 			return nullptr;
 		}
@@ -144,8 +117,8 @@ public:
 		}
 		return ppkgParent->GetValue(*itName);
 	}
-	template<class PATH_SEGMENT_ITER>
-	UTF16String *GetValue(PATH_SEGMENT_ITER itSegBegin, PATH_SEGMENT_ITER itSegEnd) noexcept {
+	template<class PathSegmentIterator_t>
+	Utf16String *GetValue(PathSegmentIterator_t itSegBegin, PathSegmentIterator_t itSegEnd) noexcept {
 		if(itSegBegin == itSegEnd){
 			return nullptr;
 		}
@@ -157,45 +130,50 @@ public:
 		}
 		return ppkgParent->GetValue(*itName);
 	}
-	template<class PATH_SEGMENT_ITER>
-	UTF16String *CreateValue(PATH_SEGMENT_ITER itSegBegin, PATH_SEGMENT_ITER itSegEnd){
+	template<class PathSegmentIterator_t, typename InitValue_t>
+	Utf16String *CreateValue(PathSegmentIterator_t itSegBegin, PathSegmentIterator_t itSegEnd, InitValue_t &&vInitValue = Utf16String()){
 		if(itSegBegin == itSegEnd){
 			return nullptr;
 		}
 		auto itName = itSegEnd;
 		--itName;
 		const auto ppkgParent = CreatePackage(itSegBegin, itName);
-		return ppkgParent->CreateValue(*itName);
+		return ppkgParent->CreateValue(*itName, std::forward<InitValue_t>(vInitValue));
 	}
 
-	const Package *GetPackage(std::initializer_list<const wchar_t *> ilPath) const noexcept {
+	template<typename Name_t>
+	const Package *GetPackage(std::initializer_list<Name_t> ilPath) const noexcept {
 		return GetPackage(ilPath.begin(), ilPath.end());
 	}
-	Package *GetPackage(std::initializer_list<const wchar_t *> ilPath) noexcept {
+	template<typename Name_t>
+	Package *GetPackage(std::initializer_list<Name_t> ilPath) noexcept {
 		return GetPackage(ilPath.begin(), ilPath.end());
 	}
-	Package *CreatePackage(std::initializer_list<const wchar_t *> ilPath){
+	template<typename Name_t>
+	Package *CreatePackage(std::initializer_list<Name_t> ilPath){
 		return CreatePackage(ilPath.begin(), ilPath.end());
 	}
 
-	const UTF16String *GetValue(std::initializer_list<const wchar_t *> ilPath) const noexcept {
+	template<typename Name_t>
+	const Utf16String *GetValue(std::initializer_list<Name_t> ilPath) const noexcept {
 		return GetValue(ilPath.begin(), ilPath.end());
 	}
-	UTF16String *GetValue(std::initializer_list<const wchar_t *> ilPath) noexcept {
+	template<typename Name_t>
+	Utf16String *GetValue(std::initializer_list<Name_t> ilPath) noexcept {
 		return GetValue(ilPath.begin(), ilPath.end());
 	}
-	UTF16String *CreateValue(std::initializer_list<const wchar_t *> ilPath){
-		return CreateValue(ilPath.begin(), ilPath.end());
+	template<typename Name_t, typename InitValue_t>
+	Utf16String *CreateValue(std::initializer_list<Name_t> ilPath, InitValue_t &&vInitValue = Utf16String()){
+		return CreateValue(ilPath.begin(), ilPath.end(), std::forward<InitValue_t>(vInitValue));
 	}
 
 	void Clear() noexcept {
-		xm_mapPackages.clear();
-		xm_mapValues.clear();
+		xm_mapPackages.Clear();
+		xm_mapValues.Clear();
 	}
 };
 
-class Notation :
-public Package {
+class Notation : public Package {
 public:
 	typedef enum {
 		ERR_NONE,
@@ -208,20 +186,18 @@ public:
 	} ErrorType;
 
 private:
-	static void xEscapeAndAppend(UTF16String &wcsAppendTo, const wchar_t *pwchBegin, std::size_t uLength);
-	static UTF16String xUnescapeAndConstruct(const wchar_t *pwchBegin, std::size_t uLength);
+	static void xEscapeAndAppend(Utf16String &wcsAppendTo, const wchar_t *pwchBegin, std::size_t uLength);
+	static Utf16String xUnescapeAndConstruct(const wchar_t *pwchBegin, std::size_t uLength);
 
-	static void xExportPackageRecur(UTF16String &wcsAppendTo, const Package &pkgWhich, UTF16String &wcsPrefix, const wchar_t *pwchIndent, std::size_t uIndentLen);
-
-public:
-	Notation();
-	explicit Notation(const wchar_t *pwszText);
-	Notation(const wchar_t *pwchText, std::size_t uLen);
+	static void xExportPackageRecur(Utf16String &wcsAppendTo, const Package &pkgWhich, Utf16String &wcsPrefix, const wchar_t *pwchIndent, std::size_t uIndentLen);
 
 public:
-	std::pair<ErrorType, const wchar_t *> Parse(const wchar_t *pwszText);
-	std::pair<ErrorType, const wchar_t *> Parse(const wchar_t *pwchText, std::size_t uLen);
-	UTF16String Export(const wchar_t *pwchIndent = L"\t") const;
+	Notation() noexcept = default;
+	explicit Notation(const wchar_t *pwchText, std::size_t uLen = (std::size_t)-1);
+
+public:
+	std::pair<ErrorType, const wchar_t *> Parse(const wchar_t *pwchText, std::size_t uLen = (std::size_t)-1);
+	Utf16String Export(const wchar_t *pwchIndent = L"\t") const;
 };
 
 }

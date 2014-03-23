@@ -22,7 +22,7 @@ wchar_t *wmemchr(const wchar_t *s, wchar_t ch, size_t cnt){
 		}
 
 		const wchar_t *const wend = (const wchar_t *)((uintptr_t)end & ~(sizeof(uintptr_t) - 1));
-		do {
+		for(;;){
 
 #ifdef _WIN64
 #	define	MASK	0x0001000100010001ull
@@ -30,32 +30,34 @@ wchar_t *wmemchr(const wchar_t *s, wchar_t ch, size_t cnt){
 #	define	MASK	0x00010001ul
 #endif
 
-#define UNROLLED(index)	\
+#define UNROLLED	\
 			{	\
-				register uintptr_t wrd = ((const uintptr_t *)rp)[(index)] ^ full;	\
+				register uintptr_t wrd = (*(const uintptr_t *)rp) ^ full;	\
 				wrd = (wrd - MASK) & ~wrd;	\
 				if((wrd & (MASK << 15)) != 0){	\
 					for(size_t i = 0; i < sizeof(uintptr_t) / sizeof(wchar_t) - 1; ++i){	\
 						if((wrd & 0x8000) != 0){	\
-							return (wchar_t *)(rp + (index) * sizeof(uintptr_t) / sizeof(wchar_t) + i);	\
+							return (wchar_t *)(rp + i);	\
 						}	\
 						wrd >>= 16;	\
 					}	\
-					return (wchar_t *)(rp + ((index) + 1) * sizeof(uintptr_t) / sizeof(wchar_t) - 1);	\
+					return (wchar_t *)(rp + sizeof(uintptr_t) / sizeof(wchar_t) - 1);	\
+				}	\
+				rp += sizeof(uintptr_t) / sizeof(wchar_t);	\
+				if(rp == wend){	\
+					break;	\
 				}	\
 			}
 
-			UNROLLED(0)
-			UNROLLED(1)
-			UNROLLED(2)
-			UNROLLED(3)
-			UNROLLED(4)
-			UNROLLED(5)
-			UNROLLED(6)
-			UNROLLED(7)
-
-			rp += 8 * sizeof(uintptr_t) / sizeof(wchar_t);
-		} while(rp != wend);
+			UNROLLED
+			UNROLLED
+			UNROLLED
+			UNROLLED
+			UNROLLED
+			UNROLLED
+			UNROLLED
+			UNROLLED
+		}
 	}
 
 	while(rp != end){

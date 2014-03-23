@@ -3,16 +3,17 @@
 // Copyleft 2014. LH_Mouse. All wrongs reserved.
 
 #include "../../env/_crtdef.h"
-#include <wchar.h>
 
-size_t wcsspn(const wchar_t *s1, const wchar_t *s2){
+extern wchar_t *wcschr(const wchar_t *s, wchar_t ch);
+
+size_t wcscspn(const wchar_t *s1, const wchar_t *s2){
 	const wchar_t *rp = s1;
 	for(;;){
 		const wchar_t ch = *rp;
 		if(ch == 0){
 			break;
 		}
-		if(!wcschr(s2, ch)){
+		if(wcschr(s2, ch)){
 			break;
 		}
 		++rp;

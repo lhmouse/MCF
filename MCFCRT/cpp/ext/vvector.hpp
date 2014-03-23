@@ -300,7 +300,7 @@ public:
 			++pRead;
 		}
 	}
-	void MoveToEnd(Element_t *pFrom, std::size_t uCount) noexcept(std::is_nothrow_move_constructible<Element_t>::value) {
+	void MoveToEnd(Element_t *pFrom, std::size_t uCount){
 		Reserve(GetSize() + uCount);
 		auto pRead = pFrom;
 		for(std::size_t i = 0; i < uCount; ++i){

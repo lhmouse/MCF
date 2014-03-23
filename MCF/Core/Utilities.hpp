@@ -5,8 +5,8 @@
 #ifndef __MCF_UTILITIES_HPP__
 #define __MCF_UTILITIES_HPP__
 
-#include "String.hpp"
 #include "../../MCFCRT/c/ext/memcchr.h"
+#include "../../MCFCRT/env/bail.h"
 #include <type_traits>
 #include <cstddef>
 #include <cstdint>
@@ -19,18 +19,24 @@ namespace MCF {
 #	define __MCF_CPP_NORETURN_IF_NDEBUG
 #endif
 
-__MCF_CPP_NORETURN_IF_NDEBUG extern void Bail(const wchar_t *pwszDescription);
+template<typename... Params_t>
+__MCF_CPP_NORETURN_IF_NDEBUG inline void Bail(const wchar_t *pwszFormat, const Params_t &... vParams){
+	::__MCF_CRT_BailF(pwszFormat, vParams...);
+}
 
-extern UTF16String GetWin32ErrorDesc(unsigned long ulErrorCode);
+template<>
+__MCF_CPP_NORETURN_IF_NDEBUG inline void Bail<>(const wchar_t *pwszDescription){
+	::__MCF_CRT_Bail(pwszDescription);
+}
 
 template<typename T>
 inline auto Clone(T &&vSrc) -> typename std::remove_cv<typename std::remove_reference<T>::type>::type {
 	return std::forward<T>(vSrc);
 }
 
-template<typename TX, typename TY>
-inline void BCopy(TX &vDst, const TY &vSrc) noexcept {
-	static_assert(std::is_trivial<TX>::value && std::is_trivial<TY>::value, "MCF::BCopy(): Only trivial types are supported");
+template<typename Tx, typename Ty>
+inline void BCopy(Tx &vDst, const Ty &vSrc) noexcept {
+	static_assert(std::is_trivial<Tx>::value && std::is_trivial<Ty>::value, "MCF::BCopy(): Only trivial types are supported");
 	static_assert(sizeof(vDst) == sizeof(vSrc), "MCF::BCopy(): Source and destination sizes do not match.");
 	__builtin_memcpy(&vDst, &vSrc, sizeof(vDst));
 }
@@ -53,9 +59,9 @@ inline bool BTest(const T &vSrc) noexcept {
 	return ::_memcchr(&vSrc, 0, sizeof(vSrc)) == nullptr;
 }
 
-template<typename TX, typename TY>
-inline int BComp(const TX &vDst, const TY &vSrc) noexcept {
-	static_assert(std::is_trivial<TX>::value && std::is_trivial<TY>::value, "MCF::BComp(): Only trivial types are supported");
+template<typename Tx, typename Ty>
+inline int BComp(const Tx &vDst, const Ty &vSrc) noexcept {
+	static_assert(std::is_trivial<Tx>::value && std::is_trivial<Ty>::value, "MCF::BComp(): Only trivial types are supported");
 	static_assert(sizeof(vDst) == sizeof(vSrc), "MCF::BComp(): Source and destination sizes do not match.");
 	return __builtin_memcmp(&vDst, &vSrc, sizeof(vDst));
 }

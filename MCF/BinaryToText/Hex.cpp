@@ -17,7 +17,7 @@ namespace {
 			__builtin_memcpy(vResult.first, (const unsigned char *)pSrc + uBytesCopied, uBytesToCopyThisTime);
 			uBytesCopied += uBytesToCopyThisTime;
 		}
-	};
+	}
 }
 
 // ========== HexEncoder ==========

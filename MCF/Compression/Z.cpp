@@ -55,8 +55,7 @@ namespace {
 
 // ========== ZEncoder ==========
 // 嵌套类定义。
-class ZEncoder::xDelegate :
-private ::z_stream, NO_COPY {
+class ZEncoder::xDelegate : private ::z_stream, NO_COPY {
 private:
 	const std::function<std::pair<void *, std::size_t> (std::size_t)> xm_fnDataCallback;
 	bool xm_bInited;
@@ -205,8 +204,7 @@ void ZEncoder::Finalize(){
 
 // ========== ZDecoder ==========
 // 嵌套类定义。
-class ZDecoder::xDelegate :
-private ::z_stream, NO_COPY {
+class ZDecoder::xDelegate : private ::z_stream, NO_COPY {
 private:
 	const std::function<std::pair<void *, std::size_t> (std::size_t)> xm_fnDataCallback;
 	bool xm_bInited;

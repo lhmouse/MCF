@@ -9,7 +9,7 @@
 using namespace MCF;
 
 // 静态成员函数。
-void Notation::xEscapeAndAppend(UTF16String &wcsAppendTo, const wchar_t *pwchBegin, std::size_t uLength){
+void Notation::xEscapeAndAppend(Utf16String &wcsAppendTo, const wchar_t *pwchBegin, std::size_t uLength){
 	wcsAppendTo.Reserve(wcsAppendTo.GetLength() + uLength * 2);
 
 	for(std::size_t i = 0; i < uLength; ++i){
@@ -45,10 +45,9 @@ void Notation::xEscapeAndAppend(UTF16String &wcsAppendTo, const wchar_t *pwchBeg
 		}
 	}
 }
-UTF16String Notation::xUnescapeAndConstruct(const wchar_t *pwchBegin, std::size_t uLength){
-	UTF16String wcsRet;
-	wcsRet.Reserve(uLength + 1);
-	auto pwchWrite = wcsRet.GetCStr();
+Utf16String Notation::xUnescapeAndConstruct(const wchar_t *pwchBegin, std::size_t uLength){
+	Utf16String wcsRet;
+	wcsRet.Reserve(uLength);
 
 	enum STATE {
 		NORMAL,
@@ -68,25 +67,25 @@ UTF16String Notation::xUnescapeAndConstruct(const wchar_t *pwchBegin, std::size_
 			if(ch == L'\\'){
 				eState = SLASH_MATCH;
 			} else {
-				*(pwchWrite++) = ch;
+				wcsRet.Push(ch);
 			}
 			break;
 		case SLASH_MATCH:
 			switch(ch){
 			case L'b':
-				*(pwchWrite++) = L'\b';
+				wcsRet.Push(L'\b');
 				eState = NORMAL;
 				break;
 			case L'n':
-				*(pwchWrite++) = L'\n';
+				wcsRet.Push(L'\n');
 				eState = NORMAL;
 				break;
 			case L'r':
-				*(pwchWrite++) = L'\r';
+				wcsRet.Push(L'\r');
 				eState = NORMAL;
 				break;
 			case L't':
-				*(pwchWrite++) = L'\t';
+				wcsRet.Push(L'\t');
 				eState = NORMAL;
 				break;
 			case L'x':
@@ -97,7 +96,7 @@ UTF16String Notation::xUnescapeAndConstruct(const wchar_t *pwchBegin, std::size_
 				eState = NORMAL;
 				break;
 			default:
-				*(pwchWrite++) = ch;
+				wcsRet.Push(ch);
 				eState = NORMAL;
 				break;
 			}
@@ -110,15 +109,15 @@ UTF16String Notation::xUnescapeAndConstruct(const wchar_t *pwchBegin, std::size_
 			} else if((L'A' <= ch) && (ch <= L'F')){
 				nDecodedDigit = ch - L'A' + 0x0A;
 			} else {
-				*(pwchWrite++) = L'x';
+				wcsRet.Push(L'x');
 				for(std::size_t i = 0; i < uBufferIndex; ++i){
-					*(pwchWrite++) = awchHexBuffer[i];
+					wcsRet.Push(awchHexBuffer[i]);
 				}
 				eState = NORMAL;
 				break;
 			}
 			if(uBufferIndex == COUNT_OF(awchHexBuffer)){
-				*(pwchWrite++) = (chDecoded << 4) | nDecodedDigit;
+				wcsRet.Push((chDecoded << 4) | nDecodedDigit);
 				eState = NORMAL;
 			} else {
 				awchHexBuffer[uBufferIndex++] = ch;
@@ -127,36 +126,38 @@ UTF16String Notation::xUnescapeAndConstruct(const wchar_t *pwchBegin, std::size_
 			break;
 		}
 	}
-	*pwchWrite = 0;
 
 	return std::move(wcsRet);
 }
 
 void Notation::xExportPackageRecur(
-	UTF16String &wcsAppendTo,
+	Utf16String &wcsAppendTo,
 	const Notation::Package &pkgWhich,
-	UTF16String &wcsPrefix,
+	Utf16String &wcsPrefix,
 	const wchar_t *pwchIndent,
 	std::size_t uIndentLen
 ){
 	const auto uCurrentPrefixLen = wcsPrefix.GetLength();
 	auto pwchCurrentPrefix = wcsPrefix.GetCStr();
 
-	if(!pkgWhich.xm_mapPackages.empty()){
+	if(!pkgWhich.xm_mapPackages.IsEmpty()){
 		if(pwchIndent){
 			wcsPrefix.Append(pwchIndent, uIndentLen);
 		}
 		pwchCurrentPrefix = wcsPrefix.GetCStr();
 
-		for(const auto &SubPackageItem : pkgWhich.xm_mapPackages){
+		auto pPackageNode = pkgWhich.xm_mapPackages.GetFront<0>();
+		while(pPackageNode){
 			wcsAppendTo.Append(pwchCurrentPrefix, uCurrentPrefixLen);
-			xEscapeAndAppend(wcsAppendTo, SubPackageItem.first.m_pwchBegin, SubPackageItem.first.m_uLength);
+			xEscapeAndAppend(wcsAppendTo, pPackageNode->GetIndex<0>().GetCStr(), pPackageNode->GetIndex<0>().GetLength());
 			wcsAppendTo.Append(L" {\n", 3);
 
-			xExportPackageRecur(wcsAppendTo, SubPackageItem.second, wcsPrefix, pwchIndent, uIndentLen);
+			xExportPackageRecur(wcsAppendTo, pPackageNode->GetElement(), wcsPrefix, pwchIndent, uIndentLen);
 
 			wcsAppendTo.Append(pwchCurrentPrefix, uCurrentPrefixLen);
 			wcsAppendTo.Append(L"}\n", 2);
+
+			pPackageNode = pkgWhich.xm_mapPackages.GetNext<0>(pPackageNode);
 		}
 
 		if(pwchIndent){
@@ -164,34 +165,33 @@ void Notation::xExportPackageRecur(
 		}
 	}
 
-	for(const auto &ValueItem : pkgWhich.xm_mapValues){
+	auto pValueNode = pkgWhich.xm_mapValues.GetFront<0>();
+	while(pValueNode){
 		wcsAppendTo.Append(pwchCurrentPrefix, uCurrentPrefixLen);
-		xEscapeAndAppend(wcsAppendTo, ValueItem.first.m_pwchBegin, ValueItem.first.m_uLength);
+		xEscapeAndAppend(wcsAppendTo, pValueNode->GetIndex<0>().GetCStr(), pValueNode->GetIndex<0>().GetLength());
 		wcsAppendTo.Append(L" = ", 3);
-		xEscapeAndAppend(wcsAppendTo, ValueItem.second.GetCStr(), ValueItem.second.GetLength());
+		xEscapeAndAppend(wcsAppendTo, pValueNode->GetElement().GetCStr(), pValueNode->GetElement().GetLength());
 		wcsAppendTo.Append(L'\n');
+
+		pValueNode = pkgWhich.xm_mapValues.GetNext<0>(pValueNode);
 	}
 }
 
 // 构造函数和析构函数。
-Notation::Notation(){
-}
-Notation::Notation(const wchar_t *pwszText){
-	Parse(pwszText);
-}
 Notation::Notation(const wchar_t *pwchText, std::size_t uLen){
 	Parse(pwchText, uLen);
 }
 
 // 其他非静态成员函数。
-std::pair<Notation::ErrorType, const wchar_t *> Notation::Parse(const wchar_t *pwszText){
-	return Parse(pwszText, std::wcslen(pwszText));
-}
 std::pair<Notation::ErrorType, const wchar_t *> Notation::Parse(const wchar_t *pwchText, std::size_t uLen){
 	Clear();
 
 	if(uLen == 0){
 		return std::make_pair(ERR_NONE, nullptr);
+	}
+
+	if(uLen == (std::size_t)-1){
+		uLen = std::wcslen(pwchText);
 	}
 
 	const wchar_t *pwszRead = pwchText;
@@ -214,17 +214,22 @@ std::pair<Notation::ErrorType, const wchar_t *> Notation::Parse(const wchar_t *p
 	} eState = NAME_INDENT;
 	bool bEscaped = false;
 
-	const auto PushPackage = [&]() -> void {
+	const auto PushPackage = [&]{
 		ASSERT(pNameBegin != pNameEnd);
 
 		auto wcsName = xUnescapeAndConstruct(pNameBegin, (std::size_t)(pNameEnd - pNameBegin));
-		auto &pkgNew = vecPackageStack.GetEnd()[-1]->xm_mapPackages.emplace(std::move(wcsName), Package()).first->second;
-		vecPackageStack.Push(&pkgNew);
+
+		auto &mapPackages = vecPackageStack.GetEnd()[-1]->xm_mapPackages;
+		auto pNewPackageNode = mapPackages.Find<0>(wcsName);
+		if(!pNewPackageNode){
+			pNewPackageNode = mapPackages.Insert(Package(), std::move(wcsName));
+		}
+		vecPackageStack.Push(&(pNewPackageNode->GetElement()));
 
 		pNameBegin = pwszRead;
 		pNameEnd = pwszRead;
 	};
-	const auto PopPackage = [&]() -> void {
+	const auto PopPackage = [&]{
 		ASSERT(vecPackageStack.GetSize() > 0);
 
 		vecPackageStack.Pop();
@@ -232,12 +237,19 @@ std::pair<Notation::ErrorType, const wchar_t *> Notation::Parse(const wchar_t *p
 		pNameBegin = pwszRead;
 		pNameEnd = pwszRead;
 	};
-	const auto SubmitValue = [&]() -> void {
+	const auto SubmitValue = [&]{
 		ASSERT(pNameBegin != pNameEnd);
 
 		auto wcsName = xUnescapeAndConstruct(pNameBegin, (std::size_t)(pNameEnd - pNameBegin));
 		auto wcsValue = xUnescapeAndConstruct(pValueBegin, (std::size_t)(pValueEnd - pValueBegin));
-		vecPackageStack.GetEnd()[-1]->xm_mapValues[std::move(wcsName)] = std::move(wcsValue);
+
+		auto &mapValues = vecPackageStack.GetEnd()[-1]->xm_mapValues;
+		const auto pValueNode = mapValues.Find<0>(wcsName);
+		if(pValueNode){
+			pValueNode->GetElement() = std::move(wcsValue);
+		} else {
+			mapValues.Insert(std::move(wcsValue), std::move(wcsName));
+		}
 
 		pValueBegin = pwszRead;
 		pValueEnd = pwszRead;
@@ -432,9 +444,9 @@ std::pair<Notation::ErrorType, const wchar_t *> Notation::Parse(const wchar_t *p
 
 	return std::make_pair(ERR_NONE, nullptr);
 }
-UTF16String Notation::Export(const wchar_t *pwchIndent) const {
-	UTF16String wcsResult;
-	UTF16String wcsPrefix;
+Utf16String Notation::Export(const wchar_t *pwchIndent) const {
+	Utf16String wcsResult;
+	Utf16String wcsPrefix;
 	const std::size_t uIndentLength = pwchIndent ? (std::size_t)0 : std::wcslen(pwchIndent);
 	xExportPackageRecur(wcsResult, *this, wcsPrefix, pwchIndent, uIndentLength);
 	return std::move(wcsResult);

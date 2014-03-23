@@ -22,7 +22,7 @@ void *memchr(const void *s, int ch, size_t cb){
 		}
 
 		const unsigned char *const wend = (const unsigned char *)((uintptr_t)end & ~(sizeof(uintptr_t) - 1));
-		do {
+		for(;;){
 
 #ifdef _WIN64
 #	define	MASK	0x0101010101010101ull
@@ -30,32 +30,34 @@ void *memchr(const void *s, int ch, size_t cb){
 #	define	MASK	0x01010101ul
 #endif
 
-#define UNROLLED(index)	\
+#define UNROLLED	\
 			{	\
-				register uintptr_t wrd = ((const uintptr_t *)rp)[(index)] ^ full;	\
+				register uintptr_t wrd = (*(const uintptr_t *)rp) ^ full;	\
 				wrd = (wrd - MASK) & ~wrd;	\
 				if((wrd & (MASK << 7)) != 0){	\
 					for(size_t i = 0; i < sizeof(uintptr_t) - 1; ++i){	\
 						if((wrd & 0x80) != 0){	\
-							return (void *)(rp + (index) * sizeof(uintptr_t) + i);	\
+							return (void *)(rp + i);	\
 						}	\
 						wrd >>= 8;	\
 					}	\
-					return (void *)(rp + ((index) + 1) * sizeof(uintptr_t) - 1);	\
+					return (void *)(rp + sizeof(uintptr_t) - 1);	\
+				}	\
+				rp += sizeof(uintptr_t);	\
+				if(rp == wend){	\
+					break;	\
 				}	\
 			}
 
-			UNROLLED(0)
-			UNROLLED(1)
-			UNROLLED(2)
-			UNROLLED(3)
-			UNROLLED(4)
-			UNROLLED(5)
-			UNROLLED(6)
-			UNROLLED(7)
-
-			rp += 8 * sizeof(uintptr_t);
-		} while(rp != wend);
+			UNROLLED
+			UNROLLED
+			UNROLLED
+			UNROLLED
+			UNROLLED
+			UNROLLED
+			UNROLLED
+			UNROLLED
+		}
 	}
 
 	while(rp != end){

@@ -3,7 +3,6 @@
 // Copyleft 2014. LH_Mouse. All wrongs reserved.
 
 #include "../../env/_crtdef.h"
-#include <wchar.h>
 
 extern size_t wcslen(const wchar_t *s);
 

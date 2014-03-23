@@ -7,66 +7,48 @@
 
 #include "../Core/NoCopy.hpp"
 #include "../Core/String.hpp"
-#include "../../MCFCRT/cpp/ext/vvector.hpp"
 #include "../../MCFCRT/cpp/ext/multi_indexed_map.hpp"
+#include "../../MCFCRT/cpp/ext/vvector.hpp"
 #include "PeerInfo.hpp"
 #include <memory>
-#include <deque>
 #include <cstddef>
 #include <cstdint>
 
 namespace MCF {
 
 class HttpClient : NO_COPY {
+public:
+	enum : std::uint64_t {
+		UNKNOWN_CONTENT_LENGTH = (std::uint64_t)-1
+	};
+
 private:
 	class xDelegate;
-
-public:
-	struct CookieItem {
-		UTF16String u16sValue;
-		bool bSecure;
-		bool bHttpOnly;
-	};
-
-	typedef MultiIndexedMap<
-		CookieItem,
-		UTF16String,	// name
-		UTF16String,	// path
-		UTF16String,	// domain
-		std::uint64_t	// expires
-	> CookieMap;
-
-	struct MimeData {
-		UTF16String u16sMimeType;
-		std::deque<unsigned char> deqData;
-	};
 
 private:
 	std::unique_ptr<xDelegate> xm_pDelegate;
 
 public:
-	HttpClient();
+	// bAutoProxy   pwszProxy  描述
+	//   false         空      不使用代理服务器
+	//   true          空      使用 IE 的代理服务器
+	//   false        非空     使用指定的代理服务器（pwszProxy = user:pass@addr:port|bypass）
+	//   true         非空     使用指定的 PAC（pwszProxy = URL）
+	explicit HttpClient(bool bAutoProxy = false, const wchar_t *pwszProxy = nullptr, std::size_t uProxyLen = (std::size_t)-1);
+	HttpClient(bool bAutoProxy, const Utf16String &wcsProxy);
+	HttpClient(HttpClient &&rhs) noexcept;
+	HttpClient &operator=(HttpClient &&rhs) noexcept;
 	~HttpClient();
 
 public:
-	const PeerInfo &GetProxy() const noexcept;
-	void SetProxy(const PeerInfo &vProxyInfo) noexcept;
-	void SetProxyAuthorization(UTF16String u16sUsername, UTF16String u16sPassword) noexcept;
-
-	void SetAuthorization(UTF16String u16sUsername, UTF16String u16sPassword) noexcept;
-
-	const std::map<CookieKey, CookieItem> &GetCookies() const noexcept;
-	std::map<CookieKey, CookieItem> &GetCookies() noexcept;
-
-	const MimeData &GetOutgoingData() const noexcept;
-	MimeData &GetOutgoingData() noexcept;
-
 	unsigned long ConnectNoThrow(const wchar_t *pwszVerb, const wchar_t *pwszUrl, std::size_t uUrlLen = (std::size_t)-1);
+	unsigned long ConnectNoThrow(const wchar_t *pwszVerb, const Utf16String &wcsUrl);
 	void Connect(const wchar_t *pwszVerb, const wchar_t *pwszUrl, std::size_t uUrlLen = (std::size_t)-1);
-
-	unsigned int GetStatusCode() const;
-	std::size_t Read(void *pData, std::size_t uSize);
+	void Connect(const wchar_t *pwszVerb, const Utf16String &wcsUrl);
 	void Disconnect() noexcept;
+
+/*	std::uint32_t GetStatusCode() const;
+	std::size_t Read(void *pData, std::size_t uSize);*/
 };
 
 }

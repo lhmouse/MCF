@@ -3,7 +3,8 @@
 // Copyleft 2014. LH_Mouse. All wrongs reserved.
 
 #include "../../env/_crtdef.h"
-#include <wchar.h>
+
+extern wchar_t *wcschr(const wchar_t *s, wchar_t ch);
 
 wchar_t *wcspbrk(const wchar_t *s1, const wchar_t *s2){
 	const wchar_t *rp = s1;

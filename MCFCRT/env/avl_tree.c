@@ -4,6 +4,7 @@
 
 #include "avl_tree.h"
 #include "../c/ext/assert.h"
+#include "../c/ext/unref_param.h"
 
 static inline size_t GetHeight(const __MCF_AVL_NODE_HEADER *pWhere){
 	return pWhere ? pWhere->uHeight : 0;
@@ -219,12 +220,32 @@ static void UpdateRecur(__MCF_AVL_NODE_HEADER *pWhere){
 	}
 }
 
-static void Insert(
+void __MCF_AvlSwap(
+	__MCF_AVL_PROOT *ppRoot1,
+	__MCF_AVL_PROOT *ppRoot2
+){
+	__MCF_AVL_NODE_HEADER *const pRoot1 = *ppRoot1;
+	__MCF_AVL_NODE_HEADER *const pRoot2 = *ppRoot2;
+
+	*ppRoot2 = pRoot1;
+	if(pRoot1){
+		pRoot1->ppRefl = ppRoot2;
+	}
+
+	*ppRoot1 = pRoot2;
+	if(pRoot2){
+		pRoot2->ppRefl = ppRoot1;
+	}
+}
+
+void __MCF_AvlInsertNoCheck(
 	__MCF_AVL_NODE_HEADER *pNode,
 	intptr_t nKey,
 	__MCF_AVL_NODE_HEADER *pParent,
 	__MCF_AVL_NODE_HEADER **ppIns
 ){
+	ASSERT(!*ppIns);
+
 	*ppIns = pNode;
 
 	pNode->nKey		= nKey;
@@ -260,24 +281,6 @@ static void Insert(
 	}
 }
 
-void __MCF_AvlSwap(
-	__MCF_AVL_PROOT *ppRoot1,
-	__MCF_AVL_PROOT *ppRoot2
-){
-	__MCF_AVL_NODE_HEADER *const pRoot1 = *ppRoot1;
-	__MCF_AVL_NODE_HEADER *const pRoot2 = *ppRoot2;
-
-	*ppRoot2 = pRoot1;
-	if(pRoot1){
-		pRoot1->ppRefl = ppRoot2;
-	}
-
-	*ppRoot1 = pRoot2;
-	if(pRoot2){
-		pRoot2->ppRefl = ppRoot1;
-	}
-}
-
 void __MCF_AvlAttach(
 	__MCF_AVL_PROOT *ppRoot,
 	intptr_t nKey,
@@ -298,7 +301,7 @@ void __MCF_AvlAttach(
 			ppIns = &(pCur->pRight);
 		}
 	}
-	Insert(pNode, nKey, pParent, ppIns);
+	__MCF_AvlInsertNoCheck(pNode, nKey, pParent, ppIns);
 }
 void __MCF_AvlAttachCustomComp(
 	__MCF_AVL_PROOT *ppRoot,
@@ -321,7 +324,7 @@ void __MCF_AvlAttachCustomComp(
 			ppIns = &(pCur->pRight);
 		}
 	}
-	Insert(pNode, nKey, pParent, ppIns);
+	__MCF_AvlInsertNoCheck(pNode, nKey, pParent, ppIns);
 }
 void __MCF_AvlDetach(
 	const __MCF_AVL_NODE_HEADER *pNode
@@ -453,13 +456,16 @@ __MCF_AVL_NODE_HEADER *__MCF_AvlLowerBound(
 }
 __MCF_AVL_NODE_HEADER *__MCF_AvlLowerBoundCustomComp(
 	const __MCF_AVL_PROOT *ppRoot,
-	intptr_t nKey,
-	__MCF_AVL_KEY_COMPARER pfnKeyComparer
+	intptr_t nOther,
+	__MCF_AVL_KEY_COMPARER pfnComparerKeyOther,
+	__MCF_AVL_KEY_COMPARER pfnComparerOtherKey
 ){
+	UNREF_PARAM(pfnComparerOtherKey);
+
 	const __MCF_AVL_NODE_HEADER *pRet = NULL;
 	const __MCF_AVL_NODE_HEADER *pCur = *ppRoot;
 	while(pCur){
-		if((*pfnKeyComparer)(pCur->nKey, nKey)){
+		if((*pfnComparerKeyOther)(pCur->nKey, nOther)){
 			pCur = pCur->pRight;
 		} else {
 			pRet = pCur;
@@ -486,13 +492,16 @@ __MCF_AVL_NODE_HEADER *__MCF_AvlUpperBound(
 }
 __MCF_AVL_NODE_HEADER *__MCF_AvlUpperBoundCustomComp(
 	const __MCF_AVL_PROOT *ppRoot,
-	intptr_t nKey,
-	__MCF_AVL_KEY_COMPARER pfnKeyComparer
+	intptr_t nOther,
+	__MCF_AVL_KEY_COMPARER pfnComparerKeyOther,
+	__MCF_AVL_KEY_COMPARER pfnComparerOtherKey
 ){
+	UNREF_PARAM(pfnComparerKeyOther);
+
 	const __MCF_AVL_NODE_HEADER *pRet = NULL;
 	const __MCF_AVL_NODE_HEADER *pCur = *ppRoot;
 	while(pCur){
-		if(!(*pfnKeyComparer)(nKey, pCur->nKey)){
+		if(!(*pfnComparerOtherKey)(nOther, pCur->nKey)){
 			pCur = pCur->pRight;
 		} else {
 			pRet = pCur;
@@ -519,14 +528,15 @@ __MCF_AVL_NODE_HEADER *__MCF_AvlFind(
 }
 __MCF_AVL_NODE_HEADER *__MCF_AvlFindCustomComp(
 	const __MCF_AVL_PROOT *ppRoot,
-	intptr_t nKey,
-	__MCF_AVL_KEY_COMPARER pfnKeyComparer
+	intptr_t nOther,
+	__MCF_AVL_KEY_COMPARER pfnComparerKeyOther,
+	__MCF_AVL_KEY_COMPARER pfnComparerOtherKey
 ){
 	const __MCF_AVL_NODE_HEADER *pCur = *ppRoot;
 	while(pCur){
-		if((*pfnKeyComparer)(pCur->nKey, nKey)){
+		if((*pfnComparerKeyOther)(pCur->nKey, nOther)){
 			pCur = pCur->pRight;
-		} else if((*pfnKeyComparer)(nKey, pCur->nKey)){
+		} else if((*pfnComparerOtherKey)(nOther, pCur->nKey)){
 			pCur = pCur->pLeft;
 		} else {
 			break;
@@ -570,15 +580,21 @@ void __MCF_AvlEqualRangeCustomComp(
 	__MCF_AVL_NODE_HEADER **ppFrom,
 	__MCF_AVL_NODE_HEADER **ppTo,
 	const __MCF_AVL_PROOT *ppRoot,
-	intptr_t nKey,
-	__MCF_AVL_KEY_COMPARER pfnKeyComparer
+	intptr_t nOther,
+	__MCF_AVL_KEY_COMPARER pfnComparerKeyOther,
+	__MCF_AVL_KEY_COMPARER pfnComparerOtherKey
 ){
-	const __MCF_AVL_NODE_HEADER *const pTop = __MCF_AvlFindCustomComp(ppRoot, nKey, pfnKeyComparer);
+	const __MCF_AVL_NODE_HEADER *const pTop = __MCF_AvlFindCustomComp(
+		ppRoot,
+		nOther,
+		pfnComparerKeyOther,
+		pfnComparerOtherKey
+	);
 	if(pTop){
 		const __MCF_AVL_NODE_HEADER *pCur = pTop;
 		for(;;){
 			const __MCF_AVL_NODE_HEADER *const pLower = pCur->pLeft;
-			if(!pLower || (*pfnKeyComparer)(pLower->nKey, nKey)){
+			if(!pLower || (*pfnComparerKeyOther)(pLower->nKey, nOther)){
 				break;
 			}
 			pCur = pLower;
@@ -588,7 +604,7 @@ void __MCF_AvlEqualRangeCustomComp(
 		pCur = pTop;
 		for(;;){
 			const __MCF_AVL_NODE_HEADER *const pUpper = pCur->pRight;
-			if(!pUpper || (*pfnKeyComparer)(nKey, pUpper->nKey)){
+			if(!pUpper || (*pfnComparerOtherKey)(nOther, pUpper->nKey)){
 				break;
 			}
 			pCur = pUpper;

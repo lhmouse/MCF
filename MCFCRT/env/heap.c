@@ -17,7 +17,7 @@ unsigned long __MCF_CRT_HeapInitialize(){
 	g_vBadAllocHandler.pfnProc = NULL;
 
 #ifdef __MCF_CRT_HEAPDBG_ON
-	__MCF_CRT_HeapDbgInitContext();
+	__MCF_CRT_HeapDbgInit();
 #endif
 
 	const HANDLE hProcessHeap = GetProcessHeap();
@@ -35,7 +35,7 @@ unsigned long __MCF_CRT_HeapInitialize(){
 }
 void __MCF_CRT_HeapUninitialize(){
 #ifdef __MCF_CRT_HEAPDBG_ON
-	__MCF_CRT_HeapDbgUninitContext();
+	__MCF_CRT_HeapDbgUninit();
 #endif
 
 	DeleteCriticalSection(&g_csHeapLock);

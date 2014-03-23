@@ -21,8 +21,8 @@ typedef struct tagHeapDbgBlockInfo {
 	const void *pRetAddr;
 } __MCF_HEAPDBG_BLOCK_INFO;
 
-extern unsigned long __MCF_CRT_HeapDbgInitContext(void) __MCF_NOEXCEPT;
-extern void __MCF_CRT_HeapDbgUninitContext(void) __MCF_NOEXCEPT;
+extern unsigned long __MCF_CRT_HeapDbgInit(void) __MCF_NOEXCEPT;
+extern void __MCF_CRT_HeapDbgUninit(void) __MCF_NOEXCEPT;
 
 extern __MCF_STD size_t __MCF_CRT_HeapDbgGetRawSize(
 	__MCF_STD size_t uContentSize
@@ -47,6 +47,21 @@ extern const unsigned char *__MCF_CRT_HeapDbgGetContents(
 
 extern void __MCF_CRT_HeapDbgUnregister(
 	const __MCF_HEAPDBG_BLOCK_INFO *pBlockInfo
+) __MCF_NOEXCEPT;
+
+typedef void (*__MCF_HEAP_CALLBACK)(
+	int,				// 0 分配，1 释放
+	const void *,		// 内存块地址
+	__MCF_STD size_t,	// 内存块大小
+	const void *,		// 返回地址
+	__MCF_STD intptr_t	// 回调参数
+);
+
+extern void __MCF_CRT_HeapSetCallback(
+	__MCF_HEAP_CALLBACK *pfnOldCallback,
+	__MCF_STD intptr_t *pnOldContext,
+	__MCF_HEAP_CALLBACK pfnNewCallback,
+	__MCF_STD intptr_t nNewContext
 ) __MCF_NOEXCEPT;
 
 __MCF_EXTERN_C_END

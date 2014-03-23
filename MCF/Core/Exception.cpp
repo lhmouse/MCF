@@ -3,18 +3,13 @@
 // Copyleft 2014. LH_Mouse. All wrongs reserved.
 
 #include "../StdMCF.hpp"
-#include "Utilities.hpp"
+#include "Exception.hpp"
 #include "UniqueHandle.hpp"
-#include "../../MCFCRT/env/bail.h"
 using namespace MCF;
 
 namespace MCF {
 
-__MCF_CPP_NORETURN_IF_NDEBUG void Bail(const wchar_t *pwszDescription){
-	::__MCF_CRT_Bail(pwszDescription);
-}
-
-UTF16String GetWin32ErrorDesc(unsigned long ulErrorCode){
+Utf16String GetWin32ErrorDesc(unsigned long ulErrorCode){
 	struct LocalFreer {
 		constexpr HLOCAL operator()() const {
 			return NULL;
@@ -24,7 +19,7 @@ UTF16String GetWin32ErrorDesc(unsigned long ulErrorCode){
 		}
 	};
 
-	UTF16String u16sRet;
+	Utf16String wcsRet;
 	PVOID pDescBuffer;
 	const auto uLen = ::FormatMessageW(
 		FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
@@ -36,8 +31,8 @@ UTF16String GetWin32ErrorDesc(unsigned long ulErrorCode){
 		nullptr
 	);
 	const UniqueHandle<LocalFreer> hLocal((HLOCAL)pDescBuffer); // RAII
-	u16sRet.Assign((LPCWSTR)pDescBuffer, uLen);
-	return std::move(u16sRet);
+	wcsRet.Assign((LPCWSTR)pDescBuffer, uLen);
+	return std::move(wcsRet);
 }
 
 }

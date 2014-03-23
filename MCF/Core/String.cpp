@@ -12,39 +12,47 @@ template class GenericString<char,		StringEncoding::ANSI>;
 template class GenericString<wchar_t,	StringEncoding::UTF16>;
 
 template<>
-UnifiedString &UTF8String::xUnify(UnifiedString &ucsTemp) const {
+const UnifiedString *Utf8String::xUnify(UnifiedString &ucsTemp) const {
 	const auto pszSource = GetCStr();
 	const auto nLength = (int)GetLength();
-	const auto nUnifiedLength = ::MultiByteToWideChar(CP_UTF8, 0, pszSource, nLength, nullptr, 0);
-	ucsTemp.Resize(::MultiByteToWideChar(CP_UTF8, 0, pszSource, nLength, ucsTemp.Reserve(nUnifiedLength), nUnifiedLength));
-	return ucsTemp;
+	auto nUnifiedLength = ::MultiByteToWideChar(CP_UTF8, 0, pszSource, nLength, nullptr, 0);
+	ucsTemp.Resize(nUnifiedLength);
+	nUnifiedLength = ::MultiByteToWideChar(CP_UTF8, 0, pszSource, nLength, ucsTemp.GetCStr(), ucsTemp.GetCapacity());
+	ucsTemp.Resize(nUnifiedLength);
+	return nullptr;
 }
 template<>
-void UTF8String::xDisunify(const UnifiedString &ucsTemp){
+void Utf8String::xDisunify(const UnifiedString &ucsTemp){
 	const auto pszSource = ucsTemp.GetCStr();
 	const auto nLength = (int)ucsTemp.GetLength();
-	const auto nDisunifiedLength = ::WideCharToMultiByte(CP_UTF8, 0, pszSource, nLength, nullptr, 0, nullptr, nullptr);
-	Resize(::WideCharToMultiByte(CP_UTF8, 0, pszSource, nLength, Reserve(nDisunifiedLength), nDisunifiedLength, nullptr, nullptr));
+	auto nDisunifiedLength = ::WideCharToMultiByte(CP_UTF8, 0, pszSource, nLength, nullptr, 0, nullptr, nullptr);
+	Resize(nDisunifiedLength + 1);
+	nDisunifiedLength = ::WideCharToMultiByte(CP_UTF8, 0, pszSource, nLength, GetCStr(), nDisunifiedLength, nullptr, nullptr);
+	Resize(nDisunifiedLength);
 }
 template<>
-void UTF8String::xDisunify(UnifiedString &&ucsTemp){
+void Utf8String::xDisunify(UnifiedString &&ucsTemp){
 	xDisunify(ucsTemp);
 }
 
 template<>
-UnifiedString &ANSIString::xUnify(UnifiedString &ucsTemp) const {
+const UnifiedString *ANSIString::xUnify(UnifiedString &ucsTemp) const {
 	const auto pszSource = GetCStr();
 	const auto nLength = (int)GetLength();
-	const auto nUnifiedLength = ::MultiByteToWideChar(CP_ACP, 0, pszSource, nLength, nullptr, 0);
-	ucsTemp.Resize(::MultiByteToWideChar(CP_ACP, 0, pszSource, nLength, ucsTemp.Reserve(nUnifiedLength), nUnifiedLength));
-	return ucsTemp;
+	auto nUnifiedLength = ::MultiByteToWideChar(CP_ACP, 0, pszSource, nLength, nullptr, 0);
+	ucsTemp.Resize(nUnifiedLength);
+	nUnifiedLength = ::MultiByteToWideChar(CP_ACP, 0, pszSource, nLength, ucsTemp.GetCStr(), ucsTemp.GetCapacity());
+	ucsTemp.Resize(nUnifiedLength);
+	return nullptr;
 }
 template<>
 void ANSIString::xDisunify(const UnifiedString &ucsTemp){
 	const auto pszSource = ucsTemp.GetCStr();
 	const auto nLength = (int)ucsTemp.GetLength();
-	const auto nDisunifiedLength = ::WideCharToMultiByte(CP_ACP, 0, pszSource, nLength, nullptr, 0, nullptr, nullptr);
-	Resize(::WideCharToMultiByte(CP_ACP, 0, pszSource, nLength, Reserve(nDisunifiedLength), nDisunifiedLength, nullptr, nullptr));
+	auto nDisunifiedLength = ::WideCharToMultiByte(CP_ACP, 0, pszSource, nLength, nullptr, 0, nullptr, nullptr);
+	Resize(nDisunifiedLength);
+	nDisunifiedLength = ::WideCharToMultiByte(CP_ACP, 0, pszSource, nLength, GetCStr(), nDisunifiedLength, nullptr, nullptr);
+	Resize(nDisunifiedLength);
 }
 template<>
 void ANSIString::xDisunify(UnifiedString &&ucsTemp){
@@ -52,8 +60,8 @@ void ANSIString::xDisunify(UnifiedString &&ucsTemp){
 }
 
 template<>
-UnifiedString &UnifiedString::xUnify(UnifiedString & /* ucsTemp */) const {
-	return *(UnifiedString *)this;
+const UnifiedString *UnifiedString::xUnify(UnifiedString & /* ucsTemp */) const {
+	return this;
 }
 template<>
 void UnifiedString::xDisunify(const UnifiedString &ucsTemp){

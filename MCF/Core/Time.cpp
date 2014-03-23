@@ -18,29 +18,18 @@ std::uint64_t GetUnixTime() noexcept {
 	return (u.uli.QuadPart - 0x019DB1DED53E8000ull) / 10000000ull;
 }
 
-std::uint64_t GetHiResCounter() noexcept {
+double GetHiResCounter() noexcept {
 	static bool s_bInited = false;
-	static long double s_llfFreq;
 	static long double s_llfFreqRecip;
-	static long double s_llfRemainderCoef;
 
 	LARGE_INTEGER liTemp;
-
 	if(!__atomic_load_n(&s_bInited, __ATOMIC_ACQUIRE)){
 		::QueryPerformanceFrequency(&liTemp);
-		const auto llFreq = (long double)liTemp.QuadPart;
-		s_llfFreq = llFreq;
-		s_llfFreqRecip = 1.0l / llFreq;
-		s_llfRemainderCoef = (1ull << (64 - HI_RES_COUNTER_SECOND_BITS)) / llFreq;
-
+		s_llfFreqRecip = 1.0l / liTemp.QuadPart;
 		__atomic_store_n(&s_bInited, true, __ATOMIC_RELEASE);
 	}
-
 	::QueryPerformanceCounter(&liTemp);
-	const auto llfCounter = (long double)liTemp.QuadPart;
-	const auto u64Seconds = (std::uint64_t)(llfCounter * s_llfFreqRecip);
-	const auto u32Remainder = (std::uint32_t)((llfCounter - u64Seconds * s_llfFreq) * s_llfRemainderCoef);
-	return (u64Seconds << (64 - HI_RES_COUNTER_SECOND_BITS)) | u32Remainder;
+	return (double)(liTemp.QuadPart * s_llfFreqRecip);
 }
 
 }

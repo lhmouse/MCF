@@ -6,6 +6,8 @@
 
 #include "heap_dbg.h"
 
+typedef int UNUSED;
+
 #ifdef __MCF_CRT_HEAPDBG_ON
 
 #include "bail.h"
@@ -24,8 +26,10 @@
 static HANDLE							g_hMapAllocator;
 static __MCF_AVL_PROOT					g_mapBlocks;
 static const __MCF_HEAPDBG_BLOCK_INFO	*g_pBlockHead;
+static __MCF_HEAP_CALLBACK				g_pfnCallback;
+static intptr_t							g_nCallbackContext;
 
-unsigned long __MCF_CRT_HeapDbgInitContext(){
+unsigned long __MCF_CRT_HeapDbgInit(){
 	g_hMapAllocator = HeapCreate(HEAP_NO_SERIALIZE, 0, 0);
 	if(!g_hMapAllocator){
 		return GetLastError();
@@ -33,11 +37,11 @@ unsigned long __MCF_CRT_HeapDbgInitContext(){
 
 	return ERROR_SUCCESS;
 }
-void __MCF_CRT_HeapDbgUninitContext(){
+void __MCF_CRT_HeapDbgUninit(){
 	const __MCF_HEAPDBG_BLOCK_INFO *pBlockInfo = g_pBlockHead;
 	if(pBlockInfo){
 		__MCF_CRT_Bail(
-			L"__MCF_CRT_HeapDbgUninitContext() 失败：侦测到内存泄漏。\n\n"
+			L"__MCF_CRT_HeapDbgUninit() 失败：侦测到内存泄漏。\n\n"
 			"如果您选择调试应用程序，MCF CRT 将尝试使用 OutputDebugString() 导出内存泄漏的详细信息。"
 		);
 
@@ -114,6 +118,10 @@ void __MCF_CRT_HeapDbgAddGuardsAndRegister(
 	if(!__MCF_AvlPrev((__MCF_AVL_NODE_HEADER *)pBlockInfo)){
 		g_pBlockHead = pBlockInfo;
 	}
+
+	if(g_pfnCallback){
+		g_pfnCallback(0, pContents, uContentSize, pRetAddr, g_nCallbackContext);
+	}
 }
 const __MCF_HEAPDBG_BLOCK_INFO *__MCF_CRT_HeapDbgValidate(
 	unsigned char **ppRaw,
@@ -150,12 +158,32 @@ const unsigned char *__MCF_CRT_HeapDbgGetContents(
 void __MCF_CRT_HeapDbgUnregister(
 	const __MCF_HEAPDBG_BLOCK_INFO *pBlockInfo
 ){
+	if(g_pfnCallback){
+		g_pfnCallback(1, __MCF_CRT_HeapDbgGetContents(pBlockInfo), pBlockInfo->uSize, pBlockInfo->pRetAddr, g_nCallbackContext);
+	}
+
 	if(g_pBlockHead == pBlockInfo){
 		g_pBlockHead = (__MCF_HEAPDBG_BLOCK_INFO *)__MCF_AvlNext((__MCF_AVL_NODE_HEADER *)pBlockInfo);
 	}
 	__MCF_AvlDetach((const __MCF_AVL_NODE_HEADER *)pBlockInfo);
 
 	HeapFree(g_hMapAllocator, 0, (void *)pBlockInfo);
+}
+
+void __MCF_CRT_HeapSetCallback(
+	__MCF_HEAP_CALLBACK *pfnOldCallback,
+	__MCF_STD intptr_t *pnOldContext,
+	__MCF_HEAP_CALLBACK pfnNewCallback,
+	__MCF_STD intptr_t nNewContext
+){
+	if(pfnOldCallback){
+		*pfnOldCallback = g_pfnCallback;
+	}
+	if(pnOldContext){
+		*pnOldContext = g_nCallbackContext;
+	}
+	g_pfnCallback = pfnNewCallback;
+	g_nCallbackContext = nNewContext;
 }
 
 #endif // __MCF_CRT_HEAPDBG_ON

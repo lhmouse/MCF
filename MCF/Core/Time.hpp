@@ -11,11 +11,7 @@ namespace MCF {
 
 extern std::uint64_t GetUnixTime() noexcept;
 
-enum {
-	// 这里使用定点数格式。
-	HI_RES_COUNTER_SECOND_BITS = 40
-};
-extern std::uint64_t GetHiResCounter() noexcept;
+extern double GetHiResCounter() noexcept;
 
 }
 

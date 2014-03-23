@@ -47,7 +47,7 @@ public:
 	bool IsOpen() const noexcept {
 		return xm_hFile.IsGood();
 	}
-	unsigned long Open(const wchar_t *pwszPath, bool bToRead, bool bToWrite, bool bAutoCreate) noexcept {
+	void Open(const wchar_t *pwszPath, bool bToRead, bool bToWrite, bool bAutoCreate){
 		xm_hFile.Reset(::CreateFileW(
 			pwszPath,
 			(bToRead ? GENERIC_READ : 0) | (bToWrite ? GENERIC_WRITE : 0),
@@ -58,9 +58,8 @@ public:
 			NULL
 		));
 		if(!xm_hFile){
-			return ::GetLastError();
+			MCF_THROW(::GetLastError(), L"::CreateFileW() 失败。");
 		}
-		return ERROR_SUCCESS;
 	}
 	void Close() noexcept {
 		if(xm_hFile){
@@ -183,16 +182,18 @@ bool File::IsOpen() const noexcept {
 	return xm_pDelegate->IsOpen();
 }
 unsigned long File::OpenNoThrow(const wchar_t *pwszPath, bool bToRead, bool bToWrite, bool bAutoCreate){
+	try {
+		Open(pwszPath, bToRead, bToWrite, bAutoCreate);
+		return ERROR_SUCCESS;
+	} catch(Exception &e){
+		return e.ulErrorCode;
+	}
+}
+void File::Open(const wchar_t *pwszPath, bool bToRead, bool bToWrite, bool bAutoCreate){
 	if(!xm_pDelegate){
 		xm_pDelegate.reset(new xDelegate);
 	}
-	return xm_pDelegate->Open(pwszPath, bToRead, bToWrite, bAutoCreate);
-}
-void File::Open(const wchar_t *pwszPath, bool bToRead, bool bToWrite, bool bAutoCreate){
-	const auto ulErrorCode = OpenNoThrow(pwszPath, bToRead, bToWrite, bAutoCreate);
-	if(ulErrorCode != ERROR_SUCCESS){
-		MCF_THROW(ulErrorCode, L"打开文件失败。");
-	}
+	xm_pDelegate->Open(pwszPath, bToRead, bToWrite, bAutoCreate);
 }
 void File::Close() noexcept {
 	if(!xm_pDelegate){

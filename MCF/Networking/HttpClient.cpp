@@ -16,6 +16,7 @@ using namespace MCF;
 // 嵌套类定义。
 class HttpClient::xDelegate : NO_COPY {
 private:
+	// RAII
 	struct WinHttpCloser {
 		constexpr HINTERNET operator()() const noexcept {
 			return NULL;
@@ -24,7 +25,6 @@ private:
 			::WinHttpCloseHandle(hInternet);
 		}
 	};
-
 	typedef UniqueHandle<WinHttpCloser> xWinHttpHandle;
 
 	struct GlobalFreer {
@@ -35,17 +35,27 @@ private:
 			::GlobalFree((HGLOBAL)pGlobal);
 		}
 	};
-
 	typedef UniqueHandle<GlobalFreer> xPGlobal;
 
+	// Cookies
+/*	struct CookieItem {
+		Utf16String wcsValue;
+		bool bSecure;
+		bool bHttpOnly;
+	};
+
+
+
+	typedef MultiIndexedMap<
+		CookieItem,
+
+	> CookieMap;
+*/
 private:
 	Utf16String xm_ucsPacUrl;
 	Utf16String xm_ucsProxyUserName;
 	Utf16String xm_ucsProxyPassword;
 	xWinHttpHandle xm_hSession;
-
-	VVector<unsigned char> xm_vecOutgoingData;
-	Utf16String xm_wcsMimeType;
 
 	xWinHttpHandle xm_hConnect;
 	xWinHttpHandle xm_hRequest;
@@ -162,7 +172,7 @@ public:
 		std::size_t uUrlLen,
 		const void *pContents,
 		std::size_t uContentSize,
-		const wchar_t *pwszMimeType
+		const wchar_t *pwszContentType
 	){
 		Disconnect();
 
@@ -311,7 +321,7 @@ public:
 
 		if(uContentSize > 0){
 			Utf16String wcsContentType(L"Content-Type: ");
-			wcsContentType += pwszMimeType;
+			wcsContentType += pwszContentType;
 			if(!::WinHttpAddRequestHeaders(
 				hRequest.Get(),
 				wcsContentType.GetCStr(),
@@ -338,21 +348,45 @@ public:
 			MCF_THROW(::GetLastError(), L"::WinHttpReceiveResponse() 失败。");
 		}
 
+		DWORD dwCookieIndex = 0;
+		for(;;){
+			Utf16String wcsSetCookie;
+			DWORD dwSetCookieLength = 127 * sizeof(wchar_t);
+			wcsSetCookie.Resize(dwSetCookieLength / sizeof(wchar_t));
+			if(!::WinHttpQueryHeaders(
+				hRequest.Get(),
+				WINHTTP_QUERY_SET_COOKIE,
+				WINHTTP_HEADER_NAME_BY_INDEX,
+				wcsSetCookie.GetCStr(),
+				&dwSetCookieLength,
+				&dwCookieIndex
+			)){
+				auto ulErrorCode = ::GetLastError();
+				if(ulErrorCode == ERROR_WINHTTP_HEADER_NOT_FOUND){
+					break;
+				}
+				if(ulErrorCode != ERROR_INSUFFICIENT_BUFFER){
+					MCF_THROW(ulErrorCode, L"::WinHttpQueryHeaders() 失败。");
+				}
+				wcsSetCookie.Resize(dwSetCookieLength / sizeof(wchar_t));
+				if(!::WinHttpQueryHeaders(
+					hRequest.Get(),
+					WINHTTP_QUERY_SET_COOKIE,
+					WINHTTP_HEADER_NAME_BY_INDEX,
+					wcsSetCookie.GetCStr(),
+					&dwSetCookieLength,
+					&dwCookieIndex
+				)){
+					MCF_THROW(ulErrorCode, L"::WinHttpQueryHeaders() 失败。");
+				}
+			}
+			wcsSetCookie.Resize(dwSetCookieLength / sizeof(wchar_t));
+
+			printf("set-cookie: %ls\n", wcsSetCookie.GetCStr());
+		}
+
 		xm_hConnect = std::move(hConnect);
 		xm_hRequest = std::move(hRequest);
-
-		DWORD status;
-		DWORD size = sizeof(status);
-		if(!::WinHttpQueryHeaders(xm_hRequest.Get(), WINHTTP_QUERY_STATUS_CODE | WINHTTP_QUERY_FLAG_NUMBER, WINHTTP_HEADER_NAME_BY_INDEX, &status, &size, WINHTTP_NO_HEADER_INDEX)){
-			MCF_THROW(::GetLastError(), L"::WinHttpQueryHeaders() 失败。");
-		}
-		unsigned char buffer[1024];
-		DWORD bytesRead;
-		if(!::WinHttpReadData(xm_hRequest.Get(), buffer, sizeof(buffer) - 1, &bytesRead)){
-			MCF_THROW(::GetLastError(), L"::WinHttpReadData() 失败。");
-		}
-		buffer[bytesRead] = 0;
-		std::printf("%lu\n===================\n%s\n", status, buffer);
 	}
 	void Disconnect() noexcept {
 		xm_hRequest.Reset();
@@ -389,10 +423,10 @@ unsigned long HttpClient::ConnectNoThrow(
 	std::size_t uUrlLen,
 	const void *pContents,
 	std::size_t uContentSize,
-	const wchar_t *pwszMimeType
+	const wchar_t *pwszContentType
 ){
 	try {
-		Connect(pwszVerb, pwchUrl, uUrlLen, pContents, uContentSize, pwszMimeType);
+		Connect(pwszVerb, pwchUrl, uUrlLen, pContents, uContentSize, pwszContentType);
 		return ERROR_SUCCESS;
 	} catch(Exception &e){
 		return e.ulErrorCode;
@@ -404,9 +438,9 @@ void HttpClient::Connect(
 	std::size_t uUrlLen,
 	const void *pContents,
 	std::size_t uContentSize,
-	const wchar_t *pwszMimeType
+	const wchar_t *pwszContentType
 ){
-	xm_pDelegate->Connect(pwszVerb, pwchUrl, uUrlLen, pContents, uContentSize, pwszMimeType);
+	xm_pDelegate->Connect(pwszVerb, pwchUrl, uUrlLen, pContents, uContentSize, pwszContentType);
 }
 
 unsigned long HttpClient::ConnectNoThrow(
@@ -414,18 +448,18 @@ unsigned long HttpClient::ConnectNoThrow(
 	const Utf16String &wcsUrl,
 	const void *pContents,
 	std::size_t uContentSize,
-	const wchar_t *pwszMimeType
+	const wchar_t *pwszContentType
 ){
-	return ConnectNoThrow(pwszVerb, wcsUrl.GetCStr(), wcsUrl.GetLength(), pContents, uContentSize, pwszMimeType);
+	return ConnectNoThrow(pwszVerb, wcsUrl.GetCStr(), wcsUrl.GetLength(), pContents, uContentSize, pwszContentType);
 }
 void HttpClient::Connect(
 	const wchar_t *pwszVerb,
 	const Utf16String &wcsUrl,
 	const void *pContents,
 	std::size_t uContentSize,
-	const wchar_t *pwszMimeType
+	const wchar_t *pwszContentType
 ){
-	Connect(pwszVerb, wcsUrl.GetCStr(), wcsUrl.GetLength(), pContents, uContentSize, pwszMimeType);
+	Connect(pwszVerb, wcsUrl.GetCStr(), wcsUrl.GetLength(), pContents, uContentSize, pwszContentType);
 }
 void HttpClient::Disconnect() noexcept {
 	xm_pDelegate->Disconnect();

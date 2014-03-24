@@ -7,99 +7,101 @@
 using namespace MCF;
 
 namespace {
-	// http://en.wikipedia.org/wiki/RC4
-	// 1. 基本算法为 RC4；
-	// 2. 输入 RC4 的密钥为原始密钥的散列值；
-	// 3. 原文输入 RC4 前被循环移位；
-	// 4. 加密输出的字节参与伪随机数生成。
-	void GenInitBox(unsigned char (&abyOutput)[256], const void *pKey, std::size_t uKeyLen, std::uint64_t u64Nonce) noexcept {
-		SHA256 Hasher;
-		union {
-			struct {
-				unsigned char abyNoncedKeyHash[32];
-				unsigned char abyKeyHash[32];
-			};
-			unsigned char abyBytes[64];
-		} RC4Key;
 
-		Hasher.Update(&u64Nonce, sizeof(u64Nonce));
-		Hasher.Update(pKey, uKeyLen);
-		Hasher.Finalize(RC4Key.abyNoncedKeyHash);
+// http://en.wikipedia.org/wiki/RC4
+// 1. 基本算法为 RC4；
+// 2. 输入 RC4 的密钥为原始密钥的散列值；
+// 3. 原文输入 RC4 前被循环移位；
+// 4. 加密输出的字节参与伪随机数生成。
+void GenInitBox(unsigned char (&abyOutput)[256], const void *pKey, std::size_t uKeyLen, std::uint64_t u64Nonce) noexcept {
+	SHA256 Hasher;
+	union {
+		struct {
+			unsigned char abyNoncedKeyHash[32];
+			unsigned char abyKeyHash[32];
+		};
+		unsigned char abyBytes[64];
+	} RC4Key;
 
-		Hasher.Update(pKey, uKeyLen);
-		Hasher.Finalize(RC4Key.abyKeyHash);
+	Hasher.Update(&u64Nonce, sizeof(u64Nonce));
+	Hasher.Update(pKey, uKeyLen);
+	Hasher.Finalize(RC4Key.abyNoncedKeyHash);
 
-		for(std::size_t i = 0; i < 256; ++i){
-			abyOutput[i] = (unsigned char)i;
-		}
-		unsigned char j = 0;
-		for(std::size_t i = 0; i < 256; ++i){
-			const auto b0 = abyOutput[i];
-			j += b0 + RC4Key.abyBytes[i % sizeof(RC4Key.abyBytes)];
-			const auto b1 = abyOutput[j];
-			abyOutput[i] = b1;
-			abyOutput[j] = b0;
-		}
+	Hasher.Update(pKey, uKeyLen);
+	Hasher.Finalize(RC4Key.abyKeyHash);
+
+	for(std::size_t i = 0; i < 256; ++i){
+		abyOutput[i] = (unsigned char)i;
+	}
+	unsigned char j = 0;
+	for(std::size_t i = 0; i < 256; ++i){
+		const auto b0 = abyOutput[i];
+		j += b0 + RC4Key.abyBytes[i % sizeof(RC4Key.abyBytes)];
+		const auto b1 = abyOutput[j];
+		abyOutput[i] = b1;
+		abyOutput[j] = b0;
+	}
+}
+
+void Encode(void *pOut, const void *pIn, std::size_t uSize, unsigned char *pbyBox, unsigned char *pbyI, unsigned char *pbyJ) noexcept {
+	auto pbyRead = (const unsigned char *)pIn;
+	auto pbyWrite = (unsigned char *)pOut;
+
+	auto i = *pbyI;
+	auto j = *pbyJ;
+
+	for(std::size_t k = 0; k < uSize; ++k){
+		++i;
+		const auto b0 = pbyBox[i];
+		j += b0;
+		const auto b1 = pbyBox[j];
+		pbyBox[i] = b1;
+		pbyBox[j] = b0;
+
+		register auto ch = *(pbyRead++);
+		__asm__ __volatile__(
+			"rol %b0, cl \n"
+			: "+q"(ch)
+			: "c"(b1 & 7)
+		);
+		ch ^= pbyBox[(unsigned char)(b0 + b1)];
+		j += ch;
+		*(pbyWrite++) = ch;
 	}
 
-	void Encode(void *pOut, const void *pIn, std::size_t uSize, unsigned char *pbyBox, unsigned char *pbyI, unsigned char *pbyJ) noexcept {
-		auto pbyRead = (const unsigned char *)pIn;
-		auto pbyWrite = (unsigned char *)pOut;
+	*pbyI = i;
+	*pbyJ = j;
+}
+void Decode(void *pOut, const void *pIn, std::size_t uSize, unsigned char *pbyBox, unsigned char *pbyI, unsigned char *pbyJ) noexcept {
+	auto pbyRead = (const unsigned char *)pIn;
+	auto pbyWrite = (unsigned char *)pOut;
 
-		auto i = *pbyI;
-		auto j = *pbyJ;
+	auto i = *pbyI;
+	auto j = *pbyJ;
 
-		for(std::size_t k = 0; k < uSize; ++k){
-			++i;
-			const auto b0 = pbyBox[i];
-			j += b0;
-			const auto b1 = pbyBox[j];
-			pbyBox[i] = b1;
-			pbyBox[j] = b0;
+	for(std::size_t k = 0; k < uSize; ++k){
+		++i;
+		const auto b0 = pbyBox[i];
+		j += b0;
+		const auto b1 = pbyBox[j];
+		pbyBox[i] = b1;
+		pbyBox[j] = b0;
 
-			register auto ch = *(pbyRead++);
-			__asm__ __volatile__(
-				"rol %b0, cl \n"
-				: "+q"(ch)
-				: "c"(b1 & 7)
-			);
-			ch ^= pbyBox[(unsigned char)(b0 + b1)];
-			j += ch;
-			*(pbyWrite++) = ch;
-		}
-
-		*pbyI = i;
-		*pbyJ = j;
+		register auto ch = *(pbyRead++);
+		j += ch;
+		ch ^= pbyBox[(unsigned char)(b0 + b1)];
+		__asm__ __volatile__(
+			"ror %b0, cl \n"
+			: "+q"(ch)
+			: "c"(b1 & 7)
+		);
+		*(pbyWrite++) = ch;
 	}
-	void Decode(void *pOut, const void *pIn, std::size_t uSize, unsigned char *pbyBox, unsigned char *pbyI, unsigned char *pbyJ) noexcept {
-		auto pbyRead = (const unsigned char *)pIn;
-		auto pbyWrite = (unsigned char *)pOut;
 
-		auto i = *pbyI;
-		auto j = *pbyJ;
+	*pbyI = i;
+	*pbyJ = j;
+}
 
-		for(std::size_t k = 0; k < uSize; ++k){
-			++i;
-			const auto b0 = pbyBox[i];
-			j += b0;
-			const auto b1 = pbyBox[j];
-			pbyBox[i] = b1;
-			pbyBox[j] = b0;
-
-			register auto ch = *(pbyRead++);
-			j += ch;
-			ch ^= pbyBox[(unsigned char)(b0 + b1)];
-			__asm__ __volatile__(
-				"ror %b0, cl \n"
-				: "+q"(ch)
-				: "c"(b1 & 7)
-			);
-			*(pbyWrite++) = ch;
-		}
-
-		*pbyI = i;
-		*pbyJ = j;
-	}
 }
 
 // ========== RC4ExEncoder ==========

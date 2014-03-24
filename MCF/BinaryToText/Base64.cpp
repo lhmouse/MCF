@@ -9,16 +9,18 @@
 using namespace MCF;
 
 namespace {
-	inline void CopyOut(const std::function<std::pair<void *, std::size_t> (std::size_t)> &fnDataCallback, const void *pSrc, std::size_t uBytesToCopy){
-		std::size_t uBytesCopied = 0;
-		while(uBytesCopied < uBytesToCopy){
-			const std::size_t uBytesRemaining = uBytesToCopy - uBytesCopied;
-			const auto vResult = fnDataCallback(uBytesRemaining);
-			const std::size_t uBytesToCopyThisTime = std::min(vResult.second, uBytesRemaining);
-			__builtin_memcpy(vResult.first, (const unsigned char *)pSrc + uBytesCopied, uBytesToCopyThisTime);
-			uBytesCopied += uBytesToCopyThisTime;
-		}
+
+inline void CopyOut(const std::function<std::pair<void *, std::size_t> (std::size_t)> &fnDataCallback, const void *pSrc, std::size_t uBytesToCopy){
+	std::size_t uBytesCopied = 0;
+	while(uBytesCopied < uBytesToCopy){
+		const std::size_t uBytesRemaining = uBytesToCopy - uBytesCopied;
+		const auto vResult = fnDataCallback(uBytesRemaining);
+		const std::size_t uBytesToCopyThisTime = std::min(vResult.second, uBytesRemaining);
+		__builtin_memcpy(vResult.first, (const unsigned char *)pSrc + uBytesCopied, uBytesToCopyThisTime);
+		uBytesCopied += uBytesToCopyThisTime;
 	}
+}
+
 }
 
 // 静态成员变量。

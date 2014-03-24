@@ -18,63 +18,65 @@
 using namespace MCF;
 
 namespace {
-	inline void CopyOut(const std::function<std::pair<void *, std::size_t> (std::size_t)> &fnDataCallback, const void *pSrc, std::size_t uBytesToCopy){
-		std::size_t uBytesCopied = 0;
-		while(uBytesCopied < uBytesToCopy){
-			const std::size_t uBytesRemaining = uBytesToCopy - uBytesCopied;
-			const auto vResult = fnDataCallback(uBytesRemaining);
-			const std::size_t uBytesToCopyThisTime = std::min(vResult.second, uBytesRemaining);
-			__builtin_memcpy(vResult.first, (const unsigned char *)pSrc + uBytesCopied, uBytesToCopyThisTime);
-			uBytesCopied += uBytesToCopyThisTime;
-		}
-	}
 
-	inline unsigned long LzmaErrorToWin32Error(int nError) noexcept {
-		switch(nError){
-		case SZ_OK:
-			return ERROR_SUCCESS;
-		case SZ_ERROR_DATA:
-			return ERROR_INVALID_DATA;
-		case SZ_ERROR_MEM:
-			return ERROR_NOT_ENOUGH_MEMORY;
-		case SZ_ERROR_CRC:
-			return ERROR_INVALID_DATA;
-		case SZ_ERROR_UNSUPPORTED:
-			return ERROR_NOT_SUPPORTED;
-		case SZ_ERROR_PARAM:
-			return ERROR_INVALID_PARAMETER;
-		case SZ_ERROR_INPUT_EOF:
-			return ERROR_HANDLE_EOF;
-		case SZ_ERROR_OUTPUT_EOF:
-			return ERROR_MORE_DATA;
-		// case SZ_ERROR_READ:
-		// case SZ_ERROR_WRITE:
-		// case SZ_ERROR_PROGRESS:
-		// case SZ_ERROR_FAIL:
-		// case SZ_ERROR_THREAD:
-		default:
-			return ERROR_INVALID_FUNCTION;
-		}
+inline void CopyOut(const std::function<std::pair<void *, std::size_t> (std::size_t)> &fnDataCallback, const void *pSrc, std::size_t uBytesToCopy){
+	std::size_t uBytesCopied = 0;
+	while(uBytesCopied < uBytesToCopy){
+		const std::size_t uBytesRemaining = uBytesToCopy - uBytesCopied;
+		const auto vResult = fnDataCallback(uBytesRemaining);
+		const std::size_t uBytesToCopyThisTime = std::min(vResult.second, uBytesRemaining);
+		__builtin_memcpy(vResult.first, (const unsigned char *)pSrc + uBytesCopied, uBytesToCopyThisTime);
+		uBytesCopied += uBytesToCopyThisTime;
 	}
+}
 
-	void *SmallAlloc(void *, size_t uSize) noexcept {
-		return ::operator new(uSize);
+inline unsigned long LzmaErrorToWin32Error(int nError) noexcept {
+	switch(nError){
+	case SZ_OK:
+		return ERROR_SUCCESS;
+	case SZ_ERROR_DATA:
+		return ERROR_INVALID_DATA;
+	case SZ_ERROR_MEM:
+		return ERROR_NOT_ENOUGH_MEMORY;
+	case SZ_ERROR_CRC:
+		return ERROR_INVALID_DATA;
+	case SZ_ERROR_UNSUPPORTED:
+		return ERROR_NOT_SUPPORTED;
+	case SZ_ERROR_PARAM:
+		return ERROR_INVALID_PARAMETER;
+	case SZ_ERROR_INPUT_EOF:
+		return ERROR_HANDLE_EOF;
+	case SZ_ERROR_OUTPUT_EOF:
+		return ERROR_MORE_DATA;
+	// case SZ_ERROR_READ:
+	// case SZ_ERROR_WRITE:
+	// case SZ_ERROR_PROGRESS:
+	// case SZ_ERROR_FAIL:
+	// case SZ_ERROR_THREAD:
+	default:
+		return ERROR_INVALID_FUNCTION;
 	}
-	void SmallFree(void *, void *pBlock) noexcept {
-		::operator delete(pBlock);
-	}
+}
 
-	void *LargeAlloc(void *, size_t uSize) noexcept {
-		return ::VirtualAlloc(nullptr, uSize, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
-	}
-	void LargeFree(void *, void *pBlock) noexcept {
-		if(pBlock != nullptr){
-			::VirtualFree(pBlock, 0, MEM_RELEASE);
-		}
-	}
+void *SmallAlloc(void *, size_t uSize) noexcept {
+	return ::operator new(uSize);
+}
+void SmallFree(void *, void *pBlock) noexcept {
+	::operator delete(pBlock);
+}
 
-	::ISzAlloc g_vAllocSmall = {&SmallAlloc, &SmallFree};
-	::ISzAlloc g_vAllocLarge = {&LargeAlloc, &LargeFree};
+void *LargeAlloc(void *, size_t uSize) noexcept {
+	return ::VirtualAlloc(nullptr, uSize, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+}
+void LargeFree(void *, void *pBlock) noexcept {
+	if(pBlock != nullptr){
+		::VirtualFree(pBlock, 0, MEM_RELEASE);
+	}
+}
+
+::ISzAlloc g_vAllocSmall = {&SmallAlloc, &SmallFree};
+::ISzAlloc g_vAllocLarge = {&LargeAlloc, &LargeFree};
+
 }
 
 // ========== LzmaEncoder ==========

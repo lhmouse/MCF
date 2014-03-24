@@ -12,7 +12,14 @@
 
 namespace MCF {
 
-template<typename Index_t>
+struct BinaryLess {
+	template<class Tx, class Ty>
+	constexpr bool operator()(const Tx &lhs, const Ty &rhs) const {
+		return lhs < rhs;
+	}
+};
+
+template<typename Index_t, class Comparer_t = BinaryLess>
 struct Index {
 	Index_t m_vIndex;
 
@@ -21,28 +28,24 @@ struct Index {
 		: m_vIndex(std::forward<Params_t>(vParams)...)
 	{
 	}
-};
 
-template<typename Index1_t, typename Index2_t>
-bool operator<(const Index<Index1_t> &lhs, const Index<Index2_t> &rhs){
-	return lhs.m_vIndex < rhs.m_vIndex;
-}
-template<typename Index_t, typename Comparand_t>
-bool operator<(const Index<Index_t> &lhs, const Comparand_t &rhs){
-	return lhs.m_vIndex < rhs;
-}
-template<typename Comparand_t, typename Index_t>
-bool operator<(const Comparand_t &lhs, const Index<Index_t> &rhs){
-	return lhs < rhs.m_vIndex;
-}
+	template<typename Comparand_t>
+	bool operator()(const Comparand_t &lhs, int) const {
+		return Comparer_t()(lhs, m_vIndex);
+	}
+	template<typename Comparand_t>
+	bool operator()(const Comparand_t &rhs) const {
+		return Comparer_t()(m_vIndex, rhs);
+	}
+};
 
 template<typename Index_t>
 struct MakeIndex {
 	typedef Index<Index_t> IndexType;
 };
-template<typename IndexParam_t>
-struct MakeIndex<Index<IndexParam_t>> {
-	typedef Index<IndexParam_t> IndexType;
+template<typename Index_t, typename Comparer_t>
+struct MakeIndex<Index<Index_t, Comparer_t>> {
+	typedef Index<Index_t, Comparer_t> IndexType;
 };
 
 template<class Element_t, class... Indexes_t>
@@ -90,10 +93,25 @@ public:
 	};
 
 private:
-	template<typename Comparand1_t, typename Comparand2_t>
-	struct xComparer {
+	template<typename Tx, typename Ty>
+	struct xComparer;
+
+	template<typename Index_t, class Comparer_t, typename Comparand_t>
+	struct xComparer<Index<Index_t, Comparer_t>, Comparand_t> {
 		bool operator()(std::intptr_t lhs, std::intptr_t rhs) const {
-			return *(const Comparand1_t *)lhs < *(const Comparand2_t *)rhs;
+			return (*(const Index<Index_t, Comparer_t> *)lhs)(*(const Comparand_t *)rhs);
+		}
+	};
+	template<typename Comparand_t, typename Index_t, class Comparer_t>
+	struct xComparer<Comparand_t, Index<Index_t, Comparer_t>> {
+		bool operator()(std::intptr_t lhs, std::intptr_t rhs) const {
+			return (*(const Index<Index_t, Comparer_t> *)rhs)(*(const Comparand_t *)lhs, 0);
+		}
+	};
+	template<typename Index1_t, typename Index2_t, class Comparer_t>
+	struct xComparer<Index<Index1_t, Comparer_t>, Index<Index2_t, Comparer_t>> {
+		bool operator()(std::intptr_t lhs, std::intptr_t rhs) const {
+			return (*(const Index<Index1_t, Comparer_t> *)lhs)(((const Index<Index2_t, Comparer_t> *)rhs)->m_vIndex);
 		}
 	};
 
@@ -169,6 +187,7 @@ public:
 		__MCF_AVL_NODE_HEADER *pRoot;
 		__MCF_AVL_NODE_HEADER *pBack;
 	} xm_arvIndexPointers[INDEX_COUNT];
+
 	std::size_t xm_uSize;
 
 public:

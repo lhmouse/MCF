@@ -49,14 +49,14 @@ public:
 		std::size_t uUrlLen = (std::size_t)-1,
 		const void *pContents = nullptr,
 		std::size_t uContentSize = 0,
-		const wchar_t *pwszMimeType = L"application/x-www-form-urlencoded; charset=utf-8"
+		const wchar_t *pwszContentType = L"application/x-www-form-urlencoded; charset=utf-8"
 	);
 	unsigned long ConnectNoThrow(
 		const wchar_t *pwszVerb,
 		const Utf16String &wcsUrl,
 		const void *pContents = nullptr,
 		std::size_t uContentSize = 0,
-		const wchar_t *pwszMimeType = L"application/x-www-form-urlencoded; charset=utf-8"
+		const wchar_t *pwszContentType = L"application/x-www-form-urlencoded; charset=utf-8"
 	);
 	void Connect(
 		const wchar_t *pwszVerb,
@@ -64,16 +64,23 @@ public:
 		std::size_t uUrlLen = (std::size_t)-1,
 		const void *pContents = nullptr,
 		std::size_t uContentSize = 0,
-		const wchar_t *pwszMimeType = L"application/x-www-form-urlencoded; charset=utf-8"
+		const wchar_t *pwszContentType = L"application/x-www-form-urlencoded; charset=utf-8"
 	);
 	void Connect(
 		const wchar_t *pwszVerb,
 		const Utf16String &wcsUrl,
 		const void *pContents = nullptr,
 		std::size_t uContentSize = 0,
-		const wchar_t *pwszMimeType = L"application/x-www-form-urlencoded; charset=utf-8"
+		const wchar_t *pwszContentType = L"application/x-www-form-urlencoded; charset=utf-8"
 	);
 	void Disconnect() noexcept;
+
+	Utf16String GetCookies(
+		bool bIncludeSecure = true,
+		bool bIncludeHttpOnly = true,
+		bool bIncludeSessionOnly = false
+	) const;
+	void SetCookies(const Utf16String &wcsCookies);
 
 /*	std::uint32_t GetStatusCode() const;
 	std::size_t Read(void *pData, std::size_t uSize);*/

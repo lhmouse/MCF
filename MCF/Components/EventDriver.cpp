@@ -15,13 +15,15 @@
 using namespace MCF;
 
 namespace {
-	typedef std::function<bool (std::intptr_t)> HandlerProc;
-	typedef std::list<std::shared_ptr<HandlerProc>> HandlerList;
 
-	// 使用 Copy-On-Write 策略。
-	CriticalSection g_csWriteLock;
-	CriticalSection g_csReadLock;
-	std::map<std::intptr_t, std::shared_ptr<const HandlerList>> g_mapDelegates;
+typedef std::function<bool (std::intptr_t)> HandlerProc;
+typedef std::list<std::shared_ptr<HandlerProc>> HandlerList;
+
+// 使用 Copy-On-Write 策略。
+CriticalSection g_csWriteLock;
+CriticalSection g_csReadLock;
+std::map<std::intptr_t, std::shared_ptr<const HandlerList>> g_mapDelegates;
+
 }
 
 namespace MCF {

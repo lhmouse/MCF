@@ -16,41 +16,43 @@
 using namespace MCF;
 
 namespace {
-	inline void CopyOut(const std::function<std::pair<void *, std::size_t> (std::size_t)> &fnDataCallback, const void *pSrc, std::size_t uBytesToCopy){
-		std::size_t uBytesCopied = 0;
-		while(uBytesCopied < uBytesToCopy){
-			const std::size_t uBytesRemaining = uBytesToCopy - uBytesCopied;
-			const auto vResult = fnDataCallback(uBytesRemaining);
-			const std::size_t uBytesToCopyThisTime = std::min(vResult.second, uBytesRemaining);
-			__builtin_memcpy(vResult.first, (const unsigned char *)pSrc + uBytesCopied, uBytesToCopyThisTime);
-			uBytesCopied += uBytesToCopyThisTime;
-		}
-	};
 
-	inline unsigned long ZErrorToWin32Error(int nZError) noexcept {
-		switch(nZError){
-		case Z_OK:
-			return ERROR_SUCCESS;
-		case Z_STREAM_END:
-			return ERROR_HANDLE_EOF;
-		case Z_NEED_DICT:
-			return ERROR_INVALID_PARAMETER;
-		case Z_ERRNO:
-			return ERROR_OPEN_FAILED;
-		case Z_STREAM_ERROR:
-			return ERROR_INVALID_PARAMETER;
-		case Z_DATA_ERROR:
-			return ERROR_INVALID_DATA;
-		case Z_MEM_ERROR:
-			return ERROR_NOT_ENOUGH_MEMORY;
-		case Z_BUF_ERROR:
-			return ERROR_SUCCESS;
-		case Z_VERSION_ERROR:
-			return ERROR_NOT_SUPPORTED;
-		default:
-			return ERROR_INVALID_FUNCTION;
-		}
+inline void CopyOut(const std::function<std::pair<void *, std::size_t> (std::size_t)> &fnDataCallback, const void *pSrc, std::size_t uBytesToCopy){
+	std::size_t uBytesCopied = 0;
+	while(uBytesCopied < uBytesToCopy){
+		const std::size_t uBytesRemaining = uBytesToCopy - uBytesCopied;
+		const auto vResult = fnDataCallback(uBytesRemaining);
+		const std::size_t uBytesToCopyThisTime = std::min(vResult.second, uBytesRemaining);
+		__builtin_memcpy(vResult.first, (const unsigned char *)pSrc + uBytesCopied, uBytesToCopyThisTime);
+		uBytesCopied += uBytesToCopyThisTime;
 	}
+};
+
+inline unsigned long ZErrorToWin32Error(int nZError) noexcept {
+	switch(nZError){
+	case Z_OK:
+		return ERROR_SUCCESS;
+	case Z_STREAM_END:
+		return ERROR_HANDLE_EOF;
+	case Z_NEED_DICT:
+		return ERROR_INVALID_PARAMETER;
+	case Z_ERRNO:
+		return ERROR_OPEN_FAILED;
+	case Z_STREAM_ERROR:
+		return ERROR_INVALID_PARAMETER;
+	case Z_DATA_ERROR:
+		return ERROR_INVALID_DATA;
+	case Z_MEM_ERROR:
+		return ERROR_NOT_ENOUGH_MEMORY;
+	case Z_BUF_ERROR:
+		return ERROR_SUCCESS;
+	case Z_VERSION_ERROR:
+		return ERROR_NOT_SUPPORTED;
+	default:
+		return ERROR_INVALID_FUNCTION;
+	}
+}
+
 }
 
 // ========== ZEncoder ==========

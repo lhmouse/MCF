@@ -328,7 +328,7 @@ public:
 	}
 
 private:
-	void xSetEnd(std::size_t uNewSize) noexcept {
+	void xSetSize(std::size_t uNewSize) noexcept {
 		ASSERT(uNewSize <= GetCapacity());
 
 		if(xm_vStorage.chNull == Char_t()){
@@ -345,53 +345,50 @@ private:
 		auto pchOldBuffer = GetCStr();
 		auto pchNewBuffer = pchOldBuffer;
 
-		const auto SlideCopy = [=]() noexcept {
-			std::size_t uCopyOffsetBegin;
-			if(nDeltaBegin >= 0){
-				uCopyOffsetBegin = 0;
-			} else {
-				if((std::size_t)-nDeltaBegin >= uOldLength){
-					return;
-				}
-				uCopyOffsetBegin = nDeltaBegin;
-			}
-
-			std::size_t uCopyOffsetEnd;
-			if(nDeltaEnd >= 0){
-				uCopyOffsetEnd = uOldLength;
-			} else {
-				if((std::size_t)-nDeltaEnd >= uOldLength){
-					return;
-				}
-				uCopyOffsetEnd = uOldLength + nDeltaEnd;
-			}
-
-			if(uCopyOffsetBegin >= uCopyOffsetEnd){
-				return;
-			}
-
-			const auto pchBegin = pchOldBuffer + uCopyOffsetBegin;
-			const auto pchEnd = pchOldBuffer + uCopyOffsetEnd;
-			if(pchBegin == pchNewBuffer + nDeltaBegin - uCopyOffsetBegin){
-				return;
-			}
-
-			if(nDeltaBegin < 0){
-				std::copy(pchBegin, pchEnd, pchNewBuffer);
-			} else {
-				std::copy_backward(pchBegin, pchEnd, pchNewBuffer + nDeltaBegin + uCopyOffsetEnd);
-			}
-		};
-
 		const std::size_t uNewSize = nDeltaBegin + uOldLength + nDeltaEnd;
-		if(uNewSize > GetCapacity()){
-			auto uSizeToAlloc = uNewSize + 1;
+		std::size_t uSizeToAlloc = (uNewSize > GetCapacity()) ? (uNewSize + 1) : 0;
+		if(uSizeToAlloc != 0){
 			uSizeToAlloc += (uSizeToAlloc >> 1);
 			uSizeToAlloc = (uSizeToAlloc + 0xF) & -0x10;
 			pchNewBuffer = new Char_t[uSizeToAlloc];
+		}
 
-			SlideCopy();
+		do {
+			std::size_t uCopyOffsetBegin = 0;
+			if(nDeltaBegin < 0){
+				if((std::size_t)-nDeltaBegin >= uOldLength){
+					break;
+				}
+				uCopyOffsetBegin -= nDeltaBegin;
+			}
 
+			std::size_t uCopyOffsetEnd = uOldLength;
+			if(nDeltaEnd < 0){
+				if((std::size_t)-nDeltaEnd >= uOldLength){
+					break;
+				}
+				uCopyOffsetEnd += nDeltaEnd;
+			}
+
+			if(uCopyOffsetBegin >= uCopyOffsetEnd){
+				break;
+			}
+			if(nDeltaBegin < 0){
+				std::copy(
+					pchOldBuffer + uCopyOffsetBegin,
+					pchOldBuffer + uCopyOffsetEnd,
+					pchNewBuffer
+				);
+			} else {
+				std::copy_backward(
+					pchOldBuffer + uCopyOffsetBegin,
+					pchOldBuffer + uCopyOffsetEnd,
+					pchNewBuffer + uCopyOffsetEnd + nDeltaBegin
+				);
+			}
+		} while(false);
+
+		if(uSizeToAlloc != 0){
 			if(xm_vStorage.chNull == Char_t()){
 				xm_vStorage.chNull = Char_t() + 1;
 			} else {
@@ -401,12 +398,10 @@ private:
 			xm_vStorage.pchLargeBegin = pchNewBuffer;
 			xm_vStorage.uLargeLength = uOldLength;
 			xm_vStorage.uLargeBufferSize = uSizeToAlloc;
-		} else {
-			SlideCopy();
 		}
 
 		if(bSetEnd){
-			xSetEnd(uNewSize);
+			xSetSize(uNewSize);
 		} else {
 			pchNewBuffer[uNewSize] = Char_t();
 		}
@@ -467,17 +462,17 @@ public:
 
 	void Resize(std::size_t uNewSize){
 		Reserve(uNewSize);
-		xSetEnd(uNewSize);
+		xSetSize(uNewSize);
 	}
 	void Shrink() noexcept {
-		xSetEnd(StrLen(GetCStr()));
+		xSetSize(StrLen(GetCStr()));
 	}
 
 	bool IsEmpty() const noexcept {
 		return GetSize() == 0;
 	}
 	void Clear() noexcept {
-		xSetEnd(0);
+		xSetSize(0);
 	}
 
 	std::size_t GetCapacity() const noexcept {
@@ -587,7 +582,7 @@ public:
 		if(uOldLength <= uCount){
 			Clear();
 		} else {
-			xSetEnd(uOldLength - uCount);
+			xSetSize(uOldLength - uCount);
 		}
 	}
 
@@ -636,7 +631,7 @@ public:
 			const auto uNewLength = uOldLength - uCount;
 			const auto pchBegin = GetCStr();
 			std::copy_n(pchBegin + uCount, uNewLength, pchBegin);
-			xSetEnd(uNewLength);
+			xSetSize(uNewLength);
 		}
 	}
 
@@ -765,7 +760,7 @@ public:
 				std::copy(pchBegin + uRealEnd, pchBegin + uOldLength, pchBegin + uRealBegin + uRepCount);
 			}
 			std::fill_n(pchBegin + uRealBegin, uRepCount, chRep);
-			xSetEnd(uNewLength);
+			xSetSize(uNewLength);
 		} else if(uRealBegin > uRealEnd){
 			const auto uOldCount = uRealBegin - uRealEnd;
 			const auto uNewLength = uOldLength - uOldCount + uRepCount;
@@ -781,7 +776,7 @@ public:
 				std::copy(pchBegin + uRealBegin, pchBegin + uOldLength, pchBegin + uRealEnd + uRepCount);
 			}
 			std::fill_n(pchBegin + uRealEnd, uRepCount, chRep);
-			xSetEnd(uNewLength);
+			xSetSize(uNewLength);
 		}
 	}
 	void Replace(std::ptrdiff_t nBegin, std::ptrdiff_t nEnd, const Char_t *pszRep){
@@ -807,7 +802,7 @@ public:
 				std::copy(pchBegin + uRealEnd, pchBegin + uOldLength, pchBegin + uRealBegin + uRepLen);
 			}
 			std::copy(pchRep, pchRep + uRepLen, pchBegin + uRealBegin);
-			xSetEnd(uNewLength);
+			xSetSize(uNewLength);
 		} else if(uRealBegin > uRealEnd){
 			const auto uOldCount = uRealBegin - uRealEnd;
 			const auto uNewLength = uOldLength - uOldCount + uRepLen;
@@ -823,7 +818,7 @@ public:
 				std::copy(pchBegin + uRealBegin, pchBegin + uOldLength, pchBegin + uRealEnd + uRepLen);
 			}
 			std::reverse_copy(pchRep, pchRep + uRepLen, pchBegin + uRealEnd);
-			xSetEnd(uNewLength);
+			xSetSize(uNewLength);
 		}
 	}
 	void Replace(std::ptrdiff_t nBegin, std::ptrdiff_t nEnd, const GenericString &strRep){

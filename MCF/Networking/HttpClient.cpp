@@ -5,6 +5,8 @@
 #include "../StdMCF.hpp"
 #include "HttpClient.hpp"
 #include "../../MCFCRT/c/ext/assert.h"
+#include "../../MCFCRT/cpp/ext/multi_indexed_map.hpp"
+#include "../../MCFCRT/cpp/ext/vvector.hpp"
 #include "../Core/UniqueHandle.hpp"
 #include "../Core/Exception.hpp"
 #include "../Core/Utilities.hpp"
@@ -42,11 +44,14 @@ private:
 	Utf16String xm_ucsProxyPassword;
 	xWinHttpHandle xm_hSession;
 
+	VVector<unsigned char> xm_vecOutgoingData;
+	Utf16String xm_wcsMimeType;
+
 	xWinHttpHandle xm_hConnect;
 	xWinHttpHandle xm_hRequest;
 
 public:
-	xDelegate(bool bAutoProxy, const wchar_t *pwchProxy, std::size_t uProxyLen){
+	xDelegate(bool bAutoProxy, const wchar_t *pwchProxy, std::size_t uProxyLen, const wchar_t *pwszUserAgent){
 		if(!pwchProxy){
 			pwchProxy = L"";
 			uProxyLen = 0;
@@ -130,7 +135,7 @@ public:
 
 		if(ucsNamedProxy.IsEmpty()){
 			xm_hSession.Reset(::WinHttpOpen(
-				L"MCF HttpClient",
+				pwszUserAgent,
 				WINHTTP_ACCESS_TYPE_NO_PROXY,
 				WINHTTP_NO_PROXY_NAME,
 				WINHTTP_NO_PROXY_BYPASS,
@@ -138,7 +143,7 @@ public:
 			));
 		} else {
 			xm_hSession.Reset(::WinHttpOpen(
-				L"MCF HttpClient",
+				pwszUserAgent,
 				WINHTTP_ACCESS_TYPE_NAMED_PROXY,
 				ucsNamedProxy.GetCStr(),
 				ucsNamedProxyBypass.GetCStr(),
@@ -151,7 +156,14 @@ public:
 	}
 
 public:
-	void Connect(const wchar_t *pwszVerb, const wchar_t *pwchUrl, std::size_t uUrlLen){
+	void Connect(
+		const wchar_t *pwszVerb,
+		const wchar_t *pwchUrl,
+		std::size_t uUrlLen,
+		const void *pContents,
+		std::size_t uContentSize,
+		const wchar_t *pwszMimeType
+	){
 		Disconnect();
 
 		if(uUrlLen == (std::size_t)-1){
@@ -230,6 +242,11 @@ public:
 			MCF_THROW(::GetLastError(), L"::WinHttpOpenRequest() 失败。");
 		}
 
+		static const DWORD DISABLE_COOKIES = WINHTTP_DISABLE_COOKIES;
+		if(!::WinHttpSetOption(hRequest.Get(), WINHTTP_OPTION_DISABLE_FEATURE, (void *)&DISABLE_COOKIES, sizeof(DISABLE_COOKIES))){
+			MCF_THROW(::GetLastError(), L"::WinHttpSetOption() 失败。");
+		}
+
 		if(!xm_ucsPacUrl.IsEmpty()){
 			DWORD dwUrlLength = 0;
 			::WinHttpCreateUrl(&vUrlComponents, 0, nullptr, &dwUrlLength);
@@ -265,7 +282,8 @@ public:
 		}
 
 		if(!xm_ucsProxyUserName.IsEmpty()){
-			if(!::WinHttpSetCredentials(hRequest.Get(),
+			if(!::WinHttpSetCredentials(
+				hRequest.Get(),
 				WINHTTP_AUTH_TARGET_PROXY,
 				WINHTTP_AUTH_SCHEME_BASIC,
 				xm_ucsProxyUserName.GetCStr(),
@@ -277,7 +295,8 @@ public:
 		}
 
 		if(!wcsUserName.IsEmpty()){
-			if(!::WinHttpSetCredentials(hRequest.Get(),
+			if(!::WinHttpSetCredentials(
+				hRequest.Get(),
 				WINHTTP_AUTH_TARGET_SERVER,
 				WINHTTP_AUTH_SCHEME_BASIC,
 				wcsUserName.GetCStr(),
@@ -290,7 +309,28 @@ public:
 
 		// add headers
 
-		if(!::WinHttpSendRequest(hRequest.Get(), WINHTTP_NO_ADDITIONAL_HEADERS , 0, nullptr, 0, 0, 0)){
+		if(uContentSize > 0){
+			Utf16String wcsContentType(L"Content-Type: ");
+			wcsContentType += pwszMimeType;
+			if(!::WinHttpAddRequestHeaders(
+				hRequest.Get(),
+				wcsContentType.GetCStr(),
+				wcsContentType.GetSize(),
+				WINHTTP_ADDREQ_FLAG_ADD | WINHTTP_ADDREQ_FLAG_REPLACE
+			)){
+				MCF_THROW(::GetLastError(), L"::WinHttpAddRequestHeaders() 失败。");
+			}
+		}
+
+		if(!::WinHttpSendRequest(
+			hRequest.Get(),
+			WINHTTP_NO_ADDITIONAL_HEADERS,
+			0,
+			(void *)pContents,
+			uContentSize,
+			uContentSize,
+			0
+		)){
 			MCF_THROW(::GetLastError(), L"::WinHttpSendRequest() 失败。");
 		}
 
@@ -321,12 +361,12 @@ public:
 };
 
 // 构造函数和析构函数。
-HttpClient::HttpClient(bool bAutoProxy, const wchar_t *pwchProxy, std::size_t uProxyLen)
-	: xm_pDelegate(new xDelegate(bAutoProxy, pwchProxy, uProxyLen))
+HttpClient::HttpClient(bool bAutoProxy, const wchar_t *pwchProxy, std::size_t uProxyLen, const wchar_t *pwszUserAgent)
+	: xm_pDelegate(new xDelegate(bAutoProxy, pwchProxy, uProxyLen, pwszUserAgent))
 {
 }
-HttpClient::HttpClient(bool bAutoProxy, const Utf16String &wcsProxy)
-	: HttpClient(bAutoProxy, wcsProxy.GetCStr(), wcsProxy.GetLength())
+HttpClient::HttpClient(bool bAutoProxy, const Utf16String &wcsProxy, const wchar_t *pwszUserAgent)
+	: HttpClient(bAutoProxy, wcsProxy.GetCStr(), wcsProxy.GetLength(), pwszUserAgent)
 {
 }
 HttpClient::HttpClient(HttpClient &&rhs) noexcept
@@ -343,23 +383,49 @@ HttpClient::~HttpClient(){
 }
 
 // 其他非静态成员函数。
-unsigned long HttpClient::ConnectNoThrow(const wchar_t *pwszVerb, const wchar_t *pwchUrl, std::size_t uUrlLen){
+unsigned long HttpClient::ConnectNoThrow(
+	const wchar_t *pwszVerb,
+	const wchar_t *pwchUrl,
+	std::size_t uUrlLen,
+	const void *pContents,
+	std::size_t uContentSize,
+	const wchar_t *pwszMimeType
+){
 	try {
-		Connect(pwszVerb, pwchUrl, uUrlLen);
+		Connect(pwszVerb, pwchUrl, uUrlLen, pContents, uContentSize, pwszMimeType);
 		return ERROR_SUCCESS;
 	} catch(Exception &e){
 		return e.ulErrorCode;
 	}
 }
-void HttpClient::Connect(const wchar_t *pwszVerb, const wchar_t *pwchUrl, std::size_t uUrlLen){
-	xm_pDelegate->Connect(pwszVerb, pwchUrl, uUrlLen);
+void HttpClient::Connect(
+	const wchar_t *pwszVerb,
+	const wchar_t *pwchUrl,
+	std::size_t uUrlLen,
+	const void *pContents,
+	std::size_t uContentSize,
+	const wchar_t *pwszMimeType
+){
+	xm_pDelegate->Connect(pwszVerb, pwchUrl, uUrlLen, pContents, uContentSize, pwszMimeType);
 }
 
-unsigned long HttpClient::ConnectNoThrow(const wchar_t *pwszVerb, const Utf16String &wcsUrl){
-	return ConnectNoThrow(pwszVerb, wcsUrl.GetCStr(), wcsUrl.GetLength());
+unsigned long HttpClient::ConnectNoThrow(
+	const wchar_t *pwszVerb,
+	const Utf16String &wcsUrl,
+	const void *pContents,
+	std::size_t uContentSize,
+	const wchar_t *pwszMimeType
+){
+	return ConnectNoThrow(pwszVerb, wcsUrl.GetCStr(), wcsUrl.GetLength(), pContents, uContentSize, pwszMimeType);
 }
-void HttpClient::Connect(const wchar_t *pwszVerb, const Utf16String &wcsUrl){
-	Connect(pwszVerb, wcsUrl.GetCStr(), wcsUrl.GetLength());
+void HttpClient::Connect(
+	const wchar_t *pwszVerb,
+	const Utf16String &wcsUrl,
+	const void *pContents,
+	std::size_t uContentSize,
+	const wchar_t *pwszMimeType
+){
+	Connect(pwszVerb, wcsUrl.GetCStr(), wcsUrl.GetLength(), pContents, uContentSize, pwszMimeType);
 }
 void HttpClient::Disconnect() noexcept {
 	xm_pDelegate->Disconnect();

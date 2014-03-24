@@ -7,8 +7,6 @@
 
 #include "../Core/NoCopy.hpp"
 #include "../Core/String.hpp"
-#include "../../MCFCRT/cpp/ext/multi_indexed_map.hpp"
-#include "../../MCFCRT/cpp/ext/vvector.hpp"
 #include "PeerInfo.hpp"
 #include <memory>
 #include <cstddef>
@@ -17,11 +15,6 @@
 namespace MCF {
 
 class HttpClient : NO_COPY {
-public:
-	enum : std::uint64_t {
-		UNKNOWN_CONTENT_LENGTH = (std::uint64_t)-1
-	};
-
 private:
 	class xDelegate;
 
@@ -34,17 +27,52 @@ public:
 	//   true          空      使用 IE 的代理服务器
 	//   false        非空     使用指定的代理服务器（pwszProxy = user:pass@addr:port|bypass）
 	//   true         非空     使用指定的 PAC（pwszProxy = URL）
-	explicit HttpClient(bool bAutoProxy = false, const wchar_t *pwszProxy = nullptr, std::size_t uProxyLen = (std::size_t)-1);
-	HttpClient(bool bAutoProxy, const Utf16String &wcsProxy);
+	explicit HttpClient(
+		bool bAutoProxy = false,
+		const wchar_t *pwszProxy = nullptr,
+		std::size_t uProxyLen = (std::size_t)-1,
+		const wchar_t *pwszUserAgent = L"MCF HTTPClient"
+	);
+	HttpClient(
+		bool bAutoProxy,
+		const Utf16String &wcsProxy,
+		const wchar_t *pwszUserAgent = L"MCF HTTPClient"
+	);
 	HttpClient(HttpClient &&rhs) noexcept;
 	HttpClient &operator=(HttpClient &&rhs) noexcept;
 	~HttpClient();
 
 public:
-	unsigned long ConnectNoThrow(const wchar_t *pwszVerb, const wchar_t *pwszUrl, std::size_t uUrlLen = (std::size_t)-1);
-	unsigned long ConnectNoThrow(const wchar_t *pwszVerb, const Utf16String &wcsUrl);
-	void Connect(const wchar_t *pwszVerb, const wchar_t *pwszUrl, std::size_t uUrlLen = (std::size_t)-1);
-	void Connect(const wchar_t *pwszVerb, const Utf16String &wcsUrl);
+	unsigned long ConnectNoThrow(
+		const wchar_t *pwszVerb,
+		const wchar_t *pwszUrl,
+		std::size_t uUrlLen = (std::size_t)-1,
+		const void *pContents = nullptr,
+		std::size_t uContentSize = 0,
+		const wchar_t *pwszMimeType = L"application/x-www-form-urlencoded; charset=utf-8"
+	);
+	unsigned long ConnectNoThrow(
+		const wchar_t *pwszVerb,
+		const Utf16String &wcsUrl,
+		const void *pContents = nullptr,
+		std::size_t uContentSize = 0,
+		const wchar_t *pwszMimeType = L"application/x-www-form-urlencoded; charset=utf-8"
+	);
+	void Connect(
+		const wchar_t *pwszVerb,
+		const wchar_t *pwszUrl,
+		std::size_t uUrlLen = (std::size_t)-1,
+		const void *pContents = nullptr,
+		std::size_t uContentSize = 0,
+		const wchar_t *pwszMimeType = L"application/x-www-form-urlencoded; charset=utf-8"
+	);
+	void Connect(
+		const wchar_t *pwszVerb,
+		const Utf16String &wcsUrl,
+		const void *pContents = nullptr,
+		std::size_t uContentSize = 0,
+		const wchar_t *pwszMimeType = L"application/x-www-form-urlencoded; charset=utf-8"
+	);
 	void Disconnect() noexcept;
 
 /*	std::uint32_t GetStatusCode() const;

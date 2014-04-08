@@ -25,7 +25,7 @@ typedef int UNUSED;
 
 static HANDLE							g_hMapAllocator;
 static __MCF_AVL_PROOT					g_mapBlocks;
-static const __MCF_HEAPDBG_BLOCK_INFO	*g_pBlockHead;
+static const __MCF_HEAPDBG_BLOCK_INFO *	g_pBlockHead;
 static __MCF_HEAP_CALLBACK				g_pfnCallback;
 static intptr_t							g_nCallbackContext;
 

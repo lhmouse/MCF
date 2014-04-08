@@ -6,6 +6,7 @@
 #define __MCF_CRT_MULTI_INDEXED_HPP__
 
 #include "../../c/ext/offset_of.h"
+#include "../../c/ext/unref_param.h"
 #include "../../env/avl_tree.h"
 #include <tuple>
 #include <type_traits>
@@ -59,25 +60,32 @@ public:
 	static_assert(INDEX_COUNT > 0, "No index?");
 
 	class Node {
-		friend class MultiIndexedMap;
+		friend MultiIndexedMap;
 
 	private:
 		Element_t xm_vElement;
 		Indexes xm_vIndexes;
+
+#ifndef NDEBUG
+		const MultiIndexedMap *xm_pOwner;
+#endif
 
 	private:
 		__MCF_AVL_NODE_HEADER xm_arHeaders[INDEX_COUNT];
 
 	public:
 		template<typename ElementParam_t, typename FirstIndexParam_t, typename... IndexParams_t>
-		Node(ElementParam_t &&vElementParam, FirstIndexParam_t &&vFirstIndexParam, IndexParams_t &&... vIndexParams)
+		constexpr Node(ElementParam_t &&vElementParam, FirstIndexParam_t &&vFirstIndexParam, IndexParams_t &&... vIndexParams)
 			: xm_vElement(std::forward<ElementParam_t>(vElementParam))
 			, xm_vIndexes(std::forward<FirstIndexParam_t>(vFirstIndexParam), std::forward<IndexParams_t>(vIndexParams)...)
+#ifndef NDEBUG
+			, xm_pOwner(nullptr)
+#endif
 		{
 		}
 
 	public:
-		const Element_t &GetElement() const noexcept {
+		constexpr const Element_t &GetElement() const noexcept {
 			return xm_vElement;
 		}
 		Element_t &GetElement() noexcept {
@@ -85,7 +93,7 @@ public:
 		}
 
 		template<std::size_t INDEX>
-		auto GetIndex() const noexcept -> const decltype(std::get<INDEX>(xm_vIndexes).m_vIndex) & {
+		constexpr auto GetIndex() const noexcept -> const decltype(std::get<INDEX>(xm_vIndexes).m_vIndex) & {
 			static_assert(INDEX < INDEX_COUNT, "INDEX is out of range.");
 
 			return std::get<INDEX>(xm_vIndexes).m_vIndex;
@@ -248,12 +256,18 @@ private:
 	}
 	template<std::size_t INDEX>
 	void xAttachAll(Node *pNode, typename std::enable_if<INDEX != (std::size_t)-1, int>::type = 0) noexcept {
+		ASSERT(pNode->xm_pOwner == nullptr);
+
 		xAttach<INDEX>(pNode);
 		xAttachAll<INDEX - 1>(pNode);
 	}
 	template<std::size_t INDEX>
-	void xAttachAll(Node *, typename std::enable_if<INDEX == (std::size_t)-1, int>::type = 0) noexcept {
-		// 空的。
+	void xAttachAll(Node *pNode, typename std::enable_if<INDEX == (std::size_t)-1, int>::type = 0) noexcept {
+		UNREF_PARAM(pNode);
+
+#ifndef NDEBUG
+		pNode->xm_pOwner = this;
+#endif
 	}
 
 	template<std::size_t INDEX>
@@ -270,12 +284,18 @@ private:
 	}
 	template<std::size_t INDEX>
 	void xDetachAll(Node *pNode, typename std::enable_if<INDEX != (std::size_t)-1, int>::type = 0) noexcept {
+		ASSERT(pNode->xm_pOwner == this);
+
 		xDetach<INDEX>(pNode);
 		xDetachAll<INDEX - 1>(pNode);
 	}
 	template<std::size_t INDEX>
-	void xDetachAll(Node *, typename std::enable_if<INDEX == (std::size_t)-1, int>::type = 0) noexcept {
-		// 空的。
+	void xDetachAll(Node *pNode, typename std::enable_if<INDEX == (std::size_t)-1, int>::type = 0) noexcept {
+		UNREF_PARAM(pNode);
+
+#ifndef NDEBUG
+		pNode->xm_pOwner = nullptr;
+#endif
 	}
 
 	void xCloneRecur(const MultiIndexedMap &rhs){

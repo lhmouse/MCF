@@ -14,17 +14,27 @@
 
 namespace MCF {
 
-namespace __MCF {
-	template<class Closer_t>
-	class SharedNodeNTS {
-	public:
-		typedef decltype(Closer_t()()) Handle;
+template<class Closer_t>
+class SharedHandleNts;
 
+template<class Closer_t>
+class WeakHandleNts {
+	friend SharedHandleNts<Closer_t>;
+
+public:
+	typedef decltype(Closer_t()()) Handle;
+
+	static_assert(std::is_scalar<Handle>::value, "Handle must be a scalar type");
+
+private:
+	typedef SharedHandleNts<Closer_t> xStrongHandleNts;
+
+	class xSharedNodeNts {
 	public:
-		static SharedNodeNTS *Create(Handle hObj){
+		static xSharedNodeNts *Create(Handle hObj){
 			return Recreate(nullptr, hObj);
 		}
-		static SharedNodeNTS *Recreate(SharedNodeNTS *pNode, Handle hObj){
+		static xSharedNodeNts *Recreate(xSharedNodeNts *pNode, Handle hObj){
 			if(hObj == Closer_t()()){
 				if(pNode && (pNode->xDropRef())){
 					delete pNode;
@@ -33,51 +43,51 @@ namespace __MCF {
 			}
 
 			if(pNode && (pNode->xDropRef())){
-				pNode->~SharedNodeNTS();
-				new(pNode) SharedNodeNTS(hObj);
+				pNode->~xSharedNodeNts();
+				new(pNode) xSharedNodeNts(hObj);
 				return pNode;
 			}
-			SharedNodeNTS *pNewNode;
+			xSharedNodeNts *pNewNode;
 			try {
-				pNewNode = new SharedNodeNTS(hObj);
+				pNewNode = new xSharedNodeNts(hObj);
 			} catch(...){
 				Closer_t()(hObj);
 				throw;
 			}
 			return pNewNode;
 		}
-		static SharedNodeNTS *AddWeakRef(SharedNodeNTS *pNode) noexcept {
+		static xSharedNodeNts *AddWeakRef(xSharedNodeNts *pNode) noexcept {
 			if(pNode && pNode->xAddWeakRef()){
 				return pNode;
 			}
 			return nullptr;
 		}
-		static SharedNodeNTS *AddRef(SharedNodeNTS *pNode) noexcept {
+		static xSharedNodeNts *AddRef(xSharedNodeNts *pNode) noexcept {
 			if(pNode && pNode->xAddRef()){
 				return pNode;
 			}
 			return nullptr;
 		}
-		static void DropRef(SharedNodeNTS *pNode) noexcept {
+		static void DropRef(xSharedNodeNts *pNode) noexcept {
 			if(pNode && pNode->xDropRef()){
 				delete pNode;
 			}
 		}
-		static void DropWeakRef(SharedNodeNTS *pNode) noexcept {
+		static void DropWeakRef(xSharedNodeNts *pNode) noexcept {
 			if(pNode && pNode->pNode()){
 				delete pNode;
 			}
 		}
 
-		static const Handle *ToPHandle(SharedNodeNTS *pNode){
+		static const Handle *ToPHandle(xSharedNodeNts *pNode){
 			if(pNode){
-				return (const Handle *)((std::intptr_t)pNode + OFFSET_OF(SharedNodeNTS, xm_hObj));
+				return (const Handle *)((std::intptr_t)pNode + OFFSET_OF(xSharedNodeNts, xm_hObj));
 			}
 			return nullptr;
 		}
-		static SharedNodeNTS *FromPHandle(const Handle *pHandle){
+		static xSharedNodeNts *FromPHandle(const Handle *pHandle){
 			if(pHandle){
-				return (SharedNodeNTS *)((std::intptr_t)pHandle - OFFSET_OF(SharedNodeNTS, xm_hObj));
+				return (xSharedNodeNts *)((std::intptr_t)pHandle - OFFSET_OF(xSharedNodeNts, xm_hObj));
 			}
 			return nullptr;
 		}
@@ -86,13 +96,14 @@ namespace __MCF {
 		Handle xm_hObj;
 		std::size_t xm_uWeakCount;
 		std::size_t xm_uCount;
+
 #ifndef NDEBUG
 		// 用于在手动调用 AddRef() 和 DropRef() 时检测多次释放。
-		SharedNodeNTS *xm_pDebugInfo;
+		xSharedNodeNts *xm_pDebugInfo;
 #endif
 
 	private:
-		explicit constexpr SharedNodeNTS(Handle hObj) noexcept
+		explicit constexpr xSharedNodeNts(Handle hObj) noexcept
 			: xm_hObj(hObj), xm_uWeakCount(1), xm_uCount(1)
 #ifndef NDEBUG
 			, xm_pDebugInfo(this)
@@ -100,7 +111,7 @@ namespace __MCF {
 		{
 		}
 #ifndef NDEBUG
-		~SharedNodeNTS(){
+		~xSharedNodeNts(){
 			ASSERT(xm_pDebugInfo == this);
 
 			xm_pDebugInfo = nullptr;
@@ -111,7 +122,7 @@ namespace __MCF {
 		void xValidate() const noexcept {
 #ifndef NDEBUG
 			if(xm_pDebugInfo != this){
-				__MCF_CRT_Bail(L"SharedNodeNTS::xValidate() 失败：侦测到堆损坏或二次释放。");
+				__MCF_CRT_Bail(L"xSharedNodeNts::xValidate() 失败：侦测到堆损坏或二次释放。");
 			}
 #endif
 		}
@@ -165,147 +176,236 @@ namespace __MCF {
 			return xm_uCount;
 		}
 	};
-}
-
-template<class Closer_t>
-class SharedHandleNTS;
-
-template<class Closer_t>
-class WeakHandleNTS {
-	friend class SharedHandleNTS<Closer_t>;
-
-public:
-	typedef decltype(Closer_t()()) Handle;
 
 private:
-	typedef __MCF::SharedNodeNTS<Closer_t> xSharedNodeNTS;
-	typedef SharedHandleNTS<Closer_t> xStrongHandleNTS;
+	xSharedNodeNts *xm_pNode;
 
 private:
-	xSharedNodeNTS *xm_pNode;
-
-private:
-	WeakHandleNTS(xSharedNodeNTS *pNode) noexcept : xm_pNode(pNode) {
+	WeakHandleNts(xSharedNodeNts *pNode) noexcept : xm_pNode(pNode) {
 	}
 
 public:
-	constexpr WeakHandleNTS() noexcept : xm_pNode() {
+	constexpr WeakHandleNts() noexcept : xm_pNode() {
 	}
-	WeakHandleNTS(const xStrongHandleNTS &rhs) noexcept : WeakHandleNTS(xSharedNodeNTS::AddWeakRef(rhs.xm_pNode)) {
+	WeakHandleNts(const xStrongHandleNts &rhs) noexcept : WeakHandleNts(xSharedNodeNts::AddWeakRef(rhs.xm_pNode)) {
 	}
-	WeakHandleNTS(const WeakHandleNTS &rhs) noexcept : WeakHandleNTS(xSharedNodeNTS::AddWeakRef(rhs.xm_pNode)) {
+	WeakHandleNts(const WeakHandleNts &rhs) noexcept : WeakHandleNts(xSharedNodeNts::AddWeakRef(rhs.xm_pNode)) {
 	}
-	WeakHandleNTS(WeakHandleNTS &&rhs) noexcept : WeakHandleNTS(rhs.xm_pNode) {
+	WeakHandleNts(WeakHandleNts &&rhs) noexcept : WeakHandleNts(rhs.xm_pNode) {
 		rhs.xm_pNode = nullptr;
 	}
-	WeakHandleNTS &operator=(const xStrongHandleNTS &rhs) noexcept {
+	WeakHandleNts &operator=(const xStrongHandleNts &rhs) noexcept {
 		Reset(rhs);
 		return *this;
 	}
-	WeakHandleNTS &operator=(const WeakHandleNTS &rhs) noexcept {
+	WeakHandleNts &operator=(const WeakHandleNts &rhs) noexcept {
 		Reset(rhs);
 		return *this;
 	}
-	WeakHandleNTS &operator=(WeakHandleNTS &&rhs) noexcept {
+	WeakHandleNts &operator=(WeakHandleNts &&rhs) noexcept {
 		Reset(std::move(rhs));
 		return *this;
 	}
-	~WeakHandleNTS(){
+	~WeakHandleNts(){
 		Reset();
 	}
 
+private:
+	Handle xGetUnowned() const noexcept {
+		return xm_pNode ? xm_pNode->Get() : Closer_t()();
+	}
+
 public:
-	xStrongHandleNTS Lock() const noexcept {
-		return xStrongHandleNTS(xSharedNodeNTS::AddRef(xm_pNode));
+	std::size_t GetRefCount() const noexcept {
+		return xm_pNode ? xm_pNode->GetRefCount() : 0;
+	}
+	bool IsAlive() const noexcept {
+		return GetRefCount() != 0;
+	}
+	xStrongHandleNts Lock() const noexcept {
+		return xStrongHandleNts(xSharedNodeNts::AddRef(xm_pNode));
 	}
 
 	void Reset() noexcept {
-		xSharedNodeNTS::DropWeakRef(xm_pNode);
+		xSharedNodeNts::DropWeakRef(xm_pNode);
 		xm_pNode = nullptr;
 	}
-	void Reset(const xStrongHandleNTS &rhs) noexcept {
-		xSharedNodeNTS::DropWeakRef(xm_pNode);
-		xm_pNode = xSharedNodeNTS::AddWeakRef(rhs.xm_pNode);
-	}
-	void Reset(const WeakHandleNTS &rhs) noexcept {
-		if(&rhs == this){
-			return;
+	void Reset(const xStrongHandleNts &rhs) noexcept {
+		if(xm_pNode != rhs.xm_pNode){
+			xSharedNodeNts::DropWeakRef(xm_pNode);
+			xm_pNode = xSharedNodeNts::AddWeakRef(rhs.xm_pNode);
 		}
-		xSharedNodeNTS::DropWeakRef(xm_pNode);
-		xm_pNode = xSharedNodeNTS::AddWeakRef(rhs.xm_pNode);
 	}
-	void Reset(WeakHandleNTS &&rhs) noexcept {
-		if(&rhs == this){
-			return;
+	void Reset(const WeakHandleNts &rhs) noexcept {
+		if((&rhs != this) && (xm_pNode != rhs.xm_pNode)){
+			xSharedNodeNts::DropWeakRef(xm_pNode);
+			xm_pNode = xSharedNodeNts::AddWeakRef(rhs.xm_pNode);
 		}
-		xSharedNodeNTS::DropWeakRef(xm_pNode);
-		xm_pNode = rhs.xm_pNode;
-		rhs.xm_pNode = nullptr;
+	}
+	void Reset(WeakHandleNts &&rhs) noexcept {
+		if(&rhs != this){
+			xSharedNodeNts::DropWeakRef(xm_pNode);
+			xm_pNode = rhs.xm_pNode;
+			rhs.xm_pNode = nullptr;
+		}
 	}
 
-	void Swap(WeakHandleNTS &rhs) noexcept {
-		if(&rhs == this){
-			return;
-		}
+	void Swap(WeakHandleNts &rhs) noexcept {
 		std::swap(xm_pNode, rhs.xm_pNode);
+	}
+
+public:
+	bool operator==(const WeakHandleNts &rhs) const noexcept {
+		return xGetUnowned() == rhs.xGetUnowned();
+	}
+	bool operator!=(const WeakHandleNts &rhs) const noexcept {
+		return xGetUnowned() != rhs.xGetUnowned();
+	}
+	bool operator<(const WeakHandleNts &rhs) const noexcept {
+		return xGetUnowned() < rhs.xGetUnowned();
+	}
+	bool operator<=(const WeakHandleNts &rhs) const noexcept {
+		return xGetUnowned() <= rhs.xGetUnowned();
+	}
+	bool operator>(const WeakHandleNts &rhs) const noexcept {
+		return xGetUnowned() > rhs.xGetUnowned();
+	}
+	bool operator>=(const WeakHandleNts &rhs) const noexcept {
+		return xGetUnowned() >= rhs.xGetUnowned();
+	}
+
+	bool operator==(Handle rhs) const noexcept {
+		return xGetUnowned() == rhs;
+	}
+	bool operator!=(Handle rhs) const noexcept {
+		return xGetUnowned() != rhs;
+	}
+	bool operator<(Handle rhs) const noexcept {
+		return xGetUnowned() < rhs;
+	}
+	bool operator<=(Handle rhs) const noexcept {
+		return xGetUnowned() <= rhs;
+	}
+	bool operator>(Handle rhs) const noexcept {
+		return xGetUnowned() > rhs;
+	}
+	bool operator>=(Handle rhs) const noexcept {
+		return xGetUnowned() >= rhs;
 	}
 };
 
+template<class Handle_t, class Closer_t>
+auto operator==(Handle_t lhs, const WeakHandleNts<Closer_t> &rhs) noexcept
+	-> typename std::enable_if<
+		std::is_same<Handle_t, typename WeakHandleNts<Closer_t>::Handle>::value,
+		bool
+	>::type
+{
+	return rhs == lhs;
+}
+template<class Handle_t, class Closer_t>
+auto operator!=(Handle_t lhs, const WeakHandleNts<Closer_t> &rhs) noexcept
+	-> typename std::enable_if<
+		std::is_same<Handle_t, typename WeakHandleNts<Closer_t>::Handle>::value,
+		bool
+	>::type
+{
+	return rhs != lhs;
+}
+template<class Handle_t, class Closer_t>
+auto operator<(Handle_t lhs, const WeakHandleNts<Closer_t> &rhs) noexcept
+	-> typename std::enable_if<
+		std::is_same<Handle_t, typename WeakHandleNts<Closer_t>::Handle>::value,
+		bool
+	>::type
+{
+	return rhs > lhs;
+}
+template<class Handle_t, class Closer_t>
+auto operator<=(Handle_t lhs, const WeakHandleNts<Closer_t> &rhs) noexcept
+	-> typename std::enable_if<
+		std::is_same<Handle_t, typename WeakHandleNts<Closer_t>::Handle>::value,
+		bool
+	>::type
+{
+	return rhs >= lhs;
+}
+template<class Handle_t, class Closer_t>
+auto operator>(Handle_t lhs, const WeakHandleNts<Closer_t> &rhs) noexcept
+	-> typename std::enable_if<
+		std::is_same<Handle_t, typename WeakHandleNts<Closer_t>::Handle>::value,
+		bool
+	>::type
+{
+	return rhs < lhs;
+}
+template<class Handle_t, class Closer_t>
+auto operator>=(Handle_t lhs, const WeakHandleNts<Closer_t> &rhs) noexcept
+	-> typename std::enable_if<
+		std::is_same<Handle_t, typename WeakHandleNts<Closer_t>::Handle>::value,
+		bool
+	>::type
+{
+	return rhs <= lhs;
+}
+
 template<class Closer_t>
-class SharedHandleNTS {
-	friend class WeakHandleNTS<Closer_t>;
+class SharedHandleNts {
+	friend WeakHandleNts<Closer_t>;
 
 public:
 	typedef decltype(Closer_t()()) Handle;
 
+	static_assert(std::is_scalar<Handle>::value, "Handle must be a scalar type");
+
 private:
-	typedef __MCF::SharedNodeNTS<Closer_t> xSharedNodeNTS;
-	typedef WeakHandleNTS<Closer_t> xWeakHandleNTS;
+	typedef WeakHandleNts<Closer_t>					xWeakHandleNts;
+	typedef typename xWeakHandleNts::xSharedNodeNts	xSharedNodeNts;
 
 public:
 	static void AddRef(const Handle *pHandle) noexcept {
-		xSharedNodeNTS::AddRef(xSharedNodeNTS::FromPHandle(pHandle));
+		xSharedNodeNts::AddRef(xSharedNodeNts::FromPHandle(pHandle));
 	}
 	static void DropRef(const Handle *pHandle) noexcept {
-		xSharedNodeNTS::DropRef(xSharedNodeNTS::FromPHandle(pHandle));
+		xSharedNodeNts::DropRef(xSharedNodeNts::FromPHandle(pHandle));
 	}
 
 private:
-	xSharedNodeNTS *xm_pNode;
+	xSharedNodeNts *xm_pNode;
 
 private:
-	SharedHandleNTS(xSharedNodeNTS *pNode) noexcept : xm_pNode(pNode) {
+	SharedHandleNts(xSharedNodeNts *pNode) noexcept : xm_pNode(pNode) {
 	}
 
 public:
-	constexpr SharedHandleNTS() noexcept : xm_pNode() {
+	constexpr SharedHandleNts() noexcept : xm_pNode() {
 	}
-	constexpr explicit SharedHandleNTS(Handle hObj) noexcept : SharedHandleNTS(xSharedNodeNTS::Create(hObj)) {
+	constexpr explicit SharedHandleNts(Handle hObj) noexcept : SharedHandleNts(xSharedNodeNts::Create(hObj)) {
 	}
-	explicit SharedHandleNTS(const xWeakHandleNTS &rhs) noexcept : SharedHandleNTS(xSharedNodeNTS::AddRef(rhs.xm_pNode)) {
+	explicit SharedHandleNts(const xWeakHandleNts &rhs) noexcept : SharedHandleNts(xSharedNodeNts::AddRef(rhs.xm_pNode)) {
 	}
-	SharedHandleNTS(const SharedHandleNTS &rhs) noexcept : SharedHandleNTS(xSharedNodeNTS::AddRef(rhs.xm_pNode)) {
+	SharedHandleNts(const SharedHandleNts &rhs) noexcept : SharedHandleNts(xSharedNodeNts::AddRef(rhs.xm_pNode)) {
 	}
-	SharedHandleNTS(SharedHandleNTS &&rhs) noexcept : SharedHandleNTS(rhs.xm_pNode) {
+	SharedHandleNts(SharedHandleNts &&rhs) noexcept : SharedHandleNts(rhs.xm_pNode) {
 		rhs.xm_pNode = nullptr;
 	}
-	SharedHandleNTS &operator=(Handle hObj){
+	SharedHandleNts &operator=(Handle hObj){
 		Reset(hObj);
 		return *this;
 	}
-	SharedHandleNTS &operator=(const xWeakHandleNTS &rhs) noexcept {
+	SharedHandleNts &operator=(const xWeakHandleNts &rhs) noexcept {
 		Reset(rhs);
 		return *this;
 	}
-	SharedHandleNTS &operator=(const SharedHandleNTS &rhs) noexcept {
+	SharedHandleNts &operator=(const SharedHandleNts &rhs) noexcept {
 		Reset(rhs);
 		return *this;
 	}
-	SharedHandleNTS &operator=(SharedHandleNTS &&rhs) noexcept {
+	SharedHandleNts &operator=(SharedHandleNts &&rhs) noexcept {
 		Reset(std::move(rhs));
 		return *this;
 	}
-	~SharedHandleNTS(){
+	~SharedHandleNts(){
 		Reset();
 	}
 
@@ -320,40 +420,37 @@ public:
 		return xm_pNode ? xm_pNode->GetRefCount() : 0;
 	}
 	const Handle *AddRef() const noexcept {
-		return xSharedNodeNTS::ToPHandle(xSharedNodeNTS::AddRef(xm_pNode));
+		return xSharedNodeNts::ToPHandle(xSharedNodeNts::AddRef(xm_pNode));
 	}
 
 	void Reset() noexcept {
-		xSharedNodeNTS::DropRef(xm_pNode);
+		xSharedNodeNts::DropRef(xm_pNode);
 		xm_pNode = nullptr;
 	}
 	void Reset(Handle hObj){
-		xm_pNode = xSharedNodeNTS::Recreate(xm_pNode, hObj);
+		xm_pNode = xSharedNodeNts::Recreate(xm_pNode, hObj);
 	}
-	void Reset(const xWeakHandleNTS &rhs) noexcept {
-		xSharedNodeNTS::DropRef(xm_pNode);
-		xm_pNode = xSharedNodeNTS::AddRef(rhs.xm_pNode);
-	}
-	void Reset(const SharedHandleNTS &rhs) noexcept {
-		if(&rhs == this){
-			return;
+	void Reset(const xWeakHandleNts &rhs) noexcept {
+		if(xm_pNode != rhs.xm_pNode){
+			xSharedNodeNts::DropRef(xm_pNode);
+			xm_pNode = xSharedNodeNts::AddRef(rhs.xm_pNode);
 		}
-		xSharedNodeNTS::DropRef(xm_pNode);
-		xm_pNode = xSharedNodeNTS::AddRef(rhs.xm_pNode);
 	}
-	void Reset(SharedHandleNTS &&rhs) noexcept {
-		if(&rhs == this){
-			return;
+	void Reset(const SharedHandleNts &rhs) noexcept {
+		if((&rhs != this) && (xm_pNode != rhs.xm_pNode)){
+			xSharedNodeNts::DropRef(xm_pNode);
+			xm_pNode = xSharedNodeNts::AddRef(rhs.xm_pNode);
 		}
-		xSharedNodeNTS::DropRef(xm_pNode);
-		xm_pNode = rhs.xm_pNode;
-		rhs.xm_pNode = nullptr;
+	}
+	void Reset(SharedHandleNts &&rhs) noexcept {
+		if(&rhs != this){
+			xSharedNodeNts::DropRef(xm_pNode);
+			xm_pNode = rhs.xm_pNode;
+			rhs.xm_pNode = nullptr;
+		}
 	}
 
-	void Swap(SharedHandleNTS &rhs) noexcept {
-		if(&rhs == this){
-			return;
-		}
+	void Swap(SharedHandleNts &rhs) noexcept {
 		std::swap(xm_pNode, rhs.xm_pNode);
 	}
 
@@ -365,25 +462,143 @@ public:
 		return Get();
 	}
 
-	bool operator==(const SharedHandleNTS &rhs) const noexcept {
+	bool operator==(const SharedHandleNts &rhs) const noexcept {
 		return Get() == rhs.Get();
 	}
-	bool operator!=(const SharedHandleNTS &rhs) const noexcept {
+	bool operator!=(const SharedHandleNts &rhs) const noexcept {
 		return Get() != rhs.Get();
 	}
-	bool operator<(const SharedHandleNTS &rhs) const noexcept {
+	bool operator<(const SharedHandleNts &rhs) const noexcept {
 		return Get() < rhs.Get();
 	}
-	bool operator<=(const SharedHandleNTS &rhs) const noexcept {
+	bool operator<=(const SharedHandleNts &rhs) const noexcept {
 		return Get() <= rhs.Get();
 	}
-	bool operator>(const SharedHandleNTS &rhs) const noexcept {
+	bool operator>(const SharedHandleNts &rhs) const noexcept {
 		return Get() > rhs.Get();
 	}
-	bool operator>=(const SharedHandleNTS &rhs) const noexcept {
+	bool operator>=(const SharedHandleNts &rhs) const noexcept {
 		return Get() >= rhs.Get();
 	}
+
+	bool operator==(const xWeakHandleNts &rhs) const noexcept {
+		return rhs == Get();
+	}
+	bool operator!=(const xWeakHandleNts &rhs) const noexcept {
+		return rhs != Get();
+	}
+	bool operator<(const xWeakHandleNts &rhs) const noexcept {
+		return rhs > Get();
+	}
+	bool operator<=(const xWeakHandleNts &rhs) const noexcept {
+		return rhs >= Get();
+	}
+	bool operator>(const xWeakHandleNts &rhs) const noexcept {
+		return rhs < Get();
+	}
+	bool operator>=(const xWeakHandleNts &rhs) const noexcept {
+		return rhs <= Get();
+	}
+
+	bool operator==(Handle rhs) const noexcept {
+		return Get() == rhs;
+	}
+	bool operator!=(Handle rhs) const noexcept {
+		return Get() != rhs;
+	}
+	bool operator<(Handle rhs) const noexcept {
+		return Get() < rhs;
+	}
+	bool operator<=(Handle rhs) const noexcept {
+		return Get() <= rhs;
+	}
+	bool operator>(Handle rhs) const noexcept {
+		return Get() > rhs;
+	}
+	bool operator>=(Handle rhs) const noexcept {
+		return Get() >= rhs;
+	}
 };
+
+template<class Handle_t, class Closer_t>
+auto operator==(Handle_t lhs, const SharedHandleNts<Closer_t> &rhs) noexcept
+	-> typename std::enable_if<
+		std::is_same<Handle_t, typename SharedHandleNts<Closer_t>::Handle>::value,
+		bool
+	>::type
+{
+	return rhs == lhs;
+}
+template<class Handle_t, class Closer_t>
+auto operator!=(Handle_t lhs, const SharedHandleNts<Closer_t> &rhs) noexcept
+	-> typename std::enable_if<
+		std::is_same<Handle_t, typename SharedHandleNts<Closer_t>::Handle>::value,
+		bool
+	>::type
+{
+	return rhs != lhs;
+}
+template<class Handle_t, class Closer_t>
+auto operator<(Handle_t lhs, const SharedHandleNts<Closer_t> &rhs) noexcept
+	-> typename std::enable_if<
+		std::is_same<Handle_t, typename SharedHandleNts<Closer_t>::Handle>::value,
+		bool
+	>::type
+{
+	return rhs > lhs;
+}
+template<class Handle_t, class Closer_t>
+auto operator<=(Handle_t lhs, const SharedHandleNts<Closer_t> &rhs) noexcept
+	-> typename std::enable_if<
+		std::is_same<Handle_t, typename SharedHandleNts<Closer_t>::Handle>::value,
+		bool
+	>::type
+{
+	return rhs >= lhs;
+}
+template<class Handle_t, class Closer_t>
+auto operator>(Handle_t lhs, const SharedHandleNts<Closer_t> &rhs) noexcept
+	-> typename std::enable_if<
+		std::is_same<Handle_t, typename SharedHandleNts<Closer_t>::Handle>::value,
+		bool
+	>::type
+{
+	return rhs < lhs;
+}
+template<class Handle_t, class Closer_t>
+auto operator>=(Handle_t lhs, const SharedHandleNts<Closer_t> &rhs) noexcept
+	-> typename std::enable_if<
+		std::is_same<Handle_t, typename SharedHandleNts<Closer_t>::Handle>::value,
+		bool
+	>::type
+{
+	return rhs <= lhs;
+}
+
+template<class Closer_t>
+bool operator==(const WeakHandleNts<Closer_t> &lhs, const SharedHandleNts<Closer_t> &rhs) noexcept {
+	return lhs == rhs.Get();
+}
+template<class Closer_t>
+bool operator!=(const WeakHandleNts<Closer_t> &lhs, const SharedHandleNts<Closer_t> &rhs) noexcept {
+	return lhs != rhs.Get();
+}
+template<class Closer_t>
+bool operator<(const WeakHandleNts<Closer_t> &lhs, const SharedHandleNts<Closer_t> &rhs) noexcept {
+	return lhs < rhs.Get();
+}
+template<class Closer_t>
+bool operator<=(const WeakHandleNts<Closer_t> &lhs, const SharedHandleNts<Closer_t> &rhs) noexcept {
+	return lhs <= rhs.Get();
+}
+template<class Closer_t>
+bool operator>(const WeakHandleNts<Closer_t> &lhs, const SharedHandleNts<Closer_t> &rhs) noexcept {
+	return lhs > rhs.Get();
+}
+template<class Closer_t>
+bool operator>=(const WeakHandleNts<Closer_t> &lhs, const SharedHandleNts<Closer_t> &rhs) noexcept {
+	return lhs >= rhs.Get();
+}
 
 }
 

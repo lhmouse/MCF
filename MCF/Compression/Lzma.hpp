@@ -5,7 +5,7 @@
 #ifndef __MCF_LZMA_HPP__
 #define __MCF_LZMA_HPP__
 
-#include "../Core/NoCopy.hpp"
+#include "../Core/Utilities.hpp"
 #include <memory>
 #include <functional>
 #include <utility>

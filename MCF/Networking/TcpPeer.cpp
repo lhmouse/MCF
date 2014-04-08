@@ -19,18 +19,16 @@ private:
 	};
 
 private:
-	__MCF::WSAInitializer xm_vWSAInitializer;
+	WSAInitializer xm_vWSAInitializer;
 
-	__MCF::UniqueSocket xm_sockPeer;
+	UniqueSocket xm_sockPeer;
 	PeerInfo xm_vPeerInfo;
-	bool xm_bNoDelay;
 	std::uintptr_t xm_uFlags;
 
 public:
-	xDelegate(__MCF::UniqueSocket &&sockPeer, const void *pSockAddr, std::size_t uSockAddrLen)
+	xDelegate(UniqueSocket &&sockPeer, const void *pSockAddr, std::size_t uSockAddrLen)
 		: xm_sockPeer(std::move(sockPeer))
 		, xm_vPeerInfo(pSockAddr, uSockAddrLen)
-		, xm_bNoDelay(false)
 		, xm_uFlags(FLAG_READABLE | FLAG_WRITABLE)
 	{
 	}
@@ -67,16 +65,21 @@ public:
 		return xm_uFlags;
 	}
 
-	void Write(const void *pData, std::size_t uSize, bool bNoDelay){
-		if(xm_bNoDelay != bNoDelay){
-			static const DWORD TRUE_VALUE	= 1;
-			static const DWORD FALSE_VALUE	= 0;
-			if(::setsockopt(xm_sockPeer.Get(), IPPROTO_TCP, TCP_NODELAY, (const char *)&(bNoDelay ? TRUE_VALUE : FALSE_VALUE), sizeof(TRUE_VALUE))){
-				MCF_THROW(::WSAGetLastError(), L"::setsockopt() 失败。");
-			}
-
-			xm_bNoDelay = bNoDelay;
+	void SetNoDelay(bool bNoDelay){
+		static const DWORD TRUE_VALUE	= 1;
+		static const DWORD FALSE_VALUE	= 0;
+		if(::setsockopt(
+			xm_sockPeer.Get(),
+			IPPROTO_TCP,
+			TCP_NODELAY,
+			(const char *)(bNoDelay ? &TRUE_VALUE : &FALSE_VALUE),
+			sizeof(TRUE_VALUE)
+		)){
+			MCF_THROW(::WSAGetLastError(), L"::setsockopt() 失败。");
 		}
+	}
+
+	void Write(const void *pData, std::size_t uSize){
 		auto pCur = (const char *)pData;
 		const auto pEnd = pCur + uSize;
 		for(;;){
@@ -105,7 +108,7 @@ public:
 
 // 构造函数和析构函数。
 TcpPeer::TcpPeer(void *ppSocket, const void *pSockAddr, std::size_t uSockAddrLen)
-	: xm_pDelegate(new xDelegate(std::move(*(__MCF::UniqueSocket *)ppSocket), pSockAddr, uSockAddrLen))
+	: xm_pDelegate(new xDelegate(std::move(*(UniqueSocket *)ppSocket), pSockAddr, uSockAddrLen))
 {
 }
 
@@ -148,11 +151,11 @@ unsigned long TcpPeer::ConnectNoThrow(const PeerInfo &vServerInfo){
 void TcpPeer::Connect(const PeerInfo &vServerInfo){
 	Disconnect();
 
-	__MCF::WSAInitializer vWSAInitializer;
+	WSAInitializer vWSAInitializer;
 
 	const short shFamily = vServerInfo.IsIPv4() ? AF_INET : AF_INET6;
 
-	__MCF::UniqueSocket sockServer(::socket(shFamily, SOCK_STREAM, IPPROTO_TCP));
+	UniqueSocket sockServer(::socket(shFamily, SOCK_STREAM, IPPROTO_TCP));
 	if(!sockServer){
 		MCF_THROW(::WSAGetLastError(), L"::socket() 失败。");
 	}
@@ -182,6 +185,13 @@ void TcpPeer::Disconnect() noexcept {
 	xm_pDelegate.reset();
 }
 
+void TcpPeer::SetNoDelay(bool bNoDelay){
+	if(!xm_pDelegate){
+		MCF_THROW(WSAENOTCONN, L"TcpPeer 未连接。");
+	}
+	return xm_pDelegate->SetNoDelay(bNoDelay);
+}
+
 std::size_t TcpPeer::Read(void *pData, std::size_t uSize){
 	if(!xm_pDelegate){
 		MCF_THROW(WSAENOTCONN, L"TcpPeer 未连接。");
@@ -194,11 +204,11 @@ void TcpPeer::ShutdownRead() noexcept {
 	}
 }
 
-void TcpPeer::Write(const void *pData, std::size_t uSize, bool bNoDelay){
+void TcpPeer::Write(const void *pData, std::size_t uSize){
 	if(!xm_pDelegate){
 		MCF_THROW(WSAENOTCONN, L"TcpPeer 未连接。");
 	}
-	xm_pDelegate->Write(pData, uSize, bNoDelay);
+	xm_pDelegate->Write(pData, uSize);
 }
 void TcpPeer::ShutdownWrite() noexcept {
 	if(xm_pDelegate && !xm_pDelegate->ShutdownWrite()){

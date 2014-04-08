@@ -23,17 +23,20 @@ extern Utf16String GetWin32ErrorDesc(unsigned long ulErrorCode);
 
 struct Exception {
 	const char *pszFunction;
+	unsigned long ulLine;
 	unsigned long ulErrorCode;
 	const wchar_t *pwszMessage;
 
 	constexpr Exception(
 		const char *pszFunctionParam,
+		unsigned long ulLineParam,
 		unsigned long ulErrorCodeParam,
 		const wchar_t *pwszMessageParam = L""
 	) noexcept
-		: pszFunction(pszFunctionParam)
-		, ulErrorCode(ulErrorCodeParam)
-		, pwszMessage(pwszMessageParam)
+		: pszFunction	(pszFunctionParam)
+		, ulLine		(ulLineParam)
+		, ulErrorCode	(ulErrorCodeParam)
+		, pwszMessage	(pwszMessageParam)
 	{
 	}
 };
@@ -42,11 +45,11 @@ struct Exception {
 
 #define MCF_THROW(...)	\
 	do {	\
-		::MCF::Exception __MCF_TEMP_EXCEPTION__(__PRETTY_FUNCTION__, __VA_ARGS__);	\
+		::MCF::Exception __MCF_TEMP_EXCEPTION__(__PRETTY_FUNCTION__, __LINE__, __VA_ARGS__);	\
 		throw __MCF_TEMP_EXCEPTION__;	\
 	} while(false)
 
 #define MCF_MAKE_EXCEPTION_PTR(...)	\
-	::std::make_exception_ptr(::MCF::Exception(__PRETTY_FUNCTION__, __VA_ARGS__))
+	::std::make_exception_ptr(::MCF::Exception(__PRETTY_FUNCTION__, __LINE__, __VA_ARGS__))
 
 #endif

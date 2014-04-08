@@ -18,7 +18,6 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstdlib>
-#include <climits>
 
 #include <memory>
 #include <algorithm>

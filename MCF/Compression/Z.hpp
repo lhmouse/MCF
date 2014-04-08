@@ -5,7 +5,7 @@
 #ifndef __MCF_Z_HPP__
 #define __MCF_Z_HPP__
 
-#include "../Core/NoCopy.hpp"
+#include "../Core/Utilities.hpp"
 #include <memory>
 #include <functional>
 #include <utility>
@@ -21,7 +21,7 @@ private:
 	std::unique_ptr<xDelegate> xm_pDelegate;
 
 public:
-	ZEncoder(std::function<std::pair<void *, std::size_t> (std::size_t)> fnDataCallback, int nLevel = 6);
+	ZEncoder(std::function<std::pair<void *, std::size_t> (std::size_t)> fnDataCallback, bool bRaw = false, int nLevel = 6);
 	ZEncoder(ZEncoder &&rhs) noexcept;
 	ZEncoder &operator=(ZEncoder &&rhs) noexcept;
 	~ZEncoder();
@@ -41,7 +41,7 @@ private:
 	std::unique_ptr<xDelegate> xm_pDelegate;
 
 public:
-	ZDecoder(std::function<std::pair<void *, std::size_t> (std::size_t)> fnDataCallback);
+	ZDecoder(std::function<std::pair<void *, std::size_t> (std::size_t)> fnDataCallback, bool bRaw = false);
 	ZDecoder(ZDecoder &&rhs) noexcept;
 	ZDecoder &operator=(ZDecoder &&rhs) noexcept;
 	~ZDecoder();

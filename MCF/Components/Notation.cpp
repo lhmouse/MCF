@@ -23,22 +23,27 @@ void Notation::xEscapeAndAppend(Utf16String &wcsAppendTo, const wchar_t *pwchBeg
 			wcsAppendTo.Append(L'\\');
 			wcsAppendTo.Append(ch);
 			break;
+
 		case L'\n':
 			wcsAppendTo.Append(L'\\');
 			wcsAppendTo.Append(L'n');
 			break;
+
 		case L'\b':
 			wcsAppendTo.Append(L'\\');
 			wcsAppendTo.Append(L'b');
 			break;
+
 		case L'\r':
 			wcsAppendTo.Append(L'\\');
 			wcsAppendTo.Append(L'r');
 			break;
+
 		case L'\t':
 			wcsAppendTo.Append(L'\\');
 			wcsAppendTo.Append(L't');
 			break;
+
 		default:
 			wcsAppendTo.Append(ch);
 			break;
@@ -70,37 +75,45 @@ Utf16String Notation::xUnescapeAndConstruct(const wchar_t *pwchBegin, std::size_
 				wcsRet.Push(ch);
 			}
 			break;
+
 		case SLASH_MATCH:
 			switch(ch){
 			case L'b':
 				wcsRet.Push(L'\b');
 				eState = NORMAL;
 				break;
+
 			case L'n':
 				wcsRet.Push(L'\n');
 				eState = NORMAL;
 				break;
+
 			case L'r':
 				wcsRet.Push(L'\r');
 				eState = NORMAL;
 				break;
+
 			case L't':
 				wcsRet.Push(L'\t');
 				eState = NORMAL;
 				break;
+
 			case L'x':
 				uBufferIndex = 0;
 				eState = HEX_WAIT_FOR_NEXT;
 				break;
+
 			case L'\n':
 				eState = NORMAL;
 				break;
+
 			default:
 				wcsRet.Push(ch);
 				eState = NORMAL;
 				break;
 			}
 			break;
+
 		case HEX_WAIT_FOR_NEXT:
 			if((L'0' <= ch) && (ch <= L'9')){
 				nDecodedDigit = ch - L'0';
@@ -203,6 +216,7 @@ std::pair<Notation::ErrorType, const wchar_t *> Notation::Parse(const wchar_t *p
 	const wchar_t *pNameEnd = pwszRead;
 	const wchar_t *pValueBegin = pwszRead;
 	const wchar_t *pValueEnd = pwszRead;
+
 	enum STATE {
 		NAME_INDENT,
 		NAME_BODY,
@@ -212,6 +226,7 @@ std::pair<Notation::ErrorType, const wchar_t *> Notation::Parse(const wchar_t *p
 		VAL_PADDING,
 		COMMENT
 	} eState = NAME_INDENT;
+
 	bool bEscaped = false;
 
 	const auto PushPackage = [&]{
@@ -265,18 +280,22 @@ std::pair<Notation::ErrorType, const wchar_t *> Notation::Parse(const wchar_t *p
 			case L'\\':
 				bEscaped = true;
 				continue;
+
 			case L'=':
 				switch(eState){
 				case NAME_INDENT:
 					return std::make_pair(ERR_NO_VALUE_NAME, pwszRead);
+
 				case NAME_BODY:
 				case NAME_PADDING:
 					eState = VAL_INDENT;
 					continue;
+
 				case VAL_INDENT:
 				case VAL_BODY:
 				case VAL_PADDING:
 					break;
+
 				case COMMENT:
 					continue;
 				};
@@ -285,11 +304,13 @@ std::pair<Notation::ErrorType, const wchar_t *> Notation::Parse(const wchar_t *p
 				switch(eState){
 				case NAME_INDENT:
 					return std::make_pair(ERR_NO_VALUE_NAME, pwszRead);
+
 				case NAME_BODY:
 				case NAME_PADDING:
 					PushPackage();
 					eState = NAME_INDENT;
 					continue;
+
 				case VAL_INDENT:
 				case VAL_BODY:
 				case VAL_PADDING:
@@ -297,6 +318,7 @@ std::pair<Notation::ErrorType, const wchar_t *> Notation::Parse(const wchar_t *p
 					PushPackage();
 					eState = NAME_INDENT;
 					continue;
+
 				case COMMENT:
 					continue;
 				};
@@ -310,9 +332,11 @@ std::pair<Notation::ErrorType, const wchar_t *> Notation::Parse(const wchar_t *p
 					PopPackage();
 					eState = NAME_INDENT;
 					continue;
+
 				case NAME_BODY:
 				case NAME_PADDING:
 					return std::make_pair(ERR_EQU_EXPECTED, pwszRead);
+
 				case VAL_INDENT:
 				case VAL_BODY:
 				case VAL_PADDING:
@@ -323,6 +347,7 @@ std::pair<Notation::ErrorType, const wchar_t *> Notation::Parse(const wchar_t *p
 					PopPackage();
 					eState = NAME_INDENT;
 					continue;
+
 				case COMMENT:
 					continue;
 				};
@@ -332,15 +357,18 @@ std::pair<Notation::ErrorType, const wchar_t *> Notation::Parse(const wchar_t *p
 				case NAME_INDENT:
 					eState = COMMENT;
 					continue;
+
 				case NAME_BODY:
 				case NAME_PADDING:
 					return std::make_pair(ERR_EQU_EXPECTED, pwszRead);
+
 				case VAL_INDENT:
 				case VAL_BODY:
 				case VAL_PADDING:
 					SubmitValue();
 					eState = COMMENT;
 					continue;
+
 				case COMMENT:
 					continue;
 				};
@@ -349,15 +377,18 @@ std::pair<Notation::ErrorType, const wchar_t *> Notation::Parse(const wchar_t *p
 				switch(eState){
 				case NAME_INDENT:
 					continue;
+
 				case NAME_BODY:
 				case NAME_PADDING:
 					return std::make_pair(ERR_EQU_EXPECTED, pwszRead);
+
 				case VAL_INDENT:
 				case VAL_BODY:
 				case VAL_PADDING:
 					SubmitValue();
 					eState = NAME_INDENT;
 					continue;
+
 				case COMMENT:
 					eState = NAME_INDENT;
 					continue;
@@ -377,6 +408,7 @@ std::pair<Notation::ErrorType, const wchar_t *> Notation::Parse(const wchar_t *p
 					eState = NAME_BODY;
 				}
 				continue;
+
 			case NAME_BODY:
 				if((ch == L' ') || (ch == L'\t')){
 					eState = NAME_PADDING;
@@ -385,6 +417,7 @@ std::pair<Notation::ErrorType, const wchar_t *> Notation::Parse(const wchar_t *p
 					// eState = NAME_BODY;
 				}
 				continue;
+
 			case NAME_PADDING:
 				if((ch == L' ') || (ch == L'\t')){
 					// eState = NAME_PADDING;
@@ -393,6 +426,7 @@ std::pair<Notation::ErrorType, const wchar_t *> Notation::Parse(const wchar_t *p
 					eState = NAME_BODY;
 				}
 				continue;
+
 			case VAL_INDENT:
 				if((ch == L' ') || (ch == L'\t')){
 					// eState = VAL_INDENT;
@@ -402,6 +436,7 @@ std::pair<Notation::ErrorType, const wchar_t *> Notation::Parse(const wchar_t *p
 					eState = VAL_BODY;
 				}
 				continue;
+
 			case VAL_BODY:
 				if((ch == L' ') || (ch == L'\t')){
 					eState = VAL_PADDING;
@@ -410,6 +445,7 @@ std::pair<Notation::ErrorType, const wchar_t *> Notation::Parse(const wchar_t *p
 					// eState = VAL_BODY;
 				}
 				continue;
+
 			case VAL_PADDING:
 				if((ch == L' ') || (ch == L'\t')){
 					// eState = VAL_PADDING;
@@ -418,6 +454,7 @@ std::pair<Notation::ErrorType, const wchar_t *> Notation::Parse(const wchar_t *p
 					eState = VAL_BODY;
 				}
 				continue;
+
 			case COMMENT:
 				continue;
 			}
@@ -433,11 +470,13 @@ std::pair<Notation::ErrorType, const wchar_t *> Notation::Parse(const wchar_t *p
 	case NAME_BODY:
 	case NAME_PADDING:
 		return std::make_pair(ERR_EQU_EXPECTED, pwszRead);
+
 	case VAL_INDENT:
 	case VAL_BODY:
 	case VAL_PADDING:
 		SubmitValue();
 		break;
+
 	default:
 		break;
 	};

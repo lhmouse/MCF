@@ -11,12 +11,7 @@
 #include <windows.h>
 
 // ld 自动添加此符号。
-#ifdef _WIN64
-#	define IMAGE_BASE __image_base__
-#else
-#	define IMAGE_BASE _image_base__
-#endif
-extern char IMAGE_BASE;
+extern char IMAGE_BASE __asm__("__image_base__");
 
 extern void __cdecl __main();
 

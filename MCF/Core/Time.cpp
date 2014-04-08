@@ -8,14 +8,17 @@ using namespace MCF;
 
 namespace MCF {
 
-std::uint64_t GetUnixTime() noexcept {
+std::uint64_t GetNtTime() noexcept {
 	union {
 		FILETIME ft;
 		ULARGE_INTEGER uli;
 	} u;
 	::GetSystemTimeAsFileTime(&u.ft);
+	return u.uli.QuadPart;
+}
+std::uint64_t GetUnixTime() noexcept {
 	// 0x019DB1DED53E8000 = 从 1601-01-01 到 1970-01-01 经历的时间纳秒数。
-	return (u.uli.QuadPart - 0x019DB1DED53E8000ull) / 10000000ull;
+	return (GetNtTime() - 0x019DB1DED53E8000ull) / 10000000u;
 }
 
 double GetHiResCounter() noexcept {

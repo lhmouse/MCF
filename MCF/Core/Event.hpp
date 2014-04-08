@@ -5,7 +5,7 @@
 #ifndef __MCF_EVENT_HPP__
 #define __MCF_EVENT_HPP__
 
-#include "NoCopy.hpp"
+#include "Utilities.hpp"
 #include <memory>
 
 namespace MCF {

@@ -13,7 +13,7 @@
 
 namespace MCF {
 
-template<typename Element_t, std::size_t ALT_STOR_THLD = 64>
+template<typename Element_t, std::size_t ALT_STOR_THLD = 64u>
 class Vla {
 private:
 	unsigned char xm_aSmall[sizeof(Element_t) * ALT_STOR_THLD];
@@ -51,12 +51,12 @@ public:
 			new(p) Element_t(Params...);
 		}
 	}
-	explicit Vla(std::initializer_list<Element_t> InitList){
-		xInitStorage(InitList.size());
+	Vla(std::initializer_list<Element_t> vInitList){
+		xInitStorage(vInitList.size());
 
 		auto p = xm_pBegin;
-		for(auto iter = InitList.begin(); iter != InitList.end(); ++iter){
-			new(p++) Element_t(std::move(*iter));
+		for(auto it = vInitList.begin(); it != vInitList.end(); ++it){
+			new(p++) Element_t(std::move(*it));
 		}
 	}
 	~Vla(){
@@ -102,12 +102,16 @@ public:
 	explicit operator Element_t *() noexcept {
 		return xm_pBegin;
 	}
-/*	const Element_t &operator[](std::size_t uIndex) const noexcept {
+	const Element_t &operator[](std::size_t uIndex) const noexcept {
+		ASSERT_MSG(uIndex < GetSize(), L"MCF::Vla::operator[]() 失败：索引越界。");
+
 		return xm_pBegin[uIndex];
 	}
 	Element_t &operator[](std::size_t uIndex) noexcept {
+		ASSERT_MSG(uIndex < GetSize(), L"MCF::Vla::operator[]() 失败：索引越界。");
+
 		return xm_pBegin[uIndex];
-	}*/
+	}
 };
 
 

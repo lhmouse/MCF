@@ -89,6 +89,7 @@ public:
 					case 0:
 						xm_semNoAccessing.Wait();
 						break;
+
 					case 1:
 						xm_semMostOneReader.Wait();
 						break;
@@ -116,6 +117,7 @@ public:
 				case 0:
 					xm_semNoAccessing.Signal();
 					break;
+
 				case 1:
 					xm_semMostOneReader.Signal();
 					break;

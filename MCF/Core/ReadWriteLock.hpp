@@ -5,7 +5,7 @@
 #ifndef __MCF_READ_WRITE_LOCK_HPP__
 #define __MCF_READ_WRITE_LOCK_HPP__
 
-#include "NoCopy.hpp"
+#include "Utilities.hpp"
 #include "UniqueHandle.hpp"
 #include <memory>
 #include <utility>

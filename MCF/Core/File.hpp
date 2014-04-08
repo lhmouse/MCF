@@ -5,7 +5,8 @@
 #ifndef __MCF_FILE_HPP__
 #define __MCF_FILE_HPP__
 
-#include "NoCopy.hpp"
+#include "Utilities.hpp"
+#include "StringObserver.hpp"
 #include <memory>
 #include <functional>
 #include <cstddef>
@@ -29,19 +30,20 @@ private:
 
 public:
 	File() noexcept;
-	File(const wchar_t *pwszPath, bool bToRead, bool bToWrite, bool bAutoCreate);
+	File(const WideStringObserver &obsPath, bool bToRead, bool bToWrite, bool bAutoCreate);
 	File(File &&rhs) noexcept;
 	File &operator=(File &&rhs) noexcept;
 	~File();
 
 public:
 	bool IsOpen() const noexcept;
-	unsigned long OpenNoThrow(const wchar_t *pwszPath, bool bToRead, bool bToWrite, bool bAutoCreate);
-	void Open(const wchar_t *pwszPath, bool bToRead, bool bToWrite, bool bAutoCreate);
+	unsigned long OpenNoThrow(const WideStringObserver &obsPath, bool bToRead, bool bToWrite, bool bAutoCreate);
+	void Open(const WideStringObserver &obsPath, bool bToRead, bool bToWrite, bool bAutoCreate);
 	void Close() noexcept;
 
 	std::uint64_t GetSize() const;
 	void Resize(std::uint64_t u64NewSize);
+	void Clear();
 
 	std::uint32_t Read(void *pBuffer, std::uint64_t u64Offset, std::uint32_t u32BytesToRead) const;
 	std::uint32_t Read(void *pBuffer, std::uint64_t u64Offset, std::uint32_t u32BytesToRead, AsyncProc fnAsyncProc) const;

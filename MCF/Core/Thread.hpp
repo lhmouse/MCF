@@ -5,7 +5,7 @@
 #ifndef __MCF_THREAD_HPP__
 #define __MCF_THREAD_HPP__
 
-#include "NoCopy.hpp"
+#include "Utilities.hpp"
 #include <functional>
 #include <memory>
 #include <cstddef>

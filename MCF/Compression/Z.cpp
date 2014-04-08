@@ -4,7 +4,7 @@
 
 #include "../StdMCF.hpp"
 #include "Z.hpp"
-#include "../Core/NoCopy.hpp"
+#include "../Core/Utilities.hpp"
 #include "../Core/Exception.hpp"
 
 #define ZLIB_CONST
@@ -32,22 +32,31 @@ inline unsigned long ZErrorToWin32Error(int nZError) noexcept {
 	switch(nZError){
 	case Z_OK:
 		return ERROR_SUCCESS;
+
 	case Z_STREAM_END:
 		return ERROR_HANDLE_EOF;
+
 	case Z_NEED_DICT:
 		return ERROR_INVALID_PARAMETER;
+
 	case Z_ERRNO:
 		return ERROR_OPEN_FAILED;
+
 	case Z_STREAM_ERROR:
 		return ERROR_INVALID_PARAMETER;
+
 	case Z_DATA_ERROR:
 		return ERROR_INVALID_DATA;
+
 	case Z_MEM_ERROR:
 		return ERROR_NOT_ENOUGH_MEMORY;
+
 	case Z_BUF_ERROR:
 		return ERROR_SUCCESS;
+
 	case Z_VERSION_ERROR:
 		return ERROR_NOT_SUPPORTED;
+
 	default:
 		return ERROR_INVALID_FUNCTION;
 	}
@@ -66,7 +75,7 @@ private:
 	std::size_t xm_uBytesProcessed;
 
 public:
-	xDelegate(std::function<std::pair<void *, std::size_t> (std::size_t)> &&fnDataCallback, int nLevel)
+	xDelegate(std::function<std::pair<void *, std::size_t> (std::size_t)> &&fnDataCallback, bool bRaw, int nLevel)
 		: xm_fnDataCallback(std::move(fnDataCallback))
 		, xm_bInited(false)
 	{
@@ -74,7 +83,7 @@ public:
 		zfree = Z_NULL;
 		opaque = Z_NULL;
 
-		const auto ulErrorCode = ZErrorToWin32Error(::deflateInit2(this, nLevel, Z_DEFLATED, -15, 9, Z_DEFAULT_STRATEGY));
+		const auto ulErrorCode = ZErrorToWin32Error(::deflateInit2(this, nLevel, Z_DEFLATED, bRaw ? -15 : 15, 9, Z_DEFAULT_STRATEGY));
 		if(ulErrorCode != ERROR_SUCCESS){
 			MCF_THROW(ulErrorCode, L"::deflateInit2() 失败。");
 		}
@@ -165,8 +174,8 @@ public:
 };
 
 // 构造函数和析构函数。
-ZEncoder::ZEncoder(std::function<std::pair<void *, std::size_t> (std::size_t)> fnDataCallback, int nLevel)
-	: xm_pDelegate(new xDelegate(std::move(fnDataCallback), nLevel))
+ZEncoder::ZEncoder(std::function<std::pair<void *, std::size_t> (std::size_t)> fnDataCallback, bool bRaw, int nLevel)
+	: xm_pDelegate(new xDelegate(std::move(fnDataCallback), bRaw, nLevel))
 {
 }
 ZEncoder::ZEncoder(ZEncoder &&rhs) noexcept
@@ -215,7 +224,7 @@ private:
 	std::size_t xm_uBytesProcessed;
 
 public:
-	xDelegate(std::function<std::pair<void *, std::size_t> (std::size_t)> &&fnDataCallback)
+	xDelegate(std::function<std::pair<void *, std::size_t> (std::size_t)> &&fnDataCallback, bool bRaw)
 		: xm_fnDataCallback(std::move(fnDataCallback))
 		, xm_bInited(false)
 	{
@@ -226,7 +235,7 @@ public:
 		next_in = nullptr;
 		avail_in = 0;
 
-		const auto ulErrorCode = ZErrorToWin32Error(::inflateInit2(this, -15));
+		const auto ulErrorCode = ZErrorToWin32Error(::inflateInit2(this, bRaw ? -15 : 15));
 		if(ulErrorCode != ERROR_SUCCESS){
 			MCF_THROW(ulErrorCode, L"::inflateInit2() 失败。");
 		}
@@ -317,8 +326,8 @@ public:
 };
 
 // 构造函数和析构函数。
-ZDecoder::ZDecoder(std::function<std::pair<void *, std::size_t> (std::size_t)> fnDataCallback)
-	: xm_pDelegate(new xDelegate(std::move(fnDataCallback)))
+ZDecoder::ZDecoder(std::function<std::pair<void *, std::size_t> (std::size_t)> fnDataCallback, bool bRaw)
+	: xm_pDelegate(new xDelegate(std::move(fnDataCallback), bRaw))
 {
 }
 ZDecoder::ZDecoder(ZDecoder &&rhs) noexcept

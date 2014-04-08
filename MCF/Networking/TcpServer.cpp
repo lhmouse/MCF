@@ -24,10 +24,10 @@ private:
 	};
 
 private:
-	__MCF::WSAInitializer xm_vWSAInitializer;
+	WSAInitializer xm_vWSAInitializer;
 
 	volatile State xm_eState;
-	__MCF::UniqueSocket xm_sockListen;
+	UniqueSocket xm_sockListen;
 
 	CriticalSection xm_csQueueLock;
 	std::deque<TcpPeer> xm_deqPeers;
@@ -61,7 +61,7 @@ private:
 
 				SOCKADDR_STORAGE vSockAddr;
 				int nSockAddrSize = sizeof(vSockAddr);
-				__MCF::UniqueSocket sockClient(::accept(xm_sockListen.Get(), (SOCKADDR *)&vSockAddr, &nSockAddrSize));
+				UniqueSocket sockClient(::accept(xm_sockListen.Get(), (SOCKADDR *)&vSockAddr, &nSockAddrSize));
 				if(!sockClient){
 					continue;
 				}
@@ -163,9 +163,11 @@ public:
 				switch(xm_deqPeers.size()){
 				case 1:
 					xm_evnPeersAvailable.Clear();
+
 				default:
 					vPeer = std::move(xm_deqPeers.front());
 					xm_deqPeers.pop_front();
+
 				case 0:
 					break;
 				}

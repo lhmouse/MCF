@@ -7,6 +7,7 @@
 
 #include <new>
 #include <utility>
+#include <type_traits>
 #include <cstddef>
 
 namespace MCF {
@@ -15,6 +16,8 @@ template<class Closer_t>
 class UniqueHandle {
 public:
 	typedef decltype(Closer_t()()) Handle;
+
+	static_assert(std::is_scalar<Handle>::value, "Handle must be a scalar type");
 
 private:
 	Handle xm_hObj;
@@ -62,17 +65,15 @@ public:
 		}
 	}
 	void Reset(UniqueHandle &&rhs) noexcept {
-		if(&rhs == this){
-			return;
+		if(&rhs != this){
+			Reset(rhs.Release());
 		}
-		Reset(rhs.Release());
 	}
 
 	void Swap(UniqueHandle &rhs) noexcept {
-		if(&rhs == this){
-			return;
+		if(&rhs != this){
+			std::swap(xm_hObj, rhs.xm_hObj);
 		}
-		std::swap(xm_hObj, rhs.xm_hObj);
 	}
 
 public:
@@ -101,7 +102,81 @@ public:
 	bool operator>=(const UniqueHandle &rhs) const noexcept {
 		return Get() >= rhs.Get();
 	}
+
+	bool operator==(Handle rhs) const noexcept {
+		return Get() == rhs;
+	}
+	bool operator!=(Handle rhs) const noexcept {
+		return Get() != rhs;
+	}
+	bool operator<(Handle rhs) const noexcept {
+		return Get() < rhs;
+	}
+	bool operator<=(Handle rhs) const noexcept {
+		return Get() <= rhs;
+	}
+	bool operator>(Handle rhs) const noexcept {
+		return Get() > rhs;
+	}
+	bool operator>=(Handle rhs) const noexcept {
+		return Get() >= rhs;
+	}
 };
+
+template<class Handle_t, class Closer_t>
+auto operator==(Handle_t lhs, const UniqueHandle<Closer_t> &rhs) noexcept
+	-> typename std::enable_if<
+		std::is_same<Handle_t, typename UniqueHandle<Closer_t>::Handle>::value,
+		bool
+	>::type
+{
+	return lhs == rhs.Get();
+}
+template<class Handle_t, class Closer_t>
+auto operator!=(Handle_t lhs, const UniqueHandle<Closer_t> &rhs) noexcept
+	-> typename std::enable_if<
+		std::is_same<Handle_t, typename UniqueHandle<Closer_t>::Handle>::value,
+		bool
+	>::type
+{
+	return lhs != rhs.Get();
+}
+template<class Handle_t, class Closer_t>
+auto operator<(Handle_t lhs, const UniqueHandle<Closer_t> &rhs) noexcept
+	-> typename std::enable_if<
+		std::is_same<Handle_t, typename UniqueHandle<Closer_t>::Handle>::value,
+		bool
+	>::type
+{
+	return lhs < rhs.Get();
+}
+template<class Handle_t, class Closer_t>
+auto operator<=(Handle_t lhs, const UniqueHandle<Closer_t> &rhs) noexcept
+	-> typename std::enable_if<
+		std::is_same<Handle_t, typename UniqueHandle<Closer_t>::Handle>::value,
+		bool
+	>::type
+{
+	return lhs <= rhs.Get();
+}
+template<class Handle_t, class Closer_t>
+auto operator>(Handle_t lhs, const UniqueHandle<Closer_t> &rhs) noexcept
+	-> typename std::enable_if<
+		std::is_same<Handle_t, typename UniqueHandle<Closer_t>::Handle>::value,
+		bool
+	>::type
+{
+	return lhs > rhs.Get();
+}
+template<class Handle_t, class Closer_t>
+auto operator>=(Handle_t lhs, const UniqueHandle<Closer_t> &rhs) noexcept
+	-> typename std::enable_if<
+		std::is_same<Handle_t, typename UniqueHandle<Closer_t>::Handle>::value,
+		bool
+	>::type
+{
+	return lhs >= rhs.Get();
+}
 
 }
 

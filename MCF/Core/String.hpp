@@ -5,16 +5,11 @@
 #ifndef __MCF_STRING_HPP__
 #define __MCF_STRING_HPP__
 
-#include "../../MCFCRT/c/ext/assert.h"
+#include "StringObserver.hpp"
 #include "../../MCFCRT/cpp/ext/count_of.hpp"
 #include "Utilities.hpp"
-#include <algorithm>
 #include <memory>
 #include <new>
-#include <utility>
-#include <iterator>
-#include <type_traits>
-#include <cstddef>
 #include <cstdint>
 #include <cstring>
 #include <cwchar>
@@ -93,7 +88,7 @@ inline Char_t *StrChr(Char_t *pszSrc, std::size_t uLen, typename std::remove_cv<
 }
 template<>
 inline const char *StrChr<const char>(const char *pszSrc, std::size_t uLen, char chToFind) noexcept {
-	return (char *)std::memchr(pszSrc, chToFind, uLen);
+	return (const char *)std::memchr(pszSrc, chToFind, uLen);
 }
 template<>
 inline char *StrChr<char>(char *pszSrc, std::size_t uLen, char chToFind) noexcept {
@@ -121,9 +116,7 @@ inline Char_t *StrRChr(Char_t *pszSrc, std::size_t uLen, typename std::remove_cv
 }
 
 template<typename Iterator_t>
-auto Kmp(Iterator_t s, std::size_t slen, Iterator_t w, std::size_t wlen) noexcept
-	-> typename std::remove_reference<decltype(*s)>::type *
-{
+auto Kmp(Iterator_t s, std::size_t slen, Iterator_t w, std::size_t wlen) noexcept -> decltype(&*s) {
 	if(wlen == 0){
 		return &*s;
 	}
@@ -172,7 +165,7 @@ auto Kmp(Iterator_t s, std::size_t slen, Iterator_t w, std::size_t wlen) noexcep
 		}
 	}
 
-	typename std::remove_reference<decltype(*s)>::type *found = nullptr;
+	decltype(&*s) found = nullptr;
 
 	std::size_t m = 0;
 	std::size_t i = 0;
@@ -220,16 +213,16 @@ enum class StringEncoding {
 };
 
 template<typename Char_t, StringEncoding ENCODING>
-class GenericString;
+class String;
 
-typedef GenericString<wchar_t, StringEncoding::UTF16> UnifiedString;
+typedef String<wchar_t, StringEncoding::UTF16> UnifiedString;
 
 template<typename Char_t, StringEncoding ENCODING>
-class GenericString {
+class String {
 	static_assert(std::is_arithmetic<Char_t>::value, "Char_t must be an arithmetic type.");
 
 	template<typename, StringEncoding>
-	friend class GenericString;
+	friend class String;
 
 public:
 	enum : std::size_t {
@@ -251,77 +244,91 @@ private:
 	}
 
 private:
-	struct xStorage {
-		union {
-			struct __attribute__((packed)) {
-				Char_t achSmall[(32 - sizeof(Char_t *)) / sizeof(Char_t) - 2];
-				Char_t chNull;
-				typename std::make_unsigned<Char_t>::type uchSmallLength;
-			};
-			struct {
-				Char_t *pchLargeBegin;
-				std::size_t uLargeLength;
-				std::size_t uLargeBufferSize;
-			};
+	union xStorage {
+		struct __attribute__((packed)) {
+			Char_t achSmall[32 / sizeof(Char_t) - 2];
+			Char_t chNull;
+			typename std::make_unsigned<Char_t>::type uchSmallLength;
+		};
+		struct {
+			Char_t *pchLargeBegin;
+			std::size_t uLargeLength;
+			std::size_t uLargeBufferSize;
 		};
 	} xm_vStorage;
 
 public:
-	GenericString() noexcept {
-		xm_vStorage.achSmall[0] = Char_t();
-		xm_vStorage.chNull = Char_t();
-		xm_vStorage.uchSmallLength = 0;
+	constexpr String() noexcept
+		: xm_vStorage{{{Char_t()}, Char_t(), 0}}
+	{
 	}
-	explicit GenericString(Char_t ch, std::size_t uCount = 1) : GenericString() {
+	explicit String(Char_t ch, std::size_t uCount = 1) : String() {
 		Assign(ch, uCount);
 	}
-	GenericString(const Char_t *pszSrc) : GenericString() {
+	String(const Char_t *pchBegin, const Char_t *pchEnd) : String() {
+		Assign(pchBegin, pchEnd);
+	}
+	explicit String(const Char_t *pszSrc) : String() {
 		Assign(pszSrc);
 	}
-	GenericString(const Char_t *pchSrc, std::size_t uSrcLen) : GenericString() {
+	String(const Char_t *pchSrc, std::size_t uSrcLen) : String() {
 		Assign(pchSrc, uSrcLen);
 	}
+	explicit String(const std::pair<const Char_t *, std::size_t> &vPair) : String() {
+		Assign(vPair);
+	}
+	explicit String(const std::pair<const Char_t *, const Char_t *> &vPair) : String() {
+		Assign(vPair);
+	}
 	template<typename OtherChar_t, StringEncoding OTHER_ENCODING>
-	GenericString(const GenericString<OtherChar_t, OTHER_ENCODING> &rhs) : GenericString() {
+	explicit String(const String<OtherChar_t, OTHER_ENCODING> &rhs) : String() {
 		Assign(rhs);
 	}
 	template<typename OtherChar_t, StringEncoding OTHER_ENCODING>
-	GenericString(GenericString<OtherChar_t, OTHER_ENCODING> &&rhs) : GenericString() {
+	explicit String(String<OtherChar_t, OTHER_ENCODING> &&rhs) : String() {
 		Assign(std::move(rhs));
 	}
-	GenericString(const GenericString &rhs) : GenericString() {
+	String(const String &rhs) : String() {
 		Assign(rhs);
 	}
-	GenericString(GenericString &&rhs) noexcept : GenericString() {
+	String(String &&rhs) noexcept : String() {
 		Assign(std::move(rhs));
 	}
-	GenericString &operator=(Char_t ch) noexcept {
+	String &operator=(Char_t ch) noexcept {
 		Assign(ch, 1);
 		return *this;
 	}
-	GenericString &operator=(const Char_t *pszSrc){
+	String &operator=(const Char_t *pszSrc){
 		Assign(pszSrc);
 		return *this;
 	}
+	String &operator=(const std::pair<const Char_t *, std::size_t> &vPair){
+		Assign(vPair);
+		return *this;
+	}
+	String &operator=(const std::pair<const Char_t *, const Char_t *> &vPair){
+		Assign(vPair);
+		return *this;
+	}
 	template<typename OtherChar_t, StringEncoding OTHER_ENCODING>
-	GenericString &operator=(const GenericString<OtherChar_t, OTHER_ENCODING> &rhs){
+	String &operator=(const String<OtherChar_t, OTHER_ENCODING> &rhs){
 		Assign(rhs);
 		return *this;
 	}
 	template<typename OtherChar_t, StringEncoding OTHER_ENCODING>
-	GenericString &operator=(GenericString<OtherChar_t, OTHER_ENCODING> &&rhs){
+	String &operator=(String<OtherChar_t, OTHER_ENCODING> &&rhs){
 		Assign(std::move(rhs));
 		return *this;
 	}
-	GenericString &operator=(const GenericString &rhs){
+	String &operator=(const String &rhs){
 		Assign(rhs);
 		return *this;
 	}
-	GenericString &operator=(GenericString &&rhs) noexcept {
+	String &operator=(String &&rhs) noexcept {
 		Assign(std::move(rhs));
 		return *this;
 	}
-	~GenericString(){
+	~String(){
 		if(xm_vStorage.chNull != Char_t()){
 			delete[] xm_vStorage.pchLargeBegin;
 		}
@@ -403,13 +410,14 @@ private:
 		if(bSetEnd){
 			xSetSize(uNewSize);
 		} else {
-			pchNewBuffer[uNewSize] = Char_t();
+			pchNewBuffer[uOldLength] = Char_t();
 		}
 	}
 
 	// 返回值如果不是 nullptr，就使用返回值拷贝构造。
 	// 否则 ucsTemp 为出参，可以移动构造。
 	const UnifiedString *xUnify(UnifiedString &ucsTemp) const;
+	// 追加到末尾。
 	void xDisunify(const UnifiedString &ucsTemp);
 	void xDisunify(UnifiedString &&ucsTemp);
 
@@ -436,6 +444,13 @@ public:
 		}
 	}
 
+	std::pair<const Char_t *, std::size_t> GetCStrLength() const {
+		return std::make_pair(GetCStr(), GetLength());
+	}
+	std::pair<Char_t *, std::size_t> GetCStrLength(){
+		return std::make_pair(GetCStr(), GetLength());
+	}
+
 	const Char_t *GetData() const noexcept {
 		return GetCStr();
 	}
@@ -446,18 +461,31 @@ public:
 		return GetLength();
 	}
 
+	std::pair<const Char_t *, std::size_t> GetDataSize() const {
+		return std::make_pair(GetData(), GetSize());
+	}
+	std::pair<Char_t *, std::size_t> GetDataSize(){
+		return std::make_pair(GetData(), GetSize());
+	}
+
 	const Char_t *GetBegin() const noexcept {
 		return GetCStr();
 	}
 	Char_t *GetBegin() noexcept {
 		return GetCStr();
 	}
-
 	const Char_t *GetEnd() const noexcept {
 		return GetCStr() + GetLength();
 	}
 	Char_t *GetEnd() noexcept {
 		return GetCStr() + GetLength();
+	}
+
+	std::pair<const Char_t *, const Char_t *> GetBeginEnd() const {
+		return std::make_pair(GetBegin(), GetEnd());
+	}
+	std::pair<Char_t *, Char_t *> GetBeginEnd(){
+		return std::make_pair(GetBegin(), GetEnd());
 	}
 
 	void Resize(std::size_t uNewSize){
@@ -486,7 +514,7 @@ public:
 		xSlide(0, uNewCapacity - GetLength(), false);
 	}
 
-	void Swap(GenericString &rhs) noexcept {
+	void Swap(String &rhs) noexcept {
 		if(this != &rhs){
 			std::swap(xm_vStorage, rhs.xm_vStorage);
 		}
@@ -495,19 +523,25 @@ public:
 	int Compare(const Char_t *pszComparand) const noexcept {
 		return Compare(pszComparand, StrLen(pszComparand));
 	}
-	int Compare(const GenericString &strComparand) const noexcept {
+	int Compare(const String &strComparand) const noexcept {
 		return Compare(strComparand.GetCStr(), strComparand.GetLength());
+	}
+	int Compare(const Char_t *pszComparand, const Char_t *pszEnd) const noexcept {
+		return StrCmp(GetCStr(), GetLength(), pszComparand, pszEnd - pszComparand);
 	}
 	int Compare(const Char_t *pszComparand, std::size_t uMaxCount) const noexcept {
 		return StrCmp(GetCStr(), GetLength(), pszComparand, uMaxCount);
 	}
-	int Compare(const GenericString &strComparand, std::size_t uMaxCount) const noexcept {
+	int Compare(const String &strComparand, std::size_t uMaxCount) const noexcept {
 		return Compare(strComparand.GetCStr(), uMaxCount);
 	}
 
 	void Assign(Char_t ch, std::size_t uCount = 1){
 		Resize(uCount);
 		std::fill_n(GetCStr(), uCount, ch);
+	}
+	void Assign(const Char_t *pchBegin, const Char_t *pchEnd){
+		Assign(pchBegin, pchEnd - pchBegin);
 	}
 	void Assign(const Char_t *pszSrc){
 		if(pszSrc){
@@ -520,21 +554,28 @@ public:
 		Resize(uSrcLen);
 		std::copy_n(pchSrc, uSrcLen, GetCStr());
 	}
-	void Assign(const GenericString &rhs){
+	void Assign(const std::pair<const Char_t *, std::size_t> &vPair){
+		Assign(vPair.first, vPair.second);
+	}
+	void Assign(const std::pair<const Char_t *, const Char_t *> &vPair){
+		Assign(vPair.first, vPair.second);
+	}
+	void Assign(const String &rhs){
 		if(this != &rhs){
 			Assign(rhs.GetCStr(), rhs.GetLength());
 		}
 	}
-	void Assign(GenericString &&rhs) noexcept {
+	void Assign(String &&rhs) noexcept {
 		if(this != &rhs){
 			Clear();
 			Swap(rhs);
 		}
 	}
 	template<typename OtherChar_t, StringEncoding OTHER_ENCODING>
-	void Assign(const GenericString<OtherChar_t, OTHER_ENCODING> &rhs){
+	void Assign(const String<OtherChar_t, OTHER_ENCODING> &rhs){
 		UnifiedString ucsTemp;
 		const auto pucsUnfied = rhs.xUnify(ucsTemp);
+		Clear();
 		if(pucsUnfied){
 			xDisunify(*pucsUnfied);
 		} else {
@@ -547,6 +588,9 @@ public:
 		xSlide(0, uCount);
 		std::fill_n(GetCStr() + uOldLength, uCount, ch);
 	}
+	void Append(const Char_t *pchBegin, const Char_t *pchEnd){
+		Append(pchBegin, pchEnd - pchBegin);
+	}
 	void Append(const Char_t *pszSrc){
 		if(pszSrc){
 			Append(pszSrc, StrLen(pszSrc));
@@ -557,7 +601,13 @@ public:
 		xSlide(0, uSrcLen);
 		std::copy_n(pchSrc, uSrcLen, GetCStr() + uOldLength);
 	}
-	void Append(const GenericString &rhs){
+	void Append(const std::pair<const Char_t *, std::size_t> &vPair){
+		Append(vPair.first, vPair.second);
+	}
+	void Append(const std::pair<const Char_t *, const Char_t *> &vPair){
+		Append(vPair.first, vPair.second);
+	}
+	void Append(const String &rhs){
 		if(this == &rhs){
 			const auto uOldLength = GetLength();
 			xSlide(0, uOldLength);
@@ -567,14 +617,26 @@ public:
 			Append(rhs.GetCStr(), rhs.GetLength());
 		}
 	}
-	void Append(GenericString &&rhs){
+	void Append(String &&rhs){
 		if(this == &rhs){
 			Append(rhs);
+		} else if(IsEmpty()){
+			Assign(std::move(rhs));
 		} else if(GetCapacity() >= rhs.GetCapacity()){
 			Append(rhs);
 		} else {
 			rhs.Unshift(*this);
 			Assign(std::move(rhs));
+		}
+	}
+	template<typename OtherChar_t, StringEncoding OTHER_ENCODING>
+	void Append(const String<OtherChar_t, OTHER_ENCODING> &rhs){
+		UnifiedString ucsTemp;
+		const auto pucsUnfied = rhs.xUnify(ucsTemp);
+		if(pucsUnfied){
+			xDisunify(*pucsUnfied);
+		} else {
+			xDisunify(std::move(ucsTemp));
 		}
 	}
 	void Truncate(std::size_t uCount = 1) noexcept {
@@ -606,16 +668,18 @@ public:
 		xSlide(uSrcLen, 0);
 		std::copy_n(pchSrc, uSrcLen, GetCStr());
 	}
-	void Unshift(const GenericString &rhs){
+	void Unshift(const String &rhs){
 		if(this == &rhs){
 			Append(rhs);
 		} else {
 			Unshift(rhs.GetCStr(), rhs.GetLength());
 		}
 	}
-	void Unshift(GenericString &&rhs){
+	void Unshift(String &&rhs){
 		if(this == &rhs){
 			Append(std::move(rhs));
+		} else if(IsEmpty()){
+			Assign(std::move(rhs));
 		} else if(GetCapacity() >= rhs.GetCapacity()){
 			Unshift(rhs);
 		} else {
@@ -647,8 +711,8 @@ public:
 	//   Slice( 1, -5)   返回 "bc"；
 	//   Slice(-1,  5)   返回 "gf"；
 	//   Slice(-1, -5)   返回 "gfed"。
-	GenericString Slice(std::ptrdiff_t nBegin, std::ptrdiff_t nEnd = -1) const {
-		GenericString strRet;
+	String Slice(std::ptrdiff_t nBegin, std::ptrdiff_t nEnd = -1) const {
+		String strRet;
 		const auto pchBegin = GetCStr();
 		const auto uLength = GetLength();
 		const auto uRealBegin = xTranslateOffset(uLength, nBegin);
@@ -821,7 +885,7 @@ public:
 			xSetSize(uNewLength);
 		}
 	}
-	void Replace(std::ptrdiff_t nBegin, std::ptrdiff_t nEnd, const GenericString &strRep){
+	void Replace(std::ptrdiff_t nBegin, std::ptrdiff_t nEnd, const String &strRep){
 		Replace(nBegin, nEnd, strRep.GetCStr(), strRep.GetSize());
 	}
 
@@ -845,7 +909,7 @@ public:
 	explicit operator const Char_t *() const noexcept {
 		return GetCStr();
 	}
-	explicit operator const Char_t *() noexcept {
+	explicit operator Char_t *() noexcept {
 		return GetCStr();
 	}
 	const Char_t &operator[](std::size_t uIndex) const noexcept {
@@ -859,19 +923,29 @@ public:
 		return GetCStr()[uIndex];
 	}
 
-	GenericString &operator+=(Char_t rhs){
+	String &operator+=(Char_t rhs){
 		Append(rhs);
 		return *this;
 	}
-	GenericString &operator+=(const Char_t *rhs){
+	String &operator+=(const Char_t *rhs){
 		Append(rhs);
 		return *this;
 	}
-	GenericString &operator+=(const GenericString &rhs){
+	String &operator+=(const String &rhs){
 		Append(rhs);
 		return *this;
 	}
-	GenericString &operator+=(GenericString &&rhs){
+	String &operator+=(String &&rhs){
+		Append(std::move(rhs));
+		return *this;
+	}
+	template<typename OtherChar_t, StringEncoding OTHER_ENCODING>
+	String &operator+=(const String<OtherChar_t, OTHER_ENCODING> &rhs){
+		Append(rhs);
+		return *this;
+	}
+	template<typename OtherChar_t, StringEncoding OTHER_ENCODING>
+	String &operator+=(String<OtherChar_t, OTHER_ENCODING> &&rhs){
 		Append(std::move(rhs));
 		return *this;
 	}
@@ -879,63 +953,102 @@ public:
 	bool operator==(const Char_t *rhs) const noexcept {
 		return Compare(rhs) == 0;
 	}
-	bool operator==(const GenericString &rhs) const noexcept {
-		return Compare(rhs) == 0;
-	}
 	bool operator!=(const Char_t *rhs) const noexcept {
-		return Compare(rhs) != 0;
-	}
-	bool operator!=(const GenericString &rhs) const noexcept {
 		return Compare(rhs) != 0;
 	}
 	bool operator<(const Char_t *rhs) const noexcept {
 		return Compare(rhs) < 0;
 	}
-	bool operator<(const GenericString &rhs) const noexcept {
-		return Compare(rhs) < 0;
-	}
 	bool operator>(const Char_t *rhs) const noexcept {
-		return Compare(rhs) > 0;
-	}
-	bool operator>(const GenericString &rhs) const noexcept {
 		return Compare(rhs) > 0;
 	}
 	bool operator<=(const Char_t *rhs) const noexcept {
 		return Compare(rhs) <= 0;
 	}
-	bool operator<=(const GenericString &rhs) const noexcept {
-		return Compare(rhs) <= 0;
-	}
 	bool operator>=(const Char_t *rhs) const noexcept {
 		return Compare(rhs) >= 0;
 	}
-	bool operator>=(const GenericString &rhs) const noexcept {
+
+	bool operator==(const String &rhs) const noexcept {
+		return Compare(rhs) == 0;
+	}
+	bool operator!=(const String &rhs) const noexcept {
+		return Compare(rhs) != 0;
+	}
+	bool operator<(const String &rhs) const noexcept {
+		return Compare(rhs) < 0;
+	}
+	bool operator>(const String &rhs) const noexcept {
+		return Compare(rhs) > 0;
+	}
+	bool operator<=(const String &rhs) const noexcept {
+		return Compare(rhs) <= 0;
+	}
+	bool operator>=(const String &rhs) const noexcept {
 		return Compare(rhs) >= 0;
+	}
+
+	bool operator==(const std::pair<const Char_t *, std::size_t> &rhs) const noexcept {
+		return Compare(rhs.first, rhs.second) == 0;
+	}
+	bool operator!=(const std::pair<const Char_t *, std::size_t> &rhs) const noexcept {
+		return Compare(rhs.first, rhs.second) != 0;
+	}
+	bool operator<(const std::pair<const Char_t *, std::size_t> &rhs) const noexcept {
+		return Compare(rhs.first, rhs.second) < 0;
+	}
+	bool operator>(const std::pair<const Char_t *, std::size_t> &rhs) const noexcept {
+		return Compare(rhs.first, rhs.second) > 0;
+	}
+	bool operator<=(const std::pair<const Char_t *, std::size_t> &rhs) const noexcept {
+		return Compare(rhs.first, rhs.second) <= 0;
+	}
+	bool operator>=(const std::pair<const Char_t *, std::size_t> &rhs) const noexcept {
+		return Compare(rhs.first, rhs.second) >= 0;
+	}
+
+	bool operator==(const std::pair<const Char_t *, const Char_t *> &rhs) const noexcept {
+		return Compare(rhs.first, rhs.second - rhs.first) == 0;
+	}
+	bool operator!=(const std::pair<const Char_t *, const Char_t *> &rhs) const noexcept {
+		return Compare(rhs.first, rhs.second - rhs.first) != 0;
+	}
+	bool operator<(const std::pair<const Char_t *, const Char_t *> &rhs) const noexcept {
+		return Compare(rhs.first, rhs.second - rhs.first) < 0;
+	}
+	bool operator>(const std::pair<const Char_t *, const Char_t *> &rhs) const noexcept {
+		return Compare(rhs.first, rhs.second - rhs.first) > 0;
+	}
+	bool operator<=(const std::pair<const Char_t *, const Char_t *> &rhs) const noexcept {
+		return Compare(rhs.first, rhs.second - rhs.first) <= 0;
+	}
+	bool operator>=(const std::pair<const Char_t *, const Char_t *> &rhs) const noexcept {
+		return Compare(rhs.first, rhs.second - rhs.first) >= 0;
 	}
 };
 
 template<typename Char_t, StringEncoding ENCODING>
-GenericString<Char_t, ENCODING> operator+(const GenericString<Char_t, ENCODING> &lhs, const GenericString<Char_t, ENCODING> &rhs){
+String<Char_t, ENCODING> operator+(const String<Char_t, ENCODING> &lhs, const String<Char_t, ENCODING> &rhs){
 	const auto uLLen = lhs.GetLength();
 	const auto uRLen = rhs.GetLength();
-	GenericString<Char_t, ENCODING> strRet;
+	String<Char_t, ENCODING> strRet;
 	strRet.Reserve(uLLen + uRLen);
 	strRet.Assign(lhs.GetCStr(), uLLen);
 	strRet.Append(rhs.GetCStr(), uRLen);
 	return std::move(strRet);
 }
 template<typename Char_t, StringEncoding ENCODING>
-GenericString<Char_t, ENCODING> operator+(GenericString<Char_t, ENCODING> &&lhs, const GenericString<Char_t, ENCODING> &rhs){
+String<Char_t, ENCODING> operator+(String<Char_t, ENCODING> &&lhs, const String<Char_t, ENCODING> &rhs){
 	lhs.Append(rhs);
 	return std::move(lhs);
 }
 template<typename Char_t, StringEncoding ENCODING>
-GenericString<Char_t, ENCODING> operator+(const GenericString<Char_t, ENCODING> &lhs, GenericString<Char_t, ENCODING> &&rhs){
+String<Char_t, ENCODING> operator+(const String<Char_t, ENCODING> &lhs, String<Char_t, ENCODING> &&rhs){
 	rhs.Unshift(lhs);
 	return std::move(rhs);
 }
 template<typename Char_t, StringEncoding ENCODING>
-GenericString<Char_t, ENCODING> operator+(GenericString<Char_t, ENCODING> &&lhs, GenericString<Char_t, ENCODING> &&rhs){
+String<Char_t, ENCODING> operator+(String<Char_t, ENCODING> &&lhs, String<Char_t, ENCODING> &&rhs){
 	if(lhs.GetCapacity() >= rhs.GetCapacity()){
 		lhs.Append(rhs);
 		return std::move(lhs);
@@ -945,122 +1058,172 @@ GenericString<Char_t, ENCODING> operator+(GenericString<Char_t, ENCODING> &&lhs,
 	}
 }
 template<typename Char_t, StringEncoding ENCODING>
-GenericString<Char_t, ENCODING> operator+(const Char_t *lhs, const GenericString<Char_t, ENCODING> &rhs){
+String<Char_t, ENCODING> operator+(const Char_t *lhs, const String<Char_t, ENCODING> &rhs){
 	const auto uLLen = StrLen(lhs);
 	const auto uRLen = rhs.GetLength();
-	GenericString<Char_t, ENCODING> strRet;
+	String<Char_t, ENCODING> strRet;
 	strRet.Reserve(uLLen + uRLen);
 	strRet.Assign(lhs, uLLen);
 	strRet.Append(rhs.GetCStr(), uRLen);
 	return std::move(strRet);
 }
 template<typename Char_t, StringEncoding ENCODING>
-GenericString<Char_t, ENCODING> operator+(const Char_t *lhs, GenericString<Char_t, ENCODING> &&rhs){
+String<Char_t, ENCODING> operator+(const Char_t *lhs, String<Char_t, ENCODING> &&rhs){
 	rhs.Unshift(lhs);
 	return std::move(rhs);
 }
 template<typename Char_t, StringEncoding ENCODING>
-GenericString<Char_t, ENCODING> operator+(Char_t lhs, const GenericString<Char_t, ENCODING> &rhs){
+String<Char_t, ENCODING> operator+(Char_t lhs, const String<Char_t, ENCODING> &rhs){
 	const auto uRLen = rhs.GetLength();
-	GenericString<Char_t, ENCODING> strRet;
+	String<Char_t, ENCODING> strRet;
 	strRet.Reserve(1 + uRLen);
 	strRet.Assign(lhs);
 	strRet.Append(rhs.GetCStr(), uRLen);
 	return std::move(strRet);
 }
 template<typename Char_t, StringEncoding ENCODING>
-GenericString<Char_t, ENCODING> operator+(Char_t lhs, GenericString<Char_t, ENCODING> &&rhs){
+String<Char_t, ENCODING> operator+(Char_t lhs, String<Char_t, ENCODING> &&rhs){
 	rhs.Unshift(lhs);
 	return std::move(rhs);
 }
 template<typename Char_t, StringEncoding ENCODING>
-GenericString<Char_t, ENCODING> operator+(const GenericString<Char_t, ENCODING> &lhs, const Char_t *rhs){
+String<Char_t, ENCODING> operator+(const String<Char_t, ENCODING> &lhs, const Char_t *rhs){
 	const auto uLLen = lhs.GetLength();
 	const auto uRLen = StrLen(rhs);
-	GenericString<Char_t, ENCODING> strRet;
+	String<Char_t, ENCODING> strRet;
 	strRet.Reserve(uLLen + uRLen);
 	strRet.Assign(lhs.GetCStr(), uLLen);
 	strRet.Append(rhs, uRLen);
 	return std::move(strRet);
 }
 template<typename Char_t, StringEncoding ENCODING>
-GenericString<Char_t, ENCODING> operator+(GenericString<Char_t, ENCODING> &&lhs, const Char_t *rhs){
+String<Char_t, ENCODING> operator+(String<Char_t, ENCODING> &&lhs, const Char_t *rhs){
 	lhs.Append(rhs);
 	return std::move(lhs);
 }
 template<typename Char_t, StringEncoding ENCODING>
-GenericString<Char_t, ENCODING> operator+(const GenericString<Char_t, ENCODING> &lhs, Char_t rhs){
+String<Char_t, ENCODING> operator+(const String<Char_t, ENCODING> &lhs, Char_t rhs){
 	const auto uLLen = lhs.GetLength();
-	GenericString<Char_t, ENCODING> strRet;
+	String<Char_t, ENCODING> strRet;
 	strRet.Reserve(uLLen + 1);
 	strRet.Assign(lhs.GetCStr(), uLLen);
 	strRet.Append(rhs);
 	return std::move(strRet);
 }
 template<typename Char_t, StringEncoding ENCODING>
-GenericString<Char_t, ENCODING> operator+(GenericString<Char_t, ENCODING> &&lhs, Char_t rhs){
+String<Char_t, ENCODING> operator+(String<Char_t, ENCODING> &&lhs, Char_t rhs){
 	lhs.Append(rhs);
 	return std::move(lhs);
 }
 
 template<typename Char_t, StringEncoding ENCODING>
-bool operator==(const Char_t *lhs, const GenericString<Char_t, ENCODING> &rhs) noexcept {
+bool operator==(const Char_t *lhs, const String<Char_t, ENCODING> &rhs) noexcept {
 	return rhs == lhs;
 }
 template<typename Char_t, StringEncoding ENCODING>
-bool operator!=(const Char_t *lhs, const GenericString<Char_t, ENCODING> &rhs) noexcept {
+bool operator!=(const Char_t *lhs, const String<Char_t, ENCODING> &rhs) noexcept {
 	return rhs != lhs;
 }
 template<typename Char_t, StringEncoding ENCODING>
-bool operator<(const Char_t *lhs, const GenericString<Char_t, ENCODING> &rhs) noexcept {
+bool operator<(const Char_t *lhs, const String<Char_t, ENCODING> &rhs) noexcept {
 	return rhs > lhs;
 }
 template<typename Char_t, StringEncoding ENCODING>
-bool operator>(const Char_t *lhs, const GenericString<Char_t, ENCODING> &rhs) noexcept {
+bool operator>(const Char_t *lhs, const String<Char_t, ENCODING> &rhs) noexcept {
 	return rhs < lhs;
 }
 template<typename Char_t, StringEncoding ENCODING>
-bool operator<=(const Char_t *lhs, const GenericString<Char_t, ENCODING> &rhs) noexcept {
+bool operator<=(const Char_t *lhs, const String<Char_t, ENCODING> &rhs) noexcept {
 	return rhs >= lhs;
 }
 template<typename Char_t, StringEncoding ENCODING>
-bool operator>=(const Char_t *lhs, const GenericString<Char_t, ENCODING> &rhs) noexcept {
+bool operator>=(const Char_t *lhs, const String<Char_t, ENCODING> &rhs) noexcept {
 	return rhs <= lhs;
 }
 
 template<typename Char_t, StringEncoding ENCODING>
-const Char_t *begin(const GenericString<Char_t, ENCODING> &str) noexcept {
+bool operator==(const std::pair<const Char_t *, std::size_t> &lhs, const String<Char_t, ENCODING> &rhs) noexcept {
+	return rhs == lhs;
+}
+template<typename Char_t, StringEncoding ENCODING>
+bool operator!=(const std::pair<const Char_t *, std::size_t> &lhs, const String<Char_t, ENCODING> &rhs) noexcept {
+	return rhs != lhs;
+}
+template<typename Char_t, StringEncoding ENCODING>
+bool operator<(const std::pair<const Char_t *, std::size_t> &lhs, const String<Char_t, ENCODING> &rhs) noexcept {
+	return rhs > lhs;
+}
+template<typename Char_t, StringEncoding ENCODING>
+bool operator>(const std::pair<const Char_t *, std::size_t> &lhs, const String<Char_t, ENCODING> &rhs) noexcept {
+	return rhs < lhs;
+}
+template<typename Char_t, StringEncoding ENCODING>
+bool operator<=(const std::pair<const Char_t *, std::size_t> &lhs, const String<Char_t, ENCODING> &rhs) noexcept {
+	return rhs >= lhs;
+}
+template<typename Char_t, StringEncoding ENCODING>
+bool operator>=(const std::pair<const Char_t *, std::size_t> &lhs, const String<Char_t, ENCODING> &rhs) noexcept {
+	return rhs <= lhs;
+}
+
+template<typename Char_t, StringEncoding ENCODING>
+bool operator==(const std::pair<const Char_t *, const Char_t *> &lhs, const String<Char_t, ENCODING> &rhs) noexcept {
+	return rhs == lhs;
+}
+template<typename Char_t, StringEncoding ENCODING>
+bool operator!=(const std::pair<const Char_t *, const Char_t *> &lhs, const String<Char_t, ENCODING> &rhs) noexcept {
+	return rhs != lhs;
+}
+template<typename Char_t, StringEncoding ENCODING>
+bool operator<(const std::pair<const Char_t *, const Char_t *> &lhs, const String<Char_t, ENCODING> &rhs) noexcept {
+	return rhs > lhs;
+}
+template<typename Char_t, StringEncoding ENCODING>
+bool operator>(const std::pair<const Char_t *, const Char_t *> &lhs, const String<Char_t, ENCODING> &rhs) noexcept {
+	return rhs < lhs;
+}
+template<typename Char_t, StringEncoding ENCODING>
+bool operator<=(const std::pair<const Char_t *, const Char_t *> &lhs, const String<Char_t, ENCODING> &rhs) noexcept {
+	return rhs >= lhs;
+}
+template<typename Char_t, StringEncoding ENCODING>
+bool operator>=(const std::pair<const Char_t *, const Char_t *> &lhs, const String<Char_t, ENCODING> &rhs) noexcept {
+	return rhs <= lhs;
+}
+
+template<typename Char_t, StringEncoding ENCODING>
+const Char_t *begin(const String<Char_t, ENCODING> &str) noexcept {
 	return str.GetBegin();
 }
 template<typename Char_t, StringEncoding ENCODING>
-Char_t *begin(GenericString<Char_t, ENCODING> &str) noexcept {
+Char_t *begin(String<Char_t, ENCODING> &str) noexcept {
 	return str.GetBegin();
 }
 template<typename Char_t, StringEncoding ENCODING>
-const Char_t *cbegin(const GenericString<Char_t, ENCODING> &str) noexcept {
+const Char_t *cbegin(const String<Char_t, ENCODING> &str) noexcept {
 	return str.GetBegin();
 }
 
 template<typename Char_t, StringEncoding ENCODING>
-const Char_t *end(const GenericString<Char_t, ENCODING> &str) noexcept {
+const Char_t *end(const String<Char_t, ENCODING> &str) noexcept {
 	return str.GetEnd();
 }
 template<typename Char_t, StringEncoding ENCODING>
-Char_t *end(GenericString<Char_t, ENCODING> &str) noexcept {
+Char_t *end(String<Char_t, ENCODING> &str) noexcept {
 	return str.GetEnd();
 }
 template<typename Char_t, StringEncoding ENCODING>
-const Char_t *cend(const GenericString<Char_t, ENCODING> &str) noexcept {
+const Char_t *cend(const String<Char_t, ENCODING> &str) noexcept {
 	return str.GetEnd();
 }
 
-extern template class GenericString<char,		StringEncoding::UTF8>;
-extern template class GenericString<char,		StringEncoding::ANSI>;
-extern template class GenericString<wchar_t,	StringEncoding::UTF16>;
+template class String<char,		StringEncoding::UTF8>;
+template class String<char,		StringEncoding::ANSI>;
+template class String<wchar_t,	StringEncoding::UTF16>;
 
-typedef GenericString<char,		StringEncoding::UTF8>		Utf8String;
-typedef GenericString<char,		StringEncoding::ANSI>		ANSIString;
-typedef GenericString<wchar_t,	StringEncoding::UTF16>		Utf16String;
+typedef String<char,	StringEncoding::UTF8>	Utf8String;
+typedef String<char,	StringEncoding::ANSI>	AnsiString;
+typedef String<wchar_t,	StringEncoding::UTF16>	Utf16String;
 
 }
 

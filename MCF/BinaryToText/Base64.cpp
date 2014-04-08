@@ -101,6 +101,7 @@ void Base64Encoder::Finalize(){
 				CopyOut(xm_fnDataCallback, achTemp, 4);
 			}
 			break;
+
 		case 2:
 			if(xm_achTable[64] == 0){
 				achTemp[0] = xm_achTable[(xm_u32Word >> 10) & 0x3F];
@@ -191,6 +192,7 @@ void Base64Decoder::Finalize(){
 			achTemp[0] = (xm_u32Word >>  4) & 0xFF;
 			CopyOut(xm_fnDataCallback, achTemp, 1);
 			break;
+
 		case 3:
 			achTemp[0] = (xm_u32Word >> 10) & 0xFF;
 			achTemp[1] = (xm_u32Word >>  2) & 0xFF;

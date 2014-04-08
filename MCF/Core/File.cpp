@@ -3,6 +3,7 @@
 // Copyleft 2014. LH_Mouse. All wrongs reserved.
 
 #include "../StdMCF.hpp"
+#include "../../MCFCRT/cpp/ext/vla.hpp"
 #include "File.hpp"
 #include "Exception.hpp"
 #include "UniqueHandle.hpp"
@@ -47,9 +48,14 @@ public:
 	bool IsOpen() const noexcept {
 		return xm_hFile.IsGood();
 	}
-	void Open(const wchar_t *pwszPath, bool bToRead, bool bToWrite, bool bAutoCreate){
+	void Open(const WideStringObserver &obsPath, bool bToRead, bool bToWrite, bool bAutoCreate){
+		const std::size_t uPathLen = obsPath.GetLength();
+		Vla<wchar_t> achPathZ(uPathLen + 1);
+		std::copy(obsPath.GetBegin(), obsPath.GetEnd(), achPathZ.GetData());
+		achPathZ[uPathLen] = 0;
+
 		xm_hFile.Reset(::CreateFileW(
-			pwszPath,
+			achPathZ.GetData(),
 			(bToRead ? GENERIC_READ : 0) | (bToWrite ? GENERIC_WRITE : 0),
 			bToWrite ? 0 : FILE_SHARE_READ,
 			nullptr,
@@ -158,8 +164,8 @@ public:
 // 构造函数和析构函数。
 File::File() noexcept {
 }
-File::File(const wchar_t *pwszPath, bool bToRead, bool bToWrite, bool bAutoCreate){
-	Open(pwszPath, bToRead, bToWrite, bAutoCreate);
+File::File(const WideStringObserver &obsPath, bool bToRead, bool bToWrite, bool bAutoCreate){
+	Open(obsPath, bToRead, bToWrite, bAutoCreate);
 }
 File::File(File &&rhs) noexcept
 	: xm_pDelegate(std::move(rhs.xm_pDelegate))
@@ -181,19 +187,19 @@ bool File::IsOpen() const noexcept {
 	}
 	return xm_pDelegate->IsOpen();
 }
-unsigned long File::OpenNoThrow(const wchar_t *pwszPath, bool bToRead, bool bToWrite, bool bAutoCreate){
+unsigned long File::OpenNoThrow(const WideStringObserver &obsPath, bool bToRead, bool bToWrite, bool bAutoCreate){
 	try {
-		Open(pwszPath, bToRead, bToWrite, bAutoCreate);
+		Open(obsPath, bToRead, bToWrite, bAutoCreate);
 		return ERROR_SUCCESS;
 	} catch(Exception &e){
 		return e.ulErrorCode;
 	}
 }
-void File::Open(const wchar_t *pwszPath, bool bToRead, bool bToWrite, bool bAutoCreate){
+void File::Open(const WideStringObserver &obsPath, bool bToRead, bool bToWrite, bool bAutoCreate){
 	if(!xm_pDelegate){
 		xm_pDelegate.reset(new xDelegate);
 	}
-	xm_pDelegate->Open(pwszPath, bToRead, bToWrite, bAutoCreate);
+	xm_pDelegate->Open(obsPath, bToRead, bToWrite, bAutoCreate);
 }
 void File::Close() noexcept {
 	if(!xm_pDelegate){
@@ -213,6 +219,9 @@ void File::Resize(std::uint64_t u64NewSize){
 		MCF_THROW(ERROR_INVALID_HANDLE, L"没有打开文件。");
 	}
 	return xm_pDelegate->Resize(u64NewSize);
+}
+void File::Clear(){
+	Resize(0);
 }
 
 std::uint32_t File::Read(void *pBuffer, std::uint64_t u64Offset, std::uint32_t u32BytesToRead) const {

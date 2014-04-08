@@ -7,6 +7,7 @@
 #include "heap.h"
 #include "heap_dbg.h"
 #include <string.h>
+#include <limits.h>
 #include <windows.h>
 
 static CRITICAL_SECTION			g_csHeapLock;
@@ -22,8 +23,8 @@ unsigned long __MCF_CRT_HeapInitialize(){
 
 	const HANDLE hProcessHeap = GetProcessHeap();
 
-	ULONG ulLFHFlag = 2;
-	HeapSetInformation(hProcessHeap, HeapCompatibilityInformation, &ulLFHFlag, sizeof(ulLFHFlag));
+	ULONG ulLfhFlag = 2;
+	HeapSetInformation(hProcessHeap, HeapCompatibilityInformation, &ulLfhFlag, sizeof(ulLfhFlag));
 
 #if WINVER >= 0x0600
 	if(LOBYTE(LOWORD(GetVersion())) >= 6){
@@ -44,7 +45,7 @@ void __MCF_CRT_HeapUninitialize(){
 unsigned char *__MCF_CRT_HeapAlloc(size_t uSize, const void *pRetAddr __attribute__((unused))){
 #ifdef __MCF_CRT_HEAPDBG_ON
 	const size_t uRawSize = __MCF_CRT_HeapDbgGetRawSize(uSize);
-	if(uSize & ~uRawSize & ((size_t)1 << (sizeof(size_t) * 8 - 1))){
+	if(uSize & ~uRawSize & ((size_t)1 << (sizeof(size_t) * CHAR_BIT - 1))){
 		return NULL;
 	}
 #else

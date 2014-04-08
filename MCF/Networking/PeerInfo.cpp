@@ -62,8 +62,10 @@ bool PeerInfo::IsNull() const noexcept {
 	switch(m_au16IPv4Ones){
 	case 0:
 		return !BTest(m_au16IPv6);
+
 	case 0xFFFF:
 		return !BTest(m_au8IPv4);
+
 	default:
 		return false;
 	}

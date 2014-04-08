@@ -7,10 +7,6 @@
 
 namespace MCF {
 
-template class GenericString<char,		StringEncoding::UTF8>;
-template class GenericString<char,		StringEncoding::ANSI>;
-template class GenericString<wchar_t,	StringEncoding::UTF16>;
-
 template<>
 const UnifiedString *Utf8String::xUnify(UnifiedString &ucsTemp) const {
 	const auto pszSource = GetCStr();
@@ -23,12 +19,13 @@ const UnifiedString *Utf8String::xUnify(UnifiedString &ucsTemp) const {
 }
 template<>
 void Utf8String::xDisunify(const UnifiedString &ucsTemp){
+	const auto uOldLength = GetLength();
 	const auto pszSource = ucsTemp.GetCStr();
 	const auto nLength = (int)ucsTemp.GetLength();
 	auto nDisunifiedLength = ::WideCharToMultiByte(CP_UTF8, 0, pszSource, nLength, nullptr, 0, nullptr, nullptr);
-	Resize(nDisunifiedLength + 1);
-	nDisunifiedLength = ::WideCharToMultiByte(CP_UTF8, 0, pszSource, nLength, GetCStr(), nDisunifiedLength, nullptr, nullptr);
-	Resize(nDisunifiedLength);
+	Resize(uOldLength + nDisunifiedLength + 1);
+	nDisunifiedLength = ::WideCharToMultiByte(CP_UTF8, 0, pszSource, nLength, GetCStr() + uOldLength, nDisunifiedLength, nullptr, nullptr);
+	Resize(uOldLength + nDisunifiedLength);
 }
 template<>
 void Utf8String::xDisunify(UnifiedString &&ucsTemp){
@@ -36,7 +33,7 @@ void Utf8String::xDisunify(UnifiedString &&ucsTemp){
 }
 
 template<>
-const UnifiedString *ANSIString::xUnify(UnifiedString &ucsTemp) const {
+const UnifiedString *AnsiString::xUnify(UnifiedString &ucsTemp) const {
 	const auto pszSource = GetCStr();
 	const auto nLength = (int)GetLength();
 	auto nUnifiedLength = ::MultiByteToWideChar(CP_ACP, 0, pszSource, nLength, nullptr, 0);
@@ -46,16 +43,17 @@ const UnifiedString *ANSIString::xUnify(UnifiedString &ucsTemp) const {
 	return nullptr;
 }
 template<>
-void ANSIString::xDisunify(const UnifiedString &ucsTemp){
+void AnsiString::xDisunify(const UnifiedString &ucsTemp){
+	const auto uOldLength = GetLength();
 	const auto pszSource = ucsTemp.GetCStr();
 	const auto nLength = (int)ucsTemp.GetLength();
 	auto nDisunifiedLength = ::WideCharToMultiByte(CP_ACP, 0, pszSource, nLength, nullptr, 0, nullptr, nullptr);
-	Resize(nDisunifiedLength);
-	nDisunifiedLength = ::WideCharToMultiByte(CP_ACP, 0, pszSource, nLength, GetCStr(), nDisunifiedLength, nullptr, nullptr);
-	Resize(nDisunifiedLength);
+	Resize(uOldLength + nDisunifiedLength + 1);
+	nDisunifiedLength = ::WideCharToMultiByte(CP_ACP, 0, pszSource, nLength, GetCStr() + uOldLength, nDisunifiedLength, nullptr, nullptr);
+	Resize(uOldLength + nDisunifiedLength);
 }
 template<>
-void ANSIString::xDisunify(UnifiedString &&ucsTemp){
+void AnsiString::xDisunify(UnifiedString &&ucsTemp){
 	xDisunify(ucsTemp);
 }
 
@@ -65,11 +63,11 @@ const UnifiedString *UnifiedString::xUnify(UnifiedString & /* ucsTemp */) const 
 }
 template<>
 void UnifiedString::xDisunify(const UnifiedString &ucsTemp){
-	Assign(ucsTemp);
+	Append(ucsTemp);
 }
 template<>
 void UnifiedString::xDisunify(UnifiedString &&ucsTemp){
-	Assign(std::move(ucsTemp));
+	Append(std::move(ucsTemp));
 }
 
 }

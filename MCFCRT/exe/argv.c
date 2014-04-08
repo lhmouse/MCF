@@ -9,10 +9,10 @@
 #include <wchar.h>
 #include <windows.h>
 
-static CRITICAL_SECTION		g_csMutex;
-static wchar_t			*	g_pwszArgBuffer;
-static volatile size_t		g_uArgC;
-static wchar_t			**	g_ppwszArgV;
+static CRITICAL_SECTION	g_csMutex;
+static wchar_t *		g_pwszArgBuffer;
+static volatile size_t	g_uArgC;
+static wchar_t **		g_ppwszArgV;
 
 unsigned long __MCF_CRT_ExeInitializeArgV(){
 	InitializeCriticalSection(&g_csMutex);
@@ -70,6 +70,7 @@ size_t __MCF_GetArgV(const wchar_t *const **pppwszArgV){
 						case DELIM:
 							// eState = DELIM;
 							break;
+
 						case IN_ARG:
 						case QUOTE_BEGIN:
 						case IN_QUOTE:
@@ -77,6 +78,7 @@ size_t __MCF_GetArgV(const wchar_t *const **pppwszArgV){
 						case QUOTE_AFTER_QUOTE:
 							eState = FINISH;
 							break;
+
 						case FINISH:
 							eState = DELIM;
 							break;
@@ -89,81 +91,98 @@ size_t __MCF_GetArgV(const wchar_t *const **pppwszArgV){
 							case L'\t':
 								// eState = DELIM;
 								break;
+
 							case L'\"':
 								eState = QUOTE_BEGIN;
 								break;
+
 							default:
 								eState = IN_ARG;
 								break;
 							}
 							break;
+
 						case IN_ARG:
 							switch(ch){
 							case L' ':
 							case L'\t':
 								eState = FINISH;
 								break;
+
 							case L'\"':
 								eState = QUOTE_BEGIN;
 								break;
+
 							default:
 								// eState = IN_ARG;
 								break;
 							}
 							break;
+
 						case QUOTE_BEGIN:
 							switch(ch){
 							case L'\"':
 								eState = QUOTE_END;
 								break;
+
 							default:
 								eState = IN_QUOTE;
 								break;
 							}
 							break;
+
 						case IN_QUOTE:
 							switch(ch){
 							case L'\"':
 								eState = QUOTE_END;
 								break;
+
 							default:
 								// eState = IN_QUOTE;
 								break;
 							}
 							break;
+
 						case QUOTE_END:
 							switch(ch){
 							case L' ':
 							case L'\t':
 								eState = FINISH;
 								break;
+
 							case L'\"':
 								eState = QUOTE_AFTER_QUOTE;
 								break;
+
 							default:
 								eState = IN_ARG;
 								break;
 							}
 							break;
+
 						case QUOTE_AFTER_QUOTE:
 							switch(ch){
 							case L'\"':
 								eState = QUOTE_END;
 								break;
+
 							default:
 								eState = IN_QUOTE;
 								break;
 							}
 							break;
+
 						case FINISH:
 							switch(ch){
 							case L' ':
 							case L'\t':
 								eState = DELIM;
 								break;
+
 							case L'\"':
 								eState = IN_QUOTE;
 								break;
+
 							default:
 								eState = IN_ARG;
 								break;
@@ -176,11 +195,13 @@ size_t __MCF_GetArgV(const wchar_t *const **pppwszArgV){
 					case QUOTE_BEGIN:
 					case QUOTE_END:
 						break;
+
 					case IN_ARG:
 					case IN_QUOTE:
 					case QUOTE_AFTER_QUOTE:
 						*(pwchWrite++) = ch;
 						break;
+
 					case FINISH:
 						*(pwchWrite++) = 0;
 						// 为最后的 NULL 保留一个空位。

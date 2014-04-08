@@ -6,7 +6,7 @@
 #define __MCF_TCP_SERVER_HPP__
 
 #include "TcpPeer.hpp"
-#include "../Core/NoCopy.hpp"
+#include "../Core/Utilities.hpp"
 #include <memory>
 #include <cstddef>
 

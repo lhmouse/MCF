@@ -12,8 +12,6 @@
 
 namespace MCF {
 
-class Notation;
-
 class Package {
 	friend class Notation;
 

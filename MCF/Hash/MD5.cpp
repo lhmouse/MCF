@@ -53,15 +53,18 @@ void DoMD5Chunk(std::uint32_t (&auResult)[4], const unsigned char *pbyChunk) noe
 				f = d ^ (b & (c ^ d));
 				g = i;
 				break;
+
 			case 1:
 				// f = (d & b) | (~d & c);
 				f = c ^ (d & (b ^ c));
 				g = (5 * i + 1) % 16;
 				break;
+
 			case 2:
 				f = b ^ c ^ d;
 				g = (3 * i + 5) % 16;
 				break;
+
 			default:
 				f = c ^ (b | ~d);
 				g = (7 * i) % 16;

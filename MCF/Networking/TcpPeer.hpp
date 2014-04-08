@@ -5,14 +5,12 @@
 #ifndef __MCF_TCP_PEER_HPP__
 #define __MCF_TCP_PEER_HPP__
 
-#include "../Core/NoCopy.hpp"
+#include "../Core/Utilities.hpp"
 #include "PeerInfo.hpp"
 #include <memory>
 #include <cstddef>
 
 namespace MCF {
-
-class TcpServer;
 
 class TcpPeer : NO_COPY {
 	friend class TcpServer;
@@ -40,10 +38,12 @@ public:
 	void Connect(const PeerInfo &vServerInfo);
 	void Disconnect() noexcept;
 
+	void SetNoDelay(bool bNoDelay);
+
 	std::size_t Read(void *pData, std::size_t uSize);
 	void ShutdownRead() noexcept;
 
-	void Write(const void *pData, std::size_t uSize, bool bNoDelay = false);
+	void Write(const void *pData, std::size_t uSize);
 	void ShutdownWrite() noexcept;
 
 public:

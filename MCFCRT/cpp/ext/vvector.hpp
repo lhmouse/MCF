@@ -265,11 +265,11 @@ public:
 	}
 
 	template<typename... Params_t>
-	void PushNoCheck(Params_t &&...vParams){
+	Element_t &PushNoCheck(Params_t &&...vParams){
 		ASSERT_MSG(xm_pEnd != xm_pEndOfStor, L"VVector::PushNoCheck() 失败：容器已满。");
 
 		new(xm_pEnd) Element_t(std::forward<Params_t>(vParams)...);
-		++xm_pEnd;
+		return *(xm_pEnd++);
 	}
 	void PopNoCheck() noexcept {
 		ASSERT_MSG(xm_pEnd != xm_pBegin, L"VVector::PopNoCheck() 失败：容器为空。");
@@ -278,9 +278,9 @@ public:
 	}
 
 	template<typename... Params_t>
-	void Push(Params_t &&...vParams){
+	Element_t &Push(Params_t &&...vParams){
 		Reserve(GetSize() + 1);
-		PushNoCheck(std::forward<Params_t>(vParams)...);
+		return PushNoCheck(std::forward<Params_t>(vParams)...);
 	}
 	void Pop() noexcept {
 		ASSERT(!IsEmpty());
@@ -563,11 +563,11 @@ public:
 	}
 
 	template<typename... Params_t>
-	void PushNoCheck(Params_t &&...vParams){
+	Element_t &PushNoCheck(Params_t &&...vParams){
 		ASSERT_MSG(xm_pEnd != xm_pEndOfStor, L"VVector::PushNoCheck() 失败：容器已满。");
 
 		new(xm_pEnd) Element_t(std::forward<Params_t>(vParams)...);
-		++xm_pEnd;
+		return *(xm_pEnd++);
 	}
 	void PopNoCheck() noexcept {
 		ASSERT_MSG(xm_pEnd != xm_pBegin, L"VVector::PopNoCheck() 失败：容器为空。");
@@ -576,9 +576,9 @@ public:
 	}
 
 	template<typename... Params_t>
-	void Push(Params_t &&...vParams){
+	Element_t &Push(Params_t &&...vParams){
 		Reserve(GetSize() + 1);
-		PushNoCheck(std::forward<Params_t>(vParams)...);
+		return PushNoCheck(std::forward<Params_t>(vParams)...);
 	}
 	void Pop() noexcept {
 		ASSERT(!IsEmpty());

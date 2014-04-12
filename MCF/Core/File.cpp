@@ -12,8 +12,9 @@
 #include <list>
 using namespace MCF;
 
-// 嵌套类定义。
-class File::xDelegate : NO_COPY {
+namespace {
+
+class FileDelegate : CONCRETE(File) {
 private:
 	struct xFileCloser {
 		constexpr HANDLE operator()() const {
@@ -25,33 +26,25 @@ private:
 	};
 
 	struct xApcResult {
-		std::uint32_t u32BytesTransferred;
+		DWORD dwBytesTransferred;
 		DWORD dwErrorCode;
 	};
 
 private:
-	static void __stdcall xAIOCallback(DWORD dwErrorCode, DWORD dwBytesTransferred, LPOVERLAPPED pOverlapped) noexcept {
+	static void __stdcall xAioCallback(DWORD dwErrorCode, DWORD dwBytesTransferred, LPOVERLAPPED pOverlapped) noexcept {
 		const auto pApcResult = (xApcResult *)pOverlapped->hEvent;
 		pApcResult->dwErrorCode = dwErrorCode;
-		pApcResult->u32BytesTransferred = dwBytesTransferred;
+		pApcResult->dwBytesTransferred = dwBytesTransferred;
 	}
 
 private:
 	UniqueHandle<xFileCloser> xm_hFile;
 
 public:
-	~xDelegate(){
-		Close();
-	}
-
-public:
-	bool IsOpen() const noexcept {
-		return xm_hFile.IsGood();
-	}
-	void Open(const WideStringObserver &obsPath, bool bToRead, bool bToWrite, bool bAutoCreate){
-		const std::size_t uPathLen = obsPath.GetLength();
+	FileDelegate(const WideStringObserver &wsoPath, bool bToRead, bool bToWrite, bool bAutoCreate){
+		const std::size_t uPathLen = wsoPath.GetLength();
 		Vla<wchar_t> achPathZ(uPathLen + 1);
-		std::copy(obsPath.GetBegin(), obsPath.GetEnd(), achPathZ.GetData());
+		std::copy(wsoPath.GetBegin(), wsoPath.GetEnd(), achPathZ.GetData());
 		achPathZ[uPathLen] = 0;
 
 		xm_hFile.Reset(::CreateFileW(
@@ -67,12 +60,8 @@ public:
 			MCF_THROW(::GetLastError(), L"::CreateFileW() 失败。");
 		}
 	}
-	void Close() noexcept {
-		if(xm_hFile){
-			xm_hFile.Reset();
-		}
-	}
 
+public:
 	std::uint64_t GetSize() const {
 		LARGE_INTEGER liFileSize;
 		if(!::GetFileSizeEx(xm_hFile.Get(), &liFileSize)){
@@ -94,9 +83,9 @@ public:
 		}
 	}
 
-	std::uint32_t Read(void *pBuffer, std::uint64_t u64Offset, std::uint32_t u32BytesToRead, AsyncProc *pfnAsyncProc) const {
+	DWORD Read(void *pBuffer, DWORD dwBytesToRead, std::uint64_t u64Offset, AsyncProc *pfnAsyncProc) const {
 		xApcResult ApcResult;
-		ApcResult.u32BytesTransferred = 0;
+		ApcResult.dwBytesTransferred = 0;
 		ApcResult.dwErrorCode = ERROR_SUCCESS;
 
 		OVERLAPPED Overlapped;
@@ -104,7 +93,7 @@ public:
 		Overlapped.Offset = (DWORD)u64Offset;
 		Overlapped.OffsetHigh = (DWORD)(u64Offset >> 32);
 		Overlapped.hEvent = (HANDLE)&ApcResult;
-		const bool bSucceeds = ::ReadFileEx(xm_hFile.Get(), pBuffer, u32BytesToRead, &Overlapped, &xAIOCallback);
+		const bool bSucceeds = ::ReadFileEx(xm_hFile.Get(), pBuffer, dwBytesToRead, &Overlapped, &xAioCallback);
 		if(!bSucceeds){
 			ApcResult.dwErrorCode = ::GetLastError();
 		}
@@ -125,11 +114,11 @@ public:
 		if(!bSucceeds){
 			MCF_THROW(ApcResult.dwErrorCode, L"::ReadFileEx() 失败。");
 		}
-		return ApcResult.u32BytesTransferred;
+		return ApcResult.dwBytesTransferred;
 	}
-	void Write(std::uint64_t u64Offset, const void *pBuffer, std::uint32_t u32BytesToWrite, AsyncProc *pfnAsyncProc){
+	void Write(std::uint64_t u64Offset, const void *pBuffer, DWORD dwBytesToWrite, AsyncProc *pfnAsyncProc){
 		xApcResult ApcResult;
-		ApcResult.u32BytesTransferred = 0;
+		ApcResult.dwBytesTransferred = 0;
 		ApcResult.dwErrorCode = ERROR_SUCCESS;
 
 		OVERLAPPED Overlapped;
@@ -137,7 +126,7 @@ public:
 		Overlapped.Offset = (DWORD)u64Offset;
 		Overlapped.OffsetHigh = (DWORD)(u64Offset >> 32);
 		Overlapped.hEvent = (HANDLE)&ApcResult;
-		const bool bSucceeds = ::WriteFileEx(xm_hFile.Get(), pBuffer, u32BytesToWrite, &Overlapped, &xAIOCallback);
+		const bool bSucceeds = ::WriteFileEx(xm_hFile.Get(), pBuffer, dwBytesToWrite, &Overlapped, &xAioCallback);
 		if(!bSucceeds){
 			ApcResult.dwErrorCode = ::GetLastError();
 		}
@@ -161,90 +150,126 @@ public:
 	}
 };
 
-// 构造函数和析构函数。
-File::File() noexcept {
 }
-File::File(const WideStringObserver &obsPath, bool bToRead, bool bToWrite, bool bAutoCreate){
-	Open(obsPath, bToRead, bToWrite, bAutoCreate);
+
+// 静态成员函数。
+std::unique_ptr<File> File::Open(const WideStringObserver &wsoPath, bool bToRead, bool bToWrite, bool bAutoCreate){
+	return std::unique_ptr<File>(new FileDelegate(wsoPath, bToRead, bToWrite, bAutoCreate));
 }
-File::File(File &&rhs) noexcept
-	: xm_pDelegate(std::move(rhs.xm_pDelegate))
-{
-}
-File &File::operator=(File &&rhs) noexcept {
-	if(&rhs != this){
-		xm_pDelegate = std::move(rhs.xm_pDelegate);
+std::unique_ptr<File> File::OpenNoThrow(const WideStringObserver &wsoPath, bool bToRead, bool bToWrite, bool bAutoCreate){
+	try {
+		return Open(wsoPath, bToRead, bToWrite, bAutoCreate);
+	} catch(Exception &e){
+		SetWin32LastError(e.ulErrorCode);
+		return std::unique_ptr<File>();
 	}
-	return *this;
-}
-File::~File(){
 }
 
 // 其他非静态成员函数。
-bool File::IsOpen() const noexcept {
-	if(!xm_pDelegate){
-		return false;
-	}
-	return xm_pDelegate->IsOpen();
-}
-unsigned long File::OpenNoThrow(const WideStringObserver &obsPath, bool bToRead, bool bToWrite, bool bAutoCreate){
-	try {
-		Open(obsPath, bToRead, bToWrite, bAutoCreate);
-		return ERROR_SUCCESS;
-	} catch(Exception &e){
-		return e.ulErrorCode;
-	}
-}
-void File::Open(const WideStringObserver &obsPath, bool bToRead, bool bToWrite, bool bAutoCreate){
-	if(!xm_pDelegate){
-		xm_pDelegate.reset(new xDelegate);
-	}
-	xm_pDelegate->Open(obsPath, bToRead, bToWrite, bAutoCreate);
-}
-void File::Close() noexcept {
-	if(!xm_pDelegate){
-		return;
-	}
-	xm_pDelegate->Close();
-}
-
 std::uint64_t File::GetSize() const {
-	if(!xm_pDelegate){
-		MCF_THROW(ERROR_INVALID_HANDLE, L"没有打开文件。");
-	}
-	return xm_pDelegate->GetSize();
+	ASSERT(dynamic_cast<const FileDelegate *>(this));
+
+	return ((const FileDelegate *)this)->GetSize();
 }
 void File::Resize(std::uint64_t u64NewSize){
-	if(!xm_pDelegate){
-		MCF_THROW(ERROR_INVALID_HANDLE, L"没有打开文件。");
-	}
-	return xm_pDelegate->Resize(u64NewSize);
+	ASSERT(dynamic_cast<FileDelegate *>(this));
+
+	((FileDelegate *)this)->Resize(u64NewSize);
 }
 void File::Clear(){
 	Resize(0);
 }
 
-std::uint32_t File::Read(void *pBuffer, std::uint64_t u64Offset, std::uint32_t u32BytesToRead) const {
-	if(!xm_pDelegate){
-		MCF_THROW(ERROR_INVALID_HANDLE, L"没有打开文件。");
+std::size_t File::Read(void *pBuffer, std::size_t uBytesToRead, std::uint64_t u64Offset) const {
+	ASSERT(dynamic_cast<const FileDelegate *>(this));
+
+	std::size_t uBytesRead = 0;
+	for(;;){
+		const DWORD dwBytesToReadThisTime = std::min<DWORD>(0xFFFFF000u, uBytesToRead - uBytesRead);
+		const DWORD dwBytesReadThisTime = ((const FileDelegate *)this)->Read(
+			(unsigned char *)pBuffer + uBytesRead,
+			dwBytesToReadThisTime,
+			u64Offset + uBytesRead,
+			nullptr
+		);
+		if(dwBytesReadThisTime == 0){
+			break;
+		}
+		uBytesRead += dwBytesReadThisTime;
 	}
-	return xm_pDelegate->Read(pBuffer, u64Offset, u32BytesToRead, nullptr);
+	return uBytesRead;
 }
-std::uint32_t File::Read(void *pBuffer, std::uint64_t u64Offset, std::uint32_t u32BytesToRead, File::AsyncProc fnAsyncProc) const {
-	if(!xm_pDelegate){
-		MCF_THROW(ERROR_INVALID_HANDLE, L"没有打开文件。");
+std::size_t File::Read(void *pBuffer, std::size_t uBytesToRead, std::uint64_t u64Offset, File::AsyncProc &&fnAsyncProc) const {
+	ASSERT(dynamic_cast<const FileDelegate *>(this));
+
+	DWORD dwBytesToReadThisTime = std::min<DWORD>(0xFFFFF000u, uBytesToRead);
+	std::size_t uBytesRead = ((const FileDelegate *)this)->Read(
+		pBuffer,
+		dwBytesToReadThisTime,
+		u64Offset,
+		&fnAsyncProc
+	);
+	if(uBytesRead == 0){
+		return 0;
 	}
-	return xm_pDelegate->Read(pBuffer, u64Offset, u32BytesToRead, &fnAsyncProc);
+	for(;;){
+		dwBytesToReadThisTime = std::min<DWORD>(0xFFFFF000u, uBytesToRead - uBytesRead);
+		const DWORD dwBytesReadThisTime = ((const FileDelegate *)this)->Read(
+			(unsigned char *)pBuffer + uBytesRead,
+			dwBytesToReadThisTime,
+			u64Offset + uBytesRead,
+			nullptr
+		);
+		if(dwBytesReadThisTime == 0){
+			break;
+		}
+		uBytesRead += dwBytesReadThisTime;
+	}
+	return uBytesRead;
 }
-void File::Write(std::uint64_t u64Offset, const void *pBuffer, std::uint32_t u32BytesToWrite){
-	if(!xm_pDelegate){
-		MCF_THROW(ERROR_INVALID_HANDLE, L"没有打开文件。");
+void File::Write(std::uint64_t u64Offset, const void *pBuffer, std::size_t uBytesToWrite){
+	ASSERT(dynamic_cast<FileDelegate *>(this));
+
+	std::size_t uBytesWritten = 0;
+	for(;;){
+		const DWORD dwBytesToWriteThisTime = std::min<DWORD>(0xFFFFF000u, uBytesToWrite - uBytesWritten);
+		if(dwBytesToWriteThisTime == 0){
+			break;
+		}
+		((FileDelegate *)this)->Write(
+			u64Offset + uBytesWritten,
+			(const unsigned char *)pBuffer + uBytesWritten,
+			dwBytesToWriteThisTime,
+			nullptr
+		);
+		uBytesWritten += dwBytesToWriteThisTime;
 	}
-	xm_pDelegate->Write(u64Offset, pBuffer, u32BytesToWrite, nullptr);
 }
-void File::Write(std::uint64_t u64Offset, const void *pBuffer, std::uint32_t u32BytesToWrite, File::AsyncProc fnAsyncProc){
-	if(!xm_pDelegate){
-		MCF_THROW(ERROR_INVALID_HANDLE, L"没有打开文件。");
+void File::Write(std::uint64_t u64Offset, const void *pBuffer, std::size_t uBytesToWrite, File::AsyncProc &&fnAsyncProc){
+	ASSERT(dynamic_cast<FileDelegate *>(this));
+
+	DWORD dwBytesToWriteThisTime = std::min<DWORD>(0xFFFFF000u, uBytesToWrite);
+	if(dwBytesToWriteThisTime == 0){
+		return;
 	}
-	xm_pDelegate->Write(u64Offset, pBuffer, u32BytesToWrite, &fnAsyncProc);
+	((FileDelegate *)this)->Write(
+		u64Offset,
+		pBuffer,
+		dwBytesToWriteThisTime,
+		&fnAsyncProc
+	);
+	std::size_t uBytesWritten = dwBytesToWriteThisTime;
+	for(;;){
+		dwBytesToWriteThisTime = std::min<DWORD>(0xFFFFF000u, uBytesToWrite - uBytesWritten);
+		if(dwBytesToWriteThisTime == 0){
+			break;
+		}
+		((FileDelegate *)this)->Write(
+			u64Offset + uBytesWritten,
+			(const unsigned char *)pBuffer + uBytesWritten,
+			dwBytesToWriteThisTime,
+			nullptr
+		);
+		uBytesWritten += dwBytesToWriteThisTime;
+	}
 }

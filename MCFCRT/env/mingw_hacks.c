@@ -11,7 +11,7 @@
 #include <windows.h>
 
 typedef struct tagKeyDtorNode {
-	__MCF_LFLIST_NODE_HEADER LFListHeader;
+	MCF_LFLIST_NODE_HEADER LFListHeader;
 
 	unsigned long ulKey;
 	void (*pfnDtor)(void *);
@@ -26,13 +26,13 @@ void __MCF_CRT_RunEmutlsThreadDtors(){
 		if((GetLastError() == ERROR_SUCCESS) && pMem){
 			(*pNode->pfnDtor)(pMem);
 		}
-		pNode = (const KEY_DTOR_NODE *)__MCF_LFListNext((const __MCF_LFLIST_NODE_HEADER *)pNode);
+		pNode = (const KEY_DTOR_NODE *)MCF_LFListNext((const MCF_LFLIST_NODE_HEADER *)pNode);
 	}
 }
 
 void __MCF_CRT_EmutlsCleanup(){
 	for(;;){
-		KEY_DTOR_NODE *const pNode = (KEY_DTOR_NODE *)__MCF_LFListPopFront(&g_pDtorHeader);
+		KEY_DTOR_NODE *const pNode = (KEY_DTOR_NODE *)MCF_LFListPopFront(&g_pDtorHeader);
 		if(!pNode){
 			break;
 		}
@@ -49,7 +49,7 @@ int __mingwthr_key_dtor(unsigned long ulKey, void (*pfnDtor)(void *)){
 		pNode->ulKey = ulKey;
 		pNode->pfnDtor = pfnDtor;
 
-		__MCF_LFListPushFront(&g_pDtorHeader, (__MCF_LFLIST_NODE_HEADER *)pNode);
+		MCF_LFListPushFront(&g_pDtorHeader, (MCF_LFLIST_NODE_HEADER *)pNode);
 	}
 	return 0;
 }

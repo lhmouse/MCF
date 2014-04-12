@@ -13,42 +13,31 @@
 
 namespace MCF {
 
-class ZEncoder : NO_COPY {
-private:
-	class xDelegate;
-
-private:
-	std::unique_ptr<xDelegate> xm_pDelegate;
-
+class ZEncoder : NO_COPY, ABSTRACT {
 public:
-	ZEncoder(std::function<std::pair<void *, std::size_t> (std::size_t)> fnDataCallback, bool bRaw = false, int nLevel = 6);
-	ZEncoder(ZEncoder &&rhs) noexcept;
-	ZEncoder &operator=(ZEncoder &&rhs) noexcept;
-	~ZEncoder();
+	static std::unique_ptr<ZEncoder> Create(
+		std::function<std::pair<void *, std::size_t> (std::size_t)> fnDataCallback,
+		bool bRaw = false,
+		int nLevel = 6
+	);
 
 public:
 	void Abort() noexcept;
-	void Update(const void *pData, std::size_t uSize, const void *pDict = nullptr, std::size_t uDictSize = 0);
+	void Update(const void *pData, std::size_t uSize);
 	std::size_t QueryBytesProcessed() const noexcept;
 	void Finalize();
 };
 
-class ZDecoder : NO_COPY {
-private:
-	class xDelegate;
-
-private:
-	std::unique_ptr<xDelegate> xm_pDelegate;
-
+class ZDecoder : NO_COPY, ABSTRACT {
 public:
-	ZDecoder(std::function<std::pair<void *, std::size_t> (std::size_t)> fnDataCallback, bool bRaw = false);
-	ZDecoder(ZDecoder &&rhs) noexcept;
-	ZDecoder &operator=(ZDecoder &&rhs) noexcept;
-	~ZDecoder();
+	static std::unique_ptr<ZDecoder> Create(
+		std::function<std::pair<void *, std::size_t> (std::size_t)> fnDataCallback,
+		bool bRaw = false
+	);
 
 public:
 	void Abort() noexcept;
-	void Update(const void *pData, std::size_t uSize, const void *pDict = nullptr, std::size_t uDictSize = 0);
+	void Update(const void *pData, std::size_t uSize);
 	std::size_t QueryBytesProcessed() const noexcept;
 	void Finalize();
 };

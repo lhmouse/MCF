@@ -180,10 +180,7 @@ private:
 	class DomainPathNameComp {
 	private:
 		static constexpr const xCookieMap::Node &xGetNode(const int &nIndex) noexcept {
-			return *(const xCookieMap::Node *)(
-				(const char *)&nIndex
-				- OFFSET_OF(xCookieMap::Node, GetIndex<IDX_DOMAIN_PATH_NAME>())
-			);
+			return DOWN_CAST(const xCookieMap::Node, GetIndex<IDX_DOMAIN_PATH_NAME>(), &nIndex)[0];
 		}
 
 	public:
@@ -681,8 +678,7 @@ public:
 		xTidyExpiredCookies();
 
 		Vector<Vector<unsigned char>> vecRet;
-		Utf8String u8sDecodedValue;
-		auto pNode = bIncludeSessionOnly ? xm_mapCookies.GetFront<IDX_EXPIRES>() : xm_mapCookies.GetUpperBound<IDX_EXPIRES>(0);
+		auto pNode = bIncludeSessionOnly ? xm_mapCookies.GetBegin<IDX_EXPIRES>() : xm_mapCookies.GetUpperBound<IDX_EXPIRES>(0);
 		while(pNode){
 			vecRet.Push();
 			auto &vecDst = vecRet.GetEnd()[-1];
@@ -690,18 +686,17 @@ public:
 
 			unsigned char abyTempBuffer[9];
 			VarIntEx<std::uint64_t> viTemp;
+			unsigned char byTemp;
 
 			viTemp = pNode->GetIndex<IDX_NAME>().GetLength();
 			vecDst.CopyToEnd(abyTempBuffer, viTemp.Serialize(abyTempBuffer));
 			vecDst.CopyToEnd((const unsigned char *)pNode->GetIndex<IDX_NAME>().GetCStr(), viTemp.Get());
 
-			u8sDecodedValue.Clear();
-			UrlDecode(u8sDecodedValue, pNode->GetElement());
-			viTemp = u8sDecodedValue.GetLength();
+			viTemp = pNode->GetElement().GetLength();
 			vecDst.CopyToEnd(abyTempBuffer, viTemp.Serialize(abyTempBuffer));
-			vecDst.CopyToEnd((const unsigned char *)u8sDecodedValue.GetCStr(), viTemp.Get());
+			vecDst.CopyToEnd((const unsigned char *)pNode->GetElement().GetCStr(), viTemp.Get());
 
-			viTemp = pNode->GetIndex<IDX_EXPIRES>();
+			viTemp = pNode->GetIndex<IDX_EXPIRES>() / 10000000u;
 			vecDst.CopyToEnd(abyTempBuffer, viTemp.Serialize(abyTempBuffer));
 
 			viTemp = pNode->GetIndex<IDX_PATH>().GetLength();
@@ -712,11 +707,11 @@ public:
 			vecDst.CopyToEnd(abyTempBuffer, viTemp.Serialize(abyTempBuffer));
 			vecDst.CopyToEnd((const unsigned char *)pNode->GetIndex<IDX_DOMAIN>().GetCStr(), viTemp.Get());
 
-			viTemp = pNode->GetIndex<IDX_SECURE>();
-			vecDst.CopyToEnd(abyTempBuffer, viTemp.Serialize(abyTempBuffer));
+			byTemp = pNode->GetIndex<IDX_SECURE>();
+			vecDst.CopyToEnd(&byTemp, sizeof(byTemp));
 
-			viTemp = pNode->GetIndex<IDX_HTTP_ONLY>();
-			vecDst.CopyToEnd(abyTempBuffer, viTemp.Serialize(abyTempBuffer));
+			byTemp = pNode->GetIndex<IDX_HTTP_ONLY>();
+			vecDst.CopyToEnd(&byTemp, sizeof(byTemp));
 
 			pNode = xm_mapCookies.GetNext<IDX_EXPIRES>(pNode);
 		}
@@ -760,7 +755,7 @@ public:
 			if(!pchBegin){
 				continue;
 			}
-			const std::uint64_t u64Expires = viTemp.Get();
+			const std::uint64_t uExpires = viTemp * 10000000u;
 
 			pchBegin = viTemp.Unserialize(pchBegin, pchEnd);
 			if(!pchBegin){
@@ -782,30 +777,29 @@ public:
 			Utf8String u8sDomain((const char *)pchBegin, viTemp.Get());
 			pchBegin += viTemp.Get();
 
-			pchBegin = viTemp.Unserialize(pchBegin, pchEnd);
-			if(!pchBegin){
+			if(pchBegin == pchEnd){
 				continue;
 			}
-			const bool bSecure = viTemp.Get();
+			const bool bSecure = *(pchBegin++);
 
-			pchBegin = viTemp.Unserialize(pchBegin, pchEnd);
-			if(!pchBegin){
+			if(pchBegin == pchEnd){
 				continue;
 			}
-			const bool bHttpOnly = viTemp.Get();
+			const bool bHttpOnly = *(pchBegin++);
 
-			xCookieMap::Node vNode(
-				Utf8String(),
+			if(pchBegin != pchEnd){
+				continue;
+			}
+			xUpdateCookie(xCookieMap::Node(
+				std::move(u8sDecodedValue),
 				std::move(u8sName),
-				u64Expires,
+				uExpires,
 				std::move(u8sPath),
 				std::move(u8sDomain),
 				bSecure,
 				bHttpOnly,
 				0
-			);
-			UrlEncode(vNode.GetElement(), u8sDecodedValue);
-			xUpdateCookie(std::move(vNode));
+			));
 		}
 	}
 
@@ -975,12 +969,15 @@ public:
 		xTidyExpiredCookies(u64NtTime);
 
 		Utf16String wcsCookie(L"Cookie: ");
-		auto pNext = xm_mapCookies.GetLowerBound<IDX_DOMAIN>(u8sRevHostName);
-		while(pNext && xCanHostMatchDomain(u8sRevHostName, pNext->GetIndex<IDX_DOMAIN>())){
+		auto pNext = xm_mapCookies.GetBegin<IDX_DOMAIN>();
+		while(pNext){
 			const auto pNode = pNext;
 			pNext = xm_mapCookies.GetNext<IDX_DOMAIN>(pNext);
 
 			if(pNode->GetIndex<IDX_HTTP_ONLY>() && (vUrlComponents.nScheme != INTERNET_SCHEME_HTTPS)){
+				continue;
+			}
+			if(!xCanHostMatchDomain(u8sRevHostName, pNode->GetIndex<IDX_DOMAIN>())){
 				continue;
 			}
 			if(!xCanRequestPathMatchPath(u8sRequestPath, pNode->GetIndex<IDX_PATH>())){

@@ -5,19 +5,19 @@
 #ifndef __MCF_HEX_HPP__
 #define __MCF_HEX_HPP__
 
+#include "../Core/Utilities.hpp"
 #include <memory>
 #include <utility>
 #include <cstddef>
 
 namespace MCF {
 
-class HexEncoder {
-private:
-	const std::function<std::pair<void *, std::size_t> (std::size_t)> xm_fnDataCallback;
-	const unsigned char xm_byDelta;
-
+class HexEncoder : NO_COPY, ABSTRACT {
 public:
-	HexEncoder(std::function<std::pair<void *, std::size_t> (std::size_t)> fnDataCallback, bool bUpperCase);
+	static std::unique_ptr<HexEncoder> Create(
+		std::function<std::pair<void *, std::size_t> (std::size_t)> fnDataCallback,
+		bool bUpperCase
+	);
 
 public:
 	void Abort() noexcept;
@@ -25,15 +25,11 @@ public:
 	void Finalize();
 };
 
-class HexDecoder {
-private:
-	const std::function<std::pair<void *, std::size_t> (std::size_t)> xm_fnDataCallback;
-	bool xm_bInited;
-
-	unsigned char xm_uchLastDigit;
-
+class HexDecoder : NO_COPY, ABSTRACT {
 public:
-	HexDecoder(std::function<std::pair<void *, std::size_t> (std::size_t)> fnDataCallback);
+	static std::unique_ptr<HexDecoder> Create(
+		std::function<std::pair<void *, std::size_t> (std::size_t)> fnDataCallback
+	);
 
 public:
 	void Abort() noexcept;

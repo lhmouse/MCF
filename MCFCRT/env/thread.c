@@ -24,7 +24,7 @@ typedef struct tagThreadInitInfo {
 } THREAD_INIT_INFO;
 
 typedef struct tagAtExitNode {
-	__MCF_AVL_NODE_HEADER AvlNodeHeader;
+	MCF_AVL_NODE_HEADER AvlNodeHeader;
 	struct tagAtExitNode *pPrev;
 	struct tagAtExitNode *pNext;
 
@@ -33,7 +33,7 @@ typedef struct tagAtExitNode {
 } AT_EXIT_NODE;
 
 typedef struct tagTlsObject {
-	__MCF_AVL_NODE_HEADER AvlNodeHeader;
+	MCF_AVL_NODE_HEADER AvlNodeHeader;
 	struct tagTlsObject *pPrev;
 	struct tagTlsObject *pNext;
 
@@ -46,7 +46,7 @@ typedef struct tagTlsObject {
 
 typedef struct tagThreadEnv {
 	AT_EXIT_NODE *pAtExitHead;
-	__MCF_AVL_PROOT mapObjects;
+	MCF_AVL_ROOT mapObjects;
 	TLS_OBJECT *pLastObject;
 } THREAD_ENV;
 
@@ -152,7 +152,7 @@ void __MCF_CRT_ThreadUninitialize(){
 	__MCF_CRT_RunEmutlsThreadDtors();
 }
 
-void *__MCF_CRT_CreateThread(
+void *MCF_CRT_CreateThread(
 	unsigned int (*pfnProc)(intptr_t),
 	intptr_t nParam,
 	unsigned long ulFlags,
@@ -174,7 +174,7 @@ void *__MCF_CRT_CreateThread(
 	return (void *)hThread;
 }
 
-int __MCF_CRT_AtThreadExit(
+int MCF_CRT_AtThreadExit(
 	void (*pfnProc)(intptr_t),
 	intptr_t nContext
 ){
@@ -197,7 +197,7 @@ int __MCF_CRT_AtThreadExit(
 	return 0;
 }
 
-void *__MCF_CRT_RetrieveTls(
+void *MCF_CRT_RetrieveTls(
 	intptr_t nKey,
 	size_t uSizeToAlloc,
 	void (*pfnConstructor)(void *, intptr_t),
@@ -209,7 +209,7 @@ void *__MCF_CRT_RetrieveTls(
 		return NULL;
 	}
 
-	TLS_OBJECT *pObject = (TLS_OBJECT *)__MCF_AvlFind(&pThreadEnv->mapObjects, nKey);
+	TLS_OBJECT *pObject = (TLS_OBJECT *)MCF_AvlFind(&pThreadEnv->mapObjects, nKey);
 	if(!pObject){
 		pObject = malloc(sizeof(TLS_OBJECT));
 		if(!pObject){
@@ -240,12 +240,12 @@ void *__MCF_CRT_RetrieveTls(
 
 		pThreadEnv->pLastObject = pObject;
 
-		__MCF_AvlAttach(&pThreadEnv->mapObjects, nKey, (__MCF_AVL_NODE_HEADER *)pObject);
+		MCF_AvlAttach(&pThreadEnv->mapObjects, nKey, (MCF_AVL_NODE_HEADER *)pObject);
 	}
 #ifndef NDEBUG
 	if(pObject->uMemSize != uSizeToAlloc){
-		__MCF_CRT_BailF(
-			L"__MCF_CRT_RetrieveTls() 失败：两次试图使用相同的键获得 TLS，但指定的大小不一致。\n\n"
+		MCF_CRT_BailF(
+			L"MCF_CRT_RetrieveTls() 失败：两次试图使用相同的键获得 TLS，但指定的大小不一致。\n\n"
 			"键：" UINTPTR_FORMAT "\n"
 			"该 TLS 创建时的大小：" UINTPTR_FORMAT "\n"
 			"本次调用指定的大小 ：" UINTPTR_FORMAT "\n",
@@ -257,7 +257,7 @@ void *__MCF_CRT_RetrieveTls(
 #endif
 	return pObject->pMem;
 }
-void __MCF_CRT_DeleteTls(
+void MCF_CRT_DeleteTls(
 	intptr_t nKey
 ){
 	THREAD_ENV *const pThreadEnv = TlsGetValue(g_dwTlsIndex);
@@ -265,7 +265,7 @@ void __MCF_CRT_DeleteTls(
 		return;
 	}
 
-	TLS_OBJECT *pObject = (TLS_OBJECT *)__MCF_AvlFind(&pThreadEnv->mapObjects, nKey);
+	TLS_OBJECT *pObject = (TLS_OBJECT *)MCF_AvlFind(&pThreadEnv->mapObjects, nKey);
 	if(pObject){
 		TLS_OBJECT *const pPrev = pObject->pPrev;
 		TLS_OBJECT *const pNext = pObject->pNext;

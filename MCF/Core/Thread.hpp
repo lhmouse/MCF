@@ -12,36 +12,20 @@
 
 namespace MCF {
 
-class Thread : NO_COPY {
-private:
-	class xDelegate;
-
-private:
-	std::shared_ptr<xDelegate> xm_pDelegate;
+class Thread : NO_COPY, ABSTRACT {
+public:
+	static std::shared_ptr<Thread> Create(std::function<void ()> fnProc, bool bSuspended = false);
 
 public:
-	Thread() noexcept;
-	Thread(Thread &&rhs) noexcept;
-	Thread &operator=(Thread &&rhs) noexcept;
-	~Thread();
-
-public:
-	void Start(std::function<void ()> fnProc, bool bSuspended = false);
-	void WaitTimeout(unsigned long ulMilliSeconds) const noexcept;
+	bool WaitTimeout(unsigned long ulMilliSeconds) const noexcept;
+	void Wait() const noexcept;
 	void Join() const; // 如果线程中有被捕获的异常，抛出异常。
-	void Detach() noexcept;
-	void JoinDetach() noexcept;
-
-	void Suspend() noexcept;
-	void Resume() noexcept;
 
 	bool IsAlive() const noexcept;
 	unsigned long GetThreadId() const noexcept;
 
-public:
-	explicit operator bool() const noexcept {
-		return IsAlive();
-	}
+	void Suspend() noexcept;
+	void Resume() noexcept;
 };
 
 }

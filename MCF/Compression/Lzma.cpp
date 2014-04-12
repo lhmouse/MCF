@@ -86,11 +86,7 @@ void LargeFree(void *, void *pBlock) noexcept {
 ::ISzAlloc g_vAllocSmall = {&SmallAlloc, &SmallFree};
 ::ISzAlloc g_vAllocLarge = {&LargeAlloc, &LargeFree};
 
-}
-
-// ========== LzmaEncoder ==========
-// 嵌套类定义。
-class LzmaEncoder::xDelegate {
+class LzmaEncoderDelegate : CONCRETE(LzmaEncoder) {
 private:
 	struct xLzmaEncHandleCloser {
 		constexpr ::CLzmaEncHandle operator()() const noexcept {
@@ -112,8 +108,7 @@ private:
 
 private:
 	static std::size_t xWriteCallback(void *pDataSink, const void *pData, std::size_t uSize) noexcept {
-		const auto pDelegate = (xDelegate *)((unsigned char *)pDataSink - OFFSET_OF(xDelegate, xm_sosOutputter));
-		return pDelegate->xWrite(pData, uSize);
+		return DownCast(&LzmaEncoderDelegate::xm_sosOutputter, (::ISeqOutStream *)pDataSink)->xWrite(pData, uSize);
 	}
 
 private:
@@ -128,7 +123,7 @@ private:
 	std::exception_ptr xm_pException;
 
 public:
-	xDelegate(std::function<std::pair<void *, std::size_t> (std::size_t)> &&fnDataCallback, int nLevel, std::uint32_t u32DictSize)
+	LzmaEncoderDelegate(std::function<std::pair<void *, std::size_t> (std::size_t)> &&fnDataCallback, int nLevel, std::uint32_t u32DictSize)
 		: xm_fnDataCallback(std::move(fnDataCallback))
 	{
 		xm_sosOutputter.Write = &xWriteCallback;
@@ -222,49 +217,7 @@ public:
 	}
 };
 
-// 构造函数和析构函数。
-LzmaEncoder::LzmaEncoder(std::function<std::pair<void *, std::size_t> (std::size_t)> fnDataCallback, int nLevel, std::uint32_t u32DictSize)
-	: xm_pDelegate(new xDelegate(std::move(fnDataCallback), nLevel, u32DictSize))
-{
-}
-LzmaEncoder::LzmaEncoder(LzmaEncoder &&rhs) noexcept
-	: xm_pDelegate(std::move(rhs.xm_pDelegate))
-{
-}
-LzmaEncoder &LzmaEncoder::operator=(LzmaEncoder &&rhs) noexcept {
-	if(&rhs != this){
-		xm_pDelegate = std::move(rhs.xm_pDelegate);
-	}
-	return *this;
-}
-LzmaEncoder::~LzmaEncoder(){
-}
-
-// 其他非静态成员函数。
-void LzmaEncoder::Abort() noexcept {
-	ASSERT(xm_pDelegate);
-
-	xm_pDelegate->Abort();
-}
-void LzmaEncoder::Update(const void *pData, std::size_t uSize){
-	ASSERT(xm_pDelegate);
-
-	xm_pDelegate->Update(pData, uSize);
-}
-std::size_t LzmaEncoder::QueryBytesProcessed() const noexcept {
-	ASSERT(xm_pDelegate);
-
-	return xm_pDelegate->QueryBytesProcessed();
-}
-void LzmaEncoder::Finalize(){
-	ASSERT(xm_pDelegate);
-
-	xm_pDelegate->Finalize();
-}
-
-// ========== LzmaDecoder ==========
-// 嵌套类定义。
-class LzmaDecoder::xDelegate {
+class LzmaDecoderDelegate : CONCRETE(LzmaDecoder) {
 private:
 	struct xLzmaDecHandleCloser {
 		constexpr ::CLzmaDec *operator()() const noexcept {
@@ -286,7 +239,7 @@ private:
 	std::size_t xm_uBytesProcessed;
 
 public:
-	xDelegate(std::function<std::pair<void *, std::size_t> (std::size_t)> &&fnDataCallback)
+	LzmaDecoderDelegate(std::function<std::pair<void *, std::size_t> (std::size_t)> &&fnDataCallback)
 		: xm_fnDataCallback(std::move(fnDataCallback))
 		, xm_uHeaderSize(0)
 	{
@@ -351,42 +304,66 @@ public:
 	}
 };
 
-// 构造函数和析构函数。
-LzmaDecoder::LzmaDecoder(std::function<std::pair<void *, std::size_t> (std::size_t)> fnDataCallback)
-	: xm_pDelegate(new xDelegate(std::move(fnDataCallback)))
-{
 }
-LzmaDecoder::LzmaDecoder(LzmaDecoder &&rhs) noexcept
-	: xm_pDelegate(std::move(rhs.xm_pDelegate))
-{
+
+// ========== LzmaEncoder ==========
+// 静态成员函数。
+std::unique_ptr<LzmaEncoder> LzmaEncoder::Create(
+	std::function<std::pair<void *, std::size_t> (std::size_t)> fnDataCallback,
+	int nLevel,
+	std::uint32_t u32DictSize
+){
+	return std::unique_ptr<LzmaEncoder>(new LzmaEncoderDelegate(std::move(fnDataCallback), nLevel, u32DictSize));
 }
-LzmaDecoder &LzmaDecoder::operator=(LzmaDecoder &&rhs) noexcept {
-	if(&rhs != this){
-		xm_pDelegate = std::move(rhs.xm_pDelegate);
-	}
-	return *this;
+
+// 其他非静态成员函数。
+void LzmaEncoder::Abort() noexcept {
+	ASSERT(dynamic_cast<LzmaEncoderDelegate *>(this));
+
+	((LzmaEncoderDelegate *)this)->Abort();
 }
-LzmaDecoder::~LzmaDecoder(){
+void LzmaEncoder::Update(const void *pData, std::size_t uSize){
+	ASSERT(dynamic_cast<LzmaEncoderDelegate *>(this));
+
+	((LzmaEncoderDelegate *)this)->Update(pData, uSize);
+}
+std::size_t LzmaEncoder::QueryBytesProcessed() const noexcept {
+	ASSERT(dynamic_cast<const LzmaEncoderDelegate *>(this));
+
+	return ((const LzmaEncoderDelegate *)this)->QueryBytesProcessed();
+}
+void LzmaEncoder::Finalize(){
+	ASSERT(dynamic_cast<LzmaEncoderDelegate *>(this));
+
+	((LzmaEncoderDelegate *)this)->Finalize();
+}
+
+// ========== LzmaDecoder ==========
+// 静态成员函数。
+std::unique_ptr<LzmaDecoder> LzmaDecoder::Create(
+	std::function<std::pair<void *, std::size_t> (std::size_t)> fnDataCallback
+){
+	return std::unique_ptr<LzmaDecoder>(new LzmaDecoderDelegate(std::move(fnDataCallback)));
 }
 
 // 其他非静态成员函数。
 void LzmaDecoder::Abort() noexcept {
-	ASSERT(xm_pDelegate);
+	ASSERT(dynamic_cast<LzmaDecoderDelegate *>(this));
 
-	xm_pDelegate->Abort();
+	((LzmaDecoderDelegate *)this)->Abort();
 }
 void LzmaDecoder::Update(const void *pData, std::size_t uSize){
-	ASSERT(xm_pDelegate);
+	ASSERT(dynamic_cast<LzmaDecoderDelegate *>(this));
 
-	xm_pDelegate->Update(pData, uSize);
+	((LzmaDecoderDelegate *)this)->Update(pData, uSize);
 }
 std::size_t LzmaDecoder::QueryBytesProcessed() const noexcept {
-	ASSERT(xm_pDelegate);
+	ASSERT(dynamic_cast<const LzmaDecoderDelegate *>(this));
 
-	return xm_pDelegate->QueryBytesProcessed();
+	return ((const LzmaDecoderDelegate *)this)->QueryBytesProcessed();
 }
 void LzmaDecoder::Finalize(){
-	ASSERT(xm_pDelegate);
+	ASSERT(dynamic_cast<LzmaDecoderDelegate *>(this));
 
-	xm_pDelegate->Finalize();
+	((LzmaDecoderDelegate *)this)->Finalize();
 }

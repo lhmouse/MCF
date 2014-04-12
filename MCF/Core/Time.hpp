@@ -10,7 +10,8 @@
 namespace MCF {
 
 extern std::uint64_t GetNtTime() noexcept;
-extern std::uint64_t GetUnixTime() noexcept;
+extern std::uint64_t NtTimeFromUnixTime(std::uint64_t u64UnixTime) noexcept;
+extern std::uint64_t UnixTimeFromNtTime(std::uint64_t u64NtTime) noexcept;
 
 extern double GetHiResCounter() noexcept;
 

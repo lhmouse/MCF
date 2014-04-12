@@ -8,8 +8,9 @@
 #include "UniqueHandle.hpp"
 using namespace MCF;
 
-// 嵌套类定义。
-class Mutex::xDelegate : NO_COPY {
+namespace {
+
+class MutexDelegate : CONCRETE(Mutex) {
 private:
 	struct xMutexCloser {
 		constexpr HANDLE operator()() const {
@@ -24,56 +25,51 @@ private:
 	UniqueHandle<xMutexCloser> xm_hMutex;
 
 public:
-	xDelegate(const wchar_t *pwszName){
-		xm_hMutex.Reset(::CreateMutexW(nullptr, FALSE, pwszName));
+	explicit MutexDelegate(const WideStringObserver &wsoName){
+		const std::size_t uPathLen = wsoName.GetLength();
+		if(uPathLen != 0){
+			Vla<wchar_t> achNameZ(uPathLen + 1);
+			std::copy(wsoName.GetBegin(), wsoName.GetEnd(), achNameZ.GetData());
+			achNameZ[uPathLen] = 0;
+
+			xm_hMutex.Reset(::CreateMutexW(nullptr, false, achNameZ.GetData()));
+		} else {
+			xm_hMutex.Reset(::CreateMutexW(nullptr, false, nullptr));
+		}
 		if(!xm_hMutex){
 			MCF_THROW(::GetLastError(), L"CreateMutexW() 失败。");
 		}
 	}
 
 public:
-	HANDLE GetHandle() const noexcept {
-		return xm_hMutex.Get();
+	bool WaitTimeout(unsigned long ulMilliSeconds) const noexcept {
+		return ::WaitForSingleObject(xm_hMutex.Get(), ulMilliSeconds) != WAIT_TIMEOUT;
+	}
+	void Release() noexcept {
+		if(!::ReleaseMutex(xm_hMutex.Get())){
+			ASSERT_MSG(false, L"ReleaseMutex() 失败。");
+		}
 	}
 };
 
-// 静态成员函数。
-void Mutex::xUnlock(Mutex::xDelegate *pDelegate) noexcept {
-	if(pDelegate){
-		::ReleaseMutex(pDelegate->GetHandle());
-	}
 }
 
-// 构造函数和析构函数。
-Mutex::Mutex(const wchar_t *pwszName)
-	: xm_pDelegate(new xDelegate(pwszName))
-{
-}
-Mutex::Mutex(Mutex &&rhs) noexcept
-	: xm_pDelegate(std::move(rhs.xm_pDelegate))
-{
-}
-Mutex &Mutex::operator=(Mutex &&rhs) noexcept {
-	if(&rhs != this){
-		xm_pDelegate = std::move(rhs.xm_pDelegate);
-	}
-	return *this;
-}
-Mutex::~Mutex(){
+// 静态成员函数。
+std::unique_ptr<Mutex> Mutex::Create(const WideStringObserver &wsoName){
+	return std::unique_ptr<Mutex>(new MutexDelegate(wsoName));
 }
 
 // 其他非静态成员函数。
-Mutex::LockHolder Mutex::Try() noexcept {
-	ASSERT(xm_pDelegate);
+bool Mutex::Try(unsigned long ulMilliSeconds) noexcept {
+	ASSERT(dynamic_cast<MutexDelegate *>(this));
 
-	if(::WaitForSingleObject(xm_pDelegate->GetHandle(), 0) == WAIT_TIMEOUT){
-		return LockHolder();
-	}
-	return LockHolder(xm_pDelegate.get());
+	return ((MutexDelegate *)this)->WaitTimeout(ulMilliSeconds);
 }
-Mutex::LockHolder Mutex::Lock() noexcept {
-	ASSERT(xm_pDelegate);
+void Mutex::Lock() noexcept {
+	Try(INFINITE);
+}
+void Mutex::Unlock() noexcept {
+	ASSERT(dynamic_cast<MutexDelegate *>(this));
 
-	::WaitForSingleObject(xm_pDelegate->GetHandle(), INFINITE);
-	return LockHolder(xm_pDelegate.get());
+	((MutexDelegate *)this)->Release();
 }

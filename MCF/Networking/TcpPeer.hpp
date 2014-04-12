@@ -12,44 +12,22 @@
 
 namespace MCF {
 
-class TcpPeer : NO_COPY {
-	friend class TcpServer;
+class TcpPeer : NO_COPY, ABSTRACT {
+public:
+	static std::unique_ptr<TcpPeer> FromSocket(void *ppSocket, const void *pSockAddr, std::size_t uSockAddrLen);
 
-private:
-	class xDelegate;
-
-private:
-	std::unique_ptr<xDelegate> xm_pDelegate;
-
-private:
-	TcpPeer(void *ppSocket, const void *pSockAddr, std::size_t uSockAddrLen);
+	static std::unique_ptr<TcpPeer> Connect(const PeerInfo &vServerInfo);
+	static std::unique_ptr<TcpPeer> ConnectNoThrow(const PeerInfo &vServerInfo);
 
 public:
-	TcpPeer() noexcept;
-	explicit TcpPeer(const PeerInfo &vServerInfo);
-	TcpPeer(TcpPeer &&rhs) noexcept;
-	TcpPeer &operator=(TcpPeer &&rhs) noexcept;
-	~TcpPeer();
-
-public:
-	bool IsConnected() const noexcept;
-	const PeerInfo &GetPeerInfo() const;
-	unsigned long ConnectNoThrow(const PeerInfo &vServerInfo);
-	void Connect(const PeerInfo &vServerInfo);
-	void Disconnect() noexcept;
-
-	void SetNoDelay(bool bNoDelay);
+	const PeerInfo &GetPeerInfo() const noexcept;
 
 	std::size_t Read(void *pData, std::size_t uSize);
 	void ShutdownRead() noexcept;
 
+	void SetNoDelay(bool bNoDelay);
 	void Write(const void *pData, std::size_t uSize);
 	void ShutdownWrite() noexcept;
-
-public:
-	explicit operator bool() const noexcept {
-		return IsConnected();
-	}
 };
 
 }

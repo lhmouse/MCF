@@ -20,14 +20,14 @@ typedef std::function<bool (std::intptr_t)> HandlerProc;
 typedef std::list<std::shared_ptr<HandlerProc>> HandlerList;
 
 // 使用 Copy-On-Write 策略。
-CriticalSection g_csWriteLock;
-CriticalSection g_csReadLock;
-std::map<std::intptr_t, std::shared_ptr<const HandlerList>> g_mapDelegates;
+const std::unique_ptr<CriticalSection>						g_pcsWriteLock	(CriticalSection::Create());
+const std::unique_ptr<CriticalSection>						g_pcsReadLock	(CriticalSection::Create());
+std::map<std::intptr_t, std::shared_ptr<const HandlerList>>	g_mapDelegates;
 
 void UnregisterEventHandler(std::intptr_t nEventId, const HandlerProc *pProc) noexcept {
-	CRITICAL_SECTION_SCOPE(g_csWriteLock){
+	CRITICAL_SECTION_SCOPE(g_pcsWriteLock){
 		std::shared_ptr<const HandlerList> pOldList;
-		CRITICAL_SECTION_SCOPE(g_csReadLock){
+		CRITICAL_SECTION_SCOPE(g_pcsReadLock){
 			const auto itList = g_mapDelegates.find(nEventId);
 			if(itList != g_mapDelegates.end()){
 				pOldList = itList->second;
@@ -51,7 +51,7 @@ void UnregisterEventHandler(std::intptr_t nEventId, const HandlerProc *pProc) no
 		std::copy(pOldList->cbegin(), it, std::back_inserter(*pNewList));
 		std::copy(++it, pOldList->cend(), std::back_inserter(*pNewList));
 
-		CRITICAL_SECTION_SCOPE(g_csReadLock){
+		CRITICAL_SECTION_SCOPE(g_pcsReadLock){
 			const auto itList = g_mapDelegates.find(nEventId);
 
 			ASSERT(itList != g_mapDelegates.end());
@@ -87,9 +87,9 @@ namespace MCF {
 
 std::shared_ptr<void> RegisterEventHandler(std::intptr_t nEventId, std::function<bool (std::intptr_t)> fnHandler){
 	std::shared_ptr<void> pRet;
-	CRITICAL_SECTION_SCOPE(g_csWriteLock){
+	CRITICAL_SECTION_SCOPE(g_pcsWriteLock){
 		std::shared_ptr<const HandlerList> pOldList;
-		CRITICAL_SECTION_SCOPE(g_csReadLock){
+		CRITICAL_SECTION_SCOPE(g_pcsReadLock){
 			const auto itList = g_mapDelegates.find(nEventId);
 			if(itList != g_mapDelegates.end()){
 				pOldList = itList->second;
@@ -105,7 +105,7 @@ std::shared_ptr<void> RegisterEventHandler(std::intptr_t nEventId, std::function
 		pNewList->emplace_front(std::make_shared<HandlerProc>(std::move(fnHandler)));
 		const HandlerProc *const pNewHandler = pNewList->front().get();
 
-		CRITICAL_SECTION_SCOPE(g_csReadLock){
+		CRITICAL_SECTION_SCOPE(g_pcsReadLock){
 			g_mapDelegates[nEventId] = std::move(pNewList);
 		}
 		pRet = std::make_shared<HandlerHolder>(nEventId, pNewHandler);
@@ -114,7 +114,7 @@ std::shared_ptr<void> RegisterEventHandler(std::intptr_t nEventId, std::function
 }
 void RaiseEvent(std::intptr_t nEventId, std::intptr_t nContext){
 	std::shared_ptr<const HandlerList> pList;
-	CRITICAL_SECTION_SCOPE(g_csReadLock){
+	CRITICAL_SECTION_SCOPE(g_pcsReadLock){
 		const auto itList = g_mapDelegates.find(nEventId);
 		if(itList != g_mapDelegates.end()){
 			pList = itList->second;

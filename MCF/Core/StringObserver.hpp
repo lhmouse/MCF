@@ -137,6 +137,10 @@ public:
 
 private:
 	static const Char_t *xEndOf(const Char_t *pszBegin) noexcept {
+		if(pszBegin == nullptr){
+			return nullptr;
+		}
+
 		const Char_t *pchEnd = pszBegin;
 		while(*pchEnd != Char_t()){
 			++pchEnd;
@@ -247,7 +251,7 @@ public:
 		: StringObserver((const Char_t *)nullptr, nullptr)
 	{
 	}
-	constexpr StringObserver(std::nullptr_t, std::nullptr_t) noexcept
+	constexpr StringObserver(std::nullptr_t, std::nullptr_t = nullptr) noexcept
 		: StringObserver()
 	{
 	}
@@ -255,9 +259,8 @@ public:
 		: StringObserver(pchBegin, pchBegin + uLen)
 	{
 	}
-	template<typename Ty>
-	constexpr StringObserver(const Ty &pszBegin) noexcept
-		: StringObserver(static_cast<const Char_t *>(pszBegin), xEndOf(static_cast<const Char_t *>(pszBegin)))
+	constexpr StringObserver(const Char_t *&pszBegin) noexcept
+		: StringObserver(pszBegin, xEndOf(pszBegin))
 	{
 	}
 	template<std::size_t N>
@@ -328,15 +331,14 @@ public:
 		xm_pchBegin = pchBegin;
 		xm_pchEnd = pchEnd;
 	}
-	void Assign(std::nullptr_t, std::nullptr_t) noexcept {
+	void Assign(std::nullptr_t, std::nullptr_t = nullptr) noexcept {
 		Assign((const Char_t *)nullptr, nullptr);
 	}
 	void Assign(const Char_t *pchBegin, std::size_t uLen) noexcept {
 		Assign(pchBegin, pchBegin + uLen);
 	}
-	template<typename Ty>
-	void Assign(const Ty &pszBegin) noexcept {
-		Assign(static_cast<const Char_t *>(pszBegin), xEndOf(static_cast<const Char_t *>(pszBegin)));
+	void Assign(const Char_t *&pszBegin) noexcept {
+		Assign(pszBegin, xEndOf(pszBegin));
 	}
 	template<std::size_t N>
 	void Assign(const Char_t (&achLiteral)[N]) noexcept {
@@ -471,9 +473,15 @@ public:
 	}
 
 	bool operator==(const StringObserver &rhs) const noexcept {
+		if(GetLength() != rhs.GetLength()){
+			return false;
+		}
 		return Compare(rhs) == 0;
 	}
 	bool operator!=(const StringObserver &rhs) const noexcept {
+		if(GetLength() != rhs.GetLength()){
+			return true;
+		}
 		return Compare(rhs) != 0;
 	}
 	bool operator<(const StringObserver &rhs) const noexcept {
@@ -507,7 +515,6 @@ template<typename Char_t>
 StringObserverIterator<Char_t> cend(const StringObserver<Char_t> &obs) noexcept {
 	return obs.GetEnd();
 }
-
 
 template class StringObserver<char>;
 template class StringObserver<wchar_t>;

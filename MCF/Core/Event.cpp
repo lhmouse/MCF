@@ -8,8 +8,9 @@
 #include "UniqueHandle.hpp"
 using namespace MCF;
 
-// 嵌套类定义。
-class Event::xDelegate : NO_COPY {
+namespace {
+
+class EventDelegate : CONCRETE(Event) {
 private:
 	struct xEventCloser {
 		constexpr HANDLE operator()() const {
@@ -24,58 +25,61 @@ private:
 	UniqueHandle<xEventCloser> xm_hEvent;
 
 public:
-	xDelegate(bool bInitSet, const wchar_t *pwszName){
-		xm_hEvent.Reset(::CreateEventW(nullptr, true, bInitSet, pwszName));
+	EventDelegate(bool bInitSet, const WideStringObserver &wsoName){
+		const std::size_t uPathLen = wsoName.GetLength();
+		if(uPathLen != 0){
+			Vla<wchar_t> achNameZ(uPathLen + 1);
+			std::copy(wsoName.GetBegin(), wsoName.GetEnd(), achNameZ.GetData());
+			achNameZ[uPathLen] = 0;
+
+			xm_hEvent.Reset(::CreateEventW(nullptr, true, bInitSet, achNameZ.GetData()));
+		} else {
+			xm_hEvent.Reset(::CreateEventW(nullptr, true, bInitSet, nullptr));
+		}
 		if(!xm_hEvent){
 			MCF_THROW(::GetLastError(), L"CreateEventW() 失败。");
 		}
 	}
 
 public:
-	HANDLE GetHandle() const noexcept {
-		return xm_hEvent.Get();
+	bool WaitTimeout(unsigned long ulMilliSeconds) const noexcept {
+		return ::WaitForSingleObject(xm_hEvent.Get(), ulMilliSeconds) != WAIT_TIMEOUT;
+	}
+
+	void Set() const noexcept {
+		::SetEvent(xm_hEvent.Get());
+	}
+	void Clear() const noexcept {
+		::ResetEvent(xm_hEvent.Get());
 	}
 };
 
-// 构造函数和析构函数。
-Event::Event(bool bInitSet, const wchar_t *pwszName)
-	: xm_pDelegate(new xDelegate(bInitSet, pwszName))
-{
 }
-Event::Event(Event &&rhs) noexcept
-	: xm_pDelegate(std::move(rhs.xm_pDelegate))
-{
-}
-Event &Event::operator=(Event &&rhs) noexcept {
-	if(&rhs != this){
-		xm_pDelegate = std::move(rhs.xm_pDelegate);
-	}
-	return *this;
-}
-Event::~Event(){
+
+// 静态成员函数。
+std::unique_ptr<Event> Event::Create(bool bInitSet, const WideStringObserver &wsoName){
+	return std::unique_ptr<Event>(new EventDelegate(bInitSet, wsoName));
 }
 
 // 其他非静态成员函数。
 bool Event::IsSet() const noexcept {
-	ASSERT(xm_pDelegate);
-
 	return WaitTimeout(0);
 }
 void Event::Set() noexcept {
-	ASSERT(xm_pDelegate);
+	ASSERT(dynamic_cast<EventDelegate *>(this));
 
-	::SetEvent(xm_pDelegate->GetHandle());
+	((EventDelegate *)this)->Set();
 }
 void Event::Clear() noexcept {
-	ASSERT(xm_pDelegate);
+	ASSERT(dynamic_cast<EventDelegate *>(this));
 
-	::ResetEvent(xm_pDelegate->GetHandle());
+	((EventDelegate *)this)->Clear();
 }
 
 bool Event::WaitTimeout(unsigned long ulMilliSeconds) const noexcept {
-	ASSERT(xm_pDelegate);
+	ASSERT(dynamic_cast<const EventDelegate *>(this));
 
-	return ::WaitForSingleObject(xm_pDelegate->GetHandle(), ulMilliSeconds) != WAIT_TIMEOUT;
+	return ((const EventDelegate *)this)->WaitTimeout(ulMilliSeconds);
 }
 void Event::Wait() const noexcept {
 	WaitTimeout(INFINITE);

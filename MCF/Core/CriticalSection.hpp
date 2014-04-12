@@ -6,50 +6,87 @@
 #define __MCF_CRITICAL_SECTION_HPP__
 
 #include "Utilities.hpp"
-#include "UniqueHandle.hpp"
+#include "StringObserver.hpp"
 #include <memory>
-#include <utility>
 
 namespace MCF {
 
-class CriticalSection : NO_COPY {
-private:
-	class xDelegate;
+class CriticalSection : NO_COPY, ABSTRACT {
+public:
+	static std::unique_ptr<CriticalSection> Create(unsigned long ulSpinCount = 0x400);
 
-	struct xUnlocker {
-		constexpr void *operator()() const noexcept {
-			return nullptr;
+public:
+	bool Try() noexcept;
+	void Lock() noexcept;
+	void Unlock() noexcept;
+};
+
+
+class CriticalSectionLock : NO_COPY {
+private:
+	CriticalSection *xm_pOwner;
+
+public:
+	constexpr explicit CriticalSectionLock() noexcept
+		: xm_pOwner(nullptr)
+	{
+	}
+	constexpr explicit CriticalSectionLock(std::nullptr_t) noexcept
+		: xm_pOwner()
+	{
+	}
+	explicit CriticalSectionLock(CriticalSection *pOwner) noexcept
+		: xm_pOwner()
+	{
+		Lock(pOwner);
+	}
+	CriticalSectionLock &operator=(CriticalSection *pOwner) noexcept {
+		Lock(pOwner);
+		return *this;
+	}
+	~CriticalSectionLock(){
+		Unlock();
+	}
+
+public:
+	bool IsLocking() const noexcept {
+		return !!xm_pOwner;
+	}
+	void Try(CriticalSection *pNewOwner) noexcept {
+		if(xm_pOwner){
+			xm_pOwner->Unlock();
 		}
-		void operator()(void *pDelegate) const noexcept {
-			xUnlock((xDelegate *)pDelegate);
+		if(pNewOwner){
+			if(!pNewOwner->Try()){
+				pNewOwner = nullptr;
+			}
 		}
-	};
-
-private:
-	static void xUnlock(xDelegate *pDelegate) noexcept;
-
-public:
-	typedef UniqueHandle<xUnlocker> LockHolder;
-
-private:
-	std::unique_ptr<xDelegate> xm_pDelegate;
-
-public:
-	explicit CriticalSection(unsigned long ulSpinCount = 0x400);
-	CriticalSection(CriticalSection &&rhs) noexcept;
-	CriticalSection &operator=(CriticalSection &&rhs) noexcept;
-	~CriticalSection();
+		xm_pOwner = pNewOwner;
+	}
+	void Lock(CriticalSection *pNewOwner) noexcept {
+		if(xm_pOwner){
+			xm_pOwner->Unlock();
+		}
+		if(pNewOwner){
+			pNewOwner->Lock();
+		}
+		xm_pOwner = pNewOwner;
+	}
+	void Unlock() noexcept {
+		Lock(nullptr);
+	}
 
 public:
-	LockHolder Try() noexcept;
-	LockHolder Lock() noexcept;
+	explicit operator bool() const noexcept {
+		return IsLocking();
+	}
 };
 
 }
 
-#define CRITICAL_SECTION_SCOPE(cs)	\
-	for(auto __MCF_LOCK__ = std::make_pair(static_cast<::MCF::CriticalSection &>(cs).Lock(), true);	\
-		__MCF_LOCK__.second;	\
-		__MCF_LOCK__.second = false)
+#define CRITICAL_SECTION_SCOPE(pcs)	\
+	for(const ::MCF::CriticalSectionLock __MCF_LOCK(&*(pcs)), *__MCF_PLOCK = &__MCF_LOCK;	\
+		__MCF_PLOCK;	\
+		__MCF_PLOCK = nullptr)
 
 #endif

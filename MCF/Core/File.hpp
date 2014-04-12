@@ -14,7 +14,7 @@
 
 namespace MCF {
 
-class File : NO_COPY {
+class File : NO_COPY, ABSTRACT {
 public:
 	enum : std::uint64_t {
 		INVALID_SIZE = (std::uint64_t)-1
@@ -22,38 +22,19 @@ public:
 
 	typedef std::function<void ()> AsyncProc;
 
-private:
-	class xDelegate;
-
-private:
-	std::unique_ptr<xDelegate> xm_pDelegate;
+public:
+	static std::unique_ptr<File> Open(const WideStringObserver &wsoPath, bool bToRead, bool bToWrite, bool bAutoCreate);
+	static std::unique_ptr<File> OpenNoThrow(const WideStringObserver &wsoPath, bool bToRead, bool bToWrite, bool bAutoCreate);
 
 public:
-	File() noexcept;
-	File(const WideStringObserver &obsPath, bool bToRead, bool bToWrite, bool bAutoCreate);
-	File(File &&rhs) noexcept;
-	File &operator=(File &&rhs) noexcept;
-	~File();
-
-public:
-	bool IsOpen() const noexcept;
-	unsigned long OpenNoThrow(const WideStringObserver &obsPath, bool bToRead, bool bToWrite, bool bAutoCreate);
-	void Open(const WideStringObserver &obsPath, bool bToRead, bool bToWrite, bool bAutoCreate);
-	void Close() noexcept;
-
 	std::uint64_t GetSize() const;
 	void Resize(std::uint64_t u64NewSize);
 	void Clear();
 
-	std::uint32_t Read(void *pBuffer, std::uint64_t u64Offset, std::uint32_t u32BytesToRead) const;
-	std::uint32_t Read(void *pBuffer, std::uint64_t u64Offset, std::uint32_t u32BytesToRead, AsyncProc fnAsyncProc) const;
-	void Write(std::uint64_t u64Offset, const void *pBuffer, std::uint32_t u32BytesToWrite);
-	void Write(std::uint64_t u64Offset, const void *pBuffer, std::uint32_t u32BytesToWrite, AsyncProc fnAsyncProc);
-
-public:
-	explicit operator bool() const noexcept {
-		return IsOpen();
-	}
+	std::size_t Read(void *pBuffer, std::size_t uBytesToRead, std::uint64_t u64Offset) const;
+	std::size_t Read(void *pBuffer, std::size_t uBytesToRead, std::uint64_t u64Offset, AsyncProc &&fnAsyncProc) const;
+	void Write(std::uint64_t u64Offset, const void *pBuffer, std::size_t uBytesToWrite);
+	void Write(std::uint64_t u64Offset, const void *pBuffer, std::size_t uBytesToWrite, AsyncProc &&fnAsyncProc);
 };
 
 }

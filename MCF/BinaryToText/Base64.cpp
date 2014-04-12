@@ -24,32 +24,29 @@ inline void CopyOut(const std::function<std::pair<void *, std::size_t> (std::siz
 }
 
 // 静态成员变量。
-const char *__MCF::Base64Base::ENCODED_CHARS_MIME	= "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
-const char *__MCF::Base64Base::ENCODED_CHARS_URL	= "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789*-";
-const char *__MCF::Base64Base::ENCODED_CHARS_REGEXP	= "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!-=";
+const char Base64Base::ENCODED_CHARS_MIME	[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
+const char Base64Base::ENCODED_CHARS_URL	[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789*-";
+const char Base64Base::ENCODED_CHARS_REGEXP	[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!-=";
 
 // ========== Base64Encoder ==========
 // 构造函数和析构函数。
 Base64Encoder::Base64Encoder(std::function<std::pair<void *, std::size_t> (std::size_t)> fnDataCallback, const char *pchEncodedChars)
 	: xm_fnDataCallback(std::move(fnDataCallback))
-	, xm_bInited(false)
+	, xm_uState((std::size_t)-1)
 {
 	__builtin_memcpy(xm_achTable, pchEncodedChars, sizeof(xm_achTable));
 }
 
 // 其他非静态成员函数。
 void Base64Encoder::Abort() noexcept{
-	xm_bInited = false;
+	xm_uState = (std::size_t)-1;
 }
 void Base64Encoder::Update(const void *pData, std::size_t uSize){
-	if(!xm_bInited){
-		xm_uState = 0;
-
-		xm_bInited = true;
-	}
-
 	std::uint32_t u32Word = xm_u32Word;
 	std::size_t uState = xm_uState;
+	if(uState == (std::size_t)-1){
+		uState = 0;
+	}
 
 	alignas(16) char achBuffer[64];
 	auto pchWrite = std::begin(achBuffer);
@@ -69,9 +66,9 @@ void Base64Encoder::Update(const void *pData, std::size_t uSize){
 		pchWrite[3] = xm_achTable[ u32Word        & 0x3F];
 		pchWrite += 4;
 
-		if(pchWrite == std::end(xm_achTable)){
+		if(pchWrite == std::end(achBuffer)){
 			CopyOut(xm_fnDataCallback, achBuffer, sizeof(achBuffer));
-			pchWrite = std::begin(xm_achTable);
+			pchWrite = std::begin(achBuffer);
 		}
 	}
 
@@ -84,7 +81,7 @@ void Base64Encoder::Update(const void *pData, std::size_t uSize){
 	xm_uState = uState;
 }
 void Base64Encoder::Finalize(){
-	if(xm_bInited){
+	if(xm_uState != (std::size_t)-1){
 		char achTemp[4];
 
 		switch(xm_uState){
@@ -118,7 +115,7 @@ void Base64Encoder::Finalize(){
 			break;
 		}
 
-		xm_bInited = false;
+		xm_uState = (std::size_t)-1;
 	}
 }
 
@@ -126,7 +123,7 @@ void Base64Encoder::Finalize(){
 // 构造函数和析构函数。
 Base64Decoder::Base64Decoder(std::function<std::pair<void *, std::size_t> (std::size_t)> fnDataCallback, const char *pchEncodedChars)
 	: xm_fnDataCallback(std::move(fnDataCallback))
-	, xm_bInited(false)
+	, xm_uState((std::size_t)-1)
 {
 	__builtin_memset(xm_achTable, 0xFF, sizeof(xm_achTable));
 	for(std::size_t i = 0; i < 64; ++i){
@@ -136,17 +133,14 @@ Base64Decoder::Base64Decoder(std::function<std::pair<void *, std::size_t> (std::
 
 // 其他非静态成员函数。
 void Base64Decoder::Abort() noexcept{
-	xm_bInited = false;
+	xm_uState = (std::size_t)-1;
 }
 void Base64Decoder::Update(const void *pData, std::size_t uSize){
-	if(!xm_bInited){
-		xm_uState = 0;
-
-		xm_bInited = true;
-	}
-
 	std::uint32_t u32Word = xm_u32Word;
 	std::size_t uState = xm_uState;
+	if(uState == (std::size_t)-1){
+		uState = 0;
+	}
 
 	alignas(16) unsigned char abyBuffer[48];
 	auto pbyWrite = std::begin(abyBuffer);
@@ -184,7 +178,7 @@ void Base64Decoder::Update(const void *pData, std::size_t uSize){
 	xm_uState = uState;
 }
 void Base64Decoder::Finalize(){
-	if(xm_bInited){
+	if(xm_uState != (std::size_t)-1){
 		char achTemp[4];
 
 		switch(xm_uState){
@@ -196,10 +190,10 @@ void Base64Decoder::Finalize(){
 		case 3:
 			achTemp[0] = (xm_u32Word >> 10) & 0xFF;
 			achTemp[1] = (xm_u32Word >>  2) & 0xFF;
-			CopyOut(xm_fnDataCallback, achTemp, 1);
+			CopyOut(xm_fnDataCallback, achTemp, 2);
 			break;
 		}
 
-		xm_bInited = false;
+		xm_uState = (std::size_t)-1;
 	}
 }

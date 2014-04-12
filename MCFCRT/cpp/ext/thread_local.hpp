@@ -39,17 +39,17 @@ public:
 
 public:
 	Object_t *Get() const noexcept {
-		const auto pRet = (Object_t *)::__MCF_CRT_RetrieveTls((std::intptr_t)this, sizeof(Object_t), &xCtorWrapper, (std::intptr_t)this, &xDtorWrapper);
+		const auto pRet = (Object_t *)::MCF_CRT_RetrieveTls((std::intptr_t)this, sizeof(Object_t), &xCtorWrapper, (std::intptr_t)this, &xDtorWrapper);
 		if(!pRet){
-			::__MCF_CRT_Bail(
-				L"__MCF_CRT_RetrieveTls() 返回了一个空指针。\n"
+			::MCF_CRT_Bail(
+				L"MCF_CRT_RetrieveTls() 返回了一个空指针。\n"
 				"如果这不是由于系统内存不足造成的，请确保不要在静态对象的构造函数或析构函数中访问 TLS。"
 			);
 		}
 		return pRet;
 	}
 	void Release() const noexcept {
-		::__MCF_CRT_DeleteTls((std::intptr_t)this);
+		::MCF_CRT_DeleteTls((std::intptr_t)this);
 	}
 
 public:

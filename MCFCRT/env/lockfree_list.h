@@ -13,18 +13,18 @@ __MCF_EXTERN_C_BEGIN
 
 typedef struct tagLFListNodeHeader {
 	struct tagLFListNodeHeader *pNext;
-} __MCF_LFLIST_NODE_HEADER;
+} MCF_LFLIST_NODE_HEADER;
 
-typedef __MCF_LFLIST_NODE_HEADER *volatile __MCF_LFLIST_PHEAD;
+typedef MCF_LFLIST_NODE_HEADER *volatile __MCF_LFLIST_PHEAD;
 
-static inline void __MCF_LFListPushFront(__MCF_LFLIST_PHEAD *ppHead, __MCF_LFLIST_NODE_HEADER *pNode) __MCF_NOEXCEPT {
-	__MCF_LFLIST_NODE_HEADER *pOldHead = __atomic_load_n(ppHead, __ATOMIC_RELAXED);
+static inline void MCF_LFListPushFront(__MCF_LFLIST_PHEAD *ppHead, MCF_LFLIST_NODE_HEADER *pNode) __MCF_NOEXCEPT {
+	MCF_LFLIST_NODE_HEADER *pOldHead = __atomic_load_n(ppHead, __ATOMIC_RELAXED);
 	do {
 		pNode->pNext = pOldHead;
 	} while(!__atomic_compare_exchange_n(ppHead, &pOldHead, pNode, true, __ATOMIC_RELAXED, __ATOMIC_RELAXED));
 }
-static inline __MCF_LFLIST_NODE_HEADER *__MCF_LFListPopFront(__MCF_LFLIST_PHEAD *ppHead) __MCF_NOEXCEPT {
-	__MCF_LFLIST_NODE_HEADER *pNode = __atomic_load_n(ppHead, __ATOMIC_RELAXED);
+static inline MCF_LFLIST_NODE_HEADER *MCF_LFListPopFront(__MCF_LFLIST_PHEAD *ppHead) __MCF_NOEXCEPT {
+	MCF_LFLIST_NODE_HEADER *pNode = __atomic_load_n(ppHead, __ATOMIC_RELAXED);
 	do {
 		if(!pNode){
 			break;
@@ -33,10 +33,10 @@ static inline __MCF_LFLIST_NODE_HEADER *__MCF_LFListPopFront(__MCF_LFLIST_PHEAD 
 	return pNode;
 }
 
-static inline __MCF_LFLIST_NODE_HEADER *__MCF_LFListBegin(const __MCF_LFLIST_PHEAD *ppHead) __MCF_NOEXCEPT {
+static inline MCF_LFLIST_NODE_HEADER *MCF_LFListBegin(const __MCF_LFLIST_PHEAD *ppHead) __MCF_NOEXCEPT {
 	return __atomic_load_n(ppHead, __ATOMIC_RELAXED);
 }
-static inline __MCF_LFLIST_NODE_HEADER *__MCF_LFListNext(const __MCF_LFLIST_NODE_HEADER *pNode){
+static inline MCF_LFLIST_NODE_HEADER *MCF_LFListNext(const MCF_LFLIST_NODE_HEADER *pNode){
 	return pNode->pNext;
 }
 

@@ -6,22 +6,14 @@
 #define __MCF_EVENT_HPP__
 
 #include "Utilities.hpp"
+#include "StringObserver.hpp"
 #include <memory>
 
 namespace MCF {
 
-class Event : NO_COPY {
-private:
-	class xDelegate;
-
-private:
-	std::unique_ptr<xDelegate> xm_pDelegate;
-
+class Event : NO_COPY, ABSTRACT {
 public:
-	explicit Event(bool bInitSet, const wchar_t *pwszName = nullptr);
-	Event(Event &&rhs) noexcept;
-	Event &operator=(Event &&rhs) noexcept;
-	~Event();
+	static std::unique_ptr<Event> Create(bool bInitSet, const WideStringObserver &wsoName = nullptr);
 
 public:
 	bool IsSet() const noexcept;

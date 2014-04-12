@@ -18,98 +18,98 @@ typedef struct tagAVLNodeHeader {
 	__MCF_STD size_t uHeight;
 	struct tagAVLNodeHeader *pPrev;
 	struct tagAVLNodeHeader *pNext;
-} __MCF_AVL_NODE_HEADER;
+} MCF_AVL_NODE_HEADER;
 
-typedef __MCF_AVL_NODE_HEADER *__MCF_AVL_PROOT;
+typedef MCF_AVL_NODE_HEADER *MCF_AVL_ROOT;
 
 // 若 arg0 < arg1 应返回非零值，否则应返回零。
-typedef int (*__MCF_AVL_KEY_COMPARER)(__MCF_STD intptr_t, __MCF_STD intptr_t);
+typedef int (*MCF_AVL_KEY_COMPARER)(__MCF_STD intptr_t, __MCF_STD intptr_t);
 
-static inline __MCF_AVL_NODE_HEADER *__MCF_AvlPrev(const __MCF_AVL_NODE_HEADER *pNode) __MCF_NOEXCEPT {
+static inline MCF_AVL_NODE_HEADER *MCF_AvlPrev(const MCF_AVL_NODE_HEADER *pNode) __MCF_NOEXCEPT {
 	return pNode->pPrev;
 }
-static inline __MCF_AVL_NODE_HEADER *__MCF_AvlNext(const __MCF_AVL_NODE_HEADER *pNode) __MCF_NOEXCEPT {
+static inline MCF_AVL_NODE_HEADER *MCF_AvlNext(const MCF_AVL_NODE_HEADER *pNode) __MCF_NOEXCEPT {
 	return pNode->pNext;
 }
 
-extern void __MCF_AvlSwap(__MCF_AVL_PROOT *ppRoot1, __MCF_AVL_PROOT *ppRoot2) __MCF_NOEXCEPT;
+extern void MCF_AvlSwap(MCF_AVL_ROOT *ppRoot1, MCF_AVL_ROOT *ppRoot2) __MCF_NOEXCEPT;
 
-void __MCF_AvlInsertNoCheck(
-	__MCF_AVL_NODE_HEADER *pNode,
+void MCF_AvlInsertNoCheck(
+	MCF_AVL_NODE_HEADER *pNode,
 	__MCF_STD intptr_t nKey,
-	__MCF_AVL_NODE_HEADER *pParent,
-	__MCF_AVL_NODE_HEADER **ppIns
+	MCF_AVL_NODE_HEADER *pParent,
+	MCF_AVL_NODE_HEADER **ppIns
 ) __MCF_NOEXCEPT;
 
-extern void __MCF_AvlAttach(
-	__MCF_AVL_PROOT *ppRoot,
+extern void MCF_AvlAttach(
+	MCF_AVL_ROOT *ppRoot,
 	__MCF_STD intptr_t nKey,
-	__MCF_AVL_NODE_HEADER *pNode
+	MCF_AVL_NODE_HEADER *pNode
 ) __MCF_NOEXCEPT;
 
-extern void __MCF_AvlAttachCustomComp(
-	__MCF_AVL_PROOT *ppRoot,
+extern void MCF_AvlAttachCustomComp(
+	MCF_AVL_ROOT *ppRoot,
 	__MCF_STD intptr_t nKey,
-	__MCF_AVL_NODE_HEADER *pNode,
-	__MCF_AVL_KEY_COMPARER pfnKeyComparer
+	MCF_AVL_NODE_HEADER *pNode,
+	MCF_AVL_KEY_COMPARER pfnKeyComparer
 ) __MCF_NOEXCEPT;
 
-extern void __MCF_AvlDetach(
-	const __MCF_AVL_NODE_HEADER *pNode
+extern void MCF_AvlDetach(
+	const MCF_AVL_NODE_HEADER *pNode
 ) __MCF_NOEXCEPT;
 
-// Q: 为什么这里是 const __MCF_AVL_NODE_HEADER * 而不是 __MCF_AVL_NODE_HEADER * 呢？
+// Q: 为什么这里是 const MCF_AVL_NODE_HEADER * 而不是 MCF_AVL_NODE_HEADER * 呢？
 // A: 参考 strchr 函数。
-extern __MCF_AVL_NODE_HEADER *__MCF_AvlLowerBound(
-	const __MCF_AVL_PROOT *ppRoot,
+extern MCF_AVL_NODE_HEADER *MCF_AvlLowerBound(
+	const MCF_AVL_ROOT *ppRoot,
 	__MCF_STD intptr_t nKey
 ) __MCF_NOEXCEPT;
 
-extern __MCF_AVL_NODE_HEADER *__MCF_AvlLowerBoundCustomComp(
-	const __MCF_AVL_PROOT *ppRoot,
+extern MCF_AVL_NODE_HEADER *MCF_AvlLowerBoundCustomComp(
+	const MCF_AVL_ROOT *ppRoot,
 	__MCF_STD intptr_t nOther,
-	__MCF_AVL_KEY_COMPARER pfnComparerKeyOther,
-	__MCF_AVL_KEY_COMPARER pfnComparerOtherKey
+	MCF_AVL_KEY_COMPARER pfnComparerKeyOther,
+	MCF_AVL_KEY_COMPARER pfnComparerOtherKey
 ) __MCF_NOEXCEPT;
 
-extern __MCF_AVL_NODE_HEADER *__MCF_AvlUpperBound(
-	const __MCF_AVL_PROOT *ppRoot,
+extern MCF_AVL_NODE_HEADER *MCF_AvlUpperBound(
+	const MCF_AVL_ROOT *ppRoot,
 	__MCF_STD intptr_t nKey
 ) __MCF_NOEXCEPT;
 
-extern __MCF_AVL_NODE_HEADER *__MCF_AvlUpperBoundCustomComp(
-	const __MCF_AVL_PROOT *ppRoot,
+extern MCF_AVL_NODE_HEADER *MCF_AvlUpperBoundCustomComp(
+	const MCF_AVL_ROOT *ppRoot,
 	__MCF_STD intptr_t nOther,
-	__MCF_AVL_KEY_COMPARER pfnComparerKeyOther,
-	__MCF_AVL_KEY_COMPARER pfnComparerOtherKey
+	MCF_AVL_KEY_COMPARER pfnComparerKeyOther,
+	MCF_AVL_KEY_COMPARER pfnComparerOtherKey
 ) __MCF_NOEXCEPT;
 
-extern __MCF_AVL_NODE_HEADER *__MCF_AvlFind(
-	const __MCF_AVL_PROOT *ppRoot,
+extern MCF_AVL_NODE_HEADER *MCF_AvlFind(
+	const MCF_AVL_ROOT *ppRoot,
 	__MCF_STD intptr_t nKey
 ) __MCF_NOEXCEPT;
 
-extern __MCF_AVL_NODE_HEADER *__MCF_AvlFindCustomComp(
-	const __MCF_AVL_PROOT *ppRoot,
+extern MCF_AVL_NODE_HEADER *MCF_AvlFindCustomComp(
+	const MCF_AVL_ROOT *ppRoot,
 	__MCF_STD intptr_t nOther,
-	__MCF_AVL_KEY_COMPARER pfnComparerKeyOther,
-	__MCF_AVL_KEY_COMPARER pfnComparerOtherKey
+	MCF_AVL_KEY_COMPARER pfnComparerKeyOther,
+	MCF_AVL_KEY_COMPARER pfnComparerOtherKey
 ) __MCF_NOEXCEPT;
 
-extern void __MCF_AvlEqualRange(
-	__MCF_AVL_NODE_HEADER **ppFrom,
-	__MCF_AVL_NODE_HEADER **ppTo,
-	const __MCF_AVL_PROOT *ppRoot,
+extern void MCF_AvlEqualRange(
+	MCF_AVL_NODE_HEADER **ppFrom,
+	MCF_AVL_NODE_HEADER **ppTo,
+	const MCF_AVL_ROOT *ppRoot,
 	__MCF_STD intptr_t nKey
 ) __MCF_NOEXCEPT;
 
-extern void __MCF_AvlEqualRangeCustomComp(
-	__MCF_AVL_NODE_HEADER **ppFrom,
-	__MCF_AVL_NODE_HEADER **ppTo,
-	const __MCF_AVL_PROOT *ppRoot,
+extern void MCF_AvlEqualRangeCustomComp(
+	MCF_AVL_NODE_HEADER **ppFrom,
+	MCF_AVL_NODE_HEADER **ppTo,
+	const MCF_AVL_ROOT *ppRoot,
 	__MCF_STD intptr_t nOther,
-	__MCF_AVL_KEY_COMPARER pfnComparerKeyOther,
-	__MCF_AVL_KEY_COMPARER pfnComparerOtherKey
+	MCF_AVL_KEY_COMPARER pfnComparerKeyOther,
+	MCF_AVL_KEY_COMPARER pfnComparerOtherKey
 ) __MCF_NOEXCEPT;
 
 __MCF_EXTERN_C_END
@@ -120,35 +120,39 @@ __MCF_EXTERN_C_END
 
 namespace MCF {
 
-static inline const __MCF_AVL_NODE_HEADER *AvlPrev(const __MCF_AVL_NODE_HEADER *pNode) noexcept {
+typedef ::MCF_AVL_NODE_HEADER	AvlNodeHeader;
+typedef ::MCF_AVL_ROOT			AvlRoot;
+
+
+static inline const AvlNodeHeader *AvlPrev(const AvlNodeHeader *pNode) noexcept {
 	return pNode->pPrev;
 }
-static inline __MCF_AVL_NODE_HEADER *AvlPrev(__MCF_AVL_NODE_HEADER *pNode) noexcept {
+static inline AvlNodeHeader *AvlPrev(AvlNodeHeader *pNode) noexcept {
 	return pNode->pPrev;
 }
 
-static inline const __MCF_AVL_NODE_HEADER *AvlNext(const __MCF_AVL_NODE_HEADER *pNode) noexcept {
+static inline const AvlNodeHeader *AvlNext(const AvlNodeHeader *pNode) noexcept {
 	return pNode->pNext;
 }
-static inline __MCF_AVL_NODE_HEADER *AvlNext(__MCF_AVL_NODE_HEADER *pNode) noexcept {
+static inline AvlNodeHeader *AvlNext(AvlNodeHeader *pNode) noexcept {
 	return pNode->pNext;
 }
 
-static inline void AvlSwap(__MCF_AVL_PROOT *ppRoot1, __MCF_AVL_PROOT *ppRoot2) noexcept {
-	return ::__MCF_AvlSwap(ppRoot1, ppRoot2);
+static inline void AvlSwap(AvlRoot *ppRoot1, AvlRoot *ppRoot2) noexcept {
+	return ::MCF_AvlSwap(ppRoot1, ppRoot2);
 }
 
 template<class Comparer_t>
 inline void AvlAttach(
-	__MCF_AVL_PROOT *ppRoot,
+	AvlRoot *ppRoot,
 	std::intptr_t nKey,
-	__MCF_AVL_NODE_HEADER *pNode,
+	AvlNodeHeader *pNode,
 	Comparer_t &&vComparer = std::less<std::intptr_t>()
 ) noexcept(noexcept(vComparer(0, 0))) {
-	__MCF_AVL_NODE_HEADER *pParent = nullptr;
-	__MCF_AVL_NODE_HEADER **ppIns = ppRoot;
+	AvlNodeHeader *pParent = nullptr;
+	AvlNodeHeader **ppIns = ppRoot;
 	for(;;){
-		__MCF_AVL_NODE_HEADER *const pCur = *ppIns;
+		AvlNodeHeader *const pCur = *ppIns;
 		if(!pCur){
 			break;
 		}
@@ -160,24 +164,24 @@ inline void AvlAttach(
 			ppIns = &(pCur->pRight);
 		}
 	}
-	::__MCF_AvlInsertNoCheck(pNode, nKey, pParent, ppIns);
+	::MCF_AvlInsertNoCheck(pNode, nKey, pParent, ppIns);
 }
 
 static inline void AvlDetach(
-	const __MCF_AVL_NODE_HEADER *pNode
+	const AvlNodeHeader *pNode
 ) noexcept {
-	return ::__MCF_AvlDetach(pNode);
+	return ::MCF_AvlDetach(pNode);
 }
 
 template<class ComparerKeyOther_t, class ComparerOtherKey_t>
-inline __MCF_AVL_NODE_HEADER *AvlLowerBound(
-	const __MCF_AVL_PROOT *ppRoot,
+inline AvlNodeHeader *AvlLowerBound(
+	const AvlRoot *ppRoot,
 	std::intptr_t nOther,
 	ComparerKeyOther_t &&vComparerKeyOther = std::less<std::intptr_t>(),
 	ComparerOtherKey_t && /* vComparerOtherKey */ = std::less<std::intptr_t>()
 ) noexcept(noexcept(vComparerKeyOther(0, 0)) /* && noexcept(vComparerOtherKey(0, 0)) */) {
-	const __MCF_AVL_NODE_HEADER *pRet = nullptr;
-	const __MCF_AVL_NODE_HEADER *pCur = *ppRoot;
+	const AvlNodeHeader *pRet = nullptr;
+	const AvlNodeHeader *pCur = *ppRoot;
 	while(pCur){
 		if(vComparerKeyOther(pCur->nKey, nOther)){
 			pCur = pCur->pRight;
@@ -186,18 +190,18 @@ inline __MCF_AVL_NODE_HEADER *AvlLowerBound(
 			pCur = pCur->pLeft;
 		}
 	}
-	return (__MCF_AVL_NODE_HEADER *)pRet;
+	return (AvlNodeHeader *)pRet;
 }
 
 template<class ComparerKeyOther_t, class ComparerOtherKey_t>
-inline __MCF_AVL_NODE_HEADER *AvlUpperBound(
-	const __MCF_AVL_PROOT *ppRoot,
+inline AvlNodeHeader *AvlUpperBound(
+	const AvlRoot *ppRoot,
 	std::intptr_t nOther,
 	ComparerKeyOther_t && /* vComparerKeyOther */ = std::less<std::intptr_t>(),
 	ComparerOtherKey_t &&vComparerOtherKey = std::less<std::intptr_t>()
 ) noexcept(/* noexcept(vComparerKeyOther(0, 0)) && */ noexcept(vComparerOtherKey(0, 0))) {
-	const __MCF_AVL_NODE_HEADER *pRet = NULL;
-	const __MCF_AVL_NODE_HEADER *pCur = *ppRoot;
+	const AvlNodeHeader *pRet = NULL;
+	const AvlNodeHeader *pCur = *ppRoot;
 	while(pCur){
 		if(!vComparerOtherKey(nOther, pCur->nKey)){
 			pCur = pCur->pRight;
@@ -206,17 +210,17 @@ inline __MCF_AVL_NODE_HEADER *AvlUpperBound(
 			pCur = pCur->pLeft;
 		}
 	}
-	return (__MCF_AVL_NODE_HEADER *)pRet;
+	return (AvlNodeHeader *)pRet;
 }
 
 template<class ComparerKeyOther_t, class ComparerOtherKey_t>
-inline __MCF_AVL_NODE_HEADER *AvlFind(
-	const __MCF_AVL_PROOT *ppRoot,
+inline AvlNodeHeader *AvlFind(
+	const AvlRoot *ppRoot,
 	std::intptr_t nOther,
 	ComparerKeyOther_t &&vComparerKeyOther = std::less<std::intptr_t>(),
 	ComparerOtherKey_t &&vComparerOtherKey = std::less<std::intptr_t>()
 ) noexcept(noexcept(vComparerKeyOther(0, 0)) && noexcept(vComparerOtherKey(0, 0))) {
-	const __MCF_AVL_NODE_HEADER *pCur = *ppRoot;
+	const AvlNodeHeader *pCur = *ppRoot;
 	while(pCur){
 		if(vComparerKeyOther(pCur->nKey, nOther)){
 			pCur = pCur->pRight;
@@ -226,44 +230,44 @@ inline __MCF_AVL_NODE_HEADER *AvlFind(
 			break;
 		}
 	}
-	return (__MCF_AVL_NODE_HEADER *)pCur;
+	return (AvlNodeHeader *)pCur;
 }
 
 template<class ComparerKeyOther_t, class ComparerOtherKey_t>
 inline void AvlEqualRange(
-	__MCF_AVL_NODE_HEADER **ppFrom,
-	__MCF_AVL_NODE_HEADER **ppTo,
-	const __MCF_AVL_PROOT *ppRoot,
+	AvlNodeHeader **ppFrom,
+	AvlNodeHeader **ppTo,
+	const AvlRoot *ppRoot,
 	std::intptr_t nOther,
 	ComparerKeyOther_t &&vComparerKeyOther = std::less<std::intptr_t>(),
 	ComparerOtherKey_t &&vComparerOtherKey = std::less<std::intptr_t>()
 ) noexcept(noexcept(vComparerKeyOther(0, 0)) && noexcept(vComparerOtherKey(0, 0))) {
-	const __MCF_AVL_NODE_HEADER *const pTop = AvlFind(
+	const AvlNodeHeader *const pTop = AvlFind(
 		ppRoot,
 		nOther,
 		std::move(vComparerKeyOther),
 		std::move(vComparerOtherKey)
 	);
 	if(pTop){
-		const __MCF_AVL_NODE_HEADER *pCur = pTop;
+		const AvlNodeHeader *pCur = pTop;
 		for(;;){
-			const __MCF_AVL_NODE_HEADER *const pLower = pCur->pLeft;
+			const AvlNodeHeader *const pLower = pCur->pLeft;
 			if(!pLower || vComparerKeyOther(pLower->nKey, nOther)){
 				break;
 			}
 			pCur = pLower;
 		}
-		*ppFrom = (__MCF_AVL_NODE_HEADER *)pCur;
+		*ppFrom = (AvlNodeHeader *)pCur;
 
 		pCur = pTop;
 		for(;;){
-			const __MCF_AVL_NODE_HEADER *const pUpper = pCur->pRight;
+			const AvlNodeHeader *const pUpper = pCur->pRight;
 			if(!pUpper || vComparerOtherKey(nOther, pUpper->nKey)){
 				break;
 			}
 			pCur = pUpper;
 		}
-		*ppTo = (__MCF_AVL_NODE_HEADER *)(pCur ? pCur->pNext : NULL);
+		*ppTo = (AvlNodeHeader *)(pCur ? pCur->pNext : NULL);
 	} else {
 		*ppFrom = NULL;
 		*ppTo = NULL;

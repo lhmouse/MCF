@@ -55,6 +55,7 @@ public:
 	enum : std::size_t {
 		INDEX_COUNT = sizeof...(Indexes_t)
 	};
+
 	typedef typename std::tuple<typename MakeIndex<Indexes_t>::IndexType...> Indexes;
 
 	static_assert(INDEX_COUNT > 0, "No index?");
@@ -71,7 +72,7 @@ public:
 #endif
 
 	private:
-		__MCF_AVL_NODE_HEADER xm_arHeaders[INDEX_COUNT];
+		AvlNodeHeader xm_arHeaders[INDEX_COUNT];
 
 	public:
 		template<typename ElementParam_t, typename FirstIndexParam_t, typename... IndexParams_t>
@@ -125,7 +126,7 @@ private:
 
 private:
 	template<std::size_t INDEX>
-	static const __MCF_AVL_NODE_HEADER *xAvlFromNode(const Node *pNode) noexcept {
+	static const AvlNodeHeader *xAvlFromNode(const Node *pNode) noexcept {
 		static_assert(INDEX < INDEX_COUNT, "INDEX is out of range.");
 
 		if(!pNode){
@@ -134,7 +135,7 @@ private:
 		return &(pNode->xm_arHeaders[INDEX]);
 	}
 	template<std::size_t INDEX>
-	static __MCF_AVL_NODE_HEADER *xAvlFromNode(Node *pNode) noexcept {
+	static AvlNodeHeader *xAvlFromNode(Node *pNode) noexcept {
 		static_assert(INDEX < INDEX_COUNT, "INDEX is out of range.");
 
 		if(!pNode){
@@ -144,22 +145,22 @@ private:
 	}
 
 	template<std::size_t INDEX>
-	static const Node *xNodeFromAvl(const __MCF_AVL_NODE_HEADER *pNode) noexcept {
+	static const Node *xNodeFromAvl(const AvlNodeHeader *pNode) noexcept {
 		static_assert(INDEX < INDEX_COUNT, "INDEX is out of range.");
 
 		if(!pNode){
 			return nullptr;
 		}
-		return (const Node *)((const char *)pNode - OFFSET_OF(Node, xm_arHeaders[INDEX]));
+		return DOWN_CAST(const Node, xm_arHeaders[INDEX], pNode);
 	}
 	template<std::size_t INDEX>
-	static Node *xNodeFromAvl(__MCF_AVL_NODE_HEADER *pNode) noexcept {
+	static Node *xNodeFromAvl(AvlNodeHeader *pNode) noexcept {
 		static_assert(INDEX < INDEX_COUNT, "INDEX is out of range.");
 
 		if(!pNode){
 			return nullptr;
 		}
-		return (Node *)((char *)pNode - OFFSET_OF(Node, xm_arHeaders[INDEX]));
+		return DOWN_CAST(Node, xm_arHeaders[INDEX], pNode);
 	}
 
 public:
@@ -191,9 +192,9 @@ public:
 
 public:
 	struct {
-		__MCF_AVL_NODE_HEADER *pFront;
-		__MCF_AVL_NODE_HEADER *pRoot;
-		__MCF_AVL_NODE_HEADER *pBack;
+		AvlNodeHeader *pFront;
+		AvlNodeHeader *pRoot;
+		AvlNodeHeader *pBack;
 	} xm_arvIndexPointers[INDEX_COUNT];
 
 	std::size_t xm_uSize;
@@ -301,7 +302,7 @@ private:
 	void xCloneRecur(const MultiIndexedMap &rhs){
 		ASSERT(this != &rhs);
 
-		__MCF_AVL_NODE_HEADER *pAvl = rhs.xm_arvIndexPointers[0].pFront;
+		AvlNodeHeader *pAvl = rhs.xm_arvIndexPointers[0].pFront;
 		while(pAvl){
 			Node *const pNode = xNodeFromAvl<0>(pAvl);
 			pAvl = AvlNext(pAvl);
@@ -323,7 +324,7 @@ public:
 		delete pNode;
 	}
 	void Clear() noexcept {
-		__MCF_AVL_NODE_HEADER *pAvl = xm_arvIndexPointers[0].pFront;
+		AvlNodeHeader *pAvl = xm_arvIndexPointers[0].pFront;
 		while(pAvl){
 			Node *const pNode = xNodeFromAvl<0>(pAvl);
 			pAvl = AvlNext(pAvl);
@@ -369,26 +370,26 @@ public:
 	}
 
 	template<std::size_t INDEX>
-	const Node *GetFront() const noexcept {
+	const Node *GetBegin() const noexcept {
 		static_assert(INDEX < INDEX_COUNT, "INDEX is out of range.");
 
 		return xNodeFromAvl<INDEX>(xm_arvIndexPointers[INDEX].pFront);
 	}
 	template<std::size_t INDEX>
-	Node *GetFront() noexcept {
+	Node *GetBegin() noexcept {
 		static_assert(INDEX < INDEX_COUNT, "INDEX is out of range.");
 
 		return xNodeFromAvl<INDEX>(xm_arvIndexPointers[INDEX].pFront);
 	}
 
 	template<std::size_t INDEX>
-	const Node *GetBack() const noexcept {
+	const Node *GetRBegin() const noexcept {
 		static_assert(INDEX < INDEX_COUNT, "INDEX is out of range.");
 
 		return xNodeFromAvl<INDEX>(xm_arvIndexPointers[INDEX].pBack);
 	}
 	template<std::size_t INDEX>
-	Node *GetBack() noexcept {
+	Node *GetRBegin() noexcept {
 		static_assert(INDEX < INDEX_COUNT, "INDEX is out of range.");
 
 		return xNodeFromAvl<INDEX>(xm_arvIndexPointers[INDEX].pBack);
@@ -516,7 +517,7 @@ public:
 
 		typedef typename std::tuple_element<INDEX, Indexes>::type KeyType;
 
-		__MCF_AVL_NODE_HEADER *pFrom, *pTo;
+		AvlNodeHeader *pFrom, *pTo;
 		AvlEqualRange(
 			&pFrom,
 			&pTo,
@@ -541,7 +542,7 @@ public:
 
 		typedef typename std::tuple_element<INDEX, Indexes>::type KeyType;
 
-		__MCF_AVL_NODE_HEADER *pFrom, *pTo;
+		AvlNodeHeader *pFrom, *pTo;
 		AvlEqualRange(
 			&pFrom,
 			&pTo,

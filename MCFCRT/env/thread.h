@@ -15,19 +15,19 @@ extern void __MCF_CRT_TlsEnvUninitialize(void) __MCF_NOEXCEPT;
 extern unsigned long __MCF_CRT_ThreadInitialize(void) __MCF_NOEXCEPT;
 extern void __MCF_CRT_ThreadUninitialize(void) __MCF_NOEXCEPT;
 
-extern void *__MCF_CRT_CreateThread(
+extern void *MCF_CRT_CreateThread(
 	unsigned int (*pfnProc)(__MCF_STD intptr_t),
 	__MCF_STD intptr_t nParam,
 	unsigned long ulFlags,
 	unsigned long *pulThreadId
 ) __MCF_NOEXCEPT;
 
-extern int __MCF_CRT_AtThreadExit(
+extern int MCF_CRT_AtThreadExit(
 	void (*pfnProc)(__MCF_STD intptr_t),
 	__MCF_STD intptr_t nContext
 ) __MCF_NOEXCEPT;
 
-extern void *__MCF_CRT_RetrieveTls(
+extern void *MCF_CRT_RetrieveTls(
 	__MCF_STD intptr_t nKey,
 	__MCF_STD size_t uSizeToAlloc,
 	void (*pfnConstructor)(void *, __MCF_STD intptr_t),
@@ -35,7 +35,7 @@ extern void *__MCF_CRT_RetrieveTls(
 	void (*pfnDestructor)(void *)
 ) __MCF_NOEXCEPT;
 
-extern void __MCF_CRT_DeleteTls(
+extern void MCF_CRT_DeleteTls(
 	__MCF_STD intptr_t nKey
 ) __MCF_NOEXCEPT;
 

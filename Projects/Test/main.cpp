@@ -17,39 +17,38 @@ static void heap_callback(int op, const void *p, std::size_t cb, const void *ret
 
 unsigned int MCFMain(){
 #ifdef HEAP_DBG
-	::__MCF_CRT_HeapSetCallback(nullptr, nullptr, &heap_callback, 0);
+	::MCF_CRT_HeapSetCallback(nullptr, nullptr, &heap_callback, 0);
 #endif
 
 	try {
 		WideStringObserver path(L"nib.seikooc");
-		File f(path.Reverse(), true, true, true);
+		auto f = File::Open(path.Reverse(), true, true, true);
 		HttpClient http(false, nullptr, 0);
 
-		Vector<unsigned char> data;
-		data.Resize(f.GetSize());
-		f.Read(data.GetData(), 0, data.GetSize());
 		Vector<Vector<unsigned char>> cookies;
-		cookies.Push();
-		for(auto &b : data){
-			if(b == 0xFF){
-				cookies.Push();
-			} else {
-				cookies.GetEnd()[-1].Push(b);
-			}
+		std::uint64_t off = 0;
+		std::uint32_t cb;
+		while(f->Read(&cb, sizeof(cb), off) == sizeof(cb)){
+			auto &top = cookies.Push();
+			top.Resize(cb);
+			off += sizeof(cb);
+			f->Read(top.GetData(), cb, off);
+			off += cb;
 		}
 		http.ImportCookies(cookies);
 
 		http.Connect(L"POST", L"http://localhost/", -1, "post_test1=meow1&post_test2=meow2", 33);
 		http.Connect(L"GET", L"https://localhost/?get_test1=meow1&get_test2=meow2");
 /*
-		f.Clear();
-		std::uint64_t off = 0;
-		const auto cookies = http.ExportCookies(true);
+		f->Clear();
+		off = 0;
+		cookies = http.ExportCookies(true);
 		for(auto &v : cookies){
-			f.Write(off, v.GetData(), v.GetSize());
-			off += v.GetSize();
-			f.Write(off, "\xFF", 1);
-			++off;
+			cb = v.GetSize();
+			f->Write(off, &cb, sizeof(cb));
+			off += sizeof(cb);
+			f->Write(off, v.GetData(), cb);
+			off += cb;
 		}
 */
 	} catch(Exception &e){
@@ -64,7 +63,7 @@ unsigned int MCFMain(){
 	}
 
 #ifdef HEAP_DBG
-	::__MCF_CRT_HeapSetCallback(nullptr, nullptr, nullptr, 0);
+	::MCF_CRT_HeapSetCallback(nullptr, nullptr, nullptr, 0);
 #endif
 	return 0;
 }

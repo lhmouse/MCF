@@ -159,7 +159,7 @@ void Notation::xExportPackageRecur(
 		}
 		pwchCurrentPrefix = wcsPrefix.GetCStr();
 
-		auto pPackageNode = pkgWhich.xm_mapPackages.GetFront<0>();
+		auto pPackageNode = pkgWhich.xm_mapPackages.GetBegin<0>();
 		while(pPackageNode){
 			wcsAppendTo.Append(pwchCurrentPrefix, uCurrentPrefixLen);
 			xEscapeAndAppend(wcsAppendTo, pPackageNode->GetIndex<0>().GetCStr(), pPackageNode->GetIndex<0>().GetLength());
@@ -178,7 +178,7 @@ void Notation::xExportPackageRecur(
 		}
 	}
 
-	auto pValueNode = pkgWhich.xm_mapValues.GetFront<0>();
+	auto pValueNode = pkgWhich.xm_mapValues.GetBegin<0>();
 	while(pValueNode){
 		wcsAppendTo.Append(pwchCurrentPrefix, uCurrentPrefixLen);
 		xEscapeAndAppend(wcsAppendTo, pValueNode->GetIndex<0>().GetCStr(), pValueNode->GetIndex<0>().GetLength());

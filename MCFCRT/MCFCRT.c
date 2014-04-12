@@ -9,14 +9,15 @@
 #include "env/mingw_hacks.h"
 #include <stdlib.h>
 #include <windows.h>
+#include <winnt.h>
 
 // ld 自动添加此符号。
-extern char IMAGE_BASE __asm__("__image_base__");
+extern IMAGE_DOS_HEADER vImageBase __asm__("__image_base__");
 
 extern void __cdecl __main();
 
 typedef struct tagAtExitNode {
-	__MCF_LFLIST_NODE_HEADER LFListHeader;
+	MCF_LFLIST_NODE_HEADER LFListHeader;
 
 	void (__cdecl *pfnProc)(intptr_t);
 	intptr_t nContext;
@@ -43,7 +44,7 @@ unsigned long __MCF_CRT_Begin(){
 }
 void __MCF_CRT_End(){
 	for(;;){
-		AT_EXIT_NODE *const pNode = (AT_EXIT_NODE *)__MCF_LFListPopFront(&g_pAtExitHeader);
+		AT_EXIT_NODE *const pNode = (AT_EXIT_NODE *)MCF_LFListPopFront(&g_pAtExitHeader);
 		if(!pNode){
 			break;
 		}
@@ -57,8 +58,9 @@ void __MCF_CRT_End(){
 }
 
 void *__MCF_GetModuleBase(){
-	return &IMAGE_BASE;
+	return &vImageBase;
 }
+
 int __MCF_AtCRTEnd(void (__cdecl *pfnProc)(intptr_t), intptr_t nContext){
 	AT_EXIT_NODE *const pNode = malloc(sizeof(AT_EXIT_NODE));
 	if(!pNode){
@@ -67,7 +69,7 @@ int __MCF_AtCRTEnd(void (__cdecl *pfnProc)(intptr_t), intptr_t nContext){
 	pNode->pfnProc = pfnProc;
 	pNode->nContext = nContext;
 
-	__MCF_LFListPushFront(&g_pAtExitHeader, (__MCF_LFLIST_NODE_HEADER *)pNode);
+	MCF_LFListPushFront(&g_pAtExitHeader, (MCF_LFLIST_NODE_HEADER *)pNode);
 
 	return 0;
 }

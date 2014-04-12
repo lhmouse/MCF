@@ -15,7 +15,7 @@
 __MCF_EXTERN_C_BEGIN
 
 typedef struct tagHeapDbgBlockInfo {
-	__MCF_AVL_NODE_HEADER __MCF_AvlNodeHeader;
+	MCF_AVL_NODE_HEADER MCF_AvlNodeHeader;
 
 	__MCF_STD size_t uSize;
 	const void *pRetAddr;
@@ -57,7 +57,7 @@ typedef void (*__MCF_HEAP_CALLBACK)(
 	__MCF_STD intptr_t	// 回调参数
 );
 
-extern void __MCF_CRT_HeapSetCallback(
+extern void MCF_CRT_HeapSetCallback(
 	__MCF_HEAP_CALLBACK *pfnOldCallback,
 	__MCF_STD intptr_t *pnOldContext,
 	__MCF_HEAP_CALLBACK pfnNewCallback,

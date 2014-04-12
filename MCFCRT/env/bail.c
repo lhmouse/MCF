@@ -56,10 +56,10 @@ static __MCF_NORETURN_IF_NDEBUG void DoBail(const wchar_t *pwszDescription){
 	__asm__ __volatile__("int 3 \n");
 }
 
-__MCF_NORETURN_IF_NDEBUG void __MCF_CRT_Bail(const wchar_t *pwszDescription){
+__MCF_NORETURN_IF_NDEBUG void MCF_CRT_Bail(const wchar_t *pwszDescription){
 	DoBail(pwszDescription);
 }
-__MCF_NORETURN_IF_NDEBUG void __MCF_CRT_BailF(const wchar_t *pwszFormat, ...){
+__MCF_NORETURN_IF_NDEBUG void MCF_CRT_BailF(const wchar_t *pwszFormat, ...){
 	wchar_t awchBuffer[1025];
 	va_list ap;
 	va_start(ap, pwszFormat);

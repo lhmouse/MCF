@@ -14,82 +14,28 @@
 #include <deque>
 using namespace MCF;
 
-// 嵌套类定义。
-class TcpServer::xDelegate : NO_COPY {
-private:
-	enum class State {
-		STOPPED,
-		RUNNING,
-		STOPPING
-	};
+namespace {
 
+class TcpServerDelegate : CONCRETE(TcpServer) {
 private:
 	WSAInitializer xm_vWSAInitializer;
 
-	volatile State xm_eState;
 	UniqueSocket xm_sockListen;
+	volatile bool xm_bStopNow;
+	std::shared_ptr<Thread> xm_pthrdListener;
 
-	CriticalSection xm_csQueueLock;
-	std::deque<TcpPeer> xm_deqPeers;
-	Event xm_evnPeersAvailable;
-	Thread xm_thrdListener;
+	const std::unique_ptr<CriticalSection> xm_pcsQueueLock;
+	std::deque<std::unique_ptr<TcpPeer>> xm_deqPeers;
+	const std::unique_ptr<Event> xm_pevnPeersAvailable;
 
 public:
-	xDelegate()
-		: xm_eState(State::STOPPED)
-		, xm_evnPeersAvailable(true)
+	TcpServerDelegate(const PeerInfo &vBoundOnto)
+		: xm_bStopNow			(false)
+		, xm_pcsQueueLock		(CriticalSection::Create())
+		, xm_pevnPeersAvailable	(Event::Create(false))
 	{
-	}
-	~xDelegate(){
-	}
-
-private:
-	void xListenerProc() noexcept {
-		::SetThreadPriority(::GetCurrentThread(), THREAD_PRIORITY_HIGHEST);
-
-		unsigned long ulSleepTime = 0;
-		while(__atomic_load_n(&xm_eState, __ATOMIC_ACQUIRE) == State::RUNNING){
-			try {
-				if(ulSleepTime == 0){
-					ulSleepTime = 1;
-				} else {
-					::Sleep(ulSleepTime);
-					if(ulSleepTime < 0x20){
-						ulSleepTime <<= 1;
-					}
-				}
-
-				SOCKADDR_STORAGE vSockAddr;
-				int nSockAddrSize = sizeof(vSockAddr);
-				UniqueSocket sockClient(::accept(xm_sockListen.Get(), (SOCKADDR *)&vSockAddr, &nSockAddrSize));
-				if(!sockClient){
-					continue;
-				}
-				unsigned long ulFalseValue = 0;
-				if(::ioctlsocket(sockClient.Get(), FIONBIO, &ulFalseValue)){
-					continue;
-				}
-
-				TcpPeer vPeer(&sockClient, &vSockAddr, nSockAddrSize);
-				CRITICAL_SECTION_SCOPE(xm_csQueueLock){
-					xm_deqPeers.emplace_back(std::move(vPeer));
-					xm_evnPeersAvailable.Set();
-				}
-				ulSleepTime = 0;
-			} catch(...){
-			}
-		}
-	}
-
-public:
-	bool IsRunning() const noexcept {
-		return __atomic_load_n(&xm_eState, __ATOMIC_ACQUIRE) != State::STOPPED;
-	}
-	void Start(const PeerInfo &vBoundOnto){
 		static const DWORD TRUE_VALUE	= 1;
 		static const DWORD FALSE_VALUE	= 0;
-
-		Stop();
 
 		const short shFamily = vBoundOnto.IsIPv4() ? AF_INET : AF_INET6;
 
@@ -131,51 +77,77 @@ public:
 			MCF_THROW(::WSAGetLastError(), L"::listen() 失败。");
 		}
 
-		xm_evnPeersAvailable.Clear();
-		xm_thrdListener.Start(std::bind(&xDelegate::xListenerProc, this));
-
-		__atomic_store_n(&xm_eState, State::RUNNING, __ATOMIC_RELEASE);
+		xm_pthrdListener = Thread::Create(std::bind(&TcpServerDelegate::xListenerProc, this), false);
 	}
-	void Stop() noexcept {
-		if(__atomic_load_n(&xm_eState, __ATOMIC_ACQUIRE) != State::STOPPED){
-			__atomic_store_n(&xm_eState, State::STOPPING, __ATOMIC_RELEASE);
+	~TcpServerDelegate(){
+		__atomic_store_n(&xm_bStopNow, true, __ATOMIC_RELEASE);
+		xm_pthrdListener->Wait();
+	}
 
-			xm_thrdListener.JoinDetach();
-			CRITICAL_SECTION_SCOPE(xm_csQueueLock){
-				xm_deqPeers.clear();
+private:
+	void xListenerProc() noexcept {
+		::SetThreadPriority(::GetCurrentThread(), THREAD_PRIORITY_HIGHEST);
+
+		unsigned long ulSleepTime = 0;
+		while(!__atomic_load_n(&xm_bStopNow, __ATOMIC_ACQUIRE)){
+			try {
+				if(ulSleepTime == 0){
+					ulSleepTime = 1;
+				} else {
+					::Sleep(ulSleepTime);
+					if(ulSleepTime < 0x20){
+						ulSleepTime <<= 1;
+					}
+				}
+
+				SOCKADDR_STORAGE vSockAddr;
+				int nSockAddrSize = sizeof(vSockAddr);
+				UniqueSocket sockClient(::accept(xm_sockListen.Get(), (SOCKADDR *)&vSockAddr, &nSockAddrSize));
+				if(!sockClient){
+					continue;
+				}
+				unsigned long ulFalseValue = 0;
+				if(::ioctlsocket(sockClient.Get(), FIONBIO, &ulFalseValue)){
+					continue;
+				}
+
+				auto pPeer(TcpPeer::FromSocket(&sockClient, &vSockAddr, nSockAddrSize));
+				CRITICAL_SECTION_SCOPE(xm_pcsQueueLock){
+					xm_deqPeers.emplace_back(std::move(pPeer));
+					xm_pevnPeersAvailable->Set();
+				}
+				ulSleepTime = 0;
+			} catch(...){
 			}
-			xm_evnPeersAvailable.Set();
-			xm_sockListen.Reset();
-
-			__atomic_store_n(&xm_eState, State::STOPPED, __ATOMIC_RELEASE);
 		}
 	}
 
-	TcpPeer GetPeerTimeout(unsigned long ulMilliSeconds) noexcept {
-		TcpPeer vPeer;
+public:
+	std::unique_ptr<TcpPeer> GetPeerTimeout(unsigned long ulMilliSeconds) noexcept {
+		std::unique_ptr<TcpPeer> pPeer;
 		const auto ulWaitUntil = ::GetTickCount() + ulMilliSeconds;
 		unsigned long ulTimeToWait = ulMilliSeconds;
 		for(;;){
-			if(!xm_evnPeersAvailable.WaitTimeout(ulTimeToWait)){
+			if(!xm_pevnPeersAvailable->WaitTimeout(ulTimeToWait)){
 				break;
 			}
-			CRITICAL_SECTION_SCOPE(xm_csQueueLock){
+			CRITICAL_SECTION_SCOPE(xm_pcsQueueLock){
 				switch(xm_deqPeers.size()){
 				case 1:
-					xm_evnPeersAvailable.Clear();
+					xm_pevnPeersAvailable->Clear();
 
 				default:
-					vPeer = std::move(xm_deqPeers.front());
+					pPeer = std::move(xm_deqPeers.front());
 					xm_deqPeers.pop_front();
 
 				case 0:
 					break;
 				}
 			}
-			if(vPeer){
+			if(pPeer){
 				break;
 			}
-			if(__atomic_load_n(&xm_eState, __ATOMIC_ACQUIRE) != State::RUNNING){
+			if(__atomic_load_n(&xm_bStopNow, __ATOMIC_ACQUIRE)){
 				break;
 			}
 			const auto ulCurrent = ::GetTickCount();
@@ -184,42 +156,25 @@ public:
 			}
 			ulTimeToWait = ulWaitUntil - ulCurrent;
 		}
-		return std::move(vPeer);
+		return std::move(pPeer);
 	}
 };
 
-// 构造函数和析构函数。
-TcpServer::TcpServer()
-	: xm_pDelegate(new xDelegate)
-{
 }
-TcpServer::TcpServer(TcpServer &&rhs) noexcept
-	: xm_pDelegate(std::move(rhs.xm_pDelegate))
-{
-}
-TcpServer &TcpServer::operator=(TcpServer &&rhs) noexcept {
-	if(&rhs != this){
-		xm_pDelegate = std::move(rhs.xm_pDelegate);
-	}
-	return *this;
-}
-TcpServer::~TcpServer(){
+
+// 静态成员函数。
+std::unique_ptr<TcpServer> TcpServer::Create(const PeerInfo &vBoundOnto){
+	return std::unique_ptr<TcpServer>(new TcpServerDelegate(vBoundOnto));
 }
 
 // 其他非静态成员函数。
-bool TcpServer::IsRunning() const noexcept {
-	return xm_pDelegate->IsRunning();
-}
-void TcpServer::Start(const PeerInfo &vBoundOnto){
-	xm_pDelegate->Start(vBoundOnto);
-}
-void TcpServer::Stop() noexcept {
-	xm_pDelegate->Stop();
-}
+std::unique_ptr<TcpPeer> TcpServer::GetPeerTimeout(unsigned long ulMilliSeconds) noexcept {
+	ASSERT(dynamic_cast<TcpServerDelegate *>(this));
 
-TcpPeer TcpServer::GetPeerTimeout(unsigned long ulMilliSeconds) noexcept {
-	return xm_pDelegate->GetPeerTimeout(ulMilliSeconds);
+	return ((TcpServerDelegate *)this)->GetPeerTimeout(ulMilliSeconds);
 }
-TcpPeer TcpServer::GetPeer() noexcept {
-	return xm_pDelegate->GetPeerTimeout(INFINITE);
+std::unique_ptr<TcpPeer> TcpServer::GetPeer() noexcept {
+	ASSERT(dynamic_cast<TcpServerDelegate *>(this));
+
+	return ((TcpServerDelegate *)this)->GetPeerTimeout(INFINITE);
 }

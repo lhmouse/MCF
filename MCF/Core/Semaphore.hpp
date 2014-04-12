@@ -6,27 +6,19 @@
 #define __MCF_SEMAPHORE_HPP__
 
 #include "Utilities.hpp"
+#include "StringObserver.hpp"
 #include <memory>
 
 namespace MCF {
 
-class Semaphore : NO_COPY {
-private:
-	class xDelegate;
-
-private:
-	std::unique_ptr<xDelegate> xm_pDelegate;
+class Semaphore : NO_COPY, ABSTRACT {
+public:
+	static std::unique_ptr<Semaphore> Create(unsigned long ulInitCount, unsigned long ulMaxCount, const WideStringObserver &wsoName = nullptr);
 
 public:
-	explicit Semaphore(std::size_t uInitCount, std::size_t uMaxCount, const wchar_t *pwszName = nullptr);
-	Semaphore(Semaphore &&rhs) noexcept;
-	Semaphore &operator=(Semaphore &&rhs) noexcept;
-	~Semaphore();
-
-public:
-	std::size_t WaitTimeout(unsigned long ulMilliSeconds, std::size_t uWaitCount = 1) noexcept;
-	void Wait(std::size_t uWaitCount = 1) noexcept;
-	void Signal(std::size_t uSignalCount = 1) noexcept;
+	unsigned long WaitTimeout(unsigned long ulMilliSeconds, unsigned long ulWaitCount = 1) noexcept;
+	void Wait(unsigned long ulWaitCount = 1) noexcept;
+	void Signal(unsigned long ulSignalCount = 1) noexcept;
 };
 
 }

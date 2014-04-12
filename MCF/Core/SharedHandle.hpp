@@ -6,7 +6,7 @@
 #define __MCF_SHARED_HANDLE_HPP__
 
 #include "../../MCFCRT/c/ext/assert.h"
-#include "../../MCFCRT/c/ext/offset_of.h"
+#include "../../MCFCRT/cpp/ext/offset_of.hpp"
 #include "../../MCFCRT/env/bail.h"
 #include <new>
 #include <utility>
@@ -80,16 +80,16 @@ private:
 		}
 
 		static const Handle *ToPHandle(xSharedNode *pNode){
-			if(pNode){
-				return (const Handle *)((std::intptr_t)pNode + OFFSET_OF(xSharedNode, xm_hObj));
+			if(!pNode){
+				return nullptr;
 			}
-			return nullptr;
+			return &(pNode->xm_hObj);
 		}
 		static xSharedNode *FromPHandle(const Handle *pHandle){
-			if(pHandle){
-				return (xSharedNode *)((std::intptr_t)pHandle - OFFSET_OF(xSharedNode, xm_hObj));
+			if(!pHandle){
+				return nullptr;
 			}
-			return nullptr;
+			return DownCast(&xSharedNode::xm_hObj, pHandle);
 		}
 
 	private:
@@ -122,7 +122,7 @@ private:
 		void xValidate() const noexcept {
 #ifndef NDEBUG
 			if(xm_pDebugInfo != this){
-				__MCF_CRT_Bail(L"xSharedNode::xValidate() 失败：侦测到堆损坏或二次释放。");
+				MCF_CRT_Bail(L"xSharedNode::xValidate() 失败：侦测到堆损坏或二次释放。");
 			}
 #endif
 		}

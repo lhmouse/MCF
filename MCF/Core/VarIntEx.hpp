@@ -55,17 +55,17 @@ public:
 	}
 
 public:
-	Underlying_t Get() const noexcept {
+	const Underlying_t &Get() const noexcept {
 		return xm_vValue;
 	}
-	void Set(Underlying_t vValue) noexcept {
-		xm_vValue = vValue;
+	Underlying_t &Get() noexcept {
+		return xm_vValue;
 	}
 
 	unsigned char *Serialize(unsigned char (&abyBuffer)[9]) const noexcept {
 		unsigned char *pbyWrite = abyBuffer;
 		auto uEncoded = xZigZagEncode(xm_vValue - ORIGIN);
-		for(std::size_t i = 0; i < 8; ++i){
+		for(std::size_t i = 0; i < std::min<std::size_t>(8, sizeof(uEncoded)); ++i){
 			unsigned char by = uEncoded & 0x7F;
 			uEncoded >>= 7;
 			if(uEncoded != 0){
@@ -84,7 +84,7 @@ public:
 	const unsigned char *Unserialize(const unsigned char *pbyBegin, const unsigned char *pbyEnd) noexcept {
 		auto pbyRead = pbyBegin;
 		xUnsigned uEncoded = 0;
-		for(std::size_t i = 0; i < 4; ++i){
+		for(std::size_t i = 0; i < std::min<std::size_t>(4, sizeof(uEncoded)); ++i){
 			if(pbyRead == pbyEnd){
 				return nullptr;
 			}
@@ -94,7 +94,7 @@ public:
 				goto jDone;
 			}
 		}
-		for(std::size_t i = 4; i < 8; ++i){
+		for(std::size_t i = 4; i < std::min<std::size_t>(8, sizeof(uEncoded)); ++i){
 			if(pbyRead == pbyEnd){
 				return nullptr;
 			}
@@ -115,7 +115,10 @@ public:
 	}
 
 public:
-	operator Underlying_t() const noexcept {
+	operator const Underlying_t &() const noexcept {
+		return Get();
+	}
+	operator Underlying_t &() noexcept {
 		return Get();
 	}
 };

@@ -12,26 +12,13 @@
 
 namespace MCF {
 
-class TcpServer : NO_COPY {
-private:
-	class xDelegate;
-
-private:
-	std::unique_ptr<xDelegate> xm_pDelegate;
+class TcpServer : NO_COPY, ABSTRACT {
+public:
+	static std::unique_ptr<TcpServer> Create(const PeerInfo &vBoundOnto);
 
 public:
-	TcpServer();
-	TcpServer(TcpServer &&rhs) noexcept;
-	TcpServer &operator=(TcpServer &&rhs) noexcept;
-	~TcpServer();
-
-public:
-	bool IsRunning() const noexcept;
-	void Start(const PeerInfo &vBoundOnto);
-	void Stop() noexcept;
-
-	TcpPeer GetPeerTimeout(unsigned long ulMilliSeconds) noexcept;
-	TcpPeer GetPeer() noexcept;
+	std::unique_ptr<TcpPeer> GetPeerTimeout(unsigned long ulMilliSeconds) noexcept;
+	std::unique_ptr<TcpPeer> GetPeer() noexcept;
 };
 
 }

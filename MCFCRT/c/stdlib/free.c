@@ -7,6 +7,6 @@
 
 void __attribute__((noinline)) free(void *ptr){
 	if(ptr){
-		__MCF_CRT_HeapFree((unsigned char *)ptr, __builtin_return_address(0));
+		MCF_CRT_HeapFree((unsigned char *)ptr, __builtin_return_address(0));
 	}
 }

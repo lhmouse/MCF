@@ -10,26 +10,19 @@
 #include "_SocketUtils.hpp"
 using namespace MCF;
 
-// 嵌套类定义。
-class TcpPeer::xDelegate : NO_COPY {
-private:
-	enum : std::uintptr_t {
-		FLAG_READABLE	= 0x0001,
-		FLAG_WRITABLE	= 0x0002
-	};
+namespace {
 
+class TcpPeerDelegate : CONCRETE(TcpPeer) {
 private:
 	WSAInitializer xm_vWSAInitializer;
 
 	UniqueSocket xm_sockPeer;
 	PeerInfo xm_vPeerInfo;
-	std::uintptr_t xm_uFlags;
 
 public:
-	xDelegate(UniqueSocket &&sockPeer, const void *pSockAddr, std::size_t uSockAddrLen)
+	TcpPeerDelegate(UniqueSocket &&sockPeer, const void *pSockAddr, std::size_t uSockAddrLen)
 		: xm_sockPeer(std::move(sockPeer))
 		, xm_vPeerInfo(pSockAddr, uSockAddrLen)
-		, xm_uFlags(FLAG_READABLE | FLAG_WRITABLE)
 	{
 	}
 
@@ -39,46 +32,22 @@ public:
 	}
 
 	std::size_t Read(void *pData, std::size_t uSize){
-		auto pCur = (char *)pData;
-		const auto pEnd = pCur + uSize;
-		for(;;){
-			const int nBytesToRead = pEnd - pCur;
-			if(nBytesToRead == 0){
-				break;
-			}
-			const int nBytesRead = ::recv(xm_sockPeer.Get(), pCur, nBytesToRead, 0);
-			if(nBytesRead == 0){
-				break;
-			}
-			if(nBytesRead < 0){
-				MCF_THROW(::WSAGetLastError(), L"::recv() 失败。");
-			}
-			pCur += nBytesRead;
+		const int nBytesRead = ::recv(xm_sockPeer.Get(), (char *)pData, uSize, 0);
+		if(nBytesRead < 0){
+			MCF_THROW(::WSAGetLastError(), L"::recv() 失败。");
 		}
-		return (std::size_t)(pCur - (char *)pData);
+		return (std::size_t)nBytesRead;
 	}
-	bool ShutdownRead() noexcept {
-		if(xm_uFlags & FLAG_READABLE){
-			::shutdown(xm_sockPeer.Get(), SD_RECEIVE);
-			xm_uFlags &= ~FLAG_READABLE;
-		}
-		return xm_uFlags;
+	void ShutdownRead() noexcept {
+		::shutdown(xm_sockPeer.Get(), SD_RECEIVE);
 	}
 
 	void SetNoDelay(bool bNoDelay){
-		static const DWORD TRUE_VALUE	= 1;
-		static const DWORD FALSE_VALUE	= 0;
-		if(::setsockopt(
-			xm_sockPeer.Get(),
-			IPPROTO_TCP,
-			TCP_NODELAY,
-			(const char *)(bNoDelay ? &TRUE_VALUE : &FALSE_VALUE),
-			sizeof(TRUE_VALUE)
-		)){
+		DWORD dwVal = bNoDelay;
+		if(::setsockopt(xm_sockPeer.Get(), IPPROTO_TCP, TCP_NODELAY, (const char *)&dwVal, sizeof(dwVal))){
 			MCF_THROW(::WSAGetLastError(), L"::setsockopt() 失败。");
 		}
 	}
-
 	void Write(const void *pData, std::size_t uSize){
 		auto pCur = (const char *)pData;
 		const auto pEnd = pCur + uSize;
@@ -97,60 +66,19 @@ public:
 			pCur += nBytesWritten;
 		}
 	}
-	bool ShutdownWrite() noexcept {
-		if(xm_uFlags & FLAG_WRITABLE){
-			::shutdown(xm_sockPeer.Get(), SD_SEND);
-			xm_uFlags &= ~FLAG_WRITABLE;
-		}
-		return xm_uFlags;
+	void ShutdownWrite() noexcept {
+		::shutdown(xm_sockPeer.Get(), SD_SEND);
 	}
 };
 
-// 构造函数和析构函数。
-TcpPeer::TcpPeer(void *ppSocket, const void *pSockAddr, std::size_t uSockAddrLen)
-	: xm_pDelegate(new xDelegate(std::move(*(UniqueSocket *)ppSocket), pSockAddr, uSockAddrLen))
-{
 }
 
-TcpPeer::TcpPeer() noexcept {
-}
-TcpPeer::TcpPeer(const PeerInfo &vServerInfo){
-	Connect(vServerInfo);
-}
-TcpPeer::TcpPeer(TcpPeer &&rhs) noexcept
-	: xm_pDelegate(std::move(rhs.xm_pDelegate))
-{
-}
-TcpPeer &TcpPeer::operator=(TcpPeer &&rhs) noexcept {
-	if(&rhs != this){
-		xm_pDelegate = std::move(rhs.xm_pDelegate);
-	}
-	return *this;
-}
-TcpPeer::~TcpPeer(){
+// 静态成员函数。
+std::unique_ptr<TcpPeer> TcpPeer::FromSocket(void *ppSocket, const void *pSockAddr, std::size_t uSockAddrLen){
+	return std::unique_ptr<TcpPeer>(new TcpPeerDelegate(std::move(*(UniqueSocket *)ppSocket), pSockAddr, uSockAddrLen));
 }
 
-// 其他非静态成员函数。
-bool TcpPeer::IsConnected() const noexcept {
-	return (bool)xm_pDelegate;
-}
-const PeerInfo &TcpPeer::GetPeerInfo() const {
-	if(!xm_pDelegate){
-		MCF_THROW(WSAENOTCONN, L"TcpPeer 未连接。");
-	}
-	return xm_pDelegate->GetPeerInfo();
-}
-unsigned long TcpPeer::ConnectNoThrow(const PeerInfo &vServerInfo){
-	try {
-		Connect(vServerInfo);
-		return ERROR_SUCCESS;
-	} catch(Exception &e){
-		return e.ulErrorCode;
-	}
-}
-void TcpPeer::Connect(const PeerInfo &vServerInfo){
-	Disconnect();
-
+std::unique_ptr<TcpPeer> TcpPeer::Connect(const PeerInfo &vServerInfo){
 	WSAInitializer vWSAInitializer;
 
 	const short shFamily = vServerInfo.IsIPv4() ? AF_INET : AF_INET6;
@@ -179,39 +107,47 @@ void TcpPeer::Connect(const PeerInfo &vServerInfo){
 		MCF_THROW(::WSAGetLastError(), L"::connect() 失败。");
 	}
 
-	*this = TcpPeer(&sockServer, &vSockAddr, uSockAddrLen);
+	return std::unique_ptr<TcpPeer>(new TcpPeerDelegate(std::move(sockServer), &vSockAddr, uSockAddrLen));
 }
-void TcpPeer::Disconnect() noexcept {
-	xm_pDelegate.reset();
+std::unique_ptr<TcpPeer> TcpPeer::ConnectNoThrow(const PeerInfo &vServerInfo){
+	try {
+		return Connect(vServerInfo);
+	} catch(Exception &e){
+		SetWin32LastError(e.ulErrorCode);
+		return std::unique_ptr<TcpPeer>();
+	}
 }
 
-void TcpPeer::SetNoDelay(bool bNoDelay){
-	if(!xm_pDelegate){
-		MCF_THROW(WSAENOTCONN, L"TcpPeer 未连接。");
-	}
-	return xm_pDelegate->SetNoDelay(bNoDelay);
+// 其他非静态成员函数。
+const PeerInfo &TcpPeer::GetPeerInfo() const noexcept {
+	ASSERT(dynamic_cast<const TcpPeerDelegate *>(this));
+
+	return ((const TcpPeerDelegate *)this)->GetPeerInfo();
 }
 
 std::size_t TcpPeer::Read(void *pData, std::size_t uSize){
-	if(!xm_pDelegate){
-		MCF_THROW(WSAENOTCONN, L"TcpPeer 未连接。");
-	}
-	return xm_pDelegate->Read(pData, uSize);
+	ASSERT(dynamic_cast<TcpPeerDelegate *>(this));
+
+	return ((TcpPeerDelegate *)this)->Read(pData, uSize);
 }
 void TcpPeer::ShutdownRead() noexcept {
-	if(xm_pDelegate && !xm_pDelegate->ShutdownRead()){
-		xm_pDelegate.reset();
-	}
+	ASSERT(dynamic_cast<TcpPeerDelegate *>(this));
+
+	((TcpPeerDelegate *)this)->ShutdownRead();
 }
 
+void TcpPeer::SetNoDelay(bool bNoDelay){
+	ASSERT(dynamic_cast<TcpPeerDelegate *>(this));
+
+	((TcpPeerDelegate *)this)->SetNoDelay(bNoDelay);
+}
 void TcpPeer::Write(const void *pData, std::size_t uSize){
-	if(!xm_pDelegate){
-		MCF_THROW(WSAENOTCONN, L"TcpPeer 未连接。");
-	}
-	xm_pDelegate->Write(pData, uSize);
+	ASSERT(dynamic_cast<TcpPeerDelegate *>(this));
+
+	((TcpPeerDelegate *)this)->Write(pData, uSize);
 }
 void TcpPeer::ShutdownWrite() noexcept {
-	if(xm_pDelegate && !xm_pDelegate->ShutdownWrite()){
-		xm_pDelegate.reset();
-	}
+	ASSERT(dynamic_cast<TcpPeerDelegate *>(this));
+
+	((TcpPeerDelegate *)this)->ShutdownWrite();
 }

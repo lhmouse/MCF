@@ -1,7 +1,7 @@
 Default = Debug
 
 General {
-	CompilerFlags		= -Wall -Wextra -pedantic -pipe -mfpmath=sse,387 -msse2 -masm=intel
+	CompilerFlags		= -Wall -Wextra -Wsuggest-attribute=noreturn -pedantic -pipe -mfpmath=sse,387 -msse2 -masm=intel
 
 	CFlags				= -std=c11
 	CPPFlags			= -std=c++11

@@ -259,7 +259,8 @@ public:
 		: StringObserver(pchBegin, pchBegin + uLen)
 	{
 	}
-	constexpr StringObserver(const Char_t *&pszBegin) noexcept
+	template<typename Test_t, typename = typename std::enable_if<std::is_same<Test_t, Char_t>::value>::type>
+	constexpr StringObserver(const Test_t *const &pszBegin) noexcept
 		: StringObserver(pszBegin, xEndOf(pszBegin))
 	{
 	}
@@ -337,7 +338,8 @@ public:
 	void Assign(const Char_t *pchBegin, std::size_t uLen) noexcept {
 		Assign(pchBegin, pchBegin + uLen);
 	}
-	void Assign(const Char_t *&pszBegin) noexcept {
+	template<typename Test_t, typename = typename std::enable_if<std::is_same<Test_t, Char_t>::value>::type>
+	void Assign(const Test_t *const &pszBegin) noexcept {
 		Assign(pszBegin, xEndOf(pszBegin));
 	}
 	template<std::size_t N>
@@ -457,9 +459,14 @@ public:
 		return NPOS;
 	}
 
-	StringObserver Reverse() const noexcept {
+	StringObserver GetReverse() const noexcept {
+		auto obsRet(*this);
+		obsRet.Reverse();
+		return std::move(obsRet);
+	}
+	void Reverse() noexcept {
 		const auto nShift = (xm_pchBegin <= xm_pchEnd) ? -1 : 1;
-		return StringObserver(xm_pchEnd + nShift, xm_pchBegin + nShift);
+		Assign(xm_pchEnd + nShift, xm_pchBegin + nShift);
 	}
 
 public:

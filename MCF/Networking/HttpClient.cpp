@@ -16,7 +16,7 @@
 #include <algorithm>
 #include <winhttp.h>
 using namespace MCF;
-
+/*
 // 外部函数定义。
 namespace MCF {
 
@@ -663,12 +663,12 @@ public:
 		return true;
 	}
 	bool RemoveCookie(const std::pair<const char *, std::size_t> (&aNamePathDomain)[3]) noexcept {
-	/*	auto pNode = xm_mapCookies.Find<IDX_DOMAIN_PATH_NAME>(aNamePathDomain);
+		auto pNode = xm_mapCookies.Find<IDX_DOMAIN_PATH_NAME>(aNamePathDomain);
 		if(!pNode){
 			return false;
 		}
 		xm_mapCookies.Erase(pNode);
-		return true;*/
+		return true;
 	}
 	void ClearCookies() noexcept {
 		xm_mapCookies.Clear();
@@ -1120,13 +1120,13 @@ HttpClient::~HttpClient(){
 
 // 其他非静态成员函数。
 bool HttpClient::AddCookie(
-		Utf8String			u8sName,
-		const Utf8String &	u8sValue,
-		std::uint64_t		u64Expires,
-		Utf8String			u8sPath,
-		Utf8String			u8sDomain,
-		bool				bSecure,
-		bool				bHttpOnly
+	Utf8String			u8sName,
+	const Utf8String &	u8sValue,
+	std::uint64_t		u64Expires,
+	Utf8String			u8sPath,
+	Utf8String			u8sDomain,
+	bool				bSecure,
+	bool				bHttpOnly
 ){
 	return xm_pDelegate->AddCookie(
 		std::move(u8sName),
@@ -1210,3 +1210,4 @@ Vector<Vector<unsigned char>> HttpClient::ExportCookies(bool bIncludeSessionOnly
 void HttpClient::ImportCookies(const Vector<Vector<unsigned char>> &vecData){
 	xm_pDelegate->ImportCookies(vecData);
 }
+*/

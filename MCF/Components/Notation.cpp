@@ -7,7 +7,7 @@
 #include "../../MCFCRT/cpp/ext/vvector.hpp"
 #include <cwchar>
 using namespace MCF;
-
+/*
 // 静态成员函数。
 void Notation::xEscapeAndAppend(Utf16String &wcsAppendTo, const wchar_t *pwchBegin, std::size_t uLength){
 	wcsAppendTo.Reserve(wcsAppendTo.GetLength() + uLength * 2);
@@ -174,7 +174,7 @@ void Notation::xExportPackageRecur(
 		}
 
 		if(pwchIndent){
-			wcsPrefix.Pop(uIndentLen);
+			wcsPrefix.Truncate(uIndentLen);
 		}
 	}
 
@@ -490,3 +490,4 @@ Utf16String Notation::Export(const wchar_t *pwchIndent) const {
 	xExportPackageRecur(wcsResult, *this, wcsPrefix, pwchIndent, uIndentLength);
 	return std::move(wcsResult);
 }
+*/

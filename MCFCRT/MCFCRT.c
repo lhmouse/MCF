@@ -12,7 +12,7 @@
 #include <winnt.h>
 
 // ld 自动添加此符号。
-extern IMAGE_DOS_HEADER vImageBase __asm__("__image_base__");
+extern IMAGE_DOS_HEADER g_vDosHeader __asm__("__image_base__");
 
 extern void __cdecl __main();
 
@@ -57,11 +57,11 @@ void __MCF_CRT_End(){
 	__MCF_CRT_HeapUninitialize();
 }
 
-void *__MCF_GetModuleBase(){
-	return &vImageBase;
+void *MCF_GetModuleBase(){
+	return &g_vDosHeader;
 }
 
-int __MCF_AtCRTEnd(void (__cdecl *pfnProc)(intptr_t), intptr_t nContext){
+int MCF_AtCRTEnd(void (__cdecl *pfnProc)(intptr_t), intptr_t nContext){
 	AT_EXIT_NODE *const pNode = malloc(sizeof(AT_EXIT_NODE));
 	if(!pNode){
 		return -1;

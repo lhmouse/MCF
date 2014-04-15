@@ -275,7 +275,7 @@ public:
 	{
 	}
 	constexpr StringObserver(const Iterator &itBegin, const Iterator &itEnd) noexcept
-		: StringObserver(&*itBegin, *itEnd)
+		: StringObserver(&*itBegin, &*itEnd)
 	{
 	}
 
@@ -359,6 +359,7 @@ public:
 	// 字符串内容：    a   b   c   d   e   f   g  \0
 	// 正光标位置：  0   1   2   3   4   5   6   7
 	// 负光标位置： -8  -7  -6  -5  -4  -3  -2  -1
+
 	// 以下均以此字符串为例。
 
 	// 举例：
@@ -367,8 +368,9 @@ public:
 	//   Slice(-1,  5)   返回 "gf"；
 	//   Slice(-1, -5)   返回 "gfed"。
 	StringObserver Slice(std::ptrdiff_t nBegin, std::ptrdiff_t nEnd = -1) const noexcept {
-		const auto uRealBegin = xTranslateOffset(GetLength(), nBegin);
-		const auto uRealEnd = xTranslateOffset(GetLength(), nEnd);
+		const auto uLength = GetLength();
+		const auto uRealBegin = xTranslateOffset(uLength, nBegin);
+		const auto uRealEnd = xTranslateOffset(uLength, nEnd);
 		const std::ptrdiff_t nShift = (uRealBegin <= uRealEnd) ? 0 : -1;
 		return StringObserver(GetBegin() + uRealBegin + nShift, GetBegin() + uRealEnd + nShift);
 	}
@@ -467,6 +469,25 @@ public:
 	void Reverse() noexcept {
 		const auto nShift = (xm_pchBegin <= xm_pchEnd) ? -1 : 1;
 		Assign(xm_pchEnd + nShift, xm_pchBegin + nShift);
+	}
+
+	bool DoesOverlapWith(const StringObserver &obs) const noexcept {
+		const Char_t *pchBegin1, *pchEnd1, *pchBegin2, *pchEnd2;
+		if(xm_pchBegin <= xm_pchEnd){
+			pchBegin1 = xm_pchBegin;
+			pchEnd1 = xm_pchEnd;
+		} else {
+			pchBegin1 = xm_pchEnd + 1;
+			pchEnd1 = xm_pchBegin + 1;
+		}
+		if(obs.xm_pchBegin <= obs.xm_pchEnd){
+			pchBegin2 = obs.xm_pchBegin;
+			pchEnd2 = obs.xm_pchEnd;
+		} else {
+			pchBegin2 = obs.xm_pchEnd + 1;
+			pchEnd2 = obs.xm_pchBegin + 1;
+		}
+		return (pchBegin1 < pchEnd2) && (pchBegin2 < pchEnd1);
 	}
 
 public:

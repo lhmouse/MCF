@@ -23,13 +23,13 @@ int wmemcmp(const wchar_t *p1, const wchar_t *p2, size_t cnt){
 		}
 
 #ifdef _WIN64
-#	define	COMPARE_UINTPTR	\
+#	define COMPARE_UINTPTR	\
 		COMPARE_LOWORD_AND_SHIFT	\
 		COMPARE_LOWORD_AND_SHIFT	\
 		COMPARE_LOWORD_AND_SHIFT	\
 		COMPARE_LOWORD_AND_SHIFT
 #else
-#	define	COMPARE_UINTPTR	\
+#	define COMPARE_UINTPTR	\
 		COMPARE_LOWORD_AND_SHIFT	\
 		COMPARE_LOWORD_AND_SHIFT
 #endif

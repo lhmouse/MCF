@@ -66,8 +66,8 @@ public:
 	String(const Char_t *pchBegin, const Char_t *pchEnd) : String() {
 		Assign(pchBegin, pchEnd);
 	}
-	String(const Char_t *pchSrc, std::size_t uSrcLen) : String() {
-		Assign(pchSrc, uSrcLen);
+	String(const Char_t *pchBegin, std::size_t uLen) : String() {
+		Assign(pchBegin, uLen);
 	}
 	explicit String(const Observer &obs) : String() {
 		Assign(obs);
@@ -296,25 +296,19 @@ public:
 	}
 
 	void Assign(Char_t ch, std::size_t uCount = 1){
-		Resize(uCount);
-		std::fill_n(GetCStr(), uCount, ch);
+		Replace(0, -1, ch, uCount);
 	}
 	void Assign(const Char_t *pchBegin, const Char_t *pchEnd){
-		Assign(pchBegin, pchEnd - pchBegin);
+		Replace(0, -1, Observer(pchBegin, pchEnd));
 	}
-	void Assign(const Char_t *pchSrc, std::size_t uSrcLen){
-		Resize(uSrcLen);
-		std::copy_n(pchSrc, uSrcLen, GetCStr());
+	void Assign(const Char_t *pchBegin, std::size_t uLen){
+		Replace(0, -1, Observer(pchBegin, uLen));
 	}
 	void Assign(const Observer &obs){
-		Resize(obs.GetLength());
-		std::copy(obs.GetBegin(), obs.GetEnd(), GetCStr());
+		Replace(0, -1, obs);
 	}
 	void Assign(String &&rhs) noexcept {
-		if(this != &rhs){
-			Clear();
-			Swap(rhs);
-		}
+		Swap(rhs);
 	}
 	template<typename OtherChar_t, StringEncoding OTHER_ENCODING>
 	void Assign(const String<OtherChar_t, OTHER_ENCODING> &rhs){
@@ -329,39 +323,36 @@ public:
 	}
 
 	void Append(Char_t ch, std::size_t uCount = 1){
-		const auto uOldLength = GetLength();
-		xSlide(0, uCount);
-		std::fill_n(GetCStr() + uOldLength, uCount, ch);
+		Replace(-1, -1, ch, uCount);
 	}
 	void Append(const Char_t *pchBegin, const Char_t *pchEnd){
-		Append(pchBegin, pchEnd - pchBegin);
+		Replace(-1, -1, Observer(pchBegin, pchEnd));
 	}
-	void Append(const Char_t *pchSrc, std::size_t uSrcLen){
-		const auto uOldLength = GetLength();
-		xSlide(0, uSrcLen);
-		std::copy_n(pchSrc, uSrcLen, GetCStr() + uOldLength);
+	void Append(const Char_t *pchBegin, std::size_t uLen){
+		Replace(-1, -1, Observer(pchBegin, uLen));
 	}
 	void Append(const Observer &obs){
-		const auto uOldLength = GetLength();
-		xSlide(0, obs.GetLength());
-		std::copy(obs.GetBegin(), obs.GetEnd(), GetCStr() + uOldLength);
+		Replace(-1, -1, obs);
 	}
-	void Append(String &&rhs){
-		if(this == &rhs){
-			Append(rhs);
+	void Append(const String &str){
+		Replace(-1, -1, str.GetObserver());
+	}
+	void Append(String &&str){
+		if(this == &str){
+			Append(str);
 		} else if(IsEmpty()){
-			Assign(std::move(rhs));
-		} else if(GetCapacity() >= rhs.GetCapacity()){
-			Append(rhs);
+			Assign(std::move(str));
+		} else if(GetCapacity() >= str.GetCapacity()){
+			Append(str);
 		} else {
-			rhs.Unshift(*this);
-			Assign(std::move(rhs));
+			Swap(str);
+			Unshift(str);
 		}
 	}
 	template<typename OtherChar_t, StringEncoding OTHER_ENCODING>
-	void Append(const String<OtherChar_t, OTHER_ENCODING> &rhs){
+	void Append(const String<OtherChar_t, OTHER_ENCODING> &str){
 		UnifiedString ucsTemp;
-		const auto pucsUnfied = rhs.xUnify(ucsTemp);
+		const auto pucsUnfied = str.xUnify(ucsTemp);
 		if(pucsUnfied){
 			xDisunify(*pucsUnfied);
 		} else {
@@ -369,12 +360,7 @@ public:
 		}
 	}
 	void Truncate(std::size_t uCount = 1) noexcept {
-		const auto uOldLength = GetLength();
-		if(uOldLength <= uCount){
-			Clear();
-		} else {
-			xSetSize(uOldLength - uCount);
-		}
+		Replace(-1 - uCount, -1, Observer());
 	}
 
 	void Push(Char_t ch){
@@ -406,42 +392,34 @@ public:
 	}
 
 	void Unshift(Char_t ch, std::size_t uCount = 1){
-		xSlide(uCount, 0);
-		std::fill_n(GetCStr(), uCount, ch);
+		Replace(0, 0, ch, uCount);
 	}
 	void Unshift(const Char_t *pchBegin, const Char_t *pchEnd){
-		Unshift(pchBegin, pchEnd - pchBegin);
+		Replace(0, 0, Observer(pchBegin, pchEnd));
 	}
-	void Unshift(const Char_t *pchSrc, std::size_t uSrcLen){
-		xSlide(uSrcLen, 0);
-		std::copy_n(pchSrc, uSrcLen, GetCStr());
+	void Unshift(const Char_t *pchBegin, std::size_t uLen){
+		Replace(0, 0, Observer(pchBegin, uLen));
 	}
 	void Unshift(const Observer &obs){
-		xSlide(obs.GetLength(), 0);
-		std::copy(obs.GetBegin(), obs.GetEnd(), GetCStr());
+		Replace(0, 0, obs);
 	}
-	void Unshift(String &&rhs){
-		if(this == &rhs){
-			Append(std::move(rhs));
+	void Unshift(const String &str){
+		Replace(0, 0, str.GetObserver());
+	}
+	void Unshift(String &&str){
+		if(this == &str){
+			Append(str);
 		} else if(IsEmpty()){
-			Assign(std::move(rhs));
-		} else if(GetCapacity() >= rhs.GetCapacity()){
-			Unshift(rhs);
+			Assign(std::move(str));
+		} else if(GetCapacity() >= str.GetCapacity()){
+			Unshift(str);
 		} else {
-			rhs.Append(*this);
-			Assign(std::move(rhs));
+			Swap(str);
+			Append(str);
 		}
 	}
 	void Shift(std::size_t uCount = 1) noexcept {
-		const auto uOldLength = GetLength();
-		if(uOldLength <= uCount){
-			Clear();
-		} else {
-			const auto uNewLength = uOldLength - uCount;
-			const auto pchBegin = GetCStr();
-			std::copy_n(pchBegin + uCount, uNewLength, pchBegin);
-			xSetSize(uNewLength);
-		}
+		Replace(0, uCount, Observer());
 	}
 
 	Observer Slice(std::ptrdiff_t nBegin, std::ptrdiff_t nEnd = -1) const {
@@ -460,87 +438,50 @@ public:
 	std::size_t FindLastBefore(Char_t chToFind, std::ptrdiff_t nOffsetEnd = -1) const noexcept {
 		return GetObserver().FindLastBefore(chToFind, nOffsetEnd);
 	}
-/*
-	// 参考 Slice。
-	void Replace(std::ptrdiff_t nBegin, std::ptrdiff_t nEnd, Char_t chRep, std::size_t uRepCount = 1){
-		auto pchBegin = GetCStr();
+
+	void Replace(std::ptrdiff_t nBegin, std::ptrdiff_t nEnd, Char_t chReplacement, std::size_t uCount = 1){
+		const auto obsRemoved(Slice(nBegin, nEnd));
+		const std::size_t uRemovedFrom = (const Char_t *)obsRemoved.GetBegin() - GetBegin();
+		const std::size_t uRemovedTo = (const Char_t *)obsRemoved.GetEnd() - GetBegin();
+
 		const auto uOldLength = GetLength();
-		const auto uRealBegin = xTranslateOffset(uOldLength, nBegin);
-		const auto uRealEnd = xTranslateOffset(uOldLength, nEnd);
-		if(uRealBegin < uRealEnd){
-			const auto uOldCount = uRealEnd - uRealBegin;
-			const auto uNewLength = uOldLength - uOldCount + uRepCount;
-			if(uRepCount > uOldCount){
-				// xxxYYYzzz
-				// xxxWWWWWzzz
-				xSlide(0, uRepCount - uOldCount, false);
-				pchBegin = GetCStr();
-				std::copy_backward(pchBegin + uRealEnd, pchBegin + uOldLength, pchBegin + uNewLength);
-			} else if(uRepCount < uOldCount){
-				// xxxYYYYYzzz
-				// xxxWWWzzz
-				std::copy(pchBegin + uRealEnd, pchBegin + uOldLength, pchBegin + uRealBegin + uRepCount);
-			}
-			std::fill_n(pchBegin + uRealBegin, uRepCount, chRep);
-			xSetSize(uNewLength);
-		} else if(uRealBegin > uRealEnd){
-			const auto uOldCount = uRealBegin - uRealEnd;
-			const auto uNewLength = uOldLength - uOldCount + uRepCount;
-			if(uRepCount > uOldCount){
-				// xxxYYYzzz
-				// xxxWWWWWzzz
-				xSlide(0, uRepCount - uOldCount, false);
-				pchBegin = GetCStr();
-				std::copy_backward(pchBegin + uRealBegin, pchBegin + uOldLength, pchBegin + uNewLength);
-			} else if(uRepCount < uOldCount){
-				// xxxYYYYYzzz
-				// xxxWWWzzz
-				std::copy(pchBegin + uRealBegin, pchBegin + uOldLength, pchBegin + uRealEnd + uRepCount);
-			}
-			std::fill_n(pchBegin + uRealEnd, uRepCount, chRep);
-			xSetSize(uNewLength);
+		const auto uDeltaLength = uCount - (uRemovedTo - uRemovedFrom);
+		Resize(uOldLength + uDeltaLength);
+
+		const auto pchBegin = GetCStr();
+		if((std::ptrdiff_t)uDeltaLength < 0){
+			std::copy(pchBegin + uRemovedTo, pchBegin + uOldLength, GetEnd() - (uOldLength - uRemovedTo));
+		} else if((std::ptrdiff_t)uDeltaLength > 0){
+			std::copy_backward(pchBegin + uRemovedTo, pchBegin + uOldLength, GetEnd());
 		}
+		std::fill_n(pchBegin + uRemovedFrom, uCount, chReplacement);
 	}
-	void Replace(std::ptrdiff_t nBegin, std::ptrdiff_t nEnd, const Char_t *pchRep, std::size_t uRepLen){
-		auto pchBegin = GetCStr();
+	void Replace(std::ptrdiff_t nBegin, std::ptrdiff_t nEnd, Observer obsReplacement){
+		std::unique_ptr<Char_t []> pchTemp;
+		if(obsReplacement.DoesOverlapWith(GetObserver())){
+			const auto uRepLen = obsReplacement.GetLength();
+			pchTemp.reset(new Char_t[uRepLen]);
+			std::copy(obsReplacement.GetBegin(), obsReplacement.GetEnd(), pchTemp.get());
+			obsReplacement.Assign(pchTemp.get(), uRepLen);
+		}
+
+		const auto obsRemoved(Slice(nBegin, nEnd));
+		const std::size_t uRemovedFrom = (const Char_t *)obsRemoved.GetBegin() - GetBegin();
+		const std::size_t uRemovedTo = (const Char_t *)obsRemoved.GetEnd() - GetBegin();
+
 		const auto uOldLength = GetLength();
-		const auto uRealBegin = xTranslateOffset(uOldLength, nBegin);
-		const auto uRealEnd = xTranslateOffset(uOldLength, nEnd);
-		if(uRealBegin < uRealEnd){
-			const auto uOldCount = uRealEnd - uRealBegin;
-			const auto uNewLength = uOldLength - uOldCount + uRepLen;
-			if(uRepLen > uOldCount){
-				// xxxYYYzzz
-				// xxxWWWWWzzz
-				xSlide(0, uRepLen - uOldCount, false);
-				pchBegin = GetCStr();
-				std::copy_backward(pchBegin + uRealEnd, pchBegin + uOldLength, pchBegin + uNewLength);
-			} else if(uRepLen < uOldCount){
-				// xxxYYYYYzzz
-				// xxxWWWzzz
-				std::copy(pchBegin + uRealEnd, pchBegin + uOldLength, pchBegin + uRealBegin + uRepLen);
-			}
-			std::copy(pchRep, pchRep + uRepLen, pchBegin + uRealBegin);
-			xSetSize(uNewLength);
-		} else if(uRealBegin > uRealEnd){
-			const auto uOldCount = uRealBegin - uRealEnd;
-			const auto uNewLength = uOldLength - uOldCount + uRepLen;
-			if(uRepLen > uOldCount){
-				// xxxYYYzzz
-				// xxxWWWWWzzz
-				xSlide(0, uRepLen - uOldCount, false);
-				pchBegin = GetCStr();
-				std::copy_backward(pchBegin + uRealBegin, pchBegin + uOldLength, pchBegin + uNewLength);
-			} else if(uRepLen < uOldCount){
-				// xxxYYYYYzzz
-				// xxxWWWzzz
-				std::copy(pchBegin + uRealBegin, pchBegin + uOldLength, pchBegin + uRealEnd + uRepLen);
-			}
-			std::reverse_copy(pchRep, pchRep + uRepLen, pchBegin + uRealEnd);
-			xSetSize(uNewLength);
+		const auto uDeltaLength = obsReplacement.GetLength() - (uRemovedTo - uRemovedFrom);
+		Resize(uOldLength + uDeltaLength);
+
+		const auto pchBegin = GetCStr();
+		if((std::ptrdiff_t)uDeltaLength < 0){
+			std::copy(pchBegin + uRemovedTo, pchBegin + uOldLength, GetEnd() - (uOldLength - uRemovedTo));
+		} else if((std::ptrdiff_t)uDeltaLength > 0){
+			std::copy_backward(pchBegin + uRemovedTo, pchBegin + uOldLength, GetEnd());
 		}
+		std::copy(obsReplacement.GetBegin(), obsReplacement.GetEnd(), pchBegin + uRemovedFrom);
 	}
-*/
+
 	Observer GetReverse() const noexcept {
 		auto obsRet(GetObserver());
 		obsRet.Reverse();

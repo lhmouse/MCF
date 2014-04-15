@@ -11,9 +11,9 @@
 using namespace MCF;
 
 #if (__BYTE_ORDER__ == __ORDER_BIG_ENDIAN__)
-#	define	SWAP_IF_NOT_BIG_ENDIAN(x)	(x)
+#	define SWAP_IF_NOT_BIG_ENDIAN(x)	(x)
 #else
-#	define	SWAP_IF_NOT_BIG_ENDIAN(x)	(__builtin_bswap16(x))
+#	define SWAP_IF_NOT_BIG_ENDIAN(x)	(__builtin_bswap16(x))
 #endif
 
 // 构造函数和析构函数。

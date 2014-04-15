@@ -12,17 +12,17 @@ __MCF_EXTERN_C_BEGIN
 extern char *_strcpyout(char *restrict dst, const char *restrict src) __MCF_NOEXCEPT;
 extern wchar_t *_wcscpyout(wchar_t *restrict dst, const wchar_t *restrict src) __MCF_NOEXCEPT;
 #ifndef _UNICODE
-#	define	_tcscpyout	_strcpyout
+#	define _tcscpyout	_strcpyout
 #else
-#	define	_tcscpyout	_wcscpyout
+#	define _tcscpyout	_wcscpyout
 #endif
 
 extern char *_strtok_r(char *restrict s1, const char *restrict s2, char **ctx) __MCF_NOEXCEPT;
 extern wchar_t *_wcstok_r(wchar_t *restrict s1, const wchar_t *restrict s2, wchar_t **ctx) __MCF_NOEXCEPT;
 #ifndef _UNICODE
-#	define	_tcstok_r	_strtok_r
+#	define _tcstok_r	_strtok_r
 #else
-#	define	_tcstok_r	_wcstok_r
+#	define _tcstok_r	_wcstok_r
 #endif
 
 __MCF_EXTERN_C_END

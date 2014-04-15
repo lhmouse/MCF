@@ -10,5 +10,5 @@ static void atexitWrapper(intptr_t nContext){
 }
 
 int atexit(void (*func)(void)){
-	return __MCF_AtCRTEnd(&atexitWrapper, (intptr_t)func);
+	return MCF_AtCRTEnd(&atexitWrapper, (intptr_t)func);
 }

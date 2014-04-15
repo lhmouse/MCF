@@ -25,9 +25,9 @@ wchar_t *wmemchr(const wchar_t *s, wchar_t ch, size_t cnt){
 		for(;;){
 
 #ifdef _WIN64
-#	define	MASK	0x0001000100010001ull
+#	define MASK	0x0001000100010001ull
 #else
-#	define	MASK	0x00010001ul
+#	define MASK	0x00010001ul
 #endif
 
 #define UNROLLED	\

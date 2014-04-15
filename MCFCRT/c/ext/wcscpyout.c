@@ -30,9 +30,9 @@ wchar_t *_wcscpyout(wchar_t *restrict dst, const wchar_t *restrict src){
 	for(;;){
 
 #ifdef _WIN64
-#	define	MASK	0x0001000100010001ull
+#	define MASK	0x0001000100010001ull
 #else
-#	define	MASK	0x00010001ul
+#	define MASK	0x00010001ul
 #endif
 
 #define UNROLLED(index)	\

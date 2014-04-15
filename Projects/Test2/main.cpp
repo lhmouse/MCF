@@ -2,15 +2,15 @@
 #include <MCF/Core/String.hpp>
 using namespace MCF;
 
+__attribute__((noinline)) void foo(AnsiString &s){
+	s.Replace(3, 5, "meow");
+}
+
 unsigned int MCFMain(){
-	AnsiString a("hello "), b("world! ");
-	a += b;
-	std::puts(a.GetCStr());
-
-	std::printf("%d\n", a == "hello world! ");
-
-	b.Unshift(a);
-	std::puts(b.GetCStr());
+	AnsiString s("0123456789");
+	foo(s);
+	s.Append(s.Slice(1, 10));
+	std::printf("%s$\n", s.GetCStr());
 
 	return 0;
 }

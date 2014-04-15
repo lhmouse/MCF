@@ -30,7 +30,7 @@
 
 #include <MCFCRT/MCFCRT.h>
 
-#undef	NULL
-#define	NULL	nullptr
+#undef NULL
+#define NULL	nullptr
 
 #endif

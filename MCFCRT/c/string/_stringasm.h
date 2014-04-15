@@ -9,23 +9,23 @@
 
 #if defined(__amd64__)
 
-#	define	RAX		"rax"
-#	define	RCX		"rcx"
-#	define	RDX		"rdx"
-#	define	RBX		"rbx"
-#	define	RBP		"rbp"
-#	define	RSI		"rsi"
-#	define	RDI		"rdi"
+#	define RAX		"rax"
+#	define RCX		"rcx"
+#	define RDX		"rdx"
+#	define RBX		"rbx"
+#	define RBP		"rbp"
+#	define RSI		"rsi"
+#	define RDI		"rdi"
 
 #elif defined(__i386__)
 
-#	define	RAX		"eax"
-#	define	RCX		"ecx"
-#	define	RDX		"edx"
-#	define	RBX		"ebx"
-#	define	RBP		"ebp"
-#	define	RSI		"esi"
-#	define	RDI		"edi"
+#	define RAX		"eax"
+#	define RCX		"ecx"
+#	define RDX		"edx"
+#	define RBX		"ebx"
+#	define RBP		"ebp"
+#	define RSI		"esi"
+#	define RDI		"edi"
 
 #else
 #	error Oops, this platform is not supported.

@@ -25,9 +25,9 @@ void *memchr(const void *s, int ch, size_t cb){
 		for(;;){
 
 #ifdef _WIN64
-#	define	MASK	0x0101010101010101ull
+#	define MASK	0x0101010101010101ull
 #else
-#	define	MASK	0x01010101ul
+#	define MASK	0x01010101ul
 #endif
 
 #define UNROLLED	\

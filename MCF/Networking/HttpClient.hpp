@@ -43,7 +43,7 @@ public:
 	);
 	HttpClient(
 		bool bAutoProxy,
-		const Utf16String &wcsProxy,
+		const WideString &wcsProxy,
 		const wchar_t *pwszUserAgent = L"MCF HTTPClient"
 	);
 	HttpClient(HttpClient &&rhs) noexcept;
@@ -77,7 +77,7 @@ public:
 
 	unsigned long ConnectNoThrow(
 		const wchar_t *		pwszVerb,
-		const wchar_t *		pwchUrl,
+		const wchar_t *		pwcUrl,
 		std::size_t			uUrlLen = (std::size_t)-1,
 		const void *		pContents = nullptr,
 		std::size_t			uContentSize = 0,
@@ -85,14 +85,14 @@ public:
 	);
 	unsigned long ConnectNoThrow(
 		const wchar_t *		pwszVerb,
-		const Utf16String &	wcsUrl,
+		const WideString &	wcsUrl,
 		const void *		pContents = nullptr,
 		std::size_t			uContentSize = 0,
 		const wchar_t *		pwszContentType = L"application/x-www-form-urlencoded; charset=utf-8"
 	);
 	void Connect(
 		const wchar_t *		pwszVerb,
-		const wchar_t *		pwchUrl,
+		const wchar_t *		pwcUrl,
 		std::size_t			uUrlLen = (std::size_t)-1,
 		const void *		pContents = nullptr,
 		std::size_t			uContentSize = 0,
@@ -100,7 +100,7 @@ public:
 	);
 	void Connect(
 		const wchar_t *		pwszVerb,
-		const Utf16String &	wcsUrl,
+		const WideString &	wcsUrl,
 		const void *		pContents = nullptr,
 		std::size_t			uContentSize = 0,
 		const wchar_t *		pwszContentType = L"application/x-www-form-urlencoded; charset=utf-8"

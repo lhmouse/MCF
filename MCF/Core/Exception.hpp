@@ -19,7 +19,7 @@ inline void SetWin32LastError(unsigned long ulErrorCode) noexcept {
 	::__MCF_CRT_SetWin32LastError(ulErrorCode);
 }
 
-extern Utf16String GetWin32ErrorDesc(unsigned long ulErrorCode);
+extern WideString GetWin32ErrorDesc(unsigned long ulErrorCode);
 
 struct Exception {
 	const char *pszFunction;

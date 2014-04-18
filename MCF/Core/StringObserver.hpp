@@ -6,6 +6,7 @@
 #define __MCF_STRING_OBSERVER_HPP__
 
 #include "../../MCFCRT/c/ext/assert.h"
+#include "../../MCFCRT/cpp/ext/count_of.hpp"
 #include <algorithm>
 #include <utility>
 #include <iterator>
@@ -161,81 +162,98 @@ private:
 		return (std::size_t)nOffset;
 	}
 
-	template<typename IteratorS_t, typename IteratorW_t>
-	static std::size_t xKmp(IteratorS_t s, std::size_t slen, IteratorW_t w, std::size_t wlen) noexcept {
-		if(wlen == 0){
-			return 0;
-		}
-		if(slen < wlen){
-			return NPOS;
-		}
+	template<typename Iterator_t>
+	static std::size_t xFindRepSeq(const Iterator_t &itBegin, const Iterator_t &itEnd, Char_t chToFind, std::size_t uRepCount) noexcept {
+		ASSERT(uRepCount != 0);
+		ASSERT((std::size_t)(itEnd - itBegin) >= uRepCount);
 
-		// http://en.wikipedia.org/wiki/Knuth–Morris–Pratt_algorithm
-		std::size_t t_sm[64];
-		std::size_t *t;
-		if(wlen <= COUNT_OF(t_sm)){
-			t = t_sm;
+		const auto itSearchEnd = itEnd - (uRepCount - 1);
+
+		std::size_t uFound = NPOS;
+
+		auto itCur = itBegin;
+		do {
+			const auto itPartBegin = std::find_if(itCur, itSearchEnd, [chToFind](Char_t ch){ return ch == chToFind; });
+			if(itPartBegin == itSearchEnd){
+				break;
+			}
+			const auto itPartEnd = itPartBegin + uRepCount;
+			itCur = std::find_if(itPartBegin, itPartEnd, [chToFind](Char_t ch){ return ch != chToFind; });
+			if(itCur == itPartEnd){
+				uFound = itPartBegin - itBegin;
+				break;
+			}
+			++itCur;
+		} while(itCur < itSearchEnd);
+
+		return uFound;
+	}
+
+	template<typename Iterator_t>
+	static std::size_t xKmpSearch(const Iterator_t &itBegin, const Iterator_t &itEnd, const StringObserver &obsToFind) noexcept {
+		ASSERT(!obsToFind.IsEmpty());
+		ASSERT((std::size_t)(itEnd - itBegin) >= obsToFind.GetLength());
+
+		const auto uToFindLen = obsToFind.GetLength();
+		const auto itSearchEnd = itEnd - (uToFindLen - 1);
+
+		std::size_t *puKmpTable;
+
+		std::size_t auSmallTable[256];
+		if(uToFindLen <= COUNT_OF(auSmallTable)){
+			puKmpTable = auSmallTable;
 		} else {
-			t = new(std::nothrow) std::size_t[wlen];
-			if(!t){
+			puKmpTable = new(std::nothrow) std::size_t[uToFindLen];
+			if(!puKmpTable){
 				// 内存不足，使用暴力搜索方法。
-				const auto till = s  + (slen - wlen);
-				auto p = s;
-				do {
-					if(std::equal(p, p + wlen, w)){
-						return p - s;
+				for(auto itCur = itBegin; itCur != itSearchEnd; ++itCur){
+					if(std::equal(obsToFind.GetBegin(), obsToFind.GetEnd(), itCur)){
+						return itCur - itBegin;
 					}
-				} while(++p != till);
-
+				}
 				return NPOS;
 			}
 		}
 
-		std::size_t pos = 2;
-		std::size_t cnd = 0;
+		std::size_t uFound = NPOS;
 
-		t[0] = (std::size_t)-1;
-		t[1] = 0;
+		puKmpTable[0] = 0;
+		puKmpTable[1] = 0;
 
-		while(pos < wlen){
-			if(w[pos - 1] == w[cnd]){
-				++cnd;
-				t[pos] = cnd;
-				++pos;
-			} else if(cnd != 0){
-				cnd = t[cnd];
+		std::size_t uPos = 2;
+		std::size_t uCand = 0;
+		while(uPos < uToFindLen){
+			if(obsToFind[uPos - 1] == obsToFind[uCand]){
+				puKmpTable[uPos++] = ++uCand;
+			} else if(uCand != 0){
+				uCand = puKmpTable[uCand];
 			} else {
-				t[pos] = 0;
-				++pos;
+				puKmpTable[uPos++] = 0;
 			}
 		}
 
-		std::size_t found = NPOS;
+		const auto itToFindBegin = obsToFind.GetBegin();
+		const auto itToFindEnd = obsToFind.GetEnd();
 
-		std::size_t m = 0;
-		std::size_t i = 0;
-		while(m + i < slen){
-			if(w[i] == s[m + i]){
-				if(i == wlen - 1){
-					found = m;
-					break;
-				}
-				++i;
-			} else {
-				const auto entry = t[i];
-				m += i - entry;
-				if(entry != (std::size_t)-1){
-					i = entry;
-				} else {
-					i = 0;
-				}
+		auto itCur = itBegin;
+		std::size_t uToSkip = 0;
+		do {
+			const auto vResult = std::mismatch(itToFindBegin + uToSkip, itToFindEnd, itCur + uToSkip);
+			if(vResult.first == itToFindEnd){
+				uFound = itCur - itBegin;
+				break;
 			}
-		}
+			std::size_t uDelta = vResult.first - itToFindBegin;
+			uToSkip = puKmpTable[uDelta];
+			uDelta -= uToSkip;
+			uDelta += (std::size_t)(*vResult.second != *itToFindBegin);
+			itCur += uDelta;
+		} while(itCur < itSearchEnd);
 
-		if(t != t_sm){
-			delete[] t;
+		if(puKmpTable != auSmallTable){
+			delete[] puKmpTable;
 		}
-		return found;
+		return uFound;
 	}
 
 private:
@@ -283,8 +301,14 @@ public:
 	Iterator GetBegin() const noexcept {
 		return Iterator(xm_pchBegin, xm_pchEnd - xm_pchBegin);
 	}
+	Iterator GetCBegin() const noexcept {
+		return GetBegin();
+	}
 	Iterator GetEnd() const noexcept {
 		return Iterator(xm_pchEnd, xm_pchEnd - xm_pchBegin);
+	}
+	Iterator GetCEnd() const noexcept {
+		return GetEnd();
 	}
 	std::size_t GetSize() const noexcept {
 		return (std::size_t)(GetEnd() - GetBegin());
@@ -376,89 +400,85 @@ public:
 	}
 
 	// 举例：
-	//   FindFirstAfter("def", 3)   返回 3；
-	//   FindFirstAfter("def", 4)   返回 NPOS；
-	//   FindLastBefore("def", 5)   返回 NPOS；
-	//   FindLastBefore("def", 6)   返回 3。
-	std::size_t FindFirstAfter(const StringObserver &obsToFind, std::ptrdiff_t nOffsetBegin = 0) const noexcept {
+	//   Find("def", 3)				返回 3；
+	//   Find("def", 4)				返回 NPOS；
+	//   FindBackward("def", 5)		返回 NPOS；
+	//   FindBackward("def", 6)		返回 3。
+	std::size_t Find(const StringObserver &obsToFind, std::ptrdiff_t nOffsetBegin = 0) const noexcept {
+		const auto uLength = GetLength();
+		const auto uRealBegin = xTranslateOffset(uLength, nOffsetBegin);
 		const auto uLenToFind = obsToFind.GetLength();
 		if(uLenToFind == 0){
-			return 0;
+			return uRealBegin;
 		}
-		const auto uLength = GetLength();
 		if(uLength < uLenToFind){
 			return NPOS;
 		}
-		const auto uRealBegin = xTranslateOffset(uLength, nOffsetBegin);
 		if(uRealBegin + uLenToFind > uLength){
 			return NPOS;
 		}
 
-		const auto uPos = xKmp(
-			GetBegin() + uRealBegin,
-			uLength - uRealBegin,
-			obsToFind.GetBegin(),
-			uLenToFind
-		);
+		const auto uPos = xKmpSearch(GetBegin() + uRealBegin, GetEnd(), obsToFind);
 		return (uPos == NPOS) ? NPOS : (uPos + uRealBegin);
 	}
-	std::size_t FindLastBefore(const StringObserver &obsToFind, std::ptrdiff_t nOffsetEnd = -1) const noexcept {
-		const auto uLenToFind = obsToFind.GetLength();
+	std::size_t FindBackward(const StringObserver &obsToFind, std::ptrdiff_t nOffsetEnd = -1) const noexcept {
 		const auto uLength = GetLength();
+		const auto uRealEnd = xTranslateOffset(uLength, nOffsetEnd);
+		const auto uLenToFind = obsToFind.GetLength();
 		if(uLenToFind == 0){
-			return uLength;
+			return uRealEnd;
 		}
 		if(uLength < uLenToFind){
 			return NPOS;
 		}
-		const auto uRealEnd = xTranslateOffset(uLength, nOffsetEnd);
 		if(uRealEnd < uLenToFind){
 			return NPOS;
 		}
 
 		typedef std::reverse_iterator<Iterator> RevIterator;
 
-		const auto uPos = xKmp(
-			RevIterator(GetBegin() + uRealEnd),
-			uRealEnd,
-			RevIterator(obsToFind.GetEnd()),
-			uLenToFind
-		);
+		const auto uPos = xKmpSearch(RevIterator(GetBegin() + uRealEnd), RevIterator(GetBegin()), obsToFind.GetReverse());
 		return (uPos == NPOS) ? NPOS : (uRealEnd - uPos - uLenToFind);
 	}
 
 	// 举例：
-	//   FindFirstAfter('c', 3)   返回 NPOS；
-	//   FindFirstAfter('d', 3)   返回 3；
-	//   FindLastBefore('c', 3)   返回 2；
-	//   FindLastBefore('d', 3)   返回 NPOS。
-	std::size_t FindFirstAfter(Char_t chToFind, std::ptrdiff_t nOffsetBegin = 0) const noexcept {
-		if(IsEmpty()){
+	//   Find('c', 1, 3)			返回 NPOS；
+	//   Find('d', 1, 3)			返回 3；
+	//   FindBackward('c', 1, 3)	返回 2；
+	//   FindBackward('d', 1, 3)	返回 NPOS。
+	std::size_t Find(Char_t chToFind, std::size_t uRepCount = 1, std::ptrdiff_t nOffsetBegin = 0) const noexcept {
+		const auto uLength = GetLength();
+		const auto uRealBegin = xTranslateOffset(uLength, nOffsetBegin);
+		if(uRepCount == 0){
+			return uRealBegin;
+		}
+		if(uLength < uRepCount){
 			return NPOS;
 		}
-		auto itPos = GetBegin() + xTranslateOffset(GetLength(), nOffsetBegin);
-		const auto itEnd = GetEnd();
-		while(itPos != itEnd){
-			if(*itPos == chToFind){
-				return itPos - GetBegin();
-			}
-			++itPos;
+		if(uRealBegin + uRepCount > uLength){
+			return NPOS;
 		}
-		return NPOS;
+
+		const auto uPos = xFindRepSeq(GetBegin() + uRealBegin, GetEnd(), chToFind, uRepCount);
+		return (uPos == NPOS) ? NPOS : (uPos + uRealBegin);
 	}
-	std::size_t FindLastBefore(Char_t chToFind, std::ptrdiff_t nOffsetEnd = -1) const noexcept {
-		if(IsEmpty()){
+	std::size_t FindBackward(Char_t chToFind, std::size_t uRepCount = 1, std::ptrdiff_t nOffsetEnd = -1) const noexcept {
+		const auto uLength = GetLength();
+		const auto uRealEnd = xTranslateOffset(uLength, nOffsetEnd);
+		if(uRepCount == 0){
+			return uRealEnd;
+		}
+		if(uLength < uRepCount){
 			return NPOS;
 		}
-		auto itPos = GetBegin() + xTranslateOffset(GetLength(), nOffsetEnd);
-		const auto itBegin = GetBegin();
-		while(itPos != itBegin){
-			--itPos;
-			if(*itPos == chToFind){
-				return itPos - GetBegin();
-			}
+		if(uRealEnd < uRepCount){
+			return NPOS;
 		}
-		return NPOS;
+
+		typedef std::reverse_iterator<Iterator> RevIterator;
+
+		const auto uPos = xFindRepSeq(RevIterator(GetBegin() + uRealEnd), RevIterator(GetBegin()), chToFind, uRepCount);
+		return (uPos == NPOS) ? NPOS : (uRealEnd - uPos - uRepCount);
 	}
 
 	StringObserver GetReverse() const noexcept {
@@ -532,7 +552,7 @@ StringObserverIterator<Char_t> begin(const StringObserver<Char_t> &obs) noexcept
 }
 template<typename Char_t>
 StringObserverIterator<Char_t> cbegin(const StringObserver<Char_t> &obs) noexcept {
-	return obs.GetBegin();
+	return obs.GetCBegin();
 }
 
 template<typename Char_t>
@@ -541,7 +561,7 @@ StringObserverIterator<Char_t> end(const StringObserver<Char_t> &obs) noexcept {
 }
 template<typename Char_t>
 StringObserverIterator<Char_t> cend(const StringObserver<Char_t> &obs) noexcept {
-	return obs.GetEnd();
+	return obs.GetCEnd();
 }
 
 template class StringObserver<char>;

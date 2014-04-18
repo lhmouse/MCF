@@ -78,11 +78,17 @@ public:
 	Element_t *GetBegin() noexcept {
 		return xm_pBegin;
 	}
+	const Element_t *GetCBegin() const noexcept {
+		return GetBegin();
+	}
 	const Element_t *GetEnd() const noexcept {
 		return xm_pEnd;
 	}
 	Element_t *GetEnd() noexcept {
 		return xm_pEnd;
+	}
+	const Element_t *GetCEnd() const noexcept {
+		return GetEnd();
 	}
 
 	const Element_t *GetData() const noexcept {
@@ -125,7 +131,7 @@ Element_t *begin(Vla<Element_t, ALT_STOR_THLD> &vec) noexcept {
 }
 template<typename Element_t, std::size_t ALT_STOR_THLD>
 const Element_t *cbegin(const Vla<Element_t, ALT_STOR_THLD> &vec) noexcept {
-	return vec.GetBegin();
+	return vec.GetCBegin();
 }
 
 template<typename Element_t, std::size_t ALT_STOR_THLD>
@@ -138,7 +144,7 @@ Element_t *end(Vla<Element_t, ALT_STOR_THLD> &vec) noexcept {
 }
 template<typename Element_t, std::size_t ALT_STOR_THLD>
 const Element_t *cend(const Vla<Element_t, ALT_STOR_THLD> &vec) noexcept {
-	return vec.GetEnd();
+	return vec.GetCEnd();
 }
 
 }

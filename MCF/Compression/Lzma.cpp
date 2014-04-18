@@ -185,7 +185,7 @@ public:
 
 		xm_uBytesProcessed = 0;
 		while(pbyRead != pbyEnd){
-			const auto uBytesToProcess = std::min<std::size_t>(pbyEnd - pbyRead, 0x10000);
+			const auto uBytesToProcess = Min(pbyEnd - pbyRead, 0x10000);
 
 			ulErrorCode = LzmaErrorToWin32Error(::LzmaEnc_NewEncode(xm_pContext.Get(), pbyRead, uBytesToProcess));
 			if(xm_pException){
@@ -258,7 +258,7 @@ public:
 
 		xm_uBytesProcessed = 0;
 		if(xm_uHeaderSize < sizeof(xm_abyHeader)){
-			const auto uBytesToCopy = std::min<std::size_t>(pbyEnd - pbyRead, sizeof(xm_abyHeader) - xm_uHeaderSize);
+			const auto uBytesToCopy = Min(pbyEnd - pbyRead, sizeof(xm_abyHeader) - xm_uHeaderSize);
 			__builtin_memcpy(xm_abyHeader + xm_uHeaderSize, pbyRead, uBytesToCopy);
 			pbyRead += uBytesToCopy;
 			xm_uBytesProcessed += uBytesToCopy;

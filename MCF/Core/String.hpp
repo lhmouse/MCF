@@ -7,25 +7,19 @@
 
 #include "StringObserver.hpp"
 #include "../../MCFCRT/cpp/ext/count_of.hpp"
+#include "../../MCFCRT/cpp/ext/vvector.hpp"
 #include "Utilities.hpp"
 #include <memory>
-#include <new>
 #include <cstdint>
-#include <cstring>
-#include <cwchar>
 
 namespace MCF {
 
 enum class StringEncoding {
 	UTF8,
 	ANSI,
-	UTF16
+	UTF16,
+	UTF32
 };
-
-template<typename Char_t, StringEncoding ENCODING>
-class String;
-
-typedef String<wchar_t, StringEncoding::UTF16> UnifiedString;
 
 template<typename Char_t, StringEncoding ENCODING>
 class String {
@@ -63,11 +57,13 @@ public:
 	explicit String(Char_t ch, std::size_t uCount = 1) : String() {
 		Assign(ch, uCount);
 	}
-	String(const Char_t *pchBegin, const Char_t *pchEnd) : String() {
-		Assign(pchBegin, pchEnd);
+	template<class Iterator_t>
+	String(const Iterator_t &itBegin, const Iterator_t &itEnd) : String() {
+		Assign(itBegin, itEnd);
 	}
-	String(const Char_t *pchBegin, std::size_t uLen) : String() {
-		Assign(pchBegin, uLen);
+	template<class Iterator_t>
+	String(const Iterator_t &itBegin, std::size_t uLen) : String() {
+		Assign(itBegin, uLen);
 	}
 	explicit String(const Observer &obs) : String() {
 		Assign(obs);
@@ -198,12 +194,26 @@ private:
 		}
 	}
 
-	// 返回值如果不是 nullptr，就使用返回值拷贝构造。
-	// 否则 ucsTemp 为出参，可以移动构造。
-	const UnifiedString *xUnify(UnifiedString &ucsTemp) const;
-	// 追加到末尾。
-	void xDisunify(const UnifiedString &ucsTemp);
-	void xDisunify(UnifiedString &&ucsTemp);
+	Char_t *xSnap(std::ptrdiff_t nBegin, std::ptrdiff_t nEnd, std::size_t uSize){
+		const auto obsRemoved(Slice(nBegin, nEnd));
+		const std::size_t uRemovedFrom = (const Char_t *)obsRemoved.GetBegin() - GetBegin();
+		const std::size_t uRemovedTo = (const Char_t *)obsRemoved.GetEnd() - GetBegin();
+
+		const auto uOldLength = GetLength();
+		const auto uDeltaLength = uSize - (uRemovedTo - uRemovedFrom);
+		Resize(uOldLength + uDeltaLength);
+
+		const auto pchBegin = GetCStr();
+		if((std::ptrdiff_t)uDeltaLength < 0){
+			std::copy(pchBegin + uRemovedTo, pchBegin + uOldLength, GetEnd() - (uOldLength - uRemovedTo));
+		} else if((std::ptrdiff_t)uDeltaLength > 0){
+			std::copy_backward(pchBegin + uRemovedTo, pchBegin + uOldLength, GetEnd());
+		}
+		return pchBegin + uRemovedFrom;
+	}
+
+	VVector<wchar_t> xUnify() const;
+	void xDeunifyAppend(const VVector<wchar_t> &vecUnified);
 
 public:
 	const Char_t *GetBegin() const noexcept {
@@ -220,6 +230,9 @@ public:
 			return xm_vStorage.pchLargeBegin;
 		}
 	}
+	const Char_t *GetCBegin() const noexcept {
+		return GetBegin();
+	}
 	const Char_t *GetEnd() const noexcept {
 		if(xm_vStorage.chNull == Char_t()){
 			return &(xm_vStorage.achSmall[0]) + xm_vStorage.uchSmallLength;
@@ -233,6 +246,9 @@ public:
 		} else {
 			return xm_vStorage.pchLargeBegin + xm_vStorage.uLargeLength;
 		}
+	}
+	const Char_t *GetCEnd() const noexcept {
+		return GetEnd();
 	}
 
 	const Char_t *GetCStr() const noexcept {
@@ -298,11 +314,13 @@ public:
 	void Assign(Char_t ch, std::size_t uCount = 1){
 		Replace(0, -1, ch, uCount);
 	}
-	void Assign(const Char_t *pchBegin, const Char_t *pchEnd){
-		Replace(0, -1, Observer(pchBegin, pchEnd));
+	template<class Iterator_t>
+	void Assign(const Iterator_t &itBegin, const Iterator_t &itEnd){
+		Replace(0, -1, itBegin, itEnd);
 	}
-	void Assign(const Char_t *pchBegin, std::size_t uLen){
-		Replace(0, -1, Observer(pchBegin, uLen));
+	template<class Iterator_t>
+	void Assign(const Iterator_t &itBegin, std::size_t uLen){
+		Replace(0, -1, itBegin, uLen);
 	}
 	void Assign(const Observer &obs){
 		Replace(0, -1, obs);
@@ -312,24 +330,20 @@ public:
 	}
 	template<typename OtherChar_t, StringEncoding OTHER_ENCODING>
 	void Assign(const String<OtherChar_t, OTHER_ENCODING> &rhs){
-		UnifiedString ucsTemp;
-		const auto pucsUnfied = rhs.xUnify(ucsTemp);
 		Clear();
-		if(pucsUnfied){
-			xDisunify(*pucsUnfied);
-		} else {
-			xDisunify(std::move(ucsTemp));
-		}
+		Append(rhs);
 	}
 
 	void Append(Char_t ch, std::size_t uCount = 1){
 		Replace(-1, -1, ch, uCount);
 	}
-	void Append(const Char_t *pchBegin, const Char_t *pchEnd){
-		Replace(-1, -1, Observer(pchBegin, pchEnd));
+	template<class Iterator_t>
+	void Append(const Iterator_t &itBegin, const Iterator_t &itEnd){
+		Replace(-1, -1, itBegin, itEnd);
 	}
-	void Append(const Char_t *pchBegin, std::size_t uLen){
-		Replace(-1, -1, Observer(pchBegin, uLen));
+	template<class Iterator_t>
+	void Append(const Iterator_t &itBegin, std::size_t uLen){
+		Replace(-1, -1, itBegin, uLen);
 	}
 	void Append(const Observer &obs){
 		Replace(-1, -1, obs);
@@ -351,13 +365,7 @@ public:
 	}
 	template<typename OtherChar_t, StringEncoding OTHER_ENCODING>
 	void Append(const String<OtherChar_t, OTHER_ENCODING> &str){
-		UnifiedString ucsTemp;
-		const auto pucsUnfied = str.xUnify(ucsTemp);
-		if(pucsUnfied){
-			xDisunify(*pucsUnfied);
-		} else {
-			xDisunify(std::move(ucsTemp));
-		}
+		xDeunifyAppend(str.xUnify());
 	}
 	void Truncate(std::size_t uCount = 1) noexcept {
 		Replace(-1 - uCount, -1, Observer());
@@ -394,11 +402,13 @@ public:
 	void Unshift(Char_t ch, std::size_t uCount = 1){
 		Replace(0, 0, ch, uCount);
 	}
-	void Unshift(const Char_t *pchBegin, const Char_t *pchEnd){
-		Replace(0, 0, Observer(pchBegin, pchEnd));
+	template<class Iterator_t>
+	void Unshift(const Iterator_t &itBegin, const Iterator_t &itEnd){
+		Replace(0, 0, itBegin, itEnd);
 	}
-	void Unshift(const Char_t *pchBegin, std::size_t uLen){
-		Replace(0, 0, Observer(pchBegin, uLen));
+	template<class Iterator_t>
+	void Unshift(const Iterator_t &itBegin, std::size_t uLen){
+		Replace(0, 0, itBegin, uLen);
 	}
 	void Unshift(const Observer &obs){
 		Replace(0, 0, obs);
@@ -426,60 +436,43 @@ public:
 		return GetObserver().Slice(nBegin, nEnd);
 	}
 
-	std::size_t FindFirstAfter(const Observer &obsToFind, std::ptrdiff_t nOffsetBegin = 0) const noexcept {
-		return GetObserver().FindFirstAfter(obsToFind, nOffsetBegin);
+	std::size_t Find(const Observer &obsToFind, std::ptrdiff_t nOffsetBegin = 0) const noexcept {
+		return GetObserver().Find(obsToFind, nOffsetBegin);
 	}
-	std::size_t FindFirstAfter(Char_t chToFind, std::ptrdiff_t nOffsetBegin = 0) const noexcept {
-		return GetObserver().FindFirstAfter(chToFind, nOffsetBegin);
+	std::size_t Find(Char_t chToFind, std::ptrdiff_t nOffsetBegin = 0) const noexcept {
+		return GetObserver().Find(chToFind, nOffsetBegin);
 	}
-	std::size_t FindLastBefore(const Observer &obsToFind, std::ptrdiff_t nOffsetEnd = -1) const noexcept {
-		return GetObserver().FindLastBefore(obsToFind, nOffsetEnd);
+	std::size_t FindBackward(const Observer &obsToFind, std::ptrdiff_t nOffsetEnd = -1) const noexcept {
+		return GetObserver().FindBackward(obsToFind, nOffsetEnd);
 	}
-	std::size_t FindLastBefore(Char_t chToFind, std::ptrdiff_t nOffsetEnd = -1) const noexcept {
-		return GetObserver().FindLastBefore(chToFind, nOffsetEnd);
+	std::size_t FindBackward(Char_t chToFind, std::ptrdiff_t nOffsetEnd = -1) const noexcept {
+		return GetObserver().FindBackward(chToFind, nOffsetEnd);
 	}
 
 	void Replace(std::ptrdiff_t nBegin, std::ptrdiff_t nEnd, Char_t chReplacement, std::size_t uCount = 1){
-		const auto obsRemoved(Slice(nBegin, nEnd));
-		const std::size_t uRemovedFrom = (const Char_t *)obsRemoved.GetBegin() - GetBegin();
-		const std::size_t uRemovedTo = (const Char_t *)obsRemoved.GetEnd() - GetBegin();
-
-		const auto uOldLength = GetLength();
-		const auto uDeltaLength = uCount - (uRemovedTo - uRemovedFrom);
-		Resize(uOldLength + uDeltaLength);
-
-		const auto pchBegin = GetCStr();
-		if((std::ptrdiff_t)uDeltaLength < 0){
-			std::copy(pchBegin + uRemovedTo, pchBegin + uOldLength, GetEnd() - (uOldLength - uRemovedTo));
-		} else if((std::ptrdiff_t)uDeltaLength > 0){
-			std::copy_backward(pchBegin + uRemovedTo, pchBegin + uOldLength, GetEnd());
-		}
-		std::fill_n(pchBegin + uRemovedFrom, uCount, chReplacement);
+		const auto pchWrite = xSnap(nBegin, nEnd, uCount);
+		std::fill_n(pchWrite, uCount, chReplacement);
 	}
-	void Replace(std::ptrdiff_t nBegin, std::ptrdiff_t nEnd, Observer obsReplacement){
-		std::unique_ptr<Char_t []> pchTemp;
-		if(obsReplacement.DoesOverlapWith(GetObserver())){
-			const auto uRepLen = obsReplacement.GetLength();
-			pchTemp.reset(new Char_t[uRepLen]);
-			std::copy(obsReplacement.GetBegin(), obsReplacement.GetEnd(), pchTemp.get());
-			obsReplacement.Assign(pchTemp.get(), uRepLen);
+	template<class Iterator_t>
+	void Replace(std::ptrdiff_t nBegin, std::ptrdiff_t nEnd, const Iterator_t &itRepBegin, std::size_t uRepLen){
+		// 注意，不指向同一个数组的两个指针相互比较是未定义行为。
+		if((uRepLen != 0) && ((std::uintptr_t)&*itRepBegin - (std::uintptr_t)GetBegin() <= GetLength() * sizeof(Char_t))){
+			// 待替换字符串和当前字符串重叠。
+			String strTemp(*this);
+			const auto pchWrite = strTemp.xSnap(nBegin, nEnd, uRepLen);
+			std::copy_n(itRepBegin, uRepLen, pchWrite);
+			Swap(strTemp);
+		} else {
+			const auto pchWrite = xSnap(nBegin, nEnd, uRepLen);
+			std::copy_n(itRepBegin, uRepLen, pchWrite);
 		}
-
-		const auto obsRemoved(Slice(nBegin, nEnd));
-		const std::size_t uRemovedFrom = (const Char_t *)obsRemoved.GetBegin() - GetBegin();
-		const std::size_t uRemovedTo = (const Char_t *)obsRemoved.GetEnd() - GetBegin();
-
-		const auto uOldLength = GetLength();
-		const auto uDeltaLength = obsReplacement.GetLength() - (uRemovedTo - uRemovedFrom);
-		Resize(uOldLength + uDeltaLength);
-
-		const auto pchBegin = GetCStr();
-		if((std::ptrdiff_t)uDeltaLength < 0){
-			std::copy(pchBegin + uRemovedTo, pchBegin + uOldLength, GetEnd() - (uOldLength - uRemovedTo));
-		} else if((std::ptrdiff_t)uDeltaLength > 0){
-			std::copy_backward(pchBegin + uRemovedTo, pchBegin + uOldLength, GetEnd());
-		}
-		std::copy(obsReplacement.GetBegin(), obsReplacement.GetEnd(), pchBegin + uRemovedFrom);
+	}
+	template<class Iterator_t>
+	void Replace(std::ptrdiff_t nBegin, std::ptrdiff_t nEnd, const Iterator_t &itRepBegin, const Iterator_t &itRepEnd){
+		Replace(nBegin, nEnd, itRepBegin, std::distance(itRepBegin, itRepEnd));
+	}
+	void Replace(std::ptrdiff_t nBegin, std::ptrdiff_t nEnd, const Observer &obsReplacement){
+		Replace(nBegin, nEnd, obsReplacement.GetBegin(), obsReplacement.GetLength());
 	}
 
 	Observer GetReverse() const noexcept {
@@ -533,8 +526,17 @@ public:
 		Append(rhs);
 		return *this;
 	}
+	String &operator+=(const String &rhs){
+		Append(rhs);
+		return *this;
+	}
 	String &operator+=(String &&rhs){
 		Append(std::move(rhs));
+		return *this;
+	}
+	template<typename OtherChar_t, StringEncoding OTHER_ENCODING>
+	String &operator+=(const String<OtherChar_t, OTHER_ENCODING> &str){
+		Append(str);
 		return *this;
 	}
 
@@ -574,6 +576,12 @@ String<Char_t, ENCODING> operator+(const String<Char_t, ENCODING> &lhs, Char_t r
 	strRet.Append(rhs);
 	return std::move(strRet);
 }
+template<typename Char_t, StringEncoding ENCODING, typename OtherChar_t, StringEncoding OTHER_ENCODING>
+String<Char_t, ENCODING> operator+(const String<Char_t, ENCODING> &lhs, const String<OtherChar_t, OTHER_ENCODING> &rhs){
+	String<Char_t, ENCODING> strRet(lhs);
+	strRet.Append(rhs);
+	return std::move(strRet);
+}
 template<typename Char_t, StringEncoding ENCODING>
 String<Char_t, ENCODING> operator+(String<Char_t, ENCODING> &&lhs, const StringObserver<Char_t> &rhs){
 	lhs.Append(rhs);
@@ -581,6 +589,11 @@ String<Char_t, ENCODING> operator+(String<Char_t, ENCODING> &&lhs, const StringO
 }
 template<typename Char_t, StringEncoding ENCODING>
 String<Char_t, ENCODING> operator+(String<Char_t, ENCODING> &&lhs, Char_t rhs){
+	lhs.Append(rhs);
+	return std::move(lhs);
+}
+template<typename Char_t, StringEncoding ENCODING, typename OtherChar_t, StringEncoding OTHER_ENCODING>
+String<Char_t, ENCODING> operator+(String<Char_t, ENCODING> &&lhs, const String<OtherChar_t, OTHER_ENCODING> &rhs){
 	lhs.Append(rhs);
 	return std::move(lhs);
 }
@@ -633,7 +646,7 @@ Char_t *begin(String<Char_t, ENCODING> &str) noexcept {
 }
 template<typename Char_t, StringEncoding ENCODING>
 const Char_t *cbegin(const String<Char_t, ENCODING> &str) noexcept {
-	return str.GetBegin();
+	return str.GetCBegin();
 }
 
 template<typename Char_t, StringEncoding ENCODING>
@@ -646,16 +659,22 @@ Char_t *end(String<Char_t, ENCODING> &str) noexcept {
 }
 template<typename Char_t, StringEncoding ENCODING>
 const Char_t *cend(const String<Char_t, ENCODING> &str) noexcept {
-	return str.GetEnd();
+	return str.GetCEnd();
 }
 
-template class String<char,		StringEncoding::UTF8>;
-template class String<char,		StringEncoding::ANSI>;
-template class String<wchar_t,	StringEncoding::UTF16>;
+extern template class String<char,		StringEncoding::ANSI>;
+extern template class String<wchar_t,	StringEncoding::UTF16>;
 
-typedef String<char,	StringEncoding::UTF8>	Utf8String;
-typedef String<char,	StringEncoding::ANSI>	AnsiString;
-typedef String<wchar_t,	StringEncoding::UTF16>	Utf16String;
+extern template class String<char,		StringEncoding::UTF8>;
+extern template class String<char16_t,	StringEncoding::UTF16>;
+extern template class String<char32_t,	StringEncoding::UTF32>;
+
+typedef String<char,		StringEncoding::ANSI>	AnsiString;
+typedef String<wchar_t,		StringEncoding::UTF16>	WideString;
+
+typedef String<char,		StringEncoding::UTF8>	Utf8String;
+typedef String<char16_t,	StringEncoding::UTF16>	Utf16String;
+typedef String<char32_t,	StringEncoding::UTF32>	Utf32String;
 
 }
 

@@ -60,11 +60,11 @@ size_t MCF_GetArgV(const wchar_t *const **pppwszArgV){
 					QUOTE_AFTER_QUOTE,
 					FINISH
 				} eState = DELIM;
-				const wchar_t *pwchRead = g_pwszArgBuffer;
-				wchar_t *pwchBegin = g_pwszArgBuffer;
-				wchar_t *pwchWrite = g_pwszArgBuffer;
+				const wchar_t *pwcRead = g_pwszArgBuffer;
+				wchar_t *pwcBegin = g_pwszArgBuffer;
+				wchar_t *pwcWrite = g_pwszArgBuffer;
 				for(;;){
-					const wchar_t ch = *(pwchRead++);
+					const wchar_t ch = *(pwcRead++);
 					if(ch == 0){
 						switch(eState){
 						case DELIM:
@@ -199,11 +199,11 @@ size_t MCF_GetArgV(const wchar_t *const **pppwszArgV){
 					case IN_ARG:
 					case IN_QUOTE:
 					case QUOTE_AFTER_QUOTE:
-						*(pwchWrite++) = ch;
+						*(pwcWrite++) = ch;
 						break;
 
 					case FINISH:
-						*(pwchWrite++) = 0;
+						*(pwcWrite++) = 0;
 						// 为最后的 NULL 保留一个空位。
 						if(uIndex + 2 >= uCapacity){
 							uCapacity *= 2;
@@ -213,8 +213,8 @@ size_t MCF_GetArgV(const wchar_t *const **pppwszArgV){
 							}
 							ppArgV = ppNewArgV;
 						}
-						ppArgV[uIndex++] = pwchBegin;
-						pwchBegin = pwchWrite;
+						ppArgV[uIndex++] = pwcBegin;
+						pwcBegin = pwcWrite;
 						break;
 					}
 					if(ch == 0){

@@ -8,6 +8,7 @@
 #include "../../MCFCRT/c/ext/memcchr.h"
 #include "../../MCFCRT/env/bail.h"
 #include <type_traits>
+#include <utility>
 #include <cstddef>
 #include <cstdint>
 
@@ -138,6 +139,23 @@ template<typename Function_t, typename FirstParam_t, typename... Params_t>
 void CallOnEachBackward(Function_t &&fnCallable, FirstParam_t &&vFirstParam, Params_t &&... vParams){
 	CallOnEachBackward(std::forward<Function_t>(fnCallable), std::forward<Params_t>(vParams)...);
 	fnCallable(std::forward<FirstParam_t>(vFirstParam));
+}
+
+//----------------------------------------------------------------------------
+// Min / Max
+//----------------------------------------------------------------------------
+template<typename Tx, typename Ty>
+typename std::common_type<Tx, Ty>::type Min(Tx op1, Ty op2){
+	static_assert(std::is_scalar<Tx>::value && std::is_scalar<Ty>::value, "MCF::Min(): Only scalar types are supported");
+
+	return std::min<typename std::common_type<Tx, Ty>::type>(op1, op2);
+}
+
+template<typename Tx, typename Ty>
+typename std::common_type<Tx, Ty>::type Max(Tx op1, Ty op2){
+	static_assert(std::is_scalar<Tx>::value && std::is_scalar<Ty>::value, "MCF::Min(): Only scalar types are supported");
+
+	return std::max<typename std::common_type<Tx, Ty>::type>(op1, op2);
 }
 
 }

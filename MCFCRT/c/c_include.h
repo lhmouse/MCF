@@ -5,7 +5,6 @@
 #ifndef __MCF_CRT_C_INCLUDE_H__
 #define __MCF_CRT_C_INCLUDE_H__
 
-#include "ext/tchar.h"
 #include "ext/unref_param.h"
 #include "ext/noop.h"
 #include "ext/assert.h"

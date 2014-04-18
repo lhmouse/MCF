@@ -42,11 +42,11 @@ struct Index {
 
 template<typename Index_t>
 struct MakeIndex {
-	typedef Index<Index_t> IndexType;
+	typedef Index<Index_t> Index;
 };
 template<typename Index_t, typename Comparer_t>
 struct MakeIndex<Index<Index_t, Comparer_t>> {
-	typedef Index<Index_t, Comparer_t> IndexType;
+	typedef Index<Index_t, Comparer_t> Index;
 };
 
 template<class Element_t, class... Indexes_t>
@@ -56,12 +56,51 @@ public:
 		INDEX_COUNT = sizeof...(Indexes_t)
 	};
 
-	typedef typename std::tuple<typename MakeIndex<Indexes_t>::IndexType...> Indexes;
-
 	static_assert(INDEX_COUNT > 0, "No index?");
+
+	typedef std::tuple<typename MakeIndex<Indexes_t>::Index...> Indexes;
 
 	class Node {
 		friend MultiIndexedMap;
+
+	private:
+		template<std::size_t INDEX>
+		static const AvlNodeHeader *xAvlFromNode(const Node *pNode) noexcept {
+			static_assert(INDEX < INDEX_COUNT, "INDEX is out of range.");
+
+			if(!pNode){
+				return nullptr;
+			}
+			return &(pNode->xm_arHeaders[INDEX]);
+		}
+		template<std::size_t INDEX>
+		static AvlNodeHeader *xAvlFromNode(Node *pNode) noexcept {
+			static_assert(INDEX < INDEX_COUNT, "INDEX is out of range.");
+
+			if(!pNode){
+				return nullptr;
+			}
+			return &(pNode->xm_arHeaders[INDEX]);
+		}
+
+		template<std::size_t INDEX>
+		static const Node *xNodeFromAvl(const AvlNodeHeader *pNode) noexcept {
+			static_assert(INDEX < INDEX_COUNT, "INDEX is out of range.");
+
+			if(!pNode){
+				return nullptr;
+			}
+			return DOWN_CAST(const Node, xm_arHeaders[INDEX], pNode);
+		}
+		template<std::size_t INDEX>
+		static Node *xNodeFromAvl(AvlNodeHeader *pNode) noexcept {
+			static_assert(INDEX < INDEX_COUNT, "INDEX is out of range.");
+
+			if(!pNode){
+				return nullptr;
+			}
+			return DOWN_CAST(Node, xm_arHeaders[INDEX], pNode);
+		}
 
 	private:
 		Element_t xm_vElement;
@@ -99,6 +138,32 @@ public:
 
 			return std::get<INDEX>(xm_vIndexes).m_vIndex;
 		}
+
+		template<std::size_t INDEX>
+		const Node *GetPrev() const noexcept {
+			static_assert(INDEX < INDEX_COUNT, "INDEX is out of range.");
+
+			return xNodeFromAvl<INDEX>(AvlPrev(xAvlFromNode<INDEX>(this)));
+		}
+		template<std::size_t INDEX>
+		Node *GetPrev() noexcept {
+			static_assert(INDEX < INDEX_COUNT, "INDEX is out of range.");
+
+			return xNodeFromAvl<INDEX>(AvlPrev(xAvlFromNode<INDEX>(this)));
+		}
+
+		template<std::size_t INDEX>
+		const Node *GetNext() const noexcept {
+			static_assert(INDEX < INDEX_COUNT, "INDEX is out of range.");
+
+			return xNodeFromAvl<INDEX>(AvlNext(xAvlFromNode<INDEX>(this)));
+		}
+		template<std::size_t INDEX>
+		Node *GetNext() noexcept {
+			static_assert(INDEX < INDEX_COUNT, "INDEX is out of range.");
+
+			return xNodeFromAvl<INDEX>(AvlNext(xAvlFromNode<INDEX>(this)));
+		}
 	};
 
 private:
@@ -123,72 +188,6 @@ private:
 			return (*(const Index<Index1_t, Comparer_t> *)lhs)(((const Index<Index2_t, Comparer_t> *)rhs)->m_vIndex);
 		}
 	};
-
-private:
-	template<std::size_t INDEX>
-	static const AvlNodeHeader *xAvlFromNode(const Node *pNode) noexcept {
-		static_assert(INDEX < INDEX_COUNT, "INDEX is out of range.");
-
-		if(!pNode){
-			return nullptr;
-		}
-		return &(pNode->xm_arHeaders[INDEX]);
-	}
-	template<std::size_t INDEX>
-	static AvlNodeHeader *xAvlFromNode(Node *pNode) noexcept {
-		static_assert(INDEX < INDEX_COUNT, "INDEX is out of range.");
-
-		if(!pNode){
-			return nullptr;
-		}
-		return &(pNode->xm_arHeaders[INDEX]);
-	}
-
-	template<std::size_t INDEX>
-	static const Node *xNodeFromAvl(const AvlNodeHeader *pNode) noexcept {
-		static_assert(INDEX < INDEX_COUNT, "INDEX is out of range.");
-
-		if(!pNode){
-			return nullptr;
-		}
-		return DOWN_CAST(const Node, xm_arHeaders[INDEX], pNode);
-	}
-	template<std::size_t INDEX>
-	static Node *xNodeFromAvl(AvlNodeHeader *pNode) noexcept {
-		static_assert(INDEX < INDEX_COUNT, "INDEX is out of range.");
-
-		if(!pNode){
-			return nullptr;
-		}
-		return DOWN_CAST(Node, xm_arHeaders[INDEX], pNode);
-	}
-
-public:
-	template<std::size_t INDEX>
-	static const Node *GetPrev(const Node *pNode) noexcept {
-		static_assert(INDEX < INDEX_COUNT, "INDEX is out of range.");
-
-		return xNodeFromAvl<INDEX>(AvlPrev(xAvlFromNode<INDEX>(pNode)));
-	}
-	template<std::size_t INDEX>
-	static Node *GetPrev(Node *pNode) noexcept {
-		static_assert(INDEX < INDEX_COUNT, "INDEX is out of range.");
-
-		return xNodeFromAvl<INDEX>(AvlPrev(xAvlFromNode<INDEX>(pNode)));
-	}
-
-	template<std::size_t INDEX>
-	static const Node *GetNext(const Node *pNode) noexcept {
-		static_assert(INDEX < INDEX_COUNT, "INDEX is out of range.");
-
-		return xNodeFromAvl<INDEX>(AvlNext(xAvlFromNode<INDEX>(pNode)));
-	}
-	template<std::size_t INDEX>
-	static Node *GetNext(Node *pNode) noexcept {
-		static_assert(INDEX < INDEX_COUNT, "INDEX is out of range.");
-
-		return xNodeFromAvl<INDEX>(AvlNext(xAvlFromNode<INDEX>(pNode)));
-	}
 
 public:
 	struct {
@@ -241,11 +240,11 @@ private:
 		AvlAttach(
 			&(xm_arvIndexPointers[INDEX].pRoot),
 			(std::intptr_t)&std::get<INDEX>(pNode->xm_vIndexes),
-			xAvlFromNode<INDEX>(pNode),
+			Node::xAvlFromNode<INDEX>(pNode),
 			xComparer<KeyType, KeyType>()
 		);
 
-		const auto pAvl = xAvlFromNode<INDEX>(pNode);
+		const auto pAvl = Node::xAvlFromNode<INDEX>(pNode);
 		const auto pPrev = AvlPrev(pAvl);
 		if(!pPrev){
 			xm_arvIndexPointers[INDEX].pFront = pAvl;
@@ -273,7 +272,7 @@ private:
 
 	template<std::size_t INDEX>
 	void xDetach(Node *pNode) noexcept {
-		const auto pAvl = xAvlFromNode<INDEX>(pNode);
+		const auto pAvl = Node::xAvlFromNode<INDEX>(pNode);
 		if(pAvl == xm_arvIndexPointers[INDEX].pFront){
 			xm_arvIndexPointers[INDEX].pFront = AvlNext(pAvl);
 		}
@@ -304,7 +303,7 @@ private:
 
 		AvlNodeHeader *pAvl = rhs.xm_arvIndexPointers[0].pFront;
 		while(pAvl){
-			Node *const pNode = xNodeFromAvl<0>(pAvl);
+			Node *const pNode = Node::xNodeFromAvl<0>(pAvl);
 			pAvl = AvlNext(pAvl);
 			Insert(*pNode);
 		}
@@ -326,7 +325,7 @@ public:
 	void Clear() noexcept {
 		AvlNodeHeader *pAvl = xm_arvIndexPointers[0].pFront;
 		while(pAvl){
-			Node *const pNode = xNodeFromAvl<0>(pAvl);
+			Node *const pNode = Node::xNodeFromAvl<0>(pAvl);
 			pAvl = AvlNext(pAvl);
 			delete pNode;
 		}
@@ -373,26 +372,34 @@ public:
 	const Node *GetBegin() const noexcept {
 		static_assert(INDEX < INDEX_COUNT, "INDEX is out of range.");
 
-		return xNodeFromAvl<INDEX>(xm_arvIndexPointers[INDEX].pFront);
+		return Node::xNodeFromAvl<INDEX>(xm_arvIndexPointers[INDEX].pFront);
 	}
 	template<std::size_t INDEX>
 	Node *GetBegin() noexcept {
 		static_assert(INDEX < INDEX_COUNT, "INDEX is out of range.");
 
-		return xNodeFromAvl<INDEX>(xm_arvIndexPointers[INDEX].pFront);
+		return Node::xNodeFromAvl<INDEX>(xm_arvIndexPointers[INDEX].pFront);
+	}
+	template<std::size_t INDEX>
+	const Node *GetCBegin() const noexcept {
+		return GetBegin();
 	}
 
 	template<std::size_t INDEX>
 	const Node *GetRBegin() const noexcept {
 		static_assert(INDEX < INDEX_COUNT, "INDEX is out of range.");
 
-		return xNodeFromAvl<INDEX>(xm_arvIndexPointers[INDEX].pBack);
+		return Node::xNodeFromAvl<INDEX>(xm_arvIndexPointers[INDEX].pBack);
 	}
 	template<std::size_t INDEX>
 	Node *GetRBegin() noexcept {
 		static_assert(INDEX < INDEX_COUNT, "INDEX is out of range.");
 
-		return xNodeFromAvl<INDEX>(xm_arvIndexPointers[INDEX].pBack);
+		return Node::xNodeFromAvl<INDEX>(xm_arvIndexPointers[INDEX].pBack);
+	}
+	template<std::size_t INDEX>
+	const Node *GetCRBegin() const noexcept {
+		return GetRBegin();
 	}
 
 	template<std::size_t INDEX, typename Comparand_t>
@@ -406,7 +413,7 @@ public:
 
 		typedef typename std::tuple_element<INDEX, Indexes>::type KeyType;
 
-		return xNodeFromAvl<INDEX>(AvlLowerBound(
+		return Node::xNodeFromAvl<INDEX>(AvlLowerBound(
 			&(xm_arvIndexPointers[INDEX].pRoot),
 			(std::intptr_t)&vComparand,
 			xComparer<KeyType, Comparand_t>(),
@@ -424,7 +431,7 @@ public:
 
 		typedef typename std::tuple_element<INDEX, Indexes>::type KeyType;
 
-		return xNodeFromAvl<INDEX>(AvlLowerBound(
+		return Node::xNodeFromAvl<INDEX>(AvlLowerBound(
 			&(xm_arvIndexPointers[INDEX].pRoot),
 			(std::intptr_t)&vComparand,
 			xComparer<KeyType, Comparand_t>(),
@@ -443,7 +450,7 @@ public:
 
 		typedef typename std::tuple_element<INDEX, Indexes>::type KeyType;
 
-		return xNodeFromAvl<INDEX>(AvlUpperBound(
+		return Node::xNodeFromAvl<INDEX>(AvlUpperBound(
 			&(xm_arvIndexPointers[INDEX].pRoot),
 			(std::intptr_t)&vComparand,
 			xComparer<KeyType, Comparand_t>(),
@@ -461,7 +468,7 @@ public:
 
 		typedef typename std::tuple_element<INDEX, Indexes>::type KeyType;
 
-		return xNodeFromAvl<INDEX>(AvlUpperBound(
+		return Node::xNodeFromAvl<INDEX>(AvlUpperBound(
 			&(xm_arvIndexPointers[INDEX].pRoot),
 			(std::intptr_t)&vComparand,
 			xComparer<KeyType, Comparand_t>(),
@@ -480,7 +487,7 @@ public:
 
 		typedef typename std::tuple_element<INDEX, Indexes>::type KeyType;
 
-		return xNodeFromAvl<INDEX>(AvlFind(
+		return Node::xNodeFromAvl<INDEX>(AvlFind(
 			&(xm_arvIndexPointers[INDEX].pRoot),
 			(std::intptr_t)&vComparand,
 			xComparer<KeyType, Comparand_t>(),
@@ -498,7 +505,7 @@ public:
 
 		typedef typename std::tuple_element<INDEX, Indexes>::type KeyType;
 
-		return xNodeFromAvl<INDEX>(AvlFind(
+		return Node::xNodeFromAvl<INDEX>(AvlFind(
 			&(xm_arvIndexPointers[INDEX].pRoot),
 			(std::intptr_t)&vComparand,
 			xComparer<KeyType, Comparand_t>(),
@@ -527,8 +534,8 @@ public:
 			xComparer<Comparand_t, KeyType>()
 		);
 		return std::make_pair(
-			xNodeFromAvl<INDEX>(pFrom),
-			xNodeFromAvl<INDEX>(pTo)
+			Node::xNodeFromAvl<INDEX>(pFrom),
+			Node::xNodeFromAvl<INDEX>(pTo)
 		);
 	}
 	template<std::size_t INDEX, typename Comparand_t>
@@ -552,8 +559,8 @@ public:
 			xComparer<Comparand_t, KeyType>()
 		);
 		return std::make_pair(
-			xNodeFromAvl<INDEX>(pFrom),
-			xNodeFromAvl<INDEX>(pTo)
+			Node::xNodeFromAvl<INDEX>(pFrom),
+			Node::xNodeFromAvl<INDEX>(pTo)
 		);
 	}
 };

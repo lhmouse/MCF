@@ -65,7 +65,7 @@ public:
 	unsigned char *Serialize(unsigned char (&abyBuffer)[9]) const noexcept {
 		unsigned char *pbyWrite = abyBuffer;
 		auto uEncoded = xZigZagEncode(xm_vValue - ORIGIN);
-		for(std::size_t i = 0; i < std::min<std::size_t>(8, sizeof(uEncoded)); ++i){
+		for(std::size_t i = 0; i < Min(8, sizeof(uEncoded)); ++i){
 			unsigned char by = uEncoded & 0x7F;
 			uEncoded >>= 7;
 			if(uEncoded != 0){
@@ -84,7 +84,7 @@ public:
 	const unsigned char *Unserialize(const unsigned char *pbyBegin, const unsigned char *pbyEnd) noexcept {
 		auto pbyRead = pbyBegin;
 		xUnsigned uEncoded = 0;
-		for(std::size_t i = 0; i < std::min<std::size_t>(4, sizeof(uEncoded)); ++i){
+		for(std::size_t i = 0; i < Min(4, sizeof(uEncoded)); ++i){
 			if(pbyRead == pbyEnd){
 				return nullptr;
 			}
@@ -94,7 +94,7 @@ public:
 				goto jDone;
 			}
 		}
-		for(std::size_t i = 4; i < std::min<std::size_t>(8, sizeof(uEncoded)); ++i){
+		for(std::size_t i = 4; i < Min(8, sizeof(uEncoded)); ++i){
 			if(pbyRead == pbyEnd){
 				return nullptr;
 			}

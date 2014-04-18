@@ -11,7 +11,7 @@ typedef int UNUSED;
 #ifdef __MCF_CRT_HEAPDBG_ON
 
 #include "bail.h"
-#include "../c/ext/tchar.h"
+#include "../c/ext/strcpyout.h"
 #include <wchar.h>
 #include <windows.h>
 
@@ -45,32 +45,32 @@ void __MCF_CRT_HeapDbgUninit(){
 			"如果您选择调试应用程序，MCF CRT 将尝试使用 OutputDebugString() 导出内存泄漏的详细信息。"
 		);
 
-		wchar_t awchBuffer[256];
+		wchar_t awcBuffer[256];
 		do {
 			const BYTE *pbyDump = __MCF_CRT_HeapDbgGetContents(pBlockInfo);
-			wchar_t *pwchWrite = awchBuffer + __mingw_snwprintf(
-				awchBuffer,
-				sizeof(awchBuffer) / sizeof(wchar_t),
+			wchar_t *pwcWrite = awcBuffer + __mingw_snwprintf(
+				awcBuffer,
+				sizeof(awcBuffer) / sizeof(wchar_t),
 				L"地址 " UINTPTR_FORMAT "  大小 " UINTPTR_FORMAT "  调用返回地址 " UINTPTR_FORMAT "  首字节 ",
 				(void *)pbyDump,
 				(void *)pBlockInfo->uSize,
 				(void *)pBlockInfo->pRetAddr
 			);
 			for(size_t i = 0; i < 16; ++i){
-				*(pwchWrite++) = L' ';
+				*(pwcWrite++) = L' ';
 				if(IsBadReadPtr(pbyDump, 1)){
-					*(pwchWrite++) = L'?';
-					*(pwchWrite++) = L'?';
+					*(pwcWrite++) = L'?';
+					*(pwcWrite++) = L'?';
 				} else {
 					static const wchar_t HEX_TABLE[16] = L"0123456789ABCDEF";
-					*(pwchWrite++) = HEX_TABLE[(*pbyDump >> 4) & 0xF0];
-					*(pwchWrite++) = HEX_TABLE[*pbyDump & 0x0F];
+					*(pwcWrite++) = HEX_TABLE[(*pbyDump >> 4) & 0xF0];
+					*(pwcWrite++) = HEX_TABLE[*pbyDump & 0x0F];
 				}
 				++pbyDump;
 			}
-			*pwchWrite = 0;
+			*pwcWrite = 0;
 
-			OutputDebugStringW(awchBuffer);
+			OutputDebugStringW(awcBuffer);
 		} while(!!(pBlockInfo = (const __MCF_HEAPDBG_BLOCK_INFO *)MCF_AvlNext((const MCF_AVL_NODE_HEADER *)pBlockInfo)));
 		__asm__ __volatile__("int 3 \n");
 	}

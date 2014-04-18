@@ -22,7 +22,7 @@ unsigned int MCFMain(){
 
 	try {
 		WideStringObserver path(L"nib.seikooc");
-		auto f = File::Open(path.Reverse(), true, true, true);
+		auto f = File::Open(path.GetReverse(), true, true, true);
 		HttpClient http(false, nullptr, 0);
 
 		Vector<Vector<unsigned char>> cookies;

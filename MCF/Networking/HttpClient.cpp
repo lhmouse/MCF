@@ -316,7 +316,7 @@ private:
 
 			case 7:
 				if(CheckAttribute("expires")){
-					Utf16String wcsHttpTime(Utf8String(pchAttrValBegin, pchPartEnd));
+					WideString wcsHttpTime(Utf8String(pchAttrValBegin, pchPartEnd));
 					SYSTEMTIME vSystemTime;
 					if(::WinHttpTimeToSystemTime(wcsHttpTime.GetCStr(), &vSystemTime)){
 						::SystemTimeToFileTime(&vSystemTime, (FILETIME *)&u64Expires);
@@ -479,13 +479,13 @@ private:
 	}
 
 private:
-	Utf16String xm_wcsPacUrl;
-	Utf16String xm_wcsProxyUserName;
-	Utf16String xm_wcsProxyPassword;
+	WideString xm_wcsPacUrl;
+	WideString xm_wcsProxyUserName;
+	WideString xm_wcsProxyPassword;
 	xWinHttpHandle xm_hSession;
 
 	xSharedWinHttpHandle xm_hConnect;
-	Utf16String xm_wcsLastHost;
+	WideString xm_wcsLastHost;
 	int xm_nLastScheme;
 
 	xWinHttpHandle xm_hRequest;
@@ -493,27 +493,27 @@ private:
 	xCookieMap xm_mapCookies;
 
 public:
-	xDelegate(bool bAutoProxy, const wchar_t *pwchProxy, std::size_t uProxyLen, const wchar_t *pwszUserAgent)
+	xDelegate(bool bAutoProxy, const wchar_t *pwcProxy, std::size_t uProxyLen, const wchar_t *pwszUserAgent)
 		: xm_nLastScheme(0)
 	{
-		if(!pwchProxy){
-			pwchProxy = L"";
+		if(!pwcProxy){
+			pwcProxy = L"";
 			uProxyLen = 0;
 		} else if(uProxyLen == (std::size_t)-1){
-			uProxyLen = StrLen(pwchProxy);
+			uProxyLen = StrLen(pwcProxy);
 		}
 
-		Utf16String ucsNamedProxy;
-		Utf16String ucsNamedProxyBypass;
+		WideString ucsNamedProxy;
+		WideString ucsNamedProxyBypass;
 
 		if(uProxyLen > 0){
 			if(bAutoProxy){
 				// 使用指定的 PAC（指定 URL）
-				xm_wcsPacUrl = pwchProxy;
+				xm_wcsPacUrl = pwcProxy;
 			} else {
 				// 使用指定的代理服务器（user:pass@addr:port|bypass）
-				const auto pwchBypassBegin = std::wmemchr(pwchProxy, L'|', uProxyLen);
-				const auto uProxyUrlLen = pwchBypassBegin ? (std::size_t)(pwchBypassBegin - pwchProxy) : uProxyLen;
+				const auto pwcBypassBegin = std::wmemchr(pwcProxy, L'|', uProxyLen);
+				const auto uProxyUrlLen = pwcBypassBegin ? (std::size_t)(pwcBypassBegin - pwcProxy) : uProxyLen;
 
 				URL_COMPONENTS vUrlComponents;
 				vUrlComponents.dwStructSize			= sizeof(vUrlComponents);
@@ -529,7 +529,7 @@ public:
 				vUrlComponents.dwUrlPathLength		= 0;
 				vUrlComponents.lpszExtraInfo		= nullptr;
 				vUrlComponents.dwExtraInfoLength	= 0;
-				if(!::WinHttpCrackUrl(pwchProxy, uProxyUrlLen, 0, &vUrlComponents)){
+				if(!::WinHttpCrackUrl(pwcProxy, uProxyUrlLen, 0, &vUrlComponents)){
 					MCF_THROW(::GetLastError(), L"::WinHttpCrackUrl() 失败。");
 				}
 
@@ -556,8 +556,8 @@ public:
 				}
 				ucsNamedProxy.Resize(dwUrlLength);
 
-				if(pwchBypassBegin){
-					ucsNamedProxyBypass.Assign(pwchBypassBegin + 1, pwchProxy + uProxyLen);
+				if(pwcBypassBegin){
+					ucsNamedProxyBypass.Assign(pwcBypassBegin + 1, pwcProxy + uProxyLen);
 				}
 			}
 		} else if(bAutoProxy){
@@ -805,14 +805,14 @@ public:
 
 	void Connect(
 		const wchar_t *pwszVerb,
-		const wchar_t *pwchUrl,
+		const wchar_t *pwcUrl,
 		std::size_t uUrlLen,
 		const void *pContents,
 		std::size_t uContentSize,
 		const wchar_t *pwszContentType
 	){
 		if(uUrlLen == (std::size_t)-1){
-			uUrlLen = StrLen(pwchUrl);
+			uUrlLen = StrLen(pwcUrl);
 		}
 
 		URL_COMPONENTS vUrlComponents;
@@ -829,11 +829,11 @@ public:
 		vUrlComponents.dwUrlPathLength		= 1;
 		vUrlComponents.lpszExtraInfo		= nullptr;
 		vUrlComponents.dwExtraInfoLength	= 1;
-		if(!::WinHttpCrackUrl(pwchUrl, uUrlLen, 0, &vUrlComponents)){
+		if(!::WinHttpCrackUrl(pwcUrl, uUrlLen, 0, &vUrlComponents)){
 			MCF_THROW(::GetLastError(), L"::WinHttpCrackUrl() 失败。");
 		}
 
-		Utf16String wcsHostName;
+		WideString wcsHostName;
 		wcsHostName.Resize(vUrlComponents.dwHostNameLength);
 		std::transform(
 			vUrlComponents.lpszHostName,
@@ -842,16 +842,16 @@ public:
 			[](wchar_t wch) noexcept { return ((L'A' <= wch) && (wch <= L'Z')) ? (wch & -0x20) : wch; }
 		);
 
-		Utf16String wcsPath(vUrlComponents.lpszUrlPath, vUrlComponents.dwUrlPathLength);
+		WideString wcsPath(vUrlComponents.lpszUrlPath, vUrlComponents.dwUrlPathLength);
 		if(wcsPath[0] != L'/'){
 			wcsPath = L'/';
 		}
 
-		Utf16String wcsPathExtra(wcsPath);
+		WideString wcsPathExtra(wcsPath);
 		wcsPathExtra.Append(vUrlComponents.lpszExtraInfo, vUrlComponents.dwExtraInfoLength);
 
-		Utf16String wcsUserName;
-		Utf16String wcsPassword;
+		WideString wcsUserName;
+		WideString wcsPassword;
 
 		if(vUrlComponents.lpszUserName){
 			wcsUserName.Assign(vUrlComponents.lpszUserName, vUrlComponents.dwUserNameLength);
@@ -904,7 +904,7 @@ public:
 			if(ulErrorCode != ERROR_INSUFFICIENT_BUFFER){
 				MCF_THROW(::GetLastError(), L"::WinHttpCreateUrl() 失败。");
 			}
-			Utf16String wcsUrlWithoutAuth;
+			WideString wcsUrlWithoutAuth;
 			wcsUrlWithoutAuth.Resize(dwUrlLength);
 			if(!::WinHttpCreateUrl(&vUrlComponents, 0, wcsUrlWithoutAuth.GetCStr(), &dwUrlLength)){
 				MCF_THROW(::GetLastError(), L"::WinHttpCreateUrl() 失败。");
@@ -968,7 +968,7 @@ public:
 
 		xTidyExpiredCookies(u64NtTime);
 
-		Utf16String wcsCookie(L"Cookie: ");
+		WideString wcsCookie(L"Cookie: ");
 		auto pNext = xm_mapCookies.GetBegin<IDX_DOMAIN>();
 		while(pNext){
 			const auto pNode = pNext;
@@ -1003,7 +1003,7 @@ public:
 		}
 
 		if(uContentSize > 0){
-			Utf16String wcsContentType(L"Content-Type: ");
+			WideString wcsContentType(L"Content-Type: ");
 			wcsContentType += pwszContentType;
 			if(!::WinHttpAddRequestHeaders(
 				hRequest.Get(),
@@ -1034,7 +1034,7 @@ public:
 		Utf8String u8sSetCookie;
 		std::size_t uSetCookieIndex = 0;
 		for(;;){
-			Utf16String wcsSetCookie;
+			WideString wcsSetCookie;
 			DWORD dwSetCookieLength = 127 * sizeof(wchar_t);
 			wcsSetCookie.Resize(dwSetCookieLength / sizeof(wchar_t));
 			DWORD dwSetCookieIndex = uSetCookieIndex;
@@ -1097,11 +1097,11 @@ public:
 const HttpClient::xDelegate::xCookieMap::Node HttpClient::xDelegate::NULL_COOKIE_NODE(Utf8String(), Utf8String(), 0, Utf8String(), Utf8String(), 0, 0, 0);
 
 // 构造函数和析构函数。
-HttpClient::HttpClient(bool bAutoProxy, const wchar_t *pwchProxy, std::size_t uProxyLen, const wchar_t *pwszUserAgent)
-	: xm_pDelegate(new xDelegate(bAutoProxy, pwchProxy, uProxyLen, pwszUserAgent))
+HttpClient::HttpClient(bool bAutoProxy, const wchar_t *pwcProxy, std::size_t uProxyLen, const wchar_t *pwszUserAgent)
+	: xm_pDelegate(new xDelegate(bAutoProxy, pwcProxy, uProxyLen, pwszUserAgent))
 {
 }
-HttpClient::HttpClient(bool bAutoProxy, const Utf16String &wcsProxy, const wchar_t *pwszUserAgent)
+HttpClient::HttpClient(bool bAutoProxy, const WideString &wcsProxy, const wchar_t *pwszUserAgent)
 	: HttpClient(bAutoProxy, wcsProxy.GetCStr(), wcsProxy.GetLength(), pwszUserAgent)
 {
 }
@@ -1158,14 +1158,14 @@ void HttpClient::ClearCookies() noexcept {
 
 unsigned long HttpClient::ConnectNoThrow(
 	const wchar_t *	pwszVerb,
-	const wchar_t *	pwchUrl,
+	const wchar_t *	pwcUrl,
 	std::size_t		uUrlLen,
 	const void *	pContents,
 	std::size_t		uContentSize,
 	const wchar_t *	pwszContentType
 ){
 	try {
-		Connect(pwszVerb, pwchUrl, uUrlLen, pContents, uContentSize, pwszContentType);
+		Connect(pwszVerb, pwcUrl, uUrlLen, pContents, uContentSize, pwszContentType);
 		return ERROR_SUCCESS;
 	} catch(Exception &e){
 		return e.ulErrorCode;
@@ -1173,18 +1173,18 @@ unsigned long HttpClient::ConnectNoThrow(
 }
 void HttpClient::Connect(
 	const wchar_t *	pwszVerb,
-	const wchar_t *	pwchUrl,
+	const wchar_t *	pwcUrl,
 	std::size_t		uUrlLen,
 	const void *	pContents,
 	std::size_t		uContentSize,
 	const wchar_t *	pwszContentType
 ){
-	xm_pDelegate->Connect(pwszVerb, pwchUrl, uUrlLen, pContents, uContentSize, pwszContentType);
+	xm_pDelegate->Connect(pwszVerb, pwcUrl, uUrlLen, pContents, uContentSize, pwszContentType);
 }
 
 unsigned long HttpClient::ConnectNoThrow(
 	const wchar_t *		pwszVerb,
-	const Utf16String &	wcsUrl,
+	const WideString &	wcsUrl,
 	const void *		pContents,
 	std::size_t			uContentSize,
 	const wchar_t *		pwszContentType
@@ -1193,7 +1193,7 @@ unsigned long HttpClient::ConnectNoThrow(
 }
 void HttpClient::Connect(
 	const wchar_t *		pwszVerb,
-	const Utf16String &	wcsUrl,
+	const WideString &	wcsUrl,
 	const void *		pContents,
 	std::size_t			uContentSize,
 	const wchar_t *		pwszContentType

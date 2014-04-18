@@ -5,217 +5,250 @@
 #include "../StdMCF.hpp"
 #include "Notation.hpp"
 #include "../../MCFCRT/cpp/ext/vvector.hpp"
-#include <cwchar>
+#include <tuple>
 using namespace MCF;
-/*
-// 静态成员函数。
-void Notation::xEscapeAndAppend(Utf16String &wcsAppendTo, const wchar_t *pwchBegin, std::size_t uLength){
-	wcsAppendTo.Reserve(wcsAppendTo.GetLength() + uLength * 2);
 
-	for(std::size_t i = 0; i < uLength; ++i){
-		const auto ch = pwchBegin[i];
-		switch(ch){
+namespace {
+
+WideString Unescape(const WideStringObserver &wsoSrc){
+	WideString wcsRet;
+	wcsRet.Reserve(wsoSrc.GetSize());
+
+	enum {
+		NORMAL,
+		ESCAPED,
+		UCS_CODE
+	} eState = NORMAL;
+
+	std::uint32_t u32CodePoint = 0;
+	std::size_t uHexExpecting = 0;
+
+	const auto PushUtf = [&wcsRet](std::uint32_t u32CodePoint){
+		if(u32CodePoint > 0x10FFFF){
+			u32CodePoint = 0xFFFD;
+		}
+		if(u32CodePoint <= 0xFFFF){
+			wcsRet.Append(u32CodePoint);
+		} else {
+			u32CodePoint -= 0x10000;
+			wcsRet.Append((u32CodePoint >> 10)   | 0xD800);
+			wcsRet.Append((u32CodePoint & 0x3FF) | 0xDC00);
+		}
+	};
+
+	auto itCur = wsoSrc.GetBegin();
+	const auto itEnd = wsoSrc.GetEnd();
+	while(itCur != itEnd){
+		const auto wc = *itCur;
+		++itCur;
+		switch(eState){
+		case NORMAL:
+			if(wc == L'\\'){
+				eState = ESCAPED;
+			} else {
+				// eState = NORMAL;
+				wcsRet.Push(wc);
+			}
+			break;
+
+		case ESCAPED:
+			switch(wc){
+			case L'n':
+				wcsRet.Append(L'\n');
+				eState = NORMAL;
+				break;
+
+			case L'b':
+				wcsRet.Append(L'\b');
+				eState = NORMAL;
+				break;
+
+			case L'r':
+				wcsRet.Append(L'\r');
+				eState = NORMAL;
+				break;
+
+			case L't':
+				wcsRet.Append(L'\t');
+				eState = NORMAL;
+				break;
+
+			case L'x':
+				u32CodePoint = 0;
+				uHexExpecting = 2;
+				eState = UCS_CODE;
+				break;
+
+			case L'u':
+				u32CodePoint = 0;
+				uHexExpecting = 4;
+				eState = UCS_CODE;
+				break;
+
+			case L'U':
+				u32CodePoint = 0;
+				uHexExpecting = 8;
+				eState = UCS_CODE;
+				break;
+
+			default:
+				wcsRet.Append(wc);
+				eState = NORMAL;
+				break;
+			}
+			break;
+
+		case UCS_CODE:
+			{
+				unsigned int uHex = wc - L'0';
+				do {
+					if(uHex <= 9){
+						break;
+					}
+					uHex += L'0' - L'A';
+					if(uHex <= 5){
+						uHex += 0x0A;
+						break;
+					}
+					uHex += L'A' - L'a';
+					if(uHex <= 5){
+						uHex += 0x0A;
+						break;
+					}
+					uHex = 0x10;
+				} while(false);
+
+				if(uHex <= 0x0F){
+					u32CodePoint = (u32CodePoint << 4) | uHex;
+					--uHexExpecting;
+				} else {
+					uHexExpecting = 0;
+				}
+				if(uHexExpecting != 0){
+					// eState = UCS_CODE;
+				} else {
+					PushUtf(u32CodePoint);
+					eState = NORMAL;
+				}
+			}
+			break;
+
+		default:
+			ASSERT(false);
+		}
+	}
+	if(eState == UCS_CODE){
+		PushUtf(u32CodePoint);
+	}
+
+	return std::move(wcsRet);
+}
+void Escape(WideString &wcsAppendTo, const WideStringObserver &wsoSrc){
+	wcsAppendTo.Reserve(wcsAppendTo.GetLength() + wsoSrc.GetLength());
+	for(const auto wc : wsoSrc){
+		switch(wc){
 		case L'\\':
 		case L'=':
 		case L'{':
 		case L'}':
 		case L';':
 			wcsAppendTo.Append(L'\\');
-			wcsAppendTo.Append(ch);
+			wcsAppendTo.Append(wc);
 			break;
 
 		case L'\n':
-			wcsAppendTo.Append(L'\\');
-			wcsAppendTo.Append(L'n');
+			wcsAppendTo.Append(L"\\n");
 			break;
 
 		case L'\b':
-			wcsAppendTo.Append(L'\\');
-			wcsAppendTo.Append(L'b');
+			wcsAppendTo.Append(L"\\b");
 			break;
 
 		case L'\r':
-			wcsAppendTo.Append(L'\\');
-			wcsAppendTo.Append(L'r');
+			wcsAppendTo.Append(L"\\r");
 			break;
 
 		case L'\t':
-			wcsAppendTo.Append(L'\\');
-			wcsAppendTo.Append(L't');
+			wcsAppendTo.Append(L"\\t");
 			break;
 
 		default:
-			wcsAppendTo.Append(ch);
+			wcsAppendTo.Append(wc);
 			break;
 		}
 	}
 }
-Utf16String Notation::xUnescapeAndConstruct(const wchar_t *pwchBegin, std::size_t uLength){
-	Utf16String wcsRet;
-	wcsRet.Reserve(uLength);
 
-	enum STATE {
-		NORMAL,
-		SLASH_MATCH,
-		HEX_WAIT_FOR_NEXT
-	} eState = NORMAL;
-
-	int nDecodedDigit;
-	wchar_t chDecoded = 0;
-	wchar_t awchHexBuffer[sizeof(wchar_t) * CHAR_BIT / 4 - 1];
-	std::size_t uBufferIndex = 0;
-
-	for(std::size_t i = 0; i < uLength; ++i){
-		const auto ch = pwchBegin[i];
-		switch(eState){
-		case NORMAL:
-			if(ch == L'\\'){
-				eState = SLASH_MATCH;
-			} else {
-				wcsRet.Push(ch);
-			}
-			break;
-
-		case SLASH_MATCH:
-			switch(ch){
-			case L'b':
-				wcsRet.Push(L'\b');
-				eState = NORMAL;
-				break;
-
-			case L'n':
-				wcsRet.Push(L'\n');
-				eState = NORMAL;
-				break;
-
-			case L'r':
-				wcsRet.Push(L'\r');
-				eState = NORMAL;
-				break;
-
-			case L't':
-				wcsRet.Push(L'\t');
-				eState = NORMAL;
-				break;
-
-			case L'x':
-				uBufferIndex = 0;
-				eState = HEX_WAIT_FOR_NEXT;
-				break;
-
-			case L'\n':
-				eState = NORMAL;
-				break;
-
-			default:
-				wcsRet.Push(ch);
-				eState = NORMAL;
-				break;
-			}
-			break;
-
-		case HEX_WAIT_FOR_NEXT:
-			if((L'0' <= ch) && (ch <= L'9')){
-				nDecodedDigit = ch - L'0';
-			} else if((L'a' <= ch) && (ch <= L'f')){
-				nDecodedDigit = ch - L'a' + 0x0A;
-			} else if((L'A' <= ch) && (ch <= L'F')){
-				nDecodedDigit = ch - L'A' + 0x0A;
-			} else {
-				wcsRet.Push(L'x');
-				for(std::size_t i = 0; i < uBufferIndex; ++i){
-					wcsRet.Push(awchHexBuffer[i]);
-				}
-				eState = NORMAL;
-				break;
-			}
-			if(uBufferIndex == COUNT_OF(awchHexBuffer)){
-				wcsRet.Push((chDecoded << 4) | nDecodedDigit);
-				eState = NORMAL;
-			} else {
-				awchHexBuffer[uBufferIndex++] = ch;
-				chDecoded = (chDecoded << 4) | nDecodedDigit;
-			}
-			break;
-		}
-	}
-
-	return std::move(wcsRet);
 }
 
-void Notation::xExportPackageRecur(
-	Utf16String &wcsAppendTo,
-	const Notation::Package &pkgWhich,
-	Utf16String &wcsPrefix,
-	const wchar_t *pwchIndent,
-	std::size_t uIndentLen
-){
-	const auto uCurrentPrefixLen = wcsPrefix.GetLength();
-	auto pwchCurrentPrefix = wcsPrefix.GetCStr();
-
-	if(!pkgWhich.xm_mapPackages.IsEmpty()){
-		if(pwchIndent){
-			wcsPrefix.Append(pwchIndent, uIndentLen);
-		}
-		pwchCurrentPrefix = wcsPrefix.GetCStr();
-
-		auto pPackageNode = pkgWhich.xm_mapPackages.GetBegin<0>();
-		while(pPackageNode){
-			wcsAppendTo.Append(pwchCurrentPrefix, uCurrentPrefixLen);
-			xEscapeAndAppend(wcsAppendTo, pPackageNode->GetIndex<0>().GetCStr(), pPackageNode->GetIndex<0>().GetLength());
-			wcsAppendTo.Append(L" {\n", 3);
-
-			xExportPackageRecur(wcsAppendTo, pPackageNode->GetElement(), wcsPrefix, pwchIndent, uIndentLen);
-
-			wcsAppendTo.Append(pwchCurrentPrefix, uCurrentPrefixLen);
-			wcsAppendTo.Append(L"}\n", 2);
-
-			pPackageNode = pkgWhich.xm_mapPackages.GetNext<0>(pPackageNode);
-		}
-
-		if(pwchIndent){
-			wcsPrefix.Truncate(uIndentLen);
-		}
-	}
-
-	auto pValueNode = pkgWhich.xm_mapValues.GetBegin<0>();
-	while(pValueNode){
-		wcsAppendTo.Append(pwchCurrentPrefix, uCurrentPrefixLen);
-		xEscapeAndAppend(wcsAppendTo, pValueNode->GetIndex<0>().GetCStr(), pValueNode->GetIndex<0>().GetLength());
-		wcsAppendTo.Append(L" = ", 3);
-		xEscapeAndAppend(wcsAppendTo, pValueNode->GetElement().GetCStr(), pValueNode->GetElement().GetLength());
-		wcsAppendTo.Append(L'\n');
-
-		pValueNode = pkgWhich.xm_mapValues.GetNext<0>(pValueNode);
-	}
-}
-
-// 构造函数和析构函数。
-Notation::Notation(const wchar_t *pwchText, std::size_t uLen){
-	Parse(pwchText, uLen);
-}
-
+// ========== NotationPackage ==========
 // 其他非静态成员函数。
-std::pair<Notation::ErrorType, const wchar_t *> Notation::Parse(const wchar_t *pwchText, std::size_t uLen){
+const NotationPackage *NotationPackage::GetPackage(const WideStringObserver &wsoName) const noexcept {
+	const auto pNode = xm_mapPackages.Find<0>(wsoName);
+	if(!pNode){
+		return nullptr;
+	}
+	return &(pNode->GetElement());
+}
+NotationPackage *NotationPackage::GetPackage(const WideStringObserver &wsoName) noexcept {
+	const auto pNode = xm_mapPackages.Find<0>(wsoName);
+	if(!pNode){
+		return nullptr;
+	}
+	return &(pNode->GetElement());
+}
+NotationPackage *NotationPackage::CreatePackage(WideString wcsName){
+	auto pNode = xm_mapPackages.Find<0>(wcsName);
+	if(!pNode){
+		pNode = xm_mapPackages.Insert(NotationPackage(), std::move(wcsName));
+	}
+	return &(pNode->GetElement());
+}
+
+const WideString *NotationPackage::GetValue(const WideStringObserver &wsoName) const noexcept {
+	const auto pNode = xm_mapValues.Find<0>(wsoName);
+	if(!pNode){
+		return nullptr;
+	}
+	return &(pNode->GetElement());
+}
+WideString *NotationPackage::GetValue(const WideStringObserver &wsoName) noexcept {
+	const auto pNode = xm_mapValues.Find<0>(wsoName);
+	if(!pNode){
+		return nullptr;
+	}
+	return &(pNode->GetElement());
+}
+WideString *NotationPackage::CreteValue(WideString wcsName){
+	auto pNode = xm_mapValues.Find<0>(wcsName);
+	if(!pNode){
+		pNode = xm_mapValues.Insert(WideString(), std::move(wcsName));
+	}
+	return &(pNode->GetElement());
+}
+
+void NotationPackage::Clear() noexcept {
+	xm_mapPackages.Clear();
+	xm_mapValues.Clear();
+}
+
+// ========== Notation ==========
+// 其他非静态成员函数。
+std::pair<Notation::ErrorType, WideStringObserver::Iterator> Notation::Parse(const WideStringObserver &wsoData){
 	Clear();
 
-	if(uLen == 0){
-		return std::make_pair(ERR_NONE, nullptr);
+	auto itRead = wsoData.GetBegin();
+	if(itRead == wsoData.GetEnd()){
+		return std::make_pair(ERR_NONE, itRead);
 	}
 
-	if(uLen == (std::size_t)-1){
-		uLen = std::wcslen(pwchText);
-	}
-
-	const wchar_t *pwszRead = pwchText;
-
-	MCF::VVector<Package *> vecPackageStack;
+	VVector<Package *> vecPackageStack;
 	vecPackageStack.Push(this);
 
-	const wchar_t *pNameBegin = pwszRead;
-	const wchar_t *pNameEnd = pwszRead;
-	const wchar_t *pValueBegin = pwszRead;
-	const wchar_t *pValueEnd = pwszRead;
+	auto itNameBegin = itRead;
+	auto itNameEnd = itRead;
+	auto itValueBegin = itRead;
+	auto itValueEnd = itRead;
 
 	enum STATE {
 		NAME_INDENT,
@@ -230,9 +263,9 @@ std::pair<Notation::ErrorType, const wchar_t *> Notation::Parse(const wchar_t *p
 	bool bEscaped = false;
 
 	const auto PushPackage = [&]{
-		ASSERT(pNameBegin != pNameEnd);
+		ASSERT(itNameBegin != itNameEnd);
 
-		auto wcsName = xUnescapeAndConstruct(pNameBegin, (std::size_t)(pNameEnd - pNameBegin));
+		auto wcsName = Unescape(WideStringObserver(itNameBegin, itNameEnd));
 
 		auto &mapPackages = vecPackageStack.GetEnd()[-1]->xm_mapPackages;
 		auto pNewPackageNode = mapPackages.Find<0>(wcsName);
@@ -241,22 +274,20 @@ std::pair<Notation::ErrorType, const wchar_t *> Notation::Parse(const wchar_t *p
 		}
 		vecPackageStack.Push(&(pNewPackageNode->GetElement()));
 
-		pNameBegin = pwszRead;
-		pNameEnd = pwszRead;
+		itNameBegin = itNameEnd;
 	};
 	const auto PopPackage = [&]{
 		ASSERT(vecPackageStack.GetSize() > 0);
 
 		vecPackageStack.Pop();
 
-		pNameBegin = pwszRead;
-		pNameEnd = pwszRead;
+		itNameBegin = itNameEnd;
 	};
 	const auto SubmitValue = [&]{
-		ASSERT(pNameBegin != pNameEnd);
+		ASSERT(itNameBegin != itNameEnd);
 
-		auto wcsName = xUnescapeAndConstruct(pNameBegin, (std::size_t)(pNameEnd - pNameBegin));
-		auto wcsValue = xUnescapeAndConstruct(pValueBegin, (std::size_t)(pValueEnd - pValueBegin));
+		auto wcsName = Unescape(WideStringObserver(itNameBegin, itNameEnd));
+		auto wcsValue = Unescape(WideStringObserver(itValueBegin, itValueEnd));
 
 		auto &mapValues = vecPackageStack.GetEnd()[-1]->xm_mapValues;
 		const auto pValueNode = mapValues.Find<0>(wcsName);
@@ -266,12 +297,11 @@ std::pair<Notation::ErrorType, const wchar_t *> Notation::Parse(const wchar_t *p
 			mapValues.Insert(std::move(wcsValue), std::move(wcsName));
 		}
 
-		pValueBegin = pwszRead;
-		pValueEnd = pwszRead;
+		itValueBegin = itValueEnd;
 	};
 
-	for(std::size_t i = 0; i < uLen; ++i, ++pwszRead){
-		const wchar_t ch = *pwszRead;
+	do {
+		const wchar_t ch = *itRead;
 
 		if(bEscaped){
 			bEscaped = false;
@@ -284,7 +314,7 @@ std::pair<Notation::ErrorType, const wchar_t *> Notation::Parse(const wchar_t *p
 			case L'=':
 				switch(eState){
 				case NAME_INDENT:
-					return std::make_pair(ERR_NO_VALUE_NAME, pwszRead);
+					return std::make_pair(ERR_NO_VALUE_NAME, itRead);
 
 				case NAME_BODY:
 				case NAME_PADDING:
@@ -300,10 +330,11 @@ std::pair<Notation::ErrorType, const wchar_t *> Notation::Parse(const wchar_t *p
 					continue;
 				};
 				break;
+
 			case L'{':
 				switch(eState){
 				case NAME_INDENT:
-					return std::make_pair(ERR_NO_VALUE_NAME, pwszRead);
+					return std::make_pair(ERR_NO_VALUE_NAME, itRead);
 
 				case NAME_BODY:
 				case NAME_PADDING:
@@ -323,11 +354,12 @@ std::pair<Notation::ErrorType, const wchar_t *> Notation::Parse(const wchar_t *p
 					continue;
 				};
 				break;
+
 			case L'}':
 				switch(eState){
 				case NAME_INDENT:
 					if(vecPackageStack.GetSize() == 1){
-						return std::make_pair(ERR_UNEXCEPTED_PACKAGE_CLOSE, pwszRead);
+						return std::make_pair(ERR_UNEXCEPTED_PACKAGE_CLOSE, itRead);
 					}
 					PopPackage();
 					eState = NAME_INDENT;
@@ -335,14 +367,14 @@ std::pair<Notation::ErrorType, const wchar_t *> Notation::Parse(const wchar_t *p
 
 				case NAME_BODY:
 				case NAME_PADDING:
-					return std::make_pair(ERR_EQU_EXPECTED, pwszRead);
+					return std::make_pair(ERR_EQU_EXPECTED, itRead);
 
 				case VAL_INDENT:
 				case VAL_BODY:
 				case VAL_PADDING:
 					SubmitValue();
 					if(vecPackageStack.GetSize() == 1){
-						return std::make_pair(ERR_UNEXCEPTED_PACKAGE_CLOSE, pwszRead);
+						return std::make_pair(ERR_UNEXCEPTED_PACKAGE_CLOSE, itRead);
 					}
 					PopPackage();
 					eState = NAME_INDENT;
@@ -352,6 +384,7 @@ std::pair<Notation::ErrorType, const wchar_t *> Notation::Parse(const wchar_t *p
 					continue;
 				};
 				break;
+
 			case L';':
 				switch(eState){
 				case NAME_INDENT:
@@ -360,7 +393,7 @@ std::pair<Notation::ErrorType, const wchar_t *> Notation::Parse(const wchar_t *p
 
 				case NAME_BODY:
 				case NAME_PADDING:
-					return std::make_pair(ERR_EQU_EXPECTED, pwszRead);
+					return std::make_pair(ERR_EQU_EXPECTED, itRead);
 
 				case VAL_INDENT:
 				case VAL_BODY:
@@ -373,6 +406,7 @@ std::pair<Notation::ErrorType, const wchar_t *> Notation::Parse(const wchar_t *p
 					continue;
 				};
 				break;
+
 			case L'\n':
 				switch(eState){
 				case NAME_INDENT:
@@ -380,7 +414,7 @@ std::pair<Notation::ErrorType, const wchar_t *> Notation::Parse(const wchar_t *p
 
 				case NAME_BODY:
 				case NAME_PADDING:
-					return std::make_pair(ERR_EQU_EXPECTED, pwszRead);
+					return std::make_pair(ERR_EQU_EXPECTED, itRead);
 
 				case VAL_INDENT:
 				case VAL_BODY:
@@ -403,8 +437,8 @@ std::pair<Notation::ErrorType, const wchar_t *> Notation::Parse(const wchar_t *p
 				if((ch == L' ') || (ch == L'\t')){
 					// eState = NAME_INDENT;
 				} else {
-					pNameBegin = pwszRead;
-					pNameEnd = pwszRead + 1;
+					itNameBegin = itRead;
+					itNameEnd = itRead + 1;
 					eState = NAME_BODY;
 				}
 				continue;
@@ -413,7 +447,7 @@ std::pair<Notation::ErrorType, const wchar_t *> Notation::Parse(const wchar_t *p
 				if((ch == L' ') || (ch == L'\t')){
 					eState = NAME_PADDING;
 				} else {
-					pNameEnd = pwszRead + 1;
+					itNameEnd = itRead + 1;
 					// eState = NAME_BODY;
 				}
 				continue;
@@ -422,7 +456,7 @@ std::pair<Notation::ErrorType, const wchar_t *> Notation::Parse(const wchar_t *p
 				if((ch == L' ') || (ch == L'\t')){
 					// eState = NAME_PADDING;
 				} else {
-					pNameEnd = pwszRead + 1;
+					itNameEnd = itRead + 1;
 					eState = NAME_BODY;
 				}
 				continue;
@@ -431,8 +465,8 @@ std::pair<Notation::ErrorType, const wchar_t *> Notation::Parse(const wchar_t *p
 				if((ch == L' ') || (ch == L'\t')){
 					// eState = VAL_INDENT;
 				} else {
-					pValueBegin = pwszRead;
-					pValueEnd = pwszRead + 1;
+					itValueBegin = itRead;
+					itValueEnd = itRead + 1;
 					eState = VAL_BODY;
 				}
 				continue;
@@ -441,7 +475,7 @@ std::pair<Notation::ErrorType, const wchar_t *> Notation::Parse(const wchar_t *p
 				if((ch == L' ') || (ch == L'\t')){
 					eState = VAL_PADDING;
 				} else {
-					pValueEnd = pwszRead + 1;
+					itValueEnd = itRead + 1;
 					// eState = VAL_BODY;
 				}
 				continue;
@@ -450,7 +484,7 @@ std::pair<Notation::ErrorType, const wchar_t *> Notation::Parse(const wchar_t *p
 				if((ch == L' ') || (ch == L'\t')){
 					// eState = VAL_PADDING;
 				} else {
-					pValueEnd = pwszRead + 1;
+					itValueEnd = itRead + 1;
 					eState = VAL_BODY;
 				}
 				continue;
@@ -459,17 +493,18 @@ std::pair<Notation::ErrorType, const wchar_t *> Notation::Parse(const wchar_t *p
 				continue;
 			}
 		}
-	}
+	} while(++itRead != wsoData.GetEnd());
+
 	if(bEscaped){
-		return std::make_pair(ERR_ESCAPE_AT_EOF, pwszRead);
+		return std::make_pair(ERR_ESCAPE_AT_EOF, itRead);
 	}
 	if(vecPackageStack.GetSize() > 1){
-		return std::make_pair(ERR_UNCLOSED_PACKAGE, pwszRead);
+		return std::make_pair(ERR_UNCLOSED_PACKAGE, itRead);
 	}
 	switch(eState){
 	case NAME_BODY:
 	case NAME_PADDING:
-		return std::make_pair(ERR_EQU_EXPECTED, pwszRead);
+		return std::make_pair(ERR_EQU_EXPECTED, itRead);
 
 	case VAL_INDENT:
 	case VAL_BODY:
@@ -481,13 +516,53 @@ std::pair<Notation::ErrorType, const wchar_t *> Notation::Parse(const wchar_t *p
 		break;
 	};
 
-	return std::make_pair(ERR_NONE, nullptr);
+	return std::make_pair(ERR_NONE, itRead);
 }
-Utf16String Notation::Export(const wchar_t *pwchIndent) const {
-	Utf16String wcsResult;
-	Utf16String wcsPrefix;
-	const std::size_t uIndentLength = pwchIndent ? (std::size_t)0 : std::wcslen(pwchIndent);
-	xExportPackageRecur(wcsResult, *this, wcsPrefix, pwchIndent, uIndentLength);
-	return std::move(wcsResult);
+WideString Notation::Export(const WideStringObserver &wsoIndent) const {
+	WideString wcsRet;
+
+	VVector<std::tuple<const WideString *, const Package *, bool>> vecPackageStack;
+	vecPackageStack.Push(nullptr, this, true);
+	WideString wcsIndent;
+	for(;;){
+		auto &vTop = vecPackageStack.GetEnd()[-1];
+		const auto &pkgTop = *std::get<1>(vTop);
+
+		if(std::get<2>(vTop)){
+			std::get<2>(vTop) = false;
+
+			if(std::get<0>(vTop)){
+				wcsRet.Append(wcsIndent);
+				Escape(wcsRet, *std::get<0>(vTop));
+				wcsRet.Append(L" {\n");
+				wcsIndent.Append(wsoIndent);
+			}
+			for(auto pNode = pkgTop.xm_mapPackages.GetRBegin<0>(); pNode; pNode = pNode->GetPrev<0>()){
+				vecPackageStack.Push(&(pNode->GetIndex<0>()), &(pNode->GetElement()), true);
+			}
+			continue;
+		}
+
+		for(auto pNode = pkgTop.xm_mapValues.GetBegin<0>(); pNode; pNode = pNode->GetNext<0>()){
+			wcsRet.Append(wcsIndent);
+			Escape(wcsRet, pNode->GetIndex<0>());
+			wcsRet.Append(L" = ");
+			Escape(wcsRet, pNode->GetElement());
+			wcsRet.Append(L'\n');
+		}
+
+		vecPackageStack.Pop();
+
+		if(!std::get<0>(vTop)){
+			break;
+		}
+		wcsIndent.Truncate(wsoIndent.GetLength());
+		wcsRet.Append(wcsIndent);
+		wcsRet.Append(L"}\n");
+	}
+
+	ASSERT(vecPackageStack.IsEmpty());
+	ASSERT(wcsIndent.IsEmpty());
+
+	return std::move(wcsRet);
 }
-*/

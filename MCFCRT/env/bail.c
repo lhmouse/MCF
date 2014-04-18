@@ -5,7 +5,7 @@
 #define WIN32_LEAN_AND_MEAN
 
 #include "bail.h"
-#include "../c/ext/tchar.h"
+#include "../c/ext/strcpyout.h"
 #include <windows.h>
 #include <stdarg.h>
 #include <wchar.h>
@@ -14,25 +14,25 @@
 static DWORD APIENTRY ThreadProc(LPVOID pParam){
 	const LPCWSTR pwszDescription = (LPCWSTR)pParam;
 
-	wchar_t awchBuffer[1025];
-	wchar_t *pwchWrite = _wcscpyout(awchBuffer, L"应用程序异常终止。请联系作者寻求协助。");
+	wchar_t awcBuffer[1025];
+	wchar_t *pwcWrite = _wcscpyout(awcBuffer, L"应用程序异常终止。请联系作者寻求协助。");
 	if(pwszDescription){
-		pwchWrite = _wcscpyout(pwchWrite, L"\r\n\r\n错误描述：\r\n");
+		pwcWrite = _wcscpyout(pwcWrite, L"\r\n\r\n错误描述：\r\n");
 
 		size_t uLen = wcslen(pwszDescription);
-		const size_t uMax = (size_t)(awchBuffer + sizeof(awchBuffer) / sizeof(awchBuffer[0]) - pwchWrite) - 128;
+		const size_t uMax = (size_t)(awcBuffer + sizeof(awcBuffer) / sizeof(awcBuffer[0]) - pwcWrite) - 128;
 		if(uLen > uMax){
 			uLen = uMax;
 		}
-		memcpy(pwchWrite, pwszDescription, uLen * sizeof(wchar_t));	// 我们有必要在这个地方拷贝字符串结束符吗？
-		pwchWrite += uLen;
+		memcpy(pwcWrite, pwszDescription, uLen * sizeof(wchar_t));	// 我们有必要在这个地方拷贝字符串结束符吗？
+		pwcWrite += uLen;
 	}
 #ifndef NDEBUG
-	_wcscpyout(pwchWrite, L"\r\n\r\n单击“确定”终止应用程序，单击“取消”调试应用程序。");
-	const int nRet = MessageBoxW(NULL, awchBuffer, L"MCF CRT 错误", MB_ICONERROR | MB_OKCANCEL | MB_TASKMODAL);
+	_wcscpyout(pwcWrite, L"\r\n\r\n单击“确定”终止应用程序，单击“取消”调试应用程序。");
+	const int nRet = MessageBoxW(NULL, awcBuffer, L"MCF CRT 错误", MB_ICONERROR | MB_OKCANCEL | MB_TASKMODAL);
 #else
-	_wcscpyout(pwchWrite, L"\r\n\r\n单击“确定”终止应用程序。");
-	const int nRet =  MessageBoxW(NULL, awchBuffer, L"MCF CRT 错误", MB_ICONERROR | MB_OK | MB_TASKMODAL);
+	_wcscpyout(pwcWrite, L"\r\n\r\n单击“确定”终止应用程序。");
+	const int nRet =  MessageBoxW(NULL, awcBuffer, L"MCF CRT 错误", MB_ICONERROR | MB_OK | MB_TASKMODAL);
 #endif
 	return (DWORD)nRet;
 }
@@ -60,10 +60,10 @@ __MCF_NORETURN_IF_NDEBUG void MCF_CRT_Bail(const wchar_t *pwszDescription){
 	DoBail(pwszDescription);
 }
 __MCF_NORETURN_IF_NDEBUG void MCF_CRT_BailF(const wchar_t *pwszFormat, ...){
-	wchar_t awchBuffer[1025];
+	wchar_t awcBuffer[1025];
 	va_list ap;
 	va_start(ap, pwszFormat);
-	__mingw_vsnwprintf(awchBuffer, sizeof(awchBuffer) / sizeof(wchar_t), pwszFormat, ap);
+	__mingw_vsnwprintf(awcBuffer, sizeof(awcBuffer) / sizeof(wchar_t), pwszFormat, ap);
 	va_end(ap);
-	DoBail(awchBuffer);
+	DoBail(awcBuffer);
 }

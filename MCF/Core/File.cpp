@@ -185,7 +185,7 @@ std::size_t File::Read(void *pBuffer, std::size_t uBytesToRead, std::uint64_t u6
 
 	std::size_t uBytesRead = 0;
 	for(;;){
-		const DWORD dwBytesToReadThisTime = std::min<DWORD>(0xFFFFF000u, uBytesToRead - uBytesRead);
+		const DWORD dwBytesToReadThisTime = Min(0xFFFFF000u, uBytesToRead - uBytesRead);
 		const DWORD dwBytesReadThisTime = ((const FileDelegate *)this)->Read(
 			(unsigned char *)pBuffer + uBytesRead,
 			dwBytesToReadThisTime,
@@ -202,7 +202,7 @@ std::size_t File::Read(void *pBuffer, std::size_t uBytesToRead, std::uint64_t u6
 std::size_t File::Read(void *pBuffer, std::size_t uBytesToRead, std::uint64_t u64Offset, File::AsyncProc &&fnAsyncProc) const {
 	ASSERT(dynamic_cast<const FileDelegate *>(this));
 
-	DWORD dwBytesToReadThisTime = std::min<DWORD>(0xFFFFF000u, uBytesToRead);
+	DWORD dwBytesToReadThisTime = Min(0xFFFFF000u, uBytesToRead);
 	std::size_t uBytesRead = ((const FileDelegate *)this)->Read(
 		pBuffer,
 		dwBytesToReadThisTime,
@@ -213,7 +213,7 @@ std::size_t File::Read(void *pBuffer, std::size_t uBytesToRead, std::uint64_t u6
 		return 0;
 	}
 	for(;;){
-		dwBytesToReadThisTime = std::min<DWORD>(0xFFFFF000u, uBytesToRead - uBytesRead);
+		dwBytesToReadThisTime = Min(0xFFFFF000u, uBytesToRead - uBytesRead);
 		const DWORD dwBytesReadThisTime = ((const FileDelegate *)this)->Read(
 			(unsigned char *)pBuffer + uBytesRead,
 			dwBytesToReadThisTime,
@@ -232,7 +232,7 @@ void File::Write(std::uint64_t u64Offset, const void *pBuffer, std::size_t uByte
 
 	std::size_t uBytesWritten = 0;
 	for(;;){
-		const DWORD dwBytesToWriteThisTime = std::min<DWORD>(0xFFFFF000u, uBytesToWrite - uBytesWritten);
+		const DWORD dwBytesToWriteThisTime = Min(0xFFFFF000u, uBytesToWrite - uBytesWritten);
 		if(dwBytesToWriteThisTime == 0){
 			break;
 		}
@@ -248,7 +248,7 @@ void File::Write(std::uint64_t u64Offset, const void *pBuffer, std::size_t uByte
 void File::Write(std::uint64_t u64Offset, const void *pBuffer, std::size_t uBytesToWrite, File::AsyncProc &&fnAsyncProc){
 	ASSERT(dynamic_cast<FileDelegate *>(this));
 
-	DWORD dwBytesToWriteThisTime = std::min<DWORD>(0xFFFFF000u, uBytesToWrite);
+	DWORD dwBytesToWriteThisTime = Min(0xFFFFF000u, uBytesToWrite);
 	if(dwBytesToWriteThisTime == 0){
 		return;
 	}
@@ -260,7 +260,7 @@ void File::Write(std::uint64_t u64Offset, const void *pBuffer, std::size_t uByte
 	);
 	std::size_t uBytesWritten = dwBytesToWriteThisTime;
 	for(;;){
-		dwBytesToWriteThisTime = std::min<DWORD>(0xFFFFF000u, uBytesToWrite - uBytesWritten);
+		dwBytesToWriteThisTime = Min(0xFFFFF000u, uBytesToWrite - uBytesWritten);
 		if(dwBytesToWriteThisTime == 0){
 			break;
 		}

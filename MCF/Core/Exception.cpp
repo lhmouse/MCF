@@ -9,7 +9,7 @@ using namespace MCF;
 
 namespace MCF {
 
-Utf16String GetWin32ErrorDesc(unsigned long ulErrorCode){
+WideString GetWin32ErrorDesc(unsigned long ulErrorCode){
 	struct LocalFreer {
 		constexpr HLOCAL operator()() const {
 			return NULL;
@@ -19,7 +19,7 @@ Utf16String GetWin32ErrorDesc(unsigned long ulErrorCode){
 		}
 	};
 
-	Utf16String wcsRet;
+	WideString wcsRet;
 	PVOID pDescBuffer;
 	const auto uLen = ::FormatMessageW(
 		FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,

@@ -23,7 +23,7 @@ WideString Unescape(const WideStringObserver &wsoSrc){
 	std::uint32_t u32CodePoint = 0;
 	std::size_t uHexExpecting = 0;
 
-	const auto PushUtf = [&wcsRet](std::uint32_t u32CodePoint){
+	const auto PushUtf = [&]{
 		if(u32CodePoint > 0x10FFFF){
 			u32CodePoint = 0xFFFD;
 		}
@@ -127,7 +127,7 @@ WideString Unescape(const WideStringObserver &wsoSrc){
 				if(uHexExpecting != 0){
 					// eState = UCS_CODE;
 				} else {
-					PushUtf(u32CodePoint);
+					PushUtf();
 					eState = NORMAL;
 				}
 			}
@@ -138,7 +138,7 @@ WideString Unescape(const WideStringObserver &wsoSrc){
 		}
 	}
 	if(eState == UCS_CODE){
-		PushUtf(u32CodePoint);
+		PushUtf();
 	}
 
 	return std::move(wcsRet);
@@ -266,21 +266,19 @@ std::pair<Notation::ErrorType, WideStringObserver::Iterator> Notation::Parse(con
 		ASSERT(itNameBegin != itNameEnd);
 
 		auto wcsName = Unescape(WideStringObserver(itNameBegin, itNameEnd));
-
 		auto &mapPackages = vecPackageStack.GetEnd()[-1]->xm_mapPackages;
-		auto pNewPackageNode = mapPackages.Find<0>(wcsName);
-		if(!pNewPackageNode){
-			pNewPackageNode = mapPackages.Insert(Package(), std::move(wcsName));
+		if(mapPackages.Find<0>(wcsName)){
+			return false;
 		}
-		vecPackageStack.Push(&(pNewPackageNode->GetElement()));
-
+		const auto pNewNode = mapPackages.Insert(Package(), std::move(wcsName));
+		vecPackageStack.Push(&(pNewNode->GetElement()));
 		itNameBegin = itNameEnd;
+		return true;
 	};
 	const auto PopPackage = [&]{
 		ASSERT(vecPackageStack.GetSize() > 0);
 
 		vecPackageStack.Pop();
-
 		itNameBegin = itNameEnd;
 	};
 	const auto SubmitValue = [&]{
@@ -288,16 +286,13 @@ std::pair<Notation::ErrorType, WideStringObserver::Iterator> Notation::Parse(con
 
 		auto wcsName = Unescape(WideStringObserver(itNameBegin, itNameEnd));
 		auto wcsValue = Unescape(WideStringObserver(itValueBegin, itValueEnd));
-
 		auto &mapValues = vecPackageStack.GetEnd()[-1]->xm_mapValues;
-		const auto pValueNode = mapValues.Find<0>(wcsName);
-		if(pValueNode){
-			pValueNode->GetElement() = std::move(wcsValue);
-		} else {
-			mapValues.Insert(std::move(wcsValue), std::move(wcsName));
+		if(mapValues.Find<0>(wcsName)){
+			return false;
 		}
-
+		mapValues.Insert(std::move(wcsValue), std::move(wcsName));
 		itValueBegin = itValueEnd;
+		return true;
 	};
 
 	do {
@@ -338,15 +333,21 @@ std::pair<Notation::ErrorType, WideStringObserver::Iterator> Notation::Parse(con
 
 				case NAME_BODY:
 				case NAME_PADDING:
-					PushPackage();
+					if(!PushPackage()){
+						return std::make_pair(ERR_DUPLICATE_PACKAGE, itRead);
+					}
 					eState = NAME_INDENT;
 					continue;
 
 				case VAL_INDENT:
 				case VAL_BODY:
 				case VAL_PADDING:
-					SubmitValue();
-					PushPackage();
+					if(!SubmitValue()){
+						return std::make_pair(ERR_DUPLICATE_VALUE, itRead);
+					}
+					if(!PushPackage()){
+						return std::make_pair(ERR_DUPLICATE_PACKAGE, itRead);
+					}
 					eState = NAME_INDENT;
 					continue;
 
@@ -372,7 +373,9 @@ std::pair<Notation::ErrorType, WideStringObserver::Iterator> Notation::Parse(con
 				case VAL_INDENT:
 				case VAL_BODY:
 				case VAL_PADDING:
-					SubmitValue();
+					if(!SubmitValue()){
+						return std::make_pair(ERR_DUPLICATE_VALUE, itRead);
+					}
 					if(vecPackageStack.GetSize() == 1){
 						return std::make_pair(ERR_UNEXCEPTED_PACKAGE_CLOSE, itRead);
 					}
@@ -398,7 +401,9 @@ std::pair<Notation::ErrorType, WideStringObserver::Iterator> Notation::Parse(con
 				case VAL_INDENT:
 				case VAL_BODY:
 				case VAL_PADDING:
-					SubmitValue();
+					if(!SubmitValue()){
+						return std::make_pair(ERR_DUPLICATE_VALUE, itRead);
+					}
 					eState = COMMENT;
 					continue;
 
@@ -419,7 +424,9 @@ std::pair<Notation::ErrorType, WideStringObserver::Iterator> Notation::Parse(con
 				case VAL_INDENT:
 				case VAL_BODY:
 				case VAL_PADDING:
-					SubmitValue();
+					if(!SubmitValue()){
+						return std::make_pair(ERR_DUPLICATE_VALUE, itRead);
+					}
 					eState = NAME_INDENT;
 					continue;
 
@@ -509,7 +516,9 @@ std::pair<Notation::ErrorType, WideStringObserver::Iterator> Notation::Parse(con
 	case VAL_INDENT:
 	case VAL_BODY:
 	case VAL_PADDING:
-		SubmitValue();
+		if(!SubmitValue()){
+			return std::make_pair(ERR_DUPLICATE_VALUE, itRead);
+		}
 		break;
 
 	default:

@@ -5,25 +5,24 @@
 #define WIN32_LEAN_AND_MEAN
 
 #include "MCFCRT.h"
-#include "env/lockfree_list.h"
 #include "env/mingw_hacks.h"
 #include <stdlib.h>
 #include <windows.h>
 #include <winnt.h>
 
+extern void __cdecl __main(void);
+
 // ld 自动添加此符号。
 extern IMAGE_DOS_HEADER g_vDosHeader __asm__("__image_base__");
 
-extern void __cdecl __main();
-
 typedef struct tagAtExitNode {
-	MCF_LFLIST_NODE_HEADER LFListHeader;
+	struct tagAtExitNode *pNext;
 
 	void (__cdecl *pfnProc)(intptr_t);
 	intptr_t nContext;
 } AT_EXIT_NODE;
 
-static __MCF_LFLIST_PHEAD g_pAtExitHeader;
+static AT_EXIT_NODE *g_pAtExitHead = NULL;
 
 unsigned long __MCF_CRT_Begin(){
 	DWORD dwExitCode;
@@ -44,10 +43,14 @@ unsigned long __MCF_CRT_Begin(){
 }
 void __MCF_CRT_End(){
 	for(;;){
-		AT_EXIT_NODE *const pNode = (AT_EXIT_NODE *)MCF_LFListPopFront(&g_pAtExitHeader);
+		AT_EXIT_NODE *pNode = __atomic_load_n(&g_pAtExitHead, __ATOMIC_ACQUIRE);
+		while(pNode && !__atomic_compare_exchange_n(&g_pAtExitHead, &pNode, pNode->pNext, false, __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST)){
+			// 空的。
+		}
 		if(!pNode){
 			break;
 		}
+
 		(*pNode->pfnProc)(pNode->nContext);
 		free(pNode);
 	}
@@ -66,10 +69,14 @@ int MCF_AtCRTEnd(void (__cdecl *pfnProc)(intptr_t), intptr_t nContext){
 	if(!pNode){
 		return -1;
 	}
+
 	pNode->pfnProc = pfnProc;
 	pNode->nContext = nContext;
 
-	MCF_LFListPushFront(&g_pAtExitHeader, (MCF_LFLIST_NODE_HEADER *)pNode);
+	pNode->pNext = __atomic_load_n(&g_pAtExitHead, __ATOMIC_ACQUIRE);
+	while(!__atomic_compare_exchange_n(&g_pAtExitHead, &(pNode->pNext), pNode, false, __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST)){
+		// 空的。
+	}
 
 	return 0;
 }

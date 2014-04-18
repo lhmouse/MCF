@@ -14,31 +14,47 @@
 
 namespace MCF {
 
-template<class Object_t>
+template<class Object_t, class... InitParams_t>
 class TheadLocal {
 private:
+	template<class... Unpacked_t>
+	static void TupleConstruct(
+		typename std::enable_if<sizeof...(Unpacked_t) < sizeof...(InitParams_t), void>::type *pObj,
+		const std::tuple<InitParams_t...> &vTuple,
+		const Unpacked_t &...vUnpacked
+	){
+		TupleConstruct(pObj, vTuple, vUnpacked..., std::get<sizeof...(Unpacked_t)>(vTuple));
+	}
+	template<class... Unpacked_t>
+	static void TupleConstruct(
+		typename std::enable_if<sizeof...(Unpacked_t) == sizeof...(InitParams_t), void>::type *pObj,
+		const std::tuple<InitParams_t...> &,
+		const Unpacked_t &...vUnpacked
+	){
+		new(pObj) Object_t(vUnpacked...);
+	}
+
 	static void xCtorWrapper(void *pObj, std::intptr_t nParam){
-		new(pObj) Object_t(((const TheadLocal *)nParam)->xm_vTemplate);
+		TupleConstruct(pObj, ((const TheadLocal *)nParam)->xm_vInitParams);
 	}
 	static void xDtorWrapper(void *pObj) noexcept {
 		((Object_t *)pObj)->~Object_t();
 	}
 
 private:
-	Object_t xm_vTemplate;
+	std::tuple<InitParams_t...> xm_vInitParams;
 
 public:
-	template<class... Params_t>
-	constexpr TheadLocal(Params_t ...vParams) noexcept(noexcept(Object_t(std::move(vParams)...)))
-		: xm_vTemplate(std::move(vParams)...)
+	explicit constexpr TheadLocal(InitParams_t &&... vInitParams)
+		: xm_vInitParams(std::forward<InitParams_t>(vInitParams)...)
 	{
 	}
 	~TheadLocal(){
 		Release();
 	}
 
-public:
-	Object_t *Get() const noexcept {
+private:
+	Object_t *xGetPtr() const noexcept {
 		const auto pRet = (Object_t *)::MCF_CRT_RetrieveTls((std::intptr_t)this, sizeof(Object_t), &xCtorWrapper, (std::intptr_t)this, &xDtorWrapper);
 		if(!pRet){
 			::MCF_CRT_Bail(
@@ -48,18 +64,42 @@ public:
 		}
 		return pRet;
 	}
-	void Release() const noexcept {
+public:
+	const Object_t &Get() const noexcept {
+		return *xGetPtr();
+	}
+	Object_t &Get() noexcept {
+		return *xGetPtr();
+	}
+	void Release() noexcept {
 		::MCF_CRT_DeleteTls((std::intptr_t)this);
 	}
 
 public:
-	Object_t *operator->() const {
+	explicit operator const Object_t *() const noexcept {
+		return xGetPtr();
+	}
+	explicit operator Object_t *() noexcept {
+		return xGetPtr();
+	}
+	const Object_t *operator->() const noexcept {
+		return xGetPtr();
+	}
+	Object_t *operator->() noexcept {
+		return xGetPtr();
+	}
+	const Object_t &operator*() const noexcept {
 		return Get();
 	}
-	operator Object_t *() const {
+	Object_t &operator*() noexcept {
 		return Get();
 	}
 };
+
+template<class Object_t, class... InitParams_t>
+TheadLocal<Object_t, typename std::remove_reference<InitParams_t>::type...> MakeThreadLocal(InitParams_t &&... vInitParams){
+	return TheadLocal<Object_t, typename std::remove_reference<InitParams_t>::type...>(std::forward<InitParams_t>(vInitParams)...);
+}
 
 }
 

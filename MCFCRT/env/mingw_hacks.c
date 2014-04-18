@@ -4,38 +4,42 @@
 
 #define WIN32_LEAN_AND_MEAN
 
-#include "_crtdef.h"
+#include "mingw_hacks.h"
+#include "../c/ext/assert.h"
 #include "thread.h"
-#include "lockfree_list.h"
 #include <stdlib.h>
 #include <windows.h>
 
 typedef struct tagKeyDtorNode {
-	MCF_LFLIST_NODE_HEADER LFListHeader;
+	struct tagKeyDtorNode *pNext;
 
 	unsigned long ulKey;
 	void (*pfnDtor)(void *);
 } KEY_DTOR_NODE;
 
-static __MCF_LFLIST_PHEAD g_pDtorHeader;
+static KEY_DTOR_NODE *g_pDtorHead = NULL;
 
 void __MCF_CRT_RunEmutlsThreadDtors(){
-	const KEY_DTOR_NODE *pNode = (const KEY_DTOR_NODE *)g_pDtorHeader;
+	const KEY_DTOR_NODE *pNode = __atomic_load_n(&g_pDtorHead, __ATOMIC_ACQUIRE);
 	while(pNode){
 		const LPVOID pMem = TlsGetValue(pNode->ulKey);
 		if((GetLastError() == ERROR_SUCCESS) && pMem){
-			(*pNode->pfnDtor)(pMem);
+			(*(pNode->pfnDtor))(pMem);
 		}
-		pNode = (const KEY_DTOR_NODE *)MCF_LFListNext((const MCF_LFLIST_NODE_HEADER *)pNode);
+		pNode = pNode->pNext;
 	}
 }
 
 void __MCF_CRT_EmutlsCleanup(){
 	for(;;){
-		KEY_DTOR_NODE *const pNode = (KEY_DTOR_NODE *)MCF_LFListPopFront(&g_pDtorHeader);
+		KEY_DTOR_NODE *pNode = __atomic_load_n(&g_pDtorHead, __ATOMIC_ACQUIRE);
+		while(pNode && !__atomic_compare_exchange_n(&g_pDtorHead, &pNode, pNode->pNext, false, __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST)){
+			// 空的。
+		}
 		if(!pNode){
 			break;
 		}
+
 		free(pNode);
 	}
 }
@@ -46,10 +50,14 @@ int __mingwthr_key_dtor(unsigned long ulKey, void (*pfnDtor)(void *)){
 		if(!pNode){
 			return -1;
 		}
+
 		pNode->ulKey = ulKey;
 		pNode->pfnDtor = pfnDtor;
 
-		MCF_LFListPushFront(&g_pDtorHeader, (MCF_LFLIST_NODE_HEADER *)pNode);
+		pNode->pNext = __atomic_load_n(&g_pDtorHead, __ATOMIC_ACQUIRE);
+		while(!__atomic_compare_exchange_n(&g_pDtorHead, &(pNode->pNext), pNode, false, __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST)){
+			// 空的。
+		}
 	}
 	return 0;
 }

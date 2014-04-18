@@ -16,94 +16,33 @@
 
 namespace MCF {
 
-// http://tools.ietf.org/html/rfc3986
-extern void UrlEncode(Utf8String &u8sAppendTo, const char *pchBegin, std::size_t uLen = (std::size_t)-1);
-extern void UrlEncode(Utf8String &u8sAppendTo, const Utf8String &u8sSrc);
-extern void UrlDecode(Utf8String &u8sAppendTo, const char *pchBegin, std::size_t uLen = (std::size_t)-1);
-extern void UrlDecode(Utf8String &u8sAppendTo, const Utf8String &u8sSrc);
-
-class HttpClient : NO_COPY {
-private:
-	class xDelegate;
-
-private:
-	std::unique_ptr<xDelegate> xm_pDelegate;
-
+class HttpClient : NO_COPY, ABSTRACT {
 public:
-	// bAutoProxy   pwszProxy  描述
+	// bAutoProxy   u8sProxy   描述
 	//   false         空      不使用代理服务器
 	//   true          空      使用 IE 的代理服务器
-	//   false        非空     使用指定的代理服务器（pwszProxy = user:pass@addr:port|bypass）
-	//   true         非空     使用指定的 PAC（pwszProxy = URL）
-	explicit HttpClient(
+	//   false        非空     使用指定的代理服务器（u8sProxy = user:pass@addr:port|bypass）
+	//   true         非空     使用指定的 PAC（u8sProxy = URL）
+	std::unique_ptr<HttpClient> Create(
 		bool bAutoProxy = false,
-		const wchar_t *pwszProxy = nullptr,
-		std::size_t uProxyLen = (std::size_t)-1,
-		const wchar_t *pwszUserAgent = L"MCF HTTPClient"
+		WideString wcsProxy = WideString(),
+		WideString wcsUserAgent = WideString(L"MCF HTTPClient")
 	);
-	HttpClient(
-		bool bAutoProxy,
-		const WideString &wcsProxy,
-		const wchar_t *pwszUserAgent = L"MCF HTTPClient"
-	);
-	HttpClient(HttpClient &&rhs) noexcept;
-	HttpClient &operator=(HttpClient &&rhs) noexcept;
-	~HttpClient();
 
 public:
-	bool AddCookie(
-		Utf8String			u8sName,
-		const Utf8String &	u8sValue,
-		std::uint64_t		u64Expires,
-		Utf8String			u8sPath,
-		Utf8String			u8sDomain,
-		bool				bSecure,
-		bool				bHttpOnly
-	);
-	bool RemoveCookie(
-		const std::pair<const char *, std::size_t> &vName,
-		const std::pair<const char *, std::size_t> &vPath,
-		const std::pair<const char *, std::size_t> &vDomain
-	) noexcept;
-	bool RemoveCookie(
-		const Utf8String &u8sName,
-		const Utf8String &u8sPath,
-		const Utf8String &u8sDomain
-	) noexcept;
-	void ClearCookies() noexcept;
-
-	Vector<Vector<unsigned char>> ExportCookies(bool bIncludeSessionOnly = false) const;
-	void ImportCookies(const Vector<Vector<unsigned char>> &vecData);
-
 	unsigned long ConnectNoThrow(
-		const wchar_t *		pwszVerb,
-		const wchar_t *		pwcUrl,
-		std::size_t			uUrlLen = (std::size_t)-1,
-		const void *		pContents = nullptr,
-		std::size_t			uContentSize = 0,
-		const wchar_t *		pwszContentType = L"application/x-www-form-urlencoded; charset=utf-8"
-	);
-	unsigned long ConnectNoThrow(
-		const wchar_t *		pwszVerb,
-		const WideString &	wcsUrl,
-		const void *		pContents = nullptr,
-		std::size_t			uContentSize = 0,
-		const wchar_t *		pwszContentType = L"application/x-www-form-urlencoded; charset=utf-8"
+		const WideStringObserver &	wsoVerb,
+		const WideStringObserver &	wsoUrl,
+		const void *				pContents = nullptr,
+		std::size_t					uContentSize = 0,
+		const WideStringObserver &	wsoContentType = L"application/x-www-form-urlencoded; charset=utf-8"
 	);
 	void Connect(
-		const wchar_t *		pwszVerb,
-		const wchar_t *		pwcUrl,
-		std::size_t			uUrlLen = (std::size_t)-1,
-		const void *		pContents = nullptr,
-		std::size_t			uContentSize = 0,
-		const wchar_t *		pwszContentType = L"application/x-www-form-urlencoded; charset=utf-8"
-	);
-	void Connect(
-		const wchar_t *		pwszVerb,
-		const WideString &	wcsUrl,
-		const void *		pContents = nullptr,
-		std::size_t			uContentSize = 0,
-		const wchar_t *		pwszContentType = L"application/x-www-form-urlencoded; charset=utf-8"
+		const WideStringObserver &	wsoVerb,
+		const WideStringObserver &	wsoUrl,
+		const void *				pContents = nullptr,
+		std::size_t					uContentSize = 0,
+		const WideStringObserver &	wsoContentType = L"application/x-www-form-urlencoded; charset=utf-8"
 	);
 	void Disconnect() noexcept;
 

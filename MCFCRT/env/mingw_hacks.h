@@ -12,7 +12,7 @@
 __MCF_EXTERN_C_BEGIN
 
 extern void __MCF_CRT_RunEmutlsThreadDtors(void) __MCF_NOEXCEPT;
-extern unsigned long __MCF_CRT_EmutlsCleanup(void) __MCF_NOEXCEPT;
+extern void __MCF_CRT_EmutlsCleanup(void) __MCF_NOEXCEPT;
 
 __MCF_EXTERN_C_END
 

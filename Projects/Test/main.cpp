@@ -6,7 +6,7 @@
 using namespace MCF;
 
 #ifndef NDEBUG
-//#	define HEAP_DBG
+#	define HEAP_DBG
 #endif
 
 #ifdef HEAP_DBG

@@ -95,7 +95,7 @@ public:
 	Notation() noexcept = default;
 
 public:
-	std::pair<ErrorType, WideStringObserver::Iterator> Parse(const WideStringObserver &wsoData);
+	std::pair<ErrorType, const wchar_t *> Parse(const WideStringObserver &wsoData);
 	WideString Export(const WideStringObserver &wsoIndent = L"  ") const;
 };
 

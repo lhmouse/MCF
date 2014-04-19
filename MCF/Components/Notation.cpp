@@ -36,11 +36,11 @@ WideString Unescape(const WideStringObserver &wsoSrc){
 		}
 	};
 
-	auto itCur = wsoSrc.GetBegin();
+	auto pwcCur = wsoSrc.GetBegin();
 	const auto itEnd = wsoSrc.GetEnd();
-	while(itCur != itEnd){
-		const auto wc = *itCur;
-		++itCur;
+	while(pwcCur != itEnd){
+		const auto wc = *pwcCur;
+		++pwcCur;
 		switch(eState){
 		case NORMAL:
 			if(wc == L'\\'){
@@ -234,21 +234,21 @@ void NotationPackage::Clear() noexcept {
 
 // ========== Notation ==========
 // 其他非静态成员函数。
-std::pair<Notation::ErrorType, WideStringObserver::Iterator> Notation::Parse(const WideStringObserver &wsoData){
+std::pair<Notation::ErrorType, const wchar_t *> Notation::Parse(const WideStringObserver &wsoData){
 	Clear();
 
-	auto itRead = wsoData.GetBegin();
-	if(itRead == wsoData.GetEnd()){
-		return std::make_pair(ERR_NONE, itRead);
+	auto pwcRead = wsoData.GetBegin();
+	if(pwcRead == wsoData.GetEnd()){
+		return std::make_pair(ERR_NONE, pwcRead);
 	}
 
 	VVector<Package *> vecPackageStack;
 	vecPackageStack.Push(this);
 
-	auto itNameBegin = itRead;
-	auto itNameEnd = itRead;
-	auto itValueBegin = itRead;
-	auto itValueEnd = itRead;
+	auto itNameBegin = pwcRead;
+	auto itNameEnd = pwcRead;
+	auto itValueBegin = pwcRead;
+	auto itValueEnd = pwcRead;
 
 	enum STATE {
 		NAME_INDENT,
@@ -296,7 +296,7 @@ std::pair<Notation::ErrorType, WideStringObserver::Iterator> Notation::Parse(con
 	};
 
 	do {
-		const wchar_t ch = *itRead;
+		const wchar_t ch = *pwcRead;
 
 		if(bEscaped){
 			bEscaped = false;
@@ -309,7 +309,7 @@ std::pair<Notation::ErrorType, WideStringObserver::Iterator> Notation::Parse(con
 			case L'=':
 				switch(eState){
 				case NAME_INDENT:
-					return std::make_pair(ERR_NO_VALUE_NAME, itRead);
+					return std::make_pair(ERR_NO_VALUE_NAME, pwcRead);
 
 				case NAME_BODY:
 				case NAME_PADDING:
@@ -329,12 +329,12 @@ std::pair<Notation::ErrorType, WideStringObserver::Iterator> Notation::Parse(con
 			case L'{':
 				switch(eState){
 				case NAME_INDENT:
-					return std::make_pair(ERR_NO_VALUE_NAME, itRead);
+					return std::make_pair(ERR_NO_VALUE_NAME, pwcRead);
 
 				case NAME_BODY:
 				case NAME_PADDING:
 					if(!PushPackage()){
-						return std::make_pair(ERR_DUPLICATE_PACKAGE, itRead);
+						return std::make_pair(ERR_DUPLICATE_PACKAGE, pwcRead);
 					}
 					eState = NAME_INDENT;
 					continue;
@@ -343,10 +343,10 @@ std::pair<Notation::ErrorType, WideStringObserver::Iterator> Notation::Parse(con
 				case VAL_BODY:
 				case VAL_PADDING:
 					if(!SubmitValue()){
-						return std::make_pair(ERR_DUPLICATE_VALUE, itRead);
+						return std::make_pair(ERR_DUPLICATE_VALUE, pwcRead);
 					}
 					if(!PushPackage()){
-						return std::make_pair(ERR_DUPLICATE_PACKAGE, itRead);
+						return std::make_pair(ERR_DUPLICATE_PACKAGE, pwcRead);
 					}
 					eState = NAME_INDENT;
 					continue;
@@ -360,7 +360,7 @@ std::pair<Notation::ErrorType, WideStringObserver::Iterator> Notation::Parse(con
 				switch(eState){
 				case NAME_INDENT:
 					if(vecPackageStack.GetSize() == 1){
-						return std::make_pair(ERR_UNEXCEPTED_PACKAGE_CLOSE, itRead);
+						return std::make_pair(ERR_UNEXCEPTED_PACKAGE_CLOSE, pwcRead);
 					}
 					PopPackage();
 					eState = NAME_INDENT;
@@ -368,16 +368,16 @@ std::pair<Notation::ErrorType, WideStringObserver::Iterator> Notation::Parse(con
 
 				case NAME_BODY:
 				case NAME_PADDING:
-					return std::make_pair(ERR_EQU_EXPECTED, itRead);
+					return std::make_pair(ERR_EQU_EXPECTED, pwcRead);
 
 				case VAL_INDENT:
 				case VAL_BODY:
 				case VAL_PADDING:
 					if(!SubmitValue()){
-						return std::make_pair(ERR_DUPLICATE_VALUE, itRead);
+						return std::make_pair(ERR_DUPLICATE_VALUE, pwcRead);
 					}
 					if(vecPackageStack.GetSize() == 1){
-						return std::make_pair(ERR_UNEXCEPTED_PACKAGE_CLOSE, itRead);
+						return std::make_pair(ERR_UNEXCEPTED_PACKAGE_CLOSE, pwcRead);
 					}
 					PopPackage();
 					eState = NAME_INDENT;
@@ -396,13 +396,13 @@ std::pair<Notation::ErrorType, WideStringObserver::Iterator> Notation::Parse(con
 
 				case NAME_BODY:
 				case NAME_PADDING:
-					return std::make_pair(ERR_EQU_EXPECTED, itRead);
+					return std::make_pair(ERR_EQU_EXPECTED, pwcRead);
 
 				case VAL_INDENT:
 				case VAL_BODY:
 				case VAL_PADDING:
 					if(!SubmitValue()){
-						return std::make_pair(ERR_DUPLICATE_VALUE, itRead);
+						return std::make_pair(ERR_DUPLICATE_VALUE, pwcRead);
 					}
 					eState = COMMENT;
 					continue;
@@ -419,13 +419,13 @@ std::pair<Notation::ErrorType, WideStringObserver::Iterator> Notation::Parse(con
 
 				case NAME_BODY:
 				case NAME_PADDING:
-					return std::make_pair(ERR_EQU_EXPECTED, itRead);
+					return std::make_pair(ERR_EQU_EXPECTED, pwcRead);
 
 				case VAL_INDENT:
 				case VAL_BODY:
 				case VAL_PADDING:
 					if(!SubmitValue()){
-						return std::make_pair(ERR_DUPLICATE_VALUE, itRead);
+						return std::make_pair(ERR_DUPLICATE_VALUE, pwcRead);
 					}
 					eState = NAME_INDENT;
 					continue;
@@ -444,8 +444,8 @@ std::pair<Notation::ErrorType, WideStringObserver::Iterator> Notation::Parse(con
 				if((ch == L' ') || (ch == L'\t')){
 					// eState = NAME_INDENT;
 				} else {
-					itNameBegin = itRead;
-					itNameEnd = itRead + 1;
+					itNameBegin = pwcRead;
+					itNameEnd = pwcRead + 1;
 					eState = NAME_BODY;
 				}
 				continue;
@@ -454,7 +454,7 @@ std::pair<Notation::ErrorType, WideStringObserver::Iterator> Notation::Parse(con
 				if((ch == L' ') || (ch == L'\t')){
 					eState = NAME_PADDING;
 				} else {
-					itNameEnd = itRead + 1;
+					itNameEnd = pwcRead + 1;
 					// eState = NAME_BODY;
 				}
 				continue;
@@ -463,7 +463,7 @@ std::pair<Notation::ErrorType, WideStringObserver::Iterator> Notation::Parse(con
 				if((ch == L' ') || (ch == L'\t')){
 					// eState = NAME_PADDING;
 				} else {
-					itNameEnd = itRead + 1;
+					itNameEnd = pwcRead + 1;
 					eState = NAME_BODY;
 				}
 				continue;
@@ -472,8 +472,8 @@ std::pair<Notation::ErrorType, WideStringObserver::Iterator> Notation::Parse(con
 				if((ch == L' ') || (ch == L'\t')){
 					// eState = VAL_INDENT;
 				} else {
-					itValueBegin = itRead;
-					itValueEnd = itRead + 1;
+					itValueBegin = pwcRead;
+					itValueEnd = pwcRead + 1;
 					eState = VAL_BODY;
 				}
 				continue;
@@ -482,7 +482,7 @@ std::pair<Notation::ErrorType, WideStringObserver::Iterator> Notation::Parse(con
 				if((ch == L' ') || (ch == L'\t')){
 					eState = VAL_PADDING;
 				} else {
-					itValueEnd = itRead + 1;
+					itValueEnd = pwcRead + 1;
 					// eState = VAL_BODY;
 				}
 				continue;
@@ -491,7 +491,7 @@ std::pair<Notation::ErrorType, WideStringObserver::Iterator> Notation::Parse(con
 				if((ch == L' ') || (ch == L'\t')){
 					// eState = VAL_PADDING;
 				} else {
-					itValueEnd = itRead + 1;
+					itValueEnd = pwcRead + 1;
 					eState = VAL_BODY;
 				}
 				continue;
@@ -500,24 +500,24 @@ std::pair<Notation::ErrorType, WideStringObserver::Iterator> Notation::Parse(con
 				continue;
 			}
 		}
-	} while(++itRead != wsoData.GetEnd());
+	} while(++pwcRead != wsoData.GetEnd());
 
 	if(bEscaped){
-		return std::make_pair(ERR_ESCAPE_AT_EOF, itRead);
+		return std::make_pair(ERR_ESCAPE_AT_EOF, pwcRead);
 	}
 	if(vecPackageStack.GetSize() > 1){
-		return std::make_pair(ERR_UNCLOSED_PACKAGE, itRead);
+		return std::make_pair(ERR_UNCLOSED_PACKAGE, pwcRead);
 	}
 	switch(eState){
 	case NAME_BODY:
 	case NAME_PADDING:
-		return std::make_pair(ERR_EQU_EXPECTED, itRead);
+		return std::make_pair(ERR_EQU_EXPECTED, pwcRead);
 
 	case VAL_INDENT:
 	case VAL_BODY:
 	case VAL_PADDING:
 		if(!SubmitValue()){
-			return std::make_pair(ERR_DUPLICATE_VALUE, itRead);
+			return std::make_pair(ERR_DUPLICATE_VALUE, pwcRead);
 		}
 		break;
 
@@ -525,7 +525,7 @@ std::pair<Notation::ErrorType, WideStringObserver::Iterator> Notation::Parse(con
 		break;
 	};
 
-	return std::make_pair(ERR_NONE, itRead);
+	return std::make_pair(ERR_NONE, pwcRead);
 }
 WideString Notation::Export(const WideStringObserver &wsoIndent) const {
 	WideString wcsRet;

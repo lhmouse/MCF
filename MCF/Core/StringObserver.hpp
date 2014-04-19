@@ -19,122 +19,11 @@ template<typename Char_t>
 class StringObserver;
 
 template<typename Char_t>
-class StringObserverIterator
-	: public std::iterator<std::random_access_iterator_tag, const Char_t>
-{
-public:
-	typedef StringObserver<Char_t> Observer;
-
-	friend Observer;
-
-private:
-	const Char_t *xm_pchCurrent;
-	std::intptr_t xm_nIncrement;
-
-private:
-	constexpr StringObserverIterator(const Char_t *pchCurrent, std::intptr_t nDirection) noexcept
-		: xm_pchCurrent(pchCurrent)
-		, xm_nIncrement((nDirection >= 0) ? 0 : -1)
-	{
-	}
-
-public:
-	constexpr StringObserverIterator() noexcept
-		: StringObserverIterator(nullptr, 0)
-	{
-	}
-
-public:
-	explicit operator const Char_t *() const noexcept {
-		return xm_pchCurrent;
-	}
-
-	bool operator==(const StringObserverIterator &rhs) const noexcept {
-		return *this - rhs == 0;
-	}
-	bool operator!=(const StringObserverIterator &rhs) const noexcept {
-		return *this - rhs != 0;
-	}
-
-	const Char_t &operator*() const noexcept {
-		return *xm_pchCurrent;
-	}
-	const Char_t *operator->() const noexcept {
-		return xm_pchCurrent;
-	}
-
-	StringObserverIterator &operator++() noexcept {
-		xm_pchCurrent += (xm_nIncrement | 1);
-		return *this;
-	}
-	StringObserverIterator operator++(int) noexcept {
-		auto itRet(*this);
-		++*this;
-		return std::move(itRet);
-	}
-	StringObserverIterator &operator--() noexcept {
-		xm_pchCurrent -= (xm_nIncrement | 1);
-		return *this;
-	}
-	StringObserverIterator operator--(int) noexcept {
-		auto itRet(*this);
-		--*this;
-		return std::move(itRet);
-	}
-
-	StringObserverIterator operator+(std::ptrdiff_t rhs) const noexcept {
-		return std::move(StringObserverIterator(*this) += rhs);
-	}
-	StringObserverIterator operator-(std::ptrdiff_t rhs) const noexcept {
-		return std::move(StringObserverIterator(*this) -= rhs);
-	}
-	std::ptrdiff_t operator-(const StringObserverIterator &rhs) const noexcept {
-		return ((xm_pchCurrent - rhs.xm_pchCurrent) ^ xm_nIncrement) - xm_nIncrement;
-	}
-
-	bool operator<(const StringObserverIterator &rhs) const noexcept {
-		return *this - rhs < 0;
-	}
-	bool operator<=(const StringObserverIterator &rhs) const noexcept {
-		return *this - rhs <= 0;
-	}
-	bool operator>(const StringObserverIterator &rhs) const noexcept {
-		return *this - rhs > 0;
-	}
-	bool operator>=(const StringObserverIterator &rhs) const noexcept {
-		return *this - rhs >= 0;
-	}
-
-	StringObserverIterator &operator+=(std::ptrdiff_t rhs) noexcept {
-		xm_pchCurrent += (rhs ^ xm_nIncrement) - xm_nIncrement;
-		return *this;
-	}
-	StringObserverIterator &operator-=(std::ptrdiff_t rhs) noexcept {
-		return *this += -rhs;;
-	}
-
-	const Char_t &operator[](std::ptrdiff_t nIndex) const noexcept {
-		return *(xm_pchCurrent + nIndex);
-	}
-};
-
-template<typename Char_t>
-StringObserverIterator<Char_t> operator+(
-	std::ptrdiff_t lhs,
-	const StringObserverIterator<Char_t> &rhs
-) noexcept {
-	return rhs + lhs;
-}
-
-template<typename Char_t>
 class StringObserver {
 public:
 	enum : std::size_t {
 		NPOS = (std::size_t)-1
 	};
-
-public:
-	typedef StringObserverIterator<Char_t> Iterator;
 
 private:
 	static const Char_t *xEndOf(const Char_t *pszBegin) noexcept {
@@ -261,9 +150,15 @@ private:
 	const Char_t *xm_pchEnd;
 
 public:
-	constexpr StringObserver(const Char_t *pchBegin, const Char_t *pchEnd) noexcept
+#ifdef NDEBUG
+	constexpr
+#endif
+	StringObserver(const Char_t *pchBegin, const Char_t *pchEnd) noexcept
 		: xm_pchBegin(pchBegin), xm_pchEnd(pchEnd)
 	{
+#ifndef NDEBUG
+		ASSERT(pchBegin <= pchEnd);
+#endif
 	}
 	constexpr StringObserver() noexcept
 		: StringObserver((const Char_t *)nullptr, nullptr)
@@ -292,23 +187,19 @@ public:
 		: StringObserver(achNonLiteral, xEndOf(achNonLiteral))
 	{
 	}
-	constexpr StringObserver(const Iterator &itBegin, const Iterator &itEnd) noexcept
-		: StringObserver(&*itBegin, &*itEnd)
-	{
-	}
 
 public:
-	Iterator GetBegin() const noexcept {
-		return Iterator(xm_pchBegin, xm_pchEnd - xm_pchBegin);
+	const Char_t *GetBegin() const noexcept {
+		return xm_pchBegin;
 	}
-	Iterator GetCBegin() const noexcept {
-		return GetBegin();
+	const Char_t *GetCBegin() const noexcept {
+		return xm_pchBegin;
 	}
-	Iterator GetEnd() const noexcept {
-		return Iterator(xm_pchEnd, xm_pchEnd - xm_pchBegin);
+	const Char_t *GetEnd() const noexcept {
+		return xm_pchEnd;
 	}
-	Iterator GetCEnd() const noexcept {
-		return GetEnd();
+	const Char_t *GetCEnd() const noexcept {
+		return xm_pchEnd;
 	}
 	std::size_t GetSize() const noexcept {
 		return (std::size_t)(GetEnd() - GetBegin());
@@ -353,6 +244,8 @@ public:
 	}
 
 	void Assign(const Char_t *pchBegin, const Char_t *pchEnd) noexcept {
+		ASSERT(pchBegin <= pchEnd);
+
 		xm_pchBegin = pchBegin;
 		xm_pchEnd = pchEnd;
 	}
@@ -373,9 +266,6 @@ public:
 	template<std::size_t N>
 	void Assign(Char_t (&achNonLiteral)[N]) noexcept {
 		Assign(achNonLiteral, xEndOf(achNonLiteral));
-	}
-	void Assign(const Iterator &itBegin, const Iterator &itEnd) noexcept {
-		Assign(&*itBegin, &*itEnd);
 	}
 
 	// 为了方便理解，想象此处使用的是所谓“插入式光标”：
@@ -435,7 +325,7 @@ public:
 			return NPOS;
 		}
 
-		typedef std::reverse_iterator<Iterator> RevIterator;
+		typedef std::reverse_iterator<const Char_t *> RevIterator;
 
 		const auto uPos = xKmpSearch(RevIterator(GetBegin() + uRealEnd), RevIterator(GetBegin()), obsToFind.GetReverse());
 		return (uPos == NPOS) ? NPOS : (uRealEnd - uPos - uLenToFind);
@@ -475,7 +365,7 @@ public:
 			return NPOS;
 		}
 
-		typedef std::reverse_iterator<Iterator> RevIterator;
+		typedef std::reverse_iterator<const Char_t *> RevIterator;
 
 		const auto uPos = xFindRepSeq(RevIterator(GetBegin() + uRealEnd), RevIterator(GetBegin()), chToFind, uRepCount);
 		return (uPos == NPOS) ? NPOS : (uRealEnd - uPos - uRepCount);
@@ -547,20 +437,20 @@ public:
 };
 
 template<typename Char_t>
-StringObserverIterator<Char_t> begin(const StringObserver<Char_t> &obs) noexcept {
+const Char_t *begin(const StringObserver<Char_t> &obs) noexcept {
 	return obs.GetBegin();
 }
 template<typename Char_t>
-StringObserverIterator<Char_t> cbegin(const StringObserver<Char_t> &obs) noexcept {
+const Char_t *cbegin(const StringObserver<Char_t> &obs) noexcept {
 	return obs.GetCBegin();
 }
 
 template<typename Char_t>
-StringObserverIterator<Char_t> end(const StringObserver<Char_t> &obs) noexcept {
+const Char_t *end(const StringObserver<Char_t> &obs) noexcept {
 	return obs.GetEnd();
 }
 template<typename Char_t>
-StringObserverIterator<Char_t> cend(const StringObserver<Char_t> &obs) noexcept {
+const Char_t *cend(const StringObserver<Char_t> &obs) noexcept {
 	return obs.GetCEnd();
 }
 

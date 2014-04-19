@@ -161,17 +161,21 @@ private:
 				break;
 			}
 			if(nDeltaBegin < 0){
-				std::copy(
-					pchOldBuffer + uCopyOffsetBegin,
-					pchOldBuffer + uCopyOffsetEnd,
-					pchNewBuffer
-				);
+				if(pchOldBuffer + uCopyOffsetBegin != pchNewBuffer){
+					std::copy(
+						pchOldBuffer + uCopyOffsetBegin,
+						pchOldBuffer + uCopyOffsetEnd,
+						pchNewBuffer
+					);
+				}
 			} else {
-				std::copy_backward(
-					pchOldBuffer + uCopyOffsetBegin,
-					pchOldBuffer + uCopyOffsetEnd,
-					pchNewBuffer + uCopyOffsetEnd + nDeltaBegin
-				);
+				if(pchOldBuffer != pchNewBuffer + nDeltaBegin){
+					std::copy_backward(
+						pchOldBuffer + uCopyOffsetBegin,
+						pchOldBuffer + uCopyOffsetEnd,
+						pchNewBuffer + uCopyOffsetEnd + nDeltaBegin
+					);
+				}
 			}
 		} while(false);
 

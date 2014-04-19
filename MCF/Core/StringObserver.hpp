@@ -79,11 +79,16 @@ private:
 	}
 
 	template<typename Iterator_t>
-	static std::size_t xKmpSearch(const Iterator_t &itBegin, const Iterator_t &itEnd, const StringObserver &obsToFind) noexcept {
-		ASSERT(!obsToFind.IsEmpty());
-		ASSERT((std::size_t)(itEnd - itBegin) >= obsToFind.GetLength());
+	static std::size_t xKmpSearch(
+		const Iterator_t &itBegin,
+		const Iterator_t &itEnd,
+		const Iterator_t &itToFindBegin,
+		const Iterator_t &itToFindEnd
+	) noexcept {
+		ASSERT(itToFindEnd >= itToFindBegin);
+		ASSERT(itEnd - itBegin >= itToFindEnd - itToFindBegin);
 
-		const auto uToFindLen = obsToFind.GetLength();
+		const std::size_t uToFindLen = itToFindEnd - itToFindBegin;
 		const auto itSearchEnd = itEnd - (uToFindLen - 1);
 
 		std::size_t *puKmpTable;
@@ -96,7 +101,7 @@ private:
 			if(!puKmpTable){
 				// 内存不足，使用暴力搜索方法。
 				for(auto itCur = itBegin; itCur != itSearchEnd; ++itCur){
-					if(std::equal(obsToFind.GetBegin(), obsToFind.GetEnd(), itCur)){
+					if(std::equal(itToFindBegin, itToFindEnd, itCur)){
 						return itCur - itBegin;
 					}
 				}
@@ -112,7 +117,7 @@ private:
 		std::size_t uPos = 2;
 		std::size_t uCand = 0;
 		while(uPos < uToFindLen){
-			if(obsToFind[uPos - 1] == obsToFind[uCand]){
+			if(itToFindBegin[uPos - 1] == itToFindBegin[uCand]){
 				puKmpTable[uPos++] = ++uCand;
 			} else if(uCand != 0){
 				uCand = puKmpTable[uCand];
@@ -120,9 +125,6 @@ private:
 				puKmpTable[uPos++] = 0;
 			}
 		}
-
-		const auto itToFindBegin = obsToFind.GetBegin();
-		const auto itToFindEnd = obsToFind.GetEnd();
 
 		auto itCur = itBegin;
 		std::size_t uToSkip = 0;
@@ -308,7 +310,12 @@ public:
 			return NPOS;
 		}
 
-		const auto uPos = xKmpSearch(GetBegin() + uRealBegin, GetEnd(), obsToFind);
+		const auto uPos = xKmpSearch(
+			GetBegin() + uRealBegin,
+			GetEnd(),
+			obsToFind.GetBegin(),
+			obsToFind.GetEnd()
+		);
 		return (uPos == NPOS) ? NPOS : (uPos + uRealBegin);
 	}
 	std::size_t FindBackward(const StringObserver &obsToFind, std::ptrdiff_t nOffsetEnd = -1) const noexcept {
@@ -327,7 +334,12 @@ public:
 
 		typedef std::reverse_iterator<const Char_t *> RevIterator;
 
-		const auto uPos = xKmpSearch(RevIterator(GetBegin() + uRealEnd), RevIterator(GetBegin()), obsToFind.GetReverse());
+		const auto uPos = xKmpSearch(
+			RevIterator(GetBegin() + uRealEnd),
+			RevIterator(GetBegin()),
+			RevIterator(obsToFind.GetBegin()),
+			RevIterator(obsToFind.GetEnd())
+		);
 		return (uPos == NPOS) ? NPOS : (uRealEnd - uPos - uLenToFind);
 	}
 
@@ -369,16 +381,6 @@ public:
 
 		const auto uPos = xFindRepSeq(RevIterator(GetBegin() + uRealEnd), RevIterator(GetBegin()), chToFind, uRepCount);
 		return (uPos == NPOS) ? NPOS : (uRealEnd - uPos - uRepCount);
-	}
-
-	StringObserver GetReverse() const noexcept {
-		auto obsRet(*this);
-		obsRet.Reverse();
-		return std::move(obsRet);
-	}
-	void Reverse() noexcept {
-		const auto nShift = (xm_pchBegin <= xm_pchEnd) ? -1 : 1;
-		Assign(xm_pchEnd + nShift, xm_pchBegin + nShift);
 	}
 
 	bool DoesOverlapWith(const StringObserver &obs) const noexcept {

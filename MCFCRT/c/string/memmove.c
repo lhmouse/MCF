@@ -9,7 +9,7 @@ void *memmove(void *dst, const void *src, size_t cb){
 	uintptr_t unused;
 	__asm__ __volatile__(
 		"cmp " RSI ", " RDI " \n"
-		"jb 5f \n"
+		"jbe 5f \n"
 		"	cmp %5, 64 \n"
 		"	jb 1f \n"
 		"		mov " RCX ", " RDI " \n"

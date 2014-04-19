@@ -475,11 +475,6 @@ public:
 		Replace(nBegin, nEnd, obsReplacement.GetBegin(), obsReplacement.GetLength());
 	}
 
-	Observer GetReverse() const noexcept {
-		auto obsRet(GetObserver());
-		obsRet.Reverse();
-		return std::move(obsRet);
-	}
 	void Reverse() noexcept {
 		auto pchBegin = GetBegin();
 		auto pchEnd = GetEnd();

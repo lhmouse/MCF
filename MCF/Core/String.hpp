@@ -141,16 +141,12 @@ private:
 			pchNewBuffer = new Char_t[uSizeToAlloc];
 		}
 
-		__builtin_memmove(
-			pchNewBuffer + uFirstOffset,
-			pchOldBuffer,
-			uRemovedBegin * sizeof(Char_t)
-		);
-		__builtin_memmove(
-			pchNewBuffer + uThirdOffset,
-			pchOldBuffer + uRemovedEnd,
-			(uOldLength - uRemovedEnd) * sizeof(Char_t)
-		);
+		if(uRemovedBegin != 0){
+			__builtin_memmove(pchNewBuffer + uFirstOffset, pchOldBuffer, uRemovedBegin * sizeof(Char_t));
+		}
+		if(uOldLength != uRemovedEnd){
+			__builtin_memmove(pchNewBuffer + uThirdOffset, pchOldBuffer + uRemovedEnd, (uOldLength - uRemovedEnd) * sizeof(Char_t));
+		}
 
 		if(pchNewBuffer != pchOldBuffer){
 			if(xm_vStorage.chNull == Char_t()){
@@ -357,12 +353,9 @@ public:
 		xDeunifyAppend(str.xUnify());
 	}
 	void Truncate(std::size_t uCount = 1) noexcept {
-		const std::size_t uOldLength = GetLength();
-		if(uOldLength > uCount){
-			xSetSize(uOldLength - uCount);
-		} else {
-			Clear();
-		}
+		ASSERT_MSG(uCount <= GetLength(), L"删除的字符数太多。");
+
+		xSetSize(GetLength() - uCount);
 	}
 
 	void Push(Char_t ch){
@@ -373,7 +366,7 @@ public:
 	}
 
 	void PushNoCheck(Char_t ch) noexcept {
-		ASSERT_MSG(GetLength() < GetCapacity(), L"String::PushNoCheck() 失败：容器已满。");
+		ASSERT_MSG(GetLength() < GetCapacity(), L"容器已满。");
 
 		if(xm_vStorage.chNull == Char_t()){
 			xm_vStorage.achSmall[xm_vStorage.uchSmallLength] = ch;
@@ -384,7 +377,7 @@ public:
 		}
 	}
 	void PopNoCheck() noexcept {
-		ASSERT_MSG(GetLength() != 0, L"String::PopNoCheck() 失败：容器已空。");
+		ASSERT_MSG(GetLength() != 0, L"容器已空。");
 
 		if(xm_vStorage.chNull == Char_t()){
 			xm_vStorage.achSmall[--xm_vStorage.uchSmallLength] = Char_t();
@@ -433,6 +426,8 @@ public:
 		}
 	}
 	void Shift(std::size_t uCount = 1) noexcept {
+		ASSERT_MSG(uCount <= GetLength(), L"删除的字符数太多。");
+
 		const std::size_t uOldLength = GetLength();
 		if(uOldLength > uCount){
 			const auto pchBuffer = GetBegin();
@@ -461,10 +456,12 @@ public:
 	}
 
 	void Replace(std::ptrdiff_t nBegin, std::ptrdiff_t nEnd, Char_t chReplacement, std::size_t uCount = 1){
-		const auto obsRemoved(Slice(nBegin, nEnd));
-		const auto uRemovedBegin = obsRemoved.GetBegin() - GetBegin();
-		const auto uRemovedEnd = obsRemoved.GetEnd() - GetBegin();
-		const std::size_t uOldLength = GetLength();
+		const auto obsCurrent(GetObserver());
+		const std::size_t uOldLength = obsCurrent.GetLength();
+
+		const auto obsRemoved(obsCurrent.Slice(nBegin, nEnd));
+		const auto uRemovedBegin = obsRemoved.GetBegin() - obsCurrent.GetBegin();
+		const auto uRemovedEnd = obsRemoved.GetEnd() - obsCurrent.GetBegin();
 
 		const auto pchWrite = xChopAndSplice(
 			uRemovedBegin,
@@ -477,13 +474,15 @@ public:
 	}
 	template<class Iterator_t>
 	void Replace(std::ptrdiff_t nBegin, std::ptrdiff_t nEnd, const Iterator_t &itRepBegin, std::size_t uRepLen){
-		const auto obsRemoved(Slice(nBegin, nEnd));
-		const auto uRemovedBegin = obsRemoved.GetBegin() - GetBegin();
-		const auto uRemovedEnd = obsRemoved.GetEnd() - GetBegin();
-		const std::size_t uOldLength = GetLength();
+		const auto obsCurrent(GetObserver());
+		const std::size_t uOldLength = obsCurrent.GetLength();
+
+		const auto obsRemoved(obsCurrent.Slice(nBegin, nEnd));
+		const auto uRemovedBegin = obsRemoved.GetBegin() - obsCurrent.GetBegin();
+		const auto uRemovedEnd = obsRemoved.GetEnd() - obsCurrent.GetBegin();
 
 		// 注意：不指向同一个数组的两个指针相互比较是未定义行为。
-		if((uRepLen != 0) && ((std::uintptr_t)&*itRepBegin - (std::uintptr_t)GetBegin() <= uOldLength * sizeof(Char_t))){
+		if((uRepLen != 0) && ((std::uintptr_t)&*itRepBegin - (std::uintptr_t)obsCurrent.GetBegin() <= uOldLength * sizeof(Char_t))){
 			// 待替换字符串和当前字符串重叠。
 			String strTemp(*this);
 			const auto pchWrite = strTemp.xChopAndSplice(

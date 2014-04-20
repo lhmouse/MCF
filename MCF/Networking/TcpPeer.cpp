@@ -74,7 +74,7 @@ public:
 }
 
 // 静态成员函数。
-std::unique_ptr<TcpPeer> TcpPeer::FromSocket(void *ppSocket, const void *pSockAddr, std::size_t uSockAddrLen){
+std::unique_ptr<TcpPeer> TcpPeer::xFromSocket(void *ppSocket, const void *pSockAddr, std::size_t uSockAddrLen){
 	return std::unique_ptr<TcpPeer>(new TcpPeerDelegate(std::move(*(UniqueSocket *)ppSocket), pSockAddr, uSockAddrLen));
 }
 

@@ -16,6 +16,12 @@ using namespace MCF;
 
 namespace {
 
+struct ClientInfo {
+	UniqueSocket sockClient;
+	SOCKADDR_STORAGE vSockAddr;
+	int nSockAddrSize;
+};
+
 class TcpServerDelegate : CONCRETE(TcpServer) {
 private:
 	WSAInitializer xm_vWSAInitializer;
@@ -25,7 +31,7 @@ private:
 	std::shared_ptr<Thread> xm_pthrdListener;
 
 	const std::unique_ptr<CriticalSection> xm_pcsQueueLock;
-	std::deque<std::unique_ptr<TcpPeer>> xm_deqPeers;
+	std::deque<ClientInfo> xm_deqClients;
 	const std::unique_ptr<Event> xm_pevnPeersAvailable;
 
 public:
@@ -100,20 +106,23 @@ private:
 					}
 				}
 
-				SOCKADDR_STORAGE vSockAddr;
-				int nSockAddrSize = sizeof(vSockAddr);
-				UniqueSocket sockClient(::accept(xm_sockListen.Get(), (SOCKADDR *)&vSockAddr, &nSockAddrSize));
-				if(!sockClient){
+				ClientInfo vClient;
+				vClient.nSockAddrSize = sizeof(vClient.vSockAddr);
+				vClient.sockClient.Reset(::accept(
+					xm_sockListen.Get(),
+					(SOCKADDR *)&vClient.vSockAddr,
+					&(vClient.nSockAddrSize)
+				));
+				if(!vClient.sockClient){
 					continue;
 				}
 				unsigned long ulFalseValue = 0;
-				if(::ioctlsocket(sockClient.Get(), FIONBIO, &ulFalseValue)){
+				if(::ioctlsocket(vClient.sockClient.Get(), FIONBIO, &ulFalseValue)){
 					continue;
 				}
 
-				auto pPeer(TcpPeer::FromSocket(&sockClient, &vSockAddr, nSockAddrSize));
 				CRITICAL_SECTION_SCOPE(xm_pcsQueueLock){
-					xm_deqPeers.emplace_back(std::move(pPeer));
+					xm_deqClients.emplace_back(std::move(vClient));
 					xm_pevnPeersAvailable->Set();
 				}
 				ulSleepTime = 0;
@@ -123,8 +132,8 @@ private:
 	}
 
 public:
-	std::unique_ptr<TcpPeer> GetPeerTimeout(unsigned long ulMilliSeconds) noexcept {
-		std::unique_ptr<TcpPeer> pPeer;
+	ClientInfo GetClientTimeout(unsigned long ulMilliSeconds) noexcept {
+		ClientInfo vClient;
 		const auto ulWaitUntil = ::GetTickCount() + ulMilliSeconds;
 		unsigned long ulTimeToWait = ulMilliSeconds;
 		for(;;){
@@ -132,19 +141,17 @@ public:
 				break;
 			}
 			CRITICAL_SECTION_SCOPE(xm_pcsQueueLock){
-				switch(xm_deqPeers.size()){
+				switch(xm_deqClients.size()){
 				case 1:
 					xm_pevnPeersAvailable->Clear();
-
 				default:
-					pPeer = std::move(xm_deqPeers.front());
-					xm_deqPeers.pop_front();
-
+					vClient = std::move(xm_deqClients.front());
+					xm_deqClients.pop_front();
 				case 0:
 					break;
 				}
 			}
-			if(pPeer){
+			if(vClient.sockClient){
 				break;
 			}
 			if(__atomic_load_n(&xm_bStopNow, __ATOMIC_ACQUIRE)){
@@ -156,7 +163,7 @@ public:
 			}
 			ulTimeToWait = ulWaitUntil - ulCurrent;
 		}
-		return std::move(pPeer);
+		return std::move(vClient);
 	}
 };
 
@@ -171,10 +178,16 @@ std::unique_ptr<TcpServer> TcpServer::Create(const PeerInfo &vBoundOnto){
 std::unique_ptr<TcpPeer> TcpServer::GetPeerTimeout(unsigned long ulMilliSeconds) noexcept {
 	ASSERT(dynamic_cast<TcpServerDelegate *>(this));
 
-	return ((TcpServerDelegate *)this)->GetPeerTimeout(ulMilliSeconds);
+	auto vClient = ((TcpServerDelegate *)this)->GetClientTimeout(ulMilliSeconds);
+	if(!vClient.sockClient){
+		return std::unique_ptr<TcpPeer>();
+	}
+	return TcpPeer::xFromSocket(
+		&(vClient.sockClient),
+		&(vClient.vSockAddr),
+		vClient.nSockAddrSize
+	);
 }
 std::unique_ptr<TcpPeer> TcpServer::GetPeer() noexcept {
-	ASSERT(dynamic_cast<TcpServerDelegate *>(this));
-
-	return ((TcpServerDelegate *)this)->GetPeerTimeout(INFINITE);
+	return GetPeerTimeout(INFINITE);
 }

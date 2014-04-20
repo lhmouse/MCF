@@ -13,9 +13,12 @@
 namespace MCF {
 
 class TcpPeer : NO_COPY, ABSTRACT {
-public:
-	static std::unique_ptr<TcpPeer> FromSocket(void *ppSocket, const void *pSockAddr, std::size_t uSockAddrLen);
+	friend class TcpServer;
 
+private:
+	static std::unique_ptr<TcpPeer> xFromSocket(void *ppSocket, const void *pSockAddr, std::size_t uSockAddrLen);
+
+public:
 	static std::unique_ptr<TcpPeer> Connect(const PeerInfo &vServerInfo);
 	static std::unique_ptr<TcpPeer> ConnectNoThrow(const PeerInfo &vServerInfo);
 

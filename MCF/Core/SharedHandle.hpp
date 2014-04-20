@@ -197,13 +197,21 @@ private:
 	}
 
 public:
-	constexpr WeakHandle() noexcept : xm_pNode() {
+	constexpr WeakHandle() noexcept
+		: xm_pNode()
+	{
 	}
-	WeakHandle(const xStrongHandle &rhs) noexcept : WeakHandle(xSharedNode::AddWeakRef(rhs.xm_pNode)) {
+	WeakHandle(const xStrongHandle &rhs) noexcept
+		: WeakHandle(xSharedNode::AddWeakRef(rhs.xm_pNode))
+	{
 	}
-	WeakHandle(const WeakHandle &rhs) noexcept : WeakHandle(xSharedNode::AddWeakRef(rhs.xm_pNode)) {
+	WeakHandle(const WeakHandle &rhs) noexcept
+		: WeakHandle(xSharedNode::AddWeakRef(rhs.xm_pNode))
+	{
 	}
-	WeakHandle(WeakHandle &&rhs) noexcept : WeakHandle(rhs.xm_pNode) {
+	WeakHandle(WeakHandle &&rhs) noexcept
+		: WeakHandle(rhs.xm_pNode)
+	{
 		rhs.xm_pNode = nullptr;
 	}
 	WeakHandle &operator=(const xStrongHandle &rhs) noexcept {
@@ -386,19 +394,31 @@ private:
 	xSharedNode *xm_pNode;
 
 private:
-	SharedHandle(xSharedNode *pNode) noexcept : xm_pNode(pNode) {
+	explicit SharedHandle(xSharedNode *pNode) noexcept
+		: xm_pNode(pNode)
+	{
 	}
 
 public:
-	constexpr SharedHandle() noexcept : xm_pNode() {
+	constexpr SharedHandle() noexcept
+		: xm_pNode()
+	{
 	}
-	constexpr explicit SharedHandle(Handle hObj) noexcept : SharedHandle(xSharedNode::Create(hObj)) {
+	constexpr explicit SharedHandle(Handle hObj)
+		: SharedHandle(xSharedNode::Create(hObj))
+	{
 	}
-	explicit SharedHandle(const xWeakHandle &rhs) noexcept : SharedHandle(xSharedNode::AddRef(rhs.xm_pNode)) {
+	explicit SharedHandle(const xWeakHandle &rhs) noexcept
+		: SharedHandle(xSharedNode::AddRef(rhs.xm_pNode))
+	{
 	}
-	SharedHandle(const SharedHandle &rhs) noexcept : SharedHandle(xSharedNode::AddRef(rhs.xm_pNode)) {
+	SharedHandle(const SharedHandle &rhs) noexcept
+		: SharedHandle(xSharedNode::AddRef(rhs.xm_pNode))
+	{
 	}
-	SharedHandle(SharedHandle &&rhs) noexcept : SharedHandle(rhs.xm_pNode) {
+	SharedHandle(SharedHandle &&rhs) noexcept
+		: SharedHandle(rhs.xm_pNode)
+	{
 		rhs.xm_pNode = nullptr;
 	}
 	SharedHandle &operator=(Handle hObj){

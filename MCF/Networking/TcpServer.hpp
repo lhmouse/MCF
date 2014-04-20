@@ -8,7 +8,6 @@
 #include "TcpPeer.hpp"
 #include "../Core/Utilities.hpp"
 #include <memory>
-#include <cstddef>
 
 namespace MCF {
 

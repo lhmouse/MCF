@@ -42,13 +42,8 @@ private:
 
 public:
 	FileDelegate(const WideStringObserver &wsoPath, bool bToRead, bool bToWrite, bool bAutoCreate){
-		const std::size_t uPathLen = wsoPath.GetLength();
-		Vla<wchar_t> achPathZ(uPathLen + 1);
-		std::copy(wsoPath.GetBegin(), wsoPath.GetEnd(), achPathZ.GetData());
-		achPathZ[uPathLen] = 0;
-
 		xm_hFile.Reset(::CreateFileW(
-			achPathZ.GetData(),
+			wsoPath.GetNullTerminated<MAX_PATH>().GetData(),
 			(bToRead ? GENERIC_READ : 0) | (bToWrite ? GENERIC_WRITE : 0),
 			bToWrite ? 0 : FILE_SHARE_READ,
 			nullptr,

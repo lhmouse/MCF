@@ -185,13 +185,21 @@ private:
 	}
 
 public:
-	constexpr WeakHandleNts() noexcept : xm_pNode() {
+	constexpr WeakHandleNts() noexcept
+		: xm_pNode()
+	{
 	}
-	WeakHandleNts(const xStrongHandleNts &rhs) noexcept : WeakHandleNts(xSharedNodeNts::AddWeakRef(rhs.xm_pNode)) {
+	WeakHandleNts(const xStrongHandleNts &rhs) noexcept
+		: WeakHandleNts(xSharedNodeNts::AddWeakRef(rhs.xm_pNode))
+	{
 	}
-	WeakHandleNts(const WeakHandleNts &rhs) noexcept : WeakHandleNts(xSharedNodeNts::AddWeakRef(rhs.xm_pNode)) {
+	WeakHandleNts(const WeakHandleNts &rhs) noexcept
+		: WeakHandleNts(xSharedNodeNts::AddWeakRef(rhs.xm_pNode))
+	{
 	}
-	WeakHandleNts(WeakHandleNts &&rhs) noexcept : WeakHandleNts(rhs.xm_pNode) {
+	WeakHandleNts(WeakHandleNts &&rhs) noexcept
+		: WeakHandleNts(rhs.xm_pNode)
+	{
 		rhs.xm_pNode = nullptr;
 	}
 	WeakHandleNts &operator=(const xStrongHandleNts &rhs) noexcept {
@@ -374,19 +382,31 @@ private:
 	xSharedNodeNts *xm_pNode;
 
 private:
-	SharedHandleNts(xSharedNodeNts *pNode) noexcept : xm_pNode(pNode) {
+	explicit SharedHandleNts(xSharedNodeNts *pNode) noexcept
+		: xm_pNode(pNode)
+	{
 	}
 
 public:
-	constexpr SharedHandleNts() noexcept : xm_pNode() {
+	constexpr SharedHandleNts() noexcept
+		: xm_pNode()
+	{
 	}
-	constexpr explicit SharedHandleNts(Handle hObj) noexcept : SharedHandleNts(xSharedNodeNts::Create(hObj)) {
+	constexpr explicit SharedHandleNts(Handle hObj)
+		: SharedHandleNts(xSharedNodeNts::Create(hObj))
+	{
 	}
-	explicit SharedHandleNts(const xWeakHandleNts &rhs) noexcept : SharedHandleNts(xSharedNodeNts::AddRef(rhs.xm_pNode)) {
+	explicit SharedHandleNts(const xWeakHandleNts &rhs) noexcept
+		: SharedHandleNts(xSharedNodeNts::AddRef(rhs.xm_pNode))
+	{
 	}
-	SharedHandleNts(const SharedHandleNts &rhs) noexcept : SharedHandleNts(xSharedNodeNts::AddRef(rhs.xm_pNode)) {
+	SharedHandleNts(const SharedHandleNts &rhs) noexcept
+		: SharedHandleNts(xSharedNodeNts::AddRef(rhs.xm_pNode))
+	{
 	}
-	SharedHandleNts(SharedHandleNts &&rhs) noexcept : SharedHandleNts(rhs.xm_pNode) {
+	SharedHandleNts(SharedHandleNts &&rhs) noexcept
+		: SharedHandleNts(rhs.xm_pNode)
+	{
 		rhs.xm_pNode = nullptr;
 	}
 	SharedHandleNts &operator=(Handle hObj){

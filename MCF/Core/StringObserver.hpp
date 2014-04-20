@@ -7,6 +7,7 @@
 
 #include "../../MCFCRT/c/ext/assert.h"
 #include "../../MCFCRT/cpp/ext/count_of.hpp"
+#include "../../MCFCRT/cpp/ext/vvector.hpp"
 #include <algorithm>
 #include <utility>
 #include <iterator>
@@ -400,6 +401,15 @@ public:
 			pchEnd2 = obs.xm_pchBegin + 1;
 		}
 		return (pchBegin1 < pchEnd2) && (pchBegin2 < pchEnd1);
+	}
+
+	template<std::size_t SIZE_HINT>
+	VVector<Char_t, SIZE_HINT> GetNullTerminated() const {
+		VVector<Char_t, SIZE_HINT> vecRet;
+		vecRet.Reserve(GetLength() + 1);
+		vecRet.CopyToEnd(GetBegin(), GetEnd());
+		vecRet.Push(Char_t());
+		return std::move(vecRet);
 	}
 
 public:

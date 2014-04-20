@@ -45,7 +45,7 @@ void __MCF_CRT_HeapUninitialize(){
 unsigned char *MCF_CRT_HeapAlloc(size_t uSize, const void *pRetAddr __attribute__((unused))){
 #ifdef __MCF_CRT_HEAPDBG_ON
 	const size_t uRawSize = __MCF_CRT_HeapDbgGetRawSize(uSize);
-	if((uSize & ~uRawSize) >> (sizeof(size_t) * CHAR_BIT - 1)){
+	if(uRawSize < uSize){
 		return NULL;
 	}
 #else

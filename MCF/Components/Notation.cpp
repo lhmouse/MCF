@@ -250,7 +250,7 @@ std::pair<Notation::ErrorType, const wchar_t *> Notation::Parse(const WideString
 	auto itValueBegin = pwcRead;
 	auto itValueEnd = pwcRead;
 
-	enum STATE {
+	enum {
 		NAME_INDENT,
 		NAME_BODY,
 		NAME_PADDING,
@@ -304,7 +304,7 @@ std::pair<Notation::ErrorType, const wchar_t *> Notation::Parse(const WideString
 			switch(ch){
 			case L'\\':
 				bEscaped = true;
-				continue;
+				break;
 
 			case L'=':
 				switch(eState){

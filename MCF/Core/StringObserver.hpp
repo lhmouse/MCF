@@ -43,11 +43,10 @@ private:
 		if(nOffset < 0){
 			nOffset += uLength + 1;
 		}
-		if(nOffset < 0){
-			nOffset = 0;
-		} else if((std::size_t)nOffset > uLength){
-			nOffset = uLength;
-		}
+
+		ASSERT_MSG(nOffset >= 0, L"索引越界。");
+		ASSERT_MSG((std::size_t)nOffset <= uLength, L"索引越界。");
+
 		return (std::size_t)nOffset;
 	}
 
@@ -281,14 +280,15 @@ public:
 	// 举例：
 	//   Slice( 1,  5)   返回 "bcde"；
 	//   Slice( 1, -5)   返回 "bc"；
-	//   Slice(-1,  5)   返回 "gf"；
-	//   Slice(-1, -5)   返回 "gfed"。
+	//   Slice( 5, -1)   返回 "fg"；
+	//   Slice(-5, -1)   返回 "defg"。
 	StringObserver Slice(std::ptrdiff_t nBegin, std::ptrdiff_t nEnd = -1) const noexcept {
+		const auto pchBegin = GetBegin();
 		const auto uLength = GetLength();
-		const auto uRealBegin = xTranslateOffset(uLength, nBegin);
-		const auto uRealEnd = xTranslateOffset(uLength, nEnd);
-		const std::ptrdiff_t nShift = (uRealBegin <= uRealEnd) ? 0 : -1;
-		return StringObserver(GetBegin() + uRealBegin + nShift, GetBegin() + uRealEnd + nShift);
+		return StringObserver(
+			pchBegin + xTranslateOffset(uLength, nBegin),
+			pchBegin + xTranslateOffset(uLength, nEnd)
+		);
 	}
 
 	// 举例：

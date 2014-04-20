@@ -45,7 +45,7 @@ private:
 		struct {
 			Char_t *pchLargeBegin;
 			std::size_t uLargeLength;
-			std::size_t uLargeBufferSize;
+			std::size_t uLargeCapacity;
 		};
 	} xm_vStorage;
 
@@ -115,6 +115,57 @@ public:
 	}
 
 private:
+	Char_t *xChopAndSplice(
+		std::size_t uRemovedBegin,
+		std::size_t uRemovedEnd,
+		std::size_t uFirstOffset,
+		std::size_t uThirdOffset
+	){
+		ASSERT(uRemovedBegin <= GetLength());
+		ASSERT(uRemovedEnd <= GetLength());
+		ASSERT(uRemovedBegin <= uRemovedEnd);
+		ASSERT(uFirstOffset + uRemovedBegin <= uThirdOffset);
+
+		const auto pchOldBuffer = GetBegin();
+		const auto uOldLength = GetLength();
+		auto pchNewBuffer = pchOldBuffer;
+		const auto uNewLength = uThirdOffset + (uOldLength - uRemovedEnd);
+		std::size_t uSizeToAlloc = uNewLength + 1;
+
+		if(GetCapacity() < uNewLength){
+			uSizeToAlloc += (uSizeToAlloc >> 1);
+			uSizeToAlloc = (uSizeToAlloc + 0xF) & -0x10;
+			if(uSizeToAlloc < uNewLength + 1){
+				throw std::bad_alloc();
+			}
+			pchNewBuffer = new Char_t[uSizeToAlloc];
+		}
+
+		__builtin_memmove(
+			pchNewBuffer + uFirstOffset,
+			pchOldBuffer,
+			uRemovedBegin * sizeof(Char_t)
+		);
+		__builtin_memmove(
+			pchNewBuffer + uThirdOffset,
+			pchOldBuffer + uRemovedEnd,
+			(uOldLength - uRemovedEnd) * sizeof(Char_t)
+		);
+
+		if(pchNewBuffer != pchOldBuffer){
+			if(xm_vStorage.chNull == Char_t()){
+				xm_vStorage.chNull = Char_t() + 1;
+			} else {
+				delete[] pchOldBuffer;
+			}
+
+			xm_vStorage.pchLargeBegin = pchNewBuffer;
+			xm_vStorage.uLargeLength = uOldLength;
+			xm_vStorage.uLargeCapacity = uSizeToAlloc;
+		}
+
+		return pchNewBuffer + uFirstOffset + uRemovedBegin;
+	}
 	void xSetSize(std::size_t uNewSize) noexcept {
 		ASSERT(uNewSize <= GetCapacity());
 
@@ -125,95 +176,6 @@ private:
 			xm_vStorage.uLargeLength = uNewSize;
 			xm_vStorage.pchLargeBegin[uNewSize] = Char_t();
 		}
-	}
-	// 正值向外扩张，负值向内收缩。
-	void xSlide(std::ptrdiff_t nDeltaBegin, std::ptrdiff_t nDeltaEnd, bool bSetEnd = true){
-		const auto uOldLength = GetLength();
-		auto pchOldBuffer = GetCStr();
-		auto pchNewBuffer = pchOldBuffer;
-
-		const std::size_t uNewSize = nDeltaBegin + uOldLength + nDeltaEnd;
-		std::size_t uSizeToAlloc = (uNewSize > GetCapacity()) ? (uNewSize + 1) : 0;
-		if(uSizeToAlloc != 0){
-			uSizeToAlloc += (uSizeToAlloc >> 1);
-			uSizeToAlloc = (uSizeToAlloc + 0xF) & -0x10;
-			pchNewBuffer = new Char_t[uSizeToAlloc];
-		}
-
-		do {
-			std::size_t uCopyOffsetBegin = 0;
-			if(nDeltaBegin < 0){
-				if((std::size_t)-nDeltaBegin >= uOldLength){
-					break;
-				}
-				uCopyOffsetBegin -= nDeltaBegin;
-			}
-
-			std::size_t uCopyOffsetEnd = uOldLength;
-			if(nDeltaEnd < 0){
-				if((std::size_t)-nDeltaEnd >= uOldLength){
-					break;
-				}
-				uCopyOffsetEnd += nDeltaEnd;
-			}
-
-			if(uCopyOffsetBegin >= uCopyOffsetEnd){
-				break;
-			}
-			if(nDeltaBegin < 0){
-				if(pchOldBuffer + uCopyOffsetBegin != pchNewBuffer){
-					std::copy(
-						pchOldBuffer + uCopyOffsetBegin,
-						pchOldBuffer + uCopyOffsetEnd,
-						pchNewBuffer
-					);
-				}
-			} else {
-				if(pchOldBuffer != pchNewBuffer + nDeltaBegin){
-					std::copy_backward(
-						pchOldBuffer + uCopyOffsetBegin,
-						pchOldBuffer + uCopyOffsetEnd,
-						pchNewBuffer + uCopyOffsetEnd + nDeltaBegin
-					);
-				}
-			}
-		} while(false);
-
-		if(uSizeToAlloc != 0){
-			if(xm_vStorage.chNull == Char_t()){
-				xm_vStorage.chNull = Char_t() + 1;
-			} else {
-				delete[] pchOldBuffer;
-			}
-
-			xm_vStorage.pchLargeBegin = pchNewBuffer;
-			xm_vStorage.uLargeLength = uOldLength;
-			xm_vStorage.uLargeBufferSize = uSizeToAlloc;
-		}
-
-		if(bSetEnd){
-			xSetSize(uNewSize);
-		} else {
-			pchNewBuffer[uOldLength] = Char_t();
-		}
-	}
-
-	Char_t *xSnap(std::ptrdiff_t nBegin, std::ptrdiff_t nEnd, std::size_t uSize){
-		const auto obsRemoved(Slice(nBegin, nEnd));
-		const std::size_t uRemovedFrom = (const Char_t *)obsRemoved.GetBegin() - GetBegin();
-		const std::size_t uRemovedTo = (const Char_t *)obsRemoved.GetEnd() - GetBegin();
-
-		const auto uOldLength = GetLength();
-		const auto uDeltaLength = uSize - (uRemovedTo - uRemovedFrom);
-		Resize(uOldLength + uDeltaLength);
-
-		const auto pchBegin = GetCStr();
-		if((std::ptrdiff_t)uDeltaLength < 0){
-			std::copy(pchBegin + uRemovedTo, pchBegin + uOldLength, GetEnd() - (uOldLength - uRemovedTo));
-		} else if((std::ptrdiff_t)uDeltaLength > 0){
-			std::copy_backward(pchBegin + uRemovedTo, pchBegin + uOldLength, GetEnd());
-		}
-		return pchBegin + uRemovedFrom;
 	}
 
 	VVector<wchar_t> xUnify() const;
@@ -255,10 +217,13 @@ public:
 		return GetEnd();
 	}
 
-	const Char_t *GetCStr() const noexcept {
+	const Char_t *GetStr() const noexcept {
 		return GetBegin();
 	}
-	Char_t *GetCStr() noexcept {
+	Char_t *GetStr() noexcept {
+		return GetBegin();
+	}
+	const Char_t *GetCStr() const noexcept {
 		return GetBegin();
 	}
 	std::size_t GetLength() const noexcept {
@@ -284,7 +249,7 @@ public:
 		xSetSize(uNewSize);
 	}
 	void Shrink() noexcept {
-		xSetSize(Observer(GetCStr()).GetLength());
+		Resize(Observer(GetStr()).GetLength());
 	}
 
 	bool IsEmpty() const noexcept {
@@ -298,11 +263,14 @@ public:
 		if(xm_vStorage.chNull == Char_t()){
 			return COUNT_OF(xm_vStorage.achSmall) - 1;
 		} else {
-			return xm_vStorage.uLargeBufferSize - 1;
+			return xm_vStorage.uLargeCapacity - 1;
 		}
 	}
 	void Reserve(std::size_t uNewCapacity){
-		xSlide(0, uNewCapacity - GetLength(), false);
+		if(uNewCapacity > GetCapacity()){
+			const auto uOldLength = GetLength();
+			xChopAndSplice(uOldLength, uOldLength, 0, uNewCapacity);
+		}
 	}
 
 	void Swap(String &rhs) noexcept {
@@ -316,18 +284,22 @@ public:
 	}
 
 	void Assign(Char_t ch, std::size_t uCount = 1){
-		Replace(0, -1, ch, uCount);
+		const auto pchWrite = xChopAndSplice(0, 0, 0, uCount);
+		std::fill_n(pchWrite, uCount, ch);
+		xSetSize(uCount);
 	}
 	template<class Iterator_t>
 	void Assign(const Iterator_t &itBegin, const Iterator_t &itEnd){
-		Replace(0, -1, itBegin, itEnd);
+		Assign(itBegin, std::distance(itBegin, itEnd));
 	}
 	template<class Iterator_t>
-	void Assign(const Iterator_t &itBegin, std::size_t uLen){
-		Replace(0, -1, itBegin, uLen);
+	void Assign(const Iterator_t &itBegin, std::size_t uLength){
+		const auto pchWrite = xChopAndSplice(0, 0, 0, uLength);
+		std::copy_n(itBegin, uLength, pchWrite);
+		xSetSize(uLength);
 	}
 	void Assign(const Observer &obs){
-		Replace(0, -1, obs);
+		Assign(obs.GetBegin(), obs.GetEnd());
 	}
 	void Assign(String &&rhs) noexcept {
 		Swap(rhs);
@@ -339,24 +311,37 @@ public:
 	}
 
 	void Append(Char_t ch, std::size_t uCount = 1){
-		Replace(-1, -1, ch, uCount);
+		const std::size_t uOldLength = GetLength();
+		const auto pchWrite = xChopAndSplice(uOldLength, uOldLength, 0, uOldLength + uCount);
+		std::fill_n(pchWrite, uCount, ch);
+		xSetSize(uOldLength + uCount);
 	}
 	template<class Iterator_t>
 	void Append(const Iterator_t &itBegin, const Iterator_t &itEnd){
-		Replace(-1, -1, itBegin, itEnd);
+		Append(itBegin, std::distance(itBegin, itEnd));
 	}
 	template<class Iterator_t>
-	void Append(const Iterator_t &itBegin, std::size_t uLen){
-		Replace(-1, -1, itBegin, uLen);
+	void Append(const Iterator_t &itBegin, std::size_t uLength){
+		const std::size_t uOldLength = GetLength();
+		const auto pchWrite = xChopAndSplice(uOldLength, uOldLength, 0, uOldLength + uLength);
+		std::copy_n(itBegin, uLength, pchWrite);
+		xSetSize(uOldLength + uLength);
 	}
 	void Append(const Observer &obs){
-		Replace(-1, -1, obs);
+		Append(obs.GetBegin(), obs.GetEnd());
 	}
 	void Append(const String &str){
-		Replace(-1, -1, str.GetObserver());
+		if(std::addressof(str) == this){
+			const std::size_t uOldLength = GetLength();
+			const auto pchWrite = xChopAndSplice(uOldLength, uOldLength, 0, uOldLength * 2);
+			std::copy_n(pchWrite - uOldLength, uOldLength, pchWrite);
+			xSetSize(uOldLength * 2);
+		} else {
+			Append(str.GetBegin(), str.GetEnd());
+		}
 	}
 	void Append(String &&str){
-		if(this == &str){
+		if(std::addressof(str) == this){
 			Append(str);
 		} else if(IsEmpty()){
 			Assign(std::move(str));
@@ -372,7 +357,12 @@ public:
 		xDeunifyAppend(str.xUnify());
 	}
 	void Truncate(std::size_t uCount = 1) noexcept {
-		Replace(-1 - uCount, -1, Observer());
+		const std::size_t uOldLength = GetLength();
+		if(uOldLength > uCount){
+			xSetSize(uOldLength - uCount);
+		} else {
+			Clear();
+		}
 	}
 
 	void Push(Char_t ch){
@@ -404,24 +394,34 @@ public:
 	}
 
 	void Unshift(Char_t ch, std::size_t uCount = 1){
-		Replace(0, 0, ch, uCount);
+		const std::size_t uOldLength = GetLength();
+		const auto pchWrite = xChopAndSplice(0, 0, 0, uCount);
+		std::fill_n(pchWrite, uCount, ch);
+		xSetSize(uOldLength + uCount);
 	}
 	template<class Iterator_t>
 	void Unshift(const Iterator_t &itBegin, const Iterator_t &itEnd){
-		Replace(0, 0, itBegin, itEnd);
+		Unshift(itBegin, std::distance(itBegin, itEnd));
 	}
 	template<class Iterator_t>
-	void Unshift(const Iterator_t &itBegin, std::size_t uLen){
-		Replace(0, 0, itBegin, uLen);
+	void Unshift(const Iterator_t &itBegin, std::size_t uLength){
+		const std::size_t uOldLength = GetLength();
+		const auto pchWrite = xChopAndSplice(0, 0, 0, uLength);
+		std::copy_n(itBegin, uLength, pchWrite);
+		xSetSize(uOldLength + uLength);
 	}
 	void Unshift(const Observer &obs){
-		Replace(0, 0, obs);
+		Unshift(obs.GetBegin(), obs.GetEnd());
 	}
 	void Unshift(const String &str){
-		Replace(0, 0, str.GetObserver());
+		if(std::addressof(str) == this){
+			Append(str);
+		} else {
+			Unshift(str.GetBegin(), str.GetEnd());
+		}
 	}
 	void Unshift(String &&str){
-		if(this == &str){
+		if(std::addressof(str) == this){
 			Append(str);
 		} else if(IsEmpty()){
 			Assign(std::move(str));
@@ -433,7 +433,14 @@ public:
 		}
 	}
 	void Shift(std::size_t uCount = 1) noexcept {
-		Replace(0, uCount, Observer());
+		const std::size_t uOldLength = GetLength();
+		if(uOldLength > uCount){
+			const auto pchBuffer = GetBegin();
+			std::copy(pchBuffer + uCount, pchBuffer + uOldLength, pchBuffer);
+			xSetSize(uOldLength - uCount);
+		} else {
+			Clear();
+		}
 	}
 
 	Observer Slice(std::ptrdiff_t nBegin, std::ptrdiff_t nEnd = -1) const {
@@ -454,22 +461,49 @@ public:
 	}
 
 	void Replace(std::ptrdiff_t nBegin, std::ptrdiff_t nEnd, Char_t chReplacement, std::size_t uCount = 1){
-		const auto pchWrite = xSnap(nBegin, nEnd, uCount);
+		const auto obsRemoved(Slice(nBegin, nEnd));
+		const auto uRemovedBegin = obsRemoved.GetBegin() - GetBegin();
+		const auto uRemovedEnd = obsRemoved.GetEnd() - GetBegin();
+		const std::size_t uOldLength = GetLength();
+
+		const auto pchWrite = xChopAndSplice(
+			uRemovedBegin,
+			uRemovedEnd,
+			0,
+			uRemovedBegin + uCount
+		);
 		std::fill_n(pchWrite, uCount, chReplacement);
+		xSetSize(uRemovedBegin + uCount + (uOldLength - uRemovedEnd));
 	}
 	template<class Iterator_t>
 	void Replace(std::ptrdiff_t nBegin, std::ptrdiff_t nEnd, const Iterator_t &itRepBegin, std::size_t uRepLen){
-		// 注意，不指向同一个数组的两个指针相互比较是未定义行为。
-		if((uRepLen != 0) && ((std::uintptr_t)&*itRepBegin - (std::uintptr_t)GetBegin() <= GetLength() * sizeof(Char_t))){
+		const auto obsRemoved(Slice(nBegin, nEnd));
+		const auto uRemovedBegin = obsRemoved.GetBegin() - GetBegin();
+		const auto uRemovedEnd = obsRemoved.GetEnd() - GetBegin();
+		const std::size_t uOldLength = GetLength();
+
+		// 注意：不指向同一个数组的两个指针相互比较是未定义行为。
+		if((uRepLen != 0) && ((std::uintptr_t)&*itRepBegin - (std::uintptr_t)GetBegin() <= uOldLength * sizeof(Char_t))){
 			// 待替换字符串和当前字符串重叠。
 			String strTemp(*this);
-			const auto pchWrite = strTemp.xSnap(nBegin, nEnd, uRepLen);
+			const auto pchWrite = strTemp.xChopAndSplice(
+				uRemovedBegin,
+				uRemovedEnd,
+				0,
+				uRemovedBegin + uRepLen
+			);
 			std::copy_n(itRepBegin, uRepLen, pchWrite);
 			Swap(strTemp);
 		} else {
-			const auto pchWrite = xSnap(nBegin, nEnd, uRepLen);
+			const auto pchWrite = xChopAndSplice(
+				uRemovedBegin,
+				uRemovedEnd,
+				0,
+				uRemovedBegin + uRepLen
+			);
 			std::copy_n(itRepBegin, uRepLen, pchWrite);
 		}
+		xSetSize(uRemovedBegin + uRepLen + (uOldLength - uRemovedEnd));
 	}
 	template<class Iterator_t>
 	void Replace(std::ptrdiff_t nBegin, std::ptrdiff_t nEnd, const Iterator_t &itRepBegin, const Iterator_t &itRepEnd){
@@ -501,20 +535,20 @@ public:
 		return !IsEmpty();
 	}
 	explicit operator const Char_t *() const noexcept {
-		return GetCStr();
+		return GetStr();
 	}
 	explicit operator Char_t *() noexcept {
-		return GetCStr();
+		return GetStr();
 	}
 	const Char_t &operator[](std::size_t uIndex) const noexcept {
 		ASSERT_MSG(uIndex <= GetLength(), L"索引越界。");
 
-		return GetCStr()[uIndex];
+		return GetStr()[uIndex];
 	}
 	Char_t &operator[](std::size_t uIndex) noexcept {
 		ASSERT_MSG(uIndex <= GetLength(), L"索引越界。");
 
-		return GetCStr()[uIndex];
+		return GetStr()[uIndex];
 	}
 
 	String &operator+=(const Observer &rhs){

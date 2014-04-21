@@ -258,7 +258,7 @@ public:
 
 		xm_uBytesProcessed = 0;
 		if(xm_uHeaderSize < sizeof(xm_abyHeader)){
-			const auto uBytesToCopy = Min(pbyEnd - pbyRead, sizeof(xm_abyHeader) - xm_uHeaderSize);
+			const auto uBytesToCopy = Min((std::size_t)(pbyEnd - pbyRead), sizeof(xm_abyHeader) - xm_uHeaderSize);
 			__builtin_memcpy(xm_abyHeader + xm_uHeaderSize, pbyRead, uBytesToCopy);
 			pbyRead += uBytesToCopy;
 			xm_uBytesProcessed += uBytesToCopy;

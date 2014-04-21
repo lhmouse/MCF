@@ -24,20 +24,20 @@ public:
 	//   false        非空     使用指定的代理服务器（u8sProxy = user:pass@addr:port|bypass）
 	//   true         非空     使用指定的 PAC（u8sProxy = URL）
 	std::unique_ptr<HttpClient> Create(
-		bool bAutoProxy = false,
+		bool bUseAutoProxy = false,
 		WideString wcsProxy = WideString(),
 		WideString wcsUserAgent = WideString(L"MCF HTTPClient")
 	);
 
 public:
-	unsigned long ConnectNoThrow(
+/*	void Connect(
 		const WideStringObserver &	wsoVerb,
 		const WideStringObserver &	wsoUrl,
 		const void *				pContents = nullptr,
 		std::size_t					uContentSize = 0,
 		const WideStringObserver &	wsoContentType = L"application/x-www-form-urlencoded; charset=utf-8"
 	);
-	void Connect(
+	unsigned long ConnectNoThrow(
 		const WideStringObserver &	wsoVerb,
 		const WideStringObserver &	wsoUrl,
 		const void *				pContents = nullptr,
@@ -46,7 +46,7 @@ public:
 	);
 	void Disconnect() noexcept;
 
-/*	std::uint32_t GetStatusCode() const;
+	std::uint32_t GetStatusCode() const;
 	std::size_t Read(void *pData, std::size_t uSize);*/
 };
 

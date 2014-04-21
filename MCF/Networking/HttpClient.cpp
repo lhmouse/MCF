@@ -13,13 +13,15 @@
 #include "../Core/Time.hpp"
 #include "../Core/Utilities.hpp"
 #include "../Core/VarIntEx.hpp"
-#include <algorithm>
 #include <winhttp.h>
 using namespace MCF;
-/*
-// 外部函数定义。
-namespace MCF {
 
+namespace {
+
+class HttpClientDelegate : CONCRETE(HttpClient) {
+};
+
+/*
 // http://tools.ietf.org/html/rfc3986
 void UrlEncode(Utf8String &u8sAppendTo, const char *pchBegin, std::size_t uLen){
 	static constexpr std::uint32_t TABLE[8] = {
@@ -122,9 +124,9 @@ void UrlDecode(Utf8String &u8sAppendTo, const char *pchBegin, std::size_t uLen){
 void UrlDecode(Utf8String &u8sAppendTo, const Utf8String &u8sSrc){
 	UrlDecode(u8sAppendTo, u8sSrc.GetStr(), u8sSrc.GetLength());
 }
-
+*/
 }
-
+/*
 // 嵌套类定义。
 class HttpClient::xDelegate : NO_COPY {
 private:
@@ -1095,119 +1097,44 @@ public:
 };
 
 const HttpClient::xDelegate::xCookieMap::Node HttpClient::xDelegate::NULL_COOKIE_NODE(Utf8String(), Utf8String(), 0, Utf8String(), Utf8String(), 0, 0, 0);
+*/
 
-// 构造函数和析构函数。
-HttpClient::HttpClient(bool bAutoProxy, const wchar_t *pwcProxy, std::size_t uProxyLen, const wchar_t *pwszUserAgent)
-	: xm_pDelegate(new xDelegate(bAutoProxy, pwcProxy, uProxyLen, pwszUserAgent))
-{
-}
-HttpClient::HttpClient(bool bAutoProxy, const WideString &wcsProxy, const wchar_t *pwszUserAgent)
-	: HttpClient(bAutoProxy, wcsProxy.GetStr(), wcsProxy.GetLength(), pwszUserAgent)
-{
-}
-HttpClient::HttpClient(HttpClient &&rhs) noexcept
-	: xm_pDelegate(std::move(rhs.xm_pDelegate))
-{
-}
-HttpClient &HttpClient::operator=(HttpClient &&rhs) noexcept {
-	if(&rhs != this){
-		xm_pDelegate = std::move(rhs.xm_pDelegate);
-	}
-	return *this;
-}
-HttpClient::~HttpClient(){
+// 静态成员函数。
+/*
+std::unique_ptr<HttpClient> HttpClient::Create(
+	bool bUseAutoProxy,
+	WideString wcsProxy,
+	WideString wcsUserAgent
+){
+	return std::unique_ptr<HttpClient>(new HttpClientDelegate(bUseAutoProxy, wcsProxy, wcsUserAgent));
 }
 
 // 其他非静态成员函数。
-bool HttpClient::AddCookie(
-	Utf8String			u8sName,
-	const Utf8String &	u8sValue,
-	std::uint64_t		u64Expires,
-	Utf8String			u8sPath,
-	Utf8String			u8sDomain,
-	bool				bSecure,
-	bool				bHttpOnly
+void HttpClient::Connect(
+	const WideStringObserver &	wsoVerb,
+	const WideStringObserver &	wsoUrl,
+	const void *				pContents,
+	std::size_t					uContentSize,
+	const WideStringObserver &	wsoContentType
 ){
-	return xm_pDelegate->AddCookie(
-		std::move(u8sName),
-		u8sValue,
-		u64Expires,
-		std::move(u8sPath),
-		std::move(u8sDomain),
-		bSecure,
-		bHttpOnly
-	);
-}
-bool HttpClient::RemoveCookie(
-	const std::pair<const char *, std::size_t> &vName,
-	const std::pair<const char *, std::size_t> &vPath,
-	const std::pair<const char *, std::size_t> &vDomain
-) noexcept {
-	return xm_pDelegate->RemoveCookie({vDomain, vPath, vName});
-}
-bool HttpClient::RemoveCookie(
-	const Utf8String &u8sName,
-	const Utf8String &u8sPath,
-	const Utf8String &u8sDomain
-) noexcept {
-	return RemoveCookie(u8sName.GetCStrLength(), u8sPath.GetCStrLength(), u8sDomain.GetCStrLength());
-}
-void HttpClient::ClearCookies() noexcept {
-	xm_pDelegate->ClearCookies();
-}
+	ASSERT(dynamic_cast<HttpClientDelegate *>(this));
 
+	return ((ThreadDelegate *)this)->ConnectNoThrow(ulMilliSeconds);
+}
 unsigned long HttpClient::ConnectNoThrow(
-	const wchar_t *	pwszVerb,
-	const wchar_t *	pwcUrl,
-	std::size_t		uUrlLen,
-	const void *	pContents,
-	std::size_t		uContentSize,
-	const wchar_t *	pwszContentType
+	const WideStringObserver &	wsoVerb,
+	const WideStringObserver &	wsoUrl,
+	const void *				pContents,
+	std::size_t					uContentSize,
+	const WideStringObserver &	wsoContentType
 ){
 	try {
-		Connect(pwszVerb, pwcUrl, uUrlLen, pContents, uContentSize, pwszContentType);
-		return ERROR_SUCCESS;
+		return Open(wsoPath, bToRead, bToWrite, bAutoCreate);
 	} catch(Exception &e){
-		return e.ulErrorCode;
+		SetWin32LastError(e.ulErrorCode);
+		return std::unique_ptr<File>();
 	}
 }
-void HttpClient::Connect(
-	const wchar_t *	pwszVerb,
-	const wchar_t *	pwcUrl,
-	std::size_t		uUrlLen,
-	const void *	pContents,
-	std::size_t		uContentSize,
-	const wchar_t *	pwszContentType
-){
-	xm_pDelegate->Connect(pwszVerb, pwcUrl, uUrlLen, pContents, uContentSize, pwszContentType);
-}
-
-unsigned long HttpClient::ConnectNoThrow(
-	const wchar_t *		pwszVerb,
-	const WideString &	wcsUrl,
-	const void *		pContents,
-	std::size_t			uContentSize,
-	const wchar_t *		pwszContentType
-){
-	return ConnectNoThrow(pwszVerb, wcsUrl.GetStr(), wcsUrl.GetLength(), pContents, uContentSize, pwszContentType);
-}
-void HttpClient::Connect(
-	const wchar_t *		pwszVerb,
-	const WideString &	wcsUrl,
-	const void *		pContents,
-	std::size_t			uContentSize,
-	const wchar_t *		pwszContentType
-){
-	Connect(pwszVerb, wcsUrl.GetStr(), wcsUrl.GetLength(), pContents, uContentSize, pwszContentType);
-}
 void HttpClient::Disconnect() noexcept {
-	xm_pDelegate->Disconnect();
-}
-
-Vector<Vector<unsigned char>> HttpClient::ExportCookies(bool bIncludeSessionOnly) const {
-	return xm_pDelegate->ExportCookies(bIncludeSessionOnly);
-}
-void HttpClient::ImportCookies(const Vector<Vector<unsigned char>> &vecData){
-	xm_pDelegate->ImportCookies(vecData);
 }
 */

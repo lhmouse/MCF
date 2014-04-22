@@ -2,10 +2,9 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2014. LH_Mouse. All wrongs reserved.
 
-#ifndef __MCF_CRT_VLA_HPP__
-#define __MCF_CRT_VLA_HPP__
+#ifndef MCF_CRT_VLA_HPP_
+#define MCF_CRT_VLA_HPP_
 
-#include <memory>
 #include <initializer_list>
 #include <type_traits>
 #include <iterator>
@@ -16,22 +15,13 @@ namespace MCF {
 template<typename Element_t, std::size_t ALT_STOR_THLD = 64u>
 class Vla {
 private:
-	unsigned char xm_aSmall[sizeof(Element_t) * ALT_STOR_THLD];
-	std::unique_ptr<unsigned char []> xm_pLarge;
-
 	Element_t *xm_pBegin;
 	Element_t *xm_pEnd;
 
-private:
-	void xInitStorage(std::size_t uCount){
-		if(uCount <= ALT_STOR_THLD){
-			xm_pBegin = (Element_t *)std::begin(xm_aSmall);
-		} else {
-			xm_pLarge.reset(new unsigned char[sizeof(Element_t) * uCount]);
-			xm_pBegin = (Element_t *)xm_pLarge.get();
-		}
-		xm_pEnd = xm_pBegin + uCount;
-	}
+	union {
+		unsigned char xm_abySmall[sizeof(Element_t) * ALT_STOR_THLD];
+		unsigned char *xm_pbyLarge;
+	};
 
 public:
 	explicit Vla(std::size_t uCount){
@@ -44,7 +34,7 @@ public:
 		}
 	}
 	template<typename... Params_t>
-	Vla(std::size_t uCount, const Params_t &...Params){
+	explicit Vla(std::size_t uCount, const Params_t &...Params){
 		xInitStorage(uCount);
 
 		for(auto p = xm_pBegin; p != xm_pEnd; ++p){
@@ -64,12 +54,30 @@ public:
 		while(p != xm_pBegin){
 			(--p)->~Element_t();
 		}
+
+		xUninitStorage();
 	}
 
 	Vla(const Vla &) = delete;
 	Vla(Vla &&) = delete;
 	void operator=(const Vla &) = delete;
 	void operator=(Vla &&) = delete;
+
+private:
+	void xInitStorage(std::size_t uCount){
+		if(uCount <= ALT_STOR_THLD){
+			xm_pBegin = (Element_t *)std::begin(xm_abySmall);
+		} else {
+			xm_pbyLarge = new unsigned char[sizeof(Element_t) * uCount];
+			xm_pBegin = (Element_t *)xm_pbyLarge;
+		}
+		xm_pEnd = xm_pBegin + uCount;
+	}
+	void xUninitStorage() noexcept {
+		if(xm_pBegin != (Element_t *)std::begin(xm_abySmall)){
+			delete[] xm_pBegin;
+		}
+	}
 
 public:
 	const Element_t *GetBegin() const noexcept {
@@ -119,7 +127,6 @@ public:
 		return xm_pBegin[uIndex];
 	}
 };
-
 
 template<typename Element_t, std::size_t ALT_STOR_THLD>
 const Element_t *begin(const Vla<Element_t, ALT_STOR_THLD> &vec) noexcept {

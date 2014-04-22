@@ -2,8 +2,8 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2014. LH_Mouse. All wrongs reserved.
 
-#ifndef __MCF_VAR_INT_EX_HPP__
-#define __MCF_VAR_INT_EX_HPP__
+#ifndef MCF_VAR_INT_EX_HPP_
+#define MCF_VAR_INT_EX_HPP_
 
 #include <limits>
 #include <type_traits>

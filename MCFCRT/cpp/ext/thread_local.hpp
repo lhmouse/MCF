@@ -2,8 +2,8 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2014. LH_Mouse. All wrongs reserved.
 
-#ifndef __MCF_CRT_THREAD_LOCAL_HPP__
-#define __MCF_CRT_THREAD_LOCAL_HPP__
+#ifndef MCF_CRT_THREAD_LOCAL_HPP_
+#define MCF_CRT_THREAD_LOCAL_HPP_
 
 #include "../../env/thread.h"
 #include "../../env/bail.h"

@@ -2,8 +2,8 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2014. LH_Mouse. All wrongs reserved.
 
-#ifndef __MCF_UTILITIES_HPP__
-#define __MCF_UTILITIES_HPP__
+#ifndef MCF_UTILITIES_HPP_
+#define MCF_UTILITIES_HPP_
 
 #include "../../MCFCRT/c/ext/memcchr.h"
 #include "../../MCFCRT/env/bail.h"
@@ -17,56 +17,52 @@ namespace MCF {
 //----------------------------------------------------------------------------
 // NoCopy
 //----------------------------------------------------------------------------
-namespace __MCF {
-	struct NonCopyable {
-		constexpr NonCopyable() noexcept = default;
-		~NonCopyable() = default;
+struct NonCopyable_ {
+	constexpr NonCopyable_() noexcept = default;
+	~NonCopyable_() = default;
 
-		NonCopyable(const NonCopyable &) = delete;
-		void operator=(const NonCopyable &) = delete;
-		NonCopyable(NonCopyable &&) = delete;
-		void operator=(NonCopyable &&) = delete;
-	};
-}
+	NonCopyable_(const NonCopyable_ &) = delete;
+	void operator=(const NonCopyable_ &) = delete;
+	NonCopyable_(NonCopyable_ &&) = delete;
+	void operator=(NonCopyable_ &&) = delete;
+};
 
-#define NO_COPY			private ::MCF::__MCF::NonCopyable
+#define NO_COPY			private ::MCF::NonCopyable_
 
 //----------------------------------------------------------------------------
 // Abstract
 //----------------------------------------------------------------------------
-namespace __MCF {
-	struct Abstract {
-		virtual ~Abstract(){ }
-		virtual void __MCF_AbstractFunction() = 0;
-	};
+struct Abstract_ {
+	virtual ~Abstract_(){ }
+	virtual void MCF_PureAbstractFunction_() = 0;
+};
 
-	template<class Base_t>
-	struct Concrete : public Base_t {
-		static_assert(std::is_base_of<Abstract, Base_t>::value, "Concreting from non-abstract class?");
+template<class Base_t>
+struct Concrete_ : public Base_t {
+	static_assert(std::is_base_of<Abstract_, Base_t>::value, "Concreting from non-abstract class?");
 
-		virtual void __MCF_AbstractFunction(){ }
-	};
-}
+	virtual void MCF_PureAbstractFunction_(){ }
+};
 
-#define ABSTRACT		private ::MCF::__MCF::Abstract
-#define CONCRETE(base)	public ::MCF::__MCF::Concrete<base>
+#define ABSTRACT		private ::MCF::Abstract_
+#define CONCRETE(base)	public ::MCF::Concrete_<base>
 
 //----------------------------------------------------------------------------
 // Bail
 //----------------------------------------------------------------------------
 #ifdef NDEBUG
-#	define __MCF_CPP_NORETURN_IF_NDEBUG	[[noreturn]]
+#	define MCF_CPP_NORETURN_IF_NDEBUG	[[noreturn]]
 #else
-#	define __MCF_CPP_NORETURN_IF_NDEBUG
+#	define MCF_CPP_NORETURN_IF_NDEBUG
 #endif
 
 template<typename... Params_t>
-__MCF_CPP_NORETURN_IF_NDEBUG inline void Bail(const wchar_t *pwszFormat, const Params_t &... vParams){
+MCF_CPP_NORETURN_IF_NDEBUG inline void Bail(const wchar_t *pwszFormat, const Params_t &... vParams){
 	::MCF_CRT_BailF(pwszFormat, vParams...);
 }
 
 template<>
-__MCF_CPP_NORETURN_IF_NDEBUG inline void Bail<>(const wchar_t *pwszDescription){
+MCF_CPP_NORETURN_IF_NDEBUG inline void Bail<>(const wchar_t *pwszDescription){
 	::MCF_CRT_Bail(pwszDescription);
 }
 

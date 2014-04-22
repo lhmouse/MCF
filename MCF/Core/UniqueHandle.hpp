@@ -2,8 +2,8 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2014. LH_Mouse. All wrongs reserved.
 
-#ifndef __MCF_UNIQUE_HANDLE_HPP__
-#define __MCF_UNIQUE_HANDLE_HPP__
+#ifndef MCF_UNIQUE_HANDLE_HPP_
+#define MCF_UNIQUE_HANDLE_HPP_
 
 #include <new>
 #include <utility>

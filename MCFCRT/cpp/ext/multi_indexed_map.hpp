@@ -2,8 +2,8 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2014. LH_Mouse. All wrongs reserved.
 
-#ifndef __MCF_CRT_MULTI_INDEXED_HPP__
-#define __MCF_CRT_MULTI_INDEXED_HPP__
+#ifndef MCF_CRT_MULTI_INDEXED_HPP_
+#define MCF_CRT_MULTI_INDEXED_HPP_
 
 #include "../../c/ext/offset_of.h"
 #include "../../c/ext/unref_param.h"

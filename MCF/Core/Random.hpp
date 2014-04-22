@@ -2,8 +2,8 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2014. LH_Mouse. All wrongs reserved.
 
-#ifndef __MCF_RANDOM_HPP__
-#define __MCF_RANDOM_HPP__
+#ifndef MCF_RANDOM_HPP_
+#define MCF_RANDOM_HPP_
 
 #include <type_traits>
 #include <cstdint>

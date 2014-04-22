@@ -2,8 +2,8 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2012 - 2013. LH_Mouse. All wrongs reserved.
 
-#ifndef __MCF_NOTATION_CLASS_HPP__
-#define __MCF_NOTATION_CLASS_HPP__
+#ifndef MCF_NOTATION_CLASS_HPP_
+#define MCF_NOTATION_CLASS_HPP_
 
 #include <utility>
 #include <string>

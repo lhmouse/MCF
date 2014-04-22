@@ -2,8 +2,8 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2014. LH_Mouse. All wrongs reserved.
 
-#ifndef __MCF_CRITICAL_SECTION_HPP__
-#define __MCF_CRITICAL_SECTION_HPP__
+#ifndef MCF_CRITICAL_SECTION_HPP_
+#define MCF_CRITICAL_SECTION_HPP_
 
 #include "Utilities.hpp"
 #include "StringObserver.hpp"
@@ -85,8 +85,8 @@ public:
 }
 
 #define CRITICAL_SECTION_SCOPE(pcs)	\
-	for(const ::MCF::CriticalSectionLock __MCF_LOCK(&*(pcs)), *__MCF_PLOCK = &__MCF_LOCK;	\
-		__MCF_PLOCK;	\
-		__MCF_PLOCK = nullptr)
+	for(const ::MCF::CriticalSectionLock vMCF_Lock(&*(pcs)), *pMCF_Lock = &vMCF_Lock;	\
+		pMCF_Lock;	\
+		pMCF_Lock = nullptr)
 
 #endif

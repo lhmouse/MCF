@@ -2,8 +2,8 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2014. LH_Mouse. All wrongs reserved.
 
-#ifndef __MCF_MUTEX_HPP__
-#define __MCF_MUTEX_HPP__
+#ifndef MCF_MUTEX_HPP_
+#define MCF_MUTEX_HPP_
 
 #include "Utilities.hpp"
 #include "StringObserver.hpp"
@@ -85,8 +85,8 @@ public:
 }
 
 #define MUTEX_SCOPE(pmtx)	\
-	for(const ::MCF::MutexLock __MCF_LOCK(&*(pmtx)), *__MCF_PLOCK = &__MCF_LOCK;	\
-		__MCF_PLOCK;	\
-		__MCF_PLOCK = nullptr)
+	for(const ::MCF::MutexLock vMCF_Lock(&*(pmtx)), *pMCF_Lock = &vMCF_Lock;	\
+		pMCF_Lock;	\
+		pMCF_Lock = nullptr)
 
 #endif

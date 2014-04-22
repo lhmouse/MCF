@@ -2,8 +2,8 @@
 2010-10-09 : Igor Pavlov : Public domain */
 
 // LH_Mouse : Removed unused code. We want LZMA only.
-// 2014-02-13
-#define __MCF_LZMA_ONLY	1
+// 2014-04-22
+#define MCF_LZMA_ONLY_	1
 
 #ifndef __7Z_TYPES_H
 #define __7Z_TYPES_H
@@ -39,7 +39,7 @@ EXTERN_C_BEGIN
 #define SZ_ERROR_WRITE 9
 #define SZ_ERROR_PROGRESS 10
 
-#ifndef __MCF_LZMA_ONLY // Added by LH_Mouse on 2014-02-13.
+#ifndef MCF_LZMA_ONLY_ // Added by LH_Mouse on 2014-04-22.
 
 #define SZ_ERROR_FAIL 11
 #define SZ_ERROR_THREAD 12
@@ -47,7 +47,7 @@ EXTERN_C_BEGIN
 #define SZ_ERROR_ARCHIVE 16
 #define SZ_ERROR_NO_ARCHIVE 17
 
-#endif // __MCF_LZMA_ONLY
+#endif // MCF_LZMA_ONLY_
 
 typedef int SRes;
 
@@ -131,7 +131,7 @@ typedef int Bool;
 #endif
 
 
-#ifndef __MCF_LZMA_ONLY // Added by LH_Mouse on 2014-02-13.
+#ifndef MCF_LZMA_ONLY_ // Added by LH_Mouse on 2014-04-22.
 
 /* The following interfaces use first parameter as pointer to structure */
 
@@ -145,7 +145,7 @@ typedef struct
   void (*Write)(void *p, Byte b);
 } IByteOut;
 
-#endif // __MCF_LZMA_ONLY
+#endif // MCF_LZMA_ONLY_
 
 typedef struct
 {
@@ -154,14 +154,14 @@ typedef struct
        (output(*size) < input(*size)) is allowed */
 } ISeqInStream;
 
-#ifndef __MCF_LZMA_ONLY // Added by LH_Mouse on 2014-02-13.
+#ifndef MCF_LZMA_ONLY_ // Added by LH_Mouse on 2014-04-22.
 
 /* it can return SZ_ERROR_INPUT_EOF */
 SRes SeqInStream_Read(ISeqInStream *stream, void *buf, size_t size);
 SRes SeqInStream_Read2(ISeqInStream *stream, void *buf, size_t size, SRes errorType);
 SRes SeqInStream_ReadByte(ISeqInStream *stream, Byte *buf);
 
-#endif // __MCF_LZMA_ONLY
+#endif // MCF_LZMA_ONLY_
 
 typedef struct
 {
@@ -170,7 +170,7 @@ typedef struct
        (result < size) means error */
 } ISeqOutStream;
 
-#ifndef __MCF_LZMA_ONLY // Added by LH_Mouse on 2014-02-13.
+#ifndef MCF_LZMA_ONLY_ // Added by LH_Mouse on 2014-04-22.
 
 typedef enum
 {
@@ -236,7 +236,7 @@ typedef struct
 
 void SecToRead_CreateVTable(CSecToRead *p);
 
-#endif // __MCF_LZMA_ONLY
+#endif // MCF_LZMA_ONLY_
 
 typedef struct
 {
@@ -254,7 +254,7 @@ typedef struct
 #define IAlloc_Alloc(p, size) (p)->Alloc((p), size)
 #define IAlloc_Free(p, a) (p)->Free((p), a)
 
-#ifndef __MCF_LZMA_ONLY // Added by LH_Mouse on 2014-02-13.
+#ifndef MCF_LZMA_ONLY_ // Added by LH_Mouse on 2014-04-22.
 
 #ifdef _WIN32
 
@@ -272,7 +272,7 @@ typedef struct
 
 #endif
 
-#endif // __MCF_LZMA_ONLY
+#endif // MCF_LZMA_ONLY_
 
 EXTERN_C_END
 

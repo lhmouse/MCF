@@ -2,8 +2,8 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2014. LH_Mouse. All wrongs reserved.
 
-#ifndef __MCF_SOCKET_UTILS_HPP__
-#define __MCF_SOCKET_UTILS_HPP__
+#ifndef MCF_SOCKET_UTILS_HPP_
+#define MCF_SOCKET_UTILS_HPP_
 
 #include "../Core/UniqueHandle.hpp"
 #include "../Core/SharedHandle.hpp"

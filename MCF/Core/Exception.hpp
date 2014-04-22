@@ -2,8 +2,8 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2014. LH_Mouse. All wrongs reserved.
 
-#ifndef __MCF_EXCEPTION_HPP__
-#define __MCF_EXCEPTION_HPP__
+#ifndef MCF_EXCEPTION_HPP_
+#define MCF_EXCEPTION_HPP_
 
 #include "../../MCFCRT/env/last_error.h"
 #include "String.hpp"
@@ -45,8 +45,7 @@ struct Exception {
 
 #define MCF_THROW(...)	\
 	do {	\
-		::MCF::Exception __MCF_TEMP_EXCEPTION__(__PRETTY_FUNCTION__, __LINE__, __VA_ARGS__);	\
-		throw __MCF_TEMP_EXCEPTION__;	\
+		throw ::MCF::Exception(__PRETTY_FUNCTION__, __LINE__, __VA_ARGS__);	\
 	} while(false)
 
 #define MCF_MAKE_EXCEPTION_PTR(...)	\

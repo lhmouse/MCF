@@ -2,8 +2,8 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2014. LH_Mouse. All wrongs reserved.
 
-#ifndef __MCF_SHARED_HANDLE_NTS_HPP__
-#define __MCF_SHARED_HANDLE_NTS_HPP__
+#ifndef MCF_SHARED_HANDLE_NTS_HPP_
+#define MCF_SHARED_HANDLE_NTS_HPP_
 
 #include "../../MCFCRT/c/ext/assert.h"
 #include "../../MCFCRT/cpp/ext/offset_of.hpp"

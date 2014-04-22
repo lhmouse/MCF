@@ -4,8 +4,8 @@
 
 // 多线程同时写，单线程读，可以不加锁。
 
-#ifndef __MCF_CRT_MINGW_HACKS_H__
-#define __MCF_CRT_MINGW_HACKS_H__
+#ifndef MCF_CRT_MINGW_HACKS_H_
+#define MCF_CRT_MINGW_HACKS_H_
 
 #include "_crtdef.h"
 

@@ -2,8 +2,8 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2014. LH_Mouse. All wrongs reserved.
 
-#ifndef __MCF_STD_MCF_HPP__
-#define __MCF_STD_MCF_HPP__
+#ifndef MCF_STD_MCF_HPP_
+#define MCF_STD_MCF_HPP_
 
 #ifdef UNICODE
 #	define _UNICODE			1

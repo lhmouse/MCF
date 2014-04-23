@@ -64,7 +64,7 @@ namespace MCFBuild {
 			return Print(achBuffer, (std::size_t)nCount, to_stderr);
 		}
 
-		std::unique_ptr<wchar_t> pwchBuffer(new wchar_t[nCount + 1]);
+		std::unique_ptr<wchar_t[]> pwchBuffer(new wchar_t[nCount + 1]);
 
 		va_start(ap, to_stderr);
 		const int nNewCount = std::vswprintf(pwchBuffer.get(), nCount + 1, fmt, ap);
@@ -111,7 +111,7 @@ namespace MCFBuild {
 			return PrintCR(achBuffer, (std::size_t)nCount);
 		}
 
-		std::unique_ptr<wchar_t> pwchBuffer(new wchar_t[nCount + 1]);
+		std::unique_ptr<wchar_t[]> pwchBuffer(new wchar_t[nCount + 1]);
 
 		va_start(ap, fmt);
 		const int nNewCount = std::vswprintf(pwchBuffer.get(), nCount + 1, fmt, ap);

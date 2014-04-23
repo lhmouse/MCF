@@ -7,7 +7,7 @@
 
 #include "../../MCFCRT/c/ext/assert.h"
 #include "../../MCFCRT/cpp/ext/count_of.hpp"
-#include "../../MCFCRT/cpp/ext/vvector.hpp"
+#include "VVector.hpp"
 #include <algorithm>
 #include <utility>
 #include <iterator>

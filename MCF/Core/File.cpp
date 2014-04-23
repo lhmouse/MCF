@@ -3,7 +3,6 @@
 // Copyleft 2014. LH_Mouse. All wrongs reserved.
 
 #include "../StdMCF.hpp"
-#include "../../MCFCRT/cpp/ext/vla.hpp"
 #include "File.hpp"
 #include "Exception.hpp"
 #include "UniqueHandle.hpp"

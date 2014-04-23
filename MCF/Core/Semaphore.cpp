@@ -3,7 +3,6 @@
 // Copyleft 2014. LH_Mouse. All wrongs reserved.
 
 #include "../StdMCF.hpp"
-#include "../../MCFCRT/cpp/ext/vla.hpp"
 #include "Semaphore.hpp"
 #include "Exception.hpp"
 #include "UniqueHandle.hpp"
@@ -27,15 +26,10 @@ private:
 
 public:
 	SemaphoreDelegate(unsigned long ulInitCount, unsigned long ulMaxCount, const WideStringObserver &wsoName){
-		const std::size_t uPathLen = wsoName.GetLength();
-		if(uPathLen != 0){
-			Vla<wchar_t> achNameZ(uPathLen + 1);
-			std::copy(wsoName.GetBegin(), wsoName.GetEnd(), achNameZ.GetData());
-			achNameZ[uPathLen] = 0;
-
-			xm_hSemaphore.Reset(::CreateSemaphoreW(nullptr, ulInitCount, ulMaxCount, achNameZ.GetData()));
-		} else {
+		if(wsoName.IsEmpty()){
 			xm_hSemaphore.Reset(::CreateSemaphoreW(nullptr, ulInitCount, ulMaxCount, nullptr));
+		} else {
+			xm_hSemaphore.Reset(::CreateSemaphoreW(nullptr, ulInitCount, ulMaxCount, wsoName.GetNullTerminated<MAX_PATH>().GetData()));
 		}
 		if(!xm_hSemaphore){
 			MCF_THROW(::GetLastError(), L"CreateSemaphoreW() 失败。");

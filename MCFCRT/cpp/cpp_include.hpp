@@ -8,8 +8,5 @@
 #include "ext/count_of.hpp"
 #include "ext/offset_of.hpp"
 #include "ext/thread_local.hpp"
-#include "ext/vla.hpp"
-#include "ext/vvector.hpp"
-#include "ext/multi_indexed_map.hpp"
 
 #endif

@@ -7,7 +7,7 @@
 
 #include "../Core/String.hpp"
 #include "../Core/Utilities.hpp"
-#include "../../MCFCRT/cpp/ext/multi_indexed_map.hpp"
+#include "../Core/MultiIndexedMap.hpp"
 #include <utility>
 #include <initializer_list>
 

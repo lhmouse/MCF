@@ -4,8 +4,7 @@
 
 #include "../StdMCF.hpp"
 #include "Notation.hpp"
-#include "../../MCFCRT/cpp/ext/vvector.hpp"
-#include <tuple>
+#include "../Core/VVector.hpp"
 using namespace MCF;
 
 namespace {

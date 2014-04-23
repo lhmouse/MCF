@@ -7,7 +7,7 @@
 
 #include "StringObserver.hpp"
 #include "../../MCFCRT/cpp/ext/count_of.hpp"
-#include "../../MCFCRT/cpp/ext/vvector.hpp"
+#include "VVector.hpp"
 #include "Utilities.hpp"
 #include <memory>
 #include <cstdint>

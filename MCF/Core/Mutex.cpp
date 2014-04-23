@@ -26,15 +26,10 @@ private:
 
 public:
 	explicit MutexDelegate(const WideStringObserver &wsoName){
-		const std::size_t uPathLen = wsoName.GetLength();
-		if(uPathLen != 0){
-			Vla<wchar_t> achNameZ(uPathLen + 1);
-			std::copy(wsoName.GetBegin(), wsoName.GetEnd(), achNameZ.GetData());
-			achNameZ[uPathLen] = 0;
-
-			xm_hMutex.Reset(::CreateMutexW(nullptr, false, achNameZ.GetData()));
-		} else {
+		if(wsoName.IsEmpty()){
 			xm_hMutex.Reset(::CreateMutexW(nullptr, false, nullptr));
+		} else {
+			xm_hMutex.Reset(::CreateMutexW(nullptr, false, wsoName.GetNullTerminated<MAX_PATH>().GetData()));
 		}
 		if(!xm_hMutex){
 			MCF_THROW(::GetLastError(), L"CreateMutexW() 失败。");

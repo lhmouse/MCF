@@ -26,15 +26,10 @@ private:
 
 public:
 	EventDelegate(bool bInitSet, const WideStringObserver &wsoName){
-		const std::size_t uPathLen = wsoName.GetLength();
-		if(uPathLen != 0){
-			Vla<wchar_t> achNameZ(uPathLen + 1);
-			std::copy(wsoName.GetBegin(), wsoName.GetEnd(), achNameZ.GetData());
-			achNameZ[uPathLen] = 0;
-
-			xm_hEvent.Reset(::CreateEventW(nullptr, true, bInitSet, achNameZ.GetData()));
-		} else {
+		if(wsoName.IsEmpty()){
 			xm_hEvent.Reset(::CreateEventW(nullptr, true, bInitSet, nullptr));
+		} else {
+			xm_hEvent.Reset(::CreateEventW(nullptr, true, bInitSet, wsoName.GetNullTerminated<MAX_PATH>().GetData()));
 		}
 		if(!xm_hEvent){
 			MCF_THROW(::GetLastError(), L"CreateEventW() 失败。");

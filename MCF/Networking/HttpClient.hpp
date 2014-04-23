@@ -5,7 +5,7 @@
 #ifndef MCF_HTTP_CLIENT_HPP_
 #define MCF_HTTP_CLIENT_HPP_
 
-#include "../../MCFCRT/cpp/ext/vvector.hpp"
+#include "../Core/VVector.hpp"
 #include "../Core/Utilities.hpp"
 #include "../Core/String.hpp"
 #include "PeerInfo.hpp"

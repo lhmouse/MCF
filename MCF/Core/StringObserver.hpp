@@ -5,9 +5,9 @@
 #ifndef MCF_STRING_OBSERVER_HPP_
 #define MCF_STRING_OBSERVER_HPP_
 
-#include "../../MCFCRT/c/ext/assert.h"
-#include "../../MCFCRT/cpp/ext/count_of.hpp"
+#include "../../MCFCRT/std/ext/assert.h"
 #include "VVector.hpp"
+#include "Utilities.hpp"
 #include <algorithm>
 #include <utility>
 #include <iterator>
@@ -97,7 +97,7 @@ private:
 		if(uToFindLen <= COUNT_OF(auSmallTable)){
 			puKmpTable = auSmallTable;
 		} else {
-			puKmpTable = new(std::nothrow) std::size_t[uToFindLen];
+			puKmpTable = (std::size_t *)::operator new(sizeof(std::size_t) * uToFindLen, std::nothrow_t());
 			if(!puKmpTable){
 				// 内存不足，使用暴力搜索方法。
 				for(auto itCur = itBegin; itCur != itSearchEnd; ++itCur){
@@ -142,7 +142,7 @@ private:
 		} while(itCur < itSearchEnd);
 
 		if(puKmpTable != auSmallTable){
-			delete[] puKmpTable;
+			::operator delete(puKmpTable);
 		}
 		return uFound;
 	}

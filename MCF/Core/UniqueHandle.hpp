@@ -5,7 +5,6 @@
 #ifndef MCF_UNIQUE_HANDLE_HPP_
 #define MCF_UNIQUE_HANDLE_HPP_
 
-#include <new>
 #include <utility>
 #include <type_traits>
 #include <cstddef>

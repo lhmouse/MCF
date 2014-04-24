@@ -3,14 +3,14 @@
 // Copyleft 2014. LH_Mouse. All wrongs reserved.
 
 #include "../StdMCF.hpp"
-#include "SHA1.hpp"
+#include "Sha1.hpp"
 #include <cstring>
 using namespace MCF;
 
 namespace {
 
-void DoSHA1Chunk(std::uint32_t (&auResult)[5], const unsigned char *pbyChunk) noexcept {
-	// https://en.wikipedia.org/wiki/SHA1
+void DoSha1Chunk(std::uint32_t (&auResult)[5], const unsigned char *pbyChunk) noexcept {
+	// https://en.wikipedia.org/wiki/Sha1
 /*
 	std::uint32_t w[80];
 
@@ -286,16 +286,16 @@ void DoSHA1Chunk(std::uint32_t (&auResult)[5], const unsigned char *pbyChunk) no
 }
 
 // 构造函数和析构函数。
-SHA1::SHA1() noexcept
+Sha1::Sha1() noexcept
 	: xm_bInited(false)
 {
 }
 
 // 其他非静态成员函数。
-void SHA1::Abort() noexcept {
+void Sha1::Abort() noexcept {
 	xm_bInited = false;
 }
-void SHA1::Update(const void *pData, std::size_t uSize) noexcept {
+void Sha1::Update(const void *pData, std::size_t uSize) noexcept {
 	if(!xm_bInited){
 		xm_auResult[0] = 0x67452301u;
 		xm_auResult[1] = 0xEFCDAB89u;
@@ -315,13 +315,13 @@ void SHA1::Update(const void *pData, std::size_t uSize) noexcept {
 	if(uBytesRemaining >= uBytesFree){
 		if(xm_uBytesInChunk != 0){
 			std::memcpy(xm_abyChunk + xm_uBytesInChunk, pbyRead, uBytesFree);
-			DoSHA1Chunk(xm_auResult, xm_abyChunk);
+			DoSha1Chunk(xm_auResult, xm_abyChunk);
 			xm_uBytesInChunk = 0;
 			pbyRead += uBytesFree;
 			uBytesRemaining -= uBytesFree;
 		}
 		while(uBytesRemaining >= sizeof(xm_abyChunk)){
-			DoSHA1Chunk(xm_auResult, pbyRead);
+			DoSha1Chunk(xm_auResult, pbyRead);
 			pbyRead += sizeof(xm_abyChunk);
 			uBytesRemaining -= sizeof(xm_abyChunk);
 		}
@@ -332,19 +332,19 @@ void SHA1::Update(const void *pData, std::size_t uSize) noexcept {
 	}
 	xm_u64BytesTotal += uSize;
 }
-void SHA1::Finalize(unsigned char (&abyOutput)[20]) noexcept {
+void Sha1::Finalize(unsigned char (&abyOutput)[20]) noexcept {
 	if(xm_bInited){
 		xm_abyChunk[xm_uBytesInChunk++] = 0x80;
 		if(xm_uBytesInChunk > sizeof(xm_abyFirstPart)){
 			std::memset(xm_abyChunk + xm_uBytesInChunk, 0, sizeof(xm_abyChunk) - xm_uBytesInChunk);
-			DoSHA1Chunk(xm_auResult, xm_abyChunk);
+			DoSha1Chunk(xm_auResult, xm_abyChunk);
 			xm_uBytesInChunk = 0;
 		}
 		if(xm_uBytesInChunk < sizeof(xm_abyFirstPart)){
 			std::memset(xm_abyChunk + xm_uBytesInChunk, 0, sizeof(xm_abyFirstPart) - xm_uBytesInChunk);
 		}
 		xm_uBitsTotal = __builtin_bswap64(xm_u64BytesTotal * CHAR_BIT);
-		DoSHA1Chunk(xm_auResult, xm_abyChunk);
+		DoSha1Chunk(xm_auResult, xm_abyChunk);
 
 		for(auto &u : xm_auResult){
 			u = __builtin_bswap32(u);

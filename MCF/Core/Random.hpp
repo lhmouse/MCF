@@ -31,7 +31,7 @@ public:
 	T Get() noexcept {
 		typedef typename std::make_unsigned<T>::type U;
 		U vTemp = 0;
-		for(std::size_t i = 0; i < sizeof(U); ++i){
+		for(auto i = sizeof(U); i; --i){
 			vTemp <<= 8;
 			vTemp |= xGetByte();
 		}

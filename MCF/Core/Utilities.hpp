@@ -5,7 +5,7 @@
 #ifndef MCF_UTILITIES_HPP_
 #define MCF_UTILITIES_HPP_
 
-#include "../../MCFCRT/c/ext/memcchr.h"
+#include "../../MCFCRT/std/ext/memcchr.h"
 #include "../../MCFCRT/env/bail.h"
 #include <type_traits>
 #include <utility>
@@ -15,7 +15,18 @@
 namespace MCF {
 
 //----------------------------------------------------------------------------
-// NoCopy
+// COUNT_OF
+//----------------------------------------------------------------------------
+template<typename Ty, std::size_t N>
+char (&CountOfHelper_(Ty (&)[N]))[N];
+
+template<typename Ty, std::size_t N>
+char (&CountOfHelper_(Ty (&&)[N]))[N];
+
+#define COUNT_OF(ar)	(sizeof(::MCF::CountOfHelper_((ar))))
+
+//----------------------------------------------------------------------------
+// NO_COPY
 //----------------------------------------------------------------------------
 struct NonCopyable_ {
 	constexpr NonCopyable_() noexcept = default;
@@ -30,7 +41,7 @@ struct NonCopyable_ {
 #define NO_COPY			private ::MCF::NonCopyable_
 
 //----------------------------------------------------------------------------
-// Abstract
+// ABSTRACT / CONCRETE
 //----------------------------------------------------------------------------
 struct Abstract_ {
 	virtual ~Abstract_(){ }

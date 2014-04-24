@@ -40,14 +40,14 @@ public:
 	unsigned long WaitTimeout(unsigned long ulMilliSeconds, unsigned long ulWaitCount) noexcept {
 		unsigned long ulSucceeded = 0;
 		if(ulMilliSeconds == INFINITE){
-			for(std::size_t i = 0; i < ulWaitCount; ++i){
+			for(auto i = ulWaitCount; i; --i){
 				::WaitForSingleObject(xm_hSemaphore.Get(), INFINITE);
 				++ulSucceeded;
 			}
 		} else {
 			const auto ulWaitUntil = ::GetTickCount() + ulMilliSeconds;
 			auto ulTimeToWait = ulMilliSeconds;
-			for(std::size_t i = 0; i < ulWaitCount; ++i){
+			for(auto i = ulWaitCount; i; --i){
 				if(::WaitForSingleObject(xm_hSemaphore.Get(), ulTimeToWait) == WAIT_TIMEOUT){
 					break;
 				}
@@ -72,7 +72,7 @@ public:
 
 // 静态成员函数。
 std::unique_ptr<Semaphore> Semaphore::Create(unsigned long ulInitCount, unsigned long ulMaxCount, const WideStringObserver &wsoName){
-	return std::unique_ptr<Semaphore>(new SemaphoreDelegate(ulInitCount, ulMaxCount, wsoName));
+	return std::make_unique<SemaphoreDelegate>(ulInitCount, ulMaxCount, wsoName);
 }
 
 // 其他非静态成员函数。

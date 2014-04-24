@@ -41,7 +41,7 @@ public:
 
 // 静态成员函数。
 std::unique_ptr<CriticalSection> CriticalSection::Create(unsigned long ulSpinCount){
-	return std::unique_ptr<CriticalSection>(new CriticalSectionDelegate(ulSpinCount));
+	return std::make_unique<CriticalSectionDelegate>(ulSpinCount);
 }
 
 // 其他非静态成员函数。

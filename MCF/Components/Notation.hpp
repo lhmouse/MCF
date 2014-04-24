@@ -9,7 +9,6 @@
 #include "../Core/Utilities.hpp"
 #include "../Core/MultiIndexedMap.hpp"
 #include <utility>
-#include <initializer_list>
 
 namespace MCF {
 

@@ -3,8 +3,8 @@
 // Copyleft 2014. LH_Mouse. All wrongs reserved.
 
 #include "avl_tree.h"
-#include "../c/ext/assert.h"
-#include "../c/ext/unref_param.h"
+#include "../std/ext/assert.h"
+#include "../std/ext/unref_param.h"
 
 static inline size_t GetHeight(const MCF_AVL_NODE_HEADER *pWhere){
 	return pWhere ? pWhere->uHeight : 0;

@@ -4,7 +4,7 @@
 
 #include "../StdMCF.hpp"
 #include "TcpPeer.hpp"
-#include "../../MCFCRT/c/ext/assert.h"
+#include "../../MCFCRT/std/ext/assert.h"
 #include "../Core/Exception.hpp"
 #include "../Core/Utilities.hpp"
 #include "_SocketUtils.hpp"
@@ -75,7 +75,7 @@ public:
 
 // 静态成员函数。
 std::unique_ptr<TcpPeer> TcpPeer::xFromSocket(void *ppSocket, const void *pSockAddr, std::size_t uSockAddrLen){
-	return std::unique_ptr<TcpPeer>(new TcpPeerDelegate(std::move(*(UniqueSocket *)ppSocket), pSockAddr, uSockAddrLen));
+	return std::make_unique<TcpPeerDelegate>(std::move(*(UniqueSocket *)ppSocket), pSockAddr, uSockAddrLen);
 }
 
 std::unique_ptr<TcpPeer> TcpPeer::Connect(const PeerInfo &vServerInfo){
@@ -107,7 +107,7 @@ std::unique_ptr<TcpPeer> TcpPeer::Connect(const PeerInfo &vServerInfo){
 		MCF_THROW(::WSAGetLastError(), L"::connect() 失败。");
 	}
 
-	return std::unique_ptr<TcpPeer>(new TcpPeerDelegate(std::move(sockServer), &vSockAddr, uSockAddrLen));
+	return std::make_unique<TcpPeerDelegate>(std::move(sockServer), &vSockAddr, uSockAddrLen);
 }
 std::unique_ptr<TcpPeer> TcpPeer::ConnectNoThrow(const PeerInfo &vServerInfo){
 	try {

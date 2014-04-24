@@ -11,7 +11,7 @@ typedef int UNUSED;
 #ifdef __MCF_CRT_HEAPDBG_ON
 
 #include "bail.h"
-#include "../c/ext/strcpyout.h"
+#include "../std/ext/strcpyout.h"
 #include <wchar.h>
 #include <windows.h>
 

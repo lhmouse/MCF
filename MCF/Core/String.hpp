@@ -6,7 +6,6 @@
 #define MCF_STRING_HPP_
 
 #include "StringObserver.hpp"
-#include "../../MCFCRT/cpp/ext/count_of.hpp"
 #include "VVector.hpp"
 #include "Utilities.hpp"
 #include <memory>
@@ -58,12 +57,12 @@ public:
 		Assign(ch, uCount);
 	}
 	template<class Iterator_t>
-	String(const Iterator_t &itBegin, const Iterator_t &itEnd) : String() {
-		Assign(itBegin, itEnd);
+	String(Iterator_t itBegin, Iterator_t itEnd) : String() {
+		Assign(std::move(itBegin), std::move(itEnd));
 	}
 	template<class Iterator_t>
-	String(const Iterator_t &itBegin, std::size_t uLen) : String() {
-		Assign(itBegin, uLen);
+	String(Iterator_t itBegin, std::size_t uLen) : String() {
+		Assign(std::move(itBegin), uLen);
 	}
 	explicit String(const Observer &obs) : String() {
 		Assign(obs);
@@ -285,11 +284,11 @@ public:
 		xSetSize(uCount);
 	}
 	template<class Iterator_t>
-	void Assign(const Iterator_t &itBegin, const Iterator_t &itEnd){
-		Assign(itBegin, std::distance(itBegin, itEnd));
+	void Assign(Iterator_t itBegin, Iterator_t itEnd){
+		Assign(std::move(itBegin), std::distance(itBegin, itEnd));
 	}
 	template<class Iterator_t>
-	void Assign(const Iterator_t &itBegin, std::size_t uLength){
+	void Assign(Iterator_t itBegin, std::size_t uLength){
 		const auto pchWrite = xChopAndSplice(0, 0, 0, uLength);
 		std::copy_n(itBegin, uLength, pchWrite);
 		xSetSize(uLength);
@@ -313,11 +312,11 @@ public:
 		xSetSize(uOldLength + uCount);
 	}
 	template<class Iterator_t>
-	void Append(const Iterator_t &itBegin, const Iterator_t &itEnd){
-		Append(itBegin, std::distance(itBegin, itEnd));
+	void Append(Iterator_t itBegin, Iterator_t itEnd){
+		Append(std::move(itBegin), std::distance(itBegin, itEnd));
 	}
 	template<class Iterator_t>
-	void Append(const Iterator_t &itBegin, std::size_t uLength){
+	void Append(Iterator_t itBegin, std::size_t uLength){
 		const std::size_t uOldLength = GetLength();
 		const auto pchWrite = xChopAndSplice(uOldLength, uOldLength, 0, uOldLength + uLength);
 		std::copy_n(itBegin, uLength, pchWrite);
@@ -393,11 +392,11 @@ public:
 		xSetSize(uOldLength + uCount);
 	}
 	template<class Iterator_t>
-	void Unshift(const Iterator_t &itBegin, const Iterator_t &itEnd){
-		Unshift(itBegin, std::distance(itBegin, itEnd));
+	void Unshift(Iterator_t itBegin, Iterator_t itEnd){
+		Unshift(std::move(itBegin), std::distance(itBegin, itEnd));
 	}
 	template<class Iterator_t>
-	void Unshift(const Iterator_t &itBegin, std::size_t uLength){
+	void Unshift(Iterator_t itBegin, std::size_t uLength){
 		const std::size_t uOldLength = GetLength();
 		const auto pchWrite = xChopAndSplice(0, 0, 0, uLength);
 		std::copy_n(itBegin, uLength, pchWrite);
@@ -473,7 +472,11 @@ public:
 		xSetSize(uRemovedBegin + uCount + (uOldLength - uRemovedEnd));
 	}
 	template<class Iterator_t>
-	void Replace(std::ptrdiff_t nBegin, std::ptrdiff_t nEnd, const Iterator_t &itRepBegin, std::size_t uRepLen){
+	void Replace(std::ptrdiff_t nBegin, std::ptrdiff_t nEnd, Iterator_t itRepBegin, Iterator_t itRepEnd){
+		Replace(nBegin, nEnd, itRepBegin, std::distance(itRepBegin, itRepEnd));
+	}
+	template<class Iterator_t>
+	void Replace(std::ptrdiff_t nBegin, std::ptrdiff_t nEnd, Iterator_t itRepBegin, std::size_t uRepLen){
 		const auto obsCurrent(GetObserver());
 		const std::size_t uOldLength = obsCurrent.GetLength();
 
@@ -503,10 +506,6 @@ public:
 			std::copy_n(itRepBegin, uRepLen, pchWrite);
 		}
 		xSetSize(uRemovedBegin + uRepLen + (uOldLength - uRemovedEnd));
-	}
-	template<class Iterator_t>
-	void Replace(std::ptrdiff_t nBegin, std::ptrdiff_t nEnd, const Iterator_t &itRepBegin, const Iterator_t &itRepEnd){
-		Replace(nBegin, nEnd, itRepBegin, std::distance(itRepBegin, itRepEnd));
 	}
 	void Replace(std::ptrdiff_t nBegin, std::ptrdiff_t nEnd, const Observer &obsReplacement){
 		Replace(nBegin, nEnd, obsReplacement.GetBegin(), obsReplacement.GetLength());

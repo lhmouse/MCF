@@ -4,6 +4,7 @@
 
 #include "../StdMCF.hpp"
 #include "Lzma.hpp"
+#include "../../MCFCRT/std/ext/offset_of.h"
 #include "../Core/UniqueHandle.hpp"
 #include "../Core/Exception.hpp"
 
@@ -41,7 +42,7 @@ inline unsigned long LzmaErrorToWin32Error(int nError) noexcept {
 	case SZ_ERROR_MEM:
 		return ERROR_NOT_ENOUGH_MEMORY;
 
-	case SZ_ERROR_CRC:
+	case SZ_ERROR_Crc:
 		return ERROR_INVALID_DATA;
 
 	case SZ_ERROR_UNSUPPORTED:
@@ -108,7 +109,7 @@ private:
 
 private:
 	static std::size_t xWriteCallback(void *pDataSink, const void *pData, std::size_t uSize) noexcept {
-		return DownCast(&LzmaEncoderDelegate::xm_sosOutputter, (::ISeqOutStream *)pDataSink)->xWrite(pData, uSize);
+		return DOWN_CAST(LzmaEncoderDelegate, xm_sosOutputter, pDataSink)->xWrite(pData, uSize);
 	}
 
 private:
@@ -313,7 +314,7 @@ std::unique_ptr<LzmaEncoder> LzmaEncoder::Create(
 	int nLevel,
 	std::uint32_t u32DictSize
 ){
-	return std::unique_ptr<LzmaEncoder>(new LzmaEncoderDelegate(std::move(fnDataCallback), nLevel, u32DictSize));
+	return std::make_unique<LzmaEncoderDelegate>(std::move(fnDataCallback), nLevel, u32DictSize);
 }
 
 // 其他非静态成员函数。
@@ -343,7 +344,7 @@ void LzmaEncoder::Finalize(){
 std::unique_ptr<LzmaDecoder> LzmaDecoder::Create(
 	std::function<std::pair<void *, std::size_t> (std::size_t)> fnDataCallback
 ){
-	return std::unique_ptr<LzmaDecoder>(new LzmaDecoderDelegate(std::move(fnDataCallback)));
+	return std::make_unique<LzmaDecoderDelegate>(std::move(fnDataCallback));
 }
 
 // 其他非静态成员函数。

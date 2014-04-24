@@ -2,11 +2,11 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2014. LH_Mouse. All wrongs reserved.
 
-#ifndef MCF_CRT_THREAD_LOCAL_HPP_
-#define MCF_CRT_THREAD_LOCAL_HPP_
+#ifndef MCF_THREAD_LOCAL_HPP_
+#define MCF_THREAD_LOCAL_HPP_
 
-#include "../../env/thread.h"
-#include "../../env/bail.h"
+#include "../../MCFCRT/env/thread.h"
+#include "../../MCFCRT/env/bail.h"
 #include <cstddef>
 #include <new>
 #include <tuple>
@@ -15,7 +15,7 @@
 namespace MCF {
 
 template<class Object_t, class... InitParams_t>
-class TheadLocal {
+class ThreadLocal {
 private:
 	template<class... Unpacked_t>
 	static void TupleConstruct(
@@ -35,7 +35,7 @@ private:
 	}
 
 	static void xCtorWrapper(void *pObj, std::intptr_t nParam){
-		TupleConstruct(pObj, ((const TheadLocal *)nParam)->xm_vInitParams);
+		TupleConstruct(pObj, ((const ThreadLocal *)nParam)->xm_vInitParams);
 	}
 	static void xDtorWrapper(void *pObj) noexcept {
 		((Object_t *)pObj)->~Object_t();
@@ -45,11 +45,11 @@ private:
 	std::tuple<InitParams_t...> xm_vInitParams;
 
 public:
-	explicit constexpr TheadLocal(InitParams_t &&... vInitParams)
+	explicit constexpr ThreadLocal(InitParams_t &&... vInitParams)
 		: xm_vInitParams(std::forward<InitParams_t>(vInitParams)...)
 	{
 	}
-	~TheadLocal(){
+	~ThreadLocal(){
 		Release();
 	}
 
@@ -97,10 +97,8 @@ public:
 };
 
 template<class Object_t, class... InitParams_t>
-TheadLocal<Object_t, typename std::remove_reference<InitParams_t>::type...> MakeThreadLocal(InitParams_t &&... vInitParams){
-	return TheadLocal<Object_t, typename std::remove_reference<InitParams_t>::type...>(std::forward<InitParams_t>(vInitParams)...);
-}
-
+ThreadLocal<Object_t, typename std::remove_reference<InitParams_t>::type...> MakeThreadLocal(InitParams_t &&... vInitParams){
+	return ThreadLocal<Object_t, typename std::remove_reference<InitParams_t>::type...>(std::forward<InitParams_t>(vInitParams)...);
 }
 
 #endif

@@ -65,7 +65,7 @@ public:
 	unsigned char *Serialize(unsigned char (&abyBuffer)[9]) const noexcept {
 		unsigned char *pbyWrite = abyBuffer;
 		auto uEncoded = xZigZagEncode(xm_vValue - ORIGIN);
-		for(std::size_t i = 0; i < Min(8, sizeof(uEncoded)); ++i){
+		for(auto i = Min(8u, sizeof(uEncoded)); i; --i){
 			unsigned char by = uEncoded & 0x7F;
 			uEncoded >>= 7;
 			if(uEncoded != 0){
@@ -94,7 +94,7 @@ public:
 				goto jDone;
 			}
 		}
-		for(std::size_t i = 4; i < Min(8, sizeof(uEncoded)); ++i){
+		for(auto i = Min(4u, sizeof(uEncoded)); i; --i){
 			if(pbyRead == pbyEnd){
 				return nullptr;
 			}

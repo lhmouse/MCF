@@ -53,7 +53,7 @@ public:
 
 // 静态成员函数。
 std::unique_ptr<Event> Event::Create(bool bInitSet, const WideStringObserver &wsoName){
-	return std::unique_ptr<Event>(new EventDelegate(bInitSet, wsoName));
+	return std::make_unique<EventDelegate>(bInitSet, wsoName);
 }
 
 // 其他非静态成员函数。

@@ -152,7 +152,7 @@ std::unique_ptr<HexEncoder> HexEncoder::Create(
 	std::function<std::pair<void *, std::size_t> (std::size_t)> fnDataCallback,
 	bool bUpperCase
 ){
-	return std::unique_ptr<HexEncoder>(new HexEncoderDelegate(std::move(fnDataCallback), bUpperCase));
+	return std::make_unique<HexEncoderDelegate>(std::move(fnDataCallback), bUpperCase);
 }
 
 // 其他非静态成员函数。
@@ -177,7 +177,7 @@ void HexEncoder::Finalize(){
 std::unique_ptr<HexDecoder> HexDecoder::Create(
 	std::function<std::pair<void *, std::size_t> (std::size_t)> fnDataCallback
 ){
-	return std::unique_ptr<HexDecoder>(new HexDecoderDelegate(std::move(fnDataCallback)));
+	return std::make_unique<HexDecoderDelegate>(std::move(fnDataCallback));
 }
 
 // 其他非静态成员函数。

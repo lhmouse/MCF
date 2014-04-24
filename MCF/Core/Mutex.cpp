@@ -51,7 +51,7 @@ public:
 
 // 静态成员函数。
 std::unique_ptr<Mutex> Mutex::Create(const WideStringObserver &wsoName){
-	return std::unique_ptr<Mutex>(new MutexDelegate(wsoName));
+	return std::make_unique<MutexDelegate>(wsoName);
 }
 
 // 其他非静态成员函数。

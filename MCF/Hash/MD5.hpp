@@ -2,15 +2,15 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2014. LH_Mouse. All wrongs reserved.
 
-#ifndef MCF_MD5_HPP_
-#define MCF_MD5_HPP_
+#ifndef MCF_Md5_HPP_
+#define MCF_Md5_HPP_
 
 #include <cstddef>
 #include <cstdint>
 
 namespace MCF {
 
-class MD5 {
+class Md5 {
 private:
 	bool xm_bInited;
 	std::uint32_t xm_auResult[4];
@@ -26,7 +26,7 @@ private:
 	std::uint64_t xm_u64BytesTotal;
 
 public:
-	MD5() noexcept;
+	Md5() noexcept;
 
 public:
 	void Abort() noexcept;

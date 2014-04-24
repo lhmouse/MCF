@@ -2,11 +2,11 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2014. LH_Mouse. All wrongs reserved.
 
-#ifndef MCF_SHARED_HANDLE_HPP_
-#define MCF_SHARED_HANDLE_HPP_
+#ifndef MCF_ShaRED_HANDLE_HPP_
+#define MCF_ShaRED_HANDLE_HPP_
 
-#include "../../MCFCRT/c/ext/assert.h"
-#include "../../MCFCRT/cpp/ext/offset_of.hpp"
+#include "../../MCFCRT/std/ext/assert.h"
+#include "../../MCFCRT/std/ext/offset_of.h"
 #include "../../MCFCRT/env/bail.h"
 #include <new>
 #include <utility>
@@ -89,7 +89,7 @@ private:
 			if(!pHandle){
 				return nullptr;
 			}
-			return DownCast(&xSharedNode::xm_hObj, pHandle);
+			return DOWN_CAST(xSharedNode, xm_hObj, pHandle);
 		}
 
 	private:

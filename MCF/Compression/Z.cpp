@@ -274,7 +274,7 @@ std::unique_ptr<ZEncoder> ZEncoder::Create(
 	bool bRaw,
 	int nLevel
 ){
-	return std::unique_ptr<ZEncoder>(new ZEncoderDelegate(std::move(fnDataCallback), bRaw, nLevel));
+	return std::make_unique<ZEncoderDelegate>(std::move(fnDataCallback), bRaw, nLevel);
 }
 
 // 其他非静态成员函数。
@@ -305,7 +305,7 @@ std::unique_ptr<ZDecoder> ZDecoder::Create(
 	std::function<std::pair<void *, std::size_t> (std::size_t)> fnDataCallback,
 	bool bRaw
 ){
-	return std::unique_ptr<ZDecoder>(new ZDecoderDelegate(std::move(fnDataCallback), bRaw));
+	return std::make_unique<ZDecoderDelegate>(std::move(fnDataCallback), bRaw);
 }
 
 // 其他非静态成员函数。

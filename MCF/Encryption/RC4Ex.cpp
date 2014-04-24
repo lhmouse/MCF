@@ -3,7 +3,7 @@
 // Copyleft 2014. LH_Mouse. All wrongs reserved.
 
 #include "RC4Ex.hpp"
-#include "../Hash/SHA256.hpp"
+#include "../Hash/Sha256.hpp"
 using namespace MCF;
 
 namespace {
@@ -14,7 +14,7 @@ namespace {
 // 3. 原文输入 RC4 前被循环移位；
 // 4. 加密输出的字节参与伪随机数生成。
 void GenInitBox(unsigned char (&abyOutput)[256], const void *pKey, std::size_t uKeyLen, std::uint64_t u64Nonce) noexcept {
-	SHA256 Hasher;
+	Sha256 Hasher;
 	union {
 		struct {
 			unsigned char abyNoncedKeyHash[32];

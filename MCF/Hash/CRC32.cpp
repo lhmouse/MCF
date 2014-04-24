@@ -3,15 +3,15 @@
 // Copyleft 2014. LH_Mouse. All wrongs reserved.
 
 #include "../StdMCF.hpp"
-#include "CRC32.hpp"
+#include "Crc32.hpp"
 using namespace MCF;
 
 namespace {
 
 // http://www.relisoft.com/science/CrcOptim.html
-// 1. 原文提供的是正序（权较大位向权较小位方向）的 CRC 计算，而这里使用的是反序（权较小位向权较大位方向）。
-// 2. 原文的 CRC 余数的初始值是 0；此处以 -1 为初始值，计算完成后进行按位反。
-void BuildCRC32Table(std::uint32_t (&au32Table)[0x100], std::uint32_t u32Divisor) noexcept {
+// 1. 原文提供的是正序（权较大位向权较小位方向）的 Crc 计算，而这里使用的是反序（权较小位向权较大位方向）。
+// 2. 原文的 Crc 余数的初始值是 0；此处以 -1 为初始值，计算完成后进行按位反。
+void BuildCrc32Table(std::uint32_t (&au32Table)[0x100], std::uint32_t u32Divisor) noexcept {
 	for(std::uint32_t i = 0; i < 256; ++i){
 		register std::uint32_t u32Reg = i;
 		for(std::size_t j = 0; j < 8; ++j){
@@ -35,26 +35,26 @@ void BuildCRC32Table(std::uint32_t (&au32Table)[0x100], std::uint32_t u32Divisor
 		au32Table[i] = u32Reg;
 	}
 }
-inline void DoCRC32Byte(std::uint32_t &u32Reg, const std::uint32_t (&au32Table)[0x100], unsigned char byData) noexcept {
+inline void DoCrc32Byte(std::uint32_t &u32Reg, const std::uint32_t (&au32Table)[0x100], unsigned char byData) noexcept {
 	u32Reg = au32Table[(u32Reg ^ byData) & 0xFF] ^ (u32Reg >> 8);
 }
 
 }
 
 // 构造函数和析构函数。
-CRC32::CRC32(std::uint32_t u32Divisor) noexcept
+Crc32::Crc32(std::uint32_t u32Divisor) noexcept
 	: xm_bInited(false)
 {
 	ASSERT(u32Divisor != 0);
 
-	BuildCRC32Table(xm_au32Table, u32Divisor);
+	BuildCrc32Table(xm_au32Table, u32Divisor);
 }
 
 // 其他非静态成员函数。
-void CRC32::Abort() noexcept{
+void Crc32::Abort() noexcept{
 	xm_bInited = false;
 }
-void CRC32::Update(const void *pData, std::size_t uSize) noexcept {
+void Crc32::Update(const void *pData, std::size_t uSize) noexcept {
 	if(!xm_bInited){
 		xm_u32Reg = ~(std::uint32_t)0;
 
@@ -66,24 +66,24 @@ void CRC32::Update(const void *pData, std::size_t uSize) noexcept {
 
 	if(uSize >= sizeof(std::uintptr_t) * 2){
 		while(((std::uintptr_t)pbyRead & (sizeof(std::uintptr_t) - 1)) != 0){
-			DoCRC32Byte(xm_u32Reg, xm_au32Table, *(pbyRead++));
+			DoCrc32Byte(xm_u32Reg, xm_au32Table, *(pbyRead++));
 		}
 		register auto uWordCount = (std::size_t)(pbyEnd - pbyRead) / sizeof(std::uintptr_t);
 		while(uWordCount != 0){
 			register auto uWord = *(const std::uintptr_t *)pbyRead;
 			pbyRead += sizeof(std::uintptr_t);
-			for(std::size_t i = 0; i < sizeof(std::uintptr_t); ++i){
-				DoCRC32Byte(xm_u32Reg, xm_au32Table, uWord & 0xFF);
+			for(auto i = sizeof(std::uintptr_t); i; --i){
+				DoCrc32Byte(xm_u32Reg, xm_au32Table, uWord & 0xFF);
 				uWord >>= 8;
 			}
 			--uWordCount;
 		}
 	}
 	while(pbyRead != pbyEnd){
-		DoCRC32Byte(xm_u32Reg, xm_au32Table, *(pbyRead++));
+		DoCrc32Byte(xm_u32Reg, xm_au32Table, *(pbyRead++));
 	}
 }
-std::uint32_t CRC32::Finalize() noexcept {
+std::uint32_t Crc32::Finalize() noexcept {
 	if(xm_bInited){
 		xm_u32Reg = ~xm_u32Reg;
 

@@ -3,14 +3,14 @@
 // Copyleft 2014. LH_Mouse. All wrongs reserved.
 
 #include "../StdMCF.hpp"
-#include "MD5.hpp"
+#include "Md5.hpp"
 #include <cstring>
 using namespace MCF;
 
 namespace {
 
-void DoMD5Chunk(std::uint32_t (&auResult)[4], const unsigned char *pbyChunk) noexcept {
-	// https://en.wikipedia.org/wiki/MD5
+void DoMd5Chunk(std::uint32_t (&auResult)[4], const unsigned char *pbyChunk) noexcept {
+	// https://en.wikipedia.org/wiki/Md5
 /*
 	static const unsigned char RVEC[64] = {
 		7, 12, 17, 22, 7, 12, 17, 22, 7, 12, 17, 22, 7, 12, 17, 22,
@@ -348,16 +348,16 @@ void DoMD5Chunk(std::uint32_t (&auResult)[4], const unsigned char *pbyChunk) noe
 }
 
 // 构造函数和析构函数。
-MD5::MD5() noexcept
+Md5::Md5() noexcept
 	: xm_bInited(false)
 {
 }
 
 // 其他非静态成员函数。
-void MD5::Abort() noexcept{
+void Md5::Abort() noexcept{
 	xm_bInited = false;
 }
-void MD5::Update(const void *pData, std::size_t uSize) noexcept {
+void Md5::Update(const void *pData, std::size_t uSize) noexcept {
 	if(!xm_bInited){
 		xm_auResult[0] = 0x67452301u;
 		xm_auResult[1] = 0xEFCDAB89u;
@@ -376,13 +376,13 @@ void MD5::Update(const void *pData, std::size_t uSize) noexcept {
 	if(uBytesRemaining >= uBytesFree){
 		if(xm_uBytesInChunk != 0){
 			std::memcpy(xm_abyChunk + xm_uBytesInChunk, pbyRead, uBytesFree);
-			DoMD5Chunk(xm_auResult, xm_abyChunk);
+			DoMd5Chunk(xm_auResult, xm_abyChunk);
 			xm_uBytesInChunk = 0;
 			pbyRead += uBytesFree;
 			uBytesRemaining -= uBytesFree;
 		}
 		while(uBytesRemaining >= sizeof(xm_abyChunk)){
-			DoMD5Chunk(xm_auResult, pbyRead);
+			DoMd5Chunk(xm_auResult, pbyRead);
 			pbyRead += sizeof(xm_abyChunk);
 			uBytesRemaining -= sizeof(xm_abyChunk);
 		}
@@ -393,19 +393,19 @@ void MD5::Update(const void *pData, std::size_t uSize) noexcept {
 	}
 	xm_u64BytesTotal += uSize;
 }
-void MD5::Finalize(unsigned char (&abyOutput)[16]) noexcept {
+void Md5::Finalize(unsigned char (&abyOutput)[16]) noexcept {
 	if(xm_bInited){
 		xm_abyChunk[xm_uBytesInChunk++] = 0x80;
 		if(xm_uBytesInChunk > sizeof(xm_abyFirstPart)){
 			std::memset(xm_abyChunk + xm_uBytesInChunk, 0, sizeof(xm_abyChunk) - xm_uBytesInChunk);
-			DoMD5Chunk(xm_auResult, xm_abyChunk);
+			DoMd5Chunk(xm_auResult, xm_abyChunk);
 			xm_uBytesInChunk = 0;
 		}
 		if(xm_uBytesInChunk < sizeof(xm_abyFirstPart)){
 			std::memset(xm_abyChunk + xm_uBytesInChunk, 0, sizeof(xm_abyFirstPart) - xm_uBytesInChunk);
 		}
 		xm_uBitsTotal = xm_u64BytesTotal * CHAR_BIT;
-		DoMD5Chunk(xm_auResult, xm_abyChunk);
+		DoMd5Chunk(xm_auResult, xm_abyChunk);
 
 		xm_bInited = false;
 	}

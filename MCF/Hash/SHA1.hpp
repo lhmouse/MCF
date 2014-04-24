@@ -2,15 +2,15 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2014. LH_Mouse. All wrongs reserved.
 
-#ifndef MCF_SHA1_HPP_
-#define MCF_SHA1_HPP_
+#ifndef MCF_Sha1_HPP_
+#define MCF_Sha1_HPP_
 
 #include <cstddef>
 #include <cstdint>
 
 namespace MCF {
 
-class SHA1 {
+class Sha1 {
 private:
 	bool xm_bInited;
 	std::uint32_t xm_auResult[5];
@@ -26,7 +26,7 @@ private:
 	std::uint64_t xm_u64BytesTotal;
 
 public:
-	SHA1() noexcept;
+	Sha1() noexcept;
 
 public:
 	void Abort() noexcept;

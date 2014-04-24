@@ -2,15 +2,15 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2014. LH_Mouse. All wrongs reserved.
 
-#ifndef MCF_CRC32_HPP_
-#define MCF_CRC32_HPP_
+#ifndef MCF_Crc32_HPP_
+#define MCF_Crc32_HPP_
 
 #include <cstddef>
 #include <cstdint>
 
 namespace MCF {
 
-class CRC32 {
+class Crc32 {
 public:
 	enum : std::uint32_t {
 		DIVISOR_IEEE_802_3 	= 0xEDB88320,
@@ -24,7 +24,7 @@ private:
 	std::uint32_t xm_u32Reg;
 
 public:
-	CRC32(std::uint32_t u32Divisor = DIVISOR_IEEE_802_3) noexcept;
+	Crc32(std::uint32_t u32Divisor = DIVISOR_IEEE_802_3) noexcept;
 
 public:
 	void Abort() noexcept;

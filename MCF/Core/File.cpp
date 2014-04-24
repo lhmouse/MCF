@@ -148,7 +148,7 @@ public:
 
 // 静态成员函数。
 std::unique_ptr<File> File::Open(const WideStringObserver &wsoPath, bool bToRead, bool bToWrite, bool bAutoCreate){
-	return std::unique_ptr<File>(new FileDelegate(wsoPath, bToRead, bToWrite, bAutoCreate));
+	return std::make_unique<FileDelegate>(wsoPath, bToRead, bToWrite, bAutoCreate);
 }
 std::unique_ptr<File> File::OpenNoThrow(const WideStringObserver &wsoPath, bool bToRead, bool bToWrite, bool bAutoCreate){
 	try {

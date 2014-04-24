@@ -35,7 +35,7 @@ private:
 	const std::unique_ptr<Event> xm_pevnPeersAvailable;
 
 public:
-	TcpServerDelegate(const PeerInfo &vBoundOnto)
+	explicit TcpServerDelegate(const PeerInfo &vBoundOnto)
 		: xm_bStopNow			(false)
 		, xm_pcsQueueLock		(CriticalSection::Create())
 		, xm_pevnPeersAvailable	(Event::Create(false))
@@ -171,7 +171,7 @@ public:
 
 // 静态成员函数。
 std::unique_ptr<TcpServer> TcpServer::Create(const PeerInfo &vBoundOnto){
-	return std::unique_ptr<TcpServer>(new TcpServerDelegate(vBoundOnto));
+	return std::make_unique<TcpServerDelegate>(vBoundOnto);
 }
 
 // 其他非静态成员函数。

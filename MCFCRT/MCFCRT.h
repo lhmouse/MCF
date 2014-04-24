@@ -5,12 +5,8 @@
 #ifndef MCF_CRT_MCFCRT_H_
 #define MCF_CRT_MCFCRT_H_
 
-#include "c/c_include.h"
+#include "std/std_include.h"
 #include "env/env_include.h"
-
-#ifdef __cplusplus
-#	include "cpp/cpp_include.hpp"
-#endif
 
 #if !defined(NDEBUG) && defined(__cplusplus)
 #	define _GLIBCXX_DEBUG	1

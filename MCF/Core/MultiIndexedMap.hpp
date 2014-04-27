@@ -14,21 +14,18 @@
 
 namespace MCF {
 
+//============================================================================
+// 这些代码是部分从 "../../MCFCRT/env/avl_tree.c" 中复制过来的。
+
 typedef ::MCF_AVL_NODE_HEADER	AvlNodeHeader;
 typedef ::MCF_AVL_ROOT			AvlRoot;
 
-static inline const AvlNodeHeader *AvlPrev(const AvlNodeHeader *pNode) noexcept {
-	return pNode->pPrev;
-}
-static inline AvlNodeHeader *AvlPrev(AvlNodeHeader *pNode) noexcept {
-	return pNode->pPrev;
+static inline AvlNodeHeader *AvlPrev(const AvlNodeHeader *pNode) noexcept {
+	return (AvlNodeHeader *)(pNode->pPrev);
 }
 
-static inline const AvlNodeHeader *AvlNext(const AvlNodeHeader *pNode) noexcept {
-	return pNode->pNext;
-}
-static inline AvlNodeHeader *AvlNext(AvlNodeHeader *pNode) noexcept {
-	return pNode->pNext;
+static inline AvlNodeHeader *AvlNext(const AvlNodeHeader *pNode) noexcept {
+	return (AvlNodeHeader *)(pNode->pNext);
 }
 
 static inline void AvlSwap(AvlRoot *ppRoot1, AvlRoot *ppRoot2) noexcept {
@@ -51,13 +48,11 @@ inline void AvlAttach(
 		}
 		if(vComparer(nKey, pCur->nKey)){
 			pParent = pCur;
-#warning workaround for g++ 4.9
-//			ppIns = &(pCur->pLeft);
+			ppIns = &(pCur->pLeft);
 			ppIns = &pCur->pLeft;
 		} else {
 			pParent = pCur;
-//			ppIns = &(pCur->pRight);
-			ppIns = &pCur->pRight;
+			ppIns = &(pCur->pRight);
 		}
 	}
 	::MCF_AvlInsertNoCheck(pNode, nKey, pParent, ppIns);
@@ -96,7 +91,7 @@ inline AvlNodeHeader *AvlUpperBound(
 	ComparerKeyOther_t && /* vComparerKeyOther */ = std::less<std::intptr_t>(),
 	ComparerOtherKey_t &&vComparerOtherKey = std::less<std::intptr_t>()
 ) noexcept(/* noexcept(vComparerKeyOther(0, 0)) && */ noexcept(vComparerOtherKey(0, 0))) {
-	const AvlNodeHeader *pRet = NULL;
+	const AvlNodeHeader *pRet = nullptr;
 	const AvlNodeHeader *pCur = *ppRoot;
 	while(pCur){
 		if(!vComparerOtherKey(nOther, pCur->nKey)){
@@ -163,12 +158,13 @@ inline void AvlEqualRange(
 			}
 			pCur = pUpper;
 		}
-		*ppTo = (AvlNodeHeader *)(pCur ? pCur->pNext : NULL);
+		*ppTo = (AvlNodeHeader *)(pCur ? pCur->pNext : nullptr);
 	} else {
-		*ppFrom = NULL;
-		*ppTo = NULL;
+		*ppFrom = nullptr;
+		*ppTo = nullptr;
 	}
 }
+//============================================================================
 
 struct BinaryLess {
 	template<class Tx, class Ty>
@@ -397,11 +393,11 @@ private:
 		AvlAttach(
 			&(xm_arvIndexPointers[INDEX].pRoot),
 			(std::intptr_t)&std::get<INDEX>(pNode->xm_vIndexes),
-			Node::xAvlFromNode<INDEX>(pNode),
+			Node::template xAvlFromNode<INDEX>(pNode),
 			xComparer<KeyType, KeyType>()
 		);
 
-		const auto pAvl = Node::xAvlFromNode<INDEX>(pNode);
+		const auto pAvl = Node::template xAvlFromNode<INDEX>(pNode);
 		const auto pPrev = AvlPrev(pAvl);
 		if(!pPrev){
 			xm_arvIndexPointers[INDEX].pFront = pAvl;
@@ -429,7 +425,7 @@ private:
 
 	template<std::size_t INDEX>
 	void xDetach(Node *pNode) noexcept {
-		const auto pAvl = Node::xAvlFromNode<INDEX>(pNode);
+		const auto pAvl = Node::template xAvlFromNode<INDEX>(pNode);
 		if(pAvl == xm_arvIndexPointers[INDEX].pFront){
 			xm_arvIndexPointers[INDEX].pFront = AvlNext(pAvl);
 		}
@@ -460,7 +456,7 @@ private:
 
 		AvlNodeHeader *pAvl = rhs.xm_arvIndexPointers[0].pFront;
 		while(pAvl){
-			Node *const pNode = Node::xNodeFromAvl<0>(pAvl);
+			Node *const pNode = Node::template xNodeFromAvl<0>(pAvl);
 			pAvl = AvlNext(pAvl);
 			Insert(*pNode);
 		}
@@ -482,7 +478,7 @@ public:
 	void Clear() noexcept {
 		AvlNodeHeader *pAvl = xm_arvIndexPointers[0].pFront;
 		while(pAvl){
-			Node *const pNode = Node::xNodeFromAvl<0>(pAvl);
+			Node *const pNode = Node::template xNodeFromAvl<0>(pAvl);
 			pAvl = AvlNext(pAvl);
 			delete pNode;
 		}
@@ -529,13 +525,13 @@ public:
 	const Node *GetBegin() const noexcept {
 		static_assert(INDEX < INDEX_COUNT, "INDEX is out of range.");
 
-		return Node::xNodeFromAvl<INDEX>(xm_arvIndexPointers[INDEX].pFront);
+		return Node::template xNodeFromAvl<INDEX>(xm_arvIndexPointers[INDEX].pFront);
 	}
 	template<std::size_t INDEX>
 	Node *GetBegin() noexcept {
 		static_assert(INDEX < INDEX_COUNT, "INDEX is out of range.");
 
-		return Node::xNodeFromAvl<INDEX>(xm_arvIndexPointers[INDEX].pFront);
+		return Node::template xNodeFromAvl<INDEX>(xm_arvIndexPointers[INDEX].pFront);
 	}
 	template<std::size_t INDEX>
 	const Node *GetCBegin() const noexcept {
@@ -546,13 +542,13 @@ public:
 	const Node *GetRBegin() const noexcept {
 		static_assert(INDEX < INDEX_COUNT, "INDEX is out of range.");
 
-		return Node::xNodeFromAvl<INDEX>(xm_arvIndexPointers[INDEX].pBack);
+		return Node::template xNodeFromAvl<INDEX>(xm_arvIndexPointers[INDEX].pBack);
 	}
 	template<std::size_t INDEX>
 	Node *GetRBegin() noexcept {
 		static_assert(INDEX < INDEX_COUNT, "INDEX is out of range.");
 
-		return Node::xNodeFromAvl<INDEX>(xm_arvIndexPointers[INDEX].pBack);
+		return Node::template xNodeFromAvl<INDEX>(xm_arvIndexPointers[INDEX].pBack);
 	}
 	template<std::size_t INDEX>
 	const Node *GetCRBegin() const noexcept {
@@ -570,7 +566,7 @@ public:
 
 		typedef typename std::tuple_element<INDEX, Indexes>::type KeyType;
 
-		return Node::xNodeFromAvl<INDEX>(AvlLowerBound(
+		return Node::template xNodeFromAvl<INDEX>(AvlLowerBound(
 			&(xm_arvIndexPointers[INDEX].pRoot),
 			(std::intptr_t)&vComparand,
 			xComparer<KeyType, Comparand_t>(),
@@ -588,7 +584,7 @@ public:
 
 		typedef typename std::tuple_element<INDEX, Indexes>::type KeyType;
 
-		return Node::xNodeFromAvl<INDEX>(AvlLowerBound(
+		return Node::template xNodeFromAvl<INDEX>(AvlLowerBound(
 			&(xm_arvIndexPointers[INDEX].pRoot),
 			(std::intptr_t)&vComparand,
 			xComparer<KeyType, Comparand_t>(),
@@ -607,7 +603,7 @@ public:
 
 		typedef typename std::tuple_element<INDEX, Indexes>::type KeyType;
 
-		return Node::xNodeFromAvl<INDEX>(AvlUpperBound(
+		return Node::template xNodeFromAvl<INDEX>(AvlUpperBound(
 			&(xm_arvIndexPointers[INDEX].pRoot),
 			(std::intptr_t)&vComparand,
 			xComparer<KeyType, Comparand_t>(),
@@ -625,7 +621,7 @@ public:
 
 		typedef typename std::tuple_element<INDEX, Indexes>::type KeyType;
 
-		return Node::xNodeFromAvl<INDEX>(AvlUpperBound(
+		return Node::template xNodeFromAvl<INDEX>(AvlUpperBound(
 			&(xm_arvIndexPointers[INDEX].pRoot),
 			(std::intptr_t)&vComparand,
 			xComparer<KeyType, Comparand_t>(),
@@ -644,7 +640,7 @@ public:
 
 		typedef typename std::tuple_element<INDEX, Indexes>::type KeyType;
 
-		return Node::xNodeFromAvl<INDEX>(AvlFind(
+		return Node::template xNodeFromAvl<INDEX>(AvlFind(
 			&(xm_arvIndexPointers[INDEX].pRoot),
 			(std::intptr_t)&vComparand,
 			xComparer<KeyType, Comparand_t>(),
@@ -662,7 +658,7 @@ public:
 
 		typedef typename std::tuple_element<INDEX, Indexes>::type KeyType;
 
-		return Node::xNodeFromAvl<INDEX>(AvlFind(
+		return Node::template xNodeFromAvl<INDEX>(AvlFind(
 			&(xm_arvIndexPointers[INDEX].pRoot),
 			(std::intptr_t)&vComparand,
 			xComparer<KeyType, Comparand_t>(),
@@ -681,7 +677,7 @@ public:
 
 		typedef typename std::tuple_element<INDEX, Indexes>::type KeyType;
 
-		AvlNodeHeader *pFrom, *pTo;
+		const AvlNodeHeader *pFrom, *pTo;
 		AvlEqualRange(
 			&pFrom,
 			&pTo,
@@ -691,8 +687,8 @@ public:
 			xComparer<Comparand_t, KeyType>()
 		);
 		return std::make_pair(
-			Node::xNodeFromAvl<INDEX>(pFrom),
-			Node::xNodeFromAvl<INDEX>(pTo)
+			Node::template xNodeFromAvl<INDEX>(pFrom),
+			Node::template xNodeFromAvl<INDEX>(pTo)
 		);
 	}
 	template<std::size_t INDEX, typename Comparand_t>
@@ -706,7 +702,7 @@ public:
 
 		typedef typename std::tuple_element<INDEX, Indexes>::type KeyType;
 
-		AvlNodeHeader *pFrom, *pTo;
+		const AvlNodeHeader *pFrom, *pTo;
 		AvlEqualRange(
 			&pFrom,
 			&pTo,
@@ -716,8 +712,8 @@ public:
 			xComparer<Comparand_t, KeyType>()
 		);
 		return std::make_pair(
-			Node::xNodeFromAvl<INDEX>(pFrom),
-			Node::xNodeFromAvl<INDEX>(pTo)
+			Node::template xNodeFromAvl<INDEX>(pFrom),
+			Node::template xNodeFromAvl<INDEX>(pTo)
 		);
 	}
 };

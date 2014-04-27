@@ -26,7 +26,7 @@ typedef enum {
     EXTRA,      /* i: waiting for extra bytes (gzip) */
     NAME,       /* i: waiting for end of file name (gzip) */
     COMMENT,    /* i: waiting for end of comment (gzip) */
-    HCRC,       /* i: waiting for header crc (gzip) */
+    HCrc,       /* i: waiting for header crc (gzip) */
     DICTID,     /* i: waiting for dictionary check value */
     DICT,       /* waiting for inflateSetDictionary() call */
         TYPE,       /* i: waiting for type bits, including last-flag bit */
@@ -60,7 +60,7 @@ typedef enum {
     Process header:
         HEAD -> (gzip) or (zlib) or (raw)
         (gzip) -> FLAGS -> TIME -> OS -> EXLEN -> EXTRA -> NAME -> COMMENT ->
-                  HCRC -> TYPE
+                  HCrc -> TYPE
         (zlib) -> DICTID or TYPE
         DICTID -> DICT -> TYPE
         (raw) -> TYPEDO

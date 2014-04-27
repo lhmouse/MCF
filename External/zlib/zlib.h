@@ -486,8 +486,8 @@ ZEXTERN int ZEXPORT inflate OF((z_streamp strm, int flush));
   header is not retained, so applications that need that information should
   instead use raw inflate, see inflateInit2() below, or inflateBack() and
   perform their own processing of the gzip header and trailer.  When processing
-  gzip-wrapped deflate data, strm->adler32 is set to the CRC-32 of the output
-  producted so far.  The CRC-32 is checked against the gzip trailer.
+  gzip-wrapped deflate data, strm->adler32 is set to the Crc-32 of the output
+  producted so far.  The Crc-32 is checked against the gzip trailer.
 
     inflate() returns Z_OK if some progress has been made (more input processed
   or more output produced), Z_STREAM_END if the end of the compressed data has
@@ -974,7 +974,7 @@ ZEXTERN int ZEXPORT inflateGetHeader OF((z_streamp strm,
    complete and before any actual data is decompressed.
 
      The text, time, xflags, and os fields are filled in with the gzip header
-   contents.  hcrc is set to true if there is a header CRC.  (The header CRC
+   contents.  hcrc is set to true if there is a header Crc.  (The header Crc
    was valid if done is set to one.) If extra is not Z_NULL, then extra_max
    contains the maximum number of bytes to write to extra.  Once done is true,
    extra_len contains the actual extra field length, and extra contains the
@@ -992,7 +992,7 @@ ZEXTERN int ZEXPORT inflateGetHeader OF((z_streamp strm,
 
      If inflateGetHeader is not used, then the header information is simply
    discarded.  The header is always checked for validity, including the header
-   CRC if present.  inflateReset() will reset the process to discard the header
+   Crc if present.  inflateReset() will reset the process to discard the header
    information.  The application would need to call inflateGetHeader() again to
    retrieve the header from the next gzip stream.
 
@@ -1121,7 +1121,7 @@ ZEXTERN uLong ZEXPORT zlibCompileFlags OF((void));
 
     One-time table building (smaller code, but not thread-safe if true):
      12: BUILDFIXED -- build static block decoding tables when needed
-     13: DYNAMIC_CRC_TABLE -- build CRC calculation tables when needed
+     13: DYNAMIC_Crc_TABLE -- build Crc calculation tables when needed
      14,15: 0 (reserved)
 
     Library content (indicates missing functionality):
@@ -1572,7 +1572,7 @@ ZEXTERN uLong ZEXPORT adler32 OF((uLong adler, const Bytef *buf, uInt len));
    return the updated checksum.  If buf is Z_NULL, this function returns the
    required initial value for the checksum.
 
-     An Adler-32 checksum is almost as reliable as a CRC32 but can be computed
+     An Adler-32 checksum is almost as reliable as a Crc32 but can be computed
    much faster.
 
    Usage example:
@@ -1599,8 +1599,8 @@ ZEXTERN uLong ZEXPORT adler32_combine OF((uLong adler1, uLong adler2,
 
 ZEXTERN uLong ZEXPORT crc32   OF((uLong crc, const Bytef *buf, uInt len));
 /*
-     Update a running CRC-32 with the bytes buf[0..len-1] and return the
-   updated CRC-32.  If buf is Z_NULL, this function returns the required
+     Update a running Crc-32 with the bytes buf[0..len-1] and return the
+   updated Crc-32.  If buf is Z_NULL, this function returns the required
    initial value for the crc.  Pre- and post-conditioning (one's complement) is
    performed within this function so it shouldn't be done by the application.
 
@@ -1617,9 +1617,9 @@ ZEXTERN uLong ZEXPORT crc32   OF((uLong crc, const Bytef *buf, uInt len));
 /*
 ZEXTERN uLong ZEXPORT crc32_combine OF((uLong crc1, uLong crc2, z_off_t len2));
 
-     Combine two CRC-32 check values into one.  For two sequences of bytes,
-   seq1 and seq2 with lengths len1 and len2, CRC-32 check values were
-   calculated for each, crc1 and crc2.  crc32_combine() returns the CRC-32
+     Combine two Crc-32 check values into one.  For two sequences of bytes,
+   seq1 and seq2 with lengths len1 and len2, Crc-32 check values were
+   calculated for each, crc1 and crc2.  crc32_combine() returns the Crc-32
    check value of seq1 and seq2 concatenated, requiring only crc1, crc2, and
    len2.
 */

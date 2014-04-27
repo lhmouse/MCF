@@ -845,12 +845,12 @@ int ZEXPORT deflate (strm, flush)
                 strm->adler = crc32(strm->adler, s->pending_buf + beg,
                                     s->pending - beg);
             if (val == 0)
-                s->status = HCRC_STATE;
+                s->status = HCrc_STATE;
         }
         else
-            s->status = HCRC_STATE;
+            s->status = HCrc_STATE;
     }
-    if (s->status == HCRC_STATE) {
+    if (s->status == HCrc_STATE) {
         if (s->gzhead->hcrc) {
             if (s->pending + 2 > s->pending_buf_size)
                 flush_pending(strm);
@@ -988,7 +988,7 @@ int ZEXPORT deflateEnd (strm)
         status != EXTRA_STATE &&
         status != NAME_STATE &&
         status != COMMENT_STATE &&
-        status != HCRC_STATE &&
+        status != HCrc_STATE &&
         status != BUSY_STATE &&
         status != FINISH_STATE) {
       return Z_STREAM_ERROR;

@@ -38,7 +38,7 @@ public:
 	explicit VVector(std::size_t uCount, const Params_t &...vParams)
 		: VVector()
 	{
-		FillAtEnd(uCount, std::forward<Params_t>(vParams)...);
+		FillAtEnd(uCount, vParams...);
 	}
 	template<class Iterator_t>
 	VVector(Iterator_t itBegin, Iterator_t itEnd)
@@ -57,17 +57,17 @@ public:
 	{
 		MoveToEnd(vInitList.begin(), vInitList.end());
 	}
-	template<class OtherElement_t, std::size_t OTHER_ALT_STOR_THRESHOLD>
-	VVector(const VVector<OtherElement_t, OTHER_ALT_STOR_THRESHOLD> &rhs)
+	template<std::size_t OTHER_ALT_STOR_THRESHOLD>
+	VVector(const VVector<Element_t, OTHER_ALT_STOR_THRESHOLD> &rhs)
 		: VVector()
 	{
 		CopyToEnd(rhs.GetBegin(), rhs.GetEnd());
 	}
-	template<class OtherElement_t, std::size_t OTHER_ALT_STOR_THRESHOLD>
-	VVector(VVector<OtherElement_t, OTHER_ALT_STOR_THRESHOLD> &&rhs)
+	template<std::size_t OTHER_ALT_STOR_THRESHOLD>
+	VVector(VVector<Element_t, OTHER_ALT_STOR_THRESHOLD> &&rhs)
 		: VVector()
 	{
-		operator=<Element_t, OTHER_ALT_STOR_THRESHOLD>(std::move(rhs));
+		operator=<OTHER_ALT_STOR_THRESHOLD>(std::move(rhs));
 	}
 	VVector(const VVector &rhs)
 		: VVector()
@@ -77,21 +77,21 @@ public:
 	VVector(VVector &&rhs)
 		: VVector()
 	{
-		operator=<Element_t, ALT_STOR_THRESHOLD>(std::move(rhs));
+		operator=<ALT_STOR_THRESHOLD>(std::move(rhs));
 	}
 	VVector &operator=(std::initializer_list<Element_t> rhs){
 		Clear();
 		MoveToEnd(rhs.begin(), rhs.end());
 		return *this;
 	}
-	template<class OtherElement_t, std::size_t OTHER_ALT_STOR_THRESHOLD>
-	VVector &operator=(const VVector<OtherElement_t, OTHER_ALT_STOR_THRESHOLD> &rhs){
+	template<std::size_t OTHER_ALT_STOR_THRESHOLD>
+	VVector &operator=(const VVector<Element_t, OTHER_ALT_STOR_THRESHOLD> &rhs){
 		Clear();
 		CopyToEnd(rhs.GetBegin(), rhs.GetEnd());
 		return *this;
 	}
-	template<class OtherElement_t, std::size_t OTHER_ALT_STOR_THRESHOLD>
-	VVector &operator=(VVector<OtherElement_t, OTHER_ALT_STOR_THRESHOLD> &&rhs){
+	template<std::size_t OTHER_ALT_STOR_THRESHOLD>
+	VVector &operator=(VVector<Element_t, OTHER_ALT_STOR_THRESHOLD> &&rhs){
 		Clear();
 
 		if(rhs.xm_pBegin != (Element_t *)std::begin(rhs.xm_aSmall)){
@@ -120,8 +120,7 @@ public:
 		}
 		return *this;
 	}
-	template<class OtherElement_t>
-	VVector &operator=(VVector<OtherElement_t, 0> &&rhs){
+	VVector &operator=(VVector<Element_t, 0> &&rhs){
 		Clear();
 
 		if(xm_pBegin != (Element_t *)std::begin(xm_aSmall)){
@@ -138,14 +137,13 @@ public:
 	}
 	VVector &operator=(const VVector &rhs){
 		if(&rhs != this){
-			Clear();
-			CopyToEnd(rhs.GetBegin(), rhs.GetEnd());
+			operator=<ALT_STOR_THRESHOLD>(rhs);
 		}
 		return *this;
 	}
 	VVector &operator=(VVector &&rhs){
 		if(&rhs != this){
-			operator=<Element_t, ALT_STOR_THRESHOLD>(std::move(rhs));
+			operator=<ALT_STOR_THRESHOLD>(std::move(rhs));
 		}
 		return *this;
 	}
@@ -188,10 +186,10 @@ public:
 		return (std::size_t)(GetEnd() - GetBegin());
 	}
 	template<typename... Params_t>
-	void Resize(std::size_t uNewSize, Params_t &&... vParams){
+	void Resize(std::size_t uNewSize, const Params_t &... vParams){
 		const std::size_t uCurrentSize = GetSize();
 		if(uNewSize > uCurrentSize){
-			FillAtEnd(uNewSize - uCurrentSize, std::forward<Params_t>(vParams)...);
+			FillAtEnd(uNewSize - uCurrentSize, vParams...);
 		} else if(uNewSize < uCurrentSize){
 			TruncateFromEnd(uCurrentSize - uNewSize);
 		}
@@ -363,7 +361,7 @@ public:
 	explicit VVector(std::size_t uCount, const Params_t &...vParams)
 		: VVector()
 	{
-		FillAtEnd(uCount, std::forward<Params_t>(vParams)...);
+		FillAtEnd(uCount, vParams...);
 	}
 	template<class Iterator_t>
 	VVector(Iterator_t itBegin, Iterator_t itEnd)
@@ -382,17 +380,17 @@ public:
 	{
 		MoveToEnd(vInitList.begin(), vInitList.end());
 	}
-	template<class OtherElement_t, std::size_t OTHER_ALT_STOR_THRESHOLD>
-	VVector(const VVector<OtherElement_t, OTHER_ALT_STOR_THRESHOLD> &rhs)
+	template<std::size_t OTHER_ALT_STOR_THRESHOLD>
+	VVector(const VVector<Element_t, OTHER_ALT_STOR_THRESHOLD> &rhs)
 		: VVector()
 	{
 		CopyToEnd(rhs.GetBegin(), rhs.GetEnd());
 	}
-	template<class OtherElement_t, std::size_t OTHER_ALT_STOR_THRESHOLD>
-	VVector(VVector<OtherElement_t, OTHER_ALT_STOR_THRESHOLD> &&rhs)
+	template<std::size_t OTHER_ALT_STOR_THRESHOLD>
+	VVector(VVector<Element_t, OTHER_ALT_STOR_THRESHOLD> &&rhs)
 		: VVector()
 	{
-		operator=<Element_t, 0>(std::move(rhs));
+		operator=(std::move(rhs));
 	}
 	VVector(const VVector &rhs)
 		: VVector()
@@ -402,21 +400,21 @@ public:
 	VVector(VVector &&rhs)
 		: VVector()
 	{
-		operator=<Element_t, 0>(std::move(rhs));
+		operator=(std::move(rhs));
 	}
 	VVector &operator=(std::initializer_list<Element_t> rhs){
 		Clear();
 		MoveToEnd(rhs.begin(), rhs.end());
 		return *this;
 	}
-	template<class OtherElement_t, std::size_t OTHER_ALT_STOR_THRESHOLD>
-	VVector &operator=(const VVector<OtherElement_t, OTHER_ALT_STOR_THRESHOLD> &rhs){
+	template<std::size_t OTHER_ALT_STOR_THRESHOLD>
+	VVector &operator=(const VVector<Element_t, OTHER_ALT_STOR_THRESHOLD> &rhs){
 		Clear();
 		CopyToEnd(rhs.GetBegin(), rhs.GetEnd());
 		return *this;
 	}
-	template<class OtherElement_t, std::size_t OTHER_ALT_STOR_THRESHOLD>
-	VVector &operator=(VVector<OtherElement_t, OTHER_ALT_STOR_THRESHOLD> &&rhs){
+	template<std::size_t OTHER_ALT_STOR_THRESHOLD>
+	VVector &operator=(VVector<Element_t, OTHER_ALT_STOR_THRESHOLD> &&rhs){
 		Clear();
 
 		if(rhs.xm_pBegin != (Element_t *)std::begin(rhs.xm_aSmall)){
@@ -443,30 +441,23 @@ public:
 		}
 		return *this;
 	}
-	template<class OtherElement_t>
-	VVector &operator=(VVector<OtherElement_t, 0> &&rhs){
-		Clear();
-
-		::operator delete(xm_pBegin);
-		xm_pBegin		= rhs.xm_pBegin;
-		xm_pEnd			= rhs.xm_pEnd;
-		xm_pEndOfStor	= rhs.xm_pEndOfStor;
-
-		rhs.xm_pBegin	= nullptr;
-		rhs.xm_pEnd		= nullptr;
-
-		return *this;
-	}
 	VVector &operator=(const VVector &rhs){
 		if(&rhs != this){
-			Clear();
-			CopyToEnd(rhs.GetBegin(), rhs.GetEnd());
+			operator=<0>(rhs);
 		}
 		return *this;
 	}
 	VVector &operator=(VVector &&rhs){
 		if(&rhs != this){
-			operator=<Element_t, 0>(std::move(rhs));
+			Clear();
+
+			::operator delete(xm_pBegin);
+			xm_pBegin		= rhs.xm_pBegin;
+			xm_pEnd			= rhs.xm_pEnd;
+			xm_pEndOfStor	= rhs.xm_pEndOfStor;
+
+			rhs.xm_pBegin	= nullptr;
+			rhs.xm_pEnd		= nullptr;
 		}
 		return *this;
 	}
@@ -507,10 +498,10 @@ public:
 		return (std::size_t)(GetEnd() - GetBegin());
 	}
 	template<typename... Params_t>
-	void Resize(std::size_t uNewSize, Params_t &&... vParams){
+	void Resize(std::size_t uNewSize, const Params_t &... vParams){
 		const std::size_t uCurrentSize = GetSize();
 		if(uNewSize > uCurrentSize){
-			FillAtEnd(uNewSize - uCurrentSize, std::forward<Params_t>(vParams)...);
+			FillAtEnd(uNewSize - uCurrentSize, vParams...);
 		} else if(uNewSize < uCurrentSize){
 			TruncateFromEnd(uCurrentSize - uNewSize);
 		}

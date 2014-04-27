@@ -30,7 +30,7 @@ EXTERN_C_BEGIN
 
 #define SZ_ERROR_DATA 1
 #define SZ_ERROR_MEM 2
-#define SZ_ERROR_CRC 3
+#define SZ_ERROR_Crc 3
 #define SZ_ERROR_UNSUPPORTED 4
 #define SZ_ERROR_PARAM 5
 #define SZ_ERROR_INPUT_EOF 6

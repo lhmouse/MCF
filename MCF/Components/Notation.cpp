@@ -35,11 +35,10 @@ WideString Unescape(const WideStringObserver &wsoSrc){
 		}
 	};
 
-	auto pwcCur = wsoSrc.GetBegin();
-	const auto itEnd = wsoSrc.GetEnd();
-	while(pwcCur != itEnd){
+	const auto pwcEnd = wsoSrc.GetEnd();
+	for(auto pwcCur = wsoSrc.GetBegin(); pwcCur != pwcEnd; ++pwcCur){
 		const auto wc = *pwcCur;
-		++pwcCur;
+
 		switch(eState){
 		case NORMAL:
 			if(wc == L'\\'){
@@ -69,6 +68,10 @@ WideString Unescape(const WideStringObserver &wsoSrc){
 
 			case L't':
 				wcsRet.Append(L'\t');
+				eState = NORMAL;
+				break;
+
+			case L'\n':
 				eState = NORMAL;
 				break;
 
@@ -131,9 +134,6 @@ WideString Unescape(const WideStringObserver &wsoSrc){
 				}
 			}
 			break;
-
-		default:
-			ASSERT(false);
 		}
 	}
 	if(eState == UCS_CODE){
@@ -143,8 +143,12 @@ WideString Unescape(const WideStringObserver &wsoSrc){
 	return std::move(wcsRet);
 }
 void Escape(WideString &wcsAppendTo, const WideStringObserver &wsoSrc){
-	wcsAppendTo.Reserve(wcsAppendTo.GetLength() + wsoSrc.GetLength());
-	for(const auto wc : wsoSrc){
+	const auto uSrcLength = wsoSrc.GetLength();
+	wcsAppendTo.Reserve(wcsAppendTo.GetLength() + uSrcLength);
+
+	for(std::size_t i = 0; i < uSrcLength; ++i){
+		const auto wc = wsoSrc[i];
+
 		switch(wc){
 		case L'\\':
 		case L'=':
@@ -155,20 +159,26 @@ void Escape(WideString &wcsAppendTo, const WideStringObserver &wsoSrc){
 			wcsAppendTo.Append(wc);
 			break;
 
-		case L'\n':
-			wcsAppendTo.Append(L"\\n");
+		case L' ':
+			if((i == 0) || (i == uSrcLength - 1)){
+				wcsAppendTo.Append(L'\\');
+			}
+			wcsAppendTo.Append(L' ');
 			break;
 
-		case L'\b':
-			wcsAppendTo.Append(L"\\b");
+		case L'\n':
+			wcsAppendTo.Append(L'\\');
+			wcsAppendTo.Append(L'n');
 			break;
 
 		case L'\r':
-			wcsAppendTo.Append(L"\\r");
+			wcsAppendTo.Append(L'\\');
+			wcsAppendTo.Append(L'r');
 			break;
 
 		case L'\t':
-			wcsAppendTo.Append(L"\\t");
+			wcsAppendTo.Append(L'\\');
+			wcsAppendTo.Append(L't');
 			break;
 
 		default:
@@ -203,6 +213,17 @@ NotationPackage *NotationPackage::CreatePackage(WideString wcsName){
 	}
 	return &(pNode->GetElement());
 }
+bool NotationPackage::RemovePackage(const WideStringObserver &wsoName) noexcept {
+	const auto pNode = xm_mapPackages.Find<0>(wsoName);
+	if(!pNode){
+		return false;
+	}
+	xm_mapPackages.Erase(pNode);
+	return true;
+}
+void NotationPackage::ClearPackages() noexcept {
+	xm_mapPackages.Clear();
+}
 
 const WideString *NotationPackage::GetValue(const WideStringObserver &wsoName) const noexcept {
 	const auto pNode = xm_mapValues.Find<0>(wsoName);
@@ -225,10 +246,21 @@ WideString *NotationPackage::CreteValue(WideString wcsName){
 	}
 	return &(pNode->GetElement());
 }
+bool NotationPackage::RemoveValue(const WideStringObserver &wsoName) noexcept {
+	const auto pNode = xm_mapValues.Find<0>(wsoName);
+	if(!pNode){
+		return false;
+	}
+	xm_mapValues.Erase(pNode);
+	return true;
+}
+void NotationPackage::ClearValues() noexcept {
+	xm_mapPackages.Clear();
+}
 
 void NotationPackage::Clear() noexcept {
-	xm_mapPackages.Clear();
-	xm_mapValues.Clear();
+	ClearPackages();
+	ClearValues();
 }
 
 // ========== Notation ==========
@@ -237,17 +269,17 @@ std::pair<Notation::ErrorType, const wchar_t *> Notation::Parse(const WideString
 	Clear();
 
 	auto pwcRead = wsoData.GetBegin();
-	if(pwcRead == wsoData.GetEnd()){
+	const auto pwcEnd = wsoData.GetEnd();
+	if(pwcRead == pwcEnd){
 		return std::make_pair(ERR_NONE, pwcRead);
 	}
 
-	VVector<Package *> vecPackageStack;
-	vecPackageStack.Push(this);
+	VVector<Package *> vecPackageStack(1, this);
 
-	auto itNameBegin = pwcRead;
-	auto itNameEnd = pwcRead;
-	auto itValueBegin = pwcRead;
-	auto itValueEnd = pwcRead;
+	auto pwcNameBegin = pwcRead;
+	auto pwcNameEnd = pwcRead;
+	auto pwcValueBegin = pwcRead;
+	auto pwcValueEnd = pwcRead;
 
 	enum {
 		NAME_INDENT,
@@ -256,320 +288,378 @@ std::pair<Notation::ErrorType, const wchar_t *> Notation::Parse(const WideString
 		VAL_INDENT,
 		VAL_BODY,
 		VAL_PADDING,
-		COMMENT
+		COMMENT,
+		NAME_ESCAPED,
+		VAL_ESCAPED,
+		COMMENT_ESCAPED
 	} eState = NAME_INDENT;
 
-	bool bEscaped = false;
-
+	ErrorType eError;
 	const auto PushPackage = [&]{
-		ASSERT(itNameBegin != itNameEnd);
+		ASSERT(pwcNameBegin != pwcNameEnd);
+		ASSERT(!vecPackageStack.IsEmpty());
 
-		auto wcsName = Unescape(WideStringObserver(itNameBegin, itNameEnd));
+		auto wcsName = Unescape(WideStringObserver(pwcNameBegin, pwcNameEnd));
 		auto &mapPackages = vecPackageStack.GetEnd()[-1]->xm_mapPackages;
 		if(mapPackages.Find<0>(wcsName)){
+			eError = ERR_DUPLICATE_PACKAGE;
 			return false;
 		}
 		const auto pNewNode = mapPackages.Insert(Package(), std::move(wcsName));
 		vecPackageStack.Push(&(pNewNode->GetElement()));
-		itNameBegin = itNameEnd;
 		return true;
 	};
 	const auto PopPackage = [&]{
-		ASSERT(vecPackageStack.GetSize() > 0);
-
+		if(vecPackageStack.GetSize() <= 1){
+			eError = ERR_UNEXCEPTED_PACKAGE_CLOSE;
+			return false;
+		}
 		vecPackageStack.Pop();
-		itNameBegin = itNameEnd;
+		return true;
 	};
 	const auto SubmitValue = [&]{
-		ASSERT(itNameBegin != itNameEnd);
+		ASSERT(pwcNameBegin != pwcNameEnd);
+		ASSERT(!vecPackageStack.IsEmpty());
 
-		auto wcsName = Unescape(WideStringObserver(itNameBegin, itNameEnd));
-		auto wcsValue = Unescape(WideStringObserver(itValueBegin, itValueEnd));
+		auto wcsName = Unescape(WideStringObserver(pwcNameBegin, pwcNameEnd));
+		auto wcsValue = Unescape(WideStringObserver(pwcValueBegin, pwcValueEnd));
 		auto &mapValues = vecPackageStack.GetEnd()[-1]->xm_mapValues;
 		if(mapValues.Find<0>(wcsName)){
+			eError = ERR_DUPLICATE_VALUE;
 			return false;
 		}
 		mapValues.Insert(std::move(wcsValue), std::move(wcsName));
-		itValueBegin = itValueEnd;
 		return true;
 	};
 
 	do {
-		const wchar_t ch = *pwcRead;
+		const wchar_t wc = *pwcRead;
 
-		if(bEscaped){
-			bEscaped = false;
-		} else {
-			switch(ch){
-			case L'\\':
-				bEscaped = true;
-				break;
-
-			case L'=':
-				switch(eState){
-				case NAME_INDENT:
-					return std::make_pair(ERR_NO_VALUE_NAME, pwcRead);
-
-				case NAME_BODY:
-				case NAME_PADDING:
-					eState = VAL_INDENT;
-					continue;
-
-				case VAL_INDENT:
-				case VAL_BODY:
-				case VAL_PADDING:
-					break;
-
-				case COMMENT:
-					continue;
-				};
-				break;
-
-			case L'{':
-				switch(eState){
-				case NAME_INDENT:
-					return std::make_pair(ERR_NO_VALUE_NAME, pwcRead);
-
-				case NAME_BODY:
-				case NAME_PADDING:
-					if(!PushPackage()){
-						return std::make_pair(ERR_DUPLICATE_PACKAGE, pwcRead);
-					}
-					eState = NAME_INDENT;
-					continue;
-
-				case VAL_INDENT:
-				case VAL_BODY:
-				case VAL_PADDING:
-					if(!SubmitValue()){
-						return std::make_pair(ERR_DUPLICATE_VALUE, pwcRead);
-					}
-					if(!PushPackage()){
-						return std::make_pair(ERR_DUPLICATE_PACKAGE, pwcRead);
-					}
-					eState = NAME_INDENT;
-					continue;
-
-				case COMMENT:
-					continue;
-				};
-				break;
-
-			case L'}':
-				switch(eState){
-				case NAME_INDENT:
-					if(vecPackageStack.GetSize() == 1){
-						return std::make_pair(ERR_UNEXCEPTED_PACKAGE_CLOSE, pwcRead);
-					}
-					PopPackage();
-					eState = NAME_INDENT;
-					continue;
-
-				case NAME_BODY:
-				case NAME_PADDING:
-					return std::make_pair(ERR_EQU_EXPECTED, pwcRead);
-
-				case VAL_INDENT:
-				case VAL_BODY:
-				case VAL_PADDING:
-					if(!SubmitValue()){
-						return std::make_pair(ERR_DUPLICATE_VALUE, pwcRead);
-					}
-					if(vecPackageStack.GetSize() == 1){
-						return std::make_pair(ERR_UNEXCEPTED_PACKAGE_CLOSE, pwcRead);
-					}
-					PopPackage();
-					eState = NAME_INDENT;
-					continue;
-
-				case COMMENT:
-					continue;
-				};
-				break;
-
-			case L';':
-				switch(eState){
-				case NAME_INDENT:
-					eState = COMMENT;
-					continue;
-
-				case NAME_BODY:
-				case NAME_PADDING:
-					return std::make_pair(ERR_EQU_EXPECTED, pwcRead);
-
-				case VAL_INDENT:
-				case VAL_BODY:
-				case VAL_PADDING:
-					if(!SubmitValue()){
-						return std::make_pair(ERR_DUPLICATE_VALUE, pwcRead);
-					}
-					eState = COMMENT;
-					continue;
-
-				case COMMENT:
-					continue;
-				};
-				break;
-
-			case L'\n':
-				switch(eState){
-				case NAME_INDENT:
-					continue;
-
-				case NAME_BODY:
-				case NAME_PADDING:
-					return std::make_pair(ERR_EQU_EXPECTED, pwcRead);
-
-				case VAL_INDENT:
-				case VAL_BODY:
-				case VAL_PADDING:
-					if(!SubmitValue()){
-						return std::make_pair(ERR_DUPLICATE_VALUE, pwcRead);
-					}
-					eState = NAME_INDENT;
-					continue;
-
-				case COMMENT:
-					eState = NAME_INDENT;
-					continue;
-				};
-				break;
-			}
-		}
-
-		if(ch != L'\n'){
+		switch(wc){
+		case L'=':
 			switch(eState){
 			case NAME_INDENT:
-				if((ch == L' ') || (ch == L'\t')){
-					// eState = NAME_INDENT;
-				} else {
-					itNameBegin = pwcRead;
-					itNameEnd = pwcRead + 1;
-					eState = NAME_BODY;
-				}
-				continue;
+				return std::make_pair(ERR_NO_VALUE_NAME, pwcRead);
 
 			case NAME_BODY:
-				if((ch == L' ') || (ch == L'\t')){
-					eState = NAME_PADDING;
-				} else {
-					itNameEnd = pwcRead + 1;
-					// eState = NAME_BODY;
-				}
-				continue;
-
 			case NAME_PADDING:
-				if((ch == L' ') || (ch == L'\t')){
-					// eState = NAME_PADDING;
-				} else {
-					itNameEnd = pwcRead + 1;
-					eState = NAME_BODY;
-				}
+				eState = VAL_INDENT;
 				continue;
 
 			case VAL_INDENT:
-				if((ch == L' ') || (ch == L'\t')){
-					// eState = VAL_INDENT;
-				} else {
-					itValueBegin = pwcRead;
-					itValueEnd = pwcRead + 1;
-					eState = VAL_BODY;
-				}
-				continue;
-
 			case VAL_BODY:
-				if((ch == L' ') || (ch == L'\t')){
-					eState = VAL_PADDING;
-				} else {
-					itValueEnd = pwcRead + 1;
-					// eState = VAL_BODY;
+			case VAL_PADDING:
+			case COMMENT:
+			case NAME_ESCAPED:
+			case VAL_ESCAPED:
+			case COMMENT_ESCAPED:
+				break;
+			};
+			break;
+
+		case L'{':
+			switch(eState){
+			case NAME_INDENT:
+				return std::make_pair(ERR_NO_VALUE_NAME, pwcRead);
+
+			case NAME_BODY:
+			case NAME_PADDING:
+				if(!PushPackage()){
+					return std::make_pair(eError, pwcRead);
 				}
+				eState = NAME_INDENT;
 				continue;
 
+			case VAL_INDENT:
+			case VAL_BODY:
 			case VAL_PADDING:
-				if((ch == L' ') || (ch == L'\t')){
-					// eState = VAL_PADDING;
-				} else {
-					itValueEnd = pwcRead + 1;
-					eState = VAL_BODY;
+				if(!SubmitValue() || !PushPackage()){
+					return std::make_pair(eError, pwcRead);
 				}
+				eState = NAME_INDENT;
 				continue;
 
 			case COMMENT:
-				continue;
-			}
-		}
-	} while(++pwcRead != wsoData.GetEnd());
+			case NAME_ESCAPED:
+			case VAL_ESCAPED:
+			case COMMENT_ESCAPED:
+				break;
+			};
+			break;
 
-	if(bEscaped){
-		return std::make_pair(ERR_ESCAPE_AT_EOF, pwcRead);
-	}
-	if(vecPackageStack.GetSize() > 1){
-		return std::make_pair(ERR_UNCLOSED_PACKAGE, pwcRead);
-	}
+		case L'}':
+			switch(eState){
+			case NAME_INDENT:
+				if(!PopPackage()){
+					return std::make_pair(eError, pwcRead);
+				}
+				// eState = NAME_INDENT;
+				continue;
+
+			case NAME_BODY:
+			case NAME_PADDING:
+				return std::make_pair(ERR_EQU_EXPECTED, pwcRead);
+
+			case VAL_INDENT:
+			case VAL_BODY:
+			case VAL_PADDING:
+				if(!SubmitValue() || !PopPackage()){
+					return std::make_pair(eError, pwcRead);
+				}
+				eState = NAME_INDENT;
+				continue;
+
+			case COMMENT:
+			case NAME_ESCAPED:
+			case VAL_ESCAPED:
+			case COMMENT_ESCAPED:
+				break;
+			};
+			break;
+
+		case L';':
+			switch(eState){
+			case NAME_INDENT:
+				eState = COMMENT;
+				continue;
+
+			case NAME_BODY:
+			case NAME_PADDING:
+				return std::make_pair(ERR_EQU_EXPECTED, pwcRead);
+
+			case VAL_INDENT:
+			case VAL_BODY:
+			case VAL_PADDING:
+				if(!SubmitValue()){
+					return std::make_pair(eError, pwcRead);
+				}
+				eState = COMMENT;
+				continue;
+
+			case COMMENT:
+			case NAME_ESCAPED:
+			case VAL_ESCAPED:
+			case COMMENT_ESCAPED:
+				break;
+			};
+			break;
+
+		case L'\n':
+			switch(eState){
+			case NAME_INDENT:
+				continue;
+
+			case NAME_BODY:
+			case NAME_PADDING:
+				return std::make_pair(ERR_EQU_EXPECTED, pwcRead);
+
+			case VAL_INDENT:
+			case VAL_BODY:
+			case VAL_PADDING:
+				if(!SubmitValue()){
+					return std::make_pair(eError, pwcRead);
+				}
+				eState = NAME_INDENT;
+				continue;
+
+			case COMMENT:
+				eState = NAME_INDENT;
+				continue;
+
+			case NAME_ESCAPED:
+			case VAL_ESCAPED:
+			case COMMENT_ESCAPED:
+				break;
+			};
+			break;
+		}
+
+		switch(eState){
+		case NAME_INDENT:
+			switch(wc){
+			case L' ':
+			case L'\t':
+				// eState = NAME_INDENT;
+				break;
+
+			default:
+				pwcNameBegin = pwcRead;
+				pwcNameEnd = pwcRead + 1;
+				eState = (wc == L'\\') ? NAME_ESCAPED : NAME_BODY;
+				break;
+			}
+			break;
+
+		case NAME_BODY:
+			switch(wc){
+			case L' ':
+			case L'\t':
+				eState = NAME_PADDING;
+				break;
+
+			default:
+				pwcNameEnd = pwcRead + 1;
+				if(wc == L'\\'){
+					eState = NAME_ESCAPED;
+				}
+				break;
+			}
+			break;
+
+		case NAME_PADDING:
+			switch(wc){
+			case L' ':
+			case L'\t':
+				// eState = NAME_PADDING;
+				break;
+
+			default:
+				pwcNameEnd = pwcRead + 1;
+				eState = (wc == L'\\') ? NAME_ESCAPED : NAME_BODY;
+				break;
+			}
+			break;
+
+		case VAL_INDENT:
+			switch(wc){
+			case L' ':
+			case L'\t':
+				// eState = VAL_INDENT;
+				break;
+
+			default:
+				pwcValueBegin = pwcRead;
+				pwcValueEnd = pwcRead + 1;
+				eState = (wc == L'\\') ? VAL_ESCAPED : VAL_BODY;
+				break;
+			}
+			break;
+
+		case VAL_BODY:
+			switch(wc){
+			case L' ':
+			case L'\t':
+				eState = VAL_PADDING;
+				break;
+
+			default:
+				pwcValueEnd = pwcRead + 1;
+				if(wc == L'\\'){
+					eState = VAL_ESCAPED;
+				}
+				break;
+			}
+			break;
+
+		case VAL_PADDING:
+			switch(wc){
+			case L' ':
+			case L'\t':
+				// eState = VAL_PADDING;
+				break;
+
+			default:
+				pwcValueEnd = pwcRead + 1;
+				eState = (wc == L'\\') ? VAL_ESCAPED : VAL_BODY;
+				break;
+			}
+			break;
+
+		case COMMENT:
+			if(wc == L'\\'){
+				eState = COMMENT_ESCAPED;
+			}
+			break;
+
+		case NAME_ESCAPED:
+			pwcNameEnd = pwcRead + 1;
+			eState = NAME_BODY;
+			break;
+
+		case VAL_ESCAPED:
+			pwcValueEnd = pwcRead + 1;
+			eState = VAL_BODY;
+			break;
+
+		case COMMENT_ESCAPED:
+			eState = COMMENT;
+			break;
+		}
+	} while(++pwcRead != pwcEnd);
+
 	switch(eState){
+	case NAME_INDENT:
+		break;
+
 	case NAME_BODY:
 	case NAME_PADDING:
+	case NAME_ESCAPED:
 		return std::make_pair(ERR_EQU_EXPECTED, pwcRead);
 
 	case VAL_INDENT:
 	case VAL_BODY:
 	case VAL_PADDING:
+	case VAL_ESCAPED:
 		if(!SubmitValue()){
-			return std::make_pair(ERR_DUPLICATE_VALUE, pwcRead);
+			return std::make_pair(eError, pwcRead);
 		}
 		break;
 
-	default:
+	case COMMENT:
+	case COMMENT_ESCAPED:
 		break;
 	};
+	if(vecPackageStack.GetSize() > 1){
+		return std::make_pair(ERR_UNCLOSED_PACKAGE, pwcRead);
+	}
 
 	return std::make_pair(ERR_NONE, pwcRead);
 }
 WideString Notation::Export(const WideStringObserver &wsoIndent) const {
 	WideString wcsRet;
 
-	VVector<std::tuple<const WideString *, const Package *, bool>> vecPackageStack;
-	vecPackageStack.Push(nullptr, this, true);
+	VVector<std::pair<const Package *, decltype(xm_mapPackages.GetBegin<0>())>> vecPackageStack;
+	vecPackageStack.Push(this, xm_mapPackages.GetBegin<0>());
 	WideString wcsIndent;
 	for(;;){
 		auto &vTop = vecPackageStack.GetEnd()[-1];
-		const auto &pkgTop = *std::get<1>(vTop);
+		const auto &pkgTop = *(vTop.first);
 
-		if(std::get<2>(vTop)){
-			std::get<2>(vTop) = false;
+		if(vTop.second){
+			const auto &vSubNode = *(vTop.second);
+			vTop.second = vTop.second->GetNext<0>();
 
-			if(std::get<0>(vTop)){
-				wcsRet.Append(wcsIndent);
-				Escape(wcsRet, *std::get<0>(vTop));
-				wcsRet.Append(L" {\n");
-				wcsIndent.Append(wsoIndent);
-			}
-			for(auto pNode = pkgTop.xm_mapPackages.GetRBegin<0>(); pNode; pNode = pNode->GetPrev<0>()){
-				vecPackageStack.Push(&(pNode->GetIndex<0>()), &(pNode->GetElement()), true);
-			}
+			wcsRet.Append(wcsIndent);
+			Escape(wcsRet, vSubNode.GetIndex<0>());
+			wcsRet.Append(L' ');
+			wcsRet.Append(L'{');
+			wcsRet.Append(L'\n');
+			wcsIndent.Append(wsoIndent);
+			vecPackageStack.Push(&(vSubNode.GetElement()), vSubNode.GetElement().xm_mapPackages.GetBegin<0>());
 			continue;
 		}
 
 		for(auto pNode = pkgTop.xm_mapValues.GetBegin<0>(); pNode; pNode = pNode->GetNext<0>()){
 			wcsRet.Append(wcsIndent);
 			Escape(wcsRet, pNode->GetIndex<0>());
-			wcsRet.Append(L" = ");
+			wcsRet.Append(L' ');
+			wcsRet.Append(L'=');
+			wcsRet.Append(L' ');
 			Escape(wcsRet, pNode->GetElement());
 			wcsRet.Append(L'\n');
 		}
 
 		vecPackageStack.Pop();
-
-		if(!std::get<0>(vTop)){
+		if(vecPackageStack.IsEmpty()){
 			break;
 		}
+
 		wcsIndent.Truncate(wsoIndent.GetLength());
 		wcsRet.Append(wcsIndent);
-		wcsRet.Append(L"}\n");
+		wcsRet.Append(L'}');
+		wcsRet.Append(L'\n');
 	}
 
-	ASSERT(vecPackageStack.IsEmpty());
 	ASSERT(wcsIndent.IsEmpty());
 
 	return std::move(wcsRet);

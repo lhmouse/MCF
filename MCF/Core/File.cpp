@@ -78,18 +78,18 @@ public:
 	}
 
 	DWORD Read(void *pBuffer, DWORD dwBytesToRead, std::uint64_t u64Offset, AsyncProc *pfnAsyncProc) const {
-		xApcResult ApcResult;
-		ApcResult.dwBytesTransferred = 0;
-		ApcResult.dwErrorCode = ERROR_SUCCESS;
+		xApcResult vApcResult;
+		vApcResult.dwBytesTransferred = 0;
+		vApcResult.dwErrorCode = ERROR_SUCCESS;
 
-		OVERLAPPED Overlapped;
-		BZero(Overlapped);
-		Overlapped.Offset = (DWORD)u64Offset;
-		Overlapped.OffsetHigh = (DWORD)(u64Offset >> 32);
-		Overlapped.hEvent = (HANDLE)&ApcResult;
-		const bool bSucceeds = ::ReadFileEx(xm_hFile.Get(), pBuffer, dwBytesToRead, &Overlapped, &xAioCallback);
+		OVERLAPPED vOverlapped;
+		BZero(vOverlapped);
+		vOverlapped.Offset = (DWORD)u64Offset;
+		vOverlapped.OffsetHigh = (DWORD)(u64Offset >> 32);
+		vOverlapped.hEvent = (HANDLE)&vApcResult;
+		const bool bSucceeds = ::ReadFileEx(xm_hFile.Get(), pBuffer, dwBytesToRead, &vOverlapped, &xAioCallback);
 		if(!bSucceeds){
-			ApcResult.dwErrorCode = ::GetLastError();
+			vApcResult.dwErrorCode = ::GetLastError();
 		}
 		std::exception_ptr ep;
 		if(pfnAsyncProc){
@@ -106,23 +106,23 @@ public:
 			std::rethrow_exception(ep);
 		}
 		if(!bSucceeds){
-			MCF_THROW(ApcResult.dwErrorCode, L"::ReadFileEx() 失败。");
+			MCF_THROW(vApcResult.dwErrorCode, L"::ReadFileEx() 失败。");
 		}
-		return ApcResult.dwBytesTransferred;
+		return vApcResult.dwBytesTransferred;
 	}
 	void Write(std::uint64_t u64Offset, const void *pBuffer, DWORD dwBytesToWrite, AsyncProc *pfnAsyncProc){
-		xApcResult ApcResult;
-		ApcResult.dwBytesTransferred = 0;
-		ApcResult.dwErrorCode = ERROR_SUCCESS;
+		xApcResult vApcResult;
+		vApcResult.dwBytesTransferred = 0;
+		vApcResult.dwErrorCode = ERROR_SUCCESS;
 
-		OVERLAPPED Overlapped;
-		BZero(Overlapped);
-		Overlapped.Offset = (DWORD)u64Offset;
-		Overlapped.OffsetHigh = (DWORD)(u64Offset >> 32);
-		Overlapped.hEvent = (HANDLE)&ApcResult;
-		const bool bSucceeds = ::WriteFileEx(xm_hFile.Get(), pBuffer, dwBytesToWrite, &Overlapped, &xAioCallback);
+		OVERLAPPED vOverlapped;
+		BZero(vOverlapped);
+		vOverlapped.Offset = (DWORD)u64Offset;
+		vOverlapped.OffsetHigh = (DWORD)(u64Offset >> 32);
+		vOverlapped.hEvent = (HANDLE)&vApcResult;
+		const bool bSucceeds = ::WriteFileEx(xm_hFile.Get(), pBuffer, dwBytesToWrite, &vOverlapped, &xAioCallback);
 		if(!bSucceeds){
-			ApcResult.dwErrorCode = ::GetLastError();
+			vApcResult.dwErrorCode = ::GetLastError();
 		}
 		std::exception_ptr ep;
 		if(pfnAsyncProc){
@@ -139,7 +139,7 @@ public:
 			std::rethrow_exception(ep);
 		}
 		if(!bSucceeds){
-			MCF_THROW(ApcResult.dwErrorCode, L"::WriteFileEx() 失败。");
+			MCF_THROW(vApcResult.dwErrorCode, L"::WriteFileEx() 失败。");
 		}
 	}
 };

@@ -7,7 +7,7 @@
 #include "../MCFCRT.h"
 #include <windows.h>
 
-// -static -nostartfiles -Wl,-e__MCFExeStartup,--disable-runtime-pseudo-reloc,--disable-auto-import,-lmcfcrt,-lstdc++,-lgcc,-lgcc_eh,-lmingwex,-lmcfcrt
+// -static -nostartfiles -Wl,-e__MCF_ExeStartup,--disable-runtime-pseudo-reloc,--disable-auto-import,-lmcfcrt,-lstdc++,-lgcc,-lgcc_eh,-lmingwex,-lmcfcrt
 
 extern unsigned long __MCF_CRT_ExeInitializeArgV();
 extern void __MCF_CRT_ExeUninitializeArgV();
@@ -36,8 +36,8 @@ static __attribute__((cdecl, used, noreturn)) int AlignedStartup(){
 
 __asm__(
 	"	.align 16 \n"
-	".global __MCFExeStartup \n"
-	"__MCFExeStartup: \n"
+	".global __MCF_ExeStartup \n"
+	"__MCF_ExeStartup: \n"
 #ifdef _WIN64
 	"	and rsp, -0x10 \n"
 	"	sub rsp, 0x10 \n"

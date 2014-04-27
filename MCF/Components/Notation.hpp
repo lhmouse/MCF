@@ -6,9 +6,7 @@
 #define MCF_NOTATION_HPP_
 
 #include "../Core/String.hpp"
-#include "../Core/Utilities.hpp"
 #include "../Core/MultiIndexedMap.hpp"
-#include <utility>
 
 namespace MCF {
 
@@ -26,52 +24,16 @@ public:
 	const NotationPackage *GetPackage(const WideStringObserver &wsoName) const noexcept;
 	NotationPackage *GetPackage(const WideStringObserver &wsoName) noexcept;
 	NotationPackage *CreatePackage(WideString wcsName);
+	bool RemovePackage(const WideStringObserver &wsoName) noexcept;
+	void ClearPackages() noexcept;
 
 	const WideString *GetValue(const WideStringObserver &wsoName) const noexcept;
 	WideString *GetValue(const WideStringObserver &wsoName) noexcept;
 	WideString *CreteValue(WideString wcsName);
+	bool RemoveValue(const WideStringObserver &wsoName) noexcept;
+	void ClearValues() noexcept;
 
 	void Clear() noexcept;
-
-	template<class... PathSegs_t>
-	const NotationPackage *GetPackageFromPath(const PathSegs_t &... vPathSegs) const noexcept {
-		auto *pRet = this;
-		CallOnEach(
-			[&](const WideStringObserver &wsoName) noexcept {
-				if(pRet){
-					pRet = pRet->GetPackage(wsoName);
-				}
-			},
-			WideStringObserver(vPathSegs)...
-		);
-		return pRet;
-	}
-	template<class... PathSegs_t>
-	NotationPackage *GetPackageFromPath(const PathSegs_t &... vPathSegs) noexcept {
-		auto *pRet = this;
-		CallOnEach(
-			[&](const WideStringObserver &wsoName) noexcept {
-				if(pRet){
-					pRet = pRet->GetPackage(wsoName);
-				}
-			},
-			WideStringObserver(vPathSegs)...
-		);
-		return pRet;
-	}
-	template<class... PathSegs_t>
-	NotationPackage *CreatePackageFromPath(PathSegs_t &&... vPathSegs) noexcept {
-		auto *pRet = this;
-		return CallOnEach(
-			[&](WideString wcsName) noexcept {
-				if(pRet){
-					pRet = pRet->CreatePackage(std::move(wcsName));
-				}
-			},
-			WideString(std::forward<PathSegs_t>(vPathSegs))...
-		);
-		return pRet;
-	}
 };
 
 class Notation : public NotationPackage {
@@ -83,7 +45,6 @@ public:
 		ERR_UNEXCEPTED_PACKAGE_CLOSE,
 		ERR_EQU_EXPECTED,
 		ERR_UNCLOSED_PACKAGE,
-		ERR_ESCAPE_AT_EOF,
 		ERR_DUPLICATE_PACKAGE,
 		ERR_DUPLICATE_VALUE
 	} ErrorType;

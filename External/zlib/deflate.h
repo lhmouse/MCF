@@ -55,7 +55,7 @@
 #define EXTRA_STATE   69
 #define NAME_STATE    73
 #define COMMENT_STATE 91
-#define HCRC_STATE   103
+#define HCrc_STATE   103
 #define BUSY_STATE   113
 #define FINISH_STATE 666
 /* Stream status */

@@ -6,22 +6,42 @@
 #define MCF_T_EXPRESSION_HPP_
 
 #include "../Core/String.hpp"
-#include "../Core/Utilities.hpp"
 #include "../Core/VVector.hpp"
-#include <memory>
 #include <utility>
 
 namespace MCF {
 
-struct TExpressionNode {
-	WideString m_wcsName;
-	VVector<std::unique_ptr<TExpressionNode>> m_vecChildren;
+class TExpressionNode {
+	friend class TExpression;
+
+public:
+	typedef std::pair<WideString, TExpressionNode> Child;
+
+private:
+	Vector<Child> xm_vecChildren;
+
+public:
+	const Vector<Child> &GetChildren() const noexcept {
+		return xm_vecChildren;
+	}
+	Vector<Child> &GetChildren() noexcept {
+		return xm_vecChildren;
+	}
+	TExpressionNode &PushChild(const WideStringObserver &wsoName){
+		return xm_vecChildren.Push(WideString(wsoName), TExpressionNode()).second;
+	}
+	void Clear() noexcept {
+		xm_vecChildren.Clear();
+	}
 };
 
 class TExpression : public TExpressionNode {
 public:
 	typedef enum {
 		ERR_NONE,
+		ERR_UNEXCEPTED_NODE_CLOSE,
+		ERR_UNCLOSED_QUOTE,
+		ERR_UNCLOSED_NODE
 	} ErrorType;
 
 	typedef TExpressionNode Node;

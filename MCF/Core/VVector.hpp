@@ -120,7 +120,7 @@ public:
 		}
 		return *this;
 	}
-	VVector &operator=(VVector<Element_t, 0> &&rhs){
+	VVector &operator=(VVector<Element_t, 0> &&rhs) noexcept {
 		Clear();
 
 		if(xm_pBegin != (Element_t *)std::begin(xm_aSmall)){
@@ -447,7 +447,7 @@ public:
 		}
 		return *this;
 	}
-	VVector &operator=(VVector &&rhs){
+	VVector &operator=(VVector &&rhs) noexcept {
 		if(&rhs != this){
 			Clear();
 

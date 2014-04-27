@@ -444,14 +444,14 @@ public:
 	std::size_t Find(const Observer &obsToFind, std::ptrdiff_t nOffsetBegin = 0) const noexcept {
 		return GetObserver().Find(obsToFind, nOffsetBegin);
 	}
-	std::size_t Find(Char_t chToFind, std::ptrdiff_t nOffsetBegin = 0) const noexcept {
-		return GetObserver().Find(chToFind, nOffsetBegin);
+	std::size_t Find(Char_t chToFind, std::size_t uRepCount = 1, std::ptrdiff_t nOffsetBegin = 0) const noexcept {
+		return GetObserver().Find(chToFind, uRepCount, nOffsetBegin);
 	}
 	std::size_t FindBackward(const Observer &obsToFind, std::ptrdiff_t nOffsetEnd = -1) const noexcept {
 		return GetObserver().FindBackward(obsToFind, nOffsetEnd);
 	}
-	std::size_t FindBackward(Char_t chToFind, std::ptrdiff_t nOffsetEnd = -1) const noexcept {
-		return GetObserver().FindBackward(chToFind, nOffsetEnd);
+	std::size_t FindBackward(Char_t chToFind, std::size_t uRepCount = 1, std::ptrdiff_t nOffsetEnd = -1) const noexcept {
+		return GetObserver().FindBackward(chToFind, uRepCount, nOffsetEnd);
 	}
 
 	void Replace(std::ptrdiff_t nBegin, std::ptrdiff_t nEnd, Char_t chReplacement, std::size_t uCount = 1){

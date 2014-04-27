@@ -11,10 +11,10 @@ using namespace MCF;
 namespace {
 
 struct HeapDestroyer {
-	constexpr HANDLE operator()() const {
+	constexpr HANDLE operator()() const noexcept {
 		return NULL;
 	}
-	void operator()(HANDLE hHeap) const {
+	void operator()(HANDLE hHeap) const noexcept {
 		::HeapDestroy(hHeap);
 	}
 };

@@ -13,10 +13,10 @@ namespace {
 class EventDelegate : CONCRETE(Event) {
 private:
 	struct xEventCloser {
-		constexpr HANDLE operator()() const {
+		constexpr HANDLE operator()() const noexcept {
 			return NULL;
 		}
-		void operator()(HANDLE hEvent) const {
+		void operator()(HANDLE hEvent) const noexcept {
 			::CloseHandle(hEvent);
 		}
 	};

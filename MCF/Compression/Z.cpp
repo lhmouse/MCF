@@ -84,7 +84,7 @@ public:
 			MCF_THROW(ulErrorCode, L"::deflateInit2() 失败。");
 		}
 	}
-	~ZEncoderDelegate(){
+	~ZEncoderDelegate() noexcept {
 		::deflateEnd(this);
 	}
 
@@ -187,7 +187,7 @@ public:
 			MCF_THROW(ulErrorCode, L"::inflateInit2() 失败。");
 		}
 	}
-	~ZDecoderDelegate(){
+	~ZDecoderDelegate() noexcept {
 		::inflateEnd(this);
 	}
 

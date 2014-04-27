@@ -352,20 +352,17 @@ public:
 	std::size_t xm_uSize;
 
 public:
-	MultiIndexedMap() noexcept {
-		for(auto &vPointers : xm_arvIndexPointers){
-			vPointers.pFront	= nullptr;
-			vPointers.pRoot		= nullptr;
-			vPointers.pBack		= nullptr;
-		}
-		xm_uSize = 0;
+	constexpr MultiIndexedMap() noexcept
+		: xm_arvIndexPointers{ }
+		, xm_uSize(0)
+	{
 	}
-	MultiIndexedMap(const MultiIndexedMap &rhs) noexcept
+	MultiIndexedMap(const MultiIndexedMap &rhs)
 		: MultiIndexedMap()
 	{
 		xCloneRecur(rhs);
 	}
-	MultiIndexedMap &operator=(const MultiIndexedMap &rhs) noexcept {
+	MultiIndexedMap &operator=(const MultiIndexedMap &rhs){
 		if(this != &rhs){
 			Clear();
 			xCloneRecur(rhs);
@@ -470,12 +467,12 @@ public:
 		++xm_uSize;
 		return pNode;
 	}
-	void Erase(Node *pNode) noexcept {
+	void Erase(Node *pNode){
 		xDetachAll<INDEX_COUNT - 1>(pNode);
 		--xm_uSize;
 		delete pNode;
 	}
-	void Clear() noexcept {
+	void Clear(){
 		AvlNodeHeader *pAvl = xm_arvIndexPointers[0].pFront;
 		while(pAvl){
 			Node *const pNode = Node::template xNodeFromAvl<0>(pAvl);

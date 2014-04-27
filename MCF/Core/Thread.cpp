@@ -14,10 +14,10 @@ namespace {
 class ThreadDelegate : CONCRETE(Thread) {
 private:
 	struct xThreadCloser {
-		constexpr HANDLE operator()() const {
+		constexpr HANDLE operator()() const noexcept {
 			return NULL;
 		}
-		void operator()(HANDLE hThread) const {
+		void operator()(HANDLE hThread) const noexcept {
 			::CloseHandle(hThread);
 		}
 	};

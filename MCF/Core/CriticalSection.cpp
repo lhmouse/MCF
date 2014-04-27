@@ -21,7 +21,7 @@ public:
 		::InitializeCriticalSectionAndSpinCount(&xm_vCriticalSecion, ulSpinCount);
 #endif
 	}
-	~CriticalSectionDelegate(){
+	~CriticalSectionDelegate() noexcept {
 		::DeleteCriticalSection(&xm_vCriticalSecion);
 	}
 

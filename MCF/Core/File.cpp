@@ -16,10 +16,10 @@ namespace {
 class FileDelegate : CONCRETE(File) {
 private:
 	struct xFileCloser {
-		constexpr HANDLE operator()() const {
+		constexpr HANDLE operator()() const noexcept {
 			return INVALID_HANDLE_VALUE;
 		}
-		void operator()(HANDLE hFile) const {
+		void operator()(HANDLE hFile) const noexcept {
 			::CloseHandle(hFile);
 		}
 	};

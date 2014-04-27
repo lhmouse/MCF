@@ -13,10 +13,10 @@ namespace {
 class MutexDelegate : CONCRETE(Mutex) {
 private:
 	struct xMutexCloser {
-		constexpr HANDLE operator()() const {
+		constexpr HANDLE operator()() const noexcept {
 			return NULL;
 		}
-		void operator()(HANDLE hMutex) const {
+		void operator()(HANDLE hMutex) const noexcept {
 			::CloseHandle(hMutex);
 		}
 	};

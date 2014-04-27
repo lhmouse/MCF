@@ -37,7 +37,7 @@ private:
 	static void xCtorWrapper(void *pObj, std::intptr_t nParam){
 		TupleConstruct(pObj, ((const ThreadLocal *)nParam)->xm_vInitParams);
 	}
-	static void xDtorWrapper(void *pObj) noexcept {
+	static void xDtorWrapper(void *pObj) noexcept(noexcept(((Object_t *)pObj)->~Object_t())) {
 		((Object_t *)pObj)->~Object_t();
 	}
 

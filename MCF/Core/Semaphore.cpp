@@ -13,10 +13,10 @@ namespace {
 class SemaphoreDelegate : CONCRETE(Semaphore) {
 private:
 	struct xSemaphoreCloser {
-		constexpr HANDLE operator()() const {
+		constexpr HANDLE operator()() const noexcept {
 			return NULL;
 		}
-		void operator()(HANDLE hSemaphore) const {
+		void operator()(HANDLE hSemaphore) const noexcept {
 			::CloseHandle(hSemaphore);
 		}
 	};

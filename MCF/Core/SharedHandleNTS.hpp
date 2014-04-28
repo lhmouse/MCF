@@ -217,7 +217,7 @@ public:
 		Reset(std::move(rhs));
 		return *this;
 	}
-	~WeakHandleNts(){
+	~WeakHandleNts() noexcept {
 		Reset();
 	}
 
@@ -429,7 +429,7 @@ public:
 		Reset(std::move(rhs));
 		return *this;
 	}
-	~SharedHandleNts(){
+	~SharedHandleNts() noexcept {
 		Reset();
 	}
 

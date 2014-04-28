@@ -44,7 +44,7 @@ struct NonCopyable_ {
 // ABSTRACT / CONCRETE
 //----------------------------------------------------------------------------
 struct Abstract_ {
-	virtual ~Abstract_(){ }
+	virtual ~Abstract_() noexcept { }
 	virtual void MCF_PureAbstractFunction_() = 0;
 };
 

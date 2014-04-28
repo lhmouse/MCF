@@ -380,7 +380,7 @@ public:
 		Swap(rhs);
 		return *this;
 	}
-	~MultiIndexedMap(){
+	~MultiIndexedMap() noexcept {
 		Clear();
 	}
 

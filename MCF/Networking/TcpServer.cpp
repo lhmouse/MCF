@@ -85,7 +85,7 @@ public:
 
 		xm_pthrdListener = Thread::Create(std::bind(&TcpServerDelegate::xListenerProc, this), false);
 	}
-	~TcpServerDelegate(){
+	~TcpServerDelegate() noexcept {
 		__atomic_store_n(&xm_bStopNow, true, __ATOMIC_RELEASE);
 		xm_pthrdListener->Wait();
 	}

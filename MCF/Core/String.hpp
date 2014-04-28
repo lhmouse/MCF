@@ -107,7 +107,7 @@ public:
 		Assign(std::move(rhs));
 		return *this;
 	}
-	~String(){
+	~String() noexcept {
 		if(xm_vStorage.chNull != Char_t()){
 			delete[] xm_vStorage.pchLargeBegin;
 		}

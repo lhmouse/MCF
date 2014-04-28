@@ -33,7 +33,7 @@ struct WSAInitializer : NO_COPY {
 			MCF_THROW(::WSAGetLastError(), L"::WSAStartup() 失败。");
 		}
 	}
-	~WSAInitializer(){
+	~WSAInitializer() noexcept {
 		::WSACleanup();
 	}
 };

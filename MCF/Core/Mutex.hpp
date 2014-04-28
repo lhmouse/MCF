@@ -44,7 +44,7 @@ public:
 		Lock(pOwner);
 		return *this;
 	}
-	~MutexLock(){
+	~MutexLock() noexcept {
 		Unlock();
 	}
 

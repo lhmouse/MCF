@@ -229,7 +229,7 @@ public:
 		Reset(std::move(rhs));
 		return *this;
 	}
-	~WeakHandle(){
+	~WeakHandle() noexcept {
 		Reset();
 	}
 
@@ -441,7 +441,7 @@ public:
 		Reset(std::move(rhs));
 		return *this;
 	}
-	~SharedHandle(){
+	~SharedHandle() noexcept {
 		Reset();
 	}
 

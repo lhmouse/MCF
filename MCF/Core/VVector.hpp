@@ -149,7 +149,7 @@ public:
 		}
 		return *this;
 	}
-	~VVector(){
+	~VVector() noexcept {
 		Clear();
 
 		if(xm_pBegin != (Element_t *)std::begin(xm_aSmall)){
@@ -465,7 +465,7 @@ public:
 		}
 		return *this;
 	}
-	~VVector(){
+	~VVector() noexcept {
 		Clear();
 
 		::operator delete(xm_pBegin);

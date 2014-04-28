@@ -5,7 +5,7 @@
 #define WIN32_LEAN_AND_MEAN
 
 #include "mingw_hacks.h"
-#include "../std/ext/assert.h"
+#include "../stdc/ext/assert.h"
 #include "thread.h"
 #include <stdlib.h>
 #include <windows.h>

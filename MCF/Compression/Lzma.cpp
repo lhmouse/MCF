@@ -4,7 +4,7 @@
 
 #include "../StdMCF.hpp"
 #include "Lzma.hpp"
-#include "../../MCFCRT/std/ext/offset_of.h"
+#include "../../MCFCRT/stdc/ext/offset_of.h"
 #include "../Core/UniqueHandle.hpp"
 #include "../Core/Exception.hpp"
 

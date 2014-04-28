@@ -5,7 +5,7 @@
 #ifndef MCF_STRING_OBSERVER_HPP_
 #define MCF_STRING_OBSERVER_HPP_
 
-#include "../../MCFCRT/std/ext/assert.h"
+#include "../../MCFCRT/stdc/ext/assert.h"
 #include "VVector.hpp"
 #include "Utilities.hpp"
 #include <algorithm>

@@ -5,7 +5,7 @@
 #define WIN32_LEAN_AND_MEAN
 
 #include "bail.h"
-#include "../std/ext/strcpyout.h"
+#include "../stdc/ext/strcpyout.h"
 #include <windows.h>
 #include <stdarg.h>
 #include <wchar.h>

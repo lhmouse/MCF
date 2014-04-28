@@ -5,7 +5,7 @@
 #ifndef MCF_CRT_MCFCRT_H_
 #define MCF_CRT_MCFCRT_H_
 
-#include "std/std_include.h"
+#include "stdc/std_include.h"
 #include "env/env_include.h"
 
 #if !defined(NDEBUG) && defined(__cplusplus)

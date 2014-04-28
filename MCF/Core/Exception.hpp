@@ -28,15 +28,15 @@ struct Exception {
 	const wchar_t *pwszMessage;
 
 	constexpr Exception(
-		const char *pszFunctionParam,
-		unsigned long ulLineParam,
-		unsigned long ulErrorCodeParam,
-		const wchar_t *pwszMessageParam = L""
+		const char *pszFunction_,
+		unsigned long ulLine_,
+		unsigned long ulErrorCode_,
+		const wchar_t *pwszMessage_ = L""
 	) noexcept
-		: pszFunction	(pszFunctionParam)
-		, ulLine		(ulLineParam)
-		, ulErrorCode	(ulErrorCodeParam)
-		, pwszMessage	(pwszMessageParam)
+		: pszFunction	(pszFunction_)
+		, ulLine		(ulLine_)
+		, ulErrorCode	(ulErrorCode_)
+		, pwszMessage	(pwszMessage_)
 	{
 	}
 };

@@ -5,7 +5,7 @@
 #ifndef MCF_V_VECTOR_HPP_
 #define MCF_V_VECTOR_HPP_
 
-#include "../../MCFCRT/std/ext/assert.h"
+#include "../../MCFCRT/stdc/ext/assert.h"
 #include <initializer_list>
 #include <type_traits>
 #include <iterator>

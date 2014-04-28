@@ -69,7 +69,7 @@ unsigned char *MCF_CRT_HeapAlloc(size_t uSize, const void *pRetAddr __attribute_
 	LeaveCriticalSection(&g_csHeapLock);
 	return pRet;
 }
-unsigned char *MCF_CRT_HeapReAlloc(unsigned char *pBlock /* NON-NULL */, size_t uSize, const void *pRetAddr __attribute__((unused))){
+unsigned char *MCF_CRT_HeapReAlloc(void *pBlock /* NON-NULL */, size_t uSize, const void *pRetAddr __attribute__((unused))){
 #ifdef __MCF_CRT_HEAPDBG_ON
 	const size_t uRawSize = __MCF_CRT_HeapDbgGetRawSize(uSize);
 	if(uSize & ~uRawSize & ((size_t)1 << (sizeof(size_t) * 8 - 1))){
@@ -108,7 +108,7 @@ unsigned char *MCF_CRT_HeapReAlloc(unsigned char *pBlock /* NON-NULL */, size_t 
 	LeaveCriticalSection(&g_csHeapLock);
 	return pRet;
 }
-void MCF_CRT_HeapFree(unsigned char *pBlock /* NON-NULL */, const void *pRetAddr __attribute__((unused))){
+void MCF_CRT_HeapFree(void *pBlock /* NON-NULL */, const void *pRetAddr __attribute__((unused))){
 	EnterCriticalSection(&g_csHeapLock);
 #ifdef __MCF_CRT_HEAPDBG_ON
 		unsigned char *pRaw;

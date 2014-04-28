@@ -5,8 +5,8 @@
 #ifndef MCF_ShaRED_HANDLE_NTS_HPP_
 #define MCF_ShaRED_HANDLE_NTS_HPP_
 
-#include "../../MCFCRT/std/ext/assert.h"
-#include "../../MCFCRT/std/ext/offset_of.h"
+#include "../../MCFCRT/stdc/ext/assert.h"
+#include "../../MCFCRT/stdc/ext/offset_of.h"
 #include "../../MCFCRT/env/bail.h"
 #include <new>
 #include <utility>

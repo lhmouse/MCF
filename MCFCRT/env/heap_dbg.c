@@ -11,7 +11,7 @@ typedef int UNUSED;
 #ifdef __MCF_CRT_HEAPDBG_ON
 
 #include "bail.h"
-#include "../std/ext/strcpyout.h"
+#include "../stdc/ext/strcpyout.h"
 #include <wchar.h>
 #include <windows.h>
 
@@ -24,7 +24,7 @@ typedef int UNUSED;
 #endif
 
 static HANDLE							g_hMapAllocator;
-static MCF_AVL_ROOT					g_mapBlocks;
+static MCF_AVL_ROOT						g_mapBlocks;
 static const __MCF_HEAPDBG_BLOCK_INFO *	g_pBlockHead;
 static __MCF_HEAP_CALLBACK				g_pfnCallback;
 static intptr_t							g_nCallbackContext;

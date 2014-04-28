@@ -5,8 +5,8 @@
 #ifndef MCF_MULTI_INDEXED_HPP_
 #define MCF_MULTI_INDEXED_HPP_
 
-#include "../../MCFCRT/std/ext/offset_of.h"
-#include "../../MCFCRT/std/ext/unref_param.h"
+#include "../../MCFCRT/stdc/ext/offset_of.h"
+#include "../../MCFCRT/stdc/ext/unref_param.h"
 #include "../../MCFCRT/env/avl_tree.h"
 #include <tuple>
 #include <type_traits>

@@ -19,6 +19,8 @@ class VVector {
 	template<class OtherElement_t, std::size_t OTHER_ALT_STOR_THRESHOLD>
 	friend class VVector;
 
+	static_assert(noexcept(delete (Element_t *)nullptr), "Element_t must be noexcept destructible.");
+
 private:
 	Element_t *xm_pBegin;
 	Element_t *xm_pEnd;
@@ -198,7 +200,7 @@ public:
 	bool IsEmpty() const noexcept {
 		return GetEnd() == GetBegin();
 	}
-	void Clear(){
+	void Clear() noexcept {
 		TruncateFromEnd(GetSize());
 	}
 
@@ -254,7 +256,7 @@ public:
 		new(xm_pEnd) Element_t(std::forward<Params_t>(vParams)...);
 		return *(xm_pEnd++);
 	}
-	void PopNoCheck(){
+	void PopNoCheck() noexcept {
 		ASSERT_MSG(!IsEmpty(), L"容器为空。");
 
 		(--xm_pEnd)->~Element_t();
@@ -265,7 +267,7 @@ public:
 		Reserve(GetSize() + 1);
 		return PushNoCheck(std::forward<Params_t>(vParams)...);
 	}
-	void Pop(){
+	void Pop() noexcept {
 		ASSERT(!IsEmpty());
 
 		PopNoCheck();
@@ -304,7 +306,7 @@ public:
 			++itCur;
 		}
 	}
-	void TruncateFromEnd(std::size_t uCount){
+	void TruncateFromEnd(std::size_t uCount) noexcept {
 		ASSERT(GetSize() >= uCount);
 
 		for(std::size_t i = 0; i < uCount; ++i){
@@ -344,6 +346,8 @@ template<class Element_t>
 class VVector<Element_t, 0> {
 	template<class OtherElement_t, std::size_t OTHER_ALT_STOR_THRESHOLD>
 	friend class VVector;
+
+	static_assert(noexcept(delete (Element_t *)nullptr), "Element_t must be noexcept destructible.");
 
 private:
 	Element_t *xm_pBegin;
@@ -510,7 +514,7 @@ public:
 	bool IsEmpty() const noexcept {
 		return GetEnd() == GetBegin();
 	}
-	void Clear(){
+	void Clear() noexcept {
 		TruncateFromEnd(GetSize());
 	}
 
@@ -561,7 +565,7 @@ public:
 		new(xm_pEnd) Element_t(std::forward<Params_t>(vParams)...);
 		return *(xm_pEnd++);
 	}
-	void PopNoCheck(){
+	void PopNoCheck() noexcept {
 		ASSERT_MSG(!IsEmpty(), L"容器为空。");
 
 		(--xm_pEnd)->~Element_t();
@@ -572,7 +576,7 @@ public:
 		Reserve(GetSize() + 1);
 		return PushNoCheck(std::forward<Params_t>(vParams)...);
 	}
-	void Pop(){
+	void Pop() noexcept {
 		ASSERT(!IsEmpty());
 
 		PopNoCheck();
@@ -611,7 +615,7 @@ public:
 			++itCur;
 		}
 	}
-	void TruncateFromEnd(std::size_t uCount){
+	void TruncateFromEnd(std::size_t uCount) noexcept {
 		ASSERT(GetSize() >= uCount);
 
 		for(std::size_t i = 0; i < uCount; ++i){

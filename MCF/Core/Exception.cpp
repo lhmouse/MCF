@@ -11,10 +11,10 @@ namespace MCF {
 
 WideString GetWin32ErrorDesc(unsigned long ulErrorCode){
 	struct LocalFreer {
-		constexpr HLOCAL operator()() const {
+		constexpr HLOCAL operator()() const noexcept {
 			return NULL;
 		}
-		void operator()(HLOCAL hLocal) const {
+		void operator()(HLOCAL hLocal) const noexcept {
 			::LocalFree(hLocal);
 		}
 	};

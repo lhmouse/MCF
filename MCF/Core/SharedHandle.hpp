@@ -24,7 +24,8 @@ class WeakHandle {
 public:
 	typedef decltype(Closer_t()()) Handle;
 
-	static_assert(std::is_scalar<Handle>::value, "Handle must be a scalar type");
+	static_assert(std::is_scalar<Handle>::value, "Handle must be a scalar type.");
+	static_assert(noexcept(Closer_t()(Handle())), "Handle closer must not throw.");
 
 private:
 	typedef SharedHandle<Closer_t> xStrongHandle;
@@ -111,7 +112,7 @@ private:
 		{
 		}
 #ifndef NDEBUG
-		~xSharedNode(){
+		~xSharedNode() noexcept {
 			ASSERT(xm_pDebugInfo == this);
 
 			xm_pDebugInfo = nullptr;
@@ -193,7 +194,9 @@ private:
 	xSharedNode *xm_pNode;
 
 private:
-	WeakHandle(xSharedNode *pNode) noexcept : xm_pNode(pNode) {
+	WeakHandle(xSharedNode *pNode) noexcept
+		: xm_pNode(pNode)
+	{
 	}
 
 public:
@@ -376,7 +379,8 @@ class SharedHandle {
 public:
 	typedef decltype(Closer_t()()) Handle;
 
-	static_assert(std::is_scalar<Handle>::value, "Handle must be a scalar type");
+	static_assert(std::is_scalar<Handle>::value, "Handle must be a scalar type.");
+	static_assert(noexcept(Closer_t()(Handle())), "Handle closer must not throw.");
 
 private:
 	typedef WeakHandle<Closer_t>				xWeakHandle;

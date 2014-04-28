@@ -16,17 +16,24 @@ class UniqueHandle {
 public:
 	typedef decltype(Closer_t()()) Handle;
 
-	static_assert(std::is_scalar<Handle>::value, "Handle must be a scalar type");
+	static_assert(std::is_scalar<Handle>::value, "Handle must be a scalar type.");
+	static_assert(noexcept(Closer_t()(Handle())), "Handle closer must not throw.");
 
 private:
 	Handle xm_hObj;
 
 public:
-	constexpr UniqueHandle() noexcept : UniqueHandle(Closer_t()()) {
+	constexpr UniqueHandle() noexcept
+		: UniqueHandle(Closer_t()())
+	{
 	}
-	constexpr explicit UniqueHandle(Handle hObj) noexcept : xm_hObj(hObj) {
+	constexpr explicit UniqueHandle(Handle hObj) noexcept
+		: xm_hObj(hObj)
+	{
 	}
-	UniqueHandle(UniqueHandle &&rhs) noexcept : UniqueHandle(rhs.Release()) {
+	UniqueHandle(UniqueHandle &&rhs) noexcept
+		: UniqueHandle(rhs.Release())
+	{
 	}
 	UniqueHandle &operator=(Handle hObj) noexcept {
 		Reset(hObj);
@@ -36,7 +43,7 @@ public:
 		Reset(std::move(rhs));
 		return *this;
 	}
-	~UniqueHandle(){
+	~UniqueHandle() noexcept {
 		Reset();
 	}
 

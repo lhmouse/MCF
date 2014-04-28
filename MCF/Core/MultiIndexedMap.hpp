@@ -277,6 +277,8 @@ public:
 		{
 		}
 
+		static_assert(noexcept(delete (Node *)nullptr), "Node must be noexcept destructible.");
+
 	public:
 		constexpr const Element_t &GetElement() const noexcept {
 			return xm_vElement;
@@ -467,12 +469,12 @@ public:
 		++xm_uSize;
 		return pNode;
 	}
-	void Erase(Node *pNode){
+	void Erase(Node *pNode) noexcept {
 		xDetachAll<INDEX_COUNT - 1>(pNode);
 		--xm_uSize;
 		delete pNode;
 	}
-	void Clear(){
+	void Clear() noexcept {
 		AvlNodeHeader *pAvl = xm_arvIndexPointers[0].pFront;
 		while(pAvl){
 			Node *const pNode = Node::template xNodeFromAvl<0>(pAvl);

@@ -12,14 +12,14 @@ void *Allocate(std::size_t uSize, const void *pRetAddr){
 	if(uSize == 0){
 		uSize = 1;
 	}
-	auto *pRet = MCF_CRT_HeapAlloc(uSize, pRetAddr);
+	auto *pRet = __MCF_CRT_HeapAlloc(uSize, pRetAddr);
 	while(!pRet){
 		const auto pfnHandler = std::get_new_handler();
 		if(!pfnHandler){
 			throw std::bad_alloc();
 		}
 		(*pfnHandler)();
-		pRet = MCF_CRT_HeapAlloc(uSize, pRetAddr);
+		pRet = __MCF_CRT_HeapAlloc(uSize, pRetAddr);
 	}
 	return pRet;
 }
@@ -28,25 +28,27 @@ void *AllocateNoThrow(std::size_t uSize, const void *pRetAddr) noexcept {
 	if(uSize == 0){
 		uSize = 1;
 	}
-	auto *pRet = MCF_CRT_HeapAlloc(uSize, pRetAddr);
-	while(!pRet){
-		const auto pfnHandler = std::get_new_handler();
-		if(!pfnHandler){
-			return nullptr;
-		}
+	auto *pRet = __MCF_CRT_HeapAlloc(uSize, pRetAddr);
+	if(!pRet) {
 		try {
-			(*pfnHandler)();
+			do {
+				const auto pfnHandler = std::get_new_handler();
+				if(!pfnHandler){
+					return nullptr;
+				}
+				(*pfnHandler)();
+				pRet = __MCF_CRT_HeapAlloc(uSize, pRetAddr);
+			} while(!pRet);
 		} catch(std::bad_alloc &){
 			return nullptr;
 		}
-		pRet = MCF_CRT_HeapAlloc(uSize, pRetAddr);
 	}
 	return pRet;
 }
 
 void Deallocate(void *pBlock, const void *pRetAddr) noexcept {
 	if(pBlock){
-		MCF_CRT_HeapFree(pBlock, pRetAddr);
+		__MCF_CRT_HeapFree(pBlock, pRetAddr);
 	}
 }
 

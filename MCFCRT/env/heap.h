@@ -9,12 +9,12 @@
 
 __MCF_EXTERN_C_BEGIN
 
-extern unsigned long __MCF_CRT_HeapInitialize(void) __MCF_NOEXCEPT;
-extern void __MCF_CRT_HeapUninitialize(void) __MCF_NOEXCEPT;
+extern unsigned long ____MCF_CRT_HeapInitialize(void) __MCF_NOEXCEPT;
+extern void ____MCF_CRT_HeapUninitialize(void) __MCF_NOEXCEPT;
 
-extern unsigned char *MCF_CRT_HeapAlloc(__MCF_STD size_t uSize, const void *pRetAddr) __MCF_NOEXCEPT;
-extern unsigned char *MCF_CRT_HeapReAlloc(void *pBlock /* NON-NULL */, __MCF_STD size_t uSize, const void *pRetAddr) __MCF_NOEXCEPT;
-extern void MCF_CRT_HeapFree(void *pBlock /* NON-NULL */, const void *pRetAddr) __MCF_NOEXCEPT;
+extern unsigned char *__MCF_CRT_HeapAlloc(__MCF_STD size_t uSize, const void *pRetAddr) __MCF_NOEXCEPT;
+extern unsigned char *__MCF_CRT_HeapReAlloc(void *pBlock /* NON-NULL */, __MCF_STD size_t uSize, const void *pRetAddr) __MCF_NOEXCEPT;
+extern void __MCF_CRT_HeapFree(void *pBlock /* NON-NULL */, const void *pRetAddr) __MCF_NOEXCEPT;
 
 typedef struct tagBadAllocHandler {
 	int (*pfnProc)(__MCF_STD intptr_t);

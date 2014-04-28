@@ -13,7 +13,7 @@ void *__attribute__((noinline)) calloc(size_t nmemb, size_t cnt){
 	if(cb > SIZE_MAX){
 		return NULL;
 	}
-	void *const ret = MCF_CRT_HeapAlloc(cb, __builtin_return_address(0));
+	void *const ret = __MCF_CRT_HeapAlloc(cb, __builtin_return_address(0));
 	if(ret){
 		memset(ret, 0, cb);
 	}

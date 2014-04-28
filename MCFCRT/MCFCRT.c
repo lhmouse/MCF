@@ -30,14 +30,14 @@ unsigned long __MCF_CRT_Begin(){
 #define INIT(exp)		if((dwExitCode = (exp)) == ERROR_SUCCESS){ ((void)0)
 #define CLEANUP(exp)	(exp); } ((void)0)
 
-	INIT(__MCF_CRT_HeapInitialize());
+	INIT(____MCF_CRT_HeapInitialize());
 	INIT(__MCF_CRT_TlsEnvInitialize());
 
 	__main();
 	return ERROR_SUCCESS;
 
 	CLEANUP(__MCF_CRT_TlsEnvUninitialize());
-	CLEANUP(__MCF_CRT_HeapUninitialize());
+	CLEANUP(____MCF_CRT_HeapUninitialize());
 
 	return dwExitCode;
 }
@@ -57,7 +57,7 @@ void __MCF_CRT_End(){
 
 	__MCF_CRT_EmutlsCleanup();
 	__MCF_CRT_TlsEnvUninitialize();
-	__MCF_CRT_HeapUninitialize();
+	____MCF_CRT_HeapUninitialize();
 }
 
 void *MCF_GetModuleBase(){

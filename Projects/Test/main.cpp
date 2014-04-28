@@ -17,7 +17,7 @@ static void heap_callback(int op, const void *p, std::size_t cb, const void *ret
 
 unsigned int MCFMain(){
 #ifdef HEAP_DBG
-	::MCF_CRT_HeapSetCallback(nullptr, nullptr, &heap_callback, 0);
+	::__MCF_CRT_HeapSetCallback(nullptr, nullptr, &heap_callback, 0);
 #endif
 
 	try {
@@ -63,7 +63,7 @@ unsigned int MCFMain(){
 	}
 
 #ifdef HEAP_DBG
-	::MCF_CRT_HeapSetCallback(nullptr, nullptr, nullptr, 0);
+	::__MCF_CRT_HeapSetCallback(nullptr, nullptr, nullptr, 0);
 #endif
 	return 0;
 }

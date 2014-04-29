@@ -85,8 +85,8 @@ public:
 }
 
 #define MUTEX_SCOPE(pmtx)	\
-	for(const ::MCF::MutexLock vMCF_Lock(&*(pmtx)), *pMCF_Lock = &vMCF_Lock;	\
-		pMCF_Lock;	\
-		pMCF_Lock = nullptr)
+	for(const ::MCF::MutexLock MCF_vLock_(&*(pmtx)), *MCF_pLock_ = &MCF_vLock_;	\
+		MCF_pLock_;	\
+		MCF_pLock_ = nullptr)
 
 #endif

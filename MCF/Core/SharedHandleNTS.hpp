@@ -221,11 +221,6 @@ public:
 		Reset();
 	}
 
-private:
-	Handle xGetUnowned() const noexcept {
-		return xm_pNode ? xm_pNode->Get() : Closer_t()();
-	}
-
 public:
 	std::size_t GetRefCount() const noexcept {
 		return xm_pNode ? xm_pNode->GetRefCount() : 0;
@@ -264,101 +259,7 @@ public:
 	void Swap(WeakHandleNts &rhs) noexcept {
 		std::swap(xm_pNode, rhs.xm_pNode);
 	}
-
-public:
-	bool operator==(const WeakHandleNts &rhs) const noexcept {
-		return xGetUnowned() == rhs.xGetUnowned();
-	}
-	bool operator!=(const WeakHandleNts &rhs) const noexcept {
-		return xGetUnowned() != rhs.xGetUnowned();
-	}
-	bool operator<(const WeakHandleNts &rhs) const noexcept {
-		return xGetUnowned() < rhs.xGetUnowned();
-	}
-	bool operator<=(const WeakHandleNts &rhs) const noexcept {
-		return xGetUnowned() <= rhs.xGetUnowned();
-	}
-	bool operator>(const WeakHandleNts &rhs) const noexcept {
-		return xGetUnowned() > rhs.xGetUnowned();
-	}
-	bool operator>=(const WeakHandleNts &rhs) const noexcept {
-		return xGetUnowned() >= rhs.xGetUnowned();
-	}
-
-	bool operator==(Handle rhs) const noexcept {
-		return xGetUnowned() == rhs;
-	}
-	bool operator!=(Handle rhs) const noexcept {
-		return xGetUnowned() != rhs;
-	}
-	bool operator<(Handle rhs) const noexcept {
-		return xGetUnowned() < rhs;
-	}
-	bool operator<=(Handle rhs) const noexcept {
-		return xGetUnowned() <= rhs;
-	}
-	bool operator>(Handle rhs) const noexcept {
-		return xGetUnowned() > rhs;
-	}
-	bool operator>=(Handle rhs) const noexcept {
-		return xGetUnowned() >= rhs;
-	}
 };
-
-template<class Handle_t, class Closer_t>
-auto operator==(Handle_t lhs, const WeakHandleNts<Closer_t> &rhs) noexcept
-	-> typename std::enable_if<
-		std::is_same<Handle_t, typename WeakHandleNts<Closer_t>::Handle>::value,
-		bool
-	>::type
-{
-	return rhs == lhs;
-}
-template<class Handle_t, class Closer_t>
-auto operator!=(Handle_t lhs, const WeakHandleNts<Closer_t> &rhs) noexcept
-	-> typename std::enable_if<
-		std::is_same<Handle_t, typename WeakHandleNts<Closer_t>::Handle>::value,
-		bool
-	>::type
-{
-	return rhs != lhs;
-}
-template<class Handle_t, class Closer_t>
-auto operator<(Handle_t lhs, const WeakHandleNts<Closer_t> &rhs) noexcept
-	-> typename std::enable_if<
-		std::is_same<Handle_t, typename WeakHandleNts<Closer_t>::Handle>::value,
-		bool
-	>::type
-{
-	return rhs > lhs;
-}
-template<class Handle_t, class Closer_t>
-auto operator<=(Handle_t lhs, const WeakHandleNts<Closer_t> &rhs) noexcept
-	-> typename std::enable_if<
-		std::is_same<Handle_t, typename WeakHandleNts<Closer_t>::Handle>::value,
-		bool
-	>::type
-{
-	return rhs >= lhs;
-}
-template<class Handle_t, class Closer_t>
-auto operator>(Handle_t lhs, const WeakHandleNts<Closer_t> &rhs) noexcept
-	-> typename std::enable_if<
-		std::is_same<Handle_t, typename WeakHandleNts<Closer_t>::Handle>::value,
-		bool
-	>::type
-{
-	return rhs < lhs;
-}
-template<class Handle_t, class Closer_t>
-auto operator>=(Handle_t lhs, const WeakHandleNts<Closer_t> &rhs) noexcept
-	-> typename std::enable_if<
-		std::is_same<Handle_t, typename WeakHandleNts<Closer_t>::Handle>::value,
-		bool
-	>::type
-{
-	return rhs <= lhs;
-}
 
 template<class Closer_t>
 class SharedHandleNts {
@@ -505,25 +406,6 @@ public:
 		return Get() >= rhs.Get();
 	}
 
-	bool operator==(const xWeakHandleNts &rhs) const noexcept {
-		return rhs == Get();
-	}
-	bool operator!=(const xWeakHandleNts &rhs) const noexcept {
-		return rhs != Get();
-	}
-	bool operator<(const xWeakHandleNts &rhs) const noexcept {
-		return rhs > Get();
-	}
-	bool operator<=(const xWeakHandleNts &rhs) const noexcept {
-		return rhs >= Get();
-	}
-	bool operator>(const xWeakHandleNts &rhs) const noexcept {
-		return rhs < Get();
-	}
-	bool operator>=(const xWeakHandleNts &rhs) const noexcept {
-		return rhs <= Get();
-	}
-
 	bool operator==(Handle rhs) const noexcept {
 		return Get() == rhs;
 	}
@@ -597,31 +479,6 @@ auto operator>=(Handle_t lhs, const SharedHandleNts<Closer_t> &rhs) noexcept
 	>::type
 {
 	return rhs <= lhs;
-}
-
-template<class Closer_t>
-bool operator==(const WeakHandleNts<Closer_t> &lhs, const SharedHandleNts<Closer_t> &rhs) noexcept {
-	return lhs == rhs.Get();
-}
-template<class Closer_t>
-bool operator!=(const WeakHandleNts<Closer_t> &lhs, const SharedHandleNts<Closer_t> &rhs) noexcept {
-	return lhs != rhs.Get();
-}
-template<class Closer_t>
-bool operator<(const WeakHandleNts<Closer_t> &lhs, const SharedHandleNts<Closer_t> &rhs) noexcept {
-	return lhs < rhs.Get();
-}
-template<class Closer_t>
-bool operator<=(const WeakHandleNts<Closer_t> &lhs, const SharedHandleNts<Closer_t> &rhs) noexcept {
-	return lhs <= rhs.Get();
-}
-template<class Closer_t>
-bool operator>(const WeakHandleNts<Closer_t> &lhs, const SharedHandleNts<Closer_t> &rhs) noexcept {
-	return lhs > rhs.Get();
-}
-template<class Closer_t>
-bool operator>=(const WeakHandleNts<Closer_t> &lhs, const SharedHandleNts<Closer_t> &rhs) noexcept {
-	return lhs >= rhs.Get();
 }
 
 }

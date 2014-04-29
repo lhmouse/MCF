@@ -8,6 +8,7 @@
 #include "../../MCFCRT/stdc/ext/offset_of.h"
 #include "../../MCFCRT/stdc/ext/unref_param.h"
 #include "../../MCFCRT/env/avl_tree.h"
+#include "Utilities.hpp"
 #include <tuple>
 #include <type_traits>
 #include <functional>
@@ -168,7 +169,9 @@ inline void AvlEqualRange(
 
 struct BinaryLess {
 	template<class Tx, class Ty>
-	constexpr bool operator()(const Tx &lhs, const Ty &rhs) const {
+	constexpr bool operator()(const Tx &lhs, const Ty &rhs) const
+		noexcept(noexcept(NullRef<Tx>() < NullRef<Ty>()))
+	{
 		return lhs < rhs;
 	}
 };
@@ -184,11 +187,15 @@ struct Index {
 	}
 
 	template<typename Comparand_t>
-	bool operator()(const Comparand_t &lhs, int) const {
+	bool operator()(const Comparand_t &lhs, int) const
+		noexcept(noexcept(Comparer_t()(NullRef<Comparand_t>(), m_vIndex)))
+	{
 		return Comparer_t()(lhs, m_vIndex);
 	}
 	template<typename Comparand_t>
-	bool operator()(const Comparand_t &rhs) const {
+	bool operator()(const Comparand_t &rhs) const
+		noexcept(noexcept(Comparer_t()(m_vIndex, NullRef<Comparand_t>())))
+	{
 		return Comparer_t()(m_vIndex, rhs);
 	}
 };
@@ -311,19 +318,25 @@ private:
 
 	template<typename Index_t, class Comparer_t, typename Comparand_t>
 	struct xComparer<Index<Index_t, Comparer_t>, Comparand_t> {
-		bool operator()(std::intptr_t lhs, std::intptr_t rhs) const {
+		bool operator()(std::intptr_t lhs, std::intptr_t rhs) const
+			noexcept(noexcept(NullRef<Index<Index_t, Comparer_t>>()(NullRef<Comparand_t>())))
+		{
 			return (*(const Index<Index_t, Comparer_t> *)lhs)(*(const Comparand_t *)rhs);
 		}
 	};
 	template<typename Comparand_t, typename Index_t, class Comparer_t>
 	struct xComparer<Comparand_t, Index<Index_t, Comparer_t>> {
-		bool operator()(std::intptr_t lhs, std::intptr_t rhs) const {
+		bool operator()(std::intptr_t lhs, std::intptr_t rhs) const
+			noexcept(noexcept(NullRef<Index<Index_t, Comparer_t>>()(NullRef<Comparand_t>(), 0)))
+		{
 			return (*(const Index<Index_t, Comparer_t> *)rhs)(*(const Comparand_t *)lhs, 0);
 		}
 	};
 	template<typename Index1_t, typename Index2_t, class Comparer_t>
 	struct xComparer<Index<Index1_t, Comparer_t>, Index<Index2_t, Comparer_t>> {
-		bool operator()(std::intptr_t lhs, std::intptr_t rhs) const {
+		bool operator()(std::intptr_t lhs, std::intptr_t rhs) const
+			noexcept(noexcept(NullRef<Index<Index1_t, Comparer_t>>()(NullRef<Index<Index2_t, Comparer_t>>().m_vIndex)))
+		{
 			return (*(const Index<Index1_t, Comparer_t> *)lhs)(((const Index<Index2_t, Comparer_t> *)rhs)->m_vIndex);
 		}
 	};

@@ -14,6 +14,28 @@
 
 namespace MCF {
 
+// C++11 workaround.
+template<typename Element_t, bool ASSIGNABLE = std::is_trivial<Element_t>::value && std::is_copy_assignable<Element_t>::value>
+struct Constructor_;
+
+template<typename Element_t>
+struct Constructor_<Element_t, true> {
+	template<typename... Params_t>
+	inline void operator()(Element_t *pRaw, Params_t &&... vParams) const {
+		*pRaw = Element_t(std::forward<Params_t>(vParams)...);
+	}
+};
+
+template<typename Element_t>
+struct Constructor_<Element_t, false> {
+	template<typename... Params_t>
+	inline void operator()(Element_t *pRaw, Params_t &&... vParams) const {
+		new(pRaw) Element_t(std::forward<Params_t>(vParams)...);
+	}
+};
+// - end workaround.
+// Added on 2014-04-29.
+
 template<class Element_t, std::size_t ALT_STOR_THRESHOLD = 0x400u / sizeof(Element_t)>
 class VVector {
 	template<class OtherElement_t, std::size_t OTHER_ALT_STOR_THRESHOLD>
@@ -223,7 +245,7 @@ public:
 			auto pWrite = pNewBegin;
 			try {
 				while(pRead != pOldEnd){
-					new(pWrite) Element_t(std::move_if_noexcept(*pRead));
+					Constructor_<Element_t>()(pWrite, std::move_if_noexcept(*pRead));
 					++pWrite;
 					++pRead;
 				}
@@ -253,7 +275,7 @@ public:
 	Element_t &PushNoCheck(Params_t &&...vParams){
 		ASSERT_MSG(GetSize() < GetCapacity(), L"容器已满。");
 
-		new(xm_pEnd) Element_t(std::forward<Params_t>(vParams)...);
+		Constructor_<Element_t>()(xm_pEnd, std::forward<Params_t>(vParams)...);
 		return *(xm_pEnd++);
 	}
 	void PopNoCheck() noexcept {
@@ -529,7 +551,7 @@ public:
 			auto pWrite = pNewBegin;
 			try {
 				while(pRead != pOldEnd){
-					new(pWrite) Element_t(std::move_if_noexcept(*pRead));
+					Constructor_<Element_t>()(pWrite, std::move_if_noexcept(*pRead));
 					++pWrite;
 					++pRead;
 				}
@@ -557,7 +579,7 @@ public:
 	Element_t &PushNoCheck(Params_t &&...vParams){
 		ASSERT_MSG(GetSize() < GetCapacity(), L"容器已满。");
 
-		new(xm_pEnd) Element_t(std::forward<Params_t>(vParams)...);
+		Constructor_<Element_t>()(xm_pEnd, std::forward<Params_t>(vParams)...);
 		return *(xm_pEnd++);
 	}
 	void PopNoCheck() noexcept {

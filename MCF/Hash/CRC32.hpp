@@ -24,7 +24,7 @@ private:
 	std::uint32_t xm_u32Reg;
 
 public:
-	Crc32(std::uint32_t u32Divisor = DIVISOR_IEEE_802_3) noexcept;
+	explicit Crc32(std::uint32_t u32Divisor = DIVISOR_IEEE_802_3) noexcept;
 
 public:
 	void Abort() noexcept;

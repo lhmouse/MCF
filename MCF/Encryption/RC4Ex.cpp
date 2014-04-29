@@ -21,14 +21,14 @@ void GenInitBox(unsigned char (&abyOutput)[256], const void *pKey, std::size_t u
 			unsigned char abyKeyHash[32];
 		};
 		unsigned char abyBytes[64];
-	} RC4Key;
+	} vRC4Key;
 
 	Hasher.Update(&u64Nonce, sizeof(u64Nonce));
 	Hasher.Update(pKey, uKeyLen);
-	Hasher.Finalize(RC4Key.abyNoncedKeyHash);
+	Hasher.Finalize(vRC4Key.abyNoncedKeyHash);
 
 	Hasher.Update(pKey, uKeyLen);
-	Hasher.Finalize(RC4Key.abyKeyHash);
+	Hasher.Finalize(vRC4Key.abyKeyHash);
 
 	for(std::size_t i = 0; i < 256; ++i){
 		abyOutput[i] = (unsigned char)i;
@@ -36,7 +36,7 @@ void GenInitBox(unsigned char (&abyOutput)[256], const void *pKey, std::size_t u
 	unsigned char j = 0;
 	for(std::size_t i = 0; i < 256; ++i){
 		const auto b0 = abyOutput[i];
-		j += b0 + RC4Key.abyBytes[i % sizeof(RC4Key.abyBytes)];
+		j += b0 + vRC4Key.abyBytes[i % sizeof(vRC4Key.abyBytes)];
 		const auto b1 = abyOutput[j];
 		abyOutput[i] = b1;
 		abyOutput[j] = b0;

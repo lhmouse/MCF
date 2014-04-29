@@ -5,16 +5,19 @@
 #ifndef MCF_HEX_HPP_
 #define MCF_HEX_HPP_
 
-#include "../Core/Utilities.hpp"
 #include <memory>
 #include <utility>
 #include <cstddef>
 
 namespace MCF {
 
-class HexEncoder : NO_COPY, ABSTRACT {
+class HexEncoder {
+private:
+	const std::function<std::pair<void *, std::size_t> (std::size_t)> xm_fnDataCallback;
+	const unsigned char xm_byDelta;
+
 public:
-	static std::unique_ptr<HexEncoder> Create(
+	explicit HexEncoder(
 		std::function<std::pair<void *, std::size_t> (std::size_t)> fnDataCallback,
 		bool bUpperCase
 	);
@@ -25,9 +28,15 @@ public:
 	void Finalize();
 };
 
-class HexDecoder : NO_COPY, ABSTRACT {
+class HexDecoder {
+private:
+	const std::function<std::pair<void *, std::size_t> (std::size_t)> xm_fnDataCallback;
+	bool xm_bInited;
+
+	unsigned char xm_uchLastDigit;
+
 public:
-	static std::unique_ptr<HexDecoder> Create(
+	explicit HexDecoder(
 		std::function<std::pair<void *, std::size_t> (std::size_t)> fnDataCallback
 	);
 

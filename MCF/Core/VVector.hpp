@@ -299,12 +299,7 @@ public:
 	}
 	template<class Iterator_t>
 	void MoveToEnd(Iterator_t itBegin, std::size_t uCount){
-		Reserve(GetSize() + uCount);
-		auto itCur = itBegin;
-		for(std::size_t i = 0; i < uCount; ++i){
-			PushNoCheck(std::move(*itCur));
-			++itCur;
-		}
+		CopyToEnd(std::make_move_iterator(itBegin), uCount);
 	}
 	void TruncateFromEnd(std::size_t uCount) noexcept {
 		ASSERT(GetSize() >= uCount);
@@ -608,12 +603,7 @@ public:
 	}
 	template<class Iterator_t>
 	void MoveToEnd(Iterator_t itBegin, std::size_t uCount){
-		Reserve(GetSize() + uCount);
-		auto itCur = itBegin;
-		for(std::size_t i = 0; i < uCount; ++i){
-			PushNoCheck(std::move(*itCur));
-			++itCur;
-		}
+		CopyToEnd(std::make_move_iterator(itBegin), uCount);
 	}
 	void TruncateFromEnd(std::size_t uCount) noexcept {
 		ASSERT(GetSize() >= uCount);

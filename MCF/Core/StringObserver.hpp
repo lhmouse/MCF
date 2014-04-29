@@ -97,7 +97,7 @@ private:
 		if(uToFindLen <= COUNT_OF(auSmallTable)){
 			puKmpTable = auSmallTable;
 		} else {
-			puKmpTable = (std::size_t *)::operator new(sizeof(std::size_t) * uToFindLen, std::nothrow_t());
+			puKmpTable = (std::size_t *)::operator new(sizeof(std::size_t) * uToFindLen, std::nothrow);
 			if(!puKmpTable){
 				// 内存不足，使用暴力搜索方法。
 				for(auto itCur = itBegin; itCur != itSearchEnd; ++itCur){

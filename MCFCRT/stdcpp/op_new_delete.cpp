@@ -8,7 +8,7 @@
 
 namespace {
 
-void *Allocate(std::size_t uSize, const void *pRetAddr){
+inline void *__attribute__((always_inline)) Allocate(std::size_t uSize, const void *pRetAddr){
 	if(uSize == 0){
 		uSize = 1;
 	}
@@ -24,7 +24,7 @@ void *Allocate(std::size_t uSize, const void *pRetAddr){
 	return pRet;
 }
 
-void *AllocateNoThrow(std::size_t uSize, const void *pRetAddr) noexcept {
+inline void *__attribute__((always_inline)) AllocateNoThrow(std::size_t uSize, const void *pRetAddr) noexcept {
 	if(uSize == 0){
 		uSize = 1;
 	}
@@ -46,7 +46,7 @@ void *AllocateNoThrow(std::size_t uSize, const void *pRetAddr) noexcept {
 	return pRet;
 }
 
-void Deallocate(void *pBlock, const void *pRetAddr) noexcept {
+inline void __attribute__((always_inline)) Deallocate(void *pBlock, const void *pRetAddr) noexcept {
 	if(pBlock){
 		__MCF_CRT_HeapFree(pBlock, pRetAddr);
 	}
@@ -60,22 +60,34 @@ void *operator new(std::size_t cb){
 void *operator new(std::size_t cb, const std::nothrow_t &) noexcept {
 	return AllocateNoThrow(cb, __builtin_return_address(0));
 }
+void operator delete(void *p) noexcept {
+	Deallocate(p, __builtin_return_address(0));
+}
+void operator delete(void *p, const std::nothrow_t &) noexcept {
+	Deallocate(p, __builtin_return_address(0));
+}
+void operator delete(void *p, std::size_t) noexcept {
+	Deallocate(p, __builtin_return_address(0));
+}
+void operator delete(void *p, std::size_t, const std::nothrow_t &) noexcept {
+	Deallocate(p, __builtin_return_address(0));
+}
+
 void *operator new[](std::size_t cb){
 	return Allocate(cb, __builtin_return_address(0));
 }
 void *operator new[](std::size_t cb, const std::nothrow_t &) noexcept {
 	return AllocateNoThrow(cb, __builtin_return_address(0));
 }
-
-void operator delete(void *p) noexcept {
-	Deallocate(p, __builtin_return_address(0));
-}
 void operator delete[](void *p) noexcept {
 	Deallocate(p, __builtin_return_address(0));
 }
-void operator delete(void *p, std::size_t) noexcept {
+void operator delete[](void *p, std::size_t) noexcept {
 	Deallocate(p, __builtin_return_address(0));
 }
-void operator delete[](void *p, std::size_t) noexcept {
+void operator delete[](void *p, const std::nothrow_t &) noexcept {
+	Deallocate(p, __builtin_return_address(0));
+}
+void operator delete[](void *p, std::size_t, const std::nothrow_t &) noexcept {
 	Deallocate(p, __builtin_return_address(0));
 }

@@ -26,7 +26,10 @@ private:
 	std::size_t xm_uState;
 
 public:
-	Base64Encoder(std::function<std::pair<void *, std::size_t> (std::size_t)> fnDataCallback, const char *pchEncodedChars = ENCODED_CHARS_MIME);
+	explicit Base64Encoder(
+		std::function<std::pair<void *, std::size_t> (std::size_t)> fnDataCallback,
+		const char *pchEncodedChars = ENCODED_CHARS_MIME
+	);
 
 public:
 	void Abort() noexcept;
@@ -43,7 +46,10 @@ private:
 	std::size_t xm_uState;
 
 public:
-	Base64Decoder(std::function<std::pair<void *, std::size_t> (std::size_t)> fnDataCallback, const char *pchEncodedChars = ENCODED_CHARS_MIME);
+	explicit Base64Decoder(
+		std::function<std::pair<void *, std::size_t> (std::size_t)> fnDataCallback,
+		const char *pchEncodedChars = ENCODED_CHARS_MIME
+	);
 
 public:
 	void Abort() noexcept;

@@ -10,7 +10,7 @@
 __MCF_EXTERN_C_BEGIN
 
 #ifdef NDEBUG
-#	define __MCF_NORETURN_IF_NDEBUG	__attribute__((noreturn))
+#	define __MCF_NORETURN_IF_NDEBUG	__attribute__((__noreturn__))
 #else
 #	define __MCF_NORETURN_IF_NDEBUG
 #endif

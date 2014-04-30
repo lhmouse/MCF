@@ -30,7 +30,7 @@ extern int MCF_CRT_AtThreadExit(
 extern void *MCF_CRT_RetrieveTls(
 	__MCF_STD intptr_t nKey,
 	__MCF_STD size_t uSizeToAlloc,
-	void (*pfnConstructor)(void *, __MCF_STD intptr_t),
+	int (*pfnConstructor)(void *, __MCF_STD intptr_t),
 	__MCF_STD intptr_t nParam,
 	void (*pfnDestructor)(void *)
 ) __MCF_NOEXCEPT;

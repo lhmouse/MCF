@@ -13,12 +13,12 @@
 static CRITICAL_SECTION			g_csHeapLock;
 static MCF_BAD_ALLOC_HANDLER	g_vBadAllocHandler;
 
-unsigned long ____MCF_CRT_HeapInitialize(){
+unsigned long __MCF_CRT_HeapInitialize(){
 	InitializeCriticalSectionAndSpinCount(&g_csHeapLock, 0x400);
 	g_vBadAllocHandler.pfnProc = NULL;
 
 #ifdef __MCF_CRT_HEAPDBG_ON
-	____MCF_CRT_HeapDbgInit();
+	__MCF_CRT_HeapDbgInit();
 #endif
 
 	const HANDLE hProcessHeap = GetProcessHeap();
@@ -34,17 +34,17 @@ unsigned long ____MCF_CRT_HeapInitialize(){
 
 	return ERROR_SUCCESS;
 }
-void ____MCF_CRT_HeapUninitialize(){
+void __MCF_CRT_HeapUninitialize(){
 #ifdef __MCF_CRT_HEAPDBG_ON
-	____MCF_CRT_HeapDbgUninit();
+	__MCF_CRT_HeapDbgUninit();
 #endif
 
 	DeleteCriticalSection(&g_csHeapLock);
 }
 
-unsigned char *__MCF_CRT_HeapAlloc(size_t uSize, const void *pRetAddr __attribute__((unused))){
+unsigned char *__MCF_CRT_HeapAlloc(size_t uSize, const void *pRetAddr __attribute__((__unused__))){
 #ifdef __MCF_CRT_HEAPDBG_ON
-	const size_t uRawSize = ____MCF_CRT_HeapDbgGetRawSize(uSize);
+	const size_t uRawSize = __MCF_CRT_HeapDbgGetRawSize(uSize);
 	if(uRawSize < uSize){
 		return NULL;
 	}
@@ -58,7 +58,7 @@ unsigned char *__MCF_CRT_HeapAlloc(size_t uSize, const void *pRetAddr __attribut
 			unsigned char *const pRaw = (unsigned char *)HeapAlloc(GetProcessHeap(), 0, uRawSize);
 			if(pRaw){
 #ifdef __MCF_CRT_HEAPDBG_ON
-				____MCF_CRT_HeapDbgAddGuardsAndRegister(&pRet, pRaw, uSize, pRetAddr);
+				__MCF_CRT_HeapDbgAddGuardsAndRegister(&pRet, pRaw, uSize, pRetAddr);
 				memset(pRet, 0xCD, uSize);
 #else
 				pRet = pRaw;
@@ -69,9 +69,9 @@ unsigned char *__MCF_CRT_HeapAlloc(size_t uSize, const void *pRetAddr __attribut
 	LeaveCriticalSection(&g_csHeapLock);
 	return pRet;
 }
-unsigned char *__MCF_CRT_HeapReAlloc(void *pBlock /* NON-NULL */, size_t uSize, const void *pRetAddr __attribute__((unused))){
+unsigned char *__MCF_CRT_HeapReAlloc(void *pBlock /* NON-NULL */, size_t uSize, const void *pRetAddr __attribute__((__unused__))){
 #ifdef __MCF_CRT_HEAPDBG_ON
-	const size_t uRawSize = ____MCF_CRT_HeapDbgGetRawSize(uSize);
+	const size_t uRawSize = __MCF_CRT_HeapDbgGetRawSize(uSize);
 	if(uSize & ~uRawSize & ((size_t)1 << (sizeof(size_t) * 8 - 1))){
 		return NULL;
 	}
@@ -83,7 +83,7 @@ unsigned char *__MCF_CRT_HeapReAlloc(void *pBlock /* NON-NULL */, size_t uSize, 
 	EnterCriticalSection(&g_csHeapLock);
 #ifdef __MCF_CRT_HEAPDBG_ON
 		unsigned char *pRawOriginal;
-		const __MCF_HEAPDBG_BLOCK_INFO *const pBlockInfo = ____MCF_CRT_HeapDbgValidate(&pRawOriginal, pBlock, pRetAddr);
+		const __MCF_HEAPDBG_BLOCK_INFO *const pBlockInfo = __MCF_CRT_HeapDbgValidate(&pRawOriginal, pBlock, pRetAddr);
 #else
 		unsigned char *const pRawOriginal = pBlock;
 #endif
@@ -93,9 +93,9 @@ unsigned char *__MCF_CRT_HeapReAlloc(void *pBlock /* NON-NULL */, size_t uSize, 
 			if(pRaw){
 #ifdef __MCF_CRT_HEAPDBG_ON
 				const size_t uOriginalSize = pBlockInfo->uSize;
-				____MCF_CRT_HeapDbgUnregister(pBlockInfo);
+				__MCF_CRT_HeapDbgUnregister(pBlockInfo);
 
-				____MCF_CRT_HeapDbgAddGuardsAndRegister(&pRet, pRaw, uSize, pRetAddr);
+				__MCF_CRT_HeapDbgAddGuardsAndRegister(&pRet, pRaw, uSize, pRetAddr);
 				if(uOriginalSize < uSize){
 					memset(pRet + uOriginalSize, 0xCD, uSize - uOriginalSize);
 				}
@@ -108,15 +108,15 @@ unsigned char *__MCF_CRT_HeapReAlloc(void *pBlock /* NON-NULL */, size_t uSize, 
 	LeaveCriticalSection(&g_csHeapLock);
 	return pRet;
 }
-void __MCF_CRT_HeapFree(void *pBlock /* NON-NULL */, const void *pRetAddr __attribute__((unused))){
+void __MCF_CRT_HeapFree(void *pBlock /* NON-NULL */, const void *pRetAddr __attribute__((__unused__))){
 	EnterCriticalSection(&g_csHeapLock);
 #ifdef __MCF_CRT_HEAPDBG_ON
 		unsigned char *pRaw;
-		const __MCF_HEAPDBG_BLOCK_INFO *const pBlockInfo = ____MCF_CRT_HeapDbgValidate(&pRaw, pBlock, pRetAddr);
+		const __MCF_HEAPDBG_BLOCK_INFO *const pBlockInfo = __MCF_CRT_HeapDbgValidate(&pRaw, pBlock, pRetAddr);
 
 		memset(pBlock, 0xFE, pBlockInfo->uSize);
 
-		____MCF_CRT_HeapDbgUnregister(pBlockInfo);
+		__MCF_CRT_HeapDbgUnregister(pBlockInfo);
 #else
 		unsigned char *const pRaw = pBlock;
 #endif

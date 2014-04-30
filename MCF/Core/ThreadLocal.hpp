@@ -7,22 +7,29 @@
 
 #include "../../MCFCRT/env/thread.h"
 #include "../../MCFCRT/env/bail.h"
-#include <cstddef>
+#include "Utilities.hpp"
 #include <new>
 #include <tuple>
 #include <type_traits>
+#include <exception>
+#include <cstddef>
 
 namespace MCF {
 
 template<class Object_t, class... InitParams_t>
 class ThreadLocal {
+	static_assert(noexcept(NullRef<Object_t>().~Object_t()), "Object_t must be nothrow destructible.");
+
+private:
+	typedef std::pair<const ThreadLocal *, std::exception_ptr> xCtorWrapperContext;
+
 private:
 	template<class... Unpacked_t>
 	static void TupleConstruct(
 		typename std::enable_if<sizeof...(Unpacked_t) < sizeof...(InitParams_t), void>::type *pObj,
 		const std::tuple<InitParams_t...> &vTuple,
 		const Unpacked_t &...vUnpacked
-	){
+	) noexcept(std::is_nothrow_constructible<Object_t, InitParams_t...>::value){
 		TupleConstruct(pObj, vTuple, vUnpacked..., std::get<sizeof...(Unpacked_t)>(vTuple));
 	}
 	template<class... Unpacked_t>
@@ -30,14 +37,21 @@ private:
 		typename std::enable_if<sizeof...(Unpacked_t) == sizeof...(InitParams_t), void>::type *pObj,
 		const std::tuple<InitParams_t...> &,
 		const Unpacked_t &...vUnpacked
-	){
+	) noexcept(std::is_nothrow_constructible<Object_t, InitParams_t...>::value){
 		new(pObj) Object_t(vUnpacked...);
 	}
 
-	static void xCtorWrapper(void *pObj, std::intptr_t nParam){
-		TupleConstruct(pObj, ((const ThreadLocal *)nParam)->xm_vInitParams);
+	static int xCtorWrapper(void *pObj, std::intptr_t nParam) noexcept {
+		auto *const pContext = (xCtorWrapperContext *)nParam;
+		try {
+			TupleConstruct(pObj, pContext->first->xm_vInitParams);
+			return -1;
+		} catch(...){
+			pContext->second = std::current_exception();
+			return 0;
+		}
 	}
-	static void xDtorWrapper(void *pObj) noexcept(noexcept(((Object_t *)pObj)->~Object_t())) {
+	static void xDtorWrapper(void *pObj) noexcept {
 		((Object_t *)pObj)->~Object_t();
 	}
 
@@ -54,8 +68,12 @@ public:
 	}
 
 private:
-	Object_t *xGetPtr() const noexcept {
-		const auto pRet = (Object_t *)::MCF_CRT_RetrieveTls((std::intptr_t)this, sizeof(Object_t), &xCtorWrapper, (std::intptr_t)this, &xDtorWrapper);
+	Object_t *xGetPtr() const {
+		xCtorWrapperContext vContext(this, std::exception_ptr());
+		const auto pRet = (Object_t *)::MCF_CRT_RetrieveTls((std::intptr_t)this, sizeof(Object_t), &xCtorWrapper, (std::intptr_t)&vContext, &xDtorWrapper);
+		if(vContext.second){
+			std::rethrow_exception(vContext.second);
+		}
 		if(!pRet){
 			::MCF_CRT_Bail(
 				L"MCF_CRT_RetrieveTls() 返回了一个空指针。\n"
@@ -65,10 +83,10 @@ private:
 		return pRet;
 	}
 public:
-	const Object_t &Get() const noexcept {
+	const Object_t &Get() const {
 		return *xGetPtr();
 	}
-	Object_t &Get() noexcept {
+	Object_t &Get(){
 		return *xGetPtr();
 	}
 	void Release() noexcept {
@@ -76,22 +94,22 @@ public:
 	}
 
 public:
-	explicit operator const Object_t *() const noexcept {
+	explicit operator const Object_t *() const {
 		return xGetPtr();
 	}
-	explicit operator Object_t *() noexcept {
+	explicit operator Object_t *(){
 		return xGetPtr();
 	}
-	const Object_t *operator->() const noexcept {
+	const Object_t *operator->() const {
 		return xGetPtr();
 	}
-	Object_t *operator->() noexcept {
+	Object_t *operator->(){
 		return xGetPtr();
 	}
-	const Object_t &operator*() const noexcept {
+	const Object_t &operator*() const{
 		return Get();
 	}
-	Object_t &operator*() noexcept {
+	Object_t &operator*(){
 		return Get();
 	}
 };
@@ -99,6 +117,8 @@ public:
 template<class Object_t, class... InitParams_t>
 ThreadLocal<Object_t, typename std::remove_reference<InitParams_t>::type...> MakeThreadLocal(InitParams_t &&... vInitParams){
 	return ThreadLocal<Object_t, typename std::remove_reference<InitParams_t>::type...>(std::forward<InitParams_t>(vInitParams)...);
+}
+
 }
 
 #endif

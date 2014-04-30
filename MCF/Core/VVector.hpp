@@ -6,6 +6,7 @@
 #define MCF_V_VECTOR_HPP_
 
 #include "../../MCFCRT/stdc/ext/assert.h"
+#include "Utilities.hpp"
 #include <initializer_list>
 #include <type_traits>
 #include <iterator>
@@ -21,7 +22,7 @@ struct Constructor_;
 template<typename Element_t>
 struct Constructor_<Element_t, true> {
 	template<typename... Params_t>
-	inline void operator()(Element_t *pRaw, Params_t &&... vParams) const {
+	inline void operator()(Element_t *pRaw, Params_t &&... vParams) const noexcept {
 		*pRaw = Element_t(std::forward<Params_t>(vParams)...);
 	}
 };
@@ -29,7 +30,9 @@ struct Constructor_<Element_t, true> {
 template<typename Element_t>
 struct Constructor_<Element_t, false> {
 	template<typename... Params_t>
-	inline void operator()(Element_t *pRaw, Params_t &&... vParams) const {
+	inline void operator()(Element_t *pRaw, Params_t &&... vParams) const
+		noexcept(noexcept(Element_t(NullRef<Params_t>()...)))
+	{
 		new(pRaw) Element_t(std::forward<Params_t>(vParams)...);
 	}
 };
@@ -41,7 +44,7 @@ class VVector {
 	template<class OtherElement_t, std::size_t OTHER_ALT_STOR_THRESHOLD>
 	friend class VVector;
 
-	static_assert(noexcept(delete (Element_t *)nullptr), "Element_t must be noexcept destructible.");
+	static_assert(noexcept(NullRef<Element_t>().~Element_t()), "Element_t must be noexcept destructible.");
 
 private:
 	Element_t *xm_pBegin;
@@ -89,6 +92,7 @@ public:
 	}
 	template<std::size_t OTHER_ALT_STOR_THRESHOLD>
 	VVector(VVector<Element_t, OTHER_ALT_STOR_THRESHOLD> &&rhs)
+		noexcept(std::is_nothrow_move_constructible<Element_t>::value && (ALT_STOR_THRESHOLD >= OTHER_ALT_STOR_THRESHOLD))
 		: VVector()
 	{
 		operator=<OTHER_ALT_STOR_THRESHOLD>(std::move(rhs));
@@ -99,13 +103,14 @@ public:
 		CopyToEnd(rhs.GetBegin(), rhs.GetEnd());
 	}
 	VVector(VVector &&rhs)
+		noexcept(std::is_nothrow_move_constructible<Element_t>::value)
 		: VVector()
 	{
 		operator=<ALT_STOR_THRESHOLD>(std::move(rhs));
 	}
-	VVector &operator=(std::initializer_list<Element_t> rhs){
+	VVector &operator=(std::initializer_list<Element_t> vInitList){
 		Clear();
-		MoveToEnd(rhs.begin(), rhs.end());
+		MoveToEnd(vInitList.begin(), vInitList.end());
 		return *this;
 	}
 	template<std::size_t OTHER_ALT_STOR_THRESHOLD>
@@ -115,7 +120,9 @@ public:
 		return *this;
 	}
 	template<std::size_t OTHER_ALT_STOR_THRESHOLD>
-	VVector &operator=(VVector<Element_t, OTHER_ALT_STOR_THRESHOLD> &&rhs){
+	VVector &operator=(VVector<Element_t, OTHER_ALT_STOR_THRESHOLD> &&rhs)
+		noexcept(std::is_nothrow_move_constructible<Element_t>::value && (ALT_STOR_THRESHOLD >= OTHER_ALT_STOR_THRESHOLD))
+	{
 		Clear();
 
 		if(rhs.xm_pBegin != (Element_t *)std::begin(rhs.xm_aSmall)){
@@ -144,7 +151,7 @@ public:
 		}
 		return *this;
 	}
-	VVector &operator=(VVector<Element_t, 0> &&rhs){
+	VVector &operator=(VVector<Element_t, 0> &&rhs) noexcept {
 		Clear();
 
 		if(xm_pBegin != (Element_t *)std::begin(xm_aSmall)){
@@ -165,7 +172,9 @@ public:
 		}
 		return *this;
 	}
-	VVector &operator=(VVector &&rhs){
+	VVector &operator=(VVector &&rhs)
+		noexcept(std::is_nothrow_move_constructible<Element_t>::value)
+	{
 		if(&rhs != this){
 			operator=<ALT_STOR_THRESHOLD>(std::move(rhs));
 		}
@@ -272,7 +281,9 @@ public:
 	}
 
 	template<typename... Params_t>
-	Element_t &PushNoCheck(Params_t &&...vParams){
+	Element_t &PushNoCheck(Params_t &&...vParams)
+		noexcept(noexcept(Constructor_<Element_t>()(nullptr, NullRef<Params_t>()...)))
+	{
 		ASSERT_MSG(GetSize() < GetCapacity(), L"容器已满。");
 
 		Constructor_<Element_t>()(xm_pEnd, std::forward<Params_t>(vParams)...);
@@ -409,23 +420,24 @@ public:
 	}
 	template<std::size_t OTHER_ALT_STOR_THRESHOLD>
 	VVector(VVector<Element_t, OTHER_ALT_STOR_THRESHOLD> &&rhs)
+		noexcept(OTHER_ALT_STOR_THRESHOLD == 0)
 		: VVector()
 	{
-		operator=(std::move(rhs));
+		operator=<OTHER_ALT_STOR_THRESHOLD>(std::move(rhs));
 	}
 	VVector(const VVector &rhs)
 		: VVector()
 	{
 		CopyToEnd(rhs.GetBegin(), rhs.GetEnd());
 	}
-	VVector(VVector &&rhs)
+	VVector(VVector &&rhs) noexcept
 		: VVector()
 	{
 		operator=(std::move(rhs));
 	}
-	VVector &operator=(std::initializer_list<Element_t> rhs){
+	VVector &operator=(std::initializer_list<Element_t> vInitList){
 		Clear();
-		MoveToEnd(rhs.begin(), rhs.end());
+		MoveToEnd(vInitList.begin(), vInitList.end());
 		return *this;
 	}
 	template<std::size_t OTHER_ALT_STOR_THRESHOLD>
@@ -435,7 +447,9 @@ public:
 		return *this;
 	}
 	template<std::size_t OTHER_ALT_STOR_THRESHOLD>
-	VVector &operator=(VVector<Element_t, OTHER_ALT_STOR_THRESHOLD> &&rhs){
+	VVector &operator=(VVector<Element_t, OTHER_ALT_STOR_THRESHOLD> &&rhs)
+		noexcept(OTHER_ALT_STOR_THRESHOLD == 0)
+	{
 		Clear();
 
 		if(rhs.xm_pBegin != (Element_t *)std::begin(rhs.xm_aSmall)){
@@ -468,7 +482,7 @@ public:
 		}
 		return *this;
 	}
-	VVector &operator=(VVector &&rhs){
+	VVector &operator=(VVector &&rhs) noexcept {
 		if(&rhs != this){
 			Clear();
 
@@ -576,7 +590,9 @@ public:
 	}
 
 	template<typename... Params_t>
-	Element_t &PushNoCheck(Params_t &&...vParams){
+	Element_t &PushNoCheck(Params_t &&...vParams)
+		noexcept(noexcept(Constructor_<Element_t>()(nullptr, NullRef<Params_t>()...)))
+	{
 		ASSERT_MSG(GetSize() < GetCapacity(), L"容器已满。");
 
 		Constructor_<Element_t>()(xm_pEnd, std::forward<Params_t>(vParams)...);
@@ -635,12 +651,10 @@ public:
 		}
 	}
 
-	void Swap(VVector &rhs)
-		noexcept(std::is_nothrow_move_constructible<Element_t>::value)
-	{
-		VVector vecTemp(std::move_if_noexcept(*this));
-		*this = std::move_if_noexcept(rhs);
-		rhs = std::move_if_noexcept(vecTemp);
+	void Swap(VVector &rhs) noexcept {
+		std::swap(xm_pBegin,		rhs.xm_pBegin);
+		std::swap(xm_pEnd,			rhs.xm_pEnd);
+		std::swap(xm_pEndOfStor,	rhs.rxm_pEndOfStor);
 	}
 
 public:

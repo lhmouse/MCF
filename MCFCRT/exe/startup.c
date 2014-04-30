@@ -14,7 +14,7 @@ extern void __MCF_CRT_ExeUninitializeArgV();
 
 extern unsigned int MCFMain();
 
-static __attribute__((cdecl, used, noreturn)) int AlignedStartup(){
+static __attribute__((__cdecl__, __used__, __noreturn__)) int AlignedStartup(){
 	DWORD dwExitCode;
 
 #define INIT(exp)		if((dwExitCode = (exp)) == ERROR_SUCCESS){ ((void)0)

@@ -8,7 +8,7 @@
 
 namespace {
 
-inline void *__attribute__((always_inline)) Allocate(std::size_t uSize, const void *pRetAddr){
+inline void *__attribute__((__always_inline__)) Allocate(std::size_t uSize, const void *pRetAddr){
 	if(uSize == 0){
 		uSize = 1;
 	}
@@ -24,7 +24,7 @@ inline void *__attribute__((always_inline)) Allocate(std::size_t uSize, const vo
 	return pRet;
 }
 
-inline void *__attribute__((always_inline)) AllocateNoThrow(std::size_t uSize, const void *pRetAddr) noexcept {
+inline void *__attribute__((__always_inline__)) AllocateNoThrow(std::size_t uSize, const void *pRetAddr) noexcept {
 	if(uSize == 0){
 		uSize = 1;
 	}
@@ -46,7 +46,7 @@ inline void *__attribute__((always_inline)) AllocateNoThrow(std::size_t uSize, c
 	return pRet;
 }
 
-inline void __attribute__((always_inline)) Deallocate(void *pBlock, const void *pRetAddr) noexcept {
+inline void __attribute__((__always_inline__)) Deallocate(void *pBlock, const void *pRetAddr) noexcept {
 	if(pBlock){
 		__MCF_CRT_HeapFree(pBlock, pRetAddr);
 	}

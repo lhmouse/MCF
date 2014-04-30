@@ -8,7 +8,7 @@
 
 extern void *memset(void *dst, int ch, size_t cb);
 
-void *__attribute__((noinline)) calloc(size_t nmemb, size_t cnt){
+void *__attribute__((__noinline__)) calloc(size_t nmemb, size_t cnt){
 	const uint64_t cb = ((uint64_t)nmemb) * cnt;
 	if(cb > SIZE_MAX){
 		return NULL;

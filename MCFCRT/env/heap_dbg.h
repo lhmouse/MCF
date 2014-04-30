@@ -21,31 +21,31 @@ typedef struct tagHeapDbgBlockInfo {
 	const void *pRetAddr;
 } __MCF_HEAPDBG_BLOCK_INFO;
 
-extern unsigned long ____MCF_CRT_HeapDbgInit(void) __MCF_NOEXCEPT;
-extern void ____MCF_CRT_HeapDbgUninit(void) __MCF_NOEXCEPT;
+extern unsigned long __MCF_CRT_HeapDbgInit(void) __MCF_NOEXCEPT;
+extern void __MCF_CRT_HeapDbgUninit(void) __MCF_NOEXCEPT;
 
-extern __MCF_STD size_t ____MCF_CRT_HeapDbgGetRawSize(
+extern __MCF_STD size_t __MCF_CRT_HeapDbgGetRawSize(
 	__MCF_STD size_t uContentSize
 ) __MCF_NOEXCEPT;
 
-extern void ____MCF_CRT_HeapDbgAddGuardsAndRegister(
+extern void __MCF_CRT_HeapDbgAddGuardsAndRegister(
 	unsigned char **ppContents,
 	unsigned char *pRaw,
 	__MCF_STD size_t uContentSize,
 	const void *pRetAddr
 ) __MCF_NOEXCEPT;
 
-extern const __MCF_HEAPDBG_BLOCK_INFO *____MCF_CRT_HeapDbgValidate(
+extern const __MCF_HEAPDBG_BLOCK_INFO *__MCF_CRT_HeapDbgValidate(
 	unsigned char **ppRaw,
 	unsigned char *pContents,
 	const void *pRetAddr
 ) __MCF_NOEXCEPT;
 
-extern const unsigned char *____MCF_CRT_HeapDbgGetContents(
+extern const unsigned char *__MCF_CRT_HeapDbgGetContents(
 	const __MCF_HEAPDBG_BLOCK_INFO *pBlockInfo
 ) __MCF_NOEXCEPT;
 
-extern void ____MCF_CRT_HeapDbgUnregister(
+extern void __MCF_CRT_HeapDbgUnregister(
 	const __MCF_HEAPDBG_BLOCK_INFO *pBlockInfo
 ) __MCF_NOEXCEPT;
 

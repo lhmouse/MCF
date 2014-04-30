@@ -36,7 +36,7 @@ public:
 
 private:
 	union xStorage {
-		struct __attribute__((packed)) {
+		struct __attribute__((__packed__)) {
 			Char_t achSmall[32 / sizeof(Char_t) - 2];
 			Char_t chNull;
 			typename std::make_unsigned<Char_t>::type uchSmallLength;

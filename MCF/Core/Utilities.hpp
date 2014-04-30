@@ -78,10 +78,24 @@ MCF_CPP_NORETURN_IF_NDEBUG inline void Bail<>(const wchar_t *pwszDescription){
 }
 
 //----------------------------------------------------------------------------
+// ASSERT_NOEXCEPT
+//----------------------------------------------------------------------------
+#ifdef NDEBUG
+[[noreturn]] extern void MCF_NoExceptAssertionFailed() noexcept; // 未定义的。
+#else
+inline void __attribute__((__always_inline__)) MCF_NoExceptAssertionFailed() noexcept {
+	Bail(L"ASSERT_NOEXCEPT: 假定不会抛出异常，但是确实捕获到了异常。");
+}
+#endif
+
+#define ASSERT_NOEXCEPT_BEGIN	try {
+#define ASSERT_NOEXCEPT_END		} catch(...){ MCF_NoExceptAssertionFailed(); }
+
+//----------------------------------------------------------------------------
 // HintNonNull
 //----------------------------------------------------------------------------
 template<typename T>
-inline T *__attribute__((returns_nonnull)) HintNonNull(T *p) noexcept {
+inline T *__attribute__((__returns_nonnull__)) HintNonNull(T *p) noexcept {
 	ASSERT(p);
 
 	return p;
@@ -91,7 +105,12 @@ inline T *__attribute__((returns_nonnull)) HintNonNull(T *p) noexcept {
 // NullRef
 //----------------------------------------------------------------------------
 template<typename T>
-T &NullRef() noexcept;
+auto NullRef() noexcept
+	-> typename std::enable_if<!std::is_rvalue_reference<T>::value, T &>::type;
+
+template<typename T>
+auto NullRef() noexcept
+	-> typename std::enable_if<std::is_rvalue_reference<T>::value, T &&>::type;
 
 //----------------------------------------------------------------------------
 // Clone
@@ -100,7 +119,9 @@ template<typename T>
 inline auto Clone(T &&vSrc)
 	-> typename std::remove_cv<typename std::remove_reference<T>::type>::type
 {
-	return std::forward<T>(vSrc);
+	return typename std::remove_cv<
+		typename std::remove_reference<T>::type
+	>::type(std::forward<T>(vSrc));
 }
 
 //----------------------------------------------------------------------------

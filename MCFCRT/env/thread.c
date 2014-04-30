@@ -52,7 +52,7 @@ typedef struct tagThreadEnv {
 
 static DWORD g_dwTlsIndex = TLS_OUT_OF_INDEXES;
 
-static __attribute__((cdecl, used, noreturn)) DWORD AlignedCRTThreadProc(LPVOID pParam){
+static __attribute__((__cdecl__, __used__, __noreturn__)) DWORD AlignedCRTThreadProc(LPVOID pParam){
 	const THREAD_INIT_INFO ThreadInitInfo = *(const THREAD_INIT_INFO *)pParam;
 	free(pParam);
 
@@ -71,7 +71,7 @@ static __attribute__((cdecl, used, noreturn)) DWORD AlignedCRTThreadProc(LPVOID 
 	__builtin_trap();
 }
 
-extern __attribute__((stdcall, noreturn)) DWORD CRTThreadProc(LPVOID pParam) __asm__("CRTThreadProc");
+extern __attribute__((__stdcall__, __noreturn__)) DWORD CRTThreadProc(LPVOID pParam) __asm__("CRTThreadProc");
 __asm__(
 	"	.align 16 \n"
 	"CRTThreadProc: \n"
@@ -200,7 +200,7 @@ int MCF_CRT_AtThreadExit(
 void *MCF_CRT_RetrieveTls(
 	intptr_t nKey,
 	size_t uSizeToAlloc,
-	void (*pfnConstructor)(void *, intptr_t),
+	int (*pfnConstructor)(void *, intptr_t),
 	intptr_t nParam,
 	void (*pfnDestructor)(void *)
 ){
@@ -215,14 +215,15 @@ void *MCF_CRT_RetrieveTls(
 		if(!pObject){
 			return NULL;
 		}
-
 		void *const pMem = malloc((uSizeToAlloc == 0) ? 1 : uSizeToAlloc);
 		if(!pMem){
 			free(pObject);
 			return NULL;
 		}
-		if(pfnConstructor){
-			(*pfnConstructor)(pMem, nParam);
+		if(pfnConstructor && !(*pfnConstructor)(pMem, nParam)){
+			free(pMem);
+			free(pObject);
+			return NULL;
 		}
 
 		TLS_OBJECT *const pPrev = pThreadEnv->pLastObject;

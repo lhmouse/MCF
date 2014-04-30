@@ -23,7 +23,11 @@ template<typename Element_t>
 struct Constructor_<Element_t, true> {
 	template<typename... Params_t>
 	inline void operator()(Element_t *pRaw, Params_t &&... vParams) const noexcept {
+		ASSERT_NOEXCEPT_BEGIN
+
 		*pRaw = Element_t(std::forward<Params_t>(vParams)...);
+
+		ASSERT_NOEXCEPT_END
 	}
 };
 
@@ -33,7 +37,11 @@ struct Constructor_<Element_t, false> {
 	inline void operator()(Element_t *pRaw, Params_t &&... vParams) const
 		noexcept(noexcept(Element_t(NullRef<Params_t>()...)))
 	{
+		ASSERT_NOEXCEPT_BEGIN
+
 		new(pRaw) Element_t(std::forward<Params_t>(vParams)...);
+
+		ASSERT_NOEXCEPT_END_COND(noexcept(Element_t(NullRef<Params_t>()...)))
 	}
 };
 // - end workaround.

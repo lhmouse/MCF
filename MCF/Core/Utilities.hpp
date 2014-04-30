@@ -23,7 +23,7 @@ char (&CountOfHelper_(Ty (&)[N]))[N];
 template<typename Ty, std::size_t N>
 char (&CountOfHelper_(Ty (&&)[N]))[N];
 
-#define COUNT_OF(ar)	(sizeof(::MCF::CountOfHelper_((ar))))
+#define COUNT_OF(a)		(sizeof(::MCF::CountOfHelper_((a))))
 
 //----------------------------------------------------------------------------
 // NO_COPY
@@ -80,16 +80,26 @@ MCF_CPP_NORETURN_IF_NDEBUG inline void Bail<>(const wchar_t *pwszDescription){
 //----------------------------------------------------------------------------
 // ASSERT_NOEXCEPT
 //----------------------------------------------------------------------------
+template<bool NOEXCEPT>
+inline void MCF_NoExceptAssertionFailed() noexcept;
+
+template<>
+inline void MCF_NoExceptAssertionFailed<false>() noexcept {
+}
+
 #ifdef NDEBUG
-[[noreturn]] extern void MCF_NoExceptAssertionFailed() noexcept; // 未定义的。
+template<>
+void MCF_NoExceptAssertionFailed<true>() noexcept; // 未定义的。
 #else
-inline void __attribute__((__always_inline__)) MCF_NoExceptAssertionFailed() noexcept {
+template<>
+inline void __attribute__((__always_inline__)) MCF_NoExceptAssertionFailed<true>() noexcept {
 	Bail(L"ASSERT_NOEXCEPT: 假定不会抛出异常，但是确实捕获到了异常。");
 }
 #endif
 
-#define ASSERT_NOEXCEPT_BEGIN	try {
-#define ASSERT_NOEXCEPT_END		} catch(...){ MCF_NoExceptAssertionFailed(); }
+#define ASSERT_NOEXCEPT_BEGIN		try {
+#define ASSERT_NOEXCEPT_END			} catch(...){ MCF_NoExceptAssertionFailed<true>(); }
+#define ASSERT_NOEXCEPT_END_COND(c)	} catch(...){ MCF_NoExceptAssertionFailed<(c)>(); }
 
 //----------------------------------------------------------------------------
 // HintNonNull

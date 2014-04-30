@@ -1,9 +1,9 @@
-/* crc32.c -- compute the Crc-32 of a data stream
+/* crc32.c -- compute the CRC-32 of a data stream
  * Copyright (C) 1995-2006, 2010, 2011, 2012 Mark Adler
  * For conditions of distribution and use, see copyright notice in zlib.h
  *
  * Thanks to Rodney Brown <rbrown64@csc.com.au> for his contribution of faster
- * Crc methods: exclusive-oring 32 bits of data at a time, and pre-computing
+ * CRC methods: exclusive-oring 32 bits of data at a time, and pre-computing
  * tables for updating the shift register in one step with three exclusive-ors
  * instead of four steps with four exclusive-ors.  This results in about a
  * factor of two increase in speed on a Power PC G4 (PPC7455) using gcc -O3.
@@ -12,21 +12,21 @@
 /* @(#) $Id$ */
 
 /*
-  Note on the use of DYNAMIC_Crc_TABLE: there is no mutex or semaphore
+  Note on the use of DYNAMIC_CRC_TABLE: there is no mutex or semaphore
   protection on the static variables used to control the first-use generation
-  of the crc tables.  Therefore, if you #define DYNAMIC_Crc_TABLE, you should
+  of the crc tables.  Therefore, if you #define DYNAMIC_CRC_TABLE, you should
   first call get_crc_table() to initialize the tables before allowing more than
   one thread to use crc32().
 
-  DYNAMIC_Crc_TABLE and MAKECrcH can be #defined to write out crc32.h.
+  DYNAMIC_CRC_TABLE and MAKECRCH can be #defined to write out crc32.h.
  */
 
-#ifdef MAKECrcH
+#ifdef MAKECRCH
 #  include <stdio.h>
-#  ifndef DYNAMIC_Crc_TABLE
-#    define DYNAMIC_Crc_TABLE
-#  endif /* !DYNAMIC_Crc_TABLE */
-#endif /* MAKECrcH */
+#  ifndef DYNAMIC_CRC_TABLE
+#    define DYNAMIC_CRC_TABLE
+#  endif /* !DYNAMIC_CRC_TABLE */
+#endif /* MAKECRCH */
 
 #include "zutil.h"      /* for STDC and FAR definitions */
 
@@ -53,16 +53,16 @@ local void gf2_matrix_square OF((unsigned long *square, unsigned long *mat));
 local uLong crc32_combine_ OF((uLong crc1, uLong crc2, z_off64_t len2));
 
 
-#ifdef DYNAMIC_Crc_TABLE
+#ifdef DYNAMIC_CRC_TABLE
 
 local volatile int crc_table_empty = 1;
 local z_crc_t FAR crc_table[TBLS][256];
 local void make_crc_table OF((void));
-#ifdef MAKECrcH
+#ifdef MAKECRCH
    local void write_table OF((FILE *, const z_crc_t FAR *));
-#endif /* MAKECrcH */
+#endif /* MAKECRCH */
 /*
-  Generate tables for a byte-wise 32-bit Crc calculation on the polynomial:
+  Generate tables for a byte-wise 32-bit CRC calculation on the polynomial:
   x^32+x^26+x^23+x^22+x^16+x^12+x^11+x^10+x^8+x^7+x^5+x^4+x^2+x+1.
 
   Polynomials over GF(2) are represented in binary, one bit per coefficient,
@@ -70,7 +70,7 @@ local void make_crc_table OF((void));
   is just exclusive-or, and multiplying a polynomial by x is a right shift by
   one.  If we call the above polynomial p, and represent a byte as the
   polynomial q, also with the lowest power in the most significant bit (so the
-  byte 0xb1 is the polynomial x^7+x^3+x+1), then the Crc is (q*x^32) mod p,
+  byte 0xb1 is the polynomial x^7+x^3+x+1), then the CRC is (q*x^32) mod p,
   where a mod b means the remainder after dividing a by b.
 
   This calculation is done using the shift-register method of multiplying and
@@ -81,10 +81,10 @@ local void make_crc_table OF((void));
   out is a one).  We start with the highest power (least significant bit) of
   q and repeat for all eight bits of q.
 
-  The first table is simply the Crc of all possible eight bit values.  This is
-  all the information needed to generate Crcs on data a byte at a time for all
-  combinations of Crc register values and incoming bytes.  The remaining tables
-  allow for word-at-a-time Crc calculation for both big-endian and little-
+  The first table is simply the CRC of all possible eight bit values.  This is
+  all the information needed to generate CRCs on data a byte at a time for all
+  combinations of CRC register values and incoming bytes.  The remaining tables
+  allow for word-at-a-time CRC calculation for both big-endian and little-
   endian machines, where a word is four bytes.
 */
 local void make_crc_table()
@@ -98,7 +98,7 @@ local void make_crc_table()
 
     /* See if another task is already doing this (not thread-safe, but better
        than nothing -- significantly reduces duration of vulnerability in
-       case the advice about DYNAMIC_Crc_TABLE is ignored) */
+       case the advice about DYNAMIC_CRC_TABLE is ignored) */
     if (first) {
         first = 0;
 
@@ -137,14 +137,14 @@ local void make_crc_table()
             ;
     }
 
-#ifdef MAKECrcH
-    /* write out Crc tables to crc32.h */
+#ifdef MAKECRCH
+    /* write out CRC tables to crc32.h */
     {
         FILE *out;
 
         out = fopen("crc32.h", "w");
         if (out == NULL) return;
-        fprintf(out, "/* crc32.h -- tables for rapid Crc calculation\n");
+        fprintf(out, "/* crc32.h -- tables for rapid CRC calculation\n");
         fprintf(out, " * Generated automatically by crc32.c\n */\n\n");
         fprintf(out, "local const z_crc_t FAR ");
         fprintf(out, "crc_table[TBLS][256] =\n{\n  {\n");
@@ -160,10 +160,10 @@ local void make_crc_table()
         fprintf(out, "  }\n};\n");
         fclose(out);
     }
-#endif /* MAKECrcH */
+#endif /* MAKECRCH */
 }
 
-#ifdef MAKECrcH
+#ifdef MAKECRCH
 local void write_table(out, table)
     FILE *out;
     const z_crc_t FAR *table;
@@ -175,24 +175,24 @@ local void write_table(out, table)
                 (unsigned long)(table[n]),
                 n == 255 ? "\n" : (n % 5 == 4 ? ",\n" : ", "));
 }
-#endif /* MAKECrcH */
+#endif /* MAKECRCH */
 
-#else /* !DYNAMIC_Crc_TABLE */
+#else /* !DYNAMIC_CRC_TABLE */
 /* ========================================================================
- * Tables of Crc-32s of all single-byte values, made by make_crc_table().
+ * Tables of CRC-32s of all single-byte values, made by make_crc_table().
  */
 #include "crc32.h"
-#endif /* DYNAMIC_Crc_TABLE */
+#endif /* DYNAMIC_CRC_TABLE */
 
 /* =========================================================================
  * This function can be used by asm versions of crc32()
  */
 const z_crc_t FAR * ZEXPORT get_crc_table()
 {
-#ifdef DYNAMIC_Crc_TABLE
+#ifdef DYNAMIC_CRC_TABLE
     if (crc_table_empty)
         make_crc_table();
-#endif /* DYNAMIC_Crc_TABLE */
+#endif /* DYNAMIC_CRC_TABLE */
     return (const z_crc_t FAR *)crc_table;
 }
 
@@ -208,10 +208,10 @@ unsigned long ZEXPORT crc32(crc, buf, len)
 {
     if (buf == Z_NULL) return 0UL;
 
-#ifdef DYNAMIC_Crc_TABLE
+#ifdef DYNAMIC_CRC_TABLE
     if (crc_table_empty)
         make_crc_table();
-#endif /* DYNAMIC_Crc_TABLE */
+#endif /* DYNAMIC_CRC_TABLE */
 
 #ifdef BYFOUR
     if (sizeof(void *) == sizeof(ptrdiff_t)) {
@@ -321,7 +321,7 @@ local unsigned long crc32_big(crc, buf, len)
 
 #endif /* BYFOUR */
 
-#define GF2_DIM 32      /* dimension of GF(2) vectors (length of Crc) */
+#define GF2_DIM 32      /* dimension of GF(2) vectors (length of CRC) */
 
 /* ========================================================================= */
 local unsigned long gf2_matrix_times(mat, vec)
@@ -367,7 +367,7 @@ local uLong crc32_combine_(crc1, crc2, len2)
         return crc1;
 
     /* put operator for one zero bit in odd */
-    odd[0] = 0xedb88320UL;          /* Crc-32 polynomial */
+    odd[0] = 0xedb88320UL;          /* CRC-32 polynomial */
     row = 1;
     for (n = 1; n < GF2_DIM; n++) {
         odd[n] = row;

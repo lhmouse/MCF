@@ -438,14 +438,14 @@ unsigned copy;
 
 /* check macros for header crc */
 #ifdef GUNZIP
-#  define Crc2(check, word) \
+#  define CRC2(check, word) \
     do { \
         hbuf[0] = (unsigned char)(word); \
         hbuf[1] = (unsigned char)((word) >> 8); \
         check = crc32(check, hbuf, 2); \
     } while (0)
 
-#  define Crc4(check, word) \
+#  define CRC4(check, word) \
     do { \
         hbuf[0] = (unsigned char)(word); \
         hbuf[1] = (unsigned char)((word) >> 8); \
@@ -646,7 +646,7 @@ int flush;
 #ifdef GUNZIP
             if ((state->wrap & 2) && hold == 0x8b1f) {  /* gzip header */
                 state->check = crc32(0L, Z_NULL, 0);
-                Crc2(state->check, hold);
+                CRC2(state->check, hold);
                 INITBITS();
                 state->mode = FLAGS;
                 break;
@@ -699,14 +699,14 @@ int flush;
             }
             if (state->head != Z_NULL)
                 state->head->text = (int)((hold >> 8) & 1);
-            if (state->flags & 0x0200) Crc2(state->check, hold);
+            if (state->flags & 0x0200) CRC2(state->check, hold);
             INITBITS();
             state->mode = TIME;
         case TIME:
             NEEDBITS(32);
             if (state->head != Z_NULL)
                 state->head->time = hold;
-            if (state->flags & 0x0200) Crc4(state->check, hold);
+            if (state->flags & 0x0200) CRC4(state->check, hold);
             INITBITS();
             state->mode = OS;
         case OS:
@@ -715,7 +715,7 @@ int flush;
                 state->head->xflags = (int)(hold & 0xff);
                 state->head->os = (int)(hold >> 8);
             }
-            if (state->flags & 0x0200) Crc2(state->check, hold);
+            if (state->flags & 0x0200) CRC2(state->check, hold);
             INITBITS();
             state->mode = EXLEN;
         case EXLEN:
@@ -724,7 +724,7 @@ int flush;
                 state->length = (unsigned)(hold);
                 if (state->head != Z_NULL)
                     state->head->extra_len = (unsigned)hold;
-                if (state->flags & 0x0200) Crc2(state->check, hold);
+                if (state->flags & 0x0200) CRC2(state->check, hold);
                 INITBITS();
             }
             else if (state->head != Z_NULL)
@@ -792,8 +792,8 @@ int flush;
             }
             else if (state->head != Z_NULL)
                 state->head->comment = Z_NULL;
-            state->mode = HCrc;
-        case HCrc:
+            state->mode = HCRC;
+        case HCRC:
             if (state->flags & 0x0200) {
                 NEEDBITS(16);
                 if (hold != (state->check & 0xffff)) {

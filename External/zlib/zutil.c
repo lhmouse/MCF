@@ -73,7 +73,7 @@ uLong ZEXPORT zlibCompileFlags()
 #ifdef BUILDFIXED
     flags += 1 << 12;
 #endif
-#ifdef DYNAMIC_Crc_TABLE
+#ifdef DYNAMIC_CRC_TABLE
     flags += 1 << 13;
 #endif
 #ifdef NO_GZCOMPRESS

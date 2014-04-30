@@ -42,7 +42,7 @@ inline unsigned long LzmaErrorToWin32Error(int nError) noexcept {
 	case SZ_ERROR_MEM:
 		return ERROR_NOT_ENOUGH_MEMORY;
 
-	case SZ_ERROR_Crc:
+	case SZ_ERROR_CRC:
 		return ERROR_INVALID_DATA;
 
 	case SZ_ERROR_UNSUPPORTED:

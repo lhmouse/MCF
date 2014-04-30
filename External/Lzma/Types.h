@@ -2,8 +2,8 @@
 2010-10-09 : Igor Pavlov : Public domain */
 
 // LH_Mouse : Removed unused code. We want LZMA only.
-// 2014-04-22
-#define MCF_LZMA_ONLY_	1
+// 2014-02-13
+#define __MCF_LZMA_ONLY	1
 
 #ifndef __7Z_TYPES_H
 #define __7Z_TYPES_H
@@ -30,7 +30,7 @@ EXTERN_C_BEGIN
 
 #define SZ_ERROR_DATA 1
 #define SZ_ERROR_MEM 2
-#define SZ_ERROR_Crc 3
+#define SZ_ERROR_CRC 3
 #define SZ_ERROR_UNSUPPORTED 4
 #define SZ_ERROR_PARAM 5
 #define SZ_ERROR_INPUT_EOF 6
@@ -39,7 +39,7 @@ EXTERN_C_BEGIN
 #define SZ_ERROR_WRITE 9
 #define SZ_ERROR_PROGRESS 10
 
-#ifndef MCF_LZMA_ONLY_ // Added by LH_Mouse on 2014-04-22.
+#ifndef __MCF_LZMA_ONLY // Added by LH_Mouse on 2014-02-13.
 
 #define SZ_ERROR_FAIL 11
 #define SZ_ERROR_THREAD 12
@@ -47,7 +47,7 @@ EXTERN_C_BEGIN
 #define SZ_ERROR_ARCHIVE 16
 #define SZ_ERROR_NO_ARCHIVE 17
 
-#endif // MCF_LZMA_ONLY_
+#endif // __MCF_LZMA_ONLY
 
 typedef int SRes;
 
@@ -131,7 +131,7 @@ typedef int Bool;
 #endif
 
 
-#ifndef MCF_LZMA_ONLY_ // Added by LH_Mouse on 2014-04-22.
+#ifndef __MCF_LZMA_ONLY // Added by LH_Mouse on 2014-02-13.
 
 /* The following interfaces use first parameter as pointer to structure */
 
@@ -145,7 +145,7 @@ typedef struct
   void (*Write)(void *p, Byte b);
 } IByteOut;
 
-#endif // MCF_LZMA_ONLY_
+#endif // __MCF_LZMA_ONLY
 
 typedef struct
 {
@@ -154,14 +154,14 @@ typedef struct
        (output(*size) < input(*size)) is allowed */
 } ISeqInStream;
 
-#ifndef MCF_LZMA_ONLY_ // Added by LH_Mouse on 2014-04-22.
+#ifndef __MCF_LZMA_ONLY // Added by LH_Mouse on 2014-02-13.
 
 /* it can return SZ_ERROR_INPUT_EOF */
 SRes SeqInStream_Read(ISeqInStream *stream, void *buf, size_t size);
 SRes SeqInStream_Read2(ISeqInStream *stream, void *buf, size_t size, SRes errorType);
 SRes SeqInStream_ReadByte(ISeqInStream *stream, Byte *buf);
 
-#endif // MCF_LZMA_ONLY_
+#endif // __MCF_LZMA_ONLY
 
 typedef struct
 {
@@ -170,7 +170,7 @@ typedef struct
        (result < size) means error */
 } ISeqOutStream;
 
-#ifndef MCF_LZMA_ONLY_ // Added by LH_Mouse on 2014-04-22.
+#ifndef __MCF_LZMA_ONLY // Added by LH_Mouse on 2014-02-13.
 
 typedef enum
 {
@@ -236,7 +236,7 @@ typedef struct
 
 void SecToRead_CreateVTable(CSecToRead *p);
 
-#endif // MCF_LZMA_ONLY_
+#endif // __MCF_LZMA_ONLY
 
 typedef struct
 {
@@ -254,7 +254,7 @@ typedef struct
 #define IAlloc_Alloc(p, size) (p)->Alloc((p), size)
 #define IAlloc_Free(p, a) (p)->Free((p), a)
 
-#ifndef MCF_LZMA_ONLY_ // Added by LH_Mouse on 2014-04-22.
+#ifndef __MCF_LZMA_ONLY // Added by LH_Mouse on 2014-02-13.
 
 #ifdef _WIN32
 
@@ -272,7 +272,7 @@ typedef struct
 
 #endif
 
-#endif // MCF_LZMA_ONLY_
+#endif // __MCF_LZMA_ONLY
 
 EXTERN_C_END
 

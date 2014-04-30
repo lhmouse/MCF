@@ -8,6 +8,7 @@
 #include "../../MCFCRT/stdc/ext/memcchr.h"
 #include "../../MCFCRT/env/bail.h"
 #include <type_traits>
+#include <algorithm>
 #include <utility>
 #include <cstddef>
 #include <cstdint>

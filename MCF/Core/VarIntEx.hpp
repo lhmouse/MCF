@@ -5,10 +5,10 @@
 #ifndef MCF_VAR_INT_EX_HPP_
 #define MCF_VAR_INT_EX_HPP_
 
-#include <limits>
 #include <type_traits>
 #include <cstddef>
 #include <cstdint>
+#include <climits>
 
 namespace MCF {
 
@@ -16,28 +16,28 @@ template<typename Underlying_t, Underlying_t ORIGIN = 0>
 class VarIntEx {
 	static_assert(std::is_arithmetic<Underlying_t>::value, "Underlying_t must be an arithmetic type.");
 
-	static_assert(std::numeric_limits<std::uintmax_t>::digits <= 64, "Not supported.");
-	static_assert(std::numeric_limits<unsigned char>::digits == 8, "Not supported.");
+	static_assert(CHAR_BIT == 8, "Not supported.");
+	static_assert(sizeof(std::uintmax_t) * CHAR_BIT <= 64, "Not supported.");
 
 private:
 	typedef typename std::make_unsigned<Underlying_t>::type xUnsigned;
 
 private:
 	template<typename Test_t = Underlying_t>
-	static xUnsigned xZigZagEncode(typename std::enable_if<std::numeric_limits<Underlying_t>::is_signed, Test_t>::type nValue) noexcept {
-		return ((xUnsigned)nValue << 1) ^ (xUnsigned)(nValue >> std::numeric_limits<Underlying_t>::digits);
+	static xUnsigned xZigZagEncode(typename std::enable_if<std::is_signed<Underlying_t>::value, Test_t>::type nValue) noexcept {
+		return ((xUnsigned)nValue << 1) ^ (xUnsigned)(nValue >> (sizeof(nValue) * CHAR_BIT - 1));
 	}
 	template<typename Test_t = xUnsigned>
-	static Underlying_t xZigZagDecode(typename std::enable_if<std::numeric_limits<Underlying_t>::is_signed, Test_t>::type uEncoded) noexcept {
+	static Underlying_t xZigZagDecode(typename std::enable_if<std::is_signed<Underlying_t>::value, Test_t>::type uEncoded) noexcept {
 		return (Underlying_t)((uEncoded >> 1) ^ -(uEncoded & 1));
 	}
 
 	template<typename Test_t = Underlying_t>
-	static xUnsigned xZigZagEncode(typename std::enable_if<!std::numeric_limits<Underlying_t>::is_signed, Test_t>::type uValue) noexcept {
+	static xUnsigned xZigZagEncode(typename std::enable_if<!std::is_signed<Underlying_t>::value, Test_t>::type uValue) noexcept {
 		return uValue;
 	}
 	template<typename Test_t = xUnsigned>
-	static Underlying_t xZigZagDecode(typename std::enable_if<!std::numeric_limits<Underlying_t>::is_signed, Test_t>::type uEncoded) noexcept {
+	static Underlying_t xZigZagDecode(typename std::enable_if<!std::is_signed<Underlying_t>::value, Test_t>::type uEncoded) noexcept {
 		return uEncoded;
 	}
 

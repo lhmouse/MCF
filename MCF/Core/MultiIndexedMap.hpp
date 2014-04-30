@@ -167,16 +167,7 @@ inline void AvlEqualRange(
 }
 //============================================================================
 
-struct BinaryLess {
-	template<class Tx, class Ty>
-	constexpr bool operator()(const Tx &lhs, const Ty &rhs) const
-		noexcept(noexcept(NullRef<Tx>() < NullRef<Ty>()))
-	{
-		return lhs < rhs;
-	}
-};
-
-template<typename Index_t, class Comparer_t = BinaryLess>
+template<typename Index_t, class Comparer_t = std::less<void>>
 struct Index {
 	Index_t m_vIndex;
 
@@ -201,11 +192,11 @@ struct Index {
 };
 
 template<typename Index_t>
-struct MakeIndex {
+struct MakeIndex_ {
 	typedef Index<Index_t> Index;
 };
 template<typename Index_t, typename Comparer_t>
-struct MakeIndex<Index<Index_t, Comparer_t>> {
+struct MakeIndex_<Index<Index_t, Comparer_t>> {
 	typedef Index<Index_t, Comparer_t> Index;
 };
 
@@ -218,7 +209,7 @@ public:
 
 	static_assert(INDEX_COUNT > 0, "No index?");
 
-	typedef std::tuple<typename MakeIndex<Indexes_t>::Index...> Indexes;
+	typedef std::tuple<typename MakeIndex_<Indexes_t>::Index...> Indexes;
 
 	class Node {
 		friend MultiIndexedMap;
@@ -258,25 +249,23 @@ public:
 		Element_t xm_vElement;
 		Indexes xm_vIndexes;
 
+		AvlNodeHeader xm_arHeaders[INDEX_COUNT];
 #ifndef NDEBUG
 		const MultiIndexedMap *xm_pOwner;
 #endif
 
-	private:
-		AvlNodeHeader xm_arHeaders[INDEX_COUNT];
-
 	public:
-		template<typename ElementParam_t, typename FirstIndexParam_t, typename... IndexParams_t>
-		constexpr Node(ElementParam_t &&vElementParam, FirstIndexParam_t &&vFirstIndexParam, IndexParams_t &&... vIndexParams)
-			: xm_vElement(std::forward<ElementParam_t>(vElementParam))
-			, xm_vIndexes(std::forward<FirstIndexParam_t>(vFirstIndexParam), std::forward<IndexParams_t>(vIndexParams)...)
+		constexpr Node(Element_t vElement, Indexes_t... vIndexes)
+			: xm_vElement(std::move(vElement))
+			, xm_vIndexes(std::move(vIndexes)...)
 #ifndef NDEBUG
 			, xm_pOwner(nullptr)
 #endif
 		{
 		}
 
-		static_assert(noexcept(delete (Node *)nullptr), "Node must be noexcept destructible.");
+		static_assert(noexcept(NullRef<Element_t>().~Element_t()), "Element_t must be noexcept destructible.");
+		static_assert(noexcept(NullRef<Indexes>().~Indexes()), "Indexes must be noexcept destructible.");
 
 	public:
 		constexpr const Element_t &GetElement() const noexcept {
@@ -459,9 +448,8 @@ private:
 	}
 
 public:
-	template<typename... Params_t>
-	Node *Insert(Params_t &&... vParams){
-		const auto pNode = new Node(std::forward<Params_t>(vParams)...);
+	Node *Insert(Element_t vElement, Indexes_t... vIndexes){
+		const auto pNode = new Node(std::move(vElement), std::move(vIndexes)...);
 		xAttachAll<INDEX_COUNT - 1>(pNode);
 		++xm_uSize;
 		return pNode;

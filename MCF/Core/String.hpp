@@ -64,7 +64,7 @@ public:
 	String(Iterator_t itBegin, std::size_t uLen) : String() {
 		Assign(std::move(itBegin), uLen);
 	}
-	explicit String(const Observer &obs) : String() {
+	String(const Observer &obs) : String() {
 		Assign(obs);
 	}
 	template<typename OtherChar_t, StringEncoding OTHER_ENCODING>

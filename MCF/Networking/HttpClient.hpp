@@ -8,7 +8,6 @@
 #include "../Core/VVector.hpp"
 #include "../Core/Utilities.hpp"
 #include "../Core/String.hpp"
-#include "PeerInfo.hpp"
 #include <memory>
 #include <cstddef>
 #include <cstdint>
@@ -29,8 +28,7 @@ public:
 	);
 
 public:
-/*
-	void Connect(
+/*	void Connect(
 		const wchar_t *				pwszVerb,
 		const WideStringObserver &	wsoUrl,
 		const void *				pContents = nullptr,

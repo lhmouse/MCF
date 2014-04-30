@@ -27,9 +27,9 @@ private:
 public:
 	SemaphoreDelegate(unsigned long ulInitCount, unsigned long ulMaxCount, const WideStringObserver &wsoName){
 		if(wsoName.IsEmpty()){
-			xm_hSemaphore.Reset(::CreateSemaphoreW(nullptr, ulInitCount, ulMaxCount, nullptr));
+			xm_hSemaphore.Reset(::CreateSemaphoreW(nullptr, (long)ulInitCount, (long)ulMaxCount, nullptr));
 		} else {
-			xm_hSemaphore.Reset(::CreateSemaphoreW(nullptr, ulInitCount, ulMaxCount, wsoName.GetNullTerminated<MAX_PATH>().GetData()));
+			xm_hSemaphore.Reset(::CreateSemaphoreW(nullptr, (long)ulInitCount, (long)ulMaxCount, wsoName.GetNullTerminated<MAX_PATH>().GetData()));
 		}
 		if(!xm_hSemaphore){
 			MCF_THROW(::GetLastError(), L"CreateSemaphoreW() 失败。");
@@ -62,7 +62,7 @@ public:
 		return ulSucceeded;
 	}
 	void Release(unsigned long ulSignalCount) noexcept {
-		if(!::ReleaseSemaphore(xm_hSemaphore.Get(), ulSignalCount, nullptr)){
+		if(!::ReleaseSemaphore(xm_hSemaphore.Get(), (long)ulSignalCount, nullptr)){
 			ASSERT_MSG(false, L"ReleaseSemaphore() 失败。");
 		}
 	}

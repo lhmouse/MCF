@@ -32,11 +32,29 @@ public:
 	}
 
 	std::size_t Read(void *pData, std::size_t uSize){
-		const int nBytesRead = ::recv(xm_sockPeer.Get(), (char *)pData, uSize, 0);
-		if(nBytesRead < 0){
-			MCF_THROW(::WSAGetLastError(), L"::recv() 失败。");
+		std::size_t uTotalRead = 0;
+		auto pCur = (char *)pData;
+		const auto pEnd = pCur + uSize;
+		for(;;){
+			const int nBytesToRead = std::max(pEnd - pCur, 0x10000);
+			if(nBytesToRead == 0){
+				break;
+			}
+			const int nBytesRead = ::recv(xm_sockPeer.Get(), (char *)pData, (int)uSize, 0);
+			if(nBytesRead == 0){
+				break;
+			}
+			if(nBytesRead < 0){
+				MCF_THROW(::GetLastError(), L"::send() 失败。");
+			}
+			pCur += nBytesRead;
+
+			uTotalRead += (std::size_t)nBytesRead;
+			if(nBytesRead < 0x10000){
+				break;
+			}
 		}
-		return (std::size_t)nBytesRead;
+		return uTotalRead;
 	}
 	void ShutdownRead() noexcept {
 		::shutdown(xm_sockPeer.Get(), SD_RECEIVE);
@@ -45,14 +63,14 @@ public:
 	void SetNoDelay(bool bNoDelay){
 		DWORD dwVal = bNoDelay;
 		if(::setsockopt(xm_sockPeer.Get(), IPPROTO_TCP, TCP_NODELAY, (const char *)&dwVal, sizeof(dwVal))){
-			MCF_THROW(::WSAGetLastError(), L"::setsockopt() 失败。");
+			MCF_THROW(::GetLastError(), L"::setsockopt() 失败。");
 		}
 	}
 	void Write(const void *pData, std::size_t uSize){
 		auto pCur = (const char *)pData;
 		const auto pEnd = pCur + uSize;
 		for(;;){
-			const int nBytesToWrite = pEnd - pCur;
+			const int nBytesToWrite = std::max(pEnd - pCur, 0x10000);
 			if(nBytesToWrite == 0){
 				break;
 			}
@@ -61,7 +79,7 @@ public:
 				break;
 			}
 			if(nBytesWritten < 0){
-				MCF_THROW(::WSAGetLastError(), L"::send() 失败。");
+				MCF_THROW(::GetLastError(), L"::send() 失败。");
 			}
 			pCur += nBytesWritten;
 		}
@@ -85,7 +103,7 @@ std::unique_ptr<TcpPeer> TcpPeer::Connect(const PeerInfo &vServerInfo){
 
 	UniqueSocket sockServer(::socket(shFamily, SOCK_STREAM, IPPROTO_TCP));
 	if(!sockServer){
-		MCF_THROW(::WSAGetLastError(), L"::socket() 失败。");
+		MCF_THROW(::GetLastError(), L"::socket() 失败。");
 	}
 
 	SOCKADDR_STORAGE vSockAddr;
@@ -103,8 +121,8 @@ std::unique_ptr<TcpPeer> TcpPeer::Connect(const PeerInfo &vServerInfo){
 		BCopy(vSockAddrIn6.sin6_port, vServerInfo.m_u16Port);
 		uSockAddrLen = sizeof(SOCKADDR_IN6);
 	}
-	if(::connect(sockServer.Get(), (const SOCKADDR *)&vSockAddr, uSockAddrLen)){
-		MCF_THROW(::WSAGetLastError(), L"::connect() 失败。");
+	if(::connect(sockServer.Get(), (const SOCKADDR *)&vSockAddr, (int)uSockAddrLen)){
+		MCF_THROW(::GetLastError(), L"::connect() 失败。");
 	}
 
 	return std::make_unique<TcpPeerDelegate>(std::move(sockServer), &vSockAddr, uSockAddrLen);

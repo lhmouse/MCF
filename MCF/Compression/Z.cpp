@@ -107,7 +107,7 @@ public:
 			auto pbyRead = (const unsigned char *)pData;
 			const auto pbyEnd = pbyRead + uSize;
 			do {
-				const auto uBytesToProcess = Min(pbyEnd - pbyRead, 0x10000);
+				const auto uBytesToProcess = std::min((std::size_t)(pbyEnd - pbyRead), (std::size_t)0x10000);
 
 				next_in = pbyRead;
 				avail_in = uBytesToProcess;
@@ -210,7 +210,7 @@ public:
 			auto pbyRead = (const unsigned char *)pData;
 			const auto pbyEnd = pbyRead + uSize;
 			do {
-				const auto uBytesToProcess = Min(pbyEnd - pbyRead, 0x10000);
+				const auto uBytesToProcess = std::min((std::size_t)(pbyEnd - pbyRead), (std::size_t)0x10000);
 
 				next_in = pbyRead;
 				avail_in = uBytesToProcess;

@@ -102,17 +102,17 @@ WideString Unescape(const WideStringObserver &wsoSrc){
 
 		case UCS_CODE:
 			{
-				unsigned int uHex = wc - L'0';
+				auto uHex = (unsigned int)(wc - L'0');
 				do {
 					if(uHex <= 9){
 						break;
 					}
-					uHex += L'0' - L'A';
+					uHex += (unsigned int)(L'0' - L'A');
 					if(uHex <= 5){
 						uHex += 0x0A;
 						break;
 					}
-					uHex += L'A' - L'a';
+					uHex += (unsigned int)(L'A' - L'a');
 					if(uHex <= 5){
 						uHex += 0x0A;
 						break;

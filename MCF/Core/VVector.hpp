@@ -253,7 +253,7 @@ public:
 		if(uCapacity > GetCapacity()){
 			auto uSizeToAlloc = uCapacity;
 			uSizeToAlloc += (uSizeToAlloc >> 1);
-			uSizeToAlloc = (uSizeToAlloc + 0xF) & -0x10;
+			uSizeToAlloc = (uSizeToAlloc + 0xF) & (std::size_t)-0x10;
 
 			const auto pOldBegin = GetBegin();
 			const auto pOldEnd = GetEnd();
@@ -323,7 +323,7 @@ public:
 	}
 	template<class Iterator_t>
 	void CopyToEnd(Iterator_t itBegin, Iterator_t itEnd){
-		CopyToEnd(std::move(itBegin), std::distance(itBegin, itEnd));
+		CopyToEnd(std::move(itBegin), (std::size_t)std::distance(itBegin, itEnd));
 	}
 	template<class Iterator_t>
 	void CopyToEnd(Iterator_t itBegin, std::size_t uCount){
@@ -336,7 +336,7 @@ public:
 	}
 	template<class Iterator_t>
 	void MoveToEnd(Iterator_t itBegin, Iterator_t itEnd){
-		MoveToEnd(std::move(itBegin), std::distance(itBegin, itEnd));
+		MoveToEnd(std::move(itBegin), (std::size_t)std::distance(itBegin, itEnd));
 	}
 	template<class Iterator_t>
 	void MoveToEnd(Iterator_t itBegin, std::size_t uCount){
@@ -564,7 +564,7 @@ public:
 		if(uCapacity > GetCapacity()){
 			auto uSizeToAlloc = uCapacity;
 			uSizeToAlloc += (uSizeToAlloc >> 1);
-			uSizeToAlloc = (uSizeToAlloc + 0xF) & -0x10;
+			uSizeToAlloc = (uSizeToAlloc + 0xF) & (std::size_t)-0x10;
 
 			const auto pOldBegin = GetBegin();
 			const auto pOldEnd = GetEnd();
@@ -632,7 +632,7 @@ public:
 	}
 	template<class Iterator_t>
 	void CopyToEnd(Iterator_t itBegin, Iterator_t itEnd){
-		CopyToEnd(std::move(itBegin), std::distance(itBegin, itEnd));
+		CopyToEnd(std::move(itBegin), (std::size_t)std::distance(itBegin, itEnd));
 	}
 	template<class Iterator_t>
 	void CopyToEnd(Iterator_t itBegin, std::size_t uCount){
@@ -645,7 +645,7 @@ public:
 	}
 	template<class Iterator_t>
 	void MoveToEnd(Iterator_t itBegin, Iterator_t itEnd){
-		MoveToEnd(std::move(itBegin), std::distance(itBegin, itEnd));
+		MoveToEnd(std::move(itBegin), (std::size_t)std::distance(itBegin, itEnd));
 	}
 	template<class Iterator_t>
 	void MoveToEnd(Iterator_t itBegin, std::size_t uCount){

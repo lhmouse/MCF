@@ -42,7 +42,7 @@ private:
 	static std::size_t xTranslateOffset(std::size_t uLength, std::ptrdiff_t nRaw) noexcept {
 		std::ptrdiff_t nOffset = nRaw;
 		if(nOffset < 0){
-			nOffset += uLength + 1;
+			nOffset += (std::ptrdiff_t)(uLength + 1);
 		}
 
 		ASSERT_MSG(nOffset >= 0, L"索引越界。");
@@ -56,7 +56,7 @@ private:
 		ASSERT(uRepCount != 0);
 		ASSERT((std::size_t)(itEnd - itBegin) >= uRepCount);
 
-		const auto itSearchEnd = itEnd - (uRepCount - 1);
+		const auto itSearchEnd = itEnd - (std::ptrdiff_t)(uRepCount - 1);
 
 		std::size_t uFound = NPOS;
 
@@ -66,10 +66,10 @@ private:
 			if(itPartBegin == itSearchEnd){
 				break;
 			}
-			const auto itPartEnd = itPartBegin + uRepCount;
+			const auto itPartEnd = itPartBegin + (std::ptrdiff_t)uRepCount;
 			itCur = std::find_if(itPartBegin, itPartEnd, [chToFind](Char_t ch){ return ch != chToFind; });
 			if(itCur == itPartEnd){
-				uFound = itPartBegin - itBegin;
+				uFound = (std::size_t)(itPartBegin - itBegin);
 				break;
 			}
 			++itCur;
@@ -88,8 +88,8 @@ private:
 		ASSERT(itToFindEnd >= itToFindBegin);
 		ASSERT(itEnd - itBegin >= itToFindEnd - itToFindBegin);
 
-		const std::size_t uToFindLen = itToFindEnd - itToFindBegin;
-		const auto itSearchEnd = itEnd - (uToFindLen - 1);
+		const auto uToFindLen = (std::size_t)(itToFindEnd - itToFindBegin);
+		const auto itSearchEnd = itEnd - (std::ptrdiff_t)(uToFindLen - 1);
 
 		std::size_t *puKmpTable;
 
@@ -102,7 +102,7 @@ private:
 				// 内存不足，使用暴力搜索方法。
 				for(auto itCur = itBegin; itCur != itSearchEnd; ++itCur){
 					if(std::equal(itToFindBegin, itToFindEnd, itCur)){
-						return itCur - itBegin;
+						return (std::size_t)(itCur - itBegin);
 					}
 				}
 				return NPOS;
@@ -117,7 +117,7 @@ private:
 		std::size_t uPos = 2;
 		std::size_t uCand = 0;
 		while(uPos < uToFindLen){
-			if(itToFindBegin[uPos - 1] == itToFindBegin[uCand]){
+			if(itToFindBegin[(std::ptrdiff_t)(uPos - 1)] == itToFindBegin[(std::ptrdiff_t)uCand]){
 				puKmpTable[uPos++] = ++uCand;
 			} else if(uCand != 0){
 				uCand = puKmpTable[uCand];
@@ -129,16 +129,20 @@ private:
 		auto itCur = itBegin;
 		std::size_t uToSkip = 0;
 		do {
-			const auto vResult = std::mismatch(itToFindBegin + uToSkip, itToFindEnd, itCur + uToSkip);
+			const auto vResult = std::mismatch(
+				itToFindBegin + (std::ptrdiff_t)uToSkip,
+				itToFindEnd,
+				itCur + (std::ptrdiff_t)uToSkip
+			);
 			if(vResult.first == itToFindEnd){
-				uFound = itCur - itBegin;
+				uFound = (std::size_t)(itCur - itBegin);
 				break;
 			}
-			std::size_t uDelta = vResult.first - itToFindBegin;
+			auto uDelta = (std::size_t)(vResult.first - itToFindBegin);
 			uToSkip = puKmpTable[uDelta];
 			uDelta -= uToSkip;
 			uDelta += (std::size_t)(*vResult.second != *itToFindBegin);
-			itCur += uDelta;
+			itCur += (std::ptrdiff_t)uDelta;
 		} while(itCur < itSearchEnd);
 
 		if(puKmpTable != auSmallTable){

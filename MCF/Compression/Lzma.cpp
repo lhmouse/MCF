@@ -186,7 +186,7 @@ public:
 
 		xm_uBytesProcessed = 0;
 		while(pbyRead != pbyEnd){
-			const auto uBytesToProcess = Min(pbyEnd - pbyRead, 0x10000);
+			const auto uBytesToProcess = std::min((std::size_t)(pbyEnd - pbyRead), (std::size_t)0x10000);
 
 			ulErrorCode = LzmaErrorToWin32Error(::LzmaEnc_NewEncode(xm_pContext.Get(), pbyRead, uBytesToProcess));
 			if(xm_pException){
@@ -268,7 +268,7 @@ public:
 			if(xm_uHeaderSize == sizeof(xm_abyHeader)){
 				xm_pDecoder.Reset();
 
-				ulErrorCode = ::LzmaDec_Allocate(&xm_vDecoder, xm_abyHeader, sizeof(xm_abyHeader), &g_vAllocSmall);
+				ulErrorCode = LzmaErrorToWin32Error(::LzmaDec_Allocate(&xm_vDecoder, xm_abyHeader, sizeof(xm_abyHeader), &g_vAllocSmall));
 				if(ulErrorCode != ERROR_SUCCESS){
 					MCF_THROW(ulErrorCode, L"::LzmaDec_Allocate() 失败。");
 				}

@@ -1,8 +1,8 @@
 Default = Debug
 
 General {
-	CompilerFlags		= -Wall -Wextra -pipe -mfpmath=sse,387 -msse2 -masm=intel
-	LinkerFlags			= -Wall -Wextra -static
+	CompilerFlags		= -Wall -Wextra -Wsign-conversion -pipe -mfpmath=sse,387 -msse2 -masm=intel
+	LinkerFlags			= -Wall -Wextra -Wsign-conversion -static
 	ExtraLibs			= -lversion -lshlwapi
 
 	CPPFlags			= -std=c++11

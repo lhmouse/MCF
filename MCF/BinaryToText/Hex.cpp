@@ -31,7 +31,7 @@ HexEncoder::HexEncoder(std::function<std::pair<void *, std::size_t> (std::size_t
 }
 
 // 其他非静态成员函数。
-void HexEncoder::Abort() noexcept{
+void HexEncoder::Abort() noexcept {
 }
 void HexEncoder::Update(const void *pData, std::size_t uSize){
 	alignas(16) char achBuffer[64];
@@ -77,7 +77,7 @@ HexDecoder::HexDecoder(std::function<std::pair<void *, std::size_t> (std::size_t
 }
 
 // 其他非静态成员函数。
-void HexDecoder::Abort() noexcept{
+void HexDecoder::Abort() noexcept {
 	xm_bInited = false;
 }
 void HexDecoder::Update(const void *pData, std::size_t uSize){

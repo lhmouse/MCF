@@ -38,7 +38,7 @@ Base64Encoder::Base64Encoder(std::function<std::pair<void *, std::size_t> (std::
 }
 
 // 其他非静态成员函数。
-void Base64Encoder::Abort() noexcept{
+void Base64Encoder::Abort() noexcept {
 	xm_uState = (std::size_t)-1;
 }
 void Base64Encoder::Update(const void *pData, std::size_t uSize){
@@ -132,7 +132,7 @@ Base64Decoder::Base64Decoder(std::function<std::pair<void *, std::size_t> (std::
 }
 
 // 其他非静态成员函数。
-void Base64Decoder::Abort() noexcept{
+void Base64Decoder::Abort() noexcept {
 	xm_uState = (std::size_t)-1;
 }
 void Base64Decoder::Update(const void *pData, std::size_t uSize){

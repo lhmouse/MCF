@@ -30,7 +30,7 @@ struct WSAInitializer : NO_COPY {
 	WSAInitializer(){
 		WSADATA vWsaData;
 		if(::WSAStartup(MAKEWORD(2, 2), &vWsaData)){
-			MCF_THROW(::WSAGetLastError(), L"::WSAStartup() 失败。");
+			MCF_THROW(::GetLastError(), L"::WSAStartup() 失败。");
 		}
 	}
 	~WSAInitializer() noexcept {

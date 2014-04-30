@@ -47,20 +47,20 @@ public:
 
 		xm_sockListen.Reset(::socket(shFamily, SOCK_STREAM, IPPROTO_TCP));
 		if(!xm_sockListen){
-			MCF_THROW(::WSAGetLastError(), L"::socket() 失败。");
+			MCF_THROW(::GetLastError(), L"::socket() 失败。");
 		}
 		if(::setsockopt(xm_sockListen.Get(), SOL_SOCKET, SO_CONDITIONAL_ACCEPT, (const char *)&TRUE_VALUE, sizeof(TRUE_VALUE))){
-			MCF_THROW(::WSAGetLastError(), L"::setsockopt() 失败。");
+			MCF_THROW(::GetLastError(), L"::setsockopt() 失败。");
 		}
 		if(shFamily == AF_INET6){
 			if(::setsockopt(xm_sockListen.Get(), IPPROTO_IPV6, IPV6_V6ONLY, (const char *)&FALSE_VALUE, sizeof(FALSE_VALUE))){
-				MCF_THROW(::WSAGetLastError(), L"::setsockopt() 失败。");
+				MCF_THROW(::GetLastError(), L"::setsockopt() 失败。");
 			}
 		}
 
 		unsigned long ulTrueValue = 1;
-		if(::ioctlsocket(xm_sockListen.Get(), FIONBIO, &ulTrueValue)){
-			MCF_THROW(::WSAGetLastError(), L"::ioctlsocket() 失败。");
+		if(::ioctlsocket(xm_sockListen.Get(), (long)FIONBIO, &ulTrueValue)){
+			MCF_THROW(::GetLastError(), L"::ioctlsocket() 失败。");
 		}
 
 		SOCKADDR_STORAGE vSockAddr;
@@ -76,11 +76,11 @@ public:
 			BCopy(vSockAddrIn6.sin6_port, vBoundOnto.m_u16Port);
 		}
 		if(::bind(xm_sockListen.Get(), (const SOCKADDR *)&vSockAddr, sizeof(vSockAddr))){
-			MCF_THROW(::WSAGetLastError(), L"::bind() 失败。");
+			MCF_THROW(::GetLastError(), L"::bind() 失败。");
 		}
 
 		if(::listen(xm_sockListen.Get(), SOMAXCONN)){
-			MCF_THROW(::WSAGetLastError(), L"::listen() 失败。");
+			MCF_THROW(::GetLastError(), L"::listen() 失败。");
 		}
 
 		xm_pthrdListener = Thread::Create(std::bind(&TcpServerDelegate::xListenerProc, this), false);
@@ -117,7 +117,7 @@ private:
 					continue;
 				}
 				unsigned long ulFalseValue = 0;
-				if(::ioctlsocket(vClient.sockClient.Get(), FIONBIO, &ulFalseValue)){
+				if(::ioctlsocket(vClient.sockClient.Get(), (long)FIONBIO, &ulFalseValue)){
 					continue;
 				}
 
@@ -185,7 +185,7 @@ std::unique_ptr<TcpPeer> TcpServer::GetPeerTimeout(unsigned long ulMilliSeconds)
 	return TcpPeer::xFromSocket(
 		&(vClient.sockClient),
 		&(vClient.vSockAddr),
-		vClient.nSockAddrSize
+		(std::size_t)vClient.nSockAddrSize
 	);
 }
 std::unique_ptr<TcpPeer> TcpServer::GetPeer() noexcept {

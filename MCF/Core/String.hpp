@@ -133,7 +133,7 @@ private:
 
 		if(GetCapacity() < uNewLength){
 			uSizeToAlloc += (uSizeToAlloc >> 1);
-			uSizeToAlloc = (uSizeToAlloc + 0xF) & -0x10;
+			uSizeToAlloc = (uSizeToAlloc + 0xF) & (std::size_t)-0x10;
 			if(uSizeToAlloc < uNewLength + 1){
 				throw std::bad_alloc();
 			}
@@ -232,7 +232,7 @@ public:
 		return GetBegin();
 	}
 	std::size_t GetSize() const noexcept {
-		return GetEnd() - GetBegin();
+		return (std::size_t)(GetEnd() - GetBegin());
 	}
 
 	Observer GetObserver() const noexcept {
@@ -285,7 +285,7 @@ public:
 	}
 	template<class Iterator_t>
 	void Assign(Iterator_t itBegin, Iterator_t itEnd){
-		Assign(std::move(itBegin), std::distance(itBegin, itEnd));
+		Assign(std::move(itBegin), (std::size_t)std::distance(itBegin, itEnd));
 	}
 	template<class Iterator_t>
 	void Assign(Iterator_t itBegin, std::size_t uLength){
@@ -313,7 +313,7 @@ public:
 	}
 	template<class Iterator_t>
 	void Append(Iterator_t itBegin, Iterator_t itEnd){
-		Append(std::move(itBegin), std::distance(itBegin, itEnd));
+		Append(std::move(itBegin), (std::size_t)std::distance(itBegin, itEnd));
 	}
 	template<class Iterator_t>
 	void Append(Iterator_t itBegin, std::size_t uLength){
@@ -393,7 +393,7 @@ public:
 	}
 	template<class Iterator_t>
 	void Unshift(Iterator_t itBegin, Iterator_t itEnd){
-		Unshift(std::move(itBegin), std::distance(itBegin, itEnd));
+		Unshift(std::move(itBegin), (std::size_t)std::distance(itBegin, itEnd));
 	}
 	template<class Iterator_t>
 	void Unshift(Iterator_t itBegin, std::size_t uLength){
@@ -459,8 +459,8 @@ public:
 		const std::size_t uOldLength = obsCurrent.GetLength();
 
 		const auto obsRemoved(obsCurrent.Slice(nBegin, nEnd));
-		const auto uRemovedBegin = obsRemoved.GetBegin() - obsCurrent.GetBegin();
-		const auto uRemovedEnd = obsRemoved.GetEnd() - obsCurrent.GetBegin();
+		const auto uRemovedBegin = (std::size_t)(obsRemoved.GetBegin() - obsCurrent.GetBegin());
+		const auto uRemovedEnd = (std::size_t)(obsRemoved.GetEnd() - obsCurrent.GetBegin());
 
 		const auto pchWrite = xChopAndSplice(
 			uRemovedBegin,
@@ -473,7 +473,7 @@ public:
 	}
 	template<class Iterator_t>
 	void Replace(std::ptrdiff_t nBegin, std::ptrdiff_t nEnd, Iterator_t itRepBegin, Iterator_t itRepEnd){
-		Replace(nBegin, nEnd, itRepBegin, std::distance(itRepBegin, itRepEnd));
+		Replace(nBegin, nEnd, itRepBegin, (std::size_t)std::distance(itRepBegin, itRepEnd));
 	}
 	template<class Iterator_t>
 	void Replace(std::ptrdiff_t nBegin, std::ptrdiff_t nEnd, Iterator_t itRepBegin, std::size_t uRepLen){
@@ -481,8 +481,8 @@ public:
 		const std::size_t uOldLength = obsCurrent.GetLength();
 
 		const auto obsRemoved(obsCurrent.Slice(nBegin, nEnd));
-		const auto uRemovedBegin = obsRemoved.GetBegin() - obsCurrent.GetBegin();
-		const auto uRemovedEnd = obsRemoved.GetEnd() - obsCurrent.GetBegin();
+		const auto uRemovedBegin = (std::size_t)(obsRemoved.GetBegin() - obsCurrent.GetBegin());
+		const auto uRemovedEnd = (std::size_t)(obsRemoved.GetEnd() - obsCurrent.GetBegin());
 
 		// 注意：不指向同一个数组的两个指针相互比较是未定义行为。
 		if((uRepLen != 0) && ((std::uintptr_t)&*itRepBegin - (std::uintptr_t)obsCurrent.GetBegin() <= uOldLength * sizeof(Char_t))){

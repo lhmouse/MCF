@@ -190,6 +190,9 @@ std::size_t File::Read(void *pBuffer, std::size_t uBytesToRead, std::uint64_t u6
 			break;
 		}
 		uBytesRead += dwBytesReadThisTime;
+		if(dwBytesReadThisTime != dwBytesToReadThisTime){
+			break;
+		}
 	}
 	return uBytesRead;
 }
@@ -206,6 +209,9 @@ std::size_t File::Read(void *pBuffer, std::size_t uBytesToRead, std::uint64_t u6
 	if(uBytesRead == 0){
 		return 0;
 	}
+	if(uBytesRead != dwBytesToReadThisTime){
+		return uBytesRead;
+	}
 	for(;;){
 		dwBytesToReadThisTime = Min(0xFFFFF000u, uBytesToRead - uBytesRead);
 		const DWORD dwBytesReadThisTime = ((const FileDelegate *)this)->Read(
@@ -218,6 +224,9 @@ std::size_t File::Read(void *pBuffer, std::size_t uBytesToRead, std::uint64_t u6
 			break;
 		}
 		uBytesRead += dwBytesReadThisTime;
+		if(dwBytesReadThisTime != dwBytesToReadThisTime){
+			break;
+		}
 	}
 	return uBytesRead;
 }

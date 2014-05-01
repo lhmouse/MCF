@@ -50,7 +50,7 @@ public:
 			pCur += nBytesRead;
 
 			uTotalRead += (std::size_t)nBytesRead;
-			if(nBytesRead < 0x10000){
+			if(nBytesRead < nBytesToRead){
 				break;
 			}
 		}

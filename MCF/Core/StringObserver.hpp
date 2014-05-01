@@ -12,6 +12,7 @@
 #include <utility>
 #include <iterator>
 #include <type_traits>
+#include <initializer_list>
 #include <cstddef>
 
 namespace MCF {
@@ -178,6 +179,10 @@ public:
 		: StringObserver(pchBegin, pchBegin + uLen)
 	{
 	}
+	constexpr StringObserver(std::initializer_list<Char_t> vInitList) noexcept
+		: StringObserver(vInitList.begin(), vInitList.end())
+	{
+	}
 	template<typename Test_t, typename = typename std::enable_if<std::is_same<Test_t, Char_t>::value>::type>
 	constexpr StringObserver(const Test_t *const &pszBegin) noexcept
 		: StringObserver(pszBegin, xEndOf(pszBegin))
@@ -188,10 +193,27 @@ public:
 		: StringObserver(achLiteral, achLiteral + N - 1)
 	{
 	}
+	StringObserver &operator=(std::nullptr_t) noexcept {
+		xm_pchBegin = nullptr;
+		xm_pchEnd = nullptr;
+		return *this;
+	}
+	StringObserver &operator=(std::initializer_list<Char_t> vInitList) noexcept {
+		xm_pchBegin = vInitList.begin();
+		xm_pchEnd = vInitList.end();
+		return *this;
+	}
+	template<typename Test_t, typename = typename std::enable_if<std::is_same<Test_t, Char_t>::value>::type>
+	StringObserver &operator=(const Test_t *const &pszBegin) noexcept {
+		xm_pchBegin = pszBegin;
+		xm_pchEnd = xEndOf(pszBegin);
+		return *this;
+	}
 	template<std::size_t N>
-	constexpr StringObserver(Char_t (&achNonLiteral)[N]) noexcept
-		: StringObserver(achNonLiteral, xEndOf(achNonLiteral))
-	{
+	StringObserver &operator=(const Char_t (&achLiteral)[N]) noexcept {
+		xm_pchBegin = achLiteral;
+		xm_pchEnd = achLiteral + N - 1;
+		return *this;
 	}
 
 public:

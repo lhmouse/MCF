@@ -58,11 +58,11 @@ public:
 	}
 	template<class Iterator_t>
 	String(Iterator_t itBegin, Iterator_t itEnd) : String() {
-		Assign(std::move(itBegin), std::move(itEnd));
+		Assign(itBegin, itEnd);
 	}
 	template<class Iterator_t>
 	String(Iterator_t itBegin, std::size_t uLen) : String() {
-		Assign(std::move(itBegin), uLen);
+		Assign(itBegin, uLen);
 	}
 	String(const Observer &obs) : String() {
 		Assign(obs);
@@ -285,7 +285,7 @@ public:
 	}
 	template<class Iterator_t>
 	void Assign(Iterator_t itBegin, Iterator_t itEnd){
-		Assign(std::move(itBegin), (std::size_t)std::distance(itBegin, itEnd));
+		Assign(itBegin, (std::size_t)std::distance(itBegin, itEnd));
 	}
 	template<class Iterator_t>
 	void Assign(Iterator_t itBegin, std::size_t uLength){
@@ -301,8 +301,9 @@ public:
 	}
 	template<typename OtherChar_t, StringEncoding OTHER_ENCODING>
 	void Assign(const String<OtherChar_t, OTHER_ENCODING> &rhs){
-		Clear();
-		Append(rhs);
+		String strTemp;
+		strTemp.Append(rhs);
+		Swap(strTemp);
 	}
 
 	void Append(Char_t ch, std::size_t uCount = 1){
@@ -313,7 +314,7 @@ public:
 	}
 	template<class Iterator_t>
 	void Append(Iterator_t itBegin, Iterator_t itEnd){
-		Append(std::move(itBegin), (std::size_t)std::distance(itBegin, itEnd));
+		Append(itBegin, (std::size_t)std::distance(itBegin, itEnd));
 	}
 	template<class Iterator_t>
 	void Append(Iterator_t itBegin, std::size_t uLength){
@@ -393,7 +394,7 @@ public:
 	}
 	template<class Iterator_t>
 	void Unshift(Iterator_t itBegin, Iterator_t itEnd){
-		Unshift(std::move(itBegin), (std::size_t)std::distance(itBegin, itEnd));
+		Unshift(itBegin, (std::size_t)std::distance(itBegin, itEnd));
 	}
 	template<class Iterator_t>
 	void Unshift(Iterator_t itBegin, std::size_t uLength){
@@ -428,13 +429,9 @@ public:
 		ASSERT_MSG(uCount <= GetLength(), L"删除的字符数太多。");
 
 		const std::size_t uOldLength = GetLength();
-		if(uOldLength > uCount){
-			const auto pchBuffer = GetBegin();
-			std::copy(pchBuffer + uCount, pchBuffer + uOldLength, pchBuffer);
-			xSetSize(uOldLength - uCount);
-		} else {
-			Clear();
-		}
+		const auto pchBuffer = GetBegin();
+		std::copy(pchBuffer + uCount, pchBuffer + uOldLength, pchBuffer);
+		xSetSize(uOldLength - uCount);
 	}
 
 	Observer Slice(std::ptrdiff_t nBegin, std::ptrdiff_t nEnd = -1) const {

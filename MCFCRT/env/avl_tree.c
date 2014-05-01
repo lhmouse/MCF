@@ -224,6 +224,10 @@ void MCF_AvlSwap(
 	MCF_AVL_ROOT *ppRoot1,
 	MCF_AVL_ROOT *ppRoot2
 ){
+	if(ppRoot1 == ppRoot2){
+		return;
+	}
+
 	MCF_AVL_NODE_HEADER *const pRoot1 = *ppRoot1;
 	MCF_AVL_NODE_HEADER *const pRoot2 = *ppRoot2;
 

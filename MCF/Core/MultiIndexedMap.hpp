@@ -6,9 +6,7 @@
 #define MCF_MULTI_INDEXED_HPP_
 
 #include "../../MCFCRT/stdc/ext/offset_of.h"
-#include "../../MCFCRT/stdc/ext/unref_param.h"
 #include "../../MCFCRT/env/avl_tree.h"
-#include "Utilities.hpp"
 #include <tuple>
 #include <type_traits>
 #include <functional>
@@ -164,38 +162,47 @@ public:
 private:
 	template<std::size_t INDEX>
 	struct xComparers {
+		typedef typename Node::xIndexTuple IndexTuple;
+		typedef typename std::tuple_element<INDEX, IndexTuple>::type IndexType;
+
 		static int Nodes(
 			const MCF_AVL_NODE_HEADER *pAvl1,
 			const MCF_AVL_NODE_HEADER *pAvl2
 		) noexcept {
+			static_assert(
+				noexcept(NullRef<IndexType>() < NullRef<IndexType>()),
+				"Comparer must not throw any exceptions."
+			);
+
 			const auto pNode1 = DOWN_CAST(const Node, xm_aHeaders[INDEX], pAvl1);
 			const auto pNode2 = DOWN_CAST(const Node, xm_aHeaders[INDEX], pAvl2);
-
-			static_assert(noexcept(std::get<INDEX>(pNode1->xm_vIndexes) < std::get<INDEX>(pNode2->xm_vIndexes)), "Comparer must not throw any exceptions.");
-
-			return std::get<INDEX>(pNode1->xm_vIndexes) < std::get<INDEX>(pNode2->xm_vIndexes);
+			return std::less<void>()(std::get<INDEX>(pNode1->xm_vIndexes), std::get<INDEX>(pNode2->xm_vIndexes));
 		}
 		template<typename Other_t>
 		static int NodeOther(
 			const MCF_AVL_NODE_HEADER *pAvl1,
 			std::intptr_t nOther
 		) noexcept {
+			static_assert(
+				noexcept(NullRef<IndexType>() < NullRef<Other_t>()),
+				"Comparer must not throw any exceptions."
+			);
+
 			const auto pNode1 = DOWN_CAST(const Node, xm_aHeaders[INDEX], pAvl1);
-
-			static_assert(noexcept(std::get<INDEX>(pNode1->xm_vIndexes) < *(const Other_t *)nOther), "Comparer must not throw any exceptions.");
-
-			return std::get<INDEX>(pNode1->xm_vIndexes) < *(const Other_t *)nOther;
+			return std::less<void>()(std::get<INDEX>(pNode1->xm_vIndexes), *(const Other_t *)nOther);
 		}
 		template<typename Other_t>
 		static int OtherNode(
 			std::intptr_t nOther,
 			const MCF_AVL_NODE_HEADER *pAvl2
 		) noexcept {
+			static_assert(
+				noexcept(NullRef<Other_t>() < NullRef<IndexType>()),
+				"Comparer must not throw any exceptions."
+			);
+
 			const auto pNode2 = DOWN_CAST(const Node, xm_aHeaders[INDEX], pAvl2);
-
-			static_assert(noexcept(*(const Other_t *)nOther < std::get<INDEX>(pNode2->xm_vIndexes)), "Comparer must not throw any exceptions.");
-
-			return *(const Other_t *)nOther < std::get<INDEX>(pNode2->xm_vIndexes);
+			return std::less<void>()(*(const Other_t *)nOther, std::get<INDEX>(pNode2->xm_vIndexes));
 		}
 	};
 

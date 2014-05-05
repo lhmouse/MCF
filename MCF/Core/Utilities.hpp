@@ -19,45 +19,45 @@ namespace MCF {
 // COUNT_OF
 //----------------------------------------------------------------------------
 template<typename Ty, std::size_t N>
-char (&CountOfHelper_(Ty (&)[N]))[N];
+char (&CountOfHelper(Ty (&)[N]))[N];
 
 template<typename Ty, std::size_t N>
-char (&CountOfHelper_(Ty (&&)[N]))[N];
+char (&CountOfHelper(Ty (&&)[N]))[N];
 
-#define COUNT_OF(a)		(sizeof(::MCF::CountOfHelper_((a))))
+#define COUNT_OF(a)		(sizeof(::MCF::CountOfHelper((a))))
 
 //----------------------------------------------------------------------------
 // NO_COPY
 //----------------------------------------------------------------------------
-struct NonCopyable_ {
-	constexpr NonCopyable_() noexcept = default;
-	~NonCopyable_() = default;
+struct NonCopyableBase {
+	constexpr NonCopyableBase() noexcept = default;
+	~NonCopyableBase() = default;
 
-	NonCopyable_(const NonCopyable_ &) = delete;
-	void operator=(const NonCopyable_ &) = delete;
-	NonCopyable_(NonCopyable_ &&) = delete;
-	void operator=(NonCopyable_ &&) = delete;
+	NonCopyableBase(const NonCopyableBase &) = delete;
+	void operator=(const NonCopyableBase &) = delete;
+	NonCopyableBase(NonCopyableBase &&) = delete;
+	void operator=(NonCopyableBase &&) = delete;
 };
 
-#define NO_COPY			private ::MCF::NonCopyable_
+#define NO_COPY			private ::MCF::NonCopyableBase
 
 //----------------------------------------------------------------------------
 // ABSTRACT / CONCRETE
 //----------------------------------------------------------------------------
-struct Abstract_ {
-	virtual ~Abstract_() noexcept { }
+struct AbstractBase {
+	virtual ~AbstractBase() noexcept { }
 	virtual void MCF_PureAbstractFunction_() = 0;
 };
 
 template<class Base_t>
-struct Concrete_ : public Base_t {
-	static_assert(std::is_base_of<Abstract_, Base_t>::value, "Concreting from non-abstract class?");
+struct ConcreteBase : public Base_t {
+	static_assert(std::is_base_of<AbstractBase, Base_t>::value, "Concreting from non-abstract class?");
 
 	virtual void MCF_PureAbstractFunction_(){ }
 };
 
-#define ABSTRACT		private ::MCF::Abstract_
-#define CONCRETE(base)	public ::MCF::Concrete_<base>
+#define ABSTRACT		private ::MCF::AbstractBase
+#define CONCRETE(base)	public ::MCF::ConcreteBase<base>
 
 //----------------------------------------------------------------------------
 // Bail
@@ -95,16 +95,6 @@ void NoExceptAssertionFailed<true>() noexcept; // 未定义的。
 #define ASSERT_NOEXCEPT_END_COND(c)	} catch(...){ ::MCF::NoExceptAssertionFailed<(c)>(); }
 
 //----------------------------------------------------------------------------
-// HintNonNull
-//----------------------------------------------------------------------------
-template<typename T>
-inline T *__attribute__((__returns_nonnull__)) HintNonNull(T *p) noexcept {
-	ASSERT(p);
-
-	return p;
-}
-
-//----------------------------------------------------------------------------
 // NullRef
 //----------------------------------------------------------------------------
 template<typename T>
@@ -120,7 +110,9 @@ auto NullRef() noexcept
 //----------------------------------------------------------------------------
 template<typename T>
 inline auto Clone(T &&vSrc)
-	-> typename std::remove_cv<typename std::remove_reference<T>::type>::type
+	-> typename std::remove_cv<
+		typename std::remove_reference<T>::type
+	>::type
 {
 	return typename std::remove_cv<
 		typename std::remove_reference<T>::type

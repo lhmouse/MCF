@@ -9,26 +9,22 @@
 namespace {
 
 inline void *__attribute__((__always_inline__)) Allocate(std::size_t uSize, const void *pRetAddr){
-	if(uSize == 0){
-		uSize = 1;
-	}
-	auto *pRet = __MCF_CRT_HeapAlloc(uSize, pRetAddr);
+	const auto uSizeToAlloc = (uSize == 0) ? 1 : uSize;
+	auto *pRet = ::__MCF_CRT_HeapAlloc(uSizeToAlloc, pRetAddr);
 	while(!pRet){
 		const auto pfnHandler = std::get_new_handler();
 		if(!pfnHandler){
 			throw std::bad_alloc();
 		}
 		(*pfnHandler)();
-		pRet = __MCF_CRT_HeapAlloc(uSize, pRetAddr);
+		pRet = ::__MCF_CRT_HeapAlloc(uSizeToAlloc, pRetAddr);
 	}
 	return pRet;
 }
 
 inline void *__attribute__((__always_inline__)) AllocateNoThrow(std::size_t uSize, const void *pRetAddr) noexcept {
-	if(uSize == 0){
-		uSize = 1;
-	}
-	auto *pRet = __MCF_CRT_HeapAlloc(uSize, pRetAddr);
+	const auto uSizeToAlloc = (uSize == 0) ? 1 : uSize;
+	auto *pRet = ::__MCF_CRT_HeapAlloc(uSizeToAlloc, pRetAddr);
 	if(!pRet) {
 		try {
 			do {
@@ -37,7 +33,7 @@ inline void *__attribute__((__always_inline__)) AllocateNoThrow(std::size_t uSiz
 					return nullptr;
 				}
 				(*pfnHandler)();
-				pRet = __MCF_CRT_HeapAlloc(uSize, pRetAddr);
+				pRet = ::__MCF_CRT_HeapAlloc(uSizeToAlloc, pRetAddr);
 			} while(!pRet);
 		} catch(std::bad_alloc &){
 			return nullptr;
@@ -48,7 +44,7 @@ inline void *__attribute__((__always_inline__)) AllocateNoThrow(std::size_t uSiz
 
 inline void __attribute__((__always_inline__)) Deallocate(void *pBlock, const void *pRetAddr) noexcept {
 	if(pBlock){
-		__MCF_CRT_HeapFree(pBlock, pRetAddr);
+		::__MCF_CRT_HeapFree(pBlock, pRetAddr);
 	}
 }
 

@@ -6,7 +6,6 @@
 #define MCF_V_VECTOR_HPP_
 
 #include "../../MCFCRT/stdc/ext/assert.h"
-#include "Utilities.hpp"
 #include <initializer_list>
 #include <type_traits>
 #include <iterator>

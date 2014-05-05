@@ -4,6 +4,7 @@
 
 #include "../StdMCF.hpp"
 #include "Thunk.hpp"
+#include "Utilities.hpp"
 #include "UniqueHandle.hpp"
 #include "Exception.hpp"
 using namespace MCF;
@@ -19,7 +20,7 @@ struct HeapDestroyer {
 	}
 };
 
-struct ThunkHeap {
+struct ThunkHeap : NO_COPY {
 	UniqueHandle<HeapDestroyer>	m_hHeap;
 
 	ThunkHeap(){
@@ -39,30 +40,23 @@ struct ThunkHeap {
 	}
 } g_vThunkHeap;
 
-struct ThunkDeallocator {
-	constexpr void *operator()() const noexcept {
-		return nullptr;
+void DeallocateThunk(void *pThunk) noexcept {
+	if(pThunk){
+		::HeapFree(g_vThunkHeap.m_hHeap.Get(), 0, pThunk);
 	}
-	void operator()(void *pThunk) const noexcept {
-		if(pThunk){
-			::HeapFree(g_vThunkHeap.m_hHeap.Get(), 0, pThunk);
-		}
-	}
-};
+}
 
 }
 
 namespace MCF {
 
 std::shared_ptr<void> AllocateThunk(std::size_t uSize){
-	UniqueHandle<ThunkDeallocator> pThunk;
-	pThunk.Reset(::HeapAlloc(g_vThunkHeap.m_hHeap.Get(), 0, uSize));
+	std::shared_ptr<void> pThunk;
+	pThunk.reset(::HeapAlloc(g_vThunkHeap.m_hHeap.Get(), 0, uSize), &DeallocateThunk);
 	if(!pThunk){
 		MCF_THROW(::GetLastError(), L"HeapAlloc() 失败。");
 	}
-	std::shared_ptr<void> pRet(pThunk.Get(), ThunkDeallocator());
-	pThunk.Release();
-	return std::move(pRet);
+	return std::move(pThunk);
 }
 
 }

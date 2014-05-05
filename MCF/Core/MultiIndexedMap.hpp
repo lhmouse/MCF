@@ -15,58 +15,28 @@
 
 namespace MCF {
 
-template<typename Index_t, class Comparer_t = std::less<void>>
-struct MapIndex {
-	Index_t m_vIndex;
-
-	MapIndex() = default;
-
-	explicit constexpr MapIndex(Index_t vIndex)
-		: m_vIndex(std::move(vIndex))
-	{
-	}
-
-	template<typename Comparand_t>
-	bool operator()(Comparand_t &&rhs) const noexcept {
-		static_assert(noexcept(Comparer_t()(m_vIndex, rhs)), "Comparer_t must not throw any exceptions.");
-
-		return Comparer_t()(m_vIndex, rhs);
-	}
-	template<typename Comparand_t>
-	bool operator()(Comparand_t &&lhs, int) const noexcept {
-		static_assert(noexcept(Comparer_t()(lhs, m_vIndex)), "Comparer_t must not throw any exceptions.");
-
-		return Comparer_t()(lhs, m_vIndex);
-	}
-};
-
-template<typename Index_t, class Comparer_t, class IgnoredComparer_t>
-struct MapIndex<MapIndex<Index_t, Comparer_t>, IgnoredComparer_t>
-	: public MapIndex<Index_t, Comparer_t>
-{
-	using MapIndex<Index_t, Comparer_t>::MapIndex;
-};
-
 template<class Element_t, class... Indexes_t>
 class MultiIndexedMap;
 
 template<class Element_t, class... Indexes_t>
-class MapNode {
+class MultiIndexedMapNode {
 	static_assert(sizeof...(Indexes_t) > 0, "No index?");
 
 	template<class, class...>
 	friend class MultiIndexedMap;
 
 private:
+	typedef std::tuple<Indexes_t...> xIndexTuple;
+
+private:
 	Element_t xm_vElement;
-	std::tuple<MapIndex<Indexes_t>...> xm_vIndexes;
+	xIndexTuple xm_vIndexes;
 	::MCF_AVL_NODE_HEADER xm_aHeaders[sizeof...(Indexes_t)];
 
 public:
-	template<typename... IndexParams_t>
-	explicit constexpr MapNode(Element_t vElement, IndexParams_t &&... vIndexParams)
+	explicit constexpr MultiIndexedMapNode(Element_t vElement, Indexes_t... vIndexes)
 		: xm_vElement(std::move(vElement))
-		, xm_vIndexes(MapIndex<Indexes_t>(std::forward<IndexParams_t>(vIndexParams))...)
+		, xm_vIndexes(std::move(vIndexes)...)
 		, xm_aHeaders()
 	{
 	}
@@ -80,61 +50,63 @@ public:
 	}
 	template<std::size_t INDEX>
 	constexpr auto GetIndex() const noexcept
-		-> const decltype(std::get<INDEX>(xm_vIndexes).m_vIndex) &
+		-> const typename std::tuple_element<INDEX, xIndexTuple>::type &
 	{
-		return std::get<INDEX>(xm_vIndexes).m_vIndex;
+		return std::get<INDEX>(xm_vIndexes);
 	}
 
 	template<std::size_t INDEX>
-	const MapNode *GetPrev() const noexcept {
+	const MultiIndexedMapNode *GetPrev() const noexcept {
 		const auto pPrevAvl = ::MCF_AvlPrev(&(xm_aHeaders[INDEX]));
 		if(!pPrevAvl){
 			return nullptr;
 		}
-		return DOWN_CAST(const MapNode, xm_aHeaders[INDEX], pPrevAvl);
+		return DOWN_CAST(const MultiIndexedMapNode, xm_aHeaders[INDEX], pPrevAvl);
 	}
 	template<std::size_t INDEX>
-	MapNode *GetPrev() noexcept {
+	MultiIndexedMapNode *GetPrev() noexcept {
 		const auto pPrevAvl = ::MCF_AvlPrev(&(xm_aHeaders[INDEX]));
 		if(!pPrevAvl){
 			return nullptr;
 		}
-		return DOWN_CAST(MapNode, xm_aHeaders[INDEX], pPrevAvl);
+		return DOWN_CAST(MultiIndexedMapNode, xm_aHeaders[INDEX], pPrevAvl);
 	}
 
 	template<std::size_t INDEX>
-	const MapNode *GetNext() const noexcept {
+	const MultiIndexedMapNode *GetNext() const noexcept {
 		const auto pNextAvl = ::MCF_AvlNext(&(xm_aHeaders[INDEX]));
 		if(!pNextAvl){
 			return nullptr;
 		}
-		return DOWN_CAST(const MapNode, xm_aHeaders[INDEX], pNextAvl);
+		return DOWN_CAST(const MultiIndexedMapNode, xm_aHeaders[INDEX], pNextAvl);
 	}
 	template<std::size_t INDEX>
-	MapNode *GetNext() noexcept {
+	MultiIndexedMapNode *GetNext() noexcept {
 		const auto pNextAvl = ::MCF_AvlNext(&(xm_aHeaders[INDEX]));
 		if(!pNextAvl){
 			return nullptr;
 		}
-		return DOWN_CAST(MapNode, xm_aHeaders[INDEX], pNextAvl);
+		return DOWN_CAST(MultiIndexedMapNode, xm_aHeaders[INDEX], pNextAvl);
 	}
 };
 
 template<class... Indexes_t>
-class MapNode<void, Indexes_t...> {
+class MultiIndexedMapNode<void, Indexes_t...> {
 	static_assert(sizeof...(Indexes_t) > 0, "No index?");
 
 	template<class, class...>
 	friend class MultiIndexedMap;
 
 private:
-	std::tuple<MapIndex<Indexes_t>...> xm_vIndexes;
+	typedef std::tuple<Indexes_t...> xIndexTuple;
+
+private:
+	xIndexTuple xm_vIndexes;
 	::MCF_AVL_NODE_HEADER xm_aHeaders[sizeof...(Indexes_t)];
 
 public:
-	template<typename... IndexParams_t>
-	explicit constexpr MapNode(IndexParams_t &&... vIndexParams)
-		: xm_vIndexes(MapIndex<Indexes_t>(std::forward<IndexParams_t>(vIndexParams))...)
+	explicit constexpr MultiIndexedMapNode(Indexes_t... vIndexes)
+		: xm_vIndexes(std::move(vIndexes)...)
 		, xm_aHeaders()
 	{
 	}
@@ -142,43 +114,43 @@ public:
 public:
 	template<std::size_t INDEX>
 	constexpr auto GetIndex() const noexcept
-		-> const decltype(std::get<INDEX>(xm_vIndexes).m_vIndex) &
+		-> const typename std::tuple_element<INDEX, xIndexTuple>::type &
 	{
-		return std::get<INDEX>(xm_vIndexes).m_vIndex;
+		return std::get<INDEX>(xm_vIndexes);
 	}
 
 	template<std::size_t INDEX>
-	const MapNode *GetPrev() const noexcept {
+	const MultiIndexedMapNode *GetPrev() const noexcept {
 		const auto pPrevAvl = ::MCF_AvlPrev(&(xm_aHeaders[INDEX]));
 		if(!pPrevAvl){
 			return nullptr;
 		}
-		return DOWN_CAST(const MapNode, xm_aHeaders[INDEX], pPrevAvl);
+		return DOWN_CAST(const MultiIndexedMapNode, xm_aHeaders[INDEX], pPrevAvl);
 	}
 	template<std::size_t INDEX>
-	MapNode *GetPrev() noexcept {
+	MultiIndexedMapNode *GetPrev() noexcept {
 		const auto pPrevAvl = ::MCF_AvlPrev(&(xm_aHeaders[INDEX]));
 		if(!pPrevAvl){
 			return nullptr;
 		}
-		return DOWN_CAST(MapNode, xm_aHeaders[INDEX], pPrevAvl);
+		return DOWN_CAST(MultiIndexedMapNode, xm_aHeaders[INDEX], pPrevAvl);
 	}
 
 	template<std::size_t INDEX>
-	const MapNode *GetNext() const noexcept {
+	const MultiIndexedMapNode *GetNext() const noexcept {
 		const auto pNextAvl = ::MCF_AvlNext(&(xm_aHeaders[INDEX]));
 		if(!pNextAvl){
 			return nullptr;
 		}
-		return DOWN_CAST(const MapNode, xm_aHeaders[INDEX], pNextAvl);
+		return DOWN_CAST(const MultiIndexedMapNode, xm_aHeaders[INDEX], pNextAvl);
 	}
 	template<std::size_t INDEX>
-	MapNode *GetNext() noexcept {
+	MultiIndexedMapNode *GetNext() noexcept {
 		const auto pNextAvl = ::MCF_AvlNext(&(xm_aHeaders[INDEX]));
 		if(!pNextAvl){
 			return nullptr;
 		}
-		return DOWN_CAST(MapNode, xm_aHeaders[INDEX], pNextAvl);
+		return DOWN_CAST(MultiIndexedMapNode, xm_aHeaders[INDEX], pNextAvl);
 	}
 };
 
@@ -187,7 +159,7 @@ class MultiIndexedMap {
 	static_assert(sizeof...(Indexes_t) > 0, "No index?");
 
 public:
-	typedef MapNode<Element_t, Indexes_t...> Node;
+	typedef MultiIndexedMapNode<Element_t, Indexes_t...> Node;
 
 private:
 	template<std::size_t INDEX>
@@ -198,25 +170,32 @@ private:
 		) noexcept {
 			const auto pNode1 = DOWN_CAST(const Node, xm_aHeaders[INDEX], pAvl1);
 			const auto pNode2 = DOWN_CAST(const Node, xm_aHeaders[INDEX], pAvl2);
-			return std::get<INDEX>(pNode1->xm_vIndexes)(std::get<INDEX>(pNode2->xm_vIndexes).m_vIndex);
-		}
 
+			static_assert(noexcept(std::get<INDEX>(pNode1->xm_vIndexes) < std::get<INDEX>(pNode2->xm_vIndexes)), "Comparer must not throw any exceptions.");
+
+			return std::get<INDEX>(pNode1->xm_vIndexes) < std::get<INDEX>(pNode2->xm_vIndexes);
+		}
 		template<typename Other_t>
 		static int NodeOther(
 			const MCF_AVL_NODE_HEADER *pAvl1,
 			std::intptr_t nOther
 		) noexcept {
 			const auto pNode1 = DOWN_CAST(const Node, xm_aHeaders[INDEX], pAvl1);
-			return std::get<INDEX>(pNode1->xm_vIndexes)(*(const Other_t *)nOther);
-		}
 
+			static_assert(noexcept(std::get<INDEX>(pNode1->xm_vIndexes) < *(const Other_t *)nOther), "Comparer must not throw any exceptions.");
+
+			return std::get<INDEX>(pNode1->xm_vIndexes) < *(const Other_t *)nOther;
+		}
 		template<typename Other_t>
 		static int OtherNode(
 			std::intptr_t nOther,
 			const MCF_AVL_NODE_HEADER *pAvl2
 		) noexcept {
 			const auto pNode2 = DOWN_CAST(const Node, xm_aHeaders[INDEX], pAvl2);
-			return std::get<INDEX>(pNode2->xm_vIndexes)(*(const Other_t *)nOther, 0);
+
+			static_assert(noexcept(*(const Other_t *)nOther < std::get<INDEX>(pNode2->xm_vIndexes)), "Comparer must not throw any exceptions.");
+
+			return *(const Other_t *)nOther < std::get<INDEX>(pNode2->xm_vIndexes);
 		}
 	};
 

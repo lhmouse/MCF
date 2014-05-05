@@ -37,7 +37,7 @@ public:
 private:
 	union xStorage {
 		struct __attribute__((__packed__)) {
-			Char_t achSmall[32 / sizeof(Char_t) - 2];
+			Char_t achSmall[16 / sizeof(Char_t) - 2];
 			Char_t chNull;
 			typename std::make_unsigned<Char_t>::type uchSmallLength;
 		};
@@ -53,58 +53,105 @@ public:
 		: xm_vStorage{{{Char_t()}, Char_t(), 0}}
 	{
 	}
-	explicit String(Char_t ch, std::size_t uCount = 1) : String() {
+	explicit String(Char_t ch, std::size_t uCount = 1)
+		: String()
+	{
 		Assign(ch, uCount);
 	}
 	template<class Iterator_t>
-	String(Iterator_t itBegin, Iterator_t itEnd) : String() {
+	String(Iterator_t itBegin, Iterator_t itEnd)
+		: String()
+	{
 		Assign(itBegin, itEnd);
 	}
 	template<class Iterator_t>
-	String(Iterator_t itBegin, std::size_t uLen) : String() {
+	String(Iterator_t itBegin, std::size_t uLen)
+		: String()
+	{
 		Assign(itBegin, uLen);
 	}
-	String(const Observer &obs) : String() {
+	String(const Observer &obs)
+		: String()
+	{
 		Assign(obs);
 	}
+	String(std::initializer_list<Char_t> vInitList)
+		: String()
+	{
+		Assign(vInitList);
+	}
+	template<typename Test_t, typename = typename std::enable_if<std::is_same<Test_t, Char_t>::value>::type>
+	String(const Test_t *const &pszBegin)
+		: String()
+	{
+		Assign(pszBegin);
+	}
+	template<std::size_t N>
+	String(const Char_t (&achLiteral)[N])
+		: String()
+	{
+		Assign(achLiteral);
+	}
 	template<typename OtherChar_t, StringEncoding OTHER_ENCODING>
-	explicit String(const String<OtherChar_t, OTHER_ENCODING> &rhs) : String() {
+	explicit String(const String<OtherChar_t, OTHER_ENCODING> &rhs)
+		: String()
+	{
 		Assign(rhs);
 	}
 	template<typename OtherChar_t, StringEncoding OTHER_ENCODING>
-	explicit String(String<OtherChar_t, OTHER_ENCODING> &&rhs) : String() {
+	explicit String(String<OtherChar_t, OTHER_ENCODING> &&rhs)
+		: String()
+	{
 		Assign(std::move(rhs));
 	}
-	String(const String &rhs) : String() {
+	String(const String &rhs)
+		: String()
+	{
 		Assign(rhs);
 	}
-	String(String &&rhs) noexcept : String() {
+	String(String &&rhs) noexcept
+		: String()
+	{
 		Assign(std::move(rhs));
 	}
 	String &operator=(Char_t ch) noexcept {
-		Assign(ch, 1);
+		String(ch).Swap(*this);
 		return *this;
 	}
 	String &operator=(const Observer &obs){
-		Assign(obs);
+		String(obs).Swap(*this);
+		return *this;
+	}
+	String &operator=(std::initializer_list<Char_t> vInitList){
+		String(vInitList).Swap(*this);
+		return *this;
+	}
+	template<typename Test_t, typename = typename std::enable_if<std::is_same<Test_t, Char_t>::value>::type>
+	String &operator=(const Test_t *const &pszBegin){
+		String(pszBegin).Swap(*this);
+		return *this;
+	}
+	template<std::size_t N>
+	String &operator=(const Char_t (&achLiteral)[N]){
+		String(achLiteral).Swap(*this);
 		return *this;
 	}
 	template<typename OtherChar_t, StringEncoding OTHER_ENCODING>
 	String &operator=(const String<OtherChar_t, OTHER_ENCODING> &rhs){
-		Assign(rhs);
+		String(rhs).Swap(*this);
 		return *this;
 	}
 	template<typename OtherChar_t, StringEncoding OTHER_ENCODING>
 	String &operator=(String<OtherChar_t, OTHER_ENCODING> &&rhs){
-		Assign(std::move(rhs));
+		String(std::move(rhs)).Swap(*this);
 		return *this;
 	}
 	String &operator=(const String &rhs){
-		Assign(rhs);
+		String(rhs).Swap(*this);
 		return *this;
 	}
 	String &operator=(String &&rhs) noexcept {
-		Assign(std::move(rhs));
+		rhs.Swap(*this);
 		return *this;
 	}
 	~String() noexcept {
@@ -300,6 +347,17 @@ public:
 	void Assign(const Observer &obs){
 		Assign(obs.GetBegin(), obs.GetEnd());
 	}
+	void Assign(std::initializer_list<Char_t> vInitList){
+		Assign(Observer(vInitList));
+	}
+	template<typename Test_t, typename = typename std::enable_if<std::is_same<Test_t, Char_t>::value>::type>
+	void Assign(const Test_t *const &pszBegin){
+		Assign(Observer(pszBegin));
+	}
+	template<std::size_t N>
+	void Assign(const Char_t (&achLiteral)[N]){
+		Assign(Observer(achLiteral));
+	}
 	void Assign(String &&rhs) noexcept {
 		Swap(rhs);
 	}
@@ -329,6 +387,17 @@ public:
 	}
 	void Append(const Observer &obs){
 		Append(obs.GetBegin(), obs.GetEnd());
+	}
+	void Append(std::initializer_list<Char_t> vInitList){
+		Append(Observer(vInitList));
+	}
+	template<typename Test_t, typename = typename std::enable_if<std::is_same<Test_t, Char_t>::value>::type>
+	void Append(const Test_t *const &pszBegin){
+		Append(Observer(pszBegin));
+	}
+	template<std::size_t N>
+	void Append(const Char_t (&achLiteral)[N]){
+		Append(Observer(achLiteral));
 	}
 	void Append(const String &str){
 		if(std::addressof(str) == this){
@@ -409,6 +478,17 @@ public:
 	}
 	void Unshift(const Observer &obs){
 		Unshift(obs.GetBegin(), obs.GetEnd());
+	}
+	void Unshift(std::initializer_list<Char_t> vInitList){
+		Unshift(Observer(vInitList));
+	}
+	template<typename Test_t, typename = typename std::enable_if<std::is_same<Test_t, Char_t>::value>::type>
+	void Unshift(const Test_t *const &pszBegin){
+		Unshift(Observer(pszBegin));
+	}
+	template<std::size_t N>
+	void Unshift(const Char_t (&achLiteral)[N]){
+		Unshift(Observer(achLiteral));
 	}
 	void Unshift(const String &str){
 		if(std::addressof(str) == this){

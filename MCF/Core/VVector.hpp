@@ -123,9 +123,7 @@ public:
 	VVector &operator=(VVector &&rhs)
 		noexcept(std::is_nothrow_move_constructible<Element_t>::value)
 	{
-		if(&rhs != this){
-			VVector(std::move(rhs)).Swap(*this);
-		}
+		rhs.Swap(*this);
 		return *this;
 	}
 	~VVector() noexcept {
@@ -330,13 +328,11 @@ public:
 	void Swap(VVector &rhs)
 		noexcept(std::is_nothrow_move_constructible<Element_t>::value)
 	{
-		ASSERT_NOEXCEPT_BEGIN
-
-		VVector vecTemp(std::move_if_noexcept(*this));
-		*this = std::move_if_noexcept(rhs);
-		rhs = std::move_if_noexcept(vecTemp);
-
-		ASSERT_NOEXCEPT_END_COND(std::is_nothrow_move_constructible<Element_t>::value)
+		if(this != &rhs){
+			VVector vecTemp(std::move_if_noexcept(*this));
+			*this = std::move_if_noexcept(rhs);
+			rhs = std::move_if_noexcept(vecTemp);
+		}
 	}
 
 public:
@@ -640,13 +636,11 @@ public:
 	void Swap(VVector &rhs)
 		noexcept(std::is_nothrow_move_constructible<Element_t>::value)
 	{
-		ASSERT_NOEXCEPT_BEGIN
-
-		VVector vecTemp(std::move_if_noexcept(*this));
-		*this = std::move_if_noexcept(rhs);
-		rhs = std::move_if_noexcept(vecTemp);
-
-		ASSERT_NOEXCEPT_END_COND(std::is_nothrow_move_constructible<Element_t>::value)
+		if(this != &rhs){
+			VVector vecTemp(std::move_if_noexcept(*this));
+			*this = std::move_if_noexcept(rhs);
+			rhs = std::move_if_noexcept(vecTemp);
+		}
 	}
 
 public:

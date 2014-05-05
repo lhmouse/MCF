@@ -77,17 +77,19 @@ public:
 		}
 	}
 
-	DWORD Read(void *pBuffer, DWORD dwBytesToRead, std::uint64_t u64Offset, AsyncProc *pfnAsyncProc) const {
+	std::size_t Read(void *pBuffer, std::size_t uBytesToRead, std::uint64_t u64Offset, AsyncProc *pfnAsyncProc) const {
+		DWORD dwBytesToReadThisTime = std::min<std::size_t>(0xFFFFF000u, uBytesToRead);
+
 		xApcResult vApcResult;
 		vApcResult.dwBytesTransferred = 0;
 		vApcResult.dwErrorCode = ERROR_SUCCESS;
 
 		OVERLAPPED vOverlapped;
 		BZero(vOverlapped);
-		vOverlapped.Offset = (DWORD)u64Offset;
-		vOverlapped.OffsetHigh = (DWORD)(u64Offset >> 32);
+		vOverlapped.Offset = u64Offset;
+		vOverlapped.OffsetHigh = (u64Offset >> 32);
 		vOverlapped.hEvent = (HANDLE)&vApcResult;
-		const bool bSucceeds = ::ReadFileEx(xm_hFile.Get(), pBuffer, dwBytesToRead, &vOverlapped, &xAioCallback);
+		const bool bSucceeds = ::ReadFileEx(xm_hFile.Get(), pBuffer, dwBytesToReadThisTime, &vOverlapped, &xAioCallback);
 		if(!bSucceeds){
 			vApcResult.dwErrorCode = ::GetLastError();
 		}
@@ -108,9 +110,40 @@ public:
 		if(!bSucceeds){
 			MCF_THROW(vApcResult.dwErrorCode, L"::ReadFileEx() 失败。");
 		}
-		return vApcResult.dwBytesTransferred;
+
+		std::size_t uBytesRead = vApcResult.dwBytesTransferred;
+		while((uBytesRead < uBytesToRead) && (vApcResult.dwBytesTransferred == dwBytesToReadThisTime)){
+			dwBytesToReadThisTime = std::min<std::size_t>(0xFFFFF000u, uBytesToRead - uBytesRead);
+
+			BZero(vOverlapped);
+			const auto u64NewOffset = u64Offset + uBytesRead;
+			vOverlapped.Offset = u64NewOffset;
+			vOverlapped.OffsetHigh = (u64NewOffset >> 32);
+			vOverlapped.hEvent = (HANDLE)&vApcResult;
+			if(!::ReadFileEx(
+				xm_hFile.Get(),
+				(unsigned char *)pBuffer + uBytesRead,
+				dwBytesToReadThisTime,
+				&vOverlapped,
+				&xAioCallback
+			)){
+				MCF_THROW(vApcResult.dwErrorCode, L"::ReadFileEx() 失败。");
+			}
+			::SleepEx(INFINITE, TRUE);
+
+			if(vApcResult.dwErrorCode != ERROR_SUCCESS){
+				if(vApcResult.dwErrorCode == ERROR_HANDLE_EOF){
+					break;
+				}
+				MCF_THROW(vApcResult.dwErrorCode, L"::ReadFileEx() 失败。");
+			}
+			uBytesRead += vApcResult.dwBytesTransferred;
+		}
+		return uBytesRead;
 	}
-	void Write(std::uint64_t u64Offset, const void *pBuffer, DWORD dwBytesToWrite, AsyncProc *pfnAsyncProc){
+	void Write(std::uint64_t u64Offset, const void *pBuffer, std::size_t uBytesToWrite, AsyncProc *pfnAsyncProc){
+		DWORD dwBytesToWriteThisTime = std::min<std::size_t>(0xFFFFF000u, uBytesToWrite);
+
 		xApcResult vApcResult;
 		vApcResult.dwBytesTransferred = 0;
 		vApcResult.dwErrorCode = ERROR_SUCCESS;
@@ -120,7 +153,7 @@ public:
 		vOverlapped.Offset = (DWORD)u64Offset;
 		vOverlapped.OffsetHigh = (DWORD)(u64Offset >> 32);
 		vOverlapped.hEvent = (HANDLE)&vApcResult;
-		const bool bSucceeds = ::WriteFileEx(xm_hFile.Get(), pBuffer, dwBytesToWrite, &vOverlapped, &xAioCallback);
+		const bool bSucceeds = ::WriteFileEx(xm_hFile.Get(), pBuffer, dwBytesToWriteThisTime, &vOverlapped, &xAioCallback);
 		if(!bSucceeds){
 			vApcResult.dwErrorCode = ::GetLastError();
 		}
@@ -140,6 +173,32 @@ public:
 		}
 		if(!bSucceeds){
 			MCF_THROW(vApcResult.dwErrorCode, L"::WriteFileEx() 失败。");
+		}
+
+		std::size_t uBytesWritten = vApcResult.dwBytesTransferred;
+		while((uBytesWritten < uBytesToWrite) && (vApcResult.dwBytesTransferred == dwBytesToWriteThisTime)){
+			dwBytesToWriteThisTime = std::min<std::size_t>(0xFFFFF000u, uBytesToWrite - uBytesWritten);
+
+			BZero(vOverlapped);
+			const auto u64NewOffset = u64Offset + uBytesWritten;
+			vOverlapped.Offset = (DWORD)u64NewOffset;
+			vOverlapped.OffsetHigh = (DWORD)(u64NewOffset >> 32);
+			vOverlapped.hEvent = (HANDLE)&vApcResult;
+			if(!::WriteFileEx(
+				xm_hFile.Get(),
+				(unsigned char *)pBuffer + uBytesWritten,
+				dwBytesToWriteThisTime,
+				&vOverlapped,
+				&xAioCallback
+			)){
+				MCF_THROW(vApcResult.dwErrorCode, L"::WriteFileEx() 失败。");
+			}
+			::SleepEx(INFINITE, TRUE);
+
+			if(vApcResult.dwErrorCode != ERROR_SUCCESS){
+				MCF_THROW(vApcResult.dwErrorCode, L"::WriteFileEx() 失败。");
+			}
+			uBytesWritten += vApcResult.dwBytesTransferred;
 		}
 	}
 };
@@ -177,102 +236,20 @@ void File::Clear(){
 std::size_t File::Read(void *pBuffer, std::size_t uBytesToRead, std::uint64_t u64Offset) const {
 	ASSERT(dynamic_cast<const FileDelegate *>(this));
 
-	std::size_t uBytesRead = 0;
-	for(;;){
-		const DWORD dwBytesToReadThisTime = Min(0xFFFFF000u, uBytesToRead - uBytesRead);
-		const DWORD dwBytesReadThisTime = ((const FileDelegate *)this)->Read(
-			(unsigned char *)pBuffer + uBytesRead,
-			dwBytesToReadThisTime,
-			u64Offset + uBytesRead,
-			nullptr
-		);
-		if(dwBytesReadThisTime == 0){
-			break;
-		}
-		uBytesRead += dwBytesReadThisTime;
-		if(dwBytesReadThisTime != dwBytesToReadThisTime){
-			break;
-		}
-	}
-	return uBytesRead;
+	return ((const FileDelegate *)this)->Read(pBuffer, uBytesToRead, u64Offset, nullptr);
 }
-std::size_t File::Read(void *pBuffer, std::size_t uBytesToRead, std::uint64_t u64Offset, File::AsyncProc &&fnAsyncProc) const {
+std::size_t File::Read(void *pBuffer, std::size_t uBytesToRead, std::uint64_t u64Offset, File::AsyncProc fnAsyncProc) const {
 	ASSERT(dynamic_cast<const FileDelegate *>(this));
 
-	DWORD dwBytesToReadThisTime = Min(0xFFFFF000u, uBytesToRead);
-	std::size_t uBytesRead = ((const FileDelegate *)this)->Read(
-		pBuffer,
-		dwBytesToReadThisTime,
-		u64Offset,
-		&fnAsyncProc
-	);
-	if(uBytesRead == 0){
-		return 0;
-	}
-	if(uBytesRead != dwBytesToReadThisTime){
-		return uBytesRead;
-	}
-	for(;;){
-		dwBytesToReadThisTime = Min(0xFFFFF000u, uBytesToRead - uBytesRead);
-		const DWORD dwBytesReadThisTime = ((const FileDelegate *)this)->Read(
-			(unsigned char *)pBuffer + uBytesRead,
-			dwBytesToReadThisTime,
-			u64Offset + uBytesRead,
-			nullptr
-		);
-		if(dwBytesReadThisTime == 0){
-			break;
-		}
-		uBytesRead += dwBytesReadThisTime;
-		if(dwBytesReadThisTime != dwBytesToReadThisTime){
-			break;
-		}
-	}
-	return uBytesRead;
+	return ((const FileDelegate *)this)->Read(pBuffer, uBytesToRead, u64Offset, &fnAsyncProc);
 }
 void File::Write(std::uint64_t u64Offset, const void *pBuffer, std::size_t uBytesToWrite){
 	ASSERT(dynamic_cast<FileDelegate *>(this));
 
-	std::size_t uBytesWritten = 0;
-	for(;;){
-		const DWORD dwBytesToWriteThisTime = Min(0xFFFFF000u, uBytesToWrite - uBytesWritten);
-		if(dwBytesToWriteThisTime == 0){
-			break;
-		}
-		((FileDelegate *)this)->Write(
-			u64Offset + uBytesWritten,
-			(const unsigned char *)pBuffer + uBytesWritten,
-			dwBytesToWriteThisTime,
-			nullptr
-		);
-		uBytesWritten += dwBytesToWriteThisTime;
-	}
+	((FileDelegate *)this)->Write(u64Offset, pBuffer, uBytesToWrite, nullptr);
 }
-void File::Write(std::uint64_t u64Offset, const void *pBuffer, std::size_t uBytesToWrite, File::AsyncProc &&fnAsyncProc){
+void File::Write(std::uint64_t u64Offset, const void *pBuffer, std::size_t uBytesToWrite, File::AsyncProc fnAsyncProc){
 	ASSERT(dynamic_cast<FileDelegate *>(this));
 
-	DWORD dwBytesToWriteThisTime = Min(0xFFFFF000u, uBytesToWrite);
-	if(dwBytesToWriteThisTime == 0){
-		return;
-	}
-	((FileDelegate *)this)->Write(
-		u64Offset,
-		pBuffer,
-		dwBytesToWriteThisTime,
-		&fnAsyncProc
-	);
-	std::size_t uBytesWritten = dwBytesToWriteThisTime;
-	for(;;){
-		dwBytesToWriteThisTime = Min(0xFFFFF000u, uBytesToWrite - uBytesWritten);
-		if(dwBytesToWriteThisTime == 0){
-			break;
-		}
-		((FileDelegate *)this)->Write(
-			u64Offset + uBytesWritten,
-			(const unsigned char *)pBuffer + uBytesWritten,
-			dwBytesToWriteThisTime,
-			nullptr
-		);
-		uBytesWritten += dwBytesToWriteThisTime;
-	}
+	((FileDelegate *)this)->Write(u64Offset, pBuffer, uBytesToWrite, &fnAsyncProc);
 }

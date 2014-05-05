@@ -24,8 +24,6 @@ typedef struct tagThreadInitInfo {
 } THREAD_INIT_INFO;
 
 typedef struct tagAtExitNode {
-	MCF_AVL_NODE_HEADER AvlNodeHeader;
-	struct tagAtExitNode *pPrev;
 	struct tagAtExitNode *pNext;
 
 	void (*pfnProc)(intptr_t);
@@ -33,10 +31,11 @@ typedef struct tagAtExitNode {
 } AT_EXIT_NODE;
 
 typedef struct tagTlsObject {
-	MCF_AVL_NODE_HEADER AvlNodeHeader;
+	MCF_AVL_NODE_HEADER vHeader;
 	struct tagTlsObject *pPrev;
 	struct tagTlsObject *pNext;
 
+	intptr_t nKey;
 	void *pMem;
 	void (*pfnDtor)(void *);
 #ifndef NDEBUG
@@ -44,9 +43,28 @@ typedef struct tagTlsObject {
 #endif
 } TLS_OBJECT;
 
+static int TlsObjectComparerNodes(
+	const MCF_AVL_NODE_HEADER *pObj1,
+	const MCF_AVL_NODE_HEADER *pObj2
+){
+	return ((const TLS_OBJECT *)pObj1)->nKey < ((const TLS_OBJECT *)pObj2)->nKey;
+}
+static int TlsObjectComparerNodeKey(
+	const MCF_AVL_NODE_HEADER *pObj1,
+	intptr_t nKey2
+){
+	return ((const TLS_OBJECT *)pObj1)->nKey < nKey2;
+}
+static int TlsObjectComparerKeyNode(
+	intptr_t nKey1,
+	const MCF_AVL_NODE_HEADER *pObj2
+){
+	return nKey1 < ((const TLS_OBJECT *)pObj2)->nKey;
+}
+
 typedef struct tagThreadEnv {
 	AT_EXIT_NODE *pAtExitHead;
-	MCF_AVL_ROOT mapObjects;
+	MCF_AVL_ROOT avlObjects;
 	TLS_OBJECT *pLastObject;
 } THREAD_ENV;
 
@@ -109,7 +127,7 @@ unsigned long __MCF_CRT_ThreadInitialize(){
 		return ERROR_NOT_ENOUGH_MEMORY;
 	}
 	pThreadEnv->pAtExitHead		= NULL;
-	pThreadEnv->mapObjects		= NULL;
+	pThreadEnv->avlObjects		= NULL;
 	pThreadEnv->pLastObject		= NULL;
 
 	if(!TlsSetValue(g_dwTlsIndex, pThreadEnv)){
@@ -209,7 +227,12 @@ void *MCF_CRT_RetrieveTls(
 		return NULL;
 	}
 
-	TLS_OBJECT *pObject = (TLS_OBJECT *)MCF_AvlFind(&pThreadEnv->mapObjects, nKey);
+	TLS_OBJECT *pObject = (TLS_OBJECT *)MCF_AvlFind(
+		&(pThreadEnv->avlObjects),
+		nKey,
+		&TlsObjectComparerNodeKey,
+		&TlsObjectComparerKeyNode
+	);
 	if(!pObject){
 		pObject = malloc(sizeof(TLS_OBJECT));
 		if(!pObject){
@@ -233,6 +256,7 @@ void *MCF_CRT_RetrieveTls(
 			pPrev->pNext = pObject;
 		}
 
+		pObject->nKey = nKey;
 		pObject->pMem = pMem;
 		pObject->pfnDtor = pfnDestructor;
 #ifndef NDEBUG
@@ -241,7 +265,11 @@ void *MCF_CRT_RetrieveTls(
 
 		pThreadEnv->pLastObject = pObject;
 
-		MCF_AvlAttach(&pThreadEnv->mapObjects, nKey, (MCF_AVL_NODE_HEADER *)pObject);
+		MCF_AvlAttach(
+			&(pThreadEnv->avlObjects),
+			(MCF_AVL_NODE_HEADER *)pObject,
+			&TlsObjectComparerNodes
+		);
 	}
 #ifndef NDEBUG
 	if(pObject->uMemSize != uSizeToAlloc){
@@ -266,7 +294,12 @@ void MCF_CRT_DeleteTls(
 		return;
 	}
 
-	TLS_OBJECT *pObject = (TLS_OBJECT *)MCF_AvlFind(&pThreadEnv->mapObjects, nKey);
+	TLS_OBJECT *pObject = (TLS_OBJECT *)MCF_AvlFind(
+		&(pThreadEnv->avlObjects),
+		nKey,
+		&TlsObjectComparerNodeKey,
+		&TlsObjectComparerKeyNode
+	);
 	if(pObject){
 		TLS_OBJECT *const pPrev = pObject->pPrev;
 		TLS_OBJECT *const pNext = pObject->pNext;

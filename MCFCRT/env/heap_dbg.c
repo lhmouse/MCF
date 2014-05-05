@@ -6,7 +6,7 @@
 
 #include "heap_dbg.h"
 
-typedef int UNUSED;
+__asm__("");
 
 #ifdef __MCF_CRT_HEAPDBG_ON
 
@@ -15,7 +15,27 @@ typedef int UNUSED;
 #include <wchar.h>
 #include <windows.h>
 
-#define GUARD_BAND_SIZE		0x20ul
+static int BlockInfoComparerNodes(
+	const MCF_AVL_NODE_HEADER *pInfo1,
+	const MCF_AVL_NODE_HEADER *pInfo2
+){
+	return (intptr_t)(((const __MCF_HEAPDBG_BLOCK_INFO *)pInfo1)->pContents)
+		< (intptr_t)(((const __MCF_HEAPDBG_BLOCK_INFO *)pInfo2)->pContents);
+}
+static int BlockInfoComparerNodeKey(
+	const MCF_AVL_NODE_HEADER *pInfo1,
+	intptr_t nKey2
+){
+	return (intptr_t)(((const __MCF_HEAPDBG_BLOCK_INFO *)pInfo1)->pContents) < nKey2;
+}
+static int BlockInfoComparerKeyNode(
+	intptr_t nKey1,
+	const MCF_AVL_NODE_HEADER *pInfo2
+){
+	return nKey1 < (intptr_t)(((const __MCF_HEAPDBG_BLOCK_INFO *)pInfo2)->pContents);
+}
+
+#define GUARD_BAND_SIZE		0x20u
 
 #ifdef _WIN64
 #	define UINTPTR_FORMAT	"0x%016zX"
@@ -26,7 +46,7 @@ typedef int UNUSED;
 static HANDLE							g_hMapAllocator;
 static MCF_AVL_ROOT						g_mapBlocks;
 static const __MCF_HEAPDBG_BLOCK_INFO *	g_pBlockHead;
-static __MCF_HEAP_CALLBACK				g_pfnCallback;
+static MCF_HEAP_CALLBACK				g_pfnCallback;
 static intptr_t							g_nCallbackContext;
 
 unsigned long __MCF_CRT_HeapDbgInit(){
@@ -47,14 +67,14 @@ void __MCF_CRT_HeapDbgUninit(){
 
 		wchar_t awcBuffer[256];
 		do {
-			const BYTE *pbyDump = __MCF_CRT_HeapDbgGetContents(pBlockInfo);
+			const unsigned char *pbyDump = pBlockInfo->pContents;
 			wchar_t *pwcWrite = awcBuffer + __mingw_snwprintf(
 				awcBuffer,
 				sizeof(awcBuffer) / sizeof(wchar_t),
 				L"地址 " UINTPTR_FORMAT "  大小 " UINTPTR_FORMAT "  调用返回地址 " UINTPTR_FORMAT "  首字节 ",
-				(void *)pbyDump,
-				(void *)pBlockInfo->uSize,
-				(void *)pBlockInfo->pRetAddr
+				(uintptr_t)pbyDump,
+				(uintptr_t)(pBlockInfo->uSize),
+				(uintptr_t)(pBlockInfo->pRetAddr)
 			);
 			for(size_t i = 0; i < 16; ++i){
 				*(pwcWrite++) = L' ';
@@ -63,7 +83,7 @@ void __MCF_CRT_HeapDbgUninit(){
 					*(pwcWrite++) = L'?';
 				} else {
 					static const wchar_t HEX_TABLE[16] = L"0123456789ABCDEF";
-					*(pwcWrite++) = HEX_TABLE[(*pbyDump >> 4) & 0xF0];
+					*(pwcWrite++) = HEX_TABLE[*pbyDump >> 4];
 					*(pwcWrite++) = HEX_TABLE[*pbyDump & 0x0F];
 				}
 				++pbyDump;
@@ -71,7 +91,10 @@ void __MCF_CRT_HeapDbgUninit(){
 			*pwcWrite = 0;
 
 			OutputDebugStringW(awcBuffer);
-		} while(!!(pBlockInfo = (const __MCF_HEAPDBG_BLOCK_INFO *)MCF_AvlNext((const MCF_AVL_NODE_HEADER *)pBlockInfo)));
+
+			pBlockInfo = (const __MCF_HEAPDBG_BLOCK_INFO *)MCF_AvlNext((const MCF_AVL_NODE_HEADER *)pBlockInfo);
+		} while(pBlockInfo);
+
 		__asm__ __volatile__("int 3 \n");
 	}
 
@@ -111,10 +134,15 @@ void __MCF_CRT_HeapDbgAddGuardsAndRegister(
 	if(!pBlockInfo){
 		MCF_CRT_BailF(L"__MCF_CRT_HeapDbgAddGuardsAndRegister() 失败：内存不足。\n调用返回地址：" UINTPTR_FORMAT, (uintptr_t)pRetAddr);
 	}
-	pBlockInfo->uSize = uContentSize;
-	pBlockInfo->pRetAddr = pRetAddr;
+	pBlockInfo->pContents	= pContents;
+	pBlockInfo->uSize		= uContentSize;
+	pBlockInfo->pRetAddr	= pRetAddr;
 
-	MCF_AvlAttach(&g_mapBlocks, (intptr_t)pContents, (MCF_AVL_NODE_HEADER *)pBlockInfo);
+	MCF_AvlAttach(
+		&g_mapBlocks,
+		(MCF_AVL_NODE_HEADER *)pBlockInfo,
+		&BlockInfoComparerNodes
+	);
 	if(!MCF_AvlPrev((MCF_AVL_NODE_HEADER *)pBlockInfo)){
 		g_pBlockHead = pBlockInfo;
 	}
@@ -131,7 +159,12 @@ const __MCF_HEAPDBG_BLOCK_INFO *__MCF_CRT_HeapDbgValidate(
 	unsigned char *const pRaw = pContents - GUARD_BAND_SIZE;
 	*ppRaw = pRaw;
 
-	const __MCF_HEAPDBG_BLOCK_INFO *pBlockInfo = (const __MCF_HEAPDBG_BLOCK_INFO *)MCF_AvlFind(&g_mapBlocks, (intptr_t)pContents);
+	const __MCF_HEAPDBG_BLOCK_INFO *const pBlockInfo = (const __MCF_HEAPDBG_BLOCK_INFO *)MCF_AvlFind(
+		&g_mapBlocks,
+		(intptr_t)pContents,
+		&BlockInfoComparerNodeKey,
+		&BlockInfoComparerKeyNode
+	);
 	if(!pBlockInfo){
 		MCF_CRT_BailF(L"__MCF_CRT_HeapDbgValidate() 失败：传入的指针无效。\n调用返回地址：" UINTPTR_FORMAT, (uintptr_t)pRetAddr);
 	}
@@ -150,16 +183,11 @@ const __MCF_HEAPDBG_BLOCK_INFO *__MCF_CRT_HeapDbgValidate(
 
 	return pBlockInfo;
 }
-const unsigned char *__MCF_CRT_HeapDbgGetContents(
-	const __MCF_HEAPDBG_BLOCK_INFO *pBlockInfo
-){
-	return (const unsigned char *)pBlockInfo->MCF_AvlNodeHeader.nKey;
-}
 void __MCF_CRT_HeapDbgUnregister(
 	const __MCF_HEAPDBG_BLOCK_INFO *pBlockInfo
 ){
 	if(g_pfnCallback){
-		g_pfnCallback(1, __MCF_CRT_HeapDbgGetContents(pBlockInfo), pBlockInfo->uSize, pBlockInfo->pRetAddr, g_nCallbackContext);
+		g_pfnCallback(1, pBlockInfo->pContents, pBlockInfo->uSize, pBlockInfo->pRetAddr, g_nCallbackContext);
 	}
 
 	if(g_pBlockHead == pBlockInfo){
@@ -170,10 +198,10 @@ void __MCF_CRT_HeapDbgUnregister(
 	HeapFree(g_hMapAllocator, 0, (void *)pBlockInfo);
 }
 
-void __MCF_CRT_HeapSetCallback(
-	__MCF_HEAP_CALLBACK *pfnOldCallback,
+void MCF_CRT_HeapSetCallback(
+	MCF_HEAP_CALLBACK *pfnOldCallback,
 	__MCF_STD intptr_t *pnOldContext,
-	__MCF_HEAP_CALLBACK pfnNewCallback,
+	MCF_HEAP_CALLBACK pfnNewCallback,
 	__MCF_STD intptr_t nNewContext
 ){
 	if(pfnOldCallback){

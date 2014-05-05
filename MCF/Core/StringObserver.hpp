@@ -474,6 +474,31 @@ public:
 	}
 };
 
+template<typename Comparand_t, typename Char_t>
+bool operator==(const Comparand_t &lhs, const StringObserver<Char_t> &rhs) noexcept {
+	return rhs == lhs;
+}
+template<typename Comparand_t, typename Char_t>
+bool operator!=(const Comparand_t &lhs, const StringObserver<Char_t> &rhs) noexcept {
+	return rhs != lhs;
+}
+template<typename Comparand_t, typename Char_t>
+bool operator<(const Comparand_t &lhs, const StringObserver<Char_t> &rhs) noexcept {
+	return rhs > lhs;
+}
+template<typename Comparand_t, typename Char_t>
+bool operator>(const Comparand_t &lhs, const StringObserver<Char_t> &rhs) noexcept {
+	return rhs < lhs;
+}
+template<typename Comparand_t, typename Char_t>
+bool operator<=(const Comparand_t &lhs, const StringObserver<Char_t> &rhs) noexcept {
+	return rhs >= lhs;
+}
+template<typename Comparand_t, typename Char_t>
+bool operator>=(const Comparand_t &lhs, const StringObserver<Char_t> &rhs) noexcept {
+	return rhs <= lhs;
+}
+
 template<typename Char_t>
 const Char_t *begin(const StringObserver<Char_t> &obs) noexcept {
 	return obs.GetBegin();

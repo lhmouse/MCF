@@ -62,45 +62,37 @@ struct Concrete_ : public Base_t {
 //----------------------------------------------------------------------------
 // Bail
 //----------------------------------------------------------------------------
-#ifdef NDEBUG
-#	define MCF_CPP_NORETURN_IF_NDEBUG	[[noreturn]]
-#else
-#	define MCF_CPP_NORETURN_IF_NDEBUG
-#endif
-
 template<typename... Params_t>
-MCF_CPP_NORETURN_IF_NDEBUG inline void Bail(const wchar_t *pwszFormat, const Params_t &... vParams){
+#ifdef NDEBUG
+[[noreturn]]
+#endif
+	inline void Bail(const wchar_t *pwszFormat, const Params_t &... vParams)
+{
 	::MCF_CRT_BailF(pwszFormat, vParams...);
 }
 
 template<>
-MCF_CPP_NORETURN_IF_NDEBUG inline void Bail<>(const wchar_t *pwszDescription){
+#ifdef NDEBUG
+[[noreturn]]
+#endif
+	inline void Bail<>(const wchar_t *pwszDescription)
+{
 	::MCF_CRT_Bail(pwszDescription);
 }
 
 //----------------------------------------------------------------------------
 // ASSERT_NOEXCEPT
 //----------------------------------------------------------------------------
-template<bool NOEXCEPT>
-inline void MCF_NoExceptAssertionFailed() noexcept;
-
-template<>
-inline void MCF_NoExceptAssertionFailed<false>() noexcept {
+template<bool>
+inline void NoExceptAssertionFailed() noexcept {
 }
 
-#ifdef NDEBUG
 template<>
-void MCF_NoExceptAssertionFailed<true>() noexcept; // 未定义的。
-#else
-template<>
-inline void __attribute__((__always_inline__)) MCF_NoExceptAssertionFailed<true>() noexcept {
-	Bail(L"ASSERT_NOEXCEPT: 假定不会抛出异常，但是确实捕获到了异常。");
-}
-#endif
+void NoExceptAssertionFailed<true>() noexcept; // 未定义的。
 
 #define ASSERT_NOEXCEPT_BEGIN		try {
-#define ASSERT_NOEXCEPT_END			} catch(...){ MCF_NoExceptAssertionFailed<true>(); }
-#define ASSERT_NOEXCEPT_END_COND(c)	} catch(...){ MCF_NoExceptAssertionFailed<(c)>(); }
+#define ASSERT_NOEXCEPT_END			} catch(...){ ::MCF::NoExceptAssertionFailed<true>(); }
+#define ASSERT_NOEXCEPT_END_COND(c)	} catch(...){ ::MCF::NoExceptAssertionFailed<(c)>(); }
 
 //----------------------------------------------------------------------------
 // HintNonNull
@@ -176,7 +168,7 @@ inline int BComp(const Tx &vDst, const Ty &vSrc) noexcept {
 }
 
 //----------------------------------------------------------------------------
-// 泛型工具
+// CallOnEach
 //----------------------------------------------------------------------------
 template<typename Function_t>
 void CallOnEach(Function_t && /* fnCallable */){

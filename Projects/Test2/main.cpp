@@ -1,60 +1,25 @@
 #include <MCF/StdMCF.hpp>
-#include <MCF/Core/VVector.hpp>
+#include <MCF/Core/String.hpp>
+#include <MCF/Core/MultiIndexedMap.hpp>
+
 using namespace MCF;
 
-static int cnt = 0;
-
-struct S {
-	int my;
-
-	S(int i) : my(i) {
-		std::printf("constructed %d\n", my);
-		++cnt;
-	}
-	S(const S &r) : my(r.my) {
-		if(my == 12){
-			throw 123;
-		}
-		std::printf("copied      %d\n", my);
-		++cnt;
-	}
-	S(S &&r) : my(r.my) {
-		std::printf("moved       %d\n", my);
-		++cnt;
-	}
-	~S(){
-		std::printf("destroyed   %d\n", my);
-		--cnt;
-	}
-};
+template class MultiIndexedMap<void, MapIndex<MapIndex<AnsiString, std::less<void>>, std::greater<void>>>;
 
 unsigned int MCFMain(){
-	VVector<S, 0> v;
-	VVector<S, 3> v2;
-	try {
-		for(int i = 0; i < 20; ++i){
-			v.Push(i);
-		}
-		for(int i = 0; i < 3; ++i){
-			v2.Push(i);
-		}
-		v2 = std::move(v);
-	} catch(int e){
-		std::printf("-- exception %d\n", e);
-	}
-	std::printf("-- alive %d\n", cnt);
+	MultiIndexedMap<void, MapIndex<MapIndex<AnsiString, std::less<void>>, std::greater<void>>> s;
+	s.Insert(AnsiString("acb"));
+	s.Insert(AnsiString("cab"));
+	auto p = s.Insert(AnsiString("aaa"));
+	s.Insert(AnsiString("abc"));
+	s.Insert(AnsiString("baa"));
+	s.SetIndex<0>(p, AnsiString("bbb"));
 
-	std::printf("v : ");
-	for(const auto &s : v){
-		std::printf("%d ", s.my);
+	auto begin = s.GetLowerBound<0>("abc");
+	auto end = s.GetUpperBound<0>("b");
+	for(auto p = begin; p != end; p = p->GetNext<0>()){
+		std::printf("%s ", p->GetIndex<0>().GetStr());
 	}
-	std::putchar('\n');
-
-	std::printf("v2: ");
-	for(const auto &s : v2){
-		std::printf("%d ", s.my);
-	}
-	std::putchar('\n');
 
 	return 0;
 }

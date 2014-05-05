@@ -140,6 +140,8 @@ private:
 			pchNewBuffer = new Char_t[uSizeToAlloc];
 		}
 
+		ASSERT_NOEXCEPT_BEGIN
+
 		if(uRemovedBegin != 0){
 			__builtin_memmove(pchNewBuffer + uFirstOffset, pchOldBuffer, uRemovedBegin * sizeof(Char_t));
 		}
@@ -160,6 +162,8 @@ private:
 		}
 
 		return pchNewBuffer + uFirstOffset + uRemovedBegin;
+
+		ASSERT_NOEXCEPT_END
 	}
 	void xSetSize(std::size_t uNewSize) noexcept {
 		ASSERT(uNewSize <= GetCapacity());
@@ -662,6 +666,31 @@ String<Char_t, ENCODING> operator+(StringObserver<Char_t> &&lhs, StringObserver<
 		rhs.Unshift(lhs);
 		return std::move(rhs);
 	}
+}
+
+template<typename Comparand_t, typename Char_t, StringEncoding ENCODING>
+bool operator==(const Comparand_t &lhs, const String<Char_t, ENCODING> &rhs) noexcept {
+	return rhs.GetObserver() == lhs;
+}
+template<typename Comparand_t, typename Char_t, StringEncoding ENCODING>
+bool operator!=(const Comparand_t &lhs, const String<Char_t, ENCODING> &rhs) noexcept {
+	return rhs.GetObserver() != lhs;
+}
+template<typename Comparand_t, typename Char_t, StringEncoding ENCODING>
+bool operator<(const Comparand_t &lhs, const String<Char_t, ENCODING> &rhs) noexcept {
+	return rhs.GetObserver() > lhs;
+}
+template<typename Comparand_t, typename Char_t, StringEncoding ENCODING>
+bool operator>(const Comparand_t &lhs, const String<Char_t, ENCODING> &rhs) noexcept {
+	return rhs.GetObserver() < lhs;
+}
+template<typename Comparand_t, typename Char_t, StringEncoding ENCODING>
+bool operator<=(const Comparand_t &lhs, const String<Char_t, ENCODING> &rhs) noexcept {
+	return rhs.GetObserver() >= lhs;
+}
+template<typename Comparand_t, typename Char_t, StringEncoding ENCODING>
+bool operator>=(const Comparand_t &lhs, const String<Char_t, ENCODING> &rhs) noexcept {
+	return rhs.GetObserver() <= lhs;
 }
 
 template<typename Char_t, StringEncoding ENCODING>

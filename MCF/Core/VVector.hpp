@@ -17,7 +17,7 @@ namespace MCF {
 
 template<class Element_t, std::size_t ALT_STOR_THRESHOLD = 0x400u / sizeof(Element_t)>
 class VVector {
-	template<class OtherElement_t, std::size_t OTHER_ALT_STOR_THRESHOLD>
+	template<class, std::size_t>
 	friend class VVector;
 
 private:
@@ -157,7 +157,9 @@ private:
 		} else {
 			auto pRead = rhs.GetBegin();
 			const auto uSize = rhs.GetSize();
-			Reserve(uSize);
+			if(ALT_STOR_THRESHOLD < OTHER_THRESHOLD){
+				Reserve(uSize);
+			}
 			for(auto i = uSize; i; --i){
 				PushNoCheck(std::move_if_noexcept(*pRead));
 				++pRead;
@@ -359,7 +361,7 @@ public:
 
 template<class Element_t>
 class VVector<Element_t, 0> {
-	template<class OtherElement_t, std::size_t OTHER_ALT_STOR_THRESHOLD>
+	template<class, std::size_t>
 	friend class VVector;
 
 private:
@@ -472,7 +474,9 @@ private:
 		} else {
 			auto pRead = rhs.GetBegin();
 			const auto uSize = rhs.GetSize();
-			Reserve(uSize);
+			if(0 < OTHER_THRESHOLD){
+				Reserve(uSize);
+			}
 			for(auto i = uSize; i; --i){
 				PushNoCheck(std::move_if_noexcept(*pRead));
 				++pRead;

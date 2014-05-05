@@ -25,15 +25,15 @@ private:
 
 private:
 	template<class... Unpacked_t>
-	static void TupleConstruct(
+	static void xConstructFromTuple(
 		typename std::enable_if<sizeof...(Unpacked_t) < sizeof...(InitParams_t), void>::type *pObj,
 		const std::tuple<InitParams_t...> &vTuple,
 		const Unpacked_t &...vUnpacked
 	) noexcept(std::is_nothrow_constructible<Object_t, InitParams_t...>::value){
-		TupleConstruct(pObj, vTuple, vUnpacked..., std::get<sizeof...(Unpacked_t)>(vTuple));
+		xConstructFromTuple(pObj, vTuple, vUnpacked..., std::get<sizeof...(Unpacked_t)>(vTuple));
 	}
 	template<class... Unpacked_t>
-	static void TupleConstruct(
+	static void xConstructFromTuple(
 		typename std::enable_if<sizeof...(Unpacked_t) == sizeof...(InitParams_t), void>::type *pObj,
 		const std::tuple<InitParams_t...> &,
 		const Unpacked_t &...vUnpacked
@@ -44,7 +44,7 @@ private:
 	static int xCtorWrapper(void *pObj, std::intptr_t nParam) noexcept {
 		auto *const pContext = (xCtorWrapperContext *)nParam;
 		try {
-			TupleConstruct(pObj, pContext->first->xm_vInitParams);
+			xConstructFromTuple(pObj, pContext->first->xm_vInitParams);
 			return -1;
 		} catch(...){
 			pContext->second = std::current_exception();
@@ -63,7 +63,7 @@ public:
 		: xm_vInitParams(std::forward<InitParams_t>(vInitParams)...)
 	{
 	}
-	~ThreadLocal(){
+	~ThreadLocal() noexcept {
 		Release();
 	}
 

@@ -9,49 +9,52 @@
 
 __MCF_EXTERN_C_BEGIN
 
-typedef struct tagAVLNodeHeader {
-	__MCF_STD intptr_t nKey;
-	struct tagAVLNodeHeader *pParent;
-	struct tagAVLNodeHeader **ppRefl;
-	struct tagAVLNodeHeader *pLeft;
-	struct tagAVLNodeHeader *pRight;
+typedef struct tagAvlNodeHeader {
+	struct tagAvlNodeHeader *pParent;
+	struct tagAvlNodeHeader **ppRefl;
+	struct tagAvlNodeHeader *pLeft;
+	struct tagAvlNodeHeader *pRight;
 	__MCF_STD size_t uHeight;
-	struct tagAVLNodeHeader *pPrev;
-	struct tagAVLNodeHeader *pNext;
+	struct tagAvlNodeHeader *pPrev;
+	struct tagAvlNodeHeader *pNext;
 } MCF_AVL_NODE_HEADER;
 
 typedef MCF_AVL_NODE_HEADER *MCF_AVL_ROOT;
 
 // 若 arg0 < arg1 应返回非零值，否则应返回零。
-typedef int (*MCF_AVL_KEY_COMPARER)(__MCF_STD intptr_t, __MCF_STD intptr_t);
+typedef int (*MCF_AVL_COMPARER_NODES)(
+	const MCF_AVL_NODE_HEADER *,
+	const MCF_AVL_NODE_HEADER *
+);
+typedef int (*MCF_AVL_COMPARER_NODE_OTHER)(
+	const MCF_AVL_NODE_HEADER *,
+	__MCF_STD intptr_t
+);
+typedef int (*MCF_AVL_COMPARER_OTHER_NODE)(
+	__MCF_STD intptr_t,
+	const MCF_AVL_NODE_HEADER *
+);
 
-static inline MCF_AVL_NODE_HEADER *MCF_AvlPrev(const MCF_AVL_NODE_HEADER *pNode) __MCF_NOEXCEPT {
+static inline MCF_AVL_NODE_HEADER *MCF_AvlPrev(
+	const MCF_AVL_NODE_HEADER *pNode
+) __MCF_NOEXCEPT {
 	return pNode->pPrev;
 }
-static inline MCF_AVL_NODE_HEADER *MCF_AvlNext(const MCF_AVL_NODE_HEADER *pNode) __MCF_NOEXCEPT {
+static inline MCF_AVL_NODE_HEADER *MCF_AvlNext(
+	const MCF_AVL_NODE_HEADER *pNode
+) __MCF_NOEXCEPT {
 	return pNode->pNext;
 }
 
-extern void MCF_AvlSwap(MCF_AVL_ROOT *ppRoot1, MCF_AVL_ROOT *ppRoot2) __MCF_NOEXCEPT;
-
-void MCF_AvlInsertNoCheck(
-	MCF_AVL_NODE_HEADER *pNode,
-	__MCF_STD intptr_t nKey,
-	MCF_AVL_NODE_HEADER *pParent,
-	MCF_AVL_NODE_HEADER **ppIns
+extern void MCF_AvlSwap(
+	MCF_AVL_ROOT *ppRoot1,
+	MCF_AVL_ROOT *ppRoot2
 ) __MCF_NOEXCEPT;
 
 extern void MCF_AvlAttach(
 	MCF_AVL_ROOT *ppRoot,
-	__MCF_STD intptr_t nKey,
-	MCF_AVL_NODE_HEADER *pNode
-) __MCF_NOEXCEPT;
-
-extern void MCF_AvlAttachCustomComp(
-	MCF_AVL_ROOT *ppRoot,
-	__MCF_STD intptr_t nKey,
 	MCF_AVL_NODE_HEADER *pNode,
-	MCF_AVL_KEY_COMPARER pfnKeyComparer
+	MCF_AVL_COMPARER_NODES pfnComparer
 ) __MCF_NOEXCEPT;
 
 extern void MCF_AvlDetach(
@@ -62,54 +65,32 @@ extern void MCF_AvlDetach(
 // A: 参考 strchr 函数。
 extern MCF_AVL_NODE_HEADER *MCF_AvlLowerBound(
 	const MCF_AVL_ROOT *ppRoot,
-	__MCF_STD intptr_t nKey
-) __MCF_NOEXCEPT;
-
-extern MCF_AVL_NODE_HEADER *MCF_AvlLowerBoundCustomComp(
-	const MCF_AVL_ROOT *ppRoot,
 	__MCF_STD intptr_t nOther,
-	MCF_AVL_KEY_COMPARER pfnComparerKeyOther,
-	MCF_AVL_KEY_COMPARER pfnComparerOtherKey
+	MCF_AVL_COMPARER_NODE_OTHER pfnComparerNodeOther,
+	MCF_AVL_COMPARER_OTHER_NODE pfnComparerOtherNode
 ) __MCF_NOEXCEPT;
 
 extern MCF_AVL_NODE_HEADER *MCF_AvlUpperBound(
 	const MCF_AVL_ROOT *ppRoot,
-	__MCF_STD intptr_t nKey
-) __MCF_NOEXCEPT;
-
-extern MCF_AVL_NODE_HEADER *MCF_AvlUpperBoundCustomComp(
-	const MCF_AVL_ROOT *ppRoot,
 	__MCF_STD intptr_t nOther,
-	MCF_AVL_KEY_COMPARER pfnComparerKeyOther,
-	MCF_AVL_KEY_COMPARER pfnComparerOtherKey
+	MCF_AVL_COMPARER_NODE_OTHER pfnComparerNodeOther,
+	MCF_AVL_COMPARER_OTHER_NODE pfnComparerOtherNode
 ) __MCF_NOEXCEPT;
 
 extern MCF_AVL_NODE_HEADER *MCF_AvlFind(
 	const MCF_AVL_ROOT *ppRoot,
-	__MCF_STD intptr_t nKey
-) __MCF_NOEXCEPT;
-
-extern MCF_AVL_NODE_HEADER *MCF_AvlFindCustomComp(
-	const MCF_AVL_ROOT *ppRoot,
 	__MCF_STD intptr_t nOther,
-	MCF_AVL_KEY_COMPARER pfnComparerKeyOther,
-	MCF_AVL_KEY_COMPARER pfnComparerOtherKey
+	MCF_AVL_COMPARER_NODE_OTHER pfnComparerNodeOther,
+	MCF_AVL_COMPARER_OTHER_NODE pfnComparerOtherNode
 ) __MCF_NOEXCEPT;
 
 extern void MCF_AvlEqualRange(
-	MCF_AVL_NODE_HEADER **ppFrom,
-	MCF_AVL_NODE_HEADER **ppTo,
-	const MCF_AVL_ROOT *ppRoot,
-	__MCF_STD intptr_t nKey
-) __MCF_NOEXCEPT;
-
-extern void MCF_AvlEqualRangeCustomComp(
-	MCF_AVL_NODE_HEADER **ppFrom,
-	MCF_AVL_NODE_HEADER **ppTo,
+	MCF_AVL_NODE_HEADER **ppBegin,
+	MCF_AVL_NODE_HEADER **ppEnd,
 	const MCF_AVL_ROOT *ppRoot,
 	__MCF_STD intptr_t nOther,
-	MCF_AVL_KEY_COMPARER pfnComparerKeyOther,
-	MCF_AVL_KEY_COMPARER pfnComparerOtherKey
+	MCF_AVL_COMPARER_NODE_OTHER pfnComparerNodeOther,
+	MCF_AVL_COMPARER_OTHER_NODE pfnComparerOtherNode
 ) __MCF_NOEXCEPT;
 
 __MCF_EXTERN_C_END

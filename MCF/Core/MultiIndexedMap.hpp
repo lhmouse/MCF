@@ -15,352 +15,246 @@
 
 namespace MCF {
 
-//============================================================================
-// 这些代码是部分从 "../../MCFCRT/env/avl_tree.c" 中复制过来的。
-
-typedef ::MCF_AVL_NODE_HEADER	AvlNodeHeader;
-typedef ::MCF_AVL_ROOT			AvlRoot;
-
-static inline AvlNodeHeader *AvlPrev(const AvlNodeHeader *pNode) noexcept {
-	return (AvlNodeHeader *)(pNode->pPrev);
-}
-
-static inline AvlNodeHeader *AvlNext(const AvlNodeHeader *pNode) noexcept {
-	return (AvlNodeHeader *)(pNode->pNext);
-}
-
-static inline void AvlSwap(AvlRoot *ppRoot1, AvlRoot *ppRoot2) noexcept {
-	return ::MCF_AvlSwap(ppRoot1, ppRoot2);
-}
-
-template<class Comparer_t>
-inline void AvlAttach(
-	AvlRoot *ppRoot,
-	std::intptr_t nKey,
-	AvlNodeHeader *pNode,
-	Comparer_t &&vComparer = std::less<std::intptr_t>()
-) noexcept(noexcept(vComparer(0, 0))) {
-	AvlNodeHeader *pParent = nullptr;
-	AvlNodeHeader **ppIns = ppRoot;
-	for(;;){
-		AvlNodeHeader *const pCur = *ppIns;
-		if(!pCur){
-			break;
-		}
-		if(vComparer(nKey, pCur->nKey)){
-			pParent = pCur;
-			ppIns = &(pCur->pLeft);
-			ppIns = &pCur->pLeft;
-		} else {
-			pParent = pCur;
-			ppIns = &(pCur->pRight);
-		}
-	}
-	::MCF_AvlInsertNoCheck(pNode, nKey, pParent, ppIns);
-}
-
-static inline void AvlDetach(
-	const AvlNodeHeader *pNode
-) noexcept {
-	return ::MCF_AvlDetach(pNode);
-}
-
-template<class ComparerKeyOther_t, class ComparerOtherKey_t>
-inline AvlNodeHeader *AvlLowerBound(
-	const AvlRoot *ppRoot,
-	std::intptr_t nOther,
-	ComparerKeyOther_t &&vComparerKeyOther = std::less<std::intptr_t>(),
-	ComparerOtherKey_t && /* vComparerOtherKey */ = std::less<std::intptr_t>()
-) noexcept(noexcept(vComparerKeyOther(0, 0)) /* && noexcept(vComparerOtherKey(0, 0)) */) {
-	const AvlNodeHeader *pRet = nullptr;
-	const AvlNodeHeader *pCur = *ppRoot;
-	while(pCur){
-		if(vComparerKeyOther(pCur->nKey, nOther)){
-			pCur = pCur->pRight;
-		} else {
-			pRet = pCur;
-			pCur = pCur->pLeft;
-		}
-	}
-	return (AvlNodeHeader *)pRet;
-}
-
-template<class ComparerKeyOther_t, class ComparerOtherKey_t>
-inline AvlNodeHeader *AvlUpperBound(
-	const AvlRoot *ppRoot,
-	std::intptr_t nOther,
-	ComparerKeyOther_t && /* vComparerKeyOther */ = std::less<std::intptr_t>(),
-	ComparerOtherKey_t &&vComparerOtherKey = std::less<std::intptr_t>()
-) noexcept(/* noexcept(vComparerKeyOther(0, 0)) && */ noexcept(vComparerOtherKey(0, 0))) {
-	const AvlNodeHeader *pRet = nullptr;
-	const AvlNodeHeader *pCur = *ppRoot;
-	while(pCur){
-		if(!vComparerOtherKey(nOther, pCur->nKey)){
-			pCur = pCur->pRight;
-		} else {
-			pRet = pCur;
-			pCur = pCur->pLeft;
-		}
-	}
-	return (AvlNodeHeader *)pRet;
-}
-
-template<class ComparerKeyOther_t, class ComparerOtherKey_t>
-inline AvlNodeHeader *AvlFind(
-	const AvlRoot *ppRoot,
-	std::intptr_t nOther,
-	ComparerKeyOther_t &&vComparerKeyOther = std::less<std::intptr_t>(),
-	ComparerOtherKey_t &&vComparerOtherKey = std::less<std::intptr_t>()
-) noexcept(noexcept(vComparerKeyOther(0, 0)) && noexcept(vComparerOtherKey(0, 0))) {
-	const AvlNodeHeader *pCur = *ppRoot;
-	while(pCur){
-		if(vComparerKeyOther(pCur->nKey, nOther)){
-			pCur = pCur->pRight;
-		} else if(vComparerOtherKey(nOther, pCur->nKey)){
-			pCur = pCur->pLeft;
-		} else {
-			break;
-		}
-	}
-	return (AvlNodeHeader *)pCur;
-}
-
-template<class ComparerKeyOther_t, class ComparerOtherKey_t>
-inline void AvlEqualRange(
-	AvlNodeHeader **ppFrom,
-	AvlNodeHeader **ppTo,
-	const AvlRoot *ppRoot,
-	std::intptr_t nOther,
-	ComparerKeyOther_t &&vComparerKeyOther = std::less<std::intptr_t>(),
-	ComparerOtherKey_t &&vComparerOtherKey = std::less<std::intptr_t>()
-) noexcept(noexcept(vComparerKeyOther(0, 0)) && noexcept(vComparerOtherKey(0, 0))) {
-	const AvlNodeHeader *const pTop = AvlFind(
-		ppRoot,
-		nOther,
-		std::move(vComparerKeyOther),
-		std::move(vComparerOtherKey)
-	);
-	if(pTop){
-		const AvlNodeHeader *pCur = pTop;
-		for(;;){
-			const AvlNodeHeader *const pLower = pCur->pLeft;
-			if(!pLower || vComparerKeyOther(pLower->nKey, nOther)){
-				break;
-			}
-			pCur = pLower;
-		}
-		*ppFrom = (AvlNodeHeader *)pCur;
-
-		pCur = pTop;
-		for(;;){
-			const AvlNodeHeader *const pUpper = pCur->pRight;
-			if(!pUpper || vComparerOtherKey(nOther, pUpper->nKey)){
-				break;
-			}
-			pCur = pUpper;
-		}
-		*ppTo = (AvlNodeHeader *)(pCur ? pCur->pNext : nullptr);
-	} else {
-		*ppFrom = nullptr;
-		*ppTo = nullptr;
-	}
-}
-//============================================================================
-
 template<typename Index_t, class Comparer_t = std::less<void>>
-struct Index {
+struct MapIndex {
 	Index_t m_vIndex;
 
-	template<typename... Params_t>
-	Index(Params_t &&... vParams)
-		: m_vIndex(std::forward<Params_t>(vParams)...)
+	MapIndex() = default;
+
+	explicit constexpr MapIndex(Index_t vIndex)
+		: m_vIndex(std::move(vIndex))
 	{
 	}
 
 	template<typename Comparand_t>
-	bool operator()(const Comparand_t &lhs, int) const
-		noexcept(noexcept(Comparer_t()(NullRef<Comparand_t>(), m_vIndex)))
-	{
-		return Comparer_t()(lhs, m_vIndex);
-	}
-	template<typename Comparand_t>
-	bool operator()(const Comparand_t &rhs) const
-		noexcept(noexcept(Comparer_t()(m_vIndex, NullRef<Comparand_t>())))
-	{
+	bool operator()(Comparand_t &&rhs) const noexcept {
+		static_assert(noexcept(Comparer_t()(m_vIndex, rhs)), "Comparer_t must not throw any exceptions.");
+
 		return Comparer_t()(m_vIndex, rhs);
 	}
+	template<typename Comparand_t>
+	bool operator()(Comparand_t &&lhs, int) const noexcept {
+		static_assert(noexcept(Comparer_t()(lhs, m_vIndex)), "Comparer_t must not throw any exceptions.");
+
+		return Comparer_t()(lhs, m_vIndex);
+	}
 };
 
-template<typename Index_t>
-struct MakeIndex_ {
-	typedef Index<Index_t> Index;
+template<typename Index_t, class Comparer_t, class IgnoredComparer_t>
+struct MapIndex<MapIndex<Index_t, Comparer_t>, IgnoredComparer_t>
+	: public MapIndex<Index_t, Comparer_t>
+{
+	using MapIndex<Index_t, Comparer_t>::MapIndex;
 };
-template<typename Index_t, typename Comparer_t>
-struct MakeIndex_<Index<Index_t, Comparer_t>> {
-	typedef Index<Index_t, Comparer_t> Index;
+
+template<class Element_t, class... Indexes_t>
+class MultiIndexedMap;
+
+template<class Element_t, class... Indexes_t>
+class MapNode {
+	static_assert(sizeof...(Indexes_t) > 0, "No index?");
+
+	template<class, class...>
+	friend class MultiIndexedMap;
+
+private:
+	Element_t xm_vElement;
+	std::tuple<MapIndex<Indexes_t>...> xm_vIndexes;
+	::MCF_AVL_NODE_HEADER xm_aHeaders[sizeof...(Indexes_t)];
+
+public:
+	template<typename... IndexParams_t>
+	explicit constexpr MapNode(Element_t vElement, IndexParams_t &&... vIndexParams)
+		: xm_vElement(std::move(vElement))
+		, xm_vIndexes(MapIndex<Indexes_t>(std::forward<IndexParams_t>(vIndexParams))...)
+		, xm_aHeaders()
+	{
+	}
+
+public:
+	constexpr const Element_t &GetElement() const noexcept {
+		return xm_vElement;
+	}
+	Element_t &GetElement() noexcept {
+		return xm_vElement;
+	}
+	template<std::size_t INDEX>
+	constexpr auto GetIndex() const noexcept
+		-> const decltype(std::get<INDEX>(xm_vIndexes).m_vIndex) &
+	{
+		return std::get<INDEX>(xm_vIndexes).m_vIndex;
+	}
+
+	template<std::size_t INDEX>
+	const MapNode *GetPrev() const noexcept {
+		const auto pPrevAvl = ::MCF_AvlPrev(&(xm_aHeaders[INDEX]));
+		if(!pPrevAvl){
+			return nullptr;
+		}
+		return DOWN_CAST(const MapNode, xm_aHeaders[INDEX], pPrevAvl);
+	}
+	template<std::size_t INDEX>
+	MapNode *GetPrev() noexcept {
+		const auto pPrevAvl = ::MCF_AvlPrev(&(xm_aHeaders[INDEX]));
+		if(!pPrevAvl){
+			return nullptr;
+		}
+		return DOWN_CAST(MapNode, xm_aHeaders[INDEX], pPrevAvl);
+	}
+
+	template<std::size_t INDEX>
+	const MapNode *GetNext() const noexcept {
+		const auto pNextAvl = ::MCF_AvlNext(&(xm_aHeaders[INDEX]));
+		if(!pNextAvl){
+			return nullptr;
+		}
+		return DOWN_CAST(const MapNode, xm_aHeaders[INDEX], pNextAvl);
+	}
+	template<std::size_t INDEX>
+	MapNode *GetNext() noexcept {
+		const auto pNextAvl = ::MCF_AvlNext(&(xm_aHeaders[INDEX]));
+		if(!pNextAvl){
+			return nullptr;
+		}
+		return DOWN_CAST(MapNode, xm_aHeaders[INDEX], pNextAvl);
+	}
+};
+
+template<class... Indexes_t>
+class MapNode<void, Indexes_t...> {
+	static_assert(sizeof...(Indexes_t) > 0, "No index?");
+
+	template<class, class...>
+	friend class MultiIndexedMap;
+
+private:
+	std::tuple<MapIndex<Indexes_t>...> xm_vIndexes;
+	::MCF_AVL_NODE_HEADER xm_aHeaders[sizeof...(Indexes_t)];
+
+public:
+	template<typename... IndexParams_t>
+	explicit constexpr MapNode(IndexParams_t &&... vIndexParams)
+		: xm_vIndexes(MapIndex<Indexes_t>(std::forward<IndexParams_t>(vIndexParams))...)
+		, xm_aHeaders()
+	{
+	}
+
+public:
+	template<std::size_t INDEX>
+	constexpr auto GetIndex() const noexcept
+		-> const decltype(std::get<INDEX>(xm_vIndexes).m_vIndex) &
+	{
+		return std::get<INDEX>(xm_vIndexes).m_vIndex;
+	}
+
+	template<std::size_t INDEX>
+	const MapNode *GetPrev() const noexcept {
+		const auto pPrevAvl = ::MCF_AvlPrev(&(xm_aHeaders[INDEX]));
+		if(!pPrevAvl){
+			return nullptr;
+		}
+		return DOWN_CAST(const MapNode, xm_aHeaders[INDEX], pPrevAvl);
+	}
+	template<std::size_t INDEX>
+	MapNode *GetPrev() noexcept {
+		const auto pPrevAvl = ::MCF_AvlPrev(&(xm_aHeaders[INDEX]));
+		if(!pPrevAvl){
+			return nullptr;
+		}
+		return DOWN_CAST(MapNode, xm_aHeaders[INDEX], pPrevAvl);
+	}
+
+	template<std::size_t INDEX>
+	const MapNode *GetNext() const noexcept {
+		const auto pNextAvl = ::MCF_AvlNext(&(xm_aHeaders[INDEX]));
+		if(!pNextAvl){
+			return nullptr;
+		}
+		return DOWN_CAST(const MapNode, xm_aHeaders[INDEX], pNextAvl);
+	}
+	template<std::size_t INDEX>
+	MapNode *GetNext() noexcept {
+		const auto pNextAvl = ::MCF_AvlNext(&(xm_aHeaders[INDEX]));
+		if(!pNextAvl){
+			return nullptr;
+		}
+		return DOWN_CAST(MapNode, xm_aHeaders[INDEX], pNextAvl);
+	}
 };
 
 template<class Element_t, class... Indexes_t>
 class MultiIndexedMap {
+	static_assert(sizeof...(Indexes_t) > 0, "No index?");
+
 public:
-	enum : std::size_t {
-		INDEX_COUNT = sizeof...(Indexes_t)
-	};
+	typedef MapNode<Element_t, Indexes_t...> Node;
 
-	static_assert(INDEX_COUNT > 0, "No index?");
-
-	typedef std::tuple<typename MakeIndex_<Indexes_t>::Index...> Indexes;
-
-	class Node {
-		friend MultiIndexedMap;
-
-	private:
-		template<std::size_t INDEX>
-		static const AvlNodeHeader *xAvlFromNode(const Node *pNode) noexcept {
-			if(!pNode){
-				return nullptr;
-			}
-			return &(pNode->xm_arHeaders[INDEX]);
-		}
-		template<std::size_t INDEX>
-		static AvlNodeHeader *xAvlFromNode(Node *pNode) noexcept {
-			if(!pNode){
-				return nullptr;
-			}
-			return &(pNode->xm_arHeaders[INDEX]);
+private:
+	template<std::size_t INDEX>
+	struct xComparers {
+		static int Nodes(
+			const MCF_AVL_NODE_HEADER *pAvl1,
+			const MCF_AVL_NODE_HEADER *pAvl2
+		) noexcept {
+			const auto pNode1 = DOWN_CAST(const Node, xm_aHeaders[INDEX], pAvl1);
+			const auto pNode2 = DOWN_CAST(const Node, xm_aHeaders[INDEX], pAvl2);
+			return std::get<INDEX>(pNode1->xm_vIndexes)(std::get<INDEX>(pNode2->xm_vIndexes).m_vIndex);
 		}
 
-		template<std::size_t INDEX>
-		static const Node *xNodeFromAvl(const AvlNodeHeader *pNode) noexcept {
-			if(!pNode){
-				return nullptr;
-			}
-			return DOWN_CAST(const Node, xm_arHeaders[INDEX], pNode);
-		}
-		template<std::size_t INDEX>
-		static Node *xNodeFromAvl(AvlNodeHeader *pNode) noexcept {
-			if(!pNode){
-				return nullptr;
-			}
-			return DOWN_CAST(Node, xm_arHeaders[INDEX], pNode);
+		template<typename Other_t>
+		static int NodeOther(
+			const MCF_AVL_NODE_HEADER *pAvl1,
+			std::intptr_t nOther
+		) noexcept {
+			const auto pNode1 = DOWN_CAST(const Node, xm_aHeaders[INDEX], pAvl1);
+			return std::get<INDEX>(pNode1->xm_vIndexes)(*(const Other_t *)nOther);
 		}
 
-	private:
-		Element_t xm_vElement;
-		Indexes xm_vIndexes;
-
-		AvlNodeHeader xm_arHeaders[INDEX_COUNT];
-#ifndef NDEBUG
-		const MultiIndexedMap *xm_pOwner;
-#endif
-
-	public:
-		constexpr Node(Element_t vElement, Indexes_t... vIndexes)
-			: xm_vElement(std::move(vElement))
-			, xm_vIndexes(std::move(vIndexes)...)
-#ifndef NDEBUG
-			, xm_pOwner(nullptr)
-#endif
-		{
-		}
-
-		static_assert(noexcept(NullRef<Element_t>().~Element_t()), "Element_t must be noexcept destructible.");
-		static_assert(noexcept(NullRef<Indexes>().~Indexes()), "Indexes must be noexcept destructible.");
-
-	public:
-		constexpr const Element_t &GetElement() const noexcept {
-			return xm_vElement;
-		}
-		Element_t &GetElement() noexcept {
-			return xm_vElement;
-		}
-
-		template<std::size_t INDEX>
-		constexpr auto GetIndex() const noexcept
-			-> const decltype(std::get<INDEX>(xm_vIndexes).m_vIndex) &
-		{
-			return std::get<INDEX>(xm_vIndexes).m_vIndex;
-		}
-
-		template<std::size_t INDEX>
-		const Node *GetPrev() const noexcept {
-			return xNodeFromAvl<INDEX>(AvlPrev(xAvlFromNode<INDEX>(this)));
-		}
-		template<std::size_t INDEX>
-		Node *GetPrev() noexcept {
-			return xNodeFromAvl<INDEX>(AvlPrev(xAvlFromNode<INDEX>(this)));
-		}
-
-		template<std::size_t INDEX>
-		const Node *GetNext() const noexcept {
-			return xNodeFromAvl<INDEX>(AvlNext(xAvlFromNode<INDEX>(this)));
-		}
-		template<std::size_t INDEX>
-		Node *GetNext() noexcept {
-			return xNodeFromAvl<INDEX>(AvlNext(xAvlFromNode<INDEX>(this)));
+		template<typename Other_t>
+		static int OtherNode(
+			std::intptr_t nOther,
+			const MCF_AVL_NODE_HEADER *pAvl2
+		) noexcept {
+			const auto pNode2 = DOWN_CAST(const Node, xm_aHeaders[INDEX], pAvl2);
+			return std::get<INDEX>(pNode2->xm_vIndexes)(*(const Other_t *)nOther, 0);
 		}
 	};
 
 private:
-	template<typename Tx, typename Ty>
-	struct xComparer;
-
-	template<typename Index_t, class Comparer_t, typename Comparand_t>
-	struct xComparer<Index<Index_t, Comparer_t>, Comparand_t> {
-		bool operator()(std::intptr_t lhs, std::intptr_t rhs) const
-			noexcept(noexcept(NullRef<Index<Index_t, Comparer_t>>()(NullRef<Comparand_t>())))
-		{
-			return (*(const Index<Index_t, Comparer_t> *)lhs)(*(const Comparand_t *)rhs);
-		}
-	};
-	template<typename Comparand_t, typename Index_t, class Comparer_t>
-	struct xComparer<Comparand_t, Index<Index_t, Comparer_t>> {
-		bool operator()(std::intptr_t lhs, std::intptr_t rhs) const
-			noexcept(noexcept(NullRef<Index<Index_t, Comparer_t>>()(NullRef<Comparand_t>(), 0)))
-		{
-			return (*(const Index<Index_t, Comparer_t> *)rhs)(*(const Comparand_t *)lhs, 0);
-		}
-	};
-	template<typename Index1_t, typename Index2_t, class Comparer_t>
-	struct xComparer<Index<Index1_t, Comparer_t>, Index<Index2_t, Comparer_t>> {
-		bool operator()(std::intptr_t lhs, std::intptr_t rhs) const
-			noexcept(noexcept(NullRef<Index<Index1_t, Comparer_t>>()(NullRef<Index<Index2_t, Comparer_t>>().m_vIndex)))
-		{
-			return (*(const Index<Index1_t, Comparer_t> *)lhs)(((const Index<Index2_t, Comparer_t> *)rhs)->m_vIndex);
-		}
-	};
-
-public:
 	struct {
-		AvlNodeHeader *pFront;
-		AvlNodeHeader *pRoot;
-		AvlNodeHeader *pBack;
-	} xm_arvIndexPointers[INDEX_COUNT];
+		::MCF_AVL_NODE_HEADER *pRoot;
+		::MCF_AVL_NODE_HEADER *pFirst;
+		::MCF_AVL_NODE_HEADER *pLast;
+	} xm_aNodes[sizeof...(Indexes_t)];
 
 	std::size_t xm_uSize;
 
 public:
 	constexpr MultiIndexedMap() noexcept
-		: xm_arvIndexPointers{ }
+		: xm_aNodes()
 		, xm_uSize(0)
 	{
 	}
 	MultiIndexedMap(const MultiIndexedMap &rhs)
 		: MultiIndexedMap()
 	{
-		xCloneRecur(rhs);
-	}
-	MultiIndexedMap &operator=(const MultiIndexedMap &rhs){
-		if(this != &rhs){
-			Clear();
-			xCloneRecur(rhs);
+		auto pNode = rhs.GetBegin<0>();
+		while(pNode){
+			Insert(*pNode);
+			pNode = pNode->template GetNext<0>();
 		}
-		return *this;
 	}
 	MultiIndexedMap(MultiIndexedMap &&rhs) noexcept
 		: MultiIndexedMap()
 	{
 		Swap(rhs);
+	}
+	MultiIndexedMap &operator=(const MultiIndexedMap &rhs){
+		if(this != &rhs){
+			Clear();
+			MultiIndexedMap(rhs).Swap(*this);
+		}
+		return *this;
 	}
 	MultiIndexedMap &operator=(MultiIndexedMap &&rhs) noexcept {
 		Swap(rhs);
@@ -373,105 +267,71 @@ public:
 private:
 	template<std::size_t INDEX>
 	void xAttach(Node *pNode) noexcept {
-		typedef typename std::tuple_element<INDEX, Indexes>::type KeyType;
-
-		AvlAttach(
-			&(xm_arvIndexPointers[INDEX].pRoot),
-			(std::intptr_t)&std::get<INDEX>(pNode->xm_vIndexes),
-			Node::template xAvlFromNode<INDEX>(pNode),
-			xComparer<KeyType, KeyType>()
+		const auto pAvl = &(pNode->xm_aHeaders[INDEX]);
+		::MCF_AvlAttach(
+			&(xm_aNodes[INDEX].pRoot),
+			pAvl,
+			&(xComparers<INDEX>::Nodes)
 		);
-
-		const auto pAvl = Node::template xAvlFromNode<INDEX>(pNode);
-		const auto pPrev = AvlPrev(pAvl);
-		if(!pPrev){
-			xm_arvIndexPointers[INDEX].pFront = pAvl;
+		if(!::MCF_AvlPrev(pAvl)){
+			xm_aNodes[INDEX].pFirst = pAvl;
 		}
-		const auto pNext = AvlNext(pAvl);
-		if(!pNext){
-			xm_arvIndexPointers[INDEX].pBack = pAvl;
+		if(!::MCF_AvlNext(pAvl)){
+			xm_aNodes[INDEX].pLast = pAvl;
 		}
 	}
-	template<std::size_t INDEX>
-	void xAttachAll(Node *pNode, typename std::enable_if<INDEX != (std::size_t)-1, int>::type = 0) noexcept {
-		ASSERT(pNode->xm_pOwner == nullptr);
-
-		xAttach<INDEX>(pNode);
-		xAttachAll<INDEX - 1>(pNode);
-	}
-	template<std::size_t INDEX>
-	void xAttachAll(Node *pNode, typename std::enable_if<INDEX == (std::size_t)-1, int>::type = 0) noexcept {
-		UNREF_PARAM(pNode);
-
-#ifndef NDEBUG
-		pNode->xm_pOwner = this;
-#endif
-	}
-
 	template<std::size_t INDEX>
 	void xDetach(Node *pNode) noexcept {
-		const auto pAvl = Node::template xAvlFromNode<INDEX>(pNode);
-		if(pAvl == xm_arvIndexPointers[INDEX].pFront){
-			xm_arvIndexPointers[INDEX].pFront = AvlNext(pAvl);
+		const auto pAvl = &(pNode->xm_aHeaders[INDEX]);
+		if(pAvl == xm_aNodes[INDEX].pFirst){
+			xm_aNodes[INDEX].pFirst = ::MCF_AvlNext(pAvl);
 		}
-		if(pAvl == xm_arvIndexPointers[INDEX].pBack){
-			xm_arvIndexPointers[INDEX].pBack = AvlPrev(pAvl);
+		if(pAvl == xm_aNodes[INDEX].pLast){
+			xm_aNodes[INDEX].pLast = ::MCF_AvlPrev(pAvl);
 		}
+		::MCF_AvlDetach(pAvl);
+	}
 
-		AvlDetach(pAvl);
+	template<std::size_t INDEX>
+	void xAttachRecur(Node *pNode, typename std::enable_if<(INDEX < sizeof...(Indexes_t)), int>::type = 0) noexcept {
+		xAttach<INDEX>(pNode);
+		xAttachRecur<INDEX + 1>(pNode);
 	}
 	template<std::size_t INDEX>
-	void xDetachAll(Node *pNode, typename std::enable_if<INDEX != (std::size_t)-1, int>::type = 0) noexcept {
-		ASSERT(pNode->xm_pOwner == this);
+	void xAttachRecur(Node *, typename std::enable_if<(INDEX == sizeof...(Indexes_t)), int>::type = 0) noexcept {
+	}
 
+	template<std::size_t INDEX>
+	void xDetachRecur(Node *pNode, typename std::enable_if<(INDEX < sizeof...(Indexes_t)), int>::type = 0) noexcept {
+		xDetachRecur<INDEX + 1>(pNode);
 		xDetach<INDEX>(pNode);
-		xDetachAll<INDEX - 1>(pNode);
 	}
 	template<std::size_t INDEX>
-	void xDetachAll(Node *pNode, typename std::enable_if<INDEX == (std::size_t)-1, int>::type = 0) noexcept {
-		UNREF_PARAM(pNode);
-
-#ifndef NDEBUG
-		pNode->xm_pOwner = nullptr;
-#endif
-	}
-
-	void xCloneRecur(const MultiIndexedMap &rhs){
-		ASSERT(this != &rhs);
-
-		AvlNodeHeader *pAvl = rhs.xm_arvIndexPointers[0].pFront;
-		while(pAvl){
-			Node *const pNode = Node::template xNodeFromAvl<0>(pAvl);
-			pAvl = AvlNext(pAvl);
-			Insert(*pNode);
-		}
+	void xDetachRecur(Node *, typename std::enable_if<(INDEX == sizeof...(Indexes_t)), int>::type = 0) noexcept {
 	}
 
 public:
-	Node *Insert(Element_t vElement, Indexes_t... vIndexes){
-		const auto pNode = new Node(std::move(vElement), std::move(vIndexes)...);
-		xAttachAll<INDEX_COUNT - 1>(pNode);
+	template<typename... Params_t>
+	Node *Insert(Params_t &&... vParams){
+		const auto pNode = new Node(std::forward<Params_t>(vParams)...);
+		xAttachRecur<0>(pNode);
 		++xm_uSize;
 		return pNode;
 	}
 	void Erase(Node *pNode) noexcept {
-		xDetachAll<INDEX_COUNT - 1>(pNode);
+		xDetachRecur<0>(pNode);
 		--xm_uSize;
 		delete pNode;
 	}
 	void Clear() noexcept {
-		AvlNodeHeader *pAvl = xm_arvIndexPointers[0].pFront;
-		while(pAvl){
-			Node *const pNode = Node::template xNodeFromAvl<0>(pAvl);
-			pAvl = AvlNext(pAvl);
+		auto pNode = GetBegin<0>();
+		while(pNode){
+			const auto pNext = pNode->template GetNext<0>();
 			delete pNode;
+			pNode = pNext;
 		}
 
-		for(auto &vPointers : xm_arvIndexPointers){
-			vPointers.pFront	= nullptr;
-			vPointers.pRoot		= nullptr;
-			vPointers.pBack		= nullptr;
-		}
+		BZero(xm_aNodes);
 		xm_uSize = 0;
 	}
 
@@ -484,32 +344,40 @@ public:
 
 	void Swap(MultiIndexedMap &rhs) noexcept {
 		if(this != &rhs){
-			std::swap(xm_arvIndexPointers, rhs.xm_arvIndexPointers);
+			for(std::size_t i = 0; i < sizeof...(Indexes_t); ++i){
+				::MCF_AvlSwap	(&(xm_aNodes[i].pRoot),	&(rhs.xm_aNodes[i].pRoot));
+				std::swap		(xm_aNodes[i].pFirst,	rhs.xm_aNodes[i].pFirst);
+				std::swap		(xm_aNodes[i].pLast,	rhs.xm_aNodes[i].pLast);
+			}
 			std::swap(xm_uSize, rhs.xm_uSize);
 		}
 	}
 
 	template<std::size_t INDEX, typename... Params_t>
 	void SetIndex(Node *pNode, Params_t &&... vParams){
-		auto vNewIndex = std::tuple_element<INDEX, Indexes>(std::forward<Params_t>(vParams)...);
+		auto &vIndex = std::get<INDEX>(pNode->xm_vIndexes);
+		std::get<INDEX>(pNode->xm_vIndexes) =
+			typename std::remove_reference<decltype(vIndex)>::type(std::forward<Params_t>(vParams)...);
 
 		xDetach<INDEX>(pNode);
-		try {
-			std::get<INDEX>(pNode->xm_vIndexes) = std::move(vNewIndex);
-			xAttach<INDEX>(pNode);
-		} catch(...){
-			xAttach<INDEX>(pNode);
-			throw;
-		}
+		xAttach<INDEX>(pNode);
 	}
 
 	template<std::size_t INDEX>
 	const Node *GetBegin() const noexcept {
-		return Node::template xNodeFromAvl<INDEX>(xm_arvIndexPointers[INDEX].pFront);
+		const auto pAvl = xm_aNodes[INDEX].pFirst;
+		if(!pAvl){
+			return nullptr;
+		}
+		return DOWN_CAST(const Node, xm_aHeaders[INDEX], pAvl);
 	}
 	template<std::size_t INDEX>
 	Node *GetBegin() noexcept {
-		return Node::template xNodeFromAvl<INDEX>(xm_arvIndexPointers[INDEX].pFront);
+		const auto pAvl = xm_aNodes[INDEX].pFirst;
+		if(!pAvl){
+			return nullptr;
+		}
+		return DOWN_CAST(Node, xm_aHeaders[INDEX], pAvl);
 	}
 	template<std::size_t INDEX>
 	const Node *GetCBegin() const noexcept {
@@ -518,11 +386,19 @@ public:
 
 	template<std::size_t INDEX>
 	const Node *GetRBegin() const noexcept {
-		return Node::template xNodeFromAvl<INDEX>(xm_arvIndexPointers[INDEX].pBack);
+		const auto pAvl = xm_aNodes[INDEX].pLast;
+		if(!pAvl){
+			return nullptr;
+		}
+		return DOWN_CAST(const Node, xm_aHeaders[INDEX], pAvl);
 	}
 	template<std::size_t INDEX>
 	Node *GetRBegin() noexcept {
-		return Node::template xNodeFromAvl<INDEX>(xm_arvIndexPointers[INDEX].pBack);
+		const auto pAvl = xm_aNodes[INDEX].pLast;
+		if(!pAvl){
+			return nullptr;
+		}
+		return DOWN_CAST(Node, xm_aHeaders[INDEX], pAvl);
 	}
 	template<std::size_t INDEX>
 	const Node *GetCRBegin() const noexcept {
@@ -530,148 +406,98 @@ public:
 	}
 
 	template<std::size_t INDEX, typename Comparand_t>
-	const Node *GetLowerBound(const Comparand_t &vComparand) const
-		noexcept(
-			noexcept	(xComparer<typename std::tuple_element<INDEX, Indexes>::type, Comparand_t>()(0, 0))
-			&& noexcept	(xComparer<Comparand_t, typename std::tuple_element<INDEX, Indexes>::type>()(0, 0))
-		)
-	{
-		typedef typename std::tuple_element<INDEX, Indexes>::type KeyType;
-
-		return Node::template xNodeFromAvl<INDEX>(AvlLowerBound(
-			&(xm_arvIndexPointers[INDEX].pRoot),
+	const Node *GetLowerBound(const Comparand_t &vComparand) const noexcept {
+		const auto pAvl = ::MCF_AvlLowerBound(
+			&(xm_aNodes[INDEX].pRoot),
 			(std::intptr_t)&vComparand,
-			xComparer<KeyType, Comparand_t>(),
-			xComparer<Comparand_t, KeyType>()
-		));
+			&(xComparers<INDEX>::template NodeOther<Comparand_t>),
+			&(xComparers<INDEX>::template OtherNode<Comparand_t>)
+		);
+		return pAvl ? DOWN_CAST(const Node, xm_aHeaders[INDEX], pAvl) : nullptr;
 	}
 	template<std::size_t INDEX, typename Comparand_t>
-	Node *GetLowerBound(const Comparand_t &vComparand)
-		noexcept(
-			noexcept	(xComparer<typename std::tuple_element<INDEX, Indexes>::type, Comparand_t>()(0, 0))
-			&& noexcept	(xComparer<Comparand_t, typename std::tuple_element<INDEX, Indexes>::type>()(0, 0))
-		)
-	{
-		typedef typename std::tuple_element<INDEX, Indexes>::type KeyType;
-
-		return Node::template xNodeFromAvl<INDEX>(AvlLowerBound(
-			&(xm_arvIndexPointers[INDEX].pRoot),
+	Node *GetLowerBound(const Comparand_t &vComparand) noexcept {
+		const auto pAvl = ::MCF_AvlLowerBound(
+			&(xm_aNodes[INDEX].pRoot),
 			(std::intptr_t)&vComparand,
-			xComparer<KeyType, Comparand_t>(),
-			xComparer<Comparand_t, KeyType>()
-		));
+			&(xComparers<INDEX>::template NodeOther<Comparand_t>),
+			&(xComparers<INDEX>::template OtherNode<Comparand_t>)
+		);
+		return pAvl ? DOWN_CAST(Node, xm_aHeaders[INDEX], pAvl) : nullptr;
 	}
 
 	template<std::size_t INDEX, typename Comparand_t>
-	const Node *GetUpperBound(const Comparand_t &vComparand) const
-		noexcept(
-			noexcept	(xComparer<typename std::tuple_element<INDEX, Indexes>::type, Comparand_t>()(0, 0))
-			&& noexcept	(xComparer<Comparand_t, typename std::tuple_element<INDEX, Indexes>::type>()(0, 0))
-		)
-	{
-		typedef typename std::tuple_element<INDEX, Indexes>::type KeyType;
-
-		return Node::template xNodeFromAvl<INDEX>(AvlUpperBound(
-			&(xm_arvIndexPointers[INDEX].pRoot),
+	const Node *GetUpperBound(const Comparand_t &vComparand) const noexcept {
+		const auto pAvl = ::MCF_AvlUpperBound(
+			&(xm_aNodes[INDEX].pRoot),
 			(std::intptr_t)&vComparand,
-			xComparer<KeyType, Comparand_t>(),
-			xComparer<Comparand_t, KeyType>()
-		));
+			&(xComparers<INDEX>::template NodeOther<Comparand_t>),
+			&(xComparers<INDEX>::template OtherNode<Comparand_t>)
+		);
+		return pAvl ? DOWN_CAST(const Node, xm_aHeaders[INDEX], pAvl) : nullptr;
 	}
 	template<std::size_t INDEX, typename Comparand_t>
-	Node *GetUpperBound(const Comparand_t &vComparand)
-		noexcept(
-			noexcept	(xComparer<typename std::tuple_element<INDEX, Indexes>::type, Comparand_t>()(0, 0))
-			&& noexcept	(xComparer<Comparand_t, typename std::tuple_element<INDEX, Indexes>::type>()(0, 0))
-		)
-	{
-		typedef typename std::tuple_element<INDEX, Indexes>::type KeyType;
-
-		return Node::template xNodeFromAvl<INDEX>(AvlUpperBound(
-			&(xm_arvIndexPointers[INDEX].pRoot),
+	Node *GetUpperBound(const Comparand_t &vComparand) noexcept {
+		const auto pAvl = ::MCF_AvlUpperBound(
+			&(xm_aNodes[INDEX].pRoot),
 			(std::intptr_t)&vComparand,
-			xComparer<KeyType, Comparand_t>(),
-			xComparer<Comparand_t, KeyType>()
-		));
+			&(xComparers<INDEX>::template NodeOther<Comparand_t>),
+			&(xComparers<INDEX>::template OtherNode<Comparand_t>)
+		);
+		return pAvl ? DOWN_CAST(Node, xm_aHeaders[INDEX], pAvl) : nullptr;
 	}
 
 	template<std::size_t INDEX, typename Comparand_t>
-	const Node *Find(const Comparand_t &vComparand) const
-		noexcept(
-			noexcept	(xComparer<typename std::tuple_element<INDEX, Indexes>::type, Comparand_t>()(0, 0))
-			&& noexcept	(xComparer<Comparand_t, typename std::tuple_element<INDEX, Indexes>::type>()(0, 0))
-		)
-	{
-		typedef typename std::tuple_element<INDEX, Indexes>::type KeyType;
-
-		return Node::template xNodeFromAvl<INDEX>(AvlFind(
-			&(xm_arvIndexPointers[INDEX].pRoot),
+	const Node *Find(const Comparand_t &vComparand) const noexcept {
+		const auto pAvl = ::MCF_AvlFind(
+			&(xm_aNodes[INDEX].pRoot),
 			(std::intptr_t)&vComparand,
-			xComparer<KeyType, Comparand_t>(),
-			xComparer<Comparand_t, KeyType>()
-		));
+			&(xComparers<INDEX>::template NodeOther<Comparand_t>),
+			&(xComparers<INDEX>::template OtherNode<Comparand_t>)
+		);
+		return pAvl ? DOWN_CAST(const Node, xm_aHeaders[INDEX], pAvl) : nullptr;
 	}
 	template<std::size_t INDEX, typename Comparand_t>
-	Node *Find(const Comparand_t &vComparand)
-		noexcept(
-			noexcept	(xComparer<typename std::tuple_element<INDEX, Indexes>::type, Comparand_t>()(0, 0))
-			&& noexcept	(xComparer<Comparand_t, typename std::tuple_element<INDEX, Indexes>::type>()(0, 0))
-		)
-	{
-		typedef typename std::tuple_element<INDEX, Indexes>::type KeyType;
-
-		return Node::template xNodeFromAvl<INDEX>(AvlFind(
-			&(xm_arvIndexPointers[INDEX].pRoot),
+	Node *Find(const Comparand_t &vComparand) noexcept {
+		const auto pAvl = ::MCF_AvlFind(
+			&(xm_aNodes[INDEX].pRoot),
 			(std::intptr_t)&vComparand,
-			xComparer<KeyType, Comparand_t>(),
-			xComparer<Comparand_t, KeyType>()
-		));
+			&(xComparers<INDEX>::template NodeOther<Comparand_t>),
+			&(xComparers<INDEX>::template OtherNode<Comparand_t>)
+		);
+		return pAvl ? DOWN_CAST(Node, xm_aHeaders[INDEX], pAvl) : nullptr;
 	}
 
 	template<std::size_t INDEX, typename Comparand_t>
-	std::pair<const Node *, const Node *> GetEqualRange(const Comparand_t &vComparand) const
-		noexcept(
-			noexcept	(xComparer<typename std::tuple_element<INDEX, Indexes>::type, Comparand_t>()(0, 0))
-			&& noexcept	(xComparer<Comparand_t, typename std::tuple_element<INDEX, Indexes>::type>()(0, 0))
-		)
-	{
-		typedef typename std::tuple_element<INDEX, Indexes>::type KeyType;
-
-		const AvlNodeHeader *pFrom, *pTo;
-		AvlEqualRange(
-			&pFrom,
-			&pTo,
-			&(xm_arvIndexPointers[INDEX].pRoot),
+	std::pair<const Node *, const Node *> GetEqualRange(const Comparand_t &vComparand) const noexcept {
+		::MCF_AVL_NODE_HEADER *pBegin, *pEnd;
+		::MCF_AvlEqualRange(
+			&pBegin,
+			&pEnd,
+			&(xm_aNodes[INDEX].pRoot),
 			(std::intptr_t)&vComparand,
-			xComparer<KeyType, Comparand_t>(),
-			xComparer<Comparand_t, KeyType>()
+			&(xComparers<INDEX>::template NodeOther<Comparand_t>),
+			&(xComparers<INDEX>::template OtherNode<Comparand_t>)
 		);
 		return std::make_pair(
-			Node::template xNodeFromAvl<INDEX>(pFrom),
-			Node::template xNodeFromAvl<INDEX>(pTo)
+			pBegin ? DOWN_CAST(const Node, xm_aHeaders[INDEX], pBegin) : nullptr,
+			pEnd ? DOWN_CAST(const Node, xm_aHeaders[INDEX], pEnd) : nullptr
 		);
 	}
 	template<std::size_t INDEX, typename Comparand_t>
-	std::pair<Node *, Node *> GetEqualRange(const Comparand_t &vComparand)
-		noexcept(
-			noexcept	(xComparer<typename std::tuple_element<INDEX, Indexes>::type, Comparand_t>()(0, 0))
-			&& noexcept	(xComparer<Comparand_t, typename std::tuple_element<INDEX, Indexes>::type>()(0, 0))
-		)
-	{
-		typedef typename std::tuple_element<INDEX, Indexes>::type KeyType;
-
-		const AvlNodeHeader *pFrom, *pTo;
-		AvlEqualRange(
-			&pFrom,
-			&pTo,
-			&(xm_arvIndexPointers[INDEX].pRoot),
+	std::pair<Node *, Node *> GetEqualRange(const Comparand_t &vComparand) noexcept {
+		::MCF_AVL_NODE_HEADER *pBegin, *pEnd;
+		::MCF_AvlEqualRange(
+			&pBegin,
+			&pEnd,
+			&(xm_aNodes[INDEX].pRoot),
 			(std::intptr_t)&vComparand,
-			xComparer<KeyType, Comparand_t>(),
-			xComparer<Comparand_t, KeyType>()
+			&(xComparers<INDEX>::template NodeOther<Comparand_t>),
+			&(xComparers<INDEX>::template OtherNode<Comparand_t>)
 		);
 		return std::make_pair(
-			Node::template xNodeFromAvl<INDEX>(pFrom),
-			Node::template xNodeFromAvl<INDEX>(pTo)
+			pBegin ? DOWN_CAST(Node, xm_aHeaders[INDEX], pBegin) : nullptr,
+			pEnd ? DOWN_CAST(Node, xm_aHeaders[INDEX], pEnd) : nullptr
 		);
 	}
 };

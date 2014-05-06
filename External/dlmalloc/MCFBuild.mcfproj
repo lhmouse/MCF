@@ -1,7 +1,7 @@
 Default = Debug
 
 General {
-	CompilerFlags		= -Wall -Wextra -pipe -mfpmath=sse,387 -msse2 -DZ_PREFIX
+	CompilerFlags		= -Wall -Wextra -pipe -mfpmath=sse,387 -msse2 -DUSE_DL_PREFIX -DUSE_BUILTIN_FFS
 
 	CFlags				= -std=c11
 
@@ -19,11 +19,11 @@ General {
 		Full			= ar rcs %OUT% %IN%
 	}
 
-	DefaultOutput		= libz.a
+	DefaultOutput		= libdlmalloc.a
 }
 
 Debug = General {
-	CompilerFlags		=> -fno-builtin -g -O0
+	CompilerFlags		=> -fno-builtin -g -O0 -DDEBUG
 }
 
 Release = General {

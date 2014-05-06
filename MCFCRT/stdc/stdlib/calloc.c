@@ -4,14 +4,16 @@
 
 #include "../../env/_crtdef.h"
 #include "../../env/heap.h"
-#include <limits.h>
 
 extern void *memset(void *dst, int ch, size_t cb);
 
 void *__attribute__((__noinline__)) calloc(size_t nmemb, size_t cnt){
-	const uint64_t cb = ((uint64_t)nmemb) * cnt;
-	if(cb > SIZE_MAX){
-		return NULL;
+	size_t cb = 0;
+	if((nmemb > 0) && (cnt > 0)){
+		cb = nmemb * cnt;
+		if(((nmemb | cnt) & (size_t)-0x10000) && (cb / cnt != nmemb)){
+			return NULL;
+		}
 	}
 	void *const ret = __MCF_CRT_HeapAlloc(cb, __builtin_return_address(0));
 	if(ret){

@@ -6,6 +6,11 @@
 
 #include "heap.h"
 #include "heap_dbg.h"
+#include "../stdc/ext/unref_param.h"
+
+#define USE_DL_PREFIX
+#include "../../External/dlmalloc/malloc.h"
+
 #include <string.h>
 #include <limits.h>
 #include <windows.h>
@@ -21,17 +26,6 @@ unsigned long __MCF_CRT_HeapInitialize(){
 	__MCF_CRT_HeapDbgInit();
 #endif
 
-	const HANDLE hProcessHeap = GetProcessHeap();
-
-	ULONG ulLfhFlag = 2;
-	HeapSetInformation(hProcessHeap, HeapCompatibilityInformation, &ulLfhFlag, sizeof(ulLfhFlag));
-
-#if WINVER >= 0x0600
-	if(LOBYTE(LOWORD(GetVersion())) >= 6){
-		HeapSetInformation(hProcessHeap, HeapEnableTerminationOnCorruption, NULL, 0);
-	}
-#endif
-
 	return ERROR_SUCCESS;
 }
 void __MCF_CRT_HeapUninitialize(){
@@ -42,20 +36,22 @@ void __MCF_CRT_HeapUninitialize(){
 	DeleteCriticalSection(&g_csHeapLock);
 }
 
-unsigned char *__MCF_CRT_HeapAlloc(size_t uSize, const void *pRetAddr __attribute__((__unused__))){
+unsigned char *__MCF_CRT_HeapAlloc(size_t uSize, const void *pRetAddr){
 #ifdef __MCF_CRT_HEAPDBG_ON
 	const size_t uRawSize = __MCF_CRT_HeapDbgGetRawSize(uSize);
 	if(uRawSize < uSize){
 		return NULL;
 	}
 #else
+	UNREF_PARAM(pRetAddr);
+
 	const size_t uRawSize = uSize;
 #endif
 
 	unsigned char *pRet = NULL;
 	EnterCriticalSection(&g_csHeapLock);
 		do {
-			unsigned char *const pRaw = (unsigned char *)HeapAlloc(GetProcessHeap(), 0, uRawSize);
+			unsigned char *const pRaw = dlmalloc(uRawSize);
 			if(pRaw){
 #ifdef __MCF_CRT_HEAPDBG_ON
 				__MCF_CRT_HeapDbgAddGuardsAndRegister(&pRet, pRaw, uSize, pRetAddr);
@@ -69,13 +65,15 @@ unsigned char *__MCF_CRT_HeapAlloc(size_t uSize, const void *pRetAddr __attribut
 	LeaveCriticalSection(&g_csHeapLock);
 	return pRet;
 }
-unsigned char *__MCF_CRT_HeapReAlloc(void *pBlock /* NON-NULL */, size_t uSize, const void *pRetAddr __attribute__((__unused__))){
+unsigned char *__MCF_CRT_HeapReAlloc(void *pBlock /* NON-NULL */, size_t uSize, const void *pRetAddr){
 #ifdef __MCF_CRT_HEAPDBG_ON
 	const size_t uRawSize = __MCF_CRT_HeapDbgGetRawSize(uSize);
 	if(uSize & ~uRawSize & ((size_t)1 << (sizeof(size_t) * 8 - 1))){
 		return NULL;
 	}
 #else
+	UNREF_PARAM(pRetAddr);
+
 	const size_t uRawSize = uSize;
 #endif
 
@@ -89,7 +87,7 @@ unsigned char *__MCF_CRT_HeapReAlloc(void *pBlock /* NON-NULL */, size_t uSize, 
 #endif
 
 		do {
-			unsigned char *const pRaw = (unsigned char *)HeapReAlloc(GetProcessHeap(), 0, pRawOriginal, uRawSize);
+			unsigned char *const pRaw = dlrealloc(pRawOriginal, uRawSize);
 			if(pRaw){
 #ifdef __MCF_CRT_HEAPDBG_ON
 				const size_t uOriginalSize = pBlockInfo->uSize;
@@ -108,7 +106,7 @@ unsigned char *__MCF_CRT_HeapReAlloc(void *pBlock /* NON-NULL */, size_t uSize, 
 	LeaveCriticalSection(&g_csHeapLock);
 	return pRet;
 }
-void __MCF_CRT_HeapFree(void *pBlock /* NON-NULL */, const void *pRetAddr __attribute__((__unused__))){
+void __MCF_CRT_HeapFree(void *pBlock /* NON-NULL */, const void *pRetAddr){
 	EnterCriticalSection(&g_csHeapLock);
 #ifdef __MCF_CRT_HEAPDBG_ON
 		unsigned char *pRaw;
@@ -118,9 +116,11 @@ void __MCF_CRT_HeapFree(void *pBlock /* NON-NULL */, const void *pRetAddr __attr
 
 		__MCF_CRT_HeapDbgUnregister(pBlockInfo);
 #else
+		UNREF_PARAM(pRetAddr);
+
 		unsigned char *const pRaw = pBlock;
 #endif
-		HeapFree(GetProcessHeap(), 0, pRaw);
+		dlfree(pRaw);
 	LeaveCriticalSection(&g_csHeapLock);
 }
 

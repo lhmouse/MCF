@@ -5,58 +5,54 @@
 #include "../StdMCF.hpp"
 #include "Thunk.hpp"
 #include "Utilities.hpp"
-#include "UniqueHandle.hpp"
+#include "CriticalSection.hpp"
+#include "MultiIndexedMap.hpp"
 #include "Exception.hpp"
+#include <exception>
 using namespace MCF;
 
 namespace {
-
-struct HeapDestroyer {
-	constexpr HANDLE operator()() const noexcept {
-		return NULL;
-	}
-	void operator()(HANDLE hHeap) const noexcept {
-		::HeapDestroy(hHeap);
-	}
+/*
+union ChunkHeader {
+	struct {
+		std::size_t uRefCount;
+		std::size_t uChunkSize;
+	};
+	unsigned char abyPadding[16];
 };
 
-struct ThunkHeap : NO_COPY {
-	UniqueHandle<HeapDestroyer>	m_hHeap;
+union ThunkInfo {
+	struct {
+		ChunkHeader *pChunkHeader;
+		std::size_t uSize;
+	};
+	unsigned char abyPadding[16];
+};
 
-	ThunkHeap(){
-		m_hHeap.Reset(::HeapCreate(HEAP_CREATE_ENABLE_EXECUTE, 0, 0));
-		if(!m_hHeap){
-			MCF_THROW(::GetLastError(), L"HeapCreate() 失败。");
-		}
+const auto g_pcsLock = CriticalSection::Create();
+MultiIndexedMap<ThunkInfo *, std::uintptr_t> g_mapPool;
 
-		ULONG ulLFHFlag = 2;
-		::HeapSetInformation(m_hHeap.Get(), HeapCompatibilityInformation, &ulLFHFlag, sizeof(ulLFHFlag));
-
-#if WINVER >= 0x0600
-		if(LOBYTE(LOWORD(::GetVersion())) >= 6){
-			::HeapSetInformation(m_hHeap.Get(), HeapEnableTerminationOnCorruption, nullptr, 0);
-		}
-#endif
+const void *DoAllocateThunk(const void *pInit, std::size_t uSize) noexcept {
+	CRITICAL_SECTION_SCOPE(g_pcsLock){
 	}
-} g_vThunkHeap;
-
-void DeallocateThunk(void *pThunk) noexcept {
-	if(pThunk){
-		::HeapFree(g_vThunkHeap.m_hHeap.Get(), 0, pThunk);
+	return nullptr;
+}
+void DoDeallocateThunk(const void *pThunk) noexcept {
+	CRITICAL_SECTION_SCOPE(g_pcsLock){
 	}
 }
-
+*/
 }
 
 namespace MCF {
 
-std::shared_ptr<void> AllocateThunk(std::size_t uSize){
-	std::shared_ptr<void> pThunk;
-	pThunk.reset(::HeapAlloc(g_vThunkHeap.m_hHeap.Get(), 0, uSize), &DeallocateThunk);
+std::shared_ptr<const void> AllocateThunk(const void *pInit, std::size_t uSize){
+	/*const auto pThunk = DoAllocateThunk(pInit, uSize);
 	if(!pThunk){
-		MCF_THROW(::GetLastError(), L"HeapAlloc() 失败。");
+		throw std::bad_alloc();
 	}
-	return std::move(pThunk);
+	return std::shared_ptr<const void>(pThunk, &DoDeallocateThunk);*/
+	return std::make_shared<int>(123);
 }
 
 }

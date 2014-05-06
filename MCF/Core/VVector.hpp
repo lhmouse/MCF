@@ -14,7 +14,7 @@
 
 namespace MCF {
 
-template<class Element_t, std::size_t ALT_STOR_THRESHOLD = 0x400u / sizeof(Element_t)>
+template<class Element_t, std::size_t ALT_STOR_THRESHOLD = 256u / sizeof(Element_t)>
 class VVector {
 	template<class, std::size_t>
 	friend class VVector;

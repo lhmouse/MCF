@@ -186,7 +186,7 @@ public:
 			vOverlapped.hEvent = (HANDLE)&vApcResult;
 			if(!::WriteFileEx(
 				xm_hFile.Get(),
-				(unsigned char *)pBuffer + uBytesWritten,
+				(const unsigned char *)pBuffer + uBytesWritten,
 				dwBytesToWriteThisTime,
 				&vOverlapped,
 				&xAioCallback

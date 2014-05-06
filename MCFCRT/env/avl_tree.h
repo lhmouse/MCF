@@ -9,14 +9,14 @@
 
 __MCF_EXTERN_C_BEGIN
 
-typedef struct tagAvlNodeHeader {
-	struct tagAvlNodeHeader *pParent;
-	struct tagAvlNodeHeader **ppRefl;
-	struct tagAvlNodeHeader *pLeft;
-	struct tagAvlNodeHeader *pRight;
+typedef struct MCF_tagAvlNodeHeader {
+	struct MCF_tagAvlNodeHeader *pParent;
+	struct MCF_tagAvlNodeHeader **ppRefl;
+	struct MCF_tagAvlNodeHeader *pLeft;
+	struct MCF_tagAvlNodeHeader *pRight;
 	__MCF_STD size_t uHeight;
-	struct tagAvlNodeHeader *pPrev;
-	struct tagAvlNodeHeader *pNext;
+	struct MCF_tagAvlNodeHeader *pPrev;
+	struct MCF_tagAvlNodeHeader *pNext;
 } MCF_AVL_NODE_HEADER;
 
 typedef MCF_AVL_NODE_HEADER *MCF_AVL_ROOT;

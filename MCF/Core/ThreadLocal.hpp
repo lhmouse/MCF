@@ -113,8 +113,16 @@ public:
 };
 
 template<class Object_t, class... InitParams_t>
-ThreadLocal<Object_t, typename std::remove_reference<InitParams_t>::type...> MakeThreadLocal(InitParams_t &&... vInitParams){
-	return ThreadLocal<Object_t, typename std::remove_reference<InitParams_t>::type...>(std::forward<InitParams_t>(vInitParams)...);
+auto MakeThreadLocal(InitParams_t &&... vInitParams)
+	-> ThreadLocal<
+		Object_t,
+		typename std::remove_reference<InitParams_t>::type...
+	>
+{
+	return ThreadLocal<
+		Object_t,
+		typename std::remove_reference<InitParams_t>::type...
+	>(std::forward<InitParams_t>(vInitParams)...);
 }
 
 }

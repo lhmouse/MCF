@@ -16,7 +16,7 @@ extern unsigned char *__MCF_CRT_HeapAlloc(__MCF_STD size_t uSize, const void *pR
 extern unsigned char *__MCF_CRT_HeapReAlloc(void *pBlock /* NON-NULL */, __MCF_STD size_t uSize, const void *pRetAddr) __MCF_NOEXCEPT;
 extern void __MCF_CRT_HeapFree(void *pBlock /* NON-NULL */, const void *pRetAddr) __MCF_NOEXCEPT;
 
-typedef struct tagBadAllocHandler {
+typedef struct MCF_tagBadAllocHandler {
 	int (*pfnProc)(__MCF_STD intptr_t);
 	__MCF_STD intptr_t nContext;
 } MCF_BAD_ALLOC_HANDLER;

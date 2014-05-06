@@ -9,6 +9,7 @@
 
 extern void *__cdecl InitCoroutineProc(void *pStackBottom, void (__cdecl *pfnProc)(void *), void *pParam) __asm__("InitCoroutineProc");
 __asm__("InitCoroutineProc: \n"
+	".intel_syntax noprefix \n"
 #ifdef __amd64__
 	"lea rax, dword ptr[rcx - 0x110] \n"	// rcx = pStackBottom
 	"mov qword ptr[rax + 0xE8], offset x64Wrapper \n"
@@ -34,10 +35,12 @@ __asm__("InitCoroutineProc: \n"
 	"mov dword ptr[eax + 0x18], ecx \n"
 	"ret \n"
 #endif
+	".att_syntax \n"
 );
 
 extern void *__fastcall CoroutineSwitchTo(void *sp, void **orig_sp) __asm__("CoroutineSwitchTo");
 __asm__("CoroutineSwitchTo: \n"
+	".intel_syntax noprefix \n"
 #ifdef __amd64__
 	"sub rsp, 0xA8 \n"
 	"push rbx \n"
@@ -99,6 +102,7 @@ __asm__("CoroutineSwitchTo: \n"
 	"pop ebx \n"
 	"ret \n"
 #endif
+	".att_syntax \n"
 );
 
 typedef struct tagIStream {

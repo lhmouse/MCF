@@ -46,8 +46,7 @@ static int BlockInfoComparerKeyNode(
 static HANDLE							g_hMapAllocator;
 static MCF_AVL_ROOT						g_mapBlocks;
 static const __MCF_HEAPDBG_BLOCK_INFO *	g_pBlockHead;
-static MCF_HEAP_CALLBACK				g_pfnCallback;
-static intptr_t							g_nCallbackContext;
+static MCF_HEAP_CALLBACK				g_vCallback;
 
 unsigned long __MCF_CRT_HeapDbgInit(){
 	g_hMapAllocator = HeapCreate(HEAP_NO_SERIALIZE, 0, 0);
@@ -147,8 +146,8 @@ void __MCF_CRT_HeapDbgAddGuardsAndRegister(
 		g_pBlockHead = pBlockInfo;
 	}
 
-	if(g_pfnCallback){
-		g_pfnCallback(0, pContents, uContentSize, pRetAddr, g_nCallbackContext);
+	if(g_vCallback.fnProc){
+		(*g_vCallback.fnProc)(0, pContents, uContentSize, pRetAddr, g_vCallback.nContext);
 	}
 }
 const __MCF_HEAPDBG_BLOCK_INFO *__MCF_CRT_HeapDbgValidate(
@@ -186,8 +185,8 @@ const __MCF_HEAPDBG_BLOCK_INFO *__MCF_CRT_HeapDbgValidate(
 void __MCF_CRT_HeapDbgUnregister(
 	const __MCF_HEAPDBG_BLOCK_INFO *pBlockInfo
 ){
-	if(g_pfnCallback){
-		g_pfnCallback(1, pBlockInfo->pContents, pBlockInfo->uSize, pBlockInfo->pRetAddr, g_nCallbackContext);
+	if(g_vCallback.fnProc){
+		(*g_vCallback.fnProc)(1, pBlockInfo->pContents, pBlockInfo->uSize, pBlockInfo->pRetAddr, g_vCallback.nContext);
 	}
 
 	if(g_pBlockHead == pBlockInfo){
@@ -199,19 +198,13 @@ void __MCF_CRT_HeapDbgUnregister(
 }
 
 void MCF_CRT_HeapSetCallback(
-	MCF_HEAP_CALLBACK *pfnOldCallback,
-	__MCF_STD intptr_t *pnOldContext,
-	MCF_HEAP_CALLBACK pfnNewCallback,
-	__MCF_STD intptr_t nNewContext
+	MCF_HEAP_CALLBACK *pOldCallback,
+	MCF_HEAP_CALLBACK vNewCallback
 ){
-	if(pfnOldCallback){
-		*pfnOldCallback = g_pfnCallback;
+	if(pOldCallback){
+		*pOldCallback = g_vCallback;
 	}
-	if(pnOldContext){
-		*pnOldContext = g_nCallbackContext;
-	}
-	g_pfnCallback = pfnNewCallback;
-	g_nCallbackContext = nNewContext;
+	g_vCallback = vNewCallback;
 }
 
 #endif // __MCF_CRT_HEAPDBG_ON

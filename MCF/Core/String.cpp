@@ -21,8 +21,8 @@ VVector<wchar_t> AnsiString::xUnify() const {
 	VVector<wchar_t> vecUnified;
 	const int nUnifiedLen = ::MultiByteToWideChar(CP_ACP, 0, GetBegin(), (int)GetLength(), nullptr, 0);
 	if(nUnifiedLen > 0){
-		vecUnified.Resize((std::size_t)nUnifiedLen);
-		vecUnified.Resize((std::size_t)::MultiByteToWideChar(
+		vecUnified.Resize((std::size_t)(unsigned int)nUnifiedLen);
+		vecUnified.Resize((std::size_t)(unsigned int)::MultiByteToWideChar(
 			CP_ACP,
 			0,
 			GetBegin(),
@@ -38,8 +38,8 @@ void AnsiString::xDeunifyAppend(const VVector<wchar_t> &vecUnified){
 	const int nDeunifiedLen = ::WideCharToMultiByte(CP_ACP, 0, vecUnified.GetBegin(), (int)vecUnified.GetSize(), nullptr, 0, nullptr, nullptr);
 	if(nDeunifiedLen > 0){
 		const auto uOldLength = GetLength();
-		Resize(uOldLength + (std::size_t)nDeunifiedLen);
-		Resize(uOldLength + (std::size_t)::WideCharToMultiByte(
+		Resize(uOldLength + (std::size_t)(unsigned int)nDeunifiedLen);
+		Resize(uOldLength + (std::size_t)(unsigned int)::WideCharToMultiByte(
 			CP_ACP,
 			0,
 			vecUnified.GetBegin(),

@@ -36,7 +36,7 @@ public:
 		auto pCur = (char *)pData;
 		const auto pEnd = pCur + uSize;
 		for(;;){
-			const int nBytesToRead = std::max(pEnd - pCur, 0x10000);
+			const int nBytesToRead = std::max<std::ptrdiff_t>(pEnd - pCur, 0x10000);
 			if(nBytesToRead == 0){
 				break;
 			}
@@ -70,7 +70,7 @@ public:
 		auto pCur = (const char *)pData;
 		const auto pEnd = pCur + uSize;
 		for(;;){
-			const int nBytesToWrite = std::max(pEnd - pCur, 0x10000);
+			const int nBytesToWrite = std::max<std::ptrdiff_t>(pEnd - pCur, 0x10000);
 			if(nBytesToWrite == 0){
 				break;
 			}

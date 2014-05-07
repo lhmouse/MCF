@@ -19,8 +19,8 @@
 #	define __DBL_RET_CONS(v)			"=Yz"(v)
 
 // x64 ABI 中 long double 使用引用返回。必须定义一个函数接受隐式传递的返回地址以便应用 RVO。
-#	define __LDBL_DECL(name, ...)			long double name(__VA_ARGS__) __attribute__((__alias("__MCF_CRT_Ldbl_" #name__)));	\
-										static __attribute__((__cdecl__)) long double *__MCF_CRT_Ldbl_##name(long double *_RetAddr, __VA_ARGS__)
+#	define __LDBL_DECL(name, ...)			long double name(__VA_ARGS__) __attribute__((alias("__MCF_CRT_Ldbl_" #name)));	\
+										static __attribute__((cdecl)) long double *__MCF_CRT_Ldbl_##name(long double *_RetAddr, __VA_ARGS__)
 #	define __LDBL_RETURN(v)				return _RetAddr
 #	define __LDBL_RET_ST()				"fstp tbyte ptr[%[_RetAddr]] \n"
 #	define __LDBL_RET_MEM(mem, tmp)		"mov r" tmp "x, qword ptr[" mem "] \n"	\

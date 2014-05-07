@@ -15,6 +15,12 @@ extern void __MCF_CRT_ExeUninitializeArgV();
 extern unsigned int MCFMain();
 
 static __attribute__((__cdecl__, __used__, __noreturn__)) int AlignedStartup(){
+#ifdef __SEH__
+	__asm__ __volatile__(
+		"seh_try: \n"
+	);
+#endif
+
 	DWORD dwExitCode;
 
 #define INIT(exp)		if((dwExitCode = (exp)) == ERROR_SUCCESS){ ((void)0)
@@ -29,6 +35,17 @@ static __attribute__((__cdecl__, __used__, __noreturn__)) int AlignedStartup(){
 	CLEANUP(__MCF_CRT_ExeUninitializeArgV());
 	CLEANUP(__MCF_CRT_ThreadUninitialize());
 	CLEANUP(__MCF_CRT_End());
+
+#ifdef __SEH__
+	__asm__ __volatile__(
+		"	.seh_handler __C_specific_handler, @except \n"
+		"	.seh_handlerdata \n"
+		"	.long 1 \n"
+		"	.rva seh_try, seh_except, _gnu_exception_handler, seh_except \n"
+		"	.text \n"
+		"seh_except: \n"
+	);
+#endif
 
 	ExitProcess(dwExitCode);
 	__builtin_trap();

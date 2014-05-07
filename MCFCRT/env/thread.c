@@ -89,7 +89,8 @@ static __attribute__((__cdecl__, __used__, __noreturn__)) DWORD AlignedCRTThread
 	__builtin_trap();
 }
 
-extern __attribute__((__stdcall__, __noreturn__)) DWORD CRTThreadProc(LPVOID pParam) __asm__("CRTThreadProc");
+extern __attribute__((__stdcall__, __noreturn__)) DWORD CRTThreadProc(LPVOID pParam)
+	__asm__("CRTThreadProc");
 __asm__(
 	"	.align 16 \n"
 	"CRTThreadProc: \n"

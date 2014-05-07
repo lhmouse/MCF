@@ -1,10 +1,14 @@
 #include <MCF/StdMCF.hpp>
 #include <MCF/Core/Exception.hpp>
-#include <MCF/Core/Thunk.hpp>
+#include <MCF/Core/Thread.hpp>
 using namespace MCF;
 
+void thread(){
+	throw 123;
+}
+
 unsigned int MCFMain() try {
-	auto p = AllocateThunk("meow", 1);
+	Thread::Create(thread)->Join();
 	return 0;
 } catch(std::exception &e){
 	__builtin_printf("exception caught: %s\n", e.what());
@@ -23,3 +27,4 @@ unsigned int MCFMain() try {
 	}
 	return 1;
 }
+

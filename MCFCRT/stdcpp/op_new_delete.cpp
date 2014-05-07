@@ -50,40 +50,42 @@ inline void __attribute__((__always_inline__)) Deallocate(void *pBlock, const vo
 
 }
 
-void *operator new(std::size_t cb){
+#pragma GCC diagnostic ignored "-Wattributes"
+
+void *__attribute__((__noinline__)) operator new(std::size_t cb){
 	return Allocate(cb, __builtin_return_address(0));
 }
-void *operator new(std::size_t cb, const std::nothrow_t &) noexcept {
+void *__attribute__((__noinline__)) operator new(std::size_t cb, const std::nothrow_t &) noexcept {
 	return AllocateNoThrow(cb, __builtin_return_address(0));
 }
-void operator delete(void *p) noexcept {
+void __attribute__((__noinline__)) operator delete(void *p) noexcept {
 	Deallocate(p, __builtin_return_address(0));
 }
-void operator delete(void *p, const std::nothrow_t &) noexcept {
+void __attribute__((__noinline__)) operator delete(void *p, const std::nothrow_t &) noexcept {
 	Deallocate(p, __builtin_return_address(0));
 }
-void operator delete(void *p, std::size_t) noexcept {
+void __attribute__((__noinline__)) operator delete(void *p, std::size_t) noexcept {
 	Deallocate(p, __builtin_return_address(0));
 }
-void operator delete(void *p, std::size_t, const std::nothrow_t &) noexcept {
+void __attribute__((__noinline__)) operator delete(void *p, std::size_t, const std::nothrow_t &) noexcept {
 	Deallocate(p, __builtin_return_address(0));
 }
 
-void *operator new[](std::size_t cb){
+void *__attribute__((__noinline__)) operator new[](std::size_t cb){
 	return Allocate(cb, __builtin_return_address(0));
 }
-void *operator new[](std::size_t cb, const std::nothrow_t &) noexcept {
+void *__attribute__((__noinline__)) operator new[](std::size_t cb, const std::nothrow_t &) noexcept {
 	return AllocateNoThrow(cb, __builtin_return_address(0));
 }
-void operator delete[](void *p) noexcept {
+void __attribute__((__noinline__)) operator delete[](void *p) noexcept {
 	Deallocate(p, __builtin_return_address(0));
 }
-void operator delete[](void *p, std::size_t) noexcept {
+void __attribute__((__noinline__)) operator delete[](void *p, std::size_t) noexcept {
 	Deallocate(p, __builtin_return_address(0));
 }
-void operator delete[](void *p, const std::nothrow_t &) noexcept {
+void __attribute__((__noinline__)) operator delete[](void *p, const std::nothrow_t &) noexcept {
 	Deallocate(p, __builtin_return_address(0));
 }
-void operator delete[](void *p, std::size_t, const std::nothrow_t &) noexcept {
+void __attribute__((__noinline__)) operator delete[](void *p, std::size_t, const std::nothrow_t &) noexcept {
 	Deallocate(p, __builtin_return_address(0));
 }

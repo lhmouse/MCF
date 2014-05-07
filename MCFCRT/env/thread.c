@@ -92,6 +92,7 @@ static __attribute__((__cdecl__, __used__, __noreturn__)) DWORD AlignedCRTThread
 extern __attribute__((__stdcall__, __noreturn__)) DWORD CRTThreadProc(LPVOID pParam)
 	__asm__("CRTThreadProc");
 __asm__(
+	"	.text \n"
 	"	.align 16 \n"
 	"CRTThreadProc: \n"
 #ifdef _WIN64

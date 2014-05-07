@@ -7,17 +7,24 @@
 #include <stdlib.h>
 #include <stddef.h>
 
-extern void *__cdecl InitCoroutineProc(void *pStackBottom, void (__cdecl *pfnProc)(void *), void *pParam) __asm__("InitCoroutineProc");
-__asm__("InitCoroutineProc: \n"
+extern void *__cdecl InitCoroutineProc(
+	void *pStackBottom,
+	void (__cdecl *pfnProc)(void *),
+	void *pParam
+) __asm__("InitCoroutineProc");
+__asm__(
 	".intel_syntax noprefix \n"
+	"	.text \n"
+	"	.align 16 \n"
+	"InitCoroutineProc: \n"
 #ifdef __amd64__
-	"lea rax, dword ptr[rcx - 0x110] \n"	// rcx = pStackBottom
-	"mov qword ptr[rax + 0xE8], offset x64Wrapper \n"
-	"mov qword ptr[rax + 0xF0], rdx \n"		// rdx = pfnProc
-	"mov qword ptr[rax + 0xF8], r8 \n"		// r8 = pParam
-	"ret \n"
+	"	lea rax, dword ptr[rcx - 0x110] \n"	// rcx = pStackBottom
+	"	mov qword ptr[rax + 0xE8], offset x64Wrapper \n"
+	"	mov qword ptr[rax + 0xF0], rdx \n"		// rdx = pfnProc
+	"	mov qword ptr[rax + 0xF8], r8 \n"		// r8 = pParam
+	"	ret \n"
 
-	".align 16 \n"
+	"	.align 16 \n"
 	"x64Wrapper: \n"
 	"	xor rax, rax \n"
 	"	push rax \n"
@@ -25,82 +32,88 @@ __asm__("InitCoroutineProc: \n"
 	"	mov rcx, qword ptr[rsp + 0x10] \n"
 	"	jmp rax \n"
 #else
-	"mov ecx, dword ptr[esp + 0x04] \n"		// pStackBottom
-	"lea eax, dword ptr[ecx - 0x1C] \n"
-	"mov ecx, dword ptr[esp + 0x08] \n"		// pfnProc
-	"mov dword ptr[eax + 0x10], ecx \n"
-	"xor edx, edx \n"
-	"mov dword ptr[eax + 0x14], edx \n"		// Return address of pfnProc. Coroutine procs must not return. Use NULL here.
-	"mov ecx, dword ptr[esp + 0x0C] \n"		// pParam
-	"mov dword ptr[eax + 0x18], ecx \n"
-	"ret \n"
+	"	mov ecx, dword ptr[esp + 0x04] \n"		// pStackBottom
+	"	lea eax, dword ptr[ecx - 0x1C] \n"
+	"	mov ecx, dword ptr[esp + 0x08] \n"		// pfnProc
+	"	mov dword ptr[eax + 0x10], ecx \n"
+	"	xor edx, edx \n"
+	"	mov dword ptr[eax + 0x14], edx \n"		// Return address of pfnProc. Coroutine procs must not return. Use NULL here.
+	"	mov ecx, dword ptr[esp + 0x0C] \n"		// pParam
+	"	mov dword ptr[eax + 0x18], ecx \n"
+	"	ret \n"
 #endif
 	".att_syntax \n"
 );
 
-extern void *__fastcall CoroutineSwitchTo(void *sp, void **orig_sp) __asm__("CoroutineSwitchTo");
-__asm__("CoroutineSwitchTo: \n"
+extern void *__fastcall CoroutineSwitchTo(
+	void *sp,
+	void **orig_sp
+) __asm__("CoroutineSwitchTo");
+__asm__(
 	".intel_syntax noprefix \n"
+	"	.text \n"
+	"	.align 16 \n"
+	"CoroutineSwitchTo: \n"
 #ifdef __amd64__
-	"sub rsp, 0xA8 \n"
-	"push rbx \n"
-	"push rbp \n"
-	"push rsi \n"
-	"push rdi \n"
-	"push r12 \n"
-	"push r13 \n"
-	"push r14 \n"
-	"push r15 \n"
-	"movdqa xmmword ptr[rsp + 0x40], xmm6  \n"
-	"movdqa xmmword ptr[rsp + 0x50], xmm7  \n"
-	"movdqa xmmword ptr[rsp + 0x60], xmm8  \n"
-	"movdqa xmmword ptr[rsp + 0x70], xmm9  \n"
-	"movdqa xmmword ptr[rsp + 0x80], xmm10 \n"
-	"movdqa xmmword ptr[rsp + 0x90], xmm11 \n"
-	"movdqa xmmword ptr[rsp + 0xA0], xmm12 \n"
-	"movdqa xmmword ptr[rsp + 0xB0], xmm13 \n"
-	"movdqa xmmword ptr[rsp + 0xC0], xmm14 \n"
-	"movdqa xmmword ptr[rsp + 0xD0], xmm15 \n"
+	"	sub rsp, 0xA8 \n"
+	"	push rbx \n"
+	"	push rbp \n"
+	"	push rsi \n"
+	"	push rdi \n"
+	"	push r12 \n"
+	"	push r13 \n"
+	"	push r14 \n"
+	"	push r15 \n"
+	"	movdqa xmmword ptr[rsp + 0x40], xmm6  \n"
+	"	movdqa xmmword ptr[rsp + 0x50], xmm7  \n"
+	"	movdqa xmmword ptr[rsp + 0x60], xmm8  \n"
+	"	movdqa xmmword ptr[rsp + 0x70], xmm9  \n"
+	"	movdqa xmmword ptr[rsp + 0x80], xmm10 \n"
+	"	movdqa xmmword ptr[rsp + 0x90], xmm11 \n"
+	"	movdqa xmmword ptr[rsp + 0xA0], xmm12 \n"
+	"	movdqa xmmword ptr[rsp + 0xB0], xmm13 \n"
+	"	movdqa xmmword ptr[rsp + 0xC0], xmm14 \n"
+	"	movdqa xmmword ptr[rsp + 0xD0], xmm15 \n"
 
-	"mov rax, rsp \n"
-	"mov rsp, rcx \n"
-	"mov qword ptr[rdx], rax \n"
+	"	mov rax, rsp \n"
+	"	mov rsp, rcx \n"
+	"	mov qword ptr[rdx], rax \n"
 
-	"movdqa xmm6 , xmmword ptr[rsp + 0x40] \n"
-	"movdqa xmm7 , xmmword ptr[rsp + 0x50] \n"
-	"movdqa xmm8 , xmmword ptr[rsp + 0x60] \n"
-	"movdqa xmm9 , xmmword ptr[rsp + 0x70] \n"
-	"movdqa xmm10, xmmword ptr[rsp + 0x80] \n"
-	"movdqa xmm11, xmmword ptr[rsp + 0x90] \n"
-	"movdqa xmm12, xmmword ptr[rsp + 0xA0] \n"
-	"movdqa xmm13, xmmword ptr[rsp + 0xB0] \n"
-	"movdqa xmm14, xmmword ptr[rsp + 0xC0] \n"
-	"movdqa xmm15, xmmword ptr[rsp + 0xD0] \n"
-	"pop r15 \n"
-	"pop r14 \n"
-	"pop r13 \n"
-	"pop r12 \n"
-	"pop rdi \n"
-	"pop rsi \n"
-	"pop rbp \n"
-	"pop rbx \n"
-	"add rsp, 0xA8 \n"
-	"ret \n"
+	"	movdqa xmm6 , xmmword ptr[rsp + 0x40] \n"
+	"	movdqa xmm7 , xmmword ptr[rsp + 0x50] \n"
+	"	movdqa xmm8 , xmmword ptr[rsp + 0x60] \n"
+	"	movdqa xmm9 , xmmword ptr[rsp + 0x70] \n"
+	"	movdqa xmm10, xmmword ptr[rsp + 0x80] \n"
+	"	movdqa xmm11, xmmword ptr[rsp + 0x90] \n"
+	"	movdqa xmm12, xmmword ptr[rsp + 0xA0] \n"
+	"	movdqa xmm13, xmmword ptr[rsp + 0xB0] \n"
+	"	movdqa xmm14, xmmword ptr[rsp + 0xC0] \n"
+	"	movdqa xmm15, xmmword ptr[rsp + 0xD0] \n"
+	"	pop r15 \n"
+	"	pop r14 \n"
+	"	pop r13 \n"
+	"	pop r12 \n"
+	"	pop rdi \n"
+	"	pop rsi \n"
+	"	pop rbp \n"
+	"	pop rbx \n"
+	"	add rsp, 0xA8 \n"
+	"	ret \n"
 #else
-	"push ebx \n"
-	"push ebp \n"
-	"push esi \n"
-	"push edi \n"
+	"	push ebx \n"
+	"	push ebp \n"
+	"	push esi \n"
+	"	push edi \n"
 
-	"mov eax, esp \n"
-	"mov esp, ecx \n"
-	"mov dword ptr[edx], eax \n"
+	"	mov eax, esp \n"
+	"	mov esp, ecx \n"
+	"	mov dword ptr[edx], eax \n"
 
-	"pop edi \n"
-	"pop esi \n"
-	"pop ebp \n"
-	"pop ebx \n"
-	"ret \n"
+	"	pop edi \n"
+	"	pop esi \n"
+	"	pop ebp \n"
+	"	pop ebx \n"
+	"	ret \n"
 #endif
 	".att_syntax \n"
 );

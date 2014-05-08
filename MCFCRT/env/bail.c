@@ -5,7 +5,7 @@
 #define WIN32_LEAN_AND_MEAN
 
 #include "bail.h"
-#include "../stdc/ext/strcpyout.h"
+#include "../ext/ext_include.h"
 #include <windows.h>
 #include <stdarg.h>
 #include <wchar.h>
@@ -15,9 +15,9 @@ static DWORD APIENTRY ThreadProc(LPVOID pParam){
 	const LPCWSTR pwszDescription = (LPCWSTR)pParam;
 
 	wchar_t awcBuffer[1025];
-	wchar_t *pwcWrite = _wcscpyout(awcBuffer, L"应用程序异常终止。请联系作者寻求协助。");
+	wchar_t *pwcWrite = MCF_wcscpyout(awcBuffer, L"应用程序异常终止。请联系作者寻求协助。");
 	if(pwszDescription){
-		pwcWrite = _wcscpyout(pwcWrite, L"\r\n\r\n错误描述：\r\n");
+		pwcWrite = MCF_wcscpyout(pwcWrite, L"\r\n\r\n错误描述：\r\n");
 
 		size_t uLen = wcslen(pwszDescription);
 		const size_t uMax = (size_t)(awcBuffer + sizeof(awcBuffer) / sizeof(awcBuffer[0]) - pwcWrite) - 128;
@@ -28,10 +28,10 @@ static DWORD APIENTRY ThreadProc(LPVOID pParam){
 		pwcWrite += uLen;
 	}
 #ifndef NDEBUG
-	_wcscpyout(pwcWrite, L"\r\n\r\n单击“确定”终止应用程序，单击“取消”调试应用程序。");
+	MCF_wcscpyout(pwcWrite, L"\r\n\r\n单击“确定”终止应用程序，单击“取消”调试应用程序。");
 	const int nRet = MessageBoxW(NULL, awcBuffer, L"MCF CRT 错误", MB_ICONERROR | MB_OKCANCEL | MB_TASKMODAL);
 #else
-	_wcscpyout(pwcWrite, L"\r\n\r\n单击“确定”终止应用程序。");
+	MCF_wcscpyout(pwcWrite, L"\r\n\r\n单击“确定”终止应用程序。");
 	const int nRet =  MessageBoxW(NULL, awcBuffer, L"MCF CRT 错误", MB_ICONERROR | MB_OK | MB_TASKMODAL);
 #endif
 	return (DWORD)nRet;

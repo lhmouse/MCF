@@ -4,7 +4,7 @@
 
 #include "../StdMCF.hpp"
 #include "HttpClient.hpp"
-#include "../../MCFCRT/stdc/ext/assert.h"
+//#include "../../MCFCRT/stdc/ext/assert.h"
 #include "../Core/MultiIndexedMap.hpp"
 #include "../Core/VVector.hpp"
 #include "../Core/UniqueHandle.hpp"

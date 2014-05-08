@@ -6,7 +6,7 @@
 
 #include "heap.h"
 #include "heap_dbg.h"
-#include "../stdc/ext/unref_param.h"
+#include "../ext/unref_param.h"
 
 #define USE_DL_PREFIX
 #include "../../External/dlmalloc/malloc.h"

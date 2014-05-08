@@ -66,14 +66,12 @@ extern void MCF_AvlDetach(
 extern MCF_AVL_NODE_HEADER *MCF_AvlLowerBound(
 	const MCF_AVL_ROOT *ppRoot,
 	__MCF_STD intptr_t nOther,
-	MCF_AVL_COMPARER_NODE_OTHER pfnComparerNodeOther,
-	MCF_AVL_COMPARER_OTHER_NODE pfnComparerOtherNode
+	MCF_AVL_COMPARER_NODE_OTHER pfnComparerNodeOther
 ) __MCF_NOEXCEPT;
 
 extern MCF_AVL_NODE_HEADER *MCF_AvlUpperBound(
 	const MCF_AVL_ROOT *ppRoot,
 	__MCF_STD intptr_t nOther,
-	MCF_AVL_COMPARER_NODE_OTHER pfnComparerNodeOther,
 	MCF_AVL_COMPARER_OTHER_NODE pfnComparerOtherNode
 ) __MCF_NOEXCEPT;
 

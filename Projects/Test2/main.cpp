@@ -1,30 +1,49 @@
 #include <MCF/StdMCF.hpp>
-#include <MCF/Core/Exception.hpp>
-#include <MCF/Core/Thread.hpp>
+#include <MCF/Core/Thunk.hpp>
+#include <MCF/Core/Random.hpp>
+#include <MCF/Core/Utilities.hpp>
+#include <cstdlib>
 using namespace MCF;
 
-void thread(){
-	throw 123;
-}
+static const char buffer[0x1000] = { };
 
-unsigned int MCFMain() try {
-	Thread::Create(thread)->Join();
-	return 0;
-} catch(std::exception &e){
-	__builtin_printf("exception caught: %s\n", e.what());
+extern const char begin	__asm__("thunk_begin");
+extern const char end	__asm__("thunk_end");
 
-	auto *const e2 = dynamic_cast<Exception *>(&e);
-	if(e2){
-		AnsiString desc(GetWin32ErrorDesc(e2->ulErrorCode));
-		if((desc.GetSize() >= 2) && (desc.GetEnd()[-2] == '\r') && (desc.GetEnd()[-1] == '\n')){
-			desc.Truncate(2);
+__asm__(
+	"thunk_begin: \n"
+	"lea eax, dword ptr[ecx + edx] \n"
+	"ret \n"
+	"thunk_end: \n"
+);
+
+unsigned int MCFMain(){
+
+	auto p = AllocateThunk(&begin, (std::size_t)(&end - &begin));
+	std::printf("%d\n", (*(int (__fastcall *)(int, int))p.get())(2, 3));
+	*(char *)p.get() = 'a'; // access violation
+
+/*
+	Random rng(0);
+	for(int i = 0; i < 10; ++i){
+		std::vector<std::shared_ptr<const void>> v;
+		try {
+			for(;;){
+				if(rng.Get<unsigned char>() % 3 > 0){
+					v.emplace_back(AllocateThunk(buffer, rng.Get<std::size_t>() % sizeof(buffer)));
+				} else if(!v.empty()){
+					const auto idx = rng.Get<std::size_t>() % v.size();
+					std::swap(v.at(idx), v.back());
+					v.pop_back();
+				}
+			}
+		} catch(std::bad_alloc &){
+			std::printf("allocated %zu thunks\n", v.size());
 		}
-
-		__builtin_printf("  function = %s:%lu\n", e2->pszFunction, e2->ulLine);
-		__builtin_printf("  err code = %lu\n", e2->ulErrorCode);
-		__builtin_printf("  err desc = %s\n", desc.GetCStr());
-		__builtin_printf("  message  = %s\n", AnsiString(WideString(e2->pwszMessage)).GetCStr());
+		v.clear();
+		v.shrink_to_fit();
+		std::puts("cleared");
 	}
-	return 1;
+*/
+	return 0;
 }
-

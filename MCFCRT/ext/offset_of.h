@@ -5,7 +5,7 @@
 #ifndef MCF_CRT_OFFSET_OF_H_
 #define MCF_CRT_OFFSET_OF_H_
 
-#include "../../env/_crtdef.h"
+#include "../env/_crtdef.h"
 
 #define OFFSET_OF(s, m)	\
 	((__MCF_STD size_t)((__MCF_STD uintptr_t)&(((s *)(__MCF_STD uintptr_t)1)->m) - (__MCF_STD uintptr_t)1))

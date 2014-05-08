@@ -13,8 +13,8 @@
 #ifndef MCF_CRT_ASSERT_H_
 #define MCF_CRT_ASSERT_H_
 
-#include "../../env/_crtdef.h"
-#include "../../env/bail.h"
+#include "../env/_crtdef.h"
+#include "../env/bail.h"
 
 static inline void __MCF_CRT_OnAssertFail(
 	const wchar_t *pwszExpression,

@@ -2,9 +2,9 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2014. LH_Mouse. All wrongs reserved.
 
-#include "../../env/_crtdef.h"
+#include "../env/_crtdef.h"
 
-void *_memcchr(const void *s, int ch, size_t cb){
+void *MCF_memcchr(const void *s, int ch, size_t cb){
 	register const unsigned char *rp = (const unsigned char *)s;
 	const unsigned char *const end = rp + cb;
 

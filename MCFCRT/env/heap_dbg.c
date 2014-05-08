@@ -11,7 +11,7 @@ __asm__("");
 #ifdef __MCF_CRT_HEAPDBG_ON
 
 #include "bail.h"
-#include "../stdc/ext/strcpyout.h"
+#include "../ext/ext_include.h"
 #include <wchar.h>
 #include <windows.h>
 
@@ -19,20 +19,20 @@ static int BlockInfoComparerNodes(
 	const MCF_AVL_NODE_HEADER *pInfo1,
 	const MCF_AVL_NODE_HEADER *pInfo2
 ){
-	return (intptr_t)(((const __MCF_HEAPDBG_BLOCK_INFO *)pInfo1)->pContents)
-		< (intptr_t)(((const __MCF_HEAPDBG_BLOCK_INFO *)pInfo2)->pContents);
+	return (uintptr_t)(((const __MCF_HEAPDBG_BLOCK_INFO *)pInfo1)->pContents)
+		< (uintptr_t)(((const __MCF_HEAPDBG_BLOCK_INFO *)pInfo2)->pContents);
 }
 static int BlockInfoComparerNodeKey(
 	const MCF_AVL_NODE_HEADER *pInfo1,
 	intptr_t nKey2
 ){
-	return (intptr_t)(((const __MCF_HEAPDBG_BLOCK_INFO *)pInfo1)->pContents) < nKey2;
+	return (uintptr_t)(((const __MCF_HEAPDBG_BLOCK_INFO *)pInfo1)->pContents) < (uintptr_t)nKey2;
 }
 static int BlockInfoComparerKeyNode(
 	intptr_t nKey1,
 	const MCF_AVL_NODE_HEADER *pInfo2
 ){
-	return nKey1 < (intptr_t)(((const __MCF_HEAPDBG_BLOCK_INFO *)pInfo2)->pContents);
+	return (uintptr_t)nKey1 < (uintptr_t)(((const __MCF_HEAPDBG_BLOCK_INFO *)pInfo2)->pContents);
 }
 
 #define GUARD_BAND_SIZE		0x20u
@@ -44,7 +44,7 @@ static int BlockInfoComparerKeyNode(
 #endif
 
 static HANDLE							g_hMapAllocator;
-static MCF_AVL_ROOT						g_mapBlocks;
+static MCF_AVL_ROOT						g_avlBlocks;
 static const __MCF_HEAPDBG_BLOCK_INFO *	g_pBlockHead;
 static MCF_HEAP_CALLBACK				g_vCallback;
 
@@ -100,7 +100,7 @@ void __MCF_CRT_HeapDbgUninit(){
 	HeapDestroy(g_hMapAllocator);
 
 	g_pBlockHead	= NULL;
-	g_mapBlocks		= NULL;
+	g_avlBlocks		= NULL;
 	g_hMapAllocator	= NULL;
 }
 
@@ -138,7 +138,7 @@ void __MCF_CRT_HeapDbgAddGuardsAndRegister(
 	pBlockInfo->pRetAddr	= pRetAddr;
 
 	MCF_AvlAttach(
-		&g_mapBlocks,
+		&g_avlBlocks,
 		(MCF_AVL_NODE_HEADER *)pBlockInfo,
 		&BlockInfoComparerNodes
 	);
@@ -159,7 +159,7 @@ const __MCF_HEAPDBG_BLOCK_INFO *__MCF_CRT_HeapDbgValidate(
 	*ppRaw = pRaw;
 
 	const __MCF_HEAPDBG_BLOCK_INFO *const pBlockInfo = (const __MCF_HEAPDBG_BLOCK_INFO *)MCF_AvlFind(
-		&g_mapBlocks,
+		&g_avlBlocks,
 		(intptr_t)pContents,
 		&BlockInfoComparerNodeKey,
 		&BlockInfoComparerKeyNode

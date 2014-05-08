@@ -5,7 +5,8 @@
 #ifndef MCF_V_VECTOR_HPP_
 #define MCF_V_VECTOR_HPP_
 
-#include "../../MCFCRT/stdc/ext/assert.h"
+#include "../../MCFCRT/ext/assert.h"
+#include "Utilities.hpp"
 #include <initializer_list>
 #include <type_traits>
 #include <iterator>
@@ -293,7 +294,11 @@ public:
 	void Pop() noexcept {
 		ASSERT(!IsEmpty());
 
+		ASSERT_NOEXCEPT_BEGIN
+
 		PopNoCheck();
+
+		ASSERT_NOEXCEPT_END
 	}
 
 	template<typename... Params_t>

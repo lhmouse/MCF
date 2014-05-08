@@ -4,7 +4,7 @@
 
 #include "../StdMCF.hpp"
 #include "TcpPeer.hpp"
-#include "../../MCFCRT/stdc/ext/assert.h"
+#include "../../MCFCRT/ext/assert.h"
 #include "../Core/Exception.hpp"
 #include "../Core/Utilities.hpp"
 #include "_SocketUtils.hpp"

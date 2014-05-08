@@ -5,8 +5,9 @@
 #ifndef MCF_MULTI_INDEXED_HPP_
 #define MCF_MULTI_INDEXED_HPP_
 
-#include "../../MCFCRT/stdc/ext/offset_of.h"
+#include "../../MCFCRT/ext/offset_of.h"
 #include "../../MCFCRT/env/avl_tree.h"
+#include "Utilities.hpp"
 #include <tuple>
 #include <type_traits>
 #include <functional>
@@ -169,40 +170,37 @@ private:
 			const MCF_AVL_NODE_HEADER *pAvl1,
 			const MCF_AVL_NODE_HEADER *pAvl2
 		) noexcept {
-			static_assert(
-				noexcept(NullRef<IndexType>() < NullRef<IndexType>()),
-				"Comparer must not throw any exceptions."
-			);
+			ASSERT_NOEXCEPT_BEGIN
 
 			const auto pNode1 = DOWN_CAST(const Node, xm_aHeaders[INDEX], pAvl1);
 			const auto pNode2 = DOWN_CAST(const Node, xm_aHeaders[INDEX], pAvl2);
 			return std::less<void>()(std::get<INDEX>(pNode1->xm_vIndexes), std::get<INDEX>(pNode2->xm_vIndexes));
+
+			ASSERT_NOEXCEPT_END
 		}
 		template<typename Other_t>
 		static int NodeOther(
 			const MCF_AVL_NODE_HEADER *pAvl1,
 			std::intptr_t nOther
 		) noexcept {
-			static_assert(
-				noexcept(NullRef<IndexType>() < NullRef<Other_t>()),
-				"Comparer must not throw any exceptions."
-			);
+			ASSERT_NOEXCEPT_BEGIN
 
 			const auto pNode1 = DOWN_CAST(const Node, xm_aHeaders[INDEX], pAvl1);
 			return std::less<void>()(std::get<INDEX>(pNode1->xm_vIndexes), *(const Other_t *)nOther);
+
+			ASSERT_NOEXCEPT_END
 		}
 		template<typename Other_t>
 		static int OtherNode(
 			std::intptr_t nOther,
 			const MCF_AVL_NODE_HEADER *pAvl2
 		) noexcept {
-			static_assert(
-				noexcept(NullRef<Other_t>() < NullRef<IndexType>()),
-				"Comparer must not throw any exceptions."
-			);
+			ASSERT_NOEXCEPT_BEGIN
 
 			const auto pNode2 = DOWN_CAST(const Node, xm_aHeaders[INDEX], pAvl2);
 			return std::less<void>()(*(const Other_t *)nOther, std::get<INDEX>(pNode2->xm_vIndexes));
+
+			ASSERT_NOEXCEPT_END
 		}
 	};
 
@@ -340,13 +338,24 @@ public:
 	}
 
 	template<std::size_t INDEX, typename... Params_t>
-	void SetIndex(Node *pNode, Params_t &&... vParams){
-		auto &vIndex = std::get<INDEX>(pNode->xm_vIndexes);
-		std::get<INDEX>(pNode->xm_vIndexes) =
-			typename std::remove_reference<decltype(vIndex)>::type(std::forward<Params_t>(vParams)...);
+	void SetIndex(Node *pNode, Params_t &&... vParams)
+		noexcept(std::is_nothrow_constructible<
+			typename std::tuple_element<INDEX, typename Node::xIndexTuple>::type,
+			Params_t...
+		>::value)
+	{
+		typedef typename std::tuple_element<INDEX, typename Node::xIndexTuple>::type IndexType;
 
 		xDetach<INDEX>(pNode);
-		xAttach<INDEX>(pNode);
+		auto &vIndex = std::get<INDEX>(pNode->xm_vIndexes);
+		try {
+			vIndex.~IndexType();
+			new(&vIndex) IndexType(std::forward<Params_t>(vParams)...);
+			xAttach<INDEX>(pNode);
+		} catch(...){
+			xAttach<INDEX>(pNode);
+			throw;
+		}
 	}
 
 	template<std::size_t INDEX>
@@ -396,8 +405,7 @@ public:
 		const auto pAvl = ::MCF_AvlLowerBound(
 			&(xm_aNodes[INDEX].pRoot),
 			(std::intptr_t)&vComparand,
-			&(xComparers<INDEX>::template NodeOther<Comparand_t>),
-			&(xComparers<INDEX>::template OtherNode<Comparand_t>)
+			&(xComparers<INDEX>::template NodeOther<Comparand_t>)
 		);
 		return pAvl ? DOWN_CAST(const Node, xm_aHeaders[INDEX], pAvl) : nullptr;
 	}
@@ -406,8 +414,7 @@ public:
 		const auto pAvl = ::MCF_AvlLowerBound(
 			&(xm_aNodes[INDEX].pRoot),
 			(std::intptr_t)&vComparand,
-			&(xComparers<INDEX>::template NodeOther<Comparand_t>),
-			&(xComparers<INDEX>::template OtherNode<Comparand_t>)
+			&(xComparers<INDEX>::template NodeOther<Comparand_t>)
 		);
 		return pAvl ? DOWN_CAST(Node, xm_aHeaders[INDEX], pAvl) : nullptr;
 	}
@@ -417,7 +424,6 @@ public:
 		const auto pAvl = ::MCF_AvlUpperBound(
 			&(xm_aNodes[INDEX].pRoot),
 			(std::intptr_t)&vComparand,
-			&(xComparers<INDEX>::template NodeOther<Comparand_t>),
 			&(xComparers<INDEX>::template OtherNode<Comparand_t>)
 		);
 		return pAvl ? DOWN_CAST(const Node, xm_aHeaders[INDEX], pAvl) : nullptr;
@@ -427,7 +433,6 @@ public:
 		const auto pAvl = ::MCF_AvlUpperBound(
 			&(xm_aNodes[INDEX].pRoot),
 			(std::intptr_t)&vComparand,
-			&(xComparers<INDEX>::template NodeOther<Comparand_t>),
 			&(xComparers<INDEX>::template OtherNode<Comparand_t>)
 		);
 		return pAvl ? DOWN_CAST(Node, xm_aHeaders[INDEX], pAvl) : nullptr;

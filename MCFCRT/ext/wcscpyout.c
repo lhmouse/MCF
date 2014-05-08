@@ -2,11 +2,20 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2014. LH_Mouse. All wrongs reserved.
 
-#include "../../env/_crtdef.h"
+#include "../env/_crtdef.h"
 
-char *_strcpyout(char *restrict dst, const char *restrict src){
-	register const char *rp = src;
-	register char *wp = dst;
+wchar_t *MCF_wcscpyout(wchar_t *restrict dst, const wchar_t *restrict src){
+	register const wchar_t *rp = src;
+	register wchar_t *wp = dst;
+
+	if(((uintptr_t)rp & 1) != 0){
+		for(;;){
+			if((*wp = *(rp++)) == 0){
+				return wp;
+			}
+			++wp;
+		}
+	}
 
 	// 如果 rp 是对齐到字的，就不用考虑越界的问题。
 	// 因为内存按页分配的，也自然对齐到页，并且也对齐到字。
@@ -21,22 +30,22 @@ char *_strcpyout(char *restrict dst, const char *restrict src){
 	for(;;){
 
 #ifdef _WIN64
-#	define MASK	0x0101010101010101ull
+#	define MASK	0x0001000100010001ull
 #else
-#	define MASK	0x01010101ul
+#	define MASK	0x00010001ul
 #endif
 
 #define UNROLLED(index)	\
 		{	\
 			register uintptr_t wrd = ((const uintptr_t *)rp)[(index)];	\
-			if(((wrd - MASK) & ~wrd & (MASK << 7)) != 0){	\
-				wp += (index) * sizeof(uintptr_t);	\
-				for(size_t i = 0; i < sizeof(uintptr_t) - 1; ++i){	\
-					if((*wp = (char)(unsigned char)(wrd & 0xFF)) == 0){	\
+			if(((wrd - MASK) & ~wrd & (MASK << 15)) != 0){	\
+				wp += (index) * sizeof(uintptr_t) / sizeof(wchar_t);	\
+				for(size_t i = 0; i < sizeof(uintptr_t) / sizeof(wchar_t) - 1; ++i){	\
+					if((*wp = (wchar_t)(uint16_t)(wrd & 0xFFFF)) == 0){	\
 						return wp;	\
 					}	\
 					++wp;	\
-					wrd >>= 8;	\
+					wrd >>= 16;	\
 				}	\
 				*wp = 0;	\
 				return wp;	\
@@ -53,7 +62,7 @@ char *_strcpyout(char *restrict dst, const char *restrict src){
 		UNROLLED(6)
 		UNROLLED(7)
 
-		rp += 8 * sizeof(uintptr_t);
-		wp += 8 * sizeof(uintptr_t);
+		rp += 8 * sizeof(uintptr_t) / sizeof(wchar_t);
+		wp += 8 * sizeof(uintptr_t) / sizeof(wchar_t);
 	}
 }

@@ -5,7 +5,7 @@
 #ifndef MCF_UTILITIES_HPP_
 #define MCF_UTILITIES_HPP_
 
-#include "../../MCFCRT/stdc/ext/memcchr.h"
+#include "../../MCFCRT/ext/ext_include.h"
 #include "../../MCFCRT/env/bail.h"
 #include <type_traits>
 #include <algorithm>
@@ -66,8 +66,7 @@ template<typename... Params_t>
 #ifdef NDEBUG
 [[noreturn]]
 #endif
-	inline void Bail(const wchar_t *pwszFormat, const Params_t &... vParams)
-{
+inline void Bail(const wchar_t *pwszFormat, const Params_t &... vParams){
 	::MCF_CRT_BailF(pwszFormat, vParams...);
 }
 
@@ -75,24 +74,30 @@ template<>
 #ifdef NDEBUG
 [[noreturn]]
 #endif
-	inline void Bail<>(const wchar_t *pwszDescription)
-{
+inline void Bail<>(const wchar_t *pwszDescription){
 	::MCF_CRT_Bail(pwszDescription);
 }
 
 //----------------------------------------------------------------------------
 // ASSERT_NOEXCEPT
 //----------------------------------------------------------------------------
-template<bool>
-inline void NoExceptAssertionFailed() noexcept {
-}
+__attribute__((error("noexcept assertion failed"), __noreturn__)) void AssertNoexcept() noexcept;
 
-template<>
-void NoExceptAssertionFailed<true>() noexcept; // 未定义的。
+#define ASSERT_NOEXCEPT_BEGIN	\
+	try {
 
-#define ASSERT_NOEXCEPT_BEGIN		try {
-#define ASSERT_NOEXCEPT_END			} catch(...){ ::MCF::NoExceptAssertionFailed<true>(); }
-#define ASSERT_NOEXCEPT_END_COND(c)	} catch(...){ ::MCF::NoExceptAssertionFailed<(c)>(); }
+#define ASSERT_NOEXCEPT_END	\
+	} catch(...){	\
+		::MCF::AssertNoexcept();	\
+	}
+
+#define ASSERT_NOEXCEPT_END_COND(cond)	\
+	} catch(...){	\
+		if(cond){	\
+			::MCF::AssertNoexcept();	\
+		}	\
+		throw;	\
+	}
 
 //----------------------------------------------------------------------------
 // NullRef
@@ -148,7 +153,7 @@ template<typename T>
 inline bool BTest(const T &vSrc) noexcept {
 	static_assert(std::is_trivial<T>::value, "MCF::BTest(): Only trivial types are supported.");
 
-	return ::_memcchr(&vSrc, 0, sizeof(vSrc)) == nullptr;
+	return ::MCF_memcchr(&vSrc, 0, sizeof(vSrc)) == nullptr;
 }
 
 template<typename Tx, typename Ty>

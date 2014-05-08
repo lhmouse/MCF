@@ -85,7 +85,9 @@ public:
 }
 
 #define CRITICAL_SECTION_SCOPE(pcs)	\
-	for(const ::MCF::CriticalSectionLock MCF_vLock_(&*(pcs)), *MCF_pLock_ = &MCF_vLock_;	\
+	for(const ::MCF::CriticalSectionLock MCF_vLock_(	\
+			[&]() noexcept { return &*(pcs); }()	\
+		), *MCF_pLock_ = &MCF_vLock_;	\
 		MCF_pLock_;	\
 		MCF_pLock_ = nullptr)
 

@@ -3,8 +3,7 @@
 // Copyleft 2014. LH_Mouse. All wrongs reserved.
 
 #include "avl_tree.h"
-#include "../stdc/ext/assert.h"
-#include "../stdc/ext/unref_param.h"
+#include "../ext/ext_include.h"
 
 static inline size_t GetHeight(const MCF_AVL_NODE_HEADER *pWhere){
 	return pWhere ? pWhere->uHeight : 0;
@@ -412,11 +411,8 @@ void MCF_AvlDetach(
 MCF_AVL_NODE_HEADER *MCF_AvlLowerBound(
 	const MCF_AVL_ROOT *ppRoot,
 	intptr_t nOther,
-	MCF_AVL_COMPARER_NODE_OTHER pfnComparerNodeOther,
-	MCF_AVL_COMPARER_OTHER_NODE pfnComparerOtherNode
+	MCF_AVL_COMPARER_NODE_OTHER pfnComparerNodeOther
 ){
-	UNREF_PARAM(pfnComparerOtherNode);
-
 	const MCF_AVL_NODE_HEADER *pRet = NULL;
 	const MCF_AVL_NODE_HEADER *pCur = *ppRoot;
 	while(pCur){
@@ -433,11 +429,8 @@ MCF_AVL_NODE_HEADER *MCF_AvlLowerBound(
 MCF_AVL_NODE_HEADER *MCF_AvlUpperBound(
 	const MCF_AVL_ROOT *ppRoot,
 	intptr_t nOther,
-	MCF_AVL_COMPARER_NODE_OTHER pfnComparerNodeOther,
 	MCF_AVL_COMPARER_OTHER_NODE pfnComparerOtherNode
 ){
-	UNREF_PARAM(pfnComparerNodeOther);
-
 	const MCF_AVL_NODE_HEADER *pRet = NULL;
 	const MCF_AVL_NODE_HEADER *pCur = *ppRoot;
 	while(pCur){

@@ -23,11 +23,30 @@ public:
 	std::uint16_t m_u16Port;
 
 public:
-	PeerInfo(const void *pSockAddr, std::size_t uSockAddrLen);
+	PeerInfo(
+		bool bIPv6,
+		std::uint16_t u16Port
+	) noexcept; // 空地址.
 
-	PeerInfo(bool bIPv6, std::uint16_t u16Port) noexcept; // 空地址.
-	PeerInfo(const std::uint16_t (&au16IPv6)[8], std::uint16_t u16Port) noexcept;
-	PeerInfo(const std::uint8_t (&au8IPv4)[4], std::uint16_t u16Port) noexcept;
+	PeerInfo(
+		std::uint16_t u16IPv6_0,
+		std::uint16_t u16IPv6_1,
+		std::uint16_t u16IPv6_2,
+		std::uint16_t u16IPv6_3,
+		std::uint16_t u16IPv6_4,
+		std::uint16_t u16IPv6_5,
+		std::uint16_t u16IPv6_6,
+		std::uint16_t u16IPv6_7,
+		std::uint16_t u16Port
+	) noexcept;
+
+	PeerInfo(
+		std::uint8_t u8IPv4_0,
+		std::uint8_t u8IPv4_1,
+		std::uint8_t u8IPv4_2,
+		std::uint8_t u8IPv4_3,
+		std::uint16_t u16Port
+	) noexcept;
 
 public:
 	bool IsNull() const noexcept;
@@ -44,22 +63,6 @@ public:
 		return !IsNull();
 	}
 
-	bool operator<(const PeerInfo &rhs) const noexcept {
-		const int nResult = BComp(m_au16IPv6, rhs.m_au16IPv6);
-		if(nResult != 0){
-			return nResult < 0;
-		}
-		return m_u16Port < rhs.m_u16Port;
-	}
-	bool operator>=(const PeerInfo &rhs) const noexcept {
-		return !(*this < rhs);
-	}
-	bool operator>(const PeerInfo &rhs) const noexcept {
-		return rhs < *this;
-	}
-	bool operator<=(const PeerInfo &rhs) const noexcept {
-		return !(rhs < *this);
-	}
 	bool operator==(const PeerInfo &rhs) const noexcept {
 		const int nResult = BComp(m_au16IPv6, rhs.m_au16IPv6);
 		if(nResult != 0){
@@ -69,6 +72,22 @@ public:
 	}
 	bool operator!=(const PeerInfo &rhs) const noexcept {
 		return !(*this == rhs);
+	}
+	bool operator<(const PeerInfo &rhs) const noexcept {
+		const int nResult = BComp(m_au16IPv6, rhs.m_au16IPv6);
+		if(nResult != 0){
+			return nResult < 0;
+		}
+		return m_u16Port < rhs.m_u16Port;
+	}
+	bool operator>(const PeerInfo &rhs) const noexcept {
+		return rhs < *this;
+	}
+	bool operator<=(const PeerInfo &rhs) const noexcept {
+		return !(rhs < *this);
+	}
+	bool operator>=(const PeerInfo &rhs) const noexcept {
+		return !(*this < rhs);
 	}
 };
 

@@ -295,9 +295,9 @@ public:
 		ASSERT(!IsEmpty());
 
 		ASSERT_NOEXCEPT_BEGIN
-
-		PopNoCheck();
-
+		{
+			PopNoCheck();
+		}
 		ASSERT_NOEXCEPT_END
 	}
 

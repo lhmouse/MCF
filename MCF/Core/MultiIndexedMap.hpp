@@ -14,28 +14,28 @@
 
 namespace MCF {
 
-template<class Element_t, class... Indexes_t>
+template<class Element_t, class... Indices_t>
 class MultiIndexedMap;
 
-template<class Element_t, class... Indexes_t>
+template<class Element_t, class... Indices_t>
 class MultiIndexedMapNode {
-	static_assert(sizeof...(Indexes_t) > 0, "No index?");
+	static_assert(sizeof...(Indices_t) > 0, "No index?");
 
 	template<class, class...>
 	friend class MultiIndexedMap;
 
 private:
-	typedef std::tuple<Indexes_t...> xIndexTuple;
+	typedef std::tuple<Indices_t...> xIndexTuple;
 
 private:
 	Element_t xm_vElement;
-	xIndexTuple xm_vIndexes;
-	::MCF_AVL_NODE_HEADER xm_aHeaders[sizeof...(Indexes_t)];
+	xIndexTuple xm_vIndices;
+	::MCF_AVL_NODE_HEADER xm_aHeaders[sizeof...(Indices_t)];
 
 public:
-	explicit constexpr MultiIndexedMapNode(Element_t vElement, Indexes_t... vIndexes)
+	explicit constexpr MultiIndexedMapNode(Element_t vElement, Indices_t... vIndices)
 		: xm_vElement(std::move(vElement))
-		, xm_vIndexes(std::move(vIndexes)...)
+		, xm_vIndices(std::move(vIndices)...)
 		, xm_aHeaders()
 	{
 	}
@@ -51,7 +51,7 @@ public:
 	constexpr auto GetIndex() const noexcept
 		-> const typename std::tuple_element<INDEX, xIndexTuple>::type &
 	{
-		return std::get<INDEX>(xm_vIndexes);
+		return std::get<INDEX>(xm_vIndices);
 	}
 
 	template<std::size_t INDEX>
@@ -89,23 +89,23 @@ public:
 	}
 };
 
-template<class... Indexes_t>
-class MultiIndexedMapNode<void, Indexes_t...> {
-	static_assert(sizeof...(Indexes_t) > 0, "No index?");
+template<class... Indices_t>
+class MultiIndexedMapNode<void, Indices_t...> {
+	static_assert(sizeof...(Indices_t) > 0, "No index?");
 
 	template<class, class...>
 	friend class MultiIndexedMap;
 
 private:
-	typedef std::tuple<Indexes_t...> xIndexTuple;
+	typedef std::tuple<Indices_t...> xIndexTuple;
 
 private:
-	xIndexTuple xm_vIndexes;
-	::MCF_AVL_NODE_HEADER xm_aHeaders[sizeof...(Indexes_t)];
+	xIndexTuple xm_vIndices;
+	::MCF_AVL_NODE_HEADER xm_aHeaders[sizeof...(Indices_t)];
 
 public:
-	explicit constexpr MultiIndexedMapNode(Indexes_t... vIndexes)
-		: xm_vIndexes(std::move(vIndexes)...)
+	explicit constexpr MultiIndexedMapNode(Indices_t... vIndices)
+		: xm_vIndices(std::move(vIndices)...)
 		, xm_aHeaders()
 	{
 	}
@@ -115,7 +115,7 @@ public:
 	constexpr auto GetIndex() const noexcept
 		-> const typename std::tuple_element<INDEX, xIndexTuple>::type &
 	{
-		return std::get<INDEX>(xm_vIndexes);
+		return std::get<INDEX>(xm_vIndices);
 	}
 
 	template<std::size_t INDEX>
@@ -153,12 +153,12 @@ public:
 	}
 };
 
-template<class Element_t, class... Indexes_t>
+template<class Element_t, class... Indices_t>
 class MultiIndexedMap {
-	static_assert(sizeof...(Indexes_t) > 0, "No index?");
+	static_assert(sizeof...(Indices_t) > 0, "No index?");
 
 public:
-	typedef MultiIndexedMapNode<Element_t, Indexes_t...> Node;
+	typedef MultiIndexedMapNode<Element_t, Indices_t...> Node;
 
 private:
 	template<std::size_t INDEX>
@@ -171,11 +171,11 @@ private:
 			const MCF_AVL_NODE_HEADER *pAvl2
 		) noexcept {
 			ASSERT_NOEXCEPT_BEGIN
-
-			const auto pNode1 = DOWN_CAST(const Node, xm_aHeaders[INDEX], pAvl1);
-			const auto pNode2 = DOWN_CAST(const Node, xm_aHeaders[INDEX], pAvl2);
-			return std::less<void>()(std::get<INDEX>(pNode1->xm_vIndexes), std::get<INDEX>(pNode2->xm_vIndexes));
-
+			{
+				const auto pNode1 = DOWN_CAST(const Node, xm_aHeaders[INDEX], pAvl1);
+				const auto pNode2 = DOWN_CAST(const Node, xm_aHeaders[INDEX], pAvl2);
+				return std::less<void>()(std::get<INDEX>(pNode1->xm_vIndices), std::get<INDEX>(pNode2->xm_vIndices));
+			}
 			ASSERT_NOEXCEPT_END
 		}
 		template<typename Other_t>
@@ -184,10 +184,10 @@ private:
 			std::intptr_t nOther
 		) noexcept {
 			ASSERT_NOEXCEPT_BEGIN
-
-			const auto pNode1 = DOWN_CAST(const Node, xm_aHeaders[INDEX], pAvl1);
-			return std::less<void>()(std::get<INDEX>(pNode1->xm_vIndexes), *(const Other_t *)nOther);
-
+			{
+				const auto pNode1 = DOWN_CAST(const Node, xm_aHeaders[INDEX], pAvl1);
+				return std::less<void>()(std::get<INDEX>(pNode1->xm_vIndices), *(const Other_t *)nOther);
+			}
 			ASSERT_NOEXCEPT_END
 		}
 		template<typename Other_t>
@@ -196,10 +196,10 @@ private:
 			const MCF_AVL_NODE_HEADER *pAvl2
 		) noexcept {
 			ASSERT_NOEXCEPT_BEGIN
-
-			const auto pNode2 = DOWN_CAST(const Node, xm_aHeaders[INDEX], pAvl2);
-			return std::less<void>()(*(const Other_t *)nOther, std::get<INDEX>(pNode2->xm_vIndexes));
-
+			{
+				const auto pNode2 = DOWN_CAST(const Node, xm_aHeaders[INDEX], pAvl2);
+				return std::less<void>()(*(const Other_t *)nOther, std::get<INDEX>(pNode2->xm_vIndices));
+			}
 			ASSERT_NOEXCEPT_END
 		}
 	};
@@ -209,7 +209,7 @@ private:
 		::MCF_AVL_NODE_HEADER *pRoot;
 		::MCF_AVL_NODE_HEADER *pFirst;
 		::MCF_AVL_NODE_HEADER *pLast;
-	} xm_aNodes[sizeof...(Indexes_t)];
+	} xm_aNodes[sizeof...(Indices_t)];
 
 	std::size_t xm_uSize;
 
@@ -277,21 +277,21 @@ private:
 	}
 
 	template<std::size_t INDEX>
-	void xAttachRecur(Node *pNode, typename std::enable_if<(INDEX < sizeof...(Indexes_t)), int>::type = 0) noexcept {
+	void xAttachRecur(Node *pNode, typename std::enable_if<(INDEX < sizeof...(Indices_t)), int>::type = 0) noexcept {
 		xAttach<INDEX>(pNode);
 		xAttachRecur<INDEX + 1>(pNode);
 	}
 	template<std::size_t INDEX>
-	void xAttachRecur(Node *, typename std::enable_if<(INDEX == sizeof...(Indexes_t)), int>::type = 0) noexcept {
+	void xAttachRecur(Node *, typename std::enable_if<(INDEX == sizeof...(Indices_t)), int>::type = 0) noexcept {
 	}
 
 	template<std::size_t INDEX>
-	void xDetachRecur(Node *pNode, typename std::enable_if<(INDEX < sizeof...(Indexes_t)), int>::type = 0) noexcept {
+	void xDetachRecur(Node *pNode, typename std::enable_if<(INDEX < sizeof...(Indices_t)), int>::type = 0) noexcept {
 		xDetachRecur<INDEX + 1>(pNode);
 		xDetach<INDEX>(pNode);
 	}
 	template<std::size_t INDEX>
-	void xDetachRecur(Node *, typename std::enable_if<(INDEX == sizeof...(Indexes_t)), int>::type = 0) noexcept {
+	void xDetachRecur(Node *, typename std::enable_if<(INDEX == sizeof...(Indices_t)), int>::type = 0) noexcept {
 	}
 
 public:
@@ -328,7 +328,7 @@ public:
 
 	void Swap(MultiIndexedMap &rhs) noexcept {
 		if(this != &rhs){
-			for(std::size_t i = 0; i < sizeof...(Indexes_t); ++i){
+			for(std::size_t i = 0; i < sizeof...(Indices_t); ++i){
 				::MCF_AvlSwap	(&(xm_aNodes[i].pRoot),	&(rhs.xm_aNodes[i].pRoot));
 				std::swap		(xm_aNodes[i].pFirst,	rhs.xm_aNodes[i].pFirst);
 				std::swap		(xm_aNodes[i].pLast,	rhs.xm_aNodes[i].pLast);
@@ -347,7 +347,7 @@ public:
 		typedef typename std::tuple_element<INDEX, typename Node::xIndexTuple>::type IndexType;
 
 		xDetach<INDEX>(pNode);
-		auto &vIndex = std::get<INDEX>(pNode->xm_vIndexes);
+		auto &vIndex = std::get<INDEX>(pNode->xm_vIndices);
 		try {
 			vIndex.~IndexType();
 			new(&vIndex) IndexType(std::forward<Params_t>(vParams)...);

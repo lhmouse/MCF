@@ -14,6 +14,16 @@
 #include <deque>
 using namespace MCF;
 
+namespace MCF {
+
+extern std::unique_ptr<TcpPeer> xTcpPeerFromSocket(
+	UniqueSocket vSocket,
+	const void *pSockAddr,
+	std::size_t uSockAddrLen
+);
+
+}
+
 namespace {
 
 struct ClientInfo {
@@ -101,7 +111,7 @@ private:
 					ulSleepTime = 1;
 				} else {
 					::Sleep(ulSleepTime);
-					if(ulSleepTime < 0x20){
+					if(ulSleepTime < 0x100){
 						ulSleepTime <<= 1;
 					}
 				}
@@ -182,8 +192,8 @@ std::unique_ptr<TcpPeer> TcpServer::GetPeerTimeout(unsigned long ulMilliSeconds)
 	if(!vClient.sockClient){
 		return std::unique_ptr<TcpPeer>();
 	}
-	return TcpPeer::xFromSocket(
-		&(vClient.sockClient),
+	return xTcpPeerFromSocket(
+		std::move(vClient.sockClient),
 		&(vClient.vSockAddr),
 		(std::size_t)vClient.nSockAddrSize
 	);

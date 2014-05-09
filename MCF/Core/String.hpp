@@ -188,28 +188,28 @@ private:
 		}
 
 		ASSERT_NOEXCEPT_BEGIN
-
-		if(uRemovedBegin != 0){
-			__builtin_memmove(pchNewBuffer + uFirstOffset, pchOldBuffer, uRemovedBegin * sizeof(Char_t));
-		}
-		if(uOldLength != uRemovedEnd){
-			__builtin_memmove(pchNewBuffer + uThirdOffset, pchOldBuffer + uRemovedEnd, (uOldLength - uRemovedEnd) * sizeof(Char_t));
-		}
-
-		if(pchNewBuffer != pchOldBuffer){
-			if(xm_vStorage.chNull == Char_t()){
-				xm_vStorage.chNull = Char_t() + 1;
-			} else {
-				delete[] pchOldBuffer;
+		{
+			if(uRemovedBegin != 0){
+				__builtin_memmove(pchNewBuffer + uFirstOffset, pchOldBuffer, uRemovedBegin * sizeof(Char_t));
+			}
+			if(uOldLength != uRemovedEnd){
+				__builtin_memmove(pchNewBuffer + uThirdOffset, pchOldBuffer + uRemovedEnd, (uOldLength - uRemovedEnd) * sizeof(Char_t));
 			}
 
-			xm_vStorage.pchLargeBegin = pchNewBuffer;
-			xm_vStorage.uLargeLength = uOldLength;
-			xm_vStorage.uLargeCapacity = uSizeToAlloc;
+			if(pchNewBuffer != pchOldBuffer){
+				if(xm_vStorage.chNull == Char_t()){
+					xm_vStorage.chNull = Char_t() + 1;
+				} else {
+					delete[] pchOldBuffer;
+				}
+
+				xm_vStorage.pchLargeBegin = pchNewBuffer;
+				xm_vStorage.uLargeLength = uOldLength;
+				xm_vStorage.uLargeCapacity = uSizeToAlloc;
+			}
+
+			return pchNewBuffer + uFirstOffset + uRemovedBegin;
 		}
-
-		return pchNewBuffer + uFirstOffset + uRemovedBegin;
-
 		ASSERT_NOEXCEPT_END
 	}
 	void xSetSize(std::size_t uNewSize) noexcept {

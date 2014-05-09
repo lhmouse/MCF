@@ -10,6 +10,12 @@
 #include "_SocketUtils.hpp"
 using namespace MCF;
 
+namespace MCF {
+
+extern PeerInfo xPeerInfoFromSockAddr(const void *pSockAddr, std::size_t uSockAddrLen);
+
+}
+
 namespace {
 
 class TcpPeerDelegate : CONCRETE(TcpPeer) {
@@ -22,7 +28,7 @@ private:
 public:
 	TcpPeerDelegate(UniqueSocket &&sockPeer, const void *pSockAddr, std::size_t uSockAddrLen)
 		: xm_sockPeer(std::move(sockPeer))
-		, xm_vPeerInfo(pSockAddr, uSockAddrLen)
+		, xm_vPeerInfo(xPeerInfoFromSockAddr(pSockAddr, uSockAddrLen))
 	{
 	}
 
@@ -36,7 +42,7 @@ public:
 		auto pCur = (char *)pData;
 		const auto pEnd = pCur + uSize;
 		for(;;){
-			const int nBytesToRead = std::max<std::ptrdiff_t>(pEnd - pCur, 0x10000);
+			const int nBytesToRead = std::min<std::ptrdiff_t>(pEnd - pCur, 0x10000);
 			if(nBytesToRead == 0){
 				break;
 			}
@@ -70,10 +76,11 @@ public:
 		auto pCur = (const char *)pData;
 		const auto pEnd = pCur + uSize;
 		for(;;){
-			const int nBytesToWrite = std::max<std::ptrdiff_t>(pEnd - pCur, 0x10000);
+			const int nBytesToWrite = std::min<std::ptrdiff_t>(pEnd - pCur, 0x10000);
 			if(nBytesToWrite == 0){
 				break;
 			}
+			__builtin_printf("sending %p, %u, %s\n", pCur, nBytesToWrite, pCur);
 			const int nBytesWritten = ::send(xm_sockPeer.Get(), pCur, nBytesToWrite, 0);
 			if(nBytesWritten == 0){
 				break;
@@ -91,11 +98,19 @@ public:
 
 }
 
-// 静态成员函数。
-std::unique_ptr<TcpPeer> TcpPeer::xFromSocket(void *ppSocket, const void *pSockAddr, std::size_t uSockAddrLen){
-	return std::make_unique<TcpPeerDelegate>(std::move(*(UniqueSocket *)ppSocket), pSockAddr, uSockAddrLen);
+namespace MCF {
+
+std::unique_ptr<TcpPeer> xTcpPeerFromSocket(
+	UniqueSocket vSocket,
+	const void *pSockAddr,
+	std::size_t uSockAddrLen
+){
+	return std::make_unique<TcpPeerDelegate>(std::move(vSocket), pSockAddr, uSockAddrLen);
 }
 
+}
+
+// 静态成员函数。
 std::unique_ptr<TcpPeer> TcpPeer::Connect(const PeerInfo &vServerInfo){
 	WSAInitializer vWSAInitializer;
 

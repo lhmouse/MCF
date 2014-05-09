@@ -16,24 +16,43 @@ using namespace MCF;
 #	define SWAP_IF_NOT_BIG_ENDIAN(x)	(__builtin_bswap16(x))
 #endif
 
-// 构造函数和析构函数。
-PeerInfo::PeerInfo(const void *pSockAddr, std::size_t uSockAddrLen){
+namespace {
+
+template<typename T, std::size_t N>
+inline bool IsAllZeroes(const T (&a)[N]) noexcept {
+	return std::all_of(
+		std::begin(a),
+		std::end(a),
+		[](auto v) noexcept { return v == 0; }
+	);
+}
+
+}
+
+namespace MCF {
+
+PeerInfo xPeerInfoFromSockAddr(const void *pSockAddr, std::size_t uSockAddrLen){
 	auto &vSockAddr = *(const SOCKADDR_STORAGE *)pSockAddr;
 	if((vSockAddr.ss_family == AF_INET6) && (uSockAddrLen >= sizeof(SOCKADDR_IN6))){
 		const auto &vSockAddrIn6 = reinterpret_cast<const SOCKADDR_IN6 &>(vSockAddr);
-		BCopy(m_au16IPv6, vSockAddrIn6.sin6_addr);
-		BCopy(m_u16Port, vSockAddrIn6.sin6_port);
+		PeerInfo vRet(true, 0);
+		BCopy(vRet.m_au16IPv6, vSockAddrIn6.sin6_addr);
+		BCopy(vRet.m_u16Port, vSockAddrIn6.sin6_port);
+		return std::move(vRet);
 	} else if((vSockAddr.ss_family == AF_INET) && (uSockAddrLen >= sizeof(SOCKADDR_IN))){
 		const auto &vSockAddrIn = reinterpret_cast<const SOCKADDR_IN &>(vSockAddr);
-		BZero(m_au16IPv4Zeroes);
-		m_au16IPv4Ones = 0xFFFF;
-		BCopy(m_au8IPv4, vSockAddrIn.sin_addr);
-		BCopy(m_u16Port, vSockAddrIn.sin_port);
+		PeerInfo vRet(false, 0);
+		BCopy(vRet.m_au8IPv4, vSockAddrIn.sin_addr);
+		BCopy(vRet.m_u16Port, vSockAddrIn.sin_port);
+		return std::move(vRet);
 	} else {
 		MCF_THROW(ERROR_NOT_SUPPORTED, L"不支持该协议。");
 	}
 }
 
+}
+
+// 构造函数和析构函数。
 PeerInfo::PeerInfo(bool bIPv6, std::uint16_t u16Port) noexcept {
 	if(bIPv6){
 		BZero(m_au16IPv6);
@@ -44,37 +63,62 @@ PeerInfo::PeerInfo(bool bIPv6, std::uint16_t u16Port) noexcept {
 	}
 	m_u16Port = SWAP_IF_NOT_BIG_ENDIAN(u16Port);
 }
-PeerInfo::PeerInfo(const std::uint16_t (&au16IPv6)[8], std::uint16_t u16Port) noexcept {
-	for(std::size_t i = 0; i < 8; ++i){
-		m_au16IPv6[i] = SWAP_IF_NOT_BIG_ENDIAN(au16IPv6[i]);
-	}
-	m_u16Port = SWAP_IF_NOT_BIG_ENDIAN(u16Port);
+PeerInfo::PeerInfo(
+	std::uint16_t u16IPv6_0,
+	std::uint16_t u16IPv6_1,
+	std::uint16_t u16IPv6_2,
+	std::uint16_t u16IPv6_3,
+	std::uint16_t u16IPv6_4,
+	std::uint16_t u16IPv6_5,
+	std::uint16_t u16IPv6_6,
+	std::uint16_t u16IPv6_7,
+	std::uint16_t u16Port
+) noexcept {
+	m_au16IPv6[0]	= SWAP_IF_NOT_BIG_ENDIAN(u16IPv6_0);
+	m_au16IPv6[1]	= SWAP_IF_NOT_BIG_ENDIAN(u16IPv6_1);
+	m_au16IPv6[2]	= SWAP_IF_NOT_BIG_ENDIAN(u16IPv6_2);
+	m_au16IPv6[3]	= SWAP_IF_NOT_BIG_ENDIAN(u16IPv6_3);
+	m_au16IPv6[4]	= SWAP_IF_NOT_BIG_ENDIAN(u16IPv6_4);
+	m_au16IPv6[5]	= SWAP_IF_NOT_BIG_ENDIAN(u16IPv6_5);
+	m_au16IPv6[6]	= SWAP_IF_NOT_BIG_ENDIAN(u16IPv6_6);
+	m_au16IPv6[7]	= SWAP_IF_NOT_BIG_ENDIAN(u16IPv6_7);
+	m_u16Port		= SWAP_IF_NOT_BIG_ENDIAN(u16Port);
 }
-PeerInfo::PeerInfo(const std::uint8_t (&au8IPv4)[4], std::uint16_t u16Port) noexcept {
+PeerInfo::PeerInfo(
+	std::uint8_t u8IPv4_0,
+	std::uint8_t u8IPv4_1,
+	std::uint8_t u8IPv4_2,
+	std::uint8_t u8IPv4_3,
+	std::uint16_t u16Port
+) noexcept {
 	BZero(m_au16IPv4Zeroes);
 	m_au16IPv4Ones = 0xFFFF;
-	BCopy(m_au8IPv4, au8IPv4);
-	m_u16Port = SWAP_IF_NOT_BIG_ENDIAN(u16Port);
+
+	m_au8IPv4[0]	= u8IPv4_0;
+	m_au8IPv4[1]	= u8IPv4_1;
+	m_au8IPv4[2]	= u8IPv4_2;
+	m_au8IPv4[3]	= u8IPv4_3;
+	m_u16Port	= SWAP_IF_NOT_BIG_ENDIAN(u16Port);
 }
 
 // 其他非静态成员函数。
 bool PeerInfo::IsNull() const noexcept {
-	switch(m_au16IPv4Ones){
-	case 0:
-		return !BTest(m_au16IPv6);
-
-	case 0xFFFF:
-		return !BTest(m_au8IPv4);
-
-	default:
+	if(!IsAllZeroes(m_au16IPv4Zeroes)){
 		return false;
 	}
+	if((m_au16IPv4Ones != 0) && (m_au16IPv4Ones != 0xFFFF)){
+		return false;
+	}
+	if(!IsAllZeroes(m_au8IPv4)){
+		return false;
+	}
+	return true;
 }
 bool PeerInfo::IsIPv6Null() const noexcept {
-	return !BTest(m_au16IPv6);
+	return IsAllZeroes(m_au16IPv6);
 }
 bool PeerInfo::IsIPv4Null() const noexcept {
-	return IsIPv4() && !BTest(m_au8IPv4);
+	return IsIPv4() && IsAllZeroes(m_au8IPv4);
 }
 
 void PeerInfo::ToIPv6(std::uint16_t (&au16IPv6)[8], std::uint16_t &u16Port) const noexcept {
@@ -85,7 +129,7 @@ void PeerInfo::ToIPv6(std::uint16_t (&au16IPv6)[8], std::uint16_t &u16Port) cons
 }
 
 bool PeerInfo::IsIPv4() const noexcept {
-	return !BTest(m_au16IPv4Zeroes) && (m_au16IPv4Ones == 0xFFFF);
+	return IsAllZeroes(m_au16IPv4Zeroes) && (m_au16IPv4Ones == 0xFFFF);
 }
 void PeerInfo::ToIPv4(std::uint8_t (&au8IPv4)[4], std::uint16_t &u16Port) const noexcept {
 	ASSERT(IsIPv4());

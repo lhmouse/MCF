@@ -5,7 +5,6 @@
 #ifndef MCF_UTILITIES_HPP_
 #define MCF_UTILITIES_HPP_
 
-#include "../../MCFCRT/ext/ext_include.h"
 #include "../../MCFCRT/env/bail.h"
 #include <type_traits>
 #include <algorithm>
@@ -99,6 +98,12 @@ __attribute__((error("noexcept assertion failed"), __noreturn__)) void AssertNoe
 		throw;	\
 	}
 
+#define FORCE_NOEXCEPT_BEGIN	\
+	[&]() noexcept {
+
+#define FORCE_NOEXCEPT_END	\
+	}();
+
 //----------------------------------------------------------------------------
 // NullRef
 //----------------------------------------------------------------------------
@@ -149,19 +154,12 @@ inline void BZero(T &vDst) noexcept {
 	__builtin_memset(&vDst, 0, sizeof(vDst));
 }
 
-template<typename T>
-inline bool BTest(const T &vSrc) noexcept {
-	static_assert(std::is_trivial<T>::value, "MCF::BTest(): Only trivial types are supported.");
-
-	return ::MCF_memcchr(&vSrc, 0, sizeof(vSrc)) == nullptr;
-}
-
 template<typename Tx, typename Ty>
 inline int BComp(const Tx &vDst, const Ty &vSrc) noexcept {
 	static_assert(std::is_trivial<Tx>::value && std::is_trivial<Ty>::value, "MCF::BComp(): Only trivial types are supported.");
 	static_assert(sizeof(vDst) == sizeof(vSrc), "MCF::BComp(): Source and destination sizes do not match.");
 
-	return __builtin_memcmp(&vDst, &vSrc, sizeof(vDst));
+	return __builtin_memcmp(&vDst, &vSrc, sizeof(vSrc));
 }
 
 //----------------------------------------------------------------------------

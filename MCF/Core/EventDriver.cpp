@@ -53,38 +53,38 @@ public:
 	}
 	~HandlerHolder() noexcept {
 		ASSERT_NOEXCEPT_BEGIN
+		{
+			CRITICAL_SECTION_SCOPE(g_pLock){
+				auto pNode = g_mapHandlerList.Find<0>(*xm_pwcsName);
+				ASSERT(pNode);
 
-		CRITICAL_SECTION_SCOPE(g_pLock){
-			auto pNode = g_mapHandlerList.Find<0>(*xm_pwcsName);
-			ASSERT(pNode);
+				auto &vecHandlerList = pNode->GetElement();
 
-			auto &vecHandlerList = pNode->GetElement();
-
-			auto ppfnBegin = vecHandlerList.GetBegin();
-			const auto ppfnEnd = vecHandlerList.GetEnd();
-			for(;;){
-				if(ppfnBegin == ppfnEnd){
-					break;
+				auto ppfnBegin = vecHandlerList.GetBegin();
+				const auto ppfnEnd = vecHandlerList.GetEnd();
+				for(;;){
+					if(ppfnBegin == ppfnEnd){
+						break;
+					}
+					if(ppfnBegin->get() == xm_pfnProc){
+						break;
+					}
+					++ppfnBegin;
 				}
-				if(ppfnBegin->get() == xm_pfnProc){
-					break;
+				ASSERT(ppfnBegin != ppfnEnd);
+
+				auto ppfnNext = ppfnBegin;
+				for(;;){
+					++ppfnNext;
+					if(ppfnNext == ppfnEnd){
+						break;
+					}
+					*ppfnBegin = std::move(*ppfnNext);
+					ppfnBegin = ppfnNext;
 				}
-				++ppfnBegin;
+				vecHandlerList.Pop();
 			}
-			ASSERT(ppfnBegin != ppfnEnd);
-
-			auto ppfnNext = ppfnBegin;
-			for(;;){
-				++ppfnNext;
-				if(ppfnNext == ppfnEnd){
-					break;
-				}
-				*ppfnBegin = std::move(*ppfnNext);
-				ppfnBegin = ppfnNext;
-			}
-			vecHandlerList.Pop();
 		}
-
 		ASSERT_NOEXCEPT_END
 	}
 };

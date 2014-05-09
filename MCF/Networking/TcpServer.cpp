@@ -16,11 +16,13 @@ using namespace MCF;
 
 namespace MCF {
 
-extern std::unique_ptr<TcpPeer> xTcpPeerFromSocket(
-	UniqueSocket vSocket,
-	const void *pSockAddr,
-	std::size_t uSockAddrLen
-);
+namespace Impl {
+	extern std::unique_ptr<TcpPeer> TcpPeerFromSocket(
+		UniqueSocket vSocket,
+		const void *pSockAddr,
+		std::size_t uSockAddrSize
+	);
+}
 
 }
 
@@ -74,18 +76,8 @@ public:
 		}
 
 		SOCKADDR_STORAGE vSockAddr;
-		BZero(vSockAddr);
-		vSockAddr.ss_family = shFamily;
-		if(shFamily == AF_INET){
-			auto &vSockAddrIn = reinterpret_cast<SOCKADDR_IN &>(vSockAddr);
-			BCopy(vSockAddrIn.sin_addr, vBoundOnto.m_au8IPv4);
-			BCopy(vSockAddrIn.sin_port, vBoundOnto.m_u16Port);
-		} else {
-			auto &vSockAddrIn6 = reinterpret_cast<SOCKADDR_IN6 &>(vSockAddr);
-			BCopy(vSockAddrIn6.sin6_addr, vBoundOnto.m_au16IPv6);
-			BCopy(vSockAddrIn6.sin6_port, vBoundOnto.m_u16Port);
-		}
-		if(::bind(xm_sockListen.Get(), (const SOCKADDR *)&vSockAddr, sizeof(vSockAddr))){
+		const int nSockAddrSize = vBoundOnto.ToSockAddr(&vSockAddr, sizeof(vSockAddr));
+		if(::bind(xm_sockListen.Get(), (const SOCKADDR *)&vSockAddr, nSockAddrSize)){
 			MCF_THROW(::GetLastError(), L"::bind() 失败。");
 		}
 
@@ -192,7 +184,7 @@ std::unique_ptr<TcpPeer> TcpServer::GetPeerTimeout(unsigned long ulMilliSeconds)
 	if(!vClient.sockClient){
 		return std::unique_ptr<TcpPeer>();
 	}
-	return xTcpPeerFromSocket(
+	return Impl::TcpPeerFromSocket(
 		std::move(vClient.sockClient),
 		&(vClient.vSockAddr),
 		(std::size_t)vClient.nSockAddrSize

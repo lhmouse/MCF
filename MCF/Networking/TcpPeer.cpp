@@ -10,12 +10,6 @@
 #include "_SocketUtils.hpp"
 using namespace MCF;
 
-namespace MCF {
-
-extern PeerInfo xPeerInfoFromSockAddr(const void *pSockAddr, std::size_t uSockAddrLen);
-
-}
-
 namespace {
 
 class TcpPeerDelegate : CONCRETE(TcpPeer) {
@@ -26,9 +20,9 @@ private:
 	PeerInfo xm_vPeerInfo;
 
 public:
-	TcpPeerDelegate(UniqueSocket &&sockPeer, const void *pSockAddr, std::size_t uSockAddrLen)
+	TcpPeerDelegate(UniqueSocket &&sockPeer, const void *pSockAddr, std::size_t uSockAddrSize)
 		: xm_sockPeer(std::move(sockPeer))
-		, xm_vPeerInfo(xPeerInfoFromSockAddr(pSockAddr, uSockAddrLen))
+		, xm_vPeerInfo(pSockAddr, uSockAddrSize)
 	{
 	}
 
@@ -100,12 +94,14 @@ public:
 
 namespace MCF {
 
-std::unique_ptr<TcpPeer> xTcpPeerFromSocket(
-	UniqueSocket vSocket,
-	const void *pSockAddr,
-	std::size_t uSockAddrLen
-){
-	return std::make_unique<TcpPeerDelegate>(std::move(vSocket), pSockAddr, uSockAddrLen);
+namespace Impl {
+	std::unique_ptr<TcpPeer> TcpPeerFromSocket(
+		UniqueSocket vSocket,
+		const void *pSockAddr,
+		std::size_t uSockAddrSize
+	){
+		return std::make_unique<TcpPeerDelegate>(std::move(vSocket), pSockAddr, uSockAddrSize);
+	}
 }
 
 }
@@ -122,25 +118,12 @@ std::unique_ptr<TcpPeer> TcpPeer::Connect(const PeerInfo &vServerInfo){
 	}
 
 	SOCKADDR_STORAGE vSockAddr;
-	std::size_t uSockAddrLen;
-	BZero(vSockAddr);
-	vSockAddr.ss_family = shFamily;
-	if(shFamily == AF_INET){
-		auto &vSockAddrIn = reinterpret_cast<SOCKADDR_IN &>(vSockAddr);
-		BCopy(vSockAddrIn.sin_addr, vServerInfo.m_au8IPv4);
-		BCopy(vSockAddrIn.sin_port, vServerInfo.m_u16Port);
-		uSockAddrLen = sizeof(SOCKADDR_IN);
-	} else {
-		auto &vSockAddrIn6 = reinterpret_cast<SOCKADDR_IN6 &>(vSockAddr);
-		BCopy(vSockAddrIn6.sin6_addr, vServerInfo.m_au16IPv6);
-		BCopy(vSockAddrIn6.sin6_port, vServerInfo.m_u16Port);
-		uSockAddrLen = sizeof(SOCKADDR_IN6);
-	}
-	if(::connect(sockServer.Get(), (const SOCKADDR *)&vSockAddr, (int)uSockAddrLen)){
+	const int nSockAddrSize = vServerInfo.ToSockAddr(&vSockAddr, sizeof(vSockAddr));
+	if(::connect(sockServer.Get(), (const SOCKADDR *)&vSockAddr, nSockAddrSize)){
 		MCF_THROW(::GetLastError(), L"::connect() 失败。");
 	}
 
-	return std::make_unique<TcpPeerDelegate>(std::move(sockServer), &vSockAddr, uSockAddrLen);
+	return std::make_unique<TcpPeerDelegate>(std::move(sockServer), &vSockAddr, (std::size_t)nSockAddrSize);
 }
 std::unique_ptr<TcpPeer> TcpPeer::ConnectNoThrow(const PeerInfo &vServerInfo){
 	try {

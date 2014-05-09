@@ -17,46 +17,52 @@ namespace MCF {
 //----------------------------------------------------------------------------
 // COUNT_OF
 //----------------------------------------------------------------------------
-template<typename Ty, std::size_t N>
-char (&CountOfHelper(Ty (&)[N]))[N];
+namespace Impl {
+	template<typename Ty, std::size_t N>
+	char (&CountOfHelper(Ty (&)[N]))[N];
 
-template<typename Ty, std::size_t N>
-char (&CountOfHelper(Ty (&&)[N]))[N];
+	template<typename Ty, std::size_t N>
+	char (&CountOfHelper(Ty (&&)[N]))[N];
+}
 
-#define COUNT_OF(a)		(sizeof(::MCF::CountOfHelper((a))))
+#define COUNT_OF(a)		(sizeof(::MCF::Impl::CountOfHelper((a))))
 
 //----------------------------------------------------------------------------
 // NO_COPY
 //----------------------------------------------------------------------------
-struct NonCopyableBase {
-	constexpr NonCopyableBase() noexcept = default;
-	~NonCopyableBase() = default;
+namespace Impl {
+	struct NonCopyableBase {
+		constexpr NonCopyableBase() noexcept = default;
+		~NonCopyableBase() = default;
 
-	NonCopyableBase(const NonCopyableBase &) = delete;
-	void operator=(const NonCopyableBase &) = delete;
-	NonCopyableBase(NonCopyableBase &&) = delete;
-	void operator=(NonCopyableBase &&) = delete;
-};
+		NonCopyableBase(const NonCopyableBase &) = delete;
+		void operator=(const NonCopyableBase &) = delete;
+		NonCopyableBase(NonCopyableBase &&) = delete;
+		void operator=(NonCopyableBase &&) = delete;
+	};
+}
 
-#define NO_COPY			private ::MCF::NonCopyableBase
+#define NO_COPY			private ::MCF::Impl::NonCopyableBase
 
 //----------------------------------------------------------------------------
 // ABSTRACT / CONCRETE
 //----------------------------------------------------------------------------
-struct AbstractBase {
-	virtual ~AbstractBase() noexcept { }
-	virtual void MCF_PureAbstractFunction_() = 0;
-};
+namespace Impl {
+	struct AbstractBase {
+		virtual ~AbstractBase() noexcept { }
+		virtual void MCF_PureAbstractFunction_() = 0;
+	};
 
-template<class Base_t>
-struct ConcreteBase : public Base_t {
-	static_assert(std::is_base_of<AbstractBase, Base_t>::value, "Concreting from non-abstract class?");
+	template<class Base_t>
+	struct ConcreteBase : public Base_t {
+		static_assert(std::is_base_of<AbstractBase, Base_t>::value, "Concreting from non-abstract class?");
 
-	virtual void MCF_PureAbstractFunction_(){ }
-};
+		virtual void MCF_PureAbstractFunction_(){ }
+	};
+}
 
-#define ABSTRACT		private ::MCF::AbstractBase
-#define CONCRETE(base)	public ::MCF::ConcreteBase<base>
+#define ABSTRACT		private ::MCF::Impl::AbstractBase
+#define CONCRETE(base)	public ::MCF::Impl::ConcreteBase<base>
 
 //----------------------------------------------------------------------------
 // Bail
@@ -80,20 +86,22 @@ inline void Bail<>(const wchar_t *pwszDescription){
 //----------------------------------------------------------------------------
 // ASSERT_NOEXCEPT
 //----------------------------------------------------------------------------
-__attribute__((error("noexcept assertion failed"), __noreturn__)) void AssertNoexcept() noexcept;
+namespace Impl {
+	__attribute__((error("noexcept assertion failed"), __noreturn__)) void AssertNoexcept() noexcept;
+}
 
 #define ASSERT_NOEXCEPT_BEGIN	\
 	try {
 
 #define ASSERT_NOEXCEPT_END	\
 	} catch(...){	\
-		::MCF::AssertNoexcept();	\
+		::MCF::Impl::AssertNoexcept();	\
 	}
 
 #define ASSERT_NOEXCEPT_END_COND(cond)	\
 	} catch(...){	\
 		if(cond){	\
-			::MCF::AssertNoexcept();	\
+			::MCF::Impl::AssertNoexcept();	\
 		}	\
 		throw;	\
 	}

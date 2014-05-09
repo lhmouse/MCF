@@ -13,8 +13,6 @@
 
 __MCF_EXTERN_C_BEGIN
 
-extern void *MCF_memcchr(const void *s, int c, __MCF_STD size_t n) __MCF_NOEXCEPT;
-
 extern char *MCF_strcpyout(char *restrict dst, const char *restrict src) __MCF_NOEXCEPT;
 extern wchar_t *MCF_wcscpyout(wchar_t *restrict dst, const wchar_t *restrict src) __MCF_NOEXCEPT;
 

@@ -10,12 +10,6 @@
 #include "_SocketUtils.hpp"
 using namespace MCF;
 
-#if (__BYTE_ORDER__ == __ORDER_BIG_ENDIAN__)
-#	define SWAP_IF_NOT_BIG_ENDIAN(x)	(x)
-#else
-#	define SWAP_IF_NOT_BIG_ENDIAN(x)	(__builtin_bswap16(x))
-#endif
-
 namespace {
 
 template<typename T, std::size_t N>
@@ -61,7 +55,7 @@ PeerInfo::PeerInfo(bool bIPv6, std::uint16_t u16Port) noexcept {
 		m_au16IPv4Ones = 0xFFFF;
 		BZero(m_au8IPv4);
 	}
-	m_u16Port = SWAP_IF_NOT_BIG_ENDIAN(u16Port);
+	m_u16Port = ::ntohs(u16Port);
 }
 PeerInfo::PeerInfo(
 	std::uint16_t u16IPv6_0,
@@ -74,15 +68,15 @@ PeerInfo::PeerInfo(
 	std::uint16_t u16IPv6_7,
 	std::uint16_t u16Port
 ) noexcept {
-	m_au16IPv6[0]	= SWAP_IF_NOT_BIG_ENDIAN(u16IPv6_0);
-	m_au16IPv6[1]	= SWAP_IF_NOT_BIG_ENDIAN(u16IPv6_1);
-	m_au16IPv6[2]	= SWAP_IF_NOT_BIG_ENDIAN(u16IPv6_2);
-	m_au16IPv6[3]	= SWAP_IF_NOT_BIG_ENDIAN(u16IPv6_3);
-	m_au16IPv6[4]	= SWAP_IF_NOT_BIG_ENDIAN(u16IPv6_4);
-	m_au16IPv6[5]	= SWAP_IF_NOT_BIG_ENDIAN(u16IPv6_5);
-	m_au16IPv6[6]	= SWAP_IF_NOT_BIG_ENDIAN(u16IPv6_6);
-	m_au16IPv6[7]	= SWAP_IF_NOT_BIG_ENDIAN(u16IPv6_7);
-	m_u16Port		= SWAP_IF_NOT_BIG_ENDIAN(u16Port);
+	m_au16IPv6[0]	= ::ntohs(u16IPv6_0);
+	m_au16IPv6[1]	= ::ntohs(u16IPv6_1);
+	m_au16IPv6[2]	= ::ntohs(u16IPv6_2);
+	m_au16IPv6[3]	= ::ntohs(u16IPv6_3);
+	m_au16IPv6[4]	= ::ntohs(u16IPv6_4);
+	m_au16IPv6[5]	= ::ntohs(u16IPv6_5);
+	m_au16IPv6[6]	= ::ntohs(u16IPv6_6);
+	m_au16IPv6[7]	= ::ntohs(u16IPv6_7);
+	m_u16Port		= ::ntohs(u16Port);
 }
 PeerInfo::PeerInfo(
 	std::uint8_t u8IPv4_0,
@@ -98,7 +92,7 @@ PeerInfo::PeerInfo(
 	m_au8IPv4[1]	= u8IPv4_1;
 	m_au8IPv4[2]	= u8IPv4_2;
 	m_au8IPv4[3]	= u8IPv4_3;
-	m_u16Port	= SWAP_IF_NOT_BIG_ENDIAN(u16Port);
+	m_u16Port		= ::ntohs(u16Port);
 }
 
 // 其他非静态成员函数。
@@ -123,9 +117,9 @@ bool PeerInfo::IsIPv4Null() const noexcept {
 
 void PeerInfo::ToIPv6(std::uint16_t (&au16IPv6)[8], std::uint16_t &u16Port) const noexcept {
 	for(std::size_t i = 0; i < 8; ++i){
-		au16IPv6[i] = SWAP_IF_NOT_BIG_ENDIAN(m_au16IPv6[i]);
+		au16IPv6[i] = ::ntohs(m_au16IPv6[i]);
 	}
-	u16Port = SWAP_IF_NOT_BIG_ENDIAN(m_u16Port);
+	u16Port = ::ntohs(m_u16Port);
 }
 
 bool PeerInfo::IsIPv4() const noexcept {
@@ -135,5 +129,5 @@ void PeerInfo::ToIPv4(std::uint8_t (&au8IPv4)[4], std::uint16_t &u16Port) const 
 	ASSERT(IsIPv4());
 
 	BCopy(au8IPv4, m_au8IPv4);
-	u16Port = SWAP_IF_NOT_BIG_ENDIAN(m_u16Port);
+	u16Port = ::ntohs(m_u16Port);
 }

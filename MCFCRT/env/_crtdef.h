@@ -20,12 +20,12 @@
 #ifdef __cplusplus
 #	define __MCF_EXTERN_C_BEGIN	extern "C" {
 #	define __MCF_EXTERN_C_END		}
-#	define __MCF_STD				::std::
+#	define MCF_STD				::std::
 #	define __MCF_NOEXCEPT			noexcept
 #else
 #	define __MCF_EXTERN_C_BEGIN
 #	define __MCF_EXTERN_C_END
-#	define __MCF_STD
+#	define MCF_STD
 #	define __MCF_NOEXCEPT
 #endif
 

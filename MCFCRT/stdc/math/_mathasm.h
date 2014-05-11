@@ -7,7 +7,7 @@
 
 #include "../../env/_crtdef.h"
 
-#ifdef __amd64__
+#ifdef __x86_64__
 
 // x64 ABI 中需要将返回的浮点型数据从 st 拷贝到 SSE 寄存器 xmm0 中。
 #	define __FLT_RET_ST(tmp)			"fstp dword ptr[" tmp "] \n"	\

@@ -17,7 +17,7 @@ __asm__(
 	"	.text \n"
 	"	.align 16 \n"
 	"InitCoroutineProc: \n"
-#ifdef __amd64__
+#ifdef __x86_64__
 	"	lea rax, dword ptr[rcx - 0x110] \n"	// rcx = pStackBottom
 	"	mov qword ptr[rax + 0xE8], offset x64Wrapper \n"
 	"	mov qword ptr[rax + 0xF0], rdx \n"		// rdx = pfnProc
@@ -54,7 +54,7 @@ __asm__(
 	"	.text \n"
 	"	.align 16 \n"
 	"CoroutineSwitchTo: \n"
-#ifdef __amd64__
+#ifdef __x86_64__
 	"	sub rsp, 0xA8 \n"
 	"	push rbx \n"
 	"	push rbp \n"

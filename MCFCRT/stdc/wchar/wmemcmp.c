@@ -16,7 +16,7 @@ int wmemcmp(const wchar_t *p1, const wchar_t *p2, size_t cnt){
 		{	\
 			const int delta = (int)(uint16_t)wrd1 - (int)(uint16_t)wrd2;	\
 			if(delta != 0){	\
-				return (delta >> (sizeof(int) * CHAR_BIT - 1)) | 1;	\
+				return (delta >> (sizeof(int) * __CHAR_BIT__ - 1)) | 1;	\
 			}	\
 			wrd1 >>= 16;	\
 			wrd2 >>= 16;	\
@@ -64,7 +64,7 @@ int wmemcmp(const wchar_t *p1, const wchar_t *p2, size_t cnt){
 	while(rem-- != 0){
 		const int delta = (int)(uint16_t)*(rp1++) - (int)(uint16_t)*(rp2++);
 		if(delta != 0){
-			return (delta >> (sizeof(int) * CHAR_BIT - 1)) | 1;
+			return (delta >> (sizeof(int) * __CHAR_BIT__ - 1)) | 1;
 		}
 	}
 	return 0;

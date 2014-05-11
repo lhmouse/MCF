@@ -5,16 +5,16 @@
 #include "../../env/_crtdef.h"
 
 int abs(int i){
-	register const unsigned int mask = (unsigned int)(i >> (sizeof(int) * CHAR_BIT - 1));
+	register const unsigned int mask = (unsigned int)(i >> (sizeof(int) * __CHAR_BIT__ - 1));
 	return (int)(((unsigned int)i ^ mask) - mask);
 }
 
 long labs(long i){
-	register const unsigned long mask = (unsigned long)(i >> (sizeof(long) * CHAR_BIT - 1));
+	register const unsigned long mask = (unsigned long)(i >> (sizeof(long) * __CHAR_BIT__ - 1));
 	return (long)(((unsigned long)i ^ mask) - mask);
 }
 
 long long llabs(long long i){
-	register const unsigned long long mask = (unsigned long long)(i >> (sizeof(long long) * CHAR_BIT - 1));
+	register const unsigned long long mask = (unsigned long long)(i >> (sizeof(long long) * __CHAR_BIT__ - 1));
 	return (long long)(((unsigned long long)i ^ mask) - mask);
 }

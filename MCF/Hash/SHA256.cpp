@@ -967,7 +967,7 @@ void Sha256::Finalize(unsigned char (&abyOutput)[32]) noexcept {
 		if(xm_uBytesInChunk < sizeof(xm_abyFirstPart)){
 			std::memset(xm_abyChunk + xm_uBytesInChunk, 0, sizeof(xm_abyFirstPart) - xm_uBytesInChunk);
 		}
-		xm_uBitsTotal = __builtin_bswap64(xm_u64BytesTotal * CHAR_BIT);
+		xm_uBitsTotal = __builtin_bswap64(xm_u64BytesTotal * __CHAR_BIT__);
 		DoSha256Chunk(xm_auResult, xm_abyChunk);
 
 		for(auto &u : xm_auResult){

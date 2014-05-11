@@ -20,21 +20,21 @@ typedef struct MCF_tagHeapDbgBlockInfo {
 	MCF_AVL_NODE_HEADER vHeader;
 
 	const void *pContents;
-	__MCF_STD size_t uSize;
+	MCF_STD size_t uSize;
 	const void *pRetAddr;
 } __MCF_HEAPDBG_BLOCK_INFO;
 
 extern unsigned long __MCF_CRT_HeapDbgInit(void) __MCF_NOEXCEPT;
 extern void __MCF_CRT_HeapDbgUninit(void) __MCF_NOEXCEPT;
 
-extern __MCF_STD size_t __MCF_CRT_HeapDbgGetRawSize(
-	__MCF_STD size_t uContentSize
+extern MCF_STD size_t __MCF_CRT_HeapDbgGetRawSize(
+	MCF_STD size_t uContentSize
 ) __MCF_NOEXCEPT;
 
 extern void __MCF_CRT_HeapDbgAddGuardsAndRegister(
 	unsigned char **ppContents,
 	unsigned char *pRaw,
-	__MCF_STD size_t uContentSize,
+	MCF_STD size_t uContentSize,
 	const void *pRetAddr
 ) __MCF_NOEXCEPT;
 
@@ -51,14 +51,14 @@ extern void __MCF_CRT_HeapDbgUnregister(
 typedef void (*MCF_HEAP_CALLBACK_PROC)(
 	int,				// 0 分配，1 释放
 	const void *,		// 内存块地址
-	__MCF_STD size_t,	// 内存块大小
+	MCF_STD size_t,	// 内存块大小
 	const void *,		// 返回地址
-	__MCF_STD intptr_t	// 回调参数
+	MCF_STD intptr_t	// 回调参数
 );
 
 typedef struct MCF_tagHeapCallback {
 	MCF_HEAP_CALLBACK_PROC fnProc;
-	__MCF_STD intptr_t nContext;
+	MCF_STD intptr_t nContext;
 } MCF_HEAP_CALLBACK;
 
 extern void MCF_CRT_HeapSetCallback(

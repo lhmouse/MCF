@@ -16,27 +16,27 @@ extern unsigned long __MCF_CRT_ThreadInitialize(void) __MCF_NOEXCEPT;
 extern void __MCF_CRT_ThreadUninitialize(void) __MCF_NOEXCEPT;
 
 extern void *MCF_CRT_CreateThread(
-	unsigned int (*pfnProc)(__MCF_STD intptr_t),
-	__MCF_STD intptr_t nParam,
+	unsigned int (*pfnProc)(MCF_STD intptr_t),
+	MCF_STD intptr_t nParam,
 	unsigned long ulFlags,
 	unsigned long *pulThreadId
 ) __MCF_NOEXCEPT;
 
 extern int MCF_CRT_AtThreadExit(
-	void (*pfnProc)(__MCF_STD intptr_t),
-	__MCF_STD intptr_t nContext
+	void (*pfnProc)(MCF_STD intptr_t),
+	MCF_STD intptr_t nContext
 ) __MCF_NOEXCEPT;
 
 extern void *MCF_CRT_RetrieveTls(
-	__MCF_STD intptr_t nKey,
-	__MCF_STD size_t uSizeToAlloc,
-	int (*pfnConstructor)(void *, __MCF_STD intptr_t),
-	__MCF_STD intptr_t nParam,
+	MCF_STD intptr_t nKey,
+	MCF_STD size_t uSizeToAlloc,
+	int (*pfnConstructor)(void *, MCF_STD intptr_t),
+	MCF_STD intptr_t nParam,
 	void (*pfnDestructor)(void *)
 ) __MCF_NOEXCEPT;
 
 extern void MCF_CRT_DeleteTls(
-	__MCF_STD intptr_t nKey
+	MCF_STD intptr_t nKey
 ) __MCF_NOEXCEPT;
 
 __MCF_EXTERN_C_END

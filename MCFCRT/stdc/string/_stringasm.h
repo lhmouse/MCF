@@ -7,7 +7,7 @@
 
 #include "../../env/_crtdef.h"
 
-#if defined(__amd64__)
+#if defined(__x86_64__)
 
 #	define RAX		"rax"
 #	define RCX		"rcx"

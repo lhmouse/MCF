@@ -404,7 +404,7 @@ void Md5::Finalize(unsigned char (&abyOutput)[16]) noexcept {
 		if(xm_uBytesInChunk < sizeof(xm_abyFirstPart)){
 			std::memset(xm_abyChunk + xm_uBytesInChunk, 0, sizeof(xm_abyFirstPart) - xm_uBytesInChunk);
 		}
-		xm_uBitsTotal = xm_u64BytesTotal * CHAR_BIT;
+		xm_uBitsTotal = xm_u64BytesTotal * __CHAR_BIT__;
 		DoMd5Chunk(xm_auResult, xm_abyChunk);
 
 		xm_bInited = false;

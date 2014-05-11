@@ -8,7 +8,6 @@
 #include <type_traits>
 #include <cstddef>
 #include <cstdint>
-#include <climits>
 
 namespace MCF {
 
@@ -16,8 +15,8 @@ template<typename Underlying_t, Underlying_t ORIGIN = 0>
 class VarIntEx {
 	static_assert(std::is_arithmetic<Underlying_t>::value, "Underlying_t must be an arithmetic type.");
 
-	static_assert(CHAR_BIT == 8, "Not supported.");
-	static_assert(sizeof(std::uintmax_t) * CHAR_BIT <= 64, "Not supported.");
+	static_assert(__CHAR_BIT__ == 8, "Not supported.");
+	static_assert(sizeof(std::uintmax_t) * __CHAR_BIT__ <= 64, "Not supported.");
 
 private:
 	typedef typename std::make_unsigned<Underlying_t>::type xUnsigned;
@@ -25,7 +24,7 @@ private:
 private:
 	template<typename Test_t = Underlying_t>
 	static xUnsigned xZigZagEncode(typename std::enable_if<std::is_signed<Underlying_t>::value, Test_t>::type nValue) noexcept {
-		return ((xUnsigned)nValue << 1) ^ (xUnsigned)(nValue >> (sizeof(nValue) * CHAR_BIT - 1));
+		return ((xUnsigned)nValue << 1) ^ (xUnsigned)(nValue >> (sizeof(nValue) * __CHAR_BIT__ - 1));
 	}
 	template<typename Test_t = xUnsigned>
 	static Underlying_t xZigZagDecode(typename std::enable_if<std::is_signed<Underlying_t>::value, Test_t>::type uEncoded) noexcept {

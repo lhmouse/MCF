@@ -14,7 +14,7 @@ typedef struct MCF_tagAvlNodeHeader {
 	struct MCF_tagAvlNodeHeader **ppRefl;
 	struct MCF_tagAvlNodeHeader *pLeft;
 	struct MCF_tagAvlNodeHeader *pRight;
-	__MCF_STD size_t uHeight;
+	MCF_STD size_t uHeight;
 	struct MCF_tagAvlNodeHeader *pPrev;
 	struct MCF_tagAvlNodeHeader *pNext;
 } MCF_AVL_NODE_HEADER;
@@ -28,10 +28,10 @@ typedef int (*MCF_AVL_COMPARER_NODES)(
 );
 typedef int (*MCF_AVL_COMPARER_NODE_OTHER)(
 	const MCF_AVL_NODE_HEADER *,
-	__MCF_STD intptr_t
+	MCF_STD intptr_t
 );
 typedef int (*MCF_AVL_COMPARER_OTHER_NODE)(
-	__MCF_STD intptr_t,
+	MCF_STD intptr_t,
 	const MCF_AVL_NODE_HEADER *
 );
 
@@ -65,19 +65,19 @@ extern void MCF_AvlDetach(
 // A: 参考 strchr 函数。
 extern MCF_AVL_NODE_HEADER *MCF_AvlLowerBound(
 	const MCF_AVL_ROOT *ppRoot,
-	__MCF_STD intptr_t nOther,
+	MCF_STD intptr_t nOther,
 	MCF_AVL_COMPARER_NODE_OTHER pfnComparerNodeOther
 ) __MCF_NOEXCEPT;
 
 extern MCF_AVL_NODE_HEADER *MCF_AvlUpperBound(
 	const MCF_AVL_ROOT *ppRoot,
-	__MCF_STD intptr_t nOther,
+	MCF_STD intptr_t nOther,
 	MCF_AVL_COMPARER_OTHER_NODE pfnComparerOtherNode
 ) __MCF_NOEXCEPT;
 
 extern MCF_AVL_NODE_HEADER *MCF_AvlFind(
 	const MCF_AVL_ROOT *ppRoot,
-	__MCF_STD intptr_t nOther,
+	MCF_STD intptr_t nOther,
 	MCF_AVL_COMPARER_NODE_OTHER pfnComparerNodeOther,
 	MCF_AVL_COMPARER_OTHER_NODE pfnComparerOtherNode
 ) __MCF_NOEXCEPT;
@@ -86,7 +86,7 @@ extern void MCF_AvlEqualRange(
 	MCF_AVL_NODE_HEADER **ppBegin,
 	MCF_AVL_NODE_HEADER **ppEnd,
 	const MCF_AVL_ROOT *ppRoot,
-	__MCF_STD intptr_t nOther,
+	MCF_STD intptr_t nOther,
 	MCF_AVL_COMPARER_NODE_OTHER pfnComparerNodeOther,
 	MCF_AVL_COMPARER_OTHER_NODE pfnComparerOtherNode
 ) __MCF_NOEXCEPT;

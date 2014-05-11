@@ -9,7 +9,7 @@
 
 __MCF_EXTERN_C_BEGIN
 
-extern __MCF_STD size_t MCF_GetArgV(const wchar_t *const **pppwszArgV) __MCF_NOEXCEPT;
+extern MCF_STD size_t MCF_GetArgV(const wchar_t *const **pppwszArgV) __MCF_NOEXCEPT;
 
 __MCF_EXTERN_C_END
 

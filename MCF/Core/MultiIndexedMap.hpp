@@ -339,18 +339,22 @@ public:
 
 	template<std::size_t INDEX, typename... Params_t>
 	void SetIndex(Node *pNode, Params_t &&... vParams)
-		noexcept(std::is_nothrow_constructible<
-			typename std::tuple_element<INDEX, typename Node::xIndexTuple>::type,
-			Params_t...
-		>::value)
+		noexcept(
+			std::is_nothrow_constructible<
+				typename std::tuple_element<INDEX, typename Node::xIndexTuple>::type,
+				Params_t...
+			>::value &&
+			std::is_nothrow_move_assignable<
+				typename std::tuple_element<INDEX, typename Node::xIndexTuple>::type
+			>::value
+		)
 	{
-		typedef typename std::tuple_element<INDEX, typename Node::xIndexTuple>::type IndexType;
+		typename std::tuple_element<INDEX, typename Node::xIndexTuple>::type
+			vNewIndex(std::forward<Params_t>(vParams)...);
 
 		xDetach<INDEX>(pNode);
-		auto &vIndex = std::get<INDEX>(pNode->xm_vIndices);
 		try {
-			vIndex.~IndexType();
-			new(&vIndex) IndexType(std::forward<Params_t>(vParams)...);
+			std::get<INDEX>(pNode->xm_vIndices) = std::move(vNewIndex);
 			xAttach<INDEX>(pNode);
 		} catch(...){
 			xAttach<INDEX>(pNode);

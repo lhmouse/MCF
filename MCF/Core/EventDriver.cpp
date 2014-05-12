@@ -20,17 +20,6 @@ typedef MultiIndexedMap<HandlerList, WideString>			HandlerMap;
 const auto g_pLock	= CriticalSection::Create();
 HandlerMap g_mapHandlerList;
 
-HandlerList GetHandlerList(const WideStringObserver &wsoName) noexcept {
-	HandlerList vecHandlerList;
-	CRITICAL_SECTION_SCOPE(g_pLock){
-		const auto pNode = g_mapHandlerList.Find<0>(wsoName);
-		if(pNode){
-			vecHandlerList = pNode->GetElement();
-		}
-	}
-	return std::move(vecHandlerList);
-}
-
 class HandlerHolder : NO_COPY {
 private:
 	const WideString *xm_pwcsName;
@@ -97,7 +86,14 @@ std::shared_ptr<void> RegisterEventHandler(const WideStringObserver &wsoName, Ev
 	return std::make_shared<HandlerHolder>(wsoName, std::move(fnProc));
 }
 void TriggerEvent(const WideStringObserver &wsoName, std::uintptr_t uParam1, std::uintptr_t uParam2){
-	const auto vecHandlerList = GetHandlerList(wsoName);
+	HandlerList vecHandlerList;
+	CRITICAL_SECTION_SCOPE(g_pLock){
+		const auto pNode = g_mapHandlerList.Find<0>(wsoName);
+		if(pNode){
+			vecHandlerList = pNode->GetElement();
+		}
+	}
+
 	const auto ppfnBegin = vecHandlerList.GetBegin();
 	auto ppfnEnd = vecHandlerList.GetEnd();
 	while(ppfnEnd != ppfnBegin){

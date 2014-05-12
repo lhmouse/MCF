@@ -3,7 +3,7 @@
 // Copyleft 2014. LH_Mouse. All wrongs reserved.
 
 #include "../../env/_crtdef.h"
-#include "../string/_stringasm.h"
+#include "../string/_string_asm.h"
 
 size_t wcslen(const wchar_t *s){
 	register const wchar_t *rp = s;

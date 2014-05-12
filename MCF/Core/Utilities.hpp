@@ -174,23 +174,24 @@ inline int BComp(const Tx &vDst, const Ty &vSrc) noexcept {
 // CallOnEach
 //----------------------------------------------------------------------------
 template<typename Function_t>
-void CallOnEach(Function_t && /* fnCallable */){
-	// 空的。
+Function_t &&CallOnEach(Function_t &&fnCallable){
+	return std::forward<Function_t>(fnCallable);
 }
 template<typename Function_t, typename FirstParam_t, typename... Params_t>
-void CallOnEach(Function_t &&fnCallable, FirstParam_t &&vFirstParam, Params_t &&... vParams){
+Function_t &&CallOnEach(Function_t &&fnCallable, FirstParam_t &&vFirstParam, Params_t &&... vParams){
 	fnCallable(std::forward<FirstParam_t>(vFirstParam));
-	CallOnEach(std::forward<Function_t>(fnCallable), std::forward<Params_t>(vParams)...);
+	return CallOnEach(std::forward<Function_t>(fnCallable), std::forward<Params_t>(vParams)...);
 }
 
 template<typename Function_t>
-void CallOnEachBackward(Function_t && /* fnCallable */){
-	// 空的。
+Function_t &&CallOnEachBackward(Function_t &&fnCallable){
+	return std::forward<Function_t>(fnCallable);
 }
 template<typename Function_t, typename FirstParam_t, typename... Params_t>
-void CallOnEachBackward(Function_t &&fnCallable, FirstParam_t &&vFirstParam, Params_t &&... vParams){
-	CallOnEachBackward(std::forward<Function_t>(fnCallable), std::forward<Params_t>(vParams)...);
-	fnCallable(std::forward<FirstParam_t>(vFirstParam));
+Function_t &&CallOnEachBackward(Function_t &&fnCallable, FirstParam_t &&vFirstParam, Params_t &&... vParams){
+	auto &&fnNewCallable = CallOnEachBackward(std::forward<Function_t>(fnCallable), std::forward<Params_t>(vParams)...);
+	fnNewCallable(std::forward<FirstParam_t>(vFirstParam));
+	return std::forward<Function_t>(fnNewCallable);
 }
 
 //----------------------------------------------------------------------------
@@ -210,6 +211,38 @@ typename std::common_type<Tx, Ty>::type Max(Tx op1, Ty op2){
 	static_assert(std::is_signed<Tx>::value ^ !std::is_signed<Ty>::value, "MCF::Min(): Comparison between signed and unsigned integers.");
 
 	return std::max<typename std::common_type<Tx, Ty>::type>(op1, op2);
+}
+
+//----------------------------------------------------------------------------
+// Construct / Destruct
+//----------------------------------------------------------------------------
+namespace Impl {
+	struct DirectConstruct {
+	};
+}
+
+}
+
+// 我只能说 GCC 是个白痴！为什么要检查 placement new 的返回值是否为 nullptr？
+inline void *__attribute__((__returns_nonnull__)) operator new(std::size_t, void *p, const ::MCF::Impl::DirectConstruct &){
+	return p;
+}
+inline void operator delete(void *, void *, const ::MCF::Impl::DirectConstruct &) noexcept {
+}
+
+namespace MCF {
+
+template<typename Obj_t, typename... Params_t>
+inline Obj_t *__attribute__((__returns_nonnull__)) Construct(void *pObj, Params_t &&... vParams)
+	noexcept(std::is_nothrow_constructible<Obj_t, Params_t &&...>::value)
+{
+	return new(pObj, Impl::DirectConstruct()) Obj_t(std::forward<Params_t>(vParams)...);
+}
+template<typename Obj_t>
+inline void Destruct(Obj_t *pObj)
+	noexcept(std::is_nothrow_destructible<Obj_t>::value)
+{
+	pObj->~Obj_t();
 }
 
 }

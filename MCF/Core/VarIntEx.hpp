@@ -5,6 +5,7 @@
 #ifndef MCF_VAR_INT_EX_HPP_
 #define MCF_VAR_INT_EX_HPP_
 
+#include "Utilities.hpp"
 #include <type_traits>
 #include <cstddef>
 #include <cstdint>
@@ -15,8 +16,8 @@ template<typename Underlying_t, Underlying_t ORIGIN = 0>
 class VarIntEx {
 	static_assert(std::is_arithmetic<Underlying_t>::value, "Underlying_t must be an arithmetic type.");
 
-	static_assert(__CHAR_BIT__ == 8, "Not supported.");
-	static_assert(sizeof(std::uintmax_t) * __CHAR_BIT__ <= 64, "Not supported.");
+	static_assert(__CHAR_BIT__ == 8u, "Not supported.");
+	static_assert(sizeof(std::uintmax_t) * __CHAR_BIT__ <= 64u, "Not supported.");
 
 private:
 	typedef typename std::make_unsigned<Underlying_t>::type xUnsigned;
@@ -83,7 +84,7 @@ public:
 	const unsigned char *Unserialize(const unsigned char *pbyBegin, const unsigned char *pbyEnd) noexcept {
 		auto pbyRead = pbyBegin;
 		xUnsigned uEncoded = 0;
-		for(std::size_t i = 0; i < Min(4, sizeof(uEncoded)); ++i){
+		for(std::size_t i = 0; i < Min(4u, sizeof(uEncoded)); ++i){
 			if(pbyRead == pbyEnd){
 				return nullptr;
 			}

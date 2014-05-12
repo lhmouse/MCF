@@ -21,22 +21,6 @@ class VVector {
 	friend class VVector;
 
 private:
-	template<typename Test_t = Element_t, typename... Params_t>
-	static inline void xConstruct(
-		typename std::enable_if<std::is_trivial<Element_t>::value && std::is_copy_assignable<Element_t>::value, Test_t>::type *pRaw,
-		Params_t &&... vParams
-	) noexcept {
-		*pRaw = Element_t(std::forward<Params_t>(vParams)...);
-	}
-	template<typename Test_t = Element_t, typename... Params_t>
-	static inline void xConstruct(
-		typename std::enable_if<!(std::is_trivial<Element_t>::value && std::is_copy_assignable<Element_t>::value), Test_t>::type *pRaw,
-		Params_t &&... vParams
-	) noexcept(std::is_nothrow_constructible<Element_t, Params_t &&...>::value) {
-		new(pRaw) Element_t(std::forward<Params_t>(vParams)...);
-	}
-
-private:
 	Element_t *xm_pBegin;
 	Element_t *xm_pEnd;
 
@@ -245,21 +229,21 @@ public:
 			auto pWrite = pNewBegin;
 			try {
 				while(pRead != pOldEnd){
-					xConstruct(pWrite, std::move_if_noexcept(*pRead));
+					Construct<Element_t>(pWrite, std::move_if_noexcept(*pRead));
 					++pWrite;
 					++pRead;
 				}
 			} catch(...){
 				while(pWrite != pNewBegin){
 					--pWrite;
-					pWrite->~Element_t();
+					Destruct(pWrite);
 				}
 				::operator delete(pNewBegin);
 				throw;
 			}
 			while(pRead != pOldBegin){
 				--pRead;
-				pRead->~Element_t();
+				Destruct(pRead);
 			}
 
 			if(xm_pBegin != (Element_t *)std::begin(xm_aSmall)){
@@ -277,13 +261,13 @@ public:
 	{
 		ASSERT_MSG(GetSize() < GetCapacity(), L"容器已满。");
 
-		xConstruct(xm_pEnd, std::forward<Params_t>(vParams)...);
+		Construct<Element_t>(xm_pEnd, std::forward<Params_t>(vParams)...);
 		return *(xm_pEnd++);
 	}
 	void PopNoCheck() noexcept {
 		ASSERT_MSG(!IsEmpty(), L"容器为空。");
 
-		(--xm_pEnd)->~Element_t();
+		Destruct(--xm_pEnd);
 	}
 
 	template<typename... Params_t>
@@ -559,21 +543,21 @@ public:
 			auto pWrite = pNewBegin;
 			try {
 				while(pRead != pOldEnd){
-					VVector<Element_t, 1>::xConstruct(pWrite, std::move_if_noexcept(*pRead));
+					Construct<Element_t>(pWrite, std::move_if_noexcept(*pRead));
 					++pWrite;
 					++pRead;
 				}
 			} catch(...){
 				while(pWrite != pNewBegin){
 					--pWrite;
-					pWrite->~Element_t();
+					Destruct(pWrite);
 				}
 				::operator delete(pNewBegin);
 				throw;
 			}
 			while(pRead != pOldBegin){
 				--pRead;
-				pRead->~Element_t();
+				Destruct(pRead);
 			}
 
 			::operator delete(xm_pBegin);
@@ -589,13 +573,13 @@ public:
 	{
 		ASSERT_MSG(GetSize() < GetCapacity(), L"容器已满。");
 
-		VVector<Element_t, 1>::xConstruct(xm_pEnd, std::forward<Params_t>(vParams)...);
+		Construct<Element_t>(xm_pEnd, std::forward<Params_t>(vParams)...);
 		return *(xm_pEnd++);
 	}
 	void PopNoCheck() noexcept {
 		ASSERT_MSG(!IsEmpty(), L"容器为空。");
 
-		(--xm_pEnd)->~Element_t();
+		Destruct(--xm_pEnd);
 	}
 
 	template<typename... Params_t>

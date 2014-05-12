@@ -2,8 +2,8 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2014. LH_Mouse. All wrongs reserved.
 
-#ifndef MCF_CRT_STRINGASM_H_
-#define MCF_CRT_STRINGASM_H_
+#ifndef MCF_CRT_STRING_ASM_H_
+#define MCF_CRT_STRING_ASM_H_
 
 #include "../../env/_crtdef.h"
 

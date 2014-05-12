@@ -3,7 +3,7 @@
 // Copyleft 2014. LH_Mouse. All wrongs reserved.
 
 #include "../../env/_crtdef.h"
-#include "_stringasm.h"
+#include "_string_asm.h"
 
 void *memset(void *dst, int ch, size_t cb){
 	uintptr_t unused;

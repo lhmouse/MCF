@@ -3,7 +3,7 @@
 // Copyleft 2014. LH_Mouse. All wrongs reserved.
 
 #include "../../env/_crtdef.h"
-#include "../string/_stringasm.h"
+#include "../string/_string_asm.h"
 
 wchar_t *wmemset(wchar_t *dst, wchar_t ch, size_t cnt){
 	uintptr_t unused;

@@ -7,7 +7,7 @@
 
 #include "../../MCFCRT/ext/ext_include.h"
 #include "../../MCFCRT/env/bail.h"
-#include <new>
+#include "Utilities.hpp"
 #include <utility>
 #include <cstddef>
 
@@ -43,8 +43,8 @@ private:
 			}
 
 			if(pNode && (pNode->xDropRef())){
-				pNode->~xSharedNode();
-				new(pNode) xSharedNode(hObj);
+				Destruct(pNode);
+				Construct<xSharedNode>(pNode, hObj);
 				return pNode;
 			}
 			xSharedNode *pNewNode;

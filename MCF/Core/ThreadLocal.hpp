@@ -8,7 +8,6 @@
 #include "../../MCFCRT/env/thread.h"
 #include "../../MCFCRT/env/bail.h"
 #include "Utilities.hpp"
-#include <new>
 #include <tuple>
 #include <type_traits>
 #include <exception>
@@ -18,7 +17,7 @@ namespace MCF {
 
 template<class Object_t, class... InitParams_t>
 class ThreadLocal {
-	static_assert(noexcept(NullRef<Object_t>().~Object_t()), "Object_t must be nothrow destructible.");
+	static_assert(std::is_nothrow_destructible<Object_t>::value, "Object_t must be nothrow destructible.");
 
 private:
 	typedef std::pair<const ThreadLocal *, std::exception_ptr> xCtorWrapperContext;
@@ -38,7 +37,7 @@ private:
 		const std::tuple<InitParams_t...> &,
 		const Unpacked_t &...vUnpacked
 	) noexcept(std::is_nothrow_constructible<Object_t, InitParams_t...>::value){
-		new(pObj) Object_t(vUnpacked...);
+		Construct<Object_t>(pObj, vUnpacked...);
 	}
 
 	static int xCtorWrapper(void *pObj, std::intptr_t nParam) noexcept {
@@ -52,7 +51,7 @@ private:
 		}
 	}
 	static void xDtorWrapper(void *pObj) noexcept {
-		((Object_t *)pObj)->~Object_t();
+		Destruct((Object_t *)pObj);
 	}
 
 private:

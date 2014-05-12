@@ -3,7 +3,7 @@
 // Copyleft 2014. LH_Mouse. All wrongs reserved.
 
 #include "../../env/_crtdef.h"
-#include "_stringasm.h"
+#include "_string_asm.h"
 
 void *memcpy(void *restrict dst, const void *restrict src, size_t cb){
 	uintptr_t unused;

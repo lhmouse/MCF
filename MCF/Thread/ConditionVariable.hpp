@@ -1,0 +1,29 @@
+// 这个文件是 MCF 的一部分。
+// 有关具体授权说明，请参阅 MCFLicense.txt。
+// Copyleft 2014. LH_Mouse. All wrongs reserved.
+
+#ifndef MCF_CONDITION_VARIABLE_HPP_
+#define MCF_CONDITION_VARIABLE_HPP_
+
+#include "../Core/Utilities.hpp"
+#include "../Core/StringObserver.hpp"
+#include <memory>
+
+namespace MCF {
+
+class CriticalSection;
+
+class ConditionVariable : NO_COPY, ABSTRACT {
+public:
+	static std::unique_ptr<ConditionVariable> Create();
+
+public:
+	bool WaitTimeout(CriticalSection &csLock, unsigned long ulMilliSeconds) noexcept;
+	void Wait(CriticalSection &csLock) noexcept;
+	void Signal() noexcept;
+	void Broadcast() noexcept;
+};
+
+}
+
+#endif

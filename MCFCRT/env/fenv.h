@@ -9,7 +9,7 @@
 
 __MCF_EXTERN_C_BEGIN
 
-extern void __MCF_CRT_FEnvInitialize(void) __MCF_NOEXCEPT;
+extern void __MCF_CRT_FEnvInitialize(void) MCF_NOEXCEPT;
 
 __MCF_EXTERN_C_END
 

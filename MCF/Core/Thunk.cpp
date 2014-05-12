@@ -5,8 +5,8 @@
 #include "../StdMCF.hpp"
 #include "Thunk.hpp"
 #include "Utilities.hpp"
-#include "CriticalSection.hpp"
 #include "MultiIndexedMap.hpp"
+#include "../Thread/CriticalSection.hpp"
 #include <memory>
 #include <exception>
 using namespace MCF;
@@ -30,7 +30,7 @@ struct ThunkDeallocator {
 	void operator()(const void *pThunk) const noexcept {
 		ASSERT_NOEXCEPT_BEGIN
 		{
-			CRITICAL_SECTION_SCOPE(g_pcsLock){
+			MCF_CRIT_SECT_SCOPE(g_pcsLock){
 				auto pCurrentThunk = g_mapThunks.Find<0>(pThunk);
 				ASSERT(pCurrentThunk && (pCurrentThunk->GetIndex<1>() == 0));
 
@@ -105,7 +105,7 @@ std::shared_ptr<const void> AllocateThunk(const void *pInit, std::size_t uSize){
 
 	std::shared_ptr<const void> pThunk;
 
-	CRITICAL_SECTION_SCOPE(g_pcsLock){
+	MCF_CRIT_SECT_SCOPE(g_pcsLock){
 		if(g_uPageOffsetBits == 0){
 			SYSTEM_INFO vSystemInfo;
 			::GetSystemInfo(&vSystemInfo);

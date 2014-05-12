@@ -14,13 +14,13 @@ namespace {
 
 class TcpPeerDelegate : CONCRETE(TcpPeer) {
 private:
-	WSAInitializer xm_vWSAInitializer;
+	Impl::WSAInitializer xm_vWSAInitializer;
 
-	UniqueSocket xm_sockPeer;
+	Impl::UniqueSocket xm_sockPeer;
 	PeerInfo xm_vPeerInfo;
 
 public:
-	TcpPeerDelegate(UniqueSocket &&sockPeer, const void *pSockAddr, std::size_t uSockAddrSize)
+	TcpPeerDelegate(Impl::UniqueSocket &&sockPeer, const void *pSockAddr, std::size_t uSockAddrSize)
 		: xm_sockPeer(std::move(sockPeer))
 		, xm_vPeerInfo(pSockAddr, uSockAddrSize)
 	{
@@ -96,7 +96,7 @@ namespace MCF {
 
 namespace Impl {
 	std::unique_ptr<TcpPeer> TcpPeerFromSocket(
-		UniqueSocket vSocket,
+		Impl::UniqueSocket vSocket,
 		const void *pSockAddr,
 		std::size_t uSockAddrSize
 	){
@@ -108,11 +108,11 @@ namespace Impl {
 
 // 静态成员函数。
 std::unique_ptr<TcpPeer> TcpPeer::Connect(const PeerInfo &vServerInfo){
-	WSAInitializer vWSAInitializer;
+	Impl::WSAInitializer vWSAInitializer;
 
 	const short shFamily = vServerInfo.IsIPv4() ? AF_INET : AF_INET6;
 
-	UniqueSocket sockServer(::socket(shFamily, SOCK_STREAM, IPPROTO_TCP));
+	Impl::UniqueSocket sockServer(::socket(shFamily, SOCK_STREAM, IPPROTO_TCP));
 	if(!sockServer){
 		MCF_THROW(::GetLastError(), L"::socket() 失败。");
 	}

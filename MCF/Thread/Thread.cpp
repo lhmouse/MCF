@@ -4,9 +4,8 @@
 
 #include "../StdMCF.hpp"
 #include "Thread.hpp"
-#include "Exception.hpp"
-#include "UniqueHandle.hpp"
-#include <exception>
+#include "../Core/Exception.hpp"
+#include "../Core/UniqueHandle.hpp"
 using namespace MCF;
 
 namespace {

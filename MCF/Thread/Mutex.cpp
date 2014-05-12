@@ -4,8 +4,8 @@
 
 #include "../StdMCF.hpp"
 #include "Mutex.hpp"
-#include "Exception.hpp"
-#include "UniqueHandle.hpp"
+#include "../Core/Exception.hpp"
+#include "../Core/UniqueHandle.hpp"
 using namespace MCF;
 
 namespace {
@@ -55,13 +55,10 @@ std::unique_ptr<Mutex> Mutex::Create(const WideStringObserver &wsoName){
 }
 
 // 其他非静态成员函数。
-bool Mutex::Try(unsigned long ulMilliSeconds) noexcept {
+void Mutex::Lock() noexcept {
 	ASSERT(dynamic_cast<MutexDelegate *>(this));
 
-	return ((MutexDelegate *)this)->WaitTimeout(ulMilliSeconds);
-}
-void Mutex::Lock() noexcept {
-	Try(INFINITE);
+	((MutexDelegate *)this)->WaitTimeout(INFINITE);
 }
 void Mutex::Unlock() noexcept {
 	ASSERT(dynamic_cast<MutexDelegate *>(this));

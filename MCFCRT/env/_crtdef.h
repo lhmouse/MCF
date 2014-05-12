@@ -9,29 +9,29 @@
 #	include <cstddef>
 #	include <cstdint>
 #	include <climits>
-#	include <cstdbool>
 #else
 #	include <stddef.h>
 #	include <stdint.h>
 #	include <limits.h>
 #	include <stdbool.h>
+#	include <stdalign.h>
 #endif
 
 #ifdef __cplusplus
-#	define __MCF_EXTERN_C_BEGIN	extern "C" {
+#	define __MCF_EXTERN_C_BEGIN		extern "C" {
 #	define __MCF_EXTERN_C_END		}
-#	define MCF_STD				::std::
-#	define __MCF_NOEXCEPT			noexcept
+#	define MCF_STD					::std::
+#	define MCF_NOEXCEPT				noexcept
 #else
 #	define __MCF_EXTERN_C_BEGIN
 #	define __MCF_EXTERN_C_END
 #	define MCF_STD
-#	define __MCF_NOEXCEPT
+#	define MCF_NOEXCEPT
 #endif
 
 // C++11 目前还不支持 C99 的 restrict 限定符。
 #ifdef __cplusplus
-#	define restrict				__restrict__
+#	define restrict		__restrict__
 #endif
 
 #endif

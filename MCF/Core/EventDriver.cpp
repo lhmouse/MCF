@@ -4,10 +4,10 @@
 
 #include "../StdMCF.hpp"
 #include "EventDriver.hpp"
-#include "CriticalSection.hpp"
 #include "MultiIndexedMap.hpp"
 #include "VVector.hpp"
 #include "Utilities.hpp"
+#include "../Thread/CriticalSection.hpp"
 #include <memory>
 using namespace MCF;
 
@@ -27,7 +27,7 @@ private:
 
 public:
 	HandlerHolder(const WideStringObserver &wsoName, EventHandlerProc &&fnProc){
-		CRITICAL_SECTION_SCOPE(g_pLock){
+		MCF_CRIT_SECT_SCOPE(g_pLock){
 			auto pNode = g_mapHandlerList.Find<0>(wsoName);
 			if(!pNode){
 				pNode = g_mapHandlerList.Insert(HandlerList(), wsoName);
@@ -43,7 +43,7 @@ public:
 	~HandlerHolder() noexcept {
 		ASSERT_NOEXCEPT_BEGIN
 		{
-			CRITICAL_SECTION_SCOPE(g_pLock){
+			MCF_CRIT_SECT_SCOPE(g_pLock){
 				auto pNode = g_mapHandlerList.Find<0>(*xm_pwcsName);
 				ASSERT(pNode);
 
@@ -87,7 +87,7 @@ std::shared_ptr<void> RegisterEventHandler(const WideStringObserver &wsoName, Ev
 }
 void TriggerEvent(const WideStringObserver &wsoName, std::uintptr_t uParam1, std::uintptr_t uParam2){
 	HandlerList vecHandlerList;
-	CRITICAL_SECTION_SCOPE(g_pLock){
+	MCF_CRIT_SECT_SCOPE(g_pLock){
 		const auto pNode = g_mapHandlerList.Find<0>(wsoName);
 		if(pNode){
 			vecHandlerList = pNode->GetElement();

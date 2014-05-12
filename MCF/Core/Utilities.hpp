@@ -112,6 +112,9 @@ namespace Impl {
 #define FORCE_NOEXCEPT_END	\
 	}();
 
+#define FORCE_NOEXCEPT(expr)	\
+	do { FORCE_NOEXCEPT_BEGIN { expr; } FORCE_NOEXCEPT_END } while(false)
+
 //----------------------------------------------------------------------------
 // NullRef
 //----------------------------------------------------------------------------

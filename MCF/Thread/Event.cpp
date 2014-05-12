@@ -4,8 +4,8 @@
 
 #include "../StdMCF.hpp"
 #include "Event.hpp"
-#include "Exception.hpp"
-#include "UniqueHandle.hpp"
+#include "../Core/Exception.hpp"
+#include "../Core/UniqueHandle.hpp"
 using namespace MCF;
 
 namespace {

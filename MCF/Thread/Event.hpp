@@ -5,8 +5,8 @@
 #ifndef MCF_EVENT_HPP_
 #define MCF_EVENT_HPP_
 
-#include "Utilities.hpp"
-#include "StringObserver.hpp"
+#include "../Core/Utilities.hpp"
+#include "../Core/StringObserver.hpp"
 #include <memory>
 
 namespace MCF {

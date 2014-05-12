@@ -5,7 +5,7 @@
 #ifndef MCF_THREAD_HPP_
 #define MCF_THREAD_HPP_
 
-#include "Utilities.hpp"
+#include "../Core/Utilities.hpp"
 #include <functional>
 #include <memory>
 #include <cstddef>

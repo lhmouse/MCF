@@ -5,11 +5,11 @@
 #include "../StdMCF.hpp"
 #include "TcpServer.hpp"
 #include "TcpPeer.hpp"
-#include "../Core/Thread.hpp"
 #include "../Core/Exception.hpp"
 #include "../Core/Utilities.hpp"
-#include "../Core/Event.hpp"
-#include "../Core/CriticalSection.hpp"
+#include "../Thread/Thread.hpp"
+#include "../Thread/CriticalSection.hpp"
+#include "../Thread/ConditionVariable.hpp"
 #include "_SocketUtils.hpp"
 #include <deque>
 using namespace MCF;
@@ -18,7 +18,7 @@ namespace MCF {
 
 namespace Impl {
 	extern std::unique_ptr<TcpPeer> TcpPeerFromSocket(
-		UniqueSocket vSocket,
+		Impl::UniqueSocket vSocket,
 		const void *pSockAddr,
 		std::size_t uSockAddrSize
 	);
@@ -29,28 +29,28 @@ namespace Impl {
 namespace {
 
 struct ClientInfo {
-	UniqueSocket sockClient;
+	Impl::UniqueSocket sockClient;
 	SOCKADDR_STORAGE vSockAddr;
 	int nSockAddrSize;
 };
 
 class TcpServerDelegate : CONCRETE(TcpServer) {
 private:
-	WSAInitializer xm_vWSAInitializer;
+	Impl::WSAInitializer xm_vWSAInitializer;
 
-	UniqueSocket xm_sockListen;
+	Impl::UniqueSocket xm_sockListen;
 	volatile bool xm_bStopNow;
 	std::shared_ptr<Thread> xm_pthrdListener;
 
 	const std::unique_ptr<CriticalSection> xm_pcsQueueLock;
 	std::deque<ClientInfo> xm_deqClients;
-	const std::unique_ptr<Event> xm_pevnPeersAvailable;
+	const std::unique_ptr<ConditionVariable> xm_pcondPeersAvailable;
 
 public:
 	explicit TcpServerDelegate(const PeerInfo &vBoundOnto)
-		: xm_bStopNow			(false)
-		, xm_pcsQueueLock		(CriticalSection::Create())
-		, xm_pevnPeersAvailable	(Event::Create(false))
+		: xm_bStopNow				(false)
+		, xm_pcsQueueLock			(CriticalSection::Create())
+		, xm_pcondPeersAvailable	(ConditionVariable::Create())
 	{
 		static const DWORD TRUE_VALUE	= 1;
 		static const DWORD FALSE_VALUE	= 0;
@@ -123,9 +123,9 @@ private:
 					continue;
 				}
 
-				CRITICAL_SECTION_SCOPE(xm_pcsQueueLock){
+				MCF_CRIT_SECT_SCOPE(xm_pcsQueueLock){
 					xm_deqClients.emplace_back(std::move(vClient));
-					xm_pevnPeersAvailable->Set();
+					xm_pcondPeersAvailable->Signal();
 				}
 				ulSleepTime = 0;
 			} catch(...){
@@ -138,33 +138,30 @@ public:
 		ClientInfo vClient;
 		const auto ulWaitUntil = ::GetTickCount() + ulMilliSeconds;
 		unsigned long ulTimeToWait = ulMilliSeconds;
-		for(;;){
-			if(!xm_pevnPeersAvailable->WaitTimeout(ulTimeToWait)){
-				break;
-			}
-			CRITICAL_SECTION_SCOPE(xm_pcsQueueLock){
-				switch(xm_deqClients.size()){
-				case 1:
-					xm_pevnPeersAvailable->Clear();
-				default:
-					vClient = std::move(xm_deqClients.front());
-					xm_deqClients.pop_front();
-				case 0:
+
+		MCF_CRIT_SECT_SCOPE(xm_pcsQueueLock){
+			for(;;){
+				if(!xm_pcondPeersAvailable->WaitTimeout(*xm_pcsQueueLock, ulTimeToWait)){
 					break;
 				}
+				if(!xm_deqClients.empty()){
+					vClient = std::move(xm_deqClients.front());
+					xm_deqClients.pop_front();
+					if(vClient.sockClient){
+						break;
+					}
+				}
+				if(__atomic_load_n(&xm_bStopNow, __ATOMIC_ACQUIRE)){
+					break;
+				}
+				const auto ulCurrent = ::GetTickCount();
+				if(ulWaitUntil <= ulCurrent){
+					break;
+				}
+				ulTimeToWait = ulWaitUntil - ulCurrent;
 			}
-			if(vClient.sockClient){
-				break;
-			}
-			if(__atomic_load_n(&xm_bStopNow, __ATOMIC_ACQUIRE)){
-				break;
-			}
-			const auto ulCurrent = ::GetTickCount();
-			if(ulWaitUntil <= ulCurrent){
-				break;
-			}
-			ulTimeToWait = ulWaitUntil - ulCurrent;
 		}
+
 		return std::move(vClient);
 	}
 };

@@ -37,29 +37,29 @@ typedef int (*MCF_AVL_COMPARER_OTHER_NODE)(
 
 static inline MCF_AVL_NODE_HEADER *MCF_AvlPrev(
 	const MCF_AVL_NODE_HEADER *pNode
-) __MCF_NOEXCEPT {
+) MCF_NOEXCEPT {
 	return pNode->pPrev;
 }
 static inline MCF_AVL_NODE_HEADER *MCF_AvlNext(
 	const MCF_AVL_NODE_HEADER *pNode
-) __MCF_NOEXCEPT {
+) MCF_NOEXCEPT {
 	return pNode->pNext;
 }
 
 extern void MCF_AvlSwap(
 	MCF_AVL_ROOT *ppRoot1,
 	MCF_AVL_ROOT *ppRoot2
-) __MCF_NOEXCEPT;
+) MCF_NOEXCEPT;
 
 extern void MCF_AvlAttach(
 	MCF_AVL_ROOT *ppRoot,
 	MCF_AVL_NODE_HEADER *pNode,
 	MCF_AVL_COMPARER_NODES pfnComparer
-) __MCF_NOEXCEPT;
+) MCF_NOEXCEPT;
 
 extern void MCF_AvlDetach(
 	const MCF_AVL_NODE_HEADER *pNode
-) __MCF_NOEXCEPT;
+) MCF_NOEXCEPT;
 
 // Q: 为什么这里是 const MCF_AVL_NODE_HEADER * 而不是 MCF_AVL_NODE_HEADER * 呢？
 // A: 参考 strchr 函数。
@@ -67,20 +67,20 @@ extern MCF_AVL_NODE_HEADER *MCF_AvlLowerBound(
 	const MCF_AVL_ROOT *ppRoot,
 	MCF_STD intptr_t nOther,
 	MCF_AVL_COMPARER_NODE_OTHER pfnComparerNodeOther
-) __MCF_NOEXCEPT;
+) MCF_NOEXCEPT;
 
 extern MCF_AVL_NODE_HEADER *MCF_AvlUpperBound(
 	const MCF_AVL_ROOT *ppRoot,
 	MCF_STD intptr_t nOther,
 	MCF_AVL_COMPARER_OTHER_NODE pfnComparerOtherNode
-) __MCF_NOEXCEPT;
+) MCF_NOEXCEPT;
 
 extern MCF_AVL_NODE_HEADER *MCF_AvlFind(
 	const MCF_AVL_ROOT *ppRoot,
 	MCF_STD intptr_t nOther,
 	MCF_AVL_COMPARER_NODE_OTHER pfnComparerNodeOther,
 	MCF_AVL_COMPARER_OTHER_NODE pfnComparerOtherNode
-) __MCF_NOEXCEPT;
+) MCF_NOEXCEPT;
 
 extern void MCF_AvlEqualRange(
 	MCF_AVL_NODE_HEADER **ppBegin,
@@ -89,7 +89,7 @@ extern void MCF_AvlEqualRange(
 	MCF_STD intptr_t nOther,
 	MCF_AVL_COMPARER_NODE_OTHER pfnComparerNodeOther,
 	MCF_AVL_COMPARER_OTHER_NODE pfnComparerOtherNode
-) __MCF_NOEXCEPT;
+) MCF_NOEXCEPT;
 
 __MCF_EXTERN_C_END
 

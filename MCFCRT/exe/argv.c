@@ -60,9 +60,11 @@ size_t MCF_GetArgV(const wchar_t *const **pppwszArgV){
 					QUOTE_AFTER_QUOTE,
 					FINISH
 				} eState = DELIM;
+
 				const wchar_t *pwcRead = g_pwszArgBuffer;
 				wchar_t *pwcBegin = g_pwszArgBuffer;
 				wchar_t *pwcWrite = g_pwszArgBuffer;
+
 				for(;;){
 					const wchar_t ch = *(pwcRead++);
 					if(ch == 0){

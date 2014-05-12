@@ -4,7 +4,7 @@
 
 #include "../StdMCF.hpp"
 #include "CriticalSection.hpp"
-#include "Exception.hpp"
+#include "../Core/Exception.hpp"
 using namespace MCF;
 
 namespace {
@@ -26,9 +26,6 @@ public:
 	}
 
 public:
-	bool Try() noexcept {
-		return ::TryEnterCriticalSection(&xm_vCriticalSecion);
-	}
 	void Enter() noexcept {
 		::EnterCriticalSection(&xm_vCriticalSecion);
 	}
@@ -45,11 +42,6 @@ std::unique_ptr<CriticalSection> CriticalSection::Create(unsigned long ulSpinCou
 }
 
 // 其他非静态成员函数。
-bool CriticalSection::Try() noexcept {
-	ASSERT(dynamic_cast<CriticalSectionDelegate *>(this));
-
-	return ((CriticalSectionDelegate *)this)->Try();
-}
 void CriticalSection::Lock() noexcept {
 	ASSERT(dynamic_cast<CriticalSectionDelegate *>(this));
 

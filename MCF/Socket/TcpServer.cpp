@@ -131,7 +131,9 @@ private:
 			} catch(...){
 			}
 		}
-		xm_pcondPeersAvailable->Broadcast();
+		MCF_CRIT_SECT_SCOPE(xm_pcsQueueLock){
+			xm_pcondPeersAvailable->Broadcast();
+		}
 	}
 
 public:

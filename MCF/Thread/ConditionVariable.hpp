@@ -8,6 +8,7 @@
 #include "../Core/Utilities.hpp"
 #include "../Core/StringObserver.hpp"
 #include <memory>
+#include <functional>
 
 namespace MCF {
 
@@ -20,7 +21,7 @@ public:
 public:
 	bool WaitTimeout(CriticalSection &csLock, unsigned long ulMilliSeconds) noexcept;
 	void Wait(CriticalSection &csLock) noexcept;
-	void Signal() noexcept;
+	void Signal(std::size_t uCount = 1) noexcept;
 	void Broadcast() noexcept;
 };
 

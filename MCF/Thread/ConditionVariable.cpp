@@ -47,18 +47,20 @@ public:
 		csLock.Lock();
 		return bResult;
 	}
-	void Signal() noexcept {
+	void Signal(std::size_t uCount) noexcept {
 		std::size_t uOldWaiterCount = __atomic_load_n(&xm_uWaiterCount, __ATOMIC_RELAXED);
+		std::size_t uCountToSignal;
 		do {
-			if(uOldWaiterCount == 0){
+			uCountToSignal = std::min(uCount, uOldWaiterCount);
+			if(uCountToSignal == 0){
 				return;
 			}
-		} while(!__atomic_compare_exchange_n(&xm_uWaiterCount, &uOldWaiterCount, uOldWaiterCount - 1, false, __ATOMIC_RELAXED, __ATOMIC_RELAXED));
+		} while(!__atomic_compare_exchange_n(&xm_uWaiterCount, &uOldWaiterCount, uOldWaiterCount - uCountToSignal, false, __ATOMIC_RELAXED, __ATOMIC_RELAXED));
 
-		::ReleaseSemaphore(xm_hSemaphore.Get(), 1, nullptr);
+		::ReleaseSemaphore(xm_hSemaphore.Get(), (long)uCountToSignal, nullptr);
 	}
 	void Broadcast() noexcept {
-		::ReleaseSemaphore(xm_hSemaphore.Get(), (LONG)__atomic_exchange_n(&xm_uWaiterCount, 0, __ATOMIC_RELAXED), nullptr);
+		::ReleaseSemaphore(xm_hSemaphore.Get(), (long)__atomic_exchange_n(&xm_uWaiterCount, 0, __ATOMIC_RELAXED), nullptr);
 	}
 };
 
@@ -78,10 +80,10 @@ bool ConditionVariable::WaitTimeout(CriticalSection &csLock, unsigned long ulMil
 void ConditionVariable::Wait(CriticalSection &csLock) noexcept {
 	WaitTimeout(csLock, INFINITE);
 }
-void ConditionVariable::Signal() noexcept {
+void ConditionVariable::Signal(std::size_t uCount) noexcept {
 	ASSERT(dynamic_cast<ConditionVariableDelegate *>(this));
 
-	((ConditionVariableDelegate *)this)->Signal();
+	((ConditionVariableDelegate *)this)->Signal(uCount);
 }
 void ConditionVariable::Broadcast() noexcept {
 	ASSERT(dynamic_cast<ConditionVariableDelegate *>(this));

@@ -43,8 +43,8 @@ private:
 	std::shared_ptr<Thread> xm_pthrdListener;
 
 	const std::unique_ptr<CriticalSection> xm_pcsQueueLock;
-	std::deque<ClientInfo> xm_deqClients;
 	const std::unique_ptr<ConditionVariable> xm_pcondPeersAvailable;
+	std::deque<ClientInfo> xm_deqClients;
 
 public:
 	explicit TcpServerDelegate(const PeerInfo &vBoundOnto)
@@ -131,37 +131,53 @@ private:
 			} catch(...){
 			}
 		}
+		xm_pcondPeersAvailable->Broadcast();
 	}
 
 public:
 	ClientInfo GetClientTimeout(unsigned long ulMilliSeconds) noexcept {
 		ClientInfo vClient;
-		const auto ulWaitUntil = ::GetTickCount() + ulMilliSeconds;
-		unsigned long ulTimeToWait = ulMilliSeconds;
-
-		MCF_CRIT_SECT_SCOPE(xm_pcsQueueLock){
-			for(;;){
-				if(!xm_pcondPeersAvailable->WaitTimeout(*xm_pcsQueueLock, ulTimeToWait)){
-					break;
-				}
-				if(!xm_deqClients.empty()){
-					vClient = std::move(xm_deqClients.front());
-					xm_deqClients.pop_front();
-					if(vClient.sockClient){
+		if(ulMilliSeconds == INFINITE){
+			MCF_CRIT_SECT_SCOPE(xm_pcsQueueLock){
+				for(;;){
+					if(!xm_deqClients.empty()){
+						vClient = std::move(xm_deqClients.front());
+						xm_deqClients.pop_front();
 						break;
 					}
+					if(__atomic_load_n(&xm_bStopNow, __ATOMIC_ACQUIRE)){
+						break;
+					}
+
+					xm_pcondPeersAvailable->Wait(*xm_pcsQueueLock);
 				}
-				if(__atomic_load_n(&xm_bStopNow, __ATOMIC_ACQUIRE)){
-					break;
+			}
+		} else {
+			const auto ulWaitUntil = ::GetTickCount() + ulMilliSeconds;
+			unsigned long ulTimeToWait = ulMilliSeconds;
+
+			MCF_CRIT_SECT_SCOPE(xm_pcsQueueLock){
+				for(;;){
+					if(!xm_deqClients.empty()){
+						vClient = std::move(xm_deqClients.front());
+						xm_deqClients.pop_front();
+						break;
+					}
+					if(__atomic_load_n(&xm_bStopNow, __ATOMIC_ACQUIRE)){
+						break;
+					}
+
+					if(!xm_pcondPeersAvailable->WaitTimeout(*xm_pcsQueueLock, ulTimeToWait)){
+						break;
+					}
+					const auto ulCurrent = ::GetTickCount();
+					if(ulWaitUntil <= ulCurrent){
+						break;
+					}
+					ulTimeToWait = ulWaitUntil - ulCurrent;
 				}
-				const auto ulCurrent = ::GetTickCount();
-				if(ulWaitUntil <= ulCurrent){
-					break;
-				}
-				ulTimeToWait = ulWaitUntil - ulCurrent;
 			}
 		}
-
 		return std::move(vClient);
 	}
 };

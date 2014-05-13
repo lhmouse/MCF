@@ -278,11 +278,7 @@ public:
 	void Pop() noexcept {
 		ASSERT(!IsEmpty());
 
-		ASSERT_NOEXCEPT_BEGIN
-		{
-			PopNoCheck();
-		}
-		ASSERT_NOEXCEPT_END
+		PopNoCheck();
 	}
 
 	template<typename... Params_t>
@@ -621,13 +617,11 @@ public:
 		}
 	}
 
-	void Swap(VVector &rhs)
-		noexcept(std::is_nothrow_move_constructible<Element_t>::value)
-	{
+	void Swap(VVector &rhs) noexcept {
 		if(this != &rhs){
-			VVector vecTemp(std::move_if_noexcept(*this));
-			*this = std::move_if_noexcept(rhs);
-			rhs = std::move_if_noexcept(vecTemp);
+			std::swap(xm_pBegin,		rhs.xm_pBegin);
+			std::swap(xm_pEnd,			rhs.xm_pEnd);
+			std::swap(xm_pEndOfStor,	rhs.xm_pEndOfStor);
 		}
 	}
 

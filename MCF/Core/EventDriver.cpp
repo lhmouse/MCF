@@ -8,8 +8,12 @@
 #include "VVector.hpp"
 #include "Utilities.hpp"
 #include "../Thread/CriticalSection.hpp"
+//#include "../Thread/ReadWriteLock.hpp"
 #include <memory>
 using namespace MCF;
+
+#define MCF_READER_SCOPE	MCF_CRIT_SECT_SCOPE
+#define MCF_WRITER_SCOPE	MCF_CRIT_SECT_SCOPE
 
 namespace {
 
@@ -27,7 +31,7 @@ private:
 
 public:
 	HandlerHolder(const WideStringObserver &wsoName, EventHandlerProc &&fnProc){
-		MCF_CRIT_SECT_SCOPE(g_pLock){
+		MCF_WRITER_SCOPE(g_pLock){
 			auto pNode = g_mapHandlerList.Find<0>(wsoName);
 			if(!pNode){
 				pNode = g_mapHandlerList.Insert(HandlerList(), wsoName);
@@ -43,7 +47,7 @@ public:
 	~HandlerHolder() noexcept {
 		ASSERT_NOEXCEPT_BEGIN
 		{
-			MCF_CRIT_SECT_SCOPE(g_pLock){
+			MCF_WRITER_SCOPE(g_pLock){
 				auto pNode = g_mapHandlerList.Find<0>(*xm_pwcsName);
 				ASSERT(pNode);
 
@@ -87,7 +91,7 @@ std::shared_ptr<void> RegisterEventHandler(const WideStringObserver &wsoName, Ev
 }
 void TriggerEvent(const WideStringObserver &wsoName, std::uintptr_t uParam1, std::uintptr_t uParam2){
 	HandlerList vecHandlerList;
-	MCF_CRIT_SECT_SCOPE(g_pLock){
+	MCF_READER_SCOPE(g_pLock){
 		const auto pNode = g_mapHandlerList.Find<0>(wsoName);
 		if(pNode){
 			vecHandlerList = pNode->GetElement();

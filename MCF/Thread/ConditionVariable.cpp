@@ -10,6 +10,7 @@
 using namespace MCF;
 
 // http://research.microsoft.com/pubs/64242/ImplementingCVs.pdf
+// 因为 Semaphore 现在维护一个大体上 FIFO 的顺序，我们就没必要操心了。
 
 namespace {
 
@@ -32,7 +33,7 @@ public:
 	ConditionVariableDelegate() noexcept
 		: xm_uWaiterCount(0)
 	{
-		xm_hSemaphore.Reset(::CreateSemaphoreW(nullptr, 0, LONG_MAX, nullptr));
+		xm_hSemaphore.Reset(::CreateSemaphoreW(nullptr, 0, 0x7FFFFFFF, nullptr));
 		if(!xm_hSemaphore){
 			MCF_THROW(::GetLastError(), L"CreateSemaphoreW() 失败。");
 		}
@@ -55,8 +56,14 @@ public:
 			if(uCountToSignal == 0){
 				return;
 			}
-		} while(!__atomic_compare_exchange_n(&xm_uWaiterCount, &uOldWaiterCount, uOldWaiterCount - uCountToSignal, false, __ATOMIC_RELAXED, __ATOMIC_RELAXED));
-
+		} while(!__atomic_compare_exchange_n(
+			&xm_uWaiterCount,
+			&uOldWaiterCount,
+			uOldWaiterCount - uCountToSignal,
+			false,
+			__ATOMIC_RELAXED,
+			__ATOMIC_RELAXED
+		));
 		::ReleaseSemaphore(xm_hSemaphore.Get(), (long)uCountToSignal, nullptr);
 	}
 	void Broadcast() noexcept {

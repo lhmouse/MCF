@@ -74,19 +74,27 @@ public:
 		auto &vThreadInfo = xGetThreadInfo();
 
 		if(++vThreadInfo.m_uReaderRecur == 1){
-			::EnterCriticalSection(&xm_csGuard);
-			if(__atomic_add_fetch(&xm_uReaderCount, 1, __ATOMIC_ACQUIRE) == 1){
-				::WaitForSingleObject(xm_hExSemaphore.Get(), INFINITE);
+			if(vThreadInfo.m_uWriterRecur == 0){
+				::EnterCriticalSection(&xm_csGuard);
+				if(__atomic_add_fetch(&xm_uReaderCount, 1, __ATOMIC_ACQ_REL) == 1){
+					::WaitForSingleObject(xm_hExSemaphore.Get(), INFINITE);
+				}
+				::LeaveCriticalSection(&xm_csGuard);
+			} else {
+				__atomic_add_fetch(&xm_uReaderCount, 1, __ATOMIC_ACQ_REL);
 			}
-			::LeaveCriticalSection(&xm_csGuard);
 		}
 	}
 	void ReleaseReaderLock() noexcept {
 		auto &vThreadInfo = xGetThreadInfo();
 
 		if(--vThreadInfo.m_uReaderRecur == 0){
-			if(__atomic_sub_fetch(&xm_uReaderCount, 1, __ATOMIC_RELEASE) == 0){
-				::ReleaseSemaphore(xm_hExSemaphore.Get(), 1, nullptr);
+			if(vThreadInfo.m_uWriterRecur == 0){
+				if(__atomic_sub_fetch(&xm_uReaderCount, 1, __ATOMIC_ACQ_REL) == 0){
+					::ReleaseSemaphore(xm_hExSemaphore.Get(), 1, nullptr);
+				}
+			} else {
+				__atomic_sub_fetch(&xm_uReaderCount, 1, __ATOMIC_ACQ_REL);
 			}
 		}
 	}
@@ -98,18 +106,16 @@ public:
 			ASSERT_MSG(vThreadInfo.m_uReaderRecur == 0, L"获取写锁前必须先释放读锁。");
 
 			::EnterCriticalSection(&xm_csGuard);
-			if(++vThreadInfo.m_uReaderRecur == 1){
+//			if(vThreadInfo.m_uReaderRecur == 0){
 				::WaitForSingleObject(xm_hExSemaphore.Get(), INFINITE);
-				__atomic_add_fetch(&xm_uReaderCount, 1, __ATOMIC_RELAXED);
-			}
+//			}
 		}
 	}
 	void ReleaseWriterLock() noexcept {
 		auto &vThreadInfo = xGetThreadInfo();
 
 		if(--vThreadInfo.m_uWriterRecur == 0){
-			if(--vThreadInfo.m_uReaderRecur == 0){
-				__atomic_sub_fetch(&xm_uReaderCount, 1, __ATOMIC_RELAXED);
+			if(vThreadInfo.m_uReaderRecur == 0){
 				::ReleaseSemaphore(xm_hExSemaphore.Get(), 1, nullptr);
 			}
 			::LeaveCriticalSection(&xm_csGuard);

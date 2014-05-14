@@ -49,19 +49,31 @@ public:
 
 }
 
+namespace MCF {
+
+namespace Impl {
+	template<>
+	void Mutex::Lock::xDoLock() const noexcept {
+		ASSERT(dynamic_cast<MutexDelegate *>(xm_pOwner));
+
+		((MutexDelegate *)xm_pOwner)->WaitTimeout(INFINITE);
+	}
+	template<>
+	void Mutex::Lock::xDoUnlock() const noexcept {
+		ASSERT(dynamic_cast<MutexDelegate *>(xm_pOwner));
+
+		((MutexDelegate *)xm_pOwner)->Release();
+	}
+}
+
+}
+
 // 静态成员函数。
 std::unique_ptr<Mutex> Mutex::Create(const WideStringObserver &wsoName){
 	return std::make_unique<MutexDelegate>(wsoName);
 }
 
 // 其他非静态成员函数。
-void Mutex::Lock() noexcept {
-	ASSERT(dynamic_cast<MutexDelegate *>(this));
-
-	((MutexDelegate *)this)->WaitTimeout(INFINITE);
-}
-void Mutex::Unlock() noexcept {
-	ASSERT(dynamic_cast<MutexDelegate *>(this));
-
-	((MutexDelegate *)this)->Release();
+Mutex::Lock Mutex::GetLock() noexcept {
+	return Lock(this);
 }

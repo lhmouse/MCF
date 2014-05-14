@@ -7,7 +7,7 @@
 
 #include "../../MCFCRT/env/thread.h"
 #include "../../MCFCRT/env/bail.h"
-#include "Utilities.hpp"
+#include "../Core/Utilities.hpp"
 #include <tuple>
 #include <type_traits>
 #include <exception>
@@ -79,6 +79,7 @@ private:
 		}
 		return pRet;
 	}
+
 public:
 	const Object_t &Get() const {
 		return *xGetPtr();

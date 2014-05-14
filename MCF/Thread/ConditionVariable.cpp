@@ -4,7 +4,6 @@
 
 #include "../StdMCF.hpp"
 #include "ConditionVariable.hpp"
-#include "CriticalSection.hpp"
 #include "../Core/Exception.hpp"
 #include "../Core/UniqueHandle.hpp"
 using namespace MCF;
@@ -40,12 +39,13 @@ public:
 	}
 
 public:
-	bool WaitTimeout(CriticalSection &csLock, unsigned long ulMilliSeconds) noexcept {
+	bool WaitTimeout(LockRaiiTemplateBase &vLockRaiiTemplate, unsigned long ulMilliSeconds) noexcept {
 		__atomic_add_fetch(&xm_uWaiterCount, 1, __ATOMIC_RELAXED);
-		csLock.Unlock();
+		const auto uReentrantCount = vLockRaiiTemplate.UnlockAll();
+		ASSERT(uReentrantCount != 0);
 
 		const bool bResult = (::WaitForSingleObject(xm_hSemaphore.Get(), ulMilliSeconds) != WAIT_TIMEOUT);
-		csLock.Lock();
+		vLockRaiiTemplate.Lock(uReentrantCount);
 		return bResult;
 	}
 	void Signal(std::size_t uCount) noexcept {
@@ -79,13 +79,13 @@ std::unique_ptr<ConditionVariable> ConditionVariable::Create(){
 }
 
 // 其他非静态成员函数。
-bool ConditionVariable::WaitTimeout(CriticalSection &csLock, unsigned long ulMilliSeconds) noexcept {
+bool ConditionVariable::WaitTimeout(LockRaiiTemplateBase &vLockRaiiTemplate, unsigned long ulMilliSeconds) noexcept {
 	ASSERT(dynamic_cast<ConditionVariableDelegate *>(this));
 
-	return ((ConditionVariableDelegate *)this)->WaitTimeout(csLock, ulMilliSeconds);
+	return ((ConditionVariableDelegate *)this)->WaitTimeout(vLockRaiiTemplate, ulMilliSeconds);
 }
-void ConditionVariable::Wait(CriticalSection &csLock) noexcept {
-	WaitTimeout(csLock, INFINITE);
+void ConditionVariable::Wait(LockRaiiTemplateBase &vLockRaiiTemplate) noexcept {
+	WaitTimeout(vLockRaiiTemplate, INFINITE);
 }
 void ConditionVariable::Signal(std::size_t uCount) noexcept {
 	ASSERT(dynamic_cast<ConditionVariableDelegate *>(this));

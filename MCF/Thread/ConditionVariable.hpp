@@ -5,6 +5,7 @@
 #ifndef MCF_CONDITION_VARIABLE_HPP_
 #define MCF_CONDITION_VARIABLE_HPP_
 
+#include "_LockRaiiTemplate.hpp"
 #include "../Core/Utilities.hpp"
 #include "../Core/StringObserver.hpp"
 #include <memory>
@@ -19,8 +20,8 @@ public:
 	static std::unique_ptr<ConditionVariable> Create();
 
 public:
-	bool WaitTimeout(CriticalSection &csLock, unsigned long ulMilliSeconds) noexcept;
-	void Wait(CriticalSection &csLock) noexcept;
+	bool WaitTimeout(LockRaiiTemplateBase &vLockRaiiTemplate, unsigned long ulMilliSeconds) noexcept;
+	void Wait(LockRaiiTemplateBase &vLockRaiiTemplate) noexcept;
 	void Signal(std::size_t uCount = 1) noexcept;
 	void Broadcast() noexcept;
 };

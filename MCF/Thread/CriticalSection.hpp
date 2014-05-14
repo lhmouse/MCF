@@ -5,41 +5,23 @@
 #ifndef MCF_CRITICAL_SECTION_HPP_
 #define MCF_CRITICAL_SECTION_HPP_
 
-#include "_ThreadSyncLockTemplate.hpp"
+#include "_LockRaiiTemplate.hpp"
 #include "../Core/Utilities.hpp"
-#include "../Core/StringObserver.hpp"
 #include <memory>
 
 namespace MCF {
 
 class CriticalSection : NO_COPY, ABSTRACT {
 public:
+	typedef Impl::LockRaiiTemplateTemplate<CriticalSection> Lock;
+
+public:
 	static std::unique_ptr<CriticalSection> Create(unsigned long ulSpinCount = 0x400);
 
 public:
-	void Lock() noexcept;
-	void Unlock() noexcept;
+	Lock GetLock() noexcept;
 };
 
-template class Impl::ThreadSyncLockTemplate<
-	CriticalSection,
-	&CriticalSection::Lock,
-	&CriticalSection::Unlock
->;
-
-typedef Impl::ThreadSyncLockTemplate<
-	CriticalSection,
-	&CriticalSection::Lock,
-	&CriticalSection::Unlock
-> CriticalSectionLock;
-
 }
-
-#define MCF_CRIT_SECT_SCOPE(pcs)	\
-	for(const ::MCF::CriticalSectionLock MCF_vLock_(	\
-			[&]() noexcept { return &*(pcs); }()	\
-		), *MCF_pLock_ = &MCF_vLock_;	\
-		MCF_pLock_;	\
-		MCF_pLock_ = nullptr)
 
 #endif

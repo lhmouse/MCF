@@ -123,7 +123,8 @@ private:
 					continue;
 				}
 
-				MCF_CRIT_SECT_SCOPE(xm_pcsQueueLock){
+				{
+					const auto vLock = xm_pcsQueueLock->GetLock();
 					xm_deqClients.emplace_back(std::move(vClient));
 					xm_pcondPeersAvailable->Signal();
 				}
@@ -131,7 +132,9 @@ private:
 			} catch(...){
 			}
 		}
-		MCF_CRIT_SECT_SCOPE(xm_pcsQueueLock){
+
+		{
+			const auto vLock = xm_pcsQueueLock->GetLock();
 			xm_pcondPeersAvailable->Broadcast();
 		}
 	}
@@ -140,43 +143,38 @@ public:
 	ClientInfo GetClientTimeout(unsigned long ulMilliSeconds) noexcept {
 		ClientInfo vClient;
 		if(ulMilliSeconds == INFINITE){
-			MCF_CRIT_SECT_SCOPE(xm_pcsQueueLock){
-				for(;;){
-					if(!xm_deqClients.empty()){
-						vClient = std::move(xm_deqClients.front());
-						xm_deqClients.pop_front();
-						break;
-					}
-					if(__atomic_load_n(&xm_bStopNow, __ATOMIC_ACQUIRE)){
-						break;
-					}
-
-					xm_pcondPeersAvailable->Wait(*xm_pcsQueueLock);
+			auto vLock = xm_pcsQueueLock->GetLock();
+			for(;;){
+				if(!xm_deqClients.empty()){
+					vClient = std::move(xm_deqClients.front());
+					xm_deqClients.pop_front();
+					break;
 				}
+				if(__atomic_load_n(&xm_bStopNow, __ATOMIC_ACQUIRE)){
+					break;
+				}
+
+				xm_pcondPeersAvailable->Wait(vLock);
 			}
 		} else {
 			const auto ulWaitUntil = ::GetTickCount() + ulMilliSeconds;
-			unsigned long ulTimeToWait = ulMilliSeconds;
+			auto vLock = xm_pcsQueueLock->GetLock();
+			for(;;){
+				if(!xm_deqClients.empty()){
+					vClient = std::move(xm_deqClients.front());
+					xm_deqClients.pop_front();
+					break;
+				}
+				if(__atomic_load_n(&xm_bStopNow, __ATOMIC_ACQUIRE)){
+					break;
+				}
 
-			MCF_CRIT_SECT_SCOPE(xm_pcsQueueLock){
-				for(;;){
-					if(!xm_deqClients.empty()){
-						vClient = std::move(xm_deqClients.front());
-						xm_deqClients.pop_front();
-						break;
-					}
-					if(__atomic_load_n(&xm_bStopNow, __ATOMIC_ACQUIRE)){
-						break;
-					}
-
-					if(!xm_pcondPeersAvailable->WaitTimeout(*xm_pcsQueueLock, ulTimeToWait)){
-						break;
-					}
-					const auto ulCurrent = ::GetTickCount();
-					if(ulWaitUntil <= ulCurrent){
-						break;
-					}
-					ulTimeToWait = ulWaitUntil - ulCurrent;
+				const auto ulCurrent = ::GetTickCount();
+				if(ulWaitUntil <= ulCurrent){
+					break;
+				}
+				if(!xm_pcondPeersAvailable->WaitTimeout(vLock, ulWaitUntil - ulCurrent)){
+					break;
 				}
 			}
 		}

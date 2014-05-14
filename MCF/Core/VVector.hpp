@@ -111,11 +111,7 @@ public:
 		return *this;
 	}
 	~VVector() noexcept {
-		Clear();
-
-		if(xm_pBegin != (Element_t *)std::begin(xm_aSmall)){
-			::operator delete(xm_pBegin);
-		}
+		Clear(true);
 	}
 
 private:
@@ -128,7 +124,7 @@ private:
 
 		if(rhs.xm_pBegin != (Element_t *)std::begin(rhs.xm_aSmall)){
 			if(xm_pBegin != (Element_t *)std::begin(xm_aSmall)){
-				::operator delete(xm_pBegin);
+				::operator delete[](xm_pBegin);
 			}
 			xm_pBegin		= rhs.xm_pBegin;
 			xm_pEnd			= rhs.xm_pEnd;
@@ -153,7 +149,7 @@ private:
 		ASSERT((void *)this != (void *)&rhs);
 
 		if(xm_pBegin != (Element_t *)std::begin(xm_aSmall)){
-			::operator delete(xm_pBegin);
+			::operator delete[](xm_pBegin);
 		}
 		xm_pBegin		= rhs.xm_pBegin;
 		xm_pEnd			= rhs.xm_pEnd;
@@ -206,8 +202,13 @@ public:
 	bool IsEmpty() const noexcept {
 		return GetEnd() == GetBegin();
 	}
-	void Clear() noexcept {
+	void Clear(bool bDeallocateBuffer = false) noexcept {
 		TruncateFromEnd(GetSize());
+
+		if(bDeallocateBuffer && (xm_pBegin != (Element_t *)std::begin(xm_aSmall))){
+			::operator delete[](xm_pBegin);
+			xm_pBegin = (Element_t *)std::begin(xm_aSmall);
+		}
 	}
 
 	std::size_t GetCapacity() const noexcept {
@@ -224,7 +225,7 @@ public:
 
 			const auto pOldBegin = GetBegin();
 			const auto pOldEnd = GetEnd();
-			const auto pNewBegin = (Element_t *)::operator new(sizeof(Element_t) * uSizeToAlloc);
+			const auto pNewBegin = (Element_t *)::operator new[](sizeof(Element_t) * uSizeToAlloc);
 			auto pRead = pOldBegin;
 			auto pWrite = pNewBegin;
 			try {
@@ -238,7 +239,7 @@ public:
 					--pWrite;
 					Destruct(pWrite);
 				}
-				::operator delete(pNewBegin);
+				::operator delete[](pNewBegin);
 				throw;
 			}
 			while(pRead != pOldBegin){
@@ -247,7 +248,7 @@ public:
 			}
 
 			if(xm_pBegin != (Element_t *)std::begin(xm_aSmall)){
-				::operator delete(xm_pBegin);
+				::operator delete[](xm_pBegin);
 			}
 			xm_pBegin		= pNewBegin;
 			xm_pEnd			= pWrite;
@@ -313,9 +314,12 @@ public:
 		noexcept(std::is_nothrow_move_constructible<Element_t>::value)
 	{
 		if(this != &rhs){
-			VVector vecTemp(std::move_if_noexcept(*this));
-			*this = std::move_if_noexcept(rhs);
-			rhs = std::move_if_noexcept(vecTemp);
+			VVector vecTemp;
+			vecTemp.xMoveFrom(*this);
+			Clear();
+			xMoveFrom(rhs);
+			rhs.Clear();
+			rhs.xMoveFrom(vecTemp);
 		}
 	}
 
@@ -431,8 +435,6 @@ public:
 	}
 	~VVector() noexcept {
 		Clear();
-
-		::operator delete(xm_pBegin);
 	}
 
 private:
@@ -444,7 +446,7 @@ private:
 		ASSERT((void *)this != (void *)&rhs);
 
 		if(rhs.xm_pBegin != (Element_t *)std::begin(rhs.xm_aSmall)){
-			::operator delete(xm_pBegin);
+			::operator delete[](xm_pBegin);
 			xm_pBegin		= rhs.xm_pBegin;
 			xm_pEnd			= rhs.xm_pEnd;
 			xm_pEndOfStor	= rhs.xm_pEndOfStor;
@@ -467,7 +469,7 @@ private:
 		ASSERT(IsEmpty());
 		ASSERT((void *)this != (void *)&rhs);
 
-		::operator delete(xm_pBegin);
+		::operator delete[](xm_pBegin);
 		xm_pBegin		= rhs.xm_pBegin;
 		xm_pEnd			= rhs.xm_pEnd;
 		xm_pEndOfStor	= rhs.xm_pEndOfStor;
@@ -519,8 +521,12 @@ public:
 	bool IsEmpty() const noexcept {
 		return GetEnd() == GetBegin();
 	}
-	void Clear() noexcept {
+	void Clear(bool bDeallocateBuffer = false) noexcept {
 		TruncateFromEnd(GetSize());
+
+		if(bDeallocateBuffer){
+			::operator delete[](xm_pBegin);
+		}
 	}
 
 	std::size_t GetCapacity() const noexcept {
@@ -534,7 +540,7 @@ public:
 
 			const auto pOldBegin = GetBegin();
 			const auto pOldEnd = GetEnd();
-			const auto pNewBegin = (Element_t *)::operator new(sizeof(Element_t) * uSizeToAlloc);
+			const auto pNewBegin = (Element_t *)::operator new[](sizeof(Element_t) * uSizeToAlloc);
 			auto pRead = pOldBegin;
 			auto pWrite = pNewBegin;
 			try {
@@ -548,7 +554,7 @@ public:
 					--pWrite;
 					Destruct(pWrite);
 				}
-				::operator delete(pNewBegin);
+				::operator delete[](pNewBegin);
 				throw;
 			}
 			while(pRead != pOldBegin){
@@ -556,7 +562,7 @@ public:
 				Destruct(pRead);
 			}
 
-			::operator delete(xm_pBegin);
+			::operator delete[](xm_pBegin);
 			xm_pBegin		= pNewBegin;
 			xm_pEnd			= pWrite;
 			xm_pEndOfStor	= xm_pBegin + uSizeToAlloc;

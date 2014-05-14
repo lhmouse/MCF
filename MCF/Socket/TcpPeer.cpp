@@ -74,7 +74,6 @@ public:
 			if(nBytesToWrite == 0){
 				break;
 			}
-			__builtin_printf("sending %p, %u, %s\n", pCur, nBytesToWrite, pCur);
 			const int nBytesWritten = ::send(xm_sockPeer.Get(), pCur, nBytesToWrite, 0);
 			if(nBytesWritten == 0){
 				break;

@@ -30,61 +30,61 @@ struct ThunkDeallocator {
 	void operator()(const void *pThunk) const noexcept {
 		ASSERT_NOEXCEPT_BEGIN
 		{
-			MCF_CRIT_SECT_SCOPE(g_pcsLock){
-				auto pCurrentThunk = g_mapThunks.Find<0>(pThunk);
-				ASSERT(pCurrentThunk && (pCurrentThunk->GetIndex<1>() == 0));
+			auto vLock = g_pcsLock->GetLock();
 
-				const auto pNextThunk = pCurrentThunk->GetNext<0>();
-				if(
-					pNextThunk &&
-					(pNextThunk->GetElement().first == pCurrentThunk->GetElement().first) &&
-					(pNextThunk->GetIndex<1>() != 0) &&
-					std::equal_to<void>()(
-						(const unsigned char *)pCurrentThunk->GetIndex<0>() + pCurrentThunk->GetElement().second,
-						pNextThunk->GetIndex<0>()
-					)
-				){
-					// 如果连续的下一个 thunk 也在缓存中，把它合并到当前 thunk。
-					pCurrentThunk->GetElement().second += pNextThunk->GetElement().second;
-					g_mapThunks.Erase(pNextThunk);
-				}
-				const auto pPrevThunk = pCurrentThunk->GetPrev<0>();
-				if(
-					pPrevThunk &&
-					(pPrevThunk->GetElement().first == pCurrentThunk->GetElement().first) &&
-					(pPrevThunk->GetIndex<1>() != 0) &&
-					std::equal_to<void>()(
-						(const unsigned char *)pPrevThunk->GetIndex<0>() + pPrevThunk->GetElement().second,
-						pCurrentThunk->GetIndex<0>()
-					)
-				){
-					// 如果连续的前一个 thunk 也在缓存中，把当前 thunk 合并到它。
-					pPrevThunk->GetElement().second += pCurrentThunk->GetElement().second;
-					g_mapThunks.Erase(pCurrentThunk);
-					pCurrentThunk = pPrevThunk;
-				}
-				if(!pCurrentThunk->GetElement().first.unique()){
-					g_mapThunks.SetIndex<1>(pCurrentThunk, pCurrentThunk->GetElement().second);
+			auto pCurrentThunk = g_mapThunks.Find<0>(pThunk);
+			ASSERT(pCurrentThunk && (pCurrentThunk->GetIndex<1>() == 0));
 
-					const auto pbyRoundedBegin = (unsigned char *)(
-						(((std::uintptr_t)pCurrentThunk->GetIndex<0>() + (1u << g_uPageOffsetBits) - 1) >> g_uPageOffsetBits)
-						<< g_uPageOffsetBits
-					);
-					const auto pbyRoundedEnd = (unsigned char *)(
-						(((std::uintptr_t)pCurrentThunk->GetIndex<0>() + pCurrentThunk->GetElement().second) >> g_uPageOffsetBits)
-						<< g_uPageOffsetBits
-					);
-					if(pbyRoundedBegin != pbyRoundedEnd){
-						FORCE_NOEXCEPT_BEGIN
-						{
-							DWORD dwOldProtect;
-							::VirtualProtect(pbyRoundedBegin, (std::size_t)(pbyRoundedEnd - pbyRoundedBegin), PAGE_READONLY, &dwOldProtect);
-						}
-						FORCE_NOEXCEPT_END
+			const auto pNextThunk = pCurrentThunk->GetNext<0>();
+			if(
+				pNextThunk &&
+				(pNextThunk->GetElement().first == pCurrentThunk->GetElement().first) &&
+				(pNextThunk->GetIndex<1>() != 0) &&
+				std::equal_to<void>()(
+					(const unsigned char *)pCurrentThunk->GetIndex<0>() + pCurrentThunk->GetElement().second,
+					pNextThunk->GetIndex<0>()
+				)
+			){
+				// 如果连续的下一个 thunk 也在缓存中，把它合并到当前 thunk。
+				pCurrentThunk->GetElement().second += pNextThunk->GetElement().second;
+				g_mapThunks.Erase(pNextThunk);
+			}
+			const auto pPrevThunk = pCurrentThunk->GetPrev<0>();
+			if(
+				pPrevThunk &&
+				(pPrevThunk->GetElement().first == pCurrentThunk->GetElement().first) &&
+				(pPrevThunk->GetIndex<1>() != 0) &&
+				std::equal_to<void>()(
+					(const unsigned char *)pPrevThunk->GetIndex<0>() + pPrevThunk->GetElement().second,
+					pCurrentThunk->GetIndex<0>()
+				)
+			){
+				// 如果连续的前一个 thunk 也在缓存中，把当前 thunk 合并到它。
+				pPrevThunk->GetElement().second += pCurrentThunk->GetElement().second;
+				g_mapThunks.Erase(pCurrentThunk);
+				pCurrentThunk = pPrevThunk;
+			}
+			if(!pCurrentThunk->GetElement().first.unique()){
+				g_mapThunks.SetIndex<1>(pCurrentThunk, pCurrentThunk->GetElement().second);
+
+				const auto pbyRoundedBegin = (unsigned char *)(
+					(((std::uintptr_t)pCurrentThunk->GetIndex<0>() + (1u << g_uPageOffsetBits) - 1) >> g_uPageOffsetBits)
+					<< g_uPageOffsetBits
+				);
+				const auto pbyRoundedEnd = (unsigned char *)(
+					(((std::uintptr_t)pCurrentThunk->GetIndex<0>() + pCurrentThunk->GetElement().second) >> g_uPageOffsetBits)
+					<< g_uPageOffsetBits
+				);
+				if(pbyRoundedBegin != pbyRoundedEnd){
+					FORCE_NOEXCEPT_BEGIN
+					{
+						DWORD dwOldProtect;
+						::VirtualProtect(pbyRoundedBegin, (std::size_t)(pbyRoundedEnd - pbyRoundedBegin), PAGE_READONLY, &dwOldProtect);
 					}
-				} else {
-					g_mapThunks.Erase(pCurrentThunk);
+					FORCE_NOEXCEPT_END
 				}
+			} else {
+				g_mapThunks.Erase(pCurrentThunk);
 			}
 		}
 		ASSERT_NOEXCEPT_END
@@ -104,8 +104,9 @@ std::shared_ptr<const void> AllocateThunk(const void *pInit, std::size_t uSize){
 	}
 
 	std::shared_ptr<const void> pThunk;
+	{
+		auto vLock = g_pcsLock->GetLock();
 
-	MCF_CRIT_SECT_SCOPE(g_pcsLock){
 		if(g_uPageOffsetBits == 0){
 			SYSTEM_INFO vSystemInfo;
 			::GetSystemInfo(&vSystemInfo);

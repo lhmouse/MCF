@@ -2,7 +2,7 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2014. LH_Mouse. All wrongs reserved.
 
-#include "../env/_crtdef.h"
+#include "../env/_crtdef.hpp"
 #include "../env/heap.h"
 #include <new>
 
@@ -53,39 +53,39 @@ inline void __attribute__((__always_inline__)) Deallocate(void *pBlock, const vo
 #pragma GCC diagnostic ignored "-Wattributes"
 
 void *__attribute__((__noinline__)) operator new(std::size_t cb){
-	return Allocate(cb, __builtin_return_address(0));
+	return Allocate(cb, __MCF_DEBUG_RET_ADDR);
 }
 void *__attribute__((__noinline__)) operator new(std::size_t cb, const std::nothrow_t &) noexcept {
-	return AllocateNoThrow(cb, __builtin_return_address(0));
+	return AllocateNoThrow(cb, __MCF_DEBUG_RET_ADDR);
 }
 void __attribute__((__noinline__)) operator delete(void *p) noexcept {
-	Deallocate(p, __builtin_return_address(0));
+	Deallocate(p, __MCF_DEBUG_RET_ADDR);
 }
 void __attribute__((__noinline__)) operator delete(void *p, const std::nothrow_t &) noexcept {
-	Deallocate(p, __builtin_return_address(0));
+	Deallocate(p, __MCF_DEBUG_RET_ADDR);
 }
 void __attribute__((__noinline__)) operator delete(void *p, std::size_t) noexcept {
-	Deallocate(p, __builtin_return_address(0));
+	Deallocate(p, __MCF_DEBUG_RET_ADDR);
 }
 void __attribute__((__noinline__)) operator delete(void *p, std::size_t, const std::nothrow_t &) noexcept {
-	Deallocate(p, __builtin_return_address(0));
+	Deallocate(p, __MCF_DEBUG_RET_ADDR);
 }
 
 void *__attribute__((__noinline__)) operator new[](std::size_t cb){
-	return Allocate(cb, __builtin_return_address(0));
+	return Allocate(cb, __MCF_DEBUG_RET_ADDR);
 }
 void *__attribute__((__noinline__)) operator new[](std::size_t cb, const std::nothrow_t &) noexcept {
-	return AllocateNoThrow(cb, __builtin_return_address(0));
+	return AllocateNoThrow(cb, __MCF_DEBUG_RET_ADDR);
 }
 void __attribute__((__noinline__)) operator delete[](void *p) noexcept {
-	Deallocate(p, __builtin_return_address(0));
+	Deallocate(p, __MCF_DEBUG_RET_ADDR);
 }
 void __attribute__((__noinline__)) operator delete[](void *p, std::size_t) noexcept {
-	Deallocate(p, __builtin_return_address(0));
+	Deallocate(p, __MCF_DEBUG_RET_ADDR);
 }
 void __attribute__((__noinline__)) operator delete[](void *p, const std::nothrow_t &) noexcept {
-	Deallocate(p, __builtin_return_address(0));
+	Deallocate(p, __MCF_DEBUG_RET_ADDR);
 }
 void __attribute__((__noinline__)) operator delete[](void *p, std::size_t, const std::nothrow_t &) noexcept {
-	Deallocate(p, __builtin_return_address(0));
+	Deallocate(p, __MCF_DEBUG_RET_ADDR);
 }

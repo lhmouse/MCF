@@ -7,8 +7,8 @@
 
 void *__attribute__((__noinline__)) realloc(void *p, size_t cb){
 	if(p){
-		return __MCF_CRT_HeapReAlloc(p, cb, __builtin_return_address(0));
+		return __MCF_CRT_HeapReAlloc(p, cb, __MCF_DEBUG_RET_ADDR);
 	} else {
-		return __MCF_CRT_HeapAlloc(cb, __builtin_return_address(0));
+		return __MCF_CRT_HeapAlloc(cb, __MCF_DEBUG_RET_ADDR);
 	}
 }

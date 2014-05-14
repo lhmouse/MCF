@@ -4,7 +4,6 @@
 
 #include "../StdMCF.hpp"
 #include "CriticalSection.hpp"
-#include "../Core/Exception.hpp"
 using namespace MCF;
 
 namespace {
@@ -36,19 +35,31 @@ public:
 
 }
 
+namespace MCF {
+
+namespace Impl {
+	template<>
+	void CriticalSection::Lock::xDoLock() const noexcept {
+		ASSERT(dynamic_cast<CriticalSectionDelegate *>(xm_pOwner));
+
+		((CriticalSectionDelegate *)xm_pOwner)->Enter();
+	}
+	template<>
+	void CriticalSection::Lock::xDoUnlock() const noexcept {
+		ASSERT(dynamic_cast<CriticalSectionDelegate *>(xm_pOwner));
+
+		((CriticalSectionDelegate *)xm_pOwner)->Leave();
+	}
+}
+
+}
+
 // 静态成员函数。
 std::unique_ptr<CriticalSection> CriticalSection::Create(unsigned long ulSpinCount){
 	return std::make_unique<CriticalSectionDelegate>(ulSpinCount);
 }
 
 // 其他非静态成员函数。
-void CriticalSection::Lock() noexcept {
-	ASSERT(dynamic_cast<CriticalSectionDelegate *>(this));
-
-	return ((CriticalSectionDelegate *)this)->Enter();
-}
-void CriticalSection::Unlock() noexcept {
-	ASSERT(dynamic_cast<CriticalSectionDelegate *>(this));
-
-	((CriticalSectionDelegate *)this)->Leave();
+CriticalSection::Lock CriticalSection::GetLock() noexcept {
+	return Lock(this);
 }

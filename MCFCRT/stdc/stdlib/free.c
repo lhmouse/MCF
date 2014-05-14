@@ -7,6 +7,6 @@
 
 void __attribute__((__noinline__)) free(void *p){
 	if(p){
-		__MCF_CRT_HeapFree(p, __builtin_return_address(0));
+		__MCF_CRT_HeapFree(p, __MCF_DEBUG_RET_ADDR);
 	}
 }

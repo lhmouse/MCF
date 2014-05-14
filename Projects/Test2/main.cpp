@@ -1,7 +1,10 @@
 #include <MCF/StdMCF.hpp>
 #include <MCF/Thread/ReaderWriterLock.hpp>
 #include <MCF/Thread/Thread.hpp>
+#include <MCF/Thread/ThreadLocal.hpp>
+#include <string>
 using namespace MCF;
+
 
 unsigned int MCFMain(){
 	const auto rwl = ReaderWriterLock::Create();

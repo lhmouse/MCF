@@ -20,7 +20,27 @@ class ThreadLocal {
 	static_assert(std::is_nothrow_destructible<Object_t>::value, "Object_t must be nothrow destructible.");
 
 private:
-	typedef std::pair<const ThreadLocal *, std::exception_ptr> xCtorWrapperContext;
+	template<typename Test_t = int>
+	static std::nullptr_t xGetCurrentException(
+		typename std::enable_if<
+			std::is_nothrow_constructible<Object_t, InitParams_t...>::value,
+			Test_t
+		>::type = 0
+	){
+		return nullptr;
+	}
+	template<typename Test_t = int>
+	static std::exception_ptr xGetCurrentException(
+		typename std::enable_if<
+			!std::is_nothrow_constructible<Object_t, InitParams_t...>::value,
+			Test_t
+		>::type = 0
+	){
+		return std::current_exception();
+	}
+
+	typedef decltype(xGetCurrentException(0)) xExceptionPtr;
+	typedef std::pair<const ThreadLocal *, xExceptionPtr> xCtorWrapperContext;
 
 private:
 	template<class... Unpacked_t>
@@ -46,7 +66,7 @@ private:
 			xConstructFromTuple(pObj, pContext->first->xm_vInitParams);
 			return -1;
 		} catch(...){
-			pContext->second = std::current_exception();
+			pContext->second = xGetCurrentException();
 			return 0;
 		}
 	}
@@ -70,7 +90,7 @@ public:
 	Object_t *GetPtr() const
 		noexcept(std::is_nothrow_constructible<Object_t, InitParams_t...>::value)
 	{
-		xCtorWrapperContext vContext(this, std::exception_ptr());
+		xCtorWrapperContext vContext(this, xExceptionPtr());
 		const auto pRet = (Object_t *)::MCF_CRT_RetrieveTls((std::intptr_t)this, sizeof(Object_t), &xCtorWrapper, (std::intptr_t)&vContext, &xDtorWrapper);
 		if(vContext.second){
 			std::rethrow_exception(vContext.second);

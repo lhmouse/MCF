@@ -14,7 +14,7 @@ namespace MCF {
 
 class Mutex : NO_COPY, ABSTRACT {
 public:
-	typedef Impl::LockRaiiTemplateTemplate<Mutex> Lock;
+	typedef Impl::LockRaiiTemplate<Mutex> Lock;
 
 public:
 	static std::unique_ptr<Mutex> Create(const WideStringObserver &wsoName = nullptr);

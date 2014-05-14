@@ -13,7 +13,7 @@ namespace MCF {
 
 class CriticalSection : NO_COPY, ABSTRACT {
 public:
-	typedef Impl::LockRaiiTemplateTemplate<CriticalSection> Lock;
+	typedef Impl::LockRaiiTemplate<CriticalSection> Lock;
 
 public:
 	static std::unique_ptr<CriticalSection> Create(unsigned long ulSpinCount = 0x400);

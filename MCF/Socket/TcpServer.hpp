@@ -13,7 +13,7 @@ namespace MCF {
 
 class TcpServer : NO_COPY, ABSTRACT {
 public:
-	static std::unique_ptr<TcpServer> Create(const PeerInfo &vBoundOnto);
+	static std::unique_ptr<TcpServer> Create(const PeerInfo &vBoundOnto, bool bReuseAddr = false);
 
 public:
 	std::unique_ptr<TcpPeer> GetPeerTimeout(unsigned long ulMilliSeconds) noexcept;

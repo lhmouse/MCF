@@ -47,13 +47,13 @@ private:
 	std::deque<ClientInfo> xm_deqClients;
 
 public:
-	explicit TcpServerDelegate(const PeerInfo &vBoundOnto)
+	TcpServerDelegate(const PeerInfo &vBoundOnto, bool bReuseAddr)
 		: xm_bStopNow				(false)
 		, xm_pcsQueueLock			(CriticalSection::Create())
 		, xm_pcondPeersAvailable	(ConditionVariable::Create())
 	{
-		static const DWORD TRUE_VALUE	= 1;
-		static const DWORD FALSE_VALUE	= 0;
+		static const unsigned long TRUE_VALUE	= TRUE;
+		static const unsigned long FALSE_VALUE	= FALSE;
 
 		const short shFamily = vBoundOnto.IsIPv4() ? AF_INET : AF_INET6;
 
@@ -61,17 +61,14 @@ public:
 		if(!xm_sockListen){
 			MCF_THROW(::GetLastError(), L"::socket() 失败。");
 		}
-		if(::setsockopt(xm_sockListen.Get(), SOL_SOCKET, SO_CONDITIONAL_ACCEPT, (const char *)&TRUE_VALUE, sizeof(TRUE_VALUE))){
+		if((shFamily == AF_INET6) && ::setsockopt(xm_sockListen.Get(), IPPROTO_IPV6, IPV6_V6ONLY, (const char *)&FALSE_VALUE, sizeof(FALSE_VALUE))){
 			MCF_THROW(::GetLastError(), L"::setsockopt() 失败。");
 		}
-		if(shFamily == AF_INET6){
-			if(::setsockopt(xm_sockListen.Get(), IPPROTO_IPV6, IPV6_V6ONLY, (const char *)&FALSE_VALUE, sizeof(FALSE_VALUE))){
-				MCF_THROW(::GetLastError(), L"::setsockopt() 失败。");
-			}
+		if(bReuseAddr && ::setsockopt(xm_sockListen.Get(), SOL_SOCKET, SO_REUSEADDR, (const char *)&TRUE_VALUE, sizeof(TRUE_VALUE))){
+			MCF_THROW(::GetLastError(), L"::setsockopt() 失败。");
 		}
 
-		unsigned long ulTrueValue = 1;
-		if(::ioctlsocket(xm_sockListen.Get(), (long)FIONBIO, &ulTrueValue)){
+		if(::ioctlsocket(xm_sockListen.Get(), (long)FIONBIO, (unsigned long *)&TRUE_VALUE)){
 			MCF_THROW(::GetLastError(), L"::ioctlsocket() 失败。");
 		}
 
@@ -185,8 +182,8 @@ public:
 }
 
 // 静态成员函数。
-std::unique_ptr<TcpServer> TcpServer::Create(const PeerInfo &vBoundOnto){
-	return std::make_unique<TcpServerDelegate>(vBoundOnto);
+std::unique_ptr<TcpServer> TcpServer::Create(const PeerInfo &vBoundOnto, bool bReuseAddr){
+	return std::make_unique<TcpServerDelegate>(vBoundOnto, bReuseAddr);
 }
 
 // 其他非静态成员函数。

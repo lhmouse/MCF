@@ -39,8 +39,7 @@ private:
 		return std::current_exception();
 	}
 
-	typedef decltype(xGetCurrentException(0)) xExceptionPtr;
-	typedef std::pair<const ThreadLocal *, xExceptionPtr> xCtorWrapperContext;
+	typedef std::pair<const ThreadLocal *, decltype(xGetCurrentException())> xCtorWrapperContext;
 
 private:
 	template<class... Unpacked_t>
@@ -90,7 +89,7 @@ public:
 	Object_t *GetPtr() const
 		noexcept(std::is_nothrow_constructible<Object_t, InitParams_t...>::value)
 	{
-		xCtorWrapperContext vContext(this, xExceptionPtr());
+		xCtorWrapperContext vContext(this, decltype(xGetCurrentException())());
 		const auto pRet = (Object_t *)::MCF_CRT_RetrieveTls((std::intptr_t)this, sizeof(Object_t), &xCtorWrapper, (std::intptr_t)&vContext, &xDtorWrapper);
 		if(vContext.second){
 			std::rethrow_exception(vContext.second);

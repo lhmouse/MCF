@@ -61,7 +61,7 @@ public:
 	}
 
 	void SetNoDelay(bool bNoDelay){
-		DWORD dwVal = bNoDelay;
+		const DWORD dwVal = bNoDelay;
 		if(::setsockopt(xm_sockPeer.Get(), IPPROTO_TCP, TCP_NODELAY, (const char *)&dwVal, sizeof(dwVal))){
 			MCF_THROW(::GetLastError(), L"::setsockopt() 失败。");
 		}

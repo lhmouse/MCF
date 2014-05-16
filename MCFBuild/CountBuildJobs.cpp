@@ -94,7 +94,7 @@ namespace {
 			const auto &wcsDependency = Project.mapCompilers.at(wcsExtension).wcsDependency;
 			if(!wcsDependency.empty()){
 				Scheduler.PushJob([=, &OldDatabase, &csOldDatabaseLock, &NewDatabase, &csNewDatabaseLock, &wcsPath, &llTimestamp](std::size_t uThreadIndex){
-					const auto llSourceTimestamp = GetFileTimestamp(wcsPath);
+					const auto llSourceTimestamp = GetFileTimestamp(wcsSrcRoot + wcsPath);
 
 					DependencyDatabase::Dependencies Dependencies{ LLONG_MIN, std::set<wvstring>() };
 

@@ -38,9 +38,7 @@ typedef struct tagTlsObject {
 	intptr_t nKey;
 	void *pMem;
 	void (*pfnDtor)(void *);
-#ifndef NDEBUG
 	size_t uMemSize;
-#endif
 } TLS_OBJECT;
 
 static int TlsObjectComparerNodes(
@@ -158,10 +156,16 @@ void __MCF_CRT_ThreadUninitialize(){
 	register TLS_OBJECT *pObject = pThreadEnv->pLastObject;
 	while(pObject){
 		TLS_OBJECT *const pPrev = pObject->pPrev;
-		if(pObject->pfnDtor){
-			(*pObject->pfnDtor)(pObject->pMem);
+		if(pObject->uMemSize <= sizeof(void *)){
+			if(pObject->pfnDtor){
+				(*pObject->pfnDtor)(&(pObject->pMem));
+			}
+		} else {
+			if(pObject->pfnDtor){
+				(*pObject->pfnDtor)(pObject->pMem);
+			}
+			free(pObject->pMem);
 		}
-		free(pObject->pMem);
 		free(pObject);
 		pObject = pPrev;
 	}
@@ -240,15 +244,23 @@ void *MCF_CRT_RetrieveTls(
 		if(!pObject){
 			return NULL;
 		}
-		void *const pMem = malloc((uSizeToAlloc == 0) ? 1 : uSizeToAlloc);
-		if(!pMem){
-			free(pObject);
-			return NULL;
-		}
-		if(pfnConstructor && !(*pfnConstructor)(pMem, nParam)){
-			free(pMem);
-			free(pObject);
-			return NULL;
+		if(uSizeToAlloc <= sizeof(void *)){
+			if(pfnConstructor && !(*pfnConstructor)(&(pObject->pMem), nParam)){
+				free(pObject);
+				return NULL;
+			}
+		} else {
+			void *const pMem = malloc(uSizeToAlloc);
+			if(!pMem){
+				free(pObject);
+				return NULL;
+			}
+			if(pfnConstructor && !(*pfnConstructor)(pMem, nParam)){
+				free(pMem);
+				free(pObject);
+				return NULL;
+			}
+			pObject->pMem = pMem;
 		}
 
 		TLS_OBJECT *const pPrev = pThreadEnv->pLastObject;
@@ -259,11 +271,8 @@ void *MCF_CRT_RetrieveTls(
 		}
 
 		pObject->nKey = nKey;
-		pObject->pMem = pMem;
 		pObject->pfnDtor = pfnDestructor;
-#ifndef NDEBUG
 		pObject->uMemSize = uSizeToAlloc;
-#endif
 
 		pThreadEnv->pLastObject = pObject;
 
@@ -272,9 +281,7 @@ void *MCF_CRT_RetrieveTls(
 			(MCF_AVL_NODE_HEADER *)pObject,
 			&TlsObjectComparerNodes
 		);
-	}
-#ifndef NDEBUG
-	if(pObject->uMemSize != uSizeToAlloc){
+	} else if(pObject->uMemSize != uSizeToAlloc){
 		MCF_CRT_BailF(
 			L"MCF_CRT_RetrieveTls() 失败：两次试图使用相同的键获得 TLS，但指定的大小不一致。\n\n"
 			"键：" UINTPTR_FORMAT "\n"
@@ -285,8 +292,12 @@ void *MCF_CRT_RetrieveTls(
 			(uintptr_t)uSizeToAlloc
 		);
 	}
-#endif
-	return pObject->pMem;
+
+	if(pObject->uMemSize <= sizeof(void *)){
+		return &(pObject->pMem);
+	} else {
+		return pObject->pMem;
+	}
 }
 void MCF_CRT_DeleteTls(
 	intptr_t nKey
@@ -314,10 +325,16 @@ void MCF_CRT_DeleteTls(
 		if(pThreadEnv->pLastObject == pObject){
 			pThreadEnv->pLastObject = pPrev;
 		}
-		if(pObject->pfnDtor){
-			(*pObject->pfnDtor)(pObject->pMem);
+		if(pObject->uMemSize <= sizeof(void *)){
+			if(pObject->pfnDtor){
+				(*pObject->pfnDtor)(&(pObject->pMem));
+			}
+		} else {
+			if(pObject->pfnDtor){
+				(*pObject->pfnDtor)(pObject->pMem);
+			}
+			free(pObject->pMem);
 		}
-		free(pObject->pMem);
 		free(pObject);
 	}
 }

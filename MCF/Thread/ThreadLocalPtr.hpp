@@ -2,8 +2,8 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2014. LH_Mouse. All wrongs reserved.
 
-#ifndef MCF_THREAD_LOCAL_HPP_
-#define MCF_THREAD_LOCAL_HPP_
+#ifndef MCF_THREAD_LOCAL_PTR_HPP_
+#define MCF_THREAD_LOCAL_PTR_HPP_
 
 #include "../../MCFCRT/env/thread.h"
 #include "../../MCFCRT/env/bail.h"
@@ -16,7 +16,7 @@
 namespace MCF {
 
 template<class Object_t, class... InitParams_t>
-class ThreadLocal {
+class ThreadLocalPtr {
 	static_assert(std::is_nothrow_destructible<Object_t>::value, "Object_t must be nothrow destructible.");
 
 private:
@@ -39,7 +39,7 @@ private:
 		return std::current_exception();
 	}
 
-	typedef std::pair<const ThreadLocal *, decltype(xGetCurrentException())> xCtorWrapperContext;
+	typedef std::pair<const ThreadLocalPtr *, decltype(xGetCurrentException())> xCtorWrapperContext;
 
 private:
 	template<class... Unpacked_t>
@@ -77,11 +77,11 @@ private:
 	std::tuple<InitParams_t...> xm_vInitParams;
 
 public:
-	explicit constexpr ThreadLocal(InitParams_t &&... vInitParams)
+	explicit constexpr ThreadLocalPtr(InitParams_t &&... vInitParams)
 		: xm_vInitParams(std::forward<InitParams_t>(vInitParams)...)
 	{
 	}
-	~ThreadLocal() noexcept {
+	~ThreadLocalPtr() noexcept {
 		Release();
 	}
 

@@ -116,17 +116,6 @@ namespace Impl {
 	do { FORCE_NOEXCEPT_BEGIN { expr; } FORCE_NOEXCEPT_END } while(false)
 
 //----------------------------------------------------------------------------
-// NullRef
-//----------------------------------------------------------------------------
-template<typename T>
-auto NullRef() noexcept
-	-> typename std::enable_if<!std::is_rvalue_reference<T>::value, T &>::type;
-
-template<typename T>
-auto NullRef() noexcept
-	-> typename std::enable_if<std::is_rvalue_reference<T>::value, T &&>::type;
-
-//----------------------------------------------------------------------------
 // Clone
 //----------------------------------------------------------------------------
 template<typename T>

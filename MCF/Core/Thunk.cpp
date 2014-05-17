@@ -40,10 +40,7 @@ struct ThunkDeallocator {
 				pNextThunk &&
 				(pNextThunk->GetElement().first == pCurrentThunk->GetElement().first) &&
 				(pNextThunk->GetIndex<1>() != 0) &&
-				std::equal_to<void>()(
-					(const unsigned char *)pCurrentThunk->GetIndex<0>() + pCurrentThunk->GetElement().second,
-					pNextThunk->GetIndex<0>()
-				)
+				(const unsigned char *)pCurrentThunk->GetIndex<0>() + pCurrentThunk->GetElement().second == pNextThunk->GetIndex<0>()
 			){
 				// 如果连续的下一个 thunk 也在缓存中，把它合并到当前 thunk。
 				pCurrentThunk->GetElement().second += pNextThunk->GetElement().second;
@@ -54,10 +51,7 @@ struct ThunkDeallocator {
 				pPrevThunk &&
 				(pPrevThunk->GetElement().first == pCurrentThunk->GetElement().first) &&
 				(pPrevThunk->GetIndex<1>() != 0) &&
-				std::equal_to<void>()(
-					(const unsigned char *)pPrevThunk->GetIndex<0>() + pPrevThunk->GetElement().second,
-					pCurrentThunk->GetIndex<0>()
-				)
+				(const unsigned char *)pPrevThunk->GetIndex<0>() + pPrevThunk->GetElement().second == pCurrentThunk->GetIndex<0>()
 			){
 				// 如果连续的前一个 thunk 也在缓存中，把当前 thunk 合并到它。
 				pPrevThunk->GetElement().second += pCurrentThunk->GetElement().second;

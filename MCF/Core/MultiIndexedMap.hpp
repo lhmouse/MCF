@@ -291,7 +291,12 @@ private:
 		xDetach<INDEX>(pNode);
 	}
 	template<std::size_t INDEX>
-	void xDetachRecur(Node *, typename std::enable_if<(INDEX == sizeof...(Indices_t)), int>::type = 0) noexcept {
+	void xDetachRecur(Node *pNode, typename std::enable_if<(INDEX == sizeof...(Indices_t)), int>::type = 0) noexcept {
+#ifdef NDEBUG
+		(void)pNode;
+#else
+		__builtin_memset(&(pNode->xm_aHeaders), 0xCD, sizeof((pNode->xm_aHeaders)));
+#endif
 	}
 
 public:

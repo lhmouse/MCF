@@ -104,19 +104,17 @@ private:
 
 	private:
 		explicit constexpr xSharedNode(Handle hObj) noexcept
-			: xm_hObj(hObj), xm_uWeakCount(1), xm_uCount(1)
+			: xm_hObj		(hObj)
+			, xm_uWeakCount	(1)
+			, xm_uCount		(1)
 #ifndef NDEBUG
-			, xm_pDebugInfo(this)
+			, xm_pDebugInfo	(this)
 #endif
 		{
 		}
-#ifndef NDEBUG
 		~xSharedNode() noexcept {
 			ASSERT(xm_pDebugInfo == this);
-
-			xm_pDebugInfo = nullptr;
 		}
-#endif
 
 	private:
 		void xValidate() const noexcept {

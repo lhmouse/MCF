@@ -16,8 +16,8 @@ public:
 	static std::unique_ptr<TcpServer> Create(const PeerInfo &vBoundOnto, bool bReuseAddr = false);
 
 public:
-	std::unique_ptr<TcpPeer> GetPeerTimeout(unsigned long ulMilliSeconds) noexcept;
-	std::unique_ptr<TcpPeer> GetPeer() noexcept;
+	std::unique_ptr<TcpPeer> GetPeerTimeout(unsigned long ulMilliSeconds);
+	std::unique_ptr<TcpPeer> GetPeer();
 };
 
 }

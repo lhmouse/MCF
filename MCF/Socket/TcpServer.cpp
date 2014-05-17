@@ -130,10 +130,12 @@ private:
 			}
 		}
 
+		ASSERT_NOEXCEPT_BEGIN
 		{
 			const auto vLock = xm_pcsQueueLock->GetLock();
 			xm_pcondPeersAvailable->Broadcast();
 		}
+		ASSERT_NOEXCEPT_END
 	}
 
 public:
@@ -142,11 +144,16 @@ public:
 		if(ulMilliSeconds == INFINITE){
 			auto vLock = xm_pcsQueueLock->GetLock();
 			for(;;){
-				if(!xm_deqClients.empty()){
-					vClient = std::move(xm_deqClients.front());
-					xm_deqClients.pop_front();
-					break;
+				ASSERT_NOEXCEPT_BEGIN
+				{
+					if(!xm_deqClients.empty()){
+						vClient = std::move(xm_deqClients.front());
+						xm_deqClients.pop_front();
+						break;
+					}
 				}
+				ASSERT_NOEXCEPT_END
+
 				if(__atomic_load_n(&xm_bStopNow, __ATOMIC_ACQUIRE)){
 					break;
 				}
@@ -157,11 +164,16 @@ public:
 			const auto ulWaitUntil = ::GetTickCount() + ulMilliSeconds;
 			auto vLock = xm_pcsQueueLock->GetLock();
 			for(;;){
-				if(!xm_deqClients.empty()){
-					vClient = std::move(xm_deqClients.front());
-					xm_deqClients.pop_front();
-					break;
+				ASSERT_NOEXCEPT_BEGIN
+				{
+					if(!xm_deqClients.empty()){
+						vClient = std::move(xm_deqClients.front());
+						xm_deqClients.pop_front();
+						break;
+					}
 				}
+				ASSERT_NOEXCEPT_END
+
 				if(__atomic_load_n(&xm_bStopNow, __ATOMIC_ACQUIRE)){
 					break;
 				}
@@ -187,7 +199,7 @@ std::unique_ptr<TcpServer> TcpServer::Create(const PeerInfo &vBoundOnto, bool bR
 }
 
 // 其他非静态成员函数。
-std::unique_ptr<TcpPeer> TcpServer::GetPeerTimeout(unsigned long ulMilliSeconds) noexcept {
+std::unique_ptr<TcpPeer> TcpServer::GetPeerTimeout(unsigned long ulMilliSeconds){
 	ASSERT(dynamic_cast<TcpServerDelegate *>(this));
 
 	auto vClient = ((TcpServerDelegate *)this)->GetClientTimeout(ulMilliSeconds);
@@ -200,6 +212,6 @@ std::unique_ptr<TcpPeer> TcpServer::GetPeerTimeout(unsigned long ulMilliSeconds)
 		(std::size_t)vClient.nSockAddrSize
 	);
 }
-std::unique_ptr<TcpPeer> TcpServer::GetPeer() noexcept {
+std::unique_ptr<TcpPeer> TcpServer::GetPeer(){
 	return GetPeerTimeout(INFINITE);
 }

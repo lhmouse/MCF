@@ -4,7 +4,7 @@
 
 #include "../StdMCF.hpp"
 #include "ReaderWriterLock.hpp"
-#include "ThreadLocal.hpp"
+#include "ThreadLocalPtr.hpp"
 #include "../Core/Exception.hpp"
 #include "../Core/UniqueHandle.hpp"
 using namespace MCF;
@@ -29,7 +29,7 @@ private:
 
 private:
 	volatile std::size_t xm_uReaderCount;
-	ThreadLocal<xThreadInfo, xThreadInfo> xm_pThreadInfo;
+	ThreadLocalPtr<xThreadInfo, xThreadInfo> xm_pThreadInfo;
 
 	CRITICAL_SECTION xm_csGuard;
 	UniqueHandle<xSemaphoreCloser> xm_hExSemaphore;
@@ -103,6 +103,14 @@ public:
 		auto &vThreadInfo = xGetThreadInfo();
 
 		if(++vThreadInfo.m_uWriterRecur == 1){
+			// 假定有两个线程运行同样的函数：
+			//
+			//   GetReaderLock();
+			//   ::Sleep(1000);
+			//   GetWriterLock(); // 死锁，因为没有任何一个线程可以获得写锁。
+			//
+			// 这个问题并非无法解决，例如允许 GetWriterLock() 抛出异常。
+			// 但是这样除了使问题复杂化以外没有什么好处。
 			ASSERT_MSG(vThreadInfo.m_uReaderRecur == 0, L"获取写锁前必须先释放读锁。");
 
 			::EnterCriticalSection(&xm_csGuard);

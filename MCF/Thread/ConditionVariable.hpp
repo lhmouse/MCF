@@ -7,13 +7,9 @@
 
 #include "_LockRaiiTemplate.hpp"
 #include "../Core/Utilities.hpp"
-#include "../Core/StringObserver.hpp"
 #include <memory>
-#include <functional>
 
 namespace MCF {
-
-class CriticalSection;
 
 class ConditionVariable : NO_COPY, ABSTRACT {
 public:

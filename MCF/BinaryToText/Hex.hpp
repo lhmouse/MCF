@@ -19,7 +19,7 @@ private:
 public:
 	explicit HexEncoder(
 		std::function<std::pair<void *, std::size_t> (std::size_t)> fnDataCallback,
-		bool bUpperCase
+		bool bUpperCase = true
 	);
 
 public:

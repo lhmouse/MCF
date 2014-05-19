@@ -22,10 +22,6 @@ inline void SetWin32LastError(unsigned long ulErrorCode) noexcept {
 extern WideString GetWin32ErrorDesc(unsigned long ulErrorCode);
 
 struct Exception : public std::exception {
-	virtual const char *what() const noexcept {
-		return "MCF::Exception";
-	}
-
 	const char *pszFunction;
 	unsigned long ulLine;
 	unsigned long ulErrorCode;
@@ -42,6 +38,10 @@ struct Exception : public std::exception {
 		, ulErrorCode	(ulErrorCode_)
 		, pwszMessage	(pwszMessage_)
 	{
+	}
+
+	virtual const char *what() const noexcept {
+		return "MCF::Exception";
 	}
 };
 

@@ -50,19 +50,19 @@ namespace Impl {
 namespace Impl {
 	struct AbstractBase {
 		virtual ~AbstractBase() noexcept { }
-		virtual void MCF_PureAbstractFunction_() = 0;
+		virtual void MCF_Impl_PureAbstractFunction_() = 0;
 	};
 
 	template<class Base_t>
 	struct ConcreteBase : public Base_t {
 		static_assert(std::is_base_of<AbstractBase, Base_t>::value, "Concreting from non-abstract class?");
 
-		virtual void MCF_PureAbstractFunction_(){ }
+		virtual void MCF_Impl_PureAbstractFunction_(){ }
 	};
 }
 
 #define ABSTRACT		private ::MCF::Impl::AbstractBase
-#define CONCRETE(base)	public ::MCF::Impl::ConcreteBase<base>
+#define CONCRETE(...)	public ::MCF::Impl::ConcreteBase<__VA_ARGS__>
 
 //----------------------------------------------------------------------------
 // Bail

@@ -18,7 +18,6 @@ extern unsigned long __MCF_CRT_Begin(void);
 extern void __MCF_CRT_End(void);
 
 extern void *MCF_GetModuleBase(void);
-
 extern int MCF_AtCRTEnd(void (*pfnProc)(MCF_STD intptr_t), MCF_STD intptr_t nContext);
 
 __MCF_EXTERN_C_END

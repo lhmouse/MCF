@@ -31,7 +31,7 @@ public:
 
 		auto pNode = g_mapHandlerList.Find<0>(wsoName);
 		if(!pNode){
-			pNode = g_mapHandlerList.Insert(HandlerList(), wsoName);
+			pNode = g_mapHandlerList.Insert(HandlerList(), WideString(wsoName));
 		}
 
 		auto &vecHandlerList = pNode->GetElement();

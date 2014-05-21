@@ -217,11 +217,13 @@ public:
 		}
 		return (std::size_t)(xm_pEndOfStor - xm_pBegin);
 	}
-	void Reserve(std::size_t uCapacity){
-		if(uCapacity > GetCapacity()){
-			auto uSizeToAlloc = uCapacity;
+	void Reserve(std::size_t uNewCapacity){
+		const auto uOldCapacity = GetCapacity();
+		if(uNewCapacity > uOldCapacity){
+			auto uSizeToAlloc = uOldCapacity + 1;
 			uSizeToAlloc += (uSizeToAlloc >> 1);
 			uSizeToAlloc = (uSizeToAlloc + 0xF) & (std::size_t)-0x10;
+			uSizeToAlloc = std::max(uSizeToAlloc, uNewCapacity);
 
 			const auto pOldBegin = GetBegin();
 			const auto pOldEnd = GetEnd();
@@ -256,6 +258,20 @@ public:
 		}
 	}
 
+	Element_t &PushNoCheck()
+		noexcept(std::is_nothrow_constructible<Element_t>::value)
+	{
+		ASSERT_MSG(GetSize() < GetCapacity(), L"容器已满。");
+
+		if(std::is_pod<Element_t>::value){
+#ifndef NDEBUG
+			__builtin_memset(xm_pEnd, 0xCC, sizeof(*xm_pEnd));
+#endif
+		} else {
+			Construct<Element_t>(xm_pEnd);
+		}
+		return *(xm_pEnd++);
+	}
 	template<typename... Params_t>
 	Element_t &PushNoCheck(Params_t &&...vParams)
 		noexcept(std::is_nothrow_constructible<Element_t, Params_t &&...>::value)
@@ -434,7 +450,7 @@ public:
 		return *this;
 	}
 	~VVector() noexcept {
-		Clear();
+		Clear(true);
 	}
 
 private:
@@ -532,11 +548,13 @@ public:
 	std::size_t GetCapacity() const noexcept {
 		return (std::size_t)(xm_pEndOfStor - xm_pBegin);
 	}
-	void Reserve(std::size_t uCapacity){
-		if(uCapacity > GetCapacity()){
-			auto uSizeToAlloc = uCapacity;
+	void Reserve(std::size_t uNewCapacity){
+		const auto uOldCapacity = GetCapacity();
+		if(uNewCapacity > uOldCapacity){
+			auto uSizeToAlloc = uOldCapacity + 1;
 			uSizeToAlloc += (uSizeToAlloc >> 1);
 			uSizeToAlloc = (uSizeToAlloc + 0xF) & (std::size_t)-0x10;
+			uSizeToAlloc = std::max(uSizeToAlloc, uNewCapacity);
 
 			const auto pOldBegin = GetBegin();
 			const auto pOldEnd = GetEnd();
@@ -569,6 +587,20 @@ public:
 		}
 	}
 
+	Element_t &PushNoCheck()
+		noexcept(std::is_nothrow_constructible<Element_t>::value)
+	{
+		ASSERT_MSG(GetSize() < GetCapacity(), L"容器已满。");
+
+		if(std::is_pod<Element_t>::value){
+#ifndef NDEBUG
+			__builtin_memset(xm_pEnd, 0xCC, sizeof(*xm_pEnd));
+#endif
+		} else {
+			Construct<Element_t>(xm_pEnd);
+		}
+		return *(xm_pEnd++);
+	}
 	template<typename... Params_t>
 	Element_t &PushNoCheck(Params_t &&...vParams)
 		noexcept(std::is_nothrow_constructible<Element_t, Params_t &&...>::value)

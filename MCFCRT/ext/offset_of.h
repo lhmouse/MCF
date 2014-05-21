@@ -10,7 +10,7 @@
 #define OFFSET_OF(s, m)	\
 	((MCF_STD size_t)((MCF_STD uintptr_t)&(((s *)(MCF_STD uintptr_t)1)->m) - (MCF_STD uintptr_t)1))
 
-// 派生类指针转换成基类指针，成员指针转换成类指针。
+// 成员指针转换成聚合指针。
 #define DOWN_CAST(s, m, p)	\
 	((s *)((MCF_STD uintptr_t)(p) - OFFSET_OF(s, m)))
 

@@ -1,5 +1,8 @@
 #include <MCF/StdMCF.hpp>
-#include <MCF/Storage/Serializer.hpp>
+#include <MCF/Core/Random.hpp>
+#include <MCF/Core/String.hpp>
+#include <MCF/Core/Exception.hpp>
+#include <MCF/Serialization/Serdes.hpp>
 using namespace std;
 using namespace MCF;
 
@@ -9,32 +12,39 @@ struct foo {
 	char c;
 };
 
-void ser(SerializerDefinitions::WriteIterator &, const foo &){
-	std::printf("serializing foo\n");
-}
-void des(foo &, SerializerDefinitions::ReadIterator &, const SerializerDefinitions::ReadIterator &){
-	std::printf("unserializing foo\n");
-}
+unsigned int MCFMain()
+try {
+	Random rng;
+	DataBuffer dbuf;
 
-SER_TABLE_TABLE_BEGIN(foo)
-	SER_TABLE_TABLE_SELF_CUSTOM(ser, des)
-	SER_TABLE_TABLE_MEMBER_DEFAULT(i)
-	SER_TABLE_TABLE_MEMBER_DEFAULT(d)
-	SER_TABLE_TABLE_MEMBER_DEFAULT(c)
-SER_TABLE_TABLE_END
+	map<int, double> l1, l2;
+	for(int i = 0; i < 10; ++i){
+		l1.insert(make_pair(i, i * i));
+	}
 
-unsigned int MCFMain(){
-	foo f1 = { { 1, 4 }, 2.0, '3' };
-	foo f2;
+	for(auto i : l1){
+		printf("%d %f; ", i.first, i.second);
+	}
+	putchar('\n');
 
-	vector<unsigned char> deq;
-	Serializer<foo> sr;
-	auto itw = back_inserter(deq);
-	sr.Serialize(itw, f1);
+	Serialize(dbuf, l1);
+	printf("serialized: %zu bytes\n", dbuf.GetSize());
+	Deserialize(l2, dbuf);
 
-	auto itr = deq.cbegin();
-	sr.Unserialize(f2, itr, deq.end());
-	printf("%d %d %f %c\n", f2.i[0], f2.i[1], f2.d, f2.c);
+	for(auto i : l2){
+		printf("%d %f; ", i.first, i.second);
+	}
+	putchar('\n');
 
+	return 0;
+} catch(exception &e){
+	printf("exception '%s'\n", e.what());
+	auto *const p = dynamic_cast<const Exception *>(&e);
+	if(p){
+		printf("  err  = %lu\n", p->ulErrorCode);
+		printf("  desc = %s\n", AnsiString(GetWin32ErrorDesc(p->ulErrorCode)).GetCStr());
+		printf("  func = %s\n", p->pszFunction);
+		printf("  msg  = %s\n", AnsiString(WideString(p->pwszMessage)).GetCStr());
+	}
 	return 0;
 }

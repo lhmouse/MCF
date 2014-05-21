@@ -58,6 +58,11 @@ public:
 	{
 		Assign(ch, uCount);
 	}
+	explicit String(const Char_t *pszBegin)
+		: String()
+	{
+		Assign(pszBegin);
+	}
 	template<class Iterator_t>
 	String(Iterator_t itBegin, Iterator_t itEnd)
 		: String()
@@ -70,27 +75,15 @@ public:
 	{
 		Assign(itBegin, uLen);
 	}
-	String(const Observer &obs)
+	explicit String(const Observer &obs)
 		: String()
 	{
 		Assign(obs);
 	}
-	String(std::initializer_list<Char_t> vInitList)
+	explicit String(std::initializer_list<Char_t> vInitList)
 		: String()
 	{
 		Assign(vInitList);
-	}
-	template<typename Test_t, typename = typename std::enable_if<std::is_same<Test_t, Char_t>::value>::type>
-	String(const Test_t *const &pszBegin)
-		: String()
-	{
-		Assign(pszBegin);
-	}
-	template<std::size_t N>
-	String(const Char_t (&achLiteral)[N])
-		: String()
-	{
-		Assign(achLiteral);
 	}
 	template<typename OtherChar_t, StringEncoding OTHER_ENCODING>
 	explicit String(const String<OtherChar_t, OTHER_ENCODING> &rhs)
@@ -118,22 +111,16 @@ public:
 		String(ch).Swap(*this);
 		return *this;
 	}
+	String &operator=(const Char_t *pszBegin){
+		String(pszBegin).Swap(*this);
+		return *this;
+	}
 	String &operator=(const Observer &obs){
 		String(obs).Swap(*this);
 		return *this;
 	}
 	String &operator=(std::initializer_list<Char_t> vInitList){
 		String(vInitList).Swap(*this);
-		return *this;
-	}
-	template<typename Test_t, typename = typename std::enable_if<std::is_same<Test_t, Char_t>::value>::type>
-	String &operator=(const Test_t *const &pszBegin){
-		String(pszBegin).Swap(*this);
-		return *this;
-	}
-	template<std::size_t N>
-	String &operator=(const Char_t (&achLiteral)[N]){
-		String(achLiteral).Swap(*this);
 		return *this;
 	}
 	template<typename OtherChar_t, StringEncoding OTHER_ENCODING>
@@ -334,6 +321,9 @@ public:
 		std::fill_n(pchWrite, uCount, ch);
 		xSetSize(uCount);
 	}
+	void Assign(const Char_t *pszBegin){
+		Assign(Observer(pszBegin));
+	}
 	template<class Iterator_t>
 	void Assign(Iterator_t itBegin, Iterator_t itEnd){
 		Assign(itBegin, (std::size_t)std::distance(itBegin, itEnd));
@@ -349,14 +339,6 @@ public:
 	}
 	void Assign(std::initializer_list<Char_t> vInitList){
 		Assign(Observer(vInitList));
-	}
-	template<typename Test_t, typename = typename std::enable_if<std::is_same<Test_t, Char_t>::value>::type>
-	void Assign(const Test_t *const &pszBegin){
-		Assign(Observer(pszBegin));
-	}
-	template<std::size_t N>
-	void Assign(const Char_t (&achLiteral)[N]){
-		Assign(Observer(achLiteral));
 	}
 	void Assign(String &&rhs) noexcept {
 		Swap(rhs);
@@ -374,6 +356,9 @@ public:
 		std::fill_n(pchWrite, uCount, ch);
 		xSetSize(uOldLength + uCount);
 	}
+	void Append(const Char_t *pszBegin){
+		Append(Observer(pszBegin));
+	}
 	template<class Iterator_t>
 	void Append(Iterator_t itBegin, Iterator_t itEnd){
 		Append(itBegin, (std::size_t)std::distance(itBegin, itEnd));
@@ -390,14 +375,6 @@ public:
 	}
 	void Append(std::initializer_list<Char_t> vInitList){
 		Append(Observer(vInitList));
-	}
-	template<typename Test_t, typename = typename std::enable_if<std::is_same<Test_t, Char_t>::value>::type>
-	void Append(const Test_t *const &pszBegin){
-		Append(Observer(pszBegin));
-	}
-	template<std::size_t N>
-	void Append(const Char_t (&achLiteral)[N]){
-		Append(Observer(achLiteral));
 	}
 	void Append(const String &str){
 		if(std::addressof(str) == this){
@@ -465,6 +442,9 @@ public:
 		std::fill_n(pchWrite, uCount, ch);
 		xSetSize(uOldLength + uCount);
 	}
+	void Unshift(const Char_t *pszBegin){
+		Unshift(Observer(pszBegin));
+	}
 	template<class Iterator_t>
 	void Unshift(Iterator_t itBegin, Iterator_t itEnd){
 		Unshift(itBegin, (std::size_t)std::distance(itBegin, itEnd));
@@ -481,14 +461,6 @@ public:
 	}
 	void Unshift(std::initializer_list<Char_t> vInitList){
 		Unshift(Observer(vInitList));
-	}
-	template<typename Test_t, typename = typename std::enable_if<std::is_same<Test_t, Char_t>::value>::type>
-	void Unshift(const Test_t *const &pszBegin){
-		Unshift(Observer(pszBegin));
-	}
-	template<std::size_t N>
-	void Unshift(const Char_t (&achLiteral)[N]){
-		Unshift(Observer(achLiteral));
 	}
 	void Unshift(const String &str){
 		if(std::addressof(str) == this){
@@ -813,6 +785,28 @@ typedef String<char,		StringEncoding::UTF8>	Utf8String;
 typedef String<char16_t,	StringEncoding::UTF16>	Utf16String;
 typedef String<char32_t,	StringEncoding::UTF32>	Utf32String;
 
+}
+
+inline const MCF::AnsiString &operator""_NS(const char *pchStr, std::size_t uLength) noexcept {
+	static MCF::AnsiString STATIC_STRING(pchStr, uLength);
+	return STATIC_STRING;
+}
+inline const MCF::WideString &operator""_WS(const wchar_t *pwchStr, std::size_t uLength) noexcept {
+	static MCF::WideString STATIC_STRING(pwchStr, uLength);
+	return STATIC_STRING;
+}
+
+inline const MCF::Utf8String &operator""_U8S(const char *pchStr, std::size_t uLength) noexcept {
+	static MCF::Utf8String STATIC_STRING(pchStr, uLength);
+	return STATIC_STRING;
+}
+inline const MCF::Utf16String &operator""_U16S(const char16_t *pc16Str, std::size_t uLength) noexcept {
+	static MCF::Utf16String STATIC_STRING(pc16Str, uLength);
+	return STATIC_STRING;
+}
+inline const MCF::Utf32String &operator""_U32S(const char32_t *pc32Str, std::size_t uLength) noexcept {
+	static MCF::Utf32String STATIC_STRING(pc32Str, uLength);
+	return STATIC_STRING;
 }
 
 #endif

@@ -21,6 +21,7 @@
 #include <map>
 #include <unordered_set>
 #include <unordered_map>
+#include <functional>
 #include <cstddef>
 
 namespace MCF {
@@ -209,7 +210,8 @@ namespace Impl {
 	//    set, multiset, unordered_set, unordered_multiset,
 	//    map, multimap, unordered_map, unordered_multimap
 
-	// 针对 array 的特化。同内建数组。
+	// 针对 array 的特化。
+	// 同内建数组。
 	template<typename Element_t, std::size_t COUNT>
 	struct SerdesTrait<
 		std::array<Element_t, COUNT>,
@@ -227,7 +229,8 @@ namespace Impl {
 		}
 	};
 
-	// 针对 basic_string, list, deque, vector 的特化。检测 push_back()。
+	// 针对 basic_string, list, deque, vector 的特化。
+	// 检测 push_back()。注意 basic_string 没有 emplace_back()。
 	template<typename Container_t>
 	struct SerdesTrait<
 		Container_t,
@@ -348,13 +351,19 @@ namespace Impl {
 	};
 
 	// 针对 set, multiset, unordered_set, unordered_multiset 的特化。
+	// 检测 emplace_hint() 返回的类型是否是 const value_type。
 	template<typename Container_t>
 	struct SerdesTrait<
 		Container_t,
 		typename std::enable_if<
 			std::is_same<
 				const typename Container_t::value_type,
-				typename std::remove_reference<decltype(*std::declval<Container_t>().begin())>::type
+				typename std::remove_reference<decltype(
+					*std::declval<Container_t>().emplace_hint(
+						std::declval<typename Container_t::const_iterator>(),
+						std::declval<typename Container_t::value_type>()
+					)
+				)>::type
 			>::value
 		>::type
 	> {
@@ -375,22 +384,27 @@ namespace Impl {
 
 			vContainer.clear();
 			ElementType vTempElement;
-			auto itHint = vContainer.end();
 			for(std::size_t i = 0; i < uSize; ++i){
 				SerdesTrait<ElementType>()(vTempElement, dbufStream);
-				itHint = vContainer.emplace_hint(itHint, std::move(vTempElement));
+				vContainer.emplace_hint(vContainer.end(), std::move(vTempElement));
 			}
 		}
 	};
 
 	// 针对 map, multimap, unordered_map, unordered_multimap 的特化。
+	// 检测 emplace_hint() 返回的类型是否是 pair, 且其 first 成员的类型为 const value_type::first_type。
 	template<typename Container_t>
 	struct SerdesTrait<
 		Container_t,
 		typename std::enable_if<
 			std::is_same<
 				const typename Container_t::value_type::first_type,
-				typename std::remove_reference<decltype(std::declval<Container_t>().begin()->first)>::type
+				typename std::remove_reference<decltype(
+					std::declval<Container_t>().emplace_hint(
+						std::declval<typename Container_t::const_iterator>(),
+						std::declval<typename Container_t::value_type>()
+					)->first
+				)>::type
 			>::value
 		>::type
 	> {
@@ -414,25 +428,74 @@ namespace Impl {
 
 			vContainer.clear();
 			ElementType vTempElement;
-			auto itHint = vContainer.end();
 			for(std::size_t i = 0; i < uSize; ++i){
 				SerdesTrait<ElementType>()(vTempElement, dbufStream);
-				itHint = vContainer.emplace_hint(itHint, std::move(vTempElement));
+				vContainer.emplace_hint(vContainer.end(), std::move(vTempElement));
 			}
 		}
 	};
 
+	// 通用版本。需要使用下面定义的宏来建立成员序列化表。
 	template<typename Object_t, typename>
 	struct SerdesTrait {
-		void operator()(DataBuffer &, const Object_t &) const {
-			__builtin_puts("not implemented serializer");
+		typedef Object_t ObjectType;
+		typedef std::pair<
+			std::function<void (DataBuffer &, const Object_t &)>,
+			std::function<void (Object_t &, DataBuffer &)>
+		> TableElementType;
+
+		static const TableElementType s_SerdesTable[];
+
+		void operator()(DataBuffer &dbufStream, const Object_t &vObject) const {
+			auto pCur = s_SerdesTable;
+			while(pCur->first){
+				pCur->first(dbufStream, vObject);
+				++pCur;
+			}
 		}
-		void operator()(Object_t &, DataBuffer &) const {
-			__builtin_puts("not implemented deserializer");
+		void operator()(Object_t &vObject, DataBuffer &dbufStream) const {
+			auto pCur = s_SerdesTable;
+			while(pCur->second){
+				pCur->second(vObject, dbufStream);
+				++pCur;
+			}
 		}
 	};
 }
 
 }
+
+#define SERDES_FRIEND_DECL(...)	\
+	friend ::MCF::Impl::SerdesTrait<__VA_ARGS__>;
+
+#define SERDES_TABLE_BEGIN(...)	\
+	template<>	\
+	const typename ::MCF::Impl::SerdesTrait<__VA_ARGS__>::TableElementType	\
+		(::MCF::Impl::SerdesTrait<__VA_ARGS__>::s_SerdesTable)[]	\
+	= {
+
+#define SERDES_BASE(...)	\
+		TableElementType(	\
+			[](auto &stream, const auto &obj){	\
+				::MCF::Impl::SerdesTrait<__VA_ARGS__>()(stream, static_cast<const __VA_ARGS__ &>(obj));	\
+			},	\
+			[](auto &obj, auto &stream){	\
+				::MCF::Impl::SerdesTrait<__VA_ARGS__>()(static_cast<__VA_ARGS__ &>(obj), stream);	\
+			}	\
+		),
+
+#define SERDES_MEMBER(...)	\
+		TableElementType(	\
+			[](auto &stream, const auto &obj){	\
+				::MCF::Impl::SerdesTrait<decltype(ObjectType::__VA_ARGS__)>()(stream, obj.__VA_ARGS__);	\
+			},	\
+			[](auto &obj, auto &stream){	\
+				::MCF::Impl::SerdesTrait<decltype(ObjectType::__VA_ARGS__)>()(obj.__VA_ARGS__, stream);	\
+			}	\
+		),
+
+#define SERDES_TABLE_END	\
+		TableElementType()	\
+	};
 
 #endif

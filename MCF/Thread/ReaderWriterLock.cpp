@@ -55,18 +55,11 @@ public:
 
 private:
 	xThreadInfo &xGetThreadInfo() noexcept {
-		for(;;){
-			ASSERT_NOEXCEPT_BEGIN
-			{
-				const auto pThreadInfo = xm_pThreadInfo.GetPtr();
-				if(pThreadInfo){
-					return *pThreadInfo;
-				}
-			}
-			ASSERT_NOEXCEPT_END
-
-			::Sleep(1000);
+		const auto pThreadInfo = xm_pThreadInfo.GetPtr();
+		if(!pThreadInfo){
+			Bail(L"为读写锁创建 Tls 失败。");
 		}
+		return *pThreadInfo;
 	}
 
 public:

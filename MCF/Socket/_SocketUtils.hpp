@@ -6,6 +6,7 @@
 #define MCF_SOCKET_UTILS_HPP_
 
 #include "../Core/UniqueHandle.hpp"
+#include "../Core/SharedHandle.hpp"
 #include "../Core/Exception.hpp"
 #include "../Core/Utilities.hpp"
 #include <winsock2.h>
@@ -24,6 +25,7 @@ namespace Impl {
 	};
 
 	typedef UniqueHandle<SocketCloser> UniqueSocket;
+	typedef SharedHandle<SocketCloser> SharedSocket;
 
 	struct WSAInitializer : NO_COPY {
 		WSAInitializer(){

@@ -17,7 +17,7 @@ public:
 	static std::shared_ptr<Thread> Create(std::function<void ()> fnProc, bool bSuspended = false);
 
 public:
-	bool WaitTimeout(unsigned long ulMilliSeconds) const noexcept;
+	bool WaitTimeout(unsigned long long ullMilliSeconds) const noexcept;
 	void Wait() const noexcept;
 	void Join() const; // 如果线程中有被捕获的异常，抛出异常。
 

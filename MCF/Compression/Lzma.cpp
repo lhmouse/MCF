@@ -321,12 +321,12 @@ std::unique_ptr<LzmaEncoder> LzmaEncoder::Create(
 void LzmaEncoder::Abort() noexcept {
 	ASSERT(dynamic_cast<LzmaEncoderDelegate *>(this));
 
-	((LzmaEncoderDelegate *)this)->Abort();
+	static_cast<LzmaEncoderDelegate *>(this)->Abort();
 }
 void LzmaEncoder::Update(const void *pData, std::size_t uSize){
 	ASSERT(dynamic_cast<LzmaEncoderDelegate *>(this));
 
-	((LzmaEncoderDelegate *)this)->Update(pData, uSize);
+	static_cast<LzmaEncoderDelegate *>(this)->Update(pData, uSize);
 }
 std::size_t LzmaEncoder::QueryBytesProcessed() const noexcept {
 	ASSERT(dynamic_cast<const LzmaEncoderDelegate *>(this));
@@ -336,7 +336,7 @@ std::size_t LzmaEncoder::QueryBytesProcessed() const noexcept {
 void LzmaEncoder::Finalize(){
 	ASSERT(dynamic_cast<LzmaEncoderDelegate *>(this));
 
-	((LzmaEncoderDelegate *)this)->Finalize();
+	static_cast<LzmaEncoderDelegate *>(this)->Finalize();
 }
 
 // ========== LzmaDecoder ==========
@@ -351,12 +351,12 @@ std::unique_ptr<LzmaDecoder> LzmaDecoder::Create(
 void LzmaDecoder::Abort() noexcept {
 	ASSERT(dynamic_cast<LzmaDecoderDelegate *>(this));
 
-	((LzmaDecoderDelegate *)this)->Abort();
+	static_cast<LzmaDecoderDelegate *>(this)->Abort();
 }
 void LzmaDecoder::Update(const void *pData, std::size_t uSize){
 	ASSERT(dynamic_cast<LzmaDecoderDelegate *>(this));
 
-	((LzmaDecoderDelegate *)this)->Update(pData, uSize);
+	static_cast<LzmaDecoderDelegate *>(this)->Update(pData, uSize);
 }
 std::size_t LzmaDecoder::QueryBytesProcessed() const noexcept {
 	ASSERT(dynamic_cast<const LzmaDecoderDelegate *>(this));
@@ -366,5 +366,5 @@ std::size_t LzmaDecoder::QueryBytesProcessed() const noexcept {
 void LzmaDecoder::Finalize(){
 	ASSERT(dynamic_cast<LzmaDecoderDelegate *>(this));
 
-	((LzmaDecoderDelegate *)this)->Finalize();
+	static_cast<LzmaDecoderDelegate *>(this)->Finalize();
 }

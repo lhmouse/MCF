@@ -1,24 +1,34 @@
 #include <MCF/StdMCF.hpp>
-#include <MCF/Socket/TcpPeer.hpp>
-#include <MCF/Thread/Thread.hpp>
-#include <array>
+#include <MCF/Socket/UdpServer.hpp>
+#include <MCF/Core/Exception.hpp>
+#include <MCF/Core/Time.hpp>
+#include <iostream>
+using namespace std;
 using namespace MCF;
 
-unsigned int MCFMain(){
-	std::array<std::shared_ptr<Thread>, 4> threads;
-	for(auto &p : threads){
-		p = Thread::Create([&]{
-			for(;;){
-				try {
-					TcpPeer::Connect(PeerInfo(127, 0, 0, 1, 802));
-				} catch(...){
-				}
-				::Sleep(1);
-			}
-		});
+unsigned int MCFMain()
+try {
+	StreamBuffer buf;
+	int i = 0;
+	for(;;){
+		char data[100];
+		auto len = (unsigned int)sprintf(data, "i = %d", i++);
+		buf.Clear();
+		cout <<"will send '" <<data <<"'" <<endl;
+		UdpPacket(PeerInfo(239, 253, 101, 82, 10880), data, len).Send();
+		::Sleep(1000);
 	}
-	for(auto &p : threads){
-		p->Join();
+
+	return 0;
+} catch(exception &e){
+	printf("exception '%s'\n", e.what());
+	auto *const p = dynamic_cast<const Exception *>(&e);
+	if(p){
+		printf("  err  = %lu\n", p->ulErrorCode);
+		printf("  desc = %s\n", AnsiString(GetWin32ErrorDesc(p->ulErrorCode)).GetCStr());
+		printf("  func = %s\n", p->pszFunction);
+		printf("  line = %lu\n", p->ulLine);
+		printf("  msg  = %s\n", AnsiString(WideString(p->pwszMessage)).GetCStr());
 	}
 	return 0;
 }

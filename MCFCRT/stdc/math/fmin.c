@@ -29,7 +29,7 @@ float fminf(float x, float y){
 		"xor %4, %3 \n"
 		"fld dword ptr[%4] \n"
 #endif
-		: "=r"(unused), "=r"(unused), __FLT_RET_CONS(ret)
+		: "=r"(unused), "=r"(unused), __MCF_FLT_RET_CONS(ret)
 		: "0"(&x), "1"(&y)
 		: "ax"
 	);
@@ -60,14 +60,14 @@ double fmin(double x, double y){
 		"xor %4, %3 \n"
 		"fld qword ptr[%4] \n"
 #endif
-		: "=r"(unused), "=r"(unused), __DBL_RET_CONS(ret)
+		: "=r"(unused), "=r"(unused), __MCF_DBL_RET_CONS(ret)
 		: "0"(&x), "1"(&y)
 		: "ax"
 	);
 	return ret;
 }
 
-__LDBL_DECL(fminl, long double x, long double y){
+__MCF_LDBL_DECL(fminl, long double x, long double y){
 	register long double ret;
 	uintptr_t unused;
 	__asm__ __volatile__(
@@ -88,10 +88,10 @@ __LDBL_DECL(fminl, long double x, long double y){
 		"and %4, eax \n"
 		"xor %4, %3 \n"
 #endif
-		__LDBL_RET_MEM("%4", "a")
-		: "=r"(unused), "=r"(unused), __LDBL_RET_CONS(ret)
-		: "0"(&x), "1"(&y), __LDBL_RET_CONS_IN()
+		__MCF_LDBL_RET_MEM("%4", "a")
+		: "=r"(unused), "=r"(unused), __MCF_LDBL_RET_CONS(ret)
+		: "0"(&x), "1"(&y), __MCF_LDBL_RET_CONS_IN()
 		: "ax"
 	);
-	__LDBL_RETURN(ret);
+	__MCF_LDBL_RETURN(ret);
 }

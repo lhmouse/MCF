@@ -16,7 +16,7 @@ public:
 	static std::unique_ptr<Semaphore> Create(unsigned long ulInitCount, unsigned long ulMaxCount, const WideStringObserver &wsoName = nullptr);
 
 public:
-	unsigned long WaitTimeout(unsigned long ulMilliSeconds, unsigned long ulWaitCount = 1) noexcept;
+	unsigned long WaitTimeout(unsigned long long ullMilliSeconds, unsigned long ulWaitCount = 1) noexcept;
 	void Wait(unsigned long ulWaitCount = 1) noexcept;
 	void Signal(unsigned long ulSignalCount = 1) noexcept;
 };

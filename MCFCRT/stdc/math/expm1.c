@@ -36,8 +36,8 @@ float expm1f(float x){
 		"fmulp st(1), st \n"
 		"fadd qword ptr[%2] \n"
 		"2: \n"
-		__FLT_RET_ST("%1")
-		: __FLT_RET_CONS(ret)
+		__MCF_FLT_RET_ST("%1")
+		: __MCF_FLT_RET_CONS(ret)
 		: "m"(x), "m"(NEG_THRESHOLD), "m"(POS_THRESHOLD)
 		: "ax"
 	);
@@ -72,15 +72,15 @@ double expm1(double x){
 		"fmulp st(1), st \n"
 		"fadd qword ptr[%2] \n"
 		"2: \n"
-		__DBL_RET_ST("%1")
-		: __DBL_RET_CONS(ret)
+		__MCF_DBL_RET_ST("%1")
+		: __MCF_DBL_RET_CONS(ret)
 		: "m"(x), "m"(NEG_THRESHOLD), "m"(POS_THRESHOLD)
 		: "ax"
 	);
 	return ret;
 }
 
-__LDBL_DECL(expm1l, long double x){
+__MCF_LDBL_DECL(expm1l, long double x){
 	register long double ret;
 	__asm__ __volatile__(
 		"fld tbyte ptr[%1] \n"
@@ -109,10 +109,10 @@ __LDBL_DECL(expm1l, long double x){
 		"fmulp st(1), st \n"
 		"fadd qword ptr[%2] \n"
 		"2: \n"
-		__LDBL_RET_ST()
-		: __LDBL_RET_CONS(ret)
-		: "m"(x), "m"(NEG_THRESHOLD), "m"(POS_THRESHOLD), __LDBL_RET_CONS_IN()
+		__MCF_LDBL_RET_ST()
+		: __MCF_LDBL_RET_CONS(ret)
+		: "m"(x), "m"(NEG_THRESHOLD), "m"(POS_THRESHOLD), __MCF_LDBL_RET_CONS_IN()
 		: "ax"
 	);
-	__LDBL_RETURN(ret);
+	__MCF_LDBL_RETURN(ret);
 }

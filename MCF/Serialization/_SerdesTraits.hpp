@@ -7,8 +7,8 @@
 #ifndef MCF_SERDES_TRAITS_HPP_
 #define MCF_SERDES_TRAITS_HPP_
 
-#include "DataBuffer.hpp"
 #include "VarIntEx.hpp"
+#include "../Core/StreamBuffer.hpp"
 #include <iterator>
 #include <type_traits>
 #include <array>
@@ -36,13 +36,13 @@ namespace Impl {
 		bool,
 		void
 	> {
-		void operator()(DataBuffer &dbufStream, const bool &vObject) const {
+		void operator()(StreamBuffer &sbufStream, const bool &vObject) const {
 			unsigned char by = vObject;
-			dbufStream.Insert(&by, sizeof(by));
+			sbufStream.Insert(&by, sizeof(by));
 		}
-		void operator()(bool &vObject, DataBuffer &dbufStream) const {
+		void operator()(bool &vObject, StreamBuffer &sbufStream) const {
 			unsigned char by;
-			dbufStream.Extract(&by, sizeof(by));
+			sbufStream.Extract(&by, sizeof(by));
 			vObject = by;
 		}
 	};
@@ -55,20 +55,20 @@ namespace Impl {
 			std::is_integral<Integral>::value && !std::is_same<Integral, bool>::value && (sizeof(Integral) > 2u)
 		>::type
 	> {
-		void operator()(DataBuffer &dbufStream, const Integral &vObject) const {
+		void operator()(StreamBuffer &sbufStream, const Integral &vObject) const {
 			VarIntEx<Integral> viTemp(vObject);
 
 			unsigned char abyTemp[viTemp.MAX_SERIALIZED_SIZE];
 			auto pbyWrite = abyTemp;
 			viTemp.Serialize(pbyWrite);
 
-			dbufStream.Insert(abyTemp, (std::size_t)(pbyWrite - abyTemp));
+			sbufStream.Insert(abyTemp, (std::size_t)(pbyWrite - abyTemp));
 		}
-		void operator()(Integral &vObject, DataBuffer &dbufStream) const {
+		void operator()(Integral &vObject, StreamBuffer &sbufStream) const {
 			VarIntEx<Integral> viTemp;
 
-			auto itRead = dbufStream.GetReadIterator();
-			viTemp.Unserialize(itRead, dbufStream.GetReadForeverEnd());
+			auto itRead = sbufStream.GetReadIterator();
+			viTemp.Unserialize(itRead, sbufStream.GetReadForeverEnd());
 
 			vObject = viTemp.Get();
 		}
@@ -83,9 +83,9 @@ namespace Impl {
 	// 针对 nullptr_t 的特化。什么都不做。这个特化貌似只有理论上的意义。
 	template<>
 	struct SerdesTrait<std::nullptr_t, void> {
-		void operator()(DataBuffer &, const std::nullptr_t &) const {
+		void operator()(StreamBuffer &, const std::nullptr_t &) const {
 		}
-		void operator()(std::nullptr_t &, DataBuffer &) const {
+		void operator()(std::nullptr_t &, StreamBuffer &) const {
 		}
 	};
 
@@ -99,11 +99,11 @@ namespace Impl {
 	> {
 		typedef typename std::underlying_type<Enum_t>::type UnderlyingType;
 
-		void operator()(DataBuffer &dbufStream, const Enum_t &vElement) const {
-			SerdesTrait<UnderlyingType>()(dbufStream, (const UnderlyingType &)vElement);
+		void operator()(StreamBuffer &sbufStream, const Enum_t &vElement) const {
+			SerdesTrait<UnderlyingType>()(sbufStream, (const UnderlyingType &)vElement);
 		}
-		void operator()(Enum_t &vElement, DataBuffer &dbufStream) const {
-			SerdesTrait<UnderlyingType>()((UnderlyingType &)vElement, dbufStream);
+		void operator()(Enum_t &vElement, StreamBuffer &sbufStream) const {
+			SerdesTrait<UnderlyingType>()((UnderlyingType &)vElement, sbufStream);
 		}
 	};
 
@@ -120,11 +120,11 @@ namespace Impl {
 			&& !std::is_enum<Scalar_t>::value
 		>::type
 	> {
-		void operator()(DataBuffer &dbufStream, const Scalar_t &vElement) const {
-			dbufStream.Insert(&vElement, sizeof(vElement));
+		void operator()(StreamBuffer &sbufStream, const Scalar_t &vElement) const {
+			sbufStream.Insert(&vElement, sizeof(vElement));
 		}
-		void operator()(Scalar_t &vElement, DataBuffer &dbufStream) const {
-			dbufStream.Extract(&vElement, sizeof(vElement));
+		void operator()(Scalar_t &vElement, StreamBuffer &sbufStream) const {
+			sbufStream.Extract(&vElement, sizeof(vElement));
 		}
 	};
 
@@ -134,14 +134,14 @@ namespace Impl {
 		Element_t [COUNT],
 		void
 	> {
-		void operator()(DataBuffer &dbufStream, const Element_t (&arrElements)[COUNT]) const {
+		void operator()(StreamBuffer &sbufStream, const Element_t (&arrElements)[COUNT]) const {
 			for(const auto &vElement : arrElements){
-				SerdesTrait<Element_t>()(dbufStream, vElement);
+				SerdesTrait<Element_t>()(sbufStream, vElement);
 			}
 		}
-		void operator()(Element_t (&arrElements)[COUNT], DataBuffer &dbufStream) const {
+		void operator()(Element_t (&arrElements)[COUNT], StreamBuffer &sbufStream) const {
 			for(auto &vElement : arrElements){
-				SerdesTrait<Element_t>()(vElement, dbufStream);
+				SerdesTrait<Element_t>()(vElement, sbufStream);
 			}
 		}
 	};
@@ -152,13 +152,13 @@ namespace Impl {
 		std::pair<First_t, Second_t>,
 		void
 	> {
-		void operator()(DataBuffer &dbufStream, const std::pair<First_t, Second_t> &vPair) const {
-			SerdesTrait<First_t>()(dbufStream, vPair.first);
-			SerdesTrait<Second_t>()(dbufStream, vPair.second);
+		void operator()(StreamBuffer &sbufStream, const std::pair<First_t, Second_t> &vPair) const {
+			SerdesTrait<First_t>()(sbufStream, vPair.first);
+			SerdesTrait<Second_t>()(sbufStream, vPair.second);
 		}
-		void operator()(std::pair<First_t, Second_t> &vPair, DataBuffer &dbufStream) const {
-			SerdesTrait<First_t>()(vPair.first, dbufStream);
-			SerdesTrait<Second_t>()(vPair.second, dbufStream);
+		void operator()(std::pair<First_t, Second_t> &vPair, StreamBuffer &sbufStream) const {
+			SerdesTrait<First_t>()(vPair.first, sbufStream);
+			SerdesTrait<Second_t>()(vPair.second, sbufStream);
 		}
 	};
 
@@ -169,32 +169,32 @@ namespace Impl {
 		void
 	> {
 		template<std::size_t INDEX, typename std::enable_if<(INDEX < sizeof...(Elements_t)), int>::type = 0>
-		static void SerializeAll(DataBuffer &dbufStream, const std::tuple<Elements_t...> &vTuple){
+		static void SerializeAll(StreamBuffer &sbufStream, const std::tuple<Elements_t...> &vTuple){
 			typedef typename std::tuple_element<INDEX, std::tuple<Elements_t...>>::type ElementType;
 
-			SerdesTrait<ElementType>()(dbufStream, std::get<INDEX>(vTuple));
-			SerializeAll<INDEX + 1>(dbufStream, vTuple);
+			SerdesTrait<ElementType>()(sbufStream, std::get<INDEX>(vTuple));
+			SerializeAll<INDEX + 1>(sbufStream, vTuple);
 		}
 		template<std::size_t INDEX, typename std::enable_if<(INDEX == sizeof...(Elements_t)), int>::type = 0>
-		static void SerializeAll(DataBuffer &, const std::tuple<Elements_t...> &){
+		static void SerializeAll(StreamBuffer &, const std::tuple<Elements_t...> &){
 		}
 
 		template<std::size_t INDEX, typename std::enable_if<(INDEX < sizeof...(Elements_t)), int>::type = 0>
-		static void DeserializeAll(std::tuple<Elements_t...> &vTuple, DataBuffer &dbufStream){
+		static void DeserializeAll(std::tuple<Elements_t...> &vTuple, StreamBuffer &sbufStream){
 			typedef typename std::tuple_element<INDEX, std::tuple<Elements_t...>>::type ElementType;
 
-			SerdesTrait<ElementType>()(std::get<INDEX>(vTuple), dbufStream);
-			DeserializeAll<INDEX + 1>(vTuple, dbufStream);
+			SerdesTrait<ElementType>()(std::get<INDEX>(vTuple), sbufStream);
+			DeserializeAll<INDEX + 1>(vTuple, sbufStream);
 		}
 		template<std::size_t INDEX, typename std::enable_if<(INDEX == sizeof...(Elements_t)), int>::type = 0>
-		static void DeserializeAll(std::tuple<Elements_t...> &, DataBuffer &){
+		static void DeserializeAll(std::tuple<Elements_t...> &, StreamBuffer &){
 		}
 
-		void operator()(DataBuffer &dbufStream, const std::tuple<Elements_t...> &vTuple) const {
-			SerializeAll<0>(dbufStream, vTuple);
+		void operator()(StreamBuffer &sbufStream, const std::tuple<Elements_t...> &vTuple) const {
+			SerializeAll<0>(sbufStream, vTuple);
 		}
-		void operator()(std::tuple<Elements_t...> &vTuple, DataBuffer &dbufStream) const {
-			DeserializeAll<0>(vTuple, dbufStream);
+		void operator()(std::tuple<Elements_t...> &vTuple, StreamBuffer &sbufStream) const {
+			DeserializeAll<0>(vTuple, sbufStream);
 		}
 	};
 
@@ -217,14 +217,14 @@ namespace Impl {
 		std::array<Element_t, COUNT>,
 		void
 	> {
-		void operator()(DataBuffer &dbufStream, const std::array<Element_t, COUNT> &vContainer) const {
+		void operator()(StreamBuffer &sbufStream, const std::array<Element_t, COUNT> &vContainer) const {
 			for(const auto &vElement : vContainer){
-				SerdesTrait<Element_t>()(dbufStream, vElement);
+				SerdesTrait<Element_t>()(sbufStream, vElement);
 			}
 		}
-		void operator()(std::array<Element_t, COUNT> &vContainer, DataBuffer &dbufStream) const {
+		void operator()(std::array<Element_t, COUNT> &vContainer, StreamBuffer &sbufStream) const {
 			for(auto &vElement : vContainer){
-				SerdesTrait<Element_t>()(vElement, dbufStream);
+				SerdesTrait<Element_t>()(vElement, sbufStream);
 			}
 		}
 	};
@@ -238,22 +238,22 @@ namespace Impl {
 	> {
 		typedef typename Container_t::value_type ElementType;
 
-		void operator()(DataBuffer &dbufStream, const Container_t &vContainer) const {
+		void operator()(StreamBuffer &sbufStream, const Container_t &vContainer) const {
 			const std::size_t uSize = vContainer.size();
-			SerdesTrait<std::uint64_t>()(dbufStream, uSize);
+			SerdesTrait<std::uint64_t>()(sbufStream, uSize);
 
 			for(const auto &vElement : vContainer){
-				SerdesTrait<ElementType>()(dbufStream, vElement);
+				SerdesTrait<ElementType>()(sbufStream, vElement);
 			}
 		}
-		void operator()(Container_t &vContainer, DataBuffer &dbufStream) const {
+		void operator()(Container_t &vContainer, StreamBuffer &sbufStream) const {
 			std::uint64_t u64Temp;
-			SerdesTrait<std::uint64_t>()(u64Temp, dbufStream);
+			SerdesTrait<std::uint64_t>()(u64Temp, sbufStream);
 			const std::size_t uSize = u64Temp;
 
 			vContainer.resize(uSize);
 			for(auto &vElement : vContainer){
-				SerdesTrait<ElementType>()(vElement, dbufStream);
+				SerdesTrait<ElementType>()(vElement, sbufStream);
 			}
 		}
 	};
@@ -264,9 +264,9 @@ namespace Impl {
 		std::vector<bool, Allocator_t>,
 		void
 	> {
-		void operator()(DataBuffer &dbufStream, const std::vector<bool, Allocator_t> &vContainer) const {
+		void operator()(StreamBuffer &sbufStream, const std::vector<bool, Allocator_t> &vContainer) const {
 			const std::size_t uSize = vContainer.size();
-			SerdesTrait<std::uint64_t>()(dbufStream, uSize);
+			SerdesTrait<std::uint64_t>()(sbufStream, uSize);
 
 			auto itRead = vContainer.cbegin();
 			const std::size_t uByteCount = uSize / 8;
@@ -277,7 +277,7 @@ namespace Impl {
 					by |= *itRead;
 					++itRead;
 				}
-				SerdesTrait<std::uint8_t>()(dbufStream, by);
+				SerdesTrait<std::uint8_t>()(sbufStream, by);
 			}
 			const std::size_t uRemaining = uSize % 8;
 			if(uRemaining != 0){
@@ -287,12 +287,12 @@ namespace Impl {
 					by |= *itRead;
 					++itRead;
 				}
-				SerdesTrait<std::uint8_t>()(dbufStream, by);
+				SerdesTrait<std::uint8_t>()(sbufStream, by);
 			}
 		}
-		void operator()(std::vector<bool, Allocator_t> &vContainer, DataBuffer &dbufStream) const {
+		void operator()(std::vector<bool, Allocator_t> &vContainer, StreamBuffer &sbufStream) const {
 			std::uint64_t u64Temp;
-			SerdesTrait<std::uint64_t>()(u64Temp, dbufStream);
+			SerdesTrait<std::uint64_t>()(u64Temp, sbufStream);
 			const std::size_t uSize = u64Temp;
 
 			vContainer.resize(uSize);
@@ -300,7 +300,7 @@ namespace Impl {
 			const std::size_t uByteCount = uSize / 8;
 			for(std::size_t i = 0; i < uByteCount; ++i){
 				std::uint8_t by;
-				SerdesTrait<std::uint8_t>()(by, dbufStream);
+				SerdesTrait<std::uint8_t>()(by, sbufStream);
 				for(std::size_t j = 0; j < 8; ++j){
 					*itWrite = ((by & 0x80) != 0);
 					++itWrite;
@@ -310,7 +310,7 @@ namespace Impl {
 			const std::size_t uRemaining = uSize % 8;
 			if(uRemaining != 0){
 				std::uint8_t by;
-				SerdesTrait<std::uint8_t>()(by, dbufStream);
+				SerdesTrait<std::uint8_t>()(by, sbufStream);
 				by <<= 8 - uRemaining;
 				for(std::size_t j = 0; j < uRemaining; ++j){
 					*itWrite = ((by & 0x80) != 0);
@@ -327,24 +327,24 @@ namespace Impl {
 		std::forward_list<Element_t, Allocator_t>,
 		void
 	> {
-		void operator()(DataBuffer &dbufStream, const std::forward_list<Element_t, Allocator_t> &vContainer) const {
+		void operator()(StreamBuffer &sbufStream, const std::forward_list<Element_t, Allocator_t> &vContainer) const {
 			std::size_t uSize = 0;
-			DataBuffer dbufTemp;
+			StreamBuffer sbufTemp;
 			for(const auto vElement : vContainer){
-				SerdesTrait<Element_t>()(dbufTemp, vElement);
+				SerdesTrait<Element_t>()(sbufTemp, vElement);
 				++uSize;
 			}
-			SerdesTrait<std::uint64_t>()(dbufStream, uSize);
-			dbufStream.Append(std::move(dbufTemp));
+			SerdesTrait<std::uint64_t>()(sbufStream, uSize);
+			sbufStream.Append(std::move(sbufTemp));
 		}
-		void operator()(std::forward_list<Element_t, Allocator_t> &vContainer, DataBuffer &dbufStream) const {
+		void operator()(std::forward_list<Element_t, Allocator_t> &vContainer, StreamBuffer &sbufStream) const {
 			std::uint64_t u64Temp;
-			SerdesTrait<std::uint64_t>()(u64Temp, dbufStream);
+			SerdesTrait<std::uint64_t>()(u64Temp, sbufStream);
 			const std::size_t uSize = u64Temp;
 
 			for(std::size_t i = 0; i < uSize; ++i){
 				vContainer.emplace_front();
-				SerdesTrait<Element_t>()(vContainer.front(), dbufStream);
+				SerdesTrait<Element_t>()(vContainer.front(), sbufStream);
 			}
 			vContainer.reverse();
 		}
@@ -369,23 +369,23 @@ namespace Impl {
 	> {
 		typedef typename std::remove_const<typename Container_t::value_type>::type ElementType;
 
-		void operator()(DataBuffer &dbufStream, const Container_t &vContainer) const {
+		void operator()(StreamBuffer &sbufStream, const Container_t &vContainer) const {
 			const std::size_t uSize = vContainer.size();
-			SerdesTrait<std::uint64_t>()(dbufStream, uSize);
+			SerdesTrait<std::uint64_t>()(sbufStream, uSize);
 
 			for(const auto &vElement : vContainer){
-				SerdesTrait<ElementType>()(dbufStream, vElement);
+				SerdesTrait<ElementType>()(sbufStream, vElement);
 			}
 		}
-		void operator()(Container_t &vContainer, DataBuffer &dbufStream) const {
+		void operator()(Container_t &vContainer, StreamBuffer &sbufStream) const {
 			std::uint64_t u64Temp;
-			SerdesTrait<std::uint64_t>()(u64Temp, dbufStream);
+			SerdesTrait<std::uint64_t>()(u64Temp, sbufStream);
 			const std::size_t uSize = u64Temp;
 
 			vContainer.clear();
 			ElementType vTempElement;
 			for(std::size_t i = 0; i < uSize; ++i){
-				SerdesTrait<ElementType>()(vTempElement, dbufStream);
+				SerdesTrait<ElementType>()(vTempElement, sbufStream);
 				vContainer.emplace_hint(vContainer.end(), std::move(vTempElement));
 			}
 		}
@@ -413,23 +413,23 @@ namespace Impl {
 			typename Container_t::value_type::second_type
 		> ElementType;
 
-		void operator()(DataBuffer &dbufStream, const Container_t &vContainer) const {
+		void operator()(StreamBuffer &sbufStream, const Container_t &vContainer) const {
 			const std::size_t uSize = vContainer.size();
-			SerdesTrait<std::uint64_t>()(dbufStream, uSize);
+			SerdesTrait<std::uint64_t>()(sbufStream, uSize);
 
 			for(const auto &vElement : vContainer){
-				SerdesTrait<ElementType>()(dbufStream, vElement);
+				SerdesTrait<ElementType>()(sbufStream, vElement);
 			}
 		}
-		void operator()(Container_t &vContainer, DataBuffer &dbufStream) const {
+		void operator()(Container_t &vContainer, StreamBuffer &sbufStream) const {
 			std::uint64_t u64Temp;
-			SerdesTrait<std::uint64_t>()(u64Temp, dbufStream);
+			SerdesTrait<std::uint64_t>()(u64Temp, sbufStream);
 			const std::size_t uSize = u64Temp;
 
 			vContainer.clear();
 			ElementType vTempElement;
 			for(std::size_t i = 0; i < uSize; ++i){
-				SerdesTrait<ElementType>()(vTempElement, dbufStream);
+				SerdesTrait<ElementType>()(vTempElement, sbufStream);
 				vContainer.emplace_hint(vContainer.end(), std::move(vTempElement));
 			}
 		}
@@ -440,23 +440,23 @@ namespace Impl {
 	struct SerdesTrait {
 		typedef Object_t ObjectType;
 		typedef std::pair<
-			std::function<void (DataBuffer &, const Object_t &)>,
-			std::function<void (Object_t &, DataBuffer &)>
+			std::function<void (StreamBuffer &, const Object_t &)>,
+			std::function<void (Object_t &, StreamBuffer &)>
 		> TableElementType;
 
 		static const TableElementType s_SerdesTable[];
 
-		void operator()(DataBuffer &dbufStream, const Object_t &vObject) const {
+		void operator()(StreamBuffer &sbufStream, const Object_t &vObject) const {
 			auto pCur = s_SerdesTable;
 			while(pCur->first){
-				pCur->first(dbufStream, vObject);
+				pCur->first(sbufStream, vObject);
 				++pCur;
 			}
 		}
-		void operator()(Object_t &vObject, DataBuffer &dbufStream) const {
+		void operator()(Object_t &vObject, StreamBuffer &sbufStream) const {
 			auto pCur = s_SerdesTable;
 			while(pCur->second){
-				pCur->second(vObject, dbufStream);
+				pCur->second(vObject, sbufStream);
 				++pCur;
 			}
 		}

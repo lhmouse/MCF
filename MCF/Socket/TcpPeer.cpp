@@ -21,8 +21,8 @@ private:
 
 public:
 	TcpPeerDelegate(Impl::UniqueSocket &&sockPeer, const void *pSockAddr, std::size_t uSockAddrSize)
-		: xm_sockPeer(std::move(sockPeer))
-		, xm_vPeerInfo(pSockAddr, uSockAddrSize)
+		: xm_sockPeer	(std::move(sockPeer))
+		, xm_vPeerInfo	(pSockAddr, uSockAddrSize)
 	{
 	}
 
@@ -106,10 +106,10 @@ namespace Impl {
 }
 
 // 静态成员函数。
-std::unique_ptr<TcpPeer> TcpPeer::Connect(const PeerInfo &vServerInfo){
+std::unique_ptr<TcpPeer> TcpPeer::Connect(const PeerInfo &piServerInfo){
 	Impl::WSAInitializer vWSAInitializer;
 
-	const short shFamily = vServerInfo.IsIPv4() ? AF_INET : AF_INET6;
+	const short shFamily = piServerInfo.IsIPv4() ? AF_INET : AF_INET6;
 
 	Impl::UniqueSocket sockServer(::socket(shFamily, SOCK_STREAM, IPPROTO_TCP));
 	if(!sockServer){
@@ -117,16 +117,16 @@ std::unique_ptr<TcpPeer> TcpPeer::Connect(const PeerInfo &vServerInfo){
 	}
 
 	SOCKADDR_STORAGE vSockAddr;
-	const int nSockAddrSize = vServerInfo.ToSockAddr(&vSockAddr, sizeof(vSockAddr));
+	const int nSockAddrSize = piServerInfo.ToSockAddr(&vSockAddr, sizeof(vSockAddr));
 	if(::connect(sockServer.Get(), (const SOCKADDR *)&vSockAddr, nSockAddrSize)){
 		MCF_THROW(::GetLastError(), L"::connect() 失败。");
 	}
 
 	return std::make_unique<TcpPeerDelegate>(std::move(sockServer), &vSockAddr, (std::size_t)nSockAddrSize);
 }
-std::unique_ptr<TcpPeer> TcpPeer::ConnectNoThrow(const PeerInfo &vServerInfo){
+std::unique_ptr<TcpPeer> TcpPeer::ConnectNoThrow(const PeerInfo &piServerInfo){
 	try {
-		return Connect(vServerInfo);
+		return Connect(piServerInfo);
 	} catch(Exception &e){
 		SetWin32LastError(e.ulErrorCode);
 		return std::unique_ptr<TcpPeer>();
@@ -143,26 +143,26 @@ const PeerInfo &TcpPeer::GetPeerInfo() const noexcept {
 std::size_t TcpPeer::Read(void *pData, std::size_t uSize){
 	ASSERT(dynamic_cast<TcpPeerDelegate *>(this));
 
-	return ((TcpPeerDelegate *)this)->Read(pData, uSize);
+	return static_cast<TcpPeerDelegate *>(this)->Read(pData, uSize);
 }
 void TcpPeer::ShutdownRead() noexcept {
 	ASSERT(dynamic_cast<TcpPeerDelegate *>(this));
 
-	((TcpPeerDelegate *)this)->ShutdownRead();
+	static_cast<TcpPeerDelegate *>(this)->ShutdownRead();
 }
 
 void TcpPeer::SetNoDelay(bool bNoDelay){
 	ASSERT(dynamic_cast<TcpPeerDelegate *>(this));
 
-	((TcpPeerDelegate *)this)->SetNoDelay(bNoDelay);
+	static_cast<TcpPeerDelegate *>(this)->SetNoDelay(bNoDelay);
 }
 void TcpPeer::Write(const void *pData, std::size_t uSize){
 	ASSERT(dynamic_cast<TcpPeerDelegate *>(this));
 
-	((TcpPeerDelegate *)this)->Write(pData, uSize);
+	static_cast<TcpPeerDelegate *>(this)->Write(pData, uSize);
 }
 void TcpPeer::ShutdownWrite() noexcept {
 	ASSERT(dynamic_cast<TcpPeerDelegate *>(this));
 
-	((TcpPeerDelegate *)this)->ShutdownWrite();
+	static_cast<TcpPeerDelegate *>(this)->ShutdownWrite();
 }

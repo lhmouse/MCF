@@ -5,8 +5,10 @@
 #include "../StdMCF.hpp"
 #include "ReaderWriterLock.hpp"
 #include "ThreadLocalPtr.hpp"
+#include "CriticalSection.hpp"
+#include "Semaphore.hpp"
 #include "../Core/Exception.hpp"
-#include "../Core/UniqueHandle.hpp"
+#include "../Core/Time.hpp"
 using namespace MCF;
 
 namespace {
@@ -18,39 +20,22 @@ private:
 		std::size_t m_uWriterRecur;
 	};
 
-	struct xSemaphoreCloser {
-		constexpr HANDLE operator()() const noexcept {
-			return NULL;
-		}
-		void operator()(HANDLE hSemaphore) const noexcept {
-			::CloseHandle(hSemaphore);
-		}
-	};
-
 private:
 	volatile std::size_t xm_uReaderCount;
 	ThreadLocalPtr<xThreadInfo, xThreadInfo> xm_pThreadInfo;
 
-	CRITICAL_SECTION xm_csGuard;
-	UniqueHandle<xSemaphoreCloser> xm_hExSemaphore;
+	const std::unique_ptr<CriticalSection> xm_pcsGuard;
+	CriticalSection::Lock xm_vGuardLock;
+	const std::unique_ptr<Semaphore> xm_psemExclusive;
 
 public:
 	ReaderWriterLockDelegate(unsigned long ulSpinCount) noexcept
 		: xm_uReaderCount	(0)
 		, xm_pThreadInfo	(xThreadInfo())
+		, xm_pcsGuard		(CriticalSection::Create(ulSpinCount))
+		, xm_vGuardLock		(xm_pcsGuard.get(), false)
+		, xm_psemExclusive	(Semaphore::Create(1, 1))
 	{
-#if defined(NDEBUG) && (_WIN32_WINNT >= 0x0600)
-		::InitializeCriticalSectionEx(&xm_csGuard, ulSpinCount, CRITICAL_SECTION_NO_DEBUG_INFO);
-#else
-		::InitializeCriticalSectionAndSpinCount(&xm_csGuard, ulSpinCount);
-#endif
-		xm_hExSemaphore.Reset(::CreateSemaphoreW(nullptr, 1, 1, nullptr));
-		if(!xm_hExSemaphore){
-			MCF_THROW(::GetLastError(), L"CreateSemaphoreW() 失败。");
-		}
-	}
-	~ReaderWriterLockDelegate() noexcept {
-		::DeleteCriticalSection(&xm_csGuard);
 	}
 
 private:
@@ -68,11 +53,11 @@ public:
 
 		if(++vThreadInfo.m_uReaderRecur == 1){
 			if(vThreadInfo.m_uWriterRecur == 0){
-				::EnterCriticalSection(&xm_csGuard);
+				xm_vGuardLock.Lock();
 				if(__atomic_add_fetch(&xm_uReaderCount, 1, __ATOMIC_ACQ_REL) == 1){
-					::WaitForSingleObject(xm_hExSemaphore.Get(), INFINITE);
+					xm_psemExclusive->Wait();
 				}
-				::LeaveCriticalSection(&xm_csGuard);
+				xm_vGuardLock.Unlock();
 			} else {
 				__atomic_add_fetch(&xm_uReaderCount, 1, __ATOMIC_ACQ_REL);
 			}
@@ -84,7 +69,7 @@ public:
 		if(--vThreadInfo.m_uReaderRecur == 0){
 			if(vThreadInfo.m_uWriterRecur == 0){
 				if(__atomic_sub_fetch(&xm_uReaderCount, 1, __ATOMIC_ACQ_REL) == 0){
-					::ReleaseSemaphore(xm_hExSemaphore.Get(), 1, nullptr);
+					xm_psemExclusive->Signal();
 				}
 			} else {
 				__atomic_sub_fetch(&xm_uReaderCount, 1, __ATOMIC_ACQ_REL);
@@ -106,9 +91,9 @@ public:
 			// 但是这样除了使问题复杂化以外没有什么好处。
 			ASSERT_MSG(vThreadInfo.m_uReaderRecur == 0, L"获取写锁前必须先释放读锁。");
 
-			::EnterCriticalSection(&xm_csGuard);
+			xm_vGuardLock.Lock();
 //			if(vThreadInfo.m_uReaderRecur == 0){
-				::WaitForSingleObject(xm_hExSemaphore.Get(), INFINITE);
+				xm_psemExclusive->Wait();
 //			}
 		}
 	}
@@ -117,9 +102,9 @@ public:
 
 		if(--vThreadInfo.m_uWriterRecur == 0){
 			if(vThreadInfo.m_uReaderRecur == 0){
-				::ReleaseSemaphore(xm_hExSemaphore.Get(), 1, nullptr);
+				xm_psemExclusive->Signal();
 			}
-			::LeaveCriticalSection(&xm_csGuard);
+			xm_vGuardLock.Unlock();
 		}
 	}
 };

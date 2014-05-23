@@ -4,25 +4,16 @@
 
 #include "../StdMCF.hpp"
 #include "Semaphore.hpp"
+#include "_WinHandle.hpp"
 #include "../Core/Exception.hpp"
-#include "../Core/UniqueHandle.hpp"
+#include "../Core/Time.hpp"
 using namespace MCF;
 
 namespace {
 
 class SemaphoreDelegate : CONCRETE(Semaphore) {
 private:
-	struct xSemaphoreCloser {
-		constexpr HANDLE operator()() const noexcept {
-			return NULL;
-		}
-		void operator()(HANDLE hSemaphore) const noexcept {
-			::CloseHandle(hSemaphore);
-		}
-	};
-
-private:
-	UniqueHandle<xSemaphoreCloser> xm_hSemaphore;
+	Impl::UniqueWinHandle xm_hSemaphore;
 
 public:
 	SemaphoreDelegate(unsigned long ulInitCount, unsigned long ulMaxCount, const WideStringObserver &wsoName){
@@ -37,28 +28,17 @@ public:
 	}
 
 public:
-	unsigned long WaitTimeout(unsigned long ulMilliSeconds, unsigned long ulWaitCount) noexcept {
+	unsigned long WaitTimeout(unsigned long long ullMilliSeconds, unsigned long ulWaitCount) noexcept {
 		unsigned long ulSucceeded = 0;
-		if(ulMilliSeconds == INFINITE){
-			for(auto i = ulWaitCount; i; --i){
-				::WaitForSingleObject(xm_hSemaphore.Get(), INFINITE);
-				++ulSucceeded;
-			}
-		} else {
-			const auto ulWaitUntil = ::GetTickCount() + ulMilliSeconds;
-			auto ulTimeToWait = ulMilliSeconds;
-			for(auto i = ulWaitCount; i; --i){
-				if(::WaitForSingleObject(xm_hSemaphore.Get(), ulTimeToWait) == WAIT_TIMEOUT){
-					break;
+		WaitUntil(
+			[&](DWORD dwRemaining) noexcept {
+				if(::WaitForSingleObject(xm_hSemaphore.Get(), dwRemaining) == WAIT_TIMEOUT){
+					return false;
 				}
-				++ulSucceeded;
-				const auto ulCurrent = ::GetTickCount();
-				if(ulWaitUntil <= ulCurrent){
-					break;
-				}
-				ulTimeToWait = ulWaitUntil - ulCurrent;
-			}
-		}
+				return ++ulSucceeded >= ulWaitCount;
+			},
+			ullMilliSeconds
+		);
 		return ulSucceeded;
 	}
 	void Release(unsigned long ulSignalCount) noexcept {
@@ -76,16 +56,16 @@ std::unique_ptr<Semaphore> Semaphore::Create(unsigned long ulInitCount, unsigned
 }
 
 // 其他非静态成员函数。
-unsigned long Semaphore::WaitTimeout(unsigned long ulMilliSeconds, unsigned long ulWaitCount) noexcept {
+unsigned long Semaphore::WaitTimeout(unsigned long long ullMilliSeconds, unsigned long ulWaitCount) noexcept {
 	ASSERT(dynamic_cast<SemaphoreDelegate *>(this));
 
-	return ((SemaphoreDelegate *)this)->WaitTimeout(ulMilliSeconds, ulWaitCount);
+	return static_cast<SemaphoreDelegate *>(this)->WaitTimeout(ullMilliSeconds, ulWaitCount);
 }
 void Semaphore::Wait(unsigned long ulWaitCount) noexcept {
-	WaitTimeout(INFINITE, ulWaitCount);
+	WaitTimeout(WAIT_FOREVER, ulWaitCount);
 }
 void Semaphore::Signal(unsigned long ulSignalCount) noexcept {
 	ASSERT(dynamic_cast<SemaphoreDelegate *>(this));
 
-	((SemaphoreDelegate *)this)->Release(ulSignalCount);
+	static_cast<SemaphoreDelegate *>(this)->Release(ulSignalCount);
 }

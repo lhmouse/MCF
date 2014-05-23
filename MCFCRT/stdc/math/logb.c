@@ -11,8 +11,8 @@ float logbf(float x){
 		"fld dword ptr[%1] \n"
 		"fxtract \n"
 		"fstp st \n"
-		__FLT_RET_ST("%1")
-		: __FLT_RET_CONS(ret)
+		__MCF_FLT_RET_ST("%1")
+		: __MCF_FLT_RET_CONS(ret)
 		: "m"(x)
 	);
 	return ret;
@@ -24,22 +24,22 @@ double logb(double x){
 		"fld qword ptr[%1] \n"
 		"fxtract \n"
 		"fstp st \n"
-		__DBL_RET_ST("%1")
-		: __DBL_RET_CONS(ret)
+		__MCF_DBL_RET_ST("%1")
+		: __MCF_DBL_RET_CONS(ret)
 		: "m"(x)
 	);
 	return ret;
 }
 
-__LDBL_DECL(logbl, long double x){
+__MCF_LDBL_DECL(logbl, long double x){
 	register long double ret;
 	__asm__ __volatile__(
 		"fld tbyte ptr[%1] \n"
 		"fxtract \n"
 		"fstp st \n"
-		__LDBL_RET_ST()
-		: __LDBL_RET_CONS(ret)
-		: "m"(x), __LDBL_RET_CONS_IN()
+		__MCF_LDBL_RET_ST()
+		: __MCF_LDBL_RET_CONS(ret)
+		: "m"(x), __MCF_LDBL_RET_CONS_IN()
 	);
-	__LDBL_RETURN(ret);
+	__MCF_LDBL_RETURN(ret);
 }

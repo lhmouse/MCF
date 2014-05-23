@@ -281,12 +281,12 @@ std::unique_ptr<ZEncoder> ZEncoder::Create(
 void ZEncoder::Abort() noexcept {
 	ASSERT(dynamic_cast<ZEncoderDelegate *>(this));
 
-	((ZEncoderDelegate *)this)->Abort();
+	static_cast<ZEncoderDelegate *>(this)->Abort();
 }
 void ZEncoder::Update(const void *pData, std::size_t uSize){
 	ASSERT(dynamic_cast<ZEncoderDelegate *>(this));
 
-	((ZEncoderDelegate *)this)->Update(pData, uSize);
+	static_cast<ZEncoderDelegate *>(this)->Update(pData, uSize);
 }
 std::size_t ZEncoder::QueryBytesProcessed() const noexcept {
 	ASSERT(dynamic_cast<const ZEncoderDelegate *>(this));
@@ -296,7 +296,7 @@ std::size_t ZEncoder::QueryBytesProcessed() const noexcept {
 void ZEncoder::Finalize(){
 	ASSERT(dynamic_cast<ZEncoderDelegate *>(this));
 
-	((ZEncoderDelegate *)this)->Finalize();
+	static_cast<ZEncoderDelegate *>(this)->Finalize();
 }
 
 // ========== ZDecoder ==========
@@ -312,12 +312,12 @@ std::unique_ptr<ZDecoder> ZDecoder::Create(
 void ZDecoder::Abort() noexcept {
 	ASSERT(dynamic_cast<ZDecoderDelegate *>(this));
 
-	((ZDecoderDelegate *)this)->Abort();
+	static_cast<ZDecoderDelegate *>(this)->Abort();
 }
 void ZDecoder::Update(const void *pData, std::size_t uSize){
 	ASSERT(dynamic_cast<ZDecoderDelegate *>(this));
 
-	((ZDecoderDelegate *)this)->Update(pData, uSize);
+	static_cast<ZDecoderDelegate *>(this)->Update(pData, uSize);
 }
 std::size_t ZDecoder::QueryBytesProcessed() const noexcept {
 	ASSERT(dynamic_cast<const ZDecoderDelegate *>(this));
@@ -327,5 +327,5 @@ std::size_t ZDecoder::QueryBytesProcessed() const noexcept {
 void ZDecoder::Finalize(){
 	ASSERT(dynamic_cast<ZDecoderDelegate *>(this));
 
-	((ZDecoderDelegate *)this)->Finalize();
+	static_cast<ZDecoderDelegate *>(this)->Finalize();
 }

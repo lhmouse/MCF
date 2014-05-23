@@ -20,8 +20,8 @@ float exp2f(float x){
 		"fld1 \n"
 		"faddp st(1), st \n"
 		"fmulp st(1), st \n"
-		__FLT_RET_ST("%1")
-		: __FLT_RET_CONS(ret)
+		__MCF_FLT_RET_ST("%1")
+		: __MCF_FLT_RET_CONS(ret)
 		: "m"(x)
 	);
 	return ret;
@@ -42,14 +42,14 @@ double exp2(double x){
 		"fld1 \n"
 		"faddp st(1), st \n"
 		"fmulp st(1), st \n"
-		__DBL_RET_ST("%1")
-		: __DBL_RET_CONS(ret)
+		__MCF_DBL_RET_ST("%1")
+		: __MCF_DBL_RET_CONS(ret)
 		: "m"(x)
 	);
 	return ret;
 }
 
-__LDBL_DECL(exp2l, long double x){
+__MCF_LDBL_DECL(exp2l, long double x){
 	register long double ret;
 	__asm__ __volatile__(
 		"fld tbyte ptr[%1] \n"
@@ -64,9 +64,9 @@ __LDBL_DECL(exp2l, long double x){
 		"fld1 \n"
 		"faddp st(1), st \n"
 		"fmulp st(1), st \n"
-		__LDBL_RET_ST()
-		: __LDBL_RET_CONS(ret)
-		: "m"(x), __LDBL_RET_CONS_IN()
+		__MCF_LDBL_RET_ST()
+		: __MCF_LDBL_RET_CONS(ret)
+		: "m"(x), __MCF_LDBL_RET_CONS_IN()
 	);
-	__LDBL_RETURN(ret);
+	__MCF_LDBL_RETURN(ret);
 }

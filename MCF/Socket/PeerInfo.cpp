@@ -4,10 +4,10 @@
 
 #include "../StdMCF.hpp"
 #include "PeerInfo.hpp"
+#include "_SocketUtils.hpp"
 #include "../../MCFCRT/ext/assert.h"
 #include "../Core/Exception.hpp"
 #include "../Core/Utilities.hpp"
-#include "_SocketUtils.hpp"
 using namespace MCF;
 
 namespace {

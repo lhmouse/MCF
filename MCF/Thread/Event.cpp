@@ -4,25 +4,16 @@
 
 #include "../StdMCF.hpp"
 #include "Event.hpp"
+#include "_WinHandle.hpp"
 #include "../Core/Exception.hpp"
-#include "../Core/UniqueHandle.hpp"
+#include "../Core/Time.hpp"
 using namespace MCF;
 
 namespace {
 
 class EventDelegate : CONCRETE(Event) {
 private:
-	struct xEventCloser {
-		constexpr HANDLE operator()() const noexcept {
-			return NULL;
-		}
-		void operator()(HANDLE hEvent) const noexcept {
-			::CloseHandle(hEvent);
-		}
-	};
-
-private:
-	UniqueHandle<xEventCloser> xm_hEvent;
+	Impl::UniqueWinHandle xm_hEvent;
 
 public:
 	EventDelegate(bool bInitSet, const WideStringObserver &wsoName){
@@ -37,8 +28,13 @@ public:
 	}
 
 public:
-	bool WaitTimeout(unsigned long ulMilliSeconds) const noexcept {
-		return ::WaitForSingleObject(xm_hEvent.Get(), ulMilliSeconds) != WAIT_TIMEOUT;
+	bool WaitTimeout(unsigned long long ullMilliSeconds) const noexcept {
+		return WaitUntil(
+			[&](DWORD dwRemaining) noexcept {
+				return ::WaitForSingleObject(xm_hEvent.Get(), dwRemaining) != WAIT_TIMEOUT;
+			},
+			ullMilliSeconds
+		);
 	}
 
 	void Set() const noexcept {
@@ -63,19 +59,19 @@ bool Event::IsSet() const noexcept {
 void Event::Set() noexcept {
 	ASSERT(dynamic_cast<EventDelegate *>(this));
 
-	((EventDelegate *)this)->Set();
+	static_cast<EventDelegate *>(this)->Set();
 }
 void Event::Clear() noexcept {
 	ASSERT(dynamic_cast<EventDelegate *>(this));
 
-	((EventDelegate *)this)->Clear();
+	static_cast<EventDelegate *>(this)->Clear();
 }
 
-bool Event::WaitTimeout(unsigned long ulMilliSeconds) const noexcept {
+bool Event::WaitTimeout(unsigned long long ullMilliSeconds) const noexcept {
 	ASSERT(dynamic_cast<const EventDelegate *>(this));
 
-	return ((const EventDelegate *)this)->WaitTimeout(ulMilliSeconds);
+	return ((const EventDelegate *)this)->WaitTimeout(ullMilliSeconds);
 }
 void Event::Wait() const noexcept {
-	WaitTimeout(INFINITE);
+	WaitTimeout(WAIT_FOREVER);
 }

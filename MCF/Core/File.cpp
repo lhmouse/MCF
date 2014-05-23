@@ -227,7 +227,7 @@ std::uint64_t File::GetSize() const {
 void File::Resize(std::uint64_t u64NewSize){
 	ASSERT(dynamic_cast<FileDelegate *>(this));
 
-	((FileDelegate *)this)->Resize(u64NewSize);
+	static_cast<FileDelegate *>(this)->Resize(u64NewSize);
 }
 void File::Clear(){
 	Resize(0);
@@ -246,10 +246,10 @@ std::size_t File::Read(void *pBuffer, std::size_t uBytesToRead, std::uint64_t u6
 void File::Write(std::uint64_t u64Offset, const void *pBuffer, std::size_t uBytesToWrite){
 	ASSERT(dynamic_cast<FileDelegate *>(this));
 
-	((FileDelegate *)this)->Write(u64Offset, pBuffer, uBytesToWrite, nullptr);
+	static_cast<FileDelegate *>(this)->Write(u64Offset, pBuffer, uBytesToWrite, nullptr);
 }
 void File::Write(std::uint64_t u64Offset, const void *pBuffer, std::size_t uBytesToWrite, File::AsyncProc fnAsyncProc){
 	ASSERT(dynamic_cast<FileDelegate *>(this));
 
-	((FileDelegate *)this)->Write(u64Offset, pBuffer, uBytesToWrite, &fnAsyncProc);
+	static_cast<FileDelegate *>(this)->Write(u64Offset, pBuffer, uBytesToWrite, &fnAsyncProc);
 }

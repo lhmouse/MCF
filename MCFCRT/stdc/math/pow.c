@@ -94,8 +94,8 @@ static __attribute__((__cdecl__)) float ppowf(float x, float y){
 		"fld1 \n"
 		"faddp st(1), st \n"
 		"fmulp st(1), st \n"
-		__FLT_RET_ST("%1")
-		: __FLT_RET_CONS(ret)
+		__MCF_FLT_RET_ST("%1")
+		: __MCF_FLT_RET_CONS(ret)
 		: "m"(x), "m"(y)
 	);
 	return ret;
@@ -117,13 +117,13 @@ static __attribute__((__cdecl__)) double ppowd(double x, double y){
 		"fld1 \n"
 		"faddp st(1), st \n"
 		"fmulp st(1), st \n"
-		__DBL_RET_ST("%1")
-		: __DBL_RET_CONS(ret)
+		__MCF_DBL_RET_ST("%1")
+		: __MCF_DBL_RET_CONS(ret)
 		: "m"(x), "m"(y)
 	);
 	return ret;
 }
-static __attribute__((__cdecl__)) __LDBL_DECL(ppowl, double x, double y){
+static __attribute__((__cdecl__)) __MCF_LDBL_DECL(ppowl, double x, double y){
 	register long double ret;
 	__asm__ __volatile__(
 		"fld tbyte ptr[%2] \n"
@@ -140,11 +140,11 @@ static __attribute__((__cdecl__)) __LDBL_DECL(ppowl, double x, double y){
 		"fld1 \n"
 		"faddp st(1), st \n"
 		"fmulp st(1), st \n"
-		__LDBL_RET_ST()
-		: __LDBL_RET_CONS(ret)
-		: "m"(x), "m"(y), __LDBL_RET_CONS_IN()
+		__MCF_LDBL_RET_ST()
+		: __MCF_LDBL_RET_CONS(ret)
+		: "m"(x), "m"(y), __MCF_LDBL_RET_CONS_IN()
 	);
-	__LDBL_RETURN(ret);
+	__MCF_LDBL_RETURN(ret);
 }
 
 float powf(float x, float y){

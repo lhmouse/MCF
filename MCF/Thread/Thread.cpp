@@ -4,23 +4,14 @@
 
 #include "../StdMCF.hpp"
 #include "Thread.hpp"
+#include "_WinHandle.hpp"
 #include "../Core/Exception.hpp"
-#include "../Core/UniqueHandle.hpp"
+#include "../Core/Time.hpp"
 using namespace MCF;
 
 namespace {
 
 class ThreadDelegate : CONCRETE(Thread) {
-private:
-	struct xThreadCloser {
-		constexpr HANDLE operator()() const noexcept {
-			return NULL;
-		}
-		void operator()(HANDLE hThread) const noexcept {
-			::CloseHandle(hThread);
-		}
-	};
-
 private:
 	static unsigned int xThreadProc(std::intptr_t nParam) noexcept {
 		auto *const pThis = (ThreadDelegate *)nParam;
@@ -42,7 +33,7 @@ public:
 private:
 	std::shared_ptr<ThreadDelegate> xm_pLock;
 	std::function<void ()> xm_fnProc;
-	UniqueHandle<xThreadCloser> xm_hThread;
+	Impl::UniqueWinHandle xm_hThread;
 	unsigned long xm_ulThreadId;
 	std::exception_ptr xm_pException;
 
@@ -53,11 +44,16 @@ private:
 	}
 
 public:
-	bool WaitTimeout(unsigned long ulMilliSeconds) const noexcept {
-		return ::WaitForSingleObject(xm_hThread.Get(), ulMilliSeconds) != WAIT_TIMEOUT;
+	bool WaitTimeout(unsigned long long ullMilliSeconds) const noexcept {
+		return WaitUntil(
+			[&](DWORD dwRemaining) noexcept {
+				return ::WaitForSingleObject(xm_hThread.Get(), dwRemaining) != WAIT_TIMEOUT;
+			},
+			ullMilliSeconds
+		);
 	}
 	void Join() const {
-		WaitTimeout(INFINITE);
+		WaitTimeout(WAIT_FOREVER);
 		if(xm_pException){
 			std::rethrow_exception(xm_pException);
 		}
@@ -100,13 +96,13 @@ std::shared_ptr<Thread> Thread::Create(std::function<void ()> fnProc, bool bSusp
 }
 
 // 其他非静态成员函数。
-bool Thread::WaitTimeout(unsigned long ulMilliSeconds) const noexcept {
+bool Thread::WaitTimeout(unsigned long long ullMilliSeconds) const noexcept {
 	ASSERT(dynamic_cast<const ThreadDelegate *>(this));
 
-	return ((const ThreadDelegate *)this)->WaitTimeout(ulMilliSeconds);
+	return ((const ThreadDelegate *)this)->WaitTimeout(ullMilliSeconds);
 }
 void Thread::Wait() const noexcept {
-	WaitTimeout(INFINITE);
+	WaitTimeout(WAIT_FOREVER);
 }
 void Thread::Join() const {
 	ASSERT(dynamic_cast<const ThreadDelegate *>(this));
@@ -126,10 +122,10 @@ unsigned long Thread::GetThreadId() const noexcept {
 void Thread::Suspend() noexcept {
 	ASSERT(dynamic_cast<ThreadDelegate *>(this));
 
-	((ThreadDelegate *)this)->Suspend();
+	static_cast<ThreadDelegate *>(this)->Suspend();
 }
 void Thread::Resume() noexcept {
 	ASSERT(dynamic_cast<ThreadDelegate *>(this));
 
-	((ThreadDelegate *)this)->Resume();
+	static_cast<ThreadDelegate *>(this)->Resume();
 }

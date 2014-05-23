@@ -44,8 +44,8 @@ unsigned long __MCF_CRT_Begin(){
 void __MCF_CRT_End(){
 	for(;;){
 		AT_EXIT_NODE *pNode = __atomic_load_n(&g_pAtExitHead, __ATOMIC_ACQUIRE);
-		while(pNode && !__atomic_compare_exchange_n(&g_pAtExitHead, &pNode, pNode->pNext, false, __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST)){
-			// 空的。
+		while(EXPECT(pNode && !__atomic_compare_exchange_n(&g_pAtExitHead, &pNode, pNode->pNext, false, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE))){
+			SwitchToThread();
 		}
 		if(!pNode){
 			break;
@@ -74,8 +74,8 @@ int MCF_AtCRTEnd(void (__cdecl *pfnProc)(intptr_t), intptr_t nContext){
 	pNode->nContext = nContext;
 
 	pNode->pNext = __atomic_load_n(&g_pAtExitHead, __ATOMIC_ACQUIRE);
-	while(!__atomic_compare_exchange_n(&g_pAtExitHead, &(pNode->pNext), pNode, false, __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST)){
-		// 空的。
+	while(EXPECT(!__atomic_compare_exchange_n(&g_pAtExitHead, &(pNode->pNext), pNode, false, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE))){
+		SwitchToThread();
 	}
 
 	return 0;

@@ -4,32 +4,90 @@
 
 #include "../StdMCF.hpp"
 #include "CriticalSection.hpp"
+#include "Semaphore.hpp"
 using namespace MCF;
 
 namespace {
 
 class CriticalSectionDelegate : CONCRETE(CriticalSection) {
 private:
-	CRITICAL_SECTION xm_vCriticalSecion;
+	unsigned long xm_ulSpinCount;
+	volatile DWORD xm_dwOwner;
+	std::size_t xm_uRecurCount;
+	const std::unique_ptr<Semaphore> xm_psemExclusive;
+	volatile std::size_t xm_uWaiting;
 
 public:
-	CriticalSectionDelegate(unsigned long ulSpinCount) noexcept {
-#if defined(NDEBUG) && (_WIN32_WINNT >= 0x0600)
-		::InitializeCriticalSectionEx(&xm_vCriticalSecion, ulSpinCount, CRITICAL_SECTION_NO_DEBUG_INFO);
-#else
-		::InitializeCriticalSectionAndSpinCount(&xm_vCriticalSecion, ulSpinCount);
-#endif
-	}
-	~CriticalSectionDelegate() noexcept {
-		::DeleteCriticalSection(&xm_vCriticalSecion);
+	CriticalSectionDelegate(unsigned long ulSpinCount) noexcept
+		: xm_ulSpinCount	(ulSpinCount)
+		, xm_dwOwner		(0)
+		, xm_uRecurCount	(0)
+		, xm_psemExclusive	(Semaphore::Create(0, 1))
+		, xm_uWaiting		(0)
+	{
+		SYSTEM_INFO vSystemInfo;
+		::GetSystemInfo(&vSystemInfo);
+		if(vSystemInfo.dwNumberOfProcessors == 1){
+			xm_ulSpinCount = 0;
+		}
 	}
 
 public:
 	void Enter() noexcept {
-		::EnterCriticalSection(&xm_vCriticalSecion);
+		const DWORD dwThreadId = ::GetCurrentThreadId();
+
+		if(__atomic_load_n(&xm_dwOwner, __ATOMIC_ACQUIRE) != dwThreadId){
+			for(;;){
+				auto i = xm_ulSpinCount;
+				for(;;){
+					DWORD dwOldOwner = 0;
+					if(EXPECT_NOT(__atomic_compare_exchange_n(&xm_dwOwner, &dwOldOwner, dwThreadId, false, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE))){
+						goto jAcquired;
+					}
+					if(EXPECT_NOT(i)){
+						break;
+					}
+				}
+
+				std::size_t uWaiting;
+				for(;;){
+					uWaiting = __atomic_exchange_n(&xm_uWaiting, (std::size_t)-1, __ATOMIC_ACQ_REL);
+					if(EXPECT_NOT(uWaiting != (std::size_t)-1)){
+						break;
+					}
+					::SwitchToThread();
+				}
+
+				++uWaiting;
+				__atomic_store_n(&xm_uWaiting, uWaiting, __ATOMIC_RELEASE);
+				xm_psemExclusive->Wait();
+			}
+		}
+
+	jAcquired:
+		++xm_uRecurCount;
 	}
 	void Leave() noexcept {
-		::LeaveCriticalSection(&xm_vCriticalSecion);
+		ASSERT(__atomic_load_n(&xm_dwOwner, __ATOMIC_ACQUIRE) == ::GetCurrentThreadId());
+
+		if(--xm_uRecurCount == 0){
+			__atomic_store_n(&xm_dwOwner, 0, __ATOMIC_RELEASE);
+
+			std::size_t uWaiting;
+			for(;;){
+				uWaiting = __atomic_exchange_n(&xm_uWaiting, (std::size_t)-1, __ATOMIC_ACQ_REL);
+				if(EXPECT_NOT(uWaiting != (std::size_t)-1)){
+					break;
+				}
+				::SwitchToThread();
+			}
+
+			if(uWaiting){
+				xm_psemExclusive->Signal();
+				--uWaiting;
+			}
+			__atomic_store_n(&xm_uWaiting, uWaiting, __ATOMIC_RELEASE);
+		}
 	}
 };
 

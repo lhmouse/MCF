@@ -5,15 +5,15 @@
 #ifndef MCF_DESERIALIZER_HPP_
 #define MCF_DESERIALIZER_HPP_
 
-#include "DataBuffer.hpp"
 #include "_SerdesTraits.hpp"
+#include "../Core/StreamBuffer.hpp"
 #include <cstddef>
 
 namespace MCF {
 
 class DeserializerBase : ABSTRACT {
 protected:
-	virtual void xDoDeserialize(void *pObject, DataBuffer &dbufStream) const = 0;
+	virtual void xDoDeserialize(void *pObject, StreamBuffer &sbufStream) const = 0;
 };
 
 template<typename Object_t>
@@ -22,18 +22,18 @@ public:
 	typedef Object_t ObjectType;
 
 public:
-	static void Deserialize(Object_t &vObject, DataBuffer &dbufStream){
-		Impl::SerdesTrait<Object_t>()(vObject, dbufStream);
+	static void Deserialize(Object_t &vObject, StreamBuffer &sbufStream){
+		Impl::SerdesTrait<Object_t>()(vObject, sbufStream);
 	}
 
 protected:
-	virtual void xDoDeserialize(void *pObject, DataBuffer &dbufStream) const override {
-		Deserialize(*(Object_t *)pObject, dbufStream);
+	virtual void xDoDeserialize(void *pObject, StreamBuffer &sbufStream) const override {
+		Deserialize(*(Object_t *)pObject, sbufStream);
 	}
 
 public:
-	void operator()(Object_t &vObject, DataBuffer &dbufStream) const {
-		Deserialize(vObject, dbufStream);
+	void operator()(Object_t &vObject, StreamBuffer &sbufStream) const {
+		Deserialize(vObject, sbufStream);
 	}
 };
 
@@ -63,8 +63,8 @@ template class Deserializer<std::nullptr_t>;
 
 // 小工具。
 template<typename Object_t>
-inline void Deserialize(Object_t &vObject, DataBuffer &dbufStream){
-	Deserializer<Object_t>()(vObject, dbufStream);
+inline void Deserialize(Object_t &vObject, StreamBuffer &sbufStream){
+	Deserializer<Object_t>()(vObject, sbufStream);
 }
 
 }

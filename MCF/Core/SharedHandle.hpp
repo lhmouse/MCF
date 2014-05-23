@@ -133,14 +133,7 @@ private:
 				if(uOldWeakCount == 0){
 					return false;
 				}
-				if(__atomic_compare_exchange_n(
-					&xm_uWeakCount,
-					&uOldWeakCount,
-					uOldWeakCount + 1,
-					false,
-					__ATOMIC_RELAXED,
-					__ATOMIC_RELAXED
-				)){
+				if(EXPECT_NOT(__atomic_compare_exchange_n(&xm_uWeakCount, &uOldWeakCount, uOldWeakCount + 1, false, __ATOMIC_RELAXED, __ATOMIC_RELAXED))){
 					return true;
 				}
 			}
@@ -157,14 +150,7 @@ private:
 					xDropWeakRef();
 					return false;
 				}
-				if(__atomic_compare_exchange_n(
-					&xm_uCount,
-					&uOldCount,
-					uOldCount + 1,
-					false,
-					__ATOMIC_RELAXED,
-					__ATOMIC_RELAXED
-				)){
+				if(EXPECT_NOT(__atomic_compare_exchange_n(&xm_uCount, &uOldCount, uOldCount + 1, false, __ATOMIC_RELAXED, __ATOMIC_RELAXED))){
 					return true;
 				}
 			}

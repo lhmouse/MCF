@@ -8,6 +8,7 @@
 #include "unref_param.h"
 #include "assert.h"
 #include "offset_of.h"
+#include "expect.h"
 
 #include "../env/_crtdef.h"
 

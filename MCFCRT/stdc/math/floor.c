@@ -19,9 +19,9 @@ float floorf(float x){
 		"fldcw word ptr[%2] \n"
 		"frndint \n"
 		"mov word ptr[%2], ax \n"
-		__FLT_RET_ST("%1")
+		__MCF_FLT_RET_ST("%1")
 		"fldcw word ptr[%2] \n"
-		: __FLT_RET_CONS(ret)
+		: __MCF_FLT_RET_CONS(ret)
 		: "m"(x), "m"(fcw)
 		: "ax", "cx"
 	);
@@ -42,16 +42,16 @@ double floor(double x){
 		"fldcw word ptr[%2] \n"
 		"frndint \n"
 		"mov word ptr[%2], ax \n"
-		__DBL_RET_ST("%1")
+		__MCF_DBL_RET_ST("%1")
 		"fldcw word ptr[%2] \n"
-		: __DBL_RET_CONS(ret)
+		: __MCF_DBL_RET_CONS(ret)
 		: "m"(x), "m"(fcw)
 		: "ax", "cx"
 	);
 	return ret;
 }
 
-__LDBL_DECL(floorl, long double x){
+__MCF_LDBL_DECL(floorl, long double x){
 	register long double ret;
 	uint16_t fcw;
 	__asm__ __volatile__(
@@ -65,11 +65,11 @@ __LDBL_DECL(floorl, long double x){
 		"fldcw word ptr[%2] \n"
 		"frndint \n"
 		"mov word ptr[%2], ax \n"
-		__LDBL_RET_ST()
+		__MCF_LDBL_RET_ST()
 		"fldcw word ptr[%2] \n"
-		: __LDBL_RET_CONS(ret)
-		: "m"(x), "m"(fcw), __LDBL_RET_CONS_IN()
+		: __MCF_LDBL_RET_CONS(ret)
+		: "m"(x), "m"(fcw), __MCF_LDBL_RET_CONS_IN()
 		: "ax", "cx"
 	);
-	__LDBL_RETURN(ret);
+	__MCF_LDBL_RETURN(ret);
 }

@@ -3,26 +3,32 @@
 // Copyleft 2014. LH_Mouse. All wrongs reserved.
 
 #include "../StdMCF.hpp"
-#include "DataBuffer.hpp"
-#include "../Core/Utilities.hpp"
-#include "../Core/Exception.hpp"
+#include "StreamBuffer.hpp"
+#include "Utilities.hpp"
+#include "Exception.hpp"
 #include <cstring>
 using namespace MCF;
 
 // 构造函数和析构函数。
-DataBuffer::DataBuffer() noexcept
+StreamBuffer::StreamBuffer() noexcept
 	: xm_uSmallSize	(0)
 	, xm_uSize		(0)
 {
 }
-DataBuffer::DataBuffer(const DataBuffer &rhs)
+StreamBuffer::StreamBuffer(const void *pData, std::size_t uSize)
+	: StreamBuffer()
+{
+	Insert(pData, uSize);
+}
+
+StreamBuffer::StreamBuffer(const StreamBuffer &rhs)
 	: xm_arrSmall	(rhs.xm_arrSmall)
 	, xm_uSmallSize	(rhs.xm_uSmallSize)
 	, xm_deqLarge	(rhs.xm_deqLarge)
 	, xm_uSize		(rhs.xm_uSize)
 {
 }
-DataBuffer::DataBuffer(DataBuffer &&rhs) noexcept
+StreamBuffer::StreamBuffer(StreamBuffer &&rhs) noexcept
 	: xm_arrSmall	(std::move(rhs.xm_arrSmall))
 	, xm_uSmallSize	(rhs.xm_uSmallSize)
 	, xm_deqLarge	(std::move(rhs.xm_deqLarge))
@@ -30,7 +36,7 @@ DataBuffer::DataBuffer(DataBuffer &&rhs) noexcept
 {
 	rhs.Clear();
 }
-DataBuffer &DataBuffer::operator=(const DataBuffer &rhs){
+StreamBuffer &StreamBuffer::operator=(const StreamBuffer &rhs){
 	xm_arrSmall		= rhs.xm_arrSmall;
 	xm_uSmallSize	= rhs.xm_uSmallSize;
 	xm_deqLarge		= rhs.xm_deqLarge;
@@ -38,7 +44,7 @@ DataBuffer &DataBuffer::operator=(const DataBuffer &rhs){
 
 	return *this;
 }
-DataBuffer &DataBuffer::operator=(DataBuffer &&rhs) noexcept {
+StreamBuffer &StreamBuffer::operator=(StreamBuffer &&rhs) noexcept {
 	xm_arrSmall		= std::move(rhs.xm_arrSmall);
 	xm_uSmallSize	= rhs.xm_uSmallSize;
 	xm_deqLarge		= std::move(rhs.xm_deqLarge);
@@ -50,19 +56,19 @@ DataBuffer &DataBuffer::operator=(DataBuffer &&rhs) noexcept {
 }
 
 // 其他非静态成员函数。
-bool DataBuffer::IsEmpty() const noexcept {
+bool StreamBuffer::IsEmpty() const noexcept {
 	return xm_uSize == 0;
 }
-std::size_t DataBuffer::GetSize() const noexcept {
+std::size_t StreamBuffer::GetSize() const noexcept {
 	return xm_uSize;
 }
-void DataBuffer::Clear() noexcept {
+void StreamBuffer::Clear() noexcept {
 	xm_uSmallSize = 0;
 	xm_deqLarge.clear();
 	xm_uSize = 0;
 }
 
-void DataBuffer::Insert(const void *pData, std::size_t uSize){
+void StreamBuffer::Insert(const void *pData, std::size_t uSize){
 	if(uSize == 0){
 		return;
 	}
@@ -75,23 +81,23 @@ void DataBuffer::Insert(const void *pData, std::size_t uSize){
 				xm_uSmallSize += uSize;
 				break;
 			}
-			xm_deqLarge.emplace_back();
-			xm_deqLarge.back().reserve(std::max(xm_arrSmall.size(), uSize));
-		}
-		auto &vecLast = xm_deqLarge.back();
-		const auto uLastSize = vecLast.size();
-		if(vecLast.capacity() - uLastSize >= uSize){
-			vecLast.insert(vecLast.end(), pbyData, pbyData + uSize);
-			break;
+		} else {
+			auto &vecLast = xm_deqLarge.back();
+			const auto uLastSize = vecLast.size();
+			if(vecLast.capacity() - uLastSize >= uSize){
+				vecLast.insert(vecLast.end(), pbyData, pbyData + uSize);
+				break;
+			}
 		}
 		xm_deqLarge.emplace_back();
-		xm_deqLarge.back().reserve(std::max(xm_arrSmall.size(), uSize));
-		xm_deqLarge.back().assign(pbyData, pbyData + uSize);
+		auto &vecLast = xm_deqLarge.back();
+		vecLast.reserve(std::max(xm_arrSmall.size(), uSize));
+		vecLast.assign(pbyData, pbyData + uSize);
 	} while(false);
 
 	xm_uSize += uSize;
 }
-bool DataBuffer::ExtractNoThrow(void *pData, std::size_t uSize) noexcept {
+bool StreamBuffer::ExtractNoThrow(void *pData, std::size_t uSize) noexcept {
 	if(xm_uSize < uSize){
 		return false;
 	}
@@ -139,36 +145,36 @@ bool DataBuffer::ExtractNoThrow(void *pData, std::size_t uSize) noexcept {
 	xm_uSize -= uSize;
 	return true;
 }
-void DataBuffer::Extract(void *pData, std::size_t uSize){
+void StreamBuffer::Extract(void *pData, std::size_t uSize){
 	if(!ExtractNoThrow(pData, uSize)){
 		MCF_THROW(ERROR_HANDLE_EOF, L"遇到意外的文件尾。");
 	}
 }
 
-void DataBuffer::Append(const DataBuffer &dbufOther){
-	dbufOther.Traverse([this](const unsigned char *pbyData, std::size_t uSize){
+void StreamBuffer::Append(const StreamBuffer &sbufOther){
+	sbufOther.Traverse([this](const unsigned char *pbyData, std::size_t uSize){
 		this->Insert(pbyData, uSize);
 	});
 }
-void DataBuffer::Append(DataBuffer &&dbufOther){
-	Insert(dbufOther.xm_arrSmall.data(), dbufOther.xm_uSmallSize);
-	for(auto &vecCur : dbufOther.xm_deqLarge){
+void StreamBuffer::Append(StreamBuffer &&sbufOther){
+	Insert(sbufOther.xm_arrSmall.data(), sbufOther.xm_uSmallSize);
+	for(auto &vecCur : sbufOther.xm_deqLarge){
 		xm_deqLarge.emplace_back(std::move(vecCur));
 	}
-	dbufOther.Clear();
+	sbufOther.Clear();
 }
-void DataBuffer::Swap(DataBuffer &dbufOther) noexcept {
+void StreamBuffer::Swap(StreamBuffer &sbufOther) noexcept {
 	ASSERT_NOEXCEPT_BEGIN
 	{
-		std::swap(xm_arrSmall,		dbufOther.xm_arrSmall);
-		std::swap(xm_uSmallSize,	dbufOther.xm_uSmallSize);
-		std::swap(xm_deqLarge,		dbufOther.xm_deqLarge);
-		std::swap(xm_uSize,			dbufOther.xm_uSize);
+		std::swap(xm_arrSmall,		sbufOther.xm_arrSmall);
+		std::swap(xm_uSmallSize,	sbufOther.xm_uSmallSize);
+		std::swap(xm_deqLarge,		sbufOther.xm_deqLarge);
+		std::swap(xm_uSize,			sbufOther.xm_uSize);
 	}
 	ASSERT_NOEXCEPT_END
 }
 
-void DataBuffer::Traverse(std::function<void (const unsigned char *, std::size_t)> fnCallback) const {
+void StreamBuffer::Traverse(std::function<void (const unsigned char *, std::size_t)> fnCallback) const {
 	if(xm_uSmallSize > 0){
 		fnCallback(xm_arrSmall.data(), xm_uSmallSize);
 	}
@@ -176,7 +182,7 @@ void DataBuffer::Traverse(std::function<void (const unsigned char *, std::size_t
 		fnCallback(vecCur.data(), vecCur.size());
 	}
 }
-void DataBuffer::Traverse(std::function<void (unsigned char *, std::size_t)> fnCallback){
+void StreamBuffer::Traverse(std::function<void (unsigned char *, std::size_t)> fnCallback){
 	if(xm_uSmallSize > 0){
 		fnCallback(xm_arrSmall.data(), xm_uSmallSize);
 	}

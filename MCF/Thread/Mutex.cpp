@@ -4,25 +4,16 @@
 
 #include "../StdMCF.hpp"
 #include "Mutex.hpp"
+#include "_WinHandle.hpp"
 #include "../Core/Exception.hpp"
-#include "../Core/UniqueHandle.hpp"
+#include "../Core/Time.hpp"
 using namespace MCF;
 
 namespace {
 
 class MutexDelegate : CONCRETE(Mutex) {
 private:
-	struct xMutexCloser {
-		constexpr HANDLE operator()() const noexcept {
-			return NULL;
-		}
-		void operator()(HANDLE hMutex) const noexcept {
-			::CloseHandle(hMutex);
-		}
-	};
-
-private:
-	UniqueHandle<xMutexCloser> xm_hMutex;
+	Impl::UniqueWinHandle xm_hMutex;
 
 public:
 	explicit MutexDelegate(const WideStringObserver &wsoName){
@@ -37,10 +28,10 @@ public:
 	}
 
 public:
-	bool WaitTimeout(unsigned long ulMilliSeconds) const noexcept {
-		return ::WaitForSingleObject(xm_hMutex.Get(), ulMilliSeconds) != WAIT_TIMEOUT;
+	void Wait() const noexcept {
+		::WaitForSingleObject(xm_hMutex.Get(), INFINITE);
 	}
-	void Release() noexcept {
+	void Release() const noexcept {
 		if(!::ReleaseMutex(xm_hMutex.Get())){
 			ASSERT_MSG(false, L"ReleaseMutex() 失败。");
 		}
@@ -56,7 +47,7 @@ namespace Impl {
 	void Mutex::Lock::xDoLock() const noexcept {
 		ASSERT(dynamic_cast<MutexDelegate *>(xm_pOwner));
 
-		((MutexDelegate *)xm_pOwner)->WaitTimeout(INFINITE);
+		((MutexDelegate *)xm_pOwner)->Wait();
 	}
 	template<>
 	void Mutex::Lock::xDoUnlock() const noexcept {

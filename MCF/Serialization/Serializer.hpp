@@ -5,15 +5,15 @@
 #ifndef MCF_SERIALIZER_HPP_
 #define MCF_SERIALIZER_HPP_
 
-#include "DataBuffer.hpp"
 #include "_SerdesTraits.hpp"
+#include "../Core/StreamBuffer.hpp"
 #include <cstddef>
 
 namespace MCF {
 
 class SerializerBase : ABSTRACT {
 protected:
-	virtual void xDoSerialize(DataBuffer &dbufStream, const void *pObject) const = 0;
+	virtual void xDoSerialize(StreamBuffer &sbufStream, const void *pObject) const = 0;
 };
 
 template<typename Object_t>
@@ -22,18 +22,18 @@ public:
 	typedef Object_t ObjectType;
 
 public:
-	static void Serialize(DataBuffer &dbufStream, const Object_t &vObject){
-		Impl::SerdesTrait<Object_t>()(dbufStream, vObject);
+	static void Serialize(StreamBuffer &sbufStream, const Object_t &vObject){
+		Impl::SerdesTrait<Object_t>()(sbufStream, vObject);
 	}
 
 protected:
-	virtual void xDoSerialize(DataBuffer &dbufStream, const void *pObject) const override {
-		Serialize(dbufStream, *(const Object_t *)pObject);
+	virtual void xDoSerialize(StreamBuffer &sbufStream, const void *pObject) const override {
+		Serialize(sbufStream, *(const Object_t *)pObject);
 	}
 
 public:
-	void operator()(DataBuffer &dbufStream, const Object_t &vObject){
-		Serialize(dbufStream, vObject);
+	void operator()(StreamBuffer &sbufStream, const Object_t &vObject){
+		Serialize(sbufStream, vObject);
 	}
 };
 
@@ -63,8 +63,8 @@ template class Serializer<std::nullptr_t>;
 
 // 小工具。
 template<typename Object_t>
-inline void Serialize(DataBuffer &dbufStream, const Object_t &vObject){
-	Serializer<Object_t>()(dbufStream, vObject);
+inline void Serialize(StreamBuffer &sbufStream, const Object_t &vObject){
+	Serializer<Object_t>()(sbufStream, vObject);
 }
 
 }

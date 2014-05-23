@@ -14,7 +14,7 @@ float fabsf(float x){
 #else
 		"fld dword ptr[%1] \n"
 #endif
-		: __FLT_RET_CONS(ret)
+		: __MCF_FLT_RET_CONS(ret)
 		: "m"(x)
 	);
 	return ret;
@@ -29,13 +29,13 @@ double fabs(double x){
 #else
 		"fld qword ptr[%1] \n"
 #endif
-		: __DBL_RET_CONS(ret)
+		: __MCF_DBL_RET_CONS(ret)
 		: "m"(x)
 	);
 	return ret;
 }
 
-__LDBL_DECL(fabsl, long double x){
+__MCF_LDBL_DECL(fabsl, long double x){
 	register long double ret;
 	__asm__ __volatile__(
 		"and byte ptr[%1 + 9], 0x7F \n"
@@ -47,11 +47,11 @@ __LDBL_DECL(fabsl, long double x){
 #else
 		"fld tbyte ptr[%1] \n"
 #endif
-		: __LDBL_RET_CONS(ret)
-		: "m"(x), __LDBL_RET_CONS_IN()
+		: __MCF_LDBL_RET_CONS(ret)
+		: "m"(x), __MCF_LDBL_RET_CONS_IN()
 #ifdef _WIN64
 		: "rdx"
 #endif
 	);
-	__LDBL_RETURN(ret);
+	__MCF_LDBL_RETURN(ret);
 }

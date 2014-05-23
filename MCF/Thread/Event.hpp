@@ -20,7 +20,7 @@ public:
 	void Set() noexcept;
 	void Clear() noexcept;
 
-	bool WaitTimeout(unsigned long ulMilliSeconds) const noexcept;
+	bool WaitTimeout(unsigned long long ullMilliSeconds) const noexcept;
 	void Wait() const noexcept;
 };
 

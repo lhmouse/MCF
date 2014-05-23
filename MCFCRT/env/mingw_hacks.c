@@ -6,6 +6,7 @@
 
 #include "mingw_hacks.h"
 #include "../ext/assert.h"
+#include "../ext/expect.h"
 #include "thread.h"
 #include <stdlib.h>
 #include <windows.h>
@@ -33,8 +34,8 @@ void __MCF_CRT_RunEmutlsThreadDtors(){
 void __MCF_CRT_EmutlsCleanup(){
 	for(;;){
 		KEY_DTOR_NODE *pNode = __atomic_load_n(&g_pDtorHead, __ATOMIC_ACQUIRE);
-		while(pNode && !__atomic_compare_exchange_n(&g_pDtorHead, &pNode, pNode->pNext, false, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE)){
-			// 空的。
+		while(EXPECT(pNode && !__atomic_compare_exchange_n(&g_pDtorHead, &pNode, pNode->pNext, false, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE))){
+			SwitchToThread();
 		}
 		if(!pNode){
 			break;
@@ -54,8 +55,8 @@ int __mingwthr_key_dtor(unsigned long ulKey, void (*pfnDtor)(void *)){
 		pNode->pfnDtor = pfnDtor;
 
 		pNode->pNext = __atomic_load_n(&g_pDtorHead, __ATOMIC_ACQUIRE);
-		while(!__atomic_compare_exchange_n(&g_pDtorHead, &(pNode->pNext), pNode, false, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE)){
-			// 空的。
+		while(EXPECT(!__atomic_compare_exchange_n(&g_pDtorHead, &(pNode->pNext), pNode, false, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE))){
+			SwitchToThread();
 		}
 	}
 	return 0;

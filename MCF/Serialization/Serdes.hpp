@@ -16,11 +16,11 @@ class SerdesBase : public SerializerBase, public DeserializerBase {
 template<typename Object_t>
 class Serdes : public Serializer<Object_t>, public Deserializer<Object_t> {
 protected:
-	virtual void xDoSerialize(DataBuffer &dbufStream, const void *pObject) const override {
-		Serializer<Object_t>::Serialize(dbufStream, *(const Object_t *)pObject);
+	virtual void xDoSerialize(StreamBuffer &sbufStream, const void *pObject) const override {
+		Serializer<Object_t>::Serialize(sbufStream, *(const Object_t *)pObject);
 	}
-	virtual void xDoDeserialize(void *pObject, DataBuffer &dbufStream) const override {
-		Deserializer<Object_t>::Deserialize(*(Object_t *)pObject, dbufStream);
+	virtual void xDoDeserialize(void *pObject, StreamBuffer &sbufStream) const override {
+		Deserializer<Object_t>::Deserialize(*(Object_t *)pObject, sbufStream);
 	}
 };
 

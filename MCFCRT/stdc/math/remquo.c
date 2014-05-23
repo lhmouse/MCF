@@ -31,9 +31,9 @@ float remquof(float x, float y, int *quo){
 		"sar eax, 31 \n"
 		"xor ecx, eax \n"
 		"sub ecx, eax \n"
-		__FLT_RET_ST("%1")
+		__MCF_FLT_RET_ST("%1")
 		"mov dword ptr[%3], ecx \n"
-		: __FLT_RET_CONS(ret)
+		: __MCF_FLT_RET_CONS(ret)
 		: "m"(x), "m"(y), "r"(quo)
 		: "ax", "cx"
 	);
@@ -66,16 +66,16 @@ double remquo(double x, double y, int *quo){
 		"sar eax, 31 \n"
 		"xor ecx, eax \n"
 		"sub ecx, eax \n"
-		__DBL_RET_ST("%1")
+		__MCF_DBL_RET_ST("%1")
 		"mov dword ptr[%3], ecx \n"
-		: __DBL_RET_CONS(ret)
+		: __MCF_DBL_RET_CONS(ret)
 		: "m"(x), "m"(y), "r"(quo)
 		: "ax", "cx"
 	);
 	return ret;
 }
 
-__LDBL_DECL(remquol, long double x, long double y, int *quo){
+__MCF_LDBL_DECL(remquol, long double x, long double y, int *quo){
 	register long double ret;
 	__asm__ __volatile__(
 		"fld tbyte ptr[%2] \n"
@@ -102,11 +102,11 @@ __LDBL_DECL(remquol, long double x, long double y, int *quo){
 		"sar eax, 31 \n"
 		"xor ecx, eax \n"
 		"sub ecx, eax \n"
-		__LDBL_RET_ST()
+		__MCF_LDBL_RET_ST()
 		"mov dword ptr[%3], ecx \n"
-		: __LDBL_RET_CONS(ret)
-		: "m"(x), "m"(y), "r"(quo), __LDBL_RET_CONS_IN()
+		: __MCF_LDBL_RET_CONS(ret)
+		: "m"(x), "m"(y), "r"(quo), __MCF_LDBL_RET_CONS_IN()
 		: "ax", "cx"
 	);
-	__LDBL_RETURN(ret);
+	__MCF_LDBL_RETURN(ret);
 }

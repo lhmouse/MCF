@@ -16,7 +16,7 @@ public:
 	static std::unique_ptr<ConditionVariable> Create();
 
 public:
-	bool WaitTimeout(LockRaiiTemplateBase &vLockRaiiTemplate, unsigned long ulMilliSeconds) noexcept;
+	bool WaitTimeout(LockRaiiTemplateBase &vLockRaiiTemplate, unsigned long long ullMilliSeconds) noexcept;
 	void Wait(LockRaiiTemplateBase &vLockRaiiTemplate) noexcept;
 	void Signal(std::size_t uCount = 1) noexcept;
 	void Broadcast() noexcept;

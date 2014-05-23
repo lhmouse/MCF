@@ -35,9 +35,9 @@ float roundf(float x){
 		"fldcw word ptr[%3] \n"
 		"frndint \n"
 		"mov word ptr[%3], ax \n"
-		__FLT_RET_ST("%2")
+		__MCF_FLT_RET_ST("%2")
 		"fldcw word ptr[%3] \n"
-		: __FLT_RET_CONS(ret), "=r"(unused)
+		: __MCF_FLT_RET_CONS(ret), "=r"(unused)
 		: "m"(x), "m"(fcw), "1"(&NEG_HALF), "r"(&POS_HALF)
 		: "ax", "cx", "dx"
 	);
@@ -71,16 +71,16 @@ double round(double x){
 		"fldcw word ptr[%3] \n"
 		"frndint \n"
 		"mov word ptr[%3], ax \n"
-		__DBL_RET_ST("%2")
+		__MCF_DBL_RET_ST("%2")
 		"fldcw word ptr[%3] \n"
-		: __DBL_RET_CONS(ret), "=r"(unused)
+		: __MCF_DBL_RET_CONS(ret), "=r"(unused)
 		: "m"(x), "m"(fcw), "1"(&NEG_HALF), "r"(&POS_HALF)
 		: "ax", "cx", "dx"
 	);
 	return ret;
 }
 
-__LDBL_DECL(roundl, long double x){
+__MCF_LDBL_DECL(roundl, long double x){
 	register long double ret;
 	uintptr_t unused;
 	uint16_t fcw;
@@ -107,11 +107,11 @@ __LDBL_DECL(roundl, long double x){
 		"fldcw word ptr[%3] \n"
 		"frndint \n"
 		"mov word ptr[%3], ax \n"
-		__LDBL_RET_ST()
+		__MCF_LDBL_RET_ST()
 		"fldcw word ptr[%3] \n"
-		: __LDBL_RET_CONS(ret), "=r"(unused)
-		: "m"(x), "m"(fcw), "1"(&NEG_HALF), "r"(&POS_HALF), __LDBL_RET_CONS_IN()
+		: __MCF_LDBL_RET_CONS(ret), "=r"(unused)
+		: "m"(x), "m"(fcw), "1"(&NEG_HALF), "r"(&POS_HALF), __MCF_LDBL_RET_CONS_IN()
 		: "ax", "cx", "dx"
 	);
-	__LDBL_RETURN(ret);
+	__MCF_LDBL_RETURN(ret);
 }

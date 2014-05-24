@@ -11,7 +11,7 @@
 using namespace MCF;
 
 // 其他非静态成员函数。
-void UdpPacket::Send() const {
+void UdpPacket::Send(bool bClearBuffer) const {
 	Impl::WSAInitializer vWSAInitializer;
 
 	const short shFamily = m_vPeerInfo.IsIPv4() ? AF_INET : AF_INET6;
@@ -33,5 +33,9 @@ void UdpPacket::Send() const {
 	const int nSockAddrSize = m_vPeerInfo.ToSockAddr(&vSockAddr, sizeof(vSockAddr));
 	if(::sendto(sockPeer.Get(), (const char *)vecTemp.GetData(), (int)vecTemp.GetSize(), 0, (const SOCKADDR *)&vSockAddr, nSockAddrSize) < 0){
 		MCF_THROW(::GetLastError(), L"::sendto() 失败。");
+	}
+
+	if(bClearBuffer){
+		m_sbufData.Clear();
 	}
 }

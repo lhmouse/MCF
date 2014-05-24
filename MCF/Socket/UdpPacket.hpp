@@ -33,7 +33,7 @@ public:
 	}
 
 public:
-	void Send() const;
+	void Send(bool bClearBuffer = true) const;
 };
 
 }

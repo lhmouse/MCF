@@ -204,7 +204,7 @@ void Escape(WideString &wcsAppendTo, const WideStringObserver &wsoSrc){
 
 // 其他非静态成员函数。
 std::pair<TExpression::ErrorType, const wchar_t *> TExpression::Parse(const WideStringObserver &wsoData){
-	Clear();
+	m_vecChildren.Clear();
 
 	auto pwcRead = wsoData.GetBegin();
 	const auto pwcEnd = wsoData.GetEnd();
@@ -230,13 +230,13 @@ std::pair<TExpression::ErrorType, const wchar_t *> TExpression::Parse(const Wide
 		ASSERT(!vecNodeStack.IsEmpty());
 
 		auto wcsName = Unescape(WideStringObserver(pwcNameBegin, pwcRead));
-		auto &vNewChild = vecNodeStack.GetEnd()[-1]->xm_vecChildren.Push(std::move(wcsName), Node());
+		auto &vNewChild = vecNodeStack.GetEnd()[-1]->m_vecChildren.Push(std::move(wcsName), Node());
 		vecNodeStack.Push(&(vNewChild.second));
 	};
 	const auto PushUnnamedNode = [&]{
 		ASSERT(!vecNodeStack.IsEmpty());
 
-		auto &vNewChild = vecNodeStack.GetEnd()[-1]->xm_vecChildren.Push();
+		auto &vNewChild = vecNodeStack.GetEnd()[-1]->m_vecChildren.Push();
 		vecNodeStack.Push(&(vNewChild.second));
 	};
 	const auto PopNode = [&]{
@@ -473,18 +473,18 @@ WideString TExpression::Export(const WideStringObserver &wsoIndent) const {
 		const auto &vTopNode = *(vTop.first);
 
 	jNextChild:
-		if(vTop.second < vTopNode.GetChildren().GetSize()){
-			const auto &vChild = vTopNode.GetChildren()[vTop.second++];
+		if(vTop.second < vTopNode.m_vecChildren.GetSize()){
+			const auto &vChild = vTopNode.m_vecChildren[vTop.second++];
 			wcsRet.Append(wcsIndent);
 			if(!vChild.first.IsEmpty()){
 				Escape(wcsRet, vChild.first);
-				if(vChild.second.GetChildren().IsEmpty()){
+				if(vChild.second.m_vecChildren.IsEmpty()){
 					wcsRet.Append(L'\n');
 					goto jNextChild;
 				}
 			}
 			wcsRet.Append(L'(');
-			if(vChild.second.GetChildren().IsEmpty()){
+			if(vChild.second.m_vecChildren.IsEmpty()){
 				wcsRet.Append(L')');
 				wcsRet.Append(L'\n');
 				goto jNextChild;

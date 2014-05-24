@@ -47,6 +47,7 @@ public:
 					if(EXPECT_NOT(i)){
 						break;
 					}
+					--i;
 				}
 
 				std::size_t uWaiting;

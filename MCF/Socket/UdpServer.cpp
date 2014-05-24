@@ -79,7 +79,7 @@ public:
 				}
 
 				std::size_t uSize = 0x10000;
-				VVector<unsigned char> vecTemp(0x10000);
+				VVector<unsigned char> vecTemp(uSize);
 				SOCKADDR_STORAGE vSockAddr;
 				int nSockAddrSize = (int)sizeof(vSockAddr);
 				const int nBytesRead = ::recvfrom(xm_sockPeer.Get(), (char *)vecTemp.GetData(), (int)uSize, 0, (SOCKADDR *)&vSockAddr, &nSockAddrSize);

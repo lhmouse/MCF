@@ -11,28 +11,12 @@
 
 namespace MCF {
 
-class TExpressionNode {
-	friend class TExpression;
-
+struct TExpressionNode {
 public:
 	typedef std::pair<WideString, TExpressionNode> Child;
 
-private:
-	Vector<Child> xm_vecChildren;
-
 public:
-	const Vector<Child> &GetChildren() const noexcept {
-		return xm_vecChildren;
-	}
-	Vector<Child> &GetChildren() noexcept {
-		return xm_vecChildren;
-	}
-	TExpressionNode &PushChild(const WideStringObserver &wsoName){
-		return xm_vecChildren.Push(WideString(wsoName), TExpressionNode()).second;
-	}
-	void Clear() noexcept {
-		xm_vecChildren.Clear();
-	}
+	Vector<Child> m_vecChildren;
 };
 
 class TExpression : public TExpressionNode {

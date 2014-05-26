@@ -6,8 +6,7 @@
 #define MCF_STREAM_BUFFER_HPP_
 
 #include "Utilities.hpp"
-#include <array>
-#include <vector>
+#include "VVector.hpp"
 #include <deque>
 #include <functional>
 #include <iterator>
@@ -21,9 +20,10 @@ public:
 	class WriteIterator;
 
 private:
-	std::array<unsigned char, 256u> xm_abySmall;
 	std::size_t xm_uSmallSize;
-	std::deque<std::vector<unsigned char>> xm_deqLarge;
+	unsigned char xm_abySmall[3];
+
+	std::deque<Vector<unsigned char>> xm_deqLarge;
 	std::size_t xm_uSize;
 
 public:
@@ -56,8 +56,10 @@ public:
 
 	void Swap(StreamBuffer &rhs) noexcept;
 
-	void Traverse(std::function<void (const unsigned char *, std::size_t)> fnCallback) const;
-	void Traverse(std::function<void (unsigned char *, std::size_t)> fnCallback);
+	void Traverse(std::function<void (const unsigned char *, std::size_t)> &fnCallback) const;
+	void Traverse(std::function<void (const unsigned char *, std::size_t)> &&fnCallback) const;
+	void Traverse(std::function<void (unsigned char *, std::size_t)> &fnCallback);
+	void Traverse(std::function<void (unsigned char *, std::size_t)> &&fnCallback);
 
 	ReadIterator GetReadIterator() noexcept;
 	static constexpr ReadIterator GetReadEnd() noexcept;

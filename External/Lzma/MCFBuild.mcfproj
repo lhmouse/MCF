@@ -1,7 +1,7 @@
 Default = Debug
 
 General {
-	CompilerFlags		= -Wall -Wextra -pipe -mfpmath=sse,387 -msse2 -D_7ZIP_ST -D_LZMA_PROB32
+	CompilerFlags		= -Wall -Wextra -pipe -mfpmath=both -march=core2 -D_7ZIP_ST -D_LZMA_PROB32
 
 	CFlags				= -std=c11
 

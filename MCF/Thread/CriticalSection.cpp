@@ -5,6 +5,7 @@
 #include "../StdMCF.hpp"
 #include "CriticalSection.hpp"
 #include "Semaphore.hpp"
+#include <emmintrin.h>
 using namespace MCF;
 
 namespace {
@@ -41,7 +42,10 @@ public:
 				auto i = xm_ulSpinCount;
 				for(;;){
 					DWORD dwOldOwner = 0;
-					if(EXPECT_NOT(__atomic_compare_exchange_n(&xm_dwOwner, &dwOldOwner, dwThreadId, false, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE))){
+					if(EXPECT_NOT(__atomic_compare_exchange_n(
+						&xm_dwOwner, &dwOldOwner, dwThreadId,
+						false, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE
+					))){
 						goto jAcquired;
 					}
 					if(EXPECT_NOT(i)){
@@ -52,15 +56,16 @@ public:
 
 				std::size_t uWaiting;
 				for(;;){
-					uWaiting = __atomic_exchange_n(&xm_uWaiting, (std::size_t)-1, __ATOMIC_ACQ_REL);
+					uWaiting = __atomic_exchange_n(&xm_uWaiting, (std::size_t)-1, __ATOMIC_ACQUIRE | __ATOMIC_HLE_ACQUIRE);
 					if(EXPECT_NOT(uWaiting != (std::size_t)-1)){
 						break;
 					}
+					::_mm_pause();
 					::SwitchToThread();
 				}
 
 				++uWaiting;
-				__atomic_store_n(&xm_uWaiting, uWaiting, __ATOMIC_RELEASE);
+				__atomic_store_n(&xm_uWaiting, uWaiting, __ATOMIC_RELEASE | __ATOMIC_HLE_RELEASE);
 				xm_psemExclusive->Wait();
 			}
 		}
@@ -76,10 +81,11 @@ public:
 
 			std::size_t uWaiting;
 			for(;;){
-				uWaiting = __atomic_exchange_n(&xm_uWaiting, (std::size_t)-1, __ATOMIC_ACQ_REL);
+				uWaiting = __atomic_exchange_n(&xm_uWaiting, (std::size_t)-1, __ATOMIC_ACQUIRE | __ATOMIC_HLE_ACQUIRE);
 				if(EXPECT_NOT(uWaiting != (std::size_t)-1)){
 					break;
 				}
+				::_mm_pause();
 				::SwitchToThread();
 			}
 
@@ -87,7 +93,7 @@ public:
 				xm_psemExclusive->Signal();
 				--uWaiting;
 			}
-			__atomic_store_n(&xm_uWaiting, uWaiting, __ATOMIC_RELEASE);
+			__atomic_store_n(&xm_uWaiting, uWaiting, __ATOMIC_RELEASE | __ATOMIC_HLE_RELEASE);
 		}
 	}
 };

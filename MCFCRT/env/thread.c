@@ -36,7 +36,10 @@ typedef struct tagTlsObject {
 	struct tagTlsObject *pNext;
 
 	intptr_t nKey;
-	void *pMem;
+	union {
+		void *pMem;
+		unsigned char abySmall[0x100u];
+	};
 	void (*pfnDtor)(void *);
 	size_t uMemSize;
 } TLS_OBJECT;
@@ -156,9 +159,9 @@ void __MCF_CRT_ThreadUninitialize(){
 	register TLS_OBJECT *pObject = pThreadEnv->pLastObject;
 	while(pObject){
 		TLS_OBJECT *const pPrev = pObject->pPrev;
-		if(pObject->uMemSize <= sizeof(void *)){
+		if(pObject->uMemSize <= sizeof(pObject->abySmall)){
 			if(pObject->pfnDtor){
-				(*pObject->pfnDtor)(&(pObject->pMem));
+				(*pObject->pfnDtor)(pObject->abySmall);
 			}
 		} else {
 			if(pObject->pfnDtor){
@@ -244,8 +247,8 @@ void *MCF_CRT_RetrieveTls(
 		if(!pObject){
 			return NULL;
 		}
-		if(uSizeToAlloc <= sizeof(void *)){
-			if(pfnConstructor && !(*pfnConstructor)(&(pObject->pMem), nParam)){
+		if(uSizeToAlloc <= sizeof(pObject->abySmall)){
+			if(pfnConstructor && !(*pfnConstructor)(pObject->abySmall, nParam)){
 				free(pObject);
 				return NULL;
 			}
@@ -293,8 +296,8 @@ void *MCF_CRT_RetrieveTls(
 		);
 	}
 
-	if(pObject->uMemSize <= sizeof(void *)){
-		return &(pObject->pMem);
+	if(pObject->uMemSize <= sizeof(pObject->abySmall)){
+		return pObject->abySmall;
 	} else {
 		return pObject->pMem;
 	}
@@ -325,9 +328,9 @@ void MCF_CRT_DeleteTls(
 		if(pThreadEnv->pLastObject == pObject){
 			pThreadEnv->pLastObject = pPrev;
 		}
-		if(pObject->uMemSize <= sizeof(void *)){
+		if(pObject->uMemSize <= sizeof(pObject->abySmall)){
 			if(pObject->pfnDtor){
-				(*pObject->pfnDtor)(&(pObject->pMem));
+				(*pObject->pfnDtor)(pObject->abySmall);
 			}
 		} else {
 			if(pObject->pfnDtor){

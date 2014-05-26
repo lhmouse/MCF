@@ -71,7 +71,7 @@ private:
 
 public:
 	constexpr String() noexcept
-		: xm_vStorage{{{Char_t()}, Char_t(), 0}}
+		: xm_vStorage{}
 	{
 	}
 	explicit String(Char_t ch, std::size_t uCount = 1)
@@ -126,7 +126,7 @@ public:
 	String(String &&rhs) noexcept
 		: String()
 	{
-		Assign(std::move(rhs));
+		Swap(rhs);
 	}
 	String &operator=(Char_t ch) noexcept {
 		String(ch).Swap(*this);

@@ -34,7 +34,10 @@ void __MCF_CRT_RunEmutlsThreadDtors(){
 void __MCF_CRT_EmutlsCleanup(){
 	for(;;){
 		KEY_DTOR_NODE *pNode = __atomic_load_n(&g_pDtorHead, __ATOMIC_ACQUIRE);
-		while(EXPECT(pNode && !__atomic_compare_exchange_n(&g_pDtorHead, &pNode, pNode->pNext, false, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE))){
+		while(EXPECT(pNode && !__atomic_compare_exchange_n(
+			&g_pDtorHead, &pNode, pNode->pNext,
+			0, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE
+		))){
 			SwitchToThread();
 		}
 		if(!pNode){
@@ -55,7 +58,10 @@ int __mingwthr_key_dtor(unsigned long ulKey, void (*pfnDtor)(void *)){
 		pNode->pfnDtor = pfnDtor;
 
 		pNode->pNext = __atomic_load_n(&g_pDtorHead, __ATOMIC_ACQUIRE);
-		while(EXPECT(!__atomic_compare_exchange_n(&g_pDtorHead, &(pNode->pNext), pNode, false, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE))){
+		while(EXPECT(!__atomic_compare_exchange_n(
+			&g_pDtorHead, &(pNode->pNext), pNode,
+			0, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE
+		))){
 			SwitchToThread();
 		}
 	}

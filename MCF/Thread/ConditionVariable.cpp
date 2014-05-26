@@ -50,13 +50,14 @@ public:
 		for(;;){
 			uCountToSignal = std::min(uCount, uOldWaiterCount);
 			if(uCountToSignal == 0){
-				return;
+				break;
 			}
-			if(EXPECT_NOT(
-				__atomic_compare_exchange_n(&xm_uWaiterCount, &uOldWaiterCount, uOldWaiterCount - uCountToSignal, false, __ATOMIC_RELAXED, __ATOMIC_RELAXED)
+			if(EXPECT_NOT(__atomic_compare_exchange_n(
+				&xm_uWaiterCount, &uOldWaiterCount, uOldWaiterCount - uCountToSignal,
+				false, __ATOMIC_RELAXED, __ATOMIC_RELAXED)
 			)){
 				::ReleaseSemaphore(xm_hSemaphore.Get(), (long)uCountToSignal, nullptr);
-				return;
+				break;
 			}
 			::SwitchToThread();
 		}

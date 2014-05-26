@@ -1,7 +1,7 @@
 Default = Debug
 
 General {
-	CompilerFlags		= -Wall -Wextra -pipe -mfpmath=sse,387 -msse2 -DUSE_DL_PREFIX -DUSE_BUILTIN_FFS
+	CompilerFlags		= -Wall -Wextra -pipe -mfpmath=both -march=core2 -DUSE_DL_PREFIX -DUSE_BUILTIN_FFS
 
 	CFlags				= -std=c11
 

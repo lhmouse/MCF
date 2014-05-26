@@ -201,6 +201,12 @@ public:
 			uBytesWritten += vApcResult.dwBytesTransferred;
 		}
 	}
+
+	void Flush() const {
+		if(!::FlushFileBuffers(xm_hFile.Get())){
+			MCF_THROW(::GetLastError(), L"::WriteFileEx() 失败。");
+		}
+	}
 };
 
 }
@@ -252,4 +258,10 @@ void File::Write(std::uint64_t u64Offset, const void *pBuffer, std::size_t uByte
 	ASSERT(dynamic_cast<FileDelegate *>(this));
 
 	static_cast<FileDelegate *>(this)->Write(u64Offset, pBuffer, uBytesToWrite, &fnAsyncProc);
+}
+
+void File::Flush() const {
+	ASSERT(dynamic_cast<const FileDelegate *>(this));
+
+	static_cast<const FileDelegate *>(this)->Flush();
 }

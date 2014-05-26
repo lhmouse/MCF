@@ -15,13 +15,10 @@
 
 namespace MCF {
 
-class StreamBufferReadIterator;
-class StreamBufferWriteIterator;
-
 class StreamBuffer {
 public:
-	typedef StreamBufferReadIterator	ReadIterator;
-	typedef StreamBufferWriteIterator	WriteIterator;
+	class ReadIterator;
+	class WriteIterator;
 
 private:
 	std::array<unsigned char, 256u> xm_abySmall;
@@ -42,103 +39,118 @@ public:
 	std::size_t GetSize() const noexcept;
 	void Clear() noexcept;
 
-	// 追加 uSize 个字节。
-	void Insert(const void *pData, std::size_t uSize);
 	// 要么就从头部读取并删除 uSize 个字节并返回 true，要么就返回 false。
 	// 没有只读取一半的情况。
 	bool Extract(void *pData, std::size_t uSize) noexcept;
+	// 追加 uSize 个字节。
+	void Insert(const void *pData, std::size_t uSize);
+
+	// 如果为空返回 -1。
+	int Get() noexcept;
+	// 类似于 Get()，但是不从流中删除字节。
+	int Peek() const noexcept;
+	void Put(unsigned char by);
 
 	void Append(const StreamBuffer &rhs);
 	void Append(StreamBuffer &&rhs);
+
 	void Swap(StreamBuffer &rhs) noexcept;
 
 	void Traverse(std::function<void (const unsigned char *, std::size_t)> fnCallback) const;
 	void Traverse(std::function<void (unsigned char *, std::size_t)> fnCallback);
 
 	ReadIterator GetReadIterator() noexcept;
-	ReadIterator GetReadEnd() const noexcept;
+	static constexpr ReadIterator GetReadEnd() noexcept;
 	WriteIterator GetWriteIterator() noexcept;
 };
 
-class StreamBufferReadIterator
+class StreamBuffer::ReadIterator
 	: public std::iterator<std::input_iterator_tag, unsigned char>
 {
-	friend StreamBuffer;
-
-private:
-	StreamBuffer *xm_psbufOwner;
-
-public:
-	constexpr StreamBufferReadIterator() noexcept
-		: xm_psbufOwner(nullptr)
-	{
-	}
-	explicit constexpr StreamBufferReadIterator(StreamBuffer &sbufOwner) noexcept
-		: xm_psbufOwner(&sbufOwner)
-	{
-	}
-
-public:
-	bool operator==(const StreamBufferReadIterator &rhs) const noexcept {
-		return xm_psbufOwner == rhs.xm_psbufOwner;
-	}
-	bool operator!=(const StreamBufferReadIterator &rhs) const noexcept {
-		return !(*this == rhs);
-	}
-	StreamBufferReadIterator &operator++() noexcept {
-		return *this;
-	}
-	StreamBufferReadIterator operator++(int) noexcept {
-		return *this;
-	}
-
-	int operator*() noexcept {
-		ASSERT(xm_psbufOwner);
-
-		unsigned char by;
-		if(!xm_psbufOwner->Extract(&by, sizeof(by))){
-			return -1;
-		}
-		if(xm_psbufOwner->IsEmpty()){
-			xm_psbufOwner = nullptr;
-		}
-		return by;
-	}
-};
-
-class StreamBufferWriteIterator
-	: public std::iterator<std::output_iterator_tag, unsigned char>
-{
-	friend StreamBuffer;
-
 private:
 	StreamBuffer *const xm_psbufOwner;
 
 public:
-	explicit constexpr StreamBufferWriteIterator(StreamBuffer &sbufOwner) noexcept
+	constexpr ReadIterator() noexcept
+		: xm_psbufOwner(nullptr)
+	{
+	}
+	explicit constexpr ReadIterator(StreamBuffer &sbufOwner) noexcept
 		: xm_psbufOwner(&sbufOwner)
 	{
 	}
 
 public:
-	bool operator==(const StreamBufferWriteIterator &rhs) const noexcept {
-		return xm_psbufOwner == rhs.xm_psbufOwner;
+	bool operator==(const ReadIterator &rhs) const noexcept {
+		if(!rhs.xm_psbufOwner){
+			if(!xm_psbufOwner){
+				return true;
+			} else {
+				return xm_psbufOwner->IsEmpty();
+			}
+		} else {
+			if(!xm_psbufOwner){
+				return rhs.xm_psbufOwner->IsEmpty();
+			} else {
+				return xm_psbufOwner == rhs.xm_psbufOwner;
+			}
+		}
 	}
-	bool operator!=(const StreamBufferWriteIterator &rhs) const noexcept {
+	bool operator!=(const ReadIterator &rhs) const noexcept {
 		return !(*this == rhs);
 	}
-	StreamBufferWriteIterator &operator++() noexcept {
+	ReadIterator &operator++() noexcept {
+		ASSERT(xm_psbufOwner);
+		ASSERT(!xm_psbufOwner->IsEmpty());
+
+		xm_psbufOwner->Get();
 		return *this;
 	}
-	StreamBufferWriteIterator operator++(int) noexcept {
+	ReadIterator operator++(int) noexcept {
+		auto itRet = *this;
+		++*this;
+		return std::move(itRet);
+	}
+
+	unsigned char operator*() const noexcept {
+		ASSERT(xm_psbufOwner);
+		ASSERT(!xm_psbufOwner->IsEmpty());
+
+		return (unsigned char)xm_psbufOwner->Peek();
+	}
+};
+
+class StreamBuffer::WriteIterator
+	: public std::iterator<std::output_iterator_tag, unsigned char>
+{
+private:
+	StreamBuffer *const xm_psbufOwner;
+
+public:
+	explicit constexpr WriteIterator(StreamBuffer &sbufOwner) noexcept
+		: xm_psbufOwner(&sbufOwner)
+	{
+	}
+
+public:
+	bool operator==(const WriteIterator &rhs) const noexcept {
+		return xm_psbufOwner == rhs.xm_psbufOwner;
+	}
+	bool operator!=(const WriteIterator &rhs) const noexcept {
+		return !(*this == rhs);
+	}
+	WriteIterator &operator++() noexcept {
+		return *this;
+	}
+	WriteIterator operator++(int) noexcept {
 		return *this;
 	}
 
-	StreamBufferWriteIterator &operator*() noexcept {
+	WriteIterator &operator*() noexcept {
 		return *this;
 	}
-	StreamBufferWriteIterator &operator=(unsigned char by){
-		xm_psbufOwner->Insert(&by, sizeof(by));
+	WriteIterator &operator=(unsigned char by){
+		xm_psbufOwner->Put(by);
 		return *this;
 	}
 };
@@ -146,7 +158,7 @@ public:
 inline StreamBuffer::ReadIterator StreamBuffer::GetReadIterator() noexcept {
 	return ReadIterator(*this);
 }
-inline StreamBuffer::ReadIterator StreamBuffer::GetReadEnd() const noexcept {
+inline constexpr StreamBuffer::ReadIterator StreamBuffer::GetReadEnd() noexcept {
 	return ReadIterator();
 }
 inline StreamBuffer::WriteIterator StreamBuffer::GetWriteIterator() noexcept {

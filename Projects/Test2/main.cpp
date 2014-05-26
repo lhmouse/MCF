@@ -1,18 +1,17 @@
 #include <MCF/StdMCF.hpp>
 #include <MCF/Core/Exception.hpp>
 #include <MCF/Core/StreamBuffer.hpp>
-#include <MCF/Serialization/Serdes.hpp>
+#include <iostream>
 using namespace std;
 using namespace MCF;
 
 unsigned int MCFMain()
 try {
-	auto tup1 = make_tuple(1, 2.0, '3');
-	decltype(tup1) tup2;
 	StreamBuffer buf;
-	Serialize(buf, tup1);
-	Deserialize(tup2, buf);
-	printf("%d %f %c\n", get<0>(tup2), get<1>(tup2), get<2>(tup2));
+	static const char data[] = "hello world!";
+	auto it = buf.GetReadIterator();
+	copy(begin(data), end(data) - 1, buf.GetWriteIterator());
+	printf("%d\n", it == buf.GetReadEnd());
 
 	return 0;
 } catch(exception &e){

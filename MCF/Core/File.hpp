@@ -35,6 +35,8 @@ public:
 	std::size_t Read(void *pBuffer, std::size_t uBytesToRead, std::uint64_t u64Offset, AsyncProc fnAsyncProc) const;
 	void Write(std::uint64_t u64Offset, const void *pBuffer, std::size_t uBytesToWrite);
 	void Write(std::uint64_t u64Offset, const void *pBuffer, std::size_t uBytesToWrite, AsyncProc fnAsyncProc);
+
+	void Flush() const;
 };
 
 }

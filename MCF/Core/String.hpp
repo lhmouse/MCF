@@ -861,26 +861,21 @@ typedef String<char32_t,	StringEncoding::UTF32>	Utf32String;
 
 }
 
-inline const MCF::AnsiString &operator""_NS(const char *pchStr, std::size_t uLength) noexcept {
-	static const MCF::AnsiString STATIC_STRING(pchStr, uLength);
-	return STATIC_STRING;
+inline MCF::AnsiString operator""_AS(const char *pchStr, std::size_t uLength) noexcept {
+	return MCF::AnsiString(pchStr, uLength);
 }
-inline const MCF::WideString &operator""_WS(const wchar_t *pwchStr, std::size_t uLength) noexcept {
-	static const MCF::WideString STATIC_STRING(pwchStr, uLength);
-	return STATIC_STRING;
+inline MCF::WideString operator""_WS(const wchar_t *pwchStr, std::size_t uLength) noexcept {
+	return MCF::WideString(pwchStr, uLength);
 }
 
-inline const MCF::Utf8String &operator""_U8S(const char *pchStr, std::size_t uLength) noexcept {
-	static const MCF::Utf8String STATIC_STRING(pchStr, uLength);
-	return STATIC_STRING;
+inline MCF::Utf8String operator""_U8S(const char *pchStr, std::size_t uLength) noexcept {
+	return MCF::Utf8String(pchStr, uLength);
 }
-inline const MCF::Utf16String &operator""_U16S(const char16_t *pc16Str, std::size_t uLength) noexcept {
-	static const MCF::Utf16String STATIC_STRING(pc16Str, uLength);
-	return STATIC_STRING;
+inline MCF::Utf16String operator""_U16S(const char16_t *pc16Str, std::size_t uLength) noexcept {
+	return MCF::Utf16String(pc16Str, uLength);
 }
-inline const MCF::Utf32String &operator""_U32S(const char32_t *pc32Str, std::size_t uLength) noexcept {
-	static const MCF::Utf32String STATIC_STRING(pc32Str, uLength);
-	return STATIC_STRING;
+inline MCF::Utf32String operator""_U32S(const char32_t *pc32Str, std::size_t uLength) noexcept {
+	return MCF::Utf32String(pc32Str, uLength);
 }
 
 #endif

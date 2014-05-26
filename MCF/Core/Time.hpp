@@ -12,6 +12,7 @@ namespace MCF {
 // NT 时间戳单位是 1/10000000 秒。
 // Unix 时间戳单位是秒。
 extern std::uint64_t GetNtTime() noexcept;
+extern std::uint64_t GetUnixTime() noexcept;
 extern std::uint64_t NtTimeFromUnixTime(std::uint64_t u64UnixTime) noexcept;
 extern std::uint64_t UnixTimeFromNtTime(std::uint64_t u64NtTime) noexcept;
 

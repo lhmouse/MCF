@@ -24,7 +24,7 @@ public:
 	typedef StreamBufferWriteIterator	WriteIterator;
 
 private:
-	std::array<unsigned char, 256u> xm_arrSmall;
+	std::array<unsigned char, 256u> xm_abySmall;
 	std::size_t xm_uSmallSize;
 	std::deque<std::vector<unsigned char>> xm_deqLarge;
 	std::size_t xm_uSize;
@@ -50,9 +50,9 @@ public:
 	// 和上面类似，但是如果数据少于请求的字节数会抛出异常 MCF::Exception(ERROR_HANDLE_EOF)。
 	void Extract(void *pData, std::size_t uSize);
 
-	void Append(const StreamBuffer &sbufOther);
-	void Append(StreamBuffer &&sbufOther);
-	void Swap(StreamBuffer &sbufOther) noexcept;
+	void Append(const StreamBuffer &rhs);
+	void Append(StreamBuffer &&rhs);
+	void Swap(StreamBuffer &rhs) noexcept;
 
 	void Traverse(std::function<void (const unsigned char *, std::size_t)> fnCallback) const;
 	void Traverse(std::function<void (unsigned char *, std::size_t)> fnCallback);

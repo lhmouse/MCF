@@ -427,31 +427,31 @@ public:
 	void Append(std::initializer_list<Char_t> vInitList){
 		Append(Observer(vInitList));
 	}
-	void Append(const String &str){
-		if(std::addressof(str) == this){
+	void Append(const String &rhs){
+		if(&rhs == this){
 			const std::size_t uOldLength = GetLength();
 			const auto pchWrite = xChopAndSplice(uOldLength, uOldLength, 0, uOldLength * 2);
 			std::copy_n(pchWrite - uOldLength, uOldLength, pchWrite);
 			xSetSize(uOldLength * 2);
 		} else {
-			Append(str.GetBegin(), str.GetEnd());
+			Append(rhs.GetBegin(), rhs.GetEnd());
 		}
 	}
-	void Append(String &&str){
-		if(std::addressof(str) == this){
-			Append(str);
+	void Append(String &&rhs){
+		if(&rhs == this){
+			Append(rhs);
 		} else if(IsEmpty()){
-			Assign(std::move(str));
-		} else if(GetCapacity() >= str.GetCapacity()){
-			Append(str);
+			Assign(std::move(rhs));
+		} else if(GetCapacity() >= rhs.GetCapacity()){
+			Append(rhs);
 		} else {
-			Swap(str);
-			Unshift(str);
+			Swap(rhs);
+			Unshift(rhs);
 		}
 	}
 	template<typename OtherChar_t, StringEncoding OTHER_ENCODING>
-	void Append(const String<OtherChar_t, OTHER_ENCODING> &str){
-		Impl::Transcoder<Char_t, ENCODING, OtherChar_t, OTHER_ENCODING>()(*this, str);
+	void Append(const String<OtherChar_t, OTHER_ENCODING> &rhs){
+		Impl::Transcoder<Char_t, ENCODING, OtherChar_t, OTHER_ENCODING>()(*this, rhs);
 	}
 	template<StringEncoding OTHER_ENCODING, typename OtherChar_t>
 	void Append(const StringObserver<OtherChar_t> &rhs){
@@ -517,23 +517,23 @@ public:
 	void Unshift(std::initializer_list<Char_t> vInitList){
 		Unshift(Observer(vInitList));
 	}
-	void Unshift(const String &str){
-		if(std::addressof(str) == this){
-			Append(str);
+	void Unshift(const String &rhs){
+		if(&rhs == this){
+			Append(rhs);
 		} else {
-			Unshift(str.GetBegin(), str.GetEnd());
+			Unshift(rhs.GetBegin(), rhs.GetEnd());
 		}
 	}
-	void Unshift(String &&str){
-		if(std::addressof(str) == this){
-			Append(str);
+	void Unshift(String &&rhs){
+		if(&rhs == this){
+			Append(rhs);
 		} else if(IsEmpty()){
-			Assign(std::move(str));
-		} else if(GetCapacity() >= str.GetCapacity()){
-			Unshift(str);
+			Assign(std::move(rhs));
+		} else if(GetCapacity() >= rhs.GetCapacity()){
+			Unshift(rhs);
 		} else {
-			Swap(str);
-			Append(str);
+			Swap(rhs);
+			Append(rhs);
 		}
 	}
 	void Shift(std::size_t uCount = 1) noexcept {
@@ -674,8 +674,8 @@ public:
 		return *this;
 	}
 	template<typename OtherChar_t, StringEncoding OTHER_ENCODING>
-	String &operator+=(const String<OtherChar_t, OTHER_ENCODING> &str){
-		Append(str);
+	String &operator+=(const String<OtherChar_t, OTHER_ENCODING> &rhs){
+		Append(rhs);
 		return *this;
 	}
 
@@ -801,29 +801,29 @@ bool operator>=(const Comparand_t &lhs, const String<Char_t, ENCODING> &rhs) noe
 }
 
 template<typename Char_t, StringEncoding ENCODING>
-const Char_t *begin(const String<Char_t, ENCODING> &str) noexcept {
-	return str.GetBegin();
+const Char_t *begin(const String<Char_t, ENCODING> &rhs) noexcept {
+	return rhs.GetBegin();
 }
 template<typename Char_t, StringEncoding ENCODING>
-Char_t *begin(String<Char_t, ENCODING> &str) noexcept {
-	return str.GetBegin();
+Char_t *begin(String<Char_t, ENCODING> &rhs) noexcept {
+	return rhs.GetBegin();
 }
 template<typename Char_t, StringEncoding ENCODING>
-const Char_t *cbegin(const String<Char_t, ENCODING> &str) noexcept {
-	return str.GetCBegin();
+const Char_t *cbegin(const String<Char_t, ENCODING> &rhs) noexcept {
+	return rhs.GetCBegin();
 }
 
 template<typename Char_t, StringEncoding ENCODING>
-const Char_t *end(const String<Char_t, ENCODING> &str) noexcept {
-	return str.GetEnd();
+const Char_t *end(const String<Char_t, ENCODING> &rhs) noexcept {
+	return rhs.GetEnd();
 }
 template<typename Char_t, StringEncoding ENCODING>
-Char_t *end(String<Char_t, ENCODING> &str) noexcept {
-	return str.GetEnd();
+Char_t *end(String<Char_t, ENCODING> &rhs) noexcept {
+	return rhs.GetEnd();
 }
 template<typename Char_t, StringEncoding ENCODING>
-const Char_t *cend(const String<Char_t, ENCODING> &str) noexcept {
-	return str.GetCEnd();
+const Char_t *cend(const String<Char_t, ENCODING> &rhs) noexcept {
+	return rhs.GetCEnd();
 }
 
 namespace Impl {

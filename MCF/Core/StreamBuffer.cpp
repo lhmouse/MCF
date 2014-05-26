@@ -22,14 +22,14 @@ StreamBuffer::StreamBuffer(const void *pData, std::size_t uSize)
 }
 
 StreamBuffer::StreamBuffer(const StreamBuffer &rhs)
-	: xm_arrSmall	(rhs.xm_arrSmall)
+	: xm_abySmall	(rhs.xm_abySmall)
 	, xm_uSmallSize	(rhs.xm_uSmallSize)
 	, xm_deqLarge	(rhs.xm_deqLarge)
 	, xm_uSize		(rhs.xm_uSize)
 {
 }
 StreamBuffer::StreamBuffer(StreamBuffer &&rhs) noexcept
-	: xm_arrSmall	(std::move(rhs.xm_arrSmall))
+	: xm_abySmall	(std::move(rhs.xm_abySmall))
 	, xm_uSmallSize	(rhs.xm_uSmallSize)
 	, xm_deqLarge	(std::move(rhs.xm_deqLarge))
 	, xm_uSize		(rhs.xm_uSize)
@@ -37,21 +37,11 @@ StreamBuffer::StreamBuffer(StreamBuffer &&rhs) noexcept
 	rhs.Clear();
 }
 StreamBuffer &StreamBuffer::operator=(const StreamBuffer &rhs){
-	xm_arrSmall		= rhs.xm_arrSmall;
-	xm_uSmallSize	= rhs.xm_uSmallSize;
-	xm_deqLarge		= rhs.xm_deqLarge;
-	xm_uSize		= rhs.xm_uSize;
-
+	StreamBuffer(rhs).Swap(*this);
 	return *this;
 }
 StreamBuffer &StreamBuffer::operator=(StreamBuffer &&rhs) noexcept {
-	xm_arrSmall		= std::move(rhs.xm_arrSmall);
-	xm_uSmallSize	= rhs.xm_uSmallSize;
-	xm_deqLarge		= std::move(rhs.xm_deqLarge);
-	xm_uSize		= rhs.xm_uSize;
-
-	rhs.Clear();
-
+	rhs.Swap(*this);
 	return *this;
 }
 
@@ -76,8 +66,8 @@ void StreamBuffer::Insert(const void *pData, std::size_t uSize){
 
 	do {
 		if(xm_deqLarge.empty()){
-			if(xm_arrSmall.size() - xm_uSmallSize >= uSize){
-				std::memcpy(xm_arrSmall.data() + xm_uSmallSize, pbyData, uSize);
+			if(xm_abySmall.size() - xm_uSmallSize >= uSize){
+				std::memcpy(xm_abySmall.data() + xm_uSmallSize, pbyData, uSize);
 				xm_uSmallSize += uSize;
 				break;
 			}
@@ -91,7 +81,7 @@ void StreamBuffer::Insert(const void *pData, std::size_t uSize){
 		}
 		xm_deqLarge.emplace_back();
 		auto &vecLast = xm_deqLarge.back();
-		vecLast.reserve(std::max(xm_arrSmall.size(), uSize));
+		vecLast.reserve(std::max(xm_abySmall.size(), uSize));
 		vecLast.assign(pbyData, pbyData + uSize);
 	} while(false);
 
@@ -110,12 +100,12 @@ bool StreamBuffer::ExtractNoThrow(void *pData, std::size_t uSize) noexcept {
 		auto uBytesRemaining = uSize;
 		if(xm_uSmallSize > 0){
 			if(xm_uSmallSize >= uSize){
-				pbyWrite = std::copy(xm_arrSmall.begin(), xm_arrSmall.begin() + (std::ptrdiff_t)uBytesRemaining, pbyWrite);
-				std::copy(xm_arrSmall.begin() + (std::ptrdiff_t)uSize, xm_arrSmall.end(), xm_arrSmall.begin());
+				pbyWrite = std::copy(xm_abySmall.begin(), xm_abySmall.begin() + (std::ptrdiff_t)uBytesRemaining, pbyWrite);
+				std::copy(xm_abySmall.begin() + (std::ptrdiff_t)uSize, xm_abySmall.end(), xm_abySmall.begin());
 				xm_uSmallSize -= uSize;
 				break;
 			}
-			pbyWrite = std::copy(xm_arrSmall.begin(), xm_arrSmall.begin() + (std::ptrdiff_t)xm_uSmallSize, pbyWrite);
+			pbyWrite = std::copy(xm_abySmall.begin(), xm_abySmall.begin() + (std::ptrdiff_t)xm_uSmallSize, pbyWrite);
 			uBytesRemaining -= xm_uSmallSize;
 			xm_uSmallSize = 0;
 		}
@@ -151,32 +141,49 @@ void StreamBuffer::Extract(void *pData, std::size_t uSize){
 	}
 }
 
-void StreamBuffer::Append(const StreamBuffer &sbufOther){
-	sbufOther.Traverse([this](const unsigned char *pbyData, std::size_t uSize){
-		this->Insert(pbyData, uSize);
-	});
+void StreamBuffer::Append(const StreamBuffer &rhs){
+	std::vector<unsigned char> vecTemp;
+	vecTemp.reserve(xm_uSize);
+	rhs.Traverse(
+		[&](auto pbyData, auto uSize){
+			vecTemp.insert(vecTemp.end(), pbyData, pbyData + uSize);
+			return false;
+		}
+	);
+	xm_deqLarge.emplace_back(std::move(vecTemp));
+	xm_uSize += rhs.xm_uSize;
 }
-void StreamBuffer::Append(StreamBuffer &&sbufOther){
-	Insert(sbufOther.xm_arrSmall.data(), sbufOther.xm_uSmallSize);
-	for(auto &vecCur : sbufOther.xm_deqLarge){
-		xm_deqLarge.emplace_back(std::move(vecCur));
+void StreamBuffer::Append(StreamBuffer &&rhs){
+	if(&rhs == this){
+		Append(*this);
+	} else {
+		Insert(
+			rhs.xm_abySmall.data(),
+			rhs.xm_uSmallSize
+		);
+		std::move(
+			rhs.xm_deqLarge.begin(),
+			rhs.xm_deqLarge.end(),
+			std::back_inserter(xm_deqLarge)
+		);
+		xm_uSize += rhs.xm_uSize;
+		rhs.Clear();
 	}
-	sbufOther.Clear();
 }
-void StreamBuffer::Swap(StreamBuffer &sbufOther) noexcept {
+void StreamBuffer::Swap(StreamBuffer &rhs) noexcept {
 	ASSERT_NOEXCEPT_BEGIN
 	{
-		std::swap(xm_arrSmall,		sbufOther.xm_arrSmall);
-		std::swap(xm_uSmallSize,	sbufOther.xm_uSmallSize);
-		std::swap(xm_deqLarge,		sbufOther.xm_deqLarge);
-		std::swap(xm_uSize,			sbufOther.xm_uSize);
+		std::swap(xm_abySmall,		rhs.xm_abySmall);
+		std::swap(xm_uSmallSize,	rhs.xm_uSmallSize);
+		std::swap(xm_deqLarge,		rhs.xm_deqLarge);
+		std::swap(xm_uSize,			rhs.xm_uSize);
 	}
 	ASSERT_NOEXCEPT_END
 }
 
 void StreamBuffer::Traverse(std::function<void (const unsigned char *, std::size_t)> fnCallback) const {
 	if(xm_uSmallSize > 0){
-		fnCallback(xm_arrSmall.data(), xm_uSmallSize);
+		fnCallback(xm_abySmall.data(), xm_uSmallSize);
 	}
 	for(const auto &vecCur : xm_deqLarge){
 		fnCallback(vecCur.data(), vecCur.size());
@@ -184,7 +191,7 @@ void StreamBuffer::Traverse(std::function<void (const unsigned char *, std::size
 }
 void StreamBuffer::Traverse(std::function<void (unsigned char *, std::size_t)> fnCallback){
 	if(xm_uSmallSize > 0){
-		fnCallback(xm_arrSmall.data(), xm_uSmallSize);
+		fnCallback(xm_abySmall.data(), xm_uSmallSize);
 	}
 	for(auto &vecCur : xm_deqLarge){
 		fnCallback(vecCur.data(), vecCur.size());

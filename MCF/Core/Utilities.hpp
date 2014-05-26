@@ -28,6 +28,11 @@ namespace Impl {
 #define COUNT_OF(a)		(sizeof(::MCF::Impl::CountOfHelper((a))))
 
 //----------------------------------------------------------------------------
+// BITS_OF
+//----------------------------------------------------------------------------
+#define BITS_OF(x)		(sizeof(x) * __CHAR_BIT__)
+
+//----------------------------------------------------------------------------
 // NO_COPY
 //----------------------------------------------------------------------------
 namespace Impl {
@@ -238,6 +243,30 @@ inline void Destruct(Obj_t *pObj)
 	noexcept(std::is_nothrow_destructible<Obj_t>::value)
 {
 	pObj->~Obj_t();
+}
+
+//----------------------------------------------------------------------------
+// CountLeadingZeroes / CountTrailingZeroes
+//----------------------------------------------------------------------------
+
+inline unsigned char CountLeadingZeroes(unsigned long long ull) noexcept {
+	return (unsigned char)__builtin_clzll(ull);
+}
+inline unsigned char CountLeadingZeroes(unsigned long ul) noexcept {
+	return (unsigned char)__builtin_clzl(ul);
+}
+inline unsigned char CountLeadingZeroes(unsigned int u) noexcept {
+	return (unsigned char)__builtin_clz(u);
+}
+
+inline unsigned char CountTrailingZeroes(unsigned long long ull) noexcept {
+	return (unsigned char)__builtin_ctzll(ull);
+}
+inline unsigned char CountTrailingZeroes(unsigned long ul) noexcept {
+	return (unsigned char)__builtin_ctzl(ul);
+}
+inline unsigned char CountTrailingZeroes(unsigned int u) noexcept {
+	return (unsigned char)__builtin_ctz(u);
 }
 
 }

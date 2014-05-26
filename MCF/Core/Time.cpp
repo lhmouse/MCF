@@ -16,6 +16,9 @@ std::uint64_t GetNtTime() noexcept {
 	::GetSystemTimeAsFileTime(&u.ft);
 	return u.uli.QuadPart;
 }
+std::uint64_t GetUnixTime() noexcept {
+	return UnixTimeFromNtTime(GetNtTime());
+}
 std::uint64_t NtTimeFromUnixTime(std::uint64_t u64UnixTime) noexcept {
 	// 0x019DB1DED53E8000 = 从 1601-01-01 到 1970-01-01 经历的时间纳秒数。
 	return u64UnixTime * 10000000u + 0x019DB1DED53E8000ull;

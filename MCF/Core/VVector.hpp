@@ -191,12 +191,18 @@ public:
 	}
 	template<typename... Params_t>
 	void Resize(std::size_t uNewSize, const Params_t &... vParams){
-		const std::size_t uCurrentSize = GetSize();
-		if(uNewSize > uCurrentSize){
-			FillAtEnd(uNewSize - uCurrentSize, vParams...);
-		} else if(uNewSize < uCurrentSize){
-			TruncateFromEnd(uCurrentSize - uNewSize);
+		const std::size_t uOldSize = GetSize();
+		if(uNewSize > uOldSize){
+			FillAtEnd(uNewSize - uOldSize, vParams...);
+		} else if(uNewSize < uOldSize){
+			TruncateFromEnd(uOldSize - uNewSize);
 		}
+	}
+	template<typename... Params_t>
+	Element_t *ResizeMore(std::size_t uDeltaSize, const Params_t &... vParams){
+		const auto uOldSize = GetSize();
+		FillAtEnd(uDeltaSize, vParams...);
+		return GetData() + uOldSize;
 	}
 
 	bool IsEmpty() const noexcept {
@@ -256,6 +262,9 @@ public:
 			xm_pEnd			= pWrite;
 			xm_pEndOfStor	= xm_pBegin + uSizeToAlloc;
 		}
+	}
+	void ReserveMore(std::size_t uDeltaCapacity){
+		Reserve(GetSize() + uDeltaCapacity);
 	}
 
 	Element_t &PushNoCheck()
@@ -526,12 +535,18 @@ public:
 	}
 	template<typename... Params_t>
 	void Resize(std::size_t uNewSize, const Params_t &... vParams){
-		const std::size_t uCurrentSize = GetSize();
-		if(uNewSize > uCurrentSize){
-			FillAtEnd(uNewSize - uCurrentSize, vParams...);
-		} else if(uNewSize < uCurrentSize){
-			TruncateFromEnd(uCurrentSize - uNewSize);
+		const std::size_t uOldSize = GetSize();
+		if(uNewSize > uOldSize){
+			FillAtEnd(uNewSize - uOldSize, vParams...);
+		} else if(uNewSize < uOldSize){
+			TruncateFromEnd(uOldSize - uNewSize);
 		}
+	}
+	template<typename... Params_t>
+	Element_t *ResizeMore(std::size_t uDeltaSize, const Params_t &... vParams){
+		const auto uOldSize = GetSize();
+		FillAtEnd(uDeltaSize, vParams...);
+		return GetData() + uOldSize;
 	}
 
 	bool IsEmpty() const noexcept {
@@ -585,6 +600,9 @@ public:
 			xm_pEnd			= pWrite;
 			xm_pEndOfStor	= xm_pBegin + uSizeToAlloc;
 		}
+	}
+	void ReserveMore(std::size_t uDeltaCapacity){
+		Reserve(GetSize() + uDeltaCapacity);
 	}
 
 	Element_t &PushNoCheck()

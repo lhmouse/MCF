@@ -29,7 +29,7 @@
 
 #include <windows.h>
 
-#include <MCFCRT/MCFCRT.h>
+#include "../MCFCRT/MCFCRT.h"
 
 #undef NULL
 #define NULL	nullptr

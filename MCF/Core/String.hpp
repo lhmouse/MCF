@@ -21,6 +21,27 @@ enum class StringEncoding {
 };
 
 template<typename Char_t, StringEncoding ENCODING>
+class String;
+
+namespace Impl {
+	template<typename Char_t, StringEncoding ENCODING>
+	struct UnicodeConv {
+		// 成员函数待定义。此处全部为追加到末尾。
+		void operator()(VVector<wchar_t> &vecUnified, const StringObserver<Char_t> &soSrc) const;
+		void operator()(String<Char_t, ENCODING> &strDst, const VVector<wchar_t> &vecUnified) const;
+	};
+
+	template<typename DstChar_t, StringEncoding DST_ENCODING, typename SrcChar_t, StringEncoding SRC_ENCODING>
+	struct Transcoder {
+		void operator()(String<DstChar_t, DST_ENCODING> &strDst, const StringObserver<SrcChar_t> &soSrc) const;
+	};
+	template<typename DstChar_t, StringEncoding ENCODING, typename SrcChar_t>
+	struct Transcoder<DstChar_t, ENCODING, SrcChar_t, ENCODING> {
+		void operator()(String<DstChar_t, ENCODING> &strDst, const StringObserver<SrcChar_t> &soSrc) const;
+	};
+}
+
+template<typename Char_t, StringEncoding ENCODING>
 class String {
 	static_assert(std::is_arithmetic<Char_t>::value, "Char_t must be an arithmetic type.");
 
@@ -211,9 +232,6 @@ private:
 		}
 	}
 
-	VVector<wchar_t> xUnify() const;
-	void xDeunifyAppend(const VVector<wchar_t> &vecUnified);
-
 public:
 	const Char_t *GetBegin() const noexcept {
 		if(xm_vStorage.chNull == Char_t()){
@@ -278,8 +296,31 @@ public:
 	}
 
 	void Resize(std::size_t uNewSize){
-		Reserve(uNewSize);
-		xSetSize(uNewSize);
+		const std::size_t uOldSize = GetSize();
+		if(uNewSize > uOldSize){
+			Reserve(uNewSize);
+			xSetSize(uNewSize);
+		} else if(uNewSize < uOldSize){
+			Truncate(uOldSize - uNewSize);
+		}
+	}
+	Char_t *ResizeMore(std::size_t uDeltaSize){
+		const auto uOldSize = GetSize();
+		Resize(uOldSize + uDeltaSize);
+		return GetData() + uOldSize;
+	}
+	void Resize(std::size_t uNewSize, Char_t ch){
+		const std::size_t uOldSize = GetSize();
+		if(uNewSize > uOldSize){
+			Append(ch, uNewSize - uOldSize);
+		} else if(uNewSize < uOldSize){
+			Truncate(uOldSize - uNewSize);
+		}
+	}
+	Char_t *ResizeMore(std::size_t uDeltaSize, Char_t ch){
+		const auto uOldSize = GetSize();
+		Resize(uOldSize + uDeltaSize, ch);
+		return GetData() + uOldSize;
 	}
 	void Shrink() noexcept {
 		Resize(Observer(GetStr()).GetLength());
@@ -304,6 +345,10 @@ public:
 			const auto uOldLength = GetLength();
 			xChopAndSplice(uOldLength, uOldLength, 0, uNewCapacity);
 		}
+	}
+	void ReserveMore(std::size_t uDeltaCapacity){
+		const auto uOldLength = GetLength();
+		xChopAndSplice(uOldLength, uOldLength, 0, uOldLength + uDeltaCapacity);
 	}
 
 	void Swap(String &rhs) noexcept {
@@ -347,6 +392,12 @@ public:
 	void Assign(const String<OtherChar_t, OTHER_ENCODING> &rhs){
 		String strTemp;
 		strTemp.Append(rhs);
+		Swap(strTemp);
+	}
+	template<StringEncoding OTHER_ENCODING, typename OtherChar_t>
+	void Assign(const StringObserver<OtherChar_t> &rhs){
+		String strTemp;
+		strTemp.Append<OTHER_ENCODING, OtherChar_t>(rhs);
 		Swap(strTemp);
 	}
 
@@ -400,7 +451,11 @@ public:
 	}
 	template<typename OtherChar_t, StringEncoding OTHER_ENCODING>
 	void Append(const String<OtherChar_t, OTHER_ENCODING> &str){
-		xDeunifyAppend(str.xUnify());
+		Impl::Transcoder<Char_t, ENCODING, OtherChar_t, OTHER_ENCODING>()(*this, str);
+	}
+	template<StringEncoding OTHER_ENCODING, typename OtherChar_t>
+	void Append(const StringObserver<OtherChar_t> &rhs){
+		Impl::Transcoder<Char_t, ENCODING, OtherChar_t, OTHER_ENCODING>()(*this, rhs);
 	}
 	void Truncate(std::size_t uCount = 1) noexcept {
 		ASSERT_MSG(uCount <= GetLength(), L"删除的字符数太多。");
@@ -771,6 +826,25 @@ const Char_t *cend(const String<Char_t, ENCODING> &str) noexcept {
 	return str.GetCEnd();
 }
 
+namespace Impl {
+	template<typename DstChar_t, StringEncoding DST_ENCODING, typename SrcChar_t, StringEncoding SRC_ENCODING>
+	void Transcoder<DstChar_t, DST_ENCODING, SrcChar_t, SRC_ENCODING>::operator()(
+		String<DstChar_t, DST_ENCODING> &strDst,
+		const StringObserver<SrcChar_t> &soSrc
+	) const {
+		VVector<wchar_t> vecUnified;
+		UnicodeConv<SrcChar_t, SRC_ENCODING>()(vecUnified, soSrc);
+		UnicodeConv<DstChar_t, DST_ENCODING>()(strDst, vecUnified);
+	}
+	template<typename DstChar_t, StringEncoding ENCODING, typename SrcChar_t>
+	void Transcoder<DstChar_t, ENCODING, SrcChar_t, ENCODING>::operator()(
+		String<DstChar_t, ENCODING> &strDst,
+		const StringObserver<SrcChar_t> &soSrc
+	) const {
+		strDst.Append(soSrc.GetBegin(), soSrc.GetSize());
+	}
+}
+
 extern template class String<char,		StringEncoding::ANSI>;
 extern template class String<wchar_t,	StringEncoding::UTF16>;
 
@@ -788,24 +862,24 @@ typedef String<char32_t,	StringEncoding::UTF32>	Utf32String;
 }
 
 inline const MCF::AnsiString &operator""_NS(const char *pchStr, std::size_t uLength) noexcept {
-	static MCF::AnsiString STATIC_STRING(pchStr, uLength);
+	static const MCF::AnsiString STATIC_STRING(pchStr, uLength);
 	return STATIC_STRING;
 }
 inline const MCF::WideString &operator""_WS(const wchar_t *pwchStr, std::size_t uLength) noexcept {
-	static MCF::WideString STATIC_STRING(pwchStr, uLength);
+	static const MCF::WideString STATIC_STRING(pwchStr, uLength);
 	return STATIC_STRING;
 }
 
 inline const MCF::Utf8String &operator""_U8S(const char *pchStr, std::size_t uLength) noexcept {
-	static MCF::Utf8String STATIC_STRING(pchStr, uLength);
+	static const MCF::Utf8String STATIC_STRING(pchStr, uLength);
 	return STATIC_STRING;
 }
 inline const MCF::Utf16String &operator""_U16S(const char16_t *pc16Str, std::size_t uLength) noexcept {
-	static MCF::Utf16String STATIC_STRING(pc16Str, uLength);
+	static const MCF::Utf16String STATIC_STRING(pc16Str, uLength);
 	return STATIC_STRING;
 }
 inline const MCF::Utf32String &operator""_U32S(const char32_t *pc32Str, std::size_t uLength) noexcept {
-	static MCF::Utf32String STATIC_STRING(pc32Str, uLength);
+	static const MCF::Utf32String STATIC_STRING(pc32Str, uLength);
 	return STATIC_STRING;
 }
 

@@ -13,12 +13,11 @@ using namespace MCF;
 
 namespace {
 
-// 使用写时拷贝策略。
-typedef VVector<std::shared_ptr<EventHandlerProc>, 0x400>	HandlerList;
-typedef MultiIndexedMap<HandlerList, WideString>			HandlerMap;
+typedef VVector<std::shared_ptr<EventHandlerProc>, 32>	HandlerVector;
+typedef MultiIndexedMap<HandlerVector, WideString>		HandlerMap;
 
 const auto g_pLock = ReaderWriterLock::Create();
-HandlerMap g_mapHandlerList;
+HandlerMap g_mapHandlerVector;
 
 class HandlerHolder : NO_COPY {
 private:
@@ -29,13 +28,13 @@ public:
 	HandlerHolder(const WideStringObserver &wsoName, EventHandlerProc &&fnProc){
 		const auto vLock = g_pLock->GetWriterLock();
 
-		auto pNode = g_mapHandlerList.Find<0>(wsoName);
+		auto pNode = g_mapHandlerVector.Find<0>(wsoName);
 		if(!pNode){
-			pNode = g_mapHandlerList.Insert(HandlerList(), WideString(wsoName));
+			pNode = g_mapHandlerVector.Insert(HandlerVector(), WideString(wsoName));
 		}
 
-		auto &vecHandlerList = pNode->GetElement();
-		const auto &pNewHandler = vecHandlerList.Push(std::make_shared<EventHandlerProc>(std::move(fnProc)));
+		auto &vecHandlers = pNode->GetElement();
+		const auto &pNewHandler = vecHandlers.Push(std::make_shared<EventHandlerProc>(std::move(fnProc)));
 
 		xm_pwcsName = &(pNode->GetIndex<0>());
 		xm_pfnProc = pNewHandler.get();
@@ -45,34 +44,26 @@ public:
 		{
 			const auto vLock = g_pLock->GetWriterLock();
 
-			auto pNode = g_mapHandlerList.Find<0>(*xm_pwcsName);
+			auto pNode = g_mapHandlerVector.Find<0>(*xm_pwcsName);
 			ASSERT(pNode);
 
-			auto &vecHandlerList = pNode->GetElement();
+			auto &vecHandlers = pNode->GetElement();
 
-			auto ppfnBegin = vecHandlerList.GetBegin();
-			const auto ppfnEnd = vecHandlerList.GetEnd();
+			const auto ppfnEnd = vecHandlers.GetEnd();
+			auto ppfnCur = ppfnEnd;
 			for(;;){
-				if(ppfnBegin == ppfnEnd){
-					break;
-				}
-				if(ppfnBegin->get() == xm_pfnProc){
-					break;
-				}
-				++ppfnBegin;
-			}
-			ASSERT(ppfnBegin != ppfnEnd);
+				ASSERT(ppfnCur != vecHandlers.GetBegin());
 
-			auto ppfnNext = ppfnBegin;
-			for(;;){
-				++ppfnNext;
-				if(ppfnNext == ppfnEnd){
+				--ppfnCur;
+				if(ppfnCur->get() == xm_pfnProc){
 					break;
 				}
-				*ppfnBegin = std::move(*ppfnNext);
-				ppfnBegin = ppfnNext;
 			}
-			vecHandlerList.Pop();
+
+			for(auto ppfnNext = ppfnCur + 1; ppfnNext != ppfnEnd; ++ppfnNext){
+				std::swap(ppfnNext[-1], ppfnNext[0]);
+			}
+			vecHandlers.Pop();
 		}
 		ASSERT_NOEXCEPT_END
 	}
@@ -86,20 +77,18 @@ std::shared_ptr<void> RegisterEventHandler(const WideStringObserver &wsoName, Ev
 	return std::make_shared<HandlerHolder>(wsoName, std::move(fnProc));
 }
 void TriggerEvent(const WideStringObserver &wsoName, std::uintptr_t uParam1, std::uintptr_t uParam2){
-	HandlerList vecHandlerList;
+	HandlerVector vecHandlers;
 	{
 		const auto vLock = g_pLock->GetReaderLock();
 
-		const auto pNode = g_mapHandlerList.Find<0>(wsoName);
+		const auto pNode = g_mapHandlerVector.Find<0>(wsoName);
 		if(pNode){
-			vecHandlerList = pNode->GetElement();
+			vecHandlers = pNode->GetElement();
 		}
 	}
 
-	const auto ppfnBegin = vecHandlerList.GetBegin();
-	auto ppfnEnd = vecHandlerList.GetEnd();
-	while(ppfnEnd != ppfnBegin){
-		if((**--ppfnEnd)(uParam1, uParam2)){
+	for(auto ppfnNext = vecHandlers.GetEnd(); ppfnNext != vecHandlers.GetBegin(); --ppfnNext){
+		if((*(ppfnNext[-1]))(uParam1, uParam2)){
 			break;
 		}
 	}

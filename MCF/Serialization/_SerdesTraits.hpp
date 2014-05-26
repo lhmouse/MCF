@@ -9,6 +9,7 @@
 
 #include "VarIntEx.hpp"
 #include "../Core/StreamBuffer.hpp"
+#include "../Core/Exception.hpp"
 #include <iterator>
 #include <type_traits>
 #include <array>
@@ -27,6 +28,12 @@
 namespace MCF {
 
 namespace Impl {
+
+#pragma push_macro("OR_THROW")
+#undef OR_THROW
+
+#define OR_THROW	|| (MCF_THROW(ERROR_HANDLE_EOF, L"遇到意外的文件尾。"), true);
+
 	template<typename Object_t, typename = void>
 	struct SerdesTrait;
 
@@ -37,12 +44,12 @@ namespace Impl {
 		void
 	> {
 		void operator()(StreamBuffer &sbufStream, const bool &vObject) const {
-			unsigned char by = vObject;
+			const unsigned char by = vObject;
 			sbufStream.Insert(&by, sizeof(by));
 		}
 		void operator()(bool &vObject, StreamBuffer &sbufStream) const {
-			unsigned char by;
-			sbufStream.Extract(&by, sizeof(by));
+			unsigned char by = vObject;
+			sbufStream.Extract(&by, sizeof(by)) OR_THROW;
 			vObject = by;
 		}
 	};
@@ -68,7 +75,7 @@ namespace Impl {
 			VarIntEx<Integral> viTemp;
 
 			auto itRead = sbufStream.GetReadIterator();
-			viTemp.Unserialize(itRead, sbufStream.GetReadForeverEnd());
+			viTemp.Unserialize(itRead, sbufStream.GetReadEnd()) OR_THROW;
 
 			vObject = viTemp.Get();
 		}
@@ -124,7 +131,7 @@ namespace Impl {
 			sbufStream.Insert(&vElement, sizeof(vElement));
 		}
 		void operator()(Scalar_t &vElement, StreamBuffer &sbufStream) const {
-			sbufStream.Extract(&vElement, sizeof(vElement));
+			sbufStream.Extract(&vElement, sizeof(vElement)) OR_THROW;
 		}
 	};
 
@@ -462,6 +469,9 @@ namespace Impl {
 		}
 	};
 }
+
+#undef OR_THROW
+#pragma pop_macro("OR_THROW")
 
 }
 

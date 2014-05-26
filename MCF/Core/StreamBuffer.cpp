@@ -5,7 +5,6 @@
 #include "../StdMCF.hpp"
 #include "StreamBuffer.hpp"
 #include "Utilities.hpp"
-#include "Exception.hpp"
 #include <cstring>
 using namespace MCF;
 
@@ -87,7 +86,7 @@ void StreamBuffer::Insert(const void *pData, std::size_t uSize){
 
 	xm_uSize += uSize;
 }
-bool StreamBuffer::ExtractNoThrow(void *pData, std::size_t uSize) noexcept {
+bool StreamBuffer::Extract(void *pData, std::size_t uSize) noexcept {
 	if(xm_uSize < uSize){
 		return false;
 	}
@@ -134,11 +133,6 @@ bool StreamBuffer::ExtractNoThrow(void *pData, std::size_t uSize) noexcept {
 
 	xm_uSize -= uSize;
 	return true;
-}
-void StreamBuffer::Extract(void *pData, std::size_t uSize){
-	if(!ExtractNoThrow(pData, uSize)){
-		MCF_THROW(ERROR_HANDLE_EOF, L"遇到意外的文件尾。");
-	}
 }
 
 void StreamBuffer::Append(const StreamBuffer &rhs){

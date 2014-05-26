@@ -48,11 +48,9 @@ struct Exception : public std::exception {
 }
 
 #define MCF_THROW(...)	\
-	do {	\
-		throw ::MCF::Exception(__PRETTY_FUNCTION__, __LINE__, __VA_ARGS__);	\
-	} while(false)
+	(throw ::MCF::Exception(__PRETTY_FUNCTION__, __LINE__, __VA_ARGS__))
 
 #define MCF_MAKE_EXCEPTION_PTR(...)	\
-	::std::make_exception_ptr(::MCF::Exception(__PRETTY_FUNCTION__, __LINE__, __VA_ARGS__))
+	(::std::make_exception_ptr(::MCF::Exception(__PRETTY_FUNCTION__, __LINE__, __VA_ARGS__)))
 
 #endif

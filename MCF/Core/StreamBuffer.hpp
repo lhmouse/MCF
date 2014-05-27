@@ -24,7 +24,7 @@ public:
 	class WriteIterator;
 
 private:
-	unsigned char xm_abySmall[4];
+	unsigned char xm_abySmall[0x100u];
 	std::size_t xm_uSmallRead;
 	std::size_t xm_uSmallWrite;
 

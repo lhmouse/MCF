@@ -5,7 +5,6 @@
 #include "../StdMCF.hpp"
 #include "CriticalSection.hpp"
 #include "Semaphore.hpp"
-#include <emmintrin.h>
 using namespace MCF;
 
 namespace {
@@ -33,6 +32,25 @@ public:
 		}
 	}
 
+private:
+	// http://wiki.osdev.org/Spinlock
+	std::size_t xLockSpin() noexcept {
+		std::size_t uWaiting;
+		for(;;){
+			uWaiting = __atomic_exchange_n(&xm_uWaiting, (std::size_t)-1, __ATOMIC_ACQ_REL | __ATOMIC_HLE_ACQUIRE);
+			if(EXPECT_NOT(uWaiting != (std::size_t)-1)){
+				break;
+			}
+			do {
+				__asm__ __volatile__("pause \n");
+			} while(EXPECT(__atomic_load_n(&xm_uWaiting, __ATOMIC_ACQUIRE) == (std::size_t)-1));
+		}
+		return uWaiting;
+	}
+	void xUnlockSpin(std::size_t uNewWaiting) noexcept {
+		__atomic_store_n(&xm_uWaiting, uNewWaiting, __ATOMIC_RELEASE | __ATOMIC_HLE_RELEASE);
+	}
+
 public:
 	void Enter() noexcept {
 		const DWORD dwThreadId = ::GetCurrentThreadId();
@@ -54,18 +72,10 @@ public:
 					--i;
 				}
 
-				std::size_t uWaiting;
-				for(;;){
-					uWaiting = __atomic_exchange_n(&xm_uWaiting, (std::size_t)-1, __ATOMIC_ACQUIRE | __ATOMIC_HLE_ACQUIRE);
-					if(EXPECT_NOT(uWaiting != (std::size_t)-1)){
-						break;
-					}
-					::_mm_pause();
-					::SwitchToThread();
-				}
-
+				auto uWaiting = xLockSpin();
 				++uWaiting;
-				__atomic_store_n(&xm_uWaiting, uWaiting, __ATOMIC_RELEASE | __ATOMIC_HLE_RELEASE);
+				xUnlockSpin(uWaiting);
+
 				xm_psemExclusive->Wait();
 			}
 		}
@@ -79,21 +89,12 @@ public:
 		if(--xm_uRecurCount == 0){
 			__atomic_store_n(&xm_dwOwner, 0, __ATOMIC_RELEASE);
 
-			std::size_t uWaiting;
-			for(;;){
-				uWaiting = __atomic_exchange_n(&xm_uWaiting, (std::size_t)-1, __ATOMIC_ACQUIRE | __ATOMIC_HLE_ACQUIRE);
-				if(EXPECT_NOT(uWaiting != (std::size_t)-1)){
-					break;
-				}
-				::_mm_pause();
-				::SwitchToThread();
-			}
-
+			auto uWaiting = xLockSpin();
 			if(uWaiting){
 				xm_psemExclusive->Signal();
 				--uWaiting;
 			}
-			__atomic_store_n(&xm_uWaiting, uWaiting, __ATOMIC_RELEASE | __ATOMIC_HLE_RELEASE);
+			xUnlockSpin(uWaiting);
 		}
 	}
 };

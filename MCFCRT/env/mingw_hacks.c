@@ -38,7 +38,7 @@ void __MCF_CRT_EmutlsCleanup(){
 			&g_pDtorHead, &pNode, pNode->pNext,
 			0, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE
 		))){
-			SwitchToThread();
+			// 空的。
 		}
 		if(!pNode){
 			break;
@@ -62,7 +62,7 @@ int __mingwthr_key_dtor(unsigned long ulKey, void (*pfnDtor)(void *)){
 			&g_pDtorHead, &(pNode->pNext), pNode,
 			0, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE
 		))){
-			SwitchToThread();
+			// 空的。
 		}
 	}
 	return 0;

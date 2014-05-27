@@ -48,7 +48,7 @@ void __MCF_CRT_End(){
 			&g_pAtExitHead, &pNode, pNode->pNext,
 			0, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE
 		))){
-			SwitchToThread();
+			// 空的。
 		}
 		if(!pNode){
 			break;
@@ -81,7 +81,7 @@ int MCF_AtCRTEnd(void (__cdecl *pfnProc)(intptr_t), intptr_t nContext){
 		&g_pAtExitHead, &(pNode->pNext), pNode,
 		0, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE
 	))){
-		SwitchToThread();
+		// 空的。
 	}
 
 	return 0;

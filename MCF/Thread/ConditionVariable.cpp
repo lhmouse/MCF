@@ -59,7 +59,6 @@ public:
 				::ReleaseSemaphore(xm_hSemaphore.Get(), (long)uCountToSignal, nullptr);
 				break;
 			}
-			::SwitchToThread();
 		}
 	}
 	void Broadcast() noexcept {

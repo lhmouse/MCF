@@ -1,11 +1,15 @@
 #include <MCF/StdMCF.hpp>
 #include <MCF/Core/Exception.hpp>
 #include <MCF/Core/StreamBuffer.hpp>
+#include <MCF/Thread/CriticalSection.hpp>
 using namespace std;
 using namespace MCF;
 
 unsigned int MCFMain()
 try {
+	auto cs = CriticalSection::Create();
+	cs->GetLock();
+
 	StreamBuffer buf;
 	buf.Insert("a", 1);
 	buf.Insert("bc", 2);

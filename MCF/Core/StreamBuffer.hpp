@@ -17,7 +17,11 @@ class StreamBuffer {
 private:
 	class xBlockHeader;
 
-	typedef std::unique_ptr<xBlockHeader, void (*)(xBlockHeader *)> xBlockHeaderPtr;
+	struct xBlockDeleter {
+		void operator()(xBlockHeader *pBlock) noexcept;
+	};
+
+	typedef std::unique_ptr<xBlockHeader, xBlockDeleter> xBlockHeaderPtr;
 
 public:
 	class ReadIterator;

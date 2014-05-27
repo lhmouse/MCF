@@ -6,8 +6,7 @@
 #define MCF_STREAM_BUFFER_HPP_
 
 #include "Utilities.hpp"
-#include "VVector.hpp"
-#include <deque>
+#include <memory>
 #include <functional>
 #include <iterator>
 #include <cstddef>
@@ -15,15 +14,22 @@
 namespace MCF {
 
 class StreamBuffer {
+private:
+	class xBlockHeader;
+
+	typedef std::unique_ptr<xBlockHeader, void (*)(xBlockHeader *)> xBlockHeaderPtr;
+
 public:
 	class ReadIterator;
 	class WriteIterator;
 
 private:
-	std::size_t xm_uSmallSize;
-	unsigned char xm_abySmall[3];
+	unsigned char xm_abySmall[4];
+	std::size_t xm_uSmallRead;
+	std::size_t xm_uSmallWrite;
 
-	std::deque<Vector<unsigned char>> xm_deqLarge;
+	xBlockHeaderPtr xm_pLargeHead;
+	xBlockHeader *xm_pLargeTail;
 	std::size_t xm_uSize;
 
 public:
@@ -33,23 +39,24 @@ public:
 	StreamBuffer(StreamBuffer &&rhs) noexcept;
 	StreamBuffer &operator=(const StreamBuffer &rhs);
 	StreamBuffer &operator=(StreamBuffer &&rhs) noexcept;
+	~StreamBuffer() noexcept;
 
 public:
 	bool IsEmpty() const noexcept;
 	std::size_t GetSize() const noexcept;
 	void Clear() noexcept;
 
-	// 要么就从头部读取并删除 uSize 个字节并返回 true，要么就返回 false。
-	// 没有只读取一半的情况。
-	bool Extract(void *pData, std::size_t uSize) noexcept;
-	// 追加 uSize 个字节。
-	void Insert(const void *pData, std::size_t uSize);
-
 	// 如果为空返回 -1。
 	int Get() noexcept;
 	// 类似于 Get()，但是不从流中删除字节。
 	int Peek() const noexcept;
 	void Put(unsigned char by);
+
+	// 要么就从头部读取并删除 uSize 个字节并返回 true，要么就返回 false。
+	// 没有只读取一半的情况。
+	bool Extract(void *pData, std::size_t uSize) noexcept;
+	// 追加 uSize 个字节。
+	void Insert(const void *pData, std::size_t uSize);
 
 	void Append(const StreamBuffer &rhs);
 	void Append(StreamBuffer &&rhs);

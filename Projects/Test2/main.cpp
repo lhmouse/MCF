@@ -2,6 +2,7 @@
 #include <MCF/Core/Exception.hpp>
 #include <MCF/Core/StreamBuffer.hpp>
 #include <MCF/Thread/CriticalSection.hpp>
+#include <iostream>
 using namespace std;
 using namespace MCF;
 
@@ -16,10 +17,19 @@ try {
 	buf.Insert("def", 3);
 	buf.Insert("ghij", 4);
 	buf.Insert("klmno", 5);
-	char temp[16];
-	buf.Extract(temp, 15);
-	temp[15] = 0;
-	puts(temp);
+
+	buf.Traverse(
+		[](auto p, auto cb){
+			while(cb--){
+				putchar(*(p++));
+			}
+			putchar('\n');
+		}
+	);
+
+	copy(buf.GetReadIterator(), buf.GetReadEnd(), ostream_iterator<char>(cout));
+	cout <<endl;
+
 	return 0;
 } catch(exception &e){
 	printf("exception '%s'\n", e.what());

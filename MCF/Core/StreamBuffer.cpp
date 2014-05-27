@@ -8,10 +8,61 @@
 #include <cstring>
 using namespace MCF;
 
+// 嵌套类定义。
+class StreamBuffer::xBlockHeader {
+public:
+	static void DeleteBlock(xBlockHeader *pBlock) noexcept {
+		if(pBlock){
+			pBlock->~xBlockHeader();
+			::operator delete(pBlock);
+		}
+	}
+
+public:
+	static xBlockHeaderPtr Create(std::size_t m_uCapacity);
+
+public:
+	xBlockHeaderPtr m_pNext;
+
+	std::size_t m_uRead;
+	std::size_t m_uWrite;
+	const std::size_t m_uCapacity;
+	unsigned char abyData[];
+
+private:
+	explicit xBlockHeader(std::size_t uCapacity) noexcept
+		: m_pNext		(nullptr, &DeleteBlock)
+		, m_uRead		(0)
+		, m_uWrite		(0)
+		, m_uCapacity	(uCapacity)
+	{
+	}
+};
+
+inline StreamBuffer::xBlockHeaderPtr StreamBuffer::xBlockHeader::Create(std::size_t uCapacity){
+	struct Helper : public xBlockHeader {
+		explicit Helper(std::size_t uCapacity)
+			: xBlockHeader(uCapacity)
+		{
+		}
+	};
+
+	return xBlockHeaderPtr(
+		Construct<Helper>(
+			::operator new(sizeof(Helper) + uCapacity),
+			uCapacity
+		),
+		&DeleteBlock
+	);
+}
+
 // 构造函数和析构函数。
 StreamBuffer::StreamBuffer() noexcept
-	: xm_uSmallSize	(0)
-	, xm_uSize		(0)
+	: xm_uSmallRead		(0)
+	, xm_uSmallWrite	(0)
+	, xm_pLargeHead		(nullptr, &xBlockHeader::DeleteBlock)
+	, xm_pLargeTail		(nullptr)
+	, xm_uSize			(0)
 {
 }
 StreamBuffer::StreamBuffer(const void *pData, std::size_t uSize)
@@ -19,7 +70,6 @@ StreamBuffer::StreamBuffer(const void *pData, std::size_t uSize)
 {
 	Insert(pData, uSize);
 }
-
 StreamBuffer::StreamBuffer(const StreamBuffer &rhs)
 	: StreamBuffer()
 {
@@ -38,6 +88,8 @@ StreamBuffer &StreamBuffer::operator=(StreamBuffer &&rhs) noexcept {
 	rhs.Swap(*this);
 	return *this;
 }
+StreamBuffer::~StreamBuffer() noexcept {
+}
 
 // 其他非静态成员函数。
 bool StreamBuffer::IsEmpty() const noexcept {
@@ -47,166 +99,256 @@ std::size_t StreamBuffer::GetSize() const noexcept {
 	return xm_uSize;
 }
 void StreamBuffer::Clear() noexcept {
-	xm_uSmallSize = 0;
-	xm_deqLarge.clear();
-	xm_uSize = 0;
-}
+	xm_uSmallRead	= 0;
+	xm_uSmallWrite	= 0;
 
-bool StreamBuffer::Extract(void *pData, std::size_t uSize) noexcept {
-	if(xm_uSize < uSize){
-		return false;
-	}
-
-	auto pbyWrite = (unsigned char *)pData;
-	if(xm_uSmallSize >= uSize){
-		std::copy_n(xm_abySmall, uSize, pbyWrite);
-		if(xm_uSmallSize > uSize){
-			std::copy(xm_abySmall + uSize, xm_abySmall + xm_uSmallSize, xm_abySmall);
-		}
-		xm_uSmallSize -= uSize;
-	} else {
-		const auto pbyEnd = pbyWrite + uSize;
-		pbyWrite = std::copy_n(xm_abySmall, xm_uSmallSize, pbyWrite);
-		xm_uSmallSize = 0;
-
-		for(;;){
-			ASSERT(!xm_deqLarge.empty());
-			auto &vecBlock = xm_deqLarge.front();
-
-			const auto uRemaining = (std::size_t)(pbyEnd - pbyWrite);
-			if(vecBlock.GetSize() >= uRemaining){
-				pbyWrite = std::copy_n(vecBlock.GetBegin(), uRemaining, pbyWrite);
-				if(vecBlock.GetSize() > uRemaining){
-					std::copy(vecBlock.GetBegin() + uRemaining, vecBlock.GetEnd(), vecBlock.GetBegin());
-					vecBlock.TruncateFromEnd(uRemaining);
-				} else {
-					xm_deqLarge.pop_front();
-				}
-				break;
-			}
-			pbyWrite = std::copy_n(vecBlock.GetBegin(), vecBlock.GetSize(), pbyWrite);
-			xm_deqLarge.pop_front();
-		}
-	}
-	xm_uSize -= uSize;
-	return true;
-}
-void StreamBuffer::Insert(const void *pData, std::size_t uSize){
-	auto pbyRead = (const unsigned char *)pData;
-	const auto uSmallRemaining = sizeof(xm_abySmall) - xm_uSmallSize;
-	if(xm_deqLarge.empty() && (uSmallRemaining >= uSize)){
-		std::copy_n(pbyRead, uSize, xm_abySmall + xm_uSmallSize);
-		xm_uSmallSize += uSize;
-	} else {
-		if(xm_deqLarge.empty() || (xm_deqLarge.back().GetCapacity() - xm_deqLarge.back().GetSize() < uSize)){
-			xm_deqLarge.emplace_back();
-			xm_deqLarge.back().Reserve(std::max(sizeof(xm_abySmall), uSize));
-		}
-		xm_deqLarge.back().CopyToEnd(pbyRead, uSize);
-	}
-	xm_uSize += uSize;
+	xm_pLargeHead	= nullptr;
+	xm_pLargeTail	= nullptr;
+	xm_uSize		= 0;
 }
 
 int StreamBuffer::Get() noexcept {
-	int nRet = -1;
-	if(xm_uSmallSize > 0){
-		nRet = xm_abySmall[0];
-		if(xm_uSmallSize > 1){
-			std::copy(xm_abySmall + 1, xm_abySmall + xm_uSmallSize, xm_abySmall);
+	ASSERT_NOEXCEPT_BEGIN
+	{
+		if(xm_uSmallWrite > xm_uSmallRead){
+			const int nRet = xm_abySmall[xm_uSmallRead];
+			++xm_uSmallRead;
+			--xm_uSize;
+			return nRet;
 		}
-		--xm_uSmallSize;
-	} else {
-		while(!xm_deqLarge.empty()){
-			auto &vecBlock = xm_deqLarge.front();
-			if(!vecBlock.IsEmpty()){
-				nRet = vecBlock[0];
-				if(vecBlock.GetSize() > 1){
-					std::copy(vecBlock.GetBegin() + 1, vecBlock.GetEnd(), vecBlock.GetBegin());
-					vecBlock.Pop();
-				} else {
-					xm_deqLarge.pop_front();
+		if(xm_pLargeHead){
+			for(;;){
+				if(xm_pLargeHead->m_uWrite > xm_pLargeHead->m_uRead){
+					const int nRet = xm_pLargeHead->abyData[xm_pLargeHead->m_uRead];
+					++xm_pLargeHead->m_uRead;
+					if(xm_pLargeHead->m_uRead == xm_pLargeHead->m_uWrite){
+						std::exchange(xm_pLargeHead, std::move(xm_pLargeHead->m_pNext));
+					}
+					--xm_uSize;
+					return nRet;
 				}
-				break;
+				std::exchange(xm_pLargeHead, std::move(xm_pLargeHead->m_pNext));
+
+				if(!xm_pLargeHead){
+					xm_pLargeTail = nullptr;
+					break;
+				}
 			}
-			xm_deqLarge.pop_front();
 		}
+		return -1;
 	}
-	--xm_uSize;
-	return nRet;
+	ASSERT_NOEXCEPT_END
 }
 int StreamBuffer::Peek() const noexcept {
-	if(xm_uSmallSize > 0){
-		return xm_abySmall[0];
-	}
-	for(const auto &vecBlock : xm_deqLarge){
-		if(!vecBlock.IsEmpty()){
-			return vecBlock[0];
+	ASSERT_NOEXCEPT_BEGIN
+	{
+		if(xm_uSmallWrite > xm_uSmallRead){
+			return xm_abySmall[xm_uSmallRead];
 		}
+		for(auto pBlock = xm_pLargeHead.get(); pBlock; pBlock = pBlock->m_pNext.get()){
+			if(pBlock->m_uWrite > pBlock->m_uRead){
+				return pBlock->abyData[pBlock->m_uRead];
+			}
+		}
+		return -1;
 	}
-	return -1;
+	ASSERT_NOEXCEPT_END
 }
 void StreamBuffer::Put(unsigned char by){
-	if(xm_deqLarge.empty() && (sizeof(xm_abySmall) > xm_uSmallSize)){
-		xm_abySmall[xm_uSmallSize] = by;
-		++xm_uSmallSize;
-	} else {
-		if(xm_deqLarge.empty() || (xm_deqLarge.back().GetCapacity() == xm_deqLarge.back().GetSize())){
-			xm_deqLarge.emplace_back();
-			xm_deqLarge.back().Reserve(sizeof(xm_abySmall));
+	ASSERT_NOEXCEPT_BEGIN
+	{
+		if(sizeof(xm_abySmall) > xm_uSmallWrite){
+			xm_abySmall[xm_uSmallWrite] = by;
+			++xm_uSmallWrite;
+			++xm_uSize;
+			return;
 		}
-		xm_deqLarge.back().Push(by);
+		if(xm_pLargeTail && (xm_pLargeTail->m_uCapacity > xm_pLargeTail->m_uWrite)){
+			xm_pLargeTail->abyData[xm_pLargeTail->m_uWrite] = by;
+			++xm_pLargeTail->m_uWrite;
+			++xm_uSize;
+			return;
+		}
 	}
-	++xm_uSize;
+	ASSERT_NOEXCEPT_END
+
+	auto pNewBlock = xBlockHeader::Create(sizeof(xm_abySmall));
+	pNewBlock->abyData[0] = by;
+	pNewBlock->m_uWrite = 1;
+
+	ASSERT_NOEXCEPT_BEGIN
+	{
+		const auto pNewTail = pNewBlock.get();
+		if(xm_pLargeHead){
+			ASSERT(xm_pLargeTail);
+
+			xm_pLargeTail->m_pNext = std::move(pNewBlock);
+		} else {
+			xm_pLargeHead = std::move(pNewBlock);
+		}
+		xm_pLargeTail = pNewTail;
+
+		++xm_uSize;
+	}
+	ASSERT_NOEXCEPT_END
+}
+
+bool StreamBuffer::Extract(void *pData, std::size_t uSize) noexcept {
+	ASSERT_NOEXCEPT_BEGIN
+	{
+		if(uSize > xm_uSize){
+			return false;
+		}
+
+		auto pbyWrite = (unsigned char *)pData;
+		if(xm_uSmallWrite - xm_uSmallRead >= uSize){
+			std::memcpy(pbyWrite, xm_abySmall + xm_uSmallRead, uSize);
+			xm_uSmallRead += uSize;
+			xm_uSize -= uSize;
+			return true;
+		}
+
+		const auto pbyEnd = pbyWrite + uSize;
+		std::memcpy(pbyWrite, xm_abySmall + xm_uSmallRead, xm_uSmallWrite - xm_uSmallRead);
+		pbyWrite += (xm_uSmallWrite - xm_uSmallRead);
+		xm_uSmallRead = xm_uSmallWrite;
+
+		for(;;){
+			ASSERT(xm_pLargeHead);
+
+			const auto uRemaining = (std::size_t)(pbyEnd - pbyWrite);
+			const auto uBlockSize = xm_pLargeHead->m_uWrite - xm_pLargeHead->m_uRead;
+			if(uBlockSize >= uRemaining){
+				std::memcpy(pbyWrite, xm_pLargeHead->abyData + xm_pLargeHead->m_uRead, uSize);
+				xm_pLargeHead->m_uRead += uSize;
+				if(xm_pLargeHead->m_uRead == xm_pLargeHead->m_uWrite){
+					std::exchange(xm_pLargeHead, std::move(xm_pLargeHead->m_pNext));
+				}
+				xm_uSize -= uSize;
+				return true;
+			}
+			std::memcpy(pbyWrite, xm_pLargeHead->abyData + xm_pLargeHead->m_uRead, uBlockSize);
+			pbyWrite += uBlockSize;
+			std::exchange(xm_pLargeHead, std::move(xm_pLargeHead->m_pNext));
+		}
+	}
+	ASSERT_NOEXCEPT_END
+}
+void StreamBuffer::Insert(const void *pData, std::size_t uSize){
+	const auto pbyRead = (const unsigned char *)pData;
+
+	ASSERT_NOEXCEPT_BEGIN
+	{
+		if(sizeof(xm_abySmall) - xm_uSmallWrite >= uSize){
+			std::memcpy(xm_abySmall + xm_uSmallWrite, pbyRead, uSize);
+			xm_uSmallWrite += uSize;
+			xm_uSize += uSize;
+			return;
+		}
+		if(xm_pLargeTail && (xm_pLargeTail->m_uCapacity - xm_pLargeTail->m_uWrite >= uSize)){
+			std::memcpy(xm_pLargeTail->abyData + xm_pLargeTail->m_uWrite, pbyRead, uSize);
+			xm_pLargeTail->m_uWrite += uSize;
+			xm_uSize += uSize;
+			return;
+		}
+	}
+	ASSERT_NOEXCEPT_END
+
+	auto pNewBlock = xBlockHeader::Create(std::max(uSize, sizeof(xm_abySmall)));
+	std::memcpy(pNewBlock->abyData, pbyRead, uSize);
+	pNewBlock->m_uWrite = uSize;
+
+	ASSERT_NOEXCEPT_BEGIN
+	{
+		const auto pNewTail = pNewBlock.get();
+		if(xm_pLargeHead){
+			ASSERT(xm_pLargeTail);
+
+			xm_pLargeTail->m_pNext = std::move(pNewBlock);
+		} else {
+			xm_pLargeHead = std::move(pNewBlock);
+		}
+		xm_pLargeTail = pNewTail;
+
+		xm_uSize += uSize;
+	}
+	ASSERT_NOEXCEPT_END
 }
 
 void StreamBuffer::Append(const StreamBuffer &rhs){
-	Vector<unsigned char> vecTemp;
-	vecTemp.Reserve(rhs.GetSize());
+	const auto uDeltaSize = rhs.GetSize();
+	auto pNewBlock = xBlockHeader::Create(uDeltaSize);
+
+	auto pbyWrite = pNewBlock->abyData;
 	rhs.Traverse(
-		[&vecTemp](auto pbyData, auto uSize){
-			vecTemp.CopyToEnd(pbyData, pbyData + uSize);
+		[&](auto pbyData, auto uSize) noexcept {
+			std::memcpy(pbyWrite, pbyData, uSize);
+			pbyWrite += uSize;
 		}
 	);
-	const auto uDeltaSize = vecTemp.GetSize();
-	xm_deqLarge.emplace_back(std::move(vecTemp));
-	xm_uSize += uDeltaSize;
+
+	ASSERT_NOEXCEPT_BEGIN
+	{
+		const auto pNewTail = pNewBlock.get();
+		if(xm_pLargeHead){
+			ASSERT(xm_pLargeTail);
+
+			xm_pLargeTail->m_pNext = std::move(pNewBlock);
+		} else {
+			xm_pLargeHead = std::move(pNewBlock);
+		}
+		xm_pLargeTail = pNewTail;
+
+		xm_uSize += uDeltaSize;
+	}
+	ASSERT_NOEXCEPT_END
 }
 void StreamBuffer::Append(StreamBuffer &&rhs){
 	if(&rhs == this){
-		Append(rhs);
-	} else {
-		Insert(rhs.xm_abySmall, rhs.xm_uSmallSize);
-		for(auto &vecBlock : rhs.xm_deqLarge){
-			if(!vecBlock.IsEmpty()){
-				const auto uDeltaSize = vecBlock.GetSize();
-				xm_deqLarge.emplace_back(std::move(vecBlock));
-				xm_uSize += uDeltaSize;
-				rhs.xm_uSize -= uDeltaSize;
-				vecBlock.Clear();
-			}
+		return Append(rhs);
+	}
+
+	const auto uSmallSize = rhs.xm_uSmallWrite - rhs.xm_uSmallRead;
+	Insert(rhs.xm_abySmall, uSmallSize);
+
+	ASSERT_NOEXCEPT_BEGIN
+	{
+		if(xm_pLargeHead){
+			ASSERT(xm_pLargeTail);
+
+			xm_pLargeTail->m_pNext = std::move(rhs.xm_pLargeHead);
+		} else {
+			xm_pLargeHead = std::move(rhs.xm_pLargeHead);
 		}
+		xm_pLargeTail = rhs.xm_pLargeTail;
+
+		xm_uSize += (rhs.xm_uSize - uSmallSize);
 		rhs.Clear();
 	}
+	ASSERT_NOEXCEPT_END
 }
 
 void StreamBuffer::Swap(StreamBuffer &rhs) noexcept {
-	std::swap(xm_uSmallSize,		rhs.xm_uSmallSize);
-	decltype(xm_abySmall) abyTemp;
-	std::memcpy(abyTemp,			xm_abySmall,		xm_uSmallSize);
-	std::memcpy(xm_abySmall,		rhs.xm_abySmall,	rhs.xm_uSmallSize);
-	std::memcpy(rhs.xm_abySmall,	abyTemp,			xm_uSmallSize);
+	ASSERT_NOEXCEPT_BEGIN
+	{
+		std::swap(xm_abySmall,		rhs.xm_abySmall);
+		std::swap(xm_uSmallRead,	rhs.xm_uSmallRead);
+		std::swap(xm_uSmallWrite,	rhs.xm_uSmallWrite);
 
-	std::swap(xm_deqLarge,			rhs.xm_deqLarge);
-	std::swap(xm_uSize,				rhs.xm_uSize);
+		std::swap(xm_pLargeHead,	rhs.xm_pLargeHead);
+		std::swap(xm_pLargeTail,	rhs.xm_pLargeTail);
+		std::swap(xm_uSize,			rhs.xm_uSize);
+	}
+	ASSERT_NOEXCEPT_END
 }
 
 void StreamBuffer::Traverse(std::function<void (const unsigned char *, std::size_t)> &fnCallback) const {
-	if(xm_uSmallSize > 0){
-		fnCallback(xm_abySmall, xm_uSmallSize);
+	if(xm_uSmallWrite > xm_uSmallRead){
+		fnCallback(xm_abySmall + xm_uSmallRead, xm_uSmallWrite - xm_uSmallRead);
 	}
-	for(const auto &vecBlock : xm_deqLarge){
-		if(!vecBlock.IsEmpty()){
-			fnCallback(vecBlock.GetData(), vecBlock.GetSize());
+	for(auto pBlock = xm_pLargeHead.get(); pBlock; pBlock = pBlock->m_pNext.get()){
+		if(pBlock->m_uWrite > pBlock->m_uRead){
+			fnCallback(pBlock->abyData + pBlock->m_uRead, pBlock->m_uWrite - pBlock->m_uRead);
 		}
 	}
 }
@@ -214,12 +356,12 @@ void StreamBuffer::Traverse(std::function<void (const unsigned char *, std::size
 	Traverse(fnCallback);
 }
 void StreamBuffer::Traverse(std::function<void (unsigned char *, std::size_t)> &fnCallback){
-	if(xm_uSmallSize > 0){
-		fnCallback(xm_abySmall, xm_uSmallSize);
+	if(xm_uSmallWrite > xm_uSmallRead){
+		fnCallback(xm_abySmall + xm_uSmallRead, xm_uSmallWrite - xm_uSmallRead);
 	}
-	for(auto &vecBlock : xm_deqLarge){
-		if(!vecBlock.IsEmpty()){
-			fnCallback(vecBlock.GetData(), vecBlock.GetSize());
+	for(auto pBlock = xm_pLargeHead.get(); pBlock; pBlock = pBlock->m_pNext.get()){
+		if(pBlock->m_uWrite > pBlock->m_uRead){
+			fnCallback(pBlock->abyData + pBlock->m_uRead, pBlock->m_uWrite - pBlock->m_uRead);
 		}
 	}
 }

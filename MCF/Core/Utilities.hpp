@@ -5,6 +5,7 @@
 #ifndef MCF_UTILITIES_HPP_
 #define MCF_UTILITIES_HPP_
 
+#include "../../MCFCRT/ext/assert.h"
 #include "../../MCFCRT/env/bail.h"
 #include <type_traits>
 #include <algorithm>

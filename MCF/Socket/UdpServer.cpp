@@ -48,10 +48,6 @@ public:
 			MCF_THROW(::GetLastError(), L"::setsockopt() 失败。");
 		}
 
-		if(::ioctlsocket(xm_sockPeer.Get(), (long)FIONBIO, (unsigned long *)&TRUE_VALUE)){
-			MCF_THROW(::GetLastError(), L"::ioctlsocket() 失败。");
-		}
-
 		SOCKADDR_STORAGE vSockAddr;
 		const int nSockAddrSize = piBoundOnto.ToSockAddr(&vSockAddr, sizeof(vSockAddr));
 		if(::bind(xm_sockPeer.Get(), (const SOCKADDR *)&vSockAddr, nSockAddrSize)){
@@ -78,17 +74,25 @@ public:
 					ulNextSleepTime <<= 1;
 				}
 
-				std::size_t uSize = 0x10000;
-				VVector<unsigned char> vecTemp(uSize);
+				unsigned long ulBytesAvailable;
+				if(::ioctlsocket(xm_sockPeer.Get(), (long)FIONREAD, (unsigned long *)&ulBytesAvailable)){
+					MCF_THROW(::GetLastError(), L"::ioctlsocket() 失败。");
+				}
+				if(ulBytesAvailable == 0){
+					return false;
+				}
+
 				SOCKADDR_STORAGE vSockAddr;
 				int nSockAddrSize = (int)sizeof(vSockAddr);
-				const int nBytesRead = ::recvfrom(xm_sockPeer.Get(), (char *)vecTemp.GetData(), (int)uSize, 0, (SOCKADDR *)&vSockAddr, &nSockAddrSize);
+				VVector<unsigned char, 508u> vecTemp(ulBytesAvailable);
+				const int nBytesRead = ::recvfrom(
+					xm_sockPeer.Get(),
+					(char *)vecTemp.GetData(), (int)ulBytesAvailable,
+					0,
+					(SOCKADDR *)&vSockAddr, &nSockAddrSize
+				);
 				if(nBytesRead < 0){
-					const auto ulErrorCode = ::GetLastError();
-					if(ulErrorCode != WSAEWOULDBLOCK){
-						MCF_THROW(ulErrorCode, L"::recvfrom() 失败。");
-					}
-					return false;
+					MCF_THROW(::GetLastError(), L"::recvfrom() 失败。");
 				}
 
 				pPacket = std::make_unique<UdpPacket>(

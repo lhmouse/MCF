@@ -58,7 +58,7 @@ public:
 private:
 	union xStorage {
 		struct __attribute__((__packed__)) {
-			Char_t achSmall[16 / sizeof(Char_t) - 2];
+			Char_t achSmall[(4 * sizeof(void *)) / sizeof(Char_t) - 2];
 			Char_t chNull;
 			typename std::make_unsigned<Char_t>::type uchSmallLength;
 		};
@@ -68,6 +68,8 @@ private:
 			std::size_t uLargeCapacity;
 		};
 	} xm_vStorage;
+
+	static_assert(sizeof(xm_vStorage) % 16 == 0, "Bad alignment.");
 
 public:
 	constexpr String() noexcept
@@ -552,14 +554,20 @@ public:
 	std::size_t Find(const Observer &obsToFind, std::ptrdiff_t nOffsetBegin = 0) const noexcept {
 		return GetObserver().Find(obsToFind, nOffsetBegin);
 	}
-	std::size_t Find(Char_t chToFind, std::size_t uRepCount = 1, std::ptrdiff_t nOffsetBegin = 0) const noexcept {
-		return GetObserver().Find(chToFind, uRepCount, nOffsetBegin);
-	}
 	std::size_t FindBackward(const Observer &obsToFind, std::ptrdiff_t nOffsetEnd = -1) const noexcept {
 		return GetObserver().FindBackward(obsToFind, nOffsetEnd);
 	}
-	std::size_t FindBackward(Char_t chToFind, std::size_t uRepCount = 1, std::ptrdiff_t nOffsetEnd = -1) const noexcept {
-		return GetObserver().FindBackward(chToFind, uRepCount, nOffsetEnd);
+	std::size_t FindRep(Char_t chToFind, std::size_t uRepCount, std::ptrdiff_t nOffsetBegin = 0) const noexcept {
+		return GetObserver().FindRep(chToFind, uRepCount, nOffsetBegin);
+	}
+	std::size_t FindRepBackward(Char_t chToFind, std::size_t uRepCount, std::ptrdiff_t nOffsetEnd = -1) const noexcept {
+		return GetObserver().FindRepBackward(chToFind, uRepCount, nOffsetEnd);
+	}
+	std::size_t Find(Char_t chToFind, std::ptrdiff_t nOffsetBegin = 0) const noexcept {
+		return GetObserver().Find(chToFind, nOffsetBegin);
+	}
+	std::size_t FindBackward(Char_t chToFind, std::ptrdiff_t nOffsetEnd = -1) const noexcept {
+		return GetObserver().FindBackward(chToFind, nOffsetEnd);
 	}
 
 	void Replace(std::ptrdiff_t nBegin, std::ptrdiff_t nEnd, Char_t chReplacement, std::size_t uCount = 1){

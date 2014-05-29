@@ -6,7 +6,7 @@
 #define MCF_FILE_HPP_
 
 #include "Utilities.hpp"
-#include "StringObserver.hpp"
+#include "String.hpp"
 #include <memory>
 #include <functional>
 #include <cstddef>
@@ -25,6 +25,8 @@ public:
 public:
 	static std::unique_ptr<File> Open(const WideStringObserver &wsoPath, bool bToRead, bool bToWrite, bool bAutoCreate);
 	static std::unique_ptr<File> OpenNoThrow(const WideStringObserver &wsoPath, bool bToRead, bool bToWrite, bool bAutoCreate);
+	static std::unique_ptr<File> Open(const WideString &wcsPath, bool bToRead, bool bToWrite, bool bAutoCreate);
+	static std::unique_ptr<File> OpenNoThrow(const WideString &wcsPath, bool bToRead, bool bToWrite, bool bAutoCreate);
 
 public:
 	std::uint64_t GetSize() const;

@@ -129,7 +129,7 @@ void __MCF_CRT_HeapDbgAddGuardsAndRegister(
 		++ppGuard2;
 	}
 
-	__MCF_HEAPDBG_BLOCK_INFO *const pBlockInfo = (__MCF_HEAPDBG_BLOCK_INFO *)HeapAlloc(g_hMapAllocator, 0, sizeof(__MCF_HEAPDBG_BLOCK_INFO));
+	__MCF_HEAPDBG_BLOCK_INFO *const pBlockInfo = HeapAlloc(g_hMapAllocator, 0, sizeof(__MCF_HEAPDBG_BLOCK_INFO));
 	if(!pBlockInfo){
 		MCF_CRT_BailF(L"__MCF_CRT_HeapDbgAddGuardsAndRegister() 失败：内存不足。\n调用返回地址：" UINTPTR_FORMAT, (uintptr_t)pRetAddr);
 	}

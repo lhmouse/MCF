@@ -6,7 +6,7 @@
 #define MCF_UDP_PACKET_HPP_
 
 #include "PeerInfo.hpp"
-#include "../Core/StreamBuffer.hpp"
+#include "../Core/VVector.hpp"
 #include <memory>
 
 namespace MCF {
@@ -14,7 +14,7 @@ namespace MCF {
 class UdpPacket {
 public:
 	PeerInfo m_vPeerInfo;
-	StreamBuffer m_sbufData;
+	VVector<unsigned char, 508u> m_vecData;
 
 public:
 	explicit UdpPacket(const PeerInfo &vPeerInfo) noexcept
@@ -23,12 +23,13 @@ public:
 	}
 	UdpPacket(const PeerInfo &vPeerInfo, const void *pData, std::size_t uSize) noexcept
 		: m_vPeerInfo	(vPeerInfo)
-		, m_sbufData	(pData, uSize)
+		, m_vecData		((const unsigned char *)pData, uSize)
 	{
 	}
-	UdpPacket(const PeerInfo &vPeerInfo, StreamBuffer sbufData) noexcept
+	template<std::size_t VECTOR_CAP>
+	UdpPacket(const PeerInfo &vPeerInfo, VVector<unsigned char, VECTOR_CAP> vecData) noexcept
 		: m_vPeerInfo	(vPeerInfo)
-		, m_sbufData	(std::move(sbufData))
+		, m_vecData		(std::move(vecData))
 	{
 	}
 

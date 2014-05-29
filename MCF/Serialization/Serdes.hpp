@@ -17,10 +17,17 @@ template<typename Object_t>
 class Serdes : public Serializer<Object_t>, public Deserializer<Object_t> {
 protected:
 	virtual void xDoSerialize(StreamBuffer &sbufStream, const void *pObject) const override {
-		Serializer<Object_t>::Serialize(sbufStream, *(const Object_t *)pObject);
+		Serializer<Object_t>()(sbufStream, *(const Object_t *)pObject);
 	}
+	virtual void xDoSerialize(StreamBuffer &sbufStream, const void *pObject, std::size_t uSize) const override {
+		Serializer<Object_t>()(sbufStream, (const Object_t *)pObject, uSize);
+	}
+
 	virtual void xDoDeserialize(void *pObject, StreamBuffer &sbufStream) const override {
-		Deserializer<Object_t>::Deserialize(*(Object_t *)pObject, sbufStream);
+		Deserializer<Object_t>()(*(Object_t *)pObject, sbufStream);
+	}
+	virtual void xDoDeserialize(void *pObject, std::size_t uSize, StreamBuffer &sbufStream) const override {
+		Deserializer<Object_t>()((Object_t *)pObject, uSize, sbufStream);
 	}
 };
 

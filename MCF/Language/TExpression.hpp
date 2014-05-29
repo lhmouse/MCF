@@ -6,7 +6,7 @@
 #define MCF_T_EXPRESSION_HPP_
 
 #include "../Core/String.hpp"
-#include "../Core/VVector.hpp"
+#include <deque>
 #include <utility>
 
 namespace MCF {
@@ -16,7 +16,7 @@ public:
 	typedef std::pair<WideString, TExpressionNode> Child;
 
 public:
-	Vector<Child> m_vecChildren;
+	std::deque<Child> m_deqChildren;
 };
 
 class TExpression : public TExpressionNode {

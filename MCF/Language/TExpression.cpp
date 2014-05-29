@@ -4,6 +4,7 @@
 
 #include "../StdMCF.hpp"
 #include "TExpression.hpp"
+#include "../Core/VVector.hpp"
 using namespace MCF;
 
 namespace {
@@ -204,7 +205,7 @@ void Escape(WideString &wcsAppendTo, const WideStringObserver &wsoSrc){
 
 // 其他非静态成员函数。
 std::pair<TExpression::ErrorType, const wchar_t *> TExpression::Parse(const WideStringObserver &wsoData){
-	m_vecChildren.Clear();
+	m_deqChildren.clear();
 
 	auto pwcRead = wsoData.GetBegin();
 	const auto pwcEnd = wsoData.GetEnd();
@@ -229,15 +230,17 @@ std::pair<TExpression::ErrorType, const wchar_t *> TExpression::Parse(const Wide
 	const auto PushNode = [&]{
 		ASSERT(!vecNodeStack.IsEmpty());
 
-		auto wcsName = Unescape(WideStringObserver(pwcNameBegin, pwcRead));
-		auto &vNewChild = vecNodeStack.GetEnd()[-1]->m_vecChildren.Push(std::move(wcsName), Node());
-		vecNodeStack.Push(&(vNewChild.second));
+		auto &deqChildren = vecNodeStack.GetEnd()[-1]->m_deqChildren;
+		deqChildren.emplace_back();
+		deqChildren.back().first = Unescape(WideStringObserver(pwcNameBegin, pwcRead));
+		vecNodeStack.Push(&(deqChildren.back().second));
 	};
 	const auto PushUnnamedNode = [&]{
 		ASSERT(!vecNodeStack.IsEmpty());
 
-		auto &vNewChild = vecNodeStack.GetEnd()[-1]->m_vecChildren.Push();
-		vecNodeStack.Push(&(vNewChild.second));
+		auto &deqChildren = vecNodeStack.GetEnd()[-1]->m_deqChildren;
+		deqChildren.emplace_back();
+		vecNodeStack.Push(&(deqChildren.back().second));
 	};
 	const auto PopNode = [&]{
 		ASSERT(vecNodeStack.GetSize() > 1);
@@ -473,18 +476,18 @@ WideString TExpression::Export(const WideStringObserver &wsoIndent) const {
 		const auto &vTopNode = *(vTop.first);
 
 	jNextChild:
-		if(vTop.second < vTopNode.m_vecChildren.GetSize()){
-			const auto &vChild = vTopNode.m_vecChildren[vTop.second++];
+		if(vTop.second < vTopNode.m_deqChildren.size()){
+			const auto &vChild = vTopNode.m_deqChildren[vTop.second++];
 			wcsRet.Append(wcsIndent);
 			if(!vChild.first.IsEmpty()){
 				Escape(wcsRet, vChild.first);
-				if(vChild.second.m_vecChildren.IsEmpty()){
+				if(vChild.second.m_deqChildren.empty()){
 					wcsRet.Append(L'\n');
 					goto jNextChild;
 				}
 			}
 			wcsRet.Append(L'(');
-			if(vChild.second.m_vecChildren.IsEmpty()){
+			if(vChild.second.m_deqChildren.empty()){
 				wcsRet.Append(L')');
 				wcsRet.Append(L'\n');
 				goto jNextChild;

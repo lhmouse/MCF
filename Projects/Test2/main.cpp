@@ -1,33 +1,31 @@
 #include <MCF/StdMCF.hpp>
 #include <MCF/Core/Exception.hpp>
-#include <MCF/Core/StreamBuffer.hpp>
-#include <MCF/Thread/CriticalSection.hpp>
+#include <MCF/Serialization/Serdes.hpp>
+#include <iterator>
+#include <vector>
 #include <iostream>
 using namespace std;
 using namespace MCF;
 
+template class Serdes<vector<int>>;
+template class Serdes<vector<bool>>;
+
 unsigned int MCFMain()
 try {
-	auto cs = CriticalSection::Create();
-	cs->GetLock();
+	vector<bool> v, v2;
+	generate_n(back_inserter(v), 1000, []{ return rand() % 2; });
+	StreamBuffer sbuf;
+	Serialize(sbuf, v);
+	printf("serialized size %zu\n", sbuf.GetSize());
+	auto sbuf2 = sbuf;
 
-	StreamBuffer buf;
-	buf.Insert("a", 1);
-	buf.Insert("bc", 2);
-	buf.Insert("def", 3);
-	buf.Insert("ghij", 4);
-	buf.Insert("klmno", 5);
+	cout <<hex;
+	copy(sbuf.GetReadIterator(), sbuf.GetReadEnd(), ostream_iterator<unsigned int>(cout));
+	cout <<endl;
 
-	buf.Traverse(
-		[](auto p, auto cb){
-			while(cb--){
-				putchar(*(p++));
-			}
-			putchar('\n');
-		}
-	);
-
-	copy(buf.GetReadIterator(), buf.GetReadEnd(), ostream_iterator<char>(cout));
+	cout <<boolalpha;
+	Deserialize(v2, sbuf2);
+	cout <<(v == v2);
 	cout <<endl;
 
 	return 0;
@@ -35,11 +33,11 @@ try {
 	printf("exception '%s'\n", e.what());
 	auto *const p = dynamic_cast<const Exception *>(&e);
 	if(p){
-		printf("  err  = %lu\n", p->ulErrorCode);
-		printf("  desc = %s\n", AnsiString(GetWin32ErrorDesc(p->ulErrorCode)).GetCStr());
-		printf("  func = %s\n", p->pszFunction);
-		printf("  line = %lu\n", p->ulLine);
-		printf("  msg  = %s\n", AnsiString(WideString(p->pwszMessage)).GetCStr());
+		printf("  err  = %lu\n", p->m_ulErrorCode);
+		printf("  desc = %s\n", AnsiString(GetWin32ErrorDesc(p->m_ulErrorCode)).GetCStr());
+		printf("  func = %s\n", p->m_pszFunction);
+		printf("  line = %lu\n", p->m_ulLine);
+		printf("  msg  = %s\n", AnsiString(WideString(p->m_pwszMessage.get())).GetCStr());
 	}
 	return 0;
 }

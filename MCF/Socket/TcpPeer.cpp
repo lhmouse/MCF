@@ -128,7 +128,7 @@ std::unique_ptr<TcpPeer> TcpPeer::ConnectNoThrow(const PeerInfo &piServerInfo){
 	try {
 		return Connect(piServerInfo);
 	} catch(Exception &e){
-		SetWin32LastError(e.ulErrorCode);
+		SetWin32LastError(e.m_ulErrorCode);
 		return std::unique_ptr<TcpPeer>();
 	}
 }

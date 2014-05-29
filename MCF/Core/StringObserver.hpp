@@ -53,7 +53,7 @@ private:
 	}
 
 	template<typename Iterator_t>
-	static std::size_t xFindRepSeq(const Iterator_t &itBegin, const Iterator_t &itEnd, Char_t chToFind, std::size_t uRepCount) noexcept {
+	static std::size_t xFindRep(const Iterator_t &itBegin, const Iterator_t &itEnd, Char_t chToFind, std::size_t uRepCount) noexcept {
 		ASSERT(uRepCount != 0);
 		ASSERT((std::size_t)(itEnd - itBegin) >= uRepCount);
 
@@ -63,12 +63,12 @@ private:
 
 		auto itCur = itBegin;
 		do {
-			const auto itPartBegin = std::find_if(itCur, itSearchEnd, [chToFind](Char_t ch){ return ch == chToFind; });
+			const auto itPartBegin = std::find_if(itCur, itSearchEnd, [chToFind](Char_t ch) noexcept { return ch == chToFind; });
 			if(itPartBegin == itSearchEnd){
 				break;
 			}
 			const auto itPartEnd = itPartBegin + (std::ptrdiff_t)uRepCount;
-			itCur = std::find_if(itPartBegin, itPartEnd, [chToFind](Char_t ch){ return ch != chToFind; });
+			itCur = std::find_if(itPartBegin, itPartEnd, [chToFind](Char_t ch) noexcept { return ch != chToFind; });
 			if(itCur == itPartEnd){
 				uFound = (std::size_t)(itPartBegin - itBegin);
 				break;
@@ -371,11 +371,11 @@ public:
 	}
 
 	// 举例：
-	//   Find('c', 1, 3)			返回 NPOS；
-	//   Find('d', 1, 3)			返回 3；
-	//   FindBackward('c', 1, 3)	返回 2；
-	//   FindBackward('d', 1, 3)	返回 NPOS。
-	std::size_t Find(Char_t chToFind, std::size_t uRepCount = 1, std::ptrdiff_t nOffsetBegin = 0) const noexcept {
+	//   Find('c', 3)			返回 NPOS；
+	//   Find('d', 3)			返回 3；
+	//   FindBackward('c', 3)	返回 2；
+	//   FindBackward('d', 3)	返回 NPOS。
+	std::size_t FindRep(Char_t chToFind, std::size_t uRepCount, std::ptrdiff_t nOffsetBegin = 0) const noexcept {
 		const auto uLength = GetLength();
 		const auto uRealBegin = xTranslateOffset(uLength, nOffsetBegin);
 		if(uRepCount == 0){
@@ -388,10 +388,10 @@ public:
 			return NPOS;
 		}
 
-		const auto uPos = xFindRepSeq(GetBegin() + uRealBegin, GetEnd(), chToFind, uRepCount);
+		const auto uPos = xFindRep(GetBegin() + uRealBegin, GetEnd(), chToFind, uRepCount);
 		return (uPos == NPOS) ? NPOS : (uPos + uRealBegin);
 	}
-	std::size_t FindBackward(Char_t chToFind, std::size_t uRepCount = 1, std::ptrdiff_t nOffsetEnd = -1) const noexcept {
+	std::size_t FindRepBackward(Char_t chToFind, std::size_t uRepCount, std::ptrdiff_t nOffsetEnd = -1) const noexcept {
 		const auto uLength = GetLength();
 		const auto uRealEnd = xTranslateOffset(uLength, nOffsetEnd);
 		if(uRepCount == 0){
@@ -406,8 +406,14 @@ public:
 
 		typedef std::reverse_iterator<const Char_t *> RevIterator;
 
-		const auto uPos = xFindRepSeq(RevIterator(GetBegin() + uRealEnd), RevIterator(GetBegin()), chToFind, uRepCount);
+		const auto uPos = xFindRep(RevIterator(GetBegin() + uRealEnd), RevIterator(GetBegin()), chToFind, uRepCount);
 		return (uPos == NPOS) ? NPOS : (uRealEnd - uPos - uRepCount);
+	}
+	std::size_t Find(Char_t chToFind, std::ptrdiff_t nOffsetBegin = 0) const noexcept {
+		return FindRep(chToFind, 1, nOffsetBegin);
+	}
+	std::size_t FindBackward(Char_t chToFind, std::ptrdiff_t nOffsetEnd = -1) const noexcept {
+		return FindRepBackward(chToFind, 1, nOffsetEnd);
 	}
 
 	bool DoesOverlapWith(const StringObserver &obs) const noexcept {

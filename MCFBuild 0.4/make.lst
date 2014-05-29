@@ -1,0 +1,18 @@
+; 这里只写需要编译的其他目录下的文件。
+; 当前目录中的文件会自动搜索。
+
+..\MCFCRT\env\bail.c					; ASSERT, Bail
+..\MCFCRT\ext\wcscpyout.c				; <DITTO>
+..\MCFCRT\env\last_error.c
+..\MCFCRT\env\avl_tree.c				; MultiIndexedMap, Notation
+
+..\MCF\Core\String.cpp
+..\MCF\Core\Exception.cpp
+..\MCF\Core\File.cpp
+..\MCF\Core\StreamBuffer.cpp
+..\MCF\Core\Time.cpp					; GetNtTime()
+..\MCF\Thread\CriticalSection.cpp
+..\MCF\Thread\Semaphore.cpp				; CriticalSection
+..\MCF\Language\Notation.cpp
+..\MCF\Hash\Sha256.cpp
+..\MCF\Serialization\_SerdesTraits.cpp

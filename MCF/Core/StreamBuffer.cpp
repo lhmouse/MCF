@@ -39,11 +39,11 @@ inline StreamBuffer::xBlockHeaderPtr StreamBuffer::xBlockHeader::Create(std::siz
 		}
 	};
 
+	if(uCapacity < 4096){
+		uCapacity = 4096;
+	}
 	return xBlockHeaderPtr(
-		Construct<Helper>(
-			::operator new(sizeof(Helper) + uCapacity),
-			uCapacity
-		)
+		Construct<Helper>(::operator new(sizeof(Helper) + uCapacity), uCapacity)
 	);
 }
 
@@ -170,7 +170,7 @@ void StreamBuffer::Put(unsigned char by){
 	}
 	ASSERT_NOEXCEPT_END
 
-	auto pNewBlock = xBlockHeader::Create(sizeof(xm_abySmall));
+	auto pNewBlock = xBlockHeader::Create(1);
 	pNewBlock->m_abyData[0] = by;
 	pNewBlock->m_uWrite = 1;
 
@@ -252,7 +252,7 @@ void StreamBuffer::Insert(const void *pData, std::size_t uSize){
 	}
 	ASSERT_NOEXCEPT_END
 
-	auto pNewBlock = xBlockHeader::Create(std::max(uSize, sizeof(xm_abySmall)));
+	auto pNewBlock = xBlockHeader::Create(uSize);
 	std::memcpy(pNewBlock->m_abyData, pbyRead, uSize);
 	pNewBlock->m_uWrite = uSize;
 

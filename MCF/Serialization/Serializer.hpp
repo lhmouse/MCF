@@ -14,6 +14,7 @@ namespace MCF {
 class SerializerBase : ABSTRACT {
 protected:
 	virtual void xDoSerialize(StreamBuffer &sbufStream, const void *pObject) const = 0;
+	virtual void xDoSerialize(StreamBuffer &sbufStream, const void *pObject, std::size_t uCount) const = 0;
 };
 
 template<typename Object_t>
@@ -21,19 +22,20 @@ class Serializer : CONCRETE(SerializerBase) {
 public:
 	typedef Object_t ObjectType;
 
-public:
-	static void Serialize(StreamBuffer &sbufStream, const Object_t &vObject){
-		Impl::SerdesTrait<Object_t>()(sbufStream, vObject);
-	}
-
 protected:
 	virtual void xDoSerialize(StreamBuffer &sbufStream, const void *pObject) const override {
-		Serialize(sbufStream, *(const Object_t *)pObject);
+		(*this)(sbufStream, *(const Object_t *)pObject);
+	}
+	virtual void xDoSerialize(StreamBuffer &sbufStream, const void *pObject, std::size_t uCount) const override {
+		(*this)(sbufStream, (const Object_t *)pObject, uCount);
 	}
 
 public:
-	void operator()(StreamBuffer &sbufStream, const Object_t &vObject){
-		Serialize(sbufStream, vObject);
+	void operator()(StreamBuffer &sbufStream, const Object_t &vObject) const {
+		Impl::SerdesTrait<Object_t>()(sbufStream, vObject);
+	}
+	void operator()(StreamBuffer &sbufStream, const Object_t *pObjects, std::size_t uCount) const {
+		Impl::SerdesTrait<Object_t[]>()(sbufStream, pObjects, uCount);
 	}
 };
 
@@ -65,6 +67,10 @@ template class Serializer<std::nullptr_t>;
 template<typename Object_t>
 inline void Serialize(StreamBuffer &sbufStream, const Object_t &vObject){
 	Serializer<Object_t>()(sbufStream, vObject);
+}
+template<typename Object_t>
+inline void Serialize(StreamBuffer &sbufStream, const Object_t *pObjects, std::size_t uCount){
+	Serializer<Object_t>()(sbufStream, pObjects, uCount);
 }
 
 }

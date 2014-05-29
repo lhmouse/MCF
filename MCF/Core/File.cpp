@@ -40,9 +40,9 @@ private:
 	UniqueHandle<xFileCloser> xm_hFile;
 
 public:
-	FileDelegate(const WideStringObserver &wsoPath, bool bToRead, bool bToWrite, bool bAutoCreate){
+	FileDelegate(const wchar_t *pwszPath, bool bToRead, bool bToWrite, bool bAutoCreate){
 		xm_hFile.Reset(::CreateFileW(
-			wsoPath.GetNullTerminated<MAX_PATH>().GetData(),
+			pwszPath,
 			(bToRead ? GENERIC_READ : 0) | (bToWrite ? GENERIC_WRITE : 0),
 			bToWrite ? 0 : FILE_SHARE_READ,
 			nullptr,
@@ -213,13 +213,24 @@ public:
 
 // 静态成员函数。
 std::unique_ptr<File> File::Open(const WideStringObserver &wsoPath, bool bToRead, bool bToWrite, bool bAutoCreate){
-	return std::make_unique<FileDelegate>(wsoPath, bToRead, bToWrite, bAutoCreate);
+	return std::make_unique<FileDelegate>(wsoPath.GetNullTerminated<MAX_PATH>().GetData(), bToRead, bToWrite, bAutoCreate);
 }
 std::unique_ptr<File> File::OpenNoThrow(const WideStringObserver &wsoPath, bool bToRead, bool bToWrite, bool bAutoCreate){
 	try {
 		return Open(wsoPath, bToRead, bToWrite, bAutoCreate);
 	} catch(Exception &e){
-		SetWin32LastError(e.ulErrorCode);
+		SetWin32LastError(e.m_ulErrorCode);
+		return std::unique_ptr<File>();
+	}
+}
+std::unique_ptr<File> File::Open(const WideString &wcsPath, bool bToRead, bool bToWrite, bool bAutoCreate){
+	return std::make_unique<FileDelegate>(wcsPath.GetCStr(), bToRead, bToWrite, bAutoCreate);
+}
+std::unique_ptr<File> File::OpenNoThrow(const WideString &wcsPath, bool bToRead, bool bToWrite, bool bAutoCreate){
+	try {
+		return Open(wcsPath, bToRead, bToWrite, bAutoCreate);
+	} catch(Exception &e){
+		SetWin32LastError(e.m_ulErrorCode);
 		return std::unique_ptr<File>();
 	}
 }

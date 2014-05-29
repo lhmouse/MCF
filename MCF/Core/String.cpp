@@ -5,7 +5,9 @@
 #include "../StdMCF.hpp"
 #include "String.hpp"
 #include "Utilities.hpp"
+#include "../Serialization/Serdes.hpp"
 #include <limits>
+using namespace MCF;
 
 namespace MCF {
 
@@ -285,3 +287,38 @@ template class String<char16_t,	StringEncoding::UTF16>;
 template class String<char32_t,	StringEncoding::UTF32>;
 
 }
+
+SERDES_TABLE_BEGIN(Utf8String)
+	SERDES_CUSTOM(
+		[](auto &sbufStream, const auto &vUtf8String){
+			const auto uSize = vUtf8String.GetSize();
+			Serialize(sbufStream, uSize);
+			Serialize(sbufStream, vUtf8String.GetStr(), uSize);
+		},
+		[](auto &vUtf8String, auto &sbufStream){
+			std::uint64_t u64Size;
+			Deserialize(u64Size, sbufStream);
+			Deserialize(vUtf8String.ResizeMore(u64Size), (std::size_t)u64Size, sbufStream);
+		}
+	)
+SERDES_TABLE_END
+
+#define DEFINE_STRING_SERDES(class_name)	\
+	SERDES_TABLE_BEGIN(class_name)	\
+		SERDES_CUSTOM(	\
+			[](auto &sbufStream, const auto &vString){	\
+				Serialize(sbufStream, Utf8String(vString));	\
+			},	\
+			[](auto &vString, auto &sbufStream){	\
+				Utf8String u8sTemp;	\
+				Deserialize(u8sTemp, sbufStream);	\
+				vString = u8sTemp;	\
+			}	\
+		)	\
+	SERDES_TABLE_END
+
+DEFINE_STRING_SERDES(AnsiString)
+DEFINE_STRING_SERDES(WideString)
+
+DEFINE_STRING_SERDES(Utf16String)
+DEFINE_STRING_SERDES(Utf32String)

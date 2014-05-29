@@ -5,55 +5,29 @@
 #ifndef MCF_SERDES_HPP_
 #define MCF_SERDES_HPP_
 
-#include "Serializer.hpp"
-#include "Deserializer.hpp"
+#include "_SerdesTraits.hpp"
+#include "../Core/StreamBuffer.hpp"
+#include <cstddef>
 
 namespace MCF {
 
-class SerdesBase : public SerializerBase, public DeserializerBase {
-};
+template<typename Object_t>
+inline void Serialize(StreamBuffer &sbufStream, const Object_t &vObject){
+	Impl::SerdesTrait<Object_t>()(sbufStream, vObject);
+}
+template<typename Object_t>
+inline void Serialize(StreamBuffer &sbufStream, const Object_t *pObjects, std::size_t uCount){
+	Impl::SerdesTrait<Object_t[]>()(sbufStream, pObjects, uCount);
+}
 
 template<typename Object_t>
-class Serdes : public Serializer<Object_t>, public Deserializer<Object_t> {
-protected:
-	virtual void xDoSerialize(StreamBuffer &sbufStream, const void *pObject) const override {
-		Serializer<Object_t>()(sbufStream, *(const Object_t *)pObject);
-	}
-	virtual void xDoSerialize(StreamBuffer &sbufStream, const void *pObject, std::size_t uSize) const override {
-		Serializer<Object_t>()(sbufStream, (const Object_t *)pObject, uSize);
-	}
-
-	virtual void xDoDeserialize(void *pObject, StreamBuffer &sbufStream) const override {
-		Deserializer<Object_t>()(*(Object_t *)pObject, sbufStream);
-	}
-	virtual void xDoDeserialize(void *pObject, std::size_t uSize, StreamBuffer &sbufStream) const override {
-		Deserializer<Object_t>()((Object_t *)pObject, uSize, sbufStream);
-	}
-};
-
-template class Serdes<bool>;
-
-template class Serdes<char>;
-template class Serdes<wchar_t>;
-template class Serdes<char16_t>;
-template class Serdes<char32_t>;
-
-template class Serdes<signed char>;
-template class Serdes<unsigned char>;
-template class Serdes<short>;
-template class Serdes<unsigned short>;
-template class Serdes<int>;
-template class Serdes<unsigned int>;
-template class Serdes<long>;
-template class Serdes<unsigned long>;
-template class Serdes<long long>;
-template class Serdes<unsigned long long>;
-
-template class Serdes<float>;
-template class Serdes<double>;
-template class Serdes<long double>;
-
-template class Serdes<std::nullptr_t>;
+inline void Deserialize(Object_t &vObject, StreamBuffer &sbufStream){
+	Impl::SerdesTrait<Object_t>()(vObject, sbufStream);
+}
+template<typename Object_t>
+inline void Deserialize(Object_t *pObjects, std::size_t uCount, StreamBuffer &sbufStream){
+	Impl::SerdesTrait<Object_t[]>()(pObjects, uCount, sbufStream);
+}
 
 }
 

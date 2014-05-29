@@ -34,6 +34,22 @@ namespace Impl {
 #define BITS_OF(x)		(sizeof(x) * __CHAR_BIT__)
 
 //----------------------------------------------------------------------------
+// MACRO_TYPE
+//----------------------------------------------------------------------------
+namespace Impl {
+	template<typename>
+	struct MacroTypeHelper;
+
+	template<typename Ty>
+	struct MacroTypeHelper {
+		typedef Ty Type;
+	};
+}
+
+// 安全地在宏参数中使用带逗号的类型名，例如 MY_MACRO(double, (std::map<int, double>))。
+#define MACRO_TYPE(ty)	typename ::MCF::Impl::MacroTypeHelper<ty>::Type
+
+//----------------------------------------------------------------------------
 // NO_COPY
 //----------------------------------------------------------------------------
 namespace Impl {

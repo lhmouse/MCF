@@ -7,8 +7,8 @@
 using namespace std;
 using namespace MCF;
 
-template class Serdes<vector<int>>;
-template class Serdes<vector<bool>>;
+template void MCF::Serialize(StreamBuffer &, const vector<int> &);
+template void MCF::Serialize(StreamBuffer &, const vector<bool> &);
 
 unsigned int MCFMain()
 try {

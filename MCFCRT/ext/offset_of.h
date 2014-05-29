@@ -7,8 +7,14 @@
 
 #include "../env/_crtdef.h"
 
+#ifdef __cplusplus
+#	define __MCF_ADDRESS_OF		&(char &)
+#else
+#	define __MCF_ADDRESS_OF
+#endif
+
 #define OFFSET_OF(s, m)	\
-	((MCF_STD size_t)((MCF_STD uintptr_t)&(((s *)(MCF_STD uintptr_t)1)->m) - (MCF_STD uintptr_t)1))
+	((MCF_STD size_t)((MCF_STD uintptr_t)__MCF_ADDRESS_OF(((s *)(MCF_STD uintptr_t)1)->m) - (MCF_STD uintptr_t)1))
 
 // 成员指针转换成聚合指针。
 #define DOWN_CAST(s, m, p)	\

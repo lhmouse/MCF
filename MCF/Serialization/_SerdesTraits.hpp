@@ -7,7 +7,6 @@
 #ifndef MCF_SERDES_TRAITS_HPP_
 #define MCF_SERDES_TRAITS_HPP_
 
-#include "SerdesDecl.hpp"
 #include "VarIntEx.hpp"
 #include "../Core/StreamBuffer.hpp"
 #include <iterator>
@@ -30,6 +29,9 @@ namespace MCF {
 
 namespace Impl {
 	[[noreturn]] extern void ThrowOnEof();
+
+	template<typename Object_t, typename = void>
+	struct SerdesTrait;
 
 	// 针对 bool 的特化。使用最小的存储。注意 bool 本身的大小是实现定义的，有可能当作 int 了。
 	template<>
@@ -534,19 +536,19 @@ namespace Impl {
 
 }
 
-#define SERDES_TABLE_BEGIN(...)	\
+#define SERDES_TABLE_BEGIN(cls)	\
 	template<>	\
-	const typename ::MCF::Impl::SerdesTrait<__VA_ARGS__>::TableElementType	\
-		(::MCF::Impl::SerdesTrait<__VA_ARGS__>::s_vSerdesTable)[]	\
+	const typename ::MCF::Impl::SerdesTrait<MACRO_TYPE(cls)>::TableElementType	\
+		(::MCF::Impl::SerdesTrait<MACRO_TYPE(cls)>::s_vSerdesTable)[]	\
 	= {
 
-#define SERDES_BASE(...)	\
+#define SERDES_BASE(cls)	\
 		TableElementType(	\
 			[](auto &stream, const auto &obj){	\
-				::MCF::Impl::SerdesTrait<__VA_ARGS__>()(stream, static_cast<const __VA_ARGS__ &>(obj));	\
+				::MCF::Impl::SerdesTrait<MACRO_TYPE(cls)>()(stream, static_cast<const MACRO_TYPE(cls) &>(obj));	\
 			},	\
 			[](auto &obj, auto &stream){	\
-				::MCF::Impl::SerdesTrait<__VA_ARGS__>()(static_cast<__VA_ARGS__ &>(obj), stream);	\
+				::MCF::Impl::SerdesTrait<MACRO_TYPE(cls)>()(static_cast<MACRO_TYPE(cls) &>(obj), stream);	\
 			}	\
 		),
 

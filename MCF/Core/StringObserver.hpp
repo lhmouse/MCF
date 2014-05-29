@@ -183,14 +183,8 @@ public:
 		: StringObserver(vInitList.begin(), vInitList.end())
 	{
 	}
-	template<typename Test_t, typename = typename std::enable_if<std::is_same<Test_t, Char_t>::value>::type>
-	constexpr StringObserver(const Test_t *const &pszBegin) noexcept
+	explicit constexpr StringObserver(const Char_t *pszBegin) noexcept
 		: StringObserver(pszBegin, xEndOf(pszBegin))
-	{
-	}
-	template<std::size_t N>
-	constexpr StringObserver(const Char_t (&achLiteral)[N]) noexcept
-		: StringObserver(achLiteral, achLiteral + N - 1)
 	{
 	}
 	StringObserver &operator=(std::nullptr_t) noexcept {
@@ -203,16 +197,9 @@ public:
 		xm_pchEnd = vInitList.end();
 		return *this;
 	}
-	template<typename Test_t, typename = typename std::enable_if<std::is_same<Test_t, Char_t>::value>::type>
-	StringObserver &operator=(const Test_t *const &pszBegin) noexcept {
+	StringObserver &operator=(const Char_t *pszBegin) noexcept {
 		xm_pchBegin = pszBegin;
 		xm_pchEnd = xEndOf(pszBegin);
-		return *this;
-	}
-	template<std::size_t N>
-	StringObserver &operator=(const Char_t (&achLiteral)[N]) noexcept {
-		xm_pchBegin = achLiteral;
-		xm_pchEnd = achLiteral + N - 1;
 		return *this;
 	}
 
@@ -283,17 +270,8 @@ public:
 	void Assign(const Char_t *pchBegin, std::size_t uLen) noexcept {
 		Assign(pchBegin, pchBegin + uLen);
 	}
-	template<typename Test_t, typename = typename std::enable_if<std::is_same<Test_t, Char_t>::value>::type>
-	void Assign(const Test_t *const &pszBegin) noexcept {
+	void Assign(const Char_t *pszBegin) noexcept {
 		Assign(pszBegin, xEndOf(pszBegin));
-	}
-	template<std::size_t N>
-	void Assign(const Char_t (&achLiteral)[N]) noexcept {
-		Assign(achLiteral, achLiteral + N - 1);
-	}
-	template<std::size_t N>
-	void Assign(Char_t (&achNonLiteral)[N]) noexcept {
-		Assign(achNonLiteral, xEndOf(achNonLiteral));
 	}
 
 	// 为了方便理解，想象此处使用的是所谓“插入式光标”：

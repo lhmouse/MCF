@@ -19,7 +19,7 @@ try {
 		std::printf("  desc = %s\n", MCF::AnsiString(MCF::GetWin32ErrorDesc(p->m_ulErrorCode)).GetCStr());
 		std::printf("  func = %s\n", p->m_pszFunction);
 		std::printf("  line = %lu\n", p->m_ulLine);
-		std::printf("  msg  = %s\n", MCF::AnsiString(FormatString(p->m_pwszMessage.get())).GetCStr());
+		std::printf("  msg  = %s\n", MCF::AnsiString(FormatString(p->m_wcsMessage.GetStr())).GetCStr());
 	}
 	return 0;
 }

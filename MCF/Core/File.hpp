@@ -24,8 +24,9 @@ public:
 
 public:
 	static std::unique_ptr<File> Open(const WideStringObserver &wsoPath, bool bToRead, bool bToWrite, bool bAutoCreate);
-	static std::unique_ptr<File> OpenNoThrow(const WideStringObserver &wsoPath, bool bToRead, bool bToWrite, bool bAutoCreate);
 	static std::unique_ptr<File> Open(const WideString &wcsPath, bool bToRead, bool bToWrite, bool bAutoCreate);
+
+	static std::unique_ptr<File> OpenNoThrow(const WideStringObserver &wsoPath, bool bToRead, bool bToWrite, bool bAutoCreate);
 	static std::unique_ptr<File> OpenNoThrow(const WideString &wcsPath, bool bToRead, bool bToWrite, bool bAutoCreate);
 
 public:

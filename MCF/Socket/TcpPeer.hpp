@@ -15,7 +15,10 @@ namespace MCF {
 class TcpPeer : NO_COPY, ABSTRACT {
 public:
 	static std::unique_ptr<TcpPeer> Connect(const PeerInfo &piServerInfo);
+	static std::unique_ptr<TcpPeer> Connect(const PeerInfo &piServerInfo, const PeerInfo &piLocalInfo);
+
 	static std::unique_ptr<TcpPeer> ConnectNoThrow(const PeerInfo &piServerInfo);
+	static std::unique_ptr<TcpPeer> ConnectNoThrow(const PeerInfo &piServerInfo, const PeerInfo &piLocalInfo);
 
 public:
 	const PeerInfo &GetPeerInfo() const noexcept;

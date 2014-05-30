@@ -4,10 +4,9 @@
 
 #include "../StdMCF.hpp"
 #include "TcpPeer.hpp"
-#include "../../MCFCRT/ext/assert.h"
+#include "_SocketUtils.hpp"
 #include "../Core/Exception.hpp"
 #include "../Core/Utilities.hpp"
-#include "_SocketUtils.hpp"
 using namespace MCF;
 
 namespace {
@@ -95,7 +94,7 @@ namespace MCF {
 
 namespace Impl {
 	std::unique_ptr<TcpPeer> TcpPeerFromSocket(
-		Impl::UniqueSocket vSocket,
+		UniqueSocket vSocket,
 		const void *pSockAddr,
 		std::size_t uSockAddrSize
 	){
@@ -121,12 +120,43 @@ std::unique_ptr<TcpPeer> TcpPeer::Connect(const PeerInfo &piServerInfo){
 	if(::connect(sockServer.Get(), (const SOCKADDR *)&vSockAddr, nSockAddrSize)){
 		MCF_THROW(::GetLastError(), L"::connect() 失败。");
 	}
-
 	return std::make_unique<TcpPeerDelegate>(std::move(sockServer), &vSockAddr, (std::size_t)nSockAddrSize);
 }
+std::unique_ptr<TcpPeer> TcpPeer::Connect(const PeerInfo &piServerInfo, const PeerInfo &piLocalInfo){
+	Impl::WSAInitializer vWSAInitializer;
+
+	const short shFamily = piServerInfo.IsIPv4() ? AF_INET : AF_INET6;
+
+	Impl::UniqueSocket sockServer(::socket(shFamily, SOCK_STREAM, IPPROTO_TCP));
+	if(!sockServer){
+		MCF_THROW(::GetLastError(), L"::socket() 失败。");
+	}
+
+	SOCKADDR_STORAGE vLocalAddr;
+	const int nLocalAddrSize = piLocalInfo.ToSockAddr(&vLocalAddr, sizeof(vLocalAddr));
+	if(::bind(sockServer.Get(), (const SOCKADDR *)&vLocalAddr, nLocalAddrSize)){
+		MCF_THROW(::GetLastError(), L"::bind() 失败。");
+	}
+
+	SOCKADDR_STORAGE vSockAddr;
+	const int nSockAddrSize = piServerInfo.ToSockAddr(&vSockAddr, sizeof(vSockAddr));
+	if(::connect(sockServer.Get(), (const SOCKADDR *)&vSockAddr, nSockAddrSize)){
+		MCF_THROW(::GetLastError(), L"::connect() 失败。");
+	}
+	return std::make_unique<TcpPeerDelegate>(std::move(sockServer), &vSockAddr, (std::size_t)nSockAddrSize);
+}
+
 std::unique_ptr<TcpPeer> TcpPeer::ConnectNoThrow(const PeerInfo &piServerInfo){
 	try {
 		return Connect(piServerInfo);
+	} catch(Exception &e){
+		SetWin32LastError(e.m_ulErrorCode);
+		return std::unique_ptr<TcpPeer>();
+	}
+}
+std::unique_ptr<TcpPeer> TcpPeer::ConnectNoThrow(const PeerInfo &piServerInfo, const PeerInfo &piLocalInfo){
+	try {
+		return Connect(piServerInfo, piLocalInfo);
 	} catch(Exception &e){
 		SetWin32LastError(e.m_ulErrorCode);
 		return std::unique_ptr<TcpPeer>();

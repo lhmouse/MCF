@@ -47,7 +47,7 @@ namespace Impl {
 }
 
 // 安全地在宏参数中使用带逗号的类型名，例如 MY_MACRO(double, (std::map<int, double>))。
-#define MACRO_TYPE(ty)	typename ::MCF::Impl::MacroTypeHelper<ty>::Type
+#define MACRO_TYPE(type)	typename ::MCF::Impl::MacroTypeHelper<type>::Type
 
 //----------------------------------------------------------------------------
 // NO_COPY
@@ -87,7 +87,7 @@ namespace Impl {
 }
 
 #define ABSTRACT		private ::MCF::Impl::AbstractBase
-#define CONCRETE(...)	public ::MCF::Impl::ConcreteBase<__VA_ARGS__>
+#define CONCRETE(type)	public ::MCF::Impl::ConcreteBase<MACRO_TYPE(type)>
 
 //----------------------------------------------------------------------------
 // Bail
@@ -234,32 +234,50 @@ typename std::common_type<Tx, Ty>::type Max(Tx op1, Ty op2){
 // Construct / Destruct
 //----------------------------------------------------------------------------
 namespace Impl {
-	struct DirectConstruct {
+	struct DirectConstructTag {
 	};
 }
 
 }
 
 // 我只能说 GCC 是个白痴！为什么要检查 placement new 的返回值是否为 nullptr？
-inline void *__attribute__((__returns_nonnull__)) operator new(std::size_t, void *p, const ::MCF::Impl::DirectConstruct &){
+inline void *__attribute__((__returns_nonnull__)) operator new(std::size_t, void *p, const ::MCF::Impl::DirectConstructTag &){
 	return p;
 }
-inline void operator delete(void *, void *, const ::MCF::Impl::DirectConstruct &) noexcept {
+inline void operator delete(void *, void *, const ::MCF::Impl::DirectConstructTag &) noexcept {
 }
 
 namespace MCF {
 
-template<typename Obj_t, typename... Params_t>
-inline Obj_t *__attribute__((__returns_nonnull__)) Construct(void *pObj, Params_t &&... vParams)
-	noexcept(std::is_nothrow_constructible<Obj_t, Params_t &&...>::value)
-{
-	return new(pObj, Impl::DirectConstruct()) Obj_t(std::forward<Params_t>(vParams)...);
+namespace Impl {
+	template<typename Object_t>
+	struct DirectConstructor {
+		template<typename... Params_t>
+		Object_t *Construct(void *pObject, Params_t &&... vParams){
+			return ::new(pObject, DirectConstructTag()) Object_t(std::forward<Params_t>(vParams)...);
+		}
+		void Destruct(Object_t *pObject){
+			pObject->~Object_t();
+		}
+	};
 }
-template<typename Obj_t>
-inline void Destruct(Obj_t *pObj)
-	noexcept(std::is_nothrow_destructible<Obj_t>::value)
+
+#define FRIEND_CONSTRUCT_DESTRUCT(type)	\
+	friend class ::MCF::Impl::DirectConstructor<MACRO_TYPE(type)>
+
+template<typename Object_t, typename... Params_t>
+inline Object_t *__attribute__((__returns_nonnull__)) Construct(void *pObject, Params_t &&... vParams)
+	noexcept(std::is_nothrow_constructible<Object_t, Params_t &&...>::value)
 {
-	pObj->~Obj_t();
+	return Impl::DirectConstructor<Object_t>().template Construct<Params_t &&...>(pObject, std::forward<Params_t>(vParams)...);
+}
+template<typename Object_t>
+inline void Destruct(Object_t *pObject)
+	noexcept(std::is_nothrow_destructible<Object_t>::value)
+{
+	ASSERT(pObject);
+
+	Impl::DirectConstructor<Object_t>().Destruct(pObject);
 }
 
 //----------------------------------------------------------------------------

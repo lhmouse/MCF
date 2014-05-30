@@ -215,6 +215,10 @@ public:
 std::unique_ptr<File> File::Open(const WideStringObserver &wsoPath, bool bToRead, bool bToWrite, bool bAutoCreate){
 	return std::make_unique<FileDelegate>(wsoPath.GetNullTerminated<MAX_PATH>().GetData(), bToRead, bToWrite, bAutoCreate);
 }
+std::unique_ptr<File> File::Open(const WideString &wcsPath, bool bToRead, bool bToWrite, bool bAutoCreate){
+	return std::make_unique<FileDelegate>(wcsPath.GetCStr(), bToRead, bToWrite, bAutoCreate);
+}
+
 std::unique_ptr<File> File::OpenNoThrow(const WideStringObserver &wsoPath, bool bToRead, bool bToWrite, bool bAutoCreate){
 	try {
 		return Open(wsoPath, bToRead, bToWrite, bAutoCreate);
@@ -222,9 +226,6 @@ std::unique_ptr<File> File::OpenNoThrow(const WideStringObserver &wsoPath, bool 
 		SetWin32LastError(e.m_ulErrorCode);
 		return std::unique_ptr<File>();
 	}
-}
-std::unique_ptr<File> File::Open(const WideString &wcsPath, bool bToRead, bool bToWrite, bool bAutoCreate){
-	return std::make_unique<FileDelegate>(wcsPath.GetCStr(), bToRead, bToWrite, bAutoCreate);
 }
 std::unique_ptr<File> File::OpenNoThrow(const WideString &wcsPath, bool bToRead, bool bToWrite, bool bAutoCreate){
 	try {

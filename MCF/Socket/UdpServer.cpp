@@ -4,13 +4,24 @@
 
 #include "../StdMCF.hpp"
 #include "UdpServer.hpp"
-#include "UdpPacket.hpp"
-#include "PeerInfo.hpp"
+#include "UdpSender.hpp"
 #include "_SocketUtils.hpp"
 #include "../Core/Exception.hpp"
 #include "../Core/Utilities.hpp"
 #include "../Core/Time.hpp"
 using namespace MCF;
+
+namespace MCF {
+
+namespace Impl {
+	extern std::unique_ptr<UdpSender> UdpSenderFromSocket(
+		SharedSocket vSocket,
+		const void *pSockAddr,
+		std::size_t uSockAddrSize
+	);
+}
+
+}
 
 namespace {
 
@@ -18,7 +29,7 @@ class UdpServerDelegate : CONCRETE(UdpServer) {
 private:
 	Impl::WSAInitializer xm_vWSAInitializer;
 
-	Impl::UniqueSocket xm_sockPeer;
+	Impl::SharedSocket xm_sockPeer;
 	volatile bool xm_bStopNow;
 
 public:
@@ -38,6 +49,7 @@ public:
 		if(!xm_sockPeer){
 			MCF_THROW(::GetLastError(), L"::socket() 失败。");
 		}
+
 		if((shFamily == AF_INET6) && ::setsockopt(xm_sockPeer.Get(), IPPROTO_IPV6, IPV6_V6ONLY, (const char *)&FALSE_VALUE, sizeof(FALSE_VALUE))){
 			MCF_THROW(::GetLastError(), L"::setsockopt() 失败。");
 		}
@@ -47,7 +59,9 @@ public:
 		if(bReuseAddr && ::setsockopt(xm_sockPeer.Get(), SOL_SOCKET, SO_REUSEADDR, (const char *)&TRUE_VALUE, sizeof(TRUE_VALUE))){
 			MCF_THROW(::GetLastError(), L"::setsockopt() 失败。");
 		}
-
+		if(::ioctlsocket(xm_sockPeer.Get(), (long)FIONBIO, (unsigned long *)&TRUE_VALUE)){
+			MCF_THROW(::GetLastError(), L"::ioctlsocket() 失败。");
+		}
 		SOCKADDR_STORAGE vSockAddr;
 		const int nSockAddrSize = piBoundOnto.ToSockAddr(&vSockAddr, sizeof(vSockAddr));
 		if(::bind(xm_sockPeer.Get(), (const SOCKADDR *)&vSockAddr, nSockAddrSize)){
@@ -56,8 +70,8 @@ public:
 	}
 
 public:
-	std::unique_ptr<UdpPacket> GetPacketTimeout(unsigned long long ullMilliSeconds){
-		std::unique_ptr<UdpPacket> pPacket;
+	UdpPacket GetPacketTimeout(unsigned long long ullMilliSeconds){
+		UdpPacket vPacket;
 
 		unsigned long ulNextSleepTime = 0;
 		WaitUntil<0x100>(
@@ -75,37 +89,41 @@ public:
 				}
 
 				unsigned long ulBytesAvailable;
-				if(::ioctlsocket(xm_sockPeer.Get(), (long)FIONREAD, (unsigned long *)&ulBytesAvailable)){
-					MCF_THROW(::GetLastError(), L"::ioctlsocket() 失败。");
+				if(::recvfrom(xm_sockPeer.Get(), nullptr, 0, MSG_PEEK, nullptr, nullptr) < 0){
+					const auto ulErrorCode = ::GetLastError();
+					if(ulErrorCode == WSAEWOULDBLOCK){
+						return false;
+					} else if(ulErrorCode != WSAEMSGSIZE){
+						MCF_THROW(::GetLastError(), L"::recvfrom() 失败。");
+					}
+					if(::ioctlsocket(xm_sockPeer.Get(), (long)FIONREAD, (unsigned long *)&ulBytesAvailable)){
+						MCF_THROW(::GetLastError(), L"::ioctlsocket() 失败。");
+					}
+				} else {
+					ulBytesAvailable = 0;
 				}
-				if(ulBytesAvailable == 0){
-					return false;
-				}
+				vPacket.vecPayload.Resize(ulBytesAvailable);
 
 				SOCKADDR_STORAGE vSockAddr;
 				int nSockAddrSize = (int)sizeof(vSockAddr);
-				VVector<unsigned char, 508u> vecTemp(ulBytesAvailable);
 				const int nBytesRead = ::recvfrom(
 					xm_sockPeer.Get(),
-					(char *)vecTemp.GetData(), (int)ulBytesAvailable,
+					(char *)vPacket.vecPayload.GetData(), (int)vPacket.vecPayload.GetSize(),
 					0,
 					(SOCKADDR *)&vSockAddr, &nSockAddrSize
 				);
 				if(nBytesRead < 0){
 					MCF_THROW(::GetLastError(), L"::recvfrom() 失败。");
 				}
+				vPacket.vecPayload.Resize((std::size_t)nBytesRead);
 
-				pPacket = std::make_unique<UdpPacket>(
-					PeerInfo(&vSockAddr, (std::size_t)nSockAddrSize),
-					vecTemp.GetData(),
-					(std::size_t)nBytesRead
-				);
+				vPacket.pSender = Impl::UdpSenderFromSocket(xm_sockPeer, &vSockAddr, (std::size_t)nSockAddrSize);
 				return true;
 			},
 			ullMilliSeconds
 		);
 
-		return std::move(pPacket);
+		return std::move(vPacket);
 	}
 	void Shutdown(){
 		__atomic_store_n(&xm_bStopNow, false, __ATOMIC_RELEASE);
@@ -161,7 +179,7 @@ std::unique_ptr<UdpServer> UdpServer::Create(
 }
 
 // 其他非静态成员函数。
-std::unique_ptr<UdpPacket> UdpServer::GetPacketTimeout(unsigned long long ullMilliSeconds){
+UdpPacket UdpServer::GetPacketTimeout(unsigned long long ullMilliSeconds){
 	ASSERT(dynamic_cast<UdpServerDelegate *>(this));
 
 	return static_cast<UdpServerDelegate *>(this)->GetPacketTimeout(ullMilliSeconds);

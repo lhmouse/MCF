@@ -30,6 +30,8 @@ private:
 	typedef SharedHandleNts<Closer_t> xStrongHandleNts;
 
 	class xSharedNodeNts {
+		FRIEND_CONSTRUCT_DESTRUCT(xSharedNodeNts);
+
 	public:
 		static xSharedNodeNts *Create(Handle hObj){
 			return Recreate(nullptr, hObj);

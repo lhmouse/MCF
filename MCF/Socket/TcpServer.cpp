@@ -15,7 +15,7 @@ namespace MCF {
 
 namespace Impl {
 	extern std::unique_ptr<TcpPeer> TcpPeerFromSocket(
-		Impl::UniqueSocket vSocket,
+		UniqueSocket vSocket,
 		const void *pSockAddr,
 		std::size_t uSockAddrSize
 	);
@@ -49,6 +49,7 @@ public:
 		if(!xm_sockListen){
 			MCF_THROW(::GetLastError(), L"::socket() 失败。");
 		}
+
 		if((shFamily == AF_INET6) && ::setsockopt(xm_sockListen.Get(), IPPROTO_IPV6, IPV6_V6ONLY, (const char *)&FALSE_VALUE, sizeof(FALSE_VALUE))){
 			MCF_THROW(::GetLastError(), L"::setsockopt() 失败。");
 		}
@@ -58,11 +59,9 @@ public:
 		if(bReuseAddr && ::setsockopt(xm_sockListen.Get(), SOL_SOCKET, SO_REUSEADDR, (const char *)&TRUE_VALUE, sizeof(TRUE_VALUE))){
 			MCF_THROW(::GetLastError(), L"::setsockopt() 失败。");
 		}
-
 		if(::ioctlsocket(xm_sockListen.Get(), (long)FIONBIO, (unsigned long *)&TRUE_VALUE)){
 			MCF_THROW(::GetLastError(), L"::ioctlsocket() 失败。");
 		}
-
 		SOCKADDR_STORAGE vSockAddr;
 		const int nSockAddrSize = piBoundOnto.ToSockAddr(&vSockAddr, sizeof(vSockAddr));
 		if(::bind(xm_sockListen.Get(), (const SOCKADDR *)&vSockAddr, nSockAddrSize)){
@@ -100,7 +99,7 @@ public:
 					return false;
 				}
 				if(::ioctlsocket(sockClient.Get(), (long)FIONBIO, (unsigned long *)&FALSE_VALUE)){
-					return false;
+					MCF_THROW(::GetLastError(), L"::ioctlsocket() 失败。");
 				}
 				pPeer = Impl::TcpPeerFromSocket(std::move(sockClient), &vSockAddr, (std::size_t)nSockAddrSize);
 				return true;

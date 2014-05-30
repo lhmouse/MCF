@@ -7,7 +7,7 @@
 
 extern void *memset(void *dst, int ch, size_t cb);
 
-void *__attribute__((__noinline__)) calloc(size_t nmemb, size_t cnt){
+__attribute__((__noinline__)) void *calloc(size_t nmemb, size_t cnt){
 	size_t cb = 0;
 	if((nmemb > 0) && (cnt > 0)){
 		cb = nmemb * cnt;

@@ -6,6 +6,8 @@
 #include "String.hpp"
 #include "Utilities.hpp"
 #include "../Serialization/Serdes.hpp"
+#include "../Thread/ReaderWriterLock.hpp"
+#include <map>
 #include <limits>
 using namespace MCF;
 
@@ -322,3 +324,43 @@ DEFINE_STRING_SERDES(WideString)
 
 DEFINE_STRING_SERDES(Utf16String)
 DEFINE_STRING_SERDES(Utf32String)
+
+#define DEFINE_LITERAL_OPERATOR(suffix, char_type, encoding)	\
+	namespace {	\
+		const auto	\
+			g_pPoolLockOf ## suffix ## char_type ## encoding = ReaderWriterLock::Create();	\
+		std::map<const char_type *, ::MCF::String<MACRO_TYPE(char_type), ::MCF::StringEncoding::encoding>>	\
+			g_mapPooledStringsOf ## suffix ## char_type ## encoding;	\
+	}	\
+	const ::MCF::String<MACRO_TYPE(char_type), ::MCF::StringEncoding::encoding> &	\
+		operator"" ## suffix(const MACRO_TYPE(char_type) *pchStr, std::size_t uLength)	\
+	{	\
+		const auto &pLock = g_pPoolLockOf ## suffix ## char_type ## encoding;	\
+		auto &mapStrings = g_mapPooledStringsOf ## suffix ## char_type ## encoding;	\
+		\
+		auto vReaderLock = pLock->GetReaderLock();	\
+		auto itHint = mapStrings.upper_bound(pchStr);	\
+		if(itHint != mapStrings.begin()){	\
+			auto itString = itHint;	\
+			--itString;	\
+			if(itString->first == pchStr){	\
+				return itString->second;	\
+			}	\
+		}	\
+		vReaderLock.Unlock();	\
+		\
+		auto vWriterLock = pLock->GetWriterLock();	\
+		return mapStrings.emplace_hint(	\
+			itHint,	\
+			std::piecewise_construct,	\
+			std::make_tuple(pchStr),	\
+			std::make_tuple(pchStr, uLength)	\
+		)->second;	\
+	}
+
+DEFINE_LITERAL_OPERATOR(_AS,	char,		ANSI)
+DEFINE_LITERAL_OPERATOR(_WS,	wchar_t,	UTF16)
+
+DEFINE_LITERAL_OPERATOR(_U8S,	char,		UTF8)
+DEFINE_LITERAL_OPERATOR(_U16S,	char16_t,	UTF16)
+DEFINE_LITERAL_OPERATOR(_U32S,	char32_t,	UTF32)

@@ -25,7 +25,7 @@ private:
 	ThreadLocalPtr<xThreadInfo, xThreadInfo> xm_pThreadInfo;
 
 	const std::unique_ptr<CriticalSection> xm_pcsGuard;
-	CriticalSection::Lock xm_vGuardLock;
+	CriticalSection::Lock xm_vWriterLock;
 	const std::unique_ptr<Semaphore> xm_psemExclusive;
 
 public:
@@ -33,7 +33,7 @@ public:
 		: xm_uReaderCount	(0)
 		, xm_pThreadInfo	(xThreadInfo())
 		, xm_pcsGuard		(CriticalSection::Create(ulSpinCount))
-		, xm_vGuardLock		(xm_pcsGuard.get(), false)
+		, xm_vWriterLock	(xm_pcsGuard.get(), false)
 		, xm_psemExclusive	(Semaphore::Create(1, 1))
 	{
 	}
@@ -53,11 +53,10 @@ public:
 
 		if(++vThreadInfo.m_uReaderRecur == 1){
 			if(vThreadInfo.m_uWriterRecur == 0){
-				xm_vGuardLock.Lock();
+				const auto vReaderLock = xm_pcsGuard->GetLock();
 				if(__atomic_add_fetch(&xm_uReaderCount, 1, __ATOMIC_ACQ_REL) == 1){
 					xm_psemExclusive->Wait();
 				}
-				xm_vGuardLock.Unlock();
 			} else {
 				__atomic_add_fetch(&xm_uReaderCount, 1, __ATOMIC_ACQ_REL);
 			}
@@ -91,10 +90,11 @@ public:
 			// 但是这样除了使问题复杂化以外没有什么好处。
 			ASSERT_MSG(vThreadInfo.m_uReaderRecur == 0, L"获取写锁前必须先释放读锁。");
 
-			xm_vGuardLock.Lock();
+			auto vWriterLock = xm_pcsGuard->GetLock();
 //			if(vThreadInfo.m_uReaderRecur == 0){
 				xm_psemExclusive->Wait();
 //			}
+			xm_vWriterLock = std::move(vWriterLock);
 		}
 	}
 	void ReleaseWriterLock() noexcept {
@@ -104,7 +104,7 @@ public:
 			if(vThreadInfo.m_uReaderRecur == 0){
 				xm_psemExclusive->Signal();
 			}
-			xm_vGuardLock.Unlock();
+			xm_vWriterLock.Unlock();
 		}
 	}
 };

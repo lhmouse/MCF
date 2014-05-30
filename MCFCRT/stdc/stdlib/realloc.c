@@ -5,7 +5,7 @@
 #include "../../env/_crtdef.h"
 #include "../../env/heap.h"
 
-void *__attribute__((__noinline__)) realloc(void *p, size_t cb){
+__attribute__((__noinline__)) void *realloc(void *p, size_t cb){
 	if(p){
 		return __MCF_CRT_HeapReAlloc(p, cb, __MCF_DEBUG_RET_ADDR);
 	} else {

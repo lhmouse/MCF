@@ -75,19 +75,35 @@ namespace Impl {
 				Lock();
 			}
 		}
+		LockRaiiTemplate(const LockRaiiTemplate &rhs) noexcept
+			: xm_pOwner(rhs.xm_pOwner)
+		{
+			if(rhs.IsLocking()){
+				Lock();
+			}
+		}
 		LockRaiiTemplate(LockRaiiTemplate &&rhs) noexcept
 			: xm_pOwner(rhs.xm_pOwner)
 		{
-			xm_uLockCount = rhs.xm_uLockCount;
-			rhs.xm_uLockCount = 0;
+			xm_uLockCount = std::exchange(rhs.xm_uLockCount, 0u);
+		}
+		LockRaiiTemplate &operator=(const LockRaiiTemplate &rhs) noexcept {
+			if(this != &rhs){
+				UnlockAll();
+
+				xm_pOwner = rhs.xm_pOwner;
+				if(rhs.IsLocking()){
+					Lock();
+				}
+			}
+			return *this;
 		}
 		LockRaiiTemplate &operator=(LockRaiiTemplate &&rhs) noexcept {
 			if(this != &rhs){
 				UnlockAll();
 
 				xm_pOwner = rhs.xm_pOwner;
-				xm_uLockCount = rhs.xm_uLockCount;
-				rhs.xm_uLockCount = 0;
+				xm_uLockCount = std::exchange(rhs.xm_uLockCount, 0u);
 			}
 			return *this;
 		}

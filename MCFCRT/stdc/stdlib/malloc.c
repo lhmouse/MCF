@@ -5,6 +5,6 @@
 #include "../../env/_crtdef.h"
 #include "../../env/heap.h"
 
-void *__attribute__((__noinline__)) malloc(size_t cb){
+__attribute__((__noinline__)) void *malloc(size_t cb){
 	return __MCF_CRT_HeapAlloc(cb, __MCF_DEBUG_RET_ADDR);
 }

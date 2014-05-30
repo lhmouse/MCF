@@ -8,7 +8,7 @@
 
 namespace {
 
-inline void *__attribute__((__always_inline__)) Allocate(std::size_t uSize, const void *pRetAddr){
+inline __attribute__((__always_inline__)) void *Allocate(std::size_t uSize, const void *pRetAddr){
 	const auto uSizeToAlloc = (uSize == 0) ? 1 : uSize;
 	auto *pRet = ::__MCF_CRT_HeapAlloc(uSizeToAlloc, pRetAddr);
 	while(!pRet){
@@ -22,7 +22,7 @@ inline void *__attribute__((__always_inline__)) Allocate(std::size_t uSize, cons
 	return pRet;
 }
 
-inline void *__attribute__((__always_inline__)) AllocateNoThrow(std::size_t uSize, const void *pRetAddr) noexcept {
+inline __attribute__((__always_inline__)) void *AllocateNoThrow(std::size_t uSize, const void *pRetAddr) noexcept {
 	const auto uSizeToAlloc = (uSize == 0) ? 1 : uSize;
 	auto *pRet = ::__MCF_CRT_HeapAlloc(uSizeToAlloc, pRetAddr);
 	if(!pRet) {
@@ -42,7 +42,7 @@ inline void *__attribute__((__always_inline__)) AllocateNoThrow(std::size_t uSiz
 	return pRet;
 }
 
-inline void __attribute__((__always_inline__)) Deallocate(void *pBlock, const void *pRetAddr) noexcept {
+inline __attribute__((__always_inline__)) void Deallocate(void *pBlock, const void *pRetAddr) noexcept {
 	if(pBlock){
 		::__MCF_CRT_HeapFree(pBlock, pRetAddr);
 	}
@@ -52,40 +52,40 @@ inline void __attribute__((__always_inline__)) Deallocate(void *pBlock, const vo
 
 #pragma GCC diagnostic ignored "-Wattributes"
 
-void *__attribute__((__noinline__)) operator new(std::size_t cb){
+__attribute__((__noinline__)) void *operator new(std::size_t cb){
 	return Allocate(cb, __MCF_DEBUG_RET_ADDR);
 }
-void *__attribute__((__noinline__)) operator new(std::size_t cb, const std::nothrow_t &) noexcept {
+__attribute__((__noinline__)) void *operator new(std::size_t cb, const std::nothrow_t &) noexcept {
 	return AllocateNoThrow(cb, __MCF_DEBUG_RET_ADDR);
 }
-void __attribute__((__noinline__)) operator delete(void *p) noexcept {
+__attribute__((__noinline__)) void operator delete(void *p) noexcept {
 	Deallocate(p, __MCF_DEBUG_RET_ADDR);
 }
-void __attribute__((__noinline__)) operator delete(void *p, const std::nothrow_t &) noexcept {
+__attribute__((__noinline__)) void operator delete(void *p, const std::nothrow_t &) noexcept {
 	Deallocate(p, __MCF_DEBUG_RET_ADDR);
 }
-void __attribute__((__noinline__)) operator delete(void *p, std::size_t) noexcept {
+__attribute__((__noinline__)) void operator delete(void *p, std::size_t) noexcept {
 	Deallocate(p, __MCF_DEBUG_RET_ADDR);
 }
-void __attribute__((__noinline__)) operator delete(void *p, std::size_t, const std::nothrow_t &) noexcept {
+__attribute__((__noinline__)) void operator delete(void *p, std::size_t, const std::nothrow_t &) noexcept {
 	Deallocate(p, __MCF_DEBUG_RET_ADDR);
 }
 
-void *__attribute__((__noinline__)) operator new[](std::size_t cb){
+__attribute__((__noinline__)) void *operator new[](std::size_t cb){
 	return Allocate(cb, __MCF_DEBUG_RET_ADDR);
 }
-void *__attribute__((__noinline__)) operator new[](std::size_t cb, const std::nothrow_t &) noexcept {
+__attribute__((__noinline__)) void *operator new[](std::size_t cb, const std::nothrow_t &) noexcept {
 	return AllocateNoThrow(cb, __MCF_DEBUG_RET_ADDR);
 }
-void __attribute__((__noinline__)) operator delete[](void *p) noexcept {
+__attribute__((__noinline__)) void operator delete[](void *p) noexcept {
 	Deallocate(p, __MCF_DEBUG_RET_ADDR);
 }
-void __attribute__((__noinline__)) operator delete[](void *p, std::size_t) noexcept {
+__attribute__((__noinline__)) void operator delete[](void *p, std::size_t) noexcept {
 	Deallocate(p, __MCF_DEBUG_RET_ADDR);
 }
-void __attribute__((__noinline__)) operator delete[](void *p, const std::nothrow_t &) noexcept {
+__attribute__((__noinline__)) void operator delete[](void *p, const std::nothrow_t &) noexcept {
 	Deallocate(p, __MCF_DEBUG_RET_ADDR);
 }
-void __attribute__((__noinline__)) operator delete[](void *p, std::size_t, const std::nothrow_t &) noexcept {
+__attribute__((__noinline__)) void operator delete[](void *p, std::size_t, const std::nothrow_t &) noexcept {
 	Deallocate(p, __MCF_DEBUG_RET_ADDR);
 }

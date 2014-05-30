@@ -49,7 +49,7 @@ PeerInfo::PeerInfo(const void *pSockAddr, std::size_t uSockAddrSize){
 		BCopy(xm_au8IPv4, vSockAddrIn.sin_addr);
 		BCopy(xm_u16Port, vSockAddrIn.sin_port);
 	} else {
-		MCF_THROW(ERROR_NOT_SUPPORTED, L"不支持该协议。");
+		MCF_THROW(ERROR_NOT_SUPPORTED, L"不支持该协议。"_WSO);
 	}
 }
 

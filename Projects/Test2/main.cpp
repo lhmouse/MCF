@@ -42,7 +42,7 @@ try {
 		printf("  desc = %s\n", AnsiString(GetWin32ErrorDesc(p->m_ulErrorCode)).GetCStr());
 		printf("  func = %s\n", p->m_pszFunction);
 		printf("  line = %lu\n", p->m_ulLine);
-		printf("  msg  = %s\n", AnsiString(WideString(p->m_pwszMessage.get())).GetCStr());
+		printf("  msg  = %s\n", AnsiString(p->m_wcsMessage).GetCStr());
 	}
 	return 0;
 }

@@ -29,6 +29,29 @@ inline void Deserialize(Object_t *pObjects, std::size_t uCount, StreamBuffer &sb
 	Impl::SerdesTrait<Object_t[]>()(pObjects, uCount, sbufStream);
 }
 
+// 运算符重载。
+template<typename Object_t>
+inline StreamBuffer &operator<<(StreamBuffer &sbufStream, const Object_t &vObject){
+	Serialize(sbufStream, vObject);
+	return sbufStream;
+}
+template<typename Object_t, std::size_t COUNT>
+inline StreamBuffer &operator<<(StreamBuffer &sbufStream, const Object_t (&aObjects)[COUNT]){
+	Serialize(sbufStream, aObjects, COUNT);
+	return sbufStream;
+}
+
+template<typename Object_t>
+inline StreamBuffer &operator>>(StreamBuffer &sbufStream, Object_t &vObject){
+	Deserialize(vObject, sbufStream);
+	return sbufStream;
+}
+template<typename Object_t, std::size_t COUNT>
+inline StreamBuffer &operator>>(StreamBuffer &sbufStream, Object_t (&aObjects)[COUNT]){
+	Deserialize(aObjects, COUNT, sbufStream);
+	return sbufStream;
+}
+
 }
 
 #endif

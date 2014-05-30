@@ -157,25 +157,25 @@ public:
 		if(!xm_pContext){
 			xm_hEncoder.Reset(::LzmaEnc_Create(&g_vAllocSmall));
 			if(!xm_hEncoder){
-				MCF_THROW(ERROR_NOT_ENOUGH_MEMORY, L"::LzmaEnc_Create() 失败。");
+				MCF_THROW(ERROR_NOT_ENOUGH_MEMORY, L"::LzmaEnc_Create() 失败。"_WSO);
 			}
 
 			ulErrorCode = LzmaErrorToWin32Error(::LzmaEnc_SetProps(xm_hEncoder.Get(), &xm_vEncProps));
 			if(ulErrorCode != ERROR_SUCCESS){
-				MCF_THROW(ulErrorCode, L"::LzmaEnc_SetProps() 失败。");
+				MCF_THROW(ulErrorCode, L"::LzmaEnc_SetProps() 失败。"_WSO);
 			}
 
 			unsigned char abyHeader[LZMA_PROPS_SIZE];
 			std::size_t uHeaderSize = sizeof(abyHeader);
 			ulErrorCode = LzmaErrorToWin32Error(::LzmaEnc_WriteProperties(xm_hEncoder.Get(), abyHeader, &uHeaderSize));
 			if(ulErrorCode != ERROR_SUCCESS){
-				MCF_THROW(ulErrorCode, L"::LzmaEnc_WriteProperties() 失败。");
+				MCF_THROW(ulErrorCode, L"::LzmaEnc_WriteProperties() 失败。"_WSO);
 			}
 			CopyOut(xm_fnDataCallback, abyHeader, uHeaderSize);
 
 			xm_pContext.Reset(::LzmaEnc_NewEncodeCreateContext(xm_hEncoder.Get(), &xm_sosOutputter, nullptr, &g_vAllocSmall, &g_vAllocLarge));
 			if(!xm_pContext){
-				MCF_THROW(ERROR_NOT_ENOUGH_MEMORY, L"::LzmaEnc_NewEncodeCreateContext() 失败。");
+				MCF_THROW(ERROR_NOT_ENOUGH_MEMORY, L"::LzmaEnc_NewEncodeCreateContext() 失败。"_WSO);
 			}
 
 			xm_pException = std::exception_ptr();
@@ -193,7 +193,7 @@ public:
 				std::rethrow_exception(xm_pException);
 			}
 			if(ulErrorCode != ERROR_SUCCESS){
-				MCF_THROW(ulErrorCode, L"::LzmaEnc_NewEncode() 失败。");
+				MCF_THROW(ulErrorCode, L"::LzmaEnc_NewEncode() 失败。"_WSO);
 			}
 
 			pbyRead += uBytesToProcess;
@@ -210,7 +210,7 @@ public:
 				std::rethrow_exception(xm_pException);
 			}
 			if(ulErrorCode != ERROR_SUCCESS){
-				MCF_THROW(ulErrorCode, L"::LzmaEnc_NewEncode() 失败。");
+				MCF_THROW(ulErrorCode, L"::LzmaEnc_NewEncode() 失败。"_WSO);
 			}
 
 			xm_pContext.Reset();
@@ -270,7 +270,7 @@ public:
 
 				ulErrorCode = LzmaErrorToWin32Error(::LzmaDec_Allocate(&xm_vDecoder, xm_abyHeader, sizeof(xm_abyHeader), &g_vAllocSmall));
 				if(ulErrorCode != ERROR_SUCCESS){
-					MCF_THROW(ulErrorCode, L"::LzmaDec_Allocate() 失败。");
+					MCF_THROW(ulErrorCode, L"::LzmaDec_Allocate() 失败。"_WSO);
 				}
 				::LzmaDec_Init(&xm_vDecoder);
 				xm_pDecoder.Reset(&xm_vDecoder);
@@ -284,7 +284,7 @@ public:
 
 				ulErrorCode = LzmaErrorToWin32Error(::LzmaDec_DecodeToBuf(xm_pDecoder.Get(), xm_abyTemp, &uDecoded, pbyRead, &uToDecode, LZMA_FINISH_ANY, &vStatus));
 				if(ulErrorCode != ERROR_SUCCESS){
-					MCF_THROW(ulErrorCode, L"::LzmaDec_DecodeToBuf() 失败。");
+					MCF_THROW(ulErrorCode, L"::LzmaDec_DecodeToBuf() 失败。"_WSO);
 				}
 
 				CopyOut(xm_fnDataCallback, xm_abyTemp, uDecoded);

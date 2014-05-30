@@ -9,7 +9,6 @@
 #include "String.hpp"
 #include <exception>
 #include <utility>
-#include <memory>
 #include <cstddef>
 
 namespace MCF {
@@ -28,17 +27,16 @@ public:
 	const char *m_pszFunction;
 	unsigned long m_ulLine;
 	unsigned long m_ulErrorCode;
-	std::shared_ptr<const wchar_t> m_pwszMessage;
+	WideString m_wcsMessage;
 
 private:
 	void xMakeMessage() noexcept {
 	}
-	void xMakeMessage(const wchar_t *pwszMessage){
-		m_pwszMessage.reset(pwszMessage, [](auto) noexcept { });
+	void xMakeMessage(const WideStringObserver &wsoMessage){
+		m_wcsMessage = wsoMessage;
 	}
 	void xMakeMessage(WideString wcsMessage){
-		auto pwcsMessage = std::make_shared<WideString>(std::move(wcsMessage));
-		m_pwszMessage = std::shared_ptr<const wchar_t>(std::move(pwcsMessage), pwcsMessage->GetCStr());
+		m_wcsMessage = std::move(wcsMessage);
 	}
 
 public:

@@ -10,7 +10,7 @@ namespace MCF {
 
 namespace Impl {
 	[[noreturn]] void ThrowOnEof(){
-		MCF_THROW(ERROR_HANDLE_EOF, L"遇到意外的文件尾。");
+		MCF_THROW(ERROR_HANDLE_EOF, L"遇到意外的文件尾。"_WSO);
 	}
 }
 

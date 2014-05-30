@@ -44,32 +44,31 @@ public:
 		: xm_bStopNow(false)
 	{
 		const short shFamily = piBoundOnto.IsIPv4() ? AF_INET : AF_INET6;
-
 		xm_sockListen.Reset(::socket(shFamily, SOCK_STREAM, IPPROTO_TCP));
 		if(!xm_sockListen){
-			MCF_THROW(::GetLastError(), L"::socket() 失败。");
+			MCF_THROW(::GetLastError(), L"::socket() 失败。"_WSO);
 		}
 
 		if((shFamily == AF_INET6) && ::setsockopt(xm_sockListen.Get(), IPPROTO_IPV6, IPV6_V6ONLY, (const char *)&FALSE_VALUE, sizeof(FALSE_VALUE))){
-			MCF_THROW(::GetLastError(), L"::setsockopt() 失败。");
+			MCF_THROW(::GetLastError(), L"::setsockopt() 失败。"_WSO);
 		}
 		if(bExclusive && ::setsockopt(xm_sockListen.Get(), SOL_SOCKET, SO_EXCLUSIVEADDRUSE, (const char *)&TRUE_VALUE, sizeof(TRUE_VALUE))){
-			MCF_THROW(::GetLastError(), L"::setsockopt() 失败。");
+			MCF_THROW(::GetLastError(), L"::setsockopt() 失败。"_WSO);
 		}
 		if(bReuseAddr && ::setsockopt(xm_sockListen.Get(), SOL_SOCKET, SO_REUSEADDR, (const char *)&TRUE_VALUE, sizeof(TRUE_VALUE))){
-			MCF_THROW(::GetLastError(), L"::setsockopt() 失败。");
+			MCF_THROW(::GetLastError(), L"::setsockopt() 失败。"_WSO);
 		}
 		if(::ioctlsocket(xm_sockListen.Get(), (long)FIONBIO, (unsigned long *)&TRUE_VALUE)){
-			MCF_THROW(::GetLastError(), L"::ioctlsocket() 失败。");
+			MCF_THROW(::GetLastError(), L"::ioctlsocket() 失败。"_WSO);
 		}
 		SOCKADDR_STORAGE vSockAddr;
 		const int nSockAddrSize = piBoundOnto.ToSockAddr(&vSockAddr, sizeof(vSockAddr));
 		if(::bind(xm_sockListen.Get(), (const SOCKADDR *)&vSockAddr, nSockAddrSize)){
-			MCF_THROW(::GetLastError(), L"::bind() 失败。");
+			MCF_THROW(::GetLastError(), L"::bind() 失败。"_WSO);
 		}
 
 		if(::listen(xm_sockListen.Get(), SOMAXCONN)){
-			MCF_THROW(::GetLastError(), L"::listen() 失败。");
+			MCF_THROW(::GetLastError(), L"::listen() 失败。"_WSO);
 		}
 	}
 
@@ -99,7 +98,7 @@ public:
 					return false;
 				}
 				if(::ioctlsocket(sockClient.Get(), (long)FIONBIO, (unsigned long *)&FALSE_VALUE)){
-					MCF_THROW(::GetLastError(), L"::ioctlsocket() 失败。");
+					MCF_THROW(::GetLastError(), L"::ioctlsocket() 失败。"_WSO);
 				}
 				pPeer = Impl::TcpPeerFromSocket(std::move(sockClient), &vSockAddr, (std::size_t)nSockAddrSize);
 				return true;

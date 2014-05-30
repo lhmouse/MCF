@@ -37,7 +37,7 @@ echo #warning Failed to load precompiled header file. > %TempDir%\MCFBuild.hpp
 echo #include "../MCFBuild.hpp" >> %TempDir%\MCFBuild.hpp
 
 echo ----- Compiling MCFBuild...
-for /f %%I in ('dir *.c *.cpp /b /o:-d') do (
+for /f %%I in ('dir *.c *.cpp /b /o:-d /t:w') do (
 	echo %%I
 	if "%%~xI"==".c" (
 		gcc %CFlags% "%%I" -c -o "%TempDir%\%%~nxI.o" || exit /b 1
@@ -52,7 +52,7 @@ for /f "eol=;" %%I in (make.lst) do (
 	if "%%~xI"==".c" (
 		gcc %CFlags% "%%I" -c -o "%TempDir%\%%~nxI.o" || exit /b 1
 	) else (
-		g++ %CPPFlags% "%%I" -include "%TempDir%\MCFBuild.hpp" -c -o "%TempDir%\%%~nxI.o" || exit /b 1
+		g++ %CPPFlags% "%%I" -c -o "%TempDir%\%%~nxI.o" || exit /b 1
 	)
 )
 

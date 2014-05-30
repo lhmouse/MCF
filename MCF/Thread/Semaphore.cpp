@@ -23,7 +23,7 @@ public:
 			xm_hSemaphore.Reset(::CreateSemaphoreW(nullptr, (long)ulInitCount, (long)ulMaxCount, wsoName.GetNullTerminated<MAX_PATH>().GetData()));
 		}
 		if(!xm_hSemaphore){
-			MCF_THROW(::GetLastError(), L"CreateSemaphoreW() 失败。");
+			MCF_THROW(::GetLastError(), L"CreateSemaphoreW() 失败。"_WSO);
 		}
 	}
 

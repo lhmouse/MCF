@@ -10,10 +10,6 @@
 #include <cstddef>
 using namespace MCFBuild;
 
-SERDES_TABLE_BEGIN(DependencyDatabase::Sha256)
-	SERDES_MEMBER(abyChecksum)
-SERDES_TABLE_END
-
 SERDES_TABLE_BEGIN(DependencyDatabase::FileItem)
 	SERDES_MEMBER(shaCommandLine)
 	SERDES_MEMBER(shaFile)

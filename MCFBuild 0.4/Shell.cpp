@@ -25,11 +25,11 @@ typedef MCF::UniqueHandle<WinHandleCloser> UniqueWinHandle;
 std::pair<UniqueWinHandle, UniqueWinHandle> CreateReadablePipe(){
 	HANDLE hRawRead, hRawWrite;
 	if(!::CreatePipe(&hRawRead, &hRawWrite, nullptr, 0)){
-		MCF_THROW(::GetLastError(), L"CREATE_PIPE_FAILED");
+		MCF_THROW(::GetLastError(), L"CREATE_PIPE_FAILED"_WSO);
 	}
 	UniqueWinHandle hRead(hRawRead), hWrite(hRawWrite);
 	if(!::SetHandleInformation(hWrite.Get(), HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT)){
-		MCF_THROW(::GetLastError(), L"SET_PIPE_INFO_FAILED");
+		MCF_THROW(::GetLastError(), L"SET_PIPE_INFO_FAILED"_WSO);
 	}
 	return std::make_pair(std::move(hRead), std::move(hWrite));
 }

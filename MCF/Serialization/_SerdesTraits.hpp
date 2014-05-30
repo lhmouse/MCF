@@ -536,19 +536,19 @@ namespace Impl {
 
 }
 
-#define SERDES_TABLE_BEGIN(cls)	\
+#define SERDES_TABLE_BEGIN(type)	\
 	template<>	\
-	const typename ::MCF::Impl::SerdesTrait<MACRO_TYPE(cls)>::TableElementType	\
-		(::MCF::Impl::SerdesTrait<MACRO_TYPE(cls)>::s_vSerdesTable)[]	\
+	const typename ::MCF::Impl::SerdesTrait<MACRO_TYPE(type)>::TableElementType	\
+		(::MCF::Impl::SerdesTrait<MACRO_TYPE(type)>::s_vSerdesTable)[]	\
 	= {
 
-#define SERDES_BASE(cls)	\
+#define SERDES_BASE(type)	\
 		TableElementType(	\
 			[](auto &stream, const auto &obj){	\
-				::MCF::Impl::SerdesTrait<MACRO_TYPE(cls)>()(stream, static_cast<const MACRO_TYPE(cls) &>(obj));	\
+				::MCF::Impl::SerdesTrait<MACRO_TYPE(type)>()(stream, static_cast<const MACRO_TYPE(type) &>(obj));	\
 			},	\
 			[](auto &obj, auto &stream){	\
-				::MCF::Impl::SerdesTrait<MACRO_TYPE(cls)>()(static_cast<MACRO_TYPE(cls) &>(obj), stream);	\
+				::MCF::Impl::SerdesTrait<MACRO_TYPE(type)>()(static_cast<MACRO_TYPE(type) &>(obj), stream);	\
 			}	\
 		),
 

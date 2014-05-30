@@ -11,11 +11,11 @@ using namespace MCFBuild;
 namespace {
 
 const std::map<MCF::WideStringObserver, MCF::WideStringObserver> g_mapStrings = {
-	{ L"CREATE_PIPE_FAILED",			L"创建管道失败。" },
-	{ L"SET_PIPE_INFO_FAILED",			L"设置管道句柄信息失败。" },
-	{ L"CREATE_PROCESS_FAILED",			L"以命令行“%0”创建进程失败。" },
-	{ L"ACCESS_DIRECTORY_FAILED",		L"访问目录“%0”失败。" },
-	{ L"FILE_TOO_LARGE",				L"文件“%0”太大。" },
+	{ L"CREATE_PIPE_FAILED"_WSO,			L"创建管道失败。"_WSO },
+	{ L"SET_PIPE_INFO_FAILED"_WSO,			L"设置管道句柄信息失败。"_WSO },
+	{ L"CREATE_PROCESS_FAILED"_WSO,			L"以命令行“%0”创建进程失败。"_WSO },
+	{ L"ACCESS_DIRECTORY_FAILED"_WSO,		L"访问目录“%0”失败。"_WSO },
+	{ L"FILE_TOO_LARGE"_WSO,				L"文件“%0”太大。"_WSO }
 };
 
 }

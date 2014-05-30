@@ -81,7 +81,7 @@ public:
 
 		const auto ulErrorCode = ZErrorToWin32Error(::deflateInit2(this, nLevel, Z_DEFLATED, bRaw ? -15 : 15, 9, Z_DEFAULT_STRATEGY));
 		if(ulErrorCode != ERROR_SUCCESS){
-			MCF_THROW(ulErrorCode, L"::deflateInit2() 失败。");
+			MCF_THROW(ulErrorCode, L"::deflateInit2() 失败。"_WSO);
 		}
 	}
 	~ZEncoderDelegate() noexcept {
@@ -117,7 +117,7 @@ public:
 						break;
 					}
 					if(ulErrorCode != ERROR_SUCCESS){
-						MCF_THROW(ulErrorCode, L"::deflate() 失败。");
+						MCF_THROW(ulErrorCode, L"::deflate() 失败。"_WSO);
 					}
 					if(avail_out == 0){
 						CopyOut(xm_fnDataCallback, xm_abyTemp, sizeof(xm_abyTemp));
@@ -144,7 +144,7 @@ public:
 					break;
 				}
 				if(ulErrorCode != ERROR_SUCCESS){
-					MCF_THROW(ulErrorCode, L"::deflate() 失败。");
+					MCF_THROW(ulErrorCode, L"::deflate() 失败。"_WSO);
 				}
 				if(avail_out == 0){
 					CopyOut(xm_fnDataCallback, xm_abyTemp, sizeof(xm_abyTemp));
@@ -184,7 +184,7 @@ public:
 
 		const auto ulErrorCode = ZErrorToWin32Error(::inflateInit2(this, bRaw ? -15 : 15));
 		if(ulErrorCode != ERROR_SUCCESS){
-			MCF_THROW(ulErrorCode, L"::inflateInit2() 失败。");
+			MCF_THROW(ulErrorCode, L"::inflateInit2() 失败。"_WSO);
 		}
 	}
 	~ZDecoderDelegate() noexcept {
@@ -220,7 +220,7 @@ public:
 						break;
 					}
 					if(ulErrorCode != ERROR_SUCCESS){
-						MCF_THROW(ulErrorCode, L"::inflate() 失败。");
+						MCF_THROW(ulErrorCode, L"::inflate() 失败。"_WSO);
 					}
 					if(avail_out == 0){
 						CopyOut(xm_fnDataCallback, xm_abyTemp, sizeof(xm_abyTemp));
@@ -247,7 +247,7 @@ public:
 					break;
 				}
 				if(ulErrorCode != ERROR_SUCCESS){
-					MCF_THROW(ulErrorCode, L"::inflate() 失败。");
+					MCF_THROW(ulErrorCode, L"::inflate() 失败。"_WSO);
 				}
 				if(avail_out == 0){
 					CopyOut(xm_fnDataCallback, xm_abyTemp, sizeof(xm_abyTemp));

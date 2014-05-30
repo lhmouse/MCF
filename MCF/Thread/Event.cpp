@@ -23,7 +23,7 @@ public:
 			xm_hEvent.Reset(::CreateEventW(nullptr, true, bInitSet, wsoName.GetNullTerminated<MAX_PATH>().GetData()));
 		}
 		if(!xm_hEvent){
-			MCF_THROW(::GetLastError(), L"CreateEventW() 失败。");
+			MCF_THROW(::GetLastError(), L"CreateEventW() 失败。"_WSO);
 		}
 	}
 

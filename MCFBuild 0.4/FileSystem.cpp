@@ -3,51 +3,42 @@
 
 #include "MCFBuild.hpp"
 #include "FileSystem.hpp"
-#include "../MCF/Core/UniqueHandle.hpp"
 #include "../MCF/Core/Exception.hpp"
+#include "../MCF/Core/File.hpp"
+#include "../MCF/Hash/Sha256.hpp"
 #include <climits>
+#include <cstdint>
 #include <cstddef>
 using namespace MCFBuild;
 
-namespace {
-
-struct FileHandleCloser {
-	constexpr HANDLE operator()() const noexcept {
-		return INVALID_HANDLE_VALUE;
-	}
-	void operator()(HANDLE hFile) const noexcept {
-		::CloseHandle(hFile);
-	}
-};
-
-typedef MCF::UniqueHandle<FileHandleCloser> UniqueFileHandle;
-
-}
-
 namespace MCFBuild {
 
-unsigned long long GetFileLastWriteTime(const MCF::WideString &wcsPath) noexcept {
-	const UniqueFileHandle hFile(::CreateFileW(
-		wcsPath.GetCStr(),
-		FILE_READ_ATTRIBUTES,
-		FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
-		nullptr,
-		OPEN_EXISTING,
-		FILE_ATTRIBUTE_NORMAL,
-		NULL
-	));
-	if(!hFile){
-		return 0;
+bool GetFileSha256(Sha256 &shaRet, const MCF::WideString &wcsPath){
+	const auto pFile = MCF::File::OpenNoThrow(wcsPath, true, false, false);
+	if(!pFile){
+		return false;
 	}
 
-	union {
-		FILETIME ft;
-		ULARGE_INTEGER uli;
-	} u;
-	if(!::GetFileTime(hFile.Get(), nullptr, nullptr, &u.ft)){
-		return 0;
+	MCF::Sha256 shaHasher;
+	shaHasher.Update(nullptr, 0);
+	const auto u64FileSize = pFile->GetSize();
+	if(u64FileSize > 0){
+		unsigned char abyTemp1[32 * 1024], abyTemp2[sizeof(abyTemp1)];
+		auto *pbyCurBuffer = abyTemp1, *pbyBackBuffer = abyTemp2;
+		std::size_t uBytesInBuffer = pFile->Read(pbyCurBuffer, sizeof(abyTemp1), 0);
+		std::uint64_t u64Offset = uBytesInBuffer;
+		while(u64Offset < u64FileSize){
+			std::swap(pbyCurBuffer, pbyBackBuffer);
+			uBytesInBuffer = pFile->Read(
+				pbyCurBuffer, sizeof(abyTemp1), u64Offset,
+				[&]{ shaHasher.Update(pbyBackBuffer, uBytesInBuffer); }
+			);
+			u64Offset += uBytesInBuffer;
+		}
+		shaHasher.Update(pbyCurBuffer, uBytesInBuffer);
 	}
-	return u.uli.QuadPart;
+	shaHasher.Finalize(shaRet.abyChecksum);
+	return true;
 }
 
 MCF::WideString GetFullPath(const MCF::WideString &wcsSrc){

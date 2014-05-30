@@ -44,28 +44,27 @@ public:
 		static const unsigned long FALSE_VALUE	= FALSE;
 
 		const short shFamily = piBoundOnto.IsIPv4() ? AF_INET : AF_INET6;
-
 		xm_sockPeer.Reset(::socket(shFamily, SOCK_DGRAM, IPPROTO_UDP));
 		if(!xm_sockPeer){
-			MCF_THROW(::GetLastError(), L"::socket() 失败。");
+			MCF_THROW(::GetLastError(), L"::socket() 失败。"_WSO);
 		}
 
 		if((shFamily == AF_INET6) && ::setsockopt(xm_sockPeer.Get(), IPPROTO_IPV6, IPV6_V6ONLY, (const char *)&FALSE_VALUE, sizeof(FALSE_VALUE))){
-			MCF_THROW(::GetLastError(), L"::setsockopt() 失败。");
+			MCF_THROW(::GetLastError(), L"::setsockopt() 失败。"_WSO);
 		}
 		if(bExclusive && ::setsockopt(xm_sockPeer.Get(), SOL_SOCKET, SO_EXCLUSIVEADDRUSE, (const char *)&TRUE_VALUE, sizeof(TRUE_VALUE))){
-			MCF_THROW(::GetLastError(), L"::setsockopt() 失败。");
+			MCF_THROW(::GetLastError(), L"::setsockopt() 失败。"_WSO);
 		}
 		if(bReuseAddr && ::setsockopt(xm_sockPeer.Get(), SOL_SOCKET, SO_REUSEADDR, (const char *)&TRUE_VALUE, sizeof(TRUE_VALUE))){
-			MCF_THROW(::GetLastError(), L"::setsockopt() 失败。");
+			MCF_THROW(::GetLastError(), L"::setsockopt() 失败。"_WSO);
 		}
 		if(::ioctlsocket(xm_sockPeer.Get(), (long)FIONBIO, (unsigned long *)&TRUE_VALUE)){
-			MCF_THROW(::GetLastError(), L"::ioctlsocket() 失败。");
+			MCF_THROW(::GetLastError(), L"::ioctlsocket() 失败。"_WSO);
 		}
 		SOCKADDR_STORAGE vSockAddr;
 		const int nSockAddrSize = piBoundOnto.ToSockAddr(&vSockAddr, sizeof(vSockAddr));
 		if(::bind(xm_sockPeer.Get(), (const SOCKADDR *)&vSockAddr, nSockAddrSize)){
-			MCF_THROW(::GetLastError(), L"::bind() 失败。");
+			MCF_THROW(::GetLastError(), L"::bind() 失败。"_WSO);
 		}
 	}
 
@@ -94,10 +93,10 @@ public:
 					if(ulErrorCode == WSAEWOULDBLOCK){
 						return false;
 					} else if(ulErrorCode != WSAEMSGSIZE){
-						MCF_THROW(::GetLastError(), L"::recvfrom() 失败。");
+						MCF_THROW(::GetLastError(), L"::recvfrom() 失败。"_WSO);
 					}
 					if(::ioctlsocket(xm_sockPeer.Get(), (long)FIONREAD, (unsigned long *)&ulBytesAvailable)){
-						MCF_THROW(::GetLastError(), L"::ioctlsocket() 失败。");
+						MCF_THROW(::GetLastError(), L"::ioctlsocket() 失败。"_WSO);
 					}
 				} else {
 					ulBytesAvailable = 0;
@@ -113,7 +112,7 @@ public:
 					(SOCKADDR *)&vSockAddr, &nSockAddrSize
 				);
 				if(nBytesRead < 0){
-					MCF_THROW(::GetLastError(), L"::recvfrom() 失败。");
+					MCF_THROW(::GetLastError(), L"::recvfrom() 失败。"_WSO);
 				}
 				vPacket.vecPayload.Resize((std::size_t)nBytesRead);
 
@@ -146,7 +145,7 @@ public:
 			nResult = ::setsockopt(xm_sockPeer.Get(), IPPROTO_IPV6, IPV6_ADD_MEMBERSHIP, (const char *)&vIPv6Mreq, sizeof(vIPv6Mreq));
 		}
 		if(nResult){
-			MCF_THROW(::GetLastError(), L"::setsockopt() 失败。");
+			MCF_THROW(::GetLastError(), L"::setsockopt() 失败。"_WSO);
 		}
 	}
 	void LeaveGroup(const PeerInfo &piGroup) noexcept {

@@ -40,7 +40,7 @@ private:
 	UniqueHandle<xFileCloser> xm_hFile;
 
 public:
-	FileDelegate(const wchar_t *pwszPath, bool bToRead, bool bToWrite, bool bAutoCreate){
+	std::pair<unsigned long, WideStringObserver> Open(const wchar_t *pwszPath, bool bToRead, bool bToWrite, bool bAutoCreate) noexcept {
 		xm_hFile.Reset(::CreateFileW(
 			pwszPath,
 			(bToRead ? GENERIC_READ : 0) | (bToWrite ? GENERIC_WRITE : 0),
@@ -51,33 +51,39 @@ public:
 			NULL
 		));
 		if(!xm_hFile){
-			MCF_THROW(::GetLastError(), L"::CreateFileW() 失败。");
+			return std::make_pair(::GetLastError(), L"::CreateFileW() 失败。"_WSO);
 		}
+		return std::make_pair((unsigned long)ERROR_SUCCESS, nullptr);
 	}
 
-public:
 	std::uint64_t GetSize() const {
+		ASSERT(xm_hFile);
+
 		LARGE_INTEGER liFileSize;
 		if(!::GetFileSizeEx(xm_hFile.Get(), &liFileSize)){
-			MCF_THROW(::GetLastError(), L"::GetFileSizeEx() 失败。");
+			MCF_THROW(::GetLastError(), L"::GetFileSizeEx() 失败。"_WSO);
 		}
 		return (std::uint64_t)liFileSize.QuadPart;
 	}
 	void Resize(std::uint64_t u64NewSize){
+		ASSERT(xm_hFile);
+
 		if(u64NewSize > (std::uint64_t)LLONG_MAX){
-			MCF_THROW(ERROR_INVALID_PARAMETER, L"调整文件大小时指定的大小无效。");
+			MCF_THROW(ERROR_INVALID_PARAMETER, L"调整文件大小时指定的大小无效。"_WSO);
 		}
 		LARGE_INTEGER liNewSize;
 		liNewSize.QuadPart = (long long)u64NewSize;
 		if(!::SetFilePointerEx(xm_hFile.Get(), liNewSize, nullptr, FILE_BEGIN)){
-			MCF_THROW(::GetLastError(), L"::SetFilePointerEx() 失败。");
+			MCF_THROW(::GetLastError(), L"::SetFilePointerEx() 失败。"_WSO);
 		}
 		if(!::SetEndOfFile(xm_hFile.Get())){
-			MCF_THROW(::GetLastError(), L"::SetEndOfFile() 失败。");
+			MCF_THROW(::GetLastError(), L"::SetEndOfFile() 失败。"_WSO);
 		}
 	}
 
 	std::size_t Read(void *pBuffer, std::size_t uBytesToRead, std::uint64_t u64Offset, AsyncProc *pfnAsyncProc) const {
+		ASSERT(xm_hFile);
+
 		DWORD dwBytesToReadThisTime = std::min<std::size_t>(0xFFFFF000u, uBytesToRead);
 
 		xApcResult vApcResult;
@@ -108,7 +114,7 @@ public:
 			std::rethrow_exception(ep);
 		}
 		if(!bSucceeds){
-			MCF_THROW(vApcResult.dwErrorCode, L"::ReadFileEx() 失败。");
+			MCF_THROW(vApcResult.dwErrorCode, L"::ReadFileEx() 失败。"_WSO);
 		}
 
 		std::size_t uBytesRead = vApcResult.dwBytesTransferred;
@@ -121,13 +127,10 @@ public:
 			vOverlapped.OffsetHigh = (u64NewOffset >> 32);
 			vOverlapped.hEvent = (HANDLE)&vApcResult;
 			if(!::ReadFileEx(
-				xm_hFile.Get(),
-				(unsigned char *)pBuffer + uBytesRead,
-				dwBytesToReadThisTime,
-				&vOverlapped,
-				&xAioCallback
+				xm_hFile.Get(), (unsigned char *)pBuffer + uBytesRead, dwBytesToReadThisTime,
+				&vOverlapped, &xAioCallback
 			)){
-				MCF_THROW(vApcResult.dwErrorCode, L"::ReadFileEx() 失败。");
+				MCF_THROW(vApcResult.dwErrorCode, L"::ReadFileEx() 失败。"_WSO);
 			}
 			::SleepEx(INFINITE, TRUE);
 
@@ -135,13 +138,15 @@ public:
 				if(vApcResult.dwErrorCode == ERROR_HANDLE_EOF){
 					break;
 				}
-				MCF_THROW(vApcResult.dwErrorCode, L"::ReadFileEx() 失败。");
+				MCF_THROW(vApcResult.dwErrorCode, L"::ReadFileEx() 失败。"_WSO);
 			}
 			uBytesRead += vApcResult.dwBytesTransferred;
 		}
 		return uBytesRead;
 	}
 	void Write(std::uint64_t u64Offset, const void *pBuffer, std::size_t uBytesToWrite, AsyncProc *pfnAsyncProc){
+		ASSERT(xm_hFile);
+
 		DWORD dwBytesToWriteThisTime = std::min<std::size_t>(0xFFFFF000u, uBytesToWrite);
 
 		xApcResult vApcResult;
@@ -172,7 +177,7 @@ public:
 			std::rethrow_exception(ep);
 		}
 		if(!bSucceeds){
-			MCF_THROW(vApcResult.dwErrorCode, L"::WriteFileEx() 失败。");
+			MCF_THROW(vApcResult.dwErrorCode, L"::WriteFileEx() 失败。"_WSO);
 		}
 
 		std::size_t uBytesWritten = vApcResult.dwBytesTransferred;
@@ -185,26 +190,25 @@ public:
 			vOverlapped.OffsetHigh = (DWORD)(u64NewOffset >> 32);
 			vOverlapped.hEvent = (HANDLE)&vApcResult;
 			if(!::WriteFileEx(
-				xm_hFile.Get(),
-				(const unsigned char *)pBuffer + uBytesWritten,
-				dwBytesToWriteThisTime,
-				&vOverlapped,
-				&xAioCallback
+				xm_hFile.Get(), (const unsigned char *)pBuffer + uBytesWritten, dwBytesToWriteThisTime,
+				&vOverlapped, &xAioCallback
 			)){
-				MCF_THROW(vApcResult.dwErrorCode, L"::WriteFileEx() 失败。");
+				MCF_THROW(vApcResult.dwErrorCode, L"::WriteFileEx() 失败。"_WSO);
 			}
 			::SleepEx(INFINITE, TRUE);
 
 			if(vApcResult.dwErrorCode != ERROR_SUCCESS){
-				MCF_THROW(vApcResult.dwErrorCode, L"::WriteFileEx() 失败。");
+				MCF_THROW(vApcResult.dwErrorCode, L"::WriteFileEx() 失败。"_WSO);
 			}
 			uBytesWritten += vApcResult.dwBytesTransferred;
 		}
 	}
 
 	void Flush() const {
+		ASSERT(xm_hFile);
+
 		if(!::FlushFileBuffers(xm_hFile.Get())){
-			MCF_THROW(::GetLastError(), L"::WriteFileEx() 失败。");
+			MCF_THROW(::GetLastError(), L"::WriteFileEx() 失败。"_WSO);
 		}
 	}
 };
@@ -213,27 +217,39 @@ public:
 
 // 静态成员函数。
 std::unique_ptr<File> File::Open(const WideStringObserver &wsoPath, bool bToRead, bool bToWrite, bool bAutoCreate){
-	return std::make_unique<FileDelegate>(wsoPath.GetNullTerminated<MAX_PATH>().GetData(), bToRead, bToWrite, bAutoCreate);
+	auto pFile = std::make_unique<FileDelegate>();
+	const auto vResult = pFile->Open(wsoPath.GetNullTerminated<MAX_PATH>().GetData(), bToRead, bToWrite, bAutoCreate);
+	if(vResult.first != ERROR_SUCCESS){
+		MCF_THROW(vResult.first, vResult.second);
+	}
+	return std::move(pFile);
 }
 std::unique_ptr<File> File::Open(const WideString &wcsPath, bool bToRead, bool bToWrite, bool bAutoCreate){
-	return std::make_unique<FileDelegate>(wcsPath.GetCStr(), bToRead, bToWrite, bAutoCreate);
+	auto pFile = std::make_unique<FileDelegate>();
+	const auto vResult = pFile->Open(wcsPath.GetCStr(), bToRead, bToWrite, bAutoCreate);
+	if(vResult.first != ERROR_SUCCESS){
+		MCF_THROW(vResult.first, vResult.second);
+	}
+	return std::move(pFile);
 }
 
 std::unique_ptr<File> File::OpenNoThrow(const WideStringObserver &wsoPath, bool bToRead, bool bToWrite, bool bAutoCreate){
-	try {
-		return Open(wsoPath, bToRead, bToWrite, bAutoCreate);
-	} catch(Exception &e){
-		SetWin32LastError(e.m_ulErrorCode);
-		return std::unique_ptr<File>();
+	auto pFile = std::make_unique<FileDelegate>();
+	const auto vResult = pFile->Open(wsoPath.GetNullTerminated<MAX_PATH>().GetData(), bToRead, bToWrite, bAutoCreate);
+	if(vResult.first != ERROR_SUCCESS){
+		::SetLastError(vResult.first);
+		return nullptr;
 	}
+	return std::move(pFile);
 }
 std::unique_ptr<File> File::OpenNoThrow(const WideString &wcsPath, bool bToRead, bool bToWrite, bool bAutoCreate){
-	try {
-		return Open(wcsPath, bToRead, bToWrite, bAutoCreate);
-	} catch(Exception &e){
-		SetWin32LastError(e.m_ulErrorCode);
-		return std::unique_ptr<File>();
+	auto pFile = std::make_unique<FileDelegate>();
+	const auto vResult = pFile->Open(wcsPath.GetCStr(), bToRead, bToWrite, bAutoCreate);
+	if(vResult.first != ERROR_SUCCESS){
+		::SetLastError(vResult.first);
+		return nullptr;
 	}
+	return std::move(pFile);
 }
 
 // 其他非静态成员函数。

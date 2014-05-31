@@ -85,7 +85,7 @@ namespace Impl {
 				continue;
 			}
 			// 这个值是该码点剩余的字节数，不包含刚刚读取的。
-			const auto uAddnlBytes = (std::size_t)__builtin_clzl(~(u32CodePoint << (std::numeric_limits<unsigned int>::digits - 7)) | 1);
+			const std::size_t uAddnlBytes = CountLeadingZeroes(~(u32CodePoint << (std::numeric_limits<unsigned int>::digits - 7)) | 1);
 			// UTF-8 理论上最长可以编码 6 个字符，但是标准化以后只能使用 4 个。
 			if(uAddnlBytes - 1 > 2){ // 0 - 3
 				// 按照 ISO-8859-1 映射到 U+0080 - U+00FF。
@@ -100,7 +100,7 @@ namespace Impl {
 				break;
 			}
 
-			u32CodePoint &= 0x7Fu >> uAddnlBytes;
+			u32CodePoint &= (0x7Fu >> uAddnlBytes);
 			const auto pchCodeEnd = pchCur + uAddnlBytes;
 			while(pchCur != pchCodeEnd){
 				const auto uchCur = (std::uint8_t)*(pchCur++);
@@ -177,7 +177,7 @@ namespace Impl {
 
 		jEncode:
 			// 这个值是该码点的总字节数减一。
-			const auto uAddnlBytes = (std::size_t)(29 - __builtin_clzl(u32CodePoint | 1)) / 5;
+			const auto uAddnlBytes = (std::size_t)(29 - CountLeadingZeroes(u32CodePoint | 1)) / 5;
 			if(uAddnlBytes == 0){
 				ASSERT(u32CodePoint <= 0x7Fu);
 

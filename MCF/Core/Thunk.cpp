@@ -104,7 +104,7 @@ std::shared_ptr<const void> AllocateThunk(const void *pInit, std::size_t uSize){
 		if(g_uPageOffsetBits == 0){
 			SYSTEM_INFO vSystemInfo;
 			::GetSystemInfo(&vSystemInfo);
-			g_uPageOffsetBits = (std::size_t)__builtin_ctz(vSystemInfo.dwPageSize) + 1;
+			g_uPageOffsetBits = CountTrailingZeroes(vSystemInfo.dwPageSize) + 1u;
 		}
 
 		// 先挖坑，否则后面就没法 noexcept 了。

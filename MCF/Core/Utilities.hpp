@@ -289,9 +289,8 @@ inline void Destruct(Object_t *pObject)
 }
 
 //----------------------------------------------------------------------------
-// CountLeadingZeroes / CountTrailingZeroes
+// CountLeadingZeroes
 //----------------------------------------------------------------------------
-
 inline unsigned char CountLeadingZeroes(unsigned long long ull) noexcept {
 	return (unsigned char)__builtin_clzll(ull);
 }
@@ -301,7 +300,18 @@ inline unsigned char CountLeadingZeroes(unsigned long ul) noexcept {
 inline unsigned char CountLeadingZeroes(unsigned int u) noexcept {
 	return (unsigned char)__builtin_clz(u);
 }
+inline unsigned char CountLeadingZeroes(unsigned short ush) noexcept {
+	return (unsigned char)__builtin_clz(ush)
+		- (sizeof(unsigned int) - sizeof(unsigned short)) * (std::size_t)__CHAR_BIT__;
+}
+inline unsigned char CountLeadingZeroes(unsigned char by) noexcept {
+	return (unsigned char)__builtin_clz(by)
+		- (sizeof(unsigned int) - sizeof(unsigned char)) * (std::size_t)__CHAR_BIT__;
+}
 
+//----------------------------------------------------------------------------
+// CountTrailingZeroes
+//----------------------------------------------------------------------------
 inline unsigned char CountTrailingZeroes(unsigned long long ull) noexcept {
 	return (unsigned char)__builtin_ctzll(ull);
 }
@@ -310,6 +320,28 @@ inline unsigned char CountTrailingZeroes(unsigned long ul) noexcept {
 }
 inline unsigned char CountTrailingZeroes(unsigned int u) noexcept {
 	return (unsigned char)__builtin_ctz(u);
+}
+inline unsigned char CountTrailingZeroes(unsigned short ush) noexcept {
+	return (unsigned char)__builtin_ctz(ush);
+}
+inline unsigned char CountTrailingZeroes(unsigned char by) noexcept {
+	return (unsigned char)__builtin_ctz(by);
+}
+
+//----------------------------------------------------------------------------
+// ByteSwap
+//----------------------------------------------------------------------------
+inline std::uint64_t ByteSwap(std::uint64_t u64) noexcept {
+	return __builtin_bswap64(u64);
+}
+inline std::uint32_t ByteSwap(std::uint32_t u32) noexcept {
+	return __builtin_bswap32(u32);
+}
+inline std::uint16_t ByteSwap(std::uint16_t u16) noexcept {
+	return __builtin_bswap16(u16);
+}
+inline std::uint8_t ByteSwap(std::uint8_t u8) noexcept {
+	return u8;
 }
 
 }

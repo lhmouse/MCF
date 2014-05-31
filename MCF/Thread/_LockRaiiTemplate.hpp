@@ -10,7 +10,7 @@
 
 namespace MCF {
 
-class LockRaiiTemplateBase {
+class LockRaiiTemplateBase : NO_COPY, ABSTRACT {
 protected:
 	std::size_t xm_uLockCount;
 
@@ -63,7 +63,7 @@ public:
 
 namespace Impl {
 	template<class Mutex_t, std::size_t LOCK_TYPE = 0>
-	class LockRaiiTemplate : public LockRaiiTemplateBase {
+	class LockRaiiTemplate : CONCRETE(LockRaiiTemplateBase) {
 	private:
 		Mutex_t *xm_pOwner;
 
@@ -75,28 +75,10 @@ namespace Impl {
 				Lock();
 			}
 		}
-		LockRaiiTemplate(const LockRaiiTemplate &rhs) noexcept
-			: xm_pOwner(rhs.xm_pOwner)
-		{
-			if(rhs.IsLocking()){
-				Lock();
-			}
-		}
 		LockRaiiTemplate(LockRaiiTemplate &&rhs) noexcept
 			: xm_pOwner(rhs.xm_pOwner)
 		{
 			xm_uLockCount = std::exchange(rhs.xm_uLockCount, 0u);
-		}
-		LockRaiiTemplate &operator=(const LockRaiiTemplate &rhs) noexcept {
-			if(this != &rhs){
-				UnlockAll();
-
-				xm_pOwner = rhs.xm_pOwner;
-				if(rhs.IsLocking()){
-					Lock();
-				}
-			}
-			return *this;
 		}
 		LockRaiiTemplate &operator=(LockRaiiTemplate &&rhs) noexcept {
 			if(this != &rhs){

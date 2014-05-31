@@ -81,13 +81,21 @@ namespace Impl {
 	struct ConcreteBase : public Base_t {
 		static_assert(std::is_base_of<AbstractBase, Base_t>::value, "Concreting from non-abstract class?");
 
+		template<typename... Params_t>
+		ConcreteBase(Params_t &&... vParams)
+			noexcept(std::is_nothrow_constructible<Base_t, Params_t &&...>::value)
+			: Base_t(std::forward<Params_t>(vParams)...)
+		{
+		}
+
 		virtual void MCF_Impl_PureAbstractFunction_() override {
 		}
 	};
 }
 
-#define ABSTRACT		private ::MCF::Impl::AbstractBase
-#define CONCRETE(type)	public ::MCF::Impl::ConcreteBase<MACRO_TYPE(type)>
+#define ABSTRACT				private ::MCF::Impl::AbstractBase
+#define CONCRETE(type)			public ::MCF::Impl::ConcreteBase<MACRO_TYPE(type)>
+#define CONCRETE_BASE(type)		::MCF::Impl::ConcreteBase<MACRO_TYPE(type)>
 
 //----------------------------------------------------------------------------
 // Bail

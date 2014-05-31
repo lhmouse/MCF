@@ -154,7 +154,9 @@ std::shared_ptr<const void> AllocateThunk(const void *pInit, std::size_t uSize){
 				DWORD dwOldProtect;
 				// 由于其他 thunk 可能共享了当前内存页，所以不能设置为 PAGE_READWRITE。
 				::VirtualProtect(pbyThunk, uThunkSize, PAGE_EXECUTE_READWRITE, &dwOldProtect);
-				std::fill_n(std::copy_n((const unsigned char *)pInit, uSize, pbyThunk), uThunkSize - uSize, 0xCC);
+				auto pbyWrite = pbyThunk;
+				pbyWrite = CopyN(pbyWrite, (const unsigned char *)pInit, uSize);
+				pbyWrite = FillN(pbyWrite, uThunkSize - uSize, 0xCC);
 				::VirtualProtect(pbyThunk, uThunkSize, PAGE_EXECUTE_READ, &dwOldProtect);
 			}
 			FORCE_NOEXCEPT_END

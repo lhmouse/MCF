@@ -51,7 +51,7 @@ public:
 			NULL
 		));
 		if(!xm_hFile){
-			return std::make_pair(::GetLastError(), L"::CreateFileW() 失败。"_WSO);
+			return std::make_pair(::GetLastError(), L"::CreateFileW() 失败。"_wso);
 		}
 		return std::make_pair((unsigned long)ERROR_SUCCESS, nullptr);
 	}
@@ -61,7 +61,7 @@ public:
 
 		LARGE_INTEGER liFileSize;
 		if(!::GetFileSizeEx(xm_hFile.Get(), &liFileSize)){
-			MCF_THROW(::GetLastError(), L"::GetFileSizeEx() 失败。"_WSO);
+			MCF_THROW(::GetLastError(), L"::GetFileSizeEx() 失败。"_wso);
 		}
 		return (std::uint64_t)liFileSize.QuadPart;
 	}
@@ -69,15 +69,15 @@ public:
 		ASSERT(xm_hFile);
 
 		if(u64NewSize > (std::uint64_t)LLONG_MAX){
-			MCF_THROW(ERROR_INVALID_PARAMETER, L"调整文件大小时指定的大小无效。"_WSO);
+			MCF_THROW(ERROR_INVALID_PARAMETER, L"调整文件大小时指定的大小无效。"_wso);
 		}
 		LARGE_INTEGER liNewSize;
 		liNewSize.QuadPart = (long long)u64NewSize;
 		if(!::SetFilePointerEx(xm_hFile.Get(), liNewSize, nullptr, FILE_BEGIN)){
-			MCF_THROW(::GetLastError(), L"::SetFilePointerEx() 失败。"_WSO);
+			MCF_THROW(::GetLastError(), L"::SetFilePointerEx() 失败。"_wso);
 		}
 		if(!::SetEndOfFile(xm_hFile.Get())){
-			MCF_THROW(::GetLastError(), L"::SetEndOfFile() 失败。"_WSO);
+			MCF_THROW(::GetLastError(), L"::SetEndOfFile() 失败。"_wso);
 		}
 	}
 
@@ -114,7 +114,7 @@ public:
 			std::rethrow_exception(ep);
 		}
 		if(!bSucceeds){
-			MCF_THROW(vApcResult.dwErrorCode, L"::ReadFileEx() 失败。"_WSO);
+			MCF_THROW(vApcResult.dwErrorCode, L"::ReadFileEx() 失败。"_wso);
 		}
 
 		std::size_t uBytesRead = vApcResult.dwBytesTransferred;
@@ -130,7 +130,7 @@ public:
 				xm_hFile.Get(), (unsigned char *)pBuffer + uBytesRead, dwBytesToReadThisTime,
 				&vOverlapped, &xAioCallback
 			)){
-				MCF_THROW(vApcResult.dwErrorCode, L"::ReadFileEx() 失败。"_WSO);
+				MCF_THROW(vApcResult.dwErrorCode, L"::ReadFileEx() 失败。"_wso);
 			}
 			::SleepEx(INFINITE, TRUE);
 
@@ -138,7 +138,7 @@ public:
 				if(vApcResult.dwErrorCode == ERROR_HANDLE_EOF){
 					break;
 				}
-				MCF_THROW(vApcResult.dwErrorCode, L"::ReadFileEx() 失败。"_WSO);
+				MCF_THROW(vApcResult.dwErrorCode, L"::ReadFileEx() 失败。"_wso);
 			}
 			uBytesRead += vApcResult.dwBytesTransferred;
 		}
@@ -177,7 +177,7 @@ public:
 			std::rethrow_exception(ep);
 		}
 		if(!bSucceeds){
-			MCF_THROW(vApcResult.dwErrorCode, L"::WriteFileEx() 失败。"_WSO);
+			MCF_THROW(vApcResult.dwErrorCode, L"::WriteFileEx() 失败。"_wso);
 		}
 
 		std::size_t uBytesWritten = vApcResult.dwBytesTransferred;
@@ -193,12 +193,12 @@ public:
 				xm_hFile.Get(), (const unsigned char *)pBuffer + uBytesWritten, dwBytesToWriteThisTime,
 				&vOverlapped, &xAioCallback
 			)){
-				MCF_THROW(vApcResult.dwErrorCode, L"::WriteFileEx() 失败。"_WSO);
+				MCF_THROW(vApcResult.dwErrorCode, L"::WriteFileEx() 失败。"_wso);
 			}
 			::SleepEx(INFINITE, TRUE);
 
 			if(vApcResult.dwErrorCode != ERROR_SUCCESS){
-				MCF_THROW(vApcResult.dwErrorCode, L"::WriteFileEx() 失败。"_WSO);
+				MCF_THROW(vApcResult.dwErrorCode, L"::WriteFileEx() 失败。"_wso);
 			}
 			uBytesWritten += vApcResult.dwBytesTransferred;
 		}
@@ -208,7 +208,7 @@ public:
 		ASSERT(xm_hFile);
 
 		if(!::FlushFileBuffers(xm_hFile.Get())){
-			MCF_THROW(::GetLastError(), L"::WriteFileEx() 失败。"_WSO);
+			MCF_THROW(::GetLastError(), L"::WriteFileEx() 失败。"_wso);
 		}
 	}
 };

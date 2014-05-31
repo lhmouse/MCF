@@ -37,7 +37,7 @@ public:
 
 	void Send(const void *pData, std::size_t uSize){
 		if(::sendto(xm_sockPeer.Get(), (const char *)pData, (int)uSize, 0, (const SOCKADDR *)&xm_vSockAddr, xm_nSockAddrSize) < 0){
-			MCF_THROW(::GetLastError(), L"::sendto() 失败。"_WSO);
+			MCF_THROW(::GetLastError(), L"::sendto() 失败。"_wso);
 		}
 	}
 };
@@ -65,13 +65,13 @@ std::unique_ptr<UdpSender> UdpSender::Create(const PeerInfo &piServerInfo){
 	const short shFamily = piServerInfo.IsIPv4() ? AF_INET : AF_INET6;
 	Impl::SharedSocket sockServer(::socket(shFamily, SOCK_DGRAM, IPPROTO_UDP));
 	if(!sockServer){
-		MCF_THROW(::GetLastError(), L"::socket() 失败。"_WSO);
+		MCF_THROW(::GetLastError(), L"::socket() 失败。"_wso);
 	}
 
 	SOCKADDR_STORAGE vSockAddr;
 	const int nSockAddrSize = piServerInfo.ToSockAddr(&vSockAddr, sizeof(vSockAddr));
 	if(::connect(sockServer.Get(), (const SOCKADDR *)&vSockAddr, nSockAddrSize)){
-		MCF_THROW(::GetLastError(), L"::connect() 失败。"_WSO);
+		MCF_THROW(::GetLastError(), L"::connect() 失败。"_wso);
 	}
 	return std::make_unique<UdpSenderDelegate>(std::move(sockServer), &vSockAddr, (std::size_t)nSockAddrSize);
 }
@@ -81,19 +81,19 @@ std::unique_ptr<UdpSender> UdpSender::Create(const PeerInfo &piServerInfo, const
 	const short shFamily = piServerInfo.IsIPv4() ? AF_INET : AF_INET6;
 	Impl::SharedSocket sockServer(::socket(shFamily, SOCK_DGRAM, IPPROTO_UDP));
 	if(!sockServer){
-		MCF_THROW(::GetLastError(), L"::socket() 失败。"_WSO);
+		MCF_THROW(::GetLastError(), L"::socket() 失败。"_wso);
 	}
 
 	SOCKADDR_STORAGE vLocalAddr;
 	const int nLocalAddrSize = piLocalInfo.ToSockAddr(&vLocalAddr, sizeof(vLocalAddr));
 	if(::bind(sockServer.Get(), (const SOCKADDR *)&vLocalAddr, nLocalAddrSize)){
-		MCF_THROW(::GetLastError(), L"::bind() 失败。"_WSO);
+		MCF_THROW(::GetLastError(), L"::bind() 失败。"_wso);
 	}
 
 	SOCKADDR_STORAGE vSockAddr;
 	const int nSockAddrSize = piServerInfo.ToSockAddr(&vSockAddr, sizeof(vSockAddr));
 	if(::connect(sockServer.Get(), (const SOCKADDR *)&vSockAddr, nSockAddrSize)){
-		MCF_THROW(::GetLastError(), L"::connect() 失败。"_WSO);
+		MCF_THROW(::GetLastError(), L"::connect() 失败。"_wso);
 	}
 	return std::make_unique<UdpSenderDelegate>(std::move(sockServer), &vSockAddr, (std::size_t)nSockAddrSize);
 }

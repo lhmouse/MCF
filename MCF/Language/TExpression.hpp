@@ -32,7 +32,7 @@ public:
 
 public:
 	std::pair<ErrorType, const wchar_t *> Parse(const WideStringObserver &wsoData);
-	WideString Export(const WideStringObserver &wsoIndent = L"  "_WSO) const;
+	WideString Export(const WideStringObserver &wsoIndent = L"  "_wso) const;
 };
 
 }

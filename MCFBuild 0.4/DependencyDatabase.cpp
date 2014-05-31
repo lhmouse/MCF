@@ -25,7 +25,7 @@ void DependencyDatabase::LoadFromFile(const MCF::WideString &wcsPath){
 	const auto pFile = MCF::File::Open(wcsPath, true, false, false);
 	const unsigned long long ullFileSize = pFile->GetSize();
 	if(ullFileSize >= MAX_FILE_SIZE){
-		MCF_THROW(ERROR_INVALID_PARAMETER, L"FILE_TOO_LARGE|"_WS + wcsPath);
+		MCF_THROW(ERROR_INVALID_DATA, L"FILE_TOO_LARGE|"_ws + wcsPath);
 	}
 
 	MCF::StreamBuffer sbufData;

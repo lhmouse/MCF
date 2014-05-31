@@ -44,7 +44,7 @@ public:
 				break;
 			}
 			if(nBytesRead < 0){
-				MCF_THROW(::GetLastError(), L"::send() 失败。"_WSO);
+				MCF_THROW(::GetLastError(), L"::send() 失败。"_wso);
 			}
 			pCur += nBytesRead;
 
@@ -62,7 +62,7 @@ public:
 	void SetNoDelay(bool bNoDelay){
 		const DWORD dwVal = bNoDelay;
 		if(::setsockopt(xm_sockPeer.Get(), IPPROTO_TCP, TCP_NODELAY, (const char *)&dwVal, sizeof(dwVal))){
-			MCF_THROW(::GetLastError(), L"::setsockopt() 失败。"_WSO);
+			MCF_THROW(::GetLastError(), L"::setsockopt() 失败。"_wso);
 		}
 	}
 	void Write(const void *pData, std::size_t uSize){
@@ -78,7 +78,7 @@ public:
 				break;
 			}
 			if(nBytesWritten < 0){
-				MCF_THROW(::GetLastError(), L"::send() 失败。"_WSO);
+				MCF_THROW(::GetLastError(), L"::send() 失败。"_wso);
 			}
 			pCur += nBytesWritten;
 		}
@@ -111,13 +111,13 @@ std::unique_ptr<TcpPeer> TcpPeer::Connect(const PeerInfo &piServerInfo){
 	const short shFamily = piServerInfo.IsIPv4() ? AF_INET : AF_INET6;
 	Impl::UniqueSocket sockServer(::socket(shFamily, SOCK_STREAM, IPPROTO_TCP));
 	if(!sockServer){
-		MCF_THROW(::GetLastError(), L"::socket() 失败。"_WSO);
+		MCF_THROW(::GetLastError(), L"::socket() 失败。"_wso);
 	}
 
 	SOCKADDR_STORAGE vSockAddr;
 	const int nSockAddrSize = piServerInfo.ToSockAddr(&vSockAddr, sizeof(vSockAddr));
 	if(::connect(sockServer.Get(), (const SOCKADDR *)&vSockAddr, nSockAddrSize)){
-		MCF_THROW(::GetLastError(), L"::connect() 失败。"_WSO);
+		MCF_THROW(::GetLastError(), L"::connect() 失败。"_wso);
 	}
 	return std::make_unique<TcpPeerDelegate>(std::move(sockServer), &vSockAddr, (std::size_t)nSockAddrSize);
 }
@@ -127,19 +127,19 @@ std::unique_ptr<TcpPeer> TcpPeer::Connect(const PeerInfo &piServerInfo, const Pe
 	const short shFamily = piServerInfo.IsIPv4() ? AF_INET : AF_INET6;
 	Impl::UniqueSocket sockServer(::socket(shFamily, SOCK_STREAM, IPPROTO_TCP));
 	if(!sockServer){
-		MCF_THROW(::GetLastError(), L"::socket() 失败。"_WSO);
+		MCF_THROW(::GetLastError(), L"::socket() 失败。"_wso);
 	}
 
 	SOCKADDR_STORAGE vLocalAddr;
 	const int nLocalAddrSize = piLocalInfo.ToSockAddr(&vLocalAddr, sizeof(vLocalAddr));
 	if(::bind(sockServer.Get(), (const SOCKADDR *)&vLocalAddr, nLocalAddrSize)){
-		MCF_THROW(::GetLastError(), L"::bind() 失败。"_WSO);
+		MCF_THROW(::GetLastError(), L"::bind() 失败。"_wso);
 	}
 
 	SOCKADDR_STORAGE vSockAddr;
 	const int nSockAddrSize = piServerInfo.ToSockAddr(&vSockAddr, sizeof(vSockAddr));
 	if(::connect(sockServer.Get(), (const SOCKADDR *)&vSockAddr, nSockAddrSize)){
-		MCF_THROW(::GetLastError(), L"::connect() 失败。"_WSO);
+		MCF_THROW(::GetLastError(), L"::connect() 失败。"_wso);
 	}
 	return std::make_unique<TcpPeerDelegate>(std::move(sockServer), &vSockAddr, (std::size_t)nSockAddrSize);
 }

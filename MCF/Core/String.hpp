@@ -200,10 +200,10 @@ private:
 		ASSERT_NOEXCEPT_BEGIN
 		{
 			if(uRemovedBegin != 0){
-				__builtin_memmove(pchNewBuffer + uFirstOffset, pchOldBuffer, uRemovedBegin * sizeof(Char_t));
+				std::memmove(pchNewBuffer + uFirstOffset, pchOldBuffer, uRemovedBegin * sizeof(Char_t));
 			}
 			if(uOldLength != uRemovedEnd){
-				__builtin_memmove(pchNewBuffer + uThirdOffset, pchOldBuffer + uRemovedEnd, (uOldLength - uRemovedEnd) * sizeof(Char_t));
+				std::memmove(pchNewBuffer + uThirdOffset, pchOldBuffer + uRemovedEnd, (uOldLength - uRemovedEnd) * sizeof(Char_t));
 			}
 
 			if(pchNewBuffer != pchOldBuffer){
@@ -364,8 +364,7 @@ public:
 	}
 
 	void Assign(Char_t ch, std::size_t uCount = 1){
-		const auto pchWrite = xChopAndSplice(0, 0, 0, uCount);
-		std::fill_n(pchWrite, uCount, ch);
+		FillN(xChopAndSplice(0, 0, 0, uCount), uCount, ch);
 		xSetSize(uCount);
 	}
 	void Assign(const Char_t *pszBegin){
@@ -377,8 +376,7 @@ public:
 	}
 	template<class Iterator_t>
 	void Assign(Iterator_t itBegin, std::size_t uLength){
-		const auto pchWrite = xChopAndSplice(0, 0, 0, uLength);
-		std::copy_n(itBegin, uLength, pchWrite);
+		CopyN(xChopAndSplice(0, 0, 0, uLength), itBegin, uLength);
 		xSetSize(uLength);
 	}
 	void Assign(const Observer &obs){
@@ -405,8 +403,7 @@ public:
 
 	void Append(Char_t ch, std::size_t uCount = 1){
 		const std::size_t uOldLength = GetLength();
-		const auto pchWrite = xChopAndSplice(uOldLength, uOldLength, 0, uOldLength + uCount);
-		std::fill_n(pchWrite, uCount, ch);
+		FillN(xChopAndSplice(uOldLength, uOldLength, 0, uOldLength + uCount), uCount, ch);
 		xSetSize(uOldLength + uCount);
 	}
 	void Append(const Char_t *pszBegin){
@@ -419,8 +416,7 @@ public:
 	template<class Iterator_t>
 	void Append(Iterator_t itBegin, std::size_t uLength){
 		const std::size_t uOldLength = GetLength();
-		const auto pchWrite = xChopAndSplice(uOldLength, uOldLength, 0, uOldLength + uLength);
-		std::copy_n(itBegin, uLength, pchWrite);
+		CopyN(xChopAndSplice(uOldLength, uOldLength, 0, uOldLength + uLength), itBegin, uLength);
 		xSetSize(uOldLength + uLength);
 	}
 	void Append(const Observer &obs){
@@ -433,7 +429,7 @@ public:
 		if(&rhs == this){
 			const std::size_t uOldLength = GetLength();
 			const auto pchWrite = xChopAndSplice(uOldLength, uOldLength, 0, uOldLength * 2);
-			std::copy_n(pchWrite - uOldLength, uOldLength, pchWrite);
+			Copy(pchWrite, pchWrite - uOldLength, pchWrite);
 			xSetSize(uOldLength * 2);
 		} else {
 			Append(rhs.GetBegin(), rhs.GetEnd());
@@ -495,8 +491,7 @@ public:
 
 	void Unshift(Char_t ch, std::size_t uCount = 1){
 		const std::size_t uOldLength = GetLength();
-		const auto pchWrite = xChopAndSplice(0, 0, 0, uCount);
-		std::fill_n(pchWrite, uCount, ch);
+		FillN(xChopAndSplice(0, 0, 0, uCount), uCount, ch);
 		xSetSize(uOldLength + uCount);
 	}
 	void Unshift(const Char_t *pszBegin){
@@ -509,8 +504,7 @@ public:
 	template<class Iterator_t>
 	void Unshift(Iterator_t itBegin, std::size_t uLength){
 		const std::size_t uOldLength = GetLength();
-		const auto pchWrite = xChopAndSplice(0, 0, 0, uLength);
-		std::copy_n(itBegin, uLength, pchWrite);
+		CopyN(xChopAndSplice(0, 0, 0, uLength), itBegin, uLength);
 		xSetSize(uOldLength + uLength);
 	}
 	void Unshift(const Observer &obs){
@@ -542,8 +536,8 @@ public:
 		ASSERT_MSG(uCount <= GetLength(), L"删除的字符数太多。");
 
 		const std::size_t uOldLength = GetLength();
-		const auto pchBuffer = GetBegin();
-		std::copy(pchBuffer + uCount, pchBuffer + uOldLength, pchBuffer);
+		const auto pchBegin = GetBegin();
+		Copy(pchBegin, pchBegin + uCount, pchBegin + uOldLength);
 		xSetSize(uOldLength - uCount);
 	}
 
@@ -579,12 +573,10 @@ public:
 		const auto uRemovedEnd = (std::size_t)(obsRemoved.GetEnd() - obsCurrent.GetBegin());
 
 		const auto pchWrite = xChopAndSplice(
-			uRemovedBegin,
-			uRemovedEnd,
-			0,
-			uRemovedBegin + uCount
+			uRemovedBegin, uRemovedEnd,
+			0, uRemovedBegin + uCount
 		);
-		std::fill_n(pchWrite, uCount, chReplacement);
+		FillN(pchWrite, uCount, chReplacement);
 		xSetSize(uRemovedBegin + uCount + (uOldLength - uRemovedEnd));
 	}
 	template<class Iterator_t>
@@ -605,21 +597,17 @@ public:
 			// 待替换字符串和当前字符串重叠。
 			String strTemp(*this);
 			const auto pchWrite = strTemp.xChopAndSplice(
-				uRemovedBegin,
-				uRemovedEnd,
-				0,
-				uRemovedBegin + uRepLen
+				uRemovedBegin, uRemovedEnd,
+				0, uRemovedBegin + uRepLen
 			);
-			std::copy_n(itRepBegin, uRepLen, pchWrite);
+			CopyN(pchWrite, itRepBegin, uRepLen);
 			Swap(strTemp);
 		} else {
 			const auto pchWrite = xChopAndSplice(
-				uRemovedBegin,
-				uRemovedEnd,
-				0,
-				uRemovedBegin + uRepLen
+				uRemovedBegin, uRemovedEnd,
+				0, uRemovedBegin + uRepLen
 			);
-			std::copy_n(itRepBegin, uRepLen, pchWrite);
+			CopyN(pchWrite, itRepBegin, uRepLen);
 		}
 		xSetSize(uRemovedBegin + uRepLen + (uOldLength - uRemovedEnd));
 	}
@@ -869,11 +857,11 @@ typedef String<char32_t,	StringEncoding::UTF32>	Utf32String;
 
 }
 
-const MCF::AnsiString	&operator""_AS		(const char *pchStr,		std::size_t uLength);
-const MCF::WideString	&operator""_WS		(const wchar_t *pchStr,		std::size_t uLength);
+const MCF::AnsiString	&operator""_as		(const char *pchStr,		std::size_t uLength);
+const MCF::WideString	&operator""_ws		(const wchar_t *pchStr,		std::size_t uLength);
 
-const MCF::Utf8String	&operator""_U8S		(const char *pchStr,		std::size_t uLength);
-const MCF::Utf16String	&operator""_U16S	(const char16_t *pchStr,	std::size_t uLength);
-const MCF::Utf32String	&operator""_U32S	(const char32_t *pchStr,	std::size_t uLength);
+const MCF::Utf8String	&operator""_u8s		(const char *pchStr,		std::size_t uLength);
+const MCF::Utf16String	&operator""_u16s	(const char16_t *pchStr,	std::size_t uLength);
+const MCF::Utf32String	&operator""_u32s	(const char32_t *pchStr,	std::size_t uLength);
 
 #endif

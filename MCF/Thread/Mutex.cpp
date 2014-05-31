@@ -23,7 +23,7 @@ public:
 			xm_hMutex.Reset(::CreateMutexW(nullptr, false, wsoName.GetNullTerminated<MAX_PATH>().GetData()));
 		}
 		if(!xm_hMutex){
-			MCF_THROW(::GetLastError(), L"CreateMutexW() 失败。"_WSO);
+			MCF_THROW(::GetLastError(), L"CreateMutexW() 失败。"_wso);
 		}
 	}
 

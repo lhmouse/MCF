@@ -54,16 +54,16 @@ namespace Impl {
 		VVector<wchar_t> &vecUnified,
 		const StringObserver<wchar_t> &soSrc
 	) const {
-		const auto pwcWrite = vecUnified.ResizeMore(soSrc.GetSize());
-		std::copy(soSrc.GetBegin(), soSrc.GetEnd(), pwcWrite);
+		const auto uSize = soSrc.GetSize();
+		CopyN(vecUnified.ResizeMore(uSize), soSrc.GetBegin(), uSize);
 	}
 	template<>
 	void UnicodeConv<wchar_t, StringEncoding::UTF16>::operator()(
 		String<wchar_t, StringEncoding::UTF16> &strDst,
 		const VVector<wchar_t> &vecUnified
 	) const {
-		const auto pwcWrite = strDst.ResizeMore(vecUnified.GetSize());
-		std::copy(vecUnified.GetBegin(), vecUnified.GetEnd(), pwcWrite);
+		const auto uSize = vecUnified.GetSize();
+		CopyN(strDst.ResizeMore(uSize), vecUnified.GetBegin(), uSize);
 	}
 
 	// https://en.wikipedia.org/wiki/UTF-8
@@ -197,16 +197,16 @@ namespace Impl {
 		VVector<wchar_t> &vecUnified,
 		const StringObserver<char16_t> &soSrc
 	) const {
-		const auto pwcWrite = vecUnified.ResizeMore(soSrc.GetSize());
-		std::copy(soSrc.GetBegin(), soSrc.GetEnd(), pwcWrite);
+		const auto uSize = soSrc.GetSize();
+		CopyN(vecUnified.ResizeMore(uSize), soSrc.GetBegin(), uSize);
 	}
 	template<>
 	void UnicodeConv<char16_t, StringEncoding::UTF16>::operator()(
 		String<char16_t, StringEncoding::UTF16> &strDst,
 		const VVector<wchar_t> &vecUnified
 	) const {
-		const auto pwcWrite = strDst.ResizeMore(vecUnified.GetSize());
-		std::copy(vecUnified.GetBegin(), vecUnified.GetEnd(), pwcWrite);
+		const auto uSize = strDst.GetSize();
+		CopyN(strDst.ResizeMore(uSize), vecUnified.GetBegin(), uSize);
 	}
 
 	// https://en.wikipedia.org/wiki/UTF-16
@@ -353,9 +353,9 @@ DEFINE_STRING_SERDES(Utf32String)
 		).first->second;	\
 	}
 
-DEFINE_LITERAL_OPERATOR(_AS,	char,		ANSI)
-DEFINE_LITERAL_OPERATOR(_WS,	wchar_t,	UTF16)
+DEFINE_LITERAL_OPERATOR(_as,	char,		ANSI)
+DEFINE_LITERAL_OPERATOR(_ws,	wchar_t,	UTF16)
 
-DEFINE_LITERAL_OPERATOR(_U8S,	char,		UTF8)
-DEFINE_LITERAL_OPERATOR(_U16S,	char16_t,	UTF16)
-DEFINE_LITERAL_OPERATOR(_U32S,	char32_t,	UTF32)
+DEFINE_LITERAL_OPERATOR(_u8s,	char,		UTF8)
+DEFINE_LITERAL_OPERATOR(_u16s,	char16_t,	UTF16)
+DEFINE_LITERAL_OPERATOR(_u32s,	char32_t,	UTF32)

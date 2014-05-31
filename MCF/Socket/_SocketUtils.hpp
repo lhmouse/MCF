@@ -31,7 +31,7 @@ namespace Impl {
 		WSAInitializer(){
 			WSADATA vWsaData;
 			if(::WSAStartup(MAKEWORD(2, 2), &vWsaData)){
-				MCF_THROW(::GetLastError(), L"::WSAStartup() 失败。"_WSO);
+				MCF_THROW(::GetLastError(), L"::WSAStartup() 失败。"_wso);
 			}
 		}
 		~WSAInitializer() noexcept {

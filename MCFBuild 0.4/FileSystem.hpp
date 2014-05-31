@@ -5,11 +5,14 @@
 #define MCFBUILD_FILE_SYSTEM_HPP_
 
 #include "Model.hpp"
+#include "../MCF/Core/VVector.hpp"
 #include "../MCF/Core/String.hpp"
 
 namespace MCFBuild {
 
-extern bool GetFileSha256(Sha256 &shaRet, const MCF::WideString &wcsPath);
+extern bool GetFileContents(MCF::Vector<unsigned char> &vecData, const MCF::WideString &wcsPath);
+// 如果不要文件内容 pvecData 可以置空。
+extern bool GetFileContentsAndSha256(MCF::Vector<unsigned char> *pvecData, Sha256 &shaChecksum, const MCF::WideString &wcsPath);
 
 extern MCF::WideString GetFullPath(const MCF::WideString &wcsSrc);
 

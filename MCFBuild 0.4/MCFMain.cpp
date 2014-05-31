@@ -12,7 +12,7 @@ using namespace MCFBuild;
 extern "C" unsigned MCFMain()
 try {
 	Sha256 sha;
-	bool ret = GetFileSha256(sha, L"E:\\Desktop\\HttpClient.cpp"_WS);
+	bool ret = GetFileContentsAndSha256(nullptr, sha, L"E:\\Desktop\\HttpClient.cpp"_ws);
 	std::printf("%d\n", ret);
 	for(auto by : sha){
 		std::printf("%02hhX", by);

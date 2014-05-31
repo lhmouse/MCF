@@ -7,13 +7,27 @@
 #include "heap.h"
 #include "heap_dbg.h"
 #include "../ext/unref_param.h"
-
-#define USE_DL_PREFIX
-#include "../../External/dlmalloc/malloc.h"
-
+#include <stdlib.h>
 #include <string.h>
 #include <limits.h>
 #include <windows.h>
+
+#ifndef __MCF_CRT_NO_DLMALLOC
+
+#	define USE_DL_PREFIX
+#	include "../../External/dlmalloc/malloc.h"
+
+#	define	MCF_MALLOC(cb)		dlmalloc(cb)
+#	define	MCF_REALLOC(p, cb)	dlrealloc((p), (cb))
+#	define	MCF_FREE(p)			dlfree(p)
+
+#else
+
+#	define	MCF_MALLOC(cb)		HeapAlloc(GetProcessHeap(), 0, (cb))
+#	define	MCF_REALLOC(p, cb)	HeapReAlloc(GetProcessHeap(), 0, (p), (cb))
+#	define	MCF_FREE(p)			HeapFree(GetProcessHeap(), 0, (p))
+
+#endif
 
 static CRITICAL_SECTION			g_csHeapLock;
 static MCF_BAD_ALLOC_HANDLER	g_vBadAllocHandler;
@@ -51,7 +65,7 @@ unsigned char *__MCF_CRT_HeapAlloc(size_t uSize, const void *pRetAddr){
 	unsigned char *pRet = NULL;
 	EnterCriticalSection(&g_csHeapLock);
 		do {
-			unsigned char *const pRaw = dlmalloc(uRawSize);
+			unsigned char *const pRaw = MCF_MALLOC(uRawSize);
 			if(pRaw){
 #ifdef __MCF_CRT_HEAPDBG_ON
 				__MCF_CRT_HeapDbgAddGuardsAndRegister(&pRet, pRaw, uSize, pRetAddr);
@@ -87,7 +101,7 @@ unsigned char *__MCF_CRT_HeapReAlloc(void *pBlock /* NON-NULL */, size_t uSize, 
 #endif
 
 		do {
-			unsigned char *const pRaw = dlrealloc(pRawOriginal, uRawSize);
+			unsigned char *const pRaw = MCF_REALLOC(pRawOriginal, uRawSize);
 			if(pRaw){
 #ifdef __MCF_CRT_HEAPDBG_ON
 				const size_t uOriginalSize = pBlockInfo->uSize;
@@ -120,7 +134,7 @@ void __MCF_CRT_HeapFree(void *pBlock /* NON-NULL */, const void *pRetAddr){
 
 		unsigned char *const pRaw = pBlock;
 #endif
-		dlfree(pRaw);
+		MCF_FREE(pRaw);
 	LeaveCriticalSection(&g_csHeapLock);
 }
 

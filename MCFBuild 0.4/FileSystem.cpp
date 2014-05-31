@@ -37,7 +37,7 @@ bool GetFileSha256(Sha256 &shaRet, const MCF::WideString &wcsPath){
 		}
 		shaHasher.Update(pbyCurBuffer, uBytesInBuffer);
 	}
-	shaHasher.Finalize(shaRet.abyChecksum);
+	shaHasher.Finalize(*(unsigned char (*)[32])shaRet.data());
 	return true;
 }
 

@@ -5,13 +5,14 @@
 #ifndef MCF_CRT_HEAP_DBG_H_
 #define MCF_CRT_HEAP_DBG_H_
 
+#include "_crtdef.h"
+
 #if !defined(__MCF_CRT_HEAPDBG_ON) && !defined(NDEBUG)
 #	define __MCF_CRT_HEAPDBG_ON		1
 #endif
 
 #ifdef __MCF_CRT_HEAPDBG_ON
 
-#include "_crtdef.h"
 #include "avl_tree.h"
 
 __MCF_EXTERN_C_BEGIN

@@ -9,15 +9,16 @@
 #include <cstdio>
 using namespace MCFBuild;
 
-int main()
+extern "C" unsigned MCFMain()
 try {
 	Sha256 sha;
 	bool ret = GetFileSha256(sha, L"E:\\Desktop\\HttpClient.cpp"_WS);
 	std::printf("%d\n", ret);
-	for(auto by : sha.abyChecksum){
+	for(auto by : sha){
 		std::printf("%02hhX", by);
 	}
 	std::putchar('\n');
+	return 0;
 } catch(std::exception &e){
 	std::printf("exception '%s'\n", e.what());
 	auto *const p = dynamic_cast<const MCF::Exception *>(&e);

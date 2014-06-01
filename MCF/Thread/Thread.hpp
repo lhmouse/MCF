@@ -8,6 +8,7 @@
 #include "../Core/Utilities.hpp"
 #include <functional>
 #include <memory>
+#include <exception>
 #include <cstddef>
 
 namespace MCF {
@@ -19,6 +20,8 @@ public:
 public:
 	bool WaitTimeout(unsigned long long ullMilliSeconds) const noexcept;
 	void Wait() const noexcept;
+
+	std::exception_ptr JoinNoThrow() const;
 	void Join() const; // 如果线程中有被捕获的异常，抛出异常。
 
 	bool IsAlive() const noexcept;

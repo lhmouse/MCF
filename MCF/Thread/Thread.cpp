@@ -52,11 +52,9 @@ public:
 			ullMilliSeconds
 		);
 	}
-	void Join() const {
+	std::exception_ptr JoinNoThrow() const {
 		WaitTimeout(WAIT_FOREVER);
-		if(xm_pException){
-			std::rethrow_exception(xm_pException);
-		}
+		return xm_pException; // 不要 move()。
 	}
 
 	unsigned long GetThreadId() const noexcept {
@@ -107,10 +105,17 @@ bool Thread::WaitTimeout(unsigned long long ullMilliSeconds) const noexcept {
 void Thread::Wait() const noexcept {
 	WaitTimeout(WAIT_FOREVER);
 }
-void Thread::Join() const {
+
+std::exception_ptr Thread::JoinNoThrow() const {
 	ASSERT(dynamic_cast<const ThreadDelegate *>(this));
 
-	((const ThreadDelegate *)this)->Join();
+	return ((const ThreadDelegate *)this)->JoinNoThrow();
+}
+void Thread::Join() const {
+	const auto pException = JoinNoThrow();
+	if(pException){
+		std::rethrow_exception(pException);
+	}
 }
 
 bool Thread::IsAlive() const noexcept {

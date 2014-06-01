@@ -7,29 +7,48 @@
 
 #include "CriticalSection.hpp"
 #include "../Core/Utilities.hpp"
+#include <utility>
+#include <type_traits>
 #include <cstddef>
 
 namespace MCF {
 
+namespace Impl {
+	template<typename Ty, typename = void>
+	struct ForwardArrowOperator {
+		auto operator()(Ty &vSrc) const noexcept {
+			return std::addressof(vSrc);
+		}
+	};
+	template<typename Ty>
+	struct ForwardArrowOperator<
+		Ty, decltype(std::declval<Ty>().operator->(), (void)0)
+	>{
+		auto operator()(Ty &vSrc) const noexcept {
+			return vSrc.operator->();
+		}
+	};
+}
+
 template<class Object_t>
 class MonitorPtr : NO_COPY {
 private:
-	template<class Return_t>
+	template<typename ForwardAs_t>
 	class xMonitorHolder : NO_COPY {
 		friend MonitorPtr;
 
 	private:
-		Return_t *const xm_pObject;
+		Object_t &xm_vObject;
 		CriticalSection::Lock xm_vLock;
 
 	private:
 		explicit xMonitorHolder(MonitorPtr &vMonitorPtr) noexcept
-			: xm_pObject(&(vMonitorPtr.xm_vObject))
+			: xm_vObject(vMonitorPtr.xm_vObject)
 			, xm_vLock(vMonitorPtr.xm_pcsMutex->GetLock())
 		{
 		}
 		xMonitorHolder(xMonitorHolder &&rhs) noexcept
-			: xm_pObject(rhs.xm_pObject)
+			: xm_vObject(rhs.xm_vObject)
 			, xm_vLock(std::move(rhs.xm_vLock))
 		{
 		}
@@ -37,8 +56,8 @@ private:
 		void operator=(xMonitorHolder &&rhs) = delete;
 
 	public:
-		Return_t *operator->() const noexcept {
-			return xm_pObject;
+		auto operator->() const noexcept {
+			return Impl::ForwardArrowOperator<ForwardAs_t>()(xm_vObject);
 		}
 	};
 

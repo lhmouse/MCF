@@ -1,14 +1,46 @@
 #include <MCF/StdMCF.hpp>
 #include <MCF/Core/Exception.hpp>
+#include <MCF/Thread/Thread.hpp>
+#include <MCF/Thread/MonitorPtr.hpp>
 using namespace std;
 using namespace MCF;
 
+struct foo {
+	int i;
+
+	foo()
+		: i(0)
+	{
+	}
+
+	void inc(){
+		puts("pre inc");
+		::Sleep(100);
+		auto tmp = i;
+		::Sleep(100);
+		i = tmp + 1;
+		puts("post inc");
+	}
+};
+
 unsigned int MCFMain()
 try {
-	char str[] = "0123456789";
-	char str2[sizeof(str)] = { };
-	ReverseMoveBackward(end(str2) - 1, begin(str), end(str) - 1);
-	puts(str2);
+	UniqueMonitorPtr<foo> pf(make_unique<foo>());
+
+	vector<shared_ptr<Thread>> v;
+	v.resize(10);
+	for(auto &p : v){
+		p = Thread::Create(
+			[&]{
+				pf->inc();
+			}
+		);
+	}
+	for(auto &p : v){
+		p->Join();
+	}
+	printf("i = %d\n", pf->i);
+
 	return 0;
 } catch(exception &e){
 	printf("exception '%s'\n", e.what());

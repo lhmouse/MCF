@@ -25,15 +25,22 @@ public:
 	NotationPackage *GetPackage(const WideStringObserver &wsoName) noexcept;
 	NotationPackage *CreatePackage(WideString wcsName);
 	bool RemovePackage(const WideStringObserver &wsoName) noexcept;
-	void ClearPackages() noexcept;
 
 	const WideString *GetValue(const WideStringObserver &wsoName) const noexcept;
 	WideString *GetValue(const WideStringObserver &wsoName) noexcept;
 	WideString *CreteValue(WideString wcsName);
 	bool RemoveValue(const WideStringObserver &wsoName) noexcept;
-	void ClearValues() noexcept;
 
-	void Clear() noexcept;
+	const MultiIndexedMap<NotationPackage, WideString> &GetPackages() const noexcept{
+		return xm_mapPackages;
+	}
+	const MultiIndexedMap<WideString, WideString> &GetValues() const noexcept {
+		return xm_mapValues;
+	}
+	void Clear() noexcept {
+		xm_mapPackages.Clear();
+		xm_mapValues.Clear();
+	}
 };
 
 class Notation : public NotationPackage {

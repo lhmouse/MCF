@@ -94,7 +94,7 @@ public:
 //			if(vThreadInfo.m_uReaderRecur == 0){
 				xm_psemExclusive->Wait();
 //			}
-			xm_vWriterLock = std::move(vWriterLock);
+			xm_vWriterLock.Join(std::move(vWriterLock));
 		}
 	}
 	void ReleaseWriterLock() noexcept {

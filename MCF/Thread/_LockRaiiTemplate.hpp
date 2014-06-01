@@ -96,6 +96,18 @@ namespace Impl {
 	private:
 		void xDoLock() const noexcept override;
 		void xDoUnlock() const noexcept override;
+
+	public:
+		void Join(LockRaiiTemplate &&rhs) noexcept {
+			ASSERT(xm_pOwner == rhs.xm_pOwner);
+
+			xm_uLockCount += std::exchange(rhs.xm_uLockCount, 0u);
+		}
+
+		void Swap(LockRaiiTemplate &rhs) noexcept {
+			std::swap(xm_pOwner, rhs.xm_pOwner);
+			std::swap(xm_uLockCount, rhs.xm_uLockCount);
+		}
 	};
 }
 

@@ -221,9 +221,6 @@ bool NotationPackage::RemovePackage(const WideStringObserver &wsoName) noexcept 
 	xm_mapPackages.Erase(pNode);
 	return true;
 }
-void NotationPackage::ClearPackages() noexcept {
-	xm_mapPackages.Clear();
-}
 
 const WideString *NotationPackage::GetValue(const WideStringObserver &wsoName) const noexcept {
 	const auto pNode = xm_mapValues.Find<0>(wsoName);
@@ -253,14 +250,6 @@ bool NotationPackage::RemoveValue(const WideStringObserver &wsoName) noexcept {
 	}
 	xm_mapValues.Erase(pNode);
 	return true;
-}
-void NotationPackage::ClearValues() noexcept {
-	xm_mapPackages.Clear();
-}
-
-void NotationPackage::Clear() noexcept {
-	ClearPackages();
-	ClearValues();
 }
 
 // ========== Notation ==========

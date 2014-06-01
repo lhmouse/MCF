@@ -85,8 +85,8 @@ public:
 		Release();
 	}
 
-public:
-	Object_t *GetPtr() const
+private:
+	Object_t *xDoGetPtr() const
 		noexcept(std::is_nothrow_constructible<Object_t, InitParams_t...>::value)
 	{
 		xCtorWrapperContext vContext(this, decltype(xGetCurrentException())());
@@ -96,13 +96,27 @@ public:
 		}
 		return pRet;
 	}
-	Object_t *GetSafePtr() const {
+	Object_t *xDoGetSafePtr() const {
 		const auto pRet = GetPtr();
 		if(!pRet){
 			// 如果这不是由于系统内存不足造成的，请确保不要在静态对象的构造函数或析构函数中访问 TLS。
 			throw std::bad_alloc();
 		}
 		return pRet;
+	}
+
+public:
+	const Object_t *GetPtr() const {
+		return xDoGetPtr();
+	}
+	Object_t *GetPtr(){
+		return xDoGetPtr();
+	}
+	const Object_t *GetSafePtr() const {
+		return xDoGetSafePtr();
+	}
+	Object_t *GetSafePtr(){
+		return xDoGetSafePtr();
 	}
 
 	const Object_t &Get() const {

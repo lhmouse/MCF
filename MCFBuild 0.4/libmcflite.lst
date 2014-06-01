@@ -1,0 +1,30 @@
+; 这里只写需要编译的其他目录下的文件。
+; 当前目录中的文件会自动搜索。
+
+..\MCFCRT\MCFCRT.c
+..\MCFCRT\stdc\stdlib\atexit.c
+..\MCFCRT\env\bail.c
+..\MCFCRT\ext\wcscpyout.c
+..\MCFCRT\env\last_error.c
+..\MCFCRT\env\fenv.c
+..\MCFCRT\env\mingw_hacks.c
+..\MCFCRT\env\avl_tree.c
+..\MCFCRT\env\thread.c
+..\MCFCRT\env\heap.c
+..\MCFCRT\env\heap_dbg.c
+..\MCFCRT\exe\startup.c
+..\MCFCRT\exe\argv.c
+..\MCFCRT\exe\startup.c
+
+..\MCF\Core\String.cpp
+..\MCF\Core\Exception.cpp
+..\MCF\Core\File.cpp
+..\MCF\Core\StreamBuffer.cpp
+..\MCF\Core\Time.cpp
+..\MCF\Thread\Thread.cpp
+..\MCF\Thread\CriticalSection.cpp
+..\MCF\Thread\Semaphore.cpp
+..\MCF\Thread\ReaderWriterLock.cpp
+..\MCF\Language\Notation.cpp
+..\MCF\Hash\Sha256.cpp
+..\MCF\Serialization\_SerdesTraits.cpp

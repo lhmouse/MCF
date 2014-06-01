@@ -1,0 +1,48 @@
+Default = Debug
+
+General {
+	CompilerFlags		= -Wall -Wextra -pipe -mfpmath=sse,387 -msse2 -masm=intel
+	LinkerFlags			= -Wall -Wextra -static
+	ExtraLibs			= -lversion -lshlwapi
+
+	CPPFlags			= -std=c++11
+	RCFlags				=
+
+	IgnoredFiles		= .Built* make.cmd a.exe *.h *.hpp *.mcfproj
+
+	PreCompiledHeaders {
+		General {
+			SourceFile	= General.hpp
+			CommandLine	= g++ -x c++-header $CompilerFlags$ $CPPFlags$ %IN% -o %OUT%
+		}
+	}
+
+	Compilers {
+		cpp cxx cc {
+			CommandLine	= gcc -x c++ -c $CompilerFlags$ $CPPFlags$ %GCH.General% %IN% -o %OUT%
+			Dependency	= gcc -x c++ -c $CompilerFlags$ $CPPFlags$ %IN% -MM
+		}
+		rc {
+			CommandLine	= windres $RCFlags$ -O coff -i %IN% -o %OUT%
+			Dependency	=
+		}
+	}
+
+	Linkers {
+		Partial			= ld -r %IN% -o %OUT%
+		Full			= g++ $LinkerFlags$ %IN% $ExtraLibs$ -o %OUT%
+	}
+
+	DefaultOutput		= MCFBuild.exe
+}
+
+Debug = General {
+	CompilerFlags		=> -fno-builtin -g -O0
+	LinkerFlags			=> -O0
+}
+
+Release = General {
+	CompilerFlags		=> -DNDEBUG -O3 -ffunction-sections -fdata-sections
+	LinkerFlags			=> -O3 -Wl,--gc-sections,-s
+	RCFlags				=> -DNDEBUG
+}

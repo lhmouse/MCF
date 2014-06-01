@@ -1,17 +1,14 @@
 #include <MCF/StdMCF.hpp>
 #include <MCF/Core/Exception.hpp>
-#include <MCF/Socket/UdpServer.hpp>
 using namespace std;
 using namespace MCF;
 
 unsigned int MCFMain()
 try {
-	printf("%f\n", ::fabsf(2.0f));
-	printf("%f\n", ::fabsf(-2.0f));
-	printf("%f\n", ::fabs(3.0));
-	printf("%f\n", ::fabs(-3.0));
-	printf("%Lf\n", ::fabsl(4.0l));
-	printf("%Lf\n", ::fabsl(-4.0l));
+	char str[] = "0123456789";
+	char str2[sizeof(str)] = { };
+	ReverseMoveBackward(end(str2) - 1, begin(str), end(str) - 1);
+	puts(str2);
 	return 0;
 } catch(exception &e){
 	printf("exception '%s'\n", e.what());

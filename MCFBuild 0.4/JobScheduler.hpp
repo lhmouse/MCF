@@ -5,6 +5,7 @@
 #define MCFBUILD_JOB_SCHEDULER_HPP_
 
 #include "../MCF/Core/Utilities.hpp"
+#include "../MCF/Thread/Thread.hpp"
 
 namespace MCFBuild {
 

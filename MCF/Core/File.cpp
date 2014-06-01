@@ -293,7 +293,6 @@ void File::Write(std::uint64_t u64Offset, const void *pBuffer, std::size_t uByte
 void File::Write(std::uint64_t u64Offset, const void *pBuffer, std::size_t uBytesToWrite, File::AsyncProc &&fnAsyncProc){
 	Write(u64Offset, pBuffer, uBytesToWrite, fnAsyncProc);
 }
-
 void File::Flush() const {
 	ASSERT(dynamic_cast<const FileDelegate *>(this));
 

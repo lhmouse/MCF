@@ -25,7 +25,7 @@ struct foo {
 
 unsigned int MCFMain()
 try {
-	UniqueMonitorPtr<foo> pf(make_unique<foo>());
+	MonitorPtr<foo> pf;
 
 	vector<shared_ptr<Thread>> v;
 	v.resize(10);

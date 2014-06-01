@@ -7,72 +7,61 @@
 
 #include "CriticalSection.hpp"
 #include "../Core/Utilities.hpp"
-#include <memory>
 #include <cstddef>
 
 namespace MCF {
 
-namespace Impl {
-	template<class SmartPtr_t>
-	class MonitorPtr : NO_COPY {
-	public:
-		typedef typename SmartPtr_t::element_type ObjectType;
+template<class Object_t>
+class MonitorPtr : NO_COPY {
+private:
+	template<class Return_t>
+	class xMonitorHolder : NO_COPY {
+		friend MonitorPtr;
 
 	private:
-		template<class Return_t>
-		class xMonitorHolder : NO_COPY {
-			friend MonitorPtr;
-
-		private:
-			Return_t *const xm_pObject;
-			CriticalSection::Lock xm_vLock;
-
-		private:
-			explicit xMonitorHolder(MonitorPtr &vMonitorPtr) noexcept
-				: xm_pObject(vMonitorPtr.xm_pObject.get())
-				, xm_vLock(vMonitorPtr.xm_pcsMutex->GetLock())
-			{
-			}
-			xMonitorHolder(xMonitorHolder &&rhs) noexcept
-				: xm_pObject(rhs.xm_pObject)
-				, xm_vLock(std::move(rhs.xm_vLock))
-			{
-			}
-
-			void operator=(xMonitorHolder &&rhs) = delete;
-
-		public:
-			Return_t *operator->() const noexcept {
-				return xm_pObject;
-			}
-		};
+		Return_t *const xm_pObject;
+		CriticalSection::Lock xm_vLock;
 
 	private:
-		SmartPtr_t xm_pObject;
-		std::unique_ptr<CriticalSection> xm_pcsMutex;
-
-	public:
-		explicit MonitorPtr(SmartPtr_t pObject) noexcept
-			: xm_pObject(std::move(pObject))
-			, xm_pcsMutex(CriticalSection::Create())
+		explicit xMonitorHolder(MonitorPtr &vMonitorPtr) noexcept
+			: xm_pObject(&(vMonitorPtr.xm_vObject))
+			, xm_vLock(vMonitorPtr.xm_pcsMutex->GetLock())
+		{
+		}
+		xMonitorHolder(xMonitorHolder &&rhs) noexcept
+			: xm_pObject(rhs.xm_pObject)
+			, xm_vLock(std::move(rhs.xm_vLock))
 		{
 		}
 
+		void operator=(xMonitorHolder &&rhs) = delete;
+
 	public:
-		xMonitorHolder<const ObjectType> operator->() const noexcept {
-			return xMonitorHolder<const ObjectType>(*this);
-		}
-		xMonitorHolder<ObjectType> operator->() noexcept {
-			return xMonitorHolder<ObjectType>(*this);
+		Return_t *operator->() const noexcept {
+			return xm_pObject;
 		}
 	};
-}
 
-template<class Object_t>
-using UniqueMonitorPtr = Impl::MonitorPtr<std::unique_ptr<Object_t>>;
+private:
+	Object_t xm_vObject;
+	std::unique_ptr<CriticalSection> xm_pcsMutex;
 
-template<class Object_t>
-using SharedMonitorPtr = Impl::MonitorPtr<std::shared_ptr<Object_t>>;
+public:
+	template<typename... Params_t>
+	explicit MonitorPtr(Params_t &&... vParams)
+		: xm_vObject(std::forward<Params_t>(vParams)...)
+		, xm_pcsMutex(CriticalSection::Create())
+	{
+	}
+
+public:
+	xMonitorHolder<const Object_t> operator->() const noexcept {
+		return xMonitorHolder<const Object_t>(*this);
+	}
+	xMonitorHolder<Object_t> operator->() noexcept {
+		return xMonitorHolder<Object_t>(*this);
+	}
+};
 
 }
 

@@ -58,7 +58,7 @@ void ConvertCrlfAppend(MCF::Vector<char> &vecAppendTo, MCF::StreamBuffer &sbufSo
 	vecAppendTo.ReserveMore(sbufSource.GetSize());
 	int nNext = sbufSource.Get();
 	while(nNext != -1){
-		const char ch = (char)nNext;
+		const char ch = (char)(unsigned char)nNext;
 		nNext = sbufSource.Get();
 		if(ch == '\r'){
 			if(nNext == '\n'){

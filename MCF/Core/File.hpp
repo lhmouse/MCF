@@ -34,6 +34,8 @@ public:
 	void Resize(std::uint64_t u64NewSize);
 	void Clear();
 
+	// 异步过程调用总是会被执行，即使读取或写入操作失败。
+	// 异步过程可以抛出异常；在这种情况下，异常将在读取或写入操作完成后被重新抛出。
 	std::size_t Read(void *pBuffer, std::size_t uBytesToRead, std::uint64_t u64Offset) const;
 	std::size_t Read(void *pBuffer, std::size_t uBytesToRead, std::uint64_t u64Offset, AsyncProc &fnAsyncProc) const;
 	std::size_t Read(void *pBuffer, std::size_t uBytesToRead, std::uint64_t u64Offset, AsyncProc &&fnAsyncProc) const;

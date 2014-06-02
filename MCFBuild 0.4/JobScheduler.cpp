@@ -9,9 +9,16 @@
 #include <exception>
 using namespace MCFBuild;
 
+// 构造函数和析构函数。
+JobScheduler::JobScheduler()
+	: xm_pcsLock(MCF::CriticalSection::Create())
+{
+}
+
 // 其他非静态成员函数。
 void JobScheduler::AddJob(std::function<void ()> fnJob){
-	xm_pJobQueue->Enqueue(std::move(fnJob));
+	const auto vLock = xm_pcsLock->GetLock();
+	xm_queJobs.emplace(std::move(fnJob));
 }
 void JobScheduler::CommitAll(std::size_t uThreadCount){
 	MCF::VVector<std::shared_ptr<MCF::Thread>, 16u> vecThreads(uThreadCount);
@@ -25,9 +32,14 @@ void JobScheduler::CommitAll(std::size_t uThreadCount){
 					if(__atomic_load_n(&bExitNow, __ATOMIC_ACQUIRE)){
 						break;
 					}
-					auto fnJob = xm_pJobQueue->Dequeue();
-					if(!fnJob){
-						break;
+					std::function<void ()> fnJob;
+					{
+						const auto vLock = xm_pcsLock->GetLock();
+						if(xm_queJobs.empty()){
+							break;
+						}
+						fnJob = std::move(xm_queJobs.front());
+						xm_queJobs.pop();
 					}
 					fnJob();
 				}

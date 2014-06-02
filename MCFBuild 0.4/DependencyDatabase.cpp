@@ -17,7 +17,6 @@ SERDES_TABLE_BEGIN(DependencyDatabase::FileItem)
 SERDES_TABLE_END
 
 SERDES_TABLE_BEGIN(DependencyDatabase)
-	SERDES_MEMBER(m_shaSelf)
 	SERDES_MEMBER(m_mapFiles)
 SERDES_TABLE_END
 

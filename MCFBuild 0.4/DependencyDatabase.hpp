@@ -19,7 +19,6 @@ public:
 	};
 
 public:
-	Sha256 m_shaSelf;
 	std::map<MCF::WideString, FileItem> m_mapFiles;
 
 public:

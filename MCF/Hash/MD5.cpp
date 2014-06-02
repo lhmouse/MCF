@@ -9,7 +9,7 @@ using namespace MCF;
 
 namespace {
 
-void DoMd5Chunk(std::uint32_t (&auResult)[4], const unsigned char *pbyChunk) noexcept {
+void DoMd5Chunk(std::uint32_t (&au32Result)[4], const unsigned char *pbyChunk) noexcept {
 	// https://en.wikipedia.org/wiki/Md5
 /*
 	static const unsigned char RVEC[64] = {
@@ -39,10 +39,10 @@ void DoMd5Chunk(std::uint32_t (&auResult)[4], const unsigned char *pbyChunk) noe
 
 	const auto w = (const std::uint32_t *)pbyChunk;
 
-	std::uint32_t a = auResult[0];
-	std::uint32_t b = auResult[1];
-	std::uint32_t c = auResult[2];
-	std::uint32_t d = auResult[3];
+	std::uint32_t a = au32Result[0];
+	std::uint32_t b = au32Result[1];
+	std::uint32_t c = au32Result[2];
+	std::uint32_t d = au32Result[3];
 
 	for(std::size_t i = 0; i < 64; ++i){
 		std::uint32_t f, g;
@@ -78,10 +78,10 @@ void DoMd5Chunk(std::uint32_t (&auResult)[4], const unsigned char *pbyChunk) noe
 		a = temp;
 	}
 
-	auResult[0] += a;
-	auResult[1] += b;
-	auResult[2] += c;
-	auResult[3] += d;
+	au32Result[0] += a;
+	au32Result[1] += b;
+	au32Result[2] += c;
+	au32Result[3] += d;
 */
 
 #define R_0		"7"
@@ -216,10 +216,10 @@ void DoMd5Chunk(std::uint32_t (&auResult)[4], const unsigned char *pbyChunk) noe
 #define K_63	"0xEB86D391"
 #define K(i)	K_##i
 
-	register std::uint32_t a = auResult[0];
-	register std::uint32_t b = auResult[1];
-	register std::uint32_t c = auResult[2];
-	register std::uint32_t d = auResult[3];
+	register std::uint32_t a = au32Result[0];
+	register std::uint32_t b = au32Result[1];
+	register std::uint32_t c = au32Result[2];
+	register std::uint32_t d = au32Result[3];
 
 	__asm__ __volatile__(
 
@@ -339,10 +339,10 @@ void DoMd5Chunk(std::uint32_t (&auResult)[4], const unsigned char *pbyChunk) noe
 		: "di"
 	);
 
-	auResult[0] += a;
-	auResult[1] += b;
-	auResult[2] += c;
-	auResult[3] += d;
+	au32Result[0] += a;
+	au32Result[1] += b;
+	au32Result[2] += c;
+	au32Result[3] += d;
 }
 
 }

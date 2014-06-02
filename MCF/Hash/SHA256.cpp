@@ -9,7 +9,7 @@ using namespace MCF;
 
 namespace {
 
-void DoSha256Chunk(std::uint32_t (&auResult)[8], const unsigned char *pbyChunk) noexcept {
+void DoSha256Chunk(std::uint32_t (&au32Result)[8], const unsigned char *pbyChunk) noexcept {
 	// https://en.wikipedia.org/wiki/Sha-2
 	// http://download.intel.com/embedded/processor/whitepaper/327457.pdf
 /*
@@ -36,14 +36,14 @@ void DoSha256Chunk(std::uint32_t (&auResult)[8], const unsigned char *pbyChunk) 
 		w[i] = w[i - 16] + w[i - 7] + s0 + s1;
 	}
 
-	std::uint32_t a = auResult[0];
-	std::uint32_t b = auResult[1];
-	std::uint32_t c = auResult[2];
-	std::uint32_t d = auResult[3];
-	std::uint32_t e = auResult[4];
-	std::uint32_t f = auResult[5];
-	std::uint32_t g = auResult[6];
-	std::uint32_t h = auResult[7];
+	std::uint32_t a = au32Result[0];
+	std::uint32_t b = au32Result[1];
+	std::uint32_t c = au32Result[2];
+	std::uint32_t d = au32Result[3];
+	std::uint32_t e = au32Result[4];
+	std::uint32_t f = au32Result[5];
+	std::uint32_t g = au32Result[6];
+	std::uint32_t h = au32Result[7];
 
 	for(std::size_t i = 0; i < 64; ++i){
 		//const std::uint32_t S0 = ::_rotr(a, 2) ^ ::_rotr(a, 13) ^ ::_rotr(a, 22);
@@ -67,14 +67,14 @@ void DoSha256Chunk(std::uint32_t (&auResult)[8], const unsigned char *pbyChunk) 
 		a = t1 + t2;
 	}
 
-	auResult[0] += a;
-	auResult[1] += b;
-	auResult[2] += c;
-	auResult[3] += d;
-	auResult[4] += e;
-	auResult[5] += f;
-	auResult[6] += g;
-	auResult[7] += h;
+	au32Result[0] += a;
+	au32Result[1] += b;
+	au32Result[2] += c;
+	au32Result[3] += d;
+	au32Result[4] += e;
+	au32Result[5] += f;
+	au32Result[6] += g;
+	au32Result[7] += h;
 */
 
 #define K_0		"0x428A2F98"
@@ -158,23 +158,23 @@ void DoSha256Chunk(std::uint32_t (&auResult)[8], const unsigned char *pbyChunk) 
 */
 
 #ifdef _WIN64
-	register std::uint32_t a = auResult[0];
-	register std::uint32_t b = auResult[1];
-	register std::uint32_t c = auResult[2];
-	register std::uint32_t d = auResult[3];
-	register std::uint32_t e = auResult[4];
-	register std::uint32_t f = auResult[5];
-	register std::uint32_t g = auResult[6];
-	register std::uint32_t h = auResult[7];
+	register std::uint32_t a = au32Result[0];
+	register std::uint32_t b = au32Result[1];
+	register std::uint32_t c = au32Result[2];
+	register std::uint32_t d = au32Result[3];
+	register std::uint32_t e = au32Result[4];
+	register std::uint32_t f = au32Result[5];
+	register std::uint32_t g = au32Result[6];
+	register std::uint32_t h = au32Result[7];
 #else
-	std::uint32_t a = auResult[0];
-	std::uint32_t b = auResult[1];
-	std::uint32_t c = auResult[2];
-	std::uint32_t d = auResult[3];
-	std::uint32_t e = auResult[4];
-	std::uint32_t f = auResult[5];
-	std::uint32_t g = auResult[6];
-	std::uint32_t h = auResult[7];
+	std::uint32_t a = au32Result[0];
+	std::uint32_t b = au32Result[1];
+	std::uint32_t c = au32Result[2];
+	std::uint32_t d = au32Result[3];
+	std::uint32_t e = au32Result[4];
+	std::uint32_t f = au32Result[5];
+	std::uint32_t g = au32Result[6];
+	std::uint32_t h = au32Result[7];
 #endif
 
 	__asm__ __volatile__(
@@ -894,14 +894,14 @@ void DoSha256Chunk(std::uint32_t (&auResult)[8], const unsigned char *pbyChunk) 
 
 	);
 
-	auResult[0] += a;
-	auResult[1] += b;
-	auResult[2] += c;
-	auResult[3] += d;
-	auResult[4] += e;
-	auResult[5] += f;
-	auResult[6] += g;
-	auResult[7] += h;
+	au32Result[0] += a;
+	au32Result[1] += b;
+	au32Result[2] += c;
+	au32Result[3] += d;
+	au32Result[4] += e;
+	au32Result[5] += f;
+	au32Result[6] += g;
+	au32Result[7] += h;
 }
 
 }

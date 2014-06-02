@@ -26,23 +26,15 @@ bool GetFileContents(MCF::Vector<unsigned char> &vecData, const MCF::WideString 
 	pFile->Read(vecData.GetData(), u64FileSize, 0);
 	return true;
 }
-bool GetFileContentsAndSha256(MCF::Vector<unsigned char> *pvecData, Sha256 &shaChecksum, const MCF::WideString &wcsPath){
+bool GetFileSha256(Sha256 &shaChecksum, const MCF::WideString &wcsPath){
 	const auto pFile = MCF::File::OpenNoThrow(wcsPath, true, false, false);
 	if(!pFile){
 		return false;
 	}
 	const auto u64FileSize = pFile->GetSize();
-	if(u64FileSize > (std::size_t)-1){
-		MCF_THROW(ERROR_NOT_ENOUGH_MEMORY, L"FILE_TOO_LARGE|"_ws + wcsPath);
-	}
-	if(pvecData){
-		pvecData->Resize(u64FileSize);
-	}
 	MCF::Sha256 shaHasher;
 	shaHasher.Update(nullptr, 0);
 	if(u64FileSize > 0){
-		auto pbyWrite = pvecData ? pvecData->GetData() : nullptr;
-
 		unsigned char abyTemp1[32 * 1024], abyTemp2[sizeof(abyTemp1)];
 		auto *pbyCurBuffer = abyTemp1, *pbyBackBuffer = abyTemp2;
 		std::size_t uBytesCur = pFile->Read(pbyCurBuffer, sizeof(abyTemp1), 0);
@@ -52,9 +44,6 @@ bool GetFileContentsAndSha256(MCF::Vector<unsigned char> *pvecData, Sha256 &shaC
 			const auto uBytesBack = pFile->Read(
 				pbyBackBuffer, sizeof(abyTemp1), u64Offset,
 				[&]{
-					if(pbyWrite){
-						pbyWrite = MCF::CopyN(pbyWrite, pbyCurBuffer, uBytesCur);
-					}
 					shaHasher.Update(pbyCurBuffer, uBytesCur);
 				}
 			);
@@ -64,9 +53,6 @@ bool GetFileContentsAndSha256(MCF::Vector<unsigned char> *pvecData, Sha256 &shaC
 			uBytesCur = uBytesBack;
 		}
 
-		if(pbyWrite){
-			pbyWrite = MCF::CopyN(pbyWrite, pbyCurBuffer, uBytesCur);
-		}
 		shaHasher.Update(pbyCurBuffer, uBytesCur);
 	}
 	shaHasher.Finalize(*(unsigned char (*)[32])shaChecksum.data());

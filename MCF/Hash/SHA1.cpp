@@ -9,7 +9,7 @@ using namespace MCF;
 
 namespace {
 
-void DoSha1Chunk(std::uint32_t (&auResult)[5], const unsigned char *pbyChunk) noexcept {
+void DoSha1Chunk(std::uint32_t (&au32Result)[5], const unsigned char *pbyChunk) noexcept {
 	// https://en.wikipedia.org/wiki/Sha1
 /*
 	std::uint32_t w[80];
@@ -24,11 +24,11 @@ void DoSha1Chunk(std::uint32_t (&auResult)[5], const unsigned char *pbyChunk) no
 		w[i] = ::_rotl(w[i - 6] ^ w[i - 16] ^ w[i - 28] ^ w[i - 32], 2);
 	}
 
-	std::uint32_t a = auResult[0];
-	std::uint32_t b = auResult[1];
-	std::uint32_t c = auResult[2];
-	std::uint32_t d = auResult[3];
-	std::uint32_t e = auResult[4];
+	std::uint32_t a = au32Result[0];
+	std::uint32_t b = au32Result[1];
+	std::uint32_t c = au32Result[2];
+	std::uint32_t d = au32Result[3];
+	std::uint32_t e = au32Result[4];
 
 	for(std::size_t i = 0; i < 80; ++i){
 		std::uint32_t f, k;
@@ -65,11 +65,11 @@ void DoSha1Chunk(std::uint32_t (&auResult)[5], const unsigned char *pbyChunk) no
 		a = temp;
 	}
 
-	auResult[0] += a;
-	auResult[1] += b;
-	auResult[2] += c;
-	auResult[3] += d;
-	auResult[4] += e;
+	au32Result[0] += a;
+	au32Result[1] += b;
+	au32Result[2] += c;
+	au32Result[3] += d;
+	au32Result[4] += e;
 */
 
 	alignas(16) std::uint32_t w[80];
@@ -86,11 +86,11 @@ void DoSha1Chunk(std::uint32_t (&auResult)[5], const unsigned char *pbyChunk) no
 	}
 */
 
-	register std::uint32_t a = auResult[0];
-	register std::uint32_t b = auResult[1];
-	register std::uint32_t c = auResult[2];
-	register std::uint32_t d = auResult[3];
-	register std::uint32_t e = auResult[4];
+	register std::uint32_t a = au32Result[0];
+	register std::uint32_t b = au32Result[1];
+	register std::uint32_t c = au32Result[2];
+	register std::uint32_t d = au32Result[3];
+	register std::uint32_t e = au32Result[4];
 
 	__asm__ __volatile__(
 		"movdqa xmm4, xmmword ptr[%5 + 28 * 4] \n"
@@ -276,11 +276,11 @@ void DoSha1Chunk(std::uint32_t (&auResult)[5], const unsigned char *pbyChunk) no
 #endif
 	);
 
-	auResult[0] += a;
-	auResult[1] += b;
-	auResult[2] += c;
-	auResult[3] += d;
-	auResult[4] += e;
+	au32Result[0] += a;
+	au32Result[1] += b;
+	au32Result[2] += c;
+	au32Result[3] += d;
+	au32Result[4] += e;
 }
 
 }

@@ -19,6 +19,9 @@ try {
 			[&, i]{
 				std::printf("job %d begins\n", i);
 				__atomic_add_fetch(&x, 1, __ATOMIC_RELAXED);
+				if(i >= 50){
+					MCF_THROW(123, L"test exception!"_wso);
+				}
 				std::printf("job %d ends\n", i);
 			}
 		);

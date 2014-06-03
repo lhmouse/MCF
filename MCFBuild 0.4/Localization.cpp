@@ -11,6 +11,11 @@ using namespace MCFBuild;
 namespace {
 
 const std::map<MCF::WideStringObserver, MCF::WideStringObserver> g_mapStrings = {
+	{ L"MCFBUILD_LOGO"_wso,					L"MCF 构建实用工具 [版本 %0.%1.%2.%3]\nCopyleft 2014, LH_Mouse. All wrongs reserved. "_wso },
+	{ L"MCF_EXCEPTION"_wso,					L"MCF Build 遇到一个错误：\n  错误描述：%0\n  错误代码：%1（%2）"_wso },
+	{ L"STD_EXCEPTION"_wso,					L"捕获到异常“%0”。请联系作者寻求协助。"_wso },
+	{ L"UNKNOWN_EXCEPTION"_wso,				L"捕获到无法处理的异常。请联系作者寻求协助。"_wso },
+
 	{ L"CREATE_PIPE_FAILED"_wso,			L"创建管道失败。"_wso },
 	{ L"SET_PIPE_INFO_FAILED"_wso,			L"设置管道句柄信息失败。"_wso },
 	{ L"CREATE_PROCESS_FAILED"_wso,			L"以命令行“%0”创建进程失败。"_wso },

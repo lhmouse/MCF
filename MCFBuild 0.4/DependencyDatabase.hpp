@@ -15,7 +15,7 @@ public:
 	struct FileItem {
 		Sha256 shaCommandLine;
 		Sha256 shaSource;
-		std::pair<MCF::WideString, Sha256> vPreProcessed;
+		Sha256 shaPreProcessed;
 		std::map<MCF::WideString, Sha256> mapDependencies;
 	};
 

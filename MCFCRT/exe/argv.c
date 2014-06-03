@@ -182,7 +182,7 @@ size_t MCF_GetArgV(const wchar_t *const **pppwszArgV){
 								break;
 
 							case L'\"':
-								eState = IN_QUOTE;
+								eState = QUOTE_BEGIN;
 								break;
 
 							default:

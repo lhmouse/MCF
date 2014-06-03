@@ -13,7 +13,7 @@ using namespace MCFBuild;
 SERDES_TABLE_BEGIN(DependencyDatabase::FileItem)
 	SERDES_MEMBER(shaCommandLine)
 	SERDES_MEMBER(shaSource)
-	SERDES_MEMBER(vPreProcessed)
+	SERDES_MEMBER(shaPreProcessed)
 	SERDES_MEMBER(mapDependencies)
 SERDES_TABLE_END
 

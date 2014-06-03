@@ -3,41 +3,55 @@
 
 #include "MCFBuild.hpp"
 #include "Localization.hpp"
-#include "JobScheduler.hpp"
+#include "ConsoleOutput.hpp"
+#include "../MCF/Core/Utilities.hpp"
 #include "../MCF/Core/Exception.hpp"
-#include "../MCF/Thread/CriticalSection.hpp"
-#include <exception>
-#include <cstdio>
+#include "../MCFCRT/exe/exe_include.h"
+#include <cwchar>
 using namespace MCFBuild;
 
-extern "C" unsigned MCFMain()
+namespace MCFBuild {
+
+extern unsigned int WorkerEntry(std::size_t uArgC, const wchar_t *const *ppwszArgV);
+
+}
+
+extern "C" unsigned int MCFMain()
 try {
-	int x = 0;
-	JobScheduler sch;
-	for(int i = 0; i < 100; ++i){
-		sch.AddJob(
-			[&, i]{
-				std::printf("job %d begins\n", i);
-				__atomic_add_fetch(&x, 1, __ATOMIC_RELAXED);
-				if(i >= 50){
-					MCF_THROW(123, L"test exception!"_wso);
-				}
-				std::printf("job %d ends\n", i);
-			}
-		);
+	PrintLn(FormatString(L"MCFBUILD_LOGO|0|4|0|0"_wso));
+	PrintLn();
+
+	const wchar_t *const *ppwszArgV;
+	const auto uArgC = ::MCF_GetArgV(&ppwszArgV);
+	const auto uMainRet = WorkerEntry(uArgC, ppwszArgV);
+
+	return uMainRet;
+} catch(MCF::Exception &e){
+	MCF::WideString wcsMessage(L"MCF_EXCEPTION|"_ws);
+	wcsMessage += e.m_wcsMessage;
+	wchar_t awcCode[16];
+	wcsMessage.Append(awcCode, (std::size_t)std::swprintf(awcCode, COUNT_OF(awcCode), L"|%lu|", e.m_ulErrorCode));
+	auto wcsErrorDescription = MCF::GetWin32ErrorDesc(e.m_ulErrorCode);
+	for(;;){
+		if(wcsErrorDescription.IsEmpty()){
+			break;
+		}
+		const auto wc = wcsErrorDescription.GetEnd()[-1];
+		if((wc != L'\n') && (wc != L'\r')){
+			break;
+		}
+		wcsErrorDescription.Pop();
 	}
-	sch.CommitAll(6);
-	std::printf("x = %d\n", x);
-	return 0;
+	wcsMessage += wcsErrorDescription;
+	PrintLn();
+	PrintLn(FormatString(wcsMessage));
+	return e.m_ulErrorCode;
 } catch(std::exception &e){
-	std::printf("exception '%s'\n", e.what());
-	auto *const p = dynamic_cast<const MCF::Exception *>(&e);
-	if(p){
-		std::printf("  err  = %lu\n", p->m_ulErrorCode);
-		std::printf("  desc = %s\n", MCF::AnsiString(MCF::GetWin32ErrorDesc(p->m_ulErrorCode)).GetCStr());
-		std::printf("  func = %s\n", p->m_pszFunction);
-		std::printf("  line = %lu\n", p->m_ulLine);
-		std::printf("  msg  = %s\n", MCF::AnsiString(FormatString(p->m_wcsMessage)).GetCStr());
-	}
-	return 0;
+	PrintLn();
+	PrintLn(FormatString(L"STD_EXCEPTION|"_ws + MCF::Utf8String(e.what())));
+	return (unsigned int)-1;
+} catch(...){
+	PrintLn();
+	PrintLn(FormatString(L"UNKNOWN_EXCEPTION"_wso));
+	return (unsigned int)-1;
 }

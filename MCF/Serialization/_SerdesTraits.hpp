@@ -9,6 +9,7 @@
 
 #include "VarIntEx.hpp"
 #include "../Core/StreamBuffer.hpp"
+#include "../Core/VVector.hpp"
 #include <iterator>
 #include <type_traits>
 #include <array>
@@ -33,6 +34,9 @@ namespace Impl {
 
 	template<typename Object_t, typename = void>
 	struct SerdesTrait;
+
+	//------------------------------------------------------------------------
+	// 标量类型开始。
 
 	// 针对 bool 的特化。使用最小的存储。注意 bool 本身的大小是实现定义的，有可能当作 int 了。
 	template<>
@@ -61,6 +65,7 @@ namespace Impl {
 			std::is_integral<Integral>::value && !std::is_same<Integral, bool>::value && (sizeof(Integral) > 2u)
 		>::type
 	> {
+		// VarIntEx 是无序的。
 		void operator()(StreamBuffer &sbufStream, const Integral &vObject) const {
 			VarIntEx<Integral> viTemp(vObject);
 
@@ -115,7 +120,39 @@ namespace Impl {
 		}
 	};
 
-	// 针对其他标量类型（较小的整数，浮点数，指向成员的指针等）的特化。
+	// 针对浮点数的特化。
+	template<typename FloatingPoint_t>
+	struct SerdesTrait<
+		FloatingPoint_t,
+		typename std::enable_if<
+			std::is_floating_point<FloatingPoint_t>::value
+		>::type
+	> {
+		void operator()(StreamBuffer &sbufStream, const FloatingPoint_t &vFloatingPoint) const {
+#if __FLOAT_WORD_ORDER__ == __ORDER_BIG_ENDIAN__
+			unsigned char abyTemp[sizeof(vFloatingPoint)];
+			ReverseCopyBackwardN(std::end(abyTemp), (const unsigned char *)&vFloatingPoint, sizeof(vFloatingPoint));
+			sbufStream.Insert(abyTemp, sizeof(vFloatingPoint));
+#else
+			sbufStream.Insert(&vFloatingPoint, sizeof(vFloatingPoint));
+#endif
+		}
+		void operator()(FloatingPoint_t &vFloatingPoint, StreamBuffer &sbufStream) const {
+#if __FLOAT_WORD_ORDER__ == __ORDER_BIG_ENDIAN__
+			unsigned char abyTemp[sizeof(vFloatingPoint)];
+			if(!sbufStream.Extract(abyTemp, sizeof(vFloatingPoint))){
+				ThrowOnEof();
+			}
+			ReverseCopyN((unsigned char *)&vFloatingPoint, sizeof(vFloatingPoint), std::end(abyTemp));
+#else
+			if(!sbufStream.Extract(&vFloatingPoint, sizeof(vFloatingPoint))){
+				ThrowOnEof();
+			}
+#endif
+		}
+	};
+
+	// 针对其他标量类型（较小的整数，指向成员的指针等）的特化。
 	template<typename Scalar_t>
 	struct SerdesTrait<
 		Scalar_t,
@@ -126,19 +163,35 @@ namespace Impl {
 			&& !std::is_pointer<Scalar_t>::value
 			&& !std::is_null_pointer<Scalar_t>::value
 			&& !std::is_enum<Scalar_t>::value
+			&& !std::is_floating_point<Scalar_t>::value
 		>::type
 	> {
 		void operator()(StreamBuffer &sbufStream, const Scalar_t &vElement) const {
+#if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
+			unsigned char abyTemp[sizeof(vElement)];
+			ReverseCopyBackwardN(std::end(abyTemp), (const unsigned char *)&vElement, sizeof(vElement));
+			sbufStream.Insert(abyTemp, sizeof(vElement));
+#else
 			sbufStream.Insert(&vElement, sizeof(vElement));
+#endif
 		}
 		void operator()(Scalar_t &vElement, StreamBuffer &sbufStream) const {
+#if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
+			unsigned char abyTemp[sizeof(vElement)];
+			if(!sbufStream.Extract(abyTemp, sizeof(vElement))){
+				ThrowOnEof();
+			}
+			ReverseCopyN((unsigned char *)&vElement, sizeof(vElement), std::end(abyTemp));
+#else
 			if(!sbufStream.Extract(&vElement, sizeof(vElement))){
 				ThrowOnEof();
 			}
+#endif
 		}
 	};
 
-	// 基本类型结束。
+	// 标量类型结束。
+	//------------------------------------------------------------------------
 
 	// 小工具。
 	struct SizeTSerdes {
@@ -398,16 +451,16 @@ namespace Impl {
 		void operator()(StreamBuffer &sbufStream, const std::vector<bool, Allocator_t> &vVectorBool) const {
 			const auto uSize = vVectorBool.size();
 			SizeTSerdes()(sbufStream, uSize);
-			std::unique_ptr<bool[]> pTemp(new bool[uSize]);
-			CopyN(pTemp.get(), vVectorBool.begin(), uSize);
-			SerdesTrait<bool[]>()(sbufStream, pTemp.get(), uSize);
+			VVector<bool> vecTemp(uSize);
+			CopyN(vecTemp.GetData(), vVectorBool.begin(), uSize);
+			SerdesTrait<bool[]>()(sbufStream, vecTemp.GetData(), uSize);
 		}
 		void operator()(std::vector<bool, Allocator_t> &vVectorBool, StreamBuffer &sbufStream) const {
 			const auto uSize = SizeTSerdes()(sbufStream);
-			std::unique_ptr<bool[]> pTemp(new bool[uSize]);
-			SerdesTrait<bool[]>()(pTemp.get(), uSize, sbufStream);
+			VVector<bool> vecTemp(uSize);
+			SerdesTrait<bool[]>()(vecTemp.GetData(), uSize, sbufStream);
 			vVectorBool.resize(uSize);
-			CopyN(vVectorBool.begin(), pTemp.get(), uSize);
+			CopyN(vVectorBool.begin(), vecTemp.GetData(), uSize);
 		}
 	};
 

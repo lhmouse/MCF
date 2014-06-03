@@ -14,7 +14,8 @@ class DependencyDatabase {
 public:
 	struct FileItem {
 		Sha256 shaCommandLine;
-		Sha256 shaFile;
+		Sha256 shaSource;
+		std::pair<MCF::WideString, Sha256> vPreProcessed;
 		std::map<MCF::WideString, Sha256> mapDependencies;
 	};
 

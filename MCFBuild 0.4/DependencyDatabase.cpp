@@ -12,7 +12,8 @@ using namespace MCFBuild;
 
 SERDES_TABLE_BEGIN(DependencyDatabase::FileItem)
 	SERDES_MEMBER(shaCommandLine)
-	SERDES_MEMBER(shaFile)
+	SERDES_MEMBER(shaSource)
+	SERDES_MEMBER(vPreProcessed)
 	SERDES_MEMBER(mapDependencies)
 SERDES_TABLE_END
 
@@ -29,7 +30,7 @@ void DependencyDatabase::LoadFromFile(const MCF::WideString &wcsPath){
 
 	MCF::StreamBuffer sbufData;
 	while(sbufData.GetSize() < ullFileSize){
-		unsigned char abyTemp[4096];
+		unsigned char abyTemp[0x10000];
 		const auto uBytesRead = pFile->Read(abyTemp, sizeof(abyTemp), sbufData.GetSize());
 		sbufData.Insert(abyTemp, uBytesRead);
 	}

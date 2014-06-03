@@ -261,10 +261,14 @@ namespace Impl {
 	template<typename Object_t>
 	struct DirectConstructor {
 		template<typename... Params_t>
-		Object_t *Construct(void *pObject, Params_t &&... vParams){
+		Object_t *Construct(void *pObject, Params_t &&... vParams)
+			noexcept(std::is_nothrow_constructible<Object_t, Params_t &&...>::value)
+		{
 			return ::new(pObject, DirectConstructTag()) Object_t(std::forward<Params_t>(vParams)...);
 		}
-		void Destruct(Object_t *pObject){
+		void Destruct(Object_t *pObject)
+			noexcept(std::is_nothrow_destructible<Object_t>::value)
+		{
 			pObject->~Object_t();
 		}
 	};

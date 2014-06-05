@@ -9,7 +9,12 @@
 
 __MCF_EXTERN_C_BEGIN
 
-extern MCF_STD size_t MCF_GetArgV(const wchar_t *const **pppwszArgV) MCF_NOEXCEPT;
+typedef struct tagArgItem {
+	const wchar_t *pwszBegin;
+	MCF_STD size_t uLen;
+} ARG_ITEM;
+
+extern MCF_STD size_t MCF_GetArgV(const ARG_ITEM **ppArgV) MCF_NOEXCEPT;
 
 __MCF_EXTERN_C_END
 

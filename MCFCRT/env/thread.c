@@ -44,19 +44,19 @@ typedef struct tagTlsObject {
 	size_t uMemSize;
 } TLS_OBJECT;
 
-static int TlsObjectComparerNodes(
+static int TlsObjectComparatorNodes(
 	const MCF_AVL_NODE_HEADER *pObj1,
 	const MCF_AVL_NODE_HEADER *pObj2
 ){
 	return ((const TLS_OBJECT *)pObj1)->nKey < ((const TLS_OBJECT *)pObj2)->nKey;
 }
-static int TlsObjectComparerNodeKey(
+static int TlsObjectComparatorNodeKey(
 	const MCF_AVL_NODE_HEADER *pObj1,
 	intptr_t nKey2
 ){
 	return ((const TLS_OBJECT *)pObj1)->nKey < nKey2;
 }
-static int TlsObjectComparerKeyNode(
+static int TlsObjectComparatorKeyNode(
 	intptr_t nKey1,
 	const MCF_AVL_NODE_HEADER *pObj2
 ){
@@ -77,8 +77,8 @@ static __attribute__((__cdecl__, __used__, __noreturn__)) DWORD AlignedCRTThread
 
 	DWORD dwExitCode;
 
-#define INIT(exp)		if((dwExitCode = (exp)) == ERROR_SUCCESS){ ((void)0)
-#define CLEANUP(exp)	(exp); } ((void)0)
+#define INIT(exp)		if((dwExitCode = (exp)) == ERROR_SUCCESS){
+#define CLEANUP(exp)	(exp); }
 
 	INIT(__MCF_CRT_ThreadInitialize());
 
@@ -129,9 +129,9 @@ unsigned long __MCF_CRT_ThreadInitialize(){
 	if(!pThreadEnv){
 		return ERROR_NOT_ENOUGH_MEMORY;
 	}
-	pThreadEnv->pAtExitHead		= NULL;
-	pThreadEnv->avlObjects		= NULL;
-	pThreadEnv->pLastObject		= NULL;
+	pThreadEnv->pAtExitHead	= NULL;
+	pThreadEnv->avlObjects	= NULL;
+	pThreadEnv->pLastObject	= NULL;
 
 	if(!TlsSetValue(g_dwTlsIndex, pThreadEnv)){
 		const unsigned long ulErrorCode = GetLastError();
@@ -239,8 +239,8 @@ void *MCF_CRT_RetrieveTls(
 	TLS_OBJECT *pObject = (TLS_OBJECT *)MCF_AvlFind(
 		&(pThreadEnv->avlObjects),
 		nKey,
-		&TlsObjectComparerNodeKey,
-		&TlsObjectComparerKeyNode
+		&TlsObjectComparatorNodeKey,
+		&TlsObjectComparatorKeyNode
 	);
 	if(!pObject){
 		pObject = malloc(sizeof(TLS_OBJECT));
@@ -282,7 +282,7 @@ void *MCF_CRT_RetrieveTls(
 		MCF_AvlAttach(
 			&(pThreadEnv->avlObjects),
 			(MCF_AVL_NODE_HEADER *)pObject,
-			&TlsObjectComparerNodes
+			&TlsObjectComparatorNodes
 		);
 	} else if(pObject->uMemSize != uSizeToAlloc){
 		MCF_CRT_BailF(
@@ -313,8 +313,8 @@ void MCF_CRT_DeleteTls(
 	TLS_OBJECT *pObject = (TLS_OBJECT *)MCF_AvlFind(
 		&(pThreadEnv->avlObjects),
 		nKey,
-		&TlsObjectComparerNodeKey,
-		&TlsObjectComparerKeyNode
+		&TlsObjectComparatorNodeKey,
+		&TlsObjectComparatorKeyNode
 	);
 	if(pObject){
 		TLS_OBJECT *const pPrev = pObject->pPrev;

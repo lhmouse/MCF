@@ -15,20 +15,20 @@ __asm__("");
 #include <wchar.h>
 #include <windows.h>
 
-static int BlockInfoComparerNodes(
+static int BlockInfoComparatorNodes(
 	const MCF_AVL_NODE_HEADER *pInfo1,
 	const MCF_AVL_NODE_HEADER *pInfo2
 ){
 	return (uintptr_t)(((const __MCF_HEAPDBG_BLOCK_INFO *)pInfo1)->pContents)
 		< (uintptr_t)(((const __MCF_HEAPDBG_BLOCK_INFO *)pInfo2)->pContents);
 }
-static int BlockInfoComparerNodeKey(
+static int BlockInfoComparatorNodeKey(
 	const MCF_AVL_NODE_HEADER *pInfo1,
 	intptr_t nKey2
 ){
 	return (uintptr_t)(((const __MCF_HEAPDBG_BLOCK_INFO *)pInfo1)->pContents) < (uintptr_t)nKey2;
 }
-static int BlockInfoComparerKeyNode(
+static int BlockInfoComparatorKeyNode(
 	intptr_t nKey1,
 	const MCF_AVL_NODE_HEADER *pInfo2
 ){
@@ -140,7 +140,7 @@ void __MCF_CRT_HeapDbgAddGuardsAndRegister(
 	MCF_AvlAttach(
 		&g_avlBlocks,
 		(MCF_AVL_NODE_HEADER *)pBlockInfo,
-		&BlockInfoComparerNodes
+		&BlockInfoComparatorNodes
 	);
 	if(!MCF_AvlPrev((MCF_AVL_NODE_HEADER *)pBlockInfo)){
 		g_pBlockHead = pBlockInfo;
@@ -161,8 +161,8 @@ const __MCF_HEAPDBG_BLOCK_INFO *__MCF_CRT_HeapDbgValidate(
 	const __MCF_HEAPDBG_BLOCK_INFO *const pBlockInfo = (const __MCF_HEAPDBG_BLOCK_INFO *)MCF_AvlFind(
 		&g_avlBlocks,
 		(intptr_t)pContents,
-		&BlockInfoComparerNodeKey,
-		&BlockInfoComparerKeyNode
+		&BlockInfoComparatorNodeKey,
+		&BlockInfoComparatorKeyNode
 	);
 	if(!pBlockInfo){
 		MCF_CRT_BailF(L"__MCF_CRT_HeapDbgValidate() 失败：传入的指针无效。\n调用返回地址：" UINTPTR_FORMAT, (uintptr_t)pRetAddr);

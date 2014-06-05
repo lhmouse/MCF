@@ -27,15 +27,17 @@ static AT_EXIT_NODE *g_pAtExitHead = NULL;
 unsigned long __MCF_CRT_Begin(){
 	DWORD dwExitCode;
 
-#define INIT(exp)		if((dwExitCode = (exp)) == ERROR_SUCCESS){ ((void)0)
-#define CLEANUP(exp)	(exp); } ((void)0)
+#define INIT(exp)		if((dwExitCode = (exp)) == ERROR_SUCCESS){
+#define CLEANUP(exp)	(exp); }
 
 	INIT(__MCF_CRT_HeapInitialize());
 	INIT(__MCF_CRT_TlsEnvInitialize());
+	INIT(__MCF_CRT_MinGWHacksInitialize());
 
 	__main();
 	return ERROR_SUCCESS;
 
+	CLEANUP(__MCF_CRT_MinGWHacksUninitialize());
 	CLEANUP(__MCF_CRT_TlsEnvUninitialize());
 	CLEANUP(__MCF_CRT_HeapUninitialize());
 
@@ -59,6 +61,8 @@ void __MCF_CRT_End(){
 	}
 
 	__MCF_CRT_EmutlsCleanup();
+
+	__MCF_CRT_MinGWHacksUninitialize();
 	__MCF_CRT_TlsEnvUninitialize();
 	__MCF_CRT_HeapUninitialize();
 }

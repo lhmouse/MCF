@@ -326,17 +326,13 @@ DEFINE_STRING_SERDES(Utf16String)
 DEFINE_STRING_SERDES(Utf32String)
 
 #define DEFINE_LITERAL_OPERATOR(suffix, char_type, encoding)	\
-	namespace {	\
-		const auto	\
-			g_pPoolLockOf ## suffix ## char_type ## encoding = ReaderWriterLock::Create();	\
-		std::unordered_map<const char_type *, ::MCF::String<MACRO_TYPE(char_type), ::MCF::StringEncoding::encoding>>	\
-			g_mapPooledStringsOf ## suffix ## char_type ## encoding;	\
-	}	\
 	const ::MCF::String<MACRO_TYPE(char_type), ::MCF::StringEncoding::encoding> &	\
 		operator"" ## suffix(const MACRO_TYPE(char_type) *pchStr, std::size_t uLength)	\
 	{	\
-		const auto &pLock = g_pPoolLockOf ## suffix ## char_type ## encoding;	\
-		auto &mapStrings = g_mapPooledStringsOf ## suffix ## char_type ## encoding;	\
+		typedef ::MCF::String<MACRO_TYPE(char_type), ::MCF::StringEncoding::encoding> StringType;	\
+		\
+		static const auto pLock = ReaderWriterLock::Create();	\
+		static auto mapStrings = std::unordered_map<const char_type *, StringType>();	\
 		\
 		auto vReaderLock = pLock->GetReaderLock();	\
 		auto itString = mapStrings.find(pchStr);	\

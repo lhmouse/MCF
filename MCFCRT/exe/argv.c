@@ -5,6 +5,7 @@
 #define WIN32_LEAN_AND_MEAN
 
 #include "../MCFCRT.h"
+#include "argv.h"
 #include <stdlib.h>
 #include <wchar.h>
 #include <windows.h>
@@ -12,29 +13,29 @@
 static CRITICAL_SECTION	g_csMutex;
 static wchar_t *		g_pwszArgBuffer;
 static volatile size_t	g_uArgC;
-static wchar_t **		g_ppwszArgV;
+static ARG_ITEM *		g_pArgV;
 
 unsigned long __MCF_CRT_ExeInitializeArgV(){
 	InitializeCriticalSection(&g_csMutex);
 	g_pwszArgBuffer = NULL;
 	g_uArgC = 0;
-	g_ppwszArgV = NULL;
+	g_pArgV = NULL;
 
 	return ERROR_SUCCESS;
 }
 void __MCF_CRT_ExeUninitializeArgV(){
-	free(g_ppwszArgV);
-	g_ppwszArgV = NULL;
+	free(g_pArgV);
+	g_pArgV = NULL;
 	g_uArgC = 0;
 	free(g_pwszArgBuffer);
 	g_pwszArgBuffer = NULL;
 	DeleteCriticalSection(&g_csMutex);
 }
 
-size_t MCF_GetArgV(const wchar_t *const **pppwszArgV){
-	if(!g_ppwszArgV){
+size_t MCF_GetArgV(const ARG_ITEM **ppArgV){
+	if(!g_pArgV){
 		EnterCriticalSection(&g_csMutex);
-			if(!g_ppwszArgV){
+			if(!g_pArgV){
 				const wchar_t *const pwszCommandLine = GetCommandLineW();
 				const size_t uCommandLineLen = wcslen(pwszCommandLine);
 
@@ -46,8 +47,8 @@ size_t MCF_GetArgV(const wchar_t *const **pppwszArgV){
 
 				size_t uIndex = 0;
 				size_t uCapacity = 4;
-				wchar_t **ppArgV = malloc(uCapacity * sizeof(wchar_t *));
-				if(!ppArgV){
+				g_pArgV = malloc(uCapacity * sizeof(ARG_ITEM));
+				if(!g_pArgV){
 					MCF_CRT_Bail(L"MCF_GetArgV() 失败：内存不足。");
 				}
 
@@ -205,31 +206,35 @@ size_t MCF_GetArgV(const wchar_t *const **pppwszArgV){
 						break;
 
 					case FINISH:
-						*(pwcWrite++) = 0;
+						*pwcWrite = 0;
 						// 为最后的 NULL 保留一个空位。
 						if(uIndex + 2 >= uCapacity){
 							uCapacity *= 2;
-							wchar_t **ppNewArgV = (wchar_t **)realloc(ppArgV, uCapacity * sizeof(wchar_t *));
-							if(!ppNewArgV){
+							ARG_ITEM *const pNewArgV = realloc(g_pArgV, uCapacity * sizeof(ARG_ITEM));
+							if(!pNewArgV){
 								MCF_CRT_Bail(L"MCF_GetArgV() 失败：内存不足。");
 							}
-							ppArgV = ppNewArgV;
+							g_pArgV = pNewArgV;
 						}
-						ppArgV[uIndex++] = pwcBegin;
+						g_pArgV[uIndex].pwszBegin = pwcBegin;
+						g_pArgV[uIndex].uLen = (size_t)(pwcWrite - pwcBegin);
+						++uIndex;
+
+						++pwcWrite;
 						pwcBegin = pwcWrite;
 						break;
 					}
 					if(ch == 0){
-						ppArgV[uIndex] = NULL;
+						g_pArgV[uIndex].pwszBegin = NULL;
+						g_pArgV[uIndex].uLen = 0;
 						break;
 					}
 				}
 
 				g_uArgC = uIndex;
-				g_ppwszArgV = ppArgV;
 			}
 		LeaveCriticalSection(&g_csMutex);
 	}
-	*pppwszArgV = (const wchar_t *const *)g_ppwszArgV;
+	*ppArgV = g_pArgV;
 	return g_uArgC;
 }

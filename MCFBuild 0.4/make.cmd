@@ -2,15 +2,36 @@
 
 set Config=Debug
 
-if "%1"=="Release" (
+set CompilerFlags=-Wall -Wextra -Wsign-conversion -Wsuggest-attribute=noreturn -pipe -mfpmath=sse,387 -march=core2 -masm=intel -D__MCF_CRT_NO_DLMALLOC
+set LinkerFlags=-Wall -Wextra -static -nostartfiles -Wl,-e__MCF_ExeStartup,--disable-runtime-pseudo-reloc,--disable-auto-import
+
+if not "%1"=="Release" (
+	set CompilerFlags=%CompilerFlags% -fno-builtin -g -O0
+	set LinkerFlags=%LinkerFlags% -O0
+) else (
 	set Config=Release
+	set CompilerFlags=%CompilerFlags% -DNDEBUG -O3 -ffunction-sections -fdata-sections
+	set LinkerFlags=%LinkerFlags% -O3 -Wl,--gc-sections,-s
 )
 
-set TempDir=.Temp-%Config%
+set CFlags=%CompilerFlags% -std=c11
+set CPPFlags=%CompilerFlags% -std=c++1y
 
-if not exist "%TempDir%\libmcflite.a" call clean %* || exit /b 1
+set TempDir=.Temp-%Config%
+set ExeFile=.%Config%.exe
+
+echo ----- Configurations
+echo   CFlags      : %CFlags%
+echo   CPPFlags    : %CPPFlags%
+echo   LinkerFlags : %LinkerFlags%
+
+md "%TempDir%" >nul 2>nul
+
+if not exist "%TempDir%\libmcflite.a" call makelite %* || exit /b 1
 
 echo ----- Compiling MCFBuild...
+del "%TempDir%\*.o" /f /a 2>nul
+
 echo MCFBuild.hpp
 g++ %CPPFlags% "MCFBuild.hpp" -o "%TempDir%\MCFBuild.hpp.gch" || exit /b 1
 echo #warning Failed to load precompiled header file. > %TempDir%\MCFBuild.hpp

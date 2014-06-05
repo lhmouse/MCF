@@ -162,7 +162,7 @@ public:
 
 private:
 	template<std::size_t INDEX>
-	struct xComparers {
+	struct xComparators {
 		typedef typename Node::xIndexTuple IndexTuple;
 		typedef typename std::tuple_element<INDEX, IndexTuple>::type IndexType;
 
@@ -255,7 +255,7 @@ private:
 		::MCF_AvlAttach(
 			&(xm_aNodes[INDEX].pRoot),
 			pAvl,
-			&(xComparers<INDEX>::Nodes)
+			&(xComparators<INDEX>::Nodes)
 		);
 		if(!::MCF_AvlPrev(pAvl)){
 			xm_aNodes[INDEX].pFirst = pAvl;
@@ -414,7 +414,7 @@ public:
 		const auto pAvl = ::MCF_AvlLowerBound(
 			&(xm_aNodes[INDEX].pRoot),
 			(std::intptr_t)&vComparand,
-			&(xComparers<INDEX>::template NodeOther<Comparand_t>)
+			&(xComparators<INDEX>::template NodeOther<Comparand_t>)
 		);
 		return pAvl ? DOWN_CAST(const Node, xm_aHeaders[INDEX], pAvl) : nullptr;
 	}
@@ -423,7 +423,7 @@ public:
 		const auto pAvl = ::MCF_AvlLowerBound(
 			&(xm_aNodes[INDEX].pRoot),
 			(std::intptr_t)&vComparand,
-			&(xComparers<INDEX>::template NodeOther<Comparand_t>)
+			&(xComparators<INDEX>::template NodeOther<Comparand_t>)
 		);
 		return pAvl ? DOWN_CAST(Node, xm_aHeaders[INDEX], pAvl) : nullptr;
 	}
@@ -433,7 +433,7 @@ public:
 		const auto pAvl = ::MCF_AvlUpperBound(
 			&(xm_aNodes[INDEX].pRoot),
 			(std::intptr_t)&vComparand,
-			&(xComparers<INDEX>::template OtherNode<Comparand_t>)
+			&(xComparators<INDEX>::template OtherNode<Comparand_t>)
 		);
 		return pAvl ? DOWN_CAST(const Node, xm_aHeaders[INDEX], pAvl) : nullptr;
 	}
@@ -442,7 +442,7 @@ public:
 		const auto pAvl = ::MCF_AvlUpperBound(
 			&(xm_aNodes[INDEX].pRoot),
 			(std::intptr_t)&vComparand,
-			&(xComparers<INDEX>::template OtherNode<Comparand_t>)
+			&(xComparators<INDEX>::template OtherNode<Comparand_t>)
 		);
 		return pAvl ? DOWN_CAST(Node, xm_aHeaders[INDEX], pAvl) : nullptr;
 	}
@@ -452,8 +452,8 @@ public:
 		const auto pAvl = ::MCF_AvlFind(
 			&(xm_aNodes[INDEX].pRoot),
 			(std::intptr_t)&vComparand,
-			&(xComparers<INDEX>::template NodeOther<Comparand_t>),
-			&(xComparers<INDEX>::template OtherNode<Comparand_t>)
+			&(xComparators<INDEX>::template NodeOther<Comparand_t>),
+			&(xComparators<INDEX>::template OtherNode<Comparand_t>)
 		);
 		return pAvl ? DOWN_CAST(const Node, xm_aHeaders[INDEX], pAvl) : nullptr;
 	}
@@ -462,8 +462,8 @@ public:
 		const auto pAvl = ::MCF_AvlFind(
 			&(xm_aNodes[INDEX].pRoot),
 			(std::intptr_t)&vComparand,
-			&(xComparers<INDEX>::template NodeOther<Comparand_t>),
-			&(xComparers<INDEX>::template OtherNode<Comparand_t>)
+			&(xComparators<INDEX>::template NodeOther<Comparand_t>),
+			&(xComparators<INDEX>::template OtherNode<Comparand_t>)
 		);
 		return pAvl ? DOWN_CAST(Node, xm_aHeaders[INDEX], pAvl) : nullptr;
 	}
@@ -476,8 +476,8 @@ public:
 			&pEnd,
 			&(xm_aNodes[INDEX].pRoot),
 			(std::intptr_t)&vComparand,
-			&(xComparers<INDEX>::template NodeOther<Comparand_t>),
-			&(xComparers<INDEX>::template OtherNode<Comparand_t>)
+			&(xComparators<INDEX>::template NodeOther<Comparand_t>),
+			&(xComparators<INDEX>::template OtherNode<Comparand_t>)
 		);
 		return std::make_pair(
 			pBegin ? DOWN_CAST(const Node, xm_aHeaders[INDEX], pBegin) : nullptr,
@@ -492,8 +492,8 @@ public:
 			&pEnd,
 			&(xm_aNodes[INDEX].pRoot),
 			(std::intptr_t)&vComparand,
-			&(xComparers<INDEX>::template NodeOther<Comparand_t>),
-			&(xComparers<INDEX>::template OtherNode<Comparand_t>)
+			&(xComparators<INDEX>::template NodeOther<Comparand_t>),
+			&(xComparators<INDEX>::template OtherNode<Comparand_t>)
 		);
 		return std::make_pair(
 			pBegin ? DOWN_CAST(Node, xm_aHeaders[INDEX], pBegin) : nullptr,

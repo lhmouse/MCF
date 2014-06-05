@@ -22,15 +22,15 @@ typedef struct MCF_tagAvlNodeHeader {
 typedef MCF_AVL_NODE_HEADER *MCF_AVL_ROOT;
 
 // 若 arg0 < arg1 应返回非零值，否则应返回零。
-typedef int (*MCF_AVL_COMPARER_NODES)(
+typedef int (*MCF_AVL_COMPARATOR_NODES)(
 	const MCF_AVL_NODE_HEADER *,
 	const MCF_AVL_NODE_HEADER *
 );
-typedef int (*MCF_AVL_COMPARER_NODE_OTHER)(
+typedef int (*MCF_AVL_COMPARATOR_NODE_OTHER)(
 	const MCF_AVL_NODE_HEADER *,
 	MCF_STD intptr_t
 );
-typedef int (*MCF_AVL_COMPARER_OTHER_NODE)(
+typedef int (*MCF_AVL_COMPARATOR_OTHER_NODE)(
 	MCF_STD intptr_t,
 	const MCF_AVL_NODE_HEADER *
 );
@@ -54,7 +54,7 @@ extern void MCF_AvlSwap(
 extern void MCF_AvlAttach(
 	MCF_AVL_ROOT *ppRoot,
 	MCF_AVL_NODE_HEADER *pNode,
-	MCF_AVL_COMPARER_NODES pfnComparer
+	MCF_AVL_COMPARATOR_NODES pfnComparator
 ) MCF_NOEXCEPT;
 
 extern void MCF_AvlDetach(
@@ -66,20 +66,20 @@ extern void MCF_AvlDetach(
 extern MCF_AVL_NODE_HEADER *MCF_AvlLowerBound(
 	const MCF_AVL_ROOT *ppRoot,
 	MCF_STD intptr_t nOther,
-	MCF_AVL_COMPARER_NODE_OTHER pfnComparerNodeOther
+	MCF_AVL_COMPARATOR_NODE_OTHER pfnComparatorNodeOther
 ) MCF_NOEXCEPT;
 
 extern MCF_AVL_NODE_HEADER *MCF_AvlUpperBound(
 	const MCF_AVL_ROOT *ppRoot,
 	MCF_STD intptr_t nOther,
-	MCF_AVL_COMPARER_OTHER_NODE pfnComparerOtherNode
+	MCF_AVL_COMPARATOR_OTHER_NODE pfnComparatorOtherNode
 ) MCF_NOEXCEPT;
 
 extern MCF_AVL_NODE_HEADER *MCF_AvlFind(
 	const MCF_AVL_ROOT *ppRoot,
 	MCF_STD intptr_t nOther,
-	MCF_AVL_COMPARER_NODE_OTHER pfnComparerNodeOther,
-	MCF_AVL_COMPARER_OTHER_NODE pfnComparerOtherNode
+	MCF_AVL_COMPARATOR_NODE_OTHER pfnComparatorNodeOther,
+	MCF_AVL_COMPARATOR_OTHER_NODE pfnComparatorOtherNode
 ) MCF_NOEXCEPT;
 
 extern void MCF_AvlEqualRange(
@@ -87,8 +87,8 @@ extern void MCF_AvlEqualRange(
 	MCF_AVL_NODE_HEADER **ppEnd,
 	const MCF_AVL_ROOT *ppRoot,
 	MCF_STD intptr_t nOther,
-	MCF_AVL_COMPARER_NODE_OTHER pfnComparerNodeOther,
-	MCF_AVL_COMPARER_OTHER_NODE pfnComparerOtherNode
+	MCF_AVL_COMPARATOR_NODE_OTHER pfnComparatorNodeOther,
+	MCF_AVL_COMPARATOR_OTHER_NODE pfnComparatorOtherNode
 ) MCF_NOEXCEPT;
 
 __MCF_EXTERN_C_END

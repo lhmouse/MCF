@@ -10,12 +10,14 @@
 
 namespace MCFBuild {
 
-extern bool GetFileContents(MCF::Vector<unsigned char> &vecData, const MCF::WideString &wcsPath);
-extern bool GetFileSha256(Sha256 &shaChecksum, const MCF::WideString &wcsPath);
-
 extern MCF::WideString GetFullPath(const MCF::WideString &wcsSrc);
 
+extern bool GetFileContents(MCF::Vector<unsigned char> &vecData, const MCF::WideString &wcsPath);
+extern void PutFileContents(const MCF::WideString &wcsPath, const void *pData, std::size_t uSize);
+extern bool GetFileSha256(Sha256 &shaChecksum, const MCF::WideString &wcsPath);
+
 extern void CreateDirectory(const MCF::WideString &wcsPath);
+extern void RemoveFile(const MCF::WideString &wcsPath);
 
 }
 

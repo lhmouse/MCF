@@ -137,7 +137,7 @@ namespace MCFBuild {
 
 #define	LOCK_THROUGH(cs)	const ::MCFBuild::CriticalSectionHelper __LOCK__(&cs)
 
-	struct WcsComparerNoCase {
+	struct WcsComparatorNoCase {
 		bool operator()(const wvstring &lhs, const wvstring &rhs) const {
 			auto iter1 = lhs.cbegin();
 			auto iter2 = rhs.cbegin();
@@ -171,16 +171,16 @@ namespace MCFBuild {
 		};
 
 		long long llProjectFileTimestamp;
-		std::set<wvstring, WcsComparerNoCase> setIgnoredFiles;
-		std::map<wvstring, PRECOMPILED_HEADER, WcsComparerNoCase> mapPreCompiledHeaders;
-		std::map<wvstring, COMPILER, WcsComparerNoCase> mapCompilers;
+		std::set<wvstring, WcsComparatorNoCase> setIgnoredFiles;
+		std::map<wvstring, PRECOMPILED_HEADER, WcsComparatorNoCase> mapPreCompiledHeaders;
+		std::map<wvstring, COMPILER, WcsComparatorNoCase> mapCompilers;
 		LINKERS Linkers;
 		wvstring wcsOutputPath;
 	};
 
 	struct FOLDER_TREE {
-		std::map<wvstring, FOLDER_TREE, WcsComparerNoCase> mapSubFolders;
-		std::map<wvstring, long long, WcsComparerNoCase> mapFiles;
+		std::map<wvstring, FOLDER_TREE, WcsComparatorNoCase> mapSubFolders;
+		std::map<wvstring, long long, WcsComparatorNoCase> mapFiles;
 	};
 
 	struct BUILD_JOBS {

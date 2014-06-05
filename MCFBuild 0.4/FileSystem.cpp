@@ -13,21 +13,42 @@ using namespace MCFBuild;
 
 namespace MCFBuild {
 
+MCF::WideString GetFullPath(const MCF::WideString &wcsSrc){
+	MCF::WideString wcsRet;
+	if(!wcsSrc.IsEmpty()){
+		const DWORD dwSize = ::GetFullPathNameW(wcsSrc.GetCStr(), 0, nullptr, nullptr);
+		wcsRet.Resize(dwSize);
+		wcsRet.Resize(::GetFullPathNameW(wcsSrc.GetCStr(), dwSize, wcsRet.GetStr(), nullptr));
+	}
+	return std::move(wcsRet);
+}
+
 bool GetFileContents(MCF::Vector<unsigned char> &vecData, const MCF::WideString &wcsPath){
-	const auto pFile = MCF::File::OpenNoThrow(wcsPath, true, false, false);
+	const auto wcsFullPath = GetFullPath(wcsPath);
+	const auto pFile = MCF::File::OpenNoThrow(wcsFullPath, true, false, false);
 	if(!pFile){
 		return false;
 	}
 	const auto u64FileSize = pFile->GetSize();
 	if(u64FileSize > (std::size_t)-1){
-		MCF_THROW(ERROR_NOT_ENOUGH_MEMORY, L"FILE_TOO_LARGE|"_ws + wcsPath);
+		FORMAT_THROW(ERROR_NOT_ENOUGH_MEMORY, L"FILE_TOO_LARGE|"_wso + wcsFullPath);
 	}
 	vecData.Resize(u64FileSize);
 	pFile->Read(vecData.GetData(), u64FileSize, 0);
 	return true;
 }
+void PutFileContents(const MCF::WideString &wcsPath, const void *pData, std::size_t uSize){
+	const auto wcsFullPath = GetFullPath(wcsPath);
+	const auto pFile = MCF::File::OpenNoThrow(wcsFullPath, false, true, true);
+	if(pFile){
+		FORMAT_THROW(::GetLastError(), L"OPEN_FILE_FAILED|"_wso + wcsFullPath);
+	}
+	pFile->Clear();
+	pFile->Write(0, pData, uSize);
+}
 bool GetFileSha256(Sha256 &shaChecksum, const MCF::WideString &wcsPath){
-	const auto pFile = MCF::File::OpenNoThrow(wcsPath, true, false, false);
+	const auto wcsFullPath = GetFullPath(wcsPath);
+	const auto pFile = MCF::File::OpenNoThrow(wcsFullPath, true, false, false);
 	if(!pFile){
 		return false;
 	}
@@ -59,16 +80,6 @@ bool GetFileSha256(Sha256 &shaChecksum, const MCF::WideString &wcsPath){
 	return true;
 }
 
-MCF::WideString GetFullPath(const MCF::WideString &wcsSrc){
-	MCF::WideString wcsRet;
-	if(!wcsSrc.IsEmpty()){
-		const DWORD dwSize = ::GetFullPathNameW(wcsSrc.GetCStr(), 0, nullptr, nullptr);
-		wcsRet.Resize(dwSize);
-		wcsRet.Resize(::GetFullPathNameW(wcsSrc.GetCStr(), dwSize, wcsRet.GetStr(), nullptr));
-	}
-	return std::move(wcsRet);
-}
-
 void CreateDirectory(const MCF::WideString &wcsPath){
 	MCF::WideString wcsFullPath = GetFullPath(wcsPath);
 	if(!wcsFullPath.IsEmpty() && (wcsFullPath.GetEnd()[-1] != L'\\')){
@@ -83,12 +94,12 @@ void CreateDirectory(const MCF::WideString &wcsPath){
 		wcsFullPath[uSlashPos] = L'\\';
 		if(dwAttributes != INVALID_FILE_ATTRIBUTES){
 			if((dwAttributes & FILE_ATTRIBUTE_DIRECTORY) == 0){
-				MCF_THROW(ERROR_PATH_NOT_FOUND, L"ACCESS_DIRECTORY_FAILED|"_ws + wcsFullPath);
+				FORMAT_THROW(ERROR_PATH_NOT_FOUND, L"OPEN_DIRECTORY_FAILED|"_wso + wcsFullPath);
 			}
 		} else {
 			const DWORD dwError = ::GetLastError();
 			if(dwError != ERROR_FILE_NOT_FOUND){
-				MCF_THROW(dwError, L"ACCESS_DIRECTORY_FAILED|"_ws + wcsFullPath);
+				FORMAT_THROW(dwError, L"OPEN_DIRECTORY_FAILED|"_wso + wcsFullPath);
 			}
 			wcsFullPath[uSlashPos] = 0;
 			const bool bResult = ::CreateDirectoryW(wcsFullPath.GetCStr(), nullptr);
@@ -96,12 +107,21 @@ void CreateDirectory(const MCF::WideString &wcsPath){
 			if(!bResult){
 				const DWORD dwError = ::GetLastError();
 				if(dwError != ERROR_ALREADY_EXISTS){
-					MCF_THROW(dwError, L"ACCESS_DIRECTORY_FAILED|"_ws + wcsFullPath);
+					FORMAT_THROW(dwError, L"OPEN_DIRECTORY_FAILED|"_wso + wcsFullPath);
 				}
 			}
 		}
 		uSlashPos = wcsFullPath.Find(L'\\', (std::ptrdiff_t)(uSlashPos + 1));
 	} while(uSlashPos != MCF::WideString::NPOS);
+}
+void RemoveFile(const MCF::WideString &wcsPath){
+	const auto wcsFullPath = GetFullPath(wcsPath);
+	if(!::DeleteFileW(wcsFullPath.GetCStr())){
+		const DWORD dwError = ::GetLastError();
+		if((dwError != ERROR_FILE_NOT_FOUND) && (dwError != ERROR_PATH_NOT_FOUND)){
+			FORMAT_THROW(dwError, L"DELETE_FILE_FAILED|"_wso + wcsFullPath);
+		}
+	}
 }
 
 }

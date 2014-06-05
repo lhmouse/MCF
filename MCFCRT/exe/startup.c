@@ -25,8 +25,8 @@ static __attribute__((__cdecl__, __used__, __noreturn__)) int AlignedStartup(){
 
 	DWORD dwExitCode;
 
-#define INIT(exp)		if((dwExitCode = (exp)) == ERROR_SUCCESS){ ((void)0)
-#define CLEANUP(exp)	(exp); } ((void)0)
+#define INIT(exp)		if((dwExitCode = (exp)) == ERROR_SUCCESS){
+#define CLEANUP(exp)	(exp); }
 
 	INIT(__MCF_CRT_Begin());
 	INIT(__MCF_CRT_ThreadInitialize());

@@ -25,11 +25,11 @@ typedef MCF::UniqueHandle<WinHandleCloser> UniqueWinHandle;
 std::pair<UniqueWinHandle, UniqueWinHandle> CreateReadablePipe(){
 	HANDLE hRawRead, hRawWrite;
 	if(!::CreatePipe(&hRawRead, &hRawWrite, nullptr, 0)){
-		MCF_THROW(::GetLastError(), L"CREATE_PIPE_FAILED"_wso);
+		FORMAT_THROW(::GetLastError(), L"CREATE_PIPE_FAILED"_wso);
 	}
 	UniqueWinHandle hRead(hRawRead), hWrite(hRawWrite);
 	if(!::SetHandleInformation(hWrite.Get(), HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT)){
-		MCF_THROW(::GetLastError(), L"SET_PIPE_INFO_FAILED"_wso);
+		FORMAT_THROW(::GetLastError(), L"SET_PIPE_INFO_FAILED"_wso);
 	}
 	return std::make_pair(std::move(hRead), std::move(hWrite));
 }
@@ -104,7 +104,7 @@ unsigned int Shell(
 
 	PROCESS_INFORMATION vProcessInfo;
 	if(!::CreateProcessW(nullptr, wcsCommandLine.GetStr(), nullptr, nullptr, TRUE, 0, nullptr, nullptr, &vStartupInfo, &vProcessInfo)){
-		MCF_THROW(::GetLastError(), L"CREATE_PROCESS_FAILED|"_ws + wcsCommandLine);
+		FORMAT_THROW(::GetLastError(), L"CREATE_PROCESS_FAILED|"_wso + wcsCommandLine);
 	}
 	::CloseHandle(vProcessInfo.hThread);
 	const UniqueWinHandle hProcess(vProcessInfo.hProcess);

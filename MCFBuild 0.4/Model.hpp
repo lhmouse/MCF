@@ -5,14 +5,31 @@
 #define MCFBUILD_MODEL_HPP_
 
 #include "../MCF/Core/Utilities.hpp"
-#include <array>
 #include <cstddef>
 
 namespace MCFBuild {
 
-constexpr std::size_t MAX_FILE_SIZE = 64 * 0x400 * 0x400; // 64 MiB
+class Model : NO_COPY {
+public:
+	static Model &GetInstance() noexcept;
 
-typedef std::array<unsigned char, 32> Sha256;
+private:
+	bool xm_bVerbose;
+	bool xm_bRawOutput;
+
+protected:
+	Model();
+
+public:
+	bool IsVerbose() const noexcept {
+		return xm_bVerbose;
+	}
+	bool DoesUseRawOutput() const noexcept {
+		return xm_bRawOutput;
+	}
+
+	unsigned int Run();
+};
 
 }
 

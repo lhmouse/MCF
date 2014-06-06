@@ -2,34 +2,22 @@
 // Copyleft 2014, LH_Mouse. All wrongs reserved.
 
 #include "MCFBuild.hpp"
+#include "Model.hpp"
+#include "ConsoleOutput.hpp"
+#include "Localization.hpp"
 #include "../MCF/Core/Utilities.hpp"
 #include "../MCF/Core/String.hpp"
 #include "../MCF/Core/VVector.hpp"
 #include "../MCF/Core/Exception.hpp"
-#include "../MCFCRT/exe/exe_include.h"
 #include <cwchar>
 using namespace MCFBuild;
-
-namespace MCFBuild {
-
-extern unsigned int WorkerEntry(const MCF::VVector<MCF::WideStringObserver> &vecArgs);
-
-}
 
 extern "C" unsigned int MCFMain()
 try {
 	PrintLn(FormatString(L"MCFBUILD_LOGO|0|4|0|0"_wso));
 	PrintLn();
 
-	const ARG_ITEM *pArgV;
-	const auto uArgC = ::MCF_GetArgV(&pArgV);
-
-	MCF::VVector<MCF::WideStringObserver> vecArgs;
-	vecArgs.Reserve(uArgC);
-	for(std::size_t i = 0; i < uArgC; ++i){
-		vecArgs.PushNoCheck(MCF::WideStringObserver(pArgV[i].pwszBegin, pArgV[i].uLen));
-	}
-	return WorkerEntry(vecArgs);
+	return Model::GetInstance().Run();
 } catch(MCF::Exception &e){
 	auto wcsMessage(L"MCF_EXCEPTION|"_wso + e.m_wcsMessage);
 	wchar_t awcCode[16];

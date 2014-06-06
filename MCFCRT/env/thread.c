@@ -71,43 +71,8 @@ typedef struct tagThreadEnv {
 
 static DWORD g_dwTlsIndex = TLS_OUT_OF_INDEXES;
 
-static __attribute__((__cdecl__, __used__, __noreturn__)) DWORD AlignedCRTThreadProc(LPVOID pParam){
-	const THREAD_INIT_INFO ThreadInitInfo = *(const THREAD_INIT_INFO *)pParam;
-	free(pParam);
-
-	DWORD dwExitCode;
-
-#define INIT(exp)		if((dwExitCode = (exp)) == ERROR_SUCCESS){
-#define CLEANUP(exp)	(exp); }
-
-	INIT(__MCF_CRT_ThreadInitialize());
-
-	dwExitCode = (*ThreadInitInfo.pfnProc)(ThreadInitInfo.nParam);
-
-	CLEANUP(__MCF_CRT_ThreadUninitialize());
-
-	ExitThread(dwExitCode);
-	__builtin_trap();
-}
-
 extern __attribute__((__stdcall__, __noreturn__)) DWORD CRTThreadProc(LPVOID pParam)
 	__asm__("CRTThreadProc");
-__asm__(
-	"	.text \n"
-	"	.align 16 \n"
-	"CRTThreadProc: \n"
-#ifdef _WIN64
-	"	and rsp, -0x10 \n"
-	"	sub rsp, 0x10 \n"
-	"	call AlignedCRTThreadProc \n"
-#else
-	"	mov eax, dword ptr[esp + 4] \n"
-	"	and esp, -0x10 \n"
-	"	sub esp, 0x10 \n"
-	"	mov dword ptr[esp], eax \n"
-	"	call _AlignedCRTThreadProc \n"
-#endif
-);
 
 unsigned long __MCF_CRT_TlsEnvInitialize(){
 	g_dwTlsIndex = TlsAlloc();
@@ -341,3 +306,58 @@ void MCF_CRT_DeleteTls(
 		free(pObject);
 	}
 }
+
+#pragma GCC optimize "-fno-function-sections"
+
+static __attribute__((__cdecl__, __used__, __noreturn__)) DWORD AlignedCRTThreadProc(LPVOID pParam){
+#ifdef __SEH__
+	__asm__ __volatile__(
+		"seh_try: \n"
+	);
+#endif
+
+	const THREAD_INIT_INFO ThreadInitInfo = *(const THREAD_INIT_INFO *)pParam;
+	free(pParam);
+
+	DWORD dwExitCode;
+
+#define INIT(exp)		if((dwExitCode = (exp)) == ERROR_SUCCESS){
+#define CLEANUP(exp)	(exp); }
+
+	INIT(__MCF_CRT_ThreadInitialize());
+
+	dwExitCode = (*ThreadInitInfo.pfnProc)(ThreadInitInfo.nParam);
+
+	CLEANUP(__MCF_CRT_ThreadUninitialize());
+
+#ifdef __SEH__
+	__asm__ __volatile__(
+		"seh_except: \n"
+		"	.seh_handler __C_specific_handler, @except \n"
+		"	.seh_handlerdata \n"
+		"	.long 1 \n"
+		"	.rva seh_try, seh_except, _gnu_exception_handler, seh_except \n"
+		"	.text \n"
+	);
+#endif
+
+	ExitThread(dwExitCode);
+	__builtin_unreachable();
+}
+
+__asm__(
+	"	.text \n"
+	"	.align 16 \n"
+	"CRTThreadProc: \n"
+#ifdef _WIN64
+	"	and rsp, -0x10 \n"
+	"	sub rsp, 0x10 \n"
+	"	call AlignedCRTThreadProc \n"
+#else
+	"	mov eax, dword ptr[esp + 4] \n"
+	"	and esp, -0x10 \n"
+	"	sub esp, 0x10 \n"
+	"	mov dword ptr[esp], eax \n"
+	"	call _AlignedCRTThreadProc \n"
+#endif
+);

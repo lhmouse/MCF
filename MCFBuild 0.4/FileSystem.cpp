@@ -11,6 +11,9 @@
 #include <cstddef>
 using namespace MCFBuild;
 
+constexpr std::size_t FILE_BUFFER_SIZE	= 32 * 0x400;			// 32 KiB
+constexpr std::size_t MAX_FILE_SIZE		= 64 * 0x400 * 0x400;	// 64 MiB
+
 namespace MCFBuild {
 
 MCF::WideString GetFullPath(const MCF::WideString &wcsSrc){
@@ -23,28 +26,41 @@ MCF::WideString GetFullPath(const MCF::WideString &wcsSrc){
 	return std::move(wcsRet);
 }
 
-bool GetFileContents(MCF::Vector<unsigned char> &vecData, const MCF::WideString &wcsPath){
+bool GetFileContents(MCF::StreamBuffer &sbufData, const MCF::WideString &wcsPath, bool bThrowOnFailure){
 	const auto wcsFullPath = GetFullPath(wcsPath);
 	const auto pFile = MCF::File::OpenNoThrow(wcsFullPath, true, false, false);
 	if(!pFile){
+		if(bThrowOnFailure){
+			FORMAT_THROW(::GetLastError(), L"OPEN_FILE_FAILED|"_wso + wcsFullPath);
+		}
 		return false;
 	}
+
 	const auto u64FileSize = pFile->GetSize();
-	if(u64FileSize > (std::size_t)-1){
-		FORMAT_THROW(ERROR_NOT_ENOUGH_MEMORY, L"FILE_TOO_LARGE|"_wso + wcsFullPath);
+	std::uint64_t u64Offset = 0;
+	while(u64Offset < u64FileSize){
+		unsigned char abyTemp[FILE_BUFFER_SIZE];
+		const auto uBytesRead = pFile->Read(abyTemp, sizeof(abyTemp), u64Offset);
+		u64Offset += uBytesRead;
+		sbufData.Insert(abyTemp, uBytesRead);
 	}
-	vecData.Resize(u64FileSize);
-	pFile->Read(vecData.GetData(), u64FileSize, 0);
 	return true;
 }
-void PutFileContents(const MCF::WideString &wcsPath, const void *pData, std::size_t uSize){
+void PutFileContents(const MCF::WideString &wcsPath, const MCF::StreamBuffer &sbufData){
 	const auto wcsFullPath = GetFullPath(wcsPath);
 	const auto pFile = MCF::File::OpenNoThrow(wcsFullPath, false, true, true);
 	if(pFile){
 		FORMAT_THROW(::GetLastError(), L"OPEN_FILE_FAILED|"_wso + wcsFullPath);
 	}
 	pFile->Clear();
-	pFile->Write(0, pData, uSize);
+
+	std::uint64_t u64Offset = 0;
+	sbufData.Traverse(
+		[&](auto pbyData, auto uSize){
+			pFile->Write(u64Offset, pbyData, uSize);
+			u64Offset += uSize;
+		}
+	);
 }
 bool GetFileSha256(Sha256 &shaChecksum, const MCF::WideString &wcsPath){
 	const auto wcsFullPath = GetFullPath(wcsPath);
@@ -56,14 +72,14 @@ bool GetFileSha256(Sha256 &shaChecksum, const MCF::WideString &wcsPath){
 	MCF::Sha256 shaHasher;
 	shaHasher.Update(nullptr, 0);
 	if(u64FileSize > 0){
-		unsigned char abyTemp1[32 * 1024], abyTemp2[sizeof(abyTemp1)];
+		unsigned char abyTemp1[FILE_BUFFER_SIZE], abyTemp2[FILE_BUFFER_SIZE];
 		auto *pbyCurBuffer = abyTemp1, *pbyBackBuffer = abyTemp2;
-		std::size_t uBytesCur = pFile->Read(pbyCurBuffer, sizeof(abyTemp1), 0);
+		std::size_t uBytesCur = pFile->Read(pbyCurBuffer, FILE_BUFFER_SIZE, 0);
 
 		std::uint64_t u64Offset = uBytesCur;
 		while(u64Offset < u64FileSize){
 			const auto uBytesBack = pFile->Read(
-				pbyBackBuffer, sizeof(abyTemp1), u64Offset,
+				pbyBackBuffer, FILE_BUFFER_SIZE, u64Offset,
 				[&]{
 					shaHasher.Update(pbyCurBuffer, uBytesCur);
 				}

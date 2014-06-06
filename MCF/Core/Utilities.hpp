@@ -167,32 +167,38 @@ inline auto Clone(T &&vSrc)
 //----------------------------------------------------------------------------
 template<typename Tx, typename Ty>
 inline void BCopy(Tx &vDst, const Ty &vSrc) noexcept {
-	static_assert(std::is_trivial<Tx>::value && std::is_trivial<Ty>::value, "MCF::BCopy(): Only trivial types are supported.");
-	static_assert(sizeof(vDst) == sizeof(vSrc), "MCF::BCopy(): Source and destination sizes do not match.");
+	static_assert(std::is_trivial<Tx>::value && std::is_trivial<Ty>::value, "Only trivial types are supported.");
+	static_assert(sizeof(vDst) == sizeof(vSrc), "Source and destination sizes do not match.");
 
 	__builtin_memcpy(&vDst, &vSrc, sizeof(vDst));
 }
 
 template<typename T>
 inline void BFill(T &vDst, bool bVal) noexcept {
-	static_assert(std::is_trivial<T>::value, "MCF::BFill(): Only trivial types are supported.");
+	static_assert(std::is_trivial<T>::value, "Only trivial types are supported.");
 
 	__builtin_memset(&vDst, bVal ? -1 : 0, sizeof(vDst));
 }
 
-template<typename T>
-inline void BZero(T &vDst) noexcept {
-	static_assert(std::is_trivial<T>::value, "MCF::BZero(): Only trivial types are supported.");
+template<typename Tx, typename Ty>
+inline int BComp(const Tx &vDst, const Ty &vSrc) noexcept {
+	static_assert(std::is_trivial<Tx>::value && std::is_trivial<Ty>::value, "Only trivial types are supported.");
+	static_assert(sizeof(vDst) == sizeof(vSrc), "Source and destination sizes do not match.");
 
-	__builtin_memset(&vDst, 0, sizeof(vDst));
+	return __builtin_memcmp(&vDst, &vSrc, sizeof(vSrc));
 }
 
 template<typename Tx, typename Ty>
-inline int BComp(const Tx &vDst, const Ty &vSrc) noexcept {
-	static_assert(std::is_trivial<Tx>::value && std::is_trivial<Ty>::value, "MCF::BComp(): Only trivial types are supported.");
-	static_assert(sizeof(vDst) == sizeof(vSrc), "MCF::BComp(): Source and destination sizes do not match.");
+inline void BSwap(Tx &vDst, Ty &vSrc) noexcept {
+	static_assert(std::is_trivial<Tx>::value && std::is_trivial<Ty>::value, "Only trivial types are supported.");
+	static_assert(sizeof(vDst) == sizeof(vSrc), "Source and destination sizes do not match.");
 
-	return __builtin_memcmp(&vDst, &vSrc, sizeof(vSrc));
+	std::swap(vDst, reinterpret_cast<Tx &>(vSrc));
+}
+
+template<typename T>
+inline void BZero(T &vDst) noexcept {
+	BFill(vDst, false);
 }
 
 //----------------------------------------------------------------------------
@@ -224,16 +230,16 @@ Function_t &&CallOnEachBackward(Function_t &&fnCallable, FirstParam_t &&vFirstPa
 //----------------------------------------------------------------------------
 template<typename Tx, typename Ty>
 typename std::common_type<Tx, Ty>::type Min(Tx op1, Ty op2){
-	static_assert(std::is_scalar<Tx>::value && std::is_scalar<Ty>::value, "MCF::Min(): Only scalar types are supported");
-	static_assert(std::is_signed<Tx>::value ^ !std::is_signed<Ty>::value, "MCF::Min(): Comparison between signed and unsigned integers.");
+	static_assert(std::is_scalar<Tx>::value && std::is_scalar<Ty>::value, "Only scalar types are supported");
+	static_assert(std::is_signed<Tx>::value ^ !std::is_signed<Ty>::value, "Comparison between signed and unsigned integers.");
 
 	return std::min<typename std::common_type<Tx, Ty>::type>(op1, op2);
 }
 
 template<typename Tx, typename Ty>
 typename std::common_type<Tx, Ty>::type Max(Tx op1, Ty op2){
-	static_assert(std::is_scalar<Tx>::value && std::is_scalar<Ty>::value, "MCF::Min(): Only scalar types are supported");
-	static_assert(std::is_signed<Tx>::value ^ !std::is_signed<Ty>::value, "MCF::Min(): Comparison between signed and unsigned integers.");
+	static_assert(std::is_scalar<Tx>::value && std::is_scalar<Ty>::value, "Only scalar types are supported");
+	static_assert(std::is_signed<Tx>::value ^ !std::is_signed<Ty>::value, "Comparison between signed and unsigned integers.");
 
 	return std::max<typename std::common_type<Tx, Ty>::type>(op1, op2);
 }

@@ -3,7 +3,7 @@
 
 #include "MCFBuild.hpp"
 #include "DependencyDatabase.hpp"
-#include "../MCF/Core/File.hpp"
+#include "FileSystem.hpp"
 #include "../MCF/Core/VVector.hpp"
 #include "../MCF/Core/Exception.hpp"
 #include "../MCF/Serialization/Serdes.hpp"
@@ -22,31 +22,13 @@ SERDES_TABLE_BEGIN(DependencyDatabase)
 SERDES_TABLE_END
 
 void DependencyDatabase::LoadFromFile(const MCF::WideString &wcsPath){
-	const auto pFile = MCF::File::Open(wcsPath, true, false, false);
-	const unsigned long long ullFileSize = pFile->GetSize();
-	if(ullFileSize >= MAX_FILE_SIZE){
-		FORMAT_THROW(ERROR_INVALID_DATA, L"FILE_TOO_LARGE|"_wso + wcsPath);
-	}
-
+	m_mapFiles.clear();
 	MCF::StreamBuffer sbufData;
-	while(sbufData.GetSize() < ullFileSize){
-		unsigned char abyTemp[0x10000];
-		const auto uBytesRead = pFile->Read(abyTemp, sizeof(abyTemp), sbufData.GetSize());
-		sbufData.Insert(abyTemp, uBytesRead);
-	}
+	GetFileContents(sbufData, wcsPath, true);
 	MCF::Deserialize(*this, sbufData);
 }
 void DependencyDatabase::SaveToFile(const MCF::WideString &wcsPath) const {
 	MCF::StreamBuffer sbufData;
 	MCF::Serialize(sbufData, *this);
-
-	const auto pFile = MCF::File::Open(wcsPath, false, true, true);
-	pFile->Clear();
-	unsigned long long ullBytesWritten = 0;
-	sbufData.Traverse(
-		[&](auto pbyData, auto uSize){
-			pFile->Write(ullBytesWritten, pbyData, uSize);
-			ullBytesWritten += uSize;
-		}
-	);
+	PutFileContents(wcsPath, sbufData);
 }

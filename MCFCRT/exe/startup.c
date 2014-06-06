@@ -30,11 +30,9 @@ static __attribute__((__cdecl__, __used__, __noreturn__)) int AlignedStartup(){
 
 	INIT(__MCF_CRT_Begin());
 	INIT(__MCF_CRT_ThreadInitialize());
-	INIT(__MCF_CRT_ExeInitializeArgV());
 
 	dwExitCode = MCFMain();
 
-	CLEANUP(__MCF_CRT_ExeUninitializeArgV());
 	CLEANUP(__MCF_CRT_ThreadUninitialize());
 	CLEANUP(__MCF_CRT_End());
 
@@ -50,7 +48,7 @@ static __attribute__((__cdecl__, __used__, __noreturn__)) int AlignedStartup(){
 #endif
 
 	ExitProcess(dwExitCode);
-	__builtin_trap();
+	__builtin_unreachable();
 }
 
 __asm__(

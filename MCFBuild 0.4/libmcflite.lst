@@ -13,13 +13,13 @@
 ..\MCFCRT\env\heap.c
 ..\MCFCRT\env\heap_dbg.c
 ..\MCFCRT\exe\startup.c
-..\MCFCRT\exe\argv.c
 ..\MCFCRT\exe\startup.c
 
 ..\MCF\Core\String.cpp
 ..\MCF\Core\Exception.cpp
 ..\MCF\Core\File.cpp
 ..\MCF\Core\StreamBuffer.cpp
+..\MCF\Core\System.cpp
 ..\MCF\Core\Time.cpp
 ..\MCF\Thread\Thread.cpp
 ..\MCF\Thread\CriticalSection.cpp

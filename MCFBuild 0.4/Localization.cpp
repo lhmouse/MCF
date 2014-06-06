@@ -3,6 +3,7 @@
 
 #include "MCFBuild.hpp"
 #include "Localization.hpp"
+#include "Model.hpp"
 #include "../MCF/Core/VVector.hpp"
 #include <cstdlib>
 #include <map>
@@ -21,10 +22,10 @@ const std::map<MCF::WideStringObserver, MCF::WideStringObserver> g_mapStrings = 
 											"  -C目录        在进行任何其他操作之前，切换工作目录到此路径。\n"
 											"\n"
 											"  -p文件        指定要调用的项目文件路径。\n"
-											"                默认值是“MCFBuild.mcfproj4”。\n"
+											"                默认值是“MCFBuild.mcfproj”。\n"
 											"  配置名        指定要调用的配置包的名称。区分大小写。\n"
 											"                默认值是“Default”。\n"
-											"  -D名称[=值]   定义一个宏。如果 = 省略则删除该宏。\n"
+											"  -D名称[=值]   定义一个宏。\n"
 											"                命令行内定义的宏比配置包内定义的宏优先级高。\n"
 											"\n"
 											"  -s目录        指定源文件根目录。\n"
@@ -35,7 +36,9 @@ const std::map<MCF::WideStringObserver, MCF::WideStringObserver> g_mapStrings = 
 											"  -c            执行清理操作，删除所有目标文件（不构建）。\n"
 											"  -R            重新构建所有文件。\n"
 											"  -v            显示详细资料。\n"
-											""_wso },
+											"\n"
+											"  -X[序列号]    排除依赖项目，仅用于内部使用。"
+											"                参数是卷序列号与文件 ID 的拼合。"_wso },
 
 	{ L"MCF_EXCEPTION"_wso,					L"MCF Build 遇到一个错误：\n"
 											"  错误描述：%0\n"
@@ -57,6 +60,10 @@ const std::map<MCF::WideStringObserver, MCF::WideStringObserver> g_mapStrings = 
 namespace MCFBuild {
 
 MCF::WideString FormatString(const MCF::WideStringObserver &wsoRaw){
+	if(Model::GetInstance().DoesUseRawOutput()){
+		return MCF::WideString(wsoRaw);
+	}
+
 	MCF::VVector<std::size_t> vecDelims;
 	for(std::size_t i = 0; i < wsoRaw.GetSize(); ++i){
 		if(wsoRaw[i] == L'|'){

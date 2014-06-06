@@ -7,6 +7,7 @@
 #include "Model.hpp"
 #include "../MCF/Core/StreamBuffer.hpp"
 #include "../MCF/Core/String.hpp"
+#include "../MCF/Core/File.hpp"
 
 namespace MCFBuild {
 
@@ -14,7 +15,9 @@ extern MCF::WideString GetFullPath(const MCF::WideString &wcsSrc);
 
 extern bool GetFileContents(MCF::StreamBuffer &sbufData, const MCF::WideString &wcsPath, bool bThrowOnFailure);
 extern void PutFileContents(const MCF::WideString &wcsPath, const MCF::StreamBuffer &sbufData);
-extern bool GetFileSha256(Sha256 &shaChecksum, const MCF::WideString &wcsPath);
+
+extern bool GetFileSha256(Sha256 &vSha256, const MCF::WideString &wcsPath, bool bThrowOnFailure);
+extern bool GetFileId(MCF::File::UniqueId &vFileId, const MCF::WideString &wcsPath, bool bThrowOnFailure);
 
 extern void CreateDirectory(const MCF::WideString &wcsPath);
 extern void RemoveFile(const MCF::WideString &wcsPath);

@@ -5,33 +5,99 @@
 #define MCFBUILD_MODEL_HPP_
 
 #include "../MCF/Core/Utilities.hpp"
+#include "../MCF/Core/VVector.hpp"
+#include "../MCF/Core/String.hpp"
+#include "../MCF/Core/File.hpp"
 #include <cstddef>
+#include <map>
+#include <set>
 
 namespace MCFBuild {
 
+typedef std::array<unsigned char, 32> Sha256;
+
 class Model : NO_COPY {
+public:
+	enum OPERATION {
+		OP_SHOW_HELP,
+		OP_BUILD,
+		OP_CLEAN,
+		OP_REBUILD
+	};
+
 public:
 	static Model &GetInstance() noexcept;
 
 private:
-	bool xm_bVerbose;
+	const MCF::VVector<MCF::WideString> xm_vecArgV;
 	bool xm_bRawOutput;
+
+	bool xm_bVerbose;
+
+	MCF::WideString xm_wcsProject;
+	MCF::WideString xm_wcsConfig;
+	std::map<MCF::WideString, MCF::WideString> xm_mapMacros;
+
+	MCF::WideString xm_wcsWorkingDir;
+	MCF::WideString xm_wcsSrcRoot;
+	MCF::WideString xm_wcsIntermediateRoot;
+	MCF::WideString xm_wcsDstRoot;
+
+	OPERATION xm_eOperation;
+	std::size_t xm_uProcessCount;
+
+	std::set<MCF::File::UniqueId> xm_setSkippedDependencies;
 
 protected:
 	Model();
 
 public:
-	bool IsVerbose() const noexcept {
-		return xm_bVerbose;
-	}
-	bool DoesUseRawOutput() const noexcept {
+	void InitParams();
+
+public:
+	auto DoesUseRawOutput() const noexcept {
 		return xm_bRawOutput;
 	}
 
-	unsigned int Run();
+	auto IsVerbose() const noexcept {
+		return xm_bVerbose;
+	}
+
+	const auto &GetProject() const noexcept {
+		return xm_wcsProject;
+	}
+	const auto &GetConfig() const noexcept {
+		return xm_wcsConfig;
+	}
+	const auto &GetMacros() const noexcept {
+		return xm_mapMacros;
+	}
+
+	const auto &GetWorkingDir() const noexcept {
+		return xm_wcsWorkingDir;
+	}
+	const auto &GetSrcRoot() const noexcept {
+		return xm_wcsSrcRoot;
+	}
+	const auto &GetIntermediateRoot() const noexcept {
+		return xm_wcsIntermediateRoot;
+	}
+	const auto &GetDstRoot() const noexcept {
+		return xm_wcsDstRoot;
+	}
+
+	auto GetOperation() const noexcept {
+		return xm_eOperation;
+	}
+	auto GetProcessCount() const noexcept {
+		return xm_uProcessCount;
+	}
+
+	const auto &GetSkippedDependencies() const noexcept {
+		return xm_setSkippedDependencies;
+	}
 };
 
 }
-
 
 #endif

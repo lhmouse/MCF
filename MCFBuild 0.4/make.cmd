@@ -20,7 +20,7 @@ set CPPFlags=%CompilerFlags% -std=c++1y
 set TempDir=.Temp-%Config%
 set ExeFile=.%Config%.exe
 
-echo ----- Configurations
+echo ----- Configuration
 echo   CFlags      : %CFlags%
 echo   CPPFlags    : %CPPFlags%
 echo   LinkerFlags : %LinkerFlags%

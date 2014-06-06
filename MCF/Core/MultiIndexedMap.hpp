@@ -502,6 +502,9 @@ public:
 	}
 };
 
+template<class... Indices_t>
+using MultiIndexedSet = MultiIndexedMap<void, Indices_t...>;
+
 }
 
 #endif

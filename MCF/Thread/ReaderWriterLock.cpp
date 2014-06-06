@@ -42,7 +42,7 @@ private:
 	xThreadInfo &xGetThreadInfo() noexcept {
 		const auto pThreadInfo = xm_pThreadInfo.GetPtr();
 		if(!pThreadInfo){
-			Bail(L"为读写锁创建 Tls 失败。");
+			Bail(L"为读写锁创建 Tls 失败。\n\n注意不要在静态对象的构造函数或析构函数中使用读写锁。");
 		}
 		return *pThreadInfo;
 	}

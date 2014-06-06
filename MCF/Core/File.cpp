@@ -81,6 +81,21 @@ public:
 		}
 	}
 
+	UniqueId GetUniqueId() const {
+		ASSERT(xm_hFile);
+
+		BY_HANDLE_FILE_INFORMATION vFileInfo;
+		if(!::GetFileInformationByHandle(xm_hFile.Get(), &vFileInfo)){
+			MCF_THROW(::GetLastError(), L"::GetFileInformationByHandle() 失败。"_wso);
+		}
+		UniqueId vIdRet;
+		vIdRet.u32VolumeSN	= vFileInfo.dwVolumeSerialNumber;
+		vIdRet.u32IndexLow	= vFileInfo.nFileIndexLow;
+		vIdRet.u32IndexHigh	= vFileInfo.nFileIndexHigh;
+		vIdRet.u32Reserved	= 0;
+		return std::move(vIdRet);
+	}
+
 	std::size_t Read(void *pBuffer, std::size_t uBytesToRead, std::uint64_t u64Offset, AsyncProc *pfnAsyncProc) const {
 		ASSERT(xm_hFile);
 
@@ -265,6 +280,12 @@ void File::Resize(std::uint64_t u64NewSize){
 }
 void File::Clear(){
 	Resize(0);
+}
+
+File::UniqueId File::GetUniqueId() const {
+	ASSERT(dynamic_cast<const FileDelegate *>(this));
+
+	return ((const FileDelegate *)this)->GetUniqueId();
 }
 
 std::size_t File::Read(void *pBuffer, std::size_t uBytesToRead, std::uint64_t u64Offset) const {

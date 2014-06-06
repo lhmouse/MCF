@@ -120,7 +120,7 @@ inline void Bail<>(const wchar_t *pwszDescription){
 // ASSERT_NOEXCEPT
 //----------------------------------------------------------------------------
 namespace Impl {
-	__attribute__((error("noexcept assertion failed"), __noreturn__)) void AssertNoexcept() noexcept;
+	__attribute__((error("noexcept assertion failed."), __noreturn__)) void AssertNoexcept() noexcept;
 }
 
 #define ASSERT_NOEXCEPT_BEGIN	\

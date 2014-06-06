@@ -13,11 +13,17 @@ namespace {
 
 const std::map<MCF::WideStringObserver, MCF::WideStringObserver> g_mapStrings = {
 	{ L"MCFBUILD_LOGO"_wso,					L"MCF 构建实用工具 [版本 %0.%1.%2.%3]\n"
-											"Copyleft 2014, LH_Mouse. All wrongs reserved."_wso },
+											"Copyleft 2014, LH_Mouse. All wrongs reserved.\n"_wso },
 	{ L"MCFBUILD_USAGE"_wso,				L"" //     10        20        30        40        50        60        70        80
+											"命令行参数可以以 - 或 / 开头，其效果是一样的。\n"
+											"任何不以 - 或 / 开头的命令行参数都会被当作配置名。\n"
+											"\n"
 											"命令行选项（按相关性顺序）：\n"
 											"\n"
-											"  -h            显示此帮助信息。\n"
+											"  -h 或 -?      显示此帮助信息。\n"
+											"  -M            使用原始格式输出消息。"
+											"\n"
+											"  -v            显示详细资料。\n"
 											"\n"
 											"  -C目录        在进行任何其他操作之前，切换工作目录到此路径。\n"
 											"\n"
@@ -30,15 +36,26 @@ const std::map<MCF::WideStringObserver, MCF::WideStringObserver> g_mapStrings = 
 											"\n"
 											"  -s目录        指定源文件根目录。\n"
 											"                默认值是当前目录。\n"
-											"  -d目录        指定目标文件根目录。\n"
+											"  -i目录        指定中间文件根目录。\n"
+											"                默认值是“.Intermediate-配置名”。\n"
+											"  -d目录        指定最终文件根目录。\n"
 											"                默认值是“.Built-配置名”。\n"
 											"\n"
+											"  -j十进制整数  指定多进程构建时使用的进程数。0 为自动选择.\n"
+											"                默认值是 0。\n"
 											"  -c            执行清理操作，删除所有目标文件（不构建）。\n"
 											"  -R            重新构建所有文件。\n"
-											"  -v            显示详细资料。\n"
 											"\n"
-											"  -X[序列号]    排除依赖项目，仅用于内部使用。"
-											"                参数是卷序列号与文件 ID 的拼合。"_wso },
+											"  -X[序列号]    排除依赖项目（仅供内部使用）。"_wso },
+
+	{ L"ENVIRONMENT_MANIFEST"_wso,			L"----- 构建环境清单 -----\n"
+											L"工作目录：%0\n"
+											L"项目文件：%1\n"
+											L"配置名　：%2\n"
+											L"源目录　：%3\n"
+											L"中间目录：%4\n"
+											L"目标目录：%5\n"
+											L"进程数　：%6"_wso },
 
 	{ L"MCF_EXCEPTION"_wso,					L"MCF Build 遇到一个错误：\n"
 											"  错误描述：%0\n"
@@ -46,6 +63,7 @@ const std::map<MCF::WideStringObserver, MCF::WideStringObserver> g_mapStrings = 
 	{ L"STD_EXCEPTION"_wso,					L"MCF Build 遇到异常“%0”。请联系作者寻求协助。"_wso },
 	{ L"UNKNOWN_EXCEPTION"_wso,				L"MCF Build 遇到无法处理的异常。请联系作者寻求协助。"_wso },
 
+	{ L"INVALID_COMMAND_LINE_OPTION"_wso,	L"命令行选项“%0”无效。"_wso },
 	{ L"CREATE_PIPE_FAILED"_wso,			L"创建管道失败。"_wso },
 	{ L"SET_PIPE_INFO_FAILED"_wso,			L"设置管道句柄信息失败。"_wso },
 	{ L"CREATE_PROCESS_FAILED"_wso,			L"以命令行“%0”创建进程失败。"_wso },
@@ -53,6 +71,7 @@ const std::map<MCF::WideStringObserver, MCF::WideStringObserver> g_mapStrings = 
 	{ L"OPEN_FILE_FAILED"_wso,				L"打开文件“%0”失败。"_wso },
 	{ L"FILE_TOO_LARGE"_wso,				L"文件“%0”太大。"_wso },
 	{ L"DELETE_FILE_FAILED"_wso,			L"删除文件“%0”失败。"_wso },
+	{ L"SET_WORKING_DIR_FAILED"_wso,		L"设置工作目录至“%0”失败。"_wso },
 };
 
 }

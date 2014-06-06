@@ -78,9 +78,9 @@ private:
 	};
 
 private:
-	Object_t xm_vObject;
-	std::unique_ptr<CriticalSection> xm_pcsMutex;
+	const std::unique_ptr<CriticalSection> xm_pcsMutex;
 	mutable CriticalSection::Lock xm_vLock;
+	Object_t xm_vObject;
 
 public:
 	template<typename... Params_t>

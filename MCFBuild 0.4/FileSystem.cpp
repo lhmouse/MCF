@@ -62,10 +62,13 @@ void PutFileContents(const MCF::WideString &wcsPath, const MCF::StreamBuffer &sb
 		}
 	);
 }
-bool GetFileSha256(Sha256 &shaChecksum, const MCF::WideString &wcsPath){
+bool GetFileSha256(Sha256 &vSha256, const MCF::WideString &wcsPath, bool bThrowOnFailure){
 	const auto wcsFullPath = GetFullPath(wcsPath);
 	const auto pFile = MCF::File::OpenNoThrow(wcsFullPath, true, false, false);
 	if(!pFile){
+		if(bThrowOnFailure){
+			FORMAT_THROW(::GetLastError(), L"OPEN_FILE_FAILED|"_wso + wcsFullPath);
+		}
 		return false;
 	}
 	const auto u64FileSize = pFile->GetSize();
@@ -92,7 +95,19 @@ bool GetFileSha256(Sha256 &shaChecksum, const MCF::WideString &wcsPath){
 
 		shaHasher.Update(pbyCurBuffer, uBytesCur);
 	}
-	shaHasher.Finalize(*(unsigned char (*)[32])shaChecksum.data());
+	shaHasher.Finalize(*(unsigned char (*)[32])vSha256.data());
+	return true;
+}
+bool GetFileId(MCF::File::UniqueId &vFileId, const MCF::WideString &wcsPath, bool bThrowOnFailure){
+	const auto wcsFullPath = GetFullPath(wcsPath);
+	const auto pFile = MCF::File::OpenNoThrow(wcsFullPath, true, false, false);
+	if(!pFile){
+		if(bThrowOnFailure){
+			FORMAT_THROW(::GetLastError(), L"OPEN_FILE_FAILED|"_wso + wcsFullPath);
+		}
+		return false;
+	}
+	vFileId = pFile->GetUniqueId();
 	return true;
 }
 

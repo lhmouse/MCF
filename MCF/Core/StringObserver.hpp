@@ -514,8 +514,6 @@ typedef StringObserver<char>		Utf8StringObserver;
 typedef StringObserver<char16_t>	Utf16StringObserver;
 typedef StringObserver<char32_t>	Utf32StringObserver;
 
-}
-
 constexpr inline const MCF::NarrowStringObserver	operator""_nso		(const char *pchStr,		std::size_t uLength) noexcept {
 	return MCF::NarrowStringObserver(pchStr, uLength);
 }
@@ -532,5 +530,15 @@ constexpr inline const MCF::Utf16StringObserver		operator""_u16so	(const char16_
 constexpr inline const MCF::Utf32StringObserver		operator""_u32so	(const char32_t *pc32Str,	std::size_t uLength) noexcept {
 	return MCF::Utf32StringObserver(pc32Str, uLength);
 }
+
+}
+
+#ifndef MCF_NO_LITERAL_OPERATORS
+using ::MCF::operator""_nso;
+using ::MCF::operator""_wso;
+using ::MCF::operator""_u8so;
+using ::MCF::operator""_u16so;
+using ::MCF::operator""_u32so;
+#endif
 
 #endif

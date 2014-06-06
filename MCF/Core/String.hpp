@@ -541,8 +541,11 @@ public:
 		xSetSize(uOldLength - uCount);
 	}
 
-	Observer Slice(std::ptrdiff_t nBegin, std::ptrdiff_t nEnd = -1) const {
+	Observer Slice(std::ptrdiff_t nBegin, std::ptrdiff_t nEnd = -1) const noexcept {
 		return GetObserver().Slice(nBegin, nEnd);
+	}
+	String SliceStr(std::ptrdiff_t nBegin, std::ptrdiff_t nEnd = -1) const {
+		return String(Slice(nBegin, nEnd));
 	}
 
 	std::size_t Find(const Observer &obsToFind, std::ptrdiff_t nOffsetBegin = 0) const noexcept {
@@ -855,13 +858,21 @@ typedef String<char,		StringEncoding::UTF8>	Utf8String;
 typedef String<char16_t,	StringEncoding::UTF16>	Utf16String;
 typedef String<char32_t,	StringEncoding::UTF32>	Utf32String;
 
-}
-
 const MCF::AnsiString	&operator""_as		(const char *pchStr,		std::size_t uLength);
 const MCF::WideString	&operator""_ws		(const wchar_t *pchStr,		std::size_t uLength);
 
 const MCF::Utf8String	&operator""_u8s		(const char *pchStr,		std::size_t uLength);
 const MCF::Utf16String	&operator""_u16s	(const char16_t *pchStr,	std::size_t uLength);
 const MCF::Utf32String	&operator""_u32s	(const char32_t *pchStr,	std::size_t uLength);
+
+}
+
+#ifndef MCF_NO_LITERAL_OPERATORS
+using ::MCF::operator""_as;
+using ::MCF::operator""_ws;
+using ::MCF::operator""_u8s;
+using ::MCF::operator""_u16s;
+using ::MCF::operator""_u32s;
+#endif
 
 #endif

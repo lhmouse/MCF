@@ -12,7 +12,7 @@ namespace {
 
 static const auto pLock = MCF::CriticalSection::Create(0);
 
-void DoPrint(HANDLE hFile, const MCF::WideStringObserver &wsoString, const MCF::WideStringObserver &wsoSuffix) noexcept {
+void DoPrint(HANDLE hFile, const MCF::WideStringObserver &wsoString) noexcept {
 	DWORD dwMode;
 	if(::GetConsoleMode(hFile, &dwMode)){
 		const auto vLock = pLock->GetLock();
@@ -28,13 +28,11 @@ void DoPrint(HANDLE hFile, const MCF::WideStringObserver &wsoString, const MCF::
 			}
 			uTotalWritten += dwCharsWritten;
 		}
-		if(!wsoSuffix.IsEmpty()){
-			::WriteConsoleW(hFile, wsoSuffix.GetBegin(), wsoSuffix.GetSize(), &dwCharsWritten, nullptr);
-		}
+		::WriteConsoleW(hFile, L"\n", 1, &dwCharsWritten, nullptr);
 	} else {
 		MCF::Utf8String u8sTemp;
 		u8sTemp.Assign<MCF::StringEncoding::UTF16>(wsoString);
-		u8sTemp.Append<MCF::StringEncoding::UTF16>(wsoSuffix);
+		u8sTemp.Append('\n');
 
 		const auto vLock = pLock->GetLock();
 
@@ -56,14 +54,11 @@ void DoPrint(HANDLE hFile, const MCF::WideStringObserver &wsoString, const MCF::
 
 namespace MCFBuild {
 
-void Print(const MCF::WideStringObserver &wsoString) noexcept {
-	DoPrint(::GetStdHandle(STD_OUTPUT_HANDLE), wsoString, nullptr);
-}
 void PrintLn(const MCF::WideStringObserver &wsoString) noexcept {
-	DoPrint(::GetStdHandle(STD_OUTPUT_HANDLE), wsoString, L"\n"_wso);
+	DoPrint(::GetStdHandle(STD_OUTPUT_HANDLE), wsoString);
 }
-void PrintErr(const MCF::WideStringObserver &wsoString) noexcept {
-	DoPrint(::GetStdHandle(STD_ERROR_HANDLE), wsoString, nullptr);
+void PrintLnErr(const MCF::WideStringObserver &wsoString) noexcept {
+	DoPrint(::GetStdHandle(STD_ERROR_HANDLE), wsoString);
 }
 
 }

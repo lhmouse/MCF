@@ -8,9 +8,8 @@
 
 namespace MCFBuild {
 
-extern void Print(const MCF::WideStringObserver &wsoString) noexcept;
 extern void PrintLn(const MCF::WideStringObserver &wsoString = nullptr) noexcept;
-extern void PrintErr(const MCF::WideStringObserver &wsoString) noexcept;
+extern void PrintLnErr(const MCF::WideStringObserver &wsoString = nullptr) noexcept;
 
 }
 

@@ -16,12 +16,8 @@ private:
 	Impl::UniqueWinHandle xm_hEvent;
 
 public:
-	EventDelegate(bool bInitSet, const WideStringObserver &wsoName){
-		if(wsoName.IsEmpty()){
-			xm_hEvent.Reset(::CreateEventW(nullptr, true, bInitSet, nullptr));
-		} else {
-			xm_hEvent.Reset(::CreateEventW(nullptr, true, bInitSet, wsoName.GetNullTerminated<MAX_PATH>().GetData()));
-		}
+	EventDelegate(bool bInitSet, const wchar_t *pwszName){
+		xm_hEvent.Reset(::CreateEventW(nullptr, true, bInitSet, pwszName));
 		if(!xm_hEvent){
 			MCF_THROW(::GetLastError(), L"CreateEventW() 失败。"_wso);
 		}
@@ -49,7 +45,10 @@ public:
 
 // 静态成员函数。
 std::unique_ptr<Event> Event::Create(bool bInitSet, const WideStringObserver &wsoName){
-	return std::make_unique<EventDelegate>(bInitSet, wsoName);
+	return std::make_unique<EventDelegate>(bInitSet, wsoName.IsEmpty() ? nullptr : wsoName.GetNullTerminated<MAX_PATH>().GetData());
+}
+std::unique_ptr<Event> Event::Create(bool bInitSet, const WideString &wcsName){
+	return std::make_unique<EventDelegate>(bInitSet, wcsName.GetCStr());
 }
 
 // 其他非静态成员函数。

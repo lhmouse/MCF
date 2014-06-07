@@ -16,12 +16,8 @@ private:
 	Impl::UniqueWinHandle xm_hSemaphore;
 
 public:
-	SemaphoreDelegate(unsigned long ulInitCount, unsigned long ulMaxCount, const WideStringObserver &wsoName){
-		if(wsoName.IsEmpty()){
-			xm_hSemaphore.Reset(::CreateSemaphoreW(nullptr, (long)ulInitCount, (long)ulMaxCount, nullptr));
-		} else {
-			xm_hSemaphore.Reset(::CreateSemaphoreW(nullptr, (long)ulInitCount, (long)ulMaxCount, wsoName.GetNullTerminated<MAX_PATH>().GetData()));
-		}
+	SemaphoreDelegate(unsigned long ulInitCount, unsigned long ulMaxCount, const wchar_t *pwszName){
+		xm_hSemaphore.Reset(::CreateSemaphoreW(nullptr, (long)ulInitCount, (long)ulMaxCount, pwszName));
 		if(!xm_hSemaphore){
 			MCF_THROW(::GetLastError(), L"CreateSemaphoreW() 失败。"_wso);
 		}
@@ -51,8 +47,25 @@ public:
 }
 
 // 静态成员函数。
-std::unique_ptr<Semaphore> Semaphore::Create(unsigned long ulInitCount, unsigned long ulMaxCount, const WideStringObserver &wsoName){
-	return std::make_unique<SemaphoreDelegate>(ulInitCount, ulMaxCount, wsoName);
+std::unique_ptr<Semaphore> Semaphore::Create(
+	unsigned long ulInitCount,
+	unsigned long ulMaxCount,
+	const WideStringObserver &wsoName
+){
+	return std::make_unique<SemaphoreDelegate>(
+		ulInitCount, ulMaxCount,
+		wsoName.IsEmpty() ? nullptr : wsoName.GetNullTerminated<MAX_PATH>().GetData()
+	);
+}
+std::unique_ptr<Semaphore> Semaphore::Create(
+	unsigned long ulInitCount,
+	unsigned long ulMaxCount,
+	const WideString &wcsName
+){
+	return std::make_unique<SemaphoreDelegate>(
+		ulInitCount, ulMaxCount,
+		wcsName.GetCStr()
+	);
 }
 
 // 其他非静态成员函数。

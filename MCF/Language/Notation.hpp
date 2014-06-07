@@ -71,7 +71,7 @@ public:
 	std::pair<NotationPackage *, bool> CreatePackageFromPath(const PathSegments_t &vPathSegments){
 		auto vRet = std::make_pair(this, false);
 		for(const auto &vSegment : vPathSegments){
-			vRet = CreatePackage(vRet.first, vSegment);
+			vRet = vRet.first->CreatePackage(vSegment);
 		}
 		return std::move(vRet);
 	}
@@ -113,7 +113,7 @@ public:
 	){
 		auto vRet = std::make_pair(this, false);
 		while(itSegmentBegin != itSegmentEnd){
-			vRet = CreatePackage(vRet.first, *itSegmentBegin);
+			vRet = vRet.first->CreatePackage(*itSegmentBegin);
 			++itSegmentBegin;
 		}
 		return std::move(vRet);

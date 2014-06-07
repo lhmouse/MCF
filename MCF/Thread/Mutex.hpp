@@ -7,7 +7,7 @@
 
 #include "_LockRaiiTemplate.hpp"
 #include "../Core/Utilities.hpp"
-#include "../Core/StringObserver.hpp"
+#include "../Core/String.hpp"
 #include <memory>
 
 namespace MCF {
@@ -18,6 +18,7 @@ public:
 
 public:
 	static std::unique_ptr<Mutex> Create(const WideStringObserver &wsoName = nullptr);
+	static std::unique_ptr<Mutex> Create(const WideString &wcsName);
 
 public:
 	Lock GetLock() noexcept;

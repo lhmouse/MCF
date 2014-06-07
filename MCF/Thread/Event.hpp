@@ -6,7 +6,7 @@
 #define MCF_EVENT_HPP_
 
 #include "../Core/Utilities.hpp"
-#include "../Core/StringObserver.hpp"
+#include "../Core/String.hpp"
 #include <memory>
 
 namespace MCF {
@@ -14,6 +14,7 @@ namespace MCF {
 class Event : NO_COPY, ABSTRACT {
 public:
 	static std::unique_ptr<Event> Create(bool bInitSet, const WideStringObserver &wsoName = nullptr);
+	static std::unique_ptr<Event> Create(bool bInitSet, const WideString &wcsName);
 
 public:
 	bool IsSet() const noexcept;

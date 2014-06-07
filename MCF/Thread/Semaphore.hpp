@@ -6,7 +6,7 @@
 #define MCF_SEMAPHORE_HPP_
 
 #include "../Core/Utilities.hpp"
-#include "../Core/StringObserver.hpp"
+#include "../Core/String.hpp"
 #include <memory>
 
 namespace MCF {
@@ -14,6 +14,7 @@ namespace MCF {
 class Semaphore : NO_COPY, ABSTRACT {
 public:
 	static std::unique_ptr<Semaphore> Create(unsigned long ulInitCount, unsigned long ulMaxCount, const WideStringObserver &wsoName = nullptr);
+	static std::unique_ptr<Semaphore> Create(unsigned long ulInitCount, unsigned long ulMaxCount, const WideString &wcsName);
 
 public:
 	unsigned long WaitTimeout(unsigned long long ullMilliSeconds, unsigned long ulWaitCount = 1) noexcept;

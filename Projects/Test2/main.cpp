@@ -58,12 +58,10 @@ try {
 
 	Notation n;
 	const auto res = n.Parse(s);
+	const auto p = n.CreatePackageFromPath(std::initializer_list<WideStringObserver>{ L"General"_wso, L"meow"_wso, L"meow!"_wso });
+	printf("p = %p\n", p.first);
 	printf("result = %d\n", res.first);
 	printf("%ls\n", n.Export().GetStr());
-
-	const auto path = { L"General"_wso, L"PreCompiledHeaders"_wso, L"C"_wso };
-	const auto p = n.GetPackageFromPath(path);
-	printf("p = %p\n", p);
 
 	return 0;
 } catch(exception &e){

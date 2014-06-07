@@ -1,67 +1,19 @@
 #include <MCF/StdMCF.hpp>
 #include <MCF/Core/Exception.hpp>
-#include <MCF/Language/Notation.hpp>
+#include <MCF/Core/MessageDriver.hpp>
 using namespace std;
 using namespace MCF;
 
 unsigned int MCFMain()
 try {
-	const auto s = L""
-		"Default = Debug \n"
-		" \n"
-		"General { \n"
-		"	CompilerFlags		= -Wall -Wextra -Wsign-conversion -Wsuggest-attribute=noreturn -pedantic -pipe -mfpmath=both -march=core2 -masm=intel \n"
-		" \n"
-		"	CFlags				= -std=c11 \n"
-		"	CPPFlags			= -std=c++1y -Wnoexcept \n"
-		" \n"
-		"	IgnoredFiles		= .Built* *.h *.hpp *.mcfproj \n"
-		" \n"
-		"	PreCompiledHeaders { \n"
-		"		C { \n"
-		"			SourceFile	= env\\_crtdef.h \n"
-		"			CommandLine	= gcc -x c-header $CompilerFlags$ $CFlags$ %IN% -o %OUT% \n"
-		"		} \n"
-		"		CPP { \n"
-		"			SourceFile	= env\\_crtdef.hpp \n"
-		"			CommandLine	= g++ -x c++-header $CompilerFlags$ $CPPFlags$ %IN% -o %OUT% \n"
-		"		} \n"
-		"	} \n"
-		" \n"
-		"	Compilers { \n"
-		"		c { \n"
-		"			CommandLine	= gcc -x c -c $CompilerFlags$ $CFlags$ %GCH.C% %IN% -o %OUT% \n"
-		"			Dependency	= gcc -x c -c $CompilerFlags$ $CFlags$ %IN% -MM \n"
-		"		} \n"
-		"		cpp cxx cc { \n"
-		"			CommandLine	= g++ -x c++ -c $CompilerFlags$ $CPPFlags$ %GCH.CPP% %IN% -o %OUT% \n"
-		"			Dependency	= g++ -x c++ -c $CompilerFlags$ $CPPFlags$ %IN% -MM \n"
-		"		} \n"
-		"	} \n"
-		" \n"
-		"	Linkers { \n"
-		"		Partial			= ld -r %IN% -o %OUT% \n"
-		"		Full			= ar rcs %OUT% %IN% \n"
-		"	} \n"
-		" \n"
-		"	DefaultOutput		= libmcfcrt.a \n"
-		"} \n"
-		" \n"
-		"Debug = General { \n"
-		"	CompilerFlags		=> -fno-builtin -g -O0 \n"
-		"} \n"
-		" \n"
-		"Release = General { \n"
-		"	CompilerFlags		=> -DNDEBUG -O3 -ffunction-sections -fdata-sections \n"
-		"} \n"
-	""_wso;
+	auto p1 = Message::RegisterHandler("meow"_u8so, [](auto &){ puts("handler1"); return false; });
+	auto p2 = Message::RegisterHandler("meow"_u8so, [](auto &){ puts("handler2"); return false; });
 
-	Notation n;
-	const auto res = n.Parse(s);
-	const auto p = n.CreatePackageFromPath(std::initializer_list<WideStringObserver>{ L"General"_wso, L"meow"_wso, L"meow!"_wso });
-	printf("p = %p\n", p.first);
-	printf("result = %d\n", res.first);
-	printf("%ls\n", n.Export().GetStr());
+	Message x("meow"_u8s);
+	x.Dispatch();
+	p1.reset();
+	puts("----- reset p1");
+	x.Dispatch();
 
 	return 0;
 } catch(exception &e){

@@ -3,7 +3,7 @@
 // Copyleft 2014. LH_Mouse. All wrongs reserved.
 
 #include "../StdMCF.hpp"
-#include "EventDriver.hpp"
+#include "MessageDriver.hpp"
 #include "MultiIndexedMap.hpp"
 #include "VVector.hpp"
 #include "Utilities.hpp"
@@ -13,30 +13,32 @@ using namespace MCF;
 
 namespace {
 
-typedef VVector<std::shared_ptr<EventHandlerProc>, 32>	HandlerVector;
-typedef MultiIndexedMap<HandlerVector, WideString>		HandlerMap;
+typedef Message::HandlerProc HandlerProc;
+
+typedef VVector<std::shared_ptr<HandlerProc>, 32>	HandlerVector;
+typedef MultiIndexedMap<HandlerVector, Utf8String>	HandlerMap;
 
 const auto g_pLock = ReaderWriterLock::Create();
 HandlerMap g_mapHandlerVector;
 
 class HandlerHolder : NO_COPY {
 private:
-	const WideString *xm_pwcsName;
-	const EventHandlerProc *xm_pfnProc;
+	const Utf8String *xm_pu8csName;
+	const HandlerProc *xm_pfnProc;
 
 public:
-	HandlerHolder(const WideStringObserver &wsoName, EventHandlerProc &&fnProc){
+	HandlerHolder(const Utf8StringObserver &u8soName, HandlerProc &&fnProc){
 		const auto vLock = g_pLock->GetWriterLock();
 
-		auto pNode = g_mapHandlerVector.Find<0>(wsoName);
+		auto pNode = g_mapHandlerVector.Find<0>(u8soName);
 		if(!pNode){
-			pNode = g_mapHandlerVector.Insert(HandlerVector(), WideString(wsoName));
+			pNode = g_mapHandlerVector.Insert(HandlerVector(), Utf8String(u8soName));
 		}
 
 		auto &vecHandlers = pNode->GetElement();
-		const auto &pNewHandler = vecHandlers.Push(std::make_shared<EventHandlerProc>(std::move(fnProc)));
+		const auto &pNewHandler = vecHandlers.Push(std::make_shared<HandlerProc>(std::move(fnProc)));
 
-		xm_pwcsName = &(pNode->GetIndex<0>());
+		xm_pu8csName = &(pNode->GetIndex<0>());
 		xm_pfnProc = pNewHandler.get();
 	}
 	~HandlerHolder() noexcept {
@@ -44,7 +46,7 @@ public:
 		{
 			const auto vLock = g_pLock->GetWriterLock();
 
-			auto pNode = g_mapHandlerVector.Find<0>(*xm_pwcsName);
+			auto pNode = g_mapHandlerVector.Find<0>(*xm_pu8csName);
 			ASSERT(pNode);
 
 			auto &vecHandlers = pNode->GetElement();
@@ -71,27 +73,35 @@ public:
 
 }
 
-namespace MCF {
-
-std::shared_ptr<void> RegisterEventHandler(const WideStringObserver &wsoName, EventHandlerProc fnProc){
-	return std::make_shared<HandlerHolder>(wsoName, std::move(fnProc));
+// 静态成员函数。
+std::shared_ptr<void> Message::RegisterHandler(const Utf8StringObserver &u8soName, HandlerProc fnProc){
+	return std::make_shared<HandlerHolder>(u8soName, std::move(fnProc));
 }
-void TriggerEvent(const WideStringObserver &wsoName, std::uintptr_t uParam1, std::uintptr_t uParam2){
+
+// 构造函数和析构函数。
+Message::Message(Utf8String u8sName) noexcept
+	: m_u8sName(std::move(u8sName))
+{
+}
+Message::~Message() noexcept {
+}
+
+// 其他非静态成员函数。
+void Message::Dispatch() const {
 	HandlerVector vecHandlers;
 	{
 		const auto vLock = g_pLock->GetReaderLock();
 
-		const auto pNode = g_mapHandlerVector.Find<0>(wsoName);
+		const auto pNode = g_mapHandlerVector.Find<0>(m_u8sName);
 		if(pNode){
 			vecHandlers = pNode->GetElement();
 		}
 	}
 
 	for(auto ppfnNext = vecHandlers.GetEnd(); ppfnNext != vecHandlers.GetBegin(); --ppfnNext){
-		if((*(ppfnNext[-1]))(uParam1, uParam2)){
+		if((*(ppfnNext[-1]))(*this)){
 			break;
 		}
 	}
 }
 
-}

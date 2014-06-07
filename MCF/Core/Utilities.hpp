@@ -71,10 +71,9 @@ namespace Impl {
 //----------------------------------------------------------------------------
 namespace Impl {
 	struct AbstractBase {
-		virtual ~AbstractBase() noexcept {
-		}
+		virtual ~AbstractBase() = default;
 
-		virtual void MCF_Impl_PureAbstractFunction_() = 0;
+		virtual void MCF_Impl_PureAbstractFunction_() const noexcept = 0;
 	};
 
 	template<class Base_t>
@@ -88,7 +87,7 @@ namespace Impl {
 		{
 		}
 
-		virtual void MCF_Impl_PureAbstractFunction_() override {
+		virtual void MCF_Impl_PureAbstractFunction_() const noexcept override {
 		}
 	};
 }

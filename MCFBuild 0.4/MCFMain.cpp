@@ -23,10 +23,10 @@ try {
 		return 0;
 	}
 
-	MCF::WideString wsProcessCount;
-	wsProcessCount.Resize(5);
-	wsProcessCount.Resize((unsigned int)std::swprintf(
-		wsProcessCount.GetStr(), wsProcessCount.GetSize(),
+	MCF::WideString wcsProcessCount;
+	wcsProcessCount.Resize(5);
+	wcsProcessCount.Resize((unsigned int)std::swprintf(
+		wcsProcessCount.GetStr(), wcsProcessCount.GetSize(),
 		L"%lu",
 		vModel.GetProcessCount()
 	));
@@ -38,7 +38,7 @@ try {
 		+ vModel.GetSrcRoot() + L'|'
 		+ vModel.GetIntermediateRoot() + L'|'
 		+ vModel.GetDstRoot() + L'|'
-		+ wsProcessCount
+		+ wcsProcessCount
 	));
 
 	return 0;

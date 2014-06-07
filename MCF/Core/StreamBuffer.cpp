@@ -340,7 +340,7 @@ void StreamBuffer::Swap(StreamBuffer &rhs) noexcept {
 	ASSERT_NOEXCEPT_END
 }
 
-void StreamBuffer::Traverse(std::function<void (const unsigned char *, std::size_t)> &fnCallback) const {
+void StreamBuffer::Traverse(const std::function<void (const unsigned char *, std::size_t)> &fnCallback) const {
 	if(xm_uSmallWrite > xm_uSmallRead){
 		fnCallback(xm_abySmall + xm_uSmallRead, xm_uSmallWrite - xm_uSmallRead);
 	}
@@ -350,10 +350,7 @@ void StreamBuffer::Traverse(std::function<void (const unsigned char *, std::size
 		}
 	}
 }
-void StreamBuffer::Traverse(std::function<void (const unsigned char *, std::size_t)> &&fnCallback) const {
-	Traverse(fnCallback);
-}
-void StreamBuffer::Traverse(std::function<void (unsigned char *, std::size_t)> &fnCallback){
+void StreamBuffer::Traverse(const std::function<void (unsigned char *, std::size_t)> &fnCallback){
 	if(xm_uSmallWrite > xm_uSmallRead){
 		fnCallback(xm_abySmall + xm_uSmallRead, xm_uSmallWrite - xm_uSmallRead);
 	}
@@ -362,7 +359,4 @@ void StreamBuffer::Traverse(std::function<void (unsigned char *, std::size_t)> &
 			fnCallback(pBlock->m_abyData + pBlock->m_uRead, pBlock->m_uWrite - pBlock->m_uRead);
 		}
 	}
-}
-void StreamBuffer::Traverse(std::function<void (unsigned char *, std::size_t)> &&fnCallback){
-	Traverse(fnCallback);
 }

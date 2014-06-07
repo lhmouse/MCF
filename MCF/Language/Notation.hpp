@@ -6,7 +6,10 @@
 #define MCF_NOTATION_HPP_
 
 #include "../Core/String.hpp"
+#include "../Core/VVector.hpp"
 #include "../Core/MultiIndexedMap.hpp"
+#include <functional>
+#include <initializer_list>
 
 namespace MCF {
 
@@ -18,28 +21,102 @@ private:
 	MultiIndexedMap<WideString, WideString> xm_mapValues;
 
 private:
-	NotationPackage() = default;
+	NotationPackage() noexcept = default;
 
 public:
 	const NotationPackage *GetPackage(const WideStringObserver &wsoName) const noexcept;
 	NotationPackage *GetPackage(const WideStringObserver &wsoName) noexcept;
-	NotationPackage *CreatePackage(WideString wcsName);
+	std::pair<NotationPackage *, bool> CreatePackage(const WideStringObserver &wsoName);
+	std::pair<NotationPackage *, bool> CreatePackage(WideString wcsName);
 	bool RemovePackage(const WideStringObserver &wsoName) noexcept;
+
+	void TraversePackages(const std::function<void (const NotationPackage &)> &fnCallback) const;
+	void TraversePackages(const std::function<void (NotationPackage &)> &fnCallback);
 
 	const WideString *GetValue(const WideStringObserver &wsoName) const noexcept;
 	WideString *GetValue(const WideStringObserver &wsoName) noexcept;
-	WideString *CreteValue(WideString wcsName);
+	std::pair<WideString *, bool> CreateValue(const WideStringObserver &wsoName, WideString wcsValue);
+	std::pair<WideString *, bool> CreateValue(WideString wcsName, WideString wcsValue);
 	bool RemoveValue(const WideStringObserver &wsoName) noexcept;
 
-	const MultiIndexedMap<NotationPackage, WideString> &GetPackages() const noexcept{
-		return xm_mapPackages;
+	void TraverseValues(const std::function<void (const WideString &)> &fnCallback) const;
+	void TraverseValues(const std::function<void (WideString &)> &fnCallback);
+
+	void Clear() noexcept;
+
+public:
+	template<typename PathSegments_t>
+	const NotationPackage *GetPackageFromPath(const PathSegments_t &vPathSegments) const noexcept {
+		auto pCur = this;
+		for(const auto &vSegment : vPathSegments){
+			pCur = pCur->GetPackage(vSegment);
+			if(!pCur){
+				return nullptr;
+			}
+		}
+		return pCur;
 	}
-	const MultiIndexedMap<WideString, WideString> &GetValues() const noexcept {
-		return xm_mapValues;
+	template<typename PathSegments_t>
+	NotationPackage *GetPackageFromPath(const PathSegments_t &vPathSegments) noexcept {
+		auto pCur = this;
+		for(const auto &vSegment : vPathSegments){
+			pCur = pCur->GetPackage(vSegment);
+			if(!pCur){
+				return nullptr;
+			}
+		}
+		return pCur;
 	}
-	void Clear() noexcept {
-		xm_mapPackages.Clear();
-		xm_mapValues.Clear();
+	template<typename PathSegments_t>
+	std::pair<NotationPackage *, bool> CreatePackageFromPath(const PathSegments_t &vPathSegments){
+		auto vRet = std::make_pair(this, false);
+		for(const auto &vSegment : vPathSegments){
+			vRet = CreatePackage(vRet.first, vSegment);
+		}
+		return std::move(vRet);
+	}
+
+	template<typename PathSegmentIterator_t>
+	const NotationPackage *GetPackageFromPath(
+		PathSegmentIterator_t itSegmentBegin,
+		PathSegmentIterator_t itSegmentEnd
+	) const noexcept {
+		auto pCur = this;
+		while(itSegmentBegin != itSegmentEnd){
+			pCur = pCur->GetPackage(*itSegmentBegin);
+			if(!pCur){
+				return nullptr;
+			}
+			++itSegmentBegin;
+		}
+		return pCur;
+	}
+	template<typename PathSegmentIterator_t>
+	NotationPackage *GetPackageFromPath(
+		PathSegmentIterator_t itSegmentBegin,
+		PathSegmentIterator_t itSegmentEnd
+	) noexcept {
+		auto pCur = this;
+		while(itSegmentBegin != itSegmentEnd){
+			pCur = pCur->GetPackage(*itSegmentBegin);
+			if(!pCur){
+				return nullptr;
+			}
+			++itSegmentBegin;
+		}
+		return pCur;
+	}
+	template<typename PathSegmentIterator_t>
+	std::pair<NotationPackage *, bool> CreatePackageFromPath(
+		PathSegmentIterator_t itSegmentBegin,
+		PathSegmentIterator_t itSegmentEnd
+	){
+		auto vRet = std::make_pair(this, false);
+		while(itSegmentBegin != itSegmentEnd){
+			vRet = CreatePackage(vRet.first, *itSegmentBegin);
+			++itSegmentBegin;
+		}
+		return std::move(vRet);
 	}
 };
 

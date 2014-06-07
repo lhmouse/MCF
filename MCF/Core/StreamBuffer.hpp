@@ -67,10 +67,8 @@ public:
 
 	void Swap(StreamBuffer &rhs) noexcept;
 
-	void Traverse(std::function<void (const unsigned char *, std::size_t)> &fnCallback) const;
-	void Traverse(std::function<void (const unsigned char *, std::size_t)> &&fnCallback) const;
-	void Traverse(std::function<void (unsigned char *, std::size_t)> &fnCallback);
-	void Traverse(std::function<void (unsigned char *, std::size_t)> &&fnCallback);
+	void Traverse(const std::function<void (const unsigned char *, std::size_t)> &fnCallback) const;
+	void Traverse(const std::function<void (unsigned char *, std::size_t)> &fnCallback);
 
 	ReadIterator GetReadIterator() noexcept;
 	static constexpr ReadIterator GetReadEnd() noexcept;

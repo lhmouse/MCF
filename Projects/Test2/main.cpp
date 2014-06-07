@@ -1,14 +1,69 @@
 #include <MCF/StdMCF.hpp>
 #include <MCF/Core/Exception.hpp>
-#include <iostream>
+#include <MCF/Language/Notation.hpp>
 using namespace std;
 using namespace MCF;
 
 unsigned int MCFMain()
 try {
-	double d1 = 1.0, d2 = 2.0;
-	BSwap(d1, d2);
-	cout <<d1 << ',' <<d2 <<endl;
+	const auto s = L""
+		"Default = Debug \n"
+		" \n"
+		"General { \n"
+		"	CompilerFlags		= -Wall -Wextra -Wsign-conversion -Wsuggest-attribute=noreturn -pedantic -pipe -mfpmath=both -march=core2 -masm=intel \n"
+		" \n"
+		"	CFlags				= -std=c11 \n"
+		"	CPPFlags			= -std=c++1y -Wnoexcept \n"
+		" \n"
+		"	IgnoredFiles		= .Built* *.h *.hpp *.mcfproj \n"
+		" \n"
+		"	PreCompiledHeaders { \n"
+		"		C { \n"
+		"			SourceFile	= env\\_crtdef.h \n"
+		"			CommandLine	= gcc -x c-header $CompilerFlags$ $CFlags$ %IN% -o %OUT% \n"
+		"		} \n"
+		"		CPP { \n"
+		"			SourceFile	= env\\_crtdef.hpp \n"
+		"			CommandLine	= g++ -x c++-header $CompilerFlags$ $CPPFlags$ %IN% -o %OUT% \n"
+		"		} \n"
+		"	} \n"
+		" \n"
+		"	Compilers { \n"
+		"		c { \n"
+		"			CommandLine	= gcc -x c -c $CompilerFlags$ $CFlags$ %GCH.C% %IN% -o %OUT% \n"
+		"			Dependency	= gcc -x c -c $CompilerFlags$ $CFlags$ %IN% -MM \n"
+		"		} \n"
+		"		cpp cxx cc { \n"
+		"			CommandLine	= g++ -x c++ -c $CompilerFlags$ $CPPFlags$ %GCH.CPP% %IN% -o %OUT% \n"
+		"			Dependency	= g++ -x c++ -c $CompilerFlags$ $CPPFlags$ %IN% -MM \n"
+		"		} \n"
+		"	} \n"
+		" \n"
+		"	Linkers { \n"
+		"		Partial			= ld -r %IN% -o %OUT% \n"
+		"		Full			= ar rcs %OUT% %IN% \n"
+		"	} \n"
+		" \n"
+		"	DefaultOutput		= libmcfcrt.a \n"
+		"} \n"
+		" \n"
+		"Debug = General { \n"
+		"	CompilerFlags		=> -fno-builtin -g -O0 \n"
+		"} \n"
+		" \n"
+		"Release = General { \n"
+		"	CompilerFlags		=> -DNDEBUG -O3 -ffunction-sections -fdata-sections \n"
+		"} \n"
+	""_wso;
+
+	Notation n;
+	const auto res = n.Parse(s);
+	printf("result = %d\n", res.first);
+	printf("%ls\n", n.Export().GetStr());
+
+	const auto path = { L"General"_wso, L"PreCompiledHeaders"_wso, L"C"_wso };
+	const auto p = n.GetPackageFromPath(path);
+	printf("p = %p\n", p);
 
 	return 0;
 } catch(exception &e){

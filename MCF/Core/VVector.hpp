@@ -25,7 +25,7 @@ private:
 	Element_t *xm_pEnd;
 
 	union {
-		unsigned char xm_aSmall[sizeof(Element_t) * ALT_STOR_THRESHOLD];
+		alignas(std::max_align_t) unsigned char xm_aSmall[sizeof(Element_t) * ALT_STOR_THRESHOLD];
 		Element_t *xm_pEndOfStor;
 	};
 

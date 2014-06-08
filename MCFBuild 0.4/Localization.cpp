@@ -63,7 +63,7 @@ const std::map<MCF::WideStringObserver, MCF::WideStringObserver> g_mapStrings = 
 	{ L"STD_EXCEPTION"_wso,					L"MCF Build 遇到异常“%0”。请联系作者寻求协助。"_wso },
 	{ L"UNKNOWN_EXCEPTION"_wso,				L"MCF Build 遇到无法处理的异常。请联系作者寻求协助。"_wso },
 
-	{ L"INVALID_COMMAND_LINE_OPTION"_wso,	L"命令行选项“%0”无效。"_wso },
+	{ L"INVALID_COMMAND_LINE_OPTION"_wso,	L"命令行选项“%0”无效。使用选项 -h 获得帮助。"_wso },
 	{ L"CREATE_PIPE_FAILED"_wso,			L"创建管道失败。"_wso },
 	{ L"SET_PIPE_INFO_FAILED"_wso,			L"设置管道句柄信息失败。"_wso },
 	{ L"CREATE_PROCESS_FAILED"_wso,			L"以命令行“%0”创建进程失败。"_wso },

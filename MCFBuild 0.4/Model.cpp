@@ -37,7 +37,7 @@ Model::Model()
 {
 	for(std::size_t i = 1; i < xm_vecArgV.GetSize(); ++i){
 		const auto &wcsArg = xm_vecArgV[i];
-		if(wcsArg == L"-M"_wso){
+		if((wcsArg == L"-M"_wso) || (wcsArg == L"/M"_wso)){
 			xm_bRawOutput = true;
 		}
 	}
@@ -78,13 +78,22 @@ void Model::InitParams(){
 			switch(wcsArg[1]){
 			case L'h':
 			case L'?':
+				if(uArgLen > 2){
+					THROW_INV_PARAM;
+				}
 				xm_eOperation = OP_SHOW_HELP;
 				break;
 
 			case L'M':
+				if(uArgLen > 2){
+					THROW_INV_PARAM;
+				}
 				break;
 
 			case L'v':
+				if(uArgLen > 2){
+					THROW_INV_PARAM;
+				}
 				xm_bVerbose = true;
 				break;
 
@@ -92,14 +101,14 @@ void Model::InitParams(){
 				if(uArgLen <= 2){
 					THROW_INV_PARAM;
 				}
-				xm_wcsWorkingDir.Assign(wcsArg.GetBegin(), uArgLen - 2);
+				xm_wcsWorkingDir.Assign(wcsArg.GetBegin() + 2, wcsArg.GetEnd());
 				break;
 
 			case L'p':
 				if(uArgLen <= 2){
 					THROW_INV_PARAM;
 				}
-				xm_wcsProject.Assign(wcsArg.GetBegin(), uArgLen - 2);
+				xm_wcsProject.Assign(wcsArg.GetBegin() + 2, wcsArg.GetEnd());
 				break;
 
 			case L'D':
@@ -123,24 +132,27 @@ void Model::InitParams(){
 				if(uArgLen <= 2){
 					THROW_INV_PARAM;
 				}
-				xm_wcsSrcRoot.Assign(wcsArg.GetBegin(), uArgLen - 2);
+				xm_wcsSrcRoot.Assign(wcsArg.GetBegin() + 2, wcsArg.GetEnd());
 				break;
 
 			case L'i':
 				if(uArgLen <= 2){
 					THROW_INV_PARAM;
 				}
-				xm_wcsIntermediateRoot.Assign(wcsArg.GetBegin(), uArgLen - 2);
+				xm_wcsIntermediateRoot.Assign(wcsArg.GetBegin() + 2, wcsArg.GetEnd());
 				break;
 
 			case L'd':
 				if(uArgLen <= 2){
 					THROW_INV_PARAM;
 				}
-				xm_wcsDstRoot.Assign(wcsArg.GetBegin(), uArgLen - 2);
+				xm_wcsDstRoot.Assign(wcsArg.GetBegin() + 2, wcsArg.GetEnd());
 				break;
 
 			case L'c':
+				if(uArgLen > 2){
+					THROW_INV_PARAM;
+				}
 				xm_eOperation = OP_CLEAN;
 				break;
 
@@ -160,6 +172,9 @@ void Model::InitParams(){
 				break;
 
 			case L'r':
+				if(uArgLen > 2){
+					THROW_INV_PARAM;
+				}
 				xm_eOperation = OP_REBUILD;
 				break;
 
@@ -170,11 +185,11 @@ void Model::InitParams(){
 					MCF::File::UniqueId vUniqueId;
 					wchar_t *pwcEnd;
 					vUniqueId.u32VolumeSN = std::wcstoul(wcsArg.GetCStr() + 2, &pwcEnd, 16);
-					if(*pwcEnd != L'_'){
+					if(*pwcEnd != L'.'){
 						THROW_INV_PARAM;
 					}
 					vUniqueId.u32IndexLow = std::wcstoul(pwcEnd + 1, &pwcEnd, 16);
-					if(*pwcEnd != L'_'){
+					if(*pwcEnd != L'.'){
 						THROW_INV_PARAM;
 					}
 					vUniqueId.u32IndexHigh = std::wcstoul(pwcEnd + 1, &pwcEnd, 16);

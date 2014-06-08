@@ -12,6 +12,32 @@
 
 namespace MCF {
 
+namespace Impl {
+	template<typename Plain_t, typename Encoded_t = typename std::make_unsigned<Plain_t>::type>
+	struct ZigZagger {
+		typedef Encoded_t EncodedType;
+
+		EncodedType Encode(Plain_t vVal) const noexcept {
+			return ((EncodedType)vVal << 1) ^ (EncodedType)(vVal >> (sizeof(vVal) * __CHAR_BIT__ - 1));
+		}
+		Plain_t Decode(EncodedType vVal) const noexcept {
+			return (Plain_t)((vVal >> 1) ^ -(vVal & 1));
+		}
+	};
+
+	template<typename Plain_t>
+	struct ZigZagger<Plain_t, Plain_t> {
+		typedef Plain_t EncodedType;
+
+		EncodedType Encode(Plain_t vVal) const noexcept {
+			return vVal;
+		}
+		Plain_t Decode(EncodedType vVal) const noexcept {
+			return vVal;
+		}
+	};
+}
+
 template<typename Underlying_t, Underlying_t ORIGIN = 0>
 class VarIntEx {
 	static_assert(std::is_arithmetic<Underlying_t>::value, "Underlying_t must be an arithmetic type.");
@@ -21,30 +47,8 @@ class VarIntEx {
 
 public:
 	enum : std::size_t {
-		MAX_SERIALIZED_SIZE = 9u
+		MAX_SERIALIZED_SIZE = sizeof(Underlying_t) + 1u
 	};
-
-private:
-	typedef typename std::make_unsigned<Underlying_t>::type xUnsigned;
-
-private:
-	template<typename Test_t = Underlying_t>
-	static xUnsigned xZigZagEncode(typename std::enable_if<std::is_signed<Underlying_t>::value, Test_t>::type nValue) noexcept {
-		return ((xUnsigned)nValue << 1) ^ (xUnsigned)(nValue >> (sizeof(nValue) * __CHAR_BIT__ - 1));
-	}
-	template<typename Test_t = xUnsigned>
-	static Underlying_t xZigZagDecode(typename std::enable_if<std::is_signed<Underlying_t>::value, Test_t>::type uEncoded) noexcept {
-		return (Underlying_t)((uEncoded >> 1) ^ -(uEncoded & 1));
-	}
-
-	template<typename Test_t = Underlying_t>
-	static xUnsigned xZigZagEncode(typename std::enable_if<!std::is_signed<Underlying_t>::value, Test_t>::type uValue) noexcept {
-		return uValue;
-	}
-	template<typename Test_t = xUnsigned>
-	static Underlying_t xZigZagDecode(typename std::enable_if<!std::is_signed<Underlying_t>::value, Test_t>::type uEncoded) noexcept {
-		return uEncoded;
-	}
 
 private:
 	Underlying_t xm_vValue;
@@ -70,7 +74,7 @@ public:
 	// 最多输出 9 个字节。
 	template<typename OutputIterator_t>
 	void Serialize(OutputIterator_t &itWrite) const {
-		auto uEncoded = xZigZagEncode(xm_vValue - ORIGIN);
+		auto uEncoded = Impl::ZigZagger<Underlying_t>().Encode(xm_vValue - ORIGIN);
 		for(auto i = Min(8u, sizeof(uEncoded)); i; --i){
 			unsigned char by = uEncoded & 0x7F;
 			uEncoded >>= 7;
@@ -88,7 +92,7 @@ public:
 	}
 	template<typename InputIterator_t>
 	bool Unserialize(InputIterator_t &itRead, const InputIterator_t &itEnd){
-		xUnsigned uEncoded = 0;
+		typename Impl::ZigZagger<Underlying_t>::EncodedType uEncoded = 0;
 		for(std::size_t i = 0; i < Min(4u, sizeof(uEncoded)); ++i){
 			if(itRead == itEnd){
 				return false;
@@ -118,7 +122,7 @@ public:
 		++itRead;
 
 	jDone:
-		xm_vValue = xZigZagDecode(uEncoded) + ORIGIN;
+		xm_vValue = Impl::ZigZagger<Underlying_t>().Decode(uEncoded) + ORIGIN;
 		return true;
 	}
 

@@ -58,16 +58,16 @@ namespace Impl {
 	};
 
 	// 针对比较大的整数类型（bool 除外）的特化。
-	template<typename Integral>
+	template<typename Integral_t>
 	struct SerdesTrait<
-		Integral,
+		Integral_t,
 		typename std::enable_if<
-			std::is_integral<Integral>::value && !std::is_same<Integral, bool>::value && (sizeof(Integral) > 2u)
+			std::is_integral<Integral_t>::value && !std::is_same<Integral_t, bool>::value && (sizeof(Integral_t) > 2u)
 		>::type
 	> {
 		// VarIntEx 是无序的。
-		void operator()(StreamBuffer &sbufStream, const Integral &vObject) const {
-			VarIntEx<Integral> viTemp(vObject);
+		void operator()(StreamBuffer &sbufStream, const Integral_t &vObject) const {
+			VarIntEx<Integral_t> viTemp(vObject);
 
 			unsigned char abyTemp[viTemp.MAX_SERIALIZED_SIZE];
 			auto pbyWrite = abyTemp;
@@ -75,8 +75,8 @@ namespace Impl {
 
 			sbufStream.Insert(abyTemp, (std::size_t)(pbyWrite - abyTemp));
 		}
-		void operator()(Integral &vObject, StreamBuffer &sbufStream) const {
-			VarIntEx<Integral> viTemp;
+		void operator()(Integral_t &vObject, StreamBuffer &sbufStream) const {
+			VarIntEx<Integral_t> viTemp;
 
 			auto itRead = sbufStream.GetReadIterator();
 			if(!viTemp.Unserialize(itRead, sbufStream.GetReadEnd())){
@@ -572,6 +572,7 @@ namespace Impl {
 	template<typename Object_t, typename>
 	struct SerdesTrait {
 		typedef Object_t ObjectType;
+
 		typedef std::pair<
 			std::function<void (StreamBuffer &, const Object_t &)>,
 			std::function<void (Object_t &, StreamBuffer &)>

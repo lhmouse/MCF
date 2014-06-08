@@ -1,64 +1,20 @@
 #include <MCF/StdMCF.hpp>
-#include <MCF/Thread/ReaderWriterLock.hpp>
-#include <MCF/Thread/Thread.hpp>
+#include <MCF/Serialization/VarIntEx.hpp>
+#include <iterator>
+#include <cstdio>
+using namespace std;
 using namespace MCF;
 
 unsigned int MCFMain(){
-	const auto rwl = ReaderWriterLock::Create();
+	VarIntEx<unsigned int> vi(0x12345678);
 
-	std::shared_ptr<Thread> threads[20];
-	for(unsigned int i = 0; i < COUNT_OF(threads); ++i){
-		threads[i] = Thread::Create([&, i]{
-			::Sleep(100 + i * 10);
-			auto lock1 = rwl->GetReaderLock();
-			__builtin_printf("*    %u\n", i);
-
-			::Sleep(100);
-			auto lock2 = rwl->GetReaderLock();
-			__builtin_printf(" *   %u\n", i);
-
-			::Sleep(100);
-			auto lock3 = rwl->GetReaderLock();
-			__builtin_printf("  *  %u\n", i);
-
-			::Sleep(100);
-			auto lock4 = rwl->GetReaderLock();
-			__builtin_printf("   * %u\n", i);
-
-			::Sleep(100);
-			lock1.Unlock();
-
-			::Sleep(100);
-			lock2.Unlock();
-
-			::Sleep(100);
-			lock3.Unlock();
-
-			::Sleep(100);
-			lock4.Unlock();
-		});
+	unsigned char buf[vi.MAX_SERIALIZED_SIZE];
+	auto p = buf;
+	vi.Serialize(p);
+	for(auto r = buf; r != p; ++r){
+		printf("%02hhX ", *r);
 	}
+	putchar('\n');
 
-	Thread::Create([&]{
-		::Sleep(130);
-		auto lock1 = rwl->GetWriterLock();
-		__builtin_printf("----\n");
-
-		::Sleep(10);
-		auto lock2 = rwl->GetWriterLock();
-		__builtin_printf("----\n");
-
-		::Sleep(1000);
-		__builtin_printf("----\n");
-		lock1.Unlock();
-
-		::Sleep(1000);
-		__builtin_printf("----\n");
-		lock2.Unlock();
-	})->Join();
-
-	for(auto &p : threads){
-		p->Join();
-	}
 	return 0;
 }

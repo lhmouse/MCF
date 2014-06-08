@@ -6,9 +6,6 @@
 
 #include <cstddef>
 
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
-
 #include "../MCF/StdMCF.hpp"
 #include "../MCF/Core/String.hpp"
 #include "../MCF/Core/Utilities.hpp"

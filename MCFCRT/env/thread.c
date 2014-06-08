@@ -2,15 +2,13 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2014. LH_Mouse. All wrongs reserved.
 
-#define WIN32_LEAN_AND_MEAN
-
 #include "thread.h"
 #include "fenv.h"
 #include "mingw_hacks.h"
 #include "avl_tree.h"
 #include "bail.h"
+#include "mcfwin.h"
 #include <stdlib.h>
-#include <windows.h>
 
 #ifdef _WIN64
 #	define UINTPTR_FORMAT	"0x%016zX"

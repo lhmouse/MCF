@@ -13,8 +13,6 @@
 #	define _GLIBCXX_DEBUG	1
 #endif
 
-#define WIN32_LEAN_AND_MEAN
-
 #include <cstddef>
 #include <cstdint>
 #include <cstdlib>
@@ -27,9 +25,8 @@
 #include <functional>
 #include <type_traits>
 
-#include <windows.h>
-
 #include "../MCFCRT/MCFCRT.h"
+#include "../MCFCRT/env/mcfwin.h"
 
 #undef NULL
 #define NULL	nullptr

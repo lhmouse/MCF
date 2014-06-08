@@ -2,8 +2,6 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2014. LH_Mouse. All wrongs reserved.
 
-#define WIN32_LEAN_AND_MEAN
-
 #include "heap_dbg.h"
 
 __asm__("");
@@ -11,9 +9,9 @@ __asm__("");
 #ifdef __MCF_CRT_HEAPDBG_ON
 
 #include "bail.h"
+#include "mcfwin.h"
 #include "../ext/ext_include.h"
 #include <wchar.h>
-#include <windows.h>
 
 static int BlockInfoComparatorNodes(
 	const MCF_AVL_NODE_HEADER *pInfo1,

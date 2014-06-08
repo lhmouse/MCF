@@ -17,17 +17,12 @@ const auto				DEFAULT_PROJECT_NAME	= L"MCFBuild.mcfproj"_ws;
 const auto				DEFAULT_CONFIG			= L"Default"_ws;
 constexpr std::size_t	MAX_PROCESS_COUNT		= 17;
 
-struct Helper : public Model {
-	Helper() = default;
-};
-
-Helper g_vModel;
-
 }
 
 // 静态成员函数。
 Model &Model::GetInstance() noexcept {
-	return g_vModel;
+	static std::unique_ptr<Model> s_pInstance(new Model);
+	return *(s_pInstance.get());
 }
 
 // 构造函数和析构函数。

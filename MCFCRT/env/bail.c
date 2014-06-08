@@ -2,11 +2,9 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2014. LH_Mouse. All wrongs reserved.
 
-#define WIN32_LEAN_AND_MEAN
-
 #include "bail.h"
+#include "mcfwin.h"
 #include "../ext/ext_include.h"
-#include <windows.h>
 #include <stdarg.h>
 #include <wchar.h>
 #include <stdlib.h>

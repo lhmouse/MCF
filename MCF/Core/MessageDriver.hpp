@@ -23,10 +23,12 @@ public:
 
 public:
 	const Utf8String m_u8sName;
+	const std::size_t m_uType;
 
 public:
-	explicit Message(Utf8String u8sName) noexcept
-		: m_u8sName(std::move(u8sName))
+	Message(Utf8String u8sName, std::size_t uType) noexcept
+		: m_u8sName	(std::move(u8sName))
+		, m_uType	(uType)
 	{
 	}
 	virtual ~Message() noexcept = default;

@@ -13,10 +13,11 @@ using namespace MCFBuild;
 
 extern "C" unsigned int MCFMain()
 try {
+	auto &vModel = Model::GetInstance();
+
 	PrintLn(FormatString(L"MCFBUILD_LOGO|0|4|0|0"_wso));
 
-	Model::GetInstance().InitParams();
-	const auto &vModel = Model::GetInstance();
+	vModel.InitParams();
 
 	if(vModel.GetOperation() == Model::OP_SHOW_HELP){
 		PrintLn(FormatString(L"MCFBUILD_USAGE"_wso));

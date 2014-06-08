@@ -2,15 +2,13 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2014. LH_Mouse. All wrongs reserved.
 
-#define WIN32_LEAN_AND_MEAN
-
 #include "mingw_hacks.h"
 #include "../ext/assert.h"
 #include "../ext/expect.h"
 #include "thread.h"
 #include "avl_tree.h"
+#include "mcfwin.h"
 #include <stdlib.h>
-#include <windows.h>
 
 typedef struct tagKeyDtorNode {
 	MCF_AVL_NODE_HEADER vHeader;

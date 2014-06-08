@@ -2,10 +2,8 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2014. LH_Mouse. All wrongs reserved.
 
-#define WIN32_LEAN_AND_MEAN
-
 #include "../MCFCRT.h"
-#include <windows.h>
+#include "../env/mcfwin.h"
 
 // -static -nostartfiles -Wl,-e__MCF_ExeStartup,--disable-runtime-pseudo-reloc,--disable-auto-import,-lmcfcrt,-lstdc++,-lgcc,-lgcc_eh,-lmingwex,-lmcfcrt
 

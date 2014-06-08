@@ -4,7 +4,7 @@
 
 #include "../../env/_crtdef.h"
 #include "../../env/bail.h"
-#include <windows.h>
+#include "../../env/mcfwin.h"
 
 __attribute__((__noreturn__)) void abort(){
 	MCF_CRT_Bail(L"应用程序调用 abort() 异常终止。");

@@ -2,15 +2,13 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2014. LH_Mouse. All wrongs reserved.
 
-#define WIN32_LEAN_AND_MEAN
-
 #include "heap.h"
 #include "heap_dbg.h"
+#include "mcfwin.h"
 #include "../ext/unref_param.h"
 #include <stdlib.h>
 #include <string.h>
 #include <limits.h>
-#include <windows.h>
 
 #ifndef __MCF_CRT_NO_DLMALLOC
 

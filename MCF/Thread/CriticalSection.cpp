@@ -4,27 +4,35 @@
 
 #include "../StdMCF.hpp"
 #include "CriticalSection.hpp"
-#include "Semaphore.hpp"
+#include "Thread.hpp"
+#include "_WinHandle.hpp"
+#include "../Core/Exception.hpp"
+#include "../Core/StringObserver.hpp"
 using namespace MCF;
 
 namespace {
 
 class CriticalSectionDelegate : CONCRETE(CriticalSection) {
 private:
+	Impl::UniqueWinHandle xm_hSemaphore;
 	unsigned long xm_ulSpinCount;
+
 	volatile DWORD xm_dwOwner;
 	std::size_t xm_uRecurCount;
-	const std::unique_ptr<Semaphore> xm_psemExclusive;
 	volatile std::size_t xm_uWaiting;
 
 public:
-	CriticalSectionDelegate(unsigned long ulSpinCount) noexcept
+	CriticalSectionDelegate(unsigned long ulSpinCount)
 		: xm_ulSpinCount	(ulSpinCount)
 		, xm_dwOwner		(0)
 		, xm_uRecurCount	(0)
-		, xm_psemExclusive	(Semaphore::Create(0, 1))
 		, xm_uWaiting		(0)
 	{
+		xm_hSemaphore.Reset(::CreateSemaphoreW(nullptr, 0, 1, nullptr));
+		if(!xm_hSemaphore){
+			MCF_THROW(::GetLastError(), L"CreateSemaphoreW() 失败。"_wso);
+		}
+
 		SYSTEM_INFO vSystemInfo;
 		::GetSystemInfo(&vSystemInfo);
 		if(vSystemInfo.dwNumberOfProcessors == 1){
@@ -52,8 +60,12 @@ private:
 	}
 
 public:
+	bool IsLockedByCurrentThread() const noexcept {
+		return __atomic_load_n(&xm_dwOwner, __ATOMIC_ACQUIRE) == Thread::GetCurrentId();
+	}
+
 	void Enter() noexcept {
-		const DWORD dwThreadId = ::GetCurrentThreadId();
+		const DWORD dwThreadId = Thread::GetCurrentId();
 
 		if(__atomic_load_n(&xm_dwOwner, __ATOMIC_ACQUIRE) != dwThreadId){
 			for(;;){
@@ -76,7 +88,7 @@ public:
 				++uWaiting;
 				xUnlockSpin(uWaiting);
 
-				xm_psemExclusive->Wait();
+				::WaitForSingleObject(xm_hSemaphore.Get(), INFINITE);
 			}
 		}
 
@@ -84,14 +96,15 @@ public:
 		++xm_uRecurCount;
 	}
 	void Leave() noexcept {
-		ASSERT(__atomic_load_n(&xm_dwOwner, __ATOMIC_ACQUIRE) == ::GetCurrentThreadId());
+		ASSERT(__atomic_load_n(&xm_dwOwner, __ATOMIC_ACQUIRE) == Thread::GetCurrentId());
 
 		if(--xm_uRecurCount == 0){
 			__atomic_store_n(&xm_dwOwner, 0, __ATOMIC_RELEASE);
 
 			auto uWaiting = xLockSpin();
 			if(uWaiting){
-				xm_psemExclusive->Signal();
+				::ReleaseSemaphore(xm_hSemaphore.Get(), 1, nullptr);
+
 				--uWaiting;
 			}
 			xUnlockSpin(uWaiting);
@@ -108,13 +121,13 @@ namespace Impl {
 	void CriticalSection::Lock::xDoLock() const noexcept {
 		ASSERT(dynamic_cast<CriticalSectionDelegate *>(xm_pOwner));
 
-		((CriticalSectionDelegate *)xm_pOwner)->Enter();
+		static_cast<CriticalSectionDelegate *>(xm_pOwner)->Enter();
 	}
 	template<>
 	void CriticalSection::Lock::xDoUnlock() const noexcept {
 		ASSERT(dynamic_cast<CriticalSectionDelegate *>(xm_pOwner));
 
-		((CriticalSectionDelegate *)xm_pOwner)->Leave();
+		static_cast<CriticalSectionDelegate *>(xm_pOwner)->Leave();
 	}
 }
 
@@ -126,6 +139,12 @@ std::unique_ptr<CriticalSection> CriticalSection::Create(unsigned long ulSpinCou
 }
 
 // 其他非静态成员函数。
+bool CriticalSection::IsLockedByCurrentThread() const noexcept {
+	ASSERT(dynamic_cast<const CriticalSectionDelegate *>(this));
+
+	return static_cast<const CriticalSectionDelegate *>(this)->IsLockedByCurrentThread();
+}
+
 CriticalSection::Lock CriticalSection::GetLock() noexcept {
 	return Lock(this);
 }

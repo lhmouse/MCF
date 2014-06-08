@@ -229,7 +229,7 @@ Function_t &&CallOnEachBackward(Function_t &&fnCallable, FirstParam_t &&vFirstPa
 //----------------------------------------------------------------------------
 template<typename Tx, typename Ty>
 typename std::common_type<Tx, Ty>::type Min(Tx op1, Ty op2){
-	static_assert(std::is_scalar<Tx>::value && std::is_scalar<Ty>::value, "Only scalar types are supported");
+	static_assert(std::is_scalar<Tx>::value && std::is_scalar<Ty>::value, "Only scalar types are supported.");
 	static_assert(std::is_signed<Tx>::value ^ !std::is_signed<Ty>::value, "Comparison between signed and unsigned integers.");
 
 	return std::min<typename std::common_type<Tx, Ty>::type>(op1, op2);
@@ -237,7 +237,7 @@ typename std::common_type<Tx, Ty>::type Min(Tx op1, Ty op2){
 
 template<typename Tx, typename Ty>
 typename std::common_type<Tx, Ty>::type Max(Tx op1, Ty op2){
-	static_assert(std::is_scalar<Tx>::value && std::is_scalar<Ty>::value, "Only scalar types are supported");
+	static_assert(std::is_scalar<Tx>::value && std::is_scalar<Ty>::value, "Only scalar types are supported.");
 	static_assert(std::is_signed<Tx>::value ^ !std::is_signed<Ty>::value, "Comparison between signed and unsigned integers.");
 
 	return std::max<typename std::common_type<Tx, Ty>::type>(op1, op2);

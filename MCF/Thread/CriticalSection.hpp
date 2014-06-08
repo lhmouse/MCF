@@ -19,6 +19,8 @@ public:
 	static std::unique_ptr<CriticalSection> Create(unsigned long ulSpinCount = 0x400);
 
 public:
+	bool IsLockedByCurrentThread() const noexcept;
+
 	Lock GetLock() noexcept;
 };
 

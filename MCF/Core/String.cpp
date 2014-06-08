@@ -6,7 +6,7 @@
 #include "String.hpp"
 #include "Utilities.hpp"
 #include "../Serialization/Serdes.hpp"
-#include "../Thread/CriticalSection.hpp"
+#include "../Thread/ReaderWriterLock.hpp"
 #include <unordered_map>
 #include <limits>
 using namespace MCF;
@@ -327,17 +327,21 @@ DEFINE_STRING_SERDES(Utf32String)
 	const String<MACRO_TYPE(char_type), StringEncoding::encoding> &	\
 		operator"" ## suffix(const MACRO_TYPE(char_type) *pchStr, std::size_t uLength)	\
 	{	\
-		typedef String<MACRO_TYPE(char_type), StringEncoding::encoding> StringType;	\
+		static const auto pReaderWriterLock = ReaderWriterLock::Create();	\
+		static std::unordered_map<	\
+			const char_type *,	\
+			String<MACRO_TYPE(char_type), StringEncoding::encoding>	\
+		> mapStrings;	\
 		\
-		static const auto pCriticalSection = CriticalSection::Create();	\
-		static auto mapStrings = std::unordered_map<const char_type *, StringType>();	\
-		\
-		const auto vLock = pCriticalSection->GetLock();	\
-		auto itString = mapStrings.find(pchStr);	\
-		if(itString != mapStrings.end()){	\
-			return itString->second;	\
+		{	\
+			const auto vReaderLock = pReaderWriterLock->GetReaderLock();	\
+			auto itString = mapStrings.find(pchStr);	\
+			if(itString != mapStrings.end()){	\
+				return itString->second;	\
+			}	\
 		}	\
 		\
+		const auto vWriterLock = pReaderWriterLock->GetWriterLock();	\
 		return mapStrings.emplace(	\
 			std::piecewise_construct,	\
 			std::make_tuple(pchStr),	\

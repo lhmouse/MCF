@@ -14,8 +14,7 @@ using namespace MCF;
 namespace {
 
 typedef Message::HandlerProc HandlerProc;
-
-typedef VVector<std::shared_ptr<HandlerProc>, 32>	HandlerVector;
+typedef VVector<std::shared_ptr<HandlerProc>>		HandlerVector;
 typedef MultiIndexedMap<HandlerVector, Utf8String>	HandlerMap;
 
 const auto g_pLock = ReaderWriterLock::Create();
@@ -62,9 +61,7 @@ public:
 				}
 			}
 
-			for(auto ppfnNext = ppfnCur + 1; ppfnNext != ppfnEnd; ++ppfnNext){
-				std::swap(ppfnNext[-1], ppfnNext[0]);
-			}
+			Move(ppfnCur, ppfnCur + 1, ppfnEnd);
 			vecHandlers.Pop();
 		}
 		ASSERT_NOEXCEPT_END
@@ -76,14 +73,6 @@ public:
 // 静态成员函数。
 std::shared_ptr<void> Message::RegisterHandler(const Utf8StringObserver &u8soName, HandlerProc fnProc){
 	return std::make_shared<HandlerHolder>(u8soName, std::move(fnProc));
-}
-
-// 构造函数和析构函数。
-Message::Message(Utf8String u8sName) noexcept
-	: m_u8sName(std::move(u8sName))
-{
-}
-Message::~Message() noexcept {
 }
 
 // 其他非静态成员函数。

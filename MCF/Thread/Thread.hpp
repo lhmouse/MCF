@@ -15,6 +15,8 @@ namespace MCF {
 
 class Thread : NO_COPY, ABSTRACT {
 public:
+	static unsigned long GetCurrentId() noexcept;
+
 	static std::shared_ptr<Thread> Create(std::function<void ()> fnProc, bool bSuspended = false);
 
 public:
@@ -25,7 +27,7 @@ public:
 	void Join() const; // 如果线程中有被捕获的异常，抛出异常。
 
 	bool IsAlive() const noexcept;
-	unsigned long GetThreadId() const noexcept;
+	unsigned long GetId() const noexcept;
 
 	void Suspend() noexcept;
 	void Resume() noexcept;

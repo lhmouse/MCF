@@ -33,18 +33,24 @@ public:
 	bool IsLocking() const noexcept {
 		return xm_uLockCount > 0;
 	}
-	void Lock(std::size_t uCount = 1) noexcept {
+	bool Lock(std::size_t uCount = 1) noexcept {
+		bool bRet = false;
 		if(xm_uLockCount == 0){
 			xDoLock();
+			bRet = true;
 		}
 		xm_uLockCount += uCount;
+		return bRet;
 	}
-	void Unlock() noexcept {
+	bool Unlock() noexcept {
 		ASSERT(xm_uLockCount > 0);
 
+		bool bRet = false;
 		if(--xm_uLockCount == 0){
 			xDoUnlock();
+			bRet = true;
 		}
+		return bRet;
 	}
 	std::size_t UnlockAll() noexcept {
 		const auto uCount = xm_uLockCount;

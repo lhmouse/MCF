@@ -6,6 +6,7 @@
 #include "Semaphore.hpp"
 #include "_WinHandle.hpp"
 #include "../Core/Exception.hpp"
+#include "../Core/String.hpp"
 #include "../Core/Time.hpp"
 using namespace MCF;
 

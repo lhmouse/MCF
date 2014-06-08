@@ -14,8 +14,8 @@ namespace MCF {
 
 class Message {
 public:
-	// 返回 true 则表示事件已被处理，不会继续传递。
-	// 否则事件传递给前一个注册的响应器。
+	// 返回 true 则表示消息已被处理，不会继续传递。
+	// 否则消息传递给前一个注册的响应器。
 	typedef std::function<bool (const Message &)> HandlerProc;
 
 public:
@@ -25,8 +25,11 @@ public:
 	const Utf8String m_u8sName;
 
 public:
-	explicit Message(Utf8String u8sName) noexcept;
-	virtual ~Message() noexcept;
+	explicit Message(Utf8String u8sName) noexcept
+		: m_u8sName(std::move(u8sName))
+	{
+	}
+	virtual ~Message() noexcept = default;
 
 public:
 	void Dispatch() const;

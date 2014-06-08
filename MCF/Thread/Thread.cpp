@@ -57,7 +57,7 @@ public:
 		return xm_pException; // 不要 move()。
 	}
 
-	unsigned long GetThreadId() const noexcept {
+	unsigned long GetId() const noexcept {
 		return xm_ulThreadId;
 	}
 
@@ -92,6 +92,10 @@ inline std::shared_ptr<ThreadDelegate> ThreadDelegate::Create(std::function<void
 }
 
 // 静态成员函数。
+unsigned long Thread::GetCurrentId() noexcept {
+	return ::GetCurrentThreadId();
+}
+
 std::shared_ptr<Thread> Thread::Create(std::function<void ()> fnProc, bool bSuspended){
 	return ThreadDelegate::Create(std::move(fnProc), bSuspended);
 }
@@ -121,10 +125,10 @@ void Thread::Join() const {
 bool Thread::IsAlive() const noexcept {
 	return !WaitTimeout(0);
 }
-unsigned long Thread::GetThreadId() const noexcept {
+unsigned long Thread::GetId() const noexcept {
 	ASSERT(dynamic_cast<const ThreadDelegate *>(this));
 
-	return ((const ThreadDelegate *)this)->GetThreadId();
+	return ((const ThreadDelegate *)this)->GetId();
 }
 
 void Thread::Suspend() noexcept {

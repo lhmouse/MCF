@@ -6,6 +6,7 @@
 #include "Mutex.hpp"
 #include "_WinHandle.hpp"
 #include "../Core/Exception.hpp"
+#include "../Core/String.hpp"
 #include "../Core/Time.hpp"
 using namespace MCF;
 
@@ -43,13 +44,13 @@ namespace Impl {
 	void Mutex::Lock::xDoLock() const noexcept {
 		ASSERT(dynamic_cast<MutexDelegate *>(xm_pOwner));
 
-		((MutexDelegate *)xm_pOwner)->Wait();
+		static_cast<MutexDelegate *>(xm_pOwner)->Wait();
 	}
 	template<>
 	void Mutex::Lock::xDoUnlock() const noexcept {
 		ASSERT(dynamic_cast<MutexDelegate *>(xm_pOwner));
 
-		((MutexDelegate *)xm_pOwner)->Release();
+		static_cast<MutexDelegate *>(xm_pOwner)->Release();
 	}
 }
 

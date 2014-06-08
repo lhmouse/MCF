@@ -4,82 +4,87 @@
 
 #include "../StdMCF.hpp"
 #include "ReaderWriterLock.hpp"
-#include "ThreadLocalPtr.hpp"
 #include "CriticalSection.hpp"
-#include "Semaphore.hpp"
+#include "_WinHandle.hpp"
+#include "../Core/UniqueHandle.hpp"
 #include "../Core/Exception.hpp"
 #include "../Core/Time.hpp"
 using namespace MCF;
 
 namespace {
 
+struct TlsDeleter {
+	constexpr DWORD operator()() const noexcept {
+		return TLS_OUT_OF_INDEXES;
+	}
+	void operator()(DWORD dwIndex) const noexcept {
+		::TlsFree(dwIndex);
+	}
+};
+
 class ReaderWriterLockDelegate : CONCRETE(ReaderWriterLock) {
 private:
-	struct xThreadInfo {
-		std::size_t m_uReaderRecur;
-		std::size_t m_uWriterRecur;
-	};
-
-private:
-	volatile std::size_t xm_uReaderCount;
-	ThreadLocalPtr<xThreadInfo, xThreadInfo> xm_pThreadInfo;
-
 	const std::unique_ptr<CriticalSection> xm_pcsGuard;
+	Impl::UniqueWinHandle xm_hSemaphore;
+
+	volatile std::size_t xm_uReaderCount;
+	UniqueHandle<TlsDeleter> xm_hdwReaderRecur;
 	CriticalSection::Lock xm_vWriterLock;
-	const std::unique_ptr<Semaphore> xm_psemExclusive;
 
 public:
-	ReaderWriterLockDelegate(unsigned long ulSpinCount) noexcept
-		: xm_uReaderCount	(0)
-		, xm_pThreadInfo	(xThreadInfo())
-		, xm_pcsGuard		(CriticalSection::Create(ulSpinCount))
+	ReaderWriterLockDelegate(unsigned long ulSpinCount)
+		: xm_pcsGuard		(CriticalSection::Create(ulSpinCount))
+		, xm_uReaderCount	(0)
 		, xm_vWriterLock	(xm_pcsGuard.get(), false)
-		, xm_psemExclusive	(Semaphore::Create(1, 1))
 	{
-	}
-
-private:
-	xThreadInfo &xGetThreadInfo() noexcept {
-		const auto pThreadInfo = xm_pThreadInfo.GetPtr();
-		if(!pThreadInfo){
-			Bail(L"为读写锁创建 Tls 失败。\n\n注意不要在静态对象的构造函数或析构函数中使用读写锁。");
+		xm_hSemaphore.Reset(::CreateSemaphoreW(nullptr, 1, 1, nullptr));
+		if(!xm_hSemaphore){
+			MCF_THROW(::GetLastError(), L"CreateSemaphoreW() 失败。"_wso);
 		}
-		return *pThreadInfo;
+
+		xm_hdwReaderRecur.Reset(::TlsAlloc());
+		if(!xm_hdwReaderRecur){
+			MCF_THROW(::GetLastError(), L"TlsAlloc() 失败。"_wso);
+		}
 	}
 
 public:
 	void GetReaderLock() noexcept {
-		auto &vThreadInfo = xGetThreadInfo();
+		auto uReaderRecur = (std::size_t)::TlsGetValue(xm_hdwReaderRecur.Get());
+		++uReaderRecur;
+		::TlsSetValue(xm_hdwReaderRecur.Get(), (void *)uReaderRecur);
 
-		if(++vThreadInfo.m_uReaderRecur == 1){
-			if(vThreadInfo.m_uWriterRecur == 0){
-				const auto vReaderLock = xm_pcsGuard->GetLock();
-				if(__atomic_add_fetch(&xm_uReaderCount, 1, __ATOMIC_ACQ_REL) == 1){
-					xm_psemExclusive->Wait();
-				}
-			} else {
+		if(uReaderRecur == 1){
+			if(xm_pcsGuard->IsLockedByCurrentThread()){
 				__atomic_add_fetch(&xm_uReaderCount, 1, __ATOMIC_ACQ_REL);
+			} else {
+				const auto vGuardLock = xm_pcsGuard->GetLock();
+				if(__atomic_add_fetch(&xm_uReaderCount, 1, __ATOMIC_ACQ_REL) == 1){
+					::WaitForSingleObject(xm_hSemaphore.Get(), INFINITE);
+				}
 			}
 		}
 	}
 	void ReleaseReaderLock() noexcept {
-		auto &vThreadInfo = xGetThreadInfo();
+		auto uReaderRecur = (std::size_t)::TlsGetValue(xm_hdwReaderRecur.Get());
+		--uReaderRecur;
+		::TlsSetValue(xm_hdwReaderRecur.Get(), (void *)uReaderRecur);
 
-		if(--vThreadInfo.m_uReaderRecur == 0){
-			if(vThreadInfo.m_uWriterRecur == 0){
-				if(__atomic_sub_fetch(&xm_uReaderCount, 1, __ATOMIC_ACQ_REL) == 0){
-					xm_psemExclusive->Signal();
-				}
-			} else {
+		if(uReaderRecur == 0){
+			if(xm_pcsGuard->IsLockedByCurrentThread()){
 				__atomic_sub_fetch(&xm_uReaderCount, 1, __ATOMIC_ACQ_REL);
+			} else {
+				if(__atomic_sub_fetch(&xm_uReaderCount, 1, __ATOMIC_ACQ_REL) == 0){
+					::ReleaseSemaphore(xm_hSemaphore.Get(), 1, nullptr);
+				}
 			}
 		}
 	}
 
 	void GetWriterLock() noexcept {
-		auto &vThreadInfo = xGetThreadInfo();
-
-		if(++vThreadInfo.m_uWriterRecur == 1){
+		if(xm_pcsGuard->IsLockedByCurrentThread()){
+			xm_vWriterLock.Lock();
+		} else {
 			// 假定有两个线程运行同样的函数：
 			//
 			//   GetReaderLock();
@@ -88,23 +93,18 @@ public:
 			//
 			// 这个问题并非无法解决，例如允许 GetWriterLock() 抛出异常。
 			// 但是这样除了使问题复杂化以外没有什么好处。
-			ASSERT_MSG(vThreadInfo.m_uReaderRecur == 0, L"获取写锁前必须先释放读锁。");
+			ASSERT_MSG((std::size_t)::TlsGetValue(xm_hdwReaderRecur.Get()) == 0, L"获取写锁前必须先释放读锁。");
 
-			auto vWriterLock = xm_pcsGuard->GetLock();
-//			if(vThreadInfo.m_uReaderRecur == 0){
-				xm_psemExclusive->Wait();
-//			}
-			xm_vWriterLock.Join(std::move(vWriterLock));
+			auto vGuardLock = xm_pcsGuard->GetLock();
+			::WaitForSingleObject(xm_hSemaphore.Get(), INFINITE);
+			xm_vWriterLock.Join(std::move(vGuardLock));
 		}
 	}
 	void ReleaseWriterLock() noexcept {
-		auto &vThreadInfo = xGetThreadInfo();
-
-		if(--vThreadInfo.m_uWriterRecur == 0){
-			if(vThreadInfo.m_uReaderRecur == 0){
-				xm_psemExclusive->Signal();
+		if(xm_vWriterLock.Unlock()){
+			if((std::size_t)::TlsGetValue(xm_hdwReaderRecur.Get()) == 0){
+				::ReleaseSemaphore(xm_hSemaphore.Get(), 1, nullptr);
 			}
-			xm_vWriterLock.Unlock();
 		}
 	}
 };
@@ -118,26 +118,26 @@ namespace Impl {
 	void ReaderWriterLock::ReaderLock::xDoLock() const noexcept {
 		ASSERT(dynamic_cast<ReaderWriterLockDelegate *>(xm_pOwner));
 
-		((ReaderWriterLockDelegate *)xm_pOwner)->GetReaderLock();
+		static_cast<ReaderWriterLockDelegate *>(xm_pOwner)->GetReaderLock();
 	}
 	template<>
 	void ReaderWriterLock::ReaderLock::xDoUnlock() const noexcept {
 		ASSERT(dynamic_cast<ReaderWriterLockDelegate *>(xm_pOwner));
 
-		((ReaderWriterLockDelegate *)xm_pOwner)->ReleaseReaderLock();
+		static_cast<ReaderWriterLockDelegate *>(xm_pOwner)->ReleaseReaderLock();
 	}
 
 	template<>
 	void ReaderWriterLock::WriterLock::xDoLock() const noexcept {
 		ASSERT(dynamic_cast<ReaderWriterLockDelegate *>(xm_pOwner));
 
-		((ReaderWriterLockDelegate *)xm_pOwner)->GetWriterLock();
+		static_cast<ReaderWriterLockDelegate *>(xm_pOwner)->GetWriterLock();
 	}
 	template<>
 	void ReaderWriterLock::WriterLock::xDoUnlock() const noexcept {
 		ASSERT(dynamic_cast<ReaderWriterLockDelegate *>(xm_pOwner));
 
-		((ReaderWriterLockDelegate *)xm_pOwner)->ReleaseWriterLock();
+		static_cast<ReaderWriterLockDelegate *>(xm_pOwner)->ReleaseWriterLock();
 	}
 }
 

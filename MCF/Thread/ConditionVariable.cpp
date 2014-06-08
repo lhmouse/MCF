@@ -6,6 +6,7 @@
 #include "ConditionVariable.hpp"
 #include "_WinHandle.hpp"
 #include "../Core/Exception.hpp"
+#include "../Core/StringObserver.hpp"
 #include "../Core/Time.hpp"
 using namespace MCF;
 
@@ -16,11 +17,11 @@ namespace {
 
 class ConditionVariableDelegate : CONCRETE(ConditionVariable) {
 private:
-	volatile std::size_t xm_uWaiterCount;
 	Impl::UniqueWinHandle xm_hSemaphore;
+	volatile std::size_t xm_uWaiterCount;
 
 public:
-	ConditionVariableDelegate() noexcept
+	ConditionVariableDelegate()
 		: xm_uWaiterCount(0)
 	{
 		xm_hSemaphore.Reset(::CreateSemaphoreW(nullptr, 0, 0x7FFFFFFF, nullptr));

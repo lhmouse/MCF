@@ -192,12 +192,12 @@ void StreamBuffer::Put(unsigned char by){
 }
 
 bool StreamBuffer::Extract(void *pData, std::size_t uSize) noexcept {
+	if(uSize > xm_uSize){
+		return false;
+	}
+
 	ASSERT_NOEXCEPT_BEGIN
 	{
-		if(uSize > xm_uSize){
-			return false;
-		}
-
 		auto pbyWrite = (unsigned char *)pData;
 		if(xm_uSmallWrite - xm_uSmallRead >= uSize){
 			std::memcpy(pbyWrite, xm_abySmall + xm_uSmallRead, uSize);
@@ -324,6 +324,30 @@ void StreamBuffer::Append(StreamBuffer &&rhs){
 		rhs.Clear();
 	}
 	ASSERT_NOEXCEPT_END
+}
+bool StreamBuffer::CutOut(StreamBuffer &sbufHead, std::size_t uSize){
+	StreamBuffer sbufTemp;
+
+	unsigned char *pbyWrite;
+	std::size_t *puWrite;
+	if(uSize <= sizeof(xm_abySmall)){
+		pbyWrite = sbufTemp.xm_abySmall;
+		puWrite = &(sbufTemp.xm_uSmallWrite);
+	} else {
+		sbufTemp.xm_pLargeHead = xBlockHeader::Create(uSize);
+		sbufTemp.xm_pLargeTail = sbufTemp.xm_pLargeHead.get();
+
+		pbyWrite = sbufTemp.xm_pLargeHead->m_abyData;
+		puWrite = &(sbufTemp.xm_pLargeHead->m_uWrite);
+	}
+	if(!Extract(pbyWrite, uSize)){
+		return false;
+	}
+	*puWrite = uSize;
+	sbufTemp.xm_uSize = uSize;
+
+	sbufHead = std::move(sbufTemp);
+	return true;
 }
 
 void StreamBuffer::Swap(StreamBuffer &rhs) noexcept {

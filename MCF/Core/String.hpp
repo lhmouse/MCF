@@ -72,9 +72,10 @@ private:
 	static_assert(sizeof(xm_vStorage) % 16 == 0, "Bad alignment.");
 
 public:
-	constexpr String() noexcept
-		: xm_vStorage{}
-	{
+	String() noexcept {
+		xm_vStorage.achSmall[0]		= Char_t();
+		xm_vStorage.chNull			= Char_t();
+		xm_vStorage.uchSmallLength	= 0;
 	}
 	explicit String(Char_t ch, std::size_t uCount = 1)
 		: String()
@@ -337,7 +338,7 @@ public:
 
 	std::size_t GetCapacity() const noexcept {
 		if(xm_vStorage.chNull == Char_t()){
-			return COUNT_OF(xm_vStorage.achSmall) - 1;
+			return COUNT_OF(xm_vStorage.achSmall);
 		} else {
 			return xm_vStorage.uLargeCapacity - 1;
 		}

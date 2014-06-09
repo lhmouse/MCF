@@ -208,6 +208,25 @@ namespace Impl {
 		}
 	};
 
+	// StreamBuffer 套 StreamBuffer。
+	template<>
+	struct SerdesTrait<
+		StreamBuffer,
+		void
+	> {
+		void operator()(StreamBuffer &sbufStream, const StreamBuffer &sbufNested) const {
+			const auto uSize = sbufNested.GetSize();
+			SizeTSerdes()(sbufStream, uSize);
+			sbufStream.Append(sbufNested);
+		}
+		void operator()(StreamBuffer &sbufNested, StreamBuffer &sbufStream) const {
+			const auto uSize = SizeTSerdes()(sbufStream);
+			if(!sbufStream.CutOut(sbufNested, uSize)){
+				ThrowOnEof();
+			}
+		}
+	};
+
 	// 针对未知大小的内建数组的特化。
 	template<typename Element_t>
 	struct SerdesTrait<
@@ -398,7 +417,7 @@ namespace Impl {
 		void
 	> {
 		void operator()(StreamBuffer &sbufStream, const std::basic_string<Char_t, Trait_t, Allocator_t> &vBasicString) const {
-			const std::size_t uSize = vBasicString.size();
+			const auto uSize = vBasicString.size();
 			SizeTSerdes()(sbufStream, uSize);
 			SerdesTrait<Char_t[]>()(sbufStream, vBasicString.c_str(), uSize);
 		}
@@ -423,7 +442,7 @@ namespace Impl {
 		typedef typename Container_t::value_type ElementType;
 
 		void operator()(StreamBuffer &sbufStream, const Container_t &vContainer) const {
-			const std::size_t uSize = vContainer.size();
+			const auto uSize = vContainer.size();
 			SizeTSerdes()(sbufStream, uSize);
 			auto itRead = vContainer.begin();
 			for(auto i = uSize; i; --i){
@@ -511,7 +530,7 @@ namespace Impl {
 		typedef typename std::remove_const<typename Container_t::value_type>::type ElementType;
 
 		void operator()(StreamBuffer &sbufStream, const Container_t &vContainer) const {
-			const std::size_t uSize = vContainer.size();
+			const auto uSize = vContainer.size();
 			SizeTSerdes()(sbufStream, uSize);
 			for(const auto &vElement : vContainer){
 				SerdesTrait<ElementType>()(sbufStream, vElement);
@@ -551,7 +570,7 @@ namespace Impl {
 		> ElementType;
 
 		void operator()(StreamBuffer &sbufStream, const Container_t &vContainer) const {
-			const std::size_t uSize = vContainer.size();
+			const auto uSize = vContainer.size();
 			SizeTSerdes()(sbufStream, uSize);
 			for(const auto &vElement : vContainer){
 				SerdesTrait<ElementType>()(sbufStream, vElement);

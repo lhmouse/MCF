@@ -64,6 +64,7 @@ public:
 
 	void Append(const StreamBuffer &rhs);
 	void Append(StreamBuffer &&rhs);
+	bool CutOut(StreamBuffer &sbufHead, std::size_t uSize);
 
 	void Swap(StreamBuffer &rhs) noexcept;
 

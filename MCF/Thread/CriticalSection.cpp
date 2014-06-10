@@ -4,112 +4,23 @@
 
 #include "../StdMCF.hpp"
 #include "CriticalSection.hpp"
-#include "Thread.hpp"
-#include "_WinHandle.hpp"
-#include "../Core/Exception.hpp"
-#include "../Core/StringObserver.hpp"
+#include "_CriticalSectionImpl.hpp"
 using namespace MCF;
 
 namespace {
 
-class CriticalSectionDelegate : CONCRETE(CriticalSection) {
-private:
-	Impl::UniqueWinHandle xm_hSemaphore;
-	unsigned long xm_ulSpinCount;
-
-	volatile DWORD xm_dwOwner;
-	std::size_t xm_uRecurCount;
-	volatile std::size_t xm_uWaiting;
-
+class CriticalSectionDelegate : CONCRETE(CriticalSection), public Impl::CriticalSectionImpl {
 public:
-	CriticalSectionDelegate(unsigned long ulSpinCount)
-		: xm_ulSpinCount	(ulSpinCount)
-		, xm_dwOwner		(0)
-		, xm_uRecurCount	(0)
-		, xm_uWaiting		(0)
+	explicit CriticalSectionDelegate(unsigned long ulSpinCount)
+		: CriticalSectionImpl(ulSpinCount)
 	{
-		xm_hSemaphore.Reset(::CreateSemaphoreW(nullptr, 0, 1, nullptr));
-		if(!xm_hSemaphore){
-			MCF_THROW(::GetLastError(), L"CreateSemaphoreW() 失败。"_wso);
-		}
-
-		SYSTEM_INFO vSystemInfo;
-		::GetSystemInfo(&vSystemInfo);
-		if(vSystemInfo.dwNumberOfProcessors == 1){
-			xm_ulSpinCount = 0;
-		}
-	}
-
-private:
-	// http://wiki.osdev.org/Spinlock
-	std::size_t xLockSpin() noexcept {
-		std::size_t uWaiting;
-		for(;;){
-			uWaiting = __atomic_exchange_n(&xm_uWaiting, (std::size_t)-1, __ATOMIC_ACQ_REL | __ATOMIC_HLE_ACQUIRE);
-			if(EXPECT_NOT(uWaiting != (std::size_t)-1)){
-				break;
-			}
-			do {
-				__asm__ __volatile__("pause \n");
-			} while(EXPECT(__atomic_load_n(&xm_uWaiting, __ATOMIC_ACQUIRE) == (std::size_t)-1));
-		}
-		return uWaiting;
-	}
-	void xUnlockSpin(std::size_t uNewWaiting) noexcept {
-		__atomic_store_n(&xm_uWaiting, uNewWaiting, __ATOMIC_RELEASE | __ATOMIC_HLE_RELEASE);
 	}
 
 public:
-	bool IsLockedByCurrentThread() const noexcept {
-		return __atomic_load_n(&xm_dwOwner, __ATOMIC_ACQUIRE) == Thread::GetCurrentId();
-	}
+	using CriticalSectionImpl::GetSpinCount;
+	using CriticalSectionImpl::SetSpinCount;
 
-	void Enter() noexcept {
-		const DWORD dwThreadId = Thread::GetCurrentId();
-
-		if(__atomic_load_n(&xm_dwOwner, __ATOMIC_ACQUIRE) != dwThreadId){
-			for(;;){
-				auto i = xm_ulSpinCount;
-				for(;;){
-					DWORD dwOldOwner = 0;
-					if(EXPECT_NOT(__atomic_compare_exchange_n(
-						&xm_dwOwner, &dwOldOwner, dwThreadId,
-						false, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE
-					))){
-						goto jAcquired;
-					}
-					if(EXPECT_NOT(i)){
-						break;
-					}
-					--i;
-				}
-
-				auto uWaiting = xLockSpin();
-				++uWaiting;
-				xUnlockSpin(uWaiting);
-
-				::WaitForSingleObject(xm_hSemaphore.Get(), INFINITE);
-			}
-		}
-
-	jAcquired:
-		++xm_uRecurCount;
-	}
-	void Leave() noexcept {
-		ASSERT(__atomic_load_n(&xm_dwOwner, __ATOMIC_ACQUIRE) == Thread::GetCurrentId());
-
-		if(--xm_uRecurCount == 0){
-			__atomic_store_n(&xm_dwOwner, 0, __ATOMIC_RELEASE);
-
-			auto uWaiting = xLockSpin();
-			if(uWaiting){
-				::ReleaseSemaphore(xm_hSemaphore.Get(), 1, nullptr);
-
-				--uWaiting;
-			}
-			xUnlockSpin(uWaiting);
-		}
-	}
+	using CriticalSectionImpl::IsLockedByCurrentThread;
 };
 
 }
@@ -139,6 +50,17 @@ std::unique_ptr<CriticalSection> CriticalSection::Create(unsigned long ulSpinCou
 }
 
 // 其他非静态成员函数。
+unsigned long CriticalSection::GetSpinCount() const noexcept {
+	ASSERT(dynamic_cast<const CriticalSectionDelegate *>(this));
+
+	return static_cast<const CriticalSectionDelegate *>(this)->GetSpinCount();
+}
+void CriticalSection::SetSpinCount(unsigned long ulSpinCount) noexcept {
+	ASSERT(dynamic_cast<CriticalSectionDelegate *>(this));
+
+	static_cast<CriticalSectionDelegate *>(this)->SetSpinCount(ulSpinCount);
+}
+
 bool CriticalSection::IsLockedByCurrentThread() const noexcept {
 	ASSERT(dynamic_cast<const CriticalSectionDelegate *>(this));
 

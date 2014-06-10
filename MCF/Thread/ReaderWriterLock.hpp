@@ -20,6 +20,9 @@ public:
 	static std::unique_ptr<ReaderWriterLock> Create(unsigned long ulSpinCount = 0x400);
 
 public:
+	unsigned long GetSpinCount() const noexcept;
+	void SetSpinCount(unsigned long ulSpinCount) noexcept;
+
 	ReaderLock GetReaderLock() noexcept;
 	WriterLock GetWriterLock() noexcept;
 };

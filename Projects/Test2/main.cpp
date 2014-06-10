@@ -1,18 +1,21 @@
 #include <MCF/StdMCF.hpp>
-#include <MCF/Core/StreamBuffer.hpp>
-#include <iostream>
-using namespace std;
+#include <MCF/Thread/CriticalSection.hpp>
+#include <MCF/Thread/Thread.hpp>
 using namespace MCF;
 
 unsigned int MCFMain(){
-	StreamBuffer buf, buf2;
-	buf.Insert("hello world!", 12);
-	cout <<buf.CutOut(buf2, 100) <<endl;
+	std::shared_ptr<Thread> threads[200];
+	auto lock = CriticalSection::Create();
 
-	cout <<buf.CutOut(buf2, 5) <<endl;
-	Copy(ostream_iterator<char>(cout), buf2.GetReadIterator(), buf2.GetReadEnd());
-	cout <<endl;
-	Copy(ostream_iterator<char>(cout), buf.GetReadIterator(), buf.GetReadEnd());
-	cout <<endl;
+	for(auto &p : threads){
+		p = Thread::Create([&]{
+			::Sleep(1000);
+			auto v = lock->GetLock();
+			::Sleep(100);
+		});
+	}
+	for(auto &p : threads){
+		p->Join();
+	}
 	return 0;
 }

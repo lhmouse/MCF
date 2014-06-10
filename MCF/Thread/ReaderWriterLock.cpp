@@ -4,7 +4,7 @@
 
 #include "../StdMCF.hpp"
 #include "ReaderWriterLock.hpp"
-#include "CriticalSection.hpp"
+#include "_CriticalSectionImpl.hpp"
 #include "_WinHandle.hpp"
 #include "../Core/UniqueHandle.hpp"
 #include "../Core/Exception.hpp"
@@ -24,18 +24,16 @@ struct TlsDeleter {
 
 class ReaderWriterLockDelegate : CONCRETE(ReaderWriterLock) {
 private:
-	const std::unique_ptr<CriticalSection> xm_pcsGuard;
+	Impl::CriticalSectionImpl xm_csGuard;
 	Impl::UniqueWinHandle xm_hSemaphore;
 
 	volatile std::size_t xm_uReaderCount;
 	UniqueHandle<TlsDeleter> xm_hdwReaderRecur;
-	CriticalSection::Lock xm_vWriterLock;
 
 public:
-	ReaderWriterLockDelegate(unsigned long ulSpinCount)
-		: xm_pcsGuard		(CriticalSection::Create(ulSpinCount))
+	explicit ReaderWriterLockDelegate(unsigned long ulSpinCount)
+		: xm_csGuard		(ulSpinCount)
 		, xm_uReaderCount	(0)
-		, xm_vWriterLock	(xm_pcsGuard.get(), false)
 	{
 		xm_hSemaphore.Reset(::CreateSemaphoreW(nullptr, 1, 1, nullptr));
 		if(!xm_hSemaphore){
@@ -49,19 +47,27 @@ public:
 	}
 
 public:
+	unsigned long GetSpinCount() const noexcept {
+		return xm_csGuard.GetSpinCount();
+	}
+	void SetSpinCount(unsigned long ulSpinCount) noexcept {
+		xm_csGuard.SetSpinCount(ulSpinCount);
+	}
+
 	void GetReaderLock() noexcept {
 		auto uReaderRecur = (std::size_t)::TlsGetValue(xm_hdwReaderRecur.Get());
 		++uReaderRecur;
 		::TlsSetValue(xm_hdwReaderRecur.Get(), (void *)uReaderRecur);
 
 		if(uReaderRecur == 1){
-			if(xm_pcsGuard->IsLockedByCurrentThread()){
+			if(xm_csGuard.IsLockedByCurrentThread()){
 				__atomic_add_fetch(&xm_uReaderCount, 1, __ATOMIC_ACQ_REL);
 			} else {
-				const auto vGuardLock = xm_pcsGuard->GetLock();
+				xm_csGuard.Enter();
 				if(__atomic_add_fetch(&xm_uReaderCount, 1, __ATOMIC_ACQ_REL) == 1){
 					::WaitForSingleObject(xm_hSemaphore.Get(), INFINITE);
 				}
+				xm_csGuard.Leave();
 			}
 		}
 	}
@@ -71,7 +77,7 @@ public:
 		::TlsSetValue(xm_hdwReaderRecur.Get(), (void *)uReaderRecur);
 
 		if(uReaderRecur == 0){
-			if(xm_pcsGuard->IsLockedByCurrentThread()){
+			if(xm_csGuard.IsLockedByCurrentThread()){
 				__atomic_sub_fetch(&xm_uReaderCount, 1, __ATOMIC_ACQ_REL);
 			} else {
 				if(__atomic_sub_fetch(&xm_uReaderCount, 1, __ATOMIC_ACQ_REL) == 0){
@@ -82,9 +88,7 @@ public:
 	}
 
 	void GetWriterLock() noexcept {
-		if(xm_pcsGuard->IsLockedByCurrentThread()){
-			xm_vWriterLock.Lock();
-		} else {
+		if(xm_csGuard.Enter()){
 			// 假定有两个线程运行同样的函数：
 			//
 			//   GetReaderLock();
@@ -95,13 +99,11 @@ public:
 			// 但是这样除了使问题复杂化以外没有什么好处。
 			ASSERT_MSG((std::size_t)::TlsGetValue(xm_hdwReaderRecur.Get()) == 0, L"获取写锁前必须先释放读锁。");
 
-			auto vGuardLock = xm_pcsGuard->GetLock();
 			::WaitForSingleObject(xm_hSemaphore.Get(), INFINITE);
-			xm_vWriterLock.Join(std::move(vGuardLock));
 		}
 	}
 	void ReleaseWriterLock() noexcept {
-		if(xm_vWriterLock.Unlock()){
+		if(xm_csGuard.Leave()){
 			if((std::size_t)::TlsGetValue(xm_hdwReaderRecur.Get()) == 0){
 				::ReleaseSemaphore(xm_hSemaphore.Get(), 1, nullptr);
 			}
@@ -149,6 +151,17 @@ std::unique_ptr<ReaderWriterLock> ReaderWriterLock::Create(unsigned long ulSpinC
 }
 
 // 其他非静态成员函数。
+unsigned long ReaderWriterLock::GetSpinCount() const noexcept {
+	ASSERT(dynamic_cast<const ReaderWriterLockDelegate *>(this));
+
+	return static_cast<const ReaderWriterLockDelegate *>(this)->GetSpinCount();
+}
+void ReaderWriterLock::SetSpinCount(unsigned long ulSpinCount) noexcept {
+	ASSERT(dynamic_cast<ReaderWriterLockDelegate *>(this));
+
+	static_cast<ReaderWriterLockDelegate *>(this)->SetSpinCount(ulSpinCount);
+}
+
 ReaderWriterLock::ReaderLock ReaderWriterLock::GetReaderLock() noexcept {
 	return ReaderLock(this);
 }

@@ -25,8 +25,9 @@
 #include <functional>
 #include <type_traits>
 
-#include "../MCFCRT/MCFCRT.h"
 #include "../MCFCRT/env/mcfwin.h"
+#include "../MCFCRT/env/env_include.h"
+#include "../MCFCRT/ext/ext_include.h"
 
 #undef NULL
 #define NULL	nullptr

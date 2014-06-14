@@ -1,34 +1,28 @@
 #include <MCF/StdMCF.hpp>
-#include <MCF/Socket/UdpServer.hpp>
-#include <MCF/Core/Exception.hpp>
-#include <MCF/Core/Time.hpp>
+#include <MCF/Core/StreamBuffer.hpp>
+#include <MCF/Serialization/Serdes.hpp>
 #include <iostream>
 using namespace std;
 using namespace MCF;
 
-unsigned int MCFMain()
-try {
-	StreamBuffer buf;
-	int i = 0;
-	for(;;){
-		char data[100];
-		auto len = (unsigned int)sprintf(data, "i = %d", i++);
-		buf.Clear();
-		cout <<"will send '" <<data <<"'" <<endl;
-		UdpPacket(PeerInfo(239, 253, 101, 82, 10880), data, len).Send();
-		::Sleep(1000);
-	}
-
-	return 0;
-} catch(exception &e){
-	printf("exception '%s'\n", e.what());
-	auto *const p = dynamic_cast<const Exception *>(&e);
-	if(p){
-		printf("  err  = %lu\n", p->ulErrorCode);
-		printf("  desc = %s\n", AnsiString(GetWin32ErrorDesc(p->ulErrorCode)).GetCStr());
-		printf("  func = %s\n", p->pszFunction);
-		printf("  line = %lu\n", p->ulLine);
-		printf("  msg  = %s\n", AnsiString(WideString(p->pwszMessage)).GetCStr());
-	}
+unsigned int MCFMain(){
+	double d1, d2;
+	StreamBuffer buf1, buf2;
+	d1 = 123.456;
+	buf1 << d1;
+	buf2 << buf1;
+	printf("serialized: ");
+	buf2.Traverse(
+		[](auto pby, auto cb){
+			for(unsigned i = 0; i < cb; ++i){
+				printf("%02hhX ", pby[i]);
+			}
+		}
+	);
+	putchar('\n');
+	buf1.Clear();
+	buf2 >> buf1;
+	buf1 >> d2;
+	printf("d2 = %f\n", d2);
 	return 0;
 }

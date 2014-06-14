@@ -2,51 +2,33 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2014. LH_Mouse. All wrongs reserved.
 
-#include "../MCFCRT.h"
 #include "../env/mcfwin.h"
+#include "../env/bail.h"
+#include "../env/module.h"
+#include "../env/_eh_top.h"
 
 // -static -nostartfiles -Wl,-e__MCF_ExeStartup,--disable-runtime-pseudo-reloc,--disable-auto-import,-lmcfcrt,-lstdc++,-lgcc,-lgcc_eh,-lmingwex,-lmcfcrt
-
-extern unsigned long __MCF_CRT_ExeInitializeArgV();
-extern void __MCF_CRT_ExeUninitializeArgV();
 
 extern unsigned int MCFMain();
 
 #pragma GCC optimize "-fno-function-sections"
 
 static __attribute__((__cdecl__, __used__, __noreturn__)) int AlignedStartup(){
-#ifdef __SEH__
-	__asm__ __volatile__(
-		"seh_try: \n"
-	);
-#endif
-
 	DWORD dwExitCode;
 
-#define INIT(exp)		if((dwExitCode = (exp)) == ERROR_SUCCESS){
-#define CLEANUP(exp)	(exp); }
+	__MCF_EH_TOP_BEGIN
+	{
+		if(!__MCF_CRT_BeginModule()){
+			MCF_CRT_BailF(L"MCFCRT 初始化失败。\n\n错误代码：%lu", (unsigned long)GetLastError());
+		}
+		dwExitCode = MCFMain();
+		__MCF_CRT_EndModule();
 
-	INIT(__MCF_CRT_Begin());
-	INIT(__MCF_CRT_ThreadInitialize());
-
-	dwExitCode = MCFMain();
-
-	CLEANUP(__MCF_CRT_ThreadUninitialize());
-	CLEANUP(__MCF_CRT_End());
-
-#ifdef __SEH__
-	__asm__ __volatile__(
-		"seh_except: \n"
-		"	.seh_handler __C_specific_handler, @except \n"
-		"	.seh_handlerdata \n"
-		"	.long 1 \n"
-		"	.rva seh_try, seh_except, _gnu_exception_handler, seh_except \n"
-		"	.text \n"
-	);
-#endif
+	}
+	__MCF_EH_TOP_END
 
 	ExitProcess(dwExitCode);
-	__builtin_unreachable();
+	__builtin_trap();
 }
 
 __asm__(

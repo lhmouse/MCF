@@ -17,6 +17,9 @@
 
 __MCF_EXTERN_C_BEGIN
 
+extern bool __MCF_CRT_HeapDbgInit(void) MCF_NOEXCEPT;
+extern void __MCF_CRT_HeapDbgUninit(void) MCF_NOEXCEPT;
+
 typedef struct MCF_tagHeapDbgBlockInfo {
 	MCF_AVL_NODE_HEADER vHeader;
 
@@ -24,9 +27,6 @@ typedef struct MCF_tagHeapDbgBlockInfo {
 	MCF_STD size_t uSize;
 	const void *pRetAddr;
 } __MCF_HEAPDBG_BLOCK_INFO;
-
-extern unsigned long __MCF_CRT_HeapDbgInit(void) MCF_NOEXCEPT;
-extern void __MCF_CRT_HeapDbgUninit(void) MCF_NOEXCEPT;
 
 extern MCF_STD size_t __MCF_CRT_HeapDbgGetRawSize(
 	MCF_STD size_t uContentSize

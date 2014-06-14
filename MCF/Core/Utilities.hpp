@@ -40,14 +40,18 @@ namespace Impl {
 	template<typename>
 	struct MacroTypeHelper;
 
-	template<typename Ty>
-	struct MacroTypeHelper {
-		typedef Ty Type;
+	template<typename R, typename P>
+	struct MacroTypeHelper<R(P &)> {
+		typedef P Type;
+	};
+	template<typename R, typename P>
+	struct MacroTypeHelper<R(P &&)> {
+		typedef P Type;
 	};
 }
 
 // 安全地在宏参数中使用带逗号的类型名，例如 MY_MACRO(double, (std::map<int, double>))。
-#define MACRO_TYPE(type)	typename ::MCF::Impl::MacroTypeHelper<type>::Type
+#define MACRO_TYPE(type_param)	typename ::MCF::Impl::MacroTypeHelper<void(type_param &&)>::Type
 
 //----------------------------------------------------------------------------
 // NO_COPY
@@ -145,16 +149,18 @@ namespace Impl {
 	}();
 
 #define FORCE_NOEXCEPT(expr)	\
-	do { FORCE_NOEXCEPT_BEGIN { expr; } FORCE_NOEXCEPT_END } while(false)
+	do { FORCE_NOEXCEPT_BEGIN (expr); FORCE_NOEXCEPT_END } while(false)
 
 //----------------------------------------------------------------------------
 // Clone
 //----------------------------------------------------------------------------
 template<typename T>
 inline auto Clone(T &&vSrc)
-	-> typename std::remove_cv<
-		typename std::remove_reference<T>::type
-	>::type
+	noexcept(
+		std::is_nothrow_copy_constructible<
+			typename std::remove_reference<T>::type
+		>::value
+	)
 {
 	return typename std::remove_cv<
 		typename std::remove_reference<T>::type
@@ -356,8 +362,12 @@ inline std::uint8_t ByteSwap(std::uint8_t u8) noexcept {
 //----------------------------------------------------------------------------
 // Copy / CopyN / CopyBackward / CopyBackwardN
 //----------------------------------------------------------------------------
-template<typename OutputBegin_t, typename InputBegin_t, typename InputEnd_t>
-inline OutputBegin_t Copy(OutputBegin_t itOutputBegin, InputBegin_t itInputBegin, InputEnd_t itInputEnd)
+template<typename OutputIterator_t, typename InputIterator_t>
+inline OutputIterator_t Copy(
+	OutputIterator_t itOutputBegin,
+	InputIterator_t itInputBegin,
+	typename std::common_type<InputIterator_t>::type itInputEnd
+)
 	noexcept(std::is_nothrow_assignable<decltype(*itOutputBegin), decltype(*itInputBegin)>::value)
 {
 	while(itInputBegin != itInputEnd){
@@ -367,8 +377,12 @@ inline OutputBegin_t Copy(OutputBegin_t itOutputBegin, InputBegin_t itInputBegin
 	}
 	return std::move(itOutputBegin);
 }
-template<typename OutputBegin_t, typename InputBegin_t>
-inline OutputBegin_t CopyN(OutputBegin_t itOutputBegin, InputBegin_t itInputBegin, std::size_t uCount)
+template<typename OutputIterator_t, typename InputIterator_t>
+inline OutputIterator_t CopyN(
+	OutputIterator_t itOutputBegin,
+	InputIterator_t itInputBegin,
+	std::size_t uCount
+)
 	noexcept(std::is_nothrow_assignable<decltype(*itOutputBegin), decltype(*itInputBegin)>::value)
 {
 	for(auto i = uCount; i; --i){
@@ -378,8 +392,12 @@ inline OutputBegin_t CopyN(OutputBegin_t itOutputBegin, InputBegin_t itInputBegi
 	}
 	return std::move(itOutputBegin);
 }
-template<typename OutputEnd_t, typename InputBegin_t, typename InputEnd_t>
-inline OutputEnd_t CopyBackward(OutputEnd_t itOutputEnd, InputBegin_t itInputBegin, InputEnd_t itInputEnd)
+template<typename OutputIterator_t, typename InputIterator_t>
+inline OutputIterator_t CopyBackward(
+	OutputIterator_t itOutputEnd,
+	InputIterator_t itInputBegin,
+	typename std::common_type<InputIterator_t>::type itInputEnd
+)
 	noexcept(std::is_nothrow_assignable<decltype(*itOutputEnd), decltype(*itInputEnd)>::value)
 {
 	while(itInputBegin != itInputEnd){
@@ -389,8 +407,12 @@ inline OutputEnd_t CopyBackward(OutputEnd_t itOutputEnd, InputBegin_t itInputBeg
 	}
 	return std::move(itOutputEnd);
 }
-template<typename OutputEnd_t, typename InputEnd_t>
-inline OutputEnd_t CopyBackwardN(OutputEnd_t itOutputEnd, std::size_t uCount, InputEnd_t itInputEnd)
+template<typename OutputIterator_t, typename InputIterator_t>
+inline OutputIterator_t CopyBackwardN(
+	OutputIterator_t itOutputEnd,
+	std::size_t uCount,
+	InputIterator_t itInputEnd
+)
 	noexcept(std::is_nothrow_assignable<decltype(*itOutputEnd), decltype(*itInputEnd)>::value)
 {
 	for(auto i = uCount; i; --i){
@@ -404,140 +426,192 @@ inline OutputEnd_t CopyBackwardN(OutputEnd_t itOutputEnd, std::size_t uCount, In
 //----------------------------------------------------------------------------
 // ReverseCopy / ReverseCopyN / ReverseCopyBackward / ReverseCopyBackwardN
 //----------------------------------------------------------------------------
-template<typename OutputBegin_t, typename InputBegin_t, typename InputEnd_t>
-inline OutputBegin_t ReverseCopy(OutputBegin_t itOutputBegin, InputBegin_t itInputBegin, InputEnd_t itInputEnd)
+template<typename OutputIterator_t, typename InputIterator_t>
+inline OutputIterator_t ReverseCopy(
+	OutputIterator_t itOutputBegin,
+	InputIterator_t itInputBegin,
+	typename std::common_type<InputIterator_t>::type itInputEnd
+)
 	noexcept(std::is_nothrow_assignable<decltype(*itOutputBegin), decltype(*itInputEnd)>::value)
 {
 	return Copy(
 		std::move(itOutputBegin),
-		std::reverse_iterator<InputEnd_t>(itInputEnd),
-		std::reverse_iterator<InputBegin_t>(itInputBegin)
+		std::reverse_iterator<InputIterator_t>(itInputEnd),
+		std::reverse_iterator<InputIterator_t>(itInputBegin)
 	);
 }
-template<typename OutputBegin_t, typename InputEnd_t>
-inline OutputBegin_t ReverseCopyN(OutputBegin_t itOutputBegin, std::size_t uCount, InputEnd_t itInputEnd)
+template<typename OutputIterator_t, typename InputIterator_t>
+inline OutputIterator_t ReverseCopyN(
+	OutputIterator_t itOutputBegin,
+	std::size_t uCount,
+	InputIterator_t itInputEnd
+)
 	noexcept(std::is_nothrow_assignable<decltype(*itOutputBegin), decltype(*itInputEnd)>::value)
 {
 	return CopyN(
 		std::move(itOutputBegin),
-		std::reverse_iterator<InputEnd_t>(itInputEnd),
+		std::reverse_iterator<InputIterator_t>(itInputEnd),
 		uCount
 	);
 }
-template<typename OutputEnd_t, typename InputBegin_t, typename InputEnd_t>
-inline OutputEnd_t ReverseCopyBackward(OutputEnd_t itOutputEnd, InputBegin_t itInputBegin, InputEnd_t itInputEnd)
+template<typename OutputIterator_t, typename InputIterator_t>
+inline OutputIterator_t ReverseCopyBackward(
+	OutputIterator_t itOutputEnd,
+	InputIterator_t itInputBegin,
+	typename std::common_type<InputIterator_t>::type itInputEnd
+)
 	noexcept(std::is_nothrow_assignable<decltype(*itOutputEnd), decltype(*itInputBegin)>::value)
 {
 	return CopyBackward(
 		std::move(itOutputEnd),
-		std::reverse_iterator<InputEnd_t>(itInputEnd),
-		std::reverse_iterator<InputBegin_t>(itInputBegin)
+		std::reverse_iterator<InputIterator_t>(itInputEnd),
+		std::reverse_iterator<InputIterator_t>(itInputBegin)
 	);
 }
-template<typename OutputEnd_t, typename InputBegin_t>
-inline OutputEnd_t ReverseCopyBackwardN(OutputEnd_t itOutputEnd, InputBegin_t itInputBegin, std::size_t uCount)
+template<typename OutputIterator_t, typename InputIterator_t>
+inline OutputIterator_t ReverseCopyBackwardN(
+	OutputIterator_t itOutputEnd,
+	InputIterator_t itInputBegin,
+	std::size_t uCount
+)
 	noexcept(std::is_nothrow_assignable<decltype(*itOutputEnd), decltype(*itInputBegin)>::value)
 {
 	return CopyBackwardN(
 		std::move(itOutputEnd),
 		uCount,
-		std::reverse_iterator<InputBegin_t>(itInputBegin)
+		std::reverse_iterator<InputIterator_t>(itInputBegin)
 	);
 }
 
 //----------------------------------------------------------------------------
 // Move / MoveN / MoveBackward / MoveBackwardN
 //----------------------------------------------------------------------------
-template<typename OutputBegin_t, typename InputBegin_t, typename InputEnd_t>
-inline OutputBegin_t Move(OutputBegin_t itOutputBegin, InputBegin_t itInputBegin, InputEnd_t itInputEnd)
+template<typename OutputIterator_t, typename InputIterator_t>
+inline OutputIterator_t Move(
+	OutputIterator_t itOutputBegin,
+	InputIterator_t itInputBegin,
+	typename std::common_type<InputIterator_t>::type itInputEnd
+)
 	noexcept(std::is_nothrow_assignable<decltype(*itOutputBegin), decltype(*itInputBegin) &&>::value)
 {
 	return Copy(
 		std::move(itOutputBegin),
-		std::move_iterator<InputBegin_t>(itInputBegin),
-		std::move_iterator<InputEnd_t>(itInputEnd)
+		std::move_iterator<InputIterator_t>(itInputBegin),
+		std::move_iterator<InputIterator_t>(itInputEnd)
 	);
 }
-template<typename OutputBegin_t, typename InputBegin_t>
-inline OutputBegin_t MoveN(OutputBegin_t itOutputBegin, InputBegin_t itInputBegin, std::size_t uCount)
+template<typename OutputIterator_t, typename InputIterator_t>
+inline OutputIterator_t MoveN(
+	OutputIterator_t itOutputBegin,
+	InputIterator_t itInputBegin,
+	std::size_t uCount
+)
 	noexcept(std::is_nothrow_assignable<decltype(*itOutputBegin), decltype(*itInputBegin) &&>::value)
 {
 	return CopyN(
 		std::move(itOutputBegin),
-		std::move_iterator<InputBegin_t>(itInputBegin),
+		std::move_iterator<InputIterator_t>(itInputBegin),
 		uCount
 	);
 }
-template<typename OutputEnd_t, typename InputBegin_t, typename InputEnd_t>
-inline OutputEnd_t MoveBackward(OutputEnd_t itOutputEnd, InputBegin_t itInputBegin, InputEnd_t itInputEnd)
+template<typename OutputIterator_t, typename InputIterator_t>
+inline OutputIterator_t MoveBackward(
+	OutputIterator_t itOutputEnd,
+	InputIterator_t itInputBegin,
+	typename std::common_type<InputIterator_t>::type itInputEnd
+)
 	noexcept(std::is_nothrow_assignable<decltype(*itOutputEnd), decltype(*itInputEnd) &&>::value)
 {
 	return CopyBackward(
 		std::move(itOutputEnd),
-		std::move_iterator<InputBegin_t>(itInputBegin),
-		std::move_iterator<InputEnd_t>(itInputEnd)
+		std::move_iterator<InputIterator_t>(itInputBegin),
+		std::move_iterator<InputIterator_t>(itInputEnd)
 	);
 }
-template<typename OutputEnd_t, typename InputEnd_t>
-inline OutputEnd_t MoveBackwardN(OutputEnd_t itOutputEnd, std::size_t uCount, InputEnd_t itInputEnd)
+template<typename OutputIterator_t, typename InputIterator_t>
+inline OutputIterator_t MoveBackwardN(
+	OutputIterator_t itOutputEnd,
+	std::size_t uCount,
+	InputIterator_t itInputEnd
+)
 	noexcept(std::is_nothrow_assignable<decltype(*itOutputEnd), decltype(*itInputEnd) &&>::value)
 {
 	return CopyBackwardN(
 		std::move(itOutputEnd),
 		uCount,
-		std::move_iterator<InputEnd_t>(itInputEnd)
+		std::move_iterator<InputIterator_t>(itInputEnd)
 	);
 }
 
 //----------------------------------------------------------------------------
 // ReverseMove / ReverseMoveN / ReverseMoveBackward / ReverseMoveBackwardN
 //----------------------------------------------------------------------------
-template<typename OutputBegin_t, typename InputBegin_t, typename InputEnd_t>
-inline OutputBegin_t ReverseMove(OutputBegin_t itOutputBegin, InputBegin_t itInputBegin, InputEnd_t itInputEnd)
+template<typename OutputIterator_t, typename InputIterator_t>
+inline OutputIterator_t ReverseMove(
+	OutputIterator_t itOutputBegin,
+	InputIterator_t itInputBegin,
+	typename std::common_type<InputIterator_t>::type itInputEnd
+)
 	noexcept(std::is_nothrow_assignable<decltype(*itOutputBegin), decltype(*itInputEnd)>::value)
 {
 	return Move(
 		std::move(itOutputBegin),
-		std::reverse_iterator<InputEnd_t>(itInputEnd),
-		std::reverse_iterator<InputBegin_t>(itInputBegin)
+		std::reverse_iterator<InputIterator_t>(itInputEnd),
+		std::reverse_iterator<InputIterator_t>(itInputBegin)
 	);
 }
-template<typename OutputBegin_t, typename InputEnd_t>
-inline OutputBegin_t ReverseMoveN(OutputBegin_t itOutputBegin, std::size_t uCount, InputEnd_t itInputEnd)
+template<typename OutputIterator_t, typename InputIterator_t>
+inline OutputIterator_t ReverseMoveN(
+	OutputIterator_t itOutputBegin,
+	std::size_t uCount,
+	InputIterator_t itInputEnd
+)
 	noexcept(std::is_nothrow_assignable<decltype(*itOutputBegin), decltype(*itInputEnd)>::value)
 {
 	return MoveN(
 		std::move(itOutputBegin),
-		std::reverse_iterator<InputEnd_t>(itInputEnd),
+		std::reverse_iterator<InputIterator_t>(itInputEnd),
 		uCount
 	);
 }
-template<typename OutputEnd_t, typename InputBegin_t, typename InputEnd_t>
-inline OutputEnd_t ReverseMoveBackward(OutputEnd_t itOutputEnd, InputBegin_t itInputBegin, InputEnd_t itInputEnd)
+template<typename OutputIterator_t, typename InputIterator_t>
+inline OutputIterator_t ReverseMoveBackward(
+	OutputIterator_t itOutputEnd,
+	InputIterator_t itInputBegin,
+	typename std::common_type<InputIterator_t>::type itInputEnd
+)
 	noexcept(std::is_nothrow_assignable<decltype(*itOutputEnd), decltype(*itInputBegin)>::value)
 {
 	return MoveBackward(
 		std::move(itOutputEnd),
-		std::reverse_iterator<InputEnd_t>(itInputEnd),
-		std::reverse_iterator<InputBegin_t>(itInputBegin)
+		std::reverse_iterator<InputIterator_t>(itInputEnd),
+		std::reverse_iterator<InputIterator_t>(itInputBegin)
 	);
 }
-template<typename OutputEnd_t, typename InputBegin_t>
-inline OutputEnd_t ReverseMoveBackwardN(OutputEnd_t itOutputEnd, InputBegin_t itInputBegin, std::size_t uCount)
+template<typename OutputIterator_t, typename InputIterator_t>
+inline OutputIterator_t ReverseMoveBackwardN(
+	OutputIterator_t itOutputEnd,
+	InputIterator_t itInputBegin,
+	std::size_t uCount
+)
 	noexcept(std::is_nothrow_assignable<decltype(*itOutputEnd), decltype(*itInputBegin)>::value)
 {
 	return MoveBackwardN(
 		std::move(itOutputEnd),
 		uCount,
-		std::reverse_iterator<InputBegin_t>(itInputBegin)
+		std::reverse_iterator<InputIterator_t>(itInputBegin)
 	);
 }
 
 //----------------------------------------------------------------------------
 // Fill / FillN
 //----------------------------------------------------------------------------
-template<typename OutputBegin_t, typename OutputEnd_t, typename... Params_t>
-inline OutputBegin_t Fill(OutputBegin_t itOutputBegin, OutputEnd_t itOutputEnd, const Params_t &... vParams)
+template<typename OutputIterator_t, typename... Params_t>
+inline OutputIterator_t Fill(
+	OutputIterator_t itOutputBegin,
+	typename std::common_type<OutputIterator_t>::type itOutputEnd,
+	const Params_t &... vParams
+)
 	noexcept(
 		std::is_nothrow_constructible<decltype(*itOutputBegin), const Params_t &...>::value
 		&& std::is_nothrow_move_assignable<decltype(*itOutputBegin)>::value
@@ -549,8 +623,12 @@ inline OutputBegin_t Fill(OutputBegin_t itOutputBegin, OutputEnd_t itOutputEnd, 
 	}
 	return std::move(itOutputBegin);
 }
-template<typename OutputBegin_t, typename... Params_t>
-inline OutputBegin_t FillN(OutputBegin_t itOutputBegin, std::size_t uCount, const Params_t &... vParams)
+template<typename OutputIterator_t, typename... Params_t>
+inline OutputIterator_t FillN(
+	OutputIterator_t itOutputBegin,
+	std::size_t uCount,
+	const Params_t &... vParams
+)
 	noexcept(
 		std::is_nothrow_constructible<decltype(*itOutputBegin), const Params_t &...>::value
 		&& std::is_nothrow_move_assignable<decltype(*itOutputBegin)>::value

@@ -35,24 +35,17 @@ static int BlockInfoComparatorKeyNode(
 
 #define GUARD_BAND_SIZE		0x20u
 
-#ifdef _WIN64
-#	define UINTPTR_FORMAT	"0x%016zX"
-#else
-#	define UINTPTR_FORMAT	"0x%08zX"
-#endif
-
 static HANDLE							g_hMapAllocator;
-static MCF_AVL_ROOT						g_avlBlocks;
+static MCF_AVL_ROOT						g_pavlBlocks;
 static const __MCF_HEAPDBG_BLOCK_INFO *	g_pBlockHead;
 static MCF_HEAP_CALLBACK				g_vCallback;
 
-unsigned long __MCF_CRT_HeapDbgInit(){
+bool __MCF_CRT_HeapDbgInit(){
 	g_hMapAllocator = HeapCreate(HEAP_NO_SERIALIZE, 0, 0);
 	if(!g_hMapAllocator){
-		return GetLastError();
+		return false;
 	}
-
-	return ERROR_SUCCESS;
+	return true;
 }
 void __MCF_CRT_HeapDbgUninit(){
 	const __MCF_HEAPDBG_BLOCK_INFO *pBlockInfo = g_pBlockHead;
@@ -68,10 +61,10 @@ void __MCF_CRT_HeapDbgUninit(){
 			wchar_t *pwcWrite = awcBuffer + __mingw_snwprintf(
 				awcBuffer,
 				sizeof(awcBuffer) / sizeof(wchar_t),
-				L"地址 " UINTPTR_FORMAT "  大小 " UINTPTR_FORMAT "  调用返回地址 " UINTPTR_FORMAT "  首字节 ",
-				(uintptr_t)pbyDump,
-				(uintptr_t)(pBlockInfo->uSize),
-				(uintptr_t)(pBlockInfo->pRetAddr)
+				L"地址 %0*zX  大小 %0*zX  调用返回地址 %0*zX  首字节 ",
+				sizeof(size_t) * 2, (size_t)pbyDump,
+				sizeof(size_t) * 2, (pBlockInfo->uSize),
+				sizeof(size_t) * 2, (size_t)(pBlockInfo->pRetAddr)
 			);
 			for(size_t i = 0; i < 16; ++i){
 				*(pwcWrite++) = L' ';
@@ -98,7 +91,7 @@ void __MCF_CRT_HeapDbgUninit(){
 	HeapDestroy(g_hMapAllocator);
 
 	g_pBlockHead	= NULL;
-	g_avlBlocks		= NULL;
+	g_pavlBlocks		= NULL;
 	g_hMapAllocator	= NULL;
 }
 
@@ -129,14 +122,17 @@ void __MCF_CRT_HeapDbgAddGuardsAndRegister(
 
 	__MCF_HEAPDBG_BLOCK_INFO *const pBlockInfo = HeapAlloc(g_hMapAllocator, 0, sizeof(__MCF_HEAPDBG_BLOCK_INFO));
 	if(!pBlockInfo){
-		MCF_CRT_BailF(L"__MCF_CRT_HeapDbgAddGuardsAndRegister() 失败：内存不足。\n调用返回地址：" UINTPTR_FORMAT, (uintptr_t)pRetAddr);
+		MCF_CRT_BailF(
+			L"__MCF_CRT_HeapDbgAddGuardsAndRegister() 失败：内存不足。\n调用返回地址：%0*zX",
+			sizeof(size_t) * 2, (size_t)pRetAddr
+		);
 	}
 	pBlockInfo->pContents	= pContents;
 	pBlockInfo->uSize		= uContentSize;
 	pBlockInfo->pRetAddr	= pRetAddr;
 
 	MCF_AvlAttach(
-		&g_avlBlocks,
+		&g_pavlBlocks,
 		(MCF_AVL_NODE_HEADER *)pBlockInfo,
 		&BlockInfoComparatorNodes
 	);
@@ -157,13 +153,16 @@ const __MCF_HEAPDBG_BLOCK_INFO *__MCF_CRT_HeapDbgValidate(
 	*ppRaw = pRaw;
 
 	const __MCF_HEAPDBG_BLOCK_INFO *const pBlockInfo = (const __MCF_HEAPDBG_BLOCK_INFO *)MCF_AvlFind(
-		&g_avlBlocks,
+		&g_pavlBlocks,
 		(intptr_t)pContents,
 		&BlockInfoComparatorNodeKey,
 		&BlockInfoComparatorKeyNode
 	);
 	if(!pBlockInfo){
-		MCF_CRT_BailF(L"__MCF_CRT_HeapDbgValidate() 失败：传入的指针无效。\n调用返回地址：" UINTPTR_FORMAT, (uintptr_t)pRetAddr);
+		MCF_CRT_BailF(
+			L"__MCF_CRT_HeapDbgValidate() 失败：传入的指针无效。\n调用返回地址：%0*zX",
+			sizeof(size_t) * 2, (size_t)pRetAddr
+		);
 	}
 
 	void *const *ppGuard1 = (void *const *)pContents;
@@ -172,7 +171,10 @@ const __MCF_HEAPDBG_BLOCK_INFO *__MCF_CRT_HeapDbgValidate(
 		--ppGuard1;
 
 		if((DecodePointer(*ppGuard1) != ppGuard2) || (DecodePointer(*ppGuard2) != ppGuard1)){
-			MCF_CRT_BailF(L"__MCF_CRT_HeapDbgValidate() 失败：侦测到堆损坏。\n调用返回地址：" UINTPTR_FORMAT, (uintptr_t)pRetAddr);
+			MCF_CRT_BailF(
+				L"__MCF_CRT_HeapDbgValidate() 失败：侦测到堆损坏。\n调用返回地址：%0*zX",
+				sizeof(size_t) * 2, (size_t)pRetAddr
+			);
 		}
 
 		++ppGuard2;

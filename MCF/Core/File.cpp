@@ -280,6 +280,7 @@ void File::Resize(std::uint64_t u64NewSize){
 }
 void File::Clear(){
 	Resize(0);
+	Flush();
 }
 
 File::UniqueId File::GetUniqueId() const {

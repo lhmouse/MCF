@@ -3,12 +3,12 @@
 // Copyleft 2014. LH_Mouse. All wrongs reserved.
 
 #include "../../env/_crtdef.h"
-#include "../../MCFCRT.h"
+#include "../../env/module.h"
 
-static void atexitWrapper(intptr_t nContext){
+static void AtExitWrapper(intptr_t nContext){
 	(*((void (*)(void))nContext))();
 }
 
 int atexit(void (*func)(void)){
-	return MCF_AtCRTEnd(&atexitWrapper, (intptr_t)func);
+	return MCF_CRT_AtEndModule(&AtExitWrapper, (intptr_t)func);
 }

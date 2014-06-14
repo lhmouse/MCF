@@ -8,16 +8,16 @@
 #include "../env/_crtdef.h"
 
 #ifdef __cplusplus
-#	define __MCF_ADDRESS_OF		&(char &)
+#	define __MCF_ADDRESS_OF(lval)	((unsigned char *)&reinterpret_cast<const volatile unsigned char &>(lval))
 #else
-#	define __MCF_ADDRESS_OF
+#	define __MCF_ADDRESS_OF(lval)	((unsigned char *)&(lval))
 #endif
 
 #define OFFSET_OF(s, m)	\
-	((MCF_STD size_t)((MCF_STD uintptr_t)__MCF_ADDRESS_OF(((s *)(MCF_STD uintptr_t)1)->m) - (MCF_STD uintptr_t)1))
+	((MCF_STD size_t)(__MCF_ADDRESS_OF(((s *)(unsigned char *)1)->m) - (unsigned char *)1))
 
 // 成员指针转换成聚合指针。
 #define DOWN_CAST(s, m, p)	\
-	((s *)((MCF_STD uintptr_t)(p) - OFFSET_OF(s, m)))
+	((s *)((unsigned char *)(p) - OFFSET_OF(s, m)))
 
 #endif

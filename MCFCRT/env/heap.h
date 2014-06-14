@@ -9,8 +9,8 @@
 
 __MCF_EXTERN_C_BEGIN
 
-extern unsigned long __MCF_CRT_HeapInitialize(void) MCF_NOEXCEPT;
-extern void __MCF_CRT_HeapUninitialize(void) MCF_NOEXCEPT;
+extern bool __MCF_CRT_HeapInit(void) MCF_NOEXCEPT;
+extern void __MCF_CRT_HeapUninit(void) MCF_NOEXCEPT;
 
 extern unsigned char *__MCF_CRT_HeapAlloc(MCF_STD size_t uSize, const void *pRetAddr) MCF_NOEXCEPT;
 extern unsigned char *__MCF_CRT_HeapReAlloc(void *pBlock /* NON-NULL */, MCF_STD size_t uSize, const void *pRetAddr) MCF_NOEXCEPT;

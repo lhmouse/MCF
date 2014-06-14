@@ -21,8 +21,8 @@ constexpr std::size_t	MAX_PROCESS_COUNT		= 17;
 
 // 静态成员函数。
 Model &Model::GetInstance() noexcept {
-	static std::unique_ptr<Model> s_pInstance(new Model);
-	return *(s_pInstance.get());
+	static Model s_vModel;
+	return s_vModel;
 }
 
 // 构造函数和析构函数。

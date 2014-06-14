@@ -3,24 +3,19 @@
 // Copyleft 2014. LH_Mouse. All wrongs reserved.
 
 #include "mingw_hacks.h"
-#include "../ext/assert.h"
-#include "../ext/expect.h"
+#include "mcfwin.h"
 #include "thread.h"
 #include "avl_tree.h"
-#include "mcfwin.h"
 #include <stdlib.h>
 
 typedef struct tagKeyDtorNode {
 	MCF_AVL_NODE_HEADER vHeader;
+	struct tagKeyDtorNode *pPrev;
 	struct tagKeyDtorNode *pNext;
 
 	unsigned long ulKey;
 	void (*pfnDtor)(void *);
 } KEY_DTOR_NODE;
-
-static CRITICAL_SECTION	g_csLock;
-static KEY_DTOR_NODE *	g_pDtorHead		= NULL;
-static MCF_AVL_ROOT		g_avlDtorRoot	= NULL;
 
 static int DtorComparatorNodes(
 	const MCF_AVL_NODE_HEADER *pObj1,
@@ -41,39 +36,37 @@ static int DtorComparatorKeyNode(
 	return (unsigned long)nKey1 < ((const KEY_DTOR_NODE *)pObj2)->ulKey;
 }
 
-unsigned long __MCF_CRT_MinGWHacksInitialize(){
-	InitializeCriticalSectionAndSpinCount(&g_csLock, 0x400);
-	return ERROR_SUCCESS;
+static SRWLOCK			g_srwLock;
+static KEY_DTOR_NODE *	g_pDtorHead;
+static MCF_AVL_ROOT		g_pavlDtorRoot;
+
+bool __MCF_CRT_MinGWHacksInit(){
+	InitializeSRWLock(&g_srwLock);
+	g_pDtorHead = NULL;
+	g_pavlDtorRoot = NULL;
+
+	return true;
 }
-void __MCF_CRT_MinGWHacksUninitialize(){
-	DeleteCriticalSection(&g_csLock);
+void __MCF_CRT_MinGWHacksUninit(){
+	while(g_pDtorHead){
+		KEY_DTOR_NODE *const pNext = g_pDtorHead->pNext;
+		free(g_pDtorHead);
+		g_pDtorHead = pNext;
+	}
+	g_pavlDtorRoot = NULL;
 }
 
-void __MCF_CRT_RunEmutlsThreadDtors(){
-	EnterCriticalSection(&g_csLock);
-		const KEY_DTOR_NODE *pNode = g_pDtorHead;
-		while(pNode){
-			const LPVOID pMem = TlsGetValue(pNode->ulKey);
-			if((GetLastError() == ERROR_SUCCESS) && pMem){
-				(*(pNode->pfnDtor))(pMem);
+void __MCF_CRT_RunEmutlsDtors(){
+	AcquireSRWLockShared(&g_srwLock);
+		for(const KEY_DTOR_NODE *pCur = g_pDtorHead; pCur; pCur = pCur->pNext){
+			const LPVOID pMem = TlsGetValue(pCur->ulKey);
+			if(!pMem){
+				continue;
 			}
-			pNode = pNode->pNext;
+			(*(pCur->pfnDtor))(pMem);
+			TlsSetValue(pCur->ulKey, NULL);
 		}
-	LeaveCriticalSection(&g_csLock);
-}
-
-void __MCF_CRT_EmutlsCleanup(){
-	EnterCriticalSection(&g_csLock);
-		for(;;){
-			KEY_DTOR_NODE *const pNode = g_pDtorHead;
-			if(!pNode){
-				break;
-			}
-			g_pDtorHead = pNode->pNext;
-			free(pNode);
-		}
-		g_avlDtorRoot = NULL;
-	LeaveCriticalSection(&g_csLock);
+	ReleaseSRWLockShared(&g_srwLock);
 }
 
 int __mingwthr_key_dtor(unsigned long ulKey, void (*pfnDtor)(void *)){
@@ -84,25 +77,29 @@ int __mingwthr_key_dtor(unsigned long ulKey, void (*pfnDtor)(void *)){
 		}
 		pNode->ulKey = ulKey;
 		pNode->pfnDtor = pfnDtor;
+		pNode->pPrev = NULL;
 
-		EnterCriticalSection(&g_csLock);
+		AcquireSRWLockExclusive(&g_srwLock);
 			pNode->pNext = g_pDtorHead;
+			if(g_pDtorHead){
+				g_pDtorHead->pPrev = pNode;
+			}
 			g_pDtorHead = pNode;
 
 			MCF_AvlAttach(
-				&g_avlDtorRoot,
+				&g_pavlDtorRoot,
 				(MCF_AVL_NODE_HEADER *)pNode,
 				&DtorComparatorNodes
 			);
-		LeaveCriticalSection(&g_csLock);
+		ReleaseSRWLockExclusive(&g_srwLock);
 	}
 	return 0;
 }
 
 int __mingwthr_remove_key_dtor(unsigned long ulKey){
-	EnterCriticalSection(&g_csLock);
+	AcquireSRWLockExclusive(&g_srwLock);
 		KEY_DTOR_NODE *pNode = (KEY_DTOR_NODE *)MCF_AvlFind(
-			&g_avlDtorRoot,
+			&g_pavlDtorRoot,
 			(intptr_t)ulKey,
 			&DtorComparatorNodeKey,
 			&DtorComparatorKeyNode
@@ -111,11 +108,18 @@ int __mingwthr_remove_key_dtor(unsigned long ulKey){
 			if(g_pDtorHead == pNode){
 				g_pDtorHead = pNode->pNext;
 			}
+
+			if(pNode->pNext){
+				pNode->pNext->pPrev = pNode->pPrev;
+			}
+			if(pNode->pPrev){
+				pNode->pPrev->pNext = pNode->pNext;
+			}
 			MCF_AvlDetach((MCF_AVL_NODE_HEADER *)pNode);
 
 			free(pNode);
 		}
-	LeaveCriticalSection(&g_csLock);
+	ReleaseSRWLockExclusive(&g_srwLock);
 	return 0;
 }
 

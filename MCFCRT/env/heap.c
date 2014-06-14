@@ -30,21 +30,21 @@
 static CRITICAL_SECTION			g_csHeapLock;
 static MCF_BAD_ALLOC_HANDLER	g_vBadAllocHandler;
 
-unsigned long __MCF_CRT_HeapInitialize(){
-	InitializeCriticalSectionAndSpinCount(&g_csHeapLock, 0x400);
+bool __MCF_CRT_HeapInit(){
+	if(!InitializeCriticalSectionEx(
+		&g_csHeapLock, 0x1000u,
+#ifdef NDEBUG
+		CRITICAL_SECTION_NO_DEBUG_INFO
+#else
+		0
+#endif
+	)){
+		return false;
+	}
 	g_vBadAllocHandler.pfnProc = NULL;
-
-#ifdef __MCF_CRT_HEAPDBG_ON
-	__MCF_CRT_HeapDbgInit();
-#endif
-
-	return ERROR_SUCCESS;
+	return true;
 }
-void __MCF_CRT_HeapUninitialize(){
-#ifdef __MCF_CRT_HEAPDBG_ON
-	__MCF_CRT_HeapDbgUninit();
-#endif
-
+void __MCF_CRT_HeapUninit(){
 	DeleteCriticalSection(&g_csHeapLock);
 }
 

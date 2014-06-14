@@ -17,7 +17,7 @@ namespace Impl {
 	class CriticalSectionImpl {
 	private:
 		struct xWaitingThread {
-			xWaitingThread *pNext;
+			xWaitingThread *volatile pNext;
 		};
 
 	private:
@@ -126,25 +126,26 @@ namespace Impl {
 						--i;
 					}
 
-					xWaitingThread vCurrent = { nullptr };
+					xWaitingThread vWaiting = { nullptr };
+					const auto pCurrent = &vWaiting;
 
 					auto uWaiting = xLockSpin();
 					{
 						++uWaiting;
+
 						if(xm_pLastWaiting){
-							xm_pLastWaiting->pNext = &vCurrent;
+							xm_pLastWaiting->pNext = pCurrent;
 						} else {
-							xm_pFirstWaiting = &vCurrent;
+							xm_pFirstWaiting = pCurrent;
 						}
-						xm_pLastWaiting = &vCurrent;
+						xm_pLastWaiting = pCurrent;
 					}
 					xUnlockSpin(uWaiting);
 
 					for(;;){
 						::WaitForSingleObject(xm_hSemaphore.Get(), INFINITE);
-						if(xm_pFirstWaiting == &vCurrent){
-							xm_pFirstWaiting = xm_pFirstWaiting->pNext;
-							if(xm_pLastWaiting == &vCurrent){
+						if(xm_pFirstWaiting == pCurrent){
+							if(!(xm_pFirstWaiting = pCurrent->pNext)){
 								xm_pLastWaiting = nullptr;
 							}
 							break;

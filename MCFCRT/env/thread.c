@@ -27,12 +27,12 @@ MCF_SECTION(".tls$AAA") unsigned char _tls_start	= 0;
 MCF_SECTION(".tls$ZZZ") unsigned char _tls_end		= 0;
 
 MCF_SECTION(".tls") const IMAGE_TLS_DIRECTORY _tls_used = {
-	(UINT_PTR)&_tls_start,
-	(UINT_PTR)&_tls_end,
-	(UINT_PTR)&_tls_index,
-	(UINT_PTR)&__xl_a,
-	(DWORD)0,
-	(DWORD)0
+	.StartAddressOfRawData	= (UINT_PTR)&_tls_start,
+	.EndAddressOfRawData	= (UINT_PTR)&_tls_end,
+	.AddressOfIndex			= (UINT_PTR)&_tls_index,
+	.AddressOfCallBacks		= (UINT_PTR)&__xl_a,
+	.SizeOfZeroFill			= 0,
+	.Characteristics		= 0
 };
 
 static void CALLBACK TlsCleanupCallback(LPVOID hModule, DWORD dwReason, PVOID pReserved){
@@ -172,46 +172,6 @@ void __MCF_CRT_TlsCleanup(){
 	}
 
 	__MCF_CRT_RunEmutlsDtors();
-}
-
-typedef struct tagThreadInitInfo {
-	unsigned int (*pfnProc)(intptr_t);
-	intptr_t nParam;
-
-	HANDLE hDoneInit;
-} THREAD_INIT_INFO;
-
-extern __attribute__((__stdcall__, __noreturn__)) DWORD CRTThreadProc(LPVOID pParam)
-	__asm__("CRTThreadProc");
-
-void *MCF_CRT_CreateThread(
-	unsigned int (*pfnThreadProc)(intptr_t),
-	intptr_t nParam,
-	bool bSuspended,
-	unsigned long *pulThreadId
-){
-	THREAD_INIT_INFO vInitInfo;
-	vInitInfo.pfnProc	= pfnThreadProc;
-	vInitInfo.nParam	= nParam;
-	vInitInfo.hDoneInit	= CreateEvent(NULL, TRUE, FALSE, NULL);
-	if(!vInitInfo.hDoneInit){
-		return NULL;
-	}
-
-	const HANDLE hThread = CreateThread(NULL, 0, &CRTThreadProc, &vInitInfo, 0, pulThreadId);
-	if(!hThread){
-		const DWORD dwErrorCode = GetLastError();
-		CloseHandle(vInitInfo.hDoneInit);
-		SetLastError(dwErrorCode);
-		return NULL;
-	}
-	WaitForSingleObject(vInitInfo.hDoneInit, INFINITE);
-	CloseHandle(vInitInfo.hDoneInit);
-
-	if(!bSuspended){
-		ResumeThread(hThread);
-	}
-	return hThread;
 }
 
 uintptr_t MCF_CRT_AtThreadExit(void (*pfnProc)(intptr_t), intptr_t nContext){
@@ -570,6 +530,40 @@ int MCF_CRT_TlsExchange(uintptr_t uKey, intptr_t *pnOldValue, intptr_t nNewValue
 	return nRet;
 }
 
+typedef struct tagThreadInitInfo {
+	unsigned int (*pfnProc)(intptr_t);
+	intptr_t nParam;
+} THREAD_INIT_INFO;
+
+extern __attribute__((__stdcall__, __noreturn__)) DWORD CRTThreadProc(LPVOID pParam)
+	__asm__("CRTThreadProc");
+
+void *MCF_CRT_CreateThread(
+	unsigned int (*pfnThreadProc)(intptr_t),
+	intptr_t nParam,
+	bool bSuspended,
+	unsigned long *pulThreadId
+){
+	THREAD_INIT_INFO *const pInitInfo = malloc(sizeof(THREAD_INIT_INFO));
+	if(!pInitInfo){
+		return NULL;
+	}
+	pInitInfo->pfnProc		= pfnThreadProc;
+	pInitInfo->nParam		= nParam;
+
+	const HANDLE hThread = CreateThread(NULL, 0, &CRTThreadProc, pInitInfo, CREATE_SUSPENDED, pulThreadId);
+	if(!hThread){
+		const DWORD dwErrorCode = GetLastError();
+		free(pInitInfo);
+		SetLastError(dwErrorCode);
+		return NULL;
+	}
+	if(!bSuspended){
+		ResumeThread(hThread);
+	}
+	return hThread;
+}
+
 #pragma GCC optimize "-fno-function-sections"
 
 static __attribute__((__cdecl__, __used__, __noreturn__)) DWORD AlignedCRTThreadProc(LPVOID pParam){
@@ -577,11 +571,10 @@ static __attribute__((__cdecl__, __used__, __noreturn__)) DWORD AlignedCRTThread
 
 	__MCF_EH_TOP_BEGIN
 	{
-		__MCF_CRT_FEnvInit();
-
 		const THREAD_INIT_INFO vInitInfo = *(THREAD_INIT_INFO *)pParam;
-		SetEvent(vInitInfo.hDoneInit);
-		SuspendThread(GetCurrentThread());
+		free(pParam);
+
+		__MCF_CRT_FEnvInit();
 
 		dwExitCode = (*vInitInfo.pfnProc)(vInitInfo.nParam);
 	}

@@ -24,9 +24,9 @@ unsigned int MCFMain(){
 	const auto evn = Event::Create(false);
 	ThreadLocalPtr<WideString> p;
 	try {
-		p->Assign(L"meow"_wso);
+		p->Assign(L"meow!-----------------------"_wso);
 		auto pthrd = Thread::Create([&]{
-			p->Assign(L"bark"_wso);
+			p->Assign(L"bark!-----------------------"_wso);
 			printf("thread -> %ls\n", p->GetCStr());
 			evn->Set();
 			throw 12345;
@@ -45,7 +45,7 @@ unsigned int MCFMain(){
 		p = Thread::Create([&]{
 			::Sleep(1000);
 			for(auto &pstr : tls){
-				pstr->Assign(L"hello world!");
+				pstr->Assign(L"hello world!-----------------------"_wso);
 			}
 		});
 	}

@@ -6,123 +6,120 @@
 #define MCF_THREAD_LOCAL_PTR_HPP_
 
 #include "../../MCFCRT/env/thread.h"
-#include "../../MCFCRT/env/bail.h"
 #include "../Core/Utilities.hpp"
+#include "../Core/UniqueHandle.hpp"
 #include <tuple>
-#include <type_traits>
 #include <exception>
 #include <cstddef>
+#include <cstdint>
 
 namespace MCF {
 
 namespace Impl {
-	template<bool NOEXCEPT>
-	struct CurrentExceptionGetter {
-		std::exception_ptr operator()() const noexcept {
+	template<bool IS_DUMMY>
+	struct ExceptionWrapper {
+		typedef std::exception_ptr ExceptionPtr;
+
+		static ExceptionPtr GetCurrentException() noexcept {
 			return std::current_exception();
+		}
+		[[noreturn]] static void RethrowException(ExceptionPtr pException){
+			std::rethrow_exception(std::move(pException));
 		}
 	};
 	template<>
-	struct CurrentExceptionGetter<true> {
-		std::nullptr_t operator()() const noexcept {
+	struct ExceptionWrapper<true> {
+		typedef std::nullptr_t ExceptionPtr;
+
+		static ExceptionPtr GetCurrentException() noexcept {
 			return nullptr;
+		}
+		[[noreturn]] static void RethrowException(ExceptionPtr) noexcept {
+			__builtin_trap();
 		}
 	};
 }
 
 template<class Object_t, class... InitParams_t>
 class ThreadLocalPtr {
-	static_assert(std::is_nothrow_destructible<Object_t>::value, "Object_t must be nothrow destructible.");
-
 private:
-	typedef Impl::CurrentExceptionGetter<
-		std::is_nothrow_constructible<Object_t, InitParams_t &&...>::value
-	> xCtorExceptionGetter;
+	typedef Impl::ExceptionWrapper<std::is_nothrow_constructible<Object_t, InitParams_t &&...>::value> xExceptionWrapper;
+	typedef typename xExceptionWrapper::ExceptionPtr xExceptionPtr;
 
-	typedef decltype(xCtorExceptionGetter()()) xCtorExceptionType;
-
-	typedef std::pair<const ThreadLocalPtr *, xCtorExceptionType> xCtorWrapperContext;
-
-private:
-	template<class... Unpacked_t>
-	static void xConstructFromTuple(
-		typename std::enable_if<sizeof...(Unpacked_t) < sizeof...(InitParams_t), void>::type *pObj,
-		const std::tuple<InitParams_t...> &vTuple,
-		const Unpacked_t &...vUnpacked
-	) noexcept(std::is_nothrow_constructible<Object_t, InitParams_t...>::value){
-		xConstructFromTuple(pObj, vTuple, vUnpacked..., std::get<sizeof...(Unpacked_t)>(vTuple));
-	}
-	template<class... Unpacked_t>
-	static void xConstructFromTuple(
-		typename std::enable_if<sizeof...(Unpacked_t) == sizeof...(InitParams_t), void>::type *pObj,
-		const std::tuple<InitParams_t...> &,
-		const Unpacked_t &...vUnpacked
-	) noexcept(std::is_nothrow_constructible<Object_t, InitParams_t...>::value){
-		Construct<Object_t>(pObj, vUnpacked...);
-	}
-
-	static int xCtorWrapper(void *pObj, std::intptr_t nParam) noexcept {
-		auto *const pContext = (xCtorWrapperContext *)nParam;
-		try {
-			xConstructFromTuple(pObj, pContext->first->xm_vInitParams);
-			return -1;
-		} catch(...){
-			pContext->second = xCtorExceptionGetter()();
+	struct TlsKeyDeleter {
+		constexpr std::uintptr_t operator()() const noexcept {
 			return 0;
 		}
-	}
-	static void xDtorWrapper(void *pObj) noexcept {
-		Destruct((Object_t *)pObj);
+		void operator()(std::uintptr_t uKey) const noexcept {
+			::MCF_CRT_TlsFreeKey(uKey);
+		}
+	};
+	typedef UniqueHandle<TlsKeyDeleter> xTlsIndex;
+
+private:
+	static void xTlsCallback(std::intptr_t nValue) noexcept {
+		delete (Object_t *)nValue;
 	}
 
 private:
-	std::tuple<InitParams_t...> xm_vInitParams;
+	const xTlsIndex xm_nTlsIndex;
+	const std::tuple<InitParams_t...> xm_vInitParams;
 
 public:
 	explicit constexpr ThreadLocalPtr(InitParams_t &&... vInitParams)
-		: xm_vInitParams(std::forward<InitParams_t>(vInitParams)...)
+		: xm_nTlsIndex		(::MCF_CRT_TlsAllocKey(&xTlsCallback))
+		, xm_vInitParams	(std::forward<InitParams_t>(vInitParams)...)
 	{
-	}
-	~ThreadLocalPtr() noexcept {
-		Release();
 	}
 
 private:
-	Object_t *xDoGetPtr() const
-		noexcept(std::is_nothrow_constructible<Object_t, InitParams_t...>::value)
-	{
-		xCtorWrapperContext vContext(this, xCtorExceptionType());
-		const auto pRet = (Object_t *)::MCF_CRT_RetrieveTls(
-			(std::intptr_t)this,
-			sizeof(Object_t),
-			&xCtorWrapper, (std::intptr_t)&vContext,
-			&xDtorWrapper
-		);
-		if(vContext.second){
-			std::rethrow_exception(vContext.second);
+	Object_t *xDoGetPtr() const noexcept {
+		Object_t *pObject;
+		{
+			std::intptr_t nValue;
+			if(::MCF_CRT_TlsGet(xm_nTlsIndex.Get(), &nValue)){
+				pObject = (Object_t *)nValue;
+			} else {
+				pObject = nullptr;
+			}
 		}
-		return pRet;
+		return pObject;
 	}
-	Object_t *xDoGetSafePtr() const {
-		const auto pRet = xDoGetPtr();
-		if(!pRet){
-			throw std::bad_alloc();
+	Object_t *xDoAllocPtr() const {
+		Object_t *pObject;
+		{
+			std::intptr_t nValue;
+			if(::MCF_CRT_TlsGet(xm_nTlsIndex.Get(), &nValue)){
+				pObject = (Object_t *)nValue;
+			} else {
+				pObject = nullptr;
+			}
 		}
-		return pRet;
+		if(!pObject){
+			auto pNewObject = MakeUniqueFromTuple<Object_t>(xm_vInitParams);
+			if(!::MCF_CRT_TlsReset(xm_nTlsIndex.Get(), (std::intptr_t)pNewObject.get())){
+				throw std::bad_alloc();
+			}
+			pObject = pNewObject.release();
+		}
+		return pObject;
+	}
+	void xDoFreePtr() const noexcept {
+		::MCF_CRT_TlsReset(xm_nTlsIndex.Get(), (std::intptr_t)(Object_t *)nullptr);
 	}
 
 public:
-	const Object_t *GetPtr() const {
+	const Object_t *GetPtr() const noexcept {
 		return xDoGetPtr();
 	}
-	Object_t *GetPtr(){
+	Object_t *GetPtr() noexcept {
 		return xDoGetPtr();
 	}
 	const Object_t *GetSafePtr() const {
-		return xDoGetSafePtr();
+		return xDoAllocPtr();
 	}
 	Object_t *GetSafePtr(){
-		return xDoGetSafePtr();
+		return xDoAllocPtr();
 	}
 
 	const Object_t &Get() const {
@@ -133,7 +130,7 @@ public:
 	}
 
 	void Release() noexcept {
-		::MCF_CRT_DeleteTls((std::intptr_t)this);
+		xDoFreePtr();
 	}
 
 public:

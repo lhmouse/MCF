@@ -44,4 +44,5 @@ __asm__(
 	"	and esp, -0x10 \n"
 	"	call _AlignedStartup \n"
 #endif
+	"	int3 \n"
 );

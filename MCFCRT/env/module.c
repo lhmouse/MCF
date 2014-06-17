@@ -5,6 +5,7 @@
 #include "module.h"
 #include "mcfwin.h"
 #include "mingw_hacks.h"
+#include "fenv.h"
 #include "heap.h"
 #include "heap_dbg.h"
 #include "thread.h"
@@ -16,7 +17,7 @@
 extern IMAGE_DOS_HEADER g_vDosHeader __asm__("__image_base__");
 
 typedef struct tagAtExitNode {
-	struct tagAtExitNode *pNext;
+	struct tagAtExitNode *pPrev;
 
 	void (__cdecl *pfnProc)(intptr_t);
 	intptr_t nContext;
@@ -26,16 +27,17 @@ static AT_EXIT_NODE *volatile g_pAtExitHead = NULL;
 
 static unsigned int g_uInitState = 0;
 
+#define DUMMY_INIT()			(true)
+#define DUMMY_UNINIT()			((void)0)
+
+#define VOID_INIT(exp)			((exp), true)
+
 #ifdef __MCF_CRT_HEAPDBG_ON
-static inline bool HeapDebugInit(){
-	return __MCF_CRT_HeapDbgInit();
-}
-static inline void HeapDebugUninit(){
-	__MCF_CRT_HeapDbgUninit();
-}
+#	define HEAPDBG_INIT()		(__MCF_CRT_HeapDbgInit())
+#	define HEAPDBG_UNINIT()		(__MCF_CRT_HeapDbgUninit())
 #else
-#	define HeapDebugInit()		(true)
-#	define HeapDebugUninit()	((void)0)
+#	define HEAPDBG_INIT()		DUMMY_INIT()
+#	define HEAPDBG_UNINIT()		DUMMY_UNINIT()
 #endif
 
 static inline bool DoCtors(){
@@ -49,9 +51,9 @@ static inline void DoDtors(){
 	while(pHead){
 		(*(pHead->pfnProc))(pHead->nContext);
 
-		AT_EXIT_NODE *const pNext = pHead->pNext;
+		AT_EXIT_NODE *const pPrev = pHead->pPrev;
 		free(pHead);
-		pHead = pNext;
+		pHead = pPrev;
 	}
 }
 
@@ -68,12 +70,13 @@ static bool Init(unsigned int *puState){
 		}
 
 //=========================================================
-	DO_INIT(0, __MCF_CRT_HeapInit());
-	DO_INIT(1, HeapDebugInit());
-	DO_INIT(2, __MCF_CRT_TlsEnvInit());
-	DO_INIT(3, __MCF_CRT_MinGWHacksInit());
-	DO_INIT(4, DoCtors());
-	DO_INIT(5, __MCF_CRT_ThreadInit());
+	DO_INIT(0, VOID_INIT(__MCF_CRT_FEnvInit()));
+	DO_INIT(1, __MCF_CRT_HeapInit());
+	DO_INIT(2, HEAPDBG_INIT());
+	DO_INIT(3, __MCF_CRT_TlsEnvInit());
+	DO_INIT(4, __MCF_CRT_MinGWHacksInit());
+	DO_INIT(5, DUMMY_INIT());
+	DO_INIT(6, DoCtors());
 //=========================================================
 
 		break;
@@ -97,12 +100,13 @@ static void Uninit(unsigned int *puState){
 		}
 
 //=========================================================
-	DO_UNINIT(5, __MCF_CRT_ThreadUninit());
-	DO_UNINIT(4, DoDtors());
-	DO_UNINIT(3, __MCF_CRT_MinGWHacksUninit());
-	DO_UNINIT(2, __MCF_CRT_TlsEnvUninit());
-	DO_UNINIT(1, HeapDebugUninit());
-	DO_UNINIT(0, __MCF_CRT_HeapUninit());
+	DO_UNINIT(6, DoDtors());
+	DO_UNINIT(5, __MCF_CRT_TlsCleanup());
+	DO_UNINIT(4, __MCF_CRT_MinGWHacksUninit());
+	DO_UNINIT(3, __MCF_CRT_TlsEnvUninit());
+	DO_UNINIT(2, HEAPDBG_UNINIT());
+	DO_UNINIT(1, __MCF_CRT_HeapUninit());
+	DO_UNINIT(0, DUMMY_UNINIT());
 //=========================================================
 
 		break;
@@ -131,9 +135,9 @@ int MCF_CRT_AtEndModule(void (*pfnProc)(intptr_t), intptr_t nContext){
 	pNode->pfnProc = pfnProc;
 	pNode->nContext = nContext;
 
-	pNode->pNext = __atomic_load_n(&g_pAtExitHead, __ATOMIC_RELAXED);
+	pNode->pPrev = __atomic_load_n(&g_pAtExitHead, __ATOMIC_RELAXED);
 	while(EXPECT(!__atomic_compare_exchange_n(
-		&g_pAtExitHead, &(pNode->pNext), pNode,
+		&g_pAtExitHead, &(pNode->pPrev), pNode,
 		false, __ATOMIC_RELAXED, __ATOMIC_RELAXED
 	))){
 		// 空的。

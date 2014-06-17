@@ -91,7 +91,7 @@ void __MCF_CRT_HeapDbgUninit(){
 	HeapDestroy(g_hMapAllocator);
 
 	g_pBlockHead	= NULL;
-	g_pavlBlocks		= NULL;
+	g_pavlBlocks	= NULL;
 	g_hMapAllocator	= NULL;
 }
 

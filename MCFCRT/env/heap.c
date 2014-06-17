@@ -41,11 +41,11 @@ bool __MCF_CRT_HeapInit(){
 	)){
 		return false;
 	}
-	g_vBadAllocHandler.pfnProc = NULL;
 	return true;
 }
 void __MCF_CRT_HeapUninit(){
 	DeleteCriticalSection(&g_csHeapLock);
+	g_vBadAllocHandler.pfnProc = NULL;
 }
 
 unsigned char *__MCF_CRT_HeapAlloc(size_t uSize, const void *pRetAddr){

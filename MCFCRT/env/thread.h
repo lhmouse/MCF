@@ -12,8 +12,7 @@ __MCF_EXTERN_C_BEGIN
 extern bool __MCF_CRT_TlsEnvInit(void) MCF_NOEXCEPT;
 extern void __MCF_CRT_TlsEnvUninit(void) MCF_NOEXCEPT;
 
-extern bool __MCF_CRT_ThreadInit(void) MCF_NOEXCEPT;
-extern void __MCF_CRT_ThreadUninit(void) MCF_NOEXCEPT;
+extern void __MCF_CRT_TlsCleanup(void) MCF_NOEXCEPT;
 
 // 返回的是 HANDLE。
 extern void *MCF_CRT_CreateThread(
@@ -23,20 +22,20 @@ extern void *MCF_CRT_CreateThread(
 	unsigned long *pulThreadId
 ) MCF_NOEXCEPT;
 
-// 失败返回 -1。
-extern MCF_STD intptr_t MCF_CRT_AtThreadExit(void (*pfnProc)(MCF_STD intptr_t), MCF_STD intptr_t nContext) MCF_NOEXCEPT;
-extern bool MCF_CRT_RemoveAtThreadExit(MCF_STD intptr_t nKey) MCF_NOEXCEPT;
+// 失败返回 0。
+extern MCF_STD uintptr_t MCF_CRT_AtThreadExit(void (*pfnProc)(MCF_STD intptr_t), MCF_STD intptr_t nContext) MCF_NOEXCEPT;
+extern bool MCF_CRT_RemoveAtThreadExit(MCF_STD uintptr_t uKey) MCF_NOEXCEPT;
 
-// 失败返回 -1。
-// 这里的 TlsCallback 类似于 FlsCallback，但需注意线程必须使用 __MCF_CRT_ThreadInitialize() 初始化过。
-// 在任何情况下都调用回调，即使 Tls 中保存的值是缺省值。
-// 使用 MCF_CRT_CreateThread() 创建的线程不需要显式调用 __MCF_CRT_ThreadInitialize()。
-extern MCF_STD intptr_t MCF_CRT_TlsAllocKey(void (*pfnTlsCallback)(MCF_STD intptr_t), MCF_STD intptr_t nInitValue) MCF_NOEXCEPT;
-extern bool MCF_CRT_TlsFreeKey(MCF_STD intptr_t nKey) MCF_NOEXCEPT;
+// 失败返回 0。
+extern MCF_STD uintptr_t MCF_CRT_TlsAllocKey(void (*pfnCallback)(MCF_STD intptr_t)) MCF_NOEXCEPT;
+extern bool MCF_CRT_TlsFreeKey(MCF_STD uintptr_t uKey) MCF_NOEXCEPT;
 
-extern bool MCF_CRT_TlsGetValue(MCF_STD intptr_t nKey, MCF_STD intptr_t *pnValue) MCF_NOEXCEPT;
-// 注意这里不触发回调。
-extern bool MCF_CRT_TlsSetValue(MCF_STD intptr_t nKey, MCF_STD intptr_t *pnOldValue, MCF_STD intptr_t nNewValue) MCF_NOEXCEPT;
+extern bool MCF_CRT_TlsGet(MCF_STD uintptr_t uKey, MCF_STD intptr_t *pnValue) MCF_NOEXCEPT;
+// 触发回调。
+extern bool MCF_CRT_TlsReset(MCF_STD uintptr_t uKey, MCF_STD intptr_t nNewValue) MCF_NOEXCEPT;
+// 不触发回调。pnOldValue 不得为空。
+// 返回 0 若失败，返回 1 若新值被设定但旧值未定义，返回 2 若旧值有效且已被替换。
+extern int MCF_CRT_TlsExchange(MCF_STD uintptr_t uKey, MCF_STD intptr_t *pnOldValue, MCF_STD intptr_t nNewValue) MCF_NOEXCEPT;
 
 __MCF_EXTERN_C_END
 

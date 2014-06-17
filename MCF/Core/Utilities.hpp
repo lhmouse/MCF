@@ -9,6 +9,7 @@
 #include "../../MCFCRT/env/bail.h"
 #include <type_traits>
 #include <algorithm>
+#include <memory>
 #include <utility>
 #include <cstddef>
 #include <cstdint>
@@ -210,24 +211,24 @@ inline void BZero(T &vDst) noexcept {
 // CallOnEach
 //----------------------------------------------------------------------------
 template<typename Function_t>
-Function_t &&CallOnEach(Function_t &&fnCallable){
-	return std::forward<Function_t>(fnCallable);
+Function_t CallOnEach(Function_t &&vFunction){
+	return std::move(vFunction);
 }
 template<typename Function_t, typename FirstParam_t, typename... Params_t>
-Function_t &&CallOnEach(Function_t &&fnCallable, FirstParam_t &&vFirstParam, Params_t &&... vParams){
-	fnCallable(std::forward<FirstParam_t>(vFirstParam));
-	return CallOnEach(std::forward<Function_t>(fnCallable), std::forward<Params_t>(vParams)...);
+Function_t CallOnEach(Function_t &&vFunction, FirstParam_t &&vFirstParam, Params_t &&... vParams){
+	vFunction(std::forward<FirstParam_t>(vFirstParam));
+	return CallOnEach(std::move(vFunction), std::forward<Params_t>(vParams)...);
 }
 
 template<typename Function_t>
-Function_t &&CallOnEachBackward(Function_t &&fnCallable){
-	return std::forward<Function_t>(fnCallable);
+Function_t CallOnEachBackward(Function_t &&vFunction){
+	return std::move(vFunction);
 }
 template<typename Function_t, typename FirstParam_t, typename... Params_t>
-Function_t &&CallOnEachBackward(Function_t &&fnCallable, FirstParam_t &&vFirstParam, Params_t &&... vParams){
-	auto &&fnNewCallable = CallOnEachBackward(std::forward<Function_t>(fnCallable), std::forward<Params_t>(vParams)...);
-	fnNewCallable(std::forward<FirstParam_t>(vFirstParam));
-	return std::forward<Function_t>(fnNewCallable);
+Function_t CallOnEachBackward(Function_t &&vFunction, FirstParam_t &&vFirstParam, Params_t &&... vParams){
+	auto vNewFunction = CallOnEachBackward(std::move(vFunction), std::forward<Params_t>(vParams)...);
+	vNewFunction(std::forward<FirstParam_t>(vFirstParam));
+	return std::move(vNewFunction);
 }
 
 //----------------------------------------------------------------------------
@@ -639,6 +640,118 @@ inline OutputIterator_t FillN(
 		++itOutputBegin;
 	}
 	return std::move(itOutputBegin);
+}
+
+//----------------------------------------------------------------------------
+// CallOnTuple / MakeFromTuple / MakeUniqueFromTuple / MakeSharedFromTuple
+//----------------------------------------------------------------------------
+namespace Impl {
+	template<std::size_t CUR, std::size_t END>
+	struct CallOnTupleHelper {
+		template<typename Function_t, typename... TupleParams_t, typename... Unpacked_t>
+		auto operator()(Function_t &&vFunction, const std::tuple<TupleParams_t...> &vTuple, const Unpacked_t &... vUnpacked) const {
+			return CallOnTupleHelper<CUR + 1, END>()(vFunction, vTuple, vUnpacked..., std::get<CUR>(vTuple));
+		}
+		template<typename Function_t, typename... TupleParams_t, typename... Unpacked_t>
+		auto operator()(Function_t &&vFunction, std::tuple<TupleParams_t...> &&vTuple, Unpacked_t &&... vUnpacked) const {
+			return CallOnTupleHelper<CUR + 1, END>()(vFunction, std::move(vTuple), std::move(vUnpacked)..., std::move(std::get<CUR>(vTuple)));
+		}
+	};
+	template<std::size_t END>
+	struct CallOnTupleHelper<END, END> {
+		template<typename Function_t, typename... TupleParams_t, typename... Unpacked_t>
+		auto operator()(Function_t &&vFunction, const std::tuple<TupleParams_t...> &, const Unpacked_t &... vUnpacked) const {
+			return vFunction(vUnpacked...);
+		}
+		template<typename Function_t, typename... TupleParams_t, typename... Unpacked_t>
+		auto operator()(Function_t &&vFunction, std::tuple<TupleParams_t...> &&, Unpacked_t &&... vUnpacked) const {
+			return vFunction(std::move(vUnpacked)...);
+		}
+	};
+}
+
+template<typename Function_t, typename... Params_t>
+auto CallOnTuple(Function_t vFunction, const std::tuple<Params_t...> &vTuple)
+	noexcept(noexcept(
+		std::declval<Function_t>()(std::declval<const Params_t &>()...)
+	))
+{
+	return Impl::CallOnTupleHelper<0u, sizeof...(Params_t)>()(vFunction, vTuple);
+}
+template<typename Function_t, typename... Params_t>
+auto CallOnTuple(Function_t vFunction, std::tuple<Params_t...> &&vTuple)
+	noexcept(noexcept(
+		std::declval<Function_t>()(std::declval<Params_t &&>()...)
+	))
+{
+	return Impl::CallOnTupleHelper<0u, sizeof...(Params_t)>()(vFunction, std::move(vTuple));
+}
+
+template<class Object_t, typename... Params_t>
+auto MakeFromTuple(const std::tuple<Params_t...> &vTuple)
+	noexcept(noexcept(
+		std::is_nothrow_constructible<Object_t, const Params_t &...>::value
+		&& std::is_nothrow_move_constructible<Object_t>::value
+	))
+{
+	return Impl::CallOnTupleHelper<0u, sizeof...(Params_t)>()(
+		[](const Params_t &... vParams){
+			return Object_t(vParams...);
+		},
+		vTuple
+	);
+}
+template<class Object_t, typename... Params_t>
+auto MakeFromTuple(std::tuple<Params_t...> &&vTuple)
+	noexcept(noexcept(
+		std::is_nothrow_constructible<Object_t, Params_t &&...>::value
+		&& std::is_nothrow_move_constructible<Object_t>::value
+	))
+{
+	return Impl::CallOnTupleHelper<0u, sizeof...(Params_t)>()(
+		[](Params_t &&... vParams){
+			return Object_t(std::move(vParams)...);
+		},
+		std::move(vTuple)
+	);
+}
+
+template<class Object_t, typename... Params_t>
+auto MakeUniqueFromTuple(const std::tuple<Params_t...> &vTuple){
+	return Impl::CallOnTupleHelper<0u, sizeof...(Params_t)>()(
+		[](const Params_t &... vParams){
+			return std::make_unique<Object_t>(vParams...);
+		},
+		vTuple
+	);
+}
+template<class Object_t, typename... Params_t>
+auto MakeUniqueFromTuple(std::tuple<Params_t...> &&vTuple){
+	return Impl::CallOnTupleHelper<0u, sizeof...(Params_t)>()(
+		[](Params_t &&... vParams){
+			return std::make_unique<Object_t>(std::move(vParams)...);
+		},
+		std::move(vTuple)
+	);
+}
+
+template<class Object_t, typename... Params_t>
+auto MakeSharedFromTuple(const std::tuple<Params_t...> &vTuple){
+	return Impl::CallOnTupleHelper<0u, sizeof...(Params_t)>()(
+		[](const Params_t &... vParams){
+			return std::make_shared<Object_t>(vParams...);
+		},
+		vTuple
+	);
+}
+template<class Object_t, typename... Params_t>
+auto MakeSharedFromTuple(std::tuple<Params_t...> &&vTuple){
+	return Impl::CallOnTupleHelper<0u, sizeof...(Params_t)>()(
+		[](Params_t &&... vParams){
+			return std::make_shared<Object_t>(std::move(vParams)...);
+		},
+		std::move(vTuple)
+	);
 }
 
 }

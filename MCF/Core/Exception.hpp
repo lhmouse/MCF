@@ -14,10 +14,10 @@
 namespace MCF {
 
 inline unsigned long GetWin32LastError() noexcept {
-	return ::__MCF_CRT_GetWin32LastError();
+	return ::MCF_CRT_GetWin32LastError();
 }
 inline void SetWin32LastError(unsigned long ulErrorCode) noexcept {
-	::__MCF_CRT_SetWin32LastError(ulErrorCode);
+	::MCF_CRT_SetWin32LastError(ulErrorCode);
 }
 
 extern WideString GetWin32ErrorDesc(unsigned long ulErrorCode);
@@ -64,9 +64,9 @@ public:
 }
 
 #define MCF_THROW(code, ...)	\
-	throw ::MCF::Exception(__PRETTY_FUNCTION__, __LINE__, code, __VA_ARGS__);	\
+	(throw ::MCF::Exception(__PRETTY_FUNCTION__, __LINE__, code, __VA_ARGS__))
 
 #define MCF_MAKE_EXCEPTION_PTR(code, ...)	\
-	out_ptr = ::std::make_exception_ptr(::MCF::Exception(__PRETTY_FUNCTION__, __LINE__, code, __VA_ARGS__));	\
+	(::std::make_exception_ptr(::MCF::Exception(__PRETTY_FUNCTION__, __LINE__, code, __VA_ARGS__)))
 
 #endif

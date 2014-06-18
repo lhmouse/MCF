@@ -4,10 +4,9 @@
 
 #include "../../env/_crtdef.h"
 #include "../../env/heap.h"
+#include <string.h>
 
-extern void *memset(void *dst, int ch, size_t cb);
-
-__attribute__((__noinline__)) void *calloc(size_t nmemb, size_t cnt){
+__attribute__((__noinline__)) void *__wrap_calloc(size_t nmemb, size_t cnt){
 	size_t cb = 0;
 	if((nmemb > 0) && (cnt > 0)){
 		cb = nmemb * cnt;
@@ -21,3 +20,5 @@ __attribute__((__noinline__)) void *calloc(size_t nmemb, size_t cnt){
 	}
 	return ret;
 }
+
+__attribute__((__alias__("__wrap_calloc"))) void *calloc(size_t nmemb, size_t cnt);

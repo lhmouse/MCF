@@ -9,6 +9,8 @@ static void AtExitWrapper(intptr_t nContext){
 	(*((void (*)(void))nContext))();
 }
 
-int atexit(void (*func)(void)){
+int __wrap_atexit(void (*func)(void)){
 	return MCF_CRT_AtEndModule(&AtExitWrapper, (intptr_t)func);
 }
+
+__attribute__((__alias__("__wrap_atexit"))) int atexit(void (*)(void));

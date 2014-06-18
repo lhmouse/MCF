@@ -5,8 +5,10 @@
 #include "../../env/_crtdef.h"
 #include "../../env/heap.h"
 
-__attribute__((__noinline__)) void free(void *p){
+__attribute__((__noinline__)) void __wrap_free(void *p){
 	if(p){
 		__MCF_CRT_HeapFree(p, __MCF_DEBUG_RET_ADDR);
 	}
 }
+
+__attribute__((__alias__("__wrap_free"))) void free(void *p);

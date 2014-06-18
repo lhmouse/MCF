@@ -5,10 +5,12 @@
 #include "../../env/_crtdef.h"
 #include "../../env/heap.h"
 
-__attribute__((__noinline__)) void *realloc(void *p, size_t cb){
+__attribute__((__noinline__)) void *__wrap_realloc(void *p, size_t cb){
 	if(p){
 		return __MCF_CRT_HeapReAlloc(p, cb, __MCF_DEBUG_RET_ADDR);
 	} else {
 		return __MCF_CRT_HeapAlloc(cb, __MCF_DEBUG_RET_ADDR);
 	}
 }
+
+__attribute__((__alias__("__wrap_realloc"))) void *realloc(void *p, size_t cb);

@@ -23,7 +23,7 @@ public:
 
 private:
 	explicit xBlockHeader(std::size_t uCapacity) noexcept
-		: m_pNext		(nullptr)
+		: m_pNext		()
 		, m_uRead		(0)
 		, m_uWrite		(0)
 		, m_uCapacity	(uCapacity)
@@ -42,9 +42,7 @@ inline StreamBuffer::xBlockHeaderPtr StreamBuffer::xBlockHeader::Create(std::siz
 	if(uCapacity < 4096){
 		uCapacity = 4096;
 	}
-	return xBlockHeaderPtr(
-		Construct<Helper>(::operator new(sizeof(Helper) + uCapacity), uCapacity)
-	);
+	return xBlockHeaderPtr(Construct<Helper>(::operator new(sizeof(Helper) + uCapacity), uCapacity));
 }
 
 inline void StreamBuffer::xBlockDeleter::operator()(xBlockHeader *pBlock) noexcept {

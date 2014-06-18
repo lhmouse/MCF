@@ -20,6 +20,21 @@ public:
 		INVALID_SIZE = (std::uint64_t)-1
 	};
 
+	enum : std::uint32_t {
+		// 权限控制。
+		TO_READ			= 0x00000100,
+		TO_WRITE		= 0x00000200,
+
+		// 创建行为控制。如果没有指定 TO_WRITE，这些选项都无效。
+		NO_CREATE		= 0x00004000,	// 文件不存在则失败。若指定该选项则 FAIL_IF_EXISTS 无效。
+		FAIL_IF_EXISTS	= 0x00008000,	// 文件已存在则失败。
+
+		// 杂项。
+		NO_BUFFERING	= 0x10000000,
+		WRITE_THROUGH	= 0x20000000,
+		DEL_ON_CLOSE	= 0x40000000,
+	};
+
 	typedef std::function<void ()> AsyncProc;
 
 	// 用于在同一时刻确定同一台计算机上的文件。
@@ -51,11 +66,15 @@ public:
 	};
 
 public:
-	static std::unique_ptr<File> Open(const WideStringObserver &wsoPath, bool bToRead, bool bToWrite, bool bAutoCreate);
-	static std::unique_ptr<File> Open(const WideString &wcsPath, bool bToRead, bool bToWrite, bool bAutoCreate);
+	// nCreateDisposition
+	//   > 0	文件存在则打开，不存在则创建（OPEN_ALWAYS）
+	//   = 0	文件存在则打开，不存在则失败（OPEN_EXISTING）
+	//   < 0	文件存在则失败，不存在则创建（OPEN_ALWAYS）
+	static std::unique_ptr<File> Open(const WideStringObserver &wsoPath, std::uint32_t uFlags);
+	static std::unique_ptr<File> Open(const WideString &wcsPath, std::uint32_t uFlags);
 
-	static std::unique_ptr<File> OpenNoThrow(const WideStringObserver &wsoPath, bool bToRead, bool bToWrite, bool bAutoCreate);
-	static std::unique_ptr<File> OpenNoThrow(const WideString &wcsPath, bool bToRead, bool bToWrite, bool bAutoCreate);
+	static std::unique_ptr<File> OpenNoThrow(const WideStringObserver &wsoPath, std::uint32_t uFlags);
+	static std::unique_ptr<File> OpenNoThrow(const WideString &wcsPath, std::uint32_t uFlags);
 
 public:
 	std::uint64_t GetSize() const;

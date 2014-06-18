@@ -122,7 +122,7 @@ public:
 
 class Notation : public NotationPackage {
 public:
-	typedef enum {
+	enum ErrorType {
 		ERR_NONE,
 		ERR_NO_VALUE_NAME,
 		ERR_NO_PACKAGE_NAME,
@@ -131,7 +131,7 @@ public:
 		ERR_UNCLOSED_PACKAGE,
 		ERR_DUPLICATE_PACKAGE,
 		ERR_DUPLICATE_VALUE
-	} ErrorType;
+	};
 
 	typedef NotationPackage Package;
 

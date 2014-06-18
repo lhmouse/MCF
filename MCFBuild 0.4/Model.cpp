@@ -68,7 +68,7 @@ void Model::InitParams(){
 
 		if((wcsArg[0] == L'-') || (wcsArg[0] == L'/')){
 			if(uArgLen <= 1){
-				continue;
+				THROW_INV_PARAM;
 			}
 			switch(wcsArg[1]){
 			case L'h':

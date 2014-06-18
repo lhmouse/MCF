@@ -21,7 +21,7 @@ const std::map<MCF::WideStringObserver, MCF::WideStringObserver> g_mapStrings = 
 											"命令行选项（按相关性顺序）：\n"
 											"\n"
 											"  -h 或 -?      显示此帮助信息。\n"
-											"  -M            使用原始格式输出消息。"
+											"  -M            使用原始格式输出信息。"
 											"\n"
 											"  -v            显示详细资料。\n"
 											"\n"
@@ -56,6 +56,7 @@ const std::map<MCF::WideStringObserver, MCF::WideStringObserver> g_mapStrings = 
 											L"中间目录：%4\n"
 											L"目标目录：%5\n"
 											L"进程数　：%6"_wso },
+	{ L"SOURCE_FILE_MANIFEST"_wso,			L"----- 源文件清单 -----\n"_wso },
 
 	{ L"MCF_EXCEPTION"_wso,					L"MCF Build 遇到一个错误：\n"
 											"  错误描述：%0\n"

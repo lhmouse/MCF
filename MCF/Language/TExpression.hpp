@@ -21,12 +21,12 @@ public:
 
 class TExpression : public TExpressionNode {
 public:
-	typedef enum {
+	enum ErrorType {
 		ERR_NONE,
 		ERR_UNEXCEPTED_NODE_CLOSE,
 		ERR_UNCLOSED_QUOTE,
 		ERR_UNCLOSED_NODE
-	} ErrorType;
+	};
 
 	typedef TExpressionNode Node;
 

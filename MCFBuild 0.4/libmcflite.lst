@@ -1,10 +1,14 @@
 ; 这里只写需要编译的其他目录下的文件。
 ; 当前目录中的文件会自动搜索。
 
-..\MCFCRT\MCFCRT.c
 ..\MCFCRT\stdc\stdlib\atexit.c
-..\MCFCRT\env\bail.c
+..\MCFCRT\stdc\stdlib\malloc.c
+..\MCFCRT\stdc\stdlib\realloc.c
+..\MCFCRT\stdc\stdlib\calloc.c
+..\MCFCRT\stdc\stdlib\free.c
 ..\MCFCRT\ext\wcscpyout.c
+..\MCFCRT\env\bail.c
+..\MCFCRT\env\module.c
 ..\MCFCRT\env\last_error.c
 ..\MCFCRT\env\fenv.c
 ..\MCFCRT\env\mingw_hacks.c

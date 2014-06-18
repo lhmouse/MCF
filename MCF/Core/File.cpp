@@ -40,14 +40,38 @@ private:
 	UniqueHandle<xFileCloser> xm_hFile;
 
 public:
-	std::pair<unsigned long, WideStringObserver> Open(const wchar_t *pwszPath, bool bToRead, bool bToWrite, bool bAutoCreate) noexcept {
+	std::pair<unsigned long, WideStringObserver> Open(const wchar_t *pwszPath, std::uint32_t uFlags) noexcept {
+		DWORD dwCreateDisposition;
+		if(uFlags & TO_WRITE){
+			if(uFlags & NO_CREATE){
+				dwCreateDisposition = OPEN_EXISTING;
+			} else if(uFlags & FAIL_IF_EXISTS){
+				dwCreateDisposition = CREATE_NEW;
+			} else {
+				dwCreateDisposition = OPEN_ALWAYS;
+			}
+		} else {
+			dwCreateDisposition = OPEN_EXISTING;
+		}
+
+		DWORD dwFlagsAndAttributes = FILE_ATTRIBUTE_NORMAL | FILE_FLAG_OVERLAPPED;
+		if(uFlags & NO_BUFFERING){
+			dwFlagsAndAttributes |= FILE_FLAG_NO_BUFFERING;
+		}
+		if(uFlags & WRITE_THROUGH){
+			dwFlagsAndAttributes |= FILE_FLAG_WRITE_THROUGH;
+		}
+		if(uFlags & DEL_ON_CLOSE){
+			dwFlagsAndAttributes |= FILE_FLAG_DELETE_ON_CLOSE;
+		}
+
 		xm_hFile.Reset(::CreateFileW(
 			pwszPath,
-			(bToRead ? GENERIC_READ : 0) | (bToWrite ? GENERIC_WRITE : 0),
-			bToWrite ? 0 : FILE_SHARE_READ,
+			((uFlags & TO_READ) ? GENERIC_READ : 0) | ((uFlags & TO_WRITE) ? GENERIC_WRITE : 0),
+			(uFlags & TO_WRITE) ? 0 : FILE_SHARE_READ,
 			nullptr,
-			(bToWrite && bAutoCreate) ? OPEN_ALWAYS : OPEN_EXISTING,
-			FILE_ATTRIBUTE_NORMAL | FILE_FLAG_OVERLAPPED,
+			dwCreateDisposition,
+			dwFlagsAndAttributes,
 			NULL
 		));
 		if(!xm_hFile){
@@ -231,35 +255,35 @@ public:
 }
 
 // 静态成员函数。
-std::unique_ptr<File> File::Open(const WideStringObserver &wsoPath, bool bToRead, bool bToWrite, bool bAutoCreate){
+std::unique_ptr<File> File::Open(const WideStringObserver &wsoPath, std::uint32_t uFlags){
 	auto pFile = std::make_unique<FileDelegate>();
-	const auto vResult = pFile->Open(wsoPath.GetNullTerminated<MAX_PATH>().GetData(), bToRead, bToWrite, bAutoCreate);
+	const auto vResult = pFile->Open(wsoPath.GetNullTerminated<MAX_PATH>().GetData(), uFlags);
 	if(vResult.first != ERROR_SUCCESS){
 		MCF_THROW(vResult.first, vResult.second);
 	}
 	return std::move(pFile);
 }
-std::unique_ptr<File> File::Open(const WideString &wcsPath, bool bToRead, bool bToWrite, bool bAutoCreate){
+std::unique_ptr<File> File::Open(const WideString &wcsPath, std::uint32_t uFlags){
 	auto pFile = std::make_unique<FileDelegate>();
-	const auto vResult = pFile->Open(wcsPath.GetCStr(), bToRead, bToWrite, bAutoCreate);
+	const auto vResult = pFile->Open(wcsPath.GetCStr(), uFlags);
 	if(vResult.first != ERROR_SUCCESS){
 		MCF_THROW(vResult.first, vResult.second);
 	}
 	return std::move(pFile);
 }
 
-std::unique_ptr<File> File::OpenNoThrow(const WideStringObserver &wsoPath, bool bToRead, bool bToWrite, bool bAutoCreate){
+std::unique_ptr<File> File::OpenNoThrow(const WideStringObserver &wsoPath, std::uint32_t uFlags){
 	auto pFile = std::make_unique<FileDelegate>();
-	const auto vResult = pFile->Open(wsoPath.GetNullTerminated<MAX_PATH>().GetData(), bToRead, bToWrite, bAutoCreate);
+	const auto vResult = pFile->Open(wsoPath.GetNullTerminated<MAX_PATH>().GetData(), uFlags);
 	if(vResult.first != ERROR_SUCCESS){
 		::SetLastError(vResult.first);
 		return nullptr;
 	}
 	return std::move(pFile);
 }
-std::unique_ptr<File> File::OpenNoThrow(const WideString &wcsPath, bool bToRead, bool bToWrite, bool bAutoCreate){
+std::unique_ptr<File> File::OpenNoThrow(const WideString &wcsPath, std::uint32_t uFlags){
 	auto pFile = std::make_unique<FileDelegate>();
-	const auto vResult = pFile->Open(wcsPath.GetCStr(), bToRead, bToWrite, bAutoCreate);
+	const auto vResult = pFile->Open(wcsPath.GetCStr(), uFlags);
 	if(vResult.first != ERROR_SUCCESS){
 		::SetLastError(vResult.first);
 		return nullptr;

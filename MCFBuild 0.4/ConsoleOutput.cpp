@@ -13,40 +13,21 @@ namespace {
 static const auto pLock = MCF::CriticalSection::Create(0);
 
 void DoPrint(HANDLE hFile, const MCF::WideStringObserver &wsoString) noexcept {
-	DWORD dwMode;
-	if(::GetConsoleMode(hFile, &dwMode)){
-		const auto vLock = pLock->GetLock();
+	MCF::AnsiString ansTemp;
+	ansTemp.Assign<MCF::StringEncoding::UTF16>(wsoString);
+	ansTemp.Append('\n');
 
-		const auto pwcData = wsoString.GetBegin();
-		const auto uSize = wsoString.GetSize();
-		std::size_t uTotalWritten = 0;
+	const auto vLock = pLock->GetLock();
+	const auto pchData = ansTemp.GetBegin();
+	const auto uSize = ansTemp.GetSize();
+	std::size_t uTotalWritten = 0;
 
-		DWORD dwCharsWritten;
-		while(uTotalWritten < uSize){
-			if(!::WriteConsoleW(hFile, pwcData + uTotalWritten, uSize - uTotalWritten, &dwCharsWritten, nullptr)){
-				break;
-			}
-			uTotalWritten += dwCharsWritten;
+	DWORD dwCharsWritten;
+	while(uTotalWritten < uSize){
+		if(!::WriteFile(hFile, pchData + uTotalWritten, uSize - uTotalWritten, &dwCharsWritten, nullptr)){
+			break;
 		}
-		::WriteConsoleW(hFile, L"\n", 1, &dwCharsWritten, nullptr);
-	} else {
-		MCF::Utf8String u8sTemp;
-		u8sTemp.Assign<MCF::StringEncoding::UTF16>(wsoString);
-		u8sTemp.Append('\n');
-
-		const auto vLock = pLock->GetLock();
-
-		const auto pchData = u8sTemp.GetBegin();
-		const auto uSize = u8sTemp.GetSize();
-		std::size_t uTotalWritten = 0;
-
-		DWORD dwCharsWritten;
-		while(uTotalWritten < uSize){
-			if(!::WriteFile(hFile, pchData + uTotalWritten, uSize - uTotalWritten, &dwCharsWritten, nullptr)){
-				break;
-			}
-			uTotalWritten += dwCharsWritten;
-		}
+		uTotalWritten += dwCharsWritten;
 	}
 }
 

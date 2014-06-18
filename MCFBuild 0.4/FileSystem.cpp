@@ -28,7 +28,7 @@ MCF::WideString GetFullPath(const MCF::WideString &wcsSrc){
 
 bool GetFileContents(MCF::StreamBuffer &sbufData, const MCF::WideString &wcsPath, bool bThrowOnFailure){
 	const auto wcsFullPath = GetFullPath(wcsPath);
-	const auto pFile = MCF::File::OpenNoThrow(wcsFullPath, true, false, false);
+	const auto pFile = MCF::File::OpenNoThrow(wcsFullPath, MCF::File::TO_READ);
 	if(!pFile){
 		if(bThrowOnFailure){
 			FORMAT_THROW(::GetLastError(), L"OPEN_FILE_FAILED|"_wso + wcsFullPath);
@@ -48,7 +48,7 @@ bool GetFileContents(MCF::StreamBuffer &sbufData, const MCF::WideString &wcsPath
 }
 void PutFileContents(const MCF::WideString &wcsPath, const MCF::StreamBuffer &sbufData){
 	const auto wcsFullPath = GetFullPath(wcsPath);
-	const auto pFile = MCF::File::OpenNoThrow(wcsFullPath, false, true, true);
+	const auto pFile = MCF::File::OpenNoThrow(wcsFullPath, MCF::File::TO_WRITE | MCF::File::NO_CREATE);
 	if(pFile){
 		FORMAT_THROW(::GetLastError(), L"OPEN_FILE_FAILED|"_wso + wcsFullPath);
 	}
@@ -64,7 +64,7 @@ void PutFileContents(const MCF::WideString &wcsPath, const MCF::StreamBuffer &sb
 }
 bool GetFileSha256(Sha256 &vSha256, const MCF::WideString &wcsPath, bool bThrowOnFailure){
 	const auto wcsFullPath = GetFullPath(wcsPath);
-	const auto pFile = MCF::File::OpenNoThrow(wcsFullPath, true, false, false);
+	const auto pFile = MCF::File::OpenNoThrow(wcsFullPath, MCF::File::TO_READ);
 	if(!pFile){
 		if(bThrowOnFailure){
 			FORMAT_THROW(::GetLastError(), L"OPEN_FILE_FAILED|"_wso + wcsFullPath);
@@ -100,7 +100,7 @@ bool GetFileSha256(Sha256 &vSha256, const MCF::WideString &wcsPath, bool bThrowO
 }
 bool GetFileId(MCF::File::UniqueId &vFileId, const MCF::WideString &wcsPath, bool bThrowOnFailure){
 	const auto wcsFullPath = GetFullPath(wcsPath);
-	const auto pFile = MCF::File::OpenNoThrow(wcsFullPath, true, false, false);
+	const auto pFile = MCF::File::OpenNoThrow(wcsFullPath, MCF::File::TO_READ);
 	if(!pFile){
 		if(bThrowOnFailure){
 			FORMAT_THROW(::GetLastError(), L"OPEN_FILE_FAILED|"_wso + wcsFullPath);

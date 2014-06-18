@@ -18,19 +18,19 @@ static void CALLBACK TlsCleanupCallback(LPVOID hModule, DWORD dwReason, PVOID pR
 
 #define MCF_SECTION(x)	__attribute__((__section__(x), __used__))
 
-MCF_SECTION(".CRT$XLA") PIMAGE_TLS_CALLBACK __xl_a	= &TlsCleanupCallback;
-MCF_SECTION(".CRT$XLZ") PIMAGE_TLS_CALLBACK __xl_z	= NULL;
+MCF_SECTION(".CRT$XL@") PIMAGE_TLS_CALLBACK vCallbackAt	= &TlsCleanupCallback;
+MCF_SECTION(".CRT$XL_") PIMAGE_TLS_CALLBACK vCallback_	= NULL;
 
 DWORD _tls_index = 0;
 
-MCF_SECTION(".tls$AAA") unsigned char _tls_start	= 0;
-MCF_SECTION(".tls$ZZZ") unsigned char _tls_end		= 0;
+MCF_SECTION(".tls$@@@") unsigned char _tls_start	= 0;
+MCF_SECTION(".tls$___") unsigned char _tls_end		= 0;
 
 MCF_SECTION(".tls") const IMAGE_TLS_DIRECTORY _tls_used = {
 	.StartAddressOfRawData	= (UINT_PTR)&_tls_start,
 	.EndAddressOfRawData	= (UINT_PTR)&_tls_end,
 	.AddressOfIndex			= (UINT_PTR)&_tls_index,
-	.AddressOfCallBacks		= (UINT_PTR)&__xl_a,
+	.AddressOfCallBacks		= (UINT_PTR)&vCallbackAt,
 	.SizeOfZeroFill			= 0,
 	.Characteristics		= 0
 };
@@ -128,8 +128,41 @@ bool __MCF_CRT_TlsEnvInit(){
 void __MCF_CRT_TlsEnvUninit(){
 	__MCF_CRT_TlsCleanup();
 
-	while(g_pavlKeys){
-		MCF_CRT_TlsFreeKey((uintptr_t)g_pavlKeys);
+	if(g_pavlKeys){
+		TLS_KEY *pKey = (TLS_KEY *)MCF_AvlFront(&g_pavlKeys);
+		do {
+			TLS_OBJECT *pObject = pKey->pLastByKey;
+			while(pObject){
+				AcquireSRWLockExclusive(&(pObject->pMap->srwLock));
+				{
+					TLS_OBJECT *const pPrevInThread = pObject->pPrevInThread;
+					TLS_OBJECT *const pNextInThread = pObject->pNextInThread;
+					if(pPrevInThread){
+						pPrevInThread->pNextInThread = pNextInThread;
+					}
+					if(pNextInThread){
+						pNextInThread->pPrevInThread = pPrevInThread;
+					}
+
+					if(pObject->pMap->pLastInThread == pObject){
+						pObject->pMap->pLastInThread = pPrevInThread;
+					}
+				}
+				ReleaseSRWLockExclusive(&(pObject->pMap->srwLock));
+
+				if(pObject->pKey->pfnCallback){
+					(*(pObject->pKey->pfnCallback))(pObject->nValue);
+				}
+
+				TLS_OBJECT *const pPrev = pObject->pPrevByKey;
+				free(pObject);
+				pObject = pPrev;
+			}
+
+			TLS_KEY *const pNext = (TLS_KEY *)MCF_AvlNext((MCF_AVL_NODE_HEADER *)pKey);;
+			free(pKey);
+			pKey = pNext;
+		} while(pKey);
 	}
 
 	TlsFree(g_dwTlsIndex);

@@ -35,6 +35,29 @@ typedef int (*MCF_AVL_COMPARATOR_OTHER_NODE)(
 	const MCF_AVL_NODE_HEADER *
 );
 
+static inline MCF_AVL_NODE_HEADER *MCF_AvlFront(
+	const MCF_AVL_ROOT *ppRoot
+) MCF_NOEXCEPT {
+	MCF_AVL_NODE_HEADER *pCur = *ppRoot;
+	if(pCur){
+		while(pCur->pLeft){
+			pCur = pCur->pLeft;
+		}
+	}
+	return pCur;
+}
+static inline MCF_AVL_NODE_HEADER *MCF_AvlBack(
+	const MCF_AVL_ROOT *ppRoot
+) MCF_NOEXCEPT {
+	MCF_AVL_NODE_HEADER *pCur = *ppRoot;
+	if(pCur){
+		while(pCur->pRight){
+			pCur = pCur->pRight;
+		}
+	}
+	return pCur;
+}
+
 static inline MCF_AVL_NODE_HEADER *MCF_AvlPrev(
 	const MCF_AVL_NODE_HEADER *pNode
 ) MCF_NOEXCEPT {

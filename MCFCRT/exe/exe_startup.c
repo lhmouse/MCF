@@ -7,7 +7,7 @@
 #include "../env/module.h"
 #include "../env/_eh_top.h"
 
-// -static -nostartfiles -Wl,-e__MCF_ExeStartup,--disable-runtime-pseudo-reloc,--disable-auto-import,-lmcfcrt,-lstdc++,-lgcc,-lgcc_eh,-lmingwex,-lmcfcrt
+// -static -Wl,-e__MCF_DllStartup,--disable-runtime-pseudo-reloc,--disable-auto-import
 
 extern unsigned int MCFMain();
 
@@ -15,18 +15,16 @@ extern unsigned int MCFMain();
 
 static __attribute__((__cdecl__, __used__, __noreturn__)) int AlignedStartup(){
 	DWORD dwExitCode;
+__MCF_EH_TOP_BEGIN
 
-	__MCF_EH_TOP_BEGIN
-	{
-		if(!__MCF_CRT_BeginModule()){
-			MCF_CRT_BailF(L"MCFCRT 初始化失败。\n\n错误代码：%lu", (unsigned long)GetLastError());
-		}
-		dwExitCode = MCFMain();
-		__MCF_CRT_EndModule();
-
+	if(!__MCF_CRT_BeginModule()){
+		MCF_CRT_BailF(L"MCFCRT 初始化失败。\n\n错误代码：%lu", (unsigned long)GetLastError());
 	}
-	__MCF_EH_TOP_END
+	dwExitCode = MCFMain();
+	__MCF_CRT_EndModule();
 
+
+__MCF_EH_TOP_END
 	ExitProcess(dwExitCode);
 	__builtin_trap();
 }
@@ -37,12 +35,10 @@ __asm__(
 	".global __MCF_ExeStartup \n"
 	"__MCF_ExeStartup: \n"
 #ifdef _WIN64
-	"	and rsp, -0x10 \n"
-	"	sub rsp, 0x10 \n"
-	"	call AlignedStartup \n"
+	"	jmp AlignedStartup \n"
 #else
 	"	and esp, -0x10 \n"
 	"	call _AlignedStartup \n"
-#endif
 	"	int3 \n"
+#endif
 );

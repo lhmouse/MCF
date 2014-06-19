@@ -7,7 +7,7 @@ if "%1"=="Release" (
 	set CXXFlags=-DNDEBUG -O3 -ffunction-sections -fdata-sections -Wl,--gc-sections,-s
 )
 
-set Lib=-lmcf -lmcfcrt -lstdc++ -lmingwex -lmingw32 -lgcc -lgcc_eh -lmcfcrt -ldlmalloc -lmsvcrt -lkernel32 -luser32 -lshell32 -ladvapi32
+set Lib=-lmcf -lmcfcrt -lstdc++ -lmingwex -lmingw32 -lgcc -lgcc_eh -lmcfcrt -lgcc -ldlmalloc -lmsvcrt -lkernel32 -luser32 -lshell32 -ladvapi32
 
 call mingw 32
 

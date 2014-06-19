@@ -601,18 +601,16 @@ void *MCF_CRT_CreateThread(
 
 static __attribute__((__cdecl__, __used__, __noreturn__)) DWORD AlignedCRTThreadProc(LPVOID pParam){
 	DWORD dwExitCode;
+__MCF_EH_TOP_BEGIN
 
-	__MCF_EH_TOP_BEGIN
-	{
-		const THREAD_INIT_INFO vInitInfo = *(THREAD_INIT_INFO *)pParam;
-		free(pParam);
+	const THREAD_INIT_INFO vInitInfo = *(THREAD_INIT_INFO *)pParam;
+	free(pParam);
 
-		__MCF_CRT_FEnvInit();
+	__MCF_CRT_FEnvInit();
 
-		dwExitCode = (*vInitInfo.pfnProc)(vInitInfo.nParam);
-	}
-	__MCF_EH_TOP_END
+	dwExitCode = (*vInitInfo.pfnProc)(vInitInfo.nParam);
 
+__MCF_EH_TOP_END
 	ExitThread(dwExitCode);
 	__builtin_trap();
 }
@@ -622,15 +620,13 @@ __asm__(
 	"	.align 16 \n"
 	"CRTThreadProc: \n"
 #ifdef _WIN64
-	"	and rsp, -0x10 \n"
-	"	sub rsp, 0x10 \n"
-	"	call AlignedCRTThreadProc \n"
+	"	jmp AlignedCRTThreadProc \n"
 #else
 	"	mov eax, dword ptr[esp + 4] \n"
 	"	and esp, -0x10 \n"
 	"	sub esp, 0x10 \n"
 	"	mov dword ptr[esp], eax \n"
 	"	call _AlignedCRTThreadProc \n"
-#endif
 	"	int3 \n"
+#endif
 );

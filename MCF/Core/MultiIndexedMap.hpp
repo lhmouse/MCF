@@ -170,37 +170,31 @@ private:
 			const MCF_AVL_NODE_HEADER *pAvl1,
 			const MCF_AVL_NODE_HEADER *pAvl2
 		) noexcept {
-			ASSERT_NOEXCEPT_BEGIN
-			{
-				const auto pNode1 = DOWN_CAST(const Node, xm_aHeaders[INDEX], pAvl1);
-				const auto pNode2 = DOWN_CAST(const Node, xm_aHeaders[INDEX], pAvl2);
-				return std::less<void>()(std::get<INDEX>(pNode1->xm_vIndices), std::get<INDEX>(pNode2->xm_vIndices));
-			}
-			ASSERT_NOEXCEPT_END
+		ASSERT_NOEXCEPT_BEGIN
+			const auto pNode1 = DOWN_CAST(const Node, xm_aHeaders[INDEX], pAvl1);
+			const auto pNode2 = DOWN_CAST(const Node, xm_aHeaders[INDEX], pAvl2);
+			return std::less<void>()(std::get<INDEX>(pNode1->xm_vIndices), std::get<INDEX>(pNode2->xm_vIndices));
+		ASSERT_NOEXCEPT_END
 		}
 		template<typename Other_t>
 		static int NodeOther(
 			const MCF_AVL_NODE_HEADER *pAvl1,
 			std::intptr_t nOther
 		) noexcept {
-			ASSERT_NOEXCEPT_BEGIN
-			{
-				const auto pNode1 = DOWN_CAST(const Node, xm_aHeaders[INDEX], pAvl1);
-				return std::less<void>()(std::get<INDEX>(pNode1->xm_vIndices), *(const Other_t *)nOther);
-			}
-			ASSERT_NOEXCEPT_END
+		ASSERT_NOEXCEPT_BEGIN
+			const auto pNode1 = DOWN_CAST(const Node, xm_aHeaders[INDEX], pAvl1);
+			return std::less<void>()(std::get<INDEX>(pNode1->xm_vIndices), *(const Other_t *)nOther);
+		ASSERT_NOEXCEPT_END
 		}
 		template<typename Other_t>
 		static int OtherNode(
 			std::intptr_t nOther,
 			const MCF_AVL_NODE_HEADER *pAvl2
 		) noexcept {
-			ASSERT_NOEXCEPT_BEGIN
-			{
-				const auto pNode2 = DOWN_CAST(const Node, xm_aHeaders[INDEX], pAvl2);
-				return std::less<void>()(*(const Other_t *)nOther, std::get<INDEX>(pNode2->xm_vIndices));
-			}
-			ASSERT_NOEXCEPT_END
+		ASSERT_NOEXCEPT_BEGIN
+			const auto pNode2 = DOWN_CAST(const Node, xm_aHeaders[INDEX], pAvl2);
+			return std::less<void>()(*(const Other_t *)nOther, std::get<INDEX>(pNode2->xm_vIndices));
+		ASSERT_NOEXCEPT_END
 		}
 	};
 

@@ -12,7 +12,6 @@
 using namespace MCFBuild;
 
 constexpr std::size_t FILE_BUFFER_SIZE	= 64 * 0x400;			// 64 KiB
-constexpr std::size_t MAX_FILE_SIZE		= 64 * 0x400 * 0x400;	// 64 MiB
 
 namespace MCFBuild {
 

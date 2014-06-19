@@ -8,57 +8,113 @@
 #include <cstring>
 using namespace MCF;
 
-// 嵌套类定义。
-class StreamBuffer::xBlockHeader {
-public:
-	static xBlockHeaderPtr Create(std::size_t m_uCapacity);
+namespace MCF {
 
-public:
-	xBlockHeaderPtr m_pNext;
+namespace Impl {
+	class DisposableBuffer {
+	private:
+		unsigned short xm_ushRead;
+		unsigned short xm_ushWrite;
+		unsigned char xm_abyData[0x400u];
 
-	std::size_t m_uRead;
-	std::size_t m_uWrite;
-	const std::size_t m_uCapacity;
-	unsigned char m_abyData[];
-
-private:
-	explicit xBlockHeader(std::size_t uCapacity) noexcept
-		: m_pNext		()
-		, m_uRead		(0)
-		, m_uWrite		(0)
-		, m_uCapacity	(uCapacity)
-	{
-	}
-};
-
-inline StreamBuffer::xBlockHeaderPtr StreamBuffer::xBlockHeader::Create(std::size_t uCapacity){
-	struct Helper : public xBlockHeader {
-		explicit Helper(std::size_t uCapacity)
-			: xBlockHeader(uCapacity)
+	public:
+		DisposableBuffer()
+			: xm_ushRead	(0)
+			, xm_ushWrite	(0)
 		{
 		}
-	};
 
-	if(uCapacity < 4096){
-		uCapacity = 4096;
-	}
-	return xBlockHeaderPtr(Construct<Helper>(::operator new(sizeof(Helper) + uCapacity), uCapacity));
+	public:
+		std::size_t GetSize() const noexcept {
+			return (std::size_t)(xm_ushWrite - xm_ushRead);
+		}
+		std::size_t GetFree() const noexcept {
+			return sizeof(xm_abyData) - (std::size_t)xm_ushWrite;
+		}
+		bool IsEmpty() const noexcept {
+			return GetSize() == 0;
+		}
+		bool IsFull() const noexcept {
+			return GetFree() == 0;
+		}
+		void Clear() noexcept {
+			xm_ushRead = 0;
+			xm_ushWrite = 0;
+		}
+
+		unsigned char Get() noexcept {
+			ASSERT(!IsEmpty());
+
+			return xm_abyData[xm_ushRead++];
+		}
+		void Put(unsigned char by) noexcept {
+			ASSERT(!IsFull());
+
+			xm_abyData[xm_ushWrite++] = by;
+		}
+
+		const unsigned char *GetBegin() const noexcept {
+			return xm_abyData + xm_ushRead;
+		}
+		const unsigned char *GetEnd() const noexcept {
+			return xm_abyData + xm_ushWrite;
+		}
+		unsigned char *GetBegin() noexcept {
+			return xm_abyData + xm_ushRead;
+		}
+		unsigned char *GetEnd() noexcept {
+			return xm_abyData + xm_ushWrite;
+		}
+
+		std::size_t CopyOut(unsigned char *&pbyOutput, const unsigned char *pbyEnd) noexcept {
+			const std::size_t uBytesToCopy = std::min(GetSize(), (std::size_t)(pbyEnd - pbyOutput));
+			pbyOutput = CopyN(pbyOutput, xm_abyData + xm_ushRead, uBytesToCopy).first;
+			xm_ushRead += uBytesToCopy;
+			return uBytesToCopy;
+		}
+		std::size_t CopyIn(const unsigned char *&pbyInput, const unsigned char *pbyEnd) noexcept {
+			const std::size_t uBytesToCopy = std::min(GetFree(), (std::size_t)(pbyEnd - pbyInput));
+			pbyInput = CopyN(xm_abyData + xm_ushWrite, pbyInput, uBytesToCopy).second;
+			xm_ushWrite += uBytesToCopy;
+			return uBytesToCopy;
+		}
+		std::size_t Transfer(DisposableBuffer &dst, std::size_t &uToTransfer) noexcept {
+			const std::size_t uBytesToTransfer = std::min(std::min(GetSize(), uToTransfer), dst.GetFree());
+			CopyN(dst.xm_abyData + dst.xm_ushWrite, xm_abyData + xm_ushRead, uBytesToTransfer);
+			dst.xm_ushWrite += uBytesToTransfer;
+			xm_ushRead += uBytesToTransfer;
+			uToTransfer -= uBytesToTransfer;
+			return uBytesToTransfer;
+		}
+		std::size_t Discard(std::size_t &uToDiscard) noexcept {
+			const std::size_t uBytesToDiscard = std::min(GetSize(), uToDiscard);
+			uToDiscard -= uBytesToDiscard;
+			xm_ushRead += uBytesToDiscard;
+			return uBytesToDiscard;
+		}
+
+		void Swap(DisposableBuffer &rhs) noexcept {
+			if((xm_ushRead >= rhs.xm_ushWrite) || (rhs.xm_ushRead >= xm_ushWrite)){
+				Copy(xm_abyData + rhs.xm_ushRead,	rhs.xm_abyData + rhs.xm_ushRead,	rhs.xm_abyData + rhs.xm_ushWrite);
+				Copy(rhs.xm_abyData + xm_ushRead,	xm_abyData + xm_ushRead,			xm_abyData + xm_ushWrite);
+			} else {
+				decltype(xm_abyData) abyTemp;
+
+				Copy(abyTemp + rhs.xm_ushRead,		rhs.xm_abyData + rhs.xm_ushRead,	rhs.xm_abyData + rhs.xm_ushWrite);
+				Copy(rhs.xm_abyData + xm_ushRead,	xm_abyData + xm_ushRead,			xm_abyData + xm_ushWrite);
+				Copy(xm_abyData + rhs.xm_ushRead,	abyTemp + rhs.xm_ushRead,			abyTemp + rhs.xm_ushWrite);
+			}
+			std::swap(xm_ushRead, rhs.xm_ushRead);
+			std::swap(xm_ushWrite, rhs.xm_ushWrite);
+		}
+	};
 }
 
-inline void StreamBuffer::xBlockDeleter::operator()(xBlockHeader *pBlock) noexcept {
-	if(pBlock){
-		pBlock->~xBlockHeader();
-		::operator delete(pBlock);
-	}
 }
 
 // 构造函数和析构函数。
 StreamBuffer::StreamBuffer() noexcept
-	: xm_uSmallRead		(0)
-	, xm_uSmallWrite	(0)
-	, xm_pLargeHead		(nullptr)
-	, xm_pLargeTail		(nullptr)
-	, xm_uSize			(0)
+	: xm_uSize(0)
 {
 }
 StreamBuffer::StreamBuffer(const void *pData, std::size_t uSize)
@@ -95,290 +151,180 @@ std::size_t StreamBuffer::GetSize() const noexcept {
 	return xm_uSize;
 }
 void StreamBuffer::Clear() noexcept {
-	xm_uSmallRead	= 0;
-	xm_uSmallWrite	= 0;
-
-	xm_pLargeHead	= nullptr;
-	xm_pLargeTail	= nullptr;
-	xm_uSize		= 0;
+	xm_lstData.clear();
+	xm_uSize = 0;
 }
 
 int StreamBuffer::Get() noexcept {
-	ASSERT_NOEXCEPT_BEGIN
-	{
-		if(xm_uSmallWrite > xm_uSmallRead){
-			const int nRet = xm_abySmall[xm_uSmallRead];
-			++xm_uSmallRead;
-			--xm_uSize;
-			return nRet;
+ASSERT_NOEXCEPT_BEGIN
+	int nRet = -1;
+	while(!xm_lstData.empty()){
+		if(!xm_lstData.front().IsEmpty()){
+			nRet = xm_lstData.front().Get();
+			break;
 		}
-		if(xm_pLargeHead){
-			for(;;){
-				if(xm_pLargeHead->m_uWrite > xm_pLargeHead->m_uRead){
-					const int nRet = xm_pLargeHead->m_abyData[xm_pLargeHead->m_uRead];
-					++xm_pLargeHead->m_uRead;
-					if(xm_pLargeHead->m_uRead == xm_pLargeHead->m_uWrite){
-						std::exchange(xm_pLargeHead, std::move(xm_pLargeHead->m_pNext));
-					}
-					--xm_uSize;
-					return nRet;
-				}
-				std::exchange(xm_pLargeHead, std::move(xm_pLargeHead->m_pNext));
-
-				if(!xm_pLargeHead){
-					xm_pLargeTail = nullptr;
-					break;
-				}
-			}
-		}
-		return -1;
+		xm_lstData.pop_front();
 	}
-	ASSERT_NOEXCEPT_END
+	--xm_uSize;
+	return nRet;
+ASSERT_NOEXCEPT_END
 }
 int StreamBuffer::Peek() const noexcept {
-	ASSERT_NOEXCEPT_BEGIN
-	{
-		if(xm_uSmallWrite > xm_uSmallRead){
-			return xm_abySmall[xm_uSmallRead];
+ASSERT_NOEXCEPT_BEGIN
+	for(const auto &vCur : xm_lstData){
+		if(!vCur.IsEmpty()){
+			return vCur.GetBegin()[0];
 		}
-		for(auto pBlock = xm_pLargeHead.get(); pBlock; pBlock = pBlock->m_pNext.get()){
-			if(pBlock->m_uWrite > pBlock->m_uRead){
-				return pBlock->m_abyData[pBlock->m_uRead];
-			}
-		}
-		return -1;
 	}
-	ASSERT_NOEXCEPT_END
+	return -1;
+ASSERT_NOEXCEPT_END
 }
+
 void StreamBuffer::Put(unsigned char by){
-	ASSERT_NOEXCEPT_BEGIN
-	{
-		if(sizeof(xm_abySmall) > xm_uSmallWrite){
-			xm_abySmall[xm_uSmallWrite] = by;
-			++xm_uSmallWrite;
-			++xm_uSize;
-			return;
-		}
-		if(xm_pLargeTail && (xm_pLargeTail->m_uCapacity > xm_pLargeTail->m_uWrite)){
-			xm_pLargeTail->m_abyData[xm_pLargeTail->m_uWrite] = by;
-			++xm_pLargeTail->m_uWrite;
-			++xm_uSize;
-			return;
-		}
+	if(xm_lstData.empty() || xm_lstData.back().IsFull()){
+		xm_lstData.emplace_back();
 	}
-	ASSERT_NOEXCEPT_END
 
-	auto pNewBlock = xBlockHeader::Create(1);
-	pNewBlock->m_abyData[0] = by;
-	pNewBlock->m_uWrite = 1;
-
-	ASSERT_NOEXCEPT_BEGIN
-	{
-		const auto pNewTail = pNewBlock.get();
-		if(xm_pLargeHead){
-			ASSERT(xm_pLargeTail);
-
-			xm_pLargeTail->m_pNext = std::move(pNewBlock);
-		} else {
-			xm_pLargeHead = std::move(pNewBlock);
-		}
-		xm_pLargeTail = pNewTail;
-
-		++xm_uSize;
-	}
-	ASSERT_NOEXCEPT_END
+ASSERT_NOEXCEPT_BEGIN
+	xm_lstData.back().Put(by);
+	++xm_uSize;
+ASSERT_NOEXCEPT_END
 }
 
 bool StreamBuffer::Extract(void *pData, std::size_t uSize) noexcept {
+ASSERT_NOEXCEPT_BEGIN
 	if(uSize > xm_uSize){
 		return false;
 	}
 
-	ASSERT_NOEXCEPT_BEGIN
-	{
+	if(pData){
 		auto pbyWrite = (unsigned char *)pData;
-		if(xm_uSmallWrite - xm_uSmallRead >= uSize){
-			std::memcpy(pbyWrite, xm_abySmall + xm_uSmallRead, uSize);
-			xm_uSmallRead += uSize;
-			xm_uSize -= uSize;
-			return true;
-		}
-
 		const auto pbyEnd = pbyWrite + uSize;
-		std::memcpy(pbyWrite, xm_abySmall + xm_uSmallRead, xm_uSmallWrite - xm_uSmallRead);
-		pbyWrite += (xm_uSmallWrite - xm_uSmallRead);
-		xm_uSmallRead = xm_uSmallWrite;
-
 		for(;;){
-			ASSERT(xm_pLargeHead);
+			ASSERT(!xm_lstData.empty());
 
-			const auto uRemaining = (std::size_t)(pbyEnd - pbyWrite);
-			const auto uBlockSize = xm_pLargeHead->m_uWrite - xm_pLargeHead->m_uRead;
-			if(uBlockSize >= uRemaining){
-				std::memcpy(pbyWrite, xm_pLargeHead->m_abyData + xm_pLargeHead->m_uRead, uSize);
-				xm_pLargeHead->m_uRead += uSize;
-				if(xm_pLargeHead->m_uRead == xm_pLargeHead->m_uWrite){
-					std::exchange(xm_pLargeHead, std::move(xm_pLargeHead->m_pNext));
-				}
-				xm_uSize -= uSize;
-				return true;
+			xm_uSize -= xm_lstData.front().CopyOut(pbyWrite, pbyEnd);
+			if(pbyWrite == pbyEnd){
+				break;
 			}
-			std::memcpy(pbyWrite, xm_pLargeHead->m_abyData + xm_pLargeHead->m_uRead, uBlockSize);
-			pbyWrite += uBlockSize;
-			std::exchange(xm_pLargeHead, std::move(xm_pLargeHead->m_pNext));
+
+			ASSERT(xm_lstData.front().IsEmpty());
+			xm_lstData.pop_front();
+		}
+	} else {
+		std::size_t uToDiscard = uSize;
+		for(;;){
+			ASSERT(!xm_lstData.empty());
+
+			xm_uSize -= xm_lstData.front().Discard(uToDiscard);
+			if(uToDiscard == 0){
+				break;
+			}
+
+			ASSERT(xm_lstData.front().IsEmpty());
+			xm_lstData.pop_front();
 		}
 	}
-	ASSERT_NOEXCEPT_END
+	return true;
+ASSERT_NOEXCEPT_END
 }
 void StreamBuffer::Insert(const void *pData, std::size_t uSize){
-	const auto pbyRead = (const unsigned char *)pData;
+	auto pbyRead = (const unsigned char *)pData;
+	const auto pbyEnd = pbyRead + uSize;
 
-	ASSERT_NOEXCEPT_BEGIN
-	{
-		if(sizeof(xm_abySmall) - xm_uSmallWrite >= uSize){
-			std::memcpy(xm_abySmall + xm_uSmallWrite, pbyRead, uSize);
-			xm_uSmallWrite += uSize;
-			xm_uSize += uSize;
-			return;
-		}
-		if(xm_pLargeTail && (xm_pLargeTail->m_uCapacity - xm_pLargeTail->m_uWrite >= uSize)){
-			std::memcpy(xm_pLargeTail->m_abyData + xm_pLargeTail->m_uWrite, pbyRead, uSize);
-			xm_pLargeTail->m_uWrite += uSize;
-			xm_uSize += uSize;
-			return;
-		}
+	std::list<Impl::DisposableBuffer> lstTemp;
+	while(pbyRead != pbyEnd){
+		lstTemp.emplace_back();
+
+ASSERT_NOEXCEPT_BEGIN
+		xm_uSize += lstTemp.back().CopyIn(pbyRead, pbyEnd);
+		xm_lstData.splice(xm_lstData.end(), lstTemp);
+ASSERT_NOEXCEPT_END
 	}
-	ASSERT_NOEXCEPT_END
-
-	auto pNewBlock = xBlockHeader::Create(uSize);
-	std::memcpy(pNewBlock->m_abyData, pbyRead, uSize);
-	pNewBlock->m_uWrite = uSize;
-
-	ASSERT_NOEXCEPT_BEGIN
-	{
-		const auto pNewTail = pNewBlock.get();
-		if(xm_pLargeHead){
-			ASSERT(xm_pLargeTail);
-
-			xm_pLargeTail->m_pNext = std::move(pNewBlock);
-		} else {
-			xm_pLargeHead = std::move(pNewBlock);
-		}
-		xm_pLargeTail = pNewTail;
-
-		xm_uSize += uSize;
-	}
-	ASSERT_NOEXCEPT_END
 }
 
+bool StreamBuffer::CutOut(StreamBuffer &sbufHead, std::size_t uSize){
+	if(uSize > xm_uSize){
+		return false;
+	}
+
+	StreamBuffer sbufTemp;
+	auto uRemaining = uSize;
+	if(uRemaining != 0){
+		std::size_t uToSplice = 0;
+		auto itLast = xm_lstData.begin();
+		for(;;){
+			ASSERT(itLast != xm_lstData.end());
+
+			const auto uLastSize = itLast->GetSize();
+			if(uRemaining - uToSplice < uLastSize){
+				break;
+			}
+			uToSplice += uLastSize;
+			++itLast;
+		}
+
+	ASSERT_NOEXCEPT_BEGIN
+		sbufTemp.xm_lstData.splice(sbufTemp.xm_lstData.end(), xm_lstData, xm_lstData.begin(), itLast);
+		uRemaining -= uToSplice;
+		xm_uSize -= uToSplice;
+		sbufTemp.xm_uSize += uToSplice;
+	ASSERT_NOEXCEPT_END
+
+		if(uRemaining != 0){
+			sbufTemp.xm_lstData.emplace_back();
+
+		ASSERT_NOEXCEPT_BEGIN
+			const auto uTransferred = itLast->Transfer(sbufTemp.xm_lstData.back(), uRemaining);
+			xm_uSize -= uTransferred;
+			sbufTemp.xm_uSize += uTransferred;
+		ASSERT_NOEXCEPT_END
+
+			ASSERT(uRemaining == 0);
+		}
+	}
+	sbufHead = std::move(sbufTemp);
+	return true;
+}
 void StreamBuffer::Append(const StreamBuffer &rhs){
-	const auto uDeltaSize = rhs.GetSize();
-	auto pNewBlock = xBlockHeader::Create(uDeltaSize);
-	rhs.Traverse(
-		[&](auto pbyData, auto uSize) noexcept {
-			ASSERT(pNewBlock->m_uCapacity - pNewBlock->m_uWrite >= uSize);
+	std::list<Impl::DisposableBuffer> lstTemp(rhs.xm_lstData);
 
-			std::memcpy(pNewBlock->m_abyData + pNewBlock->m_uWrite, pbyData, uSize);
-			pNewBlock->m_uWrite += uSize;
-		}
-	);
-
-	ASSERT_NOEXCEPT_BEGIN
-	{
-		const auto pNewTail = pNewBlock.get();
-		if(xm_pLargeHead){
-			ASSERT(xm_pLargeTail);
-
-			xm_pLargeTail->m_pNext = std::move(pNewBlock);
-		} else {
-			xm_pLargeHead = std::move(pNewBlock);
-		}
-		xm_pLargeTail = pNewTail;
-
-		xm_uSize += uDeltaSize;
-	}
-	ASSERT_NOEXCEPT_END
+ASSERT_NOEXCEPT_BEGIN
+	xm_lstData.splice(xm_lstData.end(), lstTemp);
+	xm_uSize += rhs.xm_uSize;
+ASSERT_NOEXCEPT_END
 }
-void StreamBuffer::Append(StreamBuffer &&rhs){
+void StreamBuffer::Append(StreamBuffer &&rhs) noexcept {
 	if(&rhs == this){
 		return Append(rhs);
 	}
 
-	const auto uSmallSize = rhs.xm_uSmallWrite - rhs.xm_uSmallRead;
-	Insert(rhs.xm_abySmall, uSmallSize);
+	std::list<Impl::DisposableBuffer> lstTemp;
 
-	ASSERT_NOEXCEPT_BEGIN
-	{
-		if(xm_pLargeHead){
-			ASSERT(xm_pLargeTail);
-
-			xm_pLargeTail->m_pNext = std::move(rhs.xm_pLargeHead);
-		} else {
-			xm_pLargeHead = std::move(rhs.xm_pLargeHead);
-		}
-		xm_pLargeTail = rhs.xm_pLargeTail;
-
-		xm_uSize += (rhs.xm_uSize - uSmallSize);
-		rhs.Clear();
-	}
-	ASSERT_NOEXCEPT_END
-}
-bool StreamBuffer::CutOut(StreamBuffer &sbufHead, std::size_t uSize){
-	StreamBuffer sbufTemp;
-
-	unsigned char *pbyWrite;
-	std::size_t *puWrite;
-	if(uSize <= sizeof(xm_abySmall)){
-		pbyWrite = sbufTemp.xm_abySmall;
-		puWrite = &(sbufTemp.xm_uSmallWrite);
-	} else {
-		sbufTemp.xm_pLargeHead = xBlockHeader::Create(uSize);
-		sbufTemp.xm_pLargeTail = sbufTemp.xm_pLargeHead.get();
-
-		pbyWrite = sbufTemp.xm_pLargeHead->m_abyData;
-		puWrite = &(sbufTemp.xm_pLargeHead->m_uWrite);
-	}
-	if(!Extract(pbyWrite, uSize)){
-		return false;
-	}
-	*puWrite = uSize;
-	sbufTemp.xm_uSize = uSize;
-
-	sbufHead = std::move(sbufTemp);
-	return true;
+ASSERT_NOEXCEPT_BEGIN
+	xm_lstData.splice(xm_lstData.end(), lstTemp);
+	xm_lstData.splice(xm_lstData.end(), rhs.xm_lstData);
+	xm_uSize += rhs.xm_uSize;
+	rhs.Clear();
+ASSERT_NOEXCEPT_END
 }
 
 void StreamBuffer::Swap(StreamBuffer &rhs) noexcept {
-	ASSERT_NOEXCEPT_BEGIN
-	{
-		std::swap(xm_abySmall,		rhs.xm_abySmall);
-		std::swap(xm_uSmallRead,	rhs.xm_uSmallRead);
-		std::swap(xm_uSmallWrite,	rhs.xm_uSmallWrite);
-
-		std::swap(xm_pLargeHead,	rhs.xm_pLargeHead);
-		std::swap(xm_pLargeTail,	rhs.xm_pLargeTail);
-		std::swap(xm_uSize,			rhs.xm_uSize);
-	}
-	ASSERT_NOEXCEPT_END
+	std::swap(xm_lstData, rhs.xm_lstData);
+	std::swap(xm_uSize, rhs.xm_uSize);
 }
 
 void StreamBuffer::Traverse(const std::function<void (const unsigned char *, std::size_t)> &fnCallback) const {
-	if(xm_uSmallWrite > xm_uSmallRead){
-		fnCallback(xm_abySmall + xm_uSmallRead, xm_uSmallWrite - xm_uSmallRead);
-	}
-	for(auto pBlock = xm_pLargeHead.get(); pBlock; pBlock = pBlock->m_pNext.get()){
-		if(pBlock->m_uWrite > pBlock->m_uRead){
-			fnCallback(pBlock->m_abyData + pBlock->m_uRead, pBlock->m_uWrite - pBlock->m_uRead);
+	for(const auto &vCur : xm_lstData){
+		if(!vCur.IsEmpty()){
+			fnCallback(vCur.GetBegin(), vCur.GetSize());
 		}
 	}
 }
 void StreamBuffer::Traverse(const std::function<void (unsigned char *, std::size_t)> &fnCallback){
-	if(xm_uSmallWrite > xm_uSmallRead){
-		fnCallback(xm_abySmall + xm_uSmallRead, xm_uSmallWrite - xm_uSmallRead);
-	}
-	for(auto pBlock = xm_pLargeHead.get(); pBlock; pBlock = pBlock->m_pNext.get()){
-		if(pBlock->m_uWrite > pBlock->m_uRead){
-			fnCallback(pBlock->m_abyData + pBlock->m_uRead, pBlock->m_uWrite - pBlock->m_uRead);
+	for(auto &vCur : xm_lstData){
+		if(!vCur.IsEmpty()){
+			fnCallback(vCur.GetBegin(), vCur.GetSize());
 		}
 	}
 }

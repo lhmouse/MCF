@@ -6,34 +6,24 @@
 #define MCF_STREAM_BUFFER_HPP_
 
 #include "Utilities.hpp"
-#include <memory>
+#include <list>
 #include <functional>
 #include <iterator>
 #include <cstddef>
 
 namespace MCF {
 
+namespace Impl {
+	class DisposableBuffer;
+}
+
 class StreamBuffer {
-private:
-	class xBlockHeader;
-
-	struct xBlockDeleter {
-		void operator()(xBlockHeader *pBlock) noexcept;
-	};
-
-	typedef std::unique_ptr<xBlockHeader, xBlockDeleter> xBlockHeaderPtr;
-
 public:
 	class ReadIterator;
 	class WriteIterator;
 
 private:
-	unsigned char xm_abySmall[0x100u];
-	std::size_t xm_uSmallRead;
-	std::size_t xm_uSmallWrite;
-
-	xBlockHeaderPtr xm_pLargeHead;
-	xBlockHeader *xm_pLargeTail;
+	std::list<Impl::DisposableBuffer> xm_lstData;
 	std::size_t xm_uSize;
 
 public:
@@ -56,15 +46,16 @@ public:
 	int Peek() const noexcept;
 	void Put(unsigned char by);
 
-	// 要么就从头部读取并删除 uSize 个字节并返回 true，要么就返回 false。
-	// 没有只读取一半的情况。
+	// 要么就从头部读取并删除 uSize 个字节并返回 true，要么就返回 false，没有只读取一半的情况。
+	// pData 可以为空。
 	bool Extract(void *pData, std::size_t uSize) noexcept;
 	// 追加 uSize 个字节。
 	void Insert(const void *pData, std::size_t uSize);
 
-	void Append(const StreamBuffer &rhs);
-	void Append(StreamBuffer &&rhs);
+	// 同 Extract()。
 	bool CutOut(StreamBuffer &sbufHead, std::size_t uSize);
+	void Append(const StreamBuffer &rhs);
+	void Append(StreamBuffer &&rhs) noexcept;
 
 	void Swap(StreamBuffer &rhs) noexcept;
 

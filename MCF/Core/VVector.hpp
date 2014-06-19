@@ -669,7 +669,7 @@ public:
 	}
 	template<class Iterator_t>
 	void CopyToEndNoCheck(Iterator_t itBegin, Iterator_t itEnd)
-		noexcept(noexcept(PushNoCheck(*std::declval<Iterator_t>())))
+		noexcept(std::is_nothrow_constructible<Element_t, decltype(*std::declval<Iterator_t>())>::value)
 	{
 		auto itCur = itBegin;
 		while(itCur != itEnd){
@@ -679,7 +679,7 @@ public:
 	}
 	template<class Iterator_t>
 	void CopyToEndNoCheck(Iterator_t itBegin, std::size_t uCount)
-		noexcept(noexcept(PushNoCheck(*std::declval<Iterator_t>())))
+		noexcept(std::is_nothrow_constructible<Element_t, decltype(*std::declval<Iterator_t>())>::value)
 	{
 		auto itCur = itBegin;
 		for(std::size_t i = 0; i < uCount; ++i){

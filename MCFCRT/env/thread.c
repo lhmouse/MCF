@@ -489,16 +489,16 @@ void *MCF_CRT_CreateThread(
 
 static __attribute__((__cdecl__, __used__, __noreturn__)) DWORD AlignedCRTThreadProc(LPVOID pParam){
 	DWORD dwExitCode;
-__MCF_EH_TOP_BEGIN
+	__MCF_EH_TOP_BEGIN
+	{
+		const THREAD_INIT_INFO vInitInfo = *(THREAD_INIT_INFO *)pParam;
+		free(pParam);
 
-	const THREAD_INIT_INFO vInitInfo = *(THREAD_INIT_INFO *)pParam;
-	free(pParam);
+		__MCF_CRT_FEnvInit();
 
-	__MCF_CRT_FEnvInit();
-
-	dwExitCode = (*vInitInfo.pfnProc)(vInitInfo.nParam);
-
-__MCF_EH_TOP_END
+		dwExitCode = (*vInitInfo.pfnProc)(vInitInfo.nParam);
+	}
+	__MCF_EH_TOP_END
 	ExitThread(dwExitCode);
 	__builtin_trap();
 }

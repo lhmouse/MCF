@@ -19,36 +19,36 @@ extern void MCFDll_OnThreadDetach();
 
 static __attribute__((__cdecl__, __used__)) BOOL AlignedStartup(HINSTANCE hDll, DWORD dwReason, LPVOID pReserved){
 	BOOL bRet = FALSE;
-__MCF_EH_TOP_BEGIN
+	__MCF_EH_TOP_BEGIN
+	{
+		switch(dwReason){
+		case DLL_PROCESS_ATTACH:
+			if(!__MCF_CRT_BeginModule()){
+				break;
+			}
+			if(!MCFDll_OnProcessAttach(!pReserved)){
+				break;
+			}
+			bRet = TRUE;
+			break;
 
-	switch(dwReason){
-	case DLL_PROCESS_ATTACH:
-		if(!__MCF_CRT_BeginModule()){
+		case DLL_PROCESS_DETACH:
+			MCFDll_OnProcessDetach(!pReserved);
+			__MCF_CRT_EndModule();
+			break;
+
+		case DLL_THREAD_ATTACH:
+			MCFDll_OnThreadAttach();
+			__MCF_CRT_TlsCallback(hDll, dwReason, pReserved);
+			break;
+
+		case DLL_THREAD_DETACH:
+			__MCF_CRT_TlsCallback(hDll, dwReason, pReserved);
+			MCFDll_OnThreadDetach();
 			break;
 		}
-		if(!MCFDll_OnProcessAttach(!pReserved)){
-			break;
-		}
-		bRet = TRUE;
-		break;
-
-	case DLL_PROCESS_DETACH:
-		MCFDll_OnProcessDetach(!pReserved);
-		__MCF_CRT_EndModule();
-		break;
-
-	case DLL_THREAD_ATTACH:
-		MCFDll_OnThreadAttach();
-		__MCF_CRT_TlsCallback(hDll, dwReason, pReserved);
-		break;
-
-	case DLL_THREAD_DETACH:
-		__MCF_CRT_TlsCallback(hDll, dwReason, pReserved);
-		MCFDll_OnThreadDetach();
-		break;
 	}
-
-__MCF_EH_TOP_END
+	__MCF_EH_TOP_END
 	return bRet;
 }
 

@@ -36,15 +36,15 @@ extern unsigned int MCFMain();
 
 static __attribute__((__cdecl__, __used__, __noreturn__)) int AlignedStartup(){
 	DWORD dwExitCode;
-__MCF_EH_TOP_BEGIN
-
-	if(!__MCF_CRT_BeginModule()){
-		MCF_CRT_BailF(L"MCFCRT 初始化失败。\n\n错误代码：%lu", (unsigned long)GetLastError());
+	__MCF_EH_TOP_BEGIN
+	{
+		if(!__MCF_CRT_BeginModule()){
+			MCF_CRT_BailF(L"MCFCRT 初始化失败。\n\n错误代码：%lu", (unsigned long)GetLastError());
+		}
+		dwExitCode = MCFMain();
+		__MCF_CRT_EndModule();
 	}
-	dwExitCode = MCFMain();
-	__MCF_CRT_EndModule();
-
-__MCF_EH_TOP_END
+	__MCF_EH_TOP_END
 	ExitProcess(dwExitCode);
 	__builtin_trap();
 }

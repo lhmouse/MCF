@@ -13,37 +13,6 @@
 #include "../ext/unref_param.h"
 #include <stdlib.h>
 
-// Tls 回调。
-static void CALLBACK TlsCleanupCallback(LPVOID hModule, DWORD dwReason, PVOID pReserved);
-
-#define MCF_SECTION(x)	__attribute__((__section__(x), __used__))
-
-MCF_SECTION(".CRT$XL@") PIMAGE_TLS_CALLBACK vCallbackAt	= &TlsCleanupCallback;
-MCF_SECTION(".CRT$XL_") PIMAGE_TLS_CALLBACK vCallback_	= NULL;
-
-DWORD _tls_index = 0;
-
-MCF_SECTION(".tls$@@@") unsigned char _tls_start	= 0;
-MCF_SECTION(".tls$___") unsigned char _tls_end		= 0;
-
-MCF_SECTION(".tls") const IMAGE_TLS_DIRECTORY _tls_used = {
-	.StartAddressOfRawData	= (UINT_PTR)&_tls_start,
-	.EndAddressOfRawData	= (UINT_PTR)&_tls_end,
-	.AddressOfIndex			= (UINT_PTR)&_tls_index,
-	.AddressOfCallBacks		= (UINT_PTR)&vCallbackAt,
-	.SizeOfZeroFill			= 0,
-	.Characteristics		= 0
-};
-
-static void CALLBACK TlsCleanupCallback(LPVOID hModule, DWORD dwReason, PVOID pReserved){
-	UNREF_PARAM(hModule);
-	UNREF_PARAM(pReserved);
-
-	if(dwReason == DLL_THREAD_DETACH){
-		__MCF_CRT_TlsCleanup();
-	}
-}
-
 // 结构定义。
 // 全局的用于描述已分配的 Tls 键的结构。
 typedef struct tagTlsKey {
@@ -77,6 +46,8 @@ typedef struct tagTlsMap {
 	SRWLOCK srwLock;
 	MCF_AVL_ROOT pavlObjects;
 	struct tagTlsObject *pLastInThread;
+	struct tagTlsMap *pPrevMap;
+	struct tagTlsMap *pNextMap;
 } TLS_MAP;
 
 // 用于描述每个线程内的每个 Tls 对象的结构。
@@ -116,6 +87,7 @@ static int ObjectComparatorKeyNode(
 static DWORD		g_dwTlsIndex	= TLS_OUT_OF_INDEXES;
 
 static SRWLOCK		g_srwLock		= SRWLOCK_INIT;
+static TLS_MAP *	g_pLastMap		= NULL;
 static MCF_AVL_ROOT	g_pavlKeys		= NULL;
 
 bool __MCF_CRT_TlsEnvInit(){
@@ -126,85 +98,88 @@ bool __MCF_CRT_TlsEnvInit(){
 	return true;
 }
 void __MCF_CRT_TlsEnvUninit(){
-	__MCF_CRT_TlsCleanup();
-
 	if(g_pavlKeys){
 		TLS_KEY *pKey = (TLS_KEY *)MCF_AvlFront(&g_pavlKeys);
 		do {
 			TLS_OBJECT *pObject = pKey->pLastByKey;
 			while(pObject){
-				AcquireSRWLockExclusive(&(pObject->pMap->srwLock));
-				{
-					TLS_OBJECT *const pPrevInThread = pObject->pPrevInThread;
-					TLS_OBJECT *const pNextInThread = pObject->pNextInThread;
-					if(pPrevInThread){
-						pPrevInThread->pNextInThread = pNextInThread;
-					}
-					if(pNextInThread){
-						pNextInThread->pPrevInThread = pPrevInThread;
-					}
-
-					if(pObject->pMap->pLastInThread == pObject){
-						pObject->pMap->pLastInThread = pPrevInThread;
-					}
-				}
-				ReleaseSRWLockExclusive(&(pObject->pMap->srwLock));
-
-				if(pObject->pKey->pfnCallback){
-					(*(pObject->pKey->pfnCallback))(pObject->nValue);
-				}
-
 				TLS_OBJECT *const pPrev = pObject->pPrevByKey;
 				free(pObject);
 				pObject = pPrev;
 			}
 
-			TLS_KEY *const pNext = (TLS_KEY *)MCF_AvlNext((MCF_AVL_NODE_HEADER *)pKey);;
+			TLS_KEY *const pNext = (TLS_KEY *)MCF_AvlNext((MCF_AVL_NODE_HEADER *)pKey);
 			free(pKey);
 			pKey = pNext;
 		} while(pKey);
+	}
+	while(g_pLastMap){
+		TLS_MAP *const pPrev = g_pLastMap->pPrevMap;
+		free(g_pLastMap);
+		g_pLastMap = pPrev;
 	}
 
 	TlsFree(g_dwTlsIndex);
 	g_dwTlsIndex = TLS_OUT_OF_INDEXES;
 }
 
-void __MCF_CRT_TlsCleanup(){
-	TLS_MAP *const pMap = TlsGetValue(g_dwTlsIndex);
-	if(pMap){
-		TLS_OBJECT *pObject = pMap->pLastInThread;
-		while(pObject){
-			AcquireSRWLockExclusive(&g_srwLock);
-			{
-				TLS_OBJECT *const pPrevByKey = pObject->pPrevByKey;
-				TLS_OBJECT *const pNextByKey = pObject->pNextByKey;
-				if(pPrevByKey){
-					pPrevByKey->pNextByKey = pNextByKey;
+__attribute__((__stdcall__)) void __MCF_CRT_TlsCallback(void *hModule, unsigned long ulReason, void *pReserved){
+	UNREF_PARAM(hModule);
+	UNREF_PARAM(pReserved);
+
+	if(ulReason == DLL_THREAD_DETACH){
+		TLS_MAP *const pMap = TlsGetValue(g_dwTlsIndex);
+		if(pMap){
+			TLS_OBJECT *pObject = pMap->pLastInThread;
+			while(pObject){
+				AcquireSRWLockExclusive(&g_srwLock);
+				{
+					TLS_OBJECT *const pPrevByKey = pObject->pPrevByKey;
+					TLS_OBJECT *const pNextByKey = pObject->pNextByKey;
+					if(pPrevByKey){
+						pPrevByKey->pNextByKey = pNextByKey;
+					}
+					if(pNextByKey){
+						pNextByKey->pPrevByKey = pPrevByKey;
+					}
+
+					if(pObject->pKey->pLastByKey == pObject){
+						pObject->pKey->pLastByKey = pPrevByKey;
+					}
 				}
-				if(pNextByKey){
-					pNextByKey->pPrevByKey = pPrevByKey;
+				ReleaseSRWLockExclusive(&g_srwLock);
+
+				if(pObject->pKey->pfnCallback){
+					(*(pObject->pKey->pfnCallback))(pObject->nValue);
 				}
 
-				if(pObject->pKey->pLastByKey == pObject){
-					pObject->pKey->pLastByKey = pPrevByKey;
+				TLS_OBJECT *const pPrev = pObject->pPrevInThread;
+				free(pObject);
+				pObject = pPrev;
+			}
+
+			AcquireSRWLockExclusive(&g_srwLock);
+			{
+				TLS_MAP *const pPrevMap = pMap->pPrevMap;
+				TLS_MAP *const pNextMap = pMap->pNextMap;
+				if(pPrevMap){
+					pPrevMap->pNextMap = pNextMap;
+				}
+				if(pNextMap){
+					pNextMap->pPrevMap = pPrevMap;
+				}
+				if(g_pLastMap == pMap){
+					g_pLastMap = pPrevMap;
 				}
 			}
 			ReleaseSRWLockExclusive(&g_srwLock);
 
-			if(pObject->pKey->pfnCallback){
-				(*(pObject->pKey->pfnCallback))(pObject->nValue);
-			}
-
-			TLS_OBJECT *const pPrev = pObject->pPrevInThread;
-			free(pObject);
-			pObject = pPrev;
+			free(pMap);
+			TlsSetValue(g_dwTlsIndex, NULL);
 		}
 
-		free(pMap);
-		TlsSetValue(g_dwTlsIndex, NULL);
+		__MCF_CRT_RunEmutlsDtors();
 	}
-
-	__MCF_CRT_RunEmutlsDtors();
 }
 
 uintptr_t MCF_CRT_AtThreadExit(void (*pfnProc)(intptr_t), intptr_t nContext){
@@ -320,129 +295,8 @@ bool MCF_CRT_TlsGet(uintptr_t uKey, intptr_t *pnValue){
 
 	return bRet;
 }
-bool MCF_CRT_TlsReset(uintptr_t uKey, intptr_t nNewValue){
-	TLS_KEY *const pKey = (TLS_KEY *)uKey;
 
-#ifndef NDEBUG
-	AcquireSRWLockShared(&g_srwLock);
-	{
-		TLS_KEY *const pTestKey = (TLS_KEY *)MCF_AvlFind(
-			&g_pavlKeys,
-			(intptr_t)pKey,
-			&KeyComparatorNodeKey,
-			&KeyComparatorKeyNode
-		);
-		ASSERT(pTestKey && (pTestKey == pKey));
-	}
-	ReleaseSRWLockShared(&g_srwLock);
-#endif
-
-	TLS_MAP *pMap = TlsGetValue(g_dwTlsIndex);
-	if(!pMap){
-		pMap = malloc(sizeof(TLS_MAP));
-		if(!pMap){
-			return false;
-		}
-		const SRWLOCK vLockInit = SRWLOCK_INIT;
-		pMap->srwLock		= vLockInit;
-		pMap->pavlObjects	= NULL;
-		pMap->pLastInThread	= NULL;
-
-		TlsSetValue(g_dwTlsIndex, pMap);
-	}
-
-	void (*pfnCallback)(intptr_t) = NULL;
-	intptr_t nOldValue;
-
-	AcquireSRWLockExclusive(&(pMap->srwLock));
-	{
-		TLS_OBJECT *pObject = (TLS_OBJECT *)MCF_AvlFind(
-			&(pMap->pavlObjects),
-			(intptr_t)pKey,
-			&ObjectComparatorNodeKey,
-			&ObjectComparatorKeyNode
-		);
-		if(pObject){
-			ASSERT(pObject->pMap == pMap);
-			ASSERT(pObject->pKey == pKey);
-
-			pfnCallback = pObject->pKey->pfnCallback;
-			nOldValue = pObject->nValue;
-
-			TLS_OBJECT *const pPrevByKey = pObject->pPrevByKey;
-			TLS_OBJECT *const pNextByKey = pObject->pNextByKey;
-			if(pPrevByKey){
-				pPrevByKey->pNextByKey = pNextByKey;
-			}
-			if(pNextByKey){
-				pNextByKey->pPrevByKey = pPrevByKey;
-			}
-			if(pKey->pLastByKey == pObject){
-				pKey->pLastByKey = pPrevByKey;
-			}
-
-			TLS_OBJECT *const pPrevInThread = pObject->pPrevInThread;
-			TLS_OBJECT *const pNextInThread = pObject->pNextInThread;
-			if(pPrevInThread){
-				pPrevInThread->pNextInThread = pNextInThread;
-			}
-			if(pNextInThread){
-				pNextInThread->pPrevInThread = pPrevInThread;
-			}
-			if(pMap->pLastInThread == pObject){
-				pMap->pLastInThread = pPrevInThread;
-			}
-
-			pObject->nValue	= nNewValue;
-		} else {
-			ReleaseSRWLockExclusive(&(pMap->srwLock));
-			{
-				pObject = malloc(sizeof(TLS_OBJECT));
-				if(!pObject){
-					return false;
-				}
-				pObject->pMap	= pMap;
-				pObject->pKey	= pKey;
-				pObject->nValue	= nNewValue;
-
-				MCF_AvlAttach(
-					&(pMap->pavlObjects),
-					(MCF_AVL_NODE_HEADER *)pObject,
-					&ObjectComparatorNodes
-				);
-			}
-			AcquireSRWLockExclusive(&(pMap->srwLock));
-		}
-
-		AcquireSRWLockExclusive(&g_srwLock);
-		{
-			TLS_OBJECT *const pPrevByKey = pKey->pLastByKey;
-			pKey->pLastByKey = pObject;
-			if(pPrevByKey){
-				pPrevByKey->pNextByKey = pObject;
-			}
-			pObject->pPrevByKey	= pPrevByKey;
-			pObject->pNextByKey	= NULL;
-		}
-		ReleaseSRWLockExclusive(&g_srwLock);
-
-		TLS_OBJECT *const pPrevInThread = pMap->pLastInThread;
-		pMap->pLastInThread = pObject;
-		if(pPrevInThread){
-			pPrevInThread->pNextInThread = pObject;
-		}
-		pObject->pPrevInThread	= pPrevInThread;
-		pObject->pNextInThread	= NULL;
-	}
-	ReleaseSRWLockExclusive(&(pMap->srwLock));
-
-	if(pfnCallback){
-		(*pfnCallback)(nOldValue);
-	}
-
-	return true;
-}
-int MCF_CRT_TlsExchange(uintptr_t uKey, intptr_t *pnOldValue, intptr_t nNewValue){
+static int TlsExchange(uintptr_t uKey, void (**ppfnCallback)(intptr_t), intptr_t *pnOldValue, intptr_t nNewValue){
 	TLS_KEY *const pKey = (TLS_KEY *)uKey;
 
 #ifndef NDEBUG
@@ -469,6 +323,18 @@ int MCF_CRT_TlsExchange(uintptr_t uKey, intptr_t *pnOldValue, intptr_t nNewValue
 		pMap->srwLock		= vLockInit;
 		pMap->pavlObjects	= NULL;
 		pMap->pLastInThread	= NULL;
+		pMap->pNextMap		= NULL;
+
+		AcquireSRWLockExclusive(&g_srwLock);
+		{
+			TLS_MAP *const pPrevMap = g_pLastMap;
+			g_pLastMap = pMap;
+			pMap->pPrevMap = pPrevMap;
+			if(pPrevMap){
+				pPrevMap->pNextMap = pMap;
+			}
+		}
+		ReleaseSRWLockExclusive(&g_srwLock);
 
 		TlsSetValue(g_dwTlsIndex, pMap);
 	}
@@ -487,6 +353,9 @@ int MCF_CRT_TlsExchange(uintptr_t uKey, intptr_t *pnOldValue, intptr_t nNewValue
 			ASSERT(pObject->pMap == pMap);
 			ASSERT(pObject->pKey == pKey);
 
+			if(ppfnCallback){
+				*ppfnCallback = pObject->pKey->pfnCallback;
+			}
 			*pnOldValue = pObject->nValue;
 
 			TLS_OBJECT *const pPrevByKey = pObject->pPrevByKey;
@@ -515,13 +384,13 @@ int MCF_CRT_TlsExchange(uintptr_t uKey, intptr_t *pnOldValue, intptr_t nNewValue
 
 			pObject->nValue	= nNewValue;
 
-			nRet = 2;
+			nRet = 1;
 		} else {
 			ReleaseSRWLockExclusive(&(pMap->srwLock));
 			{
 				pObject = malloc(sizeof(TLS_OBJECT));
 				if(!pObject){
-					return 0;
+					return false;
 				}
 				pObject->pMap	= pMap;
 				pObject->pKey	= pKey;
@@ -535,7 +404,7 @@ int MCF_CRT_TlsExchange(uintptr_t uKey, intptr_t *pnOldValue, intptr_t nNewValue
 			}
 			AcquireSRWLockExclusive(&(pMap->srwLock));
 
-			nRet = 1;
+			nRet = 2;
 		}
 
 		AcquireSRWLockExclusive(&g_srwLock);
@@ -561,6 +430,25 @@ int MCF_CRT_TlsExchange(uintptr_t uKey, intptr_t *pnOldValue, intptr_t nNewValue
 	ReleaseSRWLockExclusive(&(pMap->srwLock));
 
 	return nRet;
+}
+
+bool MCF_CRT_TlsReset(uintptr_t uKey, intptr_t nNewValue){
+	void (*pfnCallback)(intptr_t);
+	intptr_t nOldValue;
+	switch(TlsExchange(uKey, &pfnCallback, &nOldValue, nNewValue)){
+	case 1:
+		if(pfnCallback){
+			(*pfnCallback)(nOldValue);
+		}
+	case 2:
+		return true;
+
+	default:
+		return false;
+	}
+}
+int MCF_CRT_TlsExchange(uintptr_t uKey, intptr_t *pnOldValue, intptr_t nNewValue){
+	return TlsExchange(uKey, NULL, pnOldValue, nNewValue);
 }
 
 typedef struct tagThreadInitInfo {

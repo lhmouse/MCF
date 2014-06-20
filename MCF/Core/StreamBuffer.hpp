@@ -13,17 +13,16 @@
 
 namespace MCF {
 
-namespace Impl {
-	class DisposableBuffer;
-}
-
 class StreamBuffer {
+private:
+	class xDisposableBuffer;
+
 public:
 	class ReadIterator;
 	class WriteIterator;
 
 private:
-	std::list<Impl::DisposableBuffer> xm_lstData;
+	std::list<xDisposableBuffer> xm_lstData;
 	std::size_t xm_uSize;
 
 public:

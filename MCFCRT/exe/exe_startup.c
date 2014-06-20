@@ -5,13 +5,34 @@
 #include "../env/mcfwin.h"
 #include "../env/bail.h"
 #include "../env/module.h"
+#include "../env/thread.h"
 #include "../env/_eh_top.h"
 
 // -static -Wl,-e__MCF_DllStartup,--disable-runtime-pseudo-reloc,--disable-auto-import
 
-extern unsigned int MCFMain();
-
 #pragma GCC optimize "-fno-function-sections"
+#pragma GCC optimize "-fno-data-sections"
+
+#define MCF_SECTION(x)	__attribute__((__section__(x), __used__))
+
+MCF_SECTION(".CRT$XL@") PIMAGE_TLS_CALLBACK vCallbackAt	= &__MCF_CRT_TlsCallback;
+MCF_SECTION(".CRT$XL_") PIMAGE_TLS_CALLBACK vCallback_	= NULL;
+
+DWORD _tls_index = 0;
+
+MCF_SECTION(".tls$@@@") unsigned char _tls_start	= 0;
+MCF_SECTION(".tls$___") unsigned char _tls_end		= 0;
+
+MCF_SECTION(".tls") const IMAGE_TLS_DIRECTORY _tls_used = {
+	.StartAddressOfRawData	= (UINT_PTR)&_tls_start,
+	.EndAddressOfRawData	= (UINT_PTR)&_tls_end,
+	.AddressOfIndex			= (UINT_PTR)&_tls_index,
+	.AddressOfCallBacks		= (UINT_PTR)&vCallbackAt,
+	.SizeOfZeroFill			= 0,
+	.Characteristics		= 0
+};
+
+extern unsigned int MCFMain();
 
 static __attribute__((__cdecl__, __used__, __noreturn__)) int AlignedStartup(){
 	DWORD dwExitCode;
@@ -22,7 +43,6 @@ __MCF_EH_TOP_BEGIN
 	}
 	dwExitCode = MCFMain();
 	__MCF_CRT_EndModule();
-
 
 __MCF_EH_TOP_END
 	ExitProcess(dwExitCode);

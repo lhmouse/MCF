@@ -45,6 +45,12 @@ bool __MCF_CRT_MinGWHacksInit(){
 }
 void __MCF_CRT_MinGWHacksUninit(){
 	while(g_pDtorHead){
+		const LPVOID pMem = TlsGetValue(g_pDtorHead->ulKey);
+		if(pMem){
+			(*(g_pDtorHead->pfnDtor))(pMem);
+			TlsSetValue(g_pDtorHead->ulKey, NULL);
+		}
+
 		KEY_DTOR_NODE *const pNext = g_pDtorHead->pNext;
 		free(g_pDtorHead);
 		g_pDtorHead = pNext;
@@ -57,11 +63,10 @@ void __MCF_CRT_RunEmutlsDtors(){
 	{
 		for(const KEY_DTOR_NODE *pCur = g_pDtorHead; pCur; pCur = pCur->pNext){
 			const LPVOID pMem = TlsGetValue(pCur->ulKey);
-			if(!pMem){
-				continue;
+			if(pMem){
+				(*(pCur->pfnDtor))(pMem);
+				TlsSetValue(pCur->ulKey, NULL);
 			}
-			(*(pCur->pfnDtor))(pMem);
-			TlsSetValue(pCur->ulKey, NULL);
 		}
 	}
 	ReleaseSRWLockShared(&g_srwLock);
@@ -73,9 +78,9 @@ int __mingwthr_key_dtor(unsigned long ulKey, void (*pfnDtor)(void *)){
 		if(!pNode){
 			return -1;
 		}
-		pNode->ulKey = ulKey;
-		pNode->pfnDtor = pfnDtor;
-		pNode->pPrev = NULL;
+		pNode->ulKey	= ulKey;
+		pNode->pfnDtor	= pfnDtor;
+		pNode->pPrev	= NULL;
 
 		AcquireSRWLockExclusive(&g_srwLock);
 		{

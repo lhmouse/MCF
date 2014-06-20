@@ -75,8 +75,7 @@ static bool Init(unsigned int *puState){
 	DO_INIT(2, HEAPDBG_INIT());
 	DO_INIT(3, __MCF_CRT_TlsEnvInit());
 	DO_INIT(4, __MCF_CRT_MinGWHacksInit());
-	DO_INIT(5, DUMMY_INIT());
-	DO_INIT(6, DoCtors());
+	DO_INIT(5, DoCtors());
 //=========================================================
 
 		break;
@@ -100,8 +99,7 @@ static void Uninit(unsigned int *puState){
 		}
 
 //=========================================================
-	DO_UNINIT(6, DoDtors());
-	DO_UNINIT(5, __MCF_CRT_TlsCleanup());
+	DO_UNINIT(5, DoDtors());
 	DO_UNINIT(4, __MCF_CRT_MinGWHacksUninit());
 	DO_UNINIT(3, __MCF_CRT_TlsEnvUninit());
 	DO_UNINIT(2, HEAPDBG_UNINIT());

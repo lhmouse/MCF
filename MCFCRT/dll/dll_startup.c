@@ -5,8 +5,8 @@
 #include "../env/mcfwin.h"
 #include "../env/bail.h"
 #include "../env/module.h"
+#include "../env/thread.h"
 #include "../env/_eh_top.h"
-#include "../ext/unref_param.h"
 
 // -static -Wl,-e__MCF_DllStartup,--disable-runtime-pseudo-reloc,--disable-auto-import
 
@@ -18,8 +18,6 @@ extern void MCFDll_OnThreadDetach();
 #pragma GCC optimize "-fno-function-sections"
 
 static __attribute__((__cdecl__, __used__)) BOOL AlignedStartup(HINSTANCE hDll, DWORD dwReason, LPVOID pReserved){
-	UNREF_PARAM(hDll);
-
 	BOOL bRet = FALSE;
 __MCF_EH_TOP_BEGIN
 
@@ -41,9 +39,11 @@ __MCF_EH_TOP_BEGIN
 
 	case DLL_THREAD_ATTACH:
 		MCFDll_OnThreadAttach();
+		__MCF_CRT_TlsCallback(hDll, dwReason, pReserved);
 		break;
 
 	case DLL_THREAD_DETACH:
+		__MCF_CRT_TlsCallback(hDll, dwReason, pReserved);
 		MCFDll_OnThreadDetach();
 		break;
 	}

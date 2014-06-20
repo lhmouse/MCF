@@ -12,7 +12,7 @@ __MCF_EXTERN_C_BEGIN
 extern bool __MCF_CRT_TlsEnvInit(void) MCF_NOEXCEPT;
 extern void __MCF_CRT_TlsEnvUninit(void) MCF_NOEXCEPT;
 
-extern void __MCF_CRT_TlsCleanup(void) MCF_NOEXCEPT;
+extern __attribute__((__stdcall__)) void __MCF_CRT_TlsCallback(void *hModule, unsigned long ulReason, void *pReserved) MCF_NOEXCEPT;
 
 // 失败返回 0。
 extern MCF_STD uintptr_t MCF_CRT_AtThreadExit(void (*pfnProc)(MCF_STD intptr_t), MCF_STD intptr_t nContext) MCF_NOEXCEPT;
@@ -26,7 +26,7 @@ extern bool MCF_CRT_TlsGet(MCF_STD uintptr_t uKey, MCF_STD intptr_t *pnValue) MC
 // 触发回调。
 extern bool MCF_CRT_TlsReset(MCF_STD uintptr_t uKey, MCF_STD intptr_t nNewValue) MCF_NOEXCEPT;
 // 不触发回调。pnOldValue 不得为空。
-// 返回 0 若失败，返回 1 若新值被设定但旧值未定义，返回 2 若旧值有效且已被替换。
+// 返回 0 若失败，返回 1 若旧值有效且已被替换，返回 2 若新值被设定但旧值未定义。
 extern int MCF_CRT_TlsExchange(MCF_STD uintptr_t uKey, MCF_STD intptr_t *pnOldValue, MCF_STD intptr_t nNewValue) MCF_NOEXCEPT;
 
 // 返回的是 HANDLE。

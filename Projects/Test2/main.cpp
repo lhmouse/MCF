@@ -1,30 +1,57 @@
 #include <MCF/StdMCF.hpp>
-#include <MCF/Core/Utilities.hpp>
 #include <MCF/Core/String.hpp>
-#include <MCF/Core/StreamBuffer.hpp>
-#include <iostream>
+#include <MCF/Thread/ThreadLocalPtr.hpp>
+#include <MCF/Thread/Thread.hpp>
+#include <MCF/Thread/Event.hpp>
+#include <cstdio>
+using namespace std;
 using namespace MCF;
 
+template class ThreadLocalPtr<WideString>;
+
 unsigned int MCFMain(){
-	const auto str = "_123456789"_nso;
-	StreamBuffer buf, buf2;
-
-	for(auto i = 3u; i; --i){
-		Copy(buf.GetWriteIterator(), str.GetBegin(), str.GetEnd());
-		buf.Insert(str.GetBegin(), str.GetSize());
+	uintptr_t v[20];
+	for(auto &u : v){
+		u = MCF_CRT_TlsAllocKey(0);
+		printf("allocated %zx\n", u);
 	}
-	buf.CutOut(buf2, 19);
-
-	Copy(std::ostream_iterator<char>(std::cout), buf2.GetReadIterator(), buf2.GetReadEnd());
-	std::cout <<'$' <<std::endl;
-
-	unsigned char tmp[1];
-	while(buf.Extract(tmp, sizeof(tmp))){
-		for(char ch : tmp){
-			std::cout <<ch;
-		}
+	random_shuffle(begin(v), end(v));
+	for(auto &u : v){
+		MCF_CRT_TlsFreeKey(u);
+		printf("freed %zx\n", u);
 	}
-	std::cout <<'$' <<std::endl;
+
+	const auto evn = Event::Create(false);
+	ThreadLocalPtr<WideString> p;
+	try {
+		p->Assign(L"meow!-----------------------"_wso);
+		auto pthrd = Thread::Create([&]{
+			p->Assign(L"bark!-----------------------"_wso);
+			printf("thread -> %ls\n", p->GetCStr());
+			evn->Set();
+			throw 12345;
+		}, true);
+		pthrd->Resume();
+		evn->Wait();
+		printf("main -> %ls\n", p->GetCStr());
+		pthrd->Join();
+	} catch(int &e){
+		printf("exception! %d\n", e);
+	}
+
+	shared_ptr<Thread> threads[100];
+	ThreadLocalPtr<WideString> tls[200];
+	for(auto &p : threads){
+		p = Thread::Create([&]{
+			::Sleep(1000);
+			for(auto &pstr : tls){
+				pstr->Assign(L"hello world!-----------------------"_wso);
+			}
+		});
+	}
+	for(auto &p : threads){
+		p->Join();
+	}
 
 	return 0;
 }

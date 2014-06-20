@@ -57,7 +57,7 @@ static inline void DoDtors(){
 	}
 }
 
-static bool Init(unsigned int *puState){
+static bool Init(unsigned int *restrict puState){
 	switch(*puState){
 
 #define DO_INIT(n, exp)	\
@@ -84,7 +84,7 @@ static bool Init(unsigned int *puState){
 	}
 	return true;
 }
-static void Uninit(unsigned int *puState){
+static void Uninit(unsigned int *restrict puState){
 	if(*puState == 0){
 		return;
 	}

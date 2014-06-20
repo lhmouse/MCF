@@ -98,25 +98,39 @@ bool __MCF_CRT_TlsEnvInit(){
 	return true;
 }
 void __MCF_CRT_TlsEnvUninit(){
-	if(g_pavlKeys){
-		TLS_KEY *pKey = (TLS_KEY *)MCF_AvlFront(&g_pavlKeys);
-		do {
-			TLS_OBJECT *pObject = pKey->pLastByKey;
-			while(pObject){
-				TLS_OBJECT *const pPrev = pObject->pPrevByKey;
-				free(pObject);
-				pObject = pPrev;
+	while(g_pLastMap){
+		TLS_OBJECT *pObject = g_pLastMap->pLastInThread;
+		while(pObject){
+			if(pObject->pKey->pfnCallback){
+				(*(pObject->pKey->pfnCallback))(pObject->nValue);
 			}
 
-			TLS_KEY *const pNext = (TLS_KEY *)MCF_AvlNext((MCF_AVL_NODE_HEADER *)pKey);
-			free(pKey);
-			pKey = pNext;
-		} while(pKey);
-	}
-	while(g_pLastMap){
-		TLS_MAP *const pPrev = g_pLastMap->pPrevMap;
+			TLS_OBJECT *const pPrevInThread = pObject->pPrevInThread;
+			free(pObject);
+			pObject = pPrevInThread;
+		}
+
+		TLS_MAP *const pPrevMap = g_pLastMap->pPrevMap;
 		free(g_pLastMap);
-		g_pLastMap = pPrev;
+		g_pLastMap = pPrevMap;
+	}
+	if(g_pavlKeys){
+		TLS_KEY *pCur = (TLS_KEY *)MCF_AvlPrev((MCF_AVL_NODE_HEADER *)g_pavlKeys);
+		while(pCur){
+			TLS_KEY *const pPrev = (TLS_KEY *)MCF_AvlPrev((MCF_AVL_NODE_HEADER *)pCur);
+			free(pCur);
+			pCur = pPrev;
+		}
+
+		pCur = (TLS_KEY *)MCF_AvlNext((MCF_AVL_NODE_HEADER *)g_pavlKeys);
+		while(pCur){
+			TLS_KEY *const pNext = (TLS_KEY *)MCF_AvlNext((MCF_AVL_NODE_HEADER *)pCur);
+			free(pCur);
+			pCur = pNext;
+		}
+
+		free(g_pavlKeys);
+		g_pavlKeys = NULL;
 	}
 
 	TlsFree(g_dwTlsIndex);
@@ -153,9 +167,9 @@ __attribute__((__stdcall__)) void __MCF_CRT_TlsCallback(void *hModule, unsigned 
 					(*(pObject->pKey->pfnCallback))(pObject->nValue);
 				}
 
-				TLS_OBJECT *const pPrev = pObject->pPrevInThread;
+				TLS_OBJECT *const pPrevInThread = pObject->pPrevInThread;
 				free(pObject);
-				pObject = pPrev;
+				pObject = pPrevInThread;
 			}
 
 			AcquireSRWLockExclusive(&g_srwLock);
@@ -263,9 +277,9 @@ bool MCF_CRT_TlsFreeKey(uintptr_t uKey){
 			(*(pObject->pKey->pfnCallback))(pObject->nValue);
 		}
 
-		TLS_OBJECT *const pPrev = pObject->pPrevByKey;
+		TLS_OBJECT *const pPrevByKey = pObject->pPrevByKey;
 		free(pObject);
-		pObject = pPrev;
+		pObject = pPrevByKey;
 	}
 	free(pKey);
 
@@ -433,8 +447,8 @@ static int TlsExchange(uintptr_t uKey, void (**ppfnCallback)(intptr_t), intptr_t
 }
 
 bool MCF_CRT_TlsReset(uintptr_t uKey, intptr_t nNewValue){
-	void (*pfnCallback)(intptr_t);
-	intptr_t nOldValue;
+	void (*pfnCallback)(intptr_t) = NULL;
+	intptr_t nOldValue = 0;
 	switch(TlsExchange(uKey, &pfnCallback, &nOldValue, nNewValue)){
 	case 1:
 		if(pfnCallback){

@@ -235,20 +235,28 @@ Function_t CallOnEachBackward(Function_t &&vFunction, FirstParam_t &&vFirstParam
 //----------------------------------------------------------------------------
 // Min / Max
 //----------------------------------------------------------------------------
-template<typename Tx, typename Ty>
-typename std::common_type<Tx, Ty>::type Min(Tx op1, Ty op2){
+template<typename Tx, typename Ty, typename Comparator_t = std::less<void>>
+auto Min(Tx x, Ty y){
 	static_assert(std::is_scalar<Tx>::value && std::is_scalar<Ty>::value, "Only scalar types are supported.");
-	static_assert(std::is_signed<Tx>::value ^ !std::is_signed<Ty>::value, "Comparison between signed and unsigned integers.");
+	static_assert(std::is_signed<Tx>::value == std::is_signed<Ty>::value, "Comparison between signed and unsigned integers.");
 
-	return std::min<typename std::common_type<Tx, Ty>::type>(op1, op2);
+	return Comparator_t()(x, y) ? x : y;
+}
+template<typename Tx, typename Ty, typename Comparator_t = std::less<void>, typename... More_t>
+auto Min(Tx &&x, Ty &&y, More_t &&... vMore){
+	return Min(Min(std::forward<Tx>(x), std::forward<Ty>(y)), std::forward<More_t>(vMore)...);
 }
 
-template<typename Tx, typename Ty>
-typename std::common_type<Tx, Ty>::type Max(Tx op1, Ty op2){
+template<typename Tx, typename Ty, typename Comparator_t = std::less<void>>
+auto Max(Tx x, Ty y){
 	static_assert(std::is_scalar<Tx>::value && std::is_scalar<Ty>::value, "Only scalar types are supported.");
-	static_assert(std::is_signed<Tx>::value ^ !std::is_signed<Ty>::value, "Comparison between signed and unsigned integers.");
+	static_assert(std::is_signed<Tx>::value == std::is_signed<Ty>::value, "Comparison between signed and unsigned integers.");
 
-	return std::max<typename std::common_type<Tx, Ty>::type>(op1, op2);
+	return Comparator_t()(x, y) ? y : x;
+}
+template<typename Tx, typename Ty, typename Comparator_t = std::less<void>, typename... More_t>
+auto Max(Tx &&x, Ty &&y, More_t &&... vMore){
+	return Max(Max(std::forward<Tx>(x), std::forward<Ty>(y)), std::forward<More_t>(vMore)...);
 }
 
 //----------------------------------------------------------------------------

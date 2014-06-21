@@ -23,9 +23,9 @@ namespace {
 inline void CopyOut(const std::function<std::pair<void *, std::size_t> (std::size_t)> &fnDataCallback, const void *pSrc, std::size_t uBytesToCopy){
 	std::size_t uBytesCopied = 0;
 	while(uBytesCopied < uBytesToCopy){
-		const std::size_t uBytesRemaining = uBytesToCopy - uBytesCopied;
+		const auto uBytesRemaining = uBytesToCopy - uBytesCopied;
 		const auto vResult = fnDataCallback(uBytesRemaining);
-		const std::size_t uBytesToCopyThisTime = std::min(vResult.second, uBytesRemaining);
+		const auto uBytesToCopyThisTime = Min(vResult.second, uBytesRemaining);
 		__builtin_memcpy(vResult.first, (const unsigned char *)pSrc + uBytesCopied, uBytesToCopyThisTime);
 		uBytesCopied += uBytesToCopyThisTime;
 	}
@@ -186,7 +186,7 @@ public:
 
 		xm_uBytesProcessed = 0;
 		while(pbyRead != pbyEnd){
-			const auto uBytesToProcess = std::min((std::size_t)(pbyEnd - pbyRead), (std::size_t)0x10000);
+			const auto uBytesToProcess = Min((std::size_t)(pbyEnd - pbyRead), (std::size_t)0x10000);
 
 			ulErrorCode = LzmaErrorToWin32Error(::LzmaEnc_NewEncode(xm_pContext.Get(), pbyRead, uBytesToProcess));
 			if(xm_pException){

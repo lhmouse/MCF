@@ -65,19 +65,19 @@ public:
 	}
 
 	std::size_t CopyOut(unsigned char *&pbyOutput, const unsigned char *pbyEnd) noexcept {
-		const std::size_t uBytesToCopy = std::min(GetSize(), (std::size_t)(pbyEnd - pbyOutput));
+		const std::size_t uBytesToCopy = Min(GetSize(), (std::size_t)(pbyEnd - pbyOutput));
 		pbyOutput = CopyN(pbyOutput, xm_abyData + xm_ushRead, uBytesToCopy).first;
 		xm_ushRead += uBytesToCopy;
 		return uBytesToCopy;
 	}
 	std::size_t CopyIn(const unsigned char *&pbyInput, const unsigned char *pbyEnd) noexcept {
-		const std::size_t uBytesToCopy = std::min(GetFree(), (std::size_t)(pbyEnd - pbyInput));
+		const std::size_t uBytesToCopy = Min(GetFree(), (std::size_t)(pbyEnd - pbyInput));
 		pbyInput = CopyN(xm_abyData + xm_ushWrite, pbyInput, uBytesToCopy).second;
 		xm_ushWrite += uBytesToCopy;
 		return uBytesToCopy;
 	}
 	std::size_t Transfer(xDisposableBuffer &dst, std::size_t &uToTransfer) noexcept {
-		const std::size_t uBytesToTransfer = std::min(std::min(GetSize(), uToTransfer), dst.GetFree());
+		const std::size_t uBytesToTransfer = Min(GetSize(), uToTransfer, dst.GetFree());
 		CopyN(dst.xm_abyData + dst.xm_ushWrite, xm_abyData + xm_ushRead, uBytesToTransfer);
 		dst.xm_ushWrite += uBytesToTransfer;
 		xm_ushRead += uBytesToTransfer;
@@ -85,7 +85,7 @@ public:
 		return uBytesToTransfer;
 	}
 	std::size_t Discard(std::size_t &uToDiscard) noexcept {
-		const std::size_t uBytesToDiscard = std::min(GetSize(), uToDiscard);
+		const std::size_t uBytesToDiscard = Min(GetSize(), uToDiscard);
 		uToDiscard -= uBytesToDiscard;
 		xm_ushRead += uBytesToDiscard;
 		return uBytesToDiscard;

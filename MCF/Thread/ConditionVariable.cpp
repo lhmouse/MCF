@@ -49,7 +49,7 @@ public:
 		std::size_t uOldWaiterCount = __atomic_load_n(&xm_uWaiterCount, __ATOMIC_RELAXED);
 		std::size_t uCountToSignal;
 		for(;;){
-			uCountToSignal = std::min(uCount, uOldWaiterCount);
+			uCountToSignal = Min(uCount, uOldWaiterCount);
 			if(uCountToSignal == 0){
 				break;
 			}

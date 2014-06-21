@@ -3,6 +3,7 @@
 // Copyleft 2014. LH_Mouse. All wrongs reserved.
 
 #include "RC4Ex.hpp"
+#include "../Core/Utilities.hpp"
 #include "../Hash/Sha256.hpp"
 using namespace MCF;
 
@@ -131,7 +132,7 @@ void RC4ExEncoder::Update(const void *pData, std::size_t uSize){
 	while(pbyRead != pbyEnd){
 		const auto uBytesRemaining = (std::size_t)(pbyEnd - pbyRead);
 		const auto vResult = xm_fnDataCallback(uBytesRemaining);
-		const std::size_t uBytesToProcessThisTime = std::min(vResult.second, uBytesRemaining);
+		const std::size_t uBytesToProcessThisTime = Min(vResult.second, uBytesRemaining);
 		Encode(vResult.first, pbyRead, uBytesToProcessThisTime, xm_abyBox, &xm_byI, &xm_byJ);
 		pbyRead += uBytesToProcessThisTime;
 	}
@@ -167,7 +168,7 @@ void RC4ExDecoder::Update(const void *pData, std::size_t uSize){
 	while(pbyRead != pbyEnd){
 		const auto uBytesRemaining = (std::size_t)(pbyEnd - pbyRead);
 		const auto vResult = xm_fnDataCallback(uBytesRemaining);
-		const std::size_t uBytesToProcessThisTime = std::min(vResult.second, uBytesRemaining);
+		const std::size_t uBytesToProcessThisTime = Min(vResult.second, uBytesRemaining);
 		Decode(vResult.first, pbyRead, uBytesToProcessThisTime, xm_abyBox, &xm_byI, &xm_byJ);
 		pbyRead += uBytesToProcessThisTime;
 	}

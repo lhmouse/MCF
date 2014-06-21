@@ -4,6 +4,7 @@
 
 #include "../StdMCF.hpp"
 #include "Base64.hpp"
+#include "../Core/Utilities.hpp"
 #include <iterator>
 #include <cstring>
 using namespace MCF;
@@ -15,7 +16,7 @@ inline void CopyOut(const std::function<std::pair<void *, std::size_t> (std::siz
 	while(uBytesCopied < uBytesToCopy){
 		const std::size_t uBytesRemaining = uBytesToCopy - uBytesCopied;
 		const auto vResult = fnDataCallback(uBytesRemaining);
-		const std::size_t uBytesToCopyThisTime = std::min(vResult.second, uBytesRemaining);
+		const std::size_t uBytesToCopyThisTime = Min(vResult.second, uBytesRemaining);
 		__builtin_memcpy(vResult.first, (const unsigned char *)pSrc + uBytesCopied, uBytesToCopyThisTime);
 		uBytesCopied += uBytesToCopyThisTime;
 	}

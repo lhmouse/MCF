@@ -123,7 +123,7 @@ public:
 	std::size_t Read(void *pBuffer, std::size_t uBytesToRead, std::uint64_t u64Offset, const AsyncProc *pfnAsyncProc) const {
 		ASSERT(xm_hFile);
 
-		DWORD dwBytesToReadThisTime = std::min<std::size_t>(0xFFFFF000u, uBytesToRead);
+		auto dwBytesToReadThisTime = (DWORD)Min(0xFFFFF000u, uBytesToRead);
 
 		xApcResult vApcResult;
 		vApcResult.dwBytesTransferred = 0;
@@ -158,7 +158,7 @@ public:
 
 		std::size_t uBytesRead = vApcResult.dwBytesTransferred;
 		while((uBytesRead < uBytesToRead) && (vApcResult.dwBytesTransferred == dwBytesToReadThisTime)){
-			dwBytesToReadThisTime = std::min<std::size_t>(0xFFFFF000u, uBytesToRead - uBytesRead);
+			dwBytesToReadThisTime = Min(0xFFFFF000u, uBytesToRead - uBytesRead);
 
 			BZero(vOverlapped);
 			const auto u64NewOffset = u64Offset + uBytesRead;
@@ -186,7 +186,7 @@ public:
 	void Write(std::uint64_t u64Offset, const void *pBuffer, std::size_t uBytesToWrite, const AsyncProc *pfnAsyncProc){
 		ASSERT(xm_hFile);
 
-		DWORD dwBytesToWriteThisTime = std::min<std::size_t>(0xFFFFF000u, uBytesToWrite);
+		auto dwBytesToWriteThisTime = (DWORD)Min(0xFFFFF000u, uBytesToWrite);
 
 		xApcResult vApcResult;
 		vApcResult.dwBytesTransferred = 0;
@@ -221,7 +221,7 @@ public:
 
 		std::size_t uBytesWritten = vApcResult.dwBytesTransferred;
 		while((uBytesWritten < uBytesToWrite) && (vApcResult.dwBytesTransferred == dwBytesToWriteThisTime)){
-			dwBytesToWriteThisTime = std::min<std::size_t>(0xFFFFF000u, uBytesToWrite - uBytesWritten);
+			dwBytesToWriteThisTime = Min(0xFFFFF000u, uBytesToWrite - uBytesWritten);
 
 			BZero(vOverlapped);
 			const auto u64NewOffset = u64Offset + uBytesWritten;

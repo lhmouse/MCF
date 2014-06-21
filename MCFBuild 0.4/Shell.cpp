@@ -81,7 +81,7 @@ unsigned int Shell(
 	const MCF::WideStringObserver &wsoCommandLine
 ){
 	MCF::WideString wcsCommandLine;
-	wcsCommandLine.Reserve(std::min((std::size_t)MAX_PATH, wsoCommandLine.GetSize()));
+	wcsCommandLine.Reserve(Min((std::size_t)MAX_PATH, wsoCommandLine.GetSize()));
 	wcsCommandLine = wsoCommandLine;
 	if(wcsCommandLine.GetSize() < MAX_PATH){
 		wcsCommandLine.Resize(MAX_PATH);

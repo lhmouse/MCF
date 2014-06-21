@@ -20,9 +20,9 @@ namespace {
 inline void CopyOut(const std::function<std::pair<void *, std::size_t> (std::size_t)> &fnDataCallback, const void *pSrc, std::size_t uBytesToCopy){
 	std::size_t uBytesCopied = 0;
 	while(uBytesCopied < uBytesToCopy){
-		const std::size_t uBytesRemaining = uBytesToCopy - uBytesCopied;
+		const auto uBytesRemaining = uBytesToCopy - uBytesCopied;
 		const auto vResult = fnDataCallback(uBytesRemaining);
-		const std::size_t uBytesToCopyThisTime = std::min(vResult.second, uBytesRemaining);
+		const auto uBytesToCopyThisTime = Min(vResult.second, uBytesRemaining);
 		__builtin_memcpy(vResult.first, (const unsigned char *)pSrc + uBytesCopied, uBytesToCopyThisTime);
 		uBytesCopied += uBytesToCopyThisTime;
 	}
@@ -75,9 +75,9 @@ public:
 		: xm_fnDataCallback(std::move(fnDataCallback))
 		, xm_bInited(false)
 	{
-		zalloc = Z_NULL;
-		zfree = Z_NULL;
-		opaque = Z_NULL;
+		zalloc	= Z_NULL;
+		zfree	= Z_NULL;
+		opaque	= Z_NULL;
 
 		const auto ulErrorCode = ZErrorToWin32Error(::deflateInit2(this, nLevel, Z_DEFLATED, bRaw ? -15 : 15, 9, Z_DEFAULT_STRATEGY));
 		if(ulErrorCode != ERROR_SUCCESS){
@@ -107,7 +107,7 @@ public:
 			auto pbyRead = (const unsigned char *)pData;
 			const auto pbyEnd = pbyRead + uSize;
 			do {
-				const auto uBytesToProcess = std::min((std::size_t)(pbyEnd - pbyRead), (std::size_t)0x10000);
+				const auto uBytesToProcess = Min((std::size_t)(pbyEnd - pbyRead), (std::size_t)0x10000);
 
 				next_in = pbyRead;
 				avail_in = uBytesToProcess;
@@ -175,9 +175,9 @@ public:
 		: xm_fnDataCallback(std::move(fnDataCallback))
 		, xm_bInited(false)
 	{
-		zalloc = Z_NULL;
-		zfree = Z_NULL;
-		opaque = Z_NULL;
+		zalloc	= Z_NULL;
+		zfree	= Z_NULL;
+		opaque	= Z_NULL;
 
 		next_in = nullptr;
 		avail_in = 0;
@@ -210,7 +210,7 @@ public:
 			auto pbyRead = (const unsigned char *)pData;
 			const auto pbyEnd = pbyRead + uSize;
 			do {
-				const auto uBytesToProcess = std::min((std::size_t)(pbyEnd - pbyRead), (std::size_t)0x10000);
+				const auto uBytesToProcess = Min((std::size_t)(pbyEnd - pbyRead), (std::size_t)0x10000);
 
 				next_in = pbyRead;
 				avail_in = uBytesToProcess;

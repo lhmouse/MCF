@@ -229,7 +229,7 @@ public:
 			auto uSizeToAlloc = uOldCapacity + 1;
 			uSizeToAlloc += (uSizeToAlloc >> 1);
 			uSizeToAlloc = (uSizeToAlloc + 0xF) & (std::size_t)-0x10;
-			uSizeToAlloc = std::max(uSizeToAlloc, uNewCapacity);
+			uSizeToAlloc = Max(uSizeToAlloc, uNewCapacity);
 
 			const auto pOldBegin = GetBegin();
 			const auto pOldEnd = GetEnd();
@@ -589,7 +589,7 @@ public:
 			auto uSizeToAlloc = uOldCapacity + 1;
 			uSizeToAlloc += (uSizeToAlloc >> 1);
 			uSizeToAlloc = (uSizeToAlloc + 0xF) & (std::size_t)-0x10;
-			uSizeToAlloc = std::max(uSizeToAlloc, uNewCapacity);
+			uSizeToAlloc = Max(uSizeToAlloc, uNewCapacity);
 
 			const auto pOldBegin = GetBegin();
 			const auto pOldEnd = GetEnd();

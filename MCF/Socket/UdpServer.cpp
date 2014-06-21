@@ -81,7 +81,7 @@ public:
 				if(ulNextSleepTime == 0){
 					ulNextSleepTime = 1;
 				} else {
-					ulNextSleepTime = std::min(ulNextSleepTime, ulInterval);
+					ulNextSleepTime = Min(ulNextSleepTime, ulInterval);
 					::Sleep(ulNextSleepTime);
 
 					ulNextSleepTime <<= 1;

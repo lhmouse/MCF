@@ -98,6 +98,9 @@ bool __MCF_CRT_TlsEnvInit(){
 	return true;
 }
 void __MCF_CRT_TlsEnvUninit(){
+	TlsFree(g_dwTlsIndex);
+	g_dwTlsIndex = TLS_OUT_OF_INDEXES;
+
 	while(g_pLastMap){
 		TLS_OBJECT *pObject = g_pLastMap->pLastInThread;
 		while(pObject){
@@ -132,9 +135,6 @@ void __MCF_CRT_TlsEnvUninit(){
 		free(g_pavlKeys);
 		g_pavlKeys = NULL;
 	}
-
-	TlsFree(g_dwTlsIndex);
-	g_dwTlsIndex = TLS_OUT_OF_INDEXES;
 }
 
 __attribute__((__stdcall__)) void __MCF_CRT_TlsCallback(void *hModule, unsigned long ulReason, void *pReserved){

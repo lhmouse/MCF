@@ -35,7 +35,7 @@ public:
 		auto pCur = (char *)pData;
 		const auto pEnd = pCur + uSize;
 		for(;;){
-			const int nBytesToRead = std::min<std::ptrdiff_t>(pEnd - pCur, 0x10000);
+			const int nBytesToRead = Min(pEnd - pCur, 0x10000);
 			if(nBytesToRead == 0){
 				break;
 			}
@@ -69,7 +69,7 @@ public:
 		auto pCur = (const char *)pData;
 		const auto pEnd = pCur + uSize;
 		for(;;){
-			const int nBytesToWrite = std::min<std::ptrdiff_t>(pEnd - pCur, 0x10000);
+			const int nBytesToWrite = Min(pEnd - pCur, 0x10000);
 			if(nBytesToWrite == 0){
 				break;
 			}

@@ -7,6 +7,7 @@
 #include "../env/module.h"
 #include "../env/thread.h"
 #include "../env/_eh_top.h"
+#include "../ext/unref_param.h"
 
 // -static -Wl,-e__MCF_DllStartup,--disable-runtime-pseudo-reloc,--disable-auto-import
 
@@ -34,10 +35,12 @@ MCF_SECTION(".tls") const IMAGE_TLS_DIRECTORY _tls_used = {
 
 extern unsigned int MCFMain();
 
-static __attribute__((__cdecl__, __used__, __noreturn__)) int AlignedStartup(){
+static __attribute__((__stdcall__, __used__, __noreturn__)) int AlignedStartup(LPVOID pReserved){
 	DWORD dwExitCode;
 	__MCF_EH_TOP_BEGIN
 	{
+		UNREF_PARAM(pReserved);
+
 		if(!__MCF_CRT_BeginModule()){
 			MCF_CRT_BailF(L"MCFCRT 初始化失败。\n\n错误代码：%lu", (unsigned long)GetLastError());
 		}
@@ -49,16 +52,20 @@ static __attribute__((__cdecl__, __used__, __noreturn__)) int AlignedStartup(){
 	__builtin_trap();
 }
 
+#ifdef _WIN64
+extern __attribute__((__stdcall__, __noreturn__, __alias__("AlignedStartup")))
+	int __MCF_ExeStartup(LPVOID) __asm__("__MCF_ExeStartup");
+#else
 __asm__(
 	"	.text \n"
 	"	.align 16 \n"
 	".global __MCF_ExeStartup \n"
 	"__MCF_ExeStartup: \n"
-#ifdef _WIN64
-	"	jmp AlignedStartup \n"
-#else
+	"	mov eax, dword ptr[esp + 4] \n"
 	"	and esp, -0x10 \n"
-	"	call _AlignedStartup \n"
+	"	sub esp, 0x10 \n"
+	"	mov dword ptr[esp], eax \n"
+	"	call _AlignedStartup@4 \n"
 	"	int3 \n"
-#endif
 );
+#endif

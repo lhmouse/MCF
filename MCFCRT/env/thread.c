@@ -470,7 +470,7 @@ typedef struct tagThreadInitInfo {
 	intptr_t nParam;
 } THREAD_INIT_INFO;
 
-extern __attribute__((__stdcall__, __noreturn__)) DWORD CRTThreadProc(LPVOID pParam)
+static __attribute__((__stdcall__, __noreturn__)) DWORD CRTThreadProc(LPVOID pParam)
 	__asm__("CRTThreadProc");
 
 void *MCF_CRT_CreateThread(
@@ -501,7 +501,7 @@ void *MCF_CRT_CreateThread(
 
 #pragma GCC optimize "-fno-function-sections"
 
-static __attribute__((__cdecl__, __used__, __noreturn__)) DWORD AlignedCRTThreadProc(LPVOID pParam){
+static __attribute__((__stdcall__, __used__, __noreturn__)) DWORD AlignedCRTThreadProc(LPVOID pParam){
 	DWORD dwExitCode;
 	__MCF_EH_TOP_BEGIN
 	{
@@ -517,18 +517,19 @@ static __attribute__((__cdecl__, __used__, __noreturn__)) DWORD AlignedCRTThread
 	__builtin_trap();
 }
 
+#ifdef _WIN64
+static __attribute__((__stdcall__, __noreturn__, __alias__("AlignedCRTThreadProc")))
+	DWORD CRTThreadProc(LPVOID) __asm__("CRTThreadProc");
+#else
 __asm__(
 	"	.text \n"
 	"	.align 16 \n"
 	"CRTThreadProc: \n"
-#ifdef _WIN64
-	"	jmp AlignedCRTThreadProc \n"
-#else
 	"	mov eax, dword ptr[esp + 4] \n"
 	"	and esp, -0x10 \n"
 	"	sub esp, 0x10 \n"
 	"	mov dword ptr[esp], eax \n"
-	"	call _AlignedCRTThreadProc \n"
+	"	call _AlignedCRTThreadProc@4 \n"
 	"	int3 \n"
-#endif
 );
+#endif

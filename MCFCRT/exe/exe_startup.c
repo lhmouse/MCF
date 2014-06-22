@@ -13,13 +13,13 @@
 
 #define MCF_SECTION(x)	__attribute__((__section__(x), __used__))
 
-MCF_SECTION(".CRT$XL@") PIMAGE_TLS_CALLBACK vCallbackAt	= &__MCF_CRT_TlsCallback;
-MCF_SECTION(".CRT$XL_") PIMAGE_TLS_CALLBACK vCallback_	= NULL;
+MCF_SECTION(".CRT$XL@") const PIMAGE_TLS_CALLBACK vCallbackAt	= &__MCF_CRT_TlsCallback;
+MCF_SECTION(".CRT$XL_") const PIMAGE_TLS_CALLBACK vCallback_	= NULL;
 
 DWORD _tls_index = 0;
 
-MCF_SECTION(".tls$@@@") unsigned char _tls_start	= 0;
-MCF_SECTION(".tls$___") unsigned char _tls_end		= 0;
+MCF_SECTION(".tls$@@@") const unsigned char _tls_start	= 0;
+MCF_SECTION(".tls$___") const unsigned char _tls_end	= 0;
 
 MCF_SECTION(".tls") const IMAGE_TLS_DIRECTORY _tls_used = {
 	.StartAddressOfRawData	= (UINT_PTR)&_tls_start,
@@ -33,7 +33,8 @@ MCF_SECTION(".tls") const IMAGE_TLS_DIRECTORY _tls_used = {
 _Noreturn DWORD __stdcall __MCF_ExeStartup(LPVOID pReserved)
 	__asm__("__MCF_ExeStartup");
 
-_Noreturn __attribute__((__force_align_arg_pointer__, __optimize__("no-function-sections")))
+_Noreturn
+__attribute__((__force_align_arg_pointer__, __section__(".text$"))) __MCF_HAS_EH_TOP
 DWORD __stdcall __MCF_ExeStartup(LPVOID pReserved){
 	extern unsigned int MCFMain();
 

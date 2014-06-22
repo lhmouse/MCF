@@ -7,6 +7,9 @@
 
 #include "_crtdef.h"
 
+#define __MCF_HAS_EH_TOP	\
+	__attribute__((__section__(".text$")))
+
 #ifdef __SEH__
 
 #	define __MCF_EH_TOP_BEGIN	\
@@ -21,7 +24,7 @@
 		"	.seh_handlerdata \n"	\
 		"	.long 1 \n"	\
 		"	.rva 60000b, 60001b + 1, _gnu_exception_handler, 60001b + 1 \n"	\
-		"	.text \n"	\
+		"	.section .text$ \n"	\
 	);
 
 #else

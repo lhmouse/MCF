@@ -16,12 +16,10 @@ extern void MCFDll_OnProcessDetach(bool bDynamic);
 extern void MCFDll_OnThreadAttach();
 extern void MCFDll_OnThreadDetach();
 
-#pragma GCC optimize "-fno-function-sections"
-
 BOOL __stdcall __MCF_DllStartup(HINSTANCE hDll, DWORD dwReason, LPVOID pReserved)
 	__asm__("__MCF_DllStartup");
 
-__attribute__((__force_align_arg_pointer__, __optimize__("no-function-sections")))
+__attribute__((__force_align_arg_pointer__)) __MCF_HAS_EH_TOP
 BOOL __stdcall __MCF_DllStartup(HINSTANCE hDll, DWORD dwReason, LPVOID pReserved){
 	BOOL bRet = FALSE;
 	__MCF_EH_TOP_BEGIN

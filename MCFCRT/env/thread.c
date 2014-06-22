@@ -473,7 +473,8 @@ typedef struct tagThreadInitInfo {
 	intptr_t nParam;
 } THREAD_INIT_INFO;
 
-_Noreturn static __attribute__((__force_align_arg_pointer__, __optimize__("no-function-sections")))
+_Noreturn static
+__attribute__((__force_align_arg_pointer__)) __MCF_HAS_EH_TOP
 DWORD __stdcall CRTThreadProc(LPVOID pParam){
 	DWORD dwExitCode;
 	__MCF_EH_TOP_BEGIN

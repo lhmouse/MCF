@@ -5,12 +5,8 @@
 #include "../../env/_crtdef.h"
 #include "../../env/module.h"
 
-static void AtExitWrapper(intptr_t nContext){
-	(*((void (*)(void))nContext))();
-}
-
-int __wrap_atexit(void (*func)(void)){
-	return MCF_CRT_AtEndModule(&AtExitWrapper, (intptr_t)func);
+int __wrap_atexit(void (__cdecl *func)(void)){
+	return MCF_CRT_AtEndModule((void (__cdecl *)(intptr_t))func, 0);
 }
 
 __attribute__((__alias__("__wrap_atexit"))) int atexit(void (*func)(void));

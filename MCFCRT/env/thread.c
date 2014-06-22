@@ -18,7 +18,7 @@
 typedef struct tagTlsKey {
 	MCF_AVL_NODE_HEADER vHeader;
 
-	void (*pfnCallback)(intptr_t);
+	void (__cdecl *pfnCallback)(intptr_t);
 	struct tagTlsObject *pLastByKey;
 } TLS_KEY;
 
@@ -196,7 +196,7 @@ __attribute__((__stdcall__)) void __MCF_CRT_TlsCallback(void *hModule, unsigned 
 	}
 }
 
-void *MCF_CRT_AtThreadExit(void (*pfnProc)(intptr_t), intptr_t nContext){
+void *MCF_CRT_AtThreadExit(void (__cdecl *pfnProc)(intptr_t), intptr_t nContext){
 	void *const pKey = MCF_CRT_TlsAllocKey(pfnProc);
 	if(!pKey){
 		return NULL;
@@ -213,7 +213,7 @@ bool MCF_CRT_RemoveAtThreadExit(void *pTlsKey){
 	return MCF_CRT_TlsFreeKey(pTlsKey);
 }
 
-void *MCF_CRT_TlsAllocKey(void (*pfnCallback)(intptr_t)){
+void *MCF_CRT_TlsAllocKey(void (__cdecl *pfnCallback)(intptr_t)){
 	TLS_KEY *const pKey = malloc(sizeof(TLS_KEY));
 	if(!pKey){
 		return NULL;
@@ -311,7 +311,7 @@ bool MCF_CRT_TlsGet(void *pTlsKey, intptr_t *pnValue){
 	return bRet;
 }
 
-static int TlsExchange(void *pTlsKey, void (**ppfnCallback)(intptr_t), intptr_t *pnOldValue, intptr_t nNewValue){
+static int TlsExchange(void *pTlsKey, void (__cdecl **ppfnCallback)(intptr_t), intptr_t *pnOldValue, intptr_t nNewValue){
 	TLS_KEY *const pKey = pTlsKey;
 	if(!pKey){
 		return false;
@@ -450,7 +450,7 @@ static int TlsExchange(void *pTlsKey, void (**ppfnCallback)(intptr_t), intptr_t 
 }
 
 bool MCF_CRT_TlsReset(void *pTlsKey, intptr_t nNewValue){
-	void (*pfnCallback)(intptr_t) = NULL;
+	void (__cdecl *pfnCallback)(intptr_t) = NULL;
 	intptr_t nOldValue = 0;
 	switch(TlsExchange(pTlsKey, &pfnCallback, &nOldValue, nNewValue)){
 	case 1:
@@ -469,7 +469,7 @@ int MCF_CRT_TlsExchange(void *pTlsKey, intptr_t *pnOldValue, intptr_t nNewValue)
 }
 
 typedef struct tagThreadInitInfo {
-	unsigned int (*pfnProc)(intptr_t);
+	unsigned int (*pfnThreadProc)(intptr_t);
 	intptr_t nParam;
 } THREAD_INIT_INFO;
 
@@ -485,7 +485,7 @@ static __attribute__((__stdcall__, __used__, __noreturn__)) DWORD AlignedCRTThre
 
 		__MCF_CRT_FEnvInit();
 
-		dwExitCode = (*vInitInfo.pfnProc)(vInitInfo.nParam);
+		dwExitCode = (*vInitInfo.pfnThreadProc)(vInitInfo.nParam);
 	}
 	__MCF_EH_TOP_END
 	ExitThread(dwExitCode);
@@ -526,8 +526,8 @@ void *MCF_CRT_CreateThread(
 	if(!pInitInfo){
 		return NULL;
 	}
-	pInitInfo->pfnProc		= pfnThreadProc;
-	pInitInfo->nParam		= nParam;
+	pInitInfo->pfnThreadProc	= pfnThreadProc;
+	pInitInfo->nParam			= nParam;
 
 	const HANDLE hThread = CreateThread(NULL, 0, &CRTThreadProc, pInitInfo, CREATE_SUSPENDED, pulThreadId);
 	if(!hThread){

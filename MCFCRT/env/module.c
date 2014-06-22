@@ -125,13 +125,13 @@ void __MCF_CRT_EndModule(void){
 	Uninit(&g_uInitState);
 }
 
-int MCF_CRT_AtEndModule(void (*pfnProc)(intptr_t), intptr_t nContext){
+int MCF_CRT_AtEndModule(void (__cdecl *pfnProc)(intptr_t), intptr_t nContext){
 	AT_EXIT_NODE *const pNode = malloc(sizeof(AT_EXIT_NODE));
 	if(!pNode){
 		return -1;
 	}
-	pNode->pfnProc = pfnProc;
-	pNode->nContext = nContext;
+	pNode->pfnProc	= pfnProc;
+	pNode->nContext	= nContext;
 
 	pNode->pPrev = __atomic_load_n(&g_pAtExitHead, __ATOMIC_RELAXED);
 	while(EXPECT(!__atomic_compare_exchange_n(

@@ -12,7 +12,7 @@ __MCF_EXTERN_C_BEGIN
 extern bool __MCF_CRT_BeginModule(void);
 extern void __MCF_CRT_EndModule(void);
 
-extern int MCF_CRT_AtEndModule(void (*pfnProc)(MCF_STD intptr_t), MCF_STD intptr_t nContext);
+extern int MCF_CRT_AtEndModule(void (__cdecl *pfnProc)(MCF_STD intptr_t), MCF_STD intptr_t nContext);
 
 extern void *MCF_CRT_GetModuleBase(void);
 

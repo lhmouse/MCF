@@ -15,11 +15,11 @@ extern void __MCF_CRT_TlsEnvUninit(void) MCF_NOEXCEPT;
 extern __attribute__((__stdcall__)) void __MCF_CRT_TlsCallback(void *hModule, unsigned long ulReason, void *pReserved) MCF_NOEXCEPT;
 
 // 失败返回 0。
-extern void *MCF_CRT_AtThreadExit(void (*pfnProc)(MCF_STD intptr_t), MCF_STD intptr_t nContext) MCF_NOEXCEPT;
+extern void *MCF_CRT_AtThreadExit(void (__cdecl *pfnProc)(MCF_STD intptr_t), MCF_STD intptr_t nContext) MCF_NOEXCEPT;
 extern bool MCF_CRT_RemoveAtThreadExit(void *pTlsKey) MCF_NOEXCEPT;
 
 // 失败返回 0。
-extern void *MCF_CRT_TlsAllocKey(void (*pfnCallback)(MCF_STD intptr_t)) MCF_NOEXCEPT;
+extern void *MCF_CRT_TlsAllocKey(void (__cdecl *pfnCallback)(MCF_STD intptr_t)) MCF_NOEXCEPT;
 extern bool MCF_CRT_TlsFreeKey(void *pTlsKey) MCF_NOEXCEPT;
 
 extern bool MCF_CRT_TlsGet(void *pTlsKey, MCF_STD intptr_t *pnValue) MCF_NOEXCEPT;

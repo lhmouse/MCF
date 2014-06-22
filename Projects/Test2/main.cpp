@@ -10,15 +10,15 @@ using namespace MCF;
 template class ThreadLocalPtr<WideString>;
 
 unsigned int MCFMain(){
-	uintptr_t v[20];
+	void *v[20];
 	for(auto &u : v){
 		u = MCF_CRT_TlsAllocKey(0);
-		printf("allocated %zx\n", u);
+		printf("allocated %p\n", u);
 	}
 	random_shuffle(begin(v), end(v));
 	for(auto &u : v){
 		MCF_CRT_TlsFreeKey(u);
-		printf("freed %zx\n", u);
+		printf("freed %p\n", u);
 	}
 
 	const auto evn = Event::Create(false);

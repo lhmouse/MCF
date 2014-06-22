@@ -47,11 +47,11 @@ private:
 	typedef typename xExceptionWrapper::ExceptionPtr xExceptionPtr;
 
 	struct TlsKeyDeleter {
-		constexpr std::uintptr_t operator()() const noexcept {
-			return 0;
+		constexpr void *operator()() const noexcept {
+			return nullptr;
 		}
-		void operator()(std::uintptr_t uKey) const noexcept {
-			::MCF_CRT_TlsFreeKey(uKey);
+		void operator()(void *pKey) const noexcept {
+			::MCF_CRT_TlsFreeKey(pKey);
 		}
 	};
 	typedef UniqueHandle<TlsKeyDeleter> xTlsIndex;

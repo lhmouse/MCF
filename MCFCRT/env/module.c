@@ -9,7 +9,6 @@
 #include "heap.h"
 #include "heap_dbg.h"
 #include "thread.h"
-#include "_eh_top.h"
 #include "../ext/expect.h"
 #include <stdlib.h>
 

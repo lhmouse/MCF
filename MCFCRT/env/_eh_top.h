@@ -10,17 +10,20 @@
 #ifdef __SEH__
 
 #	define __MCF_EH_TOP_BEGIN	\
-		__asm__ __volatile__("seh_try: \n");
+	__asm__ __volatile__(	\
+		"60000: \n"	\
+	);
 
 #	define __MCF_EH_TOP_END	\
-		__asm__ __volatile__(	\
-			"seh_except: \n"	\
-			"	.seh_handler __C_specific_handler, @except \n"	\
-			"	.seh_handlerdata \n"	\
-			"	.long 1 \n"	\
-			"	.rva seh_try, seh_except, _gnu_exception_handler, seh_except \n"	\
-			"	.text \n"	\
-		);
+	__asm__ __volatile__(	\
+		"	nop \n"	\
+		"60001: \n"	\
+		"	.seh_handler __C_specific_handler, @except \n"	\
+		"	.seh_handlerdata \n"	\
+		"	.long 1 \n"	\
+		"	.rva 60000b, 60001b, _gnu_exception_handler, 60001b \n"	\
+		"	.text \n"	\
+	);
 
 #else
 

@@ -33,9 +33,9 @@ MCF_SECTION(".tls") const IMAGE_TLS_DIRECTORY _tls_used = {
 	.Characteristics		= 0
 };
 
-extern unsigned int MCFMain();
-
 static __attribute__((__stdcall__, __used__, __noreturn__)) int AlignedStartup(LPVOID pReserved){
+	extern unsigned int MCFMain();
+
 	DWORD dwExitCode;
 	__MCF_EH_TOP_BEGIN
 	{

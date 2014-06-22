@@ -6,6 +6,7 @@
 #include "../MCF/Core/StreamBuffer.hpp"
 #include "../MCF/Core/UniqueHandle.hpp"
 #include "../MCF/Core/Exception.hpp"
+#include "../MCF/Core/Utilities.hpp"
 #include <cstddef>
 using namespace MCFBuild;
 
@@ -81,7 +82,7 @@ unsigned int Shell(
 	const MCF::WideStringObserver &wsoCommandLine
 ){
 	MCF::WideString wcsCommandLine;
-	wcsCommandLine.Reserve(Min((std::size_t)MAX_PATH, wsoCommandLine.GetSize()));
+	wcsCommandLine.Reserve(MCF::Min((std::size_t)MAX_PATH, wsoCommandLine.GetSize()));
 	wcsCommandLine = wsoCommandLine;
 	if(wcsCommandLine.GetSize() < MAX_PATH){
 		wcsCommandLine.Resize(MAX_PATH);

@@ -16,8 +16,7 @@
 ..\MCFCRT\env\thread.c
 ..\MCFCRT\env\heap.c
 ..\MCFCRT\env\heap_dbg.c
-..\MCFCRT\exe\startup.c
-..\MCFCRT\exe\startup.c
+..\MCFCRT\exe\exe_startup.c
 
 ..\MCF\Core\String.cpp
 ..\MCF\Core\Exception.cpp

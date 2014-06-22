@@ -473,13 +473,48 @@ typedef struct tagThreadInitInfo {
 	intptr_t nParam;
 } THREAD_INIT_INFO;
 
+#pragma GCC push_options
+#pragma GCC optimize "-fno-function-sections"
+
+static __attribute__((__stdcall__, __used__, __noreturn__)) DWORD AlignedCRTThreadProc(LPVOID pParam){
+	DWORD dwExitCode;
+	__MCF_EH_TOP_BEGIN
+	{
+		const THREAD_INIT_INFO vInitInfo = *(THREAD_INIT_INFO *)pParam;
+		free(pParam);
+
+		__MCF_CRT_FEnvInit();
+
+		dwExitCode = (*vInitInfo.pfnProc)(vInitInfo.nParam);
+	}
+	__MCF_EH_TOP_END
+	ExitThread(dwExitCode);
+	__builtin_trap();
+}
+
 #ifdef _WIN64
-static
-#else
-extern
-#endif
-__attribute__((__stdcall__, __noreturn__)) DWORD CRTThreadProc(LPVOID pParam)
+static __attribute__((__stdcall__, __noreturn__, __alias__("AlignedCRTThreadProc")))
+	DWORD CRTThreadProc(LPVOID)
 	__asm__("CRTThreadProc");
+#else
+extern __attribute__((__stdcall__, __noreturn__))
+	DWORD CRTThreadProc(LPVOID)
+	__asm__("CRTThreadProc");
+
+__asm__(
+	"	.text \n"
+	"	.align 16 \n"
+	"CRTThreadProc: \n"
+	"	mov eax, dword ptr[esp + 4] \n"
+	"	and esp, -0x10 \n"
+	"	sub esp, 0x10 \n"
+	"	mov dword ptr[esp], eax \n"
+	"	call _AlignedCRTThreadProc@4 \n"
+	"	int3 \n"
+);
+#endif
+
+#pragma GCC pop_options
 
 void *MCF_CRT_CreateThread(
 	unsigned int (*pfnThreadProc)(intptr_t),
@@ -506,38 +541,3 @@ void *MCF_CRT_CreateThread(
 	}
 	return hThread;
 }
-
-#pragma GCC optimize "-fno-function-sections"
-
-static __attribute__((__stdcall__, __used__, __noreturn__)) DWORD AlignedCRTThreadProc(LPVOID pParam){
-	DWORD dwExitCode;
-	__MCF_EH_TOP_BEGIN
-	{
-		const THREAD_INIT_INFO vInitInfo = *(THREAD_INIT_INFO *)pParam;
-		free(pParam);
-
-		__MCF_CRT_FEnvInit();
-
-		dwExitCode = (*vInitInfo.pfnProc)(vInitInfo.nParam);
-	}
-	__MCF_EH_TOP_END
-	ExitThread(dwExitCode);
-	__builtin_trap();
-}
-
-#ifdef _WIN64
-static __attribute__((__stdcall__, __noreturn__, __alias__("AlignedCRTThreadProc")))
-	DWORD CRTThreadProc(LPVOID) __asm__("CRTThreadProc");
-#else
-__asm__(
-	"	.text \n"
-	"	.align 16 \n"
-	"CRTThreadProc: \n"
-	"	mov eax, dword ptr[esp + 4] \n"
-	"	and esp, -0x10 \n"
-	"	sub esp, 0x10 \n"
-	"	mov dword ptr[esp], eax \n"
-	"	call _AlignedCRTThreadProc@4 \n"
-	"	int3 \n"
-);
-#endif

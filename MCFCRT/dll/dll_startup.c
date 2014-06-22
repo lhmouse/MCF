@@ -7,6 +7,7 @@
 #include "../env/module.h"
 #include "../env/thread.h"
 #include "../env/_eh_top.h"
+#include "../ext/unref_param.h"
 
 // -static -Wl,-e__MCF_DllStartup,--disable-runtime-pseudo-reloc,--disable-auto-import
 
@@ -54,7 +55,8 @@ static __attribute__((__stdcall__, __used__)) BOOL AlignedStartup(HINSTANCE hDll
 
 #ifdef _WIN64
 extern __attribute__((__stdcall__, __alias__("AlignedStartup")))
-	BOOL __MCF_DllStartup(HINSTANCE, DWORD, LPVOID) __asm__("__MCF_DllStartup");
+	BOOL __MCF_DllStartup(HINSTANCE, DWORD, LPVOID)
+	__asm__("__MCF_DllStartup");
 #else
 __asm__(
 	"	.text \n"

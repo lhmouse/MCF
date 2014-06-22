@@ -54,7 +54,8 @@ static __attribute__((__stdcall__, __used__, __noreturn__)) int AlignedStartup(L
 
 #ifdef _WIN64
 extern __attribute__((__stdcall__, __noreturn__, __alias__("AlignedStartup")))
-	int __MCF_ExeStartup(LPVOID) __asm__("__MCF_ExeStartup");
+	int __MCF_ExeStartup(LPVOID)
+	__asm__("__MCF_ExeStartup");
 #else
 __asm__(
 	"	.text \n"

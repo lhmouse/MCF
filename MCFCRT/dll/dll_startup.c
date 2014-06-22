@@ -18,7 +18,11 @@ extern void MCFDll_OnThreadDetach();
 
 #pragma GCC optimize "-fno-function-sections"
 
-static __attribute__((__stdcall__, __used__)) BOOL AlignedStartup(HINSTANCE hDll, DWORD dwReason, LPVOID pReserved){
+BOOL __stdcall __MCF_DllStartup(HINSTANCE hDll, DWORD dwReason, LPVOID pReserved)
+	__asm__("__MCF_DllStartup");
+
+__attribute__((__force_align_arg_pointer__, __optimize__("no-function-sections")))
+BOOL __stdcall __MCF_DllStartup(HINSTANCE hDll, DWORD dwReason, LPVOID pReserved){
 	BOOL bRet = FALSE;
 	__MCF_EH_TOP_BEGIN
 	{
@@ -52,29 +56,3 @@ static __attribute__((__stdcall__, __used__)) BOOL AlignedStartup(HINSTANCE hDll
 	__MCF_EH_TOP_END
 	return bRet;
 }
-
-#ifdef _WIN64
-extern __attribute__((__stdcall__, __alias__("AlignedStartup")))
-	BOOL __MCF_DllStartup(HINSTANCE, DWORD, LPVOID)
-	__asm__("__MCF_DllStartup");
-#else
-__asm__(
-	"	.text \n"
-	"	.align 16 \n"
-	".global __MCF_DllStartup \n"
-	"__MCF_DllStartup: \n"
-	"	push ebp \n"
-	"	mov ebp, esp \n"
-	"	and esp, -0x10 \n"
-	"	sub esp, 0x10 \n"
-	"	mov eax, dword ptr[ebp + 0x08] \n"
-	"	mov dword ptr[esp], eax \n"
-	"	mov eax, dword ptr[ebp + 0x0C] \n"
-	"	mov dword ptr[esp + 0x04], eax \n"
-	"	mov eax, dword ptr[ebp + 0x10] \n"
-	"	mov dword ptr[esp + 0x08], eax \n"
-	"	call _AlignedStartup@12 \n"
-	"	leave \n"
-	"	ret 0x0C \n"
-);
-#endif

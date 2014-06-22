@@ -11,9 +11,6 @@
 
 // -static -Wl,-e__MCF_DllStartup,--disable-runtime-pseudo-reloc,--disable-auto-import
 
-#pragma GCC optimize "-fno-function-sections"
-#pragma GCC optimize "-fno-data-sections"
-
 #define MCF_SECTION(x)	__attribute__((__section__(x), __used__))
 
 MCF_SECTION(".CRT$XL@") PIMAGE_TLS_CALLBACK vCallbackAt	= &__MCF_CRT_TlsCallback;
@@ -33,7 +30,11 @@ MCF_SECTION(".tls") const IMAGE_TLS_DIRECTORY _tls_used = {
 	.Characteristics		= 0
 };
 
-static __attribute__((__stdcall__, __used__, __noreturn__)) int AlignedStartup(LPVOID pReserved){
+_Noreturn DWORD __stdcall __MCF_ExeStartup(LPVOID pReserved)
+	__asm__("__MCF_ExeStartup");
+
+_Noreturn __attribute__((__force_align_arg_pointer__, __optimize__("no-function-sections")))
+DWORD __stdcall __MCF_ExeStartup(LPVOID pReserved){
 	extern unsigned int MCFMain();
 
 	DWORD dwExitCode;
@@ -51,22 +52,3 @@ static __attribute__((__stdcall__, __used__, __noreturn__)) int AlignedStartup(L
 	ExitProcess(dwExitCode);
 	__builtin_trap();
 }
-
-#ifdef _WIN64
-extern __attribute__((__stdcall__, __noreturn__, __alias__("AlignedStartup")))
-	int __MCF_ExeStartup(LPVOID)
-	__asm__("__MCF_ExeStartup");
-#else
-__asm__(
-	"	.text \n"
-	"	.align 16 \n"
-	".global __MCF_ExeStartup \n"
-	"__MCF_ExeStartup: \n"
-	"	mov eax, dword ptr[esp + 4] \n"
-	"	and esp, -0x10 \n"
-	"	sub esp, 0x10 \n"
-	"	mov dword ptr[esp], eax \n"
-	"	call _AlignedStartup@4 \n"
-	"	int3 \n"
-);
-#endif

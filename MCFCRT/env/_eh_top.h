@@ -16,12 +16,11 @@
 
 #	define __MCF_EH_TOP_END	\
 	__asm__ __volatile__(	\
-		"	nop \n"	\
 		"60001: \n"	\
 		"	.seh_handler __C_specific_handler, @except \n"	\
 		"	.seh_handlerdata \n"	\
 		"	.long 1 \n"	\
-		"	.rva 60000b, 60001b, _gnu_exception_handler, 60001b \n"	\
+		"	.rva 60000b, 60001b + 1, _gnu_exception_handler, 60001b + 1 \n"	\
 		"	.text \n"	\
 	);
 

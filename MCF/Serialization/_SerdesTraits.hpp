@@ -29,8 +29,11 @@
 namespace MCF {
 
 namespace Impl {
-	[[noreturn]] extern void ThrowOnEof();
-	[[noreturn]] extern void ThrowOnSizeTooLarge();
+	[[noreturn]]
+	extern void ThrowOnEof();
+
+	[[noreturn]]
+	extern void ThrowOnSizeTooLarge();
 
 	template<typename Object_t, typename = void>
 	struct SerdesTrait;

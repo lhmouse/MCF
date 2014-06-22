@@ -10,7 +10,7 @@ using namespace MCF;
 template class ThreadLocalPtr<WideString>;
 
 unsigned int MCFMain(){
-	void *v[20];
+	void *v[10000];
 	for(auto &u : v){
 		u = MCF_CRT_TlsAllocKey(0);
 		printf("allocated %p\n", u);

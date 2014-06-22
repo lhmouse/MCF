@@ -5,7 +5,7 @@ General {
 
 	CFlags				= -std=c11
 
-	IgnoredFiles		= .Built* *.h *.mcfproj .exe
+	IgnoredFiles		= .Built* *.h *.mcfproj .exe *.txt
 
 	Compilers {
 		c {

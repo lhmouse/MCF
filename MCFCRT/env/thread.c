@@ -28,13 +28,13 @@ static int KeyComparatorNodes(
 ){
 	return (uintptr_t)(void *)pObj1 < (uintptr_t)(void *)pObj2;
 }
-static int KeyComparatorNodeKey(
+static __attribute__((__unused__)) int KeyComparatorNodeKey(
 	const MCF_AVL_NODE_HEADER *pObj1,
 	intptr_t nKey2
 ){
 	return (uintptr_t)(void *)pObj1 < (uintptr_t)(void *)nKey2;
 }
-static int KeyComparatorKeyNode(
+static __attribute__((__unused__)) int KeyComparatorKeyNode(
 	intptr_t nKey1,
 	const MCF_AVL_NODE_HEADER *pObj2
 ){

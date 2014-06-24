@@ -4,6 +4,7 @@
 
 #include "heap.h"
 #include "heap_dbg.h"
+#include "hooks.h"
 #include "mcfwin.h"
 #include "../ext/unref_param.h"
 #include <stdlib.h>
@@ -27,8 +28,7 @@
 
 #endif
 
-static CRITICAL_SECTION			g_csHeapLock;
-static MCF_BAD_ALLOC_HANDLER	g_vBadAllocHandler;
+static CRITICAL_SECTION		g_csHeapLock;
 
 bool __MCF_CRT_HeapInit(){
 	if(!InitializeCriticalSectionEx(
@@ -45,7 +45,6 @@ bool __MCF_CRT_HeapInit(){
 }
 void __MCF_CRT_HeapUninit(){
 	DeleteCriticalSection(&g_csHeapLock);
-	g_vBadAllocHandler.pfnProc = NULL;
 }
 
 unsigned char *__MCF_CRT_HeapAlloc(size_t uSize, const void *pRetAddr){
@@ -62,6 +61,7 @@ unsigned char *__MCF_CRT_HeapAlloc(size_t uSize, const void *pRetAddr){
 
 	unsigned char *pRet = NULL;
 	EnterCriticalSection(&g_csHeapLock);
+	{
 		do {
 			unsigned char *const pRaw = MCF_MALLOC(uRawSize);
 			if(pRaw){
@@ -73,7 +73,8 @@ unsigned char *__MCF_CRT_HeapAlloc(size_t uSize, const void *pRetAddr){
 #endif
 				break;
 			}
-		} while((g_vBadAllocHandler.pfnProc) && (*g_vBadAllocHandler.pfnProc)(g_vBadAllocHandler.nContext));
+		} while(MCF_OnBadAlloc());
+	}
 	LeaveCriticalSection(&g_csHeapLock);
 	return pRet;
 }
@@ -91,6 +92,7 @@ unsigned char *__MCF_CRT_HeapReAlloc(void *pBlock /* NON-NULL */, size_t uSize, 
 
 	unsigned char *pRet = NULL;
 	EnterCriticalSection(&g_csHeapLock);
+	{
 #ifdef __MCF_CRT_HEAPDBG_ON
 		unsigned char *pRawOriginal;
 		const __MCF_HEAPDBG_BLOCK_INFO *const pBlockInfo = __MCF_CRT_HeapDbgValidate(&pRawOriginal, pBlock, pRetAddr);
@@ -114,12 +116,14 @@ unsigned char *__MCF_CRT_HeapReAlloc(void *pBlock /* NON-NULL */, size_t uSize, 
 #endif
 				break;
 			}
-		} while((g_vBadAllocHandler.pfnProc) && (*g_vBadAllocHandler.pfnProc)(g_vBadAllocHandler.nContext));
+		} while(MCF_OnBadAlloc());
+	}
 	LeaveCriticalSection(&g_csHeapLock);
 	return pRet;
 }
 void __MCF_CRT_HeapFree(void *pBlock /* NON-NULL */, const void *pRetAddr){
 	EnterCriticalSection(&g_csHeapLock);
+	{
 #ifdef __MCF_CRT_HEAPDBG_ON
 		unsigned char *pRaw;
 		const __MCF_HEAPDBG_BLOCK_INFO *const pBlockInfo = __MCF_CRT_HeapDbgValidate(&pRaw, pBlock, pRetAddr);
@@ -133,22 +137,10 @@ void __MCF_CRT_HeapFree(void *pBlock /* NON-NULL */, const void *pRetAddr){
 		unsigned char *const pRaw = pBlock;
 #endif
 		MCF_FREE(pRaw);
+	}
 	LeaveCriticalSection(&g_csHeapLock);
 }
 
-// Q: 这里为什么不用原子操作？
-// A: 如果使用原子操作，线程 A 就可能在线程 B 正在执行内存分配/去配操作的时候更改响应函数。
-//    如果线程 B 在线程 A 更改响应函数之后调用了旧的响应函数，结果将是不可预测的。
-MCF_BAD_ALLOC_HANDLER MCF_GetBadAllocHandler(){
-	EnterCriticalSection(&g_csHeapLock);
-		const MCF_BAD_ALLOC_HANDLER Handler = g_vBadAllocHandler;
-	LeaveCriticalSection(&g_csHeapLock);
-	return Handler;
-}
-MCF_BAD_ALLOC_HANDLER MCF_SetBadAllocHandler(MCF_BAD_ALLOC_HANDLER NewHandler){
-	EnterCriticalSection(&g_csHeapLock);
-		const MCF_BAD_ALLOC_HANDLER OldHandler = g_vBadAllocHandler;
-		g_vBadAllocHandler = NewHandler;
-	LeaveCriticalSection(&g_csHeapLock);
-	return OldHandler;
+bool MCF_OnBadAlloc(){
+	return false;
 }

@@ -6,12 +6,12 @@
 #include "hooks.h"
 #include "../ext/unref_param.h"
 
-void MCF_OnHeapAlloc(const void *pBlock, size_t uBytes, const void *pRetAddr){
+void MCF_OnHeapAlloc(void *pBlock, size_t uBytes, const void *pRetAddr){
 	UNREF_PARAM(pBlock);
 	UNREF_PARAM(uBytes);
 	UNREF_PARAM(pRetAddr);
 }
-void MCF_OnHeapDealloc(const void *pBlock, size_t uBytes, const void *pRetAddr){
+void MCF_OnHeapDealloc(void *pBlock, size_t uBytes, const void *pRetAddr){
 	UNREF_PARAM(pBlock);
 	UNREF_PARAM(uBytes);
 	UNREF_PARAM(pRetAddr);

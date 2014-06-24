@@ -23,7 +23,7 @@ extern void __MCF_CRT_HeapDbgUninit(void) MCF_NOEXCEPT;
 typedef struct MCF_tagHeapDbgBlockInfo {
 	MCF_AVL_NODE_HEADER vHeader;
 
-	const void *pContents;
+	void *pContents;
 	MCF_STD size_t uSize;
 	const void *pRetAddr;
 } __MCF_HEAPDBG_BLOCK_INFO;

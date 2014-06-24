@@ -45,7 +45,7 @@ void ReadPipe(MCF::StreamBuffer &sbufSink, HANDLE hSource){
 		if(dwBytesRead >= dwBytesAvail){
 			break;
 		}
-		unsigned char abyBuffer[0x100];
+		unsigned char abyBuffer[0x1000];
 		DWORD dwBytesReadThisTime;
 		if(!::ReadFile(hSource, abyBuffer, sizeof(abyBuffer), &dwBytesReadThisTime, nullptr)){
 			break;
@@ -55,8 +55,8 @@ void ReadPipe(MCF::StreamBuffer &sbufSink, HANDLE hSource){
 	}
 }
 
-void ConvertCrlfAppend(MCF::Vector<char> &vecAppendTo, MCF::StreamBuffer &sbufSource){
-	vecAppendTo.ReserveMore(sbufSource.GetSize());
+void ConvertCrlfAppend(MCF::AnsiString &strAppendTo, MCF::StreamBuffer &sbufSource){
+	strAppendTo.ReserveMore(sbufSource.GetSize());
 	int nNext = sbufSource.Get();
 	while(nNext != -1){
 		const char ch = (char)(unsigned char)nNext;
@@ -65,9 +65,9 @@ void ConvertCrlfAppend(MCF::Vector<char> &vecAppendTo, MCF::StreamBuffer &sbufSo
 			if(nNext == '\n'){
 				nNext = sbufSource.Get();
 			}
-			vecAppendTo.Push('\n');
+			strAppendTo.Push('\n');
 		} else {
-			vecAppendTo.Push(ch);
+			strAppendTo.Push(ch);
 		}
 	}
 }
@@ -77,8 +77,8 @@ void ConvertCrlfAppend(MCF::Vector<char> &vecAppendTo, MCF::StreamBuffer &sbufSo
 namespace MCFBuild {
 
 unsigned int Shell(
-	MCF::Vector<char> &restrict vecStdOut,
-	MCF::Vector<char> &restrict vecStdErr,
+	MCF::AnsiString &restrict strStdOut,
+	MCF::AnsiString &restrict strStdErr,
 	const MCF::WideStringObserver &wsoCommandLine
 ){
 	MCF::WideString wcsCommandLine;
@@ -123,8 +123,8 @@ unsigned int Shell(
 		ReadPipe(sbufStdErr, vStdErr.first.Get());
 	} while(!bBreakNow);
 
-	ConvertCrlfAppend(vecStdOut, sbufStdOut);
-	ConvertCrlfAppend(vecStdErr, sbufStdErr);
+	ConvertCrlfAppend(strStdOut, sbufStdOut);
+	ConvertCrlfAppend(strStdErr, sbufStdErr);
 
 	return dwExitCode;
 }

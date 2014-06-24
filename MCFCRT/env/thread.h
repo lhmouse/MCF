@@ -12,7 +12,7 @@ __MCF_EXTERN_C_BEGIN
 extern bool __MCF_CRT_TlsEnvInit(void) MCF_NOEXCEPT;
 extern void __MCF_CRT_TlsEnvUninit(void) MCF_NOEXCEPT;
 
-extern __attribute__((__stdcall__)) void __MCF_CRT_TlsCallback(void *hModule, unsigned long ulReason, void *pReserved) MCF_NOEXCEPT;
+extern void __stdcall __MCF_CRT_TlsCallback(void *hModule, unsigned long ulReason, void *pReserved) MCF_NOEXCEPT;
 
 // 失败返回 0。
 extern void *MCF_CRT_AtThreadExit(void (__cdecl *pfnProc)(MCF_STD intptr_t), MCF_STD intptr_t nContext) MCF_NOEXCEPT;

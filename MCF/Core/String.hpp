@@ -375,8 +375,9 @@ public:
 	}
 	template<class Iterator_t>
 	void Assign(Iterator_t itBegin, std::size_t uLength){
-		CopyN(xChopAndSplice(0, 0, 0, uLength), itBegin, uLength);
-		xSetSize(uLength);
+		String strTemp;
+		strTemp.Append(itBegin, uLength);
+		Swap(strTemp);
 	}
 	void Assign(const Observer &obs){
 		Assign(obs.GetBegin(), obs.GetEnd());

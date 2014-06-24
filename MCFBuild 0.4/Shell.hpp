@@ -4,14 +4,13 @@
 #ifndef MCFBUILD_SHELL_HPP_
 #define MCFBUILD_SHELL_HPP_
 
-#include "../MCF/Core/StringObserver.hpp"
-#include "../MCF/Core/VVector.hpp"
+#include "../MCF/Core/String.hpp"
 
 namespace MCFBuild {
 
 extern unsigned int Shell(
-	MCF::Vector<char> &restrict vecStdOut,
-	MCF::Vector<char> &restrict vecStdErr,
+	MCF::AnsiString &restrict strStdOut,
+	MCF::AnsiString &restrict strStdErr,
 	const MCF::WideStringObserver &wsoCommandLine
 );
 

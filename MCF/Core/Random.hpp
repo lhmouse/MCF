@@ -21,7 +21,7 @@ private:
 	unsigned char xm_byJ;
 
 public:
-	Random(std::uint32_t u32Seed = GenRandSeed()) noexcept;
+	explicit Random(std::uint32_t u32Seed = GenRandSeed()) noexcept;
 
 private:
 	std::uint8_t xGetByte() noexcept;
@@ -29,7 +29,10 @@ private:
 public:
 	template<typename T>
 	T Get() noexcept {
+		static_assert(std::is_integral<T>::value, "T must be an integral type.");
+
 		typedef typename std::make_unsigned<T>::type U;
+
 		U vTemp = 0;
 		for(auto i = sizeof(U); i; --i){
 			vTemp <<= 8;

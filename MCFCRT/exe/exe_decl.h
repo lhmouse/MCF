@@ -9,7 +9,7 @@
 
 __MCF_EXTERN_C_BEGIN
 
-extern unsigned int MCFMain();
+extern unsigned int MCFMain() MCF_NOEXCEPT;
 
 __MCF_EXTERN_C_END
 

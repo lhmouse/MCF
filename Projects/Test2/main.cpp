@@ -1,4 +1,5 @@
 #include <MCF/StdMCF.hpp>
+#include <MCFCRT/exe/exe_decl.h>
 #include <MCFCRT/env/hooks.h>
 #include <cstdlib>
 using namespace MCF;
@@ -19,7 +20,7 @@ void foo(){
 	throw 123;
 }
 
-extern "C" unsigned int MCFMain(){
+extern "C" unsigned int MCFMain() noexcept {
 	try {
 		foo();
 	} catch(int e){

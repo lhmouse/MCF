@@ -5,13 +5,14 @@
 #include "Model.hpp"
 #include "ConsoleOutput.hpp"
 #include "Localization.hpp"
+#include "../MCFCRT/exe/exe_decl.h"
 #include "../MCF/Core/Utilities.hpp"
 #include "../MCF/Core/String.hpp"
 #include "../MCF/Core/Exception.hpp"
 #include <cwchar>
 using namespace MCFBuild;
 
-extern "C" unsigned int MCFMain()
+extern "C" unsigned int MCFMain() noexcept
 try {
 	auto &vModel = Model::GetInstance();
 

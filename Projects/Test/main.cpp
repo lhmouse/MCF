@@ -1,11 +1,12 @@
 #include <MCF/StdMCF.hpp>
+#include <MCFCRT/exe/exe_decl.h>
 #include <MCF/Core/StreamBuffer.hpp>
 #include <MCF/Serialization/Serdes.hpp>
 #include <iostream>
 using namespace std;
 using namespace MCF;
 
-extern "C" unsigned int MCFMain(){
+extern "C" unsigned int MCFMain() noexcept {
 	double d1, d2;
 	StreamBuffer buf1, buf2;
 	d1 = 123.456;

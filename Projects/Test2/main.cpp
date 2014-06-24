@@ -1,5 +1,5 @@
 #include <MCF/StdMCF.hpp>
-#include <MCFCRT/exe/exe_decl.h>
+#include <MCF/Core/String.hpp>
 #include <MCFCRT/env/hooks.h>
 #include <cstdlib>
 using namespace MCF;
@@ -15,16 +15,12 @@ extern "C" void MCF_OnHeapDealloc(void *p, std::size_t cb, const void *ret) noex
 	std::printf("  heap dealloc, p = %p, cb = %5zu, ret = %p\n", p, cb, ret);
 }
 
-void foo(){
-	std::printf("will throw exception\n");
-	throw 123;
-}
-
 extern "C" unsigned int MCFMain() noexcept {
-	try {
-		foo();
-	} catch(int e){
-		std::printf("exception caught, e = %d\n", e);
-	}
+std::puts("----------");
+	AnsiString s	("hello world! =========");
+std::puts("----------");
+	s.Assign		("mmmmmeeeeeoooooowwww");
+std::puts("----------");
+	std::puts(s.GetCStr());
 	return 0;
 }

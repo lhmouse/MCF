@@ -132,37 +132,37 @@ public:
 		Swap(rhs);
 	}
 	String &operator=(Char_t ch) noexcept {
-		String(ch).Swap(*this);
+		Assign(ch);
 		return *this;
 	}
 	String &operator=(const Char_t *pszBegin){
-		String(pszBegin).Swap(*this);
+		Assign(pszBegin);
 		return *this;
 	}
 	String &operator=(const Observer &obs){
-		String(obs).Swap(*this);
+		Assign(obs);
 		return *this;
 	}
 	String &operator=(std::initializer_list<Char_t> vInitList){
-		String(vInitList).Swap(*this);
+		Assign(vInitList);
 		return *this;
 	}
 	template<typename OtherChar_t, StringEncoding OTHER_ENCODING>
 	String &operator=(const String<OtherChar_t, OTHER_ENCODING> &rhs){
-		String(rhs).Swap(*this);
+		Assign(rhs);
 		return *this;
 	}
 	template<typename OtherChar_t, StringEncoding OTHER_ENCODING>
 	String &operator=(String<OtherChar_t, OTHER_ENCODING> &&rhs){
-		String(std::move(rhs)).Swap(*this);
+		Assign(std::move(rhs));
 		return *this;
 	}
 	String &operator=(const String &rhs){
-		String(rhs).Swap(*this);
+		Assign(rhs);
 		return *this;
 	}
 	String &operator=(String &&rhs) noexcept {
-		rhs.Swap(*this);
+		Assign(std::move(rhs));
 		return *this;
 	}
 	~String() noexcept {
@@ -363,8 +363,8 @@ public:
 	}
 
 	void Assign(Char_t ch, std::size_t uCount = 1){
-		FillN(xChopAndSplice(0, 0, 0, uCount), uCount, ch);
-		xSetSize(uCount);
+		Clear();
+		Append(ch, uCount);
 	}
 	void Assign(const Char_t *pszBegin){
 		Assign(Observer(pszBegin));
@@ -375,9 +375,8 @@ public:
 	}
 	template<class Iterator_t>
 	void Assign(Iterator_t itBegin, std::size_t uLength){
-		String strTemp;
-		strTemp.Append(itBegin, uLength);
-		Swap(strTemp);
+		Clear();
+		Append(itBegin, uLength);
 	}
 	void Assign(const Observer &obs){
 		Assign(obs.GetBegin(), obs.GetEnd());
@@ -390,15 +389,13 @@ public:
 	}
 	template<typename OtherChar_t, StringEncoding OTHER_ENCODING>
 	void Assign(const String<OtherChar_t, OTHER_ENCODING> &rhs){
-		String strTemp;
-		strTemp.Append(rhs);
-		Swap(strTemp);
+		Clear();
+		Append(rhs);
 	}
 	template<StringEncoding OTHER_ENCODING, typename OtherChar_t>
 	void Assign(const StringObserver<OtherChar_t> &rhs){
-		String strTemp;
-		strTemp.Append<OTHER_ENCODING, OtherChar_t>(rhs);
-		Swap(strTemp);
+		Clear();
+		Append<OTHER_ENCODING, OtherChar_t>(rhs);
 	}
 
 	void Append(Char_t ch, std::size_t uCount = 1){

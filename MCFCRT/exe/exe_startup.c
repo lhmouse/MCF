@@ -2,6 +2,7 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2014. LH_Mouse. All wrongs reserved.
 
+#include "exe_decl.h"
 #include "../env/mcfwin.h"
 #include "../env/bail.h"
 #include "../env/module.h"
@@ -36,8 +37,6 @@ _Noreturn DWORD __stdcall __MCF_ExeStartup(LPVOID pReserved)
 _Noreturn
 __attribute__((__force_align_arg_pointer__, __section__(".text$"))) __MCF_HAS_EH_TOP
 DWORD __stdcall __MCF_ExeStartup(LPVOID pReserved){
-	extern unsigned int MCFMain();
-
 	DWORD dwExitCode;
 	__MCF_EH_TOP_BEGIN
 	{

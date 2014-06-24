@@ -5,7 +5,7 @@
 using namespace std;
 using namespace MCF;
 
-unsigned int MCFMain(){
+extern "C" unsigned int MCFMain(){
 	double d1, d2;
 	StreamBuffer buf1, buf2;
 	d1 = 123.456;

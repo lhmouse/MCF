@@ -3,7 +3,9 @@
 #include <cstdio>
 using namespace MCF;
 
-extern "C" __declspec(dllexport) int __stdcall dlltest(int a, int b) noexcept {
+extern "C" {
+
+__declspec(dllexport) int __stdcall dlltest(int a, int b) noexcept {
 	return a + b;
 }
 
@@ -20,4 +22,6 @@ void MCFDll_OnThreadAttach(){
 }
 void MCFDll_OnThreadDetach(){
 	std::printf("on thread detach\n");
+}
+
 }

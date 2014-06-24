@@ -9,4 +9,5 @@ __attribute__((__noinline__)) void *__wrap_malloc(size_t cb){
 	return __MCF_CRT_HeapAlloc(cb, __MCF_DEBUG_RET_ADDR);
 }
 
-__attribute__((__alias__("__wrap_malloc"))) void *malloc(size_t cb);
+void *malloc(size_t cb)
+	__attribute__((__alias__("__wrap_malloc")));

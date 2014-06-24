@@ -2,6 +2,7 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2014. LH_Mouse. All wrongs reserved.
 
+#include "dll_decl.h"
 #include "../env/mcfwin.h"
 #include "../env/bail.h"
 #include "../env/module.h"
@@ -10,11 +11,6 @@
 #include "../ext/unref_param.h"
 
 // -static -Wl,-e__MCF_DllStartup,--disable-runtime-pseudo-reloc,--disable-auto-import
-
-extern bool MCFDll_OnProcessAttach(bool bDynamic);
-extern void MCFDll_OnProcessDetach(bool bDynamic);
-extern void MCFDll_OnThreadAttach();
-extern void MCFDll_OnThreadDetach();
 
 BOOL __stdcall __MCF_DllStartup(HINSTANCE hDll, DWORD dwReason, LPVOID pReserved)
 	__asm__("__MCF_DllStartup");

@@ -11,4 +11,5 @@ __attribute__((__noinline__)) void __wrap_free(void *p){
 	}
 }
 
-__attribute__((__alias__("__wrap_free"))) void free(void *p);
+void free(void *p)
+	__attribute__((__alias__("__wrap_free")));

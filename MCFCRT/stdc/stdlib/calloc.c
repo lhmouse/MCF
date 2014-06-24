@@ -21,4 +21,5 @@ __attribute__((__noinline__)) void *__wrap_calloc(size_t nmemb, size_t cnt){
 	return ret;
 }
 
-__attribute__((__alias__("__wrap_calloc"))) void *calloc(size_t nmemb, size_t cnt);
+void *calloc(size_t nmemb, size_t cnt)
+	__attribute__((__alias__("__wrap_calloc")));

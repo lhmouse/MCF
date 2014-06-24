@@ -13,4 +13,5 @@ __attribute__((__noinline__)) void *__wrap_realloc(void *p, size_t cb){
 	}
 }
 
-__attribute__((__alias__("__wrap_realloc"))) void *realloc(void *p, size_t cb);
+void *realloc(void *p, size_t cb)
+	__attribute__((__alias__("__wrap_realloc")));

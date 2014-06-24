@@ -1,0 +1,25 @@
+// 这个文件是 MCF 的一部分。
+// 有关具体授权说明，请参阅 MCFLicense.txt。
+// Copyleft 2014. LH_Mouse. All wrongs reserved.
+
+#ifndef MCF_CRT_HOOKS_H_
+#define MCF_CRT_HOOKS_H_
+
+#include "_crtdef.h"
+
+// heap_dbg.c
+extern void MCF_OnHeapAlloc(const void *pBlock, MCF_STD size_t uBytes, const void *pRetAddr) MCF_NOEXCEPT
+	__attribute__((__weak__));
+extern void MCF_OnHeapDealloc(const void *pBlock, MCF_STD size_t uBytes, const void *pRetAddr) MCF_NOEXCEPT
+	__attribute__((__weak__));
+
+#ifdef __cplusplus
+#	include <typeinfo>
+
+// cxa_throw.cpp
+extern void MCF_OnException(void *pException, const std::type_info &tiType, const void *pRetAddr) noexcept
+	__attribute__((__weak__));
+
+#endif // __cplusplus
+
+#endif

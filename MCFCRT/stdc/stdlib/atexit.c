@@ -6,7 +6,9 @@
 #include "../../env/module.h"
 
 int __wrap_atexit(void (__cdecl *func)(void)){
+	// Windows 上 x86 __cdecl 和 x64 都约定调用者清栈，因此可以直接转换函数指针。
 	return MCF_CRT_AtEndModule((void (__cdecl *)(intptr_t))func, 0);
 }
 
-__attribute__((__alias__("__wrap_atexit"))) int atexit(void (*func)(void));
+int atexit(void (*func)(void))
+	__attribute__((__alias__("__wrap_atexit")));

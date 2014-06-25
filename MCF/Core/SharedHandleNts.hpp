@@ -5,7 +5,6 @@
 #ifndef MCF_SHARED_HANDLE_NTS_HPP_
 #define MCF_SHARED_HANDLE_NTS_HPP_
 
-#include "../../MCFCRT/ext/ext_include.h"
 #include "../../MCFCRT/env/bail.h"
 #include "Utilities.hpp"
 #include <utility>

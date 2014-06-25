@@ -75,6 +75,7 @@ static bool Init(unsigned int *restrict puState){
 	DO_INIT(3, __MCF_CRT_TlsEnvInit());
 	DO_INIT(4, __MCF_CRT_MinGWHacksInit());
 	DO_INIT(5, DoCtors());
+	DO_INIT(6, DUMMY_INIT());
 //=========================================================
 
 		break;
@@ -98,6 +99,7 @@ static void Uninit(unsigned int *restrict puState){
 		}
 
 //=========================================================
+	DO_UNINIT(6, __MCF_CRT_RunEmutlsDtors());
 	DO_UNINIT(5, DoDtors());
 	DO_UNINIT(4, __MCF_CRT_MinGWHacksUninit());
 	DO_UNINIT(3, __MCF_CRT_TlsEnvUninit());

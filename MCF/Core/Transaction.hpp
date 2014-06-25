@@ -12,10 +12,12 @@
 namespace MCF {
 
 class OperationBase : NO_COPY, ABSTRACT {
-public:
-	virtual void Lock() = 0;
-	virtual void Commit() noexcept = 0;
-	virtual void Unlock() noexcept = 0;
+	friend class Transaction;
+
+private:
+	virtual void xLock() = 0;
+	virtual void xCommit() noexcept = 0;
+	virtual void xUnlock() noexcept = 0;
 };
 
 class Transaction : NO_COPY {

@@ -7,6 +7,7 @@
 #include "_WinHandle.hpp"
 #include "../Core/Exception.hpp"
 #include "../Core/Time.hpp"
+#include "../../MCFCRT/env/thread.h"
 using namespace MCF;
 
 namespace {

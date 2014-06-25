@@ -58,14 +58,11 @@ public:
 		return xm_hObj;
 	}
 	Handle Release() noexcept {
-		const Handle hOld = xm_hObj;
-		xm_hObj = Closer_t()();
-		return hOld;
+		return std::exchange(xm_hObj, Closer_t()());
 	}
 
 	void Reset(Handle hObj = Closer_t()()) noexcept {
-		const Handle hOld = xm_hObj;
-		xm_hObj = hObj;
+		const Handle hOld = std::exchange(xm_hObj, hObj);
 		if(hOld != Closer_t()()){
 			Closer_t()(hOld);
 		}
@@ -77,9 +74,7 @@ public:
 	}
 
 	void Swap(UniqueHandle &rhs) noexcept {
-		if(&rhs != this){
-			std::swap(xm_hObj, rhs.xm_hObj);
-		}
+		std::swap(xm_hObj, rhs.xm_hObj);
 	}
 
 public:

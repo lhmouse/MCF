@@ -27,24 +27,24 @@ void Transaction::CommitAll(){
 	auto ppHead = ppBegin;
 	try {
 		while(ppHead != ppEnd){
-			(*ppHead)->Lock();
+			(*ppHead)->xLock();
 			++ppHead;
 		}
 	} catch(...){
 		while(ppHead != ppBegin){
 			--ppHead;
-			(*ppHead)->Unlock();
+			(*ppHead)->xUnlock();
 		}
 		throw;
 	}
 	ppHead = ppBegin;
 	while(ppHead != ppEnd){
-		(*ppHead)->Commit();
+		(*ppHead)->xCommit();
 		++ppHead;
 	}
 	while(ppHead != ppBegin){
 		--ppHead;
-		(*ppHead)->Unlock();
+		(*ppHead)->xUnlock();
 	}
 	xm_vecOperations.Clear();
 }

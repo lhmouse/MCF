@@ -5,6 +5,8 @@
 #ifndef MCF_TIME_HPP_
 #define MCF_TIME_HPP_
 
+#include "Utilities.hpp"
+#include <functional>
 #include <cstdint>
 
 namespace MCF {
@@ -18,6 +20,25 @@ extern std::uint64_t UnixTimeFromNtTime(std::uint64_t u64NtTime) noexcept;
 
 // 单位是秒。
 extern double GetHiResCounter() noexcept;
+
+class TimeBenchmarker : NO_COPY {
+private:
+	const std::function<void (double)> xm_fnCallback;
+	const double xm_lfTimeBegin;
+
+public:
+	explicit TimeBenchmarker(std::function<void (double)> fnCallback)
+		: xm_fnCallback		(std::move(fnCallback))
+		, xm_lfTimeBegin	(GetHiResCounter())
+	{
+	}
+	~TimeBenchmarker() noexcept {
+		try {
+			xm_fnCallback(GetHiResCounter() - xm_lfTimeBegin);
+		} catch(...){
+		}
+	}
+};
 
 // 单位是毫秒。
 enum : std::uint64_t {

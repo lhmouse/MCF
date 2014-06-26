@@ -22,6 +22,7 @@ public:
 
 public:
 	const PeerInfo &GetPeerInfo() const noexcept;
+	const PeerInfo &GetLocalInfo() const noexcept;
 
 	std::size_t Read(void *pData, std::size_t uSize);
 	void ShutdownRead() noexcept;

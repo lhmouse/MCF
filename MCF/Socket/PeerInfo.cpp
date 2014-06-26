@@ -23,6 +23,22 @@ inline bool IsAllZeroes(const T (&a)[N]) noexcept {
 
 }
 
+namespace MCF {
+
+namespace Impl {
+	PeerInfo LocalInfoFromSocket(SOCKET sockLocal){
+		SOCKADDR_STORAGE vSockAddr;
+		auto nSockAddrSize = (int)sizeof(vSockAddr);
+		if(::getsockname(sockLocal, (SOCKADDR *)&vSockAddr, &nSockAddrSize)){
+			MCF_THROW(::GetLastError(), L"::getsockname() 失败。"_wso);
+		}
+		return PeerInfo(&vSockAddr, (std::size_t)nSockAddrSize);
+	}
+}
+
+}
+
+
 // 构造函数和析构函数。
 PeerInfo::PeerInfo(bool bIPv6, std::uint16_t u16Port) noexcept {
 	if(bIPv6){

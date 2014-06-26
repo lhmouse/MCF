@@ -22,6 +22,7 @@ public:
 
 public:
 	const PeerInfo &GetPeerInfo() const noexcept;
+	const PeerInfo &GetLocalInfo() const noexcept;
 
 	void Send(const void *pData, std::size_t uSize);
 };

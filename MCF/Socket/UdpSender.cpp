@@ -9,14 +9,23 @@
 #include "../Core/Utilities.hpp"
 using namespace MCF;
 
+namespace MCF {
+
+namespace Impl {
+	extern PeerInfo LocalInfoFromSocket(SOCKET sockLocal);
+}
+
+}
+
 namespace {
 
 class UdpSenderDelegate : CONCRETE(UdpSender) {
 private:
-	Impl::WSAInitializer xm_vWSAInitializer;
+	const Impl::WSAInitializer xm_vWSAInitializer;
 
-	Impl::SharedSocket xm_sockPeer;
-	PeerInfo xm_vPeerInfo;
+	const Impl::SharedSocket xm_sockPeer;
+	const PeerInfo xm_vPeerInfo;
+	const PeerInfo xm_vLocalInfo;
 
 	SOCKADDR_STORAGE xm_vSockAddr;
 	int xm_nSockAddrSize;
@@ -25,6 +34,7 @@ public:
 	UdpSenderDelegate(Impl::SharedSocket &&sockPeer, const void *pSockAddr, std::size_t uSockAddrSize)
 		: xm_sockPeer	(std::move(sockPeer))
 		, xm_vPeerInfo	(pSockAddr, uSockAddrSize)
+		, xm_vLocalInfo	(Impl::LocalInfoFromSocket(xm_sockPeer.Get()))
 	{
 		std::memcpy(&xm_vSockAddr, pSockAddr, uSockAddrSize);
 		xm_nSockAddrSize = (int)uSockAddrSize;
@@ -33,6 +43,9 @@ public:
 public:
 	const PeerInfo &GetPeerInfo() const noexcept {
 		return xm_vPeerInfo;
+	}
+	const PeerInfo &GetLocalInfo() const noexcept {
+		return xm_vLocalInfo;
 	}
 
 	void Send(const void *pData, std::size_t uSize){
@@ -142,6 +155,11 @@ const PeerInfo &UdpSender::GetPeerInfo() const noexcept {
 	ASSERT(dynamic_cast<const UdpSenderDelegate *>(this));
 
 	return ((const UdpSenderDelegate *)this)->GetPeerInfo();
+}
+const PeerInfo &UdpSender::GetLocalInfo() const noexcept {
+	ASSERT(dynamic_cast<const UdpSenderDelegate *>(this));
+
+	return ((const UdpSenderDelegate *)this)->GetLocalInfo();
 }
 
 void UdpSender::Send(const void *pData, std::size_t uSize){

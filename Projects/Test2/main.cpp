@@ -41,6 +41,7 @@ extern "C" unsigned int MCFMain() noexcept {
 		std::printf("--- wp1: assign from sp1, weak = %zu, strong = %zu\n", wp1.GetWeakRefCount(), wp1.GetRefCount());
 		wp2 = sp2;
 		std::printf("--- wp2: assign from sp2, weak = %zu, strong = %zu\n", wp2.GetWeakRefCount(), wp2.GetRefCount());
+		std::printf("%d\n", sp1.Get() == sp1);
 	}
 	std::printf("--- wp2: lock = %p\n", wp2.Lock().Get());
 	sp2.Reset();

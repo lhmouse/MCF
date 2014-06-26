@@ -9,25 +9,38 @@
 #include "../Core/Utilities.hpp"
 using namespace MCF;
 
+namespace MCF {
+
+namespace Impl {
+	extern PeerInfo LocalInfoFromSocket(SOCKET sockLocal);
+}
+
+}
+
 namespace {
 
 class TcpPeerDelegate : CONCRETE(TcpPeer) {
 private:
-	Impl::WSAInitializer xm_vWSAInitializer;
+	const Impl::WSAInitializer xm_vWSAInitializer;
 
-	Impl::UniqueSocket xm_sockPeer;
-	PeerInfo xm_vPeerInfo;
+	const Impl::UniqueSocket xm_sockPeer;
+	const PeerInfo xm_vPeerInfo;
+	const PeerInfo xm_vLocalInfo;
 
 public:
 	TcpPeerDelegate(Impl::UniqueSocket &&sockPeer, const void *pSockAddr, std::size_t uSockAddrSize)
 		: xm_sockPeer	(std::move(sockPeer))
 		, xm_vPeerInfo	(pSockAddr, uSockAddrSize)
+		, xm_vLocalInfo	(Impl::LocalInfoFromSocket(xm_sockPeer.Get()))
 	{
 	}
 
 public:
 	const PeerInfo &GetPeerInfo() const noexcept {
 		return xm_vPeerInfo;
+	}
+	const PeerInfo &GetLocalInfo() const noexcept {
+		return xm_vLocalInfo;
 	}
 
 	std::size_t Read(void *pData, std::size_t uSize){
@@ -188,6 +201,11 @@ const PeerInfo &TcpPeer::GetPeerInfo() const noexcept {
 	ASSERT(dynamic_cast<const TcpPeerDelegate *>(this));
 
 	return ((const TcpPeerDelegate *)this)->GetPeerInfo();
+}
+const PeerInfo &TcpPeer::GetLocalInfo() const noexcept {
+	ASSERT(dynamic_cast<const TcpPeerDelegate *>(this));
+
+	return ((const TcpPeerDelegate *)this)->GetLocalInfo();
 }
 
 std::size_t TcpPeer::Read(void *pData, std::size_t uSize){

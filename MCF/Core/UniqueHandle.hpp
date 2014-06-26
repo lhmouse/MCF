@@ -62,7 +62,7 @@ public:
 	}
 
 	void Reset(Handle hObj = Closer_t()()) noexcept {
-		const Handle hOld = std::exchange(xm_hObj, hObj);
+		const auto hOld = std::exchange(xm_hObj, hObj);
 		if(hOld != Closer_t()()){
 			Closer_t()(hOld);
 		}

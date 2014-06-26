@@ -9,7 +9,6 @@
 #include "_WinHandle.hpp"
 #include "../Core/Utilities.hpp"
 #include "../Core/Exception.hpp"
-#include "../Core/StringObserver.hpp"
 
 namespace MCF {
 

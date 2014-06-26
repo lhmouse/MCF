@@ -25,12 +25,6 @@
 #	define __MCF_EXTERN_C_END
 #endif
 
-#ifdef NDEBUG
-#	define __MCF_DEBUG_RET_ADDR		((void *)0)
-#else
-#	define __MCF_DEBUG_RET_ADDR		(__builtin_return_address(0))
-#endif
-
 // C++ 目前还不支持 C99 的 restrict 限定符。
 #ifdef __cplusplus
 #	define restrict					__restrict__

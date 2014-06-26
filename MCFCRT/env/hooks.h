@@ -16,7 +16,7 @@ extern bool MCF_OnBadAlloc() MCF_NOEXCEPT
 // heap_dbg.c
 extern void MCF_OnHeapAlloc(void *pBlock, MCF_STD size_t uBytes, const void *pRetAddr) MCF_NOEXCEPT
 	__attribute__((__weak__));
-extern void MCF_OnHeapDealloc(void *pBlock, MCF_STD size_t uBytes, const void *pRetAddr) MCF_NOEXCEPT
+extern void MCF_OnHeapDealloc(void *pBlock, const void *pRetAddr) MCF_NOEXCEPT
 	__attribute__((__weak__));
 
 __MCF_EXTERN_C_END

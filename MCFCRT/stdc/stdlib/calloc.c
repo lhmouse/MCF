@@ -14,7 +14,7 @@ __attribute__((__noinline__)) void *__wrap_calloc(size_t nmemb, size_t cnt){
 			return NULL;
 		}
 	}
-	void *const ret = __MCF_CRT_HeapAlloc(cb, __MCF_DEBUG_RET_ADDR);
+	void *const ret = __MCF_CRT_HeapAlloc(cb, __builtin_return_address(0));
 	if(ret){
 		memset(ret, 0, cb);
 	}

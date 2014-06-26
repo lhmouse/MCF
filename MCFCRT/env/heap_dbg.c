@@ -3,19 +3,9 @@
 // Copyleft 2014. LH_Mouse. All wrongs reserved.
 
 #include "heap_dbg.h"
-#include "hooks.h"
 #include "../ext/unref_param.h"
 
-void MCF_OnHeapAlloc(void *pBlock, size_t uBytes, const void *pRetAddr){
-	UNREF_PARAM(pBlock);
-	UNREF_PARAM(uBytes);
-	UNREF_PARAM(pRetAddr);
-}
-void MCF_OnHeapDealloc(void *pBlock, size_t uBytes, const void *pRetAddr){
-	UNREF_PARAM(pBlock);
-	UNREF_PARAM(uBytes);
-	UNREF_PARAM(pRetAddr);
-}
+typedef int Dummy;
 
 #ifdef __MCF_CRT_HEAPDBG_ON
 
@@ -151,8 +141,6 @@ void __MCF_CRT_HeapDbgAddGuardsAndRegister(
 	if(!MCF_AvlPrev((MCF_AVL_NODE_HEADER *)pBlockInfo)){
 		g_pBlockHead = pBlockInfo;
 	}
-
-	MCF_OnHeapAlloc(pContents, uContentSize, pRetAddr);
 }
 const BLOCK_INFO *__MCF_CRT_HeapDbgValidate(
 	unsigned char **ppRaw,
@@ -195,8 +183,6 @@ const BLOCK_INFO *__MCF_CRT_HeapDbgValidate(
 void __MCF_CRT_HeapDbgUnregister(
 	const BLOCK_INFO *pBlockInfo
 ){
-	MCF_OnHeapDealloc(pBlockInfo->pContents, pBlockInfo->uSize, pBlockInfo->pRetAddr);
-
 	if(g_pBlockHead == pBlockInfo){
 		g_pBlockHead = (BLOCK_INFO *)MCF_AvlNext((MCF_AVL_NODE_HEADER *)pBlockInfo);
 	}

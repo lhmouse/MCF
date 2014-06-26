@@ -28,6 +28,16 @@
 
 #endif
 
+void MCF_OnHeapAlloc(void *pBlock, size_t uBytes, const void *pRetAddr){
+	UNREF_PARAM(pBlock);
+	UNREF_PARAM(uBytes);
+	UNREF_PARAM(pRetAddr);
+}
+void MCF_OnHeapDealloc(void *pBlock, const void *pRetAddr){
+	UNREF_PARAM(pBlock);
+	UNREF_PARAM(pRetAddr);
+}
+
 static CRITICAL_SECTION		g_csHeapLock;
 
 bool __MCF_CRT_HeapInit(){
@@ -74,6 +84,8 @@ unsigned char *__MCF_CRT_HeapAlloc(size_t uSize, const void *pRetAddr){
 				break;
 			}
 		} while(MCF_OnBadAlloc());
+
+		MCF_OnHeapAlloc(pRet, uSize, pRetAddr);
 	}
 	LeaveCriticalSection(&g_csHeapLock);
 	return pRet;
@@ -100,6 +112,8 @@ unsigned char *__MCF_CRT_HeapReAlloc(void *pBlock /* NON-NULL */, size_t uSize, 
 		unsigned char *const pRawOriginal = pBlock;
 #endif
 
+		MCF_OnHeapDealloc(pBlock, pRetAddr);
+
 		do {
 			unsigned char *const pRaw = MCF_REALLOC(pRawOriginal, uRawSize);
 			if(pRaw){
@@ -117,6 +131,8 @@ unsigned char *__MCF_CRT_HeapReAlloc(void *pBlock /* NON-NULL */, size_t uSize, 
 				break;
 			}
 		} while(MCF_OnBadAlloc());
+
+		MCF_OnHeapAlloc(pRet, uSize, pRetAddr);
 	}
 	LeaveCriticalSection(&g_csHeapLock);
 	return pRet;
@@ -136,6 +152,9 @@ void __MCF_CRT_HeapFree(void *pBlock /* NON-NULL */, const void *pRetAddr){
 
 		unsigned char *const pRaw = pBlock;
 #endif
+
+		MCF_OnHeapDealloc(pBlock, pRetAddr);
+
 		MCF_FREE(pRaw);
 	}
 	LeaveCriticalSection(&g_csHeapLock);

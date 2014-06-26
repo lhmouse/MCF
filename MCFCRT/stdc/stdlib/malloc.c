@@ -6,7 +6,7 @@
 #include "../../env/heap.h"
 
 __attribute__((__noinline__)) void *__wrap_malloc(size_t cb){
-	return __MCF_CRT_HeapAlloc(cb, __MCF_DEBUG_RET_ADDR);
+	return __MCF_CRT_HeapAlloc(cb, __builtin_return_address(0));
 }
 
 void *malloc(size_t cb)

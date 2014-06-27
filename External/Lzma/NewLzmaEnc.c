@@ -18,7 +18,7 @@ __asm__(
 	"	.align 16 \n"
 	"InitCoroutineProc: \n"
 #ifdef __x86_64__
-	"	lea rax, dword ptr[rcx - 0x110] \n"	// rcx = pStackBottom
+	"	lea rax, dword ptr[rcx - 0x110] \n"		// rcx = pStackBottom
 	"	mov qword ptr[rax + 0xE8], offset x64Wrapper \n"
 	"	mov qword ptr[rax + 0xF0], rdx \n"		// rdx = pfnProc
 	"	mov qword ptr[rax + 0xF8], r8 \n"		// r8 = pParam
@@ -37,7 +37,9 @@ __asm__(
 	"	mov ecx, dword ptr[esp + 0x08] \n"		// pfnProc
 	"	mov dword ptr[eax + 0x10], ecx \n"
 	"	xor edx, edx \n"
-	"	mov dword ptr[eax + 0x14], edx \n"		// Return address of pfnProc. Coroutine procs must not return. Use NULL here.
+	"	mov dword ptr[eax + 0x14], edx \n"		// Return address of pfnProc.
+												// Coroutine procs _must not_ return.
+												// Use NULL here.
 	"	mov ecx, dword ptr[esp + 0x0C] \n"		// pParam
 	"	mov dword ptr[eax + 0x18], ecx \n"
 	"	ret \n"
@@ -168,12 +170,18 @@ static SRes ContextRead(void *sis, void *buf, size_t *size){
 static __attribute__((noreturn)) void __cdecl CoroutineProc(void *pParam){
 	CONTEXT_HEADER *const pHeader = (CONTEXT_HEADER *)pParam;
 	for(;;){
-		pHeader->res = LzmaEnc_Encode(pHeader->p, pHeader->os, &(pHeader->is.sis), pHeader->progress, pHeader->alloc, pHeader->allocBig);
+		pHeader->res = LzmaEnc_Encode(
+			pHeader->p, pHeader->os, &(pHeader->is.sis),
+			pHeader->progress, pHeader->alloc, pHeader->allocBig
+		);
 		CoroutineSwitchTo(pHeader->orgSp, &pHeader->crSp);
 	}
 }
 
-void *LzmaEnc_NewEncodeCreateContext(CLzmaEncHandle p, ISeqOutStream *outStream, ICompressProgress *progress, ISzAlloc *alloc, ISzAlloc *allocBig){
+void *LzmaEnc_NewEncodeCreateContext(
+	CLzmaEncHandle p, ISeqOutStream *outStream,
+	ICompressProgress *progress, ISzAlloc *alloc, ISzAlloc *allocBig
+){
 	SYSTEM_INFO vSystemInfo;
 	GetSystemInfo(&vSystemInfo);
 	const size_t uPageSize = vSystemInfo.dwPageSize;

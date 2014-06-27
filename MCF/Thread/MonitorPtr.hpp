@@ -14,24 +14,24 @@
 namespace MCF {
 
 namespace Impl {
-	template<typename Ty, typename = void>
+	template<typename Object_t, typename = void>
 	struct ForwardArrowOperatorHelper {
-		auto operator()(Ty &vSrc) const noexcept {
-			return std::addressof(vSrc);
+		auto operator()(Object_t *pObject) const noexcept {
+			return pObject;
 		}
 	};
-	template<typename Ty>
+	template<typename Object_t>
 	struct ForwardArrowOperatorHelper<
-		Ty, decltype(std::declval<Ty>().operator->(), (void)0)
-	>{
-		auto operator()(Ty &vSrc) const noexcept {
-			return vSrc.operator->();
+		Object_t, decltype(std::declval<Object_t *>()->operator->(), (void)0)
+	> {
+		auto operator()(Object_t *pObject) const noexcept {
+			return pObject->operator->();
 		}
 	};
 
-	template<typename Ty>
-	auto ForwardArrowOperator(Ty &vObject) noexcept {
-		return ForwardArrowOperatorHelper<Ty>()(vObject);
+	template<typename Object_t>
+	auto ForwardArrowOperator(Object_t &vObject) noexcept {
+		return ForwardArrowOperatorHelper<Object_t>()(&vObject);
 	}
 }
 
@@ -85,9 +85,9 @@ private:
 public:
 	template<typename... Params_t>
 	explicit MonitorPtr(Params_t &&... vParams)
-		: xm_vObject	(std::forward<Params_t>(vParams)...)
-		, xm_pcsMutex	(CriticalSection::Create())
+		: xm_pcsMutex	(CriticalSection::Create())
 		, xm_vLock		(xm_pcsMutex.get(), false)
+		, xm_vObject	(std::forward<Params_t>(vParams)...)
 	{
 	}
 

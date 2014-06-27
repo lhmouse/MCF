@@ -36,8 +36,8 @@ public:
 		return GetFree() == 0;
 	}
 	void Clear() noexcept {
-		xm_ushRead = 0;
-		xm_ushWrite = 0;
+		xm_ushRead	= 0;
+		xm_ushWrite	= 0;
 	}
 
 	unsigned char Get() noexcept {
@@ -146,7 +146,7 @@ std::size_t StreamBuffer::GetSize() const noexcept {
 	return xm_uSize;
 }
 void StreamBuffer::Clear() noexcept {
-	xm_lstData.clear();
+	xm_lstPool.splice(xm_lstPool.end(), xm_lstData);
 	xm_uSize = 0;
 }
 
@@ -158,7 +158,7 @@ ASSERT_NOEXCEPT_BEGIN
 			nRet = xm_lstData.front().Get();
 			break;
 		}
-		xm_lstData.pop_front();
+		xm_lstPool.splice(xm_lstPool.end(), xm_lstData, xm_lstData.begin());
 	}
 	--xm_uSize;
 	return nRet;
@@ -177,7 +177,12 @@ ASSERT_NOEXCEPT_END
 
 void StreamBuffer::Put(unsigned char by){
 	if(xm_lstData.empty() || xm_lstData.back().IsFull()){
-		xm_lstData.emplace_back();
+		if(xm_lstPool.empty()){
+			xm_lstData.emplace_back();
+		} else {
+			xm_lstData.splice(xm_lstData.end(), xm_lstPool, xm_lstPool.begin());
+			xm_lstData.back().Clear();
+		}
 	}
 
 ASSERT_NOEXCEPT_BEGIN
@@ -204,7 +209,7 @@ ASSERT_NOEXCEPT_BEGIN
 			}
 
 			ASSERT(xm_lstData.front().IsEmpty());
-			xm_lstData.pop_front();
+			xm_lstPool.splice(xm_lstPool.end(), xm_lstData, xm_lstData.begin());
 		}
 	} else {
 		std::size_t uToDiscard = uSize;
@@ -217,7 +222,7 @@ ASSERT_NOEXCEPT_BEGIN
 			}
 
 			ASSERT(xm_lstData.front().IsEmpty());
-			xm_lstData.pop_front();
+			xm_lstPool.splice(xm_lstPool.end(), xm_lstData, xm_lstData.begin());
 		}
 	}
 	return true;
@@ -229,7 +234,12 @@ void StreamBuffer::Insert(const void *pData, std::size_t uSize){
 
 	decltype(xm_lstData) lstTemp;
 	while(pbyRead != pbyEnd){
-		lstTemp.emplace_back();
+		if(xm_lstPool.empty()){
+			lstTemp.emplace_back();
+		} else {
+			lstTemp.splice(lstTemp.end(), xm_lstPool, xm_lstPool.begin());
+			lstTemp.back().Clear();
+		}
 
 	ASSERT_NOEXCEPT_BEGIN
 		xm_uSize += lstTemp.back().CopyIn(pbyRead, pbyEnd);
@@ -267,7 +277,12 @@ bool StreamBuffer::CutOut(StreamBuffer &sbufHead, std::size_t uSize){
 	ASSERT_NOEXCEPT_END
 
 		if(uRemaining != 0){
-			sbufTemp.xm_lstData.emplace_back();
+			if(xm_lstPool.empty()){
+				sbufTemp.xm_lstData.emplace_back();
+			} else {
+				sbufTemp.xm_lstData.splice(sbufTemp.xm_lstData.end(), xm_lstPool, xm_lstPool.begin());
+				sbufTemp.xm_lstData.back().Clear();
+			}
 
 		ASSERT_NOEXCEPT_BEGIN
 			const auto uTransferred = itLast->Transfer(sbufTemp.xm_lstData.back(), uRemaining);
@@ -299,6 +314,7 @@ void StreamBuffer::Append(StreamBuffer &&rhs) noexcept {
 ASSERT_NOEXCEPT_BEGIN
 	xm_lstData.splice(xm_lstData.end(), lstTemp);
 	xm_lstData.splice(xm_lstData.end(), rhs.xm_lstData);
+	xm_lstPool.splice(xm_lstPool.end(), rhs.xm_lstPool);
 	xm_uSize += rhs.xm_uSize;
 	rhs.Clear();
 ASSERT_NOEXCEPT_END

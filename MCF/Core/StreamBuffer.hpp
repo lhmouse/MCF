@@ -23,6 +23,7 @@ public:
 
 private:
 	std::list<xDisposableBuffer> xm_lstData;
+	std::list<xDisposableBuffer> xm_lstPool;
 	std::size_t xm_uSize;
 
 public:

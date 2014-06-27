@@ -142,7 +142,7 @@ typedef struct tagContextHeader {
 } CONTEXT_HEADER;
 
 static SRes ContextRead(void *sis, void *buf, size_t *size){
-	ISTREAM *const pIs = (ISTREAM *)sis;
+	ISTREAM *const pIs = sis;
 
 	if(pIs->srcAvail == 0){
 		CONTEXT_HEADER *const pHeader = (CONTEXT_HEADER *)((unsigned char *)pIs - offsetof(CONTEXT_HEADER, is));
@@ -168,7 +168,7 @@ static SRes ContextRead(void *sis, void *buf, size_t *size){
 }
 
 static __attribute__((noreturn)) void __cdecl CoroutineProc(void *pParam){
-	CONTEXT_HEADER *const pHeader = (CONTEXT_HEADER *)pParam;
+	CONTEXT_HEADER *const pHeader = pParam;
 	for(;;){
 		pHeader->res = LzmaEnc_Encode(
 			pHeader->p, pHeader->os, &(pHeader->is.sis),
@@ -186,7 +186,7 @@ void *LzmaEnc_NewEncodeCreateContext(
 	GetSystemInfo(&vSystemInfo);
 	const size_t uPageSize = vSystemInfo.dwPageSize;
 
-	unsigned char *const pContext = (unsigned char *)VirtualAlloc(NULL, 0x10000 + uPageSize * 3, MEM_RESERVE, PAGE_READWRITE);
+	unsigned char *const pContext = VirtualAlloc(NULL, 0x10000 + uPageSize * 3, MEM_RESERVE, PAGE_READWRITE);
 	if(pContext == NULL){
 		return NULL;
 	}
@@ -207,7 +207,7 @@ void *LzmaEnc_NewEncodeCreateContext(
 }
 void LzmaEnc_NewEncodeDestroyContext(void *ctx){
 	if(ctx != NULL){
-		CONTEXT_HEADER *const pHeader = (CONTEXT_HEADER *)ctx;
+		CONTEXT_HEADER *const pHeader = ctx;
 		pHeader->is.src = NULL;
 		pHeader->is.srcAvail = 1;
 		CoroutineSwitchTo(pHeader->crSp, &pHeader->orgSp);
@@ -217,7 +217,7 @@ void LzmaEnc_NewEncodeDestroyContext(void *ctx){
 }
 
 SRes LzmaEnc_NewEncode(void *ctx, const Byte *src, SizeT srcLen){
-	CONTEXT_HEADER *const pHeader = (CONTEXT_HEADER *)ctx;
+	CONTEXT_HEADER *const pHeader = ctx;
 	pHeader->is.src = src;
 	pHeader->is.srcAvail = srcLen;
 	CoroutineSwitchTo(pHeader->crSp, &pHeader->orgSp);

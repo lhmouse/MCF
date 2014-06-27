@@ -19,6 +19,10 @@ extern void MCF_OnHeapAlloc(void *pBlock, MCF_STD size_t uBytes, const void *pRe
 extern void MCF_OnHeapDealloc(void *pBlock, const void *pRetAddr) MCF_NOEXCEPT
 	__attribute__((__weak__));
 
+// module.h
+extern void MCF_PreInitModule() MCF_NOEXCEPT
+	__attribute__((__weak__));
+
 __MCF_EXTERN_C_END
 
 #ifdef __cplusplus

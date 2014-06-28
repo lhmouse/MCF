@@ -236,14 +236,14 @@ private:
 public:
 	const Char_t *GetBegin() const noexcept {
 		if(xm_vStorage.chNull == Char_t()){
-			return &(xm_vStorage.achSmall[0]);
+			return xm_vStorage.achSmall;
 		} else {
 			return xm_vStorage.pchLargeBegin;
 		}
 	}
 	Char_t *GetBegin() noexcept {
 		if(xm_vStorage.chNull == Char_t()){
-			return &(xm_vStorage.achSmall[0]);
+			return xm_vStorage.achSmall;
 		} else {
 			return xm_vStorage.pchLargeBegin;
 		}
@@ -253,14 +253,14 @@ public:
 	}
 	const Char_t *GetEnd() const noexcept {
 		if(xm_vStorage.chNull == Char_t()){
-			return &(xm_vStorage.achSmall[0]) + xm_vStorage.uchSmallLength;
+			return xm_vStorage.achSmall + xm_vStorage.uchSmallLength;
 		} else {
 			return xm_vStorage.pchLargeBegin + xm_vStorage.uLargeLength;
 		}
 	}
 	Char_t *GetEnd() noexcept {
 		if(xm_vStorage.chNull == Char_t()){
-			return &(xm_vStorage.achSmall[0]) + xm_vStorage.uchSmallLength;
+			return xm_vStorage.achSmall + xm_vStorage.uchSmallLength;
 		} else {
 			return xm_vStorage.pchLargeBegin + xm_vStorage.uLargeLength;
 		}

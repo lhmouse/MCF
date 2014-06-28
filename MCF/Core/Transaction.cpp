@@ -17,7 +17,7 @@ void Transaction::Clear(){
 	xm_vecOperations.Clear();
 }
 
-void Transaction::CommitAll(){
+void Transaction::Commit(){
 	const auto ppBegin = xm_vecOperations.GetBegin();
 	const auto ppEnd = xm_vecOperations.GetEnd();
 	if(ppBegin == ppEnd){

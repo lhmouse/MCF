@@ -13,13 +13,25 @@ class StreamBuffer::xDisposableBuffer {
 private:
 	unsigned short xm_ushRead;
 	unsigned short xm_ushWrite;
-	unsigned char xm_abyData[0x400u];
+	unsigned char xm_abyData[0x100];
 
 public:
-	xDisposableBuffer()
+	xDisposableBuffer() noexcept
 		: xm_ushRead	(0)
 		, xm_ushWrite	(0)
 	{
+	}
+	xDisposableBuffer(const xDisposableBuffer &rhs) noexcept
+		: xm_ushRead	(rhs.xm_ushRead)
+		, xm_ushWrite	(rhs.xm_ushWrite)
+	{
+		Copy(xm_abyData + xm_ushRead, rhs.xm_abyData + rhs.xm_ushRead, rhs.xm_abyData + rhs.xm_ushWrite);
+	}
+	xDisposableBuffer &operator=(const xDisposableBuffer &rhs) noexcept {
+		xm_ushRead	= rhs.xm_ushRead;
+		xm_ushWrite	= rhs.xm_ushWrite;
+		Copy(xm_abyData + xm_ushRead, rhs.xm_abyData + rhs.xm_ushRead, rhs.xm_abyData + rhs.xm_ushWrite);
+		return *this;
 	}
 
 public:
@@ -64,15 +76,17 @@ public:
 		return xm_abyData + xm_ushWrite;
 	}
 
-	std::size_t CopyOut(unsigned char *&pbyOutput, const unsigned char *pbyEnd) noexcept {
-		const std::size_t uBytesToCopy = Min(GetSize(), (std::size_t)(pbyEnd - pbyOutput));
+	std::size_t CopyOut(unsigned char *&pbyOutput, std::size_t &uToCopy) noexcept {
+		const std::size_t uBytesToCopy = Min(GetSize(), uToCopy);
 		pbyOutput = CopyN(pbyOutput, xm_abyData + xm_ushRead, uBytesToCopy).first;
+		uToCopy -= uBytesToCopy;
 		xm_ushRead += uBytesToCopy;
 		return uBytesToCopy;
 	}
-	std::size_t CopyIn(const unsigned char *&pbyInput, const unsigned char *pbyEnd) noexcept {
-		const std::size_t uBytesToCopy = Min(GetFree(), (std::size_t)(pbyEnd - pbyInput));
+	std::size_t CopyIn(const unsigned char *&pbyInput, std::size_t &uToCopy) noexcept {
+		const std::size_t uBytesToCopy = Min(GetFree(), uToCopy);
 		pbyInput = CopyN(xm_abyData + xm_ushWrite, pbyInput, uBytesToCopy).second;
+		uToCopy -= uBytesToCopy;
 		xm_ushWrite += uBytesToCopy;
 		return uBytesToCopy;
 	}
@@ -93,23 +107,73 @@ public:
 
 	void Swap(xDisposableBuffer &rhs) noexcept {
 		if((xm_ushRead >= rhs.xm_ushWrite) || (rhs.xm_ushRead >= xm_ushWrite)){
-			Copy(xm_abyData + rhs.xm_ushRead,	rhs.xm_abyData + rhs.xm_ushRead,	rhs.xm_abyData + rhs.xm_ushWrite);
-			Copy(rhs.xm_abyData + xm_ushRead,	xm_abyData + xm_ushRead,			xm_abyData + xm_ushWrite);
+			Copy(
+				xm_abyData + rhs.xm_ushRead,
+				rhs.xm_abyData + rhs.xm_ushRead,
+				rhs.xm_abyData + rhs.xm_ushWrite
+			);
+			Copy(
+				rhs.xm_abyData + xm_ushRead,
+				xm_abyData + xm_ushRead,
+				xm_abyData + xm_ushWrite
+			);
 		} else {
 			decltype(xm_abyData) abyTemp;
 
-			Copy(abyTemp + rhs.xm_ushRead,		rhs.xm_abyData + rhs.xm_ushRead,	rhs.xm_abyData + rhs.xm_ushWrite);
-			Copy(rhs.xm_abyData + xm_ushRead,	xm_abyData + xm_ushRead,			xm_abyData + xm_ushWrite);
-			Copy(xm_abyData + rhs.xm_ushRead,	abyTemp + rhs.xm_ushRead,			abyTemp + rhs.xm_ushWrite);
+			Copy(
+				abyTemp + rhs.xm_ushRead,
+				rhs.xm_abyData + rhs.xm_ushRead,
+				rhs.xm_abyData + rhs.xm_ushWrite
+			);
+			Copy(
+				rhs.xm_abyData + xm_ushRead,
+				xm_abyData + xm_ushRead,
+				xm_abyData + xm_ushWrite
+			);
+			Copy(
+				xm_abyData + rhs.xm_ushRead,
+				abyTemp + rhs.xm_ushRead,
+				abyTemp + rhs.xm_ushWrite
+			);
 		}
 		std::swap(xm_ushRead, rhs.xm_ushRead);
 		std::swap(xm_ushWrite, rhs.xm_ushWrite);
 	}
 };
 
+namespace {
+
+inline void AllocPooled(auto &lstData, auto &itTail, auto &lstPool){
+	if(lstPool.empty()){
+		itTail = lstData.emplace_after(itTail);
+	} else {
+		lstData.splice_after(itTail, lstPool, lstPool.before_begin());
+		++itTail;
+		itTail->Clear();
+	}
+}
+inline void AllocPooled(auto &lstData, auto &itTail, auto &lstPool, auto &&vBuffer){
+	if(lstPool.empty()){
+		itTail = lstData.emplace_after(itTail, std::move(vBuffer));
+	} else {
+		lstData.splice_after(itTail, lstPool, lstPool.before_begin());
+		++itTail;
+		*itTail = std::move(vBuffer);
+	}
+}
+inline void DeallocPooled(auto &lstData, auto &itTail, auto &lstPool) noexcept {
+	lstPool.splice_after(lstPool.before_begin(), lstData, lstData.before_begin());
+	if(lstData.empty()){
+		itTail = lstData.before_begin();
+	}
+}
+
+}
+
 // 构造函数和析构函数。
 StreamBuffer::StreamBuffer() noexcept
-	: xm_uSize(0)
+	: xm_itTail	(xm_lstData.before_begin())
+	, xm_uSize	(0)
 {
 }
 StreamBuffer::StreamBuffer(const void *pData, std::size_t uSize)
@@ -146,106 +210,101 @@ std::size_t StreamBuffer::GetSize() const noexcept {
 	return xm_uSize;
 }
 void StreamBuffer::Clear() noexcept {
-	xm_lstPool.splice(xm_lstPool.end(), xm_lstData);
+	xm_lstPool.splice_after(xm_lstPool.before_begin(), xm_lstData);
+	xm_itTail = xm_lstData.before_begin();
 	xm_uSize = 0;
 }
 
 int StreamBuffer::Get() noexcept {
-ASSERT_NOEXCEPT_BEGIN
 	int nRet = -1;
 	while(!xm_lstData.empty()){
 		if(!xm_lstData.front().IsEmpty()){
 			nRet = xm_lstData.front().Get();
+			--xm_uSize;
 			break;
 		}
-		xm_lstPool.splice(xm_lstPool.end(), xm_lstData, xm_lstData.begin());
+		DeallocPooled(xm_lstData, xm_itTail, xm_lstPool);
 	}
-	--xm_uSize;
 	return nRet;
-ASSERT_NOEXCEPT_END
 }
 int StreamBuffer::Peek() const noexcept {
-ASSERT_NOEXCEPT_BEGIN
 	for(const auto &vCur : xm_lstData){
 		if(!vCur.IsEmpty()){
 			return vCur.GetBegin()[0];
 		}
 	}
 	return -1;
-ASSERT_NOEXCEPT_END
 }
 
 void StreamBuffer::Put(unsigned char by){
-	if(xm_lstData.empty() || xm_lstData.back().IsFull()){
-		if(xm_lstPool.empty()){
-			xm_lstData.emplace_back();
-		} else {
-			xm_lstData.splice(xm_lstData.end(), xm_lstPool, xm_lstPool.begin());
-			xm_lstData.back().Clear();
-		}
+	if(xm_lstData.empty() || xm_itTail->IsFull()){
+		AllocPooled(xm_lstData, xm_itTail, xm_lstPool);
 	}
 
 ASSERT_NOEXCEPT_BEGIN
-	xm_lstData.back().Put(by);
+	xm_itTail->Put(by);
 	++xm_uSize;
 ASSERT_NOEXCEPT_END
 }
 
 bool StreamBuffer::Extract(void *pData, std::size_t uSize) noexcept {
-ASSERT_NOEXCEPT_BEGIN
 	if(uSize > xm_uSize){
 		return false;
 	}
+	auto pbyWrite = (unsigned char *)pData;
+	auto uRemaining = uSize;
+	for(;;){
+		ASSERT(!xm_lstData.empty());
 
-	if(pData){
-		auto pbyWrite = (unsigned char *)pData;
-		const auto pbyEnd = pbyWrite + uSize;
-		for(;;){
-			ASSERT(!xm_lstData.empty());
-
-			xm_uSize -= xm_lstData.front().CopyOut(pbyWrite, pbyEnd);
-			if(pbyWrite == pbyEnd){
-				break;
-			}
-
-			ASSERT(xm_lstData.front().IsEmpty());
-			xm_lstPool.splice(xm_lstPool.end(), xm_lstData, xm_lstData.begin());
+		xm_uSize -= xm_lstData.front().CopyOut(pbyWrite, uRemaining);
+		if(uRemaining == 0){
+			break;
 		}
-	} else {
-		std::size_t uToDiscard = uSize;
-		for(;;){
-			ASSERT(!xm_lstData.empty());
-
-			xm_uSize -= xm_lstData.front().Discard(uToDiscard);
-			if(uToDiscard == 0){
-				break;
-			}
-
-			ASSERT(xm_lstData.front().IsEmpty());
-			xm_lstPool.splice(xm_lstPool.end(), xm_lstData, xm_lstData.begin());
-		}
+		ASSERT(xm_lstData.front().IsEmpty());
+		DeallocPooled(xm_lstData, xm_itTail, xm_lstPool);
 	}
 	return true;
-ASSERT_NOEXCEPT_END
+}
+bool StreamBuffer::Discard(std::size_t uSize) noexcept {
+	if(uSize > xm_uSize){
+		return false;
+	}
+	auto uRemaining = uSize;
+	for(;;){
+		ASSERT(!xm_lstData.empty());
+
+		xm_uSize -= xm_lstData.front().Discard(uRemaining);
+		if(uRemaining == 0){
+			break;
+		}
+		ASSERT(xm_lstData.front().IsEmpty());
+		DeallocPooled(xm_lstData, xm_itTail, xm_lstPool);
+	}
+	return true;
 }
 void StreamBuffer::Insert(const void *pData, std::size_t uSize){
-	auto pbyRead = (const unsigned char *)pData;
-	const auto pbyEnd = pbyRead + uSize;
-
-	decltype(xm_lstData) lstTemp;
-	while(pbyRead != pbyEnd){
-		if(xm_lstPool.empty()){
-			lstTemp.emplace_back();
-		} else {
-			lstTemp.splice(lstTemp.end(), xm_lstPool, xm_lstPool.begin());
-			lstTemp.back().Clear();
-		}
-
-	ASSERT_NOEXCEPT_BEGIN
-		xm_uSize += lstTemp.back().CopyIn(pbyRead, pbyEnd);
-		xm_lstData.splice(xm_lstData.end(), lstTemp);
-	ASSERT_NOEXCEPT_END
+	if(xm_lstData.empty() || xm_itTail->IsFull()){
+		AllocPooled(xm_lstData, xm_itTail, xm_lstPool);
 	}
+	auto itCur = xm_itTail;
+	auto uRemaining = uSize;
+	for(;;){
+		const auto uFree = xm_itTail->GetFree();
+		if(uRemaining <= uFree){
+			break;
+		}
+		uRemaining -= uFree;
+		AllocPooled(xm_lstData, xm_itTail, xm_lstPool);
+	}
+
+ASSERT_NOEXCEPT_BEGIN
+	auto pbyRead = (const unsigned char *)pData;
+	uRemaining = uSize;
+	while(uRemaining != 0){
+		xm_uSize += itCur->CopyIn(pbyRead, uRemaining);
+		++itCur;
+	}
+ASSERT_NOEXCEPT_END
 }
 
 bool StreamBuffer::CutOut(StreamBuffer &sbufHead, std::size_t uSize){
@@ -254,75 +313,76 @@ bool StreamBuffer::CutOut(StreamBuffer &sbufHead, std::size_t uSize){
 	}
 
 	StreamBuffer sbufTemp;
-	auto uRemaining = uSize;
-	if(uRemaining != 0){
-		std::size_t uToSplice = 0;
-		auto itLast = xm_lstData.begin();
-		for(;;){
-			ASSERT(itLast != xm_lstData.end());
-
-			const auto uLastSize = itLast->GetSize();
-			if(uRemaining - uToSplice < uLastSize){
-				break;
-			}
-			uToSplice += uLastSize;
-			++itLast;
-		}
-
-	ASSERT_NOEXCEPT_BEGIN
-		sbufTemp.xm_lstData.splice(sbufTemp.xm_lstData.end(), xm_lstData, xm_lstData.begin(), itLast);
-		uRemaining -= uToSplice;
-		xm_uSize -= uToSplice;
-		sbufTemp.xm_uSize += uToSplice;
-	ASSERT_NOEXCEPT_END
-
-		if(uRemaining != 0){
-			if(xm_lstPool.empty()){
-				sbufTemp.xm_lstData.emplace_back();
-			} else {
-				sbufTemp.xm_lstData.splice(sbufTemp.xm_lstData.end(), xm_lstPool, xm_lstPool.begin());
-				sbufTemp.xm_lstData.back().Clear();
-			}
-
-		ASSERT_NOEXCEPT_BEGIN
-			const auto uTransferred = itLast->Transfer(sbufTemp.xm_lstData.back(), uRemaining);
-			xm_uSize -= uTransferred;
-			sbufTemp.xm_uSize += uTransferred;
-		ASSERT_NOEXCEPT_END
-
-			ASSERT(uRemaining == 0);
-		}
+	if(this != &sbufHead){
+		xm_lstPool.splice_after(xm_lstPool.before_begin(), sbufHead.xm_lstPool);
 	}
+	auto itNewTail = sbufTemp.xm_lstData.before_begin();
+	auto itSpliceEnd = xm_lstData.begin();
+	auto uRemaining = uSize;
+	while(uRemaining != 0){
+		ASSERT(itSpliceEnd != xm_lstData.end());
+
+		const auto uCurSize = itSpliceEnd->GetSize();
+		if(uRemaining < uCurSize){
+			AllocPooled(sbufTemp.xm_lstData, sbufTemp.xm_itTail, xm_lstPool);
+			itNewTail = sbufTemp.xm_itTail;
+			break;
+		}
+		itNewTail = itSpliceEnd;
+		++itSpliceEnd;
+		uRemaining -= uCurSize;
+	}
+
+	sbufTemp.xm_lstData.splice_after(
+		sbufTemp.xm_lstData.before_begin(),
+		xm_lstData, xm_lstData.before_begin(), itSpliceEnd
+	);
+	sbufTemp.xm_itTail = itNewTail;
+	if(uRemaining != 0){
+		ASSERT(itNewTail != sbufTemp.xm_lstData.before_begin());
+
+		xm_lstData.front().Transfer(*itNewTail, uRemaining);
+		ASSERT(uRemaining == 0);
+	}
+	xm_uSize -= uSize;
+	sbufTemp.xm_uSize += uSize;
+
 	sbufHead = std::move(sbufTemp);
 	return true;
 }
 void StreamBuffer::Append(const StreamBuffer &rhs){
-	decltype(xm_lstData) lstTemp(rhs.xm_lstData);
+	xBufferList lstTemp(rhs.xm_lstData);
+	auto itNewTail = lstTemp.before_begin();
 
-ASSERT_NOEXCEPT_BEGIN
-	xm_lstData.splice(xm_lstData.end(), lstTemp);
+	for(const auto &vCur : rhs.xm_lstData){
+		if(!vCur.IsEmpty()){
+			AllocPooled(lstTemp, itNewTail, xm_lstPool, vCur);
+		}
+	}
+
+	xm_lstData.splice_after(xm_itTail, lstTemp);
+	xm_itTail = itNewTail;
 	xm_uSize += rhs.xm_uSize;
-ASSERT_NOEXCEPT_END
 }
 void StreamBuffer::Append(StreamBuffer &&rhs) noexcept {
 	if(&rhs == this){
 		return Append(rhs);
 	}
 
-	decltype(xm_lstData) lstTemp;
-
-ASSERT_NOEXCEPT_BEGIN
-	xm_lstData.splice(xm_lstData.end(), lstTemp);
-	xm_lstData.splice(xm_lstData.end(), rhs.xm_lstData);
-	xm_lstPool.splice(xm_lstPool.end(), rhs.xm_lstPool);
+	xm_lstData.splice_after(xm_itTail, rhs.xm_lstData);
+	xm_itTail = rhs.xm_itTail;
+	xm_lstPool.splice_after(xm_lstPool.before_begin(), rhs.xm_lstPool);
 	xm_uSize += rhs.xm_uSize;
-	rhs.Clear();
-ASSERT_NOEXCEPT_END
+
+	rhs.xm_itTail = rhs.xm_lstData.before_begin();
+	rhs.xm_uSize = 0;
 }
 
 void StreamBuffer::Swap(StreamBuffer &rhs) noexcept {
-	std::swap(xm_lstData, rhs.xm_lstData);
-	std::swap(xm_uSize, rhs.xm_uSize);
+	std::swap(xm_lstData,	rhs.xm_lstData);
+	std::swap(xm_itTail,	rhs.xm_itTail);
+	std::swap(xm_lstPool,	rhs.xm_lstPool);
+	std::swap(xm_uSize,		rhs.xm_uSize);
 }
 
 void StreamBuffer::Traverse(const std::function<void (const unsigned char *, std::size_t)> &fnCallback) const {

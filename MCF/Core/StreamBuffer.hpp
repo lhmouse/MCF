@@ -6,7 +6,7 @@
 #define MCF_STREAM_BUFFER_HPP_
 
 #include "Utilities.hpp"
-#include <list>
+#include <forward_list>
 #include <functional>
 #include <iterator>
 #include <cstddef>
@@ -17,13 +17,17 @@ class StreamBuffer {
 private:
 	class xDisposableBuffer;
 
+	typedef std::forward_list<xDisposableBuffer> xBufferList;
+	typedef xBufferList::iterator xBufferListIterator;
+
 public:
 	class ReadIterator;
 	class WriteIterator;
 
 private:
-	std::list<xDisposableBuffer> xm_lstData;
-	std::list<xDisposableBuffer> xm_lstPool;
+	xBufferList xm_lstData;
+	xBufferListIterator xm_itTail;
+	xBufferList xm_lstPool;
 	std::size_t xm_uSize;
 
 public:
@@ -47,8 +51,8 @@ public:
 	void Put(unsigned char by);
 
 	// 要么就从头部读取并删除 uSize 个字节并返回 true，要么就返回 false，没有只读取一半的情况。
-	// pData 可以为空。
 	bool Extract(void *pData, std::size_t uSize) noexcept;
+	bool Discard(std::size_t uSize) noexcept;
 	// 追加 uSize 个字节。
 	void Insert(const void *pData, std::size_t uSize);
 

@@ -151,7 +151,9 @@ namespace Impl {
 	}();
 
 #define FORCE_NOEXCEPT(expr)	\
-	do { FORCE_NOEXCEPT_BEGIN (expr); FORCE_NOEXCEPT_END } while(false)
+	FORCE_NOEXCEPT_BEGIN	\
+		return (expr);	\
+	FORCE_NOEXCEPT_END	\
 
 //----------------------------------------------------------------------------
 // Clone

@@ -29,7 +29,7 @@ public:
 	void AddOperation(std::unique_ptr<OperationBase> pOperation);
 	void Clear();
 
-	void CommitAll();
+	void Commit();
 };
 
 }

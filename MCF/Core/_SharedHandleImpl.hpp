@@ -6,6 +6,7 @@
 #define MCF_SHARED_HANDLE_IMPL_HPP_
 
 #include "UniqueHandle.hpp"
+#include "Utilities.hpp"
 
 namespace MCF {
 
@@ -48,6 +49,11 @@ namespace Impl {
 
 			return __atomic_sub_fetch(&xm_uCount, 1, __ATOMIC_RELAXED);
 		}
+		void Reset() noexcept {
+			ASSERT(Get() == 0);
+
+			__atomic_store_n(&xm_uCount, 1, __ATOMIC_RELAXED);
+		}
 	};
 	class NonAtomicRefCount : private RefCountBase {
 	public:
@@ -64,6 +70,11 @@ namespace Impl {
 			ASSERT(Get() != 0);
 
 			return --xm_uCount;
+		}
+		void Reset() noexcept {
+			ASSERT(Get() == 0);
+
+			xm_uCount = 1;
 		}
 	};
 
@@ -301,10 +312,27 @@ namespace Impl {
 			Reset(UniqueHandle(hObject));
 		}
 		void Reset(UniqueHandle &&rhs){
-			xTidy();
-			if(rhs.Get() != Closer_t()()){
-				WeakHandle::xm_pNode = new xSharedNode(std::move(rhs));
+			if(!rhs){
+				Reset();
+				return;
 			}
+
+		ASSERT_NOEXCEPT_BEGIN
+			if(WeakHandle::xm_pNode){
+				if(WeakHandle::xm_pNode->m_rcStrong.Decrement() == 0){
+					WeakHandle::xm_pNode->m_hObject.Reset();
+				}
+				if(WeakHandle::xm_pNode->m_rcWeak.Decrement() == 0){
+					WeakHandle::xm_pNode->m_hObject.Reset(std::move(rhs));
+					WeakHandle::xm_pNode->m_rcWeak.Reset();
+					WeakHandle::xm_pNode->m_rcStrong.Reset();
+					return;
+				}
+				WeakHandle::xm_pNode = nullptr;
+			}
+		ASSERT_NOEXCEPT_END
+
+			WeakHandle::xm_pNode = new xSharedNode(std::move(rhs));
 		}
 		void Reset(const WeakHandle &rhs) noexcept {
 			Reset(SharedHandleImpl(rhs));

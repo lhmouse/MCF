@@ -10,10 +10,18 @@
 namespace MCF {
 
 template<class Closer_t>
-using WeakHandleNts = Impl::WeakHandleImpl<Closer_t, Impl::NonAtomicRefCount>;
+struct WeakHandleNts
+	: public Impl::WeakHandleImpl<Closer_t, Impl::NonAtomicRefCount>
+{
+	using Impl::WeakHandleImpl<Closer_t, Impl::NonAtomicRefCount>::WeakHandleImpl;
+};
 
 template<class Closer_t>
-using SharedHandleNts = Impl::SharedHandleImpl<Closer_t, Impl::NonAtomicRefCount>;
+struct SharedHandleNts
+	: public Impl::SharedHandleImpl<Closer_t, Impl::NonAtomicRefCount>
+{
+	using Impl::SharedHandleImpl<Closer_t, Impl::NonAtomicRefCount>::SharedHandleImpl;
+};
 
 }
 

@@ -13,7 +13,7 @@ class StreamBuffer::xDisposableBuffer {
 private:
 	unsigned short xm_ushRead;
 	unsigned short xm_ushWrite;
-	unsigned char xm_abyData[0x100];
+	unsigned char xm_abyData[0x400];
 
 public:
 	xDisposableBuffer() noexcept

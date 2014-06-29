@@ -89,18 +89,14 @@ public:
 
 public:
 	bool operator==(const ReadIterator &rhs) const noexcept {
-		if(!rhs.xm_psbufOwner){
-			if(!xm_psbufOwner){
-				return true;
-			} else {
-				return xm_psbufOwner->IsEmpty();
-			}
+		if(xm_psbufOwner == rhs.xm_psbufOwner){
+			return true;
+		} else if(!xm_psbufOwner){
+			return rhs.xm_psbufOwner->IsEmpty();
+		} else if(!rhs.xm_psbufOwner){
+			return xm_psbufOwner->IsEmpty();
 		} else {
-			if(!xm_psbufOwner){
-				return rhs.xm_psbufOwner->IsEmpty();
-			} else {
-				return xm_psbufOwner == rhs.xm_psbufOwner;
-			}
+			return false;
 		}
 	}
 	bool operator!=(const ReadIterator &rhs) const noexcept {

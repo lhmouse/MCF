@@ -13,8 +13,8 @@ namespace {
 
 const std::map<MCF::WideStringObserver, MCF::WideStringObserver> g_mapStrings = {
 	{ L"MCFBUILD_LOGO"_wso,					L"MCF 构建实用工具 [版本 %0.%1.%2.%3]\n"
-											"Copyleft 2014, LH_Mouse. All wrongs reserved.\n"_wso },
-	{ L"MCFBUILD_USAGE"_wso,				L"" //     10        20        30        40        50        60        70        80
+											"Copyleft 2014, LH_Mouse. All wrongs reserved."_wso },
+	{ L"MCFBUILD_USAGE"_wso,				L"\n" //   10        20        30        40        50        60        70        80
 											"命令行参数可以以 - 或 / 开头，其效果是一样的。\n"
 											"任何不以 - 或 / 开头的命令行参数都会被当作配置名。\n"
 											"\n"
@@ -41,14 +41,14 @@ const std::map<MCF::WideStringObserver, MCF::WideStringObserver> g_mapStrings = 
 											"  -d目录        指定最终文件根目录。\n"
 											"                默认值是“.Built-配置名”。\n"
 											"\n"
-											"  -j十进制整数  指定多进程构建时使用的进程数。0 为自动选择.\n"
+											"  -j十进制整数  指定多进程构建时使用的进程数。0 为自动选择。\n"
 											"                默认值是 0。\n"
 											"  -c            执行清理操作，删除所有目标文件（不构建）。\n"
 											"  -R            重新构建所有文件。\n"
 											"\n"
 											"  -X[序列号]    排除依赖项目（仅供内部使用）。"_wso },
 
-	{ L"ENVIRONMENT_MANIFEST"_wso,			L"----- 构建环境清单 -----\n"
+	{ L"ENVIRONMENT_MANIFEST"_wso,			L"\n----- 构建环境清单 -----\n"
 											L"工作目录：%0\n"
 											L"项目文件：%1\n"
 											L"配置名　：%2\n"
@@ -56,13 +56,14 @@ const std::map<MCF::WideStringObserver, MCF::WideStringObserver> g_mapStrings = 
 											L"中间目录：%4\n"
 											L"目标目录：%5\n"
 											L"进程数　：%6"_wso },
-	{ L"SOURCE_FILE_MANIFEST"_wso,			L"----- 源文件清单 -----\n"_wso },
+	{ L"SOURCE_FILE_MANIFEST"_wso,			L"\n----- 源文件清单 -----\n"_wso },
 
-	{ L"MCF_EXCEPTION"_wso,					L"MCF Build 遇到一个错误：\n"
+	{ L"EXCEPTION_HEADER"_wso,				L"\n----- 捕获到异常 -----"_wso },
+	{ L"MCF_EXCEPTION"_wso,					L"MCF Build 遇到一个异常：\n"
 											"  错误描述：%0\n"
 											"  错误代码：%1（%2）"_wso },
-	{ L"STD_EXCEPTION"_wso,					L"MCF Build 遇到异常“%0”。请联系作者寻求协助。"_wso },
-	{ L"UNKNOWN_EXCEPTION"_wso,				L"MCF Build 遇到无法处理的异常。请联系作者寻求协助。"_wso },
+	{ L"STD_EXCEPTION"_wso,					L"MCF Build 遇到异常“%0”。\n请联系作者寻求协助。"_wso },
+	{ L"UNKNOWN_EXCEPTION"_wso,				L"MCF Build 遇到无法处理的异常。\n请联系作者寻求协助。"_wso },
 
 	{ L"INVALID_COMMAND_LINE_OPTION"_wso,	L"命令行选项“%0”无效。使用选项 -h 获得帮助。"_wso },
 	{ L"CREATE_PIPE_FAILED"_wso,			L"创建管道失败。"_wso },

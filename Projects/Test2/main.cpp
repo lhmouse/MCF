@@ -11,7 +11,7 @@ extern "C" void MCF_OnHeapDealloc(void *p, const void *ret) noexcept {
 }
 */
 extern "C" unsigned int MCFMain() noexcept {
-	for(std::size_t i = 8; i < 16; ++i){
+	for(std::size_t i = 0; i < 80; ++i){
 		static const unsigned char data[] = "0123456789abcdefghijklmnopqrstuvexyzABCDEFGHIJKLMNOPQRSTUVEXYZ";
 		StreamBuffer buf, buf2;
 		buf.Insert(data, sizeof(data));

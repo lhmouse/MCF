@@ -137,6 +137,7 @@ void __MCF_CRT_TlsEnvUninit(){
 	}
 }
 
+__attribute__((__force_align_arg_pointer__))
 void __stdcall __MCF_CRT_TlsCallback(void *hModule, unsigned long ulReason, void *pReserved){
 	UNREF_PARAM(hModule);
 	UNREF_PARAM(pReserved);

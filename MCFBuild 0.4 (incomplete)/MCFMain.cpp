@@ -44,9 +44,12 @@ try {
 	));
 
 	//
+	throw std::bad_alloc();
 
 	return 0;
 } catch(MCF::Exception &e){
+	PrintLn(FormatString(L"EXCEPTION_HEADER"_wso));
+
 	auto wcsMessage(L"MCF_EXCEPTION|"_wso + e.m_wcsMessage);
 	wchar_t awcCode[16];
 	wcsMessage.Append(awcCode, (std::size_t)std::swprintf(awcCode, COUNT_OF(awcCode), L"|%lu|", e.m_ulErrorCode));
@@ -65,9 +68,15 @@ try {
 	PrintLn(FormatString(wcsMessage));
 	return e.m_ulErrorCode;
 } catch(std::exception &e){
-	PrintLn(FormatString(L"STD_EXCEPTION|"_ws + MCF::Utf8String(e.what())));
+	PrintLn(FormatString(L"EXCEPTION_HEADER"_wso));
+
+	auto wcsMessage = L"STD_EXCEPTION|"_ws;
+	wcsMessage.Append<MCF::StringEncoding::UTF8>(MCF::Utf8StringObserver(e.what()));
+	PrintLn(FormatString(wcsMessage));
 	return (unsigned int)-1;
 } catch(...){
+	PrintLn(FormatString(L"EXCEPTION_HEADER"_wso));
+
 	PrintLn(FormatString(L"UNKNOWN_EXCEPTION"_wso));
 	return (unsigned int)-2;
 }

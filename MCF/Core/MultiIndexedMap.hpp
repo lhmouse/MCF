@@ -14,6 +14,11 @@
 
 namespace MCF {
 
+// 这并不是真正的索引，因为它不能用来检索元素，而只能用来遍历。
+// 但是这个索引保证了元素创建的顺序。
+struct SequenceIndex {
+};
+
 template<class Element_t, class... Indices_t>
 class MultiIndexedMap;
 
@@ -30,7 +35,7 @@ private:
 private:
 	Element_t xm_vElement;
 	xIndexTuple xm_vIndices;
-	::MCF_AVL_NODE_HEADER xm_aHeaders[sizeof...(Indices_t)];
+	MCF_AVL_NODE_HEADER xm_aHeaders[sizeof...(Indices_t)];
 
 public:
 	explicit constexpr MultiIndexedMapNode(Element_t vElement, Indices_t... vIndices)
@@ -48,9 +53,7 @@ public:
 		return xm_vElement;
 	}
 	template<std::size_t INDEX>
-	constexpr auto GetIndex() const noexcept
-		-> const typename std::tuple_element<INDEX, xIndexTuple>::type &
-	{
+	constexpr auto &GetIndex() const noexcept {
 		return std::get<INDEX>(xm_vIndices);
 	}
 
@@ -101,7 +104,7 @@ private:
 
 private:
 	xIndexTuple xm_vIndices;
-	::MCF_AVL_NODE_HEADER xm_aHeaders[sizeof...(Indices_t)];
+	MCF_AVL_NODE_HEADER xm_aHeaders[sizeof...(Indices_t)];
 
 public:
 	explicit constexpr MultiIndexedMapNode(Indices_t... vIndices)
@@ -112,9 +115,7 @@ public:
 
 public:
 	template<std::size_t INDEX>
-	constexpr auto GetIndex() const noexcept
-		-> const typename std::tuple_element<INDEX, xIndexTuple>::type &
-	{
+	constexpr auto &GetIndex() const noexcept {
 		return std::get<INDEX>(xm_vIndices);
 	}
 
@@ -166,33 +167,27 @@ private:
 		typedef typename Node::xIndexTuple IndexTuple;
 		typedef typename std::tuple_element<INDEX, IndexTuple>::type IndexType;
 
-		static int Nodes(
-			const MCF_AVL_NODE_HEADER *pAvl1,
-			const MCF_AVL_NODE_HEADER *pAvl2
-		) noexcept {
-		ASSERT_NOEXCEPT_BEGIN
+		static int Nodes(const MCF_AVL_NODE_HEADER *pAvl1, const MCF_AVL_NODE_HEADER *pAvl2) noexcept {
 			const auto pNode1 = DOWN_CAST(const Node, xm_aHeaders[INDEX], pAvl1);
 			const auto pNode2 = DOWN_CAST(const Node, xm_aHeaders[INDEX], pAvl2);
+
+		ASSERT_NOEXCEPT_BEGIN
 			return std::less<void>()(std::get<INDEX>(pNode1->xm_vIndices), std::get<INDEX>(pNode2->xm_vIndices));
 		ASSERT_NOEXCEPT_END
 		}
 		template<typename Other_t>
-		static int NodeOther(
-			const MCF_AVL_NODE_HEADER *pAvl1,
-			std::intptr_t nOther
-		) noexcept {
-		ASSERT_NOEXCEPT_BEGIN
+		static int NodeOther(const MCF_AVL_NODE_HEADER *pAvl1, std::intptr_t nOther) noexcept {
 			const auto pNode1 = DOWN_CAST(const Node, xm_aHeaders[INDEX], pAvl1);
+
+		ASSERT_NOEXCEPT_BEGIN
 			return std::less<void>()(std::get<INDEX>(pNode1->xm_vIndices), *(const Other_t *)nOther);
 		ASSERT_NOEXCEPT_END
 		}
 		template<typename Other_t>
-		static int OtherNode(
-			std::intptr_t nOther,
-			const MCF_AVL_NODE_HEADER *pAvl2
-		) noexcept {
-		ASSERT_NOEXCEPT_BEGIN
+		static int OtherNode(std::intptr_t nOther, const MCF_AVL_NODE_HEADER *pAvl2) noexcept {
 			const auto pNode2 = DOWN_CAST(const Node, xm_aHeaders[INDEX], pAvl2);
+
+		ASSERT_NOEXCEPT_BEGIN
 			return std::less<void>()(*(const Other_t *)nOther, std::get<INDEX>(pNode2->xm_vIndices));
 		ASSERT_NOEXCEPT_END
 		}
@@ -200,9 +195,9 @@ private:
 
 private:
 	struct {
-		::MCF_AVL_NODE_HEADER *pRoot;
-		::MCF_AVL_NODE_HEADER *pFirst;
-		::MCF_AVL_NODE_HEADER *pLast;
+		MCF_AVL_ROOT pRoot;
+		MCF_AVL_NODE_HEADER *pFirst;
+		MCF_AVL_NODE_HEADER *pLast;
 	} xm_aNodes[sizeof...(Indices_t)];
 
 	std::size_t xm_uSize;
@@ -228,14 +223,11 @@ public:
 		Swap(rhs);
 	}
 	MultiIndexedMap &operator=(const MultiIndexedMap &rhs){
-		if(this != &rhs){
-			Clear();
-			MultiIndexedMap(rhs).Swap(*this);
-		}
+		MultiIndexedMap(rhs).Swap(*this);
 		return *this;
 	}
 	MultiIndexedMap &operator=(MultiIndexedMap &&rhs) noexcept {
-		Swap(rhs);
+		rhs.Swap(*this);
 		return *this;
 	}
 	~MultiIndexedMap() noexcept {
@@ -244,13 +236,24 @@ public:
 
 private:
 	template<std::size_t INDEX>
-	void xAttach(Node *pNode) noexcept {
+	void xAttach(
+		Node *pNode,
+		typename std::enable_if<
+			!std::is_same<
+				typename std::tuple_element<INDEX, std::tuple<Indices_t...>>::type,
+				SequenceIndex
+			>::value,
+			int
+		>::type = 0
+	) noexcept {
 		const auto pAvl = &(pNode->xm_aHeaders[INDEX]);
+
 		::MCF_AvlAttach(
 			&(xm_aNodes[INDEX].pRoot),
 			pAvl,
 			&(xComparators<INDEX>::Nodes)
 		);
+
 		if(!::MCF_AvlPrev(pAvl)){
 			xm_aNodes[INDEX].pFirst = pAvl;
 		}
@@ -259,33 +262,110 @@ private:
 		}
 	}
 	template<std::size_t INDEX>
-	void xDetach(Node *pNode) noexcept {
+	void xDetach(
+		Node *pNode,
+		typename std::enable_if<
+			!std::is_same<
+				typename std::tuple_element<INDEX, std::tuple<Indices_t...>>::type,
+				SequenceIndex
+			>::value,
+			int
+		>::type = 0
+	) noexcept {
 		const auto pAvl = &(pNode->xm_aHeaders[INDEX]);
+
 		if(pAvl == xm_aNodes[INDEX].pFirst){
 			xm_aNodes[INDEX].pFirst = ::MCF_AvlNext(pAvl);
 		}
 		if(pAvl == xm_aNodes[INDEX].pLast){
 			xm_aNodes[INDEX].pLast = ::MCF_AvlPrev(pAvl);
 		}
+
 		::MCF_AvlDetach(pAvl);
 	}
 
 	template<std::size_t INDEX>
-	void xAttachRecur(Node *pNode, typename std::enable_if<(INDEX < sizeof...(Indices_t)), int>::type = 0) noexcept {
+	void xAttach(
+		Node *pNode,
+		typename std::enable_if<
+			std::is_same<
+				typename std::tuple_element<INDEX, std::tuple<Indices_t...>>::type,
+				SequenceIndex
+			>::value,
+			int
+		>::type = 0
+	) noexcept {
+		const auto pAvl = &(pNode->xm_aHeaders[INDEX]);
+
+		auto &pLast = xm_aNodes[INDEX].pLast;
+		pAvl->pPrev = pLast;
+		pAvl->pNext = nullptr;
+
+		if(pLast){
+			pLast->pNext = pAvl;
+		} else {
+			xm_aNodes[INDEX].pFirst = pAvl;
+		}
+		pLast = pAvl;
+	}
+	template<std::size_t INDEX>
+	void xDetach(
+		Node *pNode,
+		typename std::enable_if<
+			std::is_same<
+				typename std::tuple_element<INDEX, std::tuple<Indices_t...>>::type,
+				SequenceIndex
+			>::value,
+			int
+		>::type = 0
+	) noexcept {
+		const auto pAvl = &(pNode->xm_aHeaders[INDEX]);
+
+		const auto pPrev = ::MCF_AvlPrev(pAvl);
+		const auto pNext = ::MCF_AvlNext(pAvl);
+		if(pPrev){
+			pPrev->pNext = pNext;
+		}
+		if(pNext){
+			pNext->pPrev = pPrev;
+		}
+
+		if(pAvl == xm_aNodes[INDEX].pFirst){
+			xm_aNodes[INDEX].pFirst = pNext;
+		}
+		if(pAvl == xm_aNodes[INDEX].pLast){
+			xm_aNodes[INDEX].pLast = pPrev;
+		}
+	}
+
+	template<std::size_t INDEX>
+	void xAttachRecur(
+		Node *pNode,
+		typename std::enable_if<(INDEX < sizeof...(Indices_t)), int>::type = 0
+	) noexcept {
 		xAttach<INDEX>(pNode);
 		xAttachRecur<INDEX + 1>(pNode);
 	}
 	template<std::size_t INDEX>
-	void xAttachRecur(Node *, typename std::enable_if<(INDEX == sizeof...(Indices_t)), int>::type = 0) noexcept {
+	void xAttachRecur(
+		Node *,
+		typename std::enable_if<(INDEX == sizeof...(Indices_t)), int>::type = 0
+	) noexcept {
 	}
 
 	template<std::size_t INDEX>
-	void xDetachRecur(Node *pNode, typename std::enable_if<(INDEX < sizeof...(Indices_t)), int>::type = 0) noexcept {
+	void xDetachRecur(
+		Node *pNode,
+		typename std::enable_if<(INDEX < sizeof...(Indices_t)), int>::type = 0
+	) noexcept {
 		xDetachRecur<INDEX + 1>(pNode);
 		xDetach<INDEX>(pNode);
 	}
 	template<std::size_t INDEX>
-	void xDetachRecur(Node *pNode, typename std::enable_if<(INDEX == sizeof...(Indices_t)), int>::type = 0) noexcept {
+	void xDetachRecur(
+		Node *pNode,
+		typename std::enable_if<(INDEX == sizeof...(Indices_t)), int>::type = 0
+	) noexcept {
 #ifdef NDEBUG
 		(void)pNode;
 #else
@@ -464,7 +544,7 @@ public:
 
 	template<std::size_t INDEX, typename Comparand_t>
 	std::pair<const Node *, const Node *> GetEqualRange(const Comparand_t &vComparand) const noexcept {
-		::MCF_AVL_NODE_HEADER *pBegin, *pEnd;
+		MCF_AVL_NODE_HEADER *pBegin, *pEnd;
 		::MCF_AvlEqualRange(
 			&pBegin,
 			&pEnd,
@@ -480,7 +560,7 @@ public:
 	}
 	template<std::size_t INDEX, typename Comparand_t>
 	std::pair<Node *, Node *> GetEqualRange(const Comparand_t &vComparand) noexcept {
-		::MCF_AVL_NODE_HEADER *pBegin, *pEnd;
+		MCF_AVL_NODE_HEADER *pBegin, *pEnd;
 		::MCF_AvlEqualRange(
 			&pBegin,
 			&pEnd,

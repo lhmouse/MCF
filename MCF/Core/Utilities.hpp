@@ -211,7 +211,7 @@ inline void BZero(T &vDst) noexcept {
 }
 
 //----------------------------------------------------------------------------
-// CallOnEach
+// CallOnEach / CallOnEachBackward
 //----------------------------------------------------------------------------
 template<typename Function_t>
 Function_t CallOnEach(Function_t &&vFunction){

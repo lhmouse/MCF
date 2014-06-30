@@ -17,8 +17,8 @@ class NotationPackage {
 	friend class Notation;
 
 private:
-	MultiIndexedMap<NotationPackage, SequenceIndex, WideString> xm_mapPackages;
-	MultiIndexedMap<WideString, SequenceIndex, WideString> xm_mapValues;
+	MultiIndexedMap<NotationPackage, WideString, SequenceIndex> xm_mapPackages;
+	MultiIndexedMap<WideString, WideString, SequenceIndex> xm_mapValues;
 
 private:
 	NotationPackage() noexcept = default;

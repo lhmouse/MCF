@@ -193,39 +193,39 @@ void Escape(WideString &wcsAppendTo, const WideStringObserver &wsoSrc){
 // ========== NotationPackage ==========
 // 其他非静态成员函数。
 const NotationPackage *NotationPackage::GetPackage(const WideStringObserver &wsoName) const noexcept {
-	const auto pNode = xm_mapPackages.Find<1>(wsoName);
+	const auto pNode = xm_mapPackages.Find<0>(wsoName);
 	if(!pNode){
 		return nullptr;
 	}
 	return &(pNode->GetElement());
 }
 NotationPackage *NotationPackage::GetPackage(const WideStringObserver &wsoName) noexcept {
-	const auto pNode = xm_mapPackages.Find<1>(wsoName);
+	const auto pNode = xm_mapPackages.Find<0>(wsoName);
 	if(!pNode){
 		return nullptr;
 	}
 	return &(pNode->GetElement());
 }
 std::pair<NotationPackage *, bool> NotationPackage::CreatePackage(const WideStringObserver &wsoName){
-	auto pNode = xm_mapPackages.Find<1>(wsoName);
+	auto pNode = xm_mapPackages.Find<0>(wsoName);
 	bool bNew = false;
 	if(!pNode){
-		pNode = xm_mapPackages.Insert(NotationPackage(), SequenceIndex(), WideString(wsoName));
+		pNode = xm_mapPackages.Insert(NotationPackage(), WideString(wsoName), SequenceIndex());
 		bNew = true;
 	}
 	return std::make_pair(&(pNode->GetElement()), bNew);
 }
 std::pair<NotationPackage *, bool> NotationPackage::CreatePackage(WideString wcsName){
-	auto pNode = xm_mapPackages.Find<1>(wcsName);
+	auto pNode = xm_mapPackages.Find<0>(wcsName);
 	bool bNew = false;
 	if(!pNode){
-		pNode = xm_mapPackages.Insert(NotationPackage(), SequenceIndex(), std::move(wcsName));
+		pNode = xm_mapPackages.Insert(NotationPackage(), std::move(wcsName), SequenceIndex());
 		bNew = true;
 	}
 	return std::make_pair(&(pNode->GetElement()), bNew);
 }
 bool NotationPackage::RemovePackage(const WideStringObserver &wsoName) noexcept {
-	const auto pNode = xm_mapPackages.Find<1>(wsoName);
+	const auto pNode = xm_mapPackages.Find<0>(wsoName);
 	if(!pNode){
 		return false;
 	}
@@ -234,52 +234,52 @@ bool NotationPackage::RemovePackage(const WideStringObserver &wsoName) noexcept 
 }
 
 void NotationPackage::TraversePackages(const std::function<void (const NotationPackage &)> &fnCallback) const {
-	for(auto pNode = xm_mapPackages.GetBegin<0>(); pNode; pNode = pNode->GetNext<0>()){
+	for(auto pNode = xm_mapPackages.GetBegin<1>(); pNode; pNode = pNode->GetNext<1>()){
 		fnCallback(pNode->GetElement());
 	}
 }
 void NotationPackage::TraversePackages(const std::function<void (NotationPackage &)> &fnCallback){
-	for(auto pNode = xm_mapPackages.GetBegin<0>(); pNode; pNode = pNode->GetNext<0>()){
+	for(auto pNode = xm_mapPackages.GetBegin<1>(); pNode; pNode = pNode->GetNext<1>()){
 		fnCallback(pNode->GetElement());
 	}
 }
 
 const WideString *NotationPackage::GetValue(const WideStringObserver &wsoName) const noexcept {
-	const auto pNode = xm_mapValues.Find<1>(wsoName);
+	const auto pNode = xm_mapValues.Find<0>(wsoName);
 	if(!pNode){
 		return nullptr;
 	}
 	return &(pNode->GetElement());
 }
 WideString *NotationPackage::GetValue(const WideStringObserver &wsoName) noexcept {
-	const auto pNode = xm_mapValues.Find<1>(wsoName);
+	const auto pNode = xm_mapValues.Find<0>(wsoName);
 	if(!pNode){
 		return nullptr;
 	}
 	return &(pNode->GetElement());
 }
 std::pair<WideString *, bool> NotationPackage::CreateValue(const WideStringObserver &wsoName, WideString wcsValue){
-	auto pNode = xm_mapValues.Find<1>(wsoName);
+	auto pNode = xm_mapValues.Find<0>(wsoName);
 	bool bNew = false;
 	if(!pNode){
-		pNode = xm_mapValues.Insert(WideString(), SequenceIndex(), WideString(wsoName));
+		pNode = xm_mapValues.Insert(WideString(), WideString(wsoName), SequenceIndex());
 		bNew = true;
 	}
 	pNode->GetElement() = std::move(wcsValue);
 	return std::make_pair(&(pNode->GetElement()), bNew);
 }
 std::pair<WideString *, bool> NotationPackage::CreateValue(WideString wcsName, WideString wcsValue){
-	auto pNode = xm_mapValues.Find<1>(wcsName);
+	auto pNode = xm_mapValues.Find<0>(wcsName);
 	bool bNew = false;
 	if(!pNode){
-		pNode = xm_mapValues.Insert(WideString(), SequenceIndex(), std::move(wcsName));
+		pNode = xm_mapValues.Insert(WideString(), std::move(wcsName), SequenceIndex());
 		bNew = true;
 	}
 	pNode->GetElement() = std::move(wcsValue);
 	return std::make_pair(&(pNode->GetElement()), bNew);
 }
 bool NotationPackage::RemoveValue(const WideStringObserver &wsoName) noexcept {
-	const auto pNode = xm_mapValues.Find<1>(wsoName);
+	const auto pNode = xm_mapValues.Find<0>(wsoName);
 	if(!pNode){
 		return false;
 	}
@@ -288,12 +288,12 @@ bool NotationPackage::RemoveValue(const WideStringObserver &wsoName) noexcept {
 }
 
 void NotationPackage::TraverseValues(const std::function<void (const WideString &)> &fnCallback) const {
-	for(auto pNode = xm_mapValues.GetBegin<0>(); pNode; pNode = pNode->GetNext<0>()){
+	for(auto pNode = xm_mapValues.GetBegin<1>(); pNode; pNode = pNode->GetNext<1>()){
 		fnCallback(pNode->GetElement());
 	}
 }
 void NotationPackage::TraverseValues(const std::function<void (WideString &)> &fnCallback){
-	for(auto pNode = xm_mapValues.GetBegin<0>(); pNode; pNode = pNode->GetNext<0>()){
+	for(auto pNode = xm_mapValues.GetBegin<1>(); pNode; pNode = pNode->GetNext<1>()){
 		fnCallback(pNode->GetElement());
 	}
 }
@@ -658,8 +658,8 @@ std::pair<Notation::ErrorType, const wchar_t *> Notation::Parse(const WideString
 WideString Notation::Export(const WideStringObserver &wsoIndent) const {
 	WideString wcsRet;
 
-	VVector<std::pair<const Package *, decltype(xm_mapPackages.GetBegin<0>())>> vecPackageStack;
-	vecPackageStack.Push(this, xm_mapPackages.GetBegin<0>());
+	VVector<std::pair<const Package *, decltype(xm_mapPackages.GetBegin<1>())>> vecPackageStack;
+	vecPackageStack.Push(this, xm_mapPackages.GetBegin<1>());
 	WideString wcsIndent;
 	for(;;){
 		auto &vTop = vecPackageStack.GetEnd()[-1];
@@ -667,19 +667,19 @@ WideString Notation::Export(const WideStringObserver &wsoIndent) const {
 
 		if(vTop.second){
 			wcsRet.Append(wcsIndent);
-			Escape(wcsRet, vTop.second->GetIndex<1>());
+			Escape(wcsRet, vTop.second->GetIndex<0>());
 			wcsRet.Append(L' ');
 			wcsRet.Append(L'{');
 			wcsRet.Append(L'\n');
 			wcsIndent.Append(wsoIndent);
-			vecPackageStack.Push(&(vTop.second->GetElement()), vTop.second->GetElement().xm_mapPackages.GetBegin<0>());
-			vTop.second = vTop.second->GetNext<0>();
+			vecPackageStack.Push(&(vTop.second->GetElement()), vTop.second->GetElement().xm_mapPackages.GetBegin<1>());
+			vTop.second = vTop.second->GetNext<1>();
 			continue;
 		}
 
-		for(auto pNode = pkgTop.xm_mapValues.GetBegin<0>(); pNode; pNode = pNode->GetNext<0>()){
+		for(auto pNode = pkgTop.xm_mapValues.GetBegin<1>(); pNode; pNode = pNode->GetNext<1>()){
 			wcsRet.Append(wcsIndent);
-			Escape(wcsRet, pNode->GetIndex<1>());
+			Escape(wcsRet, pNode->GetIndex<0>());
 			wcsRet.Append(L' ');
 			wcsRet.Append(L'=');
 			wcsRet.Append(L' ');

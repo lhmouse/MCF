@@ -22,15 +22,15 @@ typedef struct MCF_tagAvlNodeHeader {
 typedef MCF_AVL_NODE_HEADER *MCF_AVL_ROOT;
 
 // 若 arg0 < arg1 应返回非零值，否则应返回零。
-typedef int (*MCF_AVL_COMPARATOR_NODES)(
+typedef bool (*MCF_AVL_COMPARATOR_NODES)(
 	const MCF_AVL_NODE_HEADER *,
 	const MCF_AVL_NODE_HEADER *
 );
-typedef int (*MCF_AVL_COMPARATOR_NODE_OTHER)(
+typedef bool (*MCF_AVL_COMPARATOR_NODE_OTHER)(
 	const MCF_AVL_NODE_HEADER *,
 	MCF_STD intptr_t
 );
-typedef int (*MCF_AVL_COMPARATOR_OTHER_NODE)(
+typedef bool (*MCF_AVL_COMPARATOR_OTHER_NODE)(
 	MCF_STD intptr_t,
 	const MCF_AVL_NODE_HEADER *
 );

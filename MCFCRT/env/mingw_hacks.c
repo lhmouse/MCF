@@ -17,19 +17,19 @@ typedef struct tagKeyDtorNode {
 	void (*pfnDtor)(void *);
 } KEY_DTOR_NODE;
 
-static int DtorComparatorNodes(
+static bool DtorComparatorNodes(
 	const MCF_AVL_NODE_HEADER *pObj1,
 	const MCF_AVL_NODE_HEADER *pObj2
 ){
 	return ((const KEY_DTOR_NODE *)pObj1)->ulKey < ((const KEY_DTOR_NODE *)pObj2)->ulKey;
 }
-static int DtorComparatorNodeKey(
+static bool DtorComparatorNodeKey(
 	const MCF_AVL_NODE_HEADER *pObj1,
 	intptr_t nKey2
 ){
 	return ((const KEY_DTOR_NODE *)pObj1)->ulKey < (unsigned long)nKey2;
 }
-static int DtorComparatorKeyNode(
+static bool DtorComparatorKeyNode(
 	intptr_t nKey1,
 	const MCF_AVL_NODE_HEADER *pObj2
 ){

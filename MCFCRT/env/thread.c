@@ -22,19 +22,19 @@ typedef struct tagTlsKey {
 	struct tagTlsObject *pLastByKey;
 } TLS_KEY;
 
-static int KeyComparatorNodes(
+static bool KeyComparatorNodes(
 	const MCF_AVL_NODE_HEADER *pObj1,
 	const MCF_AVL_NODE_HEADER *pObj2
 ){
 	return (uintptr_t)(void *)pObj1 < (uintptr_t)(void *)pObj2;
 }
-static __attribute__((__unused__)) int KeyComparatorNodeKey(
+static __attribute__((__unused__)) bool KeyComparatorNodeKey(
 	const MCF_AVL_NODE_HEADER *pObj1,
 	intptr_t nKey2
 ){
 	return (uintptr_t)(void *)pObj1 < (uintptr_t)(void *)nKey2;
 }
-static __attribute__((__unused__)) int KeyComparatorKeyNode(
+static __attribute__((__unused__)) bool KeyComparatorKeyNode(
 	intptr_t nKey1,
 	const MCF_AVL_NODE_HEADER *pObj2
 ){
@@ -64,19 +64,19 @@ typedef struct tagTlsObject {
 	intptr_t nValue;
 } TLS_OBJECT;
 
-static int ObjectComparatorNodes(
+static bool ObjectComparatorNodes(
 	const MCF_AVL_NODE_HEADER *pObj1,
 	const MCF_AVL_NODE_HEADER *pObj2
 ){
 	return (uintptr_t)(void *)((const TLS_OBJECT *)pObj1)->pKey < (uintptr_t)(void *)((const TLS_OBJECT *)pObj2)->pKey;
 }
-static int ObjectComparatorNodeKey(
+static bool ObjectComparatorNodeKey(
 	const MCF_AVL_NODE_HEADER *pObj1,
 	intptr_t nKey2
 ){
 	return (uintptr_t)(void *)((const TLS_OBJECT *)pObj1)->pKey < (uintptr_t)(void *)nKey2;
 }
-static int ObjectComparatorKeyNode(
+static bool ObjectComparatorKeyNode(
 	intptr_t nKey1,
 	const MCF_AVL_NODE_HEADER *pObj2
 ){
@@ -118,14 +118,14 @@ void __MCF_CRT_TlsEnvUninit(){
 		g_pLastMap = pPrevMap;
 	}
 	if(g_pavlKeys){
-		TLS_KEY *pCur = (TLS_KEY *)MCF_AvlPrev((MCF_AVL_NODE_HEADER *)g_pavlKeys);
+		TLS_KEY *pCur = (TLS_KEY *)MCF_AvlPrev(g_pavlKeys);
 		while(pCur){
 			TLS_KEY *const pPrev = (TLS_KEY *)MCF_AvlPrev((MCF_AVL_NODE_HEADER *)pCur);
 			free(pCur);
 			pCur = pPrev;
 		}
 
-		pCur = (TLS_KEY *)MCF_AvlNext((MCF_AVL_NODE_HEADER *)g_pavlKeys);
+		pCur = (TLS_KEY *)MCF_AvlNext(g_pavlKeys);
 		while(pCur){
 			TLS_KEY *const pNext = (TLS_KEY *)MCF_AvlNext((MCF_AVL_NODE_HEADER *)pCur);
 			free(pCur);

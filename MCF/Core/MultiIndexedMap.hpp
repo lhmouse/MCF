@@ -8,6 +8,7 @@
 #include "../../MCFCRT/ext/offset_of.h"
 #include "../../MCFCRT/env/avl_tree.h"
 #include "Utilities.hpp"
+#include "VVector.hpp"
 #include <tuple>
 #include <type_traits>
 #include <functional>
@@ -37,6 +38,9 @@ private:
 	xIndexTuple xm_vIndices;
 	MCF_AVL_NODE_HEADER xm_aHeaders[sizeof...(Indices_t)];
 
+	const MultiIndexedMapNode *xm_pReserved; // 复制树结构的时候用到。
+	MCF_AVL_NODE_HEADER xm_vReservedHeader;
+
 public:
 	explicit constexpr MultiIndexedMapNode(Element_t vElement, Indices_t... vIndices)
 		: xm_vElement(std::move(vElement))
@@ -59,7 +63,7 @@ public:
 
 	template<std::size_t INDEX>
 	const MultiIndexedMapNode *GetPrev() const noexcept {
-		const auto pPrevAvl = ::MCF_AvlPrev(&(xm_aHeaders[INDEX]));
+		const auto pPrevAvl = ::MCF_AvlPrev(xm_aHeaders + INDEX);
 		if(!pPrevAvl){
 			return nullptr;
 		}
@@ -67,7 +71,7 @@ public:
 	}
 	template<std::size_t INDEX>
 	MultiIndexedMapNode *GetPrev() noexcept {
-		const auto pPrevAvl = ::MCF_AvlPrev(&(xm_aHeaders[INDEX]));
+		const auto pPrevAvl = ::MCF_AvlPrev(xm_aHeaders + INDEX);
 		if(!pPrevAvl){
 			return nullptr;
 		}
@@ -76,7 +80,7 @@ public:
 
 	template<std::size_t INDEX>
 	const MultiIndexedMapNode *GetNext() const noexcept {
-		const auto pNextAvl = ::MCF_AvlNext(&(xm_aHeaders[INDEX]));
+		const auto pNextAvl = ::MCF_AvlNext(xm_aHeaders + INDEX);
 		if(!pNextAvl){
 			return nullptr;
 		}
@@ -84,7 +88,7 @@ public:
 	}
 	template<std::size_t INDEX>
 	MultiIndexedMapNode *GetNext() noexcept {
-		const auto pNextAvl = ::MCF_AvlNext(&(xm_aHeaders[INDEX]));
+		const auto pNextAvl = ::MCF_AvlNext(xm_aHeaders + INDEX);
 		if(!pNextAvl){
 			return nullptr;
 		}
@@ -106,6 +110,9 @@ private:
 	xIndexTuple xm_vIndices;
 	MCF_AVL_NODE_HEADER xm_aHeaders[sizeof...(Indices_t)];
 
+	const MultiIndexedMapNode *xm_pReserved; // 复制树结构的时候用到。
+	MCF_AVL_NODE_HEADER xm_vReservedHeader;
+
 public:
 	explicit constexpr MultiIndexedMapNode(Indices_t... vIndices)
 		: xm_vIndices(std::move(vIndices)...)
@@ -121,7 +128,7 @@ public:
 
 	template<std::size_t INDEX>
 	const MultiIndexedMapNode *GetPrev() const noexcept {
-		const auto pPrevAvl = ::MCF_AvlPrev(&(xm_aHeaders[INDEX]));
+		const auto pPrevAvl = ::MCF_AvlPrev(xm_aHeaders + INDEX);
 		if(!pPrevAvl){
 			return nullptr;
 		}
@@ -129,7 +136,7 @@ public:
 	}
 	template<std::size_t INDEX>
 	MultiIndexedMapNode *GetPrev() noexcept {
-		const auto pPrevAvl = ::MCF_AvlPrev(&(xm_aHeaders[INDEX]));
+		const auto pPrevAvl = ::MCF_AvlPrev(xm_aHeaders + INDEX);
 		if(!pPrevAvl){
 			return nullptr;
 		}
@@ -138,7 +145,7 @@ public:
 
 	template<std::size_t INDEX>
 	const MultiIndexedMapNode *GetNext() const noexcept {
-		const auto pNextAvl = ::MCF_AvlNext(&(xm_aHeaders[INDEX]));
+		const auto pNextAvl = ::MCF_AvlNext(xm_aHeaders + INDEX);
 		if(!pNextAvl){
 			return nullptr;
 		}
@@ -146,7 +153,7 @@ public:
 	}
 	template<std::size_t INDEX>
 	MultiIndexedMapNode *GetNext() noexcept {
-		const auto pNextAvl = ::MCF_AvlNext(&(xm_aHeaders[INDEX]));
+		const auto pNextAvl = ::MCF_AvlNext(xm_aHeaders + INDEX);
 		if(!pNextAvl){
 			return nullptr;
 		}
@@ -162,12 +169,18 @@ public:
 	typedef MultiIndexedMapNode<Element_t, Indices_t...> Node;
 
 private:
+	struct xBstNodes {
+		MCF_AVL_ROOT pRoot;
+		MCF_AVL_NODE_HEADER *pFirst;
+		MCF_AVL_NODE_HEADER *pLast;
+	};
+
 	template<std::size_t INDEX>
 	struct xComparators {
 		typedef typename Node::xIndexTuple IndexTuple;
 		typedef typename std::tuple_element<INDEX, IndexTuple>::type IndexType;
 
-		static int Nodes(const MCF_AVL_NODE_HEADER *pAvl1, const MCF_AVL_NODE_HEADER *pAvl2) noexcept {
+		static bool Nodes(const MCF_AVL_NODE_HEADER *pAvl1, const MCF_AVL_NODE_HEADER *pAvl2) noexcept {
 			const auto pNode1 = DOWN_CAST(const Node, xm_aHeaders[INDEX], pAvl1);
 			const auto pNode2 = DOWN_CAST(const Node, xm_aHeaders[INDEX], pAvl2);
 
@@ -176,7 +189,7 @@ private:
 		ASSERT_NOEXCEPT_END
 		}
 		template<typename Other_t>
-		static int NodeOther(const MCF_AVL_NODE_HEADER *pAvl1, std::intptr_t nOther) noexcept {
+		static bool NodeOther(const MCF_AVL_NODE_HEADER *pAvl1, std::intptr_t nOther) noexcept {
 			const auto pNode1 = DOWN_CAST(const Node, xm_aHeaders[INDEX], pAvl1);
 
 		ASSERT_NOEXCEPT_BEGIN
@@ -184,7 +197,7 @@ private:
 		ASSERT_NOEXCEPT_END
 		}
 		template<typename Other_t>
-		static int OtherNode(std::intptr_t nOther, const MCF_AVL_NODE_HEADER *pAvl2) noexcept {
+		static bool OtherNode(std::intptr_t nOther, const MCF_AVL_NODE_HEADER *pAvl2) noexcept {
 			const auto pNode2 = DOWN_CAST(const Node, xm_aHeaders[INDEX], pAvl2);
 
 		ASSERT_NOEXCEPT_BEGIN
@@ -193,12 +206,24 @@ private:
 		}
 	};
 
+	struct xAddressComparators {
+		static bool Nodes(const MCF_AVL_NODE_HEADER *pAvl1, const MCF_AVL_NODE_HEADER *pAvl2) noexcept {
+			const auto pNode1 = DOWN_CAST(const Node, xm_vReservedHeader, pAvl1);
+			const auto pNode2 = DOWN_CAST(const Node, xm_vReservedHeader, pAvl2);
+			return std::less<void>()(pNode1->xm_pReserved, pNode2->xm_pReserved);
+		}
+		static bool NodeOther(const MCF_AVL_NODE_HEADER *pAvl1, std::intptr_t nOther) noexcept {
+			const auto pNode1 = DOWN_CAST(const Node, xm_vReservedHeader, pAvl1);
+			return std::less<void>()(pNode1->xm_pReserved, (const Node *)nOther);
+		}
+		static bool OtherNode(std::intptr_t nOther, const MCF_AVL_NODE_HEADER *pAvl2) noexcept {
+			const auto pNode2 = DOWN_CAST(const Node, xm_vReservedHeader, pAvl2);
+			return std::less<void>()((const Node *)nOther, pNode2->xm_pReserved);
+		}
+	};
+
 private:
-	struct {
-		MCF_AVL_ROOT pRoot;
-		MCF_AVL_NODE_HEADER *pFirst;
-		MCF_AVL_NODE_HEADER *pLast;
-	} xm_aNodes[sizeof...(Indices_t)];
+	xBstNodes xm_aNodes[sizeof...(Indices_t)];
 
 	std::size_t xm_uSize;
 
@@ -211,11 +236,46 @@ public:
 	MultiIndexedMap(const MultiIndexedMap &rhs)
 		: MultiIndexedMap()
 	{
-		auto pNode = rhs.GetBegin<0>();
-		while(pNode){
-			Insert(*pNode);
-			pNode = pNode->template GetNext<0>();
+		// 稳定地复制树结构。
+
+		// 第一步，分配全部新节点。
+		MCF_AVL_ROOT pavlNodeMap = nullptr;
+		try {
+			auto pNode = rhs.GetBegin<0>();
+			while(pNode){
+				const auto pNewNode = new Node(*pNode);
+				pNewNode->xm_pReserved = pNode; // 放置源节点的地址。
+				::MCF_AvlAttach(
+					&pavlNodeMap,
+					&(pNewNode->xm_vReservedHeader),
+					&(xAddressComparators::Nodes)
+				);
+				pNode = pNode->template GetNext<0>();
+			}
+		} catch(...){
+			if(pavlNodeMap){
+				auto pCur = ::MCF_AvlPrev(pavlNodeMap);
+				while(pCur){
+					const auto pPrev = ::MCF_AvlPrev(pCur);
+					delete DOWN_CAST(Node, xm_vReservedHeader, pCur);
+					pCur = pPrev;
+				}
+				pCur = ::MCF_AvlNext(pavlNodeMap);
+				while(pCur){
+					const auto pNext = ::MCF_AvlNext(pCur);
+					delete DOWN_CAST(Node, xm_vReservedHeader, pCur);
+					pCur = pNext;
+				}
+				delete DOWN_CAST(Node, xm_vReservedHeader, pavlNodeMap);
+			}
+			throw;
 		}
+
+		// 所有节点都分配完成，现在进行第二步，重建每个二叉树，保证无异常抛出。
+		xCloneTreeRecur<0>(rhs.xm_aNodes, pavlNodeMap);
+
+		// 最后一步，填写 size。
+		xm_uSize = rhs.xm_uSize;
 	}
 	MultiIndexedMap(MultiIndexedMap &&rhs) noexcept
 		: MultiIndexedMap()
@@ -246,7 +306,7 @@ private:
 			int
 		>::type = 0
 	) noexcept {
-		const auto pAvl = &(pNode->xm_aHeaders[INDEX]);
+		const auto pAvl = pNode->xm_aHeaders + INDEX;
 
 		::MCF_AvlAttach(
 			&(xm_aNodes[INDEX].pRoot),
@@ -272,7 +332,7 @@ private:
 			int
 		>::type = 0
 	) noexcept {
-		const auto pAvl = &(pNode->xm_aHeaders[INDEX]);
+		const auto pAvl = pNode->xm_aHeaders + INDEX;
 
 		if(pAvl == xm_aNodes[INDEX].pFirst){
 			xm_aNodes[INDEX].pFirst = ::MCF_AvlNext(pAvl);
@@ -295,7 +355,7 @@ private:
 			int
 		>::type = 0
 	) noexcept {
-		const auto pAvl = &(pNode->xm_aHeaders[INDEX]);
+		const auto pAvl = pNode->xm_aHeaders + INDEX;
 
 		auto &pLast = xm_aNodes[INDEX].pLast;
 		pAvl->pPrev = pLast;
@@ -319,7 +379,7 @@ private:
 			int
 		>::type = 0
 	) noexcept {
-		const auto pAvl = &(pNode->xm_aHeaders[INDEX]);
+		const auto pAvl = pNode->xm_aHeaders + INDEX;
 
 		const auto pPrev = ::MCF_AvlPrev(pAvl);
 		const auto pNext = ::MCF_AvlNext(pAvl);
@@ -371,6 +431,33 @@ private:
 #else
 		__builtin_memset(&(pNode->xm_aHeaders), 0xCD, sizeof((pNode->xm_aHeaders)));
 #endif
+	}
+
+	template<std::size_t INDEX>
+	void xCloneTreeRecur(
+		const xBstNodes *pSrcNodes,
+		const MCF_AVL_ROOT &pavlAllocatedNodes,
+		typename std::enable_if<(INDEX < sizeof...(Indices_t)), int>::type = 0
+	) noexcept {
+		for(auto pSrc = pSrcNodes[INDEX].pFirst; pSrc; pSrc = ::MCF_AvlNext(pSrc)){
+			const auto pNewAvl = ::MCF_AvlFind(
+				&pavlAllocatedNodes,
+				(std::intptr_t)DOWN_CAST(const Node, xm_aHeaders[INDEX], pSrc),
+				&(xAddressComparators::NodeOther),
+				&(xAddressComparators::OtherNode)
+			);
+			ASSERT(pNewAvl);
+
+			xAttach<INDEX>(DOWN_CAST(Node, xm_vReservedHeader, pNewAvl));
+		}
+		xCloneTreeRecur<INDEX + 1>(pSrcNodes, pavlAllocatedNodes);
+	}
+	template<std::size_t INDEX>
+	void xCloneTreeRecur(
+		const xBstNodes *,
+		const MCF_AVL_ROOT &,
+		typename std::enable_if<(INDEX == sizeof...(Indices_t)), int>::type = 0
+	) noexcept {
 	}
 
 public:

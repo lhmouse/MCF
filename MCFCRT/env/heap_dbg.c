@@ -16,20 +16,20 @@ typedef int Dummy;
 
 typedef __MCF_HEAPDBG_BLOCK_INFO BLOCK_INFO;
 
-static int BlockInfoComparatorNodes(
+static bool BlockInfoComparatorNodes(
 	const MCF_AVL_NODE_HEADER *pInfo1,
 	const MCF_AVL_NODE_HEADER *pInfo2
 ){
 	return (uintptr_t)(((const BLOCK_INFO *)pInfo1)->pContents)
 		< (uintptr_t)(((const BLOCK_INFO *)pInfo2)->pContents);
 }
-static int BlockInfoComparatorNodeKey(
+static bool BlockInfoComparatorNodeKey(
 	const MCF_AVL_NODE_HEADER *pInfo1,
 	intptr_t nKey2
 ){
 	return (uintptr_t)(((const BLOCK_INFO *)pInfo1)->pContents) < (uintptr_t)nKey2;
 }
-static int BlockInfoComparatorKeyNode(
+static bool BlockInfoComparatorKeyNode(
 	intptr_t nKey1,
 	const MCF_AVL_NODE_HEADER *pInfo2
 ){

@@ -339,12 +339,25 @@ std::pair<Notation::ErrorType, const wchar_t *> Notation::Parse(const WideString
 		ASSERT(pwcNameBegin != pwcNameEnd);
 		ASSERT(!vecPackageStack.IsEmpty());
 
+		Package *ppkgSource = nullptr;
+		const auto wcsSourceName = Unescape(WideStringObserver(pwcValueBegin, pwcValueEnd));
+		if(!wcsSourceName.IsEmpty()){
+			ppkgSource = vecPackageStack.GetEnd()[-1]->GetPackage(wcsSourceName);
+			if(!ppkgSource){
+				eError = ERR_SOURCE_PACKAGE_NOT_FOUND;
+				return false;
+			}
+		}
+
 		const auto vResult = vecPackageStack.GetEnd()[-1]->CreatePackage(
 			Unescape(WideStringObserver(pwcNameBegin, pwcNameEnd))
 		);
 		if(!vResult.second){
 			eError = ERR_DUPLICATE_PACKAGE;
 			return false;
+		}
+		if(ppkgSource){
+			*vResult.first = *ppkgSource;
 		}
 		vecPackageStack.Push(vResult.first);
 		return true;
@@ -413,7 +426,7 @@ std::pair<Notation::ErrorType, const wchar_t *> Notation::Parse(const WideString
 			case VAL_INDENT:
 			case VAL_BODY:
 			case VAL_PADDING:
-				if(!SubmitValue() || !PushPackage()){
+				if(!PushPackage()){
 					return std::make_pair(eError, pwcRead);
 				}
 				eState = NAME_INDENT;
@@ -525,6 +538,8 @@ std::pair<Notation::ErrorType, const wchar_t *> Notation::Parse(const WideString
 			default:
 				pwcNameBegin = pwcRead;
 				pwcNameEnd = pwcRead + 1;
+				pwcValueBegin = pwcRead;
+				pwcValueEnd = pwcRead;
 				eState = (wc == L'\\') ? NAME_ESCAPED : NAME_BODY;
 				break;
 			}

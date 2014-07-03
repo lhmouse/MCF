@@ -26,8 +26,8 @@ public:
 		TO_WRITE		= 0x00000200,
 
 		// 创建行为控制。如果没有指定 TO_WRITE，这些选项都无效。
-		NO_CREATE		= 0x00004000,	// 文件不存在则失败。若指定该选项则 FAIL_IF_EXISTS 无效。
-		FAIL_IF_EXISTS	= 0x00008000,	// 文件已存在则失败。
+		NO_CREATE		= 0x00001000,	// 文件不存在则失败。若指定该选项则 FAIL_IF_EXISTS 无效。
+		FAIL_IF_EXISTS	= 0x00002000,	// 文件已存在则失败。
 
 		// 杂项。
 		NO_BUFFERING	= 0x10000000,

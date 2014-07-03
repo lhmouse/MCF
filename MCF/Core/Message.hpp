@@ -2,8 +2,8 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2014. LH_Mouse. All wrongs reserved.
 
-#ifndef MCF_MESSAGE_DRIVER_HPP_
-#define MCF_MESSAGE_DRIVER_HPP_
+#ifndef MCF_MESSAGE_HPP_
+#define MCF_MESSAGE_HPP_
 
 #include "String.hpp"
 #include <functional>
@@ -16,7 +16,7 @@ class Message {
 public:
 	// 返回 true 则表示消息已被处理，不会继续传递。
 	// 否则消息传递给前一个注册的响应器。
-	typedef std::function<bool (const Message &)> HandlerProc;
+	typedef std::function<bool (Message &)> HandlerProc;
 
 public:
 	static std::shared_ptr<void> RegisterHandler(const Utf8StringObserver &u8soName, HandlerProc fnProc);
@@ -34,7 +34,7 @@ public:
 	virtual ~Message() noexcept = default;
 
 public:
-	void Dispatch() const;
+	void Dispatch();
 };
 
 }

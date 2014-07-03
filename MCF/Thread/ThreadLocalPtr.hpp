@@ -23,8 +23,7 @@ namespace Impl {
 		static ExceptionPtr GetCurrentException() noexcept {
 			return std::current_exception();
 		}
-		[[noreturn]]
-		static void RethrowException(ExceptionPtr pException){
+		[[noreturn]] static void RethrowException(ExceptionPtr pException){
 			std::rethrow_exception(std::move(pException));
 		}
 	};
@@ -35,8 +34,7 @@ namespace Impl {
 		static ExceptionPtr GetCurrentException() noexcept {
 			return nullptr;
 		}
-		[[noreturn]]
-		static void RethrowException(ExceptionPtr) noexcept {
+		[[noreturn]] static void RethrowException(ExceptionPtr) noexcept {
 			__builtin_trap();
 		}
 	};

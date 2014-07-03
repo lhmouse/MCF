@@ -2,13 +2,13 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2014. LH_Mouse. All wrongs reserved.
 
+#include "../env/hooks.h"
 #include "../env/_crtdef.hpp"
 #include "../ext/unref_param.h"
 #include <cxxabi.h>
 #include <typeinfo>
 
-extern __attribute__((__weak__))
-void MCF_OnException(void *pException, const std::type_info &tiType, const void *pRetAddr){
+void MCF_OnException(void *pException, const std::type_info &tiType, const void *pRetAddr) noexcept {
 	UNREF_PARAM(pException);
 	UNREF_PARAM(tiType);
 	UNREF_PARAM(pRetAddr);

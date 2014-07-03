@@ -3,7 +3,7 @@
 // Copyleft 2014. LH_Mouse. All wrongs reserved.
 
 #include "../StdMCF.hpp"
-#include "MessageDriver.hpp"
+#include "Message.hpp"
 #include "MultiIndexedMap.hpp"
 #include "VVector.hpp"
 #include "Utilities.hpp"
@@ -74,7 +74,7 @@ std::shared_ptr<void> Message::RegisterHandler(const Utf8StringObserver &u8soNam
 }
 
 // 其他非静态成员函数。
-void Message::Dispatch() const {
+void Message::Dispatch(){
 	HandlerVector vecHandlers;
 	{
 		const auto vLock = g_pLock->GetReaderLock();

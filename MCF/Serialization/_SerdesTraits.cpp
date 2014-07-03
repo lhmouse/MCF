@@ -9,12 +9,10 @@
 namespace MCF {
 
 namespace Impl {
-	[[noreturn]]
-	void ThrowOnEof(){
+	[[noreturn]] void SerdesThrowOnEof(){
 		MCF_THROW(ERROR_HANDLE_EOF, L"遇到意外的文件尾。"_wso);
 	}
-	[[noreturn]]
-	void ThrowOnSizeTooLarge(){
+	[[noreturn]] void SerdesThrowOnSizeTooLarge(){
 		MCF_THROW(ERROR_NOT_ENOUGH_MEMORY, L"数据大小超过上限。"_wso);
 	}
 }

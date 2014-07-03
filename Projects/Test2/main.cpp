@@ -18,17 +18,10 @@ extern "C" unsigned int MCFMain() noexcept {
 				a = a
 				b = b
 			}
-			AAA {
-				z = z
-				y = y
-				a = a
-				b = b
+			AAA = YYY {
+				w = w
 			}
-			BBB {
-				z = z
-				y = y
-				a = a
-				b = b
+			BBB = AAA {
 			}
 		)"_wso);
 		auto n2 = n;

@@ -13,9 +13,6 @@
 #include "../ext/expect.h"
 #include <stdlib.h>
 
-// ld 自动添加此符号。
-extern IMAGE_DOS_HEADER g_vDosHeader __asm__("__image_base__");
-
 typedef struct tagAtExitNode {
 	struct tagAtExitNode *pPrev;
 
@@ -160,5 +157,8 @@ int MCF_CRT_AtEndModule(void (__cdecl *pfnProc)(intptr_t), intptr_t nContext){
 }
 
 void *MCF_CRT_GetModuleBase(){
-	return &g_vDosHeader;
+	// ld 自动添加此符号。
+	extern IMAGE_DOS_HEADER vDosHeader __asm__("__image_base__");
+
+	return &vDosHeader;
 }

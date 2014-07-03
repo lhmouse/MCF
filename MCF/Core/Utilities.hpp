@@ -105,10 +105,7 @@ namespace Impl {
 // Bail
 //----------------------------------------------------------------------------
 template<typename... Params_t>
-#ifdef NDEBUG
-[[noreturn]]
-#endif
-inline void Bail(const wchar_t *pwszFormat, const Params_t &... vParams){
+__MCF_NORETURN_IF_NDEBUG inline void Bail(const wchar_t *pwszFormat, const Params_t &... vParams){
 	::MCF_CRT_BailF(pwszFormat, vParams...);
 }
 

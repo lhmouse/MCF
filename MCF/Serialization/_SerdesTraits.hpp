@@ -29,11 +29,8 @@
 namespace MCF {
 
 namespace Impl {
-	[[noreturn]]
-	extern void ThrowOnEof();
-
-	[[noreturn]]
-	extern void ThrowOnSizeTooLarge();
+	[[noreturn]] extern void SerdesThrowOnEof();
+	[[noreturn]] extern void SerdesThrowOnSizeTooLarge();
 
 	template<typename Object_t, typename = void>
 	struct SerdesTrait;
@@ -54,7 +51,7 @@ namespace Impl {
 		void operator()(bool &vObject, StreamBuffer &sbufStream) const {
 			unsigned char by = vObject;
 			if(!sbufStream.Extract(&by, sizeof(by))){
-				ThrowOnEof();
+				SerdesThrowOnEof();
 			}
 			vObject = by;
 		}
@@ -83,7 +80,7 @@ namespace Impl {
 
 			auto itRead = sbufStream.GetReadIterator();
 			if(!viTemp.Unserialize(itRead, sbufStream.GetReadEnd())){
-				ThrowOnEof();
+				SerdesThrowOnEof();
 			}
 
 			vObject = viTemp.Get();
@@ -144,12 +141,12 @@ namespace Impl {
 #if __FLOAT_WORD_ORDER__ == __ORDER_BIG_ENDIAN__
 			unsigned char abyTemp[sizeof(vFloatingPoint)];
 			if(!sbufStream.Extract(abyTemp, sizeof(vFloatingPoint))){
-				ThrowOnEof();
+				SerdesThrowOnEof();
 			}
 			ReverseCopyN((unsigned char *)&vFloatingPoint, sizeof(vFloatingPoint), std::end(abyTemp));
 #else
 			if(!sbufStream.Extract(&vFloatingPoint, sizeof(vFloatingPoint))){
-				ThrowOnEof();
+				SerdesThrowOnEof();
 			}
 #endif
 		}
@@ -182,12 +179,12 @@ namespace Impl {
 #if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
 			unsigned char abyTemp[sizeof(vElement)];
 			if(!sbufStream.Extract(abyTemp, sizeof(vElement))){
-				ThrowOnEof();
+				SerdesThrowOnEof();
 			}
 			ReverseCopyN((unsigned char *)&vElement, sizeof(vElement), std::end(abyTemp));
 #else
 			if(!sbufStream.Extract(&vElement, sizeof(vElement))){
-				ThrowOnEof();
+				SerdesThrowOnEof();
 			}
 #endif
 		}
@@ -205,7 +202,7 @@ namespace Impl {
 			std::uint64_t u64Temp;
 			SerdesTrait<std::uint64_t>()(u64Temp, sbufStream);
 			if(u64Temp > (std::size_t)-1){
-				ThrowOnSizeTooLarge();
+				SerdesThrowOnSizeTooLarge();
 			}
 			return (std::size_t)u64Temp;
 		}
@@ -225,7 +222,7 @@ namespace Impl {
 		void operator()(StreamBuffer &sbufNested, StreamBuffer &sbufStream) const {
 			const auto uSize = SizeTSerdes()(sbufStream);
 			if(!sbufStream.CutOut(sbufNested, uSize)){
-				ThrowOnEof();
+				SerdesThrowOnEof();
 			}
 		}
 	};

@@ -40,12 +40,12 @@ private:
 	UniqueHandle<xFileCloser> xm_hFile;
 
 public:
-	std::pair<unsigned long, WideStringObserver> Open(const wchar_t *pwszPath, std::uint32_t uFlags) noexcept {
+	std::pair<unsigned long, WideStringObserver> Open(const wchar_t *pwszPath, std::uint32_t u32Flags) noexcept {
 		DWORD dwCreateDisposition;
-		if(uFlags & TO_WRITE){
-			if(uFlags & NO_CREATE){
+		if(u32Flags & TO_WRITE){
+			if(u32Flags & NO_CREATE){
 				dwCreateDisposition = OPEN_EXISTING;
-			} else if(uFlags & FAIL_IF_EXISTS){
+			} else if(u32Flags & FAIL_IF_EXISTS){
 				dwCreateDisposition = CREATE_NEW;
 			} else {
 				dwCreateDisposition = OPEN_ALWAYS;
@@ -55,20 +55,20 @@ public:
 		}
 
 		DWORD dwFlagsAndAttributes = FILE_ATTRIBUTE_NORMAL | FILE_FLAG_OVERLAPPED;
-		if(uFlags & NO_BUFFERING){
+		if(u32Flags & NO_BUFFERING){
 			dwFlagsAndAttributes |= FILE_FLAG_NO_BUFFERING;
 		}
-		if(uFlags & WRITE_THROUGH){
+		if(u32Flags & WRITE_THROUGH){
 			dwFlagsAndAttributes |= FILE_FLAG_WRITE_THROUGH;
 		}
-		if(uFlags & DEL_ON_CLOSE){
+		if(u32Flags & DEL_ON_CLOSE){
 			dwFlagsAndAttributes |= FILE_FLAG_DELETE_ON_CLOSE;
 		}
 
 		xm_hFile.Reset(::CreateFileW(
 			pwszPath,
-			((uFlags & TO_READ) ? GENERIC_READ : 0) | ((uFlags & TO_WRITE) ? GENERIC_WRITE : 0),
-			(uFlags & TO_WRITE) ? 0 : FILE_SHARE_READ,
+			((u32Flags & TO_READ) ? GENERIC_READ : 0) | ((u32Flags & TO_WRITE) ? GENERIC_WRITE : 0),
+			(u32Flags & TO_WRITE) ? 0 : FILE_SHARE_READ,
 			nullptr,
 			dwCreateDisposition,
 			dwFlagsAndAttributes,
@@ -255,35 +255,35 @@ public:
 }
 
 // 静态成员函数。
-std::unique_ptr<File> File::Open(const WideStringObserver &wsoPath, std::uint32_t uFlags){
+std::unique_ptr<File> File::Open(const WideStringObserver &wsoPath, std::uint32_t u32Flags){
 	auto pFile = std::make_unique<FileDelegate>();
-	const auto vResult = pFile->Open(wsoPath.GetNullTerminated<MAX_PATH>().GetData(), uFlags);
+	const auto vResult = pFile->Open(wsoPath.GetNullTerminated<MAX_PATH>().GetData(), u32Flags);
 	if(vResult.first != ERROR_SUCCESS){
 		MCF_THROW(vResult.first, vResult.second);
 	}
 	return std::move(pFile);
 }
-std::unique_ptr<File> File::Open(const WideString &wcsPath, std::uint32_t uFlags){
+std::unique_ptr<File> File::Open(const WideString &wcsPath, std::uint32_t u32Flags){
 	auto pFile = std::make_unique<FileDelegate>();
-	const auto vResult = pFile->Open(wcsPath.GetCStr(), uFlags);
+	const auto vResult = pFile->Open(wcsPath.GetCStr(), u32Flags);
 	if(vResult.first != ERROR_SUCCESS){
 		MCF_THROW(vResult.first, vResult.second);
 	}
 	return std::move(pFile);
 }
 
-std::unique_ptr<File> File::OpenNoThrow(const WideStringObserver &wsoPath, std::uint32_t uFlags){
+std::unique_ptr<File> File::OpenNoThrow(const WideStringObserver &wsoPath, std::uint32_t u32Flags){
 	auto pFile = std::make_unique<FileDelegate>();
-	const auto vResult = pFile->Open(wsoPath.GetNullTerminated<MAX_PATH>().GetData(), uFlags);
+	const auto vResult = pFile->Open(wsoPath.GetNullTerminated<MAX_PATH>().GetData(), u32Flags);
 	if(vResult.first != ERROR_SUCCESS){
 		::SetLastError(vResult.first);
 		return nullptr;
 	}
 	return std::move(pFile);
 }
-std::unique_ptr<File> File::OpenNoThrow(const WideString &wcsPath, std::uint32_t uFlags){
+std::unique_ptr<File> File::OpenNoThrow(const WideString &wcsPath, std::uint32_t u32Flags){
 	auto pFile = std::make_unique<FileDelegate>();
-	const auto vResult = pFile->Open(wcsPath.GetCStr(), uFlags);
+	const auto vResult = pFile->Open(wcsPath.GetCStr(), u32Flags);
 	if(vResult.first != ERROR_SUCCESS){
 		::SetLastError(vResult.first);
 		return nullptr;
@@ -323,6 +323,7 @@ std::size_t File::Read(void *pBuffer, std::size_t uBytesToRead, std::uint64_t u6
 
 	return ((const FileDelegate *)this)->Read(pBuffer, uBytesToRead, u64Offset, &fnAsyncProc);
 }
+
 void File::Write(std::uint64_t u64Offset, const void *pBuffer, std::size_t uBytesToWrite){
 	ASSERT(dynamic_cast<FileDelegate *>(this));
 
@@ -333,6 +334,7 @@ void File::Write(std::uint64_t u64Offset, const void *pBuffer, std::size_t uByte
 
 	static_cast<FileDelegate *>(this)->Write(u64Offset, pBuffer, uBytesToWrite, &fnAsyncProc);
 }
+
 void File::Flush() const {
 	ASSERT(dynamic_cast<const FileDelegate *>(this));
 

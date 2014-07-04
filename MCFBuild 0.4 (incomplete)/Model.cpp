@@ -6,7 +6,6 @@
 #include "FileSystem.hpp"
 #include "../MCF/Core/System.hpp"
 #include "../MCF/Core/Exception.hpp"
-#include "../MCF/Core/MultiIndexedMap.hpp"
 #include "../MCF/Core/File.hpp"
 #include <cwchar>
 using namespace MCFBuild;
@@ -44,7 +43,7 @@ void Model::InitParams(){
 
 	xm_wcsProject.Clear();
 	xm_wcsConfig.Clear();
-	xm_mapMacros.clear();
+	xm_mapMacros.Clear();
 
 	xm_wcsWorkingDir.Clear();
 	xm_wcsSrcRoot.Clear();
@@ -53,8 +52,6 @@ void Model::InitParams(){
 
 	xm_eOperation = OP_BUILD;
 	xm_uProcessCount = 0;
-
-	xm_setSkippedDependencies.clear();
 
 	for(std::size_t i = 1; i < xm_vecArgV.GetSize(); ++i){
 		const auto &wcsArg = xm_vecArgV[i];
@@ -119,7 +116,12 @@ void Model::InitParams(){
 						wcsMacroName.Resize(uEquPos);
 					}
 
-					xm_mapMacros[std::move(wcsMacroName)] = std::move(wcsMacroValue);
+					auto pNode = xm_mapMacros.Find<0>(wcsMacroName);
+					if(pNode){
+						pNode->GetElement() = std::move(wcsMacroValue);
+					} else {
+						pNode = xm_mapMacros.Insert(std::move(wcsMacroValue), std::move(wcsMacroName));
+					}
 				}
 				break;
 
@@ -171,29 +173,6 @@ void Model::InitParams(){
 					THROW_INV_PARAM;
 				}
 				xm_eOperation = OP_REBUILD;
-				break;
-
-			case L'X':
-				if(uArgLen <= 2){
-					THROW_INV_PARAM;
-				} else {
-					MCF::File::UniqueId vUniqueId;
-					wchar_t *pwcEnd;
-					vUniqueId.u32VolumeSN = std::wcstoul(wcsArg.GetCStr() + 2, &pwcEnd, 16);
-					if(*pwcEnd != L'.'){
-						THROW_INV_PARAM;
-					}
-					vUniqueId.u32IndexLow = std::wcstoul(pwcEnd + 1, &pwcEnd, 16);
-					if(*pwcEnd != L'.'){
-						THROW_INV_PARAM;
-					}
-					vUniqueId.u32IndexHigh = std::wcstoul(pwcEnd + 1, &pwcEnd, 16);
-					if(*pwcEnd != 0){
-						THROW_INV_PARAM;
-					}
-					vUniqueId.u32Reserved = 0;
-					xm_setSkippedDependencies.insert(vUniqueId);
-				}
 				break;
 
 			default:

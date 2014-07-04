@@ -25,48 +25,54 @@ Release = General {
 	RCConfig		= -DNDEBUG
 }
 
+.PreBuild {
+	Command			= mkdir MCFLite >nul 2>nul	\
+						&& for /f "eol=;" %I in (libmcflite.lst) do	(copy /y "%I" "MCFLite\\" || exit /b 1)
+}
+.PostBuild {
+	Command			= echo meow!!
+}
+; $%	输出文件，不带引号的绝对路径。
+; $@	等价于 "$%"。
+; $<	所有输入文件，带引号的绝对路径。
+; $^	等价于 $<。
+; $!	包含文件列表的输出文件，带引号的绝对路径。
 .Precompilers {
-	; $.In			带引号的输入文件绝对路径
-	; $.Out			带引号的输出文件绝对路径
-	; $.DepOut		带引号的包含输出文件绝对路径
-	; $.NqIn		不带引号的输入文件绝对路径
-	; $.NqOut		不带引号的输出文件绝对路径
-
 ;	Precompiled\\.h {
 ;		Suffix		=
-;		Command		= $CC -x c-header $CompilerConfig $CFlags -o $.Out.gch $.In	\
-;						&& echo #warning Failed to load precompiled header "$.NqOut.gch".	\
-;						&& echo #include "$.NqIn" > $.Out
-;		Invoked		= -fpch-deps -fpch-preprocess -include $.Out
+;		Command		= $CC -x c-header $CompilerConfig $CFlags -o $@.gch $<	\
+;						&& echo #warning Failed to load precompiled header "$%.gch".	\
+;						&& echo #include $< > $@
+;		Invoked		= -fpch-deps -fpch-preprocess -include $@
 ;	}
 	MCFBuild\\.hpp {
 		Suffix		=
-		Command		= $CXX -x c++-header $CompilerConfig $CXXFlags -o $.Out.gch $.In	\
-						&& echo #warning Failed to load precompiled header "$.NqOut.gch".	\
-						&& echo #include "$.NqIn" > $.Out
-		Invoked		= -fpch-deps -fpch-preprocess -include $.Out
+		Command		= $CXX -x c++-header $CompilerConfig $CXXFlags -o $@.gch $<	\
+						&& echo #warning Failed to load precompiled header "$%.gch".	\
+						&& echo #include $< > $@
+		Invoked		= -fpch-deps -fpch-preprocess -include $@
 	}
 }
 .Compilers {
 	.*\\.c {
 		Suffix		= .o
-		Command		= $CC -x c -c $CompilerConfig $CFlags -o $.Out $.In -MF $.DepOut
+		Command		= $CC -x c -c $CompilerConfig $CFlags -o $@ $< -MF $!
 	}
 	.*\\.cpp {
 		Suffix		= .o
-		Command		= $CXX -x c++ -c $CompilerConfig $CXXFlags -o $.Out $.In -MF $.DepOut
-		PCHInvoked	= MCFBuild\\.hpp
+		Command		= $CXX -x c++ -c $CompilerConfig $CXXFlags -o $@ $< -MF $!
+		PCHInvoked	= MCFBuild.hpp
 	}
 	.*\\.rc {
 		Suffix		= .o
-		Command		= $WINDRES -O coff -o $.Out -i $.In
+		Command		= $WINDRES -O coff -o $@ -i $<
 	}
 }
 .Linkers {
-	Partial			= ld -r -o $.Out $.In
-	Full			= $CXX $LinkerConfig $LinkerFlags -o $.Out $.In
+	Partial			= ld -r -o $@ $<
+	Full			= $CXX $LinkerConfig $LinkerFlags -o $@ $<
 }
 
-.Version			= 0.4
+.MCFBuildVersion	= 0.4
 .DefaultConfig		= Debug
 .Output				= MCFBuild.exe

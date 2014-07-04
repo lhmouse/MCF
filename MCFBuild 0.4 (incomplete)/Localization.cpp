@@ -45,8 +45,7 @@ const std::map<MCF::WideStringObserver, MCF::WideStringObserver> g_mapStrings = 
 											"                默认值是 0。\n"
 											"  -c            执行清理操作，删除所有目标文件（不构建）。\n"
 											"  -R            重新构建所有文件。\n"
-											"\n"
-											"  -X[序列号]    排除依赖项目（仅供内部使用）。"_wso },
+											""_wso },
 
 	{ L"ENVIRONMENT_MANIFEST"_wso,			L"\n----- 构建环境清单 -----\n"
 											L"工作目录：%0\n"

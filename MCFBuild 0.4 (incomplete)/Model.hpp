@@ -6,11 +6,10 @@
 
 #include "../MCF/Core/Utilities.hpp"
 #include "../MCF/Core/VVector.hpp"
+#include "../MCF/Core/MultiIndexedMap.hpp"
 #include "../MCF/Core/String.hpp"
 #include "../MCF/Core/File.hpp"
 #include <cstddef>
-#include <map>
-#include <set>
 
 namespace MCFBuild {
 
@@ -36,7 +35,7 @@ private:
 
 	MCF::WideString xm_wcsProject;
 	MCF::WideString xm_wcsConfig;
-	std::map<MCF::WideString, MCF::WideString> xm_mapMacros;
+	MCF::MultiIndexedMap<MCF::WideString, MCF::WideString> xm_mapMacros;
 
 	MCF::WideString xm_wcsWorkingDir;
 	MCF::WideString xm_wcsSrcRoot;
@@ -45,8 +44,6 @@ private:
 
 	OPERATION xm_eOperation;
 	std::size_t xm_uProcessCount;
-
-	std::set<MCF::File::UniqueId> xm_setSkippedDependencies;
 
 protected:
 	Model();
@@ -91,10 +88,6 @@ public:
 	}
 	auto GetProcessCount() const noexcept {
 		return xm_uProcessCount;
-	}
-
-	const auto &GetSkippedDependencies() const noexcept {
-		return xm_setSkippedDependencies;
 	}
 };
 

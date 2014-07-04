@@ -66,10 +66,6 @@ public:
 	};
 
 public:
-	// nCreateDisposition
-	//   > 0	文件存在则打开，不存在则创建（OPEN_ALWAYS）
-	//   = 0	文件存在则打开，不存在则失败（OPEN_EXISTING）
-	//   < 0	文件存在则失败，不存在则创建（OPEN_ALWAYS）
 	static std::unique_ptr<File> Open(const WideStringObserver &wsoPath, std::uint32_t u32Flags);
 	static std::unique_ptr<File> Open(const WideString &wcsPath, std::uint32_t u32Flags);
 

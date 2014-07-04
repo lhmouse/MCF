@@ -1,0 +1,72 @@
+General {
+	CompilerFlags	= -Wall -Wextra -Wsign-conversion -Wsuggest-attribute=noreturn -pipe -mfpmath=both -march=core2 -masm=intel
+	LinkerFlags		= -Wall -Wextra -static -nostdlib	\
+						-Wl,-e__MCF_ExeStartup,--disable-runtime-pseudo-reloc,--disable-auto-import	\
+						-Wl,--wrap=atexit,--wrap=malloc,--wrap=realloc,--wrap=calloc,--wrap=free,--wrap=__cxa_throw	\
+						-lstdc++ -lmingwex -lmingw32 -lgcc -lgcc_eh -lmsvcrt -luser32 -lkernel32
+
+	CFlags			= $CompilerFlags -std=c11
+	CXXFlags		= $CompilerFlags -std=c++1y -Wnoexcept
+	RCFlags			= -c 65001
+
+	CC				= gcc
+	CXX				= g++
+	WINDRES			= windres
+}
+
+Debug = General {
+	CompilerConfig	= -fno-builtin -g -O0
+	LinkerConfig	= -O0
+	RCConfig		=
+}
+Release = General {
+	CompilerConfig	= -DNDEBUG -O3 -ffunction-sections -fdata-sections -O0
+	LinkerConfig	= -Wl,--gc-sections,-s -O3
+	RCConfig		= -DNDEBUG
+}
+
+.Precompilers {
+	; $.In			带引号的输入文件绝对路径
+	; $.Out			带引号的输出文件绝对路径
+	; $.DepOut		带引号的包含输出文件绝对路径
+	; $.NqIn		不带引号的输入文件绝对路径
+	; $.NqOut		不带引号的输出文件绝对路径
+
+;	Precompiled\\.h {
+;		Suffix		=
+;		Command		= $CC -x c-header $CompilerConfig $CFlags -o $.Out.gch $.In	\
+;						&& echo #warning Failed to load precompiled header "$.NqOut.gch".	\
+;						&& echo #include "$.NqIn" > $.Out
+;		Invoked		= -fpch-deps -fpch-preprocess -include $.Out
+;	}
+	MCFBuild\\.hpp {
+		Suffix		=
+		Command		= $CXX -x c++-header $CompilerConfig $CXXFlags -o $.Out.gch $.In	\
+						&& echo #warning Failed to load precompiled header "$.NqOut.gch".	\
+						&& echo #include "$.NqIn" > $.Out
+		Invoked		= -fpch-deps -fpch-preprocess -include $.Out
+	}
+}
+.Compilers {
+	.*\\.c {
+		Suffix		= .o
+		Command		= $CC -x c -c $CompilerConfig $CFlags -o $.Out $.In -MF $.DepOut
+	}
+	.*\\.cpp {
+		Suffix		= .o
+		Command		= $CXX -x c++ -c $CompilerConfig $CXXFlags -o $.Out $.In -MF $.DepOut
+		PCHInvoked	= MCFBuild\\.hpp
+	}
+	.*\\.rc {
+		Suffix		= .o
+		Command		= $WINDRES -O coff -o $.Out -i $.In
+	}
+}
+.Linkers {
+	Partial			= ld -r -o $.Out $.In
+	Full			= $CXX $LinkerConfig $LinkerFlags -o $.Out $.In
+}
+
+.Version			= 0.4
+.DefaultConfig		= Debug
+.Output				= MCFBuild.exe

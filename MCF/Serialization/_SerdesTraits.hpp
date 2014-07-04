@@ -57,7 +57,7 @@ namespace Impl {
 		}
 	};
 
-	// 针对比较大的整数类型（bool 除外）的特化。
+	// 针对比较大的整数类型的特化。
 	template<typename Integral_t>
 	struct SerdesTrait<
 		Integral_t,
@@ -152,7 +152,7 @@ namespace Impl {
 		}
 	};
 
-	// 针对其他标量类型（较小的整数，指向成员的指针等）的特化。
+	// 针对其他标量类型（除 bool 外较小的整数，指向成员的指针等）的特化。
 	template<typename Scalar_t>
 	struct SerdesTrait<
 		Scalar_t,

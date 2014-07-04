@@ -18,7 +18,7 @@ extern "C" unsigned int MCFMain() noexcept {
 				a = a
 				b = b
 			}
-			AAA = YYY {
+			AAA = \U00000059\U00000059\x59 {
 				w = w
 			}
 			BBB = AAA {

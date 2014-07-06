@@ -1,33 +1,28 @@
 #include <MCF/StdMCF.hpp>
-#include <MCF/Language/Notation.hpp>
+#include <MCF/File/Utf8TextFile.hpp>
 using namespace MCF;
 
 extern "C" unsigned int MCFMain() noexcept {
-	try {
-		Notation n;
-		auto res = n.Parse(LR"(
-			ZZZ {
-				z = z
-				y = y
-				a = a
-				b = b
-			}
-			YYY {
-				z = z
-				y = y
-				a = a
-				b = b
-			}
-			AAA = \U00000059\U00000059\x59 {
-				w = w
-			}
-			BBB = AAA {
-			}
-		)"_wso);
-		auto n2 = n;
-		std::printf("err = %d\n%ls\n", res.first, n2.Export().GetStr());
-	} catch(std::exception &e){
-		std::printf("exception %s!\n", e.what());
+	const auto pTestWrite = Utf8TextFile::Open(
+		L"E:\\Desktop\\test2.txt"_wso,
+		Utf8TextFile::TO_WRITE | Utf8TextFile::BOM_USE
+	);
+	pTestWrite->WriteLine(L"喵喵"_wso);
+	pTestWrite->WriteLine(L"喵喵"_wso);
+
+	const auto pUtf8TextFile = Utf8TextFile::Open(
+		L"E:\\Desktop\\test.txt"_wso,
+		Utf8TextFile::TO_READ | Utf8TextFile::BOM_DETECT
+	);
+
+	std::printf("bom = %d\n", pUtf8TextFile->GetFlags() & Utf8TextFile::BOM_USE);
+	std::fflush(stdout);
+
+	WideString wcsLine;
+	while(pUtf8TextFile->ReadLine(wcsLine)){
+		DWORD dwDummy;
+		::WriteConsoleW(::GetStdHandle(STD_OUTPUT_HANDLE), wcsLine.GetStr(), wcsLine.GetSize(), &dwDummy, nullptr);
 	}
+
 	return 0;
 }

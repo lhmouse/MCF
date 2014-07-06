@@ -48,10 +48,10 @@ public:
 
 public:
 	unsigned long GetSpinCount() const noexcept {
-		return xm_csGuard.GetSpinCount();
+		return xm_csGuard.ImplGetSpinCount();
 	}
 	void SetSpinCount(unsigned long ulSpinCount) noexcept {
-		xm_csGuard.SetSpinCount(ulSpinCount);
+		xm_csGuard.ImplSetSpinCount(ulSpinCount);
 	}
 
 	void GetReaderLock() noexcept {
@@ -60,14 +60,14 @@ public:
 		::TlsSetValue(xm_hdwReaderRecur.Get(), (void *)uReaderRecur);
 
 		if(uReaderRecur == 1){
-			if(xm_csGuard.IsLockedByCurrentThread()){
+			if(xm_csGuard.ImplIsLockedByCurrentThread()){
 				__atomic_add_fetch(&xm_uReaderCount, 1, __ATOMIC_ACQ_REL);
 			} else {
-				xm_csGuard.Enter();
+				xm_csGuard.ImplEnter();
 				if(__atomic_add_fetch(&xm_uReaderCount, 1, __ATOMIC_ACQ_REL) == 1){
 					::WaitForSingleObject(xm_hSemaphore.Get(), INFINITE);
 				}
-				xm_csGuard.Leave();
+				xm_csGuard.ImplLeave();
 			}
 		}
 	}
@@ -77,7 +77,7 @@ public:
 		::TlsSetValue(xm_hdwReaderRecur.Get(), (void *)uReaderRecur);
 
 		if(uReaderRecur == 0){
-			if(xm_csGuard.IsLockedByCurrentThread()){
+			if(xm_csGuard.ImplIsLockedByCurrentThread()){
 				__atomic_sub_fetch(&xm_uReaderCount, 1, __ATOMIC_ACQ_REL);
 			} else {
 				if(__atomic_sub_fetch(&xm_uReaderCount, 1, __ATOMIC_ACQ_REL) == 0){
@@ -88,7 +88,7 @@ public:
 	}
 
 	void GetWriterLock() noexcept {
-		if(xm_csGuard.Enter()){
+		if(xm_csGuard.ImplEnter()){
 			// 假定有两个线程运行同样的函数：
 			//
 			//   GetReaderLock();
@@ -103,7 +103,7 @@ public:
 		}
 	}
 	void ReleaseWriterLock() noexcept {
-		if(xm_csGuard.Leave()){
+		if(xm_csGuard.ImplLeave()){
 			if((std::size_t)::TlsGetValue(xm_hdwReaderRecur.Get()) == 0){
 				::ReleaseSemaphore(xm_hSemaphore.Get(), 1, nullptr);
 			}

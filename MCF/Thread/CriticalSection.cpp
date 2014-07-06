@@ -11,16 +11,7 @@ namespace {
 
 class CriticalSectionDelegate : CONCRETE(CriticalSection), public Impl::CriticalSectionImpl {
 public:
-	explicit CriticalSectionDelegate(unsigned long ulSpinCount)
-		: CriticalSectionImpl(ulSpinCount)
-	{
-	}
-
-public:
-	using CriticalSectionImpl::GetSpinCount;
-	using CriticalSectionImpl::SetSpinCount;
-
-	using CriticalSectionImpl::IsLockedByCurrentThread;
+	using CriticalSectionImpl::CriticalSectionImpl;
 };
 
 }
@@ -32,13 +23,13 @@ namespace Impl {
 	void CriticalSection::Lock::xDoLock() const noexcept {
 		ASSERT(dynamic_cast<CriticalSectionDelegate *>(xm_pOwner));
 
-		static_cast<CriticalSectionDelegate *>(xm_pOwner)->Enter();
+		static_cast<CriticalSectionDelegate *>(xm_pOwner)->ImplEnter();
 	}
 	template<>
 	void CriticalSection::Lock::xDoUnlock() const noexcept {
 		ASSERT(dynamic_cast<CriticalSectionDelegate *>(xm_pOwner));
 
-		static_cast<CriticalSectionDelegate *>(xm_pOwner)->Leave();
+		static_cast<CriticalSectionDelegate *>(xm_pOwner)->ImplLeave();
 	}
 }
 
@@ -53,18 +44,18 @@ std::unique_ptr<CriticalSection> CriticalSection::Create(unsigned long ulSpinCou
 unsigned long CriticalSection::GetSpinCount() const noexcept {
 	ASSERT(dynamic_cast<const CriticalSectionDelegate *>(this));
 
-	return static_cast<const CriticalSectionDelegate *>(this)->GetSpinCount();
+	return static_cast<const CriticalSectionDelegate *>(this)->ImplGetSpinCount();
 }
 void CriticalSection::SetSpinCount(unsigned long ulSpinCount) noexcept {
 	ASSERT(dynamic_cast<CriticalSectionDelegate *>(this));
 
-	static_cast<CriticalSectionDelegate *>(this)->SetSpinCount(ulSpinCount);
+	static_cast<CriticalSectionDelegate *>(this)->ImplSetSpinCount(ulSpinCount);
 }
 
 bool CriticalSection::IsLockedByCurrentThread() const noexcept {
 	ASSERT(dynamic_cast<const CriticalSectionDelegate *>(this));
 
-	return static_cast<const CriticalSectionDelegate *>(this)->IsLockedByCurrentThread();
+	return static_cast<const CriticalSectionDelegate *>(this)->ImplIsLockedByCurrentThread();
 }
 
 CriticalSection::Lock CriticalSection::GetLock() noexcept {

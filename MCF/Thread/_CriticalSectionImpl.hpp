@@ -71,19 +71,19 @@ namespace Impl {
 		}
 
 	public:
-		unsigned long GetSpinCount() const noexcept {
+		unsigned long ImplGetSpinCount() const noexcept {
 			return __atomic_load_n(&xm_ulSpinCount, __ATOMIC_RELAXED);
 		}
-		void SetSpinCount(unsigned long ulSpinCount) noexcept {
+		void ImplSetSpinCount(unsigned long ulSpinCount) noexcept {
 			__atomic_store_n(&xm_ulSpinCount, ulSpinCount, __ATOMIC_RELAXED);
 		}
 
-		bool IsLockedByCurrentThread() const noexcept {
+		bool ImplIsLockedByCurrentThread() const noexcept {
 			return __atomic_load_n(&xm_dwOwner, __ATOMIC_ACQUIRE) == Thread::GetCurrentId();
 		}
 
 		// 首次进入临界区则返回 1，重入返回 2，否则返回 0。
-		int Try() noexcept {
+		int ImplTry() noexcept {
 			int nResult = 0;
 
 			const DWORD dwThreadId = Thread::GetCurrentId();
@@ -102,7 +102,7 @@ namespace Impl {
 			return nResult;
 		}
 		// 首次进入临界区返回 true，否则返回 false。
-		bool Enter() noexcept {
+		bool ImplEnter() noexcept {
 			bool bNotRecur = false;
 
 			const DWORD dwThreadId = Thread::GetCurrentId();
@@ -110,7 +110,7 @@ namespace Impl {
 				bNotRecur = true;
 
 				for(;;){
-					auto i = GetSpinCount();
+					auto i = ImplGetSpinCount();
 					for(;;){
 						DWORD dwOldOwner = 0;
 						if(EXPECT_NOT(__atomic_compare_exchange_n(
@@ -160,7 +160,7 @@ namespace Impl {
 			return bNotRecur;
 		}
 		// 临界区被释放返回 true，否则返回 false。
-		bool Leave() noexcept {
+		bool ImplLeave() noexcept {
 			ASSERT(__atomic_load_n(&xm_dwOwner, __ATOMIC_ACQUIRE) == Thread::GetCurrentId());
 
 			bool bReleased = false;

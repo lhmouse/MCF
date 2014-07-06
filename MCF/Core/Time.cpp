@@ -12,9 +12,9 @@ std::uint64_t GetNtTime() noexcept {
 	union {
 		FILETIME ft;
 		ULARGE_INTEGER uli;
-	} u;
-	::GetSystemTimeAsFileTime(&u.ft);
-	return u.uli.QuadPart;
+	} un;
+	::GetSystemTimeAsFileTime(&un.ft);
+	return un.uli.QuadPart;
 }
 std::uint64_t GetUnixTime() noexcept {
 	return UnixTimeFromNtTime(GetNtTime());

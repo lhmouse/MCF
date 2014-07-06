@@ -5,7 +5,7 @@
 #ifndef MCF_SHARED_HANDLE_NTS_HPP_
 #define MCF_SHARED_HANDLE_NTS_HPP_
 
-#include "_SharedHandleImpl.hpp"
+#include "_SharedHandleTemplate.hpp"
 
 namespace MCF {
 
@@ -13,7 +13,7 @@ template<class Closer_t>
 using WeakHandleNts = Impl::WeakHandleImpl<Closer_t, Impl::NonAtomicRefCount>;
 
 template<class Closer_t>
-using SharedHandleNts = Impl::SharedHandleImpl<Closer_t, Impl::NonAtomicRefCount>;
+using SharedHandleNts = Impl::SharedHandleTemplate<Closer_t, Impl::NonAtomicRefCount>;
 
 }
 

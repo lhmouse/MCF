@@ -35,8 +35,6 @@ public:
 		DEL_ON_CLOSE	= 0x00000040,
 	};
 
-	typedef std::function<void ()> AsyncProc;
-
 	// 用于在同一时刻确定同一台计算机上的文件。
 	// 参见 WinSDK 中的 BY_HANDLE_FILE_INFORMATION 描述。
 	struct UniqueId {
@@ -82,10 +80,10 @@ public:
 	// 异步过程调用总是会被执行，即使读取或写入操作失败。
 	// 异步过程可以抛出异常；在这种情况下，异常将在读取或写入操作完成后被重新抛出。
 	std::size_t Read(void *pBuffer, std::size_t uBytesToRead, std::uint64_t u64Offset) const;
-	std::size_t Read(void *pBuffer, std::size_t uBytesToRead, std::uint64_t u64Offset, const AsyncProc &fnAsyncProc) const;
+	std::size_t Read(void *pBuffer, std::size_t uBytesToRead, std::uint64_t u64Offset, const std::function<void ()> &fnAsyncProc) const;
 
 	void Write(std::uint64_t u64Offset, const void *pBuffer, std::size_t uBytesToWrite);
-	void Write(std::uint64_t u64Offset, const void *pBuffer, std::size_t uBytesToWrite, const AsyncProc &fnAsyncProc);
+	void Write(std::uint64_t u64Offset, const void *pBuffer, std::size_t uBytesToWrite, const std::function<void ()> &fnAsyncProc);
 
 	void Flush() const;
 };

@@ -120,7 +120,7 @@ public:
 		return std::move(vIdRet);
 	}
 
-	std::size_t Read(void *pBuffer, std::size_t uBytesToRead, std::uint64_t u64Offset, const AsyncProc *pfnAsyncProc) const {
+	std::size_t Read(void *pBuffer, std::size_t uBytesToRead, std::uint64_t u64Offset, const std::function<void ()> *pfnAsyncProc) const {
 		ASSERT(xm_hFile);
 
 		auto dwBytesToReadThisTime = (DWORD)Min(0xFFFFF000u, uBytesToRead);
@@ -183,7 +183,7 @@ public:
 		}
 		return uBytesRead;
 	}
-	void Write(std::uint64_t u64Offset, const void *pBuffer, std::size_t uBytesToWrite, const AsyncProc *pfnAsyncProc){
+	void Write(std::uint64_t u64Offset, const void *pBuffer, std::size_t uBytesToWrite, const std::function<void ()> *pfnAsyncProc){
 		ASSERT(xm_hFile);
 
 		auto dwBytesToWriteThisTime = (DWORD)Min(0xFFFFF000u, uBytesToWrite);
@@ -318,7 +318,7 @@ std::size_t File::Read(void *pBuffer, std::size_t uBytesToRead, std::uint64_t u6
 
 	return ((const FileDelegate *)this)->Read(pBuffer, uBytesToRead, u64Offset, nullptr);
 }
-std::size_t File::Read(void *pBuffer, std::size_t uBytesToRead, std::uint64_t u64Offset, const File::AsyncProc &fnAsyncProc) const {
+std::size_t File::Read(void *pBuffer, std::size_t uBytesToRead, std::uint64_t u64Offset, const File::std::function<void ()> &fnAsyncProc) const {
 	ASSERT(dynamic_cast<const FileDelegate *>(this));
 
 	return ((const FileDelegate *)this)->Read(pBuffer, uBytesToRead, u64Offset, &fnAsyncProc);
@@ -329,7 +329,7 @@ void File::Write(std::uint64_t u64Offset, const void *pBuffer, std::size_t uByte
 
 	static_cast<FileDelegate *>(this)->Write(u64Offset, pBuffer, uBytesToWrite, nullptr);
 }
-void File::Write(std::uint64_t u64Offset, const void *pBuffer, std::size_t uBytesToWrite, const File::AsyncProc &fnAsyncProc){
+void File::Write(std::uint64_t u64Offset, const void *pBuffer, std::size_t uBytesToWrite, const File::std::function<void ()> &fnAsyncProc){
 	ASSERT(dynamic_cast<FileDelegate *>(this));
 
 	static_cast<FileDelegate *>(this)->Write(u64Offset, pBuffer, uBytesToWrite, &fnAsyncProc);

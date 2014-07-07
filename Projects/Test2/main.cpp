@@ -1,27 +1,16 @@
 #include <MCF/StdMCF.hpp>
-#include <MCF/File/Utf8TextFile.hpp>
+#include <MCF/Core/Utf8TextFile.hpp>
 using namespace MCF;
 
 extern "C" unsigned int MCFMain() noexcept {
-	const auto pTestWrite = Utf8TextFile::Open(
-		L"E:\\Desktop\\test2.txt"_wso,
-		Utf8TextFile::TO_WRITE | Utf8TextFile::BOM_USE
-	);
-	pTestWrite->WriteLine(L"喵喵"_wso);
-	pTestWrite->WriteLine(L"喵喵"_wso);
+	Utf8TextFileWriter vWriter(File::Open(L"E:\\Desktop\\test2.txt"_wso, File::TO_WRITE), false, true);
+	vWriter.WriteLine("喵喵"_u8so);
+	vWriter.WriteLine("喵喵"_u8so);
 
-	const auto pUtf8TextFile = Utf8TextFile::Open(
-		L"E:\\Desktop\\test.txt"_wso,
-		Utf8TextFile::TO_READ | Utf8TextFile::BOM_DETECT
-	);
-
-	std::printf("bom = %d\n", pUtf8TextFile->GetFlags() & Utf8TextFile::BOM_USE);
-	std::fflush(stdout);
-
-	WideString wcsLine;
-	while(pUtf8TextFile->ReadLine(wcsLine)){
-		DWORD dwDummy;
-		::WriteConsoleW(::GetStdHandle(STD_OUTPUT_HANDLE), wcsLine.GetStr(), wcsLine.GetSize(), &dwDummy, nullptr);
+	Utf8TextFileReader vReader(File::Open(L"E:\\Desktop\\test.txt"_wso, File::TO_READ));
+	Utf8String u8sLine;
+	while(vReader.ReadLine(u8sLine)){
+		std::printf("%s$--\n", AnsiString(u8sLine).GetCStr());
 	}
 
 	return 0;

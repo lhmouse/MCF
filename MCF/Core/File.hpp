@@ -33,6 +33,7 @@ public:
 		NO_BUFFERING	= 0x00000010,
 		WRITE_THROUGH	= 0x00000020,
 		DEL_ON_CLOSE	= 0x00000040,
+		NO_TRUNC		= 0x00000080,	// 默认情况下使用 TO_WRITE 打开文件会清空现有内容。
 	};
 
 	// 用于在同一时刻确定同一台计算机上的文件。

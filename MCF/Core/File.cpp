@@ -77,6 +77,14 @@ public:
 		if(!xm_hFile){
 			return std::make_pair(::GetLastError(), L"::CreateFileW() 失败。"_wso);
 		}
+		if((u32Flags & TO_WRITE) && !(u32Flags & NO_TRUNC)){
+			if(!::SetEndOfFile(xm_hFile.Get())){
+				MCF_THROW(::GetLastError(), L"::SetEndOfFile() 失败。"_wso);
+			}
+			if(!::FlushFileBuffers(xm_hFile.Get())){
+				MCF_THROW(::GetLastError(), L"::FlushFileBuffers() 失败。"_wso);
+			}
+		}
 		return std::make_pair((unsigned long)ERROR_SUCCESS, nullptr);
 	}
 
@@ -139,7 +147,7 @@ public:
 			vApcResult.dwErrorCode = ::GetLastError();
 		}
 		std::exception_ptr ep;
-		if(pfnAsyncProc){
+		if(pfnAsyncProc && *pfnAsyncProc){
 			try {
 				(*pfnAsyncProc)();
 			} catch(...){
@@ -202,7 +210,7 @@ public:
 			vApcResult.dwErrorCode = ::GetLastError();
 		}
 		std::exception_ptr ep;
-		if(pfnAsyncProc){
+		if(pfnAsyncProc && *pfnAsyncProc){
 			try {
 				(*pfnAsyncProc)();
 			} catch(...){
@@ -247,7 +255,7 @@ public:
 		ASSERT(xm_hFile);
 
 		if(!::FlushFileBuffers(xm_hFile.Get())){
-			MCF_THROW(::GetLastError(), L"::WriteFileEx() 失败。"_wso);
+			MCF_THROW(::GetLastError(), L"::FlushFileBuffers() 失败。"_wso);
 		}
 	}
 };
@@ -318,7 +326,7 @@ std::size_t File::Read(void *pBuffer, std::size_t uBytesToRead, std::uint64_t u6
 
 	return ((const FileDelegate *)this)->Read(pBuffer, uBytesToRead, u64Offset, nullptr);
 }
-std::size_t File::Read(void *pBuffer, std::size_t uBytesToRead, std::uint64_t u64Offset, const File::std::function<void ()> &fnAsyncProc) const {
+std::size_t File::Read(void *pBuffer, std::size_t uBytesToRead, std::uint64_t u64Offset, const std::function<void ()> &fnAsyncProc) const {
 	ASSERT(dynamic_cast<const FileDelegate *>(this));
 
 	return ((const FileDelegate *)this)->Read(pBuffer, uBytesToRead, u64Offset, &fnAsyncProc);
@@ -329,7 +337,7 @@ void File::Write(std::uint64_t u64Offset, const void *pBuffer, std::size_t uByte
 
 	static_cast<FileDelegate *>(this)->Write(u64Offset, pBuffer, uBytesToWrite, nullptr);
 }
-void File::Write(std::uint64_t u64Offset, const void *pBuffer, std::size_t uBytesToWrite, const File::std::function<void ()> &fnAsyncProc){
+void File::Write(std::uint64_t u64Offset, const void *pBuffer, std::size_t uBytesToWrite, const std::function<void ()> &fnAsyncProc){
 	ASSERT(dynamic_cast<FileDelegate *>(this));
 
 	static_cast<FileDelegate *>(this)->Write(u64Offset, pBuffer, uBytesToWrite, &fnAsyncProc);

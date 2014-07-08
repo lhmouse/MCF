@@ -5,6 +5,7 @@
 #include "Model.hpp"
 #include "ConsoleOutput.hpp"
 #include "Localization.hpp"
+#include "ProjectFile.hpp"
 #include "../MCFCRT/exe/exe_decl.h"
 #include "../MCF/Core/Utilities.hpp"
 #include "../MCF/Core/String.hpp"
@@ -43,8 +44,7 @@ try {
 		+ wcsProcessCount
 	));
 
-	//
-	throw std::bad_alloc();
+	ProjectFile vProject(vModel.GetProject());
 
 	return 0;
 } catch(MCF::Exception &e){

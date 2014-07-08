@@ -5,6 +5,7 @@
 #define MCFBUILD_PROJECT_FILE_HPP_
 
 #include "../MCF/Core/Utilities.hpp"
+#include "../MCF/Core/String.hpp"
 #include "../MCF/Language/Notation.hpp"
 #include <cstddef>
 
@@ -13,6 +14,9 @@ namespace MCFBuild {
 class ProjectFile {
 private:
 	MCF::Notation xm_vData;
+
+public:
+	explicit ProjectFile(const MCF::WideString &wcsFullPath);
 };
 
 }

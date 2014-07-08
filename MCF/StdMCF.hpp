@@ -31,7 +31,4 @@
 #undef NULL
 #define NULL	nullptr
 
-namespace MCF {
-}
-
 #endif

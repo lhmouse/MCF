@@ -73,6 +73,7 @@ const std::map<MCF::WideStringObserver, MCF::WideStringObserver> g_mapStrings = 
 	{ L"FILE_TOO_LARGE"_wso,				L"文件“%0”太大。"_wso },
 	{ L"DELETE_FILE_FAILED"_wso,			L"删除文件“%0”失败。"_wso },
 	{ L"SET_WORKING_DIR_FAILED"_wso,		L"设置工作目录至“%0”失败。"_wso },
+	{ L"PROJ_FILE_INVALID"_wso,				L"项目文件“%0”解析失败，错误 %2。"_wso },
 };
 
 }

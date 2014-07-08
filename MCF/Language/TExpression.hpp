@@ -25,7 +25,7 @@ public:
 		ERR_NONE,
 		ERR_UNEXCEPTED_NODE_CLOSE,
 		ERR_UNCLOSED_QUOTE,
-		ERR_UNCLOSED_NODE
+		ERR_UNCLOSED_NODE,
 	};
 
 	typedef TExpressionNode Node;

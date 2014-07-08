@@ -27,7 +27,7 @@ Release = General {
 
 .PreBuild {
 	Command			= mkdir MCFLite >nul 2>nul	\
-						&& for /f "eol=;" %I in (libmcflite.lst) do	(copy /y "%I" "MCFLite\\" || exit /b 1)
+						&& for /f "eol=\;" %I in (libmcflite.lst) do	(copy /y "%I" "MCFLite\\" || exit /b 1)
 }
 .PostBuild {
 	Command			= echo meow!!

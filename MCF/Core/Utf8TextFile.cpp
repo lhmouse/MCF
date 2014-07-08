@@ -107,8 +107,9 @@ Utf8TextFileWriter::Utf8TextFileWriter(std::unique_ptr<File> pFile, std::uint32_
 {
 	if(xm_u32Flags & BOM_USE){
 		xm_pFile->Write(0, UTF8_BOM, sizeof(UTF8_BOM));
-		xm_u64Offset += sizeof(UTF8_BOM);
+		xm_pFile->Flush();
 	}
+	xm_u64Offset = xm_pFile->GetSize();
 }
 Utf8TextFileWriter::~Utf8TextFileWriter() noexcept {
 	try {

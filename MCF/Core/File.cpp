@@ -40,7 +40,7 @@ private:
 	UniqueHandle<xFileCloser> xm_hFile;
 
 public:
-	std::pair<unsigned long, WideStringObserver> Open(const wchar_t *pwszPath, std::uint32_t u32Flags) noexcept {
+	std::pair<unsigned long, WideStringObserver> Open(const wchar_t *pwszPath, std::uint32_t u32Flags){
 		DWORD dwCreateDisposition;
 		if(u32Flags & TO_WRITE){
 			if(u32Flags & NO_CREATE){
@@ -79,10 +79,10 @@ public:
 		}
 		if((u32Flags & TO_WRITE) && !(u32Flags & NO_TRUNC)){
 			if(!::SetEndOfFile(xm_hFile.Get())){
-				MCF_THROW(::GetLastError(), L"::SetEndOfFile() 失败。"_wso);
+				MCF_THROW(::GetLastError(), L"创建文件时试图截断文件，::SetEndOfFile() 失败。"_wso);
 			}
 			if(!::FlushFileBuffers(xm_hFile.Get())){
-				MCF_THROW(::GetLastError(), L"::FlushFileBuffers() 失败。"_wso);
+				MCF_THROW(::GetLastError(), L"创建文件时试图截断文件，::FlushFileBuffers() 失败。"_wso);
 			}
 		}
 		return std::make_pair((unsigned long)ERROR_SUCCESS, nullptr);

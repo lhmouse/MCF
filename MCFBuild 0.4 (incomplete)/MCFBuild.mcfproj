@@ -15,7 +15,7 @@ General {
 }
 
 Debug = General {
-	CompilerConfig	= -fno-builtin -g -O0
+	CompilerConfig	= -fno-builtin -g -D_GLIBCXX_DEBUG_PEDANTIC -O0
 	LinkerConfig	= -O0
 	RCConfig		=
 }

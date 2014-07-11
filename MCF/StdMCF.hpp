@@ -5,10 +5,6 @@
 #ifndef MCF_STD_MCF_HPP_
 #define MCF_STD_MCF_HPP_
 
-#ifndef NDEBUG
-#	define _GLIBCXX_DEBUG	1
-#endif
-
 #include <cstddef>
 #include <cstdint>
 #include <cstdlib>

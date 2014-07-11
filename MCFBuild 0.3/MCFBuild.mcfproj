@@ -37,7 +37,7 @@ General {
 }
 
 Debug = General {
-	CompilerFlags		=> -fno-builtin -g -O0
+	CompilerFlags		=> -fno-builtin -g -D_GLIBCXX_DEBUG_PEDANTIC -O0
 	LinkerFlags			=> -O0
 }
 

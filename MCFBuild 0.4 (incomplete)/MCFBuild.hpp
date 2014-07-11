@@ -4,8 +4,6 @@
 #ifndef MCFBUILD_MCFBUILD_HPP_
 #define MCFBUILD_MCFBUILD_HPP_
 
-#include <cstddef>
-
 #include "../MCF/StdMCF.hpp"
 #include "../MCF/Core/String.hpp"
 #include "../MCF/Core/Utilities.hpp"
@@ -13,6 +11,7 @@
 
 #include "Localization.hpp"
 
-#define FORMAT_THROW(code, msg)	MCF_THROW(code, ::MCFBuild::FormatString(msg))
+#define FORMAT_THROW(code, msg)	\
+	MCF_THROW(code, ::MCFBuild::FormatString(msg))
 
 #endif

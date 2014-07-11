@@ -5,10 +5,6 @@
 #ifndef MCF_STD_MCF_HPP_
 #define MCF_STD_MCF_HPP_
 
-#ifdef UNICODE
-#	define _UNICODE			1
-#endif
-
 #ifndef NDEBUG
 #	define _GLIBCXX_DEBUG	1
 #endif

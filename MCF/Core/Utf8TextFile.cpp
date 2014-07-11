@@ -27,7 +27,7 @@ bool Utf8TextFileReader::IsAtEndOfFile() const noexcept {
 }
 int Utf8TextFileReader::Read(){
 	if(xm_sbufCache.GetSize() <= 1){
-		unsigned char abyTemp[0x1000];
+		unsigned char abyTemp[0x400];
 		const auto uBytesRead = xm_pFile->Read(abyTemp, sizeof(abyTemp), xm_u64Offset);
 		if(uBytesRead != 0){
 			xm_sbufCache.Insert(abyTemp, uBytesRead);

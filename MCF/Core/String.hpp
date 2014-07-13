@@ -296,7 +296,7 @@ public:
 		return Observer(GetBegin(), GetEnd());
 	}
 
-	void Resize(std::size_t uNewSize){
+	Char_t *Resize(std::size_t uNewSize){
 		const std::size_t uOldSize = GetSize();
 		if(uNewSize > uOldSize){
 			Reserve(uNewSize);
@@ -304,6 +304,7 @@ public:
 		} else if(uNewSize < uOldSize){
 			Truncate(uOldSize - uNewSize);
 		}
+		return GetData();
 	}
 	Char_t *ResizeMore(std::size_t uDeltaSize){
 		const auto uOldSize = GetSize();

@@ -27,7 +27,8 @@ Release = General {
 
 .PreBuild {
 	Command			= mkdir MCFLite >nul 2>nul	\
-						&& for /f "eol=\;" %I in (libmcflite.lst) do	(copy /y "%I" "MCFLite\\" || exit /b 1)
+						&& for /f "eol=\;" %I in (libmcflite.lst) do	\
+							(copy /y "%I" "MCFLite\\" || exit /b 1)
 }
 .PostBuild {
 	Command			= echo meow!!
@@ -48,19 +49,19 @@ Release = General {
 	MCFBuild\\.hpp {
 		Suffix		=
 		Command		= $CXX -x c++-header $CompilerConfig $CXXFlags -o $@.gch $<	\
-						&& echo #warning Failed to load precompiled header "$%.gch".	\
-						&& echo #include $< > $@
+						&& echo #warning Failed to load precompiled header "$%.gch". > $@	\
+						&& echo #include $< >> $@
 		Invoked		= -fpch-deps -fpch-preprocess -include $@
 	}
 }
 .Compilers {
 	.*\\.c {
 		Suffix		= .o
-		Command		= $CC -x c -c $CompilerConfig $CFlags -o $@ $< -MF $!
+		Command		= $CC -x c -c $CompilerConfig $CFlags -o $@ $< -MMD -MF $!
 	}
 	.*\\.cpp {
 		Suffix		= .o
-		Command		= $CXX -x c++ -c $CompilerConfig $CXXFlags -o $@ $< -MF $!
+		Command		= $CXX -x c++ -c $CompilerConfig $CXXFlags -o $@ $< -MMD -MF $!
 		PCHInvoked	= MCFBuild.hpp
 	}
 	.*\\.rc {
@@ -70,7 +71,9 @@ Release = General {
 }
 .Linkers {
 	Partial			= ld -r -o $@ $<
-	Full			= $CXX $LinkerConfig $LinkerFlags -o $@ $<
+	Primary			= $CXX $LinkerConfig $LinkerFlags -o $@ $<
+	Secondary		=
+	Tertiary		=
 }
 
 .MCFBuildVersion	= 0.4

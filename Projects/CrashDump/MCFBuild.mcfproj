@@ -74,7 +74,7 @@ General {
 	ExtraLibs			= -lversion -lshlwapi
 
 	CFlags				= $CompilerFlags$ -c -std=c11
-	CPPFlags			= $CompilerFlags$ -c -std=c++11
+	CPPFlags			= $CompilerFlags$ -c -std=c++14
 
 	Ignored				= .* *.a *.bak *.cmd *.exe *.h *.hpp *.mcfproj *.o
 

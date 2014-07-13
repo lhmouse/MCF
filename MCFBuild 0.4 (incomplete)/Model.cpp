@@ -96,7 +96,7 @@ void Model::InitParams(){
 				xm_wcsWorkingDir.Assign(wcsArg.GetBegin() + 2, wcsArg.GetEnd());
 				break;
 
-			case L'p':
+			case L'f':
 				if(uArgLen <= 2){
 					THROW_INV_PARAM;
 				}

@@ -9,6 +9,7 @@
 #include "../MCF/Core/MultiIndexedMap.hpp"
 #include "../MCF/Core/String.hpp"
 #include "../MCF/Core/File.hpp"
+#include <array>
 #include <cstddef>
 
 namespace MCFBuild {

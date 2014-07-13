@@ -13,7 +13,7 @@ namespace {
 
 const std::map<MCF::WideStringObserver, MCF::WideStringObserver> g_mapStrings = {
 	{ L"MCFBUILD_LOGO"_wso,					L"MCF 构建实用工具 [版本 %0.%1.%2.%3]\n"
-											"Copyleft 2014, LH_Mouse. All wrongs reserved."_wso },
+											"Copyleft 2014, LH_Mouse. All wrongs reserved.\n"_wso },
 	{ L"MCFBUILD_USAGE"_wso,				L"\n" //   10        20        30        40        50        60        70        80
 											"命令行参数可以以 - 或 / 开头，其效果是一样的。\n"
 											"任何不以 - 或 / 开头的命令行参数都会被当作配置名。\n"
@@ -27,7 +27,7 @@ const std::map<MCF::WideStringObserver, MCF::WideStringObserver> g_mapStrings = 
 											"\n"
 											"  -C目录        在进行任何其他操作之前，切换工作目录到此路径。\n"
 											"\n"
-											"  -p文件        指定要调用的项目文件路径。\n"
+											"  -f文件        指定要调用的项目文件路径。\n"
 											"                默认值是“MCFBuild.mcfproj”。\n"
 											"  配置名        指定要调用的配置包的名称。区分大小写。\n"
 											"                默认值是“Default”。\n"
@@ -54,26 +54,27 @@ const std::map<MCF::WideStringObserver, MCF::WideStringObserver> g_mapStrings = 
 											L"源目录　：%3\n"
 											L"中间目录：%4\n"
 											L"目标目录：%5\n"
-											L"进程数　：%6"_wso },
+											L"进程数　：%6\n"_wso },
+	{ L"LOADING_PROJECT_FILE"_wso,			L"\n----- 正在加载项目文件 -----\n"_wso },
 	{ L"SOURCE_FILE_MANIFEST"_wso,			L"\n----- 源文件清单 -----\n"_wso },
 
-	{ L"EXCEPTION_HEADER"_wso,				L"\n----- 捕获到异常 -----"_wso },
+	{ L"EXCEPTION_HEADER"_wso,				L"\n----- 捕获到异常 -----\n"_wso },
 	{ L"MCF_EXCEPTION"_wso,					L"MCF Build 遇到一个异常：\n"
 											"  错误描述：%0\n"
-											"  错误代码：%1（%2）"_wso },
-	{ L"STD_EXCEPTION"_wso,					L"MCF Build 遇到异常“%0”。\n请联系作者寻求协助。"_wso },
-	{ L"UNKNOWN_EXCEPTION"_wso,				L"MCF Build 遇到无法处理的异常。\n请联系作者寻求协助。"_wso },
+											"  错误代码：%1（%2）\n"_wso },
+	{ L"STD_EXCEPTION"_wso,					L"MCF Build 遇到异常“%0”。\n请联系作者寻求协助。\n"_wso },
+	{ L"UNKNOWN_EXCEPTION"_wso,				L"MCF Build 遇到无法处理的异常。\n请联系作者寻求协助。\n"_wso },
 
-	{ L"INVALID_COMMAND_LINE_OPTION"_wso,	L"命令行选项“%0”无效。使用选项 -h 获得帮助。"_wso },
-	{ L"CREATE_PIPE_FAILED"_wso,			L"创建管道失败。"_wso },
-	{ L"SET_PIPE_INFO_FAILED"_wso,			L"设置管道句柄信息失败。"_wso },
-	{ L"CREATE_PROCESS_FAILED"_wso,			L"以命令行“%0”创建进程失败。"_wso },
-	{ L"OPEN_DIRECTORY_FAILED"_wso,			L"打开目录“%0”失败。"_wso },
-	{ L"OPEN_FILE_FAILED"_wso,				L"打开文件“%0”失败。"_wso },
-	{ L"FILE_TOO_LARGE"_wso,				L"文件“%0”太大。"_wso },
-	{ L"DELETE_FILE_FAILED"_wso,			L"删除文件“%0”失败。"_wso },
-	{ L"SET_WORKING_DIR_FAILED"_wso,		L"设置工作目录至“%0”失败。"_wso },
-	{ L"PROJ_FILE_INVALID"_wso,				L"项目文件“%0”解析失败，错误 %2。"_wso },
+	{ L"INVALID_COMMAND_LINE_OPTION"_wso,	L"命令行选项“%0”无效。使用选项 -h 获得帮助。\n"_wso },
+	{ L"CREATE_PIPE_FAILED"_wso,			L"创建管道失败。\n"_wso },
+	{ L"SET_PIPE_INFO_FAILED"_wso,			L"设置管道句柄信息失败。\n"_wso },
+	{ L"CREATE_PROCESS_FAILED"_wso,			L"以命令行“%0”创建进程失败。\n"_wso },
+	{ L"OPEN_DIRECTORY_FAILED"_wso,			L"打开目录“%0”失败。\n"_wso },
+	{ L"OPEN_FILE_FAILED"_wso,				L"打开文件“%0”失败。\n"_wso },
+	{ L"FILE_TOO_LARGE"_wso,				L"文件“%0”太大。\n"_wso },
+	{ L"DELETE_FILE_FAILED"_wso,			L"删除文件“%0”失败。\n"_wso },
+	{ L"SET_WORKING_DIR_FAILED"_wso,		L"设置工作目录至“%0”失败。\n"_wso },
+	{ L"PROJ_FILE_INVALID"_wso,				L"项目文件“%0”解析失败，错误 %2。\n"_wso },
 };
 
 }

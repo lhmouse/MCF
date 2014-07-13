@@ -5,7 +5,7 @@ General {
 	LinkerFlags			= -Wall -Wextra -static
 	ExtraLibs			= -lversion -lshlwapi
 
-	CPPFlags			= -std=c++11
+	CPPFlags			= -std=c++14
 	RCFlags				=
 
 	IgnoredFiles		= .Built* make.cmd a.exe *.h *.hpp *.mcfproj

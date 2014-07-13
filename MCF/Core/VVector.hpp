@@ -190,13 +190,14 @@ public:
 		return (std::size_t)(GetEnd() - GetBegin());
 	}
 	template<typename... Params_t>
-	void Resize(std::size_t uNewSize, const Params_t &... vParams){
+	Element_t *Resize(std::size_t uNewSize, const Params_t &... vParams){
 		const std::size_t uOldSize = GetSize();
 		if(uNewSize > uOldSize){
 			FillAtEnd(uNewSize - uOldSize, vParams...);
 		} else if(uNewSize < uOldSize){
 			TruncateFromEnd(uOldSize - uNewSize);
 		}
+		return GetData();
 	}
 	template<typename... Params_t>
 	Element_t *ResizeMore(std::size_t uDeltaSize, const Params_t &... vParams){

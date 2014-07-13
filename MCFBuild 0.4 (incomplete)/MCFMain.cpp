@@ -4,7 +4,6 @@
 #include "MCFBuild.hpp"
 #include "Model.hpp"
 #include "ConsoleOutput.hpp"
-#include "Localization.hpp"
 #include "ProjectFile.hpp"
 #include "../MCFCRT/exe/exe_decl.h"
 #include "../MCF/Core/Utilities.hpp"
@@ -17,12 +16,12 @@ extern "C" unsigned int MCFMain() noexcept
 try {
 	auto &vModel = Model::GetInstance();
 
-	PrintLn(FormatString(L"MCFBUILD_LOGO|0|4|0|0"_wso));
+	FormatPrint(L"MCFBUILD_LOGO|0|4|0|0"_wso);
 
 	vModel.InitParams();
 
 	if(vModel.GetOperation() == Model::OP_SHOW_HELP){
-		PrintLn(FormatString(L"MCFBUILD_USAGE"_wso));
+		FormatPrint(L"MCFBUILD_USAGE"_wso);
 		return 0;
 	}
 
@@ -33,8 +32,8 @@ try {
 		L"%lu",
 		vModel.GetProcessCount()
 	));
-	PrintLn(FormatString(
-		L"ENVIRONMENT_MANIFEST|"_wso
+	FormatPrint(
+		L"ENVIRONMENT_MANIFEST|"_ws
 		+ vModel.GetWorkingDir() + L'|'
 		+ vModel.GetProject() + L'|'
 		+ vModel.GetConfig() + L'|'
@@ -42,13 +41,14 @@ try {
 		+ vModel.GetIntermediateRoot() + L'|'
 		+ vModel.GetDstRoot() + L'|'
 		+ wcsProcessCount
-	));
+	);
 
+	FormatPrint(L"LOADING_PROJECT_FILE|"_wso);
 	ProjectFile vProject(vModel.GetProject());
 
 	return 0;
 } catch(MCF::Exception &e){
-	PrintLn(FormatString(L"EXCEPTION_HEADER"_wso));
+	FormatPrint(L"EXCEPTION_HEADER"_wso);
 
 	auto wcsMessage(L"MCF_EXCEPTION|"_wso + e.m_wcsMessage);
 	wchar_t awcCode[16];
@@ -65,18 +65,18 @@ try {
 		wcsErrorDescription.Pop();
 	}
 	wcsMessage += wcsErrorDescription;
-	PrintLn(FormatString(wcsMessage));
+	FormatPrint(wcsMessage);
 	return e.m_ulErrorCode;
 } catch(std::exception &e){
-	PrintLn(FormatString(L"EXCEPTION_HEADER"_wso));
+	FormatPrint(L"EXCEPTION_HEADER"_wso);
 
 	auto wcsMessage = L"STD_EXCEPTION|"_ws;
 	wcsMessage.Append<MCF::StringEncoding::UTF8>(MCF::Utf8StringObserver(e.what()));
-	PrintLn(FormatString(wcsMessage));
+	FormatPrint(wcsMessage);
 	return (unsigned int)-1;
 } catch(...){
-	PrintLn(FormatString(L"EXCEPTION_HEADER"_wso));
+	FormatPrint(L"EXCEPTION_HEADER"_wso);
 
-	PrintLn(FormatString(L"UNKNOWN_EXCEPTION"_wso));
+	FormatPrint(L"UNKNOWN_EXCEPTION"_wso);
 	return (unsigned int)-2;
 }

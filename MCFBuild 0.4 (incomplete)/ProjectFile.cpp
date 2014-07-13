@@ -30,8 +30,7 @@ ProjectFile::ProjectFile(const MCF::WideString &wcsFullPath){
 
 		FORMAT_THROW(
 			ERROR_INVALID_DATA,
-			L"PROJ_FILE_INVALID|"_wso
-			+ wcsFullPath
+			L"PROJ_FILE_INVALID|"_ws
 			+ (((std::size_t)vResult.first < COUNT_OF(ERR_DESC)) ? ERR_DESC[vResult.first] : ERR_DESC[0])
 		);
 	}

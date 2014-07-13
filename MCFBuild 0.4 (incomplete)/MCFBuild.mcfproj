@@ -1,5 +1,6 @@
 General {
-	CompilerFlags	= -Wall -Wextra -Wsign-conversion -Wsuggest-attribute=noreturn -pipe -mfpmath=both -march=core2 -masm=intel
+	CompilerFlags	= -Wall -Wextra -Wsign-conversion -Wsuggest-attribute=noreturn	\
+						-pipe -mfpmath=both -march=core2 -masm=intel
 	LinkerFlags		= -Wall -Wextra -static -nostdlib	\
 						-Wl,-e__MCF_ExeStartup,--disable-runtime-pseudo-reloc,--disable-auto-import	\
 						-Wl,--wrap=atexit,--wrap=malloc,--wrap=realloc,--wrap=calloc,--wrap=free,--wrap=__cxa_throw	\
@@ -26,8 +27,8 @@ Release = General {
 }
 
 .PreBuild {
-	Command			= mkdir MCFLite >nul 2>nul	\
-						&& for /f "eol=\;" %I in (libmcflite.lst) do	\
+	Command			= mkdir MCFLite >nul 2>nul	\0\
+						for /f "eol=\;" %I in (libmcflite.lst) do	\0\
 							(copy /y "%I" "MCFLite\\" || exit /b 1)
 }
 .PostBuild {
@@ -41,16 +42,16 @@ Release = General {
 .Precompilers {
 ;	Precompiled\\.h {
 ;		Suffix		=
-;		Command		= $CC -x c-header $CompilerConfig $CFlags -o $@.gch $<	\
-;						&& echo #warning Failed to load precompiled header "$%.gch".	\
-;						&& echo #include $< > $@
+;		Command		= $CC -x c-header $CompilerConfig $CFlags -o $@.gch $<	\0\
+;						echo #warning Failed to load precompiled header "$%.gch".	\0\
+;						echo #include $< > $@
 ;		Invoked		= -fpch-deps -fpch-preprocess -include $@
 ;	}
 	MCFBuild\\.hpp {
 		Suffix		=
-		Command		= $CXX -x c++-header $CompilerConfig $CXXFlags -o $@.gch $<	\
-						&& echo #warning Failed to load precompiled header "$%.gch". > $@	\
-						&& echo #include $< >> $@
+		Command		= $CXX -x c++-header $CompilerConfig $CXXFlags -o $@.gch $<	\0\
+						echo #warning Failed to load precompiled header "$%.gch". > $@	\0\
+						echo #include $< >> $@
 		Invoked		= -fpch-deps -fpch-preprocess -include $@
 	}
 }
@@ -71,9 +72,7 @@ Release = General {
 }
 .Linkers {
 	Partial			= ld -r -o $@ $<
-	Primary			= $CXX $LinkerConfig $LinkerFlags -o $@ $<
-	Secondary		=
-	Tertiary		=
+	Command			= $CXX $LinkerConfig $LinkerFlags -o $@ $<
 }
 
 .MCFBuildVersion	= 0.4

@@ -65,16 +65,16 @@ const std::map<MCF::WideStringObserver, MCF::WideStringObserver> g_mapStrings = 
 	{ L"STD_EXCEPTION"_wso,					L"MCF Build 遇到异常“%0”。\n请联系作者寻求协助。\n"_wso },
 	{ L"UNKNOWN_EXCEPTION"_wso,				L"MCF Build 遇到无法处理的异常。\n请联系作者寻求协助。\n"_wso },
 
-	{ L"INVALID_COMMAND_LINE_OPTION"_wso,	L"命令行选项“%0”无效。使用选项 -h 获得帮助。\n"_wso },
-	{ L"CREATE_PIPE_FAILED"_wso,			L"创建管道失败。\n"_wso },
-	{ L"SET_PIPE_INFO_FAILED"_wso,			L"设置管道句柄信息失败。\n"_wso },
-	{ L"CREATE_PROCESS_FAILED"_wso,			L"以命令行“%0”创建进程失败。\n"_wso },
-	{ L"OPEN_DIRECTORY_FAILED"_wso,			L"打开目录“%0”失败。\n"_wso },
-	{ L"OPEN_FILE_FAILED"_wso,				L"打开文件“%0”失败。\n"_wso },
-	{ L"FILE_TOO_LARGE"_wso,				L"文件“%0”太大。\n"_wso },
-	{ L"DELETE_FILE_FAILED"_wso,			L"删除文件“%0”失败。\n"_wso },
-	{ L"SET_WORKING_DIR_FAILED"_wso,		L"设置工作目录至“%0”失败。\n"_wso },
-	{ L"PROJ_FILE_INVALID"_wso,				L"项目文件“%0”解析失败，错误 %2。\n"_wso },
+	{ L"INVALID_COMMAND_LINE_OPTION"_wso,	L"命令行选项“%0”无效。使用选项 -h 获得帮助。"_wso },
+	{ L"CREATE_PIPE_FAILED"_wso,			L"创建管道失败。"_wso },
+	{ L"SET_PIPE_INFO_FAILED"_wso,			L"设置管道句柄信息失败。"_wso },
+	{ L"CREATE_PROCESS_FAILED"_wso,			L"以命令行“%0”创建进程失败。"_wso },
+	{ L"OPEN_DIRECTORY_FAILED"_wso,			L"打开目录“%0”失败。"_wso },
+	{ L"OPEN_FILE_FAILED"_wso,				L"打开文件“%0”失败。"_wso },
+	{ L"FILE_TOO_LARGE"_wso,				L"文件“%0”太大。"_wso },
+	{ L"DELETE_FILE_FAILED"_wso,			L"删除文件“%0”失败。"_wso },
+	{ L"SET_WORKING_DIR_FAILED"_wso,		L"设置工作目录至“%0”失败。"_wso },
+	{ L"PROJ_FILE_INVALID"_wso,				L"项目文件解析失败，错误 %0。"_wso },
 };
 
 }

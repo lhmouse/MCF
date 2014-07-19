@@ -99,7 +99,7 @@ unsigned int Shell(
 	MCF::Copy(
 		MCF::Copy(wcsArguments.GetStr(), COMSPEC_ARG_PREFIX.GetBegin(), COMSPEC_ARG_PREFIX.GetEnd()),
 		wsoCommandLine.GetBegin(), wsoCommandLine.GetEnd()
-	);
+	)[0] = 0;
 
 	auto vStdOut = CreateReadablePipe();
 	auto vStdErr = CreateReadablePipe();

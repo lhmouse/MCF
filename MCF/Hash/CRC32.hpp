@@ -2,8 +2,8 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2014. LH_Mouse. All wrongs reserved.
 
-#ifndef MCF_Crc32_HPP_
-#define MCF_Crc32_HPP_
+#ifndef MCF_CRC32_HPP_
+#define MCF_CRC32_HPP_
 
 #include <cstddef>
 #include <cstdint>

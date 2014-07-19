@@ -72,7 +72,7 @@ public:
 
 inline std::shared_ptr<ThreadDelegate> ThreadDelegate::Create(std::function<void ()> &&fnProc, bool bSuspended){
 	struct Helper : public ThreadDelegate {
-		Helper(std::function<void ()> &&fnProc)
+		explicit Helper(std::function<void ()> &&fnProc)
 			: ThreadDelegate(std::move(fnProc))
 		{
 		}

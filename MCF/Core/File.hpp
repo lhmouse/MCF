@@ -36,34 +36,6 @@ public:
 		NO_TRUNC		= 0x00000080,	// 默认情况下使用 TO_WRITE 打开文件会清空现有内容。
 	};
 
-	// 用于在同一时刻确定同一台计算机上的文件。
-	// 参见 WinSDK 中的 BY_HANDLE_FILE_INFORMATION 描述。
-	struct UniqueId {
-		std::uint32_t u32VolumeSN;
-		std::uint32_t u32IndexLow;
-		std::uint32_t u32IndexHigh;
-		std::uint32_t u32Reserved;
-
-		bool operator==(const UniqueId &rhs) const noexcept {
-			return BComp(*this, rhs) == 0;
-		}
-		bool operator!=(const UniqueId &rhs) const noexcept {
-			return !(*this == rhs);
-		}
-		bool operator<(const UniqueId &rhs) const noexcept {
-			return BComp(*this, rhs) < 0;
-		}
-		bool operator>(const UniqueId &rhs) const noexcept {
-			return rhs < *this;
-		}
-		bool operator<=(const UniqueId &rhs) const noexcept {
-			return !(rhs < *this);
-		}
-		bool operator>=(const UniqueId &rhs) const noexcept {
-			return !(*this < rhs);
-		}
-	};
-
 public:
 	static std::unique_ptr<File> Open(const WideStringObserver &wsoPath, std::uint32_t u32Flags);
 	static std::unique_ptr<File> Open(const WideString &wcsPath, std::uint32_t u32Flags);
@@ -75,8 +47,6 @@ public:
 	std::uint64_t GetSize() const;
 	void Resize(std::uint64_t u64NewSize);
 	void Clear();
-
-	UniqueId GetUniqueId() const;
 
 	// 异步过程调用总是会被执行，即使读取或写入操作失败。
 	// 异步过程可以抛出异常；在这种情况下，异常将在读取或写入操作完成后被重新抛出。

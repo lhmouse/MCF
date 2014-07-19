@@ -25,7 +25,7 @@ echo ----- Configuration
 echo   CFlags      : %CFlags%
 echo   CPPFlags    : %CPPFlags%
 echo   LinkerFlags : %LinkerFlags%
-echo   Lib         : %Lib%
+echo   Libs        : %Libs%
 
 echo ----- Cleaning up...
 md "%TempDir%" >nul 2>nul

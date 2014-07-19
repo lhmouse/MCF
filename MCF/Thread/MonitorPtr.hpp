@@ -31,7 +31,9 @@ namespace Impl {
 
 	template<typename Object_t>
 	auto ForwardArrowOperator(Object_t &vObject) noexcept {
-		return ForwardArrowOperatorHelper<Object_t>()(&vObject);
+		return ForwardArrowOperatorHelper<Object_t>()(
+			(Object_t *)&reinterpret_cast<const volatile char &>(vObject)
+		);
 	}
 }
 

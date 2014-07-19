@@ -2,8 +2,8 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2014. LH_Mouse. All wrongs reserved.
 
-#ifndef MCF_Sha256_HPP_
-#define MCF_Sha256_HPP_
+#ifndef MCF_SHA256_HPP_
+#define MCF_SHA256_HPP_
 
 #include <cstddef>
 #include <cstdint>

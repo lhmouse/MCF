@@ -26,31 +26,31 @@ Release = General {
 	RCConfig		= -DNDEBUG
 }
 
+.MCFBuildVersion	= 0.4
+.DefaultConfig		= Debug
+
 .PreBuild {
 	Command			= mkdir MCFLite >nul 2>nul	\0\
 						for /f "eol=\;" %I in (libmcflite.lst) do	\0\
 							(copy /y "%I" "MCFLite\\" || exit /b 1)
 }
-.PostBuild {
-	Command			= echo meow!!
-}
+; $$	字符 $。
 ; $%	输出文件，不带引号的绝对路径。
-; $@	等价于 "$%"。
+; $@	带引号的输出文件路径，等价于 "$%"。
 ; $<	所有输入文件，带引号的绝对路径。
-; $^	等价于 $<。
 ; $!	包含文件列表的输出文件，带引号的绝对路径。
 .Precompilers {
 ;	Precompiled\\.h {
 ;		Suffix		=
 ;		Command		= $CC -x c-header $CompilerConfig $CFlags -o $@.gch $<	\0\
-;						echo #warning Failed to load precompiled header "$%.gch".	\0\
+;						echo #warning Failed to load C precompiled header "$%.gch".	\0\
 ;						echo #include $< > $@
 ;		Invoked		= -fpch-deps -fpch-preprocess -include $@
 ;	}
 	MCFBuild\\.hpp {
 		Suffix		=
 		Command		= $CXX -x c++-header $CompilerConfig $CXXFlags -o $@.gch $<	\0\
-						echo #warning Failed to load precompiled header "$%.gch". > $@	\0\
+						echo #warning Failed to load C++ precompiled header "$%.gch". > $@	\0\
 						echo #include $< >> $@
 		Invoked		= -fpch-deps -fpch-preprocess -include $@
 	}
@@ -72,9 +72,8 @@ Release = General {
 }
 .Linkers {
 	Partial			= ld -r -o $@ $<
-	Command			= $CXX $LinkerConfig $LinkerFlags -o $@ $<
+	Command			= $CXX $LinkerConfig $LinkerFlags -o MCFBuild.exe $<
 }
-
-.MCFBuildVersion	= 0.4
-.DefaultConfig		= Debug
-.Output				= MCFBuild.exe
+.PostBuild {
+	Command			= echo meow!!
+}

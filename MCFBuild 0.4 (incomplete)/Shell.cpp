@@ -55,20 +55,26 @@ void ReadPipe(MCF::StreamBuffer &sbufSink, HANDLE hSource){
 	}
 }
 
-void ConvertCrlfAppend(MCF::AnsiString &strAppendTo, MCF::StreamBuffer &sbufSource){
-	strAppendTo.ReserveMore(sbufSource.GetSize());
-	int nNext = sbufSource.Get();
-	while(nNext != -1){
-		const char ch = (char)(unsigned char)nNext;
-		nNext = sbufSource.Get();
-		if(ch == '\r'){
-			if(nNext == '\n'){
-				nNext = sbufSource.Get();
-			}
-			strAppendTo.Push('\n');
-		} else {
-			strAppendTo.Push(ch);
+long ExtractWchar(MCF::StreamBuffer &sbufSource){
+	wchar_t wc;
+	if(sbufSource.Extract(&wc, sizeof(wc))){
+		return (typename std::make_unsigned<wchar_t>::type)wc;
+	}
+	return -1;
+}
+
+void ConvertCrlfAndAppend(MCF::WideString &wcsSink, MCF::StreamBuffer &sbufSource){
+	wcsSink.ReserveMore(sbufSource.GetSize() / sizeof(wchar_t) + 1);
+
+	long lNext = ExtractWchar(sbufSource);
+	while(lNext != -1){
+		const auto wc = (wchar_t)lNext;
+		lNext = ExtractWchar(sbufSource);
+
+		if((wc == L'\r') && (lNext == L'\n')){
+			continue;
 		}
+		wcsSink.PushNoCheck(wc);
 	}
 }
 
@@ -77,16 +83,23 @@ void ConvertCrlfAppend(MCF::AnsiString &strAppendTo, MCF::StreamBuffer &sbufSour
 namespace MCFBuild {
 
 unsigned int Shell(
-	MCF::AnsiString &restrict strStdOut,
-	MCF::AnsiString &restrict strStdErr,
+	MCF::WideString &restrict wcsStdOut,
+	MCF::WideString &restrict wcsStdErr,
 	const MCF::WideStringObserver &wsoCommandLine
 ){
-	MCF::WideString wcsCommandLine;
-	wcsCommandLine.Reserve(MCF::Min((std::size_t)MAX_PATH, wsoCommandLine.GetSize()));
-	wcsCommandLine = wsoCommandLine;
-	if(wcsCommandLine.GetSize() < MAX_PATH){
-		wcsCommandLine.Resize(MAX_PATH);
+	MCF::WideString wcsComSpec;
+	const auto dwComSpecLen = ::GetEnvironmentVariableW(L"COMSPEC", nullptr, 0);
+	if(dwComSpecLen > 0){
+		wcsComSpec.Resize(::GetEnvironmentVariableW(L"COMSPEC", wcsComSpec.Resize(dwComSpecLen), dwComSpecLen));
 	}
+
+	static const auto COMSPEC_ARG_PREFIX = L"/Q /U /C "_wso;
+	MCF::WideString wcsArguments;
+	wcsArguments.Resize(MCF::Max((std::size_t)MAX_PATH, wsoCommandLine.GetSize() + COMSPEC_ARG_PREFIX.GetSize()));
+	MCF::Copy(
+		MCF::Copy(wcsArguments.GetStr(), COMSPEC_ARG_PREFIX.GetBegin(), COMSPEC_ARG_PREFIX.GetEnd()),
+		wsoCommandLine.GetBegin(), wsoCommandLine.GetEnd()
+	);
 
 	auto vStdOut = CreateReadablePipe();
 	auto vStdErr = CreateReadablePipe();
@@ -104,8 +117,12 @@ unsigned int Shell(
 	vStartupInfo.hStdError		= vStdErr.second.Get();
 
 	PROCESS_INFORMATION vProcessInfo;
-	if(!::CreateProcessW(nullptr, wcsCommandLine.GetStr(), nullptr, nullptr, TRUE, 0, nullptr, nullptr, &vStartupInfo, &vProcessInfo)){
-		FORMAT_THROW(::GetLastError(), L"CREATE_PROCESS_FAILED|"_wso + wcsCommandLine);
+	if(!::CreateProcessW(
+		wcsComSpec.GetCStr(), wcsArguments.GetStr(),
+		nullptr, nullptr, TRUE, 0, nullptr, nullptr,
+		&vStartupInfo, &vProcessInfo
+	)){
+		FORMAT_THROW(::GetLastError(), L"EXECUTE_COMMAND_FAILED\0"_ws + wsoCommandLine);
 	}
 	::CloseHandle(vProcessInfo.hThread);
 	const UniqueWinHandle hProcess(vProcessInfo.hProcess);
@@ -123,8 +140,8 @@ unsigned int Shell(
 		ReadPipe(sbufStdErr, vStdErr.first.Get());
 	} while(!bBreakNow);
 
-	ConvertCrlfAppend(strStdOut, sbufStdOut);
-	ConvertCrlfAppend(strStdErr, sbufStdErr);
+	ConvertCrlfAndAppend(wcsStdOut, sbufStdOut);
+	ConvertCrlfAndAppend(wcsStdErr, sbufStdErr);
 
 	return dwExitCode;
 }

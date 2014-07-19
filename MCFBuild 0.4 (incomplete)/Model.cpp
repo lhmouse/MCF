@@ -61,7 +61,7 @@ void Model::InitParams(){
 		}
 
 #define THROW_INV_PARAM	\
-	FORMAT_THROW(ERROR_INVALID_PARAMETER, L"INVALID_COMMAND_LINE_OPTION|"_wso + wcsArg)
+	FORMAT_THROW(ERROR_INVALID_PARAMETER, L"INVALID_COMMAND_LINE_OPTION\0"_wso + wcsArg)
 
 		if((wcsArg[0] == L'-') || (wcsArg[0] == L'/')){
 			if(uArgLen <= 1){
@@ -185,7 +185,7 @@ void Model::InitParams(){
 
 	if(!xm_wcsWorkingDir.IsEmpty()){
 		if(!::SetCurrentDirectoryW(xm_wcsWorkingDir.GetCStr())){
-			FORMAT_THROW(::GetLastError(), L"SET_WORKING_DIR_FAILED|"_wso + xm_wcsWorkingDir);
+			FORMAT_THROW(::GetLastError(), L"SET_WORKING_DIR_FAILED\0"_wso + xm_wcsWorkingDir);
 		}
 	}
 	xm_wcsWorkingDir = GetFullPath(L"."_ws);

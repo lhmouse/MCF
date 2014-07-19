@@ -4,6 +4,7 @@
 #include "MCFBuild.hpp"
 #include "Model.hpp"
 #include "ConsoleOutput.hpp"
+#include "SHell.hpp"
 #include "ProjectFile.hpp"
 #include "../MCFCRT/exe/exe_decl.h"
 #include "../MCF/Core/Utilities.hpp"
@@ -16,7 +17,7 @@ extern "C" unsigned int MCFMain() noexcept
 try {
 	auto &vModel = Model::GetInstance();
 
-	FormatPrint(L"MCFBUILD_LOGO|0|4|0|0"_wso);
+	FormatPrint(L"MCFBUILD_LOGO\x000\x004\x000\x000"_wso);
 
 	vModel.InitParams();
 
@@ -33,26 +34,33 @@ try {
 		vModel.GetProcessCount()
 	));
 	FormatPrint(
-		L"ENVIRONMENT_MANIFEST|"_ws
-		+ vModel.GetWorkingDir() + L'|'
-		+ vModel.GetProject() + L'|'
-		+ vModel.GetConfig() + L'|'
-		+ vModel.GetSrcRoot() + L'|'
-		+ vModel.GetIntermediateRoot() + L'|'
-		+ vModel.GetDstRoot() + L'|'
+		L"ENVIRONMENT_MANIFEST\0"_ws
+		+ vModel.GetWorkingDir() + L'\0'
+		+ vModel.GetProject() + L'\0'
+		+ vModel.GetConfig() + L'\0'
+		+ vModel.GetSrcRoot() + L'\0'
+		+ vModel.GetIntermediateRoot() + L'\0'
+		+ vModel.GetDstRoot() + L'\0'
 		+ wcsProcessCount
 	);
 
-	FormatPrint(L"LOADING_PROJECT_FILE|"_wso);
+	FormatPrint(L"PREPARING_TO_BUILD\0"_wso);
+
+	FormatPrint(L"LOADING_PROJECT_FILE\0"_wso);
 	ProjectFile vProject(vModel.GetProject());
+
+	MCF::WideString out, err;
+	Shell(out, err, L"this_command_does_not_exist argument"_wso);
+	Print(out);
+	Print(err);
 
 	return 0;
 } catch(MCF::Exception &e){
 	FormatPrint(L"EXCEPTION_HEADER"_wso);
 
-	auto wcsMessage(L"MCF_EXCEPTION|"_wso + e.m_wcsMessage);
+	auto wcsMessage(L"MCF_EXCEPTION\0"_wso + e.m_wcsMessage);
 	wchar_t awcCode[16];
-	wcsMessage.Append(awcCode, (std::size_t)std::swprintf(awcCode, COUNT_OF(awcCode), L"|%lu|", e.m_ulErrorCode));
+	wcsMessage.Append(awcCode, (std::size_t)std::swprintf(awcCode, COUNT_OF(awcCode), L"|%lu\0", e.m_ulErrorCode));
 	auto wcsErrorDescription = MCF::GetWin32ErrorDesc(e.m_ulErrorCode);
 	for(;;){
 		if(wcsErrorDescription.IsEmpty()){
@@ -70,7 +78,7 @@ try {
 } catch(std::exception &e){
 	FormatPrint(L"EXCEPTION_HEADER"_wso);
 
-	auto wcsMessage = L"STD_EXCEPTION|"_ws;
+	auto wcsMessage = L"STD_EXCEPTION\0"_ws;
 	wcsMessage.Append<MCF::StringEncoding::UTF8>(MCF::Utf8StringObserver(e.what()));
 	FormatPrint(wcsMessage);
 	return (unsigned int)-1;

@@ -4,7 +4,7 @@ General {
 	CompilerFlags		= -Wall -Wextra -Wsign-conversion -Wsuggest-attribute=noreturn -pipe -mfpmath=both -march=core2 -masm=intel -I../..
 
 	CFlags				= -std=c11
-	CPPFlags			= -std=c++1y -Wnoexcept
+	CPPFlags			= -std=c++14 -Wnoexcept
 
 	IgnoredFiles		= .Built* *.h *.hpp *.mcfproj
 

@@ -17,7 +17,7 @@ extern "C" unsigned int MCFMain() noexcept
 try {
 	auto &vModel = Model::GetInstance();
 
-	FormatPrint(L"MCFBUILD_LOGO\x000\x004\x000\x000"_wso);
+	FormatPrint(L"MCFBUILD_LOGO\0" "0.4.0.0"_wso);
 
 	vModel.InitParams();
 

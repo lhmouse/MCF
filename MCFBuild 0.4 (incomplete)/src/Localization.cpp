@@ -16,7 +16,7 @@ namespace {
 
 const std::map<MCF::WideStringObserver, MCF::WideStringObserver> g_mapStrings = {
 										//2       10        20        30        40        50        60        70        80
-	DEF("MCFBUILD_LOGO",				"MCF 构建实用工具 [版本 %0.%1.%2.%3]\n"
+	DEF("MCFBUILD_LOGO",				"MCF 构建实用工具 [版本 %0]\n"
 										"Copyleft 2014, LH_Mouse. All wrongs reserved.\n"),
 	DEF("MCFBUILD_USAGE",				"\n"
 										"命令行参数可以以 - 或 / 开头，其效果是一样的。\n"

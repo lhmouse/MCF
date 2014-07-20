@@ -7,7 +7,7 @@ General {
 						-lstdc++ -lmingwex -lmingw32 -lgcc -lgcc_eh -lmsvcrt -luser32 -lkernel32
 
 	CFlags			= $CompilerFlags -std=c11
-	CXXFlags		= $CompilerFlags -std=c++1y -Wnoexcept
+	CXXFlags		= $CompilerFlags -std=c++14 -Wnoexcept
 	RCFlags			= -c 65001
 
 	CC				= gcc

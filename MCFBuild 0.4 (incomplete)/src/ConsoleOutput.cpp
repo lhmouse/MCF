@@ -14,33 +14,50 @@ namespace {
 const auto g_pLock = MCF::CriticalSection::Create(0);
 
 void DoPrint(HANDLE hFile, const MCF::WideStringObserver &wsoString) noexcept {
-	MCF::VVector<char> vecConverted;
-	const auto uCodePage = ::GetConsoleOutputCP();
-	const auto nChars = ::WideCharToMultiByte(
-		uCodePage, 0, wsoString.GetBegin(), (int)wsoString.GetSize(),
-		nullptr, 0,
-		nullptr, nullptr
-	);
-	if(nChars > 0){
-		vecConverted.Resize((std::size_t)::WideCharToMultiByte(
-			uCodePage, 0, wsoString.GetBegin(), (int)wsoString.GetSize(),
-			vecConverted.Resize((std::size_t)nChars), nChars,
-			nullptr, nullptr
-		));
-
-		const auto vLock = g_pLock->GetLock();
+	DWORD dwMode;
+	if(::GetConsoleMode(hFile, &dwMode)){
 		std::size_t uTotalWritten = 0;
-		const auto uSize = vecConverted.GetSize();
+		const auto uSize = wsoString.GetSize();
 		while(uTotalWritten < uSize){
 			DWORD dwWrittenThisTime;
-			if(!::WriteFile(
+			if(!::WriteConsoleW(
 				hFile,
-				vecConverted.GetData() + uTotalWritten, uSize - uTotalWritten,
+				wsoString.GetBegin() + uTotalWritten, uSize - uTotalWritten,
 				&dwWrittenThisTime, nullptr
 			)){
 				break;
 			}
 			uTotalWritten += dwWrittenThisTime;
+		}
+	} else {
+		MCF::VVector<char> vecConverted;
+		const auto uCodePage = ::GetConsoleOutputCP();
+		const auto nChars = ::WideCharToMultiByte(
+			uCodePage, 0, wsoString.GetBegin(), (int)wsoString.GetSize(),
+			nullptr, 0,
+			nullptr, nullptr
+		);
+		if(nChars > 0){
+			vecConverted.Resize((std::size_t)::WideCharToMultiByte(
+				uCodePage, 0, wsoString.GetBegin(), (int)wsoString.GetSize(),
+				vecConverted.Resize((std::size_t)nChars), nChars,
+				nullptr, nullptr
+			));
+
+			const auto vLock = g_pLock->GetLock();
+			std::size_t uTotalWritten = 0;
+			const auto uSize = vecConverted.GetSize();
+			while(uTotalWritten < uSize){
+				DWORD dwWrittenThisTime;
+				if(!::WriteFile(
+					hFile,
+					vecConverted.GetData() + uTotalWritten, uSize - uTotalWritten,
+					&dwWrittenThisTime, nullptr
+				)){
+					break;
+				}
+				uTotalWritten += dwWrittenThisTime;
+			}
 		}
 	}
 }

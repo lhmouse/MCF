@@ -1,0 +1,13 @@
+#!/bin/bash
+
+set -e
+
+export CFLAGS="-O0 -g"
+export CXXFLAGS="-D_GLIBCXX_DEBUG -O0 -g"
+export LDFLAGS="-O3"
+export OBJ_DIR=".tmp-debug"
+
+mkdir -p $OBJ_DIR/MCFBuild
+cd $OBJ_DIR/MCFBuild
+../../configure
+make -j4

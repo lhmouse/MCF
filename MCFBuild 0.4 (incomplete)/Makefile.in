@@ -77,7 +77,7 @@ POST_INSTALL = :
 NORMAL_UNINSTALL = :
 PRE_UNINSTALL = :
 POST_UNINSTALL = :
-bin_PROGRAMS = ../MCFBuild$(EXEEXT)
+bin_PROGRAMS = MCFBuild$(EXEEXT)
 subdir = .
 DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/Makefile.am \
 	$(top_srcdir)/configure $(am__configure_deps) depcomp compile \
@@ -133,15 +133,15 @@ am_src_libmcflite_a_OBJECTS =  \
 src_libmcflite_a_OBJECTS = $(am_src_libmcflite_a_OBJECTS)
 am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS)
-am____MCFBuild_OBJECTS = src/ConsoleOutput.$(OBJEXT) \
+am_MCFBuild_OBJECTS = src/ConsoleOutput.$(OBJEXT) \
 	src/DependencyDatabase.$(OBJEXT) src/FileSystem.$(OBJEXT) \
 	src/JobScheduler.$(OBJEXT) src/Localization.$(OBJEXT) \
 	src/MCFMain.$(OBJEXT) src/Model.$(OBJEXT) \
-	src/ProjectFile.$(OBJEXT) src/Shell.$(OBJEXT)
-___MCFBuild_OBJECTS = $(am____MCFBuild_OBJECTS)
-___MCFBuild_DEPENDENCIES =
-___MCFBuild_LINK = $(CXXLD) $(AM_CXXFLAGS) $(CXXFLAGS) \
-	$(___MCFBuild_LDFLAGS) $(LDFLAGS) -o $@
+	src/ProjectFile.$(OBJEXT) src/Shell.$(OBJEXT) \
+	src/Build.$(OBJEXT)
+MCFBuild_OBJECTS = $(am_MCFBuild_OBJECTS)
+MCFBuild_LINK = $(CXXLD) $(AM_CXXFLAGS) $(CXXFLAGS) \
+	$(MCFBuild_LDFLAGS) $(LDFLAGS) -o $@
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
 am__v_P_0 = false
@@ -187,8 +187,8 @@ AM_V_CXXLD = $(am__v_CXXLD_@AM_V@)
 am__v_CXXLD_ = $(am__v_CXXLD_@AM_DEFAULT_V@)
 am__v_CXXLD_0 = @echo "  CXXLD   " $@;
 am__v_CXXLD_1 = 
-SOURCES = $(src_libmcflite_a_SOURCES) $(___MCFBuild_SOURCES)
-DIST_SOURCES = $(src_libmcflite_a_SOURCES) $(___MCFBuild_SOURCES)
+SOURCES = $(src_libmcflite_a_SOURCES) $(MCFBuild_SOURCES)
+DIST_SOURCES = $(src_libmcflite_a_SOURCES) $(MCFBuild_SOURCES)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -367,16 +367,18 @@ src_libmcflite_a_SOURCES = \
 src_libmcflite_a_CFLAGS = \
 	$(AM_CFLAGS) -D__MCF_CRT_NO_DLMALLOC
 
-___MCFBuild_LDFLAGS = \
+MCFBuild_LDFLAGS = \
 	-Wall -Wextra -static -fwhole-program -nostdlib	\
 	-Wl,-e__MCF_ExeStartup,--disable-runtime-pseudo-reloc,--disable-auto-import	\
 	-Wl,--wrap=atexit,--wrap=malloc,--wrap=realloc,--wrap=calloc,--wrap=free,--wrap=__cxa_throw
 
-___MCFBuild_LDADD = \
-	-Lsrc -lmcflite -lstdc++ -lmingwex -lmingw32 -lgcc -lgcc_eh -lmcflite	\
-	-lmsvcrt -lkernel32 -luser32 -lshell32 -ladvapi32
+MCFBuild_DEPENDENCIES = \
+	src/libmcflite.a
 
-___MCFBuild_SOURCES = \
+MCFBuild_LDADD = \
+	-Lsrc -lmcflite -lstdc++ -lmingwex -lmingw32 -lgcc -lgcc_eh -lmcflite -lmsvcrt -lkernel32 -luser32
+
+MCFBuild_SOURCES = \
 	src/ConsoleOutput.cpp		\
 	src/DependencyDatabase.cpp	\
 	src/FileSystem.cpp			\
@@ -385,7 +387,8 @@ ___MCFBuild_SOURCES = \
 	src/MCFMain.cpp				\
 	src/Model.cpp				\
 	src/ProjectFile.cpp			\
-	src/Shell.cpp
+	src/Shell.cpp				\
+	src/Build.cpp
 
 all: all-am
 
@@ -632,13 +635,11 @@ src/Model.$(OBJEXT): src/$(am__dirstamp) src/$(DEPDIR)/$(am__dirstamp)
 src/ProjectFile.$(OBJEXT): src/$(am__dirstamp) \
 	src/$(DEPDIR)/$(am__dirstamp)
 src/Shell.$(OBJEXT): src/$(am__dirstamp) src/$(DEPDIR)/$(am__dirstamp)
-../$(am__dirstamp):
-	@$(MKDIR_P) ..
-	@: > ../$(am__dirstamp)
+src/Build.$(OBJEXT): src/$(am__dirstamp) src/$(DEPDIR)/$(am__dirstamp)
 
-../MCFBuild$(EXEEXT): $(___MCFBuild_OBJECTS) $(___MCFBuild_DEPENDENCIES) $(EXTRA____MCFBuild_DEPENDENCIES) ../$(am__dirstamp)
-	@rm -f ../MCFBuild$(EXEEXT)
-	$(AM_V_CXXLD)$(___MCFBuild_LINK) $(___MCFBuild_OBJECTS) $(___MCFBuild_LDADD) $(LIBS)
+MCFBuild$(EXEEXT): $(MCFBuild_OBJECTS) $(MCFBuild_DEPENDENCIES) $(EXTRA_MCFBuild_DEPENDENCIES) 
+	@rm -f MCFBuild$(EXEEXT)
+	$(AM_V_CXXLD)$(MCFBuild_LINK) $(MCFBuild_OBJECTS) $(MCFBuild_LDADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -687,6 +688,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@../MCFCRT/stdc/stdlib/$(DEPDIR)/src_libmcflite_a-free.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@../MCFCRT/stdc/stdlib/$(DEPDIR)/src_libmcflite_a-malloc.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@../MCFCRT/stdc/stdlib/$(DEPDIR)/src_libmcflite_a-realloc.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/Build.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/ConsoleOutput.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/DependencyDatabase.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/FileSystem.Po@am__quote@
@@ -1208,7 +1210,6 @@ clean-generic:
 distclean-generic:
 	-test -z "$(CONFIG_CLEAN_FILES)" || rm -f $(CONFIG_CLEAN_FILES)
 	-test . = "$(srcdir)" || test -z "$(CONFIG_CLEAN_VPATH_FILES)" || rm -f $(CONFIG_CLEAN_VPATH_FILES)
-	-rm -f ../$(am__dirstamp)
 	-rm -f ../MCF/Core/$(DEPDIR)/$(am__dirstamp)
 	-rm -f ../MCF/Core/$(am__dirstamp)
 	-rm -f ../MCF/Hash/$(DEPDIR)/$(am__dirstamp)

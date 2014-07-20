@@ -45,18 +45,20 @@ src_libmcflite_a_CFLAGS=\
 	$(AM_CFLAGS) -D__MCF_CRT_NO_DLMALLOC
 
 bin_PROGRAMS=	\
-	../MCFBuild
+	MCFBuild
 
-___MCFBuild_LDFLAGS=	\
+MCFBuild_LDFLAGS=	\
 	-Wall -Wextra -static -fwhole-program -nostdlib	\
 	-Wl,-e__MCF_ExeStartup,--disable-runtime-pseudo-reloc,--disable-auto-import	\
 	-Wl,--wrap=atexit,--wrap=malloc,--wrap=realloc,--wrap=calloc,--wrap=free,--wrap=__cxa_throw
 
-___MCFBuild_LDADD=	\
-	-Lsrc -lmcflite -lstdc++ -lmingwex -lmingw32 -lgcc -lgcc_eh -lmcflite	\
-	-lmsvcrt -lkernel32 -luser32 -lshell32 -ladvapi32
+MCFBuild_DEPENDENCIES=	\
+	src/libmcflite.a
 
-___MCFBuild_SOURCES=	\
+MCFBuild_LDADD=	\
+	-Lsrc -lmcflite -lstdc++ -lmingwex -lmingw32 -lgcc -lgcc_eh -lmcflite -lmsvcrt -lkernel32 -luser32
+
+MCFBuild_SOURCES=	\
 	src/ConsoleOutput.cpp		\
 	src/DependencyDatabase.cpp	\
 	src/FileSystem.cpp			\
@@ -65,4 +67,5 @@ ___MCFBuild_SOURCES=	\
 	src/MCFMain.cpp				\
 	src/Model.cpp				\
 	src/ProjectFile.cpp			\
-	src/Shell.cpp
+	src/Shell.cpp				\
+	src/Build.cpp

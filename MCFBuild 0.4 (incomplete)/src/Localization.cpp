@@ -58,12 +58,14 @@ const std::map<MCF::WideStringObserver, MCF::WideStringObserver> g_mapStrings = 
 										"中间目录：%4\n"
 										"目标目录：%5\n"
 										"进程数　：%6\n"),
-	DEF("PREPARING_TO_BUILD",			"\n----- 正在准备构建 -----\n"),
-	DEF("LOADING_PROJECT_FILE",			"正在读取项目文件...\n"),
+	DEF("BUILD_STARTED",				"\n----- 构建开始 -----\n"),
+	DEF("BUILD_SUCCEEDED",				"\n----- 构建成功 -----\n"),
+	DEF("BUILD_FAILED",					"\n----- 构建失败 -----\n"),
+
+	DEF("LOADING_PROJECT_FILE",			"正在读取项目文件“%0”...\n"),
 	DEF("PARSING_SOURCE_DIR_TREE",		"正在解析源文件目录树...\n"),
 	DEF("GENERATING_FILE_LIST",			"正在生成文件列表...\n"),
 
-	DEF("EXCEPTION_HEADER",				"\n----- 捕获到异常 -----\n"),
 	DEF("MCF_EXCEPTION",				"MCF Build 遇到一个异常：\n"
 										"  错误描述：%0\n"
 										"  错误代码：%1（%2）\n"),

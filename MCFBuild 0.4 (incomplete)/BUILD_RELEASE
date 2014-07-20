@@ -1,0 +1,13 @@
+#!/bin/bash
+
+set -e
+
+export CFLAGS="-DNDEBUG -O3 -ffunction-sections -fdata-sections"
+export CXXFLAGS="-DNDEBUG -O3 -ffunction-sections -fdata-sections"
+export LDFLAGS="-O3 -Wl,-s,--gc-sections"
+export OBJ_DIR=".tmp-release"
+
+mkdir -p $OBJ_DIR/MCFBuild
+cd $OBJ_DIR/MCFBuild
+../../configure
+make -j4

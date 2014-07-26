@@ -79,7 +79,7 @@ namespace Impl {
 			VarIntEx<Integral_t> viTemp;
 
 			auto itRead = sbufStream.GetReadIterator();
-			if(!viTemp.Unserialize(itRead, sbufStream.GetReadEnd())){
+			if(!viTemp.Deserialize(itRead, sbufStream.GetReadEnd())){
 				SerdesThrowOnEof();
 			}
 

@@ -1,41 +1,29 @@
 #include <MCF/StdMCF.hpp>
 #include <MCF/Core/File.hpp>
-#include <MCF/Hash/Md5.hpp>
+#include <MCF/StreamFilters/ZLibFilters.hpp>
+#include <MCF/Hash/Crc32.hpp>
 using namespace MCF;
 
 extern "C" unsigned int MCFMain() noexcept {
-	static constexpr std::size_t FILE_BUFFER_SIZE = 0x10000;
-
-	const auto pFile = File::Open(L"E:\\big.bin"_wso, File::TO_READ);
-	const auto u64FileSize = pFile->GetSize();
-	Md5 md5Hasher;
-	md5Hasher.Update(nullptr, 0);
-	if(u64FileSize > 0){
-		unsigned char abyTemp1[FILE_BUFFER_SIZE], abyTemp2[FILE_BUFFER_SIZE];
-		auto *pbyCurBuffer = abyTemp1, *pbyBackBuffer = abyTemp2;
-		std::size_t uBytesCur = pFile->Read(pbyCurBuffer, FILE_BUFFER_SIZE, 0);
-
-		std::uint64_t u64Offset = uBytesCur;
-		while(u64Offset < u64FileSize){
-			const auto uBytesBack = pFile->Read(
-				pbyBackBuffer, FILE_BUFFER_SIZE, u64Offset,
-				[&]{
-					md5Hasher.Update(pbyCurBuffer, uBytesCur);
-				}
-			);
-			u64Offset += uBytesBack;
-
-			std::swap(pbyCurBuffer, pbyBackBuffer);
-			uBytesCur = uBytesBack;
-		}
-
-		md5Hasher.Update(pbyCurBuffer, uBytesCur);
+	const auto pInputFile = File::Open(L"E:\\large.txt"_wso, File::TO_READ);
+	const auto uInputSize = pInputFile->GetSize();
+	StreamBuffer sbufData;
+	while(sbufData.GetSize() < uInputSize){
+		unsigned char abyTemp[0x1000];
+		const auto uRead = pInputFile->Read(abyTemp, sizeof(abyTemp), sbufData.GetSize());
+		sbufData.Insert(abyTemp, uRead);
 	}
-	unsigned char abyMd5[16];
-	md5Hasher.Finalize(abyMd5);
-	for(auto by : abyMd5){
-		std::printf("%02hhX", by);
-	}
-	std::putchar('\n');
+
+	Crc32 vCrc;
+	sbufData.Traverse([&](auto p, auto cb){ vCrc.Update(p, cb); });
+	std::printf("original size = %zu bytes, crc = %08lX\n", sbufData.GetSize(), (unsigned long)vCrc.Finalize());
+
+	ZLibEncoder::Create(true, 9)->FilterInPlace(sbufData);
+	std::printf("compressed size = %zu bytes\n", sbufData.GetSize());
+
+	ZLibDecoder::Create(true)->FilterInPlace(sbufData);
+	sbufData.Traverse([&](auto p, auto cb){ vCrc.Update(p, cb); });
+	std::printf("decompressed size = %zu bytes, crc = %08lX\n", sbufData.GetSize(), (unsigned long)vCrc.Finalize());
+
 	return 0;
 }

@@ -5,7 +5,6 @@
 #ifndef MCF_VAR_INT_EX_HPP_
 #define MCF_VAR_INT_EX_HPP_
 
-#include "../Core/Utilities.hpp"
 #include <type_traits>
 #include <cstddef>
 #include <cstdint>
@@ -42,12 +41,12 @@ template<typename Underlying_t, Underlying_t ORIGIN = 0>
 class VarIntEx {
 	static_assert(std::is_arithmetic<Underlying_t>::value, "Underlying_t must be an arithmetic type.");
 
-	static_assert(__CHAR_BIT__ == 8u, "Not supported.");
-	static_assert(sizeof(std::uintmax_t) * __CHAR_BIT__ <= 64u, "Not supported.");
+	static_assert(__CHAR_BIT__ == 8, "Not supported.");
+	static_assert(sizeof(std::uintmax_t) * __CHAR_BIT__ <= 64, "Not supported.");
 
 public:
 	enum : std::size_t {
-		MAX_SERIALIZED_SIZE = sizeof(Underlying_t) + 1u
+		MAX_SERIALIZED_SIZE = sizeof(Underlying_t) + 1
 	};
 
 private:
@@ -75,7 +74,7 @@ public:
 	template<typename OutputIterator_t>
 	void Serialize(OutputIterator_t &itWrite) const {
 		auto uEncoded = Impl::ZigZagger<Underlying_t>().Encode(xm_vValue - ORIGIN);
-		for(auto i = Min(8u, sizeof(uEncoded)); i; --i){
+		for(std::size_t i = 0; i < sizeof(uEncoded); ++i){
 			unsigned char by = uEncoded & 0x7F;
 			uEncoded >>= 7;
 			if(uEncoded != 0){
@@ -91,9 +90,9 @@ public:
 		++itWrite;
 	}
 	template<typename InputIterator_t>
-	bool Unserialize(InputIterator_t &itRead, const InputIterator_t &itEnd){
+	bool Deserialize(InputIterator_t &itRead, const typename std::common_type<InputIterator_t>::type &itEnd){
 		typename Impl::ZigZagger<Underlying_t>::EncodedType uEncoded = 0;
-		for(std::size_t i = 0; i < Min(4u, sizeof(uEncoded)); ++i){
+		for(std::size_t i = 0; i < 4; ++i){
 			if(itRead == itEnd){
 				return false;
 			}
@@ -104,7 +103,7 @@ public:
 				goto jDone;
 			}
 		}
-		for(auto i = Min(4u, sizeof(uEncoded)); i; --i){
+		for(std::size_t i = 4; i < 8; ++i){
 			if(itRead == itEnd){
 				return false;
 			}

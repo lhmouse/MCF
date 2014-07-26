@@ -9,8 +9,7 @@
 namespace MCFBuild {
 
 extern unsigned int Shell(
-	MCF::WideString &restrict wcsStdOut,
-	MCF::WideString &restrict wcsStdErr,
+	MCF::WideString &restrict wcsStdOut, MCF::WideString &restrict wcsStdErr,
 	const MCF::WideStringObserver &wsoCommandLine
 );
 

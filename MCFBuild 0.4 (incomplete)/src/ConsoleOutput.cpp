@@ -16,6 +16,7 @@ const auto g_pLock = MCF::CriticalSection::Create(0);
 void DoPrint(HANDLE hFile, const MCF::WideStringObserver &wsoString) noexcept {
 	DWORD dwMode;
 	if(::GetConsoleMode(hFile, &dwMode)){
+		const auto vLock = g_pLock->GetLock();
 		std::size_t uTotalWritten = 0;
 		const auto uSize = wsoString.GetSize();
 		while(uTotalWritten < uSize){
@@ -32,32 +33,29 @@ void DoPrint(HANDLE hFile, const MCF::WideStringObserver &wsoString) noexcept {
 	} else {
 		MCF::VVector<char> vecConverted;
 		const auto uCodePage = ::GetConsoleOutputCP();
-		const auto nChars = ::WideCharToMultiByte(
-			uCodePage, 0, wsoString.GetBegin(), (int)wsoString.GetSize(),
-			nullptr, 0,
-			nullptr, nullptr
-		);
-		if(nChars > 0){
-			vecConverted.Resize((std::size_t)::WideCharToMultiByte(
+		vecConverted.ResizeMore(wsoString.GetSize() * 2);
+		const auto nWritten = MCF::Max(
+			::WideCharToMultiByte(
 				uCodePage, 0, wsoString.GetBegin(), (int)wsoString.GetSize(),
-				vecConverted.Resize((std::size_t)nChars), nChars,
+				vecConverted.GetData(), (int)vecConverted.GetSize(),
 				nullptr, nullptr
-			));
+			), 0
+		);
+		vecConverted.Resize((std::size_t)nWritten);
 
-			const auto vLock = g_pLock->GetLock();
-			std::size_t uTotalWritten = 0;
-			const auto uSize = vecConverted.GetSize();
-			while(uTotalWritten < uSize){
-				DWORD dwWrittenThisTime;
-				if(!::WriteFile(
-					hFile,
-					vecConverted.GetData() + uTotalWritten, uSize - uTotalWritten,
-					&dwWrittenThisTime, nullptr
-				)){
-					break;
-				}
-				uTotalWritten += dwWrittenThisTime;
+		const auto vLock = g_pLock->GetLock();
+		std::size_t uTotalWritten = 0;
+		const auto uSize = vecConverted.GetSize();
+		while(uTotalWritten < uSize){
+			DWORD dwWrittenThisTime;
+			if(!::WriteFile(
+				hFile,
+				vecConverted.GetData() + uTotalWritten, uSize - uTotalWritten,
+				&dwWrittenThisTime, nullptr
+			)){
+				break;
 			}
+			uTotalWritten += dwWrittenThisTime;
 		}
 	}
 }

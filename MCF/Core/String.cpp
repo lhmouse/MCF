@@ -18,34 +18,31 @@ namespace Impl {
 		VVector<wchar_t> &vecUnified,
 		const StringObserver<char> &soSrc
 	) const {
-		const int nUnifiedLen = ::MultiByteToWideChar(
-			CP_ACP, 0, soSrc.GetBegin(), (int)soSrc.GetLength(),
-			nullptr, 0
-		);
-		if(nUnifiedLen > 0){
+		const auto uMoreSize = (soSrc.GetSize() + 1) / 2;
+		const auto pWrite = vecUnified.ResizeMore(uMoreSize);
+		const auto nWritten = Max(
 			::MultiByteToWideChar(
 				CP_ACP, 0, soSrc.GetBegin(), (int)soSrc.GetLength(),
-				vecUnified.ResizeMore((std::size_t)nUnifiedLen), nUnifiedLen
-			);
-		}
+				pWrite, (int)uMoreSize
+			), 0
+		);
+		vecUnified.Resize((std::size_t)(pWrite + nWritten - vecUnified.GetData()));
 	}
 	template<>
 	void UnicodeConv<char, StringEncoding::ANSI>::operator()(
 		String<char, StringEncoding::ANSI> &strDst,
 		const VVector<wchar_t> &vecUnified
 	) const {
-		const int nDeunifiedLen = ::WideCharToMultiByte(
-			CP_ACP, 0, vecUnified.GetBegin(), (int)vecUnified.GetSize(),
-			nullptr, 0,
-			nullptr, nullptr
-		);
-		if(nDeunifiedLen > 0){
+		const auto uMoreSize = vecUnified.GetSize() * 2;
+		const auto pWrite = strDst.ResizeMore(uMoreSize);
+		const auto nWritten = Max(
 			::WideCharToMultiByte(
 				CP_ACP, 0, vecUnified.GetBegin(), (int)vecUnified.GetSize(),
-				strDst.ResizeMore((std::size_t)nDeunifiedLen), nDeunifiedLen,
+				pWrite, (int)uMoreSize,
 				nullptr, nullptr
-			);
-		}
+			), 0
+		);
+		strDst.Resize((std::size_t)(pWrite + nWritten - strDst.GetData()));
 	}
 
 	template<>

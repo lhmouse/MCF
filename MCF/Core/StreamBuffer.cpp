@@ -76,14 +76,18 @@ public:
 		return xm_abyData + xm_ushWrite;
 	}
 
-	std::size_t CopyOut(unsigned char *&pbyOutput, std::size_t &uToCopy) noexcept {
+	std::size_t CopyOut(unsigned char *&pbyOutput, std::size_t &uToCopy) const noexcept {
 		const std::size_t uBytesToCopy = Min(GetSize(), uToCopy);
 		pbyOutput = CopyN(pbyOutput, xm_abyData + xm_ushRead, uBytesToCopy).first;
 		uToCopy -= uBytesToCopy;
-		xm_ushRead += uBytesToCopy;
 		return uBytesToCopy;
 	}
-	std::size_t CopyIn(const unsigned char *&pbyInput, std::size_t &uToCopy) noexcept {
+	std::size_t MoveOut(unsigned char *&pbyOutput, std::size_t &uToCopy) noexcept {
+		const auto uBytesCopied = CopyOut(pbyOutput, uToCopy);
+		xm_ushRead += uBytesCopied;
+		return uBytesCopied;
+	}
+	std::size_t MoveIn(const unsigned char *&pbyInput, std::size_t &uToCopy) noexcept {
 		const std::size_t uBytesToCopy = Min(GetFree(), uToCopy);
 		pbyInput = CopyN(xm_abyData + xm_ushWrite, pbyInput, uBytesToCopy).second;
 		uToCopy -= uBytesToCopy;
@@ -256,12 +260,28 @@ bool StreamBuffer::Extract(void *pData, std::size_t uSize) noexcept {
 	for(;;){
 		ASSERT(!xm_lstData.empty());
 
-		xm_uSize -= xm_lstData.front().CopyOut(pbyWrite, uRemaining);
+		xm_uSize -= xm_lstData.front().MoveOut(pbyWrite, uRemaining);
 		if(uRemaining == 0){
 			break;
 		}
 		ASSERT(xm_lstData.front().IsEmpty());
 		DeallocPooled(xm_lstData, xm_itTail, xm_lstPool);
+	}
+	return true;
+}
+bool StreamBuffer::CopyOut(void *pData, std::size_t uSize) const noexcept {
+	if(uSize > xm_uSize){
+		return false;
+	}
+	auto pbyWrite = (unsigned char *)pData;
+	auto uRemaining = uSize;
+	for(auto itCur = xm_lstData.begin(); ; ++itCur){
+		ASSERT(itCur != xm_lstData.end());
+
+		itCur->CopyOut(pbyWrite, uRemaining);
+		if(uRemaining == 0){
+			break;
+		}
 	}
 	return true;
 }
@@ -301,7 +321,7 @@ ASSERT_NOEXCEPT_BEGIN
 	auto pbyRead = (const unsigned char *)pData;
 	uRemaining = uSize;
 	while(uRemaining != 0){
-		xm_uSize += itCur->CopyIn(pbyRead, uRemaining);
+		xm_uSize += itCur->MoveIn(pbyRead, uRemaining);
 		++itCur;
 	}
 ASSERT_NOEXCEPT_END

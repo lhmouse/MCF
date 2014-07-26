@@ -46,12 +46,15 @@ public:
 
 	// 如果为空返回 -1。
 	int Get() noexcept;
-	// 类似于 Get()，但是不从流中删除字节。
+	// 类似于 Get()，但是不删除。
 	int Peek() const noexcept;
 	void Put(unsigned char by);
 
 	// 要么就从头部读取并删除 uSize 个字节并返回 true，要么就返回 false，没有只读取一半的情况。
 	bool Extract(void *pData, std::size_t uSize) noexcept;
+	// 类似于 Extract()，但是不删除。
+	bool CopyOut(void *pData, std::size_t uSize) const noexcept;
+	// 类似于 Extract()，但是只删除不输出。
 	bool Discard(std::size_t uSize) noexcept;
 	// 追加 uSize 个字节。
 	void Insert(const void *pData, std::size_t uSize);

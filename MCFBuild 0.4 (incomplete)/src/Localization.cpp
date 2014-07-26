@@ -17,7 +17,8 @@ namespace {
 const std::map<MCF::WideStringObserver, MCF::WideStringObserver> g_mapStrings = {
 										//2       10        20        30        40        50        60        70        80
 	DEF("MCFBUILD_LOGO",				"MCF 构建实用工具 [版本 %0]\n"
-										"Copyleft 2014, LH_Mouse. All wrongs reserved.\n"),
+										"Copyleft 2014, LH_Mouse. All wrongs reserved.\n"
+										),
 	DEF("MCFBUILD_USAGE",				"\n"
 										"命令行参数可以以 - 或 / 开头，其效果是一样的。\n"
 										"任何不以 - 或 / 开头的命令行参数都会被当作配置名。\n"
@@ -48,7 +49,8 @@ const std::map<MCF::WideStringObserver, MCF::WideStringObserver> g_mapStrings = 
 										"  -j十进制整数  指定多进程构建时使用的进程数。0 为自动选择。\n"
 										"                默认值是 0。\n"
 										"  -c            执行清理操作，删除所有目标文件（不构建）。\n"
-										"  -R            重新构建所有文件。\n"),
+										"  -R            重新构建所有文件。\n"
+										),
 
 	DEF("ENVIRONMENT_MANIFEST",			"\n----- 构建环境清单 -----\n"
 										"工作目录：%0\n"
@@ -57,7 +59,8 @@ const std::map<MCF::WideStringObserver, MCF::WideStringObserver> g_mapStrings = 
 										"源目录　：%3\n"
 										"中间目录：%4\n"
 										"目标目录：%5\n"
-										"进程数　：%6\n"),
+										"进程数　：%6\n"
+										),
 	DEF("BUILD_STARTED",				"\n----- 构建开始 -----\n"),
 	DEF("BUILD_SUCCEEDED",				"\n----- 构建成功 -----\n"),
 	DEF("BUILD_FAILED",					"\n----- 构建失败 -----\n"),
@@ -68,7 +71,8 @@ const std::map<MCF::WideStringObserver, MCF::WideStringObserver> g_mapStrings = 
 
 	DEF("MCF_EXCEPTION",				"MCF Build 遇到一个异常：\n"
 										"  错误描述：%0\n"
-										"  错误代码：%1（%2）\n"),
+										"  错误代码：%1（%2）\n"
+										),
 	DEF("STD_EXCEPTION",				"MCF Build 遇到异常“%0”。\n请联系作者寻求协助。\n"),
 	DEF("UNKNOWN_EXCEPTION",			"MCF Build 遇到无法处理的异常。\n请联系作者寻求协助。\n"),
 

@@ -52,7 +52,8 @@ namespace Impl {
 }
 
 // 安全地在宏参数中使用带逗号的类型名，例如 MY_MACRO(double, (std::map<int, double>))。
-#define MACRO_TYPE(type_param)	typename ::MCF::Impl::MacroTypeHelper<void(type_param &&)>::Type
+#define MACRO_TYPE(type_param)	\
+	typename ::MCF::Impl::MacroTypeHelper<void(type_param &&)>::Type
 
 //----------------------------------------------------------------------------
 // NO_COPY
@@ -69,43 +70,48 @@ namespace Impl {
 	};
 }
 
-#define NO_COPY			private ::MCF::Impl::NonCopyableBase
+#define NO_COPY				private ::MCF::Impl::NonCopyableBase
 
 //----------------------------------------------------------------------------
 // ABSTRACT / CONCRETE
 //----------------------------------------------------------------------------
 namespace Impl {
-	struct AbstractBase {
-		virtual ~AbstractBase() = default;
+	class AbstractBase {
+	protected:
+		virtual ~AbstractBase() noexcept = default;
 
-		virtual void MCF_Impl_PureAbstractFunction_() const noexcept = 0;
+	private:
+		virtual void MCF_PureAbstract_() noexcept = 0;
 	};
 
-	template<class Base_t>
-	struct ConcreteBase : public Base_t {
-		static_assert(std::is_base_of<AbstractBase, Base_t>::value, "Concreting from non-abstract class?");
-
-		template<typename... Params_t>
-		ConcreteBase(Params_t &&... vParams)
-			noexcept(std::is_nothrow_constructible<Base_t, Params_t &&...>::value)
-			: Base_t(std::forward<Params_t>(vParams)...)
+	template<typename RealBase_t>
+	class ConcreteBase : public RealBase_t {
+	protected:
+		template<typename... BaseParams_t>
+		explicit ConcreteBase(BaseParams_t &&... vBaseParams)
+			noexcept(std::is_nothrow_constructible<RealBase_t, BaseParams_t &&...>::value)
+			: RealBase_t(std::forward<BaseParams_t>(vBaseParams)...)
 		{
 		}
 
-		virtual void MCF_Impl_PureAbstractFunction_() const noexcept override {
+	private:
+		void MCF_PureAbstract_() noexcept override {
 		}
 	};
 }
 
-#define ABSTRACT				private ::MCF::Impl::AbstractBase
-#define CONCRETE(type)			public ::MCF::Impl::ConcreteBase<MACRO_TYPE(type)>
-#define CONCRETE_BASE(type)		::MCF::Impl::ConcreteBase<MACRO_TYPE(type)>
+#define ABSTRACT			private ::MCF::Impl::AbstractBase
+#define CONCRETE(base)		public ::MCF::Impl::ConcreteBase<MACRO_TYPE(base)>
+
+#define CONCRETE_INIT(base, ...)	\
+	::MCF::Impl::ConcreteBase<MACRO_TYPE(base)>(__VA_ARGS__)
 
 //----------------------------------------------------------------------------
 // Bail
 //----------------------------------------------------------------------------
 template<typename... Params_t>
-__MCF_NORETURN_IF_NDEBUG inline void Bail(const wchar_t *pwszFormat, const Params_t &... vParams){
+__MCF_NORETURN_IF_NDEBUG inline
+void Bail(const wchar_t *pwszFormat, const Params_t &... vParams){
 	::MCF_CRT_BailF(pwszFormat, vParams...);
 }
 

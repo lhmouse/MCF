@@ -4,7 +4,6 @@
 
 #include "../StdMCF.hpp"
 #include "Sha1.hpp"
-#include <cstring>
 using namespace MCF;
 
 namespace {

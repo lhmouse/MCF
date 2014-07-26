@@ -4,7 +4,6 @@
 
 #include "../StdMCF.hpp"
 #include "Sha256.hpp"
-#include <cstring>
 using namespace MCF;
 
 namespace {

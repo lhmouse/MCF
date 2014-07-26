@@ -45,7 +45,7 @@ void ReadPipe(MCF::StreamBuffer &sbufSink, HANDLE hSource){
 		if(dwBytesRead >= dwBytesAvail){
 			break;
 		}
-		unsigned char abyBuffer[0x1000];
+		unsigned char abyBuffer[0x400];
 		DWORD dwBytesReadThisTime;
 		if(!::ReadFile(hSource, abyBuffer, sizeof(abyBuffer), &dwBytesReadThisTime, nullptr)){
 			break;
@@ -64,7 +64,7 @@ long ExtractWchar(MCF::StreamBuffer &sbufSource){
 }
 
 void ConvertCrlfAndAppend(MCF::WideString &wcsSink, MCF::StreamBuffer &sbufSource){
-	wcsSink.ReserveMore(sbufSource.GetSize() / sizeof(wchar_t) + 1);
+	wcsSink.ReserveMore((sbufSource.GetSize() + 1) / sizeof(wchar_t));
 
 	long lNext = ExtractWchar(sbufSource);
 	while(lNext != -1){

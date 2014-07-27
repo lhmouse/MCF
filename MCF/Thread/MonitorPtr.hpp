@@ -14,41 +14,41 @@
 namespace MCF {
 
 namespace Impl {
-	template<typename Object_t, typename = void>
+	template<typename Object, typename = void>
 	struct ForwardArrowOperatorHelper {
-		auto operator()(Object_t *pObject) const noexcept {
+		auto operator()(Object *pObject) const noexcept {
 			return pObject;
 		}
 	};
-	template<typename Object_t>
+	template<typename Object>
 	struct ForwardArrowOperatorHelper<
-		Object_t, decltype(std::declval<Object_t *>()->operator->(), (void)0)
+		Object, decltype(std::declval<Object *>()->operator->(), (void)0)
 	> {
-		auto operator()(Object_t *pObject) const noexcept {
+		auto operator()(Object *pObject) const noexcept {
 			return pObject->operator->();
 		}
 	};
 
-	template<typename Object_t>
-	auto ForwardArrowOperator(Object_t &vObject) noexcept {
-		return ForwardArrowOperatorHelper<Object_t>()(
-			(Object_t *)&reinterpret_cast<const volatile char &>(vObject)
+	template<typename Object>
+	auto ForwardArrowOperator(Object &vObject) noexcept {
+		return ForwardArrowOperatorHelper<Object>()(
+			(Object *)&reinterpret_cast<const volatile char &>(vObject)
 		);
 	}
 }
 
-template<class Object_t>
+template<class Object>
 class MonitorPtr : NO_COPY {
 private:
-	template<typename Self_t>
+	template<typename Self>
 	class xMonitorHolder : NO_COPY {
 		friend MonitorPtr;
 
 	private:
-		Self_t *xm_pOwner;
+		Self *xm_pOwner;
 
 	private:
-		explicit xMonitorHolder(Self_t *pOwner) noexcept
+		explicit xMonitorHolder(Self *pOwner) noexcept
 			: xm_pOwner(pOwner)
 		{
 			auto vLock = xm_pOwner->xm_pcsMutex->GetLock();
@@ -82,14 +82,14 @@ private:
 private:
 	const std::unique_ptr<CriticalSection> xm_pcsMutex;
 	mutable CriticalSection::Lock xm_vLock;
-	Object_t xm_vObject;
+	Object xm_vObject;
 
 public:
-	template<typename... Params_t>
-	explicit MonitorPtr(Params_t &&... vParams)
+	template<typename... Params>
+	explicit MonitorPtr(Params &&... vParams)
 		: xm_pcsMutex	(CriticalSection::Create())
 		, xm_vLock		(xm_pcsMutex.get(), false)
-		, xm_vObject	(std::forward<Params_t>(vParams)...)
+		, xm_vObject	(std::forward<Params>(vParams)...)
 	{
 	}
 

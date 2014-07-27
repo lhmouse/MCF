@@ -78,38 +78,38 @@ namespace Impl {
 		}
 	};
 
-	template<class Closer_t, class RefCount_t>
+	template<class Closer, class RefCount>
 	struct SharedNode {
-		UniqueHandle<Closer_t> m_hObject;
-		RefCount_t m_rcWeak;
-		RefCount_t m_rcStrong;
+		UniqueHandle<Closer> m_hObject;
+		RefCount m_rcWeak;
+		RefCount m_rcStrong;
 
-		explicit SharedNode(UniqueHandle<Closer_t> &&hObject) noexcept
+		explicit SharedNode(UniqueHandle<Closer> &&hObject) noexcept
 			: m_hObject(std::move(hObject))
 		{
 		}
 	};
 
-	template<class Closer_t, class RefCount_t>
+	template<class Closer, class RefCount>
 	class SharedHandleTemplate;
 
-	template<class Closer_t, class RefCount_t>
+	template<class Closer, class RefCount>
 	class WeakHandleImpl {
 		template<class, class>
 		friend class SharedHandleTemplate;
 
 	protected:
-		typedef SharedNode<Closer_t, RefCount_t> xSharedNode;
+		typedef SharedNode<Closer, RefCount> xSharedNode;
 
 	public:
-		typedef decltype(Closer_t()()) Handle;
+		typedef decltype(Closer()()) Handle;
 
 		static_assert(std::is_scalar<Handle>::value, "Handle must be a scalar type.");
-		static_assert(noexcept(Closer_t()(Handle())), "Handle closer must not throw.");
+		static_assert(noexcept(Closer()(Handle())), "Handle closer must not throw.");
 
 		using WeakHandle	= WeakHandleImpl;
-		using SharedHandle	= SharedHandleTemplate<Closer_t, RefCount_t>;
-		using UniqueHandle	= UniqueHandle<Closer_t>;
+		using SharedHandle	= SharedHandleTemplate<Closer, RefCount>;
+		using UniqueHandle	= UniqueHandle<Closer>;
 
 	protected:
 		xSharedNode *xm_pNode;
@@ -203,12 +203,12 @@ namespace Impl {
 		}
 	};
 
-	template<class Closer_t, class RefCount_t>
-	class SharedHandleTemplate : public WeakHandleImpl<Closer_t, RefCount_t> {
+	template<class Closer, class RefCount>
+	class SharedHandleTemplate : public WeakHandleImpl<Closer, RefCount> {
 	public:
-		using WeakHandle	= WeakHandleImpl<Closer_t, RefCount_t>;
+		using WeakHandle	= WeakHandleImpl<Closer, RefCount>;
 		using SharedHandle	= SharedHandleTemplate;
-		using UniqueHandle	= UniqueHandle<Closer_t>;
+		using UniqueHandle	= UniqueHandle<Closer>;
 
 	protected:
 		using typename WeakHandle::xSharedNode;
@@ -299,7 +299,7 @@ namespace Impl {
 			return WeakHandle::GetRefCount() != 0;
 		}
 		Handle Get() const noexcept {
-			return (WeakHandle::GetRefCount() != 0) ? WeakHandle::xm_pNode->m_hObject.Get() : Closer_t()();
+			return (WeakHandle::GetRefCount() != 0) ? WeakHandle::xm_pNode->m_hObject.Get() : Closer()();
 		}
 		UniqueHandle Release() noexcept {
 			return xTidy();
@@ -397,64 +397,58 @@ namespace Impl {
 		}
 	};
 
-	template<class Closer_t, class RefCount_t>
-	SharedHandleTemplate<Closer_t, RefCount_t>
-		WeakHandleImpl<Closer_t, RefCount_t>::Lock() const noexcept
+	template<class Closer, class RefCount>
+	SharedHandleTemplate<Closer, RefCount>
+		WeakHandleImpl<Closer, RefCount>::Lock() const noexcept
 	{
 		return SharedHandle(*this);
 	}
 
-	template<class Handle_t, class Closer_t, class RefCount_t>
-	auto operator==(Handle_t lhs, const SharedHandleTemplate<Closer_t, RefCount_t> &rhs) noexcept
+	template<class Handle, class Closer, class RefCount>
+	auto operator==(Handle lhs, const SharedHandleTemplate<Closer, RefCount> &rhs) noexcept
 		-> typename std::enable_if<
-			std::is_same<Handle_t, typename SharedHandleTemplate<Closer_t, RefCount_t>::Handle>::value,
-			bool
-		>::type
+			std::is_same<Handle, typename SharedHandleTemplate<Closer, RefCount>::Handle>::value, bool
+			>::type
 	{
 		return lhs == rhs.Get();
 	}
-	template<class Handle_t, class Closer_t, class RefCount_t>
-	auto operator!=(Handle_t lhs, const SharedHandleTemplate<Closer_t, RefCount_t> &rhs) noexcept
+	template<class Handle, class Closer, class RefCount>
+	auto operator!=(Handle lhs, const SharedHandleTemplate<Closer, RefCount> &rhs) noexcept
 		-> typename std::enable_if<
-			std::is_same<Handle_t, typename SharedHandleTemplate<Closer_t, RefCount_t>::Handle>::value,
-			bool
-		>::type
+			std::is_same<Handle, typename SharedHandleTemplate<Closer, RefCount>::Handle>::value, bool
+			>::type
 	{
 		return lhs != rhs.Get();
 	}
-	template<class Handle_t, class Closer_t, class RefCount_t>
-	auto operator<(Handle_t lhs, const SharedHandleTemplate<Closer_t, RefCount_t> &rhs) noexcept
+	template<class Handle, class Closer, class RefCount>
+	auto operator<(Handle lhs, const SharedHandleTemplate<Closer, RefCount> &rhs) noexcept
 		-> typename std::enable_if<
-			std::is_same<Handle_t, typename SharedHandleTemplate<Closer_t, RefCount_t>::Handle>::value,
-			bool
-		>::type
+			std::is_same<Handle, typename SharedHandleTemplate<Closer, RefCount>::Handle>::value, bool
+			>::type
 	{
 		return lhs < rhs.Get();
 	}
-	template<class Handle_t, class Closer_t, class RefCount_t>
-	auto operator<=(Handle_t lhs, const SharedHandleTemplate<Closer_t, RefCount_t> &rhs) noexcept
+	template<class Handle, class Closer, class RefCount>
+	auto operator<=(Handle lhs, const SharedHandleTemplate<Closer, RefCount> &rhs) noexcept
 		-> typename std::enable_if<
-			std::is_same<Handle_t, typename SharedHandleTemplate<Closer_t, RefCount_t>::Handle>::value,
-			bool
-		>::type
+			std::is_same<Handle, typename SharedHandleTemplate<Closer, RefCount>::Handle>::value, bool
+			>::type
 	{
 		return lhs <= rhs.Get();
 	}
-	template<class Handle_t, class Closer_t, class RefCount_t>
-	auto operator>(Handle_t lhs, const SharedHandleTemplate<Closer_t, RefCount_t> &rhs) noexcept
+	template<class Handle, class Closer, class RefCount>
+	auto operator>(Handle lhs, const SharedHandleTemplate<Closer, RefCount> &rhs) noexcept
 		-> typename std::enable_if<
-			std::is_same<Handle_t, typename SharedHandleTemplate<Closer_t, RefCount_t>::Handle>::value,
-			bool
-		>::type
+			std::is_same<Handle, typename SharedHandleTemplate<Closer, RefCount>::Handle>::value, bool
+			>::type
 	{
 		return lhs > rhs.Get();
 	}
-	template<class Handle_t, class Closer_t, class RefCount_t>
-	auto operator>=(Handle_t lhs, const SharedHandleTemplate<Closer_t, RefCount_t> &rhs) noexcept
+	template<class Handle, class Closer, class RefCount>
+	auto operator>=(Handle lhs, const SharedHandleTemplate<Closer, RefCount> &rhs) noexcept
 		-> typename std::enable_if<
-			std::is_same<Handle_t, typename SharedHandleTemplate<Closer_t, RefCount_t>::Handle>::value,
-			bool
-		>::type
+			std::is_same<Handle, typename SharedHandleTemplate<Closer, RefCount>::Handle>::value, bool
+			>::type
 	{
 		return lhs >= rhs.Get();
 	}

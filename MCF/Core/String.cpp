@@ -283,7 +283,7 @@ template class String<wchar_t,	StringEncoding::UTF16>;
 template class String<char,		StringEncoding::UTF8>;
 template class String<char16_t,	StringEncoding::UTF16>;
 template class String<char32_t,	StringEncoding::UTF32>;
-
+/*
 SERDES_TABLE_BEGIN(Utf8String)
 	SERDES_CUSTOM(
 		[](auto &sbufStream, const auto &vUtf8String){
@@ -318,15 +318,15 @@ DEFINE_STRING_SERDES(WideString)
 
 DEFINE_STRING_SERDES(Utf16String)
 DEFINE_STRING_SERDES(Utf32String)
-
-#define DEFINE_LITERAL_OPERATOR(suffix, char_type, encoding)	\
-	const String<MACRO_TYPE(char_type), StringEncoding::encoding> &	\
-		operator"" ## suffix(const MACRO_TYPE(char_type) *pchStr, std::size_t uLength)	\
+*/
+#define DEFINE_LITERAL_OPERATOR(suffix, charType, encoding)	\
+	const String<MACRO_TYPE(charType), StringEncoding::encoding> &	\
+		operator"" ## suffix(const MACRO_TYPE(charType) *pchStr, std::size_t uLength)	\
 	{	\
 		static const auto pReaderWriterLock = ReaderWriterLock::Create();	\
 		static std::unordered_map<	\
-			const char_type *,	\
-			String<MACRO_TYPE(char_type), StringEncoding::encoding>	\
+			const charType *,	\
+			String<MACRO_TYPE(charType), StringEncoding::encoding>	\
 		> mapStrings;	\
 		\
 		{	\

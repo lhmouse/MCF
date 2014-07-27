@@ -17,10 +17,10 @@ typedef MultiIndexedMap<
 	std::pair<
 		std::shared_ptr<void>,	// Chunk。内存是以 64KiB 的粒度分配的，每一块称为一个 chunk。
 		std::size_t 			// Thunk 大小。
-	>,
+		>,
 	void *, 					// Thunk 地址。
 	std::size_t					// 在空闲 thunk 上等于大小，否则为零。
-> ThunkMap;
+	> ThunkMap;
 
 std::size_t	g_uPageOffsetBits = 0;
 const auto	g_pcsLock = CriticalSection::Create();

@@ -23,11 +23,8 @@ WideString GetWin32ErrorDesc(unsigned long ulErrorCode){
 	PVOID pDescBuffer;
 	const auto uLen = ::FormatMessageW(
 		FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
-		nullptr,
-		ulErrorCode,
-		MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-		(LPWSTR)&pDescBuffer,
-		0,
+		nullptr, ulErrorCode, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+		(LPWSTR)&pDescBuffer, 0,
 		nullptr
 	);
 	const UniqueHandle<LocalFreer> hLocal((HLOCAL)pDescBuffer); // RAII

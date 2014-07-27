@@ -45,8 +45,8 @@ public:
 	void Clear() noexcept;
 
 public:
-	template<typename PathSegments_t>
-	const NotationPackage *GetPackageFromPath(const PathSegments_t &vPathSegments) const noexcept {
+	template<typename PathSegments>
+	const NotationPackage *GetPackageFromPath(const PathSegments &vPathSegments) const noexcept {
 		auto pCur = this;
 		for(const auto &vSegment : vPathSegments){
 			pCur = pCur->GetPackage(vSegment);
@@ -56,8 +56,8 @@ public:
 		}
 		return pCur;
 	}
-	template<typename PathSegments_t>
-	NotationPackage *GetPackageFromPath(const PathSegments_t &vPathSegments) noexcept {
+	template<typename PathSegments>
+	NotationPackage *GetPackageFromPath(const PathSegments &vPathSegments) noexcept {
 		auto pCur = this;
 		for(const auto &vSegment : vPathSegments){
 			pCur = pCur->GetPackage(vSegment);
@@ -67,8 +67,8 @@ public:
 		}
 		return pCur;
 	}
-	template<typename PathSegments_t>
-	std::pair<NotationPackage *, bool> CreatePackageFromPath(const PathSegments_t &vPathSegments){
+	template<typename PathSegments>
+	std::pair<NotationPackage *, bool> CreatePackageFromPath(const PathSegments &vPathSegments){
 		auto vRet = std::make_pair(this, false);
 		for(const auto &vSegment : vPathSegments){
 			vRet = vRet.first->CreatePackage(vSegment);
@@ -76,10 +76,10 @@ public:
 		return std::move(vRet);
 	}
 
-	template<typename PathSegmentIterator_t>
+	template<typename PathSegmentIterator>
 	const NotationPackage *GetPackageFromPath(
-		PathSegmentIterator_t itSegmentBegin,
-		PathSegmentIterator_t itSegmentEnd
+		PathSegmentIterator itSegmentBegin,
+		PathSegmentIterator itSegmentEnd
 	) const noexcept {
 		auto pCur = this;
 		while(itSegmentBegin != itSegmentEnd){
@@ -91,10 +91,10 @@ public:
 		}
 		return pCur;
 	}
-	template<typename PathSegmentIterator_t>
+	template<typename PathSegmentIterator>
 	NotationPackage *GetPackageFromPath(
-		PathSegmentIterator_t itSegmentBegin,
-		PathSegmentIterator_t itSegmentEnd
+		PathSegmentIterator itSegmentBegin,
+		PathSegmentIterator itSegmentEnd
 	) noexcept {
 		auto pCur = this;
 		while(itSegmentBegin != itSegmentEnd){
@@ -106,10 +106,10 @@ public:
 		}
 		return pCur;
 	}
-	template<typename PathSegmentIterator_t>
+	template<typename PathSegmentIterator>
 	std::pair<NotationPackage *, bool> CreatePackageFromPath(
-		PathSegmentIterator_t itSegmentBegin,
-		PathSegmentIterator_t itSegmentEnd
+		PathSegmentIterator itSegmentBegin,
+		PathSegmentIterator itSegmentEnd
 	){
 		auto vRet = std::make_pair(this, false);
 		while(itSegmentBegin != itSegmentEnd){

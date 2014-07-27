@@ -1,29 +1,27 @@
 #include <MCF/StdMCF.hpp>
-#include <MCF/Core/File.hpp>
-#include <MCF/StreamFilters/ZLibFilters.hpp>
-#include <MCF/Hash/Crc32.hpp>
+#include <MCF/Serialization/Serdes.hpp>
+#include <random>
 using namespace MCF;
 
 extern "C" unsigned int MCFMain() noexcept {
-	const auto pInputFile = File::Open(L"E:\\large.txt"_wso, File::TO_READ);
-	const auto uInputSize = pInputFile->GetSize();
-	StreamBuffer sbufData;
-	while(sbufData.GetSize() < uInputSize){
-		unsigned char abyTemp[0x1000];
-		const auto uRead = pInputFile->Read(abyTemp, sizeof(abyTemp), sbufData.GetSize());
-		sbufData.Insert(abyTemp, uRead);
+	StreamBuffer buf;
+	std::deque<bool> q1, q2;
+
+	std::mt19937 mt;
+	std::generate_n(std::back_inserter(q1), 161, [&]{ return mt() % 2; });
+	for(auto b : q1){
+		std::putchar(b + '0');
 	}
+	std::putchar('\n');
 
-	Crc32 vCrc;
-	sbufData.Traverse([&](auto p, auto cb){ vCrc.Update(p, cb); });
-	std::printf("original size = %zu bytes, crc = %08lX\n", sbufData.GetSize(), (unsigned long)vCrc.Finalize());
+	Serialize(buf, q1);
+	std::printf("serialized size = %zu\n", buf.GetSize());
 
-	ZLibEncoder::Create(true, 9)->FilterInPlace(sbufData);
-	std::printf("compressed size = %zu bytes\n", sbufData.GetSize());
-
-	ZLibDecoder::Create(true)->FilterInPlace(sbufData);
-	sbufData.Traverse([&](auto p, auto cb){ vCrc.Update(p, cb); });
-	std::printf("decompressed size = %zu bytes, crc = %08lX\n", sbufData.GetSize(), (unsigned long)vCrc.Finalize());
+	Deserialize(q2, buf);
+	for(auto b : q2){
+		std::putchar(b + '0');
+	}
+	std::putchar('\n');
 
 	return 0;
 }

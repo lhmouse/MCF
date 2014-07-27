@@ -11,20 +11,20 @@
 
 namespace MCF {
 
-template<class Closer_t>
+template<class Closer>
 class UniqueHandle {
 public:
-	typedef decltype(Closer_t()()) Handle;
+	typedef decltype(Closer()()) Handle;
 
 	static_assert(std::is_scalar<Handle>::value, "Handle must be a scalar type.");
-	static_assert(noexcept(Closer_t()(Handle())), "Handle closer must not throw.");
+	static_assert(noexcept(Closer()(Handle())), "Handle closer must not throw.");
 
 private:
 	Handle xm_hObj;
 
 public:
 	constexpr UniqueHandle() noexcept
-		: UniqueHandle(Closer_t()())
+		: UniqueHandle(Closer()())
 	{
 	}
 	constexpr explicit UniqueHandle(Handle hObj) noexcept
@@ -52,19 +52,19 @@ public:
 
 public:
 	bool IsGood() const noexcept {
-		return Get() != Closer_t()();
+		return Get() != Closer()();
 	}
 	Handle Get() const noexcept {
 		return xm_hObj;
 	}
 	Handle Release() noexcept {
-		return std::exchange(xm_hObj, Closer_t()());
+		return std::exchange(xm_hObj, Closer()());
 	}
 
-	void Reset(Handle hObj = Closer_t()()) noexcept {
+	void Reset(Handle hObj = Closer()()) noexcept {
 		const auto hOld = std::exchange(xm_hObj, hObj);
-		if(hOld != Closer_t()()){
-			Closer_t()(hOld);
+		if(hOld != Closer()()){
+			Closer()(hOld);
 		}
 	}
 	void Reset(UniqueHandle &&rhs) noexcept {
@@ -124,57 +124,51 @@ public:
 	}
 };
 
-template<class Handle_t, class Closer_t>
-auto operator==(Handle_t lhs, const UniqueHandle<Closer_t> &rhs) noexcept
+template<class Handle, class Closer>
+auto operator==(Handle lhs, const UniqueHandle<Closer> &rhs) noexcept
 	-> typename std::enable_if<
-		std::is_same<Handle_t, typename UniqueHandle<Closer_t>::Handle>::value,
-		bool
-	>::type
+		std::is_same<Handle, typename UniqueHandle<Closer>::Handle>::value, bool
+		>::type
 {
 	return lhs == rhs.Get();
 }
-template<class Handle_t, class Closer_t>
-auto operator!=(Handle_t lhs, const UniqueHandle<Closer_t> &rhs) noexcept
+template<class Handle, class Closer>
+auto operator!=(Handle lhs, const UniqueHandle<Closer> &rhs) noexcept
 	-> typename std::enable_if<
-		std::is_same<Handle_t, typename UniqueHandle<Closer_t>::Handle>::value,
-		bool
-	>::type
+		std::is_same<Handle, typename UniqueHandle<Closer>::Handle>::value, bool
+		>::type
 {
 	return lhs != rhs.Get();
 }
-template<class Handle_t, class Closer_t>
-auto operator<(Handle_t lhs, const UniqueHandle<Closer_t> &rhs) noexcept
+template<class Handle, class Closer>
+auto operator<(Handle lhs, const UniqueHandle<Closer> &rhs) noexcept
 	-> typename std::enable_if<
-		std::is_same<Handle_t, typename UniqueHandle<Closer_t>::Handle>::value,
-		bool
-	>::type
+		std::is_same<Handle, typename UniqueHandle<Closer>::Handle>::value, bool
+		>::type
 {
 	return lhs < rhs.Get();
 }
-template<class Handle_t, class Closer_t>
-auto operator<=(Handle_t lhs, const UniqueHandle<Closer_t> &rhs) noexcept
+template<class Handle, class Closer>
+auto operator<=(Handle lhs, const UniqueHandle<Closer> &rhs) noexcept
 	-> typename std::enable_if<
-		std::is_same<Handle_t, typename UniqueHandle<Closer_t>::Handle>::value,
-		bool
-	>::type
+		std::is_same<Handle, typename UniqueHandle<Closer>::Handle>::value, bool
+		>::type
 {
 	return lhs <= rhs.Get();
 }
-template<class Handle_t, class Closer_t>
-auto operator>(Handle_t lhs, const UniqueHandle<Closer_t> &rhs) noexcept
+template<class Handle, class Closer>
+auto operator>(Handle lhs, const UniqueHandle<Closer> &rhs) noexcept
 	-> typename std::enable_if<
-		std::is_same<Handle_t, typename UniqueHandle<Closer_t>::Handle>::value,
-		bool
-	>::type
+		std::is_same<Handle, typename UniqueHandle<Closer>::Handle>::value, bool
+		>::type
 {
 	return lhs > rhs.Get();
 }
-template<class Handle_t, class Closer_t>
-auto operator>=(Handle_t lhs, const UniqueHandle<Closer_t> &rhs) noexcept
+template<class Handle, class Closer>
+auto operator>=(Handle lhs, const UniqueHandle<Closer> &rhs) noexcept
 	-> typename std::enable_if<
-		std::is_same<Handle_t, typename UniqueHandle<Closer_t>::Handle>::value,
-		bool
-	>::type
+		std::is_same<Handle, typename UniqueHandle<Closer>::Handle>::value, bool
+		>::type
 {
 	return lhs >= rhs.Get();
 }

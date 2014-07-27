@@ -3,17 +3,21 @@
 // Copyleft 2013 - 2014 LH_Mouse. All wrongs reserved.
 
 #include "../StdMCF.hpp"
-#include "_SerdesTraits.hpp"
+#include "Serdes.hpp"
 #include "../Core/Exception.hpp"
+using namespace MCF;
 
 namespace MCF {
 
 namespace Impl {
-	[[noreturn]] void SerdesThrowOnEof(){
-		MCF_THROW(ERROR_HANDLE_EOF, L"遇到意外的文件尾。"_wso);
+	[[noreturn]]
+	void ThrowEndOfStream(){
+		MCF_THROW(ERROR_HANDLE_EOF, L"遇到文件尾。"_wso);
 	}
-	[[noreturn]] void SerdesThrowOnSizeTooLarge(){
-		MCF_THROW(ERROR_NOT_ENOUGH_MEMORY, L"数据大小超过上限。"_wso);
+
+	[[noreturn]]
+	void ThrowInvalidData(){
+		MCF_THROW(ERROR_INVALID_DATA, L"数据损坏。"_wso);
 	}
 }
 

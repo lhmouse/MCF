@@ -6,74 +6,76 @@
 #define MCF_VAR_INT_EX_HPP_
 
 #include <type_traits>
+#include <limits>
 #include <cstddef>
 #include <cstdint>
 
 namespace MCF {
 
 namespace Impl {
-	template<typename Plain_t, typename Encoded_t = typename std::make_unsigned<Plain_t>::type>
+	template<typename Plain, typename Encoded = typename std::make_unsigned<Plain>::type>
 	struct ZigZagger {
-		typedef Encoded_t EncodedType;
+		typedef Encoded EncodedType;
 
-		EncodedType Encode(Plain_t vVal) const noexcept {
-			return ((EncodedType)vVal << 1) ^ (EncodedType)(vVal >> (sizeof(vVal) * __CHAR_BIT__ - 1));
+		EncodedType Encode(Plain vVal) const noexcept {
+			const auto vTemp = static_cast<EncodedType>(vVal);
+			return (vTemp << 1) ^ (vTemp >> std::numeric_limits<Plain>::digits);
 		}
-		Plain_t Decode(EncodedType vVal) const noexcept {
-			return (Plain_t)((vVal >> 1) ^ -(vVal & 1));
+		Plain Decode(EncodedType vVal) const noexcept {
+			return (Plain)((vVal >> 1) ^ -(vVal & 1));
 		}
 	};
 
-	template<typename Plain_t>
-	struct ZigZagger<Plain_t, Plain_t> {
-		typedef Plain_t EncodedType;
+	template<typename Plain>
+	struct ZigZagger<Plain, Plain> {
+		typedef Plain EncodedType;
 
-		EncodedType Encode(Plain_t vVal) const noexcept {
+		EncodedType Encode(Plain vVal) const noexcept {
 			return vVal;
 		}
-		Plain_t Decode(EncodedType vVal) const noexcept {
+		Plain Decode(EncodedType vVal) const noexcept {
 			return vVal;
 		}
 	};
 }
 
-template<typename Underlying_t, Underlying_t ORIGIN = 0>
+template<typename Underlying, Underlying ORIGIN = 0>
 class VarIntEx {
-	static_assert(std::is_arithmetic<Underlying_t>::value, "Underlying_t must be an arithmetic type.");
+	static_assert(std::is_arithmetic<Underlying>::value, "Underlying must be an arithmetic type.");
 
-	static_assert(__CHAR_BIT__ == 8, "Not supported.");
-	static_assert(sizeof(std::uintmax_t) * __CHAR_BIT__ <= 64, "Not supported.");
+	static_assert(std::numeric_limits<unsigned char>::digits == 8, "Not supported.");
+	static_assert(sizeof(std::uintmax_t) <= 8, "Not supported.");
 
 public:
 	enum : std::size_t {
-		MAX_SERIALIZED_SIZE = sizeof(Underlying_t) + 1
+		MAX_SERIALIZED_SIZE = sizeof(Underlying) + 1
 	};
 
 private:
-	Underlying_t xm_vValue;
+	Underlying xm_vValue;
 
 public:
-	VarIntEx(Underlying_t vValue = Underlying_t()) noexcept
+	VarIntEx(Underlying vValue = Underlying()) noexcept
 		: xm_vValue(vValue)
 	{
 	}
-	VarIntEx &operator=(Underlying_t vValue) noexcept {
+	VarIntEx &operator=(Underlying vValue) noexcept {
 		xm_vValue = vValue;
 		return *this;
 	}
 
 public:
-	const Underlying_t &Get() const noexcept {
+	Underlying Get() const noexcept {
 		return xm_vValue;
 	}
-	Underlying_t &Get() noexcept {
-		return xm_vValue;
+	void Set(Underlying vNewValue) noexcept {
+		xm_vValue = vNewValue;
 	}
 
 	// 最多输出 9 个字节。
-	template<typename OutputIterator_t>
-	void Serialize(OutputIterator_t &itWrite) const {
-		auto uEncoded = Impl::ZigZagger<Underlying_t>().Encode(xm_vValue - ORIGIN);
+	template<typename OutputIterator>
+	void Serialize(OutputIterator &itWrite) const {
+		auto uEncoded = Impl::ZigZagger<Underlying>().Encode(xm_vValue - ORIGIN);
 		for(std::size_t i = 0; i < sizeof(uEncoded); ++i){
 			unsigned char by = uEncoded & 0x7F;
 			uEncoded >>= 7;
@@ -89,9 +91,9 @@ public:
 		*itWrite = uEncoded & 0xFF;
 		++itWrite;
 	}
-	template<typename InputIterator_t>
-	bool Deserialize(InputIterator_t &itRead, const typename std::common_type<InputIterator_t>::type &itEnd){
-		typename Impl::ZigZagger<Underlying_t>::EncodedType uEncoded = 0;
+	template<typename InputIterator>
+	bool Deserialize(InputIterator &itRead, const typename std::common_type<InputIterator>::type &itEnd){
+		typename Impl::ZigZagger<Underlying>::EncodedType uEncoded = 0;
 		for(std::size_t i = 0; i < 4; ++i){
 			if(itRead == itEnd){
 				return false;
@@ -121,15 +123,15 @@ public:
 		++itRead;
 
 	jDone:
-		xm_vValue = Impl::ZigZagger<Underlying_t>().Decode(uEncoded) + ORIGIN;
+		xm_vValue = Impl::ZigZagger<Underlying>().Decode(uEncoded) + ORIGIN;
 		return true;
 	}
 
 public:
-	operator const Underlying_t &() const noexcept {
+	operator const Underlying &() const noexcept {
 		return Get();
 	}
-	operator Underlying_t &() noexcept {
+	operator Underlying &() noexcept {
 		return Get();
 	}
 };

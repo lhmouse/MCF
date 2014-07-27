@@ -69,10 +69,7 @@ public:
 			pwszPath,
 			((u32Flags & TO_READ) ? GENERIC_READ : 0) | ((u32Flags & TO_WRITE) ? GENERIC_WRITE : 0),
 			(u32Flags & TO_WRITE) ? 0 : FILE_SHARE_READ,
-			nullptr,
-			dwCreateDisposition,
-			dwFlagsAndAttributes,
-			NULL
+			nullptr, dwCreateDisposition, dwFlagsAndAttributes, NULL
 		));
 		if(!xm_hFile){
 			return std::make_pair(::GetLastError(), L"::CreateFileW() 失败。"_wso);
@@ -160,8 +157,8 @@ public:
 			vOverlapped.hEvent = (HANDLE)&vApcResult;
 			if(!::ReadFileEx(
 				xm_hFile.Get(), (unsigned char *)pBuffer + uBytesRead, dwBytesToReadThisTime,
-				&vOverlapped, &xAioCallback
-			)){
+				&vOverlapped, &xAioCallback))
+			{
 				MCF_THROW(vApcResult.dwErrorCode, L"::ReadFileEx() 失败。"_wso);
 			}
 			::SleepEx(INFINITE, TRUE);
@@ -223,8 +220,8 @@ public:
 			vOverlapped.hEvent = (HANDLE)&vApcResult;
 			if(!::WriteFileEx(
 				xm_hFile.Get(), (const unsigned char *)pBuffer + uBytesWritten, dwBytesToWriteThisTime,
-				&vOverlapped, &xAioCallback
-			)){
+				&vOverlapped, &xAioCallback))
+			{
 				MCF_THROW(vApcResult.dwErrorCode, L"::WriteFileEx() 失败。"_wso);
 			}
 			::SleepEx(INFINITE, TRUE);

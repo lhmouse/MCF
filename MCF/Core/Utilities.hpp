@@ -84,13 +84,13 @@ namespace Impl {
 		virtual void MCF_PureAbstract_() noexcept = 0;
 	};
 
-	template<typename RealBase_t>
-	class ConcreteBase : public RealBase_t {
+	template<typename RealBase>
+	class ConcreteBase : public RealBase {
 	protected:
-		template<typename... BaseParams_t>
-		explicit ConcreteBase(BaseParams_t &&... vBaseParams)
-			noexcept(std::is_nothrow_constructible<RealBase_t, BaseParams_t &&...>::value)
-			: RealBase_t(std::forward<BaseParams_t>(vBaseParams)...)
+		template<typename... BaseParams>
+		explicit ConcreteBase(BaseParams &&... vBaseParams)
+			noexcept(std::is_nothrow_constructible<RealBase, BaseParams &&...>::value)
+			: RealBase(std::forward<BaseParams>(vBaseParams)...)
 		{
 		}
 
@@ -109,9 +109,9 @@ namespace Impl {
 //----------------------------------------------------------------------------
 // Bail
 //----------------------------------------------------------------------------
-template<typename... Params_t>
+template<typename... Params>
 __MCF_NORETURN_IF_NDEBUG inline
-void Bail(const wchar_t *pwszFormat, const Params_t &... vParams){
+void Bail(const wchar_t *pwszFormat, const Params &... vParams){
 	::MCF_CRT_BailF(pwszFormat, vParams...);
 }
 
@@ -216,52 +216,52 @@ inline void BZero(T &vDst) noexcept {
 //----------------------------------------------------------------------------
 // CallOnEach / CallOnEachBackward
 //----------------------------------------------------------------------------
-template<typename Function_t>
-Function_t CallOnEach(Function_t &&vFunction){
+template<typename Function>
+Function CallOnEach(Function &&vFunction){
 	return std::move(vFunction);
 }
-template<typename Function_t, typename FirstParam_t, typename... Params_t>
-Function_t CallOnEach(Function_t &&vFunction, FirstParam_t &&vFirstParam, Params_t &&... vParams){
-	vFunction(std::forward<FirstParam_t>(vFirstParam));
-	return CallOnEach(std::move(vFunction), std::forward<Params_t>(vParams)...);
+template<typename Function, typename FirstParam, typename... Params>
+Function CallOnEach(Function &&vFunction, FirstParam &&vFirstParam, Params &&... vParams){
+	vFunction(std::forward<FirstParam>(vFirstParam));
+	return CallOnEach(std::move(vFunction), std::forward<Params>(vParams)...);
 }
 
-template<typename Function_t>
-Function_t CallOnEachBackward(Function_t &&vFunction){
+template<typename Function>
+Function CallOnEachBackward(Function &&vFunction){
 	return std::move(vFunction);
 }
-template<typename Function_t, typename FirstParam_t, typename... Params_t>
-Function_t CallOnEachBackward(Function_t &&vFunction, FirstParam_t &&vFirstParam, Params_t &&... vParams){
-	auto vNewFunction = CallOnEachBackward(std::move(vFunction), std::forward<Params_t>(vParams)...);
-	vNewFunction(std::forward<FirstParam_t>(vFirstParam));
+template<typename Function, typename FirstParam, typename... Params>
+Function CallOnEachBackward(Function &&vFunction, FirstParam &&vFirstParam, Params &&... vParams){
+	auto vNewFunction = CallOnEachBackward(std::move(vFunction), std::forward<Params>(vParams)...);
+	vNewFunction(std::forward<FirstParam>(vFirstParam));
 	return std::move(vNewFunction);
 }
 
 //----------------------------------------------------------------------------
 // Min / Max
 //----------------------------------------------------------------------------
-template<typename Tx, typename Ty, typename Comparator_t = std::less<void>>
+template<typename Tx, typename Ty, typename Comparator = std::less<void>>
 auto Min(Tx x, Ty y){
 	static_assert(std::is_scalar<Tx>::value && std::is_scalar<Ty>::value, "Only scalar types are supported.");
 	static_assert(std::is_signed<Tx>::value == std::is_signed<Ty>::value, "Comparison between signed and unsigned integers.");
 
-	return Comparator_t()(x, y) ? x : y;
+	return Comparator()(x, y) ? x : y;
 }
-template<typename Tx, typename Ty, typename Comparator_t = std::less<void>, typename... More_t>
-auto Min(Tx &&x, Ty &&y, More_t &&... vMore){
-	return Min(Min(std::forward<Tx>(x), std::forward<Ty>(y)), std::forward<More_t>(vMore)...);
+template<typename Tx, typename Ty, typename Comparator = std::less<void>, typename... More>
+auto Min(Tx &&x, Ty &&y, More &&... vMore){
+	return Min(Min(std::forward<Tx>(x), std::forward<Ty>(y)), std::forward<More>(vMore)...);
 }
 
-template<typename Tx, typename Ty, typename Comparator_t = std::less<void>>
+template<typename Tx, typename Ty, typename Comparator = std::less<void>>
 auto Max(Tx x, Ty y){
 	static_assert(std::is_scalar<Tx>::value && std::is_scalar<Ty>::value, "Only scalar types are supported.");
 	static_assert(std::is_signed<Tx>::value == std::is_signed<Ty>::value, "Comparison between signed and unsigned integers.");
 
-	return Comparator_t()(x, y) ? y : x;
+	return Comparator()(x, y) ? y : x;
 }
-template<typename Tx, typename Ty, typename Comparator_t = std::less<void>, typename... More_t>
-auto Max(Tx &&x, Ty &&y, More_t &&... vMore){
-	return Max(Max(std::forward<Tx>(x), std::forward<Ty>(y)), std::forward<More_t>(vMore)...);
+template<typename Tx, typename Ty, typename Comparator = std::less<void>, typename... More>
+auto Max(Tx &&x, Ty &&y, More &&... vMore){
+	return Max(Max(std::forward<Tx>(x), std::forward<Ty>(y)), std::forward<More>(vMore)...);
 }
 
 //----------------------------------------------------------------------------
@@ -284,18 +284,18 @@ inline void operator delete(void *, void *, const ::MCF::Impl::DirectConstructTa
 namespace MCF {
 
 namespace Impl {
-	template<typename Object_t>
+	template<typename Object>
 	struct DirectConstructor {
-		template<typename... Params_t>
-		Object_t *Construct(void *pObject, Params_t &&... vParams)
-			noexcept(std::is_nothrow_constructible<Object_t, Params_t &&...>::value)
+		template<typename... Params>
+		Object *Construct(void *pObject, Params &&... vParams)
+			noexcept(std::is_nothrow_constructible<Object, Params &&...>::value)
 		{
-			return ::new(pObject, DirectConstructTag()) Object_t(std::forward<Params_t>(vParams)...);
+			return ::new(pObject, DirectConstructTag()) Object(std::forward<Params>(vParams)...);
 		}
-		void Destruct(Object_t *pObject)
-			noexcept(std::is_nothrow_destructible<Object_t>::value)
+		void Destruct(Object *pObject)
+			noexcept(std::is_nothrow_destructible<Object>::value)
 		{
-			pObject->~Object_t();
+			pObject->~Object();
 		}
 	};
 }
@@ -303,19 +303,19 @@ namespace Impl {
 #define FRIEND_CONSTRUCT_DESTRUCT(type)	\
 	friend class ::MCF::Impl::DirectConstructor<MACRO_TYPE(type)>
 
-template<typename Object_t, typename... Params_t>
-inline __attribute__((__returns_nonnull__)) Object_t *Construct(void *pObject, Params_t &&... vParams)
-	noexcept(std::is_nothrow_constructible<Object_t, Params_t &&...>::value)
+template<typename Object, typename... Params>
+inline __attribute__((__returns_nonnull__)) Object *Construct(void *pObject, Params &&... vParams)
+	noexcept(std::is_nothrow_constructible<Object, Params &&...>::value)
 {
-	return Impl::DirectConstructor<Object_t>().template Construct<Params_t &&...>(pObject, std::forward<Params_t>(vParams)...);
+	return Impl::DirectConstructor<Object>().template Construct<Params &&...>(pObject, std::forward<Params>(vParams)...);
 }
-template<typename Object_t>
-inline void Destruct(Object_t *pObject)
-	noexcept(std::is_nothrow_destructible<Object_t>::value)
+template<typename Object>
+inline void Destruct(Object *pObject)
+	noexcept(std::is_nothrow_destructible<Object>::value)
 {
 	ASSERT(pObject);
 
-	Impl::DirectConstructor<Object_t>().Destruct(pObject);
+	Impl::DirectConstructor<Object>().Destruct(pObject);
 }
 
 //----------------------------------------------------------------------------
@@ -377,11 +377,11 @@ inline std::uint8_t ByteSwap(std::uint8_t u8) noexcept {
 //----------------------------------------------------------------------------
 // Copy / CopyN / CopyBackward / CopyBackwardN
 //----------------------------------------------------------------------------
-template<typename OutputIterator_t, typename InputIterator_t>
-inline OutputIterator_t Copy(
-	OutputIterator_t itOutputBegin,
-	InputIterator_t itInputBegin,
-	typename std::common_type<InputIterator_t>::type itInputEnd
+template<typename OutputIterator, typename InputIterator>
+inline OutputIterator Copy(
+	OutputIterator itOutputBegin,
+	InputIterator itInputBegin,
+	typename std::common_type<InputIterator>::type itInputEnd
 )
 	noexcept(std::is_nothrow_assignable<decltype(*itOutputBegin), decltype(*itInputBegin)>::value)
 {
@@ -392,10 +392,10 @@ inline OutputIterator_t Copy(
 	}
 	return std::move(itOutputBegin);
 }
-template<typename OutputIterator_t, typename InputIterator_t>
-inline std::pair<OutputIterator_t, InputIterator_t> CopyN(
-	OutputIterator_t itOutputBegin,
-	InputIterator_t itInputBegin,
+template<typename OutputIterator, typename InputIterator>
+inline std::pair<OutputIterator, InputIterator> CopyN(
+	OutputIterator itOutputBegin,
+	InputIterator itInputBegin,
 	std::size_t uCount
 )
 	noexcept(std::is_nothrow_assignable<decltype(*itOutputBegin), decltype(*itInputBegin)>::value)
@@ -407,11 +407,11 @@ inline std::pair<OutputIterator_t, InputIterator_t> CopyN(
 	}
 	return std::make_pair(std::move(itOutputBegin), std::move(itInputBegin));
 }
-template<typename OutputIterator_t, typename InputIterator_t>
-inline OutputIterator_t CopyBackward(
-	OutputIterator_t itOutputEnd,
-	InputIterator_t itInputBegin,
-	typename std::common_type<InputIterator_t>::type itInputEnd
+template<typename OutputIterator, typename InputIterator>
+inline OutputIterator CopyBackward(
+	OutputIterator itOutputEnd,
+	InputIterator itInputBegin,
+	typename std::common_type<InputIterator>::type itInputEnd
 )
 	noexcept(std::is_nothrow_assignable<decltype(*itOutputEnd), decltype(*itInputEnd)>::value)
 {
@@ -422,11 +422,11 @@ inline OutputIterator_t CopyBackward(
 	}
 	return std::move(itOutputEnd);
 }
-template<typename OutputIterator_t, typename InputIterator_t>
-inline std::pair<OutputIterator_t, InputIterator_t> CopyBackwardN(
-	OutputIterator_t itOutputEnd,
+template<typename OutputIterator, typename InputIterator>
+inline std::pair<OutputIterator, InputIterator> CopyBackwardN(
+	OutputIterator itOutputEnd,
 	std::size_t uCount,
-	InputIterator_t itInputEnd
+	InputIterator itInputEnd
 )
 	noexcept(std::is_nothrow_assignable<decltype(*itOutputEnd), decltype(*itInputEnd)>::value)
 {
@@ -441,53 +441,53 @@ inline std::pair<OutputIterator_t, InputIterator_t> CopyBackwardN(
 //----------------------------------------------------------------------------
 // ReverseCopy / ReverseCopyN / ReverseCopyBackward / ReverseCopyBackwardN
 //----------------------------------------------------------------------------
-template<typename OutputIterator_t, typename InputIterator_t>
-inline OutputIterator_t ReverseCopy(
-	OutputIterator_t itOutputBegin,
-	InputIterator_t itInputBegin,
-	typename std::common_type<InputIterator_t>::type itInputEnd
+template<typename OutputIterator, typename InputIterator>
+inline OutputIterator ReverseCopy(
+	OutputIterator itOutputBegin,
+	InputIterator itInputBegin,
+	typename std::common_type<InputIterator>::type itInputEnd
 )
 	noexcept(std::is_nothrow_assignable<decltype(*itOutputBegin), decltype(*itInputEnd)>::value)
 {
 	return Copy(
 		std::move(itOutputBegin),
-		std::reverse_iterator<InputIterator_t>(itInputEnd),
-		std::reverse_iterator<InputIterator_t>(itInputBegin)
+		std::reverse_iterator<InputIterator>(itInputEnd),
+		std::reverse_iterator<InputIterator>(itInputBegin)
 	);
 }
-template<typename OutputIterator_t, typename InputIterator_t>
-inline std::pair<OutputIterator_t, InputIterator_t> ReverseCopyN(
-	OutputIterator_t itOutputBegin,
+template<typename OutputIterator, typename InputIterator>
+inline std::pair<OutputIterator, InputIterator> ReverseCopyN(
+	OutputIterator itOutputBegin,
 	std::size_t uCount,
-	InputIterator_t itInputEnd
+	InputIterator itInputEnd
 )
 	noexcept(std::is_nothrow_assignable<decltype(*itOutputBegin), decltype(*itInputEnd)>::value)
 {
 	auto vResult = CopyN(
 		std::move(itOutputBegin),
-		std::reverse_iterator<InputIterator_t>(itInputEnd),
+		std::reverse_iterator<InputIterator>(itInputEnd),
 		uCount
 	);
 	return std::make_pair(std::move(vResult.first), vResult.second.base());
 }
-template<typename OutputIterator_t, typename InputIterator_t>
-inline OutputIterator_t ReverseCopyBackward(
-	OutputIterator_t itOutputEnd,
-	InputIterator_t itInputBegin,
-	typename std::common_type<InputIterator_t>::type itInputEnd
+template<typename OutputIterator, typename InputIterator>
+inline OutputIterator ReverseCopyBackward(
+	OutputIterator itOutputEnd,
+	InputIterator itInputBegin,
+	typename std::common_type<InputIterator>::type itInputEnd
 )
 	noexcept(std::is_nothrow_assignable<decltype(*itOutputEnd), decltype(*itInputBegin)>::value)
 {
 	return CopyBackward(
 		std::move(itOutputEnd),
-		std::reverse_iterator<InputIterator_t>(itInputEnd),
-		std::reverse_iterator<InputIterator_t>(itInputBegin)
+		std::reverse_iterator<InputIterator>(itInputEnd),
+		std::reverse_iterator<InputIterator>(itInputBegin)
 	);
 }
-template<typename OutputIterator_t, typename InputIterator_t>
-inline std::pair<OutputIterator_t, InputIterator_t> ReverseCopyBackwardN(
-	OutputIterator_t itOutputEnd,
-	InputIterator_t itInputBegin,
+template<typename OutputIterator, typename InputIterator>
+inline std::pair<OutputIterator, InputIterator> ReverseCopyBackwardN(
+	OutputIterator itOutputEnd,
+	InputIterator itInputBegin,
 	std::size_t uCount
 )
 	noexcept(std::is_nothrow_assignable<decltype(*itOutputEnd), decltype(*itInputBegin)>::value)
@@ -495,7 +495,7 @@ inline std::pair<OutputIterator_t, InputIterator_t> ReverseCopyBackwardN(
 	auto vResult = CopyBackwardN(
 		std::move(itOutputEnd),
 		uCount,
-		std::reverse_iterator<InputIterator_t>(itInputBegin)
+		std::reverse_iterator<InputIterator>(itInputBegin)
 	);
 	return std::make_pair(std::move(vResult.first), vResult.second.base());
 }
@@ -503,61 +503,61 @@ inline std::pair<OutputIterator_t, InputIterator_t> ReverseCopyBackwardN(
 //----------------------------------------------------------------------------
 // Move / MoveN / MoveBackward / MoveBackwardN
 //----------------------------------------------------------------------------
-template<typename OutputIterator_t, typename InputIterator_t>
-inline OutputIterator_t Move(
-	OutputIterator_t itOutputBegin,
-	InputIterator_t itInputBegin,
-	typename std::common_type<InputIterator_t>::type itInputEnd
+template<typename OutputIterator, typename InputIterator>
+inline OutputIterator Move(
+	OutputIterator itOutputBegin,
+	InputIterator itInputBegin,
+	typename std::common_type<InputIterator>::type itInputEnd
 )
 	noexcept(std::is_nothrow_assignable<decltype(*itOutputBegin), decltype(*itInputBegin) &&>::value)
 {
 	return Copy(
 		std::move(itOutputBegin),
-		std::move_iterator<InputIterator_t>(itInputBegin),
-		std::move_iterator<InputIterator_t>(itInputEnd)
+		std::move_iterator<InputIterator>(itInputBegin),
+		std::move_iterator<InputIterator>(itInputEnd)
 	);
 }
-template<typename OutputIterator_t, typename InputIterator_t>
-inline std::pair<OutputIterator_t, InputIterator_t> MoveN(
-	OutputIterator_t itOutputBegin,
-	InputIterator_t itInputBegin,
+template<typename OutputIterator, typename InputIterator>
+inline std::pair<OutputIterator, InputIterator> MoveN(
+	OutputIterator itOutputBegin,
+	InputIterator itInputBegin,
 	std::size_t uCount
 )
 	noexcept(std::is_nothrow_assignable<decltype(*itOutputBegin), decltype(*itInputBegin) &&>::value)
 {
 	auto vResult = CopyN(
 		std::move(itOutputBegin),
-		std::move_iterator<InputIterator_t>(itInputBegin),
+		std::move_iterator<InputIterator>(itInputBegin),
 		uCount
 	);
 	return std::make_pair(std::move(vResult.first), vResult.second.base());
 }
-template<typename OutputIterator_t, typename InputIterator_t>
-inline OutputIterator_t MoveBackward(
-	OutputIterator_t itOutputEnd,
-	InputIterator_t itInputBegin,
-	typename std::common_type<InputIterator_t>::type itInputEnd
+template<typename OutputIterator, typename InputIterator>
+inline OutputIterator MoveBackward(
+	OutputIterator itOutputEnd,
+	InputIterator itInputBegin,
+	typename std::common_type<InputIterator>::type itInputEnd
 )
 	noexcept(std::is_nothrow_assignable<decltype(*itOutputEnd), decltype(*itInputEnd) &&>::value)
 {
 	return CopyBackward(
 		std::move(itOutputEnd),
-		std::move_iterator<InputIterator_t>(itInputBegin),
-		std::move_iterator<InputIterator_t>(itInputEnd)
+		std::move_iterator<InputIterator>(itInputBegin),
+		std::move_iterator<InputIterator>(itInputEnd)
 	);
 }
-template<typename OutputIterator_t, typename InputIterator_t>
-inline std::pair<OutputIterator_t, InputIterator_t> MoveBackwardN(
-	OutputIterator_t itOutputEnd,
+template<typename OutputIterator, typename InputIterator>
+inline std::pair<OutputIterator, InputIterator> MoveBackwardN(
+	OutputIterator itOutputEnd,
 	std::size_t uCount,
-	InputIterator_t itInputEnd
+	InputIterator itInputEnd
 )
 	noexcept(std::is_nothrow_assignable<decltype(*itOutputEnd), decltype(*itInputEnd) &&>::value)
 {
 	auto vResult = CopyBackwardN(
 		std::move(itOutputEnd),
 		uCount,
-		std::move_iterator<InputIterator_t>(itInputEnd)
+		std::move_iterator<InputIterator>(itInputEnd)
 	);
 	return std::make_pair(std::move(vResult.first), vResult.second.base());
 }
@@ -565,53 +565,53 @@ inline std::pair<OutputIterator_t, InputIterator_t> MoveBackwardN(
 //----------------------------------------------------------------------------
 // ReverseMove / ReverseMoveN / ReverseMoveBackward / ReverseMoveBackwardN
 //----------------------------------------------------------------------------
-template<typename OutputIterator_t, typename InputIterator_t>
-inline OutputIterator_t ReverseMove(
-	OutputIterator_t itOutputBegin,
-	InputIterator_t itInputBegin,
-	typename std::common_type<InputIterator_t>::type itInputEnd
+template<typename OutputIterator, typename InputIterator>
+inline OutputIterator ReverseMove(
+	OutputIterator itOutputBegin,
+	InputIterator itInputBegin,
+	typename std::common_type<InputIterator>::type itInputEnd
 )
 	noexcept(std::is_nothrow_assignable<decltype(*itOutputBegin), decltype(*itInputEnd)>::value)
 {
 	return Move(
 		std::move(itOutputBegin),
-		std::reverse_iterator<InputIterator_t>(itInputEnd),
-		std::reverse_iterator<InputIterator_t>(itInputBegin)
+		std::reverse_iterator<InputIterator>(itInputEnd),
+		std::reverse_iterator<InputIterator>(itInputBegin)
 	);
 }
-template<typename OutputIterator_t, typename InputIterator_t>
-inline std::pair<OutputIterator_t, InputIterator_t> ReverseMoveN(
-	OutputIterator_t itOutputBegin,
+template<typename OutputIterator, typename InputIterator>
+inline std::pair<OutputIterator, InputIterator> ReverseMoveN(
+	OutputIterator itOutputBegin,
 	std::size_t uCount,
-	InputIterator_t itInputEnd
+	InputIterator itInputEnd
 )
 	noexcept(std::is_nothrow_assignable<decltype(*itOutputBegin), decltype(*itInputEnd)>::value)
 {
 	auto vResult = MoveN(
 		std::move(itOutputBegin),
-		std::reverse_iterator<InputIterator_t>(itInputEnd),
+		std::reverse_iterator<InputIterator>(itInputEnd),
 		uCount
 	);
 	return std::make_pair(std::move(vResult.first), vResult.second.base());
 }
-template<typename OutputIterator_t, typename InputIterator_t>
-inline OutputIterator_t ReverseMoveBackward(
-	OutputIterator_t itOutputEnd,
-	InputIterator_t itInputBegin,
-	typename std::common_type<InputIterator_t>::type itInputEnd
+template<typename OutputIterator, typename InputIterator>
+inline OutputIterator ReverseMoveBackward(
+	OutputIterator itOutputEnd,
+	InputIterator itInputBegin,
+	typename std::common_type<InputIterator>::type itInputEnd
 )
 	noexcept(std::is_nothrow_assignable<decltype(*itOutputEnd), decltype(*itInputBegin)>::value)
 {
 	return MoveBackward(
 		std::move(itOutputEnd),
-		std::reverse_iterator<InputIterator_t>(itInputEnd),
-		std::reverse_iterator<InputIterator_t>(itInputBegin)
+		std::reverse_iterator<InputIterator>(itInputEnd),
+		std::reverse_iterator<InputIterator>(itInputBegin)
 	);
 }
-template<typename OutputIterator_t, typename InputIterator_t>
-inline std::pair<OutputIterator_t, InputIterator_t> ReverseMoveBackwardN(
-	OutputIterator_t itOutputEnd,
-	InputIterator_t itInputBegin,
+template<typename OutputIterator, typename InputIterator>
+inline std::pair<OutputIterator, InputIterator> ReverseMoveBackwardN(
+	OutputIterator itOutputEnd,
+	InputIterator itInputBegin,
 	std::size_t uCount
 )
 	noexcept(std::is_nothrow_assignable<decltype(*itOutputEnd), decltype(*itInputBegin)>::value)
@@ -619,7 +619,7 @@ inline std::pair<OutputIterator_t, InputIterator_t> ReverseMoveBackwardN(
 	auto vResult = MoveBackwardN(
 		std::move(itOutputEnd),
 		uCount,
-		std::reverse_iterator<InputIterator_t>(itInputBegin)
+		std::reverse_iterator<InputIterator>(itInputBegin)
 	);
 	return std::make_pair(std::move(vResult.first), vResult.second.base());
 }
@@ -627,14 +627,14 @@ inline std::pair<OutputIterator_t, InputIterator_t> ReverseMoveBackwardN(
 //----------------------------------------------------------------------------
 // Fill / FillN
 //----------------------------------------------------------------------------
-template<typename OutputIterator_t, typename... Params_t>
-inline OutputIterator_t Fill(
-	OutputIterator_t itOutputBegin,
-	typename std::common_type<OutputIterator_t>::type itOutputEnd,
-	const Params_t &... vParams
+template<typename OutputIterator, typename... Params>
+inline OutputIterator Fill(
+	OutputIterator itOutputBegin,
+	typename std::common_type<OutputIterator>::type itOutputEnd,
+	const Params &... vParams
 )
 	noexcept(
-		std::is_nothrow_constructible<decltype(*itOutputBegin), const Params_t &...>::value
+		std::is_nothrow_constructible<decltype(*itOutputBegin), const Params &...>::value
 		&& std::is_nothrow_move_assignable<decltype(*itOutputBegin)>::value
 	)
 {
@@ -644,14 +644,14 @@ inline OutputIterator_t Fill(
 	}
 	return std::move(itOutputBegin);
 }
-template<typename OutputIterator_t, typename... Params_t>
-inline OutputIterator_t FillN(
-	OutputIterator_t itOutputBegin,
+template<typename OutputIterator, typename... Params>
+inline OutputIterator FillN(
+	OutputIterator itOutputBegin,
 	std::size_t uCount,
-	const Params_t &... vParams
+	const Params &... vParams
 )
 	noexcept(
-		std::is_nothrow_constructible<decltype(*itOutputBegin), const Params_t &...>::value
+		std::is_nothrow_constructible<decltype(*itOutputBegin), const Params &...>::value
 		&& std::is_nothrow_move_assignable<decltype(*itOutputBegin)>::value
 	)
 {
@@ -668,107 +668,107 @@ inline OutputIterator_t FillN(
 namespace Impl {
 	template<std::size_t CUR, std::size_t END>
 	struct CallOnTupleHelper {
-		template<typename Function_t, typename... TupleParams_t, typename... Unpacked_t>
-		auto operator()(Function_t &&vFunction, const std::tuple<TupleParams_t...> &vTuple, const Unpacked_t &... vUnpacked) const {
+		template<typename Function, typename... TupleParams, typename... Unpacked>
+		auto operator()(Function &&vFunction, const std::tuple<TupleParams...> &vTuple, const Unpacked &... vUnpacked) const {
 			return CallOnTupleHelper<CUR + 1, END>()(vFunction, vTuple, vUnpacked..., std::get<CUR>(vTuple));
 		}
-		template<typename Function_t, typename... TupleParams_t, typename... Unpacked_t>
-		auto operator()(Function_t &&vFunction, std::tuple<TupleParams_t...> &&vTuple, Unpacked_t &&... vUnpacked) const {
+		template<typename Function, typename... TupleParams, typename... Unpacked>
+		auto operator()(Function &&vFunction, std::tuple<TupleParams...> &&vTuple, Unpacked &&... vUnpacked) const {
 			return CallOnTupleHelper<CUR + 1, END>()(vFunction, std::move(vTuple), std::move(vUnpacked)..., std::move(std::get<CUR>(vTuple)));
 		}
 	};
 	template<std::size_t END>
 	struct CallOnTupleHelper<END, END> {
-		template<typename Function_t, typename... TupleParams_t, typename... Unpacked_t>
-		auto operator()(Function_t &&vFunction, const std::tuple<TupleParams_t...> &, const Unpacked_t &... vUnpacked) const {
+		template<typename Function, typename... TupleParams, typename... Unpacked>
+		auto operator()(Function &&vFunction, const std::tuple<TupleParams...> &, const Unpacked &... vUnpacked) const {
 			return vFunction(vUnpacked...);
 		}
-		template<typename Function_t, typename... TupleParams_t, typename... Unpacked_t>
-		auto operator()(Function_t &&vFunction, std::tuple<TupleParams_t...> &&, Unpacked_t &&... vUnpacked) const {
+		template<typename Function, typename... TupleParams, typename... Unpacked>
+		auto operator()(Function &&vFunction, std::tuple<TupleParams...> &&, Unpacked &&... vUnpacked) const {
 			return vFunction(std::move(vUnpacked)...);
 		}
 	};
 }
 
-template<typename Function_t, typename... Params_t>
-auto CallOnTuple(Function_t vFunction, const std::tuple<Params_t...> &vTuple)
+template<typename Function, typename... Params>
+auto CallOnTuple(Function vFunction, const std::tuple<Params...> &vTuple)
 	noexcept(noexcept(
-		std::declval<Function_t>()(std::declval<const Params_t &>()...)
+		std::declval<Function>()(std::declval<const Params &>()...)
 	))
 {
-	return Impl::CallOnTupleHelper<0u, sizeof...(Params_t)>()(vFunction, vTuple);
+	return Impl::CallOnTupleHelper<0u, sizeof...(Params)>()(vFunction, vTuple);
 }
-template<typename Function_t, typename... Params_t>
-auto CallOnTuple(Function_t vFunction, std::tuple<Params_t...> &&vTuple)
+template<typename Function, typename... Params>
+auto CallOnTuple(Function vFunction, std::tuple<Params...> &&vTuple)
 	noexcept(noexcept(
-		std::declval<Function_t>()(std::declval<Params_t &&>()...)
+		std::declval<Function>()(std::declval<Params &&>()...)
 	))
 {
-	return Impl::CallOnTupleHelper<0u, sizeof...(Params_t)>()(vFunction, std::move(vTuple));
+	return Impl::CallOnTupleHelper<0u, sizeof...(Params)>()(vFunction, std::move(vTuple));
 }
 
-template<class Object_t, typename... Params_t>
-auto MakeFromTuple(const std::tuple<Params_t...> &vTuple)
+template<class Object, typename... Params>
+auto MakeFromTuple(const std::tuple<Params...> &vTuple)
 	noexcept(noexcept(
-		std::is_nothrow_constructible<Object_t, const Params_t &...>::value
-		&& std::is_nothrow_move_constructible<Object_t>::value
+		std::is_nothrow_constructible<Object, const Params &...>::value
+		&& std::is_nothrow_move_constructible<Object>::value
 	))
 {
-	return Impl::CallOnTupleHelper<0u, sizeof...(Params_t)>()(
-		[](const Params_t &... vParams){
-			return Object_t(vParams...);
+	return Impl::CallOnTupleHelper<0u, sizeof...(Params)>()(
+		[](const Params &... vParams){
+			return Object(vParams...);
 		},
 		vTuple
 	);
 }
-template<class Object_t, typename... Params_t>
-auto MakeFromTuple(std::tuple<Params_t...> &&vTuple)
+template<class Object, typename... Params>
+auto MakeFromTuple(std::tuple<Params...> &&vTuple)
 	noexcept(noexcept(
-		std::is_nothrow_constructible<Object_t, Params_t &&...>::value
-		&& std::is_nothrow_move_constructible<Object_t>::value
+		std::is_nothrow_constructible<Object, Params &&...>::value
+		&& std::is_nothrow_move_constructible<Object>::value
 	))
 {
-	return Impl::CallOnTupleHelper<0u, sizeof...(Params_t)>()(
-		[](Params_t &&... vParams){
-			return Object_t(std::move(vParams)...);
+	return Impl::CallOnTupleHelper<0u, sizeof...(Params)>()(
+		[](Params &&... vParams){
+			return Object(std::move(vParams)...);
 		},
 		std::move(vTuple)
 	);
 }
 
-template<class Object_t, typename... Params_t>
-auto MakeUniqueFromTuple(const std::tuple<Params_t...> &vTuple){
-	return Impl::CallOnTupleHelper<0u, sizeof...(Params_t)>()(
-		[](const Params_t &... vParams){
-			return std::make_unique<Object_t>(vParams...);
+template<class Object, typename... Params>
+auto MakeUniqueFromTuple(const std::tuple<Params...> &vTuple){
+	return Impl::CallOnTupleHelper<0u, sizeof...(Params)>()(
+		[](const Params &... vParams){
+			return std::make_unique<Object>(vParams...);
 		},
 		vTuple
 	);
 }
-template<class Object_t, typename... Params_t>
-auto MakeUniqueFromTuple(std::tuple<Params_t...> &&vTuple){
-	return Impl::CallOnTupleHelper<0u, sizeof...(Params_t)>()(
-		[](Params_t &&... vParams){
-			return std::make_unique<Object_t>(std::move(vParams)...);
+template<class Object, typename... Params>
+auto MakeUniqueFromTuple(std::tuple<Params...> &&vTuple){
+	return Impl::CallOnTupleHelper<0u, sizeof...(Params)>()(
+		[](Params &&... vParams){
+			return std::make_unique<Object>(std::move(vParams)...);
 		},
 		std::move(vTuple)
 	);
 }
 
-template<class Object_t, typename... Params_t>
-auto MakeSharedFromTuple(const std::tuple<Params_t...> &vTuple){
-	return Impl::CallOnTupleHelper<0u, sizeof...(Params_t)>()(
-		[](const Params_t &... vParams){
-			return std::make_shared<Object_t>(vParams...);
+template<class Object, typename... Params>
+auto MakeSharedFromTuple(const std::tuple<Params...> &vTuple){
+	return Impl::CallOnTupleHelper<0u, sizeof...(Params)>()(
+		[](const Params &... vParams){
+			return std::make_shared<Object>(vParams...);
 		},
 		vTuple
 	);
 }
-template<class Object_t, typename... Params_t>
-auto MakeSharedFromTuple(std::tuple<Params_t...> &&vTuple){
-	return Impl::CallOnTupleHelper<0u, sizeof...(Params_t)>()(
-		[](Params_t &&... vParams){
-			return std::make_shared<Object_t>(std::move(vParams)...);
+template<class Object, typename... Params>
+auto MakeSharedFromTuple(std::tuple<Params...> &&vTuple){
+	return Impl::CallOnTupleHelper<0u, sizeof...(Params)>()(
+		[](Params &&... vParams){
+			return std::make_shared<Object>(std::move(vParams)...);
 		},
 		std::move(vTuple)
 	);

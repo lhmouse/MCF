@@ -68,13 +68,13 @@ public:
 };
 
 namespace Impl {
-	template<class Mutex_t, std::size_t LOCK_TYPE = 0>
+	template<class Mutex, std::size_t LOCK_TYPE = 0>
 	class LockRaiiTemplate : CONCRETE(LockRaiiTemplateBase) {
 	private:
-		Mutex_t *xm_pOwner;
+		Mutex *xm_pOwner;
 
 	public:
-		explicit LockRaiiTemplate(Mutex_t *pOwner, bool bInitLocked = true) noexcept
+		explicit LockRaiiTemplate(Mutex *pOwner, bool bInitLocked = true) noexcept
 			: xm_pOwner(pOwner)
 		{
 			if(bInitLocked){

@@ -23,7 +23,8 @@ namespace Impl {
 		static ExceptionPtr GetCurrentException() noexcept {
 			return std::current_exception();
 		}
-		[[noreturn]] static void RethrowException(ExceptionPtr pException){
+		[[noreturn]]
+		static void RethrowException(ExceptionPtr pException){
 			std::rethrow_exception(std::move(pException));
 		}
 	};
@@ -34,16 +35,17 @@ namespace Impl {
 		static ExceptionPtr GetCurrentException() noexcept {
 			return nullptr;
 		}
-		[[noreturn]] static void RethrowException(ExceptionPtr) noexcept {
-			__builtin_trap();
+		[[noreturn]]
+		static void RethrowException(ExceptionPtr) noexcept {
+			__builtinTrap();
 		}
 	};
 }
 
-template<class Object_t, class... InitParams_t>
+template<class Object, class... InitParams>
 class ThreadLocalPtr {
 private:
-	typedef Impl::ExceptionWrapper<std::is_nothrow_constructible<Object_t, InitParams_t &&...>::value> xExceptionWrapper;
+	typedef Impl::ExceptionWrapper<std::is_nothrow_constructible<Object, InitParams &&...>::value> xExceptionWrapper;
 	typedef typename xExceptionWrapper::ExceptionPtr xExceptionPtr;
 
 	struct TlsKeyDeleter {
@@ -58,45 +60,45 @@ private:
 
 private:
 	static void xTlsCallback(std::intptr_t nValue) noexcept {
-		delete (Object_t *)nValue;
+		delete (Object *)nValue;
 	}
 
 private:
 	const xTlsIndex xm_nTlsIndex;
-	const std::tuple<InitParams_t...> xm_vInitParams;
+	const std::tuple<InitParams...> xm_vInitParams;
 
 public:
-	explicit constexpr ThreadLocalPtr(InitParams_t &&... vInitParams)
+	explicit constexpr ThreadLocalPtr(InitParams &&... vInitParams)
 		: xm_nTlsIndex		(::MCF_CRT_TlsAllocKey(&xTlsCallback))
-		, xm_vInitParams	(std::forward<InitParams_t>(vInitParams)...)
+		, xm_vInitParams	(std::forward<InitParams>(vInitParams)...)
 	{
 	}
 
 private:
-	Object_t *xDoGetPtr() const noexcept {
-		Object_t *pObject;
+	Object *xDoGetPtr() const noexcept {
+		Object *pObject;
 		{
 			std::intptr_t nValue;
 			if(::MCF_CRT_TlsGet(xm_nTlsIndex.Get(), &nValue)){
-				pObject = (Object_t *)nValue;
+				pObject = (Object *)nValue;
 			} else {
 				pObject = nullptr;
 			}
 		}
 		return pObject;
 	}
-	Object_t *xDoAllocPtr() const {
-		Object_t *pObject;
+	Object *xDoAllocPtr() const {
+		Object *pObject;
 		{
 			std::intptr_t nValue;
 			if(::MCF_CRT_TlsGet(xm_nTlsIndex.Get(), &nValue)){
-				pObject = (Object_t *)nValue;
+				pObject = (Object *)nValue;
 			} else {
 				pObject = nullptr;
 			}
 		}
 		if(!pObject){
-			auto pNewObject = MakeUniqueFromTuple<Object_t>(xm_vInitParams);
+			auto pNewObject = MakeUniqueFromTuple<Object>(xm_vInitParams);
 			if(!::MCF_CRT_TlsReset(xm_nTlsIndex.Get(), (std::intptr_t)pNewObject.get())){
 				throw std::bad_alloc();
 			}
@@ -105,27 +107,27 @@ private:
 		return pObject;
 	}
 	void xDoFreePtr() const noexcept {
-		::MCF_CRT_TlsReset(xm_nTlsIndex.Get(), (std::intptr_t)(Object_t *)nullptr);
+		::MCF_CRT_TlsReset(xm_nTlsIndex.Get(), (std::intptr_t)(Object *)nullptr);
 	}
 
 public:
-	const Object_t *GetPtr() const noexcept {
+	const Object *GetPtr() const noexcept {
 		return xDoGetPtr();
 	}
-	Object_t *GetPtr() noexcept {
+	Object *GetPtr() noexcept {
 		return xDoGetPtr();
 	}
-	const Object_t *GetSafePtr() const {
+	const Object *GetSafePtr() const {
 		return xDoAllocPtr();
 	}
-	Object_t *GetSafePtr(){
+	Object *GetSafePtr(){
 		return xDoAllocPtr();
 	}
 
-	const Object_t &Get() const {
+	const Object &Get() const {
 		return *GetSafePtr();
 	}
-	Object_t &Get(){
+	Object &Get(){
 		return *GetSafePtr();
 	}
 
@@ -134,22 +136,22 @@ public:
 	}
 
 public:
-	explicit operator const Object_t *() const {
+	explicit operator const Object *() const {
 		return GetPtr();
 	}
-	explicit operator Object_t *(){
+	explicit operator Object *(){
 		return GetPtr();
 	}
-	const Object_t *operator->() const {
+	const Object *operator->() const {
 		return GetSafePtr();
 	}
-	Object_t *operator->(){
+	Object *operator->(){
 		return GetSafePtr();
 	}
-	const Object_t &operator*() const{
+	const Object &operator*() const{
 		return Get();
 	}
-	Object_t &operator*(){
+	Object &operator*(){
 		return Get();
 	}
 };

@@ -41,18 +41,18 @@ private:
 
 public:
 	// 确保参数的传递都不影响 ::GetLastError() 的返回值。
-	template<typename... Params_t>
+	template<typename... Params>
 	Exception(
 		const char *pszFunction,
 		unsigned long ulLine,
 		unsigned long ulErrorCode,
-		Params_t &&... vParams
+		Params &&... vParams
 	) noexcept
 		: m_pszFunction	(pszFunction)
 		, m_ulLine		(ulLine)
 		, m_ulErrorCode	(ulErrorCode)
 	{
-		xMakeMessage(std::forward<Params_t>(vParams)...);
+		xMakeMessage(std::forward<Params>(vParams)...);
 	}
 
 public:

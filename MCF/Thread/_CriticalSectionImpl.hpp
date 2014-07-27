@@ -56,7 +56,9 @@ namespace Impl {
 		std::size_t xLockSpin() noexcept {
 			std::size_t uWaiting;
 			for(;;){
-				uWaiting = __atomic_exchange_n(&xm_uWaiting, (std::size_t)-1, __ATOMIC_ACQ_REL | __ATOMIC_HLE_ACQUIRE);
+				uWaiting = __atomic_exchange_n(
+					&xm_uWaiting, (std::size_t)-1, __ATOMIC_ACQ_REL | __ATOMIC_HLE_ACQUIRE
+				);
 				if(EXPECT_NOT(uWaiting != (std::size_t)-1)){
 					break;
 				}

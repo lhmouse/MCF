@@ -15,58 +15,58 @@
 
 namespace MCF {
 
-template<class Element_t, std::size_t ALT_STOR_THRESHOLD = 256u / sizeof(Element_t)>
+template<class Element, std::size_t ALT_STOR_THRESHOLD = 256u / sizeof(Element)>
 class VVector {
 	template<class, std::size_t>
 	friend class VVector;
 
 private:
-	Element_t *xm_pBegin;
-	Element_t *xm_pEnd;
+	Element *xm_pBegin;
+	Element *xm_pEnd;
 
 	union {
-		alignas(std::max_align_t) unsigned char xm_aSmall[sizeof(Element_t) * ALT_STOR_THRESHOLD];
-		Element_t *xm_pEndOfStor;
+		alignas(std::max_align_t) unsigned char xm_aSmall[sizeof(Element) * ALT_STOR_THRESHOLD];
+		Element *xm_pEndOfStor;
 	};
 
 public:
 	constexpr VVector() noexcept
-		: xm_pBegin	((Element_t *)std::begin(xm_aSmall))
+		: xm_pBegin	((Element *)std::begin(xm_aSmall))
 		, xm_pEnd	(xm_pBegin)
 	{
 	}
-	template<typename... Params_t>
-	explicit VVector(std::size_t uCount, const Params_t &...vParams)
+	template<typename... Params>
+	explicit VVector(std::size_t uCount, const Params &...vParams)
 		: VVector()
 	{
 		FillAtEnd(uCount, vParams...);
 	}
-	template<class Iterator_t>
-	VVector(Iterator_t itBegin, Iterator_t itEnd)
+	template<class Iterator>
+	VVector(Iterator itBegin, Iterator itEnd)
 		: VVector()
 	{
 		CopyToEnd(itBegin, itEnd);
 	}
-	template<class Iterator_t>
-	VVector(Iterator_t itBegin, std::size_t uCount)
+	template<class Iterator>
+	VVector(Iterator itBegin, std::size_t uCount)
 		: VVector()
 	{
 		CopyToEnd(itBegin, uCount);
 	}
-	VVector(std::initializer_list<Element_t> rhs)
+	VVector(std::initializer_list<Element> rhs)
 		: VVector()
 	{
 		CopyToEnd(rhs.begin(), rhs.size());
 	}
 	template<std::size_t OTHER_THRESHOLD>
-	VVector(const VVector<Element_t, OTHER_THRESHOLD> &rhs)
+	VVector(const VVector<Element, OTHER_THRESHOLD> &rhs)
 		: VVector()
 	{
 		CopyToEnd(rhs.GetBegin(), rhs.GetEnd());
 	}
 	template<std::size_t OTHER_THRESHOLD>
-	VVector(VVector<Element_t, OTHER_THRESHOLD> &&rhs)
-		noexcept(std::is_nothrow_move_constructible<Element_t>::value && (ALT_STOR_THRESHOLD >= OTHER_THRESHOLD))
+	VVector(VVector<Element, OTHER_THRESHOLD> &&rhs)
+		noexcept(std::is_nothrow_move_constructible<Element>::value && (ALT_STOR_THRESHOLD >= OTHER_THRESHOLD))
 		: VVector()
 	{
 		xMoveFrom(rhs);
@@ -77,23 +77,23 @@ public:
 		CopyToEnd(rhs.GetBegin(), rhs.GetEnd());
 	}
 	VVector(VVector &&rhs)
-		noexcept(std::is_nothrow_move_constructible<Element_t>::value)
+		noexcept(std::is_nothrow_move_constructible<Element>::value)
 		: VVector()
 	{
 		xMoveFrom(rhs);
 	}
-	VVector &operator=(std::initializer_list<Element_t> rhs){
+	VVector &operator=(std::initializer_list<Element> rhs){
 		VVector(rhs).Swap(*this);
 		return *this;
 	}
 	template<std::size_t OTHER_THRESHOLD>
-	VVector &operator=(const VVector<Element_t, OTHER_THRESHOLD> &rhs){
+	VVector &operator=(const VVector<Element, OTHER_THRESHOLD> &rhs){
 		VVector(rhs).Swap(*this);
 		return *this;
 	}
 	template<std::size_t OTHER_THRESHOLD>
-	VVector &operator=(VVector<Element_t, OTHER_THRESHOLD> &&rhs)
-		noexcept(std::is_nothrow_move_constructible<Element_t>::value && (ALT_STOR_THRESHOLD >= OTHER_THRESHOLD))
+	VVector &operator=(VVector<Element, OTHER_THRESHOLD> &&rhs)
+		noexcept(std::is_nothrow_move_constructible<Element>::value && (ALT_STOR_THRESHOLD >= OTHER_THRESHOLD))
 	{
 		VVector(std::move(rhs)).Swap(*this);
 		return *this;
@@ -105,7 +105,7 @@ public:
 		return *this;
 	}
 	VVector &operator=(VVector &&rhs)
-		noexcept(std::is_nothrow_move_constructible<Element_t>::value)
+		noexcept(std::is_nothrow_move_constructible<Element>::value)
 	{
 		rhs.Swap(*this);
 		return *this;
@@ -116,21 +116,21 @@ public:
 
 private:
 	template<std::size_t OTHER_THRESHOLD>
-	void xMoveFrom(VVector<Element_t, OTHER_THRESHOLD> &rhs)
-		noexcept(std::is_nothrow_move_constructible<Element_t>::value && (ALT_STOR_THRESHOLD >= OTHER_THRESHOLD))
+	void xMoveFrom(VVector<Element, OTHER_THRESHOLD> &rhs)
+		noexcept(std::is_nothrow_move_constructible<Element>::value && (ALT_STOR_THRESHOLD >= OTHER_THRESHOLD))
 	{
 		ASSERT(IsEmpty());
 		ASSERT((void *)this != (void *)&rhs);
 
-		if(rhs.xm_pBegin != (Element_t *)std::begin(rhs.xm_aSmall)){
-			if(xm_pBegin != (Element_t *)std::begin(xm_aSmall)){
+		if(rhs.xm_pBegin != (Element *)std::begin(rhs.xm_aSmall)){
+			if(xm_pBegin != (Element *)std::begin(xm_aSmall)){
 				::operator delete[](xm_pBegin);
 			}
 			xm_pBegin		= rhs.xm_pBegin;
 			xm_pEnd			= rhs.xm_pEnd;
 			xm_pEndOfStor	= rhs.xm_pEndOfStor;
 
-			rhs.xm_pBegin	= (Element_t *)std::begin(rhs.xm_aSmall);
+			rhs.xm_pBegin	= (Element *)std::begin(rhs.xm_aSmall);
 			rhs.xm_pEnd		= rhs.xm_pBegin;
 		} else {
 			auto pRead = rhs.GetBegin();
@@ -144,11 +144,11 @@ private:
 			}
 		}
 	}
-	void xMoveFrom(VVector<Element_t, 0> &rhs) noexcept {
+	void xMoveFrom(VVector<Element, 0> &rhs) noexcept {
 		ASSERT(IsEmpty());
 		ASSERT((void *)this != (void *)&rhs);
 
-		if(xm_pBegin != (Element_t *)std::begin(xm_aSmall)){
+		if(xm_pBegin != (Element *)std::begin(xm_aSmall)){
 			::operator delete[](xm_pBegin);
 		}
 		xm_pBegin		= rhs.xm_pBegin;
@@ -160,37 +160,37 @@ private:
 	}
 
 public:
-	const Element_t *GetBegin() const noexcept {
+	const Element *GetBegin() const noexcept {
 		return xm_pBegin;
 	}
-	Element_t *GetBegin() noexcept {
+	Element *GetBegin() noexcept {
 		return xm_pBegin;
 	}
-	const Element_t *GetCBegin() const noexcept {
+	const Element *GetCBegin() const noexcept {
 		return GetBegin();
 	}
-	const Element_t *GetEnd() const noexcept {
+	const Element *GetEnd() const noexcept {
 		return xm_pEnd;
 	}
-	Element_t *GetEnd() noexcept {
+	Element *GetEnd() noexcept {
 		return xm_pEnd;
 	}
-	const Element_t *GetCEnd() const noexcept {
+	const Element *GetCEnd() const noexcept {
 		return GetEnd();
 	}
 
-	const Element_t *GetData() const noexcept {
+	const Element *GetData() const noexcept {
 		return GetBegin();
 	}
-	Element_t *GetData() noexcept {
+	Element *GetData() noexcept {
 		return GetBegin();
 	}
 
 	std::size_t GetSize() const noexcept {
 		return (std::size_t)(GetEnd() - GetBegin());
 	}
-	template<typename... Params_t>
-	Element_t *Resize(std::size_t uNewSize, const Params_t &... vParams){
+	template<typename... Params>
+	Element *Resize(std::size_t uNewSize, const Params &... vParams){
 		const std::size_t uOldSize = GetSize();
 		if(uNewSize > uOldSize){
 			FillAtEnd(uNewSize - uOldSize, vParams...);
@@ -199,8 +199,8 @@ public:
 		}
 		return GetData();
 	}
-	template<typename... Params_t>
-	Element_t *ResizeMore(std::size_t uDeltaSize, const Params_t &... vParams){
+	template<typename... Params>
+	Element *ResizeMore(std::size_t uDeltaSize, const Params &... vParams){
 		const auto uOldSize = GetSize();
 		FillAtEnd(uDeltaSize, vParams...);
 		return GetData() + uOldSize;
@@ -212,15 +212,15 @@ public:
 	void Clear(bool bDeallocateBuffer = false) noexcept {
 		TruncateFromEnd(GetSize());
 
-		if(bDeallocateBuffer && (xm_pBegin != (Element_t *)std::begin(xm_aSmall))){
+		if(bDeallocateBuffer && (xm_pBegin != (Element *)std::begin(xm_aSmall))){
 			::operator delete[](xm_pBegin);
-			xm_pBegin = (Element_t *)std::begin(xm_aSmall);
+			xm_pBegin = (Element *)std::begin(xm_aSmall);
 		}
 	}
 
 	std::size_t GetCapacity() const noexcept {
-		if(xm_pBegin == (Element_t *)std::begin(xm_aSmall)){
-			return sizeof(xm_aSmall) / sizeof(Element_t);
+		if(xm_pBegin == (Element *)std::begin(xm_aSmall)){
+			return sizeof(xm_aSmall) / sizeof(Element);
 		}
 		return (std::size_t)(xm_pEndOfStor - xm_pBegin);
 	}
@@ -234,12 +234,12 @@ public:
 
 			const auto pOldBegin = GetBegin();
 			const auto pOldEnd = GetEnd();
-			const auto pNewBegin = (Element_t *)::operator new[](sizeof(Element_t) * uSizeToAlloc);
+			const auto pNewBegin = (Element *)::operator new[](sizeof(Element) * uSizeToAlloc);
 			auto pRead = pOldBegin;
 			auto pWrite = pNewBegin;
 			try {
 				while(pRead != pOldEnd){
-					Construct<Element_t>(pWrite, std::move_if_noexcept(*pRead));
+					Construct<Element>(pWrite, std::move_if_noexcept(*pRead));
 					++pWrite;
 					++pRead;
 				}
@@ -256,7 +256,7 @@ public:
 				Destruct(pRead);
 			}
 
-			if(xm_pBegin != (Element_t *)std::begin(xm_aSmall)){
+			if(xm_pBegin != (Element *)std::begin(xm_aSmall)){
 				::operator delete[](xm_pBegin);
 			}
 			xm_pBegin		= pNewBegin;
@@ -268,33 +268,33 @@ public:
 		Reserve(GetSize() + uDeltaCapacity);
 	}
 
-	Element_t &PushNoCheck()
-		noexcept(std::is_nothrow_constructible<Element_t>::value)
+	Element &PushNoCheck()
+		noexcept(std::is_nothrow_constructible<Element>::value)
 	{
 		ASSERT_MSG(GetSize() < GetCapacity(), L"容器已满。");
 
-		if(std::is_pod<Element_t>::value){
+		if(std::is_pod<Element>::value){
 #ifndef NDEBUG
 			__builtin_memset(xm_pEnd, 0xCC, sizeof(*xm_pEnd));
 #endif
 		} else {
-			Construct<Element_t>(xm_pEnd);
+			Construct<Element>(xm_pEnd);
 		}
 		return *(xm_pEnd++);
 	}
-	template<typename... Params_t>
-	Element_t &PushNoCheck(Params_t &&...vParams)
-		noexcept(std::is_nothrow_constructible<Element_t, Params_t &&...>::value)
+	template<typename... Params>
+	Element &PushNoCheck(Params &&...vParams)
+		noexcept(std::is_nothrow_constructible<Element, Params &&...>::value)
 	{
 		ASSERT_MSG(GetSize() < GetCapacity(), L"容器已满。");
 
-		Construct<Element_t>(xm_pEnd, std::forward<Params_t>(vParams)...);
+		Construct<Element>(xm_pEnd, std::forward<Params>(vParams)...);
 		return *(xm_pEnd++);
 	}
-	template<typename... Params_t>
-	Element_t &Push(Params_t &&...vParams){
+	template<typename... Params>
+	Element &Push(Params &&...vParams){
 		Reserve(GetSize() + 1);
-		return PushNoCheck(std::forward<Params_t>(vParams)...);
+		return PushNoCheck(std::forward<Params>(vParams)...);
 	}
 	void Pop() noexcept {
 		ASSERT(!IsEmpty());
@@ -302,17 +302,17 @@ public:
 		Destruct(--xm_pEnd);
 	}
 
-	template<typename... Params_t>
-	void FillAtEndNoCheck(std::size_t uCount, const Params_t &...vParams)
-		noexcept(std::is_nothrow_constructible<Element_t, const Params_t &...>::value)
+	template<typename... Params>
+	void FillAtEndNoCheck(std::size_t uCount, const Params &...vParams)
+		noexcept(std::is_nothrow_constructible<Element, const Params &...>::value)
 	{
 		for(std::size_t i = 0; i < uCount; ++i){
 			PushNoCheck(vParams...);
 		}
 	}
-	template<class Iterator_t>
-	void CopyToEndNoCheck(Iterator_t itBegin, Iterator_t itEnd)
-		noexcept(noexcept(PushNoCheck(*std::declval<Iterator_t>())))
+	template<class Iterator>
+	void CopyToEndNoCheck(Iterator itBegin, Iterator itEnd)
+		noexcept(noexcept(PushNoCheck(*std::declval<Iterator>())))
 	{
 		auto itCur = itBegin;
 		while(itCur != itEnd){
@@ -320,9 +320,9 @@ public:
 			++itCur;
 		}
 	}
-	template<class Iterator_t>
-	void CopyToEndNoCheck(Iterator_t itBegin, std::size_t uCount)
-		noexcept(noexcept(PushNoCheck(*std::declval<Iterator_t>())))
+	template<class Iterator>
+	void CopyToEndNoCheck(Iterator itBegin, std::size_t uCount)
+		noexcept(noexcept(PushNoCheck(*std::declval<Iterator>())))
 	{
 		auto itCur = itBegin;
 		for(std::size_t i = 0; i < uCount; ++i){
@@ -330,21 +330,21 @@ public:
 			++itCur;
 		}
 	}
-	template<typename... Params_t>
-	void FillAtEnd(std::size_t uCount, const Params_t &...vParams){
+	template<typename... Params>
+	void FillAtEnd(std::size_t uCount, const Params &...vParams){
 		Reserve(GetSize() + uCount);
 		FillAtEndNoCheck(uCount, vParams...);
 	}
-	template<class Iterator_t>
-	void CopyToEnd(Iterator_t itBegin, Iterator_t itEnd){
+	template<class Iterator>
+	void CopyToEnd(Iterator itBegin, Iterator itEnd){
 		auto itCur = itBegin;
 		while(itCur != itEnd){
 			Push(*itCur);
 			++itCur;
 		}
 	}
-	template<class Iterator_t>
-	void CopyToEnd(Iterator_t itBegin, std::size_t uCount){
+	template<class Iterator>
+	void CopyToEnd(Iterator itBegin, std::size_t uCount){
 		Reserve(GetSize() + uCount);
 		CopyToEndNoCheck(std::move(itBegin), uCount);
 	}
@@ -357,7 +357,7 @@ public:
 	}
 
 	void Swap(VVector &rhs)
-		noexcept(std::is_nothrow_move_constructible<Element_t>::value)
+		noexcept(std::is_nothrow_move_constructible<Element>::value)
 	{
 		if(this != &rhs){
 			VVector vecTemp;
@@ -370,34 +370,34 @@ public:
 	}
 
 public:
-	explicit operator const Element_t *() const noexcept {
+	explicit operator const Element *() const noexcept {
 		return GetData();
 	}
-	explicit operator Element_t *() noexcept {
+	explicit operator Element *() noexcept {
 		return GetData();
 	}
 
-	const Element_t &operator[](std::size_t uIndex) const noexcept {
+	const Element &operator[](std::size_t uIndex) const noexcept {
 		ASSERT_MSG(uIndex < GetSize(), L"索引越界。");
 
 		return GetData()[uIndex];
 	}
-	Element_t &operator[](std::size_t uIndex) noexcept {
+	Element &operator[](std::size_t uIndex) noexcept {
 		ASSERT_MSG(uIndex < GetSize(), L"索引越界。");
 
 		return GetData()[uIndex];
 	}
 };
 
-template<class Element_t>
-class VVector<Element_t, 0> {
+template<class Element>
+class VVector<Element, 0> {
 	template<class, std::size_t>
 	friend class VVector;
 
 private:
-	Element_t *xm_pBegin;
-	Element_t *xm_pEnd;
-	Element_t *xm_pEndOfStor;
+	Element *xm_pBegin;
+	Element *xm_pEnd;
+	Element *xm_pEndOfStor;
 
 public:
 	constexpr VVector() noexcept
@@ -406,37 +406,37 @@ public:
 		, xm_pEndOfStor	(xm_pBegin)
 	{
 	}
-	template<typename... Params_t>
-	explicit VVector(std::size_t uCount, const Params_t &...vParams)
+	template<typename... Params>
+	explicit VVector(std::size_t uCount, const Params &...vParams)
 		: VVector()
 	{
 		FillAtEnd(uCount, vParams...);
 	}
-	template<class Iterator_t>
-	VVector(Iterator_t itBegin, Iterator_t itEnd)
+	template<class Iterator>
+	VVector(Iterator itBegin, Iterator itEnd)
 		: VVector()
 	{
 		CopyToEnd(itBegin, itEnd);
 	}
-	template<class Iterator_t>
-	VVector(Iterator_t itBegin, std::size_t uCount)
+	template<class Iterator>
+	VVector(Iterator itBegin, std::size_t uCount)
 		: VVector()
 	{
 		CopyToEnd(itBegin, uCount);
 	}
-	VVector(std::initializer_list<Element_t> rhs)
+	VVector(std::initializer_list<Element> rhs)
 		: VVector()
 	{
 		CopyToEnd(rhs.begin(), rhs.size());
 	}
 	template<std::size_t OTHER_THRESHOLD>
-	VVector(const VVector<Element_t, OTHER_THRESHOLD> &rhs)
+	VVector(const VVector<Element, OTHER_THRESHOLD> &rhs)
 		: VVector()
 	{
 		CopyToEnd(rhs.GetBegin(), rhs.GetEnd());
 	}
 	template<std::size_t OTHER_THRESHOLD>
-	VVector(VVector<Element_t, OTHER_THRESHOLD> &&rhs)
+	VVector(VVector<Element, OTHER_THRESHOLD> &&rhs)
 		: VVector()
 	{
 		xMoveFrom(rhs);
@@ -451,18 +451,18 @@ public:
 	{
 		xMoveFrom(rhs);
 	}
-	VVector &operator=(std::initializer_list<Element_t> rhs){
+	VVector &operator=(std::initializer_list<Element> rhs){
 		VVector(rhs).Swap(*this);
 		return *this;
 	}
 	template<std::size_t OTHER_THRESHOLD>
-	VVector &operator=(const VVector<Element_t, OTHER_THRESHOLD> &rhs){
+	VVector &operator=(const VVector<Element, OTHER_THRESHOLD> &rhs){
 		VVector(rhs).Swap(*this);
 		return *this;
 	}
 	template<std::size_t OTHER_THRESHOLD>
-	VVector &operator=(VVector<Element_t, OTHER_THRESHOLD> &&rhs)
-		noexcept(std::is_nothrow_move_constructible<Element_t>::value && (0 >= OTHER_THRESHOLD))
+	VVector &operator=(VVector<Element, OTHER_THRESHOLD> &&rhs)
+		noexcept(std::is_nothrow_move_constructible<Element>::value && (0 >= OTHER_THRESHOLD))
 	{
 		VVector(std::move(rhs)).Swap(*this);
 		return *this;
@@ -485,19 +485,19 @@ public:
 
 private:
 	template<std::size_t OTHER_THRESHOLD>
-	void xMoveFrom(VVector<Element_t, OTHER_THRESHOLD> &rhs)
-		noexcept(std::is_nothrow_move_constructible<Element_t>::value && (0 >= OTHER_THRESHOLD))
+	void xMoveFrom(VVector<Element, OTHER_THRESHOLD> &rhs)
+		noexcept(std::is_nothrow_move_constructible<Element>::value && (0 >= OTHER_THRESHOLD))
 	{
 		ASSERT(IsEmpty());
 		ASSERT((void *)this != (void *)&rhs);
 
-		if(rhs.xm_pBegin != (Element_t *)std::begin(rhs.xm_aSmall)){
+		if(rhs.xm_pBegin != (Element *)std::begin(rhs.xm_aSmall)){
 			::operator delete[](xm_pBegin);
 			xm_pBegin		= rhs.xm_pBegin;
 			xm_pEnd			= rhs.xm_pEnd;
 			xm_pEndOfStor	= rhs.xm_pEndOfStor;
 
-			rhs.xm_pBegin	= (Element_t *)std::begin(rhs.xm_aSmall);
+			rhs.xm_pBegin	= (Element *)std::begin(rhs.xm_aSmall);
 			rhs.xm_pEnd		= rhs.xm_pBegin;
 		} else {
 			auto pRead = rhs.GetBegin();
@@ -525,37 +525,37 @@ private:
 	}
 
 public:
-	const Element_t *GetBegin() const noexcept {
+	const Element *GetBegin() const noexcept {
 		return xm_pBegin;
 	}
-	Element_t *GetBegin() noexcept {
+	Element *GetBegin() noexcept {
 		return xm_pBegin;
 	}
-	const Element_t *GetCBegin() const noexcept {
+	const Element *GetCBegin() const noexcept {
 		return GetBegin();
 	}
-	const Element_t *GetEnd() const noexcept {
+	const Element *GetEnd() const noexcept {
 		return xm_pEnd;
 	}
-	Element_t *GetEnd() noexcept {
+	Element *GetEnd() noexcept {
 		return xm_pEnd;
 	}
-	const Element_t *GetCEnd() const noexcept {
+	const Element *GetCEnd() const noexcept {
 		return GetEnd();
 	}
 
-	const Element_t *GetData() const noexcept {
+	const Element *GetData() const noexcept {
 		return GetBegin();
 	}
-	Element_t *GetData() noexcept {
+	Element *GetData() noexcept {
 		return GetBegin();
 	}
 
 	std::size_t GetSize() const noexcept {
 		return (std::size_t)(GetEnd() - GetBegin());
 	}
-	template<typename... Params_t>
-	void Resize(std::size_t uNewSize, const Params_t &... vParams){
+	template<typename... Params>
+	void Resize(std::size_t uNewSize, const Params &... vParams){
 		const std::size_t uOldSize = GetSize();
 		if(uNewSize > uOldSize){
 			FillAtEnd(uNewSize - uOldSize, vParams...);
@@ -563,8 +563,8 @@ public:
 			TruncateFromEnd(uOldSize - uNewSize);
 		}
 	}
-	template<typename... Params_t>
-	Element_t *ResizeMore(std::size_t uDeltaSize, const Params_t &... vParams){
+	template<typename... Params>
+	Element *ResizeMore(std::size_t uDeltaSize, const Params &... vParams){
 		const auto uOldSize = GetSize();
 		FillAtEnd(uDeltaSize, vParams...);
 		return GetData() + uOldSize;
@@ -594,12 +594,12 @@ public:
 
 			const auto pOldBegin = GetBegin();
 			const auto pOldEnd = GetEnd();
-			const auto pNewBegin = (Element_t *)::operator new[](sizeof(Element_t) * uSizeToAlloc);
+			const auto pNewBegin = (Element *)::operator new[](sizeof(Element) * uSizeToAlloc);
 			auto pRead = pOldBegin;
 			auto pWrite = pNewBegin;
 			try {
 				while(pRead != pOldEnd){
-					Construct<Element_t>(pWrite, std::move_if_noexcept(*pRead));
+					Construct<Element>(pWrite, std::move_if_noexcept(*pRead));
 					++pWrite;
 					++pRead;
 				}
@@ -626,33 +626,33 @@ public:
 		Reserve(GetSize() + uDeltaCapacity);
 	}
 
-	Element_t &PushNoCheck()
-		noexcept(std::is_nothrow_constructible<Element_t>::value)
+	Element &PushNoCheck()
+		noexcept(std::is_nothrow_constructible<Element>::value)
 	{
 		ASSERT_MSG(GetSize() < GetCapacity(), L"容器已满。");
 
-		if(std::is_pod<Element_t>::value){
+		if(std::is_pod<Element>::value){
 #ifndef NDEBUG
 			__builtin_memset(xm_pEnd, 0xCC, sizeof(*xm_pEnd));
 #endif
 		} else {
-			Construct<Element_t>(xm_pEnd);
+			Construct<Element>(xm_pEnd);
 		}
 		return *(xm_pEnd++);
 	}
-	template<typename... Params_t>
-	Element_t &PushNoCheck(Params_t &&...vParams)
-		noexcept(std::is_nothrow_constructible<Element_t, Params_t &&...>::value)
+	template<typename... Params>
+	Element &PushNoCheck(Params &&...vParams)
+		noexcept(std::is_nothrow_constructible<Element, Params &&...>::value)
 	{
 		ASSERT_MSG(GetSize() < GetCapacity(), L"容器已满。");
 
-		Construct<Element_t>(xm_pEnd, std::forward<Params_t>(vParams)...);
+		Construct<Element>(xm_pEnd, std::forward<Params>(vParams)...);
 		return *(xm_pEnd++);
 	}
-	template<typename... Params_t>
-	Element_t &Push(Params_t &&...vParams){
+	template<typename... Params>
+	Element &Push(Params &&...vParams){
 		Reserve(GetSize() + 1);
-		return PushNoCheck(std::forward<Params_t>(vParams)...);
+		return PushNoCheck(std::forward<Params>(vParams)...);
 	}
 	void Pop() noexcept {
 		ASSERT(!IsEmpty());
@@ -660,17 +660,17 @@ public:
 		Destruct(--xm_pEnd);
 	}
 
-	template<typename... Params_t>
-	void FillAtEndNoCheck(std::size_t uCount, const Params_t &...vParams)
-		noexcept(std::is_nothrow_constructible<Element_t, const Params_t &...>::value)
+	template<typename... Params>
+	void FillAtEndNoCheck(std::size_t uCount, const Params &...vParams)
+		noexcept(std::is_nothrow_constructible<Element, const Params &...>::value)
 	{
 		for(std::size_t i = 0; i < uCount; ++i){
 			PushNoCheck(vParams...);
 		}
 	}
-	template<class Iterator_t>
-	void CopyToEndNoCheck(Iterator_t itBegin, Iterator_t itEnd)
-		noexcept(std::is_nothrow_constructible<Element_t, decltype(*std::declval<Iterator_t>())>::value)
+	template<class Iterator>
+	void CopyToEndNoCheck(Iterator itBegin, Iterator itEnd)
+		noexcept(std::is_nothrow_constructible<Element, decltype(*std::declval<Iterator>())>::value)
 	{
 		auto itCur = itBegin;
 		while(itCur != itEnd){
@@ -678,9 +678,9 @@ public:
 			++itCur;
 		}
 	}
-	template<class Iterator_t>
-	void CopyToEndNoCheck(Iterator_t itBegin, std::size_t uCount)
-		noexcept(std::is_nothrow_constructible<Element_t, decltype(*std::declval<Iterator_t>())>::value)
+	template<class Iterator>
+	void CopyToEndNoCheck(Iterator itBegin, std::size_t uCount)
+		noexcept(std::is_nothrow_constructible<Element, decltype(*std::declval<Iterator>())>::value)
 	{
 		auto itCur = itBegin;
 		for(std::size_t i = 0; i < uCount; ++i){
@@ -688,21 +688,21 @@ public:
 			++itCur;
 		}
 	}
-	template<typename... Params_t>
-	void FillAtEnd(std::size_t uCount, const Params_t &...vParams){
+	template<typename... Params>
+	void FillAtEnd(std::size_t uCount, const Params &...vParams){
 		Reserve(GetSize() + uCount);
 		FillAtEndNoCheck(uCount, vParams...);
 	}
-	template<class Iterator_t>
-	void CopyToEnd(Iterator_t itBegin, Iterator_t itEnd){
+	template<class Iterator>
+	void CopyToEnd(Iterator itBegin, Iterator itEnd){
 		auto itCur = itBegin;
 		while(itCur != itEnd){
 			Push(*itCur);
 			++itCur;
 		}
 	}
-	template<class Iterator_t>
-	void CopyToEnd(Iterator_t itBegin, std::size_t uCount){
+	template<class Iterator>
+	void CopyToEnd(Iterator itBegin, std::size_t uCount){
 		Reserve(GetSize() + uCount);
 		CopyToEndNoCheck(std::move(itBegin), uCount);
 	}
@@ -723,53 +723,53 @@ public:
 	}
 
 public:
-	explicit operator const Element_t *() const noexcept {
+	explicit operator const Element *() const noexcept {
 		return GetData();
 	}
-	explicit operator Element_t *() noexcept {
+	explicit operator Element *() noexcept {
 		return GetData();
 	}
 
-	const Element_t &operator[](std::size_t uIndex) const noexcept {
+	const Element &operator[](std::size_t uIndex) const noexcept {
 		ASSERT_MSG(uIndex < GetSize(), L"索引越界。");
 
 		return GetData()[uIndex];
 	}
-	Element_t &operator[](std::size_t uIndex) noexcept {
+	Element &operator[](std::size_t uIndex) noexcept {
 		ASSERT_MSG(uIndex < GetSize(), L"索引越界。");
 
 		return GetData()[uIndex];
 	}
 };
 
-template<typename Element_t, std::size_t ALT_STOR_THRESHOLD>
-const Element_t *begin(const VVector<Element_t, ALT_STOR_THRESHOLD> &vec) noexcept {
+template<typename Element, std::size_t ALT_STOR_THRESHOLD>
+const Element *begin(const VVector<Element, ALT_STOR_THRESHOLD> &vec) noexcept {
 	return vec.GetBegin();
 }
-template<typename Element_t, std::size_t ALT_STOR_THRESHOLD>
-Element_t *begin(VVector<Element_t, ALT_STOR_THRESHOLD> &vec) noexcept {
+template<typename Element, std::size_t ALT_STOR_THRESHOLD>
+Element *begin(VVector<Element, ALT_STOR_THRESHOLD> &vec) noexcept {
 	return vec.GetBegin();
 }
-template<typename Element_t, std::size_t ALT_STOR_THRESHOLD>
-const Element_t *cbegin(const VVector<Element_t, ALT_STOR_THRESHOLD> &vec) noexcept {
+template<typename Element, std::size_t ALT_STOR_THRESHOLD>
+const Element *cbegin(const VVector<Element, ALT_STOR_THRESHOLD> &vec) noexcept {
 	return vec.GetCBegin();
 }
 
-template<typename Element_t, std::size_t ALT_STOR_THRESHOLD>
-const Element_t *end(const VVector<Element_t, ALT_STOR_THRESHOLD> &vec) noexcept {
+template<typename Element, std::size_t ALT_STOR_THRESHOLD>
+const Element *end(const VVector<Element, ALT_STOR_THRESHOLD> &vec) noexcept {
 	return vec.GetEnd();
 }
-template<typename Element_t, std::size_t ALT_STOR_THRESHOLD>
-Element_t *end(VVector<Element_t, ALT_STOR_THRESHOLD> &vec) noexcept {
+template<typename Element, std::size_t ALT_STOR_THRESHOLD>
+Element *end(VVector<Element, ALT_STOR_THRESHOLD> &vec) noexcept {
 	return vec.GetEnd();
 }
-template<typename Element_t, std::size_t ALT_STOR_THRESHOLD>
-const Element_t *cend(const VVector<Element_t, ALT_STOR_THRESHOLD> &vec) noexcept {
+template<typename Element, std::size_t ALT_STOR_THRESHOLD>
+const Element *cend(const VVector<Element, ALT_STOR_THRESHOLD> &vec) noexcept {
 	return vec.GetCEnd();
 }
 
-template<typename Element_t>
-using Vector = VVector<Element_t, 0>;
+template<typename Element>
+using Vector = VVector<Element, 0>;
 
 }
 

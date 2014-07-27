@@ -58,19 +58,10 @@ struct LzmaStreamCloser {
 
 lzma_options_lzma MakeOptions(unsigned int uLevel, unsigned long ulDictSize){
 	lzma_options_lzma vRet;
-	vRet.dict_size			= ulDictSize;
-	vRet.preset_dict		= nullptr;
-	vRet.preset_dict_size	= 0;
-	vRet.lc					= LZMA_LC_DEFAULT;
-	vRet.lp					= LZMA_LP_DEFAULT;
-	vRet.pb					= LZMA_PB_DEFAULT;
-	vRet.mode				= LZMA_MODE_NORMAL;
-	vRet.nice_len			= 128;
-	vRet.mf					= LZMA_MF_BT4;
-	vRet.depth				= 0;
 	if(::lzma_lzma_preset(&vRet, uLevel)){
 		MCF_THROW(ERROR_INVALID_PARAMETER, L"::lzma_lzma_preset() 失败。"_wso);
 	}
+	vRet.dict_size = ulDictSize;
 	return std::move(vRet);
 }
 

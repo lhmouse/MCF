@@ -7,7 +7,7 @@ if "%1"=="Release" (
 	set CXXFlags=-DNDEBUG -O3 -ffunction-sections -fdata-sections -Wl,--gc-sections,-s
 )
 
-set Lib=-lmcf -lz -lmcfcrt -lstdc++ -lmingwex -lmingw32 -lgcc -lgcc_eh -lmcfcrt -lgcc -lmingwex -ldlmalloc -lmsvcrt -lkernel32 -luser32 -lshell32 -ladvapi32
+set Lib=-lmcf -llzmalite -lmcfcrt -lstdc++ -lmingwex -lmingw32 -lgcc -lgcc_eh -lmcfcrt -lgcc -lmingwex -ldlmalloc -lmsvcrt -lkernel32 -luser32 -lshell32 -ladvapi32
 
 call mingw 32
 
@@ -15,5 +15,6 @@ mcfbuild -p../../MCFCRT/MCFBuild.mcfproj -s../../MCFCRT -d../../.Built/%Config%/
 mcfbuild -p../../MCF/MCFBuild.mcfproj -s../../MCF -d../../.Built/%Config%/mcf -o../../.Built/%Config%/libmcf.a %* || exit /b 1
 mcfbuild -p../../External/dlmalloc/MCFBuild.mcfproj -s../../External/dlmalloc -d../../.Built/%Config%/dlmalloc -o../../.Built/%Config%/libdlmalloc.a %* || exit /b 1
 mcfbuild -p../../External/zlib/MCFBuild.mcfproj -s../../External/zlib -d../../.Built/%Config%/zlib -o../../.Built/%Config%/libz.a %* || exit /b 1
+mcfbuild -p../../External/lzmalite/MCFBuild.mcfproj -s../../External/lzmalite -d../../.Built/%Config%/lzmalite -o../../.Built/%Config%/liblzmalite.a %* || exit /b 1
 
 g++ %CXXFlags% -std=c++14 -Wnoexcept -Wall -Wextra -Wsign-conversion -Wsuggest-attribute=noreturn -pipe -mfpmath=both -march=core2 -masm=intel main.cpp -o ".%Config%.exe" -I../.. -L../../.Built/%Config% -static -nostdlib -Wl,-e__MCF_ExeStartup,--disable-runtime-pseudo-reloc,--disable-auto-import,--wrap=atexit,--wrap=malloc,--wrap=realloc,--wrap=calloc,--wrap=free %Lib% || exit /b 1

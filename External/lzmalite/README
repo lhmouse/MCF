@@ -1,0 +1,9 @@
+This is a LZMA lite library extracted from XZ Utils (http://tukaani.org/xz/)
+that is for alone_encoder/alone_decoder only.
+
+I have slightly modified some code to make it work without autoCRAP.
+Hence a single command line such as 'rm -f liblzmalite.a && \
+gcc -c -std=c99 *.c && ar rcs liblzmalite.a *.o' will work fine.
+
+LH_Mouse
+2014-07-27

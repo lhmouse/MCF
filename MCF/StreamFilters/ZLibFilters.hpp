@@ -12,7 +12,7 @@ namespace MCF {
 
 class ZLibEncoder : public StreamFilterBase {
 public:
-	static std::unique_ptr<ZLibEncoder> Create(bool bRaw = false, int nLevel = 6);
+	static std::unique_ptr<ZLibEncoder> Create(bool bRaw = false, unsigned int uLevel = 6);
 };
 
 class ZLibDecoder : public StreamFilterBase {

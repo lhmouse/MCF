@@ -1,0 +1,31 @@
+Default = Debug
+
+General {
+	CompilerFlags		= -Wall -Wextra -pipe -mfpmath=both -march=core2
+
+	CFlags				= -std=c11
+
+	IgnoredFiles		= .Built* *.h *.mcfproj
+
+	Compilers {
+		c {
+			CommandLine	= gcc -x c -c $CompilerFlags$ $CFlags$ %IN% -o %OUT%
+			Dependency	= gcc -x c -c $CompilerFlags$ $CFlags$ %IN% -MM
+		}
+	}
+
+	Linkers {
+		Partial			= ld -r %IN% -o %OUT%
+		Full			= ar rcs %OUT% %IN%
+	}
+
+	DefaultOutput		= liblzmalite.a
+}
+
+Debug = General {
+	CompilerFlags		=> -fno-builtin -g -O0
+}
+
+Release = General {
+	CompilerFlags		=> -DNDEBUG -O3 -ffunction-sections -fdata-sections
+}

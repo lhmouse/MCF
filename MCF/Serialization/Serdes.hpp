@@ -16,13 +16,13 @@
 
 namespace MCF {
 
+[[noreturn]]
+extern void ThrowEndOfStream();
+
+[[noreturn]]
+extern void ThrowInvalidData();
+
 namespace Impl {
-	[[noreturn]]
-	extern void ThrowEndOfStream();
-
-	[[noreturn]]
-	extern void ThrowInvalidData();
-
 	template<typename DataType, typename TraitHelper = void>
 	struct SerdesTrait {
 		static_assert((sizeof(DataType) - 1, false), "Not supported.");

@@ -283,42 +283,31 @@ template class String<wchar_t,	StringEncoding::UTF16>;
 template class String<char,		StringEncoding::UTF8>;
 template class String<char16_t,	StringEncoding::UTF16>;
 template class String<char32_t,	StringEncoding::UTF32>;
-/*
-SERDES_TABLE_BEGIN(Utf8String)
-	SERDES_CUSTOM(
-		[](auto &sbufStream, const auto &vUtf8String){
-			const auto uSize = vUtf8String.GetSize();
-			Serialize(sbufStream, uSize);
-			Serialize(sbufStream, vUtf8String.GetStr(), uSize);
-		},
-		[](auto &vUtf8String, auto &sbufStream){
-			std::uint64_t u64Size;
-			Deserialize(u64Size, sbufStream);
-			Deserialize(vUtf8String.ResizeMore(u64Size), (std::size_t)u64Size, sbufStream);
+
+// 串行化。
+void Serialize(StreamBuffer &sbufSink, const Utf8String &u8sSource){
+	Serialize<unsigned long long>(sbufSink, u8sSource.GetSize());
+	sbufSink.Insert(u8sSource.GetCStr(), u8sSource.GetSize());
+}
+void Deserialize(Utf8String &u8sSink, StreamBuffer &sbufSource){
+	unsigned long long ullSize;
+	Deserialize(ullSize, sbufSource);
+	if(ullSize > std::numeric_limits<std::size_t>::max()){
+		ThrowInvalidData();
+	}
+	// 万一 ullSize 是伪造的呢？
+	u8sSink.Clear();
+	while(ullSize){
+		const int nChar = sbufSource.Get();
+		if(nChar == -1){
+			ThrowEndOfStream();
 		}
-	)
-SERDES_TABLE_END
+		u8sSink.Push(nChar);
+		--ullSize;
+	}
+}
 
-#define DEFINE_STRING_SERDES(class_name)	\
-	SERDES_TABLE_BEGIN(class_name)	\
-		SERDES_CUSTOM(	\
-			[](auto &sbufStream, const auto &vString){	\
-				Serialize(sbufStream, Utf8String(vString));	\
-			},	\
-			[](auto &vString, auto &sbufStream){	\
-				Utf8String u8sTemp;	\
-				Deserialize(u8sTemp, sbufStream);	\
-				vString = u8sTemp;	\
-			}	\
-		)	\
-	SERDES_TABLE_END
-
-DEFINE_STRING_SERDES(AnsiString)
-DEFINE_STRING_SERDES(WideString)
-
-DEFINE_STRING_SERDES(Utf16String)
-DEFINE_STRING_SERDES(Utf32String)
-*/
+// 字面量运算符。
 #define DEFINE_LITERAL_OPERATOR(suffix, charType, encoding)	\
 	const String<MACRO_TYPE(charType), StringEncoding::encoding> &	\
 		operator"" ## suffix(const MACRO_TYPE(charType) *pchStr, std::size_t uLength)	\

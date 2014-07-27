@@ -1,27 +1,16 @@
 #include <MCF/StdMCF.hpp>
+#include <MCF/Core/String.hpp>
 #include <MCF/Serialization/Serdes.hpp>
-#include <random>
 using namespace MCF;
 
 extern "C" unsigned int MCFMain() noexcept {
+	auto ws = L"12345678901234567890123456789012345678901234567890123456789012345"_ws;
 	StreamBuffer buf;
-	std::deque<bool> q1, q2;
-
-	std::mt19937 mt;
-	std::generate_n(std::back_inserter(q1), 161, [&]{ return mt() % 2; });
-	for(auto b : q1){
-		std::putchar(b + '0');
-	}
-	std::putchar('\n');
-
-	Serialize(buf, q1.begin(), q1.size());
+	Serialize(buf, ws);
 	std::printf("serialized size = %zu\n", buf.GetSize());
-
-	Deserialize<bool>(back_inserter(q2), q1.size(), buf);
-	for(auto b : q2){
-		std::putchar(b + '0');
-	}
-	std::putchar('\n');
+	AnsiString as;
+	Deserialize(as, buf);
+	std::puts(as.GetCStr());
 
 	return 0;
 }

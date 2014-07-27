@@ -856,6 +856,24 @@ typedef String<char,		StringEncoding::UTF8>	Utf8String;
 typedef String<char16_t,	StringEncoding::UTF16>	Utf16String;
 typedef String<char32_t,	StringEncoding::UTF32>	Utf32String;
 
+// 串行化。
+class StreamBuffer;
+
+extern void Serialize(StreamBuffer &sbufSink, const Utf8String &u8sSource);
+extern void Deserialize(Utf8String &u8sSink, StreamBuffer &sbufSource);
+
+template<typename Char, StringEncoding ENCODING>
+void Serialize(StreamBuffer &sbufSink, const String<Char, ENCODING> &strSource){
+	Serialize(sbufSink, Utf8String(strSource));
+}
+template<typename Char, StringEncoding ENCODING>
+void Deserialize(String<Char, ENCODING> &strSink, StreamBuffer &sbufSource){
+	Utf8String u8sTemp;
+	Deserialize(u8sTemp, sbufSource);
+	strSink.Assign(u8sTemp);
+}
+
+// 字面量运算符。
 const MCF::AnsiString	&operator""_as		(const char *pchStr,		std::size_t uLength);
 const MCF::WideString	&operator""_ws		(const wchar_t *pchStr,		std::size_t uLength);
 

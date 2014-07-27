@@ -9,16 +9,14 @@ using namespace MCF;
 
 namespace MCF {
 
-namespace Impl {
-	[[noreturn]]
-	void ThrowEndOfStream(){
-		MCF_THROW(ERROR_HANDLE_EOF, L"遇到文件尾。"_wso);
-	}
+[[noreturn]]
+void ThrowEndOfStream(){
+	MCF_THROW(ERROR_HANDLE_EOF, L"遇到文件尾。"_wso);
+}
 
-	[[noreturn]]
-	void ThrowInvalidData(){
-		MCF_THROW(ERROR_INVALID_DATA, L"数据损坏。"_wso);
-	}
+[[noreturn]]
+void ThrowInvalidData(){
+	MCF_THROW(ERROR_INVALID_DATA, L"数据损坏。"_wso);
 }
 
 }

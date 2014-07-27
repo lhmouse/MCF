@@ -14,10 +14,10 @@ extern "C" unsigned int MCFMain() noexcept {
 	}
 	std::putchar('\n');
 
-	Serialize(buf, q1);
+	Serialize(buf, q1.begin(), q1.size());
 	std::printf("serialized size = %zu\n", buf.GetSize());
 
-	Deserialize(q2, buf);
+	Deserialize<bool>(back_inserter(q2), q1.size(), buf);
 	for(auto b : q2){
 		std::putchar(b + '0');
 	}

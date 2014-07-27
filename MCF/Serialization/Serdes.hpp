@@ -310,17 +310,21 @@ void Deserialize(DataType &vSink, StreamBuffer &sbufSource){
 	Impl::SerdesTrait<DataType>::Deserialize(vSink, sbufSource);
 }
 
-template<typename InputIterator>
+template<typename DataType = void, typename InputIterator>
 InputIterator Serialize(StreamBuffer &sbufSink, InputIterator itInput, std::size_t uCount){
 	Impl::SerdesTrait<
-		typename std::remove_reference<decltype(*itInput)>::type[]
+		typename std::conditional<std::is_void<DataType>::value,
+			typename std::iterator_traits<InputIterator>::value_type, DataType
+			>::type[]
 		>::Serialize(sbufSink, itInput, uCount);
 	return std::move(itInput);
 }
-template<typename OutputIterator>
+template<typename DataType = void, typename OutputIterator>
 OutputIterator Deserialize(OutputIterator itOutput, std::size_t uCount, StreamBuffer &sbufSource){
 	Impl::SerdesTrait<
-		typename std::remove_reference<decltype(*itOutput)>::type[]
+		typename std::conditional<std::is_void<DataType>::value,
+			typename std::iterator_traits<OutputIterator>::value_type, DataType
+			>::type[]
 		>::Deserialize(itOutput, uCount, sbufSource);
 	return std::move(itOutput);
 }

@@ -23,6 +23,10 @@
 #define HAVE_CHECK_CRC64
 #define HAVE_CHECK_SHA256
 
+#if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
+#	define WORDS_BIGENDIAN 1
+#endif
+
 #include "sysdefs.h"
 //#include "mythread.h" // Taken out by LH_Mouse on 2014-07-27.
 #include "tuklib_integer.h"

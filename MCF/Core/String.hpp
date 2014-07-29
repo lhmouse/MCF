@@ -6,7 +6,7 @@
 #define MCF_STRING_HPP_
 
 #include "StringObserver.hpp"
-#include "VVector.hpp"
+#include "../Containers/VVector.hpp"
 #include "Utilities.hpp"
 #include <memory>
 #include <cstdint>

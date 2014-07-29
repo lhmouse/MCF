@@ -287,7 +287,7 @@ namespace Impl {
 	template<typename Object>
 	struct DirectConstructor {
 		template<typename... Params>
-		Object *Construct(void *pObject, Params &&... vParams)
+		Object *Construct(Object *pObject, Params &&... vParams)
 			noexcept(std::is_nothrow_constructible<Object, Params &&...>::value)
 		{
 			return ::new(pObject, DirectConstructTag()) Object(std::forward<Params>(vParams)...);
@@ -304,7 +304,7 @@ namespace Impl {
 	friend class ::MCF::Impl::DirectConstructor<MACRO_TYPE(type)>
 
 template<typename Object, typename... Params>
-inline __attribute__((__returns_nonnull__)) Object *Construct(void *pObject, Params &&... vParams)
+inline __attribute__((__returns_nonnull__)) Object *Construct(Object *pObject, Params &&... vParams)
 	noexcept(std::is_nothrow_constructible<Object, Params &&...>::value)
 {
 	return Impl::DirectConstructor<Object>().template Construct<Params &&...>(pObject, std::forward<Params>(vParams)...);

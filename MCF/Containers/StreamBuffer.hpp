@@ -5,7 +5,8 @@
 #ifndef MCF_STREAM_BUFFER_HPP_
 #define MCF_STREAM_BUFFER_HPP_
 
-#include "Utilities.hpp"
+#include "../Core/Utilities.hpp"
+#include "VList.hpp"
 #include <forward_list>
 #include <functional>
 #include <iterator>
@@ -17,17 +18,12 @@ class StreamBuffer {
 private:
 	class xDisposableBuffer;
 
-	typedef std::forward_list<xDisposableBuffer> xBufferList;
-	typedef xBufferList::iterator xBufferListIterator;
-
 public:
 	class ReadIterator;
 	class WriteIterator;
 
 private:
-	xBufferList xm_lstData;
-	xBufferListIterator xm_itTail;
-	xBufferList xm_lstPool;
+	VList<xDisposableBuffer> xm_lstBuffers;
 	std::size_t xm_uSize;
 
 public:

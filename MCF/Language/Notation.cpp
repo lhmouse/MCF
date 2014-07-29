@@ -4,7 +4,7 @@
 
 #include "../StdMCF.hpp"
 #include "Notation.hpp"
-#include "../Core/VVector.hpp"
+#include "../Containers/VVector.hpp"
 using namespace MCF;
 
 namespace {

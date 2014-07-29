@@ -5,7 +5,7 @@
 #ifndef MCF_SERDES_HPP_
 #define MCF_SERDES_HPP_
 
-#include "../Core/StreamBuffer.hpp"
+#include "../Containers/StreamBuffer.hpp"
 #include "../Core/Utilities.hpp"
 #include "VarIntEx.hpp"
 #include <type_traits>

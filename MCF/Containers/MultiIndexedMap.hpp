@@ -7,8 +7,8 @@
 
 #include "../../MCFCRT/ext/offset_of.h"
 #include "../../MCFCRT/env/avl_tree.h"
-#include "Utilities.hpp"
-#include "VVector.hpp"
+#include "../Core/Utilities.hpp"
+#include "../Containers/VVector.hpp"
 #include <tuple>
 #include <type_traits>
 #include <functional>
@@ -287,7 +287,7 @@ public:
 		return *this;
 	}
 	MultiIndexedMap &operator=(MultiIndexedMap &&rhs) noexcept {
-		rhs.Swap(*this);
+		MultiIndexedMap(std::move(rhs)).Swap(*this);
 		return *this;
 	}
 	~MultiIndexedMap() noexcept {

@@ -4,7 +4,7 @@
 #include "MCFBuild.hpp"
 #include "ConsoleOutput.hpp"
 #include "Localization.hpp"
-#include "../MCF/Core/VVector.hpp"
+#include "../MCF/Containers/VVector.hpp"
 #include "../MCF/Thread/CriticalSection.hpp"
 #include <cstddef>
 using namespace MCFBuild;

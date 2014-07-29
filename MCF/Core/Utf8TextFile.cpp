@@ -4,7 +4,7 @@
 
 #include "../StdMCF.hpp"
 #include "Utf8TextFile.hpp"
-#include "../Core/VVector.hpp"
+#include "../Containers/VVector.hpp"
 using namespace MCF;
 
 static constexpr unsigned char UTF8_BOM[] = {0xEF, 0xBB, 0xBF};

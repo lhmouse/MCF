@@ -4,7 +4,7 @@
 #include "MCFBuild.hpp"
 #include "Localization.hpp"
 #include "Model.hpp"
-#include "../MCF/Core/VVector.hpp"
+#include "../MCF/Containers/VVector.hpp"
 #include <cstdlib>
 #include <map>
 using namespace MCFBuild;

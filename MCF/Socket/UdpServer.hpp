@@ -7,7 +7,7 @@
 
 #include "UdpSender.hpp"
 #include "../Core/Utilities.hpp"
-#include "../Core/VVector.hpp"
+#include "../Containers/VVector.hpp"
 #include <memory>
 
 namespace MCF {

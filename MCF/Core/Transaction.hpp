@@ -6,7 +6,7 @@
 #define MCF_TRANSACTION_HPP_
 
 #include "Utilities.hpp"
-#include "VVector.hpp"
+#include "../Containers/VVector.hpp"
 #include <memory>
 
 namespace MCF {

@@ -5,12 +5,12 @@
 #ifndef MCF_V_VECTOR_HPP_
 #define MCF_V_VECTOR_HPP_
 
-#include "../../MCFCRT/ext/assert.h"
-#include "Utilities.hpp"
+#include "../Core/Utilities.hpp"
 #include <initializer_list>
 #include <type_traits>
 #include <iterator>
 #include <utility>
+#include <memory>
 #include <cstddef>
 
 namespace MCF {
@@ -239,7 +239,7 @@ public:
 			auto pWrite = pNewBegin;
 			try {
 				while(pRead != pOldEnd){
-					Construct<Element>(pWrite, std::move_if_noexcept(*pRead));
+					Construct(pWrite, std::move_if_noexcept(*pRead));
 					++pWrite;
 					++pRead;
 				}
@@ -268,7 +268,7 @@ public:
 		Reserve(GetSize() + uDeltaCapacity);
 	}
 
-	Element &PushNoCheck()
+	Element *PushNoCheck()
 		noexcept(std::is_nothrow_constructible<Element>::value)
 	{
 		ASSERT_MSG(GetSize() < GetCapacity(), L"容器已满。");
@@ -278,21 +278,21 @@ public:
 			__builtin_memset(xm_pEnd, 0xCC, sizeof(*xm_pEnd));
 #endif
 		} else {
-			Construct<Element>(xm_pEnd);
+			Construct(xm_pEnd);
 		}
-		return *(xm_pEnd++);
+		return xm_pEnd++;
 	}
 	template<typename... Params>
-	Element &PushNoCheck(Params &&...vParams)
+	Element *PushNoCheck(Params &&...vParams)
 		noexcept(std::is_nothrow_constructible<Element, Params &&...>::value)
 	{
 		ASSERT_MSG(GetSize() < GetCapacity(), L"容器已满。");
 
-		Construct<Element>(xm_pEnd, std::forward<Params>(vParams)...);
-		return *(xm_pEnd++);
+		Construct(xm_pEnd, std::forward<Params>(vParams)...);
+		return xm_pEnd++;
 	}
 	template<typename... Params>
-	Element &Push(Params &&...vParams){
+	Element *Push(Params &&...vParams){
 		Reserve(GetSize() + 1);
 		return PushNoCheck(std::forward<Params>(vParams)...);
 	}
@@ -314,20 +314,18 @@ public:
 	void CopyToEndNoCheck(Iterator itBegin, Iterator itEnd)
 		noexcept(noexcept(PushNoCheck(*std::declval<Iterator>())))
 	{
-		auto itCur = itBegin;
-		while(itCur != itEnd){
-			PushNoCheck(*itCur);
-			++itCur;
+		while(itBegin != itEnd){
+			PushNoCheck(*itBegin);
+			++itBegin;
 		}
 	}
 	template<class Iterator>
 	void CopyToEndNoCheck(Iterator itBegin, std::size_t uCount)
 		noexcept(noexcept(PushNoCheck(*std::declval<Iterator>())))
 	{
-		auto itCur = itBegin;
 		for(std::size_t i = 0; i < uCount; ++i){
-			PushNoCheck(*itCur);
-			++itCur;
+			PushNoCheck(*itBegin);
+			++itBegin;
 		}
 	}
 	template<typename... Params>
@@ -337,10 +335,9 @@ public:
 	}
 	template<class Iterator>
 	void CopyToEnd(Iterator itBegin, Iterator itEnd){
-		auto itCur = itBegin;
-		while(itCur != itEnd){
-			Push(*itCur);
-			++itCur;
+		while(itBegin != itEnd){
+			Push(*itBegin);
+			++itBegin;
 		}
 	}
 	template<class Iterator>
@@ -599,7 +596,7 @@ public:
 			auto pWrite = pNewBegin;
 			try {
 				while(pRead != pOldEnd){
-					Construct<Element>(pWrite, std::move_if_noexcept(*pRead));
+					Construct(pWrite, std::move_if_noexcept(*pRead));
 					++pWrite;
 					++pRead;
 				}
@@ -626,7 +623,7 @@ public:
 		Reserve(GetSize() + uDeltaCapacity);
 	}
 
-	Element &PushNoCheck()
+	Element *PushNoCheck()
 		noexcept(std::is_nothrow_constructible<Element>::value)
 	{
 		ASSERT_MSG(GetSize() < GetCapacity(), L"容器已满。");
@@ -636,21 +633,21 @@ public:
 			__builtin_memset(xm_pEnd, 0xCC, sizeof(*xm_pEnd));
 #endif
 		} else {
-			Construct<Element>(xm_pEnd);
+			Construct(xm_pEnd);
 		}
-		return *(xm_pEnd++);
+		return xm_pEnd++;
 	}
 	template<typename... Params>
-	Element &PushNoCheck(Params &&...vParams)
+	Element *PushNoCheck(Params &&...vParams)
 		noexcept(std::is_nothrow_constructible<Element, Params &&...>::value)
 	{
 		ASSERT_MSG(GetSize() < GetCapacity(), L"容器已满。");
 
-		Construct<Element>(xm_pEnd, std::forward<Params>(vParams)...);
-		return *(xm_pEnd++);
+		Construct(xm_pEnd, std::forward<Params>(vParams)...);
+		return xm_pEnd++;
 	}
 	template<typename... Params>
-	Element &Push(Params &&...vParams){
+	Element *Push(Params &&...vParams){
 		Reserve(GetSize() + 1);
 		return PushNoCheck(std::forward<Params>(vParams)...);
 	}
@@ -672,20 +669,18 @@ public:
 	void CopyToEndNoCheck(Iterator itBegin, Iterator itEnd)
 		noexcept(std::is_nothrow_constructible<Element, decltype(*std::declval<Iterator>())>::value)
 	{
-		auto itCur = itBegin;
-		while(itCur != itEnd){
-			PushNoCheck(*itCur);
-			++itCur;
+		while(itBegin != itEnd){
+			PushNoCheck(*itBegin);
+			++itBegin;
 		}
 	}
 	template<class Iterator>
 	void CopyToEndNoCheck(Iterator itBegin, std::size_t uCount)
 		noexcept(std::is_nothrow_constructible<Element, decltype(*std::declval<Iterator>())>::value)
 	{
-		auto itCur = itBegin;
 		for(std::size_t i = 0; i < uCount; ++i){
-			PushNoCheck(*itCur);
-			++itCur;
+			PushNoCheck(*itBegin);
+			++itBegin;
 		}
 	}
 	template<typename... Params>
@@ -695,10 +690,9 @@ public:
 	}
 	template<class Iterator>
 	void CopyToEnd(Iterator itBegin, Iterator itEnd){
-		auto itCur = itBegin;
-		while(itCur != itEnd){
-			Push(*itCur);
-			++itCur;
+		while(itBegin != itEnd){
+			Push(*itBegin);
+			++itBegin;
 		}
 	}
 	template<class Iterator>

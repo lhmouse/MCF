@@ -4,7 +4,7 @@
 #include "MCFBuild.hpp"
 #include "DependencyDatabase.hpp"
 #include "FileSystem.hpp"
-#include "../MCF/Core/VVector.hpp"
+#include "../MCF/Containers/VVector.hpp"
 #include "../MCF/Core/Exception.hpp"
 #include "../MCF/Serialization/Serdes.hpp"
 #include <cstddef>

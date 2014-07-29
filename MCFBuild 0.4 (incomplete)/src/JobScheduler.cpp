@@ -4,7 +4,7 @@
 #include "MCFBuild.hpp"
 #include "JobScheduler.hpp"
 #include "../MCF/Core/Exception.hpp"
-#include "../MCF/Core/VVector.hpp"
+#include "../MCF/Containers/VVector.hpp"
 #include "../MCF/Thread/Thread.hpp"
 #include <exception>
 using namespace MCFBuild;

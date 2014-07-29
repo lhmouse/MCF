@@ -4,8 +4,8 @@
 
 #include "../StdMCF.hpp"
 #include "Message.hpp"
-#include "MultiIndexedMap.hpp"
-#include "VVector.hpp"
+#include "../Containers/MultiIndexedMap.hpp"
+#include "../Containers/VVector.hpp"
 #include "Utilities.hpp"
 #include "../Thread/ReaderWriterLock.hpp"
 #include <memory>
@@ -35,10 +35,10 @@ public:
 		}
 
 		auto &vecHandlers = pNode->GetElement();
-		const auto &pNewHandler = vecHandlers.Push(std::make_shared<HandlerProc>(std::move(fnProc)));
+		const auto pNewHandler = vecHandlers.Push(std::make_shared<HandlerProc>(std::move(fnProc)));
 
 		xm_pu8csName = &(pNode->GetIndex<0>());
-		xm_pfnProc = pNewHandler.get();
+		xm_pfnProc = pNewHandler->get();
 	}
 	~HandlerHolder() noexcept {
 	ASSERT_NOEXCEPT_BEGIN

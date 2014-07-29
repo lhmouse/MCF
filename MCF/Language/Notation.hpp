@@ -6,8 +6,8 @@
 #define MCF_NOTATION_HPP_
 
 #include "../Core/String.hpp"
-#include "../Core/VVector.hpp"
-#include "../Core/MultiIndexedMap.hpp"
+#include "../Containers/VVector.hpp"
+#include "../Containers/MultiIndexedMap.hpp"
 #include <functional>
 #include <initializer_list>
 

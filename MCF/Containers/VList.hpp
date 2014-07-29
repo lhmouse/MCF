@@ -257,16 +257,15 @@ public:
 			}
 		}
 #endif
+
 		if(pBegin != pEnd){
-			auto &pLast = (pEnd ? pEnd->xm_pPrev : lstSource.xm_pLast);
-
-			const auto pPrev = std::exchange((pPos ? pPos->xm_pPrev : xm_pLast), pLast);
-			(pPrev ? pPrev->xm_pNext : xm_pFirst) = pBegin;
+			const auto pOldPrev = pBegin->xm_pPrev;
+			const auto pOldLast = std::exchange((pEnd ? pEnd->xm_pPrev : lstSource.xm_pLast), pOldPrev);
+			const auto pPrev = std::exchange((pPos ? pPos->xm_pPrev : xm_pLast), pOldLast);
+			pOldLast->xm_pNext = pPos;
 			pBegin->xm_pPrev = pPrev;
-			pLast->xm_pNext = pPos;
-
-			(pPrev ? pPrev->xm_pNext : lstSource.xm_pFirst) = pEnd;
-			pLast = pPrev;
+			(pPrev ? pPrev->xm_pNext : xm_pFirst) = pBegin;
+			(pOldPrev ? pOldPrev->xm_pNext : lstSource.xm_pFirst) = pEnd;
 		}
 		return pPos;
 	}

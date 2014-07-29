@@ -6,6 +6,7 @@
 #define MCF_UTILITIES_HPP_
 
 #include "../../MCFCRT/ext/assert.h"
+#include "../../MCFCRT/ext/_make_constant.h"
 #include "../../MCFCRT/env/bail.h"
 #include <type_traits>
 #include <algorithm>
@@ -163,15 +164,13 @@ namespace Impl {
 //----------------------------------------------------------------------------
 template<typename T>
 inline auto Clone(T &&vSrc)
-	noexcept(
-		std::is_nothrow_copy_constructible<
-			typename std::remove_reference<T>::type
-		>::value
-	)
+	noexcept(std::is_nothrow_copy_constructible<
+		typename std::remove_reference<T>::type
+		>::value)
 {
 	return typename std::remove_cv<
 		typename std::remove_reference<T>::type
-	>::type(std::forward<T>(vSrc));
+		>::type(std::forward<T>(vSrc));
 }
 
 //----------------------------------------------------------------------------
@@ -217,50 +216,62 @@ inline void BZero(T &vDst) noexcept {
 // CallOnEach / CallOnEachBackward
 //----------------------------------------------------------------------------
 template<typename Function>
-Function CallOnEach(Function &&vFunction){
-	return std::move(vFunction);
+Function &&CallOnEach(Function &&vFunction){
+	return std::forward<Function>(vFunction);
 }
 template<typename Function, typename FirstParam, typename... Params>
-Function CallOnEach(Function &&vFunction, FirstParam &&vFirstParam, Params &&... vParams){
+Function &&CallOnEach(Function &&vFunction, FirstParam &&vFirstParam, Params &&... vParams){
 	vFunction(std::forward<FirstParam>(vFirstParam));
 	return CallOnEach(std::move(vFunction), std::forward<Params>(vParams)...);
 }
 
 template<typename Function>
-Function CallOnEachBackward(Function &&vFunction){
-	return std::move(vFunction);
+Function &&CallOnEachBackward(Function &&vFunction){
+	return std::forward<Function>(vFunction);
 }
 template<typename Function, typename FirstParam, typename... Params>
-Function CallOnEachBackward(Function &&vFunction, FirstParam &&vFirstParam, Params &&... vParams){
-	auto vNewFunction = CallOnEachBackward(std::move(vFunction), std::forward<Params>(vParams)...);
+Function &&CallOnEachBackward(Function &&vFunction, FirstParam &&vFirstParam, Params &&... vParams){
+	auto &&vNewFunction = CallOnEachBackward(std::forward<Function>(vFunction), std::forward<Params>(vParams)...);
 	vNewFunction(std::forward<FirstParam>(vFirstParam));
-	return std::move(vNewFunction);
+	return std::forward<Function>(vFunction);
 }
 
 //----------------------------------------------------------------------------
 // Min / Max
 //----------------------------------------------------------------------------
 template<typename Tx, typename Ty, typename Comparator = std::less<void>>
-auto Min(Tx x, Ty y){
-	static_assert(std::is_scalar<Tx>::value && std::is_scalar<Ty>::value, "Only scalar types are supported.");
-	static_assert(std::is_signed<Tx>::value == std::is_signed<Ty>::value, "Comparison between signed and unsigned integers.");
+auto constexpr Min(Tx x, Ty y){
+	static_assert(
+		std::is_scalar<Tx>::value && std::is_scalar<Ty>::value,
+		"Only scalar types are supported."
+	);
+	static_assert(
+		std::is_signed<Tx>::value == std::is_signed<Ty>::value,
+		"Comparison between signed and unsigned integers."
+	);
 
 	return Comparator()(x, y) ? x : y;
 }
 template<typename Tx, typename Ty, typename Comparator = std::less<void>, typename... More>
-auto Min(Tx &&x, Ty &&y, More &&... vMore){
+auto constexpr Min(Tx &&x, Ty &&y, More &&... vMore){
 	return Min(Min(std::forward<Tx>(x), std::forward<Ty>(y)), std::forward<More>(vMore)...);
 }
 
 template<typename Tx, typename Ty, typename Comparator = std::less<void>>
-auto Max(Tx x, Ty y){
-	static_assert(std::is_scalar<Tx>::value && std::is_scalar<Ty>::value, "Only scalar types are supported.");
-	static_assert(std::is_signed<Tx>::value == std::is_signed<Ty>::value, "Comparison between signed and unsigned integers.");
+auto constexpr Max(Tx x, Ty y){
+	static_assert(
+		std::is_scalar<Tx>::value && std::is_scalar<Ty>::value,
+		"Only scalar types are supported."
+	);
+	static_assert(
+		std::is_signed<Tx>::value == std::is_signed<Ty>::value,
+		"Comparison between signed and unsigned integers."
+	);
 
 	return Comparator()(x, y) ? y : x;
 }
 template<typename Tx, typename Ty, typename Comparator = std::less<void>, typename... More>
-auto Max(Tx &&x, Ty &&y, More &&... vMore){
+auto constexpr Max(Tx &&x, Ty &&y, More &&... vMore){
 	return Max(Max(std::forward<Tx>(x), std::forward<Ty>(y)), std::forward<More>(vMore)...);
 }
 
@@ -275,7 +286,8 @@ namespace Impl {
 }
 
 // 我只能说 GCC 是个白痴！为什么要检查 placement new 的返回值是否为 nullptr？
-inline __attribute__((__returns_nonnull__)) void *operator new(std::size_t, void *p, const ::MCF::Impl::DirectConstructTag &){
+inline __attribute__((__returns_nonnull__))
+void *operator new(std::size_t, void *p, const ::MCF::Impl::DirectConstructTag &){
 	return p;
 }
 inline void operator delete(void *, void *, const ::MCF::Impl::DirectConstructTag &) noexcept {
@@ -321,58 +333,101 @@ inline void Destruct(Object *pObject)
 //----------------------------------------------------------------------------
 // CountLeadingZeroes
 //----------------------------------------------------------------------------
-inline unsigned char CountLeadingZeroes(unsigned long long ull) noexcept {
-	return (unsigned char)__builtin_clzll(ull);
+inline constexpr unsigned char CountLeadingZeroes(unsigned char by) noexcept {
+	return __MCF_MAKE_CONSTANT((unsigned char)__builtin_clz(by)
+		- (sizeof(unsigned int) - sizeof(unsigned char)) * (std::size_t)__CHAR_BIT__);
 }
-inline unsigned char CountLeadingZeroes(unsigned long ul) noexcept {
-	return (unsigned char)__builtin_clzl(ul);
+inline constexpr unsigned char CountLeadingZeroes(unsigned short ush) noexcept {
+	return __MCF_MAKE_CONSTANT((unsigned char)__builtin_clz(ush)
+		- (sizeof(unsigned int) - sizeof(unsigned short)) * (std::size_t)__CHAR_BIT__);
 }
-inline unsigned char CountLeadingZeroes(unsigned int u) noexcept {
-	return (unsigned char)__builtin_clz(u);
+inline constexpr unsigned char CountLeadingZeroes(unsigned int u) noexcept {
+	return __MCF_MAKE_CONSTANT((unsigned char)__builtin_clz(u));
 }
-inline unsigned char CountLeadingZeroes(unsigned short ush) noexcept {
-	return (unsigned char)__builtin_clz(ush)
-		- (sizeof(unsigned int) - sizeof(unsigned short)) * (std::size_t)__CHAR_BIT__;
+inline constexpr unsigned char CountLeadingZeroes(unsigned long ul) noexcept {
+	return __MCF_MAKE_CONSTANT((unsigned char)__builtin_clzl(ul));
 }
-inline unsigned char CountLeadingZeroes(unsigned char by) noexcept {
-	return (unsigned char)__builtin_clz(by)
-		- (sizeof(unsigned int) - sizeof(unsigned char)) * (std::size_t)__CHAR_BIT__;
+inline constexpr unsigned char CountLeadingZeroes(unsigned long long ull) noexcept {
+	return __MCF_MAKE_CONSTANT((unsigned char)__builtin_clzll(ull));
 }
 
 //----------------------------------------------------------------------------
 // CountTrailingZeroes
 //----------------------------------------------------------------------------
-inline unsigned char CountTrailingZeroes(unsigned long long ull) noexcept {
-	return (unsigned char)__builtin_ctzll(ull);
+inline constexpr unsigned char CountTrailingZeroes(unsigned char by) noexcept {
+	return __MCF_MAKE_CONSTANT((unsigned char)__builtin_ctz(by));
 }
-inline unsigned char CountTrailingZeroes(unsigned long ul) noexcept {
-	return (unsigned char)__builtin_ctzl(ul);
+inline constexpr unsigned char CountTrailingZeroes(unsigned short ush) noexcept {
+	return __MCF_MAKE_CONSTANT((unsigned char)__builtin_ctz(ush));
 }
-inline unsigned char CountTrailingZeroes(unsigned int u) noexcept {
-	return (unsigned char)__builtin_ctz(u);
+inline constexpr unsigned char CountTrailingZeroes(unsigned int u) noexcept {
+	return __MCF_MAKE_CONSTANT((unsigned char)__builtin_ctz(u));
 }
-inline unsigned char CountTrailingZeroes(unsigned short ush) noexcept {
-	return (unsigned char)__builtin_ctz(ush);
+inline constexpr unsigned char CountTrailingZeroes(unsigned long ul) noexcept {
+	return __MCF_MAKE_CONSTANT((unsigned char)__builtin_ctzl(ul));
 }
-inline unsigned char CountTrailingZeroes(unsigned char by) noexcept {
-	return (unsigned char)__builtin_ctz(by);
+inline constexpr unsigned char CountTrailingZeroes(unsigned long long ull) noexcept {
+	return __MCF_MAKE_CONSTANT((unsigned char)__builtin_ctzll(ull));
 }
 
 //----------------------------------------------------------------------------
 // ByteSwap
 //----------------------------------------------------------------------------
-inline std::uint64_t ByteSwap(std::uint64_t u64) noexcept {
-	return __builtin_bswap64(u64);
+namespace Impl {
+	template<std::size_t BIT_COUNT>
+	struct ByteSwapHelper {
+		static_assert((BIT_COUNT, false), "Not supported.");
+	};
+
+	template<>
+	struct ByteSwapHelper<8> {
+		static constexpr std::uint8_t Do(std::uint8_t uVal) noexcept {
+			return uVal;
+		}
+	};
+	template<>
+	struct ByteSwapHelper<16> {
+		static constexpr std::uint16_t Do(std::uint16_t uVal) noexcept {
+			return __MCF_MAKE_CONSTANT(__builtin_bswap16(uVal));
+		}
+	};
+	template<>
+	struct ByteSwapHelper<32> {
+		static constexpr std::uint32_t Do(std::uint32_t uVal) noexcept {
+			return __MCF_MAKE_CONSTANT(__builtin_bswap32(uVal));
+		}
+	};
+	template<>
+	struct ByteSwapHelper<64> {
+		static constexpr std::uint64_t Do(std::uint64_t uVal) noexcept {
+			return __MCF_MAKE_CONSTANT(__builtin_bswap64(uVal));
+		}
+	};
 }
-inline std::uint32_t ByteSwap(std::uint32_t u32) noexcept {
-	return __builtin_bswap32(u32);
+
+inline constexpr unsigned char ByteSwap(unsigned char by) noexcept {
+	return Impl::ByteSwapHelper<BITS_OF(unsigned char)>::Do(by);
 }
-inline std::uint16_t ByteSwap(std::uint16_t u16) noexcept {
-	return __builtin_bswap16(u16);
+inline constexpr unsigned short ByteSwap(unsigned short ush) noexcept {
+	return Impl::ByteSwapHelper<BITS_OF(unsigned short)>::Do(ush);
 }
-inline std::uint8_t ByteSwap(std::uint8_t u8) noexcept {
-	return u8;
+inline constexpr unsigned int ByteSwap(unsigned int u) noexcept {
+	return Impl::ByteSwapHelper<BITS_OF(unsigned int)>::Do(u);
 }
+inline constexpr unsigned long ByteSwap(unsigned long ul) noexcept {
+	return Impl::ByteSwapHelper<BITS_OF(unsigned long)>::Do(ul);
+}
+inline constexpr unsigned long long ByteSwap(unsigned long long ull) noexcept {
+	return Impl::ByteSwapHelper<BITS_OF(unsigned long long)>::Do(ull);
+}
+
+#if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
+#	define BYTE_SWAP_IF_BE(expr)	(::MCF::ByteSwap(expr))
+#	define BYTE_SWAP_IF_LE(expr)	(expr)
+#else
+#	define BYTE_SWAP_IF_BE(expr)	(expr)
+#	define BYTE_SWAP_IF_LE(expr)	(::MCF::ByteSwap(expr))
+#endif
 
 //----------------------------------------------------------------------------
 // Copy / CopyN / CopyBackward / CopyBackwardN

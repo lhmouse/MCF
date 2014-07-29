@@ -49,7 +49,10 @@ public:
 	}
 
 	void Send(const void *pData, std::size_t uSize){
-		if(::sendto(xm_sockPeer.Get(), (const char *)pData, (int)uSize, 0, (const SOCKADDR *)&xm_vSockAddr, xm_nSockAddrSize) < 0){
+		if(::sendto(
+			xm_sockPeer.Get(), (const char *)pData, (int)uSize,
+			0, (const SOCKADDR *)&xm_vSockAddr, xm_nSockAddrSize
+		) < 0){
 			MCF_THROW(::GetLastError(), L"::sendto() 失败。"_wso);
 		}
 	}

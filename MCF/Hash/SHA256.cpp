@@ -4,6 +4,7 @@
 
 #include "../StdMCF.hpp"
 #include "Sha256.hpp"
+#include "../Core/Utilities.hpp"
 using namespace MCF;
 
 namespace {
@@ -25,7 +26,7 @@ void DoSha256Chunk(std::uint32_t (&au32Result)[8], const unsigned char *pbyChunk
 
 	std::uint32_t w[64];
 	for(std::size_t i = 0; i < 16; ++i){
-		w[i] = __builtin_bswap32(((const std::uint32_t *)pbyChunk)[i]);
+		w[i] = BYTE_SWAP_IF_LE(((const std::uint32_t *)pbyChunk)[i]);
 	}
 	for(std::size_t i = 16; i < COUNT_OF(w); ++i){
 		//const std::uint32_t s0 = ::_rotr(w[i - 15], 7) ^ ::_rotr(w[i - 15], 18) ^ (w[i - 15] >> 3);
@@ -144,7 +145,7 @@ void DoSha256Chunk(std::uint32_t (&au32Result)[8], const unsigned char *pbyChunk
 
 	alignas(16) std::uint32_t w[64];
 	for(std::size_t i = 0; i < 16; ++i){
-		w[i] = __builtin_bswap32(((const std::uint32_t *)pbyChunk)[i]);
+		w[i] = BYTE_SWAP_IF_LE(((const std::uint32_t *)pbyChunk)[i]);
 	}
 /*
 	for(std::size_t i = 16; i < COUNT_OF(w); ++i){
@@ -966,11 +967,11 @@ void Sha256::Finalize(unsigned char (&abyOutput)[32]) noexcept {
 		if(xm_uBytesInChunk < sizeof(xm_abyFirstPart)){
 			std::memset(xm_abyChunk + xm_uBytesInChunk, 0, sizeof(xm_abyFirstPart) - xm_uBytesInChunk);
 		}
-		xm_uBitsTotal = __builtin_bswap64(xm_u64BytesTotal * __CHAR_BIT__);
+		xm_uBitsTotal = BYTE_SWAP_IF_LE(xm_u64BytesTotal * 8);
 		DoSha256Chunk(xm_auResult, xm_abyChunk);
 
 		for(auto &u : xm_auResult){
-			u = __builtin_bswap32(u);
+			u = BYTE_SWAP_IF_LE(u);
 		}
 
 		xm_bInited = false;

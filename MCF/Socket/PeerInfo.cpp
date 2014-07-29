@@ -47,7 +47,7 @@ PeerInfo::PeerInfo(bool bIPv6, std::uint16_t u16Port) noexcept {
 		xm_au16IPv4Ones = 0xFFFF;
 		BZero(xm_au8IPv4);
 	}
-	xm_u16Port = ::ntohs(u16Port);
+	xm_u16Port = BYTE_SWAP_IF_LE(u16Port);
 }
 
 PeerInfo::PeerInfo(const void *pSockAddr, std::size_t uSockAddrSize){
@@ -79,15 +79,15 @@ PeerInfo::PeerInfo(
 	std::uint16_t u16IPv6_7,
 	std::uint16_t u16Port
 ) noexcept {
-	xm_au16IPv6[0]	= ::ntohs(u16IPv6_0);
-	xm_au16IPv6[1]	= ::ntohs(u16IPv6_1);
-	xm_au16IPv6[2]	= ::ntohs(u16IPv6_2);
-	xm_au16IPv6[3]	= ::ntohs(u16IPv6_3);
-	xm_au16IPv6[4]	= ::ntohs(u16IPv6_4);
-	xm_au16IPv6[5]	= ::ntohs(u16IPv6_5);
-	xm_au16IPv6[6]	= ::ntohs(u16IPv6_6);
-	xm_au16IPv6[7]	= ::ntohs(u16IPv6_7);
-	xm_u16Port		= ::ntohs(u16Port);
+	xm_au16IPv6[0]	= BYTE_SWAP_IF_LE(u16IPv6_0);
+	xm_au16IPv6[1]	= BYTE_SWAP_IF_LE(u16IPv6_1);
+	xm_au16IPv6[2]	= BYTE_SWAP_IF_LE(u16IPv6_2);
+	xm_au16IPv6[3]	= BYTE_SWAP_IF_LE(u16IPv6_3);
+	xm_au16IPv6[4]	= BYTE_SWAP_IF_LE(u16IPv6_4);
+	xm_au16IPv6[5]	= BYTE_SWAP_IF_LE(u16IPv6_5);
+	xm_au16IPv6[6]	= BYTE_SWAP_IF_LE(u16IPv6_6);
+	xm_au16IPv6[7]	= BYTE_SWAP_IF_LE(u16IPv6_7);
+	xm_u16Port		= BYTE_SWAP_IF_LE(u16Port);
 }
 
 PeerInfo::PeerInfo(
@@ -104,7 +104,7 @@ PeerInfo::PeerInfo(
 	xm_au8IPv4[1]	= u8IPv4_1;
 	xm_au8IPv4[2]	= u8IPv4_2;
 	xm_au8IPv4[3]	= u8IPv4_3;
-	xm_u16Port		= ::ntohs(u16Port);
+	xm_u16Port		= BYTE_SWAP_IF_LE(u16Port);
 }
 
 // 其他非静态成员函数。
@@ -153,9 +153,9 @@ int PeerInfo::ToSockAddr(void *pSockAddr, std::size_t uSockAddrSize) const noexc
 
 void PeerInfo::ToIPv6(std::uint16_t (&au16IPv6)[8], std::uint16_t &u16Port) const noexcept {
 	for(std::size_t i = 0; i < 8; ++i){
-		au16IPv6[i] = ::ntohs(xm_au16IPv6[i]);
+		au16IPv6[i] = BYTE_SWAP_IF_LE(xm_au16IPv6[i]);
 	}
-	u16Port = ::ntohs(xm_u16Port);
+	u16Port = BYTE_SWAP_IF_LE(xm_u16Port);
 }
 
 bool PeerInfo::IsIPv4() const noexcept {
@@ -165,5 +165,5 @@ void PeerInfo::ToIPv4(std::uint8_t (&au8IPv4)[4], std::uint16_t &u16Port) const 
 	ASSERT(IsIPv4());
 
 	BCopy(au8IPv4, xm_au8IPv4);
-	u16Port = ::ntohs(xm_u16Port);
+	u16Port = BYTE_SWAP_IF_LE(xm_u16Port);
 }

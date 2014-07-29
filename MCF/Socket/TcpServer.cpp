@@ -49,13 +49,22 @@ public:
 			MCF_THROW(::GetLastError(), L"::socket() 失败。"_wso);
 		}
 
-		if((shFamily == AF_INET6) && ::setsockopt(xm_sockListen.Get(), IPPROTO_IPV6, IPV6_V6ONLY, (const char *)&FALSE_VALUE, sizeof(FALSE_VALUE))){
+		if((shFamily == AF_INET6) && ::setsockopt(
+			xm_sockListen.Get(), IPPROTO_IPV6, IPV6_V6ONLY,
+			(const char *)&FALSE_VALUE, sizeof(FALSE_VALUE)
+		)){
 			MCF_THROW(::GetLastError(), L"::setsockopt() 失败。"_wso);
 		}
-		if(bExclusive && ::setsockopt(xm_sockListen.Get(), SOL_SOCKET, SO_EXCLUSIVEADDRUSE, (const char *)&TRUE_VALUE, sizeof(TRUE_VALUE))){
+		if(bExclusive && ::setsockopt(
+			xm_sockListen.Get(), SOL_SOCKET, SO_EXCLUSIVEADDRUSE,
+			(const char *)&TRUE_VALUE, sizeof(TRUE_VALUE)
+		)){
 			MCF_THROW(::GetLastError(), L"::setsockopt() 失败。"_wso);
 		}
-		if(bReuseAddr && ::setsockopt(xm_sockListen.Get(), SOL_SOCKET, SO_REUSEADDR, (const char *)&TRUE_VALUE, sizeof(TRUE_VALUE))){
+		if(bReuseAddr && ::setsockopt(
+			xm_sockListen.Get(), SOL_SOCKET, SO_REUSEADDR,
+			(const char *)&TRUE_VALUE, sizeof(TRUE_VALUE)
+		)){
 			MCF_THROW(::GetLastError(), L"::setsockopt() 失败。"_wso);
 		}
 		if(::ioctlsocket(xm_sockListen.Get(), (long)FIONBIO, (unsigned long *)&TRUE_VALUE)){
@@ -93,14 +102,18 @@ public:
 
 				SOCKADDR_STORAGE vSockAddr;
 				int nSockAddrSize = sizeof(vSockAddr);
-				Impl::UniqueSocket sockClient(::accept(xm_sockListen.Get(), (SOCKADDR *)&vSockAddr, &nSockAddrSize));
+				Impl::UniqueSocket sockClient(::accept(
+					xm_sockListen.Get(), (SOCKADDR *)&vSockAddr, &nSockAddrSize
+				));
 				if(!sockClient){
 					return false;
 				}
 				if(::ioctlsocket(sockClient.Get(), (long)FIONBIO, (unsigned long *)&FALSE_VALUE)){
 					MCF_THROW(::GetLastError(), L"::ioctlsocket() 失败。"_wso);
 				}
-				pPeer = Impl::TcpPeerFromSocket(std::move(sockClient), &vSockAddr, (std::size_t)nSockAddrSize);
+				pPeer = Impl::TcpPeerFromSocket(
+					std::move(sockClient), &vSockAddr, (std::size_t)nSockAddrSize
+				);
 				return true;
 			},
 			ullMilliSeconds

@@ -73,7 +73,7 @@ void DoMd5Chunk(std::uint32_t (&au32Result)[4], const unsigned char *pbyChunk) n
 		const std::uint32_t temp = d;
 		d = c;
 		c = b;
-		b += ::_rotl(a + f + KVEC[i] + w[g], RVEC[i]);
+		b += ::_rotl(a + f + KVEC[i] + BYTE_SWAP_IF_BE(w[g]), RVEC[i]);
 		a = temp;
 	}
 
@@ -403,7 +403,7 @@ void Md5::Finalize(unsigned char (&abyOutput)[16]) noexcept {
 		if(xm_uBytesInChunk < sizeof(xm_abyFirstPart)){
 			std::memset(xm_abyChunk + xm_uBytesInChunk, 0, sizeof(xm_abyFirstPart) - xm_uBytesInChunk);
 		}
-		xm_uBitsTotal = xm_u64BytesTotal * __CHAR_BIT__;
+		xm_uBitsTotal = BYTE_SWAP_IF_BE(xm_u64BytesTotal * 8);
 		DoMd5Chunk(xm_auResult, xm_abyChunk);
 
 		xm_bInited = false;

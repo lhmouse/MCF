@@ -260,12 +260,15 @@ public:
 
 		if(pBegin != pEnd){
 			const auto pOldPrev = pBegin->xm_pPrev;
+
+			(pOldPrev ? pOldPrev->xm_pNext : lstSource.xm_pFirst) = pEnd;
 			const auto pOldLast = std::exchange((pEnd ? pEnd->xm_pPrev : lstSource.xm_pLast), pOldPrev);
+
 			const auto pPrev = std::exchange((pPos ? pPos->xm_pPrev : xm_pLast), pOldLast);
+			(pPrev ? pPrev->xm_pNext : xm_pFirst) = pBegin;
+
 			pOldLast->xm_pNext = pPos;
 			pBegin->xm_pPrev = pPrev;
-			(pPrev ? pPrev->xm_pNext : xm_pFirst) = pBegin;
-			(pOldPrev ? pOldPrev->xm_pNext : lstSource.xm_pFirst) = pEnd;
 		}
 		return pPos;
 	}

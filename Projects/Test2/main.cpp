@@ -3,8 +3,6 @@
 #include <MCF/Core/File.hpp>
 #include <MCF/StreamFilters/LzmaFilters.hpp>
 #include <MCF/Hash/Crc32.hpp>
-#include <iostream>
-#include <iomanip>
 using namespace MCF;
 
 extern "C" unsigned int MCFMain() noexcept {
@@ -31,6 +29,5 @@ extern "C" unsigned int MCFMain() noexcept {
 	} catch(Exception &e){
 		::MessageBoxW(0, e.m_wcsMessage.GetCStr(), 0, 0);
 	}
-
 	return 0;
 }

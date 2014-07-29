@@ -203,71 +203,72 @@ public:
 			throw;
 		}
 
-		auto &pPrev = pNode->xm_pPrev;
-		auto &pNext = pNode->xm_pNext;
-		pPrev = (pPos ? pPos->xm_pPrev : xm_pLast);
-		pNext = pPos;
+		const auto pPrev = std::exchange((pPos ? pPos->xm_pPrev : xm_pLast), pNode);
 		(pPrev ? pPrev->xm_pNext : xm_pFirst) = pNode;
-		(pNext ? pNext->xm_pPrev : xm_pLast) = pNode;
+		pNode->xm_pPrev = pPrev;
+		pNode->xm_pNext = pPos;
 
 		return pNode;
 	}
 	Node *Erase(Node *pPos) noexcept {
-		ASSERT(pPos);
-
-		const auto pPrev = pPos->xm_pPrev;
-		const auto pNext = pPos->xm_pNext;
-		(pPrev ? pPrev->xm_pNext : xm_pFirst) = pNext;
-		(pNext ? pNext->xm_pPrev : xm_pLast) = pPrev;
-
-		Destruct(&(pPos->GetElement()));
-		xEnpool(pPos);
-
-		return pNext;
+		VList lstErased;
+		const auto pRet = pPos->xm_pNext;
+		lstErased.Splice(nullptr, *this, pPos);
+		return pRet;
+	}
+	Node *Erase(Node *pBegin, Node *pEnd) noexcept {
+		VList lstErased;
+		const auto pRet = pEnd ? pEnd->xm_pNext : nullptr;
+		lstErased.Splice(nullptr, *this, pBegin, pEnd);
+		return pRet;
 	}
 
 	Node *Splice(Node *pPos, VList &lstSource) noexcept {
-		const auto pRet = Splice(pPos, lstSource, lstSource.xm_pFirst, lstSource.xm_pLast);
+		const auto pRet = Splice(pPos, lstSource, lstSource.xm_pFirst, nullptr);
 		ASSERT(lstSource.IsEmpty());
 		return pRet;
 	}
 	Node *Splice(Node *pPos, VList &lstSource, Node *pSingle) noexcept {
-		return Splice(pPos, lstSource, pSingle, pSingle);
+		ASSERT(pSingle);
+		return Splice(pPos, lstSource, pSingle, pSingle->xm_pNext);
 	}
-	Node *Splice(Node *pPos, VList &lstSource, Node *pFirst, Node *pLast) noexcept {
-		ASSERT(pFirst && pLast);
+	Node *Splice(Node *pPos, VList &lstSource, Node *pBegin, Node *pEnd) noexcept {
+		ASSERT(!(!pBegin && pEnd));
 #ifndef NDEBUG
 		auto pCur = lstSource.xm_pFirst;
 		for(;;){
 			if(!pCur){
 				ASSERT(false);
 			}
-			if(pCur == pFirst){
+			if(pCur == pBegin){
 				break;
 			}
 			pCur = pCur->xm_pNext;
 		}
-		for(;;){
-			if(pCur == pLast){
-				break;
-			}
-			pCur = pCur->xm_pNext;
-			if(!pCur){
-				ASSERT(false);
+		if(pEnd){
+			for(;;){
+				if(pCur == pEnd){
+					break;
+				}
+				pCur = pCur->xm_pNext;
+				if(!pCur){
+					ASSERT(false);
+				}
 			}
 		}
 #endif
+		if(pBegin != pEnd){
+			auto &pLast = (pEnd ? pEnd->xm_pPrev : lstSource.xm_pLast);
 
-		auto &pPrev = pFirst->xm_pPrev;
-		auto &pNext = pLast->xm_pNext;
-		(pPrev ? pPrev->xm_pNext : lstSource.xm_pFirst) = pNext;
-		(pNext ? pNext->xm_pPrev : lstSource.xm_pLast) = pPrev;
-		pPrev = (pPos ? pPos->xm_pPrev : xm_pLast);
-		pNext = pPos;
-		(pPrev ? pPrev->xm_pNext : xm_pFirst) = pFirst;
-		(pNext ? pNext->xm_pPrev : xm_pLast) = pLast;
+			const auto pPrev = std::exchange((pPos ? pPos->xm_pPrev : xm_pLast), pLast);
+			(pPrev ? pPrev->xm_pNext : xm_pFirst) = pBegin;
+			pBegin->xm_pPrev = pPrev;
+			pLast->xm_pNext = pPos;
 
-		return pNext;
+			(pPrev ? pPrev->xm_pNext : lstSource.xm_pFirst) = pEnd;
+			pLast = pPrev;
+		}
+		return pPos;
 	}
 
 	Node *Splice(Node *pPos, VList &&lstSource) noexcept {
@@ -276,8 +277,8 @@ public:
 	Node *Splice(Node *pPos, VList &&lstSource, Node *pSingle) noexcept {
 		return Splice(pPos, lstSource, pSingle);
 	}
-	Node *Splice(Node *pPos, VList &&lstSource, Node *pFirst, Node *pLast) noexcept {
-		return Splice(pPos, lstSource, pFirst, pLast);
+	Node *Splice(Node *pPos, VList &&lstSource, Node *pBegin, Node *pEnd) noexcept {
+		return Splice(pPos, lstSource, pBegin, pEnd);
 	}
 
 	template<typename... Params>

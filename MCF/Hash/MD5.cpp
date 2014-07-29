@@ -4,6 +4,7 @@
 
 #include "../StdMCF.hpp"
 #include "Md5.hpp"
+#include "../Core/Utilities.hpp"
 using namespace MCF;
 
 namespace {

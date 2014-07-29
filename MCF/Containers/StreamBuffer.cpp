@@ -13,7 +13,7 @@ class StreamBuffer::xDisposableBuffer {
 private:
 	unsigned short xm_ushRead;
 	unsigned short xm_ushWrite;
-	unsigned char xm_abyData[3];
+	unsigned char xm_abyData[0x400];
 
 public:
 	xDisposableBuffer() noexcept
@@ -309,31 +309,23 @@ bool StreamBuffer::CutOut(StreamBuffer &sbufHead, std::size_t uSize){
 	}
 
 	StreamBuffer sbufTemp;
-	auto pLastToSplice = xm_lstBuffers.GetBegin();
+	auto pSpliceEnd = xm_lstBuffers.GetBegin();
 	auto uRemaining = uSize;
-	if(uRemaining != 0){
-		for(;;){
-			ASSERT(pLastToSplice);
+	while(uRemaining != 0){
+		ASSERT(pSpliceEnd);
 
-			const auto uCurSize = pLastToSplice->GetElement().GetSize();
-			if(uRemaining < uCurSize){
-				pLastToSplice = pLastToSplice->GetPrev();
-				sbufTemp.xm_lstBuffers.Push();
-				break;
-			} else if(uRemaining == uCurSize){
-				uRemaining = 0;
-				break;
-			}
-			pLastToSplice = pLastToSplice->GetNext();
-			uRemaining -= uCurSize;
+		const auto uCurSize = pSpliceEnd->GetElement().GetSize();
+		if(uRemaining < uCurSize){
+			sbufTemp.xm_lstBuffers.Push();
+			break;
 		}
+		pSpliceEnd = pSpliceEnd->GetNext();
+		uRemaining -= uCurSize;
 	}
-	if(pLastToSplice){
-		sbufTemp.xm_lstBuffers.Splice(
-			sbufTemp.xm_lstBuffers.GetBegin(),
-			xm_lstBuffers, xm_lstBuffers.GetBegin(), pLastToSplice
-		);
-	}
+	sbufTemp.xm_lstBuffers.Splice(
+		sbufTemp.xm_lstBuffers.GetBegin(),
+		xm_lstBuffers, xm_lstBuffers.GetBegin(), pSpliceEnd
+	);
 	if(uRemaining != 0){
 		ASSERT(!xm_lstBuffers.IsEmpty());
 		xm_lstBuffers.GetBegin()->GetElement().Transfer(

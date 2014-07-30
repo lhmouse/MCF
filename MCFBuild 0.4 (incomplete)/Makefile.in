@@ -121,7 +121,6 @@ am_src_libmcflite_a_OBJECTS =  \
 	../MCFCRT/exe/src_libmcflite_a-exe_startup.$(OBJEXT) \
 	../MCF/Core/String.$(OBJEXT) ../MCF/Core/Exception.$(OBJEXT) \
 	../MCF/Core/File.$(OBJEXT) ../MCF/Core/Utf8TextFile.$(OBJEXT) \
-	../MCF/Core/StreamBuffer.$(OBJEXT) \
 	../MCF/Core/System.$(OBJEXT) ../MCF/Core/Time.$(OBJEXT) \
 	../MCF/Thread/Thread.$(OBJEXT) \
 	../MCF/Thread/CriticalSection.$(OBJEXT) \
@@ -129,7 +128,8 @@ am_src_libmcflite_a_OBJECTS =  \
 	../MCF/Thread/ReaderWriterLock.$(OBJEXT) \
 	../MCF/Language/Notation.$(OBJEXT) \
 	../MCF/Hash/Sha256.$(OBJEXT) \
-	../MCF/Serialization/_SerdesTraits.$(OBJEXT)
+	../MCF/Containers/StreamBuffer.$(OBJEXT) \
+	../MCF/Serialization/Serdes.$(OBJEXT)
 src_libmcflite_a_OBJECTS = $(am_src_libmcflite_a_OBJECTS)
 am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS)
@@ -353,7 +353,6 @@ src_libmcflite_a_SOURCES = \
 	../MCF/Core/Exception.cpp				\
 	../MCF/Core/File.cpp					\
 	../MCF/Core/Utf8TextFile.cpp			\
-	../MCF/Core/StreamBuffer.cpp			\
 	../MCF/Core/System.cpp					\
 	../MCF/Core/Time.cpp					\
 	../MCF/Thread/Thread.cpp				\
@@ -362,7 +361,8 @@ src_libmcflite_a_SOURCES = \
 	../MCF/Thread/ReaderWriterLock.cpp		\
 	../MCF/Language/Notation.cpp			\
 	../MCF/Hash/Sha256.cpp					\
-	../MCF/Serialization/_SerdesTraits.cpp
+	../MCF/Containers/StreamBuffer.cpp		\
+	../MCF/Serialization/Serdes.cpp
 
 src_libmcflite_a_CFLAGS = \
 	$(AM_CFLAGS) -D__MCF_CRT_NO_DLMALLOC
@@ -519,8 +519,6 @@ clean-noinstLIBRARIES:
 	../MCF/Core/$(DEPDIR)/$(am__dirstamp)
 ../MCF/Core/Utf8TextFile.$(OBJEXT): ../MCF/Core/$(am__dirstamp) \
 	../MCF/Core/$(DEPDIR)/$(am__dirstamp)
-../MCF/Core/StreamBuffer.$(OBJEXT): ../MCF/Core/$(am__dirstamp) \
-	../MCF/Core/$(DEPDIR)/$(am__dirstamp)
 ../MCF/Core/System.$(OBJEXT): ../MCF/Core/$(am__dirstamp) \
 	../MCF/Core/$(DEPDIR)/$(am__dirstamp)
 ../MCF/Core/Time.$(OBJEXT): ../MCF/Core/$(am__dirstamp) \
@@ -557,13 +555,22 @@ clean-noinstLIBRARIES:
 	@: > ../MCF/Hash/$(DEPDIR)/$(am__dirstamp)
 ../MCF/Hash/Sha256.$(OBJEXT): ../MCF/Hash/$(am__dirstamp) \
 	../MCF/Hash/$(DEPDIR)/$(am__dirstamp)
+../MCF/Containers/$(am__dirstamp):
+	@$(MKDIR_P) ../MCF/Containers
+	@: > ../MCF/Containers/$(am__dirstamp)
+../MCF/Containers/$(DEPDIR)/$(am__dirstamp):
+	@$(MKDIR_P) ../MCF/Containers/$(DEPDIR)
+	@: > ../MCF/Containers/$(DEPDIR)/$(am__dirstamp)
+../MCF/Containers/StreamBuffer.$(OBJEXT):  \
+	../MCF/Containers/$(am__dirstamp) \
+	../MCF/Containers/$(DEPDIR)/$(am__dirstamp)
 ../MCF/Serialization/$(am__dirstamp):
 	@$(MKDIR_P) ../MCF/Serialization
 	@: > ../MCF/Serialization/$(am__dirstamp)
 ../MCF/Serialization/$(DEPDIR)/$(am__dirstamp):
 	@$(MKDIR_P) ../MCF/Serialization/$(DEPDIR)
 	@: > ../MCF/Serialization/$(DEPDIR)/$(am__dirstamp)
-../MCF/Serialization/_SerdesTraits.$(OBJEXT):  \
+../MCF/Serialization/Serdes.$(OBJEXT):  \
 	../MCF/Serialization/$(am__dirstamp) \
 	../MCF/Serialization/$(DEPDIR)/$(am__dirstamp)
 src/$(am__dirstamp):
@@ -643,6 +650,7 @@ MCFBuild$(EXEEXT): $(MCFBuild_OBJECTS) $(MCFBuild_DEPENDENCIES) $(EXTRA_MCFBuild
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
+	-rm -f ../MCF/Containers/*.$(OBJEXT)
 	-rm -f ../MCF/Core/*.$(OBJEXT)
 	-rm -f ../MCF/Hash/*.$(OBJEXT)
 	-rm -f ../MCF/Language/*.$(OBJEXT)
@@ -657,16 +665,16 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@../MCF/Containers/$(DEPDIR)/StreamBuffer.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@../MCF/Core/$(DEPDIR)/Exception.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@../MCF/Core/$(DEPDIR)/File.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@../MCF/Core/$(DEPDIR)/StreamBuffer.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@../MCF/Core/$(DEPDIR)/String.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@../MCF/Core/$(DEPDIR)/System.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@../MCF/Core/$(DEPDIR)/Time.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@../MCF/Core/$(DEPDIR)/Utf8TextFile.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@../MCF/Hash/$(DEPDIR)/Sha256.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@../MCF/Language/$(DEPDIR)/Notation.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@../MCF/Serialization/$(DEPDIR)/_SerdesTraits.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@../MCF/Serialization/$(DEPDIR)/Serdes.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@../MCF/Thread/$(DEPDIR)/CriticalSection.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@../MCF/Thread/$(DEPDIR)/ReaderWriterLock.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@../MCF/Thread/$(DEPDIR)/Semaphore.Po@am__quote@
@@ -1210,6 +1218,8 @@ clean-generic:
 distclean-generic:
 	-test -z "$(CONFIG_CLEAN_FILES)" || rm -f $(CONFIG_CLEAN_FILES)
 	-test . = "$(srcdir)" || test -z "$(CONFIG_CLEAN_VPATH_FILES)" || rm -f $(CONFIG_CLEAN_VPATH_FILES)
+	-rm -f ../MCF/Containers/$(DEPDIR)/$(am__dirstamp)
+	-rm -f ../MCF/Containers/$(am__dirstamp)
 	-rm -f ../MCF/Core/$(DEPDIR)/$(am__dirstamp)
 	-rm -f ../MCF/Core/$(am__dirstamp)
 	-rm -f ../MCF/Hash/$(DEPDIR)/$(am__dirstamp)
@@ -1241,7 +1251,7 @@ clean-am: clean-binPROGRAMS clean-generic clean-noinstLIBRARIES \
 
 distclean: distclean-am
 	-rm -f $(am__CONFIG_DISTCLEAN_FILES)
-	-rm -rf ../MCF/Core/$(DEPDIR) ../MCF/Hash/$(DEPDIR) ../MCF/Language/$(DEPDIR) ../MCF/Serialization/$(DEPDIR) ../MCF/Thread/$(DEPDIR) ../MCFCRT/env/$(DEPDIR) ../MCFCRT/exe/$(DEPDIR) ../MCFCRT/ext/$(DEPDIR) ../MCFCRT/stdc/stdlib/$(DEPDIR) src/$(DEPDIR)
+	-rm -rf ../MCF/Containers/$(DEPDIR) ../MCF/Core/$(DEPDIR) ../MCF/Hash/$(DEPDIR) ../MCF/Language/$(DEPDIR) ../MCF/Serialization/$(DEPDIR) ../MCF/Thread/$(DEPDIR) ../MCFCRT/env/$(DEPDIR) ../MCFCRT/exe/$(DEPDIR) ../MCFCRT/ext/$(DEPDIR) ../MCFCRT/stdc/stdlib/$(DEPDIR) src/$(DEPDIR)
 	-rm -f Makefile
 distclean-am: clean-am distclean-compile distclean-generic \
 	distclean-tags
@@ -1289,7 +1299,7 @@ installcheck-am:
 maintainer-clean: maintainer-clean-am
 	-rm -f $(am__CONFIG_DISTCLEAN_FILES)
 	-rm -rf $(top_srcdir)/autom4te.cache
-	-rm -rf ../MCF/Core/$(DEPDIR) ../MCF/Hash/$(DEPDIR) ../MCF/Language/$(DEPDIR) ../MCF/Serialization/$(DEPDIR) ../MCF/Thread/$(DEPDIR) ../MCFCRT/env/$(DEPDIR) ../MCFCRT/exe/$(DEPDIR) ../MCFCRT/ext/$(DEPDIR) ../MCFCRT/stdc/stdlib/$(DEPDIR) src/$(DEPDIR)
+	-rm -rf ../MCF/Containers/$(DEPDIR) ../MCF/Core/$(DEPDIR) ../MCF/Hash/$(DEPDIR) ../MCF/Language/$(DEPDIR) ../MCF/Serialization/$(DEPDIR) ../MCF/Thread/$(DEPDIR) ../MCFCRT/env/$(DEPDIR) ../MCFCRT/exe/$(DEPDIR) ../MCFCRT/ext/$(DEPDIR) ../MCFCRT/stdc/stdlib/$(DEPDIR) src/$(DEPDIR)
 	-rm -f Makefile
 maintainer-clean-am: distclean-am maintainer-clean-generic
 

@@ -3,7 +3,7 @@
 
 #include "MCFBuild.hpp"
 #include "Shell.hpp"
-#include "../MCF/Core/StreamBuffer.hpp"
+#include "../MCF/Containers/StreamBuffer.hpp"
 #include "../MCF/Core/UniqueHandle.hpp"
 #include "../MCF/Core/Exception.hpp"
 #include "../MCF/Core/Utilities.hpp"

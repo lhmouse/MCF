@@ -9,34 +9,47 @@
 #include "../Core/Utilities.hpp"
 #include "VarIntEx.hpp"
 #include <type_traits>
-#include <deque>
 #include <utility>
 #include <tuple>
+#include <limits>
 #include <cstddef>
 
 namespace MCF {
 
+// 辅助函数。
 [[noreturn]]
 extern void ThrowEndOfStream();
-
+[[noreturn]]
+extern void ThrowSizeTooLarge();
 [[noreturn]]
 extern void ThrowInvalidData();
+
+// 通用接口声明。
+template<typename DataType>
+void Serialize(StreamBuffer &sbufSink, const DataType &vSource);
+template<typename DataType>
+void Deserialize(DataType &vSink, StreamBuffer &sbufSource);
+
+template<typename DataType = void, typename InputIterator>
+InputIterator Serialize(StreamBuffer &sbufSink, InputIterator itInput, std::size_t uCount);
+template<typename DataType = void, typename OutputIterator>
+OutputIterator Deserialize(OutputIterator itOutput, std::size_t uCount, StreamBuffer &sbufSource);
 
 namespace Impl {
 	template<typename DataType, typename TraitHelper = void>
 	struct SerdesTrait {
 		static_assert((sizeof(DataType) - 1, false), "Not supported.");
 
-		static void Serialize(StreamBuffer &sbufSink, const DataType &vSource);
-		static void Deserialize(DataType &vSink, StreamBuffer &sbufSource);
+		static void DoSerialize(StreamBuffer &sbufSink, const DataType &vSource);
+		static void DoDeserialize(DataType &vSink, StreamBuffer &sbufSource);
 	};
 
 	template<>
 	struct SerdesTrait<bool, void> {
-		static void Serialize(StreamBuffer &sbufSink, bool vSource){
+		static void DoSerialize(StreamBuffer &sbufSink, bool vSource){
 			sbufSink.Put((unsigned char)vSource);
 		}
-		static void Deserialize(bool &vSink, StreamBuffer &sbufSource){
+		static void DoDeserialize(bool &vSink, StreamBuffer &sbufSource){
 			const auto nVal = sbufSource.Get();
 			if(nVal == -1){
 				ThrowEndOfStream();
@@ -50,10 +63,10 @@ namespace Impl {
 			std::is_integral<Char>::value && (sizeof(Char) == 1)
 			>::type>
 	{
-		static void Serialize(StreamBuffer &sbufSink, Char vSource){
+		static void DoSerialize(StreamBuffer &sbufSink, Char vSource){
 			sbufSink.Put((unsigned char)vSource);
 		}
-		static void Deserialize(Char &vSink, StreamBuffer &sbufSource){
+		static void DoDeserialize(Char &vSink, StreamBuffer &sbufSource){
 			const auto nVal = sbufSource.Get();
 			if(nVal == -1){
 				ThrowEndOfStream();
@@ -67,13 +80,13 @@ namespace Impl {
 			std::is_integral<Integer>::value && (sizeof(Integer) > 1)
 			>::type>
 	{
-		static void Serialize(StreamBuffer &sbufSink, Integer vSource){
+		static void DoSerialize(StreamBuffer &sbufSink, Integer vSource){
 			VarIntEx<Integer> vEncoder;
 			vEncoder.Set(vSource);
 			auto itOutput = sbufSink.GetWriteIterator();
 			vEncoder.Serialize(itOutput);
 		}
-		static void Deserialize(Integer &vSink, StreamBuffer &sbufSource){
+		static void DoDeserialize(Integer &vSink, StreamBuffer &sbufSource){
 			VarIntEx<Integer> vDecoder;
 			auto itInput = sbufSource.GetReadIterator();
 			if(!vDecoder.Deserialize(itInput, sbufSource.GetReadEnd())){
@@ -88,7 +101,7 @@ namespace Impl {
 			std::is_floating_point<FloatingPoint>::value
 			>::type>
 	{
-		static void Serialize(StreamBuffer &sbufSink, const FloatingPoint &vSource){
+		static void DoSerialize(StreamBuffer &sbufSink, const FloatingPoint &vSource){
 #if __FLOAT_WORD_ORDER__ == __ORDER_BIG_ENDIAN__
 			unsigned char abyTemp[sizeof(vSource)];
 			ReverseCopyN(abyTemp, sizeof(vSource), (const unsigned char *)(&vSource + 1));
@@ -97,7 +110,7 @@ namespace Impl {
 			sbufSink.Insert(&vSource, sizeof(vSource));
 #endif
 		}
-		static void Deserialize(FloatingPoint &vSink, StreamBuffer &sbufSource){
+		static void DoDeserialize(FloatingPoint &vSink, StreamBuffer &sbufSource){
 #if __FLOAT_WORD_ORDER__ == __ORDER_BIG_ENDIAN__
 			unsigned char abyTemp[sizeof(vSink)];
 			if(!sbufSource.Extract(abyTemp, sizeof(vSink))){
@@ -136,7 +149,7 @@ namespace Impl {
 	template<>
 	struct SerdesTrait<bool[], void> {
 		template<typename InputIterator>
-		static void Serialize(StreamBuffer &sbufSink, InputIterator itInput, std::size_t uCount){
+		static void DoSerialize(StreamBuffer &sbufSink, InputIterator itInput, std::size_t uCount){
 			std::size_t i;
 			for(i = uCount / 8u; i; --i){
 				unsigned char by = 0;
@@ -145,7 +158,7 @@ namespace Impl {
 					by |= (bool)*itInput;
 					++itInput;
 				}
-				SerdesTrait<unsigned char>::Serialize(sbufSink, by);
+				Serialize<unsigned char>(sbufSink, by);
 			}
 			if((i = uCount % 8u) != 0){
 				unsigned char by = 0;
@@ -154,15 +167,15 @@ namespace Impl {
 					by |= (bool)*itInput;
 					++itInput;
 				} while(--i != 0);
-				SerdesTrait<unsigned char>::Serialize(sbufSink, by);
+				Serialize<unsigned char>(sbufSink, by);
 			}
 		}
 		template<typename OutputIterator>
-		static void Deserialize(OutputIterator itOutput, std::size_t uCount, StreamBuffer &sbufSource){
+		static void DoDeserialize(OutputIterator itOutput, std::size_t uCount, StreamBuffer &sbufSource){
 			std::size_t i;
 			for(i = uCount / 8u; i; --i){
 				unsigned char by;
-				SerdesTrait<unsigned char>::Deserialize(by, sbufSource);
+				Deserialize<unsigned char>(by, sbufSource);
 				for(auto j = 8u; j; --j){
 					*itOutput = (bool)(by & 0x80);
 					++itOutput;
@@ -171,7 +184,7 @@ namespace Impl {
 			}
 			if((i = uCount % 8u) != 0){
 				unsigned char by;
-				SerdesTrait<unsigned char>::Deserialize(by, sbufSource);
+				Deserialize<unsigned char>(by, sbufSource);
 				by <<= (8u - i);
 				do {
 					*itOutput = (bool)(by & 0x80);
@@ -184,16 +197,18 @@ namespace Impl {
 	template<typename Element>
 	struct SerdesTrait<Element[], void> {
 		template<typename InputIterator>
-		static void Serialize(StreamBuffer &sbufSink, InputIterator itInput, std::size_t uCount){
+		static void DoSerialize(StreamBuffer &sbufSink, InputIterator itInput, std::size_t uCount){
 			for(auto i = uCount; i; --i){
-				SerdesTrait<Element>::Serialize(sbufSink, *itInput);
+				Serialize<Element>(sbufSink, *itInput);
 				++itInput;
 			}
 		}
 		template<typename OutputIterator>
-		static void Deserialize(OutputIterator itOutput, std::size_t uCount, StreamBuffer &sbufSource){
+		static void DoDeserialize(OutputIterator itOutput, std::size_t uCount, StreamBuffer &sbufSource){
 			for(auto i = uCount; i; --i){
-				SerdesTrait<Element>::Deserialize(*itOutput, sbufSource);
+				Element vTemp;
+				Deserialize<Element>(vTemp, sbufSource);
+				*itOutput = std::move(vTemp);
 				++itOutput;
 			}
 		}
@@ -202,13 +217,12 @@ namespace Impl {
 	template<typename ArrayElement, std::size_t ARRAY_SIZE>
 	struct SerdesTrait<ArrayElement [ARRAY_SIZE], void> {
 		typedef ArrayElement Array[ARRAY_SIZE];
-		typedef SerdesTrait<ArrayElement[]> Delegate;
 
-		static void Serialize(StreamBuffer &sbufSink, const Array &vSource){
-			Delegate::Serialize(sbufSink, vSource, ARRAY_SIZE);
+		static void DoSerialize(StreamBuffer &sbufSink, const Array &vSource){
+			Serialize<ArrayElement>(sbufSink, vSource, ARRAY_SIZE);
 		}
-		static void Deserialize(Array &vSink, StreamBuffer &sbufSource){
-			Delegate::Deserialize(vSink, ARRAY_SIZE, sbufSource);
+		static void DoDeserialize(Array &vSink, StreamBuffer &sbufSource){
+			Deserialize<ArrayElement>(vSink, ARRAY_SIZE, sbufSource);
 		}
 	};
 
@@ -216,117 +230,71 @@ namespace Impl {
 	struct SerdesTrait<std::pair<First, Second>, void> {
 		typedef std::pair<First, Second> Pair;
 
-		static void Serialize(StreamBuffer &sbufSink, const Pair &vSource){
-			SerdesTrait<First>::Serialize(sbufSink, vSource.first);
-			SerdesTrait<Second>::Serialize(sbufSink, vSource.second);
+		static void DoSerialize(StreamBuffer &sbufSink, const Pair &vSource){
+			Serialize<First>(sbufSink, vSource.first);
+			Serialize<Second>(sbufSink, vSource.second);
 		}
-		static void Deserialize(Pair &vSink, StreamBuffer &sbufSource){
-			SerdesTrait<First>::Deserialize(vSink.first, sbufSource);
-			SerdesTrait<Second>::Deserialize(vSink.second, sbufSource);
-		}
-	};
-
-	template<class Tuple, std::size_t TUPLE_SIZE, std::size_t INDEX>
-	struct TupleSerdesHelper {
-		typedef typename std::tuple_element<INDEX, Tuple>::type Element;
-		typedef TupleSerdesHelper<Tuple, TUPLE_SIZE, INDEX + 1> Next;
-
-		static void Serialize(StreamBuffer &sbufSink, const Tuple &vSource){
-			SerdesTrait<Element>::Serialize(sbufSink, std::get<INDEX>(vSource));
-			Next::Serialize(sbufSink, vSource);
-		}
-		static void Deserialize(Tuple &vSink, StreamBuffer &sbufSource){
-			SerdesTrait<Element>::Deserialize(std::get<INDEX>(vSink), sbufSource);
-			Next::Deserialize(vSink, sbufSource);
-		}
-	};
-	template<class Tuple, std::size_t TUPLE_SIZE>
-	struct TupleSerdesHelper<Tuple, TUPLE_SIZE, TUPLE_SIZE> {
-		static void Serialize(StreamBuffer &, const Tuple &){
-		}
-		static void Deserialize(Tuple &, StreamBuffer &){
-		}
-	};
-
-	template<typename... TupleElements>
-	struct SerdesTrait<std::tuple<TupleElements...>, void> {
-		typedef std::tuple<TupleElements...> Tuple;
-		typedef TupleSerdesHelper<Tuple, std::tuple_size<Tuple>::value, 0> First;
-
-		static void Serialize(StreamBuffer &sbufSink, const Tuple &vSource){
-			First::Serialize(sbufSink, vSource);
-		}
-		static void Deserialize(Tuple &vSink, StreamBuffer &sbufSource){
-			First::Deserialize(vSink, sbufSource);
-		}
-	};
-
-	template<typename QueueElement>
-	struct SerdesTrait<std::deque<QueueElement>, void> {
-		typedef std::deque<QueueElement> Queue;
-		typedef SerdesTrait<QueueElement[]> Delegate;
-
-		static void Serialize(StreamBuffer &sbufSink, const Queue &vSource){
-			const auto uSize = vSource.size();
-			SerdesTrait<unsigned long long>::Serialize(sbufSink, uSize);
-			Delegate::Serialize(sbufSink, vSource.begin(), uSize);
-		}
-		static void Deserialize(Queue &vSink, StreamBuffer &sbufSource){
-			unsigned long long ullSize;
-			SerdesTrait<unsigned long long>::Deserialize(ullSize, sbufSource);
-			if(ullSize > std::numeric_limits<std::size_t>::max()){
-				ThrowInvalidData();
-			}
-			vSink.clear();
-			Delegate::Deserialize(std::back_inserter(vSink), ullSize, sbufSource);
-		}
-	};
-
-	template<>
-	struct SerdesTrait<StreamBuffer, void> {
-		static void Serialize(StreamBuffer &sbufSink, const StreamBuffer &vSource){
-			SerdesTrait<unsigned long long>::Serialize(sbufSink, vSource.GetSize());
-			sbufSink.Append(vSource);
-		}
-		static void Deserialize(StreamBuffer &vSink, StreamBuffer &sbufSource){
-			unsigned long long ullSize;
-			SerdesTrait<unsigned long long>::Deserialize(ullSize, sbufSource);
-			if(ullSize > std::numeric_limits<std::size_t>::max()){
-				ThrowInvalidData();
-			}
-			if(!sbufSource.CutOut(vSink, ullSize)){
-				ThrowEndOfStream();
-			}
+		static void DoDeserialize(Pair &vSink, StreamBuffer &sbufSource){
+			Deserialize<First>(vSink.first, sbufSource);
+			Deserialize<Second>(vSink.second, sbufSource);
 		}
 	};
 }
 
+// 辅助函数。
+inline void SerializeSize(StreamBuffer &sbufSink, std::size_t uSize){
+	Serialize<std::uint64_t>(sbufSink, uSize);
+}
+inline std::size_t DeserializeSize(StreamBuffer &sbufSource){
+	std::uint64_t u64Size;
+	Deserialize<std::uint64_t>(u64Size, sbufSource);
+	if(u64Size > std::numeric_limits<std::size_t>::max()){
+		ThrowSizeTooLarge();
+	}
+	return u64Size;
+}
+
+// 通用接口定义。
 template<typename DataType>
 void Serialize(StreamBuffer &sbufSink, const DataType &vSource){
-	Impl::SerdesTrait<DataType>::Serialize(sbufSink, vSource);
+	Impl::SerdesTrait<DataType>::DoSerialize(sbufSink, vSource);
 }
 template<typename DataType>
 void Deserialize(DataType &vSink, StreamBuffer &sbufSource){
-	Impl::SerdesTrait<DataType>::Deserialize(vSink, sbufSource);
+	Impl::SerdesTrait<DataType>::DoDeserialize(vSink, sbufSource);
 }
 
-template<typename DataType = void, typename InputIterator>
+template<typename DataType, typename InputIterator>
 InputIterator Serialize(StreamBuffer &sbufSink, InputIterator itInput, std::size_t uCount){
 	Impl::SerdesTrait<
 		typename std::conditional<std::is_void<DataType>::value,
 			typename std::iterator_traits<InputIterator>::value_type, DataType
 			>::type[]
-		>::Serialize(sbufSink, itInput, uCount);
+		>::DoSerialize(sbufSink, itInput, uCount);
 	return std::move(itInput);
 }
-template<typename DataType = void, typename OutputIterator>
+template<typename DataType, typename OutputIterator>
 OutputIterator Deserialize(OutputIterator itOutput, std::size_t uCount, StreamBuffer &sbufSource){
 	Impl::SerdesTrait<
 		typename std::conditional<std::is_void<DataType>::value,
 			typename std::iterator_traits<OutputIterator>::value_type, DataType
 			>::type[]
-		>::Deserialize(itOutput, uCount, sbufSource);
+		>::DoDeserialize(itOutput, uCount, sbufSource);
 	return std::move(itOutput);
+}
+
+// 特化重载。
+template<>
+inline void Serialize(StreamBuffer &sbufSink, const StreamBuffer &vSource){
+	SerializeSize(sbufSink,  vSource.GetSize());
+	sbufSink.Append(vSource);
+}
+template<>
+inline void Deserialize(StreamBuffer &vSink, StreamBuffer &sbufSource){
+	const std::size_t uSize = DeserializeSize(sbufSource);
+	if(!sbufSource.CutOut(vSink, uSize)){
+		ThrowEndOfStream();
+	}
 }
 
 }

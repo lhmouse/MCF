@@ -1,31 +1,17 @@
 #include <MCF/StdMCF.hpp>
-#include <MCF/StreamFilters/IsaacExFilters.hpp>
+#include <MCF/Serialization/Serdes_tuple.hpp>
+#include <iostream>
 using namespace MCF;
 
+typedef
+	std::tuple<int, double, char>
+	TestType;
+
 extern "C" unsigned int MCFMain() noexcept {
-	StreamBuffer text;
-	text.Insert("hello world!", 12);
-
-	IsaacExEncoder("key", 3).FilterInPlace(text);
-
-	std::printf("encrypted: ");
-	text.Traverse([](auto pby, auto cb){
-		for(auto i = cb; i; --i){
-			std::printf("%02hhX ", *(pby++));
-		}
-	});
-	std::putchar('\n');
-
-	IsaacExDecoder("key", 3).FilterInPlace(text);
-
-	std::printf("decrypted: ");
-	text.Traverse([](auto pby, auto cb){
-		for(auto i = cb; i; --i){
-			std::putchar(*(pby++));
-		}
-	});
-	std::putchar('\n');
-
-
+	StreamBuffer buf;
+	TestType t1 = std::make_tuple(12, 34.5, '6'), t2;
+	Serialize(buf, t1);
+	Deserialize(t2, buf);
+	std::cout <<std::get<0>(t2) <<", " <<std::get<1>(t2) <<", " <<std::get<2>(t2);
 	return 0;
 }

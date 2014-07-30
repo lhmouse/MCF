@@ -10,17 +10,16 @@
 
 namespace MCFBuild {
 
+struct DependencyItem {
+	Sha256 shaCommandLine;
+	Sha256 shaSource;
+	Sha256 shaPreProcessed;
+	std::map<MCF::WideString, Sha256> mapDependencies;
+};
+
 class DependencyDatabase {
 public:
-	struct FileItem {
-		Sha256 shaCommandLine;
-		Sha256 shaSource;
-		Sha256 shaPreProcessed;
-		std::map<MCF::WideString, Sha256> mapDependencies;
-	};
-
-public:
-	std::map<MCF::WideString, FileItem> m_mapFiles;
+	std::map<MCF::WideString, DependencyItem> m_mapFiles;
 
 public:
 	void LoadFromFile(const MCF::WideString &wsoPath);

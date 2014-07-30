@@ -10,25 +10,14 @@
 #include <cstddef>
 using namespace MCFBuild;
 
-SERDES_TABLE_BEGIN(DependencyDatabase::FileItem)
-	SERDES_MEMBER(shaCommandLine)
-	SERDES_MEMBER(shaSource)
-	SERDES_MEMBER(shaPreProcessed)
-	SERDES_MEMBER(mapDependencies)
-SERDES_TABLE_END
-
-SERDES_TABLE_BEGIN(DependencyDatabase)
-	SERDES_MEMBER(m_mapFiles)
-SERDES_TABLE_END
-
 void DependencyDatabase::LoadFromFile(const MCF::WideString &wcsPath){
-	m_mapFiles.clear();
-	MCF::StreamBuffer sbufData;
-	GetFileContents(sbufData, wcsPath, true);
-	MCF::Deserialize(*this, sbufData);
+//	m_mapFiles.clear();
+//	MCF::StreamBuffer sbufData;
+//	GetFileContents(sbufData, wcsPath, true);
+//	MCF::Deserialize(*this, sbufData);
 }
 void DependencyDatabase::SaveToFile(const MCF::WideString &wcsPath) const {
-	MCF::StreamBuffer sbufData;
-	MCF::Serialize(sbufData, *this);
-	PutFileContents(wcsPath, sbufData);
+//	MCF::StreamBuffer sbufData;
+//	MCF::Serialize(sbufData, *this);
+//	PutFileContents(wcsPath, sbufData);
 }

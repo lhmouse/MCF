@@ -10,8 +10,6 @@
 
 namespace MCF {
 
-class IsaacRng;
-
 class IsaacExEncoder : CONCRETE(StreamFilterBase) {
 private:
 	union {
@@ -19,7 +17,7 @@ private:
 		std::uint32_t au32[8];
 	} xm_vKeyHash;
 
-	std::unique_ptr<IsaacRng> xm_pIsaacRng;
+	std::unique_ptr<class IsaacRng> xm_pIsaacRng;
 	unsigned char xm_abyLastEncoded;
 
 public:
@@ -39,7 +37,7 @@ private:
 		std::uint32_t au32[8];
 	} xm_vKeyHash;
 
-	std::unique_ptr<IsaacRng> xm_pIsaacRng;
+	std::unique_ptr<class IsaacRng> xm_pIsaacRng;
 	unsigned char xm_abyLastEncoded;
 
 public:

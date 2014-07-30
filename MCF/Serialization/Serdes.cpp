@@ -13,7 +13,10 @@ namespace MCF {
 void ThrowEndOfStream(){
 	MCF_THROW(ERROR_HANDLE_EOF, L"遇到文件尾。"_wso);
 }
-
+[[noreturn]]
+void ThrowSizeTooLarge(){
+	MCF_THROW(ERROR_OUTOFMEMORY, L"数据尺寸过大。"_wso);
+}
 [[noreturn]]
 void ThrowInvalidData(){
 	MCF_THROW(ERROR_INVALID_DATA, L"数据损坏。"_wso);

@@ -358,6 +358,13 @@ public:
 		std::swap(xm_pLast, rhs.xm_pLast);
 		std::swap(xm_pPool, rhs.xm_pPool);
 	}
+
+	void Reverse() noexcept {
+		for(auto pCur = xm_pFirst; pCur; pCur = pCur->xm_pPrev){
+			std::swap(pCur->xm_pPrev, pCur->xm_pNext);
+		}
+		std::swap(xm_pFirst, xm_pLast);
+	}
 };
 
 }

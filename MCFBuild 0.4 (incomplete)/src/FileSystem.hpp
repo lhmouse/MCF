@@ -5,7 +5,7 @@
 #define MCFBUILD_FILE_SYSTEM_HPP_
 
 #include "Model.hpp"
-#include "../MCF/Core/StreamBuffer.hpp"
+#include "../MCF/Containers/StreamBuffer.hpp"
 #include "../MCF/Core/String.hpp"
 #include "../MCF/Core/File.hpp"
 

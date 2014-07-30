@@ -30,7 +30,6 @@ src_libmcflite_a_SOURCES=\
 	../MCF/Core/Exception.cpp				\
 	../MCF/Core/File.cpp					\
 	../MCF/Core/Utf8TextFile.cpp			\
-	../MCF/Core/StreamBuffer.cpp			\
 	../MCF/Core/System.cpp					\
 	../MCF/Core/Time.cpp					\
 	../MCF/Thread/Thread.cpp				\
@@ -39,7 +38,8 @@ src_libmcflite_a_SOURCES=\
 	../MCF/Thread/ReaderWriterLock.cpp		\
 	../MCF/Language/Notation.cpp			\
 	../MCF/Hash/Sha256.cpp					\
-	../MCF/Serialization/_SerdesTraits.cpp
+	../MCF/Containers/StreamBuffer.cpp		\
+	../MCF/Serialization/Serdes.cpp
 
 src_libmcflite_a_CFLAGS=\
 	$(AM_CFLAGS) -D__MCF_CRT_NO_DLMALLOC

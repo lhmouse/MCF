@@ -4,7 +4,6 @@
 #include "MCFBuild.hpp"
 #include "ConsoleOutput.hpp"
 #include "Localization.hpp"
-#include "../MCF/Containers/VVector.hpp"
 #include "../MCF/Thread/CriticalSection.hpp"
 #include <cstddef>
 using namespace MCFBuild;
@@ -31,26 +30,17 @@ void DoPrint(HANDLE hFile, const MCF::WideStringObserver &wsoString) noexcept {
 			uTotalWritten += dwWrittenThisTime;
 		}
 	} else {
-		MCF::VVector<char> vecConverted;
-		const auto uCodePage = ::GetConsoleOutputCP();
-		vecConverted.ResizeMore(wsoString.GetSize() * 2);
-		const auto nWritten = MCF::Max(
-			::WideCharToMultiByte(
-				uCodePage, 0, wsoString.GetBegin(), (int)wsoString.GetSize(),
-				vecConverted.GetData(), (int)vecConverted.GetSize(),
-				nullptr, nullptr
-			), 0
-		);
-		vecConverted.Resize((std::size_t)nWritten);
+		MCF::Utf8String u8sConverted;
+		u8sConverted.Assign<MCF::StringEncoding::UTF16>(wsoString);
 
 		const auto vLock = g_pLock->GetLock();
 		std::size_t uTotalWritten = 0;
-		const auto uSize = vecConverted.GetSize();
+		const auto uSize = u8sConverted.GetSize();
 		while(uTotalWritten < uSize){
 			DWORD dwWrittenThisTime;
 			if(!::WriteFile(
 				hFile,
-				vecConverted.GetData() + uTotalWritten, uSize - uTotalWritten,
+				u8sConverted.GetBegin() + uTotalWritten, uSize - uTotalWritten,
 				&dwWrittenThisTime, nullptr
 			)){
 				break;

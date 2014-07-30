@@ -1,6 +1,6 @@
 // 这个文件是 MCF 的一部分。
 // 有关具体授权说明，请参阅 MCFLicense.txt。
-// Copyleft 2013 - 2014 LH_Mouse. All wrongs reserved.
+// Copyleft 2013 - 2014, LH_Mouse. All wrongs reserved.
 
 #include "exe_decl.h"
 #include "../env/mcfwin.h"
@@ -35,7 +35,7 @@ _Noreturn DWORD __stdcall __MCF_ExeStartup(LPVOID pReserved)
 	__asm__("__MCF_ExeStartup");
 
 _Noreturn
-__attribute__((__force_align_arg_pointer__, __section__(".text$"))) __MCF_HAS_EH_TOP
+__attribute__((__force_align_arg_pointer__)) __MCF_HAS_EH_TOP
 DWORD __stdcall __MCF_ExeStartup(LPVOID pReserved){
 	DWORD dwExitCode;
 	__MCF_EH_TOP_BEGIN

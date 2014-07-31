@@ -7,45 +7,43 @@
 
 #include "Serdes.hpp"
 #include <tuple>
-#include <iterator>
 
 namespace MCF {
 
 namespace Impl {
 	template<class Tuple, std::size_t TUPLE_SIZE, std::size_t INDEX>
 	struct TupleSerdesHelper {
-		typedef typename std::tuple_element<INDEX, Tuple>::type Element;
 		typedef TupleSerdesHelper<Tuple, TUPLE_SIZE, INDEX + 1> Next;
 
-		static void DoSerialize(StreamBuffer &sbufSink, const Tuple &vSource){
-			Serialize<Element>(sbufSink, std::get<INDEX>(vSource));
-			Next::DoSerialize(sbufSink, vSource);
+		static void Insert(const Tuple &vSource, StreamBuffer &sbufSink){
+			std::get<INDEX>(vSource) >>= sbufSink;
+			Next::Insert(vSource, sbufSink);
 		}
-		static void DoDeserialize(Tuple &vSink, StreamBuffer &sbufSource){
-			Deserialize<Element>(std::get<INDEX>(vSink), sbufSource);
-			Next::DoDeserialize(vSink, sbufSource);
+		static void Extract(Tuple &vSink, StreamBuffer &sbufSource){
+			std::get<INDEX>(vSink) <<= sbufSource;
+			Next::Extract(vSink, sbufSource);
 		}
 	};
 	template<class Tuple, std::size_t TUPLE_SIZE>
 	struct TupleSerdesHelper<Tuple, TUPLE_SIZE, TUPLE_SIZE> {
-		static void DoSerialize(StreamBuffer &, const Tuple &){
+		static void Insert(const Tuple &, StreamBuffer &){
 		}
-		static void DoDeserialize(Tuple &, StreamBuffer &){
+		static void Extract(Tuple &, StreamBuffer &){
 		}
 	};
 }
 
 template<typename... Elements>
-void Serialize(StreamBuffer &sbufSink, const std::tuple<Elements...> &vSource){
+void operator>>=(const std::tuple<Elements...> &vSource, StreamBuffer &sbufSink){
 	Impl::TupleSerdesHelper<std::tuple<Elements...>,
 		sizeof...(Elements), 0
-		>::DoSerialize(sbufSink, vSource);
+		>::Insert(vSource, sbufSink);
 }
 template<typename... Elements>
-void Deserialize(std::tuple<Elements...> &vSink, StreamBuffer &sbufSource){
+void operator<<=(std::tuple<Elements...> &vSink, StreamBuffer &sbufSource){
 	Impl::TupleSerdesHelper<std::tuple<Elements...>,
 		sizeof...(Elements), 0
-		>::DoDeserialize(vSink, sbufSource);
+		>::Extract(vSink, sbufSource);
 }
 
 }

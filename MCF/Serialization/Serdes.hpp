@@ -9,8 +9,8 @@
 #include "../Core/Utilities.hpp"
 #include "VarIntEx.hpp"
 #include <type_traits>
+#include <iterator>
 #include <utility>
-#include <tuple>
 #include <limits>
 #include <cstddef>
 
@@ -23,278 +23,336 @@ extern void ThrowEndOfStream();
 extern void ThrowSizeTooLarge();
 [[noreturn]]
 extern void ThrowInvalidData();
+[[noreturn]]
+extern void ThrowIntegerOverflow();
 
-// 通用接口声明。
+// 这里的运算符分为两种：
+
+// “接口”，全部为非成员函数：
+//     StreamBuffer &operator<<(StreamBuffer &, const DataType &);
+//     StreamBuffer &operator>>(StreamBuffer &, DataType &);
+//     StreamBuffer &&operator<<(StreamBuffer &&, const DataType &);
+//     StreamBuffer &&operator>>(StreamBuffer &&, DataType &);
+
+// “实现”，可以是成员函数，也可以不是：
+//   非成员函数：
+//     void operator>>=(const DataType &, StreamBuffer &);
+//     void operator<<=(DataType &, StreamBuffer &);
+//   成员函数：
+//     void operator>>=(StreamBuffer &) const;
+//     void operator<<=(StreamBuffer &);
+
+// “接口”的定义。接口是统一的，这里不需进行特化。
 template<typename DataType>
-void Serialize(StreamBuffer &sbufSink, const DataType &vSource);
+StreamBuffer &operator<<(StreamBuffer &sbufSink, const DataType &vSource){
+	vSource >>= sbufSink;
+	return sbufSink;
+}
 template<typename DataType>
-void Deserialize(DataType &vSink, StreamBuffer &sbufSource);
-
-template<typename DataType = void, typename InputIterator>
-InputIterator Serialize(StreamBuffer &sbufSink, InputIterator itInput, std::size_t uCount);
-template<typename DataType = void, typename OutputIterator>
-OutputIterator Deserialize(OutputIterator itOutput, std::size_t uCount, StreamBuffer &sbufSource);
-
-namespace Impl {
-	template<typename DataType, typename TraitHelper = void>
-	struct SerdesTrait {
-		static_assert((sizeof(DataType) - 1, false), "Not supported.");
-
-		static void DoSerialize(StreamBuffer &sbufSink, const DataType &vSource);
-		static void DoDeserialize(DataType &vSink, StreamBuffer &sbufSource);
-	};
-
-	template<>
-	struct SerdesTrait<bool, void> {
-		static void DoSerialize(StreamBuffer &sbufSink, bool vSource){
-			sbufSink.Put((unsigned char)vSource);
-		}
-		static void DoDeserialize(bool &vSink, StreamBuffer &sbufSource){
-			const auto nVal = sbufSource.Get();
-			if(nVal == -1){
-				ThrowEndOfStream();
-			}
-			vSink = (nVal != 0);
-		}
-	};
-	template<typename Char>
-	struct SerdesTrait<Char,
-		typename std::enable_if<
-			std::is_integral<Char>::value && (sizeof(Char) == 1)
-			>::type>
-	{
-		static void DoSerialize(StreamBuffer &sbufSink, Char vSource){
-			sbufSink.Put((unsigned char)vSource);
-		}
-		static void DoDeserialize(Char &vSink, StreamBuffer &sbufSource){
-			const auto nVal = sbufSource.Get();
-			if(nVal == -1){
-				ThrowEndOfStream();
-			}
-			vSink = (Char)(unsigned char)nVal;
-		}
-	};
-	template<typename Integer>
-	struct SerdesTrait<Integer,
-		typename std::enable_if<
-			std::is_integral<Integer>::value && (sizeof(Integer) > 1)
-			>::type>
-	{
-		static void DoSerialize(StreamBuffer &sbufSink, Integer vSource){
-			VarIntEx<Integer> vEncoder;
-			vEncoder.Set(vSource);
-			auto itOutput = sbufSink.GetWriteIterator();
-			vEncoder.Serialize(itOutput);
-		}
-		static void DoDeserialize(Integer &vSink, StreamBuffer &sbufSource){
-			VarIntEx<Integer> vDecoder;
-			auto itInput = sbufSource.GetReadIterator();
-			if(!vDecoder.Deserialize(itInput, sbufSource.GetReadEnd())){
-				ThrowEndOfStream();
-			}
-			vSink = vDecoder.Get();
-		}
-	};
-	template<typename FloatingPoint>
-	struct SerdesTrait<FloatingPoint,
-		typename std::enable_if<
-			std::is_floating_point<FloatingPoint>::value
-			>::type>
-	{
-		static void DoSerialize(StreamBuffer &sbufSink, const FloatingPoint &vSource){
-#if __FLOAT_WORD_ORDER__ == __ORDER_BIG_ENDIAN__
-			unsigned char abyTemp[sizeof(vSource)];
-			ReverseCopyN(abyTemp, sizeof(vSource), (const unsigned char *)(&vSource + 1));
-			sbufSink.Insert(abyTemp, sizeof(vSource));
-#else
-			sbufSink.Insert(&vSource, sizeof(vSource));
-#endif
-		}
-		static void DoDeserialize(FloatingPoint &vSink, StreamBuffer &sbufSource){
-#if __FLOAT_WORD_ORDER__ == __ORDER_BIG_ENDIAN__
-			unsigned char abyTemp[sizeof(vSink)];
-			if(!sbufSource.Extract(abyTemp, sizeof(vSink))){
-				ThrowEndOfStream();
-			}
-			ReverseCopyBackwardN((unsigned char *)(&vSink + 1), abyTemp, sizeof(vSink));
-#else
-			if(!sbufSource.Extract(&vSink, sizeof(vSink))){
-				ThrowEndOfStream();
-			}
-#endif
-		}
-	};
-
-	template class SerdesTrait<bool>;
-	template class SerdesTrait<char>;
-	template class SerdesTrait<signed char>;
-	template class SerdesTrait<unsigned char>;
-	template class SerdesTrait<short>;
-	template class SerdesTrait<unsigned short>;
-	template class SerdesTrait<int>;
-	template class SerdesTrait<unsigned int>;
-	template class SerdesTrait<long>;
-	template class SerdesTrait<unsigned long>;
-	template class SerdesTrait<long long>;
-	template class SerdesTrait<unsigned long long>;
-
-	template class SerdesTrait<float>;
-	template class SerdesTrait<double>;
-	template class SerdesTrait<long double>;
-
-	template class SerdesTrait<wchar_t>;
-	template class SerdesTrait<char16_t>;
-	template class SerdesTrait<char32_t>;
-
-	template<>
-	struct SerdesTrait<bool[], void> {
-		template<typename InputIterator>
-		static void DoSerialize(StreamBuffer &sbufSink, InputIterator itInput, std::size_t uCount){
-			std::size_t i;
-			for(i = uCount / 8u; i; --i){
-				unsigned char by = 0;
-				for(auto j = 8u; j; --j){
-					by <<= 1;
-					by |= (bool)*itInput;
-					++itInput;
-				}
-				Serialize<unsigned char>(sbufSink, by);
-			}
-			if((i = uCount % 8u) != 0){
-				unsigned char by = 0;
-				do {
-					by <<= 1;
-					by |= (bool)*itInput;
-					++itInput;
-				} while(--i != 0);
-				Serialize<unsigned char>(sbufSink, by);
-			}
-		}
-		template<typename OutputIterator>
-		static void DoDeserialize(OutputIterator itOutput, std::size_t uCount, StreamBuffer &sbufSource){
-			std::size_t i;
-			for(i = uCount / 8u; i; --i){
-				unsigned char by;
-				Deserialize<unsigned char>(by, sbufSource);
-				for(auto j = 8u; j; --j){
-					*itOutput = (bool)(by & 0x80);
-					++itOutput;
-					by <<= 1;
-				}
-			}
-			if((i = uCount % 8u) != 0){
-				unsigned char by;
-				Deserialize<unsigned char>(by, sbufSource);
-				by <<= (8u - i);
-				do {
-					*itOutput = (bool)(by & 0x80);
-					++itOutput;
-					by <<= 1;
-				} while(--i != 0);
-			}
-		}
-	};
-	template<typename Element>
-	struct SerdesTrait<Element[], void> {
-		template<typename InputIterator>
-		static void DoSerialize(StreamBuffer &sbufSink, InputIterator itInput, std::size_t uCount){
-			for(auto i = uCount; i; --i){
-				Serialize<Element>(sbufSink, *itInput);
-				++itInput;
-			}
-		}
-		template<typename OutputIterator>
-		static void DoDeserialize(OutputIterator itOutput, std::size_t uCount, StreamBuffer &sbufSource){
-			for(auto i = uCount; i; --i){
-				Element vTemp;
-				Deserialize<Element>(vTemp, sbufSource);
-				*itOutput = std::move(vTemp);
-				++itOutput;
-			}
-		}
-	};
-
-	template<typename ArrayElement, std::size_t ARRAY_SIZE>
-	struct SerdesTrait<ArrayElement [ARRAY_SIZE], void> {
-		typedef ArrayElement Array[ARRAY_SIZE];
-
-		static void DoSerialize(StreamBuffer &sbufSink, const Array &vSource){
-			Serialize<ArrayElement>(sbufSink, vSource, ARRAY_SIZE);
-		}
-		static void DoDeserialize(Array &vSink, StreamBuffer &sbufSource){
-			Deserialize<ArrayElement>(vSink, ARRAY_SIZE, sbufSource);
-		}
-	};
-
-	template<typename First, typename Second>
-	struct SerdesTrait<std::pair<First, Second>, void> {
-		typedef std::pair<First, Second> Pair;
-
-		static void DoSerialize(StreamBuffer &sbufSink, const Pair &vSource){
-			Serialize<First>(sbufSink, vSource.first);
-			Serialize<Second>(sbufSink, vSource.second);
-		}
-		static void DoDeserialize(Pair &vSink, StreamBuffer &sbufSource){
-			Deserialize<First>(vSink.first, sbufSource);
-			Deserialize<Second>(vSink.second, sbufSource);
-		}
-	};
+StreamBuffer &operator>>(StreamBuffer &sbufSource, DataType &vSink){
+	vSink <<= sbufSource;
+	return sbufSource;
 }
 
-// 辅助函数。
-inline void SerializeSize(StreamBuffer &sbufSink, std::size_t uSize){
-	Serialize<std::uint64_t>(sbufSink, uSize);
+template<typename DataType>
+StreamBuffer &&operator<<(StreamBuffer &&sbufSink, const DataType &vSource){
+	return std::move(sbufSink << vSource);
 }
-inline std::size_t DeserializeSize(StreamBuffer &sbufSource){
-	std::uint64_t u64Size;
-	Deserialize<std::uint64_t>(u64Size, sbufSource);
-	if(u64Size > std::numeric_limits<std::size_t>::max()){
-		ThrowSizeTooLarge();
+template<typename DataType>
+StreamBuffer &&operator>>(StreamBuffer &&sbufSource, DataType &vSink){
+	return std::move(sbufSource >> vSink);
+}
+
+// “实现”的定义。此文件内定义针对整型、枚举类型、浮点型、std::pair 以及内建数组类型的特化。
+// 这些类型都无法定义成成员函数。
+inline void operator>>=(bool bSource, StreamBuffer &sbufSink){
+	sbufSink.Put((unsigned char)bSource);
+}
+inline void operator<<=(bool &bSink, StreamBuffer &sbufSource){
+	const int nVal = sbufSource.Get();
+	if(nVal == -1){
+		ThrowEndOfStream();
 	}
-	return u64Size;
+	bSink = (nVal != 0);
 }
 
-// 通用接口定义。
-template<typename DataType>
-void Serialize(StreamBuffer &sbufSink, const DataType &vSource){
-	Impl::SerdesTrait<DataType>::DoSerialize(sbufSink, vSource);
+template<typename Char,
+	typename std::enable_if<
+		std::is_integral<Char>::value && (sizeof(Char) == 1),
+		int>::type
+	= 0>
+void operator>>=(Char chSource, StreamBuffer &sbufSink){
+	sbufSink.Put(reinterpret_cast<const unsigned char &>(chSource));
 }
-template<typename DataType>
-void Deserialize(DataType &vSink, StreamBuffer &sbufSource){
-	Impl::SerdesTrait<DataType>::DoDeserialize(vSink, sbufSource);
+template<typename Char,
+	typename std::enable_if<
+		std::is_integral<Char>::value && (sizeof(Char) == 1),
+		int>::type
+	= 0>
+void operator<<=(Char &chSink, StreamBuffer &sbufSource){
+	const int nVal = sbufSource.Get();
+	if(nVal == -1){
+		ThrowEndOfStream();
+	}
+	const unsigned char byTemp = nVal;
+	chSink = reinterpret_cast<const Char &>(byTemp);
 }
 
-template<typename DataType, typename InputIterator>
-InputIterator Serialize(StreamBuffer &sbufSink, InputIterator itInput, std::size_t uCount){
-	Impl::SerdesTrait<
-		typename std::conditional<std::is_void<DataType>::value,
-			typename std::iterator_traits<InputIterator>::value_type, DataType
-			>::type[]
-		>::DoSerialize(sbufSink, itInput, uCount);
-	return std::move(itInput);
+template<typename Integral,
+	typename std::enable_if<
+		std::is_integral<Integral>::value && (sizeof(Integral) > 1),
+		int>::type
+	= 0>
+void operator>>=(Integral vSource, StreamBuffer &sbufSink){
+	const VarIntEx<Integral> vEncoder(vSource);
+	auto itWrite = sbufSink.GetWriteIterator();
+	vEncoder.Serialize(itWrite);
 }
-template<typename DataType, typename OutputIterator>
-OutputIterator Deserialize(OutputIterator itOutput, std::size_t uCount, StreamBuffer &sbufSource){
-	Impl::SerdesTrait<
-		typename std::conditional<std::is_void<DataType>::value,
-			typename std::iterator_traits<OutputIterator>::value_type, DataType
-			>::type[]
-		>::DoDeserialize(itOutput, uCount, sbufSource);
-	return std::move(itOutput);
+template<typename Integral,
+	typename std::enable_if<
+		std::is_integral<Integral>::value && (sizeof(Integral) > 1),
+		int>::type
+	= 0>
+void operator<<=(Integral &vSink, StreamBuffer &sbufSource){
+	VarIntEx<typename std::conditional<
+		std::is_signed<Integral>::value,
+		std::intmax_t, std::uintmax_t>::type
+		> vDecoder;
+	auto itInput = sbufSource.GetReadIterator();
+	if(!vDecoder.Deserialize(itInput, sbufSource.GetReadEnd())){
+		ThrowEndOfStream();
+	}
+	if(
+		(vDecoder.Get() < std::numeric_limits<Integral>::min()) ||
+		(std::numeric_limits<Integral>::max() < vDecoder.Get())
+	){
+		ThrowIntegerOverflow();
+	}
+	vSink = vDecoder.Get();
+}
+
+template<typename Enum,
+	typename std::enable_if<
+		std::is_enum<Enum>::value,
+		int>::type
+	= 0>
+void operator>>=(Enum eSource, StreamBuffer &sbufSink){
+	static_cast<typename std::underlying_type<Enum>::type>(eSource) >>= sbufSink;
+}
+template<typename Enum,
+	typename std::enable_if<
+		std::is_enum<Enum>::value,
+		int>::type
+	= 0>
+void operator<<=(Enum &eSink, StreamBuffer &sbufSource){
+	reinterpret_cast<typename std::underlying_type<Enum>::type &>(eSink) <<= sbufSource;
+}
+
+template<typename FloatingPoint,
+	typename std::enable_if<
+		std::is_floating_point<FloatingPoint>::value,
+		int>::type
+	= 0>
+void operator>>=(const FloatingPoint &vSource, StreamBuffer &sbufSink){
+#if __FLOAT_WORD_ORDER__ == __ORDER_BIG_ENDIAN__
+	unsigned char abyTemp[sizeof(vSource)];
+	ReverseCopyN(abyTemp, sizeof(vSource), reinterpret_cast<const unsigned char *>(&vSource + 1));
+	sbufSink.Insert(abyTemp, sizeof(vSource));
+#else
+	sbufSink.Insert(&vSource, sizeof(vSource));
+#endif
+}
+template<typename FloatingPoint,
+	typename std::enable_if<
+		std::is_floating_point<FloatingPoint>::value,
+		int>::type
+	= 0>
+void operator<<=(FloatingPoint &vSink, StreamBuffer &sbufSource){
+#if __FLOAT_WORD_ORDER__ == __ORDER_BIG_ENDIAN__
+	unsigned char abyTemp[sizeof(vSink)];
+	if(!sbufSource.Extract(abyTemp, sizeof(vSink))){
+		ThrowEndOfStream();
+	}
+	ReverseCopyBackwardN(reinterpret_cast<unsigned char *>(&vSink + 1), abyTemp, sizeof(vSink));
+#else
+	if(!sbufSource.Extract(&vSink, sizeof(vSink))){
+		ThrowEndOfStream();
+	}
+#endif
+}
+
+// 小工具。
+template<typename ValueType, class InputIterator>
+class SeqInserter {
+private:
+	const InputIterator xm_itBegin;
+	const std::size_t xm_uCount;
+
+public:
+	SeqInserter(InputIterator itBegin, std::size_t uCount)
+		: xm_itBegin	(std::move(itBegin))
+		, xm_uCount		(uCount)
+	{
+	}
+
+public:
+	void operator>>=(StreamBuffer &sbufSink) const {
+		auto itRead = xm_itBegin;
+		for(std::size_t i = 0; i < xm_uCount; ++i){
+			static_cast<const ValueType &>(*itRead) >>= sbufSink;
+			++itRead;
+		}
+	}
+};
+template<typename ValueType, class OutputIterator>
+class SeqExtractor {
+private:
+	const OutputIterator xm_itBegin;
+	const std::size_t xm_uCount;
+
+public:
+	constexpr SeqExtractor(OutputIterator itBegin, std::size_t uCount)
+		: xm_itBegin	(std::move(itBegin))
+		, xm_uCount		(uCount)
+	{
+	}
+
+public:
+	void operator<<=(StreamBuffer &sbufSink) const {
+		auto itWrite = xm_itBegin;
+		for(std::size_t i = 0; i < xm_uCount; ++i){
+			ValueType vTemp;
+			vTemp <<= sbufSink;
+			*itWrite = std::move(vTemp);
+			++itWrite;
+		}
+	}
+};
+
+template<class InputIterator>
+class SeqInserter<bool, InputIterator> {
+private:
+	const InputIterator xm_itBegin;
+	const std::size_t xm_uCount;
+
+public:
+	SeqInserter(InputIterator itBegin, std::size_t uCount)
+		: xm_itBegin	(std::move(itBegin))
+		, xm_uCount		(uCount)
+	{
+	}
+
+public:
+	void operator>>=(StreamBuffer &sbufSink) const {
+		auto itRead = xm_itBegin;
+		std::size_t i;
+		for(i = xm_uCount / 8u; i; --i){
+			unsigned char by = 0;
+			for(auto j = 8u; j; --j){
+				by <<= 1;
+				by |= static_cast<bool>(*itRead);
+				++itRead;
+			}
+			by >>= sbufSink;
+		}
+		if((i = xm_uCount % 8u) != 0){
+			unsigned char by = 0;
+			do {
+				by <<= 1;
+				by |= static_cast<bool>(*itRead);
+				++itRead;
+			} while(--i != 0);
+			by >>= sbufSink;
+		}
+	}
+};
+template<class OutputIterator>
+class SeqExtractor<bool, OutputIterator> {
+private:
+	const OutputIterator xm_itBegin;
+	const std::size_t xm_uCount;
+
+public:
+	constexpr SeqExtractor(OutputIterator itBegin, std::size_t uCount)
+		: xm_itBegin	(std::move(itBegin))
+		, xm_uCount		(uCount)
+	{
+	}
+
+public:
+	void operator<<=(StreamBuffer &sbufSource) const {
+		auto itWrite = xm_itBegin;
+		std::size_t i;
+		for(i = xm_uCount / 8u; i; --i){
+			unsigned char by;
+			by <<= sbufSource;
+			for(auto j = 8u; j; --j){
+				*itWrite = static_cast<bool>(by & 0x80);
+				++itWrite;
+				by <<= 1;
+			}
+		}
+		if((i = xm_uCount % 8u) != 0){
+			unsigned char by;
+			by <<= sbufSource;
+			by <<= (8u - i);
+			do {
+				*itWrite = static_cast<bool>(by & 0x80);
+				++itWrite;
+				by <<= 1;
+			} while(--i != 0);
+		}
+	}
+};
+
+template<typename ValueType = void, class InputIterator>
+auto MakeSeqInserter(InputIterator itBegin, std::size_t uCount){
+	return SeqInserter<
+		typename std::conditional<std::is_void<ValueType>::value,
+			typename std::iterator_traits<InputIterator>::value_type, ValueType
+			>::type,
+			InputIterator
+		>(std::move(itBegin), uCount);
+}
+template<typename ValueType = void, class OutputIterator>
+auto MakeSeqExtractor(OutputIterator itBegin, std::size_t uCount){
+	return SeqExtractor<
+		typename std::conditional<std::is_void<ValueType>::value,
+			typename std::iterator_traits<OutputIterator>::value_type, ValueType
+			>::type,
+			OutputIterator
+		>(std::move(itBegin), uCount);
 }
 
 // 特化重载。
-template<>
-inline void Serialize(StreamBuffer &sbufSink, const StreamBuffer &vSource){
-	SerializeSize(sbufSink,  vSource.GetSize());
-	sbufSink.Append(vSource);
+template<class Element, std::size_t SIZE>
+void operator>>=(const Element (&aSource)[SIZE], StreamBuffer &sbufSink){
+	MakeSeqInserter(aSource, SIZE) >>= sbufSink;
 }
-template<>
-inline void Deserialize(StreamBuffer &vSink, StreamBuffer &sbufSource){
-	const std::size_t uSize = DeserializeSize(sbufSource);
-	if(!sbufSource.CutOut(vSink, uSize)){
-		ThrowEndOfStream();
-	}
+template<class Element, std::size_t SIZE>
+void operator<<=(Element (&aSink)[SIZE], StreamBuffer &sbufSource){
+	MakeSeqExtractor(aSink, SIZE) <<= sbufSource;
+}
+
+template<typename First, typename Second>
+void operator>>=(const std::pair<First, Second> &vSource, StreamBuffer &sbufSink){
+	vSource.first >>= sbufSink;
+	vSource.second >>= sbufSink;
+}
+template<typename First, typename Second>
+void operator<<=(std::pair<First, Second> &vSink, StreamBuffer &sbufSource){
+	vSink.first <<= sbufSource;
+	vSink.second <<= sbufSource;
+}
+
+inline void operator>>=(const StreamBuffer &sbufSource, StreamBuffer &sbufSink){
+	sbufSource.GetSize() >>= sbufSink;
+	sbufSink.Append(sbufSource);
+}
+inline void operator<<=(StreamBuffer &sbufSink, StreamBuffer &sbufSource){
+	std::size_t uSize;
+	uSize <<= sbufSource;
+	sbufSource.CutOut(sbufSink, uSize);
 }
 
 }

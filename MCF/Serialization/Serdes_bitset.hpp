@@ -21,20 +21,13 @@ namespace Impl {
 		std::size_t xm_uIndex;
 
 	public:
-		explicit BitSetReadIterator(const std::bitset<BIT_COUNT> &bsetOwner, std::size_t uIndex = 0)
+		explicit BitSetReadIterator(const std::bitset<BIT_COUNT> &bsetOwner)
 			: xm_bsetOwner	(bsetOwner)
-			, xm_uIndex		(uIndex)
+			, xm_uIndex		(0)
 		{
 		}
 
 	public:
-		bool operator==(const BitSetReadIterator &rhs) const noexcept {
-			ASSERT(&xm_bsetOwner == &rhs.xm_bsetOwner);
-			return xm_uIndex == rhs.xm_uIndex;
-		}
-		bool operator!=(const BitSetReadIterator &rhs) const noexcept {
-			return !(*this == rhs);
-		}
 		BitSetReadIterator &operator++() noexcept {
 			++xm_uIndex;
 			return *this;
@@ -66,13 +59,6 @@ namespace Impl {
 		}
 
 	public:
-		bool operator==(const BitSetWriteIterator &rhs) const noexcept {
-			ASSERT(&xm_bsetOwner == &rhs.xm_bsetOwner);
-			return true;
-		}
-		bool operator!=(const BitSetWriteIterator &rhs) const noexcept {
-			return !(*this == rhs);
-		}
 		BitSetWriteIterator &operator++() noexcept {
 			++xm_uIndex;
 			return *this;
@@ -94,21 +80,13 @@ namespace Impl {
 	};
 }
 
-template<std::size_t BIT_COUNT>
-void Serialize(StreamBuffer &sbufSink, const std::bitset<BIT_COUNT> &vSource){
-	Serialize<bool>(
-		sbufSink,
-		Impl::BitSetReadIterator<BIT_COUNT>(vSource, 0),
-		BIT_COUNT
-	);
+template<std::size_t SIZE>
+void operator>>=(const std::bitset<SIZE> &vSource, StreamBuffer &sbufSink){
+	MakeSeqInserter<bool>(Impl::BitSetReadIterator<SIZE>(vSource), SIZE) >>= sbufSink;
 }
-template<std::size_t BIT_COUNT>
-void Deserialize(std::bitset<BIT_COUNT> &vSink, StreamBuffer &sbufSource){
-	Deserialize<bool>(
-		Impl::BitSetWriteIterator<BIT_COUNT>(vSink),
-		BIT_COUNT,
-		sbufSource
-	);
+template<std::size_t SIZE>
+void operator<<=(std::bitset<SIZE> &vSink, StreamBuffer &sbufSource){
+	MakeSeqExtractor<bool>(Impl::BitSetWriteIterator<SIZE>(vSink), SIZE) <<= sbufSource;
 }
 
 }

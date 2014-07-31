@@ -285,25 +285,22 @@ template class String<char16_t,	StringEncoding::UTF16>;
 template class String<char32_t,	StringEncoding::UTF32>;
 
 // 串行化。
-void Serialize(StreamBuffer &sbufSink, const Utf8String &u8sSource){
-	Serialize<unsigned long long>(sbufSink, u8sSource.GetSize());
+void operator>>=(const Utf8String &u8sSource, StreamBuffer &sbufSink){
+	u8sSource.GetSize() >>= sbufSink;
 	sbufSink.Insert(u8sSource.GetCStr(), u8sSource.GetSize());
 }
-void Deserialize(Utf8String &u8sSink, StreamBuffer &sbufSource){
-	unsigned long long ullSize;
-	Deserialize(ullSize, sbufSource);
-	if(ullSize > std::numeric_limits<std::size_t>::max()){
-		ThrowInvalidData();
-	}
-	// 万一 ullSize 是伪造的呢？
+void operator<<=(Utf8String &u8sSink, StreamBuffer &sbufSource){
+	std::size_t uSize;
+	uSize <<= sbufSource;
+	// 万一 uSize 是伪造的呢？
 	u8sSink.Clear();
-	while(ullSize){
+	while(uSize){
 		const int nChar = sbufSource.Get();
 		if(nChar == -1){
 			ThrowEndOfStream();
 		}
 		u8sSink.Push(nChar);
-		--ullSize;
+		--uSize;
 	}
 }
 

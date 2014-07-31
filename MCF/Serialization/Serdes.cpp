@@ -21,5 +21,9 @@ void ThrowSizeTooLarge(){
 void ThrowInvalidData(){
 	MCF_THROW(ERROR_INVALID_DATA, L"数据损坏。"_wso);
 }
+[[noreturn]]
+void ThrowIntegerOverflow(){
+	MCF_THROW(ERROR_INVALID_DATA, L"整型溢出。"_wso);
+}
 
 }

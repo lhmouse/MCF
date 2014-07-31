@@ -10,13 +10,13 @@
 
 namespace MCF {
 
-template<typename Element, std::size_t ARRAY_SIZE>
-void Serialize(StreamBuffer &sbufSink, const std::array<Element, ARRAY_SIZE> &vSource){
-	Serialize<Element>(sbufSink, vSource.begin(), ARRAY_SIZE);
+template<class Element, std::size_t SIZE>
+void operator>>=(const std::array<Element, SIZE> &vSource, StreamBuffer &sbufSink){
+	MakeSeqInserter<Element>(vSource.begin(), SIZE) >>= sbufSink;
 }
-template<typename Element, std::size_t ARRAY_SIZE>
-void Deserialize(std::array<Element, ARRAY_SIZE> &vSink, StreamBuffer &sbufSource){
-	Deserialize<Element>(vSink.begin(), ARRAY_SIZE, sbufSource);
+template<class Element, std::size_t SIZE>
+void operator<<=(std::array<Element, SIZE> &vSink, StreamBuffer &sbufSource){
+	MakeSeqExtractor<Element>(vSink.begin(), SIZE) <<= sbufSource;
 }
 
 }

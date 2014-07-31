@@ -11,30 +11,32 @@
 
 namespace MCF {
 
-template<typename Key, typename Value, class Compare, class Allocator>
-void Serialize(StreamBuffer &sbufSink, const std::unordered_map<Key, Value, Compare, Allocator> &vSource){
+template<class Key, class Value, class Hash, class Equal, class Allocator>
+void operator>>=(const std::unordered_map<Key, Value, Hash, Equal, Allocator> &vSource, StreamBuffer &sbufSink){
 	const auto uSize = vSource.size();
-	SerializeSize(sbufSink, uSize);
-	Serialize<std::pair<Key, Value>>(sbufSink, vSource.begin(), uSize);
+	uSize >>= sbufSink;
+	MakeSeqInserter<std::pair<Key, Value>>(vSource.begin(), uSize) >>= sbufSink;
 }
-template<typename Key, typename Value, class Compare, class Allocator>
-void Deserialize(std::unordered_map<Key, Value, Compare, Allocator> &vSink, StreamBuffer &sbufSource){
+template<class Key, class Value, class Hash, class Equal, class Allocator>
+void operator<<=(std::unordered_map<Key, Value, Hash, Equal, Allocator> &vSink, StreamBuffer &sbufSource){
+	std::size_t uSize;
+	uSize <<= sbufSource;
 	vSink.clear();
-	const auto uSize = DeserializeSize(sbufSource);
-	Deserialize<std::pair<Key, Value>>(std::inserter(vSink, vSink.end()), uSize, sbufSource);
+	MakeSeqExtractor<std::pair<Key, Value>>(std::inserter(vSink, vSink.end()), uSize) <<= sbufSource;
 }
 
-template<typename Key, typename Value, class Compare, class Allocator>
-void Serialize(StreamBuffer &sbufSink, const std::multiunordered_map<Key, Value, Compare, Allocator> &vSource){
+template<class Key, class Value, class Hash, class Equal, class Allocator>
+void operator>>=(const std::unordered_multimap<Key, Value, Hash, Equal, Allocator> &vSource, StreamBuffer &sbufSink){
 	const auto uSize = vSource.size();
-	SerializeSize(sbufSink, uSize);
-	Serialize<std::pair<Key, Value>>(sbufSink, vSource.begin(), uSize);
+	uSize >>= sbufSink;
+	MakeSeqInserter<std::pair<Key, Value>>(vSource.begin(), uSize) >>= sbufSink;
 }
-template<typename Key, typename Value, class Compare, class Allocator>
-void Deserialize(std::multiunordered_map<Key, Value, Compare, Allocator> &vSink, StreamBuffer &sbufSource){
+template<class Key, class Value, class Hash, class Equal, class Allocator>
+void operator<<=(std::unordered_multimap<Key, Value, Hash, Equal, Allocator> &vSink, StreamBuffer &sbufSource){
+	std::size_t uSize;
+	uSize <<= sbufSource;
 	vSink.clear();
-	const auto uSize = DeserializeSize(sbufSource);
-	Deserialize<std::pair<Key, Value>>(std::inserter(vSink, vSink.end()), uSize, sbufSource);
+	MakeSeqExtractor<std::pair<Key, Value>>(std::inserter(vSink, vSink.end()), uSize) <<= sbufSource;
 }
 
 }

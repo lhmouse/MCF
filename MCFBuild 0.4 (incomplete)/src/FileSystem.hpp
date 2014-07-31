@@ -4,12 +4,14 @@
 #ifndef MCFBUILD_FILE_SYSTEM_HPP_
 #define MCFBUILD_FILE_SYSTEM_HPP_
 
-#include "Model.hpp"
 #include "../MCF/Containers/StreamBuffer.hpp"
 #include "../MCF/Core/String.hpp"
 #include "../MCF/Core/File.hpp"
+#include <array>
 
 namespace MCFBuild {
+
+typedef std::array<unsigned char, 32> Sha256;
 
 extern MCF::WideString GetFullPath(const MCF::WideString &wcsSrc);
 

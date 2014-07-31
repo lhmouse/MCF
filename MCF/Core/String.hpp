@@ -859,17 +859,17 @@ typedef String<char32_t,	StringEncoding::UTF32>	Utf32String;
 // 串行化。
 class StreamBuffer;
 
-extern void Serialize(StreamBuffer &sbufSink, const Utf8String &u8sSource);
-extern void Deserialize(Utf8String &u8sSink, StreamBuffer &sbufSource);
+extern void operator>>=(const Utf8String &u8sSource, StreamBuffer &sbufSink);
+extern void operator<<=(Utf8String &u8sSink, StreamBuffer &sbufSource);
 
 template<typename Char, StringEncoding ENCODING>
-void Serialize(StreamBuffer &sbufSink, const String<Char, ENCODING> &strSource){
-	Serialize(sbufSink, Utf8String(strSource));
+void operator>>=(const String<Char, ENCODING> &strSource, StreamBuffer &sbufSink){
+	Utf8String(strSource) >>= sbufSink;
 }
 template<typename Char, StringEncoding ENCODING>
-void Deserialize(String<Char, ENCODING> &strSink, StreamBuffer &sbufSource){
+void operator<<=(String<Char, ENCODING> &strSink, StreamBuffer &sbufSource){
 	Utf8String u8sTemp;
-	Deserialize(u8sTemp, sbufSource);
+	u8sTemp <<= sbufSource;
 	strSink.Assign(u8sTemp);
 }
 

@@ -11,30 +11,32 @@
 
 namespace MCF {
 
-template<typename Key, typename Value, class Compare, class Allocator>
-void Serialize(StreamBuffer &sbufSink, const std::map<Key, Value, Compare, Allocator> &vSource){
+template<class Key, class Value, class Comparator, class Allocator>
+void operator>>=(const std::map<Key, Value, Comparator, Allocator> &vSource, StreamBuffer &sbufSink){
 	const auto uSize = vSource.size();
-	SerializeSize(sbufSink, uSize);
-	Serialize<std::pair<Key, Value>>(sbufSink, vSource.begin(), uSize);
+	uSize >>= sbufSink;
+	MakeSeqInserter<std::pair<Key, Value>>(vSource.begin(), uSize) >>= sbufSink;
 }
-template<typename Key, typename Value, class Compare, class Allocator>
-void Deserialize(std::map<Key, Value, Compare, Allocator> &vSink, StreamBuffer &sbufSource){
+template<class Key, class Value, class Comparator, class Allocator>
+void operator<<=(std::map<Key, Value, Comparator, Allocator> &vSink, StreamBuffer &sbufSource){
+	std::size_t uSize;
+	uSize <<= sbufSource;
 	vSink.clear();
-	const auto uSize = DeserializeSize(sbufSource);
-	Deserialize<std::pair<Key, Value>>(std::inserter(vSink, vSink.end()), uSize, sbufSource);
+	MakeSeqExtractor<std::pair<Key, Value>>(std::inserter(vSink, vSink.end()), uSize) <<= sbufSource;
 }
 
-template<typename Key, typename Value, class Compare, class Allocator>
-void Serialize(StreamBuffer &sbufSink, const std::multimap<Key, Value, Compare, Allocator> &vSource){
+template<class Key, class Value, class Comparator, class Allocator>
+void operator>>=(const std::multimap<Key, Value, Comparator, Allocator> &vSource, StreamBuffer &sbufSink){
 	const auto uSize = vSource.size();
-	SerializeSize(sbufSink, uSize);
-	Serialize<std::pair<Key, Value>>(sbufSink, vSource.begin(), uSize);
+	uSize >>= sbufSink;
+	MakeSeqInserter<std::pair<Key, Value>>(vSource.begin(), uSize) >>= sbufSink;
 }
-template<typename Key, typename Value, class Compare, class Allocator>
-void Deserialize(std::multimap<Key, Value, Compare, Allocator> &vSink, StreamBuffer &sbufSource){
+template<class Key, class Value, class Comparator, class Allocator>
+void operator<<=(std::multimap<Key, Value, Comparator, Allocator> &vSink, StreamBuffer &sbufSource){
+	std::size_t uSize;
+	uSize <<= sbufSource;
 	vSink.clear();
-	const auto uSize = DeserializeSize(sbufSource);
-	Deserialize<std::pair<Key, Value>>(std::inserter(vSink, vSink.end()), uSize, sbufSource);
+	MakeSeqExtractor<std::pair<Key, Value>>(std::inserter(vSink, vSink.end()), uSize) <<= sbufSource;
 }
 
 }

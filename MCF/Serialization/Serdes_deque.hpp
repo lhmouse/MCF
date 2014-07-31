@@ -11,17 +11,18 @@
 
 namespace MCF {
 
-template<typename Element, class Allocator>
-void Serialize(StreamBuffer &sbufSink, const std::deque<Element, Allocator> &vSource){
+template<class Element, class Allocator>
+void operator>>=(const std::deque<Element, Allocator> &vSource, StreamBuffer &sbufSink){
 	const auto uSize = vSource.size();
-	SerializeSize(sbufSink, uSize);
-	Serialize<Element>(sbufSink, vSource.begin(), uSize);
+	uSize >>= sbufSink;
+	MakeSeqInserter<Element>(vSource.begin(), uSize) >>= sbufSink;
 }
-template<typename Element, class Allocator>
-void Deserialize(std::deque<Element, Allocator> &vSink, StreamBuffer &sbufSource){
+template<class Element, class Allocator>
+void operator<<=(std::deque<Element, Allocator> &vSink, StreamBuffer &sbufSource){
+	std::size_t uSize;
+	uSize <<= sbufSource;
 	vSink.clear();
-	const auto uSize = DeserializeSize(sbufSource);
-	Deserialize<Element>(std::back_inserter(vSink), uSize, sbufSource);
+	MakeSeqExtractor<Element>(std::back_inserter(vSink), uSize) <<= sbufSource;
 }
 
 }

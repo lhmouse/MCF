@@ -18,8 +18,7 @@ namespace Impl {
 		typedef Encoded EncodedType;
 
 		EncodedType Encode(Plain vVal) const noexcept {
-			const auto vTemp = static_cast<EncodedType>(vVal);
-			return (vTemp << 1) ^ (vTemp >> std::numeric_limits<Plain>::digits);
+			return (Encoded)(((Encoded)vVal << 1) ^ (Encoded)(vVal >> std::numeric_limits<Plain>::digits));
 		}
 		Plain Decode(EncodedType vVal) const noexcept {
 			return (Plain)((vVal >> 1) ^ -(vVal & 1));

@@ -9,12 +9,9 @@
 #include "../MCF/Containers/MultiIndexedMap.hpp"
 #include "../MCF/Core/String.hpp"
 #include "../MCF/Core/File.hpp"
-#include <array>
 #include <cstddef>
 
 namespace MCFBuild {
-
-typedef std::array<unsigned char, 32> Sha256;
 
 class Model : NO_COPY {
 public:

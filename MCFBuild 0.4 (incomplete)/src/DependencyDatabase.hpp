@@ -4,8 +4,8 @@
 #ifndef MCFBUILD_DEPENDENCY_DATABASE_HPP_
 #define MCFBUILD_DEPENDENCY_DATABASE_HPP_
 
-#include "Model.hpp"
 #include "../MCF/Core/String.hpp"
+#include "FileSystem.hpp"
 #include <map>
 
 namespace MCFBuild {
@@ -19,11 +19,21 @@ struct DependencyItem {
 
 class DependencyDatabase {
 public:
-	std::map<MCF::WideString, DependencyItem> m_mapFiles;
+	typedef std::map<MCF::WideString, DependencyItem> FileMap;
+
+private:
+	FileMap xm_mapFiles;
 
 public:
-	void LoadFromFile(const MCF::WideString &wsoPath);
+	const FileMap &GetFileMap() const noexcept {
+		return xm_mapFiles;
+	}
+	FileMap &GetFileMap() noexcept {
+		return xm_mapFiles;
+	}
+
 	void SaveToFile(const MCF::WideString &wsoPath) const;
+	void LoadFromFile(const MCF::WideString &wsoPath);
 };
 
 }

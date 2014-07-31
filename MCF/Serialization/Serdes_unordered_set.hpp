@@ -11,30 +11,32 @@
 
 namespace MCF {
 
-template<typename Key, class Compare, class Allocator>
-void Serialize(StreamBuffer &sbufSink, const std::unordered_set<Key, Compare, Allocator> &vSource){
+template<class Element, class Hash, class Equal, class Allocator>
+void operator>>=(const std::unordered_set<Element, Hash, Equal, Allocator> &vSource, StreamBuffer &sbufSink){
 	const auto uSize = vSource.size();
-	SerializeSize(sbufSink, uSize);
-	Serialize<Key>(sbufSink, vSource.begin(), uSize);
+	uSize >>= sbufSink;
+	MakeSeqInserter<Element>(vSource.begin(), uSize) >>= sbufSink;
 }
-template<typename Key, class Compare, class Allocator>
-void Deserialize(std::unordered_set<Key, Compare, Allocator> &vSink, StreamBuffer &sbufSource){
+template<class Element, class Hash, class Equal, class Allocator>
+void operator<<=(std::unordered_set<Element, Hash, Equal, Allocator> &vSink, StreamBuffer &sbufSource){
+	std::size_t uSize;
+	uSize <<= sbufSource;
 	vSink.clear();
-	const auto uSize = DeserializeSize(sbufSource);
-	Deserialize<Key>(std::inserter(vSink, vSink.end()), uSize, sbufSource);
+	MakeSeqExtractor<Element>(std::inserter(vSink, vSink.end()), uSize) <<= sbufSource;
 }
 
-template<typename Key, class Compare, class Allocator>
-void Serialize(StreamBuffer &sbufSink, const std::multiunordered_set<Key, Compare, Allocator> &vSource){
+template<class Element, class Hash, class Equal, class Allocator>
+void operator>>=(const std::unordered_multiset<Element, Hash, Equal, Allocator> &vSource, StreamBuffer &sbufSink){
 	const auto uSize = vSource.size();
-	SerializeSize(sbufSink, uSize);
-	Serialize<Key>(sbufSink, vSource.begin(), uSize);
+	uSize >>= sbufSink;
+	MakeSeqInserter<Element>(vSource.begin(), uSize) >>= sbufSink;
 }
-template<typename Key, class Compare, class Allocator>
-void Deserialize(std::multiunordered_set<Key, Compare, Allocator> &vSink, StreamBuffer &sbufSource){
+template<class Element, class Hash, class Equal, class Allocator>
+void operator<<=(std::unordered_multiset<Element, Hash, Equal, Allocator> &vSink, StreamBuffer &sbufSource){
+	std::size_t uSize;
+	uSize <<= sbufSource;
 	vSink.clear();
-	const auto uSize = DeserializeSize(sbufSource);
-	Deserialize<Key>(std::inserter(vSink, vSink.end()), uSize, sbufSource);
+	MakeSeqExtractor<Element>(std::inserter(vSink, vSink.end()), uSize) <<= sbufSource;
 }
 
 }

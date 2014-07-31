@@ -724,22 +724,40 @@ namespace Impl {
 	template<std::size_t CUR, std::size_t END>
 	struct CallOnTupleHelper {
 		template<typename Function, typename... TupleParams, typename... Unpacked>
-		auto operator()(Function &&vFunction, const std::tuple<TupleParams...> &vTuple, const Unpacked &... vUnpacked) const {
-			return CallOnTupleHelper<CUR + 1, END>()(vFunction, vTuple, vUnpacked..., std::get<CUR>(vTuple));
+		auto operator()(
+			Function &&vFunction, const std::tuple<TupleParams...> &vTuple,
+			const Unpacked &... vUnpacked
+		) const {
+			return CallOnTupleHelper<CUR + 1, END>()(
+				vFunction, vTuple,
+				vUnpacked..., std::get<CUR>(vTuple)
+			);
 		}
 		template<typename Function, typename... TupleParams, typename... Unpacked>
-		auto operator()(Function &&vFunction, std::tuple<TupleParams...> &&vTuple, Unpacked &&... vUnpacked) const {
-			return CallOnTupleHelper<CUR + 1, END>()(vFunction, std::move(vTuple), std::move(vUnpacked)..., std::move(std::get<CUR>(vTuple)));
+		auto operator()(
+			Function &&vFunction, std::tuple<TupleParams...> &&vTuple,
+			Unpacked &&... vUnpacked
+		) const {
+			return CallOnTupleHelper<CUR + 1, END>()(
+				vFunction, std::move(vTuple),
+				std::move(vUnpacked)..., std::move(std::get<CUR>(vTuple))
+			);
 		}
 	};
 	template<std::size_t END>
 	struct CallOnTupleHelper<END, END> {
 		template<typename Function, typename... TupleParams, typename... Unpacked>
-		auto operator()(Function &&vFunction, const std::tuple<TupleParams...> &, const Unpacked &... vUnpacked) const {
+		auto operator()(
+			Function &&vFunction, const std::tuple<TupleParams...> &,
+			const Unpacked &... vUnpacked
+		) const {
 			return vFunction(vUnpacked...);
 		}
 		template<typename Function, typename... TupleParams, typename... Unpacked>
-		auto operator()(Function &&vFunction, std::tuple<TupleParams...> &&, Unpacked &&... vUnpacked) const {
+		auto operator()(
+			Function &&vFunction, std::tuple<TupleParams...> &&,
+			Unpacked &&... vUnpacked
+		) const {
 			return vFunction(std::move(vUnpacked)...);
 		}
 	};

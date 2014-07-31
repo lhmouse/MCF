@@ -43,7 +43,7 @@ namespace Impl {
 
 template<typename Char, StringEncoding ENCODING>
 class String {
-	static_assert(std::is_arithmetic<Char>::value, "Char must be an arithmetic type.");
+	static_assert(std::is_integral<Char>::value, "Char must be an integral type.");
 
 	template<typename, StringEncoding>
 	friend class String;

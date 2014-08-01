@@ -14,16 +14,16 @@ void ThrowEndOfStream(){
 	MCF_THROW(ERROR_HANDLE_EOF, L"遇到文件尾。"_wso);
 }
 [[noreturn]]
-void ThrowSizeTooLarge(){
-	MCF_THROW(ERROR_OUTOFMEMORY, L"数据尺寸过大。"_wso);
+void ThrowBadLength(){
+	MCF_THROW(ERROR_BAD_LENGTH, L"数据尺寸过大。"_wso);
 }
 [[noreturn]]
 void ThrowInvalidData(){
 	MCF_THROW(ERROR_INVALID_DATA, L"数据损坏。"_wso);
 }
 [[noreturn]]
-void ThrowIntegerOverflow(){
-	MCF_THROW(ERROR_INVALID_DATA, L"整型溢出。"_wso);
+void ThrowArithmeticOverflow(){
+	MCF_THROW(ERROR_ARITHMETIC_OVERFLOW, L"整型溢出。"_wso);
 }
 
 }

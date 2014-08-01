@@ -20,11 +20,11 @@ namespace MCF {
 [[noreturn]]
 extern void ThrowEndOfStream();
 [[noreturn]]
-extern void ThrowSizeTooLarge();
+extern void ThrowBadLength();
 [[noreturn]]
 extern void ThrowInvalidData();
 [[noreturn]]
-extern void ThrowIntegerOverflow();
+extern void ThrowArithmeticOverflow();
 
 // 这里的运算符分为两种：
 
@@ -126,7 +126,7 @@ void operator<<=(Integral &vSink, StreamBuffer &sbufSource){
 		(vDecoder.Get() < std::numeric_limits<Integral>::min()) ||
 		(std::numeric_limits<Integral>::max() < vDecoder.Get())
 	){
-		ThrowIntegerOverflow();
+		ThrowArithmeticOverflow();
 	}
 	vSink = vDecoder.Get();
 }

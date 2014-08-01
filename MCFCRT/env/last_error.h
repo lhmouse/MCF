@@ -6,16 +6,18 @@
 #define MCF_CRT_LAST_ERROR_H_
 
 #include "_crtdef.h"
+#include <winerror.h>
 
 __MCF_EXTERN_C_BEGIN
 
 extern unsigned long MCF_CRT_GetWin32LastError(void) MCF_NOEXCEPT;
 extern void MCF_CRT_SetWin32LastError(unsigned long ulErrorCode) MCF_NOEXCEPT;
 
-__MCF_EXTERN_C_END
+extern MCF_STD size_t MCF_CRT_GetWin32ErrorDesc(
+	wchar_t *pwchBuffer, MCF_STD size_t uBufferSize,
+	unsigned long ulErrorCode
+) MCF_NOEXCEPT;
 
-#ifndef ERROR_SUCCESS
-#	define ERROR_SUCCESS	0
-#endif
+__MCF_EXTERN_C_END
 
 #endif

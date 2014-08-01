@@ -17,7 +17,7 @@ private:
 
 	union {
 		unsigned char xm_abyChunk[64];
-		struct {
+		struct __attribute__((__packed__)) {
 			unsigned char xm_abyFirstPart[56];
 			std::uint64_t xm_uBitsTotal;
 		};

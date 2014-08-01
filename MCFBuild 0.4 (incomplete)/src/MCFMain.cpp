@@ -62,19 +62,9 @@ try {
 	auto wcsMessage(L"MCF_EXCEPTION\0"_wso + e.m_wcsMessage);
 	wcsMessage.Push(0);
 	wchar_t awcCode[16];
+	// TODO
 	wcsMessage.Append(awcCode, (std::size_t)std::swprintf(awcCode, COUNT_OF(awcCode), L"%lu", e.m_ulErrorCode) + 1);
-	auto wcsErrorDescription = MCF::GetWin32ErrorDesc(e.m_ulErrorCode);
-	for(;;){
-		if(wcsErrorDescription.IsEmpty()){
-			break;
-		}
-		const auto wc = wcsErrorDescription.GetEnd()[-1];
-		if((wc != L'\n') && (wc != L'\r')){
-			break;
-		}
-		wcsErrorDescription.Pop();
-	}
-	wcsMessage += wcsErrorDescription;
+	wcsMessage += MCF::GetWin32ErrorDesc(e.m_ulErrorCode);
 	FormatPrint(wcsMessage);
 	return e.m_ulErrorCode;
 } catch(std::exception &e){

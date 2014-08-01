@@ -9,6 +9,7 @@
 #include "../Core/Utilities.hpp"
 #include <utility>
 #include <type_traits>
+#include <memory>
 #include <cstddef>
 
 namespace MCF {
@@ -31,9 +32,7 @@ namespace Impl {
 
 	template<typename Object>
 	auto ForwardArrowOperator(Object &vObject) noexcept {
-		return ForwardArrowOperatorHelper<Object>()(
-			(Object *)&reinterpret_cast<const volatile char &>(vObject)
-		);
+		return ForwardArrowOperatorHelper<Object>()(std::addressof(vObject));
 	}
 }
 

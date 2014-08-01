@@ -20,7 +20,12 @@ inline void SetWin32LastError(unsigned long ulErrorCode) noexcept {
 	::MCF_CRT_SetWin32LastError(ulErrorCode);
 }
 
-extern WideString GetWin32ErrorDesc(unsigned long ulErrorCode);
+inline WideString GetWin32ErrorDesc(unsigned long ulErrorCode){
+	WideString wcsRet;
+	wcsRet.Resize(0x100);
+	wcsRet.Resize(::MCF_CRT_GetWin32ErrorDesc(wcsRet.GetStr(), wcsRet.GetSize(), ulErrorCode));
+	return std::move(wcsRet);
+}
 
 class Exception : public std::exception {
 public:

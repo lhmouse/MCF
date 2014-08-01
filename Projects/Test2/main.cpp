@@ -1,18 +1,15 @@
 #include <MCF/StdMCF.hpp>
-#include <MCF/Serialization/Serdes_bitset.hpp>
+#include <MCF/Serialization/VarIntEx.hpp>
 #include <iostream>
 using namespace MCF;
 
-typedef
-	std::bitset<64>
-	TestType;
-
 extern "C" unsigned int MCFMain() noexcept {
-	StreamBuffer buf;
-	TestType t1(0x123456789ABCDEF0), t2;
-	buf <<t1;
-	buf >>t2;
-	std::cout <<t1 <<std::endl;
-	std::cout <<t2 <<std::endl;
+	VarIntEx<unsigned int> v1(0x12345678), v2;
+	unsigned char buf[12];
+	auto w = buf;
+	v1.Serialize(w);
+	auto r = buf;
+	v2.Deserialize(r, w);
+	std::cout <<std::hex <<v2.Get() <<std::endl;
 	return 0;
 }

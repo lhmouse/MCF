@@ -6,7 +6,6 @@
 #define MCF_VAR_INT_EX_HPP_
 
 #include <type_traits>
-#include <limits>
 #include <cstddef>
 #include <cstdint>
 
@@ -18,10 +17,16 @@ namespace Impl {
 		typedef Encoded EncodedType;
 
 		EncodedType Encode(Plain vVal) const noexcept {
-			return (Encoded)(((Encoded)vVal << 1) ^ (Encoded)(vVal >> std::numeric_limits<Plain>::digits));
+			auto vTemp = static_cast<Encoded>(vVal);
+			vTemp <<= 1;
+			vTemp ^= static_cast<Encoded>(vVal >> (sizeof(vVal) * __CHAR_BIT__ - 1));
+			return vTemp;
 		}
 		Plain Decode(EncodedType vVal) const noexcept {
-			return (Plain)((vVal >> 1) ^ -(vVal & 1));
+			auto vTemp = vVal;
+			vTemp >>= 1;
+			vTemp ^= static_cast<Encoded>(-(vVal & 1));
+			return static_cast<Plain>(vTemp);
 		}
 	};
 
@@ -42,7 +47,6 @@ template<typename Underlying, Underlying ORIGIN = 0>
 class VarIntEx {
 	static_assert(std::is_arithmetic<Underlying>::value, "Underlying must be an arithmetic type.");
 
-	static_assert(std::numeric_limits<unsigned char>::digits == 8, "Not supported.");
 	static_assert(sizeof(std::uintmax_t) <= 8, "Not supported.");
 
 public:

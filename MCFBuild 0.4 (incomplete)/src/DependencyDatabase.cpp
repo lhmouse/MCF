@@ -13,18 +13,18 @@ using namespace MCFBuild;
 
 namespace MCFBuild {
 
-namespace {
-	void Serialize(MCF::StreamBuffer &sbufSink, const DependencyItem &vSource){
-		MCF::Serialize(sbufSink, vSource.shaCommandLine);
-		MCF::Serialize(sbufSink, vSource.shaSource);
-		MCF::Serialize(sbufSink, vSource.shaPreProcessed);
-		MCF::Serialize(sbufSink, vSource.mapDependencies);
+inline namespace {
+	void operator>>=(const DependencyItem &vSource, MCF::StreamBuffer &sbufSink){
+		vSource.shaCommandLine	>>= sbufSink;
+		vSource.shaSource		>>= sbufSink;
+		vSource.shaPreProcessed	>>= sbufSink;
+		vSource.mapDependencies	>>= sbufSink;
 	}
-	void Deserialize(DependencyItem &vSink, MCF::StreamBuffer &sbufSource){
-		MCF::Deserialize(vSink.shaCommandLine,	sbufSource);
-		MCF::Deserialize(vSink.shaSource,		sbufSource);
-		MCF::Deserialize(vSink.shaPreProcessed,	sbufSource);
-		MCF::Deserialize(vSink.mapDependencies,	sbufSource);
+	void operator<<=(DependencyItem &vSink, MCF::StreamBuffer &sbufSource){
+		vSink.shaCommandLine	<<= sbufSource;
+		vSink.shaSource			<<= sbufSource;
+		vSink.shaPreProcessed	<<= sbufSource;
+		vSink.mapDependencies	<<= sbufSource;
 	}
 }
 
@@ -32,12 +32,12 @@ namespace {
 
 void DependencyDatabase::SaveToFile(const MCF::WideString &wcsPath) const {
 	MCF::StreamBuffer sbufData;
-//	MCF::Serialize(sbufData, xm_mapFiles);
+	sbufData <<xm_mapFiles;
 	PutFileContents(wcsPath, sbufData);
 }
 void DependencyDatabase::LoadFromFile(const MCF::WideString &wcsPath){
 	xm_mapFiles.clear();
 	MCF::StreamBuffer sbufData;
 	GetFileContents(sbufData, wcsPath, true);
-//	MCF::Deserialize(xm_mapFiles, sbufData);
+	sbufData >>xm_mapFiles;
 }

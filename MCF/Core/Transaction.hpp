@@ -15,7 +15,7 @@ class OperationBase : NO_COPY, ABSTRACT {
 	friend class Transaction;
 
 private:
-	virtual void xLock() = 0;
+	virtual bool xLock() = 0;
 	virtual void xCommit() noexcept = 0;
 	virtual void xUnlock() noexcept = 0;
 };
@@ -27,9 +27,9 @@ private:
 public:
 	bool IsEmpty() const noexcept;
 	void AddOperation(std::unique_ptr<OperationBase> pOperation);
-	void Clear();
+	void Clear() noexcept;
 
-	void Commit();
+	bool Commit() const;
 };
 
 }

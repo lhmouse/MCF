@@ -18,14 +18,16 @@
 
 static inline void __MCF_CRT_OnAssertFail(
 	const wchar_t *pwszExpression,
-	const char *pszFile,
-	unsigned long ulLine,
+	const char *pszFile, unsigned long ulLine,
 	const wchar_t *pwszMessage
 ) MCF_NOEXCEPT {
-	MCF_CRT_BailF(L"调试断言失败。\n\n表达式：%ls\n文件　：%hs\n行号　：%lu\n描述　：%ls", pwszExpression, pszFile, ulLine, pwszMessage);
+	MCF_CRT_BailF(
+		L"调试断言失败。\n\n表达式：%ls\n文件　：%hs\n行号　：%lu\n描述　：%ls",
+		pwszExpression, pszFile, ulLine, pwszMessage
+	);
 }
 
-#define ASSERT(exp)				MCF_ASSERT_MSG_(#exp, (exp), L"")
-#define ASSERT_MSG(exp, msg)	MCF_ASSERT_MSG_(#exp, (exp), (msg))
+#define ASSERT(exp)				(MCF_ASSERT_MSG_(#exp, (exp), L""))
+#define ASSERT_MSG(exp, msg)	(MCF_ASSERT_MSG_(#exp, (exp), (msg)))
 
 #endif

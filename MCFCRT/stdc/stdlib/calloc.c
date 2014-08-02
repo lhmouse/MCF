@@ -4,7 +4,8 @@
 
 #include "../../env/_crtdef.h"
 #include "../../env/heap.h"
-#include <string.h>
+
+extern void *memset(void *s, int c, size_t n);
 
 __attribute__((__noinline__)) void *__wrap_calloc(size_t nmemb, size_t cnt){
 	size_t cb = 0;

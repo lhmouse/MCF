@@ -36,7 +36,6 @@ void DependencyDatabase::SaveToFile(const MCF::WideString &wcsPath) const {
 	PutFileContents(wcsPath, sbufData);
 }
 void DependencyDatabase::LoadFromFile(const MCF::WideString &wcsPath){
-	xm_mapFiles.clear();
 	MCF::StreamBuffer sbufData;
 	GetFileContents(sbufData, wcsPath, true);
 	sbufData >>xm_mapFiles;

@@ -13,38 +13,41 @@ bool Transaction::IsEmpty() const noexcept {
 void Transaction::AddOperation(std::unique_ptr<OperationBase> pOperation){
 	xm_vecOperations.Push(std::move(pOperation));
 }
-void Transaction::Clear(){
+void Transaction::Clear() noexcept {
 	xm_vecOperations.Clear();
 }
 
-void Transaction::Commit(){
-	const auto ppBegin = xm_vecOperations.GetBegin();
-	const auto ppEnd = xm_vecOperations.GetEnd();
-	if(ppBegin == ppEnd){
-		return;
-	}
-
-	auto ppHead = ppBegin;
+bool Transaction::Commit() const {
+	auto ppCur = xm_vecOperations.GetBegin();
 	try {
-		while(ppHead != ppEnd){
-			(*ppHead)->xLock();
-			++ppHead;
+		while(ppCur != xm_vecOperations.GetEnd()){
+			if(!(*ppCur)->xLock()){
+				break;
+			}
+			++ppCur;
 		}
 	} catch(...){
-		while(ppHead != ppBegin){
-			--ppHead;
-			(*ppHead)->xUnlock();
+		while(ppCur != xm_vecOperations.GetBegin()){
+			--ppCur;
+			(*ppCur)->xUnlock();
 		}
 		throw;
 	}
-	ppHead = ppBegin;
-	while(ppHead != ppEnd){
-		(*ppHead)->xCommit();
-		++ppHead;
+	if(ppCur != xm_vecOperations.GetEnd()){
+		while(ppCur != xm_vecOperations.GetBegin()){
+			--ppCur;
+			(*ppCur)->xUnlock();
+		}
+		return false;
 	}
-	while(ppHead != ppBegin){
-		--ppHead;
-		(*ppHead)->xUnlock();
+	ppCur = xm_vecOperations.GetBegin();
+	while(ppCur != xm_vecOperations.GetEnd()){
+		(*ppCur)->xCommit();
+		++ppCur;
 	}
-	xm_vecOperations.Clear();
+	while(ppCur != xm_vecOperations.GetBegin()){
+		--ppCur;
+		(*ppCur)->xUnlock();
+	}
+	return true;
 }

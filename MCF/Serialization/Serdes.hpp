@@ -7,6 +7,7 @@
 
 #include "../Containers/StreamBuffer.hpp"
 #include "../Core/Utilities.hpp"
+#include "../Core/Exception.hpp"
 #include "VarIntEx.hpp"
 #include <type_traits>
 #include <iterator>
@@ -18,13 +19,21 @@ namespace MCF {
 
 // 辅助函数。
 [[noreturn]]
-extern void ThrowEndOfStream();
+inline void ThrowEndOfStream(){
+	MCF_THROW(ERROR_HANDLE_EOF, L"遇到文件尾。"_wso);
+}
 [[noreturn]]
-extern void ThrowBadLength();
+inline void ThrowBadLength(){
+	MCF_THROW(ERROR_BAD_LENGTH, L"数据尺寸过大。"_wso);
+}
 [[noreturn]]
-extern void ThrowInvalidData();
+inline void ThrowInvalidData(){
+	MCF_THROW(ERROR_INVALID_DATA, L"数据损坏。"_wso);
+}
 [[noreturn]]
-extern void ThrowArithmeticOverflow();
+inline void ThrowArithmeticOverflow(){
+	MCF_THROW(ERROR_ARITHMETIC_OVERFLOW, L"整型溢出。"_wso);
+}
 
 // 这里的运算符分为两种：
 

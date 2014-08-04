@@ -16,13 +16,13 @@ namespace Impl {
 	struct ZigZagger {
 		typedef Encoded EncodedType;
 
-		EncodedType Encode(Plain vVal) const noexcept {
+		static EncodedType Encode(Plain vVal) noexcept {
 			auto vTemp = static_cast<Encoded>(vVal);
 			vTemp <<= 1;
 			vTemp ^= static_cast<Encoded>(vVal >> (sizeof(vVal) * __CHAR_BIT__ - 1));
 			return vTemp;
 		}
-		Plain Decode(EncodedType vVal) const noexcept {
+		static Plain Decode(EncodedType vVal) noexcept {
 			auto vTemp = vVal;
 			vTemp >>= 1;
 			vTemp ^= static_cast<Encoded>(-(vVal & 1));
@@ -34,10 +34,10 @@ namespace Impl {
 	struct ZigZagger<Plain, Plain> {
 		typedef Plain EncodedType;
 
-		EncodedType Encode(Plain vVal) const noexcept {
+		static EncodedType Encode(Plain vVal) noexcept {
 			return vVal;
 		}
-		Plain Decode(EncodedType vVal) const noexcept {
+		static Plain Decode(EncodedType vVal) noexcept {
 			return vVal;
 		}
 	};
@@ -47,12 +47,8 @@ template<typename Underlying, Underlying ORIGIN = 0>
 class VarIntEx {
 	static_assert(std::is_arithmetic<Underlying>::value, "Underlying must be an arithmetic type.");
 
+	static_assert(__CHAR_BIT__ == 8, "Not supported.");
 	static_assert(sizeof(std::uintmax_t) <= 8, "Not supported.");
-
-public:
-	enum : std::size_t {
-		MAX_SERIALIZED_SIZE = sizeof(Underlying) + 1
-	};
 
 private:
 	Underlying xm_vValue;
@@ -77,8 +73,10 @@ public:
 
 	// 最多输出 9 个字节。
 	template<typename OutputIterator>
-	void Serialize(OutputIterator &itWrite) const {
-		auto uEncoded = Impl::ZigZagger<Underlying>().Encode(xm_vValue - ORIGIN);
+	void Serialize(OutputIterator &itWrite) const
+		noexcept(noexcept(*itWrite = std::declval<unsigned char>(), ++itWrite))
+	{
+		auto uEncoded = Impl::ZigZagger<Underlying>::Encode(xm_vValue - ORIGIN);
 		for(std::size_t i = 0; i < sizeof(uEncoded); ++i){
 			unsigned char by = uEncoded & 0x7F;
 			uEncoded >>= 7;
@@ -95,7 +93,9 @@ public:
 		++itWrite;
 	}
 	template<typename InputIterator>
-	bool Deserialize(InputIterator &itRead, const typename std::common_type<InputIterator>::type &itEnd){
+	bool Deserialize(InputIterator &itRead, const typename std::common_type<InputIterator>::type &itEnd)
+		noexcept(noexcept(std::declval<unsigned char &>() = *itRead, ++itRead))
+	{
 		typename Impl::ZigZagger<Underlying>::EncodedType uEncoded = 0;
 		for(std::size_t i = 0; i < 4; ++i){
 			if(itRead == itEnd){
@@ -126,7 +126,7 @@ public:
 		++itRead;
 
 	jDone:
-		xm_vValue = Impl::ZigZagger<Underlying>().Decode(uEncoded) + ORIGIN;
+		xm_vValue = Impl::ZigZagger<Underlying>::Decode(uEncoded) + ORIGIN;
 		return true;
 	}
 

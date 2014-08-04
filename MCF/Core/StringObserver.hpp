@@ -315,10 +315,8 @@ public:
 		}
 
 		const auto uPos = xKmpSearch(
-			GetBegin() + uRealBegin,
-			GetEnd(),
-			obsToFind.GetBegin(),
-			obsToFind.GetEnd()
+			GetBegin() + uRealBegin, GetEnd(),
+			obsToFind.GetBegin(), obsToFind.GetEnd()
 		);
 		return (uPos == NPOS) ? NPOS : (uPos + uRealBegin);
 	}
@@ -339,10 +337,8 @@ public:
 		typedef std::reverse_iterator<const Char *> RevIterator;
 
 		const auto uPos = xKmpSearch(
-			RevIterator(GetBegin() + uRealEnd),
-			RevIterator(GetBegin()),
-			RevIterator(obsToFind.GetBegin()),
-			RevIterator(obsToFind.GetEnd())
+			RevIterator(GetBegin() + uRealEnd), RevIterator(GetBegin()),
+			RevIterator(obsToFind.GetBegin()), RevIterator(obsToFind.GetEnd())
 		);
 		return (uPos == NPOS) ? NPOS : (uRealEnd - uPos - uLenToFind);
 	}

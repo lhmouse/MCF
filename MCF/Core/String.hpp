@@ -169,6 +169,10 @@ public:
 		if(xm_vStorage.chNull != Char()){
 			delete[] xm_vStorage.pchLargeBegin;
 		}
+
+#ifndef NDEBUG
+		std::memset(&xm_vStorage, 0xDD, sizeof(xm_vStorage));
+#endif
 	}
 
 private:
@@ -714,22 +718,20 @@ String<Char, ENCODING> operator+(const String<Char, ENCODING> &lhs, Char rhs){
 }
 template<typename Char, StringEncoding ENCODING, typename OtherChar, StringEncoding OTHER_ENCODING>
 String<Char, ENCODING> operator+(const String<Char, ENCODING> &lhs, const String<OtherChar, OTHER_ENCODING> &rhs){
-	String<Char, ENCODING> strRet(lhs);
-	strRet.Append(rhs);
-	return std::move(strRet);
+	return lhs + rhs.GetObserver();
 }
 template<typename Char, StringEncoding ENCODING>
-String<Char, ENCODING> operator+(String<Char, ENCODING> &&lhs, const StringObserver<Char> &rhs){
+String<Char, ENCODING> &&operator+(String<Char, ENCODING> &&lhs, const StringObserver<Char> &rhs){
 	lhs.Append(rhs);
 	return std::move(lhs);
 }
 template<typename Char, StringEncoding ENCODING>
-String<Char, ENCODING> operator+(String<Char, ENCODING> &&lhs, Char rhs){
+String<Char, ENCODING> &&operator+(String<Char, ENCODING> &&lhs, Char rhs){
 	lhs.Append(rhs);
 	return std::move(lhs);
 }
 template<typename Char, StringEncoding ENCODING, typename OtherChar, StringEncoding OTHER_ENCODING>
-String<Char, ENCODING> operator+(String<Char, ENCODING> &&lhs, const String<OtherChar, OTHER_ENCODING> &rhs){
+String<Char, ENCODING> &&operator+(String<Char, ENCODING> &&lhs, const String<OtherChar, OTHER_ENCODING> &rhs){
 	lhs.Append(rhs);
 	return std::move(lhs);
 }
@@ -751,25 +753,14 @@ String<Char, ENCODING> operator+(Char lhs, const String<Char, ENCODING> &rhs){
 	return std::move(strRet);
 }
 template<typename Char, StringEncoding ENCODING>
-String<Char, ENCODING> operator+(const StringObserver<Char> &lhs, String<Char, ENCODING> &&rhs){
+String<Char, ENCODING> &&operator+(const StringObserver<Char> &lhs, String<Char, ENCODING> &&rhs){
 	rhs.Unshift(lhs);
 	return std::move(rhs);
 }
 template<typename Char, StringEncoding ENCODING>
-String<Char, ENCODING> operator+(Char lhs, String<Char, ENCODING> &&rhs){
+String<Char, ENCODING> &&operator+(Char lhs, String<Char, ENCODING> &&rhs){
 	rhs.Unshift(lhs);
 	return std::move(rhs);
-}
-
-template<typename Char, StringEncoding ENCODING>
-String<Char, ENCODING> operator+(StringObserver<Char> &&lhs, StringObserver<Char> &&rhs){
-	if(lhs.GetCapacity() >= rhs.GetCapacity()){
-		lhs.Append(rhs);
-		return std::move(lhs);
-	} else {
-		rhs.Unshift(lhs);
-		return std::move(rhs);
-	}
 }
 
 template<typename Comparand, typename Char, StringEncoding ENCODING>

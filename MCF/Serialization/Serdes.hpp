@@ -125,16 +125,16 @@ template<typename Integral,
 void operator<<=(Integral &vSink, StreamBuffer &sbufSource){
 	VarIntEx<typename std::conditional<
 		std::is_signed<Integral>::value,
-		std::intmax_t, std::uintmax_t>::type
+		std::int64_t, std::uint64_t>::type
 		> vDecoder;
 	auto itInput = sbufSource.GetReadIterator();
 	if(!vDecoder.Deserialize(itInput, sbufSource.GetReadEnd())){
 		ThrowEndOfStream();
 	}
-	if(
-		(vDecoder.Get() < std::numeric_limits<Integral>::min()) ||
-		(std::numeric_limits<Integral>::max() < vDecoder.Get())
-	){
+
+	static constexpr auto MY_MIN = std::numeric_limits<Integral>::min();
+	static constexpr auto MY_MAX = std::numeric_limits<Integral>::max();
+	if((vDecoder.Get() < MY_MIN) || (MY_MAX < vDecoder.Get())){
 		ThrowArithmeticOverflow();
 	}
 	vSink = vDecoder.Get();

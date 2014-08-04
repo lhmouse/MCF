@@ -192,14 +192,18 @@ public:
 
 	template<typename... Params>
 	Node *Insert(Node *pPos, Params &&...vParams){
-		auto pNode = xDepool();
+		return InsertWithPool(pPos, *this, std::forward<Params>(vParams)...);
+	}
+	template<typename... Params>
+	Node *InsertWithPool(Node *pPos, VList &lstPool, Params &&...vParams){
+		auto pNode = lstPool.xDepool();
 		if(!pNode){
 			pNode = new Node;
 		}
 		try {
 			Construct(&(pNode->GetElement()), std::forward<Params>(vParams)...);
 		} catch(...){
-			xEnpool(pNode);
+			delete pNode;
 			throw;
 		}
 
@@ -211,16 +215,21 @@ public:
 		return pNode;
 	}
 	Node *Erase(Node *pPos) noexcept {
-		VList lstErased;
-		const auto pRet = pPos->xm_pNext;
-		lstErased.Splice(nullptr, *this, pPos);
-		return pRet;
+		return Erase(pPos, pPos->xm_pNext);
 	}
 	Node *Erase(Node *pBegin, Node *pEnd) noexcept {
-		VList lstErased;
-		const auto pRet = pEnd ? pEnd->xm_pNext : nullptr;
-		lstErased.Splice(nullptr, *this, pBegin, pEnd);
-		return pRet;
+		if(pBegin != pEnd){
+			const auto pOldPrev = pBegin->xm_pPrev;
+			(pOldPrev ? pOldPrev->xm_pNext : xm_pFirst) = pEnd;
+			(pEnd ? pEnd->xm_pPrev : xm_pLast) = pOldPrev;
+
+			do {
+				const auto pNode = pBegin;
+				pBegin = pBegin->xm_pNext;
+				delete pNode;
+			} while(pBegin != pEnd);
+		}
+		return pEnd;
 	}
 
 	Node *Splice(Node *pPos, VList &lstSource) noexcept {
@@ -233,34 +242,6 @@ public:
 		return Splice(pPos, lstSource, pSingle, pSingle->xm_pNext);
 	}
 	Node *Splice(Node *pPos, VList &lstSource, Node *pBegin, Node *pEnd) noexcept {
-#ifndef NDEBUG
-		if(pBegin){
-			auto pCur = lstSource.xm_pFirst;
-			for(;;){
-				if(!pCur){
-					ASSERT(false);
-				}
-				if(pCur == pBegin){
-					break;
-				}
-				pCur = pCur->xm_pNext;
-			}
-			if(pEnd){
-				for(;;){
-					if(pCur == pEnd){
-						break;
-					}
-					pCur = pCur->xm_pNext;
-					if(!pCur){
-						ASSERT(false);
-					}
-				}
-			}
-		} else {
-			ASSERT(!pEnd);
-		}
-#endif
-
 		if(pBegin != pEnd){
 			const auto pOldPrev = pBegin->xm_pPrev;
 			(pOldPrev ? pOldPrev->xm_pNext : lstSource.xm_pFirst) = pEnd;
@@ -364,6 +345,20 @@ public:
 			std::swap(pCur->xm_pPrev, pCur->xm_pNext);
 		}
 		std::swap(xm_pFirst, xm_pLast);
+	}
+
+public:
+	typedef Element value_type;
+
+	// std::back_insert_iterator
+	template<typename Param>
+	void push_back(Param &&vParam){
+		Push(std::forward<Param>(vParam));
+	}
+	// std::front_insert_iterator
+	template<typename Param>
+	void push_front(Param &&vParam){
+		Unshift(std::forward<Param>(vParam));
 	}
 };
 

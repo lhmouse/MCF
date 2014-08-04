@@ -128,7 +128,7 @@ void operator<<=(Integral &vSink, StreamBuffer &sbufSource){
 		std::int64_t, std::uint64_t>::type
 		> vDecoder;
 	auto itInput = sbufSource.GetReadIterator();
-	if(!vDecoder.Deserialize(itInput, sbufSource.GetReadEnd())){
+	if(!vDecoder.Deserialize(itInput, sbufSource.GetSize())){
 		ThrowEndOfStream();
 	}
 

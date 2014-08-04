@@ -366,6 +366,12 @@ public:
 		}
 	}
 
+	// std::back_insert_iterator
+	template<typename Param>
+	void push_back(Param &&vParam){
+		Push(std::forward<Param>(vParam));
+	}
+
 public:
 	explicit operator const Element *() const noexcept {
 		return GetData();
@@ -714,6 +720,15 @@ public:
 			std::swap(xm_pEnd,			rhs.xm_pEnd);
 			std::swap(xm_pEndOfStor,	rhs.xm_pEndOfStor);
 		}
+	}
+
+public:
+	typedef Element value_type;
+
+	// std::back_insert_iterator
+	template<typename Param>
+	void push_back(Param &&vParam){
+		Push(std::forward<Param>(vParam));
 	}
 
 public:

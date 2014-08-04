@@ -653,6 +653,15 @@ public:
 			pEnd ? DOWN_CAST(Node, xm_aHeaders[INDEX], pEnd) : nullptr
 		);
 	}
+
+public:
+	typedef Node value_type;
+
+	// std::insert_iterator
+	template<typename Ignored, typename Param>
+	void insert(const Ignored &, Param &&vParam){
+		Insert(std::forward<Param>(vParam));
+	}
 };
 
 template<class... Indices>

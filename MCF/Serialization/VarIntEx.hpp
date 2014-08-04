@@ -93,33 +93,35 @@ public:
 		++itWrite;
 	}
 	template<typename InputIterator>
-	bool Deserialize(InputIterator &itRead, const typename std::common_type<InputIterator>::type &itEnd)
+	bool Deserialize(InputIterator &itRead, std::size_t uCount)
 		noexcept(noexcept(std::declval<unsigned char &>() = *itRead, ++itRead))
 	{
 		typename Impl::ZigZagger<Underlying>::EncodedType uEncoded = 0;
 		for(std::size_t i = 0; i < 4; ++i){
-			if(itRead == itEnd){
+			if(uCount == 0){
 				return false;
 			}
 			const unsigned char by = *itRead;
 			++itRead;
+			--uCount;
 			uEncoded |= (std::uint32_t)(by & 0x7F) << (i * 7);
 			if(!(by & 0x80)){
 				goto jDone;
 			}
 		}
 		for(std::size_t i = 4; i < 8; ++i){
-			if(itRead == itEnd){
+			if(uCount == 0){
 				return false;
 			}
 			const unsigned char by = *itRead;
 			++itRead;
+			--uCount;
 			uEncoded |= (std::uint64_t)(by & 0x7F) << (i * 7);
 			if(!(by & 0x80)){
 				goto jDone;
 			}
 		}
-		if(itRead == itEnd){
+		if(uCount == 0){
 			return false;
 		}
 		uEncoded |= (std::uint64_t)*itRead << 56;

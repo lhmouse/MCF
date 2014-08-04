@@ -66,43 +66,32 @@ public:
 	void Traverse(const std::function<void (unsigned char *, std::size_t)> &fnCallback);
 
 	ReadIterator GetReadIterator() noexcept;
-	static constexpr ReadIterator GetReadEnd() noexcept;
 	WriteIterator GetWriteIterator() noexcept;
+
+public:
+	typedef unsigned char value_type;
+
+	// std::back_insert_iterator
+	template<typename Param>
+	void push_back(Param &&vParam){
+		Put(std::forward<Param>(vParam));
+	}
 };
 
 class StreamBuffer::ReadIterator
 	: public std::iterator<std::input_iterator_tag, unsigned char>
 {
 private:
-	StreamBuffer *const xm_psbufOwner;
+	StreamBuffer *xm_psbufOwner;
 
 public:
-	constexpr ReadIterator() noexcept
-		: xm_psbufOwner(nullptr)
-	{
-	}
 	explicit constexpr ReadIterator(StreamBuffer &sbufOwner) noexcept
 		: xm_psbufOwner(&sbufOwner)
 	{
 	}
 
 public:
-	bool operator==(const ReadIterator &rhs) const noexcept {
-		if(xm_psbufOwner == rhs.xm_psbufOwner){
-			return true;
-		} else if(!xm_psbufOwner){
-			return rhs.xm_psbufOwner->IsEmpty();
-		} else if(!rhs.xm_psbufOwner){
-			return xm_psbufOwner->IsEmpty();
-		} else {
-			return false;
-		}
-	}
-	bool operator!=(const ReadIterator &rhs) const noexcept {
-		return !(*this == rhs);
-	}
 	ReadIterator &operator++() noexcept {
-		ASSERT(xm_psbufOwner);
 		ASSERT(!xm_psbufOwner->IsEmpty());
 
 		xm_psbufOwner->Get();
@@ -115,7 +104,6 @@ public:
 	}
 
 	unsigned char operator*() const noexcept {
-		ASSERT(xm_psbufOwner);
 		ASSERT(!xm_psbufOwner->IsEmpty());
 
 		return (unsigned char)xm_psbufOwner->Peek();
@@ -126,7 +114,7 @@ class StreamBuffer::WriteIterator
 	: public std::iterator<std::output_iterator_tag, unsigned char>
 {
 private:
-	StreamBuffer *const xm_psbufOwner;
+	StreamBuffer *xm_psbufOwner;
 
 public:
 	explicit constexpr WriteIterator(StreamBuffer &sbufOwner) noexcept
@@ -135,12 +123,6 @@ public:
 	}
 
 public:
-	bool operator==(const WriteIterator &rhs) const noexcept {
-		return xm_psbufOwner == rhs.xm_psbufOwner;
-	}
-	bool operator!=(const WriteIterator &rhs) const noexcept {
-		return !(*this == rhs);
-	}
 	WriteIterator &operator++() noexcept {
 		return *this;
 	}
@@ -159,9 +141,6 @@ public:
 
 inline StreamBuffer::ReadIterator StreamBuffer::GetReadIterator() noexcept {
 	return ReadIterator(*this);
-}
-inline constexpr StreamBuffer::ReadIterator StreamBuffer::GetReadEnd() noexcept {
-	return ReadIterator();
 }
 inline StreamBuffer::WriteIterator StreamBuffer::GetWriteIterator() noexcept {
 	return WriteIterator(*this);

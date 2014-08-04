@@ -634,6 +634,20 @@ public:
 	}
 
 public:
+	typedef Char value_type;
+
+	// std::back_insert_iterator
+	template<typename Param>
+	void push_back(Param &&vParam){
+		Push(std::forward<Param>(vParam));
+	}
+	// std::front_insert_iterator
+	template<typename Param>
+	void push_front(Param &&vParam){
+		Unshift(std::forward<Param>(vParam));
+	}
+
+public:
 	operator Observer() const noexcept {
 		return GetObserver();
 	}
@@ -761,6 +775,16 @@ template<typename Char, StringEncoding ENCODING>
 String<Char, ENCODING> &&operator+(Char lhs, String<Char, ENCODING> &&rhs){
 	rhs.Unshift(lhs);
 	return std::move(rhs);
+}
+template<typename Char, StringEncoding ENCODING>
+String<Char, ENCODING> &&operator+(String<Char, ENCODING> &&lhs, String<Char, ENCODING> &&rhs){
+	if(lhs.GetCapacity() >= rhs.GetCapacity()){
+		lhs.Append(rhs);
+		return std::move(lhs);
+	} else {
+		rhs.Unshift(lhs);
+		return std::move(rhs);
+	}
 }
 
 template<typename Comparand, typename Char, StringEncoding ENCODING>

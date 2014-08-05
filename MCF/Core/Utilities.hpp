@@ -52,7 +52,7 @@ namespace Impl {
 	};
 }
 
-// 安全地在宏参数中使用带逗号的类型名，例如 MY_MACRO(double, (std::map<int, double>))。
+// 安全地在宏参数中使用带逗号的类型名，例如 MY_MACRO(double, MACRO_TYPE(std::map<int, double>))。
 #define MACRO_TYPE(type_param)	\
 	typename ::MCF::Impl::MacroTypeHelper<void(type_param &&)>::Type
 
@@ -156,7 +156,9 @@ namespace Impl {
 
 #define FORCE_NOEXCEPT(expr)	\
 	FORCE_NOEXCEPT_BEGIN	\
+	{	\
 		return (expr);	\
+	}	\
 	FORCE_NOEXCEPT_END	\
 
 //----------------------------------------------------------------------------
@@ -164,8 +166,8 @@ namespace Impl {
 //----------------------------------------------------------------------------
 template<typename T>
 inline auto Clone(T &&vSrc)
-	noexcept(std::is_nothrow_copy_constructible<
-		typename std::remove_reference<T>::type
+	noexcept(std::is_nothrow_constructible<
+		typename std::remove_reference<T>::type, T &&
 		>::value)
 {
 	return typename std::remove_cv<
@@ -213,26 +215,27 @@ inline void BZero(T &vDst) noexcept {
 }
 
 //----------------------------------------------------------------------------
-// CallOnEach / CallOnEachBackward
+// CallOnEach / ReverseCallOnEach
 //----------------------------------------------------------------------------
+template<typename Function, typename First, typename ...Params>
+Function &&CallOnEach(Function &&vFunction, First &&vFirst, Params &&... vParams){
+	vFunction(std::forward<First>(vFirst));
+	CallOnEach(vFunction, std::forward<Params>(vParams)...);
+	return std::forward<Function>(vFunction);
+}
 template<typename Function>
 Function &&CallOnEach(Function &&vFunction){
 	return std::forward<Function>(vFunction);
 }
-template<typename Function, typename FirstParam, typename... Params>
-Function &&CallOnEach(Function &&vFunction, FirstParam &&vFirstParam, Params &&... vParams){
-	vFunction(std::forward<FirstParam>(vFirstParam));
-	return CallOnEach(std::move(vFunction), std::forward<Params>(vParams)...);
-}
 
-template<typename Function>
-Function &&CallOnEachBackward(Function &&vFunction){
+template<typename Function, typename First, typename ...Params>
+Function &&ReverseCallOnEach(Function &&vFunction, First &&vFirst, Params &&... vParams){
+	ReverseCallOnEach(vFunction, std::forward<Params>(vParams)...);
+	vFunction(std::forward<First>(vFirst));
 	return std::forward<Function>(vFunction);
 }
-template<typename Function, typename FirstParam, typename... Params>
-Function &&CallOnEachBackward(Function &&vFunction, FirstParam &&vFirstParam, Params &&... vParams){
-	auto &&vNewFunction = CallOnEachBackward(std::forward<Function>(vFunction), std::forward<Params>(vParams)...);
-	vNewFunction(std::forward<FirstParam>(vFirstParam));
+template<typename Function>
+Function &&ReverseCallOnEach(Function &&vFunction){
 	return std::forward<Function>(vFunction);
 }
 

@@ -6,8 +6,6 @@
 #include "String.hpp"
 #include "Utilities.hpp"
 #include "../Serialization/Serdes.hpp"
-#include "../Thread/ReaderWriterLock.hpp"
-#include <unordered_map>
 using namespace MCF;
 
 namespace MCF {
@@ -303,39 +301,5 @@ void operator<<=(Utf8String &u8sSink, StreamBuffer &sbufSource){
 		--uSize;
 	}
 }
-
-// 字面量运算符。
-#define DEFINE_LITERAL_OPERATOR(suffix, charType, encoding)	\
-	const String<MACRO_TYPE(charType), StringEncoding::encoding> &	\
-		operator"" ## suffix(const MACRO_TYPE(charType) *pchStr, std::size_t uLength)	\
-	{	\
-		static const auto pReaderWriterLock = ReaderWriterLock::Create();	\
-		static std::unordered_map<	\
-			const charType *,	\
-			String<MACRO_TYPE(charType), StringEncoding::encoding>	\
-		> mapStrings;	\
-		\
-		{	\
-			const auto vReaderLock = pReaderWriterLock->GetReaderLock();	\
-			auto itString = mapStrings.find(pchStr);	\
-			if(itString != mapStrings.end()){	\
-				return itString->second;	\
-			}	\
-		}	\
-		\
-		const auto vWriterLock = pReaderWriterLock->GetWriterLock();	\
-		return mapStrings.emplace(	\
-			std::piecewise_construct,	\
-			std::make_tuple(pchStr),	\
-			std::make_tuple(pchStr, uLength)	\
-		).first->second;	\
-	}
-
-DEFINE_LITERAL_OPERATOR(_as,	char,		ANSI)
-DEFINE_LITERAL_OPERATOR(_ws,	wchar_t,	UTF16)
-
-DEFINE_LITERAL_OPERATOR(_u8s,	char,		UTF8)
-DEFINE_LITERAL_OPERATOR(_u16s,	char16_t,	UTF16)
-DEFINE_LITERAL_OPERATOR(_u32s,	char32_t,	UTF32)
 
 }

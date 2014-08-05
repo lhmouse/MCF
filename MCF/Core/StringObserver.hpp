@@ -509,21 +509,26 @@ typedef StringObserver<char>		Utf8StringObserver;
 typedef StringObserver<char16_t>	Utf16StringObserver;
 typedef StringObserver<char32_t>	Utf32StringObserver;
 
-constexpr inline const MCF::NarrowStringObserver	operator""_nso		(const char *pchStr,		std::size_t uLength) noexcept {
-	return MCF::NarrowStringObserver(pchStr, uLength);
+constexpr inline
+const NarrowStringObserver operator""_nso(const char *pchStr, std::size_t uLength) noexcept {
+	return NarrowStringObserver(pchStr, uLength);
 }
-constexpr inline const MCF::WideStringObserver		operator""_wso		(const wchar_t *pwchStr,	std::size_t uLength) noexcept {
-	return MCF::WideStringObserver(pwchStr, uLength);
+constexpr inline
+const WideStringObserver operator""_wso(const wchar_t *pwchStr, std::size_t uLength) noexcept {
+	return WideStringObserver(pwchStr, uLength);
 }
 
-constexpr inline const MCF::Utf8StringObserver		operator""_u8so		(const char *pchStr,		std::size_t uLength) noexcept {
-	return MCF::Utf8StringObserver(pchStr, uLength);
+constexpr inline
+const Utf8StringObserver operator""_u8so(const char *pchStr, std::size_t uLength) noexcept {
+	return Utf8StringObserver(pchStr, uLength);
 }
-constexpr inline const MCF::Utf16StringObserver		operator""_u16so	(const char16_t *pc16Str,	std::size_t uLength) noexcept {
-	return MCF::Utf16StringObserver(pc16Str, uLength);
+constexpr inline
+const Utf16StringObserver operator""_u16so(const char16_t *pc16Str, std::size_t uLength) noexcept {
+	return Utf16StringObserver(pc16Str, uLength);
 }
-constexpr inline const MCF::Utf32StringObserver		operator""_u32so	(const char32_t *pc32Str,	std::size_t uLength) noexcept {
-	return MCF::Utf32StringObserver(pc32Str, uLength);
+constexpr inline
+const Utf32StringObserver operator""_u32so(const char32_t *pc32Str, std::size_t uLength) noexcept {
+	return Utf32StringObserver(pc32Str, uLength);
 }
 
 }

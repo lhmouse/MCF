@@ -6,6 +6,7 @@
 #define MCF_VAR_INT_EX_HPP_
 
 #include <type_traits>
+#include <limits>
 #include <cstddef>
 #include <cstdint>
 
@@ -19,7 +20,7 @@ namespace Impl {
 		static EncodedType Encode(Plain vVal) noexcept {
 			auto vTemp = static_cast<Encoded>(vVal);
 			vTemp <<= 1;
-			vTemp ^= static_cast<Encoded>(vVal >> (sizeof(vVal) * __CHAR_BIT__ - 1));
+			vTemp ^= static_cast<Encoded>(vVal >> std::numeric_limits<Plain>::digits);
 			return vTemp;
 		}
 		static Plain Decode(EncodedType vVal) noexcept {
@@ -47,7 +48,7 @@ template<typename Underlying, Underlying ORIGIN = 0>
 class VarIntEx {
 	static_assert(std::is_arithmetic<Underlying>::value, "Underlying must be an arithmetic type.");
 
-	static_assert(__CHAR_BIT__ == 8, "Not supported.");
+	static_assert(std::numeric_limits<unsigned char>::digits == 8, "Not supported.");
 	static_assert(sizeof(std::uintmax_t) <= 8, "Not supported.");
 
 private:
@@ -93,10 +94,8 @@ public:
 		++itWrite;
 	}
 	template<typename InputIterator>
-	bool Deserialize(InputIterator &itRead, std::size_t uCount)
-		noexcept(noexcept(std::declval<unsigned char &>() = *itRead, ++itRead))
-	{
-		typename Impl::ZigZagger<Underlying>::EncodedType uEncoded = 0;
+	bool Deserialize(InputIterator &itRead, std::size_t uCount){
+		std::uint64_t u64Encoded = 0;
 		for(std::size_t i = 0; i < 4; ++i){
 			if(uCount == 0){
 				return false;
@@ -104,7 +103,7 @@ public:
 			const unsigned char by = *itRead;
 			++itRead;
 			--uCount;
-			uEncoded |= (std::uint32_t)(by & 0x7F) << (i * 7);
+			u64Encoded |= (std::uint32_t)(by & 0x7F) << (i * 7);
 			if(!(by & 0x80)){
 				goto jDone;
 			}
@@ -116,7 +115,7 @@ public:
 			const unsigned char by = *itRead;
 			++itRead;
 			--uCount;
-			uEncoded |= (std::uint64_t)(by & 0x7F) << (i * 7);
+			u64Encoded |= (std::uint64_t)(by & 0x7F) << (i * 7);
 			if(!(by & 0x80)){
 				goto jDone;
 			}
@@ -124,11 +123,23 @@ public:
 		if(uCount == 0){
 			return false;
 		}
-		uEncoded |= (std::uint64_t)*itRead << 56;
+		u64Encoded |= (std::uint64_t)*itRead << 56;
 		++itRead;
 
 	jDone:
-		xm_vValue = Impl::ZigZagger<Underlying>::Decode(uEncoded) + ORIGIN;
+		static constexpr auto MY_MAX = std::numeric_limits<Underlying>::max();
+		static constexpr auto MY_MIN = std::numeric_limits<Underlying>::min();
+
+		const auto vDecoded = Impl::ZigZagger<
+			typename std::conditional<
+				std::is_signed<Underlying>::value,
+				std::int64_t, std::uint64_t
+				>::type
+			>::Decode(u64Encoded) + ORIGIN;
+		if((vDecoded < MY_MIN) || (MY_MAX < vDecoded)){
+			MCF_THROW(ERROR_ARITHMETIC_OVERFLOW, L"整型溢出。"_wso);
+		}
+		xm_vValue = vDecoded;
 		return true;
 	}
 

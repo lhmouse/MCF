@@ -5,11 +5,13 @@
 #ifndef MCF_TCP_SERVER_HPP_
 #define MCF_TCP_SERVER_HPP_
 
-#include "TcpPeer.hpp"
 #include "../Core/Utilities.hpp"
 #include <memory>
 
 namespace MCF {
+
+class PeerInfo;
+class TcpPeer;
 
 class TcpServer : NO_COPY, ABSTRACT {
 public:

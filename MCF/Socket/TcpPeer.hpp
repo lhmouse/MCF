@@ -6,11 +6,12 @@
 #define MCF_TCP_PEER_HPP_
 
 #include "../Core/Utilities.hpp"
-#include "PeerInfo.hpp"
 #include <memory>
 #include <cstddef>
 
 namespace MCF {
+
+class PeerInfo;
 
 class TcpPeer : NO_COPY, ABSTRACT {
 public:

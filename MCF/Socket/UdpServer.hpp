@@ -5,12 +5,14 @@
 #ifndef MCF_UDP_SERVER_HPP_
 #define MCF_UDP_SERVER_HPP_
 
-#include "UdpSender.hpp"
 #include "../Core/Utilities.hpp"
 #include "../Containers/VVector.hpp"
 #include <memory>
 
 namespace MCF {
+
+class PeerInfo;
+class UdpSender;
 
 struct UdpPacket {
 	std::unique_ptr<UdpSender> pSender;

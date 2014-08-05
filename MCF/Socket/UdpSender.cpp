@@ -4,6 +4,7 @@
 
 #include "../StdMCF.hpp"
 #include "UdpSender.hpp"
+#include "PeerInfo.hpp"
 #include "_SocketUtils.hpp"
 #include "../Core/Exception.hpp"
 #include "../Core/Utilities.hpp"

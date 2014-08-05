@@ -30,10 +30,6 @@ inline void ThrowBadLength(){
 inline void ThrowInvalidData(){
 	MCF_THROW(ERROR_INVALID_DATA, L"数据损坏。"_wso);
 }
-[[noreturn]]
-inline void ThrowArithmeticOverflow(){
-	MCF_THROW(ERROR_ARITHMETIC_OVERFLOW, L"整型溢出。"_wso);
-}
 
 // 这里的运算符分为两种：
 
@@ -123,19 +119,10 @@ template<typename Integral,
 		int>::type
 	= 0>
 void operator<<=(Integral &vSink, StreamBuffer &sbufSource){
-	VarIntEx<typename std::conditional<
-		std::is_signed<Integral>::value,
-		std::int64_t, std::uint64_t>::type
-		> vDecoder;
+	VarIntEx<Integral> vDecoder;
 	auto itInput = sbufSource.GetReadIterator();
 	if(!vDecoder.Deserialize(itInput, sbufSource.GetSize())){
 		ThrowEndOfStream();
-	}
-
-	static constexpr auto MY_MIN = std::numeric_limits<Integral>::min();
-	static constexpr auto MY_MAX = std::numeric_limits<Integral>::max();
-	if((vDecoder.Get() < MY_MIN) || (MY_MAX < vDecoder.Get())){
-		ThrowArithmeticOverflow();
 	}
 	vSink = vDecoder.Get();
 }

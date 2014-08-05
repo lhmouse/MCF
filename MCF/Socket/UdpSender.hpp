@@ -6,11 +6,12 @@
 #define MCF_UDP_SENDER_HPP_
 
 #include "../Core/Utilities.hpp"
-#include "PeerInfo.hpp"
 #include <memory>
 #include <cstddef>
 
 namespace MCF {
+
+class PeerInfo;
 
 class UdpSender : NO_COPY, ABSTRACT {
 public:

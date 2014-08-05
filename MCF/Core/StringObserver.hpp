@@ -510,19 +510,21 @@ typedef StringObserver<char16_t>	Utf16StringObserver;
 typedef StringObserver<char32_t>	Utf32StringObserver;
 
 // 字面量运算符。
+// 注意 StringObserver 并不是所谓“零结尾的字符串”。
+// 这些运算符经过特意设计防止这种用法。
 template<typename Char, Char... STRING>
 typename std::enable_if<std::is_same<Char, char>::value, NarrowStringObserver>::type
 	operator""_nso()
 {
 	static Char s_achData[] = {STRING..., '$'};
-	return NarrowStringObserver(s_achData, sizeof(s_achData) - 1);
+	return NarrowStringObserver(s_achData, sizeof...(STRING));
 }
 template<typename Char, Char... STRING>
 typename std::enable_if<std::is_same<Char, wchar_t>::value, WideStringObserver>::type
 	operator""_wso()
 {
 	static Char s_achData[] = {STRING..., '$'};
-	return WideStringObserver(s_achData, sizeof(s_achData) - 1);
+	return WideStringObserver(s_achData, sizeof...(STRING));
 }
 
 template<typename Char, Char... STRING>
@@ -530,21 +532,21 @@ typename std::enable_if<std::is_same<Char, char>::value, Utf8StringObserver>::ty
 	operator""_u8so()
 {
 	static Char s_achData[] = {STRING..., '$'};
-	return Utf8StringObserver(s_achData, sizeof(s_achData) - 1);
+	return Utf8StringObserver(s_achData, sizeof...(STRING));
 }
 template<typename Char, Char... STRING>
 typename std::enable_if<std::is_same<Char, char16_t>::value, Utf16StringObserver>::type
 	operator""_u16so()
 {
 	static Char s_achData[] = {STRING..., '$'};
-	return Utf16StringObserver(s_achData, sizeof(s_achData) - 1);
+	return Utf16StringObserver(s_achData, sizeof...(STRING));
 }
 template<typename Char, Char... STRING>
 typename std::enable_if<std::is_same<Char, char32_t>::value, Utf32StringObserver>::type
 	operator""_u32so()
 {
 	static Char s_achData[] = {STRING..., '$'};
-	return Utf32StringObserver(s_achData, sizeof(s_achData) - 1);
+	return Utf32StringObserver(s_achData, sizeof...(STRING));
 }
 
 }

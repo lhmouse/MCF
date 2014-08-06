@@ -7,6 +7,7 @@
 
 #include "../Core/Utilities.hpp"
 #include <initializer_list>
+#include <type_traits>
 #include <utility>
 #include <cstddef>
 
@@ -76,7 +77,7 @@ public:
 		FillAtEnd(uCount, vParams...);
 	}
 	template<class Iterator>
-	VList(Iterator itBegin, Iterator itEnd)
+	VList(Iterator itBegin, typename std::common_type<Iterator>::type itEnd)
 		: VList()
 	{
 		CopyToEnd(itBegin, itEnd);
@@ -289,7 +290,7 @@ public:
 		}
 	}
 	template<class Iterator>
-	void CopyToEnd(Iterator itBegin, Iterator itEnd){
+	void CopyToEnd(Iterator itBegin, typename std::common_type<Iterator>::type itEnd){
 		while(itBegin != itEnd){
 			Push(*itBegin);
 			++itBegin;
@@ -315,7 +316,7 @@ public:
 		}
 	}
 	template<class Iterator>
-	void CopyToBegin(Iterator itBegin, Iterator itEnd){
+	void CopyToBegin(Iterator itBegin, typename std::common_type<Iterator>::type itEnd){
 		while(itBegin != itEnd){
 			Unshift(*itBegin);
 			++itBegin;

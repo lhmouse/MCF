@@ -42,7 +42,7 @@ public:
 		FillAtEnd(uCount, vParams...);
 	}
 	template<class Iterator>
-	VVector(Iterator itBegin, Iterator itEnd)
+	VVector(Iterator itBegin, typename std::common_type<Iterator>::type itEnd)
 		: VVector()
 	{
 		CopyToEnd(itBegin, itEnd);
@@ -311,7 +311,7 @@ public:
 		}
 	}
 	template<class Iterator>
-	void CopyToEndNoCheck(Iterator itBegin, Iterator itEnd)
+	void CopyToEndNoCheck(Iterator itBegin, typename std::common_type<Iterator>::type itEnd)
 		noexcept(noexcept(PushNoCheck(*std::declval<Iterator>())))
 	{
 		while(itBegin != itEnd){
@@ -334,7 +334,7 @@ public:
 		FillAtEndNoCheck(uCount, vParams...);
 	}
 	template<class Iterator>
-	void CopyToEnd(Iterator itBegin, Iterator itEnd){
+	void CopyToEnd(Iterator itBegin, typename std::common_type<Iterator>::type itEnd){
 		while(itBegin != itEnd){
 			Push(*itBegin);
 			++itBegin;
@@ -416,7 +416,7 @@ public:
 		FillAtEnd(uCount, vParams...);
 	}
 	template<class Iterator>
-	VVector(Iterator itBegin, Iterator itEnd)
+	VVector(Iterator itBegin, typename std::common_type<Iterator>::type itEnd)
 		: VVector()
 	{
 		CopyToEnd(itBegin, itEnd);
@@ -672,7 +672,7 @@ public:
 		}
 	}
 	template<class Iterator>
-	void CopyToEndNoCheck(Iterator itBegin, Iterator itEnd)
+	void CopyToEndNoCheck(Iterator itBegin, typename std::common_type<Iterator>::type itEnd)
 		noexcept(std::is_nothrow_constructible<Element, decltype(*std::declval<Iterator>())>::value)
 	{
 		while(itBegin != itEnd){
@@ -695,7 +695,7 @@ public:
 		FillAtEndNoCheck(uCount, vParams...);
 	}
 	template<class Iterator>
-	void CopyToEnd(Iterator itBegin, Iterator itEnd){
+	void CopyToEnd(Iterator itBegin, typename std::common_type<Iterator>::type itEnd){
 		while(itBegin != itEnd){
 			Push(*itBegin);
 			++itBegin;

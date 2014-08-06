@@ -8,6 +8,7 @@
 #include "StringObserver.hpp"
 #include "../Containers/VVector.hpp"
 #include "Utilities.hpp"
+#include <type_traits>
 #include <memory>
 #include <cstdint>
 
@@ -86,7 +87,7 @@ public:
 		Assign(pszBegin);
 	}
 	template<class Iterator>
-	String(Iterator itBegin, Iterator itEnd)
+	String(Iterator itBegin, typename std::common_type<Iterator>::type itEnd)
 		: String()
 	{
 		Assign(itBegin, itEnd);
@@ -373,7 +374,7 @@ public:
 		Assign(Observer(pszBegin));
 	}
 	template<class Iterator>
-	void Assign(Iterator itBegin, Iterator itEnd){
+	void Assign(Iterator itBegin, typename std::common_type<Iterator>::type itEnd){
 		Assign(itBegin, (std::size_t)std::distance(itBegin, itEnd));
 	}
 	template<class Iterator>
@@ -410,7 +411,7 @@ public:
 		Append(Observer(pszBegin));
 	}
 	template<class Iterator>
-	void Append(Iterator itBegin, Iterator itEnd){
+	void Append(Iterator itBegin, typename std::common_type<Iterator>::type itEnd){
 		Append(itBegin, (std::size_t)std::distance(itBegin, itEnd));
 	}
 	template<class Iterator>
@@ -498,7 +499,7 @@ public:
 		Unshift(Observer(pszBegin));
 	}
 	template<class Iterator>
-	void Unshift(Iterator itBegin, Iterator itEnd){
+	void Unshift(Iterator itBegin, typename std::common_type<Iterator>::type itEnd){
 		Unshift(itBegin, (std::size_t)std::distance(itBegin, itEnd));
 	}
 	template<class Iterator>

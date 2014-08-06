@@ -11,7 +11,7 @@
 
 namespace MCF {
 
-class OperationBase : NO_COPY, ABSTRACT {
+class TransactionItemBase : NO_COPY, ABSTRACT {
 	friend class Transaction;
 
 private:
@@ -22,11 +22,11 @@ private:
 
 class Transaction : NO_COPY {
 private:
-	VVector<std::unique_ptr<OperationBase>> xm_vecOperations;
+	VVector<std::unique_ptr<TransactionItemBase>> xm_vecItems;
 
 public:
 	bool IsEmpty() const noexcept;
-	void AddOperation(std::unique_ptr<OperationBase> pOperation);
+	void AddItem(std::unique_ptr<TransactionItemBase> pItem);
 	void Clear() noexcept;
 
 	bool Commit() const;

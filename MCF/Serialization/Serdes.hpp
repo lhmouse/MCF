@@ -35,8 +35,8 @@ inline void ThrowInvalidData(){
 
 // “接口”，全部为非成员函数：
 //     StreamBuffer &operator<<(StreamBuffer &, const DataType &);
-//     StreamBuffer &operator>>(StreamBuffer &, DataType &);
 //     StreamBuffer &&operator<<(StreamBuffer &&, const DataType &);
+//     StreamBuffer &operator>>(StreamBuffer &, DataType &);
 //     StreamBuffer &&operator>>(StreamBuffer &&, DataType &);
 
 // “实现”，可以是成员函数，也可以不是：
@@ -49,22 +49,21 @@ inline void ThrowInvalidData(){
 
 // “接口”的定义。接口是统一的，这里不需进行特化。
 template<typename DataType>
-StreamBuffer &operator<<(StreamBuffer &sbufSink, const DataType &vSource){
+auto &operator<<(StreamBuffer &sbufSink, const DataType &vSource){
 	vSource >>= sbufSink;
 	return sbufSink;
 }
 template<typename DataType>
-StreamBuffer &operator>>(StreamBuffer &sbufSource, DataType &vSink){
-	vSink <<= sbufSource;
-	return sbufSource;
-}
-
-template<typename DataType>
-StreamBuffer &&operator<<(StreamBuffer &&sbufSink, const DataType &vSource){
+auto &&operator<<(StreamBuffer &&sbufSink, const DataType &vSource){
 	return std::move(sbufSink << vSource);
 }
 template<typename DataType>
-StreamBuffer &&operator>>(StreamBuffer &&sbufSource, DataType &vSink){
+auto &operator>>(StreamBuffer &sbufSource, DataType &vSink){
+	vSink <<= sbufSource;
+	return sbufSource;
+}
+template<typename DataType>
+auto &&operator>>(StreamBuffer &&sbufSource, DataType &vSink){
 	return std::move(sbufSource >> vSink);
 }
 

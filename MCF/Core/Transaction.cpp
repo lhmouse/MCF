@@ -8,44 +8,44 @@ using namespace MCF;
 
 // 其他非静态成员函数。
 bool Transaction::IsEmpty() const noexcept {
-	return xm_vecOperations.IsEmpty();
+	return xm_vecItems.IsEmpty();
 }
-void Transaction::AddOperation(std::unique_ptr<OperationBase> pOperation){
-	xm_vecOperations.Push(std::move(pOperation));
+void Transaction::AddItem(std::unique_ptr<TransactionItemBase> pItem){
+	xm_vecItems.Push(std::move(pItem));
 }
 void Transaction::Clear() noexcept {
-	xm_vecOperations.Clear();
+	xm_vecItems.Clear();
 }
 
 bool Transaction::Commit() const {
-	auto ppCur = xm_vecOperations.GetBegin();
+	auto ppCur = xm_vecItems.GetBegin();
 	try {
-		while(ppCur != xm_vecOperations.GetEnd()){
+		while(ppCur != xm_vecItems.GetEnd()){
 			if(!(*ppCur)->xLock()){
 				break;
 			}
 			++ppCur;
 		}
 	} catch(...){
-		while(ppCur != xm_vecOperations.GetBegin()){
+		while(ppCur != xm_vecItems.GetBegin()){
 			--ppCur;
 			(*ppCur)->xUnlock();
 		}
 		throw;
 	}
-	if(ppCur != xm_vecOperations.GetEnd()){
-		while(ppCur != xm_vecOperations.GetBegin()){
+	if(ppCur != xm_vecItems.GetEnd()){
+		while(ppCur != xm_vecItems.GetBegin()){
 			--ppCur;
 			(*ppCur)->xUnlock();
 		}
 		return false;
 	}
-	ppCur = xm_vecOperations.GetBegin();
-	while(ppCur != xm_vecOperations.GetEnd()){
+	ppCur = xm_vecItems.GetBegin();
+	while(ppCur != xm_vecItems.GetEnd()){
 		(*ppCur)->xCommit();
 		++ppCur;
 	}
-	while(ppCur != xm_vecOperations.GetBegin()){
+	while(ppCur != xm_vecItems.GetBegin()){
 		--ppCur;
 		(*ppCur)->xUnlock();
 	}

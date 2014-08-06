@@ -69,8 +69,6 @@ private:
 		};
 	} xm_vStorage;
 
-	static_assert(sizeof(xm_vStorage) % 16 == 0, "Bad alignment.");
-
 public:
 	String() noexcept {
 		xm_vStorage.achSmall[0]		= Char();

@@ -37,7 +37,7 @@ namespace Impl {
 		}
 		[[noreturn]]
 		static void RethrowException(ExceptionPtr) noexcept {
-			__builtinTrap();
+			__builtin_trap();
 		}
 	};
 }

@@ -1,6 +1,6 @@
 General {
 	CompilerFlags	= -Wall -Wextra -Wsign-conversion -Wsuggest-attribute=noreturn	\
-						-pipe -mfpmath=both -march=core2 -masm=intel
+						-pipe -mfpmath=both -march=pentium4 -masm=intel
 	LinkerFlags		= -Wall -Wextra -static -nostdlib	\
 						-Wl,-e__MCF_ExeStartup,--disable-runtime-pseudo-reloc,--disable-auto-import	\
 						-Wl,--wrap=atexit,--wrap=malloc,--wrap=realloc,--wrap=calloc,--wrap=free,--wrap=__cxa_throw	\

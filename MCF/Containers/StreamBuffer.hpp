@@ -7,6 +7,7 @@
 
 #include "../Core/Utilities.hpp"
 #include "VList.hpp"
+#include "VVector.hpp"
 #include <forward_list>
 #include <functional>
 #include <iterator>
@@ -64,6 +65,8 @@ public:
 
 	void Traverse(const std::function<void (const unsigned char *, std::size_t)> &fnCallback) const;
 	void Traverse(const std::function<void (unsigned char *, std::size_t)> &fnCallback);
+
+	Vector<unsigned char> Squash() const;
 
 	ReadIterator GetReadIterator() noexcept;
 	WriteIterator GetWriteIterator() noexcept;

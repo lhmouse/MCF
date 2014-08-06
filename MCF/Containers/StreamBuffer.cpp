@@ -375,3 +375,13 @@ void StreamBuffer::Traverse(const std::function<void (unsigned char *, std::size
 		}
 	}
 }
+
+Vector<unsigned char> StreamBuffer::Squash() const {
+	Vector<unsigned char> vecRet;
+	auto pbyWrite = vecRet.ResizeMore(GetSize());
+	for(auto pNode = xm_lstBuffers.GetBegin(); pNode; pNode = pNode->GetNext()){
+		const auto &vBuffer = pNode->GetElement();
+		pbyWrite = CopyN(pbyWrite, vBuffer.GetBegin(), vBuffer.GetSize()).first;
+	}
+	return std::move(vecRet);
+}

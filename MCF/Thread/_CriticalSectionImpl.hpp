@@ -13,7 +13,16 @@
 namespace MCF {
 
 namespace Impl {
+	enum class CriticalSectionResult {
+		TRY_FAILED,
+		STATE_CHANGED,
+		RECURSIVE
+	};
+
 	class CriticalSectionImpl {
+	public:
+		typedef CriticalSectionResult Result;
+
 	private:
 		struct xWaitingThread {
 			xWaitingThread *volatile pNext;
@@ -50,6 +59,9 @@ namespace Impl {
 				xm_ulSpinCount = 0;
 			}
 		}
+		~CriticalSectionImpl() noexcept {
+			ASSERT(__atomic_load_n(&xm_dwOwner, __ATOMIC_ACQUIRE) == 0);
+		}
 
 	private:
 		// http://wiki.osdev.org/Spinlock
@@ -84,9 +96,8 @@ namespace Impl {
 			return __atomic_load_n(&xm_dwOwner, __ATOMIC_ACQUIRE) == Thread::GetCurrentId();
 		}
 
-		// 首次进入临界区则返回 1，重入返回 2，否则返回 0。
-		int ImplTry() noexcept {
-			int nResult = 0;
+		Result ImplTry() noexcept {
+			auto eResult = Result::TRY_FAILED;
 
 			const DWORD dwThreadId = Thread::GetCurrentId();
 			if(__atomic_load_n(&xm_dwOwner, __ATOMIC_ACQUIRE) != dwThreadId){
@@ -95,21 +106,21 @@ namespace Impl {
 					&xm_dwOwner, &dwOldOwner, dwThreadId,
 					false, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE
 				)){
-					nResult = 1;
+					++xm_uRecurCount;
+					eResult = Result::STATE_CHANGED;
 				}
 			} else {
-				nResult = 2;
+				eResult = Result::RECURSIVE;
 			}
 
-			return nResult;
+			return eResult;
 		}
-		// 首次进入临界区返回 true，否则返回 false。
-		bool ImplEnter() noexcept {
-			bool bNotRecur = false;
+		Result ImplEnter() noexcept {
+			auto eResult = Result::RECURSIVE;
 
 			const DWORD dwThreadId = Thread::GetCurrentId();
 			if(__atomic_load_n(&xm_dwOwner, __ATOMIC_ACQUIRE) != dwThreadId){
-				bNotRecur = true;
+				eResult = Result::STATE_CHANGED;
 
 				for(;;){
 					auto i = ImplGetSpinCount();
@@ -159,16 +170,16 @@ namespace Impl {
 		jAcquired:
 			++xm_uRecurCount;
 
-			return bNotRecur;
+			return eResult;
 		}
 		// 临界区被释放返回 true，否则返回 false。
-		bool ImplLeave() noexcept {
+		Result ImplLeave() noexcept {
 			ASSERT(__atomic_load_n(&xm_dwOwner, __ATOMIC_ACQUIRE) == Thread::GetCurrentId());
 
-			bool bReleased = false;
+			auto eResult = Result::RECURSIVE;
 
 			if(--xm_uRecurCount == 0){
-				bReleased = true;
+				eResult = Result::STATE_CHANGED;
 
 				__atomic_store_n(&xm_dwOwner, 0, __ATOMIC_RELEASE);
 
@@ -184,7 +195,7 @@ namespace Impl {
 				xUnlockSpin(uWaiting);
 			}
 
-			return bReleased;
+			return eResult;
 		}
 	};
 }

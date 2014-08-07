@@ -23,7 +23,7 @@ public:
 	void SetSpinCount(unsigned long ulSpinCount) noexcept;
 
 	bool IsLockedByCurrentThread() const noexcept;
-
+	Lock TryLock() noexcept;
 	Lock GetLock() noexcept;
 };
 

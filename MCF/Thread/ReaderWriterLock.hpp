@@ -23,7 +23,9 @@ public:
 	unsigned long GetSpinCount() const noexcept;
 	void SetSpinCount(unsigned long ulSpinCount) noexcept;
 
+	ReaderLock TryReaderLock() noexcept;
 	ReaderLock GetReaderLock() noexcept;
+	WriterLock TryWriterLock() noexcept;
 	WriterLock GetWriterLock() noexcept;
 };
 

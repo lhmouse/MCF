@@ -26,6 +26,7 @@ public:
 	}
 
 private:
+	virtual bool xDoTry() const noexcept = 0;
 	virtual void xDoLock() const noexcept = 0;
 	virtual void xDoUnlock() const noexcept = 0;
 
@@ -33,30 +34,40 @@ public:
 	bool IsLocking() const noexcept {
 		return xm_uLockCount > 0;
 	}
-	bool Lock(std::size_t uCount = 1) noexcept {
-		bool bRet = false;
+	bool Try(std::size_t uCount = 1) noexcept {
 		if(xm_uLockCount == 0){
-			xDoLock();
-			bRet = true;
+			if(!xDoTry()){
+				return false;
+			}
 		}
 		xm_uLockCount += uCount;
-		return bRet;
+		return true;
 	}
-	bool Unlock() noexcept {
-		ASSERT(xm_uLockCount > 0);
-
-		bool bRet = false;
-		if(--xm_uLockCount == 0){
-			xDoUnlock();
-			bRet = true;
+	void Lock(std::size_t uCount = 1) noexcept {
+		if(uCount == 0){
+			return;
 		}
-		return bRet;
+		if(xm_uLockCount == 0){
+			xDoLock();
+		}
+		xm_uLockCount += uCount;
+	}
+	void Unlock(std::size_t uCount = 1) noexcept {
+		if(uCount == 0){
+			return;
+		}
+
+		ASSERT(xm_uLockCount >= uCount);
+
+		xm_uLockCount -= uCount;
+		if(xm_uLockCount == 0){
+			xDoUnlock();
+		}
 	}
 	std::size_t UnlockAll() noexcept {
-		const auto uCount = xm_uLockCount;
-		if(xm_uLockCount > 0){
+		const auto uCount = std::exchange(xm_uLockCount, 0u);
+		if(uCount > 0){
 			xDoUnlock();
-			xm_uLockCount = 0;
 		}
 		return uCount;
 	}
@@ -74,12 +85,10 @@ namespace Impl {
 		Mutex *xm_pOwner;
 
 	public:
-		explicit LockRaiiTemplate(Mutex *pOwner, bool bInitLocked = true) noexcept
+		explicit LockRaiiTemplate(Mutex *pOwner, std::size_t uInitCount = 1) noexcept
 			: xm_pOwner(pOwner)
 		{
-			if(bInitLocked){
-				Lock();
-			}
+			Lock(uInitCount);
 		}
 		LockRaiiTemplate(LockRaiiTemplate &&rhs) noexcept
 			: xm_pOwner(rhs.xm_pOwner)
@@ -100,6 +109,7 @@ namespace Impl {
 		}
 
 	private:
+		bool xDoTry() const noexcept override;
 		void xDoLock() const noexcept override;
 		void xDoUnlock() const noexcept override;
 

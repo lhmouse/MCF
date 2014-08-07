@@ -25,6 +25,9 @@ public:
 	}
 
 public:
+	bool Try() const noexcept {
+		return ::WaitForSingleObject(xm_hMutex.Get(), 0) == WAIT_TIMEOUT;
+	}
 	void Wait() const noexcept {
 		::WaitForSingleObject(xm_hMutex.Get(), INFINITE);
 	}
@@ -40,6 +43,12 @@ public:
 namespace MCF {
 
 namespace Impl {
+	template<>
+	bool Mutex::Lock::xDoTry() const noexcept {
+		ASSERT(dynamic_cast<MutexDelegate *>(xm_pOwner));
+
+		return static_cast<MutexDelegate *>(xm_pOwner)->Try();
+	}
 	template<>
 	void Mutex::Lock::xDoLock() const noexcept {
 		ASSERT(dynamic_cast<MutexDelegate *>(xm_pOwner));
@@ -58,13 +67,20 @@ namespace Impl {
 
 // 静态成员函数。
 std::unique_ptr<Mutex> Mutex::Create(const WideStringObserver &wsoName){
-	return std::make_unique<MutexDelegate>(wsoName.IsEmpty() ? nullptr : wsoName.GetNullTerminated<MAX_PATH>().GetData());
+	return std::make_unique<MutexDelegate>(
+		wsoName.IsEmpty() ? nullptr : wsoName.GetNullTerminated<MAX_PATH>().GetData()
+	);
 }
 std::unique_ptr<Mutex> Mutex::Create(const WideString &wcsName){
 	return std::make_unique<MutexDelegate>(wcsName.GetCStr());
 }
 
 // 其他非静态成员函数。
+Mutex::Lock Mutex::TryLock() noexcept {
+	Lock vLock(this, 0);
+	vLock.Try();
+	return std::move(vLock);
+}
 Mutex::Lock Mutex::GetLock() noexcept {
 	return Lock(this);
 }

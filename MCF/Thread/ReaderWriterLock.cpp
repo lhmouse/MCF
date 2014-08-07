@@ -13,6 +13,8 @@ using namespace MCF;
 
 namespace {
 
+typedef Impl::CriticalSectionResult Result;
+
 struct TlsDeleter {
 	constexpr DWORD operator()() const noexcept {
 		return TLS_OUT_OF_INDEXES;
@@ -45,6 +47,9 @@ public:
 			MCF_THROW(::GetLastError(), L"TlsAlloc() 失败。"_wso);
 		}
 	}
+	~ReaderWriterLockDelegate() noexcept {
+		ASSERT(__atomic_load_n(&xm_uReaderCount, __ATOMIC_ACQUIRE) == 0);
+	}
 
 public:
 	unsigned long GetSpinCount() const noexcept {
@@ -54,6 +59,32 @@ public:
 		xm_csGuard.ImplSetSpinCount(ulSpinCount);
 	}
 
+	bool TryReaderLock() noexcept {
+		auto uReaderRecur = (std::size_t)::TlsGetValue(xm_hdwReaderRecur.Get());
+		++uReaderRecur;
+		::TlsSetValue(xm_hdwReaderRecur.Get(), (void *)uReaderRecur);
+
+		if(uReaderRecur == 1){
+			if(xm_csGuard.ImplIsLockedByCurrentThread()){
+				__atomic_add_fetch(&xm_uReaderCount, 1, __ATOMIC_ACQ_REL);
+			} else {
+				if(xm_csGuard.ImplTry() == Result::TRY_FAILED){
+					::TlsSetValue(xm_hdwReaderRecur.Get(), (void *)(std::size_t)0);
+					return false;
+				}
+				if(__atomic_add_fetch(&xm_uReaderCount, 1, __ATOMIC_ACQ_REL) == 1){
+					if(::WaitForSingleObject(xm_hSemaphore.Get(), 0) == WAIT_TIMEOUT){
+						__atomic_sub_fetch(&xm_uReaderCount, 1, __ATOMIC_ACQ_REL);
+						xm_csGuard.ImplLeave();
+						::TlsSetValue(xm_hdwReaderRecur.Get(), (void *)(std::size_t)0);
+						return false;
+					}
+				}
+				xm_csGuard.ImplLeave();
+			}
+		}
+		return true;
+	}
 	void GetReaderLock() noexcept {
 		auto uReaderRecur = (std::size_t)::TlsGetValue(xm_hdwReaderRecur.Get());
 		++uReaderRecur;
@@ -87,8 +118,12 @@ public:
 		}
 	}
 
-	void GetWriterLock() noexcept {
-		if(xm_csGuard.ImplEnter()){
+	bool TryWriterLock() noexcept {
+		switch(xm_csGuard.ImplTry()){
+		case Result::TRY_FAILED:
+			return false;
+
+		case Result::STATE_CHANGED:
 			// 假定有两个线程运行同样的函数：
 			//
 			//   GetReaderLock();
@@ -97,13 +132,34 @@ public:
 			//
 			// 这个问题并非无法解决，例如允许 GetWriterLock() 抛出异常。
 			// 但是这样除了使问题复杂化以外没有什么好处。
-			ASSERT_MSG((std::size_t)::TlsGetValue(xm_hdwReaderRecur.Get()) == 0, L"获取写锁前必须先释放读锁。");
+			ASSERT_MSG(
+				(std::size_t)::TlsGetValue(xm_hdwReaderRecur.Get()) == 0,
+				L"获取写锁前必须先释放读锁。"
+			);
+
+			if(::WaitForSingleObject(xm_hSemaphore.Get(), 0) == WAIT_TIMEOUT){
+				xm_csGuard.ImplLeave();
+				return false;
+			}
+			break;
+
+		case Result::RECURSIVE:
+			break;
+		}
+		return true;
+	}
+	void GetWriterLock() noexcept {
+		if(xm_csGuard.ImplEnter() == Result::STATE_CHANGED){
+			ASSERT_MSG(
+				(std::size_t)::TlsGetValue(xm_hdwReaderRecur.Get()) == 0,
+				L"获取写锁前必须先释放读锁。"
+			);
 
 			::WaitForSingleObject(xm_hSemaphore.Get(), INFINITE);
 		}
 	}
 	void ReleaseWriterLock() noexcept {
-		if(xm_csGuard.ImplLeave()){
+		if(xm_csGuard.ImplLeave() == Result::STATE_CHANGED){
 			if((std::size_t)::TlsGetValue(xm_hdwReaderRecur.Get()) == 0){
 				::ReleaseSemaphore(xm_hSemaphore.Get(), 1, nullptr);
 			}
@@ -117,6 +173,12 @@ namespace MCF {
 
 namespace Impl {
 	template<>
+	bool ReaderWriterLock::ReaderLock::xDoTry() const noexcept {
+		ASSERT(dynamic_cast<ReaderWriterLockDelegate *>(xm_pOwner));
+
+		return static_cast<ReaderWriterLockDelegate *>(xm_pOwner)->TryReaderLock();
+	}
+	template<>
 	void ReaderWriterLock::ReaderLock::xDoLock() const noexcept {
 		ASSERT(dynamic_cast<ReaderWriterLockDelegate *>(xm_pOwner));
 
@@ -129,6 +191,12 @@ namespace Impl {
 		static_cast<ReaderWriterLockDelegate *>(xm_pOwner)->ReleaseReaderLock();
 	}
 
+	template<>
+	bool ReaderWriterLock::WriterLock::xDoTry() const noexcept {
+		ASSERT(dynamic_cast<ReaderWriterLockDelegate *>(xm_pOwner));
+
+		return static_cast<ReaderWriterLockDelegate *>(xm_pOwner)->TryWriterLock();
+	}
 	template<>
 	void ReaderWriterLock::WriterLock::xDoLock() const noexcept {
 		ASSERT(dynamic_cast<ReaderWriterLockDelegate *>(xm_pOwner));
@@ -162,8 +230,18 @@ void ReaderWriterLock::SetSpinCount(unsigned long ulSpinCount) noexcept {
 	static_cast<ReaderWriterLockDelegate *>(this)->SetSpinCount(ulSpinCount);
 }
 
+ReaderWriterLock::ReaderLock ReaderWriterLock::TryReaderLock() noexcept {
+	ReaderLock vLock(this, 0);
+	vLock.Try();
+	return std::move(vLock);
+}
 ReaderWriterLock::ReaderLock ReaderWriterLock::GetReaderLock() noexcept {
 	return ReaderLock(this);
+}
+ReaderWriterLock::WriterLock ReaderWriterLock::TryWriterLock() noexcept {
+	WriterLock vLock(this, 0);
+	vLock.Try();
+	return std::move(vLock);
 }
 ReaderWriterLock::WriterLock ReaderWriterLock::GetWriterLock() noexcept {
 	return WriterLock(this);

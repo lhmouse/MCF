@@ -9,6 +9,8 @@ using namespace MCF;
 
 namespace {
 
+typedef Impl::CriticalSectionResult Result;
+
 class CriticalSectionDelegate : CONCRETE(CriticalSection), public Impl::CriticalSectionImpl {
 public:
 	using CriticalSectionImpl::CriticalSectionImpl;
@@ -19,6 +21,12 @@ public:
 namespace MCF {
 
 namespace Impl {
+	template<>
+	bool CriticalSection::Lock::xDoTry() const noexcept {
+		ASSERT(dynamic_cast<CriticalSectionDelegate *>(xm_pOwner));
+
+		return static_cast<CriticalSectionDelegate *>(xm_pOwner)->ImplTry() != Result::TRY_FAILED;
+	}
 	template<>
 	void CriticalSection::Lock::xDoLock() const noexcept {
 		ASSERT(dynamic_cast<CriticalSectionDelegate *>(xm_pOwner));
@@ -57,7 +65,11 @@ bool CriticalSection::IsLockedByCurrentThread() const noexcept {
 
 	return static_cast<const CriticalSectionDelegate *>(this)->ImplIsLockedByCurrentThread();
 }
-
+CriticalSection::Lock CriticalSection::TryLock() noexcept {
+	Lock vLock(this, 0);
+	vLock.Try();
+	return std::move(vLock);
+}
 CriticalSection::Lock CriticalSection::GetLock() noexcept {
 	return Lock(this);
 }

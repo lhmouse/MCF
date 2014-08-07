@@ -21,6 +21,7 @@ public:
 	static std::unique_ptr<Mutex> Create(const WideString &wcsName);
 
 public:
+	Lock TryLock() noexcept;
 	Lock GetLock() noexcept;
 };
 

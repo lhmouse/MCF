@@ -5,6 +5,5 @@
 using namespace MCF;
 
 extern "C" unsigned int MCFMain() noexcept {
-	std::printf("%s", "a"_nso.GetBegin());
 	return 0;
 }

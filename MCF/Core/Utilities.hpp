@@ -36,27 +36,6 @@ namespace Impl {
 #define BITS_OF(x)		(sizeof(x) * __CHAR_BIT__)
 
 //----------------------------------------------------------------------------
-// MACRO_TYPE
-//----------------------------------------------------------------------------
-namespace Impl {
-	template<typename>
-	struct MacroTypeHelper;
-
-	template<typename R, typename P>
-	struct MacroTypeHelper<R(P &)> {
-		typedef P Type;
-	};
-	template<typename R, typename P>
-	struct MacroTypeHelper<R(P &&)> {
-		typedef P Type;
-	};
-}
-
-// 安全地在宏参数中使用带逗号的类型名，例如 MY_MACRO(double, MACRO_TYPE(std::map<int, double>))。
-#define MACRO_TYPE(type_param)	\
-	typename ::MCF::Impl::MacroTypeHelper<void(type_param &&)>::Type
-
-//----------------------------------------------------------------------------
 // NO_COPY
 //----------------------------------------------------------------------------
 namespace Impl {
@@ -102,10 +81,10 @@ namespace Impl {
 }
 
 #define ABSTRACT			private ::MCF::Impl::AbstractBase
-#define CONCRETE(base)		public ::MCF::Impl::ConcreteBase<MACRO_TYPE(base)>
+#define CONCRETE(base)		public ::MCF::Impl::ConcreteBase<base>
 
 #define CONCRETE_INIT(base, ...)	\
-	::MCF::Impl::ConcreteBase<MACRO_TYPE(base)>(__VA_ARGS__)
+	::MCF::Impl::ConcreteBase<base>(__VA_ARGS__)
 
 //----------------------------------------------------------------------------
 // Bail
@@ -302,12 +281,12 @@ namespace Impl {
 	template<typename Object>
 	struct DirectConstructor {
 		template<typename... Params>
-		Object *Construct(Object *pObject, Params &&... vParams)
+		static Object *Construct(Object *pObject, Params &&... vParams)
 			noexcept(std::is_nothrow_constructible<Object, Params &&...>::value)
 		{
 			return ::new(pObject, DirectConstructTag()) Object(std::forward<Params>(vParams)...);
 		}
-		void Destruct(Object *pObject)
+		static void Destruct(Object *pObject)
 			noexcept(std::is_nothrow_destructible<Object>::value)
 		{
 			pObject->~Object();
@@ -316,13 +295,15 @@ namespace Impl {
 }
 
 #define FRIEND_CONSTRUCT_DESTRUCT(type)	\
-	friend class ::MCF::Impl::DirectConstructor<MACRO_TYPE(type)>
+	friend class ::MCF::Impl::DirectConstructor<type>
 
 template<typename Object, typename... Params>
 inline __attribute__((__returns_nonnull__)) Object *Construct(Object *pObject, Params &&... vParams)
 	noexcept(std::is_nothrow_constructible<Object, Params &&...>::value)
 {
-	return Impl::DirectConstructor<Object>().template Construct<Params &&...>(pObject, std::forward<Params>(vParams)...);
+	return Impl::DirectConstructor<Object>::template Construct<Params &&...>(
+		pObject, std::forward<Params>(vParams)...
+	);
 }
 template<typename Object>
 inline void Destruct(Object *pObject)
@@ -330,7 +311,7 @@ inline void Destruct(Object *pObject)
 {
 	ASSERT(pObject);
 
-	Impl::DirectConstructor<Object>().Destruct(pObject);
+	Impl::DirectConstructor<Object>::Destruct(pObject);
 }
 
 //----------------------------------------------------------------------------

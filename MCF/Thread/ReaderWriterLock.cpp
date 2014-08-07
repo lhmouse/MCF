@@ -13,7 +13,7 @@ using namespace MCF;
 
 namespace {
 
-typedef Impl::CriticalSectionResult Result;
+typedef Impl::CriticalSectionImpl::Result Result;
 
 struct TlsDeleter {
 	constexpr DWORD operator()() const noexcept {
@@ -62,34 +62,29 @@ public:
 	bool TryReaderLock() noexcept {
 		auto uReaderRecur = (std::size_t)::TlsGetValue(xm_hdwReaderRecur.Get());
 		++uReaderRecur;
-		::TlsSetValue(xm_hdwReaderRecur.Get(), (void *)uReaderRecur);
-
 		if(uReaderRecur == 1){
 			if(xm_csGuard.ImplIsLockedByCurrentThread()){
 				__atomic_add_fetch(&xm_uReaderCount, 1, __ATOMIC_ACQ_REL);
 			} else {
 				if(xm_csGuard.ImplTry() == Result::TRY_FAILED){
-					::TlsSetValue(xm_hdwReaderRecur.Get(), (void *)(std::size_t)0);
 					return false;
 				}
 				if(__atomic_add_fetch(&xm_uReaderCount, 1, __ATOMIC_ACQ_REL) == 1){
 					if(::WaitForSingleObject(xm_hSemaphore.Get(), 0) == WAIT_TIMEOUT){
 						__atomic_sub_fetch(&xm_uReaderCount, 1, __ATOMIC_ACQ_REL);
 						xm_csGuard.ImplLeave();
-						::TlsSetValue(xm_hdwReaderRecur.Get(), (void *)(std::size_t)0);
 						return false;
 					}
 				}
 				xm_csGuard.ImplLeave();
 			}
 		}
+		::TlsSetValue(xm_hdwReaderRecur.Get(), (void *)uReaderRecur);
 		return true;
 	}
 	void GetReaderLock() noexcept {
 		auto uReaderRecur = (std::size_t)::TlsGetValue(xm_hdwReaderRecur.Get());
 		++uReaderRecur;
-		::TlsSetValue(xm_hdwReaderRecur.Get(), (void *)uReaderRecur);
-
 		if(uReaderRecur == 1){
 			if(xm_csGuard.ImplIsLockedByCurrentThread()){
 				__atomic_add_fetch(&xm_uReaderCount, 1, __ATOMIC_ACQ_REL);
@@ -101,6 +96,7 @@ public:
 				xm_csGuard.ImplLeave();
 			}
 		}
+		::TlsSetValue(xm_hdwReaderRecur.Get(), (void *)uReaderRecur);
 	}
 	void ReleaseReaderLock() noexcept {
 		auto uReaderRecur = (std::size_t)::TlsGetValue(xm_hdwReaderRecur.Get());

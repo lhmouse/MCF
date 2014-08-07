@@ -1,15 +1,15 @@
 #include <MCF/StdMCF.hpp>
 #include <MCF/Thread/Thread.hpp>
-#include <MCF/Thread/ReaderWriterLock.hpp>
+#include <MCF/Thread/CriticalSection.hpp>
 using namespace MCF;
 
-const auto lock = ReaderWriterLock::Create();
+const auto lock = CriticalSection::Create();
 
 extern "C" unsigned int MCFMain() noexcept {
 	const auto thread = Thread::Create([]{
 		::Sleep(2000);
-		std::printf("child will try reader lock\n");
-		auto l = lock->TryReaderLock();
+		std::printf("child will try lock\n");
+		auto l = lock->TryLock();
 		std::printf("  result = %d\n", (bool)l);
 
 		::Sleep(1000);
@@ -24,8 +24,8 @@ extern "C" unsigned int MCFMain() noexcept {
 	});
 
 	::Sleep(1000);
-	std::printf("main will get writer lock\n");
-	auto l = lock->GetWriterLock();
+	std::printf("main will get lock\n");
+	auto l = lock->GetLock();
 
 	::Sleep(3000);
 	std::printf("main will release lock\n");

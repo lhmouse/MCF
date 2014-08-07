@@ -9,7 +9,7 @@ using namespace MCF;
 
 namespace {
 
-typedef Impl::CriticalSectionResult Result;
+typedef Impl::CriticalSectionImpl::Result Result;
 
 class CriticalSectionDelegate : CONCRETE(CriticalSection), public Impl::CriticalSectionImpl {
 public:

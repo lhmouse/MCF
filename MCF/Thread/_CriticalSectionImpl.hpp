@@ -13,15 +13,13 @@
 namespace MCF {
 
 namespace Impl {
-	enum class CriticalSectionResult {
-		TRY_FAILED,
-		STATE_CHANGED,
-		RECURSIVE
-	};
-
 	class CriticalSectionImpl {
 	public:
-		typedef CriticalSectionResult Result;
+		enum class Result {
+			TRY_FAILED,
+			STATE_CHANGED,
+			RECURSIVE
+		};
 
 	private:
 		struct xWaitingThread {

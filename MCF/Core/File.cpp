@@ -110,7 +110,11 @@ public:
 		}
 	}
 
-	std::size_t Read(void *pBuffer, std::size_t uBytesToRead, std::uint64_t u64Offset, const std::function<void ()> *pfnAsyncProc) const {
+	std::size_t Read(
+		void *pBuffer, std::size_t uBytesToRead, std::uint64_t u64Offset,
+		const std::function<void ()> *pfnAsyncProc,
+		const std::function<void ()> *pfnCompleteCallback
+	) const {
 		ASSERT(xm_hFile);
 
 		auto dwBytesToReadThisTime = (DWORD)Min(0xFFFFF000u, uBytesToRead);
@@ -145,6 +149,9 @@ public:
 		if(!bSucceeds){
 			MCF_THROW(vApcResult.dwErrorCode, L"::ReadFileEx() 失败。"_wso);
 		}
+		if(pfnCompleteCallback){
+			(*pfnCompleteCallback)();
+		}
 
 		std::size_t uBytesRead = vApcResult.dwBytesTransferred;
 		while((uBytesRead < uBytesToRead) && (vApcResult.dwBytesTransferred == dwBytesToReadThisTime)){
@@ -173,7 +180,11 @@ public:
 		}
 		return uBytesRead;
 	}
-	void Write(std::uint64_t u64Offset, const void *pBuffer, std::size_t uBytesToWrite, const std::function<void ()> *pfnAsyncProc){
+	void Write(
+		std::uint64_t u64Offset, const void *pBuffer, std::size_t uBytesToWrite,
+		const std::function<void ()> *pfnAsyncProc,
+		const std::function<void ()> *pfnCompleteCallback
+	){
 		ASSERT(xm_hFile);
 
 		auto dwBytesToWriteThisTime = (DWORD)Min(0xFFFFF000u, uBytesToWrite);
@@ -207,6 +218,9 @@ public:
 		}
 		if(!bSucceeds){
 			MCF_THROW(vApcResult.dwErrorCode, L"::WriteFileEx() 失败。"_wso);
+		}
+		if(pfnCompleteCallback){
+			(*pfnCompleteCallback)();
 		}
 
 		std::size_t uBytesWritten = vApcResult.dwBytesTransferred;
@@ -300,23 +314,39 @@ void File::Clear(){
 std::size_t File::Read(void *pBuffer, std::size_t uBytesToRead, std::uint64_t u64Offset) const {
 	ASSERT(dynamic_cast<const FileDelegate *>(this));
 
-	return ((const FileDelegate *)this)->Read(pBuffer, uBytesToRead, u64Offset, nullptr);
+	return ((const FileDelegate *)this)->Read(
+		pBuffer, uBytesToRead, u64Offset, nullptr, nullptr
+	);
 }
-std::size_t File::Read(void *pBuffer, std::size_t uBytesToRead, std::uint64_t u64Offset, const std::function<void ()> &fnAsyncProc) const {
-	ASSERT(dynamic_cast<const FileDelegate *>(this));
-
-	return ((const FileDelegate *)this)->Read(pBuffer, uBytesToRead, u64Offset, &fnAsyncProc);
-}
-
 void File::Write(std::uint64_t u64Offset, const void *pBuffer, std::size_t uBytesToWrite){
 	ASSERT(dynamic_cast<FileDelegate *>(this));
 
-	static_cast<FileDelegate *>(this)->Write(u64Offset, pBuffer, uBytesToWrite, nullptr);
+	static_cast<FileDelegate *>(this)->Write(
+		u64Offset, pBuffer, uBytesToWrite, nullptr, nullptr
+	);
 }
-void File::Write(std::uint64_t u64Offset, const void *pBuffer, std::size_t uBytesToWrite, const std::function<void ()> &fnAsyncProc){
+
+std::size_t File::Read(
+	void *pBuffer, std::size_t uBytesToRead, std::uint64_t u64Offset,
+	const std::function<void ()> &fnAsyncProc,
+	const std::function<void ()> &fnCompleteCallback
+) const {
+	ASSERT(dynamic_cast<const FileDelegate *>(this));
+
+	return ((const FileDelegate *)this)->Read(
+		pBuffer, uBytesToRead, u64Offset, &fnAsyncProc, &fnCompleteCallback
+	);
+}
+void File::Write(
+	std::uint64_t u64Offset, const void *pBuffer, std::size_t uBytesToWrite,
+	const std::function<void ()> &fnAsyncProc,
+	const std::function<void ()> &fnCompleteCallback
+){
 	ASSERT(dynamic_cast<FileDelegate *>(this));
 
-	static_cast<FileDelegate *>(this)->Write(u64Offset, pBuffer, uBytesToWrite, &fnAsyncProc);
+	static_cast<FileDelegate *>(this)->Write(
+		u64Offset, pBuffer, uBytesToWrite, &fnAsyncProc, &fnCompleteCallback
+	);
 }
 
 void File::Flush() const {

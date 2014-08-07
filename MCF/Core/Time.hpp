@@ -11,7 +11,7 @@
 
 namespace MCF {
 
-// NT 时间戳单位是 1/10000000 秒。
+// NT 时间戳单位是 1e-7 秒。
 // Unix 时间戳单位是秒。
 extern std::uint64_t GetNtTime() noexcept;
 extern std::uint64_t GetUnixTime() noexcept;
@@ -20,25 +20,6 @@ extern std::uint64_t UnixTimeFromNtTime(std::uint64_t u64NtTime) noexcept;
 
 // 单位是秒。
 extern double GetHiResCounter() noexcept;
-
-class TimeBenchmarker : NO_COPY {
-private:
-	const std::function<void (double)> xm_fnCallback;
-	const double xm_lfTimeBegin;
-
-public:
-	explicit TimeBenchmarker(std::function<void (double)> fnCallback)
-		: xm_fnCallback		(std::move(fnCallback))
-		, xm_lfTimeBegin	(GetHiResCounter())
-	{
-	}
-	~TimeBenchmarker() noexcept {
-		try {
-			xm_fnCallback(GetHiResCounter() - xm_lfTimeBegin);
-		} catch(...){
-		}
-	}
-};
 
 // 单位是毫秒。
 enum : std::uint64_t {

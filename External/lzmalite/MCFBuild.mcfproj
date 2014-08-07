@@ -1,7 +1,7 @@
 Default = Debug
 
 General {
-	CompilerFlags		= -Wall -Wextra -pipe -mfpmath=both -march=pentium4
+	CompilerFlags		= -Wall -Wextra -pipe -mfpmath=both -march=nocona
 
 	CFlags				= -std=c11
 

@@ -158,7 +158,7 @@ inline auto Clone(T &&vSrc)
 // 二进制操作
 //----------------------------------------------------------------------------
 template<typename Tx, typename Ty>
-inline void BCopy(Tx &vDst, const Ty &vSrc) noexcept {
+constexpr void BCopy(Tx &vDst, const Ty &vSrc) noexcept {
 	static_assert(std::is_trivial<Tx>::value && std::is_trivial<Ty>::value, "Only trivial types are supported.");
 	static_assert(sizeof(vDst) == sizeof(vSrc), "Source and destination sizes do not match.");
 
@@ -166,14 +166,14 @@ inline void BCopy(Tx &vDst, const Ty &vSrc) noexcept {
 }
 
 template<typename T>
-inline void BFill(T &vDst, bool bVal) noexcept {
+constexpr void BFill(T &vDst, bool bVal) noexcept {
 	static_assert(std::is_trivial<T>::value, "Only trivial types are supported.");
 
 	__builtin_memset(&vDst, bVal ? -1 : 0, sizeof(vDst));
 }
 
 template<typename Tx, typename Ty>
-inline int BComp(const Tx &vDst, const Ty &vSrc) noexcept {
+constexpr int BComp(const Tx &vDst, const Ty &vSrc) noexcept {
 	static_assert(std::is_trivial<Tx>::value && std::is_trivial<Ty>::value, "Only trivial types are supported.");
 	static_assert(sizeof(vDst) == sizeof(vSrc), "Source and destination sizes do not match.");
 
@@ -181,7 +181,7 @@ inline int BComp(const Tx &vDst, const Ty &vSrc) noexcept {
 }
 
 template<typename Tx, typename Ty>
-inline void BSwap(Tx &vDst, Ty &vSrc) noexcept {
+constexpr void BSwap(Tx &vDst, Ty &vSrc) noexcept {
 	static_assert(std::is_trivial<Tx>::value && std::is_trivial<Ty>::value, "Only trivial types are supported.");
 	static_assert(sizeof(vDst) == sizeof(vSrc), "Source and destination sizes do not match.");
 
@@ -189,7 +189,7 @@ inline void BSwap(Tx &vDst, Ty &vSrc) noexcept {
 }
 
 template<typename T>
-inline void BZero(T &vDst) noexcept {
+constexpr void BZero(T &vDst) noexcept {
 	BFill(vDst, false);
 }
 
@@ -317,40 +317,40 @@ inline void Destruct(Object *pObject)
 //----------------------------------------------------------------------------
 // CountLeadingZeroes
 //----------------------------------------------------------------------------
-inline constexpr unsigned char CountLeadingZeroes(unsigned char by) noexcept {
+constexpr unsigned char CountLeadingZeroes(unsigned char by) noexcept {
 	return __MCF_MAKE_CONSTANT((unsigned char)__builtin_clz(by)
 		- (sizeof(unsigned int) - sizeof(unsigned char)) * (std::size_t)__CHAR_BIT__);
 }
-inline constexpr unsigned char CountLeadingZeroes(unsigned short ush) noexcept {
+constexpr unsigned char CountLeadingZeroes(unsigned short ush) noexcept {
 	return __MCF_MAKE_CONSTANT((unsigned char)__builtin_clz(ush)
 		- (sizeof(unsigned int) - sizeof(unsigned short)) * (std::size_t)__CHAR_BIT__);
 }
-inline constexpr unsigned char CountLeadingZeroes(unsigned int u) noexcept {
+constexpr unsigned char CountLeadingZeroes(unsigned int u) noexcept {
 	return __MCF_MAKE_CONSTANT((unsigned char)__builtin_clz(u));
 }
-inline constexpr unsigned char CountLeadingZeroes(unsigned long ul) noexcept {
+constexpr unsigned char CountLeadingZeroes(unsigned long ul) noexcept {
 	return __MCF_MAKE_CONSTANT((unsigned char)__builtin_clzl(ul));
 }
-inline constexpr unsigned char CountLeadingZeroes(unsigned long long ull) noexcept {
+constexpr unsigned char CountLeadingZeroes(unsigned long long ull) noexcept {
 	return __MCF_MAKE_CONSTANT((unsigned char)__builtin_clzll(ull));
 }
 
 //----------------------------------------------------------------------------
 // CountTrailingZeroes
 //----------------------------------------------------------------------------
-inline constexpr unsigned char CountTrailingZeroes(unsigned char by) noexcept {
+constexpr unsigned char CountTrailingZeroes(unsigned char by) noexcept {
 	return __MCF_MAKE_CONSTANT((unsigned char)__builtin_ctz(by));
 }
-inline constexpr unsigned char CountTrailingZeroes(unsigned short ush) noexcept {
+constexpr unsigned char CountTrailingZeroes(unsigned short ush) noexcept {
 	return __MCF_MAKE_CONSTANT((unsigned char)__builtin_ctz(ush));
 }
-inline constexpr unsigned char CountTrailingZeroes(unsigned int u) noexcept {
+constexpr unsigned char CountTrailingZeroes(unsigned int u) noexcept {
 	return __MCF_MAKE_CONSTANT((unsigned char)__builtin_ctz(u));
 }
-inline constexpr unsigned char CountTrailingZeroes(unsigned long ul) noexcept {
+constexpr unsigned char CountTrailingZeroes(unsigned long ul) noexcept {
 	return __MCF_MAKE_CONSTANT((unsigned char)__builtin_ctzl(ul));
 }
-inline constexpr unsigned char CountTrailingZeroes(unsigned long long ull) noexcept {
+constexpr unsigned char CountTrailingZeroes(unsigned long long ull) noexcept {
 	return __MCF_MAKE_CONSTANT((unsigned char)__builtin_ctzll(ull));
 }
 
@@ -389,19 +389,19 @@ namespace Impl {
 	};
 }
 
-inline constexpr unsigned char ByteSwap(unsigned char by) noexcept {
+constexpr unsigned char ByteSwap(unsigned char by) noexcept {
 	return Impl::ByteSwapHelper<BITS_OF(unsigned char)>::Do(by);
 }
-inline constexpr unsigned short ByteSwap(unsigned short ush) noexcept {
+constexpr unsigned short ByteSwap(unsigned short ush) noexcept {
 	return Impl::ByteSwapHelper<BITS_OF(unsigned short)>::Do(ush);
 }
-inline constexpr unsigned int ByteSwap(unsigned int u) noexcept {
+constexpr unsigned int ByteSwap(unsigned int u) noexcept {
 	return Impl::ByteSwapHelper<BITS_OF(unsigned int)>::Do(u);
 }
-inline constexpr unsigned long ByteSwap(unsigned long ul) noexcept {
+constexpr unsigned long ByteSwap(unsigned long ul) noexcept {
 	return Impl::ByteSwapHelper<BITS_OF(unsigned long)>::Do(ul);
 }
-inline constexpr unsigned long long ByteSwap(unsigned long long ull) noexcept {
+constexpr unsigned long long ByteSwap(unsigned long long ull) noexcept {
 	return Impl::ByteSwapHelper<BITS_OF(unsigned long long)>::Do(ull);
 }
 

@@ -48,13 +48,24 @@ public:
 	void Resize(std::uint64_t u64NewSize);
 	void Clear();
 
-	// 异步过程调用总是会被执行，即使读取或写入操作失败。
-	// 异步过程可以抛出异常；在这种情况下，异常将在读取或写入操作完成后被重新抛出。
 	std::size_t Read(void *pBuffer, std::size_t uBytesToRead, std::uint64_t u64Offset) const;
-	std::size_t Read(void *pBuffer, std::size_t uBytesToRead, std::uint64_t u64Offset, const std::function<void ()> &fnAsyncProc) const;
-
 	void Write(std::uint64_t u64Offset, const void *pBuffer, std::size_t uBytesToWrite);
-	void Write(std::uint64_t u64Offset, const void *pBuffer, std::size_t uBytesToWrite, const std::function<void ()> &fnAsyncProc);
+
+	// 1. fnAsyncProc 总是会被执行一次，即使读取或写入操作失败；
+	// 2. 如果 IO 请求不能一次完成（例如尝试在 64 位环境下一次读取超过 4GiB 的数据），将会拆分为多次进行。
+	//    但是在这种情况下，只有第一次的操作是异步的并且会触发回调；
+	// 3. 所有的回调函数都可以抛出异常；在这种情况下，异常将在读取或写入操作完成或失败后被重新抛出。
+	// 4. 当且仅当 fnAsyncProc 成功返回且异步操作成功后 fnCompleteCallback 才会被执行。
+	std::size_t Read(
+		void *pBuffer, std::size_t uBytesToRead, std::uint64_t u64Offset,
+		const std::function<void ()> &fnAsyncProc,
+		const std::function<void ()> &fnCompleteCallback
+	) const;
+	void Write(
+		std::uint64_t u64Offset, const void *pBuffer, std::size_t uBytesToWrite,
+		const std::function<void ()> &fnAsyncProc,
+		const std::function<void ()> &fnCompleteCallback
+	);
 
 	void Flush() const;
 };

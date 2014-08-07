@@ -26,7 +26,7 @@ public:
 
 public:
 	bool Try() const noexcept {
-		return ::WaitForSingleObject(xm_hMutex.Get(), 0) == WAIT_TIMEOUT;
+		return ::WaitForSingleObject(xm_hMutex.Get(), 0) != WAIT_TIMEOUT;
 	}
 	void Wait() const noexcept {
 		::WaitForSingleObject(xm_hMutex.Get(), INFINITE);

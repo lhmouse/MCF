@@ -101,8 +101,6 @@ public:
 	void ReleaseReaderLock() noexcept {
 		auto uReaderRecur = (std::size_t)::TlsGetValue(xm_hdwReaderRecur.Get());
 		--uReaderRecur;
-		::TlsSetValue(xm_hdwReaderRecur.Get(), (void *)uReaderRecur);
-
 		if(uReaderRecur == 0){
 			if(xm_csGuard.ImplIsLockedByCurrentThread()){
 				__atomic_sub_fetch(&xm_uReaderCount, 1, __ATOMIC_ACQ_REL);
@@ -112,6 +110,7 @@ public:
 				}
 			}
 		}
+		::TlsSetValue(xm_hdwReaderRecur.Get(), (void *)uReaderRecur);
 	}
 
 	bool TryWriterLock() noexcept {

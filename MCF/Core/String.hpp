@@ -584,11 +584,14 @@ public:
 		xSetSize(uRemovedBegin + uCount + (uOldLength - uRemovedEnd));
 	}
 	template<class Iterator>
-	void Replace(std::ptrdiff_t nBegin, std::ptrdiff_t nEnd, Iterator itRepBegin, Iterator itRepEnd){
-		Replace(nBegin, nEnd, itRepBegin, (std::size_t)std::distance(itRepBegin, itRepEnd));
+	void Replace(
+		std::ptrdiff_t nBegin, std::ptrdiff_t nEnd,
+		Iterator itReplacementBegin, typename std::common_type<Iterator>::type itReplacementEnd
+	){
+		Replace(nBegin, nEnd, itReplacementBegin, (std::size_t)std::distance(itReplacementBegin, itReplacementEnd));
 	}
 	template<class Iterator>
-	void Replace(std::ptrdiff_t nBegin, std::ptrdiff_t nEnd, Iterator itRepBegin, std::size_t uRepLen){
+	void Replace(std::ptrdiff_t nBegin, std::ptrdiff_t nEnd, Iterator itReplacementBegin, std::size_t uReplacementLen){
 		const auto obsCurrent(GetObserver());
 		const std::size_t uOldLength = obsCurrent.GetLength();
 
@@ -597,23 +600,27 @@ public:
 		const auto uRemovedEnd = (std::size_t)(obsRemoved.GetEnd() - obsCurrent.GetBegin());
 
 		// 注意：不指向同一个数组的两个指针相互比较是未定义行为。
-		if((uRepLen != 0) && ((std::uintptr_t)&*itRepBegin - (std::uintptr_t)obsCurrent.GetBegin() <= uOldLength * sizeof(Char))){
+		if(
+			(uReplacementLen != 0) &&
+			((std::uintptr_t)&*itReplacementBegin - (std::uintptr_t)obsCurrent.GetBegin()
+				<= uOldLength * sizeof(Char))
+		){
 			// 待替换字符串和当前字符串重叠。
 			String strTemp(*this);
 			const auto pchWrite = strTemp.xChopAndSplice(
 				uRemovedBegin, uRemovedEnd,
-				0, uRemovedBegin + uRepLen
+				0, uRemovedBegin + uReplacementLen
 			);
-			CopyN(pchWrite, itRepBegin, uRepLen);
+			CopyN(pchWrite, itReplacementBegin, uReplacementLen);
 			Swap(strTemp);
 		} else {
 			const auto pchWrite = xChopAndSplice(
 				uRemovedBegin, uRemovedEnd,
-				0, uRemovedBegin + uRepLen
+				0, uRemovedBegin + uReplacementLen
 			);
-			CopyN(pchWrite, itRepBegin, uRepLen);
+			CopyN(pchWrite, itReplacementBegin, uReplacementLen);
 		}
-		xSetSize(uRemovedBegin + uRepLen + (uOldLength - uRemovedEnd));
+		xSetSize(uRemovedBegin + uReplacementLen + (uOldLength - uRemovedEnd));
 	}
 	void Replace(std::ptrdiff_t nBegin, std::ptrdiff_t nEnd, const Observer &obsReplacement){
 		Replace(nBegin, nEnd, obsReplacement.GetBegin(), obsReplacement.GetLength());

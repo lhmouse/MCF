@@ -10,6 +10,7 @@
 #include "../Containers/MultiIndexedMap.hpp"
 #include <functional>
 #include <initializer_list>
+#include <type_traits>
 
 namespace MCF {
 
@@ -79,7 +80,7 @@ public:
 	template<typename PathSegmentIterator>
 	const NotationPackage *GetPackageFromPath(
 		PathSegmentIterator itSegmentBegin,
-		PathSegmentIterator itSegmentEnd
+		typename std::common_type<PathSegmentIterator>::type itSegmentEnd
 	) const noexcept {
 		auto pCur = this;
 		while(itSegmentBegin != itSegmentEnd){
@@ -94,7 +95,7 @@ public:
 	template<typename PathSegmentIterator>
 	NotationPackage *GetPackageFromPath(
 		PathSegmentIterator itSegmentBegin,
-		PathSegmentIterator itSegmentEnd
+		typename std::common_type<PathSegmentIterator>::type itSegmentEnd
 	) noexcept {
 		auto pCur = this;
 		while(itSegmentBegin != itSegmentEnd){
@@ -109,7 +110,7 @@ public:
 	template<typename PathSegmentIterator>
 	std::pair<NotationPackage *, bool> CreatePackageFromPath(
 		PathSegmentIterator itSegmentBegin,
-		PathSegmentIterator itSegmentEnd
+		typename std::common_type<PathSegmentIterator>::type itSegmentEnd
 	){
 		auto vRet = std::make_pair(this, false);
 		while(itSegmentBegin != itSegmentEnd){

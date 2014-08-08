@@ -10,16 +10,38 @@
 
 namespace MCF {
 
-class LzmaEncoder : public StreamFilterBase {
+class LzmaEncoder : CONCRETE(StreamFilterBase) {
+private:
+	class xDelegate;
+
+private:
+	const std::unique_ptr<xDelegate> xm_pDelegate;
+
 public:
-	static std::unique_ptr<LzmaEncoder> Create(
-		unsigned int uLevel = 6, unsigned long ulDictSize = (1ul << 23)
-	);
+	explicit LzmaEncoder(unsigned int uLevel = 6, unsigned long ulDictSize = 1ul << 23);
+	~LzmaEncoder() noexcept;
+
+public:
+	void Abort() noexcept override;
+	void Update(const void *pData, std::size_t uSize) override;
+	void Finalize() override;
 };
 
-class LzmaDecoder : public StreamFilterBase {
+class LzmaDecoder : CONCRETE(StreamFilterBase) {
+private:
+	class xDelegate;
+
+private:
+	const std::unique_ptr<xDelegate> xm_pDelegate;
+
 public:
-	static std::unique_ptr<LzmaDecoder> Create();
+	LzmaDecoder();
+	~LzmaDecoder() noexcept;
+
+public:
+	void Abort() noexcept override;
+	void Update(const void *pData, std::size_t uSize) override;
+	void Finalize() override;
 };
 
 }

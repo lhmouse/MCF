@@ -10,14 +10,38 @@
 
 namespace MCF {
 
-class ZLibEncoder : public StreamFilterBase {
+class ZLibEncoder : CONCRETE(StreamFilterBase) {
+private:
+	class xDelegate;
+
+private:
+	const std::unique_ptr<xDelegate> xm_pDelegate;
+
 public:
-	static std::unique_ptr<ZLibEncoder> Create(bool bRaw = false, unsigned int uLevel = 6);
+	explicit ZLibEncoder(bool bRaw = false, unsigned int uLevel = 6);
+	~ZLibEncoder() noexcept;
+
+public:
+	void Abort() noexcept override;
+	void Update(const void *pData, std::size_t uSize) override;
+	void Finalize() override;
 };
 
-class ZLibDecoder : public StreamFilterBase {
+class ZLibDecoder : CONCRETE(StreamFilterBase) {
+private:
+	class xDelegate;
+
+private:
+	const std::unique_ptr<xDelegate> xm_pDelegate;
+
 public:
-	static std::unique_ptr<ZLibDecoder> Create(bool bRaw = false);
+	explicit ZLibDecoder(bool bRaw = false);
+	~ZLibDecoder() noexcept;
+
+public:
+	void Abort() noexcept override;
+	void Update(const void *pData, std::size_t uSize) override;
+	void Finalize() override;
 };
 
 }

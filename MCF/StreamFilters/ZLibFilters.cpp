@@ -49,13 +49,19 @@ unsigned long ZLibErrorToWin32Error(int nZLibError) noexcept {
 	}
 }
 
-class ZLibEncoderDelegate : CONCRETE(ZLibEncoder) {
+}
+
+class ZLibEncoder::xDelegate : NO_COPY {
 private:
+	ZLibEncoder &xm_vOwner;
+
 	z_stream xm_vStream;
 	bool xm_bInited;
 
 public:
-	ZLibEncoderDelegate(bool bRaw, unsigned int uLevel){
+	xDelegate(ZLibEncoder &vOwner, bool bRaw, unsigned int uLevel)
+		: xm_vOwner(vOwner)
+	{
 		xm_vStream.zalloc	= Z_NULL;
 		xm_vStream.zfree	= Z_NULL;
 		xm_vStream.opaque	= Z_NULL;
@@ -69,14 +75,14 @@ public:
 
 		xm_bInited = false;
 	}
-	~ZLibEncoderDelegate() noexcept {
+	~xDelegate() noexcept {
 		::deflateEnd(&xm_vStream);
 	}
 
 public:
 	void Abort() noexcept {
 		xm_bInited = false;
-		StreamFilterBase::Abort();
+		xm_vOwner.StreamFilterBase::Abort();
 	}
 	void Update(const void *pData, std::size_t uSize){
 		if(!xm_bInited){
@@ -106,19 +112,19 @@ public:
 					MCF_THROW(ulErrorCode, L"::deflate() 失败。"_wso);
 				}
 				if(xm_vStream.avail_out == 0){
-					xOutput(abyTemp, sizeof(abyTemp));
+					xm_vOwner.xOutput(abyTemp, sizeof(abyTemp));
 
 					xm_vStream.next_out = abyTemp;
 					xm_vStream.avail_out = sizeof(abyTemp);
 				}
 			} while(xm_vStream.avail_in != 0);
 
-			StreamFilterBase::Update(pbyRead, uToProcess);
+			xm_vOwner.StreamFilterBase::Update(pbyRead, uToProcess);
 			pbyRead += uToProcess;
 			uProcessed += uToProcess;
 		}
 		if(xm_vStream.avail_out != 0){
-			xOutput(abyTemp, sizeof(abyTemp) - xm_vStream.avail_out);
+			xm_vOwner.xOutput(abyTemp, sizeof(abyTemp) - xm_vStream.avail_out);
 		}
 	}
 	void Finalize(){
@@ -140,29 +146,33 @@ public:
 					MCF_THROW(ulErrorCode, L"::deflate() 失败。"_wso);
 				}
 				if(xm_vStream.avail_out == 0){
-					xOutput(abyTemp, sizeof(abyTemp));
+					xm_vOwner.xOutput(abyTemp, sizeof(abyTemp));
 
 					xm_vStream.next_out = abyTemp;
 					xm_vStream.avail_out = sizeof(abyTemp);
 				}
 			}
 			if(xm_vStream.avail_out != 0){
-				xOutput(abyTemp, sizeof(abyTemp) - xm_vStream.avail_out);
+				xm_vOwner.xOutput(abyTemp, sizeof(abyTemp) - xm_vStream.avail_out);
 			}
 
 			xm_bInited = false;
 		}
-		StreamFilterBase::Finalize();
+		xm_vOwner.StreamFilterBase::Finalize();
 	}
 };
 
-class ZLibDecoderDelegate : CONCRETE(ZLibDecoder) {
+class ZLibDecoder::xDelegate : NO_COPY {
 private:
+	ZLibDecoder &xm_vOwner;
+
 	z_stream xm_vStream;
 	bool xm_bInited;
 
 public:
-	explicit ZLibDecoderDelegate(bool bRaw){
+	xDelegate(ZLibDecoder &vOwner, bool bRaw)
+		: xm_vOwner(vOwner)
+	{
 		xm_vStream.zalloc	= Z_NULL;
 		xm_vStream.zfree	= Z_NULL;
 		xm_vStream.opaque	= Z_NULL;
@@ -179,14 +189,14 @@ public:
 
 		xm_bInited = false;
 	}
-	~ZLibDecoderDelegate() noexcept {
+	~xDelegate() noexcept {
 		::inflateEnd(&xm_vStream);
 	}
 
 public:
 	void Abort() noexcept {
 		xm_bInited = false;
-		StreamFilterBase::Abort();
+		xm_vOwner.StreamFilterBase::Abort();
 	}
 	void Update(const void *pData, std::size_t uSize){
 		if(!xm_bInited){
@@ -216,19 +226,19 @@ public:
 					MCF_THROW(ulErrorCode, L"::inflate() 失败。"_wso);
 				}
 				if(xm_vStream.avail_out == 0){
-					xOutput(abyTemp, sizeof(abyTemp));
+					xm_vOwner.xOutput(abyTemp, sizeof(abyTemp));
 
 					xm_vStream.next_out = abyTemp;
 					xm_vStream.avail_out = sizeof(abyTemp);
 				}
 			} while(xm_vStream.avail_in != 0);
 
-			StreamFilterBase::Update(pbyRead, uToProcess);
+			xm_vOwner.StreamFilterBase::Update(pbyRead, uToProcess);
 			pbyRead += uToProcess;
 			uProcessed += uToProcess;
 		}
 		if(xm_vStream.avail_out != 0){
-			xOutput(abyTemp, sizeof(abyTemp) - xm_vStream.avail_out);
+			xm_vOwner.xOutput(abyTemp, sizeof(abyTemp) - xm_vStream.avail_out);
 		}
 	}
 	void Finalize(){
@@ -250,32 +260,56 @@ public:
 					MCF_THROW(ulErrorCode, L"::inflate() 失败。"_wso);
 				}
 				if(xm_vStream.avail_out == 0){
-					xOutput(abyTemp, sizeof(abyTemp));
+					xm_vOwner.xOutput(abyTemp, sizeof(abyTemp));
 
 					xm_vStream.next_out = abyTemp;
 					xm_vStream.avail_out = sizeof(abyTemp);
 				}
 			}
 			if(xm_vStream.avail_out != 0){
-				xOutput(abyTemp, sizeof(abyTemp) - xm_vStream.avail_out);
+				xm_vOwner.xOutput(abyTemp, sizeof(abyTemp) - xm_vStream.avail_out);
 			}
 
 			xm_bInited = false;
 		}
-		StreamFilterBase::Finalize();
+		xm_vOwner.StreamFilterBase::Finalize();
 	}
 };
 
-}
-
 // ========== ZLibEncoder ==========
 // 静态成员函数。
-std::unique_ptr<ZLibEncoder> ZLibEncoder::Create(bool bRaw, unsigned int uLevel){
-	return std::make_unique<ZLibEncoderDelegate>(bRaw, uLevel);
+ZLibEncoder::ZLibEncoder(bool bRaw, unsigned int uLevel)
+	: xm_pDelegate(new xDelegate(*this, bRaw, uLevel))
+{
+}
+ZLibEncoder::~ZLibEncoder() noexcept {
+}
+
+void ZLibEncoder::Abort() noexcept {
+	xm_pDelegate->Abort();
+}
+void ZLibEncoder::Update(const void *pData, std::size_t uSize){
+	xm_pDelegate->Update(pData, uSize);
+}
+void ZLibEncoder::Finalize(){
+	xm_pDelegate->Finalize();
 }
 
 // ========== ZLibDecoder ==========
 // 静态成员函数。
-std::unique_ptr<ZLibDecoder> ZLibDecoder::Create(bool bRaw){
-	return std::make_unique<ZLibDecoderDelegate>(bRaw);
+ZLibDecoder::ZLibDecoder(bool bRaw)
+	: xm_pDelegate(new xDelegate(*this, bRaw))
+{
+}
+ZLibDecoder::~ZLibDecoder() noexcept {
+}
+
+void ZLibDecoder::Abort() noexcept {
+	xm_pDelegate->Abort();
+}
+void ZLibDecoder::Update(const void *pData, std::size_t uSize){
+	xm_pDelegate->Update(pData, uSize);
+}
+void ZLibDecoder::Finalize(){
+	xm_pDelegate->Finalize();
 }

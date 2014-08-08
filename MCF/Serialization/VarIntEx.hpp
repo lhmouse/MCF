@@ -44,7 +44,7 @@ namespace Impl {
 	};
 }
 
-template<typename Underlying, Underlying ORIGIN = 0>
+template<typename Underlying, typename std::make_unsigned<Underlying>::type ORIGIN = 0>
 class VarIntEx {
 	static_assert(std::is_arithmetic<Underlying>::value, "Underlying must be an arithmetic type.");
 

@@ -8,6 +8,7 @@
 #include "../Core/Exception.hpp"
 #include "../Core/StringObserver.hpp"
 #include "../Core/Time.hpp"
+#include <climits>
 using namespace MCF;
 
 // http://research.microsoft.com/pubs/64242/ImplementingCVs.pdf
@@ -24,16 +25,16 @@ public:
 	ConditionVariableDelegate()
 		: xm_uWaiterCount(0)
 	{
-		xm_hSemaphore.Reset(::CreateSemaphoreW(nullptr, 0, 0x7FFFFFFF, nullptr));
+		xm_hSemaphore.Reset(::CreateSemaphoreW(nullptr, 0, LONG_MAX, nullptr));
 		if(!xm_hSemaphore){
 			MCF_THROW(::GetLastError(), L"CreateSemaphoreW() 失败。"_wso);
 		}
 	}
 
 public:
-	bool WaitTimeout(LockRaiiTemplateBase &vLockRaiiTemplate, unsigned long long ullMilliSeconds) noexcept {
+	bool WaitTimeout(LockRaiiTemplateBase &vLock, unsigned long long ullMilliSeconds) noexcept {
 		__atomic_add_fetch(&xm_uWaiterCount, 1, __ATOMIC_RELAXED);
-		const auto uReentrantCount = vLockRaiiTemplate.UnlockAll();
+		const auto uReentrantCount = vLock.UnlockAll();
 		ASSERT(uReentrantCount != 0);
 
 		const bool bResult = WaitUntil(
@@ -42,7 +43,7 @@ public:
 			},
 			ullMilliSeconds
 		);
-		vLockRaiiTemplate.Lock(uReentrantCount);
+		vLock.Lock(uReentrantCount);
 		return bResult;
 	}
 	void Signal(std::size_t uCount) noexcept {
@@ -63,7 +64,11 @@ public:
 		}
 	}
 	void Broadcast() noexcept {
-		::ReleaseSemaphore(xm_hSemaphore.Get(), (long)__atomic_exchange_n(&xm_uWaiterCount, 0, __ATOMIC_RELAXED), nullptr);
+		::ReleaseSemaphore(
+			xm_hSemaphore.Get(),
+			(long)__atomic_exchange_n(&xm_uWaiterCount, 0, __ATOMIC_RELAXED),
+			nullptr
+		);
 	}
 };
 
@@ -75,13 +80,13 @@ std::unique_ptr<ConditionVariable> ConditionVariable::Create(){
 }
 
 // 其他非静态成员函数。
-bool ConditionVariable::WaitTimeout(LockRaiiTemplateBase &vLockRaiiTemplate, unsigned long long ullMilliSeconds) noexcept {
+bool ConditionVariable::WaitTimeout(LockRaiiTemplateBase &vLock, unsigned long long ullMilliSeconds) noexcept {
 	ASSERT(dynamic_cast<ConditionVariableDelegate *>(this));
 
-	return static_cast<ConditionVariableDelegate *>(this)->WaitTimeout(vLockRaiiTemplate, ullMilliSeconds);
+	return static_cast<ConditionVariableDelegate *>(this)->WaitTimeout(vLock, ullMilliSeconds);
 }
-void ConditionVariable::Wait(LockRaiiTemplateBase &vLockRaiiTemplate) noexcept {
-	WaitTimeout(vLockRaiiTemplate, WAIT_FOREVER);
+void ConditionVariable::Wait(LockRaiiTemplateBase &vLock) noexcept {
+	WaitTimeout(vLock, WAIT_FOREVER);
 }
 void ConditionVariable::Signal(std::size_t uCount) noexcept {
 	ASSERT(dynamic_cast<ConditionVariableDelegate *>(this));

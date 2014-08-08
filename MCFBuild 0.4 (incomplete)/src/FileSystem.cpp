@@ -82,9 +82,7 @@ bool GetFileSha256(Sha256 &vSha256, const MCF::WideString &wcsPath, bool bThrowO
 		while(u64Offset < u64FileSize){
 			const auto uBytesBack = pFile->Read(
 				pbyBackBuffer, FILE_BUFFER_SIZE, u64Offset,
-				[&]{
-					shaHasher.Update(pbyCurBuffer, uBytesCur);
-				}
+				[&]{ shaHasher.Update(pbyCurBuffer, uBytesCur); }, []{ }
 			);
 			u64Offset += uBytesBack;
 

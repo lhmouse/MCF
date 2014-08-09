@@ -177,32 +177,39 @@ private:
 
 	template<std::size_t INDEX>
 	struct xComparators {
-		typedef typename Node::xIndexTuple IndexTuple;
-		typedef typename std::tuple_element<INDEX, IndexTuple>::type IndexType;
+		typedef typename std::tuple_element<
+			INDEX, typename Node::xIndexTuple
+			>::type IndexType;
 
 		static bool Nodes(const MCF_AVL_NODE_HEADER *pAvl1, const MCF_AVL_NODE_HEADER *pAvl2) noexcept {
 			const auto pNode1 = DOWN_CAST(const Node, xm_aHeaders[INDEX], pAvl1);
 			const auto pNode2 = DOWN_CAST(const Node, xm_aHeaders[INDEX], pAvl2);
 
-		ASSERT_NOEXCEPT_BEGIN
+			static_assert(
+				noexcept(std::less<void>()(std::get<INDEX>(pNode1->xm_vIndices), std::get<INDEX>(pNode2->xm_vIndices))),
+				"Do not throw exceptions inside comparators."
+			);
 			return std::less<void>()(std::get<INDEX>(pNode1->xm_vIndices), std::get<INDEX>(pNode2->xm_vIndices));
-		ASSERT_NOEXCEPT_END
 		}
 		template<typename Other>
 		static bool NodeOther(const MCF_AVL_NODE_HEADER *pAvl1, std::intptr_t nOther) noexcept {
 			const auto pNode1 = DOWN_CAST(const Node, xm_aHeaders[INDEX], pAvl1);
 
-		ASSERT_NOEXCEPT_BEGIN
+			static_assert(
+				noexcept(std::less<void>()(std::get<INDEX>(pNode1->xm_vIndices), *(const Other *)nOther)),
+				"Do not throw exceptions inside comparators."
+			);
 			return std::less<void>()(std::get<INDEX>(pNode1->xm_vIndices), *(const Other *)nOther);
-		ASSERT_NOEXCEPT_END
 		}
 		template<typename Other>
 		static bool OtherNode(std::intptr_t nOther, const MCF_AVL_NODE_HEADER *pAvl2) noexcept {
 			const auto pNode2 = DOWN_CAST(const Node, xm_aHeaders[INDEX], pAvl2);
 
-		ASSERT_NOEXCEPT_BEGIN
+			static_assert(
+				noexcept(std::less<void>()(*(const Other *)nOther, std::get<INDEX>(pNode2->xm_vIndices))),
+				"Do not throw exceptions inside comparators."
+			);
 			return std::less<void>()(*(const Other *)nOther, std::get<INDEX>(pNode2->xm_vIndices));
-		ASSERT_NOEXCEPT_END
 		}
 	};
 

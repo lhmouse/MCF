@@ -68,19 +68,22 @@ static bool ObjectComparatorNodes(
 	const MCF_AVL_NODE_HEADER *pObj1,
 	const MCF_AVL_NODE_HEADER *pObj2
 ){
-	return (uintptr_t)(void *)((const TLS_OBJECT *)pObj1)->pKey < (uintptr_t)(void *)((const TLS_OBJECT *)pObj2)->pKey;
+	return (uintptr_t)(void *)((const TLS_OBJECT *)pObj1)->pKey <
+		(uintptr_t)(void *)((const TLS_OBJECT *)pObj2)->pKey;
 }
 static bool ObjectComparatorNodeKey(
 	const MCF_AVL_NODE_HEADER *pObj1,
 	intptr_t nKey2
 ){
-	return (uintptr_t)(void *)((const TLS_OBJECT *)pObj1)->pKey < (uintptr_t)(void *)nKey2;
+	return (uintptr_t)(void *)((const TLS_OBJECT *)pObj1)->pKey <
+		(uintptr_t)(void *)nKey2;
 }
 static bool ObjectComparatorKeyNode(
 	intptr_t nKey1,
 	const MCF_AVL_NODE_HEADER *pObj2
 ){
-	return (uintptr_t)(void *)nKey1 < (uintptr_t)(void *)((const TLS_OBJECT *)pObj2)->pKey;
+	return (uintptr_t)(void *)nKey1 <
+		(uintptr_t)(void *)((const TLS_OBJECT *)pObj2)->pKey;
 }
 
 // 全局变量。
@@ -312,7 +315,12 @@ bool MCF_CRT_TlsGet(void *pTlsKey, intptr_t *pnValue){
 	return bRet;
 }
 
-static int TlsExchange(void *pTlsKey, void (__cdecl **ppfnCallback)(intptr_t), intptr_t *pnOldValue, intptr_t nNewValue){
+static int TlsExchange(
+	void *pTlsKey,
+	void (__cdecl **ppfnCallback)(intptr_t),
+	intptr_t *pnOldValue,
+	intptr_t nNewValue
+){
 	TLS_KEY *const pKey = pTlsKey;
 	if(!pKey){
 		return false;
@@ -470,7 +478,7 @@ int MCF_CRT_TlsExchange(void *pTlsKey, intptr_t *pnOldValue, intptr_t nNewValue)
 }
 
 typedef struct tagThreadInitInfo {
-	unsigned int (*pfnThreadProc)(intptr_t);
+	unsigned int (*pfnProc)(intptr_t);
 	intptr_t nParam;
 } THREAD_INIT_INFO;
 
@@ -485,7 +493,7 @@ DWORD __stdcall CRTThreadProc(LPVOID pParam){
 
 		__MCF_CRT_FEnvInit();
 
-		dwExitCode = (*vInitInfo.pfnThreadProc)(vInitInfo.nParam);
+		dwExitCode = (*vInitInfo.pfnProc)(vInitInfo.nParam);
 	}
 	__MCF_EH_TOP_END
 	ExitThread(dwExitCode);
@@ -502,10 +510,15 @@ void *MCF_CRT_CreateThread(
 	if(!pInitInfo){
 		return NULL;
 	}
-	pInitInfo->pfnThreadProc	= pfnThreadProc;
-	pInitInfo->nParam			= nParam;
+	pInitInfo->pfnProc	= pfnThreadProc;
+	pInitInfo->nParam	= nParam;
 
-	const HANDLE hThread = CreateThread(NULL, 0, &CRTThreadProc, pInitInfo, CREATE_SUSPENDED, pulThreadId);
+	const HANDLE hThread = CreateThread(
+		NULL, 0,
+		&CRTThreadProc, pInitInfo,
+		CREATE_SUSPENDED,
+		pulThreadId
+	);
 	if(!hThread){
 		const DWORD dwErrorCode = GetLastError();
 		free(pInitInfo);

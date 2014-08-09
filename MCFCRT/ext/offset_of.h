@@ -9,8 +9,9 @@
 #include "_make_constant.h"
 
 #ifdef __cplusplus
+#include <memory>
 #	define __MCF_ADDRESS_OF(lval)	\
-	((unsigned char *)&reinterpret_cast<const volatile unsigned char &>(lval))
+	((unsigned char *)::std::addressof(lval))
 #else
 #	define __MCF_ADDRESS_OF(lval)	\
 	((unsigned char *)&(lval))

@@ -22,8 +22,15 @@ inline void SetWin32LastError(unsigned long ulErrorCode) noexcept {
 
 inline WideString GetWin32ErrorDesc(unsigned long ulErrorCode){
 	WideString wcsRet;
-	wcsRet.Resize(0x100);
-	wcsRet.Resize(::MCF_CRT_GetWin32ErrorDesc(wcsRet.GetStr(), wcsRet.GetSize(), ulErrorCode));
+	wchar_t *pwszDesc = nullptr;
+	const auto uLen = ::MCF_CRT_AllocWin32ErrorDesc(&pwszDesc, ulErrorCode);
+	try {
+		wcsRet.Append(pwszDesc, uLen);
+		::MCF_CRT_FreeWin32ErrorDesc(pwszDesc);
+	} catch(...){
+		::MCF_CRT_FreeWin32ErrorDesc(pwszDesc);
+		throw;
+	}
 	return std::move(wcsRet);
 }
 

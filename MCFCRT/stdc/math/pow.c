@@ -18,13 +18,13 @@
 			ret *= x;	\
 		}
 
-static float ppowfu(float x, unsigned int y){
+static float ppowfu(float x, uint32_t y){
 	if(y == 0){
 		return 1.0f;
 	}
 	register float ret = x;
-	unsigned int i = (unsigned int)__builtin_clz(y);
-	unsigned int mask = 0x80000000u >> i;
+	uint32_t i = (uint32_t)__builtin_clz(y);
+	uint32_t mask = 0x80000000u >> i;
 	for(;;){
 		UNROLLED
 		UNROLLED
@@ -37,13 +37,13 @@ static float ppowfu(float x, unsigned int y){
 	}
 	return ret;
 }
-static double ppowdu(double x, unsigned int y){
+static double ppowdu(double x, uint32_t y){
 	if(y == 0){
 		return 1.0;
 	}
 	register double ret = x;
-	unsigned int i = (unsigned int)__builtin_clz(y);
-	unsigned int mask = 0x80000000u >> i;
+	uint32_t i = (uint32_t)__builtin_clz(y);
+	uint32_t mask = 0x80000000u >> i;
 	for(;;){
 		UNROLLED
 		UNROLLED
@@ -56,13 +56,13 @@ static double ppowdu(double x, unsigned int y){
 	}
 	return ret;
 }
-static long double ppowlu(long double x, unsigned int y){
+static long double ppowlu(long double x, uint32_t y){
 	if(y == 0){
 		return 1.0l;
 	}
 	register long double ret = x;
-	unsigned int i = (unsigned int)__builtin_clz(y);
-	unsigned int mask = 0x80000000u >> i;
+	uint32_t i = (uint32_t)__builtin_clz(y);
+	uint32_t mask = 0x80000000u >> i;
 	for(;;){
 		UNROLLED
 		UNROLLED
@@ -165,9 +165,9 @@ float powf(float x, float y){
 		} else {
 			float ret;
 			if(y > 0){
-				ret = ppowfu(x, (unsigned int)whole);
+				ret = ppowfu(x, (uint32_t)whole);
 			} else {
-				ret = 1.0f / ppowfu(x, (unsigned int)-whole);
+				ret = 1.0f / ppowfu(x, (uint32_t)-whole);
 			}
 			if(frac != 0){
 				ret *= ppowf(x, frac);
@@ -192,14 +192,14 @@ float powf(float x, float y){
 			}
 		} else {
 			if(whole > 0){
-				const unsigned int idx = (unsigned int)whole;
+				const uint32_t idx = (uint32_t)whole;
 				if(idx % 2 == 0){
 					return ppowfu(-x, idx);
 				} else {
 					return -ppowfu(-x, idx);
 				}
 			} else {
-				const unsigned int idx = (unsigned int)-whole;
+				const uint32_t idx = (uint32_t)-whole;
 				if(idx % 2 == 0){
 					return 1.0f / ppowfu(-x, idx);
 				} else {
@@ -227,9 +227,9 @@ double pow(double x, double y){
 		} else {
 			double ret;
 			if(y > 0){
-				ret = ppowdu(x, (unsigned int)whole);
+				ret = ppowdu(x, (uint32_t)whole);
 			} else {
-				ret = 1.0 / ppowdu(x, (unsigned int)-whole);
+				ret = 1.0 / ppowdu(x, (uint32_t)-whole);
 			}
 			if(frac != 0){
 				ret *= ppowd(x, frac);
@@ -254,14 +254,14 @@ double pow(double x, double y){
 			}
 		} else {
 			if(whole > 0){
-				const unsigned int idx = (unsigned int)whole;
+				const uint32_t idx = (uint32_t)whole;
 				if(idx % 2 == 0){
 					return ppowdu(-x, idx);
 				} else {
 					return -ppowdu(-x, idx);
 				}
 			} else {
-				const unsigned int idx = (unsigned int)-whole;
+				const uint32_t idx = (uint32_t)-whole;
 				if(idx % 2 == 0){
 					return 1.0 / ppowdu(-x, idx);
 				} else {
@@ -289,9 +289,9 @@ long double powl(long double x, long double y){
 		} else {
 			long double ret;
 			if(y > 0){
-				ret = ppowlu(x, (unsigned int)whole);
+				ret = ppowlu(x, (uint32_t)whole);
 			} else {
-				ret = 1.0l / ppowlu(x, (unsigned int)-whole);
+				ret = 1.0l / ppowlu(x, (uint32_t)-whole);
 			}
 			if(lrac != 0){
 				ret *= ppowl(x, lrac);
@@ -316,14 +316,14 @@ long double powl(long double x, long double y){
 			}
 		} else {
 			if(whole > 0){
-				const unsigned int idx = (unsigned int)whole;
+				const uint32_t idx = (uint32_t)whole;
 				if(idx % 2 == 0){
 					return ppowlu(-x, idx);
 				} else {
 					return -ppowlu(-x, idx);
 				}
 			} else {
-				const unsigned int idx = (unsigned int)-whole;
+				const uint32_t idx = (uint32_t)-whole;
 				if(idx % 2 == 0){
 					return 1.0l / ppowlu(-x, idx);
 				} else {

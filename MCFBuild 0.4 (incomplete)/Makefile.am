@@ -6,9 +6,9 @@ AM_CXXFLAGS=-std=c++14 -Wall -Wextra -Wsign-conversion -Wsuggest-attribute=noret
 	-mfpmath=sse,387 -march=core2 -masm=intel -Wnoexcept
 
 noinst_LIBRARIES=	\
-	src/libmcflite.a
+	lib/libmcflite.a
 
-src_libmcflite_a_SOURCES=\
+lib_libmcflite_a_SOURCES=\
 	../MCFCRT/stdc/stdlib/atexit.c			\
 	../MCFCRT/stdc/stdlib/malloc.c			\
 	../MCFCRT/stdc/stdlib/realloc.c			\
@@ -39,7 +39,7 @@ src_libmcflite_a_SOURCES=\
 	../MCF/Hash/Sha256.cpp					\
 	../MCF/Containers/StreamBuffer.cpp
 
-src_libmcflite_a_CFLAGS=\
+lib_libmcflite_a_CFLAGS=\
 	$(AM_CFLAGS) -D__MCF_CRT_NO_DLMALLOC
 
 bin_PROGRAMS=	\
@@ -51,10 +51,10 @@ MCFBuild_LDFLAGS=	\
 	-Wl,--wrap=atexit,--wrap=malloc,--wrap=realloc,--wrap=calloc,--wrap=free,--wrap=__cxa_throw
 
 MCFBuild_DEPENDENCIES=	\
-	src/libmcflite.a
+	lib/libmcflite.a
 
 MCFBuild_LDADD=	\
-	-Lsrc -lmcflite -lstdc++ -lmingwex -lmingw32 -lgcc -lgcc_eh -lmcflite -lmsvcrt -lkernel32 -luser32
+	-Llib -lmcflite -lstdc++ -lmingwex -lmingw32 -lgcc -lgcc_eh -lmcflite -lmsvcrt -lkernel32 -luser32
 
 MCFBuild_SOURCES=	\
 	src/ConsoleOutput.cpp		\

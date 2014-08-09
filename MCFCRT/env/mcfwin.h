@@ -7,10 +7,23 @@
 
 #undef WINVER
 #undef _WIN32_WINNT
+#undef WIN32_LEAN_AND_MEAN
 
 #define WINVER			0x0601
 #define _WIN32_WINNT	0x0601
 #define WIN32_LEAN_AND_MEAN
+
+#undef CDECL
+#undef CALLBACK
+#undef WINAPI
+#undef WINAPIV
+#undef APIENTRY
+
+#define CDECL		__attribute__((__cdecl__, __nothrow__))
+#define CALLBACK	__attribute__((__stdcall__, __nothrow__))
+#define WINAPI		CALLBACK
+#define WINAPIV		CDECL
+#define APIENTRY	CALLBACK
 
 #include <windows.h>
 

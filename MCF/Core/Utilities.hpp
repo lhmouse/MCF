@@ -96,10 +96,8 @@ void Bail(const wchar_t *pwszFormat, const Params &... vParams){
 }
 
 template<>
-#ifdef NDEBUG
-[[noreturn]]
-#endif
-inline void Bail<>(const wchar_t *pwszDescription){
+__MCF_NORETURN_IF_NDEBUG inline
+void Bail<>(const wchar_t *pwszDescription){
 	::MCF_CRT_Bail(pwszDescription);
 }
 
@@ -107,7 +105,8 @@ inline void Bail<>(const wchar_t *pwszDescription){
 // ASSERT_NOEXCEPT
 //----------------------------------------------------------------------------
 namespace Impl {
-	__attribute__((error("noexcept assertion failed."), __noreturn__)) void AssertNoexcept() noexcept;
+	__attribute__((__error__("noexcept assertion failed."), __noreturn__))
+	void AssertNoexcept() noexcept;
 }
 
 #define ASSERT_NOEXCEPT_BEGIN	\
@@ -222,7 +221,7 @@ Function &&ReverseCallOnEach(Function &&vFunction){
 // Min / Max
 //----------------------------------------------------------------------------
 template<typename Tx, typename Ty, typename Comparator = std::less<void>>
-auto constexpr Min(Tx x, Ty y){
+constexpr auto Min(Tx x, Ty y){
 	static_assert(
 		std::is_scalar<Tx>::value && std::is_scalar<Ty>::value,
 		"Only scalar types are supported."
@@ -235,12 +234,12 @@ auto constexpr Min(Tx x, Ty y){
 	return Comparator()(x, y) ? x : y;
 }
 template<typename Tx, typename Ty, typename Comparator = std::less<void>, typename... More>
-auto constexpr Min(Tx &&x, Ty &&y, More &&... vMore){
+constexpr auto Min(Tx &&x, Ty &&y, More &&... vMore){
 	return Min(Min(std::forward<Tx>(x), std::forward<Ty>(y)), std::forward<More>(vMore)...);
 }
 
 template<typename Tx, typename Ty, typename Comparator = std::less<void>>
-auto constexpr Max(Tx x, Ty y){
+constexpr auto Max(Tx x, Ty y){
 	static_assert(
 		std::is_scalar<Tx>::value && std::is_scalar<Ty>::value,
 		"Only scalar types are supported."
@@ -253,7 +252,7 @@ auto constexpr Max(Tx x, Ty y){
 	return Comparator()(x, y) ? y : x;
 }
 template<typename Tx, typename Ty, typename Comparator = std::less<void>, typename... More>
-auto constexpr Max(Tx &&x, Ty &&y, More &&... vMore){
+constexpr auto Max(Tx &&x, Ty &&y, More &&... vMore){
 	return Max(Max(std::forward<Tx>(x), std::forward<Ty>(y)), std::forward<More>(vMore)...);
 }
 
@@ -748,20 +747,24 @@ namespace Impl {
 }
 
 template<typename Function, typename... Params>
-auto CallOnTuple(Function vFunction, const std::tuple<Params...> &vTuple)
+auto CallOnTuple(Function &&vFunction, const std::tuple<Params...> &vTuple)
 	noexcept(noexcept(
 		std::declval<Function>()(std::declval<const Params &>()...)
 	))
 {
-	return Impl::CallOnTupleHelper<0u, sizeof...(Params)>()(vFunction, vTuple);
+	return Impl::CallOnTupleHelper<0u, sizeof...(Params)>()(
+		std::forward<Function>(vFunction), vTuple
+	);
 }
 template<typename Function, typename... Params>
-auto CallOnTuple(Function vFunction, std::tuple<Params...> &&vTuple)
+auto CallOnTuple(Function &&vFunction, std::tuple<Params...> &&vTuple)
 	noexcept(noexcept(
 		std::declval<Function>()(std::declval<Params &&>()...)
 	))
 {
-	return Impl::CallOnTupleHelper<0u, sizeof...(Params)>()(vFunction, std::move(vTuple));
+	return Impl::CallOnTupleHelper<0u, sizeof...(Params)>()(
+		std::forward<Function>(vFunction), std::move(vTuple)
+	);
 }
 
 template<class Object, typename... Params>

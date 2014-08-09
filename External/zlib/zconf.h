@@ -305,6 +305,7 @@
 #  endif
 #endif
 
+#if 0	// Added by LH_Mouse on 2014-08-08.
 #if defined(WINDOWS) || defined(WIN32)
    /* If building or using zlib as a DLL, define ZLIB_DLL.
     * This is not mandatory, but it offers a little performance increase.
@@ -337,6 +338,7 @@
 #    endif
 #  endif
 #endif
+#endif	// Added by LH_Mouse on 2014-08-08.
 
 #if defined (__BEOS__)
 #  ifdef ZLIB_DLL
@@ -354,7 +356,8 @@
 #  define ZEXTERN extern
 #endif
 #ifndef ZEXPORT
-#  define ZEXPORT
+//#  define ZEXPORT		// Taken out by LH_Mouse on 2014-08-08.
+#  define ZEXPORT	__attribute__((__nothrow__))	// Added.
 #endif
 #ifndef ZEXPORTVA
 #  define ZEXPORTVA

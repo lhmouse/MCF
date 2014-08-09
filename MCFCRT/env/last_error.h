@@ -13,10 +13,8 @@ __MCF_EXTERN_C_BEGIN
 extern unsigned long MCF_CRT_GetWin32LastError(void) MCF_NOEXCEPT;
 extern void MCF_CRT_SetWin32LastError(unsigned long ulErrorCode) MCF_NOEXCEPT;
 
-extern MCF_STD size_t MCF_CRT_GetWin32ErrorDesc(
-	wchar_t *pwchBuffer, MCF_STD size_t uBufferSize,
-	unsigned long ulErrorCode
-) MCF_NOEXCEPT;
+extern MCF_STD size_t MCF_CRT_AllocWin32ErrorDesc(wchar_t **ppwchBuffer, unsigned long ulErrorCode) MCF_NOEXCEPT;
+extern void MCF_CRT_FreeWin32ErrorDesc(wchar_t *pwchBuffer) MCF_NOEXCEPT;
 
 __MCF_EXTERN_C_END
 

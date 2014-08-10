@@ -31,12 +31,14 @@ MCF_SECTION(".tls") const IMAGE_TLS_DIRECTORY _tls_used = {
 	.Characteristics		= 0
 };
 
-_Noreturn DWORD __stdcall __MCF_ExeStartup(LPVOID pReserved)
+_Noreturn
+__MCF_C_STDCALL __MCF_HAS_EH_TOP
+DWORD __MCF_ExeStartup(LPVOID pReserved)
 	__asm__("__MCF_ExeStartup");
 
 _Noreturn
-__attribute__((__force_align_arg_pointer__)) __MCF_HAS_EH_TOP
-DWORD __stdcall __MCF_ExeStartup(LPVOID pReserved){
+__MCF_C_STDCALL __MCF_HAS_EH_TOP
+DWORD __MCF_ExeStartup(LPVOID pReserved){
 	DWORD dwExitCode;
 	__MCF_EH_TOP_BEGIN
 	{

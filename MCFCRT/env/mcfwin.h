@@ -5,6 +5,12 @@
 #ifndef MCF_CRT_MCFWIN_H_
 #define MCF_CRT_MCFWIN_H_
 
+#define __MCF_C_CALLBACK_DECL	__attribute__((__nothrow__, __force_align_arg_pointer__))
+
+#define __MCF_C_CDECL		__attribute__((__cdecl__)) __MCF_C_CALLBACK_DECL
+#define __MCF_C_STDCALL		__attribute__((__stdcall__)) __MCF_C_CALLBACK_DECL
+#define __MCF_C_FASTCALL	__attribute__((__fastcall__)) __MCF_C_CALLBACK_DECL
+
 #undef WINVER
 #undef _WIN32_WINNT
 #undef WIN32_LEAN_AND_MEAN
@@ -19,11 +25,11 @@
 #undef WINAPIV
 #undef APIENTRY
 
-#define CDECL		__attribute__((__cdecl__, __nothrow__))
-#define CALLBACK	__attribute__((__stdcall__, __nothrow__))
-#define WINAPI		CALLBACK
-#define WINAPIV		CDECL
-#define APIENTRY	CALLBACK
+#define CDECL		__MCF_C_CDECL
+#define CALLBACK	__MCF_C_STDCALL
+#define WINAPI		__MCF_C_STDCALL
+#define WINAPIV		__MCF_C_CDECL
+#define APIENTRY	__MCF_C_STDCALL
 
 #include <windows.h>
 

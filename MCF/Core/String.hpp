@@ -677,113 +677,170 @@ public:
 
 		return GetStr()[uIndex];
 	}
-
-	String &operator+=(const Observer &rhs){
-		Append(rhs);
-		return *this;
-	}
-	String &operator+=(Char rhs){
-		Append(rhs);
-		return *this;
-	}
-	String &operator+=(const String &rhs){
-		Append(rhs);
-		return *this;
-	}
-	String &operator+=(String &&rhs){
-		Append(std::move(rhs));
-		return *this;
-	}
-	template<typename OtherChar, StringEncoding OTHER_ENCODING>
-	String &operator+=(const String<OtherChar, OTHER_ENCODING> &rhs){
-		Append(rhs);
-		return *this;
-	}
-
-	bool operator==(const Observer &rhs) const noexcept {
-		return GetObserver() == rhs;
-	}
-	bool operator!=(const Observer &rhs) const noexcept {
-		return GetObserver() != rhs;
-	}
-	bool operator<(const Observer &rhs) const noexcept {
-		return GetObserver() < rhs;
-	}
-	bool operator>(const Observer &rhs) const noexcept {
-		return GetObserver() > rhs;
-	}
-	bool operator<=(const Observer &rhs) const noexcept {
-		return GetObserver() <= rhs;
-	}
-	bool operator>=(const Observer &rhs) const noexcept {
-		return GetObserver() >= rhs;
-	}
 };
 
 template<typename Char, StringEncoding ENCODING>
-String<Char, ENCODING> operator+(const String<Char, ENCODING> &lhs, const StringObserver<Char> &rhs){
-	String<Char, ENCODING> strRet;
-	strRet.Reserve(lhs.GetLength() + rhs.GetLength());
-	strRet.Assign(lhs);
-	strRet.Append(rhs);
-	return std::move(strRet);
+String<Char, ENCODING> &operator+=(
+	String<Char, ENCODING> &lhs,
+	const StringObserver<Char> &rhs
+){
+	lhs.Append(rhs);
+	return lhs;
+}
+template<
+	typename Char, StringEncoding ENCODING,
+	typename OtherChar, StringEncoding OTHER_ENCODING
+>
+String<Char, ENCODING> &operator+=(
+	String<Char, ENCODING> &lhs,
+	const String<OtherChar, OTHER_ENCODING> &rhs
+){
+	lhs.Append(rhs);
+	return lhs;
 }
 template<typename Char, StringEncoding ENCODING>
-String<Char, ENCODING> operator+(const String<Char, ENCODING> &lhs, Char rhs){
-	String<Char, ENCODING> strRet;
-	strRet.Reserve(lhs.GetLength() + 1);
-	strRet.Assign(lhs);
-	strRet.Append(rhs);
-	return std::move(strRet);
-}
-template<typename Char, StringEncoding ENCODING, typename OtherChar, StringEncoding OTHER_ENCODING>
-String<Char, ENCODING> operator+(const String<Char, ENCODING> &lhs, const String<OtherChar, OTHER_ENCODING> &rhs){
-	return lhs + rhs.GetObserver();
+String<Char, ENCODING> &operator+=(
+	String<Char, ENCODING> &lhs,
+	Char rhs
+){
+	lhs.Append(rhs);
+	return lhs;
 }
 template<typename Char, StringEncoding ENCODING>
-String<Char, ENCODING> &&operator+(String<Char, ENCODING> &&lhs, const StringObserver<Char> &rhs){
+String<Char, ENCODING> &&operator+=(
+	String<Char, ENCODING> &&lhs,
+	const StringObserver<Char> &rhs
+){
+	lhs.Append(rhs);
+	return std::move(lhs);
+}
+template<
+	typename Char, StringEncoding ENCODING,
+	typename OtherChar, StringEncoding OTHER_ENCODING
+>
+String<Char, ENCODING> &&operator+=(
+	String<Char, ENCODING> &&lhs,
+	const String<OtherChar, OTHER_ENCODING> &rhs
+){
 	lhs.Append(rhs);
 	return std::move(lhs);
 }
 template<typename Char, StringEncoding ENCODING>
-String<Char, ENCODING> &&operator+(String<Char, ENCODING> &&lhs, Char rhs){
-	lhs.Append(rhs);
-	return std::move(lhs);
-}
-template<typename Char, StringEncoding ENCODING, typename OtherChar, StringEncoding OTHER_ENCODING>
-String<Char, ENCODING> &&operator+(String<Char, ENCODING> &&lhs, const String<OtherChar, OTHER_ENCODING> &rhs){
+String<Char, ENCODING> &&operator+=(
+	String<Char, ENCODING> &&lhs,
+	Char rhs
+){
 	lhs.Append(rhs);
 	return std::move(lhs);
 }
 
 template<typename Char, StringEncoding ENCODING>
-String<Char, ENCODING> operator+(const StringObserver<Char> &lhs, const String<Char, ENCODING> &rhs){
-	String<Char, ENCODING> strRet;
-	strRet.Reserve(lhs.GetLength() + rhs.GetLength());
-	strRet.Assign(lhs);
-	strRet.Append(rhs);
-	return std::move(strRet);
+String<Char, ENCODING> operator+(
+	const String<Char, ENCODING> &lhs,
+	const StringObserver<Char> &rhs
+){
+	String<Char, ENCODING> ret;
+	ret.Reserve(lhs.GetSize() + rhs.GetSize());
+	ret.Append(lhs);
+	ret.Append(rhs);
+	return std::move(ret);
 }
 template<typename Char, StringEncoding ENCODING>
-String<Char, ENCODING> operator+(Char lhs, const String<Char, ENCODING> &rhs){
-	String<Char, ENCODING> strRet;
-	strRet.Reserve(1 + rhs.GetLength());
-	strRet.Assign(lhs);
-	strRet.Append(rhs);
-	return std::move(strRet);
+String<Char, ENCODING> operator+(
+	const StringObserver<Char> &lhs,
+	const String<Char, ENCODING> &rhs
+){
+	String<Char, ENCODING> ret;
+	ret.Reserve(lhs.GetSize() + rhs.GetSize());
+	ret.Append(lhs);
+	ret.Append(rhs);
+	return std::move(ret);
 }
 template<typename Char, StringEncoding ENCODING>
-String<Char, ENCODING> &&operator+(const StringObserver<Char> &lhs, String<Char, ENCODING> &&rhs){
+String<Char, ENCODING> operator+(
+	const String<Char, ENCODING> &lhs,
+	Char rhs
+){
+	String<Char, ENCODING> ret;
+	ret.Reserve(lhs.GetSize() + 1);
+	ret.Append(lhs);
+	ret.Append(rhs);
+	return std::move(ret);
+}
+template<typename Char, StringEncoding ENCODING>
+String<Char, ENCODING> operator+(
+	Char lhs,
+	const String<Char, ENCODING> &rhs
+){
+	String<Char, ENCODING> ret;
+	ret.Reserve(1 + rhs.GetSize());
+	ret.Append(lhs);
+	ret.Append(rhs);
+	return std::move(ret);
+}
+
+template<typename Char, StringEncoding ENCODING>
+String<Char, ENCODING> &&operator+(
+	String<Char, ENCODING> &&lhs,
+	const StringObserver<Char> &rhs
+){
+	lhs.Append(rhs);
+	return std::move(lhs);
+}
+template<typename Char, StringEncoding ENCODING>
+String<Char, ENCODING> &&operator+(
+	const StringObserver<Char> &lhs,
+	String<Char, ENCODING> &&rhs
+){
+	lhs.Append(rhs);
+	return std::move(lhs);
+}
+template<typename Char, StringEncoding ENCODING>
+String<Char, ENCODING> &&operator+(
+	String<Char, ENCODING> &&lhs,
+	Char rhs
+){
+	lhs.Append(rhs);
+	return std::move(lhs);
+}
+template<typename Char, StringEncoding ENCODING>
+String<Char, ENCODING> &&operator+(
+	Char lhs,
+	String<Char, ENCODING> &&rhs
+){
 	rhs.Unshift(lhs);
 	return std::move(rhs);
 }
+
 template<typename Char, StringEncoding ENCODING>
-String<Char, ENCODING> &&operator+(Char lhs, String<Char, ENCODING> &&rhs){
-	rhs.Unshift(lhs);
-	return std::move(rhs);
+String<Char, ENCODING> operator+(
+	const String<Char, ENCODING> &lhs,
+	const String<Char, ENCODING> &rhs
+){
+	String<Char, ENCODING> ret;
+	ret.Reserve(lhs.GetSize() + rhs.GetSize());
+	ret.Append(lhs);
+	ret.Append(rhs);
+	return std::move(ret);
 }
+template<
+	typename Char, StringEncoding ENCODING,
+	typename OtherChar, StringEncoding OTHER_ENCODING
+>
+String<Char, ENCODING> operator+(
+	const String<Char, ENCODING> &lhs,
+	const String<OtherChar, OTHER_ENCODING> &rhs
+){
+	String<Char, ENCODING> ret(lhs);
+	ret.Append(rhs);
+	return std::move(ret);
+}
+
 template<typename Char, StringEncoding ENCODING>
-String<Char, ENCODING> &&operator+(String<Char, ENCODING> &&lhs, String<Char, ENCODING> &&rhs){
+String<Char, ENCODING> &&operator+(
+	String<Char, ENCODING> &&lhs,
+	String<Char, ENCODING> &&rhs
+){
 	if(lhs.GetCapacity() >= rhs.GetCapacity()){
 		lhs.Append(rhs);
 		return std::move(lhs);
@@ -792,31 +849,49 @@ String<Char, ENCODING> &&operator+(String<Char, ENCODING> &&lhs, String<Char, EN
 		return std::move(rhs);
 	}
 }
+template<
+	typename Char, StringEncoding ENCODING,
+	typename OtherChar, StringEncoding OTHER_ENCODING
+>
+String<Char, ENCODING> operator+(
+	String<Char, ENCODING> &&lhs,
+	const String<OtherChar, OTHER_ENCODING> &rhs
+){
+	lhs.Append(rhs);
+	return std::move(lhs);
+}
 
-template<typename Comparand, typename Char, StringEncoding ENCODING>
-bool operator==(const Comparand &lhs, const String<Char, ENCODING> &rhs) noexcept {
-	return rhs.GetObserver() == lhs;
-}
-template<typename Comparand, typename Char, StringEncoding ENCODING>
-bool operator!=(const Comparand &lhs, const String<Char, ENCODING> &rhs) noexcept {
-	return rhs.GetObserver() != lhs;
-}
-template<typename Comparand, typename Char, StringEncoding ENCODING>
-bool operator<(const Comparand &lhs, const String<Char, ENCODING> &rhs) noexcept {
-	return rhs.GetObserver() > lhs;
-}
-template<typename Comparand, typename Char, StringEncoding ENCODING>
-bool operator>(const Comparand &lhs, const String<Char, ENCODING> &rhs) noexcept {
-	return rhs.GetObserver() < lhs;
-}
-template<typename Comparand, typename Char, StringEncoding ENCODING>
-bool operator<=(const Comparand &lhs, const String<Char, ENCODING> &rhs) noexcept {
-	return rhs.GetObserver() >= lhs;
-}
-template<typename Comparand, typename Char, StringEncoding ENCODING>
-bool operator>=(const Comparand &lhs, const String<Char, ENCODING> &rhs) noexcept {
-	return rhs.GetObserver() <= lhs;
-}
+#define MCF_STRING_RATIONAL_OPERATOR_(op_type)	\
+	template<typename Char, StringEncoding ENCODING>	\
+	bool operator op_type (	\
+		const String<Char, ENCODING> &lhs,	\
+		const String<Char, ENCODING> &rhs	\
+	) noexcept {	\
+		return lhs.GetObserver() op_type rhs.GetObserver();	\
+	}	\
+	template<typename Char, StringEncoding ENCODING>	\
+	bool operator op_type (	\
+		const StringObserver<Char> &lhs,	\
+		const String<Char, ENCODING> &rhs	\
+	) noexcept {	\
+		return lhs op_type rhs.GetObserver();	\
+	}	\
+	template<typename Char, StringEncoding ENCODING>	\
+	bool operator op_type (	\
+		const String<Char, ENCODING> &lhs,	\
+		const StringObserver<Char> &rhs	\
+	) noexcept {	\
+		return lhs.GetObserver() op_type rhs;	\
+	}
+
+MCF_STRING_RATIONAL_OPERATOR_(==)
+MCF_STRING_RATIONAL_OPERATOR_(!=)
+MCF_STRING_RATIONAL_OPERATOR_(<)
+MCF_STRING_RATIONAL_OPERATOR_(>)
+MCF_STRING_RATIONAL_OPERATOR_(<=)
+MCF_STRING_RATIONAL_OPERATOR_(>=)
+
+#undef MCF_STRING_RATIONAL_OPERATOR_
 
 template<typename Char, StringEncoding ENCODING>
 const Char *begin(const String<Char, ENCODING> &rhs) noexcept {

@@ -12,11 +12,12 @@
 
 // -static -Wl,-e__MCF_DllStartup,--disable-runtime-pseudo-reloc,--disable-auto-import
 
-BOOL __stdcall __MCF_DllStartup(HINSTANCE hDll, DWORD dwReason, LPVOID pReserved)
+__MCF_C_STDCALL __MCF_HAS_EH_TOP
+BOOL __MCF_DllStartup(HINSTANCE hDll, DWORD dwReason, LPVOID pReserved)
 	__asm__("__MCF_DllStartup");
 
-__attribute__((__force_align_arg_pointer__)) __MCF_HAS_EH_TOP
-BOOL __stdcall __MCF_DllStartup(HINSTANCE hDll, DWORD dwReason, LPVOID pReserved){
+__MCF_C_STDCALL __MCF_HAS_EH_TOP
+BOOL __MCF_DllStartup(HINSTANCE hDll, DWORD dwReason, LPVOID pReserved){
 	BOOL bRet = FALSE;
 	__MCF_EH_TOP_BEGIN
 	{

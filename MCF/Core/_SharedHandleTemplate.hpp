@@ -357,44 +357,6 @@ namespace Impl {
 		explicit operator Handle() const noexcept {
 			return Get();
 		}
-
-		bool operator==(const SharedHandle &rhs) const noexcept {
-			return Get() == rhs.Get();
-		}
-		bool operator!=(const SharedHandle &rhs) const noexcept {
-			return Get() != rhs.Get();
-		}
-		bool operator<(const SharedHandle &rhs) const noexcept {
-			return Get() < rhs.Get();
-		}
-		bool operator<=(const SharedHandle &rhs) const noexcept {
-			return Get() <= rhs.Get();
-		}
-		bool operator>(const SharedHandle &rhs) const noexcept {
-			return Get() > rhs.Get();
-		}
-		bool operator>=(const SharedHandle &rhs) const noexcept {
-			return Get() >= rhs.Get();
-		}
-
-		bool operator==(Handle rhs) const noexcept {
-			return Get() == rhs;
-		}
-		bool operator!=(Handle rhs) const noexcept {
-			return Get() != rhs;
-		}
-		bool operator<(Handle rhs) const noexcept {
-			return Get() < rhs;
-		}
-		bool operator<=(Handle rhs) const noexcept {
-			return Get() <= rhs;
-		}
-		bool operator>(Handle rhs) const noexcept {
-			return Get() > rhs;
-		}
-		bool operator>=(Handle rhs) const noexcept {
-			return Get() >= rhs;
-		}
 	};
 
 	template<class Closer, class RefCount>
@@ -404,54 +366,38 @@ namespace Impl {
 		return SharedHandle(*this);
 	}
 
-	template<class Handle, class Closer, class RefCount>
-	auto operator==(Handle lhs, const SharedHandleTemplate<Closer, RefCount> &rhs) noexcept
-		-> typename std::enable_if<
-			std::is_same<Handle, typename SharedHandleTemplate<Closer, RefCount>::Handle>::value, bool
-			>::type
-	{
-		return lhs == rhs.Get();
+#define MCF_SHARED_HANDLE_RATIONAL_OPERATOR_(op_type)	\
+	template<class Closer, class RefCount>	\
+	bool operator op_type (	\
+		const SharedHandleTemplate<Closer, RefCount> &lhs,	\
+		const SharedHandleTemplate<Closer, RefCount> &rhs	\
+	) noexcept {	\
+		return lhs.Get() op_type rhs.Get();	\
+	}	\
+	template<class Closer, class RefCount>	\
+	bool operator op_type (	\
+		decltype(Closer()()) lhs,	\
+		const SharedHandleTemplate<Closer, RefCount> &rhs	\
+	) noexcept {	\
+		return lhs op_type rhs.Get();	\
+	}	\
+	template<class Closer, class RefCount>	\
+	bool operator op_type (	\
+		const SharedHandleTemplate<Closer, RefCount> &lhs,	\
+		decltype(Closer()()) rhs	\
+	) noexcept {	\
+		return lhs.Get() op_type rhs;	\
 	}
-	template<class Handle, class Closer, class RefCount>
-	auto operator!=(Handle lhs, const SharedHandleTemplate<Closer, RefCount> &rhs) noexcept
-		-> typename std::enable_if<
-			std::is_same<Handle, typename SharedHandleTemplate<Closer, RefCount>::Handle>::value, bool
-			>::type
-	{
-		return lhs != rhs.Get();
-	}
-	template<class Handle, class Closer, class RefCount>
-	auto operator<(Handle lhs, const SharedHandleTemplate<Closer, RefCount> &rhs) noexcept
-		-> typename std::enable_if<
-			std::is_same<Handle, typename SharedHandleTemplate<Closer, RefCount>::Handle>::value, bool
-			>::type
-	{
-		return lhs < rhs.Get();
-	}
-	template<class Handle, class Closer, class RefCount>
-	auto operator<=(Handle lhs, const SharedHandleTemplate<Closer, RefCount> &rhs) noexcept
-		-> typename std::enable_if<
-			std::is_same<Handle, typename SharedHandleTemplate<Closer, RefCount>::Handle>::value, bool
-			>::type
-	{
-		return lhs <= rhs.Get();
-	}
-	template<class Handle, class Closer, class RefCount>
-	auto operator>(Handle lhs, const SharedHandleTemplate<Closer, RefCount> &rhs) noexcept
-		-> typename std::enable_if<
-			std::is_same<Handle, typename SharedHandleTemplate<Closer, RefCount>::Handle>::value, bool
-			>::type
-	{
-		return lhs > rhs.Get();
-	}
-	template<class Handle, class Closer, class RefCount>
-	auto operator>=(Handle lhs, const SharedHandleTemplate<Closer, RefCount> &rhs) noexcept
-		-> typename std::enable_if<
-			std::is_same<Handle, typename SharedHandleTemplate<Closer, RefCount>::Handle>::value, bool
-			>::type
-	{
-		return lhs >= rhs.Get();
-	}
+
+	MCF_SHARED_HANDLE_RATIONAL_OPERATOR_(==)
+	MCF_SHARED_HANDLE_RATIONAL_OPERATOR_(!=)
+	MCF_SHARED_HANDLE_RATIONAL_OPERATOR_(<)
+	MCF_SHARED_HANDLE_RATIONAL_OPERATOR_(>)
+	MCF_SHARED_HANDLE_RATIONAL_OPERATOR_(<=)
+	MCF_SHARED_HANDLE_RATIONAL_OPERATOR_(>=)
+
+#undef MCF_SHARED_HANDLE_RATIONAL_OPERATOR_
+
 }
 
 }

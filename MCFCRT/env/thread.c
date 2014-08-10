@@ -140,8 +140,8 @@ void __MCF_CRT_TlsEnvUninit(){
 	}
 }
 
-__attribute__((__force_align_arg_pointer__))
-void __stdcall __MCF_CRT_TlsCallback(void *hModule, unsigned long ulReason, void *pReserved){
+__MCF_C_STDCALL
+void __MCF_CRT_TlsCallback(void *hModule, unsigned long ulReason, void *pReserved){
 	UNREF_PARAM(hModule);
 	UNREF_PARAM(pReserved);
 
@@ -483,8 +483,8 @@ typedef struct tagThreadInitInfo {
 } THREAD_INIT_INFO;
 
 _Noreturn static
-__attribute__((__force_align_arg_pointer__)) __MCF_HAS_EH_TOP
-DWORD __stdcall CRTThreadProc(LPVOID pParam){
+__MCF_C_STDCALL __MCF_HAS_EH_TOP
+DWORD CRTThreadProc(LPVOID pParam){
 	DWORD dwExitCode;
 	__MCF_EH_TOP_BEGIN
 	{

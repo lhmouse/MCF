@@ -426,56 +426,55 @@ public:
 
 		return GetBegin()[uIndex];
 	}
-
-	bool operator==(const StringObserver &rhs) const noexcept {
-		if(GetLength() != rhs.GetLength()){
-			return false;
-		}
-		return Compare(rhs) == 0;
-	}
-	bool operator!=(const StringObserver &rhs) const noexcept {
-		if(GetLength() != rhs.GetLength()){
-			return true;
-		}
-		return Compare(rhs) != 0;
-	}
-	bool operator<(const StringObserver &rhs) const noexcept {
-		return Compare(rhs) < 0;
-	}
-	bool operator>(const StringObserver &rhs) const noexcept {
-		return Compare(rhs) > 0;
-	}
-	bool operator<=(const StringObserver &rhs) const noexcept {
-		return Compare(rhs) <= 0;
-	}
-	bool operator>=(const StringObserver &rhs) const noexcept {
-		return Compare(rhs) >= 0;
-	}
 };
 
-template<typename Comparand, typename Char>
-bool operator==(const Comparand &lhs, const StringObserver<Char> &rhs) noexcept {
-	return rhs == lhs;
+template<typename Char>
+bool operator==(
+	const StringObserver<Char> &lhs,
+	const StringObserver<Char> &rhs
+) noexcept {
+	if(lhs.GetSize() != rhs.GetSize()){
+		return false;
+	}
+	return lhs.Compare(rhs) == 0;
 }
-template<typename Comparand, typename Char>
-bool operator!=(const Comparand &lhs, const StringObserver<Char> &rhs) noexcept {
-	return rhs != lhs;
+template<typename Char>
+bool operator!=(
+	const StringObserver<Char> &lhs,
+	const StringObserver<Char> &rhs
+) noexcept {
+	if(lhs.GetSize() != rhs.GetSize()){
+		return true;
+	}
+	return lhs.Compare(rhs) != 0;
 }
-template<typename Comparand, typename Char>
-bool operator<(const Comparand &lhs, const StringObserver<Char> &rhs) noexcept {
-	return rhs > lhs;
+template<typename Char>
+bool operator<(
+	const StringObserver<Char> &lhs,
+	const StringObserver<Char> &rhs
+) noexcept {
+	return lhs.Compare(rhs) < 0;
 }
-template<typename Comparand, typename Char>
-bool operator>(const Comparand &lhs, const StringObserver<Char> &rhs) noexcept {
-	return rhs < lhs;
+template<typename Char>
+bool operator>(
+	const StringObserver<Char> &lhs,
+	const StringObserver<Char> &rhs
+) noexcept {
+	return lhs.Compare(rhs) > 0;
 }
-template<typename Comparand, typename Char>
-bool operator<=(const Comparand &lhs, const StringObserver<Char> &rhs) noexcept {
-	return rhs >= lhs;
+template<typename Char>
+bool operator<=(
+	const StringObserver<Char> &lhs,
+	const StringObserver<Char> &rhs
+) noexcept {
+	return lhs.Compare(rhs) <= 0;
 }
-template<typename Comparand, typename Char>
-bool operator>=(const Comparand &lhs, const StringObserver<Char> &rhs) noexcept {
-	return rhs <= lhs;
+template<typename Char>
+bool operator>=(
+	const StringObserver<Char> &lhs,
+	const StringObserver<Char> &rhs
+) noexcept {
+	return lhs.Compare(rhs) >= 0;
 }
 
 template<typename Char>

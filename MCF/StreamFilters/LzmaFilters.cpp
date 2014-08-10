@@ -279,7 +279,7 @@ public:
 // ========== LzmaEncoder ==========
 // 静态成员函数。
 LzmaEncoder::LzmaEncoder(unsigned int uLevel, unsigned long ulDictSize)
-	: xm_pDelegate(new xDelegate(*this, uLevel, ulDictSize))
+	: xm_pDelegate(std::make_unique<xDelegate>(*this, uLevel, ulDictSize))
 {
 }
 LzmaEncoder::~LzmaEncoder() noexcept {
@@ -298,7 +298,7 @@ void LzmaEncoder::Finalize(){
 // ========== LzmaDecoder ==========
 // 静态成员函数。
 LzmaDecoder::LzmaDecoder()
-	: xm_pDelegate(new xDelegate(*this))
+	: xm_pDelegate(std::make_unique<xDelegate>(*this))
 {
 }
 LzmaDecoder::~LzmaDecoder() noexcept {

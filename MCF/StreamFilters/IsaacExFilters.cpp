@@ -29,7 +29,7 @@ void IsaacExEncoder::Abort() noexcept {
 }
 void IsaacExEncoder::Update(const void *pData, std::size_t uSize){
 	if(!xm_pIsaacRng){
-		xm_pIsaacRng.reset(new IsaacRng(xm_vKeyHash.au32));
+		xm_pIsaacRng = std::make_unique<IsaacRng>(xm_vKeyHash.au32);
 		xm_abyLastEncoded = 0;
 	}
 
@@ -78,7 +78,7 @@ void IsaacExDecoder::Abort() noexcept {
 }
 void IsaacExDecoder::Update(const void *pData, std::size_t uSize){
 	if(!xm_pIsaacRng){
-		xm_pIsaacRng.reset(new IsaacRng(xm_vKeyHash.au32));
+		xm_pIsaacRng = std::make_unique<IsaacRng>(xm_vKeyHash.au32);
 		xm_abyLastEncoded = 0;
 	}
 

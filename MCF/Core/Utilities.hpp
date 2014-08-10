@@ -221,7 +221,7 @@ Function &&ReverseCallOnEach(Function &&vFunction){
 // Min / Max
 //----------------------------------------------------------------------------
 template<typename Tx, typename Ty, typename Comparator = std::less<void>>
-constexpr auto Min(Tx x, Ty y){
+constexpr auto Min(Tx x, Ty y) noexcept {
 	static_assert(
 		std::is_scalar<Tx>::value && std::is_scalar<Ty>::value,
 		"Only scalar types are supported."
@@ -234,12 +234,12 @@ constexpr auto Min(Tx x, Ty y){
 	return Comparator()(x, y) ? x : y;
 }
 template<typename Tx, typename Ty, typename Comparator = std::less<void>, typename... More>
-constexpr auto Min(Tx &&x, Ty &&y, More &&... vMore){
+constexpr auto Min(Tx &&x, Ty &&y, More &&... vMore) noexcept {
 	return Min(Min(std::forward<Tx>(x), std::forward<Ty>(y)), std::forward<More>(vMore)...);
 }
 
 template<typename Tx, typename Ty, typename Comparator = std::less<void>>
-constexpr auto Max(Tx x, Ty y){
+constexpr auto Max(Tx x, Ty y) noexcept {
 	static_assert(
 		std::is_scalar<Tx>::value && std::is_scalar<Ty>::value,
 		"Only scalar types are supported."
@@ -252,7 +252,7 @@ constexpr auto Max(Tx x, Ty y){
 	return Comparator()(x, y) ? y : x;
 }
 template<typename Tx, typename Ty, typename Comparator = std::less<void>, typename... More>
-constexpr auto Max(Tx &&x, Ty &&y, More &&... vMore){
+constexpr auto Max(Tx &&x, Ty &&y, More &&... vMore) noexcept {
 	return Max(Max(std::forward<Tx>(x), std::forward<Ty>(y)), std::forward<More>(vMore)...);
 }
 
@@ -268,10 +268,17 @@ namespace Impl {
 
 // 我只能说 GCC 是个白痴！为什么要检查 placement new 的返回值是否为 nullptr？
 inline __attribute__((__returns_nonnull__))
-void *operator new(std::size_t, void *p, const ::MCF::Impl::DirectConstructTag &){
+void *operator new(
+	std::size_t, void *p,
+	const ::MCF::Impl::DirectConstructTag &
+){
 	return p;
 }
-inline void operator delete(void *, void *, const ::MCF::Impl::DirectConstructTag &) noexcept {
+inline
+void operator delete(
+	void *, void *,
+	const ::MCF::Impl::DirectConstructTag &
+) noexcept {
 }
 
 namespace MCF {
@@ -297,7 +304,8 @@ namespace Impl {
 	friend class ::MCF::Impl::DirectConstructor<type>
 
 template<typename Object, typename... Params>
-inline __attribute__((__returns_nonnull__)) Object *Construct(Object *pObject, Params &&... vParams)
+inline __attribute__((__returns_nonnull__))
+Object *Construct(Object *pObject, Params &&... vParams)
 	noexcept(std::is_nothrow_constructible<Object, Params &&...>::value)
 {
 	return Impl::DirectConstructor<Object>::template Construct<Params &&...>(
@@ -707,21 +715,21 @@ namespace Impl {
 	template<std::size_t CUR, std::size_t END>
 	struct CallOnTupleHelper {
 		template<typename Function, typename... TupleParams, typename... Unpacked>
-		auto operator()(
+		static decltype(auto) Do(
 			Function &&vFunction, const std::tuple<TupleParams...> &vTuple,
 			const Unpacked &... vUnpacked
-		) const {
-			return CallOnTupleHelper<CUR + 1, END>()(
+		){
+			return CallOnTupleHelper<CUR + 1, END>::Do(
 				vFunction, vTuple,
 				vUnpacked..., std::get<CUR>(vTuple)
 			);
 		}
 		template<typename Function, typename... TupleParams, typename... Unpacked>
-		auto operator()(
+		static decltype(auto) Do(
 			Function &&vFunction, std::tuple<TupleParams...> &&vTuple,
 			Unpacked &&... vUnpacked
-		) const {
-			return CallOnTupleHelper<CUR + 1, END>()(
+		){
+			return CallOnTupleHelper<CUR + 1, END>::Do(
 				vFunction, std::move(vTuple),
 				std::move(vUnpacked)..., std::move(std::get<CUR>(vTuple))
 			);
@@ -730,39 +738,39 @@ namespace Impl {
 	template<std::size_t END>
 	struct CallOnTupleHelper<END, END> {
 		template<typename Function, typename... TupleParams, typename... Unpacked>
-		auto operator()(
+		static decltype(auto) Do(
 			Function &&vFunction, const std::tuple<TupleParams...> &,
 			const Unpacked &... vUnpacked
-		) const {
+		){
 			return vFunction(vUnpacked...);
 		}
 		template<typename Function, typename... TupleParams, typename... Unpacked>
-		auto operator()(
+		static decltype(auto) Do(
 			Function &&vFunction, std::tuple<TupleParams...> &&,
 			Unpacked &&... vUnpacked
-		) const {
+		){
 			return vFunction(std::move(vUnpacked)...);
 		}
 	};
 }
 
 template<typename Function, typename... Params>
-auto CallOnTuple(Function &&vFunction, const std::tuple<Params...> &vTuple)
+decltype(auto) CallOnTuple(Function &&vFunction, const std::tuple<Params...> &vTuple)
 	noexcept(noexcept(
 		std::declval<Function>()(std::declval<const Params &>()...)
 	))
 {
-	return Impl::CallOnTupleHelper<0u, sizeof...(Params)>()(
+	return Impl::CallOnTupleHelper<0u, sizeof...(Params)>::Do(
 		std::forward<Function>(vFunction), vTuple
 	);
 }
 template<typename Function, typename... Params>
-auto CallOnTuple(Function &&vFunction, std::tuple<Params...> &&vTuple)
+decltype(auto) CallOnTuple(Function &&vFunction, std::tuple<Params...> &&vTuple)
 	noexcept(noexcept(
 		std::declval<Function>()(std::declval<Params &&>()...)
 	))
 {
-	return Impl::CallOnTupleHelper<0u, sizeof...(Params)>()(
+	return Impl::CallOnTupleHelper<0u, sizeof...(Params)>::Do(
 		std::forward<Function>(vFunction), std::move(vTuple)
 	);
 }
@@ -774,7 +782,7 @@ auto MakeFromTuple(const std::tuple<Params...> &vTuple)
 		&& std::is_nothrow_move_constructible<Object>::value
 	))
 {
-	return Impl::CallOnTupleHelper<0u, sizeof...(Params)>()(
+	return Impl::CallOnTupleHelper<0u, sizeof...(Params)>::Do(
 		[](const Params &... vParams){
 			return Object(vParams...);
 		},
@@ -788,7 +796,7 @@ auto MakeFromTuple(std::tuple<Params...> &&vTuple)
 		&& std::is_nothrow_move_constructible<Object>::value
 	))
 {
-	return Impl::CallOnTupleHelper<0u, sizeof...(Params)>()(
+	return Impl::CallOnTupleHelper<0u, sizeof...(Params)>::Do(
 		[](Params &&... vParams){
 			return Object(std::move(vParams)...);
 		},
@@ -798,7 +806,7 @@ auto MakeFromTuple(std::tuple<Params...> &&vTuple)
 
 template<class Object, typename... Params>
 auto MakeUniqueFromTuple(const std::tuple<Params...> &vTuple){
-	return Impl::CallOnTupleHelper<0u, sizeof...(Params)>()(
+	return Impl::CallOnTupleHelper<0u, sizeof...(Params)>::Do(
 		[](const Params &... vParams){
 			return std::make_unique<Object>(vParams...);
 		},
@@ -807,7 +815,7 @@ auto MakeUniqueFromTuple(const std::tuple<Params...> &vTuple){
 }
 template<class Object, typename... Params>
 auto MakeUniqueFromTuple(std::tuple<Params...> &&vTuple){
-	return Impl::CallOnTupleHelper<0u, sizeof...(Params)>()(
+	return Impl::CallOnTupleHelper<0u, sizeof...(Params)>::Do(
 		[](Params &&... vParams){
 			return std::make_unique<Object>(std::move(vParams)...);
 		},
@@ -817,7 +825,7 @@ auto MakeUniqueFromTuple(std::tuple<Params...> &&vTuple){
 
 template<class Object, typename... Params>
 auto MakeSharedFromTuple(const std::tuple<Params...> &vTuple){
-	return Impl::CallOnTupleHelper<0u, sizeof...(Params)>()(
+	return Impl::CallOnTupleHelper<0u, sizeof...(Params)>::Do(
 		[](const Params &... vParams){
 			return std::make_shared<Object>(vParams...);
 		},
@@ -826,7 +834,7 @@ auto MakeSharedFromTuple(const std::tuple<Params...> &vTuple){
 }
 template<class Object, typename... Params>
 auto MakeSharedFromTuple(std::tuple<Params...> &&vTuple){
-	return Impl::CallOnTupleHelper<0u, sizeof...(Params)>()(
+	return Impl::CallOnTupleHelper<0u, sizeof...(Params)>::Do(
 		[](Params &&... vParams){
 			return std::make_shared<Object>(std::move(vParams)...);
 		},

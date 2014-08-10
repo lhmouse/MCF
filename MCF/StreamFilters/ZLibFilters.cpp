@@ -279,7 +279,7 @@ public:
 // ========== ZLibEncoder ==========
 // 静态成员函数。
 ZLibEncoder::ZLibEncoder(bool bRaw, unsigned int uLevel)
-	: xm_pDelegate(new xDelegate(*this, bRaw, uLevel))
+	: xm_pDelegate(std::make_unique<xDelegate>(*this, bRaw, uLevel))
 {
 }
 ZLibEncoder::~ZLibEncoder() noexcept {
@@ -298,7 +298,7 @@ void ZLibEncoder::Finalize(){
 // ========== ZLibDecoder ==========
 // 静态成员函数。
 ZLibDecoder::ZLibDecoder(bool bRaw)
-	: xm_pDelegate(new xDelegate(*this, bRaw))
+	: xm_pDelegate(std::make_unique<xDelegate>(*this, bRaw))
 {
 }
 ZLibDecoder::~ZLibDecoder() noexcept {

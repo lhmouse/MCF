@@ -3,8 +3,7 @@
 // Copyleft 2013 - 2014, LH_Mouse. All wrongs reserved.
 
 #include "../StdMCF.hpp"
-#include "StreamBuffer.hpp"
-#include "../Core/Utilities.hpp"
+#include "../Core/StreamBuffer.hpp"
 #include <cstring>
 using namespace MCF;
 

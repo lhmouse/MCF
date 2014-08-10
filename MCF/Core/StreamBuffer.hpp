@@ -5,9 +5,9 @@
 #ifndef MCF_STREAM_BUFFER_HPP_
 #define MCF_STREAM_BUFFER_HPP_
 
-#include "../Core/Utilities.hpp"
-#include "VList.hpp"
-#include "VVector.hpp"
+#include "Utilities.hpp"
+#include "../Containers/VList.hpp"
+#include "../Containers/VVector.hpp"
 #include <forward_list>
 #include <functional>
 #include <iterator>

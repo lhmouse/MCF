@@ -7,7 +7,7 @@
 
 #include "File.hpp"
 #include "String.hpp"
-#include "../Containers/StreamBuffer.hpp"
+#include "../Core/StreamBuffer.hpp"
 
 namespace MCF {
 

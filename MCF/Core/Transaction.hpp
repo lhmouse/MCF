@@ -5,7 +5,7 @@
 #ifndef MCF_TRANSACTION_HPP_
 #define MCF_TRANSACTION_HPP_
 
-#include "Utilities.hpp"
+#include "../Utilities/Utilities.hpp"
 #include "../Containers/VVector.hpp"
 #include <memory>
 

@@ -6,7 +6,7 @@
 #define MCF_THREAD_LOCAL_PTR_HPP_
 
 #include "../../MCFCRT/env/thread.h"
-#include "../Core/Utilities.hpp"
+#include "../Utilities/Utilities.hpp"
 #include "../Core/UniqueHandle.hpp"
 #include <tuple>
 #include <exception>

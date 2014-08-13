@@ -290,7 +290,7 @@ void StreamBuffer::Insert(const void *pData, std::size_t uSize){
 		xm_lstBuffers.Push();
 	}
 
-ASSERT_NOEXCEPT_BEGIN
+STATIC_ASSERT_NOEXCEPT_BEGIN
 	auto pbyRead = (const unsigned char *)pData;
 	uRemaining = uSize;
 	while(uRemaining != 0){
@@ -299,7 +299,7 @@ ASSERT_NOEXCEPT_BEGIN
 		xm_uSize += pNode->GetElement().MoveIn(pbyRead, uRemaining);
 		pNode = pNode->GetNext();
 	}
-ASSERT_NOEXCEPT_END
+STATIC_ASSERT_NOEXCEPT_END
 }
 
 bool StreamBuffer::CutOut(StreamBuffer &sbufHead, std::size_t uSize){

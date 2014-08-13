@@ -4,7 +4,7 @@
 
 #include "../StdMCF.hpp"
 #include "Thunk.hpp"
-#include "Utilities.hpp"
+#include "../Utilities/Utilities.hpp"
 #include "../Containers/MultiIndexedMap.hpp"
 #include "../Thread/CriticalSection.hpp"
 #include <memory>
@@ -28,7 +28,7 @@ ThunkMap	g_mapThunks;
 
 struct ThunkDeallocator {
 	void operator()(const void *pThunk) const noexcept {
-		ASSERT_NOEXCEPT_BEGIN
+		STATIC_ASSERT_NOEXCEPT_BEGIN
 		{
 			auto vLock = g_pcsLock->GetLock();
 
@@ -81,7 +81,7 @@ struct ThunkDeallocator {
 				g_mapThunks.Erase(pCurrentThunk);
 			}
 		}
-		ASSERT_NOEXCEPT_END
+		STATIC_ASSERT_NOEXCEPT_END
 	}
 };
 
@@ -131,7 +131,7 @@ std::shared_ptr<const void> AllocateThunk(const void *pInit, std::size_t uSize){
 		}
 		ASSERT(pCached->GetIndex<1>() >= uThunkSize);
 
-		ASSERT_NOEXCEPT_BEGIN
+		STATIC_ASSERT_NOEXCEPT_BEGIN
 		{
 			const auto pbyThunk = (unsigned char *)pCached->GetIndex<0>();
 			const auto uSizeRemaining = pCached->GetIndex<1>() - uThunkSize;
@@ -161,7 +161,7 @@ std::shared_ptr<const void> AllocateThunk(const void *pInit, std::size_t uSize){
 			}
 			FORCE_NOEXCEPT_END
 		}
-		ASSERT_NOEXCEPT_END
+		STATIC_ASSERT_NOEXCEPT_END
 
 		pThunk.reset(pCached->GetIndex<0>(), ThunkDeallocator());
 	}

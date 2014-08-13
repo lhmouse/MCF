@@ -6,7 +6,7 @@
 #define MCF_READER_WRITER_LOCK_HPP_
 
 #include "_LockRaiiTemplate.hpp"
-#include "../Core/Utilities.hpp"
+#include "../Utilities/Utilities.hpp"
 #include <memory>
 
 namespace MCF {

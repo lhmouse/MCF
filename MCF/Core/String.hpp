@@ -7,7 +7,7 @@
 
 #include "StringObserver.hpp"
 #include "../Containers/VVector.hpp"
-#include "Utilities.hpp"
+#include "../Utilities/Utilities.hpp"
 #include <type_traits>
 #include <memory>
 #include <cstdint>
@@ -201,7 +201,7 @@ private:
 			pchNewBuffer = new Char[uSizeToAlloc];
 		}
 
-	ASSERT_NOEXCEPT_BEGIN
+	STATIC_ASSERT_NOEXCEPT_BEGIN
 		if(uRemovedBegin != 0){
 			std::memmove(pchNewBuffer + uFirstOffset, pchOldBuffer, uRemovedBegin * sizeof(Char));
 		}
@@ -222,7 +222,7 @@ private:
 		}
 
 		return pchNewBuffer + uFirstOffset + uRemovedBegin;
-	ASSERT_NOEXCEPT_END
+	STATIC_ASSERT_NOEXCEPT_END
 	}
 	void xSetSize(std::size_t uNewSize) noexcept {
 		ASSERT(uNewSize <= GetCapacity());
@@ -309,9 +309,16 @@ public:
 		}
 		return GetData();
 	}
+	Char *ResizeFront(std::size_t uDeltaSize){
+		const auto uOldSize = GetSize();
+		xChopAndSplice(uOldSize, uOldSize, uDeltaSize, uOldSize + uDeltaSize);
+		xSetSize(uOldSize + uDeltaSize);
+		return GetData();
+	}
 	Char *ResizeMore(std::size_t uDeltaSize){
 		const auto uOldSize = GetSize();
-		Resize(uOldSize + uDeltaSize);
+		xChopAndSplice(uOldSize, uOldSize, 0, uOldSize + uDeltaSize);
+		xSetSize(uOldSize + uDeltaSize);
 		return GetData() + uOldSize;
 	}
 	void Resize(std::size_t uNewSize, Char ch){
@@ -321,11 +328,6 @@ public:
 		} else if(uNewSize < uOldSize){
 			Truncate(uOldSize - uNewSize);
 		}
-	}
-	Char *ResizeMore(std::size_t uDeltaSize, Char ch){
-		const auto uOldSize = GetSize();
-		Resize(uOldSize + uDeltaSize, ch);
-		return GetData() + uOldSize;
 	}
 	void Shrink() noexcept {
 		Resize(Observer(GetStr()).GetLength());

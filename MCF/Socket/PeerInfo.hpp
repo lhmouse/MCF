@@ -5,7 +5,7 @@
 #ifndef MCF_PEER_INFO_HPP_
 #define MCF_PEER_INFO_HPP_
 
-#include "../Core/Utilities.hpp"
+#include "../Utilities/Utilities.hpp"
 #include <cstdint>
 
 namespace MCF {

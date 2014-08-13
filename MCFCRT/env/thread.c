@@ -315,7 +315,7 @@ bool MCF_CRT_TlsGet(void *pTlsKey, intptr_t *pnValue){
 	return bRet;
 }
 
-static int TlsExchange(
+static MCF_TLS_EXCHANGE_RESULT TlsExchange(
 	void *pTlsKey,
 	void (__cdecl **ppfnCallback)(intptr_t),
 	intptr_t *pnOldValue,
@@ -323,7 +323,7 @@ static int TlsExchange(
 ){
 	TLS_KEY *const pKey = pTlsKey;
 	if(!pKey){
-		return false;
+		return MCF_TLSXCH_FAILED;
 	}
 
 #ifndef NDEBUG
@@ -343,7 +343,7 @@ static int TlsExchange(
 	if(!pMap){
 		pMap = malloc(sizeof(TLS_MAP));
 		if(!pMap){
-			return 0;
+			return MCF_TLSXCH_FAILED;
 		}
 		const SRWLOCK vLockInit = SRWLOCK_INIT;
 		pMap->srwLock		= vLockInit;
@@ -365,7 +365,7 @@ static int TlsExchange(
 		TlsSetValue(g_dwTlsIndex, pMap);
 	}
 
-	int nRet;
+	MCF_TLS_EXCHANGE_RESULT eRet;
 
 	AcquireSRWLockExclusive(&(pMap->srwLock));
 	{
@@ -410,7 +410,7 @@ static int TlsExchange(
 
 			pObject->nValue	= nNewValue;
 
-			nRet = 1;
+			eRet = MCF_TLSXCH_OLD_VAL_RETURNED;
 		} else {
 			ReleaseSRWLockExclusive(&(pMap->srwLock));
 			{
@@ -430,7 +430,7 @@ static int TlsExchange(
 			}
 			AcquireSRWLockExclusive(&(pMap->srwLock));
 
-			nRet = 2;
+			eRet = MCF_TLSXCH_NEW_VAL_SET;
 		}
 
 		AcquireSRWLockExclusive(&g_srwLock);
@@ -455,25 +455,25 @@ static int TlsExchange(
 	}
 	ReleaseSRWLockExclusive(&(pMap->srwLock));
 
-	return nRet;
+	return eRet;
 }
 
 bool MCF_CRT_TlsReset(void *pTlsKey, intptr_t nNewValue){
 	void (__cdecl *pfnCallback)(intptr_t) = NULL;
 	intptr_t nOldValue = 0;
 	switch(TlsExchange(pTlsKey, &pfnCallback, &nOldValue, nNewValue)){
-	case 1:
+	case MCF_TLSXCH_OLD_VAL_RETURNED:
 		if(pfnCallback){
 			(*pfnCallback)(nOldValue);
 		}
-	case 2:
+	case MCF_TLSXCH_NEW_VAL_SET:
 		return true;
 
 	default:
 		return false;
 	}
 }
-int MCF_CRT_TlsExchange(void *pTlsKey, intptr_t *pnOldValue, intptr_t nNewValue){
+MCF_TLS_EXCHANGE_RESULT MCF_CRT_TlsExchange(void *pTlsKey, intptr_t *pnOldValue, intptr_t nNewValue){
 	return TlsExchange(pTlsKey, NULL, pnOldValue, nNewValue);
 }
 

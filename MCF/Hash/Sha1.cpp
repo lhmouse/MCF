@@ -4,7 +4,7 @@
 
 #include "../StdMCF.hpp"
 #include "Sha1.hpp"
-#include "../Core/Utilities.hpp"
+#include "../Utilities/Utilities.hpp"
 using namespace MCF;
 
 namespace {
@@ -352,5 +352,5 @@ void Sha1::Finalize(unsigned char (&abyOutput)[20]) noexcept {
 
 		xm_bInited = false;
 	}
-	__builtin_memcpy(abyOutput, xm_auResult, sizeof(xm_auResult));
+	BCopy(abyOutput, xm_auResult);
 }

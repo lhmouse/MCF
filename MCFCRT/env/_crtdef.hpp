@@ -8,10 +8,6 @@
 #ifndef MCF_CRT_CRTDEF_HPP_
 #define MCF_CRT_CRTDEF_HPP_
 
-#ifndef NDEBUG
-#	define _GLIBCXX_DEBUG	1
-#endif
-
 #include "_crtdef.h"
 
 #endif

@@ -6,7 +6,7 @@
 #define MCF_MUTEX_HPP_
 
 #include "_LockRaiiTemplate.hpp"
-#include "../Core/Utilities.hpp"
+#include "../Utilities/Utilities.hpp"
 #include "../Core/String.hpp"
 #include <memory>
 

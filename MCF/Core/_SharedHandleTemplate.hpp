@@ -6,7 +6,7 @@
 #define MCF_SHARED_HANDLE_IMPL_HPP_
 
 #include "UniqueHandle.hpp"
-#include "Utilities.hpp"
+#include "../Utilities/Utilities.hpp"
 
 namespace MCF {
 
@@ -317,7 +317,7 @@ namespace Impl {
 				return;
 			}
 
-		ASSERT_NOEXCEPT_BEGIN
+		STATIC_ASSERT_NOEXCEPT_BEGIN
 			if(WeakHandle::xm_pNode){
 				if(WeakHandle::xm_pNode->m_rcStrong.Decrement() == 0){
 					WeakHandle::xm_pNode->m_hObject.Reset();
@@ -330,7 +330,7 @@ namespace Impl {
 				}
 				WeakHandle::xm_pNode = nullptr;
 			}
-		ASSERT_NOEXCEPT_END
+		STATIC_ASSERT_NOEXCEPT_END
 
 			WeakHandle::xm_pNode = new xSharedNode(std::move(rhs));
 		}

@@ -5,7 +5,7 @@
 #ifndef MCF_LOCK_RAII_TEMPLATE_HPP_
 #define MCF_LOCK_RAII_TEMPLATE_HPP_
 
-#include "../Core/Utilities.hpp"
+#include "../Utilities/Utilities.hpp"
 #include <cstddef>
 
 namespace MCF {

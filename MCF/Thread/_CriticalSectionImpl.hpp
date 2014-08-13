@@ -7,7 +7,7 @@
 
 #include "Thread.hpp"
 #include "_WinHandle.hpp"
-#include "../Core/Utilities.hpp"
+#include "../Utilities/Utilities.hpp"
 #include "../Core/Exception.hpp"
 
 namespace MCF {

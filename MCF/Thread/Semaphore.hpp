@@ -5,7 +5,7 @@
 #ifndef MCF_SEMAPHORE_HPP_
 #define MCF_SEMAPHORE_HPP_
 
-#include "../Core/Utilities.hpp"
+#include "../Utilities/Utilities.hpp"
 #include "../Core/String.hpp"
 #include <memory>
 

@@ -6,7 +6,7 @@
 #define MCF_STREAM_FILTER_BASE_HPP_
 
 #include "../Core/StreamBuffer.hpp"
-#include "../Core/Utilities.hpp"
+#include "../Utilities/Utilities.hpp"
 #include <functional>
 #include <cstddef>
 #include <cstdint>

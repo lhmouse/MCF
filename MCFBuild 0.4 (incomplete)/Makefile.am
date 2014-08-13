@@ -1,9 +1,9 @@
 AUTOMAKE_OPTIONS=foreign subdir-objects
 
 AM_CFLAGS=-std=c11 -Wall -Wextra -Wsign-conversion -Wsuggest-attribute=noreturn -pipe	\
-	-mfpmath=sse,387 -march=core2 -masm=intel
+	-mfpmath=both -march=nocona -masm=intel
 AM_CXXFLAGS=-std=c++14 -Wall -Wextra -Wsign-conversion -Wsuggest-attribute=noreturn -pipe	\
-	-mfpmath=sse,387 -march=core2 -masm=intel -Wnoexcept
+	-mfpmath=both -march=nocona -masm=intel -Wnoexcept
 
 noinst_LIBRARIES=	\
 	lib/libmcflite.a

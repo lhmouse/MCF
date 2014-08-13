@@ -6,7 +6,7 @@
 #include "Message.hpp"
 #include "../Containers/MultiIndexedMap.hpp"
 #include "../Containers/VVector.hpp"
-#include "Utilities.hpp"
+#include "../Utilities/Utilities.hpp"
 #include "../Thread/ReaderWriterLock.hpp"
 #include <memory>
 using namespace MCF;
@@ -41,30 +41,26 @@ public:
 		xm_pfnProc = pNewHandler->get();
 	}
 	~HandlerHolder() noexcept {
-		ASSERT_NOEXCEPT_BEGIN
-		{
-			const auto vLock = g_pLock->GetWriterLock();
+		const auto vLock = g_pLock->GetWriterLock();
 
-			auto pNode = g_mapHandlerVector.Find<0>(*xm_pu8csName);
-			ASSERT(pNode);
+		auto pNode = g_mapHandlerVector.Find<0>(*xm_pu8csName);
+		ASSERT(pNode);
 
-			auto &vecHandlers = pNode->GetElement();
+		auto &vecHandlers = pNode->GetElement();
 
-			const auto ppfnEnd = vecHandlers.GetEnd();
-			auto ppfnCur = ppfnEnd;
-			for(;;){
-				ASSERT(ppfnCur != vecHandlers.GetBegin());
+		const auto ppfnEnd = vecHandlers.GetEnd();
+		auto ppfnCur = ppfnEnd;
+		for(;;){
+			ASSERT(ppfnCur != vecHandlers.GetBegin());
 
-				--ppfnCur;
-				if(ppfnCur->get() == xm_pfnProc){
-					break;
-				}
+			--ppfnCur;
+			if(ppfnCur->get() == xm_pfnProc){
+				break;
 			}
-
-			Move(ppfnCur, ppfnCur + 1, ppfnEnd);
-			vecHandlers.Pop();
 		}
-		ASSERT_NOEXCEPT_END
+
+		Move(ppfnCur, ppfnCur + 1, ppfnEnd);
+		vecHandlers.Pop();
 	}
 };
 

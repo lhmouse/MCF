@@ -4,7 +4,7 @@
 
 #include "../StdMCF.hpp"
 #include "Sha256.hpp"
-#include "../Core/Utilities.hpp"
+#include "../Utilities/Utilities.hpp"
 using namespace MCF;
 
 namespace {
@@ -976,5 +976,5 @@ void Sha256::Finalize(unsigned char (&abyOutput)[32]) noexcept {
 
 		xm_bInited = false;
 	}
-	__builtin_memcpy(abyOutput, xm_auResult, sizeof(xm_auResult));
+	BCopy(abyOutput, xm_auResult);
 }

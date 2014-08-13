@@ -8,7 +8,7 @@
 #include "PeerInfo.hpp"
 #include "_SocketUtils.hpp"
 #include "../Core/Exception.hpp"
-#include "../Core/Utilities.hpp"
+#include "../Utilities/Utilities.hpp"
 #include "../Core/Time.hpp"
 using namespace MCF;
 

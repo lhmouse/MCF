@@ -5,7 +5,7 @@
 #ifndef MCF_TCP_PEER_HPP_
 #define MCF_TCP_PEER_HPP_
 
-#include "../Core/Utilities.hpp"
+#include "../Utilities/Utilities.hpp"
 #include <memory>
 #include <cstddef>
 

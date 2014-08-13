@@ -14,6 +14,7 @@
 #include <utility>
 #include <cstddef>
 #include <cstdint>
+#include <climits>
 
 namespace MCF {
 
@@ -33,7 +34,7 @@ namespace Impl {
 //----------------------------------------------------------------------------
 // BITS_OF
 //----------------------------------------------------------------------------
-#define BITS_OF(x)		(sizeof(x) * __CHAR_BIT__)
+#define BITS_OF(x)		(sizeof(x) * CHAR_BIT)
 
 //----------------------------------------------------------------------------
 // NO_COPY

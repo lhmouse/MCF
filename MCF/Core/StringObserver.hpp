@@ -6,7 +6,7 @@
 #define MCF_STRING_OBSERVER_HPP_
 
 #include "../Containers/VVector.hpp"
-#include "Utilities.hpp"
+#include "../Utilities/Utilities.hpp"
 #include <algorithm>
 #include <utility>
 #include <iterator>
@@ -52,7 +52,10 @@ private:
 	}
 
 	template<typename Iterator>
-	static std::size_t xFindRep(const Iterator &itBegin, const Iterator &itEnd, Char chToFind, std::size_t uRepCount) noexcept {
+	static std::size_t xFindRep(
+		Iterator itBegin, typename std::common_type<Iterator>::type itEnd,
+		Char chToFind, std::size_t uRepCount
+	) noexcept {
 		ASSERT(uRepCount != 0);
 		ASSERT((std::size_t)(itEnd - itBegin) >= uRepCount);
 
@@ -80,10 +83,9 @@ private:
 
 	template<typename Iterator>
 	static std::size_t xKmpSearch(
-		const Iterator &itBegin,
-		const Iterator &itEnd,
-		const Iterator &itToFindBegin,
-		const Iterator &itToFindEnd
+		Iterator itBegin, typename std::common_type<Iterator>::type itEnd,
+		typename std::common_type<Iterator>::type itToFindBegin,
+		typename std::common_type<Iterator>::type itToFindEnd
 	) noexcept {
 		ASSERT(itToFindEnd >= itToFindBegin);
 		ASSERT(itEnd - itBegin >= itToFindEnd - itToFindBegin);

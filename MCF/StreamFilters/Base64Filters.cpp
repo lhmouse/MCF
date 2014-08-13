@@ -4,7 +4,7 @@
 
 #include "../StdMCF.hpp"
 #include "Base64Filters.hpp"
-#include "../Core/Utilities.hpp"
+#include "../Utilities/Utilities.hpp"
 using namespace MCF;
 
 // ========== Base64Encoder ==========

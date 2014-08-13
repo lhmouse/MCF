@@ -4,7 +4,7 @@
 
 #include "../StdMCF.hpp"
 #include "Md5.hpp"
-#include "../Core/Utilities.hpp"
+#include "../Utilities/Utilities.hpp"
 using namespace MCF;
 
 namespace {
@@ -409,5 +409,5 @@ void Md5::Finalize(unsigned char (&abyOutput)[16]) noexcept {
 
 		xm_bInited = false;
 	}
-	__builtin_memcpy(abyOutput, xm_auResult, sizeof(xm_auResult));
+	BCopy(abyOutput, xm_auResult);
 }

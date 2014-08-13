@@ -5,7 +5,7 @@
 #ifndef MCF_EVENT_HPP_
 #define MCF_EVENT_HPP_
 
-#include "../Core/Utilities.hpp"
+#include "../Utilities/Utilities.hpp"
 #include "../Core/String.hpp"
 #include <memory>
 

@@ -6,7 +6,7 @@
 #include "PeerInfo.hpp"
 #include "_SocketUtils.hpp"
 #include "../Core/Exception.hpp"
-#include "../Core/Utilities.hpp"
+#include "../Utilities/Utilities.hpp"
 using namespace MCF;
 
 namespace {
@@ -133,7 +133,7 @@ int PeerInfo::ToSockAddr(void *pSockAddr, std::size_t uSockAddrSize) const noexc
 			return -(int)sizeof(SOCKADDR_IN);
 		}
 		auto &vSockAddrIn = *(SOCKADDR_IN *)pSockAddr;
-		std::memset(&vSockAddrIn, 0, sizeof(vSockAddrIn));
+		BZero(vSockAddrIn);
 		vSockAddrIn.sin_family = AF_INET;
 		BCopy(vSockAddrIn.sin_port, xm_u16Port);
 		BCopy(vSockAddrIn.sin_addr, xm_au8IPv4);
@@ -143,7 +143,7 @@ int PeerInfo::ToSockAddr(void *pSockAddr, std::size_t uSockAddrSize) const noexc
 			return -(int)sizeof(SOCKADDR_IN6);
 		}
 		auto &vSockAddrIn6 = *(SOCKADDR_IN6 *)pSockAddr;
-		std::memset(&vSockAddrIn6, 0, sizeof(vSockAddrIn6));
+		BZero(vSockAddrIn6);
 		vSockAddrIn6.sin6_family = AF_INET6;
 		BCopy(vSockAddrIn6.sin6_port, xm_u16Port);
 		BCopy(vSockAddrIn6.sin6_addr, xm_au16IPv6);

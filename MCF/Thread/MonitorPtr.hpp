@@ -6,7 +6,7 @@
 #define MCF_MONITOR_PTR_HPP_
 
 #include "CriticalSection.hpp"
-#include "../Core/Utilities.hpp"
+#include "../Utilities/Utilities.hpp"
 #include <utility>
 #include <type_traits>
 #include <memory>

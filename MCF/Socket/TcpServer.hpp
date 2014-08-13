@@ -5,7 +5,7 @@
 #ifndef MCF_TCP_SERVER_HPP_
 #define MCF_TCP_SERVER_HPP_
 
-#include "../Core/Utilities.hpp"
+#include "../Utilities/Utilities.hpp"
 #include <memory>
 
 namespace MCF {

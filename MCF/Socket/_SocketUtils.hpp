@@ -8,7 +8,7 @@
 #include "../Core/UniqueHandle.hpp"
 #include "../Core/SharedHandle.hpp"
 #include "../Core/Exception.hpp"
-#include "../Core/Utilities.hpp"
+#include "../Utilities/Utilities.hpp"
 #include <winsock2.h>
 #include <ws2tcpip.h>
 

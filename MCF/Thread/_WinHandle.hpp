@@ -7,7 +7,7 @@
 
 #include "../Core/UniqueHandle.hpp"
 #include "../Core/SharedHandle.hpp"
-#include "../Core/Utilities.hpp"
+#include "../Utilities/Utilities.hpp"
 #include <cstddef>
 #include <winnt.h>
 

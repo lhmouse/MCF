@@ -5,7 +5,7 @@
 #ifndef MCF_V_LIST_HPP_
 #define MCF_V_LIST_HPP_
 
-#include "../Core/Utilities.hpp"
+#include "../Utilities/Utilities.hpp"
 #include <initializer_list>
 #include <type_traits>
 #include <utility>
@@ -215,8 +215,17 @@ public:
 
 		return pNode;
 	}
-	Node *Erase(Node *pPos) noexcept {
-		return Erase(pPos, pPos->xm_pNext);
+	Node *Erase(Node *pNode) noexcept {
+		const auto pNext = pNode->xm_pNext;
+
+		const auto pOldPrev = pNode->xm_pPrev;
+		(pOldPrev ? pOldPrev->xm_pNext : xm_pFirst) = pNext;
+		(pNext ? pNext->xm_pPrev : xm_pLast) = pOldPrev;
+
+		Destruct(&(pNode->GetElement()));
+		xEnpool(pNode);
+
+		return pNext;
 	}
 	Node *Erase(Node *pBegin, Node *pEnd) noexcept {
 		if(pBegin != pEnd){
@@ -227,7 +236,9 @@ public:
 			do {
 				const auto pNode = pBegin;
 				pBegin = pBegin->xm_pNext;
-				delete pNode;
+
+				Destruct(&(pNode->GetElement()));
+				xEnpool(pNode);
 			} while(pBegin != pEnd);
 		}
 		return pEnd;

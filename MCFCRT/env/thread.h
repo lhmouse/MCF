@@ -25,9 +25,18 @@ extern bool MCF_CRT_TlsFreeKey(void *pTlsKey) MCF_NOEXCEPT;
 extern bool MCF_CRT_TlsGet(void *pTlsKey, MCF_STD intptr_t *pnValue) MCF_NOEXCEPT;
 // 触发回调。
 extern bool MCF_CRT_TlsReset(void *pTlsKey, MCF_STD intptr_t nNewValue) MCF_NOEXCEPT;
+
+typedef enum tagMCFTlsExchangeResult {
+	MCF_TLSXCH_FAILED,				// 失败（例如 key 无效）。
+	MCF_TLSXCH_OLD_VAL_RETURNED,	// *pnOldValue 返回旧值。
+	MCF_TLSXCH_NEW_VAL_SET,			// 旧值未设定。
+} MCF_TLS_EXCHANGE_RESULT;
+
 // 不触发回调。pnOldValue 不得为空。
-// 返回 0 若失败，返回 1 若旧值有效且已被替换，返回 2 若新值被设定但旧值未定义。
-extern int MCF_CRT_TlsExchange(void *pTlsKey, MCF_STD intptr_t *pnOldValue, MCF_STD intptr_t nNewValue) MCF_NOEXCEPT;
+extern MCF_TLS_EXCHANGE_RESULT MCF_CRT_TlsExchange(
+	void *pTlsKey,
+	MCF_STD intptr_t *pnOldValue, MCF_STD intptr_t nNewValue
+) MCF_NOEXCEPT;
 
 // 返回的是 HANDLE。
 extern void *MCF_CRT_CreateThread(

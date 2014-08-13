@@ -273,7 +273,93 @@ void MCF_AvlAttach(
 	if(!pParent){
 		pNode->pPrev = NULL;
 		pNode->pNext = NULL;
-	} else if(ppIns == &(pParent->pLeft)){
+	} else {
+		if(ppIns == &(pParent->pLeft)){
+			MCF_AVL_NODE_HEADER *const pPrev = pParent->pPrev;
+			pNode->pPrev = pPrev;
+			pNode->pNext = pParent;
+			pParent->pPrev = pNode;
+			if(pPrev){
+				pPrev->pNext = pNode;
+			}
+		} else {
+			MCF_AVL_NODE_HEADER *const pNext = pParent->pNext;
+			pNode->pPrev = pParent;
+			pNode->pNext = pNext;
+			if(pNext){
+				pNext->pPrev = pNode;
+			}
+			pParent->pNext = pNode;
+		}
+		if(pParent){
+			UpdateRecur(pParent);
+		}
+	}
+}
+
+void MCF_AvlAttachHint(
+	MCF_AVL_ROOT *ppRoot,
+	MCF_AVL_NODE_HEADER *pHint,
+	MCF_AVL_NODE_HEADER *pNode,
+	MCF_AVL_COMPARATOR_NODES pfnComparator
+){
+	if(!pHint){
+		MCF_AvlAttach(ppRoot, pNode, pfnComparator);
+		return;
+	}
+
+	MCF_AVL_NODE_HEADER *pParent = NULL;
+	MCF_AVL_NODE_HEADER **ppIns = NULL;
+	if((*pfnComparator)(pNode, pHint)){
+		MCF_AVL_NODE_HEADER *const pPrev = pHint->pPrev;
+		if(pPrev){
+			// 条件：	node		<	hint
+			//			hint->prev	<=	node
+			if(!(*pfnComparator)(pNode, pPrev)){
+				ASSERT(!pPrev->pRight);
+
+				pParent = pPrev;
+				ppIns = &(pPrev->pRight);
+			}
+		} else {
+			ASSERT(!pHint->pLeft);
+
+			pParent = pHint;
+			ppIns = &(pHint->pLeft);
+		}
+	} else {
+		MCF_AVL_NODE_HEADER *const pNext = pHint->pNext;
+		if(pNext){
+			// 条件：	hint	<=	node
+			//			node	<	hint->next
+			if((*pfnComparator)(pNode, pNext)){
+				ASSERT(!pNext->pLeft);
+
+				pParent = pNext;
+				ppIns = &(pNext->pLeft);
+			}
+		} else {
+			ASSERT(!pHint->pRight);
+
+			pParent = pHint;
+			ppIns = &(pHint->pRight);
+		}
+	}
+
+	if(!pParent){
+		MCF_AvlAttach(ppRoot, pNode, pfnComparator);
+		return;
+	}
+
+	*ppIns = pNode;
+
+	pNode->pParent	= pParent;
+	pNode->ppRefl	= ppIns;
+	pNode->pLeft	= NULL;
+	pNode->pRight	= NULL;
+	pNode->uHeight	= 1;
+
+	if(ppIns == &(pParent->pLeft)){
 		MCF_AVL_NODE_HEADER *const pPrev = pParent->pPrev;
 		pNode->pPrev = pPrev;
 		pNode->pNext = pParent;
@@ -291,9 +377,7 @@ void MCF_AvlAttach(
 		pParent->pNext = pNode;
 	}
 
-	if(pParent){
-		UpdateRecur(pParent);
-	}
+	UpdateRecur(pParent);
 }
 
 void MCF_AvlDetach(

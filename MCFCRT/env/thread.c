@@ -369,13 +369,34 @@ static MCF_TLS_EXCHANGE_RESULT TlsExchange(
 
 	AcquireSRWLockExclusive(&(pMap->srwLock));
 	{
-		TLS_OBJECT *pObject = (TLS_OBJECT *)MCF_AvlFind(
+		TLS_OBJECT *pObject = (TLS_OBJECT *)MCF_AvlLowerBound(
 			&(pMap->pavlObjects),
 			(intptr_t)pKey,
-			&ObjectComparatorNodeKey,
-			&ObjectComparatorKeyNode
+			&ObjectComparatorNodeKey
 		);
-		if(pObject){
+		if(!pObject || (pObject->pKey != pKey)){
+			ReleaseSRWLockExclusive(&(pMap->srwLock));
+			{
+				const TLS_OBJECT *const pHint = pObject;
+				pObject = malloc(sizeof(TLS_OBJECT));
+				if(!pObject){
+					return false;
+				}
+				pObject->pMap	= pMap;
+				pObject->pKey	= pKey;
+				pObject->nValue	= nNewValue;
+
+				MCF_AvlAttachHint(
+					&(pMap->pavlObjects),
+					(MCF_AVL_NODE_HEADER *)pHint,
+					(MCF_AVL_NODE_HEADER *)pObject,
+					&ObjectComparatorNodes
+				);
+			}
+			AcquireSRWLockExclusive(&(pMap->srwLock));
+
+			eRet = MCF_TLSXCH_NEW_VAL_SET;
+		} else {
 			ASSERT(pObject->pMap == pMap);
 			ASSERT(pObject->pKey == pKey);
 
@@ -411,26 +432,6 @@ static MCF_TLS_EXCHANGE_RESULT TlsExchange(
 			pObject->nValue	= nNewValue;
 
 			eRet = MCF_TLSXCH_OLD_VAL_RETURNED;
-		} else {
-			ReleaseSRWLockExclusive(&(pMap->srwLock));
-			{
-				pObject = malloc(sizeof(TLS_OBJECT));
-				if(!pObject){
-					return false;
-				}
-				pObject->pMap	= pMap;
-				pObject->pKey	= pKey;
-				pObject->nValue	= nNewValue;
-
-				MCF_AvlAttach(
-					&(pMap->pavlObjects),
-					(MCF_AVL_NODE_HEADER *)pObject,
-					&ObjectComparatorNodes
-				);
-			}
-			AcquireSRWLockExclusive(&(pMap->srwLock));
-
-			eRet = MCF_TLSXCH_NEW_VAL_SET;
 		}
 
 		AcquireSRWLockExclusive(&g_srwLock);

@@ -305,6 +305,7 @@ private:
 	template<std::size_t INDEX>
 	void xAttach(
 		Node *pNode,
+		Node *pHint,
 		typename std::enable_if<
 			!std::is_same<
 				typename std::tuple_element<INDEX, std::tuple<Indices...>>::type, SequenceIndex
@@ -312,9 +313,11 @@ private:
 			>::type = 0
 	) noexcept {
 		const auto pAvl = pNode->xm_aHeaders + INDEX;
+		const auto pHintAvl = pHint ? (pHint->xm_aHeaders + INDEX) : nullptr;
 
-		::MCF_AvlAttach(
+		::MCF_AvlAttachHint(
 			&(xm_aNodes[INDEX].pRoot),
+			pHintAvl,
 			pAvl,
 			&(xComparators<INDEX>::Nodes)
 		);
@@ -350,6 +353,7 @@ private:
 	template<std::size_t INDEX>
 	void xAttach(
 		Node *pNode,
+		Node *pHint,
 		typename std::enable_if<
 			std::is_same<
 				typename std::tuple_element<INDEX, std::tuple<Indices...>>::type, SequenceIndex
@@ -357,6 +361,7 @@ private:
 			>::type = 0
 	) noexcept {
 		const auto pAvl = pNode->xm_aHeaders + INDEX;
+		(void)pHint;
 
 		auto &pLast = xm_aNodes[INDEX].pLast;
 		pAvl->pPrev = pLast;
@@ -400,13 +405,15 @@ private:
 	template<std::size_t INDEX>
 	void xAttachRecur(
 		Node *pNode,
+		Node *pHint,
 		typename std::enable_if<(INDEX < sizeof...(Indices)), int>::type = 0
 	) noexcept {
-		xAttach<INDEX>(pNode);
-		xAttachRecur<INDEX + 1>(pNode);
+		xAttach<INDEX>(pNode, pHint);
+		xAttachRecur<INDEX + 1>(pNode, pHint);
 	}
 	template<std::size_t INDEX>
 	void xAttachRecur(
+		Node *,
 		Node *,
 		typename std::enable_if<(INDEX == sizeof...(Indices)), int>::type = 0
 	) noexcept {
@@ -438,6 +445,7 @@ private:
 		const MCF_AVL_ROOT &pavlAllocatedNodes,
 		typename std::enable_if<(INDEX < sizeof...(Indices)), int>::type = 0
 	) noexcept {
+		Node *pHint = nullptr;
 		for(auto pSrc = pSrcNodes[INDEX].pFirst; pSrc; pSrc = ::MCF_AvlNext(pSrc)){
 			const auto pNewAvl = ::MCF_AvlFind(
 				&pavlAllocatedNodes,
@@ -447,7 +455,9 @@ private:
 			);
 			ASSERT(pNewAvl);
 
-			xAttach<INDEX>(DOWN_CAST(Node, xm_vReservedHeader, pNewAvl));
+			const auto pNode = DOWN_CAST(Node, xm_vReservedHeader, pNewAvl);
+			xAttach<INDEX>(pNode, pHint);
+			pHint = pNode;
 		}
 		xCloneTreeRecur<INDEX + 1>(pSrcNodes, pavlAllocatedNodes);
 	}
@@ -462,8 +472,12 @@ private:
 public:
 	template<typename... Params>
 	Node *Insert(Params &&... vParams){
+		return InsertHint(nullptr, std::forward<Params>(vParams)...);
+	}
+	template<typename... Params>
+	Node *InsertHint(Node *pHint, Params &&... vParams){
 		const auto pNode = new Node(std::forward<Params>(vParams)...);
-		xAttachRecur<0>(pNode);
+		xAttachRecur<0>(pNode, pHint);
 		++xm_uSize;
 		return pNode;
 	}
@@ -520,9 +534,9 @@ public:
 		xDetach<INDEX>(pNode);
 		try {
 			std::get<INDEX>(pNode->xm_vIndices) = std::move(vNewIndex);
-			xAttach<INDEX>(pNode);
+			xAttach<INDEX>(pNode, nullptr);
 		} catch(...){
-			xAttach<INDEX>(pNode);
+			xAttach<INDEX>(pNode, nullptr);
 			throw;
 		}
 	}

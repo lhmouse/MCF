@@ -116,11 +116,11 @@ void Model::InitParams(){
 						wcsMacroName.Resize(uEquPos);
 					}
 
-					auto pNode = xm_mapMacros.Find<0>(wcsMacroName);
-					if(pNode){
-						pNode->GetElement() = std::move(wcsMacroValue);
+					const auto pNode = xm_mapMacros.GetLowerBound<0>(wcsMacroName);
+					if(!pNode || (pNode->GetIndex<0>() != wcsMacroName)){
+						xm_mapMacros.InsertHint(pNode, std::move(wcsMacroValue), std::move(wcsMacroName));
 					} else {
-						pNode = xm_mapMacros.Insert(std::move(wcsMacroValue), std::move(wcsMacroName));
+						pNode->GetElement() = std::move(wcsMacroValue);
 					}
 				}
 				break;

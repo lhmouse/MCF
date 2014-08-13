@@ -31,13 +31,13 @@ lib_libmcflite_a_SOURCES=\
 	../MCF/Core/Utf8TextFile.cpp			\
 	../MCF/Core/System.cpp					\
 	../MCF/Core/Time.cpp					\
+	../MCF/Core/StreamBuffer.cpp			\
 	../MCF/Thread/Thread.cpp				\
 	../MCF/Thread/CriticalSection.cpp		\
 	../MCF/Thread/Semaphore.cpp				\
 	../MCF/Thread/ReaderWriterLock.cpp		\
 	../MCF/Language/Notation.cpp			\
-	../MCF/Hash/Sha256.cpp					\
-	../MCF/Containers/StreamBuffer.cpp
+	../MCF/Hash/Sha256.cpp
 
 lib_libmcflite_a_CFLAGS=\
 	$(AM_CFLAGS) -D__MCF_CRT_NO_DLMALLOC

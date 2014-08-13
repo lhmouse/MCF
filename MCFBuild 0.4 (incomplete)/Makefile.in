@@ -122,13 +122,13 @@ am_lib_libmcflite_a_OBJECTS =  \
 	../MCF/Core/String.$(OBJEXT) ../MCF/Core/File.$(OBJEXT) \
 	../MCF/Core/Utf8TextFile.$(OBJEXT) \
 	../MCF/Core/System.$(OBJEXT) ../MCF/Core/Time.$(OBJEXT) \
+	../MCF/Core/StreamBuffer.$(OBJEXT) \
 	../MCF/Thread/Thread.$(OBJEXT) \
 	../MCF/Thread/CriticalSection.$(OBJEXT) \
 	../MCF/Thread/Semaphore.$(OBJEXT) \
 	../MCF/Thread/ReaderWriterLock.$(OBJEXT) \
 	../MCF/Language/Notation.$(OBJEXT) \
-	../MCF/Hash/Sha256.$(OBJEXT) \
-	../MCF/Containers/StreamBuffer.$(OBJEXT)
+	../MCF/Hash/Sha256.$(OBJEXT)
 lib_libmcflite_a_OBJECTS = $(am_lib_libmcflite_a_OBJECTS)
 am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS)
@@ -322,10 +322,10 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 AUTOMAKE_OPTIONS = foreign subdir-objects
 AM_CFLAGS = -std=c11 -Wall -Wextra -Wsign-conversion -Wsuggest-attribute=noreturn -pipe	\
-	-mfpmath=sse,387 -march=core2 -masm=intel
+	-mfpmath=both -march=nocona -masm=intel
 
 AM_CXXFLAGS = -std=c++14 -Wall -Wextra -Wsign-conversion -Wsuggest-attribute=noreturn -pipe	\
-	-mfpmath=sse,387 -march=core2 -masm=intel -Wnoexcept
+	-mfpmath=both -march=nocona -masm=intel -Wnoexcept
 
 noinst_LIBRARIES = \
 	lib/libmcflite.a
@@ -353,13 +353,13 @@ lib_libmcflite_a_SOURCES = \
 	../MCF/Core/Utf8TextFile.cpp			\
 	../MCF/Core/System.cpp					\
 	../MCF/Core/Time.cpp					\
+	../MCF/Core/StreamBuffer.cpp			\
 	../MCF/Thread/Thread.cpp				\
 	../MCF/Thread/CriticalSection.cpp		\
 	../MCF/Thread/Semaphore.cpp				\
 	../MCF/Thread/ReaderWriterLock.cpp		\
 	../MCF/Language/Notation.cpp			\
-	../MCF/Hash/Sha256.cpp					\
-	../MCF/Containers/StreamBuffer.cpp
+	../MCF/Hash/Sha256.cpp
 
 lib_libmcflite_a_CFLAGS = \
 	$(AM_CFLAGS) -D__MCF_CRT_NO_DLMALLOC
@@ -518,6 +518,8 @@ clean-noinstLIBRARIES:
 	../MCF/Core/$(DEPDIR)/$(am__dirstamp)
 ../MCF/Core/Time.$(OBJEXT): ../MCF/Core/$(am__dirstamp) \
 	../MCF/Core/$(DEPDIR)/$(am__dirstamp)
+../MCF/Core/StreamBuffer.$(OBJEXT): ../MCF/Core/$(am__dirstamp) \
+	../MCF/Core/$(DEPDIR)/$(am__dirstamp)
 ../MCF/Thread/$(am__dirstamp):
 	@$(MKDIR_P) ../MCF/Thread
 	@: > ../MCF/Thread/$(am__dirstamp)
@@ -550,15 +552,6 @@ clean-noinstLIBRARIES:
 	@: > ../MCF/Hash/$(DEPDIR)/$(am__dirstamp)
 ../MCF/Hash/Sha256.$(OBJEXT): ../MCF/Hash/$(am__dirstamp) \
 	../MCF/Hash/$(DEPDIR)/$(am__dirstamp)
-../MCF/Containers/$(am__dirstamp):
-	@$(MKDIR_P) ../MCF/Containers
-	@: > ../MCF/Containers/$(am__dirstamp)
-../MCF/Containers/$(DEPDIR)/$(am__dirstamp):
-	@$(MKDIR_P) ../MCF/Containers/$(DEPDIR)
-	@: > ../MCF/Containers/$(DEPDIR)/$(am__dirstamp)
-../MCF/Containers/StreamBuffer.$(OBJEXT):  \
-	../MCF/Containers/$(am__dirstamp) \
-	../MCF/Containers/$(DEPDIR)/$(am__dirstamp)
 lib/$(am__dirstamp):
 	@$(MKDIR_P) lib
 	@: > lib/$(am__dirstamp)
@@ -639,7 +632,6 @@ MCFBuild$(EXEEXT): $(MCFBuild_OBJECTS) $(MCFBuild_DEPENDENCIES) $(EXTRA_MCFBuild
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
-	-rm -f ../MCF/Containers/*.$(OBJEXT)
 	-rm -f ../MCF/Core/*.$(OBJEXT)
 	-rm -f ../MCF/Hash/*.$(OBJEXT)
 	-rm -f ../MCF/Language/*.$(OBJEXT)
@@ -653,8 +645,8 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@../MCF/Containers/$(DEPDIR)/StreamBuffer.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@../MCF/Core/$(DEPDIR)/File.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@../MCF/Core/$(DEPDIR)/StreamBuffer.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@../MCF/Core/$(DEPDIR)/String.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@../MCF/Core/$(DEPDIR)/System.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@../MCF/Core/$(DEPDIR)/Time.Po@am__quote@
@@ -1204,8 +1196,6 @@ clean-generic:
 distclean-generic:
 	-test -z "$(CONFIG_CLEAN_FILES)" || rm -f $(CONFIG_CLEAN_FILES)
 	-test . = "$(srcdir)" || test -z "$(CONFIG_CLEAN_VPATH_FILES)" || rm -f $(CONFIG_CLEAN_VPATH_FILES)
-	-rm -f ../MCF/Containers/$(DEPDIR)/$(am__dirstamp)
-	-rm -f ../MCF/Containers/$(am__dirstamp)
 	-rm -f ../MCF/Core/$(DEPDIR)/$(am__dirstamp)
 	-rm -f ../MCF/Core/$(am__dirstamp)
 	-rm -f ../MCF/Hash/$(DEPDIR)/$(am__dirstamp)
@@ -1236,7 +1226,7 @@ clean-am: clean-binPROGRAMS clean-generic clean-noinstLIBRARIES \
 
 distclean: distclean-am
 	-rm -f $(am__CONFIG_DISTCLEAN_FILES)
-	-rm -rf ../MCF/Containers/$(DEPDIR) ../MCF/Core/$(DEPDIR) ../MCF/Hash/$(DEPDIR) ../MCF/Language/$(DEPDIR) ../MCF/Thread/$(DEPDIR) ../MCFCRT/env/$(DEPDIR) ../MCFCRT/exe/$(DEPDIR) ../MCFCRT/ext/$(DEPDIR) ../MCFCRT/stdc/stdlib/$(DEPDIR) src/$(DEPDIR)
+	-rm -rf ../MCF/Core/$(DEPDIR) ../MCF/Hash/$(DEPDIR) ../MCF/Language/$(DEPDIR) ../MCF/Thread/$(DEPDIR) ../MCFCRT/env/$(DEPDIR) ../MCFCRT/exe/$(DEPDIR) ../MCFCRT/ext/$(DEPDIR) ../MCFCRT/stdc/stdlib/$(DEPDIR) src/$(DEPDIR)
 	-rm -f Makefile
 distclean-am: clean-am distclean-compile distclean-generic \
 	distclean-tags
@@ -1284,7 +1274,7 @@ installcheck-am:
 maintainer-clean: maintainer-clean-am
 	-rm -f $(am__CONFIG_DISTCLEAN_FILES)
 	-rm -rf $(top_srcdir)/autom4te.cache
-	-rm -rf ../MCF/Containers/$(DEPDIR) ../MCF/Core/$(DEPDIR) ../MCF/Hash/$(DEPDIR) ../MCF/Language/$(DEPDIR) ../MCF/Thread/$(DEPDIR) ../MCFCRT/env/$(DEPDIR) ../MCFCRT/exe/$(DEPDIR) ../MCFCRT/ext/$(DEPDIR) ../MCFCRT/stdc/stdlib/$(DEPDIR) src/$(DEPDIR)
+	-rm -rf ../MCF/Core/$(DEPDIR) ../MCF/Hash/$(DEPDIR) ../MCF/Language/$(DEPDIR) ../MCF/Thread/$(DEPDIR) ../MCFCRT/env/$(DEPDIR) ../MCFCRT/exe/$(DEPDIR) ../MCFCRT/ext/$(DEPDIR) ../MCFCRT/stdc/stdlib/$(DEPDIR) src/$(DEPDIR)
 	-rm -f Makefile
 maintainer-clean-am: distclean-am maintainer-clean-generic
 

@@ -80,6 +80,16 @@ extern void MCF_AvlAttach(
 	MCF_AVL_COMPARATOR_NODES pfnComparator
 ) MCF_NOEXCEPT;
 
+extern void MCF_AvlAttachHint(
+	MCF_AVL_ROOT *ppRoot,
+	// 如果新节点被插入到该节点前后相邻的位置，则效率被优化。
+	// 此处行为和 C++03 C++11 都兼容。
+	// pHint 为空则调用 MCF_AvlAttach()。
+	MCF_AVL_NODE_HEADER *pHint,
+	MCF_AVL_NODE_HEADER *pNode,
+	MCF_AVL_COMPARATOR_NODES pfnComparator
+) MCF_NOEXCEPT;
+
 extern void MCF_AvlDetach(
 	const MCF_AVL_NODE_HEADER *pNode
 ) MCF_NOEXCEPT;

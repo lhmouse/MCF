@@ -29,9 +29,9 @@ public:
 	HandlerHolder(const Utf8StringObserver &u8soName, HandlerProc &&fnProc){
 		const auto vLock = g_pLock->GetWriterLock();
 
-		auto pNode = g_mapHandlerVector.Find<0>(u8soName);
-		if(!pNode){
-			pNode = g_mapHandlerVector.Insert(HandlerVector(), Utf8String(u8soName));
+		auto pNode = g_mapHandlerVector.GetLowerBound<0>(u8soName);
+		if(!pNode || (pNode->GetIndex<0>() != u8soName)){
+			pNode = g_mapHandlerVector.InsertHint(pNode, HandlerVector(), Utf8String(u8soName));
 		}
 
 		auto &vecHandlers = pNode->GetElement();

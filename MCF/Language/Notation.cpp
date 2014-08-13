@@ -207,19 +207,19 @@ NotationPackage *NotationPackage::GetPackage(const WideStringObserver &wsoName) 
 	return &(pNode->GetElement());
 }
 std::pair<NotationPackage *, bool> NotationPackage::CreatePackage(const WideStringObserver &wsoName){
-	auto pNode = xm_mapPackages.Find<0>(wsoName);
+	auto pNode = xm_mapPackages.GetLowerBound<0>(wsoName);
 	bool bNew = false;
-	if(!pNode){
-		pNode = xm_mapPackages.Insert(NotationPackage(), WideString(wsoName), SequenceIndex());
+	if(!pNode || (pNode->GetIndex<0>() != wsoName)){
+		pNode = xm_mapPackages.InsertHint(pNode, NotationPackage(), WideString(wsoName), SequenceIndex());
 		bNew = true;
 	}
 	return std::make_pair(&(pNode->GetElement()), bNew);
 }
 std::pair<NotationPackage *, bool> NotationPackage::CreatePackage(WideString wcsName){
-	auto pNode = xm_mapPackages.Find<0>(wcsName);
+	auto pNode = xm_mapPackages.GetLowerBound<0>(wcsName);
 	bool bNew = false;
-	if(!pNode){
-		pNode = xm_mapPackages.Insert(NotationPackage(), std::move(wcsName), SequenceIndex());
+	if(!pNode || (pNode->GetIndex<0>() != wcsName)){
+		pNode = xm_mapPackages.InsertHint(pNode, NotationPackage(), std::move(wcsName), SequenceIndex());
 		bNew = true;
 	}
 	return std::make_pair(&(pNode->GetElement()), bNew);
@@ -259,20 +259,20 @@ WideString *NotationPackage::GetValue(const WideStringObserver &wsoName) noexcep
 	return &(pNode->GetElement());
 }
 std::pair<WideString *, bool> NotationPackage::CreateValue(const WideStringObserver &wsoName, WideString wcsValue){
-	auto pNode = xm_mapValues.Find<0>(wsoName);
+	auto pNode = xm_mapValues.GetLowerBound<0>(wsoName);
 	bool bNew = false;
-	if(!pNode){
-		pNode = xm_mapValues.Insert(WideString(), WideString(wsoName), SequenceIndex());
+	if(!pNode || (pNode->GetIndex<0>() != wsoName)){
+		pNode = xm_mapValues.InsertHint(pNode, WideString(), WideString(wsoName), SequenceIndex());
 		bNew = true;
 	}
 	pNode->GetElement() = std::move(wcsValue);
 	return std::make_pair(&(pNode->GetElement()), bNew);
 }
 std::pair<WideString *, bool> NotationPackage::CreateValue(WideString wcsName, WideString wcsValue){
-	auto pNode = xm_mapValues.Find<0>(wcsName);
+	auto pNode = xm_mapValues.GetLowerBound<0>(wcsName);
 	bool bNew = false;
-	if(!pNode){
-		pNode = xm_mapValues.Insert(WideString(), std::move(wcsName), SequenceIndex());
+	if(!pNode || (pNode->GetIndex<0>() != wcsName)){
+		pNode = xm_mapValues.InsertHint(pNode, WideString(), std::move(wcsName), SequenceIndex());
 		bNew = true;
 	}
 	pNode->GetElement() = std::move(wcsValue);

@@ -121,9 +121,10 @@ namespace Impl {
 	struct CopyTrait<TriviallyCopyable *, InputIterator, TriviallyCopyable,
 		typename std::enable_if<
 //			std::is_trivially_copyable<TriviallyCopyable>::value &&
-				std::is_trivial<TriviallyCopyable>::value &&			// TODO: Fuck GCC.
-				!std::is_volatile<TriviallyCopyable>::value &&			//
-				std::is_move_constructible<TriviallyCopyable>::value &&	//
+				std::is_trivial<TriviallyCopyable>::value &&					// TODO: Fuck GCC.
+				!std::is_volatile<TriviallyCopyable>::value &&					//
+				(std::is_copy_constructible<TriviallyCopyable>::value ||		//
+					std::is_move_constructible<TriviallyCopyable>::value) &&	//
 			std::is_pointer<InputIterator>::value &&
 			std::is_same<
 				typename std::remove_const<

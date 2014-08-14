@@ -312,37 +312,47 @@ void MCF_AvlAttachHint(
 	MCF_AVL_NODE_HEADER **ppIns = NULL;
 	if((*pfnComparator)(pNode, pHint)){
 		MCF_AVL_NODE_HEADER *const pPrev = pHint->pPrev;
-		if(pPrev){
-			// 条件：	node		<	hint
-			//			hint->prev	<=	node
-			if(!(*pfnComparator)(pNode, pPrev)){
-				ASSERT(!pPrev->pRight);
-
-				pParent = pPrev;
-				ppIns = &(pPrev->pRight);
-			}
-		} else {
+		if(!pPrev){
 			ASSERT(!pHint->pLeft);
 
 			pParent = pHint;
 			ppIns = &(pHint->pLeft);
+		} else if(!(*pfnComparator)(pNode, pPrev)){
+			// 条件：	node		<	hint
+			//			hint->prev	<=	node
+			if(pPrev->uHeight < pHint->uHeight){
+				ASSERT(!pPrev->pRight);
+
+				pParent = pPrev;
+				ppIns = &(pPrev->pRight);
+			} else {
+				ASSERT(!pHint->pLeft);
+
+				pParent = pHint;
+				ppIns = &(pHint->pLeft);
+			}
 		}
 	} else {
 		MCF_AVL_NODE_HEADER *const pNext = pHint->pNext;
-		if(pNext){
+		if(!pNext){
+			ASSERT(!pHint->pRight);
+
+			pParent = pHint;
+			ppIns = &(pHint->pRight);
+		} else if((*pfnComparator)(pNode, pNext)){
 			// 条件：	hint	<=	node
 			//			node	<	hint->next
-			if((*pfnComparator)(pNode, pNext)){
+			if(pHint->uHeight < pNext->uHeight){
+				ASSERT(!pHint->pRight);
+
+				pParent = pHint;
+				ppIns = &(pHint->pRight);
+			} else {
 				ASSERT(!pNext->pLeft);
 
 				pParent = pNext;
 				ppIns = &(pNext->pLeft);
 			}
-		} else {
-			ASSERT(!pHint->pRight);
-
-			pParent = pHint;
-			ppIns = &(pHint->pRight);
 		}
 	}
 

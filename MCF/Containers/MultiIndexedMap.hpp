@@ -679,9 +679,9 @@ public:
 	typedef Node value_type;
 
 	// std::insert_iterator
-	template<typename Ignored, typename Param>
-	void insert(const Ignored &, Param &&vParam){
-		Insert(std::forward<Param>(vParam));
+	template<typename Param>
+	void insert(Node *pHint, Param &&vParam){
+		InsertHint(pHint, std::forward<Param>(vParam));
 	}
 };
 

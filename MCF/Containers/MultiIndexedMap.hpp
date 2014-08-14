@@ -231,7 +231,6 @@ private:
 
 private:
 	xBstNodes xm_aNodes[sizeof...(Indices)];
-
 	std::size_t xm_uSize;
 
 public:
@@ -302,16 +301,14 @@ public:
 	}
 
 private:
-	template<std::size_t INDEX>
-	void xAttach(
-		Node *pNode,
-		Node *pHint,
+	template<std::size_t INDEX,
 		typename std::enable_if<
 			!std::is_same<
 				typename std::tuple_element<INDEX, std::tuple<Indices...>>::type, SequenceIndex
 				>::value, int
 			>::type = 0
-	) noexcept {
+		>
+	void xAttach(Node *pNode, Node *pHint) noexcept {
 		const auto pAvl = pNode->xm_aHeaders + INDEX;
 		const auto pHintAvl = pHint ? (pHint->xm_aHeaders + INDEX) : nullptr;
 
@@ -329,15 +326,14 @@ private:
 			xm_aNodes[INDEX].pLast = pAvl;
 		}
 	}
-	template<std::size_t INDEX>
-	void xDetach(
-		Node *pNode,
+	template<std::size_t INDEX,
 		typename std::enable_if<
 			!std::is_same<
 				typename std::tuple_element<INDEX, std::tuple<Indices...>>::type, SequenceIndex
 				>::value, int
 			>::type = 0
-	) noexcept {
+		>
+	void xDetach(Node *pNode) noexcept {
 		const auto pAvl = pNode->xm_aHeaders + INDEX;
 
 		if(pAvl == xm_aNodes[INDEX].pFirst){
@@ -350,16 +346,14 @@ private:
 		::MCF_AvlDetach(pAvl);
 	}
 
-	template<std::size_t INDEX>
-	void xAttach(
-		Node *pNode,
-		Node *pHint,
+	template<std::size_t INDEX,
 		typename std::enable_if<
 			std::is_same<
 				typename std::tuple_element<INDEX, std::tuple<Indices...>>::type, SequenceIndex
 				>::value, int
 			>::type = 0
-	) noexcept {
+		>
+	void xAttach(Node *pNode, Node *pHint) noexcept {
 		const auto pAvl = pNode->xm_aHeaders + INDEX;
 		(void)pHint;
 
@@ -374,15 +368,14 @@ private:
 		}
 		pLast = pAvl;
 	}
-	template<std::size_t INDEX>
-	void xDetach(
-		Node *pNode,
+	template<std::size_t INDEX,
 		typename std::enable_if<
 			std::is_same<
 				typename std::tuple_element<INDEX, std::tuple<Indices...>>::type, SequenceIndex
 				>::value, int
 			>::type = 0
-	) noexcept {
+		>
+	void xDetach(Node *pNode) noexcept {
 		const auto pAvl = pNode->xm_aHeaders + INDEX;
 
 		const auto pPrev = ::MCF_AvlPrev(pAvl);
@@ -402,36 +395,30 @@ private:
 		}
 	}
 
-	template<std::size_t INDEX>
-	void xAttachRecur(
-		Node *pNode,
-		Node *pHint,
+	template<std::size_t INDEX,
 		typename std::enable_if<(INDEX < sizeof...(Indices)), int>::type = 0
-	) noexcept {
+		>
+	void xAttachRecur(Node *pNode, Node *pHint) noexcept {
 		xAttach<INDEX>(pNode, pHint);
 		xAttachRecur<INDEX + 1>(pNode, pHint);
 	}
-	template<std::size_t INDEX>
-	void xAttachRecur(
-		Node *,
-		Node *,
+	template<std::size_t INDEX,
 		typename std::enable_if<(INDEX == sizeof...(Indices)), int>::type = 0
-	) noexcept {
+		>
+	void xAttachRecur(Node *, Node *) noexcept {
 	}
 
-	template<std::size_t INDEX>
-	void xDetachRecur(
-		Node *pNode,
+	template<std::size_t INDEX,
 		typename std::enable_if<(INDEX < sizeof...(Indices)), int>::type = 0
-	) noexcept {
+		>
+	void xDetachRecur(Node *pNode) noexcept {
 		xDetachRecur<INDEX + 1>(pNode);
 		xDetach<INDEX>(pNode);
 	}
-	template<std::size_t INDEX>
-	void xDetachRecur(
-		Node *pNode,
+	template<std::size_t INDEX,
 		typename std::enable_if<(INDEX == sizeof...(Indices)), int>::type = 0
-	) noexcept {
+		>
+	void xDetachRecur(Node *pNode) noexcept {
 #ifdef NDEBUG
 		(void)pNode;
 #else
@@ -439,12 +426,10 @@ private:
 #endif
 	}
 
-	template<std::size_t INDEX>
-	void xCloneTreeRecur(
-		const xBstNodes *pSrcNodes,
-		const MCF_AVL_ROOT &pavlAllocatedNodes,
+	template<std::size_t INDEX,
 		typename std::enable_if<(INDEX < sizeof...(Indices)), int>::type = 0
-	) noexcept {
+		>
+	void xCloneTreeRecur(const xBstNodes *pSrcNodes, const MCF_AVL_ROOT &pavlAllocatedNodes) noexcept {
 		Node *pHint = nullptr;
 		for(auto pSrc = pSrcNodes[INDEX].pFirst; pSrc; pSrc = ::MCF_AvlNext(pSrc)){
 			const auto pNewAvl = ::MCF_AvlFind(
@@ -461,12 +446,10 @@ private:
 		}
 		xCloneTreeRecur<INDEX + 1>(pSrcNodes, pavlAllocatedNodes);
 	}
-	template<std::size_t INDEX>
-	void xCloneTreeRecur(
-		const xBstNodes *,
-		const MCF_AVL_ROOT &,
+	template<std::size_t INDEX,
 		typename std::enable_if<(INDEX == sizeof...(Indices)), int>::type = 0
-	) noexcept {
+		>
+	void xCloneTreeRecur(const xBstNodes *, const MCF_AVL_ROOT &) noexcept {
 	}
 
 public:

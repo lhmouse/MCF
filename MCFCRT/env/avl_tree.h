@@ -74,12 +74,6 @@ extern void MCF_AvlSwap(
 	MCF_AVL_ROOT *ppRoot2
 ) MCF_NOEXCEPT;
 
-extern void MCF_AvlAttach(
-	MCF_AVL_ROOT *ppRoot,
-	MCF_AVL_NODE_HEADER *pNode,
-	MCF_AVL_COMPARATOR_NODES pfnComparator
-) MCF_NOEXCEPT;
-
 extern void MCF_AvlAttachHint(
 	MCF_AVL_ROOT *ppRoot,
 	// 如果新节点被插入到该节点前后相邻的位置，则效率被优化。
@@ -89,6 +83,14 @@ extern void MCF_AvlAttachHint(
 	MCF_AVL_NODE_HEADER *pNode,
 	MCF_AVL_COMPARATOR_NODES pfnComparator
 ) MCF_NOEXCEPT;
+
+static inline void MCF_AvlAttach(
+	MCF_AVL_ROOT *ppRoot,
+	MCF_AVL_NODE_HEADER *pNode,
+	MCF_AVL_COMPARATOR_NODES pfnComparator
+) MCF_NOEXCEPT {
+	MCF_AvlAttachHint(ppRoot, NULL, pNode, pfnComparator);
+}
 
 extern void MCF_AvlDetach(
 	const MCF_AVL_NODE_HEADER *pNode

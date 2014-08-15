@@ -63,7 +63,8 @@ namespace Impl {
 
 	private:
 		// http://wiki.osdev.org/Spinlock
-		std::size_t xLockSpin() noexcept {
+//		std::size_t xLockSpin() noexcept {	// FIXME: g++ 4.9.1 ICE
+		std::size_t xLockSpin() throw() {	//
 			std::size_t uWaiting;
 			for(;;){
 				uWaiting = __atomic_exchange_n(
@@ -73,7 +74,7 @@ namespace Impl {
 					break;
 				}
 				do {
-					__asm__ __volatile__("pause \n");
+					__builtin_ia32_pause();
 				} while(EXPECT(__atomic_load_n(&xm_uWaiting, __ATOMIC_ACQUIRE) == (std::size_t)-1));
 			}
 			return uWaiting;

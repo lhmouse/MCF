@@ -12,7 +12,7 @@ namespace {
 // http://www.relisoft.com/science/CrcOptim.html
 // 1. 原文提供的是正序（权较大位向权较小位方向）的 Crc 计算，而这里使用的是反序（权较小位向权较大位方向）。
 // 2. 原文的 Crc 余数的初始值是 0；此处以 -1 为初始值，计算完成后进行按位反。
-void BuildCrc32Table(std::uint32_t (&au32Table)[0x100], std::uint32_t u32Divisor) noexcept {
+void BuildTable(std::uint32_t (&au32Table)[0x100], std::uint32_t u32Divisor) noexcept {
 	for(std::uint32_t i = 0; i < 256; ++i){
 		register std::uint32_t u32Reg = i;
 		for(std::size_t j = 0; j < 8; ++j){
@@ -48,7 +48,7 @@ Crc32::Crc32(std::uint32_t u32Divisor) noexcept
 {
 	ASSERT(u32Divisor != 0);
 
-	BuildCrc32Table(xm_au32Table, u32Divisor);
+	BuildTable(xm_au32Table, u32Divisor);
 }
 
 // 其他非静态成员函数。

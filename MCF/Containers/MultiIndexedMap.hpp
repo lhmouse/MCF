@@ -629,8 +629,7 @@ public:
 	std::pair<const Node *, const Node *> GetEqualRange(const Comparand &vComparand) const noexcept {
 		MCF_AVL_NODE_HEADER *pBegin, *pEnd;
 		::MCF_AvlEqualRange(
-			&pBegin,
-			&pEnd,
+			&pBegin, &pEnd,
 			&(xm_aNodes[INDEX].pRoot),
 			(std::intptr_t)&vComparand,
 			&(xComparators<INDEX>::template NodeOther<Comparand>),
@@ -645,8 +644,7 @@ public:
 	std::pair<Node *, Node *> GetEqualRange(const Comparand &vComparand) noexcept {
 		MCF_AVL_NODE_HEADER *pBegin, *pEnd;
 		::MCF_AvlEqualRange(
-			&pBegin,
-			&pEnd,
+			&pBegin, &pEnd,
 			&(xm_aNodes[INDEX].pRoot),
 			(std::intptr_t)&vComparand,
 			&(xComparators<INDEX>::template NodeOther<Comparand>),

@@ -110,7 +110,10 @@ std::shared_ptr<const void> AllocateThunk(const void *pInit, std::size_t uSize){
 		// 先挖坑，否则后面就没法 noexcept 了。
 		auto pNullNode = g_mapThunks.GetLowerBound<0>(nullptr);
 		if(!pNullNode || (pNullNode->GetIndex<0>() != nullptr)){
-			pNullNode = g_mapThunks.InsertHint(pNullNode, std::make_pair(std::shared_ptr<void>(), 0u), nullptr, 0u);
+			pNullNode = g_mapThunks.InsertWithHints(
+				std::make_tuple(pNullNode, nullptr),
+				std::make_pair(std::shared_ptr<void>(), 0u), nullptr, 0u
+			);
 		}
 
 		auto pCached = g_mapThunks.GetLowerBound<1>(uThunkSize);

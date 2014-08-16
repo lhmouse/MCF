@@ -31,7 +31,7 @@ public:
 
 		auto pNode = g_mapHandlerVector.GetLowerBound<0>(u8soName);
 		if(!pNode || (pNode->GetIndex<0>() != u8soName)){
-			pNode = g_mapHandlerVector.InsertHint(pNode, HandlerVector(), Utf8String(u8soName));
+			pNode = g_mapHandlerVector.InsertWithHints(std::make_tuple(pNode), HandlerVector(), Utf8String(u8soName));
 		}
 
 		auto &vecHandlers = pNode->GetElement();

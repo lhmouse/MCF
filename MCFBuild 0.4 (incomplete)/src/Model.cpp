@@ -118,7 +118,7 @@ void Model::InitParams(){
 
 					const auto pNode = xm_mapMacros.GetLowerBound<0>(wcsMacroName);
 					if(!pNode || (pNode->GetIndex<0>() != wcsMacroName)){
-						xm_mapMacros.InsertHint(pNode, std::move(wcsMacroValue), std::move(wcsMacroName));
+						xm_mapMacros.InsertWithHints(std::make_tuple(pNode), std::move(wcsMacroValue), std::move(wcsMacroName));
 					} else {
 						pNode->GetElement() = std::move(wcsMacroValue);
 					}

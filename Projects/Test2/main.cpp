@@ -11,9 +11,9 @@ extern "C" unsigned int MCFMain() noexcept {
 	h = h->GetNext<0>();
 	h = h->GetNext<0>();
 std::puts("--- 1 ---");
-	m.InsertHint(h, 16.0, 4);
+	m.InsertWithHints(std::make_tuple(h), 16.0, 4);
 std::puts("--- 2 ---");
-	m.InsertHint(h, 25.0, 5);
+	m.InsertWithHints(std::make_tuple(h), 25.0, 5);
 std::puts("--- 3 ---");
 
 	auto m2 = m;

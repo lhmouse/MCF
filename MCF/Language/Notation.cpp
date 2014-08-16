@@ -210,7 +210,10 @@ std::pair<NotationPackage *, bool> NotationPackage::CreatePackage(const WideStri
 	auto pNode = xm_mapPackages.GetLowerBound<0>(wsoName);
 	bool bNew = false;
 	if(!pNode || (pNode->GetIndex<0>() != wsoName)){
-		pNode = xm_mapPackages.InsertHint(pNode, NotationPackage(), WideString(wsoName), SequenceIndex());
+		pNode = xm_mapPackages.InsertWithHints(
+			std::make_tuple(pNode, nullptr),
+			NotationPackage(), WideString(wsoName), SequenceIndex()
+		);
 		bNew = true;
 	}
 	return std::make_pair(&(pNode->GetElement()), bNew);
@@ -219,7 +222,10 @@ std::pair<NotationPackage *, bool> NotationPackage::CreatePackage(WideString wcs
 	auto pNode = xm_mapPackages.GetLowerBound<0>(wcsName);
 	bool bNew = false;
 	if(!pNode || (pNode->GetIndex<0>() != wcsName)){
-		pNode = xm_mapPackages.InsertHint(pNode, NotationPackage(), std::move(wcsName), SequenceIndex());
+		pNode = xm_mapPackages.InsertWithHints(
+			std::make_tuple(pNode, nullptr),
+			NotationPackage(), std::move(wcsName), SequenceIndex()
+		);
 		bNew = true;
 	}
 	return std::make_pair(&(pNode->GetElement()), bNew);
@@ -262,7 +268,10 @@ std::pair<WideString *, bool> NotationPackage::CreateValue(const WideStringObser
 	auto pNode = xm_mapValues.GetLowerBound<0>(wsoName);
 	bool bNew = false;
 	if(!pNode || (pNode->GetIndex<0>() != wsoName)){
-		pNode = xm_mapValues.InsertHint(pNode, WideString(), WideString(wsoName), SequenceIndex());
+		pNode = xm_mapValues.InsertWithHints(
+			std::make_tuple(pNode, nullptr),
+			WideString(), WideString(wsoName), SequenceIndex()
+		);
 		bNew = true;
 	}
 	pNode->GetElement() = std::move(wcsValue);
@@ -272,7 +281,10 @@ std::pair<WideString *, bool> NotationPackage::CreateValue(WideString wcsName, W
 	auto pNode = xm_mapValues.GetLowerBound<0>(wcsName);
 	bool bNew = false;
 	if(!pNode || (pNode->GetIndex<0>() != wcsName)){
-		pNode = xm_mapValues.InsertHint(pNode, WideString(), std::move(wcsName), SequenceIndex());
+		pNode = xm_mapValues.InsertWithHints(
+			std::make_tuple(pNode, nullptr),
+			WideString(), std::move(wcsName), SequenceIndex()
+		);
 		bNew = true;
 	}
 	pNode->GetElement() = std::move(wcsValue);

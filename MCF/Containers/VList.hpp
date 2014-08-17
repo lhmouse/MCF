@@ -70,7 +70,7 @@ public:
 		, xm_pPool	(nullptr)
 	{
 	}
-	template<typename... Params>
+	template<typename ...Params>
 	explicit VList(std::size_t uCount, const Params &...vParams)
 		: VList()
 	{
@@ -191,11 +191,11 @@ public:
 		}
 	}
 
-	template<typename... Params>
+	template<typename ...Params>
 	Node *Insert(Node *pPos, Params &&...vParams){
 		return InsertWithPool(pPos, *this, std::forward<Params>(vParams)...);
 	}
-	template<typename... Params>
+	template<typename ...Params>
 	Node *InsertWithPool(Node *pPos, VList &lstPool, Params &&...vParams){
 		auto pNode = lstPool.xDepool();
 		if(!pNode){
@@ -278,7 +278,7 @@ public:
 		return Splice(pPos, lstSource, pBegin, pEnd);
 	}
 
-	template<typename... Params>
+	template<typename ...Params>
 	Node *Push(Params &&...vParams){
 		return Insert(nullptr, std::forward<Params>(vParams)...);
 	}
@@ -286,7 +286,7 @@ public:
 		Erase(xm_pLast);
 	}
 
-	template<typename... Params>
+	template<typename ...Params>
 	Node *Unshift(Params &&...vParams){
 		return Insert(xm_pFirst, std::forward<Params>(vParams)...);
 	}
@@ -294,7 +294,7 @@ public:
 		Erase(xm_pFirst);
 	}
 
-	template<typename... Params>
+	template<typename ...Params>
 	void FillAtEnd(std::size_t uCount, const Params &...vParams){
 		for(std::size_t i = 0; i < uCount; ++i){
 			Push(vParams...);
@@ -320,7 +320,7 @@ public:
 		}
 	}
 
-	template<typename... Params>
+	template<typename ...Params>
 	void FillAtBegin(std::size_t uCount, const Params &...vParams){
 		for(std::size_t i = 0; i < uCount; ++i){
 			Unshift(vParams...);

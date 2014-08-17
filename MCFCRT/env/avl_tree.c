@@ -354,6 +354,8 @@ void MCF_AvlDetach(
 	MCF_AVL_NODE_HEADER **const ppRefl = pNode->ppRefl;
 	MCF_AVL_NODE_HEADER *const pLeft = pNode->pLeft;
 	MCF_AVL_NODE_HEADER *const pRight = pNode->pRight;
+	MCF_AVL_NODE_HEADER *const pPrev = pNode->pPrev;
+	MCF_AVL_NODE_HEADER *const pNext = pNode->pNext;
 
 	if(!pLeft){
 		/*---------+------*\
@@ -373,22 +375,14 @@ void MCF_AvlDetach(
 			UpdateRecur(pParent);
 		}
 	} else {
-		MCF_AVL_NODE_HEADER *pMaxBefore = pLeft;
-		for(;;){
-			MCF_AVL_NODE_HEADER *const pNext = pMaxBefore->pRight;
-			if(!pNext){
-				break;
-			}
-			pMaxBefore = pNext;
-		}
-		if(pMaxBefore == pLeft){
-			/*--------------+------------*\
-			|     node      |   left      |
-			|     /  \      |   /  \      |
-			|  left  right  > ll   right  |
-			|  /         \  |          \  |
-			| ll         rr |          rr |
-			\*--------------+------------*/
+		if(pPrev == pLeft){
+			/*-------------+-----------*\
+			|     node     |   left     |
+			|     /  \     |   /  \     |
+			|  left  right > ll   right |
+			|  /           |            |
+			| ll           |            |
+			\*-------------+-----------*/
 
 			*ppRefl = pLeft;
 
@@ -404,53 +398,50 @@ void MCF_AvlDetach(
 
 			UpdateRecur(pLeft);
 		} else {
-			/*--------------+---------------*\
-			|     node      |     maxbf      |
-			|     /  \      |     /   \      |
-			|  mbfp  right  |  mbfp   right  |
-			|  /  \      \  >  /  \       \  |
-			| ll  maxbf  rr | ll  mbl     rr |
-			|     /         |                |
-			|   mbl         |                |
-			\*--------------+---------------*/
+			/*----------------+----------------*\
+			|       node      |       prev      |
+			|       /  \      |       /  \      |
+			|    prvp  right  |    prvp  right  |
+			|    /  \      \  >    /  \      \  |
+			| prvl  prev   rr | prvl  mbl    rr |
+			|       /         |                 |
+			|     mbl         |                 |
+			\*----------------+----------------*/
 
-			MCF_AVL_NODE_HEADER *const pMaxBfParent = pMaxBefore->pParent;
-			MCF_AVL_NODE_HEADER **const ppMaxBfRefl = pMaxBefore->ppRefl;
-			MCF_AVL_NODE_HEADER *const pMaxBfLeft = pMaxBefore->pLeft;
+			MCF_AVL_NODE_HEADER *const pPrevParent = pPrev->pParent;
+			MCF_AVL_NODE_HEADER **const ppPrevRefl = pPrev->ppRefl;
+			MCF_AVL_NODE_HEADER *const pPrevLeft = pPrev->pLeft;
 
-			ASSERT(pMaxBfParent);
+			ASSERT(pPrevParent);
 
-			*ppRefl = pMaxBefore;
+			*ppRefl = pPrev;
 
-			pMaxBefore->pParent	= pParent;
-			pMaxBefore->ppRefl	= ppRefl;
-			pMaxBefore->pLeft	= pLeft;
-			pMaxBefore->pRight	= pRight;
-			pMaxBefore->uHeight	= pNode->uHeight;
+			pPrev->pParent	= pParent;
+			pPrev->ppRefl	= ppRefl;
+			pPrev->pLeft	= pLeft;
+			pPrev->pRight	= pRight;
+			pPrev->uHeight	= pNode->uHeight;
 
-			pLeft->pParent = pMaxBefore;
-			pLeft->ppRefl = &(pMaxBefore->pLeft);
+			pLeft->pParent = pPrev;
+			pLeft->ppRefl = &(pPrev->pLeft);
 
 			if(pRight){
-				pRight->pParent = pMaxBefore;
-				pRight->ppRefl = &(pMaxBefore->pRight);
+				pRight->pParent = pPrev;
+				pRight->ppRefl = &(pPrev->pRight);
 			}
 
-			*ppMaxBfRefl = pMaxBfLeft;
+			*ppPrevRefl = pPrevLeft;
 
-			if(pMaxBfLeft){
-				pMaxBfLeft->pParent = pMaxBfParent;
-				pMaxBfLeft->ppRefl = ppMaxBfRefl;
+			if(pPrevLeft){
+				pPrevLeft->pParent = pPrevParent;
+				pPrevLeft->ppRefl = ppPrevRefl;
 			}
 
-			if(pMaxBfParent != pNode){
-				UpdateRecur(pMaxBfParent);
+			if(pPrevParent != pNode){
+				UpdateRecur(pPrevParent);
 			}
 		}
 	}
-
-	MCF_AVL_NODE_HEADER *const pPrev = pNode->pPrev;
-	MCF_AVL_NODE_HEADER *const pNext = pNode->pNext;
 	if(pPrev){
 		pPrev->pNext = pNext;
 	}

@@ -38,8 +38,8 @@ namespace MCF {
 namespace Impl {
 	template<typename Object>
 	struct DirectConstructor {
-		template<typename... Params>
-		static Object *Construct(Object *pObject, Params &&... vParams)
+		template<typename ...Params>
+		static Object *Construct(Object *pObject, Params &&...vParams)
 			noexcept(std::is_nothrow_constructible<Object, Params &&...>::value)
 		{
 			return ::new(pObject, DirectConstructTag()) Object(std::forward<Params>(vParams)...);
@@ -52,9 +52,9 @@ namespace Impl {
 	};
 }
 
-template<typename Object, typename... Params>
+template<typename Object, typename ...Params>
 inline __attribute__((__returns_nonnull__))
-Object *Construct(Object *pObject, Params &&... vParams)
+Object *Construct(Object *pObject, Params &&...vParams)
 	noexcept(std::is_nothrow_constructible<Object, Params &&...>::value)
 {
 	return Impl::DirectConstructor<Object>::template Construct<Params &&...>(

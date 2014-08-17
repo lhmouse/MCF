@@ -42,7 +42,7 @@ namespace Impl {
 	};
 }
 
-template<class Object, class... InitParams>
+template<class Object, class ...InitParams>
 class ThreadLocalPtr {
 private:
 	typedef Impl::ExceptionWrapper<std::is_nothrow_constructible<Object, InitParams &&...>::value> xExceptionWrapper;
@@ -68,7 +68,7 @@ private:
 	const std::tuple<InitParams...> xm_vInitParams;
 
 public:
-	explicit constexpr ThreadLocalPtr(InitParams &&... vInitParams)
+	explicit constexpr ThreadLocalPtr(InitParams &&...vInitParams)
 		: xm_nTlsIndex		(::MCF_CRT_TlsAllocKey(&xTlsCallback))
 		, xm_vInitParams	(std::forward<InitParams>(vInitParams)...)
 	{

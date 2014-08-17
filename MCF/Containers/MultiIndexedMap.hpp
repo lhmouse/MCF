@@ -20,10 +20,10 @@ namespace MCF {
 struct SequenceIndex {
 };
 
-template<class Element, class... Indices>
+template<class Element, class ...Indices>
 class MultiIndexedMap;
 
-template<class Element, class... Indices>
+template<class Element, class ...Indices>
 class MultiIndexedMapNode {
 	static_assert(sizeof...(Indices) > 0, "No index?");
 
@@ -42,7 +42,7 @@ private:
 	MCF_AVL_NODE_HEADER xm_vReservedHeader;
 
 public:
-	explicit constexpr MultiIndexedMapNode(Element vElement, Indices... vIndices)
+	explicit constexpr MultiIndexedMapNode(Element vElement, Indices ...vIndices)
 		: xm_vElement(std::move(vElement))
 		, xm_vIndices(std::move(vIndices)...)
 		, xm_aHeaders()
@@ -96,7 +96,7 @@ public:
 	}
 };
 
-template<class... Indices>
+template<class ...Indices>
 class MultiIndexedMapNode<void, Indices...> {
 	static_assert(sizeof...(Indices) > 0, "No index?");
 
@@ -114,7 +114,7 @@ private:
 	MCF_AVL_NODE_HEADER xm_vReservedHeader;
 
 public:
-	explicit constexpr MultiIndexedMapNode(Indices... vIndices)
+	explicit constexpr MultiIndexedMapNode(Indices ...vIndices)
 		: xm_vIndices(std::move(vIndices)...)
 		, xm_aHeaders()
 	{
@@ -161,7 +161,7 @@ public:
 	}
 };
 
-template<class Element, class... Indices>
+template<class Element, class ...Indices>
 class MultiIndexedMap {
 	static_assert(sizeof...(Indices) > 0, "No index?");
 
@@ -283,8 +283,6 @@ public:
 
 		// 所有节点都分配完成，现在进行第二步，重建每个二叉树，保证无异常抛出。
 		xCloneTreeRecur<0>(rhs.xm_aNodes, pavlNodeMap);
-
-		// 最后一步，填写 size。
 		xm_uSize = rhs.xm_uSize;
 	}
 	MultiIndexedMap(MultiIndexedMap &&rhs) noexcept
@@ -456,12 +454,12 @@ private:
 	}
 
 public:
-	template<typename... Params>
-	Node *Insert(Params &&... vParams){
+	template<typename ...Params>
+	Node *Insert(Params &&...vParams){
 		return InsertWithHints(Hints(), std::forward<Params>(vParams)...);
 	}
-	template<typename... Params>
-	Node *InsertWithHints(const Hints &vHints, Params &&... vParams){
+	template<typename ...Params>
+	Node *InsertWithHints(const Hints &vHints, Params &&...vParams){
 		const auto pNode = new Node(std::forward<Params>(vParams)...);
 		xAttachRecur<0>(pNode, vHints);
 		++xm_uSize;
@@ -502,8 +500,8 @@ public:
 		}
 	}
 
-	template<std::size_t INDEX, typename... Params>
-	void SetIndex(Node *pNode, Params &&... vParams)
+	template<std::size_t INDEX, typename ...Params>
+	void SetIndex(Node *pNode, Params &&...vParams)
 		noexcept(
 			std::is_nothrow_constructible<
 				typename std::tuple_element<INDEX, typename Node::xIndexTuple>::type,
@@ -672,7 +670,7 @@ public:
 	}
 };
 
-template<class... Indices>
+template<class ...Indices>
 using MultiIndexedSet = MultiIndexedMap<void, Indices...>;
 
 }

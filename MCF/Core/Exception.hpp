@@ -53,12 +53,12 @@ private:
 
 public:
 	// 确保参数的传递都不影响 ::GetLastError() 的返回值。
-	template<typename... Params>
+	template<typename ...Params>
 	Exception(
 		const char *pszFunction,
 		unsigned long ulLine,
 		unsigned long ulErrorCode,
-		Params &&... vParams
+		Params &&...vParams
 	) noexcept
 		: m_pszFunction	(pszFunction)
 		, m_ulLine		(ulLine)

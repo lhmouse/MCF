@@ -68,8 +68,8 @@ namespace Impl {
 	template<typename RealBase>
 	class ConcreteBase : public RealBase {
 	protected:
-		template<typename... BaseParams>
-		explicit ConcreteBase(BaseParams &&... vBaseParams)
+		template<typename ...BaseParams>
+		explicit ConcreteBase(BaseParams &&...vBaseParams)
 			noexcept(std::is_nothrow_constructible<RealBase, BaseParams &&...>::value)
 			: RealBase(std::forward<BaseParams>(vBaseParams)...)
 		{
@@ -90,9 +90,9 @@ namespace Impl {
 //----------------------------------------------------------------------------
 // Bail
 //----------------------------------------------------------------------------
-template<typename... Params>
+template<typename ...Params>
 __MCF_NORETURN_IF_NDEBUG inline
-void Bail(const wchar_t *pwszFormat, const Params &... vParams){
+void Bail(const wchar_t *pwszFormat, const Params &...vParams){
 	::MCF_CRT_BailF(pwszFormat, vParams...);
 }
 
@@ -197,7 +197,7 @@ constexpr void BZero(T &vDst) noexcept {
 // CallOnEach / ReverseCallOnEach
 //----------------------------------------------------------------------------
 template<typename Function, typename First, typename ...Params>
-Function &&CallOnEach(Function &&vFunction, First &&vFirst, Params &&... vParams){
+Function &&CallOnEach(Function &&vFunction, First &&vFirst, Params &&...vParams){
 	vFunction(std::forward<First>(vFirst));
 	CallOnEach(vFunction, std::forward<Params>(vParams)...);
 	return std::forward<Function>(vFunction);
@@ -208,7 +208,7 @@ Function &&CallOnEach(Function &&vFunction){
 }
 
 template<typename Function, typename First, typename ...Params>
-Function &&ReverseCallOnEach(Function &&vFunction, First &&vFirst, Params &&... vParams){
+Function &&ReverseCallOnEach(Function &&vFunction, First &&vFirst, Params &&...vParams){
 	ReverseCallOnEach(vFunction, std::forward<Params>(vParams)...);
 	vFunction(std::forward<First>(vFirst));
 	return std::forward<Function>(vFunction);
@@ -234,8 +234,8 @@ constexpr auto Min(Tx x, Ty y) noexcept {
 
 	return Comparator()(x, y) ? x : y;
 }
-template<typename Tx, typename Ty, typename Comparator = std::less<void>, typename... More>
-constexpr auto Min(Tx &&x, Ty &&y, More &&... vMore) noexcept {
+template<typename Tx, typename Ty, typename Comparator = std::less<void>, typename ...More>
+constexpr auto Min(Tx &&x, Ty &&y, More &&...vMore) noexcept {
 	return Min(Min(std::forward<Tx>(x), std::forward<Ty>(y)), std::forward<More>(vMore)...);
 }
 
@@ -252,8 +252,8 @@ constexpr auto Max(Tx x, Ty y) noexcept {
 
 	return Comparator()(x, y) ? y : x;
 }
-template<typename Tx, typename Ty, typename Comparator = std::less<void>, typename... More>
-constexpr auto Max(Tx &&x, Ty &&y, More &&... vMore) noexcept {
+template<typename Tx, typename Ty, typename Comparator = std::less<void>, typename ...More>
+constexpr auto Max(Tx &&x, Ty &&y, More &&...vMore) noexcept {
 	return Max(Max(std::forward<Tx>(x), std::forward<Ty>(y)), std::forward<More>(vMore)...);
 }
 
@@ -287,8 +287,8 @@ namespace MCF {
 namespace Impl {
 	template<typename Object>
 	struct DirectConstructor {
-		template<typename... Params>
-		static Object *Construct(Object *pObject, Params &&... vParams)
+		template<typename ...Params>
+		static Object *Construct(Object *pObject, Params &&...vParams)
 			noexcept(std::is_nothrow_constructible<Object, Params &&...>::value)
 		{
 			return ::new(pObject, DirectConstructTag()) Object(std::forward<Params>(vParams)...);
@@ -304,9 +304,9 @@ namespace Impl {
 #define FRIEND_CONSTRUCT_DESTRUCT(type)	\
 	friend class ::MCF::Impl::DirectConstructor<type>
 
-template<typename Object, typename... Params>
+template<typename Object, typename ...Params>
 inline __attribute__((__returns_nonnull__))
-Object *Construct(Object *pObject, Params &&... vParams)
+Object *Construct(Object *pObject, Params &&...vParams)
 	noexcept(std::is_nothrow_constructible<Object, Params &&...>::value)
 {
 	return Impl::DirectConstructor<Object>::template Construct<Params &&...>(
@@ -674,11 +674,11 @@ inline std::pair<OutputIterator, InputIterator> ReverseMoveBackwardN(
 //----------------------------------------------------------------------------
 // Fill / FillN
 //----------------------------------------------------------------------------
-template<typename OutputIterator, typename... Params>
+template<typename OutputIterator, typename ...Params>
 inline OutputIterator Fill(
 	OutputIterator itOutputBegin,
 	typename std::common_type<OutputIterator>::type itOutputEnd,
-	const Params &... vParams
+	const Params &...vParams
 )
 	noexcept(
 		std::is_nothrow_constructible<decltype(*itOutputBegin), const Params &...>::value
@@ -691,11 +691,11 @@ inline OutputIterator Fill(
 	}
 	return std::move(itOutputBegin);
 }
-template<typename OutputIterator, typename... Params>
+template<typename OutputIterator, typename ...Params>
 inline OutputIterator FillN(
 	OutputIterator itOutputBegin,
 	std::size_t uCount,
-	const Params &... vParams
+	const Params &...vParams
 )
 	noexcept(
 		std::is_nothrow_constructible<decltype(*itOutputBegin), const Params &...>::value
@@ -715,20 +715,20 @@ inline OutputIterator FillN(
 namespace Impl {
 	template<std::size_t CUR, std::size_t END>
 	struct CallOnTupleHelper {
-		template<typename Function, typename... TupleParams, typename... Unpacked>
+		template<typename Function, typename ...TupleParams, typename ...Unpacked>
 		static decltype(auto) Do(
 			Function &&vFunction, const std::tuple<TupleParams...> &vTuple,
-			const Unpacked &... vUnpacked
+			const Unpacked &...vUnpacked
 		){
 			return CallOnTupleHelper<CUR + 1, END>::Do(
 				vFunction, vTuple,
 				vUnpacked..., std::get<CUR>(vTuple)
 			);
 		}
-		template<typename Function, typename... TupleParams, typename... Unpacked>
+		template<typename Function, typename ...TupleParams, typename ...Unpacked>
 		static decltype(auto) Do(
 			Function &&vFunction, std::tuple<TupleParams...> &&vTuple,
-			Unpacked &&... vUnpacked
+			Unpacked &&...vUnpacked
 		){
 			return CallOnTupleHelper<CUR + 1, END>::Do(
 				vFunction, std::move(vTuple),
@@ -738,24 +738,24 @@ namespace Impl {
 	};
 	template<std::size_t END>
 	struct CallOnTupleHelper<END, END> {
-		template<typename Function, typename... TupleParams, typename... Unpacked>
+		template<typename Function, typename ...TupleParams, typename ...Unpacked>
 		static decltype(auto) Do(
 			Function &&vFunction, const std::tuple<TupleParams...> &,
-			const Unpacked &... vUnpacked
+			const Unpacked &...vUnpacked
 		){
 			return vFunction(vUnpacked...);
 		}
-		template<typename Function, typename... TupleParams, typename... Unpacked>
+		template<typename Function, typename ...TupleParams, typename ...Unpacked>
 		static decltype(auto) Do(
 			Function &&vFunction, std::tuple<TupleParams...> &&,
-			Unpacked &&... vUnpacked
+			Unpacked &&...vUnpacked
 		){
 			return vFunction(std::move(vUnpacked)...);
 		}
 	};
 }
 
-template<typename Function, typename... Params>
+template<typename Function, typename ...Params>
 decltype(auto) CallOnTuple(Function &&vFunction, const std::tuple<Params...> &vTuple)
 	noexcept(noexcept(
 		std::declval<Function>()(std::declval<const Params &>()...)
@@ -765,7 +765,7 @@ decltype(auto) CallOnTuple(Function &&vFunction, const std::tuple<Params...> &vT
 		std::forward<Function>(vFunction), vTuple
 	);
 }
-template<typename Function, typename... Params>
+template<typename Function, typename ...Params>
 decltype(auto) CallOnTuple(Function &&vFunction, std::tuple<Params...> &&vTuple)
 	noexcept(noexcept(
 		std::declval<Function>()(std::declval<Params &&>()...)
@@ -776,7 +776,7 @@ decltype(auto) CallOnTuple(Function &&vFunction, std::tuple<Params...> &&vTuple)
 	);
 }
 
-template<class Object, typename... Params>
+template<class Object, typename ...Params>
 auto MakeFromTuple(const std::tuple<Params...> &vTuple)
 	noexcept(noexcept(
 		std::is_nothrow_constructible<Object, const Params &...>::value
@@ -784,13 +784,13 @@ auto MakeFromTuple(const std::tuple<Params...> &vTuple)
 	))
 {
 	return Impl::CallOnTupleHelper<0u, sizeof...(Params)>::Do(
-		[](const Params &... vParams){
+		[](const Params &...vParams){
 			return Object(vParams...);
 		},
 		vTuple
 	);
 }
-template<class Object, typename... Params>
+template<class Object, typename ...Params>
 auto MakeFromTuple(std::tuple<Params...> &&vTuple)
 	noexcept(noexcept(
 		std::is_nothrow_constructible<Object, Params &&...>::value
@@ -798,45 +798,45 @@ auto MakeFromTuple(std::tuple<Params...> &&vTuple)
 	))
 {
 	return Impl::CallOnTupleHelper<0u, sizeof...(Params)>::Do(
-		[](Params &&... vParams){
+		[](Params &&...vParams){
 			return Object(std::move(vParams)...);
 		},
 		std::move(vTuple)
 	);
 }
 
-template<class Object, typename... Params>
+template<class Object, typename ...Params>
 auto MakeUniqueFromTuple(const std::tuple<Params...> &vTuple){
 	return Impl::CallOnTupleHelper<0u, sizeof...(Params)>::Do(
-		[](const Params &... vParams){
+		[](const Params &...vParams){
 			return std::make_unique<Object>(vParams...);
 		},
 		vTuple
 	);
 }
-template<class Object, typename... Params>
+template<class Object, typename ...Params>
 auto MakeUniqueFromTuple(std::tuple<Params...> &&vTuple){
 	return Impl::CallOnTupleHelper<0u, sizeof...(Params)>::Do(
-		[](Params &&... vParams){
+		[](Params &&...vParams){
 			return std::make_unique<Object>(std::move(vParams)...);
 		},
 		std::move(vTuple)
 	);
 }
 
-template<class Object, typename... Params>
+template<class Object, typename ...Params>
 auto MakeSharedFromTuple(const std::tuple<Params...> &vTuple){
 	return Impl::CallOnTupleHelper<0u, sizeof...(Params)>::Do(
-		[](const Params &... vParams){
+		[](const Params &...vParams){
 			return std::make_shared<Object>(vParams...);
 		},
 		vTuple
 	);
 }
-template<class Object, typename... Params>
+template<class Object, typename ...Params>
 auto MakeSharedFromTuple(std::tuple<Params...> &&vTuple){
 	return Impl::CallOnTupleHelper<0u, sizeof...(Params)>::Do(
-		[](Params &&... vParams){
+		[](Params &&...vParams){
 			return std::make_shared<Object>(std::move(vParams)...);
 		},
 		std::move(vTuple)

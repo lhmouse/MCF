@@ -16,20 +16,20 @@ namespace MCF {
 namespace Impl {
 	template<std::size_t CUR, std::size_t END>
 	struct CallOnTupleHelper {
-		template<typename Function, typename... TupleParams, typename... Unpacked>
+		template<typename Function, typename ...TupleParams, typename ...Unpacked>
 		static decltype(auto) Do(
 			Function &&vFunction, const std::tuple<TupleParams...> &vTuple,
-			const Unpacked &... vUnpacked
+			const Unpacked &...vUnpacked
 		){
 			return CallOnTupleHelper<CUR + 1, END>::Do(
 				vFunction, vTuple,
 				vUnpacked..., std::get<CUR>(vTuple)
 			);
 		}
-		template<typename Function, typename... TupleParams, typename... Unpacked>
+		template<typename Function, typename ...TupleParams, typename ...Unpacked>
 		static decltype(auto) Do(
 			Function &&vFunction, std::tuple<TupleParams...> &&vTuple,
-			Unpacked &&... vUnpacked
+			Unpacked &&...vUnpacked
 		){
 			return CallOnTupleHelper<CUR + 1, END>::Do(
 				vFunction, std::move(vTuple),
@@ -39,24 +39,24 @@ namespace Impl {
 	};
 	template<std::size_t END>
 	struct CallOnTupleHelper<END, END> {
-		template<typename Function, typename... TupleParams, typename... Unpacked>
+		template<typename Function, typename ...TupleParams, typename ...Unpacked>
 		static decltype(auto) Do(
 			Function &&vFunction, const std::tuple<TupleParams...> &,
-			const Unpacked &... vUnpacked
+			const Unpacked &...vUnpacked
 		){
 			return vFunction(vUnpacked...);
 		}
-		template<typename Function, typename... TupleParams, typename... Unpacked>
+		template<typename Function, typename ...TupleParams, typename ...Unpacked>
 		static decltype(auto) Do(
 			Function &&vFunction, std::tuple<TupleParams...> &&,
-			Unpacked &&... vUnpacked
+			Unpacked &&...vUnpacked
 		){
 			return vFunction(std::move(vUnpacked)...);
 		}
 	};
 }
 
-template<typename Function, typename... Params>
+template<typename Function, typename ...Params>
 decltype(auto) CallOnTuple(Function &&vFunction, const std::tuple<Params...> &vTuple)
 	noexcept(noexcept(
 		std::declval<Function>()(std::declval<const Params &>()...)
@@ -66,7 +66,7 @@ decltype(auto) CallOnTuple(Function &&vFunction, const std::tuple<Params...> &vT
 		std::forward<Function>(vFunction), vTuple
 	);
 }
-template<typename Function, typename... Params>
+template<typename Function, typename ...Params>
 decltype(auto) CallOnTuple(Function &&vFunction, std::tuple<Params...> &&vTuple)
 	noexcept(noexcept(
 		std::declval<Function>()(std::declval<Params &&>()...)
@@ -77,7 +77,7 @@ decltype(auto) CallOnTuple(Function &&vFunction, std::tuple<Params...> &&vTuple)
 	);
 }
 
-template<class Object, typename... Params>
+template<class Object, typename ...Params>
 auto MakeFromTuple(const std::tuple<Params...> &vTuple)
 	noexcept(noexcept(
 		std::is_nothrow_constructible<Object, const Params &...>::value
@@ -85,13 +85,13 @@ auto MakeFromTuple(const std::tuple<Params...> &vTuple)
 	))
 {
 	return Impl::CallOnTupleHelper<0u, sizeof...(Params)>::Do(
-		[](const Params &... vParams){
+		[](const Params &...vParams){
 			return Object(vParams...);
 		},
 		vTuple
 	);
 }
-template<class Object, typename... Params>
+template<class Object, typename ...Params>
 auto MakeFromTuple(std::tuple<Params...> &&vTuple)
 	noexcept(noexcept(
 		std::is_nothrow_constructible<Object, Params &&...>::value
@@ -99,45 +99,45 @@ auto MakeFromTuple(std::tuple<Params...> &&vTuple)
 	))
 {
 	return Impl::CallOnTupleHelper<0u, sizeof...(Params)>::Do(
-		[](Params &&... vParams){
+		[](Params &&...vParams){
 			return Object(std::move(vParams)...);
 		},
 		std::move(vTuple)
 	);
 }
 
-template<class Object, typename... Params>
+template<class Object, typename ...Params>
 auto MakeUniqueFromTuple(const std::tuple<Params...> &vTuple){
 	return Impl::CallOnTupleHelper<0u, sizeof...(Params)>::Do(
-		[](const Params &... vParams){
+		[](const Params &...vParams){
 			return std::make_unique<Object>(vParams...);
 		},
 		vTuple
 	);
 }
-template<class Object, typename... Params>
+template<class Object, typename ...Params>
 auto MakeUniqueFromTuple(std::tuple<Params...> &&vTuple){
 	return Impl::CallOnTupleHelper<0u, sizeof...(Params)>::Do(
-		[](Params &&... vParams){
+		[](Params &&...vParams){
 			return std::make_unique<Object>(std::move(vParams)...);
 		},
 		std::move(vTuple)
 	);
 }
 
-template<class Object, typename... Params>
+template<class Object, typename ...Params>
 auto MakeSharedFromTuple(const std::tuple<Params...> &vTuple){
 	return Impl::CallOnTupleHelper<0u, sizeof...(Params)>::Do(
-		[](const Params &... vParams){
+		[](const Params &...vParams){
 			return std::make_shared<Object>(vParams...);
 		},
 		vTuple
 	);
 }
-template<class Object, typename... Params>
+template<class Object, typename ...Params>
 auto MakeSharedFromTuple(std::tuple<Params...> &&vTuple){
 	return Impl::CallOnTupleHelper<0u, sizeof...(Params)>::Do(
-		[](Params &&... vParams){
+		[](Params &&...vParams){
 			return std::make_shared<Object>(std::move(vParams)...);
 		},
 		std::move(vTuple)

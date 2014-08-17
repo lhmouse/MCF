@@ -10,7 +10,7 @@
 namespace MCF {
 
 template<typename Function, typename First, typename ...Params>
-Function &&CallOnEach(Function &&vFunction, First &&vFirst, Params &&... vParams){
+Function &&CallOnEach(Function &&vFunction, First &&vFirst, Params &&...vParams){
 	vFunction(std::forward<First>(vFirst));
 	CallOnEach(vFunction, std::forward<Params>(vParams)...);
 	return std::forward<Function>(vFunction);
@@ -21,7 +21,7 @@ Function &&CallOnEach(Function &&vFunction){
 }
 
 template<typename Function, typename First, typename ...Params>
-Function &&ReverseCallOnEach(Function &&vFunction, First &&vFirst, Params &&... vParams){
+Function &&ReverseCallOnEach(Function &&vFunction, First &&vFirst, Params &&...vParams){
 	ReverseCallOnEach(vFunction, std::forward<Params>(vParams)...);
 	vFunction(std::forward<First>(vFirst));
 	return std::forward<Function>(vFunction);

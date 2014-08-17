@@ -9,9 +9,9 @@
 
 namespace MCF {
 
-template<typename... Params>
+template<typename ...Params>
 __MCF_NORETURN_IF_NDEBUG inline
-void Bail(const wchar_t *pwszFormat, const Params &... vParams){
+void Bail(const wchar_t *pwszFormat, const Params &...vParams){
 	::MCF_CRT_BailF(pwszFormat, vParams...);
 }
 

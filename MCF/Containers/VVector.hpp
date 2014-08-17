@@ -35,7 +35,7 @@ public:
 		, xm_pEnd	(xm_pBegin)
 	{
 	}
-	template<typename... Params>
+	template<typename ...Params>
 	explicit VVector(std::size_t uCount, const Params &...vParams)
 		: VVector()
 	{
@@ -189,8 +189,8 @@ public:
 	std::size_t GetSize() const noexcept {
 		return (std::size_t)(GetEnd() - GetBegin());
 	}
-	template<typename... Params>
-	Element *Resize(std::size_t uNewSize, const Params &... vParams){
+	template<typename ...Params>
+	Element *Resize(std::size_t uNewSize, const Params &...vParams){
 		const std::size_t uOldSize = GetSize();
 		if(uNewSize > uOldSize){
 			FillAtEnd(uNewSize - uOldSize, vParams...);
@@ -199,8 +199,8 @@ public:
 		}
 		return GetData();
 	}
-	template<typename... Params>
-	Element *ResizeMore(std::size_t uDeltaSize, const Params &... vParams){
+	template<typename ...Params>
+	Element *ResizeMore(std::size_t uDeltaSize, const Params &...vParams){
 		const auto uOldSize = GetSize();
 		FillAtEnd(uDeltaSize, vParams...);
 		return GetData() + uOldSize;
@@ -282,7 +282,7 @@ public:
 		}
 		return xm_pEnd++;
 	}
-	template<typename... Params>
+	template<typename ...Params>
 	Element *PushNoCheck(Params &&...vParams)
 		noexcept(std::is_nothrow_constructible<Element, Params &&...>::value)
 	{
@@ -291,7 +291,7 @@ public:
 		Construct(xm_pEnd, std::forward<Params>(vParams)...);
 		return xm_pEnd++;
 	}
-	template<typename... Params>
+	template<typename ...Params>
 	Element *Push(Params &&...vParams){
 		Reserve(GetSize() + 1);
 		return PushNoCheck(std::forward<Params>(vParams)...);
@@ -302,7 +302,7 @@ public:
 		Destruct(--xm_pEnd);
 	}
 
-	template<typename... Params>
+	template<typename ...Params>
 	void FillAtEndNoCheck(std::size_t uCount, const Params &...vParams)
 		noexcept(std::is_nothrow_constructible<Element, const Params &...>::value)
 	{
@@ -328,7 +328,7 @@ public:
 			++itBegin;
 		}
 	}
-	template<typename... Params>
+	template<typename ...Params>
 	void FillAtEnd(std::size_t uCount, const Params &...vParams){
 		Reserve(GetSize() + uCount);
 		FillAtEndNoCheck(uCount, vParams...);
@@ -409,7 +409,7 @@ public:
 		, xm_pEndOfStor	(xm_pBegin)
 	{
 	}
-	template<typename... Params>
+	template<typename ...Params>
 	explicit VVector(std::size_t uCount, const Params &...vParams)
 		: VVector()
 	{
@@ -557,8 +557,8 @@ public:
 	std::size_t GetSize() const noexcept {
 		return (std::size_t)(GetEnd() - GetBegin());
 	}
-	template<typename... Params>
-	void Resize(std::size_t uNewSize, const Params &... vParams){
+	template<typename ...Params>
+	void Resize(std::size_t uNewSize, const Params &...vParams){
 		const std::size_t uOldSize = GetSize();
 		if(uNewSize > uOldSize){
 			FillAtEnd(uNewSize - uOldSize, vParams...);
@@ -566,8 +566,8 @@ public:
 			TruncateFromEnd(uOldSize - uNewSize);
 		}
 	}
-	template<typename... Params>
-	Element *ResizeMore(std::size_t uDeltaSize, const Params &... vParams){
+	template<typename ...Params>
+	Element *ResizeMore(std::size_t uDeltaSize, const Params &...vParams){
 		const auto uOldSize = GetSize();
 		FillAtEnd(uDeltaSize, vParams...);
 		return GetData() + uOldSize;
@@ -643,7 +643,7 @@ public:
 		}
 		return xm_pEnd++;
 	}
-	template<typename... Params>
+	template<typename ...Params>
 	Element *PushNoCheck(Params &&...vParams)
 		noexcept(std::is_nothrow_constructible<Element, Params &&...>::value)
 	{
@@ -652,7 +652,7 @@ public:
 		Construct(xm_pEnd, std::forward<Params>(vParams)...);
 		return xm_pEnd++;
 	}
-	template<typename... Params>
+	template<typename ...Params>
 	Element *Push(Params &&...vParams){
 		Reserve(GetSize() + 1);
 		return PushNoCheck(std::forward<Params>(vParams)...);
@@ -663,7 +663,7 @@ public:
 		Destruct(--xm_pEnd);
 	}
 
-	template<typename... Params>
+	template<typename ...Params>
 	void FillAtEndNoCheck(std::size_t uCount, const Params &...vParams)
 		noexcept(std::is_nothrow_constructible<Element, const Params &...>::value)
 	{
@@ -689,7 +689,7 @@ public:
 			++itBegin;
 		}
 	}
-	template<typename... Params>
+	template<typename ...Params>
 	void FillAtEnd(std::size_t uCount, const Params &...vParams){
 		Reserve(GetSize() + uCount);
 		FillAtEndNoCheck(uCount, vParams...);

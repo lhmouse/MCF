@@ -33,13 +33,13 @@ namespace Impl {
 	};
 }
 
-template<typename... Elements>
+template<typename ...Elements>
 void operator>>=(const std::tuple<Elements...> &vSource, StreamBuffer &sbufSink){
 	Impl::TupleSerdesHelper<std::tuple<Elements...>,
 		sizeof...(Elements), 0
 		>::Insert(vSource, sbufSink);
 }
-template<typename... Elements>
+template<typename ...Elements>
 void operator<<=(std::tuple<Elements...> &vSink, StreamBuffer &sbufSource){
 	Impl::TupleSerdesHelper<std::tuple<Elements...>,
 		sizeof...(Elements), 0

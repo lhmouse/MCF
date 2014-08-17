@@ -22,8 +22,8 @@ namespace Impl {
 	template<typename RealBase>
 	class ConcreteBase : public RealBase {
 	protected:
-		template<typename... BaseParams>
-		explicit ConcreteBase(BaseParams &&... vBaseParams)
+		template<typename ...BaseParams>
+		explicit ConcreteBase(BaseParams &&...vBaseParams)
 			noexcept(std::is_nothrow_constructible<RealBase, BaseParams &&...>::value)
 			: RealBase(std::forward<BaseParams>(vBaseParams)...)
 		{

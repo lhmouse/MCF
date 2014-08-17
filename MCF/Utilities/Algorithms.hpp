@@ -467,11 +467,11 @@ inline std::pair<OutputIterator, InputIterator> ReverseMoveBackwardN(
 	return std::make_pair(std::move(vResult.first), vResult.second.base());
 }
 
-template<typename Value = void, typename OutputIterator, typename... Params>
+template<typename Value = void, typename OutputIterator, typename ...Params>
 inline OutputIterator Fill(
 	OutputIterator itOutputBegin,
 	typename std::common_type<OutputIterator>::type itOutputEnd,
-	const Params &... vParams
+	const Params &...vParams
 ){
 	typedef typename std::conditional<
 		std::is_void<Value>::value,
@@ -484,11 +484,11 @@ inline OutputIterator Fill(
 	}
 	return std::move(itOutputBegin);
 }
-template<typename Value = void, typename OutputIterator, typename... Params>
+template<typename Value = void, typename OutputIterator, typename ...Params>
 inline OutputIterator FillN(
 	OutputIterator itOutputBegin,
 	std::size_t uCount,
-	const Params &... vParams
+	const Params &...vParams
 ){
 	typedef typename std::conditional<
 		std::is_void<Value>::value,

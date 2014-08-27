@@ -14,11 +14,11 @@ extern void __MCF_CRT_TlsEnvUninit(void) MCF_NOEXCEPT;
 
 extern void __stdcall __MCF_CRT_TlsCallback(void *hModule, unsigned long ulReason, void *pReserved) MCF_NOEXCEPT;
 
-// 失败返回 0。
+// 失败返回 NULL。
 extern void *MCF_CRT_AtThreadExit(void (__cdecl *pfnProc)(MCF_STD intptr_t), MCF_STD intptr_t nContext) MCF_NOEXCEPT;
 extern bool MCF_CRT_RemoveAtThreadExit(void *pTlsKey) MCF_NOEXCEPT;
 
-// 失败返回 0。
+// 失败返回 NULL。
 extern void *MCF_CRT_TlsAllocKey(void (__cdecl *pfnCallback)(MCF_STD intptr_t)) MCF_NOEXCEPT;
 extern bool MCF_CRT_TlsFreeKey(void *pTlsKey) MCF_NOEXCEPT;
 
@@ -37,6 +37,9 @@ extern MCF_TLS_EXCHANGE_RESULT MCF_CRT_TlsExchange(
 	void *pTlsKey,
 	MCF_STD intptr_t *pnOldValue, MCF_STD intptr_t nNewValue
 ) MCF_NOEXCEPT;
+
+// 删除所有 Tls。
+extern void MCF_CRT_TlsClearAll() MCF_NOEXCEPT;
 
 // 返回的是 HANDLE。
 extern void *MCF_CRT_CreateThread(

@@ -146,57 +146,7 @@ void __MCF_CRT_TlsCallback(void *hModule, unsigned long ulReason, void *pReserve
 	UNREF_PARAM(pReserved);
 
 	if(ulReason == DLL_THREAD_DETACH){
-		TLS_MAP *const pMap = TlsGetValue(g_dwTlsIndex);
-		if(pMap){
-			TLS_OBJECT *pObject = pMap->pLastInThread;
-			while(pObject){
-				AcquireSRWLockExclusive(&g_srwLock);
-				{
-					TLS_OBJECT *const pPrevByKey = pObject->pPrevByKey;
-					TLS_OBJECT *const pNextByKey = pObject->pNextByKey;
-					if(pPrevByKey){
-						pPrevByKey->pNextByKey = pNextByKey;
-					}
-					if(pNextByKey){
-						pNextByKey->pPrevByKey = pPrevByKey;
-					}
-
-					if(pObject->pKey->pLastByKey == pObject){
-						pObject->pKey->pLastByKey = pPrevByKey;
-					}
-				}
-				ReleaseSRWLockExclusive(&g_srwLock);
-
-				if(pObject->pKey->pfnCallback){
-					(*(pObject->pKey->pfnCallback))(pObject->nValue);
-				}
-
-				TLS_OBJECT *const pPrevInThread = pObject->pPrevInThread;
-				free(pObject);
-				pObject = pPrevInThread;
-			}
-
-			AcquireSRWLockExclusive(&g_srwLock);
-			{
-				TLS_MAP *const pPrevMap = pMap->pPrevMap;
-				TLS_MAP *const pNextMap = pMap->pNextMap;
-				if(pPrevMap){
-					pPrevMap->pNextMap = pNextMap;
-				}
-				if(pNextMap){
-					pNextMap->pPrevMap = pPrevMap;
-				}
-				if(g_pLastMap == pMap){
-					g_pLastMap = pPrevMap;
-				}
-			}
-			ReleaseSRWLockExclusive(&g_srwLock);
-
-			free(pMap);
-			TlsSetValue(g_dwTlsIndex, NULL);
-		}
-
-		__MCF_CRT_RunEmutlsDtors();
+		MCF_CRT_TlsClearAll();
 	}
 }
 
@@ -476,6 +426,60 @@ bool MCF_CRT_TlsReset(void *pTlsKey, intptr_t nNewValue){
 }
 MCF_TLS_EXCHANGE_RESULT MCF_CRT_TlsExchange(void *pTlsKey, intptr_t *pnOldValue, intptr_t nNewValue){
 	return TlsExchange(pTlsKey, NULL, pnOldValue, nNewValue);
+}
+
+void MCF_CRT_TlsClearAll(){
+	TLS_MAP *const pMap = TlsGetValue(g_dwTlsIndex);
+	if(pMap){
+		TLS_OBJECT *pObject = pMap->pLastInThread;
+		while(pObject){
+			AcquireSRWLockExclusive(&g_srwLock);
+			{
+				TLS_OBJECT *const pPrevByKey = pObject->pPrevByKey;
+				TLS_OBJECT *const pNextByKey = pObject->pNextByKey;
+				if(pPrevByKey){
+					pPrevByKey->pNextByKey = pNextByKey;
+				}
+				if(pNextByKey){
+					pNextByKey->pPrevByKey = pPrevByKey;
+				}
+
+				if(pObject->pKey->pLastByKey == pObject){
+					pObject->pKey->pLastByKey = pPrevByKey;
+				}
+			}
+			ReleaseSRWLockExclusive(&g_srwLock);
+
+			if(pObject->pKey->pfnCallback){
+				(*(pObject->pKey->pfnCallback))(pObject->nValue);
+			}
+
+			TLS_OBJECT *const pPrevInThread = pObject->pPrevInThread;
+			free(pObject);
+			pObject = pPrevInThread;
+		}
+
+		AcquireSRWLockExclusive(&g_srwLock);
+		{
+			TLS_MAP *const pPrevMap = pMap->pPrevMap;
+			TLS_MAP *const pNextMap = pMap->pNextMap;
+			if(pPrevMap){
+				pPrevMap->pNextMap = pNextMap;
+			}
+			if(pNextMap){
+				pNextMap->pPrevMap = pPrevMap;
+			}
+			if(g_pLastMap == pMap){
+				g_pLastMap = pPrevMap;
+			}
+		}
+		ReleaseSRWLockExclusive(&g_srwLock);
+
+		free(pMap);
+		TlsSetValue(g_dwTlsIndex, NULL);
+	}
+
+	__MCF_CRT_RunEmutlsDtors();
 }
 
 typedef struct tagThreadInitInfo {

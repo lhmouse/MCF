@@ -1,25 +1,24 @@
 #include <MCF/StdMCF.hpp>
-#include <MCF/Containers/MultiIndexedMap.hpp>
+#include <MCF/Thread/ThreadLocalPtr.hpp>
+#include <MCF/Thread/Thread.hpp>
 using namespace MCF;
 
-extern "C" unsigned int MCFMain() noexcept {
-	MultiIndexedMap<double, int> m;
-	m.Insert(1.0 , 1);
-	m.Insert(4.0 , 2);
-	m.Insert(9.0 , 3);
-	auto h = m.GetBegin<0>();
-	h = h->GetNext<0>();
-	h = h->GetNext<0>();
-std::puts("--- 1 ---");
-	m.InsertWithHints(std::make_tuple(h), 16.0, 4);
-std::puts("--- 2 ---");
-	m.InsertWithHints(std::make_tuple(h), 25.0, 5);
-std::puts("--- 3 ---");
+static ThreadLocalPtr<int> g_tls;
 
-	auto m2 = m;
-	for(auto p = m.GetBegin<0>(); p; p = p->GetNext<0>()){
-		std::printf("%d %f\n", p->GetIndex<0>(), p->GetElement());
-	}
+extern "C" unsigned int MCFMain() noexcept {
+	auto fn = []{
+		::Sleep(1000);
+		std::printf("thread %lu tls = %d\n", Thread::GetCurrentId(), *g_tls);
+		*g_tls = 12345;
+		std::printf("thread %lu sets tls to %d\n", Thread::GetCurrentId(), *g_tls);
+	};
+
+	auto thread = Thread::Create(fn);
+	::Sleep(500);
+	fn();
+	thread->Join();
+
+	std::printf("child thread has exited, tls = %d\n", *g_tls);
 
 	return 0;
 }

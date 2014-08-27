@@ -501,17 +501,7 @@ public:
 	}
 
 	template<std::size_t INDEX, typename ...Params>
-	void SetIndex(Node *pNode, Params &&...vParams)
-		noexcept(
-			std::is_nothrow_constructible<
-				typename std::tuple_element<INDEX, typename Node::xIndexTuple>::type,
-				Params...
-			>::value &&
-			std::is_nothrow_move_assignable<
-				typename std::tuple_element<INDEX, typename Node::xIndexTuple>::type
-			>::value
-		)
-	{
+	void SetIndex(Node *pNode, Params &&...vParams){
 		typename std::tuple_element<INDEX, typename Node::xIndexTuple>::type
 			vNewIndex(std::forward<Params>(vParams)...);
 

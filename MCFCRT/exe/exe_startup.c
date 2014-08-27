@@ -10,7 +10,7 @@
 #include "../env/_eh_top.h"
 #include "../ext/unref_param.h"
 
-// -static -Wl,-e__MCF_DllStartup,--disable-runtime-pseudo-reloc,--disable-auto-import
+// -static -Wl,-e__MCF_ExeStartup,--disable-runtime-pseudo-reloc,--disable-auto-import
 
 #define MCF_SECTION(x)	__attribute__((__section__(x), __used__))
 

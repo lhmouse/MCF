@@ -7,7 +7,7 @@
 
 #include "../../MCFCRT/env/last_error.h"
 #include "String.hpp"
-#include <exception>
+#include <stdexcept>
 #include <utility>
 #include <cstddef>
 

@@ -59,7 +59,11 @@ struct ThunkDeallocator {
 				pCurrentThunk = pPrevThunk;
 			}
 			if(!pCurrentThunk->GetElement().first.unique()){
-				g_mapThunks.SetIndex<1>(pCurrentThunk, pCurrentThunk->GetElement().second);
+				FORCE_NOEXCEPT_BEGIN
+				{
+					g_mapThunks.SetIndex<1>(pCurrentThunk, pCurrentThunk->GetElement().second);
+				}
+				FORCE_NOEXCEPT_END
 
 				const auto pbyRoundedBegin = (unsigned char *)(
 					(((std::uintptr_t)pCurrentThunk->GetIndex<0>() + (1u << g_uPageOffsetBits) - 1) >> g_uPageOffsetBits)
@@ -134,37 +138,29 @@ std::shared_ptr<const void> AllocateThunk(const void *pInit, std::size_t uSize){
 		}
 		ASSERT(pCached->GetIndex<1>() >= uThunkSize);
 
-		STATIC_ASSERT_NOEXCEPT_BEGIN
-		{
-			const auto pbyThunk = (unsigned char *)pCached->GetIndex<0>();
-			const auto uSizeRemaining = pCached->GetIndex<1>() - uThunkSize;
-			if(uSizeRemaining >= 0x10){
-				// 如果剩下的空间还很大，保存成一个新的空闲 thunk。
-				pCached->GetElement().second = uThunkSize;
-				g_mapThunks.SetIndex<1>(pCached, 0u);
+		const auto pbyThunk = (unsigned char *)pCached->GetIndex<0>();
+		const auto uSizeRemaining = pCached->GetIndex<1>() - uThunkSize;
+		if(uSizeRemaining >= 0x10){
+			// 如果剩下的空间还很大，保存成一个新的空闲 thunk。
+			pCached->GetElement().second = uThunkSize;
+			g_mapThunks.SetIndex<1>(pCached, 0u);
 
-				pNullNode->GetElement() = std::make_pair(pCached->GetElement().first, uSizeRemaining);
-				g_mapThunks.SetIndex<0>(pNullNode, pbyThunk + uThunkSize);
-				g_mapThunks.SetIndex<1>(pNullNode, uSizeRemaining);
-			} else {
-				// 否则就不继续切分，当作一个整体。
-				uThunkSize = pCached->GetIndex<1>();
-				g_mapThunks.SetIndex<1>(pCached, 0u);
-			}
-
-			FORCE_NOEXCEPT_BEGIN
-			{
-				DWORD dwOldProtect;
-				// 由于其他 thunk 可能共享了当前内存页，所以不能设置为 PAGE_READWRITE。
-				::VirtualProtect(pbyThunk, uThunkSize, PAGE_EXECUTE_READWRITE, &dwOldProtect);
-				auto pbyWrite = pbyThunk;
-				pbyWrite = CopyN(pbyWrite, (const unsigned char *)pInit, uSize).first;
-				pbyWrite = FillN(pbyWrite, uThunkSize - uSize, 0xCC);
-				::VirtualProtect(pbyThunk, uThunkSize, PAGE_EXECUTE_READ, &dwOldProtect);
-			}
-			FORCE_NOEXCEPT_END
+			pNullNode->GetElement() = std::make_pair(pCached->GetElement().first, uSizeRemaining);
+			g_mapThunks.SetIndex<0>(pNullNode, pbyThunk + uThunkSize);
+			g_mapThunks.SetIndex<1>(pNullNode, uSizeRemaining);
+		} else {
+			// 否则就不继续切分，当作一个整体。
+			uThunkSize = pCached->GetIndex<1>();
+			g_mapThunks.SetIndex<1>(pCached, 0u);
 		}
-		STATIC_ASSERT_NOEXCEPT_END
+
+		DWORD dwOldProtect;
+		// 由于其他 thunk 可能共享了当前内存页，所以不能设置为 PAGE_READWRITE。
+		::VirtualProtect(pbyThunk, uThunkSize, PAGE_EXECUTE_READWRITE, &dwOldProtect);
+		auto pbyWrite = pbyThunk;
+		pbyWrite = CopyN(pbyWrite, (const unsigned char *)pInit, uSize).first;
+		pbyWrite = FillN(pbyWrite, uThunkSize - uSize, 0xCC);
+		::VirtualProtect(pbyThunk, uThunkSize, PAGE_EXECUTE_READ, &dwOldProtect);
 
 		pThunk.reset(pCached->GetIndex<0>(), ThunkDeallocator());
 	}

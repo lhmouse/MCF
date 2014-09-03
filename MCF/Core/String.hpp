@@ -973,14 +973,14 @@ void operator<<=(String<Char, ENCODING> &strSink, StreamBuffer &sbufSource){
 
 // 字面量运算符。
 template<typename Char, Char ...STRING>
-typename std::enable_if<std::is_same<Char, char>::value, const AnsiString &>::type
+extern inline typename std::enable_if<std::is_same<Char, char>::value, const AnsiString &>::type
 	operator""_as()
 {
 	static AnsiString s_strRet({STRING...});
 	return s_strRet;
 }
 template<typename Char, Char ...STRING>
-typename std::enable_if<std::is_same<Char, wchar_t>::value, const WideString &>::type
+extern inline typename std::enable_if<std::is_same<Char, wchar_t>::value, const WideString &>::type
 	operator""_ws()
 {
 	static WideString s_strRet({STRING...});
@@ -988,21 +988,21 @@ typename std::enable_if<std::is_same<Char, wchar_t>::value, const WideString &>:
 }
 
 template<typename Char, Char ...STRING>
-typename std::enable_if<std::is_same<Char, char>::value, const Utf8String &>::type
+extern inline typename std::enable_if<std::is_same<Char, char>::value, const Utf8String &>::type
 	operator""_u8s()
 {
 	static Utf8String s_strRet({STRING...});
 	return s_strRet;
 }
 template<typename Char, Char ...STRING>
-typename std::enable_if<std::is_same<Char, char16_t>::value, const Utf16String &>::type
+extern inline typename std::enable_if<std::is_same<Char, char16_t>::value, const Utf16String &>::type
 	operator""_u16s()
 {
 	static Utf16String s_strRet({STRING...});
 	return s_strRet;
 }
 template<typename Char, Char ...STRING>
-typename std::enable_if<std::is_same<Char, char32_t>::value, const Utf32String &>::type
+extern inline typename std::enable_if<std::is_same<Char, char32_t>::value, const Utf32String &>::type
 	operator""_u32s()
 {
 	static Utf32String s_strRet({STRING...});

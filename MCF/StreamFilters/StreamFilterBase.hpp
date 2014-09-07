@@ -56,12 +56,9 @@ public:
 	StreamFilterBase &Filter(const StreamBuffer &sbufData){
 		ASSERT(&xm_sbufOutput != &sbufData);
 
-		sbufData.Traverse(
-			[](auto nContext, auto pbyData, auto uSize){
-				((StreamFilterBase *)nContext)->Update(pbyData, uSize);
-			},
-			(std::intptr_t)this
-		);
+		sbufData.Traverse([&](auto pbyData, auto uSize){
+			this->Update(pbyData, uSize);
+		});
 		return *this;
 	}
 	StreamFilterBase &FilterInPlace(StreamBuffer &sbufData){

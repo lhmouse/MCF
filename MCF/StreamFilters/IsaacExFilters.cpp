@@ -4,6 +4,7 @@
 
 #include "../StdMCF.hpp"
 #include "IsaacExFilters.hpp"
+#include "../Utilities/ByteSwap.hpp"
 #include "../Hash/Sha256.hpp"
 #include "../Random/IsaacRng.hpp"
 using namespace MCF;

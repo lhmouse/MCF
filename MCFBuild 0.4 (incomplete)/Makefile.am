@@ -1,9 +1,9 @@
 AUTOMAKE_OPTIONS=foreign subdir-objects
 
-AM_CFLAGS=-std=c11 -Wall -Wextra -Wsign-conversion -Wsuggest-attribute=noreturn -pipe	\
-	-mfpmath=both -march=nocona -masm=intel
-AM_CXXFLAGS=-std=c++14 -Wall -Wextra -Wsign-conversion -Wsuggest-attribute=noreturn -pipe	\
-	-mfpmath=both -march=nocona -masm=intel -Wnoexcept
+AM_CPPFLAGS=-Wall -Wextra -pedantic -Wsign-conversion -Wsuggest-attribute=noreturn	\
+	-pipe -mfpmath=both -march=nocona -masm=intel
+AM_CFLAGS=-std=c11
+AM_CXXFLAGS=-std=c++14 -Wnoexcept
 
 noinst_LIBRARIES=	\
 	lib/libmcflite.a
@@ -15,7 +15,7 @@ lib_libmcflite_a_SOURCES=\
 	../MCFCRT/stdc/stdlib/calloc.c			\
 	../MCFCRT/stdc/stdlib/free.c			\
 	../MCFCRT/ext/wcscpyout.c				\
-	../MCFCRT/env/bail.c					\
+	../MCFCRT/env/bail_out.c				\
 	../MCFCRT/env/module.c					\
 	../MCFCRT/env/last_error.c				\
 	../MCFCRT/env/fenv.c					\

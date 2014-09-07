@@ -36,7 +36,7 @@ WideString Unescape(const WideStringObserver &wsoSrc){
 	};
 
 	const auto pwcEnd = wsoSrc.GetEnd();
-	for(auto pwcCur = wsoSrc.GetBegin(); pwcCur != pwcEnd; ++pwcCur){
+	for(auto pwcCur = wsoSrc.GetFirst(); pwcCur != pwcEnd; ++pwcCur){
 		const auto wc = *pwcCur;
 
 		switch(eState){
@@ -207,7 +207,7 @@ void Escape(WideString &wcsAppendTo, const WideStringObserver &wsoSrc){
 std::pair<TExpression::ErrorType, const wchar_t *> TExpression::Parse(const WideStringObserver &wsoData){
 	m_deqChildren.clear();
 
-	auto pwcRead = wsoData.GetBegin();
+	auto pwcRead = wsoData.GetFirst();
 	const auto pwcEnd = wsoData.GetEnd();
 	if(pwcRead == pwcEnd){
 		return std::make_pair(ERR_NONE, pwcRead);

@@ -7,7 +7,11 @@
 
 #include "StringObserver.hpp"
 #include "../Containers/VVector.hpp"
-#include "../Utilities/Utilities.hpp"
+#include "../Utilities/CountOf.hpp"
+#include "../Utilities/BitsOf.hpp"
+#include "../Utilities/CountLeadingTrailingZeroes.hpp"
+#include "../Utilities/Algorithms.hpp"
+#include "../Utilities/StaticAssertNoexcept.hpp"
 #include <type_traits>
 #include <memory>
 #include <cstdint>
@@ -59,22 +63,22 @@ public:
 private:
 	union xStorage {
 		struct __attribute__((__packed__)) {
-			Char achSmall[(4 * sizeof(void *)) / sizeof(Char) - 2];
+			Char achData[(4 * sizeof(void *)) / sizeof(Char) - 2];
 			Char chNull;
-			typename std::make_unsigned<Char>::type uchSmallLength;
-		};
+			std::make_unsigned_t<Char> uchLength;
+		} vSmall;
 		struct {
-			Char *pchLargeBegin;
-			std::size_t uLargeLength;
-			std::size_t uLargeCapacity;
-		};
+			Char *pchBegin;
+			std::size_t uLength;
+			std::size_t uCapacity;
+		} vLarge;
 	} xm_vStorage;
 
 public:
 	String() noexcept {
-		xm_vStorage.achSmall[0]		= Char();
-		xm_vStorage.chNull			= Char();
-		xm_vStorage.uchSmallLength	= 0;
+		xm_vStorage.vSmall.achData[0]	= Char();
+		xm_vStorage.vSmall.chNull		= Char();
+		xm_vStorage.vSmall.uchLength	= 0;
 	}
 	explicit String(Char ch, std::size_t uCount = 1)
 		: String()
@@ -87,7 +91,7 @@ public:
 		Assign(pszBegin);
 	}
 	template<class Iterator>
-	String(Iterator itBegin, typename std::common_type<Iterator>::type itEnd)
+	String(Iterator itBegin, std::common_type_t<Iterator> itEnd)
 		: String()
 	{
 		Assign(itBegin, itEnd);
@@ -165,8 +169,8 @@ public:
 		return *this;
 	}
 	~String() noexcept {
-		if(xm_vStorage.chNull != Char()){
-			delete[] xm_vStorage.pchLargeBegin;
+		if(xm_vStorage.vSmall.chNull != Char()){
+			delete[] xm_vStorage.vLarge.pchBegin;
 		}
 
 #ifndef NDEBUG
@@ -186,7 +190,7 @@ private:
 		ASSERT(uRemovedBegin <= uRemovedEnd);
 		ASSERT(uFirstOffset + uRemovedBegin <= uThirdOffset);
 
-		const auto pchOldBuffer = GetBegin();
+		const auto pchOldBuffer = GetFirst();
 		const auto uOldLength = GetLength();
 		auto pchNewBuffer = pchOldBuffer;
 		const auto uNewLength = uThirdOffset + (uOldLength - uRemovedEnd);
@@ -210,15 +214,15 @@ private:
 		}
 
 		if(pchNewBuffer != pchOldBuffer){
-			if(xm_vStorage.chNull == Char()){
-				xm_vStorage.chNull = Char() + 1;
+			if(xm_vStorage.vSmall.chNull == Char()){
+				xm_vStorage.vSmall.chNull = Char() + 1;
 			} else {
 				delete[] pchOldBuffer;
 			}
 
-			xm_vStorage.pchLargeBegin = pchNewBuffer;
-			xm_vStorage.uLargeLength = uOldLength;
-			xm_vStorage.uLargeCapacity = uSizeToAlloc;
+			xm_vStorage.vLarge.pchBegin = pchNewBuffer;
+			xm_vStorage.vLarge.uLength = uOldLength;
+			xm_vStorage.vLarge.uCapacity = uSizeToAlloc;
 		}
 
 		return pchNewBuffer + uFirstOffset + uRemovedBegin;
@@ -227,45 +231,45 @@ private:
 	void xSetSize(std::size_t uNewSize) noexcept {
 		ASSERT(uNewSize <= GetCapacity());
 
-		if(xm_vStorage.chNull == Char()){
-			xm_vStorage.uchSmallLength = uNewSize;
-			((Char (&)[SIZE_MAX])xm_vStorage.achSmall)[uNewSize] = Char();
+		if(xm_vStorage.vSmall.chNull == Char()){
+			xm_vStorage.vSmall.uchLength = uNewSize;
+			((Char (&)[SIZE_MAX])xm_vStorage.vSmall.achData)[uNewSize] = Char();
 		} else {
-			xm_vStorage.uLargeLength = uNewSize;
-			xm_vStorage.pchLargeBegin[uNewSize] = Char();
+			xm_vStorage.vLarge.uLength = uNewSize;
+			xm_vStorage.vLarge.pchBegin[uNewSize] = Char();
 		}
 	}
 
 public:
-	const Char *GetBegin() const noexcept {
-		if(xm_vStorage.chNull == Char()){
-			return xm_vStorage.achSmall;
+	const Char *GetFirst() const noexcept {
+		if(xm_vStorage.vSmall.chNull == Char()){
+			return xm_vStorage.vSmall.achData;
 		} else {
-			return xm_vStorage.pchLargeBegin;
+			return xm_vStorage.vLarge.pchBegin;
 		}
 	}
-	Char *GetBegin() noexcept {
-		if(xm_vStorage.chNull == Char()){
-			return xm_vStorage.achSmall;
+	Char *GetFirst() noexcept {
+		if(xm_vStorage.vSmall.chNull == Char()){
+			return xm_vStorage.vSmall.achData;
 		} else {
-			return xm_vStorage.pchLargeBegin;
+			return xm_vStorage.vLarge.pchBegin;
 		}
 	}
 	const Char *GetCBegin() const noexcept {
-		return GetBegin();
+		return GetFirst();
 	}
 	const Char *GetEnd() const noexcept {
-		if(xm_vStorage.chNull == Char()){
-			return xm_vStorage.achSmall + xm_vStorage.uchSmallLength;
+		if(xm_vStorage.vSmall.chNull == Char()){
+			return xm_vStorage.vSmall.achData + xm_vStorage.vSmall.uchLength;
 		} else {
-			return xm_vStorage.pchLargeBegin + xm_vStorage.uLargeLength;
+			return xm_vStorage.vLarge.pchBegin + xm_vStorage.vLarge.uLength;
 		}
 	}
 	Char *GetEnd() noexcept {
-		if(xm_vStorage.chNull == Char()){
-			return xm_vStorage.achSmall + xm_vStorage.uchSmallLength;
+		if(xm_vStorage.vSmall.chNull == Char()){
+			return xm_vStorage.vSmall.achData + xm_vStorage.vSmall.uchLength;
 		} else {
-			return xm_vStorage.pchLargeBegin + xm_vStorage.uLargeLength;
+			return xm_vStorage.vLarge.pchBegin + xm_vStorage.vLarge.uLength;
 		}
 	}
 	const Char *GetCEnd() const noexcept {
@@ -273,30 +277,30 @@ public:
 	}
 
 	const Char *GetStr() const noexcept {
-		return GetBegin();
+		return GetFirst();
 	}
 	Char *GetStr() noexcept {
-		return GetBegin();
+		return GetFirst();
 	}
 	const Char *GetCStr() const noexcept {
-		return GetBegin();
+		return GetFirst();
 	}
 	std::size_t GetLength() const noexcept {
 		return GetSize();
 	}
 
 	const Char *GetData() const noexcept {
-		return GetBegin();
+		return GetFirst();
 	}
 	Char *GetData() noexcept {
-		return GetBegin();
+		return GetFirst();
 	}
 	std::size_t GetSize() const noexcept {
-		return (std::size_t)(GetEnd() - GetBegin());
+		return (std::size_t)(GetEnd() - GetFirst());
 	}
 
 	Observer GetObserver() const noexcept {
-		return Observer(GetBegin(), GetEnd());
+		return Observer(GetFirst(), GetEnd());
 	}
 
 	Char *Resize(std::size_t uNewSize){
@@ -334,17 +338,17 @@ public:
 	}
 
 	bool IsEmpty() const noexcept {
-		return GetBegin() == GetEnd();
+		return GetFirst() == GetEnd();
 	}
 	void Clear() noexcept {
 		xSetSize(0);
 	}
 
 	std::size_t GetCapacity() const noexcept {
-		if(xm_vStorage.chNull == Char()){
-			return COUNT_OF(xm_vStorage.achSmall);
+		if(xm_vStorage.vSmall.chNull == Char()){
+			return COUNT_OF(xm_vStorage.vSmall.achData);
 		} else {
-			return xm_vStorage.uLargeCapacity - 1;
+			return xm_vStorage.vLarge.uCapacity - 1;
 		}
 	}
 	void Reserve(std::size_t uNewCapacity){
@@ -376,7 +380,7 @@ public:
 		Assign(Observer(pszBegin));
 	}
 	template<class Iterator>
-	void Assign(Iterator itBegin, typename std::common_type<Iterator>::type itEnd){
+	void Assign(Iterator itBegin, std::common_type_t<Iterator> itEnd){
 		Assign(itBegin, (std::size_t)std::distance(itBegin, itEnd));
 	}
 	template<class Iterator>
@@ -385,7 +389,7 @@ public:
 		Append(itBegin, uLength);
 	}
 	void Assign(const Observer &obs){
-		Assign(obs.GetBegin(), obs.GetEnd());
+		Assign(obs.GetFirst(), obs.GetEnd());
 	}
 	void Assign(std::initializer_list<Char> vInitList){
 		Assign(Observer(vInitList));
@@ -413,7 +417,7 @@ public:
 		Append(Observer(pszBegin));
 	}
 	template<class Iterator>
-	void Append(Iterator itBegin, typename std::common_type<Iterator>::type itEnd){
+	void Append(Iterator itBegin, std::common_type_t<Iterator> itEnd){
 		Append(itBegin, (std::size_t)std::distance(itBegin, itEnd));
 	}
 	template<class Iterator>
@@ -423,7 +427,7 @@ public:
 		xSetSize(uOldLength + uLength);
 	}
 	void Append(const Observer &obs){
-		Append(obs.GetBegin(), obs.GetEnd());
+		Append(obs.GetFirst(), obs.GetEnd());
 	}
 	void Append(std::initializer_list<Char> vInitList){
 		Append(Observer(vInitList));
@@ -435,7 +439,7 @@ public:
 			Copy(pchWrite, pchWrite - uOldLength, pchWrite);
 			xSetSize(uOldLength * 2);
 		} else {
-			Append(rhs.GetBegin(), rhs.GetEnd());
+			Append(rhs.GetFirst(), rhs.GetEnd());
 		}
 	}
 	void Append(String &&rhs){
@@ -474,21 +478,21 @@ public:
 	void PushNoCheck(Char ch) noexcept {
 		ASSERT_MSG(GetLength() < GetCapacity(), L"容器已满。");
 
-		if(xm_vStorage.chNull == Char()){
-			xm_vStorage.achSmall[xm_vStorage.uchSmallLength] = ch;
-			xm_vStorage.achSmall[++xm_vStorage.uchSmallLength] = Char();
+		if(xm_vStorage.vSmall.chNull == Char()){
+			xm_vStorage.vSmall.achData[xm_vStorage.vSmall.uchLength] = ch;
+			xm_vStorage.vSmall.achData[++xm_vStorage.vSmall.uchLength] = Char();
 		} else {
-			xm_vStorage.pchLargeBegin[xm_vStorage.uLargeLength] = ch;
-			xm_vStorage.pchLargeBegin[++xm_vStorage.uLargeLength] = Char();
+			xm_vStorage.vLarge.pchBegin[xm_vStorage.vLarge.uLength] = ch;
+			xm_vStorage.vLarge.pchBegin[++xm_vStorage.vLarge.uLength] = Char();
 		}
 	}
 	void PopNoCheck() noexcept {
 		ASSERT_MSG(GetLength() != 0, L"容器已空。");
 
-		if(xm_vStorage.chNull == Char()){
-			xm_vStorage.achSmall[--xm_vStorage.uchSmallLength] = Char();
+		if(xm_vStorage.vSmall.chNull == Char()){
+			xm_vStorage.vSmall.achData[--xm_vStorage.vSmall.uchLength] = Char();
 		} else {
-			xm_vStorage.pchLargeBegin[--xm_vStorage.uLargeLength] = Char();
+			xm_vStorage.vLarge.pchBegin[--xm_vStorage.vLarge.uLength] = Char();
 		}
 	}
 
@@ -501,7 +505,7 @@ public:
 		Unshift(Observer(pszBegin));
 	}
 	template<class Iterator>
-	void Unshift(Iterator itBegin, typename std::common_type<Iterator>::type itEnd){
+	void Unshift(Iterator itBegin, std::common_type_t<Iterator> itEnd){
 		Unshift(itBegin, (std::size_t)std::distance(itBegin, itEnd));
 	}
 	template<class Iterator>
@@ -511,7 +515,7 @@ public:
 		xSetSize(uOldLength + uLength);
 	}
 	void Unshift(const Observer &obs){
-		Unshift(obs.GetBegin(), obs.GetEnd());
+		Unshift(obs.GetFirst(), obs.GetEnd());
 	}
 	void Unshift(std::initializer_list<Char> vInitList){
 		Unshift(Observer(vInitList));
@@ -520,7 +524,7 @@ public:
 		if(&rhs == this){
 			Append(rhs);
 		} else {
-			Unshift(rhs.GetBegin(), rhs.GetEnd());
+			Unshift(rhs.GetFirst(), rhs.GetEnd());
 		}
 	}
 	void Unshift(String &&rhs){
@@ -539,7 +543,7 @@ public:
 		ASSERT_MSG(uCount <= GetLength(), L"删除的字符数太多。");
 
 		const std::size_t uOldLength = GetLength();
-		const auto pchBegin = GetBegin();
+		const auto pchBegin = GetFirst();
 		Copy(pchBegin, pchBegin + uCount, pchBegin + uOldLength);
 		xSetSize(uOldLength - uCount);
 	}
@@ -575,8 +579,8 @@ public:
 		const std::size_t uOldLength = obsCurrent.GetLength();
 
 		const auto obsRemoved(obsCurrent.Slice(nBegin, nEnd));
-		const auto uRemovedBegin = (std::size_t)(obsRemoved.GetBegin() - obsCurrent.GetBegin());
-		const auto uRemovedEnd = (std::size_t)(obsRemoved.GetEnd() - obsCurrent.GetBegin());
+		const auto uRemovedBegin = (std::size_t)(obsRemoved.GetFirst() - obsCurrent.GetFirst());
+		const auto uRemovedEnd = (std::size_t)(obsRemoved.GetEnd() - obsCurrent.GetFirst());
 
 		const auto pchWrite = xChopAndSplice(
 			uRemovedBegin, uRemovedEnd,
@@ -588,7 +592,7 @@ public:
 	template<class Iterator>
 	void Replace(
 		std::ptrdiff_t nBegin, std::ptrdiff_t nEnd,
-		Iterator itReplacementBegin, typename std::common_type<Iterator>::type itReplacementEnd
+		Iterator itReplacementBegin, std::common_type_t<Iterator> itReplacementEnd
 	){
 		Replace(nBegin, nEnd, itReplacementBegin, (std::size_t)std::distance(itReplacementBegin, itReplacementEnd));
 	}
@@ -598,13 +602,13 @@ public:
 		const std::size_t uOldLength = obsCurrent.GetLength();
 
 		const auto obsRemoved(obsCurrent.Slice(nBegin, nEnd));
-		const auto uRemovedBegin = (std::size_t)(obsRemoved.GetBegin() - obsCurrent.GetBegin());
-		const auto uRemovedEnd = (std::size_t)(obsRemoved.GetEnd() - obsCurrent.GetBegin());
+		const auto uRemovedBegin = (std::size_t)(obsRemoved.GetFirst() - obsCurrent.GetFirst());
+		const auto uRemovedEnd = (std::size_t)(obsRemoved.GetEnd() - obsCurrent.GetFirst());
 
 		// 注意：不指向同一个数组的两个指针相互比较是未定义行为。
 		if(
 			(uReplacementLen != 0) &&
-			((std::uintptr_t)&*itReplacementBegin - (std::uintptr_t)obsCurrent.GetBegin()
+			((std::uintptr_t)&*itReplacementBegin - (std::uintptr_t)obsCurrent.GetFirst()
 				<= uOldLength * sizeof(Char))
 		){
 			// 待替换字符串和当前字符串重叠。
@@ -625,11 +629,11 @@ public:
 		xSetSize(uRemovedBegin + uReplacementLen + (uOldLength - uRemovedEnd));
 	}
 	void Replace(std::ptrdiff_t nBegin, std::ptrdiff_t nEnd, const Observer &obsReplacement){
-		Replace(nBegin, nEnd, obsReplacement.GetBegin(), obsReplacement.GetLength());
+		Replace(nBegin, nEnd, obsReplacement.GetFirst(), obsReplacement.GetLength());
 	}
 
 	void Reverse() noexcept {
-		auto pchBegin = GetBegin();
+		auto pchBegin = GetFirst();
 		auto pchEnd = GetEnd();
 		if(pchBegin != pchEnd){
 			--pchEnd;
@@ -897,11 +901,11 @@ MCF_STRING_RATIONAL_OPERATOR_(>=)
 
 template<typename Char, StringEncoding ENCODING>
 const Char *begin(const String<Char, ENCODING> &rhs) noexcept {
-	return rhs.GetBegin();
+	return rhs.GetFirst();
 }
 template<typename Char, StringEncoding ENCODING>
 Char *begin(String<Char, ENCODING> &rhs) noexcept {
-	return rhs.GetBegin();
+	return rhs.GetFirst();
 }
 template<typename Char, StringEncoding ENCODING>
 const Char *cbegin(const String<Char, ENCODING> &rhs) noexcept {
@@ -921,6 +925,11 @@ const Char *cend(const String<Char, ENCODING> &rhs) noexcept {
 	return rhs.GetCEnd();
 }
 
+template<typename Char, StringEncoding ENCODING>
+void swap(String<Char, ENCODING> &lhs, String<Char, ENCODING> &rhs) noexcept {
+	lhs.Swap(rhs);
+}
+
 namespace Impl {
 	template<typename DstChar, StringEncoding DST_ENCODING, typename SrcChar, StringEncoding SRC_ENCODING>
 	void Transcoder<DstChar, DST_ENCODING, SrcChar, SRC_ENCODING>::operator()(
@@ -936,7 +945,7 @@ namespace Impl {
 		String<DstChar, ENCODING> &strDst,
 		const StringObserver<SrcChar> &soSrc
 	) const {
-		strDst.Append(soSrc.GetBegin(), soSrc.GetSize());
+		strDst.Append(soSrc.GetFirst(), soSrc.GetSize());
 	}
 }
 
@@ -973,14 +982,16 @@ void operator<<=(String<Char, ENCODING> &strSink, StreamBuffer &sbufSource){
 
 // 字面量运算符。
 template<typename Char, Char ...STRING>
-extern inline typename std::enable_if<std::is_same<Char, char>::value, const AnsiString &>::type
+extern inline
+std::enable_if_t<std::is_same<Char, char>::value, const AnsiString &>
 	operator""_as()
 {
 	static AnsiString s_strRet({STRING...});
 	return s_strRet;
 }
 template<typename Char, Char ...STRING>
-extern inline typename std::enable_if<std::is_same<Char, wchar_t>::value, const WideString &>::type
+extern inline
+std::enable_if_t<std::is_same<Char, wchar_t>::value, const WideString &>
 	operator""_ws()
 {
 	static WideString s_strRet({STRING...});
@@ -988,21 +999,24 @@ extern inline typename std::enable_if<std::is_same<Char, wchar_t>::value, const 
 }
 
 template<typename Char, Char ...STRING>
-extern inline typename std::enable_if<std::is_same<Char, char>::value, const Utf8String &>::type
+extern inline
+std::enable_if_t<std::is_same<Char, char>::value, const Utf8String &>
 	operator""_u8s()
 {
 	static Utf8String s_strRet({STRING...});
 	return s_strRet;
 }
 template<typename Char, Char ...STRING>
-extern inline typename std::enable_if<std::is_same<Char, char16_t>::value, const Utf16String &>::type
+extern inline
+std::enable_if_t<std::is_same<Char, char16_t>::value, const Utf16String &>
 	operator""_u16s()
 {
 	static Utf16String s_strRet({STRING...});
 	return s_strRet;
 }
 template<typename Char, Char ...STRING>
-extern inline typename std::enable_if<std::is_same<Char, char32_t>::value, const Utf32String &>::type
+extern inline
+std::enable_if_t<std::is_same<Char, char32_t>::value, const Utf32String &>
 	operator""_u32s()
 {
 	static Utf32String s_strRet({STRING...});

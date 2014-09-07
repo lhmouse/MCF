@@ -30,10 +30,10 @@ typedef enum tagMCFTlsExchangeResult {
 	MCF_TLSXCH_FAILED,				// 失败（例如 key 无效）。
 	MCF_TLSXCH_OLD_VAL_RETURNED,	// *pnOldValue 返回旧值。
 	MCF_TLSXCH_NEW_VAL_SET,			// 旧值未设定。
-} MCF_TLS_EXCHANGE_RESULT;
+} MCF_TlsExchangeResult;
 
 // 不触发回调。pnOldValue 不得为空。
-extern MCF_TLS_EXCHANGE_RESULT MCF_CRT_TlsExchange(
+extern MCF_TlsExchangeResult MCF_CRT_TlsExchange(
 	void *pTlsKey,
 	MCF_STD intptr_t *pnOldValue, MCF_STD intptr_t nNewValue
 ) MCF_NOEXCEPT;

@@ -5,13 +5,13 @@
 #ifndef MCF_TRANSACTION_HPP_
 #define MCF_TRANSACTION_HPP_
 
-#include "../Utilities/Utilities.hpp"
+#include "../Utilities/NoCopy.hpp"
 #include "../Containers/VVector.hpp"
 #include <memory>
 
 namespace MCF {
 
-class TransactionItemBase : NO_COPY, ABSTRACT {
+class TransactionItemBase : NO_COPY {
 	friend class Transaction;
 
 private:

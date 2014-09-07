@@ -118,6 +118,11 @@ MCF_UNIQUE_HANDLE_RATIONAL_OPERATOR_(>=)
 
 #undef MCF_UNIQUE_HANDLE_RATIONAL_OPERATOR_
 
+template<class Closer>
+void swap(UniqueHandle<Closer> &lhs, UniqueHandle<Closer> &rhs) noexcept {
+	lhs.Swap(rhs);
+}
+
 }
 
 #endif

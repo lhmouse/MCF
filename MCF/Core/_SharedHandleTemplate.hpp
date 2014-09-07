@@ -6,7 +6,7 @@
 #define MCF_SHARED_HANDLE_IMPL_HPP_
 
 #include "UniqueHandle.hpp"
-#include "../Utilities/Utilities.hpp"
+#include "../Utilities/StaticAssertNoexcept.hpp"
 
 namespace MCF {
 
@@ -299,7 +299,8 @@ namespace Impl {
 			return WeakHandle::GetRefCount() != 0;
 		}
 		Handle Get() const noexcept {
-			return (WeakHandle::GetRefCount() != 0) ? WeakHandle::xm_pNode->m_hObject.Get() : Closer()();
+			return (WeakHandle::GetRefCount() != 0) ?
+				WeakHandle::xm_pNode->m_hObject.Get() : Closer()();
 		}
 		UniqueHandle Release() noexcept {
 			return xTidy();
@@ -397,6 +398,13 @@ namespace Impl {
 	MCF_SHARED_HANDLE_RATIONAL_OPERATOR_(>=)
 
 #undef MCF_SHARED_HANDLE_RATIONAL_OPERATOR_
+
+	template<class Closer, class RefCount>
+	void swap(SharedHandleTemplate<Closer, RefCount> &lhs,
+		SharedHandleTemplate<Closer, RefCount> &rhs) noexcept
+	{
+		lhs.Swap(rhs);
+	}
 
 }
 

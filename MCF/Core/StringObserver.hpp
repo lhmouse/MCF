@@ -6,7 +6,7 @@
 #define MCF_STRING_OBSERVER_HPP_
 
 #include "../Containers/VVector.hpp"
-#include "../Utilities/Utilities.hpp"
+#include "../Utilities/CountOf.hpp"
 #include <algorithm>
 #include <utility>
 #include <iterator>
@@ -53,7 +53,7 @@ private:
 
 	template<typename Iterator>
 	static std::size_t xFindRep(
-		Iterator itBegin, typename std::common_type<Iterator>::type itEnd,
+		Iterator itBegin, std::common_type_t<Iterator> itEnd,
 		Char chToFind, std::size_t uRepCount
 	) noexcept {
 		ASSERT(uRepCount != 0);
@@ -83,9 +83,9 @@ private:
 
 	template<typename Iterator>
 	static std::size_t xKmpSearch(
-		Iterator itBegin, typename std::common_type<Iterator>::type itEnd,
-		typename std::common_type<Iterator>::type itToFindBegin,
-		typename std::common_type<Iterator>::type itToFindEnd
+		Iterator itBegin, std::common_type_t<Iterator> itEnd,
+		std::common_type_t<Iterator> itToFindBegin,
+		std::common_type_t<Iterator> itToFindEnd
 	) noexcept {
 		ASSERT(itToFindEnd >= itToFindBegin);
 		ASSERT(itEnd - itBegin >= itToFindEnd - itToFindBegin);
@@ -205,7 +205,7 @@ public:
 	}
 
 public:
-	const Char *GetBegin() const noexcept {
+	const Char *GetFirst() const noexcept {
 		return xm_pchBegin;
 	}
 	const Char *GetCBegin() const noexcept {
@@ -218,7 +218,7 @@ public:
 		return xm_pchEnd;
 	}
 	std::size_t GetSize() const noexcept {
-		return (std::size_t)(GetEnd() - GetBegin());
+		return (std::size_t)(GetEnd() - GetFirst());
 	}
 	std::size_t GetLength() const noexcept {
 		return GetSize();
@@ -237,9 +237,9 @@ public:
 	}
 
 	int Compare(const StringObserver &rhs) const noexcept {
-		auto itLRead = GetBegin();
+		auto itLRead = GetFirst();
 		const auto itLEnd = GetEnd();
-		auto itRRead = rhs.GetBegin();
+		auto itRRead = rhs.GetFirst();
 		const auto itREnd = rhs.GetEnd();
 		for(;;){
 			const int nResult = 2 - (((itLRead == itLEnd) ? 3 : 0) ^ ((itRRead == itREnd) ? 1 : 0));
@@ -247,7 +247,7 @@ public:
 				return nResult;
 			}
 
-			typedef typename std::make_unsigned<Char>::type UChar;
+			typedef std::make_unsigned_t<Char> UChar;
 
 			const auto uchL = (UChar)*itLRead;
 			const auto uchR = (UChar)*itRRead;
@@ -289,7 +289,7 @@ public:
 	//   Slice( 5, -1)   返回 "fg"；
 	//   Slice(-5, -1)   返回 "defg"。
 	StringObserver Slice(std::ptrdiff_t nBegin, std::ptrdiff_t nEnd = -1) const noexcept {
-		const auto pchBegin = GetBegin();
+		const auto pchBegin = GetFirst();
 		const auto uLength = GetLength();
 		return StringObserver(
 			pchBegin + xTranslateOffset(uLength, nBegin),
@@ -317,8 +317,8 @@ public:
 		}
 
 		const auto uPos = xKmpSearch(
-			GetBegin() + uRealBegin, GetEnd(),
-			obsToFind.GetBegin(), obsToFind.GetEnd()
+			GetFirst() + uRealBegin, GetEnd(),
+			obsToFind.GetFirst(), obsToFind.GetEnd()
 		);
 		return (uPos == NPOS) ? NPOS : (uPos + uRealBegin);
 	}
@@ -339,8 +339,8 @@ public:
 		typedef std::reverse_iterator<const Char *> RevIterator;
 
 		const auto uPos = xKmpSearch(
-			RevIterator(GetBegin() + uRealEnd), RevIterator(GetBegin()),
-			RevIterator(obsToFind.GetBegin()), RevIterator(obsToFind.GetEnd())
+			RevIterator(GetFirst() + uRealEnd), RevIterator(GetFirst()),
+			RevIterator(obsToFind.GetFirst()), RevIterator(obsToFind.GetEnd())
 		);
 		return (uPos == NPOS) ? NPOS : (uRealEnd - uPos - uLenToFind);
 	}
@@ -363,7 +363,7 @@ public:
 			return NPOS;
 		}
 
-		const auto uPos = xFindRep(GetBegin() + uRealBegin, GetEnd(), chToFind, uRepCount);
+		const auto uPos = xFindRep(GetFirst() + uRealBegin, GetEnd(), chToFind, uRepCount);
 		return (uPos == NPOS) ? NPOS : (uPos + uRealBegin);
 	}
 	std::size_t FindRepBackward(Char chToFind, std::size_t uRepCount, std::ptrdiff_t nOffsetEnd = -1) const noexcept {
@@ -381,7 +381,7 @@ public:
 
 		typedef std::reverse_iterator<const Char *> RevIterator;
 
-		const auto uPos = xFindRep(RevIterator(GetBegin() + uRealEnd), RevIterator(GetBegin()), chToFind, uRepCount);
+		const auto uPos = xFindRep(RevIterator(GetFirst() + uRealEnd), RevIterator(GetFirst()), chToFind, uRepCount);
 		return (uPos == NPOS) ? NPOS : (uRealEnd - uPos - uRepCount);
 	}
 	std::size_t Find(Char chToFind, std::ptrdiff_t nOffsetBegin = 0) const noexcept {
@@ -414,7 +414,7 @@ public:
 	VVector<Char, SIZE_HINT> GetNullTerminated() const {
 		VVector<Char, SIZE_HINT> vecRet;
 		vecRet.Reserve(GetLength() + 1);
-		vecRet.CopyToEnd(GetBegin(), GetEnd());
+		vecRet.CopyToEnd(GetFirst(), GetEnd());
 		vecRet.Push(Char());
 		return std::move(vecRet);
 	}
@@ -426,7 +426,7 @@ public:
 	const Char &operator[](std::size_t uIndex) const noexcept {
 		ASSERT_MSG(uIndex <= GetSize(), L"索引越界。");
 
-		return GetBegin()[uIndex];
+		return GetFirst()[uIndex];
 	}
 };
 
@@ -481,7 +481,7 @@ bool operator>=(
 
 template<typename Char>
 const Char *begin(const StringObserver<Char> &obs) noexcept {
-	return obs.GetBegin();
+	return obs.GetFirst();
 }
 template<typename Char>
 const Char *cbegin(const StringObserver<Char> &obs) noexcept {
@@ -495,6 +495,11 @@ const Char *end(const StringObserver<Char> &obs) noexcept {
 template<typename Char>
 const Char *cend(const StringObserver<Char> &obs) noexcept {
 	return obs.GetCEnd();
+}
+
+template<typename Char>
+void swap(StringObserver<Char> &lhs, StringObserver<Char> &rhs) noexcept {
+	lhs.Swap(rhs);
 }
 
 template class StringObserver<char>;
@@ -514,14 +519,14 @@ typedef StringObserver<char32_t>	Utf32StringObserver;
 // 注意 StringObserver 并不是所谓“零结尾的字符串”。
 // 这些运算符经过特意设计防止这种用法。
 template<typename Char, Char ...STRING>
-typename std::enable_if<std::is_same<Char, char>::value, NarrowStringObserver>::type
+std::enable_if_t<std::is_same<Char, char>::value, NarrowStringObserver>
 	operator""_nso()
 {
 	static Char s_achData[] = {STRING..., '$'};
 	return NarrowStringObserver(s_achData, sizeof...(STRING));
 }
 template<typename Char, Char ...STRING>
-typename std::enable_if<std::is_same<Char, wchar_t>::value, WideStringObserver>::type
+std::enable_if_t<std::is_same<Char, wchar_t>::value, WideStringObserver>
 	operator""_wso()
 {
 	static Char s_achData[] = {STRING..., '$'};
@@ -529,21 +534,21 @@ typename std::enable_if<std::is_same<Char, wchar_t>::value, WideStringObserver>:
 }
 
 template<typename Char, Char ...STRING>
-typename std::enable_if<std::is_same<Char, char>::value, Utf8StringObserver>::type
+std::enable_if_t<std::is_same<Char, char>::value, Utf8StringObserver>
 	operator""_u8so()
 {
 	static Char s_achData[] = {STRING..., '$'};
 	return Utf8StringObserver(s_achData, sizeof...(STRING));
 }
 template<typename Char, Char ...STRING>
-typename std::enable_if<std::is_same<Char, char16_t>::value, Utf16StringObserver>::type
+std::enable_if_t<std::is_same<Char, char16_t>::value, Utf16StringObserver>
 	operator""_u16so()
 {
 	static Char s_achData[] = {STRING..., '$'};
 	return Utf16StringObserver(s_achData, sizeof...(STRING));
 }
 template<typename Char, Char ...STRING>
-typename std::enable_if<std::is_same<Char, char32_t>::value, Utf32StringObserver>::type
+std::enable_if_t<std::is_same<Char, char32_t>::value, Utf32StringObserver>
 	operator""_u32so()
 {
 	static Char s_achData[] = {STRING..., '$'};

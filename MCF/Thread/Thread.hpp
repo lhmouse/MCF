@@ -5,7 +5,8 @@
 #ifndef MCF_THREAD_HPP_
 #define MCF_THREAD_HPP_
 
-#include "../Utilities/Utilities.hpp"
+#include "../Utilities/NoCopy.hpp"
+#include "../Utilities/Abstract.hpp"
 #include <functional>
 #include <memory>
 #include <exception>

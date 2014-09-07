@@ -11,13 +11,9 @@ namespace MCF {
 
 template<typename T>
 inline auto Clone(T &&vSrc)
-	noexcept(std::is_nothrow_constructible<
-		typename std::remove_reference<T>::type, T &&
-		>::value)
+	noexcept(std::is_nothrow_constructible<std::remove_reference_t<T>, T &&>::value)
 {
-	return typename std::remove_cv<
-		typename std::remove_reference<T>::type
-		>::type(std::forward<T>(vSrc));
+	return std::remove_cv_t<std::remove_reference_t<T>>(std::forward<T>(vSrc));
 }
 
 }

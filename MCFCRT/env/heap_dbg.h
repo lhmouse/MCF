@@ -20,13 +20,13 @@ __MCF_EXTERN_C_BEGIN
 extern bool __MCF_CRT_HeapDbgInit(void) MCF_NOEXCEPT;
 extern void __MCF_CRT_HeapDbgUninit(void) MCF_NOEXCEPT;
 
-typedef struct MCF_tagHeapDbgBlockInfo {
-	MCF_AVL_NODE_HEADER vHeader;
+typedef struct tagHeapDbgBlockInfo {
+	MCF_AvlNodeHeader vHeader;
 
 	void *pContents;
 	MCF_STD size_t uSize;
 	const void *pRetAddr;
-} __MCF_HEAPDBG_BLOCK_INFO;
+} __MCF_HeapDbgBlockInfo;
 
 extern MCF_STD size_t __MCF_CRT_HeapDbgGetRawSize(
 	MCF_STD size_t uContentSize
@@ -39,14 +39,14 @@ extern void __MCF_CRT_HeapDbgAddGuardsAndRegister(
 	const void *pRetAddr
 ) MCF_NOEXCEPT;
 
-extern const __MCF_HEAPDBG_BLOCK_INFO *__MCF_CRT_HeapDbgValidate(
+extern const __MCF_HeapDbgBlockInfo *__MCF_CRT_HeapDbgValidate(
 	unsigned char **ppRaw,
 	unsigned char *pContents,
 	const void *pRetAddr
 ) MCF_NOEXCEPT;
 
 extern void __MCF_CRT_HeapDbgUnregister(
-	const __MCF_HEAPDBG_BLOCK_INFO *pBlockInfo
+	const __MCF_HeapDbgBlockInfo *pBlockInfo
 ) MCF_NOEXCEPT;
 
 __MCF_EXTERN_C_END

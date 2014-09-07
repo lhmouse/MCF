@@ -58,7 +58,7 @@ void ReadPipe(MCF::StreamBuffer &sbufSink, HANDLE hSource){
 long ExtractWchar(MCF::StreamBuffer &sbufSource){
 	wchar_t wc;
 	if(sbufSource.Extract(&wc, sizeof(wc))){
-		return (typename std::make_unsigned<wchar_t>::type)wc;
+		return (std::make_unsigned_t<wchar_t>)wc;
 	}
 	return -1;
 }

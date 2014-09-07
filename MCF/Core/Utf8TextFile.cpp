@@ -4,6 +4,7 @@
 
 #include "../StdMCF.hpp"
 #include "Utf8TextFile.hpp"
+#include "../Utilities/BinaryOperations.hpp"
 #include "../Containers/VVector.hpp"
 using namespace MCF;
 
@@ -30,7 +31,7 @@ int Utf8TextFileReader::Read(){
 		unsigned char abyTemp[0x1000];
 		const auto uBytesRead = xm_pFile->Read(abyTemp, sizeof(abyTemp), xm_u64Offset);
 		if(uBytesRead != 0){
-			xm_sbufCache.Insert(abyTemp, uBytesRead);
+			xm_sbufCache.Put(abyTemp, uBytesRead);
 			xm_u64Offset += uBytesRead;
 		}
 	}

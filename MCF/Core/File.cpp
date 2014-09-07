@@ -6,7 +6,7 @@
 #include "File.hpp"
 #include "Exception.hpp"
 #include "UniqueHandle.hpp"
-#include "../Utilities/Utilities.hpp"
+#include "../Utilities/BinaryOperations.hpp"
 #include <exception>
 #include <list>
 using namespace MCF;
@@ -88,7 +88,7 @@ public:
 	std::uint64_t GetSize() const {
 		ASSERT(xm_hFile);
 
-		LARGE_INTEGER liFileSize;
+		::LARGE_INTEGER liFileSize;
 		if(!::GetFileSizeEx(xm_hFile.Get(), &liFileSize)){
 			MCF_THROW(::GetLastError(), L"::GetFileSizeEx() 失败。"_wso);
 		}
@@ -100,7 +100,7 @@ public:
 		if(u64NewSize > (std::uint64_t)LLONG_MAX){
 			MCF_THROW(ERROR_INVALID_PARAMETER, L"调整文件大小时指定的大小无效。"_wso);
 		}
-		LARGE_INTEGER liNewSize;
+		::LARGE_INTEGER liNewSize;
 		liNewSize.QuadPart = (long long)u64NewSize;
 		if(!::SetFilePointerEx(xm_hFile.Get(), liNewSize, nullptr, FILE_BEGIN)){
 			MCF_THROW(::GetLastError(), L"::SetFilePointerEx() 失败。"_wso);
@@ -123,7 +123,7 @@ public:
 		vApcResult.dwBytesTransferred = 0;
 		vApcResult.dwErrorCode = ERROR_SUCCESS;
 
-		OVERLAPPED vOverlapped;
+		::OVERLAPPED vOverlapped;
 		BZero(vOverlapped);
 		vOverlapped.Offset = u64Offset;
 		vOverlapped.OffsetHigh = (u64Offset >> 32);
@@ -193,7 +193,7 @@ public:
 		vApcResult.dwBytesTransferred = 0;
 		vApcResult.dwErrorCode = ERROR_SUCCESS;
 
-		OVERLAPPED vOverlapped;
+		::OVERLAPPED vOverlapped;
 		BZero(vOverlapped);
 		vOverlapped.Offset = (DWORD)u64Offset;
 		vOverlapped.OffsetHigh = (DWORD)(u64Offset >> 32);

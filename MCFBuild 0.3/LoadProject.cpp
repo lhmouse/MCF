@@ -34,7 +34,7 @@ namespace {
 			throw Exception{dwError, L"打开项目文件“" + wcsProjFile + L"”失败。"};
 		}
 
-		LARGE_INTEGER liFileSize;
+		::LARGE_INTEGER liFileSize;
 		::GetFileSizeEx(hProjFile, &liFileSize);
 		if(liFileSize.QuadPart == 0){
 			throw Exception{ERROR_INVALID_DATA, L"文件“" + wcsProjFile + L"”为空。"};

@@ -31,7 +31,7 @@ double GetHiResCounter() noexcept {
 	static bool s_bInited = false;
 	static long double s_llfFreqRecip;
 
-	LARGE_INTEGER liTemp;
+	::LARGE_INTEGER liTemp;
 	if(!__atomic_load_n(&s_bInited, __ATOMIC_ACQUIRE)){
 		::QueryPerformanceFrequency(&liTemp);
 		s_llfFreqRecip = 1.0l / liTemp.QuadPart;

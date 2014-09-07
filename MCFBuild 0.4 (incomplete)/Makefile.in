@@ -108,7 +108,7 @@ am_lib_libmcflite_a_OBJECTS =  \
 	../MCFCRT/stdc/stdlib/lib_libmcflite_a-calloc.$(OBJEXT) \
 	../MCFCRT/stdc/stdlib/lib_libmcflite_a-free.$(OBJEXT) \
 	../MCFCRT/ext/lib_libmcflite_a-wcscpyout.$(OBJEXT) \
-	../MCFCRT/env/lib_libmcflite_a-bail.$(OBJEXT) \
+	../MCFCRT/env/lib_libmcflite_a-bail_out.$(OBJEXT) \
 	../MCFCRT/env/lib_libmcflite_a-module.$(OBJEXT) \
 	../MCFCRT/env/lib_libmcflite_a-last_error.$(OBJEXT) \
 	../MCFCRT/env/lib_libmcflite_a-fenv.$(OBJEXT) \
@@ -321,12 +321,11 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 AUTOMAKE_OPTIONS = foreign subdir-objects
-AM_CFLAGS = -std=c11 -Wall -Wextra -Wsign-conversion -Wsuggest-attribute=noreturn -pipe	\
-	-mfpmath=both -march=nocona -masm=intel
+AM_CPPFLAGS = -Wall -Wextra -pedantic -Wsign-conversion -Wsuggest-attribute=noreturn	\
+	-pipe -mfpmath=both -march=nocona -masm=intel
 
-AM_CXXFLAGS = -std=c++14 -Wall -Wextra -Wsign-conversion -Wsuggest-attribute=noreturn -pipe	\
-	-mfpmath=both -march=nocona -masm=intel -Wnoexcept
-
+AM_CFLAGS = -std=c11
+AM_CXXFLAGS = -std=c++14 -Wnoexcept
 noinst_LIBRARIES = \
 	lib/libmcflite.a
 
@@ -337,7 +336,7 @@ lib_libmcflite_a_SOURCES = \
 	../MCFCRT/stdc/stdlib/calloc.c			\
 	../MCFCRT/stdc/stdlib/free.c			\
 	../MCFCRT/ext/wcscpyout.c				\
-	../MCFCRT/env/bail.c					\
+	../MCFCRT/env/bail_out.c				\
 	../MCFCRT/env/module.c					\
 	../MCFCRT/env/last_error.c				\
 	../MCFCRT/env/fenv.c					\
@@ -464,7 +463,7 @@ clean-noinstLIBRARIES:
 ../MCFCRT/env/$(DEPDIR)/$(am__dirstamp):
 	@$(MKDIR_P) ../MCFCRT/env/$(DEPDIR)
 	@: > ../MCFCRT/env/$(DEPDIR)/$(am__dirstamp)
-../MCFCRT/env/lib_libmcflite_a-bail.$(OBJEXT):  \
+../MCFCRT/env/lib_libmcflite_a-bail_out.$(OBJEXT):  \
 	../MCFCRT/env/$(am__dirstamp) \
 	../MCFCRT/env/$(DEPDIR)/$(am__dirstamp)
 ../MCFCRT/env/lib_libmcflite_a-module.$(OBJEXT):  \
@@ -659,7 +658,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@../MCF/Thread/$(DEPDIR)/Thread.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@../MCFCRT/env/$(DEPDIR)/cxa_throw.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@../MCFCRT/env/$(DEPDIR)/lib_libmcflite_a-avl_tree.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@../MCFCRT/env/$(DEPDIR)/lib_libmcflite_a-bail.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@../MCFCRT/env/$(DEPDIR)/lib_libmcflite_a-bail_out.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@../MCFCRT/env/$(DEPDIR)/lib_libmcflite_a-fenv.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@../MCFCRT/env/$(DEPDIR)/lib_libmcflite_a-heap.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@../MCFCRT/env/$(DEPDIR)/lib_libmcflite_a-heap_dbg.Po@am__quote@
@@ -785,19 +784,19 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_libmcflite_a_CFLAGS) $(CFLAGS) -c -o ../MCFCRT/ext/lib_libmcflite_a-wcscpyout.obj `if test -f '../MCFCRT/ext/wcscpyout.c'; then $(CYGPATH_W) '../MCFCRT/ext/wcscpyout.c'; else $(CYGPATH_W) '$(srcdir)/../MCFCRT/ext/wcscpyout.c'; fi`
 
-../MCFCRT/env/lib_libmcflite_a-bail.o: ../MCFCRT/env/bail.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_libmcflite_a_CFLAGS) $(CFLAGS) -MT ../MCFCRT/env/lib_libmcflite_a-bail.o -MD -MP -MF ../MCFCRT/env/$(DEPDIR)/lib_libmcflite_a-bail.Tpo -c -o ../MCFCRT/env/lib_libmcflite_a-bail.o `test -f '../MCFCRT/env/bail.c' || echo '$(srcdir)/'`../MCFCRT/env/bail.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) ../MCFCRT/env/$(DEPDIR)/lib_libmcflite_a-bail.Tpo ../MCFCRT/env/$(DEPDIR)/lib_libmcflite_a-bail.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='../MCFCRT/env/bail.c' object='../MCFCRT/env/lib_libmcflite_a-bail.o' libtool=no @AMDEPBACKSLASH@
+../MCFCRT/env/lib_libmcflite_a-bail_out.o: ../MCFCRT/env/bail_out.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_libmcflite_a_CFLAGS) $(CFLAGS) -MT ../MCFCRT/env/lib_libmcflite_a-bail_out.o -MD -MP -MF ../MCFCRT/env/$(DEPDIR)/lib_libmcflite_a-bail_out.Tpo -c -o ../MCFCRT/env/lib_libmcflite_a-bail_out.o `test -f '../MCFCRT/env/bail_out.c' || echo '$(srcdir)/'`../MCFCRT/env/bail_out.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) ../MCFCRT/env/$(DEPDIR)/lib_libmcflite_a-bail_out.Tpo ../MCFCRT/env/$(DEPDIR)/lib_libmcflite_a-bail_out.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='../MCFCRT/env/bail_out.c' object='../MCFCRT/env/lib_libmcflite_a-bail_out.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_libmcflite_a_CFLAGS) $(CFLAGS) -c -o ../MCFCRT/env/lib_libmcflite_a-bail.o `test -f '../MCFCRT/env/bail.c' || echo '$(srcdir)/'`../MCFCRT/env/bail.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_libmcflite_a_CFLAGS) $(CFLAGS) -c -o ../MCFCRT/env/lib_libmcflite_a-bail_out.o `test -f '../MCFCRT/env/bail_out.c' || echo '$(srcdir)/'`../MCFCRT/env/bail_out.c
 
-../MCFCRT/env/lib_libmcflite_a-bail.obj: ../MCFCRT/env/bail.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_libmcflite_a_CFLAGS) $(CFLAGS) -MT ../MCFCRT/env/lib_libmcflite_a-bail.obj -MD -MP -MF ../MCFCRT/env/$(DEPDIR)/lib_libmcflite_a-bail.Tpo -c -o ../MCFCRT/env/lib_libmcflite_a-bail.obj `if test -f '../MCFCRT/env/bail.c'; then $(CYGPATH_W) '../MCFCRT/env/bail.c'; else $(CYGPATH_W) '$(srcdir)/../MCFCRT/env/bail.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) ../MCFCRT/env/$(DEPDIR)/lib_libmcflite_a-bail.Tpo ../MCFCRT/env/$(DEPDIR)/lib_libmcflite_a-bail.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='../MCFCRT/env/bail.c' object='../MCFCRT/env/lib_libmcflite_a-bail.obj' libtool=no @AMDEPBACKSLASH@
+../MCFCRT/env/lib_libmcflite_a-bail_out.obj: ../MCFCRT/env/bail_out.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_libmcflite_a_CFLAGS) $(CFLAGS) -MT ../MCFCRT/env/lib_libmcflite_a-bail_out.obj -MD -MP -MF ../MCFCRT/env/$(DEPDIR)/lib_libmcflite_a-bail_out.Tpo -c -o ../MCFCRT/env/lib_libmcflite_a-bail_out.obj `if test -f '../MCFCRT/env/bail_out.c'; then $(CYGPATH_W) '../MCFCRT/env/bail_out.c'; else $(CYGPATH_W) '$(srcdir)/../MCFCRT/env/bail_out.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) ../MCFCRT/env/$(DEPDIR)/lib_libmcflite_a-bail_out.Tpo ../MCFCRT/env/$(DEPDIR)/lib_libmcflite_a-bail_out.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='../MCFCRT/env/bail_out.c' object='../MCFCRT/env/lib_libmcflite_a-bail_out.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_libmcflite_a_CFLAGS) $(CFLAGS) -c -o ../MCFCRT/env/lib_libmcflite_a-bail.obj `if test -f '../MCFCRT/env/bail.c'; then $(CYGPATH_W) '../MCFCRT/env/bail.c'; else $(CYGPATH_W) '$(srcdir)/../MCFCRT/env/bail.c'; fi`
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_libmcflite_a_CFLAGS) $(CFLAGS) -c -o ../MCFCRT/env/lib_libmcflite_a-bail_out.obj `if test -f '../MCFCRT/env/bail_out.c'; then $(CYGPATH_W) '../MCFCRT/env/bail_out.c'; else $(CYGPATH_W) '$(srcdir)/../MCFCRT/env/bail_out.c'; fi`
 
 ../MCFCRT/env/lib_libmcflite_a-module.o: ../MCFCRT/env/module.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_libmcflite_a_CFLAGS) $(CFLAGS) -MT ../MCFCRT/env/lib_libmcflite_a-module.o -MD -MP -MF ../MCFCRT/env/$(DEPDIR)/lib_libmcflite_a-module.Tpo -c -o ../MCFCRT/env/lib_libmcflite_a-module.o `test -f '../MCFCRT/env/module.c' || echo '$(srcdir)/'`../MCFCRT/env/module.c

@@ -5,7 +5,9 @@
 #ifndef MCF_LOCK_RAII_TEMPLATE_HPP_
 #define MCF_LOCK_RAII_TEMPLATE_HPP_
 
-#include "../Utilities/Utilities.hpp"
+#include "../Utilities/NoCopy.hpp"
+#include "../Utilities/Abstract.hpp"
+#include "../Utilities/Assert.hpp"
 #include <cstddef>
 
 namespace MCF {
@@ -125,6 +127,13 @@ namespace Impl {
 			std::swap(xm_uLockCount, rhs.xm_uLockCount);
 		}
 	};
+
+	template<class Mutex, std::size_t LOCK_TYPE>
+	void swap(LockRaiiTemplate<Mutex, LOCK_TYPE> &lhs,
+		LockRaiiTemplate<Mutex, LOCK_TYPE> &rhs) noexcept
+	{
+		lhs.Swap(rhs);
+	}
 }
 
 }

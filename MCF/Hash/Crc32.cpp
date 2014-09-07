@@ -4,7 +4,7 @@
 
 #include "../StdMCF.hpp"
 #include "Crc32.hpp"
-#include "../Utilities/Utilities.hpp"
+#include "../Utilities/ByteSwap.hpp"
 using namespace MCF;
 
 namespace {

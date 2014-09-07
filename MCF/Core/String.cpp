@@ -4,8 +4,8 @@
 
 #include "../StdMCF.hpp"
 #include "String.hpp"
-#include "../Utilities/Utilities.hpp"
-#include "../Serialization/Serdes.hpp"
+#include "../Utilities/MinMax.hpp"
+//#include "../Serialization/Serdes.hpp"
 using namespace MCF;
 
 namespace MCF {
@@ -20,7 +20,7 @@ namespace Impl {
 		const auto pWrite = vecUnified.ResizeMore(uMoreSize);
 		const auto nWritten = Max(
 			::MultiByteToWideChar(
-				CP_ACP, 0, soSrc.GetBegin(), (int)soSrc.GetLength(),
+				CP_ACP, 0, soSrc.GetFirst(), (int)soSrc.GetLength(),
 				pWrite, (int)uMoreSize
 			), 0
 		);
@@ -35,7 +35,7 @@ namespace Impl {
 		const auto pWrite = strDst.ResizeMore(uMoreSize);
 		const auto nWritten = Max(
 			::WideCharToMultiByte(
-				CP_ACP, 0, vecUnified.GetBegin(), (int)vecUnified.GetSize(),
+				CP_ACP, 0, vecUnified.GetFirst(), (int)vecUnified.GetSize(),
 				pWrite, (int)uMoreSize,
 				nullptr, nullptr
 			), 0
@@ -49,7 +49,7 @@ namespace Impl {
 		const StringObserver<wchar_t> &soSrc
 	) const {
 		const auto uSize = soSrc.GetSize();
-		CopyN(vecUnified.ResizeMore(uSize), soSrc.GetBegin(), uSize);
+		CopyN(vecUnified.ResizeMore(uSize), soSrc.GetFirst(), uSize);
 	}
 	template<>
 	void UnicodeConv<wchar_t, StringEncoding::UTF16>::operator()(
@@ -57,7 +57,7 @@ namespace Impl {
 		const VVector<wchar_t> &vecUnified
 	) const {
 		const auto uSize = vecUnified.GetSize();
-		CopyN(strDst.ResizeMore(uSize), vecUnified.GetBegin(), uSize);
+		CopyN(strDst.ResizeMore(uSize), vecUnified.GetFirst(), uSize);
 	}
 
 	// https://en.wikipedia.org/wiki/UTF-8
@@ -69,7 +69,7 @@ namespace Impl {
 		// UTF-8 转 UTF-16。
 		vecUnified.ReserveMore(soSrc.GetSize() * 3);
 
-		auto pchCur = soSrc.GetBegin();
+		auto pchCur = soSrc.GetFirst();
 		const auto pchEnd = soSrc.GetEnd();
 		while(pchCur != pchEnd){
 			std::uint32_t u32CodePoint = (std::uint8_t)*(pchCur++);
@@ -136,7 +136,7 @@ namespace Impl {
 		// UTF-16 转 UTF-8。
 		strDst.ReserveMore(vecUnified.GetSize());
 
-		auto pwcCur = vecUnified.GetBegin();
+		auto pwcCur = vecUnified.GetFirst();
 		const auto pwcEnd = vecUnified.GetEnd();
 		while(pwcCur != pwcEnd){
 			std::uint32_t u32CodePoint = (std::uint16_t)*(pwcCur++);
@@ -192,7 +192,7 @@ namespace Impl {
 		const StringObserver<char16_t> &soSrc
 	) const {
 		const auto uSize = soSrc.GetSize();
-		CopyN(vecUnified.ResizeMore(uSize), soSrc.GetBegin(), uSize);
+		CopyN(vecUnified.ResizeMore(uSize), soSrc.GetFirst(), uSize);
 	}
 	template<>
 	void UnicodeConv<char16_t, StringEncoding::UTF16>::operator()(
@@ -200,7 +200,7 @@ namespace Impl {
 		const VVector<wchar_t> &vecUnified
 	) const {
 		const auto uSize = strDst.GetSize();
-		CopyN(strDst.ResizeMore(uSize), vecUnified.GetBegin(), uSize);
+		CopyN(strDst.ResizeMore(uSize), vecUnified.GetFirst(), uSize);
 	}
 
 	// https://en.wikipedia.org/wiki/UTF-16
@@ -236,7 +236,7 @@ namespace Impl {
 		// UTF-16 转 UTF-32。
 		strDst.ReserveMore(vecUnified.GetSize());
 
-		auto pwcCur = vecUnified.GetBegin();
+		auto pwcCur = vecUnified.GetFirst();
 		const auto pwcEnd = vecUnified.GetEnd();
 		while(pwcCur != pwcEnd){
 			std::uint32_t u32CodePoint = (std::uint16_t)*(pwcCur++);
@@ -281,11 +281,11 @@ template class String<wchar_t,	StringEncoding::UTF16>;
 template class String<char,		StringEncoding::UTF8>;
 template class String<char16_t,	StringEncoding::UTF16>;
 template class String<char32_t,	StringEncoding::UTF32>;
-
+/*
 // 串行化。
 void operator>>=(const Utf8String &u8sSource, StreamBuffer &sbufSink){
 	u8sSource.GetSize() >>= sbufSink;
-	sbufSink.Insert(u8sSource.GetCStr(), u8sSource.GetSize());
+	sbufSink.Put(u8sSource.GetCStr(), u8sSource.GetSize());
 }
 void operator<<=(Utf8String &u8sSink, StreamBuffer &sbufSource){
 	std::size_t uSize;
@@ -301,5 +301,5 @@ void operator<<=(Utf8String &u8sSink, StreamBuffer &sbufSource){
 		--uSize;
 	}
 }
-
+*/
 }

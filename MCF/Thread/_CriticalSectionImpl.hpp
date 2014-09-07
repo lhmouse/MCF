@@ -7,13 +7,14 @@
 
 #include "Thread.hpp"
 #include "_WinHandle.hpp"
-#include "../Utilities/Utilities.hpp"
+#include "../Utilities/NoCopy.hpp"
+#include "../Utilities/Assert.hpp"
 #include "../Core/Exception.hpp"
 
 namespace MCF {
 
 namespace Impl {
-	class CriticalSectionImpl {
+	class CriticalSectionImpl : NO_COPY {
 	public:
 		enum class Result {
 			TRY_FAILED,

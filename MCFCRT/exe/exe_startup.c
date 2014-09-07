@@ -4,7 +4,7 @@
 
 #include "exe_decl.h"
 #include "../env/mcfwin.h"
-#include "../env/bail.h"
+#include "../env/bail_out.h"
 #include "../env/module.h"
 #include "../env/thread.h"
 #include "../env/_eh_top.h"
@@ -45,7 +45,7 @@ DWORD __MCF_ExeStartup(LPVOID pReserved){
 		UNREF_PARAM(pReserved);
 
 		if(!__MCF_CRT_BeginModule()){
-			MCF_CRT_BailF(L"MCFCRT 初始化失败。\n\n错误代码：%lu", (unsigned long)GetLastError());
+			MCF_CRT_BailOutF(L"MCFCRT 初始化失败。\n\n错误代码：%lu", (unsigned long)GetLastError());
 		}
 		dwExitCode = MCFMain();
 		__MCF_CRT_EndModule();

@@ -107,7 +107,7 @@ unsigned char *__MCF_CRT_HeapReAlloc(void *pBlock /* NON-NULL */, size_t uSize, 
 	{
 #ifdef __MCF_CRT_HEAPDBG_ON
 		unsigned char *pRawOriginal;
-		const __MCF_HEAPDBG_BLOCK_INFO *const pBlockInfo = __MCF_CRT_HeapDbgValidate(&pRawOriginal, pBlock, pRetAddr);
+		const __MCF_HeapDbgBlockInfo *const pBlockInfo = __MCF_CRT_HeapDbgValidate(&pRawOriginal, pBlock, pRetAddr);
 #else
 		unsigned char *const pRawOriginal = pBlock;
 #endif
@@ -142,7 +142,7 @@ void __MCF_CRT_HeapFree(void *pBlock /* NON-NULL */, const void *pRetAddr){
 	{
 #ifdef __MCF_CRT_HEAPDBG_ON
 		unsigned char *pRaw;
-		const __MCF_HEAPDBG_BLOCK_INFO *const pBlockInfo = __MCF_CRT_HeapDbgValidate(&pRaw, pBlock, pRetAddr);
+		const __MCF_HeapDbgBlockInfo *const pBlockInfo = __MCF_CRT_HeapDbgValidate(&pRaw, pBlock, pRetAddr);
 
 		memset(pBlock, 0xFE, pBlockInfo->uSize);
 

@@ -25,6 +25,12 @@
 #	define __MCF_EXTERN_C_END
 #endif
 
+#ifdef NDEBUG
+#	define __MCF_NORETURN_IF_NDEBUG	__attribute__((__noreturn__))
+#else
+#	define __MCF_NORETURN_IF_NDEBUG
+#endif
+
 // C++ 目前还不支持 C99 的 restrict 限定符。
 #ifdef __cplusplus
 #	define restrict					__restrict__

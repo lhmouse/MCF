@@ -5,7 +5,6 @@
 #ifndef MCF_V_LIST_HPP_
 #define MCF_V_LIST_HPP_
 
-#include "../Utilities/Utilities.hpp"
 #include <initializer_list>
 #include <type_traits>
 #include <utility>
@@ -20,28 +19,37 @@ public:
 		friend class VList;
 
 	private:
-		union alignas(std::max_align_t) xRawElement {
-			unsigned char aby[];
-			Element elem;
-
-			constexpr xRawElement() noexcept {
-			}
-			~xRawElement() noexcept {
-			}
-		} xm_vElement;
-
+		Element xm_vElement;
 		Node *xm_pPrev;
 		Node *xm_pNext;
 
 	private:
-		constexpr Node() noexcept = default;
+#ifdef NDEBUG
+		constexpr Node()
+			noexcept(std::is_nothrow_constructible<Element>::value)
+		{
+		}
+#else
+		Node()
+			noexcept(std::is_nothrow_constructible<Element>::value)
+		{
+			if(std::is_pod<Element>::value){
+				__builtin_memset(&xm_vElement, 0xCC, sizeof(xm_vElement));
+			}
+		}
+#endif
+		template<typename ...Params>
+		explicit constexpr Node(Params &&...vParams)
+			: xm_vElement(std::forward<Params>(vParams)...)
+		{
+		}
 
 	public:
 		const Element &GetElement() const noexcept {
-			return xm_vElement.elem;
+			return xm_vElement;
 		}
 		Element &GetElement() noexcept {
-			return xm_vElement.elem;
+			return xm_vElement;
 		}
 
 		const Node *GetPrev() const noexcept {
@@ -61,13 +69,11 @@ public:
 private:
 	Node *xm_pFirst;
 	Node *xm_pLast;
-	Node *xm_pPool;
 
 public:
 	constexpr VList() noexcept
 		: xm_pFirst	(nullptr)
 		, xm_pLast	(nullptr)
-		, xm_pPool	(nullptr)
 	{
 	}
 	template<typename ...Params>
@@ -77,7 +83,7 @@ public:
 		FillAtEnd(uCount, vParams...);
 	}
 	template<class Iterator>
-	VList(Iterator itBegin, typename std::common_type<Iterator>::type itEnd)
+	VList(Iterator itBegin, std::common_type_t<Iterator> itEnd)
 		: VList()
 	{
 		CopyToEnd(itBegin, itEnd);
@@ -105,14 +111,6 @@ public:
 	{
 		std::swap(xm_pFirst, rhs.xm_pFirst);
 		std::swap(xm_pLast, rhs.xm_pLast);
-
-		for(;;){
-			const auto pCur = rhs.xDepool();
-			if(!pCur){
-				break;
-			}
-			xEnpool(pCur);
-		}
 	}
 	VList &operator=(std::initializer_list<Element> rhs){
 		VList(rhs).Swap(*this);
@@ -125,88 +123,47 @@ public:
 		return *this;
 	}
 	VList &operator=(VList &&rhs) noexcept {
-		VList(std::move(rhs)).Swap(*this);
+		rhs.Swap(*this);
 		return *this;
 	}
 	~VList() noexcept {
-		Clear(true);
-	}
-
-private:
-	void xEnpool(Node *pNode) noexcept {
-		pNode->xm_pPrev = std::exchange(xm_pPool, pNode);
-	}
-	Node *xDepool() noexcept {
-		if(!xm_pPool){
-			return nullptr;
-		}
-		return std::exchange(xm_pPool, xm_pPool->xm_pPrev);
+		Clear();
 	}
 
 public:
-	const Node *GetBegin() const noexcept {
+	const Node *GetFirst() const noexcept {
 		return xm_pFirst;
 	}
-	Node *GetBegin() noexcept {
+	Node *GetFirst() noexcept {
 		return xm_pFirst;
 	}
 	const Node *GetCBegin() const noexcept {
-		return GetBegin();
+		return GetFirst();
 	}
-	const Node *GetRBegin() const noexcept {
+	const Node *GetLast() const noexcept {
 		return xm_pLast;
 	}
-	Node *GetRBegin() noexcept {
+	Node *GetLast() noexcept {
 		return xm_pLast;
 	}
 	const Node *GetCRBegin() const noexcept {
-		return GetRBegin();
+		return GetLast();
 	}
 
 	bool IsEmpty() const noexcept {
-		return GetBegin() == nullptr;
+		return GetFirst() == nullptr;
 	}
-	void Clear(bool bDeallocatePool = false) noexcept {
-		if(bDeallocatePool){
-			while(xm_pFirst){
-				const auto pCur = std::exchange(xm_pFirst, xm_pFirst->xm_pNext);
-				Destruct(&(pCur->GetElement()));
-				delete pCur;
-			}
-			xm_pLast = nullptr;
-
-			for(;;){
-				const auto pCur = xDepool();
-				if(!pCur){
-					break;
-				}
-				delete pCur;
-			}
-		} else {
-			while(xm_pFirst){
-				const auto pCur = std::exchange(xm_pFirst, xm_pFirst->xm_pNext);
-				Destruct(&(pCur->GetElement()));
-				xEnpool(pCur);
-			}
+	void Clear() noexcept {
+		while(xm_pFirst){
+			const auto pCur = std::exchange(xm_pFirst, xm_pFirst->xm_pNext);
+			delete pCur;
 		}
+		xm_pLast = nullptr;
 	}
 
 	template<typename ...Params>
 	Node *Insert(Node *pPos, Params &&...vParams){
-		return InsertWithPool(pPos, *this, std::forward<Params>(vParams)...);
-	}
-	template<typename ...Params>
-	Node *InsertWithPool(Node *pPos, VList &lstPool, Params &&...vParams){
-		auto pNode = lstPool.xDepool();
-		if(!pNode){
-			pNode = new Node;
-		}
-		try {
-			Construct(&(pNode->GetElement()), std::forward<Params>(vParams)...);
-		} catch(...){
-			delete pNode;
-			throw;
-		}
+		auto pNode = new Node(std::forward<Params>(vParams)...);
 
 		const auto pPrev = std::exchange((pPos ? pPos->xm_pPrev : xm_pLast), pNode);
 		(pPrev ? pPrev->xm_pNext : xm_pFirst) = pNode;
@@ -222,9 +179,7 @@ public:
 		(pOldPrev ? pOldPrev->xm_pNext : xm_pFirst) = pNext;
 		(pNext ? pNext->xm_pPrev : xm_pLast) = pOldPrev;
 
-		Destruct(&(pNode->GetElement()));
-		xEnpool(pNode);
-
+		delete pNode;
 		return pNext;
 	}
 	Node *Erase(Node *pBegin, Node *pEnd) noexcept {
@@ -237,8 +192,7 @@ public:
 				const auto pNode = pBegin;
 				pBegin = pBegin->xm_pNext;
 
-				Destruct(&(pNode->GetElement()));
-				xEnpool(pNode);
+				delete pNode;
 			} while(pBegin != pEnd);
 		}
 		return pEnd;
@@ -301,7 +255,7 @@ public:
 		}
 	}
 	template<class Iterator>
-	void CopyToEnd(Iterator itBegin, typename std::common_type<Iterator>::type itEnd){
+	void CopyToEnd(Iterator itBegin, std::common_type_t<Iterator> itEnd){
 		while(itBegin != itEnd){
 			Push(*itBegin);
 			++itBegin;
@@ -327,7 +281,7 @@ public:
 		}
 	}
 	template<class Iterator>
-	void CopyToBegin(Iterator itBegin, typename std::common_type<Iterator>::type itEnd){
+	void CopyToBegin(Iterator itBegin, std::common_type_t<Iterator> itEnd){
 		while(itBegin != itEnd){
 			Unshift(*itBegin);
 			++itBegin;
@@ -349,7 +303,6 @@ public:
 	void Swap(VList &rhs) noexcept {
 		std::swap(xm_pFirst, rhs.xm_pFirst);
 		std::swap(xm_pLast, rhs.xm_pLast);
-		std::swap(xm_pPool, rhs.xm_pPool);
 	}
 
 	void Reverse() noexcept {
@@ -373,6 +326,11 @@ public:
 		Unshift(std::forward<Param>(vParam));
 	}
 };
+
+template<class Element>
+void swap(VList<Element> &lhs, VList<Element> &rhs) noexcept {
+	lhs.Swap(rhs);
+}
 
 }
 

@@ -4,7 +4,7 @@
 
 #include "../StdMCF.hpp"
 #include "IsaacRng.hpp"
-#include "../Utilities/Utilities.hpp"
+#include "../Utilities/Algorithms.hpp"
 using namespace MCF;
 
 // http://www.burtleburtle.net/bob/c/readable.c

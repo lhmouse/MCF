@@ -4,7 +4,8 @@
 
 #include "../StdMCF.hpp"
 #include "Md5.hpp"
-#include "../Utilities/Utilities.hpp"
+#include "../Utilities/ByteSwap.hpp"
+#include "../Utilities/BinaryOperations.hpp"
 using namespace MCF;
 
 namespace {
@@ -372,40 +373,40 @@ void Md5::Update(const void *pData, std::size_t uSize) noexcept {
 
 	auto pbyRead = (const unsigned char *)pData;
 	std::size_t uBytesRemaining = uSize;
-	const std::size_t uBytesFree = sizeof(xm_abyChunk) - xm_uBytesInChunk;
+	const std::size_t uBytesFree = sizeof(xm_vChunk.aby) - xm_uBytesInChunk;
 	if(uBytesRemaining >= uBytesFree){
 		if(xm_uBytesInChunk != 0){
-			std::memcpy(xm_abyChunk + xm_uBytesInChunk, pbyRead, uBytesFree);
-			DoMd5Chunk(xm_auResult, xm_abyChunk);
+			std::memcpy(xm_vChunk.aby + xm_uBytesInChunk, pbyRead, uBytesFree);
+			DoMd5Chunk(xm_auResult, xm_vChunk.aby);
 			xm_uBytesInChunk = 0;
 			pbyRead += uBytesFree;
 			uBytesRemaining -= uBytesFree;
 		}
-		while(uBytesRemaining >= sizeof(xm_abyChunk)){
+		while(uBytesRemaining >= sizeof(xm_vChunk.aby)){
 			DoMd5Chunk(xm_auResult, pbyRead);
-			pbyRead += sizeof(xm_abyChunk);
-			uBytesRemaining -= sizeof(xm_abyChunk);
+			pbyRead += sizeof(xm_vChunk.aby);
+			uBytesRemaining -= sizeof(xm_vChunk.aby);
 		}
 	}
 	if(uBytesRemaining != 0){
-		std::memcpy(xm_abyChunk + xm_uBytesInChunk, pbyRead, uBytesRemaining);
+		std::memcpy(xm_vChunk.aby + xm_uBytesInChunk, pbyRead, uBytesRemaining);
 		xm_uBytesInChunk += uBytesRemaining;
 	}
 	xm_u64BytesTotal += uSize;
 }
 void Md5::Finalize(unsigned char (&abyOutput)[16]) noexcept {
 	if(xm_bInited){
-		xm_abyChunk[xm_uBytesInChunk++] = 0x80;
-		if(xm_uBytesInChunk > sizeof(xm_abyFirstPart)){
-			std::memset(xm_abyChunk + xm_uBytesInChunk, 0, sizeof(xm_abyChunk) - xm_uBytesInChunk);
-			DoMd5Chunk(xm_auResult, xm_abyChunk);
+		xm_vChunk.aby[xm_uBytesInChunk++] = 0x80;
+		if(xm_uBytesInChunk > sizeof(xm_vChunk.vLast.abyData)){
+			std::memset(xm_vChunk.aby + xm_uBytesInChunk, 0, sizeof(xm_vChunk.aby) - xm_uBytesInChunk);
+			DoMd5Chunk(xm_auResult, xm_vChunk.aby);
 			xm_uBytesInChunk = 0;
 		}
-		if(xm_uBytesInChunk < sizeof(xm_abyFirstPart)){
-			std::memset(xm_abyChunk + xm_uBytesInChunk, 0, sizeof(xm_abyFirstPart) - xm_uBytesInChunk);
+		if(xm_uBytesInChunk < sizeof(xm_vChunk.vLast.abyData)){
+			std::memset(xm_vChunk.aby + xm_uBytesInChunk, 0, sizeof(xm_vChunk.vLast.abyData) - xm_uBytesInChunk);
 		}
-		xm_uBitsTotal = BYTE_SWAP_IF_BE(xm_u64BytesTotal * 8);
-		DoMd5Chunk(xm_auResult, xm_abyChunk);
+		xm_vChunk.vLast.u64Bits = BYTE_SWAP_IF_BE(xm_u64BytesTotal * 8);
+		DoMd5Chunk(xm_auResult, xm_vChunk.aby);
 
 		xm_bInited = false;
 	}

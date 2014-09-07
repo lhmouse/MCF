@@ -5,7 +5,8 @@
 #ifndef MCF_EVENT_HPP_
 #define MCF_EVENT_HPP_
 
-#include "../Utilities/Utilities.hpp"
+#include "../Utilities/NoCopy.hpp"
+#include "../Utilities/Abstract.hpp"
 #include "../Core/String.hpp"
 #include <memory>
 

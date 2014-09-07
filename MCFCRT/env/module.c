@@ -18,9 +18,9 @@ typedef struct tagAtExitNode {
 
 	void (__cdecl *pfnProc)(intptr_t);
 	intptr_t nContext;
-} AT_EXIT_NODE;
+} AtExitNode;
 
-static AT_EXIT_NODE *volatile g_pAtExitHead = NULL;
+static AtExitNode *volatile g_pAtExitHead = NULL;
 
 static unsigned int g_uInitState = 0;
 
@@ -59,11 +59,11 @@ static inline void EndModule(){
 	__MCF_CRT_RunEmutlsDtors();
 
 	// libgcc 使用 atexit() 调用全局析构函数。
-	AT_EXIT_NODE *pHead = __atomic_exchange_n(&g_pAtExitHead, NULL, __ATOMIC_RELAXED);
+	AtExitNode *pHead = __atomic_exchange_n(&g_pAtExitHead, NULL, __ATOMIC_RELAXED);
 	while(pHead){
 		(*(pHead->pfnProc))(pHead->nContext);
 
-		AT_EXIT_NODE *const pPrev = pHead->pPrev;
+		AtExitNode *const pPrev = pHead->pPrev;
 		free(pHead);
 		pHead = pPrev;
 	}
@@ -138,7 +138,7 @@ void __MCF_CRT_EndModule(void){
 }
 
 int MCF_CRT_AtEndModule(void (__cdecl *pfnProc)(intptr_t), intptr_t nContext){
-	AT_EXIT_NODE *const pNode = malloc(sizeof(AT_EXIT_NODE));
+	AtExitNode *const pNode = malloc(sizeof(AtExitNode));
 	if(!pNode){
 		return -1;
 	}

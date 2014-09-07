@@ -16,12 +16,13 @@ private:
 	std::uint32_t xm_auResult[8];
 
 	union {
-		unsigned char xm_abyChunk[64];
+		unsigned char aby[64];
 		struct __attribute__((__packed__)) {
-			unsigned char xm_abyFirstPart[56];
-			std::uint64_t xm_uBitsTotal;
-		};
-	};
+			unsigned char abyData[56];
+			std::uint64_t u64Bits;
+		} vLast;
+	} xm_vChunk;
+
 	std::size_t xm_uBytesInChunk;
 	std::uint64_t xm_u64BytesTotal;
 

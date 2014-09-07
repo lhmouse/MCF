@@ -6,8 +6,8 @@
 #define MCF_STREAM_FILTER_BASE_HPP_
 
 #include "../Core/StreamBuffer.hpp"
-#include "../Utilities/Utilities.hpp"
-#include <functional>
+#include "../Utilities/NoCopy.hpp"
+#include "../Utilities/Abstract.hpp"
 #include <cstddef>
 #include <cstdint>
 
@@ -29,7 +29,7 @@ protected:
 		xm_sbufOutput.Put(by);
 	}
 	void xOutput(const void *pData, std::size_t uSize){
-		xm_sbufOutput.Insert(pData, uSize);
+		xm_sbufOutput.Put(pData, uSize);
 	}
 
 public:
@@ -56,10 +56,12 @@ public:
 	StreamFilterBase &Filter(const StreamBuffer &sbufData){
 		ASSERT(&xm_sbufOutput != &sbufData);
 
-		sbufData.Traverse(std::bind(
-			&StreamFilterBase::Update,
-			this, std::placeholders::_1, std::placeholders::_2
-		));
+		sbufData.Traverse(
+			[](auto nContext, auto pbyData, auto uSize){
+				((StreamFilterBase *)nContext)->Update(pbyData, uSize);
+			},
+			(std::intptr_t)this
+		);
 		return *this;
 	}
 	StreamFilterBase &FilterInPlace(StreamBuffer &sbufData){

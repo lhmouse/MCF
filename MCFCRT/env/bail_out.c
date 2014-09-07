@@ -2,7 +2,7 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2013 - 2014, LH_Mouse. All wrongs reserved.
 
-#include "bail.h"
+#include "bail_out.h"
 #include "mcfwin.h"
 #include "../ext/ext_include.h"
 #include <stdarg.h>
@@ -34,7 +34,8 @@ static DWORD APIENTRY ThreadProc(LPVOID pParam){
 #endif
 	return (DWORD)nRet;
 }
-static __MCF_NORETURN_IF_NDEBUG void DoBail(const wchar_t *pwszDescription){
+static __MCF_NORETURN_IF_NDEBUG
+void DoBailOut(const wchar_t *pwszDescription){
 	DWORD dwExitCode = IDOK;
 	const HANDLE hThread = CreateThread(NULL, 0, &ThreadProc, (LPVOID)pwszDescription, 0, NULL);
 	if(hThread){
@@ -54,14 +55,14 @@ static __MCF_NORETURN_IF_NDEBUG void DoBail(const wchar_t *pwszDescription){
 	__asm__ __volatile__("int 3 \n");
 }
 
-__MCF_NORETURN_IF_NDEBUG void MCF_CRT_Bail(const wchar_t *pwszDescription){
-	DoBail(pwszDescription);
+__MCF_NORETURN_IF_NDEBUG void MCF_CRT_BailOut(const wchar_t *pwszDescription){
+	DoBailOut(pwszDescription);
 }
-__MCF_NORETURN_IF_NDEBUG void MCF_CRT_BailF(const wchar_t *pwszFormat, ...){
+__MCF_NORETURN_IF_NDEBUG void MCF_CRT_BailOutF(const wchar_t *pwszFormat, ...){
 	wchar_t awcBuffer[1025];
 	va_list ap;
 	va_start(ap, pwszFormat);
 	__mingw_vsnwprintf(awcBuffer, sizeof(awcBuffer) / sizeof(wchar_t), pwszFormat, ap);
 	va_end(ap);
-	DoBail(awcBuffer);
+	DoBailOut(awcBuffer);
 }

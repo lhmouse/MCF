@@ -9,36 +9,36 @@
 #include <stdlib.h>
 
 typedef struct tagKeyDtorNode {
-	MCF_AVL_NODE_HEADER vHeader;
+	MCF_AvlNodeHeader vHeader;
 	struct tagKeyDtorNode *pPrev;
 	struct tagKeyDtorNode *pNext;
 
 	unsigned long ulKey;
 	void (*pfnDtor)(void *);
-} KEY_DTOR_NODE;
+} KeyDtorNode;
 
 static bool DtorComparatorNodes(
-	const MCF_AVL_NODE_HEADER *pObj1,
-	const MCF_AVL_NODE_HEADER *pObj2
+	const MCF_AvlNodeHeader *pObj1,
+	const MCF_AvlNodeHeader *pObj2
 ){
-	return ((const KEY_DTOR_NODE *)pObj1)->ulKey < ((const KEY_DTOR_NODE *)pObj2)->ulKey;
+	return ((const KeyDtorNode *)pObj1)->ulKey < ((const KeyDtorNode *)pObj2)->ulKey;
 }
 static bool DtorComparatorNodeKey(
-	const MCF_AVL_NODE_HEADER *pObj1,
+	const MCF_AvlNodeHeader *pObj1,
 	intptr_t nKey2
 ){
-	return ((const KEY_DTOR_NODE *)pObj1)->ulKey < (unsigned long)nKey2;
+	return ((const KeyDtorNode *)pObj1)->ulKey < (unsigned long)nKey2;
 }
 static bool DtorComparatorKeyNode(
 	intptr_t nKey1,
-	const MCF_AVL_NODE_HEADER *pObj2
+	const MCF_AvlNodeHeader *pObj2
 ){
-	return (unsigned long)nKey1 < ((const KEY_DTOR_NODE *)pObj2)->ulKey;
+	return (unsigned long)nKey1 < ((const KeyDtorNode *)pObj2)->ulKey;
 }
 
 static SRWLOCK			g_srwLock		= SRWLOCK_INIT;
-static KEY_DTOR_NODE *	g_pDtorHead		= NULL;
-static MCF_AVL_ROOT		g_pavlDtorRoot	= NULL;
+static KeyDtorNode *	g_pDtorHead		= NULL;
+static MCF_AvlRoot		g_pavlDtorRoot	= NULL;
 
 bool __MCF_CRT_MinGWHacksInit(){
 	return true;
@@ -51,7 +51,7 @@ void __MCF_CRT_MinGWHacksUninit(){
 			TlsSetValue(g_pDtorHead->ulKey, NULL);
 		}
 
-		KEY_DTOR_NODE *const pNext = g_pDtorHead->pNext;
+		KeyDtorNode *const pNext = g_pDtorHead->pNext;
 		free(g_pDtorHead);
 		g_pDtorHead = pNext;
 	}
@@ -61,7 +61,7 @@ void __MCF_CRT_MinGWHacksUninit(){
 void __MCF_CRT_RunEmutlsDtors(){
 	AcquireSRWLockShared(&g_srwLock);
 	{
-		for(const KEY_DTOR_NODE *pCur = g_pDtorHead; pCur; pCur = pCur->pNext){
+		for(const KeyDtorNode *pCur = g_pDtorHead; pCur; pCur = pCur->pNext){
 			const LPVOID pMem = TlsGetValue(pCur->ulKey);
 			if(pMem){
 				(*(pCur->pfnDtor))(pMem);
@@ -74,7 +74,7 @@ void __MCF_CRT_RunEmutlsDtors(){
 
 int __mingwthr_key_dtor(unsigned long ulKey, void (*pfnDtor)(void *)){
 	if(pfnDtor){
-		KEY_DTOR_NODE *const pNode = malloc(sizeof(KEY_DTOR_NODE));
+		KeyDtorNode *const pNode = malloc(sizeof(KeyDtorNode));
 		if(!pNode){
 			return -1;
 		}
@@ -92,7 +92,7 @@ int __mingwthr_key_dtor(unsigned long ulKey, void (*pfnDtor)(void *)){
 
 			MCF_AvlAttach(
 				&g_pavlDtorRoot,
-				(MCF_AVL_NODE_HEADER *)pNode,
+				(MCF_AvlNodeHeader *)pNode,
 				&DtorComparatorNodes
 			);
 		}
@@ -104,7 +104,7 @@ int __mingwthr_key_dtor(unsigned long ulKey, void (*pfnDtor)(void *)){
 int __mingwthr_remove_key_dtor(unsigned long ulKey){
 	AcquireSRWLockExclusive(&g_srwLock);
 	{
-		KEY_DTOR_NODE *pNode = (KEY_DTOR_NODE *)MCF_AvlFind(
+		KeyDtorNode *pNode = (KeyDtorNode *)MCF_AvlFind(
 			&g_pavlDtorRoot,
 			(intptr_t)ulKey,
 			&DtorComparatorNodeKey,
@@ -121,7 +121,7 @@ int __mingwthr_remove_key_dtor(unsigned long ulKey){
 			if(pNode->pPrev){
 				pNode->pPrev->pNext = pNode->pNext;
 			}
-			MCF_AvlDetach((MCF_AVL_NODE_HEADER *)pNode);
+			MCF_AvlDetach((MCF_AvlNodeHeader *)pNode);
 
 			free(pNode);
 		}

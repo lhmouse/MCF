@@ -5,7 +5,8 @@
 #ifndef MCF_FILE_HPP_
 #define MCF_FILE_HPP_
 
-#include "../Utilities/Utilities.hpp"
+#include "../Utilities/NoCopy.hpp"
+#include "../Utilities/Abstract.hpp"
 #include "String.hpp"
 #include <memory>
 #include <functional>

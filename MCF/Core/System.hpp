@@ -5,7 +5,6 @@
 #ifndef MCF_SYSTEM_HPP_
 #define MCF_SYSTEM_HPP_
 
-#include "../Utilities/Utilities.hpp"
 #include "../Containers/VVector.hpp"
 #include "String.hpp"
 

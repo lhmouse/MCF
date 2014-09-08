@@ -25,11 +25,11 @@ enum : std::uint64_t {
 	WAIT_FOREVER = (std::uint64_t)-1
 };
 
-template<std::uint64_t GRANULARITY = 0x7FFFFFFFu, typename Function>
-bool WaitUntil(Function &&fnCallable, std::uint64_t u64MilliSeconds){
+template<std::uint64_t GRANULARITY_T = 0x7FFFFFFFu, typename FunctionT>
+bool WaitUntil(FunctionT &&fnCallable, std::uint64_t u64MilliSeconds){
 	if(u64MilliSeconds == WAIT_FOREVER){
 		for(;;){
-			if(fnCallable(GRANULARITY)){
+			if(fnCallable(GRANULARITY_T)){
 				return true;
 			}
 		}
@@ -37,8 +37,8 @@ bool WaitUntil(Function &&fnCallable, std::uint64_t u64MilliSeconds){
 		const auto u64Until = GetNtTime() / 10000u + u64MilliSeconds;
 		auto u64ToWait = u64MilliSeconds;
 		for(;;){
-			if(u64ToWait > GRANULARITY){
-				u64ToWait = GRANULARITY;
+			if(u64ToWait > GRANULARITY_T){
+				u64ToWait = GRANULARITY_T;
 			}
 			if(fnCallable(u64ToWait)){
 				return true;

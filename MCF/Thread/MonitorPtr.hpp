@@ -15,39 +15,39 @@
 namespace MCF {
 
 namespace Impl {
-	template<typename Object, typename = void>
+	template<typename ObjectT, typename = void>
 	struct ForwardArrowOperatorHelper {
-		auto operator()(Object *pObject) const noexcept {
+		auto operator()(ObjectT *pObject) const noexcept {
 			return pObject;
 		}
 	};
-	template<typename Object>
+	template<typename ObjectT>
 	struct ForwardArrowOperatorHelper<
-		Object, decltype(std::declval<Object *>()->operator->(), (void)0)
+		ObjectT, decltype(std::declval<ObjectT *>()->operator->(), (void)0)
 	> {
-		auto operator()(Object *pObject) const noexcept {
+		auto operator()(ObjectT *pObject) const noexcept {
 			return pObject->operator->();
 		}
 	};
 
-	template<typename Object>
-	auto ForwardArrowOperator(Object &vObject) noexcept {
-		return ForwardArrowOperatorHelper<Object>()(std::addressof(vObject));
+	template<typename ObjectT>
+	auto ForwardArrowOperator(ObjectT &vObject) noexcept {
+		return ForwardArrowOperatorHelper<ObjectT>()(std::addressof(vObject));
 	}
 }
 
-template<class Object>
+template<class ObjectT>
 class MonitorPtr : NO_COPY {
 private:
-	template<typename Self>
+	template<typename SelfT>
 	class xMonitorHolder : NO_COPY {
 		friend MonitorPtr;
 
 	private:
-		Self *xm_pOwner;
+		SelfT *xm_pOwner;
 
 	private:
-		explicit xMonitorHolder(Self *pOwner) noexcept
+		explicit xMonitorHolder(SelfT *pOwner) noexcept
 			: xm_pOwner(pOwner)
 		{
 			auto vLock = xm_pOwner->xm_pcsMutex->GetLock();
@@ -81,14 +81,14 @@ private:
 private:
 	const std::unique_ptr<CriticalSection> xm_pcsMutex;
 	mutable CriticalSection::Lock xm_vLock;
-	Object xm_vObject;
+	ObjectT xm_vObject;
 
 public:
-	template<typename ...Params>
-	explicit MonitorPtr(Params &&...vParams)
+	template<typename ...ParamsT>
+	explicit MonitorPtr(ParamsT &&...vParams)
 		: xm_pcsMutex	(CriticalSection::Create())
 		, xm_vLock		(xm_pcsMutex.get(), false)
-		, xm_vObject	(std::forward<Params>(vParams)...)
+		, xm_vObject	(std::forward<ParamsT>(vParams)...)
 	{
 	}
 

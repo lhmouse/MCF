@@ -77,9 +77,8 @@ public:
 	typedef unsigned char value_type;
 
 	// std::back_insert_iterator
-	template<typename Param>
-	void push_back(Param &&vParam){
-		Put(std::forward<Param>(vParam));
+	void push_back(unsigned char byParam){
+		Put(byParam);
 	}
 };
 

@@ -9,11 +9,11 @@
 
 namespace MCF {
 
-template<class Closer>
-using WeakHandle = Impl::WeakHandleImpl<Closer, Impl::AtomicRefCount>;
+template<class CloserT>
+using WeakHandle = Impl::WeakHandleImpl<CloserT, Impl::AtomicRefCount>;
 
-template<class Closer>
-using SharedHandle = Impl::SharedHandleTemplate<Closer, Impl::AtomicRefCount>;
+template<class CloserT>
+using SharedHandle = Impl::SharedHandleTemplate<CloserT, Impl::AtomicRefCount>;
 
 }
 

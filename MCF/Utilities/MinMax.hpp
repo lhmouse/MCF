@@ -23,8 +23,8 @@ constexpr auto Min(Tx x, Ty y) noexcept {
 
 	return Comparator()(x, y) ? x : y;
 }
-template<typename Tx, typename Ty, typename Comparator = std::less<void>, typename ...More>
-constexpr auto Min(Tx x, Ty y, More ...vMore) noexcept {
+template<typename Tx, typename Ty, typename Comparator = std::less<void>, typename ...MoreT>
+constexpr auto Min(Tx x, Ty y, MoreT ...vMore) noexcept {
 	return Min(Min(x, y), vMore...);
 }
 
@@ -41,8 +41,8 @@ constexpr auto Max(Tx x, Ty y) noexcept {
 
 	return Comparator()(x, y) ? y : x;
 }
-template<typename Tx, typename Ty, typename Comparator = std::less<void>, typename ...More>
-constexpr auto Max(Tx x, Ty y, More ...vMore) noexcept {
+template<typename Tx, typename Ty, typename Comparator = std::less<void>, typename ...MoreT>
+constexpr auto Max(Tx x, Ty y, MoreT ...vMore) noexcept {
 	return Max(Max(x, y), vMore...);
 }
 

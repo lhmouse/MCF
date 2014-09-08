@@ -11,20 +11,20 @@
 
 namespace MCF {
 
-template<class Closer>
+template<class CloserT>
 class UniqueHandle {
 public:
-	typedef decltype(Closer()()) Handle;
+	typedef decltype(CloserT()()) Handle;
 
 	static_assert(std::is_scalar<Handle>::value, "Handle must be a scalar type.");
-	static_assert(noexcept(Closer()(Handle())), "Handle closer must not throw.");
+	static_assert(noexcept(CloserT()(Handle())), "Handle closer must not throw.");
 
 private:
 	Handle xm_hObj;
 
 public:
 	constexpr UniqueHandle() noexcept
-		: UniqueHandle(Closer()())
+		: UniqueHandle(CloserT()())
 	{
 	}
 	constexpr explicit UniqueHandle(Handle hObj) noexcept
@@ -52,19 +52,19 @@ public:
 
 public:
 	bool IsGood() const noexcept {
-		return Get() != Closer()();
+		return Get() != CloserT()();
 	}
 	Handle Get() const noexcept {
 		return xm_hObj;
 	}
 	Handle Release() noexcept {
-		return std::exchange(xm_hObj, Closer()());
+		return std::exchange(xm_hObj, CloserT()());
 	}
 
-	void Reset(Handle hObj = Closer()()) noexcept {
+	void Reset(Handle hObj = CloserT()()) noexcept {
 		const auto hOld = std::exchange(xm_hObj, hObj);
-		if(hOld != Closer()()){
-			Closer()(hOld);
+		if(hOld != CloserT()()){
+			CloserT()(hOld);
 		}
 	}
 	void Reset(UniqueHandle &&rhs) noexcept {
@@ -87,24 +87,24 @@ public:
 };
 
 #define MCF_UNIQUE_HANDLE_RATIONAL_OPERATOR_(op_type)	\
-	template<class Closer>	\
+	template<class CloserT>	\
 	bool operator op_type (	\
-		const UniqueHandle<Closer> &lhs,	\
-		const UniqueHandle<Closer> &rhs	\
+		const UniqueHandle<CloserT> &lhs,	\
+		const UniqueHandle<CloserT> &rhs	\
 	) noexcept {	\
 		return lhs.Get() op_type rhs.Get();	\
 	}	\
-	template<class Closer>	\
+	template<class CloserT>	\
 	bool operator op_type (	\
-		decltype(Closer()()) lhs,	\
-		const UniqueHandle<Closer> &rhs	\
+		decltype(CloserT()()) lhs,	\
+		const UniqueHandle<CloserT> &rhs	\
 	) noexcept {	\
 		return lhs op_type rhs.Get();	\
 	}	\
-	template<class Closer>	\
+	template<class CloserT>	\
 	bool operator op_type (	\
-		const UniqueHandle<Closer> &lhs,	\
-		decltype(Closer()()) rhs	\
+		const UniqueHandle<CloserT> &lhs,	\
+		decltype(CloserT()()) rhs	\
 	) noexcept {	\
 		return lhs.Get() op_type rhs;	\
 	}
@@ -118,8 +118,8 @@ MCF_UNIQUE_HANDLE_RATIONAL_OPERATOR_(>=)
 
 #undef MCF_UNIQUE_HANDLE_RATIONAL_OPERATOR_
 
-template<class Closer>
-void swap(UniqueHandle<Closer> &lhs, UniqueHandle<Closer> &rhs) noexcept {
+template<class CloserT>
+void swap(UniqueHandle<CloserT> &lhs, UniqueHandle<CloserT> &rhs) noexcept {
 	lhs.Swap(rhs);
 }
 

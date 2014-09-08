@@ -12,9 +12,9 @@
 namespace MCF {
 
 namespace Impl {
-	template<std::size_t BIT_COUNT>
+	template<std::size_t BIT_COUNT_T>
 	struct ByteSwapHelper {
-		static_assert((BIT_COUNT, false), "Not supported.");
+		static_assert((BIT_COUNT_T, false), "Not supported.");
 	};
 
 	template<>

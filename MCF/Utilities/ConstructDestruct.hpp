@@ -36,38 +36,38 @@ void operator delete(
 namespace MCF {
 
 namespace Impl {
-	template<typename Object>
+	template<typename ObjectT>
 	struct DirectConstructor {
-		template<typename ...Params>
-		static Object *Construct(Object *pObject, Params &&...vParams)
-			noexcept(std::is_nothrow_constructible<Object, Params &&...>::value)
+		template<typename ...ParamsT>
+		static ObjectT *Construct(ObjectT *pObject, ParamsT &&...vParams)
+			noexcept(std::is_nothrow_constructible<ObjectT, ParamsT &&...>::value)
 		{
-			return ::new(pObject, DirectConstructTag()) Object(std::forward<Params>(vParams)...);
+			return ::new(pObject, DirectConstructTag()) ObjectT(std::forward<ParamsT>(vParams)...);
 		}
-		static void Destruct(Object *pObject)
-			noexcept(std::is_nothrow_destructible<Object>::value)
+		static void Destruct(ObjectT *pObject)
+			noexcept(std::is_nothrow_destructible<ObjectT>::value)
 		{
-			pObject->~Object();
+			pObject->~ObjectT();
 		}
 	};
 }
 
-template<typename Object, typename ...Params>
+template<typename ObjectT, typename ...ParamsT>
 inline __attribute__((__returns_nonnull__))
-Object *Construct(Object *pObject, Params &&...vParams)
-	noexcept(std::is_nothrow_constructible<Object, Params &&...>::value)
+ObjectT *Construct(ObjectT *pObject, ParamsT &&...vParams)
+	noexcept(std::is_nothrow_constructible<ObjectT, ParamsT &&...>::value)
 {
-	return Impl::DirectConstructor<Object>::template Construct<Params &&...>(
-		pObject, std::forward<Params>(vParams)...
+	return Impl::DirectConstructor<ObjectT>::template Construct<ParamsT &&...>(
+		pObject, std::forward<ParamsT>(vParams)...
 	);
 }
-template<typename Object>
-inline void Destruct(Object *pObject)
-	noexcept(std::is_nothrow_destructible<Object>::value)
+template<typename ObjectT>
+inline void Destruct(ObjectT *pObject)
+	noexcept(std::is_nothrow_destructible<ObjectT>::value)
 {
 	ASSERT(pObject);
 
-	Impl::DirectConstructor<Object>::Destruct(pObject);
+	Impl::DirectConstructor<ObjectT>::Destruct(pObject);
 }
 
 }

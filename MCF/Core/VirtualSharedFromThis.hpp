@@ -11,22 +11,22 @@
 namespace MCF {
 
 namespace Impl {
-	template<class Base, class Derived, typename TraitHelper = void>
+	template<class BaseT, class DerivedT, typename TraitHelperT = void>
 	struct IsStaticCastable : public std::false_type {
 	};
-	template<class Base, class Derived>
-	struct IsStaticCastable<Base, Derived,
-		decltype(static_cast<Derived *>(std::declval<Base *>()), (void)0)>
+	template<class BaseT, class DerivedT>
+	struct IsStaticCastable<BaseT, DerivedT,
+		decltype(static_cast<DerivedT *>(std::declval<BaseT *>()), (void)0)>
 		: public std::true_type
 	{
 	};
 
-	template<class Base, class Derived, typename TraitHelper = void>
+	template<class BaseT, class DerivedT, typename TraitHelperT = void>
 	struct IsDynamicCastable : public std::false_type {
 	};
-	template<class Base, class Derived>
-	struct IsDynamicCastable<Base, Derived,
-		decltype(dynamic_cast<Derived *>(std::declval<Base *>()), (void)0)>
+	template<class BaseT, class DerivedT>
+	struct IsDynamicCastable<BaseT, DerivedT,
+		decltype(dynamic_cast<DerivedT *>(std::declval<BaseT *>()), (void)0)>
 		: public std::true_type
 	{
 	};
@@ -40,32 +40,32 @@ public:
 	virtual ~VirtualSharedFromThis() = 0;
 
 public:
-	template<typename Derived>
-	std::shared_ptr<const Derived> GetSharedFromThis() const {
-		static_assert(std::is_base_of<VirtualSharedFromThis, Derived>::value &&
-				!Impl::IsStaticCastable<VirtualSharedFromThis, Derived>::value &&
-				Impl::IsDynamicCastable<VirtualSharedFromThis, Derived>::value,
+	template<typename DerivedT>
+	std::shared_ptr<const DerivedT> GetSharedFromThis() const {
+		static_assert(std::is_base_of<VirtualSharedFromThis, DerivedT>::value &&
+				!Impl::IsStaticCastable<VirtualSharedFromThis, DerivedT>::value &&
+				Impl::IsDynamicCastable<VirtualSharedFromThis, DerivedT>::value,
 			"Please virtually derive from VirtualSharedFromThis.");
 
-		return std::dynamic_pointer_cast<const Derived>(shared_from_this());
+		return std::dynamic_pointer_cast<const DerivedT>(shared_from_this());
 	}
-	template<typename Derived>
-	std::shared_ptr<Derived> GetSharedFromThis(){
-		static_assert(std::is_base_of<VirtualSharedFromThis, Derived>::value &&
-				!Impl::IsStaticCastable<VirtualSharedFromThis, Derived>::value &&
-				Impl::IsDynamicCastable<VirtualSharedFromThis, Derived>::value,
+	template<typename DerivedT>
+	std::shared_ptr<DerivedT> GetSharedFromThis(){
+		static_assert(std::is_base_of<VirtualSharedFromThis, DerivedT>::value &&
+				!Impl::IsStaticCastable<VirtualSharedFromThis, DerivedT>::value &&
+				Impl::IsDynamicCastable<VirtualSharedFromThis, DerivedT>::value,
 			"Please virtually derive from VirtualSharedFromThis.");
 
-		return std::dynamic_pointer_cast<Derived>(shared_from_this());
+		return std::dynamic_pointer_cast<DerivedT>(shared_from_this());
 	}
 
-	template<typename Derived>
-	std::weak_ptr<const Derived> GetWeakFromThis() const {
-		return GetSharedFromThis<const Derived>();
+	template<typename DerivedT>
+	std::weak_ptr<const DerivedT> GetWeakFromThis() const {
+		return GetSharedFromThis<const DerivedT>();
 	}
-	template<typename Derived>
-	std::weak_ptr<Derived> GetWeakFromThis(){
-		return GetSharedFromThis<Derived>();
+	template<typename DerivedT>
+	std::weak_ptr<DerivedT> GetWeakFromThis(){
+		return GetSharedFromThis<DerivedT>();
 	}
 };
 

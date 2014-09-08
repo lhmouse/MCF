@@ -17,7 +17,7 @@
 namespace MCF {
 
 namespace Impl {
-	template<bool IS_DUMMY>
+	template<bool>
 	struct ExceptionWrapper {
 		typedef std::exception_ptr ExceptionPtr;
 
@@ -43,11 +43,12 @@ namespace Impl {
 	};
 }
 
-template<class Object, class ...InitParams>
+template<class ObjectT, class ...InitParamsT>
 class ThreadLocalPtr : NO_COPY {
 private:
-	typedef Impl::ExceptionWrapper<std::is_nothrow_constructible<Object, InitParams &&...>::value> xExceptionWrapper;
-	typedef typename xExceptionWrapper::ExceptionPtr xExceptionPtr;
+	using xExceptionWrapper = Impl::ExceptionWrapper<
+		std::is_nothrow_constructible<ObjectT, InitParamsT &&...>::value>;
+	using xExceptionPtr = typename xExceptionWrapper::ExceptionPtr;
 
 	struct TlsKeyDeleter {
 		constexpr void *operator()() const noexcept {
@@ -57,49 +58,49 @@ private:
 			::MCF_CRT_TlsFreeKey(pKey);
 		}
 	};
-	typedef UniqueHandle<TlsKeyDeleter> xTlsIndex;
+	using xTlsIndex = UniqueHandle<TlsKeyDeleter>;
 
 private:
 	static void xTlsCallback(std::intptr_t nValue) noexcept {
-		delete (Object *)nValue;
+		delete (ObjectT *)nValue;
 	}
 
 private:
 	const xTlsIndex xm_nTlsIndex;
-	const std::tuple<InitParams...> xm_vInitParams;
+	const std::tuple<InitParamsT...> xm_vInitParams;
 
 public:
-	explicit constexpr ThreadLocalPtr(InitParams &&...vInitParams)
+	explicit constexpr ThreadLocalPtr(InitParamsT &&...vInitParams)
 		: xm_nTlsIndex		(::MCF_CRT_TlsAllocKey(&xTlsCallback))
-		, xm_vInitParams	(std::forward<InitParams>(vInitParams)...)
+		, xm_vInitParams	(std::forward<InitParamsT>(vInitParams)...)
 	{
 	}
 
 private:
-	Object *xDoGetPtr() const noexcept {
-		Object *pObject;
+	ObjectT *xDoGetPtr() const noexcept {
+		ObjectT *pObject;
 		{
 			std::intptr_t nValue;
 			if(::MCF_CRT_TlsGet(xm_nTlsIndex.Get(), &nValue)){
-				pObject = (Object *)nValue;
+				pObject = (ObjectT *)nValue;
 			} else {
 				pObject = nullptr;
 			}
 		}
 		return pObject;
 	}
-	Object *xDoAllocPtr() const {
-		Object *pObject;
+	ObjectT *xDoAllocPtr() const {
+		ObjectT *pObject;
 		{
 			std::intptr_t nValue;
 			if(::MCF_CRT_TlsGet(xm_nTlsIndex.Get(), &nValue)){
-				pObject = (Object *)nValue;
+				pObject = (ObjectT *)nValue;
 			} else {
 				pObject = nullptr;
 			}
 		}
 		if(!pObject){
-			auto pNewObject = MakeUniqueFromTuple<Object>(xm_vInitParams);
+			auto pNewObject = MakeUniqueFromTuple<ObjectT>(xm_vInitParams);
 			if(!::MCF_CRT_TlsReset(xm_nTlsIndex.Get(), (std::intptr_t)pNewObject.get())){
 				throw std::bad_alloc();
 			}
@@ -108,27 +109,27 @@ private:
 		return pObject;
 	}
 	void xDoFreePtr() const noexcept {
-		::MCF_CRT_TlsReset(xm_nTlsIndex.Get(), (std::intptr_t)(Object *)nullptr);
+		::MCF_CRT_TlsReset(xm_nTlsIndex.Get(), (std::intptr_t)(ObjectT *)nullptr);
 	}
 
 public:
-	const Object *GetPtr() const noexcept {
+	const ObjectT *GetPtr() const noexcept {
 		return xDoGetPtr();
 	}
-	Object *GetPtr() noexcept {
+	ObjectT *GetPtr() noexcept {
 		return xDoGetPtr();
 	}
-	const Object *GetSafePtr() const {
+	const ObjectT *GetSafePtr() const {
 		return xDoAllocPtr();
 	}
-	Object *GetSafePtr(){
+	ObjectT *GetSafePtr(){
 		return xDoAllocPtr();
 	}
 
-	const Object &Get() const {
+	const ObjectT &Get() const {
 		return *GetSafePtr();
 	}
-	Object &Get(){
+	ObjectT &Get(){
 		return *GetSafePtr();
 	}
 
@@ -137,22 +138,22 @@ public:
 	}
 
 public:
-	explicit operator const Object *() const {
+	explicit operator const ObjectT *() const {
 		return GetPtr();
 	}
-	explicit operator Object *(){
+	explicit operator ObjectT *(){
 		return GetPtr();
 	}
-	const Object *operator->() const {
+	const ObjectT *operator->() const {
 		return GetSafePtr();
 	}
-	Object *operator->(){
+	ObjectT *operator->(){
 		return GetSafePtr();
 	}
-	const Object &operator*() const{
+	const ObjectT &operator*() const{
 		return Get();
 	}
-	Object &operator*(){
+	ObjectT &operator*(){
 		return Get();
 	}
 };

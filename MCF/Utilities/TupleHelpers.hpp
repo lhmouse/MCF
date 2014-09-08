@@ -14,131 +14,131 @@
 namespace MCF {
 
 namespace Impl {
-	template<std::size_t CUR, std::size_t END>
+	template<std::size_t CUR_T, std::size_t END_T>
 	struct CallOnTupleHelper {
-		template<typename Function, typename ...TupleParams, typename ...Unpacked>
+		template<typename FunctionT, typename ...TupleParamsT, typename ...UnpackedT>
 		static decltype(auto) Do(
-			Function &&vFunction, const std::tuple<TupleParams...> &vTuple,
-			const Unpacked &...vUnpacked
+			FunctionT &&vFunction, const std::tuple<TupleParamsT...> &vTuple,
+			const UnpackedT &...vUnpacked
 		){
-			return CallOnTupleHelper<CUR + 1, END>::Do(
+			return CallOnTupleHelper<CUR_T + 1, END_T>::Do(
 				vFunction, vTuple,
-				vUnpacked..., std::get<CUR>(vTuple)
+				vUnpacked..., std::get<CUR_T>(vTuple)
 			);
 		}
-		template<typename Function, typename ...TupleParams, typename ...Unpacked>
+		template<typename FunctionT, typename ...TupleParamsT, typename ...UnpackedT>
 		static decltype(auto) Do(
-			Function &&vFunction, std::tuple<TupleParams...> &&vTuple,
-			Unpacked &&...vUnpacked
+			FunctionT &&vFunction, std::tuple<TupleParamsT...> &&vTuple,
+			UnpackedT &&...vUnpacked
 		){
-			return CallOnTupleHelper<CUR + 1, END>::Do(
+			return CallOnTupleHelper<CUR_T + 1, END_T>::Do(
 				vFunction, std::move(vTuple),
-				std::move(vUnpacked)..., std::move(std::get<CUR>(vTuple))
+				std::move(vUnpacked)..., std::move(std::get<CUR_T>(vTuple))
 			);
 		}
 	};
-	template<std::size_t END>
-	struct CallOnTupleHelper<END, END> {
-		template<typename Function, typename ...TupleParams, typename ...Unpacked>
+	template<std::size_t END_T>
+	struct CallOnTupleHelper<END_T, END_T> {
+		template<typename FunctionT, typename ...TupleParamsT, typename ...UnpackedT>
 		static decltype(auto) Do(
-			Function &&vFunction, const std::tuple<TupleParams...> &,
-			const Unpacked &...vUnpacked
+			FunctionT &&vFunction, const std::tuple<TupleParamsT...> &,
+			const UnpackedT &...vUnpacked
 		){
 			return vFunction(vUnpacked...);
 		}
-		template<typename Function, typename ...TupleParams, typename ...Unpacked>
+		template<typename FunctionT, typename ...TupleParamsT, typename ...UnpackedT>
 		static decltype(auto) Do(
-			Function &&vFunction, std::tuple<TupleParams...> &&,
-			Unpacked &&...vUnpacked
+			FunctionT &&vFunction, std::tuple<TupleParamsT...> &&,
+			UnpackedT &&...vUnpacked
 		){
 			return vFunction(std::move(vUnpacked)...);
 		}
 	};
 }
 
-template<typename Function, typename ...Params>
-decltype(auto) CallOnTuple(Function &&vFunction, const std::tuple<Params...> &vTuple)
+template<typename FunctionT, typename ...ParamsT>
+decltype(auto) CallOnTuple(FunctionT &&vFunction, const std::tuple<ParamsT...> &vTuple)
 	noexcept(noexcept(
-		std::declval<Function>()(std::declval<const Params &>()...)
+		std::declval<FunctionT>()(std::declval<const ParamsT &>()...)
 	))
 {
-	return Impl::CallOnTupleHelper<0u, sizeof...(Params)>::Do(
-		std::forward<Function>(vFunction), vTuple
+	return Impl::CallOnTupleHelper<0u, sizeof...(ParamsT)>::Do(
+		std::forward<FunctionT>(vFunction), vTuple
 	);
 }
-template<typename Function, typename ...Params>
-decltype(auto) CallOnTuple(Function &&vFunction, std::tuple<Params...> &&vTuple)
+template<typename FunctionT, typename ...ParamsT>
+decltype(auto) CallOnTuple(FunctionT &&vFunction, std::tuple<ParamsT...> &&vTuple)
 	noexcept(noexcept(
-		std::declval<Function>()(std::declval<Params &&>()...)
+		std::declval<FunctionT>()(std::declval<ParamsT &&>()...)
 	))
 {
-	return Impl::CallOnTupleHelper<0u, sizeof...(Params)>::Do(
-		std::forward<Function>(vFunction), std::move(vTuple)
+	return Impl::CallOnTupleHelper<0u, sizeof...(ParamsT)>::Do(
+		std::forward<FunctionT>(vFunction), std::move(vTuple)
 	);
 }
 
-template<class Object, typename ...Params>
-auto MakeFromTuple(const std::tuple<Params...> &vTuple)
+template<class ObjectT, typename ...ParamsT>
+auto MakeFromTuple(const std::tuple<ParamsT...> &vTuple)
 	noexcept(noexcept(
-		std::is_nothrow_constructible<Object, const Params &...>::value
-		&& std::is_nothrow_move_constructible<Object>::value
+		std::is_nothrow_constructible<ObjectT, const ParamsT &...>::value
+		&& std::is_nothrow_move_constructible<ObjectT>::value
 	))
 {
-	return Impl::CallOnTupleHelper<0u, sizeof...(Params)>::Do(
-		[](const Params &...vParams){
-			return Object(vParams...);
+	return Impl::CallOnTupleHelper<0u, sizeof...(ParamsT)>::Do(
+		[](const ParamsT &...vParams){
+			return ObjectT(vParams...);
 		},
 		vTuple
 	);
 }
-template<class Object, typename ...Params>
-auto MakeFromTuple(std::tuple<Params...> &&vTuple)
+template<class ObjectT, typename ...ParamsT>
+auto MakeFromTuple(std::tuple<ParamsT...> &&vTuple)
 	noexcept(noexcept(
-		std::is_nothrow_constructible<Object, Params &&...>::value
-		&& std::is_nothrow_move_constructible<Object>::value
+		std::is_nothrow_constructible<ObjectT, ParamsT &&...>::value
+		&& std::is_nothrow_move_constructible<ObjectT>::value
 	))
 {
-	return Impl::CallOnTupleHelper<0u, sizeof...(Params)>::Do(
-		[](Params &&...vParams){
-			return Object(std::move(vParams)...);
+	return Impl::CallOnTupleHelper<0u, sizeof...(ParamsT)>::Do(
+		[](ParamsT &&...vParams){
+			return ObjectT(std::move(vParams)...);
 		},
 		std::move(vTuple)
 	);
 }
 
-template<class Object, typename ...Params>
-auto MakeUniqueFromTuple(const std::tuple<Params...> &vTuple){
-	return Impl::CallOnTupleHelper<0u, sizeof...(Params)>::Do(
-		[](const Params &...vParams){
-			return std::make_unique<Object>(vParams...);
+template<class ObjectT, typename ...ParamsT>
+auto MakeUniqueFromTuple(const std::tuple<ParamsT...> &vTuple){
+	return Impl::CallOnTupleHelper<0u, sizeof...(ParamsT)>::Do(
+		[](const ParamsT &...vParams){
+			return std::make_unique<ObjectT>(vParams...);
 		},
 		vTuple
 	);
 }
-template<class Object, typename ...Params>
-auto MakeUniqueFromTuple(std::tuple<Params...> &&vTuple){
-	return Impl::CallOnTupleHelper<0u, sizeof...(Params)>::Do(
-		[](Params &&...vParams){
-			return std::make_unique<Object>(std::move(vParams)...);
+template<class ObjectT, typename ...ParamsT>
+auto MakeUniqueFromTuple(std::tuple<ParamsT...> &&vTuple){
+	return Impl::CallOnTupleHelper<0u, sizeof...(ParamsT)>::Do(
+		[](ParamsT &&...vParams){
+			return std::make_unique<ObjectT>(std::move(vParams)...);
 		},
 		std::move(vTuple)
 	);
 }
 
-template<class Object, typename ...Params>
-auto MakeSharedFromTuple(const std::tuple<Params...> &vTuple){
-	return Impl::CallOnTupleHelper<0u, sizeof...(Params)>::Do(
-		[](const Params &...vParams){
-			return std::make_shared<Object>(vParams...);
+template<class ObjectT, typename ...ParamsT>
+auto MakeSharedFromTuple(const std::tuple<ParamsT...> &vTuple){
+	return Impl::CallOnTupleHelper<0u, sizeof...(ParamsT)>::Do(
+		[](const ParamsT &...vParams){
+			return std::make_shared<ObjectT>(vParams...);
 		},
 		vTuple
 	);
 }
-template<class Object, typename ...Params>
-auto MakeSharedFromTuple(std::tuple<Params...> &&vTuple){
-	return Impl::CallOnTupleHelper<0u, sizeof...(Params)>::Do(
-		[](Params &&...vParams){
-			return std::make_shared<Object>(std::move(vParams)...);
+template<class ObjectT, typename ...ParamsT>
+auto MakeSharedFromTuple(std::tuple<ParamsT...> &&vTuple){
+	return Impl::CallOnTupleHelper<0u, sizeof...(ParamsT)>::Do(
+		[](ParamsT &&...vParams){
+			return std::make_shared<ObjectT>(std::move(vParams)...);
 		},
 		std::move(vTuple)
 	);

@@ -81,13 +81,13 @@ public:
 };
 
 namespace Impl {
-	template<class Mutex, std::size_t LOCK_TYPE = 0>
+	template<class MutexT, std::size_t LOCK_TYPE_T = 0>
 	class LockRaiiTemplate : CONCRETE(LockRaiiTemplateBase) {
 	private:
-		Mutex *xm_pOwner;
+		MutexT *xm_pOwner;
 
 	public:
-		explicit LockRaiiTemplate(Mutex *pOwner, std::size_t uInitCount = 1) noexcept
+		explicit LockRaiiTemplate(MutexT *pOwner, std::size_t uInitCount = 1) noexcept
 			: xm_pOwner(pOwner)
 		{
 			Lock(uInitCount);
@@ -128,9 +128,9 @@ namespace Impl {
 		}
 	};
 
-	template<class Mutex, std::size_t LOCK_TYPE>
-	void swap(LockRaiiTemplate<Mutex, LOCK_TYPE> &lhs,
-		LockRaiiTemplate<Mutex, LOCK_TYPE> &rhs) noexcept
+	template<class MutexT, std::size_t LOCK_TYPE_T>
+	void swap(LockRaiiTemplate<MutexT, LOCK_TYPE_T> &lhs,
+		LockRaiiTemplate<MutexT, LOCK_TYPE_T> &rhs) noexcept
 	{
 		lhs.Swap(rhs);
 	}

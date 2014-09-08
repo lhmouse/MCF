@@ -19,13 +19,13 @@ namespace Impl {
 		virtual void MCF_PureAbstract_() noexcept = 0;
 	};
 
-	template<typename RealBase>
-	class ConcreteBase : public RealBase {
+	template<typename RealBaseT>
+	class ConcreteBase : public RealBaseT {
 	protected:
 		template<typename ...BaseParams>
 		explicit ConcreteBase(BaseParams &&...vBaseParams)
-			noexcept(std::is_nothrow_constructible<RealBase, BaseParams &&...>::value)
-			: RealBase(std::forward<BaseParams>(vBaseParams)...)
+			noexcept(std::is_nothrow_constructible<RealBaseT, BaseParams &&...>::value)
+			: RealBaseT(std::forward<BaseParams>(vBaseParams)...)
 		{
 		}
 

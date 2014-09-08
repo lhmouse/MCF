@@ -82,7 +82,9 @@ StreamBuffer::StreamBuffer(StreamBuffer &&rhs) noexcept
 	Swap(rhs);
 }
 StreamBuffer &StreamBuffer::operator=(const StreamBuffer &rhs){
-	StreamBuffer(rhs).Swap(*this);
+	if(&rhs != this){
+		StreamBuffer(rhs).Swap(*this);
+	}
 	return *this;
 }
 StreamBuffer &StreamBuffer::operator=(StreamBuffer &&rhs) noexcept {

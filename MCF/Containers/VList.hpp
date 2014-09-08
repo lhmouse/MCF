@@ -12,43 +12,43 @@
 
 namespace MCF {
 
-template<class Element>
+template<class ElementT>
 class VList {
 public:
 	class Node {
 		friend class VList;
 
 	private:
-		Element xm_vElement;
+		ElementT xm_vElement;
 		Node *xm_pPrev;
 		Node *xm_pNext;
 
 	private:
 #ifdef NDEBUG
 		constexpr Node()
-			noexcept(std::is_nothrow_constructible<Element>::value)
+			noexcept(std::is_nothrow_constructible<ElementT>::value)
 		{
 		}
 #else
 		Node()
-			noexcept(std::is_nothrow_constructible<Element>::value)
+			noexcept(std::is_nothrow_constructible<ElementT>::value)
 		{
-			if(std::is_pod<Element>::value){
+			if(std::is_pod<ElementT>::value){
 				__builtin_memset(&xm_vElement, 0xCC, sizeof(xm_vElement));
 			}
 		}
 #endif
-		template<typename ...Params>
-		explicit constexpr Node(Params &&...vParams)
-			: xm_vElement(std::forward<Params>(vParams)...)
+		template<typename ...ParamsT>
+		explicit constexpr Node(ParamsT &&...vParams)
+			: xm_vElement(std::forward<ParamsT>(vParams)...)
 		{
 		}
 
 	public:
-		const Element &GetElement() const noexcept {
+		const ElementT &GetElement() const noexcept {
 			return xm_vElement;
 		}
-		Element &GetElement() noexcept {
+		ElementT &GetElement() noexcept {
 			return xm_vElement;
 		}
 
@@ -76,25 +76,25 @@ public:
 		, xm_pLast	(nullptr)
 	{
 	}
-	template<typename ...Params>
-	explicit VList(std::size_t uCount, const Params &...vParams)
+	template<typename ...ParamsT>
+	explicit VList(std::size_t uCount, const ParamsT &...vParams)
 		: VList()
 	{
 		FillAtEnd(uCount, vParams...);
 	}
-	template<class Iterator>
-	VList(Iterator itBegin, std::common_type_t<Iterator> itEnd)
+	template<class IteratorT>
+	VList(IteratorT itBegin, std::common_type_t<IteratorT> itEnd)
 		: VList()
 	{
 		CopyToEnd(itBegin, itEnd);
 	}
-	template<class Iterator>
-	VList(Iterator itBegin, std::size_t uCount)
+	template<class IteratorT>
+	VList(IteratorT itBegin, std::size_t uCount)
 		: VList()
 	{
 		CopyToEnd(itBegin, uCount);
 	}
-	VList(std::initializer_list<Element> rhs)
+	VList(std::initializer_list<ElementT> rhs)
 		: VList()
 	{
 		CopyToEnd(rhs.begin(), rhs.size());
@@ -112,7 +112,7 @@ public:
 		std::swap(xm_pFirst, rhs.xm_pFirst);
 		std::swap(xm_pLast, rhs.xm_pLast);
 	}
-	VList &operator=(std::initializer_list<Element> rhs){
+	VList &operator=(std::initializer_list<ElementT> rhs){
 		VList(rhs).Swap(*this);
 		return *this;
 	}
@@ -137,7 +137,7 @@ public:
 	Node *GetFirst() noexcept {
 		return xm_pFirst;
 	}
-	const Node *GetCBegin() const noexcept {
+	const Node *GetCFirst() const noexcept {
 		return GetFirst();
 	}
 	const Node *GetLast() const noexcept {
@@ -146,7 +146,7 @@ public:
 	Node *GetLast() noexcept {
 		return xm_pLast;
 	}
-	const Node *GetCRBegin() const noexcept {
+	const Node *GetCLast() const noexcept {
 		return GetLast();
 	}
 
@@ -161,9 +161,9 @@ public:
 		xm_pLast = nullptr;
 	}
 
-	template<typename ...Params>
-	Node *Insert(Node *pPos, Params &&...vParams){
-		auto pNode = new Node(std::forward<Params>(vParams)...);
+	template<typename ...ParamsT>
+	Node *Insert(Node *pPos, ParamsT &&...vParams){
+		auto pNode = new Node(std::forward<ParamsT>(vParams)...);
 
 		const auto pPrev = std::exchange((pPos ? pPos->xm_pPrev : xm_pLast), pNode);
 		(pPrev ? pPrev->xm_pNext : xm_pFirst) = pNode;
@@ -232,37 +232,37 @@ public:
 		return Splice(pPos, lstSource, pBegin, pEnd);
 	}
 
-	template<typename ...Params>
-	Node *Push(Params &&...vParams){
-		return Insert(nullptr, std::forward<Params>(vParams)...);
+	template<typename ...ParamsT>
+	Node *Push(ParamsT &&...vParams){
+		return Insert(nullptr, std::forward<ParamsT>(vParams)...);
 	}
 	void Pop() noexcept {
 		Erase(xm_pLast);
 	}
 
-	template<typename ...Params>
-	Node *Unshift(Params &&...vParams){
-		return Insert(xm_pFirst, std::forward<Params>(vParams)...);
+	template<typename ...ParamsT>
+	Node *Unshift(ParamsT &&...vParams){
+		return Insert(xm_pFirst, std::forward<ParamsT>(vParams)...);
 	}
 	void Shift() noexcept {
 		Erase(xm_pFirst);
 	}
 
-	template<typename ...Params>
-	void FillAtEnd(std::size_t uCount, const Params &...vParams){
+	template<typename ...ParamsT>
+	void FillAtEnd(std::size_t uCount, const ParamsT &...vParams){
 		for(std::size_t i = 0; i < uCount; ++i){
 			Push(vParams...);
 		}
 	}
-	template<class Iterator>
-	void CopyToEnd(Iterator itBegin, std::common_type_t<Iterator> itEnd){
+	template<class IteratorT>
+	void CopyToEnd(IteratorT itBegin, std::common_type_t<IteratorT> itEnd){
 		while(itBegin != itEnd){
 			Push(*itBegin);
 			++itBegin;
 		}
 	}
-	template<class Iterator>
-	void CopyToEnd(Iterator itBegin, std::size_t uCount){
+	template<class IteratorT>
+	void CopyToEnd(IteratorT itBegin, std::size_t uCount){
 		for(std::size_t i = 0; i < uCount; ++i){
 			Push(*itBegin);
 			++itBegin;
@@ -274,21 +274,21 @@ public:
 		}
 	}
 
-	template<typename ...Params>
-	void FillAtBegin(std::size_t uCount, const Params &...vParams){
+	template<typename ...ParamsT>
+	void FillAtBegin(std::size_t uCount, const ParamsT &...vParams){
 		for(std::size_t i = 0; i < uCount; ++i){
 			Unshift(vParams...);
 		}
 	}
-	template<class Iterator>
-	void CopyToBegin(Iterator itBegin, std::common_type_t<Iterator> itEnd){
+	template<class IteratorT>
+	void CopyToBegin(IteratorT itBegin, std::common_type_t<IteratorT> itEnd){
 		while(itBegin != itEnd){
 			Unshift(*itBegin);
 			++itBegin;
 		}
 	}
-	template<class Iterator>
-	void CopyToBegin(Iterator itBegin, std::size_t uCount){
+	template<class IteratorT>
+	void CopyToBegin(IteratorT itBegin, std::size_t uCount){
 		for(std::size_t i = 0; i < uCount; ++i){
 			Unshift(*itBegin);
 			++itBegin;
@@ -313,22 +313,22 @@ public:
 	}
 
 public:
-	typedef Element value_type;
+	typedef ElementT value_type;
 
 	// std::back_insert_iterator
-	template<typename Param>
-	void push_back(Param &&vParam){
-		Push(std::forward<Param>(vParam));
+	template<typename ParamT>
+	void push_back(ParamT &&vParam){
+		Push(std::forward<ParamT>(vParam));
 	}
 	// std::front_insert_iterator
-	template<typename Param>
-	void push_front(Param &&vParam){
-		Unshift(std::forward<Param>(vParam));
+	template<typename ParamT>
+	void push_front(ParamT &&vParam){
+		Unshift(std::forward<ParamT>(vParam));
 	}
 };
 
-template<class Element>
-void swap(VList<Element> &lhs, VList<Element> &rhs) noexcept {
+template<class ElementT>
+void swap(VList<ElementT> &lhs, VList<ElementT> &rhs) noexcept {
 	lhs.Swap(rhs);
 }
 

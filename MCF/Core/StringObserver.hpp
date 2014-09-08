@@ -16,10 +16,10 @@
 
 namespace MCF {
 
-template<typename Char>
+template<typename>
 class StringObserver;
 
-template<typename Char>
+template<typename CharT>
 class StringObserver {
 public:
 	enum : std::size_t {
@@ -27,13 +27,13 @@ public:
 	};
 
 private:
-	static const Char *xEndOf(const Char *pszBegin) noexcept {
+	static const CharT *xEndOf(const CharT *pszBegin) noexcept {
 		if(pszBegin == nullptr){
 			return nullptr;
 		}
 
-		const Char *pchEnd = pszBegin;
-		while(*pchEnd != Char()){
+		const CharT *pchEnd = pszBegin;
+		while(*pchEnd != CharT()){
 			++pchEnd;
 		}
 		return pchEnd;
@@ -51,10 +51,10 @@ private:
 		return (std::size_t)nOffset;
 	}
 
-	template<typename Iterator>
+	template<typename IteratorT>
 	static std::size_t xFindRep(
-		Iterator itBegin, std::common_type_t<Iterator> itEnd,
-		Char chToFind, std::size_t uRepCount
+		IteratorT itBegin, std::common_type_t<IteratorT> itEnd,
+		CharT chToFind, std::size_t uRepCount
 	) noexcept {
 		ASSERT(uRepCount != 0);
 		ASSERT((std::size_t)(itEnd - itBegin) >= uRepCount);
@@ -65,12 +65,12 @@ private:
 
 		auto itCur = itBegin;
 		do {
-			const auto itPartBegin = std::find_if(itCur, itSearchEnd, [chToFind](Char ch) noexcept { return ch == chToFind; });
+			const auto itPartBegin = std::find_if(itCur, itSearchEnd, [chToFind](CharT ch) noexcept { return ch == chToFind; });
 			if(itPartBegin == itSearchEnd){
 				break;
 			}
 			const auto itPartEnd = itPartBegin + (std::ptrdiff_t)uRepCount;
-			itCur = std::find_if(itPartBegin, itPartEnd, [chToFind](Char ch) noexcept { return ch != chToFind; });
+			itCur = std::find_if(itPartBegin, itPartEnd, [chToFind](CharT ch) noexcept { return ch != chToFind; });
 			if(itCur == itPartEnd){
 				uFound = (std::size_t)(itPartBegin - itBegin);
 				break;
@@ -81,11 +81,11 @@ private:
 		return uFound;
 	}
 
-	template<typename Iterator>
+	template<typename IteratorT>
 	static std::size_t xKmpSearch(
-		Iterator itBegin, std::common_type_t<Iterator> itEnd,
-		std::common_type_t<Iterator> itToFindBegin,
-		std::common_type_t<Iterator> itToFindEnd
+		IteratorT itBegin, std::common_type_t<IteratorT> itEnd,
+		std::common_type_t<IteratorT> itToFindBegin,
+		std::common_type_t<IteratorT> itToFindEnd
 	) noexcept {
 		ASSERT(itToFindEnd >= itToFindBegin);
 		ASSERT(itEnd - itBegin >= itToFindEnd - itToFindBegin);
@@ -154,14 +154,14 @@ private:
 	}
 
 private:
-	const Char *xm_pchBegin;
-	const Char *xm_pchEnd;
+	const CharT *xm_pchBegin;
+	const CharT *xm_pchEnd;
 
 public:
 #ifdef NDEBUG
 	constexpr
 #endif
-	StringObserver(const Char *pchBegin, const Char *pchEnd) noexcept
+	StringObserver(const CharT *pchBegin, const CharT *pchEnd) noexcept
 		: xm_pchBegin(pchBegin), xm_pchEnd(pchEnd)
 	{
 #ifndef NDEBUG
@@ -169,22 +169,22 @@ public:
 #endif
 	}
 	constexpr StringObserver() noexcept
-		: StringObserver((const Char *)nullptr, nullptr)
+		: StringObserver((const CharT *)nullptr, nullptr)
 	{
 	}
 	constexpr StringObserver(std::nullptr_t, std::nullptr_t = nullptr) noexcept
 		: StringObserver()
 	{
 	}
-	constexpr StringObserver(const Char *pchBegin, std::size_t uLen) noexcept
+	constexpr StringObserver(const CharT *pchBegin, std::size_t uLen) noexcept
 		: StringObserver(pchBegin, pchBegin + uLen)
 	{
 	}
-	constexpr StringObserver(std::initializer_list<Char> vInitList) noexcept
+	constexpr StringObserver(std::initializer_list<CharT> vInitList) noexcept
 		: StringObserver(vInitList.begin(), vInitList.end())
 	{
 	}
-	explicit constexpr StringObserver(const Char *pszBegin) noexcept
+	explicit constexpr StringObserver(const CharT *pszBegin) noexcept
 		: StringObserver(pszBegin, xEndOf(pszBegin))
 	{
 	}
@@ -193,28 +193,28 @@ public:
 		xm_pchEnd = nullptr;
 		return *this;
 	}
-	StringObserver &operator=(std::initializer_list<Char> vInitList) noexcept {
+	StringObserver &operator=(std::initializer_list<CharT> vInitList) noexcept {
 		xm_pchBegin = vInitList.begin();
 		xm_pchEnd = vInitList.end();
 		return *this;
 	}
-	StringObserver &operator=(const Char *pszBegin) noexcept {
+	StringObserver &operator=(const CharT *pszBegin) noexcept {
 		xm_pchBegin = pszBegin;
 		xm_pchEnd = xEndOf(pszBegin);
 		return *this;
 	}
 
 public:
-	const Char *GetFirst() const noexcept {
+	const CharT *GetFirst() const noexcept {
 		return xm_pchBegin;
 	}
-	const Char *GetCBegin() const noexcept {
+	const CharT *GetCBegin() const noexcept {
 		return xm_pchBegin;
 	}
-	const Char *GetEnd() const noexcept {
+	const CharT *GetEnd() const noexcept {
 		return xm_pchEnd;
 	}
-	const Char *GetCEnd() const noexcept {
+	const CharT *GetCEnd() const noexcept {
 		return xm_pchEnd;
 	}
 	std::size_t GetSize() const noexcept {
@@ -247,7 +247,7 @@ public:
 				return nResult;
 			}
 
-			typedef std::make_unsigned_t<Char> UChar;
+			typedef std::make_unsigned_t<CharT> UChar;
 
 			const auto uchL = (UChar)*itLRead;
 			const auto uchR = (UChar)*itRRead;
@@ -259,19 +259,19 @@ public:
 		}
 	}
 
-	void Assign(const Char *pchBegin, const Char *pchEnd) noexcept {
+	void Assign(const CharT *pchBegin, const CharT *pchEnd) noexcept {
 		ASSERT(pchBegin <= pchEnd);
 
 		xm_pchBegin = pchBegin;
 		xm_pchEnd = pchEnd;
 	}
 	void Assign(std::nullptr_t, std::nullptr_t = nullptr) noexcept {
-		Assign((const Char *)nullptr, nullptr);
+		Assign((const CharT *)nullptr, nullptr);
 	}
-	void Assign(const Char *pchBegin, std::size_t uLen) noexcept {
+	void Assign(const CharT *pchBegin, std::size_t uLen) noexcept {
 		Assign(pchBegin, pchBegin + uLen);
 	}
-	void Assign(const Char *pszBegin) noexcept {
+	void Assign(const CharT *pszBegin) noexcept {
 		Assign(pszBegin, xEndOf(pszBegin));
 	}
 
@@ -336,7 +336,7 @@ public:
 			return NPOS;
 		}
 
-		typedef std::reverse_iterator<const Char *> RevIterator;
+		typedef std::reverse_iterator<const CharT *> RevIterator;
 
 		const auto uPos = xKmpSearch(
 			RevIterator(GetFirst() + uRealEnd), RevIterator(GetFirst()),
@@ -350,7 +350,7 @@ public:
 	//   Find('d', 3)			返回 3；
 	//   FindBackward('c', 3)	返回 2；
 	//   FindBackward('d', 3)	返回 NPOS。
-	std::size_t FindRep(Char chToFind, std::size_t uRepCount, std::ptrdiff_t nOffsetBegin = 0) const noexcept {
+	std::size_t FindRep(CharT chToFind, std::size_t uRepCount, std::ptrdiff_t nOffsetBegin = 0) const noexcept {
 		const auto uLength = GetLength();
 		const auto uRealBegin = xTranslateOffset(uLength, nOffsetBegin);
 		if(uRepCount == 0){
@@ -366,7 +366,7 @@ public:
 		const auto uPos = xFindRep(GetFirst() + uRealBegin, GetEnd(), chToFind, uRepCount);
 		return (uPos == NPOS) ? NPOS : (uPos + uRealBegin);
 	}
-	std::size_t FindRepBackward(Char chToFind, std::size_t uRepCount, std::ptrdiff_t nOffsetEnd = -1) const noexcept {
+	std::size_t FindRepBackward(CharT chToFind, std::size_t uRepCount, std::ptrdiff_t nOffsetEnd = -1) const noexcept {
 		const auto uLength = GetLength();
 		const auto uRealEnd = xTranslateOffset(uLength, nOffsetEnd);
 		if(uRepCount == 0){
@@ -379,20 +379,20 @@ public:
 			return NPOS;
 		}
 
-		typedef std::reverse_iterator<const Char *> RevIterator;
+		typedef std::reverse_iterator<const CharT *> RevIterator;
 
 		const auto uPos = xFindRep(RevIterator(GetFirst() + uRealEnd), RevIterator(GetFirst()), chToFind, uRepCount);
 		return (uPos == NPOS) ? NPOS : (uRealEnd - uPos - uRepCount);
 	}
-	std::size_t Find(Char chToFind, std::ptrdiff_t nOffsetBegin = 0) const noexcept {
+	std::size_t Find(CharT chToFind, std::ptrdiff_t nOffsetBegin = 0) const noexcept {
 		return FindRep(chToFind, 1, nOffsetBegin);
 	}
-	std::size_t FindBackward(Char chToFind, std::ptrdiff_t nOffsetEnd = -1) const noexcept {
+	std::size_t FindBackward(CharT chToFind, std::ptrdiff_t nOffsetEnd = -1) const noexcept {
 		return FindRepBackward(chToFind, 1, nOffsetEnd);
 	}
 
 	bool DoesOverlapWith(const StringObserver &obs) const noexcept {
-		const Char *pchBegin1, *pchEnd1, *pchBegin2, *pchEnd2;
+		const CharT *pchBegin1, *pchEnd1, *pchBegin2, *pchEnd2;
 		if(xm_pchBegin <= xm_pchEnd){
 			pchBegin1 = xm_pchBegin;
 			pchEnd1 = xm_pchEnd;
@@ -410,12 +410,12 @@ public:
 		return (pchBegin1 < pchEnd2) && (pchBegin2 < pchEnd1);
 	}
 
-	template<std::size_t SIZE_HINT>
-	VVector<Char, SIZE_HINT> GetNullTerminated() const {
-		VVector<Char, SIZE_HINT> vecRet;
+	template<std::size_t SIZE_HINT_T>
+	VVector<CharT, SIZE_HINT_T> GetNullTerminated() const {
+		VVector<CharT, SIZE_HINT_T> vecRet;
 		vecRet.Reserve(GetLength() + 1);
 		vecRet.CopyToEnd(GetFirst(), GetEnd());
-		vecRet.Push(Char());
+		vecRet.Push(CharT());
 		return std::move(vecRet);
 	}
 
@@ -423,82 +423,82 @@ public:
 	explicit operator bool() const noexcept {
 		return !IsEmpty();
 	}
-	const Char &operator[](std::size_t uIndex) const noexcept {
+	const CharT &operator[](std::size_t uIndex) const noexcept {
 		ASSERT_MSG(uIndex <= GetSize(), L"索引越界。");
 
 		return GetFirst()[uIndex];
 	}
 };
 
-template<typename Char>
+template<typename CharT>
 bool operator==(
-	const StringObserver<Char> &lhs,
-	const StringObserver<Char> &rhs
+	const StringObserver<CharT> &lhs,
+	const StringObserver<CharT> &rhs
 ) noexcept {
 	if(lhs.GetSize() != rhs.GetSize()){
 		return false;
 	}
 	return lhs.Compare(rhs) == 0;
 }
-template<typename Char>
+template<typename CharT>
 bool operator!=(
-	const StringObserver<Char> &lhs,
-	const StringObserver<Char> &rhs
+	const StringObserver<CharT> &lhs,
+	const StringObserver<CharT> &rhs
 ) noexcept {
 	if(lhs.GetSize() != rhs.GetSize()){
 		return true;
 	}
 	return lhs.Compare(rhs) != 0;
 }
-template<typename Char>
+template<typename CharT>
 bool operator<(
-	const StringObserver<Char> &lhs,
-	const StringObserver<Char> &rhs
+	const StringObserver<CharT> &lhs,
+	const StringObserver<CharT> &rhs
 ) noexcept {
 	return lhs.Compare(rhs) < 0;
 }
-template<typename Char>
+template<typename CharT>
 bool operator>(
-	const StringObserver<Char> &lhs,
-	const StringObserver<Char> &rhs
+	const StringObserver<CharT> &lhs,
+	const StringObserver<CharT> &rhs
 ) noexcept {
 	return lhs.Compare(rhs) > 0;
 }
-template<typename Char>
+template<typename CharT>
 bool operator<=(
-	const StringObserver<Char> &lhs,
-	const StringObserver<Char> &rhs
+	const StringObserver<CharT> &lhs,
+	const StringObserver<CharT> &rhs
 ) noexcept {
 	return lhs.Compare(rhs) <= 0;
 }
-template<typename Char>
+template<typename CharT>
 bool operator>=(
-	const StringObserver<Char> &lhs,
-	const StringObserver<Char> &rhs
+	const StringObserver<CharT> &lhs,
+	const StringObserver<CharT> &rhs
 ) noexcept {
 	return lhs.Compare(rhs) >= 0;
 }
 
-template<typename Char>
-const Char *begin(const StringObserver<Char> &obs) noexcept {
+template<typename CharT>
+const CharT *begin(const StringObserver<CharT> &obs) noexcept {
 	return obs.GetFirst();
 }
-template<typename Char>
-const Char *cbegin(const StringObserver<Char> &obs) noexcept {
+template<typename CharT>
+const CharT *cbegin(const StringObserver<CharT> &obs) noexcept {
 	return obs.GetCBegin();
 }
 
-template<typename Char>
-const Char *end(const StringObserver<Char> &obs) noexcept {
+template<typename CharT>
+const CharT *end(const StringObserver<CharT> &obs) noexcept {
 	return obs.GetEnd();
 }
-template<typename Char>
-const Char *cend(const StringObserver<Char> &obs) noexcept {
+template<typename CharT>
+const CharT *cend(const StringObserver<CharT> &obs) noexcept {
 	return obs.GetCEnd();
 }
 
-template<typename Char>
-void swap(StringObserver<Char> &lhs, StringObserver<Char> &rhs) noexcept {
+template<typename CharT>
+void swap(StringObserver<CharT> &lhs, StringObserver<CharT> &rhs) noexcept {
 	lhs.Swap(rhs);
 }
 
@@ -518,41 +518,41 @@ typedef StringObserver<char32_t>	Utf32StringObserver;
 // 字面量运算符。
 // 注意 StringObserver 并不是所谓“零结尾的字符串”。
 // 这些运算符经过特意设计防止这种用法。
-template<typename Char, Char ...STRING>
-std::enable_if_t<std::is_same<Char, char>::value, NarrowStringObserver>
+template<typename CharT, CharT ...STRING_T>
+std::enable_if_t<std::is_same<CharT, char>::value, NarrowStringObserver>
 	operator""_nso()
 {
-	static Char s_achData[] = {STRING..., '$'};
-	return NarrowStringObserver(s_achData, sizeof...(STRING));
+	static CharT s_achData[] = {STRING_T..., '$'};
+	return NarrowStringObserver(s_achData, sizeof...(STRING_T));
 }
-template<typename Char, Char ...STRING>
-std::enable_if_t<std::is_same<Char, wchar_t>::value, WideStringObserver>
+template<typename CharT, CharT ...STRING_T>
+std::enable_if_t<std::is_same<CharT, wchar_t>::value, WideStringObserver>
 	operator""_wso()
 {
-	static Char s_achData[] = {STRING..., '$'};
-	return WideStringObserver(s_achData, sizeof...(STRING));
+	static CharT s_achData[] = {STRING_T..., '$'};
+	return WideStringObserver(s_achData, sizeof...(STRING_T));
 }
 
-template<typename Char, Char ...STRING>
-std::enable_if_t<std::is_same<Char, char>::value, Utf8StringObserver>
+template<typename CharT, CharT ...STRING_T>
+std::enable_if_t<std::is_same<CharT, char>::value, Utf8StringObserver>
 	operator""_u8so()
 {
-	static Char s_achData[] = {STRING..., '$'};
-	return Utf8StringObserver(s_achData, sizeof...(STRING));
+	static CharT s_achData[] = {STRING_T..., '$'};
+	return Utf8StringObserver(s_achData, sizeof...(STRING_T));
 }
-template<typename Char, Char ...STRING>
-std::enable_if_t<std::is_same<Char, char16_t>::value, Utf16StringObserver>
+template<typename CharT, CharT ...STRING_T>
+std::enable_if_t<std::is_same<CharT, char16_t>::value, Utf16StringObserver>
 	operator""_u16so()
 {
-	static Char s_achData[] = {STRING..., '$'};
-	return Utf16StringObserver(s_achData, sizeof...(STRING));
+	static CharT s_achData[] = {STRING_T..., '$'};
+	return Utf16StringObserver(s_achData, sizeof...(STRING_T));
 }
-template<typename Char, Char ...STRING>
-std::enable_if_t<std::is_same<Char, char32_t>::value, Utf32StringObserver>
+template<typename CharT, CharT ...STRING_T>
+std::enable_if_t<std::is_same<CharT, char32_t>::value, Utf32StringObserver>
 	operator""_u32so()
 {
-	static Char s_achData[] = {STRING..., '$'};
-	return Utf32StringObserver(s_achData, sizeof...(STRING));
+	static CharT s_achData[] = {STRING_T..., '$'};
+	return Utf32StringObserver(s_achData, sizeof...(STRING_T));
 }
 
 }

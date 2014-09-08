@@ -78,38 +78,38 @@ namespace Impl {
 		}
 	};
 
-	template<class Closer, class RefCount>
+	template<class CloserT, class RefCountT>
 	struct SharedNode {
-		UniqueHandle<Closer> m_hObject;
-		RefCount m_rcWeak;
-		RefCount m_rcStrong;
+		UniqueHandle<CloserT> m_hObject;
+		RefCountT m_rcWeak;
+		RefCountT m_rcStrong;
 
-		explicit SharedNode(UniqueHandle<Closer> &&hObject) noexcept
+		explicit SharedNode(UniqueHandle<CloserT> &&hObject) noexcept
 			: m_hObject(std::move(hObject))
 		{
 		}
 	};
 
-	template<class Closer, class RefCount>
+	template<class CloserT, class RefCountT>
 	class SharedHandleTemplate;
 
-	template<class Closer, class RefCount>
+	template<class CloserT, class RefCountT>
 	class WeakHandleImpl {
 		template<class, class>
 		friend class SharedHandleTemplate;
 
 	protected:
-		typedef SharedNode<Closer, RefCount> xSharedNode;
+		typedef SharedNode<CloserT, RefCountT> xSharedNode;
 
 	public:
-		typedef decltype(Closer()()) Handle;
+		typedef decltype(CloserT()()) Handle;
 
 		static_assert(std::is_scalar<Handle>::value, "Handle must be a scalar type.");
-		static_assert(noexcept(Closer()(Handle())), "Handle closer must not throw.");
+		static_assert(noexcept(CloserT()(Handle())), "Handle closer must not throw.");
 
 		using WeakHandle	= WeakHandleImpl;
-		using SharedHandle	= SharedHandleTemplate<Closer, RefCount>;
-		using UniqueHandle	= UniqueHandle<Closer>;
+		using SharedHandle	= SharedHandleTemplate<CloserT, RefCountT>;
+		using UniqueHandle	= UniqueHandle<CloserT>;
 
 	protected:
 		xSharedNode *xm_pNode;
@@ -203,12 +203,12 @@ namespace Impl {
 		}
 	};
 
-	template<class Closer, class RefCount>
-	class SharedHandleTemplate : public WeakHandleImpl<Closer, RefCount> {
+	template<class CloserT, class RefCountT>
+	class SharedHandleTemplate : public WeakHandleImpl<CloserT, RefCountT> {
 	public:
-		using WeakHandle	= WeakHandleImpl<Closer, RefCount>;
+		using WeakHandle	= WeakHandleImpl<CloserT, RefCountT>;
 		using SharedHandle	= SharedHandleTemplate;
-		using UniqueHandle	= UniqueHandle<Closer>;
+		using UniqueHandle	= UniqueHandle<CloserT>;
 
 	protected:
 		using typename WeakHandle::xSharedNode;
@@ -300,7 +300,7 @@ namespace Impl {
 		}
 		Handle Get() const noexcept {
 			return (WeakHandle::GetRefCount() != 0) ?
-				WeakHandle::xm_pNode->m_hObject.Get() : Closer()();
+				WeakHandle::xm_pNode->m_hObject.Get() : CloserT()();
 		}
 		UniqueHandle Release() noexcept {
 			return xTidy();
@@ -360,32 +360,32 @@ namespace Impl {
 		}
 	};
 
-	template<class Closer, class RefCount>
-	SharedHandleTemplate<Closer, RefCount>
-		WeakHandleImpl<Closer, RefCount>::Lock() const noexcept
+	template<class CloserT, class RefCountT>
+	SharedHandleTemplate<CloserT, RefCountT>
+		WeakHandleImpl<CloserT, RefCountT>::Lock() const noexcept
 	{
 		return SharedHandle(*this);
 	}
 
 #define MCF_SHARED_HANDLE_RATIONAL_OPERATOR_(op_type)	\
-	template<class Closer, class RefCount>	\
+	template<class CloserT, class RefCountT>	\
 	bool operator op_type (	\
-		const SharedHandleTemplate<Closer, RefCount> &lhs,	\
-		const SharedHandleTemplate<Closer, RefCount> &rhs	\
+		const SharedHandleTemplate<CloserT, RefCountT> &lhs,	\
+		const SharedHandleTemplate<CloserT, RefCountT> &rhs	\
 	) noexcept {	\
 		return lhs.Get() op_type rhs.Get();	\
 	}	\
-	template<class Closer, class RefCount>	\
+	template<class CloserT, class RefCountT>	\
 	bool operator op_type (	\
-		decltype(Closer()()) lhs,	\
-		const SharedHandleTemplate<Closer, RefCount> &rhs	\
+		decltype(CloserT()()) lhs,	\
+		const SharedHandleTemplate<CloserT, RefCountT> &rhs	\
 	) noexcept {	\
 		return lhs op_type rhs.Get();	\
 	}	\
-	template<class Closer, class RefCount>	\
+	template<class CloserT, class RefCountT>	\
 	bool operator op_type (	\
-		const SharedHandleTemplate<Closer, RefCount> &lhs,	\
-		decltype(Closer()()) rhs	\
+		const SharedHandleTemplate<CloserT, RefCountT> &lhs,	\
+		decltype(CloserT()()) rhs	\
 	) noexcept {	\
 		return lhs.Get() op_type rhs;	\
 	}
@@ -399,9 +399,9 @@ namespace Impl {
 
 #undef MCF_SHARED_HANDLE_RATIONAL_OPERATOR_
 
-	template<class Closer, class RefCount>
-	void swap(SharedHandleTemplate<Closer, RefCount> &lhs,
-		SharedHandleTemplate<Closer, RefCount> &rhs) noexcept
+	template<class CloserT, class RefCountT>
+	void swap(SharedHandleTemplate<CloserT, RefCountT> &lhs,
+		SharedHandleTemplate<CloserT, RefCountT> &rhs) noexcept
 	{
 		lhs.Swap(rhs);
 	}

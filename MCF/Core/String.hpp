@@ -192,7 +192,7 @@ private:
 		ASSERT(uRemovedBegin <= uRemovedEnd);
 		ASSERT(uFirstOffset + uRemovedBegin <= uThirdOffset);
 
-		const auto pchOldBuffer = GetFirst();
+		const auto pchOldBuffer = GetBegin();
 		const auto uOldLength = GetLength();
 		auto pchNewBuffer = pchOldBuffer;
 		const auto uNewLength = uThirdOffset + (uOldLength - uRemovedEnd);
@@ -245,14 +245,14 @@ private:
 	}
 
 public:
-	const CharT *GetFirst() const noexcept {
+	const CharT *GetBegin() const noexcept {
 		if(xm_vStorage.vSmall.chNull == CharT()){
 			return xm_vStorage.vSmall.achData;
 		} else {
 			return xm_vStorage.vLarge.pchBegin;
 		}
 	}
-	CharT *GetFirst() noexcept {
+	CharT *GetBegin() noexcept {
 		if(xm_vStorage.vSmall.chNull == CharT()){
 			return xm_vStorage.vSmall.achData;
 		} else {
@@ -260,7 +260,7 @@ public:
 		}
 	}
 	const CharT *GetCBegin() const noexcept {
-		return GetFirst();
+		return GetBegin();
 	}
 	const CharT *GetEnd() const noexcept {
 		if(xm_vStorage.vSmall.chNull == CharT()){
@@ -281,30 +281,30 @@ public:
 	}
 
 	const CharT *GetStr() const noexcept {
-		return GetFirst();
+		return GetBegin();
 	}
 	CharT *GetStr() noexcept {
-		return GetFirst();
+		return GetBegin();
 	}
 	const CharT *GetCStr() const noexcept {
-		return GetFirst();
+		return GetBegin();
 	}
 	std::size_t GetLength() const noexcept {
 		return GetSize();
 	}
 
 	const CharT *GetData() const noexcept {
-		return GetFirst();
+		return GetBegin();
 	}
 	CharT *GetData() noexcept {
-		return GetFirst();
+		return GetBegin();
 	}
 	std::size_t GetSize() const noexcept {
-		return (std::size_t)(GetEnd() - GetFirst());
+		return (std::size_t)(GetEnd() - GetBegin());
 	}
 
 	Observer GetObserver() const noexcept {
-		return Observer(GetFirst(), GetEnd());
+		return Observer(GetBegin(), GetEnd());
 	}
 
 	CharT *Resize(std::size_t uNewSize){
@@ -342,7 +342,7 @@ public:
 	}
 
 	bool IsEmpty() const noexcept {
-		return GetFirst() == GetEnd();
+		return GetBegin() == GetEnd();
 	}
 	void Clear() noexcept {
 		xSetSize(0);
@@ -393,7 +393,7 @@ public:
 		Append(itBegin, uLength);
 	}
 	void Assign(const Observer &obs){
-		Assign(obs.GetFirst(), obs.GetEnd());
+		Assign(obs.GetBegin(), obs.GetEnd());
 	}
 	void Assign(std::initializer_list<CharT> vInitList){
 		Assign(Observer(vInitList));
@@ -431,7 +431,7 @@ public:
 		xSetSize(uOldLength + uLength);
 	}
 	void Append(const Observer &obs){
-		Append(obs.GetFirst(), obs.GetEnd());
+		Append(obs.GetBegin(), obs.GetEnd());
 	}
 	void Append(std::initializer_list<CharT> vInitList){
 		Append(Observer(vInitList));
@@ -443,7 +443,7 @@ public:
 			Copy(pchWrite, pchWrite - uOldLength, pchWrite);
 			xSetSize(uOldLength * 2);
 		} else {
-			Append(rhs.GetFirst(), rhs.GetEnd());
+			Append(rhs.GetBegin(), rhs.GetEnd());
 		}
 	}
 	void Append(String &&rhs){
@@ -519,7 +519,7 @@ public:
 		xSetSize(uOldLength + uLength);
 	}
 	void Unshift(const Observer &obs){
-		Unshift(obs.GetFirst(), obs.GetEnd());
+		Unshift(obs.GetBegin(), obs.GetEnd());
 	}
 	void Unshift(std::initializer_list<CharT> vInitList){
 		Unshift(Observer(vInitList));
@@ -528,7 +528,7 @@ public:
 		if(&rhs == this){
 			Append(rhs);
 		} else {
-			Unshift(rhs.GetFirst(), rhs.GetEnd());
+			Unshift(rhs.GetBegin(), rhs.GetEnd());
 		}
 	}
 	void Unshift(String &&rhs){
@@ -547,7 +547,7 @@ public:
 		ASSERT_MSG(uCount <= GetLength(), L"删除的字符数太多。");
 
 		const std::size_t uOldLength = GetLength();
-		const auto pchBegin = GetFirst();
+		const auto pchBegin = GetBegin();
 		Copy(pchBegin, pchBegin + uCount, pchBegin + uOldLength);
 		xSetSize(uOldLength - uCount);
 	}
@@ -593,8 +593,8 @@ public:
 		const std::size_t uOldLength = obsCurrent.GetLength();
 
 		const auto obsRemoved(obsCurrent.Slice(nBegin, nEnd));
-		const auto uRemovedBegin = (std::size_t)(obsRemoved.GetFirst() - obsCurrent.GetFirst());
-		const auto uRemovedEnd = (std::size_t)(obsRemoved.GetEnd() - obsCurrent.GetFirst());
+		const auto uRemovedBegin = (std::size_t)(obsRemoved.GetBegin() - obsCurrent.GetBegin());
+		const auto uRemovedEnd = (std::size_t)(obsRemoved.GetEnd() - obsCurrent.GetBegin());
 
 		const auto pchWrite = xChopAndSplice(
 			uRemovedBegin, uRemovedEnd,
@@ -619,13 +619,13 @@ public:
 		const std::size_t uOldLength = obsCurrent.GetLength();
 
 		const auto obsRemoved(obsCurrent.Slice(nBegin, nEnd));
-		const auto uRemovedBegin = (std::size_t)(obsRemoved.GetFirst() - obsCurrent.GetFirst());
-		const auto uRemovedEnd = (std::size_t)(obsRemoved.GetEnd() - obsCurrent.GetFirst());
+		const auto uRemovedBegin = (std::size_t)(obsRemoved.GetBegin() - obsCurrent.GetBegin());
+		const auto uRemovedEnd = (std::size_t)(obsRemoved.GetEnd() - obsCurrent.GetBegin());
 
 		// 注意：不指向同一个数组的两个指针相互比较是未定义行为。
 		if(
 			(uReplacementLen != 0) &&
-			((std::uintptr_t)&*itReplacementBegin - (std::uintptr_t)obsCurrent.GetFirst()
+			((std::uintptr_t)&*itReplacementBegin - (std::uintptr_t)obsCurrent.GetBegin()
 				<= uOldLength * sizeof(CharT))
 		){
 			// 待替换字符串和当前字符串重叠。
@@ -646,11 +646,11 @@ public:
 		xSetSize(uRemovedBegin + uReplacementLen + (uOldLength - uRemovedEnd));
 	}
 	void Replace(std::ptrdiff_t nBegin, std::ptrdiff_t nEnd, const Observer &obsReplacement){
-		Replace(nBegin, nEnd, obsReplacement.GetFirst(), obsReplacement.GetLength());
+		Replace(nBegin, nEnd, obsReplacement.GetBegin(), obsReplacement.GetLength());
 	}
 
 	void Reverse() noexcept {
-		auto pchBegin = GetFirst();
+		auto pchBegin = GetBegin();
 		auto pchEnd = GetEnd();
 		if(pchBegin != pchEnd){
 			--pchEnd;
@@ -918,11 +918,11 @@ MCF_STRING_RATIONAL_OPERATOR_(>=)
 
 template<typename CharT, StringEncoding ENCODING_T>
 const CharT *begin(const String<CharT, ENCODING_T> &rhs) noexcept {
-	return rhs.GetFirst();
+	return rhs.GetBegin();
 }
 template<typename CharT, StringEncoding ENCODING_T>
 CharT *begin(String<CharT, ENCODING_T> &rhs) noexcept {
-	return rhs.GetFirst();
+	return rhs.GetBegin();
 }
 template<typename CharT, StringEncoding ENCODING_T>
 const CharT *cbegin(const String<CharT, ENCODING_T> &rhs) noexcept {
@@ -963,7 +963,7 @@ namespace Impl {
 		String<DstCharT, ENCODING_T> &strDst,
 		const StringObserver<SrcCharT> &soSrc
 	) const {
-		strDst.Append(soSrc.GetFirst(), soSrc.GetSize());
+		strDst.Append(soSrc.GetBegin(), soSrc.GetSize());
 	}
 }
 

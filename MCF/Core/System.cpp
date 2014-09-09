@@ -22,7 +22,7 @@ VVector<WideString> GetArgV(){
 	} eState = DELIM;
 
 	const WideStringObserver wsoCommandLine(::GetCommandLineW());
-	auto pwcRead = wsoCommandLine.GetFirst();
+	auto pwcRead = wsoCommandLine.GetBegin();
 	const auto pwcEnd = wsoCommandLine.GetEnd();
 	while(pwcRead != pwcEnd){
 		const wchar_t wc = *(pwcRead++);

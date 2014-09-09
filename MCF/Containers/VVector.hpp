@@ -64,7 +64,7 @@ public:
 	VVector(const VVector<ElementT, SRC_THRESHOLD_T> &rhs)
 		: VVector()
 	{
-		CopyToEnd(rhs.GetFirst(), rhs.GetEnd());
+		CopyToEnd(rhs.GetBegin(), rhs.GetEnd());
 	}
 	template<std::size_t SRC_THRESHOLD_T>
 	VVector(VVector<ElementT, SRC_THRESHOLD_T> &&rhs)
@@ -77,7 +77,7 @@ public:
 	VVector(const VVector &rhs)
 		: VVector()
 	{
-		CopyToEnd(rhs.GetFirst(), rhs.GetEnd());
+		CopyToEnd(rhs.GetBegin(), rhs.GetEnd());
 	}
 	VVector(VVector &&rhs)
 		noexcept(std::is_nothrow_move_constructible<ElementT>::value)
@@ -138,7 +138,7 @@ private:
 			rhs.xm_pBegin	= (ElementT *)std::begin(rhs.xm_aSmall);
 			rhs.xm_pEnd		= rhs.xm_pBegin;
 		} else {
-			auto pRead = rhs.GetFirst();
+			auto pRead = rhs.GetBegin();
 			const auto uSize = rhs.GetSize();
 			if(ALT_STOR_THRESHOLD_T < SRC_THRESHOLD_T){
 				Reserve(uSize);
@@ -165,14 +165,14 @@ private:
 	}
 
 public:
-	const ElementT *GetFirst() const noexcept {
+	const ElementT *GetBegin() const noexcept {
 		return xm_pBegin;
 	}
-	ElementT *GetFirst() noexcept {
+	ElementT *GetBegin() noexcept {
 		return xm_pBegin;
 	}
-	const ElementT *GetCFirst() const noexcept {
-		return GetFirst();
+	const ElementT *GetCBegin() const noexcept {
+		return GetBegin();
 	}
 	const ElementT *GetEnd() const noexcept {
 		return xm_pEnd;
@@ -185,14 +185,14 @@ public:
 	}
 
 	const ElementT *GetData() const noexcept {
-		return GetFirst();
+		return GetBegin();
 	}
 	ElementT *GetData() noexcept {
-		return GetFirst();
+		return GetBegin();
 	}
 
 	std::size_t GetSize() const noexcept {
-		return (std::size_t)(GetEnd() - GetFirst());
+		return (std::size_t)(GetEnd() - GetBegin());
 	}
 	template<typename ...ParamsT>
 	ElementT *Resize(std::size_t uNewSize, const ParamsT &...vParams){
@@ -212,7 +212,7 @@ public:
 	}
 
 	bool IsEmpty() const noexcept {
-		return GetEnd() == GetFirst();
+		return GetEnd() == GetBegin();
 	}
 	void Clear(bool bDeallocateBuffer = false) noexcept {
 		TruncateFromEnd(GetSize());
@@ -237,7 +237,7 @@ public:
 			uSizeToAlloc = (uSizeToAlloc + 0xF) & (std::size_t)-0x10;
 			uSizeToAlloc = Max(uSizeToAlloc, uNewCapacity);
 
-			const auto pOldBegin = GetFirst();
+			const auto pOldBegin = GetBegin();
 			const auto pOldEnd = GetEnd();
 			const auto pNewBegin = (ElementT *)::operator new[](sizeof(ElementT) * uSizeToAlloc);
 			auto pRead = pOldBegin;
@@ -441,7 +441,7 @@ public:
 	VVector(const VVector<ElementT, SRC_THRESHOLD_T> &rhs)
 		: VVector()
 	{
-		CopyToEnd(rhs.GetFirst(), rhs.GetEnd());
+		CopyToEnd(rhs.GetBegin(), rhs.GetEnd());
 	}
 	template<std::size_t SRC_THRESHOLD_T>
 	VVector(VVector<ElementT, SRC_THRESHOLD_T> &&rhs)
@@ -452,7 +452,7 @@ public:
 	VVector(const VVector &rhs)
 		: VVector()
 	{
-		CopyToEnd(rhs.GetFirst(), rhs.GetEnd());
+		CopyToEnd(rhs.GetBegin(), rhs.GetEnd());
 	}
 	VVector(VVector &&rhs) noexcept
 		: VVector()
@@ -510,7 +510,7 @@ private:
 			rhs.xm_pBegin	= (ElementT *)std::begin(rhs.xm_aSmall);
 			rhs.xm_pEnd		= rhs.xm_pBegin;
 		} else {
-			auto pRead = rhs.GetFirst();
+			auto pRead = rhs.GetBegin();
 			const auto uSize = rhs.GetSize();
 			if(0 < SRC_THRESHOLD_T){
 				Reserve(uSize);
@@ -535,14 +535,14 @@ private:
 	}
 
 public:
-	const ElementT *GetFirst() const noexcept {
+	const ElementT *GetBegin() const noexcept {
 		return xm_pBegin;
 	}
-	ElementT *GetFirst() noexcept {
+	ElementT *GetBegin() noexcept {
 		return xm_pBegin;
 	}
-	const ElementT *GetCFirst() const noexcept {
-		return GetFirst();
+	const ElementT *GetCBegin() const noexcept {
+		return GetBegin();
 	}
 	const ElementT *GetEnd() const noexcept {
 		return xm_pEnd;
@@ -555,14 +555,14 @@ public:
 	}
 
 	const ElementT *GetData() const noexcept {
-		return GetFirst();
+		return GetBegin();
 	}
 	ElementT *GetData() noexcept {
-		return GetFirst();
+		return GetBegin();
 	}
 
 	std::size_t GetSize() const noexcept {
-		return (std::size_t)(GetEnd() - GetFirst());
+		return (std::size_t)(GetEnd() - GetBegin());
 	}
 	template<typename ...ParamsT>
 	void Resize(std::size_t uNewSize, const ParamsT &...vParams){
@@ -581,7 +581,7 @@ public:
 	}
 
 	bool IsEmpty() const noexcept {
-		return GetEnd() == GetFirst();
+		return GetEnd() == GetBegin();
 	}
 	void Clear(bool bDeallocateBuffer = false) noexcept {
 		TruncateFromEnd(GetSize());
@@ -602,7 +602,7 @@ public:
 			uSizeToAlloc = (uSizeToAlloc + 0xF) & (std::size_t)-0x10;
 			uSizeToAlloc = Max(uSizeToAlloc, uNewCapacity);
 
-			const auto pOldBegin = GetFirst();
+			const auto pOldBegin = GetBegin();
 			const auto pOldEnd = GetEnd();
 			const auto pNewBegin = (ElementT *)::operator new[](sizeof(ElementT) * uSizeToAlloc);
 			auto pRead = pOldBegin;
@@ -762,15 +762,15 @@ public:
 
 template<typename ElementT, std::size_t ALT_STOR_THRESHOLD_T>
 const ElementT *begin(const VVector<ElementT, ALT_STOR_THRESHOLD_T> &vec) noexcept {
-	return vec.GetFirst();
+	return vec.GetBegin();
 }
 template<typename ElementT, std::size_t ALT_STOR_THRESHOLD_T>
 ElementT *begin(VVector<ElementT, ALT_STOR_THRESHOLD_T> &vec) noexcept {
-	return vec.GetFirst();
+	return vec.GetBegin();
 }
 template<typename ElementT, std::size_t ALT_STOR_THRESHOLD_T>
 const ElementT *cbegin(const VVector<ElementT, ALT_STOR_THRESHOLD_T> &vec) noexcept {
-	return vec.GetCFirst();
+	return vec.GetCBegin();
 }
 
 template<typename ElementT, std::size_t ALT_STOR_THRESHOLD_T>

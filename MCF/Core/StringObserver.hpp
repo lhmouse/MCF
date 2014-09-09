@@ -205,7 +205,7 @@ public:
 	}
 
 public:
-	const CharT *GetFirst() const noexcept {
+	const CharT *GetBegin() const noexcept {
 		return xm_pchBegin;
 	}
 	const CharT *GetCBegin() const noexcept {
@@ -218,7 +218,7 @@ public:
 		return xm_pchEnd;
 	}
 	std::size_t GetSize() const noexcept {
-		return (std::size_t)(GetEnd() - GetFirst());
+		return (std::size_t)(GetEnd() - GetBegin());
 	}
 	std::size_t GetLength() const noexcept {
 		return GetSize();
@@ -237,9 +237,9 @@ public:
 	}
 
 	int Compare(const StringObserver &rhs) const noexcept {
-		auto itLRead = GetFirst();
+		auto itLRead = GetBegin();
 		const auto itLEnd = GetEnd();
-		auto itRRead = rhs.GetFirst();
+		auto itRRead = rhs.GetBegin();
 		const auto itREnd = rhs.GetEnd();
 		for(;;){
 			const int nResult = 2 - (((itLRead == itLEnd) ? 3 : 0) ^ ((itRRead == itREnd) ? 1 : 0));
@@ -289,7 +289,7 @@ public:
 	//   Slice( 5, -1)   返回 "fg"；
 	//   Slice(-5, -1)   返回 "defg"。
 	StringObserver Slice(std::ptrdiff_t nBegin, std::ptrdiff_t nEnd = -1) const noexcept {
-		const auto pchBegin = GetFirst();
+		const auto pchBegin = GetBegin();
 		const auto uLength = GetLength();
 		return StringObserver(
 			pchBegin + xTranslateOffset(uLength, nBegin),
@@ -317,8 +317,8 @@ public:
 		}
 
 		const auto uPos = xKmpSearch(
-			GetFirst() + uRealBegin, GetEnd(),
-			obsToFind.GetFirst(), obsToFind.GetEnd()
+			GetBegin() + uRealBegin, GetEnd(),
+			obsToFind.GetBegin(), obsToFind.GetEnd()
 		);
 		return (uPos == NPOS) ? NPOS : (uPos + uRealBegin);
 	}
@@ -339,8 +339,8 @@ public:
 		typedef std::reverse_iterator<const CharT *> RevIterator;
 
 		const auto uPos = xKmpSearch(
-			RevIterator(GetFirst() + uRealEnd), RevIterator(GetFirst()),
-			RevIterator(obsToFind.GetFirst()), RevIterator(obsToFind.GetEnd())
+			RevIterator(GetBegin() + uRealEnd), RevIterator(GetBegin()),
+			RevIterator(obsToFind.GetBegin()), RevIterator(obsToFind.GetEnd())
 		);
 		return (uPos == NPOS) ? NPOS : (uRealEnd - uPos - uLenToFind);
 	}
@@ -363,7 +363,7 @@ public:
 			return NPOS;
 		}
 
-		const auto uPos = xFindRep(GetFirst() + uRealBegin, GetEnd(), chToFind, uRepCount);
+		const auto uPos = xFindRep(GetBegin() + uRealBegin, GetEnd(), chToFind, uRepCount);
 		return (uPos == NPOS) ? NPOS : (uPos + uRealBegin);
 	}
 	std::size_t FindRepBackward(CharT chToFind, std::size_t uRepCount, std::ptrdiff_t nOffsetEnd = -1) const noexcept {
@@ -381,7 +381,7 @@ public:
 
 		typedef std::reverse_iterator<const CharT *> RevIterator;
 
-		const auto uPos = xFindRep(RevIterator(GetFirst() + uRealEnd), RevIterator(GetFirst()), chToFind, uRepCount);
+		const auto uPos = xFindRep(RevIterator(GetBegin() + uRealEnd), RevIterator(GetBegin()), chToFind, uRepCount);
 		return (uPos == NPOS) ? NPOS : (uRealEnd - uPos - uRepCount);
 	}
 	std::size_t Find(CharT chToFind, std::ptrdiff_t nOffsetBegin = 0) const noexcept {
@@ -414,7 +414,7 @@ public:
 	VVector<CharT, SIZE_HINT_T> GetNullTerminated() const {
 		VVector<CharT, SIZE_HINT_T> vecRet;
 		vecRet.Reserve(GetLength() + 1);
-		vecRet.CopyToEnd(GetFirst(), GetEnd());
+		vecRet.CopyToEnd(GetBegin(), GetEnd());
 		vecRet.Push(CharT());
 		return std::move(vecRet);
 	}
@@ -426,7 +426,7 @@ public:
 	const CharT &operator[](std::size_t uIndex) const noexcept {
 		ASSERT_MSG(uIndex <= GetSize(), L"索引越界。");
 
-		return GetFirst()[uIndex];
+		return GetBegin()[uIndex];
 	}
 };
 
@@ -481,7 +481,7 @@ bool operator>=(
 
 template<typename CharT>
 const CharT *begin(const StringObserver<CharT> &obs) noexcept {
-	return obs.GetFirst();
+	return obs.GetBegin();
 }
 template<typename CharT>
 const CharT *cbegin(const StringObserver<CharT> &obs) noexcept {

@@ -647,11 +647,13 @@ public:
 			while(pNode){
 				const auto pNewNode = new Node(*pNode);
 				pNewNode->xm_pSource = pNode;
-				::MCF_AvlAttach(&avlAddressMap, pNewNode,
+				::MCF_AvlAttach(&avlAddressMap, static_cast<xAddressNode *>(pNewNode),
 					[](const ::MCF_AvlNodeHeader *lhs, const ::MCF_AvlNodeHeader *rhs) -> bool {
 						return std::less<void>()(
-							static_cast<const Node *>(static_cast<const xAddressNode *>(lhs))->xm_pSource,
-							static_cast<const Node *>(static_cast<const xAddressNode *>(rhs))->xm_pSource);
+							static_cast<const Node *>(
+								static_cast<const xAddressNode *>(lhs))->xm_pSource,
+							static_cast<const Node *>(
+								static_cast<const xAddressNode *>(rhs))->xm_pSource);
 					}
 				);
 				pNode = pNode->template GetNext<0>();
@@ -661,16 +663,16 @@ public:
 				auto pCur = ::MCF_AvlPrev(avlAddressMap);
 				while(pCur){
 					const auto pPrev = ::MCF_AvlPrev(pCur);
-					delete static_cast<Node *>(pCur);
+					delete static_cast<Node *>(static_cast<xAddressNode *>(pCur));
 					pCur = pPrev;
 				}
 				pCur = ::MCF_AvlNext(avlAddressMap);
 				while(pCur){
 					const auto pNext = ::MCF_AvlNext(pCur);
-					delete static_cast<Node *>(pCur);
+					delete static_cast<Node *>(static_cast<xAddressNode *>(pCur));
 					pCur = pNext;
 				}
-				delete static_cast<Node *>(avlAddressMap);
+				delete static_cast<Node *>(static_cast<xAddressNode *>(avlAddressMap));
 			}
 			throw;
 		}
@@ -764,17 +766,21 @@ private:
 		auto pSourceIndexNode = std::get<INDEX_ID>(vStructure).GetLast();
 		while(pSourceIndexNode){
 			const auto pSourceNode = static_cast<const Node *>(pSourceIndexNode);
-			const auto pNode = static_cast<Node *>(::MCF_AvlFind(
-				&avlNewNodes,reinterpret_cast<std::intptr_t>(pSourceNode),
+			const auto pNode = static_cast<Node *>(static_cast<xAddressNode *>(::MCF_AvlFind(
+				&avlNewNodes, reinterpret_cast<std::intptr_t>(pSourceNode),
 				[](const ::MCF_AvlNodeHeader *lhs, std::intptr_t rhs) -> bool {
-					return std::less<void>()(static_cast<const Node *>(lhs)->xm_pSource,
+					return std::less<void>()(
+						static_cast<const Node *>(
+							static_cast<const xAddressNode *>(lhs))->xm_pSource,
 						reinterpret_cast<const Node *>(rhs));
 				},
 				[](std::intptr_t lhs, const ::MCF_AvlNodeHeader *rhs) -> bool {
-					return std::less<void>()(reinterpret_cast<const Node *>(lhs),
-						static_cast<const Node *>(rhs)->xm_pSource);
+					return std::less<void>()(
+						reinterpret_cast<const Node *>(lhs),
+						static_cast<const Node *>(
+							static_cast<const xAddressNode *>(rhs))->xm_pSource);
 				}
-			));
+			)));
 			ASSERT(pNode);
 
 			const auto pIndexNode = static_cast<IndexNode *>(pNode);

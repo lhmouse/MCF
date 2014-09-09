@@ -18,7 +18,7 @@ void Transaction::Clear() noexcept {
 }
 
 bool Transaction::Commit() const {
-	auto ppCur = xm_vecItems.GetFirst();
+	auto ppCur = xm_vecItems.GetBegin();
 	try {
 		while(ppCur != xm_vecItems.GetEnd()){
 			if(!(*ppCur)->xLock()){
@@ -27,25 +27,25 @@ bool Transaction::Commit() const {
 			++ppCur;
 		}
 	} catch(...){
-		while(ppCur != xm_vecItems.GetFirst()){
+		while(ppCur != xm_vecItems.GetBegin()){
 			--ppCur;
 			(*ppCur)->xUnlock();
 		}
 		throw;
 	}
 	if(ppCur != xm_vecItems.GetEnd()){
-		while(ppCur != xm_vecItems.GetFirst()){
+		while(ppCur != xm_vecItems.GetBegin()){
 			--ppCur;
 			(*ppCur)->xUnlock();
 		}
 		return false;
 	}
-	ppCur = xm_vecItems.GetFirst();
+	ppCur = xm_vecItems.GetBegin();
 	while(ppCur != xm_vecItems.GetEnd()){
 		(*ppCur)->xCommit();
 		++ppCur;
 	}
-	while(ppCur != xm_vecItems.GetFirst()){
+	while(ppCur != xm_vecItems.GetBegin()){
 		--ppCur;
 		(*ppCur)->xUnlock();
 	}

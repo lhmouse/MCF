@@ -27,7 +27,7 @@ typedef MultiIndexMap<ThunkItem,
 	MultiOrderedMemberIndex<ThunkItem, std::size_t, &ThunkItem::uFreeSize>
 	> ThunkMap;
 
-const ThunkItem NULL_THUNK = { };
+const auto NULL_THUNK = ThunkItem();
 
 std::size_t	g_uPageOffsetBits = 0;
 const auto	g_pcsLock = CriticalSection::Create();

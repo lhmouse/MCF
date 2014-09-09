@@ -511,7 +511,8 @@ template<class ElementT, typename ...IndicesT>
 class MultiIndexMap {
 public:
 	class Node
-		: private ::MCF_AvlNodeHeader	// 复制树结构的时候用到。
+		: public ElementT
+		, private ::MCF_AvlNodeHeader	// 复制树结构的时候用到。
 	{
 		friend MultiIndexMap;
 
@@ -529,10 +530,12 @@ public:
 		struct xOffsetOfIndexNodeFromValue {
 			std::ptrdiff_t operator()() const noexcept {
 				return xOffsetOfIndexNode<INDEX_ID_T>()() - (
-					&reinterpret_cast<const char &>(
-					reinterpret_cast<const Node *>(
-						reinterpret_cast<const char *>(1))->xm_vElement) -
-					reinterpret_cast<const char *>(1));
+					reinterpret_cast<const char *>(
+						static_cast<const ElementT *>(
+							reinterpret_cast<const Node *>(reinterpret_cast<const char *>(1))
+							)
+						) - reinterpret_cast<const char *>(1)
+					);
 			}
 		};
 
@@ -561,25 +564,18 @@ public:
 		}
 
 	private:
-		const Node *xm_pSource;	// 复制树结构的时候用到。
-		ElementT xm_vElement;
+		// 这两个成员在复制树结构的时候用到。
+		const Node *xm_pSource;
 		std::tuple<typename IndicesT::IndexNode...> xm_vIndexNodes;
 
 	public:
 		template<typename ...ParamsT>
 		explicit Node(ParamsT &&...vParams)
-			: xm_vElement(std::forward<ParamsT>(vParams)...)
+			: ElementT(std::forward<ParamsT>(vParams)...)
 		{
 		}
 
 	public:
-		const ElementT &GetElement() const noexcept {
-			return xm_vElement;
-		}
-		ElementT &GetElement() noexcept {
-			return xm_vElement;
-		}
-
 		template<std::size_t INDEX_ID_T>
 		const Node *GetPrev() const noexcept {
 			const auto pIndexNode = std::get<INDEX_ID_T>(xm_vIndexNodes).GetPrev();
@@ -840,7 +836,7 @@ public:
 	void SetKeyWithHint(Node *pHint, Node *pNode, ParamsT &&...vParams){
 		typename std::tuple_element<
 			INDEX_ID_T, std::tuple<IndicesT...>
-			>::type::KeySetter()(pNode->xm_vElement, std::forward<ParamsT>(vParams)...);
+			>::type::KeySetter()(*static_cast<ElementT *>(pNode), std::forward<ParamsT>(vParams)...);
 
 		const auto pIndexNode = &(std::get<INDEX_ID_T>(pNode->xm_vIndexNodes));
 		std::get<INDEX_ID_T>(xm_vIndices).Detach(pIndexNode);

@@ -450,8 +450,7 @@ struct UniqueOrderedIndex {
 };
 
 template<class ElementT, class KeyTypeT, KeyTypeT ElementT::*PTR_TO_KEY_T,
-	class ComparatorT = std::less<void>
-	>
+	class ComparatorT = std::less<void>>
 struct MultiOrderedMemberIndex {
 	struct KeySetter {
 		template<typename ...ParamsT>
@@ -475,8 +474,7 @@ struct MultiOrderedMemberIndex {
 };
 
 template<class ElementT, class KeyTypeT, KeyTypeT ElementT::*PTR_TO_KEY_T,
-	class ComparatorT = std::less<void>
-	>
+	class ComparatorT = std::less<void>>
 struct UniqueOrderedMemberIndex {
 	struct KeySetter {
 		template<typename ...ParamsT>

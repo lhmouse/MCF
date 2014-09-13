@@ -8,7 +8,7 @@
 #include "Abstract.hpp"
 #include "Algorithms.hpp"
 #include "Assert.hpp"
-#include "Bail.hpp"
+#include "BailOut.hpp"
 #include "BinaryOperations.hpp"
 #include "BitsOf.hpp"
 #include "ByteSwap.hpp"

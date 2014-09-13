@@ -306,8 +306,3 @@ void StreamBuffer::Splice(StreamBuffer &rhs) noexcept {
 	xm_uSize += rhs.xm_uSize;
 	rhs.xm_uSize = 0;
 }
-
-void StreamBuffer::Swap(StreamBuffer &rhs) noexcept {
-	xm_lstBuffers.Swap(rhs.xm_lstBuffers);
-	std::swap(xm_uSize, rhs.xm_uSize);
-}

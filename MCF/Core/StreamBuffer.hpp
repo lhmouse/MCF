@@ -71,7 +71,10 @@ public:
 		Splice(rhs);
 	}
 
-	void Swap(StreamBuffer &rhs) noexcept;
+	void Swap(StreamBuffer &rhs) noexcept {
+		xm_lstBuffers.Swap(rhs.xm_lstBuffers);
+		std::swap(xm_uSize, rhs.xm_uSize);
+	}
 
 public:
 	typedef unsigned char value_type;

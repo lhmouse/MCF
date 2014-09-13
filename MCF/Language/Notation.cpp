@@ -774,7 +774,8 @@ std::pair<Notation::ErrorType, const wchar_t *> Notation::Parse(const WideString
 WideString Notation::Export(const WideStringObserver &wsoIndent) const {
 	WideString wcsRet;
 
-	VVector<std::pair<const Package *, decltype(xm_pPackages->mapItems.GetFirst<1>())>
+	VVector<std::pair<const Package *,
+		decltype(xm_pPackages->mapItems.GetFirst<1>())>
 		> vecPackageStack;
 	vecPackageStack.Push(this, xm_pPackages ? xm_pPackages->mapItems.GetFirst<1>() : nullptr);
 

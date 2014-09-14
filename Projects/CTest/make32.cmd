@@ -1,7 +1,7 @@
 @echo off
 
 set Config=Debug32
-set CFlags=-fno-builtin -g -D_GLIBCXX_DEBUG_PEDANTIC -O0
+set CFlags=-fno-builtin -g -D_GLIBCXX_DEBUG -D_GLIBCXX_DEBUG_PEDANTIC -O0
 if "%1"=="Release" (
 	set Config=Release32
 	set CFlags=-DNDEBUG -O3 -ffunction-sections -fdata-sections -Wl,--gc-sections,-s

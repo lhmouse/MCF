@@ -6,6 +6,7 @@
 #define MCF_VIRTUAL_SHARED_FROM_THIS_HPP_
 
 #include <memory>
+#include <stdexcept>
 #include <type_traits>
 
 namespace MCF {
@@ -47,7 +48,11 @@ public:
 				Impl::IsDynamicCastable<VirtualSharedFromThis, DerivedT>::value,
 			"Please virtually derive from VirtualSharedFromThis.");
 
-		return std::dynamic_pointer_cast<const DerivedT>(shared_from_this());
+		const auto pVirtualThis = dynamic_cast<const DerivedT *>(this);
+		if(!pVirtualThis){
+			throw std::bad_cast();
+		}
+		return std::shared_ptr<const DerivedT>(shared_from_this(), pVirtualThis);
 	}
 	template<typename DerivedT>
 	std::shared_ptr<DerivedT> GetSharedFromThis(){
@@ -56,7 +61,11 @@ public:
 				Impl::IsDynamicCastable<VirtualSharedFromThis, DerivedT>::value,
 			"Please virtually derive from VirtualSharedFromThis.");
 
-		return std::dynamic_pointer_cast<DerivedT>(shared_from_this());
+		const auto pVirtualThis = dynamic_cast<DerivedT *>(this);
+		if(!pVirtualThis){
+			throw std::bad_cast();
+		}
+		return std::shared_ptr<DerivedT>(shared_from_this(), pVirtualThis);
 	}
 
 	template<typename DerivedT>

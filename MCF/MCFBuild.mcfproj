@@ -35,7 +35,7 @@ General {
 }
 
 Debug = General {
-	CompilerFlags		=> -fno-builtin -g -D_GLIBCXX_DEBUG_PEDANTIC -O0
+	CompilerFlags		=> -fno-builtin -g -D_GLIBCXX_DEBUG -D_GLIBCXX_DEBUG_PEDANTIC -O0
 }
 
 Release = General {

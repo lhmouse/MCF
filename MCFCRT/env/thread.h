@@ -43,7 +43,7 @@ extern void MCF_CRT_TlsClearAll() MCF_NOEXCEPT;
 
 // 返回的是 HANDLE。
 extern void *MCF_CRT_CreateThread(
-	unsigned int (*pfnThreadProc)(MCF_STD intptr_t),
+	unsigned (*pfnThreadProc)(MCF_STD intptr_t),
 	MCF_STD intptr_t nParam,
 	bool bSuspended,
 	unsigned long *pulThreadId

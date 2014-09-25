@@ -79,7 +79,7 @@ namespace Impl {
 				continue;
 			}
 			// 这个值是该码点剩余的字节数，不包含刚刚读取的。
-			const std::size_t uAddnlBytes = CountLeadingZeroes(~(u32CodePoint << (BITS_OF(unsigned int) - 7)) | 1);
+			const std::size_t uAddnlBytes = CountLeadingZeroes(~(u32CodePoint << (BITS_OF(unsigned) - 7)) | 1);
 			// UTF-8 理论上最长可以编码 6 个字符，但是标准化以后只能使用 4 个。
 			if(uAddnlBytes - 1 > 2){ // 0 - 3
 				// 按照 ISO-8859-1 映射到 U+0080 - U+00FF。

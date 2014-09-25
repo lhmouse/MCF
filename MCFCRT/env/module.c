@@ -22,7 +22,7 @@ typedef struct tagAtExitNode {
 
 static AtExitNode *volatile g_pAtExitHead = NULL;
 
-static unsigned int g_uInitState = 0;
+static unsigned g_uInitState = 0;
 
 #define DUMMY_INIT()			(true)
 #define DUMMY_UNINIT()			((void)0)
@@ -69,7 +69,7 @@ static inline void EndModule(){
 	}
 }
 
-static bool Init(unsigned int *restrict puState){
+static bool Init(unsigned *restrict puState){
 	switch(*puState){
 
 #define DO_INIT(n, exp)	\
@@ -96,7 +96,7 @@ static bool Init(unsigned int *restrict puState){
 	}
 	return true;
 }
-static void Uninit(unsigned int *restrict puState){
+static void Uninit(unsigned *restrict puState){
 	if(*puState == 0){
 		return;
 	}

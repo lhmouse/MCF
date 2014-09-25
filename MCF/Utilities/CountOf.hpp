@@ -11,10 +11,10 @@ namespace MCF {
 
 namespace Impl {
 	template<typename Ty, std::size_t N>
-	char (&CountOfHelper(Ty (&)[N]))[N];
+	auto CountOfHelper(Ty (&)[N]) -> char(&)[N];
 
 	template<typename Ty, std::size_t N>
-	char (&CountOfHelper(Ty (&&)[N]))[N];
+	auto CountOfHelper(Ty (&&)[N]) -> char(&&)[N];
 }
 
 }

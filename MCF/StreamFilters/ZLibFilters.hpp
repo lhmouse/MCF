@@ -18,7 +18,7 @@ private:
 	const std::unique_ptr<xDelegate> xm_pDelegate;
 
 public:
-	explicit ZLibEncoder(bool bRaw = false, unsigned int uLevel = 6);
+	explicit ZLibEncoder(bool bRaw = false, unsigned uLevel = 6);
 	~ZLibEncoder() noexcept;
 
 public:

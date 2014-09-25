@@ -113,7 +113,7 @@ void __MCF_CRT_HeapDbgAddGuardsAndRegister(
 
 	void **ppGuard1 = (void **)pContents;
 	void **ppGuard2 = (void **)(pContents + uContentSize);
-	for(unsigned int i = 0; i < GUARD_BAND_SIZE; i += sizeof(void *)){
+	for(unsigned i = 0; i < GUARD_BAND_SIZE; i += sizeof(void *)){
 		--ppGuard1;
 
 		*ppGuard1 = EncodePointer(ppGuard2);
@@ -165,7 +165,7 @@ const BlockInfo *__MCF_CRT_HeapDbgValidate(
 
 	void *const *ppGuard1 = (void *const *)pContents;
 	void *const *ppGuard2 = (void *const *)(pContents + pBlockInfo->uSize);
-	for(unsigned int i = 0; i < GUARD_BAND_SIZE; i += sizeof(void *)){
+	for(unsigned i = 0; i < GUARD_BAND_SIZE; i += sizeof(void *)){
 		--ppGuard1;
 
 		if((DecodePointer(*ppGuard1) != ppGuard2) || (DecodePointer(*ppGuard2) != ppGuard1)){

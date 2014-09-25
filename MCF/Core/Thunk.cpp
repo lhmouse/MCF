@@ -96,7 +96,7 @@ std::shared_ptr<const void> AllocateThunk(const void *pInit, std::size_t uSize){
 	std::size_t uThunkSize = uSize + 8;
 	uThunkSize = (uThunkSize + 0x0F) & (size_t)-0x10;
 	if(uThunkSize < uSize){
-		// 无符号溢出。
+		// 无符号进位。
 		throw std::bad_alloc();
 	}
 

@@ -37,7 +37,7 @@ void IsaacExEncoder::Update(const void *pData, std::size_t uSize){
 	auto pbyRead = (const unsigned char *)pData;
 	for(std::size_t i = 0; i < uSize; ++i){
 		register auto by = *pbyRead;
-		const unsigned int uSeed = xm_pIsaacRng->Get();
+		const unsigned uSeed = xm_pIsaacRng->Get();
 
 		by ^= uSeed;
 		__asm__ __volatile__(
@@ -86,7 +86,7 @@ void IsaacExDecoder::Update(const void *pData, std::size_t uSize){
 	auto pbyRead = (const unsigned char *)pData;
 	for(std::size_t i = 0; i < uSize; ++i){
 		register auto by = *pbyRead;
-		const unsigned int uSeed = xm_pIsaacRng->Get();
+		const unsigned uSeed = xm_pIsaacRng->Get();
 
 		__asm__ __volatile__(
 			"ror %b0, cl \n"

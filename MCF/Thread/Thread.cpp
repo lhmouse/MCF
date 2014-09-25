@@ -14,7 +14,7 @@ namespace {
 
 class ThreadDelegate : CONCRETE(Thread) {
 private:
-	static unsigned int xThreadProc(std::intptr_t nParam) noexcept {
+	static unsigned xThreadProc(std::intptr_t nParam) noexcept {
 		auto *const pThis = (ThreadDelegate *)nParam;
 		try {
 			const std::shared_ptr<ThreadDelegate> pInstance(std::move(pThis->xm_pLock));

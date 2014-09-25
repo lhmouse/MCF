@@ -170,10 +170,16 @@ namespace Impl {
 			xTidy();
 		}
 		void Reset(const WeakHandle &rhs) noexcept {
+			if(this == &rhs){
+				return;
+			}
 			xTidy();
 			xJoin(rhs.xm_pNode);
 		}
 		void Reset(WeakHandle &&rhs) noexcept {
+			if(this == &rhs){
+				return;
+			}
 			xTidy();
 			xm_pNode = std::exchange(rhs.xm_pNode, nullptr);
 		}
@@ -339,10 +345,16 @@ namespace Impl {
 			Reset(SharedHandleTemplate(rhs));
 		}
 		void Reset(const SharedHandle &rhs) noexcept {
+			if(this == &rhs){
+				return;
+			}
 			xTidy();
 			xJoin(rhs.WeakHandle::xm_pNode);
 		}
 		void Reset(SharedHandle &&rhs) noexcept {
+			if(this == &rhs){
+				return;
+			}
 			xTidy();
 			WeakHandle::xm_pNode = std::exchange(rhs.WeakHandle::xm_pNode, nullptr);
 		}

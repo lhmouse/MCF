@@ -49,8 +49,8 @@ constexpr unsigned char ByteSwap(unsigned char by) noexcept {
 constexpr unsigned short ByteSwap(unsigned short ush) noexcept {
 	return Impl::ByteSwapHelper<BITS_OF(unsigned short)>::Do(ush);
 }
-constexpr unsigned int ByteSwap(unsigned int u) noexcept {
-	return Impl::ByteSwapHelper<BITS_OF(unsigned int)>::Do(u);
+constexpr unsigned ByteSwap(unsigned u) noexcept {
+	return Impl::ByteSwapHelper<BITS_OF(unsigned)>::Do(u);
 }
 constexpr unsigned long ByteSwap(unsigned long ul) noexcept {
 	return Impl::ByteSwapHelper<BITS_OF(unsigned long)>::Do(ul);

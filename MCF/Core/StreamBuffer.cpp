@@ -13,8 +13,8 @@ using namespace MCF;
 constexpr std::size_t CHUNK_SIZE = 0x400;
 
 struct Impl::DisposableBuffer {
-	unsigned int uRead;
-	unsigned int uWrite;
+	unsigned uRead;
+	unsigned uWrite;
 	unsigned char abyData[CHUNK_SIZE];
 };
 

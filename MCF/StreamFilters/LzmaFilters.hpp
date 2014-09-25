@@ -18,7 +18,7 @@ private:
 	const std::unique_ptr<xDelegate> xm_pDelegate;
 
 public:
-	explicit LzmaEncoder(unsigned int uLevel = 6, unsigned long ulDictSize = 1ul << 23);
+	explicit LzmaEncoder(unsigned uLevel = 6, unsigned long ulDictSize = 1ul << 23);
 	~LzmaEncoder() noexcept;
 
 public:

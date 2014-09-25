@@ -483,7 +483,7 @@ void MCF_CRT_TlsClearAll(){
 }
 
 typedef struct tagThreadInitInfo {
-	unsigned int (*pfnProc)(intptr_t);
+	unsigned (*pfnProc)(intptr_t);
 	intptr_t nParam;
 } ThreadInitInfo;
 
@@ -506,7 +506,7 @@ DWORD CRTThreadProc(LPVOID pParam){
 }
 
 void *MCF_CRT_CreateThread(
-	unsigned int (*pfnThreadProc)(intptr_t),
+	unsigned (*pfnThreadProc)(intptr_t),
 	intptr_t nParam,
 	bool bSuspended,
 	unsigned long *pulThreadId

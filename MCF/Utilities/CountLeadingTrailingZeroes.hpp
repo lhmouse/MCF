@@ -14,13 +14,13 @@ namespace MCF {
 
 constexpr unsigned char CountLeadingZeroes(unsigned char by) noexcept {
 	return __MCF_MAKE_CONSTANT((unsigned char)__builtin_clz(by)
-		- (sizeof(unsigned int) - sizeof(unsigned char)) * (std::size_t)CHAR_BIT);
+		- (sizeof(unsigned) - sizeof(unsigned char)) * (std::size_t)CHAR_BIT);
 }
 constexpr unsigned char CountLeadingZeroes(unsigned short ush) noexcept {
 	return __MCF_MAKE_CONSTANT((unsigned char)__builtin_clz(ush)
-		- (sizeof(unsigned int) - sizeof(unsigned short)) * (std::size_t)CHAR_BIT);
+		- (sizeof(unsigned) - sizeof(unsigned short)) * (std::size_t)CHAR_BIT);
 }
-constexpr unsigned char CountLeadingZeroes(unsigned int u) noexcept {
+constexpr unsigned char CountLeadingZeroes(unsigned u) noexcept {
 	return __MCF_MAKE_CONSTANT((unsigned char)__builtin_clz(u));
 }
 constexpr unsigned char CountLeadingZeroes(unsigned long ul) noexcept {
@@ -36,7 +36,7 @@ constexpr unsigned char CountTrailingZeroes(unsigned char by) noexcept {
 constexpr unsigned char CountTrailingZeroes(unsigned short ush) noexcept {
 	return __MCF_MAKE_CONSTANT((unsigned char)__builtin_ctz(ush));
 }
-constexpr unsigned char CountTrailingZeroes(unsigned int u) noexcept {
+constexpr unsigned char CountTrailingZeroes(unsigned u) noexcept {
 	return __MCF_MAKE_CONSTANT((unsigned char)__builtin_ctz(u));
 }
 constexpr unsigned char CountTrailingZeroes(unsigned long ul) noexcept {

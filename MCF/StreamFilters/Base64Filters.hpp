@@ -17,8 +17,8 @@ class Base64Encoder : CONCRETE(StreamFilterBase) {
 private:
 	unsigned char xm_abyTable[65];
 
-	unsigned int xm_uWord;
-	unsigned int xm_uState;
+	unsigned xm_uWord;
+	unsigned xm_uState;
 
 public:
 	explicit Base64Encoder(const char *pchTable = BASE64_TABLE_MIME) noexcept;
@@ -33,8 +33,8 @@ class Base64Decoder : CONCRETE(StreamFilterBase) {
 private:
 	unsigned char xm_abyTable[0x100];
 
-	unsigned int xm_uWord;
-	unsigned int xm_uState;
+	unsigned xm_uWord;
+	unsigned xm_uState;
 
 public:
 	explicit Base64Decoder(const char *pchTable = BASE64_TABLE_MIME) noexcept;

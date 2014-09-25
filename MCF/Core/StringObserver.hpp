@@ -522,14 +522,14 @@ template<typename CharT, CharT ...STRING_T>
 std::enable_if_t<std::is_same<CharT, char>::value, NarrowStringObserver>
 	operator""_nso()
 {
-	static CharT s_achData[] = {STRING_T..., '$'};
+	static constexpr CharT s_achData[] = {STRING_T..., '$'};
 	return NarrowStringObserver(s_achData, sizeof...(STRING_T));
 }
 template<typename CharT, CharT ...STRING_T>
 std::enable_if_t<std::is_same<CharT, wchar_t>::value, WideStringObserver>
 	operator""_wso()
 {
-	static CharT s_achData[] = {STRING_T..., '$'};
+	static constexpr CharT s_achData[] = {STRING_T..., '$'};
 	return WideStringObserver(s_achData, sizeof...(STRING_T));
 }
 
@@ -537,21 +537,21 @@ template<typename CharT, CharT ...STRING_T>
 std::enable_if_t<std::is_same<CharT, char>::value, Utf8StringObserver>
 	operator""_u8so()
 {
-	static CharT s_achData[] = {STRING_T..., '$'};
+	static constexpr CharT s_achData[] = {STRING_T..., '$'};
 	return Utf8StringObserver(s_achData, sizeof...(STRING_T));
 }
 template<typename CharT, CharT ...STRING_T>
 std::enable_if_t<std::is_same<CharT, char16_t>::value, Utf16StringObserver>
 	operator""_u16so()
 {
-	static CharT s_achData[] = {STRING_T..., '$'};
+	static constexpr CharT s_achData[] = {STRING_T..., '$'};
 	return Utf16StringObserver(s_achData, sizeof...(STRING_T));
 }
 template<typename CharT, CharT ...STRING_T>
 std::enable_if_t<std::is_same<CharT, char32_t>::value, Utf32StringObserver>
 	operator""_u32so()
 {
-	static CharT s_achData[] = {STRING_T..., '$'};
+	static constexpr CharT s_achData[] = {STRING_T..., '$'};
 	return Utf32StringObserver(s_achData, sizeof...(STRING_T));
 }
 

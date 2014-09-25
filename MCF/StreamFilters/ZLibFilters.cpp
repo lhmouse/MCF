@@ -59,7 +59,7 @@ private:
 	bool xm_bInited;
 
 public:
-	xDelegate(ZLibEncoder &vOwner, bool bRaw, unsigned int uLevel)
+	xDelegate(ZLibEncoder &vOwner, bool bRaw, unsigned uLevel)
 		: xm_vOwner(vOwner)
 	{
 		xm_vStream.zalloc	= Z_NULL;
@@ -278,7 +278,7 @@ public:
 
 // ========== ZLibEncoder ==========
 // 静态成员函数。
-ZLibEncoder::ZLibEncoder(bool bRaw, unsigned int uLevel)
+ZLibEncoder::ZLibEncoder(bool bRaw, unsigned uLevel)
 	: xm_pDelegate(std::make_unique<xDelegate>(*this, bRaw, uLevel))
 {
 }

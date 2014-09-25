@@ -27,5 +27,5 @@ void __wrap___cxa_throw(
 ){
 	MCF_OnException(pException, *pTypeInfo, __builtin_return_address(0));
 
-	__real___cxa_throw(pException, pTypeInfo, pfnDest);
+	::__real___cxa_throw(pException, pTypeInfo, pfnDest);
 }

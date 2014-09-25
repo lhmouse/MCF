@@ -34,8 +34,9 @@ public:
 public:
 	bool WaitTimeout(LockRaiiTemplateBase &vLock, unsigned long long ullMilliSeconds) noexcept {
 		__atomic_add_fetch(&xm_uWaiterCount, 1, __ATOMIC_RELAXED);
-		const auto uReentrantCount = vLock.UnlockAll();
-		ASSERT(uReentrantCount != 0);
+
+		vLock.Unlock();
+		ASSERT(!vLock.IsLocking());
 
 		const bool bResult = WaitUntil(
 			[&](DWORD dwRemaining) noexcept {
@@ -43,7 +44,7 @@ public:
 			},
 			ullMilliSeconds
 		);
-		vLock.Lock(uReentrantCount);
+		vLock.Lock();
 		return bResult;
 	}
 	void Signal(std::size_t uCount) noexcept {
@@ -56,19 +57,16 @@ public:
 			}
 			if(EXPECT_NOT(__atomic_compare_exchange_n(
 				&xm_uWaiterCount, &uOldWaiterCount, uOldWaiterCount - uCountToSignal,
-				false, __ATOMIC_RELAXED, __ATOMIC_RELAXED)
-			)){
+				false, __ATOMIC_RELAXED, __ATOMIC_RELAXED)))
+			{
 				::ReleaseSemaphore(xm_hSemaphore.Get(), (long)uCountToSignal, nullptr);
 				break;
 			}
 		}
 	}
 	void Broadcast() noexcept {
-		::ReleaseSemaphore(
-			xm_hSemaphore.Get(),
-			(long)__atomic_exchange_n(&xm_uWaiterCount, 0, __ATOMIC_RELAXED),
-			nullptr
-		);
+		::ReleaseSemaphore(xm_hSemaphore.Get(),
+			(long)__atomic_exchange_n(&xm_uWaiterCount, 0, __ATOMIC_RELAXED), nullptr);
 	}
 };
 

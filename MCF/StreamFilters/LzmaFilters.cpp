@@ -56,7 +56,7 @@ struct LzmaStreamCloser {
 	}
 };
 
-lzma_options_lzma MakeOptions(unsigned int uLevel, unsigned long ulDictSize){
+lzma_options_lzma MakeOptions(unsigned uLevel, unsigned long ulDictSize){
 	lzma_options_lzma vRet;
 	if(::lzma_lzma_preset(&vRet, uLevel)){
 		MCF_THROW(ERROR_INVALID_PARAMETER, L"::lzma_lzma_preset() 失败。"_wso);
@@ -76,7 +76,7 @@ private:
 	std::unique_ptr<lzma_stream, LzmaStreamCloser> xm_pStream;
 
 public:
-	xDelegate(LzmaEncoder &vOwner, unsigned int uLevel, unsigned long ulDictSize)
+	xDelegate(LzmaEncoder &vOwner, unsigned uLevel, unsigned long ulDictSize)
 		: xm_vOwner		(vOwner)
 		, xm_vOptions	(MakeOptions(uLevel, ulDictSize))
 		, xm_vStream	(INIT_STREAM)
@@ -278,7 +278,7 @@ public:
 
 // ========== LzmaEncoder ==========
 // 静态成员函数。
-LzmaEncoder::LzmaEncoder(unsigned int uLevel, unsigned long ulDictSize)
+LzmaEncoder::LzmaEncoder(unsigned uLevel, unsigned long ulDictSize)
 	: xm_pDelegate(std::make_unique<xDelegate>(*this, uLevel, ulDictSize))
 {
 }

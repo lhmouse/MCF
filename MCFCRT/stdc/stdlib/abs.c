@@ -5,8 +5,8 @@
 #include "../../env/_crtdef.h"
 
 int abs(int i){
-	register const unsigned int mask = (unsigned int)(i >> (sizeof(int) * __CHAR_BIT__ - 1));
-	return (int)(((unsigned int)i ^ mask) - mask);
+	register const unsigned mask = (unsigned)(i >> (sizeof(int) * __CHAR_BIT__ - 1));
+	return (int)(((unsigned)i ^ mask) - mask);
 }
 
 long labs(long i){

@@ -11,39 +11,33 @@
 namespace MCF {
 
 template<typename Tx, typename Ty, typename Comparator = std::less<void>>
-constexpr auto Min(Tx x, Ty y) noexcept {
-	static_assert(
-		std::is_scalar<Tx>::value && std::is_scalar<Ty>::value,
-		"Only scalar types are supported."
-	);
-	static_assert(
-		std::is_signed<Tx>::value == std::is_signed<Ty>::value,
-		"Comparison between signed and unsigned integers."
-	);
+constexpr decltype(auto) Min(Tx &&x, Ty &&y){
+	static_assert(std::is_scalar<Tx>::value && std::is_scalar<Ty>::value,
+		"Only scalar types are supported.");
+	static_assert(std::is_signed<Tx>::value == std::is_signed<Ty>::value,
+		"Comparison between signed and unsignedegers.");
 
-	return Comparator()(x, y) ? x : y;
+	return Comparator()(std::forward<Tx>(x), std::forward<Ty>(y))
+		? std::forward<Tx>(x) : std::forward<Ty>(y);
 }
 template<typename Tx, typename Ty, typename Comparator = std::less<void>, typename ...MoreT>
-constexpr auto Min(Tx x, Ty y, MoreT ...vMore) noexcept {
-	return Min(Min(x, y), vMore...);
+constexpr decltype(auto) Min(Tx &&x, Ty &&y, MoreT ...&&vMore){
+	return Min(Min(std::forward<Tx>(x), std::forward<Ty>(y)), std::forward<MoreT>(vMore)...);
 }
 
 template<typename Tx, typename Ty, typename Comparator = std::less<void>>
-constexpr auto Max(Tx x, Ty y) noexcept {
-	static_assert(
-		std::is_scalar<Tx>::value && std::is_scalar<Ty>::value,
-		"Only scalar types are supported."
-	);
-	static_assert(
-		std::is_signed<Tx>::value == std::is_signed<Ty>::value,
-		"Comparison between signed and unsigned integers."
-	);
+constexpr decltype(auto) Max(Tx &&x, Ty &&y){
+	static_assert(std::is_scalar<Tx>::value && std::is_scalar<Ty>::value,
+		"Only scalar types are supported.");
+	static_assert(std::is_signed<Tx>::value == std::is_signed<Ty>::value,
+		"Comparison between signed and unsignedegers.");
 
-	return Comparator()(x, y) ? y : x;
+	return Comparator()(std::forward<Tx>(x), std::forward<Ty>(y))
+		? std::forward<Ty>(y) : std::forward<Tx>(x);
 }
 template<typename Tx, typename Ty, typename Comparator = std::less<void>, typename ...MoreT>
-constexpr auto Max(Tx x, Ty y, MoreT ...vMore) noexcept {
-	return Max(Max(x, y), vMore...);
+constexpr decltype(auto) Max(Tx &&x, Ty &&y, MoreT ...&&vMore){
+	return Max(Max(std::forward<Tx>(x), std::forward<Ty>(y)), std::forward<MoreT>(vMore)...);
 }
 
 }

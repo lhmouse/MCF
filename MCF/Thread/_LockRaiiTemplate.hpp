@@ -36,42 +36,33 @@ public:
 	bool IsLocking() const noexcept {
 		return xm_uLockCount > 0;
 	}
-	bool Try(std::size_t uCount = 1) noexcept {
+	bool Try() noexcept {
 		if(xm_uLockCount == 0){
 			if(!xDoTry()){
 				return false;
 			}
 		}
-		xm_uLockCount += uCount;
+		++xm_uLockCount;
 		return true;
 	}
-	void Lock(std::size_t uCount = 1) noexcept {
+	void Lock() noexcept {
 		if(uCount == 0){
 			return;
 		}
-		if(xm_uLockCount == 0){
+		if(++xm_uLockCount == 1){
 			xDoLock();
 		}
-		xm_uLockCount += uCount;
 	}
-	void Unlock(std::size_t uCount = 1) noexcept {
+	void Unlock() noexcept {
 		if(uCount == 0){
 			return;
 		}
 
-		ASSERT(xm_uLockCount >= uCount);
+		ASSERT(xm_uLockCount != 0);
 
-		xm_uLockCount -= uCount;
-		if(xm_uLockCount == 0){
+		if(--xm_uLockCount == 0){
 			xDoUnlock();
 		}
-	}
-	std::size_t UnlockAll() noexcept {
-		const auto uCount = std::exchange(xm_uLockCount, 0u);
-		if(uCount > 0){
-			xDoUnlock();
-		}
-		return uCount;
 	}
 
 public:

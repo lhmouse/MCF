@@ -4,7 +4,7 @@
 #ifndef MCFBUILD_JOB_SCHEDULER_HPP_
 #define MCFBUILD_JOB_SCHEDULER_HPP_
 
-#include "../MCF/Core/Utilities.hpp"
+#include "../MCF/Utilities/NoCopy.hpp"
 #include "../MCF/Thread/CriticalSection.hpp"
 #include <queue>
 #include <functional>

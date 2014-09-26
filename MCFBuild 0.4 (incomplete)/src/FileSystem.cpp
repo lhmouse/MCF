@@ -41,7 +41,7 @@ bool GetFileContents(MCF::StreamBuffer &sbufData, const MCF::WideString &wcsPath
 		unsigned char abyTemp[FILE_BUFFER_SIZE];
 		const auto uBytesRead = pFile->Read(abyTemp, sizeof(abyTemp), u64Offset);
 		u64Offset += uBytesRead;
-		sbufData.Insert(abyTemp, uBytesRead);
+		sbufData.Put(abyTemp, uBytesRead);
 	}
 	return true;
 }

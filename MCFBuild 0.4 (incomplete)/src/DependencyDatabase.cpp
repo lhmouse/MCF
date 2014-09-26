@@ -5,12 +5,12 @@
 #include "DependencyDatabase.hpp"
 #include "FileSystem.hpp"
 #include "../MCF/Core/Exception.hpp"
-#include "../MCF/Serialization/Serdes.hpp"
-#include "../MCF/Serialization/Serdes_array.hpp"
-#include "../MCF/Serialization/Serdes_map.hpp"
+// #include "../MCF/Serialization/Serdes.hpp"
+// #include "../MCF/Serialization/Serdes_array.hpp"
+// #include "../MCF/Serialization/Serdes_map.hpp"
 #include <cstddef>
 using namespace MCFBuild;
-
+/*
 namespace MCFBuild {
 
 inline namespace {
@@ -40,3 +40,4 @@ void DependencyDatabase::LoadFromFile(const MCF::WideString &wcsPath){
 	GetFileContents(sbufData, wcsPath, true);
 	sbufData >>xm_mapFiles;
 }
+*/

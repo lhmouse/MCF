@@ -4,9 +4,9 @@
 #ifndef MCFBUILD_MODEL_HPP_
 #define MCFBUILD_MODEL_HPP_
 
-#include "../MCF/Core/Utilities.hpp"
+#include "../MCF/Utilities/NoCopy.hpp"
 #include "../MCF/Containers/VVector.hpp"
-#include "../MCF/Containers/MultiIndexedMap.hpp"
+#include "../MCF/Containers/MultiIndexMap.hpp"
 #include "../MCF/Core/String.hpp"
 #include "../MCF/Core/File.hpp"
 #include <cstddef>
@@ -33,7 +33,7 @@ private:
 
 	MCF::WideString xm_wcsProject;
 	MCF::WideString xm_wcsConfig;
-	MCF::MultiIndexedMap<MCF::WideString, MCF::WideString> xm_mapMacros;
+//	MCF::MultiIndexMap<MCF::WideString, MCF::WideString> xm_mapMacros;
 
 	MCF::WideString xm_wcsWorkingDir;
 	MCF::WideString xm_wcsSrcRoot;
@@ -64,9 +64,9 @@ public:
 	const auto &GetConfig() const noexcept {
 		return xm_wcsConfig;
 	}
-	const auto &GetMacros() const noexcept {
+/*	const auto &GetMacros() const noexcept {
 		return xm_mapMacros;
-	}
+	}*/
 
 	const auto &GetWorkingDir() const noexcept {
 		return xm_wcsWorkingDir;

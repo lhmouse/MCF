@@ -372,7 +372,7 @@ MCFBuild_DEPENDENCIES = \
 	lib/libmcflite.a
 
 MCFBuild_LDADD = \
-	-Llib -lmcflite -lstdc++ -lmingwex -lmingw32 -lgcc -lgcc_eh -lmcflite -lmsvcrt -lkernel32 -luser32
+	-Llib -lmcflite -lstdc++ -lmingwex -lmingw32 -lgcc -lgcc_eh -lmcflite -lmsvcrt -luser32 -lkernel32
 
 MCFBuild_SOURCES = \
 	src/ConsoleOutput.cpp		\

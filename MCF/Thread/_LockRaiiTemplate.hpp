@@ -46,18 +46,11 @@ public:
 		return true;
 	}
 	void Lock() noexcept {
-		if(uCount == 0){
-			return;
-		}
 		if(++xm_uLockCount == 1){
 			xDoLock();
 		}
 	}
 	void Unlock() noexcept {
-		if(uCount == 0){
-			return;
-		}
-
 		ASSERT(xm_uLockCount != 0);
 
 		if(--xm_uLockCount == 0){
@@ -78,10 +71,12 @@ namespace Impl {
 		MutexT *xm_pOwner;
 
 	public:
-		explicit LockRaiiTemplate(MutexT *pOwner, std::size_t uInitCount = 1) noexcept
+		explicit LockRaiiTemplate(MutexT *pOwner, bool bInitLocked = true) noexcept
 			: xm_pOwner(pOwner)
 		{
-			Lock(uInitCount);
+			if(bInitLocked){
+				Lock();
+			}
 		}
 		LockRaiiTemplate(LockRaiiTemplate &&rhs) noexcept
 			: xm_pOwner(rhs.xm_pOwner)
@@ -90,7 +85,9 @@ namespace Impl {
 		}
 		LockRaiiTemplate &operator=(LockRaiiTemplate &&rhs) noexcept {
 			if(this != &rhs){
-				UnlockAll();
+				if(xm_uLockCount != 0){
+					xDoUnlock();
+				}
 
 				xm_pOwner = rhs.xm_pOwner;
 				xm_uLockCount = std::exchange(rhs.xm_uLockCount, 0u);
@@ -98,7 +95,10 @@ namespace Impl {
 			return *this;
 		}
 		virtual ~LockRaiiTemplate() noexcept {
-			UnlockAll();
+			if(xm_uLockCount != 0){
+				xDoUnlock();
+			}
+			xm_uLockCount = 0;
 		}
 
 	private:

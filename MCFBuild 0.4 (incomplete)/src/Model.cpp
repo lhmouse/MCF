@@ -43,7 +43,7 @@ void Model::InitParams(){
 
 	xm_wcsProject.Clear();
 	xm_wcsConfig.Clear();
-	xm_mapMacros.Clear();
+//	xm_mapMacros.Clear();
 
 	xm_wcsWorkingDir.Clear();
 	xm_wcsSrcRoot.Clear();
@@ -115,13 +115,13 @@ void Model::InitParams(){
 						wcsMacroValue.Assign(wcsMacroName.GetBegin() + uEquPos + 1, wcsMacroName.GetEnd());
 						wcsMacroName.Resize(uEquPos);
 					}
-
+/*
 					const auto pNode = xm_mapMacros.GetLowerBound<0>(wcsMacroName);
 					if(!pNode || (pNode->GetIndex<0>() != wcsMacroName)){
 						xm_mapMacros.InsertWithHints(std::make_tuple(pNode), std::move(wcsMacroValue), std::move(wcsMacroName));
 					} else {
 						pNode->GetElement() = std::move(wcsMacroValue);
-					}
+					}*/
 				}
 				break;
 

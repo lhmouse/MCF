@@ -5,9 +5,6 @@
 #include "Model.hpp"
 #include "ConsoleOutput.hpp"
 #include "../MCFCRT/exe/exe_decl.h"
-#include "../MCF/Core/Utilities.hpp"
-#include "../MCF/Core/String.hpp"
-#include "../MCF/Core/Exception.hpp"
 #include <cwchar>
 using namespace MCFBuild;
 

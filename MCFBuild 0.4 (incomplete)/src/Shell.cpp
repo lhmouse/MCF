@@ -5,8 +5,6 @@
 #include "Shell.hpp"
 #include "../MCF/Core/StreamBuffer.hpp"
 #include "../MCF/Core/UniqueHandle.hpp"
-#include "../MCF/Core/Exception.hpp"
-#include "../MCF/Core/Utilities.hpp"
 #include <cstddef>
 using namespace MCFBuild;
 
@@ -50,14 +48,14 @@ void ReadPipe(MCF::StreamBuffer &sbufSink, HANDLE hSource){
 		if(!::ReadFile(hSource, abyBuffer, sizeof(abyBuffer), &dwBytesReadThisTime, nullptr)){
 			break;
 		}
-		sbufSink.Insert(abyBuffer, dwBytesReadThisTime);
+		sbufSink.Put(abyBuffer, dwBytesReadThisTime);
 		dwBytesRead += dwBytesReadThisTime;
 	}
 }
 
 long ExtractWchar(MCF::StreamBuffer &sbufSource){
 	wchar_t wc;
-	if(sbufSource.Extract(&wc, sizeof(wc))){
+	if(sbufSource.Get(&wc, sizeof(wc))){
 		return (std::make_unsigned_t<wchar_t>)wc;
 	}
 	return -1;

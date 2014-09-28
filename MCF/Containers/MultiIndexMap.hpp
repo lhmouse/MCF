@@ -815,31 +815,52 @@ public:
 	}
 
 	template<typename ...ParamsT>
-	std::pair<Node *, bool> Insert(ParamsT &&...vParams){
-		return InsertWithHints<ParamsT &&...>(Hints(), std::forward<ParamsT>(vParams)...);
+	std::pair<Node *, bool> Insert(bool bOverwrites, ParamsT &&...vParams){
+		return InsertWithHints<ParamsT &&...>(bOverwrites, Hints(), std::forward<ParamsT>(vParams)...);
 	}
 	template<typename ...ParamsT>
-	std::pair<Node *, bool> InsertWithHints(const Hints &vHints, ParamsT &&...vParams){
-		Node *pExistent;
+	std::pair<Node *, bool> InsertWithHints(bool bOverwrites, const Hints &vHints, ParamsT &&...vParams){
 		const auto pNode = new Node(std::forward<ParamsT>(vParams)...);
-		try {
-			pExistent = xAttachAll<int, IndicesT...>(vHints, pNode);
-		} catch(...){
-			delete pNode;
-			throw;
-		}
-		if(pExistent){
-			delete pNode;
-			return std::make_pair(pExistent, false);
-		} else {
-			++xm_uSize;
-			return std::make_pair(pNode, true);
+		for(;;){
+			Node *const pExistent = xAttachAll<int, IndicesT...>(vHints, pNode);
+			if(!pExistent){
+				++xm_uSize;
+				return std::make_pair(pNode, true);
+			}
+			if(!bOverwrites){
+				delete pNode;
+				return std::make_pair(pExistent, false);
+			}
+			Erase(pExistent);
 		}
 	}
 	void Erase(Node *pNode) noexcept {
 		xDetachAll<int, IndicesT...>(pNode);
 		delete pNode;
 		--xm_uSize;
+	}
+	template<typename ...ParamsT>
+	Node *Replace(Node *pNode, bool bOverwrites, ParamsT &&...vParams){
+		xDetachAll<int, IndicesT...>(pNode);
+		try {
+			*pNode = Node(std::forward<ParamsT>(vParams)...);
+		} catch(...){
+			delete pNode;
+			--xm_uSize;
+			throw;
+		}
+		for(;;){
+			Node *const pExistent = xAttachAll<int, IndicesT...>(Hints(), pNode);
+			if(!pExistent){
+				return pNode;
+			}
+			if(!bOverwrites){
+				delete pNode;
+				--xm_uSize;
+				return nullptr;
+			}
+			Erase(pExistent);
+		}
 	}
 
 	// 如果设定新的 key 与容器中原先的元素冲突，则那个元素被删除。

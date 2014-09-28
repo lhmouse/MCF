@@ -253,7 +253,7 @@ const NotationPackage *NotationPackage::GetPackage(const WideStringObserver &wso
 	if(!pNode){
 		return nullptr;
 	}
-	return std::addressof(pNode->vPackage);
+	return &(pNode->vPackage);
 }
 NotationPackage *NotationPackage::GetPackage(const WideStringObserver &wsoName) noexcept {
 	if(!xm_pPackages){
@@ -263,7 +263,7 @@ NotationPackage *NotationPackage::GetPackage(const WideStringObserver &wsoName) 
 	if(!pNode){
 		return nullptr;
 	}
-	return std::addressof(pNode->vPackage);
+	return &(pNode->vPackage);
 }
 std::pair<NotationPackage *, bool> NotationPackage::CreatePackage(const WideStringObserver &wsoName){
 	if(!xm_pPackages){
@@ -272,13 +272,13 @@ std::pair<NotationPackage *, bool> NotationPackage::CreatePackage(const WideStri
 	std::pair<NotationPackage *, bool> vRet;
 	const auto pNode = xm_pPackages->mapItems.GetLowerBound<0>(wsoName);
 	if(pNode && (pNode->wcsName == wsoName)){
-		vRet.first = std::addressof(pNode->vPackage);
+		vRet.first = &(pNode->vPackage);
 		vRet.second = false;
 	} else {
 		xPackages::Item vItem;
 		vItem.wcsName = WideString(wsoName);
-		vRet.first = std::addressof(xm_pPackages->mapItems.InsertWithHints(
-			std::make_tuple(pNode, nullptr), std::move(vItem)).first->vPackage);
+		vRet.first = &(xm_pPackages->mapItems.InsertWithHints(
+			false, std::make_tuple(pNode, nullptr), std::move(vItem)).first->vPackage);
 		vRet.second = true;
 	}
 	return vRet;
@@ -289,8 +289,8 @@ std::pair<NotationPackage *, bool> NotationPackage::CreatePackage(WideString wcs
 	}
 	xPackages::Item vItem;
 	vItem.wcsName = std::move(wcsName);
-	const auto vResult = xm_pPackages->mapItems.Insert(std::move(vItem));
-	return std::make_pair(std::addressof(vResult.first->vPackage), vResult.second);
+	const auto vResult = xm_pPackages->mapItems.Insert(false, std::move(vItem));
+	return std::make_pair(&(vResult.first->vPackage), vResult.second);
 }
 bool NotationPackage::RemovePackage(const WideStringObserver &wsoName) noexcept {
 	if(!xm_pPackages){
@@ -329,7 +329,7 @@ const WideString *NotationPackage::GetValue(const WideStringObserver &wsoName) c
 	if(!pNode){
 		return nullptr;
 	}
-	return std::addressof(pNode->wcsValue);
+	return &(pNode->wcsValue);
 }
 WideString *NotationPackage::GetValue(const WideStringObserver &wsoName) noexcept {
 	if(!xm_pValues){
@@ -339,7 +339,7 @@ WideString *NotationPackage::GetValue(const WideStringObserver &wsoName) noexcep
 	if(!pNode){
 		return nullptr;
 	}
-	return std::addressof(pNode->wcsValue);
+	return &(pNode->wcsValue);
 }
 std::pair<WideString *, bool> NotationPackage::CreateValue(const WideStringObserver &wsoName, WideString wcsValue){
 	if(!xm_pValues){
@@ -348,13 +348,13 @@ std::pair<WideString *, bool> NotationPackage::CreateValue(const WideStringObser
 	std::pair<WideString *, bool> vRet;
 	const auto pNode = xm_pValues->mapItems.GetLowerBound<0>(wsoName);
 	if(pNode && (pNode->wcsName == wsoName)){
-		vRet.first = std::addressof(pNode->wcsValue);
+		vRet.first = &(pNode->wcsValue);
 		vRet.second = false;
 	} else {
 		xValues::Item vItem;
 		vItem.wcsName = WideString(wsoName);
-		vRet.first = std::addressof(xm_pValues->mapItems.InsertWithHints(
-			std::make_tuple(pNode, nullptr), std::move(vItem)).first->wcsValue);
+		vRet.first = &(xm_pValues->mapItems.InsertWithHints(
+			false, std::make_tuple(pNode, nullptr), std::move(vItem)).first->wcsValue);
 		vRet.second = true;
 	}
 	*vRet.first = std::move(wcsValue);
@@ -366,9 +366,9 @@ std::pair<WideString *, bool> NotationPackage::CreateValue(WideString wcsName, W
 	}
 	xValues::Item vItem;
 	vItem.wcsName = std::move(wcsName);
-	const auto vResult = xm_pValues->mapItems.Insert(std::move(vItem));
+	const auto vResult = xm_pValues->mapItems.Insert(false, std::move(vItem));
 	vResult.first->wcsValue = std::move(wcsValue);
-	return std::make_pair(std::addressof(vResult.first->wcsValue), vResult.second);
+	return std::make_pair(&(vResult.first->wcsValue), vResult.second);
 }
 bool NotationPackage::RemoveValue(const WideStringObserver &wsoName) noexcept {
 	if(!xm_pValues){
@@ -790,7 +790,7 @@ WideString Notation::Export(const WideStringObserver &wsoIndent) const {
 			wcsRet.Append(L'{');
 			wcsRet.Append(L'\n');
 			wcsIndent.Append(wsoIndent);
-			vecPackageStack.Push(std::addressof(vTop.second->vPackage),
+			vecPackageStack.Push(&(vTop.second->vPackage),
 				vTop.second->vPackage.xm_pPackages
 					? vTop.second->vPackage.xm_pPackages->mapItems.GetFirst<1>()
 					: nullptr);

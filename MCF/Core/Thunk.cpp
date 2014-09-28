@@ -114,7 +114,7 @@ std::shared_ptr<const void> AllocateThunk(const void *pInit, std::size_t uSize){
 		auto pNullNode = g_mapThunks.GetLowerBound<0>(nullptr);
 		if(!pNullNode || (pNullNode->pThunk != nullptr)){
 			pNullNode = g_mapThunks.InsertWithHints(
-				std::make_tuple(pNullNode, nullptr), NULL_THUNK).first;
+				false, std::make_tuple(pNullNode, nullptr), NULL_THUNK).first;
 		}
 
 		auto pCached = g_mapThunks.GetLowerBound<1>(uThunkSize);
@@ -133,7 +133,7 @@ std::shared_ptr<const void> AllocateThunk(const void *pInit, std::size_t uSize){
 			vThunk.uThunkSize = uChunkSize;
 			vThunk.pThunk = vThunk.pChunk.get();
 			vThunk.uFreeSize = uChunkSize;
-			pCached = g_mapThunks.Insert(std::move(vThunk)).first;
+			pCached = g_mapThunks.Insert(false, std::move(vThunk)).first;
 		}
 		ASSERT(pCached->uFreeSize >= uThunkSize);
 

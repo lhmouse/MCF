@@ -865,7 +865,6 @@ public:
 		}
 	}
 
-	// 如果设定新的 key 与容器中原先的元素冲突，则那个元素被删除。
 	template<std::size_t INDEX_ID_T, typename ...ParamsT>
 	bool SetKey(bool bOverwrites, Node *pNode, ParamsT &&...vParams){
 		return SetKeyWithHint<INDEX_ID_T, ParamsT &&...>(

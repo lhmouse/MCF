@@ -842,7 +842,7 @@ public:
 		--xm_uSize;
 	}
 	template<typename ...ParamsT>
-	Node *Replace(Node *pNode, bool bOverwrites, ParamsT &&...vParams){
+	Node *Replace(bool bOverwrites, Node *pNode, ParamsT &&...vParams){
 		xDetachAll<(std::size_t)-1, IndicesT...>(pNode);
 		try {
 			*pNode = Node(std::forward<ParamsT>(vParams)...);

@@ -725,18 +725,20 @@ private:
 		return nullptr;
 	}
 
-	template<typename, typename FirstT, typename ...RemainingT>
+	template<std::size_t EXCEPT_ID_T, typename FirstT, typename ...RemainingT>
 	void xDetachAll(Node *pNode) noexcept {
 		constexpr std::size_t INDEX_ID = sizeof...(IndicesT) - sizeof...(RemainingT) - 1;
 		using IndexNode = typename std::tuple_element<
 			INDEX_ID, std::tuple<IndicesT...>
 			>::type::IndexNode;
 
-		const auto pIndexNode = static_cast<IndexNode *>(pNode);
-		std::get<INDEX_ID>(xm_vIndices).Detach(pIndexNode);
-		xDetachAll<int, RemainingT...>(pNode);
+		if(INDEX_ID != EXCEPT_ID_T){
+			const auto pIndexNode = static_cast<IndexNode *>(pNode);
+			std::get<INDEX_ID>(xm_vIndices).Detach(pIndexNode);
+		}
+		xDetachAll<EXCEPT_ID_T, RemainingT...>(pNode);
 	}
-	template<typename>
+	template<std::size_t EXCEPT_ID_T>
 	void xDetachAll(Node *) noexcept {
 	}
 
@@ -835,13 +837,13 @@ public:
 		}
 	}
 	void Erase(Node *pNode) noexcept {
-		xDetachAll<int, IndicesT...>(pNode);
+		xDetachAll<(std::size_t)-1, IndicesT...>(pNode);
 		delete pNode;
 		--xm_uSize;
 	}
 	template<typename ...ParamsT>
 	Node *Replace(Node *pNode, bool bOverwrites, ParamsT &&...vParams){
-		xDetachAll<int, IndicesT...>(pNode);
+		xDetachAll<(std::size_t)-1, IndicesT...>(pNode);
 		try {
 			*pNode = Node(std::forward<ParamsT>(vParams)...);
 		} catch(...){
@@ -865,11 +867,12 @@ public:
 
 	// 如果设定新的 key 与容器中原先的元素冲突，则那个元素被删除。
 	template<std::size_t INDEX_ID_T, typename ...ParamsT>
-	void SetKey(Node *pNode, ParamsT &&...vParams){
-		SetKeyWithHint<INDEX_ID_T, ParamsT &&...>(nullptr, pNode, std::forward<ParamsT>(vParams)...);
+	bool SetKey(bool bOverwrites, Node *pNode, ParamsT &&...vParams){
+		return SetKeyWithHint<INDEX_ID_T, ParamsT &&...>(
+			bOverwrites, nullptr, pNode, std::forward<ParamsT>(vParams)...);
 	}
 	template<std::size_t INDEX_ID_T, typename ...ParamsT>
-	void SetKeyWithHint(Node *pHint, Node *pNode, ParamsT &&...vParams){
+	bool SetKeyWithHint(bool bOverwrites, Node *pHint, Node *pNode, ParamsT &&...vParams){
 		using IndexNode = typename std::tuple_element<
 			INDEX_ID_T, std::tuple<IndicesT...>
 			>::type::IndexNode;
@@ -883,14 +886,18 @@ public:
 		auto pHintIndexNode = static_cast<IndexNode *>(pHint);
 		auto pExistentIndexNode = std::get<INDEX_ID_T>(xm_vIndices).Attach(pHintIndexNode, pIndexNode);
 		if(pExistentIndexNode){
+			if(!bOverwrites){
+				xDetachAll<INDEX_ID_T, IndicesT...>(pNode);
+				delete pNode;
+				--xm_uSize;
+				return false;
+			}
 			pHintIndexNode = static_cast<IndexNode *>(pExistentIndexNode->GetNext());
-
-			// 删掉旧的节点。
 			Erase(static_cast<Node *>(static_cast<IndexNode *>(pExistentIndexNode)));
-
 			pExistentIndexNode = std::get<INDEX_ID_T>(xm_vIndices).Attach(pHintIndexNode, pIndexNode);
 			ASSERT(!pExistentIndexNode);
 		}
+		return true;
 	}
 
 	template<std::size_t INDEX_ID_T>

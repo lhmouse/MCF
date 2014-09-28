@@ -62,7 +62,7 @@ struct ThunkDeallocator {
 			if(!pCurrentThunk->pChunk.unique()){
 				FORCE_NOEXCEPT_BEGIN
 				{
-					g_mapThunks.SetKey<1>(pCurrentThunk, pCurrentThunk->uThunkSize);
+					g_mapThunks.SetKey<1>(true, pCurrentThunk, pCurrentThunk->uThunkSize);
 				}
 				FORCE_NOEXCEPT_END
 
@@ -142,16 +142,16 @@ std::shared_ptr<const void> AllocateThunk(const void *pInit, std::size_t uSize){
 		if(uSizeRemaining >= 0x10){
 			// 如果剩下的空间还很大，保存成一个新的空闲 thunk。
 			pCached->uThunkSize = uThunkSize;
-			g_mapThunks.SetKey<1>(pCached, 0);
+			g_mapThunks.SetKey<1>(true, pCached, 0);
 
 			pNullNode->pChunk = pCached->pChunk;
 			pNullNode->uThunkSize = uSizeRemaining;
-			g_mapThunks.SetKey<0>(pNullNode, pbyThunk + uThunkSize);
-			g_mapThunks.SetKey<1>(pNullNode, uSizeRemaining);
+			g_mapThunks.SetKey<0>(true, pNullNode, pbyThunk + uThunkSize);
+			g_mapThunks.SetKey<1>(true, pNullNode, uSizeRemaining);
 		} else {
 			// 否则就不继续切分，当作一个整体。
 			uThunkSize = pCached->uFreeSize;
-			g_mapThunks.SetKey<1>(pCached, 0);
+			g_mapThunks.SetKey<1>(true, pCached, 0);
 		}
 
 		DWORD dwOldProtect;

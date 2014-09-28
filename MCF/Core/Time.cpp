@@ -4,6 +4,7 @@
 
 #include "../StdMCF.hpp"
 #include "Time.hpp"
+#include "../Utilities/BailOut.hpp"
 using namespace MCF;
 
 namespace MCF {
@@ -29,15 +30,19 @@ std::uint64_t UnixTimeFromNtTime(std::uint64_t u64NtTime) noexcept {
 
 double GetHiResCounter() noexcept {
 	static bool s_bInited = false;
-	static long double s_llfFreqRecip;
+	static double s_llfFreqRecip;
 
 	::LARGE_INTEGER liTemp;
 	if(!__atomic_load_n(&s_bInited, __ATOMIC_ACQUIRE)){
-		::QueryPerformanceFrequency(&liTemp);
-		s_llfFreqRecip = 1.0l / liTemp.QuadPart;
+		if(!::QueryPerformanceFrequency(&liTemp)){
+			BailOut(L"::QueryPerformanceFrequency() 失败。");
+		}
+		s_llfFreqRecip = 1.0 / liTemp.QuadPart;
 		__atomic_store_n(&s_bInited, true, __ATOMIC_RELEASE);
 	}
-	::QueryPerformanceCounter(&liTemp);
+	if(!::QueryPerformanceCounter(&liTemp)){
+		BailOut(L"::QueryPerformanceCounter() 失败。");
+	}
 	return (double)(liTemp.QuadPart * s_llfFreqRecip);
 }
 

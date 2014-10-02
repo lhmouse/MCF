@@ -200,7 +200,7 @@ struct NotationPackage::xPackages {
 
 	MultiIndexMap<Item,
 		UniqueOrderedMemberIndex<Item, WideString, &Item::wcsName>,
-		SequencedIndex> mapItems;
+		SequencedIndex<Item>> mapItems;
 };
 struct NotationPackage::xValues {
 	struct Item {
@@ -210,7 +210,7 @@ struct NotationPackage::xValues {
 
 	MultiIndexMap<Item,
 		UniqueOrderedMemberIndex<Item, WideString, &Item::wcsName>,
-		SequencedIndex> mapItems;
+		SequencedIndex<Item>> mapItems;
 };
 
 // ========== NotationPackage ==========

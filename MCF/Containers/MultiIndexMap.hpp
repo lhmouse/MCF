@@ -497,12 +497,12 @@ struct UniqueOrderedMemberIndex {
 	using IndexType = Impl::UniqueOrderedMapIndex<Specific>;
 };
 
+template<class ElementT>
 struct SequencedIndex {
 	struct KeySetter {
-		template<typename ElementT, typename ...ParamsT>
-		void operator()(ElementT &, ParamsT &&...) const {
-			static_assert(sizeof...(ParamsT) == 0,
-				"SequencedIndex::KeySetter takes no parameters.");
+		template<typename ...ParamsT>
+		void operator()(ElementT &vElement, ParamsT &&...vParams) const {
+			vElement = ElementT(std::forward<ParamsT>(vParams)...);
 		}
 	};
 

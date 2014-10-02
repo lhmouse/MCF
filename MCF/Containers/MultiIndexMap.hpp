@@ -114,7 +114,7 @@ namespace Impl {
 
 		IndexNode *Attach(IndexNode *pPos, IndexNode *pIndexNode) noexcept {
 			::MCF_AvlAttachHint(&xm_avlRoot, pPos, pIndexNode,
-				[](const ::MCF_AvlNodeHeader *lhs, const ::MCF_AvlNodeHeader *rhs) -> bool {
+				[](const ::MCF_AvlNodeHeader *lhs, const ::MCF_AvlNodeHeader *rhs) noexcept -> bool {
 					return NodeComparatorT()(static_cast<const IndexNode *>(lhs),
 						static_cast<const IndexNode *>(rhs));
 				}
@@ -141,7 +141,7 @@ namespace Impl {
 		const IndexNode *GetLowerBound(const ComparandT *pComparand) const noexcept {
 			return static_cast<const IndexNode *>(::MCF_AvlLowerBound(
 				&xm_avlRoot, reinterpret_cast<std::intptr_t>(pComparand),
-				[](const ::MCF_AvlNodeHeader *lhs, std::intptr_t rhs) -> bool {
+				[](const ::MCF_AvlNodeHeader *lhs, std::intptr_t rhs) noexcept -> bool {
 					return NodeComparatorT()(static_cast<const IndexNode *>(lhs),
 						reinterpret_cast<const ComparandT *>(rhs));
 				}
@@ -151,7 +151,7 @@ namespace Impl {
 		IndexNode *GetLowerBound(const ComparandT *pComparand) noexcept {
 			return static_cast<IndexNode *>(::MCF_AvlLowerBound(
 				&xm_avlRoot, reinterpret_cast<std::intptr_t>(pComparand),
-				[](const ::MCF_AvlNodeHeader *lhs, std::intptr_t rhs) -> bool {
+				[](const ::MCF_AvlNodeHeader *lhs, std::intptr_t rhs) noexcept -> bool {
 					return NodeComparatorT()(static_cast<const IndexNode *>(lhs),
 						reinterpret_cast<const ComparandT *>(rhs));
 				}
@@ -162,7 +162,7 @@ namespace Impl {
 		const IndexNode *GetUpperBound(const ComparandT *pComparand) const noexcept {
 			return static_cast<const IndexNode *>(::MCF_AvlUpperBound(
 				&xm_avlRoot, reinterpret_cast<std::intptr_t>(pComparand),
-				[](std::intptr_t lhs, const ::MCF_AvlNodeHeader *rhs) -> bool {
+				[](std::intptr_t lhs, const ::MCF_AvlNodeHeader *rhs) noexcept -> bool {
 					return NodeComparatorT()(reinterpret_cast<const ComparandT *>(lhs),
 						static_cast<const IndexNode *>(rhs));
 				}
@@ -172,7 +172,7 @@ namespace Impl {
 		IndexNode *GetUpperBound(const ComparandT *pComparand) noexcept {
 			return static_cast<IndexNode *>(::MCF_AvlUpperBound(
 				&xm_avlRoot, reinterpret_cast<std::intptr_t>(pComparand),
-				[](std::intptr_t lhs, const ::MCF_AvlNodeHeader *rhs) -> bool {
+				[](std::intptr_t lhs, const ::MCF_AvlNodeHeader *rhs) noexcept -> bool {
 					return NodeComparatorT()(reinterpret_cast<const ComparandT *>(lhs),
 						static_cast<const IndexNode *>(rhs));
 				}
@@ -183,11 +183,11 @@ namespace Impl {
 		const IndexNode *Find(const ComparandT *pComparand) const noexcept {
 			return static_cast<const IndexNode *>(::MCF_AvlFind(
 				&xm_avlRoot, reinterpret_cast<std::intptr_t>(pComparand),
-				[](const ::MCF_AvlNodeHeader *lhs, std::intptr_t rhs) -> bool {
+				[](const ::MCF_AvlNodeHeader *lhs, std::intptr_t rhs) noexcept -> bool {
 					return NodeComparatorT()(static_cast<const IndexNode *>(lhs),
 						reinterpret_cast<const ComparandT *>(rhs));
 				},
-				[](std::intptr_t lhs, const ::MCF_AvlNodeHeader *rhs) -> bool {
+				[](std::intptr_t lhs, const ::MCF_AvlNodeHeader *rhs) noexcept -> bool {
 					return NodeComparatorT()(reinterpret_cast<const ComparandT *>(lhs),
 						static_cast<const IndexNode *>(rhs));
 				}
@@ -197,11 +197,11 @@ namespace Impl {
 		IndexNode *Find(const ComparandT *pComparand) noexcept {
 			return static_cast<IndexNode *>(::MCF_AvlFind(
 				&xm_avlRoot, reinterpret_cast<std::intptr_t>(pComparand),
-				[](const ::MCF_AvlNodeHeader *lhs, std::intptr_t rhs) -> bool {
+				[](const ::MCF_AvlNodeHeader *lhs, std::intptr_t rhs) noexcept -> bool {
 					return NodeComparatorT()(static_cast<const IndexNode *>(lhs),
 						reinterpret_cast<const ComparandT *>(rhs));
 				},
-				[](std::intptr_t lhs, const ::MCF_AvlNodeHeader *rhs) -> bool {
+				[](std::intptr_t lhs, const ::MCF_AvlNodeHeader *rhs) noexcept -> bool {
 					return NodeComparatorT()(reinterpret_cast<const ComparandT *>(lhs),
 						static_cast<const IndexNode *>(rhs));
 				}
@@ -216,11 +216,11 @@ namespace Impl {
 			::MCF_AvlEqualRange(
 				&pBegin, &pEnd,
 				&xm_avlRoot, reinterpret_cast<std::intptr_t>(pComparand),
-				[](const ::MCF_AvlNodeHeader *lhs, std::intptr_t rhs) -> bool {
+				[](const ::MCF_AvlNodeHeader *lhs, std::intptr_t rhs) noexcept -> bool {
 					return NodeComparatorT()(static_cast<const IndexNode *>(lhs),
 						reinterpret_cast<const ComparandT *>(rhs));
 				},
-				[](std::intptr_t lhs, const ::MCF_AvlNodeHeader *rhs) -> bool {
+				[](std::intptr_t lhs, const ::MCF_AvlNodeHeader *rhs) noexcept -> bool {
 					return NodeComparatorT()(reinterpret_cast<const ComparandT *>(lhs),
 						static_cast<const IndexNode *>(rhs));
 				}
@@ -236,11 +236,11 @@ namespace Impl {
 			::MCF_AvlEqualRange(
 				&pBegin, &pEnd,
 				&xm_avlRoot, reinterpret_cast<std::intptr_t>(pComparand),
-				[](const ::MCF_AvlNodeHeader *lhs, std::intptr_t rhs) -> bool {
+				[](const ::MCF_AvlNodeHeader *lhs, std::intptr_t rhs) noexcept -> bool {
 					return NodeComparatorT()(static_cast<const IndexNode *>(lhs),
 						reinterpret_cast<const ComparandT *>(rhs));
 				},
-				[](std::intptr_t lhs, const ::MCF_AvlNodeHeader *rhs) -> bool {
+				[](std::intptr_t lhs, const ::MCF_AvlNodeHeader *rhs) noexcept -> bool {
 					return NodeComparatorT()(reinterpret_cast<const ComparandT *>(lhs),
 						static_cast<const IndexNode *>(rhs));
 				}
@@ -646,7 +646,7 @@ public:
 				const auto pNewNode = new Node(*pNode);
 				pNewNode->xm_pSource = pNode;
 				::MCF_AvlAttach(&avlAddressMap, static_cast<xAddressNode *>(pNewNode),
-					[](const ::MCF_AvlNodeHeader *lhs, const ::MCF_AvlNodeHeader *rhs) -> bool {
+					[](const ::MCF_AvlNodeHeader *lhs, const ::MCF_AvlNodeHeader *rhs) noexcept -> bool {
 						return std::less<void>()(
 							static_cast<const Node *>(
 								static_cast<const xAddressNode *>(lhs))->xm_pSource,
@@ -768,13 +768,13 @@ private:
 			const auto pSourceNode = static_cast<const Node *>(pSourceIndexNode);
 			const auto pNode = static_cast<Node *>(static_cast<xAddressNode *>(::MCF_AvlFind(
 				&avlNewNodes, reinterpret_cast<std::intptr_t>(pSourceNode),
-				[](const ::MCF_AvlNodeHeader *lhs, std::intptr_t rhs) -> bool {
+				[](const ::MCF_AvlNodeHeader *lhs, std::intptr_t rhs) noexcept -> bool {
 					return std::less<void>()(
 						static_cast<const Node *>(
 							static_cast<const xAddressNode *>(lhs))->xm_pSource,
 						reinterpret_cast<const Node *>(rhs));
 				},
-				[](std::intptr_t lhs, const ::MCF_AvlNodeHeader *rhs) -> bool {
+				[](std::intptr_t lhs, const ::MCF_AvlNodeHeader *rhs) noexcept -> bool {
 					return std::less<void>()(
 						reinterpret_cast<const Node *>(lhs),
 						static_cast<const Node *>(

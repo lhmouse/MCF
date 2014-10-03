@@ -7,6 +7,8 @@ export CXXFLAGS="-DNDEBUG -O3 -ffunction-sections -fdata-sections"
 export LDFLAGS="-O3 -Wl,-s,--gc-sections -fwhole-program"
 export OBJ_DIR=".tmp-release"
 
+autoreconf -if
+
 mkdir -p $OBJ_DIR/MCFBuild
 cd $OBJ_DIR/MCFBuild
 ../../configure

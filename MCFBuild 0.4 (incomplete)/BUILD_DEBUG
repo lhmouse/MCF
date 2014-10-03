@@ -4,8 +4,10 @@ set -e
 
 export CFLAGS='-O0 -g'
 export CXXFLAGS='-D_GLIBCXX_DEBUG -D_GLIBCXX_DEBUG_PEDANTIC -O0 -g'
-export LDFLAGS='-O3'
+export LDFLAGS='-O0 -g'
 export OBJ_DIR='.tmp-debug'
+
+autoreconf -if
 
 mkdir -p $OBJ_DIR/MCFBuild
 cd $OBJ_DIR/MCFBuild

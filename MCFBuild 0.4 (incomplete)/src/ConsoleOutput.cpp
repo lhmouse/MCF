@@ -20,11 +20,10 @@ void DoPrint(HANDLE hFile, const MCF::WideStringObserver &wsoString) noexcept {
 		const auto uSize = wsoString.GetSize();
 		while(uTotalWritten < uSize){
 			DWORD dwWrittenThisTime;
-			if(!::WriteConsoleW(
-				hFile,
+			if(!::WriteConsoleW(hFile,
 				wsoString.GetBegin() + uTotalWritten, uSize - uTotalWritten,
-				&dwWrittenThisTime, nullptr
-			)){
+				&dwWrittenThisTime, nullptr))
+			{
 				break;
 			}
 			uTotalWritten += dwWrittenThisTime;
@@ -38,11 +37,10 @@ void DoPrint(HANDLE hFile, const MCF::WideStringObserver &wsoString) noexcept {
 		const auto uSize = u8sConverted.GetSize();
 		while(uTotalWritten < uSize){
 			DWORD dwWrittenThisTime;
-			if(!::WriteFile(
-				hFile,
+			if(!::WriteFile(hFile,
 				u8sConverted.GetBegin() + uTotalWritten, uSize - uTotalWritten,
-				&dwWrittenThisTime, nullptr
-			)){
+				&dwWrittenThisTime, nullptr))
+			{
 				break;
 			}
 			uTotalWritten += dwWrittenThisTime;

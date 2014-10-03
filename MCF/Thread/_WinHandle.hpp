@@ -6,7 +6,6 @@
 #define MCF_WIN_HANDLE_HPP_
 
 #include "../Core/UniqueHandle.hpp"
-#include "../Core/SharedHandle.hpp"
 #include <cstddef>
 #include <winnt.h>
 
@@ -23,7 +22,6 @@ namespace Impl {
 	};
 
 	typedef UniqueHandle<WinHandleCloser> UniqueWinHandle;
-	typedef SharedHandle<WinHandleCloser> SharedWinHandle;
 }
 
 }

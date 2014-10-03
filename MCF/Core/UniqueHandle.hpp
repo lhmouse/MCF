@@ -88,24 +88,15 @@ public:
 
 #define MCF_UNIQUE_HANDLE_RATIONAL_OPERATOR_(op_type)	\
 	template<class CloserT>	\
-	bool operator op_type (	\
-		const UniqueHandle<CloserT> &lhs,	\
-		const UniqueHandle<CloserT> &rhs	\
-	) noexcept {	\
+	bool operator op_type (const UniqueHandle<CloserT> &lhs, const UniqueHandle<CloserT> &rhs) noexcept {	\
 		return lhs.Get() op_type rhs.Get();	\
 	}	\
 	template<class CloserT>	\
-	bool operator op_type (	\
-		decltype(CloserT()()) lhs,	\
-		const UniqueHandle<CloserT> &rhs	\
-	) noexcept {	\
+	bool operator op_type (decltype(CloserT()()) lhs, const UniqueHandle<CloserT> &rhs) noexcept {	\
 		return lhs op_type rhs.Get();	\
 	}	\
 	template<class CloserT>	\
-	bool operator op_type (	\
-		const UniqueHandle<CloserT> &lhs,	\
-		decltype(CloserT()()) rhs	\
-	) noexcept {	\
+	bool operator op_type (const UniqueHandle<CloserT> &lhs, decltype(CloserT()()) rhs) noexcept {	\
 		return lhs.Get() op_type rhs;	\
 	}
 

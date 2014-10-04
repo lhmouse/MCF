@@ -2,8 +2,8 @@
 // 有关具体授权说明，请参阅 MCFLicense.Tyt。
 // Copyleft 2013 - 2014, LH_Mouse. All wrongs reserved.
 
-#ifndef MCF_BINARY_OPERATIONS_HPP_
-#define MCF_BINARY_OPERATIONS_HPP_
+#ifndef MCF_UTILITIES_BINARY_OPERATIONS_HPP_
+#define MCF_UTILITIES_BINARY_OPERATIONS_HPP_
 
 #include <type_traits>
 #include <utility>

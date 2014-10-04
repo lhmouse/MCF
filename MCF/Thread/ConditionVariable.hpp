@@ -2,8 +2,8 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2013 - 2014, LH_Mouse. All wrongs reserved.
 
-#ifndef MCF_CONDITION_VARIABLE_HPP_
-#define MCF_CONDITION_VARIABLE_HPP_
+#ifndef MCF_THREAD_CONDITION_VARIABLE_HPP_
+#define MCF_THREAD_CONDITION_VARIABLE_HPP_
 
 #include "_LockRaiiTemplate.hpp"
 #include "../Utilities/NoCopy.hpp"

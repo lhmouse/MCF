@@ -2,8 +2,8 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2013 - 2014, LH_Mouse. All wrongs reserved.
 
-#ifndef MCF_UNIQUE_HANDLE_HPP_
-#define MCF_UNIQUE_HANDLE_HPP_
+#ifndef MCF_CORE_UNIQUE_HANDLE_HPP_
+#define MCF_CORE_UNIQUE_HANDLE_HPP_
 
 #include <utility>
 #include <type_traits>
@@ -86,7 +86,7 @@ public:
 	}
 };
 
-#define MCF_UNIQUE_HANDLE_RATIONAL_OPERATOR_(op_type)	\
+#define UNIQUE_HANDLE_RATIONAL_OPERATOR_(op_type)	\
 	template<class CloserT>	\
 	bool operator op_type (const UniqueHandle<CloserT> &lhs, const UniqueHandle<CloserT> &rhs) noexcept {	\
 		return lhs.Get() op_type rhs.Get();	\
@@ -100,14 +100,14 @@ public:
 		return lhs.Get() op_type rhs;	\
 	}
 
-MCF_UNIQUE_HANDLE_RATIONAL_OPERATOR_(==)
-MCF_UNIQUE_HANDLE_RATIONAL_OPERATOR_(!=)
-MCF_UNIQUE_HANDLE_RATIONAL_OPERATOR_(<)
-MCF_UNIQUE_HANDLE_RATIONAL_OPERATOR_(>)
-MCF_UNIQUE_HANDLE_RATIONAL_OPERATOR_(<=)
-MCF_UNIQUE_HANDLE_RATIONAL_OPERATOR_(>=)
+UNIQUE_HANDLE_RATIONAL_OPERATOR_(==)
+UNIQUE_HANDLE_RATIONAL_OPERATOR_(!=)
+UNIQUE_HANDLE_RATIONAL_OPERATOR_(<)
+UNIQUE_HANDLE_RATIONAL_OPERATOR_(>)
+UNIQUE_HANDLE_RATIONAL_OPERATOR_(<=)
+UNIQUE_HANDLE_RATIONAL_OPERATOR_(>=)
 
-#undef MCF_UNIQUE_HANDLE_RATIONAL_OPERATOR_
+#undef UNIQUE_HANDLE_RATIONAL_OPERATOR_
 
 template<class CloserT>
 void swap(UniqueHandle<CloserT> &lhs, UniqueHandle<CloserT> &rhs) noexcept {

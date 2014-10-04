@@ -2,8 +2,8 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2013 - 2014, LH_Mouse. All wrongs reserved.
 
-#ifndef MCF_MONITOR_PTR_HPP_
-#define MCF_MONITOR_PTR_HPP_
+#ifndef MCF_THREAD_MONITOR_PTR_HPP_
+#define MCF_THREAD_MONITOR_PTR_HPP_
 
 #include "CriticalSection.hpp"
 #include "../Utilities/NoCopy.hpp"

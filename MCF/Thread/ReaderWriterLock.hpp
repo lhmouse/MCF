@@ -2,8 +2,8 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2013 - 2014, LH_Mouse. All wrongs reserved.
 
-#ifndef MCF_READER_WRITER_LOCK_HPP_
-#define MCF_READER_WRITER_LOCK_HPP_
+#ifndef MCF_THREAD_READER_WRITER_LOCK_HPP_
+#define MCF_THREAD_READER_WRITER_LOCK_HPP_
 
 #include "_LockRaiiTemplate.hpp"
 #include "../Utilities/NoCopy.hpp"

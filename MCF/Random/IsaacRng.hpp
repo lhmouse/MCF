@@ -2,8 +2,8 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2013 - 2014, LH_Mouse. All wrongs reserved.
 
-#ifndef MCF_ISAAC_RNG_HPP_
-#define MCF_ISAAC_RNG_HPP_
+#ifndef MCF_RANDOM_ISAAC_RNG_HPP_
+#define MCF_RANDOM_ISAAC_RNG_HPP_
 
 #include "RandomSeed.hpp"
 

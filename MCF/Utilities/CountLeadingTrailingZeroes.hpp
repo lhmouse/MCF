@@ -2,8 +2,8 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2013 - 2014, LH_Mouse. All wrongs reserved.
 
-#ifndef MCF_COUNT_LEADING_TRAILING_ZEROES_HPP_
-#define MCF_COUNT_LEADING_TRAILING_ZEROES_HPP_
+#ifndef MCF_UTILITIES_COUNT_LEADING_TRAILING_ZEROES_HPP_
+#define MCF_UTILITIES_COUNT_LEADING_TRAILING_ZEROES_HPP_
 
 #include "../../MCFCRT/ext/_make_constant.h"
 #include <cstdint>

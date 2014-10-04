@@ -2,8 +2,8 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2013 - 2014, LH_Mouse. All wrongs reserved.
 
-#ifndef MCF_STRING_HPP_
-#define MCF_STRING_HPP_
+#ifndef MCF_CORE_STRING_HPP_
+#define MCF_CORE_STRING_HPP_
 
 #include "StringObserver.hpp"
 #include "../Containers/VVector.hpp"
@@ -884,7 +884,7 @@ String<CharT, ENCODING_T> operator+(
 	return std::move(lhs);
 }
 
-#define MCF_STRING_RATIONAL_OPERATOR_(op_type)	\
+#define STRING_RATIONAL_OPERATOR_(op_type)	\
 	template<typename CharT, StringEncoding ENCODING_T>	\
 	bool operator op_type (	\
 		const String<CharT, ENCODING_T> &lhs,	\
@@ -907,14 +907,14 @@ String<CharT, ENCODING_T> operator+(
 		return lhs.GetObserver() op_type rhs;	\
 	}
 
-MCF_STRING_RATIONAL_OPERATOR_(==)
-MCF_STRING_RATIONAL_OPERATOR_(!=)
-MCF_STRING_RATIONAL_OPERATOR_(<)
-MCF_STRING_RATIONAL_OPERATOR_(>)
-MCF_STRING_RATIONAL_OPERATOR_(<=)
-MCF_STRING_RATIONAL_OPERATOR_(>=)
+STRING_RATIONAL_OPERATOR_(==)
+STRING_RATIONAL_OPERATOR_(!=)
+STRING_RATIONAL_OPERATOR_(<)
+STRING_RATIONAL_OPERATOR_(>)
+STRING_RATIONAL_OPERATOR_(<=)
+STRING_RATIONAL_OPERATOR_(>=)
 
-#undef MCF_STRING_RATIONAL_OPERATOR_
+#undef STRING_RATIONAL_OPERATOR_
 
 template<typename CharT, StringEncoding ENCODING_T>
 const CharT *begin(const String<CharT, ENCODING_T> &rhs) noexcept {

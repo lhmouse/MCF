@@ -2,8 +2,8 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2013 - 2014, LH_Mouse. All wrongs reserved.
 
-#ifndef MCF_FILE_HPP_
-#define MCF_FILE_HPP_
+#ifndef MCF_CORE_FILE_HPP_
+#define MCF_CORE_FILE_HPP_
 
 #include "../Utilities/NoCopy.hpp"
 #include "../Utilities/Abstract.hpp"

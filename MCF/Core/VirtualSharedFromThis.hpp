@@ -2,8 +2,8 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2013 - 2014, LH_Mouse. All wrongs reserved.
 
-#ifndef MCF_VIRTUAL_SHARED_FROM_THIS_HPP_
-#define MCF_VIRTUAL_SHARED_FROM_THIS_HPP_
+#ifndef MCF_CORE_VIRTUAL_SHARED_FROM_THIS_HPP_
+#define MCF_CORE_VIRTUAL_SHARED_FROM_THIS_HPP_
 
 #include <memory>
 #include <stdexcept>

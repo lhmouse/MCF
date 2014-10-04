@@ -2,8 +2,8 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2013 - 2014, LH_Mouse. All wrongs reserved.
 
-#ifndef MCF_V_LIST_HPP_
-#define MCF_V_LIST_HPP_
+#ifndef MCF_CONTAINERS_V_LIST_HPP_
+#define MCF_CONTAINERS_V_LIST_HPP_
 
 #include <initializer_list>
 #include <type_traits>

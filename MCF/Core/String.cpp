@@ -281,25 +281,5 @@ template class String<wchar_t,	StringEncoding::UTF16>;
 template class String<char,		StringEncoding::UTF8>;
 template class String<char16_t,	StringEncoding::UTF16>;
 template class String<char32_t,	StringEncoding::UTF32>;
-/*
-// 串行化。
-void operator>>=(const Utf8String &u8sSource, StreamBuffer &sbufSink){
-	u8sSource.GetSize() >>= sbufSink;
-	sbufSink.Put(u8sSource.GetCStr(), u8sSource.GetSize());
-}
-void operator<<=(Utf8String &u8sSink, StreamBuffer &sbufSource){
-	std::size_t uSize;
-	uSize <<= sbufSource;
-	// 万一 uSize 是伪造的呢？
-	u8sSink.Clear();
-	while(uSize){
-		const int nChar = sbufSource.Get();
-		if(nChar == -1){
-			ThrowEndOfStream();
-		}
-		u8sSink.Push(nChar);
-		--uSize;
-	}
-}
-*/
+
 }

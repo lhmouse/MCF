@@ -2,8 +2,8 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2013 - 2014, LH_Mouse. All wrongs reserved.
 
-#ifndef MCF_MULTI_INDEX_MAP_HPP_
-#define MCF_MULTI_INDEX_MAP_HPP_
+#ifndef MCF_CONTAINERS_MULTI_INDEX_MAP_HPP_
+#define MCF_CONTAINERS_MULTI_INDEX_MAP_HPP_
 
 #include "../../MCFCRT/env/avl_tree.h"
 #include "../Utilities/Assert.hpp"

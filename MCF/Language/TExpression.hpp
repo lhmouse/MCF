@@ -2,8 +2,8 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2013 - 2014, LH_Mouse. All wrongs reserved.
 
-#ifndef MCF_T_EXPRESSION_HPP_
-#define MCF_T_EXPRESSION_HPP_
+#ifndef MCF_LANGUAGE_T_EXPRESSION_HPP_
+#define MCF_LANGUAGE_T_EXPRESSION_HPP_
 
 #include "../Core/String.hpp"
 #include <deque>

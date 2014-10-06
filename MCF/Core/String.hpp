@@ -6,7 +6,6 @@
 #define MCF_CORE_STRING_HPP_
 
 #include "StringObserver.hpp"
-#include "../Containers/VVector.hpp"
 #include "../Utilities/CountOf.hpp"
 #include "../Utilities/BitsOf.hpp"
 #include "../Utilities/CountLeadingTrailingZeroes.hpp"
@@ -38,13 +37,11 @@ namespace Impl {
 		void operator()(String<CharT, ENCODING_T> &strDst, const UnifiedString &ucsUnified) const;
 	};
 
-	template<typename DstCharT, StringEncoding DST_ENCODING_T,
-		typename SrcCharT, StringEncoding SRC_ENCODING_T>
+	template<typename DstCharT, StringEncoding DST_ENCODING_T, typename SrcCharT, StringEncoding SRC_ENCODING_T>
 	struct Transcoder {
 		void operator()(String<DstCharT, DST_ENCODING_T> &strDst, const StringObserver<SrcCharT> &soSrc) const;
 	};
-	template<typename DstCharT, StringEncoding ENCODING_T,
-		typename SrcCharT>
+	template<typename DstCharT, StringEncoding ENCODING_T, typename SrcCharT>
 	struct Transcoder<DstCharT, ENCODING_T, SrcCharT, ENCODING_T> {
 		void operator()(String<DstCharT, ENCODING_T> &strDst, const StringObserver<SrcCharT> &soSrc) const;
 	};

@@ -15,8 +15,7 @@ namespace MCF {
 
 namespace Impl {
 	template<typename OutputIteratorT, typename InputIteratorT, typename ValueT,
-		typename TraitHelper = void
-		>
+		typename TraitHelper = void>
 	struct CopyTrait {
 		static OutputIteratorT DoCopy(
 			OutputIteratorT itOutputBegin,
@@ -469,9 +468,8 @@ inline OutputIteratorT Fill(
 	std::common_type_t<OutputIteratorT> itOutputEnd,
 	const ParamsT &...vParams
 ){
-	typedef std::conditional_t<std::is_void<ValueT>::value,
-		std::remove_reference_t<decltype(*itOutputBegin)>, ValueT
-		> ToConstruct;
+	using ToConstruct = std::conditional_t<std::is_void<ValueT>::value,
+		std::remove_reference_t<decltype(*itOutputBegin)>, ValueT>;
 
 	while(itOutputBegin != itOutputEnd){
 		*itOutputBegin = ToConstruct(vParams...);
@@ -485,9 +483,8 @@ inline OutputIteratorT FillN(
 	std::size_t uCount,
 	const ParamsT &...vParams
 ){
-	typedef std::conditional_t<std::is_void<ValueT>::value,
-		std::remove_reference_t<decltype(*itOutputBegin)>, ValueT
-		> ToConstruct;
+	using ToConstruct = std::conditional_t<std::is_void<ValueT>::value,
+		std::remove_reference_t<decltype(*itOutputBegin)>, ValueT>;
 
 	for(auto i = uCount; i; --i){
 		*itOutputBegin = ToConstruct(vParams...);

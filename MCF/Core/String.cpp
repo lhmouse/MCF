@@ -5,7 +5,6 @@
 #include "../StdMCF.hpp"
 #include "String.hpp"
 #include "../Utilities/MinMax.hpp"
-//#include "../Serialization/Serdes.hpp"
 using namespace MCF;
 
 namespace MCF {
@@ -13,29 +12,29 @@ namespace MCF {
 namespace Impl {
 	template<>
 	void UnicodeConv<char, StringEncoding::ANSI>::operator()(
-		VVector<wchar_t> &vecUnified,
+		UnifiedString &ucsUnified,
 		const StringObserver<char> &soSrc
 	) const {
 		const auto uMoreSize = (soSrc.GetSize() + 1) / 2;
-		const auto pWrite = vecUnified.ResizeMore(uMoreSize);
+		const auto pWrite = ucsUnified.ResizeMore(uMoreSize);
 		const auto nWritten = Max(
 			::MultiByteToWideChar(
 				CP_ACP, 0, soSrc.GetBegin(), (int)soSrc.GetLength(),
 				pWrite, (int)uMoreSize
 			), 0
 		);
-		vecUnified.Resize((std::size_t)(pWrite + nWritten - vecUnified.GetData()));
+		ucsUnified.Resize((std::size_t)(pWrite + nWritten - ucsUnified.GetData()));
 	}
 	template<>
 	void UnicodeConv<char, StringEncoding::ANSI>::operator()(
 		String<char, StringEncoding::ANSI> &strDst,
-		const VVector<wchar_t> &vecUnified
+		const UnifiedString &ucsUnified
 	) const {
-		const auto uMoreSize = vecUnified.GetSize() * 2;
+		const auto uMoreSize = ucsUnified.GetSize() * 2;
 		const auto pWrite = strDst.ResizeMore(uMoreSize);
 		const auto nWritten = Max(
 			::WideCharToMultiByte(
-				CP_ACP, 0, vecUnified.GetBegin(), (int)vecUnified.GetSize(),
+				CP_ACP, 0, ucsUnified.GetBegin(), (int)ucsUnified.GetSize(),
 				pWrite, (int)uMoreSize,
 				nullptr, nullptr
 			), 0
@@ -45,29 +44,29 @@ namespace Impl {
 
 	template<>
 	void UnicodeConv<wchar_t, StringEncoding::UTF16>::operator()(
-		VVector<wchar_t> &vecUnified,
+		UnifiedString &ucsUnified,
 		const StringObserver<wchar_t> &soSrc
 	) const {
 		const auto uSize = soSrc.GetSize();
-		CopyN(vecUnified.ResizeMore(uSize), soSrc.GetBegin(), uSize);
+		CopyN(ucsUnified.ResizeMore(uSize), soSrc.GetBegin(), uSize);
 	}
 	template<>
 	void UnicodeConv<wchar_t, StringEncoding::UTF16>::operator()(
 		String<wchar_t, StringEncoding::UTF16> &strDst,
-		const VVector<wchar_t> &vecUnified
+		const UnifiedString &ucsUnified
 	) const {
-		const auto uSize = vecUnified.GetSize();
-		CopyN(strDst.ResizeMore(uSize), vecUnified.GetBegin(), uSize);
+		const auto uSize = ucsUnified.GetSize();
+		CopyN(strDst.ResizeMore(uSize), ucsUnified.GetBegin(), uSize);
 	}
 
 	// https://en.wikipedia.org/wiki/UTF-8
 	template<>
 	void UnicodeConv<char, StringEncoding::UTF8>::operator()(
-		VVector<wchar_t> &vecUnified,
+		UnifiedString &ucsUnified,
 		const StringObserver<char> &soSrc
 	) const {
 		// UTF-8 转 UTF-16。
-		vecUnified.ReserveMore(soSrc.GetSize() * 3);
+		ucsUnified.ReserveMore(soSrc.GetSize() * 3);
 
 		auto pchCur = soSrc.GetBegin();
 		const auto pchEnd = soSrc.GetEnd();
@@ -75,7 +74,7 @@ namespace Impl {
 			std::uint32_t u32CodePoint = (std::uint8_t)*(pchCur++);
 			if((u32CodePoint & 0x80u) == 0){
 				// ASCII 字符。
-				vecUnified.Push(u32CodePoint);
+				ucsUnified.Push(u32CodePoint);
 				continue;
 			}
 			// 这个值是该码点剩余的字节数，不包含刚刚读取的。
@@ -83,13 +82,13 @@ namespace Impl {
 			// UTF-8 理论上最长可以编码 6 个字符，但是标准化以后只能使用 4 个。
 			if(uAddnlBytes - 1 > 2){ // 0 - 3
 				// 按照 ISO-8859-1 映射到 U+0080 - U+00FF。
-				vecUnified.Push(u32CodePoint);
+				ucsUnified.Push(u32CodePoint);
 				continue;
 			}
 			if((std::size_t)(pchEnd - pchCur) < uAddnlBytes){
 				--pchCur;
 				while(pchCur != pchEnd){
-					vecUnified.Push((std::uint8_t)*(pchCur++));
+					ucsUnified.Push((std::uint8_t)*(pchCur++));
 				}
 				break;
 			}
@@ -109,7 +108,7 @@ namespace Impl {
 				// 如果编码出错，映射到 U+0080 - U+00FF。
 				pchCur = pchCodeEnd - uAddnlBytes - 1;
 				while(pchCur < pchCodeEnd){
-					vecUnified.Push((std::uint8_t)*(pchCur++));
+					ucsUnified.Push((std::uint8_t)*(pchCur++));
 				}
 				continue;
 			}
@@ -119,27 +118,27 @@ namespace Impl {
 			}
 			if(u32CodePoint <= 0xFFFFu){
 				// 单个的 UTF-16 字符。
-				vecUnified.Push(u32CodePoint);
+				ucsUnified.Push(u32CodePoint);
 				continue;
 			}
 			// 编码成代理对。
 			u32CodePoint -= 0x10000u;
-			vecUnified.Push((u32CodePoint >> 10)   | 0xD800u);
-			vecUnified.Push((u32CodePoint & 0x3FFu) | 0xDC00u);
+			ucsUnified.Push((u32CodePoint >> 10)   | 0xD800u);
+			ucsUnified.Push((u32CodePoint & 0x3FFu) | 0xDC00u);
 		}
 	}
 	template<>
 	void UnicodeConv<char, StringEncoding::UTF8>::operator()(
 		String<char, StringEncoding::UTF8> &strDst,
-		const VVector<wchar_t> &vecUnified
+		const UnifiedString &ucsUnified
 	) const {
 		// UTF-16 转 UTF-8。
-		strDst.ReserveMore(vecUnified.GetSize());
+		strDst.ReserveMore(ucsUnified.GetSize());
 
-		auto pwcCur = vecUnified.GetBegin();
-		const auto pwcEnd = vecUnified.GetEnd();
-		while(pwcCur != pwcEnd){
-			std::uint32_t u32CodePoint = (std::uint16_t)*(pwcCur++);
+		auto pucCur = ucsUnified.GetBegin();
+		const auto pucEnd = ucsUnified.GetEnd();
+		while(pucCur != pucEnd){
+			std::uint32_t u32CodePoint = (std::uint16_t)*(pucCur++);
 			if(u32CodePoint - 0xD800u <= 0x7FFu){
 				// 接受一个代理。
 				u32CodePoint -= 0xD800u;
@@ -148,12 +147,12 @@ namespace Impl {
 					u32CodePoint = 0xFFFDu;
 					goto jEncode;
 				}
-				if(pwcCur == pwcEnd){
+				if(pucCur == pucEnd){
 					// 位于结尾的首代理。
 					u32CodePoint = 0xFFFDu;
 					goto jEncode;
 				}
-				const std::uint32_t u32Next = (std::uint16_t)*(pwcCur++) - 0xDC00u;
+				const std::uint32_t u32Next = (std::uint16_t)*(pucCur++) - 0xDC00u;
 				if(u32Next > 0x3FFu){
 					// 末代理无效。
 					u32CodePoint = 0xFFFDu;
@@ -188,29 +187,29 @@ namespace Impl {
 
 	template<>
 	void UnicodeConv<char16_t, StringEncoding::UTF16>::operator()(
-		VVector<wchar_t> &vecUnified,
+		UnifiedString &ucsUnified,
 		const StringObserver<char16_t> &soSrc
 	) const {
 		const auto uSize = soSrc.GetSize();
-		CopyN(vecUnified.ResizeMore(uSize), soSrc.GetBegin(), uSize);
+		CopyN(ucsUnified.ResizeMore(uSize), soSrc.GetBegin(), uSize);
 	}
 	template<>
 	void UnicodeConv<char16_t, StringEncoding::UTF16>::operator()(
 		String<char16_t, StringEncoding::UTF16> &strDst,
-		const VVector<wchar_t> &vecUnified
+		const UnifiedString &ucsUnified
 	) const {
 		const auto uSize = strDst.GetSize();
-		CopyN(strDst.ResizeMore(uSize), vecUnified.GetBegin(), uSize);
+		CopyN(strDst.ResizeMore(uSize), ucsUnified.GetBegin(), uSize);
 	}
 
 	// https://en.wikipedia.org/wiki/UTF-16
 	template<>
 	void UnicodeConv<char32_t, StringEncoding::UTF32>::operator()(
-		VVector<wchar_t> &vecUnified,
+		UnifiedString &ucsUnified,
 		const StringObserver<char32_t> &soSrc
 	) const {
 		// UTF-32 转 UTF-16。
-		vecUnified.ReserveMore(soSrc.GetSize());
+		ucsUnified.ReserveMore(soSrc.GetSize());
 
 		for(auto u32CodePoint : soSrc){
 			if(u32CodePoint > 0x10FFFFu){
@@ -219,27 +218,27 @@ namespace Impl {
 			}
 			if(u32CodePoint <= 0xFFFFu){
 				// 单个的 UTF-16 字符。
-				vecUnified.Push(u32CodePoint);
+				ucsUnified.Push(u32CodePoint);
 				continue;
 			}
 			// 编码成代理对。
 			u32CodePoint -= 0x10000u;
-			vecUnified.Push((u32CodePoint >> 10)   | 0xD800u);
-			vecUnified.Push((u32CodePoint & 0x3FFu) | 0xDC00u);
+			ucsUnified.Push((u32CodePoint >> 10)   | 0xD800u);
+			ucsUnified.Push((u32CodePoint & 0x3FFu) | 0xDC00u);
 		}
 	}
 	template<>
 	void UnicodeConv<char32_t, StringEncoding::UTF32>::operator()(
 		String<char32_t, StringEncoding::UTF32> &strDst,
-		const VVector<wchar_t> &vecUnified
+		const UnifiedString &ucsUnified
 	) const {
 		// UTF-16 转 UTF-32。
-		strDst.ReserveMore(vecUnified.GetSize());
+		strDst.ReserveMore(ucsUnified.GetSize());
 
-		auto pwcCur = vecUnified.GetBegin();
-		const auto pwcEnd = vecUnified.GetEnd();
-		while(pwcCur != pwcEnd){
-			std::uint32_t u32CodePoint = (std::uint16_t)*(pwcCur++);
+		auto pucCur = ucsUnified.GetBegin();
+		const auto pucEnd = ucsUnified.GetEnd();
+		while(pucCur != pucEnd){
+			std::uint32_t u32CodePoint = (std::uint16_t)*(pucCur++);
 			if(u32CodePoint - 0xD800u <= 0x7FFu){
 				// 接受一个代理。
 				u32CodePoint -= 0xD800u;
@@ -248,12 +247,12 @@ namespace Impl {
 					u32CodePoint = 0xFFFDu;
 					goto jDone;
 				}
-				if(pwcCur == pwcEnd){
+				if(pucCur == pucEnd){
 					// 位于结尾的首代理。
 					u32CodePoint = 0xFFFDu;
 					goto jDone;
 				}
-				const std::uint32_t u32Next = (std::uint16_t)*(pwcCur++) - 0xDC00u;
+				const std::uint32_t u32Next = (std::uint16_t)*(pucCur++) - 0xDC00u;
 				if(u32Next > 0x3FFu){
 					// 末代理无效。
 					u32CodePoint = 0xFFFDu;

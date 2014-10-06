@@ -28,12 +28,14 @@ enum class StringEncoding {
 template<typename CharT, StringEncoding ENCODING_T>
 class String;
 
+using UnifiedString = String<wchar_t, StringEncoding::UTF16>;
+
 namespace Impl {
 	template<typename CharT, StringEncoding ENCODING_T>
 	struct UnicodeConv {
 		// 成员函数待定义。此处全部为追加到末尾。
-		void operator()(VVector<wchar_t> &vecUnified, const StringObserver<CharT> &soSrc) const;
-		void operator()(String<CharT, ENCODING_T> &strDst, const VVector<wchar_t> &vecUnified) const;
+		void operator()(UnifiedString &ucsUnified, const StringObserver<CharT> &soSrc) const;
+		void operator()(String<CharT, ENCODING_T> &strDst, const UnifiedString &ucsUnified) const;
 	};
 
 	template<typename DstCharT, StringEncoding DST_ENCODING_T,
@@ -954,9 +956,9 @@ namespace Impl {
 		String<DstCharT, DST_ENCODING_T> &strDst,
 		const StringObserver<SrcCharT> &soSrc
 	) const {
-		VVector<wchar_t> vecUnified;
-		UnicodeConv<SrcCharT, SRC_ENCODING_T>()(vecUnified, soSrc);
-		UnicodeConv<DstCharT, DST_ENCODING_T>()(strDst, vecUnified);
+		VVector<wchar_t> ucsUnified;
+		UnicodeConv<SrcCharT, SRC_ENCODING_T>()(ucsUnified, soSrc);
+		UnicodeConv<DstCharT, DST_ENCODING_T>()(strDst, ucsUnified);
 	}
 	template<typename DstCharT, StringEncoding ENCODING_T, typename SrcCharT>
 	void Transcoder<DstCharT, ENCODING_T, SrcCharT, ENCODING_T>::operator()(

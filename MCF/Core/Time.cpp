@@ -4,7 +4,7 @@
 
 #include "../StdMCF.hpp"
 #include "Time.hpp"
-#include "../Utilities/BailOut.hpp"
+#include "../Utilities/Bail.hpp"
 using namespace MCF;
 
 namespace MCF {
@@ -35,13 +35,13 @@ double GetHiResCounter() noexcept {
 	::LARGE_INTEGER liTemp;
 	if(!__atomic_load_n(&s_bInited, __ATOMIC_ACQUIRE)){
 		if(!::QueryPerformanceFrequency(&liTemp)){
-			BailOut(L"::QueryPerformanceFrequency() 失败。");
+			Bail(L"::QueryPerformanceFrequency() 失败。");
 		}
 		s_llfFreqRecip = 1.0 / liTemp.QuadPart;
 		__atomic_store_n(&s_bInited, true, __ATOMIC_RELEASE);
 	}
 	if(!::QueryPerformanceCounter(&liTemp)){
-		BailOut(L"::QueryPerformanceCounter() 失败。");
+		Bail(L"::QueryPerformanceCounter() 失败。");
 	}
 	return (double)(liTemp.QuadPart * s_llfFreqRecip);
 }

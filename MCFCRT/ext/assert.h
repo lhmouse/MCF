@@ -14,14 +14,14 @@
 #define MCF_CRT_ASSERT_H_
 
 #include "../env/_crtdef.h"
-#include "../env/bail_out.h"
+#include "../env/bail.h"
 
 static inline void __MCF_CRT_OnAssertFail(
 	const wchar_t *pwszExpression,
 	const char *pszFile, unsigned long ulLine,
 	const wchar_t *pwszMessage
 ) MCF_NOEXCEPT {
-	MCF_CRT_BailOutF(
+	MCF_CRT_BailF(
 		L"调试断言失败。\n\n表达式：%ls\n文件　：%hs\n行号　：%lu\n描述　：%ls",
 		pwszExpression, pszFile, ulLine, pwszMessage
 	);

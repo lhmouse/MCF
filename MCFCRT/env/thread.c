@@ -6,7 +6,7 @@
 #include "mcfwin.h"
 #include "fenv.h"
 #include "avl_tree.h"
-#include "bail_out.h"
+#include "bail.h"
 #include "mingw_hacks.h"
 #include "_eh_top.h"
 #include "../ext/assert.h"

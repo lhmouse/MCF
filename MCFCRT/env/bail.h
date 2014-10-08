@@ -9,8 +9,8 @@
 
 __MCF_EXTERN_C_BEGIN
 
-extern __MCF_NORETURN_IF_NDEBUG void MCF_CRT_BailOut(const wchar_t *pwszDescription) MCF_NOEXCEPT;
-extern __MCF_NORETURN_IF_NDEBUG void MCF_CRT_BailOutF(const wchar_t *pwszFormat, ...) MCF_NOEXCEPT;
+extern __MCF_NORETURN_IF_NDEBUG void MCF_CRT_Bail(const wchar_t *pwszDescription) MCF_NOEXCEPT;
+extern __MCF_NORETURN_IF_NDEBUG void MCF_CRT_BailF(const wchar_t *pwszFormat, ...) MCF_NOEXCEPT;
 
 __MCF_EXTERN_C_END
 

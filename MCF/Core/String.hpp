@@ -10,9 +10,9 @@
 #include "../Utilities/BitsOf.hpp"
 #include "../Utilities/CountLeadingTrailingZeroes.hpp"
 #include "../Utilities/Algorithms.hpp"
-#include "../Utilities/StaticAssertNoexcept.hpp"
 #include <type_traits>
-#include <memory>
+#include <cstring>
+#include <cstddef>
 #include <cstdint>
 
 namespace MCF {
@@ -30,29 +30,15 @@ class String;
 using UnifiedString = String<wchar_t, StringEncoding::UTF16>;
 
 namespace Impl {
-	template<typename CharT, StringEncoding ENCODING_T>
-	struct UnicodeConv {
-		// 成员函数待定义。此处全部为追加到末尾。
-		void operator()(UnifiedString &ucsUnified, const StringObserver<CharT> &soSrc) const;
-		void operator()(String<CharT, ENCODING_T> &strDst, const UnifiedString &ucsUnified) const;
-	};
-
-	template<typename DstCharT, StringEncoding DST_ENCODING_T, typename SrcCharT, StringEncoding SRC_ENCODING_T>
-	struct Transcoder {
-		void operator()(String<DstCharT, DST_ENCODING_T> &strDst, const StringObserver<SrcCharT> &soSrc) const;
-	};
-	template<typename DstCharT, StringEncoding ENCODING_T, typename SrcCharT>
-	struct Transcoder<DstCharT, ENCODING_T, SrcCharT, ENCODING_T> {
-		void operator()(String<DstCharT, ENCODING_T> &strDst, const StringObserver<SrcCharT> &soSrc) const;
-	};
+	template<typename DstCharT, StringEncoding DST_ENCODING_T,
+		typename SrcCharT, StringEncoding SRC_ENCODING_T>
+	void ConvertEncoding(String<DstCharT, DST_ENCODING_T> &strDst,
+		String<SrcCharT, SRC_ENCODING_T> &strSrc);
 }
 
 template<typename CharT, StringEncoding ENCODING_T>
 class String {
 	static_assert(std::is_integral<CharT>::value, "CharT must be an integral type.");
-
-	template<typename, StringEncoding>
-	friend class String;
 
 public:
 	typedef StringObserver<CharT> Observer;
@@ -68,6 +54,7 @@ private:
 			CharT chNull;
 			std::make_unsigned_t<CharT> uchLength;
 		} vSmall;
+
 		struct {
 			CharT *pchBegin;
 			std::size_t uLength;
@@ -77,9 +64,8 @@ private:
 
 public:
 	String() noexcept {
-		xm_vStorage.vSmall.achData[0]	= CharT();
-		xm_vStorage.vSmall.chNull		= CharT();
-		xm_vStorage.vSmall.uchLength	= 0;
+		xm_vStorage.vSmall.chNull = CharT();
+		xm_vStorage.vSmall.uchLength = 0;
 	}
 	explicit String(CharT ch, std::size_t uCount = 1)
 		: String()
@@ -180,12 +166,9 @@ public:
 	}
 
 private:
-	CharT *xChopAndSplice(
-		std::size_t uRemovedBegin,
-		std::size_t uRemovedEnd,
-		std::size_t uFirstOffset,
-		std::size_t uThirdOffset
-	){
+	CharT *xChopAndSplice(std::size_t uRemovedBegin, std::size_t uRemovedEnd,
+		std::size_t uFirstOffset, std::size_t uThirdOffset)
+	{
 		ASSERT(uRemovedBegin <= GetLength());
 		ASSERT(uRemovedEnd <= GetLength());
 		ASSERT(uRemovedBegin <= uRemovedEnd);
@@ -206,7 +189,6 @@ private:
 			pchNewBuffer = new CharT[uSizeToAlloc];
 		}
 
-	STATIC_ASSERT_NOEXCEPT_BEGIN
 		if(uRemovedBegin != 0){
 			std::memmove(pchNewBuffer + uFirstOffset, pchOldBuffer,
 				uRemovedBegin * sizeof(CharT));
@@ -218,7 +200,7 @@ private:
 
 		if(pchNewBuffer != pchOldBuffer){
 			if(xm_vStorage.vSmall.chNull == CharT()){
-				xm_vStorage.vSmall.chNull = CharT() + 1;
+				++xm_vStorage.vSmall.chNull;
 			} else {
 				delete[] pchOldBuffer;
 			}
@@ -229,17 +211,14 @@ private:
 		}
 
 		return pchNewBuffer + uFirstOffset + uRemovedBegin;
-	STATIC_ASSERT_NOEXCEPT_END
 	}
 	void xSetSize(std::size_t uNewSize) noexcept {
 		ASSERT(uNewSize <= GetCapacity());
 
 		if(xm_vStorage.vSmall.chNull == CharT()){
 			xm_vStorage.vSmall.uchLength = uNewSize;
-			((CharT (&)[SIZE_MAX])xm_vStorage.vSmall.achData)[uNewSize] = CharT();
 		} else {
 			xm_vStorage.vLarge.uLength = uNewSize;
-			xm_vStorage.vLarge.pchBegin[uNewSize] = CharT();
 		}
 	}
 
@@ -280,13 +259,15 @@ public:
 	}
 
 	const CharT *GetStr() const noexcept {
+		const_cast<CharT &>(GetEnd()[0]) = CharT();
 		return GetBegin();
 	}
 	CharT *GetStr() noexcept {
+		GetEnd()[0] = CharT();
 		return GetBegin();
 	}
 	const CharT *GetCStr() const noexcept {
-		return GetBegin();
+		return GetStr();
 	}
 	std::size_t GetLength() const noexcept {
 		return GetSize();
@@ -459,11 +440,11 @@ public:
 	}
 	template<typename SrcCharT, StringEncoding SRC_ENCODING_T>
 	void Append(const String<SrcCharT, SRC_ENCODING_T> &rhs){
-		Impl::Transcoder<CharT, ENCODING_T, SrcCharT, SRC_ENCODING_T>()(*this, rhs);
+		Impl::ConvertEncoding<CharT, ENCODING_T, SrcCharT, SRC_ENCODING_T>()(*this, rhs);
 	}
 	template<StringEncoding SRC_ENCODING_T, typename SrcCharT>
 	void Append(const StringObserver<SrcCharT> &rhs){
-		Impl::Transcoder<CharT, ENCODING_T, SrcCharT, SRC_ENCODING_T>()(*this, rhs);
+		Impl::ConvertEncoding<CharT, ENCODING_T, SrcCharT, SRC_ENCODING_T>()(*this, rhs);
 	}
 	void Truncate(std::size_t uCount = 1) noexcept {
 		ASSERT_MSG(uCount <= GetLength(), L"删除的字符数太多。");
@@ -483,19 +464,17 @@ public:
 
 		if(xm_vStorage.vSmall.chNull == CharT()){
 			xm_vStorage.vSmall.achData[xm_vStorage.vSmall.uchLength] = ch;
-			xm_vStorage.vSmall.achData[++xm_vStorage.vSmall.uchLength] = CharT();
 		} else {
 			xm_vStorage.vLarge.pchBegin[xm_vStorage.vLarge.uLength] = ch;
-			xm_vStorage.vLarge.pchBegin[++xm_vStorage.vLarge.uLength] = CharT();
 		}
 	}
 	void PopNoCheck() noexcept {
 		ASSERT_MSG(GetLength() != 0, L"容器已空。");
 
 		if(xm_vStorage.vSmall.chNull == CharT()){
-			xm_vStorage.vSmall.achData[--xm_vStorage.vSmall.uchLength] = CharT();
+			--xm_vStorage.vSmall.uchLength;
 		} else {
-			xm_vStorage.vLarge.pchBegin[--xm_vStorage.vLarge.uLength] = CharT();
+			--xm_vStorage.vLarge.uLength;
 		}
 	}
 
@@ -949,20 +928,13 @@ void swap(String<CharT, ENCODING_T> &lhs, String<CharT, ENCODING_T> &rhs) noexce
 namespace Impl {
 	template<typename DstCharT, StringEncoding DST_ENCODING_T,
 		typename SrcCharT, StringEncoding SRC_ENCODING_T>
-	void Transcoder<DstCharT, DST_ENCODING_T, SrcCharT, SRC_ENCODING_T>::operator()(
-		String<DstCharT, DST_ENCODING_T> &strDst,
-		const StringObserver<SrcCharT> &soSrc
-	) const {
-		VVector<wchar_t> ucsUnified;
-		UnicodeConv<SrcCharT, SRC_ENCODING_T>()(ucsUnified, soSrc);
-		UnicodeConv<DstCharT, DST_ENCODING_T>()(strDst, ucsUnified);
-	}
-	template<typename DstCharT, StringEncoding ENCODING_T, typename SrcCharT>
-	void Transcoder<DstCharT, ENCODING_T, SrcCharT, ENCODING_T>::operator()(
-		String<DstCharT, ENCODING_T> &strDst,
-		const StringObserver<SrcCharT> &soSrc
-	) const {
-		strDst.Append(soSrc.GetBegin(), soSrc.GetSize());
+	inline void ConvertEncoding(String<DstCharT, DST_ENCODING_T> &strDst,
+		const String<SrcCharT, SRC_ENCODING_T> &strSrc)
+	{
+		static_assert(!std::is_same<DstCharT, SrcCharT>::value ||
+			(DST_ENCODING_T != SRC_ENCODING_T), "Conversion from identical type?");
+
+		//
 	}
 }
 
@@ -979,23 +951,6 @@ typedef String<wchar_t,		StringEncoding::UTF16>	WideString;
 typedef String<char,		StringEncoding::UTF8>	Utf8String;
 typedef String<char16_t,	StringEncoding::UTF16>	Utf16String;
 typedef String<char32_t,	StringEncoding::UTF32>	Utf32String;
-
-// 串行化。
-class StreamBuffer;
-
-extern void operator>>=(const Utf8String &u8sSource, StreamBuffer &sbufSink);
-extern void operator<<=(Utf8String &u8sSink, StreamBuffer &sbufSource);
-
-template<typename CharT, StringEncoding ENCODING_T>
-void operator>>=(const String<CharT, ENCODING_T> &strSource, StreamBuffer &sbufSink){
-	Utf8String(strSource) >>= sbufSink;
-}
-template<typename CharT, StringEncoding ENCODING_T>
-void operator<<=(String<CharT, ENCODING_T> &strSink, StreamBuffer &sbufSource){
-	Utf8String u8sTemp;
-	u8sTemp <<= sbufSource;
-	strSink.Assign(u8sTemp);
-}
 
 // 字面量运算符。
 template<typename CharT, CharT ...STRING_T>

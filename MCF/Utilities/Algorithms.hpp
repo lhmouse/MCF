@@ -389,11 +389,12 @@ inline OutputIteratorT MoveBackward(
 	return Impl::CopyTrait<OutputIteratorT, InputIteratorT,
 		std::remove_reference_t<
 			typename std::iterator_traits<InputIteratorT>::value_type>
-		>::DoMoveBackward(
-			std::move(itOutputEnd),
-			std::move(itInputBegin),
-			std::move(itInputEnd)
-		);
+		>::DoMoveBackward
+	(
+		std::move(itOutputEnd),
+		std::move(itInputBegin),
+		std::move(itInputEnd)
+	);
 }
 template<typename OutputIteratorT, typename InputIteratorT>
 inline std::pair<OutputIteratorT, InputIteratorT> MoveBackwardN(
@@ -404,11 +405,12 @@ inline std::pair<OutputIteratorT, InputIteratorT> MoveBackwardN(
 	return Impl::CopyTrait<OutputIteratorT, InputIteratorT,
 		std::remove_reference_t<
 			typename std::iterator_traits<InputIteratorT>::value_type>
-		>::DoMoveBackwardN(
-			std::move(itOutputEnd),
-			uCount,
-			std::move(itInputEnd)
-		);
+		>::DoMoveBackwardN
+	(
+		std::move(itOutputEnd),
+		uCount,
+		std::move(itInputEnd)
+	);
 }
 
 template<typename OutputIteratorT, typename InputIteratorT>

@@ -142,10 +142,9 @@ void Utf8TextFileWriter::WriteLine(const Utf8StringObserver &u8soData){
 	Write('\n');
 }
 void Utf8TextFileWriter::Flush(){
-	const auto uLineSize = xm_u8sLine.GetSize();
-	xm_pFile->Write(xm_u64Offset, xm_u8sLine.GetCStr(), uLineSize);
+	xm_pFile->Write(xm_u64Offset, xm_u8sLine.GetData(), xm_u8sLine.GetSize());
 	xm_pFile->Flush();
 
 	xm_u8sLine.Clear();
-	xm_u64Offset += uLineSize;
+	xm_u64Offset += xm_u8sLine.GetSize();
 }

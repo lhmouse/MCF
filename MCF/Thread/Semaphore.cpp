@@ -53,20 +53,15 @@ std::unique_ptr<Semaphore> Semaphore::Create(
 	unsigned long ulMaxCount,
 	const WideStringObserver &wsoName
 ){
-	return std::make_unique<SemaphoreDelegate>(
-		ulInitCount, ulMaxCount,
-		wsoName.IsEmpty() ? nullptr : wsoName.GetNullTerminated<MAX_PATH>().GetData()
-	);
+	return std::make_unique<SemaphoreDelegate>(ulInitCount, ulMaxCount,
+		wsoName.IsEmpty() ? nullptr : wsoName.GetNullTerminated<MAX_PATH>().GetData());
 }
 std::unique_ptr<Semaphore> Semaphore::Create(
 	unsigned long ulInitCount,
 	unsigned long ulMaxCount,
 	const WideString &wcsName
 ){
-	return std::make_unique<SemaphoreDelegate>(
-		ulInitCount, ulMaxCount,
-		wcsName.GetCStr()
-	);
+	return std::make_unique<SemaphoreDelegate>(ulInitCount, ulMaxCount, wcsName.GetCStr());
 }
 
 // 其他非静态成员函数。

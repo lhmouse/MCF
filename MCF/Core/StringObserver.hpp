@@ -52,10 +52,9 @@ private:
 	}
 
 	template<typename IteratorT>
-	static std::size_t xFindRep(
-		IteratorT itBegin, std::common_type_t<IteratorT> itEnd,
-		CharT chToFind, std::size_t uRepCount
-	) noexcept {
+	static std::size_t xFindRep(IteratorT itBegin, std::common_type_t<IteratorT> itEnd,
+		CharT chToFind, std::size_t uRepCount) noexcept
+	{
 		ASSERT(uRepCount != 0);
 		ASSERT((std::size_t)(itEnd - itBegin) >= uRepCount);
 
@@ -82,11 +81,9 @@ private:
 	}
 
 	template<typename IteratorT>
-	static std::size_t xKmpSearch(
-		IteratorT itBegin, std::common_type_t<IteratorT> itEnd,
-		std::common_type_t<IteratorT> itToFindBegin,
-		std::common_type_t<IteratorT> itToFindEnd
-	) noexcept {
+	static std::size_t xKmpSearch(IteratorT itBegin, std::common_type_t<IteratorT> itEnd,
+		std::common_type_t<IteratorT> itToFindBegin, std::common_type_t<IteratorT> itToFindEnd) noexcept
+	{
 		ASSERT(itToFindEnd >= itToFindBegin);
 		ASSERT(itEnd - itBegin >= itToFindEnd - itToFindBegin);
 

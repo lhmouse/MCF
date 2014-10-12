@@ -46,7 +46,8 @@ public:
 
 // 静态成员函数。
 std::unique_ptr<Event> Event::Create(bool bInitSet, const WideStringObserver &wsoName){
-	return std::make_unique<EventDelegate>(bInitSet, wsoName.IsEmpty() ? nullptr : wsoName.GetNullTerminated<MAX_PATH>().GetData());
+	return std::make_unique<EventDelegate>(bInitSet,
+		wsoName.IsEmpty() ? nullptr : wsoName.GetNullTerminated<MAX_PATH>().GetData());
 }
 std::unique_ptr<Event> Event::Create(bool bInitSet, const WideString &wcsName){
 	return std::make_unique<EventDelegate>(bInitSet, wcsName.GetCStr());

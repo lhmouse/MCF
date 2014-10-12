@@ -10,7 +10,7 @@ using namespace MCF;
 namespace MCF {
 
 namespace Impl {
-	template<>
+/*	template<>
 	void UnicodeConv<char, StringEncoding::ANSI>::operator()(
 		UnifiedString &ucsUnified,
 		const StringObserver<char> &soSrc
@@ -271,7 +271,7 @@ namespace Impl {
 		jDone:
 			strDst.Push(u32CodePoint);
 		}
-	}
+	}*/
 }
 
 template class String<char,		StringEncoding::ANSI>;

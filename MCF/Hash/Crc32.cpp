@@ -57,7 +57,7 @@ void Crc32::Abort() noexcept{
 }
 void Crc32::Update(const void *pData, std::size_t uSize) noexcept {
 	if(!xm_bInited){
-		xm_u32Reg = ~(std::uint32_t)0;
+		xm_u32Reg = (std::uint32_t)-1;
 
 		xm_bInited = true;
 	}

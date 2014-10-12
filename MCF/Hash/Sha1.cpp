@@ -36,27 +36,27 @@ void DoSha1Chunk(std::uint32_t (&au32Result)[5], const unsigned char *pbyChunk) 
 		std::uint32_t f, k;
 
 		switch(i / 20){
-			case 0:
-				// f = (b & c) | (~b & d);
-				f = d ^ (b & (c ^ d));
-				k = 0x5A827999;
-				break;
+		case 0:
+			// f = (b & c) | (~b & d);
+			f = d ^ (b & (c ^ d));
+			k = 0x5A827999;
+			break;
 
-			case 1:
-				f = b ^ c ^ d;
-				k = 0x6ED9EBA1;
-				break;
+		case 1:
+			f = b ^ c ^ d;
+			k = 0x6ED9EBA1;
+			break;
 
-			case 2:
-				// f = (b & c) | (b & d) | (c & d);
-				f = (b & (c | d)) | (c & d);
-				k = 0x8F1BBCDC;
-				break;
+		case 2:
+			// f = (b & c) | (b & d) | (c & d);
+			f = (b & (c | d)) | (c & d);
+			k = 0x8F1BBCDC;
+			break;
 
-			case 3:
-				f = b ^ c ^ d;
-				k = 0xCA62C1D6;
-				break;
+		case 3:
+			f = b ^ c ^ d;
+			k = 0xCA62C1D6;
+			break;
 		}
 
 		const std::uint32_t temp = ::_rotl(a, 5) + f + e + k + w[i];

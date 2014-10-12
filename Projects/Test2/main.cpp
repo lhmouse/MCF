@@ -1,38 +1,22 @@
 #include <MCF/StdMCF.hpp>
-#include <MCF/Containers/MultiIndexMap.hpp>
+#include <iostream>
 #include <MCF/Core/String.hpp>
+#include <MCF/Hash/Sha1.hpp>
+#include <MCF/StreamFilters/Base64Filters.hpp>
 using namespace MCF;
 
-struct Item {
-	int i;
-	AnsiString s;
-
-	Item(int i_, AnsiString s_)
-		: i(i_), s(std::move(s_))
-	{
-	}
-};
-
 extern "C" unsigned int MCFMain() noexcept {
-	MultiIndexMap<Item,
-		UniqueOrderedMemberIndex<Item, int, &Item::i>,
-		UniqueOrderedMemberIndex<Item, AnsiString, &Item::s>
-	> m;
+	AnsiString s;
+	s = "dGhlIHNhbXBsZSBub25jZQ=="_nso;
+	s += "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"_nso;
 
-	const auto Print = [&]{
-		std::printf("--- size = %u\n", (unsigned)m.GetSize());
-		for(auto p = m.GetFirst<0>(); p; p = p->GetNext<0>()){
-			std::printf("%d, %s\n", p->i, p->s.GetCStr());
-		}
-	};
+	Sha1 sha1;
+	unsigned char hash[20];
+	sha1.Update(s.GetData(), s.GetSize());
+	sha1.Finalize(hash);
 
-	m.Insert(false, Item(3, "ghi"_as));
-	auto p = m.Insert(false, Item(2, "def"_as)).first;
-	m.Insert(false, Item(1, "abc"_as));
-	Print();
-
-	m.SetKey<0>(true, p, 3);
-	Print();
-
+	StreamBuffer buf(hash, sizeof(hash));
+	Base64Encoder().FilterInPlace(buf);
+	std::copy_n(buf.GetReadIterator(), buf.GetSize(), std::ostream_iterator<unsigned char>(std::cout));
 	return 0;
 }

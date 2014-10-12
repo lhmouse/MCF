@@ -408,6 +408,10 @@ void Md5::Finalize(unsigned char (&abyOutput)[16]) noexcept {
 		xm_vChunk.vLast.u64Bits = BYTE_SWAP_IF_BE(xm_u64BytesTotal * 8);
 		DoMd5Chunk(xm_auResult, xm_vChunk.aby);
 
+		for(auto &u : xm_auResult){
+			u = BYTE_SWAP_IF_BE(u);
+		}
+
 		xm_bInited = false;
 	}
 	BCopy(abyOutput, xm_auResult);

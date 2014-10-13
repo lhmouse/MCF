@@ -69,31 +69,26 @@ std::uint32_t IsaacRng::Get() noexcept {
 		xm_u32B += xm_u32C;
 
 		for(std::size_t i = 0; i < 256; i += 4){
-			for(std::size_t j = 0; j < 4; ++j){
-				const auto x = xm_u32Internal[i + j];
-				switch(j){
-				case 0:
-					xm_u32A ^= (xm_u32A << 13);
-					break;
+			register std::uint32_t x, y;
 
-				case 1:
-					xm_u32A ^= (xm_u32A >>  6);
-					break;
+#define SPEC_0	(xm_u32A ^= (xm_u32A << 13))
+#define SPEC_1	(xm_u32A ^= (xm_u32A >>  6))
+#define SPEC_2	(xm_u32A ^= (xm_u32A <<  2))
+#define SPEC_3	(xm_u32A ^= (xm_u32A >> 16))
 
-				case 2:
-					xm_u32A ^= (xm_u32A <<  2);
-					break;
+#define STEP(j_, spec_)	\
+			x = xm_u32Internal[i + j_];	\
+			spec_;	\
+			xm_u32A += xm_u32Internal[(i + j_ + 128) % 256];	\
+			y = xm_u32Internal[(x >> 2) % 256] + xm_u32A + xm_u32B;	\
+			xm_u32Internal[i + j_] = y;	\
+			xm_u32B = xm_u32Internal[(y >> 10) % 256] + x;	\
+			xm_u32Results[i + j_] = xm_u32B;
 
-				case 3:
-					xm_u32A ^= (xm_u32A >> 16);
-					break;
-				}
-				xm_u32A += xm_u32Internal[(i + j + 128) % 256];
-				const auto y = xm_u32Internal[(x >> 2) % 256] + xm_u32A + xm_u32B;
-				xm_u32Internal[i + j] = y;
-				xm_u32B = xm_u32Internal[(y >> 10) % 256] + x;
-				xm_u32Results[i + j] = xm_u32B;
-			}
+			STEP(0, SPEC_0);
+			STEP(1, SPEC_1);
+			STEP(2, SPEC_2);
+			STEP(3, SPEC_3);
 		}
 	}
 	const auto u32Ret = xm_u32Results[xm_u32Read];

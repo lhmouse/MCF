@@ -71,7 +71,7 @@ void Crc32::Update(const void *pData, std::size_t uSize) noexcept {
 		}
 		register auto uWordCount = (std::size_t)(pbyEnd - pbyRead) / sizeof(std::uintptr_t);
 		while(uWordCount != 0){
-			register auto uWord = BYTE_SWAP_IF_BE(*(const std::uintptr_t *)pbyRead);
+			register auto uWord = BYTE_SWAP_IF_LE(*(const std::uintptr_t *)pbyRead);
 			pbyRead += sizeof(std::uintptr_t);
 			for(auto i = sizeof(std::uintptr_t); i; --i){
 				DoCrc32Byte(xm_u32Reg, xm_au32Table, uWord & 0xFF);

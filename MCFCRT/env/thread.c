@@ -90,7 +90,7 @@ static bool ObjectComparatorKeyNode(
 static DWORD		g_dwTlsIndex	= TLS_OUT_OF_INDEXES;
 
 static SRWLOCK		g_srwLock		= SRWLOCK_INIT;
-static TlsMap *	g_pLastMap		= NULL;
+static TlsMap *		g_pLastMap		= NULL;
 static MCF_AvlRoot	g_pavlKeys		= NULL;
 
 bool __MCF_CRT_TlsEnvInit(){

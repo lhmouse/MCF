@@ -6,6 +6,7 @@
 #define MCF_CORE_STRING_HPP_
 
 #include "StringObserver.hpp"
+#include "../Utilities/Assert.hpp"
 #include "../Utilities/CountOf.hpp"
 #include "../Utilities/BitsOf.hpp"
 #include "../Utilities/CountLeadingTrailingZeroes.hpp"

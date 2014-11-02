@@ -35,10 +35,6 @@ public:
 		: UniqueHandle(rhs.Release())
 	{
 	}
-	UniqueHandle &operator=(Handle hObj) noexcept {
-		Reset(hObj);
-		return *this;
-	}
 	UniqueHandle &operator=(UniqueHandle &&rhs) noexcept {
 		Reset(std::move(rhs));
 		return *this;

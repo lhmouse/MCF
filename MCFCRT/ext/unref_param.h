@@ -5,8 +5,6 @@
 #ifndef MCF_CRT_UNREF_PARAM_H_
 #define MCF_CRT_UNREF_PARAM_H_
 
-#define UNREF_PARAM(param)	((void)(param))
-
-#define UNREF_PARAMS(...)	((void)(__VA_ARGS__))
+#define UNREF_PARAM(param_)	((void)(param_))
 
 #endif

@@ -12,7 +12,7 @@ using namespace MCF;
 namespace {
 
 void DoSha256Chunk(std::uint32_t (&au32Result)[8], const unsigned char *pbyChunk) noexcept {
-	// https://en.wikipedia.org/wiki/Sha-2
+	// https://en.wikipedia.org/wiki/SHA-2
 	// http://download.intel.com/embedded/processor/whitepaper/327457.pdf
 /*
 	static const std::uint32_t KVEC[64] = {

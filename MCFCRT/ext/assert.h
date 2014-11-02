@@ -5,9 +5,11 @@
 #undef MCF_ASSERT_MSG_
 
 #ifdef NDEBUG
-#	define MCF_ASSERT_MSG_(plain, exp, msg)	((void)0)
+#	define MCF_ASSERT_MSG_(plain_, expr_, msg_)	\
+	((void)0)
 #else
-#	define MCF_ASSERT_MSG_(plain, exp, msg)	(!(exp) && (__MCF_CRT_OnAssertFail(L##plain, __FILE__, __LINE__, (msg)), 1))
+#	define MCF_ASSERT_MSG_(plain_, expr_, msg_)	\
+	(!(expr_) && (__MCF_CRT_OnAssertFail(L ## plain_, __FILE__, __LINE__, (msg_)), 1))
 #endif
 
 #ifndef MCF_CRT_ASSERT_H_
@@ -17,17 +19,17 @@
 #include "../env/bail.h"
 
 static inline void __MCF_CRT_OnAssertFail(
-	const wchar_t *pwszExpression,
+	const wchar_t *pwszexpr_ression,
 	const char *pszFile, unsigned long ulLine,
 	const wchar_t *pwszMessage
 ) MCF_NOEXCEPT {
 	MCF_CRT_BailF(
 		L"调试断言失败。\n\n表达式：%ls\n文件　：%hs\n行号　：%lu\n描述　：%ls",
-		pwszExpression, pszFile, ulLine, pwszMessage
+		pwszexpr_ression, pszFile, ulLine, pwszMessage
 	);
 }
 
-#define ASSERT(exp)				(MCF_ASSERT_MSG_(#exp, (exp), L""))
-#define ASSERT_MSG(exp, msg)	(MCF_ASSERT_MSG_(#exp, (exp), (msg)))
+#define ASSERT(expr_)				(MCF_ASSERT_MSG_(#expr_, (expr_), L""))
+#define ASSERT_MSG(expr_, msg_)		(MCF_ASSERT_MSG_(#expr_, (expr_), (msg_)))
 
 #endif

@@ -7,7 +7,7 @@
 
 #include "../env/_crtdef.h"
 
-#define __MCF_MAKE_CONSTANT(expr)	\
-	(__builtin_constant_p(expr) ? (expr) : (expr))
+#define __MCF_MAKE_CONSTANT(expr_)	\
+	(__builtin_constant_p(expr_) ? (expr_) : (expr_))
 
 #endif

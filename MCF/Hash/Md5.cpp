@@ -11,7 +11,7 @@ using namespace MCF;
 namespace {
 
 void DoMd5Chunk(std::uint32_t (&au32Result)[4], const unsigned char *pbyChunk) noexcept {
-	// https://en.wikipedia.org/wiki/Md5
+	// https://en.wikipedia.org/wiki/MD5
 /*
 	static const unsigned char RVEC[64] = {
 		7, 12, 17, 22, 7, 12, 17, 22, 7, 12, 17, 22, 7, 12, 17, 22,

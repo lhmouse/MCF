@@ -122,8 +122,8 @@ namespace Impl {
 //			std::is_trivially_copyable<TriviallyCopyableT>::value &&
 				std::is_trivial<TriviallyCopyableT>::value &&				// TODO: Fuck GCC.
 				!std::is_volatile<TriviallyCopyableT>::value &&				//
-				std::is_copy_constructible<TriviallyCopyableT>::value &&		//
-				std::is_move_constructible<TriviallyCopyableT>::value &&		//
+				std::is_copy_constructible<TriviallyCopyableT>::value &&	//
+				std::is_move_constructible<TriviallyCopyableT>::value &&	//
 			std::is_pointer<InputIteratorT>::value &&
 			std::is_same<
 				std::remove_const_t<std::remove_pointer_t<InputIteratorT>>,

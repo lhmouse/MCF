@@ -12,7 +12,7 @@ using namespace MCF;
 namespace {
 
 void DoSha1Chunk(std::uint32_t (&au32Result)[5], const unsigned char *pbyChunk) noexcept {
-	// https://en.wikipedia.org/wiki/Sha1
+	// https://en.wikipedia.org/wiki/SHA-1
 /*
 	std::uint32_t w[80];
 

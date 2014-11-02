@@ -64,7 +64,7 @@ namespace Impl {
 
 	private:
 		// http://wiki.osdev.org/Spinlock
-//		std::size_t xLockSpin() noexcept {	// FIXME: g++ 4.9.1 ICE
+//		std::size_t xLockSpin() noexcept {	// FIXME: g++ 4.9.2 ICE
 		std::size_t xLockSpin() throw() {	//
 			std::size_t uWaiting;
 			for(;;){

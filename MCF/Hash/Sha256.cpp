@@ -28,7 +28,7 @@ void DoSha256Chunk(std::uint32_t (&au32Result)[8], const unsigned char *pbyChunk
 
 	std::uint32_t w[64];
 	for(std::size_t i = 0; i < 16; ++i){
-		w[i] = BYTE_SWAP_IF_BE(((const std::uint32_t *)pbyChunk)[i]);
+		w[i] = BYTE_SWAP_TO_LE(((const std::uint32_t *)pbyChunk)[i]);
 	}
 	for(std::size_t i = 16; i < COUNT_OF(w); ++i){
 		//const std::uint32_t s0 = ::_rotr(w[i - 15], 7) ^ ::_rotr(w[i - 15], 18) ^ (w[i - 15] >> 3);
@@ -147,7 +147,7 @@ void DoSha256Chunk(std::uint32_t (&au32Result)[8], const unsigned char *pbyChunk
 
 	alignas(16) std::uint32_t w[64];
 	for(std::size_t i = 0; i < 16; ++i){
-		w[i] = BYTE_SWAP_IF_BE(((const std::uint32_t *)pbyChunk)[i]);
+		w[i] = BYTE_SWAP_TO_LE(((const std::uint32_t *)pbyChunk)[i]);
 	}
 /*
 	for(std::size_t i = 16; i < COUNT_OF(w); ++i){
@@ -969,11 +969,11 @@ void Sha256::Finalize(unsigned char (&abyOutput)[32]) noexcept {
 		if(xm_uBytesInChunk < sizeof(xm_vChunk.vLast.abyData)){
 			std::memset(xm_vChunk.aby + xm_uBytesInChunk, 0, sizeof(xm_vChunk.vLast.abyData) - xm_uBytesInChunk);
 		}
-		xm_vChunk.vLast.u64Bits = BYTE_SWAP_IF_BE(xm_u64BytesTotal * 8);
+		xm_vChunk.vLast.u64Bits = BYTE_SWAP_TO_LE(xm_u64BytesTotal * 8);
 		DoSha256Chunk(xm_auResult, xm_vChunk.aby);
 
 		for(auto &u : xm_auResult){
-			u = BYTE_SWAP_IF_BE(u);
+			u = BYTE_SWAP_TO_LE(u);
 		}
 
 		xm_bInited = false;

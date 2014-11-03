@@ -84,14 +84,13 @@ namespace Impl {
 			xm_uLockCount = std::exchange(rhs.xm_uLockCount, 0u);
 		}
 		LockRaiiTemplate &operator=(LockRaiiTemplate &&rhs) noexcept {
-			if(this != &rhs){
-				if(xm_uLockCount != 0){
-					xDoUnlock();
-				}
+			ASSERT(&rhs != this);
 
-				xm_pOwner = rhs.xm_pOwner;
-				xm_uLockCount = std::exchange(rhs.xm_uLockCount, 0u);
+			if(xm_uLockCount != 0){
+				xDoUnlock();
 			}
+			xm_pOwner = rhs.xm_pOwner;
+			xm_uLockCount = std::exchange(rhs.xm_uLockCount, 0u);
 			return *this;
 		}
 		virtual ~LockRaiiTemplate() noexcept {

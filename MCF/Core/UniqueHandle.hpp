@@ -64,9 +64,9 @@ public:
 		}
 	}
 	void Reset(UniqueHandle &&rhs) noexcept {
-		if(&rhs != this){
-			Reset(rhs.Release());
-		}
+		ASSERT(&rhs != this);
+
+		Reset(rhs.Release());
 	}
 
 	void Swap(UniqueHandle &rhs) noexcept {

@@ -58,6 +58,8 @@ private:
 		{
 		}
 		xMonitorHolder &operator=(xMonitorHolder &&rhs) noexcept {
+			ASSERT(&rhs != this);
+
 			if(xm_pOwner){
 				xm_pOwner->xm_vLock.Unlock();
 			}

@@ -40,12 +40,8 @@ namespace Impl {
 
 	public:
 		explicit CriticalSectionImpl(unsigned long ulSpinCount)
-			: xm_ulSpinCount	(ulSpinCount)
-			, xm_dwOwner		(0)
-			, xm_uRecurCount	(0)
-			, xm_uWaiting		(0)
-			, xm_pFirstWaiting	(nullptr)
-			, xm_pLastWaiting	(nullptr)
+			: xm_ulSpinCount(ulSpinCount), xm_dwOwner(0), xm_uRecurCount(0)
+			, xm_uWaiting(0), xm_pFirstWaiting(nullptr), xm_pLastWaiting(nullptr)
 		{
 			xm_hSemaphore.Reset(::CreateSemaphoreW(nullptr, 0, 1, nullptr));
 			if(!xm_hSemaphore){
@@ -69,8 +65,7 @@ namespace Impl {
 			std::size_t uWaiting;
 			for(;;){
 				uWaiting = __atomic_exchange_n(
-					&xm_uWaiting, (std::size_t)-1, __ATOMIC_ACQ_REL | __ATOMIC_HLE_ACQUIRE
-				);
+					&xm_uWaiting, (std::size_t)-1, __ATOMIC_ACQ_REL | __ATOMIC_HLE_ACQUIRE);
 				if(EXPECT_NOT(uWaiting != (std::size_t)-1)){
 					break;
 				}
@@ -103,9 +98,8 @@ namespace Impl {
 			if(__atomic_load_n(&xm_dwOwner, __ATOMIC_ACQUIRE) != dwThreadId){
 				DWORD dwOldOwner = 0;
 				if(__atomic_compare_exchange_n(
-					&xm_dwOwner, &dwOldOwner, dwThreadId,
-					false, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE
-				)){
+					&xm_dwOwner, &dwOldOwner, dwThreadId, false, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE))
+				{
 					++xm_uRecurCount;
 					eResult = Result::STATE_CHANGED;
 				}
@@ -127,9 +121,8 @@ namespace Impl {
 					for(;;){
 						DWORD dwOldOwner = 0;
 						if(EXPECT_NOT(__atomic_compare_exchange_n(
-							&xm_dwOwner, &dwOldOwner, dwThreadId,
-							false, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE
-						))){
+							&xm_dwOwner, &dwOldOwner, dwThreadId, false, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE)))
+						{
 							goto jAcquired;
 						}
 						if(EXPECT_NOT(i)){

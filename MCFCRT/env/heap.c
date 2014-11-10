@@ -93,7 +93,7 @@ unsigned char *__MCF_CRT_HeapAlloc(size_t uSize, const void *pRetAddr){
 unsigned char *__MCF_CRT_HeapReAlloc(void *pBlock /* NON-NULL */, size_t uSize, const void *pRetAddr){
 #ifdef __MCF_CRT_HEAPDBG_ON
 	const size_t uRawSize = __MCF_CRT_HeapDbgGetRawSize(uSize);
-	if(uSize & ~uRawSize & ((size_t)1 << (sizeof(size_t) * 8 - 1))){
+	if(uRawSize < uSize){
 		return NULL;
 	}
 #else

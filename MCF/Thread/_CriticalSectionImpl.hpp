@@ -165,7 +165,6 @@ namespace Impl {
 
 			return eResult;
 		}
-		// 临界区被释放返回 true，否则返回 false。
 		Result ImplLeave() noexcept {
 			ASSERT(__atomic_load_n(&xm_dwOwner, __ATOMIC_ACQUIRE) == Thread::GetCurrentId());
 

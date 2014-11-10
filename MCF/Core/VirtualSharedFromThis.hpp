@@ -43,7 +43,8 @@ public:
 public:
 	template<typename DerivedT>
 	std::shared_ptr<const DerivedT> GetSharedFromThis() const {
-		static_assert(std::is_base_of<VirtualSharedFromThis, DerivedT>::value &&
+		static_assert(
+			std::is_base_of<VirtualSharedFromThis, DerivedT>::value &&
 				!Impl::IsStaticCastable<VirtualSharedFromThis, DerivedT>::value &&
 				Impl::IsDynamicCastable<VirtualSharedFromThis, DerivedT>::value,
 			"Please virtually derive from VirtualSharedFromThis.");
@@ -56,7 +57,8 @@ public:
 	}
 	template<typename DerivedT>
 	std::shared_ptr<DerivedT> GetSharedFromThis(){
-		static_assert(std::is_base_of<VirtualSharedFromThis, DerivedT>::value &&
+		static_assert(
+			std::is_base_of<VirtualSharedFromThis, DerivedT>::value &&
 				!Impl::IsStaticCastable<VirtualSharedFromThis, DerivedT>::value &&
 				Impl::IsDynamicCastable<VirtualSharedFromThis, DerivedT>::value,
 			"Please virtually derive from VirtualSharedFromThis.");

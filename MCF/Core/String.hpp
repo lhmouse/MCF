@@ -18,46 +18,36 @@
 
 namespace MCF {
 
-enum class StringEncoding {
-	UTF8,
-	ANSI,
-	UTF16,
-	UTF32
-};
-
-template<typename CharT, StringEncoding ENCODING_T>
+template<StringTypes TypeT>
 class String;
 
-using UnifiedString = String<wchar_t, StringEncoding::UTF16>;
+using UnifiedString = String<StringTypes::UTF32>;
+using UnifiedStringObserver = StringObserver<StringTypes::UTF32>;
 
-namespace Impl {
-	template<typename DstCharT, StringEncoding DST_ENCODING_T,
-		typename SrcCharT, StringEncoding SRC_ENCODING_T>
-	void ConvertEncoding(String<DstCharT, DST_ENCODING_T> &strDst,
-		String<SrcCharT, SRC_ENCODING_T> &strSrc);
-}
-
-template<typename CharT, StringEncoding ENCODING_T>
+template<StringTypes TypeT>
 class String {
-	static_assert(std::is_integral<CharT>::value, "CharT must be an integral type.");
+public:
+	using Observer = StringObserver<TypeT>;
+
+	static constexpr StringTypes Type = TypeT;
+	using Char = typename Observer::Char;
+
+	static constexpr std::size_t NPOS = Observer::NPOS;
 
 public:
-	typedef StringObserver<CharT> Observer;
-
-	enum : std::size_t {
-		NPOS = Observer::NPOS
-	};
+	static UnifiedStringObserver Unify(UnifiedString &&usTempStorage, const Observer &obsSrc);
+	static void Deunify(String &strDst, std::size_t uPos, const UnifiedStringObserver &usoSrc);
 
 private:
 	union xStorage {
-		struct __attribute__((__packed__)) {
-			CharT achData[(4 * sizeof(void *)) / sizeof(CharT) - 2];
-			CharT chNull;
-			std::make_unsigned_t<CharT> uchLength;
+		struct {
+			Char achData[(4 * sizeof(void *)) / sizeof(Char) - 2];
+			Char chNull;
+			std::make_unsigned_t<Char> uchLength;
 		} vSmall;
 
 		struct {
-			CharT *pchBegin;
+			Char *pchBegin;
 			std::size_t uLength;
 			std::size_t uCapacity;
 		} vLarge;
@@ -65,87 +55,77 @@ private:
 
 public:
 	String() noexcept {
-		xm_vStorage.vSmall.chNull = CharT();
+		xm_vStorage.vSmall.chNull = Char();
 		xm_vStorage.vSmall.uchLength = 0;
 	}
-	explicit String(CharT ch, std::size_t uCount = 1)
+	explicit String(Char ch, std::size_t uCount = 1)
 		: String()
 	{
-		Assign(ch, uCount);
+		Append(ch, uCount);
 	}
-	explicit String(const CharT *pszBegin)
+	explicit String(const Char *pszBegin)
 		: String()
 	{
-		Assign(pszBegin);
+		Append(pszBegin);
 	}
 	template<class IteratorT>
 	String(IteratorT itBegin, std::common_type_t<IteratorT> itEnd)
 		: String()
 	{
-		Assign(itBegin, itEnd);
+		Append(std::move(itBegin), itEnd);
 	}
 	template<class IteratorT>
 	String(IteratorT itBegin, std::size_t uLen)
 		: String()
 	{
-		Assign(itBegin, uLen);
+		Append(std::move(itBegin), uLen);
 	}
-	explicit String(const Observer &obs)
+	explicit String(const Observer &rhs)
 		: String()
 	{
-		Assign(obs);
+		Append(rhs);
 	}
-	explicit String(std::initializer_list<CharT> vInitList)
+	explicit String(std::initializer_list<Char> rhs)
 		: String()
 	{
-		Assign(vInitList);
-	}
-	template<typename SrcCharT, StringEncoding SRC_ENCODING_T>
-	explicit String(const String<SrcCharT, SRC_ENCODING_T> &rhs)
-		: String()
-	{
-		Assign(rhs);
-	}
-	template<typename SrcCharT, StringEncoding SRC_ENCODING_T>
-	explicit String(String<SrcCharT, SRC_ENCODING_T> &&rhs)
-		: String()
-	{
-		Assign(std::move(rhs));
+		Append(rhs);
 	}
 	String(const String &rhs)
 		: String()
 	{
-		Assign(rhs);
+		Append(rhs);
 	}
 	String(String &&rhs) noexcept
 		: String()
 	{
 		Swap(rhs);
 	}
-	String &operator=(CharT ch) noexcept {
+	template<StringTypes OtherTypeT>
+	explicit String(const StringObserver<OtherTypeT> &rhs)
+		: String()
+	{
+		Append(rhs);
+	}
+	template<StringTypes OtherTypeT>
+	explicit String(const String<OtherTypeT> &rhs)
+		: String()
+	{
+		Append(rhs);
+	}
+	String &operator=(Char ch) noexcept {
 		Assign(ch);
 		return *this;
 	}
-	String &operator=(const CharT *pszBegin){
+	String &operator=(const Char *pszBegin){
 		Assign(pszBegin);
 		return *this;
 	}
-	String &operator=(const Observer &obs){
-		Assign(obs);
-		return *this;
-	}
-	String &operator=(std::initializer_list<CharT> vInitList){
-		Assign(vInitList);
-		return *this;
-	}
-	template<typename SrcCharT, StringEncoding SRC_ENCODING_T>
-	String &operator=(const String<SrcCharT, SRC_ENCODING_T> &rhs){
+	String &operator=(const Observer &rhs){
 		Assign(rhs);
 		return *this;
 	}
-	template<typename SrcCharT, StringEncoding SRC_ENCODING_T>
-	String &operator=(String<SrcCharT, SRC_ENCODING_T> &&rhs){
-		Assign(std::move(rhs));
+	String &operator=(std::initializer_list<Char> rhs){
+		Assign(rhs);
 		return *this;
 	}
 	String &operator=(const String &rhs){
@@ -156,30 +136,39 @@ public:
 		Assign(std::move(rhs));
 		return *this;
 	}
+	template<StringTypes OtherTypeT>
+	String &operator=(const StringObserver<OtherTypeT> &rhs){
+		Assign(rhs);
+		return *this;
+	}
+	template<StringTypes OtherTypeT>
+	String &operator=(const String<OtherTypeT> &rhs){
+		Assign(rhs);
+		return *this;
+	}
 	~String() noexcept {
-		if(xm_vStorage.vSmall.chNull != CharT()){
+		if(xm_vStorage.vSmall.chNull != Char()){
 			delete[] xm_vStorage.vLarge.pchBegin;
 		}
-
 #ifndef NDEBUG
 		std::memset(&xm_vStorage, 0xDD, sizeof(xm_vStorage));
 #endif
 	}
 
 private:
-	CharT *xChopAndSplice(std::size_t uRemovedBegin, std::size_t uRemovedEnd,
+	Char *xChopAndSplice(std::size_t uRemovedBegin, std::size_t uRemovedEnd,
 		std::size_t uFirstOffset, std::size_t uThirdOffset)
 	{
-		ASSERT(uRemovedBegin <= GetLength());
-		ASSERT(uRemovedEnd <= GetLength());
-		ASSERT(uRemovedBegin <= uRemovedEnd);
-		ASSERT(uFirstOffset + uRemovedBegin <= uThirdOffset);
-
 		const auto pchOldBuffer = GetBegin();
 		const auto uOldLength = GetLength();
 		auto pchNewBuffer = pchOldBuffer;
 		const auto uNewLength = uThirdOffset + (uOldLength - uRemovedEnd);
 		std::size_t uSizeToAlloc = uNewLength + 1;
+
+		ASSERT(uRemovedBegin <= uOldLength);
+		ASSERT(uRemovedEnd <= uOldLength);
+		ASSERT(uRemovedBegin <= uRemovedEnd);
+		ASSERT(uFirstOffset + uRemovedBegin <= uThirdOffset);
 
 		if(GetCapacity() < uNewLength){
 			uSizeToAlloc += (uSizeToAlloc >> 1);
@@ -187,20 +176,18 @@ private:
 			if(uSizeToAlloc < uNewLength + 1){
 				throw std::bad_alloc();
 			}
-			pchNewBuffer = new CharT[uSizeToAlloc];
+			pchNewBuffer = new Char[uSizeToAlloc];
 		}
 
 		if(uRemovedBegin != 0){
-			std::memmove(pchNewBuffer + uFirstOffset, pchOldBuffer,
-				uRemovedBegin * sizeof(CharT));
+			std::memmove(pchNewBuffer + uFirstOffset, pchOldBuffer, uRemovedBegin * sizeof(Char));
 		}
 		if(uOldLength != uRemovedEnd){
-			std::memmove(pchNewBuffer + uThirdOffset, pchOldBuffer + uRemovedEnd,
-				(uOldLength - uRemovedEnd) * sizeof(CharT));
+			std::memmove(pchNewBuffer + uThirdOffset, pchOldBuffer + uRemovedEnd, (uOldLength - uRemovedEnd) * sizeof(Char));
 		}
 
 		if(pchNewBuffer != pchOldBuffer){
-			if(xm_vStorage.vSmall.chNull == CharT()){
+			if(xm_vStorage.vSmall.chNull == Char()){
 				++xm_vStorage.vSmall.chNull;
 			} else {
 				delete[] pchOldBuffer;
@@ -216,7 +203,7 @@ private:
 	void xSetSize(std::size_t uNewSize) noexcept {
 		ASSERT(uNewSize <= GetCapacity());
 
-		if(xm_vStorage.vSmall.chNull == CharT()){
+		if(xm_vStorage.vSmall.chNull == Char()){
 			xm_vStorage.vSmall.uchLength = uNewSize;
 		} else {
 			xm_vStorage.vLarge.uLength = uNewSize;
@@ -224,113 +211,81 @@ private:
 	}
 
 public:
-	const CharT *GetBegin() const noexcept {
-		if(xm_vStorage.vSmall.chNull == CharT()){
+	const Char *GetBegin() const noexcept {
+		if(xm_vStorage.vSmall.chNull == Char()){
 			return xm_vStorage.vSmall.achData;
 		} else {
 			return xm_vStorage.vLarge.pchBegin;
 		}
 	}
-	CharT *GetBegin() noexcept {
-		if(xm_vStorage.vSmall.chNull == CharT()){
+	Char *GetBegin() noexcept {
+		if(xm_vStorage.vSmall.chNull == Char()){
 			return xm_vStorage.vSmall.achData;
 		} else {
 			return xm_vStorage.vLarge.pchBegin;
 		}
 	}
-	const CharT *GetCBegin() const noexcept {
+	const Char *GetCBegin() const noexcept {
 		return GetBegin();
 	}
-	const CharT *GetEnd() const noexcept {
-		if(xm_vStorage.vSmall.chNull == CharT()){
+
+	const Char *GetEnd() const noexcept {
+		if(xm_vStorage.vSmall.chNull == Char()){
 			return xm_vStorage.vSmall.achData + xm_vStorage.vSmall.uchLength;
 		} else {
 			return xm_vStorage.vLarge.pchBegin + xm_vStorage.vLarge.uLength;
 		}
 	}
-	CharT *GetEnd() noexcept {
-		if(xm_vStorage.vSmall.chNull == CharT()){
+	Char *GetEnd() noexcept {
+		if(xm_vStorage.vSmall.chNull == Char()){
 			return xm_vStorage.vSmall.achData + xm_vStorage.vSmall.uchLength;
 		} else {
 			return xm_vStorage.vLarge.pchBegin + xm_vStorage.vLarge.uLength;
 		}
 	}
-	const CharT *GetCEnd() const noexcept {
+	const Char *GetCEnd() const noexcept {
 		return GetEnd();
 	}
 
-	const CharT *GetStr() const noexcept {
-		const_cast<CharT &>(GetEnd()[0]) = CharT();
+	const Char *GetData() const noexcept {
 		return GetBegin();
 	}
-	CharT *GetStr() noexcept {
-		GetEnd()[0] = CharT();
+	Char *GetData() noexcept {
 		return GetBegin();
 	}
-	const CharT *GetCStr() const noexcept {
+	std::size_t GetSize() const noexcept {
+		if(xm_vStorage.vSmall.chNull == Char()){
+			return xm_vStorage.vSmall.uchLength;
+		} else {
+			return xm_vStorage.vLarge.uLength;
+		}
+	}
+
+	const Char *GetStr() const noexcept {
+		const_cast<Char &>(GetEnd()[0]) = Char();
+		return GetBegin();
+	}
+	Char *GetStr() noexcept {
+		GetEnd()[0] = Char();
+		return GetBegin();
+	}
+	const Char *GetCStr() const noexcept {
 		return GetStr();
 	}
 	std::size_t GetLength() const noexcept {
 		return GetSize();
 	}
 
-	const CharT *GetData() const noexcept {
-		return GetBegin();
-	}
-	CharT *GetData() noexcept {
-		return GetBegin();
-	}
-	std::size_t GetSize() const noexcept {
-		return (std::size_t)(GetEnd() - GetBegin());
-	}
-
 	Observer GetObserver() const noexcept {
-		return Observer(GetBegin(), GetEnd());
-	}
-
-	CharT *Resize(std::size_t uNewSize){
-		const std::size_t uOldSize = GetSize();
-		if(uNewSize > uOldSize){
-			Reserve(uNewSize);
-			xSetSize(uNewSize);
-		} else if(uNewSize < uOldSize){
-			Truncate(uOldSize - uNewSize);
+		if(xm_vStorage.vSmall.chNull == Char()){
+			return Observer(xm_vStorage.vSmall.achData, xm_vStorage.vSmall.uchLength);
+		} else {
+			return Observer(xm_vStorage.vLarge.pchBegin, xm_vStorage.vLarge.uLength);
 		}
-		return GetData();
-	}
-	CharT *ResizeFront(std::size_t uDeltaSize){
-		const auto uOldSize = GetSize();
-		xChopAndSplice(uOldSize, uOldSize, uDeltaSize, uOldSize + uDeltaSize);
-		xSetSize(uOldSize + uDeltaSize);
-		return GetData();
-	}
-	CharT *ResizeMore(std::size_t uDeltaSize){
-		const auto uOldSize = GetSize();
-		xChopAndSplice(uOldSize, uOldSize, 0, uOldSize + uDeltaSize);
-		xSetSize(uOldSize + uDeltaSize);
-		return GetData() + uOldSize;
-	}
-	void Resize(std::size_t uNewSize, CharT ch){
-		const std::size_t uOldSize = GetSize();
-		if(uNewSize > uOldSize){
-			Append(ch, uNewSize - uOldSize);
-		} else if(uNewSize < uOldSize){
-			Truncate(uOldSize - uNewSize);
-		}
-	}
-	void Shrink() noexcept {
-		Resize(Observer(GetStr()).GetLength());
-	}
-
-	bool IsEmpty() const noexcept {
-		return GetBegin() == GetEnd();
-	}
-	void Clear() noexcept {
-		xSetSize(0);
 	}
 
 	std::size_t GetCapacity() const noexcept {
-		if(xm_vStorage.vSmall.chNull == CharT()){
+		if(xm_vStorage.vSmall.chNull == Char()){
 			return COUNT_OF(xm_vStorage.vSmall.achData);
 		} else {
 			return xm_vStorage.vLarge.uCapacity - 1;
@@ -347,58 +302,96 @@ public:
 		xChopAndSplice(uOldLength, uOldLength, 0, uOldLength + uDeltaCapacity);
 	}
 
-	void Swap(String &rhs) noexcept {
-		if(this != &rhs){
-			std::swap(xm_vStorage, rhs.xm_vStorage);
+	Char *Resize(std::size_t uNewSize){
+		const std::size_t uOldSize = GetSize();
+		if(uNewSize > uOldSize){
+			Reserve(uNewSize);
+			xSetSize(uNewSize);
+		} else if(uNewSize < uOldSize){
+			Truncate(uOldSize - uNewSize);
 		}
+		return GetData();
+	}
+	Char *ResizeFront(std::size_t uDeltaSize){
+		const auto uOldSize = GetSize();
+		xChopAndSplice(uOldSize, uOldSize, uDeltaSize, uOldSize + uDeltaSize);
+		xSetSize(uOldSize + uDeltaSize);
+		return GetData();
+	}
+	Char *ResizeMore(std::size_t uDeltaSize){
+		const auto uOldSize = GetSize();
+		xChopAndSplice(uOldSize, uOldSize, 0, uOldSize + uDeltaSize);
+		xSetSize(uOldSize + uDeltaSize);
+		return GetData() + uOldSize;
+	}
+	void Shrink() noexcept {
+		Resize(Observer(GetStr()).GetLength());
+	}
+
+	bool IsEmpty() const noexcept {
+		return GetBegin() == GetEnd();
+	}
+	void Clear() noexcept {
+		xSetSize(0);
+	}
+
+	void Swap(String &rhs) noexcept {
+		std::swap(xm_vStorage, rhs.xm_vStorage);
 	}
 
 	int Compare(const Observer &rhs) const noexcept {
 		return GetObserver().Compare(rhs);
 	}
+	int Compare(const String &rhs) const noexcept {
+		return GetObserver().Compare(rhs.GetObserver());
+	}
 
-	void Assign(CharT ch, std::size_t uCount = 1){
+	void Assign(Char ch, std::size_t uCount = 1){
 		Clear();
 		Append(ch, uCount);
 	}
-	void Assign(const CharT *pszBegin){
-		Assign(Observer(pszBegin));
+	void Assign(const Char *pszBegin){
+		Clear();
+		Append(Observer(pszBegin));
 	}
 	template<class IteratorT>
 	void Assign(IteratorT itBegin, std::common_type_t<IteratorT> itEnd){
-		Assign(itBegin, (std::size_t)std::distance(itBegin, itEnd));
+		Clear();
+		Append(std::move(itBegin), std::move(itEnd));
 	}
 	template<class IteratorT>
-	void Assign(IteratorT itBegin, std::size_t uLength){
+	void Assign(IteratorT itBegin, std::size_t uLen){
 		Clear();
-		Append(itBegin, uLength);
+		Append(std::move(itBegin), uLen);
 	}
-	void Assign(const Observer &obs){
-		Assign(obs.GetBegin(), obs.GetEnd());
+	void Assign(const Observer &rhs){
+		ASSERT(!GetObserver().DoesOverlapWith(rhs));
+		Clear();
+		Append(rhs);
 	}
-	void Assign(std::initializer_list<CharT> vInitList){
-		Assign(Observer(vInitList));
+	void Assign(std::initializer_list<Char> rhs){
+		Clear();
+		Append(rhs);
+	}
+	template<StringTypes OtherTypeT>
+	void Assign(const String<OtherTypeT> &rhs){
+		Clear();
+		Append(rhs);
+	}
+	void Assign(const String &rhs){
+		if(&rhs != this){
+			Clear();
+			Append(rhs);
+		}
 	}
 	void Assign(String &&rhs) noexcept {
 		Swap(rhs);
 	}
-	template<typename SrcCharT, StringEncoding SRC_ENCODING_T>
-	void Assign(const String<SrcCharT, SRC_ENCODING_T> &rhs){
-		Clear();
-		Append(rhs);
-	}
-	template<StringEncoding SRC_ENCODING_T, typename SrcCharT>
-	void Assign(const StringObserver<SrcCharT> &rhs){
-		Clear();
-		Append<SRC_ENCODING_T, SrcCharT>(rhs);
-	}
 
-	void Append(CharT ch, std::size_t uCount = 1){
-		const std::size_t uOldLength = GetLength();
-		FillN(xChopAndSplice(uOldLength, uOldLength, 0, uOldLength + uCount), uCount, ch);
-		xSetSize(uOldLength + uCount);
+	void Append(Char ch, std::size_t uCount = 1){
+		FillN(ResizeMore(uCount), uCount, ch);
 	}
-	void Append(const CharT *pszBegin){
+	void Append(const Char *pszBegin){
 		Append(Observer(pszBegin));
 	}
 	template<class IteratorT>
@@ -406,64 +399,62 @@ public:
 		Append(itBegin, (std::size_t)std::distance(itBegin, itEnd));
 	}
 	template<class IteratorT>
-	void Append(IteratorT itBegin, std::size_t uLength){
-		const std::size_t uOldLength = GetLength();
-		CopyN(xChopAndSplice(uOldLength, uOldLength, 0, uOldLength + uLength), itBegin, uLength);
-		xSetSize(uOldLength + uLength);
+	void Append(IteratorT itBegin, std::size_t uCount){
+		CopyN(ResizeMore(uCount), itBegin, uCount);
 	}
-	void Append(const Observer &obs){
-		Append(obs.GetBegin(), obs.GetEnd());
+	void Append(const Observer &rhs){
+		ASSERT(!GetObserver().DoesOverlapWith(rhs));
+		Copy(ResizeMore(rhs.GetSize()), rhs.GetBegin(), rhs.GetEnd());
 	}
-	void Append(std::initializer_list<CharT> vInitList){
-		Append(Observer(vInitList));
+	void Append(std::initializer_list<Char> rhs){
+		Append(Observer(rhs));
 	}
 	void Append(const String &rhs){
 		if(&rhs == this){
-			const std::size_t uOldLength = GetLength();
-			const auto pchWrite = xChopAndSplice(uOldLength, uOldLength, 0, uOldLength * 2);
-			Copy(pchWrite, pchWrite - uOldLength, pchWrite);
-			xSetSize(uOldLength * 2);
+			const auto uSize = GetSize();
+			const auto pchWrite = ResizeMore(uSize);
+			Copy(pchWrite, pchWrite - uSize, pchWrite);
 		} else {
-			Append(rhs.GetBegin(), rhs.GetEnd());
+			Append(Observer(rhs));
 		}
 	}
 	void Append(String &&rhs){
-		if(&rhs == this){
-			Append(rhs);
-		} else if(IsEmpty()){
-			Assign(std::move(rhs));
-		} else if(GetCapacity() >= rhs.GetCapacity()){
-			Append(rhs);
-		} else {
+		const Observer obsToAppend(rhs);
+		const auto uSizeTotal = GetSize() + obsToAppend.GetSize();
+		if(GetCapacity() >= uSizeTotal){
+			Append(obsToAppend);
+		} else if(rhs.GetCapacity() >= uSizeTotal){
+			rhs.Unshift(obsToAppend);
 			Swap(rhs);
-			Unshift(rhs);
+		} else {
+			Append(obsToAppend);
 		}
 	}
-	template<typename SrcCharT, StringEncoding SRC_ENCODING_T>
-	void Append(const String<SrcCharT, SRC_ENCODING_T> &rhs){
-		Impl::ConvertEncoding<CharT, ENCODING_T, SrcCharT, SRC_ENCODING_T>()(*this, rhs);
+	template<StringTypes OtherTypeT>
+	void Append(const StringObserver<OtherTypeT> &rhs){
+		Deunify(*this, GetSize(), String<OtherTypeT>::Unify(UnifiedString(), rhs));
 	}
-	template<StringEncoding SRC_ENCODING_T, typename SrcCharT>
-	void Append(const StringObserver<SrcCharT> &rhs){
-		Impl::ConvertEncoding<CharT, ENCODING_T, SrcCharT, SRC_ENCODING_T>()(*this, rhs);
+	template<StringTypes OtherTypeT>
+	void Append(const String<OtherTypeT> &rhs){
+		Append(rhs.GetObserver());
 	}
 	void Truncate(std::size_t uCount = 1) noexcept {
-		ASSERT_MSG(uCount <= GetLength(), L"删除的字符数太多。");
-
-		xSetSize(GetLength() - uCount);
+		const auto uOldLength = GetLength();
+		ASSERT_MSG(uCount <= uOldLength, L"删除的字符数太多。");
+		xSetSize(uOldLength - uCount);
 	}
 
-	void Push(CharT ch){
-		Append(ch);
+	void Push(Char ch){
+		Append(ch, 1);
 	}
 	void Pop() noexcept {
 		Truncate(1);
 	}
 
-	void PushNoCheck(CharT ch) noexcept {
+	void PushNoCheck(Char ch) noexcept {
 		ASSERT_MSG(GetLength() < GetCapacity(), L"容器已满。");
 
-		if(xm_vStorage.vSmall.chNull == CharT()){
+		if(xm_vStorage.vSmall.chNull == Char()){
 			xm_vStorage.vSmall.achData[xm_vStorage.vSmall.uchLength] = ch;
 		} else {
 			xm_vStorage.vLarge.pchBegin[xm_vStorage.vLarge.uLength] = ch;
@@ -472,19 +463,17 @@ public:
 	void PopNoCheck() noexcept {
 		ASSERT_MSG(GetLength() != 0, L"容器已空。");
 
-		if(xm_vStorage.vSmall.chNull == CharT()){
+		if(xm_vStorage.vSmall.chNull == Char()){
 			--xm_vStorage.vSmall.uchLength;
 		} else {
 			--xm_vStorage.vLarge.uLength;
 		}
 	}
 
-	void Unshift(CharT ch, std::size_t uCount = 1){
-		const std::size_t uOldLength = GetLength();
-		FillN(xChopAndSplice(0, 0, 0, uCount), uCount, ch);
-		xSetSize(uOldLength + uCount);
+	void Unshift(Char ch, std::size_t uCount = 1){
+		FillN(ResizeFront(uCount), uCount, ch);
 	}
-	void Unshift(const CharT *pszBegin){
+	void Unshift(const Char *pszBegin){
 		Unshift(Observer(pszBegin));
 	}
 	template<class IteratorT>
@@ -492,40 +481,45 @@ public:
 		Unshift(itBegin, (std::size_t)std::distance(itBegin, itEnd));
 	}
 	template<class IteratorT>
-	void Unshift(IteratorT itBegin, std::size_t uLength){
-		const std::size_t uOldLength = GetLength();
-		CopyN(xChopAndSplice(0, 0, 0, uLength), itBegin, uLength);
-		xSetSize(uOldLength + uLength);
+	void Unshift(IteratorT itBegin, std::size_t uCount){
+		CopyN(ResizeFront(uCount), itBegin, uCount);
 	}
 	void Unshift(const Observer &obs){
-		Unshift(obs.GetBegin(), obs.GetEnd());
+		Copy(ResizeFront(obs.GetSize()), obs.GetBegin(), obs.GetEnd());
 	}
-	void Unshift(std::initializer_list<CharT> vInitList){
-		Unshift(Observer(vInitList));
+	void Unshift(std::initializer_list<Char> rhs){
+		Unshift(Observer(rhs));
 	}
 	void Unshift(const String &rhs){
 		if(&rhs == this){
-			Append(rhs);
+			Append(*this);
 		} else {
-			Unshift(rhs.GetBegin(), rhs.GetEnd());
+			Unshift(Observer(rhs));
 		}
 	}
 	void Unshift(String &&rhs){
-		if(&rhs == this){
-			Append(rhs);
-		} else if(IsEmpty()){
-			Assign(std::move(rhs));
-		} else if(GetCapacity() >= rhs.GetCapacity()){
-			Unshift(rhs);
-		} else {
+		const Observer obsToAppend(rhs);
+		const auto uSizeTotal = GetSize() + obsToAppend.GetSize();
+		if(GetCapacity() >= uSizeTotal){
+			Unshift(obsToAppend);
+		} else if(rhs.GetCapacity() >= uSizeTotal){
+			rhs.Append(obsToAppend);
 			Swap(rhs);
-			Append(rhs);
+		} else {
+			Unshift(obsToAppend);
 		}
 	}
+	template<StringTypes OtherTypeT>
+	void Unshift(const StringObserver<OtherTypeT> &rhs){
+		Deunify(*this, 0, String<OtherTypeT>::Unify(UnifiedString(), rhs));
+	}
+	template<StringTypes OtherTypeT>
+	void Unshift(const String<OtherTypeT> &rhs){
+		Unshift(rhs.GetObserver());
+	}
 	void Shift(std::size_t uCount = 1) noexcept {
-		ASSERT_MSG(uCount <= GetLength(), L"删除的字符数太多。");
-
-		const std::size_t uOldLength = GetLength();
+		const auto uOldLength = GetLength();
+		ASSERT_MSG(uCount <= uOldLength, L"删除的字符数太多。");
 		const auto pchBegin = GetBegin();
 		Copy(pchBegin, pchBegin + uCount, pchBegin + uOldLength);
 		xSetSize(uOldLength - uCount);
@@ -538,111 +532,113 @@ public:
 		return String(Slice(nBegin, nEnd));
 	}
 
-	std::size_t Find(const Observer &obsToFind,
-		std::ptrdiff_t nOffsetBegin = 0) const noexcept
-	{
-		return GetObserver().Find(obsToFind, nOffsetBegin);
-	}
-	std::size_t FindBackward(const Observer &obsToFind,
-		std::ptrdiff_t nOffsetEnd = -1) const noexcept
-	{
-		return GetObserver().FindBackward(obsToFind, nOffsetEnd);
-	}
-	std::size_t FindRep(CharT chToFind, std::size_t uRepCount,
-		std::ptrdiff_t nOffsetBegin = 0) const noexcept
-	{
-		return GetObserver().FindRep(chToFind, uRepCount, nOffsetBegin);
-	}
-	std::size_t FindRepBackward(CharT chToFind, std::size_t uRepCount,
-		std::ptrdiff_t nOffsetEnd = -1) const noexcept
-	{
-		return GetObserver().FindRepBackward(chToFind, uRepCount, nOffsetEnd);
-	}
-	std::size_t Find(CharT chToFind, std::ptrdiff_t nOffsetBegin = 0) const noexcept {
-		return GetObserver().Find(chToFind, nOffsetBegin);
-	}
-	std::size_t FindBackward(CharT chToFind, std::ptrdiff_t nOffsetEnd = -1) const noexcept {
-		return GetObserver().FindBackward(chToFind, nOffsetEnd);
-	}
-
-	void Replace(std::ptrdiff_t nBegin, std::ptrdiff_t nEnd,
-		CharT chReplacement, std::size_t uCount = 1)
-	{
-		const auto obsCurrent(GetObserver());
-		const std::size_t uOldLength = obsCurrent.GetLength();
-
-		const auto obsRemoved(obsCurrent.Slice(nBegin, nEnd));
-		const auto uRemovedBegin = (std::size_t)(obsRemoved.GetBegin() - obsCurrent.GetBegin());
-		const auto uRemovedEnd = (std::size_t)(obsRemoved.GetEnd() - obsCurrent.GetBegin());
-
-		const auto pchWrite = xChopAndSplice(
-			uRemovedBegin, uRemovedEnd,
-			0, uRemovedBegin + uCount
-		);
-		FillN(pchWrite, uCount, chReplacement);
-		xSetSize(uRemovedBegin + uCount + (uOldLength - uRemovedEnd));
-	}
-	template<class IteratorT>
-	void Replace(
-		std::ptrdiff_t nBegin, std::ptrdiff_t nEnd,
-		IteratorT itReplacementBegin, std::common_type_t<IteratorT> itReplacementEnd
-	){
-		Replace(nBegin, nEnd, itReplacementBegin,
-			(std::size_t)std::distance(itReplacementBegin, itReplacementEnd));
-	}
-	template<class IteratorT>
-	void Replace(std::ptrdiff_t nBegin, std::ptrdiff_t nEnd,
-		IteratorT itReplacementBegin, std::size_t uReplacementLen)
-	{
-		const auto obsCurrent(GetObserver());
-		const std::size_t uOldLength = obsCurrent.GetLength();
-
-		const auto obsRemoved(obsCurrent.Slice(nBegin, nEnd));
-		const auto uRemovedBegin = (std::size_t)(obsRemoved.GetBegin() - obsCurrent.GetBegin());
-		const auto uRemovedEnd = (std::size_t)(obsRemoved.GetEnd() - obsCurrent.GetBegin());
-
-		// 注意：不指向同一个数组的两个指针相互比较是未定义行为。
-		if(
-			(uReplacementLen != 0) &&
-			((std::uintptr_t)&*itReplacementBegin - (std::uintptr_t)obsCurrent.GetBegin()
-				<= uOldLength * sizeof(CharT))
-		){
-			// 待替换字符串和当前字符串重叠。
-			String strTemp(*this);
-			const auto pchWrite = strTemp.xChopAndSplice(
-				uRemovedBegin, uRemovedEnd,
-				0, uRemovedBegin + uReplacementLen
-			);
-			CopyN(pchWrite, itReplacementBegin, uReplacementLen);
-			Swap(strTemp);
-		} else {
-			const auto pchWrite = xChopAndSplice(
-				uRemovedBegin, uRemovedEnd,
-				0, uRemovedBegin + uReplacementLen
-			);
-			CopyN(pchWrite, itReplacementBegin, uReplacementLen);
-		}
-		xSetSize(uRemovedBegin + uReplacementLen + (uOldLength - uRemovedEnd));
-	}
-	void Replace(std::ptrdiff_t nBegin, std::ptrdiff_t nEnd, const Observer &obsReplacement){
-		Replace(nBegin, nEnd, obsReplacement.GetBegin(), obsReplacement.GetLength());
-	}
-
 	void Reverse() noexcept {
 		auto pchBegin = GetBegin();
 		auto pchEnd = GetEnd();
 		if(pchBegin != pchEnd){
 			--pchEnd;
 			while(pchBegin < pchEnd){
-				std::swap(*pchBegin, *pchEnd);
-				++pchBegin;
-				--pchEnd;
+				std::iter_swap(pchBegin++, pchEnd--);
 			}
 		}
 	}
 
+	std::size_t Find(const Observer &obsToFind, std::ptrdiff_t nBegin = 0) const noexcept {
+		return GetObserver().Find(obsToFind, nBegin);
+	}
+	std::size_t FindBackward(const Observer &obsToFind, std::ptrdiff_t nEnd = -1) const noexcept {
+		return GetObserver().FindBackward(obsToFind, nEnd);
+	}
+	std::size_t FindRep(Char chToFind, std::size_t uRepCount, std::ptrdiff_t nBegin = 0) const noexcept {
+		return GetObserver().FindRep(chToFind, uRepCount, nBegin);
+	}
+	std::size_t FindRepBackward(Char chToFind, std::size_t uRepCount, std::ptrdiff_t nEnd = -1) const noexcept {
+		return GetObserver().FindRepBackward(chToFind, uRepCount, nEnd);
+	}
+	std::size_t Find(Char chToFind, std::ptrdiff_t nBegin = 0) const noexcept {
+		return GetObserver().Find(chToFind, nBegin);
+	}
+	std::size_t FindBackward(Char chToFind, std::ptrdiff_t nEnd = -1) const noexcept {
+		return GetObserver().FindBackward(chToFind, nEnd);
+	}
+
+	void Replace(std::ptrdiff_t nBegin, std::ptrdiff_t nEnd, Char chRep, std::size_t uCount = 1){
+		const auto obsCurrent(GetObserver());
+		const auto uOldLength = obsCurrent.GetLength();
+
+		const auto obsRemoved(obsCurrent.Slice(nBegin, nEnd));
+		const auto uRemovedBegin = (std::size_t)(obsRemoved.GetBegin() - obsCurrent.GetBegin());
+		const auto uRemovedEnd = (std::size_t)(obsRemoved.GetEnd() - obsCurrent.GetBegin());
+
+		const auto pchWrite = xChopAndSplice(uRemovedBegin, uRemovedEnd, 0, uRemovedBegin + uCount);
+		FillN(pchWrite, uCount, chRep);
+		xSetSize(uRemovedBegin + uCount + (uOldLength - uRemovedEnd));
+	}
+	template<class IteratorT>
+	void Replace(std::ptrdiff_t nBegin, std::ptrdiff_t nEnd, IteratorT itRepBegin, std::common_type_t<IteratorT> itRepEnd){
+		Replace(nBegin, nEnd, std::move(itRepBegin), (std::size_t)std::distance(itRepBegin, itRepEnd));
+	}
+	template<class IteratorT>
+	void Replace(std::ptrdiff_t nBegin, std::ptrdiff_t nEnd, IteratorT itRepBegin, std::size_t uRepLen){
+		// 基本异常安全保证。
+		const auto obsCurrent(GetObserver());
+		const auto uOldLength = obsCurrent.GetLength();
+
+		const auto obsRemoved(obsCurrent.Slice(nBegin, nEnd));
+		const auto uRemovedBegin = (std::size_t)(obsRemoved.GetBegin() - obsCurrent.GetBegin());
+		const auto uRemovedEnd = (std::size_t)(obsRemoved.GetEnd() - obsCurrent.GetBegin());
+
+		const auto pchWrite = xChopAndSplice(uRemovedBegin, uRemovedEnd, 0, uRemovedBegin + uRepLen);
+		CopyN(pchWrite, itRepBegin, uRepLen);
+		xSetSize(uRemovedBegin + uRepLen + (uOldLength - uRemovedEnd));
+	}
+	void Replace(std::ptrdiff_t nBegin, std::ptrdiff_t nEnd, const Observer &obsRep){
+		Replace(nBegin, nEnd, obsRep.GetBegin(), obsRep.GetSize());
+	}
+	template<StringTypes OtherTypeT>
+	void Replace(std::ptrdiff_t nBegin, std::ptrdiff_t nEnd, const StringObserver<OtherTypeT> &obsRep){
+		// 基本异常安全保证。
+		const auto obsCurrent(GetObserver());
+		const auto uOldLength = obsCurrent.GetLength();
+
+		const auto obsRemoved(obsCurrent.Slice(nBegin, nEnd));
+		const auto uRemovedBegin = (std::size_t)(obsRemoved.GetBegin() - obsCurrent.GetBegin());
+		const auto uRemovedEnd = (std::size_t)(obsRemoved.GetEnd() - obsCurrent.GetBegin());
+
+		const auto pchWrite = xChopAndSplice(uRemovedBegin, uRemovedEnd, 0, uRemovedBegin);
+		xSetSize(uRemovedBegin + (uOldLength - uRemovedEnd));
+		Deunify(*this, uRemovedBegin, String<OtherTypeT>::Unify(UnifiedString(), obsRep));
+	}
+	template<StringTypes OtherTypeT>
+	void Replace(std::ptrdiff_t nBegin, std::ptrdiff_t nEnd, const String<OtherTypeT> &strRep){
+		Replace(nBegin, nEnd, strRep.GetObserver());
+	}
+
 public:
-	typedef CharT value_type;
+	operator Observer() const noexcept {
+		return GetObserver();
+	}
+
+	explicit operator bool() const noexcept {
+		return !IsEmpty();
+	}
+	explicit operator const Char *() const noexcept {
+		return GetStr();
+	}
+	explicit operator Char *() noexcept {
+		return GetStr();
+	}
+	const Char &operator[](std::size_t uIndex) const noexcept {
+		ASSERT_MSG(uIndex <= GetLength(), L"索引越界。");
+		return GetBegin()[uIndex];
+	}
+	Char &operator[](std::size_t uIndex) noexcept {
+		ASSERT_MSG(uIndex <= GetLength(), L"索引越界。");
+		return GetBegin()[uIndex];
+	}
+
+public:
+	typedef Char value_type;
 
 	// std::back_insert_iterator
 	template<typename ParamT>
@@ -654,351 +650,208 @@ public:
 	void push_front(ParamT &&vParam){
 		Unshift(std::forward<ParamT>(vParam));
 	}
-
-public:
-	operator Observer() const noexcept {
-		return GetObserver();
-	}
-
-	explicit operator bool() const noexcept {
-		return !IsEmpty();
-	}
-	explicit operator const CharT *() const noexcept {
-		return GetStr();
-	}
-	explicit operator CharT *() noexcept {
-		return GetStr();
-	}
-	const CharT &operator[](std::size_t uIndex) const noexcept {
-		ASSERT_MSG(uIndex <= GetLength(), L"索引越界。");
-
-		return GetStr()[uIndex];
-	}
-	CharT &operator[](std::size_t uIndex) noexcept {
-		ASSERT_MSG(uIndex <= GetLength(), L"索引越界。");
-
-		return GetStr()[uIndex];
-	}
 };
 
-template<typename CharT, StringEncoding ENCODING_T>
-String<CharT, ENCODING_T> &operator+=(
-	String<CharT, ENCODING_T> &lhs,
-	const StringObserver<CharT> &rhs
-){
+template<StringTypes TypeT, StringTypes OtherTypeT>
+String<TypeT> &operator+=(String<TypeT> &lhs, const StringObserver<OtherTypeT> &rhs){
 	lhs.Append(rhs);
 	return lhs;
 }
-template<
-	typename CharT, StringEncoding ENCODING_T,
-	typename SrcCharT, StringEncoding SRC_ENCODING_T
->
-String<CharT, ENCODING_T> &operator+=(
-	String<CharT, ENCODING_T> &lhs,
-	const String<SrcCharT, SRC_ENCODING_T> &rhs
-){
+template<StringTypes TypeT>
+String<TypeT> &operator+=(String<TypeT> &lhs, typename String<TypeT>::Char rhs){
 	lhs.Append(rhs);
 	return lhs;
 }
-template<typename CharT, StringEncoding ENCODING_T>
-String<CharT, ENCODING_T> &operator+=(
-	String<CharT, ENCODING_T> &lhs,
-	CharT rhs
-){
-	lhs.Append(rhs);
-	return lhs;
-}
-template<typename CharT, StringEncoding ENCODING_T>
-String<CharT, ENCODING_T> &&operator+=(
-	String<CharT, ENCODING_T> &&lhs,
-	const StringObserver<CharT> &rhs
-){
+template<StringTypes TypeT, StringTypes OtherTypeT>
+String<TypeT> &&operator+=(String<TypeT> &&lhs, const StringObserver<OtherTypeT> &rhs){
 	lhs.Append(rhs);
 	return std::move(lhs);
 }
-template<
-	typename CharT, StringEncoding ENCODING_T,
-	typename SrcCharT, StringEncoding SRC_ENCODING_T
->
-String<CharT, ENCODING_T> &&operator+=(
-	String<CharT, ENCODING_T> &&lhs,
-	const String<SrcCharT, SRC_ENCODING_T> &rhs
-){
+template<StringTypes TypeT>
+String<TypeT> &&operator+=(String<TypeT> &&lhs, typename String<TypeT>::Char rhs){
 	lhs.Append(rhs);
 	return std::move(lhs);
 }
-template<typename CharT, StringEncoding ENCODING_T>
-String<CharT, ENCODING_T> &&operator+=(
-	String<CharT, ENCODING_T> &&lhs,
-	CharT rhs
-){
-	lhs.Append(rhs);
+template<StringTypes TypeT>
+String<TypeT> &&operator+=(String<TypeT> &&lhs, String<TypeT> &&rhs){
+	lhs.Append(std::move(rhs));
 	return std::move(lhs);
 }
 
-template<typename CharT, StringEncoding ENCODING_T>
-String<CharT, ENCODING_T> operator+(
-	const String<CharT, ENCODING_T> &lhs,
-	const StringObserver<CharT> &rhs
-){
-	String<CharT, ENCODING_T> ret;
-	ret.Reserve(lhs.GetSize() + rhs.GetSize());
-	ret.Append(lhs);
-	ret.Append(rhs);
-	return std::move(ret);
+template<StringTypes TypeT, StringTypes OtherTypeT>
+String<TypeT> operator+(const String<TypeT> &lhs, const StringObserver<OtherTypeT> &rhs){
+	return std::move(String<TypeT>(lhs) += rhs);
 }
-template<typename CharT, StringEncoding ENCODING_T>
-String<CharT, ENCODING_T> operator+(
-	const StringObserver<CharT> &lhs,
-	const String<CharT, ENCODING_T> &rhs
-){
-	String<CharT, ENCODING_T> ret;
-	ret.Reserve(lhs.GetSize() + rhs.GetSize());
-	ret.Append(lhs);
-	ret.Append(rhs);
-	return std::move(ret);
+template<StringTypes TypeT>
+String<TypeT> operator+(const String<TypeT> &lhs, typename String<TypeT>::Char rhs){
+	return std::move(String<TypeT>(lhs) += rhs);
 }
-template<typename CharT, StringEncoding ENCODING_T>
-String<CharT, ENCODING_T> operator+(
-	const String<CharT, ENCODING_T> &lhs,
-	CharT rhs
-){
-	String<CharT, ENCODING_T> ret;
-	ret.Reserve(lhs.GetSize() + 1);
-	ret.Append(lhs);
-	ret.Append(rhs);
-	return std::move(ret);
+template<StringTypes TypeT, StringTypes OtherTypeT>
+String<TypeT> &&operator+(String<TypeT> &&lhs, const StringObserver<OtherTypeT> &rhs){
+	return std::move(lhs += rhs);
 }
-template<typename CharT, StringEncoding ENCODING_T>
-String<CharT, ENCODING_T> operator+(
-	CharT lhs,
-	const String<CharT, ENCODING_T> &rhs
-){
-	String<CharT, ENCODING_T> ret;
-	ret.Reserve(1 + rhs.GetSize());
-	ret.Append(lhs);
-	ret.Append(rhs);
-	return std::move(ret);
+template<StringTypes TypeT>
+String<TypeT> &&operator+(String<TypeT> &&lhs, typename String<TypeT>::Char rhs){
+	return std::move(lhs += rhs);
+}
+template<StringTypes TypeT>
+String<TypeT> &&operator+(String<TypeT> &&lhs, String<TypeT> &&rhs){
+	return std::move(lhs += std::move(rhs));
 }
 
-template<typename CharT, StringEncoding ENCODING_T>
-String<CharT, ENCODING_T> &&operator+(
-	String<CharT, ENCODING_T> &&lhs,
-	const StringObserver<CharT> &rhs
-){
-	lhs.Append(rhs);
-	return std::move(lhs);
+template<StringTypes TypeT>
+bool operator==(const String<TypeT> &lhs, const String<TypeT> &rhs) noexcept {
+	return lhs.GetObserver() == rhs.GetObserver();
 }
-template<typename CharT, StringEncoding ENCODING_T>
-String<CharT, ENCODING_T> &&operator+(
-	const StringObserver<CharT> &lhs,
-	String<CharT, ENCODING_T> &&rhs
-){
-	lhs.Append(rhs);
-	return std::move(lhs);
+template<StringTypes TypeT>
+bool operator==(const String<TypeT> &lhs, const StringObserver<TypeT> &rhs) noexcept {
+	return lhs.GetObserver() == rhs;
 }
-template<typename CharT, StringEncoding ENCODING_T>
-String<CharT, ENCODING_T> &&operator+(
-	String<CharT, ENCODING_T> &&lhs,
-	CharT rhs
-){
-	lhs.Append(rhs);
-	return std::move(lhs);
-}
-template<typename CharT, StringEncoding ENCODING_T>
-String<CharT, ENCODING_T> &&operator+(
-	CharT lhs,
-	String<CharT, ENCODING_T> &&rhs
-){
-	rhs.Unshift(lhs);
-	return std::move(rhs);
+template<StringTypes TypeT>
+bool operator==(const StringObserver<TypeT> &lhs, const String<TypeT> &rhs) noexcept {
+	return lhs == rhs.GetObserver();
 }
 
-template<typename CharT, StringEncoding ENCODING_T>
-String<CharT, ENCODING_T> operator+(
-	const String<CharT, ENCODING_T> &lhs,
-	const String<CharT, ENCODING_T> &rhs
-){
-	String<CharT, ENCODING_T> ret;
-	ret.Reserve(lhs.GetSize() + rhs.GetSize());
-	ret.Append(lhs);
-	ret.Append(rhs);
-	return std::move(ret);
+template<StringTypes TypeT>
+bool operator!=(const String<TypeT> &lhs, const String<TypeT> &rhs) noexcept {
+	return lhs.GetObserver() != rhs.GetObserver();
 }
-template<
-	typename CharT, StringEncoding ENCODING_T,
-	typename SrcCharT, StringEncoding SRC_ENCODING_T
->
-String<CharT, ENCODING_T> operator+(
-	const String<CharT, ENCODING_T> &lhs,
-	const String<SrcCharT, SRC_ENCODING_T> &rhs
-){
-	String<CharT, ENCODING_T> ret(lhs);
-	ret.Append(rhs);
-	return std::move(ret);
+template<StringTypes TypeT>
+bool operator!=(const String<TypeT> &lhs, const StringObserver<TypeT> &rhs) noexcept {
+	return lhs.GetObserver() != rhs;
+}
+template<StringTypes TypeT>
+bool operator!=(const StringObserver<TypeT> &lhs, const String<TypeT> &rhs) noexcept {
+	return lhs != rhs.GetObserver();
 }
 
-template<typename CharT, StringEncoding ENCODING_T>
-String<CharT, ENCODING_T> &&operator+(
-	String<CharT, ENCODING_T> &&lhs,
-	String<CharT, ENCODING_T> &&rhs
-){
-	if(lhs.GetCapacity() >= rhs.GetCapacity()){
-		lhs.Append(rhs);
-		return std::move(lhs);
-	} else {
-		rhs.Unshift(lhs);
-		return std::move(rhs);
-	}
+template<StringTypes TypeT>
+bool operator<(const String<TypeT> &lhs, const String<TypeT> &rhs) noexcept {
+	return lhs.GetObserver() < rhs.GetObserver();
 }
-template<
-	typename CharT, StringEncoding ENCODING_T,
-	typename SrcCharT, StringEncoding SRC_ENCODING_T
->
-String<CharT, ENCODING_T> operator+(
-	String<CharT, ENCODING_T> &&lhs,
-	const String<SrcCharT, SRC_ENCODING_T> &rhs
-){
-	lhs.Append(rhs);
-	return std::move(lhs);
+template<StringTypes TypeT>
+bool operator<(const String<TypeT> &lhs, const StringObserver<TypeT> &rhs) noexcept {
+	return lhs.GetObserver() < rhs;
+}
+template<StringTypes TypeT>
+bool operator<(const StringObserver<TypeT> &lhs, const String<TypeT> &rhs) noexcept {
+	return lhs < rhs.GetObserver();
 }
 
-#define STRING_RATIONAL_OPERATOR_(op_type)	\
-	template<typename CharT, StringEncoding ENCODING_T>	\
-	bool operator op_type (	\
-		const String<CharT, ENCODING_T> &lhs,	\
-		const String<CharT, ENCODING_T> &rhs	\
-	) noexcept {	\
-		return lhs.GetObserver() op_type rhs.GetObserver();	\
-	}	\
-	template<typename CharT, StringEncoding ENCODING_T>	\
-	bool operator op_type (	\
-		const StringObserver<CharT> &lhs,	\
-		const String<CharT, ENCODING_T> &rhs	\
-	) noexcept {	\
-		return lhs op_type rhs.GetObserver();	\
-	}	\
-	template<typename CharT, StringEncoding ENCODING_T>	\
-	bool operator op_type (	\
-		const String<CharT, ENCODING_T> &lhs,	\
-		const StringObserver<CharT> &rhs	\
-	) noexcept {	\
-		return lhs.GetObserver() op_type rhs;	\
-	}
+template<StringTypes TypeT>
+bool operator>(const String<TypeT> &lhs, const String<TypeT> &rhs) noexcept {
+	return lhs.GetObserver() > rhs.GetObserver();
+}
+template<StringTypes TypeT>
+bool operator>(const String<TypeT> &lhs, const StringObserver<TypeT> &rhs) noexcept {
+	return lhs.GetObserver() > rhs;
+}
+template<StringTypes TypeT>
+bool operator>(const StringObserver<TypeT> &lhs, const String<TypeT> &rhs) noexcept {
+	return lhs > rhs.GetObserver();
+}
 
-STRING_RATIONAL_OPERATOR_(==)
-STRING_RATIONAL_OPERATOR_(!=)
-STRING_RATIONAL_OPERATOR_(<)
-STRING_RATIONAL_OPERATOR_(>)
-STRING_RATIONAL_OPERATOR_(<=)
-STRING_RATIONAL_OPERATOR_(>=)
+template<StringTypes TypeT>
+bool operator<=(const String<TypeT> &lhs, const String<TypeT> &rhs) noexcept {
+	return lhs.GetObserver() <= rhs.GetObserver();
+}
+template<StringTypes TypeT>
+bool operator<=(const String<TypeT> &lhs, const StringObserver<TypeT> &rhs) noexcept {
+	return lhs.GetObserver() <= rhs;
+}
+template<StringTypes TypeT>
+bool operator<=(const StringObserver<TypeT> &lhs, const String<TypeT> &rhs) noexcept {
+	return lhs <= rhs.GetObserver();
+}
 
-#undef STRING_RATIONAL_OPERATOR_
+template<StringTypes TypeT>
+bool operator>=(const String<TypeT> &lhs, const String<TypeT> &rhs) noexcept {
+	return lhs.GetObserver() >= rhs.GetObserver();
+}
+template<StringTypes TypeT>
+bool operator>=(const String<TypeT> &lhs, const StringObserver<TypeT> &rhs) noexcept {
+	return lhs.GetObserver() >= rhs;
+}
+template<StringTypes TypeT>
+bool operator>=(const StringObserver<TypeT> &lhs, const String<TypeT> &rhs) noexcept {
+	return lhs >= rhs.GetObserver();
+}
 
-template<typename CharT, StringEncoding ENCODING_T>
-const CharT *begin(const String<CharT, ENCODING_T> &rhs) noexcept {
+template<StringTypes TypeT>
+auto begin(const String<TypeT> &rhs) noexcept {
 	return rhs.GetBegin();
 }
-template<typename CharT, StringEncoding ENCODING_T>
-CharT *begin(String<CharT, ENCODING_T> &rhs) noexcept {
+template<StringTypes TypeT>
+auto begin(String<TypeT> &rhs) noexcept {
 	return rhs.GetBegin();
 }
-template<typename CharT, StringEncoding ENCODING_T>
-const CharT *cbegin(const String<CharT, ENCODING_T> &rhs) noexcept {
-	return rhs.GetCBegin();
+template<StringTypes TypeT>
+auto cbegin(const String<TypeT> &rhs) noexcept {
+	return rhs.GetBegin();
 }
 
-template<typename CharT, StringEncoding ENCODING_T>
-const CharT *end(const String<CharT, ENCODING_T> &rhs) noexcept {
+template<StringTypes TypeT>
+auto end(const String<TypeT> &rhs) noexcept {
 	return rhs.GetEnd();
 }
-template<typename CharT, StringEncoding ENCODING_T>
-CharT *end(String<CharT, ENCODING_T> &rhs) noexcept {
+template<StringTypes TypeT>
+auto end(String<TypeT> &rhs) noexcept {
 	return rhs.GetEnd();
 }
-template<typename CharT, StringEncoding ENCODING_T>
-const CharT *cend(const String<CharT, ENCODING_T> &rhs) noexcept {
-	return rhs.GetCEnd();
+template<StringTypes TypeT>
+auto cend(const String<TypeT> &rhs) noexcept {
+	return rhs.GetEnd();
 }
 
-template<typename CharT, StringEncoding ENCODING_T>
-void swap(String<CharT, ENCODING_T> &lhs, String<CharT, ENCODING_T> &rhs) noexcept {
+template<StringTypes TypeT>
+void swap(String<TypeT> &lhs, String<TypeT> &rhs) noexcept {
 	lhs.Swap(rhs);
 }
 
-namespace Impl {
-	template<typename DstCharT, StringEncoding DST_ENCODING_T,
-		typename SrcCharT, StringEncoding SRC_ENCODING_T>
-	inline void ConvertEncoding(String<DstCharT, DST_ENCODING_T> &strDst,
-		const String<SrcCharT, SRC_ENCODING_T> &strSrc)
-	{
-		static_assert(!std::is_same<DstCharT, SrcCharT>::value ||
-			(DST_ENCODING_T != SRC_ENCODING_T), "Conversion from identical type?");
+extern template class String<StringTypes::NARROW>;
+extern template class String<StringTypes::WIDE>;
+extern template class String<StringTypes::UTF8>;
+extern template class String<StringTypes::UTF16>;
+extern template class String<StringTypes::UTF32>;
+extern template class String<StringTypes::MOD_UTF8>;
 
-		//
-	}
-}
-
-extern template class String<char,		StringEncoding::ANSI>;
-extern template class String<wchar_t,	StringEncoding::UTF16>;
-
-extern template class String<char,		StringEncoding::UTF8>;
-extern template class String<char16_t,	StringEncoding::UTF16>;
-extern template class String<char32_t,	StringEncoding::UTF32>;
-
-typedef String<char,		StringEncoding::ANSI>	AnsiString;
-typedef String<wchar_t,		StringEncoding::UTF16>	WideString;
-
-typedef String<char,		StringEncoding::UTF8>	Utf8String;
-typedef String<char16_t,	StringEncoding::UTF16>	Utf16String;
-typedef String<char32_t,	StringEncoding::UTF32>	Utf32String;
+using NarrowString		= String<StringTypes::NARROW>;
+using WideString		= String<StringTypes::WIDE>;
+using Utf8String		= String<StringTypes::UTF8>;
+using Utf16String		= String<StringTypes::UTF16>;
+using Utf32String		= String<StringTypes::UTF32>;
+using ModUtf8String		= String<StringTypes::MOD_UTF8>;
 
 // 字面量运算符。
 template<typename CharT, CharT ...STRING_T>
-extern inline
-std::enable_if_t<std::is_same<CharT, char>::value, const AnsiString &>
-	operator""_as()
-{
-	static AnsiString s_strRet({STRING_T...});
-	return s_strRet;
+extern inline const auto &operator""_ns(){
+	static const NarrowString s_nsRet{ STRING_T... };
+	return s_nsRet;
 }
 template<typename CharT, CharT ...STRING_T>
-extern inline
-std::enable_if_t<std::is_same<CharT, wchar_t>::value, const WideString &>
-	operator""_ws()
-{
-	static WideString s_strRet({STRING_T...});
-	return s_strRet;
-}
-
-template<typename CharT, CharT ...STRING_T>
-extern inline
-std::enable_if_t<std::is_same<CharT, char>::value, const Utf8String &>
-	operator""_u8s()
-{
-	static Utf8String s_strRet({STRING_T...});
-	return s_strRet;
+extern inline const auto &operator""_ws(){
+	static const WideString s_wsRet{ STRING_T... };
+	return s_wsRet;
 }
 template<typename CharT, CharT ...STRING_T>
-extern inline
-std::enable_if_t<std::is_same<CharT, char16_t>::value, const Utf16String &>
-	operator""_u16s()
-{
-	static Utf16String s_strRet({STRING_T...});
-	return s_strRet;
+extern inline const auto &operator""_u8s(){
+	static const Utf32String s_u8sRet{ STRING_T... };
+	return s_u8sRet;
 }
 template<typename CharT, CharT ...STRING_T>
-extern inline
-std::enable_if_t<std::is_same<CharT, char32_t>::value, const Utf32String &>
-	operator""_u32s()
-{
-	static Utf32String s_strRet({STRING_T...});
-	return s_strRet;
+extern inline const auto &operator""_u16s(){
+	static const Utf16String s_u16sRet{ STRING_T... };
+	return s_u16sRet;
+}
+template<typename CharT, CharT ...STRING_T>
+extern inline const auto &operator""_u32s(){
+	static const Utf32String s_u32sRet{ STRING_T... };
+	return s_u32sRet;
 }
 
 }
 
-using ::MCF::operator""_as;
+using ::MCF::operator""_ns;
 using ::MCF::operator""_ws;
 using ::MCF::operator""_u8s;
 using ::MCF::operator""_u16s;

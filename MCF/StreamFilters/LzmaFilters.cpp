@@ -5,6 +5,7 @@
 #include "../StdMCF.hpp"
 #include "LzmaFilters.hpp"
 #include "../Core/Exception.hpp"
+#include "../Utilities/MinMax.hpp"
 #include "../../External/lzmalite/lzma.h"
 using namespace MCF;
 

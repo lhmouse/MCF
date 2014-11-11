@@ -10,8 +10,8 @@ using namespace MCF;
 namespace {
 
 WideString Unescape(const WideStringObserver &wsoSrc){
-	WideString wcsRet;
-	wcsRet.Reserve(wsoSrc.GetSize());
+	WideString wsRet;
+	wsRet.Reserve(wsoSrc.GetSize());
 
 	enum {
 		NORMAL,
@@ -27,11 +27,11 @@ WideString Unescape(const WideStringObserver &wsoSrc){
 			u32CodePoint = 0xFFFD;
 		}
 		if(u32CodePoint <= 0xFFFF){
-			wcsRet.Append(u32CodePoint);
+			wsRet.Append(u32CodePoint);
 		} else {
 			u32CodePoint -= 0x10000;
-			wcsRet.Append((u32CodePoint >> 10)   | 0xD800);
-			wcsRet.Append((u32CodePoint & 0x3FF) | 0xDC00);
+			wsRet.Append((u32CodePoint >> 10)   | 0xD800);
+			wsRet.Append((u32CodePoint & 0x3FF) | 0xDC00);
 		}
 	};
 
@@ -52,7 +52,7 @@ WideString Unescape(const WideStringObserver &wsoSrc){
 
 			default:
 				// eState = NORMAL;
-				wcsRet.Push(wc);
+				wsRet.Push(wc);
 				break;
 			}
 			break;
@@ -60,22 +60,22 @@ WideString Unescape(const WideStringObserver &wsoSrc){
 		case ESCAPED:
 			switch(wc){
 			case L'n':
-				wcsRet.Append(L'\n');
+				wsRet.Append(L'\n');
 				eState = NORMAL;
 				break;
 
 			case L'b':
-				wcsRet.Append(L'\b');
+				wsRet.Append(L'\b');
 				eState = NORMAL;
 				break;
 
 			case L'r':
-				wcsRet.Append(L'\r');
+				wsRet.Append(L'\r');
 				eState = NORMAL;
 				break;
 
 			case L't':
-				wcsRet.Append(L'\t');
+				wsRet.Append(L'\t');
 				eState = NORMAL;
 				break;
 
@@ -102,7 +102,7 @@ WideString Unescape(const WideStringObserver &wsoSrc){
 				break;
 
 			default:
-				wcsRet.Append(wc);
+				wsRet.Append(wc);
 				eState = NORMAL;
 				break;
 			}
@@ -151,11 +151,11 @@ WideString Unescape(const WideStringObserver &wsoSrc){
 		PushUtf();
 	}
 
-	return std::move(wcsRet);
+	return std::move(wsRet);
 }
-void Escape(WideString &wcsAppendTo, const WideStringObserver &wsoSrc){
+void Escape(WideString &wsAppendTo, const WideStringObserver &wsoSrc){
 	const auto uSrcLength = wsoSrc.GetLength();
-	wcsAppendTo.Reserve(wcsAppendTo.GetLength() + uSrcLength);
+	wsAppendTo.Reserve(wsAppendTo.GetLength() + uSrcLength);
 
 	for(std::size_t i = 0; i < uSrcLength; ++i){
 		const auto wc = wsoSrc[i];
@@ -165,37 +165,37 @@ void Escape(WideString &wcsAppendTo, const WideStringObserver &wsoSrc){
 		case L')':
 		case L';':
 		case L' ':
-			wcsAppendTo.Append(L'\\');
-			wcsAppendTo.Append(wc);
+			wsAppendTo.Append(L'\\');
+			wsAppendTo.Append(wc);
 			break;
 
 		case L'\\':
-			wcsAppendTo.Append(L'\\');
-			wcsAppendTo.Append(L'\\');
+			wsAppendTo.Append(L'\\');
+			wsAppendTo.Append(L'\\');
 			break;
 
 		case L'\"':
-			wcsAppendTo.Append(L'\\');
-			wcsAppendTo.Append(L'\"');
+			wsAppendTo.Append(L'\\');
+			wsAppendTo.Append(L'\"');
 			break;
 
 		case L'\n':
-			wcsAppendTo.Append(L'\\');
-			wcsAppendTo.Append(L'n');
+			wsAppendTo.Append(L'\\');
+			wsAppendTo.Append(L'n');
 			break;
 
 		case L'\r':
-			wcsAppendTo.Append(L'\\');
-			wcsAppendTo.Append(L'r');
+			wsAppendTo.Append(L'\\');
+			wsAppendTo.Append(L'r');
 			break;
 
 		case L'\t':
-			wcsAppendTo.Append(L'\\');
-			wcsAppendTo.Append(L't');
+			wsAppendTo.Append(L'\\');
+			wsAppendTo.Append(L't');
 			break;
 
 		default:
-			wcsAppendTo.Append(wc);
+			wsAppendTo.Append(wc);
 			break;
 		}
 	}
@@ -466,11 +466,11 @@ std::pair<TExpression::ErrorType, const wchar_t *> TExpression::Parse(const Wide
 	return std::make_pair(ERR_NONE, pwcRead);
 }
 WideString TExpression::Export(const WideStringObserver &wsoIndent) const {
-	WideString wcsRet;
+	WideString wsRet;
 
 	VVector<std::pair<const Node *, std::size_t>> vecNodeStack;
 	vecNodeStack.Push(this, 0);
-	WideString wcsIndent;
+	WideString wsIndent;
 	for(;;){
 		auto &vTop = vecNodeStack.GetEnd()[-1];
 		const auto &vTopNode = *(vTop.first);
@@ -478,22 +478,22 @@ WideString TExpression::Export(const WideStringObserver &wsoIndent) const {
 	jNextChild:
 		if(vTop.second < vTopNode.m_deqChildren.size()){
 			const auto &vChild = vTopNode.m_deqChildren[vTop.second++];
-			wcsRet.Append(wcsIndent);
+			wsRet.Append(wsIndent);
 			if(!vChild.first.IsEmpty()){
-				Escape(wcsRet, vChild.first);
+				Escape(wsRet, vChild.first);
 				if(vChild.second.m_deqChildren.empty()){
-					wcsRet.Append(L'\n');
+					wsRet.Append(L'\n');
 					goto jNextChild;
 				}
 			}
-			wcsRet.Append(L'(');
+			wsRet.Append(L'(');
 			if(vChild.second.m_deqChildren.empty()){
-				wcsRet.Append(L')');
-				wcsRet.Append(L'\n');
+				wsRet.Append(L')');
+				wsRet.Append(L'\n');
 				goto jNextChild;
 			}
-			wcsRet.Append(L'\n');
-			wcsIndent.Append(wsoIndent);
+			wsRet.Append(L'\n');
+			wsIndent.Append(wsoIndent);
 			vecNodeStack.Push(&(vChild.second), 0);
 			continue;
 		}
@@ -503,13 +503,13 @@ WideString TExpression::Export(const WideStringObserver &wsoIndent) const {
 			break;
 		}
 
-		wcsIndent.Truncate(wsoIndent.GetLength());
-		wcsRet.Append(wcsIndent);
-		wcsRet.Append(L')');
-		wcsRet.Append(L'\n');
+		wsIndent.Truncate(wsoIndent.GetLength());
+		wsRet.Append(wsIndent);
+		wsRet.Append(L')');
+		wsRet.Append(L'\n');
 	}
 
-	ASSERT(wcsIndent.IsEmpty());
+	ASSERT(wsIndent.IsEmpty());
 
-	return std::move(wcsRet);
+	return std::move(wsRet);
 }

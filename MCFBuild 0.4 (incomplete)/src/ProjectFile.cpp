@@ -7,14 +7,14 @@
 using namespace MCFBuild;
 
 // 构造函数和析构函数。
-ProjectFile::ProjectFile(const MCF::WideString &wcsFullPath){
-	MCF::Utf8TextFileReader vReader(MCF::File::Open(wcsFullPath, MCF::File::TO_READ));
+ProjectFile::ProjectFile(const MCF::WideString &wsFullPath){
+	MCF::Utf8TextFileReader vReader(MCF::File::Open(wsFullPath, MCF::File::TO_READ));
 	MCF::Utf8String u8sContents;
 
 	vReader.ReadTillEof(u8sContents);
-	MCF::WideString wcsContents(u8sContents);
+	MCF::WideString wsContents(u8sContents);
 
-	const auto vResult = xm_vData.Parse(wcsContents);
+	const auto vResult = xm_vData.Parse(wsContents);
 	if(vResult.first != MCF::Notation::ERR_NONE){
 		static const MCF::WideStringObserver ERR_DESC[] = {
 			L"ERR_UNKNOWN"_wso,

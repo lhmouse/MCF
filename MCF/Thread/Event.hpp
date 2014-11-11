@@ -14,8 +14,8 @@ namespace MCF {
 
 class Event : NO_COPY, ABSTRACT {
 public:
-	static std::unique_ptr<Event> Create(bool bInitSet, const WideStringObserver &wsoName = nullptr);
-	static std::unique_ptr<Event> Create(bool bInitSet, const WideString &wcsName);
+	static std::unique_ptr<Event> Create(bool bInitSet, const wchar_t *pwszName = nullptr);
+	static std::unique_ptr<Event> Create(bool bInitSet, const WideString &wsName);
 
 public:
 	bool IsSet() const noexcept;

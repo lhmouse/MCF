@@ -8,6 +8,7 @@
 #include "../Core/Exception.hpp"
 #include "../Core/StringObserver.hpp"
 #include "../Core/Time.hpp"
+#include "../Utilities/MinMax.hpp"
 #include <climits>
 using namespace MCF;
 

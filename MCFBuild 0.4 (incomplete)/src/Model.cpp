@@ -30,8 +30,8 @@ Model::Model()
 	, xm_bRawOutput	(false)
 {
 	for(std::size_t i = 1; i < xm_vecArgV.GetSize(); ++i){
-		const auto &wcsArg = xm_vecArgV[i];
-		if((wcsArg == L"-M"_wso) || (wcsArg == L"/M"_wso)){
+		const auto &wsArg = xm_vecArgV[i];
+		if((wsArg == L"-M"_wso) || (wsArg == L"/M"_wso)){
 			xm_bRawOutput = true;
 		}
 	}
@@ -54,20 +54,20 @@ void Model::InitParams(){
 	xm_uProcessCount = 0;
 
 	for(std::size_t i = 1; i < xm_vecArgV.GetSize(); ++i){
-		const auto &wcsArg = xm_vecArgV[i];
-		const auto uArgLen = wcsArg.GetSize();
+		const auto &wsArg = xm_vecArgV[i];
+		const auto uArgLen = wsArg.GetSize();
 		if(uArgLen == 0){
 			continue;
 		}
 
 #define THROW_INV_PARAM	\
-	FORMAT_THROW(ERROR_INVALID_PARAMETER, L"INVALID_COMMAND_LINE_OPTION\0"_wso + wcsArg)
+	FORMAT_THROW(ERROR_INVALID_PARAMETER, L"INVALID_COMMAND_LINE_OPTION\0"_wso + wsArg)
 
-		if((wcsArg[0] == L'-') || (wcsArg[0] == L'/')){
+		if((wsArg[0] == L'-') || (wsArg[0] == L'/')){
 			if(uArgLen <= 1){
 				THROW_INV_PARAM;
 			}
-			switch(wcsArg[1]){
+			switch(wsArg[1]){
 			case L'h':
 			case L'?':
 				if(uArgLen > 2){
@@ -93,34 +93,34 @@ void Model::InitParams(){
 				if(uArgLen <= 2){
 					THROW_INV_PARAM;
 				}
-				xm_wcsWorkingDir.Assign(wcsArg.GetBegin() + 2, wcsArg.GetEnd());
+				xm_wcsWorkingDir.Assign(wsArg.GetBegin() + 2, wsArg.GetEnd());
 				break;
 
 			case L'f':
 				if(uArgLen <= 2){
 					THROW_INV_PARAM;
 				}
-				xm_wcsProject.Assign(wcsArg.GetBegin() + 2, wcsArg.GetEnd());
+				xm_wcsProject.Assign(wsArg.GetBegin() + 2, wsArg.GetEnd());
 				break;
 
 			case L'D':
 				if(uArgLen <= 2){
 					THROW_INV_PARAM;
 				} else {
-					MCF::WideString wcsMacroName(wcsArg.GetBegin(), uArgLen - 2);
-					MCF::WideString wcsMacroValue;
+					MCF::WideString wsMacroName(wsArg.GetBegin(), uArgLen - 2);
+					MCF::WideString wsMacroValue;
 
-					const auto uEquPos = wcsMacroName.Find(L'=');
-					if(uEquPos != wcsMacroName.NPOS){
-						wcsMacroValue.Assign(wcsMacroName.GetBegin() + uEquPos + 1, wcsMacroName.GetEnd());
-						wcsMacroName.Resize(uEquPos);
+					const auto uEquPos = wsMacroName.Find(L'=');
+					if(uEquPos != wsMacroName.NPOS){
+						wsMacroValue.Assign(wsMacroName.GetBegin() + uEquPos + 1, wsMacroName.GetEnd());
+						wsMacroName.Resize(uEquPos);
 					}
 /*
-					const auto pNode = xm_mapMacros.GetLowerBound<0>(wcsMacroName);
-					if(!pNode || (pNode->GetIndex<0>() != wcsMacroName)){
-						xm_mapMacros.InsertWithHints(std::make_tuple(pNode), std::move(wcsMacroValue), std::move(wcsMacroName));
+					const auto pNode = xm_mapMacros.GetLowerBound<0>(wsMacroName);
+					if(!pNode || (pNode->GetIndex<0>() != wsMacroName)){
+						xm_mapMacros.InsertWithHints(std::make_tuple(pNode), std::move(wsMacroValue), std::move(wsMacroName));
 					} else {
-						pNode->GetElement() = std::move(wcsMacroValue);
+						pNode->GetElement() = std::move(wsMacroValue);
 					}*/
 				}
 				break;
@@ -129,21 +129,21 @@ void Model::InitParams(){
 				if(uArgLen <= 2){
 					THROW_INV_PARAM;
 				}
-				xm_wcsSrcRoot.Assign(wcsArg.GetBegin() + 2, wcsArg.GetEnd());
+				xm_wcsSrcRoot.Assign(wsArg.GetBegin() + 2, wsArg.GetEnd());
 				break;
 
 			case L'i':
 				if(uArgLen <= 2){
 					THROW_INV_PARAM;
 				}
-				xm_wcsIntermediateRoot.Assign(wcsArg.GetBegin() + 2, wcsArg.GetEnd());
+				xm_wcsIntermediateRoot.Assign(wsArg.GetBegin() + 2, wsArg.GetEnd());
 				break;
 
 			case L'd':
 				if(uArgLen <= 2){
 					THROW_INV_PARAM;
 				}
-				xm_wcsDstRoot.Assign(wcsArg.GetBegin() + 2, wcsArg.GetEnd());
+				xm_wcsDstRoot.Assign(wsArg.GetBegin() + 2, wsArg.GetEnd());
 				break;
 
 			case L'c':
@@ -158,8 +158,8 @@ void Model::InitParams(){
 					THROW_INV_PARAM;
 				} else {
 					wchar_t *pwcEnd;
-					xm_uProcessCount = std::wcstoul(wcsArg.GetCStr() + 2, &pwcEnd, 10);
-					if(pwcEnd != wcsArg.GetEnd()){
+					xm_uProcessCount = std::wstoul(wsArg.GetCStr() + 2, &pwcEnd, 10);
+					if(pwcEnd != wsArg.GetEnd()){
 						THROW_INV_PARAM;
 					}
 					if(xm_uProcessCount > MAX_PROCESS_COUNT){
@@ -179,7 +179,7 @@ void Model::InitParams(){
 				THROW_INV_PARAM;
 			}
 		} else {
-			xm_wcsConfig = wcsArg;
+			xm_wcsConfig = wsArg;
 		}
 	}
 

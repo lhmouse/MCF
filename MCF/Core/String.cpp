@@ -4,281 +4,338 @@
 
 #include "../StdMCF.hpp"
 #include "String.hpp"
-#include "../Utilities/MinMax.hpp"
+#include <iterator>
 using namespace MCF;
+
+namespace {
+
+// https://en.wikipedia.org/wiki/UTF-8
+// https://en.wikipedia.org/wiki/UTF-16
+constexpr unsigned long ERROR_CODE_POINT = -1ul;
+
+template<class InputCharT>
+unsigned long LoadUtf8(const InputCharT *&pchRead, const InputCharT *pchEnd){
+	ASSERT(pchRead != pchEnd);
+
+	unsigned long ulPoint = (std::uint8_t)*pchRead;
+	++pchRead;
+	if((ulPoint & 0x80u) == 0){
+		// ASCII 字符。
+		return ulPoint;
+	}
+	// 这个值是该码点的总字节数减一。
+	const auto uAdditional = CountLeadingZeroes(~(ulPoint << (BITS_OF(ulPoint) - 7)) | 1);
+	// UTF-8 理论上最长可以编码 6 个字符，但是标准化以后只能使用 4 个。
+	if(uAdditional - 1 > 3){ // 0 - 3
+		// 按照 ISO-8859-1 映射到 U+0080 - U+00FF。
+		return ERROR_CODE_POINT;
+	}
+	if((std::size_t)(pchEnd - pchRead) < uAdditional){
+		return ERROR_CODE_POINT;
+	}
+
+	const auto pchPointEnd = pchRead + uAdditional;
+	ulPoint &= (0x7Fu >> uAdditional);
+	do {
+		const unsigned long ulUnit = (std::uint8_t)*pchRead;
+		if((ulUnit & 0xC0u) != 0x80u){
+			// 编码错误。
+			return ERROR_CODE_POINT;
+		}
+		ulPoint = (ulPoint << 6) | (ulUnit & 0x3Fu);
+	} while(++pchRead != pchPointEnd);
+
+	if(ulPoint > 0x10FFFFu){
+		// 无效的 UTF-32 码点。
+		ulPoint = 0xFFFDu;
+	}
+	return ulPoint;
+}
+template<class OutputIteratorT>
+void SaveUtf8(OutputIteratorT &itOutput, unsigned long ulPoint){
+	// 这个值是该码点的总字节数减一。
+	const auto uAdditional = (std::size_t)(29 - CountLeadingZeroes(ulPoint | 1)) / 5;
+	if(uAdditional == 0){
+		ASSERT(ulPoint <= 0x7Fu);
+		*itOutput = (char)ulPoint;
+		++itOutput;
+		return;
+	}
+	ulPoint |= 0xFFFFFF80u << (uAdditional * 5);
+	itOutput = (char)(ulPoint >> (uAdditional * 6));
+	++itOutput;
+	for(std::size_t i = uAdditional; i != 0; --i){
+		itOutput = (char)(((ulPoint >> (i * 6 - 6)) & 0x3Fu) | 0x80u);
+		++itOutput;
+	}
+}
+
+template<class OutputIteratorT, class InputCharT>
+OutputIteratorT Utf32FromUtf8(OutputIteratorT itOutput, const InputCharT *pchBegin, const InputCharT *pchEnd){
+	auto pchRead = pchBegin;
+	while(pchRead != pchEnd){
+		auto pchOldRead = pchRead;
+		const auto ulPoint = LoadUtf8(pchRead, pchEnd);
+		if(ulPoint == ERROR_CODE_POINT){
+			do {
+				*itOutput = (char32_t)(unsigned char)*pchOldRead;
+				++itOutput;
+				++pchOldRead;
+			} while(pchOldRead != pchRead);
+			continue;
+		}
+		*itOutput = (char32_t)ulPoint;
+		++itOutput;
+	}
+	return std::move(itOutput);
+}
+template<class OutputIteratorT>
+OutputIteratorT Utf8FromUtf32(OutputIteratorT itOutput, const char32_t *pc32Begin, const char32_t *pc32End){
+	auto pc32Read = pc32Begin;
+	while(pc32Read != pc32End){
+		unsigned long ulPoint = (std::uint32_t)*pc32Read;
+		++pc32Read;
+		if(ulPoint > 0x10FFFFu){
+			// 无效的 UTF-32 码点。
+			ulPoint = 0xFFFDu;
+		}
+		SaveUtf8(itOutput, ulPoint);
+	}
+	return std::move(itOutput);
+}
+
+template<class OutputIteratorT, class InputCharT>
+OutputIteratorT Utf32FromModifiedUtf8(OutputIteratorT itOutput, const InputCharT *pchBegin, const InputCharT *pchEnd){
+	auto pchRead = pchBegin;
+	while(pchRead != pchEnd){
+		auto pchOldRead = pchRead;
+		auto ulPoint = LoadUtf8(pchRead, pchEnd);
+		if(ulPoint == ERROR_CODE_POINT){
+			do {
+				*itOutput = (char32_t)(unsigned char)*pchOldRead;
+				++itOutput;
+				++pchOldRead;
+			} while(pchOldRead != pchRead);
+			continue;
+		}
+		// 检测首代理。
+		const auto ulLeading = ulPoint - 0xD800u;
+		if(ulLeading > 0x7FFu){
+			*itOutput = (char32_t)ulPoint;
+			++itOutput;
+			continue;
+		}
+		if(ulLeading > 0x3FFu){
+			// 这是个末代理。
+			*itOutput = (char32_t)0xFFFDu;
+			++itOutput;
+			continue;
+		}
+		if(pchRead == pchEnd){
+			*itOutput = (char32_t)0xFFFDu;
+			++itOutput;
+			break;
+		}
+		ulPoint = LoadUtf8(pchRead, pchEnd);
+		// if(ulPoint == ERROR_CODE_POINT){ // 不需要。
+		ulPoint -= 0xDC00u;
+		if(ulPoint > 0x3FFu){
+			// 末代理无效。
+			*itOutput = (char32_t)0xFFFDu;
+			++itOutput;
+			do {
+				*itOutput = (char32_t)(unsigned char)*pchOldRead;
+				++itOutput;
+				++pchOldRead;
+			} while(pchOldRead != pchRead);
+			continue;
+		}
+		// 将代理对拼成一个码点。
+		*itOutput = (char32_t)(((ulLeading << 10) | ulPoint) + 0x10000u);
+		++itOutput;
+	}
+	return std::move(itOutput);
+}
+template<class OutputIteratorT>
+OutputIteratorT ModifiedUtf8FromUtf32(OutputIteratorT itOutput, const char32_t *pc32Begin, const char32_t *pc32End){
+	auto pc32Read = pc32Begin;
+	while(pc32Read != pc32End){
+		unsigned long ulPoint = (std::uint32_t)*pc32Read;
+		++pc32Read;
+		if(ulPoint == 0){
+			*itOutput = (char)0xC0;
+			++itOutput;
+			*itOutput = (char)0x80;
+			++itOutput;
+			continue;
+		}
+		if(ulPoint > 0x10FFFFu){
+			// 无效的 UTF-32 码点。
+			ulPoint = 0xFFFDu;
+		}
+		if(ulPoint <= 0xFFFFu){
+			// 单个的 UTF-16 字符。
+			SaveUtf8(itOutput, ulPoint);
+			continue;
+		}
+		// 编码成代理对。
+		ulPoint -= 0x10000u;
+		SaveUtf8(itOutput, (ulPoint >> 10) | 0xD800u);
+		SaveUtf8(itOutput, (ulPoint & 0x3FFu) | 0xDC00u);
+	}
+	return std::move(itOutput);
+}
+
+template<class OutputIteratorT, class InputCharT>
+OutputIteratorT Utf32FromUtf16(OutputIteratorT itOutput, const InputCharT *pchBegin, const InputCharT *pchEnd){
+	auto pchRead = pchBegin;
+	while(pchRead != pchEnd){
+		unsigned long ulPoint = (std::uint16_t)*pchRead;
+		++pchRead;
+		// 检测首代理。
+		const auto ulLeading = ulPoint - 0xD800u;
+		if(ulLeading > 0x7FFu){
+			*itOutput = (char32_t)ulPoint;
+			++itOutput;
+			continue;
+		}
+		if(ulLeading > 0x3FFu){
+			// 这是个末代理。
+			*itOutput = (char32_t)0xFFFDu;
+			++itOutput;
+			continue;
+		}
+		if(pchRead == pchEnd){
+			*itOutput = (char32_t)0xFFFDu;
+			++itOutput;
+			break;
+		}
+		ulPoint = (std::uint16_t)*pchRead;
+		++pchRead;
+		ulPoint -= 0xDC00u;
+		if(ulPoint > 0x3FFu){
+			// 末代理无效。
+			*itOutput = (char32_t)0xFFFDu;
+			++itOutput;
+			*itOutput = (char32_t)0xFFFDu;
+			++itOutput;
+			continue;
+		}
+		// 将代理对拼成一个码点。
+		*itOutput = (char32_t)(((ulLeading << 10) | ulPoint) + 0x10000u);
+		++itOutput;
+	}
+	return std::move(itOutput);
+}
+template<class OutputIteratorT>
+OutputIteratorT Utf16FromUtf32(OutputIteratorT itOutput, const char32_t *pc32Begin, const char32_t *pc32End){
+	auto pc32Read = pc32Begin;
+	while(pc32Read != pc32End){
+		unsigned long ulPoint = (std::uint32_t)*pc32Read;
+		++pc32Read;
+		if(ulPoint > 0x10FFFFu){
+			// 无效的 UTF-32 码点。
+			ulPoint = 0xFFFDu;
+		}
+		if(ulPoint <= 0xFFFFu){
+			// 单个的 UTF-16 字符。
+			*itOutput = (char32_t)ulPoint;
+			++itOutput;
+			continue;
+		}
+		// 编码成代理对。
+		ulPoint -= 0x10000u;
+		*itOutput = (char32_t)((ulPoint >> 10) | 0xD800u);
+		++itOutput;
+		*itOutput = (char32_t)((ulPoint & 0x3FFu) | 0xDC00u);
+		++itOutput;
+	}
+	return std::move(itOutput);
+}
+
+}
 
 namespace MCF {
 
-namespace Impl {
-/*	template<>
-	void UnicodeConv<char, StringEncoding::ANSI>::operator()(
-		UnifiedString &ucsUnified,
-		const StringObserver<char> &soSrc
-	) const {
-		const auto uMoreSize = (soSrc.GetSize() + 1) / 2;
-		const auto pWrite = ucsUnified.ResizeMore(uMoreSize);
-		const auto nWritten = Max(
-			::MultiByteToWideChar(
-				CP_ACP, 0, soSrc.GetBegin(), (int)soSrc.GetLength(),
-				pWrite, (int)uMoreSize
-			), 0
-		);
-		ucsUnified.Resize((std::size_t)(pWrite + nWritten - ucsUnified.GetData()));
-	}
-	template<>
-	void UnicodeConv<char, StringEncoding::ANSI>::operator()(
-		String<char, StringEncoding::ANSI> &strDst,
-		const UnifiedString &ucsUnified
-	) const {
-		const auto uMoreSize = ucsUnified.GetSize() * 2;
-		const auto pWrite = strDst.ResizeMore(uMoreSize);
-		const auto nWritten = Max(
-			::WideCharToMultiByte(
-				CP_ACP, 0, ucsUnified.GetBegin(), (int)ucsUnified.GetSize(),
-				pWrite, (int)uMoreSize,
-				nullptr, nullptr
-			), 0
-		);
-		strDst.Resize((std::size_t)(pWrite + nWritten - strDst.GetData()));
-	}
+template class String<StringTypes::NARROW>;
+template class String<StringTypes::WIDE>;
+template class String<StringTypes::UTF8>;
+template class String<StringTypes::UTF16>;
+template class String<StringTypes::UTF32>;
+template class String<StringTypes::MOD_UTF8>;
 
-	template<>
-	void UnicodeConv<wchar_t, StringEncoding::UTF16>::operator()(
-		UnifiedString &ucsUnified,
-		const StringObserver<wchar_t> &soSrc
-	) const {
-		const auto uSize = soSrc.GetSize();
-		CopyN(ucsUnified.ResizeMore(uSize), soSrc.GetBegin(), uSize);
-	}
-	template<>
-	void UnicodeConv<wchar_t, StringEncoding::UTF16>::operator()(
-		String<wchar_t, StringEncoding::UTF16> &strDst,
-		const UnifiedString &ucsUnified
-	) const {
-		const auto uSize = ucsUnified.GetSize();
-		CopyN(strDst.ResizeMore(uSize), ucsUnified.GetBegin(), uSize);
-	}
-
-	// https://en.wikipedia.org/wiki/UTF-8
-	template<>
-	void UnicodeConv<char, StringEncoding::UTF8>::operator()(
-		UnifiedString &ucsUnified,
-		const StringObserver<char> &soSrc
-	) const {
-		// UTF-8 转 UTF-16。
-		ucsUnified.ReserveMore(soSrc.GetSize() * 3);
-
-		auto pchCur = soSrc.GetBegin();
-		const auto pchEnd = soSrc.GetEnd();
-		while(pchCur != pchEnd){
-			std::uint32_t u32CodePoint = (std::uint8_t)*(pchCur++);
-			if((u32CodePoint & 0x80u) == 0){
-				// ASCII 字符。
-				ucsUnified.Push(u32CodePoint);
-				continue;
-			}
-			// 这个值是该码点剩余的字节数，不包含刚刚读取的。
-			const std::size_t uAddnlBytes = CountLeadingZeroes(~(u32CodePoint << (BITS_OF(unsigned) - 7)) | 1);
-			// UTF-8 理论上最长可以编码 6 个字符，但是标准化以后只能使用 4 个。
-			if(uAddnlBytes - 1 > 2){ // 0 - 3
-				// 按照 ISO-8859-1 映射到 U+0080 - U+00FF。
-				ucsUnified.Push(u32CodePoint);
-				continue;
-			}
-			if((std::size_t)(pchEnd - pchCur) < uAddnlBytes){
-				--pchCur;
-				while(pchCur != pchEnd){
-					ucsUnified.Push((std::uint8_t)*(pchCur++));
-				}
-				break;
-			}
-
-			u32CodePoint &= (0x7Fu >> uAddnlBytes);
-			const auto pchCodeEnd = pchCur + uAddnlBytes;
-			while(pchCur != pchCodeEnd){
-				const auto uchCur = (std::uint8_t)*(pchCur++);
-				if((uchCur & 0xC0u) != 0x80u){
-					// 编码错误。
-					break;
-				}
-				u32CodePoint <<= 6;
-				u32CodePoint |= (uchCur & 0x3Fu);
-			}
-			if(pchCur != pchCodeEnd){
-				// 如果编码出错，映射到 U+0080 - U+00FF。
-				pchCur = pchCodeEnd - uAddnlBytes - 1;
-				while(pchCur < pchCodeEnd){
-					ucsUnified.Push((std::uint8_t)*(pchCur++));
-				}
-				continue;
-			}
-			if(u32CodePoint > 0x10FFFFu){
-				// 无效的 UTF-32 码点。
-				u32CodePoint = 0xFFFDu;
-			}
-			if(u32CodePoint <= 0xFFFFu){
-				// 单个的 UTF-16 字符。
-				ucsUnified.Push(u32CodePoint);
-				continue;
-			}
-			// 编码成代理对。
-			u32CodePoint -= 0x10000u;
-			ucsUnified.Push((u32CodePoint >> 10)   | 0xD800u);
-			ucsUnified.Push((u32CodePoint & 0x3FFu) | 0xDC00u);
-		}
-	}
-	template<>
-	void UnicodeConv<char, StringEncoding::UTF8>::operator()(
-		String<char, StringEncoding::UTF8> &strDst,
-		const UnifiedString &ucsUnified
-	) const {
-		// UTF-16 转 UTF-8。
-		strDst.ReserveMore(ucsUnified.GetSize());
-
-		auto pucCur = ucsUnified.GetBegin();
-		const auto pucEnd = ucsUnified.GetEnd();
-		while(pucCur != pucEnd){
-			std::uint32_t u32CodePoint = (std::uint16_t)*(pucCur++);
-			if(u32CodePoint - 0xD800u <= 0x7FFu){
-				// 接受一个代理。
-				u32CodePoint -= 0xD800u;
-				if(u32CodePoint > 0x3FFu){
-					// 这是个末代理。
-					u32CodePoint = 0xFFFDu;
-					goto jEncode;
-				}
-				if(pucCur == pucEnd){
-					// 位于结尾的首代理。
-					u32CodePoint = 0xFFFDu;
-					goto jEncode;
-				}
-				const std::uint32_t u32Next = (std::uint16_t)*(pucCur++) - 0xDC00u;
-				if(u32Next > 0x3FFu){
-					// 末代理无效。
-					u32CodePoint = 0xFFFDu;
-					goto jEncode;
-				}
-				// 将代理对拼成一个码点。
-				u32CodePoint <<= 10;
-				u32CodePoint |= u32Next;
-				u32CodePoint += 0x10000u;
-				if(u32CodePoint > 0x10FFFFu){
-					// 无效的 UTF-32 码点。
-					u32CodePoint = 0xFFFDu;
-				}
-			}
-
-		jEncode:
-			// 这个值是该码点的总字节数减一。
-			const auto uAddnlBytes = (std::size_t)(29 - CountLeadingZeroes(u32CodePoint | 1)) / 5;
-			if(uAddnlBytes == 0){
-				ASSERT(u32CodePoint <= 0x7Fu);
-
-				strDst.Push(u32CodePoint);
-				continue;
-			}
-			u32CodePoint |= (std::uint32_t)0xFFFFFF80u << (uAddnlBytes * 5);
-			strDst.Push(u32CodePoint >> (uAddnlBytes * 6));
-			for(std::size_t i = uAddnlBytes; i != 0; --i){
-				strDst.Push(((u32CodePoint >> (i * 6 - 6)) & 0x3Fu) | 0x80u);
-			}
-		}
-	}
-
-	template<>
-	void UnicodeConv<char16_t, StringEncoding::UTF16>::operator()(
-		UnifiedString &ucsUnified,
-		const StringObserver<char16_t> &soSrc
-	) const {
-		const auto uSize = soSrc.GetSize();
-		CopyN(ucsUnified.ResizeMore(uSize), soSrc.GetBegin(), uSize);
-	}
-	template<>
-	void UnicodeConv<char16_t, StringEncoding::UTF16>::operator()(
-		String<char16_t, StringEncoding::UTF16> &strDst,
-		const UnifiedString &ucsUnified
-	) const {
-		const auto uSize = strDst.GetSize();
-		CopyN(strDst.ResizeMore(uSize), ucsUnified.GetBegin(), uSize);
-	}
-
-	// https://en.wikipedia.org/wiki/UTF-16
-	template<>
-	void UnicodeConv<char32_t, StringEncoding::UTF32>::operator()(
-		UnifiedString &ucsUnified,
-		const StringObserver<char32_t> &soSrc
-	) const {
-		// UTF-32 转 UTF-16。
-		ucsUnified.ReserveMore(soSrc.GetSize());
-
-		for(auto u32CodePoint : soSrc){
-			if(u32CodePoint > 0x10FFFFu){
-				// 无效的 UTF-32 码点。
-				u32CodePoint = 0xFFFDu;
-			}
-			if(u32CodePoint <= 0xFFFFu){
-				// 单个的 UTF-16 字符。
-				ucsUnified.Push(u32CodePoint);
-				continue;
-			}
-			// 编码成代理对。
-			u32CodePoint -= 0x10000u;
-			ucsUnified.Push((u32CodePoint >> 10)   | 0xD800u);
-			ucsUnified.Push((u32CodePoint & 0x3FFu) | 0xDC00u);
-		}
-	}
-	template<>
-	void UnicodeConv<char32_t, StringEncoding::UTF32>::operator()(
-		String<char32_t, StringEncoding::UTF32> &strDst,
-		const UnifiedString &ucsUnified
-	) const {
-		// UTF-16 转 UTF-32。
-		strDst.ReserveMore(ucsUnified.GetSize());
-
-		auto pucCur = ucsUnified.GetBegin();
-		const auto pucEnd = ucsUnified.GetEnd();
-		while(pucCur != pucEnd){
-			std::uint32_t u32CodePoint = (std::uint16_t)*(pucCur++);
-			if(u32CodePoint - 0xD800u <= 0x7FFu){
-				// 接受一个代理。
-				u32CodePoint -= 0xD800u;
-				if(u32CodePoint > 0x3FFu){
-					// 这是个末代理。
-					u32CodePoint = 0xFFFDu;
-					goto jDone;
-				}
-				if(pucCur == pucEnd){
-					// 位于结尾的首代理。
-					u32CodePoint = 0xFFFDu;
-					goto jDone;
-				}
-				const std::uint32_t u32Next = (std::uint16_t)*(pucCur++) - 0xDC00u;
-				if(u32Next > 0x3FFu){
-					// 末代理无效。
-					u32CodePoint = 0xFFFDu;
-					goto jDone;
-				}
-				// 将代理对拼成一个码点。
-				u32CodePoint <<= 10;
-				u32CodePoint |= u32Next;
-				u32CodePoint += 0x10000u;
-				if(u32CodePoint > 0x10FFFFu){
-					// 无效的 UTF-32 码点。
-					u32CodePoint = 0xFFFDu;
-				}
-			}
-
-		jDone:
-			strDst.Push(u32CodePoint);
-		}
-	}*/
+// ANSI
+template<>
+UnifiedStringObserver NarrowString::Unify(UnifiedString &&usTempStorage, const NarrowStringObserver &nsoSrc){
+	return {};
+}
+template<>
+void NarrowString::Deunify(NarrowString &nsDst, std::size_t uPos, const UnifiedStringObserver &usoSrc){
 }
 
-template class String<char,		StringEncoding::ANSI>;
-template class String<wchar_t,	StringEncoding::UTF16>;
+// UTF-16
+template<>
+UnifiedStringObserver WideString::Unify(UnifiedString &&usTempStorage, const WideStringObserver &wsoSrc){
+	usTempStorage.Reserve(wsoSrc.GetSize());
+	Utf32FromUtf16(std::back_inserter(usTempStorage), wsoSrc.GetBegin(), wsoSrc.GetEnd());
+	return usTempStorage;
+}
+template<>
+void WideString::Deunify(WideString &wsDst, std::size_t uPos, const UnifiedStringObserver &usoSrc){
+	wsDst.ReserveMore(usoSrc.GetSize());
+	Utf16FromUtf32(std::back_inserter(wsDst), usoSrc.GetBegin(), usoSrc.GetEnd());
+}
 
-template class String<char,		StringEncoding::UTF8>;
-template class String<char16_t,	StringEncoding::UTF16>;
-template class String<char32_t,	StringEncoding::UTF32>;
+// UTF-8
+template<>
+UnifiedStringObserver Utf8String::Unify(UnifiedString &&usTempStorage, const Utf8StringObserver &u8soSrc){
+	usTempStorage.Reserve(u8soSrc.GetSize() * 3);
+	Utf32FromUtf8(std::back_inserter(usTempStorage), u8soSrc.GetBegin(), u8soSrc.GetEnd());
+	for(unsigned x : usTempStorage){
+		std::printf("%04X ", x);
+	}
+	return usTempStorage;
+}
+template<>
+void Utf8String::Deunify(Utf8String &u8sDst, std::size_t uPos, const UnifiedStringObserver &usoSrc){
+	u8sDst.ReserveMore(usoSrc.GetSize() * 3);
+	Utf8FromUtf32(std::back_inserter(u8sDst), usoSrc.GetBegin(), usoSrc.GetEnd());
+}
+
+// UTF-16
+template<>
+UnifiedStringObserver Utf16String::Unify(UnifiedString &&usTempStorage, const Utf16StringObserver &u16soSrc){
+	usTempStorage.Reserve(u16soSrc.GetSize());
+	Utf32FromUtf16(std::back_inserter(usTempStorage), u16soSrc.GetBegin(), u16soSrc.GetEnd());
+	return usTempStorage;
+}
+template<>
+void Utf16String::Deunify(Utf16String &u16sDst, std::size_t uPos, const UnifiedStringObserver &usoSrc){
+	u16sDst.ReserveMore(usoSrc.GetSize());
+	Utf16FromUtf32(std::back_inserter(u16sDst), usoSrc.GetBegin(), usoSrc.GetEnd());
+}
+
+// UTF-32
+template<>
+UnifiedStringObserver Utf32String::Unify(UnifiedString && /* usTempStorage */, const Utf32StringObserver &u32soSrc){
+	return u32soSrc;
+}
+template<>
+void Utf32String::Deunify(Utf32String &u32sDst, std::size_t uPos, const UnifiedStringObserver &usoSrc){
+	u32sDst.Replace((std::ptrdiff_t)uPos, (std::ptrdiff_t)uPos, usoSrc);
+}
+
+// Modified UTF-8
+template<>
+UnifiedStringObserver ModUtf8String::Unify(UnifiedString &&usTempStorage, const ModUtf8StringObserver &mu8soSrc){
+	usTempStorage.Reserve(mu8soSrc.GetSize() * 3);
+	Utf32FromModifiedUtf8(std::back_inserter(usTempStorage), mu8soSrc.GetBegin(), mu8soSrc.GetEnd());
+	return usTempStorage;
+}
+template<>
+void ModUtf8String::Deunify(ModUtf8String &mu8sDst, std::size_t uPos, const UnifiedStringObserver &usoSrc){
+	mu8sDst.ReserveMore(usoSrc.GetSize() * 3);
+	ModifiedUtf8FromUtf32(std::back_inserter(mu8sDst), usoSrc.GetBegin(), usoSrc.GetEnd());
+}
 
 }

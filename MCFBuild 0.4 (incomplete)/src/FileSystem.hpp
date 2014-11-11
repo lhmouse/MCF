@@ -13,15 +13,15 @@ namespace MCFBuild {
 
 typedef std::array<unsigned char, 32> Sha256;
 
-extern MCF::WideString GetFullPath(const MCF::WideString &wcsSrc);
+extern MCF::WideString GetFullPath(const MCF::WideString &wsSrc);
 
-extern bool GetFileContents(MCF::StreamBuffer &sbufData, const MCF::WideString &wcsPath, bool bThrowOnFailure);
-extern void PutFileContents(const MCF::WideString &wcsPath, const MCF::StreamBuffer &sbufData);
+extern bool GetFileContents(MCF::StreamBuffer &sbufData, const MCF::WideString &wsPath, bool bThrowOnFailure);
+extern void PutFileContents(const MCF::WideString &wsPath, const MCF::StreamBuffer &sbufData);
 
-extern bool GetFileSha256(Sha256 &vSha256, const MCF::WideString &wcsPath, bool bThrowOnFailure);
+extern bool GetFileSha256(Sha256 &vSha256, const MCF::WideString &wsPath, bool bThrowOnFailure);
 
-extern void CreateDirectory(const MCF::WideString &wcsPath);
-extern void RemoveFile(const MCF::WideString &wcsPath);
+extern void CreateDirectory(const MCF::WideString &wsPath);
+extern void RemoveFile(const MCF::WideString &wsPath);
 
 }
 

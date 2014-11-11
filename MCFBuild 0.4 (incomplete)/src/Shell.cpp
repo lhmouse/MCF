@@ -61,8 +61,8 @@ long ExtractWchar(MCF::StreamBuffer &sbufSource){
 	return -1;
 }
 
-void ConvertCrlfAndAppend(MCF::WideString &wcsSink, MCF::StreamBuffer &sbufSource){
-	wcsSink.ReserveMore((sbufSource.GetSize() + 1) / sizeof(wchar_t));
+void ConvertCrlfAndAppend(MCF::WideString &wsSink, MCF::StreamBuffer &sbufSource){
+	wsSink.ReserveMore((sbufSource.GetSize() + 1) / sizeof(wchar_t));
 
 	long lNext = ExtractWchar(sbufSource);
 	while(lNext != -1){
@@ -72,7 +72,7 @@ void ConvertCrlfAndAppend(MCF::WideString &wcsSink, MCF::StreamBuffer &sbufSourc
 		if((wc == L'\r') && (lNext == L'\n')){
 			continue;
 		}
-		wcsSink.PushNoCheck(wc);
+		wsSink.PushNoCheck(wc);
 	}
 }
 
@@ -81,21 +81,21 @@ void ConvertCrlfAndAppend(MCF::WideString &wcsSink, MCF::StreamBuffer &sbufSourc
 namespace MCFBuild {
 
 unsigned int Shell(
-	MCF::WideString &restrict wcsStdOut,
-	MCF::WideString &restrict wcsStdErr,
+	MCF::WideString &restrict wsStdOut,
+	MCF::WideString &restrict wsStdErr,
 	const MCF::WideStringObserver &wsoCommandLine
 ){
-	MCF::WideString wcsComSpec;
+	MCF::WideString wsComSpec;
 	const auto dwComSpecLen = ::GetEnvironmentVariableW(L"COMSPEC", nullptr, 0);
 	if(dwComSpecLen > 0){
-		wcsComSpec.Resize(::GetEnvironmentVariableW(L"COMSPEC", wcsComSpec.Resize(dwComSpecLen), dwComSpecLen));
+		wsComSpec.Resize(::GetEnvironmentVariableW(L"COMSPEC", wsComSpec.Resize(dwComSpecLen), dwComSpecLen));
 	}
 
 	static const auto COMSPEC_ARG_PREFIX = L"/Q /U /C "_wso;
-	MCF::WideString wcsArguments;
-	wcsArguments.Resize(MCF::Max((std::size_t)MAX_PATH, wsoCommandLine.GetSize() + COMSPEC_ARG_PREFIX.GetSize()));
+	MCF::WideString wsArguments;
+	wsArguments.Resize(MCF::Max((std::size_t)MAX_PATH, wsoCommandLine.GetSize() + COMSPEC_ARG_PREFIX.GetSize()));
 	MCF::Copy(
-		MCF::Copy(wcsArguments.GetStr(), COMSPEC_ARG_PREFIX.GetBegin(), COMSPEC_ARG_PREFIX.GetEnd()),
+		MCF::Copy(wsArguments.GetStr(), COMSPEC_ARG_PREFIX.GetBegin(), COMSPEC_ARG_PREFIX.GetEnd()),
 		wsoCommandLine.GetBegin(), wsoCommandLine.GetEnd()
 	)[0] = 0;
 
@@ -116,7 +116,7 @@ unsigned int Shell(
 
 	PROCESS_INFORMATION vProcessInfo;
 	if(!::CreateProcessW(
-		wcsComSpec.GetCStr(), wcsArguments.GetStr(),
+		wsComSpec.GetCStr(), wsArguments.GetStr(),
 		nullptr, nullptr, TRUE, 0, nullptr, nullptr,
 		&vStartupInfo, &vProcessInfo
 	)){
@@ -138,8 +138,8 @@ unsigned int Shell(
 		ReadPipe(sbufStdErr, vStdErr.first.Get());
 	} while(!bBreakNow);
 
-	ConvertCrlfAndAppend(wcsStdOut, sbufStdOut);
-	ConvertCrlfAndAppend(wcsStdErr, sbufStdErr);
+	ConvertCrlfAndAppend(wsStdOut, sbufStdOut);
+	ConvertCrlfAndAppend(wsStdErr, sbufStdErr);
 
 	return dwExitCode;
 }

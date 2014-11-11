@@ -15,22 +15,22 @@ constexpr std::size_t FILE_BUFFER_SIZE	= 64 * 0x400; // 64 KiB
 
 namespace MCFBuild {
 
-MCF::WideString GetFullPath(const MCF::WideString &wcsSrc){
-	MCF::WideString wcsRet;
-	if(!wcsSrc.IsEmpty()){
-		const DWORD dwSize = ::GetFullPathNameW(wcsSrc.GetCStr(), 0, nullptr, nullptr);
-		wcsRet.Resize(dwSize);
-		wcsRet.Resize(::GetFullPathNameW(wcsSrc.GetCStr(), dwSize, wcsRet.GetStr(), nullptr));
+MCF::WideString GetFullPath(const MCF::WideString &wsSrc){
+	MCF::WideString wsRet;
+	if(!wsSrc.IsEmpty()){
+		const DWORD dwSize = ::GetFullPathNameW(wsSrc.GetCStr(), 0, nullptr, nullptr);
+		wsRet.Resize(dwSize);
+		wsRet.Resize(::GetFullPathNameW(wsSrc.GetCStr(), dwSize, wsRet.GetStr(), nullptr));
 	}
-	return std::move(wcsRet);
+	return std::move(wsRet);
 }
 
-bool GetFileContents(MCF::StreamBuffer &sbufData, const MCF::WideString &wcsPath, bool bThrowOnFailure){
-	const auto wcsFullPath = GetFullPath(wcsPath);
-	const auto pFile = MCF::File::OpenNoThrow(wcsFullPath, MCF::File::TO_READ);
+bool GetFileContents(MCF::StreamBuffer &sbufData, const MCF::WideString &wsPath, bool bThrowOnFailure){
+	const auto wsFullPath = GetFullPath(wsPath);
+	const auto pFile = MCF::File::OpenNoThrow(wsFullPath, MCF::File::TO_READ);
 	if(!pFile){
 		if(bThrowOnFailure){
-			FORMAT_THROW(::GetLastError(), L"OPEN_FILE_FAILED\0"_wso + wcsFullPath);
+			FORMAT_THROW(::GetLastError(), L"OPEN_FILE_FAILED\0"_wso + wsFullPath);
 		}
 		return false;
 	}
@@ -45,11 +45,11 @@ bool GetFileContents(MCF::StreamBuffer &sbufData, const MCF::WideString &wcsPath
 	}
 	return true;
 }
-void PutFileContents(const MCF::WideString &wcsPath, const MCF::StreamBuffer &sbufData){
-	const auto wcsFullPath = GetFullPath(wcsPath);
-	const auto pFile = MCF::File::OpenNoThrow(wcsFullPath, MCF::File::TO_WRITE | MCF::File::NO_CREATE);
+void PutFileContents(const MCF::WideString &wsPath, const MCF::StreamBuffer &sbufData){
+	const auto wsFullPath = GetFullPath(wsPath);
+	const auto pFile = MCF::File::OpenNoThrow(wsFullPath, MCF::File::TO_WRITE | MCF::File::NO_CREATE);
 	if(pFile){
-		FORMAT_THROW(::GetLastError(), L"OPEN_FILE_FAILED\0"_wso + wcsFullPath);
+		FORMAT_THROW(::GetLastError(), L"OPEN_FILE_FAILED\0"_wso + wsFullPath);
 	}
 	pFile->Clear();
 
@@ -61,12 +61,12 @@ void PutFileContents(const MCF::WideString &wcsPath, const MCF::StreamBuffer &sb
 		}
 	);
 }
-bool GetFileSha256(Sha256 &vSha256, const MCF::WideString &wcsPath, bool bThrowOnFailure){
-	const auto wcsFullPath = GetFullPath(wcsPath);
-	const auto pFile = MCF::File::OpenNoThrow(wcsFullPath, MCF::File::TO_READ);
+bool GetFileSha256(Sha256 &vSha256, const MCF::WideString &wsPath, bool bThrowOnFailure){
+	const auto wsFullPath = GetFullPath(wsPath);
+	const auto pFile = MCF::File::OpenNoThrow(wsFullPath, MCF::File::TO_READ);
 	if(!pFile){
 		if(bThrowOnFailure){
-			FORMAT_THROW(::GetLastError(), L"OPEN_FILE_FAILED\0"_wso + wcsFullPath);
+			FORMAT_THROW(::GetLastError(), L"OPEN_FILE_FAILED\0"_wso + wsFullPath);
 		}
 		return false;
 	}
@@ -96,46 +96,46 @@ bool GetFileSha256(Sha256 &vSha256, const MCF::WideString &wcsPath, bool bThrowO
 	return true;
 }
 
-void CreateDirectory(const MCF::WideString &wcsPath){
-	MCF::WideString wcsFullPath = GetFullPath(wcsPath);
-	if(!wcsFullPath.IsEmpty() && (wcsFullPath.GetEnd()[-1] != L'\\')){
-		wcsFullPath.Push(L'\\');
+void CreateDirectory(const MCF::WideString &wsPath){
+	MCF::WideString wsFullPath = GetFullPath(wsPath);
+	if(!wsFullPath.IsEmpty() && (wsFullPath.GetEnd()[-1] != L'\\')){
+		wsFullPath.Push(L'\\');
 	}
 
-	std::size_t uSlashPos = wcsFullPath.Find(L'\\', 0u);
+	std::size_t uSlashPos = wsFullPath.Find(L'\\', 0u);
 	ASSERT(uSlashPos != MCF::WideString::NPOS);
 	do {
-		wcsFullPath[uSlashPos] = 0;
-		const DWORD dwAttributes = GetFileAttributesW(wcsFullPath.GetCStr());
-		wcsFullPath[uSlashPos] = L'\\';
+		wsFullPath[uSlashPos] = 0;
+		const DWORD dwAttributes = GetFileAttributesW(wsFullPath.GetCStr());
+		wsFullPath[uSlashPos] = L'\\';
 		if(dwAttributes != INVALID_FILE_ATTRIBUTES){
 			if((dwAttributes & FILE_ATTRIBUTE_DIRECTORY) == 0){
-				FORMAT_THROW(ERROR_PATH_NOT_FOUND, L"OPEN_DIRECTORY_FAILED\0"_wso + wcsFullPath);
+				FORMAT_THROW(ERROR_PATH_NOT_FOUND, L"OPEN_DIRECTORY_FAILED\0"_wso + wsFullPath);
 			}
 		} else {
 			const DWORD dwError = ::GetLastError();
 			if(dwError != ERROR_FILE_NOT_FOUND){
-				FORMAT_THROW(dwError, L"OPEN_DIRECTORY_FAILED\0"_wso + wcsFullPath);
+				FORMAT_THROW(dwError, L"OPEN_DIRECTORY_FAILED\0"_wso + wsFullPath);
 			}
-			wcsFullPath[uSlashPos] = 0;
-			const bool bResult = ::CreateDirectoryW(wcsFullPath.GetCStr(), nullptr);
-			wcsFullPath[uSlashPos] = L'\\';
+			wsFullPath[uSlashPos] = 0;
+			const bool bResult = ::CreateDirectoryW(wsFullPath.GetCStr(), nullptr);
+			wsFullPath[uSlashPos] = L'\\';
 			if(!bResult){
 				const DWORD dwError = ::GetLastError();
 				if(dwError != ERROR_ALREADY_EXISTS){
-					FORMAT_THROW(dwError, L"OPEN_DIRECTORY_FAILED\0"_wso + wcsFullPath);
+					FORMAT_THROW(dwError, L"OPEN_DIRECTORY_FAILED\0"_wso + wsFullPath);
 				}
 			}
 		}
-		uSlashPos = wcsFullPath.Find(L'\\', (std::ptrdiff_t)(uSlashPos + 1));
+		uSlashPos = wsFullPath.Find(L'\\', (std::ptrdiff_t)(uSlashPos + 1));
 	} while(uSlashPos != MCF::WideString::NPOS);
 }
-void RemoveFile(const MCF::WideString &wcsPath){
-	const auto wcsFullPath = GetFullPath(wcsPath);
-	if(!::DeleteFileW(wcsFullPath.GetCStr())){
+void RemoveFile(const MCF::WideString &wsPath){
+	const auto wsFullPath = GetFullPath(wsPath);
+	if(!::DeleteFileW(wsFullPath.GetCStr())){
 		const DWORD dwError = ::GetLastError();
 		if((dwError != ERROR_FILE_NOT_FOUND) && (dwError != ERROR_PATH_NOT_FOUND)){
-			FORMAT_THROW(dwError, L"DELETE_FILE_FAILED\0"_wso + wcsFullPath);
+			FORMAT_THROW(dwError, L"DELETE_FILE_FAILED\0"_wso + wsFullPath);
 		}
 	}
 }

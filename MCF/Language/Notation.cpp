@@ -11,8 +11,8 @@ using namespace MCF;
 namespace {
 
 WideString Unescape(const WideStringObserver &wsoSrc){
-	WideString wcsRet;
-	wcsRet.Reserve(wsoSrc.GetSize());
+	WideString wsRet;
+	wsRet.Reserve(wsoSrc.GetSize());
 
 	enum {
 		NORMAL,
@@ -28,11 +28,11 @@ WideString Unescape(const WideStringObserver &wsoSrc){
 			u32CodePoint = 0xFFFD;
 		}
 		if(u32CodePoint <= 0xFFFF){
-			wcsRet.Append(u32CodePoint);
+			wsRet.Append(u32CodePoint);
 		} else {
 			u32CodePoint -= 0x10000;
-			wcsRet.Append((u32CodePoint >> 10)   | 0xD800);
-			wcsRet.Append((u32CodePoint & 0x3FF) | 0xDC00);
+			wsRet.Append((u32CodePoint >> 10)   | 0xD800);
+			wsRet.Append((u32CodePoint & 0x3FF) | 0xDC00);
 		}
 	};
 
@@ -46,29 +46,29 @@ WideString Unescape(const WideStringObserver &wsoSrc){
 				eState = ESCAPED;
 			} else {
 				// eState = NORMAL;
-				wcsRet.Push(wc);
+				wsRet.Push(wc);
 			}
 			break;
 
 		case ESCAPED:
 			switch(wc){
 			case L'n':
-				wcsRet.Append(L'\n');
+				wsRet.Append(L'\n');
 				eState = NORMAL;
 				break;
 
 			case L'b':
-				wcsRet.Append(L'\b');
+				wsRet.Append(L'\b');
 				eState = NORMAL;
 				break;
 
 			case L'r':
-				wcsRet.Append(L'\r');
+				wsRet.Append(L'\r');
 				eState = NORMAL;
 				break;
 
 			case L't':
-				wcsRet.Append(L'\t');
+				wsRet.Append(L'\t');
 				eState = NORMAL;
 				break;
 
@@ -95,7 +95,7 @@ WideString Unescape(const WideStringObserver &wsoSrc){
 				break;
 
 			default:
-				wcsRet.Append(wc);
+				wsRet.Append(wc);
 				eState = NORMAL;
 				break;
 			}
@@ -141,11 +141,11 @@ WideString Unescape(const WideStringObserver &wsoSrc){
 		PushUtf();
 	}
 
-	return std::move(wcsRet);
+	return std::move(wsRet);
 }
-void Escape(WideString &wcsAppendTo, const WideStringObserver &wsoSrc){
+void Escape(WideString &wsAppendTo, const WideStringObserver &wsoSrc){
 	const auto uSrcLength = wsoSrc.GetLength();
-	wcsAppendTo.Reserve(wcsAppendTo.GetLength() + uSrcLength);
+	wsAppendTo.Reserve(wsAppendTo.GetLength() + uSrcLength);
 
 	for(std::size_t i = 0; i < uSrcLength; ++i){
 		const auto wc = wsoSrc[i];
@@ -156,34 +156,34 @@ void Escape(WideString &wcsAppendTo, const WideStringObserver &wsoSrc){
 		case L'{':
 		case L'}':
 		case L';':
-			wcsAppendTo.Append(L'\\');
-			wcsAppendTo.Append(wc);
+			wsAppendTo.Append(L'\\');
+			wsAppendTo.Append(wc);
 			break;
 
 		case L' ':
 			if((i == 0) || (i == uSrcLength - 1)){
-				wcsAppendTo.Append(L'\\');
+				wsAppendTo.Append(L'\\');
 			}
-			wcsAppendTo.Append(L' ');
+			wsAppendTo.Append(L' ');
 			break;
 
 		case L'\n':
-			wcsAppendTo.Append(L'\\');
-			wcsAppendTo.Append(L'n');
+			wsAppendTo.Append(L'\\');
+			wsAppendTo.Append(L'n');
 			break;
 
 		case L'\r':
-			wcsAppendTo.Append(L'\\');
-			wcsAppendTo.Append(L'r');
+			wsAppendTo.Append(L'\\');
+			wsAppendTo.Append(L'r');
 			break;
 
 		case L'\t':
-			wcsAppendTo.Append(L'\\');
-			wcsAppendTo.Append(L't');
+			wsAppendTo.Append(L'\\');
+			wsAppendTo.Append(L't');
 			break;
 
 		default:
-			wcsAppendTo.Append(wc);
+			wsAppendTo.Append(wc);
 			break;
 		}
 	}
@@ -194,22 +194,22 @@ void Escape(WideString &wcsAppendTo, const WideStringObserver &wsoSrc){
 // 嵌套类定义。
 struct NotationPackage::xPackages {
 	struct Item {
-		WideString wcsName;
+		WideString wsName;
 		NotationPackage vPackage;
 	};
 
 	MultiIndexMap<Item,
-		UniqueOrderedMemberIndex<Item, WideString, &Item::wcsName>,
+		UniqueOrderedMemberIndex<Item, WideString, &Item::wsName>,
 		SequencedIndex<Item>> mapItems;
 };
 struct NotationPackage::xValues {
 	struct Item {
-		WideString wcsName;
-		WideString wcsValue;
+		WideString wsName;
+		WideString wsValue;
 	};
 
 	MultiIndexMap<Item,
-		UniqueOrderedMemberIndex<Item, WideString, &Item::wcsName>,
+		UniqueOrderedMemberIndex<Item, WideString, &Item::wsName>,
 		SequencedIndex<Item>> mapItems;
 };
 
@@ -271,24 +271,24 @@ std::pair<NotationPackage *, bool> NotationPackage::CreatePackage(const WideStri
 	}
 	std::pair<NotationPackage *, bool> vRet;
 	const auto pNode = xm_pPackages->mapItems.GetLowerBound<0>(wsoName);
-	if(pNode && (pNode->wcsName == wsoName)){
+	if(pNode && (pNode->wsName == wsoName)){
 		vRet.first = &(pNode->vPackage);
 		vRet.second = false;
 	} else {
 		xPackages::Item vItem;
-		vItem.wcsName = WideString(wsoName);
+		vItem.wsName = WideString(wsoName);
 		vRet.first = &(xm_pPackages->mapItems.InsertWithHints(
 			false, std::make_tuple(pNode, nullptr), std::move(vItem)).first->vPackage);
 		vRet.second = true;
 	}
 	return vRet;
 }
-std::pair<NotationPackage *, bool> NotationPackage::CreatePackage(WideString wcsName){
+std::pair<NotationPackage *, bool> NotationPackage::CreatePackage(WideString wsName){
 	if(!xm_pPackages){
 		xm_pPackages.reset(new xPackages());
 	}
 	xPackages::Item vItem;
-	vItem.wcsName = std::move(wcsName);
+	vItem.wsName = std::move(wsName);
 	const auto vResult = xm_pPackages->mapItems.Insert(false, std::move(vItem));
 	return std::make_pair(&(vResult.first->vPackage), vResult.second);
 }
@@ -329,7 +329,7 @@ const WideString *NotationPackage::GetValue(const WideStringObserver &wsoName) c
 	if(!pNode){
 		return nullptr;
 	}
-	return &(pNode->wcsValue);
+	return &(pNode->wsValue);
 }
 WideString *NotationPackage::GetValue(const WideStringObserver &wsoName) noexcept {
 	if(!xm_pValues){
@@ -339,36 +339,36 @@ WideString *NotationPackage::GetValue(const WideStringObserver &wsoName) noexcep
 	if(!pNode){
 		return nullptr;
 	}
-	return &(pNode->wcsValue);
+	return &(pNode->wsValue);
 }
-std::pair<WideString *, bool> NotationPackage::CreateValue(const WideStringObserver &wsoName, WideString wcsValue){
+std::pair<WideString *, bool> NotationPackage::CreateValue(const WideStringObserver &wsoName, WideString wsValue){
 	if(!xm_pValues){
 		xm_pValues.reset(new xValues());
 	}
 	std::pair<WideString *, bool> vRet;
 	const auto pNode = xm_pValues->mapItems.GetLowerBound<0>(wsoName);
-	if(pNode && (pNode->wcsName == wsoName)){
-		vRet.first = &(pNode->wcsValue);
+	if(pNode && (pNode->wsName == wsoName)){
+		vRet.first = &(pNode->wsValue);
 		vRet.second = false;
 	} else {
 		xValues::Item vItem;
-		vItem.wcsName = WideString(wsoName);
+		vItem.wsName = WideString(wsoName);
 		vRet.first = &(xm_pValues->mapItems.InsertWithHints(
-			false, std::make_tuple(pNode, nullptr), std::move(vItem)).first->wcsValue);
+			false, std::make_tuple(pNode, nullptr), std::move(vItem)).first->wsValue);
 		vRet.second = true;
 	}
-	*vRet.first = std::move(wcsValue);
+	*vRet.first = std::move(wsValue);
 	return vRet;
 }
-std::pair<WideString *, bool> NotationPackage::CreateValue(WideString wcsName, WideString wcsValue){
+std::pair<WideString *, bool> NotationPackage::CreateValue(WideString wsName, WideString wsValue){
 	if(!xm_pValues){
 		xm_pValues.reset(new xValues());
 	}
 	xValues::Item vItem;
-	vItem.wcsName = std::move(wcsName);
+	vItem.wsName = std::move(wsName);
 	const auto vResult = xm_pValues->mapItems.Insert(false, std::move(vItem));
-	vResult.first->wcsValue = std::move(wcsValue);
-	return std::make_pair(&(vResult.first->wcsValue), vResult.second);
+	vResult.first->wsValue = std::move(wsValue);
+	return std::make_pair(&(vResult.first->wsValue), vResult.second);
 }
 bool NotationPackage::RemoveValue(const WideStringObserver &wsoName) noexcept {
 	if(!xm_pValues){
@@ -387,7 +387,7 @@ void NotationPackage::TraverseValues(const std::function<void (const WideString 
 		return;
 	}
 	for(auto pNode = xm_pValues->mapItems.GetFirst<1>(); pNode; pNode = pNode->GetNext<1>()){
-		fnCallback(pNode->wcsValue);
+		fnCallback(pNode->wsValue);
 	}
 }
 void NotationPackage::TraverseValues(const std::function<void (WideString &)> &fnCallback){
@@ -395,7 +395,7 @@ void NotationPackage::TraverseValues(const std::function<void (WideString &)> &f
 		return;
 	}
 	for(auto pNode = xm_pValues->mapItems.GetFirst<1>(); pNode; pNode = pNode->GetNext<1>()){
-		fnCallback(pNode->wcsValue);
+		fnCallback(pNode->wsValue);
 	}
 }
 
@@ -441,9 +441,9 @@ std::pair<Notation::ErrorType, const wchar_t *> Notation::Parse(const WideString
 		ASSERT(!vecPackageStack.IsEmpty());
 
 		Package *ppkgSource = nullptr;
-		const auto wcsSourceName = Unescape(WideStringObserver(pwcValueBegin, pwcValueEnd));
-		if(!wcsSourceName.IsEmpty()){
-			ppkgSource = vecPackageStack.GetEnd()[-1]->GetPackage(wcsSourceName);
+		const auto wsSourceName = Unescape(WideStringObserver(pwcValueBegin, pwcValueEnd));
+		if(!wsSourceName.IsEmpty()){
+			ppkgSource = vecPackageStack.GetEnd()[-1]->GetPackage(wsSourceName);
 			if(!ppkgSource){
 				eError = ERR_SOURCE_PACKAGE_NOT_FOUND;
 				return false;
@@ -772,24 +772,24 @@ std::pair<Notation::ErrorType, const wchar_t *> Notation::Parse(const WideString
 	return std::make_pair(ERR_NONE, pwcRead);
 }
 WideString Notation::Export(const WideStringObserver &wsoIndent) const {
-	WideString wcsRet;
+	WideString wsRet;
 
 	VVector<std::pair<const Package *,
 		decltype(xm_pPackages->mapItems.GetFirst<1>())>
 		> vecPackageStack;
 	vecPackageStack.Push(this, xm_pPackages ? xm_pPackages->mapItems.GetFirst<1>() : nullptr);
 
-	WideString wcsIndent;
+	WideString wsIndent;
 	for(;;){
 		auto &vTop = vecPackageStack.GetEnd()[-1];
 
 		if(vTop.second){
-			wcsRet.Append(wcsIndent);
-			Escape(wcsRet, vTop.second->wcsName);
-			wcsRet.Append(L' ');
-			wcsRet.Append(L'{');
-			wcsRet.Append(L'\n');
-			wcsIndent.Append(wsoIndent);
+			wsRet.Append(wsIndent);
+			Escape(wsRet, vTop.second->wsName);
+			wsRet.Append(L' ');
+			wsRet.Append(L'{');
+			wsRet.Append(L'\n');
+			wsIndent.Append(wsoIndent);
 			vecPackageStack.Push(&(vTop.second->vPackage),
 				vTop.second->vPackage.xm_pPackages
 					? vTop.second->vPackage.xm_pPackages->mapItems.GetFirst<1>()
@@ -802,13 +802,13 @@ WideString Notation::Export(const WideStringObserver &wsoIndent) const {
 			for(auto pNode = vTop.first->xm_pValues->mapItems.GetFirst<1>();
 				pNode; pNode = pNode->GetNext<1>())
 			{
-				wcsRet.Append(wcsIndent);
-				Escape(wcsRet, pNode->wcsName);
-				wcsRet.Append(L' ');
-				wcsRet.Append(L'=');
-				wcsRet.Append(L' ');
-				Escape(wcsRet, pNode->wcsValue);
-				wcsRet.Append(L'\n');
+				wsRet.Append(wsIndent);
+				Escape(wsRet, pNode->wsName);
+				wsRet.Append(L' ');
+				wsRet.Append(L'=');
+				wsRet.Append(L' ');
+				Escape(wsRet, pNode->wsValue);
+				wsRet.Append(L'\n');
 			}
 		}
 
@@ -817,13 +817,13 @@ WideString Notation::Export(const WideStringObserver &wsoIndent) const {
 			break;
 		}
 
-		wcsIndent.Truncate(wsoIndent.GetLength());
-		wcsRet.Append(wcsIndent);
-		wcsRet.Append(L'}');
-		wcsRet.Append(L'\n');
+		wsIndent.Truncate(wsoIndent.GetLength());
+		wsRet.Append(wsIndent);
+		wsRet.Append(L'}');
+		wsRet.Append(L'\n');
 	}
 
-	ASSERT(wcsIndent.IsEmpty());
+	ASSERT(wsIndent.IsEmpty());
 
-	return std::move(wcsRet);
+	return std::move(wsRet);
 }

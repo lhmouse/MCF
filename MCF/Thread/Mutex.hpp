@@ -18,8 +18,8 @@ public:
 	typedef Impl::LockRaiiTemplate<Mutex> Lock;
 
 public:
-	static std::unique_ptr<Mutex> Create(const WideStringObserver &wsoName = nullptr);
-	static std::unique_ptr<Mutex> Create(const WideString &wcsName);
+	static std::unique_ptr<Mutex> Create(const wchar_t *pwszName = nullptr);
+	static std::unique_ptr<Mutex> Create(const WideString &wsName);
 
 public:
 	Lock TryLock() noexcept;

@@ -14,7 +14,7 @@ private:
 	MCF::Notation xm_vData;
 
 public:
-	explicit ProjectFile(const MCF::WideString &wcsFullPath);
+	explicit ProjectFile(const MCF::WideString &wsFullPath);
 };
 
 }

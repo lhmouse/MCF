@@ -27,7 +27,7 @@ static DWORD APIENTRY ThreadProc(LPVOID pParam){
 	}
 #ifndef NDEBUG
 	MCF_wcscpyout(pwcWrite, L"\r\n\r\n单击“确定”终止应用程序，单击“取消”调试应用程序。");
-	const int nRet = MessageBoxW(NULL, awcBuffer, L"MCF CRT 错误", MB_ICONERROR | MB_OKCANCEL | MB_TASKMODAL);
+	const int nRet = MessageBoxW(NULL, awcBuffer, L"MCF CRT 错误", MB_ICONERROR | MB_OKCANCEL | MB_TASKMODAL | MB_DEFBUTTON2);
 #else
 	MCF_wcscpyout(pwcWrite, L"\r\n\r\n单击“确定”终止应用程序。");
 	const int nRet =  MessageBoxW(NULL, awcBuffer, L"MCF CRT 错误", MB_ICONERROR | MB_OK | MB_TASKMODAL);

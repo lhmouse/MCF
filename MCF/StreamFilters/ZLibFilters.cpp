@@ -5,6 +5,7 @@
 #include "../StdMCF.hpp"
 #include "ZLibFilters.hpp"
 #include "../Core/Exception.hpp"
+#include "../Utilities/MinMax.hpp"
 
 #define ZLIB_CONST
 #define Z_PREFIX

@@ -30,14 +30,14 @@ inline namespace {
 
 }
 
-void DependencyDatabase::SaveToFile(const MCF::WideString &wcsPath) const {
+void DependencyDatabase::SaveToFile(const MCF::WideString &wsPath) const {
 	MCF::StreamBuffer sbufData;
 	sbufData <<xm_mapFiles;
-	PutFileContents(wcsPath, sbufData);
+	PutFileContents(wsPath, sbufData);
 }
-void DependencyDatabase::LoadFromFile(const MCF::WideString &wcsPath){
+void DependencyDatabase::LoadFromFile(const MCF::WideString &wsPath){
 	MCF::StreamBuffer sbufData;
-	GetFileContents(sbufData, wcsPath, true);
+	GetFileContents(sbufData, wsPath, true);
 	sbufData >>xm_mapFiles;
 }
 */

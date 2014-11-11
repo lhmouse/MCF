@@ -14,10 +14,8 @@ namespace MCF {
 
 class Semaphore : NO_COPY, ABSTRACT {
 public:
-	static std::unique_ptr<Semaphore> Create(unsigned long ulInitCount, unsigned long ulMaxCount,
-		const WideStringObserver &wsoName = nullptr);
-	static std::unique_ptr<Semaphore> Create(unsigned long ulInitCount, unsigned long ulMaxCount,
-		const WideString &wcsName);
+	static std::unique_ptr<Semaphore> Create(unsigned long ulInitCount, const wchar_t *pwszName = nullptr);
+	static std::unique_ptr<Semaphore> Create(unsigned long ulInitCount, const WideString &wsName);
 
 public:
 	unsigned long WaitTimeout(unsigned long long ullMilliSeconds, unsigned long ulWaitCount = 1) noexcept;

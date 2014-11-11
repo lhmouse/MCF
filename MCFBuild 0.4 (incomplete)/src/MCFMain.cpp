@@ -31,10 +31,10 @@ try {
 		return 0;
 	}
 
-	MCF::WideString wcsProcessCount;
-	wcsProcessCount.Resize(7);
-	wcsProcessCount.Resize((unsigned int)std::swprintf(
-		wcsProcessCount.GetStr(), wcsProcessCount.GetSize(),
+	MCF::WideString wsProcessCount;
+	wsProcessCount.Resize(7);
+	wsProcessCount.Resize((unsigned int)std::swprintf(
+		wsProcessCount.GetStr(), wsProcessCount.GetSize(),
 		L"%lu",
 		vModel.GetProcessCount()
 	));
@@ -46,7 +46,7 @@ try {
 		+ vModel.GetSrcRoot() + L'\0'
 		+ vModel.GetIntermediateRoot() + L'\0'
 		+ vModel.GetDstRoot() + L'\0'
-		+ wcsProcessCount
+		+ wsProcessCount
 	);
 
 	try {
@@ -60,18 +60,18 @@ try {
 
 	return 0;
 } catch(MCF::Exception &e){
-	auto wcsMessage(L"MCF_EXCEPTION\0"_wso + e.m_wcsMessage);
-	wcsMessage.Push(0);
+	auto wsMessage(L"MCF_EXCEPTION\0"_wso + e.m_wcsMessage);
+	wsMessage.Push(0);
 	wchar_t awcCode[16];
 	// TODO
-	wcsMessage.Append(awcCode, (std::size_t)std::swprintf(awcCode, COUNT_OF(awcCode), L"%lu", e.m_ulErrorCode) + 1);
-	wcsMessage += MCF::GetWin32ErrorDesc(e.m_ulErrorCode);
-	FormatPrint(wcsMessage);
+	wsMessage.Append(awcCode, (std::size_t)std::swprintf(awcCode, COUNT_OF(awcCode), L"%lu", e.m_ulErrorCode) + 1);
+	wsMessage += MCF::GetWin32ErrorDesc(e.m_ulErrorCode);
+	FormatPrint(wsMessage);
 	return e.m_ulErrorCode;
 } catch(std::exception &e){
-	auto wcsMessage = L"STD_EXCEPTION\0"_ws;
-	wcsMessage.Append<MCF::StringEncoding::UTF8>(MCF::Utf8StringObserver(e.what()));
-	FormatPrint(wcsMessage);
+	auto wsMessage = L"STD_EXCEPTION\0"_ws;
+	wsMessage.Append<MCF::StringEncoding::UTF8>(MCF::Utf8StringObserver(e.what()));
+	FormatPrint(wsMessage);
 	return (unsigned int)-1;
 } catch(...){
 	FormatPrint(L"UNKNOWN_EXCEPTION"_wso);

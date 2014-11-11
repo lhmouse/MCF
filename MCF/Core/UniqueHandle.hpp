@@ -65,7 +65,6 @@ public:
 	}
 	void Reset(UniqueHandle &&rhs) noexcept {
 		ASSERT(&rhs != this);
-
 		Reset(rhs.Release());
 	}
 
@@ -82,28 +81,83 @@ public:
 	}
 };
 
-#define UNIQUE_HANDLE_RATIONAL_OPERATOR_(op_type)	\
-	template<class CloserT>	\
-	bool operator op_type (const UniqueHandle<CloserT> &lhs, const UniqueHandle<CloserT> &rhs) noexcept {	\
-		return lhs.Get() op_type rhs.Get();	\
-	}	\
-	template<class CloserT>	\
-	bool operator op_type (decltype(CloserT()()) lhs, const UniqueHandle<CloserT> &rhs) noexcept {	\
-		return lhs op_type rhs.Get();	\
-	}	\
-	template<class CloserT>	\
-	bool operator op_type (const UniqueHandle<CloserT> &lhs, decltype(CloserT()()) rhs) noexcept {	\
-		return lhs.Get() op_type rhs;	\
-	}
+template<class CloserT>
+bool operator==(const UniqueHandle<CloserT> &lhs, const UniqueHandle<CloserT> &rhs) noexcept {
+	return lhs.get() == rhs.get();
+}
+template<class CloserT>
+bool operator==(const UniqueHandle<CloserT> &lhs, decltype(CloserT()()) rhs) noexcept {
+	return lhs.get() == rhs;
+}
+template<class CloserT>
+bool operator==(decltype(CloserT()()) lhs, const UniqueHandle<CloserT> &rhs) noexcept {
+	return lhs == rhs.get();
+}
 
-UNIQUE_HANDLE_RATIONAL_OPERATOR_(==)
-UNIQUE_HANDLE_RATIONAL_OPERATOR_(!=)
-UNIQUE_HANDLE_RATIONAL_OPERATOR_(<)
-UNIQUE_HANDLE_RATIONAL_OPERATOR_(>)
-UNIQUE_HANDLE_RATIONAL_OPERATOR_(<=)
-UNIQUE_HANDLE_RATIONAL_OPERATOR_(>=)
+template<class CloserT>
+bool operator!=(const UniqueHandle<CloserT> &lhs, const UniqueHandle<CloserT> &rhs) noexcept {
+	return lhs.get() != rhs.get();
+}
+template<class CloserT>
+bool operator!=(const UniqueHandle<CloserT> &lhs, decltype(CloserT()()) rhs) noexcept {
+	return lhs.get() != rhs;
+}
+template<class CloserT>
+bool operator!=(decltype(CloserT()()) lhs, const UniqueHandle<CloserT> &rhs) noexcept {
+	return lhs != rhs.get();
+}
 
-#undef UNIQUE_HANDLE_RATIONAL_OPERATOR_
+template<class CloserT>
+bool operator<(const UniqueHandle<CloserT> &lhs, const UniqueHandle<CloserT> &rhs) noexcept {
+	return lhs.get() < rhs.get();
+}
+template<class CloserT>
+bool operator<(const UniqueHandle<CloserT> &lhs, decltype(CloserT()()) rhs) noexcept {
+	return lhs.get() < rhs;
+}
+template<class CloserT>
+bool operator<(decltype(CloserT()()) lhs, const UniqueHandle<CloserT> &rhs) noexcept {
+	return lhs < rhs.get();
+}
+
+template<class CloserT>
+bool operator>(const UniqueHandle<CloserT> &lhs, const UniqueHandle<CloserT> &rhs) noexcept {
+	return lhs.get() > rhs.get();
+}
+template<class CloserT>
+bool operator>(const UniqueHandle<CloserT> &lhs, decltype(CloserT()()) rhs) noexcept {
+	return lhs.get() > rhs;
+}
+template<class CloserT>
+bool operator>(decltype(CloserT()()) lhs, const UniqueHandle<CloserT> &rhs) noexcept {
+	return lhs > rhs.get();
+}
+
+template<class CloserT>
+bool operator<=(const UniqueHandle<CloserT> &lhs, const UniqueHandle<CloserT> &rhs) noexcept {
+	return lhs.get() <= rhs.get();
+}
+template<class CloserT>
+bool operator<=(const UniqueHandle<CloserT> &lhs, decltype(CloserT()()) rhs) noexcept {
+	return lhs.get() <= rhs;
+}
+template<class CloserT>
+bool operator<=(decltype(CloserT()()) lhs, const UniqueHandle<CloserT> &rhs) noexcept {
+	return lhs <= rhs.get();
+}
+
+template<class CloserT>
+bool operator>=(const UniqueHandle<CloserT> &lhs, const UniqueHandle<CloserT> &rhs) noexcept {
+	return lhs.get() >= rhs.get();
+}
+template<class CloserT>
+bool operator>=(const UniqueHandle<CloserT> &lhs, decltype(CloserT()()) rhs) noexcept {
+	return lhs.get() >= rhs;
+}
+template<class CloserT>
+bool operator>=(decltype(CloserT()()) lhs, const UniqueHandle<CloserT> &rhs) noexcept {
+	return lhs >= rhs.get();
+}
 
 template<class CloserT>
 void swap(UniqueHandle<CloserT> &lhs, UniqueHandle<CloserT> &rhs) noexcept {

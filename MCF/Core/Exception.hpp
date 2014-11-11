@@ -21,17 +21,17 @@ inline void SetWin32LastError(unsigned long ulErrorCode) noexcept {
 }
 
 inline WideString GetWin32ErrorDesc(unsigned long ulErrorCode){
-	WideString wcsRet;
+	WideString wsRet;
 	wchar_t *pwszDesc = nullptr;
 	const auto uLen = ::MCF_CRT_AllocWin32ErrorDesc(&pwszDesc, ulErrorCode);
 	try {
-		wcsRet.Append(pwszDesc, uLen);
+		wsRet.Append(pwszDesc, uLen);
 		::MCF_CRT_FreeWin32ErrorDesc(pwszDesc);
 	} catch(...){
 		::MCF_CRT_FreeWin32ErrorDesc(pwszDesc);
 		throw;
 	}
-	return std::move(wcsRet);
+	return std::move(wsRet);
 }
 
 class Exception : public std::exception {
@@ -47,8 +47,8 @@ private:
 	void xMakeMessage(const WideStringObserver &wsoMessage){
 		m_wcsMessage = wsoMessage;
 	}
-	void xMakeMessage(WideString wcsMessage){
-		m_wcsMessage = std::move(wcsMessage);
+	void xMakeMessage(WideString wsMessage){
+		m_wcsMessage = std::move(wsMessage);
 	}
 
 public:

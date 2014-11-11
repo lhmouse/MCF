@@ -45,12 +45,11 @@ public:
 }
 
 // 静态成员函数。
-std::unique_ptr<Event> Event::Create(bool bInitSet, const WideStringObserver &wsoName){
-	return std::make_unique<EventDelegate>(bInitSet,
-		wsoName.IsEmpty() ? nullptr : wsoName.GetNullTerminated<MAX_PATH>().GetData());
+std::unique_ptr<Event> Event::Create(bool bInitSet, const wchar_t *pwszName){
+	return std::make_unique<EventDelegate>(bInitSet, pwszName);
 }
-std::unique_ptr<Event> Event::Create(bool bInitSet, const WideString &wcsName){
-	return std::make_unique<EventDelegate>(bInitSet, wcsName.GetCStr());
+std::unique_ptr<Event> Event::Create(bool bInitSet, const WideString &wsName){
+	return Create(bInitSet, wsName.GetCStr());
 }
 
 // 其他非静态成员函数。

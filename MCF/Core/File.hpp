@@ -38,11 +38,11 @@ public:
 	};
 
 public:
-	static std::unique_ptr<File> Open(const WideStringObserver &wsoPath, std::uint32_t u32Flags);
-	static std::unique_ptr<File> Open(const WideString &wcsPath, std::uint32_t u32Flags);
+	static std::unique_ptr<File> Open(const wchar_t *pwszPath, std::uint32_t u32Flags);
+	static std::unique_ptr<File> Open(const WideString &wsPath, std::uint32_t u32Flags);
 
-	static std::unique_ptr<File> OpenNoThrow(const WideStringObserver &wsoPath, std::uint32_t u32Flags);
-	static std::unique_ptr<File> OpenNoThrow(const WideString &wcsPath, std::uint32_t u32Flags);
+	static std::unique_ptr<File> OpenNoThrow(const wchar_t *pwszPath, std::uint32_t u32Flags);
+	static std::unique_ptr<File> OpenNoThrow(const WideString &wsPath, std::uint32_t u32Flags);
 
 public:
 	std::uint64_t GetSize() const;

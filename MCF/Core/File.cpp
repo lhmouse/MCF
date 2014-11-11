@@ -7,6 +7,7 @@
 #include "Exception.hpp"
 #include "UniqueHandle.hpp"
 #include "../Utilities/BinaryOperations.hpp"
+#include "../Utilities/MinMax.hpp"
 #include <exception>
 #include <list>
 using namespace MCF;
@@ -259,40 +260,29 @@ public:
 }
 
 // 静态成员函数。
-std::unique_ptr<File> File::Open(const WideStringObserver &wsoPath, std::uint32_t u32Flags){
+std::unique_ptr<File> File::Open(const wchar_t *pwszPath, std::uint32_t u32Flags){
 	auto pFile = std::make_unique<FileDelegate>();
-	const auto vResult = pFile->Open(wsoPath.GetNullTerminated<MAX_PATH>().GetData(), u32Flags);
+	const auto vResult = pFile->Open(pwszPath, u32Flags);
 	if(vResult.first != ERROR_SUCCESS){
 		MCF_THROW(vResult.first, vResult.second);
 	}
 	return std::move(pFile);
 }
-std::unique_ptr<File> File::Open(const WideString &wcsPath, std::uint32_t u32Flags){
-	auto pFile = std::make_unique<FileDelegate>();
-	const auto vResult = pFile->Open(wcsPath.GetCStr(), u32Flags);
-	if(vResult.first != ERROR_SUCCESS){
-		MCF_THROW(vResult.first, vResult.second);
-	}
-	return std::move(pFile);
+std::unique_ptr<File> File::Open(const WideString &wsPath, std::uint32_t u32Flags){
+	return Open(wsPath.GetCStr(), u32Flags);
 }
 
-std::unique_ptr<File> File::OpenNoThrow(const WideStringObserver &wsoPath, std::uint32_t u32Flags){
+std::unique_ptr<File> File::OpenNoThrow(const wchar_t *pwszPath, std::uint32_t u32Flags){
 	auto pFile = std::make_unique<FileDelegate>();
-	const auto vResult = pFile->Open(wsoPath.GetNullTerminated<MAX_PATH>().GetData(), u32Flags);
+	const auto vResult = pFile->Open(pwszPath, u32Flags);
 	if(vResult.first != ERROR_SUCCESS){
 		::SetLastError(vResult.first);
 		return nullptr;
 	}
 	return std::move(pFile);
 }
-std::unique_ptr<File> File::OpenNoThrow(const WideString &wcsPath, std::uint32_t u32Flags){
-	auto pFile = std::make_unique<FileDelegate>();
-	const auto vResult = pFile->Open(wcsPath.GetCStr(), u32Flags);
-	if(vResult.first != ERROR_SUCCESS){
-		::SetLastError(vResult.first);
-		return nullptr;
-	}
-	return std::move(pFile);
+std::unique_ptr<File> File::OpenNoThrow(const WideString &wsPath, std::uint32_t u32Flags){
+	return OpenNoThrow(wsPath.GetCStr(), u32Flags);
 }
 
 // 其他非静态成员函数。

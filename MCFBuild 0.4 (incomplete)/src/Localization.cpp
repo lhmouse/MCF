@@ -111,14 +111,14 @@ MCF::WideString FormatString(const MCF::WideStringObserver &wsoRaw){
 		return L"MissingText: "_ws +  wsoId;
 	}
 
-	MCF::WideString wcsRet;
+	MCF::WideString wsRet;
 	bool bExpectingIndex = false;
 	for(const auto wc : itDesc->second){
 		if(bExpectingIndex){
 			bExpectingIndex = false;
 
 			if(wc == L'%'){
-				wcsRet.Push(L'%');
+				wsRet.Push(L'%');
 				continue;
 			}
 
@@ -133,7 +133,7 @@ MCF::WideString FormatString(const MCF::WideStringObserver &wsoRaw){
 			if((std::size_t)(nIndex + 1) < vecDelims.GetSize()){
 				const auto uInsertBegin = vecDelims[(std::size_t)nIndex] + 1;
 				const auto uInsertEnd = vecDelims[(std::size_t)nIndex + 1];
-				wcsRet.Append(wsoRaw.GetBegin() + uInsertBegin, uInsertEnd - uInsertBegin);
+				wsRet.Append(wsoRaw.GetBegin() + uInsertBegin, uInsertEnd - uInsertBegin);
 			}
 			continue;
 		}
@@ -141,9 +141,9 @@ MCF::WideString FormatString(const MCF::WideStringObserver &wsoRaw){
 			bExpectingIndex = true;
 			continue;
 		}
-		wcsRet.Push(wc);
+		wsRet.Push(wc);
 	}
-	return std::move(wcsRet);
+	return std::move(wsRet);
 }
 
 }

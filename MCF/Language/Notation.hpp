@@ -36,7 +36,7 @@ public:
 	const NotationPackage *GetPackage(const WideStringObserver &wsoName) const noexcept;
 	NotationPackage *GetPackage(const WideStringObserver &wsoName) noexcept;
 	std::pair<NotationPackage *, bool> CreatePackage(const WideStringObserver &wsoName);
-	std::pair<NotationPackage *, bool> CreatePackage(WideString wcsName);
+	std::pair<NotationPackage *, bool> CreatePackage(WideString wsName);
 	bool RemovePackage(const WideStringObserver &wsoName) noexcept;
 
 	void TraversePackages(const std::function<void (const NotationPackage &)> &fnCallback) const;
@@ -44,8 +44,8 @@ public:
 
 	const WideString *GetValue(const WideStringObserver &wsoName) const noexcept;
 	WideString *GetValue(const WideStringObserver &wsoName) noexcept;
-	std::pair<WideString *, bool> CreateValue(const WideStringObserver &wsoName, WideString wcsValue);
-	std::pair<WideString *, bool> CreateValue(WideString wcsName, WideString wcsValue);
+	std::pair<WideString *, bool> CreateValue(const WideStringObserver &wsoName, WideString wsValue);
+	std::pair<WideString *, bool> CreateValue(WideString wsName, WideString wsValue);
 	bool RemoveValue(const WideStringObserver &wsoName) noexcept;
 
 	void TraverseValues(const std::function<void (const WideString &)> &fnCallback) const;

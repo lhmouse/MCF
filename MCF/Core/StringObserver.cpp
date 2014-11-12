@@ -13,6 +13,6 @@ template class StringObserver<StringTypes::WIDE>;
 template class StringObserver<StringTypes::UTF8>;
 template class StringObserver<StringTypes::UTF16>;
 template class StringObserver<StringTypes::UTF32>;
-template class StringObserver<StringTypes::MOD_UTF8>;
+template class StringObserver<StringTypes::CESU8>;
 
 }

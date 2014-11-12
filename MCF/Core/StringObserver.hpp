@@ -23,7 +23,7 @@ enum class StringTypes {
 	UTF8,
 	UTF16,
 	UTF32,
-	MOD_UTF8,	// https://docs.oracle.com/javase/6/docs/api/java/io/DataInput.html#modified-utf-8
+	CESU8,
 };
 
 template<StringTypes>
@@ -51,12 +51,12 @@ struct StringEncodingTrait<StringTypes::UTF32> {
 	using Type = char32_t;
 };
 template<>
-struct StringEncodingTrait<StringTypes::MOD_UTF8> {
+struct StringEncodingTrait<StringTypes::CESU8> {
 	using Type = char;
 };
 
-template<StringTypes TypeT>
-using CharTypeOf = typename StringEncodingTrait<TypeT>::Type;
+template<StringTypes TYPE_T>
+using CharTypeOf = typename StringEncodingTrait<TYPE_T>::Type;
 
 namespace Impl {
 	constexpr std::size_t NPOS = (std::size_t)-1;
@@ -171,11 +171,11 @@ namespace Impl {
 	}
 }
 
-template<StringTypes TypeT>
+template<StringTypes TYPE_T>
 struct StringObserver {
 public:
-	static constexpr StringTypes Type = TypeT;
-	using Char = CharTypeOf<TypeT>;
+	static constexpr StringTypes Type = TYPE_T;
+	using Char = CharTypeOf<TYPE_T>;
 
 	static constexpr std::size_t NPOS = Impl::NPOS;
 
@@ -428,57 +428,57 @@ public:
 	}
 };
 
-template<StringTypes TypeT>
-bool operator==(const StringObserver<TypeT> &lhs, const StringObserver<TypeT> &rhs) noexcept {
+template<StringTypes TYPE_T>
+bool operator==(const StringObserver<TYPE_T> &lhs, const StringObserver<TYPE_T> &rhs) noexcept {
 	if(lhs.GetSize() != rhs.GetSize()){
 		return false;
 	}
 	return lhs.Compare(rhs) == 0;
 }
-template<StringTypes TypeT>
-bool operator!=(const StringObserver<TypeT> &lhs, const StringObserver<TypeT> &rhs) noexcept {
+template<StringTypes TYPE_T>
+bool operator!=(const StringObserver<TYPE_T> &lhs, const StringObserver<TYPE_T> &rhs) noexcept {
 	if(lhs.GetSize() != rhs.GetSize()){
 		return true;
 	}
 	return lhs.Compare(rhs) != 0;
 }
-template<StringTypes TypeT>
-bool operator<(const StringObserver<TypeT> &lhs, const StringObserver<TypeT> &rhs) noexcept {
+template<StringTypes TYPE_T>
+bool operator<(const StringObserver<TYPE_T> &lhs, const StringObserver<TYPE_T> &rhs) noexcept {
 	return lhs.Compare(rhs) < 0;
 }
-template<StringTypes TypeT>
-bool operator>(const StringObserver<TypeT> &lhs, const StringObserver<TypeT> &rhs) noexcept {
+template<StringTypes TYPE_T>
+bool operator>(const StringObserver<TYPE_T> &lhs, const StringObserver<TYPE_T> &rhs) noexcept {
 	return lhs.Compare(rhs) > 0;
 }
-template<StringTypes TypeT>
-bool operator<=(const StringObserver<TypeT> &lhs, const StringObserver<TypeT> &rhs) noexcept {
+template<StringTypes TYPE_T>
+bool operator<=(const StringObserver<TYPE_T> &lhs, const StringObserver<TYPE_T> &rhs) noexcept {
 	return lhs.Compare(rhs) <= 0;
 }
-template<StringTypes TypeT>
-bool operator>=(const StringObserver<TypeT> &lhs, const StringObserver<TypeT> &rhs) noexcept {
+template<StringTypes TYPE_T>
+bool operator>=(const StringObserver<TYPE_T> &lhs, const StringObserver<TYPE_T> &rhs) noexcept {
 	return lhs.Compare(rhs) >= 0;
 }
 
-template<StringTypes TypeT>
-auto begin(const StringObserver<TypeT> &rhs) noexcept {
+template<StringTypes TYPE_T>
+auto begin(const StringObserver<TYPE_T> &rhs) noexcept {
 	return rhs.GetBegin();
 }
-template<StringTypes TypeT>
-auto cbegin(const StringObserver<TypeT> &rhs) noexcept {
+template<StringTypes TYPE_T>
+auto cbegin(const StringObserver<TYPE_T> &rhs) noexcept {
 	return rhs.GetCBegin();
 }
 
-template<StringTypes TypeT>
-auto end(const StringObserver<TypeT> &rhs) noexcept {
+template<StringTypes TYPE_T>
+auto end(const StringObserver<TYPE_T> &rhs) noexcept {
 	return rhs.GetEnd();
 }
-template<StringTypes TypeT>
-auto cend(const StringObserver<TypeT> &rhs) noexcept {
+template<StringTypes TYPE_T>
+auto cend(const StringObserver<TYPE_T> &rhs) noexcept {
 	return rhs.GetCEnd();
 }
 
-template<StringTypes TypeT>
-void swap(StringObserver<TypeT> &lhs, StringObserver<TypeT> &rhs) noexcept {
+template<StringTypes TYPE_T>
+void swap(StringObserver<TYPE_T> &lhs, StringObserver<TYPE_T> &rhs) noexcept {
 	lhs.Swap(rhs);
 }
 
@@ -487,14 +487,14 @@ extern template class StringObserver<StringTypes::WIDE>;
 extern template class StringObserver<StringTypes::UTF8>;
 extern template class StringObserver<StringTypes::UTF16>;
 extern template class StringObserver<StringTypes::UTF32>;
-extern template class StringObserver<StringTypes::MOD_UTF8>;
+extern template class StringObserver<StringTypes::CESU8>;
 
 using NarrowStringObserver		= StringObserver<StringTypes::NARROW>;
 using WideStringObserver		= StringObserver<StringTypes::WIDE>;
 using Utf8StringObserver		= StringObserver<StringTypes::UTF8>;
 using Utf16StringObserver		= StringObserver<StringTypes::UTF16>;
 using Utf32StringObserver		= StringObserver<StringTypes::UTF32>;
-using ModUtf8StringObserver		= StringObserver<StringTypes::MOD_UTF8>;
+using Cesu8StringObserver		= StringObserver<StringTypes::CESU8>;
 
 // 字面量运算符。
 // 注意 StringObserver 并不是所谓“零结尾的字符串”。

@@ -4,6 +4,7 @@
 
 #include "../StdMCF.hpp"
 #include "String.hpp"
+#include "Exception.hpp"
 #include <iterator>
 using namespace MCF;
 
@@ -11,8 +12,6 @@ namespace {
 
 // https://en.wikipedia.org/wiki/UTF-8
 // https://en.wikipedia.org/wiki/UTF-16
-constexpr unsigned long ERROR_CODE_POINT = -1ul;
-
 template<class InputCharT>
 unsigned long LoadUtf8(const InputCharT *&pchRead, const InputCharT *pchEnd){
 	ASSERT(pchRead != pchEnd);
@@ -27,11 +26,10 @@ unsigned long LoadUtf8(const InputCharT *&pchRead, const InputCharT *pchEnd){
 	const auto uAdditional = CountLeadingZeroes(~(ulPoint << (BITS_OF(ulPoint) - 7)) | 1);
 	// UTF-8 理论上最长可以编码 6 个字符，但是标准化以后只能使用 4 个。
 	if(uAdditional - 1 > 3){ // 0 - 3
-		// 按照 ISO-8859-1 映射到 U+0080 - U+00FF。
-		return ERROR_CODE_POINT;
+		MCF_THROW(ERROR_INVALID_DATA, L"无效的 UTF-8 前导字符。");
 	}
 	if((std::size_t)(pchEnd - pchRead) < uAdditional){
-		return ERROR_CODE_POINT;
+		MCF_THROW(ERROR_HANDLE_EOF, L"UTF-8 字符串被截断。");
 	}
 
 	const auto pchPointEnd = pchRead + uAdditional;
@@ -40,14 +38,14 @@ unsigned long LoadUtf8(const InputCharT *&pchRead, const InputCharT *pchEnd){
 		const unsigned long ulUnit = (std::uint8_t)*pchRead;
 		if((ulUnit & 0xC0u) != 0x80u){
 			// 编码错误。
-			return ERROR_CODE_POINT;
+			MCF_THROW(ERROR_INVALID_DATA, L"无效的 UTF-8 后续字符。");
 		}
 		ulPoint = (ulPoint << 6) | (ulUnit & 0x3Fu);
 	} while(++pchRead != pchPointEnd);
 
 	if(ulPoint > 0x10FFFFu){
 		// 无效的 UTF-32 码点。
-		ulPoint = 0xFFFDu;
+		MCF_THROW(ERROR_INVALID_DATA, L"UTF-32 码点的值超过范围。");
 	}
 	return ulPoint;
 }
@@ -59,14 +57,14 @@ void SaveUtf8(OutputIteratorT &itOutput, unsigned long ulPoint){
 		ASSERT(ulPoint <= 0x7Fu);
 		*itOutput = (char)ulPoint;
 		++itOutput;
-		return;
-	}
-	ulPoint |= 0xFFFFFF80u << (uAdditional * 5);
-	itOutput = (char)(ulPoint >> (uAdditional * 6));
-	++itOutput;
-	for(std::size_t i = uAdditional; i != 0; --i){
-		itOutput = (char)(((ulPoint >> (i * 6 - 6)) & 0x3Fu) | 0x80u);
+	} else {
+		ulPoint |= 0xFFFFFF80u << (uAdditional * 5);
+		itOutput = (char)(ulPoint >> (uAdditional * 6));
 		++itOutput;
+		for(std::size_t i = uAdditional; i != 0; --i){
+			itOutput = (char)(((ulPoint >> (i * 6 - 6)) & 0x3Fu) | 0x80u);
+			++itOutput;
+		}
 	}
 }
 
@@ -74,16 +72,7 @@ template<class OutputIteratorT, class InputCharT>
 OutputIteratorT Utf32FromUtf8(OutputIteratorT itOutput, const InputCharT *pchBegin, const InputCharT *pchEnd){
 	auto pchRead = pchBegin;
 	while(pchRead != pchEnd){
-		auto pchOldRead = pchRead;
 		const auto ulPoint = LoadUtf8(pchRead, pchEnd);
-		if(ulPoint == ERROR_CODE_POINT){
-			do {
-				*itOutput = (char32_t)(unsigned char)*pchOldRead;
-				++itOutput;
-				++pchOldRead;
-			} while(pchOldRead != pchRead);
-			continue;
-		}
 		*itOutput = (char32_t)ulPoint;
 		++itOutput;
 	}
@@ -97,7 +86,7 @@ OutputIteratorT Utf8FromUtf32(OutputIteratorT itOutput, const char32_t *pc32Begi
 		++pc32Read;
 		if(ulPoint > 0x10FFFFu){
 			// 无效的 UTF-32 码点。
-			ulPoint = 0xFFFDu;
+			MCF_THROW(ERROR_INVALID_DATA, L"UTF-32 码点的值超过范围。");
 		}
 		SaveUtf8(itOutput, ulPoint);
 	}
@@ -110,15 +99,7 @@ OutputIteratorT Utf32FromModifiedUtf8(OutputIteratorT itOutput, const InputCharT
 	while(pchRead != pchEnd){
 		auto pchOldRead = pchRead;
 		auto ulPoint = LoadUtf8(pchRead, pchEnd);
-		if(ulPoint == ERROR_CODE_POINT){
-			do {
-				*itOutput = (char32_t)(unsigned char)*pchOldRead;
-				++itOutput;
-				++pchOldRead;
-			} while(pchOldRead != pchRead);
-			continue;
-		}
-		// 检测首代理。
+		// 检测前导代理。
 		const auto ulLeading = ulPoint - 0xD800u;
 		if(ulLeading > 0x7FFu){
 			*itOutput = (char32_t)ulPoint;
@@ -126,29 +107,17 @@ OutputIteratorT Utf32FromModifiedUtf8(OutputIteratorT itOutput, const InputCharT
 			continue;
 		}
 		if(ulLeading > 0x3FFu){
-			// 这是个末代理。
-			*itOutput = (char32_t)0xFFFDu;
-			++itOutput;
-			continue;
+			// 这是个后续代理。
+			MCF_THROW(ERROR_INVALID_DATA, L"孤立的 UTF-16 后续代理。");
 		}
 		if(pchRead == pchEnd){
-			*itOutput = (char32_t)0xFFFDu;
-			++itOutput;
-			break;
+			MCF_THROW(ERROR_HANDLE_EOF, L"UTF-16 字符串被截断。");
 		}
 		ulPoint = LoadUtf8(pchRead, pchEnd);
-		// if(ulPoint == ERROR_CODE_POINT){ // 不需要。
 		ulPoint -= 0xDC00u;
 		if(ulPoint > 0x3FFu){
-			// 末代理无效。
-			*itOutput = (char32_t)0xFFFDu;
-			++itOutput;
-			do {
-				*itOutput = (char32_t)(unsigned char)*pchOldRead;
-				++itOutput;
-				++pchOldRead;
-			} while(pchOldRead != pchRead);
-			continue;
+			// 后续代理无效。
+			MCF_THROW(ERROR_INVALID_DATA, L"UTF-16 前导代理的后面不是后续代理。");
 		}
 		// 将代理对拼成一个码点。
 		*itOutput = (char32_t)(((ulLeading << 10) | ulPoint) + 0x10000u);
@@ -171,7 +140,7 @@ OutputIteratorT ModifiedUtf8FromUtf32(OutputIteratorT itOutput, const char32_t *
 		}
 		if(ulPoint > 0x10FFFFu){
 			// 无效的 UTF-32 码点。
-			ulPoint = 0xFFFDu;
+			MCF_THROW(ERROR_INVALID_DATA, L"UTF-32 码点的值超过范围。");
 		}
 		if(ulPoint <= 0xFFFFu){
 			// 单个的 UTF-16 字符。
@@ -192,7 +161,7 @@ OutputIteratorT Utf32FromUtf16(OutputIteratorT itOutput, const InputCharT *pchBe
 	while(pchRead != pchEnd){
 		unsigned long ulPoint = (std::uint16_t)*pchRead;
 		++pchRead;
-		// 检测首代理。
+		// 检测前导代理。
 		const auto ulLeading = ulPoint - 0xD800u;
 		if(ulLeading > 0x7FFu){
 			*itOutput = (char32_t)ulPoint;
@@ -200,26 +169,18 @@ OutputIteratorT Utf32FromUtf16(OutputIteratorT itOutput, const InputCharT *pchBe
 			continue;
 		}
 		if(ulLeading > 0x3FFu){
-			// 这是个末代理。
-			*itOutput = (char32_t)0xFFFDu;
-			++itOutput;
-			continue;
+			// 这是个后续代理。
+			MCF_THROW(ERROR_INVALID_DATA, L"孤立的 UTF-16 后续代理。");
 		}
 		if(pchRead == pchEnd){
-			*itOutput = (char32_t)0xFFFDu;
-			++itOutput;
-			break;
+			MCF_THROW(ERROR_HANDLE_EOF, L"UTF-16 字符串被截断。");
 		}
 		ulPoint = (std::uint16_t)*pchRead;
 		++pchRead;
 		ulPoint -= 0xDC00u;
 		if(ulPoint > 0x3FFu){
-			// 末代理无效。
-			*itOutput = (char32_t)0xFFFDu;
-			++itOutput;
-			*itOutput = (char32_t)0xFFFDu;
-			++itOutput;
-			continue;
+			// 后续代理无效。
+			MCF_THROW(ERROR_INVALID_DATA, L"UTF-16 前导代理的后面不是后续代理。");
 		}
 		// 将代理对拼成一个码点。
 		*itOutput = (char32_t)(((ulLeading << 10) | ulPoint) + 0x10000u);
@@ -235,7 +196,7 @@ OutputIteratorT Utf16FromUtf32(OutputIteratorT itOutput, const char32_t *pc32Beg
 		++pc32Read;
 		if(ulPoint > 0x10FFFFu){
 			// 无效的 UTF-32 码点。
-			ulPoint = 0xFFFDu;
+			MCF_THROW(ERROR_INVALID_DATA, L"UTF-32 码点的值超过范围。");
 		}
 		if(ulPoint <= 0xFFFFu){
 			// 单个的 UTF-16 字符。

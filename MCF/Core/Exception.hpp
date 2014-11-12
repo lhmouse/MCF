@@ -36,35 +36,19 @@ inline WideString GetWin32ErrorDesc(unsigned long ulErrorCode){
 
 class Exception : public std::exception {
 public:
-	const char *m_pszFunction;
-	unsigned long m_ulLine;
-	unsigned long m_ulErrorCode;
-	WideString m_wcsMessage;
-
-private:
-	void xMakeMessage() noexcept {
-	}
-	void xMakeMessage(const WideStringObserver &wsoMessage){
-		m_wcsMessage = wsoMessage;
-	}
-	void xMakeMessage(WideString wsMessage){
-		m_wcsMessage = std::move(wsMessage);
-	}
+	const char *const m_pszFunction;
+	const unsigned long m_ulLine;
+	const unsigned long m_ulErrorCode;
+	const WideString m_wcsMessage;
 
 public:
 	// 确保参数的传递都不影响 ::GetLastError() 的返回值。
 	template<typename ...ParamsT>
-	Exception(
-		const char *pszFunction,
-		unsigned long ulLine,
-		unsigned long ulErrorCode,
-		ParamsT &&...vParams
-	) noexcept
-		: m_pszFunction	(pszFunction)
-		, m_ulLine		(ulLine)
-		, m_ulErrorCode	(ulErrorCode)
+	Exception(const char *pszFunction, unsigned long ulLine, unsigned long ulErrorCode,
+		ParamsT &&...vParams)
+		: m_pszFunction(pszFunction), m_ulLine(ulLine), m_ulErrorCode(ulErrorCode)
+		, m_wcsMessage(std::forward<ParamsT>(vParams)...)
 	{
-		xMakeMessage(std::forward<ParamsT>(vParams)...);
 	}
 
 public:
@@ -75,10 +59,10 @@ public:
 
 }
 
-#define MCF_THROW(code, ...)	\
-	(throw ::MCF::Exception(__PRETTY_FUNCTION__, __LINE__, code, __VA_ARGS__))
+#define MCF_THROW(code_, ...)	\
+	(throw ::MCF::Exception(__PRETTY_FUNCTION__, __LINE__, code_, __VA_ARGS__))
 
-#define MCF_MAKE_EXCEPTION_PTR(code, ...)	\
-	(::std::make_exception_ptr(::MCF::Exception(__PRETTY_FUNCTION__, __LINE__, code, __VA_ARGS__)))
+#define MCF_MAKE_EXCEPTION_PTR(code_, ...)	\
+	(::std::make_exception_ptr(::MCF::Exception(__PRETTY_FUNCTION__, __LINE__, code_, __VA_ARGS__)))
 
 #endif

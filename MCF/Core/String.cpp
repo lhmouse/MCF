@@ -221,19 +221,24 @@ auto MakeUtf16Encoder(PrevT vPrev){
 
 template<class StringT, class FilterT>
 void Convert(StringT &strWrite, std::size_t uPos, FilterT vFilter){
-// TODO
-	typename StringT::Char achTemp[256];
-	auto pchWrite = std::begin(achTemp);
-	while(vFilter){
-		*pchWrite = vFilter();
-		if(++pchWrite == std::end(achTemp)){
-			strWrite.Replace((std::ptrdiff_t)uPos, (std::ptrdiff_t)uPos, std::begin(achTemp), pchWrite);
-			uPos += COUNT_OF(achTemp);
-			pchWrite = std::begin(achTemp);
+	if(uPos == strWrite.GetSize()){
+		while(vFilter){
+			strWrite.Push(vFilter());
 		}
-	}
-	if(pchWrite != std::begin(achTemp)){
-		strWrite.Replace((std::ptrdiff_t)uPos, (std::ptrdiff_t)uPos, std::begin(achTemp), pchWrite);
+	} else {
+		typename StringT::Char achTemp[256];
+		auto pchWrite = std::begin(achTemp);
+		while(vFilter){
+			*pchWrite = vFilter();
+			if(++pchWrite == std::end(achTemp)){
+				strWrite.Replace((std::ptrdiff_t)uPos, (std::ptrdiff_t)uPos, std::begin(achTemp), pchWrite);
+				uPos += COUNT_OF(achTemp);
+				pchWrite = std::begin(achTemp);
+			}
+		}
+		if(pchWrite != std::begin(achTemp)){
+			strWrite.Replace((std::ptrdiff_t)uPos, (std::ptrdiff_t)uPos, std::begin(achTemp), pchWrite);
+		}
 	}
 }
 

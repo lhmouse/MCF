@@ -27,6 +27,7 @@ WideString GetWin32ErrorDesc(unsigned long ulErrorCode){
 		if(dwError != ERROR_INSUFFICIENT_BUFFER){
 			DEBUG_THROW(SystemError, "FormatMessageW", dwError);
 		}
+		wsRet.Clear();
 		wsRet.Reserve(uMaxLen * 2);
 	}
 	return std::move(wsRet);

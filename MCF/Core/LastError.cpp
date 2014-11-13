@@ -17,7 +17,7 @@ WideString GetWin32ErrorDesc(unsigned long ulErrorCode){
 		wsRet.Resize(uMaxLen);
 		const auto uLen = ::FormatMessageW(
 			FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS | FORMAT_MESSAGE_MAX_WIDTH_MASK,
-			nullptr, ulErrorCode, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+			nullptr, ulErrorCode, MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL),
 			wsRet.GetData(), uMaxLen, nullptr);
 		if(uLen != 0){
 			wsRet.Resize(uLen);

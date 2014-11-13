@@ -11,8 +11,9 @@ namespace MCF {
 
 WideString GetWin32ErrorDesc(unsigned long ulErrorCode){
 	WideString wsRet;
-	std::size_t uMaxLen = 64;
+	wsRet.Resize(1);
 	for(;;){
+		const auto uMaxLen = wsRet.GetCapacity();
 		wsRet.Resize(uMaxLen);
 		const auto uLen = ::FormatMessageW(
 			FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS | FORMAT_MESSAGE_MAX_WIDTH_MASK,
@@ -26,7 +27,7 @@ WideString GetWin32ErrorDesc(unsigned long ulErrorCode){
 		if(dwError != ERROR_INSUFFICIENT_BUFFER){
 			DEBUG_THROW(SystemError, "FormatMessageW", dwError);
 		}
-		uMaxLen *= 2;
+		wsRet.Reserve(uMaxLen * 2);
 	}
 	return std::move(wsRet);
 }

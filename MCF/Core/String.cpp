@@ -327,31 +327,35 @@ void Cesu8String::Deunify(Cesu8String &cu8sDst, std::size_t uPos, const UnifiedS
 // ANSI
 template<>
 UnifiedStringObserver AnsiString::Unify(UnifiedString &&usTempStorage, const AnsiStringObserver &asoSrc){
-	WideString wsTemp;
-	wsTemp.Resize(asoSrc.GetSize());
-	const unsigned uCount = (unsigned)::MultiByteToWideChar(CP_ACP, MB_ERR_INVALID_CHARS,
-		asoSrc.GetBegin(), (int)asoSrc.GetSize(), wsTemp.GetData(), (int)wsTemp.GetSize());
-	if(uCount == 0){
-		DEBUG_THROW(SystemError, "MultiByteToWideChar");
+	if(!asoSrc.IsEmpty()){
+		WideString wsTemp;
+		wsTemp.Resize(asoSrc.GetSize());
+		const unsigned uCount = (unsigned)::MultiByteToWideChar(CP_ACP, MB_ERR_INVALID_CHARS,
+			asoSrc.GetBegin(), (int)asoSrc.GetSize(), wsTemp.GetData(), (int)wsTemp.GetSize());
+		if(uCount == 0){
+			DEBUG_THROW(SystemError, "MultiByteToWideChar");
+		}
+		usTempStorage.Reserve(uCount);
+		Convert(usTempStorage, 0, MakeUtf16Decoder(MakeStringSource(WideStringObserver(wsTemp.GetData(), uCount))));
 	}
-	usTempStorage.Reserve(uCount);
-	Convert(usTempStorage, 0, MakeUtf16Decoder(MakeStringSource(WideStringObserver(wsTemp.GetData(), uCount))));
 	return usTempStorage;
 }
 template<>
 void AnsiString::Deunify(AnsiString &ansDst, std::size_t uPos, const UnifiedStringObserver &usoSrc){
-	WideString wsTemp;
-	wsTemp.Reserve(usoSrc.GetSize());
-	Convert(wsTemp, 0, MakeUtf16Encoder(MakeStringSource(usoSrc)));
+	if(!usoSrc.IsEmpty()){
+		WideString wsTemp;
+		wsTemp.Reserve(usoSrc.GetSize());
+		Convert(wsTemp, 0, MakeUtf16Encoder(MakeStringSource(usoSrc)));
 
-	AnsiString ansConverted;
-	ansConverted.Resize(wsTemp.GetSize() * 2);
-	const unsigned uCount = (unsigned)::WideCharToMultiByte(CP_ACP, 0,
-		wsTemp.GetData(), (int)wsTemp.GetSize(), ansConverted.GetData(), (int)ansConverted.GetSize(), nullptr, nullptr);
-	if(uCount == 0){
-		DEBUG_THROW(SystemError, "WideCharToMultiByte");
+		AnsiString ansConverted;
+		ansConverted.Resize(wsTemp.GetSize() * 2);
+		const unsigned uCount = (unsigned)::WideCharToMultiByte(CP_ACP, 0,
+			wsTemp.GetData(), (int)wsTemp.GetSize(), ansConverted.GetData(), (int)ansConverted.GetSize(), nullptr, nullptr);
+		if(uCount == 0){
+			DEBUG_THROW(SystemError, "WideCharToMultiByte");
+		}
+		ansDst.Replace((std::ptrdiff_t)uPos, (std::ptrdiff_t)uPos, ansConverted.GetData(), uCount);
 	}
-	ansDst.Replace((std::ptrdiff_t)uPos, (std::ptrdiff_t)uPos, ansConverted.GetData(), uCount);
 }
 
 StringEncodingError::~StringEncodingError(){

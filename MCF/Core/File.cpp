@@ -117,7 +117,7 @@ public:
 		}
 		if(dwErrorCode != ERROR_SUCCESS){
 			if(dwErrorCode != ERROR_IO_PENDING){
-				DEBUG_THROW(SystemError, "ReadFile");
+				DEBUG_THROW(SystemError, "ReadFile", dwErrorCode);
 			}
 			if(!::GetOverlappedResult(xm_hFile.Get(), &vOverlapped, &dwTransferred, true)){
 				DEBUG_THROW(SystemError, "GetOverlappedResult");
@@ -135,7 +135,7 @@ public:
 			if(!::ReadFile(xm_hFile.Get(), (char *)pBuffer + uBytesRead, dwBlockSize, nullptr, &vOverlapped)){
 				dwErrorCode = ::GetLastError();
 				if(dwErrorCode != ERROR_IO_PENDING){
-					DEBUG_THROW(SystemError, "ReadFile");
+					DEBUG_THROW(SystemError, "ReadFile", dwErrorCode);
 				}
 				if(!::GetOverlappedResult(xm_hFile.Get(), &vOverlapped, &dwTransferred, true)){
 					DEBUG_THROW(SystemError, "GetOverlappedResult");
@@ -172,7 +172,7 @@ public:
 		}
 		if(dwErrorCode != ERROR_SUCCESS){
 			if(dwErrorCode != ERROR_IO_PENDING){
-				DEBUG_THROW(SystemError, "WriteFile");
+				DEBUG_THROW(SystemError, "WriteFile", dwErrorCode);
 			}
 			if(!::GetOverlappedResult(xm_hFile.Get(), &vOverlapped, &dwTransferred, true)){
 				DEBUG_THROW(SystemError, "GetOverlappedResult");
@@ -190,7 +190,7 @@ public:
 			if(!::WriteFile(xm_hFile.Get(), (char *)pBuffer + uBytesWritten, dwBlockSize, nullptr, &vOverlapped)){
 				dwErrorCode = ::GetLastError();
 				if(dwErrorCode != ERROR_IO_PENDING){
-					DEBUG_THROW(SystemError, "WriteFile");
+					DEBUG_THROW(SystemError, "WriteFile", dwErrorCode);
 				}
 				if(!::GetOverlappedResult(xm_hFile.Get(), &vOverlapped, &dwTransferred, true)){
 					DEBUG_THROW(SystemError, "GetOverlappedResult");

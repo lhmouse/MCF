@@ -32,7 +32,7 @@ public:
 	}
 	unsigned long operator()(){
 		if(xm_pchRead == xm_pchEnd){
-			MCF_THROW(ERROR_HANDLE_EOF, L"遇到字符串结尾。");
+			DEBUG_THROW(StringEncodingError, "String is truncated", ERROR_HANDLE_EOF);
 		}
 		return static_cast<std::make_unsigned_t<CharT>>(*(xm_pchRead++));
 	}
@@ -65,20 +65,18 @@ public:
 			const auto uBytes = CountLeadingZeroes((std::uint8_t)(~ulPoint | 1));
 			// UTF-8 理论上最长可以编码 6 个字符，但是标准化以后最多只能使用 4 个。
 			if(uBytes - 2 > 2){ // 2, 3, 4
-				MCF_THROW(ERROR_INVALID_DATA, L"无效的 UTF-8 前导字符。");
+				DEBUG_THROW(StringEncodingError, "Invalid UTF-8 leading byte", ERROR_INVALID_DATA);
 			}
 			ulPoint &= (0xFFu >> uBytes);
 			for(std::size_t i = 1; i < uBytes; ++i){
 				const auto ulTemp = xm_vPrev();
 				if((ulTemp & 0xC0u) != 0x80u){
-					// 编码错误。
-					MCF_THROW(ERROR_INVALID_DATA, L"无效的 UTF-8 后续字符。");
+					DEBUG_THROW(StringEncodingError, "Invalid UTF-8 non-leading byte", ERROR_INVALID_DATA);
 				}
 				ulPoint = (ulPoint << 6) | (ulTemp & 0x3Fu);
 			}
 			if(ulPoint > 0x10FFFFu){
-				// 无效的 UTF-32 码点。
-				MCF_THROW(ERROR_INVALID_DATA, L"UTF-32 码点的值超过范围。");
+				DEBUG_THROW(StringEncodingError, "Invalid UTF-32 code point value", ERROR_INVALID_DATA);
 			}
 		}
 		return ulPoint;
@@ -114,8 +112,7 @@ public:
 		}
 		auto ulPoint = xm_vPrev();
 		if(ulPoint > 0x10FFFFu){
-			// 无效的 UTF-32 码点。
-			MCF_THROW(ERROR_INVALID_DATA, L"UTF-32 码点的值超过范围。");
+			DEBUG_THROW(StringEncodingError, "Invalid UTF-32 code point value", ERROR_INVALID_DATA);
 		}
 		// 这个值是该码点的总字节数。
 		const auto uBytes = (34u - CountLeadingZeroes((std::uint32_t)(ulPoint | 0x7F))) / 5u;
@@ -157,13 +154,12 @@ public:
 		const auto ulLeading = ulPoint - 0xD800u;
 		if(ulLeading <= 0x7FFu){
 			if(ulLeading > 0x3FFu){
-				// 这是个后续代理。
-				MCF_THROW(ERROR_INVALID_DATA, L"孤立的 UTF-16 后续代理。");
+				DEBUG_THROW(StringEncodingError, "Isolated UTF-16 trailing surrogate", ERROR_INVALID_DATA);
 			}
 			ulPoint = xm_vPrev() - 0xDC00u;
 			if(ulPoint > 0x3FFu){
 				// 后续代理无效。
-				MCF_THROW(ERROR_INVALID_DATA, L"UTF-16 前导代理的后面不是后续代理。");
+				DEBUG_THROW(StringEncodingError, "Leading surrogate followed by non-trailing-surrogate", ERROR_INVALID_DATA);
 			}
 			// 将代理对拼成一个码点。
 			ulPoint = ((ulLeading << 10) | ulPoint) + 0x10000u;
@@ -201,8 +197,7 @@ public:
 		}
 		auto ulPoint = xm_vPrev();
 		if(ulPoint > 0x10FFFFu){
-			// 无效的 UTF-32 码点。
-			MCF_THROW(ERROR_INVALID_DATA, L"UTF-32 码点的值超过范围。");
+			DEBUG_THROW(StringEncodingError, "Invalid UTF-32 code point value", ERROR_INVALID_DATA);
 		}
 		if(ulPoint > 0xFFFFu){
 			// 编码成代理对。
@@ -252,59 +247,58 @@ template class String<StringTypes::UTF8>;
 template class String<StringTypes::UTF16>;
 template class String<StringTypes::UTF32>;
 template class String<StringTypes::CESU8>;
+template class String<StringTypes::ANSI>;
 
-// ANSI
+// UTF-8
 template<>
 UnifiedStringObserver NarrowString::Unify(UnifiedString &&usTempStorage, const NarrowStringObserver &nsoSrc){
-	return {};
+	usTempStorage.Reserve(nsoSrc.GetSize());
+	Convert(usTempStorage, 0, MakeUtf8Decoder(MakeStringSource(nsoSrc)));
+	return usTempStorage;
 }
 template<>
 void NarrowString::Deunify(NarrowString &nsDst, std::size_t uPos, const UnifiedStringObserver &usoSrc){
+	nsDst.ReserveMore(usoSrc.GetSize() * 2);
+	Convert(nsDst, uPos, MakeUtf8Encoder(MakeStringSource(usoSrc)));
 }
 
 // UTF-16
 template<>
 UnifiedStringObserver WideString::Unify(UnifiedString &&usTempStorage, const WideStringObserver &wsoSrc){
 	usTempStorage.Reserve(wsoSrc.GetSize());
-	Convert(usTempStorage, 0,
-		MakeUtf16Decoder(MakeStringSource(wsoSrc)));
+	Convert(usTempStorage, 0, MakeUtf16Decoder(MakeStringSource(wsoSrc)));
 	return usTempStorage;
 }
 template<>
 void WideString::Deunify(WideString &wsDst, std::size_t uPos, const UnifiedStringObserver &usoSrc){
 	wsDst.ReserveMore(usoSrc.GetSize());
-	Convert(wsDst, uPos,
-		MakeUtf16Encoder(MakeStringSource(usoSrc)));
+	Convert(wsDst, uPos, MakeUtf16Encoder(MakeStringSource(usoSrc)));
 }
 
 // UTF-8
 template<>
 UnifiedStringObserver Utf8String::Unify(UnifiedString &&usTempStorage, const Utf8StringObserver &u8soSrc){
 	usTempStorage.Reserve(u8soSrc.GetSize());
-	Convert(usTempStorage, 0,
-		MakeUtf8Decoder(MakeStringSource(u8soSrc)));
+	Convert(usTempStorage, 0, MakeUtf8Decoder(MakeStringSource(u8soSrc)));
 	return usTempStorage;
 }
 template<>
 void Utf8String::Deunify(Utf8String &u8sDst, std::size_t uPos, const UnifiedStringObserver &usoSrc){
-	u8sDst.ReserveMore(usoSrc.GetSize() * 2);
-	Convert(u8sDst, uPos,
-		MakeUtf8Encoder(MakeStringSource(usoSrc)));
+	u8sDst.ReserveMore(usoSrc.GetSize() * 3);
+	Convert(u8sDst, uPos, MakeUtf8Encoder(MakeStringSource(usoSrc)));
 }
 
 // UTF-16
 template<>
 UnifiedStringObserver Utf16String::Unify(UnifiedString &&usTempStorage, const Utf16StringObserver &u16soSrc){
 	usTempStorage.Reserve(u16soSrc.GetSize());
-	Convert(usTempStorage, 0,
-		MakeUtf16Decoder(MakeStringSource(u16soSrc)));
+	Convert(usTempStorage, 0, MakeUtf16Decoder(MakeStringSource(u16soSrc)));
 	return usTempStorage;
 }
 template<>
 void Utf16String::Deunify(Utf16String &u16sDst, std::size_t uPos, const UnifiedStringObserver &usoSrc){
 	u16sDst.ReserveMore(usoSrc.GetSize());
-	Convert(u16sDst, uPos,
-		MakeUtf16Encoder(MakeStringSource(usoSrc)));
+	Convert(u16sDst, uPos, MakeUtf16Encoder(MakeStringSource(usoSrc)));
 }
 
 // UTF-32
@@ -321,15 +315,46 @@ void Utf32String::Deunify(Utf32String &u32sDst, std::size_t uPos, const UnifiedS
 template<>
 UnifiedStringObserver Cesu8String::Unify(UnifiedString &&usTempStorage, const Cesu8StringObserver &cu8soSrc){
 	usTempStorage.Reserve(cu8soSrc.GetSize());
-	Convert(usTempStorage, 0,
-		MakeUtf16Decoder(MakeUtf8Decoder(MakeStringSource(cu8soSrc))));
+	Convert(usTempStorage, 0, MakeUtf16Decoder(MakeUtf8Decoder(MakeStringSource(cu8soSrc))));
 	return usTempStorage;
 }
 template<>
 void Cesu8String::Deunify(Cesu8String &cu8sDst, std::size_t uPos, const UnifiedStringObserver &usoSrc){
-	cu8sDst.ReserveMore(usoSrc.GetSize() * 2);
-	Convert(cu8sDst, uPos,
-		MakeUtf8Encoder(MakeUtf16Encoder(MakeStringSource(usoSrc))));
+	cu8sDst.ReserveMore(usoSrc.GetSize() * 3);
+	Convert(cu8sDst, uPos, MakeUtf8Encoder(MakeUtf16Encoder(MakeStringSource(usoSrc))));
+}
+
+// ANSI
+template<>
+UnifiedStringObserver AnsiString::Unify(UnifiedString &&usTempStorage, const AnsiStringObserver &asoSrc){
+	WideString wsTemp;
+	wsTemp.Resize(asoSrc.GetSize());
+	const unsigned uCount = (unsigned)::MultiByteToWideChar(CP_ACP, MB_ERR_INVALID_CHARS,
+		asoSrc.GetBegin(), (int)asoSrc.GetSize(), wsTemp.GetData(), (int)wsTemp.GetSize());
+	if(uCount == 0){
+		DEBUG_THROW(SystemError, "MultiByteToWideChar");
+	}
+	usTempStorage.Reserve(uCount);
+	Convert(usTempStorage, 0, MakeUtf16Decoder(MakeStringSource(WideStringObserver(wsTemp.GetData(), uCount))));
+	return usTempStorage;
+}
+template<>
+void AnsiString::Deunify(AnsiString &ansDst, std::size_t uPos, const UnifiedStringObserver &usoSrc){
+	WideString wsTemp;
+	wsTemp.Reserve(usoSrc.GetSize());
+	Convert(wsTemp, 0, MakeUtf16Encoder(MakeStringSource(usoSrc)));
+
+	AnsiString ansConverted;
+	ansConverted.Resize(wsTemp.GetSize() * 2);
+	const unsigned uCount = (unsigned)::WideCharToMultiByte(CP_ACP, 0,
+		wsTemp.GetData(), (int)wsTemp.GetSize(), ansConverted.GetData(), (int)ansConverted.GetSize(), nullptr, nullptr);
+	if(uCount == 0){
+		DEBUG_THROW(SystemError, "WideCharToMultiByte");
+	}
+	ansDst.Replace((std::ptrdiff_t)uPos, (std::ptrdiff_t)uPos, ansConverted.GetData(), uCount);
+}
+
+StringEncodingError::~StringEncodingError(){
 }
 
 }

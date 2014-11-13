@@ -22,7 +22,7 @@ private:
 
 public:
 	IsaacExEncoder(const void *pKey, std::size_t uKeyLen) noexcept;
-	~IsaacExEncoder() noexcept;
+	~IsaacExEncoder();
 
 public:
 	void Abort() noexcept override;
@@ -42,7 +42,7 @@ private:
 
 public:
 	IsaacExDecoder(const void *pKey, std::size_t uKeyLen) noexcept;
-	~IsaacExDecoder() noexcept;
+	~IsaacExDecoder();
 
 public:
 	void Abort() noexcept override;

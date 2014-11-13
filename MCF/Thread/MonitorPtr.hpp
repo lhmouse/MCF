@@ -68,7 +68,7 @@ private:
 		}
 
 	public:
-		~xMonitorHolder() noexcept {
+		~xMonitorHolder(){
 			if(xm_pOwner){
 				xm_pOwner->xm_vLock.Unlock();
 			}

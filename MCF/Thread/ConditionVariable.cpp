@@ -28,7 +28,7 @@ public:
 	{
 		xm_hSemaphore.Reset(::CreateSemaphoreW(nullptr, 0, LONG_MAX, nullptr));
 		if(!xm_hSemaphore){
-			MCF_THROW(::GetLastError(), L"CreateSemaphoreW() 失败。"_wso);
+			DEBUG_THROW(SystemError, "CreateSemaphoreW");
 		}
 	}
 

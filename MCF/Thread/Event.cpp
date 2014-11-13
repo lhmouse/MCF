@@ -20,7 +20,7 @@ public:
 	EventDelegate(bool bInitSet, const wchar_t *pwszName){
 		xm_hEvent.Reset(::CreateEventW(nullptr, true, bInitSet, pwszName));
 		if(!xm_hEvent){
-			MCF_THROW(::GetLastError(), L"CreateEventW() 失败。"_wso);
+			DEBUG_THROW(SystemError, "CreateEventW");
 		}
 	}
 

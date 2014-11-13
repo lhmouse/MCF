@@ -25,7 +25,7 @@ unsigned long LzmaErrorToWin32Error(lzma_ret eLzmaError) noexcept {
 	case LZMA_NO_CHECK:
 	case LZMA_UNSUPPORTED_CHECK:
 	case LZMA_GET_CHECK:
-		return ERROR_INVALID_FUNCTION;
+		return ERROR_INVALID_DATA;
 
 	case LZMA_MEM_ERROR:
 	case LZMA_MEMLIMIT_ERROR:
@@ -60,7 +60,7 @@ struct LzmaStreamCloser {
 lzma_options_lzma MakeOptions(unsigned uLevel, unsigned long ulDictSize){
 	lzma_options_lzma vRet;
 	if(::lzma_lzma_preset(&vRet, uLevel)){
-		MCF_THROW(ERROR_INVALID_PARAMETER, L"::lzma_lzma_preset() 失败。"_wso);
+		DEBUG_THROW(LzmaError, "lzma_lzma_preset", LZMA_OPTIONS_ERROR);
 	}
 	vRet.dict_size = ulDictSize;
 	return std::move(vRet);
@@ -78,9 +78,7 @@ private:
 
 public:
 	xDelegate(LzmaEncoder &vOwner, unsigned uLevel, unsigned long ulDictSize)
-		: xm_vOwner		(vOwner)
-		, xm_vOptions	(MakeOptions(uLevel, ulDictSize))
-		, xm_vStream	(INIT_STREAM)
+		: xm_vOwner(vOwner) , xm_vOptions(MakeOptions(uLevel, ulDictSize)), xm_vStream(INIT_STREAM)
 	{
 	}
 
@@ -92,11 +90,9 @@ public:
 	}
 	void Update(const void *pData, std::size_t uSize){
 		if(!xm_pStream){
-			const auto ulErrorCode = LzmaErrorToWin32Error(::lzma_alone_encoder(
-				&xm_vStream, &xm_vOptions
-			));
-			if(ulErrorCode != ERROR_SUCCESS){
-				MCF_THROW(ulErrorCode, L"::lzma_alone_encoder() 失败。"_wso);
+			const auto eError = ::lzma_alone_encoder(&xm_vStream, &xm_vOptions);
+			if(eError != LZMA_OK){
+				DEBUG_THROW(LzmaError, "lzma_alone_encoder", eError);
 			}
 
 			xm_pStream.reset(&xm_vStream);
@@ -114,14 +110,12 @@ public:
 			xm_pStream->next_in = pbyRead;
 			xm_pStream->avail_in = uToProcess;
 			do {
-				const auto ulErrorCode = LzmaErrorToWin32Error(::lzma_code(
-					xm_pStream.get(), LZMA_RUN
-				));
-				if(ulErrorCode == ERROR_HANDLE_EOF){
+				const auto eError = ::lzma_code(xm_pStream.get(), LZMA_RUN);
+				if(eError == LZMA_STREAM_END){
 					break;
 				}
-				if(ulErrorCode != ERROR_SUCCESS){
-					MCF_THROW(ulErrorCode, L"::lzma_code() 失败。"_wso);
+				if(eError != LZMA_OK){
+					DEBUG_THROW(LzmaError, "lzma_code", eError);
 				}
 				if(xm_pStream->avail_out == 0){
 					xm_vOwner.xOutput(abyTemp, sizeof(abyTemp));
@@ -148,14 +142,12 @@ public:
 			xm_pStream->next_in = nullptr;
 			xm_pStream->avail_in = 0;
 			for(;;){
-				const auto ulErrorCode = LzmaErrorToWin32Error(::lzma_code(
-					xm_pStream.get(), LZMA_FINISH
-				));
-				if(ulErrorCode == ERROR_HANDLE_EOF){
+				const auto eError = ::lzma_code(xm_pStream.get(), LZMA_FINISH);
+				if(eError == LZMA_STREAM_END){
 					break;
 				}
-				if(ulErrorCode != ERROR_SUCCESS){
-					MCF_THROW(ulErrorCode, L"::lzma_code() 失败。"_wso);
+				if(eError != LZMA_OK){
+					DEBUG_THROW(LzmaError, "lzma_code", eError);
 				}
 				if(xm_pStream->avail_out == 0){
 					xm_vOwner.xOutput(abyTemp, sizeof(abyTemp));
@@ -183,8 +175,7 @@ private:
 
 public:
 	explicit xDelegate(LzmaDecoder &vOwner)
-		: xm_vOwner		(vOwner)
-		, xm_vStream	(INIT_STREAM)
+		: xm_vOwner(vOwner), xm_vStream(INIT_STREAM)
 	{
 	}
 
@@ -196,11 +187,9 @@ public:
 	}
 	void Update(const void *pData, std::size_t uSize){
 		if(!xm_pStream){
-			const auto ulErrorCode = LzmaErrorToWin32Error(::lzma_alone_decoder(
-				&xm_vStream, UINT64_MAX
-			));
-			if(ulErrorCode != ERROR_SUCCESS){
-				MCF_THROW(ulErrorCode, L"::lzma_alone_decoder() 失败。"_wso);
+			const auto eError = ::lzma_alone_decoder(&xm_vStream, UINT64_MAX);
+			if(eError != LZMA_OK){
+				DEBUG_THROW(LzmaError, "lzma_alone_decoder", eError);
 			}
 			xm_pStream.reset(&xm_vStream);
 		}
@@ -217,14 +206,12 @@ public:
 			xm_pStream->next_in = pbyRead;
 			xm_pStream->avail_in = uToProcess;
 			do {
-				const auto ulErrorCode = LzmaErrorToWin32Error(::lzma_code(
-					xm_pStream.get(), LZMA_RUN
-				));
-				if(ulErrorCode == ERROR_HANDLE_EOF){
+				const auto eError = ::lzma_code(xm_pStream.get(), LZMA_RUN);
+				if(eError == LZMA_STREAM_END){
 					break;
 				}
-				if(ulErrorCode != ERROR_SUCCESS){
-					MCF_THROW(ulErrorCode, L"::lzma_code() 失败。"_wso);
+				if(eError != LZMA_OK){
+					DEBUG_THROW(LzmaError, "lzma_code", eError);
 				}
 				if(xm_pStream->avail_out == 0){
 					xm_vOwner.xOutput(abyTemp, sizeof(abyTemp));
@@ -251,14 +238,12 @@ public:
 			xm_pStream->next_in = nullptr;
 			xm_pStream->avail_in = 0;
 			for(;;){
-				const auto ulErrorCode = LzmaErrorToWin32Error(::lzma_code(
-					xm_pStream.get(), LZMA_FINISH
-				));
-				if(ulErrorCode == ERROR_HANDLE_EOF){
+				const auto eError = ::lzma_code(xm_pStream.get(), LZMA_FINISH);
+				if(eError == LZMA_STREAM_END){
 					break;
 				}
-				if(ulErrorCode != ERROR_SUCCESS){
-					MCF_THROW(ulErrorCode, L"::lzma_code() 失败。"_wso);
+				if(eError != LZMA_OK){
+					DEBUG_THROW(LzmaError, "lzma_code", eError);
 				}
 				if(xm_pStream->avail_out == 0){
 					xm_vOwner.xOutput(abyTemp, sizeof(abyTemp));
@@ -283,7 +268,7 @@ LzmaEncoder::LzmaEncoder(unsigned uLevel, unsigned long ulDictSize)
 	: xm_pDelegate(std::make_unique<xDelegate>(*this, uLevel, ulDictSize))
 {
 }
-LzmaEncoder::~LzmaEncoder() noexcept {
+LzmaEncoder::~LzmaEncoder(){
 }
 
 void LzmaEncoder::Abort() noexcept {
@@ -302,7 +287,7 @@ LzmaDecoder::LzmaDecoder()
 	: xm_pDelegate(std::make_unique<xDelegate>(*this))
 {
 }
-LzmaDecoder::~LzmaDecoder() noexcept {
+LzmaDecoder::~LzmaDecoder(){
 }
 
 void LzmaDecoder::Abort() noexcept {
@@ -313,4 +298,13 @@ void LzmaDecoder::Update(const void *pData, std::size_t uSize){
 }
 void LzmaDecoder::Finalize(){
 	xm_pDelegate->Finalize();
+}
+
+// ========== LzmaError ==========
+LzmaError::LzmaError(const char *pszFile, unsigned long ulLine, const char *pszMessage, long lLzmaError) noexcept
+	: Exception(pszFile, ulLine, pszMessage, LzmaErrorToWin32Error(static_cast<::lzma_ret>(lLzmaError)))
+	, xm_lLzmaError(lLzmaError)
+{
+}
+LzmaError::~LzmaError(){
 }

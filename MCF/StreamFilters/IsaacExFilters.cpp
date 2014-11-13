@@ -19,7 +19,7 @@ IsaacExEncoder::IsaacExEncoder(const void *pKey, std::size_t uKeyLen) noexcept {
 		u32 = BYTE_SWAP_TO_BE(u32);
 	}
 }
-IsaacExEncoder::~IsaacExEncoder() noexcept {
+IsaacExEncoder::~IsaacExEncoder(){
 }
 
 // 其他非静态成员函数。
@@ -68,7 +68,7 @@ IsaacExDecoder::IsaacExDecoder(const void *pKey, std::size_t uKeyLen) noexcept {
 		u32 = BYTE_SWAP_TO_BE(u32);
 	}
 }
-IsaacExDecoder::~IsaacExDecoder() noexcept {
+IsaacExDecoder::~IsaacExDecoder(){
 }
 
 // 其他非静态成员函数。

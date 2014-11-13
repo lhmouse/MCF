@@ -37,6 +37,7 @@ static unsigned g_uInitState = 0;
 #	define HEAPDBG_UNINIT()		DUMMY_UNINIT()
 #endif
 
+// weak
 void MCF_PreInitModule(){
 }
 

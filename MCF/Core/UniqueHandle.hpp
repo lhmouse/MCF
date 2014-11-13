@@ -39,7 +39,7 @@ public:
 		Reset(std::move(rhs));
 		return *this;
 	}
-	~UniqueHandle() noexcept {
+	~UniqueHandle(){
 		Reset();
 	}
 

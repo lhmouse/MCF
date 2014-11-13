@@ -6,6 +6,7 @@
 #define MCF_STREAM_FILTERS_LZMA_FILTERS_HPP_
 
 #include "StreamFilterBase.hpp"
+#include "../Core/Exception.hpp"
 #include <memory>
 
 namespace MCF {
@@ -19,7 +20,7 @@ private:
 
 public:
 	explicit LzmaEncoder(unsigned uLevel = 6, unsigned long ulDictSize = 1ul << 23);
-	~LzmaEncoder() noexcept;
+	~LzmaEncoder();
 
 public:
 	void Abort() noexcept override;
@@ -36,12 +37,27 @@ private:
 
 public:
 	LzmaDecoder();
-	~LzmaDecoder() noexcept;
+	~LzmaDecoder();
 
 public:
 	void Abort() noexcept override;
 	void Update(const void *pData, std::size_t uSize) override;
 	void Finalize() override;
+};
+
+class LzmaError : public Exception {
+private:
+	const long xm_lLzmaError;
+
+public:
+	LzmaError(const char *pszFile, unsigned long ulLine,
+		const char *pszMessage, long lLzmaError) noexcept;
+	~LzmaError() override;
+
+public:
+	long GetLzmaError() const noexcept {
+		return xm_lLzmaError;
+	}
 };
 
 }

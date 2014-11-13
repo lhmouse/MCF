@@ -241,7 +241,7 @@ NotationPackage &NotationPackage::operator=(NotationPackage &&rhs) noexcept {
 	xm_pValues = std::move(rhs.xm_pValues);
 	return *this;
 }
-NotationPackage::~NotationPackage() noexcept {
+NotationPackage::~NotationPackage(){
 }
 
 // 其他非静态成员函数。

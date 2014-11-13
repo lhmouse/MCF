@@ -11,6 +11,6 @@
 
 #include "Localization.hpp"
 
-#define FORMAT_THROW(code, msg)		MCF_THROW(code, ::MCFBuild::FormatString(msg))
+#define FORMAT_THROW(code_, msg_)		MCF_THROW(code_, ::MCFBuild::FormatString(msg_))
 
 #endif

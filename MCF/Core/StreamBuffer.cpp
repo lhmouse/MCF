@@ -91,7 +91,7 @@ StreamBuffer &StreamBuffer::operator=(StreamBuffer &&rhs) noexcept {
 	rhs.Swap(*this);
 	return *this;
 }
-StreamBuffer::~StreamBuffer() noexcept {
+StreamBuffer::~StreamBuffer(){
 	Clear();
 }
 

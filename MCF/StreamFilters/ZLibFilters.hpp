@@ -6,6 +6,7 @@
 #define MCF_STREAM_FILTERS_ZLIB_FILTERS_HPP_
 
 #include "StreamFilterBase.hpp"
+#include "../Core/Exception.hpp"
 #include <memory>
 
 namespace MCF {
@@ -19,7 +20,7 @@ private:
 
 public:
 	explicit ZLibEncoder(bool bRaw = false, unsigned uLevel = 6);
-	~ZLibEncoder() noexcept;
+	~ZLibEncoder();
 
 public:
 	void Abort() noexcept override;
@@ -36,12 +37,27 @@ private:
 
 public:
 	explicit ZLibDecoder(bool bRaw = false);
-	~ZLibDecoder() noexcept;
+	~ZLibDecoder();
 
 public:
 	void Abort() noexcept override;
 	void Update(const void *pData, std::size_t uSize) override;
 	void Finalize() override;
+};
+
+class ZLibError : public Exception {
+private:
+	const long xm_lZLibError;
+
+public:
+	ZLibError(const char *pszFile, unsigned long ulLine,
+		const char *pszMessage, long lZLibError) noexcept;
+	~ZLibError() override;
+
+public:
+	long GetZLibError() const noexcept {
+		return xm_lZLibError;
+	}
 };
 
 }

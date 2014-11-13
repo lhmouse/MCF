@@ -13,7 +13,7 @@ namespace MCF {
 namespace Impl {
 	class AbstractBase {
 	protected:
-		virtual ~AbstractBase() noexcept = default;
+		virtual ~AbstractBase();
 
 	private:
 		virtual void MCF_PureAbstract_() noexcept = 0;

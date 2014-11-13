@@ -13,8 +13,7 @@ static constexpr unsigned char UTF8_BOM[] = {0xEF, 0xBB, 0xBF};
 // ========== Utf8TextFileReader ==========
 // 构造函数和析构函数。
 Utf8TextFileReader::Utf8TextFileReader(std::unique_ptr<File> pFile)
-	: xm_pFile		(std::move(pFile))
-	, xm_u64Offset	(0)
+	: xm_pFile(std::move(pFile)), xm_u64Offset	(0)
 {
 	unsigned char abyTemp[sizeof(UTF8_BOM)];
 	if((xm_pFile->Read(abyTemp, sizeof(abyTemp), 0) == sizeof(abyTemp)) && !BComp(abyTemp, UTF8_BOM)){
@@ -112,7 +111,7 @@ Utf8TextFileWriter::Utf8TextFileWriter(std::unique_ptr<File> pFile, std::uint32_
 	}
 	xm_u64Offset = xm_pFile->GetSize();
 }
-Utf8TextFileWriter::~Utf8TextFileWriter() noexcept {
+Utf8TextFileWriter::~Utf8TextFileWriter(){
 	try {
 		Flush();
 	} catch(...){

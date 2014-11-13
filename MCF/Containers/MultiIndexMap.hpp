@@ -694,7 +694,7 @@ public:
 		rhs.Swap(*this);
 		return *this;
 	}
-	~MultiIndexMap() noexcept {
+	~MultiIndexMap(){
 		Clear();
 	}
 

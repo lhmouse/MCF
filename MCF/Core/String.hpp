@@ -6,6 +6,7 @@
 #define MCF_CORE_STRING_HPP_
 
 #include "StringObserver.hpp"
+#include "Exception.hpp"
 #include "../Utilities/Assert.hpp"
 #include "../Utilities/CountOf.hpp"
 #include "../Utilities/BitsOf.hpp"
@@ -814,6 +815,7 @@ extern template class String<StringTypes::UTF8>;
 extern template class String<StringTypes::UTF16>;
 extern template class String<StringTypes::UTF32>;
 extern template class String<StringTypes::CESU8>;
+extern template class String<StringTypes::ANSI>;
 
 using NarrowString		= String<StringTypes::NARROW>;
 using WideString		= String<StringTypes::WIDE>;
@@ -821,9 +823,22 @@ using Utf8String		= String<StringTypes::UTF8>;
 using Utf16String		= String<StringTypes::UTF16>;
 using Utf32String		= String<StringTypes::UTF32>;
 using Cesu8String		= String<StringTypes::CESU8>;
+using AnsiString		= String<StringTypes::ANSI>;
+
+class StringEncodingError : public Exception {
+public:
+	StringEncodingError(const char *pszFile, unsigned long ulLine,
+		const char *pszMessage, unsigned long ulErrorCode) noexcept
+		: Exception(pszFile, ulLine, pszMessage, ulErrorCode)
+	{
+	}
+	~StringEncodingError() override;
+};
 
 // 字面量运算符。
 template<typename CharT, CharT ...STRING_T>
+[[deprecated("Be warned that the encoding of narrow string literals varies from compilers to compilers "
+	"and even depends on the encoding of source files on g++.")]]
 extern inline const auto &operator""_ns(){
 	static const NarrowString s_nsRet{ STRING_T... };
 	return s_nsRet;

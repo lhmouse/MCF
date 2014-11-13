@@ -23,7 +23,7 @@ protected:
 	}
 
 public:
-	virtual ~LockRaiiTemplateBase() noexcept {
+	virtual ~LockRaiiTemplateBase(){
 		ASSERT(xm_uLockCount == 0);
 	}
 
@@ -93,7 +93,7 @@ namespace Impl {
 			xm_uLockCount = std::exchange(rhs.xm_uLockCount, 0u);
 			return *this;
 		}
-		virtual ~LockRaiiTemplate() noexcept {
+		virtual ~LockRaiiTemplate(){
 			if(xm_uLockCount != 0){
 				xDoUnlock();
 			}

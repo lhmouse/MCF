@@ -25,23 +25,11 @@ private:
 		}
 	};
 
-	struct xApcResult {
-		DWORD dwBytesTransferred;
-		DWORD dwErrorCode;
-	};
-
-private:
-	static void __stdcall xAioCallback(DWORD dwErrorCode, DWORD dwBytesTransferred, LPOVERLAPPED pOverlapped) noexcept {
-		const auto pApcResult = (xApcResult *)pOverlapped->hEvent;
-		pApcResult->dwErrorCode = dwErrorCode;
-		pApcResult->dwBytesTransferred = dwBytesTransferred;
-	}
-
 private:
 	UniqueHandle<xFileCloser> xm_hFile;
 
 public:
-	std::pair<unsigned long, WideStringObserver> Open(const wchar_t *pwszPath, std::uint32_t u32Flags){
+	std::pair<unsigned long, const char *> Open(const wchar_t *pwszPath, std::uint32_t u32Flags){
 		DWORD dwCreateDisposition;
 		if(u32Flags & TO_WRITE){
 			if(u32Flags & NO_CREATE){
@@ -66,21 +54,19 @@ public:
 			dwFlagsAndAttributes |= FILE_FLAG_DELETE_ON_CLOSE;
 		}
 
-		xm_hFile.Reset(::CreateFileW(
-			pwszPath,
+		xm_hFile.Reset(::CreateFileW(pwszPath,
 			((u32Flags & TO_READ) ? GENERIC_READ : 0) | ((u32Flags & TO_WRITE) ? GENERIC_WRITE : 0),
 			(u32Flags & TO_WRITE) ? 0 : FILE_SHARE_READ,
-			nullptr, dwCreateDisposition, dwFlagsAndAttributes, NULL
-		));
+			nullptr, dwCreateDisposition, dwFlagsAndAttributes, NULL));
 		if(!xm_hFile){
-			return std::make_pair(::GetLastError(), L"::CreateFileW() 失败。"_wso);
+			return std::make_pair(::GetLastError(), "CreateFileW");
 		}
 		if((u32Flags & TO_WRITE) && !(u32Flags & NO_TRUNC)){
 			if(!::SetEndOfFile(xm_hFile.Get())){
-				MCF_THROW(::GetLastError(), L"创建文件时试图截断文件，::SetEndOfFile() 失败。"_wso);
+				return std::make_pair(::GetLastError(), "SetEndOfFile");
 			}
 			if(!::FlushFileBuffers(xm_hFile.Get())){
-				MCF_THROW(::GetLastError(), L"创建文件时试图截断文件，::FlushFileBuffers() 失败。"_wso);
+				return std::make_pair(::GetLastError(), "FlushFileBuffers");
 			}
 		}
 		return std::make_pair((unsigned long)ERROR_SUCCESS, nullptr);
@@ -91,160 +77,130 @@ public:
 
 		::LARGE_INTEGER liFileSize;
 		if(!::GetFileSizeEx(xm_hFile.Get(), &liFileSize)){
-			MCF_THROW(::GetLastError(), L"::GetFileSizeEx() 失败。"_wso);
+			DEBUG_THROW(SystemError, "GetFileSizeEx");
 		}
 		return (std::uint64_t)liFileSize.QuadPart;
 	}
 	void Resize(std::uint64_t u64NewSize){
 		ASSERT(xm_hFile);
 
-		if(u64NewSize > (std::uint64_t)LLONG_MAX){
-			MCF_THROW(ERROR_INVALID_PARAMETER, L"调整文件大小时指定的大小无效。"_wso);
-		}
 		::LARGE_INTEGER liNewSize;
 		liNewSize.QuadPart = (long long)u64NewSize;
 		if(!::SetFilePointerEx(xm_hFile.Get(), liNewSize, nullptr, FILE_BEGIN)){
-			MCF_THROW(::GetLastError(), L"::SetFilePointerEx() 失败。"_wso);
+			DEBUG_THROW(SystemError, "SetFilePointerEx");
 		}
 		if(!::SetEndOfFile(xm_hFile.Get())){
-			MCF_THROW(::GetLastError(), L"::SetEndOfFile() 失败。"_wso);
+			DEBUG_THROW(SystemError, "SetEndOfFile");
 		}
 	}
 
-	std::size_t Read(
-		void *pBuffer, std::size_t uBytesToRead, std::uint64_t u64Offset,
-		const std::function<void ()> *pfnAsyncProc,
-		const std::function<void ()> *pfnCompleteCallback
-	) const {
+	std::size_t Read(void *pBuffer, std::size_t uBytesToRead, std::uint64_t u64Offset,
+		const std::function<void ()> *pfnAsyncProc, const std::function<void ()> *pfnCompleteCallback) const
+	{
 		ASSERT(xm_hFile);
 
-		auto dwBytesToReadThisTime = (DWORD)Min(0xFFFFF000u, uBytesToRead);
-
-		xApcResult vApcResult;
-		vApcResult.dwBytesTransferred = 0;
-		vApcResult.dwErrorCode = ERROR_SUCCESS;
+		DWORD dwErrorCode;
+		DWORD dwTransferred;
+		DWORD dwBlockSize = Min(0xFFFFF000u, uBytesToRead);
 
 		::OVERLAPPED vOverlapped;
 		BZero(vOverlapped);
 		vOverlapped.Offset = u64Offset;
 		vOverlapped.OffsetHigh = (u64Offset >> 32);
-		vOverlapped.hEvent = (HANDLE)&vApcResult;
-		const bool bSucceeds = ::ReadFileEx(xm_hFile.Get(), pBuffer, dwBytesToReadThisTime, &vOverlapped, &xAioCallback);
-		if(!bSucceeds){
-			vApcResult.dwErrorCode = ::GetLastError();
+		if(::ReadFile(xm_hFile.Get(), pBuffer, dwBlockSize, nullptr, &vOverlapped)){
+			dwErrorCode = ERROR_SUCCESS;
+		} else {
+			dwErrorCode = ::GetLastError();
 		}
-		std::exception_ptr ep;
-		if(pfnAsyncProc && *pfnAsyncProc){
-			try {
-				(*pfnAsyncProc)();
-			} catch(...){
-				ep = std::current_exception();
+		if(pfnAsyncProc){
+			(*pfnAsyncProc)();
+		}
+		if(dwErrorCode != ERROR_SUCCESS){
+			if(dwErrorCode != ERROR_IO_PENDING){
+				DEBUG_THROW(SystemError, "ReadFile");
+			}
+			if(!::GetOverlappedResult(xm_hFile.Get(), &vOverlapped, &dwTransferred, true)){
+				DEBUG_THROW(SystemError, "GetOverlappedResult");
 			}
 		}
-		if(bSucceeds){
-			::SleepEx(INFINITE, TRUE);
-		}
-		if(ep){
-			std::rethrow_exception(ep);
-		}
-		if(!bSucceeds){
-			MCF_THROW(vApcResult.dwErrorCode, L"::ReadFileEx() 失败。"_wso);
-		}
-		if(pfnCompleteCallback){
-			(*pfnCompleteCallback)();
-		}
 
-		std::size_t uBytesRead = vApcResult.dwBytesTransferred;
-		while((uBytesRead < uBytesToRead) && (vApcResult.dwBytesTransferred == dwBytesToReadThisTime)){
-			dwBytesToReadThisTime = Min(0xFFFFF000u, uBytesToRead - uBytesRead);
+		std::size_t uBytesRead = dwTransferred;
+		while((uBytesRead < uBytesToRead) && (dwTransferred == dwBlockSize)){
+			dwBlockSize = Min(0xFFFFF000u, uBytesToRead - uBytesRead);
 
 			BZero(vOverlapped);
 			const auto u64NewOffset = u64Offset + uBytesRead;
 			vOverlapped.Offset = u64NewOffset;
 			vOverlapped.OffsetHigh = (u64NewOffset >> 32);
-			vOverlapped.hEvent = (HANDLE)&vApcResult;
-			if(!::ReadFileEx(
-				xm_hFile.Get(), (unsigned char *)pBuffer + uBytesRead, dwBytesToReadThisTime,
-				&vOverlapped, &xAioCallback))
-			{
-				MCF_THROW(vApcResult.dwErrorCode, L"::ReadFileEx() 失败。"_wso);
-			}
-			::SleepEx(INFINITE, TRUE);
-
-			if(vApcResult.dwErrorCode != ERROR_SUCCESS){
-				if(vApcResult.dwErrorCode == ERROR_HANDLE_EOF){
-					break;
+			if(!::ReadFile(xm_hFile.Get(), (char *)pBuffer + uBytesRead, dwBlockSize, nullptr, &vOverlapped)){
+				dwErrorCode = ::GetLastError();
+				if(dwErrorCode != ERROR_IO_PENDING){
+					DEBUG_THROW(SystemError, "ReadFile");
 				}
-				MCF_THROW(vApcResult.dwErrorCode, L"::ReadFileEx() 失败。"_wso);
+				if(!::GetOverlappedResult(xm_hFile.Get(), &vOverlapped, &dwTransferred, true)){
+					DEBUG_THROW(SystemError, "GetOverlappedResult");
+				}
 			}
-			uBytesRead += vApcResult.dwBytesTransferred;
+			uBytesRead += dwTransferred;
 		}
-		return uBytesRead;
-	}
-	void Write(
-		std::uint64_t u64Offset, const void *pBuffer, std::size_t uBytesToWrite,
-		const std::function<void ()> *pfnAsyncProc,
-		const std::function<void ()> *pfnCompleteCallback
-	){
-		ASSERT(xm_hFile);
 
-		auto dwBytesToWriteThisTime = (DWORD)Min(0xFFFFF000u, uBytesToWrite);
-
-		xApcResult vApcResult;
-		vApcResult.dwBytesTransferred = 0;
-		vApcResult.dwErrorCode = ERROR_SUCCESS;
-
-		::OVERLAPPED vOverlapped;
-		BZero(vOverlapped);
-		vOverlapped.Offset = (DWORD)u64Offset;
-		vOverlapped.OffsetHigh = (DWORD)(u64Offset >> 32);
-		vOverlapped.hEvent = (HANDLE)&vApcResult;
-		const bool bSucceeds = ::WriteFileEx(xm_hFile.Get(), pBuffer, dwBytesToWriteThisTime, &vOverlapped, &xAioCallback);
-		if(!bSucceeds){
-			vApcResult.dwErrorCode = ::GetLastError();
-		}
-		std::exception_ptr ep;
-		if(pfnAsyncProc && *pfnAsyncProc){
-			try {
-				(*pfnAsyncProc)();
-			} catch(...){
-				ep = std::current_exception();
-			}
-		}
-		if(bSucceeds){
-			::SleepEx(INFINITE, TRUE);
-		}
-		if(ep){
-			std::rethrow_exception(ep);
-		}
-		if(!bSucceeds){
-			MCF_THROW(vApcResult.dwErrorCode, L"::WriteFileEx() 失败。"_wso);
-		}
 		if(pfnCompleteCallback){
 			(*pfnCompleteCallback)();
 		}
+		return uBytesRead;
+	}
+	void Write(std::uint64_t u64Offset, const void *pBuffer, std::size_t uBytesToWrite,
+		const std::function<void ()> *pfnAsyncProc, const std::function<void ()> *pfnCompleteCallback)
+	{
+		ASSERT(xm_hFile);
 
-		std::size_t uBytesWritten = vApcResult.dwBytesTransferred;
-		while((uBytesWritten < uBytesToWrite) && (vApcResult.dwBytesTransferred == dwBytesToWriteThisTime)){
-			dwBytesToWriteThisTime = Min(0xFFFFF000u, uBytesToWrite - uBytesWritten);
+		DWORD dwErrorCode;
+		DWORD dwTransferred;
+		DWORD dwBlockSize = Min(0xFFFFF000u, uBytesToWrite);
+
+		::OVERLAPPED vOverlapped;
+		BZero(vOverlapped);
+		vOverlapped.Offset = u64Offset;
+		vOverlapped.OffsetHigh = (u64Offset >> 32);
+		if(::WriteFile(xm_hFile.Get(), pBuffer, dwBlockSize, nullptr, &vOverlapped)){
+			dwErrorCode = ERROR_SUCCESS;
+		} else {
+			dwErrorCode = ::GetLastError();
+		}
+		if(pfnAsyncProc){
+			(*pfnAsyncProc)();
+		}
+		if(dwErrorCode != ERROR_SUCCESS){
+			if(dwErrorCode != ERROR_IO_PENDING){
+				DEBUG_THROW(SystemError, "WriteFile");
+			}
+			if(!::GetOverlappedResult(xm_hFile.Get(), &vOverlapped, &dwTransferred, true)){
+				DEBUG_THROW(SystemError, "GetOverlappedResult");
+			}
+		}
+
+		std::size_t uBytesWritten = dwTransferred;
+		while(uBytesWritten < uBytesToWrite){
+			dwBlockSize = Min(0xFFFFF000u, uBytesToWrite - uBytesWritten);
 
 			BZero(vOverlapped);
 			const auto u64NewOffset = u64Offset + uBytesWritten;
-			vOverlapped.Offset = (DWORD)u64NewOffset;
-			vOverlapped.OffsetHigh = (DWORD)(u64NewOffset >> 32);
-			vOverlapped.hEvent = (HANDLE)&vApcResult;
-			if(!::WriteFileEx(
-				xm_hFile.Get(), (const unsigned char *)pBuffer + uBytesWritten, dwBytesToWriteThisTime,
-				&vOverlapped, &xAioCallback))
-			{
-				MCF_THROW(vApcResult.dwErrorCode, L"::WriteFileEx() 失败。"_wso);
+			vOverlapped.Offset = u64NewOffset;
+			vOverlapped.OffsetHigh = (u64NewOffset >> 32);
+			if(!::WriteFile(xm_hFile.Get(), (char *)pBuffer + uBytesWritten, dwBlockSize, nullptr, &vOverlapped)){
+				dwErrorCode = ::GetLastError();
+				if(dwErrorCode != ERROR_IO_PENDING){
+					DEBUG_THROW(SystemError, "WriteFile");
+				}
+				if(!::GetOverlappedResult(xm_hFile.Get(), &vOverlapped, &dwTransferred, true)){
+					DEBUG_THROW(SystemError, "GetOverlappedResult");
+				}
 			}
-			::SleepEx(INFINITE, TRUE);
+			uBytesWritten += dwTransferred;
+		}
 
-			if(vApcResult.dwErrorCode != ERROR_SUCCESS){
-				MCF_THROW(vApcResult.dwErrorCode, L"::WriteFileEx() 失败。"_wso);
-			}
-			uBytesWritten += vApcResult.dwBytesTransferred;
+		if(pfnCompleteCallback){
+			(*pfnCompleteCallback)();
 		}
 	}
 
@@ -252,7 +208,7 @@ public:
 		ASSERT(xm_hFile);
 
 		if(!::FlushFileBuffers(xm_hFile.Get())){
-			MCF_THROW(::GetLastError(), L"::FlushFileBuffers() 失败。"_wso);
+			DEBUG_THROW(SystemError, "FlushFileBuffers");
 		}
 	}
 };
@@ -264,7 +220,7 @@ std::unique_ptr<File> File::Open(const wchar_t *pwszPath, std::uint32_t u32Flags
 	auto pFile = std::make_unique<FileDelegate>();
 	const auto vResult = pFile->Open(pwszPath, u32Flags);
 	if(vResult.first != ERROR_SUCCESS){
-		MCF_THROW(vResult.first, vResult.second);
+		DEBUG_THROW(SystemError, vResult.second, vResult.first);
 	}
 	return std::move(pFile);
 }
@@ -305,38 +261,30 @@ std::size_t File::Read(void *pBuffer, std::size_t uBytesToRead, std::uint64_t u6
 	ASSERT(dynamic_cast<const FileDelegate *>(this));
 
 	return ((const FileDelegate *)this)->Read(
-		pBuffer, uBytesToRead, u64Offset, nullptr, nullptr
-	);
+		pBuffer, uBytesToRead, u64Offset, nullptr, nullptr);
 }
 void File::Write(std::uint64_t u64Offset, const void *pBuffer, std::size_t uBytesToWrite){
 	ASSERT(dynamic_cast<FileDelegate *>(this));
 
 	static_cast<FileDelegate *>(this)->Write(
-		u64Offset, pBuffer, uBytesToWrite, nullptr, nullptr
-	);
+		u64Offset, pBuffer, uBytesToWrite, nullptr, nullptr);
 }
 
-std::size_t File::Read(
-	void *pBuffer, std::size_t uBytesToRead, std::uint64_t u64Offset,
-	const std::function<void ()> &fnAsyncProc,
-	const std::function<void ()> &fnCompleteCallback
-) const {
+std::size_t File::Read(void *pBuffer, std::size_t uBytesToRead, std::uint64_t u64Offset,
+	const std::function<void ()> &fnAsyncProc, const std::function<void ()> &fnCompleteCallback) const
+{
 	ASSERT(dynamic_cast<const FileDelegate *>(this));
 
 	return ((const FileDelegate *)this)->Read(
-		pBuffer, uBytesToRead, u64Offset, &fnAsyncProc, &fnCompleteCallback
-	);
+		pBuffer, uBytesToRead, u64Offset, &fnAsyncProc, &fnCompleteCallback);
 }
-void File::Write(
-	std::uint64_t u64Offset, const void *pBuffer, std::size_t uBytesToWrite,
-	const std::function<void ()> &fnAsyncProc,
-	const std::function<void ()> &fnCompleteCallback
-){
+void File::Write(std::uint64_t u64Offset, const void *pBuffer, std::size_t uBytesToWrite,
+	const std::function<void ()> &fnAsyncProc, const std::function<void ()> &fnCompleteCallback)
+{
 	ASSERT(dynamic_cast<FileDelegate *>(this));
 
 	static_cast<FileDelegate *>(this)->Write(
-		u64Offset, pBuffer, uBytesToWrite, &fnAsyncProc, &fnCompleteCallback
-	);
+		u64Offset, pBuffer, uBytesToWrite, &fnAsyncProc, &fnCompleteCallback);
 }
 
 void File::Flush() const {

@@ -11,17 +11,3 @@ unsigned long MCF_CRT_GetWin32LastError(void){
 void MCF_CRT_SetWin32LastError(unsigned long ulErrorCode){
 	SetLastError(ulErrorCode);
 }
-
-size_t MCF_CRT_AllocWin32ErrorDesc(wchar_t **ppwchBuffer, unsigned long ulErrorCode){
-	return FormatMessageW(
-		FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM |
-			FORMAT_MESSAGE_IGNORE_INSERTS | FORMAT_MESSAGE_MAX_WIDTH_MASK,
-		NULL, ulErrorCode,
-		MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-		(LPWSTR)ppwchBuffer, 0,
-		NULL
-	);
-}
-void MCF_CRT_FreeWin32ErrorDesc(wchar_t *pwchBuffer){
-	LocalFree((HLOCAL)pwchBuffer);
-}

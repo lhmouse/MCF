@@ -30,7 +30,7 @@ private:
 	NotationPackage(NotationPackage &&rhs) noexcept;
 	NotationPackage &operator=(const NotationPackage &rhs);
 	NotationPackage &operator=(NotationPackage &&rhs) noexcept;
-	~NotationPackage() noexcept;
+	~NotationPackage();
 
 public:
 	const NotationPackage *GetPackage(const WideStringObserver &wsoName) const noexcept;

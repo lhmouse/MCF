@@ -81,7 +81,7 @@ inline std::shared_ptr<ThreadDelegate> ThreadDelegate::Create(std::function<void
 
 	pRet->xm_hThread.Reset(::MCF_CRT_CreateThread(&xThreadProc, (std::intptr_t)pRet.get(), CREATE_SUSPENDED, &pRet->xm_ulThreadId));
 	if(!pRet->xm_hThread){
-		MCF_THROW(::GetLastError(), L"MCF_CRT_CreateThread() 失败。"_wso);
+		DEBUG_THROW(SystemError, "MCF_CRT_CreateThread");
 	}
 	pRet->xm_pLock = pRet; // 制造循环引用。这样代理对象就不会被删掉。
 	if(!bSuspended){

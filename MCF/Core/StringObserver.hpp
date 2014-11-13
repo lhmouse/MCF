@@ -24,6 +24,7 @@ enum class StringTypes {
 	UTF16,
 	UTF32,
 	CESU8,
+	ANSI,
 };
 
 template<StringTypes>
@@ -52,6 +53,10 @@ struct StringEncodingTrait<StringTypes::UTF32> {
 };
 template<>
 struct StringEncodingTrait<StringTypes::CESU8> {
+	using Type = char;
+};
+template<>
+struct StringEncodingTrait<StringTypes::ANSI> {
 	using Type = char;
 };
 
@@ -488,6 +493,7 @@ extern template class StringObserver<StringTypes::UTF8>;
 extern template class StringObserver<StringTypes::UTF16>;
 extern template class StringObserver<StringTypes::UTF32>;
 extern template class StringObserver<StringTypes::CESU8>;
+extern template class StringObserver<StringTypes::ANSI>;
 
 using NarrowStringObserver		= StringObserver<StringTypes::NARROW>;
 using WideStringObserver		= StringObserver<StringTypes::WIDE>;
@@ -495,11 +501,14 @@ using Utf8StringObserver		= StringObserver<StringTypes::UTF8>;
 using Utf16StringObserver		= StringObserver<StringTypes::UTF16>;
 using Utf32StringObserver		= StringObserver<StringTypes::UTF32>;
 using Cesu8StringObserver		= StringObserver<StringTypes::CESU8>;
+using AnsiStringObserver		= StringObserver<StringTypes::ANSI>;
 
 // 字面量运算符。
 // 注意 StringObserver 并不是所谓“零结尾的字符串”。
 // 这些运算符经过特意设计防止这种用法。
 template<typename CharT, CharT ...STRING_T>
+[[deprecated("Be warned that the encoding of narrow string literals varies from compilers to compilers "
+	"and even depends on the encoding of source files on g++.")]]
 extern inline auto operator""_nso() noexcept {
 	static constexpr char s_achData[] = { STRING_T..., '$' };
 	return NarrowStringObserver(s_achData, sizeof...(STRING_T));

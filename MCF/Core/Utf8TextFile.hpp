@@ -48,7 +48,7 @@ private:
 
 public:
 	explicit Utf8TextFileWriter(std::unique_ptr<File> pFile, std::uint32_t u32Flags);
-	~Utf8TextFileWriter() noexcept;
+	~Utf8TextFileWriter();
 
 public:
 	void Write(char ch);

@@ -45,7 +45,7 @@ namespace Impl {
 		{
 			xm_hSemaphore.Reset(::CreateSemaphoreW(nullptr, 0, 1, nullptr));
 			if(!xm_hSemaphore){
-				MCF_THROW(::GetLastError(), L"CreateSemaphoreW() 失败。"_wso);
+				DEBUG_THROW(SystemError, "CreateSemaphoreW");
 			}
 
 			SYSTEM_INFO vSystemInfo;
@@ -54,7 +54,7 @@ namespace Impl {
 				xm_ulSpinCount = 0;
 			}
 		}
-		~CriticalSectionImpl() noexcept {
+		~CriticalSectionImpl(){
 			ASSERT(__atomic_load_n(&xm_dwOwner, __ATOMIC_ACQUIRE) == 0);
 		}
 

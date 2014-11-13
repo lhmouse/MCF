@@ -20,7 +20,7 @@ public:
 	SemaphoreDelegate(unsigned long ulInitCount, const wchar_t *pwszName){
 		xm_hSemaphore.Reset(::CreateSemaphoreW(nullptr, (long)ulInitCount, LONG_MAX, pwszName));
 		if(!xm_hSemaphore){
-			MCF_THROW(::GetLastError(), L"CreateSemaphoreW() 失败。"_wso);
+			DEBUG_THROW(SystemError, "CreateSemaphoreW");
 		}
 	}
 

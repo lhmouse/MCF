@@ -126,7 +126,7 @@ public:
 		rhs.Swap(*this);
 		return *this;
 	}
-	~VList() noexcept {
+	~VList(){
 		Clear();
 	}
 

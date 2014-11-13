@@ -35,7 +35,7 @@ public:
 	StreamBuffer(StreamBuffer &&rhs) noexcept;
 	StreamBuffer &operator=(const StreamBuffer &rhs);
 	StreamBuffer &operator=(StreamBuffer &&rhs) noexcept;
-	~StreamBuffer() noexcept;
+	~StreamBuffer();
 
 public:
 	bool IsEmpty() const noexcept {

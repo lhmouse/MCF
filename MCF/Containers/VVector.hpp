@@ -26,8 +26,7 @@ private:
 	ElementT *xm_pEnd;
 
 	union {
-		alignas(std::max_align_t)
-			unsigned char xm_aSmall[sizeof(ElementT) * ALT_STOR_THRESHOLD_T];
+		alignas(std::max_align_t) unsigned char xm_aSmall[sizeof(ElementT) * ALT_STOR_THRESHOLD_T];
 		ElementT *xm_pEndOfStor;
 	};
 
@@ -114,7 +113,7 @@ public:
 		rhs.Swap(*this);
 		return *this;
 	}
-	~VVector() noexcept {
+	~VVector(){
 		Clear(true);
 	}
 
@@ -488,7 +487,7 @@ public:
 		}
 		return *this;
 	}
-	~VVector() noexcept {
+	~VVector(){
 		Clear(true);
 	}
 

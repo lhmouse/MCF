@@ -20,7 +20,7 @@ public:
 	explicit MutexDelegate(const wchar_t *pwszName){
 		xm_hMutex.Reset(::CreateMutexW(nullptr, false, pwszName));
 		if(!xm_hMutex){
-			MCF_THROW(::GetLastError(), L"CreateMutexW() 失败。"_wso);
+			DEBUG_THROW(SystemError, "CreateMutexW");
 		}
 	}
 

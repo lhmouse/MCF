@@ -1,5 +1,6 @@
 #include <MCF/StdMCF.hpp>
 #include <MCF/Core/String.hpp>
+#include <MCF/Core/LastError.hpp>
 using namespace MCF;
 
 extern "C" unsigned int MCFMain() noexcept {
@@ -10,5 +11,6 @@ extern "C" unsigned int MCFMain() noexcept {
 	}
 	std::putchar('\n');
 	std::puts(AnsiString(cu8s).GetCStr());
+	std::puts(AnsiString(GetWin32ErrorDesc(ERROR_HANDLE_EOF)).GetCStr());
 	return 0;
 }

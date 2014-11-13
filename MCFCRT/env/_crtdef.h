@@ -20,15 +20,13 @@
 #ifdef __cplusplus
 #	define __MCF_EXTERN_C_BEGIN			extern "C" {
 #	define __MCF_EXTERN_C_END			}
-#	define __MCF_NORETURN				[[noreturn]]
 #else
 #	define __MCF_EXTERN_C_BEGIN
 #	define __MCF_EXTERN_C_END
-#	define __MCF_NORETURN				_Noreturn
 #endif
 
 #ifdef NDEBUG
-#	define __MCF_NORETURN_IF_NDEBUG		__MCF_NORETURN
+#	define __MCF_NORETURN_IF_NDEBUG		__attribute__((__noreturn__))
 #else
 #	define __MCF_NORETURN_IF_NDEBUG
 #endif

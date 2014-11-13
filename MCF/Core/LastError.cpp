@@ -11,23 +11,16 @@ namespace MCF {
 
 WideString GetWin32ErrorDesc(unsigned long ulErrorCode){
 	WideString wsRet;
-	std::size_t uMaxLen = 32;
-	for(;;){
-		wsRet.Resize(uMaxLen);
-		const auto uLen = ::FormatMessageW(
-			FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM |
-				FORMAT_MESSAGE_IGNORE_INSERTS | FORMAT_MESSAGE_MAX_WIDTH_MASK,
-			nullptr, ulErrorCode, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-			wsRet.GetData(), uMaxLen, nullptr);
-		if(uLen == 0){
-			DEBUG_THROW(SystemError, "FormatMessageW");
-		}
-		if(uLen < uMaxLen - 1){
-			wsRet.Resize(uLen);
-			break;
-		}
-		uMaxLen *= 2;
+	wsRet.Resize(256);
+	const auto uLen = ::FormatMessageW(
+		FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM |
+			FORMAT_MESSAGE_IGNORE_INSERTS | FORMAT_MESSAGE_MAX_WIDTH_MASK,
+		nullptr, ulErrorCode, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+		wsRet.GetData(), wsRet.GetSize(), nullptr);
+	if(uLen == 0){
+		DEBUG_THROW(SystemError, "FormatMessageW");
 	}
+	wsRet.Resize(uLen);
 	return std::move(wsRet);
 }
 

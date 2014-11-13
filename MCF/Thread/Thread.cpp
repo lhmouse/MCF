@@ -13,21 +13,6 @@ using namespace MCF;
 namespace {
 
 class ThreadDelegate : CONCRETE(Thread) {
-private:
-	static unsigned xThreadProc(std::intptr_t nParam) noexcept {
-		auto *const pThis = (ThreadDelegate *)nParam;
-		try {
-			const std::shared_ptr<ThreadDelegate> pInstance(std::move(pThis->xm_pLock));
-			pThis->xm_pLock.reset(); // 打破循环引用。
-
-			pThis->xm_fnProc();
-		} catch(...){
-			pThis->xm_pException = std::current_exception();
-		}
-		pThis->xm_ulThreadId = 0;
-		return 0;
-	}
-
 public:
 	static std::shared_ptr<ThreadDelegate> Create(std::function<void ()> &&fnProc, bool bSuspended);
 
@@ -35,7 +20,7 @@ private:
 	std::shared_ptr<ThreadDelegate> xm_pLock;
 	std::function<void ()> xm_fnProc;
 	Impl::UniqueWinHandle xm_hThread;
-	unsigned long xm_ulThreadId;
+	volatile unsigned long xm_ulThreadId;
 	std::exception_ptr xm_pException;
 
 private:
@@ -59,7 +44,7 @@ public:
 	}
 
 	unsigned long GetId() const noexcept {
-		return xm_ulThreadId;
+		return __atomic_load_n(&xm_ulThreadId, __ATOMIC_ACQUIRE);
 	}
 
 	void Suspend() noexcept {
@@ -72,18 +57,35 @@ public:
 
 inline std::shared_ptr<ThreadDelegate> ThreadDelegate::Create(std::function<void ()> &&fnProc, bool bSuspended){
 	struct Helper : public ThreadDelegate {
+		static unsigned ThreadProc(std::intptr_t nParam) noexcept {
+			std::shared_ptr<ThreadDelegate> pInstance;
+			pInstance.swap(((ThreadDelegate *)nParam)->xm_pLock); // 打破循环引用。
+
+			try {
+				pInstance->xm_fnProc();
+			} catch(...){
+				pInstance->xm_pException = std::current_exception();
+			}
+			__atomic_store_n(&(pInstance->xm_ulThreadId), 0, __ATOMIC_RELEASE);
+			return 0;
+		}
+
 		explicit Helper(std::function<void ()> &&fnProc)
 			: ThreadDelegate(std::move(fnProc))
 		{
 		}
 	};
-	auto pRet(std::make_shared<Helper>(std::move(fnProc)));
 
-	pRet->xm_hThread.Reset(::MCF_CRT_CreateThread(&xThreadProc, (std::intptr_t)pRet.get(), CREATE_SUSPENDED, &pRet->xm_ulThreadId));
+	auto pRet(std::make_shared<Helper>(std::move(fnProc)));
+	unsigned long ulThreadId;
+	pRet->xm_hThread.Reset(::MCF_CRT_CreateThread(
+		&Helper::ThreadProc, (std::intptr_t)pRet.get(), CREATE_SUSPENDED, &ulThreadId));
 	if(!pRet->xm_hThread){
 		DEBUG_THROW(SystemError, "MCF_CRT_CreateThread");
 	}
+	__atomic_store_n(&(pRet->xm_ulThreadId), 0, __ATOMIC_RELEASE);
 	pRet->xm_pLock = pRet; // 制造循环引用。这样代理对象就不会被删掉。
+
 	if(!bSuspended){
 		pRet->Resume();
 	}

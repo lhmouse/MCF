@@ -3,7 +3,7 @@
 using namespace MCF;
 
 extern "C" unsigned int MCFMain() noexcept {
-	auto so(u8"𪚥11𪚥22喵33"_u8s);
+	auto so(u8"哈11𪚥22喵33"_u8s);
 	Cesu8String cu8s(so);
 	for(auto ch : cu8s){
 		std::printf("%02hhX ", ch);

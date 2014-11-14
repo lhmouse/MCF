@@ -17,7 +17,7 @@ private:
 
 	union {
 		unsigned char aby[64];
-		struct __attribute__((__packed__)) {
+		struct {
 			unsigned char abyData[56];
 			std::uint64_t u64Bits;
 		} vLast;

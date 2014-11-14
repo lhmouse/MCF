@@ -219,10 +219,7 @@ static void UpdateRecur(MCF_AvlNodeHeader *pWhere){
 	}
 }
 
-void MCF_AvlSwap(
-	MCF_AvlRoot *ppRoot1,
-	MCF_AvlRoot *ppRoot2
-){
+void MCF_AvlSwap(MCF_AvlRoot *ppRoot1, MCF_AvlRoot *ppRoot2){
 	if(ppRoot1 == ppRoot2){
 		return;
 	}
@@ -241,12 +238,9 @@ void MCF_AvlSwap(
 	}
 }
 
-void MCF_AvlAttachHint(
-	MCF_AvlRoot *ppRoot,
-	MCF_AvlNodeHeader *pHint,
-	MCF_AvlNodeHeader *pNode,
-	MCF_AvlComparatorNodes pfnComparator
-){
+void MCF_AvlAttachHint(MCF_AvlRoot *ppRoot,
+	MCF_AvlNodeHeader *pHint, MCF_AvlNodeHeader *pNode, MCF_AvlComparatorNodes pfnComparator)
+{
 	MCF_AvlNodeHeader *pParent = NULL;
 	MCF_AvlNodeHeader **ppIns = ppRoot;
 	if(pHint){
@@ -347,9 +341,7 @@ void MCF_AvlAttachHint(
 	}
 }
 
-void MCF_AvlDetach(
-	const MCF_AvlNodeHeader *pNode
-){
+void MCF_AvlDetach(const MCF_AvlNodeHeader *pNode){
 	MCF_AvlNodeHeader *const pParent = pNode->pParent;
 	MCF_AvlNodeHeader **const ppRefl = pNode->ppRefl;
 	MCF_AvlNodeHeader *const pLeft = pNode->pLeft;
@@ -450,11 +442,9 @@ void MCF_AvlDetach(
 	}
 }
 
-MCF_AvlNodeHeader *MCF_AvlLowerBound(
-	const MCF_AvlRoot *ppRoot,
-	intptr_t nOther,
-	MCF_AvlComparatorNodeOther pfnComparatorNodeOther
-){
+MCF_AvlNodeHeader *MCF_AvlLowerBound(const MCF_AvlRoot *ppRoot,
+	intptr_t nOther, MCF_AvlComparatorNodeOther pfnComparatorNodeOther)
+{
 	const MCF_AvlNodeHeader *pRet = NULL;
 	const MCF_AvlNodeHeader *pCur = *ppRoot;
 	while(pCur){
@@ -468,11 +458,9 @@ MCF_AvlNodeHeader *MCF_AvlLowerBound(
 	return (MCF_AvlNodeHeader *)pRet;
 }
 
-MCF_AvlNodeHeader *MCF_AvlUpperBound(
-	const MCF_AvlRoot *ppRoot,
-	intptr_t nOther,
-	MCF_AvlComparatorOtherNode pfnComparatorOtherNode
-){
+MCF_AvlNodeHeader *MCF_AvlUpperBound(const MCF_AvlRoot *ppRoot,
+	intptr_t nOther, MCF_AvlComparatorOtherNode pfnComparatorOtherNode)
+{
 	const MCF_AvlNodeHeader *pRet = NULL;
 	const MCF_AvlNodeHeader *pCur = *ppRoot;
 	while(pCur){
@@ -486,12 +474,10 @@ MCF_AvlNodeHeader *MCF_AvlUpperBound(
 	return (MCF_AvlNodeHeader *)pRet;
 }
 
-MCF_AvlNodeHeader *MCF_AvlFind(
-	const MCF_AvlRoot *ppRoot,
-	intptr_t nOther,
+MCF_AvlNodeHeader *MCF_AvlFind(const MCF_AvlRoot *ppRoot, intptr_t nOther,
 	MCF_AvlComparatorNodeOther pfnComparatorNodeOther,
-	MCF_AvlComparatorOtherNode pfnComparatorOtherNode
-){
+	MCF_AvlComparatorOtherNode pfnComparatorOtherNode)
+{
 	const MCF_AvlNodeHeader *pCur = *ppRoot;
 	while(pCur){
 		if((*pfnComparatorNodeOther)(pCur, nOther)){
@@ -505,20 +491,13 @@ MCF_AvlNodeHeader *MCF_AvlFind(
 	return (MCF_AvlNodeHeader *)pCur;
 }
 
-void MCF_AvlEqualRange(
-	MCF_AvlNodeHeader **ppBegin,
-	MCF_AvlNodeHeader **ppEnd,
-	const MCF_AvlRoot *ppRoot,
-	intptr_t nOther,
+void MCF_AvlEqualRange(MCF_AvlNodeHeader **ppBegin, MCF_AvlNodeHeader **ppEnd,
+	const MCF_AvlRoot *ppRoot, intptr_t nOther,
 	MCF_AvlComparatorNodeOther pfnComparatorNodeOther,
-	MCF_AvlComparatorOtherNode pfnComparatorOtherNode
-){
-	const MCF_AvlNodeHeader *const pTop = MCF_AvlFind(
-		ppRoot,
-		nOther,
-		pfnComparatorNodeOther,
-		pfnComparatorOtherNode
-	);
+	MCF_AvlComparatorOtherNode pfnComparatorOtherNode)
+{
+	const MCF_AvlNodeHeader *const pTop = MCF_AvlFind(ppRoot,
+		nOther, pfnComparatorNodeOther, pfnComparatorOtherNode);
 	if(!pTop){
 		*ppBegin = NULL;
 		*ppEnd = NULL;

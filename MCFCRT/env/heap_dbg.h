@@ -28,26 +28,16 @@ typedef struct tagHeapDbgBlockInfo {
 	const void *pRetAddr;
 } __MCF_HeapDbgBlockInfo;
 
-extern MCF_STD size_t __MCF_CRT_HeapDbgGetRawSize(
-	MCF_STD size_t uContentSize
-) MCF_NOEXCEPT;
+extern MCF_STD size_t __MCF_CRT_HeapDbgGetRawSize(MCF_STD size_t uContentSize) MCF_NOEXCEPT;
 
-extern void __MCF_CRT_HeapDbgAddGuardsAndRegister(
-	unsigned char **ppContents,
-	unsigned char *pRaw,
-	MCF_STD size_t uContentSize,
-	const void *pRetAddr
-) MCF_NOEXCEPT;
+// 返回 pContents，后续的 __MCF_CRT_HeapDbgValidate() 使用这个返回值。
+extern unsigned char *__MCF_CRT_HeapDbgAddGuardsAndRegister(
+	unsigned char *pRaw, MCF_STD size_t uContentSize, const void *pRetAddr) MCF_NOEXCEPT;
 
 extern const __MCF_HeapDbgBlockInfo *__MCF_CRT_HeapDbgValidate(
-	unsigned char **ppRaw,
-	unsigned char *pContents,
-	const void *pRetAddr
-) MCF_NOEXCEPT;
+	unsigned char **ppRaw, unsigned char *pContents, const void *pRetAddr) MCF_NOEXCEPT;
 
-extern void __MCF_CRT_HeapDbgUnregister(
-	const __MCF_HeapDbgBlockInfo *pBlockInfo
-) MCF_NOEXCEPT;
+extern void __MCF_CRT_HeapDbgUnregister(const __MCF_HeapDbgBlockInfo *pBlockInfo) MCF_NOEXCEPT;
 
 __MCF_EXTERN_C_END
 

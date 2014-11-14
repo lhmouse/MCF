@@ -33,21 +33,15 @@ typedef enum tagMCFTlsExchangeResult {
 } MCF_TlsExchangeResult;
 
 // 不触发回调。pnOldValue 不得为空。
-extern MCF_TlsExchangeResult MCF_CRT_TlsExchange(
-	void *pTlsKey,
-	MCF_STD intptr_t *pnOldValue, MCF_STD intptr_t nNewValue
-) MCF_NOEXCEPT;
+extern MCF_TlsExchangeResult MCF_CRT_TlsExchange(void *pTlsKey,
+	MCF_STD intptr_t *pnOldValue, MCF_STD intptr_t nNewValue) MCF_NOEXCEPT;
 
 // 删除所有 Tls。
 extern void MCF_CRT_TlsClearAll() MCF_NOEXCEPT;
 
 // 返回的是 HANDLE。
-extern void *MCF_CRT_CreateThread(
-	unsigned (*pfnThreadProc)(MCF_STD intptr_t),
-	MCF_STD intptr_t nParam,
-	bool bSuspended,
-	unsigned long *pulThreadId
-) MCF_NOEXCEPT;
+extern void *MCF_CRT_CreateThread(unsigned (*pfnThreadProc)(MCF_STD intptr_t), MCF_STD intptr_t nParam,
+	bool bSuspended, unsigned long *pulThreadId) MCF_NOEXCEPT;
 
 __MCF_EXTERN_C_END
 

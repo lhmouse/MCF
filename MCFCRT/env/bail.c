@@ -38,12 +38,14 @@ static __MCF_NORETURN_IF_NDEBUG
 void DoBail(const wchar_t *pwszDescription){
 	DWORD dwExitCode = IDOK;
 	const HANDLE hThread = CreateThread(NULL, 0, &ThreadProc, (LPVOID)pwszDescription, 0, NULL);
-	if(hThread){
-		WaitForSingleObject(hThread, INFINITE);
-
-		GetExitCodeThread(hThread, &dwExitCode);
-		CloseHandle(hThread);
+	if(!hThread){
+		__asm__ __volatile__("int 3 \n");
 	}
+
+	WaitForSingleObject(hThread, INFINITE);
+	GetExitCodeThread(hThread, &dwExitCode);
+	CloseHandle(hThread);
+
 #ifndef NDEBUG
 	if(dwExitCode == IDOK){
 #endif

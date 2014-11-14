@@ -21,13 +21,10 @@ typedef struct tagAtExitNode {
 } AtExitNode;
 
 static AtExitNode *volatile g_pAtExitHead = NULL;
-
 static unsigned g_uInitState = 0;
 
 #define DUMMY_INIT()			(true)
 #define DUMMY_UNINIT()			((void)0)
-
-#define VOID_INIT(exp)			((exp), true)
 
 #ifdef __MCF_CRT_HEAPDBG_ON
 #	define HEAPDBG_INIT()		(__MCF_CRT_HeapDbgInit())

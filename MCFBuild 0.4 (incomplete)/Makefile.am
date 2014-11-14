@@ -39,9 +39,6 @@ lib_libmcflite_a_SOURCES=\
 	../MCF/Language/Notation.cpp			\
 	../MCF/Hash/Sha256.cpp
 
-lib_libmcflite_a_CFLAGS=\
-	$(AM_CFLAGS) -D__MCF_CRT_NO_DLMALLOC
-
 bin_PROGRAMS=	\
 	MCFBuild
 

@@ -22,22 +22,19 @@ typedef struct tagTlsKey {
 	struct tagTlsObject *pLastByKey;
 } TlsKey;
 
-static bool KeyComparatorNodes(
-	const MCF_AvlNodeHeader *pObj1,
-	const MCF_AvlNodeHeader *pObj2
-){
+static __attribute__((__unused__)) bool KeyComparatorNodes(
+	const MCF_AvlNodeHeader *pObj1, const MCF_AvlNodeHeader *pObj2)
+{
 	return (uintptr_t)(void *)pObj1 < (uintptr_t)(void *)pObj2;
 }
 static __attribute__((__unused__)) bool KeyComparatorNodeKey(
-	const MCF_AvlNodeHeader *pObj1,
-	intptr_t nKey2
-){
+	const MCF_AvlNodeHeader *pObj1, intptr_t nKey2)
+{
 	return (uintptr_t)(void *)pObj1 < (uintptr_t)(void *)nKey2;
 }
 static __attribute__((__unused__)) bool KeyComparatorKeyNode(
-	intptr_t nKey1,
-	const MCF_AvlNodeHeader *pObj2
-){
+	intptr_t nKey1, const MCF_AvlNodeHeader *pObj2)
+{
 	return (uintptr_t)(void *)nKey1 < (uintptr_t)(void *)pObj2;
 }
 
@@ -64,24 +61,15 @@ typedef struct tagTlsObject {
 	intptr_t nValue;
 } TlsObject;
 
-static bool ObjectComparatorNodes(
-	const MCF_AvlNodeHeader *pObj1,
-	const MCF_AvlNodeHeader *pObj2
-){
+static bool ObjectComparatorNodes(const MCF_AvlNodeHeader *pObj1, const MCF_AvlNodeHeader *pObj2){
 	return (uintptr_t)(void *)((const TlsObject *)pObj1)->pKey <
 		(uintptr_t)(void *)((const TlsObject *)pObj2)->pKey;
 }
-static bool ObjectComparatorNodeKey(
-	const MCF_AvlNodeHeader *pObj1,
-	intptr_t nKey2
-){
+static bool ObjectComparatorNodeKey(const MCF_AvlNodeHeader *pObj1, intptr_t nKey2){
 	return (uintptr_t)(void *)((const TlsObject *)pObj1)->pKey <
 		(uintptr_t)(void *)nKey2;
 }
-static bool ObjectComparatorKeyNode(
-	intptr_t nKey1,
-	const MCF_AvlNodeHeader *pObj2
-){
+static bool ObjectComparatorKeyNode(intptr_t nKey1, const MCF_AvlNodeHeader *pObj2){
 	return (uintptr_t)(void *)nKey1 <
 		(uintptr_t)(void *)((const TlsObject *)pObj2)->pKey;
 }
@@ -265,12 +253,9 @@ bool MCF_CRT_TlsGet(void *pTlsKey, intptr_t *pnValue){
 	return bRet;
 }
 
-static MCF_TlsExchangeResult TlsExchange(
-	void *pTlsKey,
-	void (__cdecl **ppfnCallback)(intptr_t),
-	intptr_t *pnOldValue,
-	intptr_t nNewValue
-){
+static MCF_TlsExchangeResult TlsExchange(void *pTlsKey,
+	void (__cdecl **ppfnCallback)(intptr_t), intptr_t *pnOldValue, intptr_t nNewValue)
+{
 	TlsKey *const pKey = pTlsKey;
 	if(!pKey){
 		return MCF_TLSXCH_FAILED;
@@ -505,12 +490,9 @@ DWORD CRTThreadProc(LPVOID pParam){
 	__builtin_trap();
 }
 
-void *MCF_CRT_CreateThread(
-	unsigned (*pfnThreadProc)(intptr_t),
-	intptr_t nParam,
-	bool bSuspended,
-	unsigned long *pulThreadId
-){
+void *MCF_CRT_CreateThread(unsigned (*pfnThreadProc)(intptr_t), intptr_t nParam,
+	bool bSuspended, unsigned long *pulThreadId)
+{
 	ThreadInitInfo *const pInitInfo = malloc(sizeof(ThreadInitInfo));
 	if(!pInitInfo){
 		return NULL;

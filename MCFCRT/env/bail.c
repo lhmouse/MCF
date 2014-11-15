@@ -18,11 +18,12 @@ static DWORD APIENTRY ThreadProc(LPVOID pParam){
 		pwcWrite = MCF_wcscpyout(pwcWrite, L"\r\n\r\n错误描述：\r\n");
 
 		size_t uLen = wcslen(pwszDescription);
-		const size_t uMax = (size_t)(awcBuffer + sizeof(awcBuffer) / sizeof(awcBuffer[0]) - pwcWrite) - 128;
+		const wchar_t *const pwcEnd = awcBuffer + sizeof(awcBuffer) / sizeof(awcBuffer[0]);
+		const size_t uMax = (size_t)(pwcEnd - pwcWrite) - 64; // 后面还有一些内容，保留一些字符。
 		if(uLen > uMax){
 			uLen = uMax;
 		}
-		memcpy(pwcWrite, pwszDescription, uLen * sizeof(wchar_t));	// 我们有必要在这个地方拷贝字符串结束符吗？
+		memcpy(pwcWrite, pwszDescription, uLen * sizeof(wchar_t)); // 我们有必要在这个地方拷贝字符串结束符吗？
 		pwcWrite += uLen;
 	}
 #ifndef NDEBUG
@@ -36,15 +37,15 @@ static DWORD APIENTRY ThreadProc(LPVOID pParam){
 }
 static __MCF_NORETURN_IF_NDEBUG
 void DoBail(const wchar_t *pwszDescription){
-	DWORD dwExitCode = IDOK;
+	DWORD dwExitCode = IDCANCEL;
 	const HANDLE hThread = CreateThread(NULL, 0, &ThreadProc, (LPVOID)pwszDescription, 0, NULL);
-	if(!hThread){
+	if(hThread){
+		WaitForSingleObject(hThread, INFINITE);
+		GetExitCodeThread(hThread, &dwExitCode);
+		CloseHandle(hThread);
+	} else {
 		__asm__ __volatile__("int 3 \n");
 	}
-
-	WaitForSingleObject(hThread, INFINITE);
-	GetExitCodeThread(hThread, &dwExitCode);
-	CloseHandle(hThread);
 
 #ifndef NDEBUG
 	if(dwExitCode == IDOK){

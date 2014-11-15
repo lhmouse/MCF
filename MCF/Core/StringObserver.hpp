@@ -227,14 +227,14 @@ public:
 	{
 	}
 	constexpr StringObserver(const Char *pchBegin, std::size_t uLen) noexcept
-		: StringObserver(pchBegin, pchBegin + uLen)
+		: xm_pchBegin(pchBegin), xm_pchEnd(pchBegin + uLen)
 	{
 	}
 	constexpr StringObserver(std::initializer_list<Char> rhs) noexcept
-		: StringObserver(rhs.begin(), rhs.end())
+		: StringObserver(rhs.begin(), rhs.size())
 	{
 	}
-	explicit constexpr StringObserver(const Char *pszBegin) noexcept
+	explicit StringObserver(const Char *pszBegin) noexcept
 		: StringObserver(pszBegin, Impl::StrEndOf(pszBegin))
 	{
 	}

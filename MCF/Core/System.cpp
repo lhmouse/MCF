@@ -21,11 +21,12 @@ VVector<WideString> GetArgV(){
 		QUOTE_AFTER_QUOTE
 	} eState = DELIM;
 
-	const WideStringObserver wsoCommandLine(::GetCommandLineW());
-	auto pwcRead = wsoCommandLine.GetBegin();
-	const auto pwcEnd = wsoCommandLine.GetEnd();
-	while(pwcRead != pwcEnd){
+	auto pwcRead = ::GetCommandLineW();
+	for(;;){
 		const wchar_t wc = *(pwcRead++);
+		if(!wc){
+			break;
+		}
 
 		switch(eState){
 		case DELIM:

@@ -1,29 +1,26 @@
 #include <MCF/StdMCF.hpp>
-#include <MCFCRT/exe/exe_decl.h>
-#include <MCF/Core/StreamBuffer.hpp>
-#include <MCF/Serialization/Serdes.hpp>
-#include <iostream>
-using namespace std;
+#include <MCF/Core/Thunk.hpp>
+#include <MCF/Random/IsaacRng.hpp>
+#include <vector>
 using namespace MCF;
 
+constexpr char INIT[0x200000] = { };
+
 extern "C" unsigned int MCFMain() noexcept {
-	double d1, d2;
-	StreamBuffer buf1, buf2;
-	d1 = 123.456;
-	buf1 << d1;
-	buf2 << buf1;
-	printf("serialized: ");
-	buf2.Traverse(
-		[](auto pby, auto cb){
-			for(unsigned i = 0; i < cb; ++i){
-				printf("%02hhX ", pby[i]);
-			}
+	IsaacRng rng(100);
+	std::vector<ThunkPtr> v;
+	try {
+		for(;;){
+			v.emplace_back(CreateThunk(INIT, rng.Get() % sizeof(INIT)));
 		}
-	);
-	putchar('\n');
-	buf1.Clear();
-	buf2 >> buf1;
-	buf1 >> d2;
-	printf("d2 = %f\n", d2);
+	} catch(std::bad_alloc &){
+		const unsigned long cnt = v.size();
+		while(!v.empty()){
+			const std::size_t i = rng.Get() % v.size();
+			v[i].swap(v.back());
+			v.pop_back();
+		}
+		std::printf("count = %lu\n", cnt);
+	}
 	return 0;
 }

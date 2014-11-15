@@ -22,7 +22,7 @@ private:
 
 class Transaction : NO_COPY {
 private:
-	VVector<std::unique_ptr<TransactionItemBase>> xm_vecItems;
+	VVector<std::unique_ptr<TransactionItemBase>, 32> xm_vecItems;
 
 public:
 	bool IsEmpty() const noexcept;

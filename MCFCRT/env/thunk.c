@@ -161,7 +161,7 @@ done:
 
 	return pRet;
 }
-void MCF_CRT_DeallocateThunk(void *pThunk){
+void MCF_CRT_DeallocateThunk(void *pThunk, bool bToPoison){
 	void *pPageToRelease;
 
 	AcquireSRWLockExclusive(&g_srwLock);
@@ -171,6 +171,17 @@ void MCF_CRT_DeallocateThunk(void *pThunk){
 		ThunkInfo *pInfo;
 		if(!pThunkIndex || ((pInfo = GetInfoFromThunkIndex(pThunkIndex))->uFreeSize != 0)){
 			MCF_CRT_Bail(L"MCF_CRT_DeallocateThunk() 失败：传入的指针无效。");
+		}
+
+#ifndef NDEBUG
+		bToPoison = true;
+#endif
+		if(bToPoison){
+			// 由于其他 thunk 可能共享了当前内存页，所以不能设置为 PAGE_READWRITE。
+			DWORD dwOldProtect;
+			VirtualProtect(pThunk, pInfo->uThunkSize, PAGE_EXECUTE_READWRITE, &dwOldProtect);
+			memset(pThunk, 0xCC, pInfo->uThunkSize);
+			VirtualProtect(pThunk, pInfo->uThunkSize, PAGE_EXECUTE_READ, &dwOldProtect);
 		}
 
 		MCF_AvlNodeHeader *const pNextThunkIndex = MCF_AvlNext(pThunkIndex);

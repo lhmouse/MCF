@@ -13,7 +13,7 @@ namespace MCF {
 
 struct ThunkDeleter {
 	void operator()(void *pThunk) const noexcept {
-		::MCF_CRT_DeallocateThunk(pThunk);
+		::MCF_CRT_DeallocateThunk(pThunk, true);
 	}
 };
 using ThunkPtr = std::unique_ptr<void, ThunkDeleter>;

@@ -21,7 +21,7 @@ Debug = General {
 	RCConfig		=
 }
 Release = General {
-	CompilerConfig	= -DNDEBUG -O3 -ffunction-sections -fdata-sections -O0
+	CompilerConfig	= -DNDEBUG -O3 -ffunction-sections -fdata-sections
 	LinkerConfig	= -Wl,--gc-sections,-s -O3
 	RCConfig		= -DNDEBUG
 }
@@ -30,29 +30,29 @@ Release = General {
 .DefaultConfig		= Debug
 
 .PreBuild {
-	Command			= mkdir MCFLite >nul 2>nul	\0\
-						for /f "eol=\;" %I in (libmcflite.lst) do	\0\
+	Command			= mkdir MCFLite >nul 2>nul	\n\
+						for /f "eol=\;" %I in (libmcflite.lst) do	\n\
 							(copy /y "%I" "MCFLite\\" || exit /b 1)
 }
 ; $$		字符 $。
 ; $%		输出文件，不带引号的绝对路径。
 ; $@		带引号的输出文件路径，等价于 "$%"。
 ; $<		所有输入文件，带引号的绝对路径。
-; $!		包含文件列表的输出文件，带引号的绝对路径。
+; $!		导出包含文件列表的输出文件，带引号的绝对路径。
 ; $(名称)	调用指定的宏。括号可以省略，在这种情况下名称为 $ 符号后最长的
 ;			完全由数字、字母和下划线组成的字符串。
 .Precompilers {
 ;	Precompiled\\.h {
 ;		Suffix		=
-;		Command		= $CC -x c-header $CompilerConfig $CFlags -o $@.gch $<	\0\
-;						echo #warning Failed to load C precompiled header "$%.gch".	\0\
+;		Command		= $CC -x c-header $CompilerConfig $CFlags -o $@.gch $<	\n\
+;						echo #warning Failed to load C precompiled header "$%.gch".	\n\
 ;						echo #include $< > $@
 ;		Invoked		= -fpch-deps -fpch-preprocess -include $@
 ;	}
 	MCFBuild\\.hpp {
 		Suffix		=
-		Command		= $CXX -x c++-header $CompilerConfig $CXXFlags -o $@.gch $<	\0\
-						echo #warning Failed to load C++ precompiled header "$%.gch". > $@	\0\
+		Command		= $CXX -x c++-header $CompilerConfig $CXXFlags -o $@.gch $<	\n\
+						echo #warning Failed to load C++ precompiled header "$%.gch". > $@	\n\
 						echo #include $< >> $@
 		Invoked		= -fpch-deps -fpch-preprocess -include $@
 	}

@@ -30,7 +30,7 @@ void DoPrint(HANDLE hFile, const MCF::WideStringObserver &wsoString) noexcept {
 		}
 	} else {
 		MCF::Utf8String u8sConverted;
-		u8sConverted.Assign<MCF::StringEncoding::UTF16>(wsoString);
+		u8sConverted.Assign(wsoString);
 
 		const auto vLock = g_pLock->GetLock();
 		std::size_t uTotalWritten = 0;

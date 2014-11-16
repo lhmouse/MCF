@@ -58,8 +58,7 @@ ObjectT *Construct(ObjectT *pObject, ParamsT &&...vParams)
 	noexcept(std::is_nothrow_constructible<ObjectT, ParamsT &&...>::value)
 {
 	return Impl::DirectConstructor<ObjectT>::template Construct<ParamsT &&...>(
-		pObject, std::forward<ParamsT>(vParams)...
-	);
+		pObject, std::forward<ParamsT>(vParams)...	);
 }
 template<typename ObjectT>
 inline void Destruct(ObjectT *pObject)

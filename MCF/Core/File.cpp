@@ -55,7 +55,8 @@ public:
 		}
 
 		xm_hFile.Reset(::CreateFileW(pwszPath,
-			((u32Flags & TO_READ) ? GENERIC_READ : 0) | ((u32Flags & TO_WRITE) ? GENERIC_WRITE : 0),
+			((u32Flags & TO_READ) ? GENERIC_READ : 0) |
+				((u32Flags & TO_WRITE) ? (GENERIC_WRITE | FILE_READ_ATTRIBUTES) : 0),
 			(u32Flags & TO_WRITE) ? 0 : FILE_SHARE_READ,
 			nullptr, dwCreateDisposition, dwFlagsAndAttributes, NULL));
 		if(!xm_hFile){

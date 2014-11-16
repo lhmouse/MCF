@@ -8,7 +8,11 @@
 #include "../Containers/VVector.hpp"
 using namespace MCF;
 
-static constexpr unsigned char UTF8_BOM[] = {0xEF, 0xBB, 0xBF};
+namespace {
+
+constexpr unsigned char UTF8_BOM[] = { 0xEF, 0xBB, 0xBF };
+
+}
 
 // ========== Utf8TextFileReader ==========
 // 构造函数和析构函数。
@@ -101,15 +105,16 @@ bool Utf8TextFileReader::ReadTillEof(Utf8String &u8sData){
 // ========== Utf8TextFileWriter ==========
 // 构造函数和析构函数。
 Utf8TextFileWriter::Utf8TextFileWriter(std::unique_ptr<File> pFile, std::uint32_t u32Flags)
-	: xm_pFile		(std::move(pFile))
-	, xm_u32Flags	(u32Flags)
-	, xm_u64Offset	(0)
+	: xm_pFile(std::move(pFile)), xm_u32Flags(u32Flags), xm_u64Offset(0)
 {
-	if(xm_u32Flags & BOM_USE){
+	xm_u64Offset = xm_pFile->GetSize();
+
+	if((xm_u32Flags & BOM_USE) && (xm_u64Offset == 0)){
 		xm_pFile->Write(0, UTF8_BOM, sizeof(UTF8_BOM));
 		xm_pFile->Flush();
+
+		xm_u64Offset += sizeof(UTF8_BOM);
 	}
-	xm_u64Offset = xm_pFile->GetSize();
 }
 Utf8TextFileWriter::~Utf8TextFileWriter(){
 	try {

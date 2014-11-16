@@ -9,8 +9,4 @@
 #include "../MCF/Core/Exception.hpp"
 #include "../MCF/Utilities/Utilities.hpp"
 
-#include "Localization.hpp"
-
-#define FORMAT_THROW(code_, msg_)		MCF_THROW(code_, ::MCFBuild::FormatString(msg_))
-
 #endif

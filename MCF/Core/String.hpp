@@ -375,6 +375,11 @@ public:
 		Append(rhs);
 	}
 	template<StringTypes OtherTypeT>
+	void Assign(const StringObserver<OtherTypeT> &rhs){
+		Clear();
+		Append(rhs);
+	}
+	template<StringTypes OtherTypeT>
 	void Assign(const String<OtherTypeT> &rhs){
 		Clear();
 		Append(rhs);

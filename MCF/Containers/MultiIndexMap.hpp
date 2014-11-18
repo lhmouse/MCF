@@ -37,22 +37,24 @@ namespace Impl {
 		}
 	};
 
-	template<class NodeT, std::size_t INDEX_ID_T, class ElementT, class IndexNodeT, class ComparatorT>
+	template<class NodeT, class ElementT, std::size_t INDEX_ID_T, class IndexNodeT, class ComparatorT>
 	struct OrderedMapIndexNodeComparator {
-		using ElementFromIndexNode = typename NodeT::template ElementFromIndexNode<INDEX_ID_T>;
-		using IndexNode = typename ElementFromIndexNode::IndexNode;
-
 		bool operator()(const OrderedMapIndexNode *lhs, const OrderedMapIndexNode *rhs) const noexcept {
-			return ComparatorT()(*ElementFromIndexNode()(static_cast<const IndexNode *>(lhs)),
-				*ElementFromIndexNode()(static_cast<const IndexNode *>(rhs)));
+			return ComparatorT()(
+				*static_cast<const ElementT *>(static_cast<const NodeT *>(static_cast<const IndexNodeT *>(lhs))),
+				*static_cast<const ElementT *>(static_cast<const NodeT *>(static_cast<const IndexNodeT *>(rhs))));
 		}
 		template<typename ComparandT>
 		bool operator()(const OrderedMapIndexNode *lhs, const ComparandT *rhs) const noexcept {
-			return ComparatorT()(*ElementFromIndexNode()(static_cast<const IndexNode *>(lhs)), *rhs);
+			return ComparatorT()(
+				*static_cast<const ElementT *>(static_cast<const NodeT *>(static_cast<const IndexNodeT *>(lhs))),
+				*rhs);
 		}
 		template<typename ComparandT>
 		bool operator()(const ComparandT *lhs, const OrderedMapIndexNode *rhs) const noexcept {
-			return ComparatorT()(*lhs, *ElementFromIndexNode()(static_cast<const IndexNode *>(rhs)));
+			return ComparatorT()(
+				*lhs,
+				*static_cast<const ElementT *>(static_cast<const NodeT *>(static_cast<const IndexNodeT *>(rhs))));
 		}
 	};
 
@@ -207,8 +209,7 @@ namespace Impl {
 					return NodeComparatorT()(reinterpret_cast<const ComparandT *>(lhs), static_cast<const IndexNode *>(rhs));
 				}
 			);
-			return std::make_pair(static_cast<const IndexNode *>(pBegin),
-				static_cast<const IndexNode *>(pEnd));
+			return std::make_pair(static_cast<const IndexNode *>(pBegin), static_cast<const IndexNode *>(pEnd));
 		}
 		template<typename ComparandT>
 		std::pair<IndexNode *, IndexNode *> GetEqualRange(const ComparandT *pComparand) noexcept {
@@ -223,8 +224,7 @@ namespace Impl {
 					return NodeComparatorT()(reinterpret_cast<const ComparandT *>(lhs), static_cast<const IndexNode *>(rhs));
 				}
 			);
-			return std::make_pair(static_cast<IndexNode *>(pBegin),
-				static_cast<IndexNode *>(pEnd));
+			return std::make_pair(static_cast<IndexNode *>(pBegin), static_cast<IndexNode *>(pEnd));
 		}
 	};
 
@@ -297,15 +297,11 @@ namespace Impl {
 		}
 
 		template<typename ComparandT>
-		std::pair<const IndexNode *, const IndexNode *>
-			GetEqualRange(const ComparandT *pComparand) const noexcept
-		{
+		std::pair<const IndexNode *, const IndexNode *> GetEqualRange(const ComparandT *pComparand) const noexcept {
 			return xm_vDelegate.GetEqualRange(pComparand);
 		}
 		template<typename ComparandT>
-		std::pair<IndexNode *, IndexNode *>
-			GetEqualRange(const ComparandT *pComparand) noexcept
-		{
+		std::pair<IndexNode *, IndexNode *> GetEqualRange(const ComparandT *pComparand) noexcept {
 			return xm_vDelegate.GetEqualRange(pComparand);
 		}
 	};
@@ -398,7 +394,7 @@ struct MultiOrderedIndex {
 
 	template<class NodeT, std::size_t INDEX_ID_T>
 	using Specific = Impl::OrderedMapIndexNodeComparator<
-		NodeT, INDEX_ID_T, ElementT, IndexNode, ComparatorT>;
+		NodeT, ElementT, INDEX_ID_T, IndexNode, ComparatorT>;
 
 	template<class Specific>
 	using IndexType = Impl::MultiOrderedMapIndex<Specific>;
@@ -421,7 +417,7 @@ struct UniqueOrderedIndex {
 
 	template<class NodeT, std::size_t INDEX_ID_T>
 	using Specific = Impl::OrderedMapIndexNodeComparator<
-		NodeT, INDEX_ID_T, ElementT, IndexNode, ComparatorT>;
+		NodeT, ElementT, INDEX_ID_T, IndexNode, ComparatorT>;
 
 	template<class Specific>
 	using IndexType = Impl::UniqueOrderedMapIndex<Specific>;
@@ -443,7 +439,8 @@ struct MultiOrderedMemberIndex {
 	};
 
 	template<class NodeT, std::size_t INDEX_ID_T>
-	using Specific = Impl::OrderedMapIndexNodeComparator<NodeT, INDEX_ID_T, ElementT, IndexNode,
+	using Specific = Impl::OrderedMapIndexNodeComparator<
+		NodeT, ElementT, INDEX_ID_T, IndexNode,
 		Impl::MemberComparator<ElementT, KeyTypeT, PTR_TO_KEY_T, ComparatorT>>;
 
 	template<class Specific>
@@ -466,7 +463,8 @@ struct UniqueOrderedMemberIndex {
 	};
 
 	template<class NodeT, std::size_t INDEX_ID_T>
-	using Specific = Impl::OrderedMapIndexNodeComparator<NodeT, INDEX_ID_T, ElementT, IndexNode,
+	using Specific = Impl::OrderedMapIndexNodeComparator<
+		NodeT, ElementT, INDEX_ID_T, IndexNode,
 		Impl::MemberComparator<ElementT, KeyTypeT, PTR_TO_KEY_T, ComparatorT>>;
 
 	template<class Specific>
@@ -504,23 +502,10 @@ private:
 
 public:
 	class Node
-		: public ElementT, private IndicesT::IndexNode...
+		: public ElementT, public IndicesT::IndexNode...
 		, public xAddressNode	// 复制树结构的时候用到。
 	{
 		friend MultiIndexMap;
-
-	public:
-		template<std::size_t INDEX_ID_T>
-		struct ElementFromIndexNode {
-			using IndexNode = typename std::tuple_element_t<INDEX_ID_T, std::tuple<IndicesT...>>::IndexNode;
-
-			constexpr const ElementT *operator()(const IndexNode *pIndexNode) const noexcept {
-				return static_cast<const ElementT *>(static_cast<const Node *>(pIndexNode));
-			}
-			constexpr ElementT *operator()(IndexNode *pIndexNode) const noexcept {
-				return static_cast<ElementT *>(static_cast<Node *>(pIndexNode));
-			}
-		};
 
 	private:
 		// 这个成员在复制树结构的时候用到。

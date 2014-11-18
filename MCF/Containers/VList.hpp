@@ -94,8 +94,7 @@ public:
 	VList(VList &&rhs) noexcept
 		: VList()
 	{
-		std::swap(xm_pFirst, rhs.xm_pFirst);
-		std::swap(xm_pLast, rhs.xm_pLast);
+		Swap(rhs);
 	}
 	VList &operator=(std::initializer_list<ElementT> rhs){
 		VList(rhs).Swap(*this);
@@ -108,7 +107,7 @@ public:
 		return *this;
 	}
 	VList &operator=(VList &&rhs) noexcept {
-		rhs.Swap(*this);
+		Swap(rhs);
 		return *this;
 	}
 	~VList(){

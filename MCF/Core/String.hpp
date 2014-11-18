@@ -842,8 +842,8 @@ public:
 
 // 字面量运算符。
 template<typename CharT, CharT ...STRING_T>
-[[deprecated("Be warned that the encoding of narrow string literals varies from compilers to compilers "
-	"and even depends on the encoding of source files on g++.")]]
+[[deprecated("Be warned that encodings of narrow string literals vary from compilers to compilers "
+	"and might even depend on encodings of source files on g++.")]]
 extern inline const auto &operator""_ns(){
 	static const NarrowString s_nsRet{ STRING_T... };
 	return s_nsRet;

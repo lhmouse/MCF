@@ -358,6 +358,7 @@ void AnsiString::Deunify(AnsiString &ansDst, std::size_t uPos, const UnifiedStri
 	}
 }
 
+// 异常类的 RTTI。
 StringEncodingError::~StringEncodingError(){
 }
 

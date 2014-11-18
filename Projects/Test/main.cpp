@@ -1,11 +1,12 @@
 #include <MCF/StdMCF.hpp>
-#include <MCF/Language/MNotation.hpp>
+#include <MCF/Core/String.hpp>
 using namespace MCF;
 
 extern "C" unsigned int MCFMain() noexcept {
-	MNotation nt;
-	const auto result = nt.Parse(L"root{val=2\nval=1\nnested{\nval=3}}"_wso);
-	std::printf("%d\n", result.first);
-	std::printf("%ls\n", nt.Export().GetCStr());
+	auto s = "abcdefg"_ns;
+	s.Replace(4, 4, "xyz"_nso);
+	for(auto ch : s){
+		std::putchar(ch);
+	}
 	return 0;
 }

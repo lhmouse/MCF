@@ -67,8 +67,7 @@ public:
 	}
 	template<std::size_t SRC_THRESHOLD_T>
 	VVector(VVector<ElementT, SRC_THRESHOLD_T> &&rhs)
-		noexcept(std::is_nothrow_move_constructible<ElementT>::value &&
-			(ALT_STOR_THRESHOLD_T >= SRC_THRESHOLD_T))
+		noexcept(std::is_nothrow_move_constructible<ElementT>::value && (ALT_STOR_THRESHOLD_T >= SRC_THRESHOLD_T))
 		: VVector()
 	{
 		xMoveFrom(rhs);
@@ -95,22 +94,19 @@ public:
 	}
 	template<std::size_t SRC_THRESHOLD_T>
 	VVector &operator=(VVector<ElementT, SRC_THRESHOLD_T> &&rhs)
-		noexcept(std::is_nothrow_move_constructible<ElementT>::value &&
-			(ALT_STOR_THRESHOLD_T >= SRC_THRESHOLD_T))
+		noexcept(std::is_nothrow_move_constructible<ElementT>::value && (ALT_STOR_THRESHOLD_T >= SRC_THRESHOLD_T))
 	{
 		VVector(std::move(rhs)).Swap(*this);
 		return *this;
 	}
 	VVector &operator=(const VVector &rhs){
-		if(&rhs != this){
-			VVector(rhs).Swap(*this);
-		}
+		VVector(rhs).Swap(*this);
 		return *this;
 	}
 	VVector &operator=(VVector &&rhs)
 		noexcept(std::is_nothrow_move_constructible<ElementT>::value)
 	{
-		rhs.Swap(*this);
+		Swap(rhs);
 		return *this;
 	}
 	~VVector(){
@@ -120,8 +116,7 @@ public:
 private:
 	template<std::size_t SRC_THRESHOLD_T>
 	void xMoveFrom(VVector<ElementT, SRC_THRESHOLD_T> &rhs)
-		noexcept(std::is_nothrow_move_constructible<ElementT>::value &&
-			(ALT_STOR_THRESHOLD_T >= SRC_THRESHOLD_T))
+		noexcept(std::is_nothrow_move_constructible<ElementT>::value && (ALT_STOR_THRESHOLD_T >= SRC_THRESHOLD_T))
 	{
 		ASSERT(IsEmpty());
 		ASSERT((void *)this != (void *)&rhs);
@@ -469,8 +464,7 @@ public:
 	}
 	template<std::size_t SRC_THRESHOLD_T>
 	VVector &operator=(VVector<ElementT, SRC_THRESHOLD_T> &&rhs)
-		noexcept(std::is_nothrow_move_constructible<ElementT>::value &&
-			(0 >= SRC_THRESHOLD_T))
+		noexcept(std::is_nothrow_move_constructible<ElementT>::value && (0 >= SRC_THRESHOLD_T))
 	{
 		VVector(std::move(rhs)).Swap(*this);
 		return *this;
@@ -482,9 +476,7 @@ public:
 		return *this;
 	}
 	VVector &operator=(VVector &&rhs) noexcept {
-		if(&rhs != this){
-			rhs.Swap(*this);
-		}
+		Swap(rhs);
 		return *this;
 	}
 	~VVector(){
@@ -494,8 +486,7 @@ public:
 private:
 	template<std::size_t SRC_THRESHOLD_T>
 	void xMoveFrom(VVector<ElementT, SRC_THRESHOLD_T> &rhs)
-		noexcept(std::is_nothrow_move_constructible<ElementT>::value &&
-			(0 >= SRC_THRESHOLD_T))
+		noexcept(std::is_nothrow_move_constructible<ElementT>::value && (0 >= SRC_THRESHOLD_T))
 	{
 		ASSERT(IsEmpty());
 		ASSERT((void *)this != (void *)&rhs);

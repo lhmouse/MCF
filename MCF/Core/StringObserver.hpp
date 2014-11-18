@@ -507,8 +507,8 @@ using AnsiStringObserver		= StringObserver<StringTypes::ANSI>;
 // 注意 StringObserver 并不是所谓“零结尾的字符串”。
 // 这些运算符经过特意设计防止这种用法。
 template<typename CharT, CharT ...STRING_T>
-[[deprecated("Be warned that the encoding of narrow string literals varies from compilers to compilers "
-	"and even depends on the encoding of source files on g++.")]]
+[[deprecated("Be warned that encodings of narrow string literals vary from compilers to compilers "
+	"and might even depend on encodings of source files on g++.")]]
 extern inline auto operator""_nso() noexcept {
 	static constexpr char s_achData[] = { STRING_T..., '$' };
 	return NarrowStringObserver(s_achData, sizeof...(STRING_T));

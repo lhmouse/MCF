@@ -622,7 +622,7 @@ public:
 		return *this;
 	}
 	MultiIndexMap &operator=(MultiIndexMap &&rhs) noexcept {
-		rhs.Swap(*this);
+		Swap(rhs);
 		return *this;
 	}
 	~MultiIndexMap(){

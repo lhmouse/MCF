@@ -145,9 +145,8 @@ int MCF_CRT_AtEndModule(void (__cdecl *pfnProc)(intptr_t), intptr_t nContext){
 
 	pNode->pPrev = __atomic_load_n(&g_pAtExitHead, __ATOMIC_RELAXED);
 	while(EXPECT(!__atomic_compare_exchange_n(
-		&g_pAtExitHead, &(pNode->pPrev), pNode,
-		false, __ATOMIC_RELAXED, __ATOMIC_RELAXED
-	))){
+		&g_pAtExitHead, &(pNode->pPrev), pNode, false, __ATOMIC_RELAXED, __ATOMIC_RELAXED)))
+	{
 		// 空的。
 	}
 

@@ -11,7 +11,7 @@
 
 namespace MCFBuild {
 
-typedef std::array<unsigned char, 32> Sha256;
+using Sha256 = std::array<unsigned char, 32>;
 
 extern MCF::WideString GetFullPath(const MCF::WideString &wsSrc);
 

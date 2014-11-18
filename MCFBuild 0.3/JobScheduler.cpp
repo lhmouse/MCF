@@ -105,7 +105,7 @@ void JobScheduler::Commit(std::size_t uProcessCount, const wchar_t *pwszPrefix){
 			::CloseHandle(hObj);
 		}
 	};
-	typedef MCF::UniqueHandle<HANDLE, ThreadCloser> UniqueThreadHandle;
+	using UniqueThreadHandle = MCF::UniqueHandle<HANDLE, ThreadCloser>;
 
 	std::vector<UniqueThreadHandle> vecNewThreads;
 	std::vector<HANDLE> vecNakedHandles;

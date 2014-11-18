@@ -120,7 +120,7 @@ namespace Impl {
 	struct CopyTrait<TriviallyCopyableT *, InputIteratorT, TriviallyCopyableT,
 		std::enable_if_t<
 //			std::is_trivially_copyable<TriviallyCopyableT>::value &&
-				std::is_trivial<TriviallyCopyableT>::value &&				// TODO: Fuck GCC.
+				std::is_trivial<TriviallyCopyableT>::value &&				// FIXME: Fuck GCC.
 				!std::is_volatile<TriviallyCopyableT>::value &&				//
 				std::is_copy_constructible<TriviallyCopyableT>::value &&	//
 				std::is_move_constructible<TriviallyCopyableT>::value &&	//
@@ -132,10 +132,10 @@ namespace Impl {
 			>
 		>
 	{
-		typedef TriviallyCopyableT *OutputIteratorT;
+		using OutputIterator = TriviallyCopyableT *;
 
-		static OutputIteratorT DoCopy(
-			OutputIteratorT itOutputBegin,
+		static OutputIterator DoCopy(
+			OutputIterator itOutputBegin,
 			InputIteratorT itInputBegin,
 			std::common_type_t<InputIteratorT> itInputEnd
 		) noexcept {
@@ -147,8 +147,8 @@ namespace Impl {
 			);
 			return itOutputBegin + uCount;
 		}
-		static std::pair<OutputIteratorT, InputIteratorT> DoCopyN(
-			OutputIteratorT itOutputBegin,
+		static std::pair<OutputIterator, InputIteratorT> DoCopyN(
+			OutputIterator itOutputBegin,
 			InputIteratorT itInputBegin,
 			std::size_t uCount
 		) noexcept {
@@ -159,8 +159,8 @@ namespace Impl {
 			);
 			return std::make_pair(itOutputBegin + uCount, itInputBegin + uCount);
 		}
-		static OutputIteratorT DoCopyBackward(
-			OutputIteratorT itOutputEnd,
+		static OutputIterator DoCopyBackward(
+			OutputIterator itOutputEnd,
 			InputIteratorT itInputBegin,
 			std::common_type_t<InputIteratorT> itInputEnd
 		) noexcept {
@@ -172,8 +172,8 @@ namespace Impl {
 			);
 			return itOutputEnd - uCount;
 		}
-		static std::pair<OutputIteratorT, InputIteratorT> DoCopyBackwardN(
-			OutputIteratorT itOutputEnd,
+		static std::pair<OutputIterator, InputIteratorT> DoCopyBackwardN(
+			OutputIterator itOutputEnd,
 			std::size_t uCount,
 			InputIteratorT itInputEnd
 		) noexcept {
@@ -185,8 +185,8 @@ namespace Impl {
 			return std::make_pair(itOutputEnd - uCount, itInputEnd - uCount);
 		}
 
-		static OutputIteratorT DoMove(
-			OutputIteratorT itOutputBegin,
+		static OutputIterator DoMove(
+			OutputIterator itOutputBegin,
 			InputIteratorT itInputBegin,
 			std::common_type_t<InputIteratorT> itInputEnd
 		) noexcept {
@@ -196,8 +196,8 @@ namespace Impl {
 				std::move(itInputEnd)
 			);
 		}
-		static std::pair<OutputIteratorT, InputIteratorT> DoMoveN(
-			OutputIteratorT itOutputBegin,
+		static std::pair<OutputIterator, InputIteratorT> DoMoveN(
+			OutputIterator itOutputBegin,
 			InputIteratorT itInputBegin,
 			std::size_t uCount
 		) noexcept {
@@ -207,8 +207,8 @@ namespace Impl {
 				uCount
 			);
 		}
-		static OutputIteratorT DoMoveBackward(
-			OutputIteratorT itOutputEnd,
+		static OutputIterator DoMoveBackward(
+			OutputIterator itOutputEnd,
 			InputIteratorT itInputBegin,
 			std::common_type_t<InputIteratorT> itInputEnd
 		) noexcept {
@@ -218,8 +218,8 @@ namespace Impl {
 				std::move(itInputEnd)
 			);
 		}
-		static std::pair<OutputIteratorT, InputIteratorT> DoMoveBackwardN(
-			OutputIteratorT itOutputEnd,
+		static std::pair<OutputIterator, InputIteratorT> DoMoveBackwardN(
+			OutputIterator itOutputEnd,
 			std::size_t uCount,
 			InputIteratorT itInputEnd
 		) noexcept {

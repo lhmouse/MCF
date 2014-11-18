@@ -12,15 +12,12 @@ namespace MCF {
 
 template<typename Tx, typename Ty, typename Comparator = std::less<void>>
 constexpr decltype(auto) Min(Tx &&x, Ty &&y){
-	static_assert(std::is_scalar<std::remove_reference_t<Tx>>::value
-		&& std::is_scalar<std::remove_reference_t<Ty>>::value,
+	static_assert(std::is_scalar<std::remove_reference_t<Tx>>::value && std::is_scalar<std::remove_reference_t<Ty>>::value,
 		"Only scalar types are supported.");
-	static_assert(std::is_signed<std::remove_reference_t<Tx>>::value ==
-		std::is_signed<std::remove_reference_t<Ty>>::value,
+	static_assert(std::is_signed<std::remove_reference_t<Tx>>::value == std::is_signed<std::remove_reference_t<Ty>>::value,
 		"Comparison between signed and unsignedegers.");
 
-	return Comparator()(std::forward<Tx>(x), std::forward<Ty>(y))
-		? std::forward<Tx>(x) : std::forward<Ty>(y);
+	return Comparator()(std::forward<Tx>(x), std::forward<Ty>(y)) ? std::forward<Tx>(x) : std::forward<Ty>(y);
 }
 template<typename Tx, typename Ty, typename Comparator = std::less<void>, typename ...MoreT>
 constexpr decltype(auto) Min(Tx &&x, Ty &&y, MoreT &&...vMore){
@@ -29,15 +26,12 @@ constexpr decltype(auto) Min(Tx &&x, Ty &&y, MoreT &&...vMore){
 
 template<typename Tx, typename Ty, typename Comparator = std::less<void>>
 constexpr decltype(auto) Max(Tx &&x, Ty &&y){
-	static_assert(std::is_scalar<std::remove_reference_t<Tx>>::value
-		&& std::is_scalar<std::remove_reference_t<Ty>>::value,
+	static_assert(std::is_scalar<std::remove_reference_t<Tx>>::value && std::is_scalar<std::remove_reference_t<Ty>>::value,
 		"Only scalar types are supported.");
-	static_assert(std::is_signed<std::remove_reference_t<Tx>>::value ==
-		std::is_signed<std::remove_reference_t<Ty>>::value,
+	static_assert(std::is_signed<std::remove_reference_t<Tx>>::value == std::is_signed<std::remove_reference_t<Ty>>::value,
 		"Comparison between signed and unsignedegers.");
 
-	return Comparator()(std::forward<Tx>(x), std::forward<Ty>(y))
-		? std::forward<Ty>(y) : std::forward<Tx>(x);
+	return Comparator()(std::forward<Tx>(x), std::forward<Ty>(y)) ? std::forward<Ty>(y) : std::forward<Tx>(x);
 }
 template<typename Tx, typename Ty, typename Comparator = std::less<void>, typename ...MoreT>
 constexpr decltype(auto) Max(Tx &&x, Ty &&y, MoreT &&...vMore){

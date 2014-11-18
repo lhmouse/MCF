@@ -14,7 +14,7 @@ namespace MCF {
 template<class CloserT>
 class UniqueHandle {
 public:
-	typedef decltype(CloserT()()) Handle;
+	using Handle = decltype(CloserT()());
 
 	static_assert(std::is_scalar<Handle>::value, "Handle must be a scalar type.");
 	static_assert(noexcept(CloserT()(Handle())), "Handle closer must not throw.");

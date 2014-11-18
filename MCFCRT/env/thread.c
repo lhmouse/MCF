@@ -165,11 +165,7 @@ void *MCF_CRT_TlsAllocKey(void (__cdecl *pfnCallback)(intptr_t)){
 
 	AcquireSRWLockExclusive(&g_srwLock);
 	{
-		MCF_AvlAttach(
-			&g_pavlKeys,
-			(MCF_AvlNodeHeader *)pKey,
-			&KeyComparatorNodes
-		);
+		MCF_AvlAttach(&g_pavlKeys, (MCF_AvlNodeHeader *)pKey, &KeyComparatorNodes);
 	}
 	ReleaseSRWLockExclusive(&g_srwLock);
 
@@ -183,12 +179,8 @@ bool MCF_CRT_TlsFreeKey(void *pTlsKey){
 
 	AcquireSRWLockExclusive(&g_srwLock);
 	{
-		ASSERT((TlsKey *)MCF_AvlFind(
-			&g_pavlKeys,
-			(intptr_t)pKey,
-			&KeyComparatorNodeKey,
-			&KeyComparatorKeyNode
-		) == pKey);
+		ASSERT((TlsKey *)MCF_AvlFind(&g_pavlKeys,
+			(intptr_t)pKey, &KeyComparatorNodeKey, &KeyComparatorKeyNode) == pKey);
 
 		MCF_AvlDetach((MCF_AvlNodeHeader *)pKey);
 	}
@@ -237,12 +229,8 @@ bool MCF_CRT_TlsGet(void *pTlsKey, intptr_t *pnValue){
 	if(pMap){
 		AcquireSRWLockShared(&(pMap->srwLock));
 		{
-			TlsObject *const pObject = (TlsObject *)MCF_AvlFind(
-				&(pMap->pavlObjects),
-				(intptr_t)pTlsKey,
-				&ObjectComparatorNodeKey,
-				&ObjectComparatorKeyNode
-			);
+			TlsObject *const pObject = (TlsObject *)MCF_AvlFind(&(pMap->pavlObjects),
+				(intptr_t)pTlsKey, &ObjectComparatorNodeKey, &ObjectComparatorKeyNode);
 			if(pObject){
 				*pnValue = pObject->nValue;
 				bRet = true;
@@ -264,12 +252,8 @@ static MCF_TlsExchangeResult TlsExchange(void *pTlsKey,
 #ifndef NDEBUG
 	AcquireSRWLockShared(&g_srwLock);
 	{
-		ASSERT((TlsKey *)MCF_AvlFind(
-			&g_pavlKeys,
-			(intptr_t)pKey,
-			&KeyComparatorNodeKey,
-			&KeyComparatorKeyNode
-		) == pKey);
+		ASSERT((TlsKey *)MCF_AvlFind(&g_pavlKeys,
+			(intptr_t)pKey, &KeyComparatorNodeKey, &KeyComparatorKeyNode) == pKey);
 	}
 	ReleaseSRWLockShared(&g_srwLock);
 #endif
@@ -304,11 +288,8 @@ static MCF_TlsExchangeResult TlsExchange(void *pTlsKey,
 
 	AcquireSRWLockExclusive(&(pMap->srwLock));
 	{
-		TlsObject *pObject = (TlsObject *)MCF_AvlLowerBound(
-			&(pMap->pavlObjects),
-			(intptr_t)pKey,
-			&ObjectComparatorNodeKey
-		);
+		TlsObject *pObject = (TlsObject *)MCF_AvlLowerBound(&(pMap->pavlObjects),
+			(intptr_t)pKey, &ObjectComparatorNodeKey);
 		if(!pObject || (pObject->pKey != pKey)){
 			ReleaseSRWLockExclusive(&(pMap->srwLock));
 			{
@@ -321,12 +302,8 @@ static MCF_TlsExchangeResult TlsExchange(void *pTlsKey,
 				pObject->pKey	= pKey;
 				pObject->nValue	= nNewValue;
 
-				MCF_AvlAttachHint(
-					&(pMap->pavlObjects),
-					(MCF_AvlNodeHeader *)pHint,
-					(MCF_AvlNodeHeader *)pObject,
-					&ObjectComparatorNodes
-				);
+				MCF_AvlAttachHint(&(pMap->pavlObjects), (MCF_AvlNodeHeader *)pHint,
+					(MCF_AvlNodeHeader *)pObject, &ObjectComparatorNodes);
 			}
 			AcquireSRWLockExclusive(&(pMap->srwLock));
 
@@ -500,18 +477,16 @@ void *MCF_CRT_CreateThread(unsigned (*pfnThreadProc)(intptr_t), intptr_t nParam,
 	pInitInfo->pfnProc	= pfnThreadProc;
 	pInitInfo->nParam	= nParam;
 
-	const HANDLE hThread = CreateThread(
-		NULL, 0,
-		&CRTThreadProc, pInitInfo,
-		CREATE_SUSPENDED,
-		pulThreadId
-	);
+	DWORD dwThreadId;
+	const HANDLE hThread = CreateThread(NULL, 0, &CRTThreadProc, pInitInfo, CREATE_SUSPENDED, &dwThreadId);
 	if(!hThread){
 		const DWORD dwErrorCode = GetLastError();
 		free(pInitInfo);
 		SetLastError(dwErrorCode);
 		return NULL;
 	}
+	*pulThreadId = dwThreadId;
+
 	if(!bSuspended){
 		ResumeThread(hThread);
 	}

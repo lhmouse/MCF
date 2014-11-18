@@ -20,8 +20,7 @@ namespace Impl {
 			::CloseHandle(hObject);
 		}
 	};
-
-	typedef UniqueHandle<WinHandleCloser> UniqueWinHandle;
+	using UniqueWinHandle =UniqueHandle<WinHandleCloser>;
 }
 
 }

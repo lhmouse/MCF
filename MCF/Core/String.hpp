@@ -644,7 +644,7 @@ public:
 	}
 
 public:
-	typedef Char value_type;
+	using value_type = Char;
 
 	// std::back_insert_iterator
 	template<typename ParamT>

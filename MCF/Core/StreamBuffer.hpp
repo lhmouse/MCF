@@ -77,7 +77,7 @@ public:
 	}
 
 public:
-	typedef unsigned char value_type;
+	using value_type = unsigned char;
 
 	// std::back_insert_iterator
 	void push_back(unsigned char byParam){

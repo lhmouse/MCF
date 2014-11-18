@@ -22,19 +22,6 @@ WideString Unescape(const WideStringObserver &wsoSrc){
 	std::uint32_t u32CodePoint = 0;
 	std::size_t uHexExpecting = 0;
 
-	const auto PushUtf = [&]{
-		if(u32CodePoint > 0x10FFFF){
-			u32CodePoint = 0xFFFD;
-		}
-		if(u32CodePoint <= 0xFFFF){
-			wsRet.Append(u32CodePoint);
-		} else {
-			u32CodePoint -= 0x10000;
-			wsRet.Append((u32CodePoint >> 10)   | 0xD800);
-			wsRet.Append((u32CodePoint & 0x3FF) | 0xDC00);
-		}
-	};
-
 	const auto pwcEnd = wsoSrc.GetEnd();
 	for(auto pwcCur = wsoSrc.GetBegin(); pwcCur != pwcEnd; ++pwcCur){
 		const auto wc = *pwcCur;
@@ -137,7 +124,8 @@ WideString Unescape(const WideStringObserver &wsoSrc){
 				if(uHexExpecting != 0){
 					// eState = UCS_CODE;
 				} else {
-					PushUtf();
+					const char32_t c32CodePoint = u32CodePoint;
+					wsRet.Append(Utf32StringObserver(&c32CodePoint, 1));
 					eState = NORMAL;
 				}
 			}
@@ -148,7 +136,8 @@ WideString Unescape(const WideStringObserver &wsoSrc){
 		}
 	}
 	if(eState == UCS_CODE){
-		PushUtf();
+		const char32_t c32CodePoint = u32CodePoint;
+		wsRet.Append(Utf32StringObserver(&c32CodePoint, 1));
 	}
 
 	return std::move(wsRet);
@@ -205,7 +194,7 @@ void Escape(WideString &wsAppendTo, const WideStringObserver &wsoSrc){
 
 // 其他非静态成员函数。
 std::pair<TExpression::ErrorType, const wchar_t *> TExpression::Parse(const WideStringObserver &wsoData){
-	m_deqChildren.clear();
+	TExpression vTemp;
 
 	auto pwcRead = wsoData.GetBegin();
 	const auto pwcEnd = wsoData.GetEnd();
@@ -213,7 +202,7 @@ std::pair<TExpression::ErrorType, const wchar_t *> TExpression::Parse(const Wide
 		return std::make_pair(ERR_NONE, pwcRead);
 	}
 
-	VVector<Node *> vecNodeStack(1, this);
+	VVector<TExpressionNode *> vecNodeStack(1, &vTemp);
 
 	auto pwcNameBegin = pwcRead;
 
@@ -230,17 +219,17 @@ std::pair<TExpression::ErrorType, const wchar_t *> TExpression::Parse(const Wide
 	const auto PushNode = [&]{
 		ASSERT(!vecNodeStack.IsEmpty());
 
-		auto &deqChildren = vecNodeStack.GetEnd()[-1]->m_deqChildren;
-		deqChildren.emplace_back();
-		deqChildren.back().first = Unescape(WideStringObserver(pwcNameBegin, pwcRead));
-		vecNodeStack.Push(&(deqChildren.back().second));
+		auto &lstChildren = vecNodeStack.GetEnd()[-1]->xm_lstChildren;
+		auto &vNewNode = lstChildren.Push()->GetElement();
+		vNewNode.first = Unescape(WideStringObserver(pwcNameBegin, pwcRead));
+		vecNodeStack.Push(&vNewNode.second);
 	};
 	const auto PushUnnamedNode = [&]{
 		ASSERT(!vecNodeStack.IsEmpty());
 
-		auto &deqChildren = vecNodeStack.GetEnd()[-1]->m_deqChildren;
-		deqChildren.emplace_back();
-		vecNodeStack.Push(&(deqChildren.back().second));
+		auto &lstChildren = vecNodeStack.GetEnd()[-1]->xm_lstChildren;
+		auto &vNewNode = lstChildren.Push()->GetElement();
+		vecNodeStack.Push(&vNewNode.second);
 	};
 	const auto PopNode = [&]{
 		ASSERT(vecNodeStack.GetSize() > 1);
@@ -463,38 +452,42 @@ std::pair<TExpression::ErrorType, const wchar_t *> TExpression::Parse(const Wide
 		return std::make_pair(ERR_UNCLOSED_NODE, pwcRead);
 	}
 
+	Swap(vTemp);
 	return std::make_pair(ERR_NONE, pwcRead);
 }
 WideString TExpression::Export(const WideStringObserver &wsoIndent) const {
 	WideString wsRet;
 
-	VVector<std::pair<const Node *, std::size_t>> vecNodeStack;
-	vecNodeStack.Push(this, 0);
+	VVector<std::pair<const TExpressionNode *, const ChildNode *>> vecNodeStack;
+	vecNodeStack.Push(this, xm_lstChildren.GetFirst());
 	WideString wsIndent;
 	for(;;){
 		auto &vTop = vecNodeStack.GetEnd()[-1];
-		const auto &vTopNode = *(vTop.first);
+		const auto &vTopNode = *vTop.first;
 
 	jNextChild:
-		if(vTop.second < vTopNode.m_deqChildren.size()){
-			const auto &vChild = vTopNode.m_deqChildren[vTop.second++];
+		if(vTop.second){
+			const auto &wsName = vTop.second->GetElement().first;
+			const auto &vNode = vTop.second->GetElement().second;
+			vTop.second = vTop.second->GetNext();
+
 			wsRet.Append(wsIndent);
-			if(!vChild.first.IsEmpty()){
-				Escape(wsRet, vChild.first);
-				if(vChild.second.m_deqChildren.empty()){
+			if(!wsName.IsEmpty()){
+				Escape(wsRet, wsName);
+				if(vNode.xm_lstChildren.IsEmpty()){
 					wsRet.Append(L'\n');
 					goto jNextChild;
 				}
 			}
 			wsRet.Append(L'(');
-			if(vChild.second.m_deqChildren.empty()){
+			if(vNode.xm_lstChildren.IsEmpty()){
 				wsRet.Append(L')');
 				wsRet.Append(L'\n');
 				goto jNextChild;
 			}
 			wsRet.Append(L'\n');
 			wsIndent.Append(wsoIndent);
-			vecNodeStack.Push(&(vChild.second), 0);
+			vecNodeStack.Push(&vNode, vNode.xm_lstChildren.GetFirst());
 			continue;
 		}
 

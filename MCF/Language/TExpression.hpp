@@ -6,29 +6,70 @@
 #define MCF_LANGUAGE_T_EXPRESSION_HPP_
 
 #include "../Core/String.hpp"
-#include <deque>
+#include "../Containers/VList.hpp"
 #include <utility>
 
 namespace MCF {
 
-struct TExpressionNode {
-public:
-	typedef std::pair<WideString, TExpressionNode> Child;
+class TExpressionNode {
+	friend class TExpression;
 
 public:
-	std::deque<Child> m_deqChildren;
+	using Child = std::pair<WideString, TExpressionNode>;
+	using ChildList = VList<Child>;
+	using ChildNode = typename ChildList::Node;
+
+private:
+	ChildList xm_lstChildren;
+
+public:
+	bool IsEmpty() const noexcept {
+		return xm_lstChildren.IsEmpty();
+	}
+	void Clear() noexcept {
+		xm_lstChildren.Clear();
+	}
+
+	const ChildNode *GetFirstChild() const noexcept {
+		return xm_lstChildren.GetFirst();
+	}
+	ChildNode *GetFirstChild() noexcept {
+		return xm_lstChildren.GetFirst();
+	}
+	const ChildNode *GetLastChild() const noexcept {
+		return xm_lstChildren.GetLast();
+	}
+	ChildNode *GetLastChild() noexcept {
+		return xm_lstChildren.GetLast();
+	}
+
+	ChildNode *InsertChild(ChildNode *pPos, WideString wsName, TExpressionNode vNode){
+		return InsertChild(pPos, Child(std::move(wsName), std::move(vNode)));
+	}
+	ChildNode *InsertChild(ChildNode *pPos, Child vChild){
+		return xm_lstChildren.Insert(pPos, std::move(vChild));
+	}
+	ChildNode *EraseChild(ChildNode *pPos) noexcept {
+		return xm_lstChildren.Erase(pPos);
+	}
+
+	void Swap(TExpressionNode &rhs) noexcept {
+		xm_lstChildren.Swap(rhs.xm_lstChildren);
+	}
 };
+
+static inline void swap(TExpressionNode &lhs, TExpressionNode &rhs) noexcept {
+	lhs.Swap(rhs);
+}
 
 class TExpression : public TExpressionNode {
 public:
 	enum ErrorType {
-		ERR_NONE,
-		ERR_UNEXCEPTED_NODE_CLOSE,
-		ERR_UNCLOSED_QUOTE,
-		ERR_UNCLOSED_NODE,
+		ERR_NONE,						// 0
+		ERR_UNEXCEPTED_NODE_CLOSE,		// 1
+		ERR_UNCLOSED_QUOTE,				// 2
+		ERR_UNCLOSED_NODE,				// 3
 	};
-
-	typedef TExpressionNode Node;
 
 public:
 	std::pair<ErrorType, const wchar_t *> Parse(const WideStringObserver &wsoData);

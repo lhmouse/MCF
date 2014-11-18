@@ -13,7 +13,7 @@ using namespace MCF;
 
 namespace {
 
-typedef Impl::CriticalSectionImpl::Result Result;
+using Result = Impl::CriticalSectionImpl::Result;
 
 struct TlsDeleter {
 	constexpr DWORD operator()() const noexcept {

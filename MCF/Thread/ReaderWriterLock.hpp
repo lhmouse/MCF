@@ -14,8 +14,8 @@ namespace MCF {
 
 class ReaderWriterLock : NO_COPY, ABSTRACT {
 public:
-	typedef Impl::LockRaiiTemplate<ReaderWriterLock, 0u> ReaderLock;
-	typedef Impl::LockRaiiTemplate<ReaderWriterLock, 1u> WriterLock;
+	using ReaderLock = Impl::LockRaiiTemplate<ReaderWriterLock, 0u>;
+	using WriterLock = Impl::LockRaiiTemplate<ReaderWriterLock, 1u>;
 
 public:
 	static std::unique_ptr<ReaderWriterLock> Create(unsigned long ulSpinCount = 0x400);

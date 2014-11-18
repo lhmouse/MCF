@@ -9,11 +9,10 @@ using namespace MCF;
 
 namespace {
 
-typedef Impl::CriticalSectionImpl::Result Result;
+using Result = Impl::CriticalSectionImpl::Result;
 
 class CriticalSectionDelegate
-	: CONCRETE(CriticalSection)
-	, public Impl::CriticalSectionImpl
+	: CONCRETE(CriticalSection), public Impl::CriticalSectionImpl
 {
 public:
 	using CriticalSectionImpl::CriticalSectionImpl;

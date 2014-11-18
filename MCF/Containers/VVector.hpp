@@ -731,7 +731,7 @@ public:
 	}
 
 public:
-	typedef ElementT value_type;
+	using value_type = ElementT;
 
 	// std::back_insert_iterator
 	template<typename Param>

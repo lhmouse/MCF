@@ -19,7 +19,7 @@ struct WinHandleCloser {
 	}
 };
 
-typedef MCF::UniqueHandle<WinHandleCloser> UniqueWinHandle;
+using UniqueWinHandle = MCF::UniqueHandle<WinHandleCloser>;
 
 std::pair<UniqueWinHandle, UniqueWinHandle> CreateReadablePipe(){
 	HANDLE hRawRead, hRawWrite;

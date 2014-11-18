@@ -37,27 +37,22 @@ namespace Impl {
 		}
 	};
 
-	template<class ElementFromIndexNodeT, class ElementT, class IndexNodeT, class ComparatorT>
+	template<class NodeT, std::size_t INDEX_ID_T, class ElementT, class IndexNodeT, class ComparatorT>
 	struct OrderedMapIndexNodeComparator {
-		using IndexNode = typename ElementFromIndexNodeT::IndexNode;
+		using ElementFromIndexNode = typename NodeT::template ElementFromIndexNode<INDEX_ID_T>;
+		using IndexNode = typename ElementFromIndexNode::IndexNode;
 
-		bool operator()(const OrderedMapIndexNode *lhs,
-			const OrderedMapIndexNode *rhs) const noexcept
-		{
-			return ComparatorT()(*ElementFromIndexNodeT()(static_cast<const IndexNode *>(lhs)),
-				*ElementFromIndexNodeT()(static_cast<const IndexNode *>(rhs)));
+		bool operator()(const OrderedMapIndexNode *lhs, const OrderedMapIndexNode *rhs) const noexcept {
+			return ComparatorT()(*ElementFromIndexNode()(static_cast<const IndexNode *>(lhs)),
+				*ElementFromIndexNode()(static_cast<const IndexNode *>(rhs)));
 		}
 		template<typename ComparandT>
-		bool operator()(const OrderedMapIndexNode *lhs,
-			const ComparandT *rhs) const noexcept
-		{
-			return ComparatorT()(*ElementFromIndexNodeT()(static_cast<const IndexNode *>(lhs)), *rhs);
+		bool operator()(const OrderedMapIndexNode *lhs, const ComparandT *rhs) const noexcept {
+			return ComparatorT()(*ElementFromIndexNode()(static_cast<const IndexNode *>(lhs)), *rhs);
 		}
 		template<typename ComparandT>
-		bool operator()(const ComparandT *lhs,
-			const OrderedMapIndexNode *rhs) const noexcept
-		{
-			return ComparatorT()(*lhs, *ElementFromIndexNodeT()(static_cast<const IndexNode *>(rhs)));
+		bool operator()(const ComparandT *lhs, const OrderedMapIndexNode *rhs) const noexcept {
+			return ComparatorT()(*lhs, *ElementFromIndexNode()(static_cast<const IndexNode *>(rhs)));
 		}
 	};
 
@@ -115,8 +110,7 @@ namespace Impl {
 		IndexNode *Attach(IndexNode *pPos, IndexNode *pIndexNode) noexcept {
 			::MCF_AvlAttachHint(&xm_avlRoot, pPos, pIndexNode,
 				[](const ::MCF_AvlNodeHeader *lhs, const ::MCF_AvlNodeHeader *rhs) noexcept -> bool {
-					return NodeComparatorT()(static_cast<const IndexNode *>(lhs),
-						static_cast<const IndexNode *>(rhs));
+					return NodeComparatorT()(static_cast<const IndexNode *>(lhs), static_cast<const IndexNode *>(rhs));
 				}
 			);
 			if(!pIndexNode->GetPrev()){
@@ -142,8 +136,7 @@ namespace Impl {
 			return static_cast<const IndexNode *>(::MCF_AvlLowerBound(
 				&xm_avlRoot, reinterpret_cast<std::intptr_t>(pComparand),
 				[](const ::MCF_AvlNodeHeader *lhs, std::intptr_t rhs) noexcept -> bool {
-					return NodeComparatorT()(static_cast<const IndexNode *>(lhs),
-						reinterpret_cast<const ComparandT *>(rhs));
+					return NodeComparatorT()(static_cast<const IndexNode *>(lhs), reinterpret_cast<const ComparandT *>(rhs));
 				}
 			));
 		}
@@ -152,8 +145,7 @@ namespace Impl {
 			return static_cast<IndexNode *>(::MCF_AvlLowerBound(
 				&xm_avlRoot, reinterpret_cast<std::intptr_t>(pComparand),
 				[](const ::MCF_AvlNodeHeader *lhs, std::intptr_t rhs) noexcept -> bool {
-					return NodeComparatorT()(static_cast<const IndexNode *>(lhs),
-						reinterpret_cast<const ComparandT *>(rhs));
+					return NodeComparatorT()(static_cast<const IndexNode *>(lhs), reinterpret_cast<const ComparandT *>(rhs));
 				}
 			));
 		}
@@ -163,8 +155,7 @@ namespace Impl {
 			return static_cast<const IndexNode *>(::MCF_AvlUpperBound(
 				&xm_avlRoot, reinterpret_cast<std::intptr_t>(pComparand),
 				[](std::intptr_t lhs, const ::MCF_AvlNodeHeader *rhs) noexcept -> bool {
-					return NodeComparatorT()(reinterpret_cast<const ComparandT *>(lhs),
-						static_cast<const IndexNode *>(rhs));
+					return NodeComparatorT()(reinterpret_cast<const ComparandT *>(lhs), static_cast<const IndexNode *>(rhs));
 				}
 			));
 		}
@@ -173,8 +164,7 @@ namespace Impl {
 			return static_cast<IndexNode *>(::MCF_AvlUpperBound(
 				&xm_avlRoot, reinterpret_cast<std::intptr_t>(pComparand),
 				[](std::intptr_t lhs, const ::MCF_AvlNodeHeader *rhs) noexcept -> bool {
-					return NodeComparatorT()(reinterpret_cast<const ComparandT *>(lhs),
-						static_cast<const IndexNode *>(rhs));
+					return NodeComparatorT()(reinterpret_cast<const ComparandT *>(lhs), static_cast<const IndexNode *>(rhs));
 				}
 			));
 		}
@@ -184,12 +174,10 @@ namespace Impl {
 			return static_cast<const IndexNode *>(::MCF_AvlFind(
 				&xm_avlRoot, reinterpret_cast<std::intptr_t>(pComparand),
 				[](const ::MCF_AvlNodeHeader *lhs, std::intptr_t rhs) noexcept -> bool {
-					return NodeComparatorT()(static_cast<const IndexNode *>(lhs),
-						reinterpret_cast<const ComparandT *>(rhs));
+					return NodeComparatorT()(static_cast<const IndexNode *>(lhs), reinterpret_cast<const ComparandT *>(rhs));
 				},
 				[](std::intptr_t lhs, const ::MCF_AvlNodeHeader *rhs) noexcept -> bool {
-					return NodeComparatorT()(reinterpret_cast<const ComparandT *>(lhs),
-						static_cast<const IndexNode *>(rhs));
+					return NodeComparatorT()(reinterpret_cast<const ComparandT *>(lhs), static_cast<const IndexNode *>(rhs));
 				}
 			));
 		}
@@ -198,51 +186,41 @@ namespace Impl {
 			return static_cast<IndexNode *>(::MCF_AvlFind(
 				&xm_avlRoot, reinterpret_cast<std::intptr_t>(pComparand),
 				[](const ::MCF_AvlNodeHeader *lhs, std::intptr_t rhs) noexcept -> bool {
-					return NodeComparatorT()(static_cast<const IndexNode *>(lhs),
-						reinterpret_cast<const ComparandT *>(rhs));
+					return NodeComparatorT()(static_cast<const IndexNode *>(lhs), reinterpret_cast<const ComparandT *>(rhs));
 				},
 				[](std::intptr_t lhs, const ::MCF_AvlNodeHeader *rhs) noexcept -> bool {
-					return NodeComparatorT()(reinterpret_cast<const ComparandT *>(lhs),
-						static_cast<const IndexNode *>(rhs));
+					return NodeComparatorT()(reinterpret_cast<const ComparandT *>(lhs), static_cast<const IndexNode *>(rhs));
 				}
 			));
 		}
 
 		template<typename ComparandT>
-		std::pair<const IndexNode *, const IndexNode *>
-			GetEqualRange(const ComparandT *pComparand) const noexcept
-		{
+		std::pair<const IndexNode *, const IndexNode *> GetEqualRange(const ComparandT *pComparand) const noexcept {
 			::MCF_AvlNodeHeader *pBegin, *pEnd;
 			::MCF_AvlEqualRange(
 				&pBegin, &pEnd,
 				&xm_avlRoot, reinterpret_cast<std::intptr_t>(pComparand),
 				[](const ::MCF_AvlNodeHeader *lhs, std::intptr_t rhs) noexcept -> bool {
-					return NodeComparatorT()(static_cast<const IndexNode *>(lhs),
-						reinterpret_cast<const ComparandT *>(rhs));
+					return NodeComparatorT()(static_cast<const IndexNode *>(lhs), reinterpret_cast<const ComparandT *>(rhs));
 				},
 				[](std::intptr_t lhs, const ::MCF_AvlNodeHeader *rhs) noexcept -> bool {
-					return NodeComparatorT()(reinterpret_cast<const ComparandT *>(lhs),
-						static_cast<const IndexNode *>(rhs));
+					return NodeComparatorT()(reinterpret_cast<const ComparandT *>(lhs), static_cast<const IndexNode *>(rhs));
 				}
 			);
 			return std::make_pair(static_cast<const IndexNode *>(pBegin),
 				static_cast<const IndexNode *>(pEnd));
 		}
 		template<typename ComparandT>
-		std::pair<IndexNode *, IndexNode *>
-			GetEqualRange(const ComparandT *pComparand) noexcept
-		{
+		std::pair<IndexNode *, IndexNode *> GetEqualRange(const ComparandT *pComparand) noexcept {
 			::MCF_AvlNodeHeader *pBegin, *pEnd;
 			::MCF_AvlEqualRange(
 				&pBegin, &pEnd,
 				&xm_avlRoot, reinterpret_cast<std::intptr_t>(pComparand),
 				[](const ::MCF_AvlNodeHeader *lhs, std::intptr_t rhs) noexcept -> bool {
-					return NodeComparatorT()(static_cast<const IndexNode *>(lhs),
-						reinterpret_cast<const ComparandT *>(rhs));
+					return NodeComparatorT()(static_cast<const IndexNode *>(lhs), reinterpret_cast<const ComparandT *>(rhs));
 				},
 				[](std::intptr_t lhs, const ::MCF_AvlNodeHeader *rhs) noexcept -> bool {
-					return NodeComparatorT()(reinterpret_cast<const ComparandT *>(lhs),
-						static_cast<const IndexNode *>(rhs));
+					return NodeComparatorT()(reinterpret_cast<const ComparandT *>(lhs), static_cast<const IndexNode *>(rhs));
 				}
 			);
 			return std::make_pair(static_cast<IndexNode *>(pBegin),
@@ -418,9 +396,9 @@ struct MultiOrderedIndex {
 	{
 	};
 
-	template<class ElementFromIndexNodeT>
+	template<class NodeT, std::size_t INDEX_ID_T>
 	using Specific = Impl::OrderedMapIndexNodeComparator<
-		ElementFromIndexNodeT, ElementT, IndexNode, ComparatorT>;
+		NodeT, INDEX_ID_T, ElementT, IndexNode, ComparatorT>;
 
 	template<class Specific>
 	using IndexType = Impl::MultiOrderedMapIndex<Specific>;
@@ -441,9 +419,9 @@ struct UniqueOrderedIndex {
 	{
 	};
 
-	template<class ElementFromIndexNodeT>
+	template<class NodeT, std::size_t INDEX_ID_T>
 	using Specific = Impl::OrderedMapIndexNodeComparator<
-		ElementFromIndexNodeT, ElementT, IndexNode, ComparatorT>;
+		NodeT, INDEX_ID_T, ElementT, IndexNode, ComparatorT>;
 
 	template<class Specific>
 	using IndexType = Impl::UniqueOrderedMapIndex<Specific>;
@@ -464,9 +442,8 @@ struct MultiOrderedMemberIndex {
 	{
 	};
 
-	template<class ElementFromIndexNodeT>
-	using Specific = Impl::OrderedMapIndexNodeComparator<
-		ElementFromIndexNodeT, ElementT, IndexNode,
+	template<class NodeT, std::size_t INDEX_ID_T>
+	using Specific = Impl::OrderedMapIndexNodeComparator<NodeT, INDEX_ID_T, ElementT, IndexNode,
 		Impl::MemberComparator<ElementT, KeyTypeT, PTR_TO_KEY_T, ComparatorT>>;
 
 	template<class Specific>
@@ -488,9 +465,8 @@ struct UniqueOrderedMemberIndex {
 	{
 	};
 
-	template<class ElementFromIndexNodeT>
-	using Specific = Impl::OrderedMapIndexNodeComparator<
-		ElementFromIndexNodeT, ElementT, IndexNode,
+	template<class NodeT, std::size_t INDEX_ID_T>
+	using Specific = Impl::OrderedMapIndexNodeComparator<NodeT, INDEX_ID_T, ElementT, IndexNode,
 		Impl::MemberComparator<ElementT, KeyTypeT, PTR_TO_KEY_T, ComparatorT>>;
 
 	template<class Specific>
@@ -511,7 +487,7 @@ struct SequencedIndex {
 	{
 	};
 
-	template<class ElementFromIndexNodeT>
+	template<class NodeT, std::size_t INDEX_ID_T>
 	using Specific = char;
 
 	template<class Specific>
@@ -533,25 +509,10 @@ public:
 	{
 		friend MultiIndexMap;
 
-	private:
+	public:
 		template<std::size_t INDEX_ID_T>
-		struct xIndexNodeFromElement {
-			using IndexNode = typename std::tuple_element<
-				INDEX_ID_T, std::tuple<IndicesT...>
-				>::type::IndexNode;
-
-			constexpr const IndexNode *operator()(const ElementT *pElement) const noexcept {
-				return static_cast<const IndexNode *>(static_cast<const Node *>(pElement));
-			}
-			constexpr IndexNode *operator()(ElementT *pElement) const noexcept {
-				return static_cast<IndexNode *>(static_cast<Node *>(pElement));
-			}
-		};
-		template<std::size_t INDEX_ID_T>
-		struct xElementFromIndexNode {
-			using IndexNode = typename std::tuple_element<
-				INDEX_ID_T, std::tuple<IndicesT...>
-				>::type::IndexNode;
+		struct ElementFromIndexNode {
+			using IndexNode = typename std::tuple_element_t<INDEX_ID_T, std::tuple<IndicesT...>>::IndexNode;
 
 			constexpr const ElementT *operator()(const IndexNode *pIndexNode) const noexcept {
 				return static_cast<const ElementT *>(static_cast<const Node *>(pIndexNode));
@@ -575,39 +536,27 @@ public:
 	public:
 		template<std::size_t INDEX_ID_T>
 		const Node *GetPrev() const noexcept {
-			using IndexNode = typename std::tuple_element<
-				INDEX_ID_T, std::tuple<IndicesT...>
-				>::type::IndexNode;
+			using IndexNode = typename std::tuple_element_t<INDEX_ID_T, std::tuple<IndicesT...>>::IndexNode;
 
-			return static_cast<const Node *>(static_cast<const IndexNode *>(
-				static_cast<const IndexNode *>(this)->GetPrev()));
+			return static_cast<const Node *>(static_cast<const IndexNode *>(static_cast<const IndexNode *>(this)->GetPrev()));
 		}
 		template<std::size_t INDEX_ID_T>
 		Node *GetPrev() noexcept {
-			using IndexNode = typename std::tuple_element<
-				INDEX_ID_T, std::tuple<IndicesT...>
-				>::type::IndexNode;
+			using IndexNode = typename std::tuple_element_t<INDEX_ID_T, std::tuple<IndicesT...>>::IndexNode;
 
-			return static_cast<Node *>(static_cast<IndexNode *>(
-				static_cast<IndexNode *>(this)->GetPrev()));
+			return static_cast<Node *>(static_cast<IndexNode *>(static_cast<IndexNode *>(this)->GetPrev()));
 		}
 		template<std::size_t INDEX_ID_T>
 		const Node *GetNext() const noexcept {
-			using IndexNode = typename std::tuple_element<
-				INDEX_ID_T, std::tuple<IndicesT...>
-				>::type::IndexNode;
+			using IndexNode = typename std::tuple_element_t<INDEX_ID_T, std::tuple<IndicesT...>>::IndexNode;
 
-			return static_cast<const Node *>(static_cast<const IndexNode *>(
-				static_cast<const IndexNode *>(this)->GetNext()));
+			return static_cast<const Node *>(static_cast<const IndexNode *>(static_cast<const IndexNode *>(this)->GetNext()));
 		}
 		template<std::size_t INDEX_ID_T>
 		Node *GetNext() noexcept {
-			using IndexNode = typename std::tuple_element<
-				INDEX_ID_T, std::tuple<IndicesT...>
-				>::type::IndexNode;
+			using IndexNode = typename std::tuple_element_t<INDEX_ID_T, std::tuple<IndicesT...>>::IndexNode;
 
-			return static_cast<Node *>(static_cast<IndexNode *>(
-				static_cast<IndexNode *>(this)->GetNext()));
+			return static_cast<Node *>(static_cast<IndexNode *>(static_cast<IndexNode *>(this)->GetNext()));
 		}
 	};
 
@@ -617,12 +566,9 @@ public:
 private:
 	template<std::size_t ...INDEX_IDS_T>
 	static auto xMakeIndices(std::index_sequence<INDEX_IDS_T...>) ->
-		std::tuple<typename IndicesT::template IndexType<
-			typename IndicesT::template Specific<
-				typename Node::template xElementFromIndexNode<INDEX_IDS_T>>
-			>...>;
+		std::tuple<typename IndicesT::template IndexType<typename IndicesT::template Specific<Node, INDEX_IDS_T>>...> &;
 
-	using xIndexTuple = decltype(xMakeIndices(std::index_sequence_for<IndicesT...>()));
+	using xIndexTuple = std::remove_reference_t<decltype(xMakeIndices(std::index_sequence_for<IndicesT...>()))>;
 
 private:
 	xIndexTuple xm_vIndices;
@@ -702,9 +648,7 @@ private:
 	template<typename, typename FirstT, typename ...RemainingT>
 	Node *xAttachAll(const Hints &vHints, Node *pNode) noexcept {
 		constexpr std::size_t INDEX_ID = sizeof...(IndicesT) - sizeof...(RemainingT) - 1;
-		using IndexNode = typename std::tuple_element<
-			INDEX_ID, std::tuple<IndicesT...>
-			>::type::IndexNode;
+		using IndexNode = typename std::tuple_element_t<INDEX_ID, std::tuple<IndicesT...>>::IndexNode;
 
 		const auto pHintIndexNode = static_cast<IndexNode *>(std::get<INDEX_ID>(vHints));
 		const auto pIndexNode = static_cast<IndexNode *>(pNode);
@@ -728,9 +672,7 @@ private:
 	template<std::size_t EXCEPT_ID_T, typename FirstT, typename ...RemainingT>
 	void xDetachAll(Node *pNode) noexcept {
 		constexpr std::size_t INDEX_ID = sizeof...(IndicesT) - sizeof...(RemainingT) - 1;
-		using IndexNode = typename std::tuple_element<
-			INDEX_ID, std::tuple<IndicesT...>
-			>::type::IndexNode;
+		using IndexNode = typename std::tuple_element_t<INDEX_ID, std::tuple<IndicesT...>>::IndexNode;
 
 		if(INDEX_ID != EXCEPT_ID_T){
 			const auto pIndexNode = static_cast<IndexNode *>(pNode);
@@ -756,9 +698,7 @@ private:
 	template<typename, typename FirstT, typename ...RemainingT>
 	void xCloneAll(const xIndexTuple &vStructure, ::MCF_AvlRoot avlNewNodes) noexcept {
 		constexpr std::size_t INDEX_ID = sizeof...(IndicesT) - sizeof...(RemainingT) - 1;
-		using IndexNode = typename std::tuple_element<
-			INDEX_ID, std::tuple<IndicesT...>
-			>::type::IndexNode;
+		using IndexNode = typename std::tuple_element_t<INDEX_ID, std::tuple<IndicesT...>>::IndexNode;
 
 		IndexNode *pHintIndexNode = nullptr;
 
@@ -872,13 +812,10 @@ public:
 	}
 	template<std::size_t INDEX_ID_T, typename ...ParamsT>
 	bool SetKeyWithHint(bool bOverwrites, Node *pHint, Node *pNode, ParamsT &&...vParams){
-		using IndexNode = typename std::tuple_element<
-			INDEX_ID_T, std::tuple<IndicesT...>
-			>::type::IndexNode;
+		using Index = std::tuple_element_t<INDEX_ID_T, std::tuple<IndicesT...>>;
+		using IndexNode = typename Index::IndexNode;
 
-		typename std::tuple_element<
-			INDEX_ID_T, std::tuple<IndicesT...>
-			>::type::KeySetter()(*static_cast<ElementT *>(pNode), std::forward<ParamsT>(vParams)...);
+		typename Index::KeySetter()(*static_cast<ElementT *>(pNode), std::forward<ParamsT>(vParams)...);
 
 		const auto pIndexNode = static_cast<IndexNode *>(pNode);
 		std::get<INDEX_ID_T>(xm_vIndices).Detach(pIndexNode);
@@ -901,36 +838,28 @@ public:
 
 	template<std::size_t INDEX_ID_T>
 	const Node *GetFirst() const noexcept {
-		using IndexNode = typename std::tuple_element<
-			INDEX_ID_T, std::tuple<IndicesT...>
-			>::type::IndexNode;
+		using IndexNode = typename std::tuple_element_t<INDEX_ID_T, std::tuple<IndicesT...>>::IndexNode;
 
 		return static_cast<const Node *>(static_cast<const IndexNode *>(
 			std::get<INDEX_ID_T>(xm_vIndices).GetFirst()));
 	}
 	template<std::size_t INDEX_ID_T>
 	Node *GetFirst() noexcept {
-		using IndexNode = typename std::tuple_element<
-			INDEX_ID_T, std::tuple<IndicesT...>
-			>::type::IndexNode;
+		using IndexNode = typename std::tuple_element_t<INDEX_ID_T, std::tuple<IndicesT...>>::IndexNode;
 
 		return static_cast<Node *>(static_cast<IndexNode *>(
 			std::get<INDEX_ID_T>(xm_vIndices).GetFirst()));
 	}
 	template<std::size_t INDEX_ID_T>
 	const Node *GetLast() const noexcept {
-		using IndexNode = typename std::tuple_element<
-			INDEX_ID_T, std::tuple<IndicesT...>
-			>::type::IndexNode;
+		using IndexNode = typename std::tuple_element_t<INDEX_ID_T, std::tuple<IndicesT...>>::IndexNode;
 
 		return static_cast<const Node *>(static_cast<const IndexNode *>(
 			std::get<INDEX_ID_T>(xm_vIndices).GetLast()));
 	}
 	template<std::size_t INDEX_ID_T>
 	Node *GetLast() noexcept {
-		using IndexNode = typename std::tuple_element<
-			INDEX_ID_T, std::tuple<IndicesT...>
-			>::type::IndexNode;
+		using IndexNode = typename std::tuple_element_t<INDEX_ID_T, std::tuple<IndicesT...>>::IndexNode;
 
 		return static_cast<Node *>(static_cast<IndexNode *>(
 			std::get<INDEX_ID_T>(xm_vIndices).GetLast()));
@@ -943,18 +872,14 @@ public:
 
 	template<std::size_t INDEX_ID_T, typename ComparandT>
 	const Node *GetLowerBound(const ComparandT &vComparandT) const noexcept {
-		using IndexNode = typename std::tuple_element<
-			INDEX_ID_T, std::tuple<IndicesT...>
-			>::type::IndexNode;
+		using IndexNode = typename std::tuple_element_t<INDEX_ID_T, std::tuple<IndicesT...>>::IndexNode;
 
 		return static_cast<const Node *>(static_cast<const IndexNode *>(
 			std::get<INDEX_ID_T>(xm_vIndices).GetLowerBound(&vComparandT)));
 	}
 	template<std::size_t INDEX_ID_T, typename ComparandT>
 	Node *GetLowerBound(const ComparandT &vComparandT) noexcept {
-		using IndexNode = typename std::tuple_element<
-			INDEX_ID_T, std::tuple<IndicesT...>
-			>::type::IndexNode;
+		using IndexNode = typename std::tuple_element_t<INDEX_ID_T, std::tuple<IndicesT...>>::IndexNode;
 
 		return static_cast<Node *>(static_cast<IndexNode *>(
 			std::get<INDEX_ID_T>(xm_vIndices).GetLowerBound(&vComparandT)));
@@ -962,18 +887,14 @@ public:
 
 	template<std::size_t INDEX_ID_T, typename ComparandT>
 	const Node *GetUpperBound(const ComparandT &vComparandT) const noexcept {
-		using IndexNode = typename std::tuple_element<
-			INDEX_ID_T, std::tuple<IndicesT...>
-			>::type::IndexNode;
+		using IndexNode = typename std::tuple_element_t<INDEX_ID_T, std::tuple<IndicesT...>>::IndexNode;
 
 		return static_cast<const Node *>(static_cast<const IndexNode *>(
 			std::get<INDEX_ID_T>(xm_vIndices).GetUpperBound(&vComparandT)));
 	}
 	template<std::size_t INDEX_ID_T, typename ComparandT>
 	Node *GetUpperBound(const ComparandT &vComparandT) noexcept {
-		using IndexNode = typename std::tuple_element<
-			INDEX_ID_T, std::tuple<IndicesT...>
-			>::type::IndexNode;
+		using IndexNode = typename std::tuple_element_t<INDEX_ID_T, std::tuple<IndicesT...>>::IndexNode;
 
 		return static_cast<Node *>(static_cast<IndexNode *>(
 			std::get<INDEX_ID_T>(xm_vIndices).GetUpperBound(&vComparandT)));
@@ -981,18 +902,14 @@ public:
 
 	template<std::size_t INDEX_ID_T, typename ComparandT>
 	const Node *Find(const ComparandT &vComparandT) const noexcept {
-		using IndexNode = typename std::tuple_element<
-			INDEX_ID_T, std::tuple<IndicesT...>
-			>::type::IndexNode;
+		using IndexNode = typename std::tuple_element_t<INDEX_ID_T, std::tuple<IndicesT...>>::IndexNode;
 
 		return static_cast<const Node *>(static_cast<const IndexNode *>(
 			std::get<INDEX_ID_T>(xm_vIndices).Find(&vComparandT)));
 	}
 	template<std::size_t INDEX_ID_T, typename ComparandT>
 	Node *Find(const ComparandT &vComparandT) noexcept {
-		using IndexNode = typename std::tuple_element<
-			INDEX_ID_T, std::tuple<IndicesT...>
-			>::type::IndexNode;
+		using IndexNode = typename std::tuple_element_t<INDEX_ID_T, std::tuple<IndicesT...>>::IndexNode;
 
 		return static_cast<Node *>(static_cast<IndexNode *>(
 			std::get<INDEX_ID_T>(xm_vIndices).Find(&vComparandT)));
@@ -1000,19 +917,15 @@ public:
 
 	template<std::size_t INDEX_ID_T, typename ComparandT>
 	std::pair<const Node *, const Node *> GetEqualRange(const ComparandT &vComparandT) const noexcept {
-		using IndexNode = typename std::tuple_element<
-			INDEX_ID_T, std::tuple<IndicesT...>
-			>::type::IndexNode;
+		using IndexNode = typename std::tuple_element_t<INDEX_ID_T, std::tuple<IndicesT...>>::IndexNode;
 
 		const auto vRange = std::get<INDEX_ID_T>(xm_vIndices).GetEqualRange(&vComparandT);
 		return std::make_pair(static_cast<const Node *>(static_cast<const IndexNode *>(vRange.first)),
-			static_cast<Node *>(static_cast<IndexNode *>(vRange.second)));
+			static_cast<const Node *>(static_cast<const IndexNode *>(vRange.second)));
 	}
 	template<std::size_t INDEX_ID_T, typename ComparandT>
 	std::pair<Node *, Node *> GetEqualRange(const ComparandT &vComparandT) noexcept {
-		using IndexNode = typename std::tuple_element<
-			INDEX_ID_T, std::tuple<IndicesT...>
-			>::type::IndexNode;
+		using IndexNode = typename std::tuple_element_t<INDEX_ID_T, std::tuple<IndicesT...>>::IndexNode;
 
 		const auto vRange = std::get<INDEX_ID_T>(xm_vIndices).GetEqualRange(&vComparandT);
 		return std::make_pair(static_cast<Node *>(static_cast<IndexNode *>(vRange.first)),
@@ -1020,7 +933,7 @@ public:
 	}
 
 public:
-	typedef Node value_type;
+	using value_type = Node;
 
 	// std::insert_iterator
 	template<typename ParamT>
@@ -1032,7 +945,7 @@ public:
 };
 
 template<class ElementT, typename ...IndicesT>
-void swap(MultiIndexMap<ElementT, IndicesT...>  &lhs,
+void swap(MultiIndexMap<ElementT, IndicesT...> &lhs,
 	MultiIndexMap<ElementT, IndicesT...> &rhs) noexcept
 {
 	lhs.Swap(rhs);

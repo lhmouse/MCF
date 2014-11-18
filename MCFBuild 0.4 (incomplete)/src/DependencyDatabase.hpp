@@ -19,7 +19,7 @@ struct DependencyItem {
 
 class DependencyDatabase {
 public:
-	typedef std::map<MCF::WideString, DependencyItem> FileMap;
+	using FileMap = std::map<MCF::WideString, DependencyItem>;
 
 private:
 	FileMap xm_mapFiles;

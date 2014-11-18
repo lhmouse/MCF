@@ -19,7 +19,7 @@ namespace MCF {
 namespace Impl {
 	template<bool>
 	struct ExceptionWrapper {
-		typedef std::exception_ptr ExceptionPtr;
+		using ExceptionPtr = std::exception_ptr;
 
 		static ExceptionPtr GetCurrentException() noexcept {
 			return std::current_exception();
@@ -31,7 +31,7 @@ namespace Impl {
 	};
 	template<>
 	struct ExceptionWrapper<true> {
-		typedef std::nullptr_t ExceptionPtr;
+		using ExceptionPtr = std::nullptr_t;
 
 		static ExceptionPtr GetCurrentException() noexcept {
 			return nullptr;

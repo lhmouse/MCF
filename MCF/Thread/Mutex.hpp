@@ -15,7 +15,7 @@ namespace MCF {
 
 class Mutex : NO_COPY, ABSTRACT {
 public:
-	typedef Impl::LockRaiiTemplate<Mutex> Lock;
+	using Lock = Impl::LockRaiiTemplate<Mutex>;
 
 public:
 	static std::unique_ptr<Mutex> Create(const wchar_t *pwszName = nullptr);

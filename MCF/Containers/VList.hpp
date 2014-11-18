@@ -24,20 +24,6 @@ public:
 		Node *xm_pNext;
 
 	private:
-#ifdef NDEBUG
-		constexpr Node()
-			noexcept(std::is_nothrow_constructible<ElementT>::value)
-		{
-		}
-#else
-		Node()
-			noexcept(std::is_nothrow_constructible<ElementT>::value)
-		{
-			if(std::is_pod<ElementT>::value){
-				__builtin_memset(&xm_vElement, 0xCC, sizeof(xm_vElement));
-			}
-		}
-#endif
 		template<typename ...ParamsT>
 		explicit constexpr Node(ParamsT &&...vParams)
 			: xm_vElement(std::forward<ParamsT>(vParams)...)
@@ -72,8 +58,7 @@ private:
 
 public:
 	constexpr VList() noexcept
-		: xm_pFirst	(nullptr)
-		, xm_pLast	(nullptr)
+		: xm_pFirst(nullptr), xm_pLast(nullptr)
 	{
 	}
 	template<typename ...ParamsT>
@@ -313,7 +298,7 @@ public:
 	}
 
 public:
-	typedef ElementT value_type;
+	using value_type = ElementT;
 
 	// std::back_insert_iterator
 	template<typename ParamT>

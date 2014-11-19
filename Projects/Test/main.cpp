@@ -30,7 +30,9 @@ extern "C" unsigned int MCFMain() noexcept {
 		map.Insert(false, 3, 6, 9);
 		map.Insert(false, 1, 2, 3);
 
-	map.Replace(true, k.first, 3, 5, 6);
+	// map.Replace(true, k.first, 3, 5, 6);
+	map.SetKey<0>(false, k.first, 3);
+
 	for(auto p = map.GetFirst<0>(); p; p = p->GetNext<0>()){
 		std::printf("%d %d %d\n", p->a, p->b, p->c);
 	}

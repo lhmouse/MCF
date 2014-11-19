@@ -380,13 +380,6 @@ namespace Impl {
 template<class ElementT,
 	class ComparatorT = std::less<void>>
 struct MultiOrderedIndex {
-	struct KeySetter {
-		template<typename ...ParamsT>
-		void operator()(ElementT &vElement, ParamsT &&...vParams) const {
-			vElement = ElementT(std::forward<ParamsT>(vParams)...);
-		}
-	};
-
 	template<std::size_t INDEX_ID_T>
 	using IndexNode = Impl::OrderedMapIndexNode<INDEX_ID_T>;
 
@@ -395,18 +388,15 @@ struct MultiOrderedIndex {
 		Impl::OrderedMapIndexNodeComparator<
 			NodeT, ElementT, INDEX_ID_T, IndexNode<INDEX_ID_T>, ComparatorT>
 		>;
+
+	static ElementT &GetKey(ElementT &vElement) noexcept {
+		return vElement;
+	}
 };
 
 template<class ElementT,
 	class ComparatorT = std::less<void>>
 struct UniqueOrderedIndex {
-	struct KeySetter {
-		template<typename ...ParamsT>
-		void operator()(ElementT &vElement, ParamsT &&...vParams) const {
-			vElement = ElementT(std::forward<ParamsT>(vParams)...);
-		}
-	};
-
 	template<std::size_t INDEX_ID_T>
 	using IndexNode = Impl::OrderedMapIndexNode<INDEX_ID_T>;
 
@@ -415,18 +405,15 @@ struct UniqueOrderedIndex {
 		Impl::OrderedMapIndexNodeComparator<
 			NodeT, ElementT, INDEX_ID_T, IndexNode<INDEX_ID_T>, ComparatorT>
 		>;
+
+	static ElementT &GetKey(ElementT &vElement) noexcept {
+		return vElement;
+	}
 };
 
 template<class ElementT, class KeyTypeT, KeyTypeT ElementT::*PTR_TO_KEY_T,
 	class ComparatorT = std::less<void>>
 struct MultiOrderedMemberIndex {
-	struct KeySetter {
-		template<typename ...ParamsT>
-		void operator()(ElementT &vElement, ParamsT &&...vParams) const {
-			vElement.*PTR_TO_KEY_T = KeyTypeT(std::forward<ParamsT>(vParams)...);
-		}
-	};
-
 	template<std::size_t INDEX_ID_T>
 	using IndexNode = Impl::OrderedMapIndexNode<INDEX_ID_T>;
 
@@ -436,18 +423,15 @@ struct MultiOrderedMemberIndex {
 			NodeT, ElementT, INDEX_ID_T, IndexNode<INDEX_ID_T>,
 			Impl::MemberComparator<ElementT, KeyTypeT, PTR_TO_KEY_T, ComparatorT>>
 		>;
+
+	static KeyTypeT &GetKey(ElementT &vElement) noexcept {
+		return vElement.*PTR_TO_KEY_T;
+	}
 };
 
 template<class ElementT, class KeyTypeT, KeyTypeT ElementT::*PTR_TO_KEY_T,
 	class ComparatorT = std::less<void>>
 struct UniqueOrderedMemberIndex {
-	struct KeySetter {
-		template<typename ...ParamsT>
-		void operator()(ElementT &vElement, ParamsT &&...vParams) const {
-			vElement.*PTR_TO_KEY_T = KeyTypeT(std::forward<ParamsT>(vParams)...);
-		}
-	};
-
 	template<std::size_t INDEX_ID_T>
 	using IndexNode = Impl::OrderedMapIndexNode<INDEX_ID_T>;
 
@@ -457,22 +441,23 @@ struct UniqueOrderedMemberIndex {
 			NodeT, ElementT, INDEX_ID_T, IndexNode<INDEX_ID_T>,
 			Impl::MemberComparator<ElementT, KeyTypeT, PTR_TO_KEY_T, ComparatorT>>
 		>;
+
+	static KeyTypeT &GetKey(ElementT &vElement) noexcept {
+		return vElement.*PTR_TO_KEY_T;
+	}
 };
 
 template<class ElementT>
 struct SequencedIndex {
-	struct KeySetter {
-		template<typename ...ParamsT>
-		void operator()(ElementT &vElement, ParamsT &&...vParams) const {
-			vElement = ElementT(std::forward<ParamsT>(vParams)...);
-		}
-	};
-
 	template<std::size_t INDEX_ID_T>
 	using IndexNode = Impl::SequencedMapIndexNode<INDEX_ID_T>;
 
 	template<class NodeT, std::size_t INDEX_ID_T>
 	using IndexType = Impl::SequencedMapIndex<INDEX_ID_T>;
+
+	static ElementT &GetKey(ElementT &vElement) noexcept {
+		return vElement;
+	}
 };
 
 template<class ElementT, typename ...IndicesT>
@@ -534,16 +519,16 @@ private:
 	template<std::size_t ...INDEX_IDS_T>
 	static auto xMakeNode(std::index_sequence<INDEX_IDS_T...>) noexcept -> xNodeImpl<INDEX_IDS_T...>;
 
+	template<class NodeT, std::size_t ...INDEX_IDS_T>
+	static auto xMakeIndices(std::index_sequence<INDEX_IDS_T...>) noexcept ->
+		std::tuple<typename IndicesT::template IndexType<NodeT, INDEX_IDS_T>...>;
+
 public:
 	using Node = decltype(xMakeNode(std::index_sequence_for<IndicesT...>()));
 	using Hints = std::tuple<decltype(reinterpret_cast<Node *>(static_cast<IndicesT *>(nullptr)))...>;
 
 private:
-	template<std::size_t ...INDEX_IDS_T>
-	static auto xMakeIndices(std::index_sequence<INDEX_IDS_T...>) noexcept ->
-		std::tuple<typename IndicesT::template IndexType<Node, INDEX_IDS_T>...>;
-
-	using xIndexTuple = decltype(xMakeIndices(std::index_sequence_for<IndicesT...>()));
+	using xIndexTuple = decltype(xMakeIndices<Node>(std::index_sequence_for<IndicesT...>()));
 
 private:
 	template<typename, typename FirstT, typename ...RemainingT>
@@ -828,10 +813,11 @@ public:
 	template<std::size_t INDEX_ID_T, typename ...ParamsT>
 	bool SetKeyWithHint(bool bOverwrites, Node *pHint, Node *pNode, ParamsT &&...vParams){
 		using Index = std::tuple_element_t<INDEX_ID_T, std::tuple<IndicesT...>>;
-		using IndexNode = typename Index::IndexNode;
-		using KeySetter = typename Index::KeySetter;
+		using IndexNode = typename Index::template IndexNode<INDEX_ID_T>;
 
-		KeySetter()(*static_cast<ElementT *>(pNode), std::forward<ParamsT>(vParams)...);
+		Index::GetKey(*static_cast<ElementT *>(pNode)) =
+			std::remove_reference_t<decltype(Index::GetKey(std::declval<ElementT &>()))>(
+				std::forward<ParamsT>(vParams)...);
 
 		const auto pIndexNode = static_cast<IndexNode *>(pNode);
 		std::get<INDEX_ID_T>(xm_vIndices).Detach(pIndexNode);

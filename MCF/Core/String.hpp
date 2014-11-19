@@ -346,28 +346,22 @@ public:
 	}
 
 	void Assign(Char ch, std::size_t uCount = 1){
-		Clear();
-		Append(ch, uCount);
+		FillN(Resize(uCount), uCount, ch);
 	}
 	void Assign(const Char *pszBegin){
-		Clear();
-		Append(pszBegin);
+		Assign(Observer(pszBegin));
 	}
 	void Assign(const Char *pchBegin, const Char *pchEnd){
-		Clear();
-		Append(pchBegin, pchEnd);
+		Assign(Observer(pchBegin, pchEnd));
 	}
 	void Assign(const Char *pchBegin, std::size_t uCount){
-		Clear();
-		Append(pchBegin, uCount);
+		Assign(Observer(pchBegin, uCount));
 	}
 	void Assign(const Observer &rhs){
-		Clear();
-		Append(rhs);
+		Copy(Resize(rhs.GetSize()), rhs.GetBegin(), rhs.GetEnd());
 	}
 	void Assign(std::initializer_list<Char> rhs){
-		Clear();
-		Append(rhs);
+		Assign(Observer(rhs));
 	}
 	template<StringTypes OtherTypeT>
 	void Assign(const StringObserver<OtherTypeT> &rhs){
@@ -376,13 +370,11 @@ public:
 	}
 	template<StringTypes OtherTypeT>
 	void Assign(const String<OtherTypeT> &rhs){
-		Clear();
-		Append(rhs);
+		Assign(StringObserver<OtherTypeT>(rhs));
 	}
 	void Assign(const String &rhs){
 		if(&rhs != this){
-			Clear();
-			Append(rhs);
+			Assign(Observer(rhs));
 		}
 	}
 	void Assign(String &&rhs) noexcept {

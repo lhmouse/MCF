@@ -69,17 +69,15 @@ public:
 	{
 		Append(pszBegin);
 	}
-	template<class IteratorT>
-	String(IteratorT itBegin, std::common_type_t<IteratorT> itEnd)
+	String(const Char *pchBegin, const Char *pchEnd)
 		: String()
 	{
-		Append(std::move(itBegin), itEnd);
+		Append(pchBegin, pchEnd);
 	}
-	template<class IteratorT>
-	String(IteratorT itBegin, std::size_t uLen)
+	String(const Char *pchBegin, std::size_t uLen)
 		: String()
 	{
-		Append(std::move(itBegin), uLen);
+		Append(pchBegin, uLen);
 	}
 	explicit String(const Observer &rhs)
 		: String()
@@ -353,20 +351,17 @@ public:
 	}
 	void Assign(const Char *pszBegin){
 		Clear();
-		Append(Observer(pszBegin));
+		Append(pszBegin);
 	}
-	template<class IteratorT>
-	void Assign(IteratorT itBegin, std::common_type_t<IteratorT> itEnd){
+	void Assign(const Char *pchBegin, const Char *pchEnd){
 		Clear();
-		Append(std::move(itBegin), std::move(itEnd));
+		Append(pchBegin, pchEnd);
 	}
-	template<class IteratorT>
-	void Assign(IteratorT itBegin, std::size_t uLen){
+	void Assign(const Char *pchBegin, std::size_t uCount){
 		Clear();
-		Append(std::move(itBegin), uLen);
+		Append(pchBegin, uCount);
 	}
 	void Assign(const Observer &rhs){
-		ASSERT(!GetObserver().DoesOverlapWith(rhs));
 		Clear();
 		Append(rhs);
 	}
@@ -400,40 +395,29 @@ public:
 	void Append(const Char *pszBegin){
 		Append(Observer(pszBegin));
 	}
-	template<class IteratorT>
-	void Append(IteratorT itBegin, std::common_type_t<IteratorT> itEnd){
-		Append(itBegin, (std::size_t)std::distance(itBegin, itEnd));
+	void Append(const Char *pchBegin, const Char *pchEnd){
+		Append(Observer(pchBegin, pchEnd));
 	}
-	template<class IteratorT>
-	void Append(IteratorT itBegin, std::size_t uCount){
-		CopyN(ResizeMore(uCount), itBegin, uCount);
+	void Append(const Char *pchBegin, std::size_t uCount){
+		Append(Observer(pchBegin, uCount));
 	}
 	void Append(const Observer &rhs){
-		ASSERT(!GetObserver().DoesOverlapWith(rhs));
-		Copy(ResizeMore(rhs.GetSize()), rhs.GetBegin(), rhs.GetEnd());
+		Replace(-1, -1, rhs);
 	}
 	void Append(std::initializer_list<Char> rhs){
 		Append(Observer(rhs));
 	}
 	void Append(const String &rhs){
-		if(&rhs == this){
-			const auto uSize = GetSize();
-			const auto pchWrite = ResizeMore(uSize);
-			Copy(pchWrite, pchWrite - uSize, pchWrite);
-		} else {
-			Append(Observer(rhs));
-		}
+		Append(Observer(rhs));
 	}
 	void Append(String &&rhs){
 		const Observer obsToAppend(rhs);
 		const auto uSizeTotal = GetSize() + obsToAppend.GetSize();
-		if(GetCapacity() >= uSizeTotal){
+		if((GetCapacity() >= uSizeTotal) || (rhs.GetCapacity() < uSizeTotal)){
 			Append(obsToAppend);
-		} else if(rhs.GetCapacity() >= uSizeTotal){
+		} else {
 			rhs.Unshift(obsToAppend);
 			Swap(rhs);
-		} else {
-			Append(obsToAppend);
 		}
 	}
 	template<StringTypes OtherTypeT>
@@ -482,37 +466,29 @@ public:
 	void Unshift(const Char *pszBegin){
 		Unshift(Observer(pszBegin));
 	}
-	template<class IteratorT>
-	void Unshift(IteratorT itBegin, std::common_type_t<IteratorT> itEnd){
-		Unshift(itBegin, (std::size_t)std::distance(itBegin, itEnd));
+	void Unshift(const Char *pchBegin, const Char *pchEnd){
+		Unshift(Observer(pchBegin, pchEnd));
 	}
-	template<class IteratorT>
-	void Unshift(IteratorT itBegin, std::size_t uCount){
-		CopyN(ResizeFront(uCount), itBegin, uCount);
+	void Unshift(const Char *pchBegin, std::size_t uCount){
+		Unshift(Observer(pchBegin, uCount));
 	}
 	void Unshift(const Observer &obs){
-		Copy(ResizeFront(obs.GetSize()), obs.GetBegin(), obs.GetEnd());
+		Replace(0, 0, obs);
 	}
 	void Unshift(std::initializer_list<Char> rhs){
 		Unshift(Observer(rhs));
 	}
 	void Unshift(const String &rhs){
-		if(&rhs == this){
-			Append(*this);
-		} else {
-			Unshift(Observer(rhs));
-		}
+		Unshift(Observer(rhs));
 	}
 	void Unshift(String &&rhs){
 		const Observer obsToAppend(rhs);
 		const auto uSizeTotal = GetSize() + obsToAppend.GetSize();
-		if(GetCapacity() >= uSizeTotal){
+		if((GetCapacity() >= uSizeTotal) || (rhs.GetCapacity() < uSizeTotal)){
 			Unshift(obsToAppend);
-		} else if(rhs.GetCapacity() >= uSizeTotal){
+		} else {
 			rhs.Append(obsToAppend);
 			Swap(rhs);
-		} else {
-			Unshift(obsToAppend);
 		}
 	}
 	template<StringTypes OtherTypeT>
@@ -526,9 +502,7 @@ public:
 	void Shift(std::size_t uCount = 1) noexcept {
 		const auto uOldLength = GetLength();
 		ASSERT_MSG(uCount <= uOldLength, L"删除的字符数太多。");
-		const auto pchBegin = GetBegin();
-		Copy(pchBegin, pchBegin + uCount, pchBegin + uOldLength);
-		xSetSize(uOldLength - uCount);
+		Replace(0, (std::ptrdiff_t)uCount, Observer());
 	}
 
 	Observer Slice(std::ptrdiff_t nBegin, std::ptrdiff_t nEnd = -1) const noexcept {
@@ -580,13 +554,16 @@ public:
 		FillN(pchWrite, uCount, chRep);
 		xSetSize(uRemovedBegin + uCount + (uOldLength - uRemovedEnd));
 	}
-	template<class IteratorT>
-	void Replace(std::ptrdiff_t nBegin, std::ptrdiff_t nEnd, IteratorT itRepBegin, std::common_type_t<IteratorT> itRepEnd){
-		Replace(nBegin, nEnd, std::move(itRepBegin), (std::size_t)std::distance(itRepBegin, itRepEnd));
+	void Replace(std::ptrdiff_t nBegin, std::ptrdiff_t nEnd, const Char *pchRepBegin){
+		Replace(nBegin, nEnd, Observer(pchRepBegin));
 	}
-	template<class IteratorT>
-	void Replace(std::ptrdiff_t nBegin, std::ptrdiff_t nEnd, IteratorT itRepBegin, std::size_t uRepLen){
-		// 基本异常安全保证。
+	void Replace(std::ptrdiff_t nBegin, std::ptrdiff_t nEnd, const Char *pchRepBegin, const Char *pchRepEnd){
+		Replace(nBegin, nEnd, Observer(pchRepBegin, pchRepEnd));
+	}
+	void Replace(std::ptrdiff_t nBegin, std::ptrdiff_t nEnd, const Char *pchRepBegin, std::size_t uLen){
+		Replace(nBegin, nEnd, Observer(pchRepBegin, uLen));
+	}
+	void Replace(std::ptrdiff_t nBegin, std::ptrdiff_t nEnd, const Observer &obsRep){
 		const auto obsCurrent(GetObserver());
 		const auto uOldLength = obsCurrent.GetLength();
 
@@ -594,12 +571,18 @@ public:
 		const auto uRemovedBegin = (std::size_t)(obsRemoved.GetBegin() - obsCurrent.GetBegin());
 		const auto uRemovedEnd = (std::size_t)(obsRemoved.GetEnd() - obsCurrent.GetBegin());
 
-		const auto pchWrite = xChopAndSplice(uRemovedBegin, uRemovedEnd, 0, uRemovedBegin + uRepLen);
-		CopyN(pchWrite, itRepBegin, uRepLen);
-		xSetSize(uRemovedBegin + uRepLen + (uOldLength - uRemovedEnd));
-	}
-	void Replace(std::ptrdiff_t nBegin, std::ptrdiff_t nEnd, const Observer &obsRep){
-		Replace(nBegin, nEnd, obsRep.GetBegin(), obsRep.GetSize());
+		if(obsCurrent.DoesOverlapWith(obsRep)){
+			String strTemp;
+			auto pchWrite = strTemp.Resize(uRemovedBegin + obsRep.GetSize() + (uOldLength - uRemovedEnd));
+			pchWrite = Copy(pchWrite, obsCurrent.GetBegin(), obsCurrent.GetBegin() + uRemovedBegin);
+			pchWrite = Copy(pchWrite, obsRep.GetBegin(), obsRep.GetEnd());
+			pchWrite = Copy(pchWrite, obsCurrent.GetBegin() + uRemovedEnd, obsCurrent.GetEnd());
+			Swap(strTemp);
+		} else {
+			const auto pchWrite = xChopAndSplice(uRemovedBegin, uRemovedEnd, 0, uRemovedBegin + obsRep.GetSize());
+			CopyN(pchWrite, obsRep.GetBegin(), obsRep.GetSize());
+			xSetSize(uRemovedBegin + obsRep.GetSize() + (uOldLength - uRemovedEnd));
+		}
 	}
 	template<StringTypes OtherTypeT>
 	void Replace(std::ptrdiff_t nBegin, std::ptrdiff_t nEnd, const StringObserver<OtherTypeT> &obsRep){

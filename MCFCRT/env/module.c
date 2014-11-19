@@ -67,8 +67,8 @@ static inline void EndModule(){
 	}
 }
 
-static bool Init(unsigned *restrict puState){
-	switch(*puState){
+static bool Init(){
+	switch(g_uInitState){
 
 #define DO_INIT(n, exp)	\
 	case (n):	\
@@ -76,7 +76,7 @@ static bool Init(unsigned *restrict puState){
 			if(!(exp)){	\
 				return false;	\
 			}	\
-			++*puState;	\
+			++g_uInitState;	\
 		}
 
 //=========================================================
@@ -94,18 +94,18 @@ static bool Init(unsigned *restrict puState){
 	}
 	return true;
 }
-static void Uninit(unsigned *restrict puState){
-	if(*puState == 0){
+static void Uninit(){
+	if(g_uInitState == 0){
 		return;
 	}
 	const DWORD dwLastError = GetLastError();
-	switch(--*puState){
+	switch(--g_uInitState){
 
 #define DO_UNINIT(n, exp)	\
 	case (n):	\
 		{	\
 			(exp);	\
-			--*puState;	\
+			--g_uInitState;	\
 		}
 
 //=========================================================
@@ -125,14 +125,14 @@ static void Uninit(unsigned *restrict puState){
 }
 
 bool __MCF_CRT_BeginModule(void){
-	if(!Init(&g_uInitState)){
-		Uninit(&g_uInitState);
+	if(!Init()){
+		Uninit();
 		return false;
 	}
 	return true;
 }
 void __MCF_CRT_EndModule(void){
-	Uninit(&g_uInitState);
+	Uninit();
 }
 
 int MCF_CRT_AtEndModule(void (__cdecl *pfnProc)(intptr_t), intptr_t nContext){

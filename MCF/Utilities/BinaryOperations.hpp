@@ -11,7 +11,7 @@
 namespace MCF {
 
 template<typename Tx, typename Ty>
-constexpr void BCopy(Tx &vDst, const Ty &vSrc) noexcept {
+void BCopy(Tx &vDst, const Ty &vSrc) noexcept {
 	static_assert(!std::is_empty<Tx>::value, "Tx shall not be empty.");
 	static_assert(!std::is_empty<Ty>::value, "Ty shall not be empty.");
 	static_assert(std::is_trivial<Tx>::value, "Tx must be a trivial type.");
@@ -22,7 +22,7 @@ constexpr void BCopy(Tx &vDst, const Ty &vSrc) noexcept {
 }
 
 template<typename Ty>
-constexpr void BFill(Ty &vDst, bool bVal) noexcept {
+void BFill(Ty &vDst, bool bVal) noexcept {
 	static_assert(!std::is_empty<Ty>::value, "Ty shall not be empty.");
 	static_assert(std::is_trivial<Ty>::value, "Ty must be a trivial type.");
 
@@ -30,7 +30,7 @@ constexpr void BFill(Ty &vDst, bool bVal) noexcept {
 }
 
 template<typename Tx, typename Ty>
-constexpr int BComp(const Tx &vDst, const Ty &vSrc) noexcept {
+int BComp(const Tx &vDst, const Ty &vSrc) noexcept {
 	static_assert(!std::is_empty<Tx>::value, "Tx shall not be empty.");
 	static_assert(!std::is_empty<Ty>::value, "Ty shall not be empty.");
 	static_assert(std::is_trivial<Tx>::value, "Tx must be a trivial type.");
@@ -41,7 +41,7 @@ constexpr int BComp(const Tx &vDst, const Ty &vSrc) noexcept {
 }
 
 template<typename Tx, typename Ty>
-constexpr void BSwap(Tx &vDst, Ty &vSrc) noexcept {
+void BSwap(Tx &vDst, Ty &vSrc) noexcept {
 	static_assert(!std::is_empty<Tx>::value, "Tx shall not be empty.");
 	static_assert(!std::is_empty<Ty>::value, "Ty shall not be empty.");
 	static_assert(std::is_trivial<Tx>::value, "Tx must be a trivial type.");
@@ -53,7 +53,7 @@ constexpr void BSwap(Tx &vDst, Ty &vSrc) noexcept {
 }
 
 template<typename Ty>
-constexpr void BZero(Ty &vDst) noexcept {
+void BZero(Ty &vDst) noexcept {
 	BFill(vDst, false);
 }
 

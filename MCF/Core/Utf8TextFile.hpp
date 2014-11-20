@@ -35,8 +35,8 @@ public:
 		BOM_NONE		= 0x00000000,
 		BOM_USE			= 0x00000001,
 
-		LES_CRLF		= 0x00000000,
-		LES_LF			= 0x00000002,
+		LES_LF			= 0x00000000,
+		LES_CRLF		= 0x00000002,
 	};
 
 private:

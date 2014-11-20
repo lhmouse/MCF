@@ -178,10 +178,10 @@ private:
 			pchNewBuffer = new Char[uSizeToAlloc];
 		}
 
-		if(uRemovedBegin != 0){
+		if((pchNewBuffer + uFirstOffset != pchOldBuffer) && (uRemovedBegin != 0)){
 			std::memmove(pchNewBuffer + uFirstOffset, pchOldBuffer, uRemovedBegin * sizeof(Char));
 		}
-		if(uOldLength != uRemovedEnd){
+		if((pchNewBuffer + uThirdOffset != pchOldBuffer + uRemovedEnd) && (uOldLength != uRemovedEnd)){
 			std::memmove(pchNewBuffer + uThirdOffset, pchOldBuffer + uRemovedEnd, (uOldLength - uRemovedEnd) * sizeof(Char));
 		}
 
@@ -421,9 +421,9 @@ public:
 		Append(rhs.GetObserver());
 	}
 	void Truncate(std::size_t uCount = 1) noexcept {
-		const auto uOldLength = GetLength();
-		ASSERT_MSG(uCount <= uOldLength, L"删除的字符数太多。");
-		xSetSize(uOldLength - uCount);
+		const auto uOldSize = GetSize();
+		ASSERT_MSG(uOldSize >= uCount, L"删除的字符数太多。");
+		xSetSize(uOldSize - uCount);
 	}
 
 	void Push(Char ch){
@@ -492,9 +492,11 @@ public:
 		Unshift(rhs.GetObserver());
 	}
 	void Shift(std::size_t uCount = 1) noexcept {
-		const auto uOldLength = GetLength();
-		ASSERT_MSG(uCount <= uOldLength, L"删除的字符数太多。");
-		Replace(0, (std::ptrdiff_t)uCount, Observer());
+		const auto uOldSize = GetSize();
+		ASSERT_MSG(uOldSize >= uCount, L"删除的字符数太多。");
+		const auto pchWrite = GetBegin();
+		CopyN(pchWrite, pchWrite + uCount, uOldSize - uCount);
+		xSetSize(uOldSize - uCount);
 	}
 
 	Observer Slice(std::ptrdiff_t nBegin, std::ptrdiff_t nEnd = -1) const noexcept {

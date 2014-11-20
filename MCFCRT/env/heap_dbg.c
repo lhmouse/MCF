@@ -59,9 +59,9 @@ void __MCF_CRT_HeapDbgUninit(){
 			wchar_t *pwcWrite = awcBuffer + __mingw_snwprintf(
 				awcBuffer, sizeof(awcBuffer) / sizeof(wchar_t),
 				L"地址 %0*zX  大小 %0*zX  调用返回地址 %0*zX  首字节 ",
-				sizeof(size_t) * 2, (size_t)pbyDump,
-				sizeof(size_t) * 2, (pBlockInfo->uSize),
-				sizeof(size_t) * 2, (size_t)(pBlockInfo->pRetAddr));
+				(int)(sizeof(size_t) * 2), (size_t)pbyDump,
+				(int)(sizeof(size_t) * 2), (pBlockInfo->uSize),
+				(int)(sizeof(size_t) * 2), (size_t)(pBlockInfo->pRetAddr));
 			for(size_t i = 0; i < 16; ++i){
 				*(pwcWrite++) = L' ';
 				if(IsBadReadPtr(pbyDump, 1)){
@@ -111,7 +111,7 @@ unsigned char *__MCF_CRT_HeapDbgAddGuardsAndRegister(
 	BlockInfo *const pBlockInfo = HeapAlloc(g_hMapAllocator, 0, sizeof(BlockInfo));
 	if(!pBlockInfo){
 		MCF_CRT_BailF(L"__MCF_CRT_HeapDbgAddGuardsAndRegister() 失败：内存不足。\n调用返回地址：%0*zX",
-			sizeof(size_t) * 2, (size_t)pRetAddr);
+			(int)(sizeof(size_t) * 2), (size_t)pRetAddr);
 	}
 	pBlockInfo->pContents	= pContents;
 	pBlockInfo->uSize		= uContentSize;
@@ -130,7 +130,7 @@ const BlockInfo *__MCF_CRT_HeapDbgValidate(
 		&g_pavlBlocks, (intptr_t)pContents, &BlockInfoComparatorNodeKey, &BlockInfoComparatorKeyNode);
 	if(!pBlockInfo){
 		MCF_CRT_BailF(L"__MCF_CRT_HeapDbgValidate() 失败：传入的指针无效。\n调用返回地址：%0*zX",
-			sizeof(size_t) * 2, (size_t)pRetAddr);
+			(int)(sizeof(size_t) * 2), (size_t)pRetAddr);
 	}
 
 	void *const *ppGuard1 = (void *const *)pContents;
@@ -140,7 +140,7 @@ const BlockInfo *__MCF_CRT_HeapDbgValidate(
 
 		if((DecodePointer(*ppGuard1) != ppGuard2) || (DecodePointer(*ppGuard2) != ppGuard1)){
 			MCF_CRT_BailF(L"__MCF_CRT_HeapDbgValidate() 失败：侦测到堆损坏。\n调用返回地址：%0*zX",
-				sizeof(size_t) * 2, (size_t)pRetAddr);
+				(int)(sizeof(size_t) * 2), (size_t)pRetAddr);
 		}
 
 		++ppGuard2;

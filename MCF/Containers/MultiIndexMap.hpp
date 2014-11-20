@@ -474,7 +474,7 @@ private:
 	template<std::size_t ...INDEX_IDS_T>
 	class xNodeImpl
 		: public ElementT, private IndicesT::template IndexNode<INDEX_IDS_T>...
-		, public xAddressNode	// 复制树结构的时候用到。
+		, private xAddressNode	// 复制树结构的时候用到。
 	{
 		friend MultiIndexMap;
 

@@ -110,7 +110,7 @@ public:
 		return std::move(itRet);
 	}
 
-	int operator*() const noexcept {
+	unsigned char operator*() const noexcept {
 		ASSERT(!xm_psbufOwner->IsEmpty());
 
 		return xm_psbufOwner->Peek();

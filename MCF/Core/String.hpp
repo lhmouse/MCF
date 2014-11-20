@@ -438,8 +438,10 @@ public:
 
 		if(xm_vStorage.vSmall.chNull == Char()){
 			xm_vStorage.vSmall.achData[xm_vStorage.vSmall.uchLength] = ch;
+			++xm_vStorage.vSmall.uchLength;
 		} else {
 			xm_vStorage.vLarge.pchBegin[xm_vStorage.vLarge.uLength] = ch;
+			++xm_vStorage.vLarge.uLength;
 		}
 	}
 	void PopNoCheck() noexcept {

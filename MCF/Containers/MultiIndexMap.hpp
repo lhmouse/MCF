@@ -49,7 +49,7 @@ namespace Impl {
 		using MapIndexNode = OrderedMapIndexNode<INDEX_ID_T>;
 
 		static auto GetElement(const MapIndexNode *pMapIndexNode) noexcept {
-			return static_cast<const ElementT *>(static_cast<const NodeT *>(static_cast<const IndexNodeT *>(pMapIndexNode)));
+			return static_cast<const ElementT *>(NodeT::template GetNodeFromIndexNode<INDEX_ID_T>(pMapIndexNode));
 		}
 
 		bool operator()(const MapIndexNode *lhs, const MapIndexNode *rhs) const noexcept {
@@ -473,10 +473,16 @@ private:
 
 	template<std::size_t ...INDEX_IDS_T>
 	class xNodeImpl
-		: public ElementT, public IndicesT::template IndexNode<INDEX_IDS_T>...
+		: public ElementT, private IndicesT::template IndexNode<INDEX_IDS_T>...
 		, public xAddressNode	// 复制树结构的时候用到。
 	{
 		friend MultiIndexMap;
+
+	public:
+		template<std::size_t INDEX_ID_T>
+		static auto GetNodeFromIndexNode(const xIndexNode<INDEX_ID_T> *pIndexNode) noexcept {
+			return static_cast<const xNodeImpl *>(pIndexNode);
+		}
 
 	private:
 		// 这个成员在复制树结构的时候用到。
@@ -494,25 +500,29 @@ private:
 		const xNodeImpl *GetPrev() const noexcept {
 			using IndexNode = xIndexNode<INDEX_ID_T>;
 
-			return static_cast<const xNodeImpl *>(static_cast<const IndexNode *>(static_cast<const IndexNode *>(this)->GetPrev()));
+			return static_cast<const xNodeImpl *>(static_cast<const IndexNode *>(
+				static_cast<const IndexNode *>(this)->GetPrev()));
 		}
 		template<std::size_t INDEX_ID_T>
 		xNodeImpl *GetPrev() noexcept {
 			using IndexNode = xIndexNode<INDEX_ID_T>;
 
-			return static_cast<xNodeImpl *>(static_cast<IndexNode *>(static_cast<IndexNode *>(this)->GetPrev()));
+			return static_cast<xNodeImpl *>(static_cast<IndexNode *>(
+				static_cast<IndexNode *>(this)->GetPrev()));
 		}
 		template<std::size_t INDEX_ID_T>
 		const xNodeImpl *GetNext() const noexcept {
 			using IndexNode = xIndexNode<INDEX_ID_T>;
 
-			return static_cast<const xNodeImpl *>(static_cast<const IndexNode *>(static_cast<const IndexNode *>(this)->GetNext()));
+			return static_cast<const xNodeImpl *>(static_cast<const IndexNode *>(
+				static_cast<const IndexNode *>(this)->GetNext()));
 		}
 		template<std::size_t INDEX_ID_T>
 		xNodeImpl *GetNext() noexcept {
 			using IndexNode = xIndexNode<INDEX_ID_T>;
 
-			return static_cast<xNodeImpl *>(static_cast<IndexNode *>(static_cast<IndexNode *>(this)->GetNext()));
+			return static_cast<xNodeImpl *>(static_cast<IndexNode *>(
+				static_cast<IndexNode *>(this)->GetNext()));
 		}
 	};
 

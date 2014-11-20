@@ -7,11 +7,12 @@
 
 #include "UniqueHandle.hpp"
 #include "DefaultDeleter.hpp"
+#include <type_traits>
 
 namespace MCF {
 
 template<class T>
-using UniquePtr = UniqueHandle<DefaultDeleter<T>>;
+using UniquePtr = UniqueHandle<DefaultDeleter<std::remove_cv_t<T>>>;
 
 }
 

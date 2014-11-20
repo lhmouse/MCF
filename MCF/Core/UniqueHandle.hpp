@@ -32,8 +32,9 @@ public:
 	{
 	}
 	UniqueHandle(UniqueHandle &&rhs) noexcept
-		: UniqueHandle(rhs.Release())
+		: UniqueHandle()
 	{
+		Reset(std::move(rhs));
 	}
 	UniqueHandle &operator=(UniqueHandle &&rhs) noexcept {
 		Reset(std::move(rhs));
@@ -83,80 +84,80 @@ public:
 
 template<class CloserT>
 bool operator==(const UniqueHandle<CloserT> &lhs, const UniqueHandle<CloserT> &rhs) noexcept {
-	return lhs.get() == rhs.get();
+	return lhs.Get() == rhs.Get();
 }
 template<class CloserT>
 bool operator==(const UniqueHandle<CloserT> &lhs, decltype(CloserT()()) rhs) noexcept {
-	return lhs.get() == rhs;
+	return lhs.Get() == rhs;
 }
 template<class CloserT>
 bool operator==(decltype(CloserT()()) lhs, const UniqueHandle<CloserT> &rhs) noexcept {
-	return lhs == rhs.get();
+	return lhs == rhs.Get();
 }
 
 template<class CloserT>
 bool operator!=(const UniqueHandle<CloserT> &lhs, const UniqueHandle<CloserT> &rhs) noexcept {
-	return lhs.get() != rhs.get();
+	return lhs.Get() != rhs.Get();
 }
 template<class CloserT>
 bool operator!=(const UniqueHandle<CloserT> &lhs, decltype(CloserT()()) rhs) noexcept {
-	return lhs.get() != rhs;
+	return lhs.Get() != rhs;
 }
 template<class CloserT>
 bool operator!=(decltype(CloserT()()) lhs, const UniqueHandle<CloserT> &rhs) noexcept {
-	return lhs != rhs.get();
+	return lhs != rhs.Get();
 }
 
 template<class CloserT>
 bool operator<(const UniqueHandle<CloserT> &lhs, const UniqueHandle<CloserT> &rhs) noexcept {
-	return lhs.get() < rhs.get();
+	return lhs.Get() < rhs.Get();
 }
 template<class CloserT>
 bool operator<(const UniqueHandle<CloserT> &lhs, decltype(CloserT()()) rhs) noexcept {
-	return lhs.get() < rhs;
+	return lhs.Get() < rhs;
 }
 template<class CloserT>
 bool operator<(decltype(CloserT()()) lhs, const UniqueHandle<CloserT> &rhs) noexcept {
-	return lhs < rhs.get();
+	return lhs < rhs.Get();
 }
 
 template<class CloserT>
 bool operator>(const UniqueHandle<CloserT> &lhs, const UniqueHandle<CloserT> &rhs) noexcept {
-	return lhs.get() > rhs.get();
+	return lhs.Get() > rhs.Get();
 }
 template<class CloserT>
 bool operator>(const UniqueHandle<CloserT> &lhs, decltype(CloserT()()) rhs) noexcept {
-	return lhs.get() > rhs;
+	return lhs.Get() > rhs;
 }
 template<class CloserT>
 bool operator>(decltype(CloserT()()) lhs, const UniqueHandle<CloserT> &rhs) noexcept {
-	return lhs > rhs.get();
+	return lhs > rhs.Get();
 }
 
 template<class CloserT>
 bool operator<=(const UniqueHandle<CloserT> &lhs, const UniqueHandle<CloserT> &rhs) noexcept {
-	return lhs.get() <= rhs.get();
+	return lhs.Get() <= rhs.Get();
 }
 template<class CloserT>
 bool operator<=(const UniqueHandle<CloserT> &lhs, decltype(CloserT()()) rhs) noexcept {
-	return lhs.get() <= rhs;
+	return lhs.Get() <= rhs;
 }
 template<class CloserT>
 bool operator<=(decltype(CloserT()()) lhs, const UniqueHandle<CloserT> &rhs) noexcept {
-	return lhs <= rhs.get();
+	return lhs <= rhs.Get();
 }
 
 template<class CloserT>
 bool operator>=(const UniqueHandle<CloserT> &lhs, const UniqueHandle<CloserT> &rhs) noexcept {
-	return lhs.get() >= rhs.get();
+	return lhs.Get() >= rhs.Get();
 }
 template<class CloserT>
 bool operator>=(const UniqueHandle<CloserT> &lhs, decltype(CloserT()()) rhs) noexcept {
-	return lhs.get() >= rhs;
+	return lhs.Get() >= rhs;
 }
 template<class CloserT>
 bool operator>=(decltype(CloserT()()) lhs, const UniqueHandle<CloserT> &rhs) noexcept {
-	return lhs >= rhs.get();
+	return lhs >= rhs.Get();
 }
 
 template<class CloserT>

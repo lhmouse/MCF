@@ -9,26 +9,20 @@ namespace MCF {
 
 template<class T>
 struct DefaultDeleter {
-	using Value = T;
-	using Pointer = T *;
-
-	constexpr Pointer operator()() const noexcept {
+	constexpr T *operator()() const noexcept {
 		return nullptr;
 	}
-	void operator()(Pointer p) const noexcept {
+	void operator()(const volatile T *p) const noexcept {
 		delete p;
 	}
 };
 
 template<class T>
 struct DefaultDeleter<T []> {
-	using Value = T [];
-	using Pointer = T *;
-
-	constexpr Pointer operator()() const noexcept {
+	constexpr T *operator()() const noexcept {
 		return nullptr;
 	}
-	void operator()(Pointer p) const noexcept {
+	void operator()(const volatile T *p) const noexcept {
 		delete[] p;
 	}
 };

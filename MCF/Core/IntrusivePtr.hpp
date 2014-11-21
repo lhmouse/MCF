@@ -150,9 +150,7 @@ public:
 		return *this;
 	}
 	~IntrusivePtr(){
-		if(xm_pBuddy){
-			xm_pBuddy->DropRef();
-		}
+		Reset();
 	}
 
 public:

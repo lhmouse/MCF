@@ -1,16 +1,18 @@
 #include <MCF/StdMCF.hpp>
-#include <MCF/Core/IntrusivePtr.hpp>
+#include <MCF/Core/Exception.hpp>
+#include <MCF/Thread/Thread.hpp>
 using namespace MCF;
 
-struct foo : IntrusiveBase<foo> {
-};
-
-template class IntrusivePtr<foo>;
+void foo(){
+	DEBUG_THROW(Exception, "meow", 123);
+}
 
 extern "C" unsigned int MCFMain() noexcept {
-	IntrusivePtr<foo> p1, p2;
-	p1.Reset(new foo);
-	p2.Reset(new foo);
-	p2.Reset(p1);
+	try {
+		auto thread = Thread::Create(foo);
+		thread->Join();
+	} catch(Exception &e){
+		std::printf("Exception: file = %s, line = %lu\n", e.GetFile(), e.GetLine());
+	}
 	return 0;
 }

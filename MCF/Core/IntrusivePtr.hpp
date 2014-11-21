@@ -44,14 +44,16 @@ namespace Impl {
 	};
 
 	template<typename T, class DeleterT>
-	struct IntrusiveBase {
+	class IntrusiveBase {
 	private:
 		mutable volatile std::size_t xm_uRefCount;
 
-	public:
+	protected:
 		IntrusiveBase() noexcept {
 			__atomic_store_n(&xm_uRefCount, 1, __ATOMIC_RELAXED);
 		}
+
+	public:
 		IntrusiveBase(const IntrusiveBase &) noexcept
 			: IntrusiveBase() // 默认构造。
 		{
@@ -84,16 +86,16 @@ namespace Impl {
 				reinterpret_cast<std::intptr_t>(Get()));
 		}
 
-		auto Get() const volatile noexcept {
+		const volatile T *Get() const volatile noexcept {
 			return static_cast<const volatile T *>(this);
 		}
-		auto Get() const noexcept {
+		const T *Get() const noexcept {
 			return static_cast<const T *>(this);
 		}
-		auto Get() volatile noexcept {
+		volatile T *Get() volatile noexcept {
 			return static_cast<volatile T *>(this);
 		}
-		auto Get() noexcept {
+		T *Get() noexcept {
 			return static_cast<T *>(this);
 		}
 

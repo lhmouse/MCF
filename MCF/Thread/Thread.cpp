@@ -13,20 +13,36 @@ using namespace MCF;
 namespace {
 
 class ThreadDelegate : CONCRETE(Thread) {
-public:
-	static std::shared_ptr<ThreadDelegate> Create(std::function<void ()> &&fnProc, bool bSuspended);
-
 private:
-	std::shared_ptr<ThreadDelegate> xm_pLock;
 	std::function<void ()> xm_fnProc;
 	Impl::UniqueWinHandle xm_hThread;
 	volatile unsigned long xm_ulThreadId;
 	std::exception_ptr xm_pException;
 
-private:
-	explicit ThreadDelegate(std::function<void ()> &&fnProc) noexcept
+public:
+	explicit ThreadDelegate(std::function<void ()> &&fnProc)
 		: xm_fnProc(std::move(fnProc))
 	{
+		unsigned long ulThreadId;
+		xm_hThread.Reset(::MCF_CRT_CreateThread(
+			[](std::intptr_t nParam) noexcept -> unsigned {
+				const auto pThis = reinterpret_cast<ThreadDelegate *>(nParam);
+				try {
+					pThis->xm_fnProc();
+				} catch(...){
+					pThis->xm_pException = std::current_exception();
+				}
+				__atomic_store_n(&(pThis->xm_ulThreadId), 0, __ATOMIC_RELEASE);
+				pThis->DropRef();
+				return 0;
+			},
+			reinterpret_cast<std::intptr_t>(this), CREATE_SUSPENDED, &ulThreadId
+		));
+		if(!xm_hThread){
+			DEBUG_THROW(SystemError, "MCF_CRT_CreateThread");
+		}
+		AddRef();
+		__atomic_store_n(&xm_ulThreadId, 0, __ATOMIC_RELAXED);
 	}
 
 public:
@@ -55,43 +71,6 @@ public:
 	}
 };
 
-inline std::shared_ptr<ThreadDelegate> ThreadDelegate::Create(std::function<void ()> &&fnProc, bool bSuspended){
-	struct Helper : public ThreadDelegate {
-		static unsigned ThreadProc(std::intptr_t nParam) noexcept {
-			std::shared_ptr<ThreadDelegate> pInstance;
-			pInstance.swap(((ThreadDelegate *)nParam)->xm_pLock); // 打破循环引用。
-
-			try {
-				pInstance->xm_fnProc();
-			} catch(...){
-				pInstance->xm_pException = std::current_exception();
-			}
-			__atomic_store_n(&(pInstance->xm_ulThreadId), 0, __ATOMIC_RELEASE);
-			return 0;
-		}
-
-		explicit Helper(std::function<void ()> &&fnProc)
-			: ThreadDelegate(std::move(fnProc))
-		{
-		}
-	};
-
-	auto pRet(std::make_shared<Helper>(std::move(fnProc)));
-	unsigned long ulThreadId;
-	pRet->xm_hThread.Reset(::MCF_CRT_CreateThread(
-		&Helper::ThreadProc, (std::intptr_t)pRet.get(), CREATE_SUSPENDED, &ulThreadId));
-	if(!pRet->xm_hThread){
-		DEBUG_THROW(SystemError, "MCF_CRT_CreateThread");
-	}
-	__atomic_store_n(&(pRet->xm_ulThreadId), 0, __ATOMIC_RELEASE);
-	pRet->xm_pLock = pRet; // 制造循环引用。这样代理对象就不会被删掉。
-
-	if(!bSuspended){
-		pRet->Resume();
-	}
-	return std::move(pRet);
-}
-
 }
 
 // 静态成员函数。
@@ -99,8 +78,12 @@ unsigned long Thread::GetCurrentId() noexcept {
 	return ::GetCurrentThreadId();
 }
 
-std::shared_ptr<Thread> Thread::Create(std::function<void ()> fnProc, bool bSuspended){
-	return ThreadDelegate::Create(std::move(fnProc), bSuspended);
+IntrusivePtr<Thread> Thread::Create(std::function<void ()> fnProc, bool bSuspended){
+	IntrusivePtr<Thread> pThread(new ThreadDelegate(std::move(fnProc)));
+	if(!bSuspended){
+		pThread->Resume();
+	}
+	return std::move(pThread);
 }
 
 // 其他非静态成员函数。

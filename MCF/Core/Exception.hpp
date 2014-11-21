@@ -31,6 +31,13 @@ public:
 		return xm_pszMessage;
 	}
 
+	const char *GetFile() const noexcept {
+		return xm_pszFile;
+	}
+	unsigned long GetLine() const noexcept {
+		return xm_ulLine;
+	}
+
 	const char *GetMessage() const noexcept {
 		return xm_pszMessage;
 	}

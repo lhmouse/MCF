@@ -7,18 +7,18 @@
 
 #include "../Utilities/NoCopy.hpp"
 #include "../Utilities/Abstract.hpp"
+#include "../Core/IntrusivePtr.hpp"
 #include <functional>
-#include <memory>
 #include <exception>
 #include <cstddef>
 
 namespace MCF {
 
-class Thread : NO_COPY, ABSTRACT {
+class Thread : public IntrusiveBase<Thread>, NO_COPY, ABSTRACT {
 public:
 	static unsigned long GetCurrentId() noexcept;
 
-	static std::shared_ptr<Thread> Create(std::function<void ()> fnProc, bool bSuspended = false);
+	static IntrusivePtr<Thread> Create(std::function<void ()> fnProc, bool bSuspended = false);
 
 public:
 	bool WaitTimeout(unsigned long long ullMilliSeconds) const noexcept;

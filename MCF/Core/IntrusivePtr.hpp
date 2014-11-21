@@ -52,9 +52,20 @@ namespace Impl {
 		IntrusiveBase() noexcept {
 			__atomic_store_n(&xm_uRefCount, 1, __ATOMIC_RELAXED);
 		}
-
-		IntrusiveBase(const IntrusiveBase &) = delete;
-		void operator=(const IntrusiveBase &) = delete;
+		IntrusiveBase(const IntrusiveBase &) noexcept
+			: IntrusiveBase() // 默认构造。
+		{
+		}
+		IntrusiveBase(IntrusiveBase &&) noexcept
+			: IntrusiveBase() // 同上。
+		{
+		}
+		IntrusiveBase &operator=(const IntrusiveBase &) noexcept {
+			return *this; // 无操作。
+		}
+		IntrusiveBase &operator=(IntrusiveBase &&) noexcept {
+			return *this; // 同上。
+		}
 
 	public:
 		void AddRef() const volatile noexcept {
@@ -205,9 +216,7 @@ public:
 	}
 
 	T &operator*() const noexcept {
-		const auto pRet = Get();
-		ASSERT_MSG(pRet, L"试图解引用空指针。");
-		return *pRet;
+		return *(this->operator->());
 	}
 	T *operator->() const noexcept {
 		const auto pRet = Get();

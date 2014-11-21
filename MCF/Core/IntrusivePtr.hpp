@@ -13,6 +13,9 @@
 
 namespace MCF {
 
+template<typename T, class DeleterT = DefaultDeleter<std::remove_cv_t<T>>>
+class IntrusivePtr;
+
 namespace Impl {
 	class IntrusiveSentry {
 	private:
@@ -80,13 +83,18 @@ namespace Impl {
 		auto Get() noexcept {
 			return static_cast<T *>(this);
 		}
+
+		IntrusivePtr<const volatile T, DeleterT> Fork() const volatile noexcept;
+		IntrusivePtr<const T, DeleterT> Fork() const noexcept;
+		IntrusivePtr<volatile T, DeleterT> Fork() volatile noexcept;
+		IntrusivePtr<T, DeleterT> Fork() noexcept;
 	};
 }
 
 template<typename T, class DeleterT = DefaultDeleter<std::remove_cv_t<T>>>
 using IntrusiveBase = Impl::IntrusiveBase<std::remove_cv_t<T>, DeleterT>;
 
-template<typename T, class DeleterT = DefaultDeleter<std::remove_cv_t<T>>>
+template<typename T, class DeleterT>
 class IntrusivePtr {
 public:
 	using Buddy = IntrusiveBase<T, DeleterT>;
@@ -162,6 +170,9 @@ public:
 		}
 		return const_cast<T *>(pBuddy->Get());
 	}
+	IntrusivePtr Fork() const noexcept {
+		return IntrusivePtr(*this);
+	}
 
 	void Reset(T *pObject = nullptr) noexcept {
 		const auto pOld = std::exchange(xm_pBuddy, pObject);
@@ -192,7 +203,41 @@ public:
 	explicit operator T *() const noexcept {
 		return Get();
 	}
+
+	T &operator*() const noexcept {
+		const auto pRet = Get();
+		ASSERT_MSG(pRet, L"试图解引用空指针。");
+		return *pRet;
+	}
+	T *operator->() const noexcept {
+		const auto pRet = Get();
+		ASSERT_MSG(pRet, L"试图解引用空指针。");
+		return pRet;
+	}
 };
+
+namespace Impl {
+	template<typename T, class DeleterT>
+	IntrusivePtr<const volatile T, DeleterT> IntrusiveBase<T, DeleterT>::Fork() const volatile noexcept {
+		AddRef();
+		return IntrusivePtr<const volatile T, DeleterT>(Get());
+	}
+	template<typename T, class DeleterT>
+	IntrusivePtr<const T, DeleterT> IntrusiveBase<T, DeleterT>::Fork() const noexcept {
+		AddRef();
+		return IntrusivePtr<const T, DeleterT>(Get());
+	}
+	template<typename T, class DeleterT>
+	IntrusivePtr<volatile T, DeleterT> IntrusiveBase<T, DeleterT>::Fork() volatile noexcept {
+		AddRef();
+		return IntrusivePtr<volatile T, DeleterT>(Get());
+	}
+	template<typename T, class DeleterT>
+	IntrusivePtr<T, DeleterT> IntrusiveBase<T, DeleterT>::Fork() noexcept {
+		AddRef();
+		return IntrusivePtr<T, DeleterT>(Get());
+	}
+}
 
 template<typename T, class DeleterT>
 bool operator==(const IntrusivePtr<T, DeleterT> &lhs, const IntrusivePtr<T, DeleterT> &rhs) noexcept {

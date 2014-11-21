@@ -88,9 +88,8 @@ private:
 public:
 	template<typename ...ParamsT>
 	explicit MonitorPtr(ParamsT &&...vParams)
-		: xm_pcsMutex	(CriticalSection::Create())
-		, xm_vLock		(xm_pcsMutex.get(), false)
-		, xm_vObject	(std::forward<ParamsT>(vParams)...)
+		: xm_pcsMutex(CriticalSection::Create())
+		, xm_vLock(xm_pcsMutex.get(), false), xm_vObject(std::forward<ParamsT>(vParams)...)
 	{
 	}
 

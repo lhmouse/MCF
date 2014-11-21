@@ -1,33 +1,19 @@
 #include <MCF/StdMCF.hpp>
-#include <MCF/Core/IntrusivePtr.hpp>
+#include <MCF/Core/StreamBuffer.hpp>
 using namespace MCF;
 
-struct foo : IntrusiveBase<foo> {
-	foo(){
-		std::puts("foo::foo()");
-	}
-	~foo(){
-		std::puts("foo::~foo()");
-	}
-};
-
-template class IntrusivePtr<foo>;
-
 extern "C" unsigned int MCFMain() noexcept {
+	StreamBuffer buf;
 	std::puts("------ 1");
-	IntrusivePtr<foo> p(new foo);
+	buf.Put('a');
 	std::puts("------ 2");
-	IntrusivePtr<const foo> p2(p);
+	buf.Put('b');
 	std::puts("------ 3");
-	auto raw = p.Release();
+	buf.Get();
 	std::puts("------ 4");
-	auto forked = p2.Fork();
-	std::printf("%p\n", forked.Get());
-	p2.Reset();
+	buf.Get();
 	std::puts("------ 5");
-	raw->DropRef();
+	buf.Put('a');
 	std::puts("------ 6");
-	forked.Reset();
-	std::puts("------ 7");
 	return 0;
 }

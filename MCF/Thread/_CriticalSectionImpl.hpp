@@ -7,6 +7,7 @@
 
 #include "Thread.hpp"
 #include "_WinHandle.hpp"
+#include "_LockRaiiTemplate.hpp"
 #include "../Utilities/NoCopy.hpp"
 #include "../Utilities/Assert.hpp"
 #include "../Core/Exception.hpp"
@@ -21,6 +22,8 @@ namespace Impl {
 			STATE_CHANGED,
 			RECURSIVE
 		};
+
+		using Lock = LockRaiiTemplate<CriticalSectionImpl>;
 
 	private:
 		struct xWaitingThread {
@@ -65,7 +68,7 @@ namespace Impl {
 			std::size_t uWaiting;
 			for(;;){
 				uWaiting = __atomic_exchange_n(
-					&xm_uWaiting, (std::size_t)-1, __ATOMIC_ACQ_REL | __ATOMIC_HLE_ACQUIRE);
+					&xm_uWaiting, (std::size_t)-1, __ATOMIC_ACQ_REL);
 				if(EXPECT_NOT(uWaiting != (std::size_t)-1)){
 					break;
 				}
@@ -76,7 +79,7 @@ namespace Impl {
 			return uWaiting;
 		}
 		void xUnlockSpin(std::size_t uNewWaiting) noexcept {
-			__atomic_store_n(&xm_uWaiting, uNewWaiting, __ATOMIC_RELEASE | __ATOMIC_HLE_RELEASE);
+			__atomic_store_n(&xm_uWaiting, uNewWaiting, __ATOMIC_RELEASE);
 		}
 
 	public:
@@ -190,6 +193,25 @@ namespace Impl {
 			return eResult;
 		}
 	};
+
+	template<>
+	inline bool CriticalSectionImpl::Lock::xDoTry() const noexcept {
+		ASSERT(dynamic_cast<CriticalSectionImpl *>(xm_pOwner));
+
+		return static_cast<CriticalSectionImpl *>(xm_pOwner)->ImplTry() != CriticalSectionImpl::Result::TRY_FAILED;
+	}
+	template<>
+	inline void CriticalSectionImpl::Lock::xDoLock() const noexcept {
+		ASSERT(dynamic_cast<CriticalSectionImpl *>(xm_pOwner));
+
+		static_cast<CriticalSectionImpl *>(xm_pOwner)->ImplEnter();
+	}
+	template<>
+	inline void CriticalSectionImpl::Lock::xDoUnlock() const noexcept {
+		ASSERT(dynamic_cast<CriticalSectionImpl *>(xm_pOwner));
+
+		static_cast<CriticalSectionImpl *>(xm_pOwner)->ImplLeave();
+	}
 }
 
 }

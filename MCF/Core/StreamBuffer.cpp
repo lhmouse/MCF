@@ -7,7 +7,7 @@
 #include "../Utilities/Assert.hpp"
 #include "../Utilities/MinMax.hpp"
 #include "../Utilities/Algorithms.hpp"
-#include "../Thread/CriticalSection.hpp"
+#include "../Thread/_CriticalSectionImpl.hpp"
 using namespace MCF;
 
 constexpr std::size_t CHUNK_SIZE = 0x400;
@@ -20,13 +20,19 @@ struct Impl::DisposableBuffer {
 
 namespace {
 
-const auto g_pcsLock = CriticalSection::Create();
+using PoolLock = Impl::CriticalSectionImpl::Lock;
+
+auto GetPoolLock(){
+	static Impl::CriticalSectionImpl s_csLock(0x400);
+	return PoolLock(&s_csLock);
+}
+
 VList<Impl::DisposableBuffer> g_lstPool;
 
 auto &PushPooled(VList<Impl::DisposableBuffer> &lstDst){
 	VList<Impl::DisposableBuffer>::Node *pNode;
 	{
-		const auto vLock = g_pcsLock->GetLock();
+		const auto vLock = GetPoolLock();
 		if(!g_lstPool.IsEmpty()){
 			lstDst.Splice(nullptr, g_lstPool, g_lstPool.GetFirst());
 			pNode = lstDst.GetLast();
@@ -44,14 +50,14 @@ jDone:
 void ShiftPooled(VList<Impl::DisposableBuffer> &lstSrc){
 	ASSERT(!lstSrc.IsEmpty());
 
-	const auto vLock = g_pcsLock->GetLock();
+	const auto vLock = GetPoolLock();
 	g_lstPool.Splice(nullptr, lstSrc, lstSrc.GetFirst());
 }
 void ClearPooled(VList<Impl::DisposableBuffer> &lstSrc){
 	if(lstSrc.IsEmpty()){
 		return;
 	}
-	const auto vLock = g_pcsLock->GetLock();
+	const auto vLock = GetPoolLock();
 	g_lstPool.Splice(nullptr, lstSrc);
 }
 

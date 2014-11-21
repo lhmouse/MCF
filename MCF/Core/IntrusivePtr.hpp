@@ -62,13 +62,13 @@ namespace Impl {
 
 			__atomic_add_fetch(&xm_uRefCount, 1, __ATOMIC_RELEASE);
 		}
-		Impl::IntrusiveSentry DropRef() const volatile noexcept {
+		IntrusiveSentry DropRef() const volatile noexcept {
 			ASSERT(__atomic_load_n(&xm_uRefCount, __ATOMIC_ACQUIRE) != 0);
 
 			if(__atomic_sub_fetch(&xm_uRefCount, 1, __ATOMIC_ACQUIRE) != 0){
-				return Impl::IntrusiveSentry(nullptr, 0);
+				return IntrusiveSentry(nullptr, 0);
 			}
-			return Impl::IntrusiveSentry(
+			return IntrusiveSentry(
 				[](std::intptr_t nThis){ DeleterT()(reinterpret_cast<T *>(nThis)); },
 				reinterpret_cast<std::intptr_t>(Get()));
 		}

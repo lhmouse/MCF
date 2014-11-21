@@ -10,6 +10,7 @@
 #include <utility>
 #include <type_traits>
 #include <cstddef>
+#include <cstdint>
 
 namespace MCF {
 
@@ -19,21 +20,21 @@ class IntrusivePtr;
 namespace Impl {
 	class IntrusiveSentry {
 	private:
-		void (*xm_pfnCallback)(void *);
-		void *xm_pObject;
+		void (*xm_pfnCallback)(std::intptr_t);
+		std::intptr_t xm_nContext;
 
 	public:
-		explicit IntrusiveSentry(void (*pfnCallback)(void *), void *pObject) noexcept
-			: xm_pfnCallback(pfnCallback), xm_pObject(pObject)
+		explicit IntrusiveSentry(void (*pfnCallback)(std::intptr_t), std::intptr_t nContext) noexcept
+			: xm_pfnCallback(pfnCallback), xm_nContext(nContext)
 		{
 		}
 		IntrusiveSentry(IntrusiveSentry &&rhs) noexcept
-			: xm_pfnCallback(std::exchange(rhs.xm_pfnCallback, nullptr)), xm_pObject(rhs.xm_pObject)
+			: xm_pfnCallback(std::exchange(rhs.xm_pfnCallback, nullptr)), xm_nContext(rhs.xm_nContext)
 		{
 		}
 		~IntrusiveSentry(){
 			if(xm_pfnCallback){
-				(*xm_pfnCallback)(xm_pObject);
+				(*xm_pfnCallback)(xm_nContext);
 			}
 		}
 
@@ -65,10 +66,11 @@ namespace Impl {
 			ASSERT(__atomic_load_n(&xm_uRefCount, __ATOMIC_ACQUIRE) != 0);
 
 			if(__atomic_sub_fetch(&xm_uRefCount, 1, __ATOMIC_ACQUIRE) != 0){
-				return Impl::IntrusiveSentry(nullptr, nullptr);
+				return Impl::IntrusiveSentry(nullptr, 0);
 			}
 			return Impl::IntrusiveSentry(
-				[](void *pThis){ DeleterT()(static_cast<T *>(pThis)); }, const_cast<T *>(Get()));
+				[](std::intptr_t nThis){ DeleterT()(reinterpret_cast<T *>(nThis)); },
+				reinterpret_cast<std::intptr_t>(Get()));
 		}
 
 		auto Get() const volatile noexcept {

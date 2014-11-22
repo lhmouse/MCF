@@ -101,23 +101,31 @@ namespace Impl {
 				reinterpret_cast<std::intptr_t>(Get()));
 		}
 
-		const volatile T *Get() const volatile noexcept {
-			return IntrusiveCastHelper<const volatile T, const volatile IntrusiveBase>()(this);
+		template<typename U = T>
+		auto Get() const volatile noexcept {
+			return IntrusiveCastHelper<const volatile U, const volatile IntrusiveBase>()(this);
 		}
-		const T *Get() const noexcept {
-			return IntrusiveCastHelper<const T, const IntrusiveBase>()(this);
+		template<typename U = T>
+		auto Get() const noexcept {
+			return IntrusiveCastHelper<const U, const IntrusiveBase>()(this);
 		}
-		volatile T *Get() volatile noexcept {
-			return IntrusiveCastHelper<volatile T, volatile IntrusiveBase>()(this);
+		template<typename U = T>
+		auto Get() volatile noexcept {
+			return IntrusiveCastHelper<volatile U, volatile IntrusiveBase>()(this);
 		}
-		T *Get() noexcept {
-			return IntrusiveCastHelper<T, IntrusiveBase>()(this);
+		template<typename U = T>
+		auto Get() noexcept {
+			return IntrusiveCastHelper<U, IntrusiveBase>()(this);
 		}
 
-		IntrusivePtr<const volatile T, DeleterT> Fork() const volatile noexcept;
-		IntrusivePtr<const T, DeleterT> Fork() const noexcept;
-		IntrusivePtr<volatile T, DeleterT> Fork() volatile noexcept;
-		IntrusivePtr<T, DeleterT> Fork() noexcept;
+		template<typename U = T>
+		IntrusivePtr<const volatile U, DeleterT> Fork() const volatile noexcept;
+		template<typename U = T>
+		IntrusivePtr<const U, DeleterT> Fork() const noexcept;
+		template<typename U = T>
+		IntrusivePtr<volatile U, DeleterT> Fork() volatile noexcept;
+		template<typename U = T>
+		IntrusivePtr<U, DeleterT> Fork() noexcept;
 	};
 }
 
@@ -244,24 +252,44 @@ public:
 
 namespace Impl {
 	template<typename T, class DeleterT>
-	IntrusivePtr<const volatile T, DeleterT> IntrusiveBase<T, DeleterT>::Fork() const volatile noexcept {
+		template<typename U>
+	IntrusivePtr<const volatile U, DeleterT> IntrusiveBase<T, DeleterT>::Fork() const volatile noexcept {
+		const auto pForked = Get<const volatile U>();
+		if(!pForked){
+			return nullptr;
+		}
 		AddRef();
-		return IntrusivePtr<const volatile T, DeleterT>(Get());
+		return IntrusivePtr<const volatile U, DeleterT>(pForked);
 	}
 	template<typename T, class DeleterT>
-	IntrusivePtr<const T, DeleterT> IntrusiveBase<T, DeleterT>::Fork() const noexcept {
+		template<typename U>
+	IntrusivePtr<const U, DeleterT> IntrusiveBase<T, DeleterT>::Fork() const noexcept {
+		const auto pForked = Get<const U>();
+		if(!pForked){
+			return nullptr;
+		}
 		AddRef();
-		return IntrusivePtr<const T, DeleterT>(Get());
+		return IntrusivePtr<const U, DeleterT>(pForked);
 	}
 	template<typename T, class DeleterT>
-	IntrusivePtr<volatile T, DeleterT> IntrusiveBase<T, DeleterT>::Fork() volatile noexcept {
+		template<typename U>
+	IntrusivePtr<volatile U, DeleterT> IntrusiveBase<T, DeleterT>::Fork() volatile noexcept {
+		const auto pForked = Get<volatile U>();
+		if(!pForked){
+			return nullptr;
+		}
 		AddRef();
-		return IntrusivePtr<volatile T, DeleterT>(Get());
+		return IntrusivePtr<const volatile U, DeleterT>(pForked);
 	}
 	template<typename T, class DeleterT>
-	IntrusivePtr<T, DeleterT> IntrusiveBase<T, DeleterT>::Fork() noexcept {
+		template<typename U>
+	IntrusivePtr<U, DeleterT> IntrusiveBase<T, DeleterT>::Fork() noexcept {
+		const auto pForked = Get<U>();
+		if(!pForked){
+			return nullptr;
+		}
 		AddRef();
-		return IntrusivePtr<T, DeleterT>(Get());
+		return IntrusivePtr<U, DeleterT>(pForked);
 	}
 }
 

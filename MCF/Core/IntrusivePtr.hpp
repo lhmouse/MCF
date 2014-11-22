@@ -43,6 +43,21 @@ namespace Impl {
 		IntrusiveSentry &operator=(IntrusiveSentry &&) = delete;
 	};
 
+	template<typename DstT, typename SrcT, typename = void>
+	struct IntrusiveCastHelper {
+		DstT *operator()(SrcT *pSrc) const noexcept {
+			return dynamic_cast<DstT *>(pSrc);
+		}
+	};
+	template<typename DstT, typename SrcT>
+	struct IntrusiveCastHelper<DstT, SrcT,
+		decltype(static_cast<DstT *>(std::declval<SrcT *>()), (void)0)>
+	{
+		constexpr DstT *operator()(SrcT *pSrc) const noexcept {
+			return static_cast<DstT *>(pSrc);
+		}
+	};
+
 	template<typename T, class DeleterT>
 	class IntrusiveBase {
 	private:
@@ -87,16 +102,16 @@ namespace Impl {
 		}
 
 		const volatile T *Get() const volatile noexcept {
-			return static_cast<const volatile T *>(this);
+			return IntrusiveCastHelper<const volatile T, const volatile IntrusiveBase>()(this);
 		}
 		const T *Get() const noexcept {
-			return static_cast<const T *>(this);
+			return IntrusiveCastHelper<const T, const IntrusiveBase>()(this);
 		}
 		volatile T *Get() volatile noexcept {
-			return static_cast<volatile T *>(this);
+			return IntrusiveCastHelper<volatile T, volatile IntrusiveBase>()(this);
 		}
 		T *Get() noexcept {
-			return static_cast<T *>(this);
+			return IntrusiveCastHelper<T, IntrusiveBase>()(this);
 		}
 
 		IntrusivePtr<const volatile T, DeleterT> Fork() const volatile noexcept;

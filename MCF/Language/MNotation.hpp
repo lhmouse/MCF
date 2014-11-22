@@ -179,7 +179,7 @@ public:
 	}
 };
 
-static inline void swap(MNotationPackage &lhs, MNotationPackage &rhs) noexcept {
+inline void swap(MNotationPackage &lhs, MNotationPackage &rhs) noexcept {
 	lhs.Swap(rhs);
 }
 

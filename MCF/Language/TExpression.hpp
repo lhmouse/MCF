@@ -58,7 +58,7 @@ public:
 	}
 };
 
-static inline void swap(TExpressionNode &lhs, TExpressionNode &rhs) noexcept {
+inline void swap(TExpressionNode &lhs, TExpressionNode &rhs) noexcept {
 	lhs.Swap(rhs);
 }
 

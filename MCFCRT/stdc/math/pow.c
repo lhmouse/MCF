@@ -176,7 +176,7 @@ float powf(float x, float y){
 		}
 	} else {
 		if(frac != 0){
-			__builtin_trap();
+			return -0.0f / 0.0f;
 		}
 		if(y > INT_MAX){
 			if(__builtin_fmodf(whole, 2.0f) == 0.0f){
@@ -238,7 +238,7 @@ double pow(double x, double y){
 		}
 	} else {
 		if(frac != 0){
-			__builtin_trap();
+			return -0.0 / 0.0;
 		}
 		if(y > INT_MAX){
 			if(__builtin_fmod(whole, 2.0) == 0.0){
@@ -300,7 +300,7 @@ long double powl(long double x, long double y){
 		}
 	} else {
 		if(lrac != 0){
-			__builtin_trap();
+			return -0.0l / 0.0l;
 		}
 		if(y > INT_MAX){
 			if(__builtin_fmodl(whole, 2.0l) == 0.0l){

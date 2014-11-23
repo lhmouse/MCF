@@ -7,13 +7,13 @@
 
 #include "_crtdef.h"
 
-__MCF_EXTERN_C_BEGIN
+__MCF_CRT_EXTERN_C_BEGIN
 
 extern bool __MCF_CRT_MinGWHacksInit(void) MCF_NOEXCEPT;
 extern void __MCF_CRT_MinGWHacksUninit(void) MCF_NOEXCEPT;
 
 extern void __MCF_CRT_RunEmutlsDtors(void) MCF_NOEXCEPT;
 
-__MCF_EXTERN_C_END
+__MCF_CRT_EXTERN_C_END
 
 #endif

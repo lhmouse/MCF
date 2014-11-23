@@ -15,7 +15,7 @@
 
 #include "avl_tree.h"
 
-__MCF_EXTERN_C_BEGIN
+__MCF_CRT_EXTERN_C_BEGIN
 
 extern bool __MCF_CRT_HeapDbgInit(void) MCF_NOEXCEPT;
 extern void __MCF_CRT_HeapDbgUninit(void) MCF_NOEXCEPT;
@@ -39,7 +39,7 @@ extern const __MCF_HeapDbgBlockInfo *__MCF_CRT_HeapDbgValidate(
 
 extern void __MCF_CRT_HeapDbgUnregister(const __MCF_HeapDbgBlockInfo *pBlockInfo) MCF_NOEXCEPT;
 
-__MCF_EXTERN_C_END
+__MCF_CRT_EXTERN_C_END
 
 #endif // __MCF_CRT_HEAPDBG_ON
 

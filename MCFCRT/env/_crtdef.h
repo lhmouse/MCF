@@ -18,27 +18,21 @@
 #endif
 
 #ifdef __cplusplus
-#	define __MCF_EXTERN_C_BEGIN			extern "C" {
-#	define __MCF_EXTERN_C_END			}
+#	define __MCF_CRT_EXTERN_C_BEGIN		extern "C" {
+#	define __MCF_CRT_EXTERN_C_END		}
 #else
-#	define __MCF_EXTERN_C_BEGIN
-#	define __MCF_EXTERN_C_END
-#endif
-
-#ifdef NDEBUG
-#	define __MCF_NORETURN_IF_NDEBUG		__attribute__((__noreturn__))
-#else
-#	define __MCF_NORETURN_IF_NDEBUG
+#	define __MCF_CRT_EXTERN_C_BEGIN
+#	define __MCF_CRT_EXTERN_C_END
 #endif
 
 // C++ 目前还不支持 C99 的 restrict 限定符。
 #ifdef __cplusplus
-#	define restrict						__restrict__
+#	define restrict			__restrict__
 #endif
 
 #ifdef __cplusplus
-#	define MCF_STD						::std::
-#	define MCF_NOEXCEPT					noexcept
+#	define MCF_STD			::std::
+#	define MCF_NOEXCEPT		noexcept
 #else
 #	define MCF_STD
 #	define MCF_NOEXCEPT

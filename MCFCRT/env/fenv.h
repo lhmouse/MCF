@@ -7,10 +7,10 @@
 
 #include "_crtdef.h"
 
-__MCF_EXTERN_C_BEGIN
+__MCF_CRT_EXTERN_C_BEGIN
 
 extern bool __MCF_CRT_FEnvInit(void) MCF_NOEXCEPT;
 
-__MCF_EXTERN_C_END
+__MCF_CRT_EXTERN_C_END
 
 #endif

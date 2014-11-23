@@ -7,11 +7,11 @@
 
 #include "_crtdef.h"
 
-__MCF_EXTERN_C_BEGIN
+__MCF_CRT_EXTERN_C_BEGIN
 
 extern void *MCF_CRT_AllocateThunk(const void *pInit, MCF_STD size_t uSize) MCF_NOEXCEPT;
 extern void MCF_CRT_DeallocateThunk(void *pThunk, bool bToPoison) MCF_NOEXCEPT;
 
-__MCF_EXTERN_C_END
+__MCF_CRT_EXTERN_C_END
 
 #endif

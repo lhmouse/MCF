@@ -7,7 +7,7 @@
 
 #include "_crtdef.h"
 
-__MCF_EXTERN_C_BEGIN
+__MCF_CRT_EXTERN_C_BEGIN
 
 extern bool __MCF_CRT_HeapInit(void) MCF_NOEXCEPT;
 extern void __MCF_CRT_HeapUninit(void) MCF_NOEXCEPT;
@@ -16,6 +16,6 @@ extern unsigned char *__MCF_CRT_HeapAlloc(MCF_STD size_t uSize, const void *pRet
 extern unsigned char *__MCF_CRT_HeapReAlloc(void *pBlock /* NON-NULL */, MCF_STD size_t uSize, const void *pRetAddr) MCF_NOEXCEPT;
 extern void __MCF_CRT_HeapFree(void *pBlock /* NON-NULL */, const void *pRetAddr) MCF_NOEXCEPT;
 
-__MCF_EXTERN_C_END
+__MCF_CRT_EXTERN_C_END
 
 #endif

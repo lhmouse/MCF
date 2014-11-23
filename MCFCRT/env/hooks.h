@@ -7,7 +7,7 @@
 
 #include "_crtdef.h"
 
-__MCF_EXTERN_C_BEGIN
+__MCF_CRT_EXTERN_C_BEGIN
 
 // heap.c
 extern bool MCF_OnBadAlloc() MCF_NOEXCEPT
@@ -23,7 +23,7 @@ extern void MCF_OnHeapDealloc(void *pBlock, const void *pRetAddr) MCF_NOEXCEPT
 extern void MCF_PreInitModule() MCF_NOEXCEPT
 	__attribute__((__weak__));
 
-__MCF_EXTERN_C_END
+__MCF_CRT_EXTERN_C_END
 
 #ifdef __cplusplus
 #	include <typeinfo>

@@ -7,7 +7,7 @@
 
 #include "_crtdef.h"
 
-__MCF_EXTERN_C_BEGIN
+__MCF_CRT_EXTERN_C_BEGIN
 
 typedef struct tagAvlNodeHeader {
 	struct tagAvlNodeHeader *pParent;
@@ -92,6 +92,6 @@ extern void MCF_AvlEqualRange(MCF_AvlNodeHeader **ppBegin, MCF_AvlNodeHeader **p
 	MCF_AvlComparatorNodeOther pfnComparatorNodeOther,
 	MCF_AvlComparatorOtherNode pfnComparatorOtherNode) MCF_NOEXCEPT;
 
-__MCF_EXTERN_C_END
+__MCF_CRT_EXTERN_C_END
 
 #endif

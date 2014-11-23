@@ -7,7 +7,7 @@
 
 #include "_crtdef.h"
 
-__MCF_EXTERN_C_BEGIN
+__MCF_CRT_EXTERN_C_BEGIN
 
 extern bool __MCF_CRT_TlsEnvInit(void) MCF_NOEXCEPT;
 extern void __MCF_CRT_TlsEnvUninit(void) MCF_NOEXCEPT;
@@ -43,6 +43,6 @@ extern void MCF_CRT_TlsClearAll() MCF_NOEXCEPT;
 extern void *MCF_CRT_CreateThread(unsigned (*pfnThreadProc)(MCF_STD intptr_t), MCF_STD intptr_t nParam,
 	bool bSuspended, unsigned long *pulThreadId) MCF_NOEXCEPT;
 
-__MCF_EXTERN_C_END
+__MCF_CRT_EXTERN_C_END
 
 #endif

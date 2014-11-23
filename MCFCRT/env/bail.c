@@ -12,7 +12,7 @@
 static DWORD APIENTRY ThreadProc(LPVOID pParam){
 	const LPCWSTR pwszDescription = (LPCWSTR)pParam;
 
-	wchar_t awcBuffer[1025];
+	wchar_t awcBuffer[2049];
 	wchar_t *pwcWrite = MCF_wcscpyout(awcBuffer, L"应用程序异常终止。请联系作者寻求协助。");
 	if(pwszDescription){
 		pwcWrite = MCF_wcscpyout(pwcWrite, L"\r\n\r\n错误描述：\r\n");
@@ -35,8 +35,7 @@ static DWORD APIENTRY ThreadProc(LPVOID pParam){
 #endif
 	return (DWORD)nRet;
 }
-static __MCF_NORETURN_IF_NDEBUG
-void DoBail(const wchar_t *pwszDescription){
+static void DoBail(const wchar_t *pwszDescription){
 	DWORD dwExitCode = IDCANCEL;
 	const HANDLE hThread = CreateThread(NULL, 0, &ThreadProc, (LPVOID)pwszDescription, 0, NULL);
 	if(hThread){
@@ -58,10 +57,10 @@ void DoBail(const wchar_t *pwszDescription){
 	__asm__ __volatile__("int 3 \n");
 }
 
-__MCF_NORETURN_IF_NDEBUG void MCF_CRT_Bail(const wchar_t *pwszDescription){
+void MCF_CRT_Bail(const wchar_t *pwszDescription){
 	DoBail(pwszDescription);
 }
-__MCF_NORETURN_IF_NDEBUG void MCF_CRT_BailF(const wchar_t *pwszFormat, ...){
+void MCF_CRT_BailF(const wchar_t *pwszFormat, ...){
 	wchar_t awcBuffer[1025];
 	va_list ap;
 	va_start(ap, pwszFormat);

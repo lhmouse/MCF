@@ -7,11 +7,11 @@
 
 #include "_crtdef.h"
 
-__MCF_EXTERN_C_BEGIN
+__MCF_CRT_EXTERN_C_BEGIN
 
-extern __MCF_NORETURN_IF_NDEBUG void MCF_CRT_Bail(const wchar_t *pwszDescription) MCF_NOEXCEPT;
-extern __MCF_NORETURN_IF_NDEBUG void MCF_CRT_BailF(const wchar_t *pwszFormat, ...) MCF_NOEXCEPT;
+extern void MCF_CRT_Bail(const wchar_t *pwszDescription) MCF_NOEXCEPT;
+extern void MCF_CRT_BailF(const wchar_t *pwszFormat, ...) MCF_NOEXCEPT;
 
-__MCF_EXTERN_C_END
+__MCF_CRT_EXTERN_C_END
 
 #endif

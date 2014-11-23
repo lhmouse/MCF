@@ -7,7 +7,7 @@
 
 #include "../env/_crtdef.h"
 
-__MCF_EXTERN_C_BEGIN
+__MCF_CRT_EXTERN_C_BEGIN
 
 extern bool MCFDll_OnProcessAttach(bool bDynamic) MCF_NOEXCEPT
 	__attribute__((__weak__));
@@ -21,6 +21,6 @@ extern void MCFDll_OnThreadAttach() MCF_NOEXCEPT
 extern void MCFDll_OnThreadDetach() MCF_NOEXCEPT
 	__attribute__((__weak__));
 
-__MCF_EXTERN_C_END
+__MCF_CRT_EXTERN_C_END
 
 #endif

@@ -117,7 +117,7 @@ namespace Impl {
 		}
 
 		IndexNode *Attach(IndexNode *pPos, IndexNode *pIndexNode) noexcept {
-			::MCF_AvlAttachHint(&xm_avlRoot, pPos, pIndexNode,
+			::MCF_AvlAttachWithHint(&xm_avlRoot, pPos, pIndexNode,
 				[](const ::MCF_AvlNodeHeader *lhs, const ::MCF_AvlNodeHeader *rhs) noexcept -> bool {
 					return NodeComparatorT()(static_cast<const IndexNode *>(lhs), static_cast<const IndexNode *>(rhs));
 				}

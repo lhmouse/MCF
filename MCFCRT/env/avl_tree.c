@@ -238,78 +238,13 @@ void MCF_AvlSwap(MCF_AvlRoot *ppRoot1, MCF_AvlRoot *ppRoot2){
 	}
 }
 
-void MCF_AvlAttachHint(MCF_AvlRoot *ppRoot,
-	MCF_AvlNodeHeader *pHint, MCF_AvlNodeHeader *pNode, MCF_AvlComparatorNodes pfnComparator)
+void MCF_AvlInternalAttach(MCF_AvlNodeHeader *pNode,
+	MCF_AvlNodeHeader *pParent, MCF_AvlNodeHeader **ppRefl)
 {
-	MCF_AvlNodeHeader *pParent = NULL;
-	MCF_AvlNodeHeader **ppIns = ppRoot;
-	if(pHint){
-		if((*pfnComparator)(pNode, pHint)){
-			MCF_AvlNodeHeader *const pPrev = pHint->pPrev;
-			if(!pPrev){
-				ASSERT(!pHint->pLeft);
-
-				pParent = pHint;
-				ppIns = &(pHint->pLeft);
-			} else if(!(*pfnComparator)(pNode, pPrev)){
-				// 条件：	node		<	hint
-				//			hint->prev	<=	node
-				if(pPrev->uHeight < pHint->uHeight){
-					ASSERT(!pPrev->pRight);
-
-					pParent = pPrev;
-					ppIns = &(pPrev->pRight);
-				} else {
-					ASSERT(!pHint->pLeft);
-
-					pParent = pHint;
-					ppIns = &(pHint->pLeft);
-				}
-			}
-		} else {
-			MCF_AvlNodeHeader *const pNext = pHint->pNext;
-			if(!pNext){
-				ASSERT(!pHint->pRight);
-
-				pParent = pHint;
-				ppIns = &(pHint->pRight);
-			} else if((*pfnComparator)(pNode, pNext)){
-				// 条件：	hint	<=	node
-				//			node	<	hint->next
-				if(pHint->uHeight < pNext->uHeight){
-					ASSERT(!pHint->pRight);
-
-					pParent = pHint;
-					ppIns = &(pHint->pRight);
-				} else {
-					ASSERT(!pNext->pLeft);
-
-					pParent = pNext;
-					ppIns = &(pNext->pLeft);
-				}
-			}
-		}
-	}
-	if(!pParent){
-		for(;;){
-			MCF_AvlNodeHeader *const pCur = *ppIns;
-			if(!pCur){
-				break;
-			}
-			if((*pfnComparator)(pNode, pCur)){
-				pParent = pCur;
-				ppIns = &(pCur->pLeft);
-			} else {
-				pParent = pCur;
-				ppIns = &(pCur->pRight);
-			}
-		}
-	}
-
-	*ppIns = pNode;
+	*ppRefl = pNode;
 
 	pNode->pParent	= pParent;
-	pNode->ppRefl	= ppIns;
+	pNode->ppRefl	= ppRefl;
 	pNode->pLeft	= NULL;
 	pNode->pRight	= NULL;
 	pNode->uHeight	= 1;
@@ -318,7 +253,7 @@ void MCF_AvlAttachHint(MCF_AvlRoot *ppRoot,
 		pNode->pPrev = NULL;
 		pNode->pNext = NULL;
 	} else {
-		if(ppIns == &(pParent->pLeft)){
+		if(ppRefl == &(pParent->pLeft)){
 			MCF_AvlNodeHeader *const pPrev = pParent->pPrev;
 			pNode->pPrev = pPrev;
 			pNode->pNext = pParent;
@@ -341,7 +276,7 @@ void MCF_AvlAttachHint(MCF_AvlRoot *ppRoot,
 	}
 }
 
-void MCF_AvlDetach(const MCF_AvlNodeHeader *pNode){
+void MCF_AvlInternalDetach(const MCF_AvlNodeHeader *pNode){
 	MCF_AvlNodeHeader *const pParent = pNode->pParent;
 	MCF_AvlNodeHeader **const ppRefl = pNode->ppRefl;
 	MCF_AvlNodeHeader *const pLeft = pNode->pLeft;
@@ -440,6 +375,76 @@ void MCF_AvlDetach(const MCF_AvlNodeHeader *pNode){
 	if(pNext){
 		pNext->pPrev = pPrev;
 	}
+}
+
+void MCF_AvlAttachWithHint(MCF_AvlRoot *ppRoot,
+	MCF_AvlNodeHeader *pHint, MCF_AvlNodeHeader *pNode, MCF_AvlComparatorNodes pfnComparator)
+{
+	MCF_AvlNodeHeader *pParent = NULL;
+	MCF_AvlNodeHeader **ppRefl = ppRoot;
+	if(pHint){
+		if((*pfnComparator)(pNode, pHint)){
+			MCF_AvlNodeHeader *const pPrev = pHint->pPrev;
+			if(!pPrev){
+				ASSERT(!pHint->pLeft);
+
+				pParent = pHint;
+				ppRefl = &(pHint->pLeft);
+			} else if(!(*pfnComparator)(pNode, pPrev)){
+				// 条件：	node		<	hint
+				//			hint->prev	<=	node
+				if(pPrev->uHeight < pHint->uHeight){
+					ASSERT(!pPrev->pRight);
+
+					pParent = pPrev;
+					ppRefl = &(pPrev->pRight);
+				} else {
+					ASSERT(!pHint->pLeft);
+
+					pParent = pHint;
+					ppRefl = &(pHint->pLeft);
+				}
+			}
+		} else {
+			MCF_AvlNodeHeader *const pNext = pHint->pNext;
+			if(!pNext){
+				ASSERT(!pHint->pRight);
+
+				pParent = pHint;
+				ppRefl = &(pHint->pRight);
+			} else if((*pfnComparator)(pNode, pNext)){
+				// 条件：	hint	<=	node
+				//			node	<	hint->next
+				if(pHint->uHeight < pNext->uHeight){
+					ASSERT(!pHint->pRight);
+
+					pParent = pHint;
+					ppRefl = &(pHint->pRight);
+				} else {
+					ASSERT(!pNext->pLeft);
+
+					pParent = pNext;
+					ppRefl = &(pNext->pLeft);
+				}
+			}
+		}
+	}
+	if(!pParent){
+		for(;;){
+			MCF_AvlNodeHeader *const pCur = *ppRefl;
+			if(!pCur){
+				break;
+			}
+			if((*pfnComparator)(pNode, pCur)){
+				pParent = pCur;
+				ppRefl = &(pCur->pLeft);
+			} else {
+				pParent = pCur;
+				ppRefl = &(pCur->pRight);
+			}
+		}
+	}
+	MCF_AvlInternalAttach(pNode, pParent, ppRefl);
 }
 
 MCF_AvlNodeHeader *MCF_AvlLowerBound(const MCF_AvlRoot *ppRoot,

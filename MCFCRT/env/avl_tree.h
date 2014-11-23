@@ -21,11 +21,6 @@ typedef struct tagAvlNodeHeader {
 
 typedef MCF_AvlNodeHeader *MCF_AvlRoot;
 
-// 若 arg0 < arg1 应返回非零值，否则应返回零。
-typedef bool (*MCF_AvlComparatorNodes)(const MCF_AvlNodeHeader *, const MCF_AvlNodeHeader *);
-typedef bool (*MCF_AvlComparatorNodeOther)(const MCF_AvlNodeHeader *, MCF_STD intptr_t);
-typedef bool (*MCF_AvlComparatorOtherNode)(MCF_STD intptr_t, const MCF_AvlNodeHeader *);
-
 static inline MCF_AvlNodeHeader *MCF_AvlFront(const MCF_AvlRoot *ppRoot) MCF_NOEXCEPT {
 	MCF_AvlNodeHeader *pCur = *ppRoot;
 	if(pCur){
@@ -54,7 +49,16 @@ static inline MCF_AvlNodeHeader *MCF_AvlNext(const MCF_AvlNodeHeader *pNode) MCF
 
 extern void MCF_AvlSwap(MCF_AvlRoot *ppRoot1, MCF_AvlRoot *ppRoot2) MCF_NOEXCEPT;
 
-extern void MCF_AvlAttachHint(MCF_AvlRoot *ppRoot,
+extern void MCF_AvlInternalAttach(MCF_AvlNodeHeader *pNode,
+	MCF_AvlNodeHeader *pParent, MCF_AvlNodeHeader **ppRefl) MCF_NOEXCEPT;
+extern void MCF_AvlInternalDetach(const MCF_AvlNodeHeader *pNode) MCF_NOEXCEPT;
+
+// 若 arg0 < arg1 应返回非零值，否则应返回零。
+typedef bool (*MCF_AvlComparatorNodes)(const MCF_AvlNodeHeader *, const MCF_AvlNodeHeader *);
+typedef bool (*MCF_AvlComparatorNodeOther)(const MCF_AvlNodeHeader *, MCF_STD intptr_t);
+typedef bool (*MCF_AvlComparatorOtherNode)(MCF_STD intptr_t, const MCF_AvlNodeHeader *);
+
+extern void MCF_AvlAttachWithHint(MCF_AvlRoot *ppRoot,
 	// 如果新节点被插入到该节点前后相邻的位置，则效率被优化。
 	// 此处行为和 C++03 C++11 都兼容。
 	// pHint 为空则调用 MCF_AvlAttach()。
@@ -64,10 +68,12 @@ extern void MCF_AvlAttachHint(MCF_AvlRoot *ppRoot,
 static inline void MCF_AvlAttach(MCF_AvlRoot *ppRoot,
 	MCF_AvlNodeHeader *pNode, MCF_AvlComparatorNodes pfnComparator) MCF_NOEXCEPT
 {
-	MCF_AvlAttachHint(ppRoot, NULL, pNode, pfnComparator);
+	MCF_AvlAttachWithHint(ppRoot, NULL, pNode, pfnComparator);
 }
 
-extern void MCF_AvlDetach(const MCF_AvlNodeHeader *pNode) MCF_NOEXCEPT;
+static inline void MCF_AvlDetach(const MCF_AvlNodeHeader *pNode) MCF_NOEXCEPT {
+	MCF_AvlInternalDetach(pNode);
+}
 
 // Q: 为什么这里是 const MCF_AvlNodeHeader * 而不是 MCF_AvlNodeHeader * 呢？
 // A: 参考 strchr 函数。

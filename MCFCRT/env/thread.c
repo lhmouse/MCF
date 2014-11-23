@@ -302,7 +302,7 @@ static MCF_TlsExchangeResult TlsExchange(void *pTlsKey,
 				pObject->pKey	= pKey;
 				pObject->nValue	= nNewValue;
 
-				MCF_AvlAttachHint(&(pMap->pavlObjects), (MCF_AvlNodeHeader *)pHint,
+				MCF_AvlAttachWithHint(&(pMap->pavlObjects), (MCF_AvlNodeHeader *)pHint,
 					(MCF_AvlNodeHeader *)pObject, &ObjectComparatorNodes);
 			}
 			AcquireSRWLockExclusive(&(pMap->srwLock));

@@ -241,6 +241,8 @@ void MCF_AvlSwap(MCF_AvlRoot *ppRoot1, MCF_AvlRoot *ppRoot2){
 void MCF_AvlInternalAttach(MCF_AvlNodeHeader *pNode,
 	MCF_AvlNodeHeader *pParent, MCF_AvlNodeHeader **ppRefl)
 {
+	ASSERT(*ppRefl == NULL);
+
 	*ppRefl = pNode;
 
 	pNode->pParent	= pParent;

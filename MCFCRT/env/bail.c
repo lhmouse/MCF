@@ -35,7 +35,7 @@ static DWORD APIENTRY ThreadProc(LPVOID pParam){
 #endif
 	return (DWORD)nRet;
 }
-static void DoBail(const wchar_t *pwszDescription){
+MCF_CRT_NORETURN_IF_NDEBUG static void DoBail(const wchar_t *pwszDescription){
 	DWORD dwExitCode = IDCANCEL;
 	const HANDLE hThread = CreateThread(NULL, 0, &ThreadProc, (LPVOID)pwszDescription, 0, NULL);
 	if(hThread){
@@ -57,10 +57,10 @@ static void DoBail(const wchar_t *pwszDescription){
 	__asm__ __volatile__("int 3 \n");
 }
 
-void MCF_CRT_Bail(const wchar_t *pwszDescription){
+MCF_CRT_NORETURN_IF_NDEBUG void MCF_CRT_Bail(const wchar_t *pwszDescription){
 	DoBail(pwszDescription);
 }
-void MCF_CRT_BailF(const wchar_t *pwszFormat, ...){
+MCF_CRT_NORETURN_IF_NDEBUG void MCF_CRT_BailF(const wchar_t *pwszFormat, ...){
 	wchar_t awcBuffer[1025];
 	va_list ap;
 	va_start(ap, pwszFormat);

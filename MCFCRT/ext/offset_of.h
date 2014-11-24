@@ -18,7 +18,7 @@
 #endif
 
 #define OFFSET_OF(s_, m_)	\
-	(__MCF_MAKE_CONSTANT((MCF_STD size_t)(	\
+	(__MCF_CRT_MAKE_CONSTANT((MCF_STD size_t)(	\
 		__MCF_ADDRESS_OF(((s_ *)(unsigned char *)1)->m_) - (unsigned char *)1)))
 
 // 成员指针转换成聚合指针。

@@ -38,8 +38,8 @@ namespace Impl {
 }
 
 #define ABSTRACT					private ::MCF::Impl::AbstractBase
-#define CONCRETE(base)				public ::MCF::Impl::ConcreteBase<base>
+#define CONCRETE(base_)				public ::MCF::Impl::ConcreteBase<base_>
 
-#define CONCRETE_INIT(base, ...)	::MCF::Impl::ConcreteBase<base>(__VA_ARGS__)
+#define CONCRETE_INIT(base_, ...)	::MCF::Impl::ConcreteBase<base_>(__VA_ARGS__)
 
 #endif

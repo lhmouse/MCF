@@ -7,6 +7,6 @@
 
 #include <climits>
 
-#define BITS_OF(x)		(sizeof(x) * CHAR_BIT)
+#define BITS_OF(x_)		(sizeof(x_) * CHAR_BIT)
 
 #endif

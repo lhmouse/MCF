@@ -13,8 +13,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-// LH_Mouse: I have to remove tons of tricks and autoCRAP stuffs from this
-//           file.
+// LH_Mouse: I have to remove tons of tricks and autoCRAP stuff from this file.
 //           2014-07-27
 
 #ifndef LZMA_SYSDEFS_H

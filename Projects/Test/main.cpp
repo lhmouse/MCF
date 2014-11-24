@@ -8,8 +8,8 @@ using namespace MCF;
 extern "C" unsigned int MCFMain() noexcept {
 	const char data[] = "hello world!";
 
-	unsigned char result[32];
-	Sha256 hash;
+	unsigned char result[16];
+	Md5 hash;
 	hash.Update(data, sizeof(data) - 1);
 	hash.Finalize(result);
 	for(auto by : result){

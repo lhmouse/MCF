@@ -408,11 +408,10 @@ void Md5::Finalize(unsigned char (&abyOutput)[16]) noexcept {
 		StoreLe(xm_vChunk.vLast.u64Bits, xm_u64BytesTotal * 8);
 		DoMd5Chunk(xm_auResult, xm_vChunk.aby);
 
-		for(auto &u : xm_auResult){
-			StoreLe(u, u);
-		}
-
 		xm_bInited = false;
 	}
-	BCopy(abyOutput, xm_auResult);
+
+	for(unsigned i = 0; i < 4; ++i){
+		StoreLe(((std::uint32_t *)abyOutput)[i], xm_auResult[i]);
+	}
 }

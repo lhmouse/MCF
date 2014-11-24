@@ -972,11 +972,10 @@ void Sha256::Finalize(unsigned char (&abyOutput)[32]) noexcept {
 		StoreBe(xm_vChunk.vLast.u64Bits, xm_u64BytesTotal * 8);
 		DoSha256Chunk(xm_auResult, xm_vChunk.aby);
 
-		for(auto &u : xm_auResult){
-			StoreBe(u, u);
-		}
-
 		xm_bInited = false;
 	}
-	BCopy(abyOutput, xm_auResult);
+
+	for(unsigned i = 0; i < 8; ++i){
+		StoreBe(((std::uint32_t *)abyOutput)[i], xm_auResult[i]);
+	}
 }

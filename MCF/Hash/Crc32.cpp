@@ -4,7 +4,7 @@
 
 #include "../StdMCF.hpp"
 #include "Crc32.hpp"
-#include "../Utilities/ByteSwap.hpp"
+#include "../Utilities/Endian.hpp"
 using namespace MCF;
 
 namespace {
@@ -67,13 +67,14 @@ void Crc32::Update(const void *pData, std::size_t uSize) noexcept {
 
 	if(uSize >= sizeof(std::uintptr_t) * 2){
 		while(((std::uintptr_t)pbyRead & (sizeof(std::uintptr_t) - 1)) != 0){
-			DoCrc32Byte(xm_u32Reg, xm_au32Table, *(pbyRead++));
+			DoCrc32Byte(xm_u32Reg, xm_au32Table, *pbyRead);
+			++pbyRead;
 		}
 		register auto uWordCount = (std::size_t)(pbyEnd - pbyRead) / sizeof(std::uintptr_t);
 		while(uWordCount != 0){
-			register auto uWord = BYTE_SWAP_FROM_BE(*(const std::uintptr_t *)pbyRead);
+			register auto uWord = LoadLe(*(const std::uintptr_t *)pbyRead);
 			pbyRead += sizeof(std::uintptr_t);
-			for(auto i = sizeof(std::uintptr_t); i; --i){
+			for(unsigned i = 0; i < sizeof(std::uintptr_t); ++i){
 				DoCrc32Byte(xm_u32Reg, xm_au32Table, uWord & 0xFF);
 				uWord >>= 8;
 			}
@@ -81,7 +82,8 @@ void Crc32::Update(const void *pData, std::size_t uSize) noexcept {
 		}
 	}
 	while(pbyRead != pbyEnd){
-		DoCrc32Byte(xm_u32Reg, xm_au32Table, *(pbyRead++));
+		DoCrc32Byte(xm_u32Reg, xm_au32Table, *pbyRead);
+		++pbyRead;
 	}
 }
 std::uint32_t Crc32::Finalize() noexcept {

@@ -1,18 +1,19 @@
 #include <MCF/StdMCF.hpp>
-#include <MCF/Core/Exception.hpp>
-#include <MCF/Thread/Thread.hpp>
+#include <MCF/Hash/Crc32.hpp>
+#include <MCF/Hash/Md5.hpp>
+#include <MCF/Hash/Sha1.hpp>
+#include <MCF/Hash/Sha256.hpp>
 using namespace MCF;
 
-void foo(){
-	DEBUG_THROW(Exception, "meow", 123);
-}
-
 extern "C" unsigned int MCFMain() noexcept {
-	try {
-		auto thread = Thread::Create(foo);
-		thread->Join();
-	} catch(Exception &e){
-		std::printf("Exception: file = %s, line = %lu\n", e.GetFile(), e.GetLine());
+	const char data[] = "hello world!";
+
+	unsigned char result[32];
+	Sha256 hash;
+	hash.Update(data, sizeof(data) - 1);
+	hash.Finalize(result);
+	for(auto by : result){
+		std::printf("%02hhX", by);
 	}
 	return 0;
 }

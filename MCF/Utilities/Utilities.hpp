@@ -11,7 +11,7 @@
 #include "Bail.hpp"
 #include "BinaryOperations.hpp"
 #include "BitsOf.hpp"
-#include "ByteSwap.hpp"
+#include "Endian.hpp"
 #include "CallOnEach.hpp"
 #include "Clone.hpp"
 #include "ConstructDestruct.hpp"

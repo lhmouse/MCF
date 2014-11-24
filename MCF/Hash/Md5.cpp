@@ -4,7 +4,7 @@
 
 #include "../StdMCF.hpp"
 #include "Md5.hpp"
-#include "../Utilities/ByteSwap.hpp"
+#include "../Utilities/Endian.hpp"
 #include "../Utilities/BinaryOperations.hpp"
 using namespace MCF;
 
@@ -75,7 +75,7 @@ void DoMd5Chunk(std::uint32_t (&au32Result)[4], const unsigned char *pbyChunk) n
 		const std::uint32_t temp = d;
 		d = c;
 		c = b;
-		b += ::_rotl(a + f + KVEC[i] + BYTE_SWAP_FROM_BE(w[g]), RVEC[i]);
+		b += ::_rotl(a + f + KVEC[i] + LoadLe(w[g]), RVEC[i]);
 		a = temp;
 	}
 
@@ -405,11 +405,11 @@ void Md5::Finalize(unsigned char (&abyOutput)[16]) noexcept {
 		if(xm_uBytesInChunk < sizeof(xm_vChunk.vLast.abyData)){
 			std::memset(xm_vChunk.aby + xm_uBytesInChunk, 0, sizeof(xm_vChunk.vLast.abyData) - xm_uBytesInChunk);
 		}
-		xm_vChunk.vLast.u64Bits = BYTE_SWAP_TO_BE(xm_u64BytesTotal * 8);
+		StoreLe(xm_vChunk.vLast.u64Bits, xm_u64BytesTotal * 8);
 		DoMd5Chunk(xm_auResult, xm_vChunk.aby);
 
 		for(auto &u : xm_auResult){
-			u = BYTE_SWAP_TO_BE(u);
+			StoreLe(u, u);
 		}
 
 		xm_bInited = false;

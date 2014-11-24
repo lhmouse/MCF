@@ -4,20 +4,30 @@
 
 #include "../StdMCF.hpp"
 #include "IsaacExFilters.hpp"
-#include "../Utilities/ByteSwap.hpp"
+#include "../Utilities/Endian.hpp"
 #include "../Hash/Sha256.hpp"
 #include "../Random/IsaacRng.hpp"
 using namespace MCF;
 
+namespace {
+
+void GenerateKey(std::uint32_t (&au32KeyHash)[8], const void *pKey, std::size_t uKeyLen) noexcept {
+	unsigned char abyKeyHash[32];
+	Sha256 vShaHasher;
+	vShaHasher.Update(pKey, uKeyLen);
+	vShaHasher.Finalize(abyKeyHash);
+
+	for(std::size_t i = 0; i < 8; ++i){
+		au32KeyHash[i] = LoadBe(((const std::uint32_t *)abyKeyHash)[i]);
+	}
+}
+
+}
+
 // ========== IsaacExEncoder ==========
 // 构造函数和析构函数。
 IsaacExEncoder::IsaacExEncoder(const void *pKey, std::size_t uKeyLen) noexcept {
-	Sha256 vShaHasher;
-	vShaHasher.Update(pKey, uKeyLen);
-	vShaHasher.Finalize(xm_vKeyHash.aby);
-	for(auto &u32 : xm_vKeyHash.au32){
-		u32 = BYTE_SWAP_FROM_BE(u32);
-	}
+	GenerateKey(xm_au32KeyHash, pKey, uKeyLen);
 }
 IsaacExEncoder::~IsaacExEncoder(){
 }
@@ -30,7 +40,7 @@ void IsaacExEncoder::Abort() noexcept {
 }
 void IsaacExEncoder::Update(const void *pData, std::size_t uSize){
 	if(!xm_pIsaacRng){
-		xm_pIsaacRng = std::make_unique<IsaacRng>(xm_vKeyHash.au32);
+		xm_pIsaacRng = std::make_unique<IsaacRng>(xm_au32KeyHash);
 		xm_abyLastEncoded = 0;
 	}
 
@@ -61,12 +71,7 @@ void IsaacExEncoder::Finalize(){
 // ========== IsaacExDecoder ==========
 // 构造函数和析构函数。
 IsaacExDecoder::IsaacExDecoder(const void *pKey, std::size_t uKeyLen) noexcept {
-	Sha256 vShaHasher;
-	vShaHasher.Update(pKey, uKeyLen);
-	vShaHasher.Finalize(xm_vKeyHash.aby);
-	for(auto &u32 : xm_vKeyHash.au32){
-		u32 = BYTE_SWAP_FROM_BE(u32);
-	}
+	GenerateKey(xm_au32KeyHash, pKey, uKeyLen);
 }
 IsaacExDecoder::~IsaacExDecoder(){
 }
@@ -79,7 +84,7 @@ void IsaacExDecoder::Abort() noexcept {
 }
 void IsaacExDecoder::Update(const void *pData, std::size_t uSize){
 	if(!xm_pIsaacRng){
-		xm_pIsaacRng = std::make_unique<IsaacRng>(xm_vKeyHash.au32);
+		xm_pIsaacRng = std::make_unique<IsaacRng>(xm_au32KeyHash);
 		xm_abyLastEncoded = 0;
 	}
 

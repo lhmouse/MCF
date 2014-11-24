@@ -14,6 +14,9 @@ template<typename ValueT>
 ValueT LoadLe(const ValueT &vMem) noexcept {
 	static_assert(std::is_integral<ValueT>::value, "ValueT must be an integral type.");
 
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+	return vMem;
+#else
 	using Unsigned = std::make_unsigned_t<ValueT>;
 
 	const auto &abyMem = reinterpret_cast<const unsigned char (&)[sizeof(vMem)]>(vMem);
@@ -22,11 +25,15 @@ ValueT LoadLe(const ValueT &vMem) noexcept {
 		uTemp |= static_cast<Unsigned>(abyMem[i]) << (i * CHAR_BIT);
 	}
 	return static_cast<ValueT>(uTemp);
+#endif
 }
 template<typename ValueT>
 ValueT LoadBe(const ValueT &vMem) noexcept {
 	static_assert(std::is_integral<ValueT>::value, "ValueT must be an integral type.");
 
+#if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
+	return vMem;
+#else
 	using Unsigned = std::make_unsigned_t<ValueT>;
 
 	const auto &abyMem = reinterpret_cast<const unsigned char (&)[sizeof(vMem)]>(vMem);
@@ -35,29 +42,38 @@ ValueT LoadBe(const ValueT &vMem) noexcept {
 		uTemp |= static_cast<Unsigned>(abyMem[sizeof(vMem) - 1 - i]) << (i * CHAR_BIT);
 	}
 	return static_cast<ValueT>(uTemp);
+#endif
 }
 
 template<typename ValueT>
 void StoreLe(ValueT &vMem, std::common_type_t<ValueT> vVal) noexcept {
 	static_assert(std::is_integral<ValueT>::value, "ValueT must be an integral type.");
 
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+	vMem = vVal;
+#else
 	using Unsigned = std::make_unsigned_t<ValueT>;
 
 	auto &abyMem = reinterpret_cast<unsigned char (&)[sizeof(vMem)]>(vMem);
 	for(unsigned i = 0; i < sizeof(vMem); ++i){
 		abyMem[i] = static_cast<Unsigned>(vVal) >> (i * CHAR_BIT);
 	}
+#endif
 }
 template<typename ValueT>
 void StoreBe(ValueT &vMem, std::common_type_t<ValueT> vVal) noexcept {
 	static_assert(std::is_integral<ValueT>::value, "ValueT must be an integral type.");
 
+#if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
+	vMem = vVal;
+#else
 	using Unsigned = std::make_unsigned_t<ValueT>;
 
 	auto &abyMem = reinterpret_cast<unsigned char (&)[sizeof(vMem)]>(vMem);
 	for(unsigned i = 0; i < sizeof(vMem); ++i){
 		abyMem[sizeof(vMem) - 1 - i] = static_cast<Unsigned>(vVal) >> (i * CHAR_BIT);
 	}
+#endif
 }
 
 }

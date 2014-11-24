@@ -19,18 +19,10 @@ namespace Impl {
 }
 
 // 我只能说 GCC 是个白痴！为什么要检查 placement new 的返回值是否为 nullptr？
-inline __attribute__((__always_inline__, __returns_nonnull__))
-void *operator new(
-	std::size_t, void *p,
-	const ::MCF::Impl::DirectConstructTag &
-){
+inline void *operator new(std::size_t, void *p, const ::MCF::Impl::DirectConstructTag &){
 	return p;
 }
-inline __attribute__((__always_inline__))
-void operator delete(
-	void *, void *,
-	const ::MCF::Impl::DirectConstructTag &
-) noexcept {
+inline void operator delete(void *, void *, const ::MCF::Impl::DirectConstructTag &) noexcept {
 }
 
 namespace MCF {
@@ -53,12 +45,11 @@ namespace Impl {
 }
 
 template<typename ObjectT, typename ...ParamsT>
-inline __attribute__((__returns_nonnull__))
-ObjectT *Construct(ObjectT *pObject, ParamsT &&...vParams)
+inline ObjectT *Construct(ObjectT *pObject, ParamsT &&...vParams)
 	noexcept(std::is_nothrow_constructible<ObjectT, ParamsT &&...>::value)
 {
 	return Impl::DirectConstructor<ObjectT>::template Construct<ParamsT &&...>(
-		pObject, std::forward<ParamsT>(vParams)...	);
+		pObject, std::forward<ParamsT>(vParams)...);
 }
 template<typename ObjectT>
 inline void Destruct(ObjectT *pObject)

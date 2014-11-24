@@ -16,7 +16,7 @@ IsaacExEncoder::IsaacExEncoder(const void *pKey, std::size_t uKeyLen) noexcept {
 	vShaHasher.Update(pKey, uKeyLen);
 	vShaHasher.Finalize(xm_vKeyHash.aby);
 	for(auto &u32 : xm_vKeyHash.au32){
-		u32 = BYTE_SWAP_TO_BE(u32);
+		u32 = BYTE_SWAP_FROM_BE(u32);
 	}
 }
 IsaacExEncoder::~IsaacExEncoder(){
@@ -65,7 +65,7 @@ IsaacExDecoder::IsaacExDecoder(const void *pKey, std::size_t uKeyLen) noexcept {
 	vShaHasher.Update(pKey, uKeyLen);
 	vShaHasher.Finalize(xm_vKeyHash.aby);
 	for(auto &u32 : xm_vKeyHash.au32){
-		u32 = BYTE_SWAP_TO_BE(u32);
+		u32 = BYTE_SWAP_FROM_BE(u32);
 	}
 }
 IsaacExDecoder::~IsaacExDecoder(){

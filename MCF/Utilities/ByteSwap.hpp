@@ -62,11 +62,14 @@ constexpr unsigned long long ByteSwap(unsigned long long ull) noexcept {
 }
 
 #if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
-#	define BYTE_SWAP_TO_LE(expr)	(expr)
-#	define BYTE_SWAP_TO_BE(expr)	(::MCF::ByteSwap(expr))
+#	define BYTE_SWAP_TO_LE(val_)	(val_)
+#	define BYTE_SWAP_TO_BE(val_)	(::MCF::ByteSwap(val_))
 #else
-#	define BYTE_SWAP_TO_LE(expr)	(::MCF::ByteSwap(expr))
-#	define BYTE_SWAP_TO_BE(expr)	(expr)
+#	define BYTE_SWAP_TO_LE(val_)	(::MCF::ByteSwap(val_))
+#	define BYTE_SWAP_TO_BE(val_)	(val_)
 #endif
+
+#define BYTE_SWAP_FROM_LE(val_)		(BYTE_SWAP_TO_LE(val_))
+#define BYTE_SWAP_FROM_BE(val_)		(BYTE_SWAP_TO_BE(val_))
 
 #endif

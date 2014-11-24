@@ -28,7 +28,7 @@ void DoSha256Chunk(std::uint32_t (&au32Result)[8], const unsigned char *pbyChunk
 
 	std::uint32_t w[64];
 	for(std::size_t i = 0; i < 16; ++i){
-		w[i] = BYTE_SWAP_TO_LE(((const std::uint32_t *)pbyChunk)[i]);
+		w[i] = BYTE_SWAP_FROM_LE(((const std::uint32_t *)pbyChunk)[i]);
 	}
 	for(std::size_t i = 16; i < COUNT_OF(w); ++i){
 		//const std::uint32_t s0 = ::_rotr(w[i - 15], 7) ^ ::_rotr(w[i - 15], 18) ^ (w[i - 15] >> 3);
@@ -147,7 +147,7 @@ void DoSha256Chunk(std::uint32_t (&au32Result)[8], const unsigned char *pbyChunk
 
 	alignas(16) std::uint32_t w[64];
 	for(std::size_t i = 0; i < 16; ++i){
-		w[i] = BYTE_SWAP_TO_LE(((const std::uint32_t *)pbyChunk)[i]);
+		w[i] = BYTE_SWAP_FROM_LE(((const std::uint32_t *)pbyChunk)[i]);
 	}
 /*
 	for(std::size_t i = 16; i < COUNT_OF(w); ++i){

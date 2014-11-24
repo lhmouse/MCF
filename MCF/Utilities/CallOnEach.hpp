@@ -10,17 +10,6 @@
 namespace MCF {
 
 template<typename FunctionT, typename FirstT, typename ...ParamsT>
-FunctionT &&CallOnEach(FunctionT &&vFunction, FirstT &&vFirst, ParamsT &&...vParams){
-	vFunction(std::forward<FirstT>(vFirst));
-	CallOnEach(vFunction, std::forward<ParamsT>(vParams)...);
-	return std::forward<FunctionT>(vFunction);
-}
-template<typename FunctionT>
-FunctionT &&CallOnEach(FunctionT &&vFunction){
-	return std::forward<FunctionT>(vFunction);
-}
-
-template<typename FunctionT, typename FirstT, typename ...ParamsT>
 FunctionT &&ReverseCallOnEach(FunctionT &&vFunction, FirstT &&vFirst, ParamsT &&...vParams){
 	ReverseCallOnEach(vFunction, std::forward<ParamsT>(vParams)...);
 	vFunction(std::forward<FirstT>(vFirst));
@@ -28,6 +17,17 @@ FunctionT &&ReverseCallOnEach(FunctionT &&vFunction, FirstT &&vFirst, ParamsT &&
 }
 template<typename FunctionT>
 FunctionT &&ReverseCallOnEach(FunctionT &&vFunction){
+	return std::forward<FunctionT>(vFunction);
+}
+
+template<typename FunctionT, typename FirstT, typename ...ParamsT>
+FunctionT &&CallOnEach(FunctionT &&vFunction, FirstT &&vFirst, ParamsT &&...vParams){
+	vFunction(std::forward<FirstT>(vFirst));
+	CallOnEach(vFunction, std::forward<ParamsT>(vParams)...);
+	return std::forward<FunctionT>(vFunction);
+}
+template<typename FunctionT>
+FunctionT &&CallOnEach(FunctionT &&vFunction){
 	return std::forward<FunctionT>(vFunction);
 }
 

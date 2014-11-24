@@ -17,39 +17,34 @@ namespace Impl {
 	template<std::size_t CUR_T, std::size_t END_T>
 	struct CallOnTupleHelper {
 		template<typename FunctionT, typename ...TupleParamsT, typename ...UnpackedT>
-		static decltype(auto) Do(
-			FunctionT &&vFunction, const std::tuple<TupleParamsT...> &vTuple,
-			const UnpackedT &...vUnpacked
-		){
+		static decltype(auto) Do(FunctionT &&vFunction, const std::tuple<TupleParamsT...> &vTuple,
+			const UnpackedT &...vUnpacked)
+		{
 			return CallOnTupleHelper<CUR_T + 1, END_T>::Do(
 				std::forward<FunctionT>(vFunction), vTuple,
 				vUnpacked..., std::get<CUR_T>(vTuple));
 		}
 		template<typename FunctionT, typename ...TupleParamsT, typename ...UnpackedT>
-		static decltype(auto) Do(
-			FunctionT &&vFunction, std::tuple<TupleParamsT...> &&vTuple,
-			UnpackedT &&...vUnpacked
-		){
+		static decltype(auto) Do(FunctionT &&vFunction, std::tuple<TupleParamsT...> &&vTuple,
+			UnpackedT &&...vUnpacked)
+		{
 			return CallOnTupleHelper<CUR_T + 1, END_T>::Do(
 				std::forward<FunctionT>(vFunction), std::move(vTuple),
-				std::move(vUnpacked)..., std::move(std::get<CUR_T>(vTuple))
-			);
+				std::move(vUnpacked)..., std::move(std::get<CUR_T>(vTuple)));
 		}
 	};
 	template<std::size_t END_T>
 	struct CallOnTupleHelper<END_T, END_T> {
 		template<typename FunctionT, typename ...TupleParamsT, typename ...UnpackedT>
-		static decltype(auto) Do(
-			FunctionT &&vFunction, const std::tuple<TupleParamsT...> &,
-			const UnpackedT &...vUnpacked
-		){
+		static decltype(auto) Do(FunctionT &&vFunction, const std::tuple<TupleParamsT...> &,
+			const UnpackedT &...vUnpacked)
+		{
 			return std::forward<FunctionT>(vFunction)(vUnpacked...);
 		}
 		template<typename FunctionT, typename ...TupleParamsT, typename ...UnpackedT>
-		static decltype(auto) Do(
-			FunctionT &&vFunction, std::tuple<TupleParamsT...> &&,
-			UnpackedT &&...vUnpacked
-		){
+		static decltype(auto) Do(FunctionT &&vFunction, std::tuple<TupleParamsT...> &&,
+			UnpackedT &&...vUnpacked)
+		{
 			return std::forward<FunctionT>(vFunction)(std::move(vUnpacked)...);
 		}
 	};

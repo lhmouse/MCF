@@ -75,7 +75,7 @@ void DoMd5Chunk(std::uint32_t (&au32Result)[4], const unsigned char *pbyChunk) n
 		const std::uint32_t temp = d;
 		d = c;
 		c = b;
-		b += ::_rotl(a + f + KVEC[i] + BYTE_SWAP_TO_BE(w[g]), RVEC[i]);
+		b += ::_rotl(a + f + KVEC[i] + BYTE_SWAP_FROM_BE(w[g]), RVEC[i]);
 		a = temp;
 	}
 

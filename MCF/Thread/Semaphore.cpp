@@ -18,8 +18,7 @@ private:
 
 public:
 	SemaphoreDelegate(unsigned long ulInitCount, const wchar_t *pwszName){
-		xm_hSemaphore.Reset(::CreateSemaphoreW(nullptr, (long)ulInitCount, LONG_MAX, pwszName));
-		if(!xm_hSemaphore){
+		if(!xm_hSemaphore.Reset(::CreateSemaphoreW(nullptr, (long)ulInitCount, LONG_MAX, pwszName))){
 			DEBUG_THROW(SystemError, "CreateSemaphoreW");
 		}
 	}

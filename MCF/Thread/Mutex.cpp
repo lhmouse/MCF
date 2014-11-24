@@ -18,8 +18,7 @@ private:
 
 public:
 	explicit MutexDelegate(const wchar_t *pwszName){
-		xm_hMutex.Reset(::CreateMutexW(nullptr, false, pwszName));
-		if(!xm_hMutex){
+		if(!xm_hMutex.Reset(::CreateMutexW(nullptr, false, pwszName))){
 			DEBUG_THROW(SystemError, "CreateMutexW");
 		}
 	}

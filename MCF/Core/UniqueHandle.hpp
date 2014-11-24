@@ -58,15 +58,15 @@ public:
 		return std::exchange(xm_hObject, CloserT()());
 	}
 
-	void Reset(Handle hObject = CloserT()()) noexcept {
+	UniqueHandle &Reset(Handle hObject = CloserT()()) noexcept {
 		const auto hOld = std::exchange(xm_hObject, hObject);
 		if(hOld != CloserT()()){
 			CloserT()(hOld);
 		}
+		return *this;
 	}
-	void Reset(UniqueHandle &&rhs) noexcept {
-		ASSERT(&rhs != this);
-		Reset(rhs.Release());
+	UniqueHandle &Reset(UniqueHandle &&rhs) noexcept {
+		return Reset(rhs.Release());
 	}
 
 	void Swap(UniqueHandle &rhs) noexcept {

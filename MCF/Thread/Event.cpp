@@ -18,8 +18,7 @@ private:
 
 public:
 	EventDelegate(bool bInitSet, const wchar_t *pwszName){
-		xm_hEvent.Reset(::CreateEventW(nullptr, true, bInitSet, pwszName));
-		if(!xm_hEvent){
+		if(!xm_hEvent.Reset(::CreateEventW(nullptr, true, bInitSet, pwszName))){
 			DEBUG_THROW(SystemError, "CreateEventW");
 		}
 	}

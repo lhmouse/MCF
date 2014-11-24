@@ -24,7 +24,7 @@ public:
 		: xm_fnProc(std::move(fnProc))
 	{
 		unsigned long ulThreadId;
-		xm_hThread.Reset(::MCF_CRT_CreateThread(
+		if(!xm_hThread.Reset(::MCF_CRT_CreateThread(
 			[](std::intptr_t nParam) noexcept -> unsigned {
 				const auto pThis = reinterpret_cast<ThreadDelegate *>(nParam);
 				try {
@@ -36,9 +36,8 @@ public:
 				pThis->DropRef();
 				return 0;
 			},
-			reinterpret_cast<std::intptr_t>(this), CREATE_SUSPENDED, &ulThreadId
-		));
-		if(!xm_hThread){
+			reinterpret_cast<std::intptr_t>(this), CREATE_SUSPENDED, &ulThreadId)))
+		{
 			DEBUG_THROW(SystemError, "MCF_CRT_CreateThread");
 		}
 		AddRef();

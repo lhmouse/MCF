@@ -210,22 +210,24 @@ public:
 		return IntrusivePtr(*this);
 	}
 
-	void Reset(T *pObject = nullptr) noexcept {
+	IntrusivePtr &Reset(T *pObject = nullptr) noexcept {
 		const auto pOld = std::exchange(xm_pBuddy, pObject);
 		if(pOld){
 			pOld->DropRef();
 		}
+		return *this;
 	}
 	template<typename U, std::enable_if_t<std::is_convertible<U *, T *>::value, int> = 0>
-	void Reset(const IntrusivePtr<U, DeleterT> &rhs) noexcept {
+	IntrusivePtr &Reset(const IntrusivePtr<U, DeleterT> &rhs) noexcept {
 		Reset(rhs.Get());
 		if(xm_pBuddy){
 			xm_pBuddy->AddRef();
 		}
+		return *this;
 	}
 	template<typename U, std::enable_if_t<std::is_convertible<U *, T *>::value, int> = 0>
-	void Reset(IntrusivePtr<U, DeleterT> &&rhs) noexcept {
-		Reset(rhs.Release());
+	IntrusivePtr &Reset(IntrusivePtr<U, DeleterT> &&rhs) noexcept {
+		return Reset(rhs.Release());
 	}
 
 	void Swap(IntrusivePtr &rhs) noexcept {

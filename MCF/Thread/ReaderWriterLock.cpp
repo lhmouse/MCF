@@ -36,13 +36,11 @@ public:
 	explicit ReaderWriterLockDelegate(unsigned long ulSpinCount)
 		: xm_csGuard(ulSpinCount), xm_uReaderCount(0)
 	{
-		xm_hSemaphore.Reset(::CreateSemaphoreW(nullptr, 1, 1, nullptr));
-		if(!xm_hSemaphore){
+		if(!xm_hSemaphore.Reset(::CreateSemaphoreW(nullptr, 1, 1, nullptr))){
 			DEBUG_THROW(SystemError, "CreateSemaphoreW");
 		}
 
-		xm_hdwReaderRecur.Reset(::TlsAlloc());
-		if(!xm_hdwReaderRecur){
+		if(!xm_hdwReaderRecur.Reset(::TlsAlloc())){
 			DEBUG_THROW(SystemError, "TlsAlloc");
 		}
 	}

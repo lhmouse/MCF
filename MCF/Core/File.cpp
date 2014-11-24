@@ -54,12 +54,12 @@ public:
 			dwFlagsAndAttributes |= FILE_FLAG_DELETE_ON_CLOSE;
 		}
 
-		xm_hFile.Reset(::CreateFileW(pwszPath,
+		if(!xm_hFile.Reset(::CreateFileW(pwszPath,
 			((u32Flags & TO_READ) ? GENERIC_READ : 0) |
 				((u32Flags & TO_WRITE) ? (GENERIC_WRITE | FILE_READ_ATTRIBUTES) : 0),
 			(u32Flags & TO_WRITE) ? 0 : FILE_SHARE_READ,
-			nullptr, dwCreateDisposition, dwFlagsAndAttributes, NULL));
-		if(!xm_hFile){
+			nullptr, dwCreateDisposition, dwFlagsAndAttributes, NULL)))
+		{
 			return std::make_pair(::GetLastError(), "CreateFileW");
 		}
 		if((u32Flags & TO_WRITE) && !(u32Flags & NO_TRUNC)){

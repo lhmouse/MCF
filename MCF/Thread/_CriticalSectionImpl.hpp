@@ -46,8 +46,7 @@ namespace Impl {
 			: xm_ulSpinCount(ulSpinCount), xm_dwOwner(0), xm_uRecurCount(0)
 			, xm_uWaiting(0), xm_pFirstWaiting(nullptr), xm_pLastWaiting(nullptr)
 		{
-			xm_hSemaphore.Reset(::CreateSemaphoreW(nullptr, 0, 1, nullptr));
-			if(!xm_hSemaphore){
+			if(!xm_hSemaphore.Reset(::CreateSemaphoreW(nullptr, 0, 1, nullptr))){
 				DEBUG_THROW(SystemError, "CreateSemaphoreW");
 			}
 

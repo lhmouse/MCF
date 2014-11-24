@@ -670,8 +670,7 @@ public:
 	}
 	template<class IteratorT>
 	void CopyToEndNoCheck(IteratorT itBegin, std::common_type_t<IteratorT> itEnd)
-		noexcept(std::is_nothrow_constructible<ElementT,
-			decltype(*std::declval<IteratorT>())>::value)
+		noexcept(std::is_nothrow_constructible<ElementT, decltype(*std::declval<IteratorT>())>::value)
 	{
 		while(itBegin != itEnd){
 			PushNoCheck(*itBegin);
@@ -680,8 +679,7 @@ public:
 	}
 	template<class IteratorT>
 	void CopyToEndNoCheck(IteratorT itBegin, std::size_t uCount)
-		noexcept(std::is_nothrow_constructible<ElementT,
-			decltype(*std::declval<IteratorT>())>::value)
+		noexcept(std::is_nothrow_constructible<ElementT, decltype(*std::declval<IteratorT>())>::value)
 	{
 		for(std::size_t i = 0; i < uCount; ++i){
 			PushNoCheck(*itBegin);
@@ -784,11 +782,6 @@ void swap(VVector<ElementT, ALT_STOR_THRESHOLD_T> &lhs,
 	VVector<ElementT, ALT_STOR_THRESHOLD_T> &rhs)
 	noexcept(noexcept(lhs.Swap(rhs)))
 {
-	lhs.Swap(rhs);
-}
-
-template<class ElementT>
-void swap(Vector<ElementT> &lhs, Vector<ElementT> &rhs) noexcept {
 	lhs.Swap(rhs);
 }
 

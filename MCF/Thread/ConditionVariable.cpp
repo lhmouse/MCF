@@ -26,8 +26,7 @@ public:
 	ConditionVariableDelegate()
 		: xm_uWaiterCount(0)
 	{
-		xm_hSemaphore.Reset(::CreateSemaphoreW(nullptr, 0, LONG_MAX, nullptr));
-		if(!xm_hSemaphore){
+		if(!xm_hSemaphore.Reset(::CreateSemaphoreW(nullptr, 0, LONG_MAX, nullptr))){
 			DEBUG_THROW(SystemError, "CreateSemaphoreW");
 		}
 	}

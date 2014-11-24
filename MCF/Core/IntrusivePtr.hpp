@@ -18,23 +18,23 @@ template<typename T, class DeleterT = DefaultDeleter<std::remove_cv_t<T>>>
 class IntrusivePtr;
 
 namespace Impl {
+	template<typename T, class DeleterT>
 	class IntrusiveSentry {
 	private:
-		void (*xm_pfnCallback)(std::intptr_t);
-		std::intptr_t xm_nContext;
+		T *xm_pToDelete;
 
 	public:
-		explicit IntrusiveSentry(void (*pfnCallback)(std::intptr_t), std::intptr_t nContext) noexcept
-			: xm_pfnCallback(pfnCallback), xm_nContext(nContext)
+		explicit IntrusiveSentry(T *pToDelete) noexcept
+			: xm_pToDelete(pToDelete)
 		{
 		}
 		IntrusiveSentry(IntrusiveSentry &&rhs) noexcept
-			: xm_pfnCallback(std::exchange(rhs.xm_pfnCallback, nullptr)), xm_nContext(rhs.xm_nContext)
+			: xm_pToDelete(std::exchange(rhs.xm_pToDelete, nullptr))
 		{
 		}
 		~IntrusiveSentry(){
-			if(xm_pfnCallback){
-				(*xm_pfnCallback)(xm_nContext);
+			if(xm_pToDelete){
+				DeleterT()(xm_pToDelete);
 			}
 		}
 
@@ -90,15 +90,14 @@ namespace Impl {
 
 			__atomic_add_fetch(&xm_uRefCount, 1, __ATOMIC_RELEASE);
 		}
-		IntrusiveSentry DropRef() const volatile noexcept {
+		IntrusiveSentry<T, DeleterT> DropRef() const volatile noexcept {
 			ASSERT(__atomic_load_n(&xm_uRefCount, __ATOMIC_ACQUIRE) != 0);
 
-			if(__atomic_sub_fetch(&xm_uRefCount, 1, __ATOMIC_ACQUIRE) != 0){
-				return IntrusiveSentry(nullptr, 0);
+			T *pToDelete = nullptr;
+			if(__atomic_sub_fetch(&xm_uRefCount, 1, __ATOMIC_ACQUIRE) == 0){
+				pToDelete = const_cast<T *>(Get());
 			}
-			return IntrusiveSentry(
-				[](std::intptr_t nThis){ DeleterT()(reinterpret_cast<T *>(nThis)); },
-				reinterpret_cast<std::intptr_t>(Get()));
+			return IntrusiveSentry<T, DeleterT>(pToDelete);
 		}
 
 		template<typename U = T>

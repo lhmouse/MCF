@@ -78,7 +78,8 @@ private:
 
 public:
 	xDelegate(LzmaEncoder &vOwner, unsigned uLevel, unsigned long ulDictSize)
-		: xm_vOwner(vOwner) , xm_vOptions(MakeOptions(uLevel, ulDictSize)), xm_vStream(INIT_STREAM)
+		: xm_vOwner(vOwner) , xm_vOptions(MakeOptions(uLevel, ulDictSize))
+		, xm_vStream(INIT_STREAM)
 	{
 	}
 
@@ -175,7 +176,8 @@ private:
 
 public:
 	explicit xDelegate(LzmaDecoder &vOwner)
-		: xm_vOwner(vOwner), xm_vStream(INIT_STREAM)
+		: xm_vOwner(vOwner)
+		, xm_vStream(INIT_STREAM)
 	{
 	}
 

@@ -56,10 +56,9 @@ bool Utf8TextFileReader::Read(Utf8String &u8sData, std::size_t uCount){
 	if((nChar = Read()) < 0){
 		return false;
 	}
-	auto i = uCount;
 	for(;;){
-		u8sData.PushNoCheck(nChar & 0xFF);
-		if(--i == 0){
+		u8sData.PushNoCheck((char)nChar);
+		if(u8sData.GetSize() == uCount){
 			break;
 		}
 		if((nChar = Read()) < 0){
@@ -79,7 +78,7 @@ bool Utf8TextFileReader::ReadLine(Utf8String &u8sData){
 		if(nChar == '\n'){
 			break;
 		}
-		u8sData.Push(nChar & 0xFF);
+		u8sData.Push((char)nChar);
 		if((nChar = Read()) < 0){
 			break;
 		}
@@ -94,7 +93,7 @@ bool Utf8TextFileReader::ReadTillEof(Utf8String &u8sData){
 		return false;
 	}
 	for(;;){
-		u8sData.Push(nChar & 0xFF);
+		u8sData.Push((char)nChar);
 		if((nChar = Read()) < 0){
 			break;
 		}

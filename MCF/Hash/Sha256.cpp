@@ -143,7 +143,7 @@ void DoSha256Chunk(std::uint32_t (&au32Result)[8], const unsigned char *pbyChunk
 #define K_61	"0xA4506CEB"
 #define K_62	"0xBEF9A3F7"
 #define K_63	"0xC67178F2"
-#define K(i)	K_##i
+#define K(i_)	K_ ## i_
 
 	alignas(16) std::uint32_t w[64];
 	for(std::size_t i = 0; i < 16; ++i){
@@ -185,135 +185,136 @@ void DoSha256Chunk(std::uint32_t (&au32Result)[8], const unsigned char *pbyChunk
 		"movdqa xmm3, xmmword ptr[%8 + 4 * 4] \n"
 		"movdqa xmm4, xmmword ptr[%8] \n"
 
-#define GEN_W_0(i, xr_out, xrm4, xrm8, xrm12, xrm16)	\
-		"movdqa " xr_out ", " xrm16 " \n"	\
-		"psrldq " xr_out ", 4 \n"	\
-		"movdqa xmm5, " xrm12 " \n"	\
+#define GEN_W_0(i_, xr_out_, xrm4_, xrm8_, xrm12_, xrm16_)	\
+		"movdqa " xr_out_ ", " xrm16_ " \n"	\
+		"psrldq " xr_out_ ", 4 \n"	\
+		"movdqa xmm5, " xrm12_ " \n"	\
 		"pslldq xmm5, 12 \n"
 
-#define GEN_W_1(i, xr_out, xrm4, xrm8, xrm12, xrm16)	\
-		"por " xr_out ", xmm5 \n"	\
-		"movdqa xmm5, " xr_out " \n"	\
-		"movdqa xmm6, " xr_out " \n"	\
+#define GEN_W_1(i_, xr_out_, xrm4_, xrm8_, xrm12_, xrm16_)	\
+		"por " xr_out_ ", xmm5 \n"	\
+		"movdqa xmm5, " xr_out_ " \n"	\
+		"movdqa xmm6, " xr_out_ " \n"	\
 		"psrld xmm6, 11 \n"
 
-#define GEN_W_2(i, xr_out, xrm4, xrm8, xrm12, xrm16)	\
-		"pslld " xr_out ", 21 \n"	\
-		"por " xr_out ", xmm6 \n"	\
-		"pxor " xr_out ", xmm5 \n"	\
+#define GEN_W_2(i_, xr_out_, xrm4_, xrm8_, xrm12_, xrm16_)	\
+		"pslld " xr_out_ ", 21 \n"	\
+		"por " xr_out_ ", xmm6 \n"	\
+		"pxor " xr_out_ ", xmm5 \n"	\
 		"psrld xmm5, 3 \n"
 
-#define GEN_W_3(i, xr_out, xrm4, xrm8, xrm12, xrm16)	\
-		"movdqa xmm6, " xr_out " \n"	\
+#define GEN_W_3(i_, xr_out_, xrm4_, xrm8_, xrm12_, xrm16_)	\
+		"movdqa xmm6, " xr_out_ " \n"	\
 		"psrld xmm6, 7 \n"	\
-		"pslld " xr_out ", 25 \n"	\
-		"por " xr_out ", xmm6 \n"
+		"pslld " xr_out_ ", 25 \n"	\
+		"por " xr_out_ ", xmm6 \n"
 
-#define GEN_W_4(i, xr_out, xrm4, xrm8, xrm12, xrm16)	\
-		"pxor " xr_out ", xmm5 \n"	\
-		"movdqa xmm5, " xrm8 " \n"	\
+#define GEN_W_4(i_, xr_out_, xrm4_, xrm8_, xrm12_, xrm16_)	\
+		"pxor " xr_out_ ", xmm5 \n"	\
+		"movdqa xmm5, " xrm8_ " \n"	\
 		"psrldq xmm5, 4 \n"	\
-		"movdqa xmm6, " xrm4 " \n"
+		"movdqa xmm6, " xrm4_ " \n"
 
-#define GEN_W_5(i, xr_out, xrm4, xrm8, xrm12, xrm16)	\
+#define GEN_W_5(i_, xr_out_, xrm4_, xrm8_, xrm12_, xrm16_)	\
 		"pslldq xmm6, 12 \n"	\
 		"por xmm5, xmm6 \n"	\
-		"paddd " xr_out ", xmm5 \n"	\
-		"paddd " xr_out ", " xrm16 " \n"
+		"paddd " xr_out_ ", xmm5 \n"	\
+		"paddd " xr_out_ ", " xrm16_ " \n"
 
-#define GEN_W_6(i, xr_out, xrm4, xrm8, xrm12, xrm16)	\
-		"movdqa xmm5, " xrm4 " \n"	\
+#define GEN_W_6(i_, xr_out_, xrm4_, xrm8_, xrm12_, xrm16_)	\
+		"movdqa xmm5, " xrm4_ " \n"	\
 		"psrldq xmm5, 8 \n"	\
 		"movdqa xmm6, xmm5 \n"
 
-#define GEN_W_7(i, xr_out, xrm4, xrm8, xrm12, xrm16)	\
+#define GEN_W_7(i_, xr_out_, xrm4_, xrm8_, xrm12_, xrm16_)	\
 		"movdqa xmm7, xmm5 \n"	\
 		"psrld xmm6, 2 \n"	\
 		"pslld xmm5, 30 \n"
 
-#define GEN_W_8(i, xr_out, xrm4, xrm8, xrm12, xrm16)	\
+#define GEN_W_8(i_, xr_out_, xrm4_, xrm8_, xrm12_, xrm16_)	\
 		"por xmm5, xmm6 \n"	\
 		"pxor xmm5, xmm7 \n"	\
 		"psrld xmm7, 10 \n"	\
 		"movdqa xmm6, xmm5 \n"
 
-#define GEN_W_9(i, xr_out, xrm4, xrm8, xrm12, xrm16)	\
+#define GEN_W_9(i_, xr_out_, xrm4_, xrm8_, xrm12_, xrm16_)	\
 		"psrld xmm6, 17 \n"	\
 		"pslld xmm5, 15 \n"	\
 		"por xmm5, xmm6 \n"	\
 
-#define GEN_W_10(i, xr_out, xrm4, xrm8, xrm12, xrm16)	\
+#define GEN_W_10(i_, xr_out_, xrm4_, xrm8_, xrm12_, xrm16_)	\
 		"pxor xmm5, xmm7 \n"	\
 		"pslldq xmm5, 8 \n"	\
 		"psrldq xmm5, 8 \n"
 
-#define GEN_W_11(i, xr_out, xrm4, xrm8, xrm12, xrm16)	\
-		"paddd " xr_out ", xmm5 \n"	\
-		"movdqa xmm5, " xr_out " \n"	\
-		"movdqa xmm6, " xr_out " \n"
+#define GEN_W_11(i_, xr_out_, xrm4_, xrm8_, xrm12_, xrm16_)	\
+		"paddd " xr_out_ ", xmm5 \n"	\
+		"movdqa xmm5, " xr_out_ " \n"	\
+		"movdqa xmm6, " xr_out_ " \n"
 
-#define GEN_W_12(i, xr_out, xrm4, xrm8, xrm12, xrm16)	\
+#define GEN_W_12(i_, xr_out_, xrm4_, xrm8_, xrm12_, xrm16_)	\
 		"psrld xmm6, 2 \n"	\
 		"pslld xmm5, 30 \n"	\
 		"por xmm5, xmm6 \n"	\
-		"pxor xmm5, " xr_out " \n"
+		"pxor xmm5, " xr_out_ " \n"
 
-#define GEN_W_13(i, xr_out, xrm4, xrm8, xrm12, xrm16)	\
+#define GEN_W_13(i_, xr_out_, xrm4_, xrm8_, xrm12_, xrm16_)	\
 		"movdqa xmm6, xmm5 \n"	\
 		"psrld xmm6, 17 \n"	\
 		"pslld xmm5, 15 \n"
 
-#define GEN_W_14(i, xr_out, xrm4, xrm8, xrm12, xrm16)	\
+#define GEN_W_14(i_, xr_out_, xrm4_, xrm8_, xrm12_, xrm16_)	\
 		"por xmm5, xmm6 \n"	\
-		"movdqa xmm7, " xr_out " \n"	\
+		"movdqa xmm7, " xr_out_ " \n"	\
 		"psrld xmm7, 10 \n"	\
 		"pxor xmm5, xmm7 \n"
 
-#define GEN_W_15(i, xr_out, xrm4, xrm8, xrm12, xrm16)	\
+#define GEN_W_15(i_, xr_out_, xrm4_, xrm8_, xrm12_, xrm16_)	\
 		"pslldq xmm5, 8 \n"	\
-		"paddd " xr_out ", xmm5 \n"	\
-		"movdqa xmmword ptr[%8 + (" #i ") * 4], " xr_out " \n"
+		"paddd " xr_out_ ", xmm5 \n"	\
+		"movdqa xmmword ptr[%8 + (" #i_ ") * 4], " xr_out_ " \n"
 
-// 寄存器多就是好。
 #ifdef _WIN64
 
-#define X64_STEP_0(i, ra, rb, rc, rd, re, rf, rg, rh)	\
-		"mov r10d, " ra " \n"	\
+// 寄存器多就是好。
+
+#define X64_STEP_0(i_, ra_, rb_, rc_, rd_, re_, rf_, rg_, rh_)	\
+		"mov r10d, " ra_ " \n"	\
 		"ror r10d, 9 \n"	\
-		"xor r10d, " ra " \n"	\
+		"xor r10d, " ra_ " \n"	\
 		"ror r10d, 11 \n"	\
-		"xor r10d, " ra " \n"	\
+		"xor r10d, " ra_ " \n"	\
 		"ror r10d, 2 \n"
 
-#define X64_STEP_1(i, ra, rb, rc, rd, re, rf, rg, rh)	\
-		"mov r11d, " ra " \n"	\
-		"and r11d, " rb " \n"	\
-		"mov r12d, " ra " \n"	\
-		"xor r12d, " rb " \n"	\
-		"and r12d, " rc " \n"	\
+#define X64_STEP_1(i_, ra_, rb_, rc_, rd_, re_, rf_, rg_, rh_)	\
+		"mov r11d, " ra_ " \n"	\
+		"and r11d, " rb_ " \n"	\
+		"mov r12d, " ra_ " \n"	\
+		"xor r12d, " rb_ " \n"	\
+		"and r12d, " rc_ " \n"	\
 		"or r11d, r12d \n"	\
-		"mov r12d, dword ptr[%8 + (" #i ") * 4] \n"	\
+		"mov r12d, dword ptr[%8 + (" #i_ ") * 4] \n"	\
 		"add r10d, r11d \n"
 
-#define X64_STEP_2(i, ra, rb, rc, rd, re, rf, rg, rh)	\
-		"mov r11d, " re " \n"	\
+#define X64_STEP_2(i_, ra_, rb_, rc_, rd_, re_, rf_, rg_, rh_)	\
+		"mov r11d, " re_ " \n"	\
 		"ror r11d, 14 \n"	\
-		"xor r11d, " re " \n"	\
+		"xor r11d, " re_ " \n"	\
 		"ror r11d, 5 \n"	\
-		"xor r11d, " re " \n"	\
+		"xor r11d, " re_ " \n"	\
 		"ror r11d, 6 \n"	\
-		"add " rh ", r12d \n"	\
-		"add " rh ", r11d \n"
+		"add " rh_ ", r12d \n"	\
+		"add " rh_ ", r11d \n"
 
-#define X64_STEP_3(i, ra, rb, rc, rd, re, rf, rg, rh)	\
-		"mov r11d, " rf " \n"	\
-		"xor r11d, " rg " \n"	\
-		"and r11d, " re " \n"	\
-		"xor r11d, " rg " \n"	\
-		"add " rh ", " K(i) " \n"	\
-		"add " rh ", r11d \n"	\
-		"add " rd ", " rh " \n"	\
-		"add " rh ", r10d \n"
+#define X64_STEP_3(i_, ra_, rb_, rc_, rd_, re_, rf_, rg_, rh_)	\
+		"mov r11d, " rf_ " \n"	\
+		"xor r11d, " rg_ " \n"	\
+		"and r11d, " re_ " \n"	\
+		"xor r11d, " rg_ " \n"	\
+		"add " rh_ ", " K(i_) " \n"	\
+		"add " rh_ ", r11d \n"	\
+		"add " rd_ ", " rh_ " \n"	\
+		"add " rh_ ", r10d \n"
 
 		X64_STEP_0( 0, "%0", "%1", "%2", "%3", "%4", "%5", "%6", "%7")	GEN_W_0 (16, "xmm0", "xmm1", "xmm2", "xmm3", "xmm4")
 		X64_STEP_1( 0, "%0", "%1", "%2", "%3", "%4", "%5", "%6", "%7")	GEN_W_1 (16, "xmm0", "xmm1", "xmm2", "xmm3", "xmm4")
@@ -585,48 +586,48 @@ void DoSha256Chunk(std::uint32_t (&au32Result)[8], const unsigned char *pbyChunk
 		"mov esi, dword ptr[%1] \n" // b
 		"mov edi, dword ptr[%2] \n" // c
 
-#define X86_STEP_0(i, ma, mb, mc, md, me, mf, mg, mh, ra, rb, rc_ra)	\
-		"mov eax, " ra " \n"	\
+#define X86_STEP_0(i_, ma_, mb_, mc_, md_, me_, mf_, mg_, mh_, ra_, rb_, rc_ra_)	\
+		"mov eax, " ra_ " \n"	\
 		"ror eax, 9 \n"	\
-		"xor eax, " ra " \n"	\
+		"xor eax, " ra_ " \n"	\
 		"ror eax, 11 \n"	\
-		"xor eax, " ra " \n"	\
+		"xor eax, " ra_ " \n"	\
 		"ror eax, 2 \n"
 
-#define X86_STEP_1(i, ma, mb, mc, md, me, mf, mg, mh, ra, rb, rc_ra)	\
-		"mov ecx, " ra " \n"	\
-		"and ecx, " rb " \n"	\
-		"mov edx, " ra " \n"	\
-		"xor edx, " rb " \n"	\
-		"and edx, " rc_ra " \n"	\
+#define X86_STEP_1(i_, ma_, mb_, mc_, md_, me_, mf_, mg_, mh_, ra_, rb_, rc_ra_)	\
+		"mov ecx, " ra_ " \n"	\
+		"and ecx, " rb_ " \n"	\
+		"mov edx, " ra_ " \n"	\
+		"xor edx, " rb_ " \n"	\
+		"and edx, " rc_ra_ " \n"	\
 		"or ecx, edx \n"	\
-		"mov edx, dword ptr[%8 + (" #i ") * 4] \n"	\
+		"mov edx, dword ptr[%8 + (" #i_ ") * 4] \n"	\
 		"add eax, ecx \n"
 
-#define X86_STEP_2(i, ma, mb, mc, md, me, mf, mg, mh, ra, rb, rc_ra)	\
-		"mov " rc_ra ", dword ptr[" me "] \n"	\
-		"mov ecx, " rc_ra " \n"	\
+#define X86_STEP_2(i_, ma_, mb_, mc_, md_, me_, mf_, mg_, mh_, ra_, rb_, rc_ra_)	\
+		"mov " rc_ra_ ", dword ptr[" me_ "] \n"	\
+		"mov ecx, " rc_ra_ " \n"	\
 		"ror ecx, 14 \n"	\
-		"xor ecx, " rc_ra " \n"	\
+		"xor ecx, " rc_ra_ " \n"	\
 		"ror ecx, 5 \n"	\
-		"xor ecx, " rc_ra " \n"	\
-		"mov " rc_ra ", dword ptr[" mh "] \n"	\
-		"add " rc_ra ", edx \n"	\
+		"xor ecx, " rc_ra_ " \n"	\
+		"mov " rc_ra_ ", dword ptr[" mh_ "] \n"	\
+		"add " rc_ra_ ", edx \n"	\
 		"ror ecx, 6 \n"	\
-		"add " rc_ra ", ecx \n"
+		"add " rc_ra_ ", ecx \n"
 
-#define X86_STEP_3(i, ma, mb, mc, md, me, mf, mg, mh, ra, rb, rc_ra)	\
-		"mov edx, dword ptr[" md "] \n"	\
-		"mov ecx, " mf " \n"	\
-		"xor ecx, " mg " \n"	\
-		"and ecx, " me " \n"	\
-		"xor ecx, " mg " \n"	\
-		"add " rc_ra ", " K(i) " \n"	\
-		"add " rc_ra ", ecx \n"	\
-		"add edx, " rc_ra " \n"	\
-		"mov dword ptr[" md "], edx \n"	\
-		"add " rc_ra ", eax \n"	\
-		"mov dword ptr[" mh "], " rc_ra " \n"
+#define X86_STEP_3(i_, ma_, mb_, mc_, md_, me_, mf_, mg_, mh_, ra_, rb_, rc_ra_)	\
+		"mov edx, dword ptr[" md_ "] \n"	\
+		"mov ecx, " mf_ " \n"	\
+		"xor ecx, " mg_ " \n"	\
+		"and ecx, " me_ " \n"	\
+		"xor ecx, " mg_ " \n"	\
+		"add " rc_ra_ ", " K(i_) " \n"	\
+		"add " rc_ra_ ", ecx \n"	\
+		"add edx, " rc_ra_ " \n"	\
+		"mov dword ptr[" md_ "], edx \n"	\
+		"add " rc_ra_ ", eax \n"	\
+		"mov dword ptr[" mh_ "], " rc_ra_ " \n"
 
 		X86_STEP_0( 0, "%0", "%1", "%2", "%3", "%4", "%5", "%6", "%7", "ebx", "esi", "edi")	GEN_W_0 (16, "xmm0", "xmm1", "xmm2", "xmm3", "xmm4")
 		X86_STEP_1( 0, "%0", "%1", "%2", "%3", "%4", "%5", "%6", "%7", "ebx", "esi", "edi")	GEN_W_1 (16, "xmm0", "xmm1", "xmm2", "xmm3", "xmm4")

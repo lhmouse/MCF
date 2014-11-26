@@ -219,25 +219,6 @@ static void UpdateRecur(MCF_AvlNodeHeader *pWhere){
 	}
 }
 
-void MCF_AvlSwap(MCF_AvlRoot *ppRoot1, MCF_AvlRoot *ppRoot2){
-	if(ppRoot1 == ppRoot2){
-		return;
-	}
-
-	MCF_AvlNodeHeader *const pRoot1 = *ppRoot1;
-	MCF_AvlNodeHeader *const pRoot2 = *ppRoot2;
-
-	*ppRoot2 = pRoot1;
-	if(pRoot1){
-		pRoot1->ppRefl = ppRoot2;
-	}
-
-	*ppRoot1 = pRoot2;
-	if(pRoot2){
-		pRoot2->ppRefl = ppRoot1;
-	}
-}
-
 void MCF_AvlInternalAttach(MCF_AvlNodeHeader *pNode,
 	MCF_AvlNodeHeader *pParent, MCF_AvlNodeHeader **ppRefl)
 {
@@ -376,5 +357,43 @@ void MCF_AvlInternalDetach(const MCF_AvlNodeHeader *pNode){
 	}
 	if(pNext){
 		pNext->pPrev = pPrev;
+	}
+}
+
+MCF_AvlNodeHeader *MCF_AvlFront(const MCF_AvlRoot *ppRoot){
+	MCF_AvlNodeHeader *pCur = *ppRoot;
+	if(pCur){
+		while(pCur->pLeft){
+			pCur = pCur->pLeft;
+		}
+	}
+	return pCur;
+}
+MCF_AvlNodeHeader *MCF_AvlBack(const MCF_AvlRoot *ppRoot){
+	MCF_AvlNodeHeader *pCur = *ppRoot;
+	if(pCur){
+		while(pCur->pRight){
+			pCur = pCur->pRight;
+		}
+	}
+	return pCur;
+}
+
+void MCF_AvlSwap(MCF_AvlRoot *ppRoot1, MCF_AvlRoot *ppRoot2){
+	if(ppRoot1 == ppRoot2){
+		return;
+	}
+
+	MCF_AvlNodeHeader *const pRoot1 = *ppRoot1;
+	MCF_AvlNodeHeader *const pRoot2 = *ppRoot2;
+
+	*ppRoot2 = pRoot1;
+	if(pRoot1){
+		pRoot1->ppRefl = ppRoot2;
+	}
+
+	*ppRoot1 = pRoot2;
+	if(pRoot2){
+		pRoot2->ppRefl = ppRoot1;
 	}
 }

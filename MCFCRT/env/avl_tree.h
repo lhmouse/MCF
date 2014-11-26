@@ -20,27 +20,6 @@ typedef struct tagAvlNodeHeader {
 	struct tagAvlNodeHeader *pNext;
 } MCF_AvlNodeHeader;
 
-typedef MCF_AvlNodeHeader *MCF_AvlRoot;
-
-static inline MCF_AvlNodeHeader *MCF_AvlFront(const MCF_AvlRoot *ppRoot) MCF_NOEXCEPT {
-	MCF_AvlNodeHeader *pCur = *ppRoot;
-	if(pCur){
-		while(pCur->pLeft){
-			pCur = pCur->pLeft;
-		}
-	}
-	return pCur;
-}
-static inline MCF_AvlNodeHeader *MCF_AvlBack(const MCF_AvlRoot *ppRoot) MCF_NOEXCEPT {
-	MCF_AvlNodeHeader *pCur = *ppRoot;
-	if(pCur){
-		while(pCur->pRight){
-			pCur = pCur->pRight;
-		}
-	}
-	return pCur;
-}
-
 static inline MCF_AvlNodeHeader *MCF_AvlPrev(const MCF_AvlNodeHeader *pNode) MCF_NOEXCEPT {
 	return pNode->pPrev;
 }
@@ -48,11 +27,16 @@ static inline MCF_AvlNodeHeader *MCF_AvlNext(const MCF_AvlNodeHeader *pNode) MCF
 	return pNode->pNext;
 }
 
-extern void MCF_AvlSwap(MCF_AvlRoot *ppRoot1, MCF_AvlRoot *ppRoot2) MCF_NOEXCEPT;
-
 extern void MCF_AvlInternalAttach(MCF_AvlNodeHeader *pNode,
 	MCF_AvlNodeHeader *pParent, MCF_AvlNodeHeader **ppRefl) MCF_NOEXCEPT;
 extern void MCF_AvlInternalDetach(const MCF_AvlNodeHeader *pNode) MCF_NOEXCEPT;
+
+typedef MCF_AvlNodeHeader *MCF_AvlRoot;
+
+extern MCF_AvlNodeHeader *MCF_AvlFront(const MCF_AvlRoot *ppRoot) MCF_NOEXCEPT;
+extern MCF_AvlNodeHeader *MCF_AvlBack(const MCF_AvlRoot *ppRoot) MCF_NOEXCEPT;
+
+extern void MCF_AvlSwap(MCF_AvlRoot *ppRoot1, MCF_AvlRoot *ppRoot2) MCF_NOEXCEPT;
 
 // 若 arg0 < arg1 应返回非零值，否则应返回零。
 typedef bool (*MCF_AvlComparatorNodes)(const MCF_AvlNodeHeader *, const MCF_AvlNodeHeader *);

@@ -781,6 +781,7 @@ public:
 	template<typename ModifierT>
 	Node *ModifyWithHints(bool bOverwrites, const Hints &vHints, Node *pNode, ModifierT &&vModifier){
 		xDetachAll<(std::size_t)-1, IndicesT...>(pNode);
+
 		try {
 			std::forward<ModifierT>(vModifier)(*pNode);
 		} catch(...){

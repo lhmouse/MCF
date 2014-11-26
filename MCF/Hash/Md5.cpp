@@ -149,7 +149,7 @@ void DoMd5Chunk(std::uint32_t (&au32Result)[4], const unsigned char *pbyChunk) n
 #define R_61	"10"
 #define R_62	"15"
 #define R_63	"21"
-#define R(i)	R_##i
+#define R(i_)	R_ ## i_
 
 #define K_0		"0xD76AA478"
 #define K_1		"0xE8C7B756"
@@ -215,7 +215,7 @@ void DoMd5Chunk(std::uint32_t (&au32Result)[4], const unsigned char *pbyChunk) n
 #define K_61	"0xBD3AF235"
 #define K_62	"0x2AD7D2BB"
 #define K_63	"0xEB86D391"
-#define K(i)	K_##i
+#define K(i_)	K_ ## i_
 
 	register std::uint32_t a = au32Result[0];
 	register std::uint32_t b = au32Result[1];
@@ -224,48 +224,48 @@ void DoMd5Chunk(std::uint32_t (&au32Result)[4], const unsigned char *pbyChunk) n
 
 	__asm__ __volatile__(
 
-#define STEP_A(i, ra, rb, rc, rd)	\
-		"add " ra ", dword ptr[%4 + (" #i ") * 4] \n"	\
-		"mov edi, " rc " \n"	\
-		"xor edi, " rd " \n"	\
-		"and edi, " rb " \n"	\
-		"xor edi, " rd " \n"	\
-		"add " ra ", edi \n"	\
-		"add " ra ", " K(i) " \n"	\
-		"rol " ra ", " R(i) " \n"	\
-		"add " ra ", " rb " \n"
+#define STEP_A(i_, ra_, rb_, rc_, rd_)	\
+		"add " ra_ ", dword ptr[%4 + (" #i_ ") * 4] \n"	\
+		"mov edi, " rc_ " \n"	\
+		"xor edi, " rd_ " \n"	\
+		"and edi, " rb_ " \n"	\
+		"xor edi, " rd_ " \n"	\
+		"add " ra_ ", edi \n"	\
+		"add " ra_ ", " K(i_) " \n"	\
+		"rol " ra_ ", " R(i_) " \n"	\
+		"add " ra_ ", " rb_ " \n"
 
-#define STEP_B(i, ra, rb, rc, rd)	\
-		"add " ra ", dword ptr[%4 + ((5 * (" #i ") + 1) %% 16) * 4] \n"	\
-		"mov edi, " rb " \n"	\
-		"xor edi, " rc " \n"	\
-		"and edi, " rd " \n"	\
-		"xor edi, " rc " \n"	\
-		"add " ra ", edi \n"	\
-		"add " ra ", " K(i) " \n"	\
-		"rol " ra ", " R(i) " \n"	\
-		"add " ra ", " rb " \n"
+#define STEP_B(i_, ra_, rb_, rc_, rd_)	\
+		"add " ra_ ", dword ptr[%4 + ((5 * (" #i_ ") + 1) %% 16) * 4] \n"	\
+		"mov edi, " rb_ " \n"	\
+		"xor edi, " rc_ " \n"	\
+		"and edi, " rd_ " \n"	\
+		"xor edi, " rc_ " \n"	\
+		"add " ra_ ", edi \n"	\
+		"add " ra_ ", " K(i_) " \n"	\
+		"rol " ra_ ", " R(i_) " \n"	\
+		"add " ra_ ", " rb_ " \n"
 
-#define STEP_C(i, ra, rb, rc, rd)	\
-		"add " ra ", dword ptr[%4 + ((3 * (" #i ") + 5) %% 16) * 4] \n"	\
-		"mov edi, " rb " \n"	\
-		"xor edi, " rc " \n"	\
-		"xor edi, " rd " \n"	\
-		"add " ra ", edi \n"	\
-		"add " ra ", " K(i) " \n"	\
-		"rol " ra ", " R(i) " \n"	\
-		"add " ra ", " rb " \n"
+#define STEP_C(i_, ra_, rb_, rc_, rd_)	\
+		"add " ra_ ", dword ptr[%4 + ((3 * (" #i_ ") + 5) %% 16) * 4] \n"	\
+		"mov edi, " rb_ " \n"	\
+		"xor edi, " rc_ " \n"	\
+		"xor edi, " rd_ " \n"	\
+		"add " ra_ ", edi \n"	\
+		"add " ra_ ", " K(i_) " \n"	\
+		"rol " ra_ ", " R(i_) " \n"	\
+		"add " ra_ ", " rb_ " \n"
 
-#define STEP_D(i, ra, rb, rc, rd)	\
-		"add " ra ", dword ptr[%4 + ((7 * (" #i ")) %% 16) * 4] \n"	\
-		"mov edi, " rd " \n"	\
+#define STEP_D(i_, ra_, rb_, rc_, rd_)	\
+		"add " ra_ ", dword ptr[%4 + ((7 * (" #i_ ")) %% 16) * 4] \n"	\
+		"mov edi, " rd_ " \n"	\
 		"not edi \n"	\
-		"or edi, " rb " \n"	\
-		"xor edi, " rc " \n"	\
-		"add " ra ", edi \n"	\
-		"add " ra ", " K(i) " \n"	\
-		"rol " ra ", " R(i) " \n"	\
-		"add " ra ", " rb " \n"
+		"or edi, " rb_ " \n"	\
+		"xor edi, " rc_ " \n"	\
+		"add " ra_ ", edi \n"	\
+		"add " ra_ ", " K(i_) " \n"	\
+		"rol " ra_ ", " R(i_) " \n"	\
+		"add " ra_ ", " rb_ " \n"
 
 		STEP_A( 0, "%0", "%1", "%2", "%3")
 		STEP_A( 1, "%3", "%0", "%1", "%2")

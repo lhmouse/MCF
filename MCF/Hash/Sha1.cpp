@@ -101,90 +101,90 @@ void DoSha1Chunk(std::uint32_t (&au32Result)[5], const unsigned char *pbyChunk) 
 		"movdqa xmm6, xmmword ptr[%5] \n"
 		"movdqa xmm2, xmmword ptr[%5 + 20 * 4] \n"
 
-#define GEN_W_0(i, xr_out, xrm4, xrm8, xrm16, xrm28_out, xrm32)	\
-		"movdqa " xr_out ", " xrm8 " \n"	\
-		"movdqa " xrm28_out ", xmmword ptr[%5 + ((" #i ") - 7 * 4) * 4] \n"
+#define GEN_W_0(i_, xr_out_, xrm4_, xrm8_, xrm16_, xrm28_out_, xrm32_)	\
+		"movdqa " xr_out_ ", " xrm8_ " \n"	\
+		"movdqa " xrm28_out_ ", xmmword ptr[%5 + ((" #i_ ") - 7 * 4) * 4] \n"
 
-#define GEN_W_1(i, xr_out, xrm4, xrm8, xrm16, xrm28_out, xrm32)	\
-		"punpckhqdq " xr_out ", " xr_out " \n"	\
-		"punpcklqdq " xr_out ", " xrm4 " \n"
+#define GEN_W_1(i_, xr_out_, xrm4_, xrm8_, xrm16_, xrm28_out_, xrm32_)	\
+		"punpckhqdq " xr_out_ ", " xr_out_ " \n"	\
+		"punpcklqdq " xr_out_ ", " xrm4_ " \n"
 
-#define GEN_W_2(i, xr_out, xrm4, xrm8, xrm16, xrm28_out, xrm32)	\
-		"pxor " xr_out ", " xrm16 " \n"	\
-		"pxor " xr_out ", " xrm28_out " \n"	\
-		"pxor " xr_out ", " xrm32 " \n"
+#define GEN_W_2(i_, xr_out_, xrm4_, xrm8_, xrm16_, xrm28_out_, xrm32_)	\
+		"pxor " xr_out_ ", " xrm16_ " \n"	\
+		"pxor " xr_out_ ", " xrm28_out_ " \n"	\
+		"pxor " xr_out_ ", " xrm32_ " \n"
 
-#define GEN_W_3(i, xr_out, xrm4, xrm8, xrm16, xrm28_out, xrm32)	\
-		"movdqa xmm7, " xr_out " \n"	\
+#define GEN_W_3(i_, xr_out_, xrm4_, xrm8_, xrm16_, xrm28_out_, xrm32_)	\
+		"movdqa xmm7, " xr_out_ " \n"	\
 		"psrld xmm7, 30 \n"	\
-		"pslld " xr_out ", 2 \n"
+		"pslld " xr_out_ ", 2 \n"
 
-#define GEN_W_4(i, xr_out, xrm4, xrm8, xrm16, xrm28_out, xrm32)	\
-		"por " xr_out ", xmm7 \n"	\
-		"movdqa xmmword ptr[%5 + (" #i ") * 4], " xr_out " \n"
+#define GEN_W_4(i_, xr_out_, xrm4_, xrm8_, xrm16_, xrm28_out_, xrm32_)	\
+		"por " xr_out_ ", xmm7 \n"	\
+		"movdqa xmmword ptr[%5 + (" #i_ ") * 4], " xr_out_ " \n"
 
-#define STEP_0(i, ra, rb, rc, rd, re)	\
-		"mov edi, " ra " \n"	\
+#define STEP_0(i_, ra_, rb_, rc_, rd_, re_)	\
+		"mov edi, " ra_ " \n"	\
 		"rol edi, 5 \n"	\
-		"add edi, dword ptr[%5 + (" #i ") * 4] \n"	\
+		"add edi, dword ptr[%5 + (" #i_ ") * 4] \n"	\
 		"add edi, 0x5A827999 \n"	\
-		"add " re ", edi \n"	\
-		"mov edi, " rc " \n"	\
-		"xor edi, " rd " \n"	\
-		"and edi, " rb " \n"	\
-		"xor edi, " rd " \n"	\
-		"add " re ", edi \n"	\
-		"rol " rb ", 30 \n"
+		"add " re_ ", edi \n"	\
+		"mov edi, " rc_ " \n"	\
+		"xor edi, " rd_ " \n"	\
+		"and edi, " rb_ " \n"	\
+		"xor edi, " rd_ " \n"	\
+		"add " re_ ", edi \n"	\
+		"rol " rb_ ", 30 \n"
 
-#define STEP_1(i, ra, rb, rc, rd, re)	\
-		"mov edi, " ra " \n"	\
+#define STEP_1(i_, ra_, rb_, rc_, rd_, re_)	\
+		"mov edi, " ra_ " \n"	\
 		"rol edi, 5 \n"	\
-		"add edi, dword ptr[%5 + (" #i ") * 4] \n"	\
+		"add edi, dword ptr[%5 + (" #i_ ") * 4] \n"	\
 		"add edi, 0x6ED9EBA1 \n"	\
-		"add " re ", edi \n"	\
-		"mov edi, " rb " \n"	\
-		"xor edi, " rc " \n"	\
-		"xor edi, " rd " \n"	\
-		"add " re ", edi \n"	\
-		"rol " rb ", 30 \n"
+		"add " re_ ", edi \n"	\
+		"mov edi, " rb_ " \n"	\
+		"xor edi, " rc_ " \n"	\
+		"xor edi, " rd_ " \n"	\
+		"add " re_ ", edi \n"	\
+		"rol " rb_ ", 30 \n"
 
 #ifdef _WIN64
-#	define EDI_OREQ_RC_AND_RD(rc, rd)	\
-		"mov r8d, " rc " \n"	\
-		"and r8d, " rd " \n"	\
+#	define EDI_OREQ_RC_AND_RD(rc_, rd_)	\
+		"mov r8d, " rc_ " \n"	\
+		"and r8d, " rd_ " \n"	\
 		"or edi, r8d \n"
 #else
-#	define EDI_OREQ_RC_AND_RD(rc, rd)	\
-		"push " rc " \n"	\
-		"and " rc ", " rd " \n"	\
-		"or edi, " rc " \n"	\
-		"pop " rc " \n"
+#	define EDI_OREQ_RC_AND_RD(rc_, rd_)	\
+		"push " rc_ " \n"	\
+		"and " rc_ ", " rd_ " \n"	\
+		"or edi, " rc_ " \n"	\
+		"pop " rc_ " \n"
 #endif
 
-#define STEP_2(i, ra, rb, rc, rd, re)	\
-		"mov edi, " ra " \n"	\
+#define STEP_2(i_, ra_, rb_, rc_, rd_, re_)	\
+		"mov edi, " ra_ " \n"	\
 		"rol edi, 5 \n"	\
-		"add edi, dword ptr[%5 + (" #i ") * 4] \n"	\
+		"add edi, dword ptr[%5 + (" #i_ ") * 4] \n"	\
 		"add edi, 0x8F1BBCDC \n"	\
-		"add " re ", edi \n"	\
-		"mov edi, " rc " \n"	\
-		"or edi, " rd " \n"	\
-		"and edi, " rb " \n"	\
-		EDI_OREQ_RC_AND_RD(rc, rd)	\
-		"add " re ", edi \n"	\
-		"rol " rb ", 30 \n"
+		"add " re_ ", edi \n"	\
+		"mov edi, " rc_ " \n"	\
+		"or edi, " rd_ " \n"	\
+		"and edi, " rb_ " \n"	\
+		EDI_OREQ_RC_AND_RD(rc_, rd_)	\
+		"add " re_ ", edi \n"	\
+		"rol " rb_ ", 30 \n"
 
-#define STEP_3(i, ra, rb, rc, rd, re)	\
-		"mov edi, " ra " \n"	\
+#define STEP_3(i_, ra_, rb_, rc_, rd_, re_)	\
+		"mov edi, " ra_ " \n"	\
 		"rol edi, 5 \n"	\
-		"add edi, dword ptr[%5 + (" #i ") * 4] \n"	\
+		"add edi, dword ptr[%5 + (" #i_ ") * 4] \n"	\
 		"add edi, 0xCA62C1D6 \n"	\
-		"add " re ", edi \n"	\
-		"mov edi, " rb " \n"	\
-		"xor edi, " rc " \n"	\
-		"xor edi, " rd " \n"	\
-		"add " re ", edi \n"	\
-		"rol " rb ", 30 \n"
+		"add " re_ ", edi \n"	\
+		"mov edi, " rb_ " \n"	\
+		"xor edi, " rc_ " \n"	\
+		"xor edi, " rd_ " \n"	\
+		"add " re_ ", edi \n"	\
+		"rol " rb_ ", 30 \n"
 
 		STEP_0( 0, "%0", "%1", "%2", "%3", "%4")	GEN_W_0(32, "xmm0", "xmm4", "xmm3", "xmm1", "xmm5", "xmm6")
 		STEP_0( 1, "%4", "%0", "%1", "%2", "%3")	GEN_W_1(32, "xmm0", "xmm4", "xmm3", "xmm1", "xmm5", "xmm6")

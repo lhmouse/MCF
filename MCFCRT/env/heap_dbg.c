@@ -40,19 +40,11 @@ bool __MCF_CRT_HeapDbgInit(){
 	return true;
 }
 void __MCF_CRT_HeapDbgUninit(){
-	const BlockInfo *pBlockInfo = (const BlockInfo *)g_pavlBlocks;
-	if(pBlockInfo){
-		for(;;){
-			const BlockInfo *const pPrev = (const BlockInfo *)MCF_AvlPrev((const MCF_AvlNodeHeader *)pBlockInfo);
-			if(!pPrev){
-				break;
-			}
-			pBlockInfo = pPrev;
-		}
-
+	if(g_pavlBlocks){
 		MCF_CRT_Bail(L"__MCF_CRT_HeapDbgUninit() 失败：侦测到内存泄漏。\n\n"
 			"如果您选择调试应用程序，MCF CRT 将尝试使用 OutputDebugString() 导出内存泄漏的详细信息。");
 
+		const BlockInfo *pBlockInfo = (const BlockInfo *)MCF_AvlFront(&g_pavlBlocks);
 		wchar_t awcBuffer[256];
 		do {
 			const unsigned char *pbyDump = pBlockInfo->pContents;

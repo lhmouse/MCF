@@ -37,6 +37,10 @@ public:
 
 		LES_LF			= 0x00000000,
 		LES_CRLF		= 0x00000002,
+
+		BUF_LINE		= 0x00000000,
+		BUF_NONE		= 0x00000004,
+		BUF_FULL		= 0x00000008,
 	};
 
 private:
@@ -47,7 +51,7 @@ private:
 	Utf8String xm_u8sLine;
 
 public:
-	explicit Utf8TextFileWriter(std::unique_ptr<File> pFile, std::uint32_t u32Flags);
+	explicit Utf8TextFileWriter(std::unique_ptr<File> pFile, std::uint32_t u32Flags = 0);
 	~Utf8TextFileWriter();
 
 public:

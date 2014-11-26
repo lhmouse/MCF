@@ -63,12 +63,8 @@ public:
 			return std::make_pair(::GetLastError(), "CreateFileW");
 		}
 		if((u32Flags & TO_WRITE) && !(u32Flags & NO_TRUNC)){
-			if(!::SetEndOfFile(xm_hFile.Get())){
-				return std::make_pair(::GetLastError(), "SetEndOfFile");
-			}
-			if(!::FlushFileBuffers(xm_hFile.Get())){
-				return std::make_pair(::GetLastError(), "FlushFileBuffers");
-			}
+			Resize(0);
+			Flush();
 		}
 		return std::make_pair((unsigned long)ERROR_SUCCESS, nullptr);
 	}

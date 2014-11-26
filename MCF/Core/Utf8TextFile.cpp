@@ -125,15 +125,23 @@ Utf8TextFileWriter::~Utf8TextFileWriter(){
 
 // 其他非静态成员函数。
 void Utf8TextFileWriter::Write(char ch){
-	if(ch != '\n'){
-		xm_u8sLine += ch;
+	if(xm_u32Flags & BUF_NONE){
+		xm_pFile->Write(xm_u64Offset, &ch, 1);
 	} else {
-		if(xm_u32Flags & LES_CRLF){
+		if((ch == '\n') && (xm_u32Flags & LES_CRLF)){
 			xm_u8sLine += '\r';
 		}
-		xm_u8sLine += '\n';
+		xm_u8sLine += ch;
 
-		Flush();
+		bool bFlushNow;
+		if(xm_u32Flags & BUF_FULL){
+			bFlushNow = xm_u8sLine.GetSize() >= 0x1000;
+		} else {
+			bFlushNow = (ch == '\n');
+		}
+		if(bFlushNow){
+			Flush();
+		}
 	}
 }
 void Utf8TextFileWriter::Write(const Utf8StringObserver &u8soData){
@@ -149,6 +157,6 @@ void Utf8TextFileWriter::Flush(){
 	xm_pFile->Write(xm_u64Offset, xm_u8sLine.GetData(), xm_u8sLine.GetSize());
 	xm_pFile->Flush();
 
-	xm_u8sLine.Clear();
 	xm_u64Offset += xm_u8sLine.GetSize();
+	xm_u8sLine.Clear();
 }

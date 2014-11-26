@@ -1,18 +1,12 @@
 #include <MCF/StdMCF.hpp>
-#include <MCF/Core/StreamBuffer.hpp>
+#include <MCF/Core/Utf8TextFile.hpp>
 using namespace MCF;
 
 extern "C" unsigned int MCFMain() noexcept {
-	StreamBuffer buf;
-	buf.Splice(StreamBuffer("a"));
-	buf.Splice(StreamBuffer("b"));
-	buf.Splice(StreamBuffer("c"));
-	StreamBuffer(buf).Swap(buf);
-	buf.Traverse(
-		[](auto p, auto cb){
-			std::fwrite(p, cb, 1, stdout);
-			std::putchar('\n');
-		}
-	);
+	Utf8TextFileWriter wr(File::Open(L"E:\\Desktop\\test.txt", File::TO_WRITE), Utf8TextFileWriter::LES_CRLF);
+	wr.WriteLine(u8"hello world!"_u8so);
+	wr.WriteLine(u8"hello world!"_u8so);
+	wr.WriteLine(u8"hello world!"_u8so);
+	wr.WriteLine(u8"hello world!"_u8so);
 	return 0;
 }

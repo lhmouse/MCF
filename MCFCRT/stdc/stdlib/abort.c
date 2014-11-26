@@ -6,8 +6,8 @@
 #include "../../env/bail.h"
 #include "../../env/mcfwin.h"
 
-__attribute__((__noreturn__)) void abort(){
-	MCF_CRT_Bail(L"应用程序调用 abort() 异常终止。");
+_Noreturn void abort(){
+	MCF_CRT_Bail(L"应用程序调用了 abort()。");
 
 	TerminateProcess(GetCurrentProcess(), ERROR_PROCESS_ABORTED);
 	__builtin_unreachable();

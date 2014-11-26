@@ -62,7 +62,7 @@ void Deallocate(void *pBlock, bool bIsArray, const void *pRetAddr) noexcept {
 	const auto pbyRaw = (unsigned char *)pBlock - sizeof(std::max_align_t);
 	if(bIsArray != pbyRaw[0]){
 		MCF_CRT_BailF(L"试图使用 operator delete%ls() 释放 operator new%ls() 分配的内存。\n调用返回地址：%0*zX",
-			bIsArray ? L"" : L"[]", bIsArray ? L"[]" : L"", (int)(sizeof(size_t) * 2), (size_t)pRetAddr);
+			bIsArray ? L"" : L"[]", bIsArray ? L"[]" : L"", (int)(sizeof(std::size_t) * 2), (std::size_t)pRetAddr);
 	}
 	::__MCF_CRT_HeapFree(pbyRaw, pRetAddr);
 }

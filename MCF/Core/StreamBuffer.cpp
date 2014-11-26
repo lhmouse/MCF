@@ -22,12 +22,12 @@ namespace {
 
 using PoolLock = Impl::CriticalSectionImpl::Lock;
 
-auto GetPoolLock(){
+VList<Impl::DisposableBuffer> g_lstPool;
+
+PoolLock GetPoolLock(){
 	static Impl::CriticalSectionImpl s_csLock(0x400);
 	return PoolLock(&s_csLock);
 }
-
-VList<Impl::DisposableBuffer> g_lstPool;
 
 auto &PushPooled(VList<Impl::DisposableBuffer> &lstDst){
 	VList<Impl::DisposableBuffer>::Node *pNode;

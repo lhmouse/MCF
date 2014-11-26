@@ -1,18 +1,16 @@
 #include <MCF/StdMCF.hpp>
-#include <MCF/Core/Exception.hpp>
-#include <MCF/Thread/Thread.hpp>
+#include <MCF/Containers/MultiIndexMap.hpp>
+#include <utility>
 using namespace MCF;
 
-void foo(){
-	DEBUG_THROW(Exception, "meow", 123);
-}
-
 extern "C" unsigned int MCFMain() noexcept {
-	try {
-		auto thread = Thread::Create(foo);
-		thread->Join();
-	} catch(Exception &e){
-		std::printf("Exception: file = %s, line = %lu\n", e.GetFile(), e.GetLine());
+	MultiIndexMap<std::pair<int, int>,
+		UniqueOrderedMemberIndex<std::pair<int, int>, int, &std::pair<int, int>::first>> map;
+	map.Insert(true, std::make_pair(1, 2));
+	map.Insert(true, std::make_pair(2, 3));
+	map.Insert(true, std::make_pair(1, 4));
+	for(auto p = map.GetFirst<0>(); p; p = p->GetNext<0>()){
+		std::printf("%d %d\n", p->first, p->second);
 	}
 	return 0;
 }

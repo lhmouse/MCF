@@ -11,7 +11,7 @@ typedef int Dummy;
 
 #include "bail.h"
 #include "mcfwin.h"
-#include "../ext/ext_include.h"
+#include "../ext/strcpyout.h"
 #include <wchar.h>
 
 typedef __MCF_HeapDbgBlockInfo BlockInfo;

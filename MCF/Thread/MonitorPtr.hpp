@@ -9,13 +9,12 @@
 #include "../Utilities/NoCopy.hpp"
 #include <utility>
 #include <type_traits>
-#include <memory>
 #include <cstddef>
 
 namespace MCF {
 
 namespace Impl {
-	template<typename ObjectT, typename = void>
+	template<typename ObjectT, typename = int>
 	struct ForwardArrowOperatorHelper {
 		auto operator()(ObjectT *pObject) const noexcept {
 			return pObject;
@@ -23,8 +22,8 @@ namespace Impl {
 	};
 	template<typename ObjectT>
 	struct ForwardArrowOperatorHelper<
-		ObjectT, decltype(std::declval<ObjectT *>()->operator->(), (void)0)
-	> {
+		ObjectT, decltype(std::declval<ObjectT *>()->operator->(), 1)>
+	{
 		auto operator()(ObjectT *pObject) const noexcept {
 			return pObject->operator->();
 		}
@@ -32,7 +31,7 @@ namespace Impl {
 
 	template<typename ObjectT>
 	auto ForwardArrowOperator(ObjectT &vObject) noexcept {
-		return ForwardArrowOperatorHelper<ObjectT>()(std::addressof(vObject));
+		return ForwardArrowOperatorHelper<ObjectT>()(&vObject);
 	}
 }
 

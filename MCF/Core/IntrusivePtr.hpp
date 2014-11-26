@@ -43,7 +43,7 @@ namespace Impl {
 		void operator=(IntrusiveSentry &&) = delete;
 	};
 
-	template<typename DstT, typename SrcT, typename = void>
+	template<typename DstT, typename SrcT, typename = int>
 	struct IntrusiveCastHelper {
 		DstT *operator()(SrcT *pSrc) const noexcept {
 			return dynamic_cast<DstT *>(pSrc);
@@ -51,7 +51,7 @@ namespace Impl {
 	};
 	template<typename DstT, typename SrcT>
 	struct IntrusiveCastHelper<DstT, SrcT,
-		decltype(static_cast<DstT *>(std::declval<SrcT *>()), (void)0)>
+		decltype(static_cast<DstT *>(std::declval<SrcT *>()), 1)>
 	{
 		constexpr DstT *operator()(SrcT *pSrc) const noexcept {
 			return static_cast<DstT *>(pSrc);

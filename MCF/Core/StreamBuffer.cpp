@@ -21,6 +21,7 @@ struct Impl::DisposableBuffer {
 namespace {
 
 using PoolLock = Impl::CriticalSectionImpl::Lock;
+using BufferNode = typename VList<Impl::DisposableBuffer>::Node;
 
 VList<Impl::DisposableBuffer> g_lstPool;
 
@@ -30,7 +31,7 @@ PoolLock GetPoolLock(){
 }
 
 auto &PushPooled(VList<Impl::DisposableBuffer> &lstDst){
-	VList<Impl::DisposableBuffer>::Node *pNode;
+	BufferNode *pNode;
 	{
 		const auto vLock = GetPoolLock();
 		if(!g_lstPool.IsEmpty()){
@@ -79,8 +80,12 @@ StreamBuffer::StreamBuffer(const char *pszData)
 	Put(pszData);
 }
 StreamBuffer::StreamBuffer(const StreamBuffer &rhs)
-	: xm_lstBuffers(rhs.xm_lstBuffers), xm_uSize(rhs.xm_uSize)
+	: StreamBuffer()
 {
+	for(auto pNode = rhs.xm_lstBuffers.GetFirst(); pNode; pNode = pNode->GetNext()){
+		const auto &vBuffer = pNode->GetElement();
+		Put(vBuffer.abyData + vBuffer.uRead, vBuffer.uWrite - vBuffer.uRead);
+	}
 }
 StreamBuffer::StreamBuffer(StreamBuffer &&rhs) noexcept
 	: StreamBuffer()
@@ -254,23 +259,6 @@ void StreamBuffer::Put(const char *pszData){
 	}
 }
 
-void StreamBuffer::Traverse(const std::function<void (const unsigned char *, std::size_t)> &fnCallback) const {
-	for(auto pNode = xm_lstBuffers.GetFirst(); pNode; pNode = pNode->GetNext()){
-		auto &vBuffer = pNode->GetElement();
-		if(vBuffer.uRead < vBuffer.uWrite){
-			fnCallback(vBuffer.abyData + vBuffer.uRead, vBuffer.uWrite - vBuffer.uRead);
-		}
-	}
-}
-void StreamBuffer::Traverse(const std::function<void (unsigned char *, std::size_t)> &fnCallback){
-	for(auto pNode = xm_lstBuffers.GetFirst(); pNode; pNode = pNode->GetNext()){
-		auto &vBuffer = pNode->GetElement();
-		if(vBuffer.uRead < vBuffer.uWrite){
-			fnCallback(vBuffer.abyData + vBuffer.uRead, vBuffer.uWrite - vBuffer.uRead);
-		}
-	}
-}
-
 StreamBuffer StreamBuffer::Cut(std::size_t uSize){
 	StreamBuffer sbufRet;
 	if(xm_uSize <= uSize){
@@ -311,4 +299,41 @@ void StreamBuffer::Splice(StreamBuffer &rhs) noexcept {
 	xm_lstBuffers.Splice(nullptr, rhs.xm_lstBuffers);
 	xm_uSize += rhs.xm_uSize;
 	rhs.xm_uSize = 0;
+}
+
+bool StreamBuffer::Traverse(const StreamBuffer::TraverseContext *&pContext,
+	std::pair<const unsigned char *, std::size_t> &vBlock) const noexcept
+{
+	auto pNode = pContext ? ((const BufferNode *)pContext)->GetNext() : xm_lstBuffers.GetFirst();
+	for(;;){
+		if(!pNode){
+			return false;
+		}
+		const auto &vBuffer = pNode->GetElement();
+		if(vBuffer.uRead < vBuffer.uWrite){
+			pContext = (const TraverseContext *)pNode;
+			vBlock.first = vBuffer.abyData + vBuffer.uRead;
+			vBlock.second = vBuffer.uWrite - vBuffer.uRead;
+			return true;
+		}
+		pNode = pNode->GetNext();
+	}
+}
+bool StreamBuffer::Traverse(StreamBuffer::TraverseContext *&pContext,
+	std::pair<unsigned char *, std::size_t> &vBlock) noexcept
+{
+	auto pNode = pContext ? ((BufferNode *)pContext)->GetNext() : xm_lstBuffers.GetFirst();
+	for(;;){
+		if(!pNode){
+			return false;
+		}
+		pContext = (TraverseContext *)pNode;
+		auto &vBuffer = pNode->GetElement();
+		if(vBuffer.uRead < vBuffer.uWrite){
+			vBlock.first = vBuffer.abyData + vBuffer.uRead;
+			vBlock.second = vBuffer.uWrite - vBuffer.uRead;
+			return true;
+		}
+		pNode = pNode->GetNext();
+	}
 }

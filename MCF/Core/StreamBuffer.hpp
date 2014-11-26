@@ -9,7 +9,6 @@
 #include <iterator>
 #include <utility>
 #include <memory>
-#include <functional>
 #include <cstddef>
 
 namespace MCF {
@@ -22,6 +21,8 @@ class StreamBuffer {
 public:
 	class ReadIterator;
 	class WriteIterator;
+
+	class TraverseContext;
 
 private:
 	VList<Impl::DisposableBuffer> xm_lstBuffers;
@@ -57,12 +58,6 @@ public:
 	void Put(const void *pData, std::size_t uSize);
 	void Put(const char *pszData);
 
-	ReadIterator GetReadIterator() noexcept;
-	WriteIterator GetWriteIterator() noexcept;
-
-	void Traverse(const std::function<void (const unsigned char *, std::size_t)> &fnCallback) const;
-	void Traverse(const std::function<void (unsigned char *, std::size_t)> &fnCallback);
-
 	// 拆分成两部分，返回 [0, uSize) 部分，[uSize, -) 部分仍保存于当前对象中。
 	StreamBuffer Cut(std::size_t uSize);
 	// Cut() 的逆操作。该函数返回后 src 为空。
@@ -70,6 +65,31 @@ public:
 	void Splice(StreamBuffer &&rhs) noexcept {
 		Splice(rhs);
 	}
+
+	bool Traverse(const TraverseContext *&pContext,
+		std::pair<const unsigned char *, std::size_t> &vBlock) const noexcept;
+	bool Traverse(TraverseContext *&pContext,
+		std::pair<unsigned char *, std::size_t> &vBlock) noexcept;
+
+	template<typename CallbackT>
+	void Traverse(CallbackT &&vCallback) const {
+		const TraverseContext *pContext = nullptr;
+		std::pair<const unsigned char *, std::size_t> vBlock;
+		while(Traverse(pContext, vBlock)){
+			std::forward<CallbackT>(vCallback)(vBlock.first, vBlock.second);
+		}
+	}
+	template<typename CallbackT>
+	void Traverse(CallbackT &&vCallback){
+		TraverseContext *pContext = nullptr;
+		std::pair<unsigned char *, std::size_t> vBlock;
+		while(Traverse(pContext, vBlock)){
+			std::forward<CallbackT>(vCallback)(vBlock.first, vBlock.second);
+		}
+	}
+
+	ReadIterator GetReadIterator() noexcept;
+	WriteIterator GetWriteIterator() noexcept;
 
 	void Swap(StreamBuffer &rhs) noexcept {
 		xm_lstBuffers.Swap(rhs.xm_lstBuffers);

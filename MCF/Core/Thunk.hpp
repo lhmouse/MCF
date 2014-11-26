@@ -13,17 +13,10 @@ namespace MCF {
 
 struct ThunkDeleter {
 	void operator()(void *pThunk) const noexcept {
-		::MCF_CRT_DeallocateThunk(pThunk, false);
-	}
-};
-using ThunkPtr = std::unique_ptr<void, ThunkDeleter>;
-
-struct SafeThunkDeleter {
-	void operator()(void *pThunk) const noexcept {
 		::MCF_CRT_DeallocateThunk(pThunk, true);
 	}
 };
-using SafeThunkPtr = std::unique_ptr<void, SafeThunkDeleter>;
+using ThunkPtr = std::unique_ptr<void, ThunkDeleter>;
 
 inline ThunkPtr CreateThunk(const void *pInit, std::size_t uSize){
 	ThunkPtr pThunk(::MCF_CRT_AllocateThunk(pInit, uSize));
@@ -31,9 +24,6 @@ inline ThunkPtr CreateThunk(const void *pInit, std::size_t uSize){
 		throw std::bad_alloc();
 	}
 	return std::move(pThunk);
-}
-inline SafeThunkPtr CreateSafeThunk(const void *pInit, std::size_t uSize){
-	return SafeThunkPtr(CreateThunk(pInit, uSize).release());
 }
 
 }

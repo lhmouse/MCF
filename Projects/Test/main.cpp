@@ -1,19 +1,18 @@
 #include <MCF/StdMCF.hpp>
-#include <MCF/Containers/MultiIndexMap.hpp>
-#include <utility>
+#include <MCF/Core/StreamBuffer.hpp>
 using namespace MCF;
 
 extern "C" unsigned int MCFMain() noexcept {
-	using Element = std::pair<int, int>;
-	MultiIndexMap<Element,
-		UniqueOrderedMemberIndex<Element, int, &Element::first>
-		> map;
-	map.Insert(true, std::make_pair(1, 2));
-	map.Insert(true, std::make_pair(2, 3));
-	map.Insert(true, std::make_pair(1, 4));
-// __debugbreak();
-	for(auto p = map.GetFirst<0>(); p; p = p->GetNext<0>()){
-		std::printf("%d %d\n", p->first, p->second);
-	}
+	StreamBuffer buf;
+	buf.Splice(StreamBuffer("a"));
+	buf.Splice(StreamBuffer("b"));
+	buf.Splice(StreamBuffer("c"));
+	StreamBuffer(buf).Swap(buf);
+	buf.Traverse(
+		[](auto p, auto cb){
+			std::fwrite(p, cb, 1, stdout);
+			std::putchar('\n');
+		}
+	);
 	return 0;
 }

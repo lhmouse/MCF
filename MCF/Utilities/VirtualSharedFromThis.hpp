@@ -12,22 +12,26 @@
 namespace MCF {
 
 namespace Impl {
-	template<class BaseT, class DerivedT, typename TraitHelperT = void>
-	struct IsStaticCastable : public std::false_type {
+	template<class BaseT, class DerivedT, typename TraitHelperT = int>
+	struct IsStaticCastable
+		: public std::false_type
+	{
 	};
 	template<class BaseT, class DerivedT>
 	struct IsStaticCastable<BaseT, DerivedT,
-		decltype(static_cast<DerivedT *>(std::declval<BaseT *>()), (void)0)>
+		decltype(static_cast<DerivedT *>(std::declval<BaseT *>()), 1)>
 		: public std::true_type
 	{
 	};
 
-	template<class BaseT, class DerivedT, typename TraitHelperT = void>
-	struct IsDynamicCastable : public std::false_type {
+	template<class BaseT, class DerivedT, typename TraitHelperT = int>
+	struct IsDynamicCastable
+		: public std::false_type
+	{
 	};
 	template<class BaseT, class DerivedT>
 	struct IsDynamicCastable<BaseT, DerivedT,
-		decltype(dynamic_cast<DerivedT *>(std::declval<BaseT *>()), (void)0)>
+		decltype(dynamic_cast<DerivedT *>(std::declval<BaseT *>()), 1)>
 		: public std::true_type
 	{
 	};

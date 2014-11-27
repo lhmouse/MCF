@@ -67,14 +67,14 @@ public:
 	}
 
 	bool Traverse(const TraverseContext *&pContext,
-		std::pair<const unsigned char *, std::size_t> &vBlock) const noexcept;
+		std::pair<const void *, std::size_t> &vBlock) const noexcept;
 	bool Traverse(TraverseContext *&pContext,
-		std::pair<unsigned char *, std::size_t> &vBlock) noexcept;
+		std::pair<void *, std::size_t> &vBlock) noexcept;
 
 	template<typename CallbackT>
 	void Traverse(CallbackT &&vCallback) const {
 		const TraverseContext *pContext = nullptr;
-		std::pair<const unsigned char *, std::size_t> vBlock;
+		std::pair<const void *, std::size_t> vBlock;
 		while(Traverse(pContext, vBlock)){
 			std::forward<CallbackT>(vCallback)(vBlock.first, vBlock.second);
 		}
@@ -82,7 +82,7 @@ public:
 	template<typename CallbackT>
 	void Traverse(CallbackT &&vCallback){
 		TraverseContext *pContext = nullptr;
-		std::pair<unsigned char *, std::size_t> vBlock;
+		std::pair<void *, std::size_t> vBlock;
 		while(Traverse(pContext, vBlock)){
 			std::forward<CallbackT>(vCallback)(vBlock.first, vBlock.second);
 		}

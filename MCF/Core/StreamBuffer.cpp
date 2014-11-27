@@ -302,7 +302,7 @@ void StreamBuffer::Splice(StreamBuffer &rhs) noexcept {
 }
 
 bool StreamBuffer::Traverse(const StreamBuffer::TraverseContext *&pContext,
-	std::pair<const unsigned char *, std::size_t> &vBlock) const noexcept
+	std::pair<const void *, std::size_t> &vBlock) const noexcept
 {
 	auto pNode = pContext ? ((const BufferNode *)pContext)->GetNext() : xm_lstBuffers.GetFirst();
 	for(;;){
@@ -320,7 +320,7 @@ bool StreamBuffer::Traverse(const StreamBuffer::TraverseContext *&pContext,
 	}
 }
 bool StreamBuffer::Traverse(StreamBuffer::TraverseContext *&pContext,
-	std::pair<unsigned char *, std::size_t> &vBlock) noexcept
+	std::pair<void *, std::size_t> &vBlock) noexcept
 {
 	auto pNode = pContext ? ((BufferNode *)pContext)->GetNext() : xm_lstBuffers.GetFirst();
 	for(;;){

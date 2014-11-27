@@ -29,7 +29,7 @@ private:
 	UniqueHandle<xFileCloser> xm_hFile;
 
 public:
-	std::pair<unsigned long, const char *> Open(const wchar_t *pwszPath, std::uint32_t u32Flags){
+	void Open(const wchar_t *pwszPath, std::uint32_t u32Flags){
 		DWORD dwCreateDisposition;
 		if(u32Flags & TO_WRITE){
 			if(u32Flags & NO_CREATE){
@@ -60,13 +60,12 @@ public:
 			(u32Flags & TO_WRITE) ? 0 : FILE_SHARE_READ,
 			nullptr, dwCreateDisposition, dwFlagsAndAttributes, NULL)))
 		{
-			return std::make_pair(::GetLastError(), "CreateFileW");
+			DEBUG_THROW(SystemError, "CreateFileW");
 		}
 		if((u32Flags & TO_WRITE) && !(u32Flags & NO_TRUNC)){
 			Resize(0);
 			Flush();
 		}
-		return std::make_pair((unsigned long)ERROR_SUCCESS, nullptr);
 	}
 
 	std::uint64_t GetSize() const {
@@ -215,10 +214,7 @@ public:
 // 静态成员函数。
 std::unique_ptr<File> File::Open(const wchar_t *pwszPath, std::uint32_t u32Flags){
 	auto pFile = std::make_unique<FileDelegate>();
-	const auto vResult = pFile->Open(pwszPath, u32Flags);
-	if(vResult.first != ERROR_SUCCESS){
-		DEBUG_THROW(SystemError, vResult.second, vResult.first);
-	}
+	pFile->Open(pwszPath, u32Flags);
 	return std::move(pFile);
 }
 std::unique_ptr<File> File::Open(const WideString &wsPath, std::uint32_t u32Flags){
@@ -226,13 +222,12 @@ std::unique_ptr<File> File::Open(const WideString &wsPath, std::uint32_t u32Flag
 }
 
 std::unique_ptr<File> File::OpenNoThrow(const wchar_t *pwszPath, std::uint32_t u32Flags){
-	auto pFile = std::make_unique<FileDelegate>();
-	const auto vResult = pFile->Open(pwszPath, u32Flags);
-	if(vResult.first != ERROR_SUCCESS){
-		::SetLastError(vResult.first);
+	try {
+		return Open(pwszPath, u32Flags);
+	} catch(SystemError &e){
+		::SetLastError(e.GetCode());
 		return nullptr;
 	}
-	return std::move(pFile);
 }
 std::unique_ptr<File> File::OpenNoThrow(const WideString &wsPath, std::uint32_t u32Flags){
 	return OpenNoThrow(wsPath.GetCStr(), u32Flags);

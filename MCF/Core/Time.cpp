@@ -29,21 +29,21 @@ std::uint64_t UnixTimeFromNtTime(std::uint64_t u64NtTime) noexcept {
 }
 
 double GetHiResCounter() noexcept {
-	static bool s_bInited = false;
-	static double s_llfFreqRecip;
+	static volatile bool s_bInited = false;
+	static double s_lfFreqRecip;
 
 	::LARGE_INTEGER liTemp;
 	if(!__atomic_load_n(&s_bInited, __ATOMIC_ACQUIRE)){
 		if(!::QueryPerformanceFrequency(&liTemp)){
 			Bail(L"::QueryPerformanceFrequency() 失败。");
 		}
-		s_llfFreqRecip = 1.0 / liTemp.QuadPart;
+		s_lfFreqRecip = 1.0 / liTemp.QuadPart;
 		__atomic_store_n(&s_bInited, true, __ATOMIC_RELEASE);
 	}
 	if(!::QueryPerformanceCounter(&liTemp)){
 		Bail(L"::QueryPerformanceCounter() 失败。");
 	}
-	return (double)(liTemp.QuadPart * s_llfFreqRecip);
+	return (double)(liTemp.QuadPart * s_lfFreqRecip);
 }
 
 }

@@ -6,8 +6,6 @@
 #include "_mathasm.h"
 #include <limits.h>
 
-// postive pow float unsigned
-
 #define UNROLLED	\
 		if(++i == 32){	\
 			break;	\
@@ -18,6 +16,7 @@
 			ret *= x;	\
 		}
 
+// postive pow float unsigned
 static float ppowfu(float x, unsigned y){
 	if(y == 0){
 		return 1.0f;
@@ -75,6 +74,12 @@ static long double ppowlu(long double x, unsigned y){
 	}
 	return ret;
 }
+
+#define PPOWU(t_, x_, y_)	\
+	_Generic((t_)0,	\
+		float:		ppowfu,	\
+		double:		ppowdu,	\
+		default:	ppowlu)(x_, y_)
 
 // postive pow float float
 static __attribute__((__cdecl__)) float ppowf(float x, float y){
@@ -147,189 +152,90 @@ static __attribute__((__cdecl__)) __MCF_LDBL_DECL(ppowl, double x, double y){
 	__MCF_LDBL_RETURN(ret);
 }
 
-float powf(float x, float y){
-	if(y == 0){
-		return 1.0f;
-	}
-	if(x == 0){
-		return 0.0f;
+#define PPOW(t_, x_, y_)	\
+	_Generic((t_)0,	\
+		float:		ppowf,	\
+		double:		ppowd,	\
+		default:	ppowl)(x_, y_)
+
+#define POW_IMPL(t_)	\
+	if(y == 0){	\
+		return 1.0;	\
+	}	\
+	if(x == 0){	\
+		return 0.0;	\
+	}	\
+	const t_ whole = _Generic((t_)0,	\
+		float:		__builtin_floorf,	\
+		double:		__builtin_floor,	\
+		default:	__builtin_floorl)(y);	\
+	const t_ frac = y - whole;	\
+	if(x > 0){	\
+		if(y > INT_MAX){	\
+			return PPOW(t_, x, y);	\
+		} else if(y < INT_MIN){	\
+			return 1.0 / PPOW(t_, x, -y);	\
+		} else {	\
+			t_ ret;	\
+			if(y > 0){	\
+				ret = PPOWU(t_, x, (unsigned)whole);	\
+			} else {	\
+				ret = 1.0 / PPOWU(t_, x, (unsigned)-whole);	\
+			}	\
+			if(frac != 0){	\
+				ret *= PPOW(t_, x, frac);	\
+			}	\
+			return ret;	\
+		}	\
+	} else {	\
+		if(frac != 0){	\
+			__builtin_trap();	\
+		}	\
+		if(y > INT_MAX){	\
+			if(_Generic((t_)0,	\
+				float:		__builtin_fmodf,	\
+				double:		__builtin_fmod,	\
+				default:	__builtin_fmodl)(whole, 2.0) == 0.0)	\
+			{	\
+				return PPOW(t_, -x, whole);	\
+			} else {	\
+				return -PPOW(t_, -x, whole);	\
+			}	\
+		} else if(y < INT_MIN){	\
+			if(_Generic((t_)0,	\
+				float:		__builtin_fmodf,	\
+				double:		__builtin_fmod,	\
+				default:	__builtin_fmodl)(whole, 2.0) == 0.0)	\
+			{	\
+				return 1.0 / PPOW(t_, -x, whole);	\
+			} else {	\
+				return -1.0 / PPOW(t_, -x, whole);	\
+			}	\
+		} else {	\
+			if(whole > 0){	\
+				const unsigned idx = (unsigned)whole;	\
+				if(idx % 2 == 0){	\
+					return PPOWU(t_, -x, idx);	\
+				} else {	\
+					return -PPOWU(t_, -x, idx);	\
+				}	\
+			} else {	\
+				const unsigned idx = (unsigned)-whole;	\
+				if(idx % 2 == 0){	\
+					return 1.0 / PPOWU(t_, -x, idx);	\
+				} else {	\
+					return -1.0 / PPOWU(t_, -x, idx);	\
+				}	\
+			}	\
+		}	\
 	}
 
-	const float whole = __builtin_floorf(y);
-	const float frac = y - whole;
-	if(x > 0){
-		if(y > INT_MAX){
-			return ppowf(x, y);
-		} else if(y < INT_MIN){
-			return 1.0f / ppowf(x, -y);
-		} else {
-			float ret;
-			if(y > 0){
-				ret = ppowfu(x, (unsigned)whole);
-			} else {
-				ret = 1.0f / ppowfu(x, (unsigned)-whole);
-			}
-			if(frac != 0){
-				ret *= ppowf(x, frac);
-			}
-			return ret;
-		}
-	} else {
-		if(frac != 0){
-			return -0.0f / 0.0f;
-		}
-		if(y > INT_MAX){
-			if(__builtin_fmodf(whole, 2.0f) == 0.0f){
-				return ppowf(-x, whole);
-			} else {
-				return -ppowf(-x, whole);
-			}
-		} else if(y < INT_MIN){
-			if(__builtin_fmodf(whole, 2.0f) == 0.0f){
-				return 1.0f / ppowf(-x, whole);
-			} else {
-				return -1.0f / ppowf(-x, whole);
-			}
-		} else {
-			if(whole > 0){
-				const unsigned idx = (unsigned)whole;
-				if(idx % 2 == 0){
-					return ppowfu(-x, idx);
-				} else {
-					return -ppowfu(-x, idx);
-				}
-			} else {
-				const unsigned idx = (unsigned)-whole;
-				if(idx % 2 == 0){
-					return 1.0f / ppowfu(-x, idx);
-				} else {
-					return -1.0f / ppowfu(-x, idx);
-				}
-			}
-		}
-	}
+float powf(float x, float y){
+	POW_IMPL(float)
 }
 double pow(double x, double y){
-	if(y == 0){
-		return 1.0;
-	}
-	if(x == 0){
-		return 0.0;
-	}
-
-	const double whole = __builtin_floor(y);
-	const double frac = y - whole;
-	if(x > 0){
-		if(y > INT_MAX){
-			return ppowd(x, y);
-		} else if(y < INT_MIN){
-			return 1.0 / ppowd(x, -y);
-		} else {
-			double ret;
-			if(y > 0){
-				ret = ppowdu(x, (unsigned)whole);
-			} else {
-				ret = 1.0 / ppowdu(x, (unsigned)-whole);
-			}
-			if(frac != 0){
-				ret *= ppowd(x, frac);
-			}
-			return ret;
-		}
-	} else {
-		if(frac != 0){
-			return -0.0 / 0.0;
-		}
-		if(y > INT_MAX){
-			if(__builtin_fmod(whole, 2.0) == 0.0){
-				return ppowd(-x, whole);
-			} else {
-				return -ppowd(-x, whole);
-			}
-		} else if(y < INT_MIN){
-			if(__builtin_fmod(whole, 2.0) == 0.0){
-				return 1.0 / ppowd(-x, whole);
-			} else {
-				return -1.0 / ppowd(-x, whole);
-			}
-		} else {
-			if(whole > 0){
-				const unsigned idx = (unsigned)whole;
-				if(idx % 2 == 0){
-					return ppowdu(-x, idx);
-				} else {
-					return -ppowdu(-x, idx);
-				}
-			} else {
-				const unsigned idx = (unsigned)-whole;
-				if(idx % 2 == 0){
-					return 1.0 / ppowdu(-x, idx);
-				} else {
-					return -1.0 / ppowdu(-x, idx);
-				}
-			}
-		}
-	}
+	POW_IMPL(double)
 }
 long double powl(long double x, long double y){
-	if(y == 0){
-		return 1.0l;
-	}
-	if(x == 0){
-		return 0.0l;
-	}
-
-	const long double whole = __builtin_floorl(y);
-	const long double lrac = y - whole;
-	if(x > 0){
-		if(y > INT_MAX){
-			return ppowl(x, y);
-		} else if(y < INT_MIN){
-			return 1.0l / ppowl(x, -y);
-		} else {
-			long double ret;
-			if(y > 0){
-				ret = ppowlu(x, (unsigned)whole);
-			} else {
-				ret = 1.0l / ppowlu(x, (unsigned)-whole);
-			}
-			if(lrac != 0){
-				ret *= ppowl(x, lrac);
-			}
-			return ret;
-		}
-	} else {
-		if(lrac != 0){
-			return -0.0l / 0.0l;
-		}
-		if(y > INT_MAX){
-			if(__builtin_fmodl(whole, 2.0l) == 0.0l){
-				return ppowl(-x, whole);
-			} else {
-				return -ppowl(-x, whole);
-			}
-		} else if(y < INT_MIN){
-			if(__builtin_fmodl(whole, 2.0l) == 0.0l){
-				return 1.0l / ppowl(-x, whole);
-			} else {
-				return -1.0l / ppowl(-x, whole);
-			}
-		} else {
-			if(whole > 0){
-				const unsigned idx = (unsigned)whole;
-				if(idx % 2 == 0){
-					return ppowlu(-x, idx);
-				} else {
-					return -ppowlu(-x, idx);
-				}
-			} else {
-				const unsigned idx = (unsigned)-whole;
-				if(idx % 2 == 0){
-					return 1.0l / ppowlu(-x, idx);
-				} else {
-					return -1.0l / ppowlu(-x, idx);
-				}
-			}
-		}
-	}
+	POW_IMPL(long double)
 }

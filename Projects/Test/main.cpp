@@ -1,12 +1,10 @@
 #include <MCF/StdMCF.hpp>
-#include <MCF/Core/Utf8TextFile.hpp>
+#include <cmath>
 using namespace MCF;
 
 extern "C" unsigned int MCFMain() noexcept {
-	Utf8TextFileWriter wr(File::Open(L"E:\\Desktop\\test.txt", File::TO_WRITE), Utf8TextFileWriter::LES_CRLF);
-	wr.WriteLine(u8"hello world!"_u8s);
-	wr.WriteLine(u8"hello world!"_u8s);
-	wr.WriteLine(u8"hello world!"_u8s);
-	wr.WriteLine(u8"hello world!"_u8s);
+	double d1, d2;
+	std::scanf("%lf %lf", &d1, &d2);
+	std::printf("%f\n", std::pow(d1, d2));
 	return 0;
 }

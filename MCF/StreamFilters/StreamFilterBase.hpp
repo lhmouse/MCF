@@ -15,12 +15,13 @@ namespace MCF {
 
 class StreamFilterBase : NO_COPY, ABSTRACT {
 private:
+	bool xm_bInited;
 	StreamBuffer xm_sbufOutput;
 	std::uint64_t xm_u64BytesProcessed;
 
 protected:
 	StreamFilterBase() noexcept
-		: xm_u64BytesProcessed(0)
+		: xm_bInited(false), xm_u64BytesProcessed(0)
 	{
 	}
 
@@ -34,13 +35,18 @@ protected:
 
 public:
 	virtual void Abort() noexcept {
-		xm_sbufOutput.Clear();
-		xm_u64BytesProcessed = 0;
+		xm_bInited = false;
 	}
 	virtual void Update(const void *, std::size_t uSize){
+		if(!xm_bInited){
+			xm_bInited = true;
+			xm_sbufOutput.Clear();
+			xm_u64BytesProcessed = 0;
+		}
 		xm_u64BytesProcessed += uSize;
 	}
 	virtual void Finalize(){
+		xm_bInited = false;
 	}
 
 	std::size_t QueryBytesProcessed() const noexcept {

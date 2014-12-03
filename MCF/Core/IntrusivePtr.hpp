@@ -101,19 +101,19 @@ namespace Impl {
 		}
 
 		template<typename U = T>
-		auto Get() const volatile noexcept {
+		const volatile U *Get() const volatile noexcept {
 			return IntrusiveCastHelper<const volatile U, const volatile IntrusiveBase>()(this);
 		}
 		template<typename U = T>
-		auto Get() const noexcept {
+		const U *Get() const noexcept {
 			return IntrusiveCastHelper<const U, const IntrusiveBase>()(this);
 		}
 		template<typename U = T>
-		auto Get() volatile noexcept {
+		volatile U *Get() volatile noexcept {
 			return IntrusiveCastHelper<volatile U, volatile IntrusiveBase>()(this);
 		}
 		template<typename U = T>
-		auto Get() noexcept {
+		U *Get() noexcept {
 			return IntrusiveCastHelper<U, IntrusiveBase>()(this);
 		}
 

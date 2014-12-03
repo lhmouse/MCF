@@ -50,7 +50,7 @@ private:
 		std::is_nothrow_constructible<ObjectT, InitParamsT &&...>::value>;
 	using xExceptionPtr = typename xExceptionWrapper::ExceptionPtr;
 
-	struct TlsKeyDeleter {
+	struct xTlsKeyDeleter {
 		constexpr void *operator()() const noexcept {
 			return nullptr;
 		}
@@ -58,12 +58,7 @@ private:
 			::MCF_CRT_TlsFreeKey(pKey);
 		}
 	};
-	using xTlsIndex = UniqueHandle<TlsKeyDeleter>;
-
-private:
-	static void xTlsCallback(std::intptr_t nValue) noexcept {
-		delete (ObjectT *)nValue;
-	}
+	using xTlsIndex = UniqueHandle<xTlsKeyDeleter>;
 
 private:
 	const xTlsIndex xm_nTlsIndex;
@@ -71,37 +66,26 @@ private:
 
 public:
 	explicit constexpr ThreadLocalPtr(InitParamsT &&...vInitParams)
-		: xm_nTlsIndex		(::MCF_CRT_TlsAllocKey(&xTlsCallback))
-		, xm_vInitParams	(std::forward<InitParamsT>(vInitParams)...)
+		: xm_nTlsIndex(::MCF_CRT_TlsAllocKey(
+			[](std::intptr_t nValue) noexcept { delete reinterpret_cast<ObjectT *>(nValue); }))
+		, xm_vInitParams(std::forward<InitParamsT>(vInitParams)...)
 	{
 	}
 
 private:
 	ObjectT *xDoGetPtr() const noexcept {
-		ObjectT *pObject;
-		{
-			std::intptr_t nValue;
-			if(::MCF_CRT_TlsGet(xm_nTlsIndex.Get(), &nValue)){
-				pObject = (ObjectT *)nValue;
-			} else {
-				pObject = nullptr;
-			}
+		ObjectT *pObject = nullptr;
+		std::intptr_t nValue;
+		if(::MCF_CRT_TlsGet(xm_nTlsIndex.Get(), &nValue)){
+			pObject = reinterpret_cast<ObjectT *>(nValue);
 		}
 		return pObject;
 	}
 	ObjectT *xDoAllocPtr() const {
-		ObjectT *pObject;
-		{
-			std::intptr_t nValue;
-			if(::MCF_CRT_TlsGet(xm_nTlsIndex.Get(), &nValue)){
-				pObject = (ObjectT *)nValue;
-			} else {
-				pObject = nullptr;
-			}
-		}
+		auto pObject = xDoGetPtr();
 		if(!pObject){
 			auto pNewObject = MakeUniqueFromTuple<ObjectT>(xm_vInitParams);
-			if(!::MCF_CRT_TlsReset(xm_nTlsIndex.Get(), (std::intptr_t)pNewObject.get())){
+			if(!::MCF_CRT_TlsReset(xm_nTlsIndex.Get(), reinterpret_cast<std::intptr_t>(pNewObject.get()))){
 				throw std::bad_alloc();
 			}
 			pObject = pNewObject.release();
@@ -109,7 +93,7 @@ private:
 		return pObject;
 	}
 	void xDoFreePtr() const noexcept {
-		::MCF_CRT_TlsReset(xm_nTlsIndex.Get(), (std::intptr_t)(ObjectT *)nullptr);
+		::MCF_CRT_TlsReset(xm_nTlsIndex.Get(), reinterpret_cast<std::intptr_t>(static_cast<ObjectT *>(nullptr)));
 	}
 
 public:

@@ -1,10 +1,12 @@
 #include <MCF/StdMCF.hpp>
-#include <cmath>
+#include <set>
+#include <cstdlib>
 using namespace MCF;
 
 extern "C" unsigned int MCFMain() noexcept {
-	double d1, d2;
-	std::scanf("%lf %lf", &d1, &d2);
-	std::printf("%f\n", std::pow(d1, d2));
+	std::multiset<int> s;
+	for(int i = 0; i < 0x100000; ++i){
+		s.insert(std::rand());
+	}
 	return 0;
 }

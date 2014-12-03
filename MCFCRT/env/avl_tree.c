@@ -41,13 +41,13 @@ static void UpdateRecur(MCF_AvlNodeHeader *pWhere){
 				if(uLLHeight >= uLRHeight){
 					ASSERT(pLL);
 
-					/*-------------+-------------*\
-					|     node     |  left        |
-					|     /  \     |  /  \        |
-					|  left  right > ll  node     |
-					|  /  \        |     /  \     |
-					| ll  lr       |    lr  right |
-					\*-------------+-------------*/
+					/*------------------+-------------------*\
+					|        node       |    left            |
+					|       /    \      |   /    \           |
+					|   left      right > ll      node       |
+					|  /    \           |        /    \      |
+					| ll     lr         |      lr      right |
+					\*------------------+-------------------*/
 
 					if(pLR){
 						pLR->pParent = pNode;
@@ -74,15 +74,15 @@ static void UpdateRecur(MCF_AvlNodeHeader *pWhere){
 				} else {
 					ASSERT(pLR);
 
-					/*-------------+--------------------*\
-					|     node     |      __lr__         |
-					|     /  \     |     /      \        |
-					|  left  right |  left      node     |
-					|  /  \        >  /  \      /  \     |
-					| ll  lr       | ll  lrl  lrr  right |
-					|    /  \      |                     |
-					|  lrl  lrr    |                     |
-					\*-------------+--------------------*/
+					/*-------------------+----------------------------*\
+					|         node       |         __ lr __            |
+					|        /    \      |        /        \           |
+					|    left      right |    left          node       |
+					|   /    \           >   /    \        /    \      |
+					| ll      lr         | ll      lrl  lrr      right |
+					|        /  \        |                             |
+					|     lrl    lrr     |                             |
+					\*-------------------+----------------------------*/
 
 					MCF_AvlNodeHeader *const pLRL = pLR->pLeft;
 					MCF_AvlNodeHeader *const pLRR = pLR->pRight;
@@ -268,11 +268,11 @@ void MCF_AvlInternalDetach(const MCF_AvlNodeHeader *pNode){
 	MCF_AvlNodeHeader *const pNext = pNode->pNext;
 
 	if(!pLeft){
-		/*---------+------*\
-		| node     | right |
-		|    \     >       |
-		|    right |       |
-		\*---------+------*/
+		/*-----------+------*\
+		| node       | right |
+		|     \      >       |
+		|      right |       |
+		\*-----------+------*/
 
 		*ppRefl = pRight;
 
@@ -286,13 +286,13 @@ void MCF_AvlInternalDetach(const MCF_AvlNodeHeader *pNode){
 		}
 	} else {
 		if(pPrev == pLeft){
-			/*-------------+-----------*\
-			|     node     |   left     |
-			|     /  \     |   /  \     |
-			|  left  right > ll   right |
-			|  /           |            |
-			| ll           |            |
-			\*-------------+-----------*/
+			/*------------------+--------------*\
+			|        node       |    left       |
+			|       /    \      |   /    \      |
+			|   left      right > ll      right |
+			|  /                |               |
+			| ll                |               |
+			\*------------------+--------------*/
 
 			*ppRefl = pLeft;
 
@@ -308,21 +308,23 @@ void MCF_AvlInternalDetach(const MCF_AvlNodeHeader *pNode){
 
 			UpdateRecur(pLeft);
 		} else {
-			/*----------------+----------------*\
-			|       node      |       prev      |
-			|       /  \      |       /  \      |
-			|    prvp  right  |    prvp  right  |
-			|    /  \      \  >    /  \      \  |
-			| prvl  prev   rr | prvl  mbl    rr |
-			|       /         |                 |
-			|     mbl         |                 |
-			\*----------------+----------------*/
+			/*--------------------------+--------------------------*\
+			|      ____ node ____       |      ____ prev ____       |
+			|     /              \      |     /              \      |
+			| left                right | left                right |
+			|     \                     |     \                     |
+			|      prevp                |      prevp                |
+			|           \               >           \               |
+			|            prev           |            prevl          |
+			|           /               |                           |
+			|      prevl                |                           |
+			\*--------------------------+---------------------------*/
 
 			MCF_AvlNodeHeader *const pPrevParent = pPrev->pParent;
 			MCF_AvlNodeHeader **const ppPrevRefl = pPrev->ppRefl;
 			MCF_AvlNodeHeader *const pPrevLeft = pPrev->pLeft;
 
-			ASSERT(pPrevParent);
+			ASSERT(pPrevParent && (pPrevParent != pNode));
 
 			*ppRefl = pPrev;
 
@@ -347,9 +349,7 @@ void MCF_AvlInternalDetach(const MCF_AvlNodeHeader *pNode){
 				pPrevLeft->ppRefl = ppPrevRefl;
 			}
 
-			if(pPrevParent != pNode){
-				UpdateRecur(pPrevParent);
-			}
+			UpdateRecur(pPrevParent);
 		}
 	}
 	if(pPrev){

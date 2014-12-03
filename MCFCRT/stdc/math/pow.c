@@ -3,6 +3,7 @@
 // Copyleft 2013 - 2014, LH_Mouse. All wrongs reserved.
 
 #include "../../env/_crtdef.h"
+#include "../../env/bail.h"
 #include "_mathasm.h"
 #include <limits.h>
 
@@ -171,9 +172,9 @@ static __attribute__((__cdecl__)) __MCF_LDBL_DECL(ppowl, double x, double y){
 		default:	__builtin_floorl)(y);	\
 	const t_ frac = y - whole;	\
 	if(x > 0){	\
-		if(y > INT_MAX){	\
+		if(y > (t_)INT_MAX){	\
 			return PPOW(t_, x, y);	\
-		} else if(y < INT_MIN){	\
+		} else if(y < (t_)INT_MIN){	\
 			return 1.0 / PPOW(t_, x, -y);	\
 		} else {	\
 			t_ ret;	\
@@ -189,9 +190,9 @@ static __attribute__((__cdecl__)) __MCF_LDBL_DECL(ppowl, double x, double y){
 		}	\
 	} else {	\
 		if(frac != 0){	\
-			__builtin_trap();	\
+			MCF_CRT_Bail(L"只能求负数的整数次幂。");	\
 		}	\
-		if(y > INT_MAX){	\
+		if(y > (t_)INT_MAX){	\
 			if(_Generic((t_)0,	\
 				float:		__builtin_fmodf,	\
 				double:		__builtin_fmod,	\
@@ -201,7 +202,7 @@ static __attribute__((__cdecl__)) __MCF_LDBL_DECL(ppowl, double x, double y){
 			} else {	\
 				return -PPOW(t_, -x, whole);	\
 			}	\
-		} else if(y < INT_MIN){	\
+		} else if(y < (t_)INT_MIN){	\
 			if(_Generic((t_)0,	\
 				float:		__builtin_fmodf,	\
 				double:		__builtin_fmod,	\

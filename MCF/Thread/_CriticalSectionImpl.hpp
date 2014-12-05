@@ -157,6 +157,7 @@ namespace Impl {
 							break;
 						}
 						::ReleaseSemaphore(xm_hSemaphore.Get(), 1, nullptr);
+						::Sleep(0);
 					}
 				}
 			}

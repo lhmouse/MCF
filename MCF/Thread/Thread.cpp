@@ -53,7 +53,7 @@ public:
 			ullMilliSeconds
 		);
 	}
-	std::exception_ptr JoinNoThrow() const {
+	std::exception_ptr JoinNoThrow() const noexcept {
 		WaitTimeout(WAIT_FOREVER);
 		return xm_pException; // 不要 move()。
 	}
@@ -89,16 +89,16 @@ IntrusivePtr<Thread> Thread::Create(std::function<void ()> fnProc, bool bSuspend
 bool Thread::WaitTimeout(unsigned long long ullMilliSeconds) const noexcept {
 	ASSERT(dynamic_cast<const ThreadDelegate *>(this));
 
-	return ((const ThreadDelegate *)this)->WaitTimeout(ullMilliSeconds);
+	return static_cast<const ThreadDelegate *>(this)->WaitTimeout(ullMilliSeconds);
 }
 void Thread::Wait() const noexcept {
 	WaitTimeout(WAIT_FOREVER);
 }
 
-std::exception_ptr Thread::JoinNoThrow() const {
+std::exception_ptr Thread::JoinNoThrow() const noexcept {
 	ASSERT(dynamic_cast<const ThreadDelegate *>(this));
 
-	return ((const ThreadDelegate *)this)->JoinNoThrow();
+	return static_cast<const ThreadDelegate *>(this)->JoinNoThrow();
 }
 void Thread::Join() const {
 	const auto pException = JoinNoThrow();
@@ -113,7 +113,7 @@ bool Thread::IsAlive() const noexcept {
 unsigned long Thread::GetId() const noexcept {
 	ASSERT(dynamic_cast<const ThreadDelegate *>(this));
 
-	return ((const ThreadDelegate *)this)->GetId();
+	return static_cast<const ThreadDelegate *>(this)->GetId();
 }
 
 void Thread::Suspend() noexcept {

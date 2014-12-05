@@ -124,10 +124,8 @@ public:
 			//
 			// 这个问题并非无法解决，例如允许 GetWriterLock() 抛出异常。
 			// 但是这样除了使问题复杂化以外没有什么好处。
-			ASSERT_MSG(
-				(std::size_t)::TlsGetValue(xm_hdwReaderRecur.Get()) == 0,
-				L"获取写锁前必须先释放读锁。"
-			);
+			ASSERT_MSG((std::size_t)::TlsGetValue(xm_hdwReaderRecur.Get()) == 0,
+				L"获取写锁前必须先释放读锁。");
 
 			if(::WaitForSingleObject(xm_hSemaphore.Get(), 0) == WAIT_TIMEOUT){
 				xm_csGuard.ImplLeave();
@@ -142,10 +140,8 @@ public:
 	}
 	void GetWriterLock() noexcept {
 		if(xm_csGuard.ImplEnter() == Result::STATE_CHANGED){
-			ASSERT_MSG(
-				(std::size_t)::TlsGetValue(xm_hdwReaderRecur.Get()) == 0,
-				L"获取写锁前必须先释放读锁。"
-			);
+			ASSERT_MSG((std::size_t)::TlsGetValue(xm_hdwReaderRecur.Get()) == 0,
+				L"获取写锁前必须先释放读锁。");
 
 			::WaitForSingleObject(xm_hSemaphore.Get(), INFINITE);
 		}

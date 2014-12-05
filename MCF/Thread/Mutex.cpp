@@ -25,10 +25,17 @@ public:
 
 public:
 	bool Try() const noexcept {
-		return ::WaitForSingleObject(xm_hMutex.Get(), 0) != WAIT_TIMEOUT;
+		const auto dwResult = ::WaitForSingleObject(xm_hMutex.Get(), 0);
+		if(dwResult == WAIT_FAILED){
+			ASSERT_MSG(false, L"WaitForSingleObject() 失败。");
+		}
+		return dwResult != WAIT_TIMEOUT;
 	}
 	void Wait() const noexcept {
-		::WaitForSingleObject(xm_hMutex.Get(), INFINITE);
+		const auto dwResult = ::WaitForSingleObject(xm_hMutex.Get(), INFINITE);
+		if(dwResult == WAIT_FAILED){
+			ASSERT_MSG(false, L"WaitForSingleObject() 失败。");
+		}
 	}
 	void Release() const noexcept {
 		if(!::ReleaseMutex(xm_hMutex.Get())){

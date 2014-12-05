@@ -67,7 +67,11 @@ public:
 					return false;
 				}
 				if(__atomic_add_fetch(&xm_uReaderCount, 1, __ATOMIC_ACQ_REL) == 1){
-					if(::WaitForSingleObject(xm_hSemaphore.Get(), 0) == WAIT_TIMEOUT){
+					const auto dwResult = ::WaitForSingleObject(xm_hSemaphore.Get(), 0);
+					if(dwResult == WAIT_FAILED){
+						ASSERT_MSG(false, L"WaitForSingleObject() 失败。");
+					}
+					if(dwResult == WAIT_TIMEOUT){
 						__atomic_sub_fetch(&xm_uReaderCount, 1, __ATOMIC_ACQ_REL);
 						xm_csGuard.ImplLeave();
 						return false;
@@ -88,7 +92,10 @@ public:
 			} else {
 				xm_csGuard.ImplEnter();
 				if(__atomic_add_fetch(&xm_uReaderCount, 1, __ATOMIC_ACQ_REL) == 1){
-					::WaitForSingleObject(xm_hSemaphore.Get(), INFINITE);
+					const auto dwResult = ::WaitForSingleObject(xm_hSemaphore.Get(), INFINITE);
+					if(dwResult == WAIT_FAILED){
+						ASSERT_MSG(false, L"WaitForSingleObject() 失败。");
+					}
 				}
 				xm_csGuard.ImplLeave();
 			}
@@ -103,7 +110,9 @@ public:
 				__atomic_sub_fetch(&xm_uReaderCount, 1, __ATOMIC_ACQ_REL);
 			} else {
 				if(__atomic_sub_fetch(&xm_uReaderCount, 1, __ATOMIC_ACQ_REL) == 0){
-					::ReleaseSemaphore(xm_hSemaphore.Get(), 1, nullptr);
+					if(!::ReleaseSemaphore(xm_hSemaphore.Get(), 1, nullptr)){
+						ASSERT_MSG(false, L"ReleaseSemaphore() 失败。");
+					}
 				}
 			}
 		}
@@ -127,9 +136,15 @@ public:
 			ASSERT_MSG((std::size_t)::TlsGetValue(xm_hdwReaderRecur.Get()) == 0,
 				L"获取写锁前必须先释放读锁。");
 
-			if(::WaitForSingleObject(xm_hSemaphore.Get(), 0) == WAIT_TIMEOUT){
-				xm_csGuard.ImplLeave();
-				return false;
+			{
+				const auto dwResult = ::WaitForSingleObject(xm_hSemaphore.Get(), 0);
+				if(dwResult == WAIT_FAILED){
+					ASSERT_MSG(false, L"WaitForSingleObject() 失败。");
+				}
+				if(dwResult == WAIT_TIMEOUT){
+					xm_csGuard.ImplLeave();
+					return false;
+				}
 			}
 			break;
 
@@ -143,13 +158,18 @@ public:
 			ASSERT_MSG((std::size_t)::TlsGetValue(xm_hdwReaderRecur.Get()) == 0,
 				L"获取写锁前必须先释放读锁。");
 
-			::WaitForSingleObject(xm_hSemaphore.Get(), INFINITE);
+			const auto dwResult = ::WaitForSingleObject(xm_hSemaphore.Get(), INFINITE);
+			if(dwResult == WAIT_FAILED){
+				ASSERT_MSG(false, L"WaitForSingleObject() 失败。");
+			}
 		}
 	}
 	void ReleaseWriterLock() noexcept {
 		if(xm_csGuard.ImplLeave() == Result::STATE_CHANGED){
 			if((std::size_t)::TlsGetValue(xm_hdwReaderRecur.Get()) == 0){
-				::ReleaseSemaphore(xm_hSemaphore.Get(), 1, nullptr);
+				if(!::ReleaseSemaphore(xm_hSemaphore.Get(), 1, nullptr)){
+					ASSERT_MSG(false, L"ReleaseSemaphore() 失败。");
+				}
 			}
 		}
 	}

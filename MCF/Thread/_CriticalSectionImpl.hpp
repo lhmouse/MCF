@@ -26,25 +26,17 @@ namespace Impl {
 		using Lock = LockRaiiTemplate<CriticalSectionImpl>;
 
 	private:
-		struct xWaitingThread {
-			xWaitingThread *volatile pNext;
-		};
-
-	private:
 		Impl::UniqueWinHandle xm_hSemaphore;
 		unsigned long xm_ulSpinCount;
 
-		volatile DWORD xm_dwOwner;
+		volatile DWORD xm_dwLocking;
 		std::size_t xm_uRecurCount;
-
 		volatile std::size_t xm_uWaiting;
-		xWaitingThread *xm_pFirstWaiting;
-		xWaitingThread *xm_pLastWaiting;
 
 	public:
 		explicit CriticalSectionImpl(unsigned long ulSpinCount)
-			: xm_ulSpinCount(ulSpinCount), xm_dwOwner(0), xm_uRecurCount(0)
-			, xm_uWaiting(0), xm_pFirstWaiting(nullptr), xm_pLastWaiting(nullptr)
+			: xm_ulSpinCount(ulSpinCount)
+			, xm_dwLocking(0), xm_uRecurCount(0), xm_uWaiting(0)
 		{
 			if(!xm_hSemaphore.Reset(::CreateSemaphoreW(nullptr, 0, 1, nullptr))){
 				DEBUG_THROW(SystemError, "CreateSemaphoreW");
@@ -57,7 +49,7 @@ namespace Impl {
 			}
 		}
 		~CriticalSectionImpl(){
-			ASSERT(__atomic_load_n(&xm_dwOwner, __ATOMIC_ACQUIRE) == 0);
+			ASSERT(__atomic_load_n(&xm_dwLocking, __ATOMIC_ACQUIRE) == 0);
 		}
 
 	private:
@@ -89,107 +81,87 @@ namespace Impl {
 		}
 
 		bool ImplIsLockedByCurrentThread() const noexcept {
-			return __atomic_load_n(&xm_dwOwner, __ATOMIC_ACQUIRE) == Thread::GetCurrentId();
+			return __atomic_load_n(&xm_dwLocking, __ATOMIC_ACQUIRE) == Thread::GetCurrentId();
 		}
 
 		Result ImplTry() noexcept {
-			auto eResult = Result::TRY_FAILED;
-
 			const DWORD dwThreadId = Thread::GetCurrentId();
-			if(__atomic_load_n(&xm_dwOwner, __ATOMIC_ACQUIRE) != dwThreadId){
-				DWORD dwOldOwner = 0;
-				if(__atomic_compare_exchange_n(
-					&xm_dwOwner, &dwOldOwner, dwThreadId, false, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE))
-				{
-					++xm_uRecurCount;
-					eResult = Result::STATE_CHANGED;
-				}
-			} else {
+
+			Result eResult;
+			DWORD dwOldOwner = __atomic_load_n(&xm_dwLocking, __ATOMIC_ACQUIRE);
+			if(dwOldOwner == dwThreadId){
 				++xm_uRecurCount;
 				eResult = Result::RECURSIVE;
+			} else if((dwOldOwner == 0) &&
+				__atomic_compare_exchange_n(&xm_dwLocking, &dwOldOwner, dwThreadId,
+					false, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE))
+			{
+				++xm_uRecurCount;
+				eResult = Result::STATE_CHANGED;
+			} else {
+				eResult = Result::TRY_FAILED;
 			}
-
 			return eResult;
 		}
 		Result ImplEnter() noexcept {
-			auto eResult = Result::RECURSIVE;
-
 			const DWORD dwThreadId = Thread::GetCurrentId();
-			if(__atomic_load_n(&xm_dwOwner, __ATOMIC_ACQUIRE) != dwThreadId){
-				eResult = Result::STATE_CHANGED;
 
+			Result eResult;
+			DWORD dwOldOwner = __atomic_load_n(&xm_dwLocking, __ATOMIC_ACQUIRE);
+			if(dwOldOwner == dwThreadId){
+				++xm_uRecurCount;
+				eResult = Result::RECURSIVE;
+			} else {
 				for(;;){
 					auto i = ImplGetSpinCount();
 					for(;;){
-						DWORD dwOldOwner = 0;
-						if(EXPECT_NOT(__atomic_compare_exchange_n(
-							&xm_dwOwner, &dwOldOwner, dwThreadId, false, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE)))
+						dwOldOwner = 0;
+						if(EXPECT_NOT(__atomic_compare_exchange_n(&xm_dwLocking, &dwOldOwner, dwThreadId,
+							false, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE)))
 						{
 							goto jAcquired;
 						}
-						if(EXPECT_NOT(i)){
+						if(EXPECT_NOT(i == 0)){
 							break;
 						}
 						--i;
+						__builtin_ia32_pause();
 					}
-
-					xWaitingThread vWaiting = { nullptr };
-					const auto pCurrent = &vWaiting;
 
 					auto uWaiting = xLockSpin();
-					{
-						++uWaiting;
-
-						if(xm_pLastWaiting){
-							xm_pLastWaiting->pNext = pCurrent;
-						} else {
-							xm_pFirstWaiting = pCurrent;
-						}
-						xm_pLastWaiting = pCurrent;
-					}
+					++uWaiting;
 					xUnlockSpin(uWaiting);
 
-					for(;;){
-						::WaitForSingleObject(xm_hSemaphore.Get(), INFINITE);
-						if(xm_pFirstWaiting == pCurrent){
-							if(!(xm_pFirstWaiting = pCurrent->pNext)){
-								xm_pLastWaiting = nullptr;
-							}
-							break;
-						}
-						::ReleaseSemaphore(xm_hSemaphore.Get(), 1, nullptr);
-						::Sleep(0);
+					if(::WaitForSingleObject(xm_hSemaphore.Get(), INFINITE) == WAIT_FAILED){
+						ASSERT_MSG(false, L"WaitForSingleObject() 失败。");
 					}
 				}
+			jAcquired:
+				++xm_uRecurCount;
+				eResult = Result::STATE_CHANGED;
 			}
-
-		jAcquired:
-			++xm_uRecurCount;
-
 			return eResult;
 		}
 		Result ImplLeave() noexcept {
-			ASSERT(__atomic_load_n(&xm_dwOwner, __ATOMIC_ACQUIRE) == Thread::GetCurrentId());
+			ASSERT(__atomic_load_n(&xm_dwLocking, __ATOMIC_ACQUIRE) == Thread::GetCurrentId());
 
-			auto eResult = Result::RECURSIVE;
-
+			Result eResult;
 			if(--xm_uRecurCount == 0){
-				eResult = Result::STATE_CHANGED;
-
-				__atomic_store_n(&xm_dwOwner, 0, __ATOMIC_RELEASE);
+				__atomic_store_n(&xm_dwLocking, 0, __ATOMIC_RELEASE);
 
 				auto uWaiting = xLockSpin();
-				{
-					if(uWaiting){
-						if(!::ReleaseSemaphore(xm_hSemaphore.Get(), 1, nullptr)){
-							ASSERT_MSG(false, L"ReleaseSemaphore() 失败。");
-						}
-						--uWaiting;
+				if(uWaiting != 0){
+					if(!::ReleaseSemaphore(xm_hSemaphore.Get(), 1, nullptr)){
+						ASSERT_MSG(false, L"ReleaseSemaphore() 失败。");
 					}
+					--uWaiting;
 				}
 				xUnlockSpin(uWaiting);
-			}
 
+				eResult = Result::STATE_CHANGED;
+			} else {
+				eResult = Result::RECURSIVE;
+			}
 			return eResult;
 		}
 	};

@@ -40,7 +40,11 @@ public:
 
 		const bool bResult = WaitUntil(
 			[&](DWORD dwRemaining) noexcept {
-				return ::WaitForSingleObject(xm_hSemaphore.Get(), dwRemaining) != WAIT_TIMEOUT;
+				const auto dwResult = ::WaitForSingleObject(xm_hSemaphore.Get(), dwRemaining);
+				if(dwResult == WAIT_FAILED){
+					ASSERT_MSG(false, L"WaitForSingleObject() 失败。");
+				}
+				return dwResult != WAIT_TIMEOUT;
 			},
 			ullMilliSeconds
 		);
@@ -60,12 +64,17 @@ public:
 			}
 		}
 		if(uCountToSignal != 0){
-			::ReleaseSemaphore(xm_hSemaphore.Get(), (long)uCountToSignal, nullptr);
+			if(!::ReleaseSemaphore(xm_hSemaphore.Get(), (long)uCountToSignal, nullptr)){
+				ASSERT_MSG(false, L"ReleaseSemaphore() 失败。");
+			}
 		}
 	}
 	void Broadcast() noexcept {
-		::ReleaseSemaphore(xm_hSemaphore.Get(),
-			(long)__atomic_exchange_n(&xm_uWaiterCount, 0, __ATOMIC_RELAXED), nullptr);
+		if(!::ReleaseSemaphore(xm_hSemaphore.Get(),
+			(long)__atomic_exchange_n(&xm_uWaiterCount, 0, __ATOMIC_RELAXED), nullptr))
+		{
+			ASSERT_MSG(false, L"ReleaseSemaphore() 失败。");
+		}
 	}
 };
 

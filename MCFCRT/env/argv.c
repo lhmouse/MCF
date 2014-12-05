@@ -58,7 +58,7 @@ const MCF_ArgItem *MCF_CRT_AllocArgv(size_t *pArgc, const wchar_t *pwszCommandLi
 					uCapacity = uCapacity * 3 / 2;
 					void *pNewStorage = realloc(pStorage, uPrefixSize + (uCapacity + 2) * sizeof(MCF_ArgItem));
 					if(!pNewStorage){
-						goto error;
+						goto jError;
 					}
 					MCF_ArgItem *pArgv = (MCF_ArgItem *)((char *)pNewStorage + uPrefixSize + sizeof(MCF_ArgItem));
 					pArgv[-1].pwszStr = pNewStorage;
@@ -144,7 +144,7 @@ const MCF_ArgItem *MCF_CRT_AllocArgv(size_t *pArgc, const wchar_t *pwszCommandLi
 
 	return pArgv;
 
-error:
+jError:
 	free(pStorage);
 	return NULL;
 }

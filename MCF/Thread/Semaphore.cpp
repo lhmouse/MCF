@@ -28,7 +28,11 @@ public:
 		unsigned long ulSucceeded = 0;
 		WaitUntil(
 			[&](DWORD dwRemaining) noexcept {
-				if(::WaitForSingleObject(xm_hSemaphore.Get(), dwRemaining) == WAIT_TIMEOUT){
+				const auto dwResult = ::WaitForSingleObject(xm_hSemaphore.Get(), dwRemaining);
+				if(dwResult == WAIT_FAILED){
+					ASSERT_MSG(false, L"WaitForSingleObject() 失败。");
+				}
+				if(dwResult == WAIT_TIMEOUT){
 					return false;
 				}
 				return ++ulSucceeded >= ulWaitCount;

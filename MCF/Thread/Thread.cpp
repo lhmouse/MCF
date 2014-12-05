@@ -48,7 +48,11 @@ public:
 	bool WaitTimeout(unsigned long long ullMilliSeconds) const noexcept {
 		return WaitUntil(
 			[&](DWORD dwRemaining) noexcept {
-				return ::WaitForSingleObject(xm_hThread.Get(), dwRemaining) != WAIT_TIMEOUT;
+				const auto dwResult = ::WaitForSingleObject(xm_hThread.Get(), dwRemaining);
+				if(dwResult == WAIT_FAILED){
+					ASSERT_MSG(false, L"WaitForSingleObject() 失败。");
+				}
+				return dwResult != WAIT_TIMEOUT;
 			},
 			ullMilliSeconds
 		);

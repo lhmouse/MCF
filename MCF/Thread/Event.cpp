@@ -27,17 +27,25 @@ public:
 	bool WaitTimeout(unsigned long long ullMilliSeconds) const noexcept {
 		return WaitUntil(
 			[&](DWORD dwRemaining) noexcept {
-				return ::WaitForSingleObject(xm_hEvent.Get(), dwRemaining) != WAIT_TIMEOUT;
+				const auto dwResult = ::WaitForSingleObject(xm_hEvent.Get(), dwRemaining);
+				if(dwResult == WAIT_FAILED){
+					ASSERT_MSG(false, L"WaitForSingleObject() 失败。");
+				}
+				return dwResult != WAIT_TIMEOUT;
 			},
 			ullMilliSeconds
 		);
 	}
 
 	void Set() const noexcept {
-		::SetEvent(xm_hEvent.Get());
+		if(!::SetEvent(xm_hEvent.Get())){
+			ASSERT_MSG(false, L"SetEvent() 失败。");
+		}
 	}
 	void Clear() const noexcept {
-		::ResetEvent(xm_hEvent.Get());
+		if(!::ResetEvent(xm_hEvent.Get())){
+			ASSERT_MSG(false, L"ResetEvent() 失败。");
+		}
 	}
 };
 

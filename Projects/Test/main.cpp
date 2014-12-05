@@ -1,12 +1,11 @@
 #include <MCF/StdMCF.hpp>
-#include <set>
-#include <cstdlib>
+#include <MCF/Core/Argv.hpp>
 using namespace MCF;
 
 extern "C" unsigned int MCFMain() noexcept {
-	std::multiset<int> s;
-	for(int i = 0; i < 0x100000; ++i){
-		s.insert(std::rand());
+	auto rt = GetArgv();
+	for(std::size_t i = 0; i < rt.uArgc; ++i){
+		std::printf("arg %zu = %ls$\n", i, rt.pArgv[i].pwszStr);
 	}
 	return 0;
 }

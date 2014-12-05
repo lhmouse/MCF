@@ -20,7 +20,7 @@ __MCF_CRT_EXTERN_C_BEGIN
 extern bool __MCF_CRT_HeapDbgInit(void) MCF_NOEXCEPT;
 extern void __MCF_CRT_HeapDbgUninit(void) MCF_NOEXCEPT;
 
-typedef struct tagHeapDbgBlockInfo {
+typedef struct __tagMCF_HeapDbgBlockInfo {
 	MCF_AvlNodeHeader vHeader;
 
 	void *pContents;

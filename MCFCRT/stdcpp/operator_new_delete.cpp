@@ -4,39 +4,49 @@
 
 #include "../env/_crtdef.hpp"
 #include "../env/heap.h"
+#include "../env/mcfwin.h"
 #include "../env/bail.h"
 #include <new>
 #include <cstddef>
 
 namespace {
 
-inline __attribute__((__always_inline__))
+std::uintptr_t GetMagic(bool bIsArray){
+	return (std::uintptr_t)::EncodePointer((void *)(bIsArray ?
+#ifdef _WIN64
+		0xDEADBEEFDEADBEEF : 0xBEEFDEADBEEFDEAD
+#else
+		0xDEADBEEF : 0xBEEFDEAD
+#endif
+		));
+}
+
+static_assert(sizeof(std::uintptr_t) <= sizeof(std::max_align_t), "wtf?");
+
 void *Allocate(std::size_t uSize, bool bIsArray, const void *pRetAddr){
 	const auto uSizeToAlloc = sizeof(std::max_align_t) + uSize;
 	if(uSizeToAlloc < uSize){
 		throw std::bad_alloc();
 	}
-	auto pbyRaw = (unsigned char *)::__MCF_CRT_HeapAlloc(uSizeToAlloc, pRetAddr);
-	while(!pbyRaw){
+	auto pRaw = ::__MCF_CRT_HeapAlloc(uSizeToAlloc, pRetAddr);
+	while(!pRaw){
 		const auto pfnHandler = std::get_new_handler();
 		if(!pfnHandler){
 			throw std::bad_alloc();
 		}
 		(*pfnHandler)();
-		pbyRaw = (unsigned char *)::__MCF_CRT_HeapAlloc(uSizeToAlloc, pRetAddr);
+		pRaw = ::__MCF_CRT_HeapAlloc(uSizeToAlloc, pRetAddr);
 	}
-	pbyRaw[0] = bIsArray;
-	return pbyRaw + sizeof(std::max_align_t);
+	*(std::uintptr_t *)pRaw = GetMagic(bIsArray);
+	return (unsigned char *)pRaw + sizeof(std::max_align_t);
 }
-
-inline __attribute__((__always_inline__))
 void *AllocateNoThrow(std::size_t uSize, bool bIsArray, const void *pRetAddr) noexcept {
 	const auto uSizeToAlloc = sizeof(std::max_align_t) + uSize;
 	if(uSizeToAlloc < uSize){
 		return nullptr;
 	}
-	auto pbyRaw = (unsigned char *)::__MCF_CRT_HeapAlloc(uSizeToAlloc, pRetAddr);
-	if(!pbyRaw){
+	auto pRaw = ::__MCF_CRT_HeapAlloc(uSizeToAlloc, pRetAddr);
+	if(!pRaw){
 		try {
 			do {
 				const auto pfnHandler = std::get_new_handler();
@@ -44,27 +54,28 @@ void *AllocateNoThrow(std::size_t uSize, bool bIsArray, const void *pRetAddr) no
 					return nullptr;
 				}
 				(*pfnHandler)();
-				pbyRaw = (unsigned char *)::__MCF_CRT_HeapAlloc(uSizeToAlloc, pRetAddr);
-			} while(!pbyRaw);
+				pRaw = ::__MCF_CRT_HeapAlloc(uSizeToAlloc, pRetAddr);
+			} while(!pRaw);
 		} catch(std::bad_alloc &){
 			return nullptr;
 		}
 	}
-	pbyRaw[0] = bIsArray;
-	return pbyRaw + sizeof(std::max_align_t);
+	*(std::uintptr_t *)pRaw = GetMagic(bIsArray);
+	return pRaw + sizeof(std::max_align_t);
 }
-
-inline __attribute__((__always_inline__))
 void Deallocate(void *pBlock, bool bIsArray, const void *pRetAddr) noexcept {
 	if(!pBlock){
 		return;
 	}
-	const auto pbyRaw = (unsigned char *)pBlock - sizeof(std::max_align_t);
-	if(bIsArray != pbyRaw[0]){
-		MCF_CRT_BailF(L"试图使用 operator delete%ls() 释放 operator new%ls() 分配的内存。\n调用返回地址：%0*zX",
-			bIsArray ? L"" : L"[]", bIsArray ? L"[]" : L"", (int)(sizeof(std::size_t) * 2), (std::size_t)pRetAddr);
+	void *const pRaw = (unsigned char *)pBlock - sizeof(std::max_align_t);
+	if(*(std::uintptr_t *)pRaw != GetMagic(bIsArray)){
+		MCF_CRT_BailF(
+			L"试图使用 operator delete%ls 释放不是由 operator new%ls 分配的内存。\n调用返回地址：%0*zX",
+			bIsArray ? L"[]" : L"",
+			bIsArray ? L"[]" : L"",
+			(int)(sizeof(std::size_t) * 2), (std::size_t)pRetAddr);
 	}
-	::__MCF_CRT_HeapFree(pbyRaw, pRetAddr);
+	::__MCF_CRT_HeapFree(pRaw, pRetAddr);
 }
 
 }

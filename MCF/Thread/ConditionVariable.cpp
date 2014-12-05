@@ -52,16 +52,15 @@ public:
 		std::size_t uCountToSignal;
 		for(;;){
 			uCountToSignal = Min(uCount, uOldWaiterCount);
-			if(uCountToSignal == 0){
-				break;
-			}
 			if(EXPECT_NOT(__atomic_compare_exchange_n(
 				&xm_uWaiterCount, &uOldWaiterCount, uOldWaiterCount - uCountToSignal,
 				false, __ATOMIC_RELAXED, __ATOMIC_RELAXED)))
 			{
-				::ReleaseSemaphore(xm_hSemaphore.Get(), (long)uCountToSignal, nullptr);
 				break;
 			}
+		}
+		if(uCountToSignal != 0){
+			::ReleaseSemaphore(xm_hSemaphore.Get(), (long)uCountToSignal, nullptr);
 		}
 	}
 	void Broadcast() noexcept {

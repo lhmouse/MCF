@@ -26,7 +26,7 @@ extern bool MCF_CRT_TlsGet(void *pTlsKey, MCF_STD intptr_t *pnValue) MCF_NOEXCEP
 // 触发回调。
 extern bool MCF_CRT_TlsReset(void *pTlsKey, MCF_STD intptr_t nNewValue) MCF_NOEXCEPT;
 
-typedef enum tagMCFTlsExchangeResult {
+typedef enum tagMCF_TlsExchangeResult {
 	MCF_TLSXCH_FAILED,				// 失败（例如 key 无效）。
 	MCF_TLSXCH_OLD_VAL_RETURNED,	// *pnOldValue 返回旧值。
 	MCF_TLSXCH_NEW_VAL_SET,			// 旧值未设定。

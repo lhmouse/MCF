@@ -1,11 +1,12 @@
 #include <MCF/StdMCF.hpp>
-#include <MCF/Core/Argv.hpp>
+#include <MCF/Thread/CriticalSection.hpp>
 using namespace MCF;
 
+auto p = CriticalSection::Create();
+
 extern "C" unsigned int MCFMain() noexcept {
-	auto rt = GetArgv();
-	for(std::size_t i = 0; i < rt.uArgc; ++i){
-		std::printf("arg %zu = %ls (%zu)\n", i, rt.pArgv[i].pwszStr, rt.pArgv[i].uLen);
-	}
+	auto l1 = p->TryLock();
+	auto l2 = p->TryLock();
+	std::printf("l1: %d, l2: %d\n", !!l1, !!l2);
 	return 0;
 }

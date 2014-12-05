@@ -105,6 +105,7 @@ namespace Impl {
 					eResult = Result::STATE_CHANGED;
 				}
 			} else {
+				++xm_uRecurCount;
 				eResult = Result::RECURSIVE;
 			}
 

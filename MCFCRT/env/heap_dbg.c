@@ -94,8 +94,9 @@ unsigned char *__MCF_CRT_HeapDbgAddGuardsAndRegister(
 	for(unsigned i = 0; i < GUARD_BAND_SIZE; i += sizeof(void *)){
 		--ppGuard1;
 
-		*ppGuard1 = EncodePointer(ppGuard2);
-		*ppGuard2 = EncodePointer(ppGuard1);
+		void *const pTemp1 = EncodePointer(ppGuard2), *const pTemp2 = EncodePointer(ppGuard1);
+		__builtin_memcpy(ppGuard1, &pTemp1, sizeof(void *));
+		__builtin_memcpy(ppGuard2, &pTemp2, sizeof(void *));
 
 		++ppGuard2;
 	}
@@ -130,7 +131,10 @@ const BlockInfo *__MCF_CRT_HeapDbgValidate(
 	for(unsigned i = 0; i < GUARD_BAND_SIZE; i += sizeof(void *)){
 		--ppGuard1;
 
-		if((DecodePointer(*ppGuard1) != ppGuard2) || (DecodePointer(*ppGuard2) != ppGuard1)){
+		void *pTemp1, *pTemp2;
+		__builtin_memcpy(&pTemp1, ppGuard1, sizeof(void *));
+		__builtin_memcpy(&pTemp2, ppGuard2, sizeof(void *));
+		if((DecodePointer(pTemp1) != ppGuard2) || (DecodePointer(pTemp2) != ppGuard1)){
 			MCF_CRT_BailF(L"__MCF_CRT_HeapDbgValidate() 失败：侦测到堆损坏。\n调用返回地址：%0*zX",
 				(int)(sizeof(size_t) * 2), (size_t)pRetAddr);
 		}

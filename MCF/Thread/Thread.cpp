@@ -4,7 +4,7 @@
 
 #include "../StdMCF.hpp"
 #include "Thread.hpp"
-#include "_WinHandle.hpp"
+#include "WinHandle.inl"
 #include "../Core/Exception.hpp"
 #include "../Core/Time.hpp"
 #include "../../MCFCRT/env/thread.h"

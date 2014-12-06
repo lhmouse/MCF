@@ -4,8 +4,8 @@
 
 #include "../StdMCF.hpp"
 #include "ReaderWriterLock.hpp"
-#include "_CriticalSectionImpl.hpp"
-#include "_WinHandle.hpp"
+#include "CriticalSectionImpl.inl"
+#include "WinHandle.inl"
 #include "../Core/UniqueHandle.hpp"
 #include "../Core/Exception.hpp"
 #include "../Core/Time.hpp"

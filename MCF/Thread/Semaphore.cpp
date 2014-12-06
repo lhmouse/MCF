@@ -4,7 +4,7 @@
 
 #include "../StdMCF.hpp"
 #include "Semaphore.hpp"
-#include "_WinHandle.hpp"
+#include "WinHandle.inl"
 #include "../Core/Exception.hpp"
 #include "../Core/String.hpp"
 #include "../Core/Time.hpp"

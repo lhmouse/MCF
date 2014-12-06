@@ -4,7 +4,7 @@
 
 #include "../StdMCF.hpp"
 #include "ConditionVariable.hpp"
-#include "_WinHandle.hpp"
+#include "WinHandle.inl"
 #include "../Core/Exception.hpp"
 #include "../Core/StringObserver.hpp"
 #include "../Core/Time.hpp"

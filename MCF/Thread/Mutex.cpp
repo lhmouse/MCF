@@ -4,7 +4,7 @@
 
 #include "../StdMCF.hpp"
 #include "Mutex.hpp"
-#include "_WinHandle.hpp"
+#include "WinHandle.inl"
 #include "../Core/Exception.hpp"
 #include "../Core/String.hpp"
 #include "../Core/Time.hpp"

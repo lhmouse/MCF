@@ -5,7 +5,7 @@
 #ifndef MCF_THREAD_CRITICAL_SECTION_HPP_
 #define MCF_THREAD_CRITICAL_SECTION_HPP_
 
-#include "_LockRaiiTemplate.hpp"
+#include "LockRaiiTemplate.hpp"
 #include "../Utilities/NoCopy.hpp"
 #include "../Utilities/Abstract.hpp"
 #include <memory>

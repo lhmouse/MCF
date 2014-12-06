@@ -5,7 +5,7 @@
 #ifndef MCF_THREAD_MUTEX_HPP_
 #define MCF_THREAD_MUTEX_HPP_
 
-#include "_LockRaiiTemplate.hpp"
+#include "LockRaiiTemplate.hpp"
 #include "../Utilities/NoCopy.hpp"
 #include "../Utilities/Abstract.hpp"
 #include "../Core/String.hpp"

@@ -5,10 +5,10 @@
 #ifndef MCF_THREAD_LOCK_RAII_TEMPLATE_HPP_
 #define MCF_THREAD_LOCK_RAII_TEMPLATE_HPP_
 
+#include "../StdMCF.hpp"
 #include "../Utilities/NoCopy.hpp"
 #include "../Utilities/Abstract.hpp"
 #include "../Utilities/Assert.hpp"
-#include <cstddef>
 
 namespace MCF {
 

@@ -4,7 +4,7 @@
 
 #include "../StdMCF.hpp"
 #include "CriticalSection.hpp"
-#include "_CriticalSectionImpl.hpp"
+#include "CriticalSectionImpl.inl"
 using namespace MCF;
 
 namespace {

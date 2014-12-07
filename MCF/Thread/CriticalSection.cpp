@@ -54,7 +54,7 @@ CriticalSection::CriticalSection(unsigned long ulSpinCount)
 // 其他非静态成员函数。
 bool CriticalSection::xNonRecursiveTry(unsigned long ulThreadId) throw() { // FIXME: g++ 4.9.2 ICE
 	std::size_t i = 1;
-	if(GetProcessorCount() != 0){
+	if(EXPECT(GetProcessorCount() != 0)){
 		i += GetSpinCount();
 	}
 	for(;;){
@@ -71,7 +71,7 @@ bool CriticalSection::xNonRecursiveTry(unsigned long ulThreadId) throw() { // FI
 	}
 }
 void CriticalSection::xNonRecursiveAcquire(unsigned long ulThreadId) noexcept {
-	while(!xNonRecursiveTry(ulThreadId)){
+	while(EXPECT(!xNonRecursiveTry(ulThreadId))){
 		auto ulQueueSize = LockSpin(xm_ulQueueSize);
 		++ulQueueSize;
 		UnlockSpin(xm_ulQueueSize, ulQueueSize);

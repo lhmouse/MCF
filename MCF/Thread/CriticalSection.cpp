@@ -4,15 +4,15 @@
 
 #include "../StdMCF.hpp"
 #include "CriticalSection.hpp"
-#include "../Core/Time.hpp"
+#include "../Core/System.hpp"
 using namespace MCF;
 
 namespace {
 
-unsigned long LockSpin(volatile unsigned long &ulCount){
+unsigned long LockSpin(volatile unsigned long &ulCount) throw() { // FIXME: g++ 4.9.2 ICE
 	unsigned long ulOld;
 	for(;;){
-		ulOld = __atomic_exchange_n(&ulCount, (unsigned long)-1, __ATOMIC_ACQ_REL);
+		ulOld = __atomic_exchange_n(&ulCount, (unsigned long)-1, __ATOMIC_SEQ_CST);
 		if(EXPECT_NOT(ulOld != (unsigned long)-1)){
 			break;
 		}
@@ -20,8 +20,8 @@ unsigned long LockSpin(volatile unsigned long &ulCount){
 	}
 	return ulOld;
 }
-void UnlockSpin(volatile unsigned long &ulCount, unsigned long ulOld){
-	__atomic_store_n(&ulCount, ulOld, __ATOMIC_RELEASE);
+void UnlockSpin(volatile unsigned long &ulCount, unsigned long ulOld) noexcept {
+	__atomic_store_n(&ulCount, ulOld, __ATOMIC_SEQ_CST);
 }
 
 }
@@ -46,12 +46,49 @@ void CriticalSection::Lock::xDoUnlock() const noexcept {
 // 构造函数和析构函数。
 CriticalSection::CriticalSection(unsigned long ulSpinCount)
 	: xm_vSemaphore(0), xm_ulSpinCount(ulSpinCount)
-	, xm_ulWantingEvent(0), xm_ulLockingThreadId(0), xm_ulRecursionCount(0)
+	, xm_ulQueueSize(0), xm_ulLockingThreadId(0), xm_ulRecursionCount(0)
 {
 	__atomic_thread_fence(__ATOMIC_SEQ_CST);
 }
 
 // 其他非静态成员函数。
+bool CriticalSection::xNonRecursiveTry(unsigned long ulThreadId) throw() { // FIXME: g++ 4.9.2 ICE
+	std::size_t i = 1;
+	if(GetProcessorCount() != 0){
+		i += GetSpinCount();
+	}
+	for(;;){
+		unsigned long ulExpected = 0;
+		if(EXPECT_NOT(__atomic_compare_exchange_n(
+			&xm_ulLockingThreadId, &ulExpected, ulThreadId, false, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE)))
+		{
+			return true;
+		}
+		if(EXPECT_NOT(--i == 0)){
+			return false;
+		}
+		__builtin_ia32_pause();
+	}
+}
+void CriticalSection::xNonRecursiveAcquire(unsigned long ulThreadId) noexcept {
+	while(!xNonRecursiveTry(ulThreadId)){
+		auto ulQueueSize = LockSpin(xm_ulQueueSize);
+		++ulQueueSize;
+		UnlockSpin(xm_ulQueueSize, ulQueueSize);
+		xm_vSemaphore.Wait();
+	}
+}
+void CriticalSection::xNonRecursiveRelease() noexcept {
+	__atomic_store_n(&xm_ulLockingThreadId, 0, __ATOMIC_RELEASE);
+
+	auto ulQueueSize = LockSpin(xm_ulQueueSize);
+	if(ulQueueSize != 0){
+		--ulQueueSize;
+		xm_vSemaphore.Post();
+	}
+	UnlockSpin(xm_ulQueueSize, ulQueueSize);
+}
+
 CriticalSection::Result CriticalSection::Try() noexcept {
 	const auto dwThreadId = ::GetCurrentThreadId();
 	if(__atomic_load_n(&xm_ulLockingThreadId, __ATOMIC_ACQUIRE) == dwThreadId){
@@ -59,23 +96,11 @@ CriticalSection::Result CriticalSection::Try() noexcept {
 		++xm_ulRecursionCount;
 		return R_RECURSIVE;
 	}
-
-	const auto ulWaiting = LockSpin(xm_ulWantingEvent);
-	if(ulWaiting == 0){
-		DWORD dwOldLocking = 0;
-		if(__atomic_compare_exchange_n(&xm_ulLockingThreadId, &dwOldLocking, dwThreadId,
-			false, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE))
-		{
-			// 无竞态。
-			UnlockSpin(xm_ulWantingEvent, ulWaiting + 1);
-			ASSERT(xm_ulRecursionCount == 0);
-			++xm_ulRecursionCount;
-			return R_STATE_CHANGED;
-		}
+	if(!xNonRecursiveTry(dwThreadId)){
+		return R_TRY_FAILED;
 	}
-	// 有竞态。
-	UnlockSpin(xm_ulWantingEvent, ulWaiting);
-	return R_TRY_FAILED;
+	++xm_ulRecursionCount;
+	return R_STATE_CHANGED;
 }
 CriticalSection::Result CriticalSection::Acquire() noexcept {
 	const auto dwThreadId = ::GetCurrentThreadId();
@@ -84,28 +109,7 @@ CriticalSection::Result CriticalSection::Acquire() noexcept {
 		++xm_ulRecursionCount;
 		return R_RECURSIVE;
 	}
-
-	const auto ulWaiting = LockSpin(xm_ulWantingEvent);
-	UnlockSpin(xm_ulWantingEvent, ulWaiting + 1);
-	if(ulWaiting == 0){
-		auto i = GetSpinCount() + 1;
-		do {
-			DWORD dwOldLocking = 0;
-			if(__atomic_compare_exchange_n(&xm_ulLockingThreadId, &dwOldLocking, dwThreadId,
-				false, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE))
-			{
-				// 无竞态。
-				ASSERT(xm_ulRecursionCount == 0);
-				++xm_ulRecursionCount;
-				return R_STATE_CHANGED;
-			}
-			__builtin_ia32_pause();
-		} while(EXPECT(--i != 0));
-	}
-	// 有竞态。
-	xm_vSemaphore.Wait();
-	ASSERT(__atomic_load_n(&xm_ulLockingThreadId, __ATOMIC_ACQUIRE) == 0);
-	__atomic_store_n(&xm_ulLockingThreadId, dwThreadId, __ATOMIC_RELEASE);
+	xNonRecursiveAcquire(dwThreadId);
 	++xm_ulRecursionCount;
 	return R_STATE_CHANGED;
 }
@@ -115,15 +119,7 @@ CriticalSection::Result CriticalSection::Release() noexcept {
 	if(--xm_ulRecursionCount != 0){
 		return R_RECURSIVE;
 	}
-
-	__atomic_store_n(&xm_ulLockingThreadId, 0, __ATOMIC_RELEASE);
-
-	const auto ulWaiting = LockSpin(xm_ulWantingEvent);
-	if(ulWaiting != 1){
-		xm_vSemaphore.Post();
-	}
-	UnlockSpin(xm_ulWantingEvent, ulWaiting - 1);
-
+	xNonRecursiveRelease();
 	return R_STATE_CHANGED;
 }
 

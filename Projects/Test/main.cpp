@@ -1,64 +1,31 @@
 #include <MCF/StdMCF.hpp>
 #include <MCF/Thread/ReaderWriterLock.hpp>
 #include <MCF/Thread/Thread.hpp>
+#include <vector>
 using namespace MCF;
 
-extern "C" unsigned int MCFMain(){
-	ReaderWriterLock rwl;
-
-	IntrusivePtr<Thread> threads[10];
-	for(unsigned int i = 0; i < COUNT_OF(threads); ++i){
-		threads[i] = Thread::Create([&, i]{
-			::Sleep(100 + i * 10);
-			auto lock1 = rwl.GetReaderLock();
-			__builtin_printf("*    %u\n", i);
-
-			::Sleep(100);
-			auto lock2 = rwl.GetReaderLock();
-			__builtin_printf(" *   %u\n", i);
-
-			::Sleep(100);
-			auto lock3 = rwl.GetReaderLock();
-			__builtin_printf("  *  %u\n", i);
-
-			::Sleep(100);
-			auto lock4 = rwl.GetReaderLock();
-			__builtin_printf("   * %u\n", i);
-
-			::Sleep(100);
-			lock1.Unlock();
-
-			::Sleep(100);
-			lock2.Unlock();
-
-			::Sleep(100);
-			lock3.Unlock();
-
-			::Sleep(100);
-			lock4.Unlock();
+extern "C" unsigned int MCFMain() noexcept {
+	CriticalSection m;
+	int val = 0;
+	std::vector<IntrusivePtr<Thread>> v(6);
+	for(unsigned i = 0; i < v.size(); ++i){
+		v.at(i) = Thread::Create([&, i]{
+//			::Sleep(100);
+			for(int j = 0; j < 100000; ++j){
+				auto l = m.GetLock();
+				while(!l){
+					l.Try();
+				}
+				const int old = val;
+//				std::printf("thread %u\n", i);
+//				::Sleep(100);
+				val = old + 1;
+			}
 		});
 	}
-
-	Thread::Create([&]{
-		::Sleep(130);
-		auto lock1 = rwl.GetWriterLock();
-		__builtin_printf("----\n");
-
-		::Sleep(10);
-		auto lock2 = rwl.GetWriterLock();
-		__builtin_printf("----\n");
-
-		::Sleep(1000);
-		__builtin_printf("----\n");
-		lock1.Unlock();
-
-		::Sleep(1000);
-		__builtin_printf("----\n");
-		lock2.Unlock();
-	})->Join();
-
-	for(auto &p : threads){
+	for(auto & p: v){
 		p->Join();
 	}
+	std::printf("val: %d\n", val);
 	return 0;
 }

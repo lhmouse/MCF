@@ -27,12 +27,17 @@ private:
 	Semaphore xm_vSemaphore;
 	volatile unsigned long xm_ulSpinCount;
 
-	volatile unsigned long xm_ulWantingEvent;
+	volatile unsigned long xm_ulQueueSize;
 	volatile unsigned long xm_ulLockingThreadId;
 	unsigned long xm_ulRecursionCount;
 
 public:
 	explicit CriticalSection(unsigned long ulSpinCount = 0x400);
+
+private:
+	bool xNonRecursiveTry(unsigned long ulThreadId) noexcept;
+	void xNonRecursiveAcquire(unsigned long ulThreadId) noexcept;
+	void xNonRecursiveRelease() noexcept;
 
 public:
 	unsigned long GetSpinCount() const noexcept {

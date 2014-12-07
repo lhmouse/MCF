@@ -46,7 +46,7 @@ unsigned char *__MCF_CRT_HeapAlloc(size_t uSize, const void *pRetAddr){
 #ifdef __MCF_CRT_HEAPDBG_ON
 	const size_t uRawSize = __MCF_CRT_HeapDbgGetRawSize(uSize);
 	if(uRawSize < uSize){
-		return NULL;
+		return nullptr;
 	}
 #else
 	UNREF_PARAM(pRetAddr);
@@ -54,7 +54,7 @@ unsigned char *__MCF_CRT_HeapAlloc(size_t uSize, const void *pRetAddr){
 	const size_t uRawSize = uSize;
 #endif
 
-	unsigned char *pRet = NULL;
+	unsigned char *pRet = nullptr;
 	EnterCriticalSection(&g_csHeapLock);
 	{
 		do {
@@ -75,11 +75,11 @@ unsigned char *__MCF_CRT_HeapAlloc(size_t uSize, const void *pRetAddr){
 	LeaveCriticalSection(&g_csHeapLock);
 	return pRet;
 }
-unsigned char *__MCF_CRT_HeapReAlloc(void *pBlock /* NON-NULL */, size_t uSize, const void *pRetAddr){
+unsigned char *__MCF_CRT_HeapReAlloc(void *pBlock /* NON-nullptr */, size_t uSize, const void *pRetAddr){
 #ifdef __MCF_CRT_HEAPDBG_ON
 	const size_t uRawSize = __MCF_CRT_HeapDbgGetRawSize(uSize);
 	if(uRawSize < uSize){
-		return NULL;
+		return nullptr;
 	}
 #else
 	UNREF_PARAM(pRetAddr);
@@ -87,7 +87,7 @@ unsigned char *__MCF_CRT_HeapReAlloc(void *pBlock /* NON-NULL */, size_t uSize, 
 	const size_t uRawSize = uSize;
 #endif
 
-	unsigned char *pRet = NULL;
+	unsigned char *pRet = nullptr;
 	EnterCriticalSection(&g_csHeapLock);
 	{
 #ifdef __MCF_CRT_HEAPDBG_ON
@@ -122,7 +122,7 @@ unsigned char *__MCF_CRT_HeapReAlloc(void *pBlock /* NON-NULL */, size_t uSize, 
 	LeaveCriticalSection(&g_csHeapLock);
 	return pRet;
 }
-void __MCF_CRT_HeapFree(void *pBlock /* NON-NULL */, const void *pRetAddr){
+void __MCF_CRT_HeapFree(void *pBlock /* NON-nullptr */, const void *pRetAddr){
 	EnterCriticalSection(&g_csHeapLock);
 	{
 #ifdef __MCF_CRT_HEAPDBG_ON

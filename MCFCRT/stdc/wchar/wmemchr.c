@@ -66,5 +66,5 @@ wchar_t *wmemchr(const wchar_t *s, wchar_t ch, size_t cnt){
 		}
 		++rp;
 	}
-	return NULL;
+	return nullptr;
 }

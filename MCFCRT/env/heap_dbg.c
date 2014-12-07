@@ -76,9 +76,9 @@ void __MCF_CRT_HeapDbgUninit(){
 		__asm__ __volatile__("int 3 \n");
 	}
 
-	g_pavlBlocks = NULL;
+	g_pavlBlocks = nullptr;
 	HeapDestroy(g_hMapAllocator);
-	g_hMapAllocator = NULL;
+	g_hMapAllocator = nullptr;
 }
 
 size_t __MCF_CRT_HeapDbgGetRawSize(size_t uContentSize){

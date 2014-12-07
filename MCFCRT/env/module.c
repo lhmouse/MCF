@@ -20,7 +20,7 @@ typedef struct tagAtExitNode {
 	intptr_t nContext;
 } AtExitNode;
 
-static AtExitNode *volatile g_pAtExitHead = NULL;
+static AtExitNode *volatile g_pAtExitHead = nullptr;
 static unsigned g_uInitState = 0;
 
 #define DUMMY_INIT()			(true)
@@ -57,7 +57,7 @@ static inline void EndModule(){
 	__MCF_CRT_RunEmutlsDtors();
 
 	// libgcc 使用 atexit() 调用全局析构函数。
-	AtExitNode *pHead = __atomic_exchange_n(&g_pAtExitHead, NULL, __ATOMIC_RELAXED);
+	AtExitNode *pHead = __atomic_exchange_n(&g_pAtExitHead, nullptr, __ATOMIC_RELAXED);
 	while(pHead){
 		(*(pHead->pfnProc))(pHead->nContext);
 

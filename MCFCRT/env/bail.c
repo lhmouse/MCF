@@ -28,16 +28,16 @@ static DWORD APIENTRY ThreadProc(LPVOID pParam){
 	}
 #ifndef NDEBUG
 	MCF_wcscpyout(pwcWrite, L"\r\n\r\n单击“确定”终止应用程序，单击“取消”调试应用程序。");
-	const int nRet = MessageBoxW(NULL, awcBuffer, L"MCF CRT 错误", MB_ICONERROR | MB_OKCANCEL | MB_TASKMODAL);
+	const int nRet = MessageBoxW(nullptr, awcBuffer, L"MCF CRT 错误", MB_ICONERROR | MB_OKCANCEL | MB_TASKMODAL);
 #else
 	MCF_wcscpyout(pwcWrite, L"\r\n\r\n单击“确定”终止应用程序。");
-	const int nRet =  MessageBoxW(NULL, awcBuffer, L"MCF CRT 错误", MB_ICONERROR | MB_OK | MB_TASKMODAL);
+	const int nRet =  MessageBoxW(nullptr, awcBuffer, L"MCF CRT 错误", MB_ICONERROR | MB_OK | MB_TASKMODAL);
 #endif
 	return (DWORD)nRet;
 }
 MCF_CRT_NORETURN_IF_NDEBUG static void DoBail(const wchar_t *pwszDescription){
 	DWORD dwExitCode = IDCANCEL;
-	const HANDLE hThread = CreateThread(NULL, 0, &ThreadProc, (LPVOID)pwszDescription, 0, NULL);
+	const HANDLE hThread = CreateThread(nullptr, 0, &ThreadProc, (LPVOID)pwszDescription, 0, nullptr);
 	if(hThread){
 		WaitForSingleObject(hThread, INFINITE);
 		GetExitCodeThread(hThread, &dwExitCode);

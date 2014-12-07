@@ -15,7 +15,7 @@
 #define MCF_SECTION(x)	__attribute__((__section__(x), __used__))
 
 MCF_SECTION(".CRT$XL@") const PIMAGE_TLS_CALLBACK vCallbackAt	= &__MCF_CRT_TlsCallback;
-MCF_SECTION(".CRT$XL_") const PIMAGE_TLS_CALLBACK vCallback_	= NULL;
+MCF_SECTION(".CRT$XL_") const PIMAGE_TLS_CALLBACK vCallback_	= nullptr;
 
 DWORD _tls_index = 0;
 

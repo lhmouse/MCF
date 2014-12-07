@@ -54,21 +54,21 @@ static bool FreeSizeComparatorNodeKey(const MCF_AvlNodeHeader *pIndex1, intptr_t
 static SRWLOCK		g_srwLock 				= SRWLOCK_INIT;
 
 static uintptr_t	g_uPageMask				= 0;
-static ThunkInfo *	g_pSpare				= NULL;
+static ThunkInfo *	g_pSpare				= nullptr;
 static bool			g_bCleanupRegistered	= false;
 
-static MCF_AvlRoot	g_pavlThunksByThunk		= NULL;
-static MCF_AvlRoot	g_pavlThunksByFreeSize	= NULL;
+static MCF_AvlRoot	g_pavlThunksByThunk		= nullptr;
+static MCF_AvlRoot	g_pavlThunksByFreeSize	= nullptr;
 
 void BackupCleanup(){
 	free(g_pSpare);
-	g_pSpare = NULL;
+	g_pSpare = nullptr;
 }
 
 void *MCF_CRT_AllocateThunk(const void *pInit, size_t uSize){
 	ASSERT(pInit);
 
-	unsigned char *pRet = NULL;
+	unsigned char *pRet = nullptr;
 
 	AcquireSRWLockExclusive(&g_srwLock);
 	{
@@ -138,7 +138,7 @@ void *MCF_CRT_AllocateThunk(const void *pInit, size_t uSize){
 			MCF_AvlAttach(&g_pavlThunksByThunk, &(g_pSpare->vThunkIndex), &ThunkComparatorNodes);
 			MCF_AvlAttach(&g_pavlThunksByFreeSize, &(g_pSpare->vFreeSizeIndex), &FreeSizeComparatorNodes);
 
-			g_pSpare = NULL;
+			g_pSpare = nullptr;
 
 			pInfo->uThunkSize = uThunkSize;
 		} else {
@@ -220,7 +220,7 @@ void MCF_CRT_DeallocateThunk(void *pThunk, bool bToPoison){
 			MCF_AvlDetach(&(pInfo->vFreeSizeIndex));
 			free(pInfo);
 		} else {
-			pPageToRelease = NULL;
+			pPageToRelease = nullptr;
 
 			MCF_AvlDetach(&(pInfo->vFreeSizeIndex));
 			pInfo->uFreeSize = pInfo->uThunkSize;

@@ -12,7 +12,7 @@ __attribute__((__noinline__)) void *__wrap_calloc(size_t nmemb, size_t cnt){
 	if((nmemb > 0) && (cnt > 0)){
 		cb = nmemb * cnt;
 		if(((nmemb | cnt) & (size_t)-0x10000) && (cb / cnt != nmemb)){
-			return NULL;
+			return nullptr;
 		}
 	}
 	void *const ret = __MCF_CRT_HeapAlloc(cb, __builtin_return_address(0));

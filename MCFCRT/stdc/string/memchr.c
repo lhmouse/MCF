@@ -66,5 +66,5 @@ void *memchr(const void *s, int ch, size_t cb){
 		}
 		++rp;
 	}
-	return NULL;
+	return nullptr;
 }

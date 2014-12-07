@@ -50,7 +50,7 @@ static inline void MCF_AvlAttachWithHint(MCF_AvlRoot *ppRoot,
 	MCF_AvlNodeHeader *pHint,
 	MCF_AvlNodeHeader *pNode, MCF_AvlComparatorNodes pfnComparator)
 {
-	MCF_AvlNodeHeader *pParent = NULL;
+	MCF_AvlNodeHeader *pParent = nullptr;
 	MCF_AvlNodeHeader **ppRefl = ppRoot;
 	if(pHint){
 		if((*pfnComparator)(pNode, pHint)){
@@ -120,7 +120,7 @@ static inline void MCF_AvlAttachWithHint(MCF_AvlRoot *ppRoot,
 static inline void MCF_AvlAttach(MCF_AvlRoot *ppRoot,
 	MCF_AvlNodeHeader *pNode, MCF_AvlComparatorNodes pfnComparator)
 {
-	MCF_AvlAttachWithHint(ppRoot, NULL, pNode, pfnComparator);
+	MCF_AvlAttachWithHint(ppRoot, nullptr, pNode, pfnComparator);
 }
 
 static inline void MCF_AvlDetach(const MCF_AvlNodeHeader *pNode) MCF_NOEXCEPT {
@@ -130,7 +130,7 @@ static inline void MCF_AvlDetach(const MCF_AvlNodeHeader *pNode) MCF_NOEXCEPT {
 static inline MCF_AvlNodeHeader *MCF_AvlLowerBound(const MCF_AvlRoot *ppRoot,
 	MCF_STD intptr_t nOther, MCF_AvlComparatorNodeOther pfnComparatorNodeOther)
 {
-	const MCF_AvlNodeHeader *pRet = NULL;
+	const MCF_AvlNodeHeader *pRet = nullptr;
 	const MCF_AvlNodeHeader *pCur = *ppRoot;
 	while(pCur){
 		if((*pfnComparatorNodeOther)(pCur, nOther)){
@@ -146,7 +146,7 @@ static inline MCF_AvlNodeHeader *MCF_AvlLowerBound(const MCF_AvlRoot *ppRoot,
 static inline MCF_AvlNodeHeader *MCF_AvlUpperBound(const MCF_AvlRoot *ppRoot,
 	MCF_STD intptr_t nOther, MCF_AvlComparatorOtherNode pfnComparatorOtherNode)
 {
-	const MCF_AvlNodeHeader *pRet = NULL;
+	const MCF_AvlNodeHeader *pRet = nullptr;
 	const MCF_AvlNodeHeader *pCur = *ppRoot;
 	while(pCur){
 		if(!(*pfnComparatorOtherNode)(nOther, pCur)){
@@ -186,8 +186,8 @@ static inline void MCF_AvlEqualRange(
 	const MCF_AvlNodeHeader *const pTop = MCF_AvlFind(ppRoot,
 		nOther, pfnComparatorNodeOther, pfnComparatorOtherNode);
 	if(!pTop){
-		*ppBegin = NULL;
-		*ppEnd = NULL;
+		*ppBegin = nullptr;
+		*ppEnd = nullptr;
 	} else {
 		const MCF_AvlNodeHeader *pCur = pTop;
 		for(;;){
@@ -207,7 +207,7 @@ static inline void MCF_AvlEqualRange(
 			}
 			pCur = pUpper;
 		}
-		*ppEnd = (MCF_AvlNodeHeader *)(pCur ? pCur->pNext : NULL);
+		*ppEnd = (MCF_AvlNodeHeader *)(pCur ? pCur->pNext : nullptr);
 	}
 }
 

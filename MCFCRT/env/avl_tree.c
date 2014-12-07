@@ -222,19 +222,19 @@ static void UpdateRecur(MCF_AvlNodeHeader *pWhere){
 void MCF_AvlInternalAttach(MCF_AvlNodeHeader *pNode,
 	MCF_AvlNodeHeader *pParent, MCF_AvlNodeHeader **ppRefl)
 {
-	ASSERT(*ppRefl == NULL);
+	ASSERT(*ppRefl == nullptr);
 
 	*ppRefl = pNode;
 
 	pNode->pParent	= pParent;
 	pNode->ppRefl	= ppRefl;
-	pNode->pLeft	= NULL;
-	pNode->pRight	= NULL;
+	pNode->pLeft	= nullptr;
+	pNode->pRight	= nullptr;
 	pNode->uHeight	= 1;
 
 	if(!pParent){
-		pNode->pPrev = NULL;
-		pNode->pNext = NULL;
+		pNode->pPrev = nullptr;
+		pNode->pNext = nullptr;
 	} else {
 		if(ppRefl == &(pParent->pLeft)){
 			MCF_AvlNodeHeader *const pPrev = pParent->pPrev;

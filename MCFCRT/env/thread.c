@@ -78,8 +78,8 @@ static bool ObjectComparatorKeyNode(intptr_t nKey1, const MCF_AvlNodeHeader *pOb
 static DWORD		g_dwTlsIndex	= TLS_OUT_OF_INDEXES;
 
 static SRWLOCK		g_srwLock		= SRWLOCK_INIT;
-static TlsMap *		g_pLastMap		= NULL;
-static MCF_AvlRoot	g_pavlKeys		= NULL;
+static TlsMap *		g_pLastMap		= nullptr;
+static MCF_AvlRoot	g_pavlKeys		= nullptr;
 
 bool __MCF_CRT_TlsEnvInit(){
 	g_dwTlsIndex = TlsAlloc();
@@ -124,7 +124,7 @@ void __MCF_CRT_TlsEnvUninit(){
 		}
 
 		free(g_pavlKeys);
-		g_pavlKeys = NULL;
+		g_pavlKeys = nullptr;
 	}
 }
 
@@ -141,13 +141,13 @@ void __MCF_CRT_TlsCallback(void *hModule, unsigned long ulReason, void *pReserve
 void *MCF_CRT_AtThreadExit(void (__cdecl *pfnProc)(intptr_t), intptr_t nContext){
 	void *const pKey = MCF_CRT_TlsAllocKey(pfnProc);
 	if(!pKey){
-		return NULL;
+		return nullptr;
 	}
 	if(!MCF_CRT_TlsReset(pKey, nContext)){
 		const DWORD dwLastError = GetLastError();
 		MCF_CRT_TlsFreeKey(pKey);
 		SetLastError(dwLastError);
-		return NULL;
+		return nullptr;
 	}
 	return pKey;
 }
@@ -158,10 +158,10 @@ bool MCF_CRT_RemoveAtThreadExit(void *pTlsKey){
 void *MCF_CRT_TlsAllocKey(void (__cdecl *pfnCallback)(intptr_t)){
 	TlsKey *const pKey = malloc(sizeof(TlsKey));
 	if(!pKey){
-		return NULL;
+		return nullptr;
 	}
 	pKey->pfnCallback	= pfnCallback;
-	pKey->pLastByKey	= NULL;
+	pKey->pLastByKey	= nullptr;
 
 	AcquireSRWLockExclusive(&g_srwLock);
 	{
@@ -266,9 +266,9 @@ static MCF_TlsExchangeResult TlsExchange(void *pTlsKey,
 		}
 		const SRWLOCK vLockInit = SRWLOCK_INIT;
 		pMap->srwLock		= vLockInit;
-		pMap->pavlObjects	= NULL;
-		pMap->pLastInThread	= NULL;
-		pMap->pNextMap		= NULL;
+		pMap->pavlObjects	= nullptr;
+		pMap->pLastInThread	= nullptr;
+		pMap->pNextMap		= nullptr;
 
 		AcquireSRWLockExclusive(&g_srwLock);
 		{
@@ -354,7 +354,7 @@ static MCF_TlsExchangeResult TlsExchange(void *pTlsKey,
 				pPrevByKey->pNextByKey = pObject;
 			}
 			pObject->pPrevByKey	= pPrevByKey;
-			pObject->pNextByKey	= NULL;
+			pObject->pNextByKey	= nullptr;
 		}
 		ReleaseSRWLockExclusive(&g_srwLock);
 
@@ -364,7 +364,7 @@ static MCF_TlsExchangeResult TlsExchange(void *pTlsKey,
 			pPrevInThread->pNextInThread = pObject;
 		}
 		pObject->pPrevInThread	= pPrevInThread;
-		pObject->pNextInThread	= NULL;
+		pObject->pNextInThread	= nullptr;
 	}
 	ReleaseSRWLockExclusive(&(pMap->srwLock));
 
@@ -372,7 +372,7 @@ static MCF_TlsExchangeResult TlsExchange(void *pTlsKey,
 }
 
 bool MCF_CRT_TlsReset(void *pTlsKey, intptr_t nNewValue){
-	void (__cdecl *pfnCallback)(intptr_t) = NULL;
+	void (__cdecl *pfnCallback)(intptr_t) = nullptr;
 	intptr_t nOldValue = 0;
 	switch(TlsExchange(pTlsKey, &pfnCallback, &nOldValue, nNewValue)){
 	case MCF_TLSXCH_OLD_VAL_RETURNED:
@@ -387,7 +387,7 @@ bool MCF_CRT_TlsReset(void *pTlsKey, intptr_t nNewValue){
 	}
 }
 MCF_TlsExchangeResult MCF_CRT_TlsExchange(void *pTlsKey, intptr_t *pnOldValue, intptr_t nNewValue){
-	return TlsExchange(pTlsKey, NULL, pnOldValue, nNewValue);
+	return TlsExchange(pTlsKey, nullptr, pnOldValue, nNewValue);
 }
 
 void MCF_CRT_TlsClearAll(){
@@ -438,7 +438,7 @@ void MCF_CRT_TlsClearAll(){
 		ReleaseSRWLockExclusive(&g_srwLock);
 
 		free(pMap);
-		TlsSetValue(g_dwTlsIndex, NULL);
+		TlsSetValue(g_dwTlsIndex, nullptr);
 	}
 
 	__MCF_CRT_RunEmutlsDtors();
@@ -472,18 +472,18 @@ void *MCF_CRT_CreateThread(unsigned (*pfnThreadProc)(intptr_t), intptr_t nParam,
 {
 	ThreadInitInfo *const pInitInfo = malloc(sizeof(ThreadInitInfo));
 	if(!pInitInfo){
-		return NULL;
+		return nullptr;
 	}
 	pInitInfo->pfnProc	= pfnThreadProc;
 	pInitInfo->nParam	= nParam;
 
 	DWORD dwThreadId;
-	const HANDLE hThread = CreateThread(NULL, 0, &CRTThreadProc, pInitInfo, CREATE_SUSPENDED, &dwThreadId);
+	const HANDLE hThread = CreateThread(nullptr, 0, &CRTThreadProc, pInitInfo, CREATE_SUSPENDED, &dwThreadId);
 	if(!hThread){
 		const DWORD dwErrorCode = GetLastError();
 		free(pInitInfo);
 		SetLastError(dwErrorCode);
-		return NULL;
+		return nullptr;
 	}
 	*pulThreadId = dwThreadId;
 

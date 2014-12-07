@@ -4,12 +4,15 @@
 
 #include "../env/_crtdef.hpp"
 #include "../env/heap.h"
+#include "../env/heap_dbg.h"
 #include "../env/mcfwin.h"
 #include "../env/bail.h"
 #include <new>
 #include <cstddef>
 
 namespace {
+
+#ifndef NDEBUG
 
 std::uintptr_t GetMagic(bool bIsArray){
 	return (std::uintptr_t)::EncodePointer((void *)(bIsArray ?
@@ -21,13 +24,19 @@ std::uintptr_t GetMagic(bool bIsArray){
 		));
 }
 
+#endif
+
 static_assert(sizeof(std::uintptr_t) <= sizeof(std::max_align_t), "wtf?");
 
 void *Allocate(std::size_t uSize, bool bIsArray, const void *pRetAddr){
+#ifdef __MCF_CRT_HEAPDBG_ON
 	const auto uSizeToAlloc = sizeof(std::max_align_t) + uSize;
 	if(uSizeToAlloc < uSize){
 		throw std::bad_alloc();
 	}
+#else
+	const auto uSizeToAlloc = uSize;
+#endif
 	auto pRaw = ::__MCF_CRT_HeapAlloc(uSizeToAlloc, pRetAddr);
 	while(!pRaw){
 		const auto pfnHandler = std::get_new_handler();
@@ -37,14 +46,22 @@ void *Allocate(std::size_t uSize, bool bIsArray, const void *pRetAddr){
 		(*pfnHandler)();
 		pRaw = ::__MCF_CRT_HeapAlloc(uSizeToAlloc, pRetAddr);
 	}
+#ifdef __MCF_CRT_HEAPDBG_ON
 	*(std::uintptr_t *)pRaw = GetMagic(bIsArray);
 	return (unsigned char *)pRaw + sizeof(std::max_align_t);
+#else
+	return pRaw;
+#endif
 }
 void *AllocateNoThrow(std::size_t uSize, bool bIsArray, const void *pRetAddr) noexcept {
+#ifdef __MCF_CRT_HEAPDBG_ON
 	const auto uSizeToAlloc = sizeof(std::max_align_t) + uSize;
 	if(uSizeToAlloc < uSize){
 		return nullptr;
 	}
+#else
+	const auto uSizeToAlloc = uSize;
+#endif
 	auto pRaw = ::__MCF_CRT_HeapAlloc(uSizeToAlloc, pRetAddr);
 	if(!pRaw){
 		try {
@@ -60,13 +77,18 @@ void *AllocateNoThrow(std::size_t uSize, bool bIsArray, const void *pRetAddr) no
 			return nullptr;
 		}
 	}
+#ifdef __MCF_CRT_HEAPDBG_ON
 	*(std::uintptr_t *)pRaw = GetMagic(bIsArray);
 	return pRaw + sizeof(std::max_align_t);
+#else
+	return pRaw;
+#endif
 }
 void Deallocate(void *pBlock, bool bIsArray, const void *pRetAddr) noexcept {
 	if(!pBlock){
 		return;
 	}
+#ifdef __MCF_CRT_HEAPDBG_ON
 	void *const pRaw = (unsigned char *)pBlock - sizeof(std::max_align_t);
 	if(*(std::uintptr_t *)pRaw != GetMagic(bIsArray)){
 		MCF_CRT_BailF(
@@ -75,6 +97,9 @@ void Deallocate(void *pBlock, bool bIsArray, const void *pRetAddr) noexcept {
 			bIsArray ? L"[]" : L"",
 			(int)(sizeof(std::size_t) * 2), (std::size_t)pRetAddr);
 	}
+#else
+	void *const pRaw = pBlock ;
+#endif
 	::__MCF_CRT_HeapFree(pRaw, pRetAddr);
 }
 

@@ -30,6 +30,10 @@
 #	define restrict			__restrict__
 #endif
 
+#ifndef __cplusplus
+#	define nullptr			((void *)0)
+#endif
+
 #ifdef __cplusplus
 #	define MCF_STD			::std::
 #	define MCF_NOEXCEPT		noexcept

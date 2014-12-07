@@ -7,33 +7,32 @@
 #include "../Utilities/Assert.hpp"
 #include "../Utilities/MinMax.hpp"
 #include "../Utilities/Algorithms.hpp"
-#include "../Thread/_CriticalSectionImpl.hpp"
+#include "../Thread/CriticalSection.hpp"
 using namespace MCF;
 
 constexpr std::size_t CHUNK_SIZE = 0x400;
 
-struct Impl::DisposableBuffer {
+namespace MCF {
+
+struct StreamBufferChunk {
 	unsigned uRead;
 	unsigned uWrite;
 	unsigned char abyData[CHUNK_SIZE];
 };
 
-namespace {
-
-using PoolLock = Impl::CriticalSectionImpl::Lock;
-using BufferNode = typename VList<Impl::DisposableBuffer>::Node;
-
-VList<Impl::DisposableBuffer> g_lstPool;
-
-PoolLock GetPoolLock(){
-	static Impl::CriticalSectionImpl s_csLock(0x400);
-	return PoolLock(&s_csLock);
 }
 
-auto &PushPooled(VList<Impl::DisposableBuffer> &lstDst){
-	BufferNode *pNode;
+namespace {
+
+using ChunkNode = typename VList<StreamBufferChunk>::Node;
+
+CriticalSection g_csPoolMutex;
+VList<StreamBufferChunk> g_lstPool;
+
+auto &PushPooled(VList<StreamBufferChunk> &lstDst){
+	ChunkNode *pNode;
 	{
-		const auto vLock = GetPoolLock();
+		const auto vLock = g_csPoolMutex.GetLock();
 		if(!g_lstPool.IsEmpty()){
 			lstDst.Splice(nullptr, g_lstPool, g_lstPool.GetFirst());
 			pNode = lstDst.GetLast();
@@ -44,21 +43,21 @@ auto &PushPooled(VList<Impl::DisposableBuffer> &lstDst){
 
 jDone:
 #ifndef NDEBUG
-	__builtin_memset(&pNode->GetElement(), 0xCC, sizeof(Impl::DisposableBuffer));
+	__builtin_memset(&pNode->GetElement(), 0xCC, sizeof(StreamBufferChunk));
 #endif
 	return pNode->GetElement();
 }
-void ShiftPooled(VList<Impl::DisposableBuffer> &lstSrc){
+void ShiftPooled(VList<StreamBufferChunk> &lstSrc){
 	ASSERT(!lstSrc.IsEmpty());
 
-	const auto vLock = GetPoolLock();
+	const auto vLock = g_csPoolMutex.GetLock();
 	g_lstPool.Splice(nullptr, lstSrc, lstSrc.GetFirst());
 }
-void ClearPooled(VList<Impl::DisposableBuffer> &lstSrc){
+void ClearPooled(VList<StreamBufferChunk> &lstSrc){
 	if(lstSrc.IsEmpty()){
 		return;
 	}
-	const auto vLock = GetPoolLock();
+	const auto vLock = g_csPoolMutex.GetLock();
 	g_lstPool.Splice(nullptr, lstSrc);
 }
 
@@ -304,7 +303,7 @@ void StreamBuffer::Splice(StreamBuffer &rhs) noexcept {
 bool StreamBuffer::Traverse(const StreamBuffer::TraverseContext *&pContext,
 	std::pair<const void *, std::size_t> &vBlock) const noexcept
 {
-	auto pNode = pContext ? ((const BufferNode *)pContext)->GetNext() : xm_lstBuffers.GetFirst();
+	auto pNode = pContext ? ((const ChunkNode *)pContext)->GetNext() : xm_lstBuffers.GetFirst();
 	for(;;){
 		if(!pNode){
 			return false;
@@ -322,7 +321,7 @@ bool StreamBuffer::Traverse(const StreamBuffer::TraverseContext *&pContext,
 bool StreamBuffer::Traverse(StreamBuffer::TraverseContext *&pContext,
 	std::pair<void *, std::size_t> &vBlock) noexcept
 {
-	auto pNode = pContext ? ((BufferNode *)pContext)->GetNext() : xm_lstBuffers.GetFirst();
+	auto pNode = pContext ? ((ChunkNode *)pContext)->GetNext() : xm_lstBuffers.GetFirst();
 	for(;;){
 		if(!pNode){
 			return false;

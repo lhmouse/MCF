@@ -13,9 +13,7 @@
 
 namespace MCF {
 
-namespace Impl {
-	struct DisposableBuffer;
-}
+struct StreamBufferChunk;
 
 class StreamBuffer {
 public:
@@ -25,7 +23,7 @@ public:
 	class TraverseContext;
 
 private:
-	VList<Impl::DisposableBuffer> xm_lstBuffers;
+	VList<StreamBufferChunk> xm_lstBuffers;
 	std::size_t xm_uSize;
 
 public:

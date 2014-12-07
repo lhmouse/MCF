@@ -6,24 +6,25 @@
 #define MCF_THREAD_EVENT_HPP_
 
 #include "../Utilities/NoCopy.hpp"
-#include "../Utilities/Abstract.hpp"
 #include "../Core/String.hpp"
-#include <memory>
+#include "Win32Handle.hpp"
 
 namespace MCF {
 
-class Event : NO_COPY, ABSTRACT {
-public:
-	static std::unique_ptr<Event> Create(bool bInitSet, const wchar_t *pwszName = nullptr);
-	static std::unique_ptr<Event> Create(bool bInitSet, const WideString &wsName);
+class Event : NO_COPY {
+private:
+	const UniqueWin32Handle xm_hEvent;
 
 public:
+	explicit Event(bool bInitSet, const wchar_t *pwszName = nullptr);
+	Event(bool bInitSet, const WideString &wsName);
+
+public:
+	bool Wait(unsigned long long ullMilliSeconds) const noexcept;
+	void Wait() const noexcept;
 	bool IsSet() const noexcept;
 	void Set() noexcept;
 	void Clear() noexcept;
-
-	bool WaitTimeout(unsigned long long ullMilliSeconds) const noexcept;
-	void Wait() const noexcept;
 };
 
 }

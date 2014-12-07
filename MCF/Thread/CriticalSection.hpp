@@ -7,23 +7,50 @@
 
 #include "LockRaiiTemplate.hpp"
 #include "../Utilities/NoCopy.hpp"
-#include "../Utilities/Abstract.hpp"
-#include <memory>
+#include "Semaphore.hpp"
 
 namespace MCF {
 
-class CriticalSection : NO_COPY, ABSTRACT {
+struct CriticalSectionResults {
+	enum Result {
+		R_TRY_FAILED	= 0,
+		R_STATE_CHANGED	= 1,
+		R_RECURSIVE		= 2,
+	};
+};
+
+class CriticalSection : NO_COPY, public CriticalSectionResults {
 public:
-	using Lock = Impl::LockRaiiTemplate<CriticalSection>;
+	using Lock = LockRaiiTemplate<CriticalSection>;
+
+private:
+	Semaphore xm_vSemaphore;
+	volatile unsigned long xm_ulSpinCount;
+
+	volatile unsigned long xm_ulWantingEvent;
+	volatile unsigned long xm_ulLockingThreadId;
+	unsigned long xm_ulRecursionCount;
 
 public:
-	static std::unique_ptr<CriticalSection> Create(unsigned long ulSpinCount = 0x400);
+	explicit CriticalSection(unsigned long ulSpinCount = 0x400);
 
 public:
-	unsigned long GetSpinCount() const noexcept;
-	void SetSpinCount(unsigned long ulSpinCount) noexcept;
+	unsigned long GetSpinCount() const noexcept {
+		return __atomic_load_n(&xm_ulSpinCount, __ATOMIC_RELAXED);
+	}
+	void SetSpinCount(unsigned long ulSpinCount) noexcept {
+		__atomic_store_n(&xm_ulSpinCount, ulSpinCount, __ATOMIC_RELAXED);
+	}
+
+	Result Try() noexcept;
+	Result Acquire() noexcept;
+	Result Release() noexcept;
 
 	bool IsLockedByCurrentThread() const noexcept;
+	// 要求 IsLockedByCurrentThread() != false。
+	unsigned long UncheckedGetRecursionCount() const noexcept;
+	unsigned long GetRecursionCount() const noexcept;
+
 	Lock TryLock() noexcept;
 	Lock GetLock() noexcept;
 };

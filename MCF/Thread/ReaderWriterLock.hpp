@@ -7,25 +7,51 @@
 
 #include "LockRaiiTemplate.hpp"
 #include "../Utilities/NoCopy.hpp"
-#include "../Utilities/Abstract.hpp"
-#include <memory>
+#include "CriticalSection.hpp"
+#include "Semaphore.hpp"
+#include "../Core/UniqueHandle.hpp"
 
 namespace MCF {
 
-class ReaderWriterLock : NO_COPY, ABSTRACT {
-public:
-	using ReaderLock = Impl::LockRaiiTemplate<ReaderWriterLock, 0u>;
-	using WriterLock = Impl::LockRaiiTemplate<ReaderWriterLock, 1u>;
+class ReaderWriterLock : NO_COPY, public CriticalSectionResults {
+private:
+	struct xTlsIndexDeleter {
+		unsigned long operator()() const noexcept;
+		void operator()(unsigned long ulTlsIndex) const noexcept;
+	};
 
 public:
-	static std::unique_ptr<ReaderWriterLock> Create(unsigned long ulSpinCount = 0x400);
+	using ReaderLock = LockRaiiTemplate<ReaderWriterLock, 0u>;
+	using WriterLock = LockRaiiTemplate<ReaderWriterLock, 1u>;
+
+private:
+	CriticalSection xm_csWriterGuard;
+	Semaphore xm_semExclusive;
+	volatile unsigned long xm_ulReaderCount;
+	UniqueHandle<xTlsIndexDeleter> xm_ulTlsIndex;
 
 public:
-	unsigned long GetSpinCount() const noexcept;
-	void SetSpinCount(unsigned long ulSpinCount) noexcept;
+	explicit ReaderWriterLock(unsigned long ulSpinCount = 0x400);
+
+public:
+	unsigned long GetSpinCount() const noexcept {
+		return xm_csWriterGuard.GetSpinCount();
+	}
+	void SetSpinCount(unsigned long ulSpinCount) noexcept {
+		xm_csWriterGuard.SetSpinCount(ulSpinCount);
+	}
+
+	Result TryAsReader() noexcept;
+	Result WaitAsReader() noexcept;
+	Result ReleaseAsReader() noexcept;
+
+	Result TryAsWriter() noexcept;
+	Result WaitAsWriter() noexcept;
+	Result ReleaseAsWriter() noexcept;
 
 	ReaderLock TryReaderLock() noexcept;
 	ReaderLock GetReaderLock() noexcept;
+
 	WriterLock TryWriterLock() noexcept;
 	WriterLock GetWriterLock() noexcept;
 };

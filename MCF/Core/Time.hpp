@@ -17,40 +17,9 @@ extern std::uint64_t GetUnixTime() noexcept;
 extern std::uint64_t NtTimeFromUnixTime(std::uint64_t u64UnixTime) noexcept;
 extern std::uint64_t UnixTimeFromNtTime(std::uint64_t u64NtTime) noexcept;
 
-// 单位是秒。
-extern double GetHiResCounter() noexcept;
-
 // 单位是毫秒。
-enum : std::uint64_t {
-	WAIT_FOREVER = (std::uint64_t)-1
-};
-
-template<std::uint64_t GRANULARITY_T = 0x7FFFFFFFu, typename FunctionT>
-bool WaitUntil(FunctionT &&fnCallable, std::uint64_t u64MilliSeconds){
-	if(u64MilliSeconds == WAIT_FOREVER){
-		for(;;){
-			if(fnCallable(GRANULARITY_T)){
-				return true;
-			}
-		}
-	} else {
-		const auto u64Until = GetNtTime() / 10000u + u64MilliSeconds;
-		auto u64ToWait = u64MilliSeconds;
-		for(;;){
-			if(u64ToWait > GRANULARITY_T){
-				u64ToWait = GRANULARITY_T;
-			}
-			if(fnCallable(u64ToWait)){
-				return true;
-			}
-			const std::uint64_t u64Now = GetNtTime() / 10000u;
-			if(u64Until <= u64Now){
-				return false;
-			}
-			u64ToWait = u64Until - u64Now;
-		}
-	}
-}
+extern std::uint64_t GetFastMonoClock() noexcept;
+extern double GetHiResMonoClock() noexcept;
 
 }
 

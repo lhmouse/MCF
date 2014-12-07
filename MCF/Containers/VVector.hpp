@@ -138,7 +138,7 @@ private:
 				Reserve(uSize);
 			}
 			for(auto i = uSize; i; --i){
-				PushNoCheck(std::move_if_noexcept(*pRead));
+				UncheckedPush(std::move_if_noexcept(*pRead));
 				++pRead;
 			}
 		}
@@ -267,7 +267,7 @@ public:
 		Reserve(GetSize() + uDeltaCapacity);
 	}
 
-	ElementT *PushNoCheck()
+	ElementT *UncheckedPush()
 		noexcept(std::is_nothrow_constructible<ElementT>::value)
 	{
 		ASSERT_MSG(GetSize() < GetCapacity(), L"容器已满。");
@@ -282,7 +282,7 @@ public:
 		return xm_pEnd++;
 	}
 	template<typename ...ParamsT>
-	ElementT *PushNoCheck(ParamsT &&...vParams)
+	ElementT *UncheckedPush(ParamsT &&...vParams)
 		noexcept(std::is_nothrow_constructible<ElementT, ParamsT &&...>::value)
 	{
 		ASSERT_MSG(GetSize() < GetCapacity(), L"容器已满。");
@@ -293,7 +293,7 @@ public:
 	template<typename ...ParamsT>
 	ElementT *Push(ParamsT &&...vParams){
 		Reserve(GetSize() + 1);
-		return PushNoCheck(std::forward<ParamsT>(vParams)...);
+		return UncheckedPush(std::forward<ParamsT>(vParams)...);
 	}
 	void Pop() noexcept {
 		ASSERT(!IsEmpty());
@@ -302,35 +302,35 @@ public:
 	}
 
 	template<typename ...ParamsT>
-	void FillAtEndNoCheck(std::size_t uCount, const ParamsT &...vParams)
+	void UncheckedFillAtEnd(std::size_t uCount, const ParamsT &...vParams)
 		noexcept(std::is_nothrow_constructible<ElementT, const ParamsT &...>::value)
 	{
 		for(std::size_t i = 0; i < uCount; ++i){
-			PushNoCheck(vParams...);
+			UncheckedPush(vParams...);
 		}
 	}
 	template<class IteratorT>
-	void CopyToEndNoCheck(IteratorT itBegin, std::common_type_t<IteratorT> itEnd)
-		noexcept(noexcept(PushNoCheck(*std::declval<IteratorT>())))
+	void UncheckedCopyToEnd(IteratorT itBegin, std::common_type_t<IteratorT> itEnd)
+		noexcept(noexcept(UncheckedPush(*std::declval<IteratorT>())))
 	{
 		while(itBegin != itEnd){
-			PushNoCheck(*itBegin);
+			UncheckedPush(*itBegin);
 			++itBegin;
 		}
 	}
 	template<class IteratorT>
-	void CopyToEndNoCheck(IteratorT itBegin, std::size_t uCount)
-		noexcept(noexcept(PushNoCheck(*std::declval<IteratorT>())))
+	void UncheckedCopyToEnd(IteratorT itBegin, std::size_t uCount)
+		noexcept(noexcept(UncheckedPush(*std::declval<IteratorT>())))
 	{
 		for(std::size_t i = 0; i < uCount; ++i){
-			PushNoCheck(*itBegin);
+			UncheckedPush(*itBegin);
 			++itBegin;
 		}
 	}
 	template<typename ...ParamsT>
 	void FillAtEnd(std::size_t uCount, const ParamsT &...vParams){
 		Reserve(GetSize() + uCount);
-		FillAtEndNoCheck(uCount, vParams...);
+		UncheckedFillAtEnd(uCount, vParams...);
 	}
 	template<class IteratorT>
 	void CopyToEnd(IteratorT itBegin, std::common_type_t<IteratorT> itEnd){
@@ -342,7 +342,7 @@ public:
 	template<class IteratorT>
 	void CopyToEnd(IteratorT itBegin, std::size_t uCount){
 		Reserve(GetSize() + uCount);
-		CopyToEndNoCheck(std::move(itBegin), uCount);
+		UncheckedCopyToEnd(std::move(itBegin), uCount);
 	}
 	void TruncateFromEnd(std::size_t uCount) noexcept {
 		ASSERT(GetSize() >= uCount);
@@ -506,7 +506,7 @@ private:
 				Reserve(uSize);
 			}
 			for(auto i = uSize; i; --i){
-				PushNoCheck(std::move_if_noexcept(*pRead));
+				UncheckedPush(std::move_if_noexcept(*pRead));
 				++pRead;
 			}
 		}
@@ -626,7 +626,7 @@ public:
 		Reserve(GetSize() + uDeltaCapacity);
 	}
 
-	ElementT *PushNoCheck()
+	ElementT *UncheckedPush()
 		noexcept(std::is_nothrow_constructible<ElementT>::value)
 	{
 		ASSERT_MSG(GetSize() < GetCapacity(), L"容器已满。");
@@ -641,7 +641,7 @@ public:
 		return xm_pEnd++;
 	}
 	template<typename ...ParamsT>
-	ElementT *PushNoCheck(ParamsT &&...vParams)
+	ElementT *UncheckedPush(ParamsT &&...vParams)
 		noexcept(std::is_nothrow_constructible<ElementT, ParamsT &&...>::value)
 	{
 		ASSERT_MSG(GetSize() < GetCapacity(), L"容器已满。");
@@ -652,7 +652,7 @@ public:
 	template<typename ...ParamsT>
 	ElementT *Push(ParamsT &&...vParams){
 		Reserve(GetSize() + 1);
-		return PushNoCheck(std::forward<ParamsT>(vParams)...);
+		return UncheckedPush(std::forward<ParamsT>(vParams)...);
 	}
 	void Pop() noexcept {
 		ASSERT(!IsEmpty());
@@ -661,35 +661,35 @@ public:
 	}
 
 	template<typename ...ParamsT>
-	void FillAtEndNoCheck(std::size_t uCount, const ParamsT &...vParams)
+	void UncheckedFillAtEnd(std::size_t uCount, const ParamsT &...vParams)
 		noexcept(std::is_nothrow_constructible<ElementT, const ParamsT &...>::value)
 	{
 		for(std::size_t i = 0; i < uCount; ++i){
-			PushNoCheck(vParams...);
+			UncheckedPush(vParams...);
 		}
 	}
 	template<class IteratorT>
-	void CopyToEndNoCheck(IteratorT itBegin, std::common_type_t<IteratorT> itEnd)
+	void UncheckedCopyToEnd(IteratorT itBegin, std::common_type_t<IteratorT> itEnd)
 		noexcept(std::is_nothrow_constructible<ElementT, decltype(*std::declval<IteratorT>())>::value)
 	{
 		while(itBegin != itEnd){
-			PushNoCheck(*itBegin);
+			UncheckedPush(*itBegin);
 			++itBegin;
 		}
 	}
 	template<class IteratorT>
-	void CopyToEndNoCheck(IteratorT itBegin, std::size_t uCount)
+	void UncheckedCopyToEnd(IteratorT itBegin, std::size_t uCount)
 		noexcept(std::is_nothrow_constructible<ElementT, decltype(*std::declval<IteratorT>())>::value)
 	{
 		for(std::size_t i = 0; i < uCount; ++i){
-			PushNoCheck(*itBegin);
+			UncheckedPush(*itBegin);
 			++itBegin;
 		}
 	}
 	template<typename ...ParamsT>
 	void FillAtEnd(std::size_t uCount, const ParamsT &...vParams){
 		Reserve(GetSize() + uCount);
-		FillAtEndNoCheck(uCount, vParams...);
+		UncheckedFillAtEnd(uCount, vParams...);
 	}
 	template<class IteratorT>
 	void CopyToEnd(IteratorT itBegin, std::common_type_t<IteratorT> itEnd){
@@ -701,7 +701,7 @@ public:
 	template<class IteratorT>
 	void CopyToEnd(IteratorT itBegin, std::size_t uCount){
 		Reserve(GetSize() + uCount);
-		CopyToEndNoCheck(std::move(itBegin), uCount);
+		UncheckedCopyToEnd(std::move(itBegin), uCount);
 	}
 	void TruncateFromEnd(std::size_t uCount) noexcept {
 		ASSERT(GetSize() >= uCount);

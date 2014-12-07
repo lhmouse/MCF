@@ -5,23 +5,29 @@
 #ifndef MCF_THREAD_MUTEX_HPP_
 #define MCF_THREAD_MUTEX_HPP_
 
-#include "LockRaiiTemplate.hpp"
 #include "../Utilities/NoCopy.hpp"
-#include "../Utilities/Abstract.hpp"
 #include "../Core/String.hpp"
-#include <memory>
+#include "Win32Handle.hpp"
+#include "LockRaiiTemplate.hpp"
 
 namespace MCF {
 
-class Mutex : NO_COPY, ABSTRACT {
+class Mutex : NO_COPY {
 public:
-	using Lock = Impl::LockRaiiTemplate<Mutex>;
+	using Lock = LockRaiiTemplate<Mutex>;
+
+private:
+	const UniqueWin32Handle xm_hMutex;
 
 public:
-	static std::unique_ptr<Mutex> Create(const wchar_t *pwszName = nullptr);
-	static std::unique_ptr<Mutex> Create(const WideString &wsName);
+	explicit Mutex(const wchar_t *pwszName = nullptr);
+	explicit Mutex(const WideString &wsName);
 
 public:
+	bool Try(unsigned long long ullMilliSeconds = 0) noexcept;
+	void Acquire() noexcept;
+	void Release() noexcept;
+
 	Lock TryLock() noexcept;
 	Lock GetLock() noexcept;
 };

@@ -4,77 +4,11 @@
 
 #include "../StdMCF.hpp"
 #include "Thread.hpp"
-#include "WinHandle.inl"
+#include "../../MCFCRT/env/thread.h"
 #include "../Core/Exception.hpp"
 #include "../Core/Time.hpp"
-#include "../../MCFCRT/env/thread.h"
+#include "../Utilities/MinMax.hpp"
 using namespace MCF;
-
-namespace {
-
-class ThreadDelegate : CONCRETE(Thread) {
-private:
-	std::function<void ()> xm_fnProc;
-	Impl::UniqueWinHandle xm_hThread;
-	volatile unsigned long xm_ulThreadId;
-	std::exception_ptr xm_pException;
-
-public:
-	explicit ThreadDelegate(std::function<void ()> &&fnProc)
-		: xm_fnProc(std::move(fnProc))
-	{
-		unsigned long ulThreadId;
-		if(!xm_hThread.Reset(::MCF_CRT_CreateThread(
-			[](std::intptr_t nParam) noexcept -> unsigned {
-				const auto pThis = reinterpret_cast<ThreadDelegate *>(nParam);
-				try {
-					pThis->xm_fnProc();
-				} catch(...){
-					pThis->xm_pException = std::current_exception();
-				}
-				__atomic_store_n(&(pThis->xm_ulThreadId), 0, __ATOMIC_RELEASE);
-				pThis->DropRef();
-				return 0;
-			},
-			reinterpret_cast<std::intptr_t>(this), CREATE_SUSPENDED, &ulThreadId)))
-		{
-			DEBUG_THROW(SystemError, "MCF_CRT_CreateThread");
-		}
-		AddRef();
-		__atomic_store_n(&xm_ulThreadId, 0, __ATOMIC_RELAXED);
-	}
-
-public:
-	bool WaitTimeout(unsigned long long ullMilliSeconds) const noexcept {
-		return WaitUntil(
-			[&](DWORD dwRemaining) noexcept {
-				const auto dwResult = ::WaitForSingleObject(xm_hThread.Get(), dwRemaining);
-				if(dwResult == WAIT_FAILED){
-					ASSERT_MSG(false, L"WaitForSingleObject() 失败。");
-				}
-				return dwResult != WAIT_TIMEOUT;
-			},
-			ullMilliSeconds
-		);
-	}
-	std::exception_ptr JoinNoThrow() const noexcept {
-		WaitTimeout(WAIT_FOREVER);
-		return xm_pException; // 不要 move()。
-	}
-
-	unsigned long GetId() const noexcept {
-		return __atomic_load_n(&xm_ulThreadId, __ATOMIC_ACQUIRE);
-	}
-
-	void Suspend() noexcept {
-		::SuspendThread(xm_hThread.Get());
-	}
-	void Resume() noexcept {
-		::ResumeThread(xm_hThread.Get());
-	}
-};
-
-}
 
 // 静态成员函数。
 unsigned long Thread::GetCurrentId() noexcept {
@@ -82,27 +16,70 @@ unsigned long Thread::GetCurrentId() noexcept {
 }
 
 IntrusivePtr<Thread> Thread::Create(std::function<void ()> fnProc, bool bSuspended){
-	IntrusivePtr<Thread> pThread(new ThreadDelegate(std::move(fnProc)));
+	IntrusivePtr<Thread> pThread(new Thread(std::move(fnProc)));
 	if(!bSuspended){
 		pThread->Resume();
 	}
 	return std::move(pThread);
 }
 
-// 其他非静态成员函数。
-bool Thread::WaitTimeout(unsigned long long ullMilliSeconds) const noexcept {
-	ASSERT(dynamic_cast<const ThreadDelegate *>(this));
+// 构造函数和析构函数。
+Thread::Thread(std::function<void ()> fnProc)
+	: xm_fnProc(std::move(fnProc))
+{
+	const auto ThreadProc = [](std::intptr_t nParam) noexcept -> unsigned {
+		const auto pThis = reinterpret_cast<Thread *>(nParam);
+		try {
+			pThis->xm_fnProc();
+		} catch(...){
+			pThis->xm_pException = std::current_exception();
+		}
+		__atomic_store_n(&(pThis->xm_ulThreadId), 0, __ATOMIC_RELEASE);
+		pThis->DropRef();
+		return 0;
+	};
 
-	return static_cast<const ThreadDelegate *>(this)->WaitTimeout(ullMilliSeconds);
+	unsigned long ulThreadId;
+	if(!xm_hThread.Reset(::MCF_CRT_CreateThread(
+		ThreadProc, reinterpret_cast<std::intptr_t>(this), CREATE_SUSPENDED, &ulThreadId)))
+	{
+		DEBUG_THROW(SystemError, "MCF_CRT_CreateThread");
+	}
+	AddRef();
+	__atomic_store_n(&xm_ulThreadId, 0, __ATOMIC_RELEASE);
+}
+
+bool Thread::Wait(unsigned long long ullMilliSeconds) const noexcept {
+	const auto ullUntil = GetFastMonoClock() + ullMilliSeconds;
+	bool bResult = false;
+	auto ullTimeRemaining = ullMilliSeconds;
+	for(;;){
+		const auto dwResult = ::WaitForSingleObject(xm_hThread.Get(), Min(ullTimeRemaining, ULONG_MAX >> 1));
+		if(dwResult == WAIT_FAILED){
+			ASSERT_MSG(false, L"WaitForSingleObject() 失败。");
+		}
+		if(dwResult != WAIT_TIMEOUT){
+			bResult = true;
+			break;
+		}
+		const auto ullNow = GetFastMonoClock();
+		if(ullUntil <= ullNow){
+			break;
+		}
+		ullTimeRemaining = ullUntil - ullNow;
+	}
+	return bResult;
 }
 void Thread::Wait() const noexcept {
-	WaitTimeout(WAIT_FOREVER);
+	const auto dwResult = ::WaitForSingleObject(xm_hThread.Get(), INFINITE);
+	if(dwResult == WAIT_FAILED){
+		ASSERT_MSG(false, L"WaitForSingleObject() 失败。");
+	}
 }
 
 std::exception_ptr Thread::JoinNoThrow() const noexcept {
-	ASSERT(dynamic_cast<const ThreadDelegate *>(this));
-
-	return static_cast<const ThreadDelegate *>(this)->JoinNoThrow();
+	Wait();
+	return xm_pException; // 不要 move()。
 }
 void Thread::Join() const {
 	const auto pException = JoinNoThrow();
@@ -112,21 +89,19 @@ void Thread::Join() const {
 }
 
 bool Thread::IsAlive() const noexcept {
-	return !WaitTimeout(0);
+	return GetId() != 0;
 }
 unsigned long Thread::GetId() const noexcept {
-	ASSERT(dynamic_cast<const ThreadDelegate *>(this));
-
-	return static_cast<const ThreadDelegate *>(this)->GetId();
+	return __atomic_load_n(&xm_ulThreadId, __ATOMIC_ACQUIRE);
 }
 
 void Thread::Suspend() noexcept {
-	ASSERT(dynamic_cast<ThreadDelegate *>(this));
-
-	static_cast<ThreadDelegate *>(this)->Suspend();
+	if(::SuspendThread(xm_hThread.Get()) == (DWORD)-1){
+		ASSERT_MSG(false, L"SuspendThread() 失败。");
+	}
 }
 void Thread::Resume() noexcept {
-	ASSERT(dynamic_cast<ThreadDelegate *>(this));
-
-	static_cast<ThreadDelegate *>(this)->Resume();
+	if(::ResumeThread(xm_hThread.Get()) == (DWORD)-1){
+		ASSERT_MSG(false, L"ResumeThread() 失败。");
+	}
 }

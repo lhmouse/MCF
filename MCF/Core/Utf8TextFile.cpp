@@ -57,7 +57,7 @@ bool Utf8TextFileReader::Read(Utf8String &u8sData, std::size_t uCount){
 		return false;
 	}
 	for(;;){
-		u8sData.PushNoCheck((char)nChar);
+		u8sData.UncheckedPush((char)nChar);
 		if(u8sData.GetSize() == uCount){
 			break;
 		}

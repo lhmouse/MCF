@@ -64,66 +64,64 @@ public:
 	}
 };
 
-namespace Impl {
-	template<class MutexT, std::size_t LOCK_TYPE_T = 0>
-	class LockRaiiTemplate : CONCRETE(LockRaiiTemplateBase) {
-	private:
-		MutexT *xm_pOwner;
+template<class MutexT, std::size_t LOCK_TYPE_T = 0>
+class LockRaiiTemplate final : CONCRETE(LockRaiiTemplateBase) {
+private:
+	MutexT *xm_pOwner;
 
-	public:
-		explicit LockRaiiTemplate(MutexT *pOwner, bool bInitLocked = true) noexcept
-			: xm_pOwner(pOwner)
-		{
-			if(bInitLocked){
-				Lock();
-			}
-		}
-		LockRaiiTemplate(LockRaiiTemplate &&rhs) noexcept
-			: xm_pOwner(rhs.xm_pOwner)
-		{
-			xm_uLockCount = std::exchange(rhs.xm_uLockCount, 0u);
-		}
-		LockRaiiTemplate &operator=(LockRaiiTemplate &&rhs) noexcept {
-			ASSERT(&rhs != this);
-
-			if(xm_uLockCount != 0){
-				xDoUnlock();
-			}
-			xm_pOwner = rhs.xm_pOwner;
-			xm_uLockCount = std::exchange(rhs.xm_uLockCount, 0u);
-			return *this;
-		}
-		virtual ~LockRaiiTemplate(){
-			if(xm_uLockCount != 0){
-				xDoUnlock();
-			}
-			xm_uLockCount = 0;
-		}
-
-	private:
-		bool xDoTry() const noexcept override;
-		void xDoLock() const noexcept override;
-		void xDoUnlock() const noexcept override;
-
-	public:
-		void Join(LockRaiiTemplate &&rhs) noexcept {
-			ASSERT(xm_pOwner == rhs.xm_pOwner);
-
-			xm_uLockCount += std::exchange(rhs.xm_uLockCount, 0u);
-		}
-
-		void Swap(LockRaiiTemplate &rhs) noexcept {
-			std::swap(xm_pOwner, rhs.xm_pOwner);
-			std::swap(xm_uLockCount, rhs.xm_uLockCount);
-		}
-	};
-
-	template<class MutexT, std::size_t LOCK_TYPE_T>
-	void swap(LockRaiiTemplate<MutexT, LOCK_TYPE_T> &lhs,
-		LockRaiiTemplate<MutexT, LOCK_TYPE_T> &rhs) noexcept
+public:
+	explicit LockRaiiTemplate(MutexT &vOwner, bool bInitLocked = true) noexcept
+		: xm_pOwner(&vOwner)
 	{
-		lhs.Swap(rhs);
+		if(bInitLocked){
+			Lock();
+		}
 	}
+	LockRaiiTemplate(LockRaiiTemplate &&rhs) noexcept
+		: xm_pOwner(rhs.xm_pOwner)
+	{
+		xm_uLockCount = std::exchange(rhs.xm_uLockCount, 0u);
+	}
+	LockRaiiTemplate &operator=(LockRaiiTemplate &&rhs) noexcept {
+		ASSERT(&rhs != this);
+
+		if(xm_uLockCount != 0){
+			xDoUnlock();
+		}
+		xm_pOwner = rhs.xm_pOwner;
+		xm_uLockCount = std::exchange(rhs.xm_uLockCount, 0u);
+		return *this;
+	}
+	virtual ~LockRaiiTemplate(){
+		if(xm_uLockCount != 0){
+			xDoUnlock();
+		}
+		xm_uLockCount = 0;
+	}
+
+private:
+	bool xDoTry() const noexcept override;
+	void xDoLock() const noexcept override;
+	void xDoUnlock() const noexcept override;
+
+public:
+	void Join(LockRaiiTemplate &&rhs) noexcept {
+		ASSERT(xm_pOwner == rhs.xm_pOwner);
+
+		xm_uLockCount += std::exchange(rhs.xm_uLockCount, 0u);
+	}
+
+	void Swap(LockRaiiTemplate &rhs) noexcept {
+		std::swap(xm_pOwner, rhs.xm_pOwner);
+		std::swap(xm_uLockCount, rhs.xm_uLockCount);
+	}
+};
+
+template<class MutexT, std::size_t LOCK_TYPE_T>
+void swap(LockRaiiTemplate<MutexT, LOCK_TYPE_T> &lhs,
+	LockRaiiTemplate<MutexT, LOCK_TYPE_T> &rhs) noexcept
+{
+	lhs.Swap(rhs);
 }
 
 }

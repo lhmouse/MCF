@@ -4,81 +4,71 @@
 
 #include "../StdMCF.hpp"
 #include "Event.hpp"
-#include "WinHandle.inl"
 #include "../Core/Exception.hpp"
 #include "../Core/String.hpp"
 #include "../Core/Time.hpp"
+#include "../Utilities/MinMax.hpp"
 using namespace MCF;
 
-namespace {
-
-class EventDelegate : CONCRETE(Event) {
-private:
-	Impl::UniqueWinHandle xm_hEvent;
-
-public:
-	EventDelegate(bool bInitSet, const wchar_t *pwszName){
-		if(!xm_hEvent.Reset(::CreateEventW(nullptr, true, bInitSet, pwszName))){
-			DEBUG_THROW(SystemError, "CreateEventW");
-		}
-	}
-
-public:
-	bool WaitTimeout(unsigned long long ullMilliSeconds) const noexcept {
-		return WaitUntil(
-			[&](DWORD dwRemaining) noexcept {
-				const auto dwResult = ::WaitForSingleObject(xm_hEvent.Get(), dwRemaining);
-				if(dwResult == WAIT_FAILED){
-					ASSERT_MSG(false, L"WaitForSingleObject() 失败。");
-				}
-				return dwResult != WAIT_TIMEOUT;
-			},
-			ullMilliSeconds
-		);
-	}
-
-	void Set() const noexcept {
-		if(!::SetEvent(xm_hEvent.Get())){
-			ASSERT_MSG(false, L"SetEvent() 失败。");
-		}
-	}
-	void Clear() const noexcept {
-		if(!::ResetEvent(xm_hEvent.Get())){
-			ASSERT_MSG(false, L"ResetEvent() 失败。");
-		}
-	}
-};
-
+// 构造函数和析构函数。
+Event::Event(bool bInitSet, const wchar_t *pwszName)
+	: xm_hEvent(
+		[&]{
+			UniqueWin32Handle hEvent(::CreateEventW(nullptr, true, bInitSet, pwszName));
+			if(!hEvent){
+				DEBUG_THROW(SystemError, "CreateEventW");
+			}
+			return std::move(hEvent);
+		}())
+{
 }
-
-// 静态成员函数。
-std::unique_ptr<Event> Event::Create(bool bInitSet, const wchar_t *pwszName){
-	return std::make_unique<EventDelegate>(bInitSet, pwszName);
-}
-std::unique_ptr<Event> Event::Create(bool bInitSet, const WideString &wsName){
-	return Create(bInitSet, wsName.GetCStr());
+Event::Event(bool bInitSet, const WideString &wsName)
+	: Event(bInitSet, wsName.GetCStr())
+{
 }
 
 // 其他非静态成员函数。
-bool Event::IsSet() const noexcept {
-	return WaitTimeout(0);
-}
-void Event::Set() noexcept {
-	ASSERT(dynamic_cast<EventDelegate *>(this));
-
-	static_cast<EventDelegate *>(this)->Set();
-}
-void Event::Clear() noexcept {
-	ASSERT(dynamic_cast<EventDelegate *>(this));
-
-	static_cast<EventDelegate *>(this)->Clear();
-}
-
-bool Event::WaitTimeout(unsigned long long ullMilliSeconds) const noexcept {
-	ASSERT(dynamic_cast<const EventDelegate *>(this));
-
-	return ((const EventDelegate *)this)->WaitTimeout(ullMilliSeconds);
+bool Event::Wait(unsigned long long ullMilliSeconds) const noexcept {
+	const auto ullUntil = GetFastMonoClock() + ullMilliSeconds;
+	bool bResult = false;
+	auto ullTimeRemaining = ullMilliSeconds;
+	for(;;){
+		const auto dwResult = ::WaitForSingleObject(xm_hEvent.Get(), Min(ullTimeRemaining, ULONG_MAX >> 1));
+		if(dwResult == WAIT_FAILED){
+			ASSERT_MSG(false, L"WaitForSingleObject() 失败。");
+		}
+		if(dwResult != WAIT_TIMEOUT){
+			bResult = true;
+			break;
+		}
+		const auto ullNow = GetFastMonoClock();
+		if(ullUntil <= ullNow){
+			break;
+		}
+		ullTimeRemaining = ullUntil - ullNow;
+	}
+	return bResult;
 }
 void Event::Wait() const noexcept {
-	WaitTimeout(WAIT_FOREVER);
+	const auto dwResult = ::WaitForSingleObject(xm_hEvent.Get(), INFINITE);
+	if(dwResult == WAIT_FAILED){
+		ASSERT_MSG(false, L"WaitForSingleObject() 失败。");
+	}
+}
+bool Event::IsSet() const noexcept {
+	const auto dwResult = ::WaitForSingleObject(xm_hEvent.Get(), 0);
+	if(dwResult == WAIT_FAILED){
+		ASSERT_MSG(false, L"WaitForSingleObject() 失败。");
+	}
+	return dwResult != WAIT_TIMEOUT;
+}
+void Event::Set() noexcept {
+	if(!::SetEvent(xm_hEvent.Get())){
+		ASSERT_MSG(false, L"SetEvent() 失败。");
+	}
+}
+void Event::Clear() noexcept {
+	if(!::ResetEvent(xm_hEvent.Get())){
+		ASSERT_MSG(false, L"ResetEvent() 失败。");
+	}
 }

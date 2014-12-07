@@ -28,7 +28,10 @@ std::uint64_t UnixTimeFromNtTime(std::uint64_t u64NtTime) noexcept {
 	return (u64NtTime - 0x019DB1DED53E8000ull) / 10000000u;
 }
 
-double GetHiResCounter() noexcept {
+std::uint64_t GetFastMonoClock() noexcept {
+	return ::GetTickCount64();
+}
+double GetHiResMonoClock() noexcept {
 	static volatile bool s_bInited = false;
 	static double s_lfFreqRecip;
 
@@ -37,13 +40,13 @@ double GetHiResCounter() noexcept {
 		if(!::QueryPerformanceFrequency(&liTemp)){
 			Bail(L"::QueryPerformanceFrequency() 失败。");
 		}
-		s_lfFreqRecip = 1.0 / liTemp.QuadPart;
+		s_lfFreqRecip = 1000.0 / liTemp.QuadPart;
 		__atomic_store_n(&s_bInited, true, __ATOMIC_RELEASE);
 	}
 	if(!::QueryPerformanceCounter(&liTemp)){
 		Bail(L"::QueryPerformanceCounter() 失败。");
 	}
-	return (double)(liTemp.QuadPart * s_lfFreqRecip);
+	return liTemp.QuadPart * s_lfFreqRecip;
 }
 
 }

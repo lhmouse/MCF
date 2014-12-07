@@ -6,22 +6,32 @@
 #define MCF_THREAD_THREAD_HPP_
 
 #include "../Utilities/NoCopy.hpp"
-#include "../Utilities/Abstract.hpp"
 #include "../Core/IntrusivePtr.hpp"
+#include "Win32Handle.hpp"
 #include <functional>
 #include <exception>
 #include <cstddef>
 
 namespace MCF {
 
-class Thread : public IntrusiveBase<Thread>, NO_COPY, ABSTRACT {
+class Thread : public IntrusiveBase<Thread>, NO_COPY {
 public:
 	static unsigned long GetCurrentId() noexcept;
 
 	static IntrusivePtr<Thread> Create(std::function<void ()> fnProc, bool bSuspended = false);
 
+private:
+	const std::function<void ()> xm_fnProc;
+
+	UniqueWin32Handle xm_hThread;
+	volatile unsigned long xm_ulThreadId;
+	std::exception_ptr xm_pException;
+
+private:
+	explicit Thread(std::function<void ()> fnProc);
+
 public:
-	bool WaitTimeout(unsigned long long ullMilliSeconds) const noexcept;
+	bool Wait(unsigned long long ullMilliSeconds) const noexcept;
 	void Wait() const noexcept;
 
 	std::exception_ptr JoinNoThrow() const noexcept;

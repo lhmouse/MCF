@@ -6,21 +6,26 @@
 #define MCF_THREAD_SEMAPHORE_HPP_
 
 #include "../Utilities/NoCopy.hpp"
-#include "../Utilities/Abstract.hpp"
 #include "../Core/String.hpp"
-#include <memory>
+#include "Win32Handle.hpp"
 
 namespace MCF {
 
-class Semaphore : NO_COPY, ABSTRACT {
-public:
-	static std::unique_ptr<Semaphore> Create(unsigned long ulInitCount, const wchar_t *pwszName = nullptr);
-	static std::unique_ptr<Semaphore> Create(unsigned long ulInitCount, const WideString &wsName);
+class Semaphore : NO_COPY {
+private:
+	const UniqueWin32Handle xm_hSemaphore;
 
 public:
-	unsigned long WaitTimeout(unsigned long long ullMilliSeconds, unsigned long ulWaitCount = 1) noexcept;
-	void Wait(unsigned long ulWaitCount = 1) noexcept;
-	void Signal(unsigned long ulSignalCount = 1) noexcept;
+	explicit Semaphore(unsigned long ulInitCount, const wchar_t *pwszName = nullptr);
+	Semaphore(unsigned long ulInitCount, const WideString &wsName);
+
+public:
+	unsigned long Wait(unsigned long long ullMilliSeconds) noexcept;
+	void Wait() noexcept;
+	unsigned long Post(unsigned long ulPostCount = 1) noexcept;
+
+	unsigned long BatchWait(unsigned long long ullMilliSeconds, unsigned long ulWaitCount) noexcept;
+	void BatchWait(unsigned long ulWaitCount) noexcept;
 };
 
 }

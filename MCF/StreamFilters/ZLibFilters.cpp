@@ -63,9 +63,9 @@ public:
 	xDelegate(ZLibEncoder &vOwner, bool bRaw, unsigned uLevel)
 		: xm_vOwner(vOwner)
 	{
-		xm_vStream.zalloc	= Z_NULL;
-		xm_vStream.zfree	= Z_NULL;
-		xm_vStream.opaque	= Z_NULL;
+		xm_vStream.zalloc	= nullptr;
+		xm_vStream.zfree	= nullptr;
+		xm_vStream.opaque	= nullptr;
 
 		const auto nError = ::deflateInit2(&xm_vStream, (int)uLevel, Z_DEFLATED, bRaw ? -15 : 15, 9, Z_DEFAULT_STRATEGY);
 		if(nError != Z_OK){
@@ -168,9 +168,9 @@ public:
 	xDelegate(ZLibDecoder &vOwner, bool bRaw)
 		: xm_vOwner(vOwner)
 	{
-		xm_vStream.zalloc	= Z_NULL;
-		xm_vStream.zfree	= Z_NULL;
-		xm_vStream.opaque	= Z_NULL;
+		xm_vStream.zalloc	= nullptr;
+		xm_vStream.zfree	= nullptr;
+		xm_vStream.opaque	= nullptr;
 
 		xm_vStream.next_in	= nullptr;
 		xm_vStream.avail_in	= 0;

@@ -433,7 +433,7 @@ public:
 		Truncate(1);
 	}
 
-	void PushNoCheck(Char ch) noexcept {
+	void UncheckedPush(Char ch) noexcept {
 		ASSERT_MSG(GetLength() < GetCapacity(), L"容器已满。");
 
 		if(xm_vStorage.vSmall.chNull == Char()){
@@ -444,7 +444,7 @@ public:
 			++xm_vStorage.vLarge.uLength;
 		}
 	}
-	void PopNoCheck() noexcept {
+	void UncheckedPop() noexcept {
 		ASSERT_MSG(GetLength() != 0, L"容器已空。");
 
 		if(xm_vStorage.vSmall.chNull == Char()){

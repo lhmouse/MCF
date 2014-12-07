@@ -7,20 +7,23 @@
 
 #include "LockRaiiTemplate.hpp"
 #include "../Utilities/NoCopy.hpp"
-#include "../Utilities/Abstract.hpp"
-#include <memory>
+#include "Semaphore.hpp"
 
 namespace MCF {
 
-class ConditionVariable : NO_COPY, ABSTRACT {
-public:
-	static std::unique_ptr<ConditionVariable> Create();
+class ConditionVariable : NO_COPY {
+private:
+	Semaphore xm_vSemaphore;
+	volatile unsigned long xm_ulWaiting;
 
 public:
-	bool WaitTimeout(LockRaiiTemplateBase &vLockRaiiTemplate, unsigned long long ullMilliSeconds) noexcept;
-	void Wait(LockRaiiTemplateBase &vLockRaiiTemplate) noexcept;
-	void Signal(std::size_t uCount = 1) noexcept;
-	void Broadcast() noexcept;
+	ConditionVariable();
+
+public:
+	bool Wait(LockRaiiTemplateBase &vLock, unsigned long long ullMilliSeconds) noexcept;
+	void Wait(LockRaiiTemplateBase &vLock) noexcept;
+	void Signal(unsigned long ulMaxCount = 1) noexcept;
+	void SignalAll() noexcept;
 };
 
 }

@@ -14,19 +14,18 @@ using namespace MCF;
 
 namespace {
 
+struct FileCloser {
+	constexpr HANDLE operator()() const noexcept {
+		return INVALID_HANDLE_VALUE;
+	}
+	void operator()(HANDLE hFile) const noexcept {
+		::CloseHandle(hFile);
+	}
+};
+
 class FileDelegate : CONCRETE(File) {
 private:
-	struct xFileCloser {
-		constexpr HANDLE operator()() const noexcept {
-			return INVALID_HANDLE_VALUE;
-		}
-		void operator()(HANDLE hFile) const noexcept {
-			::CloseHandle(hFile);
-		}
-	};
-
-private:
-	UniqueHandle<xFileCloser> xm_hFile;
+	UniqueHandle<FileCloser> xm_hFile;
 
 public:
 	void Open(const wchar_t *pwszPath, std::uint32_t u32Flags){

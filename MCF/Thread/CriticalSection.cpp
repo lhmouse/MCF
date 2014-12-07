@@ -61,15 +61,17 @@ CriticalSection::Result CriticalSection::Try() noexcept {
 	}
 
 	const auto ulWaiting = LockSpin(xm_ulWantingEvent);
-	DWORD dwOldLocking = 0;
-	if(__atomic_compare_exchange_n(&xm_ulLockingThreadId, &dwOldLocking, dwThreadId,
-		false, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE))
-	{
-		// 无竞态。
-		UnlockSpin(xm_ulWantingEvent, ulWaiting + 1);
-		ASSERT(xm_ulRecursionCount == 0);
-		++xm_ulRecursionCount;
-		return R_STATE_CHANGED;
+	if(ulWaiting == 0){
+		DWORD dwOldLocking = 0;
+		if(__atomic_compare_exchange_n(&xm_ulLockingThreadId, &dwOldLocking, dwThreadId,
+			false, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE))
+		{
+			// 无竞态。
+			UnlockSpin(xm_ulWantingEvent, ulWaiting + 1);
+			ASSERT(xm_ulRecursionCount == 0);
+			++xm_ulRecursionCount;
+			return R_STATE_CHANGED;
+		}
 	}
 	// 有竞态。
 	UnlockSpin(xm_ulWantingEvent, ulWaiting);

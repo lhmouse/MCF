@@ -72,7 +72,7 @@ bool CriticalSection::xNonRecursiveTry(unsigned long ulThreadId) throw() { // FI
 }
 void CriticalSection::xNonRecursiveAcquire(unsigned long ulThreadId) noexcept {
 	auto ulQueueSize = LockSpin(xm_ulQueueSize);
-	if(ulQueueSize == 0){
+	if(EXPECT(ulQueueSize == 0)){
 		UnlockSpin(xm_ulQueueSize, ulQueueSize);
 		if(xNonRecursiveTry(ulThreadId)){
 			return;
@@ -94,7 +94,7 @@ void CriticalSection::xNonRecursiveRelease() noexcept {
 	__atomic_store_n(&xm_ulLockingThreadId, 0, __ATOMIC_RELEASE);
 
 	auto ulQueueSize = LockSpin(xm_ulQueueSize);
-	if(ulQueueSize != 0){
+	if(EXPECT(ulQueueSize != 0)){
 		--ulQueueSize;
 		xm_vSemaphore.Post();
 	}

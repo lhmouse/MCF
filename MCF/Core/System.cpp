@@ -22,7 +22,7 @@ void RequireSystemInfo() noexcept {
 
 namespace MCF {
 
-unsigned GetProcessorCount() noexcept {
+std::size_t GetProcessorCount() noexcept {
 	RequireSystemInfo();
 	return g_vSystemInfo.dwNumberOfProcessors;
 }

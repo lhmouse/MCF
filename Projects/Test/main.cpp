@@ -9,9 +9,6 @@ extern "C" unsigned int MCFMain() noexcept {
 	}
 
 	auto p = new unsigned;
-	std::printf("*p = %08X\n", *p);
-	delete p;
-	std::printf("*p = %08X\n", *p);
 
 	return 0;
 }

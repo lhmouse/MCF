@@ -11,6 +11,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <limits.h>
+#include <errno.h>
 
 #define USE_DL_PREFIX
 #include "../../External/dlmalloc/malloc.h"
@@ -29,7 +30,7 @@ static CRITICAL_SECTION		g_csHeapLock;
 
 bool __MCF_CRT_HeapInit(){
 	if(!InitializeCriticalSectionEx(&g_csHeapLock, 0x1000u,
-#ifdef NDEBUG
+#if __MCF_CRT_REQUIRE_HEAPDBG_LEVEL(1)
 		CRITICAL_SECTION_NO_DEBUG_INFO
 #else
 		0
@@ -52,6 +53,7 @@ unsigned char *__MCF_CRT_HeapAlloc(size_t uSize, const void *pRetAddr){
 #if __MCF_CRT_REQUIRE_HEAPDBG_LEVEL(3)
 	const size_t uRawSize = __MCF_CRT_HeapDbgGetRawSize(uSize);
 	if(uRawSize < uSize){
+		errno = ENOMEM;
 		return nullptr;
 	}
 #else
@@ -93,6 +95,7 @@ unsigned char *__MCF_CRT_HeapReAlloc(void *pBlock, size_t uSize, const void *pRe
 #if __MCF_CRT_REQUIRE_HEAPDBG_LEVEL(3)
 	const size_t uRawSize = __MCF_CRT_HeapDbgGetRawSize(uSize);
 	if(uRawSize < uSize){
+		errno = ENOMEM;
 		return nullptr;
 	}
 #else

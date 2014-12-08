@@ -9,18 +9,22 @@ using namespace MCF;
 
 namespace {
 
-unsigned long LockSpin(volatile unsigned long &ulCount) throw() { // FIXME: g++ 4.9.2 ICE
+inline void SpinPause() throw() { // FIXME: g++ 4.9.2 ICE
+	__builtin_ia32_pause();
+}
+
+inline unsigned long LockSpin(volatile unsigned long &ulCount) noexcept {
 	unsigned long ulOld;
 	for(;;){
 		ulOld = __atomic_exchange_n(&ulCount, (unsigned long)-1, __ATOMIC_SEQ_CST);
 		if(EXPECT_NOT(ulOld != (unsigned long)-1)){
 			break;
 		}
-		__builtin_ia32_pause();
+		SpinPause();
 	}
 	return ulOld;
 }
-void UnlockSpin(volatile unsigned long &ulCount, unsigned long ulOld) noexcept {
+inline void UnlockSpin(volatile unsigned long &ulCount, unsigned long ulOld) noexcept {
 	__atomic_store_n(&ulCount, ulOld, __ATOMIC_SEQ_CST);
 }
 
@@ -52,7 +56,7 @@ CriticalSection::CriticalSection(unsigned long ulSpinCount)
 }
 
 // 其他非静态成员函数。
-bool CriticalSection::xNonRecursiveTry(unsigned long ulThreadId) throw() { // FIXME: g++ 4.9.2 ICE
+bool CriticalSection::xNonRecursiveTry(unsigned long ulThreadId) noexcept {
 	std::size_t i = 1;
 	if(EXPECT(GetProcessorCount() != 0)){
 		i += GetSpinCount();
@@ -67,7 +71,7 @@ bool CriticalSection::xNonRecursiveTry(unsigned long ulThreadId) throw() { // FI
 		if(EXPECT_NOT(--i == 0)){
 			return false;
 		}
-		__builtin_ia32_pause();
+		SpinPause();
 	}
 }
 void CriticalSection::xNonRecursiveAcquire(unsigned long ulThreadId) noexcept {

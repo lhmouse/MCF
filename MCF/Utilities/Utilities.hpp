@@ -18,7 +18,7 @@
 #include "CountLeadingTrailingZeroes.hpp"
 #include "CountOf.hpp"
 #include "MinMax.hpp"
-#include "NoCopy.hpp"
+#include "Noncopyable.hpp"
 #include "StaticAssertNoexcept.hpp"
 #include "TupleHelpers.hpp"
 

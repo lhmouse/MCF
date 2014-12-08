@@ -11,7 +11,7 @@
 
 namespace MCF {
 
-class Utf8TextFileReader : NO_COPY {
+class Utf8TextFileReader : Noncopyable {
 private:
 	const std::unique_ptr<File> xm_pFile;
 
@@ -29,7 +29,7 @@ public:
 	bool ReadTillEof(Utf8String &u8sData);
 };
 
-class Utf8TextFileWriter : NO_COPY {
+class Utf8TextFileWriter : Noncopyable {
 public:
 	enum : std::uint32_t {
 		BOM_NONE		= 0x00000000,

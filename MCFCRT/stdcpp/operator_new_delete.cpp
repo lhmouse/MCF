@@ -50,6 +50,7 @@ void *Allocate(std::size_t uSize, bool bIsArray, const void *pRetAddr){
 	*(std::uintptr_t *)pRaw = GetMagic(bIsArray);
 	return (unsigned char *)pRaw + sizeof(std::max_align_t);
 #else
+	(void)bIsArray;
 	return pRaw;
 #endif
 }
@@ -81,6 +82,7 @@ void *AllocateNoThrow(std::size_t uSize, bool bIsArray, const void *pRetAddr) no
 	*(std::uintptr_t *)pRaw = GetMagic(bIsArray);
 	return pRaw + sizeof(std::max_align_t);
 #else
+	(void)bIsArray;
 	return pRaw;
 #endif
 }
@@ -98,6 +100,7 @@ void Deallocate(void *pBlock, bool bIsArray, const void *pRetAddr) noexcept {
 			(int)(sizeof(std::size_t) * 2), (std::size_t)pRetAddr);
 	}
 #else
+	(void)bIsArray;
 	void *const pRaw = pBlock ;
 #endif
 	::__MCF_CRT_HeapFree(pRaw, pRetAddr);

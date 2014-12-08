@@ -5,14 +5,14 @@
 #ifndef MCF_THREAD_MUTEX_HPP_
 #define MCF_THREAD_MUTEX_HPP_
 
-#include "../Utilities/NoCopy.hpp"
+#include "../Utilities/Noncopyable.hpp"
 #include "../Core/String.hpp"
 #include "Win32Handle.hpp"
 #include "LockRaiiTemplate.hpp"
 
 namespace MCF {
 
-class Mutex : NO_COPY {
+class Mutex : Noncopyable {
 public:
 	using Lock = LockRaiiTemplate<Mutex>;
 

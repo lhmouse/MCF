@@ -6,7 +6,7 @@
 #define MCF_THREAD_MONITOR_PTR_HPP_
 
 #include "CriticalSection.hpp"
-#include "../Utilities/NoCopy.hpp"
+#include "../Utilities/Noncopyable.hpp"
 #include <utility>
 #include <type_traits>
 #include <cstddef>
@@ -36,10 +36,10 @@ namespace Impl {
 }
 
 template<class ObjectT>
-class MonitorPtr : NO_COPY {
+class MonitorPtr : Noncopyable {
 private:
 	template<typename SelfT>
-	class xMonitorHolder : NO_COPY {
+	class xMonitorHolder : Noncopyable {
 		friend MonitorPtr;
 
 	private:

@@ -6,7 +6,7 @@
 #define MCF_THREAD_CRITICAL_SECTION_HPP_
 
 #include "LockRaiiTemplate.hpp"
-#include "../Utilities/NoCopy.hpp"
+#include "../Utilities/Noncopyable.hpp"
 #include "Semaphore.hpp"
 
 namespace MCF {
@@ -19,7 +19,7 @@ struct CriticalSectionResults {
 	};
 };
 
-class CriticalSection : NO_COPY, public CriticalSectionResults {
+class CriticalSection : Noncopyable, public CriticalSectionResults {
 public:
 	using Lock = LockRaiiTemplate<CriticalSection>;
 

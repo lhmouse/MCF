@@ -5,13 +5,13 @@
 #ifndef MCF_CORE_TRANSACTION_HPP_
 #define MCF_CORE_TRANSACTION_HPP_
 
-#include "../Utilities/NoCopy.hpp"
+#include "../Utilities/Noncopyable.hpp"
 #include "../Containers/VVector.hpp"
 #include <memory>
 
 namespace MCF {
 
-class TransactionItemBase : NO_COPY {
+class TransactionItemBase : Noncopyable {
 	friend class Transaction;
 
 private:
@@ -20,7 +20,7 @@ private:
 	virtual void xUnlock() noexcept = 0;
 };
 
-class Transaction : NO_COPY {
+class Transaction : Noncopyable {
 private:
 	VVector<std::unique_ptr<TransactionItemBase>, 32> xm_vecItems;
 

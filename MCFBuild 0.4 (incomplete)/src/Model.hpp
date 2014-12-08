@@ -4,7 +4,7 @@
 #ifndef MCFBUILD_MODEL_HPP_
 #define MCFBUILD_MODEL_HPP_
 
-#include "../MCF/Utilities/NoCopy.hpp"
+#include "../MCF/Utilities/Noncopyable.hpp"
 #include "../MCF/Containers/VVector.hpp"
 #include "../MCF/Containers/MultiIndexMap.hpp"
 #include "../MCF/Core/String.hpp"
@@ -13,7 +13,7 @@
 
 namespace MCFBuild {
 
-class Model : NO_COPY {
+class Model : Noncopyable {
 public:
 	enum OPERATION {
 		OP_SHOW_HELP,

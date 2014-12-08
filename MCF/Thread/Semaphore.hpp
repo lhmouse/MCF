@@ -5,13 +5,13 @@
 #ifndef MCF_THREAD_SEMAPHORE_HPP_
 #define MCF_THREAD_SEMAPHORE_HPP_
 
-#include "../Utilities/NoCopy.hpp"
+#include "../Utilities/Noncopyable.hpp"
 #include "../Core/String.hpp"
 #include "Win32Handle.hpp"
 
 namespace MCF {
 
-class Semaphore : NO_COPY {
+class Semaphore : Noncopyable {
 private:
 	const UniqueWin32Handle xm_hSemaphore;
 

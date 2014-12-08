@@ -4,14 +4,14 @@
 #ifndef MCFBUILD_JOB_SCHEDULER_HPP_
 #define MCFBUILD_JOB_SCHEDULER_HPP_
 
-#include "../MCF/Utilities/NoCopy.hpp"
+#include "../MCF/Utilities/Noncopyable.hpp"
 #include "../MCF/Thread/CriticalSection.hpp"
 #include <queue>
 #include <functional>
 
 namespace MCFBuild {
 
-class JobScheduler : NO_COPY {
+class JobScheduler : Noncopyable {
 private:
 	const std::unique_ptr<MCF::CriticalSection> xm_pcsLock;
 	std::queue<std::function<void ()>> xm_queJobs;

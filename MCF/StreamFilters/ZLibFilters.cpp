@@ -52,7 +52,7 @@ unsigned long ZLibErrorToWin32Error(int nZLibError) noexcept {
 
 }
 
-class ZLibEncoder::xDelegate : NO_COPY {
+class ZLibEncoder::xDelegate : Noncopyable {
 private:
 	ZLibEncoder &xm_vOwner;
 
@@ -157,7 +157,7 @@ public:
 	}
 };
 
-class ZLibDecoder::xDelegate : NO_COPY {
+class ZLibDecoder::xDelegate : Noncopyable {
 private:
 	ZLibDecoder &xm_vOwner;
 

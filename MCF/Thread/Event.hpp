@@ -5,13 +5,13 @@
 #ifndef MCF_THREAD_EVENT_HPP_
 #define MCF_THREAD_EVENT_HPP_
 
-#include "../Utilities/NoCopy.hpp"
+#include "../Utilities/Noncopyable.hpp"
 #include "../Core/String.hpp"
 #include "Win32Handle.hpp"
 
 namespace MCF {
 
-class Event : NO_COPY {
+class Event : Noncopyable {
 private:
 	const UniqueWin32Handle xm_hEvent;
 

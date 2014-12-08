@@ -25,11 +25,11 @@
 #undef WINAPIV
 #undef APIENTRY
 
-#define CDECL		__MCF_C_CDECL
-#define CALLBACK	__MCF_C_STDCALL
-#define WINAPI		__MCF_C_STDCALL
-#define WINAPIV		__MCF_C_CDECL
-#define APIENTRY	__MCF_C_STDCALL
+#define CDECL					__MCF_C_CDECL
+#define CALLBACK				__MCF_C_STDCALL
+#define WINAPI					__MCF_C_STDCALL
+#define WINAPIV					__MCF_C_CDECL
+#define APIENTRY				__MCF_C_STDCALL
 
 #include <windows.h>
 

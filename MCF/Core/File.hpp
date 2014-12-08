@@ -5,7 +5,7 @@
 #ifndef MCF_CORE_FILE_HPP_
 #define MCF_CORE_FILE_HPP_
 
-#include "../Utilities/NoCopy.hpp"
+#include "../Utilities/Noncopyable.hpp"
 #include "../Utilities/Abstract.hpp"
 #include "String.hpp"
 #include <memory>
@@ -15,7 +15,7 @@
 
 namespace MCF {
 
-class File : NO_COPY, ABSTRACT {
+class File : Noncopyable, ABSTRACT {
 public:
 	enum : std::uint64_t {
 		INVALID_SIZE = (std::uint64_t)-1

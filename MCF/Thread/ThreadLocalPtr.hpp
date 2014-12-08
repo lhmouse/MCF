@@ -6,7 +6,7 @@
 #define MCF_THREAD_THREAD_LOCAL_PTR_HPP_
 
 #include "../../MCFCRT/env/thread.h"
-#include "../Utilities/NoCopy.hpp"
+#include "../Utilities/Noncopyable.hpp"
 #include "../Utilities/TupleHelpers.hpp"
 #include "../Core/UniqueHandle.hpp"
 #include "../Core/Exception.hpp"
@@ -45,7 +45,7 @@ namespace Impl {
 }
 
 template<class ObjectT, class ...InitParamsT>
-class ThreadLocalPtr : NO_COPY {
+class ThreadLocalPtr : Noncopyable {
 private:
 	using xExceptionWrapper = Impl::ExceptionWrapper<
 		std::is_nothrow_constructible<ObjectT, InitParamsT &&...>::value>;

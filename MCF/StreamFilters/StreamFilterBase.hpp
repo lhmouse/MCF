@@ -6,14 +6,14 @@
 #define MCF_STREAM_FILTERS_STREAM_FILTER_BASE_HPP_
 
 #include "../Core/StreamBuffer.hpp"
-#include "../Utilities/NoCopy.hpp"
+#include "../Utilities/Noncopyable.hpp"
 #include "../Utilities/Abstract.hpp"
 #include <cstddef>
 #include <cstdint>
 
 namespace MCF {
 
-class StreamFilterBase : NO_COPY, ABSTRACT {
+class StreamFilterBase : Noncopyable, ABSTRACT {
 private:
 	bool xm_bInited;
 	StreamBuffer xm_sbufOutput;

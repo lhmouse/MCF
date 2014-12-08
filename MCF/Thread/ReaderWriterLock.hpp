@@ -6,14 +6,14 @@
 #define MCF_THREAD_READER_WRITER_LOCK_HPP_
 
 #include "LockRaiiTemplate.hpp"
-#include "../Utilities/NoCopy.hpp"
+#include "../Utilities/Noncopyable.hpp"
 #include "CriticalSection.hpp"
 #include "Semaphore.hpp"
 #include "../Core/UniqueHandle.hpp"
 
 namespace MCF {
 
-class ReaderWriterLock : NO_COPY, public CriticalSectionResults {
+class ReaderWriterLock : Noncopyable, public CriticalSectionResults {
 private:
 	struct xTlsIndexDeleter {
 		unsigned long operator()() const noexcept;

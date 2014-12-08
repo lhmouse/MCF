@@ -6,13 +6,13 @@
 #define MCF_THREAD_LOCK_RAII_TEMPLATE_HPP_
 
 #include "../StdMCF.hpp"
-#include "../Utilities/NoCopy.hpp"
+#include "../Utilities/Noncopyable.hpp"
 #include "../Utilities/Abstract.hpp"
 #include "../Utilities/Assert.hpp"
 
 namespace MCF {
 
-class LockRaiiTemplateBase : NO_COPY, ABSTRACT {
+class LockRaiiTemplateBase : Noncopyable, ABSTRACT {
 protected:
 	std::size_t xm_uLockCount;
 

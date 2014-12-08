@@ -6,12 +6,12 @@
 #define MCF_THREAD_CONDITION_VARIABLE_HPP_
 
 #include "LockRaiiTemplate.hpp"
-#include "../Utilities/NoCopy.hpp"
+#include "../Utilities/Noncopyable.hpp"
 #include "Semaphore.hpp"
 
 namespace MCF {
 
-class ConditionVariable : NO_COPY {
+class ConditionVariable : Noncopyable {
 private:
 	Semaphore xm_vSemaphore;
 	volatile unsigned long xm_ulWaiting;

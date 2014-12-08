@@ -5,7 +5,7 @@
 #ifndef MCF_THREAD_THREAD_HPP_
 #define MCF_THREAD_THREAD_HPP_
 
-#include "../Utilities/NoCopy.hpp"
+#include "../Utilities/Noncopyable.hpp"
 #include "../Core/IntrusivePtr.hpp"
 #include "Win32Handle.hpp"
 #include <functional>
@@ -14,7 +14,7 @@
 
 namespace MCF {
 
-class Thread : public IntrusiveBase<Thread>, NO_COPY {
+class Thread : public IntrusiveBase<Thread>, Noncopyable {
 public:
 	static unsigned long GetCurrentId() noexcept;
 

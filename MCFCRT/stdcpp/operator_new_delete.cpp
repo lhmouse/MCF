@@ -7,12 +7,13 @@
 #include "../env/heap_dbg.h"
 #include "../env/mcfwin.h"
 #include "../env/bail.h"
+#include "../ext/unref_param.h"
 #include <new>
 #include <cstddef>
 
 namespace {
 
-#ifndef NDEBUG
+#if __MCF_CRT_REQUIRE_HEAPDBG_LEVEL(1)
 
 std::uintptr_t GetMagic(bool bIsArray){
 	return (std::uintptr_t)::EncodePointer((void *)(bIsArray ?
@@ -29,7 +30,7 @@ std::uintptr_t GetMagic(bool bIsArray){
 static_assert(sizeof(std::uintptr_t) <= sizeof(std::max_align_t), "wtf?");
 
 void *Allocate(std::size_t uSize, bool bIsArray, const void *pRetAddr){
-#ifdef __MCF_CRT_HEAPDBG_ON
+#if __MCF_CRT_REQUIRE_HEAPDBG_LEVEL(1)
 	const auto uSizeToAlloc = sizeof(std::max_align_t) + uSize;
 	if(uSizeToAlloc < uSize){
 		throw std::bad_alloc();
@@ -46,16 +47,16 @@ void *Allocate(std::size_t uSize, bool bIsArray, const void *pRetAddr){
 		(*pfnHandler)();
 		pRaw = ::__MCF_CRT_HeapAlloc(uSizeToAlloc, pRetAddr);
 	}
-#ifdef __MCF_CRT_HEAPDBG_ON
+#if __MCF_CRT_REQUIRE_HEAPDBG_LEVEL(1)
 	*(std::uintptr_t *)pRaw = GetMagic(bIsArray);
 	return (unsigned char *)pRaw + sizeof(std::max_align_t);
 #else
-	(void)bIsArray;
+	UNREF_PARAM(bIsArray);
 	return pRaw;
 #endif
 }
 void *AllocateNoThrow(std::size_t uSize, bool bIsArray, const void *pRetAddr) noexcept {
-#ifdef __MCF_CRT_HEAPDBG_ON
+#if __MCF_CRT_REQUIRE_HEAPDBG_LEVEL(1)
 	const auto uSizeToAlloc = sizeof(std::max_align_t) + uSize;
 	if(uSizeToAlloc < uSize){
 		return nullptr;
@@ -78,11 +79,11 @@ void *AllocateNoThrow(std::size_t uSize, bool bIsArray, const void *pRetAddr) no
 			return nullptr;
 		}
 	}
-#ifdef __MCF_CRT_HEAPDBG_ON
+#if __MCF_CRT_REQUIRE_HEAPDBG_LEVEL(1)
 	*(std::uintptr_t *)pRaw = GetMagic(bIsArray);
 	return pRaw + sizeof(std::max_align_t);
 #else
-	(void)bIsArray;
+	UNREF_PARAM(bIsArray);
 	return pRaw;
 #endif
 }
@@ -90,17 +91,16 @@ void Deallocate(void *pBlock, bool bIsArray, const void *pRetAddr) noexcept {
 	if(!pBlock){
 		return;
 	}
-#ifdef __MCF_CRT_HEAPDBG_ON
+#if __MCF_CRT_REQUIRE_HEAPDBG_LEVEL(1)
 	void *const pRaw = (unsigned char *)pBlock - sizeof(std::max_align_t);
 	if(*(std::uintptr_t *)pRaw != GetMagic(bIsArray)){
 		MCF_CRT_BailF(
-			L"试图使用 operator delete%ls 释放不是由 operator new%ls 分配的内存。\n调用返回地址：%0*zX",
-			bIsArray ? L"[]" : L"",
-			bIsArray ? L"[]" : L"",
+			bIsArray ? L"试图使用 operator delete[] 释放不是由 operator new[] 分配的内存。\n调用返回地址：%0*zX"
+				: L"试图使用 operator delete 释放不是由 operator new 分配的内存。\n调用返回地址：%0*zX",
 			(int)(sizeof(std::size_t) * 2), (std::size_t)pRetAddr);
 	}
 #else
-	(void)bIsArray;
+	UNREF_PARAM(bIsArray);
 	void *const pRaw = pBlock ;
 #endif
 	::__MCF_CRT_HeapFree(pRaw, pRetAddr);

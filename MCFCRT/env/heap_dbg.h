@@ -7,11 +7,22 @@
 
 #include "_crtdef.h"
 
-#if !defined(__MCF_CRT_HEAPDBG_ON) && !defined(NDEBUG)
-#	define __MCF_CRT_HEAPDBG_ON		1
+/*
+	__MCF_CRT_HEAPDBG_LEVEL
+
+	0	禁用。
+	1	添加仅性能造成轻微影响的检查。
+	2	在 1 的基础上，向新分配和已释放的内存投毒。
+	3	在 2 的基础上，追踪内存块的分配和释放，捕捉无效的内存操作及内存泄漏。
+*/
+
+#ifdef NDEBUG
+#	define __MCF_CRT_HEAPDBG_LEVEL	1
+#else
+#	define __MCF_CRT_HEAPDBG_LEVEL	3
 #endif
 
-#ifdef __MCF_CRT_HEAPDBG_ON
+#define __MCF_CRT_REQUIRE_HEAPDBG_LEVEL(lv_)	((__MCF_CRT_HEAPDBG_LEVEL + 0) >= lv_)
 
 #include "avl_tree.h"
 
@@ -19,6 +30,8 @@ __MCF_CRT_EXTERN_C_BEGIN
 
 extern bool __MCF_CRT_HeapDbgInit(void) MCF_NOEXCEPT;
 extern void __MCF_CRT_HeapDbgUninit(void) MCF_NOEXCEPT;
+
+#if __MCF_CRT_REQUIRE_HEAPDBG_LEVEL(3)
 
 typedef struct __tagMCF_HeapDbgBlockInfo {
 	MCF_AvlNodeHeader vHeader;
@@ -39,8 +52,8 @@ extern const __MCF_HeapDbgBlockInfo *__MCF_CRT_HeapDbgValidate(
 
 extern void __MCF_CRT_HeapDbgUnregister(const __MCF_HeapDbgBlockInfo *pBlockInfo) MCF_NOEXCEPT;
 
-__MCF_CRT_EXTERN_C_END
+#endif
 
-#endif // __MCF_CRT_HEAPDBG_ON
+__MCF_CRT_EXTERN_C_END
 
 #endif

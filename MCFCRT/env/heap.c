@@ -6,6 +6,7 @@
 #include "heap_dbg.h"
 #include "hooks.h"
 #include "mcfwin.h"
+#include "bail.h"
 #include "../ext/unref_param.h"
 #include <stdlib.h>
 #include <string.h>
@@ -33,7 +34,8 @@ bool __MCF_CRT_HeapInit(){
 #else
 		0
 #endif
-	)){
+		))
+	{
 		return false;
 	}
 	return true;
@@ -43,16 +45,16 @@ void __MCF_CRT_HeapUninit(){
 }
 
 unsigned char *__MCF_CRT_HeapAlloc(size_t uSize, const void *pRetAddr){
-#ifdef __MCF_CRT_HEAPDBG_ON
+#if __MCF_CRT_REQUIRE_HEAPDBG_LEVEL(1)
 	SetLastError(0xDEADBEEF);
+#endif
 
+#if __MCF_CRT_REQUIRE_HEAPDBG_LEVEL(3)
 	const size_t uRawSize = __MCF_CRT_HeapDbgGetRawSize(uSize);
 	if(uRawSize < uSize){
 		return nullptr;
 	}
 #else
-	UNREF_PARAM(pRetAddr);
-
 	const size_t uRawSize = uSize;
 #endif
 
@@ -62,90 +64,106 @@ unsigned char *__MCF_CRT_HeapAlloc(size_t uSize, const void *pRetAddr){
 		do {
 			unsigned char *const pRaw = dlmalloc(uRawSize);
 			if(pRaw){
-#ifdef __MCF_CRT_HEAPDBG_ON
+#if __MCF_CRT_REQUIRE_HEAPDBG_LEVEL(3)
 				pRet = __MCF_CRT_HeapDbgAddGuardsAndRegister(pRaw, uSize, pRetAddr);
-				memset(pRet, 0xCD, uSize);
 #else
 				pRet = pRaw;
 #endif
+
+#if __MCF_CRT_REQUIRE_HEAPDBG_LEVEL(2)
+				memset(pRet, 0xCD, uSize);
+#endif
+				MCF_OnHeapAlloc(pRet, uSize, pRetAddr);
 				break;
 			}
 		} while(MCF_OnBadAlloc());
-
-		MCF_OnHeapAlloc(pRet, uSize, pRetAddr);
 	}
 	LeaveCriticalSection(&g_csHeapLock);
 	return pRet;
 }
-unsigned char *__MCF_CRT_HeapReAlloc(void *pBlock /* NON-nullptr */, size_t uSize, const void *pRetAddr){
-#ifdef __MCF_CRT_HEAPDBG_ON
-	SetLastError(0xDEADBEEF);
+unsigned char *__MCF_CRT_HeapReAlloc(void *pBlock, size_t uSize, const void *pRetAddr){
+	if(!pBlock){
+		MCF_CRT_Bail(L"__MCF_CRT_HeapReAlloc() 失败：传入了一个空指针。\n\n");
+	}
 
+#if __MCF_CRT_REQUIRE_HEAPDBG_LEVEL(1)
+	SetLastError(0xDEADBEEF);
+#endif
+
+#if __MCF_CRT_REQUIRE_HEAPDBG_LEVEL(3)
 	const size_t uRawSize = __MCF_CRT_HeapDbgGetRawSize(uSize);
 	if(uRawSize < uSize){
 		return nullptr;
 	}
 #else
-	UNREF_PARAM(pRetAddr);
-
 	const size_t uRawSize = uSize;
 #endif
 
 	unsigned char *pRet = nullptr;
 	EnterCriticalSection(&g_csHeapLock);
 	{
-#ifdef __MCF_CRT_HEAPDBG_ON
+#if __MCF_CRT_REQUIRE_HEAPDBG_LEVEL(3)
 		unsigned char *pRawOriginal;
 		const __MCF_HeapDbgBlockInfo *const pBlockInfo = __MCF_CRT_HeapDbgValidate(&pRawOriginal, pBlock, pRetAddr);
+		const size_t uOriginalSize = pBlockInfo->uSize;
 #else
 		unsigned char *const pRawOriginal = pBlock;
+		const size_t uOriginalSize = dlmalloc_usable_size(pRawOriginal);
 #endif
-
-		MCF_OnHeapDealloc(pBlock, pRetAddr);
+		UNREF_PARAM(uOriginalSize);
 
 		do {
 			unsigned char *const pRaw = dlrealloc(pRawOriginal, uRawSize);
 			if(pRaw){
-#ifdef __MCF_CRT_HEAPDBG_ON
-				const size_t uOriginalSize = pBlockInfo->uSize;
+				MCF_OnHeapDealloc(pBlock, pRetAddr);
+
+#if __MCF_CRT_REQUIRE_HEAPDBG_LEVEL(3)
 				__MCF_CRT_HeapDbgUnregister(pBlockInfo);
 
 				pRet = __MCF_CRT_HeapDbgAddGuardsAndRegister(pRaw, uSize, pRetAddr);
-				if(uOriginalSize < uSize){
-					memset(pRet + uOriginalSize, 0xCD, uSize - uOriginalSize);
-				}
 #else
 				pRet = pRaw;
 #endif
+
+#if __MCF_CRT_REQUIRE_HEAPDBG_LEVEL(2)
+				if(uOriginalSize < uSize){
+					memset(pRet + uOriginalSize, 0xCD, uSize - uOriginalSize);
+				}
+#endif
+
+				MCF_OnHeapAlloc(pRet, uSize, pRetAddr);
 				break;
 			}
 		} while(MCF_OnBadAlloc());
-
-		MCF_OnHeapAlloc(pRet, uSize, pRetAddr);
 	}
 	LeaveCriticalSection(&g_csHeapLock);
 	return pRet;
 }
-void __MCF_CRT_HeapFree(void *pBlock /* NON-nullptr */, const void *pRetAddr){
+void __MCF_CRT_HeapFree(void *pBlock, const void *pRetAddr){
+	if(!pBlock){
+		MCF_CRT_Bail(L"__MCF_CRT_HeapFree() 失败：传入了一个空指针。\n\n");
+	}
+
+#if __MCF_CRT_REQUIRE_HEAPDBG_LEVEL(1)
+	SetLastError(0xDEADBEEF);
+#endif
+
 	EnterCriticalSection(&g_csHeapLock);
 	{
-#ifdef __MCF_CRT_HEAPDBG_ON
-		SetLastError(0xDEADBEEF);
+		MCF_OnHeapDealloc(pBlock, pRetAddr);
 
 		unsigned char *pRaw;
+#if __MCF_CRT_REQUIRE_HEAPDBG_LEVEL(3)
 		const __MCF_HeapDbgBlockInfo *const pBlockInfo = __MCF_CRT_HeapDbgValidate(&pRaw, pBlock, pRetAddr);
-
-		memset(pBlock, 0xFE, pBlockInfo->uSize);
 
 		__MCF_CRT_HeapDbgUnregister(pBlockInfo);
 #else
-		UNREF_PARAM(pRetAddr);
-
-		unsigned char *const pRaw = pBlock;
+		pRaw = pBlock;
 #endif
 
-		MCF_OnHeapDealloc(pBlock, pRetAddr);
-
+#if __MCF_CRT_REQUIRE_HEAPDBG_LEVEL(2)
+		memset(pRaw, 0xFE, dlmalloc_usable_size(pRaw));
+#endif
 		dlfree(pRaw);
 	}
 	LeaveCriticalSection(&g_csHeapLock);

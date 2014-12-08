@@ -23,17 +23,6 @@ typedef struct tagAtExitNode {
 static AtExitNode *volatile g_pAtExitHead = nullptr;
 static unsigned g_uInitState = 0;
 
-#define DUMMY_INIT()			(true)
-#define DUMMY_UNINIT()			((void)0)
-
-#ifdef __MCF_CRT_HEAPDBG_ON
-#	define HEAPDBG_INIT()		(__MCF_CRT_HeapDbgInit())
-#	define HEAPDBG_UNINIT()		(__MCF_CRT_HeapDbgUninit())
-#else
-#	define HEAPDBG_INIT()		DUMMY_INIT()
-#	define HEAPDBG_UNINIT()		DUMMY_UNINIT()
-#endif
-
 // weak
 void MCF_PreInitModule(){
 }
@@ -82,7 +71,7 @@ static bool Init(){
 //=========================================================
 	DO_INIT(0, __MCF_CRT_FEnvInit());
 	DO_INIT(1, __MCF_CRT_HeapInit());
-	DO_INIT(2, HEAPDBG_INIT());
+	DO_INIT(2, __MCF_CRT_HeapDbgInit());
 	DO_INIT(3, __MCF_CRT_TlsEnvInit());
 	DO_INIT(4, __MCF_CRT_MinGWHacksInit());
 	DO_INIT(5, BeginModule());
@@ -112,9 +101,9 @@ static void Uninit(){
 	DO_UNINIT(5, EndModule());
 	DO_UNINIT(4, __MCF_CRT_MinGWHacksUninit());
 	DO_UNINIT(3, __MCF_CRT_TlsEnvUninit());
-	DO_UNINIT(2, HEAPDBG_UNINIT());
+	DO_UNINIT(2, __MCF_CRT_HeapDbgUninit());
 	DO_UNINIT(1, __MCF_CRT_HeapUninit());
-	DO_UNINIT(0, DUMMY_UNINIT());
+	DO_UNINIT(0, (void)0);
 //=========================================================
 
 		break;

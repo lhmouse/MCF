@@ -1,13 +1,17 @@
 #include <MCF/StdMCF.hpp>
-#include <MCF/Core/Exception.hpp>
-#include <MCF/Core/LastError.hpp>
+#include <set>
 using namespace MCF;
 
 extern "C" unsigned int MCFMain() noexcept {
-	try {
-		GetWin32ErrorDescription(0x123456);
-	} catch(SystemError &e){
-		std::printf("code = %lX\n", e.GetCode());
+	std::multiset<int> s;
+	for(int i = 0; i < 100000; ++i){
+		s.insert(std::rand());
 	}
+
+	auto p = new unsigned;
+	std::printf("*p = %08X\n", *p);
+	delete p;
+	std::printf("*p = %08X\n", *p);
+
 	return 0;
 }

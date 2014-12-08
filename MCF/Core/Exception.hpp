@@ -6,7 +6,7 @@
 #define MCF_CORE_EXCEPTION_HPP_
 
 #include "../../MCFCRT/env/last_error.h"
-#include <stdexcept>
+#include <exception>
 
 namespace MCF {
 
@@ -58,6 +58,10 @@ public:
 
 }
 
-#define DEBUG_THROW(etype_, ...)	(throw etype_(__FILE__, __LINE__, __VA_ARGS__))
+#define DEBUG_THROW(etype_, ...)	\
+	do {	\
+		etype_ e_ (__FILE__, __LINE__, __VA_ARGS__);	\
+		throw e_;	\
+	} while(false)
 
 #endif

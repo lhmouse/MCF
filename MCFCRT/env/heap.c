@@ -44,6 +44,8 @@ void __MCF_CRT_HeapUninit(){
 
 unsigned char *__MCF_CRT_HeapAlloc(size_t uSize, const void *pRetAddr){
 #ifdef __MCF_CRT_HEAPDBG_ON
+	SetLastError(0xDEADBEEF);
+
 	const size_t uRawSize = __MCF_CRT_HeapDbgGetRawSize(uSize);
 	if(uRawSize < uSize){
 		return nullptr;
@@ -77,6 +79,8 @@ unsigned char *__MCF_CRT_HeapAlloc(size_t uSize, const void *pRetAddr){
 }
 unsigned char *__MCF_CRT_HeapReAlloc(void *pBlock /* NON-nullptr */, size_t uSize, const void *pRetAddr){
 #ifdef __MCF_CRT_HEAPDBG_ON
+	SetLastError(0xDEADBEEF);
+
 	const size_t uRawSize = __MCF_CRT_HeapDbgGetRawSize(uSize);
 	if(uRawSize < uSize){
 		return nullptr;
@@ -126,6 +130,8 @@ void __MCF_CRT_HeapFree(void *pBlock /* NON-nullptr */, const void *pRetAddr){
 	EnterCriticalSection(&g_csHeapLock);
 	{
 #ifdef __MCF_CRT_HEAPDBG_ON
+		SetLastError(0xDEADBEEF);
+
 		unsigned char *pRaw;
 		const __MCF_HeapDbgBlockInfo *const pBlockInfo = __MCF_CRT_HeapDbgValidate(&pRaw, pBlock, pRetAddr);
 

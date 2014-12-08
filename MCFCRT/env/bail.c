@@ -10,9 +10,9 @@
 #include <stdlib.h>
 
 static DWORD APIENTRY ThreadProc(LPVOID pParam){
-	const LPCWSTR pwszDescription = (LPCWSTR)pParam;
+	const LPCWSTR pwszDescription = pParam;
 
-	wchar_t awcBuffer[2049];
+	wchar_t awcBuffer[1025 + 256];
 	wchar_t *pwcWrite = MCF_wcscpyout(awcBuffer, L"应用程序异常终止。请联系作者寻求协助。");
 	if(pwszDescription){
 		pwcWrite = MCF_wcscpyout(pwcWrite, L"\r\n\r\n错误描述：\r\n");
@@ -23,7 +23,7 @@ static DWORD APIENTRY ThreadProc(LPVOID pParam){
 		if(uLen > uMax){
 			uLen = uMax;
 		}
-		memcpy(pwcWrite, pwszDescription, uLen * sizeof(wchar_t)); // 我们有必要在这个地方拷贝字符串结束符吗？
+		wmemcpy(pwcWrite, pwszDescription, uLen); // 我们有必要在这个地方拷贝字符串结束符吗？
 		pwcWrite += uLen;
 	}
 #ifndef NDEBUG

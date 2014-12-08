@@ -9,26 +9,23 @@ using namespace MCF;
 
 namespace MCF {
 
-WideString GetWin32ErrorDesc(unsigned long ulErrorCode){
+WideString GetWin32ErrorDescription(unsigned long ulErrorCode){
 	WideString wsRet;
-	wsRet.Resize(1);
-	for(;;){
-		const auto uMaxLen = wsRet.GetCapacity();
-		wsRet.Resize(uMaxLen);
-		const auto uLen = ::FormatMessageW(
-			FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS | FORMAT_MESSAGE_MAX_WIDTH_MASK,
-			nullptr, ulErrorCode, MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL),
-			wsRet.GetData(), uMaxLen, nullptr);
-		if(uLen != 0){
-			wsRet.Resize(uLen);
-			break;
-		}
-		const auto dwError = ::GetLastError();
-		if(dwError != ERROR_INSUFFICIENT_BUFFER){
-			DEBUG_THROW(SystemError, "FormatMessageW", dwError);
-		}
-		wsRet.Clear();
-		wsRet.Reserve(uMaxLen * 2);
+	void *pBuffer;
+	const auto uLen = ::FormatMessageW(
+		FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_ALLOCATE_BUFFER
+			| FORMAT_MESSAGE_IGNORE_INSERTS | FORMAT_MESSAGE_MAX_WIDTH_MASK,
+		nullptr, ulErrorCode, MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL),
+		(LPWSTR)&pBuffer, 0, nullptr);
+	if(uLen == 0){
+		DEBUG_THROW(SystemError, "FormatMessageW");
+	}
+	try {
+		wsRet.Assign((const wchar_t *)pBuffer, uLen);
+		::LocalFree(pBuffer);
+	} catch(...){
+		::LocalFree(pBuffer);
+		throw;
 	}
 	return std::move(wsRet);
 }

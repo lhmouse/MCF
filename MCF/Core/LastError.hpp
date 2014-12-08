@@ -17,7 +17,7 @@ inline void SetWin32LastError(unsigned long ulErrorCode) noexcept {
 	::MCF_CRT_SetWin32LastError(ulErrorCode);
 }
 
-WideString GetWin32ErrorDesc(unsigned long ulErrorCode);
+extern WideString GetWin32ErrorDescription(unsigned long ulErrorCode);
 
 }
 

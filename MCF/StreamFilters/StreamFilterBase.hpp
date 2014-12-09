@@ -7,13 +7,12 @@
 
 #include "../Core/StreamBuffer.hpp"
 #include "../Utilities/Noncopyable.hpp"
-#include "../Utilities/Abstract.hpp"
 #include <cstddef>
 #include <cstdint>
 
 namespace MCF {
 
-class StreamFilterBase : NONCOPYABLE, ABSTRACT {
+class StreamFilterBase : NONCOPYABLE {
 private:
 	bool xm_bInited;
 	StreamBuffer xm_sbufOutput;

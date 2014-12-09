@@ -13,7 +13,7 @@ constexpr char BASE64_TABLE_MIME	[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmno
 constexpr char BASE64_TABLE_URL		[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789*-";
 constexpr char BASE64_TABLE_REGEXP	[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!-=";
 
-class Base64Encoder : CONCRETE(StreamFilterBase) {
+class Base64Encoder : public StreamFilterBase {
 private:
 	unsigned char xm_abyTable[65];
 
@@ -29,7 +29,7 @@ public:
 	void Finalize() override;
 };
 
-class Base64Decoder : CONCRETE(StreamFilterBase) {
+class Base64Decoder : public StreamFilterBase {
 private:
 	unsigned char xm_abyTable[0x100];
 

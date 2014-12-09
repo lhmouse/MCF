@@ -10,7 +10,7 @@
 
 namespace MCF {
 
-class IsaacExEncoder : CONCRETE(StreamFilterBase) {
+class IsaacExEncoder : public StreamFilterBase {
 private:
 	std::uint32_t xm_au32KeyHash[8];
 
@@ -27,7 +27,7 @@ public:
 	void Finalize() override;
 };
 
-class IsaacExDecoder : CONCRETE(StreamFilterBase) {
+class IsaacExDecoder : public StreamFilterBase {
 private:
 	std::uint32_t xm_au32KeyHash[8];
 

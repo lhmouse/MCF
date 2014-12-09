@@ -11,7 +11,7 @@
 
 namespace MCF {
 
-class ZLibEncoder : CONCRETE(StreamFilterBase) {
+class ZLibEncoder : public StreamFilterBase {
 private:
 	class xDelegate;
 
@@ -28,7 +28,7 @@ public:
 	void Finalize() override;
 };
 
-class ZLibDecoder : CONCRETE(StreamFilterBase) {
+class ZLibDecoder : public StreamFilterBase {
 private:
 	class xDelegate;
 

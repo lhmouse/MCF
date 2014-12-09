@@ -6,14 +6,13 @@
 #define MCF_THREAD_UNIQUE_LOCK_TEMPLATE_HPP_
 
 #include "../Utilities/Noncopyable.hpp"
-#include "../Utilities/Abstract.hpp"
 #include "../Utilities/Assert.hpp"
 #include <utility>
 #include <cstddef>
 
 namespace MCF {
 
-class UniqueLockTemplateBase : NONCOPYABLE, ABSTRACT {
+class UniqueLockTemplateBase : NONCOPYABLE {
 protected:
 	std::size_t xm_uLockCount;
 
@@ -80,7 +79,7 @@ public:
 };
 
 template<class MutexT, unsigned LOCK_TYPE_T = 0>
-class UniqueLockTemplate final : CONCRETE(UniqueLockTemplateBase) {
+class UniqueLockTemplate final : public UniqueLockTemplateBase {
 private:
 	MutexT *xm_pOwner;
 

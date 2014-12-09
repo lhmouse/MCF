@@ -9,7 +9,7 @@
 
 namespace MCF {
 
-class HexEncoder : CONCRETE(StreamFilterBase) {
+class HexEncoder : public StreamFilterBase {
 private:
 	const bool xm_bUpperCase;
 
@@ -20,7 +20,7 @@ public:
 	void Update(const void *pData, std::size_t uSize) override;
 };
 
-class HexDecoder : CONCRETE(StreamFilterBase) {
+class HexDecoder : public StreamFilterBase {
 private:
 	int xm_nHigh;
 

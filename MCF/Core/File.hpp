@@ -6,21 +6,16 @@
 #define MCF_CORE_FILE_HPP_
 
 #include "../Utilities/Noncopyable.hpp"
-#include "../Utilities/Abstract.hpp"
 #include "String.hpp"
-#include <memory>
+#include "UniqueHandle.hpp"
 #include <functional>
 #include <cstddef>
 #include <cstdint>
 
 namespace MCF {
 
-class File : NONCOPYABLE, ABSTRACT {
+class File : NONCOPYABLE {
 public:
-	enum : std::uint64_t {
-		INVALID_SIZE = (std::uint64_t)-1
-	};
-
 	enum : std::uint32_t {
 		// 权限控制。
 		TO_READ			= 0x00000001,
@@ -37,20 +32,30 @@ public:
 		NO_TRUNC		= 0x00000080,	// 默认情况下使用 TO_WRITE 打开文件会清空现有内容。
 	};
 
-public:
-	static std::unique_ptr<File> Open(const wchar_t *pwszPath, std::uint32_t u32Flags);
-	static std::unique_ptr<File> Open(const WideString &wsPath, std::uint32_t u32Flags);
+private:
+	struct xFileCloser {
+		void *operator()() const noexcept;
+		void operator()(void *hFile) const noexcept;
+	};
 
-	static std::unique_ptr<File> OpenNoThrow(const wchar_t *pwszPath, std::uint32_t u32Flags);
-	static std::unique_ptr<File> OpenNoThrow(const WideString &wsPath, std::uint32_t u32Flags);
+private:
+	UniqueHandle<xFileCloser> xm_hFile;
 
 public:
+	File(const wchar_t *pwszPath, std::uint32_t u32Flags);
+	File(const WideString &wsPath, std::uint32_t u32Flags);
+
+public:
+	bool IsOpen() const noexcept;
+	void Open(const wchar_t *pwszPath, std::uint32_t u32Flags);
+	void Open(const WideString &wsPath, std::uint32_t u32Flags);
+	bool OpenNoThrow(const wchar_t *pwszPath, std::uint32_t u32Flags);
+	bool OpenNoThrow(const WideString &wsPath, std::uint32_t u32Flags);
+	void Close() noexcept;
+
 	std::uint64_t GetSize() const;
 	void Resize(std::uint64_t u64NewSize);
 	void Clear();
-
-	std::size_t Read(void *pBuffer, std::size_t uBytesToRead, std::uint64_t u64Offset) const;
-	void Write(std::uint64_t u64Offset, const void *pBuffer, std::size_t uBytesToWrite);
 
 	// 1. fnAsyncProc 总是会被执行一次，即使读取或写入操作失败；
 	// 2. 如果 IO 请求不能一次完成（例如尝试在 64 位环境下一次读取超过 4GiB 的数据），将会拆分为多次进行。
@@ -58,11 +63,17 @@ public:
 	// 3. 所有的回调函数都可以抛出异常；在这种情况下，异常将在读取或写入操作完成或失败后被重新抛出。
 	// 4. 当且仅当 fnAsyncProc 成功返回且异步操作成功后 fnCompleteCallback 才会被执行。
 	std::size_t Read(void *pBuffer, std::size_t uBytesToRead, std::uint64_t u64Offset,
-		const std::function<void ()> &fnAsyncProc, const std::function<void ()> &fnCompleteCallback) const;
+		const std::function<void ()> &fnAsyncProc = std::function<void ()>(),
+		const std::function<void ()> &fnCompleteCallback = std::function<void ()>()) const;
 	void Write(std::uint64_t u64Offset, const void *pBuffer, std::size_t uBytesToWrite,
-		const std::function<void ()> &fnAsyncProc, const std::function<void ()> &fnCompleteCallback);
-
+		const std::function<void ()> &fnAsyncProc = std::function<void ()>(),
+		const std::function<void ()> &fnCompleteCallback = std::function<void ()>());
 	void Flush() const;
+
+public:
+	explicit operator bool() const noexcept {
+		return IsOpen();
+	}
 };
 
 }

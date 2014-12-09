@@ -7,8 +7,8 @@
 
 #include "../Utilities/Noncopyable.hpp"
 #include "UniqueLockTemplate.hpp"
-#include "ConditionVariable.hpp"
 #include "UserMutex.hpp"
+#include "ConditionVariable.hpp"
 #include <cstddef>
 
 namespace MCF {

@@ -50,9 +50,9 @@ void ConditionVariable::Signal(std::size_t uMaxCount) noexcept {
 	}
 //	// 进入临界区。
 	const auto uToPost = Min(xm_uWaiting, uMaxCount);
-	xm_uWaiting -= uToPost;
 	if(uToPost != 0){
 		xm_vSemaphore.Post(uToPost);
+		xm_uWaiting -= uToPost;
 	}
 //	\\ 退出临界区。
 	if(!bIsLocking){
@@ -65,10 +65,9 @@ void ConditionVariable::Broadcast() noexcept {
 		xm_vMutex.Lock();
 	}
 //	// 进入临界区。
-	const auto uToPost = xm_uWaiting;
-	xm_uWaiting = 0;
-	if(uToPost != 0){
-		xm_vSemaphore.Post(uToPost);
+	if(xm_uWaiting != 0){
+		xm_vSemaphore.Post(xm_uWaiting);
+		xm_uWaiting = 0;
 	}
 //	\\ 退出临界区。
 	if(!bIsLocking){

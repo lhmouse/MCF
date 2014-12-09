@@ -84,7 +84,8 @@ public:
 	UniqueLockTemplate(UniqueLockTemplate &&rhs) noexcept
 		: xm_pOwner(rhs.xm_pOwner)
 	{
-		xm_ulLockCount = std::exchange(rhs.xm_ulLockCount, 0u);
+		xm_ulLockCount = rhs.xm_ulLockCount;
+		rhs.xm_ulLockCount = 0;
 	}
 	UniqueLockTemplate &operator=(UniqueLockTemplate &&rhs) noexcept {
 		ASSERT(&rhs != this);
@@ -92,15 +93,15 @@ public:
 		if(xm_ulLockCount != 0){
 			xDoUnlock();
 		}
+		xm_ulLockCount = rhs.xm_ulLockCount;
+		rhs.xm_ulLockCount = 0;
 		xm_pOwner = rhs.xm_pOwner;
-		xm_ulLockCount = std::exchange(rhs.xm_ulLockCount, 0u);
 		return *this;
 	}
 	virtual ~UniqueLockTemplate(){
 		if(xm_ulLockCount != 0){
 			xDoUnlock();
 		}
-		xm_ulLockCount = 0;
 	}
 
 private:
@@ -112,7 +113,8 @@ public:
 	void Join(UniqueLockTemplate &&rhs) noexcept {
 		ASSERT(xm_pOwner == rhs.xm_pOwner);
 
-		xm_ulLockCount += std::exchange(rhs.xm_ulLockCount, 0u);
+		xm_ulLockCount += rhs.xm_ulLockCount;
+		rhs.xm_ulLockCount = 0;
 	}
 
 	void Swap(UniqueLockTemplate &rhs) noexcept {

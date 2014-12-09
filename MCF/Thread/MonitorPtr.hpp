@@ -5,7 +5,7 @@
 #ifndef MCF_THREAD_MONITOR_PTR_HPP_
 #define MCF_THREAD_MONITOR_PTR_HPP_
 
-#include "CriticalSection.hpp"
+#include "UserRecursiveMutex.hpp"
 #include "../Utilities/Noncopyable.hpp"
 #include <utility>
 #include <type_traits>
@@ -13,33 +13,11 @@
 
 namespace MCF {
 
-namespace Impl {
-	template<typename ObjectT, typename = int>
-	struct ForwardArrowOperatorHelper {
-		auto operator()(ObjectT *pObject) const noexcept {
-			return pObject;
-		}
-	};
-	template<typename ObjectT>
-	struct ForwardArrowOperatorHelper<
-		ObjectT, decltype(std::declval<ObjectT *>()->operator->(), 1)>
-	{
-		auto operator()(ObjectT *pObject) const noexcept {
-			return pObject->operator->();
-		}
-	};
-
-	template<typename ObjectT>
-	auto ForwardArrowOperator(ObjectT &vObject) noexcept {
-		return ForwardArrowOperatorHelper<ObjectT>()(&vObject);
-	}
-}
-
 template<class ObjectT>
 class MonitorPtr : NONCOPYABLE {
 private:
 	template<typename SelfT>
-	class xMonitorHolder : NONCOPYABLE {
+	class xMonitorHolder {
 		friend MonitorPtr;
 
 	private:
@@ -49,55 +27,58 @@ private:
 		explicit xMonitorHolder(SelfT *pOwner) noexcept
 			: xm_pOwner(pOwner)
 		{
-			auto vLock = xm_pOwner->xm_pcsMutex->GetLock();
-			xm_pOwner->xm_vLock.Join(std::move(vLock));
+			xm_pOwner->xm_vMutex.Lock();
 		}
-		xMonitorHolder(xMonitorHolder &&rhs) noexcept
-			: xm_pOwner(std::exchange(rhs.xm_pOwner, nullptr))
-		{
+		xMonitorHolder(xMonitorHolder &&rhs) noexcept {
+			xm_pOwner = rhs.xm_pOwner;
+			rhs.xm_pOwner = nullptr;
 		}
-		xMonitorHolder &operator=(xMonitorHolder &&rhs) noexcept {
-			ASSERT(&rhs != this);
 
-			if(xm_pOwner){
-				xm_pOwner->xm_vLock.Unlock();
-			}
-			xm_pOwner = std::exchange(rhs.xm_pOwner, nullptr);
-			return *this;
-		}
+		xMonitorHolder(const xMonitorHolder &) = delete;
+		void operator=(const xMonitorHolder &) = delete;
+		void operator=(xMonitorHolder &&) = delete;
 
 	public:
 		~xMonitorHolder(){
 			if(xm_pOwner){
-				xm_pOwner->xm_vLock.Unlock();
+				xm_pOwner->xm_vMutex.Unlock();
 			}
 		}
 
 	public:
+		auto &operator*() const noexcept {
+			return xm_pOwner->xm_vObject;
+		}
 		auto operator->() const noexcept {
-			return Impl::ForwardArrowOperator(xm_pOwner->xm_vObject);
+			return &**this;
 		}
 	};
 
 private:
-	const std::unique_ptr<CriticalSection> xm_pcsMutex;
-	mutable CriticalSection::Lock xm_vLock;
+	UserRecursiveMutex xm_vMutex;
 	ObjectT xm_vObject;
 
 public:
 	template<typename ...ParamsT>
 	explicit MonitorPtr(ParamsT &&...vParams)
-		: xm_pcsMutex(CriticalSection::Create())
-		, xm_vLock(xm_pcsMutex.get(), false), xm_vObject(std::forward<ParamsT>(vParams)...)
+		: xm_vObject(std::forward<ParamsT>(vParams)...)
 	{
 	}
 
 public:
-	auto operator->() const noexcept {
+	auto Get() const noexcept {
 		return xMonitorHolder<const MonitorPtr>(this);
 	}
-	auto operator->() noexcept {
+	auto Get() noexcept {
 		return xMonitorHolder<MonitorPtr>(this);
+	}
+
+public:
+	auto operator->() const noexcept {
+		return Get();
+	}
+	auto operator->() noexcept {
+		return Get();
 	}
 };
 

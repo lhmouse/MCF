@@ -7,29 +7,6 @@
 #include "../Core/System.hpp"
 using namespace MCF;
 
-namespace {
-
-inline void SpinPause() throw() { // FIXME: g++ 4.9.2 ICE
-	__builtin_ia32_pause();
-}
-
-inline unsigned long LockSpin(volatile unsigned long &ulCount) noexcept {
-	unsigned long ulOld;
-	for(;;){
-		ulOld = __atomic_exchange_n(&ulCount, (unsigned long)-1, __ATOMIC_SEQ_CST);
-		if(EXPECT_NOT(ulOld != (unsigned long)-1)){
-			break;
-		}
-		SpinPause();
-	}
-	return ulOld;
-}
-inline void UnlockSpin(volatile unsigned long &ulCount, unsigned long ulOld) noexcept {
-	__atomic_store_n(&ulCount, ulOld, __ATOMIC_SEQ_CST);
-}
-
-}
-
 namespace MCF {
 
 template<>
@@ -50,9 +27,9 @@ void UserMutex::UniqueLock::xDoUnlock() const noexcept {
 // 构造函数和析构函数。
 UserMutex::UserMutex(unsigned long ulSpinCount)
 	: xm_vSemaphore(0), xm_ulSpinCount(ulSpinCount)
-	, xm_ulQueueSize(0), xm_ulLockingThreadId(0)
+	, xm_ulLockingThreadId(0)
 {
-	__atomic_thread_fence(__ATOMIC_SEQ_CST);
+	__atomic_thread_fence(__ATOMIC_RELEASE);
 }
 
 // 其他非静态成员函数。
@@ -73,7 +50,7 @@ bool UserMutex::xTryWithHint(unsigned long ulThreadId) noexcept {
 		if(EXPECT_NOT(--i == 0)){
 			return false;
 		}
-		SpinPause();
+		__builtin_ia32_pause();
 	}
 }
 
@@ -91,23 +68,23 @@ void UserMutex::Lock() noexcept {
 
 	const auto dwThreadId = ::GetCurrentThreadId();
 
-	auto ulQueueSize = LockSpin(xm_ulQueueSize);
+	auto ulQueueSize = xm_splQueueSize.Lock();
 	if(EXPECT(ulQueueSize == 0)){
-		UnlockSpin(xm_ulQueueSize, ulQueueSize);
+		xm_splQueueSize.Unlock(ulQueueSize);
 		if(xTryWithHint(dwThreadId)){
 			return;
 		}
-		ulQueueSize = LockSpin(xm_ulQueueSize);
+		ulQueueSize = xm_splQueueSize.Lock();
 	}
 	for(;;){
 		++ulQueueSize;
-		UnlockSpin(xm_ulQueueSize, ulQueueSize);
+		xm_splQueueSize.Unlock(ulQueueSize);
 		xm_vSemaphore.Wait();
 
 		if(EXPECT_NOT(xTryWithHint(dwThreadId))){
 			break;
 		}
-		ulQueueSize = LockSpin(xm_ulQueueSize);
+		ulQueueSize = xm_splQueueSize.Lock();
 	}
 }
 void UserMutex::Unlock() noexcept {
@@ -115,12 +92,12 @@ void UserMutex::Unlock() noexcept {
 
 	__atomic_store_n(&xm_ulLockingThreadId, 0, __ATOMIC_RELEASE);
 
-	auto ulQueueSize = LockSpin(xm_ulQueueSize);
+	auto ulQueueSize = xm_splQueueSize.Lock();
 	if(EXPECT(ulQueueSize != 0)){
 		--ulQueueSize;
 		xm_vSemaphore.Post();
 	}
-	UnlockSpin(xm_ulQueueSize, ulQueueSize);
+	xm_splQueueSize.Unlock(ulQueueSize);
 }
 
 UserMutex::UniqueLock UserMutex::TryLock() noexcept {

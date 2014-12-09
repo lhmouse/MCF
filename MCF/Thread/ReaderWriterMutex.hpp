@@ -5,9 +5,9 @@
 #ifndef MCF_THREAD_READER_WRITER_MUTEX_HPP_
 #define MCF_THREAD_READER_WRITER_MUTEX_HPP_
 
-#include "UniqueLockTemplate.hpp"
 #include "../Utilities/Noncopyable.hpp"
 #include "../Core/UniqueHandle.hpp"
+#include "UniqueLockTemplate.hpp"
 #include "UserRecursiveMutex.hpp"
 #include "Semaphore.hpp"
 

@@ -5,25 +5,28 @@
 #ifndef MCF_THREAD_CONDITION_VARIABLE_HPP_
 #define MCF_THREAD_CONDITION_VARIABLE_HPP_
 
-#include "UniqueLockTemplate.hpp"
 #include "../Utilities/Noncopyable.hpp"
 #include "Semaphore.hpp"
 
 namespace MCF {
 
+class UserMutex;
+
 class ConditionVariable : NONCOPYABLE {
 private:
+	UserMutex &xm_vMutex;
+
+	unsigned long xm_ulWaiting;
 	Semaphore xm_vSemaphore;
-	volatile unsigned long xm_ulWaiting;
 
 public:
-	ConditionVariable();
+	explicit ConditionVariable(UserMutex &vMutex);
 
 public:
-	bool Wait(UniqueLockTemplateBase &vLock, unsigned long long ullMilliSeconds) noexcept;
-	void Wait(UniqueLockTemplateBase &vLock) noexcept;
+	bool Wait(unsigned long long ullMilliSeconds) noexcept;
+	void Wait() noexcept;
 	void Signal(unsigned long ulMaxCount = 1) noexcept;
-	void SignalAll() noexcept;
+	void Broadcast() noexcept;
 };
 
 }

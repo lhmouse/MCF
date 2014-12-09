@@ -3,7 +3,7 @@
 // Copyleft 2013 - 2014, LH_Mouse. All wrongs reserved.
 
 #include "../StdMCF.hpp"
-#include "Win32Handle.hpp"
+#include "_Win32Handle.hpp"
 using namespace MCF;
 
 void Win32HandleCloser::operator()(void *hObject) const noexcept {

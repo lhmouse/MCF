@@ -1,10 +1,14 @@
 #include <MCF/StdMCF.hpp>
 #include <MCF/Thread/ReaderWriterMutex.hpp>
+#include <MCF/Thread/UniversalConditionVariable.hpp>
 #include <MCF/Thread/Thread.hpp>
 #include <vector>
 using namespace MCF;
 
 extern "C" unsigned int MCFMain() noexcept {
+	UniversalConditionVariable cv;
+	cv.Broadcast();
+
 	ReaderWriterMutex m;
 	int val = 0;
 	std::vector<IntrusivePtr<Thread>> v(6);

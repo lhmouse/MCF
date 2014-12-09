@@ -5,8 +5,8 @@
 #ifndef MCF_THREAD_USER_RECURSIVE_MUTEX_HPP_
 #define MCF_THREAD_USER_RECURSIVE_MUTEX_HPP_
 
-#include "UniqueLockTemplate.hpp"
 #include "../Utilities/Noncopyable.hpp"
+#include "UniqueLockTemplate.hpp"
 #include "UserMutex.hpp"
 
 namespace MCF {

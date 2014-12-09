@@ -5,26 +5,26 @@
 #ifndef MCF_THREAD_UNIQUE_LOCK_TEMPLATE_HPP_
 #define MCF_THREAD_UNIQUE_LOCK_TEMPLATE_HPP_
 
-#include "../StdMCF.hpp"
 #include "../Utilities/Noncopyable.hpp"
 #include "../Utilities/Abstract.hpp"
 #include "../Utilities/Assert.hpp"
+#include <utility>
 
 namespace MCF {
 
 class UniqueLockTemplateBase : NONCOPYABLE, ABSTRACT {
 protected:
-	std::size_t xm_uLockCount;
+	unsigned long xm_ulLockCount;
 
 protected:
 	constexpr UniqueLockTemplateBase() noexcept
-		: xm_uLockCount(0)
+		: xm_ulLockCount(0)
 	{
 	}
 
 public:
 	virtual ~UniqueLockTemplateBase(){
-		ASSERT(xm_uLockCount == 0);
+		ASSERT(xm_ulLockCount == 0);
 	}
 
 private:
@@ -34,26 +34,30 @@ private:
 
 public:
 	bool IsLocking() const noexcept {
-		return xm_uLockCount > 0;
+		return xm_ulLockCount > 0;
 	}
+	unsigned long GetLockCount() const noexcept {
+		return xm_ulLockCount;
+	}
+
 	bool Try() noexcept {
-		if(xm_uLockCount == 0){
+		if(xm_ulLockCount == 0){
 			if(!xDoTry()){
 				return false;
 			}
 		}
-		++xm_uLockCount;
+		++xm_ulLockCount;
 		return true;
 	}
 	void Lock() noexcept {
-		if(++xm_uLockCount == 1){
+		if(++xm_ulLockCount == 1){
 			xDoLock();
 		}
 	}
 	void Unlock() noexcept {
-		ASSERT(xm_uLockCount != 0);
+		ASSERT(xm_ulLockCount != 0);
 
-		if(--xm_uLockCount == 0){
+		if(--xm_ulLockCount == 0){
 			xDoUnlock();
 		}
 	}
@@ -64,7 +68,7 @@ public:
 	}
 };
 
-template<class MutexT, std::size_t LOCK_TYPE_T = 0>
+template<class MutexT, unsigned LOCK_TYPE_T = 0>
 class UniqueLockTemplate final : CONCRETE(UniqueLockTemplateBase) {
 private:
 	MutexT *xm_pOwner;
@@ -80,23 +84,23 @@ public:
 	UniqueLockTemplate(UniqueLockTemplate &&rhs) noexcept
 		: xm_pOwner(rhs.xm_pOwner)
 	{
-		xm_uLockCount = std::exchange(rhs.xm_uLockCount, 0u);
+		xm_ulLockCount = std::exchange(rhs.xm_ulLockCount, 0u);
 	}
 	UniqueLockTemplate &operator=(UniqueLockTemplate &&rhs) noexcept {
 		ASSERT(&rhs != this);
 
-		if(xm_uLockCount != 0){
+		if(xm_ulLockCount != 0){
 			xDoUnlock();
 		}
 		xm_pOwner = rhs.xm_pOwner;
-		xm_uLockCount = std::exchange(rhs.xm_uLockCount, 0u);
+		xm_ulLockCount = std::exchange(rhs.xm_ulLockCount, 0u);
 		return *this;
 	}
 	virtual ~UniqueLockTemplate(){
-		if(xm_uLockCount != 0){
+		if(xm_ulLockCount != 0){
 			xDoUnlock();
 		}
-		xm_uLockCount = 0;
+		xm_ulLockCount = 0;
 	}
 
 private:
@@ -108,16 +112,16 @@ public:
 	void Join(UniqueLockTemplate &&rhs) noexcept {
 		ASSERT(xm_pOwner == rhs.xm_pOwner);
 
-		xm_uLockCount += std::exchange(rhs.xm_uLockCount, 0u);
+		xm_ulLockCount += std::exchange(rhs.xm_ulLockCount, 0u);
 	}
 
 	void Swap(UniqueLockTemplate &rhs) noexcept {
 		std::swap(xm_pOwner, rhs.xm_pOwner);
-		std::swap(xm_uLockCount, rhs.xm_uLockCount);
+		std::swap(xm_ulLockCount, rhs.xm_ulLockCount);
 	}
 };
 
-template<class MutexT, std::size_t LOCK_TYPE_T>
+template<class MutexT, unsigned long LOCK_TYPE_T>
 void swap(UniqueLockTemplate<MutexT, LOCK_TYPE_T> &lhs,
 	UniqueLockTemplate<MutexT, LOCK_TYPE_T> &rhs) noexcept
 {

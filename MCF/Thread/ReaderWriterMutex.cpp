@@ -6,7 +6,6 @@
 #include "ReaderWriterMutex.hpp"
 #include "../Core/UniqueHandle.hpp"
 #include "../Core/Exception.hpp"
-#include "../Core/Time.hpp"
 using namespace MCF;
 
 unsigned long ReaderWriterMutex::xTlsIndexDeleter::operator()() const noexcept {
@@ -53,7 +52,7 @@ ReaderWriterMutex::ReaderWriterMutex(unsigned long ulSpinCount)
 	if(!xm_ulTlsIndex.Reset(::TlsAlloc())){
 		DEBUG_THROW(SystemError, "TlsAlloc");
 	}
-	__atomic_thread_fence(__ATOMIC_SEQ_CST);
+	__atomic_thread_fence(__ATOMIC_RELEASE);
 }
 
 // 其他非静态成员函数。

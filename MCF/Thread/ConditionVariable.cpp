@@ -5,55 +5,69 @@
 #include "../StdMCF.hpp"
 #include "ConditionVariable.hpp"
 #include "../Utilities/MinMax.hpp"
-#include "../Core/Time.hpp"
+#include "UserMutex.hpp"
 using namespace MCF;
 
 // http://research.microsoft.com/pubs/64242/ImplementingCVs.pdf
 // 因为 Semaphore 现在维护一个大体上 FIFO 的顺序，我们就没必要操心了。
 
 // 构造函数和析构函数。
-ConditionVariable::ConditionVariable()
-	: xm_vSemaphore(0, nullptr), xm_ulWaiting(0)
+ConditionVariable::ConditionVariable(UserMutex &vMutex)
+	: xm_vMutex(vMutex), xm_ulWaiting(0), xm_vSemaphore(0, nullptr)
 {
-	__atomic_thread_fence(__ATOMIC_SEQ_CST);
+	__atomic_thread_fence(__ATOMIC_RELEASE);
 }
 
 // 其他非静态成员函数。
-bool ConditionVariable::Wait(UniqueLockTemplateBase &vLock, unsigned long long ullMilliSeconds) noexcept {
-	__atomic_add_fetch(&xm_ulWaiting, 1, __ATOMIC_RELAXED);
-	vLock.Unlock();
-	ASSERT(!vLock.IsLocking());
+bool ConditionVariable::Wait(unsigned long long ullMilliSeconds) noexcept {
+	ASSERT(xm_vMutex.IsLockedByCurrentThread());
 
+	++xm_ulWaiting;
+	xm_vMutex.Unlock();
+//	\\ 退出临界区。
 	const bool bResult = xm_vSemaphore.Wait(ullMilliSeconds);
-	vLock.Lock();
+//	// 进入临界区。
+	xm_vMutex.Lock();
+	if(!bResult){
+		--xm_ulWaiting;
+	}
 	return bResult;
 }
-void ConditionVariable::Wait(UniqueLockTemplateBase &vLock) noexcept {
-	__atomic_add_fetch(&xm_ulWaiting, 1, __ATOMIC_RELAXED);
-	vLock.Unlock();
-	ASSERT(!vLock.IsLocking());
+void ConditionVariable::Wait() noexcept {
+	ASSERT(xm_vMutex.IsLockedByCurrentThread());
 
+	++xm_ulWaiting;
+	xm_vMutex.Unlock();
+//	\\ 退出临界区。
 	xm_vSemaphore.Wait();
-	vLock.Lock();
+//	// 进入临界区。
+	xm_vMutex.Lock();
 }
 void ConditionVariable::Signal(unsigned long ulMaxCount) noexcept {
-	auto ulWaiting = __atomic_load_n(&xm_ulWaiting, __ATOMIC_RELAXED);
-	unsigned long ulToSignal;
-	for(;;){
-		ulToSignal = Min(ulWaiting, ulMaxCount);
-		if(EXPECT_NOT(__atomic_compare_exchange_n(
-			&xm_ulWaiting, &ulWaiting, ulWaiting - ulToSignal, false, __ATOMIC_RELAXED, __ATOMIC_RELAXED)))
-		{
-			break;
-		}
+	const bool bIsLocking = xm_vMutex.IsLockedByCurrentThread();
+	if(!bIsLocking){
+		xm_vMutex.Lock();
 	}
-	if(ulToSignal != 0){
-		xm_vSemaphore.Post(ulToSignal);
+//	// 进入临界区。
+	const auto ulToPost = Min(xm_ulWaiting, ulMaxCount);
+	xm_ulWaiting -= ulToPost;
+	xm_vSemaphore.Post(ulToPost);
+//	\\ 退出临界区。
+	if(!bIsLocking){
+		xm_vMutex.Unlock();
 	}
 }
-void ConditionVariable::SignalAll() noexcept {
-	const auto ulToSignal = __atomic_exchange_n(&xm_ulWaiting, 0, __ATOMIC_RELAXED);
-	if(ulToSignal != 0){
-		xm_vSemaphore.Post(ulToSignal);
+void ConditionVariable::Broadcast() noexcept {
+	const bool bIsLocking = xm_vMutex.IsLockedByCurrentThread();
+	if(!bIsLocking){
+		xm_vMutex.Lock();
+	}
+//	// 进入临界区。
+	const auto ulToPost = xm_ulWaiting;
+	xm_ulWaiting = 0;
+	xm_vSemaphore.Post(ulToPost);
+//	\\ 退出临界区。
+	if(!bIsLocking){
+		xm_vMutex.Unlock();
 	}
 }

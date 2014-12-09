@@ -5,9 +5,10 @@
 #ifndef MCF_THREAD_USER_MUTEX_HPP_
 #define MCF_THREAD_USER_MUTEX_HPP_
 
-#include "UniqueLockTemplate.hpp"
 #include "../Utilities/Noncopyable.hpp"
+#include "UniqueLockTemplate.hpp"
 #include "Semaphore.hpp"
+#include "_SpinLock.hpp"
 
 namespace MCF {
 
@@ -19,7 +20,7 @@ private:
 	Semaphore xm_vSemaphore;
 	volatile unsigned long xm_ulSpinCount;
 
-	volatile unsigned long xm_ulQueueSize;
+	SpinLock xm_splQueueSize;
 	volatile unsigned long xm_ulLockingThreadId;
 
 public:

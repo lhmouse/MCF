@@ -13,7 +13,7 @@
 
 namespace MCFBuild {
 
-class Model : Noncopyable {
+class Model : NONCOPYABLE {
 public:
 	enum OPERATION {
 		OP_SHOW_HELP,

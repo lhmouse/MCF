@@ -68,7 +68,7 @@ lzma_options_lzma MakeOptions(unsigned uLevel, unsigned long ulDictSize){
 
 }
 
-class LzmaEncoder::xDelegate : Noncopyable {
+class LzmaEncoder::xDelegate : NONCOPYABLE {
 private:
 	LzmaEncoder &xm_vOwner;
 	const lzma_options_lzma xm_vOptions;
@@ -167,7 +167,7 @@ public:
 	}
 };
 
-class LzmaDecoder::xDelegate : Noncopyable {
+class LzmaDecoder::xDelegate : NONCOPYABLE {
 private:
 	LzmaDecoder &xm_vOwner;
 

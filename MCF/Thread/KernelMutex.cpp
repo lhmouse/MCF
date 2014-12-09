@@ -3,7 +3,7 @@
 // Copyleft 2013 - 2014, LH_Mouse. All wrongs reserved.
 
 #include "../StdMCF.hpp"
-#include "Mutex.hpp"
+#include "KernelMutex.hpp"
 #include "../Core/Exception.hpp"
 #include "../Core/String.hpp"
 #include "../Core/Time.hpp"
@@ -13,22 +13,22 @@ using namespace MCF;
 namespace MCF {
 
 template<>
-bool Mutex::Lock::xDoTry() const noexcept {
+bool KernelMutex::UniqueLock::xDoTry() const noexcept {
 	return xm_pOwner->Try(0);
 }
 template<>
-void Mutex::Lock::xDoLock() const noexcept {
-	xm_pOwner->Acquire();
+void KernelMutex::UniqueLock::xDoLock() const noexcept {
+	xm_pOwner->Lock();
 }
 template<>
-void Mutex::Lock::xDoUnlock() const noexcept {
-	xm_pOwner->Release();
+void KernelMutex::UniqueLock::xDoUnlock() const noexcept {
+	xm_pOwner->Unlock();
 }
 
 }
 
 // 构造函数和析构函数。
-Mutex::Mutex(const wchar_t *pwszName)
+KernelMutex::KernelMutex(const wchar_t *pwszName)
 	: xm_hMutex(
 		[&]{
 			UniqueWin32Handle hEvent(::CreateMutexW(nullptr, false, pwszName));
@@ -39,13 +39,13 @@ Mutex::Mutex(const wchar_t *pwszName)
 		}())
 {
 }
-Mutex::Mutex(const WideString &wsName)
-	: Mutex(wsName.GetCStr())
+KernelMutex::KernelMutex(const WideString &wsName)
+	: KernelMutex(wsName.GetCStr())
 {
 }
 
 // 其他非静态成员函数。
-bool Mutex::Try(unsigned long long ullMilliSeconds) noexcept {
+bool KernelMutex::Try(unsigned long long ullMilliSeconds) noexcept {
 	const auto ullUntil = GetFastMonoClock() + ullMilliSeconds;
 	bool bResult = false;
 	auto ullTimeRemaining = ullMilliSeconds;
@@ -66,23 +66,23 @@ bool Mutex::Try(unsigned long long ullMilliSeconds) noexcept {
 	}
 	return bResult;
 }
-void Mutex::Acquire() noexcept {
+void KernelMutex::Lock() noexcept {
 	const auto dwResult = ::WaitForSingleObject(xm_hMutex.Get(), INFINITE);
 	if(dwResult == WAIT_FAILED){
 		ASSERT_MSG(false, L"WaitForSingleObject() 失败。");
 	}
 }
-void Mutex::Release() noexcept {
+void KernelMutex::Unlock() noexcept {
 	if(!::ReleaseMutex(xm_hMutex.Get())){
 		ASSERT_MSG(false, L"ReleaseMutex() 失败。");
 	}
 }
 
-Mutex::Lock Mutex::TryLock() noexcept {
-	Lock vLock(*this, false);
+KernelMutex::UniqueLock KernelMutex::TryLock() noexcept {
+	UniqueLock vLock(*this, false);
 	vLock.Try();
 	return std::move(vLock);
 }
-Mutex::Lock Mutex::GetLock() noexcept {
-	return Lock(*this);
+KernelMutex::UniqueLock KernelMutex::GetLock() noexcept {
+	return UniqueLock(*this);
 }

@@ -13,7 +13,7 @@
 
 namespace MCF {
 
-class StreamFilterBase : Noncopyable, ABSTRACT {
+class StreamFilterBase : NONCOPYABLE, ABSTRACT {
 private:
 	bool xm_bInited;
 	StreamBuffer xm_sbufOutput;

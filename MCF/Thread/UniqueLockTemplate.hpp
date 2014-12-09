@@ -2,8 +2,8 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2013 - 2014, LH_Mouse. All wrongs reserved.
 
-#ifndef MCF_THREAD_LOCK_RAII_TEMPLATE_HPP_
-#define MCF_THREAD_LOCK_RAII_TEMPLATE_HPP_
+#ifndef MCF_THREAD_UNIQUE_LOCK_TEMPLATE_HPP_
+#define MCF_THREAD_UNIQUE_LOCK_TEMPLATE_HPP_
 
 #include "../StdMCF.hpp"
 #include "../Utilities/Noncopyable.hpp"
@@ -12,18 +12,18 @@
 
 namespace MCF {
 
-class LockRaiiTemplateBase : Noncopyable, ABSTRACT {
+class UniqueLockTemplateBase : NONCOPYABLE, ABSTRACT {
 protected:
 	std::size_t xm_uLockCount;
 
 protected:
-	constexpr LockRaiiTemplateBase() noexcept
+	constexpr UniqueLockTemplateBase() noexcept
 		: xm_uLockCount(0)
 	{
 	}
 
 public:
-	virtual ~LockRaiiTemplateBase(){
+	virtual ~UniqueLockTemplateBase(){
 		ASSERT(xm_uLockCount == 0);
 	}
 
@@ -65,24 +65,24 @@ public:
 };
 
 template<class MutexT, std::size_t LOCK_TYPE_T = 0>
-class LockRaiiTemplate final : CONCRETE(LockRaiiTemplateBase) {
+class UniqueLockTemplate final : CONCRETE(UniqueLockTemplateBase) {
 private:
 	MutexT *xm_pOwner;
 
 public:
-	explicit LockRaiiTemplate(MutexT &vOwner, bool bInitLocked = true) noexcept
+	explicit UniqueLockTemplate(MutexT &vOwner, bool bInitLocked = true) noexcept
 		: xm_pOwner(&vOwner)
 	{
 		if(bInitLocked){
 			Lock();
 		}
 	}
-	LockRaiiTemplate(LockRaiiTemplate &&rhs) noexcept
+	UniqueLockTemplate(UniqueLockTemplate &&rhs) noexcept
 		: xm_pOwner(rhs.xm_pOwner)
 	{
 		xm_uLockCount = std::exchange(rhs.xm_uLockCount, 0u);
 	}
-	LockRaiiTemplate &operator=(LockRaiiTemplate &&rhs) noexcept {
+	UniqueLockTemplate &operator=(UniqueLockTemplate &&rhs) noexcept {
 		ASSERT(&rhs != this);
 
 		if(xm_uLockCount != 0){
@@ -92,7 +92,7 @@ public:
 		xm_uLockCount = std::exchange(rhs.xm_uLockCount, 0u);
 		return *this;
 	}
-	virtual ~LockRaiiTemplate(){
+	virtual ~UniqueLockTemplate(){
 		if(xm_uLockCount != 0){
 			xDoUnlock();
 		}
@@ -105,21 +105,21 @@ private:
 	void xDoUnlock() const noexcept override;
 
 public:
-	void Join(LockRaiiTemplate &&rhs) noexcept {
+	void Join(UniqueLockTemplate &&rhs) noexcept {
 		ASSERT(xm_pOwner == rhs.xm_pOwner);
 
 		xm_uLockCount += std::exchange(rhs.xm_uLockCount, 0u);
 	}
 
-	void Swap(LockRaiiTemplate &rhs) noexcept {
+	void Swap(UniqueLockTemplate &rhs) noexcept {
 		std::swap(xm_pOwner, rhs.xm_pOwner);
 		std::swap(xm_uLockCount, rhs.xm_uLockCount);
 	}
 };
 
 template<class MutexT, std::size_t LOCK_TYPE_T>
-void swap(LockRaiiTemplate<MutexT, LOCK_TYPE_T> &lhs,
-	LockRaiiTemplate<MutexT, LOCK_TYPE_T> &rhs) noexcept
+void swap(UniqueLockTemplate<MutexT, LOCK_TYPE_T> &lhs,
+	UniqueLockTemplate<MutexT, LOCK_TYPE_T> &rhs) noexcept
 {
 	lhs.Swap(rhs);
 }

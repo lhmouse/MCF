@@ -8,28 +8,28 @@
 #include "../Utilities/Noncopyable.hpp"
 #include "../Core/String.hpp"
 #include "Win32Handle.hpp"
-#include "LockRaiiTemplate.hpp"
+#include "UniqueLockTemplate.hpp"
 
 namespace MCF {
 
-class Mutex : Noncopyable {
+class KernelMutex : NONCOPYABLE {
 public:
-	using Lock = LockRaiiTemplate<Mutex>;
+	using UniqueLock = UniqueLockTemplate<KernelMutex>;
 
 private:
 	const UniqueWin32Handle xm_hMutex;
 
 public:
-	explicit Mutex(const wchar_t *pwszName = nullptr);
-	explicit Mutex(const WideString &wsName);
+	explicit KernelMutex(const wchar_t *pwszName = nullptr);
+	explicit KernelMutex(const WideString &wsName);
 
 public:
 	bool Try(unsigned long long ullMilliSeconds = 0) noexcept;
-	void Acquire() noexcept;
-	void Release() noexcept;
+	void Lock() noexcept;
+	void Unlock() noexcept;
 
-	Lock TryLock() noexcept;
-	Lock GetLock() noexcept;
+	UniqueLock TryLock() noexcept;
+	UniqueLock GetLock() noexcept;
 };
 
 }

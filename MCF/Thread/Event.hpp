@@ -11,7 +11,7 @@
 
 namespace MCF {
 
-class Event : Noncopyable {
+class Event : NONCOPYABLE {
 private:
 	const UniqueWin32Handle xm_hEvent;
 

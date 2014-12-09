@@ -36,10 +36,10 @@ namespace Impl {
 }
 
 template<class ObjectT>
-class MonitorPtr : Noncopyable {
+class MonitorPtr : NONCOPYABLE {
 private:
 	template<typename SelfT>
-	class xMonitorHolder : Noncopyable {
+	class xMonitorHolder : NONCOPYABLE {
 		friend MonitorPtr;
 
 	private:

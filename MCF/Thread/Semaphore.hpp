@@ -11,7 +11,7 @@
 
 namespace MCF {
 
-class Semaphore : Noncopyable {
+class Semaphore : NONCOPYABLE {
 private:
 	const UniqueWin32Handle xm_hSemaphore;
 

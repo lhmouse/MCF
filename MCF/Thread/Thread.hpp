@@ -14,7 +14,7 @@
 
 namespace MCF {
 
-class Thread : public IntrusiveBase<Thread>, Noncopyable {
+class Thread : public IntrusiveBase<Thread>, NONCOPYABLE {
 public:
 	static unsigned long GetCurrentId() noexcept;
 

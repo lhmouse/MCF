@@ -11,7 +11,7 @@
 
 namespace MCFBuild {
 
-class JobScheduler : Noncopyable {
+class JobScheduler : NONCOPYABLE {
 private:
 	const std::unique_ptr<MCF::CriticalSection> xm_pcsLock;
 	std::queue<std::function<void ()>> xm_queJobs;

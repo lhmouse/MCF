@@ -7,7 +7,7 @@
 #include "../Utilities/Assert.hpp"
 #include "../Utilities/MinMax.hpp"
 #include "../Utilities/Algorithms.hpp"
-#include "../Thread/CriticalSection.hpp"
+#include "../Thread/UserMutex.hpp"
 using namespace MCF;
 
 constexpr std::size_t CHUNK_SIZE = 0x400;
@@ -26,13 +26,13 @@ namespace {
 
 using ChunkNode = typename VList<StreamBufferChunk>::Node;
 
-CriticalSection g_csPoolMutex;
+UserMutex g_mtxPoolMutex;
 VList<StreamBufferChunk> g_lstPool;
 
 auto &PushPooled(VList<StreamBufferChunk> &lstDst){
 	ChunkNode *pNode;
 	{
-		const auto vLock = g_csPoolMutex.GetLock();
+		const auto vLock = g_mtxPoolMutex.GetLock();
 		if(!g_lstPool.IsEmpty()){
 			lstDst.Splice(nullptr, g_lstPool, g_lstPool.GetFirst());
 			pNode = lstDst.GetLast();
@@ -50,14 +50,14 @@ jDone:
 void ShiftPooled(VList<StreamBufferChunk> &lstSrc){
 	ASSERT(!lstSrc.IsEmpty());
 
-	const auto vLock = g_csPoolMutex.GetLock();
+	const auto vLock = g_mtxPoolMutex.GetLock();
 	g_lstPool.Splice(nullptr, lstSrc, lstSrc.GetFirst());
 }
 void ClearPooled(VList<StreamBufferChunk> &lstSrc){
 	if(lstSrc.IsEmpty()){
 		return;
 	}
-	const auto vLock = g_csPoolMutex.GetLock();
+	const auto vLock = g_mtxPoolMutex.GetLock();
 	g_lstPool.Splice(nullptr, lstSrc);
 }
 

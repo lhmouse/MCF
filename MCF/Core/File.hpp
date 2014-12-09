@@ -15,7 +15,7 @@
 
 namespace MCF {
 
-class File : Noncopyable, ABSTRACT {
+class File : NONCOPYABLE, ABSTRACT {
 public:
 	enum : std::uint64_t {
 		INVALID_SIZE = (std::uint64_t)-1

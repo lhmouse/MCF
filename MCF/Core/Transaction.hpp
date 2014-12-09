@@ -11,7 +11,7 @@
 
 namespace MCF {
 
-class TransactionItemBase : Noncopyable {
+class TransactionItemBase : NONCOPYABLE {
 	friend class Transaction;
 
 private:
@@ -20,7 +20,7 @@ private:
 	virtual void xUnlock() noexcept = 0;
 };
 
-class Transaction : Noncopyable {
+class Transaction : NONCOPYABLE {
 private:
 	VVector<std::unique_ptr<TransactionItemBase>, 32> xm_vecItems;
 

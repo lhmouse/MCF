@@ -19,7 +19,7 @@ ConditionVariable::ConditionVariable()
 }
 
 // 其他非静态成员函数。
-bool ConditionVariable::Wait(LockRaiiTemplateBase &vLock, unsigned long long ullMilliSeconds) noexcept {
+bool ConditionVariable::Wait(UniqueLockTemplateBase &vLock, unsigned long long ullMilliSeconds) noexcept {
 	__atomic_add_fetch(&xm_ulWaiting, 1, __ATOMIC_RELAXED);
 	vLock.Unlock();
 	ASSERT(!vLock.IsLocking());
@@ -28,7 +28,7 @@ bool ConditionVariable::Wait(LockRaiiTemplateBase &vLock, unsigned long long ull
 	vLock.Lock();
 	return bResult;
 }
-void ConditionVariable::Wait(LockRaiiTemplateBase &vLock) noexcept {
+void ConditionVariable::Wait(UniqueLockTemplateBase &vLock) noexcept {
 	__atomic_add_fetch(&xm_ulWaiting, 1, __ATOMIC_RELAXED);
 	vLock.Unlock();
 	ASSERT(!vLock.IsLocking());

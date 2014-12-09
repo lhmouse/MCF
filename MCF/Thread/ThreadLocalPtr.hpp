@@ -45,7 +45,7 @@ namespace Impl {
 }
 
 template<class ObjectT, class ...InitParamsT>
-class ThreadLocalPtr : Noncopyable {
+class ThreadLocalPtr : NONCOPYABLE {
 private:
 	using xExceptionWrapper = Impl::ExceptionWrapper<
 		std::is_nothrow_constructible<ObjectT, InitParamsT &&...>::value>;

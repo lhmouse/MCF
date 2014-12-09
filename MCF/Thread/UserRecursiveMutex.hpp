@@ -8,6 +8,7 @@
 #include "../Utilities/Noncopyable.hpp"
 #include "UniqueLockTemplate.hpp"
 #include "UserMutex.hpp"
+#include <cstddef>
 
 namespace MCF {
 
@@ -24,17 +25,17 @@ public:
 
 private:
 	UserMutex xm_vMutex;
-	unsigned long xm_ulRecursionCount;
+	std::size_t xm_uRecursionCount;
 
 public:
-	explicit UserRecursiveMutex(unsigned long ulSpinCount = 0x400);
+	explicit UserRecursiveMutex(std::size_t uSpinCount = 0x400);
 
 public:
-	unsigned long GetSpinCount() const noexcept {
+	std::size_t GetSpinCount() const noexcept {
 		return xm_vMutex.GetSpinCount();
 	}
-	void SetSpinCount(unsigned long ulSpinCount) noexcept {
-		xm_vMutex.SetSpinCount(ulSpinCount);
+	void SetSpinCount(std::size_t uSpinCount) noexcept {
+		xm_vMutex.SetSpinCount(uSpinCount);
 	}
 
 	bool IsLockedByCurrentThread() const noexcept {
@@ -46,8 +47,8 @@ public:
 	Result Unlock() noexcept;
 
 	// 要求 IsLockedByCurrentThread() != false。
-	unsigned long UncheckedGetRecursionCount() const noexcept;
-	unsigned long GetRecursionCount() const noexcept;
+	std::size_t UncheckedGetRecursionCount() const noexcept;
+	std::size_t GetRecursionCount() const noexcept;
 
 	UniqueLock TryLock() noexcept;
 	UniqueLock GetLock() noexcept;

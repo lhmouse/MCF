@@ -6,32 +6,33 @@
 #define MCF_THREAD_SPIN_LOCK_HPP_
 
 #include "../Utilities/Noncopyable.hpp"
+#include <cstddef>
 
 namespace MCF {
 
 class SpinLock : NONCOPYABLE {
 private:
-	volatile unsigned long xm_ulCount;
+	volatile std::size_t xm_uCount;
 
 public:
-	explicit SpinLock(unsigned long ulCount = 0) noexcept {
-		__atomic_store_n(&xm_ulCount, ulCount, __ATOMIC_RELEASE);
+	explicit SpinLock(std::size_t uCount = 0) noexcept {
+		__atomic_store_n(&xm_uCount, uCount, __ATOMIC_RELEASE);
 	}
 
 public:
-	unsigned long Lock() volatile throw() { // FIXME: g++ 4.9.2 ICE.
-		unsigned long ulOld;
+	std::size_t Lock() volatile throw() { // FIXME: g++ 4.9.2 ICE.
+		std::size_t uOld;
 		for(;;){
-			ulOld = __atomic_exchange_n(&xm_ulCount, (unsigned long)-1, __ATOMIC_SEQ_CST);
-			if(EXPECT_NOT(ulOld != (unsigned long)-1)){
+			uOld = __atomic_exchange_n(&xm_uCount, (std::size_t)-1, __ATOMIC_SEQ_CST);
+			if(EXPECT_NOT(uOld != (std::size_t)-1)){
 				break;
 			}
 			__builtin_ia32_pause();
 		}
-		return ulOld;
+		return uOld;
 	}
-	void Unlock(unsigned long ulOld) volatile noexcept {
-		__atomic_store_n(&xm_ulCount, ulOld, __ATOMIC_SEQ_CST);
+	void Unlock(std::size_t uOld) volatile noexcept {
+		__atomic_store_n(&xm_uCount, uOld, __ATOMIC_SEQ_CST);
 	}
 };
 

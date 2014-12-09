@@ -7,6 +7,7 @@
 
 #include "../Utilities/Noncopyable.hpp"
 #include "Semaphore.hpp"
+#include <cstddef>
 
 namespace MCF {
 
@@ -16,7 +17,7 @@ class ConditionVariable : NONCOPYABLE {
 private:
 	UserMutex &xm_vMutex;
 
-	unsigned long xm_ulWaiting;
+	std::size_t xm_uWaiting;
 	Semaphore xm_vSemaphore;
 
 public:
@@ -25,7 +26,7 @@ public:
 public:
 	bool Wait(unsigned long long ullMilliSeconds) noexcept;
 	void Wait() noexcept;
-	void Signal(unsigned long ulMaxCount = 1) noexcept;
+	void Signal(std::size_t uMaxCount = 1) noexcept;
 	void Broadcast() noexcept;
 };
 

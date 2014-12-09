@@ -9,6 +9,7 @@
 #include "UniqueLockTemplate.hpp"
 #include "ConditionVariable.hpp"
 #include "UserMutex.hpp"
+#include <cstddef>
 
 namespace MCF {
 
@@ -18,12 +19,12 @@ private:
 	ConditionVariable xm_vDelegate;
 
 public:
-	explicit UniversalConditionVariable(unsigned long ulSpinCount = 0x400);
+	explicit UniversalConditionVariable(std::size_t uSpinCount = 0x400);
 
 public:
 	bool Wait(UniqueLockTemplateBase &vLock, unsigned long long ullMilliSeconds) noexcept;
 	void Wait(UniqueLockTemplateBase &vLock) noexcept;
-	void Signal(unsigned long ulMaxCount = 1) noexcept;
+	void Signal(std::size_t uMaxCount = 1) noexcept;
 	void Broadcast() noexcept;
 };
 

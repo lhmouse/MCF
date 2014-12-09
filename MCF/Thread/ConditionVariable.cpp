@@ -13,7 +13,7 @@ using namespace MCF;
 
 // 构造函数和析构函数。
 ConditionVariable::ConditionVariable(UserMutex &vMutex)
-	: xm_vMutex(vMutex), xm_ulWaiting(0), xm_vSemaphore(0, nullptr)
+	: xm_vMutex(vMutex), xm_uWaiting(0), xm_vSemaphore(0, nullptr)
 {
 	__atomic_thread_fence(__ATOMIC_RELEASE);
 }
@@ -22,37 +22,37 @@ ConditionVariable::ConditionVariable(UserMutex &vMutex)
 bool ConditionVariable::Wait(unsigned long long ullMilliSeconds) noexcept {
 	ASSERT(xm_vMutex.IsLockedByCurrentThread());
 
-	++xm_ulWaiting;
+	++xm_uWaiting;
 	xm_vMutex.Unlock();
 //	\\ 退出临界区。
 	const bool bResult = xm_vSemaphore.Wait(ullMilliSeconds);
 //	// 进入临界区。
 	xm_vMutex.Lock();
 	if(!bResult){
-		--xm_ulWaiting;
+		--xm_uWaiting;
 	}
 	return bResult;
 }
 void ConditionVariable::Wait() noexcept {
 	ASSERT(xm_vMutex.IsLockedByCurrentThread());
 
-	++xm_ulWaiting;
+	++xm_uWaiting;
 	xm_vMutex.Unlock();
 //	\\ 退出临界区。
 	xm_vSemaphore.Wait();
 //	// 进入临界区。
 	xm_vMutex.Lock();
 }
-void ConditionVariable::Signal(unsigned long ulMaxCount) noexcept {
+void ConditionVariable::Signal(std::size_t uMaxCount) noexcept {
 	const bool bIsLocking = xm_vMutex.IsLockedByCurrentThread();
 	if(!bIsLocking){
 		xm_vMutex.Lock();
 	}
 //	// 进入临界区。
-	const auto ulToPost = Min(xm_ulWaiting, ulMaxCount);
-	xm_ulWaiting -= ulToPost;
-	if(ulToPost != 0){
-		xm_vSemaphore.Post(ulToPost);
+	const auto uToPost = Min(xm_uWaiting, uMaxCount);
+	xm_uWaiting -= uToPost;
+	if(uToPost != 0){
+		xm_vSemaphore.Post(uToPost);
 	}
 //	\\ 退出临界区。
 	if(!bIsLocking){
@@ -65,10 +65,10 @@ void ConditionVariable::Broadcast() noexcept {
 		xm_vMutex.Lock();
 	}
 //	// 进入临界区。
-	const auto ulToPost = xm_ulWaiting;
-	xm_ulWaiting = 0;
-	if(ulToPost != 0){
-		xm_vSemaphore.Post(ulToPost);
+	const auto uToPost = xm_uWaiting;
+	xm_uWaiting = 0;
+	if(uToPost != 0){
+		xm_vSemaphore.Post(uToPost);
 	}
 //	\\ 退出临界区。
 	if(!bIsLocking){

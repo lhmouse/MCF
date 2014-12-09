@@ -25,9 +25,9 @@ void UserMutex::UniqueLock::xDoUnlock() const noexcept {
 }
 
 // 构造函数和析构函数。
-UserMutex::UserMutex(unsigned long ulSpinCount)
-	: xm_vSemaphore(0), xm_ulSpinCount(ulSpinCount)
-	, xm_ulLockingThreadId(0)
+UserMutex::UserMutex(std::size_t uSpinCount)
+	: xm_vSemaphore(0), xm_uSpinCount(uSpinCount)
+	, xm_uLockingThreadId(0)
 {
 	__atomic_thread_fence(__ATOMIC_RELEASE);
 }
@@ -41,9 +41,9 @@ bool UserMutex::xTryWithHint(unsigned long ulThreadId) noexcept {
 		i += GetSpinCount();
 	}
 	for(;;){
-		unsigned long ulExpected = 0;
+		std::size_t uExpected = 0;
 		if(EXPECT_NOT(__atomic_compare_exchange_n(
-			&xm_ulLockingThreadId, &ulExpected, ulThreadId, false, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE)))
+			&xm_uLockingThreadId, &uExpected, ulThreadId, false, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE)))
 		{
 			return true;
 		}
@@ -55,7 +55,7 @@ bool UserMutex::xTryWithHint(unsigned long ulThreadId) noexcept {
 }
 
 bool UserMutex::IsLockedByCurrentThread() const noexcept {
-	return __atomic_load_n(&xm_ulLockingThreadId, __ATOMIC_ACQUIRE) == ::GetCurrentThreadId();
+	return __atomic_load_n(&xm_uLockingThreadId, __ATOMIC_ACQUIRE) == ::GetCurrentThreadId();
 }
 
 bool UserMutex::Try() noexcept {
@@ -68,36 +68,36 @@ void UserMutex::Lock() noexcept {
 
 	const auto dwThreadId = ::GetCurrentThreadId();
 
-	auto ulQueueSize = xm_splQueueSize.Lock();
-	if(EXPECT(ulQueueSize == 0)){
-		xm_splQueueSize.Unlock(ulQueueSize);
+	auto uQueueSize = xm_splQueueSize.Lock();
+	if(EXPECT(uQueueSize == 0)){
+		xm_splQueueSize.Unlock(uQueueSize);
 		if(xTryWithHint(dwThreadId)){
 			return;
 		}
-		ulQueueSize = xm_splQueueSize.Lock();
+		uQueueSize = xm_splQueueSize.Lock();
 	}
 	for(;;){
-		++ulQueueSize;
-		xm_splQueueSize.Unlock(ulQueueSize);
+		++uQueueSize;
+		xm_splQueueSize.Unlock(uQueueSize);
 		xm_vSemaphore.Wait();
 
 		if(EXPECT_NOT(xTryWithHint(dwThreadId))){
 			break;
 		}
-		ulQueueSize = xm_splQueueSize.Lock();
+		uQueueSize = xm_splQueueSize.Lock();
 	}
 }
 void UserMutex::Unlock() noexcept {
 	ASSERT(IsLockedByCurrentThread());
 
-	__atomic_store_n(&xm_ulLockingThreadId, 0, __ATOMIC_RELEASE);
+	__atomic_store_n(&xm_uLockingThreadId, 0, __ATOMIC_RELEASE);
 
-	auto ulQueueSize = xm_splQueueSize.Lock();
-	if(EXPECT(ulQueueSize != 0)){
-		--ulQueueSize;
+	auto uQueueSize = xm_splQueueSize.Lock();
+	if(EXPECT(uQueueSize != 0)){
+		--uQueueSize;
 		xm_vSemaphore.Post();
 	}
-	xm_splQueueSize.Unlock(ulQueueSize);
+	xm_splQueueSize.Unlock(uQueueSize);
 }
 
 UserMutex::UniqueLock UserMutex::TryLock() noexcept {

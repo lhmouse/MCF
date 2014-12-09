@@ -24,47 +24,47 @@ void UserRecursiveMutex::UniqueLock::xDoUnlock() const noexcept {
 }
 
 // 构造函数和析构函数。
-UserRecursiveMutex::UserRecursiveMutex(unsigned long ulSpinCount)
-	: xm_vMutex(ulSpinCount), xm_ulRecursionCount(0)
+UserRecursiveMutex::UserRecursiveMutex(std::size_t uSpinCount)
+	: xm_vMutex(uSpinCount), xm_uRecursionCount(0)
 {
 }
 
 // 其他非静态成员函数。
 UserRecursiveMutex::Result UserRecursiveMutex::Try() noexcept {
 	if(xm_vMutex.IsLockedByCurrentThread()){
-		++xm_ulRecursionCount;
+		++xm_uRecursionCount;
 		return R_RECURSIVE;
 	}
 	if(xm_vMutex.Try()){
-		++xm_ulRecursionCount;
+		++xm_uRecursionCount;
 		return R_STATE_CHANGED;
 	}
 	return R_TRY_FAILED;
 }
 UserRecursiveMutex::Result UserRecursiveMutex::Lock() noexcept {
 	if(xm_vMutex.IsLockedByCurrentThread()){
-		++xm_ulRecursionCount;
+		++xm_uRecursionCount;
 		return R_RECURSIVE;
 	}
 	xm_vMutex.Lock();
-	++xm_ulRecursionCount;
+	++xm_uRecursionCount;
 	return R_STATE_CHANGED;
 }
 UserRecursiveMutex::Result UserRecursiveMutex::Unlock() noexcept {
 	ASSERT(IsLockedByCurrentThread());
 
-	if(--xm_ulRecursionCount != 0){
+	if(--xm_uRecursionCount != 0){
 		return R_RECURSIVE;
 	}
 	xm_vMutex.Unlock();
 	return R_STATE_CHANGED;
 }
 
-unsigned long UserRecursiveMutex::UncheckedGetRecursionCount() const noexcept {
+std::size_t UserRecursiveMutex::UncheckedGetRecursionCount() const noexcept {
 	ASSERT(IsLockedByCurrentThread());
-	return xm_ulRecursionCount;
+	return xm_uRecursionCount;
 }
-unsigned long UserRecursiveMutex::GetRecursionCount() const noexcept {
+std::size_t UserRecursiveMutex::GetRecursionCount() const noexcept {
 	if(!IsLockedByCurrentThread()){
 		return 0;
 	}

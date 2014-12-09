@@ -16,7 +16,7 @@ namespace MCF {
 
 class Thread : public IntrusiveBase<Thread>, NONCOPYABLE {
 public:
-	static unsigned long GetCurrentId() noexcept;
+	static std::size_t GetCurrentId() noexcept;
 
 	static IntrusivePtr<Thread> Create(std::function<void ()> fnProc, bool bSuspended = false);
 
@@ -38,7 +38,7 @@ public:
 	void Join() const; // 如果线程中有被捕获的异常，抛出异常。
 
 	bool IsAlive() const noexcept;
-	unsigned long GetId() const noexcept;
+	std::size_t GetId() const noexcept;
 
 	void Suspend() noexcept;
 	void Resume() noexcept;

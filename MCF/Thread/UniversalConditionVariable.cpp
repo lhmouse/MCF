@@ -7,8 +7,8 @@
 using namespace MCF;
 
 // 构造函数和析构函数。
-UniversalConditionVariable::UniversalConditionVariable(unsigned long ulSpinCount)
-	: xm_vMutex(ulSpinCount), xm_vDelegate(xm_vMutex)
+UniversalConditionVariable::UniversalConditionVariable(std::size_t uSpinCount)
+	: xm_vMutex(uSpinCount), xm_vDelegate(xm_vMutex)
 {
 }
 
@@ -36,8 +36,8 @@ void UniversalConditionVariable::Wait(UniqueLockTemplateBase &vLock) noexcept {
 	vLock.Lock();
 	xm_vMutex.Unlock();
 }
-void UniversalConditionVariable::Signal(unsigned long ulMaxCount) noexcept {
-	xm_vDelegate.Signal(ulMaxCount);
+void UniversalConditionVariable::Signal(std::size_t uMaxCount) noexcept {
+	xm_vDelegate.Signal(uMaxCount);
 }
 void UniversalConditionVariable::Broadcast() noexcept {
 	xm_vDelegate.Broadcast();

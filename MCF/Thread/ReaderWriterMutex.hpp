@@ -10,14 +10,15 @@
 #include "UniqueLockTemplate.hpp"
 #include "UserRecursiveMutex.hpp"
 #include "Semaphore.hpp"
+#include <cstddef>
 
 namespace MCF {
 
 class ReaderWriterMutex : NONCOPYABLE {
 private:
 	struct xTlsIndexDeleter {
-		unsigned long operator()() const noexcept;
-		void operator()(unsigned long ulTlsIndex) const noexcept;
+		std::size_t operator()() const noexcept;
+		void operator()(std::size_t uTlsIndex) const noexcept;
 	};
 
 public:
@@ -28,18 +29,18 @@ public:
 private:
 	UserRecursiveMutex xm_mtxWriterGuard;
 	Semaphore xm_semExclusive;
-	volatile unsigned long xm_ulReaderCount;
-	UniqueHandle<xTlsIndexDeleter> xm_ulTlsIndex;
+	volatile std::size_t xm_uReaderCount;
+	UniqueHandle<xTlsIndexDeleter> xm_uTlsIndex;
 
 public:
-	explicit ReaderWriterMutex(unsigned long ulSpinCount = 0x400);
+	explicit ReaderWriterMutex(std::size_t uSpinCount = 0x400);
 
 public:
-	unsigned long GetSpinCount() const noexcept {
+	std::size_t GetSpinCount() const noexcept {
 		return xm_mtxWriterGuard.GetSpinCount();
 	}
-	void SetSpinCount(unsigned long ulSpinCount) noexcept {
-		xm_mtxWriterGuard.SetSpinCount(ulSpinCount);
+	void SetSpinCount(std::size_t uSpinCount) noexcept {
+		xm_mtxWriterGuard.SetSpinCount(uSpinCount);
 	}
 
 	Result TryAsReader() noexcept;

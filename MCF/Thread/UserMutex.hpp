@@ -9,6 +9,7 @@
 #include "UniqueLockTemplate.hpp"
 #include "Semaphore.hpp"
 #include "_SpinLock.hpp"
+#include <cstddef>
 
 namespace MCF {
 
@@ -18,23 +19,23 @@ public:
 
 private:
 	Semaphore xm_vSemaphore;
-	volatile unsigned long xm_ulSpinCount;
+	volatile std::size_t xm_uSpinCount;
 
 	SpinLock xm_splQueueSize;
-	volatile unsigned long xm_ulLockingThreadId;
+	volatile std::size_t xm_uLockingThreadId;
 
 public:
-	explicit UserMutex(unsigned long ulSpinCount = 0x400);
+	explicit UserMutex(std::size_t uSpinCount = 0x400);
 
 private:
 	bool xTryWithHint(unsigned long ulThreadId) noexcept;
 
 public:
-	unsigned long GetSpinCount() const noexcept {
-		return __atomic_load_n(&xm_ulSpinCount, __ATOMIC_RELAXED);
+	std::size_t GetSpinCount() const noexcept {
+		return __atomic_load_n(&xm_uSpinCount, __ATOMIC_RELAXED);
 	}
-	void SetSpinCount(unsigned long ulSpinCount) noexcept {
-		__atomic_store_n(&xm_ulSpinCount, ulSpinCount, __ATOMIC_RELAXED);
+	void SetSpinCount(std::size_t uSpinCount) noexcept {
+		__atomic_store_n(&xm_uSpinCount, uSpinCount, __ATOMIC_RELAXED);
 	}
 
 	bool IsLockedByCurrentThread() const noexcept;

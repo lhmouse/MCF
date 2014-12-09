@@ -8,6 +8,7 @@
 #include "../Utilities/Noncopyable.hpp"
 #include "../Core/String.hpp"
 #include "_Win32Handle.hpp"
+#include <cstddef>
 
 namespace MCF {
 
@@ -16,16 +17,16 @@ private:
 	const UniqueWin32Handle xm_hSemaphore;
 
 public:
-	explicit Semaphore(unsigned long ulInitCount, const wchar_t *pwszName = nullptr);
-	Semaphore(unsigned long ulInitCount, const WideString &wsName);
+	explicit Semaphore(std::size_t uInitCount, const wchar_t *pwszName = nullptr);
+	Semaphore(std::size_t uInitCount, const WideString &wsName);
 
 public:
-	unsigned long Wait(unsigned long long ullMilliSeconds) noexcept;
+	std::size_t Wait(unsigned long long ullMilliSeconds) noexcept;
 	void Wait() noexcept;
-	unsigned long Post(unsigned long ulPostCount = 1) noexcept;
+	std::size_t Post(std::size_t uPostCount = 1) noexcept;
 
-	unsigned long BatchWait(unsigned long long ullMilliSeconds, unsigned long ulWaitCount) noexcept;
-	void BatchWait(unsigned long ulWaitCount) noexcept;
+	std::size_t BatchWait(unsigned long long ullMilliSeconds, std::size_t uWaitCount) noexcept;
+	void BatchWait(std::size_t uWaitCount) noexcept;
 };
 
 }

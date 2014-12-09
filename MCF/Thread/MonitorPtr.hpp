@@ -21,29 +21,20 @@ private:
 		friend MonitorPtr;
 
 	private:
-		SelfT *xm_pOwner;
+		SelfT *const xm_pOwner;
+		UserRecursiveMutex::UniqueLock xm_vLock;
 
 	private:
 		explicit xMonitorHolder(SelfT *pOwner) noexcept
-			: xm_pOwner(pOwner)
+			: xm_pOwner(pOwner), xm_vLock(pOwner->xm_vMutex)
 		{
-			xm_pOwner->xm_vMutex.Lock();
 		}
-		xMonitorHolder(xMonitorHolder &&rhs) noexcept {
-			xm_pOwner = rhs.xm_pOwner;
-			rhs.xm_pOwner = nullptr;
-		}
+
+		xMonitorHolder(xMonitorHolder &&) noexcept = default;
 
 		xMonitorHolder(const xMonitorHolder &) = delete;
 		void operator=(const xMonitorHolder &) = delete;
 		void operator=(xMonitorHolder &&) = delete;
-
-	public:
-		~xMonitorHolder(){
-			if(xm_pOwner){
-				xm_pOwner->xm_vMutex.Unlock();
-			}
-		}
 
 	public:
 		auto &operator*() const noexcept {

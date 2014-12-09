@@ -11,7 +11,7 @@
 using namespace MCF;
 
 // 静态成员函数。
-unsigned long Thread::GetCurrentId() noexcept {
+std::size_t Thread::GetCurrentId() noexcept {
 	return ::GetCurrentThreadId();
 }
 
@@ -91,7 +91,7 @@ void Thread::Join() const {
 bool Thread::IsAlive() const noexcept {
 	return GetId() != 0;
 }
-unsigned long Thread::GetId() const noexcept {
+std::size_t Thread::GetId() const noexcept {
 	return __atomic_load_n(&xm_ulThreadId, __ATOMIC_ACQUIRE);
 }
 

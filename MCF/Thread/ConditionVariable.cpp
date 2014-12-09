@@ -51,7 +51,9 @@ void ConditionVariable::Signal(unsigned long ulMaxCount) noexcept {
 //	// 进入临界区。
 	const auto ulToPost = Min(xm_ulWaiting, ulMaxCount);
 	xm_ulWaiting -= ulToPost;
-	xm_vSemaphore.Post(ulToPost);
+	if(ulToPost != 0){
+		xm_vSemaphore.Post(ulToPost);
+	}
 //	\\ 退出临界区。
 	if(!bIsLocking){
 		xm_vMutex.Unlock();
@@ -65,7 +67,9 @@ void ConditionVariable::Broadcast() noexcept {
 //	// 进入临界区。
 	const auto ulToPost = xm_ulWaiting;
 	xm_ulWaiting = 0;
-	xm_vSemaphore.Post(ulToPost);
+	if(ulToPost != 0){
+		xm_vSemaphore.Post(ulToPost);
+	}
 //	\\ 退出临界区。
 	if(!bIsLocking){
 		xm_vMutex.Unlock();

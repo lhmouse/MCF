@@ -13,6 +13,15 @@ namespace MCF {
 std::size_t GetProcessorCount() noexcept;
 std::size_t GetPageSize() noexcept;
 
+struct WindowsVersion {
+	unsigned uMajor;
+	unsigned uMinor;
+	unsigned uBuild;
+	const wchar_t *pwszServPack;
+};
+
+WindowsVersion GetWindowsVersion() noexcept;
+
 }
 
 #endif

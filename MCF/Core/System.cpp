@@ -18,6 +18,17 @@ void RequireSystemInfo() noexcept {
 	}
 }
 
+volatile bool g_bOsVersionInfoInited = false;
+::OSVERSIONINFOW g_vOsVersionInfo;
+
+void RequireOsVersionInfo() noexcept {
+	if(__atomic_load_n(&g_bOsVersionInfoInited, __ATOMIC_ACQUIRE) == false){
+		g_vOsVersionInfo.dwOSVersionInfoSize = sizeof(g_vOsVersionInfo);
+		::GetVersionExW(&g_vOsVersionInfo);
+		__atomic_store_n(&g_bOsVersionInfoInited, true, __ATOMIC_RELEASE);
+	}
+}
+
 }
 
 namespace MCF {
@@ -29,6 +40,16 @@ std::size_t GetProcessorCount() noexcept {
 std::size_t GetPageSize() noexcept {
 	RequireSystemInfo();
 	return g_vSystemInfo.dwPageSize;
+}
+
+WindowsVersion GetWindowsVersion() noexcept {
+	RequireOsVersionInfo();
+	WindowsVersion vRet;
+	vRet.uMajor			= g_vOsVersionInfo.dwMajorVersion;
+	vRet.uMinor			= g_vOsVersionInfo.dwMinorVersion;
+	vRet.uBuild			= g_vOsVersionInfo.dwBuildNumber;
+	vRet.pwszServPack	= g_vOsVersionInfo.szCSDVersion;
+	return vRet;
 }
 
 }

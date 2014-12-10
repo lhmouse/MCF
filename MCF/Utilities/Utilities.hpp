@@ -5,14 +5,13 @@
 #ifndef MCF_UTILITIES_UTILITIES_HPP_
 #define MCF_UTILITIES_UTILITIES_HPP_
 
-#include "Abstract.hpp"
 #include "Algorithms.hpp"
 #include "Assert.hpp"
 #include "Bail.hpp"
 #include "BinaryOperations.hpp"
 #include "BitsOf.hpp"
 #include "Endian.hpp"
-#include "CallOnEach.hpp"
+#include "Absorb.hpp"
 #include "Clone.hpp"
 #include "ConstructDestruct.hpp"
 #include "CountLeadingTrailingZeroes.hpp"
@@ -20,6 +19,6 @@
 #include "MinMax.hpp"
 #include "Noncopyable.hpp"
 #include "StaticAssertNoexcept.hpp"
-#include "TupleHelpers.hpp"
+#include "TupleFunctors.hpp"
 
 #endif

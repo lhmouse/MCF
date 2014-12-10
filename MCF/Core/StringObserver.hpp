@@ -124,7 +124,7 @@ namespace Impl {
 		if(uToFindLen <= COUNT_OF(auSmallTable)){
 			puKmpTable = auSmallTable;
 		} else {
-			puKmpTable = (std::size_t *)::operator new(sizeof(std::size_t) * uToFindLen, std::nothrow);
+			puKmpTable = new(std::nothrow) std::size_t[uToFindLen];
 			if(!puKmpTable){
 				// 内存不足，使用暴力搜索方法。
 				for(auto itCur = itBegin; itCur != itSearchEnd; ++itCur){
@@ -170,7 +170,7 @@ namespace Impl {
 		} while(itCur < itSearchEnd);
 
 		if(puKmpTable != auSmallTable){
-			::operator delete(puKmpTable);
+			delete[] puKmpTable;
 		}
 		return uFound;
 	}

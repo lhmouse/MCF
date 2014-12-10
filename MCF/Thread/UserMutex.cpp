@@ -27,7 +27,7 @@ void UserMutex::UniqueLock::xDoUnlock() const noexcept {
 // 构造函数和析构函数。
 UserMutex::UserMutex(std::size_t uSpinCount)
 	: xm_vSemaphore(0), xm_uSpinCount(uSpinCount)
-	, xm_uLockingThreadId(0)
+	, xm_splQueueSize(0), xm_uLockingThreadId(0)
 {
 	__atomic_thread_fence(__ATOMIC_RELEASE);
 }

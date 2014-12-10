@@ -1,11 +1,19 @@
 #include <MCF/StdMCF.hpp>
-#include <MCF/Utilities/Utilities.hpp>
+#include <MCF/Core/StreamBuffer.hpp>
 using namespace MCF;
 
 extern "C" unsigned int MCFMain() noexcept {
-	AbsorbTuple([](int i){ std::printf("%d\n", i); }, std::make_tuple(1, 2, 3));
-	ReverseAbsorbTuple([](int i){ std::printf("%d\n", i); }, std::make_tuple(1, 2, 3));
-	SqueezeTuple([](auto ...i){ std::printf("%d %d %d\n", i...); }, std::make_tuple(1, 2, 3));
-	ReverseSqueezeTuple([](auto ...i){ std::printf("%d %d %d\n", i...); }, std::make_tuple(1, 2, 3));
+	{
+		StreamBuffer buf;
+		for(unsigned i = 0; i < 100000; ++i){
+			buf.Put(i);
+		}
+	}
+	{
+		StreamBuffer buf;
+		for(unsigned i = 0; i < 100000; ++i){
+			buf.Unget(i);
+		}
+	}
 	return 0;
 }

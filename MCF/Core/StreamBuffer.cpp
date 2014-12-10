@@ -29,13 +29,13 @@ using ChunkNode = typename List<StreamBufferChunk>::Node;
 UserMutex g_mtxPoolMutex;
 List<StreamBufferChunk> g_lstPool;
 
-auto &PushPooled(List<StreamBufferChunk> &lstDst){
+StreamBufferChunk &PushPooled(List<StreamBufferChunk> &lstDst){
 	ChunkNode *pNode;
 	{
 		const auto vLock = g_mtxPoolMutex.GetLock();
 		if(!g_lstPool.IsEmpty()){
+			pNode = g_lstPool.GetFirst();
 			lstDst.Splice(nullptr, g_lstPool, g_lstPool.GetFirst());
-			pNode = lstDst.GetLast();
 			goto jDone;
 		}
 	}
@@ -47,13 +47,37 @@ jDone:
 #endif
 	return pNode->GetElement();
 }
-void ShiftPooled(List<StreamBufferChunk> &lstSrc){
+void PopPooled(List<StreamBufferChunk> &lstSrc) noexcept {
+	ASSERT(!lstSrc.IsEmpty());
+
+	const auto vLock = g_mtxPoolMutex.GetLock();
+	g_lstPool.Splice(nullptr, lstSrc, lstSrc.GetLast());
+}
+StreamBufferChunk &UnshiftPooled(List<StreamBufferChunk> &lstDst){
+	ChunkNode *pNode;
+	{
+		const auto vLock = g_mtxPoolMutex.GetLock();
+		if(!g_lstPool.IsEmpty()){
+			pNode = g_lstPool.GetFirst();
+			lstDst.Splice(lstDst.GetFirst(), g_lstPool, g_lstPool.GetFirst());
+			goto jDone;
+		}
+	}
+	pNode = lstDst.Unshift();
+
+jDone:
+#ifndef NDEBUG
+	__builtin_memset(&pNode->GetElement(), 0xCC, sizeof(StreamBufferChunk));
+#endif
+	return pNode->GetElement();
+}
+void ShiftPooled(List<StreamBufferChunk> &lstSrc) noexcept {
 	ASSERT(!lstSrc.IsEmpty());
 
 	const auto vLock = g_mtxPoolMutex.GetLock();
 	g_lstPool.Splice(nullptr, lstSrc, lstSrc.GetFirst());
 }
-void ClearPooled(List<StreamBufferChunk> &lstSrc){
+void ClearPooled(List<StreamBufferChunk> &lstSrc) noexcept {
 	if(lstSrc.IsEmpty()){
 		return;
 	}
@@ -156,6 +180,38 @@ void StreamBuffer::Put(unsigned char by){
 	vBuffer.abyData[0] = by;
 	vBuffer.uRead = 0;
 	vBuffer.uWrite = 1;
+	++xm_uSize;
+}
+int StreamBuffer::Unput() noexcept {
+	if(xm_uSize == 0){
+		return -1;
+	}
+	for(;;){
+		ASSERT(!xm_lstBuffers.IsEmpty());
+
+		auto &vBuffer = xm_lstBuffers.GetLast()->GetElement();
+		if(vBuffer.uRead < vBuffer.uWrite){
+			--vBuffer.uWrite;
+			const int nRet = vBuffer.abyData[vBuffer.uWrite];
+			--xm_uSize;
+			return nRet;
+		}
+		PopPooled(xm_lstBuffers);
+	}
+}
+void StreamBuffer::Unget(unsigned char by){
+	const auto pNode = xm_lstBuffers.GetFirst();
+	if(pNode && (pNode->GetElement().uRead > 0)){
+		auto &vBuffer = pNode->GetElement();
+		--vBuffer.uRead;
+		vBuffer.abyData[vBuffer.uRead] = by;
+		++xm_uSize;
+		return;
+	}
+	auto &vBuffer = UnshiftPooled(xm_lstBuffers);
+	vBuffer.abyData[CHUNK_SIZE - 1] = by;
+	vBuffer.uRead = CHUNK_SIZE - 1;
+	vBuffer.uWrite = CHUNK_SIZE;
 	++xm_uSize;
 }
 

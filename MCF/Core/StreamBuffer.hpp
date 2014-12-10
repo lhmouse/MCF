@@ -49,6 +49,8 @@ public:
 	int Peek() const noexcept;
 	int Get() noexcept;
 	void Put(unsigned char by);
+	int Unput() noexcept;
+	void Unget(unsigned char by);
 
 	std::size_t Peek(void *pData, std::size_t uSize) const noexcept;
 	std::size_t Get(void *pData, std::size_t uSize) noexcept;

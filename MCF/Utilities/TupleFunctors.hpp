@@ -88,7 +88,7 @@ decltype(auto) ReverseSqueezeTuple(FunctionT &&vFunction, const std::tuple<Param
 // 简单包装器。
 template<typename T,  typename ...ParamsT>
 T MakeFromTuple(const std::tuple<ParamsT...> &vTuple){
-	return SqueezeTuple([](const auto &...vParams){ return ObjectT(vParams...); }, vTuple);
+	return SqueezeTuple([](auto &&...vParams){ return ObjectT(std::move(vParams)...); }, vTuple);
 }
 
 }

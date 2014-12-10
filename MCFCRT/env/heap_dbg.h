@@ -16,10 +16,12 @@
 	3	在 2 的基础上，追踪内存块的分配和释放，捕捉无效的内存操作及内存泄漏。
 */
 
-#ifdef NDEBUG
-#	define __MCF_CRT_HEAPDBG_LEVEL	1
-#else
-#	define __MCF_CRT_HEAPDBG_LEVEL	3
+#ifndef __MCF_CRT_HEAPDBG_LEVEL
+#	ifdef NDEBUG
+#		define __MCF_CRT_HEAPDBG_LEVEL	1
+#	else
+#		define __MCF_CRT_HEAPDBG_LEVEL	3
+#	endif
 #endif
 
 #define __MCF_CRT_REQUIRE_HEAPDBG_LEVEL(lv_)	((__MCF_CRT_HEAPDBG_LEVEL + 0) >= lv_)

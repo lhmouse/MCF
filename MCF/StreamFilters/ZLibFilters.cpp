@@ -3,7 +3,7 @@
 // Copyleft 2013 - 2014, LH_Mouse. All wrongs reserved.
 
 #include "../StdMCF.hpp"
-#include "ZLibFilters.hpp"
+#include "ZlibFilters.hpp"
 #include "../Core/Exception.hpp"
 #include "../Utilities/MinMax.hpp"
 
@@ -16,8 +16,8 @@ namespace {
 
 constexpr std::size_t STEP_SIZE = 0x4000;
 
-unsigned long ZLibErrorToWin32Error(int nZLibError) noexcept {
-	switch(nZLibError){
+unsigned long ZlibErrorToWin32Error(int nZlibError) noexcept {
+	switch(nZlibError){
 	case Z_OK:
 		return ERROR_SUCCESS;
 
@@ -52,15 +52,15 @@ unsigned long ZLibErrorToWin32Error(int nZLibError) noexcept {
 
 }
 
-class ZLibEncoder::xDelegate : NONCOPYABLE {
+class ZlibEncoder::xDelegate : NONCOPYABLE {
 private:
-	ZLibEncoder &xm_vOwner;
+	ZlibEncoder &xm_vOwner;
 
 	z_stream xm_vStream;
 	bool xm_bInited;
 
 public:
-	xDelegate(ZLibEncoder &vOwner, bool bRaw, unsigned uLevel)
+	xDelegate(ZlibEncoder &vOwner, bool bRaw, unsigned uLevel)
 		: xm_vOwner(vOwner)
 	{
 		xm_vStream.zalloc	= nullptr;
@@ -69,7 +69,7 @@ public:
 
 		const auto nError = ::deflateInit2(&xm_vStream, (int)uLevel, Z_DEFLATED, bRaw ? -15 : 15, 9, Z_DEFAULT_STRATEGY);
 		if(nError != Z_OK){
-			DEBUG_THROW(ZLibError, "deflateInit2", nError);
+			DEBUG_THROW(ZlibError, "deflateInit2", nError);
 		}
 
 		xm_bInited = false;
@@ -106,7 +106,7 @@ public:
 					break;
 				}
 				if(nError != Z_OK){
-					DEBUG_THROW(ZLibError, "deflate", nError);
+					DEBUG_THROW(ZlibError, "deflate", nError);
 				}
 				if(xm_vStream.avail_out == 0){
 					xm_vOwner.xOutput(abyTemp, sizeof(abyTemp));
@@ -138,7 +138,7 @@ public:
 					break;
 				}
 				if(nError != Z_OK){
-					DEBUG_THROW(ZLibError, "deflate", nError);
+					DEBUG_THROW(ZlibError, "deflate", nError);
 				}
 				if(xm_vStream.avail_out == 0){
 					xm_vOwner.xOutput(abyTemp, sizeof(abyTemp));
@@ -157,15 +157,15 @@ public:
 	}
 };
 
-class ZLibDecoder::xDelegate : NONCOPYABLE {
+class ZlibDecoder::xDelegate : NONCOPYABLE {
 private:
-	ZLibDecoder &xm_vOwner;
+	ZlibDecoder &xm_vOwner;
 
 	z_stream xm_vStream;
 	bool xm_bInited;
 
 public:
-	xDelegate(ZLibDecoder &vOwner, bool bRaw)
+	xDelegate(ZlibDecoder &vOwner, bool bRaw)
 		: xm_vOwner(vOwner)
 	{
 		xm_vStream.zalloc	= nullptr;
@@ -177,7 +177,7 @@ public:
 
 		const auto nError = ::inflateInit2(&xm_vStream, bRaw ? -15 : 15);
 		if(nError != Z_OK){
-			DEBUG_THROW(ZLibError, "inflateInit2", nError);
+			DEBUG_THROW(ZlibError, "inflateInit2", nError);
 		}
 
 		xm_bInited = false;
@@ -214,7 +214,7 @@ public:
 					break;
 				}
 				if(nError != Z_OK){
-					DEBUG_THROW(ZLibError, "inflate", nError);
+					DEBUG_THROW(ZlibError, "inflate", nError);
 				}
 				if(xm_vStream.avail_out == 0){
 					xm_vOwner.xOutput(abyTemp, sizeof(abyTemp));
@@ -246,7 +246,7 @@ public:
 					break;
 				}
 				if(nError != Z_OK){
-					DEBUG_THROW(ZLibError, "inflate", nError);
+					DEBUG_THROW(ZlibError, "inflate", nError);
 				}
 				if(xm_vStream.avail_out == 0){
 					xm_vOwner.xOutput(abyTemp, sizeof(abyTemp));
@@ -265,49 +265,49 @@ public:
 	}
 };
 
-// ========== ZLibEncoder ==========
+// ========== ZlibEncoder ==========
 // 静态成员函数。
-ZLibEncoder::ZLibEncoder(bool bRaw, unsigned uLevel)
+ZlibEncoder::ZlibEncoder(bool bRaw, unsigned uLevel)
 	: xm_pDelegate(std::make_unique<xDelegate>(*this, bRaw, uLevel))
 {
 }
-ZLibEncoder::~ZLibEncoder(){
+ZlibEncoder::~ZlibEncoder(){
 }
 
-void ZLibEncoder::Abort() noexcept {
+void ZlibEncoder::Abort() noexcept {
 	xm_pDelegate->Abort();
 }
-void ZLibEncoder::Update(const void *pData, std::size_t uSize){
+void ZlibEncoder::Update(const void *pData, std::size_t uSize){
 	xm_pDelegate->Update(pData, uSize);
 }
-void ZLibEncoder::Finalize(){
+void ZlibEncoder::Finalize(){
 	xm_pDelegate->Finalize();
 }
 
-// ========== ZLibDecoder ==========
+// ========== ZlibDecoder ==========
 // 静态成员函数。
-ZLibDecoder::ZLibDecoder(bool bRaw)
+ZlibDecoder::ZlibDecoder(bool bRaw)
 	: xm_pDelegate(std::make_unique<xDelegate>(*this, bRaw))
 {
 }
-ZLibDecoder::~ZLibDecoder(){
+ZlibDecoder::~ZlibDecoder(){
 }
 
-void ZLibDecoder::Abort() noexcept {
+void ZlibDecoder::Abort() noexcept {
 	xm_pDelegate->Abort();
 }
-void ZLibDecoder::Update(const void *pData, std::size_t uSize){
+void ZlibDecoder::Update(const void *pData, std::size_t uSize){
 	xm_pDelegate->Update(pData, uSize);
 }
-void ZLibDecoder::Finalize(){
+void ZlibDecoder::Finalize(){
 	xm_pDelegate->Finalize();
 }
 
-// ========== ZLibError ==========
-ZLibError::ZLibError(const char *pszFile, unsigned long ulLine, const char *pszMessage, long lZLibError) noexcept
-	: Exception(pszFile, ulLine, pszMessage, ZLibErrorToWin32Error(lZLibError))
-	, xm_lZLibError(lZLibError)
+// ========== ZlibError ==========
+ZlibError::ZlibError(const char *pszFile, unsigned long ulLine, const char *pszMessage, long lZlibError) noexcept
+	: Exception(pszFile, ulLine, pszMessage, ZlibErrorToWin32Error(lZlibError))
+	, xm_lZlibError(lZlibError)
 {
 }
-ZLibError::~ZLibError(){
+ZlibError::~ZlibError(){
 }

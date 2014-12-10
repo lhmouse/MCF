@@ -11,7 +11,7 @@
 
 namespace MCF {
 
-class ZLibEncoder : public StreamFilterBase {
+class ZlibEncoder : public StreamFilterBase {
 private:
 	class xDelegate;
 
@@ -19,8 +19,8 @@ private:
 	const std::unique_ptr<xDelegate> xm_pDelegate;
 
 public:
-	explicit ZLibEncoder(bool bRaw = false, unsigned uLevel = 6);
-	~ZLibEncoder();
+	explicit ZlibEncoder(bool bRaw = false, unsigned uLevel = 6);
+	~ZlibEncoder();
 
 public:
 	void Abort() noexcept override;
@@ -28,7 +28,7 @@ public:
 	void Finalize() override;
 };
 
-class ZLibDecoder : public StreamFilterBase {
+class ZlibDecoder : public StreamFilterBase {
 private:
 	class xDelegate;
 
@@ -36,8 +36,8 @@ private:
 	const std::unique_ptr<xDelegate> xm_pDelegate;
 
 public:
-	explicit ZLibDecoder(bool bRaw = false);
-	~ZLibDecoder();
+	explicit ZlibDecoder(bool bRaw = false);
+	~ZlibDecoder();
 
 public:
 	void Abort() noexcept override;
@@ -45,18 +45,18 @@ public:
 	void Finalize() override;
 };
 
-class ZLibError : public Exception {
+class ZlibError : public Exception {
 private:
-	long xm_lZLibError;
+	long xm_lZlibError;
 
 public:
-	ZLibError(const char *pszFile, unsigned long ulLine,
-		const char *pszMessage, long lZLibError) noexcept;
-	~ZLibError() override;
+	ZlibError(const char *pszFile, unsigned long ulLine,
+		const char *pszMessage, long lZlibError) noexcept;
+	~ZlibError() override;
 
 public:
-	long GetZLibError() const noexcept {
-		return xm_lZLibError;
+	long GetZlibError() const noexcept {
+		return xm_lZlibError;
 	}
 };
 

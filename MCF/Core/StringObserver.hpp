@@ -515,31 +515,25 @@ extern inline auto operator""_nso() noexcept {
 }
 template<typename CharT, CharT ...STRING_T>
 extern inline auto operator""_wso() noexcept {
-	static constexpr wchar_t s_achData[] = { STRING_T..., '$' };
-	return WideStringObserver(s_achData, sizeof...(STRING_T));
+	static constexpr wchar_t s_awcData[] = { STRING_T..., '$' };
+	return WideStringObserver(s_awcData, sizeof...(STRING_T));
 }
 template<typename CharT, CharT ...STRING_T>
 extern inline auto operator""_u8so() noexcept {
-	static constexpr char s_achData[] = { STRING_T..., '$' };
-	return Utf8StringObserver(s_achData, sizeof...(STRING_T));
+	static constexpr char s_au8cData[] = { STRING_T..., '$' };
+	return Utf8StringObserver(s_au8cData, sizeof...(STRING_T));
 }
 template<typename CharT, CharT ...STRING_T>
 extern inline auto operator""_u16so() noexcept {
-	static constexpr char16_t s_achData[] = { STRING_T..., '$' };
-	return Utf16StringObserver(s_achData, sizeof...(STRING_T));
+	static constexpr char16_t s_au16cData[] = { STRING_T..., '$' };
+	return Utf16StringObserver(s_au16cData, sizeof...(STRING_T));
 }
 template<typename CharT, CharT ...STRING_T>
 extern inline auto operator""_u32so() noexcept {
-	static constexpr char32_t s_achData[] = { STRING_T..., '$' };
-	return Utf32StringObserver(s_achData, sizeof...(STRING_T));
+	static constexpr char32_t s_au32cData[] = { STRING_T..., '$' };
+	return Utf32StringObserver(s_au32cData, sizeof...(STRING_T));
 }
 
 }
-
-using ::MCF::operator""_nso;
-using ::MCF::operator""_wso;
-using ::MCF::operator""_u8so;
-using ::MCF::operator""_u16so;
-using ::MCF::operator""_u32so;
 
 #endif

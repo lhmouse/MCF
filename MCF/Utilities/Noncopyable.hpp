@@ -9,19 +9,19 @@ namespace MCF {
 
 namespace Impl {
 	template<unsigned long MAGIC_T>
-	struct NONCOPYABLE {
-		constexpr NONCOPYABLE() noexcept = default;
-		~NONCOPYABLE() = default;
+	struct NoncopyableBase {
+		constexpr NoncopyableBase() noexcept = default;
+		~NoncopyableBase() = default;
 
-		NONCOPYABLE(const NONCOPYABLE &) = delete;
-		void operator=(const NONCOPYABLE &) = delete;
-		NONCOPYABLE(NONCOPYABLE &&) noexcept = delete;
-		void operator=(NONCOPYABLE &&) noexcept = delete;
+		NoncopyableBase(const NoncopyableBase &) = delete;
+		NoncopyableBase &operator=(const NoncopyableBase &) = delete;
+		NoncopyableBase(NoncopyableBase &&) noexcept = delete;
+		NoncopyableBase &operator=(NoncopyableBase &&) noexcept = delete;
 	};
 }
 
 }
 
-#define NONCOPYABLE		private ::MCF::Impl::NONCOPYABLE<__COUNTER__>
+#define NONCOPYABLE		private ::MCF::Impl::NoncopyableBase<__COUNTER__>
 
 #endif

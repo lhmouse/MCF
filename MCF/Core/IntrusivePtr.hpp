@@ -39,8 +39,8 @@ namespace Impl {
 		}
 
 		IntrusiveSentry(const IntrusiveSentry &) = delete;
-		void operator=(const IntrusiveSentry &) = delete;
-		void operator=(IntrusiveSentry &&) = delete;
+		IntrusiveSentry &operator=(const IntrusiveSentry &) = delete;
+		IntrusiveSentry &operator=(IntrusiveSentry &&) = delete;
 	};
 
 	template<typename DstT, typename SrcT, typename = int>

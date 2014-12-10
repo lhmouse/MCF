@@ -10,6 +10,9 @@ using namespace MCF;
 
 namespace {
 
+struct Empty {
+};
+
 template<typename T>
 struct IncrementalAlloc {
 public:
@@ -33,7 +36,7 @@ public:
 
 	T *allocate(std::size_t n, const void * = nullptr){
 		const auto uTotal = n * sizeof(T) + m_uIncSize;
-		if(uTotal / sizeof(T) != n + m_uIncSize / sizeof(T)){
+		if((uTotal / sizeof(T) != n + m_uIncSize / sizeof(T)) || (uTotal < n * sizeof(T))){
 			throw std::bad_alloc();
 		}
 		const auto p = static_cast<char *>(::operator new(uTotal));
@@ -76,7 +79,7 @@ std::shared_ptr<CharT> CreateSharedString(const CharT *pchSrc, std::size_t uLen,
 		throw std::bad_alloc();
 	}
 	void *pIncData;
-	auto pBuffer = std::allocate_shared<char>(IncrementalAlloc<char>(pIncData, uIncrement));
+	auto pBuffer = std::allocate_shared<Empty>(IncrementalAlloc<Empty>(pIncData, uIncrement));
 	const auto pchWrite = reinterpret_cast<CharT *>(static_cast<std::size_t *>(pIncData) + 2);
 	reinterpret_cast<std::size_t *>(pchWrite)[-2] = uLen + uAdditional;
 	reinterpret_cast<std::size_t *>(pchWrite)[-1] = uLen;

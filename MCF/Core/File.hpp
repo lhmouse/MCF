@@ -5,7 +5,6 @@
 #ifndef MCF_CORE_FILE_HPP_
 #define MCF_CORE_FILE_HPP_
 
-#include "../Utilities/Noncopyable.hpp"
 #include "String.hpp"
 #include "UniqueHandle.hpp"
 #include <functional>
@@ -14,7 +13,7 @@
 
 namespace MCF {
 
-class File : NONCOPYABLE {
+class File {
 public:
 	enum : std::uint32_t {
 		// 权限控制。
@@ -44,6 +43,13 @@ private:
 public:
 	File(const wchar_t *pwszPath, std::uint32_t u32Flags);
 	File(const WideString &wsPath, std::uint32_t u32Flags);
+
+	constexpr File() noexcept = default;
+	File(File &&) noexcept = default;
+	File &operator=(File &&) = default;
+
+	File(const File &) = delete;
+	File &operator=(const File &) = delete;
 
 public:
 	bool IsOpen() const noexcept;

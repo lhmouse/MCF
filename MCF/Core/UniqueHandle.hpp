@@ -45,7 +45,7 @@ public:
 	}
 
 	UniqueHandle(const UniqueHandle &) = delete;
-	void operator=(const UniqueHandle &) = delete;
+	UniqueHandle &operator=(const UniqueHandle &) = delete;
 
 public:
 	bool IsGood() const noexcept {

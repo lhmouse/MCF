@@ -11,17 +11,25 @@
 
 namespace MCF {
 
-class Utf8TextFileReader : NONCOPYABLE {
+class Utf8TextFileReader {
 private:
-	const std::unique_ptr<File> xm_pFile;
+	File xm_vFile;
 
 	std::uint64_t xm_u64Offset;
 	StreamBuffer xm_sbufCache;
 
 public:
-	explicit Utf8TextFileReader(std::unique_ptr<File> pFile);
+	explicit Utf8TextFileReader(File &&vFile);
 
 public:
+	const File &Get() const noexcept {
+		return xm_vFile;
+	}
+	File &Get() noexcept {
+		return xm_vFile;
+	}
+	void Reset(File &&vFile = File()) noexcept;
+
 	bool IsAtEndOfFile() const noexcept;
 	int Read();
 	bool Read(Utf8String &u8sData, std::size_t uCount);
@@ -29,7 +37,7 @@ public:
 	bool ReadTillEof(Utf8String &u8sData);
 };
 
-class Utf8TextFileWriter : NONCOPYABLE {
+class Utf8TextFileWriter {
 public:
 	enum : std::uint32_t {
 		BOM_NONE		= 0x00000000,
@@ -44,17 +52,28 @@ public:
 	};
 
 private:
-	const std::unique_ptr<File> xm_pFile;
-	const std::uint32_t xm_u32Flags;
+	File xm_vFile;
+	std::uint32_t xm_u32Flags;
 
 	std::uint64_t xm_u64Offset;
 	Utf8String xm_u8sLine;
 
 public:
-	explicit Utf8TextFileWriter(std::unique_ptr<File> pFile, std::uint32_t u32Flags = 0);
+	explicit Utf8TextFileWriter(File &&vFile, std::uint32_t u32Flags = 0);
 	~Utf8TextFileWriter();
 
 public:
+	const File &Get() const noexcept {
+		return xm_vFile;
+	}
+	File &Get() noexcept {
+		return xm_vFile;
+	}
+	void Reset(File &&vFile = File(), std::uint32_t u32Flags = 0) noexcept;
+
+	std::uint32_t GetFlags() const noexcept;
+	std::uint32_t SetFlags(std::uint32_t u32Flags) noexcept;
+
 	void Write(char ch);
 	void Write(const Utf8StringObserver &u8soData);
 	void WriteLine(const Utf8StringObserver &u8soData);

@@ -16,23 +16,32 @@ constexpr unsigned char UTF8_BOM[] = { 0xEF, 0xBB, 0xBF };
 
 // ========== Utf8TextFileReader ==========
 // 构造函数和析构函数。
-Utf8TextFileReader::Utf8TextFileReader(std::unique_ptr<File> pFile)
-	: xm_pFile(std::move(pFile)), xm_u64Offset	(0)
+Utf8TextFileReader::Utf8TextFileReader(File &&vFile)
+	: xm_vFile(std::move(vFile)), xm_u64Offset(0)
 {
 	unsigned char abyTemp[sizeof(UTF8_BOM)];
-	if((xm_pFile->Read(abyTemp, sizeof(abyTemp), 0) == sizeof(abyTemp)) && !BComp(abyTemp, UTF8_BOM)){
+	if((xm_vFile.Read(abyTemp, sizeof(abyTemp), 0) == sizeof(abyTemp)) && !BComp(abyTemp, UTF8_BOM)){
 		xm_u64Offset += sizeof(UTF8_BOM);
 	}
 }
 
 // 其他非静态成员函数。
+void Utf8TextFileReader::Reset(File &&vFile) noexcept {
+	ASSERT(&xm_vFile != &vFile);
+
+	xm_u64Offset = 0;
+	xm_sbufCache.Clear();
+
+	xm_vFile = std::move(vFile);
+}
+
 bool Utf8TextFileReader::IsAtEndOfFile() const noexcept {
-	return xm_sbufCache.IsEmpty() && (xm_u64Offset == xm_pFile->GetSize());
+	return xm_sbufCache.IsEmpty() && (xm_u64Offset == xm_vFile.GetSize());
 }
 int Utf8TextFileReader::Read(){
 	if(xm_sbufCache.GetSize() <= 1){
 		unsigned char abyTemp[0x1000];
-		const auto uBytesRead = xm_pFile->Read(abyTemp, sizeof(abyTemp), xm_u64Offset);
+		const auto uBytesRead = xm_vFile.Read(abyTemp, sizeof(abyTemp), xm_u64Offset);
 		if(uBytesRead != 0){
 			xm_sbufCache.Put(abyTemp, uBytesRead);
 			xm_u64Offset += uBytesRead;
@@ -103,14 +112,14 @@ bool Utf8TextFileReader::ReadTillEof(Utf8String &u8sData){
 
 // ========== Utf8TextFileWriter ==========
 // 构造函数和析构函数。
-Utf8TextFileWriter::Utf8TextFileWriter(std::unique_ptr<File> pFile, std::uint32_t u32Flags)
-	: xm_pFile(std::move(pFile)), xm_u32Flags(u32Flags), xm_u64Offset(0)
+Utf8TextFileWriter::Utf8TextFileWriter(File &&vFile, std::uint32_t u32Flags)
+	: xm_vFile(std::move(vFile)), xm_u32Flags(u32Flags), xm_u64Offset(0)
 {
-	xm_u64Offset = xm_pFile->GetSize();
+	xm_u64Offset = xm_vFile.GetSize();
 
 	if((xm_u32Flags & BOM_USE) && (xm_u64Offset == 0)){
-		xm_pFile->Write(0, UTF8_BOM, sizeof(UTF8_BOM));
-		xm_pFile->Flush();
+		xm_vFile.Write(0, UTF8_BOM, sizeof(UTF8_BOM));
+		xm_vFile.Flush();
 
 		xm_u64Offset += sizeof(UTF8_BOM);
 	}
@@ -123,9 +132,33 @@ Utf8TextFileWriter::~Utf8TextFileWriter(){
 }
 
 // 其他非静态成员函数。
+void Utf8TextFileWriter::Reset(File &&vFile, std::uint32_t u32Flags) noexcept {
+	ASSERT(&xm_vFile != &vFile);
+
+	Flush();
+
+	xm_u64Offset = 0;
+	xm_u8sLine.Clear();
+
+	xm_vFile = std::move(vFile);
+	xm_u32Flags = u32Flags;
+}
+
+std::uint32_t Utf8TextFileWriter::GetFlags() const noexcept {
+	return xm_u32Flags;
+}
+std::uint32_t Utf8TextFileWriter::SetFlags(std::uint32_t u32Flags) noexcept {
+	auto u32OldFlags = xm_u32Flags;
+	if(xm_u32Flags != u32Flags){
+		Flush();
+		xm_u32Flags = u32Flags;
+	}
+	return u32OldFlags;
+}
+
 void Utf8TextFileWriter::Write(char ch){
 	if(xm_u32Flags & BUF_NONE){
-		xm_pFile->Write(xm_u64Offset, &ch, 1);
+		xm_vFile.Write(xm_u64Offset, &ch, 1);
 	} else {
 		if((ch == '\n') && (xm_u32Flags & LES_CRLF)){
 			xm_u8sLine += '\r';
@@ -153,8 +186,8 @@ void Utf8TextFileWriter::WriteLine(const Utf8StringObserver &u8soData){
 	Write('\n');
 }
 void Utf8TextFileWriter::Flush(){
-	xm_pFile->Write(xm_u64Offset, xm_u8sLine.GetData(), xm_u8sLine.GetSize());
-	xm_pFile->Flush();
+	xm_vFile.Write(xm_u64Offset, xm_u8sLine.GetData(), xm_u8sLine.GetSize());
+	xm_vFile.Flush();
 
 	xm_u64Offset += xm_u8sLine.GetSize();
 	xm_u8sLine.Clear();

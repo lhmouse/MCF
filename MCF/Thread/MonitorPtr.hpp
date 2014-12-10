@@ -33,8 +33,8 @@ private:
 		xMonitorHolder(xMonitorHolder &&) noexcept = default;
 
 		xMonitorHolder(const xMonitorHolder &) = delete;
-		void operator=(const xMonitorHolder &) = delete;
-		void operator=(xMonitorHolder &&) = delete;
+		xMonitorHolder &operator=(const xMonitorHolder &) = delete;
+		xMonitorHolder &operator=(xMonitorHolder &&) = delete;
 
 	public:
 		auto &operator*() const noexcept {

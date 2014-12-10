@@ -1,9 +1,8 @@
 #include <MCF/StdMCF.hpp>
-#include <MCF/Core/File.hpp>
+#include <MCF/Core/SharedString.hpp>
 using namespace MCF;
 
 extern "C" unsigned int MCFMain() noexcept {
-	File f(L"E:\\123.txt", File::TO_WRITE);
-	f.Write(0, "meow\n", 5);
+	auto p = CreateSharedString("hello world!", 12);
 	return 0;
 }

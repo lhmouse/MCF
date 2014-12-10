@@ -8,6 +8,7 @@
 #include "../Utilities/Noncopyable.hpp"
 #include "../Containers/Vector.hpp"
 #include <memory>
+#include <utility>
 
 namespace MCF {
 
@@ -21,6 +22,32 @@ public:
 	virtual void Unlock() noexcept = 0;
 };
 
+template<typename LockFuncT, typename CommitFuncT, typename UnlockFuncT>
+class TransactionItem: public TransactionItemBase {
+private:
+	const LockFuncT xm_fnLock;
+	const CommitFuncT xm_fnCommit;
+	const UnlockFuncT xm_fnUnlock;
+
+public:
+	TransactionItem(LockFuncT fnLock, CommitFuncT fnCommit, UnlockFuncT fnUnlock)
+		: xm_fnLock(std::move(fnLock)), xm_fnCommit(std::move(fnCommit))\
+		, xm_fnUnlock(std::move(fnUnlock))
+	{
+	}
+
+public:
+	bool Lock() override {
+		return xm_fnLock();
+	}
+	void Commit() noexcept override {
+		return xm_fnCommit();
+	}
+	void Unlock() noexcept override {
+		return xm_fnUnlock();
+	}
+};
+
 class Transaction : NONCOPYABLE {
 private:
 	Vector<std::unique_ptr<TransactionItemBase>> xm_vecItems;
@@ -31,6 +58,13 @@ public:
 	void Clear() noexcept;
 
 	bool Commit() const;
+
+	template<typename LockFuncT, typename CommitFuncT, typename UnlockFuncT>
+	void AddItem(LockFuncT &&fnLock, CommitFuncT &&fnCommit, UnlockFuncT &&fnUnlock){
+		AddItem(std::make_unique(std::forward<LockFuncT>(fnLock)),
+			std::make_unique(std::forward<CommitFuncT>(fnCommit)),
+			std::make_unique(std::forward<UnlockFuncT>(fnUnlock)));
+	}
 };
 
 }

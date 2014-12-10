@@ -12,12 +12,13 @@
 namespace MCF {
 
 class TransactionItemBase : NONCOPYABLE {
-	friend class Transaction;
+public:
+	virtual ~TransactionItemBase();
 
-private:
-	virtual bool xLock() = 0;
-	virtual void xCommit() noexcept = 0;
-	virtual void xUnlock() noexcept = 0;
+public:
+	virtual bool Lock() = 0;
+	virtual void Commit() noexcept = 0;
+	virtual void Unlock() noexcept = 0;
 };
 
 class Transaction : NONCOPYABLE {
@@ -26,7 +27,7 @@ private:
 
 public:
 	bool IsEmpty() const noexcept;
-	void AddItem(std::unique_ptr<TransactionItemBase> pItem);
+	void AddItem(std::unique_ptr<TransactionItemBase> &&pItem);
 	void Clear() noexcept;
 
 	bool Commit() const;

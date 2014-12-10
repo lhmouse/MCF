@@ -6,11 +6,15 @@
 #include "Transaction.hpp"
 using namespace MCF;
 
+// 嵌套类。
+TransactionItemBase::~TransactionItemBase(){
+}
+
 // 其他非静态成员函数。
 bool Transaction::IsEmpty() const noexcept {
 	return xm_vecItems.IsEmpty();
 }
-void Transaction::AddItem(std::unique_ptr<TransactionItemBase> pItem){
+void Transaction::AddItem(std::unique_ptr<TransactionItemBase> &&pItem){
 	xm_vecItems.Push(std::move(pItem));
 }
 void Transaction::Clear() noexcept {
@@ -21,7 +25,7 @@ bool Transaction::Commit() const {
 	auto ppCur = xm_vecItems.GetBegin();
 	try {
 		while(ppCur != xm_vecItems.GetEnd()){
-			if(!(*ppCur)->xLock()){
+			if(!(*ppCur)->Lock()){
 				break;
 			}
 			++ppCur;
@@ -29,25 +33,25 @@ bool Transaction::Commit() const {
 	} catch(...){
 		while(ppCur != xm_vecItems.GetBegin()){
 			--ppCur;
-			(*ppCur)->xUnlock();
+			(*ppCur)->Unlock();
 		}
 		throw;
 	}
 	if(ppCur != xm_vecItems.GetEnd()){
 		while(ppCur != xm_vecItems.GetBegin()){
 			--ppCur;
-			(*ppCur)->xUnlock();
+			(*ppCur)->Unlock();
 		}
 		return false;
 	}
 	ppCur = xm_vecItems.GetBegin();
 	while(ppCur != xm_vecItems.GetEnd()){
-		(*ppCur)->xCommit();
+		(*ppCur)->Commit();
 		++ppCur;
 	}
 	while(ppCur != xm_vecItems.GetBegin()){
 		--ppCur;
-		(*ppCur)->xUnlock();
+		(*ppCur)->Unlock();
 	}
 	return true;
 }

@@ -23,6 +23,7 @@ protected:
 		: xm_bInited(false), xm_u64BytesProcessed(0)
 	{
 	}
+	virtual ~StreamFilterBase();
 
 protected:
 	void xOutput(unsigned char by){

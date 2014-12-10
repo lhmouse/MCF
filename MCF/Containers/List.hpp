@@ -2,8 +2,8 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2013 - 2014, LH_Mouse. All wrongs reserved.
 
-#ifndef MCF_CONTAINERS_V_LIST_HPP_
-#define MCF_CONTAINERS_V_LIST_HPP_
+#ifndef MCF_CONTAINERS_LIST_HPP_
+#define MCF_CONTAINERS_LIST_HPP_
 
 #include <initializer_list>
 #include <type_traits>
@@ -13,10 +13,10 @@
 namespace MCF {
 
 template<class ElementT>
-class VList {
+class List {
 public:
 	class Node {
-		friend class VList;
+		friend class List;
 
 	private:
 		ElementT xm_vElement;
@@ -57,60 +57,60 @@ private:
 	Node *xm_pLast;
 
 public:
-	constexpr VList() noexcept
+	constexpr List() noexcept
 		: xm_pFirst(nullptr), xm_pLast(nullptr)
 	{
 	}
 	template<typename ...ParamsT>
-	explicit VList(std::size_t uCount, const ParamsT &...vParams)
-		: VList()
+	explicit List(std::size_t uCount, const ParamsT &...vParams)
+		: List()
 	{
 		FillAtEnd(uCount, vParams...);
 	}
 	template<class IteratorT>
-	VList(IteratorT itBegin, std::common_type_t<IteratorT> itEnd)
-		: VList()
+	List(IteratorT itBegin, std::common_type_t<IteratorT> itEnd)
+		: List()
 	{
 		CopyToEnd(itBegin, itEnd);
 	}
 	template<class IteratorT>
-	VList(IteratorT itBegin, std::size_t uCount)
-		: VList()
+	List(IteratorT itBegin, std::size_t uCount)
+		: List()
 	{
 		CopyToEnd(itBegin, uCount);
 	}
-	VList(std::initializer_list<ElementT> rhs)
-		: VList()
+	List(std::initializer_list<ElementT> rhs)
+		: List()
 	{
 		CopyToEnd(rhs.begin(), rhs.size());
 	}
-	VList(const VList &rhs)
-		: VList()
+	List(const List &rhs)
+		: List()
 	{
 		for(auto pCur = rhs.xm_pFirst; pCur; pCur = pCur->xm_pNext){
 			Push(pCur->GetElement());
 		}
 	}
-	VList(VList &&rhs) noexcept
-		: VList()
+	List(List &&rhs) noexcept
+		: List()
 	{
 		Swap(rhs);
 	}
-	VList &operator=(std::initializer_list<ElementT> rhs){
-		VList(rhs).Swap(*this);
+	List &operator=(std::initializer_list<ElementT> rhs){
+		List(rhs).Swap(*this);
 		return *this;
 	}
-	VList &operator=(const VList &rhs){
+	List &operator=(const List &rhs){
 		if(&rhs != this){
-			VList(rhs).Swap(*this);
+			List(rhs).Swap(*this);
 		}
 		return *this;
 	}
-	VList &operator=(VList &&rhs) noexcept {
+	List &operator=(List &&rhs) noexcept {
 		Swap(rhs);
 		return *this;
 	}
-	~VList(){
+	~List(){
 		Clear();
 	}
 
@@ -182,16 +182,16 @@ public:
 		return pEnd;
 	}
 
-	Node *Splice(Node *pPos, VList &lstSource) noexcept {
+	Node *Splice(Node *pPos, List &lstSource) noexcept {
 		const auto pRet = Splice(pPos, lstSource, lstSource.xm_pFirst, nullptr);
 		ASSERT(lstSource.IsEmpty());
 		return pRet;
 	}
-	Node *Splice(Node *pPos, VList &lstSource, Node *pSingle) noexcept {
+	Node *Splice(Node *pPos, List &lstSource, Node *pSingle) noexcept {
 		ASSERT(pSingle);
 		return Splice(pPos, lstSource, pSingle, pSingle->xm_pNext);
 	}
-	Node *Splice(Node *pPos, VList &lstSource, Node *pBegin, Node *pEnd) noexcept {
+	Node *Splice(Node *pPos, List &lstSource, Node *pBegin, Node *pEnd) noexcept {
 		if(pBegin != pEnd){
 			const auto pOldPrev = pBegin->xm_pPrev;
 			(pOldPrev ? pOldPrev->xm_pNext : lstSource.xm_pFirst) = pEnd;
@@ -206,13 +206,13 @@ public:
 		return pPos;
 	}
 
-	Node *Splice(Node *pPos, VList &&lstSource) noexcept {
+	Node *Splice(Node *pPos, List &&lstSource) noexcept {
 		return Splice(pPos, lstSource);
 	}
-	Node *Splice(Node *pPos, VList &&lstSource, Node *pSingle) noexcept {
+	Node *Splice(Node *pPos, List &&lstSource, Node *pSingle) noexcept {
 		return Splice(pPos, lstSource, pSingle);
 	}
-	Node *Splice(Node *pPos, VList &&lstSource, Node *pBegin, Node *pEnd) noexcept {
+	Node *Splice(Node *pPos, List &&lstSource, Node *pBegin, Node *pEnd) noexcept {
 		return Splice(pPos, lstSource, pBegin, pEnd);
 	}
 
@@ -284,7 +284,7 @@ public:
 		}
 	}
 
-	void Swap(VList &rhs) noexcept {
+	void Swap(List &rhs) noexcept {
 		std::swap(xm_pFirst, rhs.xm_pFirst);
 		std::swap(xm_pLast, rhs.xm_pLast);
 	}
@@ -312,7 +312,7 @@ public:
 };
 
 template<class ElementT>
-void swap(VList<ElementT> &lhs, VList<ElementT> &rhs) noexcept {
+void swap(List<ElementT> &lhs, List<ElementT> &rhs) noexcept {
 	lhs.Swap(rhs);
 }
 

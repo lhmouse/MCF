@@ -5,7 +5,7 @@
 #ifndef MCF_CORE_STREAM_BUFFER_HPP_
 #define MCF_CORE_STREAM_BUFFER_HPP_
 
-#include "../Containers/VList.hpp"
+#include "../Containers/List.hpp"
 #include <iterator>
 #include <utility>
 #include <memory>
@@ -23,7 +23,7 @@ public:
 	class TraverseContext;
 
 private:
-	VList<StreamBufferChunk> xm_lstBuffers;
+	List<StreamBufferChunk> xm_lstBuffers;
 	std::size_t xm_uSize;
 
 public:

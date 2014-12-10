@@ -24,12 +24,12 @@ struct StreamBufferChunk {
 
 namespace {
 
-using ChunkNode = typename VList<StreamBufferChunk>::Node;
+using ChunkNode = typename List<StreamBufferChunk>::Node;
 
 UserMutex g_mtxPoolMutex;
-VList<StreamBufferChunk> g_lstPool;
+List<StreamBufferChunk> g_lstPool;
 
-auto &PushPooled(VList<StreamBufferChunk> &lstDst){
+auto &PushPooled(List<StreamBufferChunk> &lstDst){
 	ChunkNode *pNode;
 	{
 		const auto vLock = g_mtxPoolMutex.GetLock();
@@ -47,13 +47,13 @@ jDone:
 #endif
 	return pNode->GetElement();
 }
-void ShiftPooled(VList<StreamBufferChunk> &lstSrc){
+void ShiftPooled(List<StreamBufferChunk> &lstSrc){
 	ASSERT(!lstSrc.IsEmpty());
 
 	const auto vLock = g_mtxPoolMutex.GetLock();
 	g_lstPool.Splice(nullptr, lstSrc, lstSrc.GetFirst());
 }
-void ClearPooled(VList<StreamBufferChunk> &lstSrc){
+void ClearPooled(List<StreamBufferChunk> &lstSrc){
 	if(lstSrc.IsEmpty()){
 		return;
 	}

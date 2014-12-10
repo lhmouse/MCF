@@ -4,7 +4,7 @@
 #include "MCFBuild.hpp"
 #include "Localization.hpp"
 #include "Model.hpp"
-#include "../MCF/Containers/VVector.hpp"
+#include "../MCF/Containers/Vector.hpp"
 #include <cstdlib>
 #include <map>
 using namespace MCFBuild;
@@ -97,7 +97,7 @@ MCF::WideString FormatString(const MCF::WideStringObserver &wsoRaw){
 		return MCF::WideString(wsoRaw);
 	}
 
-	MCF::VVector<std::size_t> vecDelims;
+	MCF::Vector<std::size_t> vecDelims;
 	for(std::size_t i = 0; i < wsoRaw.GetSize(); ++i){
 		if(wsoRaw[i] == 0){
 			vecDelims.Push(i);

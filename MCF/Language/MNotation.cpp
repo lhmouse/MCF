@@ -4,7 +4,7 @@
 
 #include "../StdMCF.hpp"
 #include "MNotation.hpp"
-#include "../Containers/VVector.hpp"
+#include "../Containers/Vector.hpp"
 using namespace MCF;
 
 namespace {
@@ -192,7 +192,7 @@ std::pair<MNotation::ErrorType, const wchar_t *> MNotation::Parse(const WideStri
 		return std::make_pair(ERR_NONE, pwcRead);
 	}
 
-	VVector<MNotationPackage *> vecPackageStack(1, &vTemp);
+	Vector<MNotationPackage *> vecPackageStack(1, &vTemp);
 
 	auto pwcNameBegin = pwcRead;
 	auto pwcNameEnd = pwcRead;
@@ -550,7 +550,7 @@ std::pair<MNotation::ErrorType, const wchar_t *> MNotation::Parse(const WideStri
 WideString MNotation::Export(const WideStringObserver &wsoIndent) const {
 	WideString wsRet;
 
-	VVector<std::pair<const MNotationPackage *, const PackageNode *>> vecPackageStack;
+	Vector<std::pair<const MNotationPackage *, const PackageNode *>> vecPackageStack;
 	vecPackageStack.Push(this, xm_mapPackages.GetFirst<1>());
 
 	WideString wsIndent;

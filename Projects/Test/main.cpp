@@ -1,14 +1,17 @@
 #include <MCF/StdMCF.hpp>
-#include <MCF/Core/StreamBuffer.hpp>
-#include <MCF/StreamFilters/ZlibFilters.hpp>
+#include <MCF/Containers/Vector.hpp>
+#include <vector>
 using namespace MCF;
 
 extern "C" unsigned int MCFMain() noexcept {
-	StreamBuffer buf;
-	for(int i = 0; i < 1000; ++i){
-		buf.Put("meow");
+	Vector<int> v;
+
+	std::vector<int> l;
+	for(int i = 0; i < 100; ++i){
+		l.push_back(i);
 	}
-	ZlibEncoder().FilterInPlace(buf);
-	std::printf("%zu\n", buf.GetSize());
+
+	v.CopyToEnd(l.begin(), l.end());
+
 	return 0;
 }

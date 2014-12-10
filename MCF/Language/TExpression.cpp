@@ -4,7 +4,7 @@
 
 #include "../StdMCF.hpp"
 #include "TExpression.hpp"
-#include "../Containers/VVector.hpp"
+#include "../Containers/Vector.hpp"
 using namespace MCF;
 
 namespace {
@@ -202,7 +202,7 @@ std::pair<TExpression::ErrorType, const wchar_t *> TExpression::Parse(const Wide
 		return std::make_pair(ERR_NONE, pwcRead);
 	}
 
-	VVector<TExpressionNode *> vecNodeStack(1, &vTemp);
+	Vector<TExpressionNode *> vecNodeStack(1, &vTemp);
 
 	auto pwcNameBegin = pwcRead;
 
@@ -458,7 +458,7 @@ std::pair<TExpression::ErrorType, const wchar_t *> TExpression::Parse(const Wide
 WideString TExpression::Export(const WideStringObserver &wsoIndent) const {
 	WideString wsRet;
 
-	VVector<std::pair<const TExpressionNode *, const ChildNode *>> vecNodeStack;
+	Vector<std::pair<const TExpressionNode *, const ChildNode *>> vecNodeStack;
 	vecNodeStack.Push(this, xm_lstChildren.GetFirst());
 	WideString wsIndent;
 	for(;;){

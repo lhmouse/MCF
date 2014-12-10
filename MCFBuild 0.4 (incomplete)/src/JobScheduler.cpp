@@ -4,7 +4,7 @@
 #include "MCFBuild.hpp"
 #include "JobScheduler.hpp"
 #include "../MCF/Core/Exception.hpp"
-#include "../MCF/Containers/VVector.hpp"
+#include "../MCF/Containers/Vector.hpp"
 #include "../MCF/Thread/Thread.hpp"
 #include <exception>
 using namespace MCFBuild;
@@ -21,7 +21,7 @@ void JobScheduler::AddJob(std::function<void ()> fnJob){
 	xm_queJobs.emplace(std::move(fnJob));
 }
 void JobScheduler::CommitAll(std::size_t uThreadCount){
-	MCF::VVector<std::shared_ptr<MCF::Thread>, 16u> vecThreads(uThreadCount);
+	MCF::Vector<std::shared_ptr<MCF::Thread>, 16u> vecThreads(uThreadCount);
 	volatile bool bExitNow = false;
 	std::exception_ptr pException;
 

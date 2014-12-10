@@ -6,7 +6,7 @@
 #define MCF_CORE_TRANSACTION_HPP_
 
 #include "../Utilities/Noncopyable.hpp"
-#include "../Containers/VVector.hpp"
+#include "../Containers/Vector.hpp"
 #include <memory>
 
 namespace MCF {
@@ -22,7 +22,7 @@ private:
 
 class Transaction : NONCOPYABLE {
 private:
-	VVector<std::unique_ptr<TransactionItemBase>, 32> xm_vecItems;
+	Vector<std::unique_ptr<TransactionItemBase>> xm_vecItems;
 
 public:
 	bool IsEmpty() const noexcept;

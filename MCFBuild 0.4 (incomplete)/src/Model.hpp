@@ -5,7 +5,7 @@
 #define MCFBUILD_MODEL_HPP_
 
 #include "../MCF/Utilities/Noncopyable.hpp"
-#include "../MCF/Containers/VVector.hpp"
+#include "../MCF/Containers/Vector.hpp"
 #include "../MCF/Containers/MultiIndexMap.hpp"
 #include "../MCF/Core/String.hpp"
 #include "../MCF/Core/File.hpp"
@@ -26,7 +26,7 @@ public:
 	static Model &GetInstance() noexcept;
 
 private:
-	const MCF::VVector<MCF::WideString> xm_vecArgV;
+	const MCF::Vector<MCF::WideString> xm_vecArgV;
 	bool xm_bRawOutput;
 
 	bool xm_bVerbose;

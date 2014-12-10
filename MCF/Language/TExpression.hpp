@@ -6,7 +6,7 @@
 #define MCF_LANGUAGE_T_EXPRESSION_HPP_
 
 #include "../Core/String.hpp"
-#include "../Containers/VList.hpp"
+#include "../Containers/List.hpp"
 #include <utility>
 
 namespace MCF {
@@ -16,7 +16,7 @@ class TExpressionNode {
 
 public:
 	using Child = std::pair<WideString, TExpressionNode>;
-	using ChildList = VList<Child>;
+	using ChildList = List<Child>;
 	using ChildNode = typename ChildList::Node;
 
 private:

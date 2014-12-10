@@ -812,10 +812,7 @@ using AnsiString		= String<StringTypes::ANSI>;
 class StringEncodingError : public Exception {
 public:
 	StringEncodingError(const char *pszFile, unsigned long ulLine,
-		const char *pszMessage, unsigned long ulErrorCode) noexcept
-		: Exception(pszFile, ulLine, pszMessage, ulErrorCode)
-	{
-	}
+		const char *pszMessage, unsigned long ulErrorCode) noexcept;
 	~StringEncodingError() override;
 };
 

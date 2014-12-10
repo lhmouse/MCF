@@ -47,7 +47,7 @@ public:
 
 class ZLibError : public Exception {
 private:
-	const long xm_lZLibError;
+	long xm_lZLibError;
 
 public:
 	ZLibError(const char *pszFile, unsigned long ulLine,

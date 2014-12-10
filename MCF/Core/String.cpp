@@ -358,7 +358,12 @@ void AnsiString::Deunify(AnsiString &ansDst, std::size_t uPos, const UnifiedStri
 	}
 }
 
-// 异常类的 RTTI。
+// 转码异常。
+StringEncodingError::StringEncodingError(const char *pszFile, unsigned long ulLine,
+	const char *pszMessage, unsigned long ulErrorCode) noexcept
+	: Exception(pszFile, ulLine, pszMessage, ulErrorCode)
+{
+}
 StringEncodingError::~StringEncodingError(){
 }
 

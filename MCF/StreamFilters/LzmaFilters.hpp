@@ -47,7 +47,7 @@ public:
 
 class LzmaError : public Exception {
 private:
-	const long xm_lLzmaError;
+	long xm_lLzmaError;
 
 public:
 	LzmaError(const char *pszFile, unsigned long ulLine,

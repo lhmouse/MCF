@@ -19,21 +19,21 @@ namespace Impl {
 		using Tuple = std::tuple<ParamsT...>;
 
 		template<typename VoidT>
-		static void DoForwards(FunctionT &&, const Tuple &){
+		static void DoForwards(FunctionT &, const Tuple &){
 		}
 		template<typename VoidT, typename FirstT, typename ...RemainingT>
-		static void DoForwards(FunctionT &&vFunction, const Tuple &vTuple){
-			DoForwards<VoidT, RemainingT...>(std::forward<FunctionT>(vFunction), vTuple);
+		static void DoForwards(FunctionT &vFunction, const Tuple &vTuple){
+			DoForwards<VoidT, RemainingT...>(vFunction, vTuple);
 			std::forward<FunctionT>(vFunction)(std::get<sizeof...(RemainingT)>(vTuple));
 		}
 
 		template<typename VoidT>
-		static void DoReversely(FunctionT &&, const Tuple &){
+		static void DoReversely(FunctionT &, const Tuple &){
 		}
 		template<typename VoidT, typename FirstT, typename ...RemainingT>
-		static void DoReversely(FunctionT &&vFunction, const Tuple &vTuple){
+		static void DoReversely(FunctionT &vFunction, const Tuple &vTuple){
 			std::forward<FunctionT>(vFunction)(std::get<sizeof...(RemainingT)>(vTuple));
-			DoReversely<VoidT, RemainingT...>(std::forward<FunctionT>(vFunction), vTuple);
+			DoReversely<VoidT, RemainingT...>(vFunction, vTuple);
 		}
 	};
 }
@@ -41,16 +41,14 @@ namespace Impl {
 // AbsorbTuple(foo, make_tuple(1, 2, 3)) -> foo(1, 2, 3);
 template<typename FunctionT, typename ...ParamsT>
 FunctionT &&AbsorbTuple(FunctionT &&vFunction, const std::tuple<ParamsT...> &vTuple){
-	Impl::AbsorbTupleHelper<FunctionT, ParamsT...>::template DoForwards<void, ParamsT...>(
-		std::forward<FunctionT>(vFunction), vTuple);
+	Impl::AbsorbTupleHelper<FunctionT, ParamsT...>::template DoForwards<void, ParamsT...>(vFunction, vTuple);
 	return std::forward<FunctionT>(vFunction);
 }
 
 // ReverseAbsorbTuple(foo, make_tuple(1, 2, 3)) -> foo(3, 2, 1);
 template<typename FunctionT, typename ...ParamsT>
 FunctionT &&ReverseAbsorbTuple(FunctionT &&vFunction, const std::tuple<ParamsT...> &vTuple){
-	Impl::AbsorbTupleHelper<FunctionT, ParamsT...>::template DoReversely<void, ParamsT...>(
-		std::forward<FunctionT>(vFunction), vTuple);
+	Impl::AbsorbTupleHelper<FunctionT, ParamsT...>::template DoReversely<void, ParamsT...>(vFunction, vTuple);
 	return std::forward<FunctionT>(vFunction);
 }
 
@@ -59,14 +57,22 @@ namespace Impl {
 	struct SqueezeTupleHelper {
 		using Tuple = std::tuple<ParamsT...>;
 
-		template<std::size_t ...IndicesT>
-		static decltype(auto) DoForwards(FunctionT &&vFunction, const Tuple &vTuple, std::index_sequence<IndicesT...>){
-			return std::forward<FunctionT>(vFunction)(std::get<IndicesT>(vTuple)...);
+		template<typename VoidT, typename ...UnpackedT>
+		static decltype(auto) DoForwards(FunctionT &vFunction, const Tuple &, UnpackedT &...vUnpacked){
+			return std::forward<FunctionT>(vFunction)(std::forward<UnpackedT>(vUnpacked)...);
+		}
+		template<typename VoidT, typename FirstT, typename ...RemainingT, typename ...UnpackedT>
+		static decltype(auto) DoForwards(FunctionT &vFunction, const Tuple &vTuple, UnpackedT &...vUnpacked){
+			return DoForwards<VoidT, RemainingT...>(vFunction, vTuple, vUnpacked..., std::get<sizeof...(UnpackedT)>(vTuple));
 		}
 
-		template<std::size_t ...IndicesT>
-		static decltype(auto) DoReversely(FunctionT &&vFunction, const Tuple &vTuple, std::index_sequence<IndicesT...>){
-			return std::forward<FunctionT>(vFunction)(std::get<sizeof...(ParamsT) - 1 - IndicesT>(vTuple)...);
+		template<typename VoidT, typename ...UnpackedT>
+		static decltype(auto) DoReversely(FunctionT &vFunction, const Tuple &, UnpackedT &...vUnpacked){
+			return std::forward<FunctionT>(vFunction)(std::forward<UnpackedT>(vUnpacked)...);
+		}
+		template<typename VoidT, typename FirstT, typename ...RemainingT, typename ...UnpackedT>
+		static decltype(auto) DoReversely(FunctionT &vFunction, const Tuple &vTuple, UnpackedT &...vUnpacked){
+			return DoReversely<VoidT, RemainingT...>(vFunction, vTuple, std::get<sizeof...(UnpackedT)>(vTuple), vUnpacked...);
 		}
 	};
 }
@@ -74,15 +80,13 @@ namespace Impl {
 // SqueezeTuple(foo, make_tuple(1, 2, 3)); -> foo(1, 2, 3);
 template<typename FunctionT, typename ...ParamsT>
 decltype(auto) SqueezeTuple(FunctionT &&vFunction, const std::tuple<ParamsT...> &vTuple){
-	return Impl::SqueezeTupleHelper<FunctionT, ParamsT...>::template DoForwards(
-		std::forward<FunctionT>(vFunction), vTuple, std::index_sequence_for<ParamsT...>());
+	return Impl::SqueezeTupleHelper<FunctionT, ParamsT...>::template DoForwards<void, ParamsT...>(vFunction, vTuple);
 }
 
 // ReverseSqueezeTuple(foo, make_tuple(1, 2, 3)); -> foo(3, 2, 1);
 template<typename FunctionT, typename ...ParamsT>
 decltype(auto) ReverseSqueezeTuple(FunctionT &&vFunction, const std::tuple<ParamsT...> &vTuple){
-	return Impl::SqueezeTupleHelper<FunctionT, ParamsT...>::template DoReversely(
-		std::forward<FunctionT>(vFunction), vTuple, std::index_sequence_for<ParamsT...>());
+	return Impl::SqueezeTupleHelper<FunctionT, ParamsT...>::template DoReversely<void, ParamsT...>(vFunction, vTuple);
 }
 
 // 简单包装器。

@@ -43,11 +43,10 @@ namespace Impl {
 	};
 }
 
-template<class ObjectT, class ...InitParamsT>
+template<class ObjectT>
 class ThreadLocalPtr : NONCOPYABLE {
 private:
-	using xExceptionWrapper = Impl::ExceptionWrapper<
-		std::is_nothrow_constructible<ObjectT, InitParamsT &&...>::value>;
+	using xExceptionWrapper = Impl::ExceptionWrapper<std::is_nothrow_copy_constructible<ObjectT>::value>;
 	using xExceptionPtr = typename xExceptionWrapper::ExceptionPtr;
 
 	struct xTlsKeyDeleter {
@@ -67,9 +66,7 @@ public:
 	explicit ThreadLocalPtr(ObjectT vTemplate = ObjectT())
 		: xm_vTemplate(std::move(vTemplate))
 	{
-		if(!xm_pTlsKey.Reset(::MCF_CRT_TlsAllocKey(
-			[](std::intptr_t nValue) noexcept { delete (ObjectT *)nValue; })))
-		{
+		if(!xm_pTlsKey.Reset(::MCF_CRT_TlsAllocKey([](std::intptr_t nValue) noexcept { delete (ObjectT *)nValue; }))){
 			DEBUG_THROW(SystemError, "MCF_CRT_TlsAllocKey");
 		}
 	}

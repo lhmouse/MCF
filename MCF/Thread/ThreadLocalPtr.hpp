@@ -10,8 +10,6 @@
 #include "../Utilities/Defer.hpp"
 #include "../Core/UniqueHandle.hpp"
 #include "../Core/Exception.hpp"
-#include <tuple>
-#include <utility>
 #include <exception>
 #include <cstddef>
 #include <cstdint>
@@ -61,18 +59,16 @@ private:
 		}
 	};
 
-	using xObjectContainer = std::pair<ObjectT, int>;
-
 private:
-	const std::tuple<InitParamsT...> xm_vInitParams;
+	const ObjectT xm_vTemplate;
 	UniqueHandle<xTlsKeyDeleter> xm_pTlsKey;
 
 public:
-	explicit ThreadLocalPtr(InitParamsT &&...vInitParams)
-		: xm_vInitParams(std::forward<InitParamsT>(vInitParams)...)
+	explicit ThreadLocalPtr(ObjectT vTemplate = ObjectT())
+		: xm_vTemplate(std::move(vTemplate))
 	{
 		if(!xm_pTlsKey.Reset(::MCF_CRT_TlsAllocKey(
-			[](std::intptr_t nValue) noexcept { delete reinterpret_cast<xObjectContainer *>(nValue); })))
+			[](std::intptr_t nValue) noexcept { delete (ObjectT *)nValue; })))
 		{
 			DEBUG_THROW(SystemError, "MCF_CRT_TlsAllocKey");
 		}
@@ -83,26 +79,26 @@ private:
 		ObjectT *pObject = nullptr;
 		std::intptr_t nValue;
 		if(::MCF_CRT_TlsGet(xm_pTlsKey.Get(), &nValue)){
-			pObject = reinterpret_cast<ObjectT *>(nValue);
+			pObject = (ObjectT *)nValue;
 		}
 		return pObject;
 	}
 	ObjectT *xDoAllocPtr() const {
 		auto pObject = xDoGetPtr();
 		if(!pObject){
-			auto pNewObject = new xObjectContainer(std::piecewise_construct, xm_vInitParams, std::make_tuple(0));
+			auto pNewObject = new ObjectT(xm_vTemplate);
 			DEFER([&]{ delete pNewObject; });
-			if(!::MCF_CRT_TlsReset(xm_pTlsKey.Get(), reinterpret_cast<std::intptr_t>(pNewObject))){
+			if(!::MCF_CRT_TlsReset(xm_pTlsKey.Get(), (std::intptr_t)pNewObject)){
 				DEBUG_THROW(SystemError, "MCF_CRT_TlsReset");
 			}
 
-			pObject = &pNewObject->first;
+			pObject = pNewObject;
 			pNewObject = nullptr;
 		}
 		return pObject;
 	}
 	void xDoFreePtr() const noexcept {
-		::MCF_CRT_TlsReset(xm_pTlsKey.Get(), reinterpret_cast<std::intptr_t>(static_cast<xObjectContainer *>(nullptr)));
+		::MCF_CRT_TlsReset(xm_pTlsKey.Get(), (std::intptr_t)(ObjectT *)nullptr);
 	}
 
 public:

@@ -5,7 +5,6 @@
 #ifndef MCF_UTILITIES_CONSTRUCT_DESTRUCT_HPP_
 #define MCF_UTILITIES_CONSTRUCT_DESTRUCT_HPP_
 
-#include "../../MCFCRT/ext/assert.h"
 #include <type_traits>
 #include <utility>
 
@@ -18,7 +17,7 @@ namespace Impl {
 
 }
 
-// 我只能说 GCC 是个白痴！为什么要检查 placement new 的返回值是否为 nullptr？
+// FIXME: 我只能说 GCC 是个白痴！为什么要检查 placement new 的返回值是否为 nullptr？
 inline void *operator new(std::size_t, void *p, const ::MCF::Impl::DirectConstructTag &){
 	return p;
 }
@@ -31,37 +30,62 @@ namespace Impl {
 	template<typename ObjectT>
 	struct DirectConstructor {
 		template<typename ...ParamsT>
-		static ObjectT *Construct(ObjectT *pObject, ParamsT &&...vParams)
-			noexcept(std::is_nothrow_constructible<ObjectT, ParamsT &&...>::value)
-		{
-			return ::new(pObject, DirectConstructTag()) ObjectT(std::forward<ParamsT>(vParams)...);
+		static void Construct(ObjectT *pObject, ParamsT &&...vParams){
+			::new(pObject, DirectConstructTag()) ObjectT(std::forward<ParamsT>(vParams)...);
 		}
-		static void Destruct(ObjectT *pObject)
-			noexcept(std::is_nothrow_destructible<ObjectT>::value)
-		{
+		static void Destruct(ObjectT *pObject){
 			pObject->~ObjectT();
 		}
 	};
 }
 
 template<typename ObjectT, typename ...ParamsT>
-inline ObjectT *Construct(ObjectT *pObject, ParamsT &&...vParams)
+inline void Construct(ObjectT *pObject, ParamsT &&...vParams)
 	noexcept(std::is_nothrow_constructible<ObjectT, ParamsT &&...>::value)
 {
-	return Impl::DirectConstructor<ObjectT>::template Construct<ParamsT &&...>(
-		pObject, std::forward<ParamsT>(vParams)...);
+	Impl::DirectConstructor<ObjectT>::Construct(pObject, std::forward<ParamsT>(vParams)...);
 }
 template<typename ObjectT>
 inline void Destruct(ObjectT *pObject)
 	noexcept(std::is_nothrow_destructible<ObjectT>::value)
 {
-	ASSERT(pObject);
-
 	Impl::DirectConstructor<ObjectT>::Destruct(pObject);
 }
 
+template<typename ObjectT, typename ...ParamsT>
+inline void ConstructArray(ObjectT *pBegin, std::size_t uCount, const ParamsT &...vParams)
+	noexcept(std::is_nothrow_constructible<ObjectT, const ParamsT &...>::value)
+{
+	static_assert(std::is_nothrow_destructible<ObjectT>::value, "ObjectT shall be nothrow destructible.");
+
+	const auto pEnd = pBegin + uCount;
+	auto pCur = pBegin;
+	try {
+		while(pCur != pEnd){
+			Construct(pCur, vParams...);
+			++pCur;
+		}
+	} catch(...){
+		while(pCur != pBegin){
+			--pCur;
+			Destruct(pCur);
+		}
+		throw;
+	}
+}
+template<typename ObjectT>
+inline void DestructArray(ObjectT *pBegin, std::size_t uCount) noexcept {
+	static_assert(std::is_nothrow_destructible<ObjectT>::value, "ObjectT shall be nothrow destructible.");
+
+	auto pCur = pBegin + uCount;
+	while(pCur != pBegin){
+		--pCur;
+		Destruct(pCur);
+	}
 }
 
-#define FRIEND_CONSTRUCT_DESTRUCT(type)		friend class ::MCF::Impl::DirectConstructor<type>
+}
+
+#define FRIEND_CONSTRUCT_DESTRUCT(type_)		friend class ::MCF::Impl::DirectConstructor<type_>
 
 #endif

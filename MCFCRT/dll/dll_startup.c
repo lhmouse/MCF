@@ -27,6 +27,7 @@ BOOL __MCF_DllStartup(HINSTANCE hDll, DWORD dwReason, LPVOID pReserved){
 				break;
 			}
 			if(!MCFDll_OnProcessAttach(!pReserved)){
+				__MCF_CRT_EndModule();
 				break;
 			}
 			bRet = TRUE;

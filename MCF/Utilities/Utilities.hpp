@@ -19,7 +19,6 @@
 #include "MinMax.hpp"
 #include "Noncopyable.hpp"
 #include "StaticAssertNoexcept.hpp"
-#include "TupleFunctors.hpp"
 #include "Defer.hpp"
 
 #endif

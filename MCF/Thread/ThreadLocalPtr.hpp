@@ -7,10 +7,11 @@
 
 #include "../../MCFCRT/env/thread.h"
 #include "../Utilities/Noncopyable.hpp"
-#include "../Utilities/TupleHelpers.hpp"
+#include "../Utilities/Defer.hpp"
 #include "../Core/UniqueHandle.hpp"
 #include "../Core/Exception.hpp"
 #include <tuple>
+#include <utility>
 #include <exception>
 #include <cstddef>
 #include <cstdint>
@@ -60,16 +61,18 @@ private:
 		}
 	};
 
+	using xObjectContainer = std::pair<ObjectT, int>;
+
 private:
 	const std::tuple<InitParamsT...> xm_vInitParams;
 	UniqueHandle<xTlsKeyDeleter> xm_pTlsKey;
 
 public:
-	explicit constexpr ThreadLocalPtr(InitParamsT &&...vInitParams)
+	explicit ThreadLocalPtr(InitParamsT &&...vInitParams)
 		: xm_vInitParams(std::forward<InitParamsT>(vInitParams)...)
 	{
 		if(!xm_pTlsKey.Reset(::MCF_CRT_TlsAllocKey(
-			[](std::intptr_t nValue) noexcept { delete reinterpret_cast<ObjectT *>(nValue); })))
+			[](std::intptr_t nValue) noexcept { delete reinterpret_cast<xObjectContainer *>(nValue); })))
 		{
 			DEBUG_THROW(SystemError, "MCF_CRT_TlsAllocKey");
 		}
@@ -87,16 +90,19 @@ private:
 	ObjectT *xDoAllocPtr() const {
 		auto pObject = xDoGetPtr();
 		if(!pObject){
-			auto pNewObject = MakeUniqueFromTuple<ObjectT>(xm_vInitParams);
-			if(!::MCF_CRT_TlsReset(xm_pTlsKey.Get(), reinterpret_cast<std::intptr_t>(pNewObject.get()))){
+			auto pNewObject = new xObjectContainer(std::piecewise_construct, xm_vInitParams, std::make_tuple(0));
+			DEFER([&]{ delete pNewObject; });
+			if(!::MCF_CRT_TlsReset(xm_pTlsKey.Get(), reinterpret_cast<std::intptr_t>(pNewObject))){
 				DEBUG_THROW(SystemError, "MCF_CRT_TlsReset");
 			}
-			pObject = pNewObject.release();
+
+			pObject = &pNewObject->first;
+			pNewObject = nullptr;
 		}
 		return pObject;
 	}
 	void xDoFreePtr() const noexcept {
-		::MCF_CRT_TlsReset(xm_pTlsKey.Get(), reinterpret_cast<std::intptr_t>(static_cast<ObjectT *>(nullptr)));
+		::MCF_CRT_TlsReset(xm_pTlsKey.Get(), reinterpret_cast<std::intptr_t>(static_cast<xObjectContainer *>(nullptr)));
 	}
 
 public:

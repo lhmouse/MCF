@@ -1,8 +1,13 @@
 #include <MCF/StdMCF.hpp>
-#include <MCF/Utilities/Utilities.hpp>
+#include <MCF/Thread/ThreadLocalPtr.hpp>
+#include <string>
 using namespace MCF;
 
+ThreadLocalPtr<std::string> tls;
+
 extern "C" unsigned int MCFMain() noexcept {
-	ReverseSqueezeTuple([](auto ...i){ std::printf("%d %d %d\n", i...); }, std::make_tuple(1, 2, 3));
+	for(int i = 0; i < 1000; ++i){
+		tls->append("a ");
+	}
 	return 0;
 }

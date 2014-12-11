@@ -19,6 +19,6 @@ namespace Impl {
 
 }
 
-#define COUNT_OF(a)		(sizeof(::MCF::Impl::CountOfHelper(a)))
+#define COUNT_OF(x_)		(sizeof(::MCF::Impl::CountOfHelper(x_)))
 
 #endif

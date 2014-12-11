@@ -5,12 +5,12 @@
 #include "../StdMCF.hpp"
 #include "LastError.hpp"
 #include "Exception.hpp"
+#include "../Utilities/Defer.hpp"
 using namespace MCF;
 
 namespace MCF {
 
 WideString GetWin32ErrorDescription(unsigned long ulErrorCode){
-	WideString wsRet;
 	void *pBuffer;
 	const auto uLen = ::FormatMessageW(
 		FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_ALLOCATE_BUFFER
@@ -20,14 +20,8 @@ WideString GetWin32ErrorDescription(unsigned long ulErrorCode){
 	if(uLen == 0){
 		DEBUG_THROW(SystemError, "FormatMessageW");
 	}
-	try {
-		wsRet.Assign((const wchar_t *)pBuffer, uLen);
-		::LocalFree(pBuffer);
-	} catch(...){
-		::LocalFree(pBuffer);
-		throw;
-	}
-	return std::move(wsRet);
+	DEFER([&]{ ::LocalFree(pBuffer); });
+	return WideString((const wchar_t *)pBuffer, uLen);
 }
 
 }

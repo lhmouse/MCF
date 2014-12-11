@@ -21,7 +21,7 @@ namespace Impl {
 			: xm_vCallback(std::move(vCallback))
 		{
 		}
-		~DeferredCallback(){
+		~DeferredCallback() noexcept(false) {
 			xm_vCallback();
 		}
 	};

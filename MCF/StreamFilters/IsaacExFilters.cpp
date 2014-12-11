@@ -41,7 +41,7 @@ void IsaacExEncoder::Abort() noexcept {
 void IsaacExEncoder::Update(const void *pData, std::size_t uSize){
 	if(!xm_pIsaacRng){
 		xm_pIsaacRng = std::make_unique<IsaacRng>(xm_au32KeyHash);
-		xm_abyLastEncoded = 0;
+		xm_byLastEncoded = 0;
 	}
 
 	auto pbyRead = (const unsigned char *)pData;
@@ -53,9 +53,9 @@ void IsaacExEncoder::Update(const void *pData, std::size_t uSize){
 		__asm__ __volatile__(
 			"rol %b0, cl \n"
 			: "+q"(by)
-			: "c"(xm_abyLastEncoded & 7)
+			: "c"(xm_byLastEncoded & 7)
 		);
-		xm_abyLastEncoded = by ^ (uSeed >> 8);
+		xm_byLastEncoded = by ^ (uSeed >> 8);
 
 		xOutput(by);
 		StreamFilterBase::Update(pbyRead, 1);
@@ -85,7 +85,7 @@ void IsaacExDecoder::Abort() noexcept {
 void IsaacExDecoder::Update(const void *pData, std::size_t uSize){
 	if(!xm_pIsaacRng){
 		xm_pIsaacRng = std::make_unique<IsaacRng>(xm_au32KeyHash);
-		xm_abyLastEncoded = 0;
+		xm_byLastEncoded = 0;
 	}
 
 	auto pbyRead = (const unsigned char *)pData;
@@ -96,9 +96,9 @@ void IsaacExDecoder::Update(const void *pData, std::size_t uSize){
 		__asm__ __volatile__(
 			"ror %b0, cl \n"
 			: "+q"(by)
-			: "c"(xm_abyLastEncoded & 7)
+			: "c"(xm_byLastEncoded & 7)
 		);
-		xm_abyLastEncoded = *pbyRead ^ (uSeed >> 8);
+		xm_byLastEncoded = *pbyRead ^ (uSeed >> 8);
 		by ^= uSeed;
 
 		xOutput(by);

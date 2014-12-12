@@ -11,7 +11,7 @@
 namespace MCF {
 
 template<typename ValueT>
-ValueT LoadLe(const ValueT &vMem) noexcept {
+inline ValueT LoadLe(const ValueT &vMem) noexcept {
 	static_assert(std::is_integral<ValueT>::value, "ValueT must be an integral type.");
 
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
@@ -28,7 +28,7 @@ ValueT LoadLe(const ValueT &vMem) noexcept {
 #endif
 }
 template<typename ValueT>
-ValueT LoadBe(const ValueT &vMem) noexcept {
+inline ValueT LoadBe(const ValueT &vMem) noexcept {
 	static_assert(std::is_integral<ValueT>::value, "ValueT must be an integral type.");
 
 #if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
@@ -46,7 +46,7 @@ ValueT LoadBe(const ValueT &vMem) noexcept {
 }
 
 template<typename ValueT>
-void StoreLe(ValueT &vMem, std::common_type_t<ValueT> vVal) noexcept {
+inline void StoreLe(ValueT &vMem, std::common_type_t<ValueT> vVal) noexcept {
 	static_assert(std::is_integral<ValueT>::value, "ValueT must be an integral type.");
 
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
@@ -61,7 +61,7 @@ void StoreLe(ValueT &vMem, std::common_type_t<ValueT> vVal) noexcept {
 #endif
 }
 template<typename ValueT>
-void StoreBe(ValueT &vMem, std::common_type_t<ValueT> vVal) noexcept {
+inline void StoreBe(ValueT &vMem, std::common_type_t<ValueT> vVal) noexcept {
 	static_assert(std::is_integral<ValueT>::value, "ValueT must be an integral type.");
 
 #if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__

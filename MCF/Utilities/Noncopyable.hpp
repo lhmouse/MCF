@@ -8,14 +8,13 @@
 namespace MCF {
 
 namespace Impl {
-	template<unsigned long MAGIC_T>
+	template<unsigned long long MAGIC_T>
 	struct NoncopyableBase {
 		constexpr NoncopyableBase() noexcept = default;
-		~NoncopyableBase() = default;
 
 		NoncopyableBase(const NoncopyableBase &) = delete;
-		NoncopyableBase &operator=(const NoncopyableBase &) = delete;
 		NoncopyableBase(NoncopyableBase &&) noexcept = delete;
+		NoncopyableBase &operator=(const NoncopyableBase &) = delete;
 		NoncopyableBase &operator=(NoncopyableBase &&) noexcept = delete;
 	};
 }

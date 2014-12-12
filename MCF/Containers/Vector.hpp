@@ -229,7 +229,7 @@ public:
 	}
 	template<class IteratorT>
 	void UncheckedCopyToEnd(IteratorT itBegin, std::common_type_t<IteratorT> itEnd)
-		noexcept(std::is_nothrow_constructible<ElementT, decltype(*std::declval<IteratorT>())>::value)
+		noexcept(std::is_nothrow_constructible<ElementT, decltype((*std::declval<IteratorT>()))>::value)
 	{
 		while(itBegin != itEnd){
 			UncheckedPush(*itBegin);
@@ -238,7 +238,7 @@ public:
 	}
 	template<class IteratorT>
 	void UncheckedCopyToEnd(IteratorT itBegin, std::size_t uCount)
-		noexcept(std::is_nothrow_constructible<ElementT, decltype(*std::declval<IteratorT>())>::value)
+		noexcept(std::is_nothrow_constructible<ElementT, decltype((*std::declval<IteratorT>()))>::value)
 	{
 		for(std::size_t i = 0; i < uCount; ++i){
 			UncheckedPush(*itBegin);

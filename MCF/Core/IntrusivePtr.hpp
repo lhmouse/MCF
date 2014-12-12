@@ -14,17 +14,17 @@
 
 namespace MCF {
 
-template<typename T, class DeleterT = DefaultDeleter<std::remove_cv_t<T>>>
+template<typename ClassT, class DeleterT = DefaultDeleter<std::remove_cv_t<ClassT>>>
 class IntrusivePtr;
 
 namespace Impl {
-	template<typename T, class DeleterT>
+	template<typename ClassT, class DeleterT>
 	class IntrusiveSentry {
 	private:
-		T *xm_pToDelete;
+		ClassT *xm_pToDelete;
 
 	public:
-		explicit IntrusiveSentry(T *pToDelete) noexcept
+		explicit IntrusiveSentry(ClassT *pToDelete) noexcept
 			: xm_pToDelete(pToDelete)
 		{
 		}
@@ -58,7 +58,7 @@ namespace Impl {
 		}
 	};
 
-	template<typename T, class DeleterT>
+	template<typename ClassT, class DeleterT>
 	class IntrusiveBase {
 	private:
 		mutable volatile std::size_t xm_uRefCount;
@@ -90,57 +90,57 @@ namespace Impl {
 
 			__atomic_add_fetch(&xm_uRefCount, 1, __ATOMIC_RELEASE);
 		}
-		IntrusiveSentry<T, DeleterT> DropRef() const volatile noexcept {
+		IntrusiveSentry<ClassT, DeleterT> DropRef() const volatile noexcept {
 			ASSERT(__atomic_load_n(&xm_uRefCount, __ATOMIC_ACQUIRE) != 0);
 
-			T *pToDelete = nullptr;
+			ClassT *pToDelete = nullptr;
 			if(__atomic_sub_fetch(&xm_uRefCount, 1, __ATOMIC_ACQUIRE) == 0){
-				pToDelete = const_cast<T *>(Get());
+				pToDelete = const_cast<ClassT *>(Get());
 			}
-			return IntrusiveSentry<T, DeleterT>(pToDelete);
+			return IntrusiveSentry<ClassT, DeleterT>(pToDelete);
 		}
 
-		template<typename U = T>
-		const volatile U *Get() const volatile noexcept {
-			return IntrusiveCastHelper<const volatile U, const volatile IntrusiveBase>()(this);
+		template<typename OtherT = ClassT>
+		const volatile OtherT *Get() const volatile noexcept {
+			return IntrusiveCastHelper<const volatile OtherT, const volatile IntrusiveBase>()(this);
 		}
-		template<typename U = T>
-		const U *Get() const noexcept {
-			return IntrusiveCastHelper<const U, const IntrusiveBase>()(this);
+		template<typename OtherT = ClassT>
+		const OtherT *Get() const noexcept {
+			return IntrusiveCastHelper<const OtherT, const IntrusiveBase>()(this);
 		}
-		template<typename U = T>
-		volatile U *Get() volatile noexcept {
-			return IntrusiveCastHelper<volatile U, volatile IntrusiveBase>()(this);
+		template<typename OtherT = ClassT>
+		volatile OtherT *Get() volatile noexcept {
+			return IntrusiveCastHelper<volatile OtherT, volatile IntrusiveBase>()(this);
 		}
-		template<typename U = T>
-		U *Get() noexcept {
-			return IntrusiveCastHelper<U, IntrusiveBase>()(this);
+		template<typename OtherT = ClassT>
+		OtherT *Get() noexcept {
+			return IntrusiveCastHelper<OtherT, IntrusiveBase>()(this);
 		}
 
-		template<typename U = T>
-		IntrusivePtr<const volatile U, DeleterT> Fork() const volatile noexcept;
-		template<typename U = T>
-		IntrusivePtr<const U, DeleterT> Fork() const noexcept;
-		template<typename U = T>
-		IntrusivePtr<volatile U, DeleterT> Fork() volatile noexcept;
-		template<typename U = T>
-		IntrusivePtr<U, DeleterT> Fork() noexcept;
+		template<typename OtherT = ClassT>
+		IntrusivePtr<const volatile OtherT, DeleterT> Fork() const volatile noexcept;
+		template<typename OtherT = ClassT>
+		IntrusivePtr<const OtherT, DeleterT> Fork() const noexcept;
+		template<typename OtherT = ClassT>
+		IntrusivePtr<volatile OtherT, DeleterT> Fork() volatile noexcept;
+		template<typename OtherT = ClassT>
+		IntrusivePtr<OtherT, DeleterT> Fork() noexcept;
 	};
 }
 
-template<typename T, class DeleterT = DefaultDeleter<std::remove_cv_t<T>>>
-using IntrusiveBase = Impl::IntrusiveBase<std::remove_cv_t<T>, DeleterT>;
+template<typename ClassT, class DeleterT = DefaultDeleter<std::remove_cv_t<ClassT>>>
+using IntrusiveBase = Impl::IntrusiveBase<std::remove_cv_t<ClassT>, DeleterT>;
 
-template<typename T, class DeleterT>
+template<typename ClassT, class DeleterT>
 class IntrusivePtr {
 public:
-	using Buddy = IntrusiveBase<T, DeleterT>;
+	using Buddy = IntrusiveBase<ClassT, DeleterT>;
 
 private:
 	const volatile Buddy *xm_pBuddy;
 
 public:
-	constexpr explicit IntrusivePtr(T *pObject = nullptr) noexcept
+	constexpr explicit IntrusivePtr(ClassT *pObject = nullptr) noexcept
 		: xm_pBuddy(pObject)
 	{
 	}
@@ -154,14 +154,14 @@ public:
 	{
 		Reset(std::move(rhs));
 	}
-	template<typename U, std::enable_if_t<std::is_convertible<U *, T *>::value, int> = 0>
-	explicit IntrusivePtr(const IntrusivePtr<U, DeleterT> &rhs) noexcept
+	template<typename OtherT, std::enable_if_t<std::is_convertible<OtherT *, ClassT *>::value, int> = 0>
+	explicit IntrusivePtr(const IntrusivePtr<OtherT, DeleterT> &rhs) noexcept
 		: IntrusivePtr()
 	{
 		Reset(rhs);
 	}
-	template<typename U, std::enable_if_t<std::is_convertible<U *, T *>::value, int> = 0>
-	explicit IntrusivePtr(IntrusivePtr<U, DeleterT> &&rhs) noexcept
+	template<typename OtherT, std::enable_if_t<std::is_convertible<OtherT *, ClassT *>::value, int> = 0>
+	explicit IntrusivePtr(IntrusivePtr<OtherT, DeleterT> &&rhs) noexcept
 		: IntrusivePtr()
 	{
 		Reset(std::move(rhs));
@@ -174,13 +174,13 @@ public:
 		Reset(std::move(rhs));
 		return *this;
 	}
-	template<typename U, std::enable_if_t<std::is_convertible<U *, T *>::value, int> = 0>
-	IntrusivePtr &operator=(const IntrusivePtr<U, DeleterT> &rhs) noexcept {
+	template<typename OtherT, std::enable_if_t<std::is_convertible<OtherT *, ClassT *>::value, int> = 0>
+	IntrusivePtr &operator=(const IntrusivePtr<OtherT, DeleterT> &rhs) noexcept {
 		Reset(rhs);
 		return *this;
 	}
-	template<typename U, std::enable_if_t<std::is_convertible<U *, T *>::value, int> = 0>
-	IntrusivePtr &operator=(IntrusivePtr<U, DeleterT> &&rhs) noexcept {
+	template<typename OtherT, std::enable_if_t<std::is_convertible<OtherT *, ClassT *>::value, int> = 0>
+	IntrusivePtr &operator=(IntrusivePtr<OtherT, DeleterT> &&rhs) noexcept {
 		Reset(std::move(rhs));
 		return *this;
 	}
@@ -192,40 +192,40 @@ public:
 	bool IsGood() const noexcept {
 		return Get() != nullptr;
 	}
-	T *Get() const noexcept {
+	ClassT *Get() const noexcept {
 		if(!xm_pBuddy){
 			return nullptr;
 		}
-		return const_cast<T *>(xm_pBuddy->Get());
+		return const_cast<ClassT *>(xm_pBuddy->Get());
 	}
-	T *Release() noexcept {
+	ClassT *Release() noexcept {
 		const auto pBuddy = std::exchange(xm_pBuddy, nullptr);
 		if(!pBuddy){
 			return nullptr;
 		}
-		return const_cast<T *>(pBuddy->Get());
+		return const_cast<ClassT *>(pBuddy->Get());
 	}
 	IntrusivePtr Fork() const noexcept {
 		return IntrusivePtr(*this);
 	}
 
-	IntrusivePtr &Reset(T *pObject = nullptr) noexcept {
+	IntrusivePtr &Reset(ClassT *pObject = nullptr) noexcept {
 		const auto pOld = std::exchange(xm_pBuddy, pObject);
 		if(pOld){
 			pOld->DropRef();
 		}
 		return *this;
 	}
-	template<typename U, std::enable_if_t<std::is_convertible<U *, T *>::value, int> = 0>
-	IntrusivePtr &Reset(const IntrusivePtr<U, DeleterT> &rhs) noexcept {
+	template<typename OtherT, std::enable_if_t<std::is_convertible<OtherT *, ClassT *>::value, int> = 0>
+	IntrusivePtr &Reset(const IntrusivePtr<OtherT, DeleterT> &rhs) noexcept {
 		Reset(rhs.Get());
 		if(xm_pBuddy){
 			xm_pBuddy->AddRef();
 		}
 		return *this;
 	}
-	template<typename U, std::enable_if_t<std::is_convertible<U *, T *>::value, int> = 0>
-	IntrusivePtr &Reset(IntrusivePtr<U, DeleterT> &&rhs) noexcept {
+	template<typename OtherT, std::enable_if_t<std::is_convertible<OtherT *, ClassT *>::value, int> = 0>
+	IntrusivePtr &Reset(IntrusivePtr<OtherT, DeleterT> &&rhs) noexcept {
 		return Reset(rhs.Release());
 	}
 
@@ -237,14 +237,14 @@ public:
 	explicit operator bool() const noexcept {
 		return IsGood();
 	}
-	explicit operator T *() const noexcept {
+	explicit operator ClassT *() const noexcept {
 		return Get();
 	}
 
-	T &operator*() const noexcept {
+	ClassT &operator*() const noexcept {
 		return *(this->operator->());
 	}
-	T *operator->() const noexcept {
+	ClassT *operator->() const noexcept {
 		const auto pRet = Get();
 		ASSERT_MSG(pRet, L"试图解引用空指针。");
 		return pRet;
@@ -252,128 +252,128 @@ public:
 };
 
 namespace Impl {
-	template<typename T, class DeleterT>
-		template<typename U>
-	IntrusivePtr<const volatile U, DeleterT> IntrusiveBase<T, DeleterT>::Fork() const volatile noexcept {
-		const auto pForked = Get<const volatile U>();
+	template<typename ClassT, class DeleterT>
+		template<typename OtherT>
+	IntrusivePtr<const volatile OtherT, DeleterT> IntrusiveBase<ClassT, DeleterT>::Fork() const volatile noexcept {
+		const auto pForked = Get<const volatile OtherT>();
 		if(!pForked){
 			return nullptr;
 		}
 		AddRef();
-		return IntrusivePtr<const volatile U, DeleterT>(pForked);
+		return IntrusivePtr<const volatile OtherT, DeleterT>(pForked);
 	}
-	template<typename T, class DeleterT>
-		template<typename U>
-	IntrusivePtr<const U, DeleterT> IntrusiveBase<T, DeleterT>::Fork() const noexcept {
-		const auto pForked = Get<const U>();
+	template<typename ClassT, class DeleterT>
+		template<typename OtherT>
+	IntrusivePtr<const OtherT, DeleterT> IntrusiveBase<ClassT, DeleterT>::Fork() const noexcept {
+		const auto pForked = Get<const OtherT>();
 		if(!pForked){
 			return nullptr;
 		}
 		AddRef();
-		return IntrusivePtr<const U, DeleterT>(pForked);
+		return IntrusivePtr<const OtherT, DeleterT>(pForked);
 	}
-	template<typename T, class DeleterT>
-		template<typename U>
-	IntrusivePtr<volatile U, DeleterT> IntrusiveBase<T, DeleterT>::Fork() volatile noexcept {
-		const auto pForked = Get<volatile U>();
+	template<typename ClassT, class DeleterT>
+		template<typename OtherT>
+	IntrusivePtr<volatile OtherT, DeleterT> IntrusiveBase<ClassT, DeleterT>::Fork() volatile noexcept {
+		const auto pForked = Get<volatile OtherT>();
 		if(!pForked){
 			return nullptr;
 		}
 		AddRef();
-		return IntrusivePtr<const volatile U, DeleterT>(pForked);
+		return IntrusivePtr<const volatile OtherT, DeleterT>(pForked);
 	}
-	template<typename T, class DeleterT>
-		template<typename U>
-	IntrusivePtr<U, DeleterT> IntrusiveBase<T, DeleterT>::Fork() noexcept {
-		const auto pForked = Get<U>();
+	template<typename ClassT, class DeleterT>
+		template<typename OtherT>
+	IntrusivePtr<OtherT, DeleterT> IntrusiveBase<ClassT, DeleterT>::Fork() noexcept {
+		const auto pForked = Get<OtherT>();
 		if(!pForked){
 			return nullptr;
 		}
 		AddRef();
-		return IntrusivePtr<U, DeleterT>(pForked);
+		return IntrusivePtr<OtherT, DeleterT>(pForked);
 	}
 }
 
-template<typename T, class DeleterT>
-bool operator==(const IntrusivePtr<T, DeleterT> &lhs, const IntrusivePtr<T, DeleterT> &rhs) noexcept {
+template<typename ClassT, class DeleterT>
+bool operator==(const IntrusivePtr<ClassT, DeleterT> &lhs, const IntrusivePtr<ClassT, DeleterT> &rhs) noexcept {
 	return lhs.Get() == rhs.Get();
 }
-template<typename T, class DeleterT>
-bool operator==(const IntrusivePtr<T, DeleterT> &lhs, T *rhs) noexcept {
+template<typename ClassT, class DeleterT>
+bool operator==(const IntrusivePtr<ClassT, DeleterT> &lhs, ClassT *rhs) noexcept {
 	return lhs.Get() == rhs;
 }
-template<typename T, class DeleterT>
-bool operator==(T *lhs, const IntrusivePtr<T, DeleterT> &rhs) noexcept {
+template<typename ClassT, class DeleterT>
+bool operator==(ClassT *lhs, const IntrusivePtr<ClassT, DeleterT> &rhs) noexcept {
 	return lhs == rhs.Get();
 }
 
-template<typename T, class DeleterT>
-bool operator!=(const IntrusivePtr<T, DeleterT> &lhs, const IntrusivePtr<T, DeleterT> &rhs) noexcept {
+template<typename ClassT, class DeleterT>
+bool operator!=(const IntrusivePtr<ClassT, DeleterT> &lhs, const IntrusivePtr<ClassT, DeleterT> &rhs) noexcept {
 	return lhs.Get() != rhs.Get();
 }
-template<typename T, class DeleterT>
-bool operator!=(const IntrusivePtr<T, DeleterT> &lhs, T *rhs) noexcept {
+template<typename ClassT, class DeleterT>
+bool operator!=(const IntrusivePtr<ClassT, DeleterT> &lhs, ClassT *rhs) noexcept {
 	return lhs.Get() != rhs;
 }
-template<typename T, class DeleterT>
-bool operator!=(T *lhs, const IntrusivePtr<T, DeleterT> &rhs) noexcept {
+template<typename ClassT, class DeleterT>
+bool operator!=(ClassT *lhs, const IntrusivePtr<ClassT, DeleterT> &rhs) noexcept {
 	return lhs != rhs.Get();
 }
 
-template<typename T, class DeleterT>
-bool operator<(const IntrusivePtr<T, DeleterT> &lhs, const IntrusivePtr<T, DeleterT> &rhs) noexcept {
+template<typename ClassT, class DeleterT>
+bool operator<(const IntrusivePtr<ClassT, DeleterT> &lhs, const IntrusivePtr<ClassT, DeleterT> &rhs) noexcept {
 	return lhs.Get() < rhs.Get();
 }
-template<typename T, class DeleterT>
-bool operator<(const IntrusivePtr<T, DeleterT> &lhs, T *rhs) noexcept {
+template<typename ClassT, class DeleterT>
+bool operator<(const IntrusivePtr<ClassT, DeleterT> &lhs, ClassT *rhs) noexcept {
 	return lhs.Get() < rhs;
 }
-template<typename T, class DeleterT>
-bool operator<(T *lhs, const IntrusivePtr<T, DeleterT> &rhs) noexcept {
+template<typename ClassT, class DeleterT>
+bool operator<(ClassT *lhs, const IntrusivePtr<ClassT, DeleterT> &rhs) noexcept {
 	return lhs < rhs.Get();
 }
 
-template<typename T, class DeleterT>
-bool operator>(const IntrusivePtr<T, DeleterT> &lhs, const IntrusivePtr<T, DeleterT> &rhs) noexcept {
+template<typename ClassT, class DeleterT>
+bool operator>(const IntrusivePtr<ClassT, DeleterT> &lhs, const IntrusivePtr<ClassT, DeleterT> &rhs) noexcept {
 	return lhs.Get() > rhs.Get();
 }
-template<typename T, class DeleterT>
-bool operator>(const IntrusivePtr<T, DeleterT> &lhs, T *rhs) noexcept {
+template<typename ClassT, class DeleterT>
+bool operator>(const IntrusivePtr<ClassT, DeleterT> &lhs, ClassT *rhs) noexcept {
 	return lhs.Get() > rhs;
 }
-template<typename T, class DeleterT>
-bool operator>(T *lhs, const IntrusivePtr<T, DeleterT> &rhs) noexcept {
+template<typename ClassT, class DeleterT>
+bool operator>(ClassT *lhs, const IntrusivePtr<ClassT, DeleterT> &rhs) noexcept {
 	return lhs > rhs.Get();
 }
 
-template<typename T, class DeleterT>
-bool operator<=(const IntrusivePtr<T, DeleterT> &lhs, const IntrusivePtr<T, DeleterT> &rhs) noexcept {
+template<typename ClassT, class DeleterT>
+bool operator<=(const IntrusivePtr<ClassT, DeleterT> &lhs, const IntrusivePtr<ClassT, DeleterT> &rhs) noexcept {
 	return lhs.Get() <= rhs.Get();
 }
-template<typename T, class DeleterT>
-bool operator<=(const IntrusivePtr<T, DeleterT> &lhs, T *rhs) noexcept {
+template<typename ClassT, class DeleterT>
+bool operator<=(const IntrusivePtr<ClassT, DeleterT> &lhs, ClassT *rhs) noexcept {
 	return lhs.Get() <= rhs;
 }
-template<typename T, class DeleterT>
-bool operator<=(T *lhs, const IntrusivePtr<T, DeleterT> &rhs) noexcept {
+template<typename ClassT, class DeleterT>
+bool operator<=(ClassT *lhs, const IntrusivePtr<ClassT, DeleterT> &rhs) noexcept {
 	return lhs <= rhs.Get();
 }
 
-template<typename T, class DeleterT>
-bool operator>=(const IntrusivePtr<T, DeleterT> &lhs, const IntrusivePtr<T, DeleterT> &rhs) noexcept {
+template<typename ClassT, class DeleterT>
+bool operator>=(const IntrusivePtr<ClassT, DeleterT> &lhs, const IntrusivePtr<ClassT, DeleterT> &rhs) noexcept {
 	return lhs.Get() >= rhs.Get();
 }
-template<typename T, class DeleterT>
-bool operator>=(const IntrusivePtr<T, DeleterT> &lhs, T *rhs) noexcept {
+template<typename ClassT, class DeleterT>
+bool operator>=(const IntrusivePtr<ClassT, DeleterT> &lhs, ClassT *rhs) noexcept {
 	return lhs.Get() >= rhs;
 }
-template<typename T, class DeleterT>
-bool operator>=(T *lhs, const IntrusivePtr<T, DeleterT> &rhs) noexcept {
+template<typename ClassT, class DeleterT>
+bool operator>=(ClassT *lhs, const IntrusivePtr<ClassT, DeleterT> &rhs) noexcept {
 	return lhs >= rhs.Get();
 }
 
-template<typename T, class DeleterT>
-void swap(IntrusivePtr<T, DeleterT> &lhs, IntrusivePtr<T, DeleterT> &rhs) noexcept {
+template<typename ClassT, class DeleterT>
+void swap(IntrusivePtr<ClassT, DeleterT> &lhs, IntrusivePtr<ClassT, DeleterT> &rhs) noexcept {
 	lhs.Swap(rhs);
 }
 

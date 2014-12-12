@@ -28,7 +28,7 @@ private:
 	std::exception_ptr xm_pException;
 
 private:
-	explicit Thread(std::function<void ()> fnProc);
+	Thread(std::function<void ()> fnProc, bool bSuspended);
 
 public:
 	bool Wait(unsigned long long ullMilliSeconds) const noexcept;

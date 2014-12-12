@@ -16,19 +16,15 @@ std::size_t Thread::GetCurrentId() noexcept {
 }
 
 IntrusivePtr<Thread> Thread::Create(std::function<void ()> fnProc, bool bSuspended){
-	IntrusivePtr<Thread> pThread(new Thread(std::move(fnProc)));
-	if(!bSuspended){
-		pThread->Resume();
-	}
-	return std::move(pThread);
+	return IntrusivePtr<Thread>(new Thread(std::move(fnProc), bSuspended));
 }
 
 // 构造函数和析构函数。
-Thread::Thread(std::function<void ()> fnProc)
+Thread::Thread(std::function<void ()> fnProc, bool bSuspended)
 	: xm_fnProc(std::move(fnProc))
 {
 	const auto ThreadProc = [](std::intptr_t nParam) noexcept -> unsigned {
-		const auto pThis = reinterpret_cast<Thread *>(nParam);
+		const auto pThis = (Thread *)nParam;
 		try {
 			pThis->xm_fnProc();
 		} catch(...){
@@ -40,13 +36,15 @@ Thread::Thread(std::function<void ()> fnProc)
 	};
 
 	unsigned long ulThreadId;
-	if(!xm_hThread.Reset(::MCF_CRT_CreateThread(
-		ThreadProc, reinterpret_cast<std::intptr_t>(this), CREATE_SUSPENDED, &ulThreadId)))
-	{
+	if(!xm_hThread.Reset(::MCF_CRT_CreateThread(ThreadProc, (std::intptr_t)this, CREATE_SUSPENDED, &ulThreadId))){
 		DEBUG_THROW(SystemError, "MCF_CRT_CreateThread");
 	}
 	AddRef();
 	__atomic_store_n(&xm_ulThreadId, 0, __ATOMIC_RELEASE);
+
+	if(!bSuspended){
+		Resume();
+	}
 }
 
 bool Thread::Wait(unsigned long long ullMilliSeconds) const noexcept {

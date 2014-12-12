@@ -6,7 +6,6 @@
 #define MCF_CONTAINERS_VECTOR_HPP_
 
 #include "../Utilities/ConstructDestruct.hpp"
-#include "../Utilities/MinMax.hpp"
 #include <initializer_list>
 #include <type_traits>
 #include <iterator>
@@ -147,8 +146,10 @@ public:
 		if(uNewCapacity > uOldCapacity){
 			auto uSizeToAlloc = uOldCapacity + 1;
 			uSizeToAlloc += (uSizeToAlloc >> 1);
-			uSizeToAlloc = (uSizeToAlloc + 0xF) & (std::size_t)-0x10;
-			uSizeToAlloc = Max(uSizeToAlloc, uNewCapacity);
+			uSizeToAlloc = (uSizeToAlloc + 0x0F) & (std::size_t)-0x10;
+			if(uSizeToAlloc < uNewCapacity){
+				uSizeToAlloc = uNewCapacity;
+			}
 
 			const auto pOldBegin = GetBegin();
 			const auto pOldEnd = GetEnd();

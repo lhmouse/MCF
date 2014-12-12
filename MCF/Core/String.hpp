@@ -171,9 +171,9 @@ private:
 
 		if(GetCapacity() < uNewLength){
 			uSizeToAlloc += (uSizeToAlloc >> 1);
-			uSizeToAlloc = (uSizeToAlloc + 0xF) & (std::size_t)-0x10;
+			uSizeToAlloc = (uSizeToAlloc + 0x0F) & (std::size_t)-0x10;
 			if(uSizeToAlloc < uNewLength + 1){
-				throw std::bad_alloc();
+				uSizeToAlloc = uNewLength + 1;
 			}
 			pchNewBuffer = new Char[uSizeToAlloc];
 		}

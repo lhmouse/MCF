@@ -20,5 +20,6 @@
 #include "Noncopyable.hpp"
 #include "StaticAssertNoexcept.hpp"
 #include "Defer.hpp"
+#include "TupleFunctors.hpp"
 
 #endif

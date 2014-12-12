@@ -71,7 +71,7 @@ void UserMutex::Lock() noexcept {
 	auto uQueueSize = xm_splQueueSize.Lock();
 	if(EXPECT(uQueueSize == 0)){
 		xm_splQueueSize.Unlock(uQueueSize);
-		if(xTryWithHint(dwThreadId)){
+		if(EXPECT(xTryWithHint(dwThreadId))){
 			return;
 		}
 		uQueueSize = xm_splQueueSize.Lock();
@@ -82,7 +82,7 @@ void UserMutex::Lock() noexcept {
 		xm_vSemaphore.Wait();
 
 		if(EXPECT_NOT(xTryWithHint(dwThreadId))){
-			break;
+			return;
 		}
 		uQueueSize = xm_splQueueSize.Lock();
 	}

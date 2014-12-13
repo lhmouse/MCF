@@ -60,9 +60,6 @@ struct StringEncodingTrait<StringTypes::ANSI> {
 	using Type = char;
 };
 
-template<StringTypes TYPE_T>
-using CharTypeOf = typename StringEncodingTrait<TYPE_T>::Type;
-
 namespace Impl {
 	constexpr std::size_t NPOS = (std::size_t)-1;
 
@@ -180,7 +177,7 @@ template<StringTypes TYPE_T>
 struct StringObserver {
 public:
 	static constexpr StringTypes Type = TYPE_T;
-	using Char = CharTypeOf<TYPE_T>;
+	using Char = typename StringEncodingTrait<TYPE_T>::Type;
 
 	static constexpr std::size_t NPOS = Impl::NPOS;
 

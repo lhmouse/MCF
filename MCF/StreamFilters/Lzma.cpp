@@ -3,7 +3,7 @@
 // Copyleft 2013 - 2014, LH_Mouse. All wrongs reserved.
 
 #include "../StdMCF.hpp"
-#include "LzmaFilters.hpp"
+#include "Lzma.hpp"
 #include "../Core/Exception.hpp"
 #include "../Utilities/MinMax.hpp"
 #include "../../External/lzmalite/lzma.h"
@@ -68,7 +68,7 @@ lzma_options_lzma MakeOptions(unsigned uLevel, unsigned long ulDictSize){
 
 }
 
-class LzmaEncoder::xDelegate : NONCOPYABLE {
+class LzmaEncoder::xDelegate {
 private:
 	LzmaEncoder &xm_vOwner;
 	const lzma_options_lzma xm_vOptions;
@@ -78,27 +78,22 @@ private:
 
 public:
 	xDelegate(LzmaEncoder &vOwner, unsigned uLevel, unsigned long ulDictSize)
-		: xm_vOwner(vOwner) , xm_vOptions(MakeOptions(uLevel, ulDictSize))
+		: xm_vOwner(vOwner), xm_vOptions(MakeOptions(uLevel, ulDictSize))
 		, xm_vStream(INIT_STREAM)
 	{
 	}
 
 public:
-	void Abort() noexcept {
+	void Init(){
 		xm_pStream.reset();
 
-		xm_vOwner.StreamFilterBase::Abort();
+		const auto eError = ::lzma_alone_encoder(&xm_vStream, &xm_vOptions);
+		if(eError != LZMA_OK){
+			DEBUG_THROW(LzmaError, "lzma_alone_encoder", eError);
+		}
+		xm_pStream.reset(&xm_vStream);
 	}
 	void Update(const void *pData, std::size_t uSize){
-		if(!xm_pStream){
-			const auto eError = ::lzma_alone_encoder(&xm_vStream, &xm_vOptions);
-			if(eError != LZMA_OK){
-				DEBUG_THROW(LzmaError, "lzma_alone_encoder", eError);
-			}
-
-			xm_pStream.reset(&xm_vStream);
-		}
-
 		unsigned char abyTemp[STEP_SIZE];
 		xm_pStream->next_out = abyTemp;
 		xm_pStream->avail_out = sizeof(abyTemp);
@@ -126,7 +121,6 @@ public:
 				}
 			} while(xm_pStream->avail_in != 0);
 
-			xm_vOwner.StreamFilterBase::Update(pbyRead, uToProcess);
 			pbyRead += uToProcess;
 			uProcessed += uToProcess;
 		}
@@ -135,39 +129,34 @@ public:
 		}
 	}
 	void Finalize(){
-		if(xm_pStream){
-			unsigned char abyTemp[STEP_SIZE];
-			xm_pStream->next_out = abyTemp;
-			xm_pStream->avail_out = sizeof(abyTemp);
+		unsigned char abyTemp[STEP_SIZE];
+		xm_pStream->next_out = abyTemp;
+		xm_pStream->avail_out = sizeof(abyTemp);
 
-			xm_pStream->next_in = nullptr;
-			xm_pStream->avail_in = 0;
-			for(;;){
-				const auto eError = ::lzma_code(xm_pStream.get(), LZMA_FINISH);
-				if(eError == LZMA_STREAM_END){
-					break;
-				}
-				if(eError != LZMA_OK){
-					DEBUG_THROW(LzmaError, "lzma_code", eError);
-				}
-				if(xm_pStream->avail_out == 0){
-					xm_vOwner.xOutput(abyTemp, sizeof(abyTemp));
-
-					xm_pStream->next_out = abyTemp;
-					xm_pStream->avail_out = sizeof(abyTemp);
-				}
+		xm_pStream->next_in = nullptr;
+		xm_pStream->avail_in = 0;
+		for(;;){
+			const auto eError = ::lzma_code(xm_pStream.get(), LZMA_FINISH);
+			if(eError == LZMA_STREAM_END){
+				break;
 			}
-			if(xm_pStream->avail_out != 0){
-				xm_vOwner.xOutput(abyTemp, sizeof(abyTemp) - xm_pStream->avail_out);
+			if(eError != LZMA_OK){
+				DEBUG_THROW(LzmaError, "lzma_code", eError);
 			}
+			if(xm_pStream->avail_out == 0){
+				xm_vOwner.xOutput(abyTemp, sizeof(abyTemp));
 
-			xm_pStream.reset();
+				xm_pStream->next_out = abyTemp;
+				xm_pStream->avail_out = sizeof(abyTemp);
+			}
 		}
-		xm_vOwner.StreamFilterBase::Finalize();
+		if(xm_pStream->avail_out != 0){
+			xm_vOwner.xOutput(abyTemp, sizeof(abyTemp) - xm_pStream->avail_out);
+		}
 	}
 };
 
-class LzmaDecoder::xDelegate : NONCOPYABLE {
+class LzmaDecoder::xDelegate {
 private:
 	LzmaDecoder &xm_vOwner;
 
@@ -182,20 +171,16 @@ public:
 	}
 
 public:
-	void Abort() noexcept {
+	void Init() noexcept {
 		xm_pStream.reset();
 
-		xm_vOwner.StreamFilterBase::Abort();
+		const auto eError = ::lzma_alone_decoder(&xm_vStream, UINT64_MAX);
+		if(eError != LZMA_OK){
+			DEBUG_THROW(LzmaError, "lzma_alone_decoder", eError);
+		}
+		xm_pStream.reset(&xm_vStream);
 	}
 	void Update(const void *pData, std::size_t uSize){
-		if(!xm_pStream){
-			const auto eError = ::lzma_alone_decoder(&xm_vStream, UINT64_MAX);
-			if(eError != LZMA_OK){
-				DEBUG_THROW(LzmaError, "lzma_alone_decoder", eError);
-			}
-			xm_pStream.reset(&xm_vStream);
-		}
-
 		unsigned char abyTemp[STEP_SIZE];
 		xm_pStream->next_out = abyTemp;
 		xm_pStream->avail_out = sizeof(abyTemp);
@@ -223,7 +208,6 @@ public:
 				}
 			} while(xm_pStream->avail_in != 0);
 
-			xm_vOwner.StreamFilterBase::Update(pbyRead, uToProcess);
 			pbyRead += uToProcess;
 			uProcessed += uToProcess;
 		}
@@ -232,73 +216,73 @@ public:
 		}
 	}
 	void Finalize(){
-		if(xm_pStream){
-			unsigned char abyTemp[STEP_SIZE];
-			xm_pStream->next_out = abyTemp;
-			xm_pStream->avail_out = sizeof(abyTemp);
+		unsigned char abyTemp[STEP_SIZE];
+		xm_pStream->next_out = abyTemp;
+		xm_pStream->avail_out = sizeof(abyTemp);
 
-			xm_pStream->next_in = nullptr;
-			xm_pStream->avail_in = 0;
-			for(;;){
-				const auto eError = ::lzma_code(xm_pStream.get(), LZMA_FINISH);
-				if(eError == LZMA_STREAM_END){
-					break;
-				}
-				if(eError != LZMA_OK){
-					DEBUG_THROW(LzmaError, "lzma_code", eError);
-				}
-				if(xm_pStream->avail_out == 0){
-					xm_vOwner.xOutput(abyTemp, sizeof(abyTemp));
-
-					xm_pStream->next_out = abyTemp;
-					xm_pStream->avail_out = sizeof(abyTemp);
-				}
+		xm_pStream->next_in = nullptr;
+		xm_pStream->avail_in = 0;
+		for(;;){
+			const auto eError = ::lzma_code(xm_pStream.get(), LZMA_FINISH);
+			if(eError == LZMA_STREAM_END){
+				break;
 			}
-			if(xm_pStream->avail_out != 0){
-				xm_vOwner.xOutput(abyTemp, sizeof(abyTemp) - xm_pStream->avail_out);
+			if(eError != LZMA_OK){
+				DEBUG_THROW(LzmaError, "lzma_code", eError);
 			}
+			if(xm_pStream->avail_out == 0){
+				xm_vOwner.xOutput(abyTemp, sizeof(abyTemp));
 
-			xm_pStream.reset();
+				xm_pStream->next_out = abyTemp;
+				xm_pStream->avail_out = sizeof(abyTemp);
+			}
 		}
-		xm_vOwner.StreamFilterBase::Finalize();
+		if(xm_pStream->avail_out != 0){
+			xm_vOwner.xOutput(abyTemp, sizeof(abyTemp) - xm_pStream->avail_out);
+		}
 	}
 };
 
 // ========== LzmaEncoder ==========
 // 静态成员函数。
-LzmaEncoder::LzmaEncoder(unsigned uLevel, unsigned long ulDictSize)
-	: xm_pDelegate(std::make_unique<xDelegate>(*this, uLevel, ulDictSize))
+LzmaEncoder::LzmaEncoder(unsigned uLevel, unsigned long ulDictSize) noexcept
+	: xm_uLevel(uLevel), xm_ulDictSize(ulDictSize)
 {
 }
 LzmaEncoder::~LzmaEncoder(){
 }
 
-void LzmaEncoder::Abort() noexcept {
-	xm_pDelegate->Abort();
+void LzmaEncoder::xDoInit(){
+	if(!xm_pDelegate){
+		xm_pDelegate.reset(new xDelegate(*this, xm_uLevel, xm_ulDictSize));
+	}
+	xm_pDelegate->Init();
 }
-void LzmaEncoder::Update(const void *pData, std::size_t uSize){
+void LzmaEncoder::xDoUpdate(const void *pData, std::size_t uSize){
 	xm_pDelegate->Update(pData, uSize);
 }
-void LzmaEncoder::Finalize(){
+void LzmaEncoder::xDoFinalize(){
 	xm_pDelegate->Finalize();
 }
 
+
 // ========== LzmaDecoder ==========
 // 静态成员函数。
-LzmaDecoder::LzmaDecoder()
-	: xm_pDelegate(std::make_unique<xDelegate>(*this))
-{
+LzmaDecoder::LzmaDecoder() noexcept {
 }
 LzmaDecoder::~LzmaDecoder(){
 }
 
-void LzmaDecoder::Abort() noexcept {
-	xm_pDelegate->Abort();
+void LzmaDecoder::xDoInit(){
+	if(!xm_pDelegate){
+		xm_pDelegate.reset(new xDelegate(*this));
+	}
+	xm_pDelegate->Init();
 }
-void LzmaDecoder::Update(const void *pData, std::size_t uSize){
+void LzmaDecoder::xDoUpdate(const void *pData, std::size_t uSize){
 	xm_pDelegate->Update(pData, uSize);
 }
-void LzmaDecoder::Finalize(){
+void LzmaDecoder::xDoFinalize(){
 	xm_pDelegate->Finalize();
 }
 

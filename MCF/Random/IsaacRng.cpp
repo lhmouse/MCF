@@ -9,14 +9,6 @@ using namespace MCF;
 
 // http://www.burtleburtle.net/bob/c/readable.c
 
-// 构造函数和析构函数。
-IsaacRng::IsaacRng(std::uint32_t u32Seed) noexcept {
-	Init(u32Seed);
-}
-IsaacRng::IsaacRng(const std::uint32_t (&au32Seed)[8]) noexcept {
-	Init(au32Seed);
-}
-
 // 其他非静态成员函数。
 void IsaacRng::Init(std::uint32_t u32Seed) noexcept {
 	std::uint32_t au32RealSeed[8];
@@ -59,17 +51,17 @@ void IsaacRng::Init(const std::uint32_t (&au32Seed)[8]) noexcept {
 	xm_u32A = 0;
 	xm_u32B = 0;
 	xm_u32C = 0;
+	xRefreshInternal();
 
 	xm_u32Read = 0;
 }
 
-std::uint32_t IsaacRng::Get() noexcept {
-	if(xm_u32Read == 0){
-		++xm_u32C;
-		xm_u32B += xm_u32C;
+void IsaacRng::xRefreshInternal() noexcept {
+	++xm_u32C;
+	xm_u32B += xm_u32C;
 
-		for(std::size_t i = 0; i < 256; i += 4){
-			register std::uint32_t x, y;
+	for(std::size_t i = 0; i < 256; i += 4){
+		register std::uint32_t x, y;
 
 #define SPEC_0	(xm_u32A ^= (xm_u32A << 13))
 #define SPEC_1	(xm_u32A ^= (xm_u32A >>  6))
@@ -77,19 +69,24 @@ std::uint32_t IsaacRng::Get() noexcept {
 #define SPEC_3	(xm_u32A ^= (xm_u32A >> 16))
 
 #define STEP(j_, spec_)	\
-			x = xm_u32Internal[i + j_];	\
-			spec_;	\
-			xm_u32A += xm_u32Internal[(i + j_ + 128) % 256];	\
-			y = xm_u32Internal[(x >> 2) % 256] + xm_u32A + xm_u32B;	\
-			xm_u32Internal[i + j_] = y;	\
-			xm_u32B = xm_u32Internal[(y >> 10) % 256] + x;	\
-			xm_u32Results[i + j_] = xm_u32B;
+		x = xm_u32Internal[i + j_];	\
+		spec_;	\
+		xm_u32A += xm_u32Internal[(i + j_ + 128) % 256];	\
+		y = xm_u32Internal[(x >> 2) % 256] + xm_u32A + xm_u32B;	\
+		xm_u32Internal[i + j_] = y;	\
+		xm_u32B = xm_u32Internal[(y >> 10) % 256] + x;	\
+		xm_u32Results[i + j_] = xm_u32B;
 
-			STEP(0, SPEC_0);
-			STEP(1, SPEC_1);
-			STEP(2, SPEC_2);
-			STEP(3, SPEC_3);
-		}
+		STEP(0, SPEC_0);
+		STEP(1, SPEC_1);
+		STEP(2, SPEC_2);
+		STEP(3, SPEC_3);
+	}
+}
+
+std::uint32_t IsaacRng::Get() noexcept {
+	if(xm_u32Read == 0){
+		xRefreshInternal();
 	}
 	const auto u32Ret = xm_u32Results[xm_u32Read];
 	xm_u32Read = (xm_u32Read + 1) % 256;

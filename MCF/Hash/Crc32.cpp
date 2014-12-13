@@ -70,15 +70,15 @@ void Crc32::Update(const void *pData, std::size_t uSize) noexcept {
 			DoCrc32Byte(xm_u32Reg, xm_au32Table, *pbyRead);
 			++pbyRead;
 		}
-		register auto uWordCount = (std::size_t)(pbyEnd - pbyRead) / sizeof(std::uintptr_t);
-		while(uWordCount != 0){
+		register auto i = (std::size_t)(pbyEnd - pbyRead) / sizeof(std::uintptr_t);
+		while(i != 0){
 			register auto uWord = LoadLe(*(const std::uintptr_t *)pbyRead);
 			pbyRead += sizeof(std::uintptr_t);
 			for(unsigned i = 0; i < sizeof(std::uintptr_t); ++i){
 				DoCrc32Byte(xm_u32Reg, xm_au32Table, uWord & 0xFF);
 				uWord >>= 8;
 			}
-			--uWordCount;
+			--i;
 		}
 	}
 	while(pbyRead != pbyEnd){

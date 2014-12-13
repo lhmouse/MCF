@@ -3,7 +3,7 @@
 // Copyleft 2013 - 2014, LH_Mouse. All wrongs reserved.
 
 #include "../StdMCF.hpp"
-#include "ZlibFilters.hpp"
+#include "Zlib.hpp"
 #include "../Core/Exception.hpp"
 #include "../Utilities/MinMax.hpp"
 
@@ -52,12 +52,11 @@ unsigned long ZlibErrorToWin32Error(int nZlibError) noexcept {
 
 }
 
-class ZlibEncoder::xDelegate : NONCOPYABLE {
+class ZlibEncoder::xDelegate {
 private:
 	ZlibEncoder &xm_vOwner;
 
 	z_stream xm_vStream;
-	bool xm_bInited;
 
 public:
 	xDelegate(ZlibEncoder &vOwner, bool bRaw, unsigned uLevel)
@@ -71,24 +70,19 @@ public:
 		if(nError != Z_OK){
 			DEBUG_THROW(ZlibError, "deflateInit2", nError);
 		}
-
-		xm_bInited = false;
 	}
 	~xDelegate(){
 		::deflateEnd(&xm_vStream);
 	}
 
 public:
-	void Abort() noexcept {
-		xm_bInited = false;
-		xm_vOwner.StreamFilterBase::Abort();
+	void Init(){
+		const auto nError = ::deflateReset(&xm_vStream);
+		if(nError != Z_OK){
+			DEBUG_THROW(ZlibError, "deflateReset", nError);
+		}
 	}
 	void Update(const void *pData, std::size_t uSize){
-		if(!xm_bInited){
-			::deflateReset(&xm_vStream);
-			xm_bInited = true;
-		}
-
 		unsigned char abyTemp[STEP_SIZE];
 		xm_vStream.next_out = abyTemp;
 		xm_vStream.avail_out = sizeof(abyTemp);
@@ -116,7 +110,6 @@ public:
 				}
 			} while(xm_vStream.avail_in != 0);
 
-			xm_vOwner.StreamFilterBase::Update(pbyRead, uToProcess);
 			pbyRead += uToProcess;
 			uProcessed += uToProcess;
 		}
@@ -125,44 +118,38 @@ public:
 		}
 	}
 	void Finalize(){
-		if(xm_bInited){
-			unsigned char abyTemp[STEP_SIZE];
-			xm_vStream.next_out = abyTemp;
-			xm_vStream.avail_out = sizeof(abyTemp);
+		unsigned char abyTemp[STEP_SIZE];
+		xm_vStream.next_out = abyTemp;
+		xm_vStream.avail_out = sizeof(abyTemp);
 
-			xm_vStream.next_in = nullptr;
-			xm_vStream.avail_in = 0;
-			for(;;){
-				const auto nError = ::deflate(&xm_vStream, Z_FINISH);
-				if(nError == Z_STREAM_END){
-					break;
-				}
-				if(nError != Z_OK){
-					DEBUG_THROW(ZlibError, "deflate", nError);
-				}
-				if(xm_vStream.avail_out == 0){
-					xm_vOwner.xOutput(abyTemp, sizeof(abyTemp));
-
-					xm_vStream.next_out = abyTemp;
-					xm_vStream.avail_out = sizeof(abyTemp);
-				}
+		xm_vStream.next_in = nullptr;
+		xm_vStream.avail_in = 0;
+		for(;;){
+			const auto nError = ::deflate(&xm_vStream, Z_FINISH);
+			if(nError == Z_STREAM_END){
+				break;
 			}
-			if(xm_vStream.avail_out != 0){
-				xm_vOwner.xOutput(abyTemp, sizeof(abyTemp) - xm_vStream.avail_out);
+			if(nError != Z_OK){
+				DEBUG_THROW(ZlibError, "deflate", nError);
 			}
+			if(xm_vStream.avail_out == 0){
+				xm_vOwner.xOutput(abyTemp, sizeof(abyTemp));
 
-			xm_bInited = false;
+				xm_vStream.next_out = abyTemp;
+				xm_vStream.avail_out = sizeof(abyTemp);
+			}
 		}
-		xm_vOwner.StreamFilterBase::Finalize();
+		if(xm_vStream.avail_out != 0){
+			xm_vOwner.xOutput(abyTemp, sizeof(abyTemp) - xm_vStream.avail_out);
+		}
 	}
 };
 
-class ZlibDecoder::xDelegate : NONCOPYABLE {
+class ZlibDecoder::xDelegate {
 private:
 	ZlibDecoder &xm_vOwner;
 
 	z_stream xm_vStream;
-	bool xm_bInited;
 
 public:
 	xDelegate(ZlibDecoder &vOwner, bool bRaw)
@@ -179,24 +166,19 @@ public:
 		if(nError != Z_OK){
 			DEBUG_THROW(ZlibError, "inflateInit2", nError);
 		}
-
-		xm_bInited = false;
 	}
 	~xDelegate(){
 		::inflateEnd(&xm_vStream);
 	}
 
 public:
-	void Abort() noexcept {
-		xm_bInited = false;
-		xm_vOwner.StreamFilterBase::Abort();
+	void Init(){
+		const auto nError = ::inflateReset(&xm_vStream);
+		if(nError != Z_OK){
+			DEBUG_THROW(ZlibError, "inflateReset", nError);
+		}
 	}
 	void Update(const void *pData, std::size_t uSize){
-		if(!xm_bInited){
-			::inflateReset(&xm_vStream);
-			xm_bInited = true;
-		}
-
 		unsigned char abyTemp[STEP_SIZE];
 		xm_vStream.next_out = abyTemp;
 		xm_vStream.avail_out = sizeof(abyTemp);
@@ -224,7 +206,6 @@ public:
 				}
 			} while(xm_vStream.avail_in != 0);
 
-			xm_vOwner.StreamFilterBase::Update(pbyRead, uToProcess);
 			pbyRead += uToProcess;
 			uProcessed += uToProcess;
 		}
@@ -233,73 +214,74 @@ public:
 		}
 	}
 	void Finalize(){
-		if(xm_bInited){
-			unsigned char abyTemp[STEP_SIZE];
-			xm_vStream.next_out = abyTemp;
-			xm_vStream.avail_out = sizeof(abyTemp);
+		unsigned char abyTemp[STEP_SIZE];
+		xm_vStream.next_out = abyTemp;
+		xm_vStream.avail_out = sizeof(abyTemp);
 
-			xm_vStream.next_in = nullptr;
-			xm_vStream.avail_in = 0;
-			for(;;){
-				const auto nError = ::inflate(&xm_vStream, Z_FINISH);
-				if(nError == Z_STREAM_END){
-					break;
-				}
-				if(nError != Z_OK){
-					DEBUG_THROW(ZlibError, "inflate", nError);
-				}
-				if(xm_vStream.avail_out == 0){
-					xm_vOwner.xOutput(abyTemp, sizeof(abyTemp));
-
-					xm_vStream.next_out = abyTemp;
-					xm_vStream.avail_out = sizeof(abyTemp);
-				}
+		xm_vStream.next_in = nullptr;
+		xm_vStream.avail_in = 0;
+		for(;;){
+			const auto nError = ::inflate(&xm_vStream, Z_FINISH);
+			if(nError == Z_STREAM_END){
+				break;
 			}
-			if(xm_vStream.avail_out != 0){
-				xm_vOwner.xOutput(abyTemp, sizeof(abyTemp) - xm_vStream.avail_out);
+			if(nError != Z_OK){
+				DEBUG_THROW(ZlibError, "inflate", nError);
 			}
+			if(xm_vStream.avail_out == 0){
+				xm_vOwner.xOutput(abyTemp, sizeof(abyTemp));
 
-			xm_bInited = false;
+				xm_vStream.next_out = abyTemp;
+				xm_vStream.avail_out = sizeof(abyTemp);
+			}
 		}
-		xm_vOwner.StreamFilterBase::Finalize();
+		if(xm_vStream.avail_out != 0){
+			xm_vOwner.xOutput(abyTemp, sizeof(abyTemp) - xm_vStream.avail_out);
+		}
 	}
 };
 
 // ========== ZlibEncoder ==========
 // 静态成员函数。
-ZlibEncoder::ZlibEncoder(bool bRaw, unsigned uLevel)
-	: xm_pDelegate(std::make_unique<xDelegate>(*this, bRaw, uLevel))
+ZlibEncoder::ZlibEncoder(bool bRaw, unsigned uLevel) noexcept
+	: xm_bRaw(bRaw), xm_uLevel(uLevel)
 {
 }
 ZlibEncoder::~ZlibEncoder(){
 }
 
-void ZlibEncoder::Abort() noexcept {
-	xm_pDelegate->Abort();
+void ZlibEncoder::xDoInit(){
+	if(!xm_pDelegate){
+		xm_pDelegate.reset(new xDelegate(*this, xm_bRaw, xm_uLevel));
+	}
+	xm_pDelegate->Init();
 }
-void ZlibEncoder::Update(const void *pData, std::size_t uSize){
+void ZlibEncoder::xDoUpdate(const void *pData, std::size_t uSize){
 	xm_pDelegate->Update(pData, uSize);
 }
-void ZlibEncoder::Finalize(){
+void ZlibEncoder::xDoFinalize(){
 	xm_pDelegate->Finalize();
 }
 
 // ========== ZlibDecoder ==========
 // 静态成员函数。
-ZlibDecoder::ZlibDecoder(bool bRaw)
-	: xm_pDelegate(std::make_unique<xDelegate>(*this, bRaw))
+ZlibDecoder::ZlibDecoder(bool bRaw) noexcept
+	: xm_bRaw(bRaw)
 {
 }
 ZlibDecoder::~ZlibDecoder(){
 }
 
-void ZlibDecoder::Abort() noexcept {
-	xm_pDelegate->Abort();
+void ZlibDecoder::xDoInit(){
+	if(!xm_pDelegate){
+		xm_pDelegate.reset(new xDelegate(*this, xm_bRaw));
+	}
+	xm_pDelegate->Init();
 }
-void ZlibDecoder::Update(const void *pData, std::size_t uSize){
+void ZlibDecoder::xDoUpdate(const void *pData, std::size_t uSize){
 	xm_pDelegate->Update(pData, uSize);
 }
-void ZlibDecoder::Finalize(){
+void ZlibDecoder::xDoFinalize(){
 	xm_pDelegate->Finalize();
 }
 

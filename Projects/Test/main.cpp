@@ -1,17 +1,17 @@
 #include <MCF/StdMCF.hpp>
-#include <MCF/Random/IsaacRng.hpp>
-#include <MCF/Core/Time.hpp>
+#include <MCF/StreamFilters/Lzma.hpp>
 using namespace MCF;
 
 extern "C" unsigned int MCFMain() noexcept {
-	IsaacRng rng(0);
+	StreamBuffer buf;
 
-	const auto begin = GetHiResMonoClock();
-	for(unsigned i = 0; i < 100'000'000; ++i){
-		rng.Get();
-	}
-	const auto end = GetHiResMonoClock();
+	buf.Put(" Hello world! Hello world! Hello world!");
+	LzmaEncoder().FilterInPlace(buf);
+	LzmaDecoder().FilterInPlace(buf);
 
-	std::printf("time elasped: %f ms\n", end - begin);
+	buf.Traverse([](auto p, auto cb){
+		for(unsigned i = 0; i < cb; ++i){ std::putchar(((const char *)p)[i]); }
+	});
+
 	return 0;
 }

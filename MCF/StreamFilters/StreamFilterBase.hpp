@@ -6,13 +6,12 @@
 #define MCF_STREAM_FILTERS_STREAM_FILTER_BASE_HPP_
 
 #include "../Core/StreamBuffer.hpp"
-#include "../Utilities/Noncopyable.hpp"
 #include <cstddef>
 #include <cstdint>
 
 namespace MCF {
 
-class StreamFilterBase : NONCOPYABLE {
+class StreamFilterBase {
 private:
 	bool xm_bInited;
 	StreamBuffer xm_sbufOutput;
@@ -26,6 +25,11 @@ protected:
 	virtual ~StreamFilterBase();
 
 protected:
+	virtual void xDoInit() = 0;
+	virtual void xDoUpdate(const void *pData, std::size_t uSize) = 0;
+	virtual void xDoFinalize() = 0;
+
+	// 子类中使用这两个函数输出数据。
 	void xOutput(unsigned char by){
 		xm_sbufOutput.Put(by);
 	}
@@ -34,19 +38,33 @@ protected:
 	}
 
 public:
-	virtual void Abort() noexcept {
-		xm_bInited = false;
-	}
-	virtual void Update(const void *, std::size_t uSize){
-		if(!xm_bInited){
-			xm_bInited = true;
+	void Abort() noexcept {
+		if(xm_bInited){
 			xm_sbufOutput.Clear();
 			xm_u64BytesProcessed = 0;
+
+			xm_bInited = false;
 		}
+	}
+	void Update(const void *pData, std::size_t uSize){
+		if(!xm_bInited){
+			xm_sbufOutput.Clear();
+			xm_u64BytesProcessed = 0;
+
+			xDoInit();
+
+			xm_bInited = true;
+		}
+
+		xDoUpdate(pData, uSize);
 		xm_u64BytesProcessed += uSize;
 	}
-	virtual void Finalize(){
-		xm_bInited = false;
+	void Finalize(){
+		if(xm_bInited){
+			xDoFinalize();
+
+			xm_bInited = false;
+		}
 	}
 
 	std::size_t QueryBytesProcessed() const noexcept {

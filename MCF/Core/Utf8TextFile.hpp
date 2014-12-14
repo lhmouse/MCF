@@ -30,11 +30,16 @@ public:
 	}
 	void Reset(File &&vFile = File()) noexcept;
 
-	bool IsAtEndOfFile() const noexcept;
+	bool IsAtEndOfFile() const;
 	int Read();
 	bool Read(Utf8String &u8sData, std::size_t uCount);
 	bool ReadLine(Utf8String &u8sData);
 	bool ReadTillEof(Utf8String &u8sData);
+
+public:
+	explicit operator bool() const noexcept {
+		return !IsAtEndOfFile();
+	}
 };
 
 class Utf8TextFileWriter {

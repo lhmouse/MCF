@@ -35,7 +35,7 @@ void Utf8TextFileReader::Reset(File &&vFile) noexcept {
 	xm_vFile = std::move(vFile);
 }
 
-bool Utf8TextFileReader::IsAtEndOfFile() const noexcept {
+bool Utf8TextFileReader::IsAtEndOfFile() const {
 	return xm_sbufCache.IsEmpty() && (xm_u64Offset == xm_vFile.GetSize());
 }
 int Utf8TextFileReader::Read(){

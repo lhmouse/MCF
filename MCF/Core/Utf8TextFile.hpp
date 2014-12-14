@@ -85,8 +85,16 @@ public:
 	void Reset() noexcept;
 	void Reset(File &&vFile, std::uint32_t u32Flags = 0);
 
-	std::uint32_t GetFlags() const noexcept;
-	std::uint32_t SetFlags(std::uint32_t u32Flags) noexcept;
+	std::uint32_t GetFlags() const noexcept {
+		return xm_u32Flags;
+	}
+	std::uint32_t SetFlags(std::uint32_t u32Flags){
+		if(xm_u32Flags == u32Flags){
+			return xm_u32Flags;
+		}
+		Flush();
+		return std::exchange(xm_u32Flags, u32Flags);
+	}
 
 	void Write(char ch);
 	void Write(const Utf8StringObserver &u8soData);

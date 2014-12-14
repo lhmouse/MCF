@@ -140,18 +140,6 @@ void Utf8TextFileWriter::Reset(File &&vFile, std::uint32_t u32Flags){
 
 }
 
-std::uint32_t Utf8TextFileWriter::GetFlags() const noexcept {
-	return xm_u32Flags;
-}
-std::uint32_t Utf8TextFileWriter::SetFlags(std::uint32_t u32Flags) noexcept {
-	auto u32OldFlags = xm_u32Flags;
-	if(xm_u32Flags != u32Flags){
-		Flush();
-		xm_u32Flags = u32Flags;
-	}
-	return u32OldFlags;
-}
-
 void Utf8TextFileWriter::Write(char ch){
 	if(xm_u32Flags & BUF_NONE){
 		xm_vFile.Write(xm_u64Offset, &ch, 1);

@@ -186,15 +186,15 @@ inline void swap(MNotationPackage &lhs, MNotationPackage &rhs) noexcept {
 class MNotation : public MNotationPackage {
 public:
 	enum ErrorType {
-		ERR_NONE,						// 0
-		ERR_NO_VALUE_NAME,				// 1
-		ERR_NO_PACKAGE_NAME,			// 2
-		ERR_UNEXCEPTED_PACKAGE_CLOSE,	// 3
-		ERR_EQU_EXPECTED,				// 4
-		ERR_UNCLOSED_PACKAGE,			// 5
-		ERR_SOURCE_PACKAGE_NOT_FOUND,	// 6
-		ERR_DUPLICATE_PACKAGE,			// 7
-		ERR_DUPLICATE_VALUE,			// 8
+		ERR_NONE						= 0,
+		ERR_NO_VALUE_NAME				= 1,
+		ERR_NO_PACKAGE_NAME				= 2,
+		ERR_UNEXCEPTED_PACKAGE_CLOSE	= 3,
+		ERR_EQU_EXPECTED				= 4,
+		ERR_UNCLOSED_PACKAGE			= 5,
+		ERR_SOURCE_PACKAGE_NOT_FOUND	= 6,
+		ERR_DUPLICATE_PACKAGE			= 7,
+		ERR_DUPLICATE_VALUE				= 8,
 	};
 
 public:

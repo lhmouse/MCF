@@ -550,7 +550,7 @@ private:
 			pHint = pNode->template GetNext<INDEX_ID>();
 		}
 
-		xUpdateHints<int, RemainingT...>(vHints, pNode);
+		xUpdateHints<void, RemainingT...>(vHints, pNode);
 	}
 	template<typename>
 	static void xUpdateHints(Hints &, Node *) noexcept {
@@ -608,7 +608,7 @@ public:
 		}
 
 		// 所有节点都分配完成，现在进行第二步，重建每个二叉树，保证无异常抛出。
-		xCloneAll<int, IndicesT...>(rhs.xm_vIndices, avlAddressMap);
+		xCloneAll<void, IndicesT...>(rhs.xm_vIndices, avlAddressMap);
 		xm_uSize = rhs.xm_uSize;
 	}
 	MultiIndexMap(MultiIndexMap &&rhs) noexcept
@@ -643,7 +643,7 @@ private:
 			// 当前的插入操作失败了，返回现存的节点。
 			return static_cast<Node *>(static_cast<IndexNode *>(pExistentIndexNode));
 		}
-		const auto pResult = xAttachAll<int, RemainingT...>(vHints, pNode);
+		const auto pResult = xAttachAll<void, RemainingT...>(vHints, pNode);
 		if(pResult){
 			// 刚刚的插入操作失败了，撤销刚才的操作。
 			std::get<INDEX_ID>(xm_vIndices).Detach(pIndexNode);
@@ -675,7 +675,7 @@ private:
 		constexpr std::size_t INDEX_ID = sizeof...(IndicesT) - sizeof...(RemainingT) - 1;
 
 		std::get<INDEX_ID>(xm_vIndices).Clear();
-		xClearAll<int, RemainingT...>();
+		xClearAll<void, RemainingT...>();
 	}
 	template<typename>
 	void xClearAll() noexcept {
@@ -721,7 +721,7 @@ private:
 			pSourceIndexNode = pSourceIndexNode->GetPrev();
 		}
 
-		xCloneAll<int, RemainingT...>(vStructure, avlNewNodes);
+		xCloneAll<void, RemainingT...>(vStructure, avlNewNodes);
 	}
 	template<typename>
 	void xCloneAll(const xIndexTuple &, ::MCF_AvlRoot) noexcept {
@@ -741,7 +741,7 @@ public:
 			delete pNode;
 			pNode = pNext;
 		}
-		xClearAll<int, IndicesT...>();
+		xClearAll<void, IndicesT...>();
 		xm_uSize = 0;
 	}
 
@@ -752,7 +752,7 @@ public:
 	template<typename ...ParamsT>
 	std::pair<Node *, bool> InsertWithHints(bool bOverwrites, const Hints &vHints, ParamsT &&...vParams){
 		const auto pNode = new Node(std::forward<ParamsT>(vParams)...);
-		Node *pExistent = xAttachAll<int, IndicesT...>(vHints, pNode);
+		Node *pExistent = xAttachAll<void, IndicesT...>(vHints, pNode);
 		if(pExistent){
 			if(!bOverwrites){
 				delete pNode;
@@ -760,9 +760,9 @@ public:
 			}
 			Hints vNewHints(vHints);
 			do {
-				xUpdateHints<int, IndicesT...>(vNewHints, pExistent);
+				xUpdateHints<void, IndicesT...>(vNewHints, pExistent);
 				Erase(pExistent);
-				pExistent = xAttachAll<int, IndicesT...>(vNewHints, pNode);
+				pExistent = xAttachAll<void, IndicesT...>(vNewHints, pNode);
 			} while(pExistent);
 		}
 		++xm_uSize;
@@ -790,7 +790,7 @@ public:
 			throw;
 		}
 
-		Node *pExistent = xAttachAll<int, IndicesT...>(vHints, pNode);
+		Node *pExistent = xAttachAll<void, IndicesT...>(vHints, pNode);
 		if(pExistent){
 			if(!bOverwrites){
 				delete pNode;
@@ -799,9 +799,9 @@ public:
 			}
 			Hints vNewHints(vHints);
 			do {
-				xUpdateHints<int, IndicesT...>(vNewHints, pExistent);
+				xUpdateHints<void, IndicesT...>(vNewHints, pExistent);
 				Erase(pExistent);
-				pExistent = xAttachAll<int, IndicesT...>(vNewHints, pNode);
+				pExistent = xAttachAll<void, IndicesT...>(vNewHints, pNode);
 			} while(pExistent);
 		}
 		return pNode;

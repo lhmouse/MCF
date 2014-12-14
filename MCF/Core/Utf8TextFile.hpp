@@ -9,6 +9,7 @@
 #include "File.hpp"
 #include "String.hpp"
 #include "../Core/StreamBuffer.hpp"
+#include <utility>
 
 namespace MCF {
 

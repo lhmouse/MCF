@@ -15,24 +15,26 @@ constexpr unsigned char UTF8_BOM[] = { 0xEF, 0xBB, 0xBF };
 }
 
 // ========== Utf8TextFileReader ==========
-// 构造函数和析构函数。
-Utf8TextFileReader::Utf8TextFileReader(File &&vFile)
-	: xm_vFile(std::move(vFile)), xm_u64Offset(0)
-{
+// 其他非静态成员函数。
+void Utf8TextFileReader::Reset() noexcept {
+	xm_vFile.Close();
+	xm_u64Offset = 0;
+	xm_sbufCache.Clear();
+}
+void Utf8TextFileReader::Reset(File &&vFile){
+	ASSERT(&xm_vFile != &vFile);
+
+	Reset();
+
+	if(!vFile){
+		return;
+	}
+	xm_vFile = std::move(vFile);
+
 	unsigned char abyTemp[sizeof(UTF8_BOM)];
 	if((xm_vFile.Read(abyTemp, sizeof(abyTemp), 0) == sizeof(abyTemp)) && !BComp(abyTemp, UTF8_BOM)){
 		xm_u64Offset += sizeof(UTF8_BOM);
 	}
-}
-
-// 其他非静态成员函数。
-void Utf8TextFileReader::Reset(File &&vFile) noexcept {
-	ASSERT(&xm_vFile != &vFile);
-
-	xm_u64Offset = 0;
-	xm_sbufCache.Clear();
-
-	xm_vFile = std::move(vFile);
 }
 
 bool Utf8TextFileReader::IsAtEndOfFile() const {
@@ -111,10 +113,22 @@ bool Utf8TextFileReader::ReadTillEof(Utf8String &u8sData){
 }
 
 // ========== Utf8TextFileWriter ==========
-// 构造函数和析构函数。
-Utf8TextFileWriter::Utf8TextFileWriter(File &&vFile, std::uint32_t u32Flags)
-	: xm_vFile(std::move(vFile)), xm_u32Flags(u32Flags), xm_u64Offset(0)
-{
+// 其他非静态成员函数。
+void Utf8TextFileWriter::Reset() noexcept {
+	try {
+		Flush();
+	} catch(...){
+	}
+	xm_vFile.Close();
+	xm_u32Flags = 0;
+	xm_u64Offset = 0;
+	xm_u8sLine.Clear();
+}
+void Utf8TextFileWriter::Reset(File &&vFile, std::uint32_t u32Flags){
+	ASSERT(&xm_vFile != &vFile);
+
+	xm_vFile = std::move(vFile);
+	xm_u32Flags = u32Flags;
 	xm_u64Offset = xm_vFile.GetSize();
 
 	if((xm_u32Flags & BOM_USE) && (xm_u64Offset == 0)){
@@ -123,25 +137,7 @@ Utf8TextFileWriter::Utf8TextFileWriter(File &&vFile, std::uint32_t u32Flags)
 
 		xm_u64Offset += sizeof(UTF8_BOM);
 	}
-}
-Utf8TextFileWriter::~Utf8TextFileWriter(){
-	try {
-		Flush();
-	} catch(...){
-	}
-}
 
-// 其他非静态成员函数。
-void Utf8TextFileWriter::Reset(File &&vFile, std::uint32_t u32Flags) noexcept {
-	ASSERT(&xm_vFile != &vFile);
-
-	Flush();
-
-	xm_u64Offset = 0;
-	xm_u8sLine.Clear();
-
-	xm_vFile = std::move(vFile);
-	xm_u32Flags = u32Flags;
 }
 
 std::uint32_t Utf8TextFileWriter::GetFlags() const noexcept {

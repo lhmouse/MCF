@@ -5,13 +5,14 @@
 #ifndef MCF_CORE_UTF8_TEXT_FILE_HPP_
 #define MCF_CORE_UTF8_TEXT_FILE_HPP_
 
+#include "../Utilities/Noncopyable.hpp"
 #include "File.hpp"
 #include "String.hpp"
 #include "../Core/StreamBuffer.hpp"
 
 namespace MCF {
 
-class Utf8TextFileReader {
+class Utf8TextFileReader : NONCOPYABLE {
 private:
 	File xm_vFile;
 
@@ -19,7 +20,9 @@ private:
 	StreamBuffer xm_sbufCache;
 
 public:
-	explicit Utf8TextFileReader(File &&vFile);
+	explicit Utf8TextFileReader(File &&vFile){
+		Reset(std::move(vFile));
+	}
 
 public:
 	const File &Get() const noexcept {
@@ -28,7 +31,8 @@ public:
 	File &Get() noexcept {
 		return xm_vFile;
 	}
-	void Reset(File &&vFile = File()) noexcept;
+	void Reset() noexcept;
+	void Reset(File &&vFile);
 
 	bool IsAtEndOfFile() const;
 	int Read();
@@ -42,7 +46,7 @@ public:
 	}
 };
 
-class Utf8TextFileWriter {
+class Utf8TextFileWriter : NONCOPYABLE {
 public:
 	enum : std::uint32_t {
 		BOM_NONE		= 0x00000000,
@@ -64,8 +68,12 @@ private:
 	Utf8String xm_u8sLine;
 
 public:
-	explicit Utf8TextFileWriter(File &&vFile, std::uint32_t u32Flags = 0);
-	~Utf8TextFileWriter();
+	explicit Utf8TextFileWriter(File &&vFile, std::uint32_t u32Flags = 0){
+		Reset(std::move(vFile), u32Flags);
+	}
+	~Utf8TextFileWriter(){
+		Reset();
+	}
 
 public:
 	const File &Get() const noexcept {
@@ -74,7 +82,8 @@ public:
 	File &Get() noexcept {
 		return xm_vFile;
 	}
-	void Reset(File &&vFile = File(), std::uint32_t u32Flags = 0) noexcept;
+	void Reset() noexcept;
+	void Reset(File &&vFile, std::uint32_t u32Flags = 0);
 
 	std::uint32_t GetFlags() const noexcept;
 	std::uint32_t SetFlags(std::uint32_t u32Flags) noexcept;

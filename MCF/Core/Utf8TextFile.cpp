@@ -183,8 +183,8 @@ void Utf8TextFileWriter::WriteLine(const Utf8StringObserver &u8soData){
 }
 void Utf8TextFileWriter::Flush(){
 	xm_vFile.Write(xm_u64Offset, xm_u8sLine.GetData(), xm_u8sLine.GetSize());
-	xm_vFile.Flush();
-
-	xm_u64Offset += xm_u8sLine.GetSize();
 	xm_u8sLine.Clear();
+	xm_u64Offset += xm_u8sLine.GetSize();
+
+	xm_vFile.Flush();
 }

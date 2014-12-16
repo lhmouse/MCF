@@ -34,7 +34,7 @@ namespace Impl {
 		}
 		~IntrusiveSentry(){
 			if(xm_pToDelete){
-				DeleterT()(xm_pToDelete);
+				DeleterT()(const_cast<std::remove_cv_t<ClassT> *>(xm_pToDelete));
 			}
 		}
 

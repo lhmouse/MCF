@@ -38,11 +38,11 @@ private:
 	MonitorLock &operator=(MonitorLock &&) = delete;
 
 public:
-	operator ObjectT &() const noexcept {
+	operator ObjectT &() const && noexcept {
 		return xm_vObject;
 	}
 
-	decltype(auto) operator->() const noexcept {
+	decltype(auto) operator->() const && noexcept {
 		return &xm_vObject;
 	}
 };

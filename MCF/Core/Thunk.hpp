@@ -5,8 +5,8 @@
 #ifndef MCF_CORE_THUNK_HPP_
 #define MCF_CORE_THUNK_HPP_
 
-#include <memory>
 #include <cstddef>
+#include "../Core/UniqueHandle.hpp"
 
 namespace MCF {
 
@@ -17,7 +17,7 @@ struct ThunkDeleter {
 	void operator()(void *pThunk) const noexcept;
 };
 
-using ThunkPtr = std::unique_ptr<void, ThunkDeleter>;
+using ThunkPtr = UniqueHandle<ThunkDeleter>;
 
 extern ThunkPtr CreateThunk(const void *pInit, std::size_t uSize);
 

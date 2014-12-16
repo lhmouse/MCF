@@ -14,7 +14,7 @@ TransactionItemBase::~TransactionItemBase(){
 bool Transaction::IsEmpty() const noexcept {
 	return xm_vecItems.IsEmpty();
 }
-void Transaction::AddItem(std::unique_ptr<TransactionItemBase> &&pItem){
+void Transaction::AddItem(UniquePtr<TransactionItemBase> &&pItem){
 	xm_vecItems.Push(std::move(pItem));
 }
 void Transaction::Clear() noexcept {

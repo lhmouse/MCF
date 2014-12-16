@@ -7,7 +7,7 @@
 
 #include "../Utilities/Noncopyable.hpp"
 #include "../Containers/Vector.hpp"
-#include <memory>
+#include "../SmartPointers/UniquePtr.hpp"
 #include <utility>
 
 namespace MCF {
@@ -50,11 +50,11 @@ public:
 
 class Transaction : NONCOPYABLE {
 private:
-	Vector<std::unique_ptr<TransactionItemBase>> xm_vecItems;
+	Vector<UniquePtr<TransactionItemBase>> xm_vecItems;
 
 public:
 	bool IsEmpty() const noexcept;
-	void AddItem(std::unique_ptr<TransactionItemBase> &&pItem);
+	void AddItem(UniquePtr<TransactionItemBase> &&pItem);
 	void Clear() noexcept;
 
 	bool Commit() const;

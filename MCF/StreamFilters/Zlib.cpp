@@ -14,7 +14,7 @@ using namespace MCF;
 
 namespace {
 
-constexpr std::size_t STEP_SIZE = 0x4000;
+constexpr std::size_t STEP_SIZE		= 0x4000;
 
 unsigned long ZlibErrorToWin32Error(int nZlibError) noexcept {
 	switch(nZlibError){
@@ -56,7 +56,7 @@ class ZlibEncoder::xDelegate {
 private:
 	ZlibEncoder &xm_vOwner;
 
-	z_stream xm_vStream;
+	::z_stream xm_vStream;
 
 public:
 	xDelegate(ZlibEncoder &vOwner, bool bRaw, unsigned uLevel)
@@ -149,7 +149,7 @@ class ZlibDecoder::xDelegate {
 private:
 	ZlibDecoder &xm_vOwner;
 
-	z_stream xm_vStream;
+	::z_stream xm_vStream;
 
 public:
 	xDelegate(ZlibDecoder &vOwner, bool bRaw)
@@ -252,7 +252,7 @@ ZlibEncoder::~ZlibEncoder(){
 
 void ZlibEncoder::xDoInit(){
 	if(!xm_pDelegate){
-		xm_pDelegate.reset(new xDelegate(*this, xm_bRaw, xm_uLevel));
+		xm_pDelegate.Reset(new xDelegate(*this, xm_bRaw, xm_uLevel));
 	}
 	xm_pDelegate->Init();
 }
@@ -274,7 +274,7 @@ ZlibDecoder::~ZlibDecoder(){
 
 void ZlibDecoder::xDoInit(){
 	if(!xm_pDelegate){
-		xm_pDelegate.reset(new xDelegate(*this, xm_bRaw));
+		xm_pDelegate.Reset(new xDelegate(*this, xm_bRaw));
 	}
 	xm_pDelegate->Init();
 }

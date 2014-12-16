@@ -7,7 +7,7 @@
 
 #include "StreamFilterBase.hpp"
 #include "../Core/Exception.hpp"
-#include <memory>
+#include "../SmartPointers/UniquePtr.hpp"
 
 namespace MCF {
 
@@ -19,7 +19,7 @@ private:
 	const unsigned xm_uLevel;
 	const unsigned long xm_ulDictSize;
 
-	std::unique_ptr<xDelegate> xm_pDelegate;
+	UniquePtr<xDelegate> xm_pDelegate;
 
 public:
 	explicit LzmaEncoder(unsigned uLevel = 6, unsigned long ulDictSize = 1ul << 23) noexcept;
@@ -36,7 +36,7 @@ private:
 	class xDelegate;
 
 private:
-	std::unique_ptr<xDelegate> xm_pDelegate;
+	UniquePtr<xDelegate> xm_pDelegate;
 
 public:
 	LzmaDecoder() noexcept;

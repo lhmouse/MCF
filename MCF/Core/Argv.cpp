@@ -7,24 +7,22 @@
 #include "Exception.hpp"
 using namespace MCF;
 
-void ArgvResult::ArgItemDeleter::operator()(const ::MCF_ArgItem *pArgItem) const noexcept {
+void ArgvResult::ArgItemDeleter::operator()(::MCF_ArgItem *pArgItem) const noexcept {
 	::MCF_CRT_FreeArgv(pArgItem);
 }
 
 namespace MCF {
 
 ArgvResult GetArgv(const wchar_t *pwszCommandLine){
-	const char *pszFunction;
 	ArgvResult vRet;
 	if(pwszCommandLine){
-		pszFunction = "MCF_CRT_AllocArgv";
-		vRet.pArgv.reset(::MCF_CRT_AllocArgv(&vRet.uArgc, pwszCommandLine));
+		if(!vRet.pArgv.Reset(::MCF_CRT_AllocArgv(&vRet.uArgc, pwszCommandLine))){
+			DEBUG_THROW(SystemError, "MCF_CRT_AllocArgv");
+		}
 	} else {
-		pszFunction = "MCF_CRT_AllocArgvFromCommandLine";
-		vRet.pArgv.reset(::MCF_CRT_AllocArgvFromCommandLine(&vRet.uArgc));
-	}
-	if(!vRet.pArgv){
-		DEBUG_THROW(SystemError, pszFunction);
+		if(!vRet.pArgv.Reset(::MCF_CRT_AllocArgvFromCommandLine(&vRet.uArgc))){
+			DEBUG_THROW(SystemError, "MCF_CRT_AllocArgvFromCommandLine");
+		}
 	}
 	return std::move(vRet);
 }

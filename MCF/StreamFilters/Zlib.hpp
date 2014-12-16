@@ -7,7 +7,7 @@
 
 #include "StreamFilterBase.hpp"
 #include "../Core/Exception.hpp"
-#include <memory>
+#include "../SmartPointers/UniquePtr.hpp"
 
 namespace MCF {
 
@@ -19,7 +19,7 @@ private:
 	const bool xm_bRaw;
 	const unsigned xm_uLevel;
 
-	std::unique_ptr<xDelegate> xm_pDelegate;
+	UniquePtr<xDelegate> xm_pDelegate;
 
 public:
 	explicit ZlibEncoder(bool bRaw = false, unsigned uLevel = 6) noexcept;
@@ -38,7 +38,7 @@ private:
 private:
 	const bool xm_bRaw;
 
-	std::unique_ptr<xDelegate> xm_pDelegate;
+	UniquePtr<xDelegate> xm_pDelegate;
 
 public:
 	explicit ZlibDecoder(bool bRaw = false) noexcept;

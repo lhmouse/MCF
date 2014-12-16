@@ -11,10 +11,10 @@ using namespace MCF;
 
 namespace {
 
-constexpr std::size_t STEP_SIZE		= 0x4000;
-constexpr lzma_stream INIT_STREAM	= LZMA_STREAM_INIT;
+constexpr std::size_t STEP_SIZE			= 0x4000;
+constexpr ::lzma_stream INIT_STREAM		= LZMA_STREAM_INIT;
 
-unsigned long LzmaErrorToWin32Error(lzma_ret eLzmaError) noexcept {
+unsigned long LzmaErrorToWin32Error(::lzma_ret eLzmaError) noexcept {
 	switch(eLzmaError){
 	case LZMA_OK:
 		return ERROR_SUCCESS;
@@ -52,13 +52,16 @@ unsigned long LzmaErrorToWin32Error(lzma_ret eLzmaError) noexcept {
 }
 
 struct LzmaStreamCloser {
-	void operator()(lzma_stream *pStream) const noexcept {
+	constexpr ::lzma_stream *operator()() const noexcept {
+		return nullptr;
+	}
+	void operator()(::lzma_stream *pStream) const noexcept {
 		::lzma_end(pStream);
 	}
 };
 
-lzma_options_lzma MakeOptions(unsigned uLevel, unsigned long ulDictSize){
-	lzma_options_lzma vRet;
+::lzma_options_lzma MakeOptions(unsigned uLevel, unsigned long ulDictSize){
+	::lzma_options_lzma vRet;
 	if(::lzma_lzma_preset(&vRet, uLevel)){
 		DEBUG_THROW(LzmaError, "lzma_lzma_preset", LZMA_OPTIONS_ERROR);
 	}
@@ -71,10 +74,10 @@ lzma_options_lzma MakeOptions(unsigned uLevel, unsigned long ulDictSize){
 class LzmaEncoder::xDelegate {
 private:
 	LzmaEncoder &xm_vOwner;
-	const lzma_options_lzma xm_vOptions;
+	const ::lzma_options_lzma xm_vOptions;
 
-	lzma_stream xm_vStream;
-	std::unique_ptr<lzma_stream, LzmaStreamCloser> xm_pStream;
+	::lzma_stream xm_vStream;
+	UniquePtr<::lzma_stream, LzmaStreamCloser> xm_pStream;
 
 public:
 	xDelegate(LzmaEncoder &vOwner, unsigned uLevel, unsigned long ulDictSize)
@@ -85,13 +88,13 @@ public:
 
 public:
 	void Init(){
-		xm_pStream.reset();
+		xm_pStream.Reset();
 
 		const auto eError = ::lzma_alone_encoder(&xm_vStream, &xm_vOptions);
 		if(eError != LZMA_OK){
 			DEBUG_THROW(LzmaError, "lzma_alone_encoder", eError);
 		}
-		xm_pStream.reset(&xm_vStream);
+		xm_pStream.Reset(&xm_vStream);
 	}
 	void Update(const void *pData, std::size_t uSize){
 		unsigned char abyTemp[STEP_SIZE];
@@ -106,7 +109,7 @@ public:
 			xm_pStream->next_in = pbyRead;
 			xm_pStream->avail_in = uToProcess;
 			do {
-				const auto eError = ::lzma_code(xm_pStream.get(), LZMA_RUN);
+				const auto eError = ::lzma_code(xm_pStream.Get(), LZMA_RUN);
 				if(eError == LZMA_STREAM_END){
 					break;
 				}
@@ -136,7 +139,7 @@ public:
 		xm_pStream->next_in = nullptr;
 		xm_pStream->avail_in = 0;
 		for(;;){
-			const auto eError = ::lzma_code(xm_pStream.get(), LZMA_FINISH);
+			const auto eError = ::lzma_code(xm_pStream.Get(), LZMA_FINISH);
 			if(eError == LZMA_STREAM_END){
 				break;
 			}
@@ -160,8 +163,8 @@ class LzmaDecoder::xDelegate {
 private:
 	LzmaDecoder &xm_vOwner;
 
-	lzma_stream xm_vStream;
-	std::unique_ptr<lzma_stream, LzmaStreamCloser> xm_pStream;
+	::lzma_stream xm_vStream;
+	UniquePtr<::lzma_stream, LzmaStreamCloser> xm_pStream;
 
 public:
 	explicit xDelegate(LzmaDecoder &vOwner)
@@ -172,13 +175,13 @@ public:
 
 public:
 	void Init() noexcept {
-		xm_pStream.reset();
+		xm_pStream.Reset();
 
 		const auto eError = ::lzma_alone_decoder(&xm_vStream, UINT64_MAX);
 		if(eError != LZMA_OK){
 			DEBUG_THROW(LzmaError, "lzma_alone_decoder", eError);
 		}
-		xm_pStream.reset(&xm_vStream);
+		xm_pStream.Reset(&xm_vStream);
 	}
 	void Update(const void *pData, std::size_t uSize){
 		unsigned char abyTemp[STEP_SIZE];
@@ -193,7 +196,7 @@ public:
 			xm_pStream->next_in = pbyRead;
 			xm_pStream->avail_in = uToProcess;
 			do {
-				const auto eError = ::lzma_code(xm_pStream.get(), LZMA_RUN);
+				const auto eError = ::lzma_code(xm_pStream.Get(), LZMA_RUN);
 				if(eError == LZMA_STREAM_END){
 					break;
 				}
@@ -223,7 +226,7 @@ public:
 		xm_pStream->next_in = nullptr;
 		xm_pStream->avail_in = 0;
 		for(;;){
-			const auto eError = ::lzma_code(xm_pStream.get(), LZMA_FINISH);
+			const auto eError = ::lzma_code(xm_pStream.Get(), LZMA_FINISH);
 			if(eError == LZMA_STREAM_END){
 				break;
 			}
@@ -254,7 +257,7 @@ LzmaEncoder::~LzmaEncoder(){
 
 void LzmaEncoder::xDoInit(){
 	if(!xm_pDelegate){
-		xm_pDelegate.reset(new xDelegate(*this, xm_uLevel, xm_ulDictSize));
+		xm_pDelegate.Reset(new xDelegate(*this, xm_uLevel, xm_ulDictSize));
 	}
 	xm_pDelegate->Init();
 }
@@ -275,7 +278,7 @@ LzmaDecoder::~LzmaDecoder(){
 
 void LzmaDecoder::xDoInit(){
 	if(!xm_pDelegate){
-		xm_pDelegate.reset(new xDelegate(*this));
+		xm_pDelegate.Reset(new xDelegate(*this));
 	}
 	xm_pDelegate->Init();
 }

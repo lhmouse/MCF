@@ -5,19 +5,22 @@
 #ifndef MCF_CORE_ARGV_HPP_
 #define MCF_CORE_ARGV_HPP_
 
-#include <memory>
 #include <cstddef>
 #include "../../MCFCRT/env/argv.h"
+#include "../SmartPointers/UniquePtr.hpp"
 
 namespace MCF {
 
 struct ArgvResult {
 	struct ArgItemDeleter {
-		void operator()(const ::MCF_ArgItem *pArgItem) const noexcept;
+		constexpr ::MCF_ArgItem *operator()() const noexcept {
+			return nullptr;
+		}
+		void operator()(::MCF_ArgItem *pArgItem) const noexcept;
 	};
 
 	std::size_t uArgc;
-	std::unique_ptr<const ::MCF_ArgItem [], ArgItemDeleter> pArgv;
+	UniquePtr<const ::MCF_ArgItem [], ArgItemDeleter> pArgv;
 };
 
 extern ArgvResult GetArgv(const wchar_t *pwszCommandLine = nullptr);

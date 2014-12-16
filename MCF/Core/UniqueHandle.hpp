@@ -48,7 +48,7 @@ public:
 	UniqueHandle &operator=(const UniqueHandle &) = delete;
 
 public:
-	bool IsGood() const noexcept {
+	bool IsValid() const noexcept {
 		return Get() != CloserT()();
 	}
 	Handle Get() const noexcept {
@@ -75,7 +75,7 @@ public:
 
 public:
 	explicit operator bool() const noexcept {
-		return IsGood();
+		return IsValid();
 	}
 	explicit operator Handle() const noexcept {
 		return Get();

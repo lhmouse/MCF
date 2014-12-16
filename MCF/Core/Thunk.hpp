@@ -7,24 +7,19 @@
 
 #include <memory>
 #include <cstddef>
-#include "../../MCFCRT/env/thunk.h"
 
 namespace MCF {
 
 struct ThunkDeleter {
-	void operator()(void *pThunk) const noexcept {
-		::MCF_CRT_DeallocateThunk(pThunk, true);
+	constexpr void *operator()() const noexcept {
+		return nullptr;
 	}
+	void operator()(void *pThunk) const noexcept;
 };
+
 using ThunkPtr = std::unique_ptr<void, ThunkDeleter>;
 
-inline ThunkPtr CreateThunk(const void *pInit, std::size_t uSize){
-	ThunkPtr pThunk(::MCF_CRT_AllocateThunk(pInit, uSize));
-	if(!pThunk){
-		throw std::bad_alloc();
-	}
-	return std::move(pThunk);
-}
+extern ThunkPtr CreateThunk(const void *pInit, std::size_t uSize);
 
 }
 

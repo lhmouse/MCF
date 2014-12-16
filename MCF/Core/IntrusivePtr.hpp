@@ -119,10 +119,13 @@ namespace Impl {
 
 		template<typename OtherT = ClassT>
 		IntrusivePtr<const volatile OtherT, DeleterT> Fork() const volatile noexcept;
+
 		template<typename OtherT = ClassT>
 		IntrusivePtr<const OtherT, DeleterT> Fork() const noexcept;
+
 		template<typename OtherT = ClassT>
 		IntrusivePtr<volatile OtherT, DeleterT> Fork() volatile noexcept;
+
 		template<typename OtherT = ClassT>
 		IntrusivePtr<OtherT, DeleterT> Fork() noexcept;
 	};

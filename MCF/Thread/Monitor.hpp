@@ -17,20 +17,55 @@ class KernelMutex;
 template<class ObjectT, class MutexT>
 class MonitorTemplate;
 
-template<class ObjectT, class MutexT>
-class MonitorLock {
+template<class ObjectT>
+class MonitorObserverAsReference {
+private:
+	ObjectT &xm_vObject;
+
+public:
+	explicit MonitorObserverAsReference(ObjectT &vObject) noexcept
+		: xm_vObject(vObject)
+	{
+	}
+
+public:
+	operator ObjectT &() const && noexcept {
+		return xm_vObject;
+	}
+};
+template<class ObjectT>
+class MonitorObserverAsPointer {
+private:
+	ObjectT &xm_vObject;
+
+public:
+	explicit MonitorObserverAsPointer(ObjectT &vObject) noexcept
+		: xm_vObject(vObject)
+	{
+	}
+
+public:
+	ObjectT &operator*() const && noexcept {
+		return xm_vObject;
+	}
+	decltype(auto) operator->() const && noexcept {
+		return &xm_vObject;
+	}
+};
+
+template<class ObjectT, class MutexT, class ObserverT>
+class MonitorLock : public ObserverT {
 	friend MonitorTemplate<const volatile ObjectT, MutexT>;
 	friend MonitorTemplate<const ObjectT, MutexT>;
 	friend MonitorTemplate<volatile ObjectT, MutexT>;
 	friend MonitorTemplate<ObjectT, MutexT>;
 
 private:
-	ObjectT &xm_vObject;
 	typename MutexT::UniqueLock xm_vLock;
 
 private:
 	MonitorLock(ObjectT &vObject, MutexT &vMutex) noexcept
-		: xm_vObject(vObject), xm_vLock(vMutex)
+		: ObserverT(vObject), xm_vLock(vMutex)
 	{
 	}
 
@@ -39,15 +74,6 @@ private:
 	MonitorLock(const MonitorLock &) = delete;
 	MonitorLock &operator=(const MonitorLock &) = delete;
 	MonitorLock &operator=(MonitorLock &&) = delete;
-
-public:
-	operator ObjectT &() const && noexcept {
-		return xm_vObject;
-	}
-
-	decltype(auto) operator->() const && noexcept {
-		return &xm_vObject;
-	}
 };
 
 template<class ObjectT, class MutexT>
@@ -64,18 +90,18 @@ public:
 	}
 
 public:
-	MonitorLock<const ObjectT, MutexT> operator*() const noexcept {
-		return MonitorLock<const ObjectT, MutexT>(xm_vObject, xm_vMutex);
+	auto operator*() const noexcept {
+		return MonitorLock<const ObjectT, MutexT, MonitorObserverAsReference<const ObjectT>>(xm_vObject, xm_vMutex);
 	}
-	MonitorLock<ObjectT, MutexT> operator*() noexcept {
-		return MonitorLock<ObjectT, MutexT>(xm_vObject, xm_vMutex);
+	auto operator*() noexcept {
+		return MonitorLock<ObjectT, MutexT, MonitorObserverAsReference<ObjectT>>(xm_vObject, xm_vMutex);
 	}
 
-	MonitorLock<const ObjectT, MutexT> operator->() const noexcept {
-		return MonitorLock<const ObjectT, MutexT>(xm_vObject, xm_vMutex);
+	auto operator->() const noexcept {
+		return MonitorLock<const ObjectT, MutexT, MonitorObserverAsPointer<const ObjectT>>(xm_vObject, xm_vMutex);
 	}
-	MonitorLock<ObjectT, MutexT> operator->() noexcept {
-		return MonitorLock<ObjectT, MutexT>(xm_vObject, xm_vMutex);
+	auto operator->() noexcept {
+		return MonitorLock<ObjectT, MutexT, MonitorObserverAsPointer<ObjectT>>(xm_vObject, xm_vMutex);
 	}
 };
 

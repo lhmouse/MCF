@@ -5,14 +5,14 @@
 #include "../StdMCF.hpp"
 #include "ConditionVariable.hpp"
 #include "../Utilities/MinMax.hpp"
-#include "UserMutex.hpp"
+#include "Mutex.hpp"
 using namespace MCF;
 
 // http://research.microsoft.com/pubs/64242/ImplementingCVs.pdf
 // 因为 Semaphore 现在维护一个大体上 FIFO 的顺序，我们就没必要操心了。
 
 // 构造函数和析构函数。
-ConditionVariable::ConditionVariable(UserMutex &vMutex)
+ConditionVariable::ConditionVariable(Mutex &vMutex)
 	: xm_vMutex(vMutex), xm_uWaiting(0), xm_vSemaphore(0, nullptr)
 {
 	__atomic_thread_fence(__ATOMIC_RELEASE);

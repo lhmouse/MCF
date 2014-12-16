@@ -3,29 +3,29 @@
 // Copyleft 2013 - 2014, LH_Mouse. All wrongs reserved.
 
 #include "../StdMCF.hpp"
-#include "UserMutex.hpp"
+#include "Mutex.hpp"
 #include "../Core/System.hpp"
 using namespace MCF;
 
 namespace MCF {
 
 template<>
-bool UserMutex::UniqueLock::xDoTry() const noexcept {
+bool Mutex::UniqueLock::xDoTry() const noexcept {
 	return xm_pOwner->Try();
 }
 template<>
-void UserMutex::UniqueLock::xDoLock() const noexcept {
+void Mutex::UniqueLock::xDoLock() const noexcept {
 	xm_pOwner->Lock();
 }
 template<>
-void UserMutex::UniqueLock::xDoUnlock() const noexcept {
+void Mutex::UniqueLock::xDoUnlock() const noexcept {
 	xm_pOwner->Unlock();
 }
 
 }
 
 // 构造函数和析构函数。
-UserMutex::UserMutex(std::size_t uSpinCount)
+Mutex::Mutex(std::size_t uSpinCount)
 	: xm_vSemaphore(0), xm_uSpinCount(uSpinCount)
 	, xm_splQueueSize(0), xm_uLockingThreadId(0)
 {
@@ -33,7 +33,7 @@ UserMutex::UserMutex(std::size_t uSpinCount)
 }
 
 // 其他非静态成员函数。
-bool UserMutex::xTryWithHint(unsigned long ulThreadId) noexcept {
+bool Mutex::xTryWithHint(unsigned long ulThreadId) noexcept {
 	ASSERT(!IsLockedByCurrentThread());
 
 	std::size_t i = 1;
@@ -54,16 +54,16 @@ bool UserMutex::xTryWithHint(unsigned long ulThreadId) noexcept {
 	}
 }
 
-bool UserMutex::IsLockedByCurrentThread() const noexcept {
+bool Mutex::IsLockedByCurrentThread() const noexcept {
 	return __atomic_load_n(&xm_uLockingThreadId, __ATOMIC_ACQUIRE) == ::GetCurrentThreadId();
 }
 
-bool UserMutex::Try() noexcept {
+bool Mutex::Try() noexcept {
 	ASSERT(!IsLockedByCurrentThread());
 
 	return xTryWithHint(::GetCurrentThreadId());
 }
-void UserMutex::Lock() noexcept {
+void Mutex::Lock() noexcept {
 	ASSERT(!IsLockedByCurrentThread());
 
 	const auto dwThreadId = ::GetCurrentThreadId();
@@ -87,7 +87,7 @@ void UserMutex::Lock() noexcept {
 		uQueueSize = xm_splQueueSize.Lock();
 	}
 }
-void UserMutex::Unlock() noexcept {
+void Mutex::Unlock() noexcept {
 	ASSERT(IsLockedByCurrentThread());
 
 	__atomic_store_n(&xm_uLockingThreadId, 0, __ATOMIC_RELEASE);
@@ -100,11 +100,11 @@ void UserMutex::Unlock() noexcept {
 	xm_splQueueSize.Unlock(uQueueSize);
 }
 
-UserMutex::UniqueLock UserMutex::TryLock() noexcept {
+Mutex::UniqueLock Mutex::TryLock() noexcept {
 	UniqueLock vLock(*this, false);
 	vLock.Try();
 	return std::move(vLock);
 }
-UserMutex::UniqueLock UserMutex::GetLock() noexcept {
+Mutex::UniqueLock Mutex::GetLock() noexcept {
 	return UniqueLock(*this);
 }

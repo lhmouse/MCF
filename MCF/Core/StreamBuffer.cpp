@@ -7,7 +7,7 @@
 #include "../Utilities/Assert.hpp"
 #include "../Utilities/MinMax.hpp"
 #include "../Utilities/Algorithms.hpp"
-#include "../Thread/UserMutex.hpp"
+#include "../Thread/Mutex.hpp"
 using namespace MCF;
 
 constexpr std::size_t CHUNK_SIZE = 0x400;
@@ -26,7 +26,7 @@ namespace {
 
 using ChunkNode = typename List<StreamBufferChunk>::Node;
 
-UserMutex g_mtxPoolMutex;
+Mutex g_mtxPoolMutex;
 List<StreamBufferChunk> g_lstPool;
 
 StreamBufferChunk &PushPooled(List<StreamBufferChunk> &lstDst){

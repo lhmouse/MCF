@@ -7,28 +7,28 @@
 
 #include "../Utilities/Noncopyable.hpp"
 #include "UniqueLockTemplate.hpp"
-#include "UserMutex.hpp"
+#include "Mutex.hpp"
 #include <cstddef>
 
 namespace MCF {
 
-enum UserRecursiveMutexResult {
+enum RecursiveMutexResult {
 	R_TRY_FAILED	= 0,
 	R_STATE_CHANGED	= 1,
 	R_RECURSIVE		= 2,
 };
 
-class UserRecursiveMutex : NONCOPYABLE {
+class RecursiveMutex : NONCOPYABLE {
 public:
-	using Result = UserRecursiveMutexResult;
-	using UniqueLock = UniqueLockTemplate<UserRecursiveMutex>;
+	using Result = RecursiveMutexResult;
+	using UniqueLock = UniqueLockTemplate<RecursiveMutex>;
 
 private:
-	UserMutex xm_vMutex;
+	Mutex xm_vMutex;
 	std::size_t xm_uRecursionCount;
 
 public:
-	explicit UserRecursiveMutex(std::size_t uSpinCount = 0x400);
+	explicit RecursiveMutex(std::size_t uSpinCount = 0x400);
 
 public:
 	std::size_t GetSpinCount() const noexcept {

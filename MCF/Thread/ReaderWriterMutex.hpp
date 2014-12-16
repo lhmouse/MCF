@@ -8,7 +8,7 @@
 #include "../Utilities/Noncopyable.hpp"
 #include "../Core/UniqueHandle.hpp"
 #include "UniqueLockTemplate.hpp"
-#include "UserRecursiveMutex.hpp"
+#include "RecursiveMutex.hpp"
 #include "Semaphore.hpp"
 #include <cstddef>
 
@@ -22,12 +22,12 @@ private:
 	};
 
 public:
-	using Result = UserRecursiveMutexResult;
+	using Result = RecursiveMutexResult;
 	using UniqueReaderLock = UniqueLockTemplate<ReaderWriterMutex, 0u>;
 	using UniqueWriterLock = UniqueLockTemplate<ReaderWriterMutex, 1u>;
 
 private:
-	UserRecursiveMutex xm_mtxWriterGuard;
+	RecursiveMutex xm_mtxWriterGuard;
 	Semaphore xm_semExclusive;
 	volatile std::size_t xm_uReaderCount;
 	UniqueHandle<xTlsIndexDeleter> xm_uTlsIndex;

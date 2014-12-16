@@ -1,4 +1,5 @@
 #include <MCF/StdMCF.hpp>
+#include <MCF/Thread/Mutex.hpp>
 #include <MCF/Thread/Monitor.hpp>
 #include <MCF/Core/String.hpp>
 using namespace MCF;

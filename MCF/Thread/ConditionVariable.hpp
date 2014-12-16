@@ -11,17 +11,17 @@
 
 namespace MCF {
 
-class UserMutex;
+class Mutex;
 
 class ConditionVariable : NONCOPYABLE {
 private:
-	UserMutex &xm_vMutex;
+	Mutex &xm_vMutex;
 
 	std::size_t xm_uWaiting;
 	Semaphore xm_vSemaphore;
 
 public:
-	explicit ConditionVariable(UserMutex &vMutex);
+	explicit ConditionVariable(Mutex &vMutex);
 
 public:
 	bool Wait(unsigned long long ullMilliSeconds) noexcept;

@@ -7,7 +7,7 @@
 
 #include "../Utilities/Noncopyable.hpp"
 #include "UniqueLockTemplate.hpp"
-#include "UserMutex.hpp"
+#include "Mutex.hpp"
 #include "ConditionVariable.hpp"
 #include <cstddef>
 
@@ -15,7 +15,7 @@ namespace MCF {
 
 class UniversalConditionVariable : NONCOPYABLE {
 private:
-	UserMutex xm_vMutex;
+	Mutex xm_vMutex;
 	ConditionVariable xm_vDelegate;
 
 public:

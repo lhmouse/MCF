@@ -13,9 +13,9 @@
 
 namespace MCF {
 
-class UserMutex : NONCOPYABLE {
+class Mutex : NONCOPYABLE {
 public:
-	using UniqueLock = UniqueLockTemplate<UserMutex>;
+	using UniqueLock = UniqueLockTemplate<Mutex>;
 
 private:
 	Semaphore xm_vSemaphore;
@@ -25,7 +25,7 @@ private:
 	volatile std::size_t xm_uLockingThreadId;
 
 public:
-	explicit UserMutex(std::size_t uSpinCount = 0x400);
+	explicit Mutex(std::size_t uSpinCount = 0x400);
 
 private:
 	bool xTryWithHint(unsigned long ulThreadId) noexcept;

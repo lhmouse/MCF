@@ -5,29 +5,32 @@
 #ifndef MCF_THREAD_MONITOR_HPP_
 #define MCF_THREAD_MONITOR_HPP_
 
-#include "UserRecursiveMutex.hpp"
 #include "../Utilities/Noncopyable.hpp"
 #include <utility>
 
 namespace MCF {
 
-template<class ObjectT>
-class Monitor;
+class Mutex;
+class RecursiveMutex;
+class KernelMutex;
 
-template<class ObjectT>
+template<class ObjectT, class MutexT>
+class MonitorTemplate;
+
+template<class ObjectT, class MutexT>
 class MonitorLock {
-	friend Monitor<const volatile ObjectT>;
-	friend Monitor<const ObjectT>;
-	friend Monitor<volatile ObjectT>;
-	friend Monitor<ObjectT>;
+	friend MonitorTemplate<const volatile ObjectT, MutexT>;
+	friend MonitorTemplate<const ObjectT, MutexT>;
+	friend MonitorTemplate<volatile ObjectT, MutexT>;
+	friend MonitorTemplate<ObjectT, MutexT>;
 
 private:
-	UserRecursiveMutex::UniqueLock xm_vLock;
 	ObjectT &xm_vObject;
+	typename MutexT::UniqueLock xm_vLock;
 
 private:
-	MonitorLock(UserRecursiveMutex &vMutex, ObjectT &vObject) noexcept
-		: xm_vLock(vMutex), xm_vObject(vObject)
+	MonitorLock(ObjectT &vObject, MutexT &vMutex) noexcept
+		: xm_vObject(vObject), xm_vLock(vMutex)
 	{
 	}
 
@@ -47,34 +50,43 @@ public:
 	}
 };
 
-template<class ObjectT>
-class Monitor : NONCOPYABLE {
+template<class ObjectT, class MutexT>
+class MonitorTemplate : NONCOPYABLE {
 private:
-	mutable UserRecursiveMutex xm_vMutex;
 	ObjectT xm_vObject;
+	mutable MutexT xm_vMutex;
 
 public:
 	template<typename ...ParamsT>
-	explicit Monitor(ParamsT &&...vParams)
+	explicit MonitorTemplate(ParamsT &&...vParams)
 		: xm_vObject(std::forward<ParamsT>(vParams)...)
 	{
 	}
 
 public:
-	MonitorLock<const ObjectT> operator*() const noexcept {
-		return MonitorLock<const ObjectT>(xm_vMutex, xm_vObject);
+	MonitorLock<const ObjectT, MutexT> operator*() const noexcept {
+		return MonitorLock<const ObjectT, MutexT>(xm_vObject, xm_vMutex);
 	}
-	MonitorLock<ObjectT> operator*() noexcept {
-		return MonitorLock<ObjectT>(xm_vMutex, xm_vObject);
+	MonitorLock<ObjectT, MutexT> operator*() noexcept {
+		return MonitorLock<ObjectT, MutexT>(xm_vObject, xm_vMutex);
 	}
 
-	MonitorLock<const ObjectT> operator->() const noexcept {
-		return MonitorLock<const ObjectT>(xm_vMutex, xm_vObject);
+	MonitorLock<const ObjectT, MutexT> operator->() const noexcept {
+		return MonitorLock<const ObjectT, MutexT>(xm_vObject, xm_vMutex);
 	}
-	MonitorLock<ObjectT> operator->() noexcept {
-		return MonitorLock<ObjectT>(xm_vMutex, xm_vObject);
+	MonitorLock<ObjectT, MutexT> operator->() noexcept {
+		return MonitorLock<ObjectT, MutexT>(xm_vObject, xm_vMutex);
 	}
 };
+
+template<class ObjectT>
+using Monitor = MonitorTemplate<ObjectT, Mutex>;
+
+template<class ObjectT>
+using RecursiveMonitor = MonitorTemplate<ObjectT, RecursiveMutex>;
+
+template<class ObjectT>
+using KernelMonitor = MonitorTemplate<ObjectT, KernelMutex>;
 
 }
 

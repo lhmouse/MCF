@@ -14,7 +14,7 @@ namespace MCF {
 template<class CloserT>
 class UniqueHandle {
 public:
-	using Handle = decltype(CloserT()());
+	using Handle = std::remove_cv_t<std::remove_reference_t<decltype(CloserT()())>>;
 
 	static_assert(std::is_scalar<Handle>::value, "Handle must be a scalar type.");
 	static_assert(noexcept(CloserT()(Handle())), "Handle closer must not throw.");
@@ -87,11 +87,11 @@ bool operator==(const UniqueHandle<CloserT> &lhs, const UniqueHandle<CloserT> &r
 	return lhs.Get() == rhs.Get();
 }
 template<class CloserT>
-bool operator==(const UniqueHandle<CloserT> &lhs, decltype(CloserT()()) rhs) noexcept {
+bool operator==(const UniqueHandle<CloserT> &lhs, typename UniqueHandle<CloserT>::Handle rhs) noexcept {
 	return lhs.Get() == rhs;
 }
 template<class CloserT>
-bool operator==(decltype(CloserT()()) lhs, const UniqueHandle<CloserT> &rhs) noexcept {
+bool operator==(typename UniqueHandle<CloserT>::Handle lhs, const UniqueHandle<CloserT> &rhs) noexcept {
 	return lhs == rhs.Get();
 }
 
@@ -100,11 +100,11 @@ bool operator!=(const UniqueHandle<CloserT> &lhs, const UniqueHandle<CloserT> &r
 	return lhs.Get() != rhs.Get();
 }
 template<class CloserT>
-bool operator!=(const UniqueHandle<CloserT> &lhs, decltype(CloserT()()) rhs) noexcept {
+bool operator!=(const UniqueHandle<CloserT> &lhs, typename UniqueHandle<CloserT>::Handle rhs) noexcept {
 	return lhs.Get() != rhs;
 }
 template<class CloserT>
-bool operator!=(decltype(CloserT()()) lhs, const UniqueHandle<CloserT> &rhs) noexcept {
+bool operator!=(typename UniqueHandle<CloserT>::Handle lhs, const UniqueHandle<CloserT> &rhs) noexcept {
 	return lhs != rhs.Get();
 }
 
@@ -113,11 +113,11 @@ bool operator<(const UniqueHandle<CloserT> &lhs, const UniqueHandle<CloserT> &rh
 	return lhs.Get() < rhs.Get();
 }
 template<class CloserT>
-bool operator<(const UniqueHandle<CloserT> &lhs, decltype(CloserT()()) rhs) noexcept {
+bool operator<(const UniqueHandle<CloserT> &lhs, typename UniqueHandle<CloserT>::Handle rhs) noexcept {
 	return lhs.Get() < rhs;
 }
 template<class CloserT>
-bool operator<(decltype(CloserT()()) lhs, const UniqueHandle<CloserT> &rhs) noexcept {
+bool operator<(typename UniqueHandle<CloserT>::Handle lhs, const UniqueHandle<CloserT> &rhs) noexcept {
 	return lhs < rhs.Get();
 }
 
@@ -126,11 +126,11 @@ bool operator>(const UniqueHandle<CloserT> &lhs, const UniqueHandle<CloserT> &rh
 	return lhs.Get() > rhs.Get();
 }
 template<class CloserT>
-bool operator>(const UniqueHandle<CloserT> &lhs, decltype(CloserT()()) rhs) noexcept {
+bool operator>(const UniqueHandle<CloserT> &lhs, typename UniqueHandle<CloserT>::Handle rhs) noexcept {
 	return lhs.Get() > rhs;
 }
 template<class CloserT>
-bool operator>(decltype(CloserT()()) lhs, const UniqueHandle<CloserT> &rhs) noexcept {
+bool operator>(typename UniqueHandle<CloserT>::Handle lhs, const UniqueHandle<CloserT> &rhs) noexcept {
 	return lhs > rhs.Get();
 }
 
@@ -139,11 +139,11 @@ bool operator<=(const UniqueHandle<CloserT> &lhs, const UniqueHandle<CloserT> &r
 	return lhs.Get() <= rhs.Get();
 }
 template<class CloserT>
-bool operator<=(const UniqueHandle<CloserT> &lhs, decltype(CloserT()()) rhs) noexcept {
+bool operator<=(const UniqueHandle<CloserT> &lhs, typename UniqueHandle<CloserT>::Handle rhs) noexcept {
 	return lhs.Get() <= rhs;
 }
 template<class CloserT>
-bool operator<=(decltype(CloserT()()) lhs, const UniqueHandle<CloserT> &rhs) noexcept {
+bool operator<=(typename UniqueHandle<CloserT>::Handle lhs, const UniqueHandle<CloserT> &rhs) noexcept {
 	return lhs <= rhs.Get();
 }
 
@@ -152,11 +152,11 @@ bool operator>=(const UniqueHandle<CloserT> &lhs, const UniqueHandle<CloserT> &r
 	return lhs.Get() >= rhs.Get();
 }
 template<class CloserT>
-bool operator>=(const UniqueHandle<CloserT> &lhs, decltype(CloserT()()) rhs) noexcept {
+bool operator>=(const UniqueHandle<CloserT> &lhs, typename UniqueHandle<CloserT>::Handle rhs) noexcept {
 	return lhs.Get() >= rhs;
 }
 template<class CloserT>
-bool operator>=(decltype(CloserT()()) lhs, const UniqueHandle<CloserT> &rhs) noexcept {
+bool operator>=(typename UniqueHandle<CloserT>::Handle lhs, const UniqueHandle<CloserT> &rhs) noexcept {
 	return lhs >= rhs.Get();
 }
 

@@ -14,13 +14,11 @@ void MCF_OnException(void *, const std::type_info &, const void *) noexcept {
 
 #pragma GCC diagnostic ignored "-Wattributes"
 
-using PFNDTOR = void (_GLIBCXX_CDTOR_CALLABI *)(void *);
-
 extern "C" [[noreturn]]
-void __real___cxa_throw(void *, std::type_info *, PFNDTOR);
+void __real___cxa_throw(void *, std::type_info *, void (_GLIBCXX_CDTOR_CALLABI *)(void *));
 
 extern "C" [[noreturn]] __attribute__((__noinline__))
-void __wrap___cxa_throw(void *pException, std::type_info *pTypeInfo, PFNDTOR pfnDtor){
+void __wrap___cxa_throw(void *pException, std::type_info *pTypeInfo, void (_GLIBCXX_CDTOR_CALLABI *pfnDtor)(void *)){
 	MCF_OnException(pException, *pTypeInfo, __builtin_return_address(0));
 
 	::__real___cxa_throw(pException, pTypeInfo, pfnDtor);

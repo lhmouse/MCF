@@ -6,8 +6,8 @@
 #define MCF_THREAD_THREAD_HPP_
 
 #include "../Utilities/Noncopyable.hpp"
-#include "../Core/IntrusivePtr.hpp"
-#include "_Win32Handle.hpp"
+#include "../SmartPointers/IntrusivePtr.hpp"
+#include "_UniqueWin32Handle.hpp"
 #include <functional>
 #include <exception>
 #include <cstddef>

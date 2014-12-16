@@ -8,7 +8,7 @@
 #include "../Utilities/Noncopyable.hpp"
 #include "../Core/String.hpp"
 #include "UniqueLockTemplate.hpp"
-#include "_Win32Handle.hpp"
+#include "_UniqueWin32Handle.hpp"
 
 namespace MCF {
 

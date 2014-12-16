@@ -1,17 +1,15 @@
 #include <MCF/StdMCF.hpp>
-#include <MCF/StreamFilters/Lzma.hpp>
+#include <MCF/Thread/Monitor.hpp>
+#include <MCF/Core/String.hpp>
 using namespace MCF;
 
+void my_print(const AnsiString &s){
+	std::puts(s.GetCStr());
+}
+
 extern "C" unsigned int MCFMain() noexcept {
-	StreamBuffer buf;
-
-	buf.Put(" Hello world! Hello world! Hello world!");
-	LzmaEncoder().FilterInPlace(buf);
-	LzmaDecoder().FilterInPlace(buf);
-
-	buf.Traverse([](auto p, auto cb){
-		for(unsigned i = 0; i < cb; ++i){ std::putchar(((const char *)p)[i]); }
-	});
-
+	Monitor<AnsiString> mon;
+	mon->Assign("meow", 4);
+	my_print(*mon);
 	return 0;
 }

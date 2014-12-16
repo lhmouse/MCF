@@ -12,7 +12,7 @@ struct DefaultDeleter {
 	constexpr T *operator()() const noexcept {
 		return nullptr;
 	}
-	void operator()(const volatile T *p) const noexcept {
+	void operator()(T *p) const noexcept {
 		delete p;
 	}
 };
@@ -22,7 +22,7 @@ struct DefaultDeleter<T []> {
 	constexpr T *operator()() const noexcept {
 		return nullptr;
 	}
-	void operator()(const volatile T *p) const noexcept {
+	void operator()(T *p) const noexcept {
 		delete[] p;
 	}
 };

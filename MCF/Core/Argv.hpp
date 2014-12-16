@@ -13,27 +13,14 @@ namespace MCF {
 
 struct ArgvResult {
 	struct ArgItemDeleter {
-		void operator()(const ::MCF_ArgItem *pArgItem) const noexcept {
-			::MCF_CRT_FreeArgv(pArgItem);
-		}
+		void operator()(const ::MCF_ArgItem *pArgItem) const noexcept;
 	};
 
 	std::size_t uArgc;
 	std::unique_ptr<const ::MCF_ArgItem [], ArgItemDeleter> pArgv;
 };
 
-inline ArgvResult GetArgv(const wchar_t *pwszCommandLine = nullptr){
-	ArgvResult vRet;
-	if(pwszCommandLine){
-		vRet.pArgv.reset(::MCF_CRT_AllocArgv(&vRet.uArgc, pwszCommandLine));
-	} else {
-		vRet.pArgv.reset(::MCF_CRT_AllocArgvFromCommandLine(&vRet.uArgc));
-	}
-	if(!vRet.pArgv){
-		throw std::bad_alloc();
-	}
-	return std::move(vRet);
-}
+extern ArgvResult GetArgv(const wchar_t *pwszCommandLine = nullptr);
 
 }
 

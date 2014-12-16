@@ -159,6 +159,9 @@ void *MCF_CRT_AllocateThunk(const void *pInit, size_t uSize){
 done:
 	ReleaseSRWLockExclusive(&g_srwLock);
 
+	if(!pRet){
+		SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+	}
 	return pRet;
 }
 void MCF_CRT_DeallocateThunk(void *pThunk, bool bToPoison){

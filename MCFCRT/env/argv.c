@@ -26,6 +26,7 @@ const MCF_ArgItem *MCF_CRT_AllocArgv(size_t *pArgc, const wchar_t *pwszCommandLi
 	size_t uCapacity = 4;
 	void *pStorage = malloc(uPrefixSize + (uCapacity + 2) * sizeof(MCF_ArgItem));
 	if(!pStorage){
+		SetLastError(ERROR_NOT_ENOUGH_MEMORY);
 		return nullptr;
 	}
 	MCF_ArgItem *pArgv = (MCF_ArgItem *)((char *)pStorage + uPrefixSize + sizeof(MCF_ArgItem));
@@ -146,6 +147,7 @@ const MCF_ArgItem *MCF_CRT_AllocArgv(size_t *pArgc, const wchar_t *pwszCommandLi
 
 jError:
 	free(pStorage);
+	SetLastError(ERROR_NOT_ENOUGH_MEMORY);
 	return nullptr;
 }
 

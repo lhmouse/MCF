@@ -158,6 +158,7 @@ bool MCF_CRT_RemoveAtThreadExit(void *pTlsKey){
 void *MCF_CRT_TlsAllocKey(void (__cdecl *pfnCallback)(intptr_t)){
 	TlsKey *const pKey = malloc(sizeof(TlsKey));
 	if(!pKey){
+		SetLastError(ERROR_NOT_ENOUGH_MEMORY);
 		return nullptr;
 	}
 	pKey->pfnCallback	= pfnCallback;
@@ -221,6 +222,7 @@ bool MCF_CRT_TlsFreeKey(void *pTlsKey){
 bool MCF_CRT_TlsGet(void *pTlsKey, intptr_t *pnValue){
 	TlsKey *const pKey = pTlsKey;
 	if(!pKey){
+		SetLastError(ERROR_INVALID_PARAMETER);
 		return false;
 	}
 
@@ -238,6 +240,7 @@ bool MCF_CRT_TlsGet(void *pTlsKey, intptr_t *pnValue){
 		}
 		ReleaseSRWLockShared(&(pMap->srwLock));
 	}
+	SetLastError(ERROR_SUCCESS);
 	return bRet;
 }
 
@@ -246,6 +249,7 @@ static MCF_TlsExchangeResult TlsExchange(void *pTlsKey,
 {
 	TlsKey *const pKey = pTlsKey;
 	if(!pKey){
+		SetLastError(ERROR_INVALID_PARAMETER);
 		return MCF_TLSXCH_FAILED;
 	}
 
@@ -262,6 +266,7 @@ static MCF_TlsExchangeResult TlsExchange(void *pTlsKey,
 	if(!pMap){
 		pMap = malloc(sizeof(TlsMap));
 		if(!pMap){
+			SetLastError(ERROR_NOT_ENOUGH_MEMORY);
 			return MCF_TLSXCH_FAILED;
 		}
 		const SRWLOCK vLockInit = SRWLOCK_INIT;
@@ -291,21 +296,23 @@ static MCF_TlsExchangeResult TlsExchange(void *pTlsKey,
 		TlsObject *pObject = (TlsObject *)MCF_AvlLowerBound(&(pMap->pavlObjects),
 			(intptr_t)pKey, &ObjectComparatorNodeKey);
 		if(!pObject || (pObject->pKey != pKey)){
+			const TlsObject *const pHint = pObject;
+
 			ReleaseSRWLockExclusive(&(pMap->srwLock));
 			{
-				const TlsObject *const pHint = pObject;
 				pObject = malloc(sizeof(TlsObject));
 				if(!pObject){
-					return false;
+					SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+					return MCF_TLSXCH_FAILED;
 				}
 				pObject->pMap	= pMap;
 				pObject->pKey	= pKey;
 				pObject->nValue	= nNewValue;
-
-				MCF_AvlAttachWithHint(&(pMap->pavlObjects), (MCF_AvlNodeHeader *)pHint,
-					(MCF_AvlNodeHeader *)pObject, &ObjectComparatorNodes);
 			}
 			AcquireSRWLockExclusive(&(pMap->srwLock));
+
+			MCF_AvlAttachWithHint(&(pMap->pavlObjects), (MCF_AvlNodeHeader *)pHint,
+				(MCF_AvlNodeHeader *)pObject, &ObjectComparatorNodes);
 
 			eRet = MCF_TLSXCH_NEW_VAL_SET;
 		} else {
@@ -363,8 +370,8 @@ static MCF_TlsExchangeResult TlsExchange(void *pTlsKey,
 		if(pPrevInThread){
 			pPrevInThread->pNextInThread = pObject;
 		}
-		pObject->pPrevInThread	= pPrevInThread;
-		pObject->pNextInThread	= nullptr;
+		pObject->pPrevInThread = pPrevInThread;
+		pObject->pNextInThread = nullptr;
 	}
 	ReleaseSRWLockExclusive(&(pMap->srwLock));
 

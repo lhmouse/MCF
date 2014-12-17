@@ -64,8 +64,8 @@ private:
 	typename MutexT::UniqueLock xm_vLock;
 
 private:
-	MonitorLock(ObjectT &vObject, MutexT &vMutex) noexcept
-		: ObserverT(vObject), xm_vLock(vMutex)
+	MonitorLock(ObjectT &vObject, typename MutexT::UniqueLock vLock) noexcept
+		: ObserverT(vObject), xm_vLock(std::move(vLock))
 	{
 	}
 
@@ -91,17 +91,21 @@ public:
 
 public:
 	auto operator*() const noexcept {
-		return MonitorLock<const ObjectT, MutexT, MonitorObserverAsReference<const ObjectT>>(xm_vObject, xm_vMutex);
+		return MonitorLock<const ObjectT, MutexT,
+			MonitorObserverAsReference<const ObjectT>>(xm_vObject, xm_vMutex.GetLock());
 	}
 	auto operator*() noexcept {
-		return MonitorLock<ObjectT, MutexT, MonitorObserverAsReference<ObjectT>>(xm_vObject, xm_vMutex);
+		return MonitorLock<ObjectT, MutexT,
+			MonitorObserverAsReference<ObjectT>>(xm_vObject, xm_vMutex.GetLock());
 	}
 
 	auto operator->() const noexcept {
-		return MonitorLock<const ObjectT, MutexT, MonitorObserverAsPointer<const ObjectT>>(xm_vObject, xm_vMutex);
+		return MonitorLock<const ObjectT,
+			MutexT, MonitorObserverAsPointer<const ObjectT>>(xm_vObject, xm_vMutex.GetLock());
 	}
 	auto operator->() noexcept {
-		return MonitorLock<ObjectT, MutexT, MonitorObserverAsPointer<ObjectT>>(xm_vObject, xm_vMutex);
+		return MonitorLock<ObjectT, MutexT,
+			MonitorObserverAsPointer<ObjectT>>(xm_vObject, xm_vMutex.GetLock());
 	}
 };
 

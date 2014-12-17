@@ -2,8 +2,8 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2013 - 2014, LH_Mouse. All wrongs reserved.
 
-#ifndef MCF_CORE_DEFAULT_DELETER_HPP_
-#define MCF_CORE_DEFAULT_DELETER_HPP_
+#ifndef MCF_SMART_POINTERS_DEFAULT_DELETER_HPP_
+#define MCF_SMART_POINTERS_DEFAULT_DELETER_HPP_
 
 namespace MCF {
 

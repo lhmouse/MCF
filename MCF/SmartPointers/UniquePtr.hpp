@@ -2,8 +2,8 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2013 - 2014, LH_Mouse. All wrongs reserved.
 
-#ifndef MCF_CORE_UNIQUE_PTR_HPP_
-#define MCF_CORE_UNIQUE_PTR_HPP_
+#ifndef MCF_SMART_POINTERS_UNIQUE_PTR_HPP_
+#define MCF_SMART_POINTERS_UNIQUE_PTR_HPP_
 
 #include "../Utilities/Assert.hpp"
 #include "DefaultDeleter.hpp"
@@ -39,7 +39,8 @@ public:
 	explicit UniquePtr(UniquePtr<OtherT, DeleterT> &&rhs) noexcept
 		: UniquePtr()
 	{
-		static_assert(std::is_convertible<OtherT *, ObjectT *>::value, "Unable to convert from `OtherT *` to `ObjectT *`.");
+		static_assert(std::is_convertible<OtherT *, ObjectT *>::value,
+			"Unable to convert from `OtherT *` to `ObjectT *`.");
 
 		Reset(std::move(rhs));
 	}
@@ -49,7 +50,8 @@ public:
 	}
 	template<typename OtherT>
 	UniquePtr &operator=(UniquePtr<OtherT, DeleterT> &&rhs) noexcept {
-		static_assert(std::is_convertible<OtherT *, ObjectT *>::value, "Unable to convert from `OtherT *` to `ObjectT *`.");
+		static_assert(std::is_convertible<OtherT *, ObjectT *>::value,
+			"Unable to convert from `OtherT *` to `ObjectT *`.");
 
 		Reset(std::move(rhs));
 		return *this;
@@ -84,7 +86,8 @@ public:
 	}
 	template<typename OtherT>
 	UniquePtr &Reset(UniquePtr<OtherT, DeleterT> &&rhs) noexcept {
-		static_assert(std::is_convertible<OtherT *, ObjectT *>::value, "Unable to convert from `OtherT *` to `ObjectT *`.");
+		static_assert(std::is_convertible<OtherT *, ObjectT *>::value,
+			"Unable to convert from `OtherT *` to `ObjectT *`.");
 
 		return Reset(rhs.Release());
 	}
@@ -177,6 +180,7 @@ public:
 	UniquePtr &Reset(ObjectT *pObject = nullptr) noexcept {
 		const auto pOld = std::exchange(xm_pObject, pObject);
 		if(pOld){
+			ASSERT(pOld != pObject);
 			DeleterT()(const_cast<std::remove_cv_t<ObjectT> *>(pOld));
 		}
 		return *this;
@@ -296,9 +300,9 @@ void swap(UniquePtr<ObjectT, DeleterT> &lhs, UniquePtr<ObjectT, DeleterT> &rhs) 
 
 template<typename ObjectT, typename ...ParamsT>
 auto MakeUnique(ParamsT &&...vParams){
-	static_assert(!std::is_array<ObjectT>::value, "ObjectT is an array type.");
+	static_assert(!std::is_array<ObjectT>::value, "ObjectT shall not be an array type.");
 
-	return UniquePtr<ObjectT>(new ObjectT(std::forward<ParamsT>(vParams)...));
+	return UniquePtr<ObjectT, DefaultDeleter<ObjectT>>(new ObjectT(std::forward<ParamsT>(vParams)...));
 }
 
 }

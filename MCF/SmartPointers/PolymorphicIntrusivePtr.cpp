@@ -3,9 +3,8 @@
 // Copyleft 2013 - 2014, LH_Mouse. All wrongs reserved.
 
 #include "../StdMCF.hpp"
-#include "VirtualSharedFromThis.hpp"
+#include "PolymorphicIntrusivePtr.hpp"
 using namespace MCF;
 
-// 虚函数定义在这里，我们在共享库中只保存一份 RTTI 信息。
-VirtualSharedFromThis::~VirtualSharedFromThis(){
+PolymorphicIntrusiveBase::~PolymorphicIntrusiveBase(){
 }

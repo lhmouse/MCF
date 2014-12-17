@@ -2,8 +2,8 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2013 - 2014, LH_Mouse. All wrongs reserved.
 
-#ifndef MCF_CORE_INTRUSIVE_PTR_HPP_
-#define MCF_CORE_INTRUSIVE_PTR_HPP_
+#ifndef MCF_SMART_POINTERS_INTRUSIVE_PTR_HPP_
+#define MCF_SMART_POINTERS_INTRUSIVE_PTR_HPP_
 
 #include "../Utilities/Assert.hpp"
 #include "DefaultDeleter.hpp"
@@ -17,13 +17,16 @@ template<typename ObjectT, class DeleterT = DefaultDeleter<std::remove_cv_t<Obje
 class IntrusivePtr;
 
 namespace Impl {
-	template<typename ObjectT, class DeleterT>
+	template<class DeleterT>
 	class IntrusiveSentry {
+	public:
+		using Object = std::remove_cv_t<std::remove_reference_t<decltype(*DeleterT()())>>;
+
 	private:
-		ObjectT *xm_pToDelete;
+		Object *xm_pToDelete;
 
 	public:
-		explicit IntrusiveSentry(ObjectT *pToDelete) noexcept
+		explicit IntrusiveSentry(Object *pToDelete) noexcept
 			: xm_pToDelete(pToDelete)
 		{
 		}
@@ -33,7 +36,7 @@ namespace Impl {
 		}
 		~IntrusiveSentry(){
 			if(xm_pToDelete){
-				DeleterT()(const_cast<std::remove_cv_t<ObjectT> *>(xm_pToDelete));
+				DeleterT()(const_cast<Object *>(xm_pToDelete));
 			}
 		}
 
@@ -42,7 +45,7 @@ namespace Impl {
 		IntrusiveSentry &operator=(IntrusiveSentry &&) = delete;
 	};
 
-	template<typename DstT, typename SrcT, typename = int>
+	template<typename DstT, typename SrcT, typename = DstT *>
 	struct IntrusiveCastHelper {
 		DstT *operator()(SrcT *pSrc) const noexcept {
 			return dynamic_cast<DstT *>(pSrc);
@@ -50,15 +53,19 @@ namespace Impl {
 	};
 	template<typename DstT, typename SrcT>
 	struct IntrusiveCastHelper<DstT, SrcT,
-		decltype(static_cast<DstT *>(std::declval<SrcT *>()), 1)>
+		decltype(static_cast<DstT *>(std::declval<SrcT *>()))>
 	{
 		constexpr DstT *operator()(SrcT *pSrc) const noexcept {
 			return static_cast<DstT *>(pSrc);
 		}
 	};
 
-	template<typename ObjectT, class DeleterT>
+	template<class DeleterT>
 	class IntrusiveBase {
+	public:
+		using Sentry = IntrusiveSentry<DeleterT>;
+		using Object = typename Sentry::Object;
+
 	private:
 		mutable volatile std::size_t xm_uRefCount;
 
@@ -84,59 +91,65 @@ namespace Impl {
 		}
 
 	public:
+		std::size_t GetRef() const volatile noexcept {
+			return __atomic_load_n(&xm_uRefCount, __ATOMIC_RELAXED);
+		}
 		void AddRef() const volatile noexcept {
-			ASSERT(__atomic_load_n(&xm_uRefCount, __ATOMIC_ACQUIRE) != 0);
+			ASSERT((std::ptrdiff_t)__atomic_load_n(&xm_uRefCount, __ATOMIC_ACQUIRE) > 0);
 
 			__atomic_add_fetch(&xm_uRefCount, 1, __ATOMIC_RELEASE);
 		}
-		IntrusiveSentry<ObjectT, DeleterT> DropRef() const volatile noexcept {
-			ASSERT(__atomic_load_n(&xm_uRefCount, __ATOMIC_ACQUIRE) != 0);
+		auto DropRef() const volatile noexcept {
+			ASSERT((std::ptrdiff_t)__atomic_load_n(&xm_uRefCount, __ATOMIC_ACQUIRE) > 0);
 
-			ObjectT *pToDelete = nullptr;
+			Object *pToDelete = nullptr;
 			if(__atomic_sub_fetch(&xm_uRefCount, 1, __ATOMIC_ACQUIRE) == 0){
-				pToDelete = const_cast<ObjectT *>(Get());
+				pToDelete = static_cast<Object *>(const_cast<IntrusiveBase *>(this));
 			}
-			return IntrusiveSentry<ObjectT, DeleterT>(pToDelete);
+			return Sentry(pToDelete);
 		}
 
-		template<typename OtherT = ObjectT>
-		const volatile OtherT *Get() const volatile noexcept {
-			return IntrusiveCastHelper<const volatile OtherT, const volatile IntrusiveBase>()(this);
+		template<typename OtherT = Object>
+		auto Get() const volatile noexcept {
+			ASSERT((std::ptrdiff_t)__atomic_load_n(&xm_uRefCount, __ATOMIC_ACQUIRE) > 0);
+			return IntrusiveCastHelper<const volatile OtherT, const volatile Object>()(static_cast<const volatile Object *>(this));
 		}
-		template<typename OtherT = ObjectT>
-		const OtherT *Get() const noexcept {
-			return IntrusiveCastHelper<const OtherT, const IntrusiveBase>()(this);
+		template<typename OtherT = Object>
+		auto Get() const noexcept {
+			ASSERT((std::ptrdiff_t)__atomic_load_n(&xm_uRefCount, __ATOMIC_ACQUIRE) > 0);
+			return IntrusiveCastHelper<const OtherT, const Object>()(static_cast<const Object *>(this));
 		}
-		template<typename OtherT = ObjectT>
-		volatile OtherT *Get() volatile noexcept {
-			return IntrusiveCastHelper<volatile OtherT, volatile IntrusiveBase>()(this);
+		template<typename OtherT = Object>
+		auto Get() volatile noexcept {
+			ASSERT((std::ptrdiff_t)__atomic_load_n(&xm_uRefCount, __ATOMIC_ACQUIRE) > 0);
+			return IntrusiveCastHelper<volatile OtherT, volatile Object>()(static_cast<volatile Object *>(this));
 		}
-		template<typename OtherT = ObjectT>
-		OtherT *Get() noexcept {
-			return IntrusiveCastHelper<OtherT, IntrusiveBase>()(this);
+		template<typename OtherT = Object>
+		auto Get() noexcept {
+			ASSERT((std::ptrdiff_t)__atomic_load_n(&xm_uRefCount, __ATOMIC_ACQUIRE) > 0);
+			return IntrusiveCastHelper<OtherT, Object>()(static_cast<Object *>(this));
 		}
 
-		template<typename OtherT = ObjectT>
+		template<typename OtherT = Object>
 		IntrusivePtr<const volatile OtherT, DeleterT> Fork() const volatile noexcept;
-
-		template<typename OtherT = ObjectT>
+		template<typename OtherT = Object>
 		IntrusivePtr<const OtherT, DeleterT> Fork() const noexcept;
-
-		template<typename OtherT = ObjectT>
+		template<typename OtherT = Object>
 		IntrusivePtr<volatile OtherT, DeleterT> Fork() volatile noexcept;
-
-		template<typename OtherT = ObjectT>
+		template<typename OtherT = Object>
 		IntrusivePtr<OtherT, DeleterT> Fork() noexcept;
 	};
 }
 
 template<typename ObjectT, class DeleterT = DefaultDeleter<std::remove_cv_t<ObjectT>>>
-using IntrusiveBase = Impl::IntrusiveBase<std::remove_cv_t<ObjectT>, DeleterT>;
+using IntrusiveBase = Impl::IntrusiveBase<DeleterT>;
 
 template<typename ObjectT, class DeleterT>
 class IntrusivePtr {
+	static_assert(!std::is_array<ObjectT>::value, "IntrusivePtr does not support arrays.");
+
 public:
-	using Buddy = IntrusiveBase<ObjectT, DeleterT>;
+	using Buddy = Impl::IntrusiveBase<DeleterT>;
 
 private:
 	const volatile Buddy *xm_pBuddy;
@@ -160,7 +173,8 @@ public:
 	explicit IntrusivePtr(const IntrusivePtr<OtherT, DeleterT> &rhs) noexcept
 		: IntrusivePtr()
 	{
-		static_assert(std::is_convertible<OtherT *, ObjectT *>::value, "Unable to convert from `OtherT *` to `ObjectT *`.");
+		static_assert(std::is_convertible<OtherT *, ObjectT *>::value,
+			"Unable to convert from `OtherT *` to `ObjectT *`.");
 
 		Reset(rhs);
 	}
@@ -168,7 +182,8 @@ public:
 	explicit IntrusivePtr(IntrusivePtr<OtherT, DeleterT> &&rhs) noexcept
 		: IntrusivePtr()
 	{
-		static_assert(std::is_convertible<OtherT *, ObjectT *>::value, "Unable to convert from `OtherT *` to `ObjectT *`.");
+		static_assert(std::is_convertible<OtherT *, ObjectT *>::value,
+			"Unable to convert from `OtherT *` to `ObjectT *`.");
 
 		Reset(std::move(rhs));
 	}
@@ -182,14 +197,16 @@ public:
 	}
 	template<typename OtherT>
 	IntrusivePtr &operator=(const IntrusivePtr<OtherT, DeleterT> &rhs) noexcept {
-		static_assert(std::is_convertible<OtherT *, ObjectT *>::value, "Unable to convert from `OtherT *` to `ObjectT *`.");
+		static_assert(std::is_convertible<OtherT *, ObjectT *>::value,
+			"Unable to convert from `OtherT *` to `ObjectT *`.");
 
 		Reset(rhs);
 		return *this;
 	}
 	template<typename OtherT>
 	IntrusivePtr &operator=(IntrusivePtr<OtherT, DeleterT> &&rhs) noexcept {
-		static_assert(std::is_convertible<OtherT *, ObjectT *>::value, "Unable to convert from `OtherT *` to `ObjectT *`.");
+		static_assert(std::is_convertible<OtherT *, ObjectT *>::value,
+			"Unable to convert from `OtherT *` to `ObjectT *`.");
 
 		Reset(std::move(rhs));
 		return *this;
@@ -206,39 +223,51 @@ public:
 		if(!xm_pBuddy){
 			return nullptr;
 		}
-		return const_cast<ObjectT *>(xm_pBuddy->Get());
+		return const_cast<ObjectT *>(xm_pBuddy->template Get<const volatile ObjectT>());
 	}
 	ObjectT *Release() noexcept {
-		const auto pBuddy = std::exchange(xm_pBuddy, nullptr);
-		if(!pBuddy){
-			return nullptr;
+		const auto pRet = Get();
+		if(pRet){
+			// pRet 现在持有所有权，释放原本的所有权。
+			xm_pBuddy = nullptr;
 		}
-		return const_cast<ObjectT *>(pBuddy->Get());
+		return pRet;
 	}
-	IntrusivePtr Fork() const noexcept {
+
+	std::size_t GetRef() const noexcept {
+		if(!xm_pBuddy){
+			return 0;
+		}
+		return xm_pBuddy->GetRef();
+	}
+	IntrusivePtr Share() const noexcept {
 		return IntrusivePtr(*this);
 	}
 
 	IntrusivePtr &Reset(ObjectT *pObject = nullptr) noexcept {
 		const auto pOld = std::exchange(xm_pBuddy, pObject);
 		if(pOld){
+			ASSERT(pOld != pObject);
 			pOld->DropRef();
 		}
 		return *this;
 	}
 	template<typename OtherT>
 	IntrusivePtr &Reset(const IntrusivePtr<OtherT, DeleterT> &rhs) noexcept {
-		static_assert(std::is_convertible<OtherT *, ObjectT *>::value, "Unable to convert from `OtherT *` to `ObjectT *`.");
+		static_assert(std::is_convertible<OtherT *, ObjectT *>::value,
+			"Unable to convert from `OtherT *` to `ObjectT *`.");
 
-		Reset(rhs.Get());
-		if(xm_pBuddy){
-			xm_pBuddy->AddRef();
+		const auto pNew = rhs.Get();
+		if(pNew){
+			pNew->AddRef();
 		}
+		Reset(pNew);
 		return *this;
 	}
 	template<typename OtherT>
 	IntrusivePtr &Reset(IntrusivePtr<OtherT, DeleterT> &&rhs) noexcept {
-		static_assert(std::is_convertible<OtherT *, ObjectT *>::value, "Unable to convert from `OtherT *` to `ObjectT *`.");
+		static_assert(std::is_convertible<OtherT *, ObjectT *>::value,
+			"Unable to convert from `OtherT *` to `ObjectT *`.");
 
 		return Reset(rhs.Release());
 	}
@@ -256,54 +285,54 @@ public:
 	}
 
 	ObjectT &operator*() const noexcept {
-		ASSERT(IsValid);
+		ASSERT(IsValid());
 		return *Get();
 	}
 	ObjectT *operator->() const noexcept {
-		ASSERT(IsValid);
+		ASSERT(IsValid());
 		return Get();
 	}
 };
 
 namespace Impl {
-	template<typename ObjectT, class DeleterT>
+	template<class DeleterT>
 		template<typename OtherT>
-	IntrusivePtr<const volatile OtherT, DeleterT> IntrusiveBase<ObjectT, DeleterT>::Fork() const volatile noexcept {
+	IntrusivePtr<const volatile OtherT, DeleterT> IntrusiveBase<DeleterT>::Fork() const volatile noexcept {
 		const auto pForked = Get<const volatile OtherT>();
 		if(!pForked){
 			return nullptr;
 		}
-		AddRef();
+		pForked->AddRef();
 		return IntrusivePtr<const volatile OtherT, DeleterT>(pForked);
 	}
-	template<typename ObjectT, class DeleterT>
+	template<class DeleterT>
 		template<typename OtherT>
-	IntrusivePtr<const OtherT, DeleterT> IntrusiveBase<ObjectT, DeleterT>::Fork() const noexcept {
+	IntrusivePtr<const OtherT, DeleterT> IntrusiveBase<DeleterT>::Fork() const noexcept {
 		const auto pForked = Get<const OtherT>();
 		if(!pForked){
 			return nullptr;
 		}
-		AddRef();
+		pForked->AddRef();
 		return IntrusivePtr<const OtherT, DeleterT>(pForked);
 	}
-	template<typename ObjectT, class DeleterT>
+	template<class DeleterT>
 		template<typename OtherT>
-	IntrusivePtr<volatile OtherT, DeleterT> IntrusiveBase<ObjectT, DeleterT>::Fork() volatile noexcept {
+	IntrusivePtr<volatile OtherT, DeleterT> IntrusiveBase<DeleterT>::Fork() volatile noexcept {
 		const auto pForked = Get<volatile OtherT>();
 		if(!pForked){
 			return nullptr;
 		}
-		AddRef();
-		return IntrusivePtr<const volatile OtherT, DeleterT>(pForked);
+		pForked->AddRef();
+		return IntrusivePtr<volatile OtherT, DeleterT>(pForked);
 	}
-	template<typename ObjectT, class DeleterT>
+	template<class DeleterT>
 		template<typename OtherT>
-	IntrusivePtr<OtherT, DeleterT> IntrusiveBase<ObjectT, DeleterT>::Fork() noexcept {
+	IntrusivePtr<OtherT, DeleterT> IntrusiveBase<DeleterT>::Fork() noexcept {
 		const auto pForked = Get<OtherT>();
 		if(!pForked){
 			return nullptr;
 		}
-		AddRef();
+		pForked->AddRef();
 		return IntrusivePtr<OtherT, DeleterT>(pForked);
 	}
 }
@@ -389,6 +418,29 @@ bool operator>=(ObjectT *lhs, const IntrusivePtr<ObjectT, DeleterT> &rhs) noexce
 template<typename ObjectT, class DeleterT>
 void swap(IntrusivePtr<ObjectT, DeleterT> &lhs, IntrusivePtr<ObjectT, DeleterT> &rhs) noexcept {
 	lhs.Swap(rhs);
+}
+
+template<typename ObjectT, typename ...ParamsT>
+auto MakeIntrusive(ParamsT &&...vParams){
+	static_assert(!std::is_array<ObjectT>::value, "ObjectT shall not be an array type.");
+
+	return IntrusivePtr<ObjectT, DefaultDeleter<ObjectT>>(new ObjectT(std::forward<ParamsT>(vParams)...));
+}
+
+template<typename DstT, typename SrcT, class DeleterT>
+auto StaticPointerCast(IntrusivePtr<SrcT, DeleterT> rhs) noexcept {
+	SrcT *const pSrc = rhs.Release();
+	DstT *const pDst = static_cast<DstT *>(pSrc);
+	return IntrusivePtr<DstT, DeleterT>(pDst);
+}
+template<typename DstT, typename SrcT, class DeleterT>
+auto DynamicPointerCast(IntrusivePtr<SrcT, DeleterT> rhs) noexcept {
+	SrcT *const pSrc = rhs.Release();
+	DstT *const pDst = dynamic_cast<DstT *>(pSrc);
+	if(!pDst){
+		rhs.Reset(pSrc);
+	}
+	return IntrusivePtr<DstT, DeleterT>(pDst);
 }
 
 }

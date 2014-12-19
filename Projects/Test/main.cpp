@@ -1,38 +1,23 @@
 #include <MCF/StdMCF.hpp>
-#include <MCF/SmartPointers/PolymorphicIntrusivePtr.hpp>
+#include <MCF/SmartPointers/UniquePtr.hpp>
 using namespace MCF;
 
-struct foo : PolymorphicIntrusiveBase {
-	int i;
+template class UniquePtr<const volatile int>;
+template class UniquePtr<volatile int>;
+template class UniquePtr<const int>;
+template class UniquePtr<int>;
 
-	foo(int k) : i(k) {
-	}
-};
-struct bar : foo {
-	double d;
-
-	bar() : foo(123), d(45.6) {
-	}
-	~bar(){
-		std::puts("~bar()");
-	}
-};
-struct meow : foo {
-	~meow(){
-		std::puts("~meow()");
-	}
-};
+template class UniquePtr<const volatile int []>;
+template class UniquePtr<volatile int []>;
+template class UniquePtr<const int []>;
+template class UniquePtr<int []>;
 
 extern "C" unsigned int MCFMain() noexcept {
-	PolymorphicIntrusivePtr<foo> p;
-	{
-		auto p2 = MakePolymorphicIntrusive<bar>();
-		p2->AddRef();
-		p.Reset(p2.Get());
-	}
-	auto p3 = DynamicPointerCast<meow>(std::move(p));
-	std::puts("---------------");
-	std::printf("p3 = %p\n", (void *)p3.Get());
-//	std::printf("%d\n", p->i);
+	UniquePtr<int[]> p1;
+//	p1 = MakeUnique<int>(123);
+	p1.Reset(new int[5]{ 1, 2, 3, 4, 5 });
+	UniquePtr<const int[]> p2(std::move(p1));
+//	std::printf("%d\n", *p2);
+	std::printf("%d\n", p2[3]);
 	return 0;
 }

@@ -7,6 +7,7 @@
 
 #include "../Utilities/Assert.hpp"
 #include "DefaultDeleter.hpp"
+#include "Traits.hpp"
 #include <utility>
 #include <type_traits>
 #include <cstddef>
@@ -14,19 +15,24 @@
 namespace MCF {
 
 template<typename ObjectT, class DeleterT = DefaultDeleter<std::remove_cv_t<ObjectT>>>
-class UniquePtr {
+class UniquePtr
+	: public Impl::SmartPointerCheckDereferencable<UniquePtr<ObjectT, DeleterT>, ObjectT>
+	, public Impl::SmartPointerCheckArray<UniquePtr<ObjectT, DeleterT>, ObjectT>
+{
+	static_assert(noexcept(DeleterT()(DeleterT()())), "Deleter must not throw.");
+
 public:
-	static_assert(noexcept(DeleterT()(std::declval<std::remove_cv_t<ObjectT> *>())), "Deleter must not throw.");
+	using PointeeType = std::remove_extent_t<ObjectT>;
 
 private:
-	ObjectT *xm_pObject;
+	PointeeType *xm_pObject;
 
 public:
 	constexpr UniquePtr() noexcept
 		: UniquePtr(nullptr)
 	{
 	}
-	constexpr explicit UniquePtr(ObjectT *pObject) noexcept
+	constexpr explicit UniquePtr(PointeeType *pObject) noexcept
 		: xm_pObject(pObject)
 	{
 	}
@@ -35,24 +41,26 @@ public:
 	{
 		Reset(std::move(rhs));
 	}
-	template<typename OtherT>
-	explicit UniquePtr(UniquePtr<OtherT, DeleterT> &&rhs) noexcept
+	template<typename OtherT,
+		std::enable_if_t<std::is_array<OtherT>::value
+			? std::is_same<std::remove_cv_t<std::remove_extent_t<OtherT>>, std::remove_cv_t<PointeeType>>::value
+			: std::is_convertible<OtherT *, PointeeType *>::value,
+		int> = 0>
+	explicit UniquePtr(UniquePtr<OtherT, DeleterT> rhs) noexcept
 		: UniquePtr()
 	{
-		static_assert(std::is_convertible<OtherT *, ObjectT *>::value,
-			"Unable to convert from `OtherT *` to `ObjectT *`.");
-
 		Reset(std::move(rhs));
 	}
 	UniquePtr &operator=(UniquePtr &&rhs) noexcept {
 		Reset(std::move(rhs));
 		return *this;
 	}
-	template<typename OtherT>
-	UniquePtr &operator=(UniquePtr<OtherT, DeleterT> &&rhs) noexcept {
-		static_assert(std::is_convertible<OtherT *, ObjectT *>::value,
-			"Unable to convert from `OtherT *` to `ObjectT *`.");
-
+	template<typename OtherT,
+		std::enable_if_t<std::is_array<OtherT>::value
+			? std::is_same<std::remove_cv_t<std::remove_extent_t<OtherT>>, std::remove_cv_t<PointeeType>>::value
+			: std::is_convertible<OtherT *, PointeeType *>::value,
+		int> = 0>
+	UniquePtr &operator=(UniquePtr<OtherT, DeleterT> rhs) noexcept {
 		Reset(std::move(rhs));
 		return *this;
 	}
@@ -64,135 +72,33 @@ public:
 	UniquePtr &operator=(const UniquePtr &) = delete;
 
 public:
-	bool IsValid() const noexcept {
+	bool IsNonnull() const noexcept {
 		return Get() != nullptr;
 	}
-	ObjectT *Get() const noexcept {
+	PointeeType *Get() const noexcept {
 		return xm_pObject;
 	}
-	ObjectT *Release() noexcept {
+	PointeeType *Release() noexcept {
 		return std::exchange(xm_pObject, nullptr);
 	}
 
-	UniquePtr &Reset(ObjectT *pObject = nullptr) noexcept {
-		const auto pOld = std::exchange(xm_pObject, pObject);
-		if(pOld){
-			DeleterT()(const_cast<std::remove_cv_t<ObjectT> *>(pOld));
-		}
-		return *this;
-	}
-	UniquePtr &Reset(UniquePtr &&rhs) noexcept {
-		return Reset(rhs.Release());
-	}
-	template<typename OtherT>
-	UniquePtr &Reset(UniquePtr<OtherT, DeleterT> &&rhs) noexcept {
-		static_assert(std::is_convertible<OtherT *, ObjectT *>::value,
-			"Unable to convert from `OtherT *` to `ObjectT *`.");
-
-		return Reset(rhs.Release());
-	}
-
-	void Swap(UniquePtr &rhs) noexcept {
-		std::swap(xm_pObject, rhs.xm_pObject);
-	}
-
-public:
-	explicit operator bool() const noexcept {
-		return IsValid();
-	}
-	explicit operator ObjectT *() const noexcept {
-		return Get();
-	}
-
-	ObjectT &operator*() const noexcept {
-		ASSERT(IsValid());
-
-		return *Get();
-	}
-	ObjectT *operator->() const noexcept {
-		ASSERT(IsValid());
-
-		return Get();
-	}
-};
-
-template<typename ObjectT, class DeleterT>
-class UniquePtr<ObjectT [], DeleterT> {
-public:
-	static_assert(noexcept(DeleterT()(std::declval<std::remove_cv_t<ObjectT> *>())), "Deleter must not throw.");
-
-private:
-	ObjectT *xm_pObject;
-
-public:
-	constexpr UniquePtr() noexcept
-		: UniquePtr(nullptr)
-	{
-	}
-	constexpr explicit UniquePtr(ObjectT *pObject) noexcept
-		: xm_pObject(pObject)
-	{
-	}
-	UniquePtr(UniquePtr &&rhs) noexcept
-		: UniquePtr()
-	{
-		Reset(std::move(rhs));
-	}
-	template<typename OtherT>
-	explicit UniquePtr(UniquePtr<OtherT [], DeleterT> &&rhs) noexcept
-		: UniquePtr()
-	{
-		static_assert(std::is_same<std::remove_cv_t<OtherT>, std::remove_cv_t<ObjectT>>::value,
-			"Unable to convert from `OtherT *` to `ObjectT *`. Note: arrays do not support covariation.");
-
-		Reset(std::move(rhs));
-	}
-	UniquePtr &operator=(UniquePtr &&rhs) noexcept {
-		Reset(std::move(rhs));
-		return *this;
-	}
-	template<typename OtherT>
-	UniquePtr &operator=(UniquePtr<OtherT [], DeleterT> &&rhs) noexcept {
-		static_assert(std::is_same<std::remove_cv_t<OtherT>, std::remove_cv_t<ObjectT>>::value,
-			"Unable to convert from `OtherT *` to `ObjectT *`. Note: arrays do not support covariation.");
-
-		Reset(std::move(rhs));
-		return *this;
-	}
-	~UniquePtr(){
-		Reset();
-	}
-
-	UniquePtr(const UniquePtr &) = delete;
-	UniquePtr &operator=(const UniquePtr &) = delete;
-
-public:
-	bool IsValid() const noexcept {
-		return Get() != nullptr;
-	}
-	ObjectT *Get() const noexcept {
-		return xm_pObject;
-	}
-	ObjectT *Release() noexcept {
-		return std::exchange(xm_pObject, nullptr);
-	}
-
-	UniquePtr &Reset(ObjectT *pObject = nullptr) noexcept {
+	UniquePtr &Reset(PointeeType *pObject = nullptr) noexcept {
 		const auto pOld = std::exchange(xm_pObject, pObject);
 		if(pOld){
 			ASSERT(pOld != pObject);
-			DeleterT()(const_cast<std::remove_cv_t<ObjectT> *>(pOld));
+			DeleterT()(const_cast<std::remove_cv_t<PointeeType> *>(pOld));
 		}
 		return *this;
 	}
 	UniquePtr &Reset(UniquePtr &&rhs) noexcept {
 		return Reset(rhs.Release());
 	}
-	template<typename OtherT>
-	UniquePtr &Reset(UniquePtr<OtherT [], DeleterT> &&rhs) noexcept {
-		static_assert(std::is_same<std::remove_cv_t<OtherT>, std::remove_cv_t<ObjectT>>::value,
-			"Unable to convert from `OtherT *` to `ObjectT *`. Note: arrays do not support covariation.");
-
+	template<typename OtherT,
+		std::enable_if_t<std::is_array<OtherT>::value
+			? std::is_same<std::remove_cv_t<std::remove_extent_t<OtherT>>, std::remove_cv_t<PointeeType>>::value
+			: std::is_convertible<OtherT *, PointeeType *>::value,
+		int> = 0>
+	UniquePtr &Reset(UniquePtr<OtherT, DeleterT> rhs) noexcept {
 		return Reset(rhs.Release());
 	}
 
@@ -202,16 +108,10 @@ public:
 
 public:
 	explicit operator bool() const noexcept {
-		return IsValid();
+		return IsNonnull();
 	}
-	explicit operator ObjectT *() const noexcept {
+	explicit operator PointeeType *() const noexcept {
 		return Get();
-	}
-
-	ObjectT &operator[](std::size_t uIndex) const noexcept {
-		ASSERT(IsValid());
-
-		return Get()[uIndex];
 	}
 };
 

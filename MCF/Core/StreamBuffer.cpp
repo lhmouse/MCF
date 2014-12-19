@@ -10,82 +10,86 @@
 #include "../Thread/Mutex.hpp"
 using namespace MCF;
 
-constexpr std::size_t CHUNK_SIZE = 0x400;
+class StreamBuffer::Chunk {
+public:
+	enum : std::size_t {
+		CHUNK_SIZE = 0x100
+	};
 
-namespace MCF {
+private:
+	static Mutex xs_vPoolMutex;
+	static List<Chunk> xs_lstPool;
 
-struct StreamBufferChunk {
-	unsigned uRead;
-	unsigned uWrite;
-	unsigned char abyData[CHUNK_SIZE];
+public:
+	static Chunk &PushPooled(List<Chunk> &lstDst){
+		typename List<Chunk>::Node *pNode;
+		{
+			const auto vLock = xs_vPoolMutex.GetLock();
+			if(!xs_lstPool.IsEmpty()){
+				pNode = xs_lstPool.GetFirst();
+				lstDst.Splice(nullptr, xs_lstPool, xs_lstPool.GetFirst());
+				goto jDone;
+			}
+		}
+		pNode = lstDst.Push();
+
+	jDone:
+#ifndef NDEBUG
+		__builtin_memset(&pNode->GetElement(), 0xCC, sizeof(Chunk));
+#endif
+		return pNode->GetElement();
+	}
+	static void PopPooled(List<Chunk> &lstSrc) noexcept {
+		ASSERT(!lstSrc.IsEmpty());
+
+		const auto vLock = xs_vPoolMutex.GetLock();
+		xs_lstPool.Splice(nullptr, lstSrc, lstSrc.GetLast());
+	}
+	static Chunk &UnshiftPooled(List<Chunk> &lstDst){
+		typename List<Chunk>::Node *pNode;
+		{
+			const auto vLock = xs_vPoolMutex.GetLock();
+			if(!xs_lstPool.IsEmpty()){
+				pNode = xs_lstPool.GetFirst();
+				lstDst.Splice(lstDst.GetFirst(), xs_lstPool, xs_lstPool.GetFirst());
+				goto jDone;
+			}
+		}
+		pNode = lstDst.Unshift();
+
+	jDone:
+#ifndef NDEBUG
+		__builtin_memset(&pNode->GetElement(), 0xCC, sizeof(Chunk));
+#endif
+		return pNode->GetElement();
+	}
+	static void ShiftPooled(List<Chunk> &lstSrc) noexcept {
+		ASSERT(!lstSrc.IsEmpty());
+
+		const auto vLock = xs_vPoolMutex.GetLock();
+		xs_lstPool.Splice(nullptr, lstSrc, lstSrc.GetFirst());
+	}
+	static void ClearPooled(List<Chunk> &lstSrc) noexcept {
+		if(lstSrc.IsEmpty()){
+			return;
+		}
+		const auto vLock = xs_vPoolMutex.GetLock();
+		xs_lstPool.Splice(nullptr, lstSrc);
+	}
+
+public:
+	unsigned m_uRead;
+	unsigned m_uWrite;
+	unsigned char m_abyData[CHUNK_SIZE];
 };
 
-}
+Mutex						StreamBuffer::Chunk::xs_vPoolMutex;
+List<StreamBuffer::Chunk>	StreamBuffer::Chunk::xs_lstPool;
 
-namespace {
-
-using ChunkNode = typename List<StreamBufferChunk>::Node;
-
-Mutex g_mtxPoolMutex;
-List<StreamBufferChunk> g_lstPool;
-
-StreamBufferChunk &PushPooled(List<StreamBufferChunk> &lstDst){
-	ChunkNode *pNode;
-	{
-		const auto vLock = g_mtxPoolMutex.GetLock();
-		if(!g_lstPool.IsEmpty()){
-			pNode = g_lstPool.GetFirst();
-			lstDst.Splice(nullptr, g_lstPool, g_lstPool.GetFirst());
-			goto jDone;
-		}
-	}
-	pNode = lstDst.Push();
-
-jDone:
-#ifndef NDEBUG
-	__builtin_memset(&pNode->GetElement(), 0xCC, sizeof(StreamBufferChunk));
-#endif
-	return pNode->GetElement();
-}
-void PopPooled(List<StreamBufferChunk> &lstSrc) noexcept {
-	ASSERT(!lstSrc.IsEmpty());
-
-	const auto vLock = g_mtxPoolMutex.GetLock();
-	g_lstPool.Splice(nullptr, lstSrc, lstSrc.GetLast());
-}
-StreamBufferChunk &UnshiftPooled(List<StreamBufferChunk> &lstDst){
-	ChunkNode *pNode;
-	{
-		const auto vLock = g_mtxPoolMutex.GetLock();
-		if(!g_lstPool.IsEmpty()){
-			pNode = g_lstPool.GetFirst();
-			lstDst.Splice(lstDst.GetFirst(), g_lstPool, g_lstPool.GetFirst());
-			goto jDone;
-		}
-	}
-	pNode = lstDst.Unshift();
-
-jDone:
-#ifndef NDEBUG
-	__builtin_memset(&pNode->GetElement(), 0xCC, sizeof(StreamBufferChunk));
-#endif
-	return pNode->GetElement();
-}
-void ShiftPooled(List<StreamBufferChunk> &lstSrc) noexcept {
-	ASSERT(!lstSrc.IsEmpty());
-
-	const auto vLock = g_mtxPoolMutex.GetLock();
-	g_lstPool.Splice(nullptr, lstSrc, lstSrc.GetFirst());
-}
-void ClearPooled(List<StreamBufferChunk> &lstSrc) noexcept {
-	if(lstSrc.IsEmpty()){
-		return;
-	}
-	const auto vLock = g_mtxPoolMutex.GetLock();
-	g_lstPool.Splice(nullptr, lstSrc);
-}
-
-}
+class StreamBuffer::TraverseContext
+	: public List<StreamBuffer::Chunk>::Node
+{
+};
 
 // 构造函数和析构函数。
 StreamBuffer::StreamBuffer() noexcept
@@ -107,7 +111,7 @@ StreamBuffer::StreamBuffer(const StreamBuffer &rhs)
 {
 	for(auto pNode = rhs.xm_lstBuffers.GetFirst(); pNode; pNode = pNode->GetNext()){
 		const auto &vBuffer = pNode->GetElement();
-		Put(vBuffer.abyData + vBuffer.uRead, vBuffer.uWrite - vBuffer.uRead);
+		Put(vBuffer.m_abyData + vBuffer.m_uRead, vBuffer.m_uWrite - vBuffer.m_uRead);
 	}
 }
 StreamBuffer::StreamBuffer(StreamBuffer &&rhs) noexcept
@@ -131,7 +135,7 @@ StreamBuffer::~StreamBuffer(){
 
 // 其他非静态成员函数。
 void StreamBuffer::Clear() noexcept {
-	ClearPooled(xm_lstBuffers);
+	Chunk::ClearPooled(xm_lstBuffers);
 	xm_uSize = 0;
 }
 
@@ -144,8 +148,8 @@ int StreamBuffer::Peek() const noexcept {
 		ASSERT(pNode);
 
 		const auto &vBuffer = pNode->GetElement();
-		if(vBuffer.uRead < vBuffer.uWrite){
-			return vBuffer.abyData[vBuffer.uRead];
+		if(vBuffer.m_uRead < vBuffer.m_uWrite){
+			return vBuffer.m_abyData[vBuffer.m_uRead];
 		}
 		pNode = pNode->GetNext();
 	}
@@ -158,28 +162,28 @@ int StreamBuffer::Get() noexcept {
 		ASSERT(!xm_lstBuffers.IsEmpty());
 
 		auto &vBuffer = xm_lstBuffers.GetFirst()->GetElement();
-		if(vBuffer.uRead < vBuffer.uWrite){
-			const int nRet = vBuffer.abyData[vBuffer.uRead];
-			++vBuffer.uRead;
+		if(vBuffer.m_uRead < vBuffer.m_uWrite){
+			const int nRet = vBuffer.m_abyData[vBuffer.m_uRead];
+			++vBuffer.m_uRead;
 			--xm_uSize;
 			return nRet;
 		}
-		ShiftPooled(xm_lstBuffers);
+		Chunk::ShiftPooled(xm_lstBuffers);
 	}
 }
 void StreamBuffer::Put(unsigned char by){
 	const auto pNode = xm_lstBuffers.GetLast();
-	if(pNode && (pNode->GetElement().uWrite < CHUNK_SIZE)){
+	if(pNode && (pNode->GetElement().m_uWrite < Chunk::CHUNK_SIZE)){
 		auto &vBuffer = pNode->GetElement();
-		vBuffer.abyData[vBuffer.uWrite] = by;
-		++vBuffer.uWrite;
+		vBuffer.m_abyData[vBuffer.m_uWrite] = by;
+		++vBuffer.m_uWrite;
 		++xm_uSize;
 		return;
 	}
-	auto &vBuffer = PushPooled(xm_lstBuffers);
-	vBuffer.abyData[0] = by;
-	vBuffer.uRead = 0;
-	vBuffer.uWrite = 1;
+	auto &vBuffer = Chunk::PushPooled(xm_lstBuffers);
+	vBuffer.m_abyData[0] = by;
+	vBuffer.m_uRead = 0;
+	vBuffer.m_uWrite = 1;
 	++xm_uSize;
 }
 int StreamBuffer::Unput() noexcept {
@@ -190,28 +194,28 @@ int StreamBuffer::Unput() noexcept {
 		ASSERT(!xm_lstBuffers.IsEmpty());
 
 		auto &vBuffer = xm_lstBuffers.GetLast()->GetElement();
-		if(vBuffer.uRead < vBuffer.uWrite){
-			--vBuffer.uWrite;
-			const int nRet = vBuffer.abyData[vBuffer.uWrite];
+		if(vBuffer.m_uRead < vBuffer.m_uWrite){
+			--vBuffer.m_uWrite;
+			const int nRet = vBuffer.m_abyData[vBuffer.m_uWrite];
 			--xm_uSize;
 			return nRet;
 		}
-		PopPooled(xm_lstBuffers);
+		Chunk::PopPooled(xm_lstBuffers);
 	}
 }
 void StreamBuffer::Unget(unsigned char by){
 	const auto pNode = xm_lstBuffers.GetFirst();
-	if(pNode && (pNode->GetElement().uRead > 0)){
+	if(pNode && (pNode->GetElement().m_uRead > 0)){
 		auto &vBuffer = pNode->GetElement();
-		--vBuffer.uRead;
-		vBuffer.abyData[vBuffer.uRead] = by;
+		--vBuffer.m_uRead;
+		vBuffer.m_abyData[vBuffer.m_uRead] = by;
 		++xm_uSize;
 		return;
 	}
-	auto &vBuffer = UnshiftPooled(xm_lstBuffers);
-	vBuffer.abyData[CHUNK_SIZE - 1] = by;
-	vBuffer.uRead = CHUNK_SIZE - 1;
-	vBuffer.uWrite = CHUNK_SIZE;
+	auto &vBuffer = Chunk::UnshiftPooled(xm_lstBuffers);
+	vBuffer.m_abyData[Chunk::CHUNK_SIZE - 1] = by;
+	vBuffer.m_uRead = Chunk::CHUNK_SIZE - 1;
+	vBuffer.m_uWrite = Chunk::CHUNK_SIZE;
 	++xm_uSize;
 }
 
@@ -227,8 +231,8 @@ std::size_t StreamBuffer::Peek(void *pData, std::size_t uSize) const noexcept {
 		ASSERT(pNode);
 		const auto &vBuffer = pNode->GetElement();
 
-		const auto uToCopy = Min(uRet - uCopied, vBuffer.uWrite - vBuffer.uRead);
-		std::memcpy(pbyWrite, vBuffer.abyData + vBuffer.uRead, uToCopy);
+		const auto uToCopy = Min(uRet - uCopied, vBuffer.m_uWrite - vBuffer.m_uRead);
+		std::memcpy(pbyWrite, vBuffer.m_abyData + vBuffer.m_uRead, uToCopy);
 		pbyWrite += uToCopy;
 		uCopied += uToCopy;
 		if(uCopied == uRet){
@@ -249,16 +253,16 @@ std::size_t StreamBuffer::Get(void *pData, std::size_t uSize) noexcept {
 		ASSERT(!xm_lstBuffers.IsEmpty());
 
 		auto &vBuffer = xm_lstBuffers.GetFirst()->GetElement();
-		const auto uToCopy = Min(uRet - uCopied, vBuffer.uWrite - vBuffer.uRead);
-		std::memcpy(pbyWrite, vBuffer.abyData + vBuffer.uRead, uToCopy);
+		const auto uToCopy = Min(uRet - uCopied, vBuffer.m_uWrite - vBuffer.m_uRead);
+		std::memcpy(pbyWrite, vBuffer.m_abyData + vBuffer.m_uRead, uToCopy);
 		pbyWrite += uToCopy;
-		vBuffer.uRead += uToCopy;
+		vBuffer.m_uRead += uToCopy;
 		xm_uSize -= uToCopy;
 		uCopied += uToCopy;
 		if(uCopied == uRet){
 			break;
 		}
-		ShiftPooled(xm_lstBuffers);
+		Chunk::ShiftPooled(xm_lstBuffers);
 	}
 	return uRet;
 }
@@ -272,14 +276,14 @@ std::size_t StreamBuffer::Discard(std::size_t uSize) noexcept {
 		ASSERT(!xm_lstBuffers.IsEmpty());
 
 		auto &vBuffer = xm_lstBuffers.GetFirst()->GetElement();
-		const std::size_t uToDrop = Min(uRet - uCopied, vBuffer.uWrite - vBuffer.uRead);
-		vBuffer.uRead += uToDrop;
+		const std::size_t uToDrop = Min(uRet - uCopied, vBuffer.m_uWrite - vBuffer.m_uRead);
+		vBuffer.m_uRead += uToDrop;
 		xm_uSize -= uToDrop;
 		uCopied += uToDrop;
 		if(uCopied == uRet){
 			break;
 		}
-		ShiftPooled(xm_lstBuffers);
+		Chunk::ShiftPooled(xm_lstBuffers);
 	}
 	return uRet;
 }
@@ -287,21 +291,21 @@ void StreamBuffer::Put(const void *pData, std::size_t uSize){
 	auto pbyRead = (unsigned char *)pData;
 	std::size_t uCopied = 0;
 	auto pNode = xm_lstBuffers.GetLast();
-	if(pNode && (pNode->GetElement().uWrite < CHUNK_SIZE)){
+	if(pNode && (pNode->GetElement().m_uWrite < Chunk::CHUNK_SIZE)){
 		auto &vBuffer = pNode->GetElement();
-		const auto uToCopy = Min(uSize - uCopied, CHUNK_SIZE - vBuffer.uWrite);
-		std::memcpy(vBuffer.abyData + vBuffer.uWrite, pbyRead, uToCopy);
-		vBuffer.uWrite += uToCopy;
+		const auto uToCopy = Min(uSize - uCopied, Chunk::CHUNK_SIZE - vBuffer.m_uWrite);
+		std::memcpy(vBuffer.m_abyData + vBuffer.m_uWrite, pbyRead, uToCopy);
+		vBuffer.m_uWrite += uToCopy;
 		pbyRead += uToCopy;
 		xm_uSize += uToCopy;
 		uCopied += uToCopy;
 	}
 	while(uCopied < uSize){
-		auto &vBuffer = PushPooled(xm_lstBuffers);
-		const auto uToCopy = Min(uSize - uCopied, CHUNK_SIZE);
-		std::memcpy(vBuffer.abyData, pbyRead, uToCopy);
-		vBuffer.uRead = 0;
-		vBuffer.uWrite = uToCopy;
+		auto &vBuffer = Chunk::PushPooled(xm_lstBuffers);
+		const auto uToCopy = Min(uSize - uCopied, Chunk::CHUNK_SIZE);
+		std::memcpy(vBuffer.m_abyData, pbyRead, uToCopy);
+		vBuffer.m_uRead = 0;
+		vBuffer.m_uWrite = uToCopy;
 		pbyRead += uToCopy;
 		xm_uSize += uToCopy;
 		uCopied += uToCopy;
@@ -314,7 +318,7 @@ void StreamBuffer::Put(const char *pszData){
 	}
 }
 
-StreamBuffer StreamBuffer::Cut(std::size_t uSize){
+StreamBuffer StreamBuffer::CutOff(std::size_t uSize){
 	StreamBuffer sbufRet;
 	if(xm_uSize <= uSize){
 		sbufRet.Swap(*this);
@@ -326,13 +330,13 @@ StreamBuffer StreamBuffer::Cut(std::size_t uSize){
 			auto &vBuffer = pNode->GetElement();
 
 			const std::size_t uRemaining = uSize - uTotal;
-			const auto uAvail = vBuffer.uWrite - vBuffer.uRead;
+			const auto uAvail = vBuffer.m_uWrite - vBuffer.m_uRead;
 			if(uRemaining < uAvail){
-				auto &vNewBuffer = PushPooled(sbufRet.xm_lstBuffers);
-				vNewBuffer.uRead = 0;
-				vNewBuffer.uWrite = uRemaining;
-				std::memcpy(vNewBuffer.abyData, vBuffer.abyData + vBuffer.uRead, uRemaining);
-				vBuffer.uRead += uRemaining;
+				auto &vNewBuffer = Chunk::PushPooled(sbufRet.xm_lstBuffers);
+				vNewBuffer.m_uRead = 0;
+				vNewBuffer.m_uWrite = uRemaining;
+				std::memcpy(vNewBuffer.m_abyData, vBuffer.m_abyData + vBuffer.m_uRead, uRemaining);
+				vBuffer.m_uRead += uRemaining;
 				sbufRet.xm_uSize += uRemaining;
 				xm_uSize -= uRemaining;
 				break;
@@ -359,16 +363,16 @@ void StreamBuffer::Splice(StreamBuffer &rhs) noexcept {
 bool StreamBuffer::Traverse(const StreamBuffer::TraverseContext *&pContext,
 	std::pair<const void *, std::size_t> &vBlock) const noexcept
 {
-	auto pNode = pContext ? ((const ChunkNode *)pContext)->GetNext() : xm_lstBuffers.GetFirst();
+	const typename List<Chunk>::Node *pNode = !pContext ? xm_lstBuffers.GetFirst() : pContext->GetNext();
 	for(;;){
 		if(!pNode){
 			return false;
 		}
 		const auto &vBuffer = pNode->GetElement();
-		if(vBuffer.uRead < vBuffer.uWrite){
-			pContext = (const TraverseContext *)pNode;
-			vBlock.first = vBuffer.abyData + vBuffer.uRead;
-			vBlock.second = vBuffer.uWrite - vBuffer.uRead;
+		if(vBuffer.m_uRead < vBuffer.m_uWrite){
+			pContext = static_cast<const TraverseContext *>(pNode);
+			vBlock.first = vBuffer.m_abyData + vBuffer.m_uRead;
+			vBlock.second = vBuffer.m_uWrite - vBuffer.m_uRead;
 			return true;
 		}
 		pNode = pNode->GetNext();
@@ -377,16 +381,16 @@ bool StreamBuffer::Traverse(const StreamBuffer::TraverseContext *&pContext,
 bool StreamBuffer::Traverse(StreamBuffer::TraverseContext *&pContext,
 	std::pair<void *, std::size_t> &vBlock) noexcept
 {
-	auto pNode = pContext ? ((ChunkNode *)pContext)->GetNext() : xm_lstBuffers.GetFirst();
+	typename List<Chunk>::Node *pNode = !pContext ? xm_lstBuffers.GetFirst() : pContext->GetNext();
 	for(;;){
 		if(!pNode){
 			return false;
 		}
-		pContext = (TraverseContext *)pNode;
 		auto &vBuffer = pNode->GetElement();
-		if(vBuffer.uRead < vBuffer.uWrite){
-			vBlock.first = vBuffer.abyData + vBuffer.uRead;
-			vBlock.second = vBuffer.uWrite - vBuffer.uRead;
+		if(vBuffer.m_uRead < vBuffer.m_uWrite){
+			pContext = static_cast<TraverseContext *>(pNode);
+			vBlock.first = vBuffer.m_abyData + vBuffer.m_uRead;
+			vBlock.second = vBuffer.m_uWrite - vBuffer.m_uRead;
 			return true;
 		}
 		pNode = pNode->GetNext();

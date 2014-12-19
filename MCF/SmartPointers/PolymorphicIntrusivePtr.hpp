@@ -10,19 +10,17 @@
 namespace MCF {
 
 struct PolymorphicIntrusiveBase : IntrusiveBase<PolymorphicIntrusiveBase> {
-	using Deleter = DefaultDeleter<PolymorphicIntrusiveBase>;
-
 	virtual ~PolymorphicIntrusiveBase() = 0;
 };
 
 template<typename ObjectT>
-using PolymorphicIntrusivePtr = IntrusivePtr<ObjectT, PolymorphicIntrusiveBase::Deleter>;
+using PolymorphicIntrusivePtr = IntrusivePtr<ObjectT, DefaultDeleter<PolymorphicIntrusiveBase>>;
 
 template<typename ObjectT, typename ...ParamsT>
 auto MakePolymorphicIntrusive(ParamsT &&...vParams){
 	static_assert(!std::is_array<ObjectT>::value, "ObjectT shall not be an array type.");
 
-	return IntrusivePtr<ObjectT, PolymorphicIntrusiveBase::Deleter>(new ObjectT(std::forward<ParamsT>(vParams)...));
+	return IntrusivePtr<ObjectT, DefaultDeleter<PolymorphicIntrusiveBase>>(new ObjectT(std::forward<ParamsT>(vParams)...));
 }
 
 }

@@ -7,6 +7,7 @@
 
 #include "../Utilities/Assert.hpp"
 #include "DefaultDeleter.hpp"
+#include "Traits.hpp"
 #include <utility>
 #include <type_traits>
 #include <cstddef>
@@ -145,7 +146,11 @@ template<typename ObjectT, class DeleterT = DefaultDeleter<std::remove_cv_t<Obje
 using IntrusiveBase = Impl::IntrusiveBase<DeleterT>;
 
 template<typename ObjectT, class DeleterT>
-class IntrusivePtr {
+class IntrusivePtr
+	: public Impl::SmartPointerCheckDereferencable<IntrusivePtr<ObjectT, DeleterT>, ObjectT>
+	, public Impl::SmartPointerCheckArray<IntrusivePtr<ObjectT, DeleterT>, ObjectT>
+{
+	static_assert(noexcept(DeleterT()(DeleterT()())), "Deleter must not throw.");
 	static_assert(!std::is_array<ObjectT>::value, "IntrusivePtr does not support arrays.");
 
 public:
@@ -169,22 +174,11 @@ public:
 	{
 		Reset(std::move(rhs));
 	}
-	template<typename OtherT>
-	explicit IntrusivePtr(const IntrusivePtr<OtherT, DeleterT> &rhs) noexcept
+	template<typename OtherT,
+		std::enable_if_t<std::is_convertible<OtherT *, ObjectT *>::value, int> = 0>
+	explicit IntrusivePtr(IntrusivePtr<OtherT, DeleterT> rhs) noexcept
 		: IntrusivePtr()
 	{
-		static_assert(std::is_convertible<OtherT *, ObjectT *>::value,
-			"Unable to convert from `OtherT *` to `ObjectT *`.");
-
-		Reset(rhs);
-	}
-	template<typename OtherT>
-	explicit IntrusivePtr(IntrusivePtr<OtherT, DeleterT> &&rhs) noexcept
-		: IntrusivePtr()
-	{
-		static_assert(std::is_convertible<OtherT *, ObjectT *>::value,
-			"Unable to convert from `OtherT *` to `ObjectT *`.");
-
 		Reset(std::move(rhs));
 	}
 	IntrusivePtr &operator=(const IntrusivePtr &rhs) noexcept {
@@ -195,19 +189,9 @@ public:
 		Reset(std::move(rhs));
 		return *this;
 	}
-	template<typename OtherT>
-	IntrusivePtr &operator=(const IntrusivePtr<OtherT, DeleterT> &rhs) noexcept {
-		static_assert(std::is_convertible<OtherT *, ObjectT *>::value,
-			"Unable to convert from `OtherT *` to `ObjectT *`.");
-
-		Reset(rhs);
-		return *this;
-	}
-	template<typename OtherT>
-	IntrusivePtr &operator=(IntrusivePtr<OtherT, DeleterT> &&rhs) noexcept {
-		static_assert(std::is_convertible<OtherT *, ObjectT *>::value,
-			"Unable to convert from `OtherT *` to `ObjectT *`.");
-
+	template<typename OtherT,
+		std::enable_if_t<std::is_convertible<OtherT *, ObjectT *>::value, int> = 0>
+	IntrusivePtr &operator=(IntrusivePtr<OtherT, DeleterT> rhs) noexcept {
 		Reset(std::move(rhs));
 		return *this;
 	}
@@ -216,7 +200,7 @@ public:
 	}
 
 public:
-	bool IsValid() const noexcept {
+	bool IsNonnull() const noexcept {
 		return Get() != nullptr;
 	}
 	ObjectT *Get() const noexcept {
@@ -252,24 +236,11 @@ public:
 		}
 		return *this;
 	}
-	template<typename OtherT>
-	IntrusivePtr &Reset(const IntrusivePtr<OtherT, DeleterT> &rhs) noexcept {
-		static_assert(std::is_convertible<OtherT *, ObjectT *>::value,
-			"Unable to convert from `OtherT *` to `ObjectT *`.");
-
-		const auto pNew = rhs.Get();
-		if(pNew){
-			pNew->AddRef();
-		}
-		Reset(pNew);
+	template<typename OtherT,
+		std::enable_if_t<std::is_convertible<OtherT *, ObjectT *>::value, int> = 0>
+	IntrusivePtr &Reset(IntrusivePtr<OtherT, DeleterT> rhs) noexcept {
+		Reset(rhs.Release());
 		return *this;
-	}
-	template<typename OtherT>
-	IntrusivePtr &Reset(IntrusivePtr<OtherT, DeleterT> &&rhs) noexcept {
-		static_assert(std::is_convertible<OtherT *, ObjectT *>::value,
-			"Unable to convert from `OtherT *` to `ObjectT *`.");
-
-		return Reset(rhs.Release());
 	}
 
 	void Swap(IntrusivePtr &rhs) noexcept {
@@ -278,18 +249,9 @@ public:
 
 public:
 	explicit operator bool() const noexcept {
-		return IsValid();
+		return IsNonnull();
 	}
 	explicit operator ObjectT *() const noexcept {
-		return Get();
-	}
-
-	ObjectT &operator*() const noexcept {
-		ASSERT(IsValid());
-		return *Get();
-	}
-	ObjectT *operator->() const noexcept {
-		ASSERT(IsValid());
 		return Get();
 	}
 };
@@ -437,8 +399,8 @@ template<typename DstT, typename SrcT, class DeleterT>
 auto DynamicPointerCast(IntrusivePtr<SrcT, DeleterT> rhs) noexcept {
 	SrcT *const pSrc = rhs.Release();
 	DstT *const pDst = dynamic_cast<DstT *>(pSrc);
-	if(!pDst){
-		rhs.Reset(pSrc);
+	if(!pDst && pSrc){
+		pSrc->DropRef();
 	}
 	return IntrusivePtr<DstT, DeleterT>(pDst);
 }

@@ -13,17 +13,16 @@
 
 namespace MCF {
 
-struct StreamBufferChunk;
-
 class StreamBuffer {
 public:
+	class Chunk;
+	class TraverseContext;
+
 	class ReadIterator;
 	class WriteIterator;
 
-	class TraverseContext;
-
 private:
-	List<StreamBufferChunk> xm_lstBuffers;
+	List<Chunk> xm_lstBuffers;
 	std::size_t xm_uSize;
 
 public:
@@ -59,8 +58,8 @@ public:
 	void Put(const char *pszData);
 
 	// 拆分成两部分，返回 [0, uSize) 部分，[uSize, -) 部分仍保存于当前对象中。
-	StreamBuffer Cut(std::size_t uSize);
-	// Cut() 的逆操作。该函数返回后 src 为空。
+	StreamBuffer CutOff(std::size_t uSize);
+	// CutOff() 的逆操作。该函数返回后 src 为空。
 	void Splice(StreamBuffer &rhs) noexcept;
 	void Splice(StreamBuffer &&rhs) noexcept {
 		Splice(rhs);
@@ -125,9 +124,9 @@ public:
 		return *this;
 	}
 	ReadIterator operator++(int) noexcept {
-		auto itRet = *this;
+		const auto itRet = *this;
 		++*this;
-		return std::move(itRet);
+		return itRet;
 	}
 
 	unsigned char operator*() const noexcept {

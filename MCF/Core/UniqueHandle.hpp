@@ -48,7 +48,7 @@ public:
 	UniqueHandle &operator=(const UniqueHandle &) = delete;
 
 public:
-	bool IsValid() const noexcept {
+	bool IsNonnull() const noexcept {
 		return Get() != CloserT()();
 	}
 	Handle Get() const noexcept {
@@ -61,6 +61,7 @@ public:
 	UniqueHandle &Reset(Handle hObject = CloserT()()) noexcept {
 		const auto hOld = std::exchange(xm_hObject, hObject);
 		if(hOld != CloserT()()){
+			ASSERT(hOld != hObject);
 			CloserT()(hOld);
 		}
 		return *this;
@@ -75,7 +76,7 @@ public:
 
 public:
 	explicit operator bool() const noexcept {
-		return IsValid();
+		return IsNonnull();
 	}
 	explicit operator Handle() const noexcept {
 		return Get();

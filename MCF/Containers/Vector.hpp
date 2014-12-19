@@ -31,29 +31,29 @@ public:
 	explicit Vector(std::size_t uCount, const ParamsT &...vParams)
 		: Vector()
 	{
-		FillAtEnd(uCount, vParams...);
+		AppendFill(uCount, vParams...);
 	}
 	template<class IteratorT>
 	Vector(IteratorT itBegin, std::common_type_t<IteratorT> itEnd)
 		: Vector()
 	{
-		CopyToEnd(itBegin, itEnd);
+		AppendCopy(itBegin, itEnd);
 	}
 	template<class IteratorT>
 	Vector(IteratorT itBegin, std::size_t uCount)
 		: Vector()
 	{
-		CopyToEnd(itBegin, uCount);
+		AppendCopy(itBegin, uCount);
 	}
 	Vector(std::initializer_list<ElementT> rhs)
 		: Vector()
 	{
-		CopyToEnd(rhs.begin(), rhs.size());
+		AppendCopy(rhs.begin(), rhs.size());
 	}
 	Vector(const Vector &rhs)
 		: Vector()
 	{
-		CopyToEnd(rhs.GetBegin(), rhs.GetEnd());
+		AppendCopy(rhs.GetBegin(), rhs.GetEnd());
 	}
 	Vector(Vector &&rhs) noexcept
 		: Vector()
@@ -112,15 +112,15 @@ public:
 	void Resize(std::size_t uNewSize, const ParamsT &...vParams){
 		const std::size_t uOldSize = GetSize();
 		if(uNewSize > uOldSize){
-			FillAtEnd(uNewSize - uOldSize, vParams...);
+			AppendFill(uNewSize - uOldSize, vParams...);
 		} else if(uNewSize < uOldSize){
-			TruncateFromEnd(uOldSize - uNewSize);
+			Truncate(uOldSize - uNewSize);
 		}
 	}
 	template<typename ...ParamsT>
 	ElementT *ResizeMore(std::size_t uDeltaSize, const ParamsT &...vParams){
 		const auto uOldSize = GetSize();
-		FillAtEnd(uDeltaSize, vParams...);
+		AppendFill(uDeltaSize, vParams...);
 		return GetData() + uOldSize;
 	}
 
@@ -128,7 +128,7 @@ public:
 		return GetEnd() == GetBegin();
 	}
 	void Clear(bool bDeallocateBuffer = false) noexcept {
-		TruncateFromEnd(GetSize());
+		Truncate(GetSize());
 
 		if(bDeallocateBuffer){
 			::operator delete[](xm_pBegin);
@@ -220,38 +220,68 @@ public:
 	}
 
 	template<typename ...ParamsT>
-	void UncheckedFillAtEnd(std::size_t uCount, const ParamsT &...vParams)
+	void UncheckedAppendFill(std::size_t uCount, const ParamsT &...vParams)
 		noexcept(std::is_nothrow_constructible<ElementT, const ParamsT &...>::value)
 	{
-		for(std::size_t i = 0; i < uCount; ++i){
-			UncheckedPush(vParams...);
+		std::size_t i = 0;
+		try {
+			while(i < uCount){
+				UncheckedPush(vParams...);
+				++i;
+			}
+		} catch(...){
+			while(i > 0){
+				Pop();
+				--i;
+			}
+			throw;
 		}
 	}
 	template<class IteratorT>
-	void UncheckedCopyToEnd(IteratorT itBegin, std::common_type_t<IteratorT> itEnd)
+	void UncheckedAppendCopy(IteratorT itBegin, std::common_type_t<IteratorT> itEnd)
 		noexcept(std::is_nothrow_constructible<ElementT, decltype((*std::declval<IteratorT>()))>::value)
 	{
-		while(itBegin != itEnd){
-			UncheckedPush(*itBegin);
-			++itBegin;
+		std::size_t i = 0;
+		try {
+			while(itBegin != itEnd){
+				UncheckedPush(*itBegin);
+				++itBegin;
+				++i;
+			}
+		} catch(...){
+			while(i > 0){
+				Pop();
+				--i;
+			}
+			throw;
 		}
 	}
 	template<class IteratorT>
-	void UncheckedCopyToEnd(IteratorT itBegin, std::size_t uCount)
+	void UncheckedAppendCopy(IteratorT itBegin, std::size_t uCount)
 		noexcept(std::is_nothrow_constructible<ElementT, decltype((*std::declval<IteratorT>()))>::value)
 	{
-		for(std::size_t i = 0; i < uCount; ++i){
-			UncheckedPush(*itBegin);
-			++itBegin;
+		std::size_t i = 0;
+		try {
+			while(i < uCount){
+				UncheckedPush(*itBegin);
+				++itBegin;
+				++i;
+			}
+		} catch(...){
+			while(i > 0){
+				Pop();
+				--i;
+			}
+			throw;
 		}
 	}
 	template<typename ...ParamsT>
-	void FillAtEnd(std::size_t uCount, const ParamsT &...vParams){
+	void AppendFill(std::size_t uCount, const ParamsT &...vParams){
 		Reserve(GetSize() + uCount);
-		UncheckedFillAtEnd(uCount, vParams...);
+		UncheckedAppendFill(uCount, vParams...);
 	}
 	template<class IteratorT>
-	void CopyToEnd(IteratorT itBegin, std::common_type_t<IteratorT> itEnd){
+	void AppendCopy(IteratorT itBegin, std::common_type_t<IteratorT> itEnd){
 		if(std::is_same<typename std::iterator_traits<IteratorT>::iterator_category,
 			std::random_access_iterator_tag>::value)
 		{
@@ -263,12 +293,11 @@ public:
 		}
 	}
 	template<class IteratorT>
-	void CopyToEnd(IteratorT itBegin, std::size_t uCount){
+	void AppendCopy(IteratorT itBegin, std::size_t uCount){
 		ReserveMore(uCount);
-		UncheckedCopyToEnd(std::move(itBegin), uCount);
+		UncheckedAppendCopy(std::move(itBegin), uCount);
 	}
-	void TruncateFromEnd(std::size_t uCount) noexcept {
-		ASSERT(GetSize() >= uCount);
+	void Truncate(std::size_t uCount) noexcept {
 		for(std::size_t i = 0; i < uCount; ++i){
 			Pop();
 		}

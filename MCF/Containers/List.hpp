@@ -16,7 +16,7 @@ template<class ElementT>
 class List {
 public:
 	class Node {
-		friend class List;
+		friend List;
 
 	private:
 		ElementT xm_vElement;
@@ -65,24 +65,24 @@ public:
 	explicit List(std::size_t uCount, const ParamsT &...vParams)
 		: List()
 	{
-		FillAtEnd(uCount, vParams...);
+		AppendFill(uCount, vParams...);
 	}
 	template<class IteratorT>
 	List(IteratorT itBegin, std::common_type_t<IteratorT> itEnd)
 		: List()
 	{
-		CopyToEnd(itBegin, itEnd);
+		AppendCopy(itBegin, itEnd);
 	}
 	template<class IteratorT>
 	List(IteratorT itBegin, std::size_t uCount)
 		: List()
 	{
-		CopyToEnd(itBegin, uCount);
+		AppendCopy(itBegin, uCount);
 	}
 	List(std::initializer_list<ElementT> rhs)
 		: List()
 	{
-		CopyToEnd(rhs.begin(), rhs.size());
+		AppendCopy(rhs.begin(), rhs.size());
 	}
 	List(const List &rhs)
 		: List()
@@ -233,52 +233,112 @@ public:
 	}
 
 	template<typename ...ParamsT>
-	void FillAtEnd(std::size_t uCount, const ParamsT &...vParams){
-		for(std::size_t i = 0; i < uCount; ++i){
-			Push(vParams...);
+	void AppendFill(std::size_t uCount, const ParamsT &...vParams){
+		std::size_t i = 0;
+		try {
+			while(i < uCount){
+				Push(vParams...);
+				++i;
+			}
+		} catch(...){
+			while(i > 0){
+				Pop();
+				--i;
+			}
+			throw;
 		}
 	}
 	template<class IteratorT>
-	void CopyToEnd(IteratorT itBegin, std::common_type_t<IteratorT> itEnd){
-		while(itBegin != itEnd){
-			Push(*itBegin);
-			++itBegin;
+	void AppendCopy(IteratorT itBegin, std::common_type_t<IteratorT> itEnd){
+		std::size_t i = 0;
+		try {
+			while(itBegin != itEnd){
+				Push(*itBegin);
+				++itBegin;
+				++i;
+			}
+		} catch(...){
+			while(i > 0){
+				Pop();
+				--i;
+			}
+			throw;
 		}
 	}
 	template<class IteratorT>
-	void CopyToEnd(IteratorT itBegin, std::size_t uCount){
-		for(std::size_t i = 0; i < uCount; ++i){
-			Push(*itBegin);
-			++itBegin;
+	void AppendCopy(IteratorT itBegin, std::size_t uCount){
+		std::size_t i = 0;
+		try {
+			while(i < uCount){
+				Push(*itBegin);
+				++itBegin;
+				++i;
+			}
+		} catch(...){
+			while(i > 0){
+				Pop();
+				--i;
+			}
+			throw;
 		}
 	}
-	void TruncateFromEnd(std::size_t uCount) noexcept {
+	void Truncate(std::size_t uCount) noexcept {
 		for(std::size_t i = 0; i < uCount; ++i){
 			Pop();
 		}
 	}
 
 	template<typename ...ParamsT>
-	void FillAtBegin(std::size_t uCount, const ParamsT &...vParams){
-		for(std::size_t i = 0; i < uCount; ++i){
-			Unshift(vParams...);
+	void PrependFill(std::size_t uCount, const ParamsT &...vParams){
+		std::size_t i = 0;
+		try {
+			while(i < uCount){
+				Unshift(vParams...);
+				++i;
+			}
+		} catch(...){
+			while(i > 0){
+				Shift();
+				--i;
+			}
+			throw;
 		}
 	}
 	template<class IteratorT>
-	void CopyToBegin(IteratorT itBegin, std::common_type_t<IteratorT> itEnd){
-		while(itBegin != itEnd){
-			Unshift(*itBegin);
-			++itBegin;
+	void PrependCopy(IteratorT itBegin, std::common_type_t<IteratorT> itEnd){
+		std::size_t i = 0;
+		try {
+			while(itBegin != itEnd){
+				Unshift(*itBegin);
+				++itBegin;
+				++i;
+			}
+		} catch(...){
+			while(i > 0){
+				Shift();
+				--i;
+			}
+			throw;
 		}
 	}
 	template<class IteratorT>
-	void CopyToBegin(IteratorT itBegin, std::size_t uCount){
-		for(std::size_t i = 0; i < uCount; ++i){
-			Unshift(*itBegin);
-			++itBegin;
+	void PrependCopy(IteratorT itBegin, std::size_t uCount){
+		std::size_t i = 0;
+		try {
+			while(i < uCount){
+				Unshift(*itBegin);
+				++itBegin;
+				++i;
+			}
+		} catch(...){
+			while(i > 0){
+				Shift();
+				--i;
+			}
+			throw;
 		}
 	}
-	void TruncateFromBegin(std::size_t uCount) noexcept {
+	void CutOff(std::size_t uCount) noexcept {
 		for(std::size_t i = 0; i < uCount; ++i){
 			Shift();
 		}

@@ -950,10 +950,10 @@ public:
 
 	// std::insert_iterator
 	template<typename ParamT>
-	void insert(Node *pHint, ParamT &&vParams){
-		InsertWithHints(
+	Node *insert(Node *pHint, ParamT &&vParams){
+		return InsertWithHints(
 			Hints(reinterpret_cast<Node *>(reinterpret_cast<IndicesT *>(pHint))...),
-			std::forward<ParamT>(vParams));
+			std::forward<ParamT>(vParams)).first;
 	}
 };
 

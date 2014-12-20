@@ -5,6 +5,7 @@
 #ifndef MCF_CONTAINERS_LIST_HPP_
 #define MCF_CONTAINERS_LIST_HPP_
 
+#include "../Utilities/Assert.hpp"
 #include <initializer_list>
 #include <type_traits>
 #include <utility>
@@ -192,6 +193,18 @@ public:
 		return Splice(pPos, lstSource, pSingle, pSingle->xm_pNext);
 	}
 	Node *Splice(Node *pPos, List &lstSource, Node *pBegin, Node *pEnd) noexcept {
+#ifndef NDEBUG
+		{
+			auto p = pBegin;
+			while(p != pEnd){
+				if(p == pPos){
+					ASSERT_MSG(false, L"不能将链表的某个区间拼接到该区间内部。");
+				}
+				p = p->GetNext();
+			}
+		}
+#endif
+
 		if(pBegin != pEnd){
 			const auto pOldPrev = pBegin->xm_pPrev;
 			(pOldPrev ? pOldPrev->xm_pNext : lstSource.xm_pFirst) = pEnd;

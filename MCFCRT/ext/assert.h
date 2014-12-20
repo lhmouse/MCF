@@ -6,7 +6,7 @@
 
 #ifdef NDEBUG
 #	define MCF_ASSERT_MSG_(plain_, expr_, msg_)	\
-	((void)0)
+	((void)sizeof(expr_))
 #else
 #	define MCF_ASSERT_MSG_(plain_, expr_, msg_)	\
 	(!(expr_) && (__MCF_CRT_OnAssertFail(L ## plain_, __FILE__, __LINE__, (msg_)), 1))

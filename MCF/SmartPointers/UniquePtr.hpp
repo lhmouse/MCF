@@ -5,9 +5,12 @@
 #ifndef MCF_SMART_POINTERS_UNIQUE_PTR_HPP_
 #define MCF_SMART_POINTERS_UNIQUE_PTR_HPP_
 
+// 1) 构造函数（包含复制构造函数、转移构造函数以及构造函数模板）、赋值运算符和析构函数应当调用 Reset()；
+// 2) Reset() 的形参若具有 UniquePtr 的某模板类类型，则禁止传值，必须传引用。
+
 #include "../Utilities/Assert.hpp"
 #include "DefaultDeleter.hpp"
-#include "Traits.hpp"
+#include "_Traits.hpp"
 #include <utility>
 #include <type_traits>
 #include <cstddef>
@@ -22,18 +25,14 @@ class UniquePtr
 	static_assert(noexcept(DeleterT()(DeleterT()())), "Deleter must not throw.");
 
 public:
-	using PointeeType = std::remove_extent_t<ObjectT>;
+	using Element = std::remove_extent_t<ObjectT>;
 
 private:
-	PointeeType *xm_pObject;
+	Element *xm_pElement;
 
 public:
-	constexpr UniquePtr() noexcept
-		: UniquePtr(nullptr)
-	{
-	}
-	constexpr explicit UniquePtr(PointeeType *pObject) noexcept
-		: xm_pObject(pObject)
+	constexpr explicit UniquePtr(Element *pElement = nullptr) noexcept
+		: xm_pElement(pElement)
 	{
 	}
 	UniquePtr(UniquePtr &&rhs) noexcept
@@ -43,8 +42,8 @@ public:
 	}
 	template<typename OtherT,
 		std::enable_if_t<std::is_array<OtherT>::value
-			? std::is_same<std::remove_cv_t<std::remove_extent_t<OtherT>>, std::remove_cv_t<PointeeType>>::value
-			: std::is_convertible<OtherT *, PointeeType *>::value,
+			? std::is_same<std::remove_cv_t<std::remove_extent_t<OtherT>>, std::remove_cv_t<Element>>::value
+			: std::is_convertible<OtherT *, Element *>::value,
 		int> = 0>
 	explicit UniquePtr(UniquePtr<OtherT, DeleterT> rhs) noexcept
 		: UniquePtr()
@@ -57,8 +56,8 @@ public:
 	}
 	template<typename OtherT,
 		std::enable_if_t<std::is_array<OtherT>::value
-			? std::is_same<std::remove_cv_t<std::remove_extent_t<OtherT>>, std::remove_cv_t<PointeeType>>::value
-			: std::is_convertible<OtherT *, PointeeType *>::value,
+			? std::is_same<std::remove_cv_t<std::remove_extent_t<OtherT>>, std::remove_cv_t<Element>>::value
+			: std::is_convertible<OtherT *, Element *>::value,
 		int> = 0>
 	UniquePtr &operator=(UniquePtr<OtherT, DeleterT> rhs) noexcept {
 		Reset(std::move(rhs));
@@ -75,18 +74,18 @@ public:
 	bool IsNonnull() const noexcept {
 		return Get() != nullptr;
 	}
-	PointeeType *Get() const noexcept {
-		return xm_pObject;
+	Element *Get() const noexcept {
+		return xm_pElement;
 	}
-	PointeeType *Release() noexcept {
-		return std::exchange(xm_pObject, nullptr);
+	Element *Release() noexcept {
+		return std::exchange(xm_pElement, nullptr);
 	}
 
-	UniquePtr &Reset(PointeeType *pObject = nullptr) noexcept {
-		const auto pOld = std::exchange(xm_pObject, pObject);
+	UniquePtr &Reset(Element *pElement = nullptr) noexcept {
+		ASSERT(Get() != pElement);
+		const auto pOld = std::exchange(xm_pElement, pElement);
 		if(pOld){
-			ASSERT(pOld != pObject);
-			DeleterT()(const_cast<std::remove_cv_t<PointeeType> *>(pOld));
+			DeleterT()(const_cast<std::remove_cv_t<Element> *>(pOld));
 		}
 		return *this;
 	}
@@ -95,22 +94,22 @@ public:
 	}
 	template<typename OtherT,
 		std::enable_if_t<std::is_array<OtherT>::value
-			? std::is_same<std::remove_cv_t<std::remove_extent_t<OtherT>>, std::remove_cv_t<PointeeType>>::value
-			: std::is_convertible<OtherT *, PointeeType *>::value,
+			? std::is_same<std::remove_cv_t<std::remove_extent_t<OtherT>>, std::remove_cv_t<Element>>::value
+			: std::is_convertible<OtherT *, Element *>::value,
 		int> = 0>
 	UniquePtr &Reset(UniquePtr<OtherT, DeleterT> rhs) noexcept {
 		return Reset(rhs.Release());
 	}
 
 	void Swap(UniquePtr &rhs) noexcept {
-		std::swap(xm_pObject, rhs.xm_pObject);
+		std::swap(xm_pElement, rhs.xm_pElement);
 	}
 
 public:
 	explicit operator bool() const noexcept {
 		return IsNonnull();
 	}
-	explicit operator PointeeType *() const noexcept {
+	explicit operator Element *() const noexcept {
 		return Get();
 	}
 };

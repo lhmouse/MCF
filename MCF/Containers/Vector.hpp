@@ -6,6 +6,7 @@
 #define MCF_CONTAINERS_VECTOR_HPP_
 
 #include "../Utilities/ConstructDestruct.hpp"
+#include "../Utilities/Assert.hpp"
 #include <initializer_list>
 #include <type_traits>
 #include <iterator>

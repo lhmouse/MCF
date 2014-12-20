@@ -153,6 +153,9 @@ class IntrusivePtr
 	: public Impl::SmartPointerCheckDereferencable<IntrusivePtr<ObjectT, DeleterT>, ObjectT>
 	, public Impl::SmartPointerCheckArray<IntrusivePtr<ObjectT, DeleterT>, ObjectT>
 {
+	template<typename, class>
+	friend class IntrusivePtr;
+
 	static_assert(noexcept(DeleterT()(DeleterT()())), "Deleter must not throw.");
 	static_assert(!std::is_array<ObjectT>::value, "IntrusivePtr does not support arrays.");
 
@@ -242,7 +245,17 @@ public:
 	}
 	template<typename OtherT,
 		std::enable_if_t<std::is_convertible<OtherT *, Element *>::value, int> = 0>
-	IntrusivePtr &Reset(IntrusivePtr<OtherT, DeleterT> rhs) noexcept {
+	IntrusivePtr &Reset(const IntrusivePtr<OtherT, DeleterT> &rhs) noexcept {
+		const auto pObject = static_cast<Element *>(rhs.Get());
+		if(pObject){
+			pObject->AddRef();
+		}
+		Reset(pObject);
+		return *this;
+	}
+	template<typename OtherT,
+		std::enable_if_t<std::is_convertible<OtherT *, Element *>::value, int> = 0>
+	IntrusivePtr &Reset(IntrusivePtr<OtherT, DeleterT> &&rhs) noexcept {
 		Reset(rhs.Release());
 		return *this;
 	}

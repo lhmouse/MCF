@@ -266,12 +266,6 @@ public:
 		}
 		return *this;
 	}
-	SharedPtr &Reset(const SharedPtr &rhs) noexcept {
-		return Reset(rhs, rhs.Get());
-	}
-	SharedPtr &Reset(SharedPtr &&rhs) noexcept {
-		return Reset(std::move(rhs), rhs.Get());
-	}
 	template<typename OtherT,
 		std::enable_if_t<std::is_array<OtherT>::value
 			? std::is_same<std::remove_cv_t<std::remove_extent_t<OtherT>>, std::remove_cv_t<Element>>::value
@@ -417,10 +411,21 @@ public:
 		return *this;
 	}
 	WeakPtr &Reset(const WeakPtr &rhs) noexcept {
-		return Reset(rhs, rhs.Get());
+		xm_pElement = rhs.xm_pElement;
+		const auto pOldControl = std::exchange(xm_pControl, rhs.xm_pControl);
+		if(xm_pControl){
+			xm_pControl->AddWeak(); // noexcept
+		}
+		if(pOldControl){
+			pOldControl->DropWeak(); // noexcept
+		}
+		return *this;
 	}
 	WeakPtr &Reset(WeakPtr &&rhs) noexcept {
-		return Reset(std::move(rhs), rhs.Get());
+		ASSERT(this != &rhs);
+		Reset();
+		Swap(rhs);
+		return *this;
 	}
 	WeakPtr &Reset(const SharedPtr<ObjectT, DeleterT> &rhs) noexcept {
 		xm_pElement = rhs.xm_pElement;

@@ -89,16 +89,13 @@ public:
 		}
 		return *this;
 	}
-	UniquePtr &Reset(UniquePtr &&rhs) noexcept {
-		return Reset(rhs.Release());
-	}
 	template<typename OtherT,
 		std::enable_if_t<std::is_array<OtherT>::value
 			? std::is_same<std::remove_cv_t<std::remove_extent_t<OtherT>>, std::remove_cv_t<Element>>::value
 			: std::is_convertible<OtherT *, Element *>::value,
 		int> = 0>
-	UniquePtr &Reset(UniquePtr<OtherT, DeleterT> rhs) noexcept {
-		return Reset(rhs.Release());
+	UniquePtr &Reset(UniquePtr<OtherT, DeleterT> &&rhs) noexcept {
+		return Reset(static_cast<Element *>(rhs.Release()));
 	}
 
 	void Swap(UniquePtr &rhs) noexcept {

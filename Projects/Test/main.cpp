@@ -3,6 +3,9 @@
 #include <string>
 using namespace MCF;
 
+template class SharedPtr<std::string>;
+template class WeakPtr<std::string>;
+
 extern "C" unsigned int MCFMain() noexcept {
 	PolymorphicWeakPtr<std::string> p;
 	{

@@ -9,7 +9,7 @@
 
 namespace MCF {
 
-struct PolymorphicIntrusiveBase : IntrusiveBase<PolymorphicIntrusiveBase> {
+struct PolymorphicIntrusiveBase : public IntrusiveBase<PolymorphicIntrusiveBase> {
 	virtual ~PolymorphicIntrusiveBase() = 0;
 };
 
@@ -20,7 +20,7 @@ template<typename ObjectT, typename ...ParamsT>
 auto MakePolymorphicIntrusive(ParamsT &&...vParams){
 	static_assert(!std::is_array<ObjectT>::value, "ObjectT shall not be an array type.");
 
-	return IntrusivePtr<ObjectT, DefaultDeleter<PolymorphicIntrusiveBase>>(new ObjectT(std::forward<ParamsT>(vParams)...));
+	return PolymorphicIntrusivePtr<ObjectT>(new ObjectT(std::forward<ParamsT>(vParams)...));
 }
 
 }

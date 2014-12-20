@@ -1,15 +1,15 @@
 #include <MCF/StdMCF.hpp>
-#include <MCF/SmartPointers/SharedPtr.hpp>
+#include <MCF/SmartPointers/PolymorphicSharedPtr.hpp>
 #include <string>
 using namespace MCF;
 
 extern "C" unsigned int MCFMain() noexcept {
-	WeakPtr<std::string> p;
+	PolymorphicWeakPtr<std::string> p;
 	{
-		SharedPtr<std::string> p1;
-		p1 = MakeShared<std::string>("hello world!");
+		PolymorphicSharedPtr<std::string> p1;
+		p1 = MakePolymorphicShared<std::string>("hello world!");
 		{
-			SharedPtr<const std::string> p2(p1);
+			PolymorphicSharedPtr<const std::string> p2(p1);
 			p = p1;
 
 			std::printf("%u %u: %s\n", p2.GetWeakCount(), p2.GetSharedCount(), p2->c_str());

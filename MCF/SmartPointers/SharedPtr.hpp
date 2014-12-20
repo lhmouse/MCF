@@ -534,6 +534,19 @@ auto MakeShared(ParamsT &&...vParams){
 	return SharedPtr<ObjectT, DefaultDeleter<ObjectT>>(new ObjectT(std::forward<ParamsT>(vParams)...));
 }
 
+template<typename DstT, typename SrcT, class DeleterT>
+auto StaticPointerCast(SharedPtr<SrcT, DeleterT> rhs) noexcept {
+	return SharedPtr<DstT, DeleterT>(std::move(rhs), static_cast<DstT *>(rhs.Get()));
+}
+template<typename DstT, typename SrcT, class DeleterT>
+auto DynamicPointerCast(SharedPtr<SrcT, DeleterT> rhs) noexcept {
+	return SharedPtr<DstT, DeleterT>(std::move(rhs), dynamic_cast<DstT *>(rhs.Get()));
+}
+template<typename DstT, typename SrcT, class DeleterT>
+auto ConstPointerCast(SharedPtr<SrcT, DeleterT> rhs) noexcept {
+	return SharedPtr<DstT, DeleterT>(std::move(rhs), const_cast<DstT *>(rhs.Get()));
+}
+
 }
 
 #endif

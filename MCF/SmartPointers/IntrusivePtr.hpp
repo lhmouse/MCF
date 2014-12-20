@@ -408,6 +408,12 @@ auto DynamicPointerCast(IntrusivePtr<SrcT, DeleterT> rhs) noexcept {
 	}
 	return IntrusivePtr<DstT, DeleterT>(pDst);
 }
+template<typename DstT, typename SrcT, class DeleterT>
+auto ConstPointerCast(IntrusivePtr<SrcT, DeleterT> rhs) noexcept {
+	SrcT *const pSrc = rhs.Release();
+	DstT *const pDst = const_cast<DstT *>(pSrc);
+	return IntrusivePtr<DstT, DeleterT>(pDst);
+}
 
 }
 

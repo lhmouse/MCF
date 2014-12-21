@@ -545,7 +545,11 @@ auto StaticPointerCast(SharedPtr<SrcT, DeleterT> rhs) noexcept {
 }
 template<typename DstT, typename SrcT, class DeleterT>
 auto DynamicPointerCast(SharedPtr<SrcT, DeleterT> rhs) noexcept {
-	return SharedPtr<DstT, DeleterT>(std::move(rhs), dynamic_cast<DstT *>(rhs.Get()));
+	const auto pDst = dynamic_cast<DstT *>(rhs.Get());
+	if(!pDst){
+		return nullptr;
+	}
+	return SharedPtr<DstT, DeleterT>(std::move(rhs), pDst);
 }
 template<typename DstT, typename SrcT, class DeleterT>
 auto ConstPointerCast(SharedPtr<SrcT, DeleterT> rhs) noexcept {

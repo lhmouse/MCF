@@ -11,7 +11,7 @@ namespace {
 
 union PooledSharedControl {
 	PooledSharedControl *pNext;
-	char achDummy[sizeof(Impl::SharedControl)];
+	alignas(Impl::SharedControl) char achDummy[sizeof(Impl::SharedControl)];
 };
 
 class Pool : NONCOPYABLE {

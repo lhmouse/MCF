@@ -216,11 +216,25 @@ public:
 		}
 		return const_cast<Element *>(xm_pBuddy->template Get<const volatile Element>());
 	}
+	auto ReleaseBuddy() noexcept {
+		return const_cast<
+			std::conditional_t<std::is_same<const volatile Element, Element>::value, const volatile Buddy *,
+				std::conditional_t<std::is_same<const Element, Element>::value, const Buddy *,
+					std::conditional_t<std::is_same<volatile Element, Element>::value, volatile Buddy *,
+						Buddy *>
+					>
+				>
+			>(std::exchange(xm_pBuddy, nullptr));
+	}
 	Element *Release() noexcept {
-		const auto pRet = Get();
-		if(pRet){
-			// pRet 现在持有所有权，释放原本的所有权。
-			xm_pBuddy = nullptr;
+		const auto pOldBuddy = ReleaseBuddy();
+		if(!pOldBuddy){
+			return nullptr;
+		}
+		const auto pRet = pOldBuddy->template Get<Element>();
+		if(!pRet){
+			pOldBuddy->DropRef();
+			return nullptr;
 		}
 		return pRet;
 	}
@@ -237,9 +251,9 @@ public:
 
 	IntrusivePtr &Reset(Element *pElement = nullptr) noexcept {
 		ASSERT(Get() != pElement);
-		const auto pOld = std::exchange(xm_pBuddy, pElement);
-		if(pOld){
-			pOld->DropRef();
+		const auto pOldBuddy = std::exchange(xm_pBuddy, pElement);
+		if(pOldBuddy){
+			pOldBuddy->DropRef();
 		}
 		return *this;
 	}
@@ -408,24 +422,27 @@ auto MakeIntrusive(ParamsT &&...vParams){
 
 template<typename DstT, typename SrcT, class DeleterT>
 auto StaticPointerCast(IntrusivePtr<SrcT, DeleterT> rhs) noexcept {
-	SrcT *const pSrc = rhs.Release();
-	DstT *const pDst = static_cast<DstT *>(pSrc);
-	return IntrusivePtr<DstT, DeleterT>(pDst);
+	IntrusivePtr<DstT, DeleterT> pRet(static_cast<DstT *>(rhs.Get()));
+	if(pRet){
+		rhs.ReleaseBuddy();
+	}
+	return std::move(pRet);
 }
 template<typename DstT, typename SrcT, class DeleterT>
 auto DynamicPointerCast(IntrusivePtr<SrcT, DeleterT> rhs) noexcept {
-	SrcT *const pSrc = rhs.Release();
-	DstT *const pDst = dynamic_cast<DstT *>(pSrc);
-	if(!pDst && pSrc){
-		pSrc->DropRef();
+	IntrusivePtr<DstT, DeleterT> pRet(dynamic_cast<DstT *>(rhs.Get()));
+	if(pRet){
+		rhs.ReleaseBuddy();
 	}
-	return IntrusivePtr<DstT, DeleterT>(pDst);
+	return std::move(pRet);
 }
 template<typename DstT, typename SrcT, class DeleterT>
 auto ConstPointerCast(IntrusivePtr<SrcT, DeleterT> rhs) noexcept {
-	SrcT *const pSrc = rhs.Release();
-	DstT *const pDst = const_cast<DstT *>(pSrc);
-	return IntrusivePtr<DstT, DeleterT>(pDst);
+	IntrusivePtr<DstT, DeleterT> pRet(const_cast<DstT *>(rhs.Get()));
+	if(pRet){
+		rhs.ReleaseBuddy();
+	}
+	return std::move(pRet);
 }
 
 }

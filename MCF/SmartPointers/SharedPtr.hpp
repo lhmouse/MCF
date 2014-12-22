@@ -100,16 +100,21 @@ namespace Impl {
 			auto uOldShared = __atomic_load_n(&xm_uSharedCount, __ATOMIC_ACQUIRE);
 			for(;;){
 				if(EXPECT_NOT(uOldShared == 0)){
-					bResult = false;
-					return DropWeak();
+					break;
 				}
 				if(EXPECT_NOT(__atomic_compare_exchange_n(&xm_uSharedCount, &uOldShared, uOldShared + 1,
 					false, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE)))
 				{
-					bResult = true;
-					return Sentry(nullptr);
+					goto jDone;
 				}
 			}
+
+			bResult = false;
+			return DropWeak();
+
+		jDone:
+			bResult = true;
+			return Sentry(nullptr);
 		}
 		Sentry DropShared() noexcept {
 			ASSERT(__atomic_load_n(&xm_uSharedCount, __ATOMIC_ACQUIRE) != 0);

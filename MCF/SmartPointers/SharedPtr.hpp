@@ -115,7 +115,6 @@ namespace Impl {
 			ASSERT(__atomic_load_n(&xm_uSharedCount, __ATOMIC_ACQUIRE) != 0);
 			if(__atomic_sub_fetch(&xm_uSharedCount, 1, __ATOMIC_ACQUIRE) == 0){
 				(*xm_pfnDeleter)(xm_pToDelete);
-				xm_pToDelete = nullptr;
 #ifndef NDEBUG
 				xm_pToDelete = (void *)
 #	ifdef _WIN64
@@ -177,6 +176,12 @@ public:
 	constexpr SharedPtr() noexcept
 		: xm_pControl(nullptr), xm_pElement(nullptr)
 	{
+	}
+	template<typename TestRawT = Raw>
+	SharedPtr(std::enable_if_t<std::is_convertible<TestRawT *, Element *>::value, TestRawT> *pRaw)
+		: SharedPtr()
+	{
+		Reset(pRaw);
 	}
 	SharedPtr(Raw *pRaw, Element *pElement)
 		: SharedPtr()
@@ -261,6 +266,10 @@ public:
 		}
 		xm_pElement = nullptr;
 		return *this;
+	}
+	template<typename TestRawT = Raw>
+	SharedPtr &Reset(std::enable_if_t<std::is_convertible<TestRawT *, Element *>::value, TestRawT> *pRaw){
+		return Reset(pRaw, pRaw);
 	}
 	SharedPtr &Reset(Raw *pRaw, Element *pElement){
 		ASSERT(GetRaw() != pRaw);
@@ -570,7 +579,7 @@ auto MakeShared(ParamsT &&...vParams){
 	static_assert(!std::is_array<ObjectT>::value, "ObjectT shall not be an array type.");
 
 	const auto pObject = new ObjectT(std::forward<ParamsT>(vParams)...);
-	return SharedPtr<ObjectT, DefaultDeleter<ObjectT>>(pObject, pObject);
+	return SharedPtr<ObjectT, DefaultDeleter<ObjectT>>(pObject);
 }
 
 template<typename DstT, typename SrcT, class DeleterT>

@@ -41,7 +41,7 @@ auto MakePolymorphicShared(ParamsT &&...vParams){
 			std::forward<ParamsT>(vParams)...);
 	return PolymorphicSharedPtr<ObjectT>(
 		SharedPtr<Impl::PolymorphicSharedPtrContainerBase,
-			DefaultDeleter<Impl::PolymorphicSharedPtrContainerBase>>(pContainer, pContainer),
+			DefaultDeleter<Impl::PolymorphicSharedPtrContainerBase>>(pContainer),
 		&(pContainer->m_vObjectT));
 }
 

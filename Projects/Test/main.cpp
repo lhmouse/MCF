@@ -9,7 +9,9 @@ template class SharedPtr<int, DefaultDeleter<Impl::PolymorphicSharedPtrContainer
 template class WeakPtr<int, DefaultDeleter<Impl::PolymorphicSharedPtrContainerBase>>;
 
 extern "C" unsigned int MCFMain() noexcept {
+	PolymorphicWeakPtr<void> wp;
 	PolymorphicSharedPtr<void> p = MakePolymorphicShared<int>(123456);
+	wp = p;
 
 	auto p1 = DynamicPointerCast<int>(p);
 	std::printf("p1 = %p, *p1 = %d\n", p1.Get(), *p1);

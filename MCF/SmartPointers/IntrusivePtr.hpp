@@ -10,7 +10,6 @@
 
 #include "../Utilities/Assert.hpp"
 #include "DefaultDeleter.hpp"
-#include "_Traits.hpp"
 #include <utility>
 #include <type_traits>
 #include <cstddef>
@@ -149,10 +148,7 @@ template<typename ObjectT, class DeleterT = DefaultDeleter<std::remove_cv_t<Obje
 using IntrusiveBase = Impl::IntrusiveBase<DeleterT>;
 
 template<typename ObjectT, class DeleterT>
-class IntrusivePtr
-	: public Impl::SmartPointerCheckDereferencable<IntrusivePtr<ObjectT, DeleterT>, ObjectT>
-	, public Impl::SmartPointerCheckArray<IntrusivePtr<ObjectT, DeleterT>, ObjectT>
-{
+class IntrusivePtr {
 	template<typename, class>
 	friend class IntrusivePtr;
 
@@ -284,6 +280,25 @@ public:
 	}
 	explicit operator Element *() const noexcept {
 		return Get();
+	}
+
+	template<typename RetT = Element>
+	std::enable_if_t<!std::is_void<RetT>::value && !std::is_array<RetT>::value, Element> &operator*() const noexcept {
+		ASSERT(IsNonnull());
+
+		return *Get();
+	}
+	template<typename RetT = Element>
+	std::enable_if_t<!std::is_void<RetT>::value && !std::is_array<RetT>::value, Element> *operator->() const noexcept {
+		ASSERT(IsNonnull());
+
+		return Get();
+	}
+	template<typename RetT = Element>
+	std::enable_if_t<std::is_array<RetT>::value, Element> &operator[](std::size_t uIndex) const noexcept {
+		ASSERT(IsNonnull());
+
+		return Get()[uIndex];
 	}
 };
 

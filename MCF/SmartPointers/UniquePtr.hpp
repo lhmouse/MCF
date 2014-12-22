@@ -10,7 +10,6 @@
 
 #include "../Utilities/Assert.hpp"
 #include "DefaultDeleter.hpp"
-#include "_Traits.hpp"
 #include <utility>
 #include <type_traits>
 #include <cstddef>
@@ -18,10 +17,7 @@
 namespace MCF {
 
 template<typename ObjectT, class DeleterT = DefaultDeleter<std::remove_cv_t<ObjectT>>>
-class UniquePtr
-	: public Impl::SmartPointerCheckDereferencable<UniquePtr<ObjectT, DeleterT>, ObjectT>
-	, public Impl::SmartPointerCheckArray<UniquePtr<ObjectT, DeleterT>, ObjectT>
-{
+class UniquePtr {
 	static_assert(noexcept(DeleterT()(DeleterT()())), "Deleter must not throw.");
 
 public:
@@ -108,6 +104,25 @@ public:
 	}
 	explicit operator Element *() const noexcept {
 		return Get();
+	}
+
+	template<typename RetT = Element>
+	std::enable_if_t<!std::is_void<RetT>::value && !std::is_array<RetT>::value, Element> &operator*() const noexcept {
+		ASSERT(IsNonnull());
+
+		return *Get();
+	}
+	template<typename RetT = Element>
+	std::enable_if_t<!std::is_void<RetT>::value && !std::is_array<RetT>::value, Element> *operator->() const noexcept {
+		ASSERT(IsNonnull());
+
+		return Get();
+	}
+	template<typename RetT = Element>
+	std::enable_if_t<std::is_array<RetT>::value, Element> &operator[](std::size_t uIndex) const noexcept {
+		ASSERT(IsNonnull());
+
+		return Get()[uIndex];
 	}
 };
 

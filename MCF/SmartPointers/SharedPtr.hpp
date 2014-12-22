@@ -11,7 +11,6 @@
 #include "../Utilities/Assert.hpp"
 #include "../../MCFCRT/ext/expect.h"
 #include "DefaultDeleter.hpp"
-#include "_Traits.hpp"
 #include <utility>
 #include <type_traits>
 #include <cstddef>
@@ -157,10 +156,7 @@ namespace Impl {
 }
 
 template<typename ObjectT, class DeleterT>
-class SharedPtr
-	: public Impl::SmartPointerCheckDereferencable<SharedPtr<ObjectT, DeleterT>, ObjectT>
-	, public Impl::SmartPointerCheckArray<SharedPtr<ObjectT, DeleterT>, ObjectT>
-{
+class SharedPtr {
 	template<typename, class>
 	friend class SharedPtr;
 
@@ -362,6 +358,25 @@ public:
 	}
 	explicit operator Element *() const noexcept {
 		return Get();
+	}
+
+	template<typename RetT = Element>
+	std::enable_if_t<!std::is_void<RetT>::value && !std::is_array<RetT>::value, Element> &operator*() const noexcept {
+		ASSERT(IsNonnull());
+
+		return *Get();
+	}
+	template<typename RetT = Element>
+	std::enable_if_t<!std::is_void<RetT>::value && !std::is_array<RetT>::value, Element> *operator->() const noexcept {
+		ASSERT(IsNonnull());
+
+		return Get();
+	}
+	template<typename RetT = Element>
+	std::enable_if_t<std::is_array<RetT>::value, Element> &operator[](std::size_t uIndex) const noexcept {
+		ASSERT(IsNonnull());
+
+		return Get()[uIndex];
 	}
 };
 

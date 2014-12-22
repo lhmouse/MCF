@@ -166,6 +166,7 @@ class SharedPtr
 	static_assert(noexcept(DeleterT()(DeleterT()())), "Deleter must not throw.");
 
 public:
+	using Raw = std::remove_pointer_t<std::remove_cv_t<std::remove_reference_t<decltype(DeleterT()())>>>;
 	using Element = std::remove_extent_t<ObjectT>;
 
 private:
@@ -177,10 +178,10 @@ public:
 		: xm_pElement(nullptr), xm_pControl(nullptr)
 	{
 	}
-	explicit SharedPtr(Element *pElement)
+	SharedPtr(Raw *pRaw, Element *pElement)
 		: SharedPtr()
 	{
-		Reset(pElement);
+		Reset(pRaw, pElement);
 	}
 	SharedPtr(const SharedPtr &rhs) noexcept
 		: SharedPtr()
@@ -230,6 +231,12 @@ public:
 	}
 
 public:
+	bool IsOwning() const noexcept {
+		return GetRaw() != nullptr;
+	}
+	Raw *GetRaw() const noexcept {
+		return xm_pControl ? static_cast<Raw *>(xm_pControl->GetRaw()) : nullptr;
+	}
 	bool IsNonnull() const noexcept {
 		return Get() != nullptr;
 	}
@@ -237,17 +244,14 @@ public:
 		return xm_pElement;
 	}
 
+	bool IsUnique() const noexcept {
+		return GetSharedCount() == 1;
+	}
 	std::size_t GetSharedCount() const noexcept {
 		return xm_pControl ? xm_pControl->GetShared() : 0;
 	}
 	std::size_t GetWeakCount() const noexcept {
 		return xm_pControl ? xm_pControl->GetWeak() : 0;
-	}
-	bool IsUnique() const noexcept {
-		return GetSharedCount() == 1;
-	}
-	auto GetRaw() const noexcept {
-		return xm_pControl ? static_cast<std::remove_reference_t<decltype(DeleterT()())>>(xm_pControl->GetRaw()) : nullptr;
 	}
 
 	SharedPtr &Reset() noexcept {
@@ -259,20 +263,18 @@ public:
 		xm_pControl = nullptr;
 		return *this;
 	}
-	SharedPtr &Reset(Element *pElement){
-		ASSERT(Get() != pElement);
-		if(!pElement){
-			return Reset();
-		}
+	SharedPtr &Reset(Raw *pRaw, Element *pElement){
+		ASSERT(GetRaw() != pRaw);
 
 		Impl::SharedControl *pControl;
 		try {
 			pControl = new Impl::SharedControl(
 				[](void *pToDelete) noexcept {
-					DeleterT()(static_cast<std::remove_reference_t<decltype(DeleterT()())>>(pToDelete));
-				}, const_cast<void *>(static_cast<const volatile void *>(pElement)));
+					DeleterT()(static_cast<Raw *>(pToDelete));
+				},
+				const_cast<void *>(static_cast<const volatile void *>(pRaw)));
 		} catch(...){
-			DeleterT()(pElement);
+			DeleterT()(pRaw);
 			throw;
 		}
 
@@ -547,7 +549,8 @@ template<typename ObjectT, typename ...ParamsT>
 auto MakeShared(ParamsT &&...vParams){
 	static_assert(!std::is_array<ObjectT>::value, "ObjectT shall not be an array type.");
 
-	return SharedPtr<ObjectT, DefaultDeleter<ObjectT>>(new ObjectT(std::forward<ParamsT>(vParams)...));
+	const auto pObject = new ObjectT(std::forward<ParamsT>(vParams)...);
+	return SharedPtr<ObjectT, DefaultDeleter<ObjectT>>(pObject, pObject);
 }
 
 template<typename DstT, typename SrcT, class DeleterT>

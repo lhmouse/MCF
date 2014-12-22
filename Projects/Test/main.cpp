@@ -2,6 +2,12 @@
 #include <MCF/SmartPointers/PolymorphicSharedPtr.hpp>
 using namespace MCF;
 
+template class SharedPtr<void, DefaultDeleter<Impl::PolymorphicSharedPtrContainerBase>>;
+template class WeakPtr<void, DefaultDeleter<Impl::PolymorphicSharedPtrContainerBase>>;
+
+template class SharedPtr<int, DefaultDeleter<Impl::PolymorphicSharedPtrContainerBase>>;
+template class WeakPtr<int, DefaultDeleter<Impl::PolymorphicSharedPtrContainerBase>>;
+
 extern "C" unsigned int MCFMain() noexcept {
 	PolymorphicSharedPtr<void> p = MakePolymorphicShared<int>(123456);
 

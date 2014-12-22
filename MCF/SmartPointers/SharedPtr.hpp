@@ -115,6 +115,16 @@ namespace Impl {
 			ASSERT(__atomic_load_n(&xm_uSharedCount, __ATOMIC_ACQUIRE) != 0);
 			if(__atomic_sub_fetch(&xm_uSharedCount, 1, __ATOMIC_ACQUIRE) == 0){
 				(*xm_pfnDeleter)(xm_pToDelete);
+				xm_pToDelete = nullptr;
+#ifndef NDEBUG
+				xm_pToDelete = (void *)
+#	ifdef _WIN64
+					0xDEADDEADDEADDEAD
+#	else
+					0xDEADDEAD
+#	endif
+				;
+#endif
 			}
 
 			return DropWeak();
@@ -134,6 +144,10 @@ namespace Impl {
 				pToDelete = this;
 			}
 			return Sentry(pToDelete);
+		}
+
+		void *GetRaw() const noexcept {
+			return xm_pToDelete;
 		}
 	};
 }
@@ -183,13 +197,13 @@ public:
 			? std::is_same<std::remove_cv_t<std::remove_extent_t<OtherT>>, std::remove_cv_t<Element>>::value
 			: std::is_convertible<OtherT *, Element *>::value,
 		int> = 0>
-	explicit SharedPtr(SharedPtr<OtherT, DeleterT> rhs) noexcept
+	SharedPtr(SharedPtr<OtherT, DeleterT> rhs) noexcept
 		: SharedPtr()
 	{
 		Reset(std::move(rhs));
 	}
 	template<typename OtherT>
-	explicit SharedPtr(SharedPtr<OtherT, DeleterT> rhs, Element *pElement) noexcept
+	SharedPtr(SharedPtr<OtherT, DeleterT> rhs, Element *pElement) noexcept
 		: SharedPtr()
 	{
 		Reset(std::move(rhs), pElement);
@@ -224,19 +238,16 @@ public:
 	}
 
 	std::size_t GetSharedCount() const noexcept {
-		if(!xm_pControl){
-			return 0;
-		}
-		return xm_pControl->GetShared();
+		return xm_pControl ? xm_pControl->GetShared() : 0;
 	}
 	std::size_t GetWeakCount() const noexcept {
-		if(!xm_pControl){
-			return 0;
-		}
-		return xm_pControl->GetWeak();
+		return xm_pControl ? xm_pControl->GetWeak() : 0;
 	}
 	bool IsUnique() const noexcept {
 		return GetSharedCount() == 1;
+	}
+	auto GetRaw() const noexcept {
+		return xm_pControl ? static_cast<std::remove_reference_t<decltype(DeleterT()())>>(xm_pControl->GetRaw()) : nullptr;
 	}
 
 	SharedPtr &Reset() noexcept {
@@ -254,10 +265,16 @@ public:
 			return Reset();
 		}
 
-		const auto pControl = new Impl::SharedControl(
-			[](void *pToDelete) noexcept {
-				DeleterT()(static_cast<std::remove_reference_t<decltype(DeleterT()())>>(pToDelete));
-			}, const_cast<void *>(static_cast<const volatile void *>(pElement)));
+		Impl::SharedControl *pControl;
+		try {
+			pControl = new Impl::SharedControl(
+				[](void *pToDelete) noexcept {
+					DeleterT()(static_cast<std::remove_reference_t<decltype(DeleterT()())>>(pToDelete));
+				}, const_cast<void *>(static_cast<const volatile void *>(pElement)));
+		} catch(...){
+			DeleterT()(pElement);
+			throw;
+		}
 
 		xm_pElement = pElement;
 		const auto pOldControl = std::exchange(xm_pControl, pControl);
@@ -386,16 +403,10 @@ public:
 	}
 
 	std::size_t GetSharedCount() const noexcept {
-		if(!xm_pControl){
-			return 0;
-		}
-		return xm_pControl->GetShared();
+		return xm_pControl ? xm_pControl->GetShared() : 0;
 	}
 	std::size_t GetWeakCount() const noexcept {
-		if(!xm_pControl){
-			return 0;
-		}
-		return xm_pControl->GetWeak();
+		return xm_pControl ? xm_pControl->GetWeak() : 0;
 	}
 	bool IsAlive() const noexcept {
 		return GetWeakCount() != 0;
@@ -547,7 +558,7 @@ template<typename DstT, typename SrcT, class DeleterT>
 auto DynamicPointerCast(SharedPtr<SrcT, DeleterT> rhs) noexcept {
 	const auto pDst = dynamic_cast<DstT *>(rhs.Get());
 	if(!pDst){
-		return nullptr;
+		return SharedPtr<DstT, DeleterT>();
 	}
 	return SharedPtr<DstT, DeleterT>(std::move(rhs), pDst);
 }

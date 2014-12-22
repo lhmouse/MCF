@@ -36,10 +36,26 @@ template<typename ObjectT, typename ...ParamsT>
 auto MakePolymorphicShared(ParamsT &&...vParams){
 	static_assert(!std::is_array<ObjectT>::value, "ObjectT shall not be an array type.");
 
-	using SharedContainerPtr = SharedPtr<Impl::PolymorphicSharedPtrContainer<ObjectT>, DefaultDeleter<Impl::PolymorphicSharedPtrContainerBase>>;
+	const auto pContainer =
+		new Impl::PolymorphicSharedPtrContainer<std::remove_cv_t<ObjectT>>(
+			std::forward<ParamsT>(vParams)...);
+	return PolymorphicSharedPtr<ObjectT>(
+		SharedPtr<Impl::PolymorphicSharedPtrContainerBase,
+			DefaultDeleter<Impl::PolymorphicSharedPtrContainerBase>>(pContainer),
+		&(pContainer->m_vObjectT));
+}
 
-	SharedContainerPtr pContainer(new Impl::PolymorphicSharedPtrContainer<ObjectT>(std::forward<ParamsT>(vParams)...));
-	return PolymorphicSharedPtr<ObjectT>(std::move(pContainer), &(pContainer->m_vObjectT));
+template<typename DstT, typename SrcT>
+auto DynamicPointerCast(PolymorphicSharedPtr<SrcT> rhs) noexcept {
+	static_assert((std::is_const<DstT>::value == std::is_const<SrcT>::value) &&
+		(std::is_volatile<DstT>::value == std::is_volatile<SrcT>::value), "cv-qualifiers mismatch.");
+
+	const auto pContainer =
+		dynamic_cast<Impl::PolymorphicSharedPtrContainer<std::remove_cv_t<DstT>> *>(rhs.GetRaw());
+	if(!pContainer){
+		return PolymorphicSharedPtr<DstT>();
+	}
+	return PolymorphicSharedPtr<DstT>(std::move(rhs), &(pContainer->m_vObjectT));
 }
 
 }

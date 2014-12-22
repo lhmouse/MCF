@@ -45,7 +45,7 @@ public:
 			? std::is_same<std::remove_cv_t<std::remove_extent_t<OtherT>>, std::remove_cv_t<Element>>::value
 			: std::is_convertible<OtherT *, Element *>::value,
 		int> = 0>
-	explicit UniquePtr(UniquePtr<OtherT, DeleterT> rhs) noexcept
+	UniquePtr(UniquePtr<OtherT, DeleterT> rhs) noexcept
 		: UniquePtr()
 	{
 		Reset(std::move(rhs));

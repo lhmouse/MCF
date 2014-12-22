@@ -1,26 +1,15 @@
 #include <MCF/StdMCF.hpp>
 #include <MCF/SmartPointers/PolymorphicSharedPtr.hpp>
-#include <string>
 using namespace MCF;
 
-template class SharedPtr<std::string>;
-template class WeakPtr<std::string>;
-
 extern "C" unsigned int MCFMain() noexcept {
-	PolymorphicWeakPtr<std::string> p;
-	{
-		PolymorphicSharedPtr<std::string> p1;
-		p1 = MakePolymorphicShared<std::string>("hello world!");
-		{
-			PolymorphicSharedPtr<const std::string> p2(p1);
-			p = p1;
+	PolymorphicSharedPtr<void> p = MakePolymorphicShared<int>(123456);
 
-			std::printf("%u %u: %s\n", p2.GetWeakCount(), p2.GetSharedCount(), p2->c_str());
+	auto p1 = DynamicPointerCast<int>(p);
+	std::printf("p1 = %p, *p1 = %d\n", p1.Get(), *p1);
 
-			std::printf("weak: %u %u: %p\n", p.GetWeakCount(), p.GetSharedCount(), [&]{ return p.Lock().Get(); }());
-		}
-			std::printf("weak: %u %u: %p\n", p.GetWeakCount(), p.GetSharedCount(), [&]{ return p.Lock().Get(); }());
-	}
-			std::printf("weak: %u %u: %p\n", p.GetWeakCount(), p.GetSharedCount(), [&]{ return p.Lock().Get(); }());
+	auto p2 = DynamicPointerCast<double>(p);
+	std::printf("p2 = %p\n", p2.Get());
+
 	return 0;
 }

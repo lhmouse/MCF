@@ -34,9 +34,7 @@ public:
 	std::size_t GetSpinCount() const noexcept {
 		return __atomic_load_n(&xm_uSpinCount, __ATOMIC_RELAXED);
 	}
-	void SetSpinCount(std::size_t uSpinCount) noexcept {
-		__atomic_store_n(&xm_uSpinCount, uSpinCount, __ATOMIC_RELAXED);
-	}
+	void SetSpinCount(std::size_t uSpinCount) noexcept;
 
 	bool IsLockedByCurrentThread() const noexcept;
 

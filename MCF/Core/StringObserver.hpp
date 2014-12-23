@@ -240,13 +240,7 @@ public:
 	const Char *GetBegin() const noexcept {
 		return xm_pchBegin;
 	}
-	const Char *GetCBegin() const noexcept {
-		return xm_pchBegin;
-	}
 	const Char *GetEnd() const noexcept {
-		return xm_pchEnd;
-	}
-	const Char *GetCEnd() const noexcept {
 		return xm_pchEnd;
 	}
 	std::size_t GetSize() const noexcept {
@@ -459,24 +453,6 @@ bool operator<=(const StringObserver<TYPE_T> &lhs, const StringObserver<TYPE_T> 
 template<StringTypes TYPE_T>
 bool operator>=(const StringObserver<TYPE_T> &lhs, const StringObserver<TYPE_T> &rhs) noexcept {
 	return lhs.Compare(rhs) >= 0;
-}
-
-template<StringTypes TYPE_T>
-auto begin(const StringObserver<TYPE_T> &rhs) noexcept {
-	return rhs.GetBegin();
-}
-template<StringTypes TYPE_T>
-auto cbegin(const StringObserver<TYPE_T> &rhs) noexcept {
-	return rhs.GetCBegin();
-}
-
-template<StringTypes TYPE_T>
-auto end(const StringObserver<TYPE_T> &rhs) noexcept {
-	return rhs.GetEnd();
-}
-template<StringTypes TYPE_T>
-auto cend(const StringObserver<TYPE_T> &rhs) noexcept {
-	return rhs.GetCEnd();
 }
 
 template<StringTypes TYPE_T>

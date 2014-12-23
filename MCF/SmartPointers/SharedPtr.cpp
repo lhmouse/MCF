@@ -9,9 +9,9 @@ using namespace MCF;
 
 namespace {
 
-union PooledSharedControl {
+union alignas(std::max_align_t) PooledSharedControl {
 	PooledSharedControl *pNext;
-	alignas(Impl::SharedControl) char achDummy[sizeof(Impl::SharedControl)];
+	char achDummy[sizeof(Impl::SharedControl)];
 };
 
 class Pool : NONCOPYABLE {

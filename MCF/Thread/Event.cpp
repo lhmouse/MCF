@@ -23,7 +23,7 @@ Event::Event(bool bInitSet, const wchar_t *pwszName)
 {
 }
 Event::Event(bool bInitSet, const WideString &wsName)
-	: Event(bInitSet, wsName.GetCStr())
+	: Event(bInitSet, wsName.GetStr())
 {
 }
 

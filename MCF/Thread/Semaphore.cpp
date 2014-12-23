@@ -23,7 +23,7 @@ Semaphore::Semaphore(std::size_t uInitCount, const wchar_t *pwszName)
 {
 }
 Semaphore::Semaphore(std::size_t uInitCount, const WideString &wsName)
-	: Semaphore(uInitCount, wsName.GetCStr())
+	: Semaphore(uInitCount, wsName.GetStr())
 {
 }
 

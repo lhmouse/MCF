@@ -26,20 +26,19 @@ void Mutex::UniqueLock::xDoUnlock() const noexcept {
 
 // 构造函数和析构函数。
 Mutex::Mutex(std::size_t uSpinCount)
-	: xm_vSemaphore(0), xm_uSpinCount(uSpinCount)
+	: xm_vSemaphore(0), xm_uSpinCount(0)
 	, xm_splQueueSize(0), xm_uLockingThreadId(0)
 {
+	SetSpinCount(uSpinCount);
+
 	__atomic_thread_fence(__ATOMIC_RELEASE);
 }
 
 // 其他非静态成员函数。
-bool Mutex::xTryWithHint(unsigned long ulThreadId) noexcept {
+bool Mutex::xTryWithHint(unsigned long ulThreadId) throw() { // FIXME: g++ 4.9.2 ICE.
 	ASSERT(!IsLockedByCurrentThread());
 
-	std::size_t i = 1;
-	if(EXPECT(GetProcessorCount() != 0)){
-		i += GetSpinCount();
-	}
+	std::size_t i = GetSpinCount();
 	for(;;){
 		std::size_t uExpected = 0;
 		if(EXPECT_NOT(__atomic_compare_exchange_n(
@@ -47,11 +46,19 @@ bool Mutex::xTryWithHint(unsigned long ulThreadId) noexcept {
 		{
 			return true;
 		}
-		if(EXPECT_NOT(--i == 0)){
+		if(EXPECT_NOT(i == 0)){
 			return false;
 		}
+		--i;
 		__builtin_ia32_pause();
 	}
+}
+
+void Mutex::SetSpinCount(std::size_t uSpinCount) noexcept {
+	if(GetProcessorCount() == 0){
+		return;
+	}
+	__atomic_store_n(&xm_uSpinCount, uSpinCount, __ATOMIC_RELAXED);
 }
 
 bool Mutex::IsLockedByCurrentThread() const noexcept {

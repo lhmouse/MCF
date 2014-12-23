@@ -161,8 +161,8 @@ void Utf8TextFileWriter::Write(char ch){
 	}
 }
 void Utf8TextFileWriter::Write(const Utf8StringObserver &u8soData){
-	for(auto ch : u8soData){
-		Write(ch);
+	for(auto p = u8soData.GetBegin(); p != u8soData.GetEnd(); ++p){
+		Write(*p);
 	}
 }
 void Utf8TextFileWriter::WriteLine(const Utf8StringObserver &u8soData){

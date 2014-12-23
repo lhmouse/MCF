@@ -15,7 +15,7 @@ constexpr decltype(auto) Min(Tx &&x, Ty &&y){
 	static_assert(std::is_scalar<std::remove_reference_t<Tx>>::value && std::is_scalar<std::remove_reference_t<Ty>>::value,
 		"Only scalar types are supported.");
 	static_assert(std::is_signed<std::remove_reference_t<Tx>>::value == std::is_signed<std::remove_reference_t<Ty>>::value,
-		"Comparison between signed and unsignedegers.");
+		"Comparison between signed and unsigned integers.");
 
 	return ComparatorT()(std::forward<Tx>(x), std::forward<Ty>(y)) ? std::forward<Tx>(x) : std::forward<Ty>(y);
 }
@@ -29,7 +29,7 @@ constexpr decltype(auto) Max(Tx &&x, Ty &&y){
 	static_assert(std::is_scalar<std::remove_reference_t<Tx>>::value && std::is_scalar<std::remove_reference_t<Ty>>::value,
 		"Only scalar types are supported.");
 	static_assert(std::is_signed<std::remove_reference_t<Tx>>::value == std::is_signed<std::remove_reference_t<Ty>>::value,
-		"Comparison between signed and unsignedegers.");
+		"Comparison between signed and unsigned integers.");
 
 	return ComparatorT()(std::forward<Tx>(x), std::forward<Ty>(y)) ? std::forward<Ty>(y) : std::forward<Tx>(x);
 }

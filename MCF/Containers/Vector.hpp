@@ -46,7 +46,7 @@ public:
 	{
 		AppendCopy(itBegin, uCount);
 	}
-	Vector(std::initializer_list<ElementT> rhs)
+	explicit Vector(std::initializer_list<ElementT> rhs)
 		: Vector()
 	{
 		AppendCopy(rhs.begin(), rhs.size());
@@ -86,17 +86,28 @@ public:
 	ElementT *GetBegin() noexcept {
 		return xm_pBegin;
 	}
-	const ElementT *GetCBegin() const noexcept {
-		return GetBegin();
-	}
 	const ElementT *GetEnd() const noexcept {
 		return xm_pEnd;
 	}
 	ElementT *GetEnd() noexcept {
 		return xm_pEnd;
 	}
-	const ElementT *GetCEnd() const noexcept {
-		return GetEnd();
+
+	const ElementT &GetFront() const noexcept {
+		ASSERT(!IsEmpty());
+		return xm_pBegin[0];
+	}
+	ElementT &GetFront() noexcept {
+		ASSERT(!IsEmpty());
+		return xm_pBegin[0];
+	}
+	const ElementT &GetBack() const noexcept {
+		ASSERT(!IsEmpty());
+		return xm_pEnd[-1];
+	}
+	ElementT &GetBack() noexcept {
+		ASSERT(!IsEmpty());
+		return xm_pEnd[-1];
 	}
 
 	const ElementT *GetData() const noexcept {
@@ -186,12 +197,21 @@ public:
 		Reserve(GetSize() + uDeltaCapacity);
 	}
 
+	const ElementT &GetAt(std::size_t uIndex) const noexcept {
+		ASSERT_MSG(uIndex < GetSize(), L"索引越界。");
+		return xm_pBegin[uIndex];
+	}
+	ElementT &GetAt(std::size_t uIndex) noexcept {
+		ASSERT_MSG(uIndex < GetSize(), L"索引越界。");
+		return xm_pBegin[uIndex];
+	}
+
 	ElementT *UncheckedPush()
 		noexcept(std::is_nothrow_constructible<ElementT>::value)
 	{
 		ASSERT_MSG(GetSize() < GetCapacity(), L"容器已满。");
 
-		if(std::is_pod<ElementT>::value){
+		if(std::is_trivial<ElementT>::value){
 #ifndef NDEBUG
 			__builtin_memset(xm_pEnd, 0xCC, sizeof(ElementT));
 #endif
@@ -328,40 +348,12 @@ public:
 	}
 
 	const ElementT &operator[](std::size_t uIndex) const noexcept {
-		ASSERT_MSG(uIndex < GetSize(), L"索引越界。");
-		return GetData()[uIndex];
+		return GetAt(uIndex);
 	}
 	ElementT &operator[](std::size_t uIndex) noexcept {
-		ASSERT_MSG(uIndex < GetSize(), L"索引越界。");
-		return GetData()[uIndex];
+		return GetAt(uIndex);
 	}
 };
-
-template<typename ElementT>
-const ElementT *begin(const Vector<ElementT> &vec) noexcept {
-	return vec.GetBegin();
-}
-template<typename ElementT>
-ElementT *begin(Vector<ElementT> &vec) noexcept {
-	return vec.GetBegin();
-}
-template<typename ElementT>
-const ElementT *cbegin(const Vector<ElementT> &vec) noexcept {
-	return vec.GetCBegin();
-}
-
-template<typename ElementT>
-const ElementT *end(const Vector<ElementT> &vec) noexcept {
-	return vec.GetEnd();
-}
-template<typename ElementT>
-ElementT *end(Vector<ElementT> &vec) noexcept {
-	return vec.GetEnd();
-}
-template<typename ElementT>
-const ElementT *cend(const Vector<ElementT> &vec) noexcept {
-	return vec.GetCEnd();
-}
 
 template<class ElementT>
 void swap(Vector<ElementT> &lhs, Vector<ElementT> &rhs) noexcept {

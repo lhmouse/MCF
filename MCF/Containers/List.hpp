@@ -26,16 +26,16 @@ public:
 
 	private:
 		template<typename ...ParamsT>
-		explicit constexpr Node(ParamsT &&...vParams)
+		explicit Node(ParamsT &&...vParams)
 			: xm_vElement(std::forward<ParamsT>(vParams)...)
 		{
 		}
 
 	public:
-		const ElementT &GetElement() const noexcept {
+		const ElementT &Get() const noexcept {
 			return xm_vElement;
 		}
-		ElementT &GetElement() noexcept {
+		ElementT &Get() noexcept {
 			return xm_vElement;
 		}
 
@@ -80,7 +80,7 @@ public:
 	{
 		AppendCopy(itBegin, uCount);
 	}
-	List(std::initializer_list<ElementT> rhs)
+	explicit List(std::initializer_list<ElementT> rhs)
 		: List()
 	{
 		AppendCopy(rhs.begin(), rhs.size());
@@ -89,7 +89,7 @@ public:
 		: List()
 	{
 		for(auto pCur = rhs.xm_pFirst; pCur; pCur = pCur->xm_pNext){
-			Push(pCur->GetElement());
+			Push(pCur->Get());
 		}
 	}
 	List(List &&rhs) noexcept
@@ -98,7 +98,9 @@ public:
 		Swap(rhs);
 	}
 	List &operator=(std::initializer_list<ElementT> rhs){
-		List(rhs).Swap(*this);
+		if(&rhs != this){
+			List(rhs).Swap(*this);
+		}
 		return *this;
 	}
 	List &operator=(const List &rhs){
@@ -122,21 +124,32 @@ public:
 	Node *GetFirst() noexcept {
 		return xm_pFirst;
 	}
-	const Node *GetCFirst() const noexcept {
-		return GetFirst();
-	}
 	const Node *GetLast() const noexcept {
 		return xm_pLast;
 	}
 	Node *GetLast() noexcept {
 		return xm_pLast;
 	}
-	const Node *GetCLast() const noexcept {
-		return GetLast();
+
+	const ElementT &GetFront() const noexcept {
+		ASSERT(!IsEmpty());
+		return xm_pFirst->Get();
+	}
+	ElementT &GetFront() noexcept {
+		ASSERT(!IsEmpty());
+		return xm_pFirst->Get();
+	}
+	const ElementT &GetBack() const noexcept {
+		ASSERT(!IsEmpty());
+		return xm_pLast->Get();
+	}
+	ElementT &GetBack() noexcept {
+		ASSERT(!IsEmpty());
+		return xm_pLast->Get();
 	}
 
 	bool IsEmpty() const noexcept {
-		return GetFirst() == nullptr;
+		return xm_pFirst == nullptr;
 	}
 	void Clear() noexcept {
 		while(xm_pFirst){
@@ -381,6 +394,12 @@ public:
 	template<typename ParamT>
 	void push_front(ParamT &&vParam){
 		Unshift(std::forward<ParamT>(vParam));
+	}
+
+	// std::insert_iterator
+	template<typename ParamT>
+	Node *insert(Node *pPos, ParamT &&vParams){
+		return Insert(pPos, std::forward<ParamT>(vParams));
 	}
 };
 

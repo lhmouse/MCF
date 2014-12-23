@@ -40,7 +40,7 @@ KernelMutex::KernelMutex(const wchar_t *pwszName)
 {
 }
 KernelMutex::KernelMutex(const WideString &wsName)
-	: KernelMutex(wsName.GetCStr())
+	: KernelMutex(wsName.GetStr())
 {
 }
 

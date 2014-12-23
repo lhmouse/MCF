@@ -220,7 +220,7 @@ std::pair<TExpression::ErrorType, const wchar_t *> TExpression::Parse(const Wide
 		ASSERT(!vecNodeStack.IsEmpty());
 
 		auto &lstChildren = vecNodeStack.GetEnd()[-1]->xm_lstChildren;
-		auto &vNewNode = lstChildren.Push()->GetElement();
+		auto &vNewNode = lstChildren.Push()->Get();
 		vNewNode.first = Unescape(WideStringObserver(pwcNameBegin, pwcRead));
 		vecNodeStack.Push(&vNewNode.second);
 	};
@@ -228,7 +228,7 @@ std::pair<TExpression::ErrorType, const wchar_t *> TExpression::Parse(const Wide
 		ASSERT(!vecNodeStack.IsEmpty());
 
 		auto &lstChildren = vecNodeStack.GetEnd()[-1]->xm_lstChildren;
-		auto &vNewNode = lstChildren.Push()->GetElement();
+		auto &vNewNode = lstChildren.Push()->Get();
 		vecNodeStack.Push(&vNewNode.second);
 	};
 	const auto PopNode = [&]{
@@ -467,8 +467,8 @@ WideString TExpression::Export(const WideStringObserver &wsoIndent) const {
 
 	jNextChild:
 		if(vTop.second){
-			const auto &wsName = vTop.second->GetElement().first;
-			const auto &vNode = vTop.second->GetElement().second;
+			const auto &wsName = vTop.second->Get().first;
+			const auto &vNode = vTop.second->Get().second;
 			vTop.second = vTop.second->GetNext();
 
 			wsRet.Append(wsIndent);

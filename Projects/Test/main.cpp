@@ -1,26 +1,19 @@
 #include <MCF/StdMCF.hpp>
-#include <MCF/SmartPointers/PolymorphicSharedPtr.hpp>
+#include <MCF/Core/String.hpp>
+#include <MCF/Containers/Deque.hpp>
 using namespace MCF;
 
-template class SharedPtr<void, DefaultDeleter<Impl::PolymorphicSharedPtrContainerBase>>;
-template class WeakPtr<void, DefaultDeleter<Impl::PolymorphicSharedPtrContainerBase>>;
-
-template class SharedPtr<int, DefaultDeleter<Impl::PolymorphicSharedPtrContainerBase>>;
-template class WeakPtr<int, DefaultDeleter<Impl::PolymorphicSharedPtrContainerBase>>;
-
-template class SharedPtr<int [], DefaultDeleter<Impl::PolymorphicSharedPtrContainerBase>>;
-template class WeakPtr<int [], DefaultDeleter<Impl::PolymorphicSharedPtrContainerBase>>;
+template class Deque<Utf8String>;
 
 extern "C" unsigned int MCFMain() noexcept {
-	PolymorphicWeakPtr<void> wp;
-	PolymorphicSharedPtr<void> p = MakePolymorphicShared<int>(123456);
-	wp = p;
-
-	auto p1 = DynamicPointerCast<int>(p);
-	std::printf("p1 = %p, *p1 = %d\n", p1.Get(), *p1);
-
-	auto p2 = DynamicPointerCast<double>(p);
-	std::printf("p2 = %p\n", p2.Get());
-
+	Deque<Utf8String> q2{ "alpha"_u8s, "beta"_u8s, "gamma"_u8s, "delta"_u8s };
+	q2.Pop();
+	q2.Shift();
+	auto q = q2;
+	while(!q.IsEmpty()){
+		auto &s = q.GetBack();
+		std::printf("str = %s\n", s.GetStr());
+		q.Pop();
+	}
 	return 0;
 }

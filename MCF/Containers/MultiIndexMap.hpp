@@ -48,20 +48,20 @@ namespace Impl {
 	struct OrderedMapIndexNodeComparator {
 		using MapIndexNode = OrderedMapIndexNode<INDEX_ID_T>;
 
-		static auto GetElement(const MapIndexNode *pMapIndexNode) noexcept {
+		static auto Get(const MapIndexNode *pMapIndexNode) noexcept {
 			return static_cast<const ElementT *>(NodeT::template GetNodeFromIndexNode<INDEX_ID_T>(pMapIndexNode));
 		}
 
 		bool operator()(const MapIndexNode *lhs, const MapIndexNode *rhs) const noexcept {
-			return ComparatorT()(*GetElement(lhs), *GetElement(rhs));
+			return ComparatorT()(*Get(lhs), *Get(rhs));
 		}
 		template<typename ComparandT>
 		bool operator()(const MapIndexNode *lhs, const ComparandT *rhs) const noexcept {
-			return ComparatorT()(*GetElement(lhs), *rhs);
+			return ComparatorT()(*Get(lhs), *rhs);
 		}
 		template<typename ComparandT>
 		bool operator()(const ComparandT *lhs, const MapIndexNode *rhs) const noexcept {
-			return ComparatorT()(*lhs, *GetElement(rhs));
+			return ComparatorT()(*lhs, *Get(rhs));
 		}
 	};
 
@@ -561,7 +561,7 @@ private:
 	std::size_t xm_uSize;
 
 public:
-	constexpr MultiIndexMap() noexcept
+	MultiIndexMap() noexcept
 		: xm_vIndices(), xm_uSize(0)
 	{
 	}

@@ -70,7 +70,7 @@ void File::Open(const wchar_t *pwszPath, std::uint32_t u32Flags){
 	}
 }
 void File::Open(const WideString &wsPath, std::uint32_t u32Flags){
-	Open(wsPath.GetCStr(), u32Flags);
+	Open(wsPath.GetStr(), u32Flags);
 }
 bool File::OpenNoThrow(const wchar_t *pwszPath, std::uint32_t u32Flags){
 	try {

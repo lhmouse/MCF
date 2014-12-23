@@ -224,9 +224,6 @@ public:
 			return xm_vStorage.vLarge.pchBegin;
 		}
 	}
-	const Char *GetCBegin() const noexcept {
-		return GetBegin();
-	}
 
 	const Char *GetEnd() const noexcept {
 		if(xm_vStorage.vSmall.chNull == Char()){
@@ -241,9 +238,6 @@ public:
 		} else {
 			return xm_vStorage.vLarge.pchBegin + xm_vStorage.vLarge.uLength;
 		}
-	}
-	const Char *GetCEnd() const noexcept {
-		return GetEnd();
 	}
 
 	const Char *GetData() const noexcept {
@@ -267,9 +261,6 @@ public:
 	Char *GetStr() noexcept {
 		GetEnd()[0] = Char();
 		return GetBegin();
-	}
-	const Char *GetCStr() const noexcept {
-		return GetStr();
 	}
 	std::size_t GetLength() const noexcept {
 		return GetSize();
@@ -760,32 +751,6 @@ bool operator>=(const String<TYPE_T> &lhs, const StringObserver<TYPE_T> &rhs) no
 template<StringTypes TYPE_T>
 bool operator>=(const StringObserver<TYPE_T> &lhs, const String<TYPE_T> &rhs) noexcept {
 	return lhs >= rhs.GetObserver();
-}
-
-template<StringTypes TYPE_T>
-auto begin(const String<TYPE_T> &rhs) noexcept {
-	return rhs.GetBegin();
-}
-template<StringTypes TYPE_T>
-auto begin(String<TYPE_T> &rhs) noexcept {
-	return rhs.GetBegin();
-}
-template<StringTypes TYPE_T>
-auto cbegin(const String<TYPE_T> &rhs) noexcept {
-	return rhs.GetBegin();
-}
-
-template<StringTypes TYPE_T>
-auto end(const String<TYPE_T> &rhs) noexcept {
-	return rhs.GetEnd();
-}
-template<StringTypes TYPE_T>
-auto end(String<TYPE_T> &rhs) noexcept {
-	return rhs.GetEnd();
-}
-template<StringTypes TYPE_T>
-auto cend(const String<TYPE_T> &rhs) noexcept {
-	return rhs.GetEnd();
 }
 
 template<StringTypes TYPE_T>

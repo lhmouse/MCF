@@ -9,23 +9,17 @@ using namespace MCF;
 
 namespace MCF {
 
-std::uint64_t GetNtTime() noexcept {
-	union {
-		FILETIME ft;
-		ULARGE_INTEGER uli;
-	} un;
-	::GetSystemTimeAsFileTime(&un.ft);
-	return un.uli.QuadPart;
-}
-std::uint64_t GetUnixTime() noexcept {
-	return UnixTimeFromNtTime(GetNtTime());
-}
-std::uint64_t NtTimeFromUnixTime(std::uint64_t u64UnixTime) noexcept {
+std::uint64_t GetUtcTime() noexcept {
+	::FILETIME ftUtc;
+	::GetSystemTimeAsFileTime(&ftUtc);
 	// 0x019DB1DED53E8000 = 从 1601-01-01 到 1970-01-01 经历的时间纳秒数。
-	return u64UnixTime * 10000000u + 0x019DB1DED53E8000ull;
+	return (reinterpret_cast<const std::uint64_t &>(ftUtc) - 0x019DB1DED53E8000ull) / 10000u;
 }
-std::uint64_t UnixTimeFromNtTime(std::uint64_t u64NtTime) noexcept {
-	return (u64NtTime - 0x019DB1DED53E8000ull) / 10000000u;
+std::uint64_t GetLocalTime() noexcept {
+	::FILETIME ftUtc, ftLocal;
+	::GetSystemTimeAsFileTime(&ftUtc);
+	::FileTimeToLocalFileTime(&ftUtc, &ftLocal);
+	return (reinterpret_cast<const std::uint64_t &>(ftLocal) - 0x019DB1DED53E8000ull) / 10000u;
 }
 
 std::uint64_t GetFastMonoClock() noexcept {

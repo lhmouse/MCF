@@ -12,8 +12,8 @@ namespace MCF {
 
 template<class ElementT>
 class Deque {
-public:
-	class Chunk {
+private:
+	class xChunk {
 		friend Deque;
 
 	public:
@@ -27,26 +27,26 @@ public:
 		ElementT *xm_pEnd;
 
 	public:
-		explicit Chunk(bool bSeekToBegin) noexcept
+		explicit xChunk(bool bSeekToBegin) noexcept
 			: xm_pBegin(reinterpret_cast<ElementT *>(bSeekToBegin ? std::begin(xm_aaStorage) : std::end(xm_aaStorage)))
 			, xm_pEnd(xm_pBegin)
 		{
 		}
-		Chunk(const Chunk &rhs)
-			: Chunk(true)
+		xChunk(const xChunk &rhs)
+			: xChunk(true)
 		{
 			for(auto pElement = rhs.xm_pBegin; pElement != rhs.xm_pEnd; ++pElement){
 				UncheckedPush(*pElement);
 			}
 		}
-		Chunk(Chunk &&rhs) noexcept(std::is_nothrow_move_constructible<ElementT>::value)
-			: Chunk(true)
+		xChunk(xChunk &&rhs) noexcept(std::is_nothrow_move_constructible<ElementT>::value)
+			: xChunk(true)
 		{
 			for(auto pElement = rhs.xm_pBegin; pElement != rhs.xm_pEnd; ++pElement){
 				UncheckedPush(std::move(*pElement));
 			}
 		}
-		Chunk &operator=(const Chunk &rhs){
+		xChunk &operator=(const xChunk &rhs){
 			if(this != &rhs){
 				xClear(true);
 				for(auto pElement = rhs.xm_pBegin; pElement != rhs.xm_pEnd; ++pElement){
@@ -55,7 +55,7 @@ public:
 			}
 			return *this;
 		}
-		Chunk &operator=(Chunk &&rhs) noexcept(std::is_nothrow_move_constructible<ElementT>::value) {
+		xChunk &operator=(xChunk &&rhs) noexcept(std::is_nothrow_move_constructible<ElementT>::value) {
 			ASSERT(this != &rhs);
 
 			xClear(true);
@@ -64,7 +64,7 @@ public:
 			}
 			return *this;
 		}
-		~Chunk(){
+		~xChunk(){
 			xClear(true);
 		}
 
@@ -166,7 +166,7 @@ public:
 	};
 
 private:
-	List<Chunk> xm_vList;
+	List<xChunk> xm_vList;
 
 public:
 	constexpr Deque() noexcept = default;
@@ -266,10 +266,16 @@ public:
 	template<typename ...ParamsT>
 	ElementT *Push(ParamsT &&...vParams){
 		auto pNode = xm_vList.GetLast();
-		if(!pNode || !pNode->Get().IsPushable()){
-			pNode = xm_vList.Push(true);
+		if(pNode && pNode->Get().IsPushable()){
+			return pNode->Get().UncheckedPush(std::forward<ParamsT>(vParams)...);
 		}
-		return pNode->Get().UncheckedPush(std::forward<ParamsT>(vParams)...);
+		pNode = xm_vList.Push(true);
+		try {
+			return pNode->Get().UncheckedPush(std::forward<ParamsT>(vParams)...);
+		} catch(...){
+			xm_vList.Pop();
+			throw;
+		}
 	}
 	void Pop() noexcept {
 		const auto pNode = xm_vList.GetFirst();
@@ -283,10 +289,16 @@ public:
 	template<typename ...ParamsT>
 	ElementT *Unshift(ParamsT &&...vParams){
 		auto pNode = xm_vList.GetFirst();
-		if(!pNode || !pNode->Get().IsUnshiftable()){
-			pNode = xm_vList.Unshift(false);
+		if(pNode && pNode->Get().IsUnshiftable()){
+			return pNode->Get().UncheckedUnshift(std::forward<ParamsT>(vParams)...);
 		}
-		return pNode->Get().UncheckedUnshift(std::forward<ParamsT>(vParams)...);
+		pNode = xm_vList.Unshift(false);
+		try {
+			return pNode->Get().UncheckedUnshift(std::forward<ParamsT>(vParams)...);
+		} catch(...){
+			xm_vList.Shift();
+			throw;
+		}
 	}
 	void Shift() noexcept {
 		const auto pNode = xm_vList.GetLast();

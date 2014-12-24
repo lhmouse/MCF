@@ -3,17 +3,27 @@
 #include <MCF/Containers/Deque.hpp>
 using namespace MCF;
 
-template class Deque<Utf8String>;
+struct foo {
+	char big[1024];
+
+	foo(){
+		std::strcpy(big, "meow");
+	}
+	explicit foo(int i){
+		throw i;
+	}
+};
+
+template class Deque<foo>;
 
 extern "C" unsigned int MCFMain() noexcept {
-	Deque<Utf8String> q2{ "alpha"_u8s, "beta"_u8s, "gamma"_u8s, "delta"_u8s };
-	q2.Pop();
-	q2.Shift();
-	auto q = q2;
-	while(!q.IsEmpty()){
-		auto &s = q.GetBack();
-		std::printf("str = %s\n", s.GetStr());
-		q.Pop();
+	Deque<foo> q;
+	try {
+		q.Unshift();
+		q.Unshift(123);
+	} catch(int e){
+		std::printf("exception! e = %d\n", e);
 	}
+	std::printf("front = %s\n", q.GetFront().big);
 	return 0;
 }

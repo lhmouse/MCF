@@ -37,7 +37,7 @@ IsaacExEncoder::IsaacExEncoder(const void *pKey, std::size_t uKeyLen) noexcept
 
 // 其他非静态成员函数。
 void IsaacExEncoder::xDoInit(){
-	xm_vIsaacRng.Init(xm_vKeyHash.au32Words);
+	xm_vIsaacGenerator.Init(xm_vKeyHash.au32Words);
 	xm_byLastEncoded = 0;
 	xm_lLastHighWord = -1;
 }
@@ -66,7 +66,7 @@ void IsaacExEncoder::xDoUpdate(const void *pData, std::size_t uSize){
 		}
 		register auto i = (std::size_t)(pbyEnd - pbyRead) / 2;
 		while(i != 0){
-			uSeed = xm_vIsaacRng.Get();
+			uSeed = xm_vIsaacGenerator.Get();
 			EncodeByte(uSeed);
 			EncodeByte(uSeed >> 16);
 			--i;
@@ -75,7 +75,7 @@ void IsaacExEncoder::xDoUpdate(const void *pData, std::size_t uSize){
 	while(pbyRead != pbyEnd){
 		unsigned uSeed;
 		if(xm_lLastHighWord == -1){
-			const auto u32Word = xm_vIsaacRng.Get();
+			const auto u32Word = xm_vIsaacGenerator.Get();
 			uSeed = u32Word;
 			xm_lLastHighWord = (long)(u32Word >> 16);
 		} else {
@@ -97,7 +97,7 @@ IsaacExDecoder::IsaacExDecoder(const void *pKey, std::size_t uKeyLen) noexcept
 
 // 其他非静态成员函数。
 void IsaacExDecoder::xDoInit(){
-	xm_vIsaacRng.Init(xm_vKeyHash.au32Words);
+	xm_vIsaacGenerator.Init(xm_vKeyHash.au32Words);
 	xm_byLastEncoded = 0;
 	xm_lLastHighWord = -1;
 }
@@ -126,7 +126,7 @@ void IsaacExDecoder::xDoUpdate(const void *pData, std::size_t uSize){
 		}
 		register auto i = (std::size_t)(pbyEnd - pbyRead) / 2;
 		while(i != 0){
-			uSeed = xm_vIsaacRng.Get();
+			uSeed = xm_vIsaacGenerator.Get();
 			DecodeByte(uSeed);
 			DecodeByte(uSeed >> 16);
 			--i;
@@ -135,7 +135,7 @@ void IsaacExDecoder::xDoUpdate(const void *pData, std::size_t uSize){
 	while(pbyRead != pbyEnd){
 		unsigned uSeed;
 		if(xm_lLastHighWord == -1){
-			const auto u32Word = xm_vIsaacRng.Get();
+			const auto u32Word = xm_vIsaacGenerator.Get();
 			uSeed = u32Word;
 			xm_lLastHighWord = (long)(u32Word >> 16);
 		} else {

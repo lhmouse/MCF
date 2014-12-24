@@ -6,7 +6,7 @@
 #define MCF_STREAM_FILTERS_ISAAC_EX_HPP_
 
 #include "StreamFilterBase.hpp"
-#include "../Random/IsaacRng.hpp"
+#include "../Random/IsaacGenerator.hpp"
 
 namespace MCF {
 
@@ -18,7 +18,7 @@ class IsaacExEncoder : public StreamFilterBase {
 private:
 	IsaacFilterKeyHash xm_vKeyHash;
 
-	IsaacRng xm_vIsaacRng;
+	IsaacGenerator xm_vIsaacGenerator;
 	unsigned char xm_byLastEncoded;
 	long xm_lLastHighWord;
 
@@ -35,7 +35,7 @@ class IsaacExDecoder : public StreamFilterBase {
 private:
 	IsaacFilterKeyHash xm_vKeyHash;
 
-	IsaacRng xm_vIsaacRng;
+	IsaacGenerator xm_vIsaacGenerator;
 	unsigned char xm_byLastEncoded;
 	long xm_lLastHighWord;
 

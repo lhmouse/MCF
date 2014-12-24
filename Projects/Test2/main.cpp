@@ -1,13 +1,13 @@
 #include <MCF/StdMCF.hpp>
 #include <MCF/Core/Thunk.hpp>
-#include <MCF/Random/IsaacRng.hpp>
+#include <MCF/Random/IsaacGenerator.hpp>
 #include <vector>
 using namespace MCF;
 
 constexpr char INIT[0x200000] = { };
 
 extern "C" unsigned int MCFMain() noexcept {
-	IsaacRng rng(100);
+	IsaacGenerator rng(100);
 	std::vector<ThunkPtr> v;
 	try {
 		for(;;){

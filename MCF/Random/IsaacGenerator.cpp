@@ -3,19 +3,34 @@
 // Copyleft 2013 - 2014, LH_Mouse. All wrongs reserved.
 
 #include "../StdMCF.hpp"
-#include "IsaacRng.hpp"
+#include "IsaacGenerator.hpp"
 #include "../Utilities/Algorithms.hpp"
+#include "../Thread/Mutex.hpp"
 using namespace MCF;
 
+// http://www.burtleburtle.net/bob/rand/isaacafa.html
 // http://www.burtleburtle.net/bob/c/readable.c
 
+namespace {
+
+Mutex g_vMutex;
+IsaacGenerator g_vGenerator(GenerateRandSeed());
+
+}
+
+// 静态成员函数。
+std::uint32_t IsaacGenerator::GlobalGet() noexcept {
+	const auto vLock = g_vMutex.GetLock();
+	return g_vGenerator.Get();
+}
+
 // 其他非静态成员函数。
-void IsaacRng::Init(std::uint32_t u32Seed) noexcept {
+void IsaacGenerator::Init(std::uint32_t u32Seed) noexcept {
 	std::uint32_t au32RealSeed[8];
 	FillN(au32RealSeed, 8, u32Seed);
 	Init(au32RealSeed);
 }
-void IsaacRng::Init(const std::uint32_t (&au32Seed)[8]) noexcept {
+void IsaacGenerator::Init(const std::uint32_t (&au32Seed)[8]) noexcept {
 	std::uint32_t au32Temp[8];
 	FillN(au32Temp, 8, 0x9E3779B9u);
 
@@ -56,7 +71,7 @@ void IsaacRng::Init(const std::uint32_t (&au32Seed)[8]) noexcept {
 	xm_u32Read = 0;
 }
 
-void IsaacRng::xRefreshInternal() noexcept {
+void IsaacGenerator::xRefreshInternal() noexcept {
 	++xm_u32C;
 	xm_u32B += xm_u32C;
 
@@ -84,7 +99,7 @@ void IsaacRng::xRefreshInternal() noexcept {
 	}
 }
 
-std::uint32_t IsaacRng::Get() noexcept {
+std::uint32_t IsaacGenerator::Get() noexcept {
 	if(xm_u32Read == 0){
 		xRefreshInternal();
 	}

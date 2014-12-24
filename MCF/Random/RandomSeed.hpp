@@ -10,7 +10,7 @@
 
 namespace MCF {
 
-extern std::uint32_t GenRandSeed() noexcept;
+extern std::uint32_t GenerateRandSeed() noexcept;
 
 }
 

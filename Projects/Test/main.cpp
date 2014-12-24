@@ -1,29 +1,10 @@
 #include <MCF/StdMCF.hpp>
-#include <MCF/Core/String.hpp>
-#include <MCF/Containers/Deque.hpp>
+#include <MCF/Random/FastGenerator.hpp>
 using namespace MCF;
 
-struct foo {
-	char big[1024];
-
-	foo(){
-		std::strcpy(big, "meow");
-	}
-	explicit foo(int i){
-		throw i;
-	}
-};
-
-template class Deque<foo>;
-
 extern "C" unsigned int MCFMain() noexcept {
-	Deque<foo> q;
-	try {
-		q.Unshift();
-		q.Unshift(123);
-	} catch(int e){
-		std::printf("exception! e = %d\n", e);
+	for(unsigned i = 0; i < 100; ++i){
+		std::printf("%08lX\n", (unsigned long)FastGenerator::GlobalGet());
 	}
-	std::printf("front = %s\n", q.GetFront().big);
 	return 0;
 }

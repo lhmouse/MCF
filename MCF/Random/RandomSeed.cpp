@@ -8,7 +8,7 @@ using namespace MCF;
 
 namespace MCF {
 
-std::uint32_t GenRandSeed() noexcept {
+std::uint32_t GenerateRandSeed() noexcept {
 	register std::uint32_t ret __asm__("eax");
 	__asm__ __volatile__(
 		"rdtsc \n"

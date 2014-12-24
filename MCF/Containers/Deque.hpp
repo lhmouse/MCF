@@ -265,17 +265,19 @@ public:
 
 	template<typename ...ParamsT>
 	ElementT *Push(ParamsT &&...vParams){
+		ElementT *pRet;
 		auto pNode = xm_vList.GetLast();
 		if(pNode && pNode->Get().IsPushable()){
-			return pNode->Get().UncheckedPush(std::forward<ParamsT>(vParams)...);
+			pRet = pNode->Get().UncheckedPush(std::forward<ParamsT>(vParams)...);
 		}
 		pNode = xm_vList.Push(true);
 		try {
-			return pNode->Get().UncheckedPush(std::forward<ParamsT>(vParams)...);
+			pRet = pNode->Get().UncheckedPush(std::forward<ParamsT>(vParams)...);
 		} catch(...){
 			xm_vList.Pop();
 			throw;
 		}
+		return pRet;
 	}
 	void Pop() noexcept {
 		const auto pNode = xm_vList.GetFirst();
@@ -288,17 +290,20 @@ public:
 
 	template<typename ...ParamsT>
 	ElementT *Unshift(ParamsT &&...vParams){
+		ElementT *pRet;
 		auto pNode = xm_vList.GetFirst();
 		if(pNode && pNode->Get().IsUnshiftable()){
-			return pNode->Get().UncheckedUnshift(std::forward<ParamsT>(vParams)...);
+			pRet = pNode->Get().UncheckedUnshift(std::forward<ParamsT>(vParams)...);
+		} else {
+			pNode = xm_vList.Unshift(false);
+			try {
+				pRet = pNode->Get().UncheckedUnshift(std::forward<ParamsT>(vParams)...);
+			} catch(...){
+				xm_vList.Shift();
+				throw;
+			}
 		}
-		pNode = xm_vList.Unshift(false);
-		try {
-			return pNode->Get().UncheckedUnshift(std::forward<ParamsT>(vParams)...);
-		} catch(...){
-			xm_vList.Shift();
-			throw;
-		}
+		return pRet;
 	}
 	void Shift() noexcept {
 		const auto pNode = xm_vList.GetLast();

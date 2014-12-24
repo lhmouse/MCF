@@ -78,9 +78,9 @@ public:
 	}
 
 public:
+	unsigned char m_abyData[CHUNK_SIZE];
 	unsigned m_uRead;
 	unsigned m_uWrite;
-	unsigned char m_abyData[CHUNK_SIZE];
 };
 
 Mutex						StreamBuffer::Chunk::xs_vPoolMutex;

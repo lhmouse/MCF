@@ -65,11 +65,11 @@ void Uuid::Print(char (&pszString)[37], bool bUpperCase) const noexcept {
 		*(pchWrite++) = uChar;	\
 	}
 
-	PRINT(4)	*(pchWrite++) = '-';
-	PRINT(2)	*(pchWrite++) = '-';
-	PRINT(2)	*(pchWrite++) = '-';
-	PRINT(2)	*(pchWrite++) = '-';
-	PRINT(6)	*(pchWrite++) = 0;
+	PRINT(4) *(pchWrite++) = '-';
+	PRINT(2) *(pchWrite++) = '-';
+	PRINT(2) *(pchWrite++) = '-';
+	PRINT(2) *(pchWrite++) = '-';
+	PRINT(6) *(pchWrite++) = 0;
 }
 bool Uuid::Scan(const char (&pszString)[37]) noexcept {
 	auto pchRead = pszString;
@@ -103,11 +103,11 @@ bool Uuid::Scan(const char (&pszString)[37]) noexcept {
 		*(pbyWrite++) = uByte;	\
 	}
 
-	SCAN(4)	if(*(pchRead++) != '-'){ return false; }
-	SCAN(2)	if(*(pchRead++) != '-'){ return false; }
-	SCAN(2)	if(*(pchRead++) != '-'){ return false; }
-	SCAN(2)	if(*(pchRead++) != '-'){ return false; }
-	SCAN(6)	if(*(pchRead++) != 0){ return false; }
+	SCAN(4) if(*(pchRead++) != '-'){ return false; }
+	SCAN(2) if(*(pchRead++) != '-'){ return false; }
+	SCAN(2) if(*(pchRead++) != '-'){ return false; }
+	SCAN(2) if(*(pchRead++) != '-'){ return false; }
+	SCAN(6) if(*(pchRead++) != 0){ return false; }
 
 	return true;
 }

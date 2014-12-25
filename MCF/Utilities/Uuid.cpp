@@ -38,7 +38,7 @@ Uuid::Uuid(const char (&pszString)[37]){
 }
 
 // 其他非静态成员函数。
-void Uuid::Print(char (&pszString)[37], bool bUpperCase) noexcept {
+void Uuid::Print(char (&pszString)[37], bool bUpperCase) const noexcept {
 	auto pbyRead = GetBegin();
 	auto pchWrite = pszString;
 

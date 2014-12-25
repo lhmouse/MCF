@@ -64,7 +64,7 @@ public:
 		return xm_unData.aby;
 	}
 
-	void Print(char (&pszString)[37], bool bUpperCase = true) noexcept;
+	void Print(char (&pszString)[37], bool bUpperCase = true) const noexcept;
 	bool Scan(const char (&pszString)[37]) noexcept;
 
 public:

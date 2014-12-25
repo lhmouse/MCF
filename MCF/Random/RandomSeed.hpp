@@ -6,7 +6,6 @@
 #define MCF_RANDOM_RANDOM_SEED_HPP_
 
 #include <cstdint>
-#include <cstddef>
 
 namespace MCF {
 

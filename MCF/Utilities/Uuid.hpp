@@ -2,11 +2,11 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2013 - 2014, LH_Mouse. All wrongs reserved.
 
-#ifndef MCF_CORE_UUID_HPP_
-#define MCF_CORE_UUID_HPP_
+#ifndef MCF_UTILITIES_UUID_HPP_
+#define MCF_UTILITIES_UUID_HPP_
 
-#include "../Utilities/Assert.hpp"
-#include "../Utilities/BinaryOperations.hpp"
+#include "Assert.hpp"
+#include "BinaryOperations.hpp"
 #include <cstddef>
 #include <cstdint>
 

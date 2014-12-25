@@ -6,7 +6,6 @@
 #define MCF_CORE_STRING_HPP_
 
 #include "StringObserver.hpp"
-#include "Exception.hpp"
 #include "../Utilities/Assert.hpp"
 #include "../Utilities/CountOf.hpp"
 #include "../Utilities/BitsOf.hpp"
@@ -773,13 +772,6 @@ using Utf16String		= String<StringTypes::UTF16>;
 using Utf32String		= String<StringTypes::UTF32>;
 using Cesu8String		= String<StringTypes::CESU8>;
 using AnsiString		= String<StringTypes::ANSI>;
-
-class StringEncodingError : public Exception {
-public:
-	StringEncodingError(const char *pszFile, unsigned long ulLine,
-		const char *pszMessage, unsigned long ulErrorCode) noexcept;
-	~StringEncodingError() override;
-};
 
 // 字面量运算符。
 template<typename CharT, CharT ...STRING_T>

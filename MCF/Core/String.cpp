@@ -5,7 +5,6 @@
 #include "../StdMCF.hpp"
 #include "String.hpp"
 #include "Exception.hpp"
-#include <iterator>
 using namespace MCF;
 
 namespace {
@@ -32,7 +31,7 @@ public:
 	}
 	unsigned long operator()(){
 		if(xm_pchRead == xm_pchEnd){
-			DEBUG_THROW(StringEncodingError, "String is truncated", ERROR_HANDLE_EOF);
+			DEBUG_THROW(Exception, "String is truncated", ERROR_HANDLE_EOF);
 		}
 		return static_cast<std::make_unsigned_t<CharT>>(*(xm_pchRead++));
 	}
@@ -65,18 +64,18 @@ public:
 			const auto uBytes = CountLeadingZeroes((std::uint8_t)(~ulPoint | 1));
 			// UTF-8 理论上最长可以编码 6 个字符，但是标准化以后最多只能使用 4 个。
 			if(uBytes - 2 > 2){ // 2, 3, 4
-				DEBUG_THROW(StringEncodingError, "Invalid UTF-8 leading byte", ERROR_INVALID_DATA);
+				DEBUG_THROW(Exception, "Invalid UTF-8 leading byte", ERROR_INVALID_DATA);
 			}
 			ulPoint &= (0xFFu >> uBytes);
 			for(std::size_t i = 1; i < uBytes; ++i){
 				const auto ulTemp = xm_vPrev();
 				if((ulTemp & 0xC0u) != 0x80u){
-					DEBUG_THROW(StringEncodingError, "Invalid UTF-8 non-leading byte", ERROR_INVALID_DATA);
+					DEBUG_THROW(Exception, "Invalid UTF-8 non-leading byte", ERROR_INVALID_DATA);
 				}
 				ulPoint = (ulPoint << 6) | (ulTemp & 0x3Fu);
 			}
 			if(ulPoint > 0x10FFFFu){
-				DEBUG_THROW(StringEncodingError, "Invalid UTF-32 code point value", ERROR_INVALID_DATA);
+				DEBUG_THROW(Exception, "Invalid UTF-32 code point value", ERROR_INVALID_DATA);
 			}
 		}
 		return ulPoint;
@@ -112,7 +111,7 @@ public:
 		}
 		auto ulPoint = xm_vPrev();
 		if(ulPoint > 0x10FFFFu){
-			DEBUG_THROW(StringEncodingError, "Invalid UTF-32 code point value", ERROR_INVALID_DATA);
+			DEBUG_THROW(Exception, "Invalid UTF-32 code point value", ERROR_INVALID_DATA);
 		}
 		// 这个值是该码点的总字节数。
 		const auto uBytes = (34u - CountLeadingZeroes((std::uint32_t)(ulPoint | 0x7F))) / 5u;
@@ -154,12 +153,12 @@ public:
 		const auto ulLeading = ulPoint - 0xD800u;
 		if(ulLeading <= 0x7FFu){
 			if(ulLeading > 0x3FFu){
-				DEBUG_THROW(StringEncodingError, "Isolated UTF-16 trailing surrogate", ERROR_INVALID_DATA);
+				DEBUG_THROW(Exception, "Isolated UTF-16 trailing surrogate", ERROR_INVALID_DATA);
 			}
 			ulPoint = xm_vPrev() - 0xDC00u;
 			if(ulPoint > 0x3FFu){
 				// 后续代理无效。
-				DEBUG_THROW(StringEncodingError, "Leading surrogate followed by non-trailing-surrogate", ERROR_INVALID_DATA);
+				DEBUG_THROW(Exception, "Leading surrogate followed by non-trailing-surrogate", ERROR_INVALID_DATA);
 			}
 			// 将代理对拼成一个码点。
 			ulPoint = ((ulLeading << 10) | ulPoint) + 0x10000u;
@@ -197,7 +196,7 @@ public:
 		}
 		auto ulPoint = xm_vPrev();
 		if(ulPoint > 0x10FFFFu){
-			DEBUG_THROW(StringEncodingError, "Invalid UTF-32 code point value", ERROR_INVALID_DATA);
+			DEBUG_THROW(Exception, "Invalid UTF-32 code point value", ERROR_INVALID_DATA);
 		}
 		if(ulPoint > 0xFFFFu){
 			// 编码成代理对。
@@ -356,15 +355,6 @@ void AnsiString::Deunify(AnsiString &ansDst, std::size_t uPos, const UnifiedStri
 		}
 		ansDst.Replace((std::ptrdiff_t)uPos, (std::ptrdiff_t)uPos, ansConverted.GetData(), uCount);
 	}
-}
-
-// 转码异常。
-StringEncodingError::StringEncodingError(const char *pszFile, unsigned long ulLine,
-	const char *pszMessage, unsigned long ulErrorCode) noexcept
-	: Exception(pszFile, ulLine, pszMessage, ulErrorCode)
-{
-}
-StringEncodingError::~StringEncodingError(){
 }
 
 }

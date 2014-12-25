@@ -1,9 +1,12 @@
 #include <MCF/StdMCF.hpp>
-#include <MCF/Core/Time.hpp>
+#include <MCF/Utilities/Uuid.hpp>
 using namespace MCF;
 
 extern "C" unsigned int MCFMain() noexcept {
-	std::printf("%016llX\n", (unsigned long long)GetUtcTime());
-	std::printf("%016llX\n", (unsigned long long)GetLocalTime());
+	char str[37];
+	// auto u = Uuid::Generate();
+	Uuid u("01234567-89AB-CDEF-cdef-0123456789AB");
+	u.Print(str);
+	std::puts(str);
 	return 0;
 }

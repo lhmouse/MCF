@@ -25,7 +25,7 @@ std::uint32_t FastGenerator::GlobalGet() noexcept {
 
 // 其他非静态成员函数。
 void FastGenerator::Init(std::uint32_t u32Seed) noexcept {
-	xm_u64Seed = 0x0123456789ABCDEFull | u32Seed | 1;
+	xm_u64Seed = 0x0123456789ABCDEFull | u32Seed;
 }
 
 std::uint32_t FastGenerator::Get() noexcept {

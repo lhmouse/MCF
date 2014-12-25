@@ -43,7 +43,7 @@ void Uuid::Print(char (&pszString)[37], bool bUpperCase) const noexcept {
 	auto pchWrite = pszString;
 
 #define PRINT(count_)	\
-	for(std::size_t i_ = 0; i_ < count_; ++i_){	\
+	for(std::size_t i = 0; i < count_; ++i){	\
 		const unsigned uByte = *(pbyRead++);	\
 		unsigned uChar = uByte >> 4;	\
 		if(uChar <= 9){	\
@@ -76,7 +76,7 @@ bool Uuid::Scan(const char (&pszString)[37]) noexcept {
 	auto pbyWrite = GetBegin();
 
 #define SCAN(count_)	\
-	for(std::size_t i_ = 0; i_ < count_; ++i_){	\
+	for(std::size_t i = 0; i < count_; ++i){	\
 		unsigned uByte;	\
 		unsigned uChar = (unsigned char)*(pchRead++);	\
 		if(('0' <= uChar) && (uChar <= '9')){	\

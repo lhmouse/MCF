@@ -64,6 +64,10 @@ public:
 		return xm_unData.aby;
 	}
 
+	void Swap(Uuid &rhs) noexcept {
+		BSwap(xm_unData, rhs.xm_unData);
+	}
+
 	void Print(char (&pszString)[37], bool bUpperCase = true) const noexcept;
 	bool Scan(const char (&pszString)[37]) noexcept;
 
@@ -95,6 +99,10 @@ inline bool operator<=(const Uuid &lhs, const Uuid &rhs) noexcept {
 }
 inline bool operator>=(const Uuid &lhs, const Uuid &rhs) noexcept {
 	return BComp(lhs.GetBytes(), rhs.GetBytes()) >= 0;
+}
+
+inline void swap(Uuid &lhs, Uuid &rhs) noexcept {
+	lhs.Swap(rhs);
 }
 
 }

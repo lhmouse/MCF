@@ -12,7 +12,7 @@ namespace MCF {
 
 namespace Impl {
 	struct PolymorphicSharedPtrContainerBase {
-		virtual ~PolymorphicSharedPtrContainerBase() = 0;
+		virtual ~PolymorphicSharedPtrContainerBase();
 
 		virtual std::pair<PolymorphicSharedPtrContainerBase *, void *> Clone() const = 0;
 	};
@@ -37,7 +37,7 @@ namespace Impl {
 		PolymorphicSharedPtrContainer *xCloneSelf() const {
 			return new TestContainerT(*this);
 		}
-		template< typename TestContainerT = PolymorphicSharedPtrContainer,
+		template<typename TestContainerT = PolymorphicSharedPtrContainer,
 			std::enable_if_t<
 				!std::is_copy_constructible<TestContainerT>::value,
 				int> = 0>

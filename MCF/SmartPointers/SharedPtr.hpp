@@ -282,7 +282,7 @@ public:
 		return Reset(pRaw, pRaw);
 	}
 	SharedPtr &Reset(Raw *pRaw, Element *pElement){
-		ASSERT(GetRaw() != pRaw);
+		ASSERT(!(pRaw && (GetRaw() == pRaw)));
 
 		Impl::SharedControl *pControl;
 		try {

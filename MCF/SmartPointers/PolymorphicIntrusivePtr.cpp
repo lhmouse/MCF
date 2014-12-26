@@ -6,5 +6,5 @@
 #include "PolymorphicIntrusivePtr.hpp"
 using namespace MCF;
 
-PolymorphicIntrusiveBase::~PolymorphicIntrusiveBase(){
+PolymorphicIntrusiveDeletableBase::~PolymorphicIntrusiveDeletableBase(){
 }

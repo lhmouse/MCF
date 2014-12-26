@@ -78,9 +78,10 @@ auto DynamicPointerCast(PolymorphicSharedPtr<SrcT> rhs) noexcept {
 	static_assert((std::is_const<DstT>::value == std::is_const<SrcT>::value) &&
 		(std::is_volatile<DstT>::value == std::is_volatile<SrcT>::value), "cv-qualifiers mismatch.");
 
-	const auto pContainer =
-		dynamic_cast<Impl::PolymorphicSharedPtrContainer<std::remove_cv_t<DstT>> *>(rhs.GetRaw());
-	return PolymorphicSharedPtr<DstT>(std::move(rhs), pContainer ? &(pContainer->m_vObjectT) : nullptr);
+	const auto pContainer = dynamic_cast<
+		Impl::PolymorphicSharedPtrContainer<std::remove_cv_t<DstT>> *>(rhs.GetRaw());
+	return PolymorphicSharedPtr<DstT>(std::move(rhs),
+		pContainer ? &(pContainer->m_vObjectT) : nullptr);
 }
 
 template<typename ObjectT>

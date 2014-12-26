@@ -52,10 +52,7 @@ auto DynamicPointerCast(PolymorphicSharedPtr<SrcT> rhs) noexcept {
 
 	const auto pContainer =
 		dynamic_cast<Impl::PolymorphicSharedPtrContainer<std::remove_cv_t<DstT>> *>(rhs.GetRaw());
-	if(!pContainer){
-		return PolymorphicSharedPtr<DstT>();
-	}
-	return PolymorphicSharedPtr<DstT>(std::move(rhs), &(pContainer->m_vObjectT));
+	return PolymorphicSharedPtr<DstT>(std::move(rhs), pContainer ? &(pContainer->m_vObjectT) : nullptr);
 }
 
 }

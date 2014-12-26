@@ -6,7 +6,7 @@ using namespace MCF;
 struct foo {
 	int i;
 
-	foo(const foo &) = delete;
+	foo(const foo &) = default;
 	foo(foo &&) = default;
 };
 
@@ -16,6 +16,9 @@ extern "C" unsigned int MCFMain() noexcept {
 		auto p2 = DynamicClone(p);
 		auto pi = DynamicPointerCast<foo>(p2);
 		std::printf("pi = %p, pi->i = %d\n", pi.Get(), pi->i);
+
+		PolymorphicWeakPtr<void> wp(p);
+		wp.Lock();
 	} catch(Exception &e){
 		std::printf("exception: %s\n", e.what());
 	}

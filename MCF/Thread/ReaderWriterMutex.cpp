@@ -4,6 +4,7 @@
 
 #include "../StdMCF.hpp"
 #include "ReaderWriterMutex.hpp"
+#include "Atomic.hpp"
 #include "../Core/UniqueHandle.hpp"
 #include "../Core/Exception.hpp"
 using namespace MCF;
@@ -52,7 +53,7 @@ ReaderWriterMutex::ReaderWriterMutex(std::size_t uSpinCount)
 	if(!xm_uTlsIndex.Reset(::TlsAlloc())){
 		DEBUG_THROW(SystemError, "TlsAlloc");
 	}
-	__atomic_thread_fence(__ATOMIC_RELEASE);
+	AtomicFence(MemoryModel::RELEASE);
 }
 
 // 其他非静态成员函数。
@@ -61,15 +62,15 @@ ReaderWriterMutex::Result ReaderWriterMutex::TryAsReader() noexcept {
 	auto uReaderRecur = (std::uintptr_t)::TlsGetValue(xm_uTlsIndex.Get());
 	if(uReaderRecur == 0){
 		if(xm_mtxWriterGuard.IsLockedByCurrentThread()){
-			__atomic_add_fetch(&xm_uReaderCount, 1, __ATOMIC_ACQ_REL);
+			AtomicIncrement(xm_uReaderCount, MemoryModel::ACQ_REL);
 		} else {
 			if(xm_mtxWriterGuard.Try() == R_TRY_FAILED){
 				eResult = R_TRY_FAILED;
 				goto jDone;
 			}
-			if(__atomic_add_fetch(&xm_uReaderCount, 1, __ATOMIC_ACQ_REL) == 1){
+			if(AtomicIncrement(xm_uReaderCount, MemoryModel::ACQ_REL) == 1){
 				if(!xm_semExclusive.Wait(0)){
-					__atomic_sub_fetch(&xm_uReaderCount, 1, __ATOMIC_ACQ_REL);
+					AtomicDecrement(xm_uReaderCount, MemoryModel::ACQ_REL);
 					xm_mtxWriterGuard.Unlock();
 					eResult = R_TRY_FAILED;
 					goto jDone;
@@ -88,10 +89,10 @@ ReaderWriterMutex::Result ReaderWriterMutex::LockAsReader() noexcept {
 	auto uReaderRecur = (std::uintptr_t)::TlsGetValue(xm_uTlsIndex.Get());
 	if(uReaderRecur == 0){
 		if(xm_mtxWriterGuard.IsLockedByCurrentThread()){
-			__atomic_add_fetch(&xm_uReaderCount, 1, __ATOMIC_ACQ_REL);
+			AtomicIncrement(xm_uReaderCount, MemoryModel::ACQ_REL);
 		} else {
 			xm_mtxWriterGuard.Lock();
-			if(__atomic_add_fetch(&xm_uReaderCount, 1, __ATOMIC_ACQ_REL) == 1){
+			if(AtomicIncrement(xm_uReaderCount, MemoryModel::ACQ_REL) == 1){
 				xm_semExclusive.Wait();
 				eResult = R_STATE_CHANGED;
 			}
@@ -106,9 +107,9 @@ ReaderWriterMutex::Result ReaderWriterMutex::UnlockAsReader() noexcept {
 	auto uReaderRecur = (std::uintptr_t)::TlsGetValue(xm_uTlsIndex.Get());
 	if(uReaderRecur == 1){
 		if(xm_mtxWriterGuard.IsLockedByCurrentThread()){
-			__atomic_sub_fetch(&xm_uReaderCount, 1, __ATOMIC_ACQ_REL);
+			AtomicDecrement(xm_uReaderCount, MemoryModel::ACQ_REL);
 		} else {
-			if(__atomic_sub_fetch(&xm_uReaderCount, 1, __ATOMIC_ACQ_REL) == 0){
+			if(AtomicDecrement(xm_uReaderCount, MemoryModel::ACQ_REL) == 0){
 				xm_semExclusive.Post();
 				eResult = R_STATE_CHANGED;
 			}

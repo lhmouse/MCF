@@ -6,6 +6,7 @@
 #define MCF_THREAD_USER_MUTEX_HPP_
 
 #include "../Utilities/Noncopyable.hpp"
+#include "Atomic.hpp"
 #include "UniqueLockTemplate.hpp"
 #include "Semaphore.hpp"
 #include "_SpinLock.hpp"
@@ -32,7 +33,7 @@ private:
 
 public:
 	std::size_t GetSpinCount() const noexcept {
-		return __atomic_load_n(&xm_uSpinCount, __ATOMIC_RELAXED);
+		return AtomicLoad(xm_uSpinCount, MemoryModel::RELAXED);
 	}
 	void SetSpinCount(std::size_t uSpinCount) noexcept;
 

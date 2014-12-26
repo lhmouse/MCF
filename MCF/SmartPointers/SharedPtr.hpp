@@ -9,6 +9,7 @@
 // 2) Reset() 的形参若具有 SharedPtr 的某模板类类型，则禁止传值，必须传引用。
 
 #include "../Utilities/Assert.hpp"
+#include "../Thread/Atomic.hpp"
 #include "../../MCFCRT/ext/expect.h"
 #include "DefaultDeleter.hpp"
 #include <utility>
@@ -69,7 +70,7 @@ namespace Impl {
 			: xm_pfnDeleter(pfnDeleter)
 			, xm_pToDelete(pData), xm_uSharedCount(1), xm_uWeakCount(1)
 		{
-			__atomic_thread_fence(__ATOMIC_RELEASE);
+			AtomicFence(MemoryModel::RELEASE);
 		}
 
 	private:
@@ -85,25 +86,23 @@ namespace Impl {
 
 	public:
 		std::size_t GetShared() const noexcept {
-			return __atomic_load_n(&xm_uSharedCount, __ATOMIC_ACQUIRE);
+			return AtomicLoad(xm_uSharedCount, MemoryModel::ACQUIRE);
 		}
 		void AddShared() noexcept {
 			AddWeak();
 
-			ASSERT(__atomic_load_n(&xm_uSharedCount, __ATOMIC_ACQUIRE) != 0);
-			__atomic_add_fetch(&xm_uSharedCount, 1, __ATOMIC_RELEASE);
+			ASSERT(AtomicLoad(xm_uSharedCount, MemoryModel::ACQUIRE) != 0);
+			AtomicIncrement(xm_uSharedCount, MemoryModel::RELEASE);
 		}
 		Sentry TryAddShared(bool &bResult) noexcept {
 			AddWeak();
 
-			auto uOldShared = __atomic_load_n(&xm_uSharedCount, __ATOMIC_ACQUIRE);
+			auto uOldShared = AtomicLoad(xm_uSharedCount, MemoryModel::ACQUIRE);
 			for(;;){
 				if(EXPECT_NOT(uOldShared == 0)){
 					goto jFailed;
 				}
-				if(EXPECT_NOT(__atomic_compare_exchange_n(&xm_uSharedCount, &uOldShared, uOldShared + 1,
-					false, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE)))
-				{
+				if(EXPECT_NOT(AtomicCompareExchange(xm_uSharedCount, uOldShared, uOldShared + 1, MemoryModel::ACQ_REL))){
 					goto jDone;
 				}
 			}
@@ -117,8 +116,8 @@ namespace Impl {
 			return Sentry(nullptr);
 		}
 		Sentry DropShared() noexcept {
-			ASSERT(__atomic_load_n(&xm_uSharedCount, __ATOMIC_ACQUIRE) != 0);
-			if(__atomic_sub_fetch(&xm_uSharedCount, 1, __ATOMIC_ACQUIRE) == 0){
+			ASSERT(AtomicLoad(xm_uSharedCount, MemoryModel::ACQUIRE) != 0);
+			if(AtomicDecrement(xm_uSharedCount, MemoryModel::ACQUIRE) == 0){
 				(*xm_pfnDeleter)(xm_pToDelete);
 #ifndef NDEBUG
 				xm_pToDelete = (void *)
@@ -135,16 +134,16 @@ namespace Impl {
 		}
 
 		std::size_t GetWeak() const noexcept {
-			return __atomic_load_n(&xm_uWeakCount, __ATOMIC_ACQUIRE);
+			return AtomicLoad(xm_uWeakCount, MemoryModel::ACQUIRE);
 		}
 		void AddWeak() noexcept {
-			ASSERT(__atomic_load_n(&xm_uWeakCount, __ATOMIC_ACQUIRE) != 0);
-			__atomic_add_fetch(&xm_uWeakCount, 1, __ATOMIC_RELEASE);
+			ASSERT(AtomicLoad(xm_uWeakCount, MemoryModel::ACQUIRE) != 0);
+			AtomicIncrement(xm_uWeakCount, MemoryModel::RELEASE);
 		}
 		Sentry DropWeak() noexcept {
-			ASSERT(__atomic_load_n(&xm_uWeakCount, __ATOMIC_ACQUIRE) != 0);
+			ASSERT(AtomicLoad(xm_uWeakCount, MemoryModel::ACQUIRE) != 0);
 			SharedControl *pToDelete = nullptr;
-			if(__atomic_sub_fetch(&xm_uWeakCount, 1, __ATOMIC_ACQUIRE) == 0){
+			if(AtomicDecrement(xm_uWeakCount, MemoryModel::ACQUIRE) == 0){
 				pToDelete = this;
 			}
 			return Sentry(pToDelete);

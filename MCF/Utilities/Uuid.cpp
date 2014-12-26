@@ -4,10 +4,11 @@
 
 #include "../StdMCF.hpp"
 #include "Uuid.hpp"
+#include "Endian.hpp"
 #include "../Core/Time.hpp"
 #include "../Core/Exception.hpp"
 #include "../Random/FastGenerator.hpp"
-#include "Endian.hpp"
+#include "../Thread/Atomic.hpp"
 using namespace MCF;
 
 namespace {
@@ -19,7 +20,7 @@ volatile std::uint32_t g_u32AutoId = 0;
 // 静态成员函数。
 Uuid Uuid::Generate(){
 	const auto u64Now = GetUtcTime();
-	const auto u32Unique = __atomic_add_fetch(&g_u32AutoId, 1, __ATOMIC_RELAXED);
+	const auto u32Unique = AtomicIncrement(g_u32AutoId, MemoryModel::RELAXED);
 
 	Uuid vRet(nullptr);
 	StoreBe(vRet.xm_unData.au32[0], u64Now >> 28);

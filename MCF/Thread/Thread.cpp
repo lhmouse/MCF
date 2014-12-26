@@ -5,6 +5,7 @@
 #include "../StdMCF.hpp"
 #include "Thread.hpp"
 #include "../../MCFCRT/env/thread.h"
+#include "Atomic.hpp"
 #include "../Core/Exception.hpp"
 #include "../Core/Time.hpp"
 #include "../Utilities/MinMax.hpp"
@@ -30,7 +31,7 @@ Thread::Thread(std::function<void ()> fnProc, bool bSuspended)
 		} catch(...){
 			pThis->xm_pException = std::current_exception();
 		}
-		__atomic_store_n(&(pThis->xm_ulThreadId), 0, __ATOMIC_RELEASE);
+		AtomicStore(pThis->xm_ulThreadId, 0, MemoryModel::RELEASE);
 		pThis->DropRef();
 		return 0;
 	};
@@ -40,7 +41,7 @@ Thread::Thread(std::function<void ()> fnProc, bool bSuspended)
 		DEBUG_THROW(SystemError, "MCF_CRT_CreateThread");
 	}
 	AddRef();
-	__atomic_store_n(&xm_ulThreadId, 0, __ATOMIC_RELEASE);
+	AtomicStore(xm_ulThreadId, ulThreadId, MemoryModel::RELEASE);
 
 	if(!bSuspended){
 		Resume();
@@ -90,7 +91,7 @@ bool Thread::IsAlive() const noexcept {
 	return GetId() != 0;
 }
 std::size_t Thread::GetId() const noexcept {
-	return __atomic_load_n(&xm_ulThreadId, __ATOMIC_ACQUIRE);
+	return AtomicLoad(xm_ulThreadId, MemoryModel::ACQUIRE);
 }
 
 void Thread::Suspend() noexcept {

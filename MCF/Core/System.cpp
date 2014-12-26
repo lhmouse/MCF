@@ -8,42 +8,31 @@ using namespace MCF;
 
 namespace {
 
-volatile bool g_bSystemInfoInited = false;
-::SYSTEM_INFO g_vSystemInfo;
-
-void RequireSystemInfo() noexcept {
-	if(__atomic_load_n(&g_bSystemInfoInited, __ATOMIC_ACQUIRE) == false){
-		::GetNativeSystemInfo(&g_vSystemInfo);
-		__atomic_store_n(&g_bSystemInfoInited, true, __ATOMIC_RELEASE);
+struct SystemInfo : public ::SYSTEM_INFO {
+	SystemInfo() noexcept {
+		::GetNativeSystemInfo(this);
 	}
-}
+} g_vSystemInfo;
 
-volatile bool g_bOsVersionInfoInited = false;
-::OSVERSIONINFOW g_vOsVersionInfo;
-
-void RequireOsVersionInfo() noexcept {
-	if(__atomic_load_n(&g_bOsVersionInfoInited, __ATOMIC_ACQUIRE) == false){
-		g_vOsVersionInfo.dwOSVersionInfoSize = sizeof(g_vOsVersionInfo);
-		::GetVersionExW(&g_vOsVersionInfo);
-		__atomic_store_n(&g_bOsVersionInfoInited, true, __ATOMIC_RELEASE);
+struct OsVersionInfo : public ::OSVERSIONINFOW {
+	OsVersionInfo() noexcept {
+		dwOSVersionInfoSize = sizeof(::OSVERSIONINFOW);
+		::GetVersionExW(this);
 	}
-}
+} g_vOsVersionInfo;
 
 }
 
 namespace MCF {
 
 std::size_t GetProcessorCount() noexcept {
-	RequireSystemInfo();
 	return g_vSystemInfo.dwNumberOfProcessors;
 }
 std::size_t GetPageSize() noexcept {
-	RequireSystemInfo();
 	return g_vSystemInfo.dwPageSize;
 }
 
 WindowsVersion GetWindowsVersion() noexcept {
-	RequireOsVersionInfo();
 	WindowsVersion vRet;
 	vRet.uMajor			= g_vOsVersionInfo.dwMajorVersion;
 	vRet.uMinor			= g_vOsVersionInfo.dwMinorVersion;

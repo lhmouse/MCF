@@ -5,6 +5,7 @@
 #include "../StdMCF.hpp"
 #include "Time.hpp"
 #include "../Utilities/Bail.hpp"
+#include "../Thread/Atomic.hpp"
 using namespace MCF;
 
 namespace {
@@ -13,6 +14,18 @@ union FileTime {
 	::FILETIME ft;
 	std::uint64_t u64;
 };
+
+struct PerformanceFrequency {
+	double lfReciprocal;
+
+	PerformanceFrequency() noexcept {
+		::LARGE_INTEGER liFrequency;
+		if(!::QueryPerformanceFrequency(&liFrequency)){
+			Bail(L"::QueryPerformanceFrequency() 失败。");
+		}
+		lfReciprocal = 1000.0 / liFrequency.QuadPart;
+	}
+} g_vPerformanceFrequency;
 
 }
 
@@ -35,21 +48,11 @@ std::uint64_t GetFastMonoClock() noexcept {
 	return ::GetTickCount64();
 }
 double GetHiResMonoClock() noexcept {
-	static volatile bool s_bInited = false;
-	static double s_lfFreqRecip;
-
-	::LARGE_INTEGER liTemp;
-	if(!__atomic_load_n(&s_bInited, __ATOMIC_ACQUIRE)){
-		if(!::QueryPerformanceFrequency(&liTemp)){
-			Bail(L"::QueryPerformanceFrequency() 失败。");
-		}
-		s_lfFreqRecip = 1000.0 / liTemp.QuadPart;
-		__atomic_store_n(&s_bInited, true, __ATOMIC_RELEASE);
-	}
-	if(!::QueryPerformanceCounter(&liTemp)){
+	::LARGE_INTEGER liCounter;
+	if(!::QueryPerformanceCounter(&liCounter)){
 		Bail(L"::QueryPerformanceCounter() 失败。");
 	}
-	return liTemp.QuadPart * s_lfFreqRecip;
+	return liCounter.QuadPart * g_vPerformanceFrequency.lfReciprocal;
 }
 
 }

@@ -9,6 +9,7 @@
 // 2) Reset() 的形参若具有 IntrusivePtr 的某模板类类型，则禁止传值，必须传引用。
 
 #include "../Utilities/Assert.hpp"
+#include "../Thread/Atomic.hpp"
 #include "DefaultDeleter.hpp"
 #include <utility>
 #include <type_traits>
@@ -74,7 +75,7 @@ namespace Impl {
 
 	protected:
 		IntrusiveBase() noexcept {
-			__atomic_store_n(&xm_uRefCount, 1, __ATOMIC_RELAXED);
+			AtomicStore(xm_uRefCount, 1, MemoryModel::RELEASE);
 		}
 
 	public:
@@ -95,18 +96,18 @@ namespace Impl {
 
 	public:
 		std::size_t GetSharedCount() const volatile noexcept {
-			return __atomic_load_n(&xm_uRefCount, __ATOMIC_RELAXED);
+			return AtomicLoad(xm_uRefCount, MemoryModel::RELAXED);
 		}
 		void AddRef() const volatile noexcept {
-			ASSERT((std::ptrdiff_t)__atomic_load_n(&xm_uRefCount, __ATOMIC_ACQUIRE) > 0);
+			ASSERT((std::ptrdiff_t)AtomicLoad(xm_uRefCount, MemoryModel::ACQUIRE) > 0);
 
-			__atomic_add_fetch(&xm_uRefCount, 1, __ATOMIC_RELEASE);
+			AtomicIncrement(xm_uRefCount, MemoryModel::RELEASE);
 		}
 		auto DropRef() const volatile noexcept {
-			ASSERT((std::ptrdiff_t)__atomic_load_n(&xm_uRefCount, __ATOMIC_ACQUIRE) > 0);
+			ASSERT((std::ptrdiff_t)AtomicLoad(xm_uRefCount, MemoryModel::ACQUIRE) > 0);
 
 			Pointee *pToDelete = nullptr;
-			if(__atomic_sub_fetch(&xm_uRefCount, 1, __ATOMIC_ACQUIRE) == 0){
+			if(AtomicDecrement(xm_uRefCount, MemoryModel::ACQUIRE) == 0){
 				pToDelete = static_cast<Pointee *>(const_cast<IntrusiveBase *>(this));
 			}
 			return Sentry(pToDelete);
@@ -114,28 +115,28 @@ namespace Impl {
 
 		template<typename OtherT>
 		auto Get() const volatile noexcept {
-			ASSERT((std::ptrdiff_t)__atomic_load_n(&xm_uRefCount, __ATOMIC_ACQUIRE) > 0);
+			ASSERT((std::ptrdiff_t)AtomicLoad(xm_uRefCount, MemoryModel::ACQUIRE) > 0);
 
 			return IntrusiveCastHelper<const volatile OtherT, const volatile Pointee>()(
 				static_cast<const volatile Pointee *>(this));
 		}
 		template<typename OtherT>
 		auto Get() const noexcept {
-			ASSERT((std::ptrdiff_t)__atomic_load_n(&xm_uRefCount, __ATOMIC_ACQUIRE) > 0);
+			ASSERT((std::ptrdiff_t)AtomicLoad(xm_uRefCount, MemoryModel::ACQUIRE) > 0);
 
 			return IntrusiveCastHelper<const OtherT, const Pointee>()(
 				static_cast<const Pointee *>(this));
 		}
 		template<typename OtherT>
 		auto Get() volatile noexcept {
-			ASSERT((std::ptrdiff_t)__atomic_load_n(&xm_uRefCount, __ATOMIC_ACQUIRE) > 0);
+			ASSERT((std::ptrdiff_t)AtomicLoad(xm_uRefCount, MemoryModel::ACQUIRE) > 0);
 
 			return IntrusiveCastHelper<volatile OtherT, volatile Pointee>()(
 				static_cast<volatile Pointee *>(this));
 		}
 		template<typename OtherT>
 		auto Get() noexcept {
-			ASSERT((std::ptrdiff_t)__atomic_load_n(&xm_uRefCount, __ATOMIC_ACQUIRE) > 0);
+			ASSERT((std::ptrdiff_t)AtomicLoad(xm_uRefCount, MemoryModel::ACQUIRE) > 0);
 
 			return IntrusiveCastHelper<OtherT, Pointee>()(
 				static_cast<Pointee *>(this));

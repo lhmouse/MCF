@@ -7,6 +7,7 @@
 
 #include "../Utilities/Noncopyable.hpp"
 #include "../../MCFCRT/ext/expect.h"
+#include "Atomic.hpp"
 #include <cstdint>
 
 namespace MCF {
@@ -17,23 +18,23 @@ private:
 
 public:
 	explicit SpinLock(std::uintptr_t uCount = 0) noexcept {
-		__atomic_store_n(&xm_uCount, uCount, __ATOMIC_RELEASE);
+		AtomicStore(xm_uCount, uCount, MemoryModel::RELEASE);
 	}
 
 public:
-	std::uintptr_t Lock() volatile throw() { // FIXME: g++ 4.9.2 ICE.
+	std::uintptr_t Lock() volatile noexcept {
 		std::uintptr_t uOld;
 		for(;;){
-			uOld = __atomic_exchange_n(&xm_uCount, (std::uintptr_t)-1, __ATOMIC_SEQ_CST);
+			uOld = AtomicExchange(xm_uCount, (std::uintptr_t)-1, MemoryModel::SEQ_CST);
 			if(EXPECT_NOT(uOld != (std::uintptr_t)-1)){
 				break;
 			}
-			__builtin_ia32_pause();
+			AtomicPause();
 		}
 		return uOld;
 	}
 	void Unlock(std::uintptr_t uOld) volatile noexcept {
-		__atomic_store_n(&xm_uCount, uOld, __ATOMIC_SEQ_CST);
+		AtomicStore(xm_uCount, uOld, MemoryModel::SEQ_CST);
 	}
 };
 

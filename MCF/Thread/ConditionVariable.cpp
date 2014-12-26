@@ -4,8 +4,9 @@
 
 #include "../StdMCF.hpp"
 #include "ConditionVariable.hpp"
-#include "../Utilities/MinMax.hpp"
+#include "Atomic.hpp"
 #include "Mutex.hpp"
+#include "../Utilities/MinMax.hpp"
 using namespace MCF;
 
 // http://research.microsoft.com/pubs/64242/ImplementingCVs.pdf
@@ -15,7 +16,7 @@ using namespace MCF;
 ConditionVariable::ConditionVariable(Mutex &vMutex)
 	: xm_vMutex(vMutex), xm_uWaiting(0), xm_vSemaphore(0, nullptr)
 {
-	__atomic_thread_fence(__ATOMIC_RELEASE);
+	AtomicFence(MemoryModel::RELEASE);
 }
 
 // 其他非静态成员函数。

@@ -13,7 +13,7 @@ namespace MCF {
 class Crc32 {
 public:
 	enum : std::uint32_t {
-		DIVISOR_IEEE_802_3 	= 0xEDB88320,
+		DIVISOR_IEEE_802_3	= 0xEDB88320,
 		DIVISOR_CASTAGNOLI	= 0x82F63B78
 	};
 

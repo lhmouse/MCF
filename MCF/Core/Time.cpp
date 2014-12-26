@@ -7,19 +7,28 @@
 #include "../Utilities/Bail.hpp"
 using namespace MCF;
 
+namespace {
+
+union FileTime {
+	::FILETIME ft;
+	std::uint64_t u64;
+};
+
+}
+
 namespace MCF {
 
 std::uint64_t GetUtcTime() noexcept {
-	::FILETIME ftUtc;
-	::GetSystemTimeAsFileTime(&ftUtc);
+	FileTime ftUtc;
+	::GetSystemTimeAsFileTime(&ftUtc.ft);
 	// 0x019DB1DED53E8000 = 从 1601-01-01 到 1970-01-01 经历的时间纳秒数。
-	return (reinterpret_cast<const std::uint64_t &>(ftUtc) - 0x019DB1DED53E8000ull) / 10000u;
+	return (ftUtc.u64 - 0x019DB1DED53E8000ull) / 10000u;
 }
 std::uint64_t GetLocalTime() noexcept {
-	::FILETIME ftUtc, ftLocal;
-	::GetSystemTimeAsFileTime(&ftUtc);
-	::FileTimeToLocalFileTime(&ftUtc, &ftLocal);
-	return (reinterpret_cast<const std::uint64_t &>(ftLocal) - 0x019DB1DED53E8000ull) / 10000u;
+	FileTime ftUtc, ftLocal;
+	::GetSystemTimeAsFileTime(&ftUtc.ft);
+	::FileTimeToLocalFileTime(&ftUtc.ft, &ftLocal.ft);
+	return (ftLocal.u64 - 0x019DB1DED53E8000ull) / 10000u;
 }
 
 std::uint64_t GetFastMonoClock() noexcept {

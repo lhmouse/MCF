@@ -710,12 +710,8 @@ private:
 			ASSERT(pNode);
 
 			const auto pIndexNode = static_cast<IndexNode *>(pNode);
-#ifdef NDEBUG
-			std::get<INDEX_ID>(xm_vIndices).Attach(pHintIndexNode, pIndexNode);
-#else
 			const auto pExistentIndexNode = std::get<INDEX_ID>(xm_vIndices).Attach(pHintIndexNode, pIndexNode);
 			ASSERT(!pExistentIndexNode);
-#endif
 
 			pHintIndexNode = pIndexNode;
 			pSourceIndexNode = pSourceIndexNode->GetPrev();

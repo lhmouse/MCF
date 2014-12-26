@@ -217,9 +217,7 @@ public:
 			std::conditional_t<std::is_same<const volatile Element, Element>::value, const volatile Buddy *,
 				std::conditional_t<std::is_same<const Element, Element>::value, const Buddy *,
 					std::conditional_t<std::is_same<volatile Element, Element>::value, volatile Buddy *,
-						Buddy *>
-					>
-				>
+						Buddy *>>>
 			>(std::exchange(xm_pBuddy, nullptr));
 	}
 	Element *Release() noexcept {

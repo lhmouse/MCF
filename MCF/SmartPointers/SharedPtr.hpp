@@ -260,6 +260,13 @@ public:
 		return xm_pControl ? xm_pControl->GetWeak() : 0;
 	}
 
+	template<typename OtherObjectT, class OtherDeleterT>
+	bool IsSharedWith(const SharedPtr<OtherObjectT, OtherDeleterT> &rhs) const noexcept {
+		return xm_pControl == rhs.xm_pControl;
+	}
+	template<typename OtherObjectT, class OtherDeleterT>
+	bool IsSharedWith(const WeakPtr<OtherObjectT, OtherDeleterT> &rhs) const noexcept;
+
 	SharedPtr &Reset() noexcept {
 		const auto pOldControl = std::exchange(xm_pControl, nullptr);
 		if(pOldControl){
@@ -455,6 +462,15 @@ public:
 		return GetWeakCount() != 0;
 	}
 
+	template<typename OtherObjectT, class OtherDeleterT>
+	bool IsSharedWith(const SharedPtr<OtherObjectT, OtherDeleterT> &rhs) const noexcept {
+		return xm_pControl == rhs.xm_pControl;
+	}
+	template<typename OtherObjectT, class OtherDeleterT>
+	bool IsSharedWith(const WeakPtr<OtherObjectT, OtherDeleterT> &rhs) const noexcept {
+		return xm_pControl == rhs.xm_pControl;
+	}
+
 	WeakPtr &Reset() noexcept {
 		const auto pOldControl = std::exchange(xm_pControl, nullptr);
 		if(pOldControl){
@@ -506,6 +522,12 @@ public:
 		std::swap(xm_pElement, rhs.xm_pElement);
 	}
 };
+
+template<typename ObjectT, class DeleterT>
+	template<typename OtherObjectT, class OtherDeleterT>
+bool SharedPtr<ObjectT, DeleterT>::IsSharedWith(const WeakPtr<OtherObjectT, OtherDeleterT> &rhs) const noexcept {
+	return xm_pControl == rhs.xm_pControl;
+}
 
 template<typename Object1T, class Deleter1T, typename Object2T, class Deleter2T>
 bool operator==(const SharedPtr<Object1T, Deleter1T> &lhs, const SharedPtr<Object2T, Deleter2T> &rhs) noexcept {

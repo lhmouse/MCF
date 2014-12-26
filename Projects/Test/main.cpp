@@ -1,15 +1,15 @@
 #include <MCF/StdMCF.hpp>
-#include <MCF/Utilities/Uuid.hpp>
+#include <MCF/SmartPointers/PolymorphicSharedPtr.hpp>
 using namespace MCF;
 
 extern "C" unsigned int MCFMain() noexcept {
-	char str[37];
-	auto u = Uuid::Generate();
-	Uuid u2("01234567-89AB-CDEF-cdef-0123456789AB");
-	u.Print(str);
-	std::puts(str);
-	swap(u, u2);
-	u.Print(str);
-	std::puts(str);
+	PolymorphicSharedPtr<const void> p = MakePolymorphicShared<int>(123456);
+
+	auto pd = DynamicPointerCast<const double>(p);
+	auto pi = DynamicPointerCast<const int>(p);
+
+	std::printf("pd = %p\n", (void *)pd.Get());
+	std::printf("pi = %p, *pi = %d\n", (void *)pi.Get(), *pi);
+
 	return 0;
 }

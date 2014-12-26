@@ -99,7 +99,7 @@ namespace Impl {
 			auto uOldShared = __atomic_load_n(&xm_uSharedCount, __ATOMIC_ACQUIRE);
 			for(;;){
 				if(EXPECT_NOT(uOldShared == 0)){
-					break;
+					goto jFailed;
 				}
 				if(EXPECT_NOT(__atomic_compare_exchange_n(&xm_uSharedCount, &uOldShared, uOldShared + 1,
 					false, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE)))
@@ -108,10 +108,11 @@ namespace Impl {
 				}
 			}
 
+		jFailed: __attribute__((__cold__));
 			bResult = false;
 			return DropWeak();
 
-		jDone:
+		jDone: __attribute__((__cold__));
 			bResult = true;
 			return Sentry(nullptr);
 		}

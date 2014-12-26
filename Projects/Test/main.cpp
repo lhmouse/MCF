@@ -11,5 +11,8 @@ extern "C" unsigned int MCFMain() noexcept {
 	std::printf("pd = %p\n", (void *)pd.Get());
 	std::printf("pi = %p, *pi = %d\n", (void *)pi.Get(), *pi);
 
+	PolymorphicWeakPtr<const void> wp(std::move(p));
+	wp.Lock();
+
 	return 0;
 }

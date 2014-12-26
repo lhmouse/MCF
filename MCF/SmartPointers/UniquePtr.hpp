@@ -37,10 +37,11 @@ public:
 		Reset(std::move(rhs));
 	}
 	template<typename OtherT,
-		std::enable_if_t<std::is_array<OtherT>::value
-			? std::is_same<std::remove_cv_t<std::remove_extent_t<OtherT>>, std::remove_cv_t<Element>>::value
-			: std::is_convertible<OtherT *, Element *>::value,
-		int> = 0>
+		std::enable_if_t<
+			std::is_array<OtherT>::value
+				? std::is_same<std::remove_cv_t<std::remove_extent_t<OtherT>>, std::remove_cv_t<Element>>::value
+				: std::is_convertible<OtherT *, Element *>::value,
+			int> = 0>
 	UniquePtr(UniquePtr<OtherT, DeleterT> rhs) noexcept
 		: UniquePtr()
 	{
@@ -51,10 +52,11 @@ public:
 		return *this;
 	}
 	template<typename OtherT,
-		std::enable_if_t<std::is_array<OtherT>::value
-			? std::is_same<std::remove_cv_t<std::remove_extent_t<OtherT>>, std::remove_cv_t<Element>>::value
-			: std::is_convertible<OtherT *, Element *>::value,
-		int> = 0>
+		std::enable_if_t<
+			std::is_array<OtherT>::value
+				? std::is_same<std::remove_cv_t<std::remove_extent_t<OtherT>>, std::remove_cv_t<Element>>::value
+				: std::is_convertible<OtherT *, Element *>::value,
+			int> = 0>
 	UniquePtr &operator=(UniquePtr<OtherT, DeleterT> rhs) noexcept {
 		Reset(std::move(rhs));
 		return *this;
@@ -86,10 +88,11 @@ public:
 		return *this;
 	}
 	template<typename OtherT,
-		std::enable_if_t<std::is_array<OtherT>::value
-			? std::is_same<std::remove_cv_t<std::remove_extent_t<OtherT>>, std::remove_cv_t<Element>>::value
-			: std::is_convertible<OtherT *, Element *>::value,
-		int> = 0>
+		std::enable_if_t<
+			std::is_array<OtherT>::value
+				? std::is_same<std::remove_cv_t<std::remove_extent_t<OtherT>>, std::remove_cv_t<Element>>::value
+				: std::is_convertible<OtherT *, Element *>::value,
+			int> = 0>
 	UniquePtr &Reset(UniquePtr<OtherT, DeleterT> &&rhs) noexcept {
 		return Reset(static_cast<Element *>(rhs.Release()));
 	}

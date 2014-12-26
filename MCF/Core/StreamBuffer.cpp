@@ -349,7 +349,7 @@ StreamBuffer StreamBuffer::CutOff(std::size_t uSize){
 		sbufRet.xm_uSize += uTotal;
 		xm_uSize -= uTotal;
 	}
-	return std::move(sbufRet);
+	return sbufRet;
 }
 void StreamBuffer::Splice(StreamBuffer &rhs) noexcept {
 	if(&rhs == this){

@@ -1,18 +1,23 @@
 #include <MCF/StdMCF.hpp>
 #include <MCF/SmartPointers/PolymorphicSharedPtr.hpp>
+#include <MCF/Core/Exception.hpp>
 using namespace MCF;
 
+struct foo {
+	int i;
+
+	foo(const foo &) = delete;
+	foo(foo &&) = default;
+};
+
 extern "C" unsigned int MCFMain() noexcept {
-	PolymorphicSharedPtr<const void> p = MakePolymorphicShared<int>(123456);
-
-	auto pd = DynamicPointerCast<const double>(p);
-	auto pi = DynamicPointerCast<const int>(p);
-
-	std::printf("pd = %p\n", (void *)pd.Get());
-	std::printf("pi = %p, *pi = %d\n", (void *)pi.Get(), *pi);
-
-	PolymorphicWeakPtr<const void> wp(std::move(p));
-	wp.Lock();
-
+	try {
+		PolymorphicSharedPtr<void> p = MakePolymorphicShared<foo>(foo{12345});
+		auto p2 = DynamicClone(p);
+		auto pi = DynamicPointerCast<foo>(p2);
+		std::printf("pi = %p, pi->i = %d\n", pi.Get(), pi->i);
+	} catch(Exception &e){
+		std::printf("exception: %s\n", e.what());
+	}
 	return 0;
 }

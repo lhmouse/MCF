@@ -201,10 +201,11 @@ public:
 		Reset(std::move(rhs));
 	}
 	template<typename OtherT,
-		std::enable_if_t<std::is_array<OtherT>::value
-			? std::is_same<std::remove_cv_t<std::remove_extent_t<OtherT>>, std::remove_cv_t<Element>>::value
-			: std::is_convertible<OtherT *, Element *>::value,
-		int> = 0>
+		std::enable_if_t<
+			std::is_array<OtherT>::value
+				? std::is_same<std::remove_cv_t<std::remove_extent_t<OtherT>>, std::remove_cv_t<Element>>::value
+				: std::is_convertible<OtherT *, Element *>::value,
+			int> = 0>
 	SharedPtr(SharedPtr<OtherT, DeleterT> rhs) noexcept
 		: SharedPtr()
 	{
@@ -225,10 +226,11 @@ public:
 		return *this;
 	}
 	template<typename OtherT,
-		std::enable_if_t<std::is_array<OtherT>::value
-			? std::is_same<std::remove_cv_t<std::remove_extent_t<OtherT>>, std::remove_cv_t<Element>>::value
-			: std::is_convertible<OtherT *, Element *>::value,
-		int> = 0>
+		std::enable_if_t<
+			std::is_array<OtherT>::value
+				? std::is_same<std::remove_cv_t<std::remove_extent_t<OtherT>>, std::remove_cv_t<Element>>::value
+				: std::is_convertible<OtherT *, Element *>::value,
+			int> = 0>
 	SharedPtr &operator=(SharedPtr<OtherT, DeleterT> rhs) noexcept {
 		Reset(std::move(rhs));
 		return *this;
@@ -315,18 +317,20 @@ public:
 		return Reset(std::move(rhs), rhs.xm_pElement);
 	}
 	template<typename OtherT,
-		std::enable_if_t<std::is_array<OtherT>::value
-			? std::is_same<std::remove_cv_t<std::remove_extent_t<OtherT>>, std::remove_cv_t<Element>>::value
-			: std::is_convertible<OtherT *, Element *>::value,
-		int> = 0>
+		std::enable_if_t<
+			std::is_array<OtherT>::value
+				? std::is_same<std::remove_cv_t<std::remove_extent_t<OtherT>>, std::remove_cv_t<Element>>::value
+				: std::is_convertible<OtherT *, Element *>::value,
+			int> = 0>
 	SharedPtr &Reset(const SharedPtr<OtherT, DeleterT> &rhs) noexcept {
 		return Reset(rhs, static_cast<Element *>(rhs.xm_pElement));
 	}
 	template<typename OtherT,
-		std::enable_if_t<std::is_array<OtherT>::value
-			? std::is_same<std::remove_cv_t<std::remove_extent_t<OtherT>>, std::remove_cv_t<Element>>::value
-			: std::is_convertible<OtherT *, Element *>::value,
-		int> = 0>
+		std::enable_if_t<
+			std::is_array<OtherT>::value
+				? std::is_same<std::remove_cv_t<std::remove_extent_t<OtherT>>, std::remove_cv_t<Element>>::value
+				: std::is_convertible<OtherT *, Element *>::value,
+			int> = 0>
 	SharedPtr &Reset(SharedPtr<OtherT, DeleterT> &&rhs) noexcept {
 		return Reset(std::move(rhs), static_cast<Element *>(rhs.xm_pElement));
 	}
@@ -450,7 +454,7 @@ public:
 				pRet.xm_pElement = xm_pElement;
 			}
 		}
-		return std::move(pRet);
+		return pRet;
 	}
 
 	std::size_t GetSharedCount() const noexcept {

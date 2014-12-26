@@ -19,7 +19,7 @@ ThunkPtr CreateThunk(const void *pInit, std::size_t uSize){
 	if(!pThunk.Reset(::MCF_CRT_AllocateThunk(pInit, uSize))){
 		DEBUG_THROW(SystemError, "MCF_CRT_AllocateThunk");
 	}
-	return std::move(pThunk);
+	return pThunk;
 }
 
 }

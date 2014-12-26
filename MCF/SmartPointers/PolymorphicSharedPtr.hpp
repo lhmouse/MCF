@@ -6,22 +6,50 @@
 #define MCF_SMART_POINTERS_POLYMORPHIC_SHARED_PTR_HPP_
 
 #include "SharedPtr.hpp"
+#include "../Core/Exception.hpp"
 
 namespace MCF {
 
 namespace Impl {
 	struct PolymorphicSharedPtrContainerBase {
 		virtual ~PolymorphicSharedPtrContainerBase() = 0;
+
+		virtual std::pair<PolymorphicSharedPtrContainerBase *, void *> Clone() const = 0;
 	};
 
 	template<typename ObjectT>
-	struct PolymorphicSharedPtrContainer : public PolymorphicSharedPtrContainerBase {
+	class PolymorphicSharedPtrContainer : public PolymorphicSharedPtrContainerBase {
+	public:
 		ObjectT m_vObjectT;
 
+	public:
 		template<typename ...ParamsT>
 		explicit PolymorphicSharedPtrContainer(ParamsT &&...vParams)
 			: m_vObjectT(std::forward<ParamsT>(vParams)...)
 		{
+		}
+
+	private:
+		template<typename TestContainerT = PolymorphicSharedPtrContainer,
+			std::enable_if_t<
+				std::is_copy_constructible<TestContainerT>::value,
+				int> = 0>
+		PolymorphicSharedPtrContainer *xCloneSelf() const {
+			return new TestContainerT(*this);
+		}
+		template< typename TestContainerT = PolymorphicSharedPtrContainer,
+			std::enable_if_t<
+				!std::is_copy_constructible<TestContainerT>::value,
+				int> = 0>
+		[[noreturn]]
+		PolymorphicSharedPtrContainer *xCloneSelf() const {
+			DEBUG_THROW(Exception, "Class is not copy-constructible", ERROR_INVALID_PARAMETER);
+		}
+
+	public:
+		std::pair<PolymorphicSharedPtrContainerBase *, void *> Clone() const override {
+			const auto pNewContainer = xCloneSelf();
+			return std::make_pair(pNewContainer, &(pNewContainer->m_vObjectT));
 		}
 	};
 }
@@ -36,13 +64,13 @@ template<typename ObjectT, typename ...ParamsT>
 auto MakePolymorphicShared(ParamsT &&...vParams){
 	static_assert(!std::is_array<ObjectT>::value, "ObjectT shall not be an array type.");
 
-	const auto pContainer =
+	const auto pNewContainer =
 		new Impl::PolymorphicSharedPtrContainer<std::remove_cv_t<ObjectT>>(
 			std::forward<ParamsT>(vParams)...);
 	return PolymorphicSharedPtr<ObjectT>(
 		SharedPtr<Impl::PolymorphicSharedPtrContainerBase,
-			DefaultDeleter<Impl::PolymorphicSharedPtrContainerBase>>(pContainer),
-		&(pContainer->m_vObjectT));
+			DefaultDeleter<Impl::PolymorphicSharedPtrContainerBase>>(pNewContainer),
+		&(pNewContainer->m_vObjectT));
 }
 
 template<typename DstT, typename SrcT>
@@ -53,6 +81,17 @@ auto DynamicPointerCast(PolymorphicSharedPtr<SrcT> rhs) noexcept {
 	const auto pContainer =
 		dynamic_cast<Impl::PolymorphicSharedPtrContainer<std::remove_cv_t<DstT>> *>(rhs.GetRaw());
 	return PolymorphicSharedPtr<DstT>(std::move(rhs), pContainer ? &(pContainer->m_vObjectT) : nullptr);
+}
+
+template<typename ObjectT>
+auto DynamicClone(const PolymorphicSharedPtr<ObjectT> &rhs){
+	PolymorphicSharedPtr<std::remove_cv_t<ObjectT>> pNew;
+	const auto pContainer = rhs.GetRaw();
+	if(pContainer){
+		const auto vResult = pContainer->Clone();
+		pNew.Reset(vResult.first, vResult.second);
+	}
+	return pNew;
 }
 
 }

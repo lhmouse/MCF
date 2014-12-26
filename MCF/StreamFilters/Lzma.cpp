@@ -66,7 +66,7 @@ struct LzmaStreamCloser {
 		DEBUG_THROW(LzmaError, "lzma_lzma_preset", LZMA_OPTIONS_ERROR);
 	}
 	vRet.dict_size = ulDictSize;
-	return std::move(vRet);
+	return vRet;
 }
 
 }

@@ -110,7 +110,7 @@ void Mutex::Unlock() noexcept {
 Mutex::UniqueLock Mutex::TryLock() noexcept {
 	UniqueLock vLock(*this, false);
 	vLock.Try();
-	return std::move(vLock);
+	return vLock;
 }
 Mutex::UniqueLock Mutex::GetLock() noexcept {
 	return UniqueLock(*this);

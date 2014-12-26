@@ -325,7 +325,10 @@ public:
 	}
 
 	void Swap(String &rhs) noexcept {
-		std::swap(xm_vStorage, rhs.xm_vStorage);
+		xStorage vStorage;
+		std::memcpy(&vStorage, &xm_vStorage, sizeof(vStorage));
+		std::memcpy(&xm_vStorage, &rhs.xm_vStorage, sizeof(vStorage));
+		std::memcpy(&rhs.xm_vStorage, &vStorage, sizeof(vStorage));
 	}
 
 	int Compare(const Observer &rhs) const noexcept {
@@ -368,6 +371,7 @@ public:
 		}
 	}
 	void Assign(String &&rhs) noexcept {
+		ASSERT(this != &rhs);
 		Swap(rhs);
 	}
 
@@ -655,11 +659,15 @@ String<TYPE_T> &&operator+=(String<TYPE_T> &&lhs, String<TYPE_T> &&rhs){
 
 template<StringTypes TYPE_T, StringTypes OTHER_TYPE_T>
 String<TYPE_T> operator+(const String<TYPE_T> &lhs, const StringObserver<OTHER_TYPE_T> &rhs){
-	return std::move(String<TYPE_T>(lhs) += rhs);
+	String<TYPE_T> strRet(lhs);
+	strRet += rhs;
+	return strRet;
 }
 template<StringTypes TYPE_T>
 String<TYPE_T> operator+(const String<TYPE_T> &lhs, typename String<TYPE_T>::Char rhs){
-	return std::move(String<TYPE_T>(lhs) += rhs);
+	String<TYPE_T> strRet(lhs);
+	strRet += rhs;
+	return strRet;
 }
 template<StringTypes TYPE_T, StringTypes OTHER_TYPE_T>
 String<TYPE_T> &&operator+(String<TYPE_T> &&lhs, const StringObserver<OTHER_TYPE_T> &rhs){

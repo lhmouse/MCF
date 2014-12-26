@@ -18,7 +18,7 @@ Semaphore::Semaphore(std::size_t uInitCount, const wchar_t *pwszName)
 			if(!hSemaphore){
 				DEBUG_THROW(SystemError, "CreateSemaphoreW");
 			}
-			return std::move(hSemaphore);
+			return hSemaphore;
 		}())
 {
 }

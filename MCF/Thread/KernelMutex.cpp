@@ -35,7 +35,7 @@ KernelMutex::KernelMutex(const wchar_t *pwszName)
 			if(!hEvent){
 				DEBUG_THROW(SystemError, "CreateMutexW");
 			}
-			return std::move(hEvent);
+			return hEvent;
 		}())
 {
 }
@@ -81,7 +81,7 @@ void KernelMutex::Unlock() noexcept {
 KernelMutex::UniqueLock KernelMutex::TryLock() noexcept {
 	UniqueLock vLock(*this, false);
 	vLock.Try();
-	return std::move(vLock);
+	return vLock;
 }
 KernelMutex::UniqueLock KernelMutex::GetLock() noexcept {
 	return UniqueLock(*this);

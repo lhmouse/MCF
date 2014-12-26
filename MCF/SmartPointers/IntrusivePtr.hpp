@@ -115,22 +115,30 @@ namespace Impl {
 		template<typename OtherT>
 		auto Get() const volatile noexcept {
 			ASSERT((std::ptrdiff_t)__atomic_load_n(&xm_uRefCount, __ATOMIC_ACQUIRE) > 0);
-			return IntrusiveCastHelper<const volatile OtherT, const volatile Pointee>()(static_cast<const volatile Pointee *>(this));
+
+			return IntrusiveCastHelper<const volatile OtherT, const volatile Pointee>()(
+				static_cast<const volatile Pointee *>(this));
 		}
 		template<typename OtherT>
 		auto Get() const noexcept {
 			ASSERT((std::ptrdiff_t)__atomic_load_n(&xm_uRefCount, __ATOMIC_ACQUIRE) > 0);
-			return IntrusiveCastHelper<const OtherT, const Pointee>()(static_cast<const Pointee *>(this));
+
+			return IntrusiveCastHelper<const OtherT, const Pointee>()(
+				static_cast<const Pointee *>(this));
 		}
 		template<typename OtherT>
 		auto Get() volatile noexcept {
 			ASSERT((std::ptrdiff_t)__atomic_load_n(&xm_uRefCount, __ATOMIC_ACQUIRE) > 0);
-			return IntrusiveCastHelper<volatile OtherT, volatile Pointee>()(static_cast<volatile Pointee *>(this));
+
+			return IntrusiveCastHelper<volatile OtherT, volatile Pointee>()(
+				static_cast<volatile Pointee *>(this));
 		}
 		template<typename OtherT>
 		auto Get() noexcept {
 			ASSERT((std::ptrdiff_t)__atomic_load_n(&xm_uRefCount, __ATOMIC_ACQUIRE) > 0);
-			return IntrusiveCastHelper<OtherT, Pointee>()(static_cast<Pointee *>(this));
+
+			return IntrusiveCastHelper<OtherT, Pointee>()(
+				static_cast<Pointee *>(this));
 		}
 
 		template<typename OtherT>
@@ -443,7 +451,7 @@ auto DynamicPointerCast(IntrusivePtr<SrcT, DeleterT> rhs) noexcept {
 	if(pRet){
 		rhs.ReleaseBuddy();
 	}
-	return std::move(pRet);
+	return pRet;
 }
 template<typename DstT, typename SrcT, class DeleterT>
 auto ConstPointerCast(IntrusivePtr<SrcT, DeleterT> rhs) noexcept {

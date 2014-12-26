@@ -138,7 +138,7 @@ WideString Unescape(const WideStringObserver &wsoSrc){
 		wsRet.Append(Utf32StringObserver(&c32CodePoint, 1));
 	}
 
-	return std::move(wsRet);
+	return wsRet;
 }
 void Escape(WideString &wsAppendTo, const WideStringObserver &wsoSrc){
 	const auto uSrcLength = wsoSrc.GetLength();
@@ -502,5 +502,5 @@ WideString TExpression::Export(const WideStringObserver &wsoIndent) const {
 
 	ASSERT(wsIndent.IsEmpty());
 
-	return std::move(wsRet);
+	return wsRet;
 }

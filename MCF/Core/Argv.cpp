@@ -24,7 +24,7 @@ ArgvResult GetArgv(const wchar_t *pwszCommandLine){
 			DEBUG_THROW(SystemError, "MCF_CRT_AllocArgvFromCommandLine");
 		}
 	}
-	return std::move(vRet);
+	return vRet;
 }
 
 }

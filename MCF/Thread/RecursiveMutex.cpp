@@ -74,7 +74,7 @@ std::size_t RecursiveMutex::GetRecursionCount() const noexcept {
 RecursiveMutex::UniqueLock RecursiveMutex::TryLock() noexcept {
 	UniqueLock vLock(*this, false);
 	vLock.Try();
-	return std::move(vLock);
+	return vLock;
 }
 RecursiveMutex::UniqueLock RecursiveMutex::GetLock() noexcept {
 	return UniqueLock(*this);

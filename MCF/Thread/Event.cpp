@@ -18,7 +18,7 @@ Event::Event(bool bInitSet, const wchar_t *pwszName)
 			if(!hEvent){
 				DEBUG_THROW(SystemError, "CreateEventW");
 			}
-			return std::move(hEvent);
+			return hEvent;
 		}())
 {
 }

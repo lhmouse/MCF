@@ -164,7 +164,7 @@ ReaderWriterMutex::Result ReaderWriterMutex::UnlockAsWriter() noexcept {
 ReaderWriterMutex::UniqueReaderLock ReaderWriterMutex::TryReaderLock() noexcept {
 	UniqueReaderLock vLock(*this, false);
 	vLock.Try();
-	return std::move(vLock);
+	return vLock;
 }
 ReaderWriterMutex::UniqueReaderLock ReaderWriterMutex::GetReaderLock() noexcept {
 	return UniqueReaderLock(*this);
@@ -173,7 +173,7 @@ ReaderWriterMutex::UniqueReaderLock ReaderWriterMutex::GetReaderLock() noexcept 
 ReaderWriterMutex::UniqueWriterLock ReaderWriterMutex::TryWriterLock() noexcept {
 	UniqueWriterLock vLock(*this, false);
 	vLock.Try();
-	return std::move(vLock);
+	return vLock;
 }
 ReaderWriterMutex::UniqueWriterLock ReaderWriterMutex::GetWriterLock() noexcept {
 	return UniqueWriterLock(*this);

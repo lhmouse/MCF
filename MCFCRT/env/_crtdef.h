@@ -27,16 +27,16 @@
 
 // C++ 目前还不支持 C99 的 restrict 限定符。
 #ifdef __cplusplus
-#	define restrict			__restrict__
+#	define restrict					__restrict__
 #endif
 
 #ifndef __cplusplus
-#	define nullptr			((void *)0)
+#	define nullptr					((void *)0)
 #endif
 
 #ifdef __cplusplus
-#	define MCF_STD			::std::
-#	define MCF_NOEXCEPT		noexcept
+#	define MCF_STD					::std::
+#	define MCF_NOEXCEPT				noexcept
 #else
 #	define MCF_STD
 #	define MCF_NOEXCEPT

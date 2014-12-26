@@ -19,7 +19,7 @@ WideString Unescape(const WideStringObserver &wsoSrc){
 		UCS_CODE
 	} eState = NORMAL;
 
-	std::uint32_t u32CodePoint = 0;
+	char32_t c32CodePoint = 0;
 	std::size_t uHexExpecting = 0;
 
 	const auto pwcEnd = wsoSrc.GetEnd();
@@ -71,19 +71,19 @@ WideString Unescape(const WideStringObserver &wsoSrc){
 				break;
 
 			case L'x':
-				u32CodePoint = 0;
+				c32CodePoint = 0;
 				uHexExpecting = 2;
 				eState = UCS_CODE;
 				break;
 
 			case L'u':
-				u32CodePoint = 0;
+				c32CodePoint = 0;
 				uHexExpecting = 4;
 				eState = UCS_CODE;
 				break;
 
 			case L'U':
-				u32CodePoint = 0;
+				c32CodePoint = 0;
 				uHexExpecting = 8;
 				eState = UCS_CODE;
 				break;
@@ -116,7 +116,7 @@ WideString Unescape(const WideStringObserver &wsoSrc){
 				} while(false);
 
 				if(uHex <= 0x0F){
-					u32CodePoint = (u32CodePoint << 4) | uHex;
+					c32CodePoint = (c32CodePoint << 4) | uHex;
 					--uHexExpecting;
 				} else {
 					uHexExpecting = 0;
@@ -124,7 +124,6 @@ WideString Unescape(const WideStringObserver &wsoSrc){
 				if(uHexExpecting != 0){
 					// eState = UCS_CODE;
 				} else {
-					const char32_t c32CodePoint = u32CodePoint;
 					wsRet.Append(Utf32StringObserver(&c32CodePoint, 1));
 					eState = NORMAL;
 				}
@@ -136,7 +135,6 @@ WideString Unescape(const WideStringObserver &wsoSrc){
 		}
 	}
 	if(eState == UCS_CODE){
-		const char32_t c32CodePoint = u32CodePoint;
 		wsRet.Append(Utf32StringObserver(&c32CodePoint, 1));
 	}
 

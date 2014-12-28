@@ -153,8 +153,7 @@ public:
 	}
 	void Clear() noexcept {
 		while(xm_pFirst){
-			const auto pCur = std::exchange(xm_pFirst, xm_pFirst->xm_pNext);
-			delete pCur;
+			delete std::exchange(xm_pFirst, xm_pFirst->xm_pNext);
 		}
 		xm_pLast = nullptr;
 	}

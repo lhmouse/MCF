@@ -56,7 +56,7 @@ template<typename ObjectT>
 auto DynamicClone(const PolymorphicIntrusivePtr<ObjectT> &rhs){
 	PolymorphicIntrusivePtr<std::remove_cv_t<ObjectT>> pNew;
 	if(rhs){
-		pNew.Reset(static_cast<ObjectT *>(rhs->MCF_Impl_IntrusiveClone_()));
+		pNew.Reset(static_cast<std::remove_cv_t<ObjectT> *>(rhs->MCF_Impl_IntrusiveClone_()));
 	}
 	return pNew;
 }

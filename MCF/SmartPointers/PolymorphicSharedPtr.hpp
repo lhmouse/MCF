@@ -14,7 +14,7 @@ namespace Impl {
 	struct PolymorphicSharedPtrContainerBase {
 		virtual ~PolymorphicSharedPtrContainerBase();
 
-		virtual std::pair<PolymorphicSharedPtrContainerBase *, void *> Clone() const = 0;
+		virtual std::pair<PolymorphicSharedPtrContainerBase *, void *> MCF_Impl_SharedClone_() const = 0;
 	};
 
 	template<typename ObjectT>
@@ -47,7 +47,7 @@ namespace Impl {
 		}
 
 	public:
-		std::pair<PolymorphicSharedPtrContainerBase *, void *> Clone() const override {
+		std::pair<PolymorphicSharedPtrContainerBase *, void *> MCF_Impl_SharedClone_() const override {
 			const auto pNewContainer = xCloneSelf();
 			return std::make_pair(pNewContainer, &(pNewContainer->m_vObjectT));
 		}
@@ -89,7 +89,7 @@ auto DynamicClone(const PolymorphicSharedPtr<ObjectT> &rhs){
 	PolymorphicSharedPtr<std::remove_cv_t<ObjectT>> pNew;
 	const auto pContainer = rhs.GetRaw();
 	if(pContainer){
-		const auto vResult = pContainer->Clone();
+		const auto vResult = pContainer->MCF_Impl_SharedClone_();
 		pNew.Reset(vResult.first, vResult.second);
 	}
 	return pNew;

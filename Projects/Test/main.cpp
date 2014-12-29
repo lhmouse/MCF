@@ -19,11 +19,11 @@ struct bar : PolymorphicIntrusiveBase<foo> {
 
 extern "C" unsigned int MCFMain() noexcept {
 	try {
-		PolymorphicIntrusivePtr<foo> p = MakePolymorphicIntrusive<foo>(foo{12345});
+		PolymorphicIntrusivePtr<const foo> p = MakePolymorphicIntrusive<const foo>(foo{12345});
 		auto p2 = DynamicClone(p);
+		p2->i = 45678;
+		std::printf("p = %p, p->i = %d\n", p.Get(), p->i);
 		std::printf("p2 = %p, p2->i = %d\n", p2.Get(), p2->i);
-		auto pb = DynamicPointerCast<bar>(p);
-		std::printf("pb = %p\n", pb.Get());
 	} catch(Exception &e){
 		std::printf("exception: %s\n", e.what());
 	}

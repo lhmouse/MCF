@@ -35,8 +35,8 @@ private:
 
 public:
 	using PackageMap = MultiIndexMap<Package,
-		// UniqueOrderedMemberIndex<Package, WideString, &Package::first>,
-		UniqueOrderedIndex<Package, xPackageComparator>,
+		// MultiOrderedMemberIndex<Package, WideString, &Package::first>,
+		MultiOrderedIndex<Package, xPackageComparator>,
 		SequencedIndex<Package>>;
 	using ValueMap = MultiIndexMap<Value,
 		MultiOrderedMemberIndex<Value, WideString, &Value::first>,
@@ -57,11 +57,11 @@ public:
 		xm_mapPackages.Clear();
 	}
 
-	const PackageNode *GetPackage(const WideStringObserver &wsoName) const noexcept {
-		return xm_mapPackages.Find<0>(wsoName);
+	std::pair<const PackageNode *, const PackageNode *> GetPackageRange(const WideStringObserver &wsoName) const noexcept {
+		return xm_mapPackages.GetEqualRange<0>(wsoName);
 	}
-	PackageNode *GetPackage(const WideStringObserver &wsoName) noexcept {
-		return xm_mapPackages.Find<0>(wsoName);
+	std::pair<PackageNode *, PackageNode *> GetPackageRange(const WideStringObserver &wsoName) noexcept {
+		return xm_mapPackages.GetEqualRange<0>(wsoName);
 	}
 	std::pair<PackageNode *, bool> InsertPackage(const WideStringObserver &wsoName, PackageNode *pSeqPos = nullptr){
 		return InsertPackage(WideString(wsoName), pSeqPos);
@@ -81,6 +81,27 @@ public:
 		}
 		xm_mapPackages.Erase(pPos);
 		return true;
+	}
+
+	const PackageNode *GetPackage(const WideStringObserver &wsoName) const noexcept {
+		return xm_mapPackages.Find<0>(wsoName);
+	}
+	PackageNode *GetPackage(const WideStringObserver &wsoName) noexcept {
+		return xm_mapPackages.Find<0>(wsoName);
+	}
+	PackageNode *CreatePackage(const WideStringObserver &wsoName, PackageNode *pSeqPos = nullptr) noexcept {
+		auto pNode = xm_mapPackages.GetLowerBound<0>(wsoName);
+		if(!pNode || (pNode->first != wsoName)){
+			pNode = xm_mapPackages.InsertWithHints(true, std::make_tuple(pNode, pSeqPos), WideString(wsoName), MNotationPackage()).first;
+		}
+		return pNode;
+	}
+	PackageNode *CreatePackage(WideString wsName, PackageNode *pSeqPos = nullptr) noexcept {
+		auto pNode = xm_mapPackages.GetLowerBound<0>(wsName);
+		if(!pNode || (pNode->first != wsName)){
+			pNode = xm_mapPackages.InsertWithHints(true, std::make_tuple(pNode, pSeqPos), std::move(wsName), MNotationPackage()).first;
+		}
+		return pNode;
 	}
 
 	const PackageNode *GetFirstPackage() const noexcept {
@@ -138,19 +159,19 @@ public:
 	}
 	ValueNode *SetValue(const WideStringObserver &wsoName, WideString wsValue, ValueNode *pSeqPos = nullptr){
 		auto pNode = xm_mapValues.GetLowerBound<0>(wsoName);
-		if(pNode && (pNode->first == wsoName)){
-			pNode->second = std::move(wsValue);
-		} else {
+		if(!pNode || (pNode->first != wsoName)){
 			pNode = xm_mapValues.InsertWithHints(true, std::make_tuple(pNode, pSeqPos), WideString(wsoName), std::move(wsValue)).first;
+		} else {
+			pNode->second = std::move(wsValue);
 		}
 		return pNode;
 	}
 	ValueNode *SetValue(WideString wsName, WideString wsValue, ValueNode *pSeqPos = nullptr){
 		auto pNode = xm_mapValues.GetLowerBound<0>(wsName);
-		if(pNode && (pNode->first == wsName)){
-			pNode->second = std::move(wsValue);
+		if(!pNode || (pNode->first != wsValue)){
+			pNode = xm_mapValues.InsertWithHints(true, std::make_tuple(pNode, pSeqPos), std::move(wsValue), std::move(wsValue)).first;
 		} else {
-			pNode = xm_mapValues.InsertWithHints(true, std::make_tuple(pNode, pSeqPos), std::move(wsName), std::move(wsValue)).first;
+			pNode->second = std::move(wsValue);
 		}
 		return pNode;
 	}
@@ -193,8 +214,6 @@ public:
 		ERR_EQU_EXPECTED				= 4,
 		ERR_UNCLOSED_PACKAGE			= 5,
 		ERR_SOURCE_PACKAGE_NOT_FOUND	= 6,
-		ERR_DUPLICATE_PACKAGE			= 7,
-		ERR_DUPLICATE_VALUE				= 8,
 	};
 
 public:

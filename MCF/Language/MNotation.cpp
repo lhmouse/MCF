@@ -228,8 +228,8 @@ std::pair<MNotation::ErrorType, const wchar_t *> MNotation::Parse(const WideStri
 		const auto vResult = vecPackageStack.GetEnd()[-1]->InsertPackage(
 			Unescape(WideStringObserver(pwcNameBegin, pwcNameEnd)));
 		if(!vResult.second){
-			eError = ERR_DUPLICATE_PACKAGE;
-			return false;
+//			eError = ERR_DUPLICATE_PACKAGE;
+//			return false;
 		}
 		if(ppkgSource){
 			vResult.first->second = *ppkgSource;
@@ -253,8 +253,8 @@ std::pair<MNotation::ErrorType, const wchar_t *> MNotation::Parse(const WideStri
 			Unescape(WideStringObserver(pwcNameBegin, pwcNameEnd)),
 			Unescape(WideStringObserver(pwcValueBegin, pwcValueEnd)));
 		if(!vResult.second){
-			eError = ERR_DUPLICATE_VALUE;
-			return false;
+//			eError = ERR_DUPLICATE_VALUE;
+//			return false;
 		}
 		return true;
 	};

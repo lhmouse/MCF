@@ -4,9 +4,9 @@
 
 #include "../StdMCF.hpp"
 #include "Uuid.hpp"
-#include "Endian.hpp"
-#include "../Core/Time.hpp"
-#include "../Core/Exception.hpp"
+#include "Time.hpp"
+#include "Exception.hpp"
+#include "../Utilities/Endian.hpp"
 #include "../Random/FastGenerator.hpp"
 #include "../Thread/Atomic.hpp"
 using namespace MCF;

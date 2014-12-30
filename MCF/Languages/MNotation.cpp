@@ -217,11 +217,12 @@ std::pair<MNotation::ErrorType, const wchar_t *> MNotation::Parse(const WideStri
 		MNotationPackage *ppkgSource = nullptr;
 		const auto wsSourceName = Unescape(WideStringObserver(pwcValueBegin, pwcValueEnd));
 		if(!wsSourceName.IsEmpty()){
-			ppkgSource = &(vecPackageStack.GetEnd()[-1]->GetPackage(wsSourceName)->second);
-			if(!ppkgSource){
+			const auto pSourceNode = vecPackageStack.GetEnd()[-1]->GetPackage(wsSourceName);
+			if(!pSourceNode){
 				eError = ERR_SOURCE_PACKAGE_NOT_FOUND;
 				return false;
 			}
+			ppkgSource = &(pSourceNode->second);
 		}
 
 		const auto vResult = vecPackageStack.GetEnd()[-1]->InsertPackage(

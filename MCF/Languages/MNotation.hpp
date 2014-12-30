@@ -2,8 +2,8 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2013 - 2014, LH_Mouse. All wrongs reserved.
 
-#ifndef MCF_LANGUAGE_M_NOTATION_HPP_
-#define MCF_LANGUAGE_M_NOTATION_HPP_
+#ifndef MCF_LANGUAGES_M_NOTATION_HPP_
+#define MCF_LANGUAGES_M_NOTATION_HPP_
 
 #include "../Core/String.hpp"
 #include "../Containers/MultiIndexMap.hpp"
@@ -208,12 +208,10 @@ class MNotation : public MNotationPackage {
 public:
 	enum ErrorType {
 		ERR_NONE						= 0,
-		ERR_NO_VALUE_NAME				= 1,
-		ERR_NO_PACKAGE_NAME				= 2,
-		ERR_UNEXCEPTED_PACKAGE_CLOSE	= 3,
-		ERR_EQU_EXPECTED				= 4,
-		ERR_UNCLOSED_PACKAGE			= 5,
-		ERR_SOURCE_PACKAGE_NOT_FOUND	= 6,
+		ERR_UNEXCEPTED_PACKAGE_CLOSE	= 1,
+		ERR_EQU_EXPECTED				= 2,
+		ERR_UNCLOSED_PACKAGE			= 3,
+		ERR_SOURCE_PACKAGE_NOT_FOUND	= 4,
 	};
 
 public:

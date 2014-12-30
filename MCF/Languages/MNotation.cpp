@@ -212,7 +212,6 @@ std::pair<MNotation::ErrorType, const wchar_t *> MNotation::Parse(const WideStri
 
 	ErrorType eError;
 	const auto PushPackage = [&]{
-		ASSERT(pwcNameBegin != pwcNameEnd);
 		ASSERT(!vecPackageStack.IsEmpty());
 
 		MNotationPackage *ppkgSource = nullptr;
@@ -235,6 +234,8 @@ std::pair<MNotation::ErrorType, const wchar_t *> MNotation::Parse(const WideStri
 			vResult.first->second = *ppkgSource;
 		}
 		vecPackageStack.Push(&(vResult.first->second));
+		pwcNameEnd = pwcNameBegin;
+		pwcValueEnd = pwcValueBegin;
 		return true;
 	};
 	const auto PopPackage = [&]{
@@ -243,10 +244,11 @@ std::pair<MNotation::ErrorType, const wchar_t *> MNotation::Parse(const WideStri
 			return false;
 		}
 		vecPackageStack.Pop();
+		pwcNameEnd = pwcNameBegin;
+		pwcValueEnd = pwcValueBegin;
 		return true;
 	};
 	const auto SubmitValue = [&]{
-		ASSERT(pwcNameBegin != pwcNameEnd);
 		ASSERT(!vecPackageStack.IsEmpty());
 
 		const auto vResult = vecPackageStack.GetEnd()[-1]->InsertValue(
@@ -256,6 +258,8 @@ std::pair<MNotation::ErrorType, const wchar_t *> MNotation::Parse(const WideStri
 //			eError = ERR_DUPLICATE_VALUE;
 //			return false;
 		}
+		pwcNameEnd = pwcNameBegin;
+		pwcValueEnd = pwcValueBegin;
 		return true;
 	};
 
@@ -266,8 +270,6 @@ std::pair<MNotation::ErrorType, const wchar_t *> MNotation::Parse(const WideStri
 		case L'=':
 			switch(eState){
 			case NAME_INDENT:
-				return std::make_pair(ERR_NO_VALUE_NAME, pwcRead);
-
 			case NAME_BODY:
 			case NAME_PADDING:
 				eState = VAL_INDENT;
@@ -287,8 +289,6 @@ std::pair<MNotation::ErrorType, const wchar_t *> MNotation::Parse(const WideStri
 		case L'{':
 			switch(eState){
 			case NAME_INDENT:
-				return std::make_pair(ERR_NO_VALUE_NAME, pwcRead);
-
 			case NAME_BODY:
 			case NAME_PADDING:
 				if(!PushPackage()){
@@ -412,8 +412,6 @@ std::pair<MNotation::ErrorType, const wchar_t *> MNotation::Parse(const WideStri
 			default:
 				pwcNameBegin = pwcRead;
 				pwcNameEnd = pwcRead + 1;
-				pwcValueBegin = pwcRead;
-				pwcValueEnd = pwcRead;
 				eState = (wc == L'\\') ? NAME_ESCAPED : NAME_BODY;
 				break;
 			}

@@ -192,10 +192,10 @@ std::pair<MNotation::ErrorType, const wchar_t *> MNotation::Parse(const WideStri
 
 	Vector<MNotationPackage *> vecPackageStack(1, &vTemp);
 
-	auto pwcNameBegin = pwcRead;
-	auto pwcNameEnd = pwcRead;
-	auto pwcValueBegin = pwcRead;
-	auto pwcValueEnd = pwcRead;
+	const wchar_t *pwcNameBegin = nullptr;
+	const wchar_t *pwcNameEnd = nullptr;
+	const wchar_t *pwcValueBegin = nullptr;
+	const wchar_t *pwcValueEnd = nullptr;
 
 	enum {
 		NAME_INDENT,
@@ -215,8 +215,8 @@ std::pair<MNotation::ErrorType, const wchar_t *> MNotation::Parse(const WideStri
 		ASSERT(!vecPackageStack.IsEmpty());
 
 		MNotationPackage *ppkgSource = nullptr;
-		const auto wsSourceName = Unescape(WideStringObserver(pwcValueBegin, pwcValueEnd));
-		if(!wsSourceName.IsEmpty()){
+		if(pwcValueBegin){
+			const auto wsSourceName = Unescape(WideStringObserver(pwcValueBegin, pwcValueEnd));
 			const auto pSourceNode = vecPackageStack.GetEnd()[-1]->GetPackage(wsSourceName);
 			if(!pSourceNode){
 				eError = ERR_SOURCE_PACKAGE_NOT_FOUND;
@@ -235,8 +235,10 @@ std::pair<MNotation::ErrorType, const wchar_t *> MNotation::Parse(const WideStri
 			vResult.first->second = *ppkgSource;
 		}
 		vecPackageStack.Push(&(vResult.first->second));
-		pwcNameEnd = pwcNameBegin;
-		pwcValueEnd = pwcValueBegin;
+		pwcNameBegin = nullptr;
+		pwcNameEnd = nullptr;
+		pwcValueBegin = nullptr;
+		pwcValueEnd = nullptr;
 		return true;
 	};
 	const auto PopPackage = [&]{
@@ -245,8 +247,10 @@ std::pair<MNotation::ErrorType, const wchar_t *> MNotation::Parse(const WideStri
 			return false;
 		}
 		vecPackageStack.Pop();
-		pwcNameEnd = pwcNameBegin;
-		pwcValueEnd = pwcValueBegin;
+		pwcNameBegin = nullptr;
+		pwcNameEnd = nullptr;
+		pwcValueBegin = nullptr;
+		pwcValueEnd = nullptr;
 		return true;
 	};
 	const auto SubmitValue = [&]{
@@ -259,8 +263,10 @@ std::pair<MNotation::ErrorType, const wchar_t *> MNotation::Parse(const WideStri
 //			eError = ERR_DUPLICATE_VALUE;
 //			return false;
 		}
-		pwcNameEnd = pwcNameBegin;
-		pwcValueEnd = pwcValueBegin;
+		pwcNameBegin = nullptr;
+		pwcNameEnd = nullptr;
+		pwcValueBegin = nullptr;
+		pwcValueEnd = nullptr;
 		return true;
 	};
 
@@ -407,6 +413,8 @@ std::pair<MNotation::ErrorType, const wchar_t *> MNotation::Parse(const WideStri
 			switch(wc){
 			case L' ':
 			case L'\t':
+				pwcNameBegin = pwcRead;
+				pwcNameEnd = pwcRead;
 				// eState = NAME_INDENT;
 				break;
 
@@ -452,6 +460,8 @@ std::pair<MNotation::ErrorType, const wchar_t *> MNotation::Parse(const WideStri
 			switch(wc){
 			case L' ':
 			case L'\t':
+				pwcValueBegin = pwcRead;
+				pwcValueEnd = pwcRead;
 				// eState = VAL_INDENT;
 				break;
 

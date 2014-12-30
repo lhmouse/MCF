@@ -7,7 +7,7 @@ extern "C" unsigned int MCFMain() noexcept {
 
 	auto result = n.Parse(L""
 		"root { \n"
-		"  pkg1 { \n"
+		"   { \n"
 		"     = uval1 \n"
 		"    key1 = val1 \n"
 		"     = uval2 \n"

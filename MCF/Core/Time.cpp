@@ -5,7 +5,6 @@
 #include "../StdMCF.hpp"
 #include "Time.hpp"
 #include "../Utilities/Bail.hpp"
-#include "../Thread/Atomic.hpp"
 using namespace MCF;
 
 namespace {

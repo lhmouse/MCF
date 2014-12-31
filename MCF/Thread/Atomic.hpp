@@ -19,23 +19,23 @@ enum class MemoryModel {
 
 template<typename T>
 inline T AtomicLoad(volatile T &ref, MemoryModel model) noexcept {
-	static_assert(std::is_pod<T>::value, "Only POD types are supported.");
+	static_assert(std::is_integral<T>::value || std::is_pointer<T>::value, "Only integers and pointers are supported.");
 	return __atomic_load_n(&ref, static_cast<int>(model));
 }
 template<typename T>
 inline void AtomicStore(volatile T &ref, std::common_type_t<T> val, MemoryModel model) noexcept {
-	static_assert(std::is_pod<T>::value, "Only POD types are supported.");
+	static_assert(std::is_integral<T>::value || std::is_pointer<T>::value, "Only integers and pointers are supported.");
 	__atomic_store_n(&ref, val, static_cast<int>(model));
 }
 
 template<typename T>
 inline T AtomicAdd(volatile T &ref, std::common_type_t<T> val, MemoryModel model) noexcept {
-	static_assert(std::is_pod<T>::value, "Only POD types are supported.");
+	static_assert(std::is_integral<T>::value || std::is_pointer<T>::value, "Only integers and pointers are supported.");
 	return __atomic_add_fetch(&ref, val, static_cast<int>(model));
 }
 template<typename T>
 inline T AtomicSub(volatile T &ref, std::common_type_t<T> val, MemoryModel model) noexcept {
-	static_assert(std::is_pod<T>::value, "Only POD types are supported.");
+	static_assert(std::is_integral<T>::value || std::is_pointer<T>::value, "Only integers and pointers are supported.");
 	return __atomic_sub_fetch(&ref, val, static_cast<int>(model));
 }
 
@@ -43,12 +43,12 @@ template<typename T>
 inline bool AtomicCompareExchange(volatile T &ref, std::common_type_t<T> &cmp, std::common_type_t<T> xchg,
 	MemoryModel succ, MemoryModel fail) noexcept
 {
-	static_assert(std::is_pod<T>::value, "Only POD types are supported.");
+	static_assert(std::is_integral<T>::value || std::is_pointer<T>::value, "Only integers and pointers are supported.");
 	return __atomic_compare_exchange_n(&ref, &cmp, xchg, false, static_cast<int>(succ), static_cast<int>(fail));
 }
 template<typename T>
 inline T AtomicExchange(volatile T &ref, std::common_type_t<T> val, MemoryModel model) noexcept {
-	static_assert(std::is_pod<T>::value, "Only POD types are supported.");
+	static_assert(std::is_integral<T>::value || std::is_pointer<T>::value, "Only integers and pointers are supported.");
 	return __atomic_exchange_n(&ref, val, static_cast<int>(model));
 }
 
@@ -75,8 +75,7 @@ inline bool AtomicCompareExchange(volatile T &ref, std::common_type_t<T> &cmp, s
 {
 	return AtomicCompareExchange(ref, cmp, xchg, model,
 		(model == MemoryModel::ACQ_REL) ? MemoryModel::ACQUIRE : (
-			(model == MemoryModel::RELEASE) ? MemoryModel::RELAXED :
-				model));
+			(model == MemoryModel::RELEASE) ? MemoryModel::RELAXED : model));
 }
 
 }

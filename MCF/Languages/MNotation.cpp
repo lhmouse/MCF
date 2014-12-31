@@ -42,22 +42,22 @@ WideString Unescape(const WideStringObserver &wsoSrc){
 		case ESCAPED:
 			switch(wc){
 			case L'n':
-				wsRet.Append(L'\n');
+				wsRet += L'\n';
 				eState = NORMAL;
 				break;
 
 			case L'b':
-				wsRet.Append(L'\b');
+				wsRet += L'\b';
 				eState = NORMAL;
 				break;
 
 			case L'r':
-				wsRet.Append(L'\r');
+				wsRet += L'\r';
 				eState = NORMAL;
 				break;
 
 			case L't':
-				wsRet.Append(L'\t');
+				wsRet += L'\t';
 				eState = NORMAL;
 				break;
 
@@ -84,7 +84,7 @@ WideString Unescape(const WideStringObserver &wsoSrc){
 				break;
 
 			default:
-				wsRet.Append(wc);
+				wsRet += wc;
 				eState = NORMAL;
 				break;
 			}
@@ -119,7 +119,7 @@ WideString Unescape(const WideStringObserver &wsoSrc){
 				if(uHexExpecting != 0){
 					// eState = UCS_CODE;
 				} else {
-					wsRet.Append(Utf32StringObserver(&c32CodePoint, 1));
+					wsRet += Utf32StringObserver(&c32CodePoint, 1);
 					eState = NORMAL;
 				}
 			}
@@ -127,7 +127,7 @@ WideString Unescape(const WideStringObserver &wsoSrc){
 		}
 	}
 	if(eState == UCS_CODE){
-		wsRet.Append(Utf32StringObserver(&c32CodePoint, 1));
+		wsRet += Utf32StringObserver(&c32CodePoint, 1);
 	}
 
 	return wsRet;
@@ -145,34 +145,34 @@ void Escape(WideString &wsAppendTo, const WideStringObserver &wsoSrc){
 		case L'{':
 		case L'}':
 		case L';':
-			wsAppendTo.Append(L'\\');
-			wsAppendTo.Append(wc);
+			wsAppendTo += L'\\';
+			wsAppendTo += wc;
 			break;
 
 		case L' ':
 			if((i == 0) || (i == uSrcLength - 1)){
-				wsAppendTo.Append(L'\\');
+				wsAppendTo += L'\\';
 			}
-			wsAppendTo.Append(L' ');
+			wsAppendTo += L' ';
 			break;
 
 		case L'\n':
-			wsAppendTo.Append(L'\\');
-			wsAppendTo.Append(L'n');
+			wsAppendTo += L'\\';
+			wsAppendTo += L'n';
 			break;
 
 		case L'\r':
-			wsAppendTo.Append(L'\\');
-			wsAppendTo.Append(L'r');
+			wsAppendTo += L'\\';
+			wsAppendTo += L'r';
 			break;
 
 		case L'\t':
-			wsAppendTo.Append(L'\\');
-			wsAppendTo.Append(L't');
+			wsAppendTo += L'\\';
+			wsAppendTo += L't';
 			break;
 
 		default:
-			wsAppendTo.Append(wc);
+			wsAppendTo += wc;
 			break;
 		}
 	}
@@ -253,7 +253,7 @@ std::pair<MNotation::ErrorType, const wchar_t *> MNotation::Parse(const WideStri
 		pwcValueEnd = nullptr;
 		return true;
 	};
-	const auto SubmitValue = [&]{
+	const auto AcceptValue = [&]{
 		ASSERT(!vecPackageStack.IsEmpty());
 
 		const auto vResult = vecPackageStack.GetEnd()[-1]->InsertValue(
@@ -337,7 +337,7 @@ std::pair<MNotation::ErrorType, const wchar_t *> MNotation::Parse(const WideStri
 			case VAL_INDENT:
 			case VAL_BODY:
 			case VAL_PADDING:
-				if(!SubmitValue() || !PopPackage()){
+				if(!AcceptValue() || !PopPackage()){
 					return std::make_pair(eError, pwcRead);
 				}
 				eState = NAME_INDENT;
@@ -364,7 +364,7 @@ std::pair<MNotation::ErrorType, const wchar_t *> MNotation::Parse(const WideStri
 			case VAL_INDENT:
 			case VAL_BODY:
 			case VAL_PADDING:
-				if(!SubmitValue()){
+				if(!AcceptValue()){
 					return std::make_pair(eError, pwcRead);
 				}
 				eState = COMMENT;
@@ -390,7 +390,7 @@ std::pair<MNotation::ErrorType, const wchar_t *> MNotation::Parse(const WideStri
 			case VAL_INDENT:
 			case VAL_BODY:
 			case VAL_PADDING:
-				if(!SubmitValue()){
+				if(!AcceptValue()){
 					return std::make_pair(eError, pwcRead);
 				}
 				eState = NAME_INDENT;
@@ -538,7 +538,7 @@ std::pair<MNotation::ErrorType, const wchar_t *> MNotation::Parse(const WideStri
 	case VAL_BODY:
 	case VAL_PADDING:
 	case VAL_ESCAPED:
-		if(!SubmitValue()){
+		if(!AcceptValue()){
 			return std::make_pair(eError, pwcRead);
 		}
 		break;
@@ -565,25 +565,32 @@ WideString MNotation::Export(const WideStringObserver &wsoIndent) const {
 		auto &vTop = vecPackageStack.GetEnd()[-1];
 
 		if(vTop.second){
-			wsRet.Append(wsIndent);
-			Escape(wsRet, vTop.second->first);
-			wsRet.Append(L' ');
-			wsRet.Append(L'{');
-			wsRet.Append(L'\n');
-			wsIndent.Append(wsoIndent);
+			wsRet += wsIndent;
+			if(!vTop.second->first.IsEmpty()){
+				Escape(wsRet, vTop.second->first);
+				wsRet += L' ';
+			}
+			wsRet += L'{';
+			wsRet += L'\n';
+			wsIndent += wsoIndent;
 			vecPackageStack.Push(&(vTop.second->second), vTop.second->second.xm_mapPackages.GetFirst<1>());
 			vTop.second = vTop.second->GetNext<1>();
 			continue;
 		}
 
 		for(auto pNode = vTop.first->xm_mapValues.GetFirst<1>(); pNode; pNode = pNode->GetNext<1>()){
-			wsRet.Append(wsIndent);
-			Escape(wsRet, pNode->first);
-			wsRet.Append(L' ');
-			wsRet.Append(L'=');
-			wsRet.Append(L' ');
+			wsRet += wsIndent;
+			if(!pNode->first.IsEmpty()){
+				Escape(wsRet, pNode->first);
+				wsRet += L' ';
+			}
+			wsRet += L'=';
+			wsRet += L' ';
 			Escape(wsRet, pNode->second);
-			wsRet.Append(L'\n');
+			if(!wsRet.IsEmpty() && (wsRet.GetEnd()[-1] == L' ')){
+				wsRet += L';';
+			}
+			wsRet += L'\n';
 		}
 
 		vecPackageStack.Pop();
@@ -592,9 +599,9 @@ WideString MNotation::Export(const WideStringObserver &wsoIndent) const {
 		}
 
 		wsIndent.Truncate(wsoIndent.GetLength());
-		wsRet.Append(wsIndent);
-		wsRet.Append(L'}');
-		wsRet.Append(L'\n');
+		wsRet += wsIndent;
+		wsRet += L'}';
+		wsRet += L'\n';
 	}
 
 	ASSERT(wsIndent.IsEmpty());

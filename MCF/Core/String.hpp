@@ -632,6 +632,11 @@ public:
 };
 
 template<StringTypes TYPE_T, StringTypes OTHER_TYPE_T>
+String<TYPE_T> &operator+=(String<TYPE_T> &lhs, const String<OTHER_TYPE_T> &rhs){
+	lhs.Append(rhs);
+	return lhs;
+}
+template<StringTypes TYPE_T, StringTypes OTHER_TYPE_T>
 String<TYPE_T> &operator+=(String<TYPE_T> &lhs, const StringObserver<OTHER_TYPE_T> &rhs){
 	lhs.Append(rhs);
 	return lhs;
@@ -640,6 +645,11 @@ template<StringTypes TYPE_T>
 String<TYPE_T> &operator+=(String<TYPE_T> &lhs, typename String<TYPE_T>::Char rhs){
 	lhs.Append(rhs);
 	return lhs;
+}
+template<StringTypes TYPE_T, StringTypes OTHER_TYPE_T>
+String<TYPE_T> &&operator+=(String<TYPE_T> &&lhs, const String<OTHER_TYPE_T> &rhs){
+	lhs.Append(rhs);
+	return std::move(lhs);
 }
 template<StringTypes TYPE_T, StringTypes OTHER_TYPE_T>
 String<TYPE_T> &&operator+=(String<TYPE_T> &&lhs, const StringObserver<OTHER_TYPE_T> &rhs){
@@ -658,6 +668,12 @@ String<TYPE_T> &&operator+=(String<TYPE_T> &&lhs, String<TYPE_T> &&rhs){
 }
 
 template<StringTypes TYPE_T, StringTypes OTHER_TYPE_T>
+String<TYPE_T> operator+(const String<TYPE_T> &lhs, const String<OTHER_TYPE_T> &rhs){
+	String<TYPE_T> strRet(lhs);
+	strRet += rhs;
+	return strRet;
+}
+template<StringTypes TYPE_T, StringTypes OTHER_TYPE_T>
 String<TYPE_T> operator+(const String<TYPE_T> &lhs, const StringObserver<OTHER_TYPE_T> &rhs){
 	String<TYPE_T> strRet(lhs);
 	strRet += rhs;
@@ -668,6 +684,10 @@ String<TYPE_T> operator+(const String<TYPE_T> &lhs, typename String<TYPE_T>::Cha
 	String<TYPE_T> strRet(lhs);
 	strRet += rhs;
 	return strRet;
+}
+template<StringTypes TYPE_T, StringTypes OTHER_TYPE_T>
+String<TYPE_T> &&operator+(String<TYPE_T> &&lhs, const String<OTHER_TYPE_T> &rhs){
+	return std::move(lhs += rhs);
 }
 template<StringTypes TYPE_T, StringTypes OTHER_TYPE_T>
 String<TYPE_T> &&operator+(String<TYPE_T> &&lhs, const StringObserver<OTHER_TYPE_T> &rhs){

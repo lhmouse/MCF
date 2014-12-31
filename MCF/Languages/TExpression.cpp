@@ -47,22 +47,22 @@ WideString Unescape(const WideStringObserver &wsoSrc){
 		case ESCAPED:
 			switch(wc){
 			case L'n':
-				wsRet.Append(L'\n');
+				wsRet += L'\n';
 				eState = NORMAL;
 				break;
 
 			case L'b':
-				wsRet.Append(L'\b');
+				wsRet += L'\b';
 				eState = NORMAL;
 				break;
 
 			case L'r':
-				wsRet.Append(L'\r');
+				wsRet += L'\r';
 				eState = NORMAL;
 				break;
 
 			case L't':
-				wsRet.Append(L'\t');
+				wsRet += L'\t';
 				eState = NORMAL;
 				break;
 
@@ -89,7 +89,7 @@ WideString Unescape(const WideStringObserver &wsoSrc){
 				break;
 
 			default:
-				wsRet.Append(wc);
+				wsRet += wc;
 				eState = NORMAL;
 				break;
 			}
@@ -124,7 +124,7 @@ WideString Unescape(const WideStringObserver &wsoSrc){
 				if(uHexExpecting != 0){
 					// eState = UCS_CODE;
 				} else {
-					wsRet.Append(Utf32StringObserver(&c32CodePoint, 1));
+					wsRet += Utf32StringObserver(&c32CodePoint, 1);
 					eState = NORMAL;
 				}
 			}
@@ -135,7 +135,7 @@ WideString Unescape(const WideStringObserver &wsoSrc){
 		}
 	}
 	if(eState == UCS_CODE){
-		wsRet.Append(Utf32StringObserver(&c32CodePoint, 1));
+		wsRet += Utf32StringObserver(&c32CodePoint, 1);
 	}
 
 	return wsRet;
@@ -152,37 +152,37 @@ void Escape(WideString &wsAppendTo, const WideStringObserver &wsoSrc){
 		case L')':
 		case L';':
 		case L' ':
-			wsAppendTo.Append(L'\\');
-			wsAppendTo.Append(wc);
+			wsAppendTo += L'\\';
+			wsAppendTo += wc;
 			break;
 
 		case L'\\':
-			wsAppendTo.Append(L'\\');
-			wsAppendTo.Append(L'\\');
+			wsAppendTo += L'\\';
+			wsAppendTo += L'\\';
 			break;
 
 		case L'\"':
-			wsAppendTo.Append(L'\\');
-			wsAppendTo.Append(L'\"');
+			wsAppendTo += L'\\';
+			wsAppendTo += L'\"';
 			break;
 
 		case L'\n':
-			wsAppendTo.Append(L'\\');
-			wsAppendTo.Append(L'n');
+			wsAppendTo += L'\\';
+			wsAppendTo += L'n';
 			break;
 
 		case L'\r':
-			wsAppendTo.Append(L'\\');
-			wsAppendTo.Append(L'r');
+			wsAppendTo += L'\\';
+			wsAppendTo += L'r';
 			break;
 
 		case L'\t':
-			wsAppendTo.Append(L'\\');
-			wsAppendTo.Append(L't');
+			wsAppendTo += L'\\';
+			wsAppendTo += L't';
 			break;
 
 		default:
-			wsAppendTo.Append(wc);
+			wsAppendTo += wc;
 			break;
 		}
 	}
@@ -469,22 +469,22 @@ WideString TExpression::Export(const WideStringObserver &wsoIndent) const {
 			const auto &vNode = vTop.second->Get().second;
 			vTop.second = vTop.second->GetNext();
 
-			wsRet.Append(wsIndent);
+			wsRet += wsIndent;
 			if(!wsName.IsEmpty()){
 				Escape(wsRet, wsName);
 				if(vNode.xm_lstChildren.IsEmpty()){
-					wsRet.Append(L'\n');
+					wsRet += L'\n';
 					goto jNextChild;
 				}
 			}
-			wsRet.Append(L'(');
+			wsRet += L'(';
 			if(vNode.xm_lstChildren.IsEmpty()){
-				wsRet.Append(L')');
-				wsRet.Append(L'\n');
+				wsRet += L')';
+				wsRet += L'\n';
 				goto jNextChild;
 			}
-			wsRet.Append(L'\n');
-			wsIndent.Append(wsoIndent);
+			wsRet += L'\n';
+			wsIndent += wsoIndent;
 			vecNodeStack.Push(&vNode, vNode.xm_lstChildren.GetFirst());
 			continue;
 		}
@@ -495,9 +495,9 @@ WideString TExpression::Export(const WideStringObserver &wsoIndent) const {
 		}
 
 		wsIndent.Truncate(wsoIndent.GetLength());
-		wsRet.Append(wsIndent);
-		wsRet.Append(L')');
-		wsRet.Append(L'\n');
+		wsRet += wsIndent;
+		wsRet += L')';
+		wsRet += L'\n';
 	}
 
 	ASSERT(wsIndent.IsEmpty());

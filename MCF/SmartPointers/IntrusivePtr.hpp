@@ -165,14 +165,14 @@ class IntrusivePtr {
 	static_assert(!std::is_array<ObjectT>::value, "IntrusivePtr does not support arrays.");
 
 public:
-	using Element = ObjectT;
-	using Buddy = Impl::IntrusiveBase<DeleterT>;
+	using ElementType = ObjectT;
+	using BuddyType = Impl::IntrusiveBase<DeleterT>;
 
 private:
-	const volatile Buddy *xm_pBuddy;
+	const volatile BuddyType *xm_pBuddy;
 
 public:
-	constexpr explicit IntrusivePtr(Element *pElement = nullptr) noexcept
+	constexpr explicit IntrusivePtr(ElementType *pElement = nullptr) noexcept
 		: xm_pBuddy(pElement)
 	{
 	}
@@ -186,9 +186,22 @@ public:
 	{
 		Reset(std::move(rhs));
 	}
-	template<typename OtherT,
-		std::enable_if_t<std::is_convertible<OtherT *, Element *>::value, int> = 0>
-	IntrusivePtr(IntrusivePtr<OtherT, DeleterT> rhs) noexcept
+	template<typename OtherT, typename OtherDeleterT,
+		std::enable_if_t<
+			std::is_convertible<typename IntrusivePtr<OtherT, OtherDeleterT>::ElementType *, ElementType *>::value &&
+				std::is_convertible<OtherDeleterT, DeleterT>::value,
+			int> = 0>
+	IntrusivePtr(const IntrusivePtr<OtherT, OtherDeleterT> &rhs) noexcept
+		: IntrusivePtr()
+	{
+		Reset(rhs);
+	}
+	template<typename OtherT, typename OtherDeleterT,
+		std::enable_if_t<
+			std::is_convertible<typename IntrusivePtr<OtherT, OtherDeleterT>::ElementType *, ElementType *>::value &&
+				std::is_convertible<OtherDeleterT, DeleterT>::value,
+			int> = 0>
+	IntrusivePtr(IntrusivePtr<OtherT, OtherDeleterT> &&rhs) noexcept
 		: IntrusivePtr()
 	{
 		Reset(std::move(rhs));
@@ -201,9 +214,21 @@ public:
 		Reset(std::move(rhs));
 		return *this;
 	}
-	template<typename OtherT,
-		std::enable_if_t<std::is_convertible<OtherT *, Element *>::value, int> = 0>
-	IntrusivePtr &operator=(IntrusivePtr<OtherT, DeleterT> rhs) noexcept {
+	template<typename OtherT, typename OtherDeleterT,
+		std::enable_if_t<
+			std::is_convertible<typename IntrusivePtr<OtherT, OtherDeleterT>::ElementType *, ElementType *>::value &&
+				std::is_convertible<OtherDeleterT, DeleterT>::value,
+			int> = 0>
+	IntrusivePtr &operator=(const IntrusivePtr<OtherT, OtherDeleterT> &rhs) noexcept {
+		Reset(rhs);
+		return *this;
+	}
+	template<typename OtherT, typename OtherDeleterT,
+		std::enable_if_t<
+			std::is_convertible<typename IntrusivePtr<OtherT, OtherDeleterT>::ElementType *, ElementType *>::value &&
+				std::is_convertible<OtherDeleterT, DeleterT>::value,
+			int> = 0>
+	IntrusivePtr &operator=(IntrusivePtr<OtherT, OtherDeleterT> &&rhs) noexcept {
 		Reset(std::move(rhs));
 		return *this;
 	}
@@ -215,26 +240,26 @@ public:
 	bool IsNonnull() const noexcept {
 		return Get() != nullptr;
 	}
-	Element *Get() const noexcept {
+	ElementType *Get() const noexcept {
 		if(!xm_pBuddy){
 			return nullptr;
 		}
-		return const_cast<Element *>(xm_pBuddy->template Get<const volatile Element>());
+		return const_cast<ElementType *>(xm_pBuddy->template Get<const volatile ElementType>());
 	}
 	auto ReleaseBuddy() noexcept {
 		return const_cast<
-			std::conditional_t<std::is_same<const volatile Element, Element>::value, const volatile Buddy *,
-				std::conditional_t<std::is_same<const Element, Element>::value, const Buddy *,
-					std::conditional_t<std::is_same<volatile Element, Element>::value, volatile Buddy *,
-						Buddy *>>>
+			std::conditional_t<std::is_same<const volatile ElementType, ElementType>::value, const volatile BuddyType *,
+				std::conditional_t<std::is_same<const ElementType, ElementType>::value, const BuddyType *,
+					std::conditional_t<std::is_same<volatile ElementType, ElementType>::value, volatile BuddyType *,
+						BuddyType *>>>
 			>(std::exchange(xm_pBuddy, nullptr));
 	}
-	Element *Release() noexcept {
+	ElementType *Release() noexcept {
 		const auto pOldBuddy = ReleaseBuddy();
 		if(!pOldBuddy){
 			return nullptr;
 		}
-		const auto pRet = pOldBuddy->template Get<Element>();
+		const auto pRet = pOldBuddy->template Get<ElementType>();
 		if(!pRet){
 			pOldBuddy->DropRef();
 			return nullptr;
@@ -252,7 +277,7 @@ public:
 		return IntrusivePtr(*this);
 	}
 
-	IntrusivePtr &Reset(Element *pElement = nullptr) noexcept {
+	IntrusivePtr &Reset(ElementType *pElement = nullptr) noexcept {
 		ASSERT(!(pElement && (Get() == pElement)));
 		const auto pOldBuddy = std::exchange(xm_pBuddy, pElement);
 		if(pOldBuddy){
@@ -260,19 +285,25 @@ public:
 		}
 		return *this;
 	}
-	template<typename OtherT,
-		std::enable_if_t<std::is_convertible<OtherT *, Element *>::value, int> = 0>
-	IntrusivePtr &Reset(const IntrusivePtr<OtherT, DeleterT> &rhs) noexcept {
-		const auto pObject = static_cast<Element *>(rhs.Get());
+	template<typename OtherT, typename OtherDeleterT,
+		std::enable_if_t<
+			std::is_convertible<typename IntrusivePtr<OtherT, OtherDeleterT>::ElementType *, ElementType *>::value &&
+				std::is_convertible<OtherDeleterT, DeleterT>::value,
+			int> = 0>
+	IntrusivePtr &Reset(const IntrusivePtr<OtherT, OtherDeleterT> &rhs) noexcept {
+		const auto pObject = static_cast<ElementType *>(rhs.Get());
 		if(pObject){
 			pObject->AddRef();
 		}
 		Reset(pObject);
 		return *this;
 	}
-	template<typename OtherT,
-		std::enable_if_t<std::is_convertible<OtherT *, Element *>::value, int> = 0>
-	IntrusivePtr &Reset(IntrusivePtr<OtherT, DeleterT> &&rhs) noexcept {
+	template<typename OtherT, typename OtherDeleterT,
+		std::enable_if_t<
+			std::is_convertible<typename IntrusivePtr<OtherT, OtherDeleterT>::ElementType *, ElementType *>::value &&
+				std::is_convertible<OtherDeleterT, DeleterT>::value,
+			int> = 0>
+	IntrusivePtr &Reset(IntrusivePtr<OtherT, OtherDeleterT> &&rhs) noexcept {
 		Reset(rhs.Release());
 		return *this;
 	}
@@ -285,24 +316,24 @@ public:
 	explicit operator bool() const noexcept {
 		return IsNonnull();
 	}
-	explicit operator Element *() const noexcept {
+	explicit operator ElementType *() const noexcept {
 		return Get();
 	}
 
-	template<typename RetT = Element>
-	std::enable_if_t<!std::is_void<RetT>::value && !std::is_array<RetT>::value, Element> &operator*() const noexcept {
+	template<typename RetT = ElementType>
+	std::enable_if_t<!std::is_void<RetT>::value && !std::is_array<RetT>::value, ElementType> &operator*() const noexcept {
 		ASSERT(IsNonnull());
 
 		return *Get();
 	}
-	template<typename RetT = Element>
-	std::enable_if_t<!std::is_void<RetT>::value && !std::is_array<RetT>::value, Element> *operator->() const noexcept {
+	template<typename RetT = ElementType>
+	std::enable_if_t<!std::is_void<RetT>::value && !std::is_array<RetT>::value, ElementType> *operator->() const noexcept {
 		ASSERT(IsNonnull());
 
 		return Get();
 	}
-	template<typename RetT = Element>
-	std::enable_if_t<std::is_array<RetT>::value, Element> &operator[](std::size_t uIndex) const noexcept {
+	template<typename RetT = ElementType>
+	std::enable_if_t<std::is_array<RetT>::value, ElementType> &operator[](std::size_t uIndex) const noexcept {
 		ASSERT(IsNonnull());
 
 		return Get()[uIndex];

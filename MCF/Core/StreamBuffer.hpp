@@ -14,15 +14,71 @@
 namespace MCF {
 
 class StreamBuffer {
+private:
+	class xChunk;
+
 public:
-	class Chunk;
 	class TraverseContext;
 
-	class ReadIterator;
-	class WriteIterator;
+	class ReadIterator
+		: public std::iterator<std::input_iterator_tag, int>
+	{
+	private:
+		StreamBuffer *xm_psbufOwner;
+
+	public:
+		explicit constexpr ReadIterator(StreamBuffer &sbufOwner) noexcept
+			: xm_psbufOwner(&sbufOwner)
+		{
+		}
+
+	public:
+		ReadIterator &operator++() noexcept {
+			xm_psbufOwner->Get();
+			return *this;
+		}
+		ReadIterator operator++(int) noexcept {
+			const auto itRet = *this;
+			++*this;
+			return itRet;
+		}
+
+		int operator*() const noexcept {
+			return xm_psbufOwner->Peek();
+		}
+	};
+
+	class WriteIterator
+		: public std::iterator<std::output_iterator_tag, unsigned char>
+	{
+	private:
+		StreamBuffer *xm_psbufOwner;
+
+	public:
+		explicit constexpr WriteIterator(StreamBuffer &sbufOwner) noexcept
+			: xm_psbufOwner(&sbufOwner)
+		{
+		}
+
+	public:
+		WriteIterator &operator++() noexcept {
+			return *this;
+		}
+		WriteIterator operator++(int) noexcept {
+			return *this;
+		}
+
+		WriteIterator &operator*() noexcept {
+			return *this;
+		}
+		WriteIterator &operator=(unsigned char by){
+			xm_psbufOwner->Put(by);
+			return *this;
+		}
+	};
 
 private:
-	List<Chunk> xm_lstBuffers;
+	List<xChunk> xm_lstBuffers;
 	std::size_t xm_uSize;
 
 public:
@@ -87,8 +143,12 @@ public:
 		}
 	}
 
-	ReadIterator GetReadIterator() noexcept;
-	WriteIterator GetWriteIterator() noexcept;
+	ReadIterator GetReadIterator() noexcept {
+		return ReadIterator(*this);
+	}
+	WriteIterator GetWriteIterator() noexcept {
+		return WriteIterator(*this);
+	}
 
 	void Swap(StreamBuffer &rhs) noexcept {
 		xm_lstBuffers.Swap(rhs.xm_lstBuffers);
@@ -103,74 +163,6 @@ public:
 		Put(byParam);
 	}
 };
-
-class StreamBuffer::ReadIterator
-	: public std::iterator<std::input_iterator_tag, unsigned char>
-{
-private:
-	StreamBuffer *xm_psbufOwner;
-
-public:
-	explicit constexpr ReadIterator(StreamBuffer &sbufOwner) noexcept
-		: xm_psbufOwner(&sbufOwner)
-	{
-	}
-
-public:
-	ReadIterator &operator++() noexcept {
-		ASSERT(!xm_psbufOwner->IsEmpty());
-
-		xm_psbufOwner->Get();
-		return *this;
-	}
-	ReadIterator operator++(int) noexcept {
-		const auto itRet = *this;
-		++*this;
-		return itRet;
-	}
-
-	unsigned char operator*() const noexcept {
-		ASSERT(!xm_psbufOwner->IsEmpty());
-
-		return xm_psbufOwner->Peek();
-	}
-};
-
-class StreamBuffer::WriteIterator
-	: public std::iterator<std::output_iterator_tag, unsigned char>
-{
-private:
-	StreamBuffer *xm_psbufOwner;
-
-public:
-	explicit constexpr WriteIterator(StreamBuffer &sbufOwner) noexcept
-		: xm_psbufOwner(&sbufOwner)
-	{
-	}
-
-public:
-	WriteIterator &operator++() noexcept {
-		return *this;
-	}
-	WriteIterator operator++(int) noexcept {
-		return *this;
-	}
-
-	WriteIterator &operator*() noexcept {
-		return *this;
-	}
-	WriteIterator &operator=(unsigned char by){
-		xm_psbufOwner->Put(by);
-		return *this;
-	}
-};
-
-inline StreamBuffer::ReadIterator StreamBuffer::GetReadIterator() noexcept {
-	return ReadIterator(*this);
-}
-inline StreamBuffer::WriteIterator StreamBuffer::GetWriteIterator() noexcept {
-	return WriteIterator(*this);
-}
 
 inline void swap(StreamBuffer &lhs, StreamBuffer &rhs) noexcept {
 	lhs.Swap(rhs);

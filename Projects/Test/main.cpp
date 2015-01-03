@@ -1,36 +1,16 @@
 #include <MCF/StdMCF.hpp>
-#include <MCF/Languages/MNotation.hpp>
+#include <MCF/Core/Transaction.hpp>
 using namespace MCF;
 
 extern "C" unsigned int MCFMain() noexcept {
-	MNotation n;
-
-	auto result = n.Parse(
-		LR"-------(
-			root {
-				= \ ; aaa
-				{
-					= val1
-					= val2
-				}
-				{
-					= val3
-					= val4
-				}
-				{
-					= val5
-				}
-				{
-					= val6
-					= val7
-					= val8
-				}
-				{
-					= val9
-				}
-			}
-		)-------"_wso);
-	std::printf("result = %d:\n---------\n%ls\n", result.first, n.Export().GetStr());
-
+	try {
+		Transaction t;
+		t.Add([]{ std::puts("locking 1"); return true; }, []{ std::puts("committing 1"); }, []{ std::puts("unlocking 1"); });
+		t.Add([]{ std::puts("locking 2"); return true; }, []{ std::puts("committing 2"); }, []{ std::puts("unlocking 2"); });
+		t.Add([]{ throw 123; std::puts("locking 3"); return true; }, []{ std::puts("committing 3"); }, []{ std::puts("unlocking 3"); });
+		t.Commit();
+	} catch(int e){
+		std::printf("exception: e = %d\n", e);
+	}
 	return 0;
 }

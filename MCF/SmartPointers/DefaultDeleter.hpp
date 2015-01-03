@@ -5,12 +5,22 @@
 #ifndef MCF_SMART_POINTERS_DEFAULT_DELETER_HPP_
 #define MCF_SMART_POINTERS_DEFAULT_DELETER_HPP_
 
+#include <type_traits>
 #include <cstddef>
 
 namespace MCF {
 
 template<class T>
 struct DefaultDeleter {
+	constexpr DefaultDeleter() noexcept = default;
+
+	template<class U,
+		std::enable_if_t<
+			std::is_convertible<std::remove_cv_t<U> *, std::remove_cv_t<T> *>::value,
+			int> = 0>
+	DefaultDeleter(const DefaultDeleter<U> &rhs){
+	}
+
 	constexpr T *operator()() const noexcept {
 		return nullptr;
 	}
@@ -21,16 +31,15 @@ struct DefaultDeleter {
 
 template<class T>
 struct DefaultDeleter<T []> {
-	constexpr T *operator()() const noexcept {
-		return nullptr;
-	}
-	void operator()(T *p) const noexcept {
-		delete[] p;
-	}
-};
+	constexpr DefaultDeleter() noexcept = default;
 
-template<class T, std::size_t N>
-struct DefaultDeleter<T [N]> {
+	template<class U,
+		std::enable_if_t<
+			std::is_same<std::remove_cv_t<U>, std::remove_cv_t<T>>::value,
+			int> = 0>
+	DefaultDeleter(const DefaultDeleter<U []> &rhs){
+	}
+
 	constexpr T *operator()() const noexcept {
 		return nullptr;
 	}

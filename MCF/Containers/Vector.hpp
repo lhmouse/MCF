@@ -206,27 +206,13 @@ public:
 		return xm_pBegin[uIndex];
 	}
 
-	ElementT *UncheckedPush()
-		noexcept(std::is_nothrow_constructible<ElementT>::value)
-	{
-		ASSERT_MSG(GetSize() < GetCapacity(), L"容器已满。");
-
-		if(std::is_trivial<ElementT>::value){
-#ifndef NDEBUG
-			__builtin_memset(xm_pEnd, 0xCC, sizeof(ElementT));
-#endif
-		} else {
-			Construct(xm_pEnd);
-		}
-		return xm_pEnd++;
-	}
 	template<typename ...ParamsT>
 	ElementT *UncheckedPush(ParamsT &&...vParams)
 		noexcept(std::is_nothrow_constructible<ElementT, ParamsT &&...>::value)
 	{
 		ASSERT_MSG(GetSize() < GetCapacity(), L"容器已满。");
 
-		Construct(xm_pEnd, std::forward<ParamsT>(vParams)...);
+		DefaultConstruct(xm_pEnd, std::forward<ParamsT>(vParams)...);
 		return xm_pEnd++;
 	}
 	template<typename ...ParamsT>

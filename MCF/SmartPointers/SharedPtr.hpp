@@ -167,11 +167,11 @@ class SharedPtr {
 
 public:
 	using Raw = std::remove_pointer_t<std::remove_cv_t<std::remove_reference_t<decltype(DeleterT()())>>>;
-	using Element = std::remove_extent_t<ObjectT>;
+	using ElementType = std::remove_extent_t<ObjectT>;
 
 private:
 	Impl::SharedControl *xm_pControl;
-	Element *xm_pElement;
+	ElementType *xm_pElement;
 
 public:
 	constexpr SharedPtr() noexcept
@@ -179,12 +179,12 @@ public:
 	{
 	}
 	template<typename TestRawT = Raw>
-	SharedPtr(std::enable_if_t<std::is_convertible<TestRawT *, Element *>::value, TestRawT> *pRaw)
+	SharedPtr(std::enable_if_t<std::is_convertible<TestRawT *, ElementType *>::value, TestRawT> *pRaw)
 		: SharedPtr()
 	{
 		Reset(pRaw);
 	}
-	SharedPtr(Raw *pRaw, Element *pElement)
+	SharedPtr(Raw *pRaw, ElementType *pElement)
 		: SharedPtr()
 	{
 		Reset(pRaw, pElement);
@@ -199,19 +199,28 @@ public:
 	{
 		Reset(std::move(rhs));
 	}
-	template<typename OtherT,
+	template<typename OtherT, typename OtherDeleterT,
 		std::enable_if_t<
-			std::is_array<OtherT>::value
-				? std::is_same<std::remove_cv_t<std::remove_extent_t<OtherT>>, std::remove_cv_t<Element>>::value
-				: std::is_convertible<OtherT *, Element *>::value,
+			std::is_convertible<typename SharedPtr<OtherT, OtherDeleterT>::ElementType *, ElementType *>::value &&
+				std::is_convertible<OtherDeleterT, DeleterT>::value,
 			int> = 0>
-	SharedPtr(SharedPtr<OtherT, DeleterT> rhs) noexcept
+	SharedPtr(const SharedPtr<OtherT, OtherDeleterT> &rhs) noexcept
+		: SharedPtr()
+	{
+		Reset(rhs);
+	}
+	template<typename OtherT, typename OtherDeleterT,
+		std::enable_if_t<
+			std::is_convertible<typename SharedPtr<OtherT, OtherDeleterT>::ElementType *, ElementType *>::value &&
+				std::is_convertible<OtherDeleterT, DeleterT>::value,
+			int> = 0>
+	SharedPtr(SharedPtr<OtherT, OtherDeleterT> &&rhs) noexcept
 		: SharedPtr()
 	{
 		Reset(std::move(rhs));
 	}
 	template<typename OtherT>
-	SharedPtr(SharedPtr<OtherT, DeleterT> rhs, Element *pElement) noexcept
+	SharedPtr(SharedPtr<OtherT, DeleterT> rhs, ElementType *pElement) noexcept
 		: SharedPtr()
 	{
 		Reset(std::move(rhs), pElement);
@@ -224,13 +233,21 @@ public:
 		Reset(std::move(rhs));
 		return *this;
 	}
-	template<typename OtherT,
+	template<typename OtherT, typename OtherDeleterT,
 		std::enable_if_t<
-			std::is_array<OtherT>::value
-				? std::is_same<std::remove_cv_t<std::remove_extent_t<OtherT>>, std::remove_cv_t<Element>>::value
-				: std::is_convertible<OtherT *, Element *>::value,
+			std::is_convertible<typename SharedPtr<OtherT, OtherDeleterT>::ElementType *, ElementType *>::value &&
+				std::is_convertible<OtherDeleterT, DeleterT>::value,
 			int> = 0>
-	SharedPtr &operator=(SharedPtr<OtherT, DeleterT> rhs) noexcept {
+	SharedPtr &operator=(const SharedPtr<OtherT, OtherDeleterT> &rhs) noexcept {
+		Reset(rhs);
+		return *this;
+	}
+	template<typename OtherT, typename OtherDeleterT,
+		std::enable_if_t<
+			std::is_convertible<typename SharedPtr<OtherT, OtherDeleterT>::ElementType *, ElementType *>::value &&
+				std::is_convertible<OtherDeleterT, DeleterT>::value,
+			int> = 0>
+	SharedPtr &operator=(SharedPtr<OtherT, OtherDeleterT> &&rhs) noexcept {
 		Reset(std::move(rhs));
 		return *this;
 	}
@@ -248,7 +265,7 @@ public:
 	bool IsNonnull() const noexcept {
 		return Get() != nullptr;
 	}
-	Element *Get() const noexcept {
+	ElementType *Get() const noexcept {
 		return xm_pElement;
 	}
 
@@ -278,10 +295,10 @@ public:
 		return *this;
 	}
 	template<typename TestRawT = Raw>
-	SharedPtr &Reset(std::enable_if_t<std::is_convertible<TestRawT *, Element *>::value, TestRawT> *pRaw){
+	SharedPtr &Reset(std::enable_if_t<std::is_convertible<TestRawT *, ElementType *>::value, TestRawT> *pRaw){
 		return Reset(pRaw, pRaw);
 	}
-	SharedPtr &Reset(Raw *pRaw, Element *pElement){
+	SharedPtr &Reset(Raw *pRaw, ElementType *pElement){
 		ASSERT(!(pRaw && (GetRaw() == pRaw)));
 
 		Impl::SharedControl *pControl;
@@ -315,26 +332,24 @@ public:
 
 		return Reset(std::move(rhs), rhs.xm_pElement);
 	}
-	template<typename OtherT,
+	template<typename OtherT, typename OtherDeleterT,
 		std::enable_if_t<
-			std::is_array<OtherT>::value
-				? std::is_same<std::remove_cv_t<std::remove_extent_t<OtherT>>, std::remove_cv_t<Element>>::value
-				: std::is_convertible<OtherT *, Element *>::value,
+			std::is_convertible<typename SharedPtr<OtherT, OtherDeleterT>::ElementType *, ElementType *>::value &&
+				std::is_convertible<OtherDeleterT, DeleterT>::value,
 			int> = 0>
-	SharedPtr &Reset(const SharedPtr<OtherT, DeleterT> &rhs) noexcept {
-		return Reset(rhs, static_cast<Element *>(rhs.xm_pElement));
+	SharedPtr &Reset(const SharedPtr<OtherT, OtherDeleterT> &rhs) noexcept {
+		return Reset(rhs, static_cast<ElementType *>(rhs.xm_pElement));
 	}
-	template<typename OtherT,
+	template<typename OtherT, typename OtherDeleterT,
 		std::enable_if_t<
-			std::is_array<OtherT>::value
-				? std::is_same<std::remove_cv_t<std::remove_extent_t<OtherT>>, std::remove_cv_t<Element>>::value
-				: std::is_convertible<OtherT *, Element *>::value,
+			std::is_convertible<typename SharedPtr<OtherT, OtherDeleterT>::ElementType *, ElementType *>::value &&
+				std::is_convertible<OtherDeleterT, DeleterT>::value,
 			int> = 0>
-	SharedPtr &Reset(SharedPtr<OtherT, DeleterT> &&rhs) noexcept {
-		return Reset(std::move(rhs), static_cast<Element *>(rhs.xm_pElement));
+	SharedPtr &Reset(SharedPtr<OtherT, OtherDeleterT> &&rhs) noexcept {
+		return Reset(std::move(rhs), static_cast<ElementType *>(rhs.xm_pElement));
 	}
 	template<typename OtherT>
-	SharedPtr &Reset(const SharedPtr<OtherT, DeleterT> &rhs, Element *pElement) noexcept {
+	SharedPtr &Reset(const SharedPtr<OtherT, DeleterT> &rhs, ElementType *pElement) noexcept {
 		const auto pOldControl = std::exchange(xm_pControl, rhs.xm_pControl);
 		if(xm_pControl){
 			xm_pControl->AddShared(); // noexcept
@@ -346,7 +361,7 @@ public:
 		return *this;
 	}
 	template<typename OtherT>
-	SharedPtr &Reset(SharedPtr<OtherT, DeleterT> &&rhs, Element *pElement) noexcept {
+	SharedPtr &Reset(SharedPtr<OtherT, DeleterT> &&rhs, ElementType *pElement) noexcept {
 		const auto pOldControl = std::exchange(xm_pControl, rhs.xm_pControl);
 		if(pOldControl){
 			pOldControl->DropShared(); // noexcept
@@ -367,24 +382,24 @@ public:
 	explicit operator bool() const noexcept {
 		return IsNonnull();
 	}
-	explicit operator Element *() const noexcept {
+	explicit operator ElementType *() const noexcept {
 		return Get();
 	}
 
-	template<typename RetT = Element>
-	std::enable_if_t<!std::is_void<RetT>::value && !std::is_array<RetT>::value, Element> &operator*() const noexcept {
+	template<typename RetT = ElementType>
+	std::enable_if_t<!std::is_void<RetT>::value && !std::is_array<RetT>::value, ElementType> &operator*() const noexcept {
 		ASSERT(IsNonnull());
 
 		return *Get();
 	}
-	template<typename RetT = Element>
-	std::enable_if_t<!std::is_void<RetT>::value && !std::is_array<RetT>::value, Element> *operator->() const noexcept {
+	template<typename RetT = ElementType>
+	std::enable_if_t<!std::is_void<RetT>::value && !std::is_array<RetT>::value, ElementType> *operator->() const noexcept {
 		ASSERT(IsNonnull());
 
 		return Get();
 	}
-	template<typename RetT = Element>
-	std::enable_if_t<std::is_array<RetT>::value, Element> &operator[](std::size_t uIndex) const noexcept {
+	template<typename RetT = ElementType>
+	std::enable_if_t<std::is_array<RetT>::value, ElementType> &operator[](std::size_t uIndex) const noexcept {
 		ASSERT(IsNonnull());
 
 		return Get()[uIndex];
@@ -400,11 +415,11 @@ class WeakPtr {
 	friend class WeakPtr;
 
 public:
-	using Element = std::remove_extent_t<ObjectT>;
+	using ElementType = std::remove_extent_t<ObjectT>;
 
 private:
 	Impl::SharedControl *xm_pControl;
-	Element *xm_pElement;
+	ElementType *xm_pElement;
 
 public:
 	constexpr WeakPtr() noexcept

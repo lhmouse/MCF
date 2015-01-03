@@ -25,6 +25,8 @@ public:
 		Node *xm_pNext;
 
 	private:
+		Node() = default;
+
 		template<typename ...ParamsT>
 		explicit Node(ParamsT &&...vParams)
 			: xm_vElement(std::forward<ParamsT>(vParams)...)

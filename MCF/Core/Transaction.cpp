@@ -11,47 +11,33 @@ TransactionItemBase::~TransactionItemBase(){
 }
 
 // 其他非静态成员函数。
-bool Transaction::IsEmpty() const noexcept {
-	return xm_vecItems.IsEmpty();
-}
-void Transaction::AddItem(UniquePtr<TransactionItemBase> &&pItem){
-	xm_vecItems.Push(std::move(pItem));
-}
-void Transaction::Clear() noexcept {
-	xm_vecItems.Clear();
-}
-
 bool Transaction::Commit() const {
-	auto ppCur = xm_vecItems.GetBegin();
+	auto vCur = xm_deqItems.GetFirst();
 	try {
-		while(ppCur != xm_vecItems.GetEnd()){
-			if(!(*ppCur)->Lock()){
+		while(vCur){
+			if(!(*vCur)->Lock()){
 				break;
 			}
-			++ppCur;
+			++vCur;
 		}
 	} catch(...){
-		while(ppCur != xm_vecItems.GetBegin()){
-			--ppCur;
-			(*ppCur)->Unlock();
+		while(--vCur){
+			(*vCur)->Unlock();
 		}
 		throw;
 	}
-	if(ppCur != xm_vecItems.GetEnd()){
-		while(ppCur != xm_vecItems.GetBegin()){
-			--ppCur;
-			(*ppCur)->Unlock();
+	if(vCur){
+		while(--vCur){
+			(*vCur)->Unlock();
 		}
 		return false;
 	}
-	ppCur = xm_vecItems.GetBegin();
-	while(ppCur != xm_vecItems.GetEnd()){
-		(*ppCur)->Commit();
-		++ppCur;
+
+	for(vCur = xm_deqItems.GetFirst(); vCur; ++vCur){
+		(*vCur)->Commit();
 	}
-	while(ppCur != xm_vecItems.GetBegin()){
-		--ppCur;
-		(*ppCur)->Unlock();
+	for(vCur = xm_deqItems.GetLast(); vCur; --vCur){
+		(*vCur)->Unlock();
 	}
 	return true;
 }

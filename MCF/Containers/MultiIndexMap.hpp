@@ -489,6 +489,8 @@ private:
 		const xNodeImpl *xm_pSource;
 
 	public:
+		xNodeImpl() = default;
+
 		template<typename ...ParamsT>
 		explicit xNodeImpl(ParamsT &&...vParams)
 			: ElementT(std::forward<ParamsT>(vParams)...)

@@ -33,6 +33,16 @@ namespace Impl {
 		static void Construct(ObjectT *pObject, ParamsT &&...vParams){
 			::new(pObject, DirectConstructTag()) ObjectT(std::forward<ParamsT>(vParams)...);
 		}
+		template<typename ...ParamsT>
+		static void DefaultConstruct(ObjectT *pObject, ParamsT &&...vParams){
+			if(std::is_trivial<ObjectT>::value && (sizeof...(vParams) == 0)){
+#ifndef NDEBUG
+				__builtin_memset(pObject, 0xCC, sizeof(ObjectT));
+#endif
+			} else {
+				Construct(pObject, std::forward<ParamsT>(vParams)...);
+			}
+		}
 		static void Destruct(ObjectT *pObject){
 			pObject->~ObjectT();
 		}
@@ -44,6 +54,12 @@ inline void Construct(ObjectT *pObject, ParamsT &&...vParams)
 	noexcept(std::is_nothrow_constructible<ObjectT, ParamsT &&...>::value)
 {
 	Impl::DirectConstructor<ObjectT>::Construct(pObject, std::forward<ParamsT>(vParams)...);
+}
+template<typename ObjectT, typename ...ParamsT>
+inline void DefaultConstruct(ObjectT *pObject, ParamsT &&...vParams)
+	noexcept(std::is_nothrow_constructible<ObjectT, ParamsT &&...>::value)
+{
+	Impl::DirectConstructor<ObjectT>::DefaultConstruct(pObject, std::forward<ParamsT>(vParams)...);
 }
 template<typename ObjectT>
 inline void Destruct(ObjectT *pObject)
@@ -63,6 +79,27 @@ inline void ConstructArray(ObjectT *pBegin, std::size_t uCount, const ParamsT &.
 	try {
 		while(pCur != pEnd){
 			Construct(pCur, vParams...);
+			++pCur;
+		}
+	} catch(...){
+		while(pCur != pBegin){
+			--pCur;
+			Destruct(pCur);
+		}
+		throw;
+	}
+}
+template<typename ObjectT, typename ...ParamsT>
+inline void DefaultConstructArray(ObjectT *pBegin, std::size_t uCount, const ParamsT &...vParams)
+	noexcept(std::is_nothrow_constructible<ObjectT, const ParamsT &...>::value)
+{
+	static_assert(std::is_nothrow_destructible<ObjectT>::value, "ObjectT shall be nothrow destructible.");
+
+	const auto pEnd = pBegin + uCount;
+	auto pCur = pBegin;
+	try {
+		while(pCur != pEnd){
+			DefaultConstruct(pCur, vParams...);
 			++pCur;
 		}
 	} catch(...){

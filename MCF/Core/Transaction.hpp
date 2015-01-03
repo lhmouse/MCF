@@ -6,7 +6,7 @@
 #define MCF_CORE_TRANSACTION_HPP_
 
 #include "../Utilities/Noncopyable.hpp"
-#include "../Containers/Vector.hpp"
+#include "../Containers/Deque.hpp"
 #include "../SmartPointers/UniquePtr.hpp"
 #include <utility>
 
@@ -23,15 +23,15 @@ public:
 };
 
 template<typename LockFuncT, typename CommitFuncT, typename UnlockFuncT>
-class TransactionItem: public TransactionItemBase {
+class TransactionTemplate: public TransactionItemBase {
 private:
 	const LockFuncT xm_fnLock;
 	const CommitFuncT xm_fnCommit;
 	const UnlockFuncT xm_fnUnlock;
 
 public:
-	TransactionItem(LockFuncT fnLock, CommitFuncT fnCommit, UnlockFuncT fnUnlock)
-		: xm_fnLock(std::move(fnLock)), xm_fnCommit(std::move(fnCommit))\
+	TransactionTemplate(LockFuncT fnLock, CommitFuncT fnCommit, UnlockFuncT fnUnlock)
+		: xm_fnLock(std::move(fnLock)), xm_fnCommit(std::move(fnCommit))
 		, xm_fnUnlock(std::move(fnUnlock))
 	{
 	}
@@ -41,30 +41,36 @@ public:
 		return xm_fnLock();
 	}
 	void Commit() noexcept override {
-		return xm_fnCommit();
+		xm_fnCommit();
 	}
 	void Unlock() noexcept override {
-		return xm_fnUnlock();
+		xm_fnUnlock();
 	}
 };
 
 class Transaction : NONCOPYABLE {
 private:
-	Vector<UniquePtr<TransactionItemBase>> xm_vecItems;
+	Deque<UniquePtr<TransactionItemBase>> xm_deqItems;
 
 public:
-	bool IsEmpty() const noexcept;
-	void AddItem(UniquePtr<TransactionItemBase> &&pItem);
-	void Clear() noexcept;
-
-	bool Commit() const;
+	bool IsEmpty() const noexcept {
+		return xm_deqItems.IsEmpty();
+	}
+	void Add(UniquePtr<TransactionItemBase> &&pItem){
+		xm_deqItems.Push(std::move(pItem));
+	}
+	void Clear() noexcept {
+		xm_deqItems.Clear();
+	}
 
 	template<typename LockFuncT, typename CommitFuncT, typename UnlockFuncT>
-	void AddItem(LockFuncT &&fnLock, CommitFuncT &&fnCommit, UnlockFuncT &&fnUnlock){
-		AddItem(std::make_unique(std::forward<LockFuncT>(fnLock)),
-			std::make_unique(std::forward<CommitFuncT>(fnCommit)),
-			std::make_unique(std::forward<UnlockFuncT>(fnUnlock)));
+	void Add(LockFuncT fnLock, CommitFuncT fnCommit, UnlockFuncT fnUnlock){
+		Add(MakeUnique<
+			TransactionTemplate<LockFuncT, CommitFuncT, UnlockFuncT>
+			>(std::move(fnLock), std::move(fnCommit), std::move(fnUnlock)));
 	}
+
+	bool Commit() const;
 };
 
 }

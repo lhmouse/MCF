@@ -21,13 +21,13 @@ class UniquePtr {
 	static_assert(noexcept(DeleterT()(DeleterT()())), "Deleter must not throw.");
 
 public:
-	using Element = std::remove_extent_t<ObjectT>;
+	using ElementType = std::remove_extent_t<ObjectT>;
 
 private:
-	Element *xm_pElement;
+	ElementType *xm_pElement;
 
 public:
-	constexpr explicit UniquePtr(Element *pElement = nullptr) noexcept
+	constexpr explicit UniquePtr(ElementType *pElement = nullptr) noexcept
 		: xm_pElement(pElement)
 	{
 	}
@@ -36,13 +36,12 @@ public:
 	{
 		Reset(std::move(rhs));
 	}
-	template<typename OtherT,
+	template<typename OtherT, typename OtherDeleterT,
 		std::enable_if_t<
-			std::is_array<OtherT>::value
-				? std::is_same<std::remove_cv_t<std::remove_extent_t<OtherT>>, std::remove_cv_t<Element>>::value
-				: std::is_convertible<OtherT *, Element *>::value,
+			std::is_convertible<typename UniquePtr<OtherT, OtherDeleterT>::ElementType *, ElementType *>::value &&
+				std::is_convertible<OtherDeleterT, DeleterT>::value,
 			int> = 0>
-	UniquePtr(UniquePtr<OtherT, DeleterT> rhs) noexcept
+	UniquePtr(UniquePtr<OtherT, OtherDeleterT> &&rhs) noexcept
 		: UniquePtr()
 	{
 		Reset(std::move(rhs));
@@ -51,13 +50,12 @@ public:
 		Reset(std::move(rhs));
 		return *this;
 	}
-	template<typename OtherT,
+	template<typename OtherT, typename OtherDeleterT,
 		std::enable_if_t<
-			std::is_array<OtherT>::value
-				? std::is_same<std::remove_cv_t<std::remove_extent_t<OtherT>>, std::remove_cv_t<Element>>::value
-				: std::is_convertible<OtherT *, Element *>::value,
+			std::is_convertible<typename UniquePtr<OtherT, OtherDeleterT>::ElementType *, ElementType *>::value &&
+				std::is_convertible<OtherDeleterT, DeleterT>::value,
 			int> = 0>
-	UniquePtr &operator=(UniquePtr<OtherT, DeleterT> rhs) noexcept {
+	UniquePtr &operator=(UniquePtr<OtherT, OtherDeleterT> rhs) noexcept {
 		Reset(std::move(rhs));
 		return *this;
 	}
@@ -72,29 +70,28 @@ public:
 	bool IsNonnull() const noexcept {
 		return Get() != nullptr;
 	}
-	Element *Get() const noexcept {
+	ElementType *Get() const noexcept {
 		return xm_pElement;
 	}
-	Element *Release() noexcept {
+	ElementType *Release() noexcept {
 		return std::exchange(xm_pElement, nullptr);
 	}
 
-	UniquePtr &Reset(Element *pElement = nullptr) noexcept {
+	UniquePtr &Reset(ElementType *pElement = nullptr) noexcept {
 		ASSERT(!(pElement && (Get() == pElement)));
 		const auto pOld = std::exchange(xm_pElement, pElement);
 		if(pOld){
-			DeleterT()(const_cast<std::remove_cv_t<Element> *>(pOld));
+			DeleterT()(const_cast<std::remove_cv_t<ElementType> *>(pOld));
 		}
 		return *this;
 	}
-	template<typename OtherT,
+	template<typename OtherT, typename OtherDeleterT,
 		std::enable_if_t<
-			std::is_array<OtherT>::value
-				? std::is_same<std::remove_cv_t<std::remove_extent_t<OtherT>>, std::remove_cv_t<Element>>::value
-				: std::is_convertible<OtherT *, Element *>::value,
+			std::is_convertible<typename UniquePtr<OtherT, OtherDeleterT>::ElementType *, ElementType *>::value &&
+				std::is_convertible<OtherDeleterT, DeleterT>::value,
 			int> = 0>
-	UniquePtr &Reset(UniquePtr<OtherT, DeleterT> &&rhs) noexcept {
-		return Reset(static_cast<Element *>(rhs.Release()));
+	UniquePtr &Reset(UniquePtr<OtherT, OtherDeleterT> &&rhs) noexcept {
+		return Reset(static_cast<ElementType *>(rhs.Release()));
 	}
 
 	void Swap(UniquePtr &rhs) noexcept {
@@ -105,24 +102,24 @@ public:
 	explicit operator bool() const noexcept {
 		return IsNonnull();
 	}
-	explicit operator Element *() const noexcept {
+	explicit operator ElementType *() const noexcept {
 		return Get();
 	}
 
-	template<typename RetT = Element>
-	std::enable_if_t<!std::is_void<RetT>::value && !std::is_array<RetT>::value, Element> &operator*() const noexcept {
+	template<typename RetT = ElementType>
+	std::enable_if_t<!std::is_void<RetT>::value && !std::is_array<RetT>::value, ElementType> &operator*() const noexcept {
 		ASSERT(IsNonnull());
 
 		return *Get();
 	}
-	template<typename RetT = Element>
-	std::enable_if_t<!std::is_void<RetT>::value && !std::is_array<RetT>::value, Element> *operator->() const noexcept {
+	template<typename RetT = ElementType>
+	std::enable_if_t<!std::is_void<RetT>::value && !std::is_array<RetT>::value, ElementType> *operator->() const noexcept {
 		ASSERT(IsNonnull());
 
 		return Get();
 	}
-	template<typename RetT = Element>
-	std::enable_if_t<std::is_array<RetT>::value, Element> &operator[](std::size_t uIndex) const noexcept {
+	template<typename RetT = ElementType>
+	std::enable_if_t<std::is_array<RetT>::value, ElementType> &operator[](std::size_t uIndex) const noexcept {
 		ASSERT(IsNonnull());
 
 		return Get()[uIndex];

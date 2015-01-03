@@ -7,6 +7,7 @@
 
 #include "../Utilities/ConstructDestruct.hpp"
 #include "List.hpp"
+#include <iterator>
 
 namespace MCF {
 
@@ -14,68 +15,54 @@ template<class ElementT>
 class Deque {
 private:
 	class xChunk {
-		friend Deque;
-
-	public:
-		enum : std::size_t {
-			MAX_ELEMENT_COUNT = 255 / sizeof(ElementT) + 1
-		};
-
 	private:
-		alignas(ElementT) char xm_aaStorage[MAX_ELEMENT_COUNT][sizeof(ElementT)];
+		alignas(ElementT) char xm_aachStorage[255 / sizeof(ElementT) + 1][sizeof(ElementT)];
 		ElementT *xm_pBegin;
 		ElementT *xm_pEnd;
 
 	public:
 		explicit xChunk(bool bSeekToBegin) noexcept
-			: xm_pBegin(reinterpret_cast<ElementT *>(bSeekToBegin ? std::begin(xm_aaStorage) : std::end(xm_aaStorage)))
+			: xm_pBegin(reinterpret_cast<ElementT *>(
+				bSeekToBegin ? std::begin(xm_aachStorage) : std::end(xm_aachStorage)))
 			, xm_pEnd(xm_pBegin)
 		{
 		}
 		xChunk(const xChunk &rhs)
+			noexcept(std::is_nothrow_copy_constructible<ElementT>::value)
 			: xChunk(true)
 		{
-			for(auto pElement = rhs.xm_pBegin; pElement != rhs.xm_pEnd; ++pElement){
-				UncheckedPush(*pElement);
+			for(auto pCur = rhs.xm_pBegin; pCur != xm_pEnd; ++pCur){
+				UncheckedPush(*pCur);
 			}
 		}
-		xChunk(xChunk &&rhs) noexcept(std::is_nothrow_move_constructible<ElementT>::value)
+		xChunk(xChunk &&rhs)
+			noexcept(std::is_nothrow_move_constructible<ElementT>::value)
 			: xChunk(true)
 		{
-			for(auto pElement = rhs.xm_pBegin; pElement != rhs.xm_pEnd; ++pElement){
-				UncheckedPush(std::move(*pElement));
+			for(auto pCur = rhs.xm_pBegin; pCur != xm_pEnd; ++pCur){
+				UncheckedPush(std::move(*pCur));
 			}
 		}
-		xChunk &operator=(const xChunk &rhs){
-			if(this != &rhs){
-				xClear(true);
-				for(auto pElement = rhs.xm_pBegin; pElement != rhs.xm_pEnd; ++pElement){
-					UncheckedPush(*pElement);
-				}
+		xChunk &operator=(const xChunk &rhs)
+			noexcept(std::is_nothrow_copy_constructible<ElementT>::value)
+		{
+			Clear(true);
+			for(auto pCur = rhs.xm_pBegin; pCur != xm_pEnd; ++pCur){
+				UncheckedPush(*pCur);
 			}
 			return *this;
 		}
-		xChunk &operator=(xChunk &&rhs) noexcept(std::is_nothrow_move_constructible<ElementT>::value) {
-			ASSERT(this != &rhs);
-
-			xClear(true);
-			for(auto pElement = rhs.xm_pBegin; pElement != rhs.xm_pEnd; ++pElement){
-				UncheckedPush(std::move(*pElement));
+		xChunk &operator=(xChunk &&rhs)
+			noexcept(std::is_nothrow_move_constructible<ElementT>::value)
+		{
+			Clear(true);
+			for(auto pCur = rhs.xm_pBegin; pCur != xm_pEnd; ++pCur){
+				UncheckedPush(std::move(*pCur));
 			}
 			return *this;
 		}
 		~xChunk(){
-			xClear(true);
-		}
-
-	private:
-		void xClear(bool bSeekToBegin) noexcept {
-			while(xm_pBegin != xm_pEnd){
-				xm_pBegin->~ElementT();
-				++xm_pBegin;
-			}
-			xm_pBegin = reinterpret_cast<ElementT *>(bSeekToBegin ? std::begin(xm_aaStorage) : std::end(xm_aaStorage));
-			xm_pEnd = xm_pBegin;
+			Clear(true);
 		}
 
 	public:
@@ -91,82 +78,190 @@ private:
 		ElementT *GetEnd() noexcept {
 			return xm_pEnd;
 		}
-
 		std::size_t GetSize() const noexcept {
-			return (std::size_t)(GetEnd() - GetBegin());
+			return (std::size_t)(xm_pEnd - xm_pBegin);
 		}
 
 		bool IsEmpty() const noexcept {
-			return GetEnd() == GetBegin();
+			return xm_pEnd == xm_pBegin;
 		}
 		bool IsPushable() const noexcept {
-			return GetEnd() != reinterpret_cast<const ElementT *>(std::end(xm_aaStorage));
+			return xm_pEnd != reinterpret_cast<const ElementT *>(std::end(xm_aachStorage));
 		}
 		bool IsUnshiftable() const noexcept {
-			return GetBegin() != reinterpret_cast<const ElementT *>(std::begin(xm_aaStorage));
+			return xm_pBegin != reinterpret_cast<const ElementT *>(std::begin(xm_aachStorage));
 		}
-
-		ElementT *UncheckedPush()
-			noexcept(std::is_nothrow_constructible<ElementT>::value)
-		{
-			ASSERT_MSG(IsPushable(), L"容器已满。");
-
-			if(std::is_trivial<ElementT>::value){
-#ifndef NDEBUG
-				__builtin_memset(xm_pEnd, 0xCC, sizeof(ElementT));
-#endif
-			} else {
-				Construct(xm_pEnd);
+		void Clear(bool bSeekToBegin) noexcept {
+			for(auto pCur = xm_pBegin; pCur != xm_pEnd; ++pCur){
+				pCur->~ElementT();
 			}
-			return xm_pEnd++;
+			xm_pBegin = reinterpret_cast<ElementT *>(
+				bSeekToBegin ? std::begin(xm_aachStorage) : std::end(xm_aachStorage));
+			xm_pEnd = xm_pBegin;
 		}
+
 		template<typename ...ParamsT>
 		ElementT *UncheckedPush(ParamsT &&...vParams)
 			noexcept(std::is_nothrow_constructible<ElementT, ParamsT &&...>::value)
 		{
-			ASSERT_MSG(IsPushable(), L"容器已满。");
+			ASSERT(IsPushable());
 
-			Construct(xm_pEnd, std::forward<ParamsT>(vParams)...);
-			return xm_pEnd++;
+			const auto pRet = xm_pEnd;
+			DefaultConstruct(pRet, std::forward<ParamsT>(vParams)...);
+			++xm_pEnd;
+			return pRet;
 		}
 		void UncheckedPop() noexcept {
 			ASSERT(!IsEmpty());
 
-			Destruct(--xm_pEnd);
+			--xm_pEnd;
+			Destruct(xm_pEnd);
 		}
 
-		ElementT *UncheckedUnshift()
-			noexcept(std::is_nothrow_constructible<ElementT>::value)
-		{
-			ASSERT_MSG(IsUnshiftable(), L"容器已满。");
-
-			if(std::is_trivial<ElementT>::value){
-#ifndef NDEBUG
-				__builtin_memset(xm_pBegin - 1, 0xCC, sizeof(ElementT));
-#endif
-			} else {
-				Construct(xm_pBegin - 1);
-			}
-			return --xm_pBegin;
-		}
 		template<typename ...ParamsT>
 		ElementT *UncheckedUnshift(ParamsT &&...vParams)
 			noexcept(std::is_nothrow_constructible<ElementT, ParamsT &&...>::value)
 		{
-			ASSERT_MSG(IsUnshiftable(), L"容器已满。");
+			ASSERT(IsUnshiftable());
 
-			Construct(xm_pBegin - 1, std::forward<ParamsT>(vParams)...);
-			return --xm_pBegin;
+			const auto pRet = xm_pBegin - 1;
+			DefaultConstruct(pRet, std::forward<ParamsT>(vParams)...);
+			--xm_pBegin;
+			return pRet;
 		}
 		void UncheckedShift() noexcept {
 			ASSERT(!IsEmpty());
 
-			Destruct(xm_pBegin++);
+			Destruct(xm_pBegin);
+			++xm_pBegin;
+		}
+	};
+
+	template<typename CursorT, typename RealElementT, typename RealNodeT>
+	class xCursorTemplate
+		: public std::iterator<std::bidirectional_iterator_tag, RealElementT>
+	{
+	protected:
+		RealElementT *xm_pElement;
+		RealNodeT *xm_pNode;
+
+	protected:
+		constexpr xCursorTemplate(RealElementT *pElement, RealNodeT *pNode) noexcept
+			: xm_pElement(pElement), xm_pNode(pNode)
+		{
+		}
+
+	public:
+		constexpr xCursorTemplate() noexcept
+			: xCursorTemplate(nullptr, nullptr)
+		{
+		}
+
+	public:
+		bool operator==(const xCursorTemplate &rhs) const noexcept {
+			return xm_pElement == rhs.xm_pElement;
+		}
+		bool operator!=(const xCursorTemplate &rhs) const noexcept {
+			return xm_pElement != rhs.xm_pElement;
+		}
+
+		RealElementT &operator*() const noexcept {
+			ASSERT_MSG(xm_pElement, L"游标指向队列两端或者为空。");
+			return *xm_pElement;
+		}
+		RealElementT *operator->() const noexcept {
+			ASSERT_MSG(xm_pElement, L"游标指向队列两端或者为空。");
+			return xm_pElement;
+		}
+
+		CursorT &operator++() noexcept {
+			ASSERT_MSG(xm_pNode, L"空游标不能移动。");
+
+			if(xm_pElement != (xm_pNode->Get().GetEnd() - 1)){
+				++xm_pElement;
+			} else {
+				xm_pNode = xm_pNode->GetNext();
+				xm_pElement = xm_pNode ? xm_pNode->Get().GetBegin() : nullptr;
+			}
+			return static_cast<CursorT &>(*this);
+		}
+		CursorT &operator--() noexcept {
+			ASSERT_MSG(xm_pNode, L"空游标不能移动。");
+
+			if(xm_pElement != xm_pNode->Get().GetBegin()){
+				--xm_pElement;
+			} else {
+				xm_pNode = xm_pNode->GetPrev();
+				xm_pElement = xm_pNode ? (xm_pNode->Get().GetEnd() - 1) : nullptr;
+			}
+			return static_cast<CursorT &>(*this);
+		}
+
+		CursorT operator++(int) noexcept {
+			CursorT ret(xm_pElement, xm_pNode);
+			++*this;
+			return ret;
+		}
+		CursorT operator--(int) noexcept {
+			CursorT ret(xm_pElement, xm_pNode);
+			--*this;
+			return ret;
+		}
+
+		explicit operator bool() const noexcept {
+			return xm_pElement != nullptr;
+		}
+	};
+
+	using xChunkNode = typename List<xChunk>::Node;
+
+public:
+	class ConstCursor;
+
+	class Cursor
+		: public xCursorTemplate<Cursor, ElementT, xChunkNode>
+	{
+		friend Deque;
+		friend ConstCursor;
+
+	private:
+		using xBase = xCursorTemplate<Cursor, ElementT, xChunkNode>;
+
+	private:
+		constexpr Cursor(ElementT *pElement, xChunkNode *pNode) noexcept
+			: xBase(pElement, pNode)
+		{
+		}
+
+	public:
+		constexpr Cursor() noexcept = default;
+	};
+
+	class ConstCursor
+		: public xCursorTemplate<ConstCursor, const ElementT, const xChunkNode>
+	{
+		friend Deque;
+
+	private:
+		using xBase = xCursorTemplate<ConstCursor, const ElementT, const xChunkNode>;
+
+	private:
+		constexpr ConstCursor(const ElementT *pElement, const xChunkNode *pNode) noexcept
+			: xBase(pElement, pNode)
+		{
+		}
+
+	public:
+		constexpr ConstCursor() noexcept = default;
+
+		constexpr ConstCursor(const Cursor &rhs) noexcept
+			: xBase(rhs.xm_pElement, rhs.xm_pNode)
+		{
 		}
 	};
 
 private:
-	List<xChunk> xm_vList;
+	List<xChunk> xm_lstChunks;
 
 public:
 	constexpr Deque() noexcept = default;
@@ -199,7 +294,7 @@ public:
 	Deque(const Deque &rhs)
 		: Deque()
 	{
-		rhs.Traverse([this](auto pBegin, auto uCount){ AppendCopy(pBegin, uCount); });
+		AppendCopy(rhs.GetFirst(), ConstCursor());
 	}
 	Deque &operator=(std::initializer_list<ElementT> rhs){
 		Deque(rhs).Swap(*this);
@@ -213,104 +308,117 @@ public:
 	}
 
 public:
-	const ElementT &GetFront() const noexcept {
-		const auto pNode = xm_vList.GetFirst();
-		ASSERT(pNode && !pNode->Get().IsEmpty());
-		return pNode->Get().GetBegin()[0];
+	ConstCursor GetFirst() const noexcept {
+		const auto pFirstNode = xm_lstChunks.GetFirst();
+		if(!pFirstNode){
+			return ConstCursor();
+		}
+		ASSERT(!pFirstNode->Get().IsEmpty());
+		return ConstCursor(pFirstNode->Get().GetBegin(), pFirstNode);
 	}
-	ElementT &GetFront() noexcept {
-		const auto pNode = xm_vList.GetFirst();
-		ASSERT(pNode && !pNode->Get().IsEmpty());
-		return pNode->Get().GetBegin()[0];
+	Cursor GetFirst() noexcept {
+		const auto pFirstNode = xm_lstChunks.GetFirst();
+		if(!pFirstNode){
+			return Cursor();
+		}
+		ASSERT(!pFirstNode->Get().IsEmpty());
+		return Cursor(pFirstNode->Get().GetBegin(), pFirstNode);
 	}
-	const ElementT &GetBack() const noexcept {
-		const auto pNode = xm_vList.GetLast();
-		ASSERT(pNode && !pNode->Get().IsEmpty());
-		return pNode->Get().GetEnd()[-1];
+	ConstCursor GetLast() const noexcept {
+		const auto pLastNode = xm_lstChunks.GetLast();
+		if(!pLastNode){
+			return ConstCursor();
+		}
+		ASSERT(!pLastNode->Get().IsEmpty());
+		return ConstCursor(pLastNode->Get().GetEnd() - 1, pLastNode);
 	}
-	ElementT &GetBack() noexcept {
-		const auto pNode = xm_vList.GetLast();
-		ASSERT(pNode && !pNode->Get().IsEmpty());
-		return pNode->Get().GetEnd()[-1];
+	Cursor GetLast() noexcept {
+		const auto pLastNode = xm_lstChunks.GetLast();
+		if(!pLastNode){
+			return Cursor();
+		}
+		ASSERT(!pLastNode->Get().IsEmpty());
+		return Cursor(pLastNode->Get().GetEnd() - 1, pLastNode);
 	}
 
-	template<typename CallbackT>
-	void Traverse(CallbackT &&vCallback) const {
-		for(auto pNode = xm_vList.GetFirst(); pNode; pNode = pNode->GetNext()){
-			std::forward<CallbackT>(vCallback)(pNode->Get().GetBegin(), pNode->Get().GetSize());
-		}
+	const ElementT &GetFront() const noexcept {
+		const auto pFirstNode = xm_lstChunks.GetFirst();
+		ASSERT(pFirstNode && !pFirstNode->Get().IsEmpty());
+		return pFirstNode->Get().GetBegin()[0];
 	}
-	template<typename CallbackT>
-	void Traverse(CallbackT &&vCallback){
-		for(auto pNode = xm_vList.GetFirst(); pNode; pNode = pNode->GetNext()){
-			std::forward<CallbackT>(vCallback)(pNode->Get().GetBegin(), pNode->Get().GetSize());
-		}
+	ElementT &GetFront() noexcept {
+		const auto pFirstNode = xm_lstChunks.GetFirst();
+		ASSERT(pFirstNode && !pFirstNode->Get().IsEmpty());
+		return pFirstNode->Get().GetBegin()[0];
+	}
+	const ElementT &GetBack() const noexcept {
+		const auto pLastNode = xm_lstChunks.GetLast();
+		ASSERT(pLastNode && !pLastNode->Get().IsEmpty());
+		return pLastNode->Get().GetEnd()[-1];
+	}
+	ElementT &GetBack() noexcept {
+		const auto pLastNode = xm_lstChunks.GetLast();
+		ASSERT(pLastNode && !pLastNode->Get().IsEmpty());
+		return pLastNode->Get().GetEnd()[-1];
 	}
 
 	bool IsEmpty() const noexcept {
-		return xm_vList.IsEmpty();
+		return xm_lstChunks.IsEmpty();
 	}
 	void Clear() noexcept {
-		xm_vList.Clear();
+		xm_lstChunks.Clear();
 	}
 
 	void Splice(Deque &clsSource) noexcept {
-		xm_vList.Splice(nullptr, clsSource.xm_vList);
+		xm_lstChunks.Splice(nullptr, clsSource.xm_lstChunks);
 		ASSERT(clsSource.IsEmpty());
 	}
 	void Splice(Deque &&clsSource) noexcept {
-		xm_vList.Splice(nullptr, std::move(clsSource.xm_vList));
+		xm_lstChunks.Splice(nullptr, std::move(clsSource.xm_lstChunks));
 		ASSERT(clsSource.IsEmpty());
 	}
 
 	template<typename ...ParamsT>
 	ElementT *Push(ParamsT &&...vParams){
-		ElementT *pRet;
-		auto pNode = xm_vList.GetLast();
-		if(pNode && pNode->Get().IsPushable()){
-			pRet = pNode->Get().UncheckedPush(std::forward<ParamsT>(vParams)...);
+		auto pLastNode = xm_lstChunks.GetLast();
+		if(pLastNode && pLastNode->Get().IsPushable()){
+			return pLastNode->Get().UncheckedPush(std::forward<ParamsT>(vParams)...);
 		}
-		pNode = xm_vList.Push(true);
-		try {
-			pRet = pNode->Get().UncheckedPush(std::forward<ParamsT>(vParams)...);
-		} catch(...){
-			xm_vList.Pop();
-			throw;
-		}
+
+		List<xChunk> lstTemp;
+		pLastNode = lstTemp.Push(true);
+		const auto pRet = pLastNode->Get().UncheckedPush(std::forward<ParamsT>(vParams)...);
+		xm_lstChunks.Splice(nullptr, lstTemp);
 		return pRet;
 	}
 	void Pop() noexcept {
-		const auto pNode = xm_vList.GetFirst();
-		ASSERT(pNode && !pNode->Get().IsEmpty());
-		pNode->Get().UncheckedPop();
-		if(pNode->Get().IsEmpty()){
-			xm_vList.Pop();
+		const auto pLastNode = xm_lstChunks.GetLast();
+		ASSERT(pLastNode && !pLastNode->Get().IsEmpty());
+		pLastNode->Get().UncheckedPop();
+		if(pLastNode->Get().IsEmpty()){
+			xm_lstChunks.Pop();
 		}
 	}
 
 	template<typename ...ParamsT>
 	ElementT *Unshift(ParamsT &&...vParams){
-		ElementT *pRet;
-		auto pNode = xm_vList.GetFirst();
-		if(pNode && pNode->Get().IsUnshiftable()){
-			pRet = pNode->Get().UncheckedUnshift(std::forward<ParamsT>(vParams)...);
-		} else {
-			pNode = xm_vList.Unshift(false);
-			try {
-				pRet = pNode->Get().UncheckedUnshift(std::forward<ParamsT>(vParams)...);
-			} catch(...){
-				xm_vList.Shift();
-				throw;
-			}
+		auto pFirstNode = xm_lstChunks.GetFirst();
+		if(pFirstNode && pFirstNode->Get().IsPushable()){
+			return pFirstNode->Get().UncheckedUnshift(std::forward<ParamsT>(vParams)...);
 		}
+
+		List<xChunk> lstTemp;
+		pFirstNode = lstTemp.Push(false);
+		const auto pRet = pFirstNode->Get().UncheckedUnshift(std::forward<ParamsT>(vParams)...);
+		xm_lstChunks.Splice(nullptr, lstTemp);
 		return pRet;
 	}
 	void Shift() noexcept {
-		const auto pNode = xm_vList.GetLast();
-		ASSERT(pNode && !pNode->Get().IsEmpty());
-		pNode->Get().UncheckedShift();
-		if(pNode->Get().IsEmpty()){
-			xm_vList.Shift();
+		const auto pFirstNode = xm_lstChunks.GetFirst();
+		ASSERT(pFirstNode && !pFirstNode->Get().IsEmpty());
+		pFirstNode->Get().UncheckedShift();
+		if(pFirstNode->Get().IsEmpty()){
+			xm_lstChunks.Shift();
 		}
 	}
 
@@ -427,7 +535,7 @@ public:
 	}
 
 	void Swap(Deque &rhs) noexcept {
-		xm_vList.Swap(rhs.xm_vList);
+		xm_lstChunks.Swap(rhs.xm_lstChunks);
 	}
 
 public:

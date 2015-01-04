@@ -177,11 +177,11 @@ template<StringTypes TYPE_T>
 struct StringObserver {
 public:
 	static constexpr StringTypes Type = TYPE_T;
-	using Char = typename StringEncodingTrait<TYPE_T>::Type;
+	using CharType = typename StringEncodingTrait<TYPE_T>::Type;
 
 	static constexpr std::size_t NPOS = Impl::NPOS;
 
-	static_assert(std::is_integral<Char>::value, "Char must be an integral type.");
+	static_assert(std::is_integral<CharType>::value, "CharType must be an integral type.");
 
 private:
 	// 为了方便理解，想象此处使用的是所谓“插入式光标”：
@@ -201,8 +201,8 @@ private:
 	}
 
 private:
-	const Char *xm_pchBegin;
-	const Char *xm_pchEnd;
+	const CharType *xm_pchBegin;
+	const CharType *xm_pchEnd;
 
 public:
 	constexpr StringObserver() noexcept
@@ -212,7 +212,7 @@ public:
 #ifdef NDEBUG
 	constexpr
 #endif
-	StringObserver(const Char *pchBegin, const Char *pchEnd) noexcept
+	StringObserver(const CharType *pchBegin, const CharType *pchEnd) noexcept
 		: xm_pchBegin(pchBegin), xm_pchEnd(pchEnd)
 	{
 #ifndef NDEBUG
@@ -223,24 +223,24 @@ public:
 		: StringObserver()
 	{
 	}
-	constexpr StringObserver(const Char *pchBegin, std::size_t uLen) noexcept
+	constexpr StringObserver(const CharType *pchBegin, std::size_t uLen) noexcept
 		: xm_pchBegin(pchBegin), xm_pchEnd(pchBegin + uLen)
 	{
 	}
-	constexpr StringObserver(std::initializer_list<Char> rhs) noexcept
+	constexpr StringObserver(std::initializer_list<CharType> rhs) noexcept
 		: StringObserver(rhs.begin(), rhs.size())
 	{
 	}
-	explicit StringObserver(const Char *pszBegin) noexcept
+	explicit StringObserver(const CharType *pszBegin) noexcept
 		: StringObserver(pszBegin, Impl::StrEndOf(pszBegin))
 	{
 	}
 
 public:
-	const Char *GetBegin() const noexcept {
+	const CharType *GetBegin() const noexcept {
 		return xm_pchBegin;
 	}
-	const Char *GetEnd() const noexcept {
+	const CharType *GetEnd() const noexcept {
 		return xm_pchEnd;
 	}
 	std::size_t GetSize() const noexcept {
@@ -275,7 +275,7 @@ public:
 				return nResult;
 			}
 
-			using UChar = std::make_unsigned_t<Char>;
+			using UChar = std::make_unsigned_t<CharType>;
 			const auto uchLhs = (UChar)*pLRead;
 			const auto uchRhs = (UChar)*pRRead;
 			if(uchLhs != uchRhs){
@@ -286,7 +286,7 @@ public:
 		}
 	}
 
-	void Assign(const Char *pchBegin, const Char *pchEnd) noexcept {
+	void Assign(const CharType *pchBegin, const CharType *pchEnd) noexcept {
 		xm_pchBegin = pchBegin;
 		xm_pchEnd = pchEnd;
 	}
@@ -294,13 +294,13 @@ public:
 		xm_pchBegin = nullptr;
 		xm_pchEnd = nullptr;
 	}
-	void Assign(const Char *pchBegin, std::size_t uLen) noexcept {
+	void Assign(const CharType *pchBegin, std::size_t uLen) noexcept {
 		Assign(pchBegin, pchBegin + uLen);
 	}
-	void Assign(std::initializer_list<Char> rhs) noexcept {
+	void Assign(std::initializer_list<CharType> rhs) noexcept {
 		Assign(rhs.begin(), rhs.end());
 	}
-	void Assign(const Char *pszBegin) noexcept {
+	void Assign(const CharType *pszBegin) noexcept {
 		Assign(pszBegin, Impl::StrEndOf(pszBegin));
 	}
 
@@ -351,7 +351,7 @@ public:
 		if(uRealEnd < uLenToFind){
 			return NPOS;
 		}
-		std::reverse_iterator<const Char *> itBegin(GetBegin() + uRealEnd), itEnd(GetBegin()),
+		std::reverse_iterator<const CharType *> itBegin(GetBegin() + uRealEnd), itEnd(GetBegin()),
 			itToFindBegin(obsToFind.GetEnd()), itToFindEnd(obsToFind.GetBegin());
 		const auto uPos = Impl::StrStr(itBegin, itEnd, itToFindBegin, itToFindEnd);
 		if(uPos == NPOS){
@@ -365,7 +365,7 @@ public:
 	//   Find('d', 3)			返回 3；
 	//   FindBackward('c', 3)	返回 2；
 	//   FindBackward('d', 3)	返回 NPOS。
-	std::size_t FindRep(Char chToFind, std::size_t uRepCount, std::ptrdiff_t nBegin = 0) const noexcept {
+	std::size_t FindRep(CharType chToFind, std::size_t uRepCount, std::ptrdiff_t nBegin = 0) const noexcept {
 		const auto uLength = GetLength();
 		const auto uRealBegin = xTranslateOffset(nBegin, uLength);
 		if(uRepCount == 0){
@@ -383,7 +383,7 @@ public:
 		}
 		return uPos + uRealBegin;
 	}
-	std::size_t FindRepBackward(Char chToFind, std::size_t uRepCount, std::ptrdiff_t nEnd = -1) const noexcept {
+	std::size_t FindRepBackward(CharType chToFind, std::size_t uRepCount, std::ptrdiff_t nEnd = -1) const noexcept {
 		const auto uLength = GetLength();
 		const auto uRealEnd = xTranslateOffset(nEnd, uLength);
 		if(uRepCount == 0){
@@ -395,17 +395,17 @@ public:
 		if(uRealEnd < uRepCount){
 			return NPOS;
 		}
-		std::reverse_iterator<const Char *> itBegin(GetBegin() + uRealEnd), itEnd(GetBegin());
+		std::reverse_iterator<const CharType *> itBegin(GetBegin() + uRealEnd), itEnd(GetBegin());
 		const auto uPos = Impl::StrChrRep(itBegin, itEnd, chToFind, uRepCount);
 		if(uPos == NPOS){
 			return NPOS;
 		}
 		return uRealEnd - uPos - uRepCount;
 	}
-	std::size_t Find(Char chToFind, std::ptrdiff_t nBegin = 0) const noexcept {
+	std::size_t Find(CharType chToFind, std::ptrdiff_t nBegin = 0) const noexcept {
 		return FindRep(chToFind, 1, nBegin);
 	}
-	std::size_t FindBackward(Char chToFind, std::ptrdiff_t nEnd = -1) const noexcept {
+	std::size_t FindBackward(CharType chToFind, std::ptrdiff_t nEnd = -1) const noexcept {
 		return FindRepBackward(chToFind, 1, nEnd);
 	}
 
@@ -417,7 +417,7 @@ public:
 	explicit operator bool() const noexcept {
 		return !IsEmpty();
 	}
-	const Char &operator[](std::size_t uIndex) const noexcept {
+	const CharType &operator[](std::size_t uIndex) const noexcept {
 		ASSERT_MSG(uIndex < GetSize(), L"索引越界。");
 
 		return GetBegin()[uIndex];

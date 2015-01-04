@@ -39,7 +39,7 @@ public:
 
 template<class StringObserverT>
 auto MakeStringSource(const StringObserverT &soRead) noexcept {
-	return StringSource<typename StringObserverT::Char>(soRead.GetBegin(), soRead.GetEnd());
+	return StringSource<typename StringObserverT::CharType>(soRead.GetBegin(), soRead.GetEnd());
 }
 
 template<class PrevT>
@@ -220,7 +220,7 @@ void Convert(StringT &strWrite, std::size_t uPos, FilterT vFilter){
 			strWrite.Push(vFilter());
 		}
 	} else {
-		typename StringT::Char achTemp[256];
+		typename StringT::CharType achTemp[256];
 		auto pchWrite = std::begin(achTemp);
 		while(vFilter){
 			*pchWrite = vFilter();

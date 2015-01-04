@@ -27,27 +27,27 @@ using UnifiedStringObserver = StringObserver<StringTypes::UTF32>;
 template<StringTypes TYPE_T>
 class String {
 public:
-	using Observer = StringObserver<TYPE_T>;
+	using ObserverType = StringObserver<TYPE_T>;
 
 	static constexpr StringTypes Type = TYPE_T;
-	using Char = typename Observer::Char;
+	using CharType = typename ObserverType::CharType;
 
-	static constexpr std::size_t NPOS = Observer::NPOS;
+	static constexpr std::size_t NPOS = ObserverType::NPOS;
 
 public:
-	static UnifiedStringObserver Unify(UnifiedString &&usTempStorage, const Observer &obsSrc);
+	static UnifiedStringObserver Unify(UnifiedString &&usTempStorage, const ObserverType &obsSrc);
 	static void Deunify(String &strDst, std::size_t uPos, const UnifiedStringObserver &usoSrc);
 
 private:
 	union xStorage {
 		struct {
-			Char achData[(4 * sizeof(void *)) / sizeof(Char) - 2];
-			Char chNull;
-			std::make_unsigned_t<Char> uchLength;
+			CharType achData[(4 * sizeof(void *)) / sizeof(CharType) - 2];
+			CharType chNull;
+			std::make_unsigned_t<CharType> uchLength;
 		} vSmall;
 
 		struct {
-			Char *pchBegin;
+			CharType *pchBegin;
 			std::size_t uLength;
 			std::size_t uCapacity;
 		} vLarge;
@@ -55,35 +55,35 @@ private:
 
 public:
 	String() noexcept {
-		xm_vStorage.vSmall.chNull = Char();
+		xm_vStorage.vSmall.chNull = CharType();
 		xm_vStorage.vSmall.uchLength = 0;
 	}
-	explicit String(Char ch, std::size_t uCount = 1)
+	explicit String(CharType ch, std::size_t uCount = 1)
 		: String()
 	{
 		Append(ch, uCount);
 	}
-	explicit String(const Char *pszBegin)
+	explicit String(const CharType *pszBegin)
 		: String()
 	{
 		Append(pszBegin);
 	}
-	String(const Char *pchBegin, const Char *pchEnd)
+	String(const CharType *pchBegin, const CharType *pchEnd)
 		: String()
 	{
 		Append(pchBegin, pchEnd);
 	}
-	String(const Char *pchBegin, std::size_t uLen)
+	String(const CharType *pchBegin, std::size_t uLen)
 		: String()
 	{
 		Append(pchBegin, uLen);
 	}
-	explicit String(const Observer &rhs)
+	explicit String(const ObserverType &rhs)
 		: String()
 	{
 		Append(rhs);
 	}
-	explicit String(std::initializer_list<Char> rhs)
+	explicit String(std::initializer_list<CharType> rhs)
 		: String()
 	{
 		Append(rhs);
@@ -110,19 +110,19 @@ public:
 	{
 		Append(rhs);
 	}
-	String &operator=(Char ch) noexcept {
+	String &operator=(CharType ch) noexcept {
 		Assign(ch);
 		return *this;
 	}
-	String &operator=(const Char *pszBegin){
+	String &operator=(const CharType *pszBegin){
 		Assign(pszBegin);
 		return *this;
 	}
-	String &operator=(const Observer &rhs){
+	String &operator=(const ObserverType &rhs){
 		Assign(rhs);
 		return *this;
 	}
-	String &operator=(std::initializer_list<Char> rhs){
+	String &operator=(std::initializer_list<CharType> rhs){
 		Assign(rhs);
 		return *this;
 	}
@@ -145,7 +145,7 @@ public:
 		return *this;
 	}
 	~String() noexcept {
-		if(xm_vStorage.vSmall.chNull != Char()){
+		if(xm_vStorage.vSmall.chNull != CharType()){
 			delete[] xm_vStorage.vLarge.pchBegin;
 		}
 #ifndef NDEBUG
@@ -154,7 +154,7 @@ public:
 	}
 
 private:
-	Char *xChopAndSplice(std::size_t uRemovedBegin, std::size_t uRemovedEnd,
+	CharType *xChopAndSplice(std::size_t uRemovedBegin, std::size_t uRemovedEnd,
 		std::size_t uFirstOffset, std::size_t uThirdOffset)
 	{
 		const auto pchOldBuffer = GetBegin();
@@ -174,18 +174,18 @@ private:
 			if(uSizeToAlloc < uNewLength + 1){
 				uSizeToAlloc = uNewLength + 1;
 			}
-			pchNewBuffer = new Char[uSizeToAlloc];
+			pchNewBuffer = new CharType[uSizeToAlloc];
 		}
 
 		if((pchNewBuffer + uFirstOffset != pchOldBuffer) && (uRemovedBegin != 0)){
-			std::memmove(pchNewBuffer + uFirstOffset, pchOldBuffer, uRemovedBegin * sizeof(Char));
+			std::memmove(pchNewBuffer + uFirstOffset, pchOldBuffer, uRemovedBegin * sizeof(CharType));
 		}
 		if((pchNewBuffer + uThirdOffset != pchOldBuffer + uRemovedEnd) && (uOldLength != uRemovedEnd)){
-			std::memmove(pchNewBuffer + uThirdOffset, pchOldBuffer + uRemovedEnd, (uOldLength - uRemovedEnd) * sizeof(Char));
+			std::memmove(pchNewBuffer + uThirdOffset, pchOldBuffer + uRemovedEnd, (uOldLength - uRemovedEnd) * sizeof(CharType));
 		}
 
 		if(pchNewBuffer != pchOldBuffer){
-			if(xm_vStorage.vSmall.chNull == Char()){
+			if(xm_vStorage.vSmall.chNull == CharType()){
 				++xm_vStorage.vSmall.chNull;
 			} else {
 				delete[] pchOldBuffer;
@@ -201,7 +201,7 @@ private:
 	void xSetSize(std::size_t uNewSize) noexcept {
 		ASSERT(uNewSize <= GetCapacity());
 
-		if(xm_vStorage.vSmall.chNull == Char()){
+		if(xm_vStorage.vSmall.chNull == CharType()){
 			xm_vStorage.vSmall.uchLength = uNewSize;
 		} else {
 			xm_vStorage.vLarge.uLength = uNewSize;
@@ -209,72 +209,72 @@ private:
 	}
 
 public:
-	const Char *GetBegin() const noexcept {
-		if(xm_vStorage.vSmall.chNull == Char()){
+	const CharType *GetBegin() const noexcept {
+		if(xm_vStorage.vSmall.chNull == CharType()){
 			return xm_vStorage.vSmall.achData;
 		} else {
 			return xm_vStorage.vLarge.pchBegin;
 		}
 	}
-	Char *GetBegin() noexcept {
-		if(xm_vStorage.vSmall.chNull == Char()){
+	CharType *GetBegin() noexcept {
+		if(xm_vStorage.vSmall.chNull == CharType()){
 			return xm_vStorage.vSmall.achData;
 		} else {
 			return xm_vStorage.vLarge.pchBegin;
 		}
 	}
 
-	const Char *GetEnd() const noexcept {
-		if(xm_vStorage.vSmall.chNull == Char()){
+	const CharType *GetEnd() const noexcept {
+		if(xm_vStorage.vSmall.chNull == CharType()){
 			return xm_vStorage.vSmall.achData + xm_vStorage.vSmall.uchLength;
 		} else {
 			return xm_vStorage.vLarge.pchBegin + xm_vStorage.vLarge.uLength;
 		}
 	}
-	Char *GetEnd() noexcept {
-		if(xm_vStorage.vSmall.chNull == Char()){
+	CharType *GetEnd() noexcept {
+		if(xm_vStorage.vSmall.chNull == CharType()){
 			return xm_vStorage.vSmall.achData + xm_vStorage.vSmall.uchLength;
 		} else {
 			return xm_vStorage.vLarge.pchBegin + xm_vStorage.vLarge.uLength;
 		}
 	}
 
-	const Char *GetData() const noexcept {
+	const CharType *GetData() const noexcept {
 		return GetBegin();
 	}
-	Char *GetData() noexcept {
+	CharType *GetData() noexcept {
 		return GetBegin();
 	}
 	std::size_t GetSize() const noexcept {
-		if(xm_vStorage.vSmall.chNull == Char()){
+		if(xm_vStorage.vSmall.chNull == CharType()){
 			return xm_vStorage.vSmall.uchLength;
 		} else {
 			return xm_vStorage.vLarge.uLength;
 		}
 	}
 
-	const Char *GetStr() const noexcept {
-		const_cast<Char &>(GetEnd()[0]) = Char();
+	const CharType *GetStr() const noexcept {
+		const_cast<CharType &>(GetEnd()[0]) = CharType();
 		return GetBegin();
 	}
-	Char *GetStr() noexcept {
-		GetEnd()[0] = Char();
+	CharType *GetStr() noexcept {
+		GetEnd()[0] = CharType();
 		return GetBegin();
 	}
 	std::size_t GetLength() const noexcept {
 		return GetSize();
 	}
 
-	Observer GetObserver() const noexcept {
-		if(xm_vStorage.vSmall.chNull == Char()){
-			return Observer(xm_vStorage.vSmall.achData, xm_vStorage.vSmall.uchLength);
+	ObserverType GetObserver() const noexcept {
+		if(xm_vStorage.vSmall.chNull == CharType()){
+			return ObserverType(xm_vStorage.vSmall.achData, xm_vStorage.vSmall.uchLength);
 		} else {
-			return Observer(xm_vStorage.vLarge.pchBegin, xm_vStorage.vLarge.uLength);
+			return ObserverType(xm_vStorage.vLarge.pchBegin, xm_vStorage.vLarge.uLength);
 		}
 	}
 
 	std::size_t GetCapacity() const noexcept {
-		if(xm_vStorage.vSmall.chNull == Char()){
+		if(xm_vStorage.vSmall.chNull == CharType()){
 			return COUNT_OF(xm_vStorage.vSmall.achData);
 		} else {
 			return xm_vStorage.vLarge.uCapacity - 1;
@@ -291,7 +291,7 @@ public:
 		xChopAndSplice(uOldLength, uOldLength, 0, uOldLength + uDeltaCapacity);
 	}
 
-	Char *Resize(std::size_t uNewSize){
+	CharType *Resize(std::size_t uNewSize){
 		const std::size_t uOldSize = GetSize();
 		if(uNewSize > uOldSize){
 			Reserve(uNewSize);
@@ -301,20 +301,20 @@ public:
 		}
 		return GetData();
 	}
-	Char *ResizeFront(std::size_t uDeltaSize){
+	CharType *ResizeFront(std::size_t uDeltaSize){
 		const auto uOldSize = GetSize();
 		xChopAndSplice(uOldSize, uOldSize, uDeltaSize, uOldSize + uDeltaSize);
 		xSetSize(uOldSize + uDeltaSize);
 		return GetData();
 	}
-	Char *ResizeMore(std::size_t uDeltaSize){
+	CharType *ResizeMore(std::size_t uDeltaSize){
 		const auto uOldSize = GetSize();
 		xChopAndSplice(uOldSize, uOldSize, 0, uOldSize + uDeltaSize);
 		xSetSize(uOldSize + uDeltaSize);
 		return GetData() + uOldSize;
 	}
 	void Shrink() noexcept {
-		Resize(Observer(GetStr()).GetLength());
+		Resize(ObserverType(GetStr()).GetLength());
 	}
 
 	bool IsEmpty() const noexcept {
@@ -331,30 +331,30 @@ public:
 		std::memcpy(&rhs.xm_vStorage, &vStorage, sizeof(vStorage));
 	}
 
-	int Compare(const Observer &rhs) const noexcept {
+	int Compare(const ObserverType &rhs) const noexcept {
 		return GetObserver().Compare(rhs);
 	}
 	int Compare(const String &rhs) const noexcept {
 		return GetObserver().Compare(rhs.GetObserver());
 	}
 
-	void Assign(Char ch, std::size_t uCount = 1){
+	void Assign(CharType ch, std::size_t uCount = 1){
 		FillN(Resize(uCount), uCount, ch);
 	}
-	void Assign(const Char *pszBegin){
-		Assign(Observer(pszBegin));
+	void Assign(const CharType *pszBegin){
+		Assign(ObserverType(pszBegin));
 	}
-	void Assign(const Char *pchBegin, const Char *pchEnd){
-		Assign(Observer(pchBegin, pchEnd));
+	void Assign(const CharType *pchBegin, const CharType *pchEnd){
+		Assign(ObserverType(pchBegin, pchEnd));
 	}
-	void Assign(const Char *pchBegin, std::size_t uCount){
-		Assign(Observer(pchBegin, uCount));
+	void Assign(const CharType *pchBegin, std::size_t uCount){
+		Assign(ObserverType(pchBegin, uCount));
 	}
-	void Assign(const Observer &rhs){
+	void Assign(const ObserverType &rhs){
 		Copy(Resize(rhs.GetSize()), rhs.GetBegin(), rhs.GetEnd());
 	}
-	void Assign(std::initializer_list<Char> rhs){
-		Assign(Observer(rhs));
+	void Assign(std::initializer_list<CharType> rhs){
+		Assign(ObserverType(rhs));
 	}
 	template<StringTypes OTHER_TYPE_T>
 	void Assign(const StringObserver<OTHER_TYPE_T> &rhs){
@@ -367,7 +367,7 @@ public:
 	}
 	void Assign(const String &rhs){
 		if(&rhs != this){
-			Assign(Observer(rhs));
+			Assign(ObserverType(rhs));
 		}
 	}
 	void Assign(String &&rhs) noexcept {
@@ -375,29 +375,29 @@ public:
 		Swap(rhs);
 	}
 
-	void Append(Char ch, std::size_t uCount = 1){
+	void Append(CharType ch, std::size_t uCount = 1){
 		FillN(ResizeMore(uCount), uCount, ch);
 	}
-	void Append(const Char *pszBegin){
-		Append(Observer(pszBegin));
+	void Append(const CharType *pszBegin){
+		Append(ObserverType(pszBegin));
 	}
-	void Append(const Char *pchBegin, const Char *pchEnd){
-		Append(Observer(pchBegin, pchEnd));
+	void Append(const CharType *pchBegin, const CharType *pchEnd){
+		Append(ObserverType(pchBegin, pchEnd));
 	}
-	void Append(const Char *pchBegin, std::size_t uCount){
-		Append(Observer(pchBegin, uCount));
+	void Append(const CharType *pchBegin, std::size_t uCount){
+		Append(ObserverType(pchBegin, uCount));
 	}
-	void Append(const Observer &rhs){
+	void Append(const ObserverType &rhs){
 		Replace(-1, -1, rhs);
 	}
-	void Append(std::initializer_list<Char> rhs){
-		Append(Observer(rhs));
+	void Append(std::initializer_list<CharType> rhs){
+		Append(ObserverType(rhs));
 	}
 	void Append(const String &rhs){
-		Append(Observer(rhs));
+		Append(ObserverType(rhs));
 	}
 	void Append(String &&rhs){
-		const Observer obsToAppend(rhs);
+		const ObserverType obsToAppend(rhs);
 		const auto uSizeTotal = GetSize() + obsToAppend.GetSize();
 		if((GetCapacity() >= uSizeTotal) || (rhs.GetCapacity() < uSizeTotal)){
 			Append(obsToAppend);
@@ -420,17 +420,17 @@ public:
 		xSetSize(uOldSize - uCount);
 	}
 
-	void Push(Char ch){
+	void Push(CharType ch){
 		Append(ch, 1);
 	}
 	void Pop() noexcept {
 		Truncate(1);
 	}
 
-	void UncheckedPush(Char ch) noexcept {
+	void UncheckedPush(CharType ch) noexcept {
 		ASSERT_MSG(GetLength() < GetCapacity(), L"容器已满。");
 
-		if(xm_vStorage.vSmall.chNull == Char()){
+		if(xm_vStorage.vSmall.chNull == CharType()){
 			xm_vStorage.vSmall.achData[xm_vStorage.vSmall.uchLength] = ch;
 			++xm_vStorage.vSmall.uchLength;
 		} else {
@@ -441,36 +441,36 @@ public:
 	void UncheckedPop() noexcept {
 		ASSERT_MSG(GetLength() != 0, L"容器已空。");
 
-		if(xm_vStorage.vSmall.chNull == Char()){
+		if(xm_vStorage.vSmall.chNull == CharType()){
 			--xm_vStorage.vSmall.uchLength;
 		} else {
 			--xm_vStorage.vLarge.uLength;
 		}
 	}
 
-	void Unshift(Char ch, std::size_t uCount = 1){
+	void Unshift(CharType ch, std::size_t uCount = 1){
 		FillN(ResizeFront(uCount), uCount, ch);
 	}
-	void Unshift(const Char *pszBegin){
-		Unshift(Observer(pszBegin));
+	void Unshift(const CharType *pszBegin){
+		Unshift(ObserverType(pszBegin));
 	}
-	void Unshift(const Char *pchBegin, const Char *pchEnd){
-		Unshift(Observer(pchBegin, pchEnd));
+	void Unshift(const CharType *pchBegin, const CharType *pchEnd){
+		Unshift(ObserverType(pchBegin, pchEnd));
 	}
-	void Unshift(const Char *pchBegin, std::size_t uCount){
-		Unshift(Observer(pchBegin, uCount));
+	void Unshift(const CharType *pchBegin, std::size_t uCount){
+		Unshift(ObserverType(pchBegin, uCount));
 	}
-	void Unshift(const Observer &obs){
+	void Unshift(const ObserverType &obs){
 		Replace(0, 0, obs);
 	}
-	void Unshift(std::initializer_list<Char> rhs){
-		Unshift(Observer(rhs));
+	void Unshift(std::initializer_list<CharType> rhs){
+		Unshift(ObserverType(rhs));
 	}
 	void Unshift(const String &rhs){
-		Unshift(Observer(rhs));
+		Unshift(ObserverType(rhs));
 	}
 	void Unshift(String &&rhs){
-		const Observer obsToAppend(rhs);
+		const ObserverType obsToAppend(rhs);
 		const auto uSizeTotal = GetSize() + obsToAppend.GetSize();
 		if((GetCapacity() >= uSizeTotal) || (rhs.GetCapacity() < uSizeTotal)){
 			Unshift(obsToAppend);
@@ -495,7 +495,7 @@ public:
 		xSetSize(uOldSize - uCount);
 	}
 
-	Observer Slice(std::ptrdiff_t nBegin, std::ptrdiff_t nEnd = -1) const noexcept {
+	ObserverType Slice(std::ptrdiff_t nBegin, std::ptrdiff_t nEnd = -1) const noexcept {
 		return GetObserver().Slice(nBegin, nEnd);
 	}
 	String SliceStr(std::ptrdiff_t nBegin, std::ptrdiff_t nEnd = -1) const {
@@ -513,26 +513,26 @@ public:
 		}
 	}
 
-	std::size_t Find(const Observer &obsToFind, std::ptrdiff_t nBegin = 0) const noexcept {
+	std::size_t Find(const ObserverType &obsToFind, std::ptrdiff_t nBegin = 0) const noexcept {
 		return GetObserver().Find(obsToFind, nBegin);
 	}
-	std::size_t FindBackward(const Observer &obsToFind, std::ptrdiff_t nEnd = -1) const noexcept {
+	std::size_t FindBackward(const ObserverType &obsToFind, std::ptrdiff_t nEnd = -1) const noexcept {
 		return GetObserver().FindBackward(obsToFind, nEnd);
 	}
-	std::size_t FindRep(Char chToFind, std::size_t uRepCount, std::ptrdiff_t nBegin = 0) const noexcept {
+	std::size_t FindRep(CharType chToFind, std::size_t uRepCount, std::ptrdiff_t nBegin = 0) const noexcept {
 		return GetObserver().FindRep(chToFind, uRepCount, nBegin);
 	}
-	std::size_t FindRepBackward(Char chToFind, std::size_t uRepCount, std::ptrdiff_t nEnd = -1) const noexcept {
+	std::size_t FindRepBackward(CharType chToFind, std::size_t uRepCount, std::ptrdiff_t nEnd = -1) const noexcept {
 		return GetObserver().FindRepBackward(chToFind, uRepCount, nEnd);
 	}
-	std::size_t Find(Char chToFind, std::ptrdiff_t nBegin = 0) const noexcept {
+	std::size_t Find(CharType chToFind, std::ptrdiff_t nBegin = 0) const noexcept {
 		return GetObserver().Find(chToFind, nBegin);
 	}
-	std::size_t FindBackward(Char chToFind, std::ptrdiff_t nEnd = -1) const noexcept {
+	std::size_t FindBackward(CharType chToFind, std::ptrdiff_t nEnd = -1) const noexcept {
 		return GetObserver().FindBackward(chToFind, nEnd);
 	}
 
-	void Replace(std::ptrdiff_t nBegin, std::ptrdiff_t nEnd, Char chRep, std::size_t uCount = 1){
+	void Replace(std::ptrdiff_t nBegin, std::ptrdiff_t nEnd, CharType chRep, std::size_t uCount = 1){
 		const auto obsCurrent(GetObserver());
 		const auto uOldLength = obsCurrent.GetLength();
 
@@ -544,16 +544,16 @@ public:
 		FillN(pchWrite, uCount, chRep);
 		xSetSize(uRemovedBegin + uCount + (uOldLength - uRemovedEnd));
 	}
-	void Replace(std::ptrdiff_t nBegin, std::ptrdiff_t nEnd, const Char *pchRepBegin){
-		Replace(nBegin, nEnd, Observer(pchRepBegin));
+	void Replace(std::ptrdiff_t nBegin, std::ptrdiff_t nEnd, const CharType *pchRepBegin){
+		Replace(nBegin, nEnd, ObserverType(pchRepBegin));
 	}
-	void Replace(std::ptrdiff_t nBegin, std::ptrdiff_t nEnd, const Char *pchRepBegin, const Char *pchRepEnd){
-		Replace(nBegin, nEnd, Observer(pchRepBegin, pchRepEnd));
+	void Replace(std::ptrdiff_t nBegin, std::ptrdiff_t nEnd, const CharType *pchRepBegin, const CharType *pchRepEnd){
+		Replace(nBegin, nEnd, ObserverType(pchRepBegin, pchRepEnd));
 	}
-	void Replace(std::ptrdiff_t nBegin, std::ptrdiff_t nEnd, const Char *pchRepBegin, std::size_t uLen){
-		Replace(nBegin, nEnd, Observer(pchRepBegin, uLen));
+	void Replace(std::ptrdiff_t nBegin, std::ptrdiff_t nEnd, const CharType *pchRepBegin, std::size_t uLen){
+		Replace(nBegin, nEnd, ObserverType(pchRepBegin, uLen));
 	}
-	void Replace(std::ptrdiff_t nBegin, std::ptrdiff_t nEnd, const Observer &obsRep){
+	void Replace(std::ptrdiff_t nBegin, std::ptrdiff_t nEnd, const ObserverType &obsRep){
 		const auto obsCurrent(GetObserver());
 		const auto uOldLength = obsCurrent.GetLength();
 
@@ -594,30 +594,30 @@ public:
 	}
 
 public:
-	operator Observer() const noexcept {
+	operator ObserverType() const noexcept {
 		return GetObserver();
 	}
 
 	explicit operator bool() const noexcept {
 		return !IsEmpty();
 	}
-	explicit operator const Char *() const noexcept {
+	explicit operator const CharType *() const noexcept {
 		return GetStr();
 	}
-	explicit operator Char *() noexcept {
+	explicit operator CharType *() noexcept {
 		return GetStr();
 	}
-	const Char &operator[](std::size_t uIndex) const noexcept {
+	const CharType &operator[](std::size_t uIndex) const noexcept {
 		ASSERT_MSG(uIndex <= GetLength(), L"索引越界。");
 		return GetBegin()[uIndex];
 	}
-	Char &operator[](std::size_t uIndex) noexcept {
+	CharType &operator[](std::size_t uIndex) noexcept {
 		ASSERT_MSG(uIndex <= GetLength(), L"索引越界。");
 		return GetBegin()[uIndex];
 	}
 
 public:
-	using value_type = Char;
+	using value_type = CharType;
 
 	// std::back_insert_iterator
 	template<typename ParamT>
@@ -642,7 +642,7 @@ String<TYPE_T> &operator+=(String<TYPE_T> &lhs, const StringObserver<OTHER_TYPE_
 	return lhs;
 }
 template<StringTypes TYPE_T>
-String<TYPE_T> &operator+=(String<TYPE_T> &lhs, typename String<TYPE_T>::Char rhs){
+String<TYPE_T> &operator+=(String<TYPE_T> &lhs, typename String<TYPE_T>::CharType rhs){
 	lhs.Append(rhs);
 	return lhs;
 }
@@ -657,7 +657,7 @@ String<TYPE_T> &&operator+=(String<TYPE_T> &&lhs, const StringObserver<OTHER_TYP
 	return std::move(lhs);
 }
 template<StringTypes TYPE_T>
-String<TYPE_T> &&operator+=(String<TYPE_T> &&lhs, typename String<TYPE_T>::Char rhs){
+String<TYPE_T> &&operator+=(String<TYPE_T> &&lhs, typename String<TYPE_T>::CharType rhs){
 	lhs.Append(rhs);
 	return std::move(lhs);
 }
@@ -680,7 +680,7 @@ String<TYPE_T> operator+(const String<TYPE_T> &lhs, const StringObserver<OTHER_T
 	return strRet;
 }
 template<StringTypes TYPE_T>
-String<TYPE_T> operator+(const String<TYPE_T> &lhs, typename String<TYPE_T>::Char rhs){
+String<TYPE_T> operator+(const String<TYPE_T> &lhs, typename String<TYPE_T>::CharType rhs){
 	String<TYPE_T> strRet(lhs);
 	strRet += rhs;
 	return strRet;
@@ -694,7 +694,7 @@ String<TYPE_T> &&operator+(String<TYPE_T> &&lhs, const StringObserver<OTHER_TYPE
 	return std::move(lhs += rhs);
 }
 template<StringTypes TYPE_T>
-String<TYPE_T> &&operator+(String<TYPE_T> &&lhs, typename String<TYPE_T>::Char rhs){
+String<TYPE_T> &&operator+(String<TYPE_T> &&lhs, typename String<TYPE_T>::CharType rhs){
 	return std::move(lhs += rhs);
 }
 template<StringTypes TYPE_T>

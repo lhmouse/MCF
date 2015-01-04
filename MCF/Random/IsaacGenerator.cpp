@@ -14,7 +14,7 @@ using namespace MCF;
 namespace {
 
 Mutex g_vMutex;
-IsaacGenerator g_vGenerator(GenerateRandSeed());
+IsaacGenerator g_vGenerator;
 
 }
 

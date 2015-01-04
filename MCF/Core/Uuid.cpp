@@ -13,18 +13,7 @@ using namespace MCF;
 
 namespace {
 
-std::uint32_t RdtscLow() noexcept {
-	register std::uint32_t ret __asm__("eax");
-	__asm__ __volatile__(
-		"rdtsc \n"
-		: "=a"(ret)
-		:
-		: "dx"
-	);
-	return ret;
-}
-
-volatile std::uint32_t g_u32AutoId = RdtscLow();
+volatile std::uint32_t g_u32AutoId = ReadTimestampCounterLow();
 
 }
 

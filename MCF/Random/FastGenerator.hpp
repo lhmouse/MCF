@@ -5,7 +5,7 @@
 #ifndef MCF_RANDOM_FAST_GENERATOR_HPP_
 #define MCF_RANDOM_FAST_GENERATOR_HPP_
 
-#include "RandomSeed.hpp"
+#include "../Core/Time.hpp"
 
 namespace MCF {
 
@@ -17,16 +17,12 @@ private:
 	std::uint64_t xm_u64Seed;
 
 public:
-	constexpr FastGenerator() noexcept
-		: xm_u64Seed(0x0123456789ABCDEF)
-	{
-	}
-	explicit FastGenerator(std::uint32_t u32Seed) noexcept {
+	explicit FastGenerator(std::uint32_t u32Seed = ReadTimestampCounterLow()) noexcept {
 		Init(u32Seed);
 	}
 
 public:
-	void Init(std::uint32_t u32Seed = GenerateRandSeed()) noexcept;
+	void Init(std::uint32_t u32Seed = ReadTimestampCounterLow()) noexcept;
 
 	std::uint32_t Get() noexcept;
 };

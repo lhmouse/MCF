@@ -13,7 +13,7 @@ using namespace MCF;
 namespace {
 
 Mutex g_vMutex;
-FastGenerator g_vGenerator(GenerateRandSeed());
+FastGenerator g_vGenerator;
 
 }
 

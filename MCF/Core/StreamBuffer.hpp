@@ -8,7 +8,6 @@
 #include "../Containers/List.hpp"
 #include <iterator>
 #include <utility>
-#include <memory>
 #include <cstddef>
 
 namespace MCF {

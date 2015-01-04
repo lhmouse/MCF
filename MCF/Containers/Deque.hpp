@@ -78,18 +78,15 @@ private:
 		ElementT *GetEnd() noexcept {
 			return xm_pEnd;
 		}
+
 		std::size_t GetSize() const noexcept {
 			return (std::size_t)(xm_pEnd - xm_pBegin);
 		}
-
-		bool IsEmpty() const noexcept {
-			return xm_pEnd == xm_pBegin;
+		std::size_t GetPushableSize() const noexcept {
+			return (std::size_t)(reinterpret_cast<const ElementT *>(std::end(xm_aachStorage)) - xm_pEnd);
 		}
-		bool IsPushable() const noexcept {
-			return xm_pEnd != reinterpret_cast<const ElementT *>(std::end(xm_aachStorage));
-		}
-		bool IsUnshiftable() const noexcept {
-			return xm_pBegin != reinterpret_cast<const ElementT *>(std::begin(xm_aachStorage));
+		std::size_t GetUnshiftableSize() const noexcept {
+			return (std::size_t)(xm_pBegin - reinterpret_cast<const ElementT *>(std::begin(xm_aachStorage)));
 		}
 		void Clear(bool bSeekToBegin) noexcept {
 			for(auto pCur = xm_pBegin; pCur != xm_pEnd; ++pCur){
@@ -104,7 +101,7 @@ private:
 		ElementT *UncheckedPush(ParamsT &&...vParams)
 			noexcept(std::is_nothrow_constructible<ElementT, ParamsT &&...>::value)
 		{
-			ASSERT(IsPushable());
+			ASSERT(GetPushableSize() > 0);
 
 			const auto pRet = xm_pEnd;
 			DefaultConstruct(pRet, std::forward<ParamsT>(vParams)...);
@@ -122,7 +119,7 @@ private:
 		ElementT *UncheckedUnshift(ParamsT &&...vParams)
 			noexcept(std::is_nothrow_constructible<ElementT, ParamsT &&...>::value)
 		{
-			ASSERT(IsUnshiftable());
+			ASSERT(GetUnshiftableSize() > 0);
 
 			const auto pRet = xm_pBegin - 1;
 			DefaultConstruct(pRet, std::forward<ParamsT>(vParams)...);
@@ -381,7 +378,7 @@ public:
 	template<typename ...ParamsT>
 	ElementT *Push(ParamsT &&...vParams){
 		auto pLastNode = xm_lstChunks.GetLast();
-		if(pLastNode && pLastNode->Get().IsPushable()){
+		if(pLastNode && (pLastNode->Get().GetPushableSize() > 0)){
 			return pLastNode->Get().UncheckedPush(std::forward<ParamsT>(vParams)...);
 		}
 
@@ -403,7 +400,7 @@ public:
 	template<typename ...ParamsT>
 	ElementT *Unshift(ParamsT &&...vParams){
 		auto pFirstNode = xm_lstChunks.GetFirst();
-		if(pFirstNode && pFirstNode->Get().IsPushable()){
+		if(pFirstNode && (pFirstNode->Get().GetUnshiftableSize() > 0)){
 			return pFirstNode->Get().UncheckedUnshift(std::forward<ParamsT>(vParams)...);
 		}
 

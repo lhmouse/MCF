@@ -291,7 +291,7 @@ public:
 		xChopAndSplice(uOldLength, uOldLength, 0, uOldLength + uDeltaCapacity);
 	}
 
-	CharType *Resize(std::size_t uNewSize){
+	void Resize(std::size_t uNewSize){
 		const std::size_t uOldSize = GetSize();
 		if(uNewSize > uOldSize){
 			Reserve(uNewSize);
@@ -299,7 +299,6 @@ public:
 		} else if(uNewSize < uOldSize){
 			Truncate(uOldSize - uNewSize);
 		}
-		return GetData();
 	}
 	CharType *ResizeFront(std::size_t uDeltaSize){
 		const auto uOldSize = GetSize();
@@ -314,7 +313,9 @@ public:
 		return GetData() + uOldSize;
 	}
 	void Shrink() noexcept {
-		Resize(ObserverType(GetStr()).GetLength());
+		const auto uSzLen = ObserverType(GetStr()).GetLength();
+		ASSERT(uSzLen <= GetSize());
+		xSetSize(uSzLen);
 	}
 
 	bool IsEmpty() const noexcept {
@@ -339,7 +340,8 @@ public:
 	}
 
 	void Assign(CharType ch, std::size_t uCount = 1){
-		FillN(Resize(uCount), uCount, ch);
+		Resize(uCount);
+		FillN(GetStr(), uCount, ch);
 	}
 	void Assign(const CharType *pszBegin){
 		Assign(ObserverType(pszBegin));
@@ -351,7 +353,8 @@ public:
 		Assign(ObserverType(pchBegin, uCount));
 	}
 	void Assign(const ObserverType &rhs){
-		Copy(Resize(rhs.GetSize()), rhs.GetBegin(), rhs.GetEnd());
+		Resize(rhs.GetSize());
+		Copy(GetStr(), rhs.GetBegin(), rhs.GetEnd());
 	}
 	void Assign(std::initializer_list<CharType> rhs){
 		Assign(ObserverType(rhs));
@@ -563,7 +566,8 @@ public:
 
 		if(obsCurrent.DoesOverlapWith(obsRep)){
 			String strTemp;
-			auto pchWrite = strTemp.Resize(uRemovedBegin + obsRep.GetSize() + (uOldLength - uRemovedEnd));
+			strTemp.Resize(uRemovedBegin + obsRep.GetSize() + (uOldLength - uRemovedEnd));
+			auto pchWrite = strTemp.GetStr();
 			pchWrite = Copy(pchWrite, obsCurrent.GetBegin(), obsCurrent.GetBegin() + uRemovedBegin);
 			pchWrite = Copy(pchWrite, obsRep.GetBegin(), obsRep.GetEnd());
 			pchWrite = Copy(pchWrite, obsCurrent.GetBegin() + uRemovedEnd, obsCurrent.GetEnd());

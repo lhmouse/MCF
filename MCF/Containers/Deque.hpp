@@ -15,8 +15,13 @@ template<class ElementT>
 class Deque {
 private:
 	class xChunk {
+	public:
+		enum : std::size_t {
+			CHUNK_SIZE = 255 / sizeof(ElementT) + 1
+		};
+
 	private:
-		alignas(ElementT) char xm_aachStorage[255 / sizeof(ElementT) + 1][sizeof(ElementT)];
+		alignas(ElementT) char xm_aachStorage[CHUNK_SIZE][sizeof(ElementT)];
 		ElementT *xm_pBegin;
 		ElementT *xm_pEnd;
 
@@ -109,7 +114,7 @@ private:
 			return pRet;
 		}
 		void UncheckedPop() noexcept {
-			ASSERT(!IsEmpty());
+			ASSERT(GetSize() > 0);
 
 			--xm_pEnd;
 			Destruct(xm_pEnd);
@@ -127,7 +132,7 @@ private:
 			return pRet;
 		}
 		void UncheckedShift() noexcept {
-			ASSERT(!IsEmpty());
+			ASSERT(GetSize() > 0);
 
 			Destruct(xm_pBegin);
 			++xm_pBegin;
@@ -310,7 +315,7 @@ public:
 		if(!pFirstNode){
 			return ConstCursor();
 		}
-		ASSERT(!pFirstNode->Get().IsEmpty());
+		ASSERT(pFirstNode->Get().GetSize() > 0);
 		return ConstCursor(pFirstNode->Get().GetBegin(), pFirstNode);
 	}
 	Cursor GetFirst() noexcept {
@@ -318,7 +323,7 @@ public:
 		if(!pFirstNode){
 			return Cursor();
 		}
-		ASSERT(!pFirstNode->Get().IsEmpty());
+		ASSERT(pFirstNode->Get().GetSize() > 0);
 		return Cursor(pFirstNode->Get().GetBegin(), pFirstNode);
 	}
 	ConstCursor GetLast() const noexcept {
@@ -326,7 +331,7 @@ public:
 		if(!pLastNode){
 			return ConstCursor();
 		}
-		ASSERT(!pLastNode->Get().IsEmpty());
+		ASSERT(pLastNode->Get().GetSize() > 0);
 		return ConstCursor(pLastNode->Get().GetEnd() - 1, pLastNode);
 	}
 	Cursor GetLast() noexcept {
@@ -334,28 +339,28 @@ public:
 		if(!pLastNode){
 			return Cursor();
 		}
-		ASSERT(!pLastNode->Get().IsEmpty());
+		ASSERT(pLastNode->Get().GetSize() > 0);
 		return Cursor(pLastNode->Get().GetEnd() - 1, pLastNode);
 	}
 
 	const ElementT &GetFront() const noexcept {
 		const auto pFirstNode = xm_lstChunks.GetFirst();
-		ASSERT(pFirstNode && !pFirstNode->Get().IsEmpty());
+		ASSERT(pFirstNode && (pFirstNode->Get().GetSize() > 0));
 		return pFirstNode->Get().GetBegin()[0];
 	}
 	ElementT &GetFront() noexcept {
 		const auto pFirstNode = xm_lstChunks.GetFirst();
-		ASSERT(pFirstNode && !pFirstNode->Get().IsEmpty());
+		ASSERT(pFirstNode && (pFirstNode->Get().GetSize() > 0));
 		return pFirstNode->Get().GetBegin()[0];
 	}
 	const ElementT &GetBack() const noexcept {
 		const auto pLastNode = xm_lstChunks.GetLast();
-		ASSERT(pLastNode && !pLastNode->Get().IsEmpty());
+		ASSERT(pLastNode && (pLastNode->Get().GetSize() > 0));
 		return pLastNode->Get().GetEnd()[-1];
 	}
 	ElementT &GetBack() noexcept {
 		const auto pLastNode = xm_lstChunks.GetLast();
-		ASSERT(pLastNode && !pLastNode->Get().IsEmpty());
+		ASSERT(pLastNode && (pLastNode->Get().GetSize() > 0));
 		return pLastNode->Get().GetEnd()[-1];
 	}
 
@@ -390,9 +395,9 @@ public:
 	}
 	void Pop() noexcept {
 		const auto pLastNode = xm_lstChunks.GetLast();
-		ASSERT(pLastNode && !pLastNode->Get().IsEmpty());
+		ASSERT(pLastNode && (pLastNode->Get().GetSize() > 0));
 		pLastNode->Get().UncheckedPop();
-		if(pLastNode->Get().IsEmpty()){
+		if(pLastNode->Get().GetSize() == 0){
 			xm_lstChunks.Pop();
 		}
 	}
@@ -412,9 +417,9 @@ public:
 	}
 	void Shift() noexcept {
 		const auto pFirstNode = xm_lstChunks.GetFirst();
-		ASSERT(pFirstNode && !pFirstNode->Get().IsEmpty());
+		ASSERT(pFirstNode && (pFirstNode->Get().GetSize() > 0));
 		pFirstNode->Get().UncheckedShift();
-		if(pFirstNode->Get().IsEmpty()){
+		if(pFirstNode->Get().GetSize() == 0){
 			xm_lstChunks.Shift();
 		}
 	}

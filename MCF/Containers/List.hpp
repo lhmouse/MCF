@@ -536,6 +536,31 @@ void swap(List<ElementT> &lhs, List<ElementT> &rhs) noexcept {
 	lhs.Swap(rhs);
 }
 
+template<class ElementT>
+auto begin(const List<ElementT> &lhs) noexcept {
+	return lhs.GetFirstCursor();
+}
+template<class ElementT>
+auto begin(List<ElementT> &lhs) noexcept {
+	return lhs.GetFirstCursor();
+}
+template<class ElementT>
+auto cbegin(const List<ElementT> &lhs) noexcept {
+	return lhs.GetFirstCursor();
+}
+template<class ElementT>
+auto end(const List<ElementT> &) noexcept {
+	return typename List<ElementT>::ConstCursor();
+}
+template<class ElementT>
+auto end(List<ElementT> &) noexcept {
+	return typename List<ElementT>::Cursor();
+}
+template<class ElementT>
+auto cend(const List<ElementT> &) noexcept {
+	return typename List<ElementT>::ConstCursor();
+}
+
 }
 
 #endif

@@ -559,6 +559,31 @@ void swap(Deque<ElementT> &lhs, Deque<ElementT> &rhs) noexcept {
 	lhs.Swap(rhs);
 }
 
+template<class ElementT>
+auto begin(const Deque<ElementT> &lhs) noexcept {
+	return lhs.GetFirstCursor();
+}
+template<class ElementT>
+auto begin(Deque<ElementT> &lhs) noexcept {
+	return lhs.GetFirstCursor();
+}
+template<class ElementT>
+auto cbegin(const Deque<ElementT> &lhs) noexcept {
+	return lhs.GetFirstCursor();
+}
+template<class ElementT>
+auto end(const Deque<ElementT> &) noexcept {
+	return typename Deque<ElementT>::ConstCursor();
+}
+template<class ElementT>
+auto end(Deque<ElementT> &) noexcept {
+	return typename Deque<ElementT>::Cursor();
+}
+template<class ElementT>
+auto cend(const Deque<ElementT> &) noexcept {
+	return typename Deque<ElementT>::ConstCursor();
+}
+
 }
 
 #endif

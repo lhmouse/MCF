@@ -789,6 +789,31 @@ void swap(String<TYPE_T> &lhs, String<TYPE_T> &rhs) noexcept {
 	lhs.Swap(rhs);
 }
 
+template<StringTypes TYPE_T>
+auto begin(const String<TYPE_T> &lhs) noexcept {
+	return lhs.GetBegin();
+}
+template<StringTypes TYPE_T>
+auto begin(String<TYPE_T> &lhs) noexcept {
+	return lhs.GetBegin();
+}
+template<StringTypes TYPE_T>
+auto cbegin(const String<TYPE_T> &lhs) noexcept {
+	return lhs.GetBegin();
+}
+template<StringTypes TYPE_T>
+auto end(const String<TYPE_T> &lhs) noexcept {
+	return lhs.GetEnd();
+}
+template<StringTypes TYPE_T>
+auto end(String<TYPE_T> &lhs) noexcept {
+	return lhs.GetEnd();
+}
+template<StringTypes TYPE_T>
+auto cend(const String<TYPE_T> &lhs) noexcept {
+	return lhs.GetEnd();
+}
+
 extern template class String<StringTypes::NARROW>;
 extern template class String<StringTypes::WIDE>;
 extern template class String<StringTypes::UTF8>;

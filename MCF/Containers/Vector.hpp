@@ -346,6 +346,31 @@ void swap(Vector<ElementT> &lhs, Vector<ElementT> &rhs) noexcept {
 	lhs.Swap(rhs);
 }
 
+template<class ElementT>
+auto begin(const Vector<ElementT> &lhs) noexcept {
+	return lhs.GetBegin();
+}
+template<class ElementT>
+auto begin(Vector<ElementT> &lhs) noexcept {
+	return lhs.GetBegin();
+}
+template<class ElementT>
+auto cbegin(const Vector<ElementT> &lhs) noexcept {
+	return lhs.GetBegin();
+}
+template<class ElementT>
+auto end(const Vector<ElementT> &lhs) noexcept {
+	return lhs.GetEnd();
+}
+template<class ElementT>
+auto end(Vector<ElementT> &lhs) noexcept {
+	return lhs.GetEnd();
+}
+template<class ElementT>
+auto cend(const Vector<ElementT> &lhs) noexcept {
+	return lhs.GetEnd();
+}
+
 }
 
 #endif

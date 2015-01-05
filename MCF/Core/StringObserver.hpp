@@ -460,6 +460,23 @@ void swap(StringObserver<TYPE_T> &lhs, StringObserver<TYPE_T> &rhs) noexcept {
 	lhs.Swap(rhs);
 }
 
+template<StringTypes TYPE_T>
+auto begin(const StringObserver<TYPE_T> &lhs) noexcept {
+	return lhs.GetBegin();
+}
+template<StringTypes TYPE_T>
+auto cbegin(const StringObserver<TYPE_T> &lhs) noexcept {
+	return lhs.GetBegin();
+}
+template<StringTypes TYPE_T>
+auto end(const StringObserver<TYPE_T> &lhs) noexcept {
+	return lhs.GetEnd();
+}
+template<StringTypes TYPE_T>
+auto cend(const StringObserver<TYPE_T> &lhs) noexcept {
+	return lhs.GetEnd();
+}
+
 extern template class StringObserver<StringTypes::NARROW>;
 extern template class StringObserver<StringTypes::WIDE>;
 extern template class StringObserver<StringTypes::UTF8>;

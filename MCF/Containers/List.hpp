@@ -9,26 +9,28 @@
 #include <initializer_list>
 #include <type_traits>
 #include <utility>
+#include <memory>
+#include <iterator>
 #include <cstddef>
 
 namespace MCF {
 
 template<class ElementT>
 class List {
-public:
-	class Node {
+private:
+	class xNode {
 		friend List;
 
 	private:
 		ElementT xm_vElement;
-		Node *xm_pPrev;
-		Node *xm_pNext;
+		xNode *xm_pPrev;
+		xNode *xm_pNext;
 
 	private:
-		Node() = default;
+		xNode() = default;
 
 		template<typename ...ParamsT>
-		explicit Node(ParamsT &&...vParams)
+		explicit xNode(ParamsT &&...vParams)
 			: xm_vElement(std::forward<ParamsT>(vParams)...)
 		{
 		}
@@ -41,23 +43,135 @@ public:
 			return xm_vElement;
 		}
 
-		const Node *GetPrev() const noexcept {
+		const xNode *GetPrev() const noexcept {
 			return xm_pPrev;
 		}
-		Node *GetPrev() noexcept {
+		xNode *GetPrev() noexcept {
 			return xm_pPrev;
 		}
-		const Node *GetNext() const noexcept {
+		const xNode *GetNext() const noexcept {
 			return xm_pNext;
 		}
-		Node *GetNext() noexcept {
+		xNode *GetNext() noexcept {
 			return xm_pNext;
 		}
 	};
 
+	template<typename CursorT, typename RealElementT, typename RealNodeT>
+	class xCursorTemplate
+		: public std::iterator<std::bidirectional_iterator_tag, RealElementT>
+	{
+	protected:
+		RealNodeT *xm_pNode;
+
+	protected:
+		explicit constexpr xCursorTemplate(RealNodeT *pNode) noexcept
+			: xm_pNode(pNode)
+		{
+		}
+
+	public:
+		constexpr xCursorTemplate() noexcept
+			: xCursorTemplate(nullptr)
+		{
+		}
+
+	public:
+		bool operator==(const xCursorTemplate &rhs) const noexcept {
+			return xm_pNode == rhs.xm_pNode;
+		}
+		bool operator!=(const xCursorTemplate &rhs) const noexcept {
+			return xm_pNode != rhs.xm_pNode;
+		}
+
+		RealElementT &operator*() const noexcept {
+			ASSERT_MSG(xm_pNode, L"游标指向链表两端或者为空。");
+			return xm_pNode->Get();
+		}
+		RealElementT *operator->() const noexcept {
+			ASSERT_MSG(xm_pNode, L"游标指向链表两端或者为空。");
+			return std::addressof(xm_pNode->Get());
+		}
+
+		CursorT &operator++() noexcept {
+			ASSERT_MSG(xm_pNode, L"空游标不能移动。");
+
+			xm_pNode = xm_pNode->GetNext();
+			return static_cast<CursorT &>(*this);
+		}
+		CursorT &operator--() noexcept {
+			ASSERT_MSG(xm_pNode, L"空游标不能移动。");
+
+			xm_pNode = xm_pNode->GetPrev();
+			return static_cast<CursorT &>(*this);
+		}
+
+		CursorT operator++(int) noexcept {
+			CursorT ret(xm_pNode);
+			++*this;
+			return ret;
+		}
+		CursorT operator--(int) noexcept {
+			CursorT ret(xm_pNode);
+			--*this;
+			return ret;
+		}
+
+		explicit operator bool() const noexcept {
+			return xm_pNode != nullptr;
+		}
+	};
+
+public:
+	using Node = xNode;
+
+	class ConstCursor;
+
+	class Cursor
+		: public xCursorTemplate<Cursor, ElementT, Node>
+	{
+		friend List;
+		friend ConstCursor;
+
+	private:
+		using xBase = xCursorTemplate<Cursor, ElementT, Node>;
+
+	private:
+		constexpr explicit Cursor(Node *pNode) noexcept
+			: xBase(pNode)
+		{
+		}
+
+	public:
+		constexpr Cursor() noexcept = default;
+	};
+
+	class ConstCursor
+		: public xCursorTemplate<ConstCursor, const ElementT, const Node>
+	{
+		friend List;
+
+	private:
+		using xBase = xCursorTemplate<ConstCursor, const ElementT, const Node>;
+
+	private:
+		constexpr explicit ConstCursor(const Node *pNode) noexcept
+			: xBase(pNode)
+		{
+		}
+
+	public:
+		constexpr ConstCursor() noexcept = default;
+
+		constexpr ConstCursor(const Cursor &rhs) noexcept
+			: xBase(rhs.xm_pNode)
+		{
+		}
+	};
+
 private:
-	Node *xm_pFirst;
-	Node *xm_pLast;
+	xNode *xm_pFirst;
+	xNode *xm_pLast;
 
 public:
 	constexpr List() noexcept
@@ -120,17 +234,30 @@ public:
 	}
 
 public:
-	const Node *GetFirst() const noexcept {
+	const xNode *GetFirst() const noexcept {
 		return xm_pFirst;
 	}
-	Node *GetFirst() noexcept {
+	xNode *GetFirst() noexcept {
 		return xm_pFirst;
 	}
-	const Node *GetLast() const noexcept {
+	const xNode *GetLast() const noexcept {
 		return xm_pLast;
 	}
-	Node *GetLast() noexcept {
+	xNode *GetLast() noexcept {
 		return xm_pLast;
+	}
+
+	ConstCursor GetFirstCursor() const noexcept {
+		return ConstCursor(GetFirst());
+	}
+	Cursor GetFirstCursor() noexcept {
+		return Cursor(GetFirst());
+	}
+	ConstCursor GetLastCursor() const noexcept {
+		return ConstCursor(GetLast());
+	}
+	Cursor GetLastCursor() noexcept {
+		return Cursor(GetLast());
 	}
 
 	const ElementT &GetFront() const noexcept {
@@ -161,8 +288,8 @@ public:
 	}
 
 	template<typename ...ParamsT>
-	Node *Insert(Node *pPos, ParamsT &&...vParams){
-		auto pNode = new Node(std::forward<ParamsT>(vParams)...);
+	xNode *Insert(xNode *pPos, ParamsT &&...vParams){
+		auto pNode = new xNode(std::forward<ParamsT>(vParams)...);
 
 		const auto pPrev = std::exchange((pPos ? pPos->xm_pPrev : xm_pLast), pNode);
 		(pPrev ? pPrev->xm_pNext : xm_pFirst) = pNode;
@@ -171,7 +298,7 @@ public:
 
 		return pNode;
 	}
-	Node *Erase(Node *pNode) noexcept {
+	xNode *Erase(xNode *pNode) noexcept {
 		const auto pNext = pNode->xm_pNext;
 
 		const auto pOldPrev = pNode->xm_pPrev;
@@ -181,7 +308,7 @@ public:
 		delete pNode;
 		return pNext;
 	}
-	Node *Erase(Node *pBegin, Node *pEnd) noexcept {
+	xNode *Erase(xNode *pBegin, xNode *pEnd) noexcept {
 		if(pBegin != pEnd){
 			const auto pOldPrev = pBegin->xm_pPrev;
 			(pOldPrev ? pOldPrev->xm_pNext : xm_pFirst) = pEnd;
@@ -197,16 +324,16 @@ public:
 		return pEnd;
 	}
 
-	Node *Splice(Node *pPos, List &lstSource) noexcept {
+	xNode *Splice(xNode *pPos, List &lstSource) noexcept {
 		const auto pRet = Splice(pPos, lstSource, lstSource.xm_pFirst, nullptr);
 		ASSERT(lstSource.IsEmpty());
 		return pRet;
 	}
-	Node *Splice(Node *pPos, List &lstSource, Node *pSingle) noexcept {
+	xNode *Splice(xNode *pPos, List &lstSource, xNode *pSingle) noexcept {
 		ASSERT(pSingle);
 		return Splice(pPos, lstSource, pSingle, pSingle->xm_pNext);
 	}
-	Node *Splice(Node *pPos, List &lstSource, Node *pBegin, Node *pEnd) noexcept {
+	xNode *Splice(xNode *pPos, List &lstSource, xNode *pBegin, xNode *pEnd) noexcept {
 #ifndef NDEBUG
 		{
 			auto p = pBegin;
@@ -233,18 +360,18 @@ public:
 		return pPos;
 	}
 
-	Node *Splice(Node *pPos, List &&lstSource) noexcept {
+	xNode *Splice(xNode *pPos, List &&lstSource) noexcept {
 		return Splice(pPos, lstSource);
 	}
-	Node *Splice(Node *pPos, List &&lstSource, Node *pSingle) noexcept {
+	xNode *Splice(xNode *pPos, List &&lstSource, xNode *pSingle) noexcept {
 		return Splice(pPos, lstSource, pSingle);
 	}
-	Node *Splice(Node *pPos, List &&lstSource, Node *pBegin, Node *pEnd) noexcept {
+	xNode *Splice(xNode *pPos, List &&lstSource, xNode *pBegin, xNode *pEnd) noexcept {
 		return Splice(pPos, lstSource, pBegin, pEnd);
 	}
 
 	template<typename ...ParamsT>
-	Node *Push(ParamsT &&...vParams){
+	xNode *Push(ParamsT &&...vParams){
 		return Insert(nullptr, std::forward<ParamsT>(vParams)...);
 	}
 	void Pop() noexcept {
@@ -252,7 +379,7 @@ public:
 	}
 
 	template<typename ...ParamsT>
-	Node *Unshift(ParamsT &&...vParams){
+	xNode *Unshift(ParamsT &&...vParams){
 		return Insert(xm_pFirst, std::forward<ParamsT>(vParams)...);
 	}
 	void Shift() noexcept {
@@ -399,7 +526,7 @@ public:
 
 	// std::insert_iterator
 	template<typename ParamT>
-	Node *insert(Node *pPos, ParamT &&vParams){
+	xNode *insert(xNode *pPos, ParamT &&vParams){
 		return Insert(pPos, std::forward<ParamT>(vParams));
 	}
 };

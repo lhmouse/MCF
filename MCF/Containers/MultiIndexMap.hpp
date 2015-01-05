@@ -498,33 +498,36 @@ private:
 		}
 
 	public:
+		const ElementT &Get() const noexcept {
+			return static_cast<const ElementT &>(*this);
+		}
+		ElementT &Get() noexcept {
+			return static_cast<ElementT &>(*this);
+		}
+
 		template<std::size_t INDEX_ID_T>
 		const xNodeImpl *GetPrev() const noexcept {
 			using IndexNode = xIndexNode<INDEX_ID_T>;
 
-			return static_cast<const xNodeImpl *>(static_cast<const IndexNode *>(
-				static_cast<const IndexNode *>(this)->GetPrev()));
+			return static_cast<const xNodeImpl *>(static_cast<const IndexNode *>(static_cast<const IndexNode *>(this)->GetPrev()));
 		}
 		template<std::size_t INDEX_ID_T>
 		xNodeImpl *GetPrev() noexcept {
 			using IndexNode = xIndexNode<INDEX_ID_T>;
 
-			return static_cast<xNodeImpl *>(static_cast<IndexNode *>(
-				static_cast<IndexNode *>(this)->GetPrev()));
+			return static_cast<xNodeImpl *>(static_cast<IndexNode *>(static_cast<IndexNode *>(this)->GetPrev()));
 		}
 		template<std::size_t INDEX_ID_T>
 		const xNodeImpl *GetNext() const noexcept {
 			using IndexNode = xIndexNode<INDEX_ID_T>;
 
-			return static_cast<const xNodeImpl *>(static_cast<const IndexNode *>(
-				static_cast<const IndexNode *>(this)->GetNext()));
+			return static_cast<const xNodeImpl *>(static_cast<const IndexNode *>(static_cast<const IndexNode *>(this)->GetNext()));
 		}
 		template<std::size_t INDEX_ID_T>
 		xNodeImpl *GetNext() noexcept {
 			using IndexNode = xIndexNode<INDEX_ID_T>;
 
-			return static_cast<xNodeImpl *>(static_cast<IndexNode *>(
-				static_cast<IndexNode *>(this)->GetNext()));
+			return static_cast<xNodeImpl *>(static_cast<IndexNode *>(static_cast<IndexNode *>(this)->GetNext()));
 		}
 	};
 
@@ -535,9 +538,121 @@ private:
 	static auto xMakeIndices(std::index_sequence<INDEX_IDS_T...>) noexcept ->
 		std::tuple<typename IndicesT::template IndexType<NodeT, INDEX_IDS_T>...>;
 
+	template<std::size_t INDEX_ID_T, typename CursorT, typename RealElementT, typename RealNodeT>
+	class xCursorTemplate
+		: public std::iterator<std::bidirectional_iterator_tag, RealElementT>
+	{
+	protected:
+		RealNodeT *xm_pNode;
+
+	protected:
+		explicit constexpr xCursorTemplate(RealNodeT *pNode) noexcept
+			: xm_pNode(pNode)
+		{
+		}
+
+	public:
+		constexpr xCursorTemplate() noexcept
+			: xCursorTemplate(nullptr)
+		{
+		}
+
+	public:
+		bool operator==(const xCursorTemplate &rhs) const noexcept {
+			return xm_pNode == rhs.xm_pNode;
+		}
+		bool operator!=(const xCursorTemplate &rhs) const noexcept {
+			return xm_pNode != rhs.xm_pNode;
+		}
+
+		RealElementT &operator*() const noexcept {
+			ASSERT_MSG(xm_pNode, L"游标指向链表两端或者为空。");
+			return xm_pNode->Get();
+		}
+		RealElementT *operator->() const noexcept {
+			ASSERT_MSG(xm_pNode, L"游标指向链表两端或者为空。");
+			return std::addressof(xm_pNode->Get());
+		}
+
+		CursorT &operator++() noexcept {
+			ASSERT_MSG(xm_pNode, L"空游标不能移动。");
+
+			xm_pNode = xm_pNode->template GetNext<INDEX_ID_T>();
+			return static_cast<CursorT &>(*this);
+		}
+		CursorT &operator--() noexcept {
+			ASSERT_MSG(xm_pNode, L"空游标不能移动。");
+
+			xm_pNode = xm_pNode->template GetPrev<INDEX_ID_T>();
+			return static_cast<CursorT &>(*this);
+		}
+
+		CursorT operator++(int) noexcept {
+			CursorT ret(xm_pNode);
+			++*this;
+			return ret;
+		}
+		CursorT operator--(int) noexcept {
+			CursorT ret(xm_pNode);
+			--*this;
+			return ret;
+		}
+
+		explicit operator bool() const noexcept {
+			return xm_pNode != nullptr;
+		}
+	};
+
 public:
 	using Node = decltype(xMakeNode(std::index_sequence_for<IndicesT...>()));
 	using Hints = std::tuple<decltype(reinterpret_cast<Node *>(static_cast<IndicesT *>(nullptr)))...>;
+
+	template<std::size_t INDEX_ID_T>
+	class ConstCursor;
+
+	template<std::size_t INDEX_ID_T>
+	class Cursor
+		: public xCursorTemplate<INDEX_ID_T, Cursor<INDEX_ID_T>, ElementT, Node>
+	{
+		friend MultiIndexMap;
+		friend ConstCursor<INDEX_ID_T>;
+
+	private:
+		using xBase = xCursorTemplate<INDEX_ID_T, Cursor<INDEX_ID_T>, ElementT, Node>;
+
+	private:
+		constexpr explicit Cursor(Node *pNode) noexcept
+			: xBase(pNode)
+		{
+		}
+
+	public:
+		constexpr Cursor() noexcept = default;
+	};
+
+	template<std::size_t INDEX_ID_T>
+	class ConstCursor
+		: public xCursorTemplate<INDEX_ID_T, ConstCursor<INDEX_ID_T>, const ElementT, const Node>
+	{
+		friend MultiIndexMap;
+
+	private:
+		using xBase = xCursorTemplate<INDEX_ID_T, ConstCursor<INDEX_ID_T>, const ElementT, const Node>;
+
+	private:
+		constexpr explicit ConstCursor(const Node *pNode) noexcept
+			: xBase(pNode)
+		{
+		}
+
+	public:
+		constexpr ConstCursor() noexcept = default;
+
+		constexpr ConstCursor(const Cursor<INDEX_ID_T> &rhs) noexcept
+			: xBase(rhs.xm_pNode)
+		{
+		}
+	};
 
 private:
 	using xIndexTuple = decltype(xMakeIndices<Node>(std::index_sequence_for<IndicesT...>()));
@@ -851,29 +966,42 @@ public:
 	const Node *GetFirst() const noexcept {
 		using IndexNode = xIndexNode<INDEX_ID_T>;
 
-		return static_cast<const Node *>(static_cast<const IndexNode *>(
-			std::get<INDEX_ID_T>(xm_vIndices).GetFirst()));
+		return static_cast<const Node *>(static_cast<const IndexNode *>(std::get<INDEX_ID_T>(xm_vIndices).GetFirst()));
 	}
 	template<std::size_t INDEX_ID_T>
 	Node *GetFirst() noexcept {
 		using IndexNode = xIndexNode<INDEX_ID_T>;
 
-		return static_cast<Node *>(static_cast<IndexNode *>(
-			std::get<INDEX_ID_T>(xm_vIndices).GetFirst()));
+		return static_cast<Node *>(static_cast<IndexNode *>(std::get<INDEX_ID_T>(xm_vIndices).GetFirst()));
 	}
 	template<std::size_t INDEX_ID_T>
 	const Node *GetLast() const noexcept {
 		using IndexNode = xIndexNode<INDEX_ID_T>;
 
-		return static_cast<const Node *>(static_cast<const IndexNode *>(
-			std::get<INDEX_ID_T>(xm_vIndices).GetLast()));
+		return static_cast<const Node *>(static_cast<const IndexNode *>(std::get<INDEX_ID_T>(xm_vIndices).GetLast()));
 	}
 	template<std::size_t INDEX_ID_T>
 	Node *GetLast() noexcept {
 		using IndexNode = xIndexNode<INDEX_ID_T>;
 
-		return static_cast<Node *>(static_cast<IndexNode *>(
-			std::get<INDEX_ID_T>(xm_vIndices).GetLast()));
+		return static_cast<Node *>(static_cast<IndexNode *>(std::get<INDEX_ID_T>(xm_vIndices).GetLast()));
+	}
+
+	template<std::size_t INDEX_ID_T>
+	ConstCursor<INDEX_ID_T> GetFirstCursor() const noexcept {
+		return ConstCursor<INDEX_ID_T>(GetFirst<INDEX_ID_T>());
+	}
+	template<std::size_t INDEX_ID_T>
+	Cursor<INDEX_ID_T> GetFirstCursor() noexcept {
+		return Cursor<INDEX_ID_T>(GetFirst<INDEX_ID_T>());
+	}
+	template<std::size_t INDEX_ID_T>
+	ConstCursor<INDEX_ID_T> GetLastCursor() const noexcept {
+		return ConstCursor<INDEX_ID_T>(GetLast<INDEX_ID_T>());
+	}
+	template<std::size_t INDEX_ID_T>
+	Cursor<INDEX_ID_T> GetLastCursor() noexcept {
+		return Cursor<INDEX_ID_T>(GetLast<INDEX_ID_T>());
 	}
 
 	void Swap(MultiIndexMap &rhs) noexcept {
@@ -885,45 +1013,39 @@ public:
 	const Node *GetLowerBound(const ComparandT &vComparandT) const noexcept {
 		using IndexNode = xIndexNode<INDEX_ID_T>;
 
-		return static_cast<const Node *>(static_cast<const IndexNode *>(
-			std::get<INDEX_ID_T>(xm_vIndices).GetLowerBound(&vComparandT)));
+		return static_cast<const Node *>(static_cast<const IndexNode *>(std::get<INDEX_ID_T>(xm_vIndices).GetLowerBound(&vComparandT)));
 	}
 	template<std::size_t INDEX_ID_T, typename ComparandT>
 	Node *GetLowerBound(const ComparandT &vComparandT) noexcept {
 		using IndexNode = xIndexNode<INDEX_ID_T>;
 
-		return static_cast<Node *>(static_cast<IndexNode *>(
-			std::get<INDEX_ID_T>(xm_vIndices).GetLowerBound(&vComparandT)));
+		return static_cast<Node *>(static_cast<IndexNode *>(std::get<INDEX_ID_T>(xm_vIndices).GetLowerBound(&vComparandT)));
 	}
 
 	template<std::size_t INDEX_ID_T, typename ComparandT>
 	const Node *GetUpperBound(const ComparandT &vComparandT) const noexcept {
 		using IndexNode = xIndexNode<INDEX_ID_T>;
 
-		return static_cast<const Node *>(static_cast<const IndexNode *>(
-			std::get<INDEX_ID_T>(xm_vIndices).GetUpperBound(&vComparandT)));
+		return static_cast<const Node *>(static_cast<const IndexNode *>(std::get<INDEX_ID_T>(xm_vIndices).GetUpperBound(&vComparandT)));
 	}
 	template<std::size_t INDEX_ID_T, typename ComparandT>
 	Node *GetUpperBound(const ComparandT &vComparandT) noexcept {
 		using IndexNode = xIndexNode<INDEX_ID_T>;
 
-		return static_cast<Node *>(static_cast<IndexNode *>(
-			std::get<INDEX_ID_T>(xm_vIndices).GetUpperBound(&vComparandT)));
+		return static_cast<Node *>(static_cast<IndexNode *>(std::get<INDEX_ID_T>(xm_vIndices).GetUpperBound(&vComparandT)));
 	}
 
 	template<std::size_t INDEX_ID_T, typename ComparandT>
 	const Node *Find(const ComparandT &vComparandT) const noexcept {
 		using IndexNode = xIndexNode<INDEX_ID_T>;
 
-		return static_cast<const Node *>(static_cast<const IndexNode *>(
-			std::get<INDEX_ID_T>(xm_vIndices).Find(&vComparandT)));
+		return static_cast<const Node *>(static_cast<const IndexNode *>(std::get<INDEX_ID_T>(xm_vIndices).Find(&vComparandT)));
 	}
 	template<std::size_t INDEX_ID_T, typename ComparandT>
 	Node *Find(const ComparandT &vComparandT) noexcept {
 		using IndexNode = xIndexNode<INDEX_ID_T>;
 
-		return static_cast<Node *>(static_cast<IndexNode *>(
-			std::get<INDEX_ID_T>(xm_vIndices).Find(&vComparandT)));
+		return static_cast<Node *>(static_cast<IndexNode *>(std::get<INDEX_ID_T>(xm_vIndices).Find(&vComparandT)));
 	}
 
 	template<std::size_t INDEX_ID_T, typename ComparandT>

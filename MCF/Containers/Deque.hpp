@@ -7,7 +7,6 @@
 
 #include "../Utilities/ConstructDestruct.hpp"
 #include "List.hpp"
-#include <iterator>
 
 namespace MCF {
 
@@ -296,7 +295,7 @@ public:
 	Deque(const Deque &rhs)
 		: Deque()
 	{
-		AppendCopy(rhs.GetFirst(), ConstCursor());
+		AppendCopy(rhs.GetFirstCursor(), ConstCursor());
 	}
 	Deque &operator=(std::initializer_list<ElementT> rhs){
 		Deque(rhs).Swap(*this);
@@ -310,7 +309,7 @@ public:
 	}
 
 public:
-	ConstCursor GetFirst() const noexcept {
+	ConstCursor GetFirstCursor() const noexcept {
 		const auto pFirstNode = xm_lstChunks.GetFirst();
 		if(!pFirstNode){
 			return ConstCursor();
@@ -318,7 +317,7 @@ public:
 		ASSERT(pFirstNode->Get().GetSize() > 0);
 		return ConstCursor(pFirstNode->Get().GetBegin(), pFirstNode);
 	}
-	Cursor GetFirst() noexcept {
+	Cursor GetFirstCursor() noexcept {
 		const auto pFirstNode = xm_lstChunks.GetFirst();
 		if(!pFirstNode){
 			return Cursor();
@@ -326,7 +325,7 @@ public:
 		ASSERT(pFirstNode->Get().GetSize() > 0);
 		return Cursor(pFirstNode->Get().GetBegin(), pFirstNode);
 	}
-	ConstCursor GetLast() const noexcept {
+	ConstCursor GetLastCursor() const noexcept {
 		const auto pLastNode = xm_lstChunks.GetLast();
 		if(!pLastNode){
 			return ConstCursor();
@@ -334,7 +333,7 @@ public:
 		ASSERT(pLastNode->Get().GetSize() > 0);
 		return ConstCursor(pLastNode->Get().GetEnd() - 1, pLastNode);
 	}
-	Cursor GetLast() noexcept {
+	Cursor GetLastCursor() noexcept {
 		const auto pLastNode = xm_lstChunks.GetLast();
 		if(!pLastNode){
 			return Cursor();

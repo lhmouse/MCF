@@ -12,38 +12,36 @@
 
 namespace MCF {
 
-constexpr unsigned char CountLeadingZeroes(unsigned char by) noexcept {
-	return __MCF_CRT_MAKE_CONSTANT((unsigned char)__builtin_clz(by)
-		- (sizeof(unsigned) - sizeof(unsigned char)) * (std::size_t)CHAR_BIT);
+constexpr unsigned CountLeadingZeroes(unsigned char by) noexcept {
+	return __MCF_CRT_MAKE_CONSTANT((unsigned)__builtin_clz(by) - (sizeof(unsigned) - sizeof(unsigned char)) * CHAR_BIT);
 }
-constexpr unsigned char CountLeadingZeroes(unsigned short ush) noexcept {
-	return __MCF_CRT_MAKE_CONSTANT((unsigned char)__builtin_clz(ush)
-		- (sizeof(unsigned) - sizeof(unsigned short)) * (std::size_t)CHAR_BIT);
+constexpr unsigned CountLeadingZeroes(unsigned short ush) noexcept {
+	return __MCF_CRT_MAKE_CONSTANT((unsigned)__builtin_clz(ush) - (sizeof(unsigned) - sizeof(unsigned short)) * CHAR_BIT);
 }
-constexpr unsigned char CountLeadingZeroes(unsigned u) noexcept {
-	return __MCF_CRT_MAKE_CONSTANT((unsigned char)__builtin_clz(u));
+constexpr unsigned CountLeadingZeroes(unsigned u) noexcept {
+	return __MCF_CRT_MAKE_CONSTANT((unsigned)__builtin_clz(u));
 }
-constexpr unsigned char CountLeadingZeroes(unsigned long ul) noexcept {
-	return __MCF_CRT_MAKE_CONSTANT((unsigned char)__builtin_clzl(ul));
+constexpr unsigned CountLeadingZeroes(unsigned long ul) noexcept {
+	return __MCF_CRT_MAKE_CONSTANT((unsigned)__builtin_clzl(ul));
 }
-constexpr unsigned char CountLeadingZeroes(unsigned long long ull) noexcept {
-	return __MCF_CRT_MAKE_CONSTANT((unsigned char)__builtin_clzll(ull));
+constexpr unsigned CountLeadingZeroes(unsigned long long ull) noexcept {
+	return __MCF_CRT_MAKE_CONSTANT((unsigned)__builtin_clzll(ull));
 }
 
-constexpr unsigned char CountTrailingZeroes(unsigned char by) noexcept {
-	return __MCF_CRT_MAKE_CONSTANT((unsigned char)__builtin_ctz(by));
+constexpr unsigned CountTrailingZeroes(unsigned char by) noexcept {
+	return __MCF_CRT_MAKE_CONSTANT((unsigned)__builtin_ctz(by));
 }
-constexpr unsigned char CountTrailingZeroes(unsigned short ush) noexcept {
-	return __MCF_CRT_MAKE_CONSTANT((unsigned char)__builtin_ctz(ush));
+constexpr unsigned CountTrailingZeroes(unsigned short ush) noexcept {
+	return __MCF_CRT_MAKE_CONSTANT((unsigned)__builtin_ctz(ush));
 }
-constexpr unsigned char CountTrailingZeroes(unsigned u) noexcept {
-	return __MCF_CRT_MAKE_CONSTANT((unsigned char)__builtin_ctz(u));
+constexpr unsigned CountTrailingZeroes(unsigned u) noexcept {
+	return __MCF_CRT_MAKE_CONSTANT((unsigned)__builtin_ctz(u));
 }
-constexpr unsigned char CountTrailingZeroes(unsigned long ul) noexcept {
-	return __MCF_CRT_MAKE_CONSTANT((unsigned char)__builtin_ctzl(ul));
+constexpr unsigned CountTrailingZeroes(unsigned long ul) noexcept {
+	return __MCF_CRT_MAKE_CONSTANT((unsigned)__builtin_ctzl(ul));
 }
-constexpr unsigned char CountTrailingZeroes(unsigned long long ull) noexcept {
-	return __MCF_CRT_MAKE_CONSTANT((unsigned char)__builtin_ctzll(ull));
+constexpr unsigned CountTrailingZeroes(unsigned long long ull) noexcept {
+	return __MCF_CRT_MAKE_CONSTANT((unsigned)__builtin_ctzll(ull));
 }
 
 }

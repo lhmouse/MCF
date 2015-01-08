@@ -26,7 +26,7 @@ extern void MCF_PreInitModule() MCF_NOEXCEPT
 __MCF_CRT_EXTERN_C_END
 
 #ifdef __cplusplus
-#	include <typeinfo>
+#	include <cxxabi.h>
 
 // cxa_throw.cpp
 extern void MCF_OnException(void *pException, const std::type_info &tiType, const void *pRetAddr) noexcept

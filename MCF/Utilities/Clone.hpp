@@ -13,7 +13,8 @@ template<typename T>
 inline auto Clone(T &&vSrc)
 	noexcept(std::is_nothrow_constructible<std::remove_reference_t<T>, T &&>::value)
 {
-	return std::remove_cv_t<std::remove_reference_t<T>>(std::forward<T>(vSrc));
+	auto vTemp(std::forward<T>(vSrc));
+	return vTemp;
 }
 
 }

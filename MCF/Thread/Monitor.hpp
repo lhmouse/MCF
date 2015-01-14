@@ -74,7 +74,7 @@ private:
 
 	MonitorLock(const MonitorLock &) = delete;
 	MonitorLock &operator=(const MonitorLock &) = delete;
-	MonitorLock &operator=(MonitorLock &&) = delete;
+	MonitorLock &operator=(MonitorLock &&) noexcept = delete;
 };
 
 template<class ObjectT, class MutexT>

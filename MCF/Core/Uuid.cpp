@@ -23,7 +23,7 @@ public:
 		const auto vLock = xm_vMutex.GetLock();
 		return std::make_pair(++xm_u32AutoId, xm_rngRandom());
 	}
-} g_vGenerator __attribute__((__init_priority__(101)));
+} g_vGenerator __attribute__((__init_priority__(500)));
 
 }
 

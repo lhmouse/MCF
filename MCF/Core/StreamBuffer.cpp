@@ -83,8 +83,8 @@ public:
 	unsigned m_uWrite;
 };
 
-Mutex						StreamBuffer::xChunk::s_vPoolMutex	__attribute__((__init_priority__(101)));
-List<StreamBuffer::xChunk>	StreamBuffer::xChunk::s_lstPool		__attribute__((__init_priority__(101)));
+Mutex						StreamBuffer::xChunk::s_vPoolMutex	__attribute__((__init_priority__(500)));
+List<StreamBuffer::xChunk>	StreamBuffer::xChunk::s_lstPool		__attribute__((__init_priority__(500)));
 
 class StreamBuffer::TraverseContext
 	: public List<StreamBuffer::xChunk>::Node

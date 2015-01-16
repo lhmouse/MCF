@@ -26,7 +26,7 @@ struct PoolClearer {
 			}
 		}
 	}
-} const g_vPoolClearer __attribute__((__init_priority__(101)));
+} const g_vPoolClearer __attribute__((__init_priority__(500)));
 
 }
 

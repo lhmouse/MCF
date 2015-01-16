@@ -13,16 +13,31 @@
 
 namespace MCF {
 
-using OnceFlag = volatile enum class OnceFlag_ : bool { };
+namespace Impl {
+	class OnceFlag {
+	private:
+		bool xm_bFlag;
+
+	public:
+		constexpr OnceFlag() noexcept
+			: xm_bFlag(false)
+		{
+		}
+
+		OnceFlag(const OnceFlag &) = delete;
+		OnceFlag &operator=(const OnceFlag &) = delete;
+	};
+}
+
+using OnceFlag = volatile Impl::OnceFlag;
 
 template<typename FunctionT, typename ...ParamsT>
 bool CallOnce(OnceFlag &vFlag, FunctionT &&vFunction, ParamsT &&...vParams){
-	auto &bFlag = reinterpret_cast<volatile bool &>(vFlag);
+	auto &bFlag = static_cast<volatile bool &>(vFlag);
 
 	if(AtomicLoad(bFlag, MemoryModel::ACQUIRE)){
 		return false;
-	}
-	{
+	} else {
 		::MCF_CRT_GlobalMutexLock();
 		DEFER(::MCF_CRT_GlobalMutexUnlock);
 
@@ -31,8 +46,8 @@ bool CallOnce(OnceFlag &vFlag, FunctionT &&vFunction, ParamsT &&...vParams){
 		}
 		std::forward<FunctionT>(vFunction)(std::forward<ParamsT>(vParams)...);
 		AtomicStore(bFlag, true, MemoryModel::RELEASE);
+		return true;
 	}
-	return true;
 }
 
 }

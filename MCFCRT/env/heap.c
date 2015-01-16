@@ -26,10 +26,10 @@ void MCF_OnHeapDealloc(void *pBlock, const void *pRetAddr){
 	UNREF_PARAM(pRetAddr);
 }
 
-static CRITICAL_SECTION		g_csHeapLock;
+static CRITICAL_SECTION g_csHeapMutex;
 
 bool __MCF_CRT_HeapInit(){
-	if(!InitializeCriticalSectionEx(&g_csHeapLock, 0x1000u,
+	if(!InitializeCriticalSectionEx(&g_csHeapMutex, 0x1000u,
 #if __MCF_CRT_REQUIRE_HEAPDBG_LEVEL(1)
 		CRITICAL_SECTION_NO_DEBUG_INFO
 #else
@@ -42,7 +42,7 @@ bool __MCF_CRT_HeapInit(){
 	return true;
 }
 void __MCF_CRT_HeapUninit(){
-	DeleteCriticalSection(&g_csHeapLock);
+	DeleteCriticalSection(&g_csHeapMutex);
 }
 
 unsigned char *__MCF_CRT_HeapAlloc(size_t uSize, const void *pRetAddr){
@@ -61,7 +61,7 @@ unsigned char *__MCF_CRT_HeapAlloc(size_t uSize, const void *pRetAddr){
 #endif
 
 	unsigned char *pRet = nullptr;
-	EnterCriticalSection(&g_csHeapLock);
+	EnterCriticalSection(&g_csHeapMutex);
 	{
 		do {
 			unsigned char *const pRaw = dlmalloc(uRawSize);
@@ -80,7 +80,7 @@ unsigned char *__MCF_CRT_HeapAlloc(size_t uSize, const void *pRetAddr){
 			}
 		} while(MCF_OnBadAlloc());
 	}
-	LeaveCriticalSection(&g_csHeapLock);
+	LeaveCriticalSection(&g_csHeapMutex);
 	if(!pRet){
 		SetLastError(ERROR_NOT_ENOUGH_MEMORY);
 	}
@@ -106,7 +106,7 @@ unsigned char *__MCF_CRT_HeapReAlloc(void *pBlock, size_t uSize, const void *pRe
 #endif
 
 	unsigned char *pRet = nullptr;
-	EnterCriticalSection(&g_csHeapLock);
+	EnterCriticalSection(&g_csHeapMutex);
 	{
 #if __MCF_CRT_REQUIRE_HEAPDBG_LEVEL(3)
 		unsigned char *pRawOriginal;
@@ -142,7 +142,7 @@ unsigned char *__MCF_CRT_HeapReAlloc(void *pBlock, size_t uSize, const void *pRe
 			}
 		} while(MCF_OnBadAlloc());
 	}
-	LeaveCriticalSection(&g_csHeapLock);
+	LeaveCriticalSection(&g_csHeapMutex);
 	if(!pRet){
 		SetLastError(ERROR_NOT_ENOUGH_MEMORY);
 	}
@@ -157,7 +157,7 @@ void __MCF_CRT_HeapFree(void *pBlock, const void *pRetAddr){
 	SetLastError(0xDEADBEEF);
 #endif
 
-	EnterCriticalSection(&g_csHeapLock);
+	EnterCriticalSection(&g_csHeapMutex);
 	{
 		MCF_OnHeapDealloc(pBlock, pRetAddr);
 
@@ -175,7 +175,7 @@ void __MCF_CRT_HeapFree(void *pBlock, const void *pRetAddr){
 #endif
 		dlfree(pRaw);
 	}
-	LeaveCriticalSection(&g_csHeapLock);
+	LeaveCriticalSection(&g_csHeapMutex);
 }
 
 bool MCF_OnBadAlloc(){

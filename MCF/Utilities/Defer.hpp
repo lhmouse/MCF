@@ -27,16 +27,19 @@ namespace Impl {
 	};
 
 	template<typename CallbackT>
-	auto CreateDeferredCallback(CallbackT &&vCallback){
-		return DeferredCallback<std::remove_reference_t<CallbackT>>(std::forward<CallbackT>(vCallback));
+	auto CreateDeferredCallback(CallbackT &&vCallback)
+		-> DeferredCallback<std::decay_t<std::remove_reference_t<CallbackT>>>
+	{
+		return DeferredCallback<std::decay_t<std::remove_reference_t<CallbackT>>>(
+			std::forward<CallbackT>(vCallback));
 	}
 }
 
 }
 
-#define DEFER_UNIQUE_ID_2_(cnt_)	MCF_DeferredCallback_ ## cnt_ ## _
+#define DEFER_UNIQUE_ID_2_(cnt_)	MCF_DeferredCallback_ ## cnt_ ## X_
 #define DEFER_UNIQUE_ID_(cnt_)		DEFER_UNIQUE_ID_2_(cnt_)
 
-#define DEFER(func_)	const volatile auto DEFER_UNIQUE_ID_(__COUNTER__) = ::MCF::Impl::CreateDeferredCallback(func_)
+#define DEFER(func_)				const auto DEFER_UNIQUE_ID_(__COUNTER__) = ::MCF::Impl::CreateDeferredCallback(func_)
 
 #endif

@@ -10,9 +10,6 @@
 namespace MCF {
 
 class IsaacGenerator {
-public:
-	static std::uint32_t GlobalGet() noexcept;
-
 private:
 	std::uint32_t xm_u32Internal[256];
 	std::uint32_t xm_u32A;
@@ -38,6 +35,11 @@ public:
 	void Init(const std::uint32_t (&au32Seed)[8]) noexcept;
 
 	std::uint32_t Get() noexcept;
+
+public:
+	std::uint32_t operator()() noexcept {
+		return Get();
+	}
 };
 
 }

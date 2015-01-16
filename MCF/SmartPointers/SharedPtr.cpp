@@ -4,7 +4,8 @@
 
 #include "../StdMCF.hpp"
 #include "SharedPtr.hpp"
-#include "../Thread/Mutex.hpp"
+#include "../../MCFCRT/ext/expect.h"
+#include "../Thread/Atomic.hpp"
 using namespace MCF;
 
 namespace {
@@ -14,47 +15,43 @@ union alignas(std::max_align_t) PooledSharedControl {
 	char achDummy[sizeof(Impl::SharedControl)];
 };
 
-class Pool : NONCOPYABLE {
-private:
-	Mutex xm_vMutex;
-	PooledSharedControl *xm_pHead;
+PooledSharedControl *volatile g_pPoolHead = nullptr;
 
-public:
-	Pool()
-		: xm_pHead(nullptr)
-	{
-	}
-	~Pool(){
-		auto pCur = xm_pHead;
-		while(pCur){
-			const auto pNext = pCur->pNext;
-			delete pCur;
-			pCur = pNext;
-		}
-	}
-
-public:
-	PooledSharedControl *Allocate(){
-		{
-			const auto vLock = xm_vMutex.GetLock();
-			if(xm_pHead){
-				return std::exchange(xm_pHead, xm_pHead->pNext);
+struct PoolClearer {
+	~PoolClearer(){
+		auto pHead = AtomicLoad(g_pPoolHead, MemoryModel::RELAXED);
+		while(pHead){
+			if(EXPECT(AtomicCompareExchange(g_pPoolHead, pHead, pHead->pNext, MemoryModel::RELAXED))){
+				delete pHead;
 			}
 		}
-		return new PooledSharedControl;
 	}
-	void Deallocate(PooledSharedControl *pPooled) noexcept {
-		const auto vLock = xm_vMutex.GetLock();
-		pPooled->pNext = std::exchange(xm_pHead, pPooled);
-	}
-} g_vPool;
+} const g_vPoolClearer __attribute__((__init_priority__(101)));
 
 }
 
 void *Impl::SharedControl::operator new(std::size_t uSize){
 	ASSERT(uSize == sizeof(PooledSharedControl));
-	return g_vPool.Allocate();
+
+	auto pHead = AtomicLoad(g_pPoolHead, MemoryModel::RELAXED);
+	while(pHead){
+		if(EXPECT_NOT(AtomicCompareExchange(g_pPoolHead, pHead, pHead->pNext, MemoryModel::RELAXED))){
+			break;
+		}
+	}
+	if(!pHead){
+		pHead = new(PooledSharedControl);
+	}
+	return pHead;
 }
 void Impl::SharedControl::operator delete(void *pData) noexcept {
-	g_vPool.Deallocate(static_cast<PooledSharedControl *>(pData));
+	if(!pData){
+		return;
+	}
+	const auto pToPool = static_cast<PooledSharedControl *>(pData);
+
+	auto pHead = AtomicLoad(g_pPoolHead, MemoryModel::RELAXED);
+	do {
+		pToPool->pNext = pHead;
+	} while(EXPECT(!AtomicCompareExchange(g_pPoolHead, pHead, pToPool, MemoryModel::RELAXED)));
 }

@@ -13,9 +13,7 @@ namespace Impl {
 		constexpr NoncopyableBase() noexcept = default;
 
 		NoncopyableBase(const NoncopyableBase &) = delete;
-		NoncopyableBase(NoncopyableBase &&) noexcept = delete;
 		NoncopyableBase &operator=(const NoncopyableBase &) = delete;
-		NoncopyableBase &operator=(NoncopyableBase &&) noexcept = delete;
 	};
 }
 

@@ -10,9 +10,6 @@
 namespace MCF {
 
 class FastGenerator {
-public:
-	static std::uint32_t GlobalGet() noexcept;
-
 private:
 	std::uint64_t xm_u64Seed;
 
@@ -25,6 +22,11 @@ public:
 	void Init(std::uint32_t u32Seed = ReadTimestampCounterLow()) noexcept;
 
 	std::uint32_t Get() noexcept;
+
+public:
+	std::uint32_t operator()() noexcept {
+		return Get();
+	}
 };
 
 }

@@ -5,24 +5,10 @@
 #include "../StdMCF.hpp"
 #include "IsaacGenerator.hpp"
 #include "../Utilities/Algorithms.hpp"
-#include "../Thread/Mutex.hpp"
 using namespace MCF;
 
 // http://www.burtleburtle.net/bob/rand/isaacafa.html
 // http://www.burtleburtle.net/bob/c/readable.c
-
-namespace {
-
-Mutex g_vMutex;
-IsaacGenerator g_vGenerator;
-
-}
-
-// 静态成员函数。
-std::uint32_t IsaacGenerator::GlobalGet() noexcept {
-	const auto vLock = g_vMutex.GetLock();
-	return g_vGenerator.Get();
-}
 
 // 其他非静态成员函数。
 void IsaacGenerator::Init(std::uint32_t u32Seed) noexcept {

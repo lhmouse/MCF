@@ -5,23 +5,9 @@
 #include "../StdMCF.hpp"
 #include "FastGenerator.hpp"
 #include "../Utilities/Algorithms.hpp"
-#include "../Thread/Mutex.hpp"
 using namespace MCF;
 
 // http://en.wikipedia.org/wiki/Linear_congruential_generator
-
-namespace {
-
-Mutex g_vMutex;
-FastGenerator g_vGenerator;
-
-}
-
-// 静态成员函数。
-std::uint32_t FastGenerator::GlobalGet() noexcept {
-	const auto vLock = g_vMutex.GetLock();
-	return g_vGenerator.Get();
-}
 
 // 其他非静态成员函数。
 void FastGenerator::Init(std::uint32_t u32Seed) noexcept {

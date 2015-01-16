@@ -14,17 +14,16 @@ union FileTime {
 	std::uint64_t u64;
 };
 
-struct PerformanceFrequency {
-	double lfReciprocal;
-
-	PerformanceFrequency() noexcept {
+const double &GetFrequencyReciprocal() noexcept {
+	static double s_lfRet = []{
 		::LARGE_INTEGER liFrequency;
 		if(!::QueryPerformanceFrequency(&liFrequency)){
 			Bail(L"::QueryPerformanceFrequency() 失败。");
 		}
-		lfReciprocal = 1000.0 / liFrequency.QuadPart;
-	}
-} g_vPerformanceFrequency;
+		return 1000.0 / liFrequency.QuadPart;
+	}();
+	return s_lfRet;
+}
 
 }
 
@@ -51,7 +50,7 @@ double GetHiResMonoClock() noexcept {
 	if(!::QueryPerformanceCounter(&liCounter)){
 		Bail(L"::QueryPerformanceCounter() 失败。");
 	}
-	return liCounter.QuadPart * g_vPerformanceFrequency.lfReciprocal;
+	return liCounter.QuadPart * GetFrequencyReciprocal();
 }
 
 }

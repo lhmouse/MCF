@@ -4,30 +4,40 @@
 
 #include "../StdMCF.hpp"
 #include "Uuid.hpp"
-#include "Time.hpp"
 #include "Exception.hpp"
 #include "../Utilities/Endian.hpp"
 #include "../Random/FastGenerator.hpp"
-#include "../Thread/Atomic.hpp"
+#include "../Thread/Mutex.hpp"
 using namespace MCF;
 
 namespace {
 
-volatile std::uint32_t g_u32AutoId = ReadTimestampCounterLow();
+class Generator {
+private:
+	Mutex xm_vMutex;
+	std::uint32_t xm_u32AutoId = 0;
+	FastGenerator xm_rngRandom;
+
+public:
+	std::pair<std::uint32_t, std::uint32_t> operator()() noexcept {
+		const auto vLock = xm_vMutex.GetLock();
+		return std::make_pair(++xm_u32AutoId, xm_rngRandom());
+	}
+} g_vGenerator __attribute__((__init_priority__(101)));
 
 }
 
 // 静态成员函数。
 Uuid Uuid::Generate(){
 	const auto u64Now = GetUtcTime();
-	const auto u32Unique = AtomicIncrement(g_u32AutoId, MemoryModel::RELAXED);
+	const auto vUnique = g_vGenerator();
 
 	Uuid vRet(nullptr);
 	StoreBe(vRet.xm_unData.au32[0], u64Now >> 28);
 	StoreBe(vRet.xm_unData.au16[2], u64Now >> 12);
 	StoreBe(vRet.xm_unData.au16[3], u64Now & 0x0FFFu); // 版本 = 0
-	StoreBe(vRet.xm_unData.au32[2], 0xC0000000u | u32Unique); // 变种 = 3
-	StoreBe(vRet.xm_unData.au32[3], FastGenerator::GlobalGet());
+	StoreBe(vRet.xm_unData.au32[2], 0xC0000000u | vUnique.first); // 变种 = 3
+	StoreBe(vRet.xm_unData.au32[3], vUnique.second);
 	return vRet;
 }
 

@@ -17,21 +17,17 @@ public:
 	};
 
 private:
-	static std::pair<List<xChunk> &, Mutex::UniqueLock> xRequirePool(){
-		static Mutex s_vPoolMutex;
-		static List<xChunk> s_lstPool;
-
-		return std::make_pair(std::ref(s_lstPool), s_vPoolMutex.GetLock());
-	}
+	static Mutex s_vPoolMutex;
+	static List<xChunk> s_lstPool;
 
 public:
 	static xChunk &PushPooled(List<xChunk> &lstDst){
 		typename List<xChunk>::Node *pNode;
 		{
-			const auto vPool = xRequirePool();
-			if(!vPool.first.IsEmpty()){
-				pNode = vPool.first.GetFirst();
-				lstDst.Splice(nullptr, vPool.first, vPool.first.GetFirst());
+			const auto vLock = s_vPoolMutex.GetLock();
+			if(!s_lstPool.IsEmpty()){
+				pNode = s_lstPool.GetFirst();
+				lstDst.Splice(nullptr, s_lstPool, s_lstPool.GetFirst());
 				goto jDone;
 			}
 		}
@@ -46,16 +42,16 @@ public:
 	static void PopPooled(List<xChunk> &lstSrc) noexcept {
 		ASSERT(!lstSrc.IsEmpty());
 
-		const auto vPool = xRequirePool();
-		vPool.first.Splice(nullptr, lstSrc, lstSrc.GetLast());
+		const auto vLock = s_vPoolMutex.GetLock();
+		s_lstPool.Splice(nullptr, lstSrc, lstSrc.GetLast());
 	}
 	static xChunk &UnshiftPooled(List<xChunk> &lstDst){
 		typename List<xChunk>::Node *pNode;
 		{
-			const auto vPool = xRequirePool();
-			if(!vPool.first.IsEmpty()){
-				pNode = vPool.first.GetFirst();
-				lstDst.Splice(lstDst.GetFirst(), vPool.first, vPool.first.GetFirst());
+			const auto vLock = s_vPoolMutex.GetLock();
+			if(!s_lstPool.IsEmpty()){
+				pNode = s_lstPool.GetFirst();
+				lstDst.Splice(lstDst.GetFirst(), s_lstPool, s_lstPool.GetFirst());
 				goto jDone;
 			}
 		}
@@ -70,15 +66,15 @@ public:
 	static void ShiftPooled(List<xChunk> &lstSrc) noexcept {
 		ASSERT(!lstSrc.IsEmpty());
 
-		const auto vPool = xRequirePool();
-		vPool.first.Splice(nullptr, lstSrc, lstSrc.GetFirst());
+		const auto vLock = s_vPoolMutex.GetLock();
+		s_lstPool.Splice(nullptr, lstSrc, lstSrc.GetFirst());
 	}
 	static void ClearPooled(List<xChunk> &lstSrc) noexcept {
 		if(lstSrc.IsEmpty()){
 			return;
 		}
-		const auto vPool = xRequirePool();
-		vPool.first.Splice(nullptr, lstSrc);
+		const auto vLock = s_vPoolMutex.GetLock();
+		s_lstPool.Splice(nullptr, lstSrc);
 	}
 
 public:
@@ -86,6 +82,9 @@ public:
 	unsigned m_uRead;
 	unsigned m_uWrite;
 };
+
+Mutex						StreamBuffer::xChunk::s_vPoolMutex	__attribute__((__init_priority__(101)));
+List<StreamBuffer::xChunk>	StreamBuffer::xChunk::s_lstPool		__attribute__((__init_priority__(101)));
 
 class StreamBuffer::TraverseContext
 	: public List<StreamBuffer::xChunk>::Node

@@ -26,6 +26,14 @@ namespace Impl {
 
 		OnceFlag(const OnceFlag &) = delete;
 		OnceFlag &operator=(const OnceFlag &) = delete;
+
+	public:
+		operator const volatile bool &() const volatile & noexcept {
+			return xm_bFlag;
+		}
+		operator volatile bool &() volatile & noexcept {
+			return xm_bFlag;
+		}
 	};
 }
 

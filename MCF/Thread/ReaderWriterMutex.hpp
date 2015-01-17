@@ -51,11 +51,23 @@ public:
 	Result LockAsWriter() noexcept;
 	Result UnlockAsWriter() noexcept;
 
-	UniqueReaderLock TryReaderLock() noexcept;
-	UniqueReaderLock GetReaderLock() noexcept;
+	UniqueReaderLock TryReaderLock() noexcept {
+		UniqueReaderLock vLock(*this, false);
+		vLock.Try();
+		return vLock;
+	}
+	UniqueReaderLock GetReaderLock() noexcept {
+		return UniqueReaderLock(*this);
+	}
 
-	UniqueWriterLock TryWriterLock() noexcept;
-	UniqueWriterLock GetWriterLock() noexcept;
+	UniqueWriterLock TryWriterLock() noexcept {
+		UniqueWriterLock vLock(*this, false);
+		vLock.Try();
+		return vLock;
+	}
+	UniqueWriterLock GetWriterLock() noexcept {
+		return UniqueWriterLock(*this);
+	}
 };
 
 }

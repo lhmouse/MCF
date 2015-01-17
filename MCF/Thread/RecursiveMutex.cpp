@@ -59,23 +59,3 @@ RecursiveMutex::Result RecursiveMutex::Unlock() noexcept {
 	xm_vMutex.Unlock();
 	return R_STATE_CHANGED;
 }
-
-std::size_t RecursiveMutex::UncheckedGetRecursionCount() const noexcept {
-	ASSERT(IsLockedByCurrentThread());
-	return xm_uRecursionCount;
-}
-std::size_t RecursiveMutex::GetRecursionCount() const noexcept {
-	if(!IsLockedByCurrentThread()){
-		return 0;
-	}
-	return UncheckedGetRecursionCount();
-}
-
-RecursiveMutex::UniqueLock RecursiveMutex::TryLock() noexcept {
-	UniqueLock vLock(*this, false);
-	vLock.Try();
-	return vLock;
-}
-RecursiveMutex::UniqueLock RecursiveMutex::GetLock() noexcept {
-	return UniqueLock(*this);
-}

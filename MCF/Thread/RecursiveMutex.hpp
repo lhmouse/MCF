@@ -6,6 +6,7 @@
 #define MCF_THREAD_USER_RECURSIVE_MUTEX_HPP_
 
 #include "../Utilities/Noncopyable.hpp"
+#include "../Utilities/Assert.hpp"
 #include "UniqueLockTemplate.hpp"
 #include "Mutex.hpp"
 #include <cstddef>
@@ -46,12 +47,25 @@ public:
 	Result Lock() noexcept;
 	Result Unlock() noexcept;
 
-	// 要求 IsLockedByCurrentThread() != false。
-	std::size_t UncheckedGetRecursionCount() const noexcept;
-	std::size_t GetRecursionCount() const noexcept;
+	std::size_t UncheckedGetRecursionCount() const noexcept {
+		ASSERT(IsLockedByCurrentThread());
+		return xm_uRecursionCount;
+	}
+	std::size_t GetRecursionCount() const noexcept {
+		if(!IsLockedByCurrentThread()){
+			return 0;
+		}
+		return UncheckedGetRecursionCount();
+	}
 
-	UniqueLock TryLock() noexcept;
-	UniqueLock GetLock() noexcept;
+	UniqueLock TryLock() noexcept {
+		UniqueLock vLock(*this, false);
+		vLock.Try();
+		return vLock;
+	}
+	UniqueLock GetLock() noexcept {
+		return UniqueLock(*this);
+	}
 };
 
 }

@@ -77,12 +77,3 @@ void KernelMutex::Unlock() noexcept {
 		ASSERT_MSG(false, L"ReleaseMutex() 失败。");
 	}
 }
-
-KernelMutex::UniqueLock KernelMutex::TryLock() noexcept {
-	UniqueLock vLock(*this, false);
-	vLock.Try();
-	return vLock;
-}
-KernelMutex::UniqueLock KernelMutex::GetLock() noexcept {
-	return UniqueLock(*this);
-}

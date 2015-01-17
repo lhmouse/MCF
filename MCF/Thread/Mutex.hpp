@@ -43,8 +43,14 @@ public:
 	void Lock() noexcept;
 	void Unlock() noexcept;
 
-	UniqueLock TryLock() noexcept;
-	UniqueLock GetLock() noexcept;
+	UniqueLock TryLock() noexcept {
+		UniqueLock vLock(*this, false);
+		vLock.Try();
+		return vLock;
+	}
+	UniqueLock GetLock() noexcept {
+		return UniqueLock(*this);
+	}
 };
 
 }

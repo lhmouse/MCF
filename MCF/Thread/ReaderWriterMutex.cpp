@@ -161,21 +161,3 @@ ReaderWriterMutex::Result ReaderWriterMutex::UnlockAsWriter() noexcept {
 	}
 	return R_STATE_CHANGED;
 }
-
-ReaderWriterMutex::UniqueReaderLock ReaderWriterMutex::TryReaderLock() noexcept {
-	UniqueReaderLock vLock(*this, false);
-	vLock.Try();
-	return vLock;
-}
-ReaderWriterMutex::UniqueReaderLock ReaderWriterMutex::GetReaderLock() noexcept {
-	return UniqueReaderLock(*this);
-}
-
-ReaderWriterMutex::UniqueWriterLock ReaderWriterMutex::TryWriterLock() noexcept {
-	UniqueWriterLock vLock(*this, false);
-	vLock.Try();
-	return vLock;
-}
-ReaderWriterMutex::UniqueWriterLock ReaderWriterMutex::GetWriterLock() noexcept {
-	return UniqueWriterLock(*this);
-}

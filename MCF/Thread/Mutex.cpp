@@ -104,12 +104,3 @@ void Mutex::Unlock() noexcept {
 	}
 	xm_splQueueSize.Unlock(uQueueSize);
 }
-
-Mutex::UniqueLock Mutex::TryLock() noexcept {
-	UniqueLock vLock(*this, false);
-	vLock.Try();
-	return vLock;
-}
-Mutex::UniqueLock Mutex::GetLock() noexcept {
-	return UniqueLock(*this);
-}

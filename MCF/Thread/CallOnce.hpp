@@ -8,13 +8,15 @@
 #include <utility>
 #include <cstddef>
 #include "Atomic.hpp"
-#include "../Utilities/Defer.hpp"
-#include "../../MCFCRT/env/global_mutex.h"
+#include "Mutex.hpp"
 
 namespace MCF {
 
 namespace Impl {
 	class OnceFlag {
+	public:
+		static Mutex &GetMutex() noexcept;
+
 	private:
 		bool xm_bFlag;
 
@@ -45,17 +47,16 @@ bool CallOnce(OnceFlag &vFlag, FunctionT &&vFunction, ParamsT &&...vParams){
 
 	if(AtomicLoad(bFlag, MemoryModel::ACQUIRE)){
 		return false;
-	} else {
-		::MCF_CRT_GlobalMutexLock();
-		DEFER(::MCF_CRT_GlobalMutexUnlock);
-
+	}
+	{
+		const auto vLock = Impl::OnceFlag::GetMutex().GetLock();
 		if(AtomicLoad(bFlag, MemoryModel::ACQUIRE)){
 			return false;
 		}
 		std::forward<FunctionT>(vFunction)(std::forward<ParamsT>(vParams)...);
 		AtomicStore(bFlag, true, MemoryModel::RELEASE);
-		return true;
 	}
+	return true;
 }
 
 }

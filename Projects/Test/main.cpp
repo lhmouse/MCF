@@ -1,10 +1,11 @@
 #include <MCF/StdMCF.hpp>
-#include <MCF/SmartPointers/PolymorphicSharedPtr.hpp>
+#include <MCF/Thread/CallOnce.hpp>
 using namespace MCF;
 
+OnceFlag fl;
+
 extern "C" unsigned int MCFMain() noexcept {
-	auto p1 = MakePolymorphicShared<int>();
-	auto p2 = MakePolymorphicShared<long long>();
-	auto p3 = MakePolymorphicShared<double>();
+	CallOnce(fl, []{ std::puts("meow!"); });
+	CallOnce(fl, []{ std::puts("meow!"); });
 	return 0;
 }

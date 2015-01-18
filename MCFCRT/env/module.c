@@ -9,7 +9,6 @@
 #include "heap.h"
 #include "heap_dbg.h"
 #include "thread.h"
-#include "global_mutex.h"
 #include "hooks.h"
 #include "../ext/expect.h"
 #include <stdlib.h>
@@ -73,10 +72,9 @@ static bool Init(){
 	DO_INIT(0, __MCF_CRT_FEnvInit());
 	DO_INIT(1, __MCF_CRT_HeapInit());
 	DO_INIT(2, __MCF_CRT_HeapDbgInit());
-	DO_INIT(3, __MCF_CRT_GlobalMutexInit());
-	DO_INIT(4, __MCF_CRT_TlsEnvInit());
-	DO_INIT(5, __MCF_CRT_MinGWHacksInit());
-	DO_INIT(6, BeginModule());
+	DO_INIT(3, __MCF_CRT_TlsEnvInit());
+	DO_INIT(4, __MCF_CRT_MinGWHacksInit());
+	DO_INIT(5, BeginModule());
 //	=========================================================
 
 		break;
@@ -100,10 +98,9 @@ static void Uninit(){
 		}
 
 //	=========================================================
-	DO_UNINIT(6, EndModule());
-	DO_UNINIT(5, __MCF_CRT_MinGWHacksUninit());
-	DO_UNINIT(4, __MCF_CRT_TlsEnvUninit());
-	DO_UNINIT(3, __MCF_CRT_GlobalMutexUninit());
+	DO_UNINIT(5, EndModule());
+	DO_UNINIT(4, __MCF_CRT_MinGWHacksUninit());
+	DO_UNINIT(3, __MCF_CRT_TlsEnvUninit());
 	DO_UNINIT(2, __MCF_CRT_HeapDbgUninit());
 	DO_UNINIT(1, __MCF_CRT_HeapUninit());
 	DO_UNINIT(0, __MCF_CRT_FEnvUninit());

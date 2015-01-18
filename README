@@ -28,12 +28,13 @@ Git is GAAAAAAAARBAGE. Git SUCKs.
 lh_mouse
 2013-10-11
 
-问题反馈
+编译说明
 ===================
 编译器请使用 i686-w64-mingw32-gcc 或 x86_64-w64-mingw32-gcc，线程模型选 Win32。
-
 *** 使用 POSIX 线程模型的工具链会出现各种奇怪的问题，特别是链接错误。 ***
 
 请使用 MCFBuild 构建，在 MCFBuild 目录下有二进制可执行文件。
 
+问题反馈
+===================
 请联系 lh_mouse at 126 dot com。

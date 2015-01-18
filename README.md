@@ -1,4 +1,9 @@
-IRC channel:
+# 简介 / Introduction
+
+```MCF``` 是一个基于 C++14 的 Windows 框架。
+```MCF``` is a C++14 framework for Windows application development.
+
+## IRC channel:
 https://webchat.freenode.net/?channels=mcfproj
 
 *** USE SVN PLEASE ***
@@ -28,3 +33,6 @@ lh_mouse
 *** 使用 POSIX 线程模型的工具链会出现各种奇怪的问题，特别是链接错误。 ***
 
 请使用 MCFBuild 构建，在 MCFBuild 目录下有二进制可执行文件。
+
+## 问题反馈
+请联系 ```lh_mouse at 126 dot com```。

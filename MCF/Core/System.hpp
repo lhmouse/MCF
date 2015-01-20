@@ -6,7 +6,6 @@
 #define MCF_CORE_SYSTEM_HPP_
 
 #include <cstddef>
-#include <cstdint>
 
 namespace MCF {
 

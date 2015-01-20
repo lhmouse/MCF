@@ -2,12 +2,11 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2013 - 2015, LH_Mouse. All wrongs reserved.
 
-#ifndef MCF_THREAD_THREAD_LOCAL_PTR_HPP_
-#define MCF_THREAD_THREAD_LOCAL_PTR_HPP_
+#ifndef MCF_THREAD_THREAD_LOCAL_HPP_
+#define MCF_THREAD_THREAD_LOCAL_HPP_
 
 #include "../../MCFCRT/env/thread.h"
 #include "../Utilities/Noncopyable.hpp"
-#include "../Utilities/Defer.hpp"
 #include "../Core/UniqueHandle.hpp"
 #include "../Core/Exception.hpp"
 #include <exception>
@@ -44,7 +43,7 @@ namespace Impl {
 }
 
 template<class ObjectT>
-class ThreadLocalPtr : NONCOPYABLE {
+class ThreadLocal : NONCOPYABLE {
 private:
 	using xExceptionWrapper = Impl::ExceptionWrapper<std::is_nothrow_copy_constructible<ObjectT>::value>;
 	using xExceptionPtr = typename xExceptionWrapper::ExceptionPtr;
@@ -63,34 +62,36 @@ private:
 	UniqueHandle<xTlsKeyDeleter> xm_pTlsKey;
 
 public:
-	explicit ThreadLocalPtr(ObjectT vTemplate = ObjectT())
+	explicit ThreadLocal(ObjectT vTemplate = ObjectT())
 		: xm_vTemplate(std::move(vTemplate))
 	{
-		if(!xm_pTlsKey.Reset(::MCF_CRT_TlsAllocKey([](std::intptr_t nValue) noexcept { delete (ObjectT *)nValue; }))){
+		if(!xm_pTlsKey.Reset(::MCF_CRT_TlsAllocKey(
+			[](std::intptr_t nValue) noexcept { delete (ObjectT *)nValue; })))
+		{
 			DEBUG_THROW(SystemError, "MCF_CRT_TlsAllocKey");
 		}
 	}
 
 private:
 	ObjectT *xDoGetPtr() const noexcept {
-		ObjectT *pObject = nullptr;
+		bool bHasValue;
 		std::intptr_t nValue;
-		if(::MCF_CRT_TlsGet(xm_pTlsKey.Get(), &nValue)){
-			pObject = (ObjectT *)nValue;
+		if(!::MCF_CRT_TlsGet(xm_pTlsKey.Get(), &bHasValue, &nValue)){
+			return nullptr;
 		}
-		return pObject;
+		if(!bHasValue){
+			return nullptr;
+		}
+		return reinterpret_cast<ObjectT *>(nValue);
 	}
 	ObjectT *xDoAllocPtr() const {
 		auto pObject = xDoGetPtr();
 		if(!pObject){
-			auto pNewObject = new ObjectT(xm_vTemplate);
-			DEFER([&]{ delete pNewObject; });
-			if(!::MCF_CRT_TlsReset(xm_pTlsKey.Get(), (std::intptr_t)pNewObject)){
+			pObject = new ObjectT(xm_vTemplate);
+			if(!::MCF_CRT_TlsReset(xm_pTlsKey.Get(), (std::intptr_t)pObject)){ // noexcept
+				delete pObject;
 				DEBUG_THROW(SystemError, "MCF_CRT_TlsReset");
 			}
-
-			pObject = pNewObject;
-			pNewObject = nullptr;
 		}
 		return pObject;
 	}

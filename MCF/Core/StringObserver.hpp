@@ -209,15 +209,9 @@ public:
 		: xm_pchBegin(nullptr), xm_pchEnd(nullptr)
 	{
 	}
-#ifdef NDEBUG
-	constexpr
-#endif
-	StringObserver(const CharType *pchBegin, const CharType *pchEnd) noexcept
+	constexpr StringObserver(const CharType *pchBegin, const CharType *pchEnd) noexcept
 		: xm_pchBegin(pchBegin), xm_pchEnd(pchEnd)
 	{
-#ifndef NDEBUG
-		ASSERT(pchBegin <= pchEnd);
-#endif
 	}
 	constexpr StringObserver(std::nullptr_t, std::nullptr_t = nullptr) noexcept
 		: StringObserver()

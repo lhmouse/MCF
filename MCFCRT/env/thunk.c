@@ -51,16 +51,16 @@ static bool FreeSizeComparatorNodeKey(const MCF_AvlNodeHeader *pIndex1, intptr_t
 	return (size_t)nKey1 < (GetInfoFromFreeSizeIndex(pIndex2)->uFreeSize);
 }*/
 
-static SRWLOCK		g_srwLock 				= SRWLOCK_INIT;
+static CRITICAL_SECTION	g_csMutex;
 
-static uintptr_t	g_uPageMask				= 0;
-static ThunkInfo *	g_pSpare				= nullptr;
-static bool			g_bCleanupRegistered	= false;
+static uintptr_t		g_uPageMask				= 0;
+static ThunkInfo *		g_pSpare				= nullptr;
+static bool				g_bCleanupRegistered	= false;
 
-static MCF_AvlRoot	g_pavlThunksByThunk		= nullptr;
-static MCF_AvlRoot	g_pavlThunksByFreeSize	= nullptr;
+static MCF_AvlRoot		g_pavlThunksByThunk		= nullptr;
+static MCF_AvlRoot		g_pavlThunksByFreeSize	= nullptr;
 
-void BackupCleanup(){
+static void BackupCleanup(){
 	free(g_pSpare);
 	g_pSpare = nullptr;
 }
@@ -70,7 +70,7 @@ void *MCF_CRT_AllocateThunk(const void *pInit, size_t uSize){
 
 	unsigned char *pRet = nullptr;
 
-	AcquireSRWLockExclusive(&g_srwLock);
+	EnterCriticalSection(&g_csMutex);
 	{
 		if(g_uPageMask == 0){
 			SYSTEM_INFO vSystemInfo;
@@ -157,7 +157,7 @@ void *MCF_CRT_AllocateThunk(const void *pInit, size_t uSize){
 		VirtualProtect(pRet, uThunkSize, PAGE_EXECUTE_READ, &dwOldProtect);
 	}
 done:
-	ReleaseSRWLockExclusive(&g_srwLock);
+	LeaveCriticalSection(&g_csMutex);
 
 	if(!pRet){
 		SetLastError(ERROR_NOT_ENOUGH_MEMORY);
@@ -167,7 +167,7 @@ done:
 void MCF_CRT_DeallocateThunk(void *pThunk, bool bToPoison){
 	void *pPageToRelease;
 
-	AcquireSRWLockExclusive(&g_srwLock);
+	EnterCriticalSection(&g_csMutex);
 	{
 		MCF_AvlNodeHeader *pThunkIndex = MCF_AvlFind(&g_pavlThunksByThunk,
 			(intptr_t)pThunk, &ThunkComparatorNodeKey, &ThunkComparatorKeyNode);
@@ -230,7 +230,7 @@ void MCF_CRT_DeallocateThunk(void *pThunk, bool bToPoison){
 			MCF_AvlAttach(&g_pavlThunksByFreeSize, &(pInfo->vFreeSizeIndex), &FreeSizeComparatorNodes);
 		}
 	}
-	ReleaseSRWLockExclusive(&g_srwLock);
+	LeaveCriticalSection(&g_csMutex);
 
 	if(pPageToRelease){
 		VirtualFree(pPageToRelease, 0, MEM_RELEASE);

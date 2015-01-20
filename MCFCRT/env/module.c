@@ -43,7 +43,7 @@ static inline void EndModule(){
 	// with thread storage duration within that thread are sequenced
 	// before the initiation of the destructors of any object with
 	// static storage duration. (...)
-	__MCF_CRT_RunEmutlsDtors();
+	MCF_CRT_TlsClearAll();
 
 	// libgcc 使用 atexit() 调用全局析构函数。
 	AtExitNode *pHead = __atomic_exchange_n(&g_pAtExitHead, nullptr, __ATOMIC_RELAXED);

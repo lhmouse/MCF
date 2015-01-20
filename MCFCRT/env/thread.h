@@ -15,33 +15,21 @@ extern void __MCF_CRT_TlsEnvUninit(void) MCF_NOEXCEPT;
 extern void __stdcall __MCF_CRT_TlsCallback(void *hModule, unsigned long ulReason, void *pReserved) MCF_NOEXCEPT;
 
 // 失败返回 nullptr。
-extern void *MCF_CRT_AtThreadExit(void (__cdecl *pfnProc)(MCF_STD intptr_t), MCF_STD intptr_t nContext) MCF_NOEXCEPT;
-extern bool MCF_CRT_RemoveAtThreadExit(void *pTlsKey) MCF_NOEXCEPT;
-
-// 失败返回 nullptr。
 extern void *MCF_CRT_TlsAllocKey(void (__cdecl *pfnCallback)(MCF_STD intptr_t)) MCF_NOEXCEPT;
 extern bool MCF_CRT_TlsFreeKey(void *pTlsKey) MCF_NOEXCEPT;
 
-extern bool MCF_CRT_TlsGet(void *pTlsKey, MCF_STD intptr_t *pnValue) MCF_NOEXCEPT;
+extern bool MCF_CRT_TlsGet(void *pTlsKey, bool *pbHasValue, MCF_STD intptr_t *pnValue) MCF_NOEXCEPT;
 // 触发回调。
 extern bool MCF_CRT_TlsReset(void *pTlsKey, MCF_STD intptr_t nNewValue) MCF_NOEXCEPT;
-
-typedef enum tagMCF_TlsExchangeResult {
-	MCF_TLSXCH_FAILED,				// 失败（例如 key 无效）。
-	MCF_TLSXCH_OLD_VAL_RETURNED,	// *pnOldValue 返回旧值。
-	MCF_TLSXCH_NEW_VAL_SET,			// 旧值未设定。
-} MCF_TlsExchangeResult;
-
-// 不触发回调。pnOldValue 不得为空。
-extern MCF_TlsExchangeResult MCF_CRT_TlsExchange(void *pTlsKey,
-	MCF_STD intptr_t *pnOldValue, MCF_STD intptr_t nNewValue) MCF_NOEXCEPT;
-
+// 不触发回调，pnOldValue 不得为空。
+extern bool MCF_CRT_TlsExchange(void *pTlsKey, bool *pbHasOldValue, MCF_STD intptr_t *pnOldValue, MCF_STD intptr_t nNewValue) MCF_NOEXCEPT;
 // 删除所有 Tls。
 extern void MCF_CRT_TlsClearAll() MCF_NOEXCEPT;
 
+extern int MCF_CRT_AtEndThread(void (__cdecl *pfnProc)(MCF_STD intptr_t), MCF_STD intptr_t nContext);
+
 // 返回的是 HANDLE。
-extern void *MCF_CRT_CreateThread(unsigned (*pfnThreadProc)(MCF_STD intptr_t), MCF_STD intptr_t nParam,
-	bool bSuspended, unsigned long *pulThreadId) MCF_NOEXCEPT;
+extern void *MCF_CRT_CreateThread(unsigned (*pfnThreadProc)(MCF_STD intptr_t), MCF_STD intptr_t nParam, bool bSuspended, unsigned long *pulThreadId) MCF_NOEXCEPT;
 
 __MCF_CRT_EXTERN_C_END
 

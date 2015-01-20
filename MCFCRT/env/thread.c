@@ -13,123 +13,104 @@
 #include "../ext/unref_param.h"
 #include <stdlib.h>
 
-// 结构定义。
-// 全局的用于描述已分配的 Tls 键的结构。
+typedef struct tagTlsObject {
+	MCF_AvlNodeHeader vHeader;
+
+	intptr_t nValue;
+
+	struct tagThreadMap *pMap;
+	struct tagTlsObject *pPrevByThread;
+	struct tagTlsObject *pNextByThread;
+
+	struct tagTlsKey *pKey;
+	struct tagTlsObject *pPrevByKey;
+	struct tagTlsObject *pNextByKey;
+} TlsObject;
+
+static bool ObjectComparatorNodes(const MCF_AvlNodeHeader *pObj1, const MCF_AvlNodeHeader *pObj2){
+	return (uintptr_t)(void *)((const TlsObject *)pObj1)->pKey < (uintptr_t)(void *)((const TlsObject *)pObj2)->pKey;
+}
+static bool ObjectComparatorNodeKey(const MCF_AvlNodeHeader *pObj1, intptr_t nKey2){
+	return (uintptr_t)(void *)((const TlsObject *)pObj1)->pKey < (uintptr_t)(void *)nKey2;
+}
+static bool ObjectComparatorKeyNode(intptr_t nKey1, const MCF_AvlNodeHeader *pObj2){
+	return (uintptr_t)(void *)nKey1 < (uintptr_t)(void *)((const TlsObject *)pObj2)->pKey;
+}
+
+typedef struct tagThreadMap {
+	CRITICAL_SECTION csMutex;
+	MCF_AvlRoot pavlObjects;
+	struct tagTlsObject *pLastByThread;
+} ThreadMap;
+
 typedef struct tagTlsKey {
 	MCF_AvlNodeHeader vHeader;
 
+	CRITICAL_SECTION csMutex;
 	void (__cdecl *pfnCallback)(intptr_t);
 	struct tagTlsObject *pLastByKey;
 } TlsKey;
 
-static __attribute__((__unused__)) bool KeyComparatorNodes(
-	const MCF_AvlNodeHeader *pObj1, const MCF_AvlNodeHeader *pObj2)
-{
+static bool KeyComparatorNodes(const MCF_AvlNodeHeader *pObj1, const MCF_AvlNodeHeader *pObj2){
 	return (uintptr_t)(void *)pObj1 < (uintptr_t)(void *)pObj2;
 }
-static __attribute__((__unused__)) bool KeyComparatorNodeKey(
-	const MCF_AvlNodeHeader *pObj1, intptr_t nKey2)
-{
+/*static bool KeyComparatorNodeKey(const MCF_AvlNodeHeader *pObj1, intptr_t nKey2){
 	return (uintptr_t)(void *)pObj1 < (uintptr_t)(void *)nKey2;
 }
-static __attribute__((__unused__)) bool KeyComparatorKeyNode(
-	intptr_t nKey1, const MCF_AvlNodeHeader *pObj2)
-{
+static bool KeyComparatorKeyNode(intptr_t nKey1, const MCF_AvlNodeHeader *pObj2){
 	return (uintptr_t)(void *)nKey1 < (uintptr_t)(void *)pObj2;
-}
+}*/
 
-// 用于描述每个线程内所有 Tls 对象的结构。
-typedef struct tagTlsMap {
-	SRWLOCK srwLock;
-	MCF_AvlRoot pavlObjects;
-	struct tagTlsObject *pLastInThread;
-	struct tagTlsMap *pPrevMap;
-	struct tagTlsMap *pNextMap;
-} TlsMap;
-
-// 用于描述每个线程内的每个 Tls 对象的结构。
-typedef struct tagTlsObject {
-	MCF_AvlNodeHeader vHeader;
-
-	struct tagTlsObject *pPrevByKey;
-	struct tagTlsObject *pNextByKey;
-	struct tagTlsObject *pPrevInThread;
-	struct tagTlsObject *pNextInThread;
-
-	struct tagTlsMap *pMap;
-	TlsKey *pKey;
-	intptr_t nValue;
-} TlsObject;
-
-static bool ObjectComparatorNodes(const MCF_AvlNodeHeader *pObj1, const MCF_AvlNodeHeader *pObj2){
-	return (uintptr_t)(void *)((const TlsObject *)pObj1)->pKey <
-		(uintptr_t)(void *)((const TlsObject *)pObj2)->pKey;
-}
-static bool ObjectComparatorNodeKey(const MCF_AvlNodeHeader *pObj1, intptr_t nKey2){
-	return (uintptr_t)(void *)((const TlsObject *)pObj1)->pKey <
-		(uintptr_t)(void *)nKey2;
-}
-static bool ObjectComparatorKeyNode(intptr_t nKey1, const MCF_AvlNodeHeader *pObj2){
-	return (uintptr_t)(void *)nKey1 <
-		(uintptr_t)(void *)((const TlsObject *)pObj2)->pKey;
-}
-
-// 全局变量。
-static DWORD		g_dwTlsIndex	= TLS_OUT_OF_INDEXES;
-
-static SRWLOCK		g_srwLock		= SRWLOCK_INIT;
-static TlsMap *		g_pLastMap		= nullptr;
-static MCF_AvlRoot	g_pavlKeys		= nullptr;
+static CRITICAL_SECTION	g_csKeyMutex;
+static DWORD			g_dwTlsIndex	= TLS_OUT_OF_INDEXES;
+static MCF_AvlRoot		g_pavlKeys		= nullptr;
 
 bool __MCF_CRT_TlsEnvInit(){
+	if(!InitializeCriticalSectionEx(&g_csKeyMutex, 0x400u,
+#ifdef NDEBUG
+		CRITICAL_SECTION_NO_DEBUG_INFO
+#else
+		0
+#endif
+		))
+	{
+		return false;
+	}
 	g_dwTlsIndex = TlsAlloc();
 	if(g_dwTlsIndex == TLS_OUT_OF_INDEXES){
+		const DWORD dwError = GetLastError();
+		DeleteCriticalSection(&g_csKeyMutex);
+		SetLastError(dwError);
 		return false;
 	}
 	return true;
 }
 void __MCF_CRT_TlsEnvUninit(){
+	MCF_AvlNodeHeader *pRoot = g_pavlKeys;
+	if(pRoot){
+		MCF_AvlNodeHeader *pCur = MCF_AvlPrev(pRoot);
+		while(pCur){
+			MCF_AvlNodeHeader *const pTemp = MCF_AvlPrev(pCur);
+			free(pCur);
+			pCur = pTemp;
+		}
+		pCur = MCF_AvlNext(pRoot);
+		while(pCur){
+			MCF_AvlNodeHeader *const pTemp = MCF_AvlNext(pCur);
+			free(pCur);
+			pCur = pTemp;
+		}
+		free(pRoot);
+		g_pavlKeys = nullptr;
+	}
+
 	TlsFree(g_dwTlsIndex);
 	g_dwTlsIndex = TLS_OUT_OF_INDEXES;
 
-	while(g_pLastMap){
-		TlsObject *pObject = g_pLastMap->pLastInThread;
-		while(pObject){
-			if(pObject->pKey->pfnCallback){
-				(*(pObject->pKey->pfnCallback))(pObject->nValue);
-			}
-
-			TlsObject *const pPrevInThread = pObject->pPrevInThread;
-			free(pObject);
-			pObject = pPrevInThread;
-		}
-
-		TlsMap *const pPrevMap = g_pLastMap->pPrevMap;
-		free(g_pLastMap);
-		g_pLastMap = pPrevMap;
-	}
-	if(g_pavlKeys){
-		TlsKey *pCur = (TlsKey *)MCF_AvlPrev(g_pavlKeys);
-		while(pCur){
-			TlsKey *const pPrev = (TlsKey *)MCF_AvlPrev((MCF_AvlNodeHeader *)pCur);
-			free(pCur);
-			pCur = pPrev;
-		}
-
-		pCur = (TlsKey *)MCF_AvlNext(g_pavlKeys);
-		while(pCur){
-			TlsKey *const pNext = (TlsKey *)MCF_AvlNext((MCF_AvlNodeHeader *)pCur);
-			free(pCur);
-			pCur = pNext;
-		}
-
-		free(g_pavlKeys);
-		g_pavlKeys = nullptr;
-	}
+	DeleteCriticalSection(&g_csKeyMutex);
 }
 
-__MCF_C_STDCALL
-void __MCF_CRT_TlsCallback(void *hModule, unsigned long ulReason, void *pReserved){
+void __stdcall __MCF_CRT_TlsCallback(void *hModule, unsigned long ulReason, void *pReserved){
 	UNREF_PARAM(hModule);
 	UNREF_PARAM(pReserved);
 
@@ -138,312 +119,236 @@ void __MCF_CRT_TlsCallback(void *hModule, unsigned long ulReason, void *pReserve
 	}
 }
 
-void *MCF_CRT_AtThreadExit(void (__cdecl *pfnProc)(intptr_t), intptr_t nContext){
-	void *const pKey = MCF_CRT_TlsAllocKey(pfnProc);
-	if(!pKey){
-		return nullptr;
-	}
-	if(!MCF_CRT_TlsReset(pKey, nContext)){
-		const DWORD dwLastError = GetLastError();
-		MCF_CRT_TlsFreeKey(pKey);
-		SetLastError(dwLastError);
-		return nullptr;
-	}
-	return pKey;
-}
-bool MCF_CRT_RemoveAtThreadExit(void *pTlsKey){
-	return MCF_CRT_TlsFreeKey(pTlsKey);
-}
-
 void *MCF_CRT_TlsAllocKey(void (__cdecl *pfnCallback)(intptr_t)){
 	TlsKey *const pKey = malloc(sizeof(TlsKey));
 	if(!pKey){
 		SetLastError(ERROR_NOT_ENOUGH_MEMORY);
 		return nullptr;
 	}
-	pKey->pfnCallback	= pfnCallback;
-	pKey->pLastByKey	= nullptr;
+	if(!InitializeCriticalSectionEx(&(pKey->csMutex), 0x400u,
+#ifdef NDEBUG
+		CRITICAL_SECTION_NO_DEBUG_INFO
+#else
+		0
+#endif
+		))
+	{
+		const DWORD dwError = GetLastError();
+		free(pKey);
+		SetLastError(dwError);
+		return nullptr;
+	}
+	pKey->pfnCallback = pfnCallback;
+	pKey->pLastByKey = nullptr;
 
-	AcquireSRWLockExclusive(&g_srwLock);
+	EnterCriticalSection(&g_csKeyMutex);
 	{
 		MCF_AvlAttach(&g_pavlKeys, (MCF_AvlNodeHeader *)pKey, &KeyComparatorNodes);
 	}
-	ReleaseSRWLockExclusive(&g_srwLock);
+	LeaveCriticalSection(&g_csKeyMutex);
 
 	return pKey;
 }
 bool MCF_CRT_TlsFreeKey(void *pTlsKey){
 	TlsKey *const pKey = pTlsKey;
 	if(!pKey){
+		SetLastError(ERROR_INVALID_PARAMETER);
 		return false;
 	}
 
-	AcquireSRWLockExclusive(&g_srwLock);
+	EnterCriticalSection(&g_csKeyMutex);
 	{
-		ASSERT((TlsKey *)MCF_AvlFind(&g_pavlKeys,
-			(intptr_t)pKey, &KeyComparatorNodeKey, &KeyComparatorKeyNode) == pKey);
-
 		MCF_AvlDetach((MCF_AvlNodeHeader *)pKey);
 	}
-	ReleaseSRWLockExclusive(&g_srwLock);
+	LeaveCriticalSection(&g_csKeyMutex);
 
 	TlsObject *pObject = pKey->pLastByKey;
 	while(pObject){
-		AcquireSRWLockExclusive(&(pObject->pMap->srwLock));
+		ThreadMap *const pMap = pObject->pMap;
+
+		EnterCriticalSection(&(pMap->csMutex));
 		{
-			TlsObject *const pPrevInThread = pObject->pPrevInThread;
-			TlsObject *const pNextInThread = pObject->pNextInThread;
-			if(pPrevInThread){
-				pPrevInThread->pNextInThread = pNextInThread;
+			TlsObject *const pPrev = pObject->pPrevByThread;
+			TlsObject *const pNext = pObject->pNextByThread;
+			if(pPrev){
+				pPrev->pNextByThread = pNext;
 			}
-			if(pNextInThread){
-				pNextInThread->pPrevInThread = pPrevInThread;
+			if(pNext){
+				pNext->pPrevByThread = pPrev;
 			}
 
-			if(pObject->pMap->pLastInThread == pObject){
-				pObject->pMap->pLastInThread = pPrevInThread;
+			if(pMap->pLastByThread == pObject){
+				pMap->pLastByThread = pObject->pPrevByThread;
 			}
 		}
-		ReleaseSRWLockExclusive(&(pObject->pMap->srwLock));
+		LeaveCriticalSection(&(pMap->csMutex));
 
-		if(pObject->pKey->pfnCallback){
-			(*(pObject->pKey->pfnCallback))(pObject->nValue);
+		if(pKey->pfnCallback){
+			(*pKey->pfnCallback)(pObject->nValue);
 		}
 
-		TlsObject *const pPrevByKey = pObject->pPrevByKey;
+		TlsObject *const pTemp = pObject->pPrevByKey;
 		free(pObject);
-		pObject = pPrevByKey;
+		pObject = pTemp;
 	}
+	DeleteCriticalSection(&(pKey->csMutex));
 	free(pKey);
 
 	return true;
 }
 
-bool MCF_CRT_TlsGet(void *pTlsKey, intptr_t *pnValue){
+bool MCF_CRT_TlsGet(void *pTlsKey, bool *pbHasValue, intptr_t *pnValue){
 	TlsKey *const pKey = pTlsKey;
 	if(!pKey){
 		SetLastError(ERROR_INVALID_PARAMETER);
 		return false;
 	}
 
-	bool bRet = false;
-	TlsMap *const pMap = TlsGetValue(g_dwTlsIndex);
-	if(pMap){
-		AcquireSRWLockShared(&(pMap->srwLock));
-		{
-			TlsObject *const pObject = (TlsObject *)MCF_AvlFind(&(pMap->pavlObjects),
-				(intptr_t)pTlsKey, &ObjectComparatorNodeKey, &ObjectComparatorKeyNode);
-			if(pObject){
-				*pnValue = pObject->nValue;
-				bRet = true;
-			}
-		}
-		ReleaseSRWLockShared(&(pMap->srwLock));
-	}
-	SetLastError(ERROR_SUCCESS);
-	return bRet;
-}
+	*pbHasValue = false;
 
-static MCF_TlsExchangeResult TlsExchange(void *pTlsKey,
-	void (__cdecl **ppfnCallback)(intptr_t), intptr_t *pnOldValue, intptr_t nNewValue)
-{
+	ThreadMap *const pMap = TlsGetValue(g_dwTlsIndex);
+	if(!pMap){
+		return true;
+	}
+
+	EnterCriticalSection(&(pMap->csMutex));
+	{
+		TlsObject *const pObject = (TlsObject *)MCF_AvlFind(&(pMap->pavlObjects), (intptr_t)pKey,
+			&ObjectComparatorNodeKey, &ObjectComparatorKeyNode);
+		if(pObject){
+			*pbHasValue = true;
+			*pnValue = pObject->nValue;
+		}
+	}
+	LeaveCriticalSection(&(pMap->csMutex));
+
+	return true;
+}
+bool MCF_CRT_TlsReset(void *pTlsKey, intptr_t nNewValue){
+	bool bHasOldValue;
+	intptr_t nOldValue;
+	if(!MCF_CRT_TlsExchange(pTlsKey, &bHasOldValue, &nOldValue, nNewValue)){
+		return false;
+	}
+	if(bHasOldValue){
+		TlsKey *const pKey = pTlsKey;
+		if(pKey->pfnCallback){
+			(*pKey->pfnCallback)(nOldValue);
+		}
+	}
+	return true;
+}
+bool MCF_CRT_TlsExchange(void *pTlsKey, bool *pbHasOldValue, intptr_t *pnOldValue, intptr_t nNewValue){
 	TlsKey *const pKey = pTlsKey;
 	if(!pKey){
 		SetLastError(ERROR_INVALID_PARAMETER);
-		return MCF_TLSXCH_FAILED;
+		return false;
 	}
 
-#ifndef NDEBUG
-	AcquireSRWLockShared(&g_srwLock);
-	{
-		ASSERT((TlsKey *)MCF_AvlFind(&g_pavlKeys,
-			(intptr_t)pKey, &KeyComparatorNodeKey, &KeyComparatorKeyNode) == pKey);
-	}
-	ReleaseSRWLockShared(&g_srwLock);
-#endif
+	*pbHasOldValue = false;
 
-	TlsMap *pMap = TlsGetValue(g_dwTlsIndex);
+	ThreadMap *pMap = TlsGetValue(g_dwTlsIndex);
 	if(!pMap){
-		pMap = malloc(sizeof(TlsMap));
+		pMap = malloc(sizeof(ThreadMap));
 		if(!pMap){
 			SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-			return MCF_TLSXCH_FAILED;
+			return false;
 		}
-		const SRWLOCK vLockInit = SRWLOCK_INIT;
-		pMap->srwLock		= vLockInit;
-		pMap->pavlObjects	= nullptr;
-		pMap->pLastInThread	= nullptr;
-		pMap->pNextMap		= nullptr;
-
-		AcquireSRWLockExclusive(&g_srwLock);
+		if(!InitializeCriticalSectionEx(&(pMap->csMutex), 0x400u,
+#ifdef NDEBUG
+			CRITICAL_SECTION_NO_DEBUG_INFO
+#else
+			0
+#endif
+			))
 		{
-			TlsMap *const pPrevMap = g_pLastMap;
-			g_pLastMap = pMap;
-			pMap->pPrevMap = pPrevMap;
-			if(pPrevMap){
-				pPrevMap->pNextMap = pMap;
-			}
+			const DWORD dwError = GetLastError();
+			free(pMap);
+			SetLastError(dwError);
+			return false;
 		}
-		ReleaseSRWLockExclusive(&g_srwLock);
+		pMap->pavlObjects = nullptr;
+		pMap->pLastByThread = nullptr;
 
 		TlsSetValue(g_dwTlsIndex, pMap);
 	}
 
-	MCF_TlsExchangeResult eRet;
-
-	AcquireSRWLockExclusive(&(pMap->srwLock));
+	EnterCriticalSection(&(pMap->csMutex));
 	{
-		TlsObject *pObject = (TlsObject *)MCF_AvlLowerBound(&(pMap->pavlObjects),
-			(intptr_t)pKey, &ObjectComparatorNodeKey);
-		if(!pObject || (pObject->pKey != pKey)){
-			const TlsObject *const pHint = pObject;
-
-			ReleaseSRWLockExclusive(&(pMap->srwLock));
-			{
-				pObject = malloc(sizeof(TlsObject));
-				if(!pObject){
-					SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-					return MCF_TLSXCH_FAILED;
-				}
-				pObject->pMap	= pMap;
-				pObject->pKey	= pKey;
-				pObject->nValue	= nNewValue;
-			}
-			AcquireSRWLockExclusive(&(pMap->srwLock));
-
-			MCF_AvlAttachWithHint(&(pMap->pavlObjects), (MCF_AvlNodeHeader *)pHint,
-				(MCF_AvlNodeHeader *)pObject, &ObjectComparatorNodes);
-
-			eRet = MCF_TLSXCH_NEW_VAL_SET;
-		} else {
-			ASSERT(pObject->pMap == pMap);
-			ASSERT(pObject->pKey == pKey);
-
-			if(ppfnCallback){
-				*ppfnCallback = pObject->pKey->pfnCallback;
-			}
+		TlsObject *const pObject = (TlsObject *)MCF_AvlFind(&(pMap->pavlObjects), (intptr_t)pKey,
+			&ObjectComparatorNodeKey, &ObjectComparatorKeyNode);
+		if(pObject){
+			*pbHasOldValue = true;
 			*pnOldValue = pObject->nValue;
-
-			TlsObject *const pPrevByKey = pObject->pPrevByKey;
-			TlsObject *const pNextByKey = pObject->pNextByKey;
-			if(pPrevByKey){
-				pPrevByKey->pNextByKey = pNextByKey;
-			}
-			if(pNextByKey){
-				pNextByKey->pPrevByKey = pPrevByKey;
-			}
-			if(pKey->pLastByKey == pObject){
-				pKey->pLastByKey = pPrevByKey;
-			}
-
-			TlsObject *const pPrevInThread = pObject->pPrevInThread;
-			TlsObject *const pNextInThread = pObject->pNextInThread;
-			if(pPrevInThread){
-				pPrevInThread->pNextInThread = pNextInThread;
-			}
-			if(pNextInThread){
-				pNextInThread->pPrevInThread = pPrevInThread;
-			}
-			if(pMap->pLastInThread == pObject){
-				pMap->pLastInThread = pPrevInThread;
-			}
-
-			pObject->nValue	= nNewValue;
-
-			eRet = MCF_TLSXCH_OLD_VAL_RETURNED;
+			pObject->nValue = nNewValue;
 		}
+	}
+	LeaveCriticalSection(&(pMap->csMutex));
 
-		AcquireSRWLockExclusive(&g_srwLock);
+	if(!*pbHasOldValue){
+		TlsObject *const pObject = malloc(sizeof(TlsObject));
+		if(!pObject){
+			SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+			return false;
+		}
+		pObject->nValue = nNewValue;
+		pObject->pMap = pMap;
+		pObject->pKey = pKey;
+
+		EnterCriticalSection(&(pMap->csMutex));
 		{
-			TlsObject *const pPrevByKey = pKey->pLastByKey;
+			TlsObject *const pPrev = pMap->pLastByThread;
+			pMap->pLastByThread = pObject;
+
+			pObject->pPrevByThread = pPrev;
+			pObject->pNextByThread = nullptr;
+			if(pPrev){
+				pPrev->pNextByThread = pObject;
+			}
+			MCF_AvlAttach(&(pMap->pavlObjects), (MCF_AvlNodeHeader *)pObject, &ObjectComparatorNodes);
+		}
+		LeaveCriticalSection(&(pMap->csMutex));
+
+		EnterCriticalSection(&(pKey->csMutex));
+		{
+			TlsObject *const pPrev = pKey->pLastByKey;
 			pKey->pLastByKey = pObject;
-			if(pPrevByKey){
-				pPrevByKey->pNextByKey = pObject;
+
+			pObject->pPrevByKey = pPrev;
+			pObject->pNextByKey = nullptr;
+			if(pPrev){
+				pPrev->pNextByKey = pObject;
 			}
-			pObject->pPrevByKey	= pPrevByKey;
-			pObject->pNextByKey	= nullptr;
 		}
-		ReleaseSRWLockExclusive(&g_srwLock);
-
-		TlsObject *const pPrevInThread = pMap->pLastInThread;
-		pMap->pLastInThread = pObject;
-		if(pPrevInThread){
-			pPrevInThread->pNextInThread = pObject;
-		}
-		pObject->pPrevInThread = pPrevInThread;
-		pObject->pNextInThread = nullptr;
+		LeaveCriticalSection(&(pKey->csMutex));
 	}
-	ReleaseSRWLockExclusive(&(pMap->srwLock));
 
-	return eRet;
+	return true;
 }
-
-bool MCF_CRT_TlsReset(void *pTlsKey, intptr_t nNewValue){
-	void (__cdecl *pfnCallback)(intptr_t) = nullptr;
-	intptr_t nOldValue = 0;
-	switch(TlsExchange(pTlsKey, &pfnCallback, &nOldValue, nNewValue)){
-	case MCF_TLSXCH_OLD_VAL_RETURNED:
-		if(pfnCallback){
-			(*pfnCallback)(nOldValue);
-		}
-	case MCF_TLSXCH_NEW_VAL_SET:
-		return true;
-
-	default:
-		return false;
-	}
-}
-MCF_TlsExchangeResult MCF_CRT_TlsExchange(void *pTlsKey, intptr_t *pnOldValue, intptr_t nNewValue){
-	return TlsExchange(pTlsKey, nullptr, pnOldValue, nNewValue);
-}
-
 void MCF_CRT_TlsClearAll(){
-	TlsMap *const pMap = TlsGetValue(g_dwTlsIndex);
+	ThreadMap *const pMap = TlsGetValue(g_dwTlsIndex);
 	if(pMap){
-		TlsObject *pObject = pMap->pLastInThread;
+		TlsObject *pObject = pMap->pLastByThread;
 		while(pObject){
-			AcquireSRWLockExclusive(&g_srwLock);
+			TlsKey *const pKey = pObject->pKey;
+
+			EnterCriticalSection(&(pKey->csMutex));
 			{
-				TlsObject *const pPrevByKey = pObject->pPrevByKey;
-				TlsObject *const pNextByKey = pObject->pNextByKey;
-				if(pPrevByKey){
-					pPrevByKey->pNextByKey = pNextByKey;
-				}
-				if(pNextByKey){
-					pNextByKey->pPrevByKey = pPrevByKey;
-				}
-
-				if(pObject->pKey->pLastByKey == pObject){
-					pObject->pKey->pLastByKey = pPrevByKey;
+				if(pKey->pLastByKey == pObject){
+					pKey->pLastByKey = pObject->pPrevByKey;
 				}
 			}
-			ReleaseSRWLockExclusive(&g_srwLock);
+			LeaveCriticalSection(&(pKey->csMutex));
 
-			if(pObject->pKey->pfnCallback){
-				(*(pObject->pKey->pfnCallback))(pObject->nValue);
+			if(pKey->pfnCallback){
+				(*pKey->pfnCallback)(pObject->nValue);
 			}
 
-			TlsObject *const pPrevInThread = pObject->pPrevInThread;
+			TlsObject *const pTemp = pObject->pPrevByThread;
 			free(pObject);
-			pObject = pPrevInThread;
+			pObject = pTemp;
 		}
-
-		AcquireSRWLockExclusive(&g_srwLock);
-		{
-			TlsMap *const pPrevMap = pMap->pPrevMap;
-			TlsMap *const pNextMap = pMap->pNextMap;
-			if(pPrevMap){
-				pPrevMap->pNextMap = pNextMap;
-			}
-			if(pNextMap){
-				pNextMap->pPrevMap = pPrevMap;
-			}
-			if(g_pLastMap == pMap){
-				g_pLastMap = pPrevMap;
-			}
-		}
-		ReleaseSRWLockExclusive(&g_srwLock);
-
+		DeleteCriticalSection(&(pMap->csMutex));
 		free(pMap);
 		TlsSetValue(g_dwTlsIndex, nullptr);
 	}
@@ -451,13 +356,26 @@ void MCF_CRT_TlsClearAll(){
 	__MCF_CRT_RunEmutlsDtors();
 }
 
+int MCF_CRT_AtEndThread(void (__cdecl *pfnProc)(intptr_t), intptr_t nContext){
+	void *const pKey = MCF_CRT_TlsAllocKey(pfnProc);
+	if(!pKey){
+		return -1;
+	}
+	if(!MCF_CRT_TlsReset(pKey, nContext)){
+		const DWORD dwLastError = GetLastError();
+		MCF_CRT_TlsFreeKey(pKey);
+		SetLastError(dwLastError);
+		return -1;
+	}
+	return 0;
+}
+
 typedef struct tagThreadInitInfo {
 	unsigned (*pfnProc)(intptr_t);
 	intptr_t nParam;
 } ThreadInitInfo;
 
-_Noreturn static
-__MCF_C_STDCALL __MCF_HAS_EH_TOP
+static __MCF_C_STDCALL __MCF_HAS_EH_TOP
 DWORD CRTThreadProc(LPVOID pParam){
 	DWORD dwExitCode;
 	__MCF_EH_TOP_BEGIN
@@ -470,13 +388,10 @@ DWORD CRTThreadProc(LPVOID pParam){
 		dwExitCode = (*vInitInfo.pfnProc)(vInitInfo.nParam);
 	}
 	__MCF_EH_TOP_END
-	ExitThread(dwExitCode);
-	__builtin_trap();
+	return dwExitCode;
 }
 
-void *MCF_CRT_CreateThread(unsigned (*pfnThreadProc)(intptr_t), intptr_t nParam,
-	bool bSuspended, unsigned long *pulThreadId)
-{
+void *MCF_CRT_CreateThread(unsigned (*pfnThreadProc)(intptr_t), intptr_t nParam, bool bSuspended, unsigned long *pulThreadId){
 	ThreadInitInfo *const pInitInfo = malloc(sizeof(ThreadInitInfo));
 	if(!pInitInfo){
 		return nullptr;
@@ -484,15 +399,13 @@ void *MCF_CRT_CreateThread(unsigned (*pfnThreadProc)(intptr_t), intptr_t nParam,
 	pInitInfo->pfnProc	= pfnThreadProc;
 	pInitInfo->nParam	= nParam;
 
-	DWORD dwThreadId;
-	const HANDLE hThread = CreateThread(nullptr, 0, &CRTThreadProc, pInitInfo, CREATE_SUSPENDED, &dwThreadId);
+	const HANDLE hThread = CreateThread(nullptr, 0, &CRTThreadProc, pInitInfo, CREATE_SUSPENDED, pulThreadId);
 	if(!hThread){
 		const DWORD dwErrorCode = GetLastError();
 		free(pInitInfo);
 		SetLastError(dwErrorCode);
 		return nullptr;
 	}
-	*pulThreadId = dwThreadId;
 
 	if(!bSuspended){
 		ResumeThread(hThread);

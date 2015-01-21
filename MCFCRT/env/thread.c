@@ -86,22 +86,28 @@ bool __MCF_CRT_TlsEnvInit(){
 	return true;
 }
 void __MCF_CRT_TlsEnvUninit(){
-	MCF_AvlNodeHeader *pRoot = g_pavlKeys;
-	if(pRoot){
+	if(g_pavlKeys){
+		MCF_AvlNodeHeader *const pRoot = g_pavlKeys;
+		g_pavlKeys = nullptr;
+
+		TlsKey *pKey;
 		MCF_AvlNodeHeader *pCur = MCF_AvlPrev(pRoot);
 		while(pCur){
-			MCF_AvlNodeHeader *const pTemp = MCF_AvlPrev(pCur);
-			free(pCur);
-			pCur = pTemp;
+			pKey = (TlsKey *)pCur;
+			pCur = MCF_AvlPrev(pCur);
+			DeleteCriticalSection(&(pKey->csMutex));
+			free(pKey);
 		}
 		pCur = MCF_AvlNext(pRoot);
 		while(pCur){
-			MCF_AvlNodeHeader *const pTemp = MCF_AvlNext(pCur);
-			free(pCur);
-			pCur = pTemp;
+			pKey = (TlsKey *)pCur;
+			pCur = MCF_AvlNext(pCur);
+			DeleteCriticalSection(&(pKey->csMutex));
+			free(pKey);
 		}
-		free(pRoot);
-		g_pavlKeys = nullptr;
+		pKey = (TlsKey *)pRoot;
+		DeleteCriticalSection(&(pKey->csMutex));
+		free(pKey);
 	}
 
 	TlsFree(g_dwTlsIndex);

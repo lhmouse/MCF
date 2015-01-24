@@ -15,10 +15,9 @@
 #define LZMA_RANGE_COMMON_H
 
 // LH_Mouse: WHAT??!
-//           2014-07-27
-//#ifdef HAVE_CONFIG_H
+// #ifdef HAVE_CONFIG_H // Taken out on 2015-01-24.
 #	include "common.h"
-//#endif
+// #endif // Taken out on 2015-01-24.
 
 
 ///////////////

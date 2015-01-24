@@ -15,8 +15,8 @@
 
 // The config file may be replaced by a package-specific file.
 // It should include at least stddef.h, inttypes.h, and limits.h.
-#include "common.h" // Added by LH_Mouse on 2014-07-27.
-//#include "tuklib_config.h" // Taken out by LH_Mouse on 2014-07-27.
+#include "common.h" // Added by LH_Mouse on 2015-01-24.
+// #include "tuklib_config.h" // Taken out by LH_Mouse on 2015-01-24.
 
 // TUKLIB_SYMBOL_PREFIX is prefixed to all symbols exported by
 // the tuklib modules. If you use a tuklib module in a library,

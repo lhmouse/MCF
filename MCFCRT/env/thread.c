@@ -27,14 +27,13 @@ typedef struct tagTlsObject {
 	struct tagTlsObject *pNextByKey;
 } TlsObject;
 
-static bool ObjectComparatorNodes(const MCF_AvlNodeHeader *pObj1, const MCF_AvlNodeHeader *pObj2){
-	return (uintptr_t)(void *)((const TlsObject *)pObj1)->pKey < (uintptr_t)(void *)((const TlsObject *)pObj2)->pKey;
+static int ObjectComparatorNodeKey(const MCF_AvlNodeHeader *pObj1, intptr_t nKey2){
+	const uintptr_t uKey1 = (uintptr_t)(((const TlsObject *)pObj1)->pKey);
+	const uintptr_t uKey2 = (uintptr_t)(void *)nKey2;
+	return (uKey1 < uKey2) ? -1 : ((uKey1 > uKey2) ? 1 : 0);
 }
-static bool ObjectComparatorNodeKey(const MCF_AvlNodeHeader *pObj1, intptr_t nKey2){
-	return (uintptr_t)(void *)((const TlsObject *)pObj1)->pKey < (uintptr_t)(void *)nKey2;
-}
-static bool ObjectComparatorKeyNode(intptr_t nKey1, const MCF_AvlNodeHeader *pObj2){
-	return (uintptr_t)(void *)nKey1 < (uintptr_t)(void *)((const TlsObject *)pObj2)->pKey;
+static int ObjectComparatorNodes(const MCF_AvlNodeHeader *pObj1, const MCF_AvlNodeHeader *pObj2){
+	return ObjectComparatorNodeKey(pObj1, (intptr_t)(void *)(((const TlsObject *)pObj2)->pKey));
 }
 
 typedef struct tagThreadMap {
@@ -51,15 +50,14 @@ typedef struct tagTlsKey {
 	struct tagTlsObject *pLastByKey;
 } TlsKey;
 
-static bool KeyComparatorNodes(const MCF_AvlNodeHeader *pObj1, const MCF_AvlNodeHeader *pObj2){
-	return (uintptr_t)(void *)pObj1 < (uintptr_t)(void *)pObj2;
+static int KeyComparatorNodeKey(const MCF_AvlNodeHeader *pObj1, intptr_t nKey2){
+	const uintptr_t uKey1 = (uintptr_t)(void *)pObj1;
+	const uintptr_t uKey2 = (uintptr_t)(void *)nKey2;
+	return (uKey1 < uKey2) ? -1 : ((uKey1 > uKey2) ? 1 : 0);
 }
-/*static bool KeyComparatorNodeKey(const MCF_AvlNodeHeader *pObj1, intptr_t nKey2){
-	return (uintptr_t)(void *)pObj1 < (uintptr_t)(void *)nKey2;
+static int KeyComparatorNodes(const MCF_AvlNodeHeader *pObj1, const MCF_AvlNodeHeader *pObj2){
+	return KeyComparatorNodeKey(pObj1, (intptr_t)(void *)pObj2);
 }
-static bool KeyComparatorKeyNode(intptr_t nKey1, const MCF_AvlNodeHeader *pObj2){
-	return (uintptr_t)(void *)nKey1 < (uintptr_t)(void *)pObj2;
-}*/
 
 static CRITICAL_SECTION	g_csKeyMutex;
 static DWORD			g_dwTlsIndex	= TLS_OUT_OF_INDEXES;
@@ -219,8 +217,8 @@ bool MCF_CRT_TlsGet(void *pTlsKey, bool *pbHasValue, intptr_t *pnValue){
 
 	EnterCriticalSection(&(pMap->csMutex));
 	{
-		TlsObject *const pObject = (TlsObject *)MCF_AvlFind(&(pMap->pavlObjects), (intptr_t)pKey,
-			&ObjectComparatorNodeKey, &ObjectComparatorKeyNode);
+		TlsObject *const pObject = (TlsObject *)MCF_AvlFind(
+			&(pMap->pavlObjects), (intptr_t)pKey, &ObjectComparatorNodeKey);
 		if(pObject){
 			*pbHasValue = true;
 			*pnValue = pObject->nValue;
@@ -281,8 +279,8 @@ bool MCF_CRT_TlsExchange(void *pTlsKey, bool *pbHasOldValue, intptr_t *pnOldValu
 
 	EnterCriticalSection(&(pMap->csMutex));
 	{
-		TlsObject *const pObject = (TlsObject *)MCF_AvlFind(&(pMap->pavlObjects), (intptr_t)pKey,
-			&ObjectComparatorNodeKey, &ObjectComparatorKeyNode);
+		TlsObject *const pObject = (TlsObject *)MCF_AvlFind(
+			&(pMap->pavlObjects), (intptr_t)pKey, &ObjectComparatorNodeKey);
 		if(pObject){
 			*pbHasOldValue = true;
 			*pnOldValue = pObject->nValue;

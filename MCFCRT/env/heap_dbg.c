@@ -16,15 +16,13 @@
 static HANDLE		g_hMapAllocator;
 static MCF_AvlRoot	g_pavlBlocks;
 
-static bool BlockInfoComparatorNodes(const MCF_AvlNodeHeader *pInfo1, const MCF_AvlNodeHeader *pInfo2){
-	return (uintptr_t)(((const __MCF_HeapDbgBlockInfo *)pInfo1)->pContents) <
-		(uintptr_t)(((const __MCF_HeapDbgBlockInfo *)pInfo2)->pContents);
+static int BlockInfoComparatorNodeKey(const MCF_AvlNodeHeader *pInfo1, intptr_t nKey2){
+	const uintptr_t uKey1 = (uintptr_t)(((const __MCF_HeapDbgBlockInfo *)pInfo1)->pContents);
+	const uintptr_t uKey2 = (uintptr_t)(void *)nKey2;
+	return (uKey1 < uKey2) ? -1 : ((uKey1 > uKey2) ? 1 : 0);
 }
-static bool BlockInfoComparatorNodeKey(const MCF_AvlNodeHeader *pInfo1, intptr_t nKey2){
-	return (uintptr_t)(((const __MCF_HeapDbgBlockInfo *)pInfo1)->pContents) < (uintptr_t)(void *)nKey2;
-}
-static bool BlockInfoComparatorKeyNode(intptr_t nKey1, const MCF_AvlNodeHeader *pInfo2){
-	return (uintptr_t)(void *)nKey1 < (uintptr_t)(((const __MCF_HeapDbgBlockInfo *)pInfo2)->pContents);
+static int BlockInfoComparatorNodes(const MCF_AvlNodeHeader *pInfo1, const MCF_AvlNodeHeader *pInfo2){
+	return BlockInfoComparatorNodeKey(pInfo1, (intptr_t)(((const __MCF_HeapDbgBlockInfo *)pInfo2)->pContents));
 }
 
 #endif
@@ -123,7 +121,7 @@ const __MCF_HeapDbgBlockInfo *__MCF_CRT_HeapDbgValidate(
 	*ppRaw = pRaw;
 
 	const __MCF_HeapDbgBlockInfo *const pBlockInfo = (const __MCF_HeapDbgBlockInfo *)MCF_AvlFind(
-		&g_pavlBlocks, (intptr_t)pContents, &BlockInfoComparatorNodeKey, &BlockInfoComparatorKeyNode);
+		&g_pavlBlocks, (intptr_t)pContents, &BlockInfoComparatorNodeKey);
 	if(!pBlockInfo){
 		MCF_CRT_BailF(L"__MCF_CRT_HeapDbgValidate() 失败：传入的指针无效。\n调用返回地址：%0*zX",
 			(int)(sizeof(size_t) * 2), (size_t)pRetAddr);

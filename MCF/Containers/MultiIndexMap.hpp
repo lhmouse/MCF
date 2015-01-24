@@ -14,6 +14,23 @@
 
 namespace MCF {
 
+template<typename DelegateComparatorT = std::less<void>>
+struct TripleComparator {
+	template<typename Tx, typename Ty>
+	int operator()(const Tx &lhs, const Ty &rhs){
+		if(DelegateComparatorT()(lhs, rhs)){
+			return -1;
+		} else if(DelegateComparatorT()(rhs, lhs)){
+			return 1;
+		} else {
+			return 0;
+		}
+	}
+};
+
+template<typename KeyT>
+TripleComparator<std::less<void>> GetDefaultComparator(const KeyT &) noexcept; // ADL
+
 namespace Impl {
 	template<std::size_t INDEX_ID_T, class NodeComparatorT>
 	class MultiOrderedMapIndex;
@@ -48,35 +65,27 @@ namespace Impl {
 	struct OrderedMapIndexNodeComparator {
 		using MapIndexNode = OrderedMapIndexNode<INDEX_ID_T>;
 
-		static auto Get(const MapIndexNode *pMapIndexNode) noexcept {
-			return static_cast<const ElementT *>(NodeT::template GetNodeFromIndexNode<INDEX_ID_T>(pMapIndexNode));
+		static auto &Get(const MapIndexNode &vMapIndexNode) noexcept {
+			return static_cast<const ElementT &>(NodeT::template GetNodeFromIndexNode<INDEX_ID_T>(vMapIndexNode));
 		}
 
-		bool operator()(const MapIndexNode *lhs, const MapIndexNode *rhs) const noexcept {
-			return ComparatorT()(*Get(lhs), *Get(rhs));
+		int operator()(const MapIndexNode &lhs, const MapIndexNode &rhs) const noexcept {
+			return ComparatorT()(Get(lhs), Get(rhs));
 		}
 		template<typename ComparandT>
-		bool operator()(const MapIndexNode *lhs, const ComparandT *rhs) const noexcept {
-			return ComparatorT()(*Get(lhs), *rhs);
-		}
-		template<typename ComparandT>
-		bool operator()(const ComparandT *lhs, const MapIndexNode *rhs) const noexcept {
-			return ComparatorT()(*lhs, *Get(rhs));
+		int operator()(const MapIndexNode &lhs, const ComparandT &rhs) const noexcept {
+			return ComparatorT()(Get(lhs), rhs);
 		}
 	};
 
 	template<class ElementT, class KeyTypeT, KeyTypeT ElementT::*PTR_TO_KEY_T, class ComparatorT>
 	struct MemberComparator {
-		bool operator()(const ElementT &lhs, const ElementT &rhs) const noexcept {
+		int operator()(const ElementT &lhs, const ElementT &rhs) const noexcept {
 			return ComparatorT()(lhs.*PTR_TO_KEY_T, rhs.*PTR_TO_KEY_T);
 		}
 		template<typename ComparandT>
-		bool operator()(const ElementT &lhs, const ComparandT &rhs) const noexcept {
+		int operator()(const ElementT &lhs, const ComparandT &rhs) const noexcept {
 			return ComparatorT()(lhs.*PTR_TO_KEY_T, rhs);
-		}
-		template<typename ComparandT>
-		bool operator()(const ComparandT &lhs, const ElementT &rhs) const noexcept {
-			return ComparatorT()(lhs, rhs.*PTR_TO_KEY_T);
 		}
 	};
 
@@ -118,8 +127,8 @@ namespace Impl {
 
 		IndexNode *Attach(IndexNode *pPos, IndexNode *pIndexNode) noexcept {
 			::MCF_AvlAttachWithHint(&xm_avlRoot, pPos, pIndexNode,
-				[](const ::MCF_AvlNodeHeader *lhs, const ::MCF_AvlNodeHeader *rhs) noexcept -> bool {
-					return NodeComparatorT()(static_cast<const IndexNode *>(lhs), static_cast<const IndexNode *>(rhs));
+				[](const ::MCF_AvlNodeHeader *lhs, const ::MCF_AvlNodeHeader *rhs){
+					return NodeComparatorT()(static_cast<const IndexNode &>(*lhs), static_cast<const IndexNode &>(*rhs));
 				}
 			);
 			if(!pIndexNode->GetPrev()){
@@ -143,16 +152,16 @@ namespace Impl {
 		template<typename ComparandT>
 		const IndexNode *GetLowerBound(const ComparandT *pComparand) const noexcept {
 			return static_cast<const IndexNode *>(::MCF_AvlLowerBound(&xm_avlRoot, reinterpret_cast<std::intptr_t>(pComparand),
-				[](const ::MCF_AvlNodeHeader *lhs, std::intptr_t rhs) noexcept -> bool {
-					return NodeComparatorT()(static_cast<const IndexNode *>(lhs), reinterpret_cast<const ComparandT *>(rhs));
+				[](const ::MCF_AvlNodeHeader *lhs, std::intptr_t rhs){
+					return NodeComparatorT()(static_cast<const IndexNode &>(*lhs), *reinterpret_cast<const ComparandT *>(rhs));
 				}
 			));
 		}
 		template<typename ComparandT>
 		IndexNode *GetLowerBound(const ComparandT *pComparand) noexcept {
 			return static_cast<IndexNode *>(::MCF_AvlLowerBound(&xm_avlRoot, reinterpret_cast<std::intptr_t>(pComparand),
-				[](const ::MCF_AvlNodeHeader *lhs, std::intptr_t rhs) noexcept -> bool {
-					return NodeComparatorT()(static_cast<const IndexNode *>(lhs), reinterpret_cast<const ComparandT *>(rhs));
+				[](const ::MCF_AvlNodeHeader *lhs, std::intptr_t rhs){
+					return NodeComparatorT()(static_cast<const IndexNode &>(*lhs), *reinterpret_cast<const ComparandT *>(rhs));
 				}
 			));
 		}
@@ -160,16 +169,16 @@ namespace Impl {
 		template<typename ComparandT>
 		const IndexNode *GetUpperBound(const ComparandT *pComparand) const noexcept {
 			return static_cast<const IndexNode *>(::MCF_AvlUpperBound(&xm_avlRoot, reinterpret_cast<std::intptr_t>(pComparand),
-				[](std::intptr_t lhs, const ::MCF_AvlNodeHeader *rhs) noexcept -> bool {
-					return NodeComparatorT()(reinterpret_cast<const ComparandT *>(lhs), static_cast<const IndexNode *>(rhs));
+				[](const ::MCF_AvlNodeHeader *lhs, std::intptr_t rhs){
+					return NodeComparatorT()(static_cast<const IndexNode &>(*lhs), *reinterpret_cast<const ComparandT *>(rhs));
 				}
 			));
 		}
 		template<typename ComparandT>
 		IndexNode *GetUpperBound(const ComparandT *pComparand) noexcept {
 			return static_cast<IndexNode *>(::MCF_AvlUpperBound(&xm_avlRoot, reinterpret_cast<std::intptr_t>(pComparand),
-				[](std::intptr_t lhs, const ::MCF_AvlNodeHeader *rhs) noexcept -> bool {
-					return NodeComparatorT()(reinterpret_cast<const ComparandT *>(lhs), static_cast<const IndexNode *>(rhs));
+				[](const ::MCF_AvlNodeHeader *lhs, std::intptr_t rhs){
+					return NodeComparatorT()(static_cast<const IndexNode &>(*lhs), *reinterpret_cast<const ComparandT *>(rhs));
 				}
 			));
 		}
@@ -177,22 +186,16 @@ namespace Impl {
 		template<typename ComparandT>
 		const IndexNode *Find(const ComparandT *pComparand) const noexcept {
 			return static_cast<const IndexNode *>(::MCF_AvlFind(&xm_avlRoot, reinterpret_cast<std::intptr_t>(pComparand),
-				[](const ::MCF_AvlNodeHeader *lhs, std::intptr_t rhs) noexcept -> bool {
-					return NodeComparatorT()(static_cast<const IndexNode *>(lhs), reinterpret_cast<const ComparandT *>(rhs));
-				},
-				[](std::intptr_t lhs, const ::MCF_AvlNodeHeader *rhs) noexcept -> bool {
-					return NodeComparatorT()(reinterpret_cast<const ComparandT *>(lhs), static_cast<const IndexNode *>(rhs));
+				[](const ::MCF_AvlNodeHeader *lhs, std::intptr_t rhs){
+					return NodeComparatorT()(static_cast<const IndexNode &>(*lhs), *reinterpret_cast<const ComparandT *>(rhs));
 				}
 			));
 		}
 		template<typename ComparandT>
 		IndexNode *Find(const ComparandT *pComparand) noexcept {
 			return static_cast<IndexNode *>(::MCF_AvlFind(&xm_avlRoot, reinterpret_cast<std::intptr_t>(pComparand),
-				[](const ::MCF_AvlNodeHeader *lhs, std::intptr_t rhs) noexcept -> bool {
-					return NodeComparatorT()(static_cast<const IndexNode *>(lhs), reinterpret_cast<const ComparandT *>(rhs));
-				},
-				[](std::intptr_t lhs, const ::MCF_AvlNodeHeader *rhs) noexcept -> bool {
-					return NodeComparatorT()(reinterpret_cast<const ComparandT *>(lhs), static_cast<const IndexNode *>(rhs));
+				[](const ::MCF_AvlNodeHeader *lhs, std::intptr_t rhs){
+					return NodeComparatorT()(static_cast<const IndexNode &>(*lhs), *reinterpret_cast<const ComparandT *>(rhs));
 				}
 			));
 		}
@@ -201,11 +204,8 @@ namespace Impl {
 		std::pair<const IndexNode *, const IndexNode *> GetEqualRange(const ComparandT *pComparand) const noexcept {
 			::MCF_AvlNodeHeader *pBegin, *pEnd;
 			::MCF_AvlEqualRange(&pBegin, &pEnd, &xm_avlRoot, reinterpret_cast<std::intptr_t>(pComparand),
-				[](const ::MCF_AvlNodeHeader *lhs, std::intptr_t rhs) noexcept -> bool {
-					return NodeComparatorT()(static_cast<const IndexNode *>(lhs), reinterpret_cast<const ComparandT *>(rhs));
-				},
-				[](std::intptr_t lhs, const ::MCF_AvlNodeHeader *rhs) noexcept -> bool {
-					return NodeComparatorT()(reinterpret_cast<const ComparandT *>(lhs), static_cast<const IndexNode *>(rhs));
+				[](const ::MCF_AvlNodeHeader *lhs, std::intptr_t rhs){
+					return NodeComparatorT()(static_cast<const IndexNode &>(*lhs), *reinterpret_cast<const ComparandT *>(rhs));
 				}
 			);
 			return std::make_pair(static_cast<const IndexNode *>(pBegin), static_cast<const IndexNode *>(pEnd));
@@ -214,11 +214,8 @@ namespace Impl {
 		std::pair<IndexNode *, IndexNode *> GetEqualRange(const ComparandT *pComparand) noexcept {
 			::MCF_AvlNodeHeader *pBegin, *pEnd;
 			::MCF_AvlEqualRange(&pBegin, &pEnd, &xm_avlRoot, reinterpret_cast<std::intptr_t>(pComparand),
-				[](const ::MCF_AvlNodeHeader *lhs, std::intptr_t rhs) noexcept -> bool {
-					return NodeComparatorT()(static_cast<const IndexNode *>(lhs), reinterpret_cast<const ComparandT *>(rhs));
-				},
-				[](std::intptr_t lhs, const ::MCF_AvlNodeHeader *rhs) noexcept -> bool {
-					return NodeComparatorT()(reinterpret_cast<const ComparandT *>(lhs), static_cast<const IndexNode *>(rhs));
+				[](const ::MCF_AvlNodeHeader *lhs, std::intptr_t rhs){
+					return NodeComparatorT()(static_cast<const IndexNode &>(*lhs), *reinterpret_cast<const ComparandT *>(rhs));
 				}
 			);
 			return std::make_pair(static_cast<IndexNode *>(pBegin), static_cast<IndexNode *>(pEnd));
@@ -254,7 +251,7 @@ namespace Impl {
 		IndexNode *Attach(IndexNode *pPos, IndexNode *pIndexNode) noexcept {
 			auto pHint = xm_vDelegate.GetLowerBound(pIndexNode);
 			if(pHint){	// *pHint >= *pIndexNode
-				if(!NodeComparatorT()(pIndexNode, pHint)){	// *pIndexNode >= *pHint
+				if(NodeComparatorT()(*pIndexNode, *pHint) >= 0){	// *pIndexNode >= *pHint
 					return pHint;
 				}
 			} else {
@@ -378,7 +375,7 @@ namespace Impl {
 }
 
 template<class ElementT,
-	class ComparatorT = std::less<void>>
+	class ComparatorT = decltype(GetDefaultComparator(std::declval<const ElementT &>()))>
 struct MultiOrderedIndex {
 	template<std::size_t INDEX_ID_T>
 	using IndexNode = Impl::OrderedMapIndexNode<INDEX_ID_T>;
@@ -395,7 +392,7 @@ struct MultiOrderedIndex {
 };
 
 template<class ElementT,
-	class ComparatorT = std::less<void>>
+	class ComparatorT = decltype(GetDefaultComparator(std::declval<const ElementT &>()))>
 struct UniqueOrderedIndex {
 	template<std::size_t INDEX_ID_T>
 	using IndexNode = Impl::OrderedMapIndexNode<INDEX_ID_T>;
@@ -412,7 +409,7 @@ struct UniqueOrderedIndex {
 };
 
 template<class ElementT, class KeyTypeT, KeyTypeT ElementT::*PTR_TO_KEY_T,
-	class ComparatorT = std::less<void>>
+	class ComparatorT = decltype(GetDefaultComparator(std::declval<const KeyTypeT &>()))>
 struct MultiOrderedMemberIndex {
 	template<std::size_t INDEX_ID_T>
 	using IndexNode = Impl::OrderedMapIndexNode<INDEX_ID_T>;
@@ -430,7 +427,7 @@ struct MultiOrderedMemberIndex {
 };
 
 template<class ElementT, class KeyTypeT, KeyTypeT ElementT::*PTR_TO_KEY_T,
-	class ComparatorT = std::less<void>>
+	class ComparatorT = decltype(GetDefaultComparator(std::declval<const KeyTypeT &>()))>
 struct UniqueOrderedMemberIndex {
 	template<std::size_t INDEX_ID_T>
 	using IndexNode = Impl::OrderedMapIndexNode<INDEX_ID_T>;
@@ -480,8 +477,12 @@ private:
 
 	public:
 		template<std::size_t INDEX_ID_T>
-		static auto GetNodeFromIndexNode(const xIndexNode<INDEX_ID_T> *pIndexNode) noexcept {
-			return static_cast<const xNodeImpl *>(pIndexNode);
+		static auto &GetNodeFromIndexNode(const xIndexNode<INDEX_ID_T> &vIndexNode) noexcept {
+			return static_cast<const xNodeImpl &>(vIndexNode);
+		}
+		template<std::size_t INDEX_ID_T>
+		static auto &GetNodeFromIndexNode(xIndexNode<INDEX_ID_T> &vIndexNode) noexcept {
+			return static_cast<xNodeImpl &>(vIndexNode);
 		}
 
 	private:
@@ -695,12 +696,10 @@ public:
 				const auto pNewNode = new Node(*pNode);
 				pNewNode->xm_pSource = pNode;
 				::MCF_AvlAttach(&avlAddressMap, static_cast<xAddressNode *>(pNewNode),
-					[](const ::MCF_AvlNodeHeader *lhs, const ::MCF_AvlNodeHeader *rhs) noexcept -> bool {
-						return std::less<void>()(
-							static_cast<const Node *>(
-								static_cast<const xAddressNode *>(lhs))->xm_pSource,
-							static_cast<const Node *>(
-								static_cast<const xAddressNode *>(rhs))->xm_pSource);
+					[](const ::MCF_AvlNodeHeader *lhs, const ::MCF_AvlNodeHeader *rhs){
+						return TripleComparator<>()(
+							static_cast<const Node *>(static_cast<const xAddressNode *>(lhs))->xm_pSource,
+							static_cast<const Node *>(static_cast<const xAddressNode *>(rhs))->xm_pSource);
 					}
 				);
 				pNode = pNode->template GetNext<0>();
@@ -811,17 +810,10 @@ private:
 			const auto pSourceNode = static_cast<const Node *>(pSourceIndexNode);
 			const auto pNode = static_cast<Node *>(static_cast<xAddressNode *>(::MCF_AvlFind(
 				&avlNewNodes, reinterpret_cast<std::intptr_t>(pSourceNode),
-				[](const ::MCF_AvlNodeHeader *lhs, std::intptr_t rhs) noexcept -> bool {
-					return std::less<void>()(
-						static_cast<const Node *>(
-							static_cast<const xAddressNode *>(lhs))->xm_pSource,
+				[](const ::MCF_AvlNodeHeader *lhs, std::intptr_t rhs){
+					return TripleComparator<>()(
+						static_cast<const Node *>(static_cast<const xAddressNode *>(lhs))->xm_pSource,
 						reinterpret_cast<const Node *>(rhs));
-				},
-				[](std::intptr_t lhs, const ::MCF_AvlNodeHeader *rhs) noexcept -> bool {
-					return std::less<void>()(
-						reinterpret_cast<const Node *>(lhs),
-						static_cast<const Node *>(
-							static_cast<const xAddressNode *>(rhs))->xm_pSource);
 				}
 			)));
 			ASSERT(pNode);
@@ -1071,16 +1063,12 @@ public:
 	// std::insert_iterator
 	template<typename ParamT>
 	Node *insert(Node *pHint, ParamT &&vParams){
-		return InsertWithHints(
-			Hints(reinterpret_cast<Node *>(reinterpret_cast<IndicesT *>(pHint))...),
-			std::forward<ParamT>(vParams)).first;
+		return InsertWithHints(Hints(reinterpret_cast<Node *>(reinterpret_cast<IndicesT *>(pHint))...), std::forward<ParamT>(vParams)).first;
 	}
 };
 
 template<class ElementT, typename ...IndicesT>
-void swap(MultiIndexMap<ElementT, IndicesT...> &lhs,
-	MultiIndexMap<ElementT, IndicesT...> &rhs) noexcept
-{
+void swap(MultiIndexMap<ElementT, IndicesT...> &lhs, MultiIndexMap<ElementT, IndicesT...> &rhs) noexcept {
 	lhs.Swap(rhs);
 }
 

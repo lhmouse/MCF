@@ -31,25 +31,25 @@ static inline ThunkInfo *GetInfoFromFreeSizeIndex(const MCF_AvlNodeHeader *pFree
 	return (ThunkInfo *)((char *)pFreeSizeIndex - offsetof(ThunkInfo, vFreeSizeIndex));
 }
 
-static bool ThunkComparatorNodes(const MCF_AvlNodeHeader *pIndex1, const MCF_AvlNodeHeader *pIndex2){
-	return (uintptr_t)(GetInfoFromThunkIndex(pIndex1)->pThunk) < (uintptr_t)(GetInfoFromThunkIndex(pIndex2)->pThunk);
+static int ThunkComparatorNodeKey(const MCF_AvlNodeHeader *pIndex1, intptr_t nKey2){
+	const uintptr_t uKey1 = (uintptr_t)(GetInfoFromThunkIndex(pIndex1)->pThunk);
+	const uintptr_t uKey2 = (uintptr_t)(void *)nKey2;
+	return (uKey1 < uKey2) ? -1 : ((uKey1 > uKey2) ? 1 : 0);
 }
-static bool ThunkComparatorNodeKey(const MCF_AvlNodeHeader *pIndex1, intptr_t nKey2){
-	return (uintptr_t)(GetInfoFromThunkIndex(pIndex1)->pThunk) < (uintptr_t)(void *)nKey2;
-}
-static bool ThunkComparatorKeyNode(intptr_t nKey1, const MCF_AvlNodeHeader *pIndex2){
-	return (uintptr_t)(void *)nKey1 < (uintptr_t)(GetInfoFromThunkIndex(pIndex2)->pThunk);
+static int ThunkComparatorNodes(const MCF_AvlNodeHeader *pIndex1, const MCF_AvlNodeHeader *pIndex2){
+	return ThunkComparatorNodeKey(pIndex1, (intptr_t)(GetInfoFromThunkIndex(pIndex2)->pThunk));
 }
 
-static bool FreeSizeComparatorNodes(const MCF_AvlNodeHeader *pIndex1, const MCF_AvlNodeHeader *pIndex2){
-	return (GetInfoFromFreeSizeIndex(pIndex1)->uFreeSize) < (GetInfoFromFreeSizeIndex(pIndex2)->uFreeSize);
+_Static_assert(sizeof(size_t) <= sizeof(uintptr_t), "This platform is not supported.");
+
+static int FreeSizeComparatorNodeKey(const MCF_AvlNodeHeader *pIndex1, intptr_t nKey2){
+	const uintptr_t uKey1 = GetInfoFromFreeSizeIndex(pIndex1)->uFreeSize;
+	const uintptr_t uKey2 = (uintptr_t)nKey2;
+	return (uKey1 < uKey2) ? -1 : ((uKey1 > uKey2) ? 1 : 0);
 }
-static bool FreeSizeComparatorNodeKey(const MCF_AvlNodeHeader *pIndex1, intptr_t nKey2){
-	return (GetInfoFromFreeSizeIndex(pIndex1)->uFreeSize) < (size_t)nKey2;
+static int FreeSizeComparatorNodes(const MCF_AvlNodeHeader *pIndex1, const MCF_AvlNodeHeader *pIndex2){
+	return FreeSizeComparatorNodeKey(pIndex1, (intptr_t)GetInfoFromFreeSizeIndex(pIndex2)->uFreeSize);
 }
-/*static bool FreeSizeComparatorKeyNode(intptr_t nKey1, const MCF_AvlNodeHeader *pIndex2){
-	return (size_t)nKey1 < (GetInfoFromFreeSizeIndex(pIndex2)->uFreeSize);
-}*/
 
 static CRITICAL_SECTION	g_csMutex;
 
@@ -169,8 +169,7 @@ void MCF_CRT_DeallocateThunk(void *pThunk, bool bToPoison){
 
 	EnterCriticalSection(&g_csMutex);
 	{
-		MCF_AvlNodeHeader *pThunkIndex = MCF_AvlFind(&g_pavlThunksByThunk,
-			(intptr_t)pThunk, &ThunkComparatorNodeKey, &ThunkComparatorKeyNode);
+		MCF_AvlNodeHeader *pThunkIndex = MCF_AvlFind(&g_pavlThunksByThunk, (intptr_t)pThunk, &ThunkComparatorNodeKey);
 		ThunkInfo *pInfo;
 		if(!pThunkIndex || ((pInfo = GetInfoFromThunkIndex(pThunkIndex))->uFreeSize != 0)){
 			MCF_CRT_Bail(L"MCF_CRT_DeallocateThunk() 失败：传入的指针无效。");

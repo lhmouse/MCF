@@ -518,6 +518,25 @@ extern inline auto operator""_u32so() noexcept {
 	return Utf32StringObserver(s_au32cData, sizeof...(STRING_T));
 }
 
+// MultiIndexMap
+template<StringTypes TYPE_T>
+struct StringObserverTripleComparator {
+	int operator()(const StringObserver<TYPE_T> &lhs, const StringObserver<TYPE_T> &rhs) const noexcept {
+		return lhs.Compare(rhs);
+	}
+	template<typename ComparandT>
+	int operator()(const StringObserver<TYPE_T> &lhs, const ComparandT &rhs) const noexcept {
+		return lhs.Compare(rhs);
+	}
+	template<typename ComparandT>
+	int operator()(const ComparandT &lhs, const StringObserver<TYPE_T> &rhs) const noexcept {
+		return -rhs.Compare(lhs);
+	}
+};
+
+template<StringTypes TYPE_T>
+StringObserverTripleComparator<TYPE_T> GetDefaultComparator(const StringObserver<TYPE_T> &) noexcept;
+
 }
 
 #endif

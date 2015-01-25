@@ -289,20 +289,20 @@ public:
 	}
 	template<class IteratorT>
 	void AppendCopy(IteratorT itBegin, std::common_type_t<IteratorT> itEnd){
-		if(std::is_same<typename std::iterator_traits<IteratorT>::iterator_category,
-			std::random_access_iterator_tag>::value)
-		{
-			ReserveMore((std::size_t)std::distance(itBegin, itEnd));
-		}
-		while(itBegin != itEnd){
-			Push(*itBegin);
-			++itBegin;
+		if(std::is_same<typename std::iterator_traits<IteratorT>::iterator_category, std::random_access_iterator_tag>::value){
+			ReserveMore(static_cast<std::size_t>(std::distance(itBegin, itEnd)));
+			UncheckedAppendCopy(itBegin, itEnd);
+		} else {
+			while(itBegin != itEnd){
+				Push(*itBegin);
+				++itBegin;
+			}
 		}
 	}
 	template<class IteratorT>
 	void AppendCopy(IteratorT itBegin, std::size_t uCount){
 		ReserveMore(uCount);
-		UncheckedAppendCopy(std::move(itBegin), uCount);
+		UncheckedAppendCopy(itBegin, uCount);
 	}
 	void Truncate(std::size_t uCount) noexcept {
 		for(std::size_t i = 0; i < uCount; ++i){

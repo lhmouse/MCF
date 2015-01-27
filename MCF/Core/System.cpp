@@ -12,14 +12,14 @@ struct SystemInfo : public ::SYSTEM_INFO {
 	SystemInfo() noexcept {
 		::GetNativeSystemInfo(this);
 	}
-} g_vSystemInfo __attribute__((__init_priority__(500)));
+} g_vSystemInfo __attribute__((__init_priority__(101)));
 
 struct OsVersionInfo : public ::OSVERSIONINFOW {
 	OsVersionInfo() noexcept {
 		dwOSVersionInfoSize = sizeof(::OSVERSIONINFOW);
 		::GetVersionExW(this);
 	}
-} g_vOsVersionInfo __attribute__((__init_priority__(500)));
+} g_vOsVersionInfo __attribute__((__init_priority__(101)));
 
 }
 

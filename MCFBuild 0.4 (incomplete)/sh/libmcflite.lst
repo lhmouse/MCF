@@ -14,8 +14,8 @@ MCFCRT/env/avl_tree.c
 MCFCRT/env/thread.c
 MCFCRT/env/heap.c
 MCFCRT/env/heap_dbg.c
-MCFCRT/exe/exe_startup.c
 MCFCRT/env/cxa_throw.cpp
+MCFCRT/exe/exe_startup.c
 MCF/Core/String.cpp
 MCF/Core/File.cpp
 MCF/Core/Utf8TextFile.cpp

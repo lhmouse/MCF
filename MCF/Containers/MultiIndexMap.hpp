@@ -66,7 +66,7 @@ namespace Impl {
 		using MapIndexNode = OrderedMapIndexNode<INDEX_ID_T>;
 
 		static auto &Get(const MapIndexNode &vMapIndexNode) noexcept {
-			return static_cast<const ElementT &>(NodeT::template GetNodeFromIndexNode<INDEX_ID_T>(vMapIndexNode));
+			return NodeT::template GetNodeFromIndexNode<INDEX_ID_T>(vMapIndexNode).Get();
 		}
 
 		int operator()(const MapIndexNode &lhs, const MapIndexNode &rhs) const noexcept {
@@ -470,7 +470,7 @@ private:
 
 	template<std::size_t ...INDEX_IDS_T>
 	class xNodeImpl
-		: public ElementT, private IndicesT::template IndexNode<INDEX_IDS_T>...
+		: private IndicesT::template IndexNode<INDEX_IDS_T>...
 		, private xAddressNode	// 复制树结构的时候用到。
 	{
 		friend MultiIndexMap;
@@ -489,21 +489,23 @@ private:
 		// 这个成员在复制树结构的时候用到。
 		const xNodeImpl *xm_pSource;
 
+		ElementT xm_vElement;
+
 	public:
 		xNodeImpl() = default;
 
 		template<typename ...ParamsT>
 		explicit xNodeImpl(ParamsT &&...vParams)
-			: ElementT(std::forward<ParamsT>(vParams)...)
+			: xm_vElement(std::forward<ParamsT>(vParams)...)
 		{
 		}
 
 	public:
 		const ElementT &Get() const noexcept {
-			return static_cast<const ElementT &>(*this);
+			return xm_vElement;
 		}
 		ElementT &Get() noexcept {
-			return static_cast<ElementT &>(*this);
+			return xm_vElement;
 		}
 
 		template<std::size_t INDEX_ID_T>

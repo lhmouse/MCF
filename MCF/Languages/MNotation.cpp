@@ -9,9 +9,6 @@ using namespace MCF;
 
 namespace {
 
-using PackageNode = MNotationPackage::PackageNode;
-using ValueNode = MNotationPackage::ValueNode;
-
 WideString Unescape(const WideStringObserver &wsoSrc){
 	WideString wsRet;
 	wsRet.Reserve(wsoSrc.GetSize());
@@ -190,7 +187,7 @@ std::pair<MNotation::ErrorType, const wchar_t *> MNotation::Parse(const WideStri
 		return std::make_pair(ERR_NONE, pwcRead);
 	}
 
-	Vector<MNotationPackage *> vecPackageStack(1, &vTemp);
+	Vector<MNotationNode *> vecPackageStack(1, &vTemp);
 
 	const wchar_t *pwcNameBegin = nullptr;
 	const wchar_t *pwcNameEnd = nullptr;
@@ -214,27 +211,27 @@ std::pair<MNotation::ErrorType, const wchar_t *> MNotation::Parse(const WideStri
 	const auto PushPackage = [&]{
 		ASSERT(!vecPackageStack.IsEmpty());
 
-		MNotationPackage *ppkgSource = nullptr;
+		MNotationNode *ppkgSource = nullptr;
 		if(pwcValueBegin){
 			const auto wsSourceName = Unescape(WideStringObserver(pwcValueBegin, pwcValueEnd));
-			const auto pSourceNode = vecPackageStack.GetEnd()[-1]->GetPackage(wsSourceName);
+			const auto pSourceNode = vecPackageStack.GetEnd()[-1]->Get(wsSourceName);
 			if(!pSourceNode){
 				eError = ERR_SOURCE_PACKAGE_NOT_FOUND;
 				return false;
 			}
-			ppkgSource = &(pSourceNode->second);
+			ppkgSource = &(pSourceNode->Get().second);
 		}
 
-		const auto vResult = vecPackageStack.GetEnd()[-1]->InsertPackage(
-			Unescape(WideStringObserver(pwcNameBegin, pwcNameEnd)));
+		const auto vResult = vecPackageStack.GetEnd()[-1]->Insert(Unescape(WideStringObserver(pwcNameBegin, pwcNameEnd)));
 		if(!vResult.second){
 //			eError = ERR_DUPLICATE_PACKAGE;
 //			return false;
 		}
 		if(ppkgSource){
-			vResult.first->second = *ppkgSource;
+			vResult.first->Get().second = *ppkgSource;
 		}
-		vecPackageStack.Push(&(vResult.first->second));
+
+		vecPackageStack.Push(&(vResult.first->Get().second));
 		pwcNameBegin = nullptr;
 		pwcNameEnd = nullptr;
 		pwcValueBegin = nullptr;
@@ -246,6 +243,7 @@ std::pair<MNotation::ErrorType, const wchar_t *> MNotation::Parse(const WideStri
 			eError = ERR_UNEXCEPTED_PACKAGE_CLOSE;
 			return false;
 		}
+
 		vecPackageStack.Pop();
 		pwcNameBegin = nullptr;
 		pwcNameEnd = nullptr;
@@ -256,13 +254,13 @@ std::pair<MNotation::ErrorType, const wchar_t *> MNotation::Parse(const WideStri
 	const auto AcceptValue = [&]{
 		ASSERT(!vecPackageStack.IsEmpty());
 
-		const auto vResult = vecPackageStack.GetEnd()[-1]->InsertValue(
-			Unescape(WideStringObserver(pwcNameBegin, pwcNameEnd)),
-			Unescape(WideStringObserver(pwcValueBegin, pwcValueEnd)));
+		const auto vResult = vecPackageStack.GetEnd()[-1]->Insert(Unescape(WideStringObserver(pwcNameBegin, pwcNameEnd)));
 		if(!vResult.second){
 //			eError = ERR_DUPLICATE_VALUE;
 //			return false;
 		}
+		vResult.first->Get().second.Insert(Unescape(WideStringObserver(pwcValueBegin, pwcValueEnd)));
+
 		pwcNameBegin = nullptr;
 		pwcNameEnd = nullptr;
 		pwcValueBegin = nullptr;
@@ -557,42 +555,61 @@ std::pair<MNotation::ErrorType, const wchar_t *> MNotation::Parse(const WideStri
 WideString MNotation::Export(const WideStringObserver &wsoIndent) const {
 	WideString wsRet;
 
-	Vector<std::pair<const MNotationPackage *, const PackageNode *>> vecPackageStack;
-	vecPackageStack.Push(this, xm_mapPackages.GetFirst<1>());
+	Vector<std::pair<const MNotationNode *, const ChildNode *>> vecPackageStack;
+	vecPackageStack.Push(this, xm_mapChildren.GetFirst<1>());
 
 	WideString wsIndent;
 	for(;;){
 		auto &vTop = vecPackageStack.GetEnd()[-1];
 
+	jNextChild:
 		if(vTop.second){
+			const auto &wsName = vTop.second->Get().first;
+			const auto &vNode = vTop.second->Get().second;
+			vTop.second = vTop.second->GetNext<1>();
+
 			wsRet += wsIndent;
-			if(!vTop.second->first.IsEmpty()){
-				Escape(wsRet, vTop.second->first);
+			if(!wsName.IsEmpty()){
+				Escape(wsRet, wsName);
+				wsRet += L' ';
+			}
+			if(vNode.xm_mapChildren.GetSize() == 1){
+				const auto pNode = vNode.xm_mapChildren.GetFirst<0>();
+				if(pNode->Get().second.xm_mapChildren.IsEmpty()){
+					wsRet += L'=';
+					wsRet += L' ';
+					Escape(wsRet, pNode->Get().first);
+					wsRet += L'\n';
+					goto jNextChild;
+				}
+			}
+			wsRet += L'{';
+			wsRet += L'\n';
+			wsIndent += wsoIndent;
+			vecPackageStack.Push(&vNode, vNode.xm_mapChildren.GetFirst<1>());
+			continue;
+		}
+/*		if(vTop.second){
+			wsRet += wsIndent;
+			if(!wsName.IsEmpty()){
+				Escape(wsRet, wsName);
 				wsRet += L' ';
 			}
 			wsRet += L'{';
 			wsRet += L'\n';
 			wsIndent += wsoIndent;
-			vecPackageStack.Push(&(vTop.second->second), vTop.second->second.xm_mapPackages.GetFirst<1>());
-			vTop.second = vTop.second->GetNext<1>();
+			vecPackageStack.Push(&(vTop.second->Get().second), vTop.second->Get().second.xm_mapChildren.GetFirst<1>());
 			continue;
-		}
-
+		}*/
+/*
 		for(auto pNode = vTop.first->xm_mapValues.GetFirst<1>(); pNode; pNode = pNode->GetNext<1>()){
 			wsRet += wsIndent;
 			if(!pNode->first.IsEmpty()){
 				Escape(wsRet, pNode->first);
 				wsRet += L' ';
 			}
-			wsRet += L'=';
-			wsRet += L' ';
-			Escape(wsRet, pNode->second);
-			if(!wsRet.IsEmpty() && (wsRet.GetEnd()[-1] == L' ')){
-				wsRet += L';';
-			}
-			wsRet += L'\n';
 		}
-
+*/
 		vecPackageStack.Pop();
 		if(vecPackageStack.IsEmpty()){
 			break;

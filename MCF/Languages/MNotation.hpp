@@ -7,204 +7,134 @@
 
 #include "../Core/String.hpp"
 #include "../Containers/MultiIndexMap.hpp"
-#include <type_traits>
-#include <memory>
 #include <utility>
 
 namespace MCF {
 
-class MNotationPackage {
+class MNotationNode {
 	friend class MNotation;
 
-public:
-	using Package = std::pair<WideString, MNotationPackage>;
-	using Value = std::pair<WideString, WideString>;
-
 private:
-	struct xPackageComparator {
-		bool operator()(const Package &lhs, const Package &rhs) const noexcept {
-			return lhs.first < rhs.first;
+	struct xChildComparator {
+		int operator()(const std::pair<WideString, MNotationNode> &lhs, const std::pair<WideString, MNotationNode> &rhs) const noexcept {
+			return lhs.first.Compare(rhs.first);
 		}
-		bool operator()(const Package &lhs, const WideStringObserver &rhs) const noexcept {
-			return lhs.first < rhs;
+		int operator()(const std::pair<WideString, MNotationNode> &lhs, const WideStringObserver &rhs) const noexcept {
+			return lhs.first.Compare(rhs);
 		}
-		bool operator()(const WideStringObserver &lhs, const Package &rhs) const noexcept {
-			return lhs < rhs.first;
+		int operator()(const WideStringObserver &lhs, const std::pair<WideString, MNotationNode> &rhs) const noexcept {
+			return lhs.Compare(rhs.first);
 		}
 	};
 
 public:
-	using PackageMap = MultiIndexMap<Package,
-		// MultiOrderedMemberIndex<Package, WideString, &Package::first>,
-		MultiOrderedIndex<Package, xPackageComparator>,
-		SequencedIndex<Package>>;
-	using ValueMap = MultiIndexMap<Value,
-		MultiOrderedMemberIndex<Value, WideString, &Value::first>,
-		SequencedIndex<Value>>;
+	using Child = std::pair<WideString, MNotationNode>;
 
-	using PackageNode = typename PackageMap::Node;
-	using ValueNode = typename ValueMap::Node;
+	using ChildMap = MultiIndexMap<Child,
+		// MultiOrderedMemberIndex<Child, WideString, &Child::first>,
+		MultiOrderedIndex<Child, xChildComparator>,
+		SequencedIndex<Child>>;
+	using ChildNode = typename ChildMap::Node;
+	using ConstCursor = typename ChildMap::ConstCursor<1>;
+	using Cursor = typename ChildMap::Cursor<1>;
 
 private:
-	PackageMap xm_mapPackages;
-	ValueMap xm_mapValues;
+	ChildMap xm_mapChildren;
 
 public:
-	bool HasNoPackages() const noexcept {
-		return xm_mapPackages.IsEmpty();
+	bool IsEmpty() const noexcept {
+		return xm_mapChildren.IsEmpty();
 	}
-	void ClearPackages() noexcept {
-		xm_mapPackages.Clear();
+	std::size_t GetSize() const noexcept {
+		return xm_mapChildren.GetSize();
+	}
+	void Clear() noexcept {
+		xm_mapChildren.Clear();
 	}
 
-	std::pair<const PackageNode *, const PackageNode *> GetPackageRange(const WideStringObserver &wsoName) const noexcept {
-		return xm_mapPackages.GetEqualRange<0>(wsoName);
+	std::pair<const ChildNode *, const ChildNode *> GetRange(const WideStringObserver &wsoName) const noexcept {
+		return xm_mapChildren.GetEqualRange<0>(wsoName);
 	}
-	std::pair<PackageNode *, PackageNode *> GetPackageRange(const WideStringObserver &wsoName) noexcept {
-		return xm_mapPackages.GetEqualRange<0>(wsoName);
+	std::pair<ChildNode *, ChildNode *> GetRange(const WideStringObserver &wsoName) noexcept {
+		return xm_mapChildren.GetEqualRange<0>(wsoName);
 	}
-	std::pair<PackageNode *, bool> InsertPackage(const WideStringObserver &wsoName, PackageNode *pSeqPos = nullptr){
-		return InsertPackage(WideString(wsoName), pSeqPos);
+	std::pair<ChildNode *, bool> Insert(const WideStringObserver &wsoName, ChildNode *pSeqPos = nullptr){
+		return Insert(WideString(wsoName), pSeqPos);
 	}
-	std::pair<PackageNode *, bool> InsertPackage(WideString wsName, PackageNode *pSeqPos = nullptr){
-		return xm_mapPackages.InsertWithHints(false, std::make_tuple(nullptr, pSeqPos), std::move(wsName), MNotationPackage());
+	std::pair<ChildNode *, bool> Insert(WideString wsName, ChildNode *pSeqPos = nullptr){
+		return xm_mapChildren.InsertWithHints(false, std::make_tuple(nullptr, pSeqPos), std::move(wsName), MNotationNode());
 	}
-	PackageNode *ErasePackage(PackageNode *pNode) noexcept {
+	ChildNode *Erase(ChildNode *pNode) noexcept {
 		const auto pRet = pNode->GetNext<1>();
-		xm_mapPackages.Erase(pNode);
+		xm_mapChildren.Erase(pNode);
 		return pRet;
 	}
-	bool ErasePackage(const WideStringObserver &wsoName) noexcept {
-		const auto pPos = xm_mapPackages.Find<0>(wsoName);
+	bool Erase(const WideStringObserver &wsoName) noexcept {
+		const auto pPos = xm_mapChildren.Find<0>(wsoName);
 		if(!pPos){
 			return false;
 		}
-		xm_mapPackages.Erase(pPos);
+		xm_mapChildren.Erase(pPos);
 		return true;
 	}
 
-	const PackageNode *GetPackage(const WideStringObserver &wsoName) const noexcept {
-		return xm_mapPackages.Find<0>(wsoName);
+	const ChildNode *Get(const WideStringObserver &wsoName) const noexcept {
+		return xm_mapChildren.Find<0>(wsoName);
 	}
-	PackageNode *GetPackage(const WideStringObserver &wsoName) noexcept {
-		return xm_mapPackages.Find<0>(wsoName);
+	ChildNode *Get(const WideStringObserver &wsoName) noexcept {
+		return xm_mapChildren.Find<0>(wsoName);
 	}
-	PackageNode *CreatePackage(const WideStringObserver &wsoName, PackageNode *pSeqPos = nullptr) noexcept {
-		auto pNode = xm_mapPackages.GetLowerBound<0>(wsoName);
-		if(!pNode || (pNode->first != wsoName)){
-			pNode = xm_mapPackages.InsertWithHints(true, std::make_tuple(pNode, pSeqPos), WideString(wsoName), MNotationPackage()).first;
+	ChildNode *Create(const WideStringObserver &wsoName, ChildNode *pSeqPos = nullptr) noexcept {
+		auto pNode = xm_mapChildren.GetLowerBound<0>(wsoName);
+		if(!pNode || (pNode->Get().first != wsoName)){
+			pNode = xm_mapChildren.InsertWithHints(true, std::make_tuple(pNode, pSeqPos), WideString(wsoName), MNotationNode()).first;
 		}
 		return pNode;
 	}
-	PackageNode *CreatePackage(WideString wsName, PackageNode *pSeqPos = nullptr) noexcept {
-		auto pNode = xm_mapPackages.GetLowerBound<0>(wsName);
-		if(!pNode || (pNode->first != wsName)){
-			pNode = xm_mapPackages.InsertWithHints(true, std::make_tuple(pNode, pSeqPos), std::move(wsName), MNotationPackage()).first;
-		}
-		return pNode;
-	}
-
-	const PackageNode *GetFirstPackage() const noexcept {
-		return xm_mapPackages.GetFirst<1>();
-	}
-	PackageNode *GetFirstPackage() noexcept {
-		return xm_mapPackages.GetFirst<1>();
-	}
-	const PackageNode *GetLastPackage() const noexcept {
-		return xm_mapPackages.GetLast<1>();
-	}
-	PackageNode *GetLastPackage() noexcept {
-		return xm_mapPackages.GetLast<1>();
-	}
-
-	bool HasNoValues() const noexcept {
-		return xm_mapValues.IsEmpty();
-	}
-	void ClearValues() noexcept {
-		xm_mapValues.Clear();
-	}
-
-	std::pair<const ValueNode *, const ValueNode *> GetValueRange(const WideStringObserver &wsoName) const noexcept {
-		return xm_mapValues.GetEqualRange<0>(wsoName);
-	}
-	std::pair<ValueNode *, ValueNode *> GetValueRange(const WideStringObserver &wsoName) noexcept {
-		return xm_mapValues.GetEqualRange<0>(wsoName);
-	}
-	std::pair<ValueNode *, bool> InsertValue(const WideStringObserver &wsoName, WideString wsValue, ValueNode *pSeqPos = nullptr){
-		return InsertValue(WideString(wsoName), std::move(wsValue), pSeqPos);
-	}
-	std::pair<ValueNode *, bool> InsertValue(WideString wsName, WideString wsValue, ValueNode *pSeqPos = nullptr){
-		return xm_mapValues.InsertWithHints(false, std::make_tuple(nullptr, pSeqPos), std::move(wsName), std::move(wsValue));
-	}
-	ValueNode *EraseValue(ValueNode *pNode) noexcept {
-		const auto pRet = pNode->GetNext<1>();
-		xm_mapValues.Erase(pNode);
-		return pRet;
-	}
-	std::size_t EraseValues(const WideStringObserver &wsoName) noexcept {
-		const auto vRange = xm_mapValues.GetEqualRange<0>(wsoName);
-		std::size_t uRet = 0;
-		for(auto pCur = vRange.first; pCur != vRange.second; pCur = pCur->GetNext<0>()){
-			xm_mapValues.Erase(pCur);
-			++uRet;
-		}
-		return uRet;
-	}
-
-	const ValueNode *GetValue(const WideStringObserver &wsoName) const noexcept {
-		return xm_mapValues.Find<0>(wsoName);
-	}
-	ValueNode *GetValue(const WideStringObserver &wsoName) noexcept {
-		return xm_mapValues.Find<0>(wsoName);
-	}
-	ValueNode *SetValue(const WideStringObserver &wsoName, WideString wsValue, ValueNode *pSeqPos = nullptr){
-		auto pNode = xm_mapValues.GetLowerBound<0>(wsoName);
-		if(!pNode || (pNode->first != wsoName)){
-			pNode = xm_mapValues.InsertWithHints(true, std::make_tuple(pNode, pSeqPos), WideString(wsoName), std::move(wsValue)).first;
-		} else {
-			pNode->second = std::move(wsValue);
-		}
-		return pNode;
-	}
-	ValueNode *SetValue(WideString wsName, WideString wsValue, ValueNode *pSeqPos = nullptr){
-		auto pNode = xm_mapValues.GetLowerBound<0>(wsName);
-		if(!pNode || (pNode->first != wsValue)){
-			pNode = xm_mapValues.InsertWithHints(true, std::make_tuple(pNode, pSeqPos), std::move(wsValue), std::move(wsValue)).first;
-		} else {
-			pNode->second = std::move(wsValue);
+	ChildNode *Create(WideString wsName, ChildNode *pSeqPos = nullptr) noexcept {
+		auto pNode = xm_mapChildren.GetLowerBound<0>(wsName);
+		if(!pNode || (pNode->Get().first != wsName)){
+			pNode = xm_mapChildren.InsertWithHints(true, std::make_tuple(pNode, pSeqPos), std::move(wsName), MNotationNode()).first;
 		}
 		return pNode;
 	}
 
-	const ValueNode *GetFirstValue() const noexcept {
-		return xm_mapValues.GetFirst<1>();
+	const ChildNode *GetFirst() const noexcept {
+		return xm_mapChildren.GetFirst<1>();
 	}
-	ValueNode *GetFirstValue() noexcept {
-		return xm_mapValues.GetFirst<1>();
+	ChildNode *GetFirst() noexcept {
+		return xm_mapChildren.GetFirst<1>();
 	}
-	const ValueNode *GetLastValue() const noexcept {
-		return xm_mapValues.GetLast<1>();
+	const ChildNode *GetLast() const noexcept {
+		return xm_mapChildren.GetLast<1>();
 	}
-	ValueNode *GetLastValue() noexcept {
-		return xm_mapValues.GetLast<1>();
-	}
-
-	void Clear() noexcept {
-		xm_mapPackages.Clear();
-		xm_mapValues.Clear();
+	ChildNode *GetLast() noexcept {
+		return xm_mapChildren.GetLast<1>();
 	}
 
-	void Swap(MNotationPackage &rhs) noexcept {
-		xm_mapPackages.Swap(rhs.xm_mapPackages);
-		xm_mapValues.Swap(rhs.xm_mapValues);
+	ConstCursor GetFirstCursor() const noexcept {
+		return xm_mapChildren.GetFirstCursor<1>();
+	}
+	Cursor GetFirstCursor() noexcept {
+		return xm_mapChildren.GetFirstCursor<1>();
+	}
+	ConstCursor GetLastCursor() const noexcept {
+		return xm_mapChildren.GetLastCursor<1>();
+	}
+	Cursor GetLastCursor() noexcept {
+		return xm_mapChildren.GetLastCursor<1>();
+	}
+
+	void Swap(MNotationNode &rhs) noexcept {
+		xm_mapChildren.Swap(rhs.xm_mapChildren);
 	}
 };
 
-inline void swap(MNotationPackage &lhs, MNotationPackage &rhs) noexcept {
+inline void swap(MNotationNode &lhs, MNotationNode &rhs) noexcept {
 	lhs.Swap(rhs);
 }
 
-class MNotation : public MNotationPackage {
+class MNotation : public MNotationNode {
 public:
 	enum ErrorType {
 		ERR_NONE						= 0,

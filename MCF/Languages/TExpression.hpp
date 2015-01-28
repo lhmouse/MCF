@@ -16,8 +16,11 @@ class TExpressionNode {
 
 public:
 	using Child = std::pair<WideString, TExpressionNode>;
+
 	using ChildList = List<Child>;
 	using ChildNode = typename ChildList::Node;
+	using ConstCursor = typename ChildList::ConstCursor;
+	using Cursor = typename ChildList::Cursor;
 
 private:
 	ChildList xm_lstChildren;
@@ -43,13 +46,26 @@ public:
 		return xm_lstChildren.GetLast();
 	}
 
-	ChildNode *InsertChild(ChildNode *pPos, WideString wsName, TExpressionNode vNode){
-		return InsertChild(pPos, Child(std::move(wsName), std::move(vNode)));
+	ConstCursor GetFirstCursor() const noexcept {
+		return xm_lstChildren.GetFirstCursor();
 	}
-	ChildNode *InsertChild(ChildNode *pPos, Child vChild){
+	Cursor GetFirstCursor() noexcept {
+		return xm_lstChildren.GetFirstCursor();
+	}
+	ConstCursor GetLastCursor() const noexcept {
+		return xm_lstChildren.GetLastCursor();
+	}
+	Cursor GetLastCursor() noexcept {
+		return xm_lstChildren.GetLastCursor();
+	}
+
+	ChildNode *Insert(ChildNode *pPos, WideString wsName, TExpressionNode vNode){
+		return Insert(pPos, Child(std::move(wsName), std::move(vNode)));
+	}
+	ChildNode *Insert(ChildNode *pPos, Child vChild){
 		return xm_lstChildren.Insert(pPos, std::move(vChild));
 	}
-	ChildNode *EraseChild(ChildNode *pPos) noexcept {
+	ChildNode *Erase(ChildNode *pPos) noexcept {
 		return xm_lstChildren.Erase(pPos);
 	}
 

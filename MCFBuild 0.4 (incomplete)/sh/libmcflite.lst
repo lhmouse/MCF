@@ -16,12 +16,15 @@ MCFCRT/env/heap.c
 MCFCRT/env/heap_dbg.c
 MCFCRT/env/cxa_throw.cpp
 MCFCRT/exe/exe_startup.c
+MCF/Core/Exception.cpp
+MCF/Core/StringObserver.cpp
 MCF/Core/String.cpp
 MCF/Core/File.cpp
 MCF/Core/Utf8TextFile.cpp
 MCF/Core/System.cpp
 MCF/Core/Time.cpp
 MCF/Core/StreamBuffer.cpp
+MCF/Thread/_UniqueWin32Handle.cpp
 MCF/Thread/Thread.cpp
 MCF/Thread/Mutex.cpp
 MCF/Thread/Semaphore.cpp

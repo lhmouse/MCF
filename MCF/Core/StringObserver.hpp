@@ -539,4 +539,10 @@ StringObserverTripleComparator<TYPE_T> GetDefaultComparator(const StringObserver
 
 }
 
+using ::MCF::operator""_nso;
+using ::MCF::operator""_wso;
+using ::MCF::operator""_u8so;
+using ::MCF::operator""_u16so;
+using ::MCF::operator""_u32so;
+
 #endif

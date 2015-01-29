@@ -96,6 +96,22 @@ unsigned System::Shell(MCF::WideString &wcsStdOut, MCF::WideString &wcsStdErr, c
 	MCF::Vector<unsigned char> vecStdOut, vecStdErr;
 
 	{
+		MCF::WideString wcsFullCommand;
+		wcsFullCommand.Reserve(MAX_PATH);
+		wcsFullCommand.Resize(wcsFullCommand.GetCapacity());
+		auto dwComSpecLen = ::GetEnvironmentVariableW(L"COMSPEC", wcsFullCommand.GetStr(), wcsFullCommand.GetSize());
+		if(dwComSpecLen > wcsFullCommand.GetSize()){
+			wcsFullCommand.Resize(dwComSpecLen);
+			dwComSpecLen = ::GetEnvironmentVariableW(L"COMSPEC", wcsFullCommand.GetStr(), wcsFullCommand.GetSize());
+		}
+		if(dwComSpecLen != 0){
+			wcsFullCommand.Resize(dwComSpecLen);
+		} else {
+			wcsFullCommand = L"CMD.EXE"_wso;
+		}
+		wcsFullCommand += L" /U /Q /C"_wso;
+		wcsFullCommand += wsoCommand;
+
 		const auto CreateInputPipe = []{
 			HANDLE hRead, hWrite;
 			if(!::CreatePipe(&hRead, &hWrite, nullptr, 0)){
@@ -141,9 +157,7 @@ unsigned System::Shell(MCF::WideString &wcsStdOut, MCF::WideString &wcsStdErr, c
 		vStartupInfo.hStdError		= vStdErrPipe.second.Get();
 
 		::PROCESS_INFORMATION vProcessInfo;
-		if(!::CreateProcessW(nullptr, (L"CMD.EXE /Q /U /C "_ws + wsoCommand).GetStr(),
-			nullptr, nullptr, true, 0, nullptr, nullptr, &vStartupInfo, &vProcessInfo))
-		{
+		if(!::CreateProcessW(nullptr, wcsFullCommand.GetStr(), nullptr, nullptr, true, 0, nullptr, nullptr, &vStartupInfo, &vProcessInfo)){
 			DEBUG_THROW(MCF::SystemError, "CreateProcessW");
 		}
 		::CloseHandle(vProcessInfo.hThread);
@@ -170,8 +184,8 @@ MCF::WideString System::NormalizePath(const MCF::WideString &wcsPath){
 	wcsRet.Reserve(MAX_PATH);
 	wcsRet.Resize(wcsRet.GetCapacity());
 
-	DWORD dwSize = ::GetFullPathNameW(wcsPath.GetStr(), wcsRet.GetSize(), wcsRet.GetStr(), nullptr);
-	if(dwSize >= wcsRet.GetSize()){
+	auto dwSize = ::GetFullPathNameW(wcsPath.GetStr(), wcsRet.GetSize(), wcsRet.GetStr(), nullptr);
+	if(dwSize > wcsRet.GetSize()){
 		// 缓冲区太小。
 		wcsRet.Resize(dwSize);
 		dwSize = ::GetFullPathNameW(wcsPath.GetStr(), wcsRet.GetSize(), wcsRet.GetStr(), nullptr);

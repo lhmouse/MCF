@@ -18,7 +18,7 @@
 	};
 */
 
-#define FIX_ALIGNMENT(cb_, as_)		(((cb_) + _Alignof(as_) - 1) / _Alignof(as_) * _Alignof(as_))
+#define FIX_ALIGNMENT(cb_, as_)		(((cb_) + alignof(as_) - 1) / alignof(as_) * alignof(as_))
 
 const MCF_ArgItem *MCF_CRT_AllocArgv(size_t *pArgc, const wchar_t *pwszCommandLine){
 	const size_t uPrefixSize = FIX_ALIGNMENT((wcslen(pwszCommandLine) + 1) * sizeof(wchar_t), MCF_ArgItem);

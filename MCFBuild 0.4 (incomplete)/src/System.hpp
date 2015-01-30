@@ -11,7 +11,6 @@
 
 namespace MCFBuild {
 
-
 struct System {
 	static void Print(const MCF::WideStringObserver &wsoText, bool bInsertsNewLine = true, bool bToStdErr = false) noexcept;
 	static unsigned Shell(MCF::WideString &wcsStdOut, MCF::WideString &wcsStdErr, const MCF::WideStringObserver &wsoCommand);

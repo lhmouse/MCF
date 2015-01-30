@@ -59,9 +59,9 @@ public:
 }
 
 #define DEBUG_THROW(etype_, ...)	\
-	do {	\
+	([&]() [[noreturn]] {	\
 		etype_ e_ (__FILE__, __LINE__, __VA_ARGS__);	\
 		throw e_;	\
-	} while(false)
+	}())
 
 #endif

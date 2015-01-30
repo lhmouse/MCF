@@ -4,12 +4,15 @@
 
 #include "Precompiled.hpp"
 #include "System.hpp"
-#include <Thread/Mutex.hpp>
-#include <Core/UniqueHandle.hpp>
-#include <Containers/Vector.hpp>
+#include <MCF/Thread/Mutex.hpp>
+#include <MCF/Core/UniqueHandle.hpp>
+#include <MCF/Core/Utf8TextFile.hpp>
 using namespace MCFBuild;
 
 namespace {
+
+// 控制台上使用 UTF-8 编码和 MSYS 兼容。
+using ConsoleNarrowString = MCF::Utf8String;
 
 MCF::Mutex g_vConsoleMutex;
 
@@ -49,7 +52,7 @@ void System::Print(const MCF::WideStringObserver &wsoText, bool bInsertsNewLine,
 		}
 	} else {
 		// 写文件。
-		const MCF::Utf8String u8sTemp(wsoText);
+		const ConsoleNarrowString cnsTemp(wsoText);
 
 		const auto Write = [&](const char *pchStr, std::size_t uLen){
 			DWORD dwTotal = 0, dwWritten;
@@ -63,7 +66,7 @@ void System::Print(const MCF::WideStringObserver &wsoText, bool bInsertsNewLine,
 
 		{
 			const auto vLock = g_vConsoleMutex.GetLock();
-			Write(u8sTemp.GetStr(), u8sTemp.GetSize());
+			Write(cnsTemp.GetStr(), cnsTemp.GetSize());
 			if(bInsertsNewLine){
 				Write("\n", 1);
 			}
@@ -71,46 +74,12 @@ void System::Print(const MCF::WideStringObserver &wsoText, bool bInsertsNewLine,
 	}
 }
 unsigned System::Shell(MCF::WideString &wcsStdOut, MCF::WideString &wcsStdErr, const MCF::WideStringObserver &wsoCommand){
-	const auto ConvertOutput = [](MCF::WideString &wcsSink, MCF::Vector<unsigned char> &vecSource){
-		wcsSink.Assign((const wchar_t *)vecSource.GetData(), vecSource.GetSize() / sizeof(wchar_t));
-
-		const auto uCrlfPos = wcsSink.Find(L"\r\n"_wso);
-		if(uCrlfPos != MCF::WideString::NPOS){
-			// 将 CRLF 转换为 LF。
-			auto pwcWrite = wcsSink.GetBegin() + uCrlfPos + 1;
-			pwcWrite[-1] = L'\n';
-
-			const auto pwcEnd = wcsSink.GetEnd();
-			for(const wchar_t *pwcRead = pwcWrite + 1; pwcRead != pwcEnd; ++pwcRead){
-				if((pwcRead[0] == L'\r') && (pwcRead[1] == '\n')){
-					continue;
-				}
-				*pwcWrite = *pwcRead;
-				++pwcWrite;
-			}
-			wcsSink.Truncate((std::size_t)(pwcEnd - pwcWrite));
-		}
-	};
-
 	DWORD dwExitCode;
-	MCF::Vector<unsigned char> vecStdOut, vecStdErr;
+	ConsoleNarrowString cnsStdOut, cnsStdErr;
 
 	{
-		MCF::WideString wcsFullCommand;
-		wcsFullCommand.Reserve(MAX_PATH);
-		wcsFullCommand.Resize(wcsFullCommand.GetCapacity());
-		auto dwComSpecLen = ::GetEnvironmentVariableW(L"COMSPEC", wcsFullCommand.GetStr(), wcsFullCommand.GetSize());
-		if(dwComSpecLen > wcsFullCommand.GetSize()){
-			wcsFullCommand.Resize(dwComSpecLen);
-			dwComSpecLen = ::GetEnvironmentVariableW(L"COMSPEC", wcsFullCommand.GetStr(), wcsFullCommand.GetSize());
-		}
-		if(dwComSpecLen != 0){
-			wcsFullCommand.Resize(dwComSpecLen);
-		} else {
-			wcsFullCommand = L"CMD.EXE"_wso;
-		}
-		wcsFullCommand += L" /U /Q /C"_wso;
-		wcsFullCommand += wsoCommand;
+		// CreateProcess() 要求路径是可写的。
+		MCF::WideString wcsCommandLine(wsoCommand);
 
 		const auto CreateInputPipe = []{
 			HANDLE hRead, hWrite;
@@ -123,24 +92,6 @@ unsigned System::Shell(MCF::WideString &wcsStdOut, MCF::WideString &wcsStdErr, c
 			}
 			return vRet;
 		};
-		const auto ReadPipe = [](MCF::Vector<unsigned char> &vecSink, HANDLE hPipe){
-			unsigned char abyTemp[0x400];
-			DWORD dwBytesAvail;
-			DWORD dwBytesRead;
-			for(;;){
-				if(!::PeekNamedPipe(hPipe, nullptr, 0, nullptr, &dwBytesAvail, nullptr)){
-					break;
-				}
-				if(dwBytesAvail == 0){
-					break;
-				}
-				if(::ReadFile(hPipe, abyTemp, sizeof(abyTemp), &dwBytesRead, nullptr) == FALSE){
-					break;
-				}
-				vecSink.AppendCopy(abyTemp, dwBytesRead);
-			}
-		};
-
 		const auto vStdOutPipe = CreateInputPipe();
 		const auto vStdErrPipe = CreateInputPipe();
 
@@ -157,10 +108,10 @@ unsigned System::Shell(MCF::WideString &wcsStdOut, MCF::WideString &wcsStdErr, c
 		vStartupInfo.hStdError		= vStdErrPipe.second.Get();
 
 		::PROCESS_INFORMATION vProcessInfo;
-		if(!::CreateProcessW(nullptr, wcsFullCommand.GetStr(), nullptr, nullptr, true, 0, nullptr, nullptr, &vStartupInfo, &vProcessInfo)){
+		if(!::CreateProcessW(nullptr, wcsCommandLine.GetStr(), nullptr, nullptr, true, 0, nullptr, nullptr, &vStartupInfo, &vProcessInfo)){
 			DEBUG_THROW(MCF::SystemError, "CreateProcessW");
 		}
-		::CloseHandle(vProcessInfo.hThread);
+		const WindowsHandle hPrimaryThread(vProcessInfo.hThread);
 		const WindowsHandle hProcess(vProcessInfo.hProcess);
 
 		bool bQuitNow = false;
@@ -169,28 +120,88 @@ unsigned System::Shell(MCF::WideString &wcsStdOut, MCF::WideString &wcsStdErr, c
 				::GetExitCodeProcess(hProcess.Get(), &dwExitCode);
 				bQuitNow = true;
 			}
-			ReadPipe(vecStdOut, vStdOutPipe.first.Get());
-			ReadPipe(vecStdErr, vStdErrPipe.first.Get());
+
+			const auto ReadPipe = [](ConsoleNarrowString &cnsSink, HANDLE hPipe){
+				char achTemp[0x400];
+				DWORD dwBytesAvail;
+				DWORD dwBytesRead;
+				for(;;){
+					if(!::PeekNamedPipe(hPipe, nullptr, 0, nullptr, &dwBytesAvail, nullptr)){
+						break;
+					}
+					if(dwBytesAvail == 0){
+						break;
+					}
+					if(!::ReadFile(hPipe, achTemp, sizeof(achTemp), &dwBytesRead, nullptr)){
+						break;
+					}
+					cnsSink.Append(achTemp, dwBytesRead);
+				}
+			};
+			ReadPipe(cnsStdOut, vStdOutPipe.first.Get());
+			ReadPipe(cnsStdErr, vStdErrPipe.first.Get());
 		} while(!bQuitNow);
 	}
 
-	ConvertOutput(wcsStdOut, vecStdOut);
-	ConvertOutput(wcsStdErr, vecStdErr);
+	const auto ZapCrlfs = [](ConsoleNarrowString &cnsInout){
+		const auto uCrlfPos = cnsInout.Find(ConsoleNarrowString::ObserverType("\r\n", 2));
+		if(uCrlfPos != ConsoleNarrowString::NPOS){
+			auto pchWrite = cnsInout.GetBegin() + uCrlfPos + 1;
+			pchWrite[-1] = '\n';
 
-	return 0;
+			const auto pchEnd = cnsInout.GetEnd();
+			for(const char *pchRead = pchWrite + 1; pchRead != pchEnd; ++pchRead){
+				if((pchRead[0] == '\r') && (pchRead[1] == '\n')){
+					continue;
+				}
+				*pchWrite = *pchRead;
+				++pchWrite;
+			}
+			cnsInout.Truncate((std::size_t)(pchEnd - pchWrite));
+		}
+	};
+	ZapCrlfs(cnsStdOut);
+	ZapCrlfs(cnsStdErr);
+
+	wcsStdOut = MCF::WideString(cnsStdOut);
+	wcsStdErr = MCF::WideString(cnsStdErr);
+	return dwExitCode;
 }
-MCF::WideString System::NormalizePath(const MCF::WideString &wcsPath){
+MCF::WideString System::NormalizePath(const wchar_t *pwcPath){
 	MCF::WideString wcsRet;
 	wcsRet.Reserve(MAX_PATH);
 	wcsRet.Resize(wcsRet.GetCapacity());
 
-	auto dwSize = ::GetFullPathNameW(wcsPath.GetStr(), wcsRet.GetSize(), wcsRet.GetStr(), nullptr);
+	auto dwSize = ::GetFullPathNameW(pwcPath, wcsRet.GetSize(), wcsRet.GetStr(), nullptr);
 	if(dwSize > wcsRet.GetSize()){
 		// 缓冲区太小。
 		wcsRet.Resize(dwSize);
-		dwSize = ::GetFullPathNameW(wcsPath.GetStr(), wcsRet.GetSize(), wcsRet.GetStr(), nullptr);
+		dwSize = ::GetFullPathNameW(pwcPath, wcsRet.GetSize(), wcsRet.GetStr(), nullptr);
 	}
 	wcsRet.Resize(dwSize);
 
 	return wcsRet;
 }
+
+MCF::Vector<MCF::WideString> System::GetUtf8FileContents(const wchar_t *pwcPath){
+	MCF::Vector<MCF::WideString> vecRet;
+	MCF::Utf8TextFileReader vReader(MCF::File(pwcPath, MCF::File::TO_READ));
+	MCF::Utf8String u8sLine;
+	while(vReader.ReadLine(u8sLine)){
+		vecRet.Push(MCF::WideString(u8sLine));
+	}
+	return vecRet;
+}
+void System::PutUtf8FileContents(const wchar_t *pwcPath, const MCF::Vector<MCF::WideString> &vecContents, bool bToAppend){
+	std::uint32_t u32Flags = 0;
+	if(bToAppend){
+		u32Flags |= MCF::File::NO_TRUNC;
+	}
+	MCF::Utf8TextFileWriter vWriter(MCF::File(pwcPath, MCF::File::TO_WRITE | u32Flags));
+	MCF::Utf8String u8sLine;
+	for(auto pwcsLine = vecContents.GetBegin(); pwcsLine != vecContents.GetEnd(); ++pwcsLine){
+		u8sLine.Assign(*pwcsLine);
+		vWriter.WriteLine(u8sLine);
+	}
+}
+

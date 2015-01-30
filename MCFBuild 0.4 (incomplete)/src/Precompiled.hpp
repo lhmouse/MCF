@@ -5,13 +5,14 @@
 #ifndef MCFBUILD_PRECOMPILED_HPP_
 #define MCFBUILD_PRECOMPILED_HPP_
 
-#include <StdMCF.hpp>
+#include <MCF/StdMCF.hpp>
 
-#include <Core/String.hpp>
-#include <Core/Exception.hpp>
-#include <Utilities/Algorithms.hpp>
-#include <SmartPointers/IntrusivePtr.hpp>
-#include <SmartPointers/SharedPtr.hpp>
-#include <SmartPointers/UniquePtr.hpp>
+#include <MCF/Core/String.hpp>
+#include <MCF/Core/Exception.hpp>
+#include <MCF/SmartPointers/IntrusivePtr.hpp>
+#include <MCF/SmartPointers/SharedPtr.hpp>
+#include <MCF/SmartPointers/UniquePtr.hpp>
+#include <MCF/Containers/Vector.hpp>
+#include <MCF/Utilities/Algorithms.hpp>
 
 #endif

@@ -1,5 +1,7 @@
 #!/bin/sh
 
+MCF_DEBUG=1
+
 if [[ -z $CC ]]
 then
 	export CC=gcc
@@ -14,7 +16,7 @@ export MCF_CPPFLAGS="-Wall -Wextra -pedantic -Wsign-conversion -Wsuggest-attribu
 export MCF_CFLAGS="-std=c11"
 export MCF_CXXFLAGS="-std=c++14 -Wzero-as-null-pointer-constant -Wnoexcept"
 
-if [ "$1" == "-d" ]
+if [[ $MCF_DEBUG ]]
 then
 	MCF_CPPFLAGS+=" -D_GLIBCXX_DEBUG -D_GLIBCXX_DEBUG_PEDANTIC -O0 -g -fno-builtin"
 else

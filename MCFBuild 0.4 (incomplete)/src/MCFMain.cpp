@@ -9,7 +9,7 @@ using namespace MCFBuild;
 extern "C" unsigned MCFMain() noexcept
 try {
 	MCF::WideString out, err;
-	auto ret = System::Shell(out, err, L"echo"_wso);
+	auto ret = System::Shell(out, err, L"cop 喵"_wso);
 
 	std::printf("ret = %u\n", ret);
 
@@ -31,5 +31,7 @@ try {
 
 	return EXIT_SUCCESS;
 } catch(...){
+	System::Print(L""_wso);
+
 	return EXIT_FAILURE;
 }

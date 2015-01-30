@@ -4,6 +4,7 @@ MCFCRT/stdc/stdlib/realloc.c
 MCFCRT/stdc/stdlib/calloc.c
 MCFCRT/stdc/stdlib/free.c
 MCFCRT/ext/wcscpyout.c
+MCFCRT/env/argv.c
 MCFCRT/env/bail.c
 MCFCRT/env/dlmalloc.c
 MCFCRT/env/module.c

@@ -8,7 +8,7 @@ for SRC in $(cd "../src/" && echo *.cpp)
 do
 	DST="../.tmp/$(echo $SRC.o | sed 's,^.*/,,')"
 
-	CMD="$CC $MCF_CPPFLAGS $CPPFLAGS $MCF_CXXFLAGS $CXXFLAGS -isystem ../../MCF/ -c -o $DST ../src/$SRC"
+	CMD="$CC $MCF_CPPFLAGS $CPPFLAGS $MCF_CXXFLAGS $CXXFLAGS -isystem ../../ -c -o $DST ../src/$SRC"
 
 	echo $CMD
 	$CMD || exit

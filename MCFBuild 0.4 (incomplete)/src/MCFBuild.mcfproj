@@ -1,5 +1,6 @@
 ; 定义一些变量。
-CPPFlags	= -Wall -Wextra -pedantic -Wsign-conversion -Wsuggest-attribute=noreturn -Wundef -pipe -mfpmath=both -march=nocona -masm=intel
+CPPFlags	= -Wall -Wextra -pedantic -Wsign-conversion -Wsuggest-attribute=noreturn -Wundef -pipe	\
+				-mfpmath=both -march=nocona -masm=intel -isystem  ../../
 CFlags		= -std=c11
 CXXFlags	= -std=c++14 -Wzero-as-null-pointer-constant -Wnoexcept
 LDFlags		= -Wall -Wextra -static -nostdlib -Wl,-e__MCF_ExeStartup,--disable-runtime-pseudo-reloc,--disable-auto-import	\
@@ -46,6 +47,7 @@ Libs		= -lmcflite -lstdc++ -lmingwex -lmingw32 -lgcc -lgcc_eh -lmcflite -lmsvcrt
 	.File	= ../../MCFCRT/stdc/stdlib/calloc.c
 	.File	= ../../MCFCRT/stdc/stdlib/free.c
 	.File	= ../../MCFCRT/ext/wcscpyout.c
+	.File	= ../../MCFCRT/env/argv.c
 	.File	= ../../MCFCRT/env/bail.c
 	.File	= ../../MCFCRT/env/dlmalloc.c
 	.File	= ../../MCFCRT/env/module.c

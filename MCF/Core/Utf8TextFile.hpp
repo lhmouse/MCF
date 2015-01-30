@@ -6,9 +6,9 @@
 #define MCF_CORE_UTF8_TEXT_FILE_HPP_
 
 #include "../Utilities/Noncopyable.hpp"
+#include "../Core/StreamBuffer.hpp"
 #include "File.hpp"
 #include "String.hpp"
-#include "../Core/StreamBuffer.hpp"
 #include <utility>
 
 namespace MCF {

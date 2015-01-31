@@ -48,6 +48,11 @@ public:
 	WideStringObserver Get(std::size_t uIndex) const noexcept {
 		return WideStringObserver(GetStr(uIndex), GetLen(uIndex));
 	}
+
+public:
+	WideStringObserver operator[](std::size_t uIndex) const noexcept {
+		return Get(uIndex);
+	}
 };
 
 }

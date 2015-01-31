@@ -11,7 +11,7 @@ extern "C" unsigned MCFMain() noexcept
 try {
 	const MCF::Argv vArgs;
 	for(unsigned i = 0; i < vArgs.GetSize(); ++i){
-		System::Print(vArgs.Get(i));
+		System::Print(vArgs[i]);
 	}
 
 	return EXIT_SUCCESS;

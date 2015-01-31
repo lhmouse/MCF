@@ -7,23 +7,47 @@
 
 #include <cstddef>
 #include "../../MCFCRT/env/argv.h"
+#include "../Core/StringObserver.hpp"
 #include "../SmartPointers/UniquePtr.hpp"
+#include "../Utilities/Noncopyable.hpp"
+#include "../Utilities/Assert.hpp"
 
 namespace MCF {
 
-struct ArgvResult {
-	struct ArgItemDeleter {
+class Argv : NONCOPYABLE {
+private:
+	struct xArgItemDeleter {
 		constexpr ::MCF_ArgItem *operator()() const noexcept {
 			return nullptr;
 		}
-		void operator()(::MCF_ArgItem *pArgItem) const noexcept;
+		void operator()(::MCF_ArgItem *pArgItem) const noexcept {
+			::MCF_CRT_FreeArgv(pArgItem);
+		}
 	};
 
-	std::size_t uArgc;
-	UniquePtr<const ::MCF_ArgItem [], ArgItemDeleter> pArgv;
-};
+private:
+	std::size_t xm_uArgc;
+	UniquePtr<const ::MCF_ArgItem [], xArgItemDeleter> xm_pArgv;
 
-extern ArgvResult GetArgv(const wchar_t *pwszCommandLine = nullptr);
+public:
+	explicit Argv(const wchar_t *pwszCommandLine = nullptr);
+
+public:
+	std::size_t GetSize() const noexcept {
+		return xm_uArgc;
+	}
+	const wchar_t *GetStr(std::size_t uIndex) const noexcept {
+		ASSERT(uIndex <= xm_uArgc); // 传入 xm_uArgc 会得到一个空指针。
+		return xm_pArgv[uIndex].pwszStr;
+	}
+	std::size_t GetLen(std::size_t uIndex) const noexcept {
+		ASSERT(uIndex <= xm_uArgc);
+		return xm_pArgv[uIndex].uLen;
+	}
+	WideStringObserver Get(std::size_t uIndex) const noexcept {
+		return WideStringObserver(GetStr(uIndex), GetLen(uIndex));
+	}
+};
 
 }
 

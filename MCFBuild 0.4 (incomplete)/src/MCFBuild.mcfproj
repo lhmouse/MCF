@@ -60,6 +60,7 @@ Libs		= -lmcflite -lstdc++ -lmingwex -lmingw32 -lgcc -lgcc_eh -lmcflite -lmsvcrt
 	.File	= ../../MCFCRT/env/heap_dbg.c
 	.File	= ../../MCFCRT/env/cxa_throw.cpp
 	.File	= ../../MCFCRT/exe/exe_startup.c
+	.File	= ../../MCF/Core/Argv.cpp
 	.File	= ../../MCF/Core/Exception.cpp
 	.File	= ../../MCF/Core/StringObserver.cpp
 	.File	= ../../MCF/Core/String.cpp

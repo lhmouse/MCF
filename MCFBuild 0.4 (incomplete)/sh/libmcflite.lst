@@ -17,6 +17,7 @@ MCFCRT/env/heap.c
 MCFCRT/env/heap_dbg.c
 MCFCRT/env/cxa_throw.cpp
 MCFCRT/exe/exe_startup.c
+MCF/Core/Argv.cpp
 MCF/Core/Exception.cpp
 MCF/Core/StringObserver.cpp
 MCF/Core/String.cpp

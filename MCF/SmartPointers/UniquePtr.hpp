@@ -106,20 +106,20 @@ public:
 		return Get();
 	}
 
-	template<typename RetT = ElementType>
-	std::enable_if_t<!std::is_void<RetT>::value && !std::is_array<RetT>::value, ElementType> &operator*() const noexcept {
+	template<typename TestT = ObjectT>
+	std::enable_if_t<!std::is_void<TestT>::value && !std::is_array<TestT>::value, ElementType> &operator*() const noexcept {
 		ASSERT(IsNonnull());
 
 		return *Get();
 	}
-	template<typename RetT = ElementType>
-	std::enable_if_t<!std::is_void<RetT>::value && !std::is_array<RetT>::value, ElementType> *operator->() const noexcept {
+	template<typename TestT = ObjectT>
+	std::enable_if_t<!std::is_void<TestT>::value && !std::is_array<TestT>::value, ElementType> *operator->() const noexcept {
 		ASSERT(IsNonnull());
 
 		return Get();
 	}
-	template<typename RetT = ElementType>
-	std::enable_if_t<std::is_array<RetT>::value, ElementType> &operator[](std::size_t uIndex) const noexcept {
+	template<typename TestT = ObjectT>
+	std::enable_if_t<std::is_array<TestT>::value, ElementType> &operator[](std::size_t uIndex) const noexcept {
 		ASSERT(IsNonnull());
 
 		return Get()[uIndex];

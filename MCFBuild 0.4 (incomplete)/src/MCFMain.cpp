@@ -3,31 +3,16 @@
 // Copyleft 2015, LH_Mouse. All wrongs reserved.
 
 #include "Precompiled.hpp"
+#include <MCF/Core/Argv.hpp>
 #include "System.hpp"
 using namespace MCFBuild;
 
 extern "C" unsigned MCFMain() noexcept
 try {
-	MCF::WideString out, err;
-	auto ret = System::Shell(out, err, L"cop 喵"_wso);
-
-	std::printf("ret = %u\n", ret);
-
-	std::printf("out = ");
-	auto p = out.GetStr();
-	while(*p != 0){
-		std::printf("%04X ", (unsigned)*p);
-		++p;
+	const MCF::Argv vArgs;
+	for(unsigned i = 0; i < vArgs.GetSize(); ++i){
+		System::Print(vArgs.Get(i));
 	}
-	std::printf("\n");
-
-	std::printf("err = ");
-	p = err.GetStr();
-	while(*p != 0){
-		std::printf("%04X ", (unsigned)*p);
-		++p;
-	}
-	std::printf("\n");
 
 	return EXIT_SUCCESS;
 } catch(...){

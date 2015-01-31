@@ -204,4 +204,3 @@ void System::PutUtf8FileContents(const wchar_t *pwcPath, const MCF::Vector<MCF::
 		vWriter.WriteLine(u8sLine);
 	}
 }
-

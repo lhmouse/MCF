@@ -42,14 +42,14 @@ Uuid Uuid::Generate(){
 }
 
 // 构造函数和析构函数。
-Uuid::Uuid(const char (&pszString)[37]){
+Uuid::Uuid(const char (&pszString)[36]){
 	if(!Scan(pszString)){
 		DEBUG_THROW(Exception, "Invalid UUID string", ERROR_INVALID_PARAMETER);
 	}
 }
 
 // 其他非静态成员函数。
-void Uuid::Print(char (&pszString)[37], bool bUpperCase) const noexcept {
+void Uuid::Print(char (&pszString)[36], bool bUpperCase) const noexcept {
 	auto pbyRead = GetBegin();
 	auto pchWrite = pszString;
 
@@ -80,9 +80,9 @@ void Uuid::Print(char (&pszString)[37], bool bUpperCase) const noexcept {
 	PRINT(2) *(pchWrite++) = '-';
 	PRINT(2) *(pchWrite++) = '-';
 	PRINT(2) *(pchWrite++) = '-';
-	PRINT(6) *(pchWrite++) = 0;
+	PRINT(6)
 }
-bool Uuid::Scan(const char (&pszString)[37]) noexcept {
+bool Uuid::Scan(const char (&pszString)[36]) noexcept {
 	auto pchRead = pszString;
 	auto pbyWrite = GetBegin();
 
@@ -118,7 +118,7 @@ bool Uuid::Scan(const char (&pszString)[37]) noexcept {
 	SCAN(2) if(*(pchRead++) != '-'){ return false; }
 	SCAN(2) if(*(pchRead++) != '-'){ return false; }
 	SCAN(2) if(*(pchRead++) != '-'){ return false; }
-	SCAN(6) if(*(pchRead++) != 0){ return false; }
+	SCAN(6)
 
 	return true;
 }

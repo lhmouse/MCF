@@ -22,10 +22,15 @@ Libs		= -lmcflite -lstdc++ -lmingwex -lmingw32 -lgcc -lgcc_eh -lmcflite -lmsvcrt
 ; $.src	= 输入目录路径
 ; $.dst	= 输出目录路径
 
-; 在构建之前执行这些命令。
-.PreBuild		=
-; 在构建之后执行这些命令。
-.PostBuild		=
+.PreBuild {
+	; 在构建之前执行这些命令。命令是按顺序执行的，名字不重要。
+
+	; 0 = command
+	; 1 = another command
+}
+.PostBuild {
+	; 在构建之后执行这些命令。命令是按顺序执行的，名字不重要。
+}
 
 .Precompiler {
 	; $.out	= 输出目标文件绝对路径
@@ -41,40 +46,40 @@ Libs		= -lmcflite -lstdc++ -lmingwex -lmingw32 -lgcc -lgcc_eh -lmcflite -lmsvcrt
 	; $.dep	= 输出依赖文件绝对路径
 
 	; 指定额外的参与编译的文件。
-	.File	= ../../MCFCRT/stdc/stdlib/atexit.c
-	.File	= ../../MCFCRT/stdc/stdlib/malloc.c
-	.File	= ../../MCFCRT/stdc/stdlib/realloc.c
-	.File	= ../../MCFCRT/stdc/stdlib/calloc.c
-	.File	= ../../MCFCRT/stdc/stdlib/free.c
-	.File	= ../../MCFCRT/ext/wcscpyout.c
-	.File	= ../../MCFCRT/env/argv.c
-	.File	= ../../MCFCRT/env/bail.c
-	.File	= ../../MCFCRT/env/dlmalloc.c
-	.File	= ../../MCFCRT/env/module.c
-	.File	= ../../MCFCRT/env/last_error.c
-	.File	= ../../MCFCRT/env/fenv.c
-	.File	= ../../MCFCRT/env/mingw_hacks.c
-	.File	= ../../MCFCRT/env/avl_tree.c
-	.File	= ../../MCFCRT/env/thread.c
-	.File	= ../../MCFCRT/env/heap.c
-	.File	= ../../MCFCRT/env/heap_dbg.c
-	.File	= ../../MCFCRT/env/cxa_throw.cpp
-	.File	= ../../MCFCRT/exe/exe_startup.c
-	.File	= ../../MCF/Core/Argv.cpp
-	.File	= ../../MCF/Core/Exception.cpp
-	.File	= ../../MCF/Core/StringObserver.cpp
-	.File	= ../../MCF/Core/String.cpp
-	.File	= ../../MCF/Core/File.cpp
-	.File	= ../../MCF/Core/Utf8TextFile.cpp
-	.File	= ../../MCF/Core/System.cpp
-	.File	= ../../MCF/Core/Time.cpp
-	.File	= ../../MCF/Core/StreamBuffer.cpp
-	.File	= ../../MCF/Thread/_UniqueWin32Handle.cpp
-	.File	= ../../MCF/Thread/Thread.cpp
-	.File	= ../../MCF/Thread/Mutex.cpp
-	.File	= ../../MCF/Thread/Semaphore.cpp
-	.File	= ../../MCF/Languages/MNotation.cpp
-	.File	= ../../MCF/Hash/Sha256.cpp
+	.Extra	= ../../MCFCRT/stdc/stdlib/atexit.c
+	.Extra	= ../../MCFCRT/stdc/stdlib/malloc.c
+	.Extra	= ../../MCFCRT/stdc/stdlib/realloc.c
+	.Extra	= ../../MCFCRT/stdc/stdlib/calloc.c
+	.Extra	= ../../MCFCRT/stdc/stdlib/free.c
+	.Extra	= ../../MCFCRT/ext/wcscpyout.c
+	.Extra	= ../../MCFCRT/env/argv.c
+	.Extra	= ../../MCFCRT/env/bail.c
+	.Extra	= ../../MCFCRT/env/dlmalloc.c
+	.Extra	= ../../MCFCRT/env/module.c
+	.Extra	= ../../MCFCRT/env/last_error.c
+	.Extra	= ../../MCFCRT/env/fenv.c
+	.Extra	= ../../MCFCRT/env/mingw_hacks.c
+	.Extra	= ../../MCFCRT/env/avl_tree.c
+	.Extra	= ../../MCFCRT/env/thread.c
+	.Extra	= ../../MCFCRT/env/heap.c
+	.Extra	= ../../MCFCRT/env/heap_dbg.c
+	.Extra	= ../../MCFCRT/env/cxa_throw.cpp
+	.Extra	= ../../MCFCRT/exe/exe_startup.c
+	.Extra	= ../../MCF/Core/Argv.cpp
+	.Extra	= ../../MCF/Core/Exception.cpp
+	.Extra	= ../../MCF/Core/StringObserver.cpp
+	.Extra	= ../../MCF/Core/String.cpp
+	.Extra	= ../../MCF/Core/File.cpp
+	.Extra	= ../../MCF/Core/Utf8TextFile.cpp
+	.Extra	= ../../MCF/Core/System.cpp
+	.Extra	= ../../MCF/Core/Time.cpp
+	.Extra	= ../../MCF/Core/StreamBuffer.cpp
+	.Extra	= ../../MCF/Thread/_UniqueWin32Handle.cpp
+	.Extra	= ../../MCF/Thread/Thread.cpp
+	.Extra	= ../../MCF/Thread/Mutex.cpp
+	.Extra	= ../../MCF/Thread/Semaphore.cpp
+	.Extra	= ../../MCF/Languages/MNotation.cpp
+	.Extra	= ../../MCF/Hash/Sha256.cpp
 
 	; 名称为过滤规则（注意匹配的是全路径）。如果名称以斜杠开头并结束，则将其中的内容视为正则表达式。
 	; 匹配的顺序就是这里的定义顺序，从第一个查找到最后一个。
@@ -88,11 +93,11 @@ Libs		= -lmcflite -lstdc++ -lmingwex -lmingw32 -lgcc -lgcc_eh -lmcflite -lmsvcrt
 	; $.out	= 输出最终文件路径
 
 	; 指定额外的参与链接的文件。
-	; .File	=
+	; .Extra	=
 	; 当命令行过长时用于合并目标文件。
 	.Partial	= ld -o $.out -r $.in
 
 	; 名称为输出文件的相对路径，值为命令行。
 	MCFBuild.exe	= gcc $LDFlags -o $.out $.in $Libs
-	; another.exe	= other command
+	; another.dll	= other command
 }

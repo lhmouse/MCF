@@ -3,12 +3,20 @@
 // Copyleft 2015, LH_Mouse. All wrongs reserved.
 
 #include "Precompiled.hpp"
-#include <MCF/Core/Argv.hpp>
 #include "System.hpp"
+#include "Localization.hpp"
+#include <MCF/Core/Argv.hpp>
 using namespace MCFBuild;
 
 extern "C" unsigned MCFMain() noexcept
 try {
+	MCF::WideString wcsBanner;
+	Localization::Get(wcsBanner, "MCFBUILD");
+	wcsBanner += L" ["_wso;
+	Localization::Get(wcsBanner, "VERSION");
+	wcsBanner += L" 0.4.0.14]"_wso;
+	System::Print(wcsBanner);
+
 	const MCF::Argv vArgs;
 	for(unsigned i = 0; i < vArgs.GetSize(); ++i){
 		System::Print(vArgs[i]);
@@ -16,7 +24,7 @@ try {
 
 	return EXIT_SUCCESS;
 } catch(...){
-	System::Print(L""_wso);
+	System::Print(L"MCF"_wso);
 
 	return EXIT_FAILURE;
 }

@@ -8,13 +8,10 @@
 using namespace MCF;
 
 Argv::Argv(const wchar_t *pwszCommandLine){
-	if(pwszCommandLine){
-		if(!xm_pArgv.Reset(::MCF_CRT_AllocArgv(&xm_uArgc, pwszCommandLine))){
-			DEBUG_THROW(SystemError, "MCF_CRT_AllocArgv");
-		}
-	} else {
-		if(!xm_pArgv.Reset(::MCF_CRT_AllocArgvFromCommandLine(&xm_uArgc))){
-			DEBUG_THROW(SystemError, "MCF_CRT_AllocArgvFromCommandLine");
-		}
+	if(!pwszCommandLine){
+		pwszCommandLine = ::GetCommandLineW();
+	}
+	if(!xm_pArgv.Reset(::MCF_CRT_AllocArgv(&xm_uArgc, pwszCommandLine))){
+		DEBUG_THROW(SystemError, "MCF_CRT_AllocArgv");
 	}
 }

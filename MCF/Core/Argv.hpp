@@ -30,6 +30,7 @@ private:
 	UniquePtr<const ::MCF_ArgItem [], xArgItemDeleter> xm_pArgv;
 
 public:
+	// 如果传入空指针，就使用当前 GetCommandLineW() 的返回值。
 	explicit Argv(const wchar_t *pwszCommandLine = nullptr);
 
 public:

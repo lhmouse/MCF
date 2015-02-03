@@ -1,15 +1,35 @@
 #include <MCF/StdMCF.hpp>
-#include <MCF/Languages/MNotation.hpp>
 using namespace MCF;
 
+void meow(){
+    __builtin_puts("-- meow()");
+}
+void bark(){
+    __builtin_puts("-- bark()");
+}
+
+struct foo {
+    foo(){
+        __builtin_puts("foo()");
+        std::atexit(meow);
+    }
+    ~foo(){
+        __builtin_puts("~foo()");
+    }
+};
+struct bar {
+    bar(){
+        __builtin_puts("bar()");
+        std::atexit(bark);
+    }
+    ~bar(){
+        __builtin_puts("~bar()");
+    }
+};
+
+foo f;
+bar b;
+
 extern "C" unsigned int MCFMain() noexcept {
-	MCF::MNotation m;
-	auto ret = m.Parse(LR"__(
-		aa {
-			xx = yy
-			xx { zz { } }
-		}
-	)__"_wso);
-	std::printf("result = %d\n===========\n%ls\n", ret.first, m.Export().GetStr());
 	return 0;
 }

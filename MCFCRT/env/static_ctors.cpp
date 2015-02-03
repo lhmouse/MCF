@@ -21,26 +21,31 @@ bool __MCF_CRT_CallStaticCtors() noexcept {
 	static std::jmp_buf s_vJmpBuf;
 
 	const auto pfnOldTerminate = std::set_terminate([]{ std::longjmp(s_vJmpBuf, ERROR_PROCESS_ABORTED); });
-
 	int nResult;
-	if((nResult = setjmp(s_vJmpBuf)) != 0){
-		std::set_terminate(pfnOldTerminate);
-		::SetLastError((DWORD)nResult);
-		return false;
-	}
-	auto ppfnCallback = __CTOR_LIST__ + 1;
-	while(*ppfnCallback){
-		(*ppfnCallback)();
-		++ppfnCallback;
+	if((nResult = setjmp(s_vJmpBuf)) == 0){
+		const auto ppfnBegin = __CTOR_LIST__ + 1;
+		auto ppfnCur = ppfnBegin;
+		if(reinterpret_cast<std::uintptr_t>(ppfnBegin[-1]) == (std::uintptr_t)-1){
+			while(*ppfnCur){
+				++ppfnCur;
+			}
+		} else {
+			ppfnCur += reinterpret_cast<std::uintptr_t>(ppfnBegin[-1]);
+		}
+		while(ppfnCur != ppfnBegin){
+			--ppfnCur;
+			(*ppfnCur)();
+		}
 	}
 	std::set_terminate(pfnOldTerminate);
-	return true;
+	::SetLastError((DWORD)nResult);
+	return nResult == 0;
 }
 void __MCF_CRT_CallStaticDtors() noexcept {
-	auto ppfnCallback = __DTOR_LIST__ + 1;
-	while(*ppfnCallback){
-		(*ppfnCallback)();
-		++ppfnCallback;
+	auto ppfnCur = __DTOR_LIST__ + 1;
+	while(*ppfnCur){
+		(*ppfnCur)();
+		++ppfnCur;
 	}
 }
 

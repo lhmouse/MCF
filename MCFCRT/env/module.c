@@ -23,10 +23,7 @@ typedef struct tagAtExitNode {
 static AtExitNode *volatile g_pAtExitHead = nullptr;
 static unsigned g_uInitState = 0;
 
-static inline bool BeginModule(){
-	return __MCF_CRT_CallStaticCtors();
-}
-static inline void EndModule(){
+static void PumpAtEndModule(){
 	// ISO C++
 	// 3.6.3 Termination [basic.start.term]
 	// 1 Destructors (12.4) for initialized objects (...)
@@ -44,7 +41,19 @@ static inline void EndModule(){
 		free(pHead);
 		pHead = pPrev;
 	}
+}
 
+static bool __MCF_CRT_StaticObjectsInit(){
+	if(!__MCF_CRT_CallStaticCtors()){
+		const DWORD dwError = GetLastError();
+		PumpAtEndModule();
+		SetLastError(dwError);
+		return false;
+	}
+	return true;
+}
+static void __MCF_CRT_StaticObjectsUninit(){
+	PumpAtEndModule();
 	__MCF_CRT_CallStaticDtors();
 }
 
@@ -66,7 +75,7 @@ bool __MCF_CRT_BeginModule(void){
 	DO_INIT(2, __MCF_CRT_HeapDbgInit());
 	DO_INIT(3, __MCF_CRT_TlsEnvInit());
 	DO_INIT(4, __MCF_CRT_MinGWHacksInit());
-	DO_INIT(5, BeginModule());
+	DO_INIT(5, __MCF_CRT_StaticObjectsInit());
 //	=========================================================
 
 		break;
@@ -90,7 +99,7 @@ void __MCF_CRT_EndModule(void){
 		}
 
 //	=========================================================
-	DO_UNINIT(5, EndModule());
+	DO_UNINIT(5, __MCF_CRT_StaticObjectsUninit());
 	DO_UNINIT(4, __MCF_CRT_MinGWHacksUninit());
 	DO_UNINIT(3, __MCF_CRT_TlsEnvUninit());
 	DO_UNINIT(2, __MCF_CRT_HeapDbgUninit());

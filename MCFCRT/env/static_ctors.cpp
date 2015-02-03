@@ -28,36 +28,19 @@ bool __MCF_CRT_CallStaticCtors() noexcept {
 		::SetLastError((DWORD)nResult);
 		return false;
 	}
-
 	auto ppfnCallback = __CTOR_LIST__ + 1;
-	const auto uCount = reinterpret_cast<const std::uintptr_t &>(__CTOR_LIST__[0]);
-	if(uCount == (std::uintptr_t)-1){
-		while(*ppfnCallback){
-			(*ppfnCallback)();
-			++ppfnCallback;
-		}
-	} else {
-		for(std::size_t i = 0; i < uCount; ++i){
-			(*ppfnCallback)();
-			++ppfnCallback;
-		}
+	while(*ppfnCallback){
+		(*ppfnCallback)();
+		++ppfnCallback;
 	}
 	std::set_terminate(pfnOldTerminate);
 	return true;
 }
 void __MCF_CRT_CallStaticDtors() noexcept {
 	auto ppfnCallback = __DTOR_LIST__ + 1;
-	const auto uCount = reinterpret_cast<const std::uintptr_t &>(__DTOR_LIST__[0]);
-	if(uCount == (std::uintptr_t)-1){
-		while(*ppfnCallback){
-			(*ppfnCallback)();
-			++ppfnCallback;
-		}
-	} else {
-		for(std::size_t i = 0; i < uCount; ++i){
-			(*ppfnCallback)();
-			++ppfnCallback;
-		}
+	while(*ppfnCallback){
+		(*ppfnCallback)();
+		++ppfnCallback;
 	}
 }
 

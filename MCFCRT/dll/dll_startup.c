@@ -24,6 +24,7 @@ BOOL __MCF_DllStartup(HINSTANCE hDll, DWORD dwReason, LPVOID pReserved){
 		switch(dwReason){
 		case DLL_PROCESS_ATTACH:
 			if(!__MCF_CRT_BeginModule()){
+				__MCF_CRT_EndModule();
 				break;
 			}
 			if(!MCFDll_OnProcessAttach(!pReserved)){

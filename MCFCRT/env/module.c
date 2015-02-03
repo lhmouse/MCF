@@ -9,7 +9,7 @@
 #include "heap.h"
 #include "heap_dbg.h"
 #include "thread.h"
-#include "hooks.h"
+#include "static_ctors.h"
 #include "../ext/expect.h"
 #include <stdlib.h>
 
@@ -23,17 +23,8 @@ typedef struct tagAtExitNode {
 static AtExitNode *volatile g_pAtExitHead = nullptr;
 static unsigned g_uInitState = 0;
 
-// weak
-void MCF_PreInitModule(){
-}
-
 static inline bool BeginModule(){
-	extern void __cdecl __main(void);
-
-	MCF_PreInitModule();
-	__main();
-
-	return true;
+	return __MCF_CRT_CallStaticCtors();
 }
 static inline void EndModule(){
 	// ISO C++
@@ -45,7 +36,6 @@ static inline void EndModule(){
 	// static storage duration. (...)
 	MCF_CRT_TlsClearAll();
 
-	// libgcc 使用 atexit() 调用全局析构函数。
 	AtExitNode *pHead = __atomic_exchange_n(&g_pAtExitHead, nullptr, __ATOMIC_RELAXED);
 	while(pHead){
 		(*(pHead->pfnProc))(pHead->nContext);
@@ -54,9 +44,11 @@ static inline void EndModule(){
 		free(pHead);
 		pHead = pPrev;
 	}
+
+	__MCF_CRT_CallStaticDtors();
 }
 
-static bool Init(){
+bool __MCF_CRT_BeginModule(void){
 	switch(g_uInitState){
 
 #define DO_INIT(n, exp)	\
@@ -83,7 +75,7 @@ static bool Init(){
 	}
 	return true;
 }
-static void Uninit(){
+void __MCF_CRT_EndModule(void){
 	if(g_uInitState == 0){
 		return;
 	}
@@ -111,17 +103,6 @@ static void Uninit(){
 		__builtin_trap();
 	}
 	SetLastError(dwLastError);
-}
-
-bool __MCF_CRT_BeginModule(void){
-	if(!Init()){
-		Uninit();
-		return false;
-	}
-	return true;
-}
-void __MCF_CRT_EndModule(void){
-	Uninit();
 }
 
 int MCF_CRT_AtEndModule(void (__cdecl *pfnProc)(intptr_t), intptr_t nContext){

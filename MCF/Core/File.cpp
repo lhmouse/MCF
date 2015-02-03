@@ -8,8 +8,6 @@
 #include "UniqueHandle.hpp"
 #include "../Utilities/BinaryOperations.hpp"
 #include "../Utilities/MinMax.hpp"
-#include <exception>
-#include <list>
 using namespace MCF;
 
 void *File::xFileCloser::operator()() const noexcept {

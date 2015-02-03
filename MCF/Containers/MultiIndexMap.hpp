@@ -561,6 +561,11 @@ private:
 		}
 
 	public:
+		RealNodeT *Get() const noexcept {
+			return xm_pNode;
+		}
+
+	public:
 		bool operator==(const xCursorTemplate &rhs) const noexcept {
 			return xm_pNode == rhs.xm_pNode;
 		}

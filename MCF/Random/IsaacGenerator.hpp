@@ -20,7 +20,7 @@ private:
 	std::uint32_t xm_u32Read;
 
 public:
-	explicit IsaacGenerator(std::uint32_t u32Seed = ReadTimestampCounterLow()) noexcept {
+	explicit IsaacGenerator(std::uint32_t u32Seed = ReadTimestampCounterLow() | 0x10001) noexcept {
 		Init(u32Seed);
 	}
 	explicit IsaacGenerator(const std::uint32_t (&au32Seed)[8]) noexcept {

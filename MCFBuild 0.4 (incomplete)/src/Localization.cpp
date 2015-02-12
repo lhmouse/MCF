@@ -17,8 +17,8 @@ struct TableElement {
 const TableElement TABLE[] = {
 #define DECL(key_, val_)				{ #key_, L ## val_ ##_wso },
 
-DECL(MCFBUILD,						"MCF 构建实用工具")
-DECL(VERSION,						"版本")
+DECL(MCFBUILD,							"MCF 构建实用工具")
+DECL(VERSION,							"版本")
 
 };
 

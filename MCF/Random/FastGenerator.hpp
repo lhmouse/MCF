@@ -14,7 +14,7 @@ private:
 	std::uint64_t xm_u64Seed;
 
 public:
-	explicit FastGenerator(std::uint32_t u32Seed = ReadTimestampCounterLow()) noexcept {
+	explicit FastGenerator(std::uint32_t u32Seed = ReadTimestampCounterLow() | 0x10001) noexcept {
 		Init(u32Seed);
 	}
 

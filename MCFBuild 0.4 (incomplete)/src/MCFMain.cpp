@@ -7,27 +7,26 @@
 #include "Localization.hpp"
 #include <MCF/Core/Argv.hpp>
 
-namespace MCFBuild {
+extern "C" unsigned MCFMain() noexcept {
+	using namespace MCFBuild;
 
-extern "C" unsigned MCFMain() noexcept
-try {
-	MCF::WideString wcsBanner;
-	Localization::Get(wcsBanner, "MCFBUILD");
-	wcsBanner += L" ["_wso;
-	Localization::Get(wcsBanner, "VERSION");
-	wcsBanner += L" 0.4.0.14]"_wso;
-	System::Print(wcsBanner);
+	try {
+		MCF::WideString wcsBanner;
+		Localization::Get(wcsBanner, "MCFBUILD");
+		wcsBanner += L" ["_wso;
+		Localization::Get(wcsBanner, "VERSION");
+		wcsBanner += L" 0.4.0.14]"_wso;
+		System::Print(wcsBanner);
 
-	const MCF::Argv vArgs;
-	for(unsigned i = 0; i < vArgs.GetSize(); ++i){
-		System::Print(vArgs[i]);
+		const MCF::Argv vArgs;
+		for(unsigned i = 0; i < vArgs.GetSize(); ++i){
+			System::Print(vArgs[i]);
+		}
+
+		return EXIT_SUCCESS;
+	} catch(...){
+		System::Print(L"MCF"_wso);
+
+		return EXIT_FAILURE;
 	}
-
-	return EXIT_SUCCESS;
-} catch(...){
-	System::Print(L"MCF"_wso);
-
-	return EXIT_FAILURE;
-}
-
 }

@@ -4,7 +4,10 @@
 
 #include "../StdMCF.hpp"
 #include "PolymorphicIntrusivePtr.hpp"
-using namespace MCF;
+
+namespace MCF {
 
 PolymorphicIntrusiveDeletableBase::~PolymorphicIntrusiveDeletableBase(){
+}
+
 }

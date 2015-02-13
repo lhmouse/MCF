@@ -5,7 +5,8 @@
 #include "../StdMCF.hpp"
 #include "FastGenerator.hpp"
 #include "../Utilities/Algorithms.hpp"
-using namespace MCF;
+
+namespace MCF {
 
 // http://en.wikipedia.org/wiki/Linear_congruential_generator
 
@@ -19,4 +20,6 @@ std::uint32_t FastGenerator::Get() noexcept {
 	const auto u64NewSeed = xm_u64Seed  * 6364136223846793005ull + 1442695040888963407ull;
 	xm_u64Seed = u64NewSeed;
 	return u64NewSeed >> 32;
+}
+
 }

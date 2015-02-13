@@ -4,7 +4,6 @@
 
 #include "../StdMCF.hpp"
 #include "StringObserver.hpp"
-using namespace MCF;
 
 namespace MCF {
 

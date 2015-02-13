@@ -8,7 +8,8 @@
 #include "UniqueHandle.hpp"
 #include "../Utilities/BinaryOperations.hpp"
 #include "../Utilities/MinMax.hpp"
-using namespace MCF;
+
+namespace MCF {
 
 void *File::xFileCloser::operator()() const noexcept {
 	return INVALID_HANDLE_VALUE;
@@ -242,4 +243,6 @@ void File::Flush() const {
 	if(!::FlushFileBuffers(xm_hFile.Get())){
 		DEBUG_THROW(SystemError, "FlushFileBuffers");
 	}
+}
+
 }

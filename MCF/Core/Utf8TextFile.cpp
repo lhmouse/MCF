@@ -6,12 +6,11 @@
 #include "Utf8TextFile.hpp"
 #include "../Utilities/BinaryOperations.hpp"
 #include "../Containers/Vector.hpp"
-using namespace MCF;
+
+namespace MCF {
 
 namespace {
-
-constexpr unsigned char UTF8_BOM[] = { 0xEF, 0xBB, 0xBF };
-
+	constexpr unsigned char UTF8_BOM[] = { 0xEF, 0xBB, 0xBF };
 }
 
 // ========== Utf8TextFileReader ==========
@@ -175,4 +174,6 @@ void Utf8TextFileWriter::Flush(){
 	xm_u64Offset += xm_u8sLine.GetSize();
 
 	xm_vFile.Flush();
+}
+
 }

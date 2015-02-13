@@ -8,23 +8,22 @@
 #include "../Utilities/Endian.hpp"
 #include "../Random/FastGenerator.hpp"
 #include "../Thread/Mutex.hpp"
-using namespace MCF;
+
+namespace MCF {
 
 namespace {
+	class Generator {
+	private:
+		Mutex xm_vMutex;
+		std::uint32_t xm_u32AutoId = 0;
+		FastGenerator xm_rngRandom;
 
-class Generator {
-private:
-	Mutex xm_vMutex;
-	std::uint32_t xm_u32AutoId = 0;
-	FastGenerator xm_rngRandom;
-
-public:
-	std::pair<std::uint32_t, std::uint32_t> operator()() noexcept {
-		const auto vLock = xm_vMutex.GetLock();
-		return std::make_pair(++xm_u32AutoId, xm_rngRandom());
-	}
-} g_vGenerator __attribute__((__init_priority__(101)));
-
+	public:
+		std::pair<std::uint32_t, std::uint32_t> operator()() noexcept {
+			const auto vLock = xm_vMutex.GetLock();
+			return std::make_pair(++xm_u32AutoId, xm_rngRandom());
+		}
+	} g_vGenerator __attribute__((__init_priority__(101)));
 }
 
 // 静态成员函数。
@@ -121,4 +120,6 @@ bool Uuid::Scan(const char (&pszString)[36]) noexcept {
 	SCAN(6)
 
 	return true;
+}
+
 }

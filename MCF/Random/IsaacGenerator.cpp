@@ -5,7 +5,8 @@
 #include "../StdMCF.hpp"
 #include "IsaacGenerator.hpp"
 #include "../Utilities/Algorithms.hpp"
-using namespace MCF;
+
+namespace MCF {
 
 // http://www.burtleburtle.net/bob/rand/isaacafa.html
 // http://www.burtleburtle.net/bob/c/readable.c
@@ -92,4 +93,6 @@ std::uint32_t IsaacGenerator::Get() noexcept {
 	const auto u32Ret = xm_u32Results[xm_u32Read];
 	xm_u32Read = (xm_u32Read + 1) % 256;
 	return u32Ret;
+}
+
 }

@@ -4,7 +4,8 @@
 
 #include "../StdMCF.hpp"
 #include "Base64.hpp"
-using namespace MCF;
+
+namespace MCF {
 
 // ========== Base64Encoder ==========
 // 构造函数和析构函数。
@@ -160,4 +161,6 @@ void Base64Decoder::xDoUpdate(const void *pData, std::size_t uSize){
 	}
 }
 void Base64Decoder::xDoFinalize(){
+}
+
 }

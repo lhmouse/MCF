@@ -5,29 +5,26 @@
 #include "../StdMCF.hpp"
 #include "Time.hpp"
 #include "../Utilities/Bail.hpp"
-using namespace MCF;
-
-namespace {
-
-union FileTime {
-	::FILETIME ft;
-	std::uint64_t u64;
-};
-
-const double &GetFrequencyReciprocal() noexcept {
-	static double s_lfRet = []{
-		::LARGE_INTEGER liFrequency;
-		if(!::QueryPerformanceFrequency(&liFrequency)){
-			Bail(L"::QueryPerformanceFrequency() 失败。");
-		}
-		return 1000.0 / liFrequency.QuadPart;
-	}();
-	return s_lfRet;
-}
-
-}
 
 namespace MCF {
+
+namespace {
+	union FileTime {
+		::FILETIME ft;
+		std::uint64_t u64;
+	};
+
+	const double &GetFrequencyReciprocal() noexcept {
+		static double s_lfRet = []{
+			::LARGE_INTEGER liFrequency;
+			if(!::QueryPerformanceFrequency(&liFrequency)){
+				Bail(L"::QueryPerformanceFrequency() 失败。");
+			}
+			return 1000.0 / liFrequency.QuadPart;
+		}();
+		return s_lfRet;
+	}
+}
 
 std::uint64_t GetUtcTime() noexcept {
 	FileTime ftUtc;

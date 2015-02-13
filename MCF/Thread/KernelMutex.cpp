@@ -8,7 +8,6 @@
 #include "../Core/String.hpp"
 #include "../Core/Time.hpp"
 #include "../Utilities/MinMax.hpp"
-using namespace MCF;
 
 namespace MCF {
 
@@ -23,8 +22,6 @@ void KernelMutex::UniqueLock::xDoLock() const noexcept {
 template<>
 void KernelMutex::UniqueLock::xDoUnlock() const noexcept {
 	xm_pOwner->Unlock();
-}
-
 }
 
 // 构造函数和析构函数。
@@ -76,4 +73,6 @@ void KernelMutex::Unlock() noexcept {
 	if(!::ReleaseMutex(xm_hMutex.Get())){
 		ASSERT_MSG(false, L"ReleaseMutex() 失败。");
 	}
+}
+
 }

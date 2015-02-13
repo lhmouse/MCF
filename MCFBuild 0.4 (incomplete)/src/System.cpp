@@ -7,25 +7,24 @@
 #include <MCF/Thread/Mutex.hpp>
 #include <MCF/Core/UniqueHandle.hpp>
 #include <MCF/Core/Utf8TextFile.hpp>
-using namespace MCFBuild;
+
+namespace MCFBuild {
 
 namespace {
+	// 控制台上使用 UTF-8 编码和 MSYS 兼容。
+	using ConsoleNarrowString = MCF::Utf8String;
 
-// 控制台上使用 UTF-8 编码和 MSYS 兼容。
-using ConsoleNarrowString = MCF::Utf8String;
+	MCF::Mutex g_vConsoleMutex;
 
-MCF::Mutex g_vConsoleMutex;
-
-struct PipeCloser {
-	constexpr HANDLE operator()() const noexcept {
-		return nullptr;
-	}
-	void operator()(HANDLE hPipe) const noexcept {
-		::CloseHandle(hPipe);
-	}
-};
-using WindowsHandle = MCF::UniqueHandle<PipeCloser>;
-
+	struct PipeCloser {
+		constexpr HANDLE operator()() const noexcept {
+			return nullptr;
+		}
+		void operator()(HANDLE hPipe) const noexcept {
+			::CloseHandle(hPipe);
+		}
+	};
+	using WindowsHandle = MCF::UniqueHandle<PipeCloser>;
 }
 
 void System::Print(const MCF::WideStringObserver &wsoText, bool bInsertsNewLine, bool bToStdErr) noexcept {
@@ -203,4 +202,6 @@ void System::PutUtf8FileContents(const wchar_t *pwcPath, const MCF::Vector<MCF::
 		u8sLine.Assign(*pwcsLine);
 		vWriter.WriteLine(u8sLine);
 	}
+}
+
 }

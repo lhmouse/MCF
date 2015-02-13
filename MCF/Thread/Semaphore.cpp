@@ -8,7 +8,8 @@
 #include "../Core/String.hpp"
 #include "../Core/Time.hpp"
 #include "../Utilities/MinMax.hpp"
-using namespace MCF;
+
+namespace MCF {
 
 // 构造函数和析构函数。
 Semaphore::Semaphore(std::size_t uInitCount, const wchar_t *pwszName)
@@ -93,4 +94,6 @@ void Semaphore::BatchWait(std::size_t uWaitCount) noexcept {
 		}
 		++uSucceeded;
 	}
+}
+
 }

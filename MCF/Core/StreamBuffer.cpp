@@ -8,7 +8,8 @@
 #include "../Utilities/MinMax.hpp"
 #include "../Utilities/Algorithms.hpp"
 #include "../Thread/Mutex.hpp"
-using namespace MCF;
+
+namespace MCF {
 
 class StreamBuffer::xChunk {
 public:
@@ -395,4 +396,6 @@ bool StreamBuffer::Traverse(StreamBuffer::TraverseContext *&pContext,
 		}
 		pNode = pNode->GetNext();
 	}
+}
+
 }

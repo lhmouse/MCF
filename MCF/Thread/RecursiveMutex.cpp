@@ -4,7 +4,6 @@
 
 #include "../StdMCF.hpp"
 #include "RecursiveMutex.hpp"
-using namespace MCF;
 
 namespace MCF {
 
@@ -19,8 +18,6 @@ void RecursiveMutex::UniqueLock::xDoLock() const noexcept {
 template<>
 void RecursiveMutex::UniqueLock::xDoUnlock() const noexcept {
 	xm_pOwner->Unlock();
-}
-
 }
 
 // 构造函数和析构函数。
@@ -58,4 +55,6 @@ RecursiveMutex::Result RecursiveMutex::Unlock() noexcept {
 	}
 	xm_vMutex.Unlock();
 	return R_STATE_CHANGED;
+}
+
 }

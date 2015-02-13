@@ -4,7 +4,10 @@
 
 #include "../StdMCF.hpp"
 #include "StreamFilterBase.hpp"
-using namespace MCF;
+
+namespace MCF {
 
 StreamFilterBase::~StreamFilterBase(){
+}
+
 }

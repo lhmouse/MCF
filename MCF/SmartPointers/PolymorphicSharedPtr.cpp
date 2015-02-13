@@ -4,7 +4,10 @@
 
 #include "../StdMCF.hpp"
 #include "PolymorphicSharedPtr.hpp"
-using namespace MCF;
+
+namespace MCF {
 
 Impl::PolymorphicSharedPtrContainerBase::~PolymorphicSharedPtrContainerBase(){
+}
+
 }

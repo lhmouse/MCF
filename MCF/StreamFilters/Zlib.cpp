@@ -10,46 +10,45 @@
 #define ZLIB_CONST
 #define Z_PREFIX
 #include "../../External/zlib/zlib.h"
-using namespace MCF;
+
+namespace MCF {
 
 namespace {
+	constexpr std::size_t STEP_SIZE		= 0x4000;
 
-constexpr std::size_t STEP_SIZE		= 0x4000;
+	unsigned long ZlibErrorToWin32Error(int nZlibError) noexcept {
+		switch(nZlibError){
+		case Z_OK:
+			return ERROR_SUCCESS;
 
-unsigned long ZlibErrorToWin32Error(int nZlibError) noexcept {
-	switch(nZlibError){
-	case Z_OK:
-		return ERROR_SUCCESS;
+		case Z_STREAM_END:
+			return ERROR_HANDLE_EOF;
 
-	case Z_STREAM_END:
-		return ERROR_HANDLE_EOF;
+		case Z_NEED_DICT:
+			return ERROR_INVALID_PARAMETER;
 
-	case Z_NEED_DICT:
-		return ERROR_INVALID_PARAMETER;
+		case Z_ERRNO:
+			return ERROR_OPEN_FAILED;
 
-	case Z_ERRNO:
-		return ERROR_OPEN_FAILED;
+		case Z_STREAM_ERROR:
+			return ERROR_INVALID_PARAMETER;
 
-	case Z_STREAM_ERROR:
-		return ERROR_INVALID_PARAMETER;
+		case Z_DATA_ERROR:
+			return ERROR_INVALID_DATA;
 
-	case Z_DATA_ERROR:
-		return ERROR_INVALID_DATA;
+		case Z_MEM_ERROR:
+			return ERROR_NOT_ENOUGH_MEMORY;
 
-	case Z_MEM_ERROR:
-		return ERROR_NOT_ENOUGH_MEMORY;
+		case Z_BUF_ERROR:
+			return ERROR_SUCCESS;
 
-	case Z_BUF_ERROR:
-		return ERROR_SUCCESS;
+		case Z_VERSION_ERROR:
+			return ERROR_NOT_SUPPORTED;
 
-	case Z_VERSION_ERROR:
-		return ERROR_NOT_SUPPORTED;
-
-	default:
-		return ERROR_INVALID_FUNCTION;
+		default:
+			return ERROR_INVALID_FUNCTION;
+		}
 	}
-}
-
 }
 
 class ZlibEncoder::xDelegate {
@@ -292,4 +291,6 @@ ZlibError::ZlibError(const char *pszFile, unsigned long ulLine, const char *pszM
 {
 }
 ZlibError::~ZlibError(){
+}
+
 }

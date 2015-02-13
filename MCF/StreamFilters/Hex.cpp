@@ -4,7 +4,8 @@
 
 #include "../StdMCF.hpp"
 #include "Hex.hpp"
-using namespace MCF;
+
+namespace MCF {
 
 // ========== HexEncoder ==========
 // 其他非静态成员函数。
@@ -63,4 +64,6 @@ void HexDecoder::xDoUpdate(const void *pData, std::size_t uSize){
 	}
 }
 void HexDecoder::xDoFinalize(){
+}
+
 }

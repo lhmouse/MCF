@@ -4,7 +4,8 @@
 
 #include "../StdMCF.hpp"
 #include "Transaction.hpp"
-using namespace MCF;
+
+namespace MCF {
 
 // 嵌套类。
 TransactionItemBase::~TransactionItemBase(){
@@ -40,4 +41,6 @@ bool Transaction::Commit() const {
 		(*vCur)->Unlock();
 	}
 	return true;
+}
+
 }

@@ -6,7 +6,6 @@
 #include "LastError.hpp"
 #include "Exception.hpp"
 #include "../Utilities/Defer.hpp"
-using namespace MCF;
 
 namespace MCF {
 

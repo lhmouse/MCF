@@ -5,176 +5,175 @@
 #include "../StdMCF.hpp"
 #include "MNotation.hpp"
 #include "../Containers/Vector.hpp"
-using namespace MCF;
+
+namespace MCF {
 
 namespace {
+	WideString Unescape(const WideStringObserver &wsoSrc){
+		WideString wsRet;
+		wsRet.Reserve(wsoSrc.GetSize());
 
-WideString Unescape(const WideStringObserver &wsoSrc){
-	WideString wsRet;
-	wsRet.Reserve(wsoSrc.GetSize());
+		enum {
+			NORMAL,
+			ESCAPED,
+			UCS_CODE
+		} eState = NORMAL;
 
-	enum {
-		NORMAL,
-		ESCAPED,
-		UCS_CODE
-	} eState = NORMAL;
+		char32_t c32CodePoint = 0;
+		std::size_t uHexExpecting = 0;
 
-	char32_t c32CodePoint = 0;
-	std::size_t uHexExpecting = 0;
+		const auto pwcEnd = wsoSrc.GetEnd();
+		for(auto pwcCur = wsoSrc.GetBegin(); pwcCur != pwcEnd; ++pwcCur){
+			const auto wc = *pwcCur;
 
-	const auto pwcEnd = wsoSrc.GetEnd();
-	for(auto pwcCur = wsoSrc.GetBegin(); pwcCur != pwcEnd; ++pwcCur){
-		const auto wc = *pwcCur;
+			switch(eState){
+			case NORMAL:
+				if(wc == L'\\'){
+					eState = ESCAPED;
+				} else {
+					// eState = NORMAL;
+					wsRet.Push(wc);
+				}
+				break;
 
-		switch(eState){
-		case NORMAL:
-			if(wc == L'\\'){
-				eState = ESCAPED;
-			} else {
-				// eState = NORMAL;
-				wsRet.Push(wc);
+			case ESCAPED:
+				switch(wc){
+				case L'n':
+					wsRet += L'\n';
+					eState = NORMAL;
+					break;
+
+				case L'b':
+					wsRet += L'\b';
+					eState = NORMAL;
+					break;
+
+				case L'r':
+					wsRet += L'\r';
+					eState = NORMAL;
+					break;
+
+				case L't':
+					wsRet += L'\t';
+					eState = NORMAL;
+					break;
+
+				case L'\n':
+					eState = NORMAL;
+					break;
+
+				case L'x':
+					c32CodePoint = 0;
+					uHexExpecting = 2;
+					eState = UCS_CODE;
+					break;
+
+				case L'u':
+					c32CodePoint = 0;
+					uHexExpecting = 4;
+					eState = UCS_CODE;
+					break;
+
+				case L'U':
+					c32CodePoint = 0;
+					uHexExpecting = 8;
+					eState = UCS_CODE;
+					break;
+
+				default:
+					wsRet += wc;
+					eState = NORMAL;
+					break;
+				}
+				break;
+
+			case UCS_CODE:
+				{
+					auto uHex = (unsigned)(wc - L'0');
+					do {
+						if(uHex <= 9){
+							break;
+						}
+						uHex += (unsigned)(L'0' - L'A');
+						if(uHex <= 5){
+							uHex += 0x0A;
+							break;
+						}
+						uHex += (unsigned)(L'A' - L'a');
+						if(uHex <= 5){
+							uHex += 0x0A;
+							break;
+						}
+						uHex = 0x10;
+					} while(false);
+
+					if(uHex <= 0x0F){
+						c32CodePoint = (c32CodePoint << 4) | uHex;
+						--uHexExpecting;
+					} else {
+						uHexExpecting = 0;
+					}
+					if(uHexExpecting != 0){
+						// eState = UCS_CODE;
+					} else {
+						wsRet += Utf32StringObserver(&c32CodePoint, 1);
+						eState = NORMAL;
+					}
+				}
+				break;
 			}
-			break;
+		}
+		if(eState == UCS_CODE){
+			wsRet += Utf32StringObserver(&c32CodePoint, 1);
+		}
 
-		case ESCAPED:
+		return wsRet;
+	}
+	void Escape(WideString &wsAppendTo, const WideStringObserver &wsoSrc){
+		const auto uSrcLength = wsoSrc.GetLength();
+		wsAppendTo.ReserveMore(uSrcLength);
+
+		for(std::size_t i = 0; i < uSrcLength; ++i){
+			const auto wc = wsoSrc[i];
+
 			switch(wc){
-			case L'n':
-				wsRet += L'\n';
-				eState = NORMAL;
+			case L'\\':
+			case L'=':
+			case L'{':
+			case L'}':
+			case L';':
+				wsAppendTo += L'\\';
+				wsAppendTo += wc;
 				break;
 
-			case L'b':
-				wsRet += L'\b';
-				eState = NORMAL;
-				break;
-
-			case L'r':
-				wsRet += L'\r';
-				eState = NORMAL;
-				break;
-
-			case L't':
-				wsRet += L'\t';
-				eState = NORMAL;
+			case L' ':
+				if((i == 0) || (i == uSrcLength - 1)){
+					wsAppendTo += L'\\';
+				}
+				wsAppendTo += L' ';
 				break;
 
 			case L'\n':
-				eState = NORMAL;
+				wsAppendTo += L'\\';
+				wsAppendTo += L'n';
 				break;
 
-			case L'x':
-				c32CodePoint = 0;
-				uHexExpecting = 2;
-				eState = UCS_CODE;
+			case L'\r':
+				wsAppendTo += L'\\';
+				wsAppendTo += L'r';
 				break;
 
-			case L'u':
-				c32CodePoint = 0;
-				uHexExpecting = 4;
-				eState = UCS_CODE;
-				break;
-
-			case L'U':
-				c32CodePoint = 0;
-				uHexExpecting = 8;
-				eState = UCS_CODE;
+			case L'\t':
+				wsAppendTo += L'\\';
+				wsAppendTo += L't';
 				break;
 
 			default:
-				wsRet += wc;
-				eState = NORMAL;
+				wsAppendTo += wc;
 				break;
 			}
-			break;
-
-		case UCS_CODE:
-			{
-				auto uHex = (unsigned)(wc - L'0');
-				do {
-					if(uHex <= 9){
-						break;
-					}
-					uHex += (unsigned)(L'0' - L'A');
-					if(uHex <= 5){
-						uHex += 0x0A;
-						break;
-					}
-					uHex += (unsigned)(L'A' - L'a');
-					if(uHex <= 5){
-						uHex += 0x0A;
-						break;
-					}
-					uHex = 0x10;
-				} while(false);
-
-				if(uHex <= 0x0F){
-					c32CodePoint = (c32CodePoint << 4) | uHex;
-					--uHexExpecting;
-				} else {
-					uHexExpecting = 0;
-				}
-				if(uHexExpecting != 0){
-					// eState = UCS_CODE;
-				} else {
-					wsRet += Utf32StringObserver(&c32CodePoint, 1);
-					eState = NORMAL;
-				}
-			}
-			break;
 		}
 	}
-	if(eState == UCS_CODE){
-		wsRet += Utf32StringObserver(&c32CodePoint, 1);
-	}
-
-	return wsRet;
-}
-void Escape(WideString &wsAppendTo, const WideStringObserver &wsoSrc){
-	const auto uSrcLength = wsoSrc.GetLength();
-	wsAppendTo.ReserveMore(uSrcLength);
-
-	for(std::size_t i = 0; i < uSrcLength; ++i){
-		const auto wc = wsoSrc[i];
-
-		switch(wc){
-		case L'\\':
-		case L'=':
-		case L'{':
-		case L'}':
-		case L';':
-			wsAppendTo += L'\\';
-			wsAppendTo += wc;
-			break;
-
-		case L' ':
-			if((i == 0) || (i == uSrcLength - 1)){
-				wsAppendTo += L'\\';
-			}
-			wsAppendTo += L' ';
-			break;
-
-		case L'\n':
-			wsAppendTo += L'\\';
-			wsAppendTo += L'n';
-			break;
-
-		case L'\r':
-			wsAppendTo += L'\\';
-			wsAppendTo += L'r';
-			break;
-
-		case L'\t':
-			wsAppendTo += L'\\';
-			wsAppendTo += L't';
-			break;
-
-		default:
-			wsAppendTo += wc;
-			break;
-		}
-	}
-}
-
 }
 
 // 其他非静态成员函数。
@@ -624,4 +623,6 @@ WideString MNotation::Export(const WideStringObserver &wsoIndent) const {
 	ASSERT(wsIndent.IsEmpty());
 
 	return wsRet;
+}
+
 }

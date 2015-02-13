@@ -6,13 +6,12 @@
 #include "Thunk.hpp"
 #include "Exception.hpp"
 #include "../../MCFCRT/env/thunk.h"
-using namespace MCF;
+
+namespace MCF {
 
 void ThunkDeleter::operator()(void *pThunk) const noexcept {
 	::MCF_CRT_DeallocateThunk(pThunk, true);
 }
-
-namespace MCF {
 
 ThunkPtr CreateThunk(const void *pInit, std::size_t uSize){
 	ThunkPtr pThunk;

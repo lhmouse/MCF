@@ -7,68 +7,67 @@
 #include "../Core/Exception.hpp"
 #include "../Utilities/MinMax.hpp"
 #include "../../External/lzmalite/lzma.h"
-using namespace MCF;
+
+namespace MCF {
 
 namespace {
+	constexpr std::size_t STEP_SIZE			= 0x4000;
+	constexpr ::lzma_stream INIT_STREAM		= LZMA_STREAM_INIT;
 
-constexpr std::size_t STEP_SIZE			= 0x4000;
-constexpr ::lzma_stream INIT_STREAM		= LZMA_STREAM_INIT;
+	unsigned long LzmaErrorToWin32Error(::lzma_ret eLzmaError) noexcept {
+		switch(eLzmaError){
+		case LZMA_OK:
+			return ERROR_SUCCESS;
 
-unsigned long LzmaErrorToWin32Error(::lzma_ret eLzmaError) noexcept {
-	switch(eLzmaError){
-	case LZMA_OK:
-		return ERROR_SUCCESS;
+		case LZMA_STREAM_END:
+			return ERROR_HANDLE_EOF;
 
-	case LZMA_STREAM_END:
-		return ERROR_HANDLE_EOF;
+		case LZMA_NO_CHECK:
+		case LZMA_UNSUPPORTED_CHECK:
+		case LZMA_GET_CHECK:
+			return ERROR_INVALID_DATA;
 
-	case LZMA_NO_CHECK:
-	case LZMA_UNSUPPORTED_CHECK:
-	case LZMA_GET_CHECK:
-		return ERROR_INVALID_DATA;
+		case LZMA_MEM_ERROR:
+		case LZMA_MEMLIMIT_ERROR:
+			return ERROR_NOT_ENOUGH_MEMORY;
 
-	case LZMA_MEM_ERROR:
-	case LZMA_MEMLIMIT_ERROR:
-		return ERROR_NOT_ENOUGH_MEMORY;
+		case LZMA_FORMAT_ERROR:
+			return ERROR_BAD_FORMAT;
 
-	case LZMA_FORMAT_ERROR:
-		return ERROR_BAD_FORMAT;
+		case LZMA_OPTIONS_ERROR:
+			return ERROR_INVALID_PARAMETER;
 
-	case LZMA_OPTIONS_ERROR:
-		return ERROR_INVALID_PARAMETER;
+		case LZMA_DATA_ERROR:
+			return ERROR_INVALID_DATA;
 
-	case LZMA_DATA_ERROR:
-		return ERROR_INVALID_DATA;
+		case LZMA_BUF_ERROR:
+			return ERROR_SUCCESS;
 
-	case LZMA_BUF_ERROR:
-		return ERROR_SUCCESS;
+		case LZMA_PROG_ERROR:
+			return ERROR_INVALID_DATA;
 
-	case LZMA_PROG_ERROR:
-		return ERROR_INVALID_DATA;
-
-	default:
-		return ERROR_INVALID_FUNCTION;
+		default:
+			return ERROR_INVALID_FUNCTION;
+		}
 	}
-}
 
-struct LzmaStreamCloser {
-	constexpr ::lzma_stream *operator()() const noexcept {
-		return nullptr;
-	}
-	void operator()(::lzma_stream *pStream) const noexcept {
-		::lzma_end(pStream);
-	}
-};
+	struct LzmaStreamCloser {
+		constexpr ::lzma_stream *operator()() const noexcept {
+			return nullptr;
+		}
+		void operator()(::lzma_stream *pStream) const noexcept {
+			::lzma_end(pStream);
+		}
+	};
 
-::lzma_options_lzma MakeOptions(unsigned uLevel, unsigned long ulDictSize){
-	::lzma_options_lzma vRet;
-	if(::lzma_lzma_preset(&vRet, uLevel)){
-		DEBUG_THROW(LzmaError, "lzma_lzma_preset", LZMA_OPTIONS_ERROR);
+	::lzma_options_lzma MakeOptions(unsigned uLevel, unsigned long ulDictSize){
+		::lzma_options_lzma vRet;
+		if(::lzma_lzma_preset(&vRet, uLevel)){
+			DEBUG_THROW(LzmaError, "lzma_lzma_preset", LZMA_OPTIONS_ERROR);
+		}
+		vRet.dict_size = ulDictSize;
+		return vRet;
 	}
-	vRet.dict_size = ulDictSize;
-	return vRet;
-}
-
 }
 
 class LzmaEncoder::xDelegate {
@@ -296,4 +295,6 @@ LzmaError::LzmaError(const char *pszFile, unsigned long ulLine, const char *pszM
 {
 }
 LzmaError::~LzmaError(){
+}
+
 }

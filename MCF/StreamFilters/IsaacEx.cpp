@@ -6,26 +6,25 @@
 #include "IsaacEx.hpp"
 #include "../Utilities/Endian.hpp"
 #include "../Hash/Sha256.hpp"
-using namespace MCF;
+
+namespace MCF {
 
 namespace {
+	IsaacFilterKeyHash GenerateKeyHash(const void *pKey, std::size_t uKeyLen) noexcept {
+		union {
+			unsigned char aby[32];
+			std::uint32_t au32[8];
+		} unHash;
+		Sha256 vShaHasher;
+		vShaHasher.Update(pKey, uKeyLen);
+		vShaHasher.Finalize(unHash.aby);
 
-IsaacFilterKeyHash GenerateKeyHash(const void *pKey, std::size_t uKeyLen) noexcept {
-	union {
-		unsigned char aby[32];
-		std::uint32_t au32[8];
-	} unHash;
-	Sha256 vShaHasher;
-	vShaHasher.Update(pKey, uKeyLen);
-	vShaHasher.Finalize(unHash.aby);
-
-	IsaacFilterKeyHash vKeyHash;
-	for(std::size_t i = 0; i < 8; ++i){
-		vKeyHash.au32Words[i] = LoadBe(unHash.au32[i]);
+		IsaacFilterKeyHash vKeyHash;
+		for(std::size_t i = 0; i < 8; ++i){
+			vKeyHash.au32Words[i] = LoadBe(unHash.au32[i]);
+		}
+		return vKeyHash;
 	}
-	return vKeyHash;
-}
-
 }
 
 // ========== IsaacExEncoder ==========
@@ -146,4 +145,6 @@ void IsaacExDecoder::xDoUpdate(const void *pData, std::size_t uSize){
 	}
 }
 void IsaacExDecoder::xDoFinalize(){
+}
+
 }

@@ -4,14 +4,15 @@
 
 #include "../StdMCF.hpp"
 #include "CallOnce.hpp"
-using namespace MCF;
+
+namespace MCF {
 
 namespace {
-
-Mutex g_vCallOnceMutex __attribute__((__init_priority__(101)));
-
+	Mutex g_vCallOnceMutex __attribute__((__init_priority__(101)));
 }
 
 Mutex &Impl::OnceFlag::GetMutex() noexcept {
 	return g_vCallOnceMutex;
+}
+
 }

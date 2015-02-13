@@ -4,10 +4,13 @@
 
 #include "../StdMCF.hpp"
 #include "Exception.hpp"
-using namespace MCF;
+
+namespace MCF {
 
 Exception::~Exception(){
 }
 
 SystemError::~SystemError(){
+}
+
 }

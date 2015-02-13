@@ -6,7 +6,8 @@
 #include "System.hpp"
 #include "Localization.hpp"
 #include <MCF/Core/Argv.hpp>
-using namespace MCFBuild;
+
+namespace MCFBuild {
 
 extern "C" unsigned MCFMain() noexcept
 try {
@@ -27,4 +28,6 @@ try {
 	System::Print(L"MCF"_wso);
 
 	return EXIT_FAILURE;
+}
+
 }

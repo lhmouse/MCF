@@ -7,7 +7,8 @@
 #include "Atomic.hpp"
 #include "../Core/UniqueHandle.hpp"
 #include "../Core/Exception.hpp"
-using namespace MCF;
+
+namespace MCF {
 
 std::size_t ReaderWriterMutex::xTlsIndexDeleter::operator()() const noexcept {
 	return TLS_OUT_OF_INDEXES;
@@ -15,8 +16,6 @@ std::size_t ReaderWriterMutex::xTlsIndexDeleter::operator()() const noexcept {
 void ReaderWriterMutex::xTlsIndexDeleter::operator()(std::size_t uTlsIndex) const noexcept {
 	::TlsFree(uTlsIndex);
 }
-
-namespace MCF {
 
 template<>
 bool ReaderWriterMutex::UniqueReaderLock::xDoTry() const noexcept {
@@ -42,8 +41,6 @@ void ReaderWriterMutex::UniqueWriterLock::xDoLock() const noexcept {
 template<>
 void ReaderWriterMutex::UniqueWriterLock::xDoUnlock() const noexcept {
 	xm_pOwner->UnlockAsWriter();
-}
-
 }
 
 // 构造函数和析构函数。
@@ -160,4 +157,6 @@ ReaderWriterMutex::Result ReaderWriterMutex::UnlockAsWriter() noexcept {
 		xm_semExclusive.Post();
 	}
 	return R_STATE_CHANGED;
+}
+
 }

@@ -7,7 +7,8 @@
 #include "Atomic.hpp"
 #include "Mutex.hpp"
 #include "../Utilities/MinMax.hpp"
-using namespace MCF;
+
+namespace MCF {
 
 // http://research.microsoft.com/pubs/64242/ImplementingCVs.pdf
 // 因为 Semaphore 现在维护一个大体上 FIFO 的顺序，我们就没必要操心了。
@@ -74,4 +75,6 @@ void ConditionVariable::Broadcast() noexcept {
 	if(!bIsLocking){
 		xm_vMutex.Unlock();
 	}
+}
+
 }

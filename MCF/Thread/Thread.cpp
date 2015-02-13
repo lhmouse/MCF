@@ -9,7 +9,8 @@
 #include "../Core/Exception.hpp"
 #include "../Core/Time.hpp"
 #include "../Utilities/MinMax.hpp"
-using namespace MCF;
+
+namespace MCF {
 
 // 静态成员函数。
 std::size_t Thread::GetCurrentId() noexcept {
@@ -103,4 +104,6 @@ void Thread::Resume() noexcept {
 	if(::ResumeThread(xm_hThread.Get()) == (DWORD)-1){
 		ASSERT_MSG(false, L"ResumeThread() 失败。");
 	}
+}
+
 }

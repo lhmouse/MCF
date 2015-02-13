@@ -4,24 +4,23 @@
 
 #include "Precompiled.hpp"
 #include "Localization.hpp"
-using namespace MCFBuild;
+
+namespace MCFBuild {
 
 namespace {
+	struct TableElement {
+		const char achKey[64 - sizeof(MCF::WideStringObserver)];
+		MCF::WideStringObserver wsoValue;
+	};
 
-struct TableElement {
-	const char achKey[64 - sizeof(MCF::WideStringObserver)];
-	MCF::WideStringObserver wsoValue;
-};
+	// 按字母顺序排列。
+	const TableElement TABLE[] = {
+	#define DECL(key_, val_)				{ #key_, L ## val_ ##_wso },
 
-// 按字母顺序排列。
-const TableElement TABLE[] = {
-#define DECL(key_, val_)				{ #key_, L ## val_ ##_wso },
+	DECL(MCFBUILD,							"MCF 构建实用工具")
+	DECL(VERSION,							"版本")
 
-DECL(MCFBUILD,							"MCF 构建实用工具")
-DECL(VERSION,							"版本")
-
-};
-
+	};
 }
 
 MCF::WideString &Localization::Get(MCF::WideString &wcsAppendsTo, const char *pszKey){
@@ -43,4 +42,6 @@ MCF::WideString &Localization::Get(MCF::WideString &wcsAppendsTo, const char *ps
 		}
 	}
 	return wcsAppendsTo;
+}
+
 }

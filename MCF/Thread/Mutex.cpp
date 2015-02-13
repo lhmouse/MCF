@@ -5,7 +5,6 @@
 #include "../StdMCF.hpp"
 #include "Mutex.hpp"
 #include "../Core/System.hpp"
-using namespace MCF;
 
 namespace MCF {
 
@@ -20,8 +19,6 @@ void Mutex::UniqueLock::xDoLock() const noexcept {
 template<>
 void Mutex::UniqueLock::xDoUnlock() const noexcept {
 	xm_pOwner->Unlock();
-}
-
 }
 
 // 构造函数和析构函数。
@@ -103,4 +100,6 @@ void Mutex::Unlock() noexcept {
 		xm_vSemaphore.Post();
 	}
 	xm_splQueueSize.Unlock(uQueueSize);
+}
+
 }

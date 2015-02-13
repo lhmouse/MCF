@@ -4,8 +4,11 @@
 
 #include "../StdMCF.hpp"
 #include "_UniqueWin32Handle.hpp"
-using namespace MCF;
+
+namespace MCF {
 
 void Win32HandleCloser::operator()(void *hObject) const noexcept {
 	::CloseHandle(hObject);
+}
+
 }

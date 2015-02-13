@@ -8,7 +8,8 @@
 #include "../Core/String.hpp"
 #include "../Core/Time.hpp"
 #include "../Utilities/MinMax.hpp"
-using namespace MCF;
+
+namespace MCF {
 
 // 构造函数和析构函数。
 Event::Event(bool bInitSet, const wchar_t *pwszName)
@@ -71,4 +72,6 @@ void Event::Clear() noexcept {
 	if(!::ResetEvent(xm_hEvent.Get())){
 		ASSERT_MSG(false, L"ResetEvent() 失败。");
 	}
+}
+
 }

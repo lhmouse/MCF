@@ -11,14 +11,18 @@ namespace MCF {
 
 namespace Impl {
 	template<typename Ty, std::size_t N>
-	auto CountOfHelper(Ty (&)[N]) -> char(&)[N];
+	constexpr std::size_t CountOfHelper(Ty (&)[N]) noexcept {
+		return N;
+	}
 
 	template<typename Ty, std::size_t N>
-	auto CountOfHelper(Ty (&&)[N]) -> char(&&)[N];
+	constexpr std::size_t CountOfHelper(Ty (&&)[N]) noexcept {
+		return N;
+	}
 }
 
 }
 
-#define COUNT_OF(x_)		(sizeof(::MCF::Impl::CountOfHelper(x_)))
+#define COUNT_OF(x_)		(::MCF::Impl::CountOfHelper(x_))
 
 #endif

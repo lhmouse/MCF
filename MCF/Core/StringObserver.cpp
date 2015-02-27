@@ -7,12 +7,12 @@
 
 namespace MCF {
 
-template class StringObserver<StringTypes::NARROW>;
-template class StringObserver<StringTypes::WIDE>;
-template class StringObserver<StringTypes::UTF8>;
-template class StringObserver<StringTypes::UTF16>;
-template class StringObserver<StringTypes::UTF32>;
-template class StringObserver<StringTypes::CESU8>;
-template class StringObserver<StringTypes::ANSI>;
+template class StringObserver<StringType::NARROW>;
+template class StringObserver<StringType::WIDE>;
+template class StringObserver<StringType::UTF8>;
+template class StringObserver<StringType::UTF16>;
+template class StringObserver<StringType::UTF32>;
+template class StringObserver<StringType::CESU8>;
+template class StringObserver<StringType::ANSI>;
 
 }

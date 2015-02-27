@@ -4,7 +4,7 @@
 
 #include "static_ctors.h"
 #include "mcfwin.h"
-#include <exception>
+#include <utility>
 #include <cstdint>
 #include <csetjmp>
 
@@ -15,14 +15,15 @@ using CallbackProc = void (*)();
 extern const CallbackProc __CTOR_LIST__[];
 extern const CallbackProc __DTOR_LIST__[];
 
-bool __MCF_CRT_CallStaticCtors() noexcept {
-	// 如果静态构造函数抛出异常，我们不终止进程，而是返回 false。
-	// 对于 EXE 这将调用 abort()，对于 DLL 这将导致 DllMain() 返回 FALSE。
-	static std::jmp_buf s_vJmpBuf;
+extern std::jmp_buf *__MCF_CRT_pAbortHookBuf;
 
-	const auto pfnOldTerminate = std::set_terminate([]{ std::longjmp(s_vJmpBuf, ERROR_PROCESS_ABORTED); });
+bool __MCF_CRT_CallStaticCtors() noexcept {
+	// 如果在 DLL 的静态构造函数抛出异常，我们不终止进程，而是返回 false。
+	// 这将导致 DllMain() 返回 FALSE，而不会终止当前进程。
+	std::jmp_buf vJmpBuf;
+	const auto pOldAbortHookBuf = std::exchange(::__MCF_CRT_pAbortHookBuf, &vJmpBuf);
 	int nResult;
-	if((nResult = setjmp(s_vJmpBuf)) == 0){
+	if((nResult = setjmp(vJmpBuf)) == 0){
 		const auto ppfnBegin = __CTOR_LIST__ + 1;
 		auto ppfnCur = ppfnBegin;
 		if(reinterpret_cast<std::uintptr_t>(ppfnBegin[-1]) == (std::uintptr_t)-1){
@@ -37,7 +38,7 @@ bool __MCF_CRT_CallStaticCtors() noexcept {
 			(*ppfnCur)();
 		}
 	}
-	std::set_terminate(pfnOldTerminate);
+	::__MCF_CRT_pAbortHookBuf = pOldAbortHookBuf;
 	::SetLastError((DWORD)nResult);
 	return nResult == 0;
 }

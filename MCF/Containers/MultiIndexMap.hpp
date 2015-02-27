@@ -29,22 +29,20 @@ struct TripleComparator {
 };
 
 template<typename KeyT>
-TripleComparator<std::less<void>> GetDefaultComparator(const KeyT &) noexcept; // ADL
+	TripleComparator<std::less<void>> GetDefaultComparator(const KeyT &) noexcept; // ADL
 
 namespace Impl {
 	template<std::size_t INDEX_ID_T, class NodeComparatorT>
-	class MultiOrderedMapIndex;
-
+		class MultiOrderedMapIndex;
 	template<std::size_t INDEX_ID_T, class NodeComparatorT>
-	class UniqueOrderedMapIndex;
+		class UniqueOrderedMapIndex;
 
 	template<std::size_t INDEX_ID_T>
 	class OrderedMapIndexNode : private ::MCF_AvlNodeHeader {
 		template<std::size_t, class>
-		friend class MultiOrderedMapIndex;
-
+			friend class MultiOrderedMapIndex;
 		template<std::size_t, class>
-		friend class UniqueOrderedMapIndex;
+			friend class UniqueOrderedMapIndex;
 
 	public:
 		const OrderedMapIndexNode *GetPrev() const noexcept {
@@ -303,7 +301,7 @@ namespace Impl {
 	template<std::size_t INDEX_ID_T>
 	class SequencedMapIndexNode {
 		template<std::size_t>
-		friend class SequencedMapIndex;
+			friend class SequencedMapIndex;
 
 	private:
 		SequencedMapIndexNode *xm_pPrev;
@@ -378,13 +376,12 @@ template<class ElementT,
 	class ComparatorT = decltype(GetDefaultComparator(std::declval<const ElementT &>()))>
 struct MultiOrderedIndex {
 	template<std::size_t INDEX_ID_T>
-	using IndexNode = Impl::OrderedMapIndexNode<INDEX_ID_T>;
-
+		using IndexNode = Impl::OrderedMapIndexNode<INDEX_ID_T>;
 	template<class NodeT, std::size_t INDEX_ID_T>
-	using IndexType = Impl::MultiOrderedMapIndex<INDEX_ID_T,
-		Impl::OrderedMapIndexNodeComparator<
-			NodeT, ElementT, INDEX_ID_T, IndexNode<INDEX_ID_T>, ComparatorT>
-		>;
+		using IndexType = Impl::MultiOrderedMapIndex<INDEX_ID_T,
+			Impl::OrderedMapIndexNodeComparator<
+				NodeT, ElementT, INDEX_ID_T, IndexNode<INDEX_ID_T>, ComparatorT>
+			>;
 
 	static ElementT &GetKey(ElementT &vElement) noexcept {
 		return vElement;
@@ -395,13 +392,12 @@ template<class ElementT,
 	class ComparatorT = decltype(GetDefaultComparator(std::declval<const ElementT &>()))>
 struct UniqueOrderedIndex {
 	template<std::size_t INDEX_ID_T>
-	using IndexNode = Impl::OrderedMapIndexNode<INDEX_ID_T>;
-
+		using IndexNode = Impl::OrderedMapIndexNode<INDEX_ID_T>;
 	template<class NodeT, std::size_t INDEX_ID_T>
-	using IndexType = Impl::UniqueOrderedMapIndex<INDEX_ID_T,
-		Impl::OrderedMapIndexNodeComparator<
-			NodeT, ElementT, INDEX_ID_T, IndexNode<INDEX_ID_T>, ComparatorT>
-		>;
+		using IndexType = Impl::UniqueOrderedMapIndex<INDEX_ID_T,
+			Impl::OrderedMapIndexNodeComparator<
+				NodeT, ElementT, INDEX_ID_T, IndexNode<INDEX_ID_T>, ComparatorT>
+			>;
 
 	static ElementT &GetKey(ElementT &vElement) noexcept {
 		return vElement;
@@ -412,14 +408,13 @@ template<class ElementT, class KeyTypeT, KeyTypeT ElementT::*PTR_TO_KEY_T,
 	class ComparatorT = decltype(GetDefaultComparator(std::declval<const KeyTypeT &>()))>
 struct MultiOrderedMemberIndex {
 	template<std::size_t INDEX_ID_T>
-	using IndexNode = Impl::OrderedMapIndexNode<INDEX_ID_T>;
-
+		using IndexNode = Impl::OrderedMapIndexNode<INDEX_ID_T>;
 	template<class NodeT, std::size_t INDEX_ID_T>
-	using IndexType = Impl::MultiOrderedMapIndex<INDEX_ID_T,
-		Impl::OrderedMapIndexNodeComparator<
-			NodeT, ElementT, INDEX_ID_T, IndexNode<INDEX_ID_T>,
-			Impl::MemberComparator<ElementT, KeyTypeT, PTR_TO_KEY_T, ComparatorT>>
-		>;
+		using IndexType = Impl::MultiOrderedMapIndex<INDEX_ID_T,
+			Impl::OrderedMapIndexNodeComparator<
+				NodeT, ElementT, INDEX_ID_T, IndexNode<INDEX_ID_T>,
+				Impl::MemberComparator<ElementT, KeyTypeT, PTR_TO_KEY_T, ComparatorT>>
+			>;
 
 	static KeyTypeT &GetKey(ElementT &vElement) noexcept {
 		return vElement.*PTR_TO_KEY_T;
@@ -430,14 +425,13 @@ template<class ElementT, class KeyTypeT, KeyTypeT ElementT::*PTR_TO_KEY_T,
 	class ComparatorT = decltype(GetDefaultComparator(std::declval<const KeyTypeT &>()))>
 struct UniqueOrderedMemberIndex {
 	template<std::size_t INDEX_ID_T>
-	using IndexNode = Impl::OrderedMapIndexNode<INDEX_ID_T>;
-
+		using IndexNode = Impl::OrderedMapIndexNode<INDEX_ID_T>;
 	template<class NodeT, std::size_t INDEX_ID_T>
-	using IndexType = Impl::UniqueOrderedMapIndex<INDEX_ID_T,
-		Impl::OrderedMapIndexNodeComparator<
-			NodeT, ElementT, INDEX_ID_T, IndexNode<INDEX_ID_T>,
-			Impl::MemberComparator<ElementT, KeyTypeT, PTR_TO_KEY_T, ComparatorT>>
-		>;
+		using IndexType = Impl::UniqueOrderedMapIndex<INDEX_ID_T,
+			Impl::OrderedMapIndexNodeComparator<
+				NodeT, ElementT, INDEX_ID_T, IndexNode<INDEX_ID_T>,
+				Impl::MemberComparator<ElementT, KeyTypeT, PTR_TO_KEY_T, ComparatorT>>
+			>;
 
 	static KeyTypeT &GetKey(ElementT &vElement) noexcept {
 		return vElement.*PTR_TO_KEY_T;
@@ -447,10 +441,9 @@ struct UniqueOrderedMemberIndex {
 template<class ElementT>
 struct SequencedIndex {
 	template<std::size_t INDEX_ID_T>
-	using IndexNode = Impl::SequencedMapIndexNode<INDEX_ID_T>;
-
+		using IndexNode = Impl::SequencedMapIndexNode<INDEX_ID_T>;
 	template<class NodeT, std::size_t INDEX_ID_T>
-	using IndexType = Impl::SequencedMapIndex<INDEX_ID_T>;
+		using IndexType = Impl::SequencedMapIndex<INDEX_ID_T>;
 
 	static ElementT &GetKey(ElementT &vElement) noexcept {
 		return vElement;
@@ -466,7 +459,8 @@ private:
 	};
 
 	template<std::size_t INDEX_ID_T>
-	using xIndexNode = typename std::tuple_element_t<INDEX_ID_T, std::tuple<IndicesT...>>::template IndexNode<INDEX_ID_T>;
+		using xIndexNode = typename
+			std::tuple_element_t<INDEX_ID_T, std::tuple<IndicesT...>>::template IndexNode<INDEX_ID_T>;
 
 	template<std::size_t ...INDEX_IDS_T>
 	class xNodeImpl
@@ -535,11 +529,11 @@ private:
 	};
 
 	template<std::size_t ...INDEX_IDS_T>
-	static auto xMakeNode(std::index_sequence<INDEX_IDS_T...>) noexcept -> xNodeImpl<INDEX_IDS_T...>;
-
+		static auto xMakeNode(std::index_sequence<INDEX_IDS_T...>) noexcept ->
+			xNodeImpl<INDEX_IDS_T...>;
 	template<class NodeT, std::size_t ...INDEX_IDS_T>
-	static auto xMakeIndices(std::index_sequence<INDEX_IDS_T...>) noexcept ->
-		std::tuple<typename IndicesT::template IndexType<NodeT, INDEX_IDS_T>...>;
+		static auto xMakeIndices(std::index_sequence<INDEX_IDS_T...>) noexcept ->
+			std::tuple<typename IndicesT::template IndexType<NodeT, INDEX_IDS_T>...>;
 
 	template<std::size_t INDEX_ID_T, typename CursorT, typename RealElementT, typename RealNodeT>
 	class xCursorTemplate
@@ -616,7 +610,7 @@ public:
 	using Hints = std::tuple<decltype(reinterpret_cast<Node *>(static_cast<IndicesT *>(nullptr)))...>;
 
 	template<std::size_t INDEX_ID_T>
-	class ConstCursor;
+		class ConstCursor;
 
 	template<std::size_t INDEX_ID_T>
 	class Cursor

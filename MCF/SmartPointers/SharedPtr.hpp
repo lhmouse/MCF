@@ -19,10 +19,9 @@
 namespace MCF {
 
 template<typename ObjectT, class DeleterT = DefaultDeleter<std::remove_cv_t<ObjectT>>>
-class SharedPtr;
-
+	class SharedPtr;
 template<typename ObjectT, class DeleterT = DefaultDeleter<std::remove_cv_t<ObjectT>>>
-class WeakPtr;
+	class WeakPtr;
 
 namespace Impl {
 	class SharedControl final {
@@ -158,10 +157,9 @@ namespace Impl {
 template<typename ObjectT, class DeleterT>
 class SharedPtr {
 	template<typename, class>
-	friend class SharedPtr;
-
+		friend class SharedPtr;
 	template<typename, class>
-	friend class WeakPtr;
+		friend class WeakPtr;
 
 	static_assert(noexcept(DeleterT()(DeleterT()())), "Deleter must not throw.");
 
@@ -280,11 +278,9 @@ public:
 	}
 
 	template<typename OtherObjectT, class OtherDeleterT>
-	bool IsSharedWith(const SharedPtr<OtherObjectT, OtherDeleterT> &rhs) const noexcept {
-		return xm_pControl == rhs.xm_pControl;
-	}
+		bool IsSharedWith(const SharedPtr<OtherObjectT, OtherDeleterT> &rhs) const noexcept;
 	template<typename OtherObjectT, class OtherDeleterT>
-	bool IsSharedWith(const WeakPtr<OtherObjectT, OtherDeleterT> &rhs) const noexcept;
+		bool IsSharedWith(const WeakPtr<OtherObjectT, OtherDeleterT> &rhs) const noexcept;
 
 	SharedPtr &Reset() noexcept {
 		const auto pOldControl = std::exchange(xm_pControl, nullptr);
@@ -409,10 +405,9 @@ public:
 template<typename ObjectT, class DeleterT>
 class WeakPtr {
 	template<typename, class>
-	friend class SharedPtr;
-
+		friend class SharedPtr;
 	template<typename, class>
-	friend class WeakPtr;
+		friend class WeakPtr;
 
 public:
 	using ElementType = std::remove_extent_t<ObjectT>;
@@ -542,6 +537,11 @@ public:
 	}
 };
 
+template<typename ObjectT, class DeleterT>
+	template<typename OtherObjectT, class OtherDeleterT>
+bool SharedPtr<ObjectT, DeleterT>::IsSharedWith(const SharedPtr<OtherObjectT, OtherDeleterT> &rhs) const noexcept {
+	return xm_pControl == rhs.xm_pControl;
+}
 template<typename ObjectT, class DeleterT>
 	template<typename OtherObjectT, class OtherDeleterT>
 bool SharedPtr<ObjectT, DeleterT>::IsSharedWith(const WeakPtr<OtherObjectT, OtherDeleterT> &rhs) const noexcept {

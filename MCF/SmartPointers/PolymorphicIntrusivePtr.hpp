@@ -43,7 +43,7 @@ public:
 };
 
 template<typename ObjectT>
-using PolymorphicIntrusivePtr = IntrusivePtr<ObjectT, DefaultDeleter<PolymorphicIntrusiveDeletableBase>>;
+	using PolymorphicIntrusivePtr = IntrusivePtr<ObjectT, DefaultDeleter<PolymorphicIntrusiveDeletableBase>>;
 
 template<typename ObjectT, typename ...ParamsT>
 auto MakePolymorphicIntrusive(ParamsT &&...vParams){

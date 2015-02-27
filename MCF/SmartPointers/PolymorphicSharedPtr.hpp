@@ -55,10 +55,9 @@ namespace Impl {
 }
 
 template<typename ObjectT>
-using PolymorphicSharedPtr = SharedPtr<ObjectT, DefaultDeleter<Impl::PolymorphicSharedPtrContainerBase>>;
-
+	using PolymorphicSharedPtr = SharedPtr<ObjectT, DefaultDeleter<Impl::PolymorphicSharedPtrContainerBase>>;
 template<typename ObjectT>
-using PolymorphicWeakPtr = WeakPtr<ObjectT, DefaultDeleter<Impl::PolymorphicSharedPtrContainerBase>>;
+	using PolymorphicWeakPtr = WeakPtr<ObjectT, DefaultDeleter<Impl::PolymorphicSharedPtrContainerBase>>;
 
 template<typename ObjectT, typename ...ParamsT>
 auto MakePolymorphicShared(ParamsT &&...vParams){

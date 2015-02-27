@@ -1,35 +1,11 @@
 #include <MCF/StdMCF.hpp>
+#include <MCF/Core/Print.hpp>
 using namespace MCF;
 
-void meow(){
-    __builtin_puts("-- meow()");
-}
-void bark(){
-    __builtin_puts("-- bark()");
-}
-
-struct foo {
-    foo(){
-        __builtin_puts("foo()");
-        std::atexit(meow);
-    }
-    ~foo(){
-        __builtin_puts("~foo()");
-    }
-};
-struct bar {
-    bar(){
-        __builtin_puts("bar()");
-        std::atexit(bark);
-    }
-    ~bar(){
-        __builtin_puts("~bar()");
-    }
-};
-
-foo f;
-bar b;
-
 extern "C" unsigned int MCFMain() noexcept {
+	char temp[64];
+	constexpr auto d = 0x1234abcd;
+	Print<Printers::x>(temp, d)[0] = 0;
+	std::printf("result = %s\n", temp);
 	return 0;
 }

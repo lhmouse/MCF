@@ -5,10 +5,16 @@
 #include "../../env/_crtdef.h"
 #include "../../env/bail.h"
 #include "../../env/mcfwin.h"
+#include <setjmp.h>
+
+jmp_buf *__MCF_CRT_pAbortHookBuf = nullptr;
 
 _Noreturn void abort(){
-	MCF_CRT_Bail(L"应用程序调用了 abort()。");
+	if(__MCF_CRT_pAbortHookBuf){
+		longjmp(*__MCF_CRT_pAbortHookBuf, ERROR_PROCESS_ABORTED);
+	}
 
+	MCF_CRT_Bail(L"应用程序调用了 abort()。");
 	TerminateProcess(GetCurrentProcess(), ERROR_PROCESS_ABORTED);
 	__builtin_unreachable();
 }

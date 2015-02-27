@@ -1,20 +1,13 @@
-// Õâ¸öÎÄ¼şÊÇ MCF µÄÒ»²¿·Ö¡£
-// ÓĞ¹Ø¾ßÌåÊÚÈ¨ËµÃ÷£¬Çë²ÎÔÄ MCFLicense.txt¡£
+// è¿™ä¸ªæ–‡ä»¶æ˜¯ MCF çš„ä¸€éƒ¨åˆ†ã€‚
+// æœ‰å…³å…·ä½“æˆæƒè¯´æ˜ï¼Œè¯·å‚é˜… MCFLicense.txtã€‚
 // Copyleft 2015, LH_Mouse. All wrongs reserved.
 
 #ifndef MCFBUILD_LOCALIZATION_HPP_
 #define MCFBUILD_LOCALIZATION_HPP_
 
-#include <MCF/Core/String.hpp>
+#include <MCF/Core/StringObserver.hpp>
 
 namespace MCFBuild {
-
-struct Localization {
-	static MCF::WideString &Get(MCF::WideString &wcsAppendsTo, const char *pszKey);
-
-private:
-	Localization() = delete;
-};
 
 }
 

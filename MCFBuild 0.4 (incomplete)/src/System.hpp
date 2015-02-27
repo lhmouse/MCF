@@ -8,16 +8,20 @@
 #include <MCF/Core/String.hpp>
 #include <MCF/Containers/Vector.hpp>
 #include <MCF/SmartPointers/IntrusivePtr.hpp>
+#include <cstdint>
 
 namespace MCFBuild {
 
 struct System {
-	static void Print(const MCF::WideStringObserver &wsoText, bool bInsertsNewLine = true, bool bToStdErr = false) noexcept;
-	static unsigned Shell(MCF::WideString &wcsStdOut, MCF::WideString &wcsStdErr, const MCF::WideStringObserver &wsoCommand);
+	static void Print(MCF::WideStringObserver wsoText, bool bInsertsNewLine = true, bool bToStdErr = false) noexcept;
+	static unsigned Shell(MCF::WideString &wcsStdOut, MCF::WideString &wcsStdErr, MCF::WideStringObserver wsoCommand);
 	static MCF::WideString NormalizePath(const wchar_t *pwcPath);
 
 	static MCF::Vector<MCF::WideString> GetUtf8FileContents(const wchar_t *pwcPath);
 	static void PutUtf8FileContents(const wchar_t *pwcPath, const MCF::Vector<MCF::WideString> &vecContents, bool bToAppend = false);
+
+	// 目录名会以一个反斜杠结尾。
+	static MCF::Vector<MCF::WideString> GetFileList(MCF::WideString wcsPath, bool bIncludesHidden);
 
 private:
 	System() = delete;

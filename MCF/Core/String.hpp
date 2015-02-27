@@ -10,7 +10,7 @@
 #include "../Utilities/CountOf.hpp"
 #include "../Utilities/BitsOf.hpp"
 #include "../Utilities/CountLeadingTrailingZeroes.hpp"
-#include "../Utilities/Algorithms.hpp"
+#include "../Utilities/CopyMoveFill.hpp"
 #include <type_traits>
 #include <cstring>
 #include <cstddef>
@@ -18,18 +18,18 @@
 
 namespace MCF {
 
-template<StringTypes TYPE_T>
-class String;
+template<StringType TYPE_T>
+	class String;
 
-using UnifiedString = String<StringTypes::UTF32>;
-using UnifiedStringObserver = StringObserver<StringTypes::UTF32>;
+using UnifiedString = String<StringType::UTF32>;
+using UnifiedStringObserver = StringObserver<StringType::UTF32>;
 
-template<StringTypes TYPE_T>
+template<StringType TYPE_T>
 class String {
 public:
 	using ObserverType = StringObserver<TYPE_T>;
 
-	static constexpr StringTypes Type = TYPE_T;
+	static constexpr StringType Type = TYPE_T;
 	using CharType = typename ObserverType::CharType;
 
 	static constexpr std::size_t NPOS = ObserverType::NPOS;
@@ -98,13 +98,13 @@ public:
 	{
 		Swap(rhs);
 	}
-	template<StringTypes OTHER_TYPE_T>
+	template<StringType OTHER_TYPE_T>
 	explicit String(const StringObserver<OTHER_TYPE_T> &rhs)
 		: String()
 	{
 		Append(rhs);
 	}
-	template<StringTypes OTHER_TYPE_T>
+	template<StringType OTHER_TYPE_T>
 	explicit String(const String<OTHER_TYPE_T> &rhs)
 		: String()
 	{
@@ -134,12 +134,12 @@ public:
 		Assign(std::move(rhs));
 		return *this;
 	}
-	template<StringTypes OTHER_TYPE_T>
+	template<StringType OTHER_TYPE_T>
 	String &operator=(const StringObserver<OTHER_TYPE_T> &rhs){
 		Assign(rhs);
 		return *this;
 	}
-	template<StringTypes OTHER_TYPE_T>
+	template<StringType OTHER_TYPE_T>
 	String &operator=(const String<OTHER_TYPE_T> &rhs){
 		Assign(rhs);
 		return *this;
@@ -359,12 +359,12 @@ public:
 	void Assign(std::initializer_list<CharType> rhs){
 		Assign(ObserverType(rhs));
 	}
-	template<StringTypes OTHER_TYPE_T>
+	template<StringType OTHER_TYPE_T>
 	void Assign(const StringObserver<OTHER_TYPE_T> &rhs){
 		Clear();
 		Append(rhs);
 	}
-	template<StringTypes OTHER_TYPE_T>
+	template<StringType OTHER_TYPE_T>
 	void Assign(const String<OTHER_TYPE_T> &rhs){
 		Assign(StringObserver<OTHER_TYPE_T>(rhs));
 	}
@@ -409,11 +409,11 @@ public:
 			Swap(rhs);
 		}
 	}
-	template<StringTypes OTHER_TYPE_T>
+	template<StringType OTHER_TYPE_T>
 	void Append(const StringObserver<OTHER_TYPE_T> &rhs){
 		Deunify(*this, GetSize(), String<OTHER_TYPE_T>::Unify(UnifiedString(), rhs));
 	}
-	template<StringTypes OTHER_TYPE_T>
+	template<StringType OTHER_TYPE_T>
 	void Append(const String<OTHER_TYPE_T> &rhs){
 		Append(rhs.GetObserver());
 	}
@@ -482,11 +482,11 @@ public:
 			Swap(rhs);
 		}
 	}
-	template<StringTypes OTHER_TYPE_T>
+	template<StringType OTHER_TYPE_T>
 	void Unshift(const StringObserver<OTHER_TYPE_T> &rhs){
 		Deunify(*this, 0, String<OTHER_TYPE_T>::Unify(UnifiedString(), rhs));
 	}
-	template<StringTypes OTHER_TYPE_T>
+	template<StringType OTHER_TYPE_T>
 	void Unshift(const String<OTHER_TYPE_T> &rhs){
 		Unshift(rhs.GetObserver());
 	}
@@ -578,7 +578,7 @@ public:
 			xSetSize(uRemovedBegin + obsRep.GetSize() + (uOldLength - uRemovedEnd));
 		}
 	}
-	template<StringTypes OTHER_TYPE_T>
+	template<StringType OTHER_TYPE_T>
 	void Replace(std::ptrdiff_t nBegin, std::ptrdiff_t nEnd, const StringObserver<OTHER_TYPE_T> &obsRep){
 		// 基本异常安全保证。
 		const auto obsCurrent(GetObserver());
@@ -592,7 +592,7 @@ public:
 		xSetSize(uRemovedBegin + (uOldLength - uRemovedEnd));
 		Deunify(*this, uRemovedBegin, String<OTHER_TYPE_T>::Unify(UnifiedString(), obsRep));
 	}
-	template<StringTypes OTHER_TYPE_T>
+	template<StringType OTHER_TYPE_T>
 	void Replace(std::ptrdiff_t nBegin, std::ptrdiff_t nEnd, const String<OTHER_TYPE_T> &strRep){
 		Replace(nBegin, nEnd, strRep.GetObserver());
 	}
@@ -635,200 +635,200 @@ public:
 	}
 };
 
-template<StringTypes TYPE_T, StringTypes OTHER_TYPE_T>
+template<StringType TYPE_T, StringType OTHER_TYPE_T>
 String<TYPE_T> &operator+=(String<TYPE_T> &lhs, const String<OTHER_TYPE_T> &rhs){
 	lhs.Append(rhs);
 	return lhs;
 }
-template<StringTypes TYPE_T, StringTypes OTHER_TYPE_T>
+template<StringType TYPE_T, StringType OTHER_TYPE_T>
 String<TYPE_T> &operator+=(String<TYPE_T> &lhs, const StringObserver<OTHER_TYPE_T> &rhs){
 	lhs.Append(rhs);
 	return lhs;
 }
-template<StringTypes TYPE_T>
+template<StringType TYPE_T>
 String<TYPE_T> &operator+=(String<TYPE_T> &lhs, typename String<TYPE_T>::CharType rhs){
 	lhs.Append(rhs);
 	return lhs;
 }
-template<StringTypes TYPE_T, StringTypes OTHER_TYPE_T>
+template<StringType TYPE_T, StringType OTHER_TYPE_T>
 String<TYPE_T> &&operator+=(String<TYPE_T> &&lhs, const String<OTHER_TYPE_T> &rhs){
 	lhs.Append(rhs);
 	return std::move(lhs);
 }
-template<StringTypes TYPE_T, StringTypes OTHER_TYPE_T>
+template<StringType TYPE_T, StringType OTHER_TYPE_T>
 String<TYPE_T> &&operator+=(String<TYPE_T> &&lhs, const StringObserver<OTHER_TYPE_T> &rhs){
 	lhs.Append(rhs);
 	return std::move(lhs);
 }
-template<StringTypes TYPE_T>
+template<StringType TYPE_T>
 String<TYPE_T> &&operator+=(String<TYPE_T> &&lhs, typename String<TYPE_T>::CharType rhs){
 	lhs.Append(rhs);
 	return std::move(lhs);
 }
-template<StringTypes TYPE_T>
+template<StringType TYPE_T>
 String<TYPE_T> &&operator+=(String<TYPE_T> &&lhs, String<TYPE_T> &&rhs){
 	lhs.Append(std::move(rhs));
 	return std::move(lhs);
 }
 
-template<StringTypes TYPE_T, StringTypes OTHER_TYPE_T>
+template<StringType TYPE_T, StringType OTHER_TYPE_T>
 String<TYPE_T> operator+(const String<TYPE_T> &lhs, const String<OTHER_TYPE_T> &rhs){
 	String<TYPE_T> strRet(lhs);
 	strRet += rhs;
 	return strRet;
 }
-template<StringTypes TYPE_T, StringTypes OTHER_TYPE_T>
+template<StringType TYPE_T, StringType OTHER_TYPE_T>
 String<TYPE_T> operator+(const String<TYPE_T> &lhs, const StringObserver<OTHER_TYPE_T> &rhs){
 	String<TYPE_T> strRet(lhs);
 	strRet += rhs;
 	return strRet;
 }
-template<StringTypes TYPE_T>
+template<StringType TYPE_T>
 String<TYPE_T> operator+(const String<TYPE_T> &lhs, typename String<TYPE_T>::CharType rhs){
 	String<TYPE_T> strRet(lhs);
 	strRet += rhs;
 	return strRet;
 }
-template<StringTypes TYPE_T, StringTypes OTHER_TYPE_T>
+template<StringType TYPE_T, StringType OTHER_TYPE_T>
 String<TYPE_T> &&operator+(String<TYPE_T> &&lhs, const String<OTHER_TYPE_T> &rhs){
 	return std::move(lhs += rhs);
 }
-template<StringTypes TYPE_T, StringTypes OTHER_TYPE_T>
+template<StringType TYPE_T, StringType OTHER_TYPE_T>
 String<TYPE_T> &&operator+(String<TYPE_T> &&lhs, const StringObserver<OTHER_TYPE_T> &rhs){
 	return std::move(lhs += rhs);
 }
-template<StringTypes TYPE_T>
+template<StringType TYPE_T>
 String<TYPE_T> &&operator+(String<TYPE_T> &&lhs, typename String<TYPE_T>::CharType rhs){
 	return std::move(lhs += rhs);
 }
-template<StringTypes TYPE_T>
+template<StringType TYPE_T>
 String<TYPE_T> &&operator+(String<TYPE_T> &&lhs, String<TYPE_T> &&rhs){
 	return std::move(lhs += std::move(rhs));
 }
 
-template<StringTypes TYPE_T>
+template<StringType TYPE_T>
 bool operator==(const String<TYPE_T> &lhs, const String<TYPE_T> &rhs) noexcept {
 	return lhs.GetObserver() == rhs.GetObserver();
 }
-template<StringTypes TYPE_T>
+template<StringType TYPE_T>
 bool operator==(const String<TYPE_T> &lhs, const StringObserver<TYPE_T> &rhs) noexcept {
 	return lhs.GetObserver() == rhs;
 }
-template<StringTypes TYPE_T>
+template<StringType TYPE_T>
 bool operator==(const StringObserver<TYPE_T> &lhs, const String<TYPE_T> &rhs) noexcept {
 	return lhs == rhs.GetObserver();
 }
 
-template<StringTypes TYPE_T>
+template<StringType TYPE_T>
 bool operator!=(const String<TYPE_T> &lhs, const String<TYPE_T> &rhs) noexcept {
 	return lhs.GetObserver() != rhs.GetObserver();
 }
-template<StringTypes TYPE_T>
+template<StringType TYPE_T>
 bool operator!=(const String<TYPE_T> &lhs, const StringObserver<TYPE_T> &rhs) noexcept {
 	return lhs.GetObserver() != rhs;
 }
-template<StringTypes TYPE_T>
+template<StringType TYPE_T>
 bool operator!=(const StringObserver<TYPE_T> &lhs, const String<TYPE_T> &rhs) noexcept {
 	return lhs != rhs.GetObserver();
 }
 
-template<StringTypes TYPE_T>
+template<StringType TYPE_T>
 bool operator<(const String<TYPE_T> &lhs, const String<TYPE_T> &rhs) noexcept {
 	return lhs.GetObserver() < rhs.GetObserver();
 }
-template<StringTypes TYPE_T>
+template<StringType TYPE_T>
 bool operator<(const String<TYPE_T> &lhs, const StringObserver<TYPE_T> &rhs) noexcept {
 	return lhs.GetObserver() < rhs;
 }
-template<StringTypes TYPE_T>
+template<StringType TYPE_T>
 bool operator<(const StringObserver<TYPE_T> &lhs, const String<TYPE_T> &rhs) noexcept {
 	return lhs < rhs.GetObserver();
 }
 
-template<StringTypes TYPE_T>
+template<StringType TYPE_T>
 bool operator>(const String<TYPE_T> &lhs, const String<TYPE_T> &rhs) noexcept {
 	return lhs.GetObserver() > rhs.GetObserver();
 }
-template<StringTypes   TYPE_T>
+template<StringType   TYPE_T>
 bool operator>(const String<TYPE_T> &lhs, const StringObserver<TYPE_T> &rhs) noexcept {
 	return lhs.GetObserver() > rhs;
 }
-template<StringTypes TYPE_T>
+template<StringType TYPE_T>
 bool operator>(const StringObserver<TYPE_T> &lhs, const String<TYPE_T> &rhs) noexcept {
 	return lhs > rhs.GetObserver();
 }
 
-template<StringTypes TYPE_T>
+template<StringType TYPE_T>
 bool operator<=(const String<TYPE_T> &lhs, const String<TYPE_T> &rhs) noexcept {
 	return lhs.GetObserver() <= rhs.GetObserver();
 }
-template<StringTypes TYPE_T>
+template<StringType TYPE_T>
 bool operator<=(const String<TYPE_T> &lhs, const StringObserver<TYPE_T> &rhs) noexcept {
 	return lhs.GetObserver() <= rhs;
 }
-template<StringTypes TYPE_T>
+template<StringType TYPE_T>
 bool operator<=(const StringObserver<TYPE_T> &lhs, const String<TYPE_T> &rhs) noexcept {
 	return lhs <= rhs.GetObserver();
 }
 
-template<StringTypes TYPE_T>
+template<StringType TYPE_T>
 bool operator>=(const String<TYPE_T> &lhs, const String<TYPE_T> &rhs) noexcept {
 	return lhs.GetObserver() >= rhs.GetObserver();
 }
-template<StringTypes TYPE_T>
+template<StringType TYPE_T>
 bool operator>=(const String<TYPE_T> &lhs, const StringObserver<TYPE_T> &rhs) noexcept {
 	return lhs.GetObserver() >= rhs;
 }
-template<StringTypes TYPE_T>
+template<StringType TYPE_T>
 bool operator>=(const StringObserver<TYPE_T> &lhs, const String<TYPE_T> &rhs) noexcept {
 	return lhs >= rhs.GetObserver();
 }
 
-template<StringTypes TYPE_T>
+template<StringType TYPE_T>
 void swap(String<TYPE_T> &lhs, String<TYPE_T> &rhs) noexcept {
 	lhs.Swap(rhs);
 }
 
-template<StringTypes TYPE_T>
+template<StringType TYPE_T>
 auto begin(const String<TYPE_T> &lhs) noexcept {
 	return lhs.GetBegin();
 }
-template<StringTypes TYPE_T>
+template<StringType TYPE_T>
 auto begin(String<TYPE_T> &lhs) noexcept {
 	return lhs.GetBegin();
 }
-template<StringTypes TYPE_T>
+template<StringType TYPE_T>
 auto cbegin(const String<TYPE_T> &lhs) noexcept {
 	return lhs.GetBegin();
 }
-template<StringTypes TYPE_T>
+template<StringType TYPE_T>
 auto end(const String<TYPE_T> &lhs) noexcept {
 	return lhs.GetEnd();
 }
-template<StringTypes TYPE_T>
+template<StringType TYPE_T>
 auto end(String<TYPE_T> &lhs) noexcept {
 	return lhs.GetEnd();
 }
-template<StringTypes TYPE_T>
+template<StringType TYPE_T>
 auto cend(const String<TYPE_T> &lhs) noexcept {
 	return lhs.GetEnd();
 }
 
-extern template class String<StringTypes::NARROW>;
-extern template class String<StringTypes::WIDE>;
-extern template class String<StringTypes::UTF8>;
-extern template class String<StringTypes::UTF16>;
-extern template class String<StringTypes::UTF32>;
-extern template class String<StringTypes::CESU8>;
-extern template class String<StringTypes::ANSI>;
+extern template class String<StringType::NARROW>;
+extern template class String<StringType::WIDE>;
+extern template class String<StringType::UTF8>;
+extern template class String<StringType::UTF16>;
+extern template class String<StringType::UTF32>;
+extern template class String<StringType::CESU8>;
+extern template class String<StringType::ANSI>;
 
-using NarrowString		= String<StringTypes::NARROW>;
-using WideString		= String<StringTypes::WIDE>;
-using Utf8String		= String<StringTypes::UTF8>;
-using Utf16String		= String<StringTypes::UTF16>;
-using Utf32String		= String<StringTypes::UTF32>;
-using Cesu8String		= String<StringTypes::CESU8>;
-using AnsiString		= String<StringTypes::ANSI>;
+using NarrowString		= String<StringType::NARROW>;
+using WideString		= String<StringType::WIDE>;
+using Utf8String		= String<StringType::UTF8>;
+using Utf16String		= String<StringType::UTF16>;
+using Utf32String		= String<StringType::UTF32>;
+using Cesu8String		= String<StringType::CESU8>;
+using AnsiString		= String<StringType::ANSI>;
 
 // 字面量运算符。
 template<typename CharT, CharT ...STRING_T>
@@ -860,7 +860,7 @@ extern inline const auto &operator""_u32s(){
 }
 
 // MultiIndexMap
-template<StringTypes TYPE_T>
+template<StringType TYPE_T>
 struct StringTripleComparator {
 	int operator()(const String<TYPE_T> &lhs, const String<TYPE_T> &rhs) const noexcept {
 		return lhs.Compare(rhs);
@@ -875,8 +875,8 @@ struct StringTripleComparator {
 	}
 };
 
-template<StringTypes TYPE_T>
-StringTripleComparator<TYPE_T> GetDefaultComparator(const String<TYPE_T> &) noexcept;
+template<StringType TYPE_T>
+	StringTripleComparator<TYPE_T> GetDefaultComparator(const String<TYPE_T> &) noexcept;
 
 }
 

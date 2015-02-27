@@ -79,7 +79,7 @@ void *MCF_CRT_AllocateThunk(const void *pInit, size_t uSize){
 		}
 		if(!g_bCleanupRegistered){
 			if(atexit(&BackupCleanup)){
-				goto done;
+				goto jDone;
 			}
 			g_bCleanupRegistered = true;
 		}
@@ -87,14 +87,14 @@ void *MCF_CRT_AllocateThunk(const void *pInit, size_t uSize){
 		if(!g_pSpare){
 			g_pSpare = malloc(sizeof(ThunkInfo));
 			if(!g_pSpare){
-				goto done;
+				goto jDone;
 			}
 		}
 
 		size_t uThunkSize = uSize + 8;
 		uThunkSize = (uThunkSize + 0x0F) & (size_t)-0x10;
 		if(uThunkSize < uSize){
-			goto done;
+			goto jDone;
 		}
 
 		MCF_AvlNodeHeader *pFreeSizeIndex = MCF_AvlLowerBound(&g_pavlThunksByFreeSize,
@@ -106,13 +106,13 @@ void *MCF_CRT_AllocateThunk(const void *pInit, size_t uSize){
 			// 如果没有足够大的 thunk，我们先分配一个新的 chunk。
 			pInfo = malloc(sizeof(ThunkInfo));
 			if(!pInfo){
-				goto done;
+				goto jDone;
 			}
 			pInfo->uChunkSize = (uThunkSize + 0xFFFF) & (size_t)-0x10000;
 			pInfo->pChunk = VirtualAlloc(0, pInfo->uChunkSize, MEM_COMMIT | MEM_RESERVE, PAGE_READONLY);
 			if(!pInfo->pChunk){
 				free(pInfo);
-				goto done;
+				goto jDone;
 			}
 			pInfo->pThunk = pInfo->pChunk;
 			pInfo->uThunkSize = pInfo->uChunkSize;
@@ -156,7 +156,7 @@ void *MCF_CRT_AllocateThunk(const void *pInit, size_t uSize){
 		memset(pRet + uSize, 0xCC, uThunkSize - uSize);
 		VirtualProtect(pRet, uThunkSize, PAGE_EXECUTE_READ, &dwOldProtect);
 	}
-done:
+jDone:
 	LeaveCriticalSection(&g_csMutex);
 
 	if(!pRet){

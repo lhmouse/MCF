@@ -11,22 +11,28 @@ extern "C" unsigned MCFMain() noexcept {
 	using namespace MCFBuild;
 
 	try {
-		MCF::WideString wcsBanner;
-		Localization::Get(wcsBanner, "MCFBUILD");
-		wcsBanner += L" ["_wso;
-		Localization::Get(wcsBanner, "VERSION");
-		wcsBanner += L" 0.4.0.14]"_wso;
-		System::Print(wcsBanner);
+		System::Print(L"MCF 构建实用工具"_wso);
+		System::Print(L""_wso);
 
 		const MCF::Argv vArgs;
 		for(unsigned i = 0; i < vArgs.GetSize(); ++i){
 			System::Print(vArgs[i]);
 		}
 
-		return EXIT_SUCCESS;
-	} catch(...){
-		System::Print(L"MCF"_wso);
+		auto v = System::GetFileList(L"C:"_ws, true);
+		for(auto &s : v){
+			System::Print(s);
+		}
 
+		return EXIT_SUCCESS;
+	} catch(MCF::Exception &e){
+		//
+		return EXIT_FAILURE;
+	} catch(std::exception &e){
+		//
+		return EXIT_FAILURE;
+	} catch(...){
+		//
 		return EXIT_FAILURE;
 	}
 }

@@ -4,7 +4,7 @@
 
 #include "../StdMCF.hpp"
 #include "FastGenerator.hpp"
-#include "../Utilities/Algorithms.hpp"
+#include "../Utilities/CopyMoveFill.hpp"
 
 namespace MCF {
 

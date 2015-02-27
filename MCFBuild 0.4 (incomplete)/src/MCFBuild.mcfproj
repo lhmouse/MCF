@@ -1,6 +1,6 @@
 ; 定义一些变量。
 CPPFlags	= -Wall -Wextra -pedantic -Wsign-conversion -Wsuggest-attribute=noreturn -Wundef -pipe	\
-				-mfpmath=both -march=nocona -masm=intel -isystem  ../../
+				-mfpmath=both -march=nocona -masm=intel -isystem ../../
 CFlags		= -std=c11
 CXXFlags	= -std=c++14 -Wzero-as-null-pointer-constant -Wnoexcept
 LDFlags		= -Wall -Wextra -static -nostdlib -Wl,-e__MCF_ExeStartup,--disable-runtime-pseudo-reloc,--disable-auto-import	\
@@ -81,7 +81,8 @@ Libs		= -lmcflite -lstdc++ -lmingwex -lmingw32 -lgcc -lgcc_eh -lmcflite -lmsvcrt
 	.Extra	= ../../MCF/Languages/MNotation.cpp
 	.Extra	= ../../MCF/Hash/Sha256.cpp
 
-	; 名称为过滤规则（注意匹配的是全路径）。如果名称以斜杠开头并结束，则将其中的内容视为正则表达式。
+	; 名称为过滤规则（注意匹配的是整个相对路径）。如果名称以斜杠开头并结束，则将其中的内容视为正则表达式。
+	; 正则表达式中的反斜杠需要转义，而一个字面的反斜杠（被转义的反斜杠）必须使用连续四个反斜杠表示（\\\\）。
 	; 匹配的顺序就是这里的定义顺序，从第一个查找到最后一个。
 	; 如果发现匹配，则使用该行定义的命令行；如果任何一个命令行都不匹配，则该源文件被忽略。
 	*.h			= gcc -x c-header $CPPFlags $CFlags -include $.out/pch_cxx.hpp -fpch-deps -o $.out $.in -MMD $.dep
@@ -99,5 +100,5 @@ Libs		= -lmcflite -lstdc++ -lmingwex -lmingw32 -lgcc -lgcc_eh -lmcflite -lmsvcrt
 
 	; 名称为输出文件的相对路径，值为命令行。
 	MCFBuild.exe	= gcc $LDFlags -o $.out $.in $Libs
-	; another.dll	= other command
+	; another.dll	= another command line
 }

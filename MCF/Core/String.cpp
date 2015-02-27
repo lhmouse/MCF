@@ -237,13 +237,13 @@ namespace {
 	}
 }
 
-template class String<StringTypes::NARROW>;
-template class String<StringTypes::WIDE>;
-template class String<StringTypes::UTF8>;
-template class String<StringTypes::UTF16>;
-template class String<StringTypes::UTF32>;
-template class String<StringTypes::CESU8>;
-template class String<StringTypes::ANSI>;
+template class String<StringType::NARROW>;
+template class String<StringType::WIDE>;
+template class String<StringType::UTF8>;
+template class String<StringType::UTF16>;
+template class String<StringType::UTF32>;
+template class String<StringType::CESU8>;
+template class String<StringType::ANSI>;
 
 // UTF-8
 template<>

@@ -17,7 +17,7 @@
 
 namespace MCF {
 
-enum class StringTypes {
+enum class StringType {
 	NARROW,
 	WIDE,
 	UTF8,
@@ -27,36 +27,36 @@ enum class StringTypes {
 	ANSI,
 };
 
-template<StringTypes>
+template<StringType>
 struct StringEncodingTrait;
 
 template<>
-struct StringEncodingTrait<StringTypes::NARROW> {
+struct StringEncodingTrait<StringType::NARROW> {
 	using Type = char;
 };
 template<>
-struct StringEncodingTrait<StringTypes::WIDE> {
+struct StringEncodingTrait<StringType::WIDE> {
 	using Type = wchar_t;
 };
 
 template<>
-struct StringEncodingTrait<StringTypes::UTF8> {
+struct StringEncodingTrait<StringType::UTF8> {
 	using Type = char;
 };
 template<>
-struct StringEncodingTrait<StringTypes::UTF16> {
+struct StringEncodingTrait<StringType::UTF16> {
 	using Type = char16_t;
 };
 template<>
-struct StringEncodingTrait<StringTypes::UTF32> {
+struct StringEncodingTrait<StringType::UTF32> {
 	using Type = char32_t;
 };
 template<>
-struct StringEncodingTrait<StringTypes::CESU8> {
+struct StringEncodingTrait<StringType::CESU8> {
 	using Type = char;
 };
 template<>
-struct StringEncodingTrait<StringTypes::ANSI> {
+struct StringEncodingTrait<StringType::ANSI> {
 	using Type = char;
 };
 
@@ -173,10 +173,10 @@ namespace Impl {
 	}
 }
 
-template<StringTypes TYPE_T>
+template<StringType TYPE_T>
 struct StringObserver {
 public:
-	static constexpr StringTypes Type = TYPE_T;
+	static constexpr StringType Type = TYPE_T;
 	using CharType = typename StringEncodingTrait<TYPE_T>::Type;
 
 	static constexpr std::size_t NPOS = Impl::NPOS;
@@ -418,74 +418,74 @@ public:
 	}
 };
 
-template<StringTypes TYPE_T>
+template<StringType TYPE_T>
 bool operator==(const StringObserver<TYPE_T> &lhs, const StringObserver<TYPE_T> &rhs) noexcept {
 	if(lhs.GetSize() != rhs.GetSize()){
 		return false;
 	}
 	return lhs.Compare(rhs) == 0;
 }
-template<StringTypes TYPE_T>
+template<StringType TYPE_T>
 bool operator!=(const StringObserver<TYPE_T> &lhs, const StringObserver<TYPE_T> &rhs) noexcept {
 	if(lhs.GetSize() != rhs.GetSize()){
 		return true;
 	}
 	return lhs.Compare(rhs) != 0;
 }
-template<StringTypes TYPE_T>
+template<StringType TYPE_T>
 bool operator<(const StringObserver<TYPE_T> &lhs, const StringObserver<TYPE_T> &rhs) noexcept {
 	return lhs.Compare(rhs) < 0;
 }
-template<StringTypes TYPE_T>
+template<StringType TYPE_T>
 bool operator>(const StringObserver<TYPE_T> &lhs, const StringObserver<TYPE_T> &rhs) noexcept {
 	return lhs.Compare(rhs) > 0;
 }
-template<StringTypes TYPE_T>
+template<StringType TYPE_T>
 bool operator<=(const StringObserver<TYPE_T> &lhs, const StringObserver<TYPE_T> &rhs) noexcept {
 	return lhs.Compare(rhs) <= 0;
 }
-template<StringTypes TYPE_T>
+template<StringType TYPE_T>
 bool operator>=(const StringObserver<TYPE_T> &lhs, const StringObserver<TYPE_T> &rhs) noexcept {
 	return lhs.Compare(rhs) >= 0;
 }
 
-template<StringTypes TYPE_T>
+template<StringType TYPE_T>
 void swap(StringObserver<TYPE_T> &lhs, StringObserver<TYPE_T> &rhs) noexcept {
 	lhs.Swap(rhs);
 }
 
-template<StringTypes TYPE_T>
+template<StringType TYPE_T>
 auto begin(const StringObserver<TYPE_T> &lhs) noexcept {
 	return lhs.GetBegin();
 }
-template<StringTypes TYPE_T>
+template<StringType TYPE_T>
 auto cbegin(const StringObserver<TYPE_T> &lhs) noexcept {
 	return lhs.GetBegin();
 }
-template<StringTypes TYPE_T>
+template<StringType TYPE_T>
 auto end(const StringObserver<TYPE_T> &lhs) noexcept {
 	return lhs.GetEnd();
 }
-template<StringTypes TYPE_T>
+template<StringType TYPE_T>
 auto cend(const StringObserver<TYPE_T> &lhs) noexcept {
 	return lhs.GetEnd();
 }
 
-extern template class StringObserver<StringTypes::NARROW>;
-extern template class StringObserver<StringTypes::WIDE>;
-extern template class StringObserver<StringTypes::UTF8>;
-extern template class StringObserver<StringTypes::UTF16>;
-extern template class StringObserver<StringTypes::UTF32>;
-extern template class StringObserver<StringTypes::CESU8>;
-extern template class StringObserver<StringTypes::ANSI>;
+extern template class StringObserver<StringType::NARROW>;
+extern template class StringObserver<StringType::WIDE>;
+extern template class StringObserver<StringType::UTF8>;
+extern template class StringObserver<StringType::UTF16>;
+extern template class StringObserver<StringType::UTF32>;
+extern template class StringObserver<StringType::CESU8>;
+extern template class StringObserver<StringType::ANSI>;
 
-using NarrowStringObserver		= StringObserver<StringTypes::NARROW>;
-using WideStringObserver		= StringObserver<StringTypes::WIDE>;
-using Utf8StringObserver		= StringObserver<StringTypes::UTF8>;
-using Utf16StringObserver		= StringObserver<StringTypes::UTF16>;
-using Utf32StringObserver		= StringObserver<StringTypes::UTF32>;
-using Cesu8StringObserver		= StringObserver<StringTypes::CESU8>;
-using AnsiStringObserver		= StringObserver<StringTypes::ANSI>;
+using NarrowStringObserver		= StringObserver<StringType::NARROW>;
+using WideStringObserver		= StringObserver<StringType::WIDE>;
+using Utf8StringObserver		= StringObserver<StringType::UTF8>;
+using Utf16StringObserver		= StringObserver<StringType::UTF16>;
+using Utf32StringObserver		= StringObserver<StringType::UTF32>;
+using Cesu8StringObserver		= StringObserver<StringType::CESU8>;
+using AnsiStringObserver		= StringObserver<StringType::ANSI>;
 
 // 字面量运算符。
 // 注意 StringObserver 并不是所谓“零结尾的字符串”。
@@ -519,7 +519,7 @@ extern inline auto operator""_u32so() noexcept {
 }
 
 // MultiIndexMap
-template<StringTypes TYPE_T>
+template<StringType TYPE_T>
 struct StringObserverTripleComparator {
 	int operator()(const StringObserver<TYPE_T> &lhs, const StringObserver<TYPE_T> &rhs) const noexcept {
 		return lhs.Compare(rhs);
@@ -534,8 +534,8 @@ struct StringObserverTripleComparator {
 	}
 };
 
-template<StringTypes TYPE_T>
-StringObserverTripleComparator<TYPE_T> GetDefaultComparator(const StringObserver<TYPE_T> &) noexcept;
+template<StringType TYPE_T>
+	StringObserverTripleComparator<TYPE_T> GetDefaultComparator(const StringObserver<TYPE_T> &) noexcept;
 
 }
 

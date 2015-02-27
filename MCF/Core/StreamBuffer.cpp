@@ -6,7 +6,7 @@
 #include "../Core/StreamBuffer.hpp"
 #include "../Utilities/Assert.hpp"
 #include "../Utilities/MinMax.hpp"
-#include "../Utilities/Algorithms.hpp"
+#include "../Utilities/CopyMoveFill.hpp"
 #include "../Thread/Mutex.hpp"
 
 namespace MCF {
@@ -364,7 +364,7 @@ void StreamBuffer::Splice(StreamBuffer &rhs) noexcept {
 bool StreamBuffer::Traverse(const StreamBuffer::TraverseContext *&pContext,
 	std::pair<const void *, std::size_t> &vBlock) const noexcept
 {
-	const typename List<xChunk>::Node *pNode = !pContext ? xm_lstBuffers.GetFirst() : pContext->GetNext();
+	const List<xChunk>::Node *pNode = pContext ? pContext->GetNext() : xm_lstBuffers.GetFirst();
 	for(;;){
 		if(!pNode){
 			return false;
@@ -382,7 +382,7 @@ bool StreamBuffer::Traverse(const StreamBuffer::TraverseContext *&pContext,
 bool StreamBuffer::Traverse(StreamBuffer::TraverseContext *&pContext,
 	std::pair<void *, std::size_t> &vBlock) noexcept
 {
-	typename List<xChunk>::Node *pNode = !pContext ? xm_lstBuffers.GetFirst() : pContext->GetNext();
+	List<xChunk>::Node *pNode = pContext ? pContext->GetNext() : xm_lstBuffers.GetFirst();
 	for(;;){
 		if(!pNode){
 			return false;

@@ -18,7 +18,7 @@
 namespace MCF {
 
 template<typename ObjectT, class DeleterT = DefaultDeleter<std::remove_cv_t<ObjectT>>>
-class IntrusivePtr;
+	class IntrusivePtr;
 
 namespace Impl {
 	template<class DeleterT>
@@ -143,23 +143,23 @@ namespace Impl {
 		}
 
 		template<typename OtherT>
-		IntrusivePtr<const volatile OtherT, DeleterT> Share() const volatile noexcept;
+			IntrusivePtr<const volatile OtherT, DeleterT> Share() const volatile noexcept;
 		template<typename OtherT>
-		IntrusivePtr<const OtherT, DeleterT> Share() const noexcept;
+			IntrusivePtr<const OtherT, DeleterT> Share() const noexcept;
 		template<typename OtherT>
-		IntrusivePtr<volatile OtherT, DeleterT> Share() volatile noexcept;
+			IntrusivePtr<volatile OtherT, DeleterT> Share() volatile noexcept;
 		template<typename OtherT>
-		IntrusivePtr<OtherT, DeleterT> Share() noexcept;
+			IntrusivePtr<OtherT, DeleterT> Share() noexcept;
 	};
 }
 
 template<typename ObjectT, class DeleterT = DefaultDeleter<std::remove_cv_t<ObjectT>>>
-using IntrusiveBase = Impl::IntrusiveBase<DeleterT>;
+	using IntrusiveBase = Impl::IntrusiveBase<DeleterT>;
 
 template<typename ObjectT, class DeleterT>
 class IntrusivePtr {
 	template<typename, class>
-	friend class IntrusivePtr;
+		friend class IntrusivePtr;
 
 	static_assert(noexcept(DeleterT()(DeleterT()())), "Deleter must not throw.");
 	static_assert(!std::is_array<ObjectT>::value, "IntrusivePtr does not support arrays.");

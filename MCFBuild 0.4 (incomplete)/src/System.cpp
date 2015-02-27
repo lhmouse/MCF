@@ -14,20 +14,21 @@ namespace {
 	// 控制台上使用 UTF-8 编码和 MSYS 兼容。
 	using ConsoleNarrowString = MCF::Utf8String;
 
-	MCF::Mutex g_vConsoleMutex;
-
-	struct PipeCloser {
+	struct WindowsHandleCloser {
 		constexpr HANDLE operator()() const noexcept {
 			return nullptr;
 		}
-		void operator()(HANDLE hPipe) const noexcept {
-			::CloseHandle(hPipe);
+		void operator()(HANDLE hObject) const noexcept {
+			::CloseHandle(hObject);
 		}
 	};
-	using WindowsHandle = MCF::UniqueHandle<PipeCloser>;
+
+	using WindowsHandle = MCF::UniqueHandle<WindowsHandleCloser>;
+
+	MCF::Mutex g_vConsoleMutex;
 }
 
-void System::Print(const MCF::WideStringObserver &wsoText, bool bInsertsNewLine, bool bToStdErr) noexcept {
+void System::Print(MCF::WideStringObserver wsoText, bool bInsertsNewLine, bool bToStdErr) noexcept {
 	const auto hOutput = ::GetStdHandle(bToStdErr ? STD_ERROR_HANDLE : STD_OUTPUT_HANDLE);
 	DWORD dwMode;
 	if(::GetConsoleMode(hOutput, &dwMode)){
@@ -72,7 +73,7 @@ void System::Print(const MCF::WideStringObserver &wsoText, bool bInsertsNewLine,
 		}
 	}
 }
-unsigned System::Shell(MCF::WideString &wcsStdOut, MCF::WideString &wcsStdErr, const MCF::WideStringObserver &wsoCommand){
+unsigned System::Shell(MCF::WideString &wcsStdOut, MCF::WideString &wcsStdErr, MCF::WideStringObserver wsoCommand){
 	DWORD dwExitCode;
 	ConsoleNarrowString cnsStdOut, cnsStdErr;
 
@@ -202,6 +203,50 @@ void System::PutUtf8FileContents(const wchar_t *pwcPath, const MCF::Vector<MCF::
 		u8sLine.Assign(*pwcsLine);
 		vWriter.WriteLine(u8sLine);
 	}
+}
+
+namespace {
+	struct FindHandleCloser {
+		constexpr HANDLE operator()() const noexcept {
+			return INVALID_HANDLE_VALUE;
+		}
+		void operator()(HANDLE hFind) const noexcept {
+			::FindClose(hFind);
+		}
+	};
+
+	using FindHandle = MCF::UniqueHandle<FindHandleCloser>;
+}
+
+MCF::Vector<MCF::WideString> System::GetFileList(MCF::WideString wcsPath, bool bIncludesHidden){
+	MCF::Vector<MCF::WideString> vecRet;
+
+	::WIN32_FIND_DATAW vFindData;
+	const FindHandle hFind(::FindFirstFileW((wcsPath += L"\\*.*"_wso).GetStr(), &vFindData));
+	if(!hFind){
+		DEBUG_THROW(MCF::SystemError, "FindFirstFileW");
+	}
+	do {
+		if(std::wcscmp(vFindData.cFileName, L".") == 0){
+			continue;
+		}
+		if(std::wcscmp(vFindData.cFileName, L"..") == 0){
+			continue;
+		}
+		if((vFindData.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN) && !bIncludesHidden){
+			continue;
+		}
+		vecRet.Push(vFindData.cFileName);
+		if(vFindData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY){
+			vecRet.GetBack() += L'\\';
+		}
+	} while(::FindNextFileW(hFind.Get(), &vFindData));
+	const auto dwError = ::GetLastError();
+	if(dwError != ERROR_NO_MORE_FILES){
+		DEBUG_THROW(MCF::SystemError, "FindNextFileW", dwError);
+	}
+
+	return vecRet;
 }
 
 }

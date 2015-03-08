@@ -3,9 +3,13 @@
 using namespace MCF;
 
 extern "C" unsigned int MCFMain() noexcept {
-	char temp[64];
-	constexpr auto d = 0x1234abcd;
-	Print<Printers::x>(temp, d)[0] = 0;
-	std::printf("result = %s\n", temp);
+	using namespace MCF::Printers;
+
+	constexpr auto v = 0x1234abcd;
+
+	char str[64];
+	Print<X>(str, v)[0] = 0;
+	std::printf("result = %s\n", str);
+
 	return 0;
 }

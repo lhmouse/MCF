@@ -33,18 +33,19 @@ namespace Impl {
 		static void Construct(ObjectT *pObject, ParamsT &&...vParams){
 			::new(pObject, DirectConstructTag()) ObjectT(std::forward<ParamsT>(vParams)...);
 		}
-		template<typename ...ParamsT>
-		static void DefaultConstruct(ObjectT *pObject, ParamsT &&...vParams){
-			if(std::is_trivial<ObjectT>::value && (sizeof...(vParams) == 0)){
-#ifndef NDEBUG
-				__builtin_memset(pObject, 0xCC, sizeof(ObjectT));
-#endif
-			} else {
-				Construct(pObject, std::forward<ParamsT>(vParams)...);
-			}
-		}
 		static void Destruct(ObjectT *pObject){
 			pObject->~ObjectT();
+		}
+
+		static void DefaultConstruct(ObjectT *pObject){
+#ifndef NDEBUG
+			__builtin_memset(pObject, 0xCC, sizeof(ObjectT));
+#endif
+			::new(pObject, DirectConstructTag()) ObjectT;
+		}
+		template<typename ...ParamsT>
+		static void DefaultConstruct(ObjectT *pObject, ParamsT &&...vParams){
+			::new(pObject, DirectConstructTag()) ObjectT(std::forward<ParamsT>(vParams)...);
 		}
 	};
 }

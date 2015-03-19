@@ -41,7 +41,7 @@ namespace MCF {
 		static std::string xUnescapeAndConstruct(const char *pBegin, const char *pEnd);
 		static void xExportPackageRecur(std::string &strAppendTo, const Package &pkgWhich, const std::string &strPrefix);
 	private:
-		Package x_Root;
+		Package xm_Root;
 	public:
 		NotationClass();
 		NotationClass(const char *pszText);

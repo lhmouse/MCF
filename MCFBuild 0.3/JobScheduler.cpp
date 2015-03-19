@@ -13,34 +13,34 @@ DWORD WINAPI JobScheduler::xThreadProc(LPVOID pParam){
 }
 
 JobScheduler::JobScheduler(){
-	::InitializeCriticalSectionAndSpinCount(&x_csLock, 0x400);
+	::InitializeCriticalSectionAndSpinCount(&xm_csLock, 0x400);
 }
 JobScheduler::~JobScheduler(){
-	::DeleteCriticalSection(&x_csLock);
+	::DeleteCriticalSection(&xm_csLock);
 }
 
 void JobScheduler::PushJob(JobScheduler::JOB &&fnJobProc){
-	x_lstJobs.emplace_back(std::move(fnJobProc));
+	xm_lstJobs.emplace_back(std::move(fnJobProc));
 }
 
 void JobScheduler::xThreadJobProc(){
-	const std::size_t uThreadIndex = (std::size_t)(std::find(x_vecThreadIDs.cbegin(), x_vecThreadIDs.cend(), ::GetCurrentThreadId()) - x_vecThreadIDs.cbegin() + 1);
+	const std::size_t uThreadIndex = (std::size_t)(std::find(xm_vecThreadIDs.cbegin(), xm_vecThreadIDs.cend(), ::GetCurrentThreadId()) - xm_vecThreadIDs.cbegin() + 1);
 
 	try {
 		std::unique_ptr<JOB> pJob;
 
 		for(;;){
 			{
-				LOCK_THROUGH(x_csLock);
+				LOCK_THROUGH(xm_csLock);
 
 				if(pJob){
-					++x_uCountCompleted;
+					++xm_uCountCompleted;
 					xPrintStatus(false);
 					pJob.reset();
 				}
-				if(!x_pCaughtException && !x_lstJobs.empty()){
-					pJob.reset(new JOB(std::move(x_lstJobs.front())));
-					x_lstJobs.pop_front();
+				if(!xm_pCaughtException && !xm_lstJobs.empty()){
+					pJob.reset(new JOB(std::move(xm_lstJobs.front())));
+					xm_lstJobs.pop_front();
 				}
 			}
 
@@ -50,22 +50,22 @@ void JobScheduler::xThreadJobProc(){
 			(*pJob)(uThreadIndex);
 		}
 	} catch(Exception &e){
-		LOCK_THROUGH(x_csLock);
+		LOCK_THROUGH(xm_csLock);
 
-		if(!x_pCaughtException){
-			x_pCaughtException.reset(new Exception(std::move(e)));
+		if(!xm_pCaughtException){
+			xm_pCaughtException.reset(new Exception(std::move(e)));
 		}
 	}
 }
 void JobScheduler::xPrintStatus(bool bStartsNewLine) const {
 	int nDigitCount = 1;
-	for(std::size_t i = x_uCountTotal; i > 9; i /= 10){
+	for(std::size_t i = xm_uCountTotal; i > 9; i /= 10){
 		++nDigitCount;
 	}
 
 	static const std::size_t PROGRESS_CHAR_COUNT = 40;
 
-	const auto ulPercent = (unsigned long)(x_uCountCompleted * 100 / x_uCountTotal);
+	const auto ulPercent = (unsigned long)(xm_uCountCompleted * 100 / xm_uCountTotal);
 	wchar_t wchProgress[PROGRESS_CHAR_COUNT + 1];
 	wchar_t *const pwchProgEnd = wchProgress + ulPercent * PROGRESS_CHAR_COUNT / 100;
 	std::fill(wchProgress, pwchProgEnd, L'>');
@@ -73,10 +73,10 @@ void JobScheduler::xPrintStatus(bool bStartsNewLine) const {
 	wchProgress[PROGRESS_CHAR_COUNT] = 0;
 	Status(
 		L"%ls%*lu / %lu [%ls] %3lu%%     %lc",
-		x_pwszPrefix,
+		xm_pwszPrefix,
 		nDigitCount,
-		(unsigned long)x_uCountCompleted,
-		(unsigned long)x_uCountTotal,
+		(unsigned long)xm_uCountCompleted,
+		(unsigned long)xm_uCountTotal,
 		wchProgress,
 		ulPercent,
 		bStartsNewLine ? L'\n' : L' '
@@ -84,12 +84,12 @@ void JobScheduler::xPrintStatus(bool bStartsNewLine) const {
 }
 
 void JobScheduler::Commit(std::size_t uProcessCount, const wchar_t *pwszPrefix){
-	x_uCountTotal = x_lstJobs.size();
-	if(x_uCountTotal == 0){
+	xm_uCountTotal = xm_lstJobs.size();
+	if(xm_uCountTotal == 0){
 		return;
 	}
-	x_uCountCompleted = 0;
-	x_pwszPrefix = (pwszPrefix == nullptr) ? L"" : pwszPrefix;
+	xm_uCountCompleted = 0;
+	xm_pwszPrefix = (pwszPrefix == nullptr) ? L"" : pwszPrefix;
 
 	xPrintStatus(false);
 
@@ -119,21 +119,21 @@ void JobScheduler::Commit(std::size_t uProcessCount, const wchar_t *pwszPrefix){
 		vecNewThreads.push_back(UniqueThreadHandle(hThread));
 		vecNakedHandles.push_back(hThread);
 
-		x_vecThreadIDs.push_back(dwThreadID);
+		xm_vecThreadIDs.push_back(dwThreadID);
 	}
-	std::sort(x_vecThreadIDs.begin(), x_vecThreadIDs.end());
+	std::sort(xm_vecThreadIDs.begin(), xm_vecThreadIDs.end());
 
 	for(std::size_t i = 0; i < uProcessCount; ++i){
 		::ResumeThread(vecNakedHandles[i]);
 	}
 	while(::WaitForMultipleObjects(vecNakedHandles.size(), vecNakedHandles.data(), TRUE, 15) == WAIT_TIMEOUT){
-		LOCK_THROUGH(x_csLock);
+		LOCK_THROUGH(xm_csLock);
 
 		xPrintStatus(false);
 	}
 	xPrintStatus(true);
 
-	if(x_pCaughtException){
-		throw *x_pCaughtException;
+	if(xm_pCaughtException){
+		throw *xm_pCaughtException;
 	}
 }

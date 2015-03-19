@@ -17,13 +17,13 @@ namespace MCFBuild {
 
 		typedef std::map<wvstring, Dependencies> DEPENDENCY_MAP;
 	private:
-		DEPENDENCY_MAP x_mapDependencies;
+		DEPENDENCY_MAP xm_mapDependencies;
 	public:
 		const DEPENDENCY_MAP &GetRawMap() const {
-			return x_mapDependencies;
+			return xm_mapDependencies;
 		}
 		DEPENDENCY_MAP &GetRawMap(){
-			return x_mapDependencies;
+			return xm_mapDependencies;
 		}
 	public:
 		void SaveToFile(const wvstring &wcsPath) const;

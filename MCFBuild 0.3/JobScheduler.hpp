@@ -15,15 +15,15 @@ namespace MCFBuild {
 	private:
 		static DWORD WINAPI xThreadProc(LPVOID pParam);
 	private:
-		CRITICAL_SECTION x_csLock;
-		std::list<JOB> x_lstJobs;
+		CRITICAL_SECTION xm_csLock;
+		std::list<JOB> xm_lstJobs;
 
-		std::size_t x_uCountTotal;
-		std::size_t x_uCountCompleted;
-		const wchar_t *x_pwszPrefix;
+		std::size_t xm_uCountTotal;
+		std::size_t xm_uCountCompleted;
+		const wchar_t *xm_pwszPrefix;
 
-		std::vector<DWORD> x_vecThreadIDs;
-		std::unique_ptr<Exception> x_pCaughtException;
+		std::vector<DWORD> xm_vecThreadIDs;
+		std::unique_ptr<Exception> xm_pCaughtException;
 	public:
 		JobScheduler();
 		~JobScheduler();

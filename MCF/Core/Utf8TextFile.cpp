@@ -16,41 +16,41 @@ namespace {
 // ========== Utf8TextFileReader ==========
 // 其他非静态成员函数。
 void Utf8TextFileReader::Reset() noexcept {
-	xm_vFile.Close();
-	xm_u64Offset = 0;
-	xm_sbufCache.Clear();
+	x_vFile.Close();
+	x_u64Offset = 0;
+	x_sbufCache.Clear();
 }
 void Utf8TextFileReader::Reset(File &&vFile){
-	ASSERT(&xm_vFile != &vFile);
+	ASSERT(&x_vFile != &vFile);
 
 	Reset();
 
 	if(!vFile){
 		return;
 	}
-	xm_vFile = std::move(vFile);
+	x_vFile = std::move(vFile);
 
 	unsigned char abyTemp[sizeof(UTF8_BOM)];
-	if((xm_vFile.Read(abyTemp, sizeof(abyTemp), 0) == sizeof(abyTemp)) && !BComp(abyTemp, UTF8_BOM)){
-		xm_u64Offset += sizeof(UTF8_BOM);
+	if((x_vFile.Read(abyTemp, sizeof(abyTemp), 0) == sizeof(abyTemp)) && !BComp(abyTemp, UTF8_BOM)){
+		x_u64Offset += sizeof(UTF8_BOM);
 	}
 }
 
 bool Utf8TextFileReader::IsAtEndOfFile() const {
-	return xm_sbufCache.IsEmpty() && (xm_u64Offset == xm_vFile.GetSize());
+	return x_sbufCache.IsEmpty() && (x_u64Offset == x_vFile.GetSize());
 }
 int Utf8TextFileReader::Read(){
-	if(xm_sbufCache.GetSize() <= 1){
+	if(x_sbufCache.GetSize() <= 1){
 		unsigned char abyTemp[0x1000];
-		const auto uBytesRead = xm_vFile.Read(abyTemp, sizeof(abyTemp), xm_u64Offset);
+		const auto uBytesRead = x_vFile.Read(abyTemp, sizeof(abyTemp), x_u64Offset);
 		if(uBytesRead != 0){
-			xm_sbufCache.Put(abyTemp, uBytesRead);
-			xm_u64Offset += uBytesRead;
+			x_sbufCache.Put(abyTemp, uBytesRead);
+			x_u64Offset += uBytesRead;
 		}
 	}
-	int nRet = xm_sbufCache.Get();
-	if((nRet == '\r') && (xm_sbufCache.Peek() == '\n')){
-		nRet = xm_sbufCache.Get();
+	int nRet = x_sbufCache.Get();
+	if((nRet == '\r') && (x_sbufCache.Peek() == '\n')){
+		nRet = x_sbufCache.Get();
 	}
 	return nRet;
 }
@@ -118,39 +118,39 @@ void Utf8TextFileWriter::Reset() noexcept {
 		Flush();
 	} catch(...){
 	}
-	xm_vFile.Close();
-	xm_u32Flags = 0;
-	xm_u64Offset = 0;
-	xm_u8sLine.Clear();
+	x_vFile.Close();
+	x_u32Flags = 0;
+	x_u64Offset = 0;
+	x_u8sLine.Clear();
 }
 void Utf8TextFileWriter::Reset(File &&vFile, std::uint32_t u32Flags){
-	ASSERT(&xm_vFile != &vFile);
+	ASSERT(&x_vFile != &vFile);
 
-	xm_vFile = std::move(vFile);
-	xm_u32Flags = u32Flags;
-	xm_u64Offset = xm_vFile.GetSize();
+	x_vFile = std::move(vFile);
+	x_u32Flags = u32Flags;
+	x_u64Offset = x_vFile.GetSize();
 
-	if((xm_u32Flags & BOM_USE) && (xm_u64Offset == 0)){
-		xm_vFile.Write(0, UTF8_BOM, sizeof(UTF8_BOM));
-		xm_vFile.Flush();
+	if((x_u32Flags & BOM_USE) && (x_u64Offset == 0)){
+		x_vFile.Write(0, UTF8_BOM, sizeof(UTF8_BOM));
+		x_vFile.Flush();
 
-		xm_u64Offset += sizeof(UTF8_BOM);
+		x_u64Offset += sizeof(UTF8_BOM);
 	}
 
 }
 
 void Utf8TextFileWriter::Write(char ch){
-	if(xm_u32Flags & BUF_NONE){
-		xm_vFile.Write(xm_u64Offset, &ch, 1);
+	if(x_u32Flags & BUF_NONE){
+		x_vFile.Write(x_u64Offset, &ch, 1);
 	} else {
-		if((ch == '\n') && (xm_u32Flags & LES_CRLF)){
-			xm_u8sLine += '\r';
+		if((ch == '\n') && (x_u32Flags & LES_CRLF)){
+			x_u8sLine += '\r';
 		}
-		xm_u8sLine += ch;
+		x_u8sLine += ch;
 
 		bool bFlushNow;
-		if(xm_u32Flags & BUF_FULL){
-			bFlushNow = xm_u8sLine.GetSize() >= 0x1000;
+		if(x_u32Flags & BUF_FULL){
+			bFlushNow = x_u8sLine.GetSize() >= 0x1000;
 		} else {
 			bFlushNow = (ch == '\n');
 		}
@@ -169,11 +169,11 @@ void Utf8TextFileWriter::WriteLine(const Utf8StringObserver &u8soData){
 	Write('\n');
 }
 void Utf8TextFileWriter::Flush(){
-	xm_vFile.Write(xm_u64Offset, xm_u8sLine.GetData(), xm_u8sLine.GetSize());
-	xm_u8sLine.Clear();
-	xm_u64Offset += xm_u8sLine.GetSize();
+	x_vFile.Write(x_u64Offset, x_u8sLine.GetData(), x_u8sLine.GetSize());
+	x_u8sLine.Clear();
+	x_u64Offset += x_u8sLine.GetSize();
 
-	xm_vFile.Flush();
+	x_vFile.Flush();
 }
 
 }

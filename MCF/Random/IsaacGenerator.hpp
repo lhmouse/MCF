@@ -11,13 +11,13 @@ namespace MCF {
 
 class IsaacGenerator {
 private:
-	std::uint32_t xm_u32Internal[256];
-	std::uint32_t xm_u32A;
-	std::uint32_t xm_u32B;
-	std::uint32_t xm_u32C;
+	std::uint32_t x_u32Internal[256];
+	std::uint32_t x_u32A;
+	std::uint32_t x_u32B;
+	std::uint32_t x_u32C;
 
-	std::uint32_t xm_u32Results[256];
-	std::uint32_t xm_u32Read;
+	std::uint32_t x_u32Results[256];
+	std::uint32_t x_u32Read;
 
 public:
 	explicit IsaacGenerator(std::uint32_t u32Seed = ReadTimestampCounterLow() | 0x10001) noexcept {

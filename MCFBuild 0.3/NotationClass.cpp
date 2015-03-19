@@ -221,7 +221,7 @@ std::pair<NotationClass::ERROR_TYPE, const char *> NotationClass::Parse(const ch
 	return Parse(pszText, std::strlen(pszText));
 }
 std::pair<NotationClass::ERROR_TYPE, const char *> NotationClass::Parse(const char *pchText, std::size_t uLen){
-	xm_Root.Clear();
+	x_Root.Clear();
 
 	if(uLen == 0){
 		return std::make_pair(ERR_NONE, nullptr);
@@ -460,28 +460,28 @@ std::pair<NotationClass::ERROR_TYPE, const char *> NotationClass::Parse(const ch
 		break;
 	};
 
-	xm_Root = std::move(NewRoot);
+	x_Root = std::move(NewRoot);
 
 	return std::make_pair(ERR_NONE, nullptr);
 }
 std::string NotationClass::Export() const {
 	std::string strRet;
-	xExportPackageRecur(strRet, xm_Root, "");
+	xExportPackageRecur(strRet, x_Root, "");
 	return std::move(strRet);
 }
 
 bool NotationClass::IsEmpty() const {
-	return xm_Root.IsEmpty();
+	return x_Root.IsEmpty();
 }
 void NotationClass::Clear(){
-	xm_Root.Clear();
+	x_Root.Clear();
 }
 
 const NotationClass::Package *NotationClass::OpenRoot() const {
-	return &xm_Root;
+	return &x_Root;
 }
 NotationClass::Package *NotationClass::OpenRoot(){
-	return &xm_Root;
+	return &x_Root;
 }
 const NotationClass::Package *NotationClass::OpenPackage(const char *pszPackagePath) const {
 	const Package *pRet = OpenRoot();

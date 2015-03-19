@@ -26,8 +26,8 @@ private:
 	};
 
 private:
-	std::size_t xm_uArgc;
-	UniquePtr<const ::MCF_ArgItem [], xArgItemDeleter> xm_pArgv;
+	std::size_t x_uArgc;
+	UniquePtr<const ::MCF_ArgItem [], xArgItemDeleter> x_pArgv;
 
 public:
 	// 如果传入空指针，就使用当前 GetCommandLineW() 的返回值。
@@ -35,15 +35,15 @@ public:
 
 public:
 	std::size_t GetSize() const noexcept {
-		return xm_uArgc;
+		return x_uArgc;
 	}
 	const wchar_t *GetStr(std::size_t uIndex) const noexcept {
-		ASSERT(uIndex <= xm_uArgc); // 传入 xm_uArgc 会得到一个空指针。
-		return xm_pArgv[uIndex].pwszStr;
+		ASSERT(uIndex <= x_uArgc); // 传入 x_uArgc 会得到一个空指针。
+		return x_pArgv[uIndex].pwszStr;
 	}
 	std::size_t GetLen(std::size_t uIndex) const noexcept {
-		ASSERT(uIndex <= xm_uArgc);
-		return xm_pArgv[uIndex].uLen;
+		ASSERT(uIndex <= x_uArgc);
+		return x_pArgv[uIndex].uLen;
 	}
 	WideStringObserver Get(std::size_t uIndex) const noexcept {
 		return WideStringObserver(GetStr(uIndex), GetLen(uIndex));

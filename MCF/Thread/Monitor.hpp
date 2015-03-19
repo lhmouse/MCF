@@ -21,36 +21,36 @@ namespace Impl {
 	template<class ObjectT>
 	class MonitorObserverAsReference {
 	private:
-		ObjectT &xm_vObject;
+		ObjectT &x_vObject;
 
 	public:
 		explicit MonitorObserverAsReference(ObjectT &vObject) noexcept
-			: xm_vObject(vObject)
+			: x_vObject(vObject)
 		{
 		}
 
 	public:
 		operator ObjectT &() const && noexcept {
-			return xm_vObject;
+			return x_vObject;
 		}
 	};
 	template<class ObjectT>
 	class MonitorObserverAsPointer {
 	private:
-		ObjectT &xm_vObject;
+		ObjectT &x_vObject;
 
 	public:
 		explicit MonitorObserverAsPointer(ObjectT &vObject) noexcept
-			: xm_vObject(vObject)
+			: x_vObject(vObject)
 		{
 		}
 
 	public:
 		ObjectT &operator*() const && noexcept {
-			return xm_vObject;
+			return x_vObject;
 		}
 		decltype(auto) operator->() const && noexcept {
-			return &xm_vObject;
+			return &x_vObject;
 		}
 	};
 }
@@ -80,33 +80,33 @@ private:
 template<class ObjectT, class MutexT>
 class MonitorTemplate : NONCOPYABLE {
 private:
-	mutable MutexT xm_vMutex;
-	ObjectT xm_vObject;
+	mutable MutexT x_vMutex;
+	ObjectT x_vObject;
 
 public:
 	template<typename ...ParamsT>
 	explicit MonitorTemplate(ParamsT &&...vParams)
-		: xm_vObject(std::forward<ParamsT>(vParams)...)
+		: x_vObject(std::forward<ParamsT>(vParams)...)
 	{
 	}
 
 public:
 	auto operator*() const noexcept {
 		return MonitorLock<const ObjectT, MutexT,
-			MonitorObserverAsReference<const ObjectT>>(xm_vMutex.GetLock(), xm_vObject);
+			MonitorObserverAsReference<const ObjectT>>(x_vMutex.GetLock(), x_vObject);
 	}
 	auto operator*() noexcept {
 		return MonitorLock<ObjectT, MutexT,
-			MonitorObserverAsReference<ObjectT>>(xm_vMutex.GetLock(), xm_vObject);
+			MonitorObserverAsReference<ObjectT>>(x_vMutex.GetLock(), x_vObject);
 	}
 
 	auto operator->() const noexcept {
 		return MonitorLock<const ObjectT,
-			MutexT, MonitorObserverAsPointer<const ObjectT>>(xm_vMutex.GetLock(), xm_vObject);
+			MutexT, MonitorObserverAsPointer<const ObjectT>>(x_vMutex.GetLock(), x_vObject);
 	}
 	auto operator->() noexcept {
 		return MonitorLock<ObjectT, MutexT,
-			MonitorObserverAsPointer<ObjectT>>(xm_vMutex.GetLock(), xm_vObject);
+			MonitorObserverAsPointer<ObjectT>>(x_vMutex.GetLock(), x_vObject);
 	}
 };
 

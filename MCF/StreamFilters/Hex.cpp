@@ -17,8 +17,8 @@ void HexEncoder::xDoUpdate(const void *pData, std::size_t uSize){
 	for(std::size_t i = 0; i < uSize; ++i){
 		const unsigned uByte = static_cast<const unsigned char *>(pData)[i];
 		unsigned char abyHex[2];
-		abyHex[0] = HEX_TABLE[(uByte >> 4) * 2 + (unsigned)xm_bUpperCase];
-		abyHex[1] = HEX_TABLE[(uByte & 0x0F) * 2 + (unsigned)xm_bUpperCase];
+		abyHex[0] = HEX_TABLE[(uByte >> 4) * 2 + (unsigned)x_bUpperCase];
+		abyHex[1] = HEX_TABLE[(uByte & 0x0F) * 2 + (unsigned)x_bUpperCase];
 		xOutput(abyHex, sizeof(abyHex));
 	}
 }
@@ -28,7 +28,7 @@ void HexEncoder::xDoFinalize(){
 // ========== HexDecoder ==========
 // 其他非静态成员函数。
 void HexDecoder::xDoInit(){
-	xm_nHigh = -1;
+	x_nHigh = -1;
 }
 void HexDecoder::xDoUpdate(const void *pData, std::size_t uSize){
 	static constexpr signed char HEX_REVERSE_TABLE[256] = {
@@ -55,11 +55,11 @@ void HexDecoder::xDoUpdate(const void *pData, std::size_t uSize){
 		if(nDigit == -1){
 			continue;
 		}
-		if(xm_nHigh == -1){
-			xm_nHigh = nDigit;
+		if(x_nHigh == -1){
+			x_nHigh = nDigit;
 		} else {
-			xOutput((unsigned char)((xm_nHigh << 4) | nDigit));
-			xm_nHigh = -1;
+			xOutput((unsigned char)((x_nHigh << 4) | nDigit));
+			x_nHigh = -1;
 		}
 	}
 }

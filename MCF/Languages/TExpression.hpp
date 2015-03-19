@@ -23,54 +23,54 @@ public:
 	using Cursor = typename ChildList::Cursor;
 
 private:
-	ChildList xm_lstChildren;
+	ChildList x_lstChildren;
 
 public:
 	bool IsEmpty() const noexcept {
-		return xm_lstChildren.IsEmpty();
+		return x_lstChildren.IsEmpty();
 	}
 	void Clear() noexcept {
-		xm_lstChildren.Clear();
+		x_lstChildren.Clear();
 	}
 
 	const ChildNode *GetFirstChild() const noexcept {
-		return xm_lstChildren.GetFirst();
+		return x_lstChildren.GetFirst();
 	}
 	ChildNode *GetFirstChild() noexcept {
-		return xm_lstChildren.GetFirst();
+		return x_lstChildren.GetFirst();
 	}
 	const ChildNode *GetLastChild() const noexcept {
-		return xm_lstChildren.GetLast();
+		return x_lstChildren.GetLast();
 	}
 	ChildNode *GetLastChild() noexcept {
-		return xm_lstChildren.GetLast();
+		return x_lstChildren.GetLast();
 	}
 
 	ConstCursor GetFirstCursor() const noexcept {
-		return xm_lstChildren.GetFirstCursor();
+		return x_lstChildren.GetFirstCursor();
 	}
 	Cursor GetFirstCursor() noexcept {
-		return xm_lstChildren.GetFirstCursor();
+		return x_lstChildren.GetFirstCursor();
 	}
 	ConstCursor GetLastCursor() const noexcept {
-		return xm_lstChildren.GetLastCursor();
+		return x_lstChildren.GetLastCursor();
 	}
 	Cursor GetLastCursor() noexcept {
-		return xm_lstChildren.GetLastCursor();
+		return x_lstChildren.GetLastCursor();
 	}
 
 	ChildNode *Insert(ChildNode *pPos, WideString wsName, TExpressionNode vNode){
 		return Insert(pPos, Child(std::move(wsName), std::move(vNode)));
 	}
 	ChildNode *Insert(ChildNode *pPos, Child vChild){
-		return xm_lstChildren.Insert(pPos, std::move(vChild));
+		return x_lstChildren.Insert(pPos, std::move(vChild));
 	}
 	ChildNode *Erase(ChildNode *pPos) noexcept {
-		return xm_lstChildren.Erase(pPos);
+		return x_lstChildren.Erase(pPos);
 	}
 
 	void Swap(TExpressionNode &rhs) noexcept {
-		xm_lstChildren.Swap(rhs.xm_lstChildren);
+		x_lstChildren.Swap(rhs.x_lstChildren);
 	}
 };
 

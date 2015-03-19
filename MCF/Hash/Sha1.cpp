@@ -288,70 +288,70 @@ namespace {
 
 // 构造函数和析构函数。
 Sha1::Sha1() noexcept
-	: xm_bInited(false)
+	: x_bInited(false)
 {
 }
 
 // 其他非静态成员函数。
 void Sha1::Abort() noexcept {
-	xm_bInited = false;
+	x_bInited = false;
 }
 void Sha1::Update(const void *pData, std::size_t uSize) noexcept {
-	if(!xm_bInited){
-		xm_auResult[0] = 0x67452301u;
-		xm_auResult[1] = 0xEFCDAB89u;
-		xm_auResult[2] = 0x98BADCFEu;
-		xm_auResult[3] = 0x10325476u,
-		xm_auResult[4] = 0xC3D2E1F0u;
+	if(!x_bInited){
+		x_auResult[0] = 0x67452301u;
+		x_auResult[1] = 0xEFCDAB89u;
+		x_auResult[2] = 0x98BADCFEu;
+		x_auResult[3] = 0x10325476u,
+		x_auResult[4] = 0xC3D2E1F0u;
 
-		xm_uBytesInChunk = 0;
-		xm_u64BytesTotal = 0;
+		x_uBytesInChunk = 0;
+		x_u64BytesTotal = 0;
 
-		xm_bInited = true;
+		x_bInited = true;
 	}
 
 	auto pbyRead = (const unsigned char *)pData;
 	std::size_t uBytesRemaining = uSize;
-	const std::size_t uBytesFree = sizeof(xm_vChunk.aby) - xm_uBytesInChunk;
+	const std::size_t uBytesFree = sizeof(x_vChunk.aby) - x_uBytesInChunk;
 	if(uBytesRemaining >= uBytesFree){
-		if(xm_uBytesInChunk != 0){
-			std::memcpy(xm_vChunk.aby + xm_uBytesInChunk, pbyRead, uBytesFree);
-			DoSha1Chunk(xm_auResult, xm_vChunk.aby);
-			xm_uBytesInChunk = 0;
+		if(x_uBytesInChunk != 0){
+			std::memcpy(x_vChunk.aby + x_uBytesInChunk, pbyRead, uBytesFree);
+			DoSha1Chunk(x_auResult, x_vChunk.aby);
+			x_uBytesInChunk = 0;
 			pbyRead += uBytesFree;
 			uBytesRemaining -= uBytesFree;
 		}
-		while(uBytesRemaining >= sizeof(xm_vChunk.aby)){
-			DoSha1Chunk(xm_auResult, pbyRead);
-			pbyRead += sizeof(xm_vChunk.aby);
-			uBytesRemaining -= sizeof(xm_vChunk.aby);
+		while(uBytesRemaining >= sizeof(x_vChunk.aby)){
+			DoSha1Chunk(x_auResult, pbyRead);
+			pbyRead += sizeof(x_vChunk.aby);
+			uBytesRemaining -= sizeof(x_vChunk.aby);
 		}
 	}
 	if(uBytesRemaining != 0){
-		std::memcpy(xm_vChunk.aby + xm_uBytesInChunk, pbyRead, uBytesRemaining);
-		xm_uBytesInChunk += uBytesRemaining;
+		std::memcpy(x_vChunk.aby + x_uBytesInChunk, pbyRead, uBytesRemaining);
+		x_uBytesInChunk += uBytesRemaining;
 	}
-	xm_u64BytesTotal += uSize;
+	x_u64BytesTotal += uSize;
 }
 void Sha1::Finalize(unsigned char (&abyOutput)[20]) noexcept {
-	if(xm_bInited){
-		xm_vChunk.aby[xm_uBytesInChunk++] = 0x80;
-		if(xm_uBytesInChunk > sizeof(xm_vChunk.vLast.abyData)){
-			std::memset(xm_vChunk.aby + xm_uBytesInChunk, 0, sizeof(xm_vChunk.aby) - xm_uBytesInChunk);
-			DoSha1Chunk(xm_auResult, xm_vChunk.aby);
-			xm_uBytesInChunk = 0;
+	if(x_bInited){
+		x_vChunk.aby[x_uBytesInChunk++] = 0x80;
+		if(x_uBytesInChunk > sizeof(x_vChunk.vLast.abyData)){
+			std::memset(x_vChunk.aby + x_uBytesInChunk, 0, sizeof(x_vChunk.aby) - x_uBytesInChunk);
+			DoSha1Chunk(x_auResult, x_vChunk.aby);
+			x_uBytesInChunk = 0;
 		}
-		if(xm_uBytesInChunk < sizeof(xm_vChunk.vLast.abyData)){
-			std::memset(xm_vChunk.aby + xm_uBytesInChunk, 0, sizeof(xm_vChunk.vLast.abyData) - xm_uBytesInChunk);
+		if(x_uBytesInChunk < sizeof(x_vChunk.vLast.abyData)){
+			std::memset(x_vChunk.aby + x_uBytesInChunk, 0, sizeof(x_vChunk.vLast.abyData) - x_uBytesInChunk);
 		}
-		StoreBe(xm_vChunk.vLast.u64Bits, xm_u64BytesTotal * 8);
-		DoSha1Chunk(xm_auResult, xm_vChunk.aby);
+		StoreBe(x_vChunk.vLast.u64Bits, x_u64BytesTotal * 8);
+		DoSha1Chunk(x_auResult, x_vChunk.aby);
 
-		xm_bInited = false;
+		x_bInited = false;
 	}
 
 	for(unsigned i = 0; i < 5; ++i){
-		StoreBe(((std::uint32_t *)abyOutput)[i], xm_auResult[i]);
+		StoreBe(((std::uint32_t *)abyOutput)[i], x_auResult[i]);
 	}
 }
 

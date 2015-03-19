@@ -40,44 +40,44 @@ void IsaacGenerator::Init(const std::uint32_t (&au32Seed)[8]) noexcept {
 			au32Temp[j] += au32Seed[j];
 		}
 		Mix();
-		CopyN(xm_u32Internal + i, au32Temp, 8);
+		CopyN(x_u32Internal + i, au32Temp, 8);
 	}
 	for(std::size_t i = 0; i < 256; i += 8){
 		for(std::size_t j = 0; j < 8; ++j){
-			au32Temp[j] += xm_u32Internal[i + j];
+			au32Temp[j] += x_u32Internal[i + j];
 		}
 		Mix();
-		CopyN(xm_u32Internal + i, au32Temp, 8);
+		CopyN(x_u32Internal + i, au32Temp, 8);
 	}
 
-	xm_u32A = 0;
-	xm_u32B = 0;
-	xm_u32C = 0;
+	x_u32A = 0;
+	x_u32B = 0;
+	x_u32C = 0;
 	xRefreshInternal();
 
-	xm_u32Read = 0;
+	x_u32Read = 0;
 }
 
 void IsaacGenerator::xRefreshInternal() noexcept {
-	++xm_u32C;
-	xm_u32B += xm_u32C;
+	++x_u32C;
+	x_u32B += x_u32C;
 
 	for(std::size_t i = 0; i < 256; i += 4){
 		register std::uint32_t x, y;
 
-#define SPEC_0	(xm_u32A ^= (xm_u32A << 13))
-#define SPEC_1	(xm_u32A ^= (xm_u32A >>  6))
-#define SPEC_2	(xm_u32A ^= (xm_u32A <<  2))
-#define SPEC_3	(xm_u32A ^= (xm_u32A >> 16))
+#define SPEC_0	(x_u32A ^= (x_u32A << 13))
+#define SPEC_1	(x_u32A ^= (x_u32A >>  6))
+#define SPEC_2	(x_u32A ^= (x_u32A <<  2))
+#define SPEC_3	(x_u32A ^= (x_u32A >> 16))
 
 #define STEP(j_, spec_)	\
-		x = xm_u32Internal[i + j_];	\
+		x = x_u32Internal[i + j_];	\
 		spec_;	\
-		xm_u32A += xm_u32Internal[(i + j_ + 128) % 256];	\
-		y = xm_u32Internal[(x >> 2) % 256] + xm_u32A + xm_u32B;	\
-		xm_u32Internal[i + j_] = y;	\
-		xm_u32B = xm_u32Internal[(y >> 10) % 256] + x;	\
-		xm_u32Results[i + j_] = xm_u32B;
+		x_u32A += x_u32Internal[(i + j_ + 128) % 256];	\
+		y = x_u32Internal[(x >> 2) % 256] + x_u32A + x_u32B;	\
+		x_u32Internal[i + j_] = y;	\
+		x_u32B = x_u32Internal[(y >> 10) % 256] + x;	\
+		x_u32Results[i + j_] = x_u32B;
 
 		STEP(0, SPEC_0);
 		STEP(1, SPEC_1);
@@ -87,11 +87,11 @@ void IsaacGenerator::xRefreshInternal() noexcept {
 }
 
 std::uint32_t IsaacGenerator::Get() noexcept {
-	if(xm_u32Read == 0){
+	if(x_u32Read == 0){
 		xRefreshInternal();
 	}
-	const auto u32Ret = xm_u32Results[xm_u32Read];
-	xm_u32Read = (xm_u32Read + 1) % 256;
+	const auto u32Ret = x_u32Results[x_u32Read];
+	x_u32Read = (x_u32Read + 1) % 256;
 	return u32Ret;
 }
 

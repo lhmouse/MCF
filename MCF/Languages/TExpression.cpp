@@ -216,7 +216,7 @@ std::pair<TExpression::ErrorType, const wchar_t *> TExpression::Parse(const Wide
 	const auto PushNode = [&]{
 		ASSERT(!vecNodeStack.IsEmpty());
 
-		auto &lstChildren = vecNodeStack.GetEnd()[-1]->xm_lstChildren;
+		auto &lstChildren = vecNodeStack.GetEnd()[-1]->x_lstChildren;
 		auto &vNewNode = lstChildren.Push()->Get();
 		vNewNode.first = Unescape(WideStringObserver(pwcNameBegin, pwcRead));
 		vecNodeStack.Push(&vNewNode.second);
@@ -224,7 +224,7 @@ std::pair<TExpression::ErrorType, const wchar_t *> TExpression::Parse(const Wide
 	const auto PushUnnamedNode = [&]{
 		ASSERT(!vecNodeStack.IsEmpty());
 
-		auto &lstChildren = vecNodeStack.GetEnd()[-1]->xm_lstChildren;
+		auto &lstChildren = vecNodeStack.GetEnd()[-1]->x_lstChildren;
 		auto &vNewNode = lstChildren.Push()->Get();
 		vecNodeStack.Push(&vNewNode.second);
 	};
@@ -456,7 +456,7 @@ WideString TExpression::Export(const WideStringObserver &wsoIndent) const {
 	WideString wsRet;
 
 	Vector<std::pair<const TExpressionNode *, const ChildNode *>> vecNodeStack;
-	vecNodeStack.Push(this, xm_lstChildren.GetFirst());
+	vecNodeStack.Push(this, x_lstChildren.GetFirst());
 	WideString wsIndent;
 	for(;;){
 		auto &vTop = vecNodeStack.GetEnd()[-1];
@@ -471,20 +471,20 @@ WideString TExpression::Export(const WideStringObserver &wsoIndent) const {
 			wsRet += wsIndent;
 			if(!wsName.IsEmpty()){
 				Escape(wsRet, wsName);
-				if(vNode.xm_lstChildren.IsEmpty()){
+				if(vNode.x_lstChildren.IsEmpty()){
 					wsRet += L'\n';
 					goto jNextChild;
 				}
 			}
 			wsRet += L'(';
-			if(vNode.xm_lstChildren.IsEmpty()){
+			if(vNode.x_lstChildren.IsEmpty()){
 				wsRet += L')';
 				wsRet += L'\n';
 				goto jNextChild;
 			}
 			wsRet += L'\n';
 			wsIndent += wsoIndent;
-			vecNodeStack.Push(&vNode, vNode.xm_lstChildren.GetFirst());
+			vecNodeStack.Push(&vNode, vNode.x_lstChildren.GetFirst());
 			continue;
 		}
 

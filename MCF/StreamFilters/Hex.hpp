@@ -11,11 +11,11 @@ namespace MCF {
 
 class HexEncoder : public StreamFilterBase {
 private:
-	const bool xm_bUpperCase;
+	const bool x_bUpperCase;
 
 public:
 	explicit HexEncoder(bool bUpperCase = true) noexcept
-		: xm_bUpperCase(bUpperCase)
+		: x_bUpperCase(bUpperCase)
 	{
 	}
 
@@ -27,7 +27,7 @@ protected:
 
 class HexDecoder : public StreamFilterBase {
 private:
-	int xm_nHigh;
+	int x_nHigh;
 
 protected:
 	void xDoInit() override;

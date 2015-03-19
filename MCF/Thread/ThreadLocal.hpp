@@ -58,14 +58,14 @@ private:
 	};
 
 private:
-	const ObjectT xm_vTemplate;
-	UniqueHandle<xTlsKeyDeleter> xm_pTlsKey;
+	const ObjectT x_vTemplate;
+	UniqueHandle<xTlsKeyDeleter> x_pTlsKey;
 
 public:
 	explicit ThreadLocal(ObjectT vTemplate = ObjectT())
-		: xm_vTemplate(std::move(vTemplate))
+		: x_vTemplate(std::move(vTemplate))
 	{
-		if(!xm_pTlsKey.Reset(::MCF_CRT_TlsAllocKey(
+		if(!x_pTlsKey.Reset(::MCF_CRT_TlsAllocKey(
 			[](std::intptr_t nValue) noexcept { delete (ObjectT *)nValue; })))
 		{
 			DEBUG_THROW(SystemError, "MCF_CRT_TlsAllocKey");
@@ -76,7 +76,7 @@ private:
 	ObjectT *xDoGetPtr() const noexcept {
 		bool bHasValue;
 		std::intptr_t nValue;
-		if(!::MCF_CRT_TlsGet(xm_pTlsKey.Get(), &bHasValue, &nValue)){
+		if(!::MCF_CRT_TlsGet(x_pTlsKey.Get(), &bHasValue, &nValue)){
 			return nullptr;
 		}
 		if(!bHasValue){
@@ -87,8 +87,8 @@ private:
 	ObjectT *xDoAllocPtr() const {
 		auto pObject = xDoGetPtr();
 		if(!pObject){
-			pObject = new ObjectT(xm_vTemplate);
-			if(!::MCF_CRT_TlsReset(xm_pTlsKey.Get(), (std::intptr_t)pObject)){ // noexcept
+			pObject = new ObjectT(x_vTemplate);
+			if(!::MCF_CRT_TlsReset(x_pTlsKey.Get(), (std::intptr_t)pObject)){ // noexcept
 				delete pObject;
 				DEBUG_THROW(SystemError, "MCF_CRT_TlsReset");
 			}
@@ -96,7 +96,7 @@ private:
 		return pObject;
 	}
 	void xDoFreePtr() const noexcept {
-		::MCF_CRT_TlsReset(xm_pTlsKey.Get(), (std::intptr_t)(ObjectT *)nullptr);
+		::MCF_CRT_TlsReset(x_pTlsKey.Get(), (std::intptr_t)(ObjectT *)nullptr);
 	}
 
 public:

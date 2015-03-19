@@ -201,16 +201,16 @@ private:
 	}
 
 private:
-	const CharType *xm_pchBegin;
-	const CharType *xm_pchEnd;
+	const CharType *x_pchBegin;
+	const CharType *x_pchEnd;
 
 public:
 	constexpr StringObserver() noexcept
-		: xm_pchBegin(nullptr), xm_pchEnd(nullptr)
+		: x_pchBegin(nullptr), x_pchEnd(nullptr)
 	{
 	}
 	constexpr StringObserver(const CharType *pchBegin, const CharType *pchEnd) noexcept
-		: xm_pchBegin(pchBegin), xm_pchEnd(pchEnd)
+		: x_pchBegin(pchBegin), x_pchEnd(pchEnd)
 	{
 	}
 	constexpr StringObserver(std::nullptr_t, std::nullptr_t = nullptr) noexcept
@@ -218,7 +218,7 @@ public:
 	{
 	}
 	constexpr StringObserver(const CharType *pchBegin, std::size_t uLen) noexcept
-		: xm_pchBegin(pchBegin), xm_pchEnd(pchBegin + uLen)
+		: x_pchBegin(pchBegin), x_pchEnd(pchBegin + uLen)
 	{
 	}
 	constexpr StringObserver(std::initializer_list<CharType> rhs) noexcept
@@ -232,13 +232,13 @@ public:
 
 public:
 	const CharType *GetBegin() const noexcept {
-		return xm_pchBegin;
+		return x_pchBegin;
 	}
 	const CharType *GetEnd() const noexcept {
-		return xm_pchEnd;
+		return x_pchEnd;
 	}
 	std::size_t GetSize() const noexcept {
-		return (std::size_t)(xm_pchEnd - xm_pchBegin);
+		return (std::size_t)(x_pchEnd - x_pchBegin);
 	}
 	std::size_t GetLength() const noexcept {
 		return GetSize();
@@ -248,12 +248,12 @@ public:
 		return GetSize() == 0;
 	}
 	void Clear() noexcept {
-		xm_pchEnd = xm_pchBegin;
+		x_pchEnd = x_pchBegin;
 	}
 
 	void Swap(StringObserver &rhs) noexcept {
-		std::swap(xm_pchBegin, rhs.xm_pchBegin);
-		std::swap(xm_pchEnd, rhs.xm_pchEnd);
+		std::swap(x_pchBegin, rhs.x_pchBegin);
+		std::swap(x_pchEnd, rhs.x_pchEnd);
 	}
 
 	int Compare(const StringObserver &rhs) const noexcept {
@@ -281,12 +281,12 @@ public:
 	}
 
 	void Assign(const CharType *pchBegin, const CharType *pchEnd) noexcept {
-		xm_pchBegin = pchBegin;
-		xm_pchEnd = pchEnd;
+		x_pchBegin = pchBegin;
+		x_pchEnd = pchEnd;
 	}
 	void Assign(std::nullptr_t, std::nullptr_t = nullptr) noexcept {
-		xm_pchBegin = nullptr;
-		xm_pchEnd = nullptr;
+		x_pchBegin = nullptr;
+		x_pchEnd = nullptr;
 	}
 	void Assign(const CharType *pchBegin, std::size_t uLen) noexcept {
 		Assign(pchBegin, pchBegin + uLen);
@@ -305,7 +305,7 @@ public:
 	//   Slice(-5, -1)   返回 "defg"。
 	StringObserver Slice(std::ptrdiff_t nBegin, std::ptrdiff_t nEnd) const noexcept {
 		const auto uLength = GetLength();
-		return StringObserver(xm_pchBegin + xTranslateOffset(nBegin, uLength), xm_pchBegin + xTranslateOffset(nEnd, uLength));
+		return StringObserver(x_pchBegin + xTranslateOffset(nBegin, uLength), x_pchBegin + xTranslateOffset(nEnd, uLength));
 	}
 
 	// 举例：
@@ -404,7 +404,7 @@ public:
 	}
 
 	bool DoesOverlapWith(const StringObserver &rhs) const noexcept {
-		return std::less<void>()(xm_pchBegin, rhs.xm_pchEnd) && std::less<void>()(rhs.xm_pchBegin, xm_pchEnd);
+		return std::less<void>()(x_pchBegin, rhs.x_pchEnd) && std::less<void>()(rhs.x_pchBegin, x_pchEnd);
 	}
 
 public:

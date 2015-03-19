@@ -25,42 +25,42 @@ public:
 template<typename LockFuncT, typename CommitFuncT, typename UnlockFuncT>
 class TransactionTemplate: public TransactionItemBase {
 private:
-	const LockFuncT xm_fnLock;
-	const CommitFuncT xm_fnCommit;
-	const UnlockFuncT xm_fnUnlock;
+	const LockFuncT x_fnLock;
+	const CommitFuncT x_fnCommit;
+	const UnlockFuncT x_fnUnlock;
 
 public:
 	TransactionTemplate(LockFuncT fnLock, CommitFuncT fnCommit, UnlockFuncT fnUnlock)
-		: xm_fnLock(std::move(fnLock)), xm_fnCommit(std::move(fnCommit))
-		, xm_fnUnlock(std::move(fnUnlock))
+		: x_fnLock(std::move(fnLock)), x_fnCommit(std::move(fnCommit))
+		, x_fnUnlock(std::move(fnUnlock))
 	{
 	}
 
 public:
 	bool Lock() override {
-		return xm_fnLock();
+		return x_fnLock();
 	}
 	void Commit() noexcept override {
-		xm_fnCommit();
+		x_fnCommit();
 	}
 	void Unlock() noexcept override {
-		xm_fnUnlock();
+		x_fnUnlock();
 	}
 };
 
 class Transaction : NONCOPYABLE {
 private:
-	Deque<UniquePtr<TransactionItemBase>> xm_deqItems;
+	Deque<UniquePtr<TransactionItemBase>> x_deqItems;
 
 public:
 	bool IsEmpty() const noexcept {
-		return xm_deqItems.IsEmpty();
+		return x_deqItems.IsEmpty();
 	}
 	void Add(UniquePtr<TransactionItemBase> &&pItem){
-		xm_deqItems.Push(std::move(pItem));
+		x_deqItems.Push(std::move(pItem));
 	}
 	void Clear() noexcept {
-		xm_deqItems.Clear();
+		x_deqItems.Clear();
 	}
 
 	template<typename LockFuncT, typename CommitFuncT, typename UnlockFuncT>

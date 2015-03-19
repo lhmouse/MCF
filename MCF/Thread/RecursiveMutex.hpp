@@ -25,22 +25,22 @@ public:
 	using UniqueLock = UniqueLockTemplate<RecursiveMutex>;
 
 private:
-	Mutex xm_vMutex;
-	std::size_t xm_uRecursionCount;
+	Mutex x_vMutex;
+	std::size_t x_uRecursionCount;
 
 public:
 	explicit RecursiveMutex(std::size_t uSpinCount = 0x400);
 
 public:
 	std::size_t GetSpinCount() const noexcept {
-		return xm_vMutex.GetSpinCount();
+		return x_vMutex.GetSpinCount();
 	}
 	void SetSpinCount(std::size_t uSpinCount) noexcept {
-		xm_vMutex.SetSpinCount(uSpinCount);
+		x_vMutex.SetSpinCount(uSpinCount);
 	}
 
 	bool IsLockedByCurrentThread() const noexcept {
-		return xm_vMutex.IsLockedByCurrentThread();
+		return x_vMutex.IsLockedByCurrentThread();
 	}
 
 	Result Try() noexcept;
@@ -49,7 +49,7 @@ public:
 
 	std::size_t UncheckedGetRecursionCount() const noexcept {
 		ASSERT(IsLockedByCurrentThread());
-		return xm_uRecursionCount;
+		return x_uRecursionCount;
 	}
 	std::size_t GetRecursionCount() const noexcept {
 		if(!IsLockedByCurrentThread()){

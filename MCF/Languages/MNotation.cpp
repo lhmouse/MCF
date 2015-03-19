@@ -555,7 +555,7 @@ WideString MNotation::Export(const WideStringObserver &wsoIndent) const {
 	WideString wsRet;
 
 	Vector<std::pair<const MNotationNode *, const ChildNode *>> vecPackageStack;
-	vecPackageStack.Push(this, xm_mapChildren.GetFirst<1>());
+	vecPackageStack.Push(this, x_mapChildren.GetFirst<1>());
 
 	WideString wsIndent;
 	for(;;){
@@ -572,9 +572,9 @@ WideString MNotation::Export(const WideStringObserver &wsoIndent) const {
 				Escape(wsRet, wsName);
 				wsRet += L' ';
 			}
-			if(vNode.xm_mapChildren.GetSize() == 1){
-				const auto pNode = vNode.xm_mapChildren.GetFirst<0>();
-				if(pNode->Get().second.xm_mapChildren.IsEmpty()){
+			if(vNode.x_mapChildren.GetSize() == 1){
+				const auto pNode = vNode.x_mapChildren.GetFirst<0>();
+				if(pNode->Get().second.x_mapChildren.IsEmpty()){
 					wsRet += L'=';
 					wsRet += L' ';
 					Escape(wsRet, pNode->Get().first);
@@ -585,7 +585,7 @@ WideString MNotation::Export(const WideStringObserver &wsoIndent) const {
 			wsRet += L'{';
 			wsRet += L'\n';
 			wsIndent += wsoIndent;
-			vecPackageStack.Push(&vNode, vNode.xm_mapChildren.GetFirst<1>());
+			vecPackageStack.Push(&vNode, vNode.x_mapChildren.GetFirst<1>());
 			continue;
 		}
 /*		if(vTop.second){
@@ -597,11 +597,11 @@ WideString MNotation::Export(const WideStringObserver &wsoIndent) const {
 			wsRet += L'{';
 			wsRet += L'\n';
 			wsIndent += wsoIndent;
-			vecPackageStack.Push(&(vTop.second->Get().second), vTop.second->Get().second.xm_mapChildren.GetFirst<1>());
+			vecPackageStack.Push(&(vTop.second->Get().second), vTop.second->Get().second.x_mapChildren.GetFirst<1>());
 			continue;
 		}*/
 /*
-		for(auto pNode = vTop.first->xm_mapValues.GetFirst<1>(); pNode; pNode = pNode->GetNext<1>()){
+		for(auto pNode = vTop.first->x_mapValues.GetFirst<1>(); pNode; pNode = pNode->GetNext<1>()){
 			wsRet += wsIndent;
 			if(!pNode->first.IsEmpty()){
 				Escape(wsRet, pNode->first);

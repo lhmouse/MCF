@@ -23,26 +23,26 @@ IntrusivePtr<Thread> Thread::Create(std::function<void ()> fnProc, bool bSuspend
 
 // 构造函数和析构函数。
 Thread::Thread(std::function<void ()> fnProc, bool bSuspended)
-	: xm_fnProc(std::move(fnProc))
+	: x_fnProc(std::move(fnProc))
 {
 	const auto ThreadProc = [](std::intptr_t nParam) noexcept -> unsigned {
 		const auto pThis = (Thread *)nParam;
 		try {
-			pThis->xm_fnProc();
+			pThis->x_fnProc();
 		} catch(...){
-			pThis->xm_pException = std::current_exception();
+			pThis->x_pException = std::current_exception();
 		}
-		AtomicStore(pThis->xm_ulThreadId, 0, MemoryModel::RELEASE);
+		AtomicStore(pThis->x_ulThreadId, 0, MemoryModel::RELEASE);
 		pThis->DropRef();
 		return 0;
 	};
 
 	unsigned long ulThreadId;
-	if(!xm_hThread.Reset(::MCF_CRT_CreateThread(ThreadProc, (std::intptr_t)this, CREATE_SUSPENDED, &ulThreadId))){
+	if(!x_hThread.Reset(::MCF_CRT_CreateThread(ThreadProc, (std::intptr_t)this, CREATE_SUSPENDED, &ulThreadId))){
 		DEBUG_THROW(SystemError, "MCF_CRT_CreateThread");
 	}
 	AddRef();
-	AtomicStore(xm_ulThreadId, ulThreadId, MemoryModel::RELEASE);
+	AtomicStore(x_ulThreadId, ulThreadId, MemoryModel::RELEASE);
 
 	if(!bSuspended){
 		Resume();
@@ -54,7 +54,7 @@ bool Thread::Wait(unsigned long long ullMilliSeconds) const noexcept {
 	bool bResult = false;
 	auto ullTimeRemaining = ullMilliSeconds;
 	for(;;){
-		const auto dwResult = ::WaitForSingleObject(xm_hThread.Get(), Min(ullTimeRemaining, ULONG_MAX >> 1));
+		const auto dwResult = ::WaitForSingleObject(x_hThread.Get(), Min(ullTimeRemaining, ULONG_MAX >> 1));
 		if(dwResult == WAIT_FAILED){
 			ASSERT_MSG(false, L"WaitForSingleObject() 失败。");
 		}
@@ -71,7 +71,7 @@ bool Thread::Wait(unsigned long long ullMilliSeconds) const noexcept {
 	return bResult;
 }
 void Thread::Wait() const noexcept {
-	const auto dwResult = ::WaitForSingleObject(xm_hThread.Get(), INFINITE);
+	const auto dwResult = ::WaitForSingleObject(x_hThread.Get(), INFINITE);
 	if(dwResult == WAIT_FAILED){
 		ASSERT_MSG(false, L"WaitForSingleObject() 失败。");
 	}
@@ -79,7 +79,7 @@ void Thread::Wait() const noexcept {
 
 std::exception_ptr Thread::JoinNoThrow() const noexcept {
 	Wait();
-	return xm_pException; // 不要 move()。
+	return x_pException; // 不要 move()。
 }
 void Thread::Join() const {
 	const auto pException = JoinNoThrow();
@@ -92,16 +92,16 @@ bool Thread::IsAlive() const noexcept {
 	return GetId() != 0;
 }
 std::size_t Thread::GetId() const noexcept {
-	return AtomicLoad(xm_ulThreadId, MemoryModel::ACQUIRE);
+	return AtomicLoad(x_ulThreadId, MemoryModel::ACQUIRE);
 }
 
 void Thread::Suspend() noexcept {
-	if(::SuspendThread(xm_hThread.Get()) == (DWORD)-1){
+	if(::SuspendThread(x_hThread.Get()) == (DWORD)-1){
 		ASSERT_MSG(false, L"SuspendThread() 失败。");
 	}
 }
 void Thread::Resume() noexcept {
-	if(::ResumeThread(xm_hThread.Get()) == (DWORD)-1){
+	if(::ResumeThread(x_hThread.Get()) == (DWORD)-1){
 		ASSERT_MSG(false, L"ResumeThread() 失败。");
 	}
 }

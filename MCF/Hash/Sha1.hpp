@@ -12,8 +12,8 @@ namespace MCF {
 
 class Sha1 {
 private:
-	bool xm_bInited;
-	std::uint32_t xm_auResult[5];
+	bool x_bInited;
+	std::uint32_t x_auResult[5];
 
 	union {
 		unsigned char aby[64];
@@ -21,10 +21,10 @@ private:
 			unsigned char abyData[56];
 			std::uint64_t u64Bits;
 		} vLast;
-	} xm_vChunk;
+	} x_vChunk;
 
-	std::size_t xm_uBytesInChunk;
-	std::uint64_t xm_u64BytesTotal;
+	std::size_t x_uBytesInChunk;
+	std::uint64_t x_u64BytesTotal;
 
 public:
 	Sha1() noexcept;

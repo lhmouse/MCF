@@ -14,15 +14,15 @@ namespace Impl {
 	template<typename CallbackT>
 	class DeferredCallback {
 	private:
-		CallbackT xm_vCallback;
+		CallbackT x_vCallback;
 
 	public:
 		explicit DeferredCallback(CallbackT vCallback)
-			: xm_vCallback(std::move(vCallback))
+			: x_vCallback(std::move(vCallback))
 		{
 		}
 		~DeferredCallback() noexcept(false) {
-			xm_vCallback();
+			x_vCallback();
 		}
 	};
 

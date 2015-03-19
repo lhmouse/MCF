@@ -15,65 +15,65 @@ namespace MCF {
 
 // 构造函数和析构函数。
 ConditionVariable::ConditionVariable(Mutex &vMutex)
-	: xm_vMutex(vMutex), xm_uWaiting(0), xm_vSemaphore(0, nullptr)
+	: x_vMutex(vMutex), x_uWaiting(0), x_vSemaphore(0, nullptr)
 {
 	AtomicFence(MemoryModel::RELEASE);
 }
 
 // 其他非静态成员函数。
 bool ConditionVariable::Wait(unsigned long long ullMilliSeconds) noexcept {
-	ASSERT(xm_vMutex.IsLockedByCurrentThread());
+	ASSERT(x_vMutex.IsLockedByCurrentThread());
 
-	++xm_uWaiting;
-	xm_vMutex.Unlock();
+	++x_uWaiting;
+	x_vMutex.Unlock();
 //	\\ 退出临界区。
-	const bool bResult = xm_vSemaphore.Wait(ullMilliSeconds);
+	const bool bResult = x_vSemaphore.Wait(ullMilliSeconds);
 //	// 进入临界区。
-	xm_vMutex.Lock();
+	x_vMutex.Lock();
 	if(!bResult){
-		--xm_uWaiting;
+		--x_uWaiting;
 	}
 	return bResult;
 }
 void ConditionVariable::Wait() noexcept {
-	ASSERT(xm_vMutex.IsLockedByCurrentThread());
+	ASSERT(x_vMutex.IsLockedByCurrentThread());
 
-	++xm_uWaiting;
-	xm_vMutex.Unlock();
+	++x_uWaiting;
+	x_vMutex.Unlock();
 //	\\ 退出临界区。
-	xm_vSemaphore.Wait();
+	x_vSemaphore.Wait();
 //	// 进入临界区。
-	xm_vMutex.Lock();
+	x_vMutex.Lock();
 }
 void ConditionVariable::Signal(std::size_t uMaxCount) noexcept {
-	const bool bIsLocking = xm_vMutex.IsLockedByCurrentThread();
+	const bool bIsLocking = x_vMutex.IsLockedByCurrentThread();
 	if(!bIsLocking){
-		xm_vMutex.Lock();
+		x_vMutex.Lock();
 	}
 //	// 进入临界区。
-	const auto uToPost = Min(xm_uWaiting, uMaxCount);
+	const auto uToPost = Min(x_uWaiting, uMaxCount);
 	if(uToPost != 0){
-		xm_vSemaphore.Post(uToPost);
-		xm_uWaiting -= uToPost;
+		x_vSemaphore.Post(uToPost);
+		x_uWaiting -= uToPost;
 	}
 //	\\ 退出临界区。
 	if(!bIsLocking){
-		xm_vMutex.Unlock();
+		x_vMutex.Unlock();
 	}
 }
 void ConditionVariable::Broadcast() noexcept {
-	const bool bIsLocking = xm_vMutex.IsLockedByCurrentThread();
+	const bool bIsLocking = x_vMutex.IsLockedByCurrentThread();
 	if(!bIsLocking){
-		xm_vMutex.Lock();
+		x_vMutex.Lock();
 	}
 //	// 进入临界区。
-	if(xm_uWaiting != 0){
-		xm_vSemaphore.Post(xm_uWaiting);
-		xm_uWaiting = 0;
+	if(x_uWaiting != 0){
+		x_vSemaphore.Post(x_uWaiting);
+		x_uWaiting = 0;
 	}
 //	\\ 退出临界区。
 	if(!bIsLocking){
-		xm_vMutex.Unlock();
+		x_vMutex.Unlock();
 	}
 }
 

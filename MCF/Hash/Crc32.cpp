@@ -43,22 +43,22 @@ namespace {
 
 // 构造函数和析构函数。
 Crc32::Crc32(std::uint32_t u32Divisor) noexcept
-	: xm_bInited(false)
+	: x_bInited(false)
 {
 	ASSERT(u32Divisor != 0);
 
-	BuildTable(xm_au32Table, u32Divisor);
+	BuildTable(x_au32Table, u32Divisor);
 }
 
 // 其他非静态成员函数。
 void Crc32::Abort() noexcept{
-	xm_bInited = false;
+	x_bInited = false;
 }
 void Crc32::Update(const void *pData, std::size_t uSize) noexcept {
-	if(!xm_bInited){
-		xm_u32Reg = (std::uint32_t)-1;
+	if(!x_bInited){
+		x_u32Reg = (std::uint32_t)-1;
 
-		xm_bInited = true;
+		x_bInited = true;
 	}
 
 	register auto pbyRead = (const unsigned char *)pData;
@@ -66,7 +66,7 @@ void Crc32::Update(const void *pData, std::size_t uSize) noexcept {
 
 	if(uSize >= sizeof(std::uintptr_t) * 2){
 		while(((std::uintptr_t)pbyRead & (sizeof(std::uintptr_t) - 1)) != 0){
-			DoCrc32Byte(xm_u32Reg, xm_au32Table, *pbyRead);
+			DoCrc32Byte(x_u32Reg, x_au32Table, *pbyRead);
 			++pbyRead;
 		}
 		register auto i = (std::size_t)(pbyEnd - pbyRead) / sizeof(std::uintptr_t);
@@ -74,24 +74,24 @@ void Crc32::Update(const void *pData, std::size_t uSize) noexcept {
 			register auto uWord = LoadLe(*(const std::uintptr_t *)pbyRead);
 			pbyRead += sizeof(std::uintptr_t);
 			for(unsigned j = 0; j < sizeof(std::uintptr_t); ++j){
-				DoCrc32Byte(xm_u32Reg, xm_au32Table, uWord & 0xFF);
+				DoCrc32Byte(x_u32Reg, x_au32Table, uWord & 0xFF);
 				uWord >>= 8;
 			}
 			--i;
 		}
 	}
 	while(pbyRead != pbyEnd){
-		DoCrc32Byte(xm_u32Reg, xm_au32Table, *pbyRead);
+		DoCrc32Byte(x_u32Reg, x_au32Table, *pbyRead);
 		++pbyRead;
 	}
 }
 std::uint32_t Crc32::Finalize() noexcept {
-	if(xm_bInited){
-		xm_u32Reg = ~xm_u32Reg;
+	if(x_bInited){
+		x_u32Reg = ~x_u32Reg;
 
-		xm_bInited = false;
+		x_bInited = false;
 	}
-	return xm_u32Reg;
+	return x_u32Reg;
 }
 
 }

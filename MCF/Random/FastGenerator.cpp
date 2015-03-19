@@ -12,13 +12,13 @@ namespace MCF {
 
 // 其他非静态成员函数。
 void FastGenerator::Init(std::uint32_t u32Seed) noexcept {
-	xm_u64Seed = 0x0123456789ABCDEFull | u32Seed;
+	x_u64Seed = 0x0123456789ABCDEFull | u32Seed;
 }
 
 std::uint32_t FastGenerator::Get() noexcept {
 	// MMIX by Donald Knuth
-	const auto u64NewSeed = xm_u64Seed  * 6364136223846793005ull + 1442695040888963407ull;
-	xm_u64Seed = u64NewSeed;
+	const auto u64NewSeed = x_u64Seed  * 6364136223846793005ull + 1442695040888963407ull;
+	x_u64Seed = u64NewSeed;
 	return u64NewSeed >> 32;
 }
 

@@ -17,7 +17,7 @@ public:
 	using UniqueLock = UniqueLockTemplate<KernelMutex>;
 
 private:
-	const UniqueWin32Handle xm_hMutex;
+	const UniqueWin32Handle x_hMutex;
 
 public:
 	explicit KernelMutex(const wchar_t *pwszName = nullptr);

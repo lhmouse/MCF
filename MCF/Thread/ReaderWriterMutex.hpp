@@ -27,20 +27,20 @@ public:
 	using UniqueWriterLock = UniqueLockTemplate<ReaderWriterMutex, 1u>;
 
 private:
-	RecursiveMutex xm_mtxWriterGuard;
-	Semaphore xm_semExclusive;
-	volatile std::size_t xm_uReaderCount;
-	UniqueHandle<xTlsIndexDeleter> xm_uTlsIndex;
+	RecursiveMutex x_mtxWriterGuard;
+	Semaphore x_semExclusive;
+	volatile std::size_t x_uReaderCount;
+	UniqueHandle<xTlsIndexDeleter> x_uTlsIndex;
 
 public:
 	explicit ReaderWriterMutex(std::size_t uSpinCount = 0x400);
 
 public:
 	std::size_t GetSpinCount() const noexcept {
-		return xm_mtxWriterGuard.GetSpinCount();
+		return x_mtxWriterGuard.GetSpinCount();
 	}
 	void SetSpinCount(std::size_t uSpinCount) noexcept {
-		xm_mtxWriterGuard.SetSpinCount(uSpinCount);
+		x_mtxWriterGuard.SetSpinCount(uSpinCount);
 	}
 
 	Result TryAsReader() noexcept;

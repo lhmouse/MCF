@@ -18,17 +18,17 @@ namespace {
 
 	class Pool : NONCOPYABLE {
 	private:
-		PooledSharedControl *volatile xm_pHead;
+		PooledSharedControl *volatile x_pHead;
 
 	public:
 		Pool() noexcept
-			: xm_pHead(nullptr)
+			: x_pHead(nullptr)
 		{
 		}
 		~Pool(){
-			auto pHead = AtomicLoad(xm_pHead, MemoryModel::RELAXED);
+			auto pHead = AtomicLoad(x_pHead, MemoryModel::RELAXED);
 			while(pHead){
-				if(EXPECT(AtomicCompareExchange(xm_pHead, pHead, pHead->pNext, MemoryModel::RELAXED))){
+				if(EXPECT(AtomicCompareExchange(x_pHead, pHead, pHead->pNext, MemoryModel::RELAXED))){
 					delete pHead;
 				}
 			}
@@ -36,19 +36,19 @@ namespace {
 
 	public:
 		PooledSharedControl *Alloc(){
-			auto pHead = AtomicLoad(xm_pHead, MemoryModel::RELAXED);
+			auto pHead = AtomicLoad(x_pHead, MemoryModel::RELAXED);
 			while(pHead){
-				if(EXPECT_NOT(AtomicCompareExchange(xm_pHead, pHead, pHead->pNext, MemoryModel::RELAXED))){
+				if(EXPECT_NOT(AtomicCompareExchange(x_pHead, pHead, pHead->pNext, MemoryModel::RELAXED))){
 					return pHead;
 				}
 			}
 			return new PooledSharedControl;
 		}
 		void Dealloc(PooledSharedControl *pControl) noexcept {
-			auto pHead = AtomicLoad(xm_pHead, MemoryModel::RELAXED);
+			auto pHead = AtomicLoad(x_pHead, MemoryModel::RELAXED);
 			do {
 				pControl->pNext = pHead;
-			} while(EXPECT(!AtomicCompareExchange(xm_pHead, pHead, pControl, MemoryModel::RELAXED)));
+			} while(EXPECT(!AtomicCompareExchange(x_pHead, pHead, pControl, MemoryModel::RELAXED)));
 		}
 	} g_vPool __attribute__((__init_priority__(101)));
 }

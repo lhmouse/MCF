@@ -22,38 +22,38 @@ private:
 		friend List;
 
 	private:
-		ElementT xm_vElement;
-		xNode *xm_pPrev;
-		xNode *xm_pNext;
+		ElementT x_vElement;
+		xNode *x_pPrev;
+		xNode *x_pNext;
 
 	private:
 		xNode() = default;
 
 		template<typename ...ParamsT>
 		explicit xNode(ParamsT &&...vParams)
-			: xm_vElement(std::forward<ParamsT>(vParams)...)
+			: x_vElement(std::forward<ParamsT>(vParams)...)
 		{
 		}
 
 	public:
 		const ElementT &Get() const noexcept {
-			return xm_vElement;
+			return x_vElement;
 		}
 		ElementT &Get() noexcept {
-			return xm_vElement;
+			return x_vElement;
 		}
 
 		const xNode *GetPrev() const noexcept {
-			return xm_pPrev;
+			return x_pPrev;
 		}
 		xNode *GetPrev() noexcept {
-			return xm_pPrev;
+			return x_pPrev;
 		}
 		const xNode *GetNext() const noexcept {
-			return xm_pNext;
+			return x_pNext;
 		}
 		xNode *GetNext() noexcept {
-			return xm_pNext;
+			return x_pNext;
 		}
 	};
 
@@ -62,11 +62,11 @@ private:
 		: public std::iterator<std::bidirectional_iterator_tag, RealElementT>
 	{
 	protected:
-		RealNodeT *xm_pNode;
+		RealNodeT *x_pNode;
 
 	protected:
 		explicit constexpr xCursorTemplate(RealNodeT *pNode) noexcept
-			: xm_pNode(pNode)
+			: x_pNode(pNode)
 		{
 		}
 
@@ -78,52 +78,52 @@ private:
 
 	public:
 		RealNodeT *Get() const noexcept {
-			return xm_pNode;
+			return x_pNode;
 		}
 
 	public:
 		bool operator==(const xCursorTemplate &rhs) const noexcept {
-			return xm_pNode == rhs.xm_pNode;
+			return x_pNode == rhs.x_pNode;
 		}
 		bool operator!=(const xCursorTemplate &rhs) const noexcept {
-			return xm_pNode != rhs.xm_pNode;
+			return x_pNode != rhs.x_pNode;
 		}
 
 		RealElementT &operator*() const noexcept {
-			ASSERT_MSG(xm_pNode, L"游标指向链表两端或者为空。");
-			return xm_pNode->Get();
+			ASSERT_MSG(x_pNode, L"游标指向链表两端或者为空。");
+			return x_pNode->Get();
 		}
 		RealElementT *operator->() const noexcept {
-			ASSERT_MSG(xm_pNode, L"游标指向链表两端或者为空。");
-			return std::addressof(xm_pNode->Get());
+			ASSERT_MSG(x_pNode, L"游标指向链表两端或者为空。");
+			return std::addressof(x_pNode->Get());
 		}
 
 		CursorT &operator++() noexcept {
-			ASSERT_MSG(xm_pNode, L"空游标不能移动。");
+			ASSERT_MSG(x_pNode, L"空游标不能移动。");
 
-			xm_pNode = xm_pNode->GetNext();
+			x_pNode = x_pNode->GetNext();
 			return static_cast<CursorT &>(*this);
 		}
 		CursorT &operator--() noexcept {
-			ASSERT_MSG(xm_pNode, L"空游标不能移动。");
+			ASSERT_MSG(x_pNode, L"空游标不能移动。");
 
-			xm_pNode = xm_pNode->GetPrev();
+			x_pNode = x_pNode->GetPrev();
 			return static_cast<CursorT &>(*this);
 		}
 
 		CursorT operator++(int) noexcept {
-			CursorT ret(xm_pNode);
+			CursorT ret(x_pNode);
 			++*this;
 			return ret;
 		}
 		CursorT operator--(int) noexcept {
-			CursorT ret(xm_pNode);
+			CursorT ret(x_pNode);
 			--*this;
 			return ret;
 		}
 
 		explicit operator bool() const noexcept {
-			return xm_pNode != nullptr;
+			return x_pNode != nullptr;
 		}
 	};
 
@@ -169,18 +169,18 @@ public:
 		constexpr ConstCursor() noexcept = default;
 
 		constexpr ConstCursor(const Cursor &rhs) noexcept
-			: xBase(rhs.xm_pNode)
+			: xBase(rhs.x_pNode)
 		{
 		}
 	};
 
 private:
-	xNode *xm_pFirst;
-	xNode *xm_pLast;
+	xNode *x_pFirst;
+	xNode *x_pLast;
 
 public:
 	constexpr List() noexcept
-		: xm_pFirst(nullptr), xm_pLast(nullptr)
+		: x_pFirst(nullptr), x_pLast(nullptr)
 	{
 	}
 	template<typename ...ParamsT>
@@ -209,7 +209,7 @@ public:
 	List(const List &rhs)
 		: List()
 	{
-		for(auto pCur = rhs.xm_pFirst; pCur; pCur = pCur->xm_pNext){
+		for(auto pCur = rhs.x_pFirst; pCur; pCur = pCur->x_pNext){
 			Push(pCur->Get());
 		}
 	}
@@ -240,16 +240,16 @@ public:
 
 public:
 	const xNode *GetFirst() const noexcept {
-		return xm_pFirst;
+		return x_pFirst;
 	}
 	xNode *GetFirst() noexcept {
-		return xm_pFirst;
+		return x_pFirst;
 	}
 	const xNode *GetLast() const noexcept {
-		return xm_pLast;
+		return x_pLast;
 	}
 	xNode *GetLast() noexcept {
-		return xm_pLast;
+		return x_pLast;
 	}
 
 	ConstCursor GetFirstCursor() const noexcept {
@@ -267,61 +267,61 @@ public:
 
 	const ElementT &GetFront() const noexcept {
 		ASSERT(!IsEmpty());
-		return xm_pFirst->Get();
+		return x_pFirst->Get();
 	}
 	ElementT &GetFront() noexcept {
 		ASSERT(!IsEmpty());
-		return xm_pFirst->Get();
+		return x_pFirst->Get();
 	}
 	const ElementT &GetBack() const noexcept {
 		ASSERT(!IsEmpty());
-		return xm_pLast->Get();
+		return x_pLast->Get();
 	}
 	ElementT &GetBack() noexcept {
 		ASSERT(!IsEmpty());
-		return xm_pLast->Get();
+		return x_pLast->Get();
 	}
 
 	bool IsEmpty() const noexcept {
-		return xm_pFirst == nullptr;
+		return x_pFirst == nullptr;
 	}
 	void Clear() noexcept {
-		while(xm_pFirst){
-			delete std::exchange(xm_pFirst, xm_pFirst->xm_pNext);
+		while(x_pFirst){
+			delete std::exchange(x_pFirst, x_pFirst->x_pNext);
 		}
-		xm_pLast = nullptr;
+		x_pLast = nullptr;
 	}
 
 	template<typename ...ParamsT>
 	xNode *Insert(xNode *pPos, ParamsT &&...vParams){
 		auto pNode = new xNode(std::forward<ParamsT>(vParams)...);
 
-		const auto pPrev = std::exchange((pPos ? pPos->xm_pPrev : xm_pLast), pNode);
-		(pPrev ? pPrev->xm_pNext : xm_pFirst) = pNode;
-		pNode->xm_pPrev = pPrev;
-		pNode->xm_pNext = pPos;
+		const auto pPrev = std::exchange((pPos ? pPos->x_pPrev : x_pLast), pNode);
+		(pPrev ? pPrev->x_pNext : x_pFirst) = pNode;
+		pNode->x_pPrev = pPrev;
+		pNode->x_pNext = pPos;
 
 		return pNode;
 	}
 	xNode *Erase(xNode *pNode) noexcept {
-		const auto pNext = pNode->xm_pNext;
+		const auto pNext = pNode->x_pNext;
 
-		const auto pOldPrev = pNode->xm_pPrev;
-		(pOldPrev ? pOldPrev->xm_pNext : xm_pFirst) = pNext;
-		(pNext ? pNext->xm_pPrev : xm_pLast) = pOldPrev;
+		const auto pOldPrev = pNode->x_pPrev;
+		(pOldPrev ? pOldPrev->x_pNext : x_pFirst) = pNext;
+		(pNext ? pNext->x_pPrev : x_pLast) = pOldPrev;
 
 		delete pNode;
 		return pNext;
 	}
 	xNode *Erase(xNode *pBegin, xNode *pEnd) noexcept {
 		if(pBegin != pEnd){
-			const auto pOldPrev = pBegin->xm_pPrev;
-			(pOldPrev ? pOldPrev->xm_pNext : xm_pFirst) = pEnd;
-			(pEnd ? pEnd->xm_pPrev : xm_pLast) = pOldPrev;
+			const auto pOldPrev = pBegin->x_pPrev;
+			(pOldPrev ? pOldPrev->x_pNext : x_pFirst) = pEnd;
+			(pEnd ? pEnd->x_pPrev : x_pLast) = pOldPrev;
 
 			do {
 				const auto pNode = pBegin;
-				pBegin = pBegin->xm_pNext;
+				pBegin = pBegin->x_pNext;
 
 				delete pNode;
 			} while(pBegin != pEnd);
@@ -330,13 +330,13 @@ public:
 	}
 
 	xNode *Splice(xNode *pPos, List &lstSource) noexcept {
-		const auto pRet = Splice(pPos, lstSource, lstSource.xm_pFirst, nullptr);
+		const auto pRet = Splice(pPos, lstSource, lstSource.x_pFirst, nullptr);
 		ASSERT(lstSource.IsEmpty());
 		return pRet;
 	}
 	xNode *Splice(xNode *pPos, List &lstSource, xNode *pSingle) noexcept {
 		ASSERT(pSingle);
-		return Splice(pPos, lstSource, pSingle, pSingle->xm_pNext);
+		return Splice(pPos, lstSource, pSingle, pSingle->x_pNext);
 	}
 	xNode *Splice(xNode *pPos, List &lstSource, xNode *pBegin, xNode *pEnd) noexcept {
 #ifndef NDEBUG
@@ -352,15 +352,15 @@ public:
 #endif
 
 		if(pBegin != pEnd){
-			const auto pOldPrev = pBegin->xm_pPrev;
-			(pOldPrev ? pOldPrev->xm_pNext : lstSource.xm_pFirst) = pEnd;
-			const auto pOldLast = std::exchange((pEnd ? pEnd->xm_pPrev : lstSource.xm_pLast), pOldPrev);
+			const auto pOldPrev = pBegin->x_pPrev;
+			(pOldPrev ? pOldPrev->x_pNext : lstSource.x_pFirst) = pEnd;
+			const auto pOldLast = std::exchange((pEnd ? pEnd->x_pPrev : lstSource.x_pLast), pOldPrev);
 
-			const auto pPrev = std::exchange((pPos ? pPos->xm_pPrev : xm_pLast), pOldLast);
-			pOldLast->xm_pNext = pPos;
+			const auto pPrev = std::exchange((pPos ? pPos->x_pPrev : x_pLast), pOldLast);
+			pOldLast->x_pNext = pPos;
 
-			(pPrev ? pPrev->xm_pNext : xm_pFirst) = pBegin;
-			pBegin->xm_pPrev = pPrev;
+			(pPrev ? pPrev->x_pNext : x_pFirst) = pBegin;
+			pBegin->x_pPrev = pPrev;
 		}
 		return pPos;
 	}
@@ -380,15 +380,15 @@ public:
 		return Insert(nullptr, std::forward<ParamsT>(vParams)...);
 	}
 	void Pop() noexcept {
-		Erase(xm_pLast);
+		Erase(x_pLast);
 	}
 
 	template<typename ...ParamsT>
 	xNode *Unshift(ParamsT &&...vParams){
-		return Insert(xm_pFirst, std::forward<ParamsT>(vParams)...);
+		return Insert(x_pFirst, std::forward<ParamsT>(vParams)...);
 	}
 	void Shift() noexcept {
-		Erase(xm_pFirst);
+		Erase(x_pFirst);
 	}
 
 	template<typename ...ParamsT>
@@ -504,15 +504,15 @@ public:
 	}
 
 	void Swap(List &rhs) noexcept {
-		std::swap(xm_pFirst, rhs.xm_pFirst);
-		std::swap(xm_pLast, rhs.xm_pLast);
+		std::swap(x_pFirst, rhs.x_pFirst);
+		std::swap(x_pLast, rhs.x_pLast);
 	}
 
 	void Reverse() noexcept {
-		for(auto pCur = xm_pFirst; pCur; pCur = pCur->xm_pPrev){
-			std::swap(pCur->xm_pPrev, pCur->xm_pNext);
+		for(auto pCur = x_pFirst; pCur; pCur = pCur->x_pPrev){
+			std::swap(pCur->x_pPrev, pCur->x_pNext);
 		}
-		std::swap(xm_pFirst, xm_pLast);
+		std::swap(x_pFirst, x_pLast);
 	}
 
 public:

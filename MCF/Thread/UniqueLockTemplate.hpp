@@ -14,25 +14,25 @@ namespace MCF {
 
 class UniqueLockTemplateBase : NONCOPYABLE {
 protected:
-	std::size_t xm_uLockCount;
+	std::size_t x_uLockCount;
 
 protected:
 	constexpr UniqueLockTemplateBase() noexcept
-		: xm_uLockCount(0)
+		: x_uLockCount(0)
 	{
 	}
 
 public:
 	virtual ~UniqueLockTemplateBase(){
-		ASSERT(xm_uLockCount == 0);
+		ASSERT(x_uLockCount == 0);
 	}
 
 protected:
 	std::size_t xUnlockAll() noexcept {
-		const auto uOldLockCount = xm_uLockCount;
+		const auto uOldLockCount = x_uLockCount;
 		if(uOldLockCount != 0){
 			xDoUnlock();
-			xm_uLockCount = 0;
+			x_uLockCount = 0;
 		}
 		return uOldLockCount;
 	}
@@ -44,30 +44,30 @@ private:
 
 public:
 	bool IsLocking() const noexcept {
-		return xm_uLockCount > 0;
+		return x_uLockCount > 0;
 	}
 	std::size_t GetLockCount() const noexcept {
-		return xm_uLockCount;
+		return x_uLockCount;
 	}
 
 	bool Try() noexcept {
-		if(xm_uLockCount == 0){
+		if(x_uLockCount == 0){
 			if(!xDoTry()){
 				return false;
 			}
 		}
-		++xm_uLockCount;
+		++x_uLockCount;
 		return true;
 	}
 	void Lock() noexcept {
-		if(++xm_uLockCount == 1){
+		if(++x_uLockCount == 1){
 			xDoLock();
 		}
 	}
 	void Unlock() noexcept {
-		ASSERT(xm_uLockCount != 0);
+		ASSERT(x_uLockCount != 0);
 
-		if(--xm_uLockCount == 0){
+		if(--x_uLockCount == 0){
 			xDoUnlock();
 		}
 	}
@@ -81,18 +81,18 @@ public:
 template<class MutexT, unsigned LOCK_TYPE_T = 0>
 class UniqueLockTemplate final : public UniqueLockTemplateBase {
 private:
-	MutexT *xm_pOwner;
+	MutexT *x_pOwner;
 
 public:
 	explicit UniqueLockTemplate(MutexT &vOwner, bool bInitLocked = true) noexcept
-		: xm_pOwner(&vOwner)
+		: x_pOwner(&vOwner)
 	{
 		if(bInitLocked){
 			Lock();
 		}
 	}
 	UniqueLockTemplate(UniqueLockTemplate &&rhs) noexcept
-		: xm_pOwner(rhs.xm_pOwner)
+		: x_pOwner(rhs.x_pOwner)
 	{
 		Swap(rhs);
 	}
@@ -114,15 +114,15 @@ private:
 
 public:
 	void Join(UniqueLockTemplate &&rhs) noexcept {
-		ASSERT(xm_pOwner == rhs.xm_pOwner);
+		ASSERT(x_pOwner == rhs.x_pOwner);
 
-		xm_uLockCount += rhs.xm_uLockCount;
-		rhs.xm_uLockCount = 0;
+		x_uLockCount += rhs.x_uLockCount;
+		rhs.x_uLockCount = 0;
 	}
 
 	void Swap(UniqueLockTemplate &rhs) noexcept {
-		std::swap(xm_pOwner, rhs.xm_pOwner);
-		std::swap(xm_uLockCount, rhs.xm_uLockCount);
+		std::swap(x_pOwner, rhs.x_pOwner);
+		std::swap(x_uLockCount, rhs.x_uLockCount);
 	}
 };
 

@@ -40,9 +40,9 @@ void DependencyDatabase::SaveToFile(const wvstring &wcsPath) const {
 		} while(dwBytesWritten != 0);
 	};
 
-	const std::uint32_t u32MapSize = (std::uint32_t)xm_mapDependencies.size();
+	const std::uint32_t u32MapSize = (std::uint32_t)x_mapDependencies.size();
 	Write(&u32MapSize, sizeof(u32MapSize));
-	for(const auto &DependencyItem : xm_mapDependencies){
+	for(const auto &DependencyItem : x_mapDependencies){
 		const std::uint32_t u32KeyLength = (std::uint32_t)DependencyItem.first.size();
 		Write(&u32KeyLength, sizeof(u32KeyLength));
 		Write(DependencyItem.first.data(), u32KeyLength * sizeof(wchar_t));
@@ -68,7 +68,7 @@ void DependencyDatabase::LoadFromFile(const wvstring &wcsPath){
 		if(dwError != ERROR_FILE_NOT_FOUND){
 			throw Exception{dwError, L"打开数据库文件“" + wcsPath + L"”失败。"};
 		}
-		xm_mapDependencies.clear();
+		x_mapDependencies.clear();
 		return;
 	}
 
@@ -115,5 +115,5 @@ void DependencyDatabase::LoadFromFile(const wvstring &wcsPath){
 		}
 	}
 
-	xm_mapDependencies.swap(mapDependencies);
+	x_mapDependencies.swap(mapDependencies);
 }

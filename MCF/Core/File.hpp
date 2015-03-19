@@ -38,7 +38,7 @@ private:
 	};
 
 private:
-	UniqueHandle<xFileCloser> xm_hFile;
+	UniqueHandle<xFileCloser> x_hFile;
 
 public:
 	File(const wchar_t *pwszPath, std::uint32_t u32Flags);

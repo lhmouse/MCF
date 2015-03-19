@@ -13,7 +13,7 @@ namespace MCF {
 
 class Event : NONCOPYABLE {
 private:
-	const UniqueWin32Handle xm_hEvent;
+	const UniqueWin32Handle x_hEvent;
 
 public:
 	explicit Event(bool bInitSet, const wchar_t *pwszName = nullptr);

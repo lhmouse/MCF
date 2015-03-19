@@ -16,11 +16,11 @@ struct IsaacFilterKeyHash {
 
 class IsaacExEncoder : public StreamFilterBase {
 private:
-	IsaacFilterKeyHash xm_vKeyHash;
+	IsaacFilterKeyHash x_vKeyHash;
 
-	IsaacGenerator xm_vIsaacGenerator;
-	unsigned char xm_byLastEncoded;
-	long xm_lLastHighWord;
+	IsaacGenerator x_vIsaacGenerator;
+	unsigned char x_byLastEncoded;
+	long x_lLastHighWord;
 
 public:
 	IsaacExEncoder(const void *pKey, std::size_t uKeyLen) noexcept;
@@ -33,11 +33,11 @@ protected:
 
 class IsaacExDecoder : public StreamFilterBase {
 private:
-	IsaacFilterKeyHash xm_vKeyHash;
+	IsaacFilterKeyHash x_vKeyHash;
 
-	IsaacGenerator xm_vIsaacGenerator;
-	unsigned char xm_byLastEncoded;
-	long xm_lLastHighWord;
+	IsaacGenerator x_vIsaacGenerator;
+	unsigned char x_byLastEncoded;
+	long x_lLastHighWord;
 
 public:
 	IsaacExDecoder(const void *pKey, std::size_t uKeyLen) noexcept;

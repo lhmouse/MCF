@@ -15,10 +15,10 @@ constexpr char BASE64_TABLE_REGEXP	[66] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijk
 
 class Base64Encoder : public StreamFilterBase {
 private:
-	unsigned char xm_abyTable[65];
+	unsigned char x_abyTable[65];
 
-	unsigned xm_uState;
-	unsigned long xm_ulWord;
+	unsigned x_uState;
+	unsigned long x_ulWord;
 
 public:
 	explicit Base64Encoder(const char *pchTable = BASE64_TABLE_MIME) noexcept;
@@ -31,10 +31,10 @@ protected:
 
 class Base64Decoder : public StreamFilterBase {
 private:
-	signed char xm_aschTable[0x100];
+	signed char x_aschTable[0x100];
 
-	unsigned xm_uState;
-	unsigned long xm_ulWord;
+	unsigned x_uState;
+	unsigned long x_ulWord;
 
 public:
 	explicit Base64Decoder(const char *pchTable = BASE64_TABLE_MIME) noexcept;

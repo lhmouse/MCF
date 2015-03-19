@@ -27,20 +27,20 @@ namespace Impl {
 		using Pointee = std::remove_cv_t<std::remove_reference_t<decltype(*DeleterT()())>>;
 
 	private:
-		Pointee *xm_pToDelete;
+		Pointee *x_pToDelete;
 
 	public:
 		explicit constexpr IntrusiveSentry(Pointee *pToDelete) noexcept
-			: xm_pToDelete(pToDelete)
+			: x_pToDelete(pToDelete)
 		{
 		}
 		IntrusiveSentry(IntrusiveSentry &&rhs) noexcept
-			: xm_pToDelete(std::exchange(rhs.xm_pToDelete, nullptr))
+			: x_pToDelete(std::exchange(rhs.x_pToDelete, nullptr))
 		{
 		}
 		~IntrusiveSentry(){
-			if(xm_pToDelete){
-				DeleterT()(const_cast<Pointee *>(xm_pToDelete));
+			if(x_pToDelete){
+				DeleterT()(const_cast<Pointee *>(x_pToDelete));
 			}
 		}
 
@@ -71,11 +71,11 @@ namespace Impl {
 		using Pointee = typename Sentry::Pointee;
 
 	private:
-		mutable volatile std::size_t xm_uRefCount;
+		mutable volatile std::size_t x_uRefCount;
 
 	protected:
 		IntrusiveBase() noexcept {
-			AtomicStore(xm_uRefCount, 1, MemoryModel::RELEASE);
+			AtomicStore(x_uRefCount, 1, MemoryModel::RELEASE);
 		}
 
 	public:
@@ -96,18 +96,18 @@ namespace Impl {
 
 	public:
 		std::size_t GetSharedCount() const volatile noexcept {
-			return AtomicLoad(xm_uRefCount, MemoryModel::RELAXED);
+			return AtomicLoad(x_uRefCount, MemoryModel::RELAXED);
 		}
 		void AddRef() const volatile noexcept {
-			ASSERT((std::ptrdiff_t)AtomicLoad(xm_uRefCount, MemoryModel::ACQUIRE) > 0);
+			ASSERT((std::ptrdiff_t)AtomicLoad(x_uRefCount, MemoryModel::ACQUIRE) > 0);
 
-			AtomicIncrement(xm_uRefCount, MemoryModel::RELEASE);
+			AtomicIncrement(x_uRefCount, MemoryModel::RELEASE);
 		}
 		auto DropRef() const volatile noexcept {
-			ASSERT((std::ptrdiff_t)AtomicLoad(xm_uRefCount, MemoryModel::ACQUIRE) > 0);
+			ASSERT((std::ptrdiff_t)AtomicLoad(x_uRefCount, MemoryModel::ACQUIRE) > 0);
 
 			Pointee *pToDelete = nullptr;
-			if(AtomicDecrement(xm_uRefCount, MemoryModel::ACQUIRE) == 0){
+			if(AtomicDecrement(x_uRefCount, MemoryModel::ACQUIRE) == 0){
 				pToDelete = static_cast<Pointee *>(const_cast<IntrusiveBase *>(this));
 			}
 			return Sentry(pToDelete);
@@ -115,28 +115,28 @@ namespace Impl {
 
 		template<typename OtherT>
 		auto Get() const volatile noexcept {
-			ASSERT((std::ptrdiff_t)AtomicLoad(xm_uRefCount, MemoryModel::ACQUIRE) > 0);
+			ASSERT((std::ptrdiff_t)AtomicLoad(x_uRefCount, MemoryModel::ACQUIRE) > 0);
 
 			return IntrusiveCastHelper<const volatile OtherT, const volatile Pointee>()(
 				static_cast<const volatile Pointee *>(this));
 		}
 		template<typename OtherT>
 		auto Get() const noexcept {
-			ASSERT((std::ptrdiff_t)AtomicLoad(xm_uRefCount, MemoryModel::ACQUIRE) > 0);
+			ASSERT((std::ptrdiff_t)AtomicLoad(x_uRefCount, MemoryModel::ACQUIRE) > 0);
 
 			return IntrusiveCastHelper<const OtherT, const Pointee>()(
 				static_cast<const Pointee *>(this));
 		}
 		template<typename OtherT>
 		auto Get() volatile noexcept {
-			ASSERT((std::ptrdiff_t)AtomicLoad(xm_uRefCount, MemoryModel::ACQUIRE) > 0);
+			ASSERT((std::ptrdiff_t)AtomicLoad(x_uRefCount, MemoryModel::ACQUIRE) > 0);
 
 			return IntrusiveCastHelper<volatile OtherT, volatile Pointee>()(
 				static_cast<volatile Pointee *>(this));
 		}
 		template<typename OtherT>
 		auto Get() noexcept {
-			ASSERT((std::ptrdiff_t)AtomicLoad(xm_uRefCount, MemoryModel::ACQUIRE) > 0);
+			ASSERT((std::ptrdiff_t)AtomicLoad(x_uRefCount, MemoryModel::ACQUIRE) > 0);
 
 			return IntrusiveCastHelper<OtherT, Pointee>()(
 				static_cast<Pointee *>(this));
@@ -169,11 +169,11 @@ public:
 	using BuddyType = Impl::IntrusiveBase<DeleterT>;
 
 private:
-	const volatile BuddyType *xm_pBuddy;
+	const volatile BuddyType *x_pBuddy;
 
 public:
 	constexpr explicit IntrusivePtr(ElementType *pElement = nullptr) noexcept
-		: xm_pBuddy(pElement)
+		: x_pBuddy(pElement)
 	{
 	}
 	IntrusivePtr(const IntrusivePtr &rhs) noexcept
@@ -241,10 +241,10 @@ public:
 		return Get() != nullptr;
 	}
 	ElementType *Get() const noexcept {
-		if(!xm_pBuddy){
+		if(!x_pBuddy){
 			return nullptr;
 		}
-		return const_cast<ElementType *>(xm_pBuddy->template Get<const volatile ElementType>());
+		return const_cast<ElementType *>(x_pBuddy->template Get<const volatile ElementType>());
 	}
 	auto ReleaseBuddy() noexcept {
 		return const_cast<
@@ -252,7 +252,7 @@ public:
 				std::conditional_t<std::is_same<const ElementType, ElementType>::value, const BuddyType *,
 					std::conditional_t<std::is_same<volatile ElementType, ElementType>::value, volatile BuddyType *,
 						BuddyType *>>>
-			>(std::exchange(xm_pBuddy, nullptr));
+			>(std::exchange(x_pBuddy, nullptr));
 	}
 	ElementType *Release() noexcept {
 		const auto pOldBuddy = ReleaseBuddy();
@@ -268,10 +268,10 @@ public:
 	}
 
 	std::size_t GetSharedCount() const noexcept {
-		if(!xm_pBuddy){
+		if(!x_pBuddy){
 			return 0;
 		}
-		return xm_pBuddy->GetSharedCount();
+		return x_pBuddy->GetSharedCount();
 	}
 	IntrusivePtr Share() const noexcept {
 		return IntrusivePtr(*this);
@@ -279,7 +279,7 @@ public:
 
 	IntrusivePtr &Reset(ElementType *pElement = nullptr) noexcept {
 		ASSERT(!(pElement && (Get() == pElement)));
-		const auto pOldBuddy = std::exchange(xm_pBuddy, pElement);
+		const auto pOldBuddy = std::exchange(x_pBuddy, pElement);
 		if(pOldBuddy){
 			pOldBuddy->DropRef();
 		}
@@ -309,7 +309,7 @@ public:
 	}
 
 	void Swap(IntrusivePtr &rhs) noexcept {
-		std::swap(xm_pBuddy, rhs.xm_pBuddy);
+		std::swap(x_pBuddy, rhs.x_pBuddy);
 	}
 
 public:

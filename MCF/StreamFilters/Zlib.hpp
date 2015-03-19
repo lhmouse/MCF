@@ -16,10 +16,10 @@ private:
 	class xDelegate;
 
 private:
-	const bool xm_bRaw;
-	const unsigned xm_uLevel;
+	const bool x_bRaw;
+	const unsigned x_uLevel;
 
-	UniquePtr<xDelegate> xm_pDelegate;
+	UniquePtr<xDelegate> x_pDelegate;
 
 public:
 	explicit ZlibEncoder(bool bRaw = false, unsigned uLevel = 6) noexcept;
@@ -36,9 +36,9 @@ private:
 	class xDelegate;
 
 private:
-	const bool xm_bRaw;
+	const bool x_bRaw;
 
-	UniquePtr<xDelegate> xm_pDelegate;
+	UniquePtr<xDelegate> x_pDelegate;
 
 public:
 	explicit ZlibDecoder(bool bRaw = false) noexcept;
@@ -52,7 +52,7 @@ protected:
 
 class ZlibError : public Exception {
 private:
-	long xm_lZlibError;
+	long x_lZlibError;
 
 public:
 	ZlibError(const char *pszFile, unsigned long ulLine, const char *pszMessage, long lZlibError) noexcept;
@@ -60,7 +60,7 @@ public:
 
 public:
 	long GetZlibError() const noexcept {
-		return xm_lZlibError;
+		return x_lZlibError;
 	}
 };
 

@@ -20,19 +20,19 @@ public:
 	};
 
 private:
-	volatile std::uintptr_t xm_uCount;
+	volatile std::uintptr_t x_uCount;
 
 public:
 	explicit SpinLock(std::uintptr_t uCount = 0) noexcept {
 		ASSERT(uCount != LOCKED_COUNT);
-		AtomicStore(xm_uCount, uCount, MemoryModel::RELEASE);
+		AtomicStore(x_uCount, uCount, MemoryModel::RELEASE);
 	}
 
 public:
 	std::uintptr_t Lock() volatile noexcept {
 		std::uintptr_t uOld;
 		for(;;){
-			uOld = AtomicExchange(xm_uCount, LOCKED_COUNT, MemoryModel::SEQ_CST);
+			uOld = AtomicExchange(x_uCount, LOCKED_COUNT, MemoryModel::SEQ_CST);
 			if(EXPECT_NOT(uOld != LOCKED_COUNT)){
 				break;
 			}
@@ -41,7 +41,7 @@ public:
 		return uOld;
 	}
 	void Unlock(std::uintptr_t uOld) volatile noexcept {
-		AtomicStore(xm_uCount, uOld, MemoryModel::SEQ_CST);
+		AtomicStore(x_uCount, uOld, MemoryModel::SEQ_CST);
 	}
 };
 

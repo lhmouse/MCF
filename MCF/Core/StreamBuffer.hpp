@@ -23,17 +23,17 @@ public:
 		: public std::iterator<std::input_iterator_tag, int>
 	{
 	private:
-		StreamBuffer *xm_psbufOwner;
+		StreamBuffer *x_psbufOwner;
 
 	public:
 		explicit constexpr ReadIterator(StreamBuffer &sbufOwner) noexcept
-			: xm_psbufOwner(&sbufOwner)
+			: x_psbufOwner(&sbufOwner)
 		{
 		}
 
 	public:
 		ReadIterator &operator++() noexcept {
-			xm_psbufOwner->Get();
+			x_psbufOwner->Get();
 			return *this;
 		}
 		ReadIterator operator++(int) noexcept {
@@ -43,7 +43,7 @@ public:
 		}
 
 		int operator*() const noexcept {
-			return xm_psbufOwner->Peek();
+			return x_psbufOwner->Peek();
 		}
 	};
 
@@ -51,11 +51,11 @@ public:
 		: public std::iterator<std::output_iterator_tag, unsigned char>
 	{
 	private:
-		StreamBuffer *xm_psbufOwner;
+		StreamBuffer *x_psbufOwner;
 
 	public:
 		explicit constexpr WriteIterator(StreamBuffer &sbufOwner) noexcept
-			: xm_psbufOwner(&sbufOwner)
+			: x_psbufOwner(&sbufOwner)
 		{
 		}
 
@@ -71,14 +71,14 @@ public:
 			return *this;
 		}
 		WriteIterator &operator=(unsigned char by){
-			xm_psbufOwner->Put(by);
+			x_psbufOwner->Put(by);
 			return *this;
 		}
 	};
 
 private:
-	List<xChunk> xm_lstBuffers;
-	std::size_t xm_uSize;
+	List<xChunk> x_lstBuffers;
+	std::size_t x_uSize;
 
 public:
 	StreamBuffer() noexcept;
@@ -92,10 +92,10 @@ public:
 
 public:
 	bool IsEmpty() const noexcept {
-		return xm_uSize == 0;
+		return x_uSize == 0;
 	}
 	std::size_t GetSize() const noexcept {
-		return xm_uSize;
+		return x_uSize;
 	}
 	void Clear() noexcept;
 
@@ -150,8 +150,8 @@ public:
 	}
 
 	void Swap(StreamBuffer &rhs) noexcept {
-		xm_lstBuffers.Swap(rhs.xm_lstBuffers);
-		std::swap(xm_uSize, rhs.xm_uSize);
+		x_lstBuffers.Swap(rhs.x_lstBuffers);
+		std::swap(x_uSize, rhs.x_uSize);
 	}
 
 public:

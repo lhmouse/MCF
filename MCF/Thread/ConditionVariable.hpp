@@ -15,10 +15,10 @@ class Mutex;
 
 class ConditionVariable : NONCOPYABLE {
 private:
-	Mutex &xm_vMutex;
+	Mutex &x_vMutex;
 
-	std::size_t xm_uWaiting;
-	Semaphore xm_vSemaphore;
+	std::size_t x_uWaiting;
+	Semaphore x_vSemaphore;
 
 public:
 	explicit ConditionVariable(Mutex &vMutex);

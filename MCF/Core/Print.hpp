@@ -19,12 +19,12 @@ namespace Printers {
 		static_assert((RADIX_T != 0) && (RADIX_T <= 36), "RADIX_T is invalid");
 
 	private:
-		OutputIteratorT &xm_itOutput;
-		EndPredT &xm_fnEndPred;
+		OutputIteratorT &x_itOutput;
+		EndPredT &x_fnEndPred;
 
 	public:
 		IntegralPrinter(OutputIteratorT &itOutput, EndPredT &fnEndPred)
-			: xm_itOutput(itOutput), xm_fnEndPred(fnEndPred)
+			: x_itOutput(itOutput), x_fnEndPred(fnEndPred)
 		{
 		}
 
@@ -45,12 +45,12 @@ namespace Printers {
 			} while(vParam != 0);
 
 			do {
-				if(xm_fnEndPred()){
+				if(x_fnEndPred()){
 					return;
 				}
 				--pchWrite;
-				*xm_itOutput = *pchWrite;
-				++xm_itOutput;
+				*x_itOutput = *pchWrite;
+				++x_itOutput;
 			} while(pchWrite != achTemp);
 		}
 		template<typename ParamT>
@@ -58,11 +58,11 @@ namespace Printers {
 			static_assert(std::is_signed<ParamT>::value, "ParamT must be a signed type");
 
 			if(vParam < 0){
-				if(xm_fnEndPred()){
+				if(x_fnEndPred()){
 					return;
 				}
-				*xm_itOutput = '-';
-				++xm_itOutput;
+				*x_itOutput = '-';
+				++x_itOutput;
 				vParam = -vParam;
 			}
 			xDoPrintUnsigned(static_cast<std::make_unsigned_t<ParamT>>(vParam));

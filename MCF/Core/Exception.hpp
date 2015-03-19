@@ -12,37 +12,37 @@ namespace MCF {
 
 class Exception : public std::exception {
 private:
-	const char *const xm_pszFile;
-	const unsigned long xm_ulLine;
+	const char *const x_pszFile;
+	const unsigned long x_ulLine;
 
-	const char *const xm_pszMessage;
-	const unsigned long xm_ulCode;
+	const char *const x_pszMessage;
+	const unsigned long x_ulCode;
 
 public:
 	Exception(const char *pszFile, unsigned long ulLine,
 		const char *pszMessage, unsigned long ulCode) noexcept
-		: xm_pszFile(pszFile), xm_ulLine(ulLine), xm_pszMessage(pszMessage), xm_ulCode(ulCode)
+		: x_pszFile(pszFile), x_ulLine(ulLine), x_pszMessage(pszMessage), x_ulCode(ulCode)
 	{
 	}
 	~Exception() override;
 
 public:
 	const char *what() const noexcept override {
-		return xm_pszMessage;
+		return x_pszMessage;
 	}
 
 	const char *GetFile() const noexcept {
-		return xm_pszFile;
+		return x_pszFile;
 	}
 	unsigned long GetLine() const noexcept {
-		return xm_ulLine;
+		return x_ulLine;
 	}
 
 	const char *GetMessage() const noexcept {
-		return xm_pszMessage;
+		return x_pszMessage;
 	}
 	unsigned long GetCode() const noexcept {
-		return xm_ulCode;
+		return x_ulCode;
 	}
 };
 

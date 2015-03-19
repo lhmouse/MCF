@@ -13,20 +13,20 @@ namespace MCF {
 
 template<>
 bool KernelMutex::UniqueLock::xDoTry() const noexcept {
-	return xm_pOwner->Try(0);
+	return x_pOwner->Try(0);
 }
 template<>
 void KernelMutex::UniqueLock::xDoLock() const noexcept {
-	xm_pOwner->Lock();
+	x_pOwner->Lock();
 }
 template<>
 void KernelMutex::UniqueLock::xDoUnlock() const noexcept {
-	xm_pOwner->Unlock();
+	x_pOwner->Unlock();
 }
 
 // 构造函数和析构函数。
 KernelMutex::KernelMutex(const wchar_t *pwszName)
-	: xm_hMutex(
+	: x_hMutex(
 		[&]{
 			UniqueWin32Handle hEvent(::CreateMutexW(nullptr, false, pwszName));
 			if(!hEvent){
@@ -47,7 +47,7 @@ bool KernelMutex::Try(unsigned long long ullMilliSeconds) noexcept {
 	bool bResult = false;
 	auto ullTimeRemaining = ullMilliSeconds;
 	for(;;){
-		const auto dwResult = ::WaitForSingleObject(xm_hMutex.Get(), Min(ullTimeRemaining, ULONG_MAX >> 1));
+		const auto dwResult = ::WaitForSingleObject(x_hMutex.Get(), Min(ullTimeRemaining, ULONG_MAX >> 1));
 		if(dwResult == WAIT_FAILED){
 			ASSERT_MSG(false, L"WaitForSingleObject() 失败。");
 		}
@@ -64,13 +64,13 @@ bool KernelMutex::Try(unsigned long long ullMilliSeconds) noexcept {
 	return bResult;
 }
 void KernelMutex::Lock() noexcept {
-	const auto dwResult = ::WaitForSingleObject(xm_hMutex.Get(), INFINITE);
+	const auto dwResult = ::WaitForSingleObject(x_hMutex.Get(), INFINITE);
 	if(dwResult == WAIT_FAILED){
 		ASSERT_MSG(false, L"WaitForSingleObject() 失败。");
 	}
 }
 void KernelMutex::Unlock() noexcept {
-	if(!::ReleaseMutex(xm_hMutex.Get())){
+	if(!::ReleaseMutex(x_hMutex.Get())){
 		ASSERT_MSG(false, L"ReleaseMutex() 失败。");
 	}
 }

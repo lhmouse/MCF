@@ -18,11 +18,11 @@ namespace Impl {
 		static Mutex &GetMutex() noexcept;
 
 	private:
-		bool xm_bFlag;
+		bool x_bFlag;
 
 	public:
 		constexpr OnceFlag() noexcept
-			: xm_bFlag(false)
+			: x_bFlag(false)
 		{
 		}
 
@@ -31,10 +31,10 @@ namespace Impl {
 
 	public:
 		operator const volatile bool &() const volatile & noexcept {
-			return xm_bFlag;
+			return x_bFlag;
 		}
 		operator volatile bool &() volatile & noexcept {
-			return xm_bFlag;
+			return x_bFlag;
 		}
 	};
 }

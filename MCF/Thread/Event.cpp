@@ -13,7 +13,7 @@ namespace MCF {
 
 // 构造函数和析构函数。
 Event::Event(bool bInitSet, const wchar_t *pwszName)
-	: xm_hEvent(
+	: x_hEvent(
 		[&]{
 			UniqueWin32Handle hEvent(::CreateEventW(nullptr, true, bInitSet, pwszName));
 			if(!hEvent){
@@ -34,7 +34,7 @@ bool Event::Wait(unsigned long long ullMilliSeconds) const noexcept {
 	bool bResult = false;
 	auto ullTimeRemaining = ullMilliSeconds;
 	for(;;){
-		const auto dwResult = ::WaitForSingleObject(xm_hEvent.Get(), Min(ullTimeRemaining, ULONG_MAX >> 1));
+		const auto dwResult = ::WaitForSingleObject(x_hEvent.Get(), Min(ullTimeRemaining, ULONG_MAX >> 1));
 		if(dwResult == WAIT_FAILED){
 			ASSERT_MSG(false, L"WaitForSingleObject() 失败。");
 		}
@@ -51,25 +51,25 @@ bool Event::Wait(unsigned long long ullMilliSeconds) const noexcept {
 	return bResult;
 }
 void Event::Wait() const noexcept {
-	const auto dwResult = ::WaitForSingleObject(xm_hEvent.Get(), INFINITE);
+	const auto dwResult = ::WaitForSingleObject(x_hEvent.Get(), INFINITE);
 	if(dwResult == WAIT_FAILED){
 		ASSERT_MSG(false, L"WaitForSingleObject() 失败。");
 	}
 }
 bool Event::IsSet() const noexcept {
-	const auto dwResult = ::WaitForSingleObject(xm_hEvent.Get(), 0);
+	const auto dwResult = ::WaitForSingleObject(x_hEvent.Get(), 0);
 	if(dwResult == WAIT_FAILED){
 		ASSERT_MSG(false, L"WaitForSingleObject() 失败。");
 	}
 	return dwResult != WAIT_TIMEOUT;
 }
 void Event::Set() noexcept {
-	if(!::SetEvent(xm_hEvent.Get())){
+	if(!::SetEvent(x_hEvent.Get())){
 		ASSERT_MSG(false, L"SetEvent() 失败。");
 	}
 }
 void Event::Clear() noexcept {
-	if(!::ResetEvent(xm_hEvent.Get())){
+	if(!::ResetEvent(x_hEvent.Get())){
 		ASSERT_MSG(false, L"ResetEvent() 失败。");
 	}
 }

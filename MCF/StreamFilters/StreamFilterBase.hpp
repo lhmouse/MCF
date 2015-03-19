@@ -13,13 +13,13 @@ namespace MCF {
 
 class StreamFilterBase {
 private:
-	bool xm_bInited;
-	StreamBuffer xm_sbufOutput;
-	std::uint64_t xm_u64BytesProcessed;
+	bool x_bInited;
+	StreamBuffer x_sbufOutput;
+	std::uint64_t x_u64BytesProcessed;
 
 protected:
 	StreamFilterBase() noexcept
-		: xm_bInited(false), xm_u64BytesProcessed(0)
+		: x_bInited(false), x_u64BytesProcessed(0)
 	{
 	}
 	virtual ~StreamFilterBase();
@@ -31,54 +31,54 @@ protected:
 
 	// 子类中使用这两个函数输出数据。
 	void xOutput(unsigned char by){
-		xm_sbufOutput.Put(by);
+		x_sbufOutput.Put(by);
 	}
 	void xOutput(const void *pData, std::size_t uSize){
-		xm_sbufOutput.Put(pData, uSize);
+		x_sbufOutput.Put(pData, uSize);
 	}
 
 public:
 	void Abort() noexcept {
-		if(xm_bInited){
-			xm_sbufOutput.Clear();
-			xm_u64BytesProcessed = 0;
+		if(x_bInited){
+			x_sbufOutput.Clear();
+			x_u64BytesProcessed = 0;
 
-			xm_bInited = false;
+			x_bInited = false;
 		}
 	}
 	void Update(const void *pData, std::size_t uSize){
-		if(!xm_bInited){
-			xm_sbufOutput.Clear();
-			xm_u64BytesProcessed = 0;
+		if(!x_bInited){
+			x_sbufOutput.Clear();
+			x_u64BytesProcessed = 0;
 
 			xDoInit();
 
-			xm_bInited = true;
+			x_bInited = true;
 		}
 
 		xDoUpdate(pData, uSize);
-		xm_u64BytesProcessed += uSize;
+		x_u64BytesProcessed += uSize;
 	}
 	void Finalize(){
-		if(xm_bInited){
+		if(x_bInited){
 			xDoFinalize();
 
-			xm_bInited = false;
+			x_bInited = false;
 		}
 	}
 
 	std::size_t QueryBytesProcessed() const noexcept {
-		return xm_u64BytesProcessed;
+		return x_u64BytesProcessed;
 	}
 	const StreamBuffer &GetOutputBuffer() const noexcept {
-		return xm_sbufOutput;
+		return x_sbufOutput;
 	}
 	StreamBuffer &GetOutputBuffer() noexcept {
-		return xm_sbufOutput;
+		return x_sbufOutput;
 	}
 
 	StreamFilterBase &Filter(const StreamBuffer &sbufData){
-		ASSERT(&xm_sbufOutput != &sbufData);
+		ASSERT(&x_sbufOutput != &sbufData);
 
 		sbufData.Traverse([this](auto pbyData, auto uSize){ this->Update(pbyData, uSize); });
 		return *this;
@@ -86,10 +86,10 @@ public:
 	StreamFilterBase &FilterInPlace(StreamBuffer &sbufData){
 		Filter(sbufData);
 		Finalize();
-		sbufData.Swap(xm_sbufOutput);
+		sbufData.Swap(x_sbufOutput);
 
-		xm_sbufOutput.Clear();
-		xm_u64BytesProcessed = 0;
+		x_sbufOutput.Clear();
+		x_u64BytesProcessed = 0;
 		return *this;
 	}
 };

@@ -21,11 +21,11 @@ public:
 	static IntrusivePtr<Thread> Create(std::function<void ()> fnProc, bool bSuspended = false);
 
 private:
-	const std::function<void ()> xm_fnProc;
+	const std::function<void ()> x_fnProc;
 
-	UniqueWin32Handle xm_hThread;
-	volatile unsigned long xm_ulThreadId;
-	std::exception_ptr xm_pException;
+	UniqueWin32Handle x_hThread;
+	volatile unsigned long x_ulThreadId;
+	std::exception_ptr x_pException;
 
 private:
 	Thread(std::function<void ()> fnProc, bool bSuspended);

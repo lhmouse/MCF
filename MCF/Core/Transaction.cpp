@@ -13,7 +13,7 @@ TransactionItemBase::~TransactionItemBase(){
 
 // 其他非静态成员函数。
 bool Transaction::Commit() const {
-	auto vCur = xm_deqItems.GetFirstCursor();
+	auto vCur = x_deqItems.GetFirstCursor();
 	try {
 		while(vCur){
 			if(!(*vCur)->Lock()){
@@ -34,10 +34,10 @@ bool Transaction::Commit() const {
 		return false;
 	}
 
-	for(vCur = xm_deqItems.GetFirstCursor(); vCur; ++vCur){
+	for(vCur = x_deqItems.GetFirstCursor(); vCur; ++vCur){
 		(*vCur)->Commit();
 	}
-	for(vCur = xm_deqItems.GetLastCursor(); vCur; --vCur){
+	for(vCur = x_deqItems.GetLastCursor(); vCur; --vCur){
 		(*vCur)->Unlock();
 	}
 	return true;

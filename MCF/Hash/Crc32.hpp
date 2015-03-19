@@ -18,10 +18,10 @@ public:
 	};
 
 private:
-	std::uint32_t xm_au32Table[0x100];
+	std::uint32_t x_au32Table[0x100];
 
-	bool xm_bInited;
-	std::uint32_t xm_u32Reg;
+	bool x_bInited;
+	std::uint32_t x_u32Reg;
 
 public:
 	explicit Crc32(std::uint32_t u32Divisor = DIVISOR_IEEE_802_3) noexcept;

@@ -19,11 +19,11 @@ public:
 	using UniqueLock = UniqueLockTemplate<Mutex>;
 
 private:
-	Semaphore xm_vSemaphore;
-	volatile std::size_t xm_uSpinCount;
+	Semaphore x_vSemaphore;
+	volatile std::size_t x_uSpinCount;
 
-	SpinLock xm_splQueueSize;
-	volatile std::size_t xm_uLockingThreadId;
+	SpinLock x_splQueueSize;
+	volatile std::size_t x_uLockingThreadId;
 
 public:
 	explicit Mutex(std::size_t uSpinCount = 0x400);
@@ -33,7 +33,7 @@ private:
 
 public:
 	std::size_t GetSpinCount() const noexcept {
-		return AtomicLoad(xm_uSpinCount, MemoryModel::RELAXED);
+		return AtomicLoad(x_uSpinCount, MemoryModel::RELAXED);
 	}
 	void SetSpinCount(std::size_t uSpinCount) noexcept;
 

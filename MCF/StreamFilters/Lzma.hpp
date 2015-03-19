@@ -16,10 +16,10 @@ private:
 	class xDelegate;
 
 private:
-	const unsigned xm_uLevel;
-	const unsigned long xm_ulDictSize;
+	const unsigned x_uLevel;
+	const unsigned long x_ulDictSize;
 
-	UniquePtr<xDelegate> xm_pDelegate;
+	UniquePtr<xDelegate> x_pDelegate;
 
 public:
 	explicit LzmaEncoder(unsigned uLevel = 6, unsigned long ulDictSize = 1ul << 23) noexcept;
@@ -36,7 +36,7 @@ private:
 	class xDelegate;
 
 private:
-	UniquePtr<xDelegate> xm_pDelegate;
+	UniquePtr<xDelegate> x_pDelegate;
 
 public:
 	LzmaDecoder() noexcept;
@@ -50,7 +50,7 @@ protected:
 
 class LzmaError : public Exception {
 private:
-	long xm_lLzmaError;
+	long x_lLzmaError;
 
 public:
 	LzmaError(const char *pszFile, unsigned long ulLine, const char *pszMessage, long lLzmaError) noexcept;
@@ -58,7 +58,7 @@ public:
 
 public:
 	long GetLzmaError() const noexcept {
-		return xm_lLzmaError;
+		return x_lLzmaError;
 	}
 };
 

@@ -19,13 +19,13 @@ namespace MCF {
 template<class ElementT>
 class Vector {
 private:
-	ElementT *xm_pBegin;
-	ElementT *xm_pEnd;
-	ElementT *xm_pEndOfStor;
+	ElementT *x_pBegin;
+	ElementT *x_pEnd;
+	ElementT *x_pEndOfStor;
 
 public:
 	constexpr Vector() noexcept
-		: xm_pBegin(nullptr), xm_pEnd(nullptr), xm_pEndOfStor(nullptr)
+		: x_pBegin(nullptr), x_pEnd(nullptr), x_pEndOfStor(nullptr)
 	{
 	}
 	template<typename ...ParamsT>
@@ -81,33 +81,33 @@ public:
 
 public:
 	const ElementT *GetBegin() const noexcept {
-		return xm_pBegin;
+		return x_pBegin;
 	}
 	ElementT *GetBegin() noexcept {
-		return xm_pBegin;
+		return x_pBegin;
 	}
 	const ElementT *GetEnd() const noexcept {
-		return xm_pEnd;
+		return x_pEnd;
 	}
 	ElementT *GetEnd() noexcept {
-		return xm_pEnd;
+		return x_pEnd;
 	}
 
 	const ElementT &GetFront() const noexcept {
 		ASSERT(!IsEmpty());
-		return xm_pBegin[0];
+		return x_pBegin[0];
 	}
 	ElementT &GetFront() noexcept {
 		ASSERT(!IsEmpty());
-		return xm_pBegin[0];
+		return x_pBegin[0];
 	}
 	const ElementT &GetBack() const noexcept {
 		ASSERT(!IsEmpty());
-		return xm_pEnd[-1];
+		return x_pEnd[-1];
 	}
 	ElementT &GetBack() noexcept {
 		ASSERT(!IsEmpty());
-		return xm_pEnd[-1];
+		return x_pEnd[-1];
 	}
 
 	const ElementT *GetData() const noexcept {
@@ -143,15 +143,15 @@ public:
 		Truncate(GetSize());
 
 		if(bDeallocateBuffer){
-			::operator delete[](xm_pBegin);
-			xm_pBegin = nullptr;
-			xm_pEnd = nullptr;
-			xm_pEndOfStor = nullptr;
+			::operator delete[](x_pBegin);
+			x_pBegin = nullptr;
+			x_pEnd = nullptr;
+			x_pEndOfStor = nullptr;
 		}
 	}
 
 	std::size_t GetCapacity() const noexcept {
-		return (std::size_t)(xm_pEndOfStor - xm_pBegin);
+		return (std::size_t)(x_pEndOfStor - x_pBegin);
 	}
 	void Reserve(std::size_t uNewCapacity){
 		const auto uOldCapacity = GetCapacity();
@@ -187,10 +187,10 @@ public:
 				Destruct(pRead);
 			}
 
-			::operator delete[](xm_pBegin);
-			xm_pBegin = pNewBegin;
-			xm_pEnd = pWrite;
-			xm_pEndOfStor = xm_pBegin + uSizeToAlloc;
+			::operator delete[](x_pBegin);
+			x_pBegin = pNewBegin;
+			x_pEnd = pWrite;
+			x_pEndOfStor = x_pBegin + uSizeToAlloc;
 		}
 	}
 	void ReserveMore(std::size_t uDeltaCapacity){
@@ -199,11 +199,11 @@ public:
 
 	const ElementT &GetAt(std::size_t uIndex) const noexcept {
 		ASSERT_MSG(uIndex < GetSize(), L"索引越界。");
-		return xm_pBegin[uIndex];
+		return x_pBegin[uIndex];
 	}
 	ElementT &GetAt(std::size_t uIndex) noexcept {
 		ASSERT_MSG(uIndex < GetSize(), L"索引越界。");
-		return xm_pBegin[uIndex];
+		return x_pBegin[uIndex];
 	}
 
 	template<typename ...ParamsT>
@@ -212,8 +212,8 @@ public:
 	{
 		ASSERT_MSG(GetSize() < GetCapacity(), L"容器已满。");
 
-		DefaultConstruct(xm_pEnd, std::forward<ParamsT>(vParams)...);
-		return xm_pEnd++;
+		DefaultConstruct(x_pEnd, std::forward<ParamsT>(vParams)...);
+		return x_pEnd++;
 	}
 	template<typename ...ParamsT>
 	ElementT *Push(ParamsT &&...vParams){
@@ -223,7 +223,7 @@ public:
 	void Pop() noexcept {
 		ASSERT(!IsEmpty());
 
-		Destruct(--xm_pEnd);
+		Destruct(--x_pEnd);
 	}
 
 	template<typename ...ParamsT>
@@ -311,9 +311,9 @@ public:
 	}
 
 	void Swap(Vector &rhs) noexcept {
-		std::swap(xm_pBegin, rhs.xm_pBegin);
-		std::swap(xm_pEnd, rhs.xm_pEnd);
-		std::swap(xm_pEndOfStor, rhs.xm_pEndOfStor);
+		std::swap(x_pBegin, rhs.x_pBegin);
+		std::swap(x_pEnd, rhs.x_pEnd);
+		std::swap(x_pEndOfStor, rhs.x_pEndOfStor);
 	}
 
 public:

@@ -24,11 +24,11 @@ public:
 	using ElementType = std::remove_extent_t<ObjectT>;
 
 private:
-	ElementType *xm_pElement;
+	ElementType *x_pElement;
 
 public:
 	constexpr explicit UniquePtr(ElementType *pElement = nullptr) noexcept
-		: xm_pElement(pElement)
+		: x_pElement(pElement)
 	{
 	}
 	UniquePtr(UniquePtr &&rhs) noexcept
@@ -71,15 +71,15 @@ public:
 		return Get() != nullptr;
 	}
 	ElementType *Get() const noexcept {
-		return xm_pElement;
+		return x_pElement;
 	}
 	ElementType *Release() noexcept {
-		return std::exchange(xm_pElement, nullptr);
+		return std::exchange(x_pElement, nullptr);
 	}
 
 	UniquePtr &Reset(ElementType *pElement = nullptr) noexcept {
 		ASSERT(!(pElement && (Get() == pElement)));
-		const auto pOld = std::exchange(xm_pElement, pElement);
+		const auto pOld = std::exchange(x_pElement, pElement);
 		if(pOld){
 			DeleterT()(const_cast<std::remove_cv_t<ElementType> *>(pOld));
 		}
@@ -95,7 +95,7 @@ public:
 	}
 
 	void Swap(UniquePtr &rhs) noexcept {
-		std::swap(xm_pElement, rhs.xm_pElement);
+		std::swap(x_pElement, rhs.x_pElement);
 	}
 
 public:

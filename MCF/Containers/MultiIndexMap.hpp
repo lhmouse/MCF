@@ -32,11 +32,6 @@ template<typename KeyT>
 	TripleComparator<std::less<void>> GetDefaultComparator(const KeyT &) noexcept; // ADL
 
 namespace Impl {
-	template<std::size_t INDEX_ID_T, class NodeComparatorT>
-		class MultiOrderedMapIndex;
-	template<std::size_t INDEX_ID_T, class NodeComparatorT>
-		class UniqueOrderedMapIndex;
-
 	template<std::size_t INDEX_ID_T>
 	class OrderedMapIndexNode : private ::MCF_AvlNodeHeader {
 		template<std::size_t, class>
@@ -696,11 +691,11 @@ public:
 			while(pNode){
 				const auto pNewNode = new Node(*pNode);
 				pNewNode->x_pSource = pNode;
-				::MCF_AvlAttach(&avlAddressMap, static_cast<xAddressNode *>(pNewNode),
+				::MCF_AvlAttach(&avlAddressMap, &static_cast<xAddressNode &>(*pNewNode),
 					[](const ::MCF_AvlNodeHeader *lhs, const ::MCF_AvlNodeHeader *rhs){
 						return TripleComparator<>()(
-							static_cast<const Node *>(static_cast<const xAddressNode *>(lhs))->x_pSource,
-							static_cast<const Node *>(static_cast<const xAddressNode *>(rhs))->x_pSource);
+							static_cast<const Node &>(static_cast<const xAddressNode &>(*lhs)).x_pSource,
+							static_cast<const Node &>(static_cast<const xAddressNode &>(*rhs)).x_pSource);
 					}
 				);
 				pNode = pNode->template GetNext<0>();
@@ -710,16 +705,16 @@ public:
 				auto pCur = ::MCF_AvlPrev(avlAddressMap);
 				while(pCur){
 					const auto pPrev = ::MCF_AvlPrev(pCur);
-					delete static_cast<Node *>(static_cast<xAddressNode *>(pCur));
+					delete &static_cast<Node &>(static_cast<xAddressNode &>(*pCur));
 					pCur = pPrev;
 				}
 				pCur = ::MCF_AvlNext(avlAddressMap);
 				while(pCur){
 					const auto pNext = ::MCF_AvlNext(pCur);
-					delete static_cast<Node *>(static_cast<xAddressNode *>(pCur));
+					delete &static_cast<Node &>(static_cast<xAddressNode &>(*pCur));
 					pCur = pNext;
 				}
-				delete static_cast<Node *>(static_cast<xAddressNode *>(avlAddressMap));
+				delete &static_cast<Node &>(static_cast<xAddressNode &>(*avlAddressMap));
 			}
 			throw;
 		}
@@ -754,11 +749,11 @@ private:
 		using IndexNode = xIndexNode<INDEX_ID>;
 
 		const auto pHintIndexNode = static_cast<IndexNode *>(std::get<INDEX_ID>(vHints));
-		const auto pIndexNode = static_cast<IndexNode *>(pNode);
+		const auto pIndexNode = &static_cast<IndexNode &>(*pNode);
 		const auto pExistentIndexNode = std::get<INDEX_ID>(x_vIndices).Attach(pHintIndexNode, pIndexNode);
 		if(pExistentIndexNode){
 			// 当前的插入操作失败了，返回现存的节点。
-			return static_cast<Node *>(static_cast<IndexNode *>(pExistentIndexNode));
+			return &static_cast<Node &>(static_cast<IndexNode &>(*pExistentIndexNode));
 		}
 		const auto pResult = xAttachAll<void, RemainingT...>(vHints, pNode);
 		if(pResult){
@@ -778,7 +773,7 @@ private:
 		using IndexNode = xIndexNode<INDEX_ID>;
 
 		if(INDEX_ID != EXCEPT_ID_T){
-			const auto pIndexNode = static_cast<IndexNode *>(pNode);
+			const auto pIndexNode = &static_cast<IndexNode &>(*pNode);
 			std::get<INDEX_ID>(x_vIndices).Detach(pIndexNode);
 		}
 		xDetachAll<EXCEPT_ID_T, RemainingT...>(pNode);
@@ -808,18 +803,16 @@ private:
 		// 逆序复制，这样我们可以保证除了第一次以外每次拿到的 pHintIndexNode 都是非空的。
 		auto pSourceIndexNode = std::get<INDEX_ID>(vStructure).GetLast();
 		while(pSourceIndexNode){
-			const auto pSourceNode = static_cast<const Node *>(pSourceIndexNode);
-			const auto pNode = static_cast<Node *>(static_cast<xAddressNode *>(::MCF_AvlFind(
+			const auto pSourceNode = &static_cast<const Node &>(*pSourceIndexNode);
+			const auto pNode = &static_cast<Node &>(static_cast<xAddressNode &>(*::MCF_AvlFind(
 				&avlNewNodes, reinterpret_cast<std::intptr_t>(pSourceNode),
 				[](const ::MCF_AvlNodeHeader *lhs, std::intptr_t rhs){
 					return TripleComparator<>()(
-						static_cast<const Node *>(static_cast<const xAddressNode *>(lhs))->x_pSource,
+						static_cast<const Node &>(static_cast<const xAddressNode &>(*lhs)).x_pSource,
 						reinterpret_cast<const Node *>(rhs));
 				}
 			)));
-			ASSERT(pNode);
-
-			const auto pIndexNode = static_cast<IndexNode *>(pNode);
+			const auto pIndexNode = &static_cast<IndexNode &>(*pNode);
 			const auto pExistentIndexNode = std::get<INDEX_ID>(x_vIndices).Attach(pHintIndexNode, pIndexNode);
 			ASSERT(!pExistentIndexNode);
 
@@ -932,13 +925,13 @@ public:
 		using Index = std::tuple_element_t<INDEX_ID_T, std::tuple<IndicesT...>>;
 		using IndexNode = typename Index::template IndexNode<INDEX_ID_T>;
 
-		Index::GetKey(*static_cast<ElementT *>(pNode)) =
+		Index::GetKey(static_cast<ElementT &>(*pNode)) =
 			std::remove_reference_t<decltype(Index::GetKey(std::declval<ElementT &>()))>(
 				std::forward<ParamsT>(vParams)...);
 
-		const auto pIndexNode = static_cast<IndexNode *>(pNode);
+		const auto pIndexNode = &static_cast<IndexNode &>(*pNode);
 		std::get<INDEX_ID_T>(x_vIndices).Detach(pIndexNode);
-		auto pHintIndexNode = static_cast<IndexNode *>(pHint);
+		auto pHintIndexNode = &static_cast<IndexNode &>(*pHint);
 		auto pExistentIndexNode = std::get<INDEX_ID_T>(x_vIndices).Attach(pHintIndexNode, pIndexNode);
 		if(pExistentIndexNode){
 			if(!bOverwrites){
@@ -948,7 +941,7 @@ public:
 				return false;
 			}
 			pHintIndexNode = static_cast<IndexNode *>(pExistentIndexNode->GetNext());
-			Erase(static_cast<Node *>(static_cast<IndexNode *>(pExistentIndexNode)));
+			Erase(static_cast<Node &>(static_cast<IndexNode &>(*pExistentIndexNode)));
 			pExistentIndexNode = std::get<INDEX_ID_T>(x_vIndices).Attach(pHintIndexNode, pIndexNode);
 			ASSERT(!pExistentIndexNode);
 		}

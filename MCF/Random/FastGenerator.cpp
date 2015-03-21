@@ -8,14 +8,14 @@
 namespace MCF {
 
 // http://en.wikipedia.org/wiki/Linear_congruential_generator
+// MMIX by Donald Knuth
 
 // 其他非静态成员函数。
 void FastGenerator::Init(std::uint32_t u32Seed) noexcept {
-	x_u64Seed = 0x0123456789ABCDEFull | u32Seed;
+	x_u64Seed = (0x0123456789ABCDEFull | u32Seed)  * 6364136223846793005ull + 1442695040888963407ull;
 }
 
 std::uint32_t FastGenerator::Get() noexcept {
-	// MMIX by Donald Knuth
 	const auto u64NewSeed = x_u64Seed  * 6364136223846793005ull + 1442695040888963407ull;
 	x_u64Seed = u64NewSeed;
 	return u64NewSeed >> 32;

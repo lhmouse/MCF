@@ -1,17 +1,11 @@
 #include <MCF/StdMCF.hpp>
-#include <MCF/Core/Print.hpp>
-#include <MCF/SmartPointers/PolymorphicSharedPtr.hpp>
+#include <MCF/Random/FastGenerator.hpp>
 using namespace MCF;
 
-struct Incomplete;
-
-namespace {
-
-PolymorphicSharedPtr<Incomplete> gp;
-
-}
-
 extern "C" unsigned int MCFMain() noexcept {
-	PolymorphicSharedPtr<Incomplete> sp = gp;
+	FastGenerator rng;
+	for(unsigned i = 0; i < 20; ++i){
+		std::printf("%08X\n", (unsigned)rng.Get());
+	}
 	return 0;
 }

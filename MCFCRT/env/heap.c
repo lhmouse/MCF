@@ -17,8 +17,8 @@
 #include "../../External/dlmalloc/malloc.h"
 
 // hooks.h
-void (*__MCF_OnHeapAlloc)(size_t uSize, const void *pRetAddr);
-void (*__MCF_OnHeapRealloc)(void *pBlock, size_t uSize, const void *pRetAddr);
+void (*__MCF_OnHeapAlloc)(void *pNewBlock, size_t uSize, const void *pRetAddr);
+void (*__MCF_OnHeapRealloc)(void *pNewBlock, void *pBlock, size_t uSize, const void *pRetAddr);
 void (*__MCF_OnHeapDealloc)(void *pBlock, const void *pRetAddr);
 bool (*__MCF_OnBadAlloc)(const void *pRetAddr);
 
@@ -42,10 +42,6 @@ void __MCF_CRT_HeapUninit(){
 }
 
 unsigned char *__MCF_CRT_HeapAlloc(size_t uSize, const void *pRetAddr){
-	if(__MCF_OnHeapAlloc){
-		(*__MCF_OnHeapAlloc)(uSize, pRetAddr);
-	}
-
 #if __MCF_CRT_REQUIRE_HEAPDBG_LEVEL(1)
 	SetLastError(0xDEADBEEF);
 #endif
@@ -81,6 +77,9 @@ unsigned char *__MCF_CRT_HeapAlloc(size_t uSize, const void *pRetAddr){
 		LeaveCriticalSection(&g_csHeapMutex);
 
 		if(pRet){
+			if(__MCF_OnHeapAlloc){
+				(*__MCF_OnHeapAlloc)(pRet, uSize, pRetAddr);
+			}
 			return pRet;
 		}
 
@@ -93,10 +92,6 @@ unsigned char *__MCF_CRT_HeapAlloc(size_t uSize, const void *pRetAddr){
 unsigned char *__MCF_CRT_HeapReAlloc(void *pBlock, size_t uSize, const void *pRetAddr){
 	if(!pBlock){
 		MCF_CRT_Bail(L"__MCF_CRT_HeapReAlloc() 失败：传入了一个空指针。\n\n");
-	}
-
-	if(__MCF_OnHeapRealloc){
-		(*__MCF_OnHeapRealloc)(pBlock, uSize, pRetAddr);
 	}
 
 #if __MCF_CRT_REQUIRE_HEAPDBG_LEVEL(1)
@@ -152,6 +147,9 @@ unsigned char *__MCF_CRT_HeapReAlloc(void *pBlock, size_t uSize, const void *pRe
 		LeaveCriticalSection(&g_csHeapMutex);
 
 		if(pRet){
+			if(__MCF_OnHeapRealloc){
+				(*__MCF_OnHeapRealloc)(pRet, pBlock, uSize, pRetAddr);
+			}
 			return pRet;
 		}
 
@@ -170,10 +168,6 @@ void __MCF_CRT_HeapFree(void *pBlock, const void *pRetAddr){
 	SetLastError(0xDEADBEEF);
 #endif
 
-	if(__MCF_OnHeapDealloc){
-		(*__MCF_OnHeapDealloc)(pBlock, pRetAddr);
-	}
-
 	EnterCriticalSection(&g_csHeapMutex);
 	{
 		unsigned char *pRaw;
@@ -190,4 +184,8 @@ void __MCF_CRT_HeapFree(void *pBlock, const void *pRetAddr){
 		dlfree(pRaw);
 	}
 	LeaveCriticalSection(&g_csHeapMutex);
+
+	if(__MCF_OnHeapDealloc){
+		(*__MCF_OnHeapDealloc)(pBlock, pRetAddr);
+	}
 }

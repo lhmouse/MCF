@@ -16,15 +16,11 @@
 #define USE_DL_PREFIX
 #include "../../External/dlmalloc/malloc.h"
 
-void MCF_OnHeapAlloc(void *pBlock, size_t uBytes, const void *pRetAddr){
-	UNREF_PARAM(pBlock);
-	UNREF_PARAM(uBytes);
-	UNREF_PARAM(pRetAddr);
-}
-void MCF_OnHeapDealloc(void *pBlock, const void *pRetAddr){
-	UNREF_PARAM(pBlock);
-	UNREF_PARAM(pRetAddr);
-}
+// hooks.h
+void (*__MCF_OnHeapAlloc)(size_t uSize, const void *pRetAddr);
+void (*__MCF_OnHeapRealloc)(void *pBlock, size_t uSize, const void *pRetAddr);
+void (*__MCF_OnHeapDealloc)(void *pBlock, const void *pRetAddr);
+bool (*__MCF_OnBadAlloc)(const void *pRetAddr);
 
 static CRITICAL_SECTION g_csHeapMutex;
 
@@ -46,6 +42,10 @@ void __MCF_CRT_HeapUninit(){
 }
 
 unsigned char *__MCF_CRT_HeapAlloc(size_t uSize, const void *pRetAddr){
+	if(__MCF_OnHeapAlloc){
+		(*__MCF_OnHeapAlloc)(uSize, pRetAddr);
+	}
+
 #if __MCF_CRT_REQUIRE_HEAPDBG_LEVEL(1)
 	SetLastError(0xDEADBEEF);
 #endif
@@ -60,40 +60,45 @@ unsigned char *__MCF_CRT_HeapAlloc(size_t uSize, const void *pRetAddr){
 	const size_t uRawSize = uSize;
 #endif
 
-	unsigned char *pRet = nullptr;
+	for(;;){
+		unsigned char *pRet = nullptr;
 
-	do {
 		EnterCriticalSection(&g_csHeapMutex);
-		unsigned char *const pRaw = dlmalloc(uRawSize);
-		if(pRaw){
+		{
+			unsigned char *const pRaw = dlmalloc(uRawSize);
+			if(pRaw){
 #if __MCF_CRT_REQUIRE_HEAPDBG_LEVEL(3)
-			pRet = __MCF_CRT_HeapDbgAddGuardsAndRegister(pRaw, uSize, pRetAddr);
+				pRet = __MCF_CRT_HeapDbgAddGuardsAndRegister(pRaw, uSize, pRetAddr);
 #else
-			pRet = pRaw;
+				pRet = pRaw;
 #endif
 
 #if __MCF_CRT_REQUIRE_HEAPDBG_LEVEL(2)
-			memset(pRet, 0xCD, uSize);
+				memset(pRet, 0xCD, uSize);
 #endif
-			LeaveCriticalSection(&g_csHeapMutex);
-			break;
+			}
 		}
 		LeaveCriticalSection(&g_csHeapMutex);
-	} while(MCF_OnBadAlloc());
 
-	if(!pRet){
-		SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-		return nullptr;
+		if(pRet){
+			return pRet;
+		}
+
+		if(!(__MCF_OnBadAlloc && (*__MCF_OnBadAlloc)(pRetAddr))){
+			SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+			return nullptr;
+		}
 	}
-
-	MCF_OnHeapAlloc(pRet, uSize, pRetAddr);
-	return pRet;
 }
 unsigned char *__MCF_CRT_HeapReAlloc(void *pBlock, size_t uSize, const void *pRetAddr){
 	if(!pBlock){
 		MCF_CRT_Bail(L"__MCF_CRT_HeapReAlloc() 失败：传入了一个空指针。\n\n");
 	}
 
+	if(__MCF_OnHeapRealloc){
+		(*__MCF_OnHeapRealloc)(pBlock, uSize, pRetAddr);
+	}
+
 #if __MCF_CRT_REQUIRE_HEAPDBG_LEVEL(1)
 	SetLastError(0xDEADBEEF);
 #endif
@@ -108,52 +113,53 @@ unsigned char *__MCF_CRT_HeapReAlloc(void *pBlock, size_t uSize, const void *pRe
 	const size_t uRawSize = uSize;
 #endif
 
-	unsigned char *pRet = nullptr;
-
+#if __MCF_CRT_REQUIRE_HEAPDBG_LEVEL(2)
 	EnterCriticalSection(&g_csHeapMutex);
-#if __MCF_CRT_REQUIRE_HEAPDBG_LEVEL(3)
-	unsigned char *pRawOriginal;
-	const __MCF_HeapDbgBlockInfo *const pBlockInfo = __MCF_CRT_HeapDbgValidate(&pRawOriginal, pBlock, pRetAddr);
-	const size_t uOriginalSize = pBlockInfo->uSize;
+#	if __MCF_CRT_REQUIRE_HEAPDBG_LEVEL(3)
+		unsigned char *pRawOriginal;
+		const __MCF_HeapDbgBlockInfo *const pBlockInfo = __MCF_CRT_HeapDbgValidate(&pRawOriginal, pBlock, pRetAddr);
+		const size_t uOriginalSize = pBlockInfo->uSize;
+#	else
+		unsigned char *const pRawOriginal = pBlock;
+		const size_t uOriginalSize = dlmalloc_usable_size(pRawOriginal);
+#	endif
+	LeaveCriticalSection(&g_csHeapMutex);
 #else
 	unsigned char *const pRawOriginal = pBlock;
-	const size_t uOriginalSize = dlmalloc_usable_size(pRawOriginal);
 #endif
-	UNREF_PARAM(uOriginalSize);
-	LeaveCriticalSection(&g_csHeapMutex);
 
-	MCF_OnHeapDealloc(pBlock, pRetAddr);
+	for(;;){
+		unsigned char *pRet = nullptr;
 
-	do {
 		EnterCriticalSection(&g_csHeapMutex);
-		unsigned char *const pRaw = dlrealloc(pRawOriginal, uRawSize);
-		if(pRaw){
+		{
+			unsigned char *const pRaw = dlrealloc(pRawOriginal, uRawSize);
+			if(pRaw){
 #if __MCF_CRT_REQUIRE_HEAPDBG_LEVEL(3)
-			__MCF_CRT_HeapDbgUnregister(pBlockInfo);
-
-			pRet = __MCF_CRT_HeapDbgAddGuardsAndRegister(pRaw, uSize, pRetAddr);
+				__MCF_CRT_HeapDbgUnregister(pBlockInfo);
+				pRet = __MCF_CRT_HeapDbgAddGuardsAndRegister(pRaw, uSize, pRetAddr);
 #else
-			pRet = pRaw;
+				pRet = pRaw;
 #endif
 
 #if __MCF_CRT_REQUIRE_HEAPDBG_LEVEL(2)
-			if(uOriginalSize < uSize){
-				memset(pRet + uOriginalSize, 0xCD, uSize - uOriginalSize);
-			}
+				if(uOriginalSize < uSize){
+					memset(pRet + uOriginalSize, 0xCD, uSize - uOriginalSize);
+				}
 #endif
-			LeaveCriticalSection(&g_csHeapMutex);
-			break;
+			}
 		}
 		LeaveCriticalSection(&g_csHeapMutex);
-	} while(MCF_OnBadAlloc());
 
-	if(!pRet){
-		SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-		return nullptr;
+		if(pRet){
+			return pRet;
+		}
+
+		if(!(__MCF_OnBadAlloc && (*__MCF_OnBadAlloc)(pRetAddr))){
+			SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+			return nullptr;
+		}
 	}
-
-	MCF_OnHeapAlloc(pRet, uSize, pRetAddr);
-	return pRet;
 }
 void __MCF_CRT_HeapFree(void *pBlock, const void *pRetAddr){
 	if(!pBlock){
@@ -164,25 +170,24 @@ void __MCF_CRT_HeapFree(void *pBlock, const void *pRetAddr){
 	SetLastError(0xDEADBEEF);
 #endif
 
-	MCF_OnHeapDealloc(pBlock, pRetAddr);
+	if(__MCF_OnHeapDealloc){
+		(*__MCF_OnHeapDealloc)(pBlock, pRetAddr);
+	}
 
 	EnterCriticalSection(&g_csHeapMutex);
-	unsigned char *pRaw;
+	{
+		unsigned char *pRaw;
 #if __MCF_CRT_REQUIRE_HEAPDBG_LEVEL(3)
-	const __MCF_HeapDbgBlockInfo *const pBlockInfo = __MCF_CRT_HeapDbgValidate(&pRaw, pBlock, pRetAddr);
-
-	__MCF_CRT_HeapDbgUnregister(pBlockInfo);
+		const __MCF_HeapDbgBlockInfo *const pBlockInfo = __MCF_CRT_HeapDbgValidate(&pRaw, pBlock, pRetAddr);
+		__MCF_CRT_HeapDbgUnregister(pBlockInfo);
 #else
-	pRaw = pBlock;
+		pRaw = pBlock;
 #endif
 
 #if __MCF_CRT_REQUIRE_HEAPDBG_LEVEL(2)
-	memset(pRaw, 0xFE, dlmalloc_usable_size(pRaw));
+		memset(pRaw, 0xFE, dlmalloc_usable_size(pRaw));
 #endif
-	dlfree(pRaw);
+		dlfree(pRaw);
+	}
 	LeaveCriticalSection(&g_csHeapMutex);
-}
-
-bool MCF_OnBadAlloc(){
-	return false;
 }

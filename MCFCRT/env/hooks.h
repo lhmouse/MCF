@@ -10,24 +10,19 @@
 __MCF_CRT_EXTERN_C_BEGIN
 
 // heap.c
-extern bool MCF_OnBadAlloc() MCF_NOEXCEPT
-	__attribute__((__weak__));
-
-// heap_dbg.c
-extern void MCF_OnHeapAlloc(void *pBlock, MCF_STD size_t uBytes, const void *pRetAddr) MCF_NOEXCEPT
-	__attribute__((__weak__));
-extern void MCF_OnHeapDealloc(void *pBlock, const void *pRetAddr) MCF_NOEXCEPT
-	__attribute__((__weak__));
-
-__MCF_CRT_EXTERN_C_END
+extern void (*__MCF_OnHeapAlloc)(MCF_STD size_t uSize, const void *pRetAddr) MCF_NOEXCEPT;
+extern void (*__MCF_OnHeapRealloc)(void *pBlock, MCF_STD size_t uSize, const void *pRetAddr) MCF_NOEXCEPT;
+extern void (*__MCF_OnHeapDealloc)(void *pBlock, const void *pRetAddr) MCF_NOEXCEPT;
+extern bool (*__MCF_OnBadAlloc)(const void *pRetAddr) MCF_NOEXCEPT;
 
 #ifdef __cplusplus
 #	include <cxxabi.h>
 
 // cxa_throw.cpp
-extern void MCF_OnException(void *pException, const std::type_info &tiType, const void *pRetAddr) noexcept
-	__attribute__((__weak__));
+extern void (*__MCF_OnException)(void *pException, const std::type_info &tiType, const void *pRetAddr);
 
 #endif // __cplusplus
+
+__MCF_CRT_EXTERN_C_END
 
 #endif

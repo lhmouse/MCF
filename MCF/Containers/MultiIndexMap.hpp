@@ -351,18 +351,18 @@ namespace Impl {
 			return x_pLast;
 		}
 
-		IndexNode *Attach(IndexNode *pPos, IndexNode *pIndexNode) noexcept {
-			const auto pPrev = std::exchange((pPos ? pPos->x_pPrev : x_pLast), pIndexNode);
+		IndexNode *Attach(IndexNode *pNext, IndexNode *pIndexNode) noexcept {
+			const auto pPrev = std::exchange((pNext ? pNext->x_pPrev : x_pLast), pIndexNode);
 			(pPrev ? pPrev->x_pNext : x_pFirst) = pIndexNode;
 			pIndexNode->x_pPrev = pPrev;
-			pIndexNode->x_pNext = pPos;
+			pIndexNode->x_pNext = pNext;
 			return nullptr;
 		}
 		void Detach(IndexNode *pIndexNode) noexcept {
 			const auto pNext = pIndexNode->x_pNext;
-			const auto pOldPrev = pIndexNode->x_pPrev;
-			(pOldPrev ? pOldPrev->x_pNext : x_pFirst) = pNext;
-			(pNext ? pNext->x_pPrev : x_pLast) = pOldPrev;
+			const auto pPrev = pIndexNode->x_pPrev;
+			(pPrev ? pPrev->x_pNext : x_pFirst) = pNext;
+			(pNext ? pNext->x_pPrev : x_pLast) = pPrev;
 		}
 	};
 }

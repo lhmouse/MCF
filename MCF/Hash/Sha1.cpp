@@ -8,11 +8,12 @@
 #include "../Utilities/CountOf.hpp"
 #include "../Utilities/BinaryOperations.hpp"
 
+// https://en.wikipedia.org/wiki/SHA-1
+
 namespace MCF {
 
 namespace {
 	void DoSha1Chunk(std::uint32_t (&au32Result)[5], const unsigned char *pbyChunk) noexcept {
-		// https://en.wikipedia.org/wiki/SHA-1
 /*
 		std::uint32_t w[80];
 

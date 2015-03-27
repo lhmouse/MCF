@@ -172,7 +172,7 @@ private:
 	ElementType *x_pElement;
 
 public:
-	constexpr SharedPtr() noexcept
+	explicit constexpr SharedPtr(std::nullptr_t = nullptr) noexcept
 		: x_pControl(nullptr), x_pElement(nullptr)
 	{
 	}
@@ -282,7 +282,7 @@ public:
 	template<typename OtherObjectT, class OtherDeleterT>
 		bool IsSharedWith(const WeakPtr<OtherObjectT, OtherDeleterT> &rhs) const noexcept;
 
-	SharedPtr &Reset() noexcept {
+	SharedPtr &Reset(std::nullptr_t = nullptr) noexcept {
 		const auto pOldControl = std::exchange(x_pControl, nullptr);
 		if(pOldControl){
 			pOldControl->DropShared(); // noexcept

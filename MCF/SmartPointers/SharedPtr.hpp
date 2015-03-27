@@ -106,11 +106,11 @@ namespace Impl {
 				}
 			}
 
-		jFailed: __attribute__((__cold__));
+		jFailed:
 			bResult = false;
 			return DropWeak();
 
-		jDone: __attribute__((__cold__));
+		jDone:
 			bResult = true;
 			return Sentry(nullptr);
 		}
@@ -125,7 +125,7 @@ namespace Impl {
 #	else
 					0xDEADDEAD
 #	endif
-				;
+					;
 #endif
 			}
 

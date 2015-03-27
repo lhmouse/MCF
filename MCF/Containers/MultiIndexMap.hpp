@@ -501,25 +501,45 @@ private:
 		const xNodeImpl *GetPrev() const noexcept {
 			using IndexNode = xIndexNode<INDEX_ID_T>;
 
-			return static_cast<const xNodeImpl *>(static_cast<const IndexNode *>(static_cast<const IndexNode *>(this)->GetPrev()));
+			// return static_cast<const xNodeImpl *>(static_cast<const IndexNode *>());
+			const auto pIndexNode = static_cast<const IndexNode *>(this)->GetPrev();
+			if(!pIndexNode){
+				return nullptr;
+			}
+			return &static_cast<const xNodeImpl &>(static_cast<const IndexNode &>(*pIndexNode));
 		}
 		template<std::size_t INDEX_ID_T>
 		xNodeImpl *GetPrev() noexcept {
 			using IndexNode = xIndexNode<INDEX_ID_T>;
 
-			return static_cast<xNodeImpl *>(static_cast<IndexNode *>(static_cast<IndexNode *>(this)->GetPrev()));
+			// return static_cast<xNodeImpl *>(static_cast<IndexNode *>(static_cast<IndexNode *>(this)->GetPrev()));
+			const auto pIndexNode = static_cast<IndexNode *>(this)->GetPrev();
+			if(!pIndexNode){
+				return nullptr;
+			}
+			return &static_cast<xNodeImpl &>(static_cast<IndexNode &>(*pIndexNode));
 		}
 		template<std::size_t INDEX_ID_T>
 		const xNodeImpl *GetNext() const noexcept {
 			using IndexNode = xIndexNode<INDEX_ID_T>;
 
-			return static_cast<const xNodeImpl *>(static_cast<const IndexNode *>(static_cast<const IndexNode *>(this)->GetNext()));
+			// return static_cast<const xNodeImpl *>(static_cast<const IndexNode *>(static_cast<const IndexNode *>(this)->GetNext()));
+			const auto pIndexNode = static_cast<const IndexNode *>(this)->GetNext();
+			if(!pIndexNode){
+				return nullptr;
+			}
+			return &static_cast<const xNodeImpl &>(static_cast<const IndexNode &>(*pIndexNode));
 		}
 		template<std::size_t INDEX_ID_T>
 		xNodeImpl *GetNext() noexcept {
 			using IndexNode = xIndexNode<INDEX_ID_T>;
 
-			return static_cast<xNodeImpl *>(static_cast<IndexNode *>(static_cast<IndexNode *>(this)->GetNext()));
+			// return static_cast<xNodeImpl *>(static_cast<IndexNode *>(static_cast<IndexNode *>(this)->GetNext()));
+			const auto pIndexNode = static_cast<IndexNode *>(this)->GetNext();
+			if(!pIndexNode){
+				return nullptr;
+			}
+			return &static_cast<xNodeImpl &>(static_cast<IndexNode &>(*pIndexNode));
 		}
 	};
 
@@ -952,25 +972,45 @@ public:
 	const Node *GetFirst() const noexcept {
 		using IndexNode = xIndexNode<INDEX_ID_T>;
 
-		return static_cast<const Node *>(static_cast<const IndexNode *>(std::get<INDEX_ID_T>(x_vIndices).GetFirst()));
+		// return static_cast<const Node *>(static_cast<const IndexNode *>(std::get<INDEX_ID_T>(x_vIndices).GetFirst()));
+		const auto pIndexNode = std::get<INDEX_ID_T>(x_vIndices).GetFirst();
+		if(!pIndexNode){
+			return nullptr;
+		}
+		return &static_cast<const Node &>(static_cast<const IndexNode &>(*pIndexNode));
 	}
 	template<std::size_t INDEX_ID_T>
 	Node *GetFirst() noexcept {
 		using IndexNode = xIndexNode<INDEX_ID_T>;
 
-		return static_cast<Node *>(static_cast<IndexNode *>(std::get<INDEX_ID_T>(x_vIndices).GetFirst()));
+		// return static_cast<Node *>(static_cast<IndexNode *>(std::get<INDEX_ID_T>(x_vIndices).GetFirst()));
+		const auto pIndexNode = std::get<INDEX_ID_T>(x_vIndices).GetFirst();
+		if(!pIndexNode){
+			return nullptr;
+		}
+		return &static_cast<Node &>(static_cast<IndexNode &>(*pIndexNode));
 	}
 	template<std::size_t INDEX_ID_T>
 	const Node *GetLast() const noexcept {
 		using IndexNode = xIndexNode<INDEX_ID_T>;
 
-		return static_cast<const Node *>(static_cast<const IndexNode *>(std::get<INDEX_ID_T>(x_vIndices).GetLast()));
+		// return static_cast<const Node *>(static_cast<const IndexNode *>(std::get<INDEX_ID_T>(x_vIndices).GetLast()));
+		const auto pIndexNode = std::get<INDEX_ID_T>(x_vIndices).GetLast();
+		if(!pIndexNode){
+			return nullptr;
+		}
+		return &static_cast<const Node &>(static_cast<const IndexNode &>(*pIndexNode));
 	}
 	template<std::size_t INDEX_ID_T>
 	Node *GetLast() noexcept {
 		using IndexNode = xIndexNode<INDEX_ID_T>;
 
-		return static_cast<Node *>(static_cast<IndexNode *>(std::get<INDEX_ID_T>(x_vIndices).GetLast()));
+		// return static_cast<Node *>(static_cast<IndexNode *>(std::get<INDEX_ID_T>(x_vIndices).GetLast()));
+		const auto pIndexNode = std::get<INDEX_ID_T>(x_vIndices).GetLast();
+		if(!pIndexNode){
+			return nullptr;
+		}
+		return &static_cast<Node &>(static_cast<IndexNode &>(*pIndexNode));
 	}
 
 	template<std::size_t INDEX_ID_T>
@@ -999,39 +1039,69 @@ public:
 	const Node *GetLowerBound(const ComparandT &vComparandT) const noexcept {
 		using IndexNode = xIndexNode<INDEX_ID_T>;
 
-		return static_cast<const Node *>(static_cast<const IndexNode *>(std::get<INDEX_ID_T>(x_vIndices).GetLowerBound(&vComparandT)));
+		// return static_cast<const Node *>(static_cast<const IndexNode *>(std::get<INDEX_ID_T>(x_vIndices).GetLowerBound(&vComparandT)));
+		const auto pIndexNode = std::get<INDEX_ID_T>(x_vIndices).GetLowerBound(&vComparandT);
+		if(!pIndexNode){
+			return nullptr;
+		}
+		return &static_cast<const Node &>(static_cast<const IndexNode &>(*pIndexNode));
 	}
 	template<std::size_t INDEX_ID_T, typename ComparandT>
 	Node *GetLowerBound(const ComparandT &vComparandT) noexcept {
 		using IndexNode = xIndexNode<INDEX_ID_T>;
 
-		return static_cast<Node *>(static_cast<IndexNode *>(std::get<INDEX_ID_T>(x_vIndices).GetLowerBound(&vComparandT)));
+		// return static_cast<Node *>(static_cast<IndexNode *>(std::get<INDEX_ID_T>(x_vIndices).GetLowerBound(&vComparandT)));
+		const auto pIndexNode = std::get<INDEX_ID_T>(x_vIndices).GetLowerBound(&vComparandT);
+		if(!pIndexNode){
+			return nullptr;
+		}
+		return &static_cast<Node &>(static_cast<IndexNode &>(*pIndexNode));
 	}
 
 	template<std::size_t INDEX_ID_T, typename ComparandT>
 	const Node *GetUpperBound(const ComparandT &vComparandT) const noexcept {
 		using IndexNode = xIndexNode<INDEX_ID_T>;
 
-		return static_cast<const Node *>(static_cast<const IndexNode *>(std::get<INDEX_ID_T>(x_vIndices).GetUpperBound(&vComparandT)));
+		// return static_cast<const Node *>(static_cast<const IndexNode *>(std::get<INDEX_ID_T>(x_vIndices).GetUpperBound(&vComparandT)));
+		const auto pIndexNode = std::get<INDEX_ID_T>(x_vIndices).GetUpperBound(&vComparandT);
+		if(!pIndexNode){
+			return nullptr;
+		}
+		return &static_cast<const Node &>(static_cast<const IndexNode &>(*pIndexNode));
 	}
 	template<std::size_t INDEX_ID_T, typename ComparandT>
 	Node *GetUpperBound(const ComparandT &vComparandT) noexcept {
 		using IndexNode = xIndexNode<INDEX_ID_T>;
 
-		return static_cast<Node *>(static_cast<IndexNode *>(std::get<INDEX_ID_T>(x_vIndices).GetUpperBound(&vComparandT)));
+		// return static_cast<Node *>(static_cast<IndexNode *>(std::get<INDEX_ID_T>(x_vIndices).GetUpperBound(&vComparandT)));
+		const auto pIndexNode = std::get<INDEX_ID_T>(x_vIndices).GetUpperBound(&vComparandT);
+		if(!pIndexNode){
+			return nullptr;
+		}
+		return &static_cast<Node &>(static_cast<IndexNode &>(*pIndexNode));
 	}
 
 	template<std::size_t INDEX_ID_T, typename ComparandT>
 	const Node *Find(const ComparandT &vComparandT) const noexcept {
 		using IndexNode = xIndexNode<INDEX_ID_T>;
 
-		return static_cast<const Node *>(static_cast<const IndexNode *>(std::get<INDEX_ID_T>(x_vIndices).Find(&vComparandT)));
+		// return static_cast<const Node *>(static_cast<const IndexNode *>(std::get<INDEX_ID_T>(x_vIndices).Find(&vComparandT)));
+		const auto pIndexNode = std::get<INDEX_ID_T>(x_vIndices).Find(&vComparandT);
+		if(!pIndexNode){
+			return nullptr;
+		}
+		return &static_cast<const Node &>(static_cast<const IndexNode &>(*pIndexNode));
 	}
 	template<std::size_t INDEX_ID_T, typename ComparandT>
 	Node *Find(const ComparandT &vComparandT) noexcept {
 		using IndexNode = xIndexNode<INDEX_ID_T>;
 
-		return static_cast<Node *>(static_cast<IndexNode *>(std::get<INDEX_ID_T>(x_vIndices).Find(&vComparandT)));
+		// return static_cast<Node *>(static_cast<IndexNode *>(std::get<INDEX_ID_T>(x_vIndices).Find(&vComparandT)));
+		const auto pIndexNode = std::get<INDEX_ID_T>(x_vIndices).Find(&vComparandT);
+		if(!pIndexNode){
+			return nullptr;
+		}
+		return &static_cast<Node &>(static_cast<IndexNode &>(*pIndexNode));
 	}
 
 	template<std::size_t INDEX_ID_T, typename ComparandT>
@@ -1039,16 +1109,32 @@ public:
 		using IndexNode = xIndexNode<INDEX_ID_T>;
 
 		const auto vRange = std::get<INDEX_ID_T>(x_vIndices).GetEqualRange(&vComparandT);
-		return std::make_pair(static_cast<const Node *>(static_cast<const IndexNode *>(vRange.first)),
-			static_cast<const Node *>(static_cast<const IndexNode *>(vRange.second)));
+		// return std::make_pair(static_cast<const Node *>(static_cast<const IndexNode *>(vRange.first)),
+		// 	static_cast<const Node *>(static_cast<const IndexNode *>(vRange.second)));
+		std::pair<const Node *, const Node *> vRet;
+		if(vRange.first){
+			vRet.first = &static_cast<const Node &>(static_cast<const IndexNode &>(*vRange.first));
+		}
+		if(vRange.second){
+			vRet.second = &static_cast<const Node &>(static_cast<const IndexNode &>(*vRange.second));
+		}
+		return vRet;
 	}
 	template<std::size_t INDEX_ID_T, typename ComparandT>
 	std::pair<Node *, Node *> GetEqualRange(const ComparandT &vComparandT) noexcept {
 		using IndexNode = xIndexNode<INDEX_ID_T>;
 
 		const auto vRange = std::get<INDEX_ID_T>(x_vIndices).GetEqualRange(&vComparandT);
-		return std::make_pair(static_cast<Node *>(static_cast<IndexNode *>(vRange.first)),
-			static_cast<Node *>(static_cast<IndexNode *>(vRange.second)));
+		// return std::make_pair(static_cast<Node *>(static_cast<IndexNode *>(vRange.first)),
+		// 	static_cast<Node *>(static_cast<IndexNode *>(vRange.second)));
+		std::pair<Node *, Node *> vRet;
+		if(vRange.first){
+			vRet.first = &static_cast<Node &>(static_cast<IndexNode &>(*vRange.first));
+		}
+		if(vRange.second){
+			vRet.second = &static_cast<Node &>(static_cast<IndexNode &>(*vRange.second));
+		}
+		return vRet;
 	}
 
 public:

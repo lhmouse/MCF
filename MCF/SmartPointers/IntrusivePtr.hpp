@@ -103,7 +103,7 @@ namespace Impl {
 
 			AtomicIncrement(x_uRefCount, MemoryModel::RELEASE);
 		}
-		auto DropRef() const volatile noexcept {
+		Sentry DropRef() const volatile noexcept {
 			ASSERT((std::ptrdiff_t)AtomicLoad(x_uRefCount, MemoryModel::ACQUIRE) > 0);
 
 			Pointee *pToDelete = nullptr;
@@ -114,28 +114,28 @@ namespace Impl {
 		}
 
 		template<typename OtherT>
-		auto Get() const volatile noexcept {
+		const volatile OtherT *Get() const volatile noexcept {
 			ASSERT((std::ptrdiff_t)AtomicLoad(x_uRefCount, MemoryModel::ACQUIRE) > 0);
 
 			return IntrusiveCastHelper<const volatile OtherT, const volatile Pointee>()(
 				static_cast<const volatile Pointee *>(this));
 		}
 		template<typename OtherT>
-		auto Get() const noexcept {
+		const OtherT *Get() const noexcept {
 			ASSERT((std::ptrdiff_t)AtomicLoad(x_uRefCount, MemoryModel::ACQUIRE) > 0);
 
 			return IntrusiveCastHelper<const OtherT, const Pointee>()(
 				static_cast<const Pointee *>(this));
 		}
 		template<typename OtherT>
-		auto Get() volatile noexcept {
+		volatile OtherT *Get() volatile noexcept {
 			ASSERT((std::ptrdiff_t)AtomicLoad(x_uRefCount, MemoryModel::ACQUIRE) > 0);
 
 			return IntrusiveCastHelper<volatile OtherT, volatile Pointee>()(
 				static_cast<volatile Pointee *>(this));
 		}
 		template<typename OtherT>
-		auto Get() noexcept {
+		OtherT *Get() noexcept {
 			ASSERT((std::ptrdiff_t)AtomicLoad(x_uRefCount, MemoryModel::ACQUIRE) > 0);
 
 			return IntrusiveCastHelper<OtherT, Pointee>()(

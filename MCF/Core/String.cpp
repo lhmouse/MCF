@@ -42,7 +42,7 @@ namespace {
 		return StringSource<typename StringObserverT::CharType>(soRead.GetBegin(), soRead.GetEnd());
 	}
 
-	template<class PrevT>
+	template<class PrevT, bool IS_CESU8_T>
 	class Utf8Decoder {
 	private:
 		PrevT x_vPrev;
@@ -77,6 +77,9 @@ namespace {
 				if(ulPoint > 0x10FFFFu){
 					DEBUG_THROW(Exception, "Invalid UTF-32 code point value", ERROR_INVALID_DATA);
 				}
+				if(!IS_CESU8_T && (ulPoint - 0xD800 < 0x800)){
+					DEBUG_THROW(Exception, "UTF-32 code point is reserved for UTF-16", ERROR_INVALID_DATA);
+				}
 			}
 			return ulPoint;
 		}
@@ -84,7 +87,11 @@ namespace {
 
 	template<class PrevT>
 	auto MakeUtf8Decoder(PrevT vPrev){
-		return Utf8Decoder<PrevT>(std::move(vPrev));
+		return Utf8Decoder<PrevT, false>(std::move(vPrev));
+	}
+	template<class PrevT>
+	auto MakeCesu8Decoder(PrevT vPrev){
+		return Utf8Decoder<PrevT, true>(std::move(vPrev));
 	}
 
 	template<class PrevT>
@@ -311,7 +318,7 @@ void Utf32String::Deunify(Utf32String &u32sDst, std::size_t uPos, const UnifiedS
 template<>
 UnifiedStringObserver Cesu8String::Unify(UnifiedString &&usTempStorage, const Cesu8StringObserver &cu8soSrc){
 	usTempStorage.Reserve(cu8soSrc.GetSize());
-	Convert(usTempStorage, 0, MakeUtf16Decoder(MakeUtf8Decoder(MakeStringSource(cu8soSrc))));
+	Convert(usTempStorage, 0, MakeUtf16Decoder(MakeCesu8Decoder(MakeStringSource(cu8soSrc))));
 	return usTempStorage;
 }
 template<>

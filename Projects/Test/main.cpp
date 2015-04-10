@@ -1,8 +1,8 @@
 #include <MCF/StdMCF.hpp>
-//#include <MCF/SmartPointers/CopyOnWritePtr.hpp>
+#include <MCF/SmartPointers/CopyOnWritePtr.hpp>
 using namespace MCF;
 
-struct foo {
+struct foo : public CopyOnWriteBase<foo> {
 	foo(){
 		std::puts("foo::foo()");
 	}
@@ -26,9 +26,9 @@ struct foo {
 };
 
 extern "C" unsigned int MCFMain() noexcept {
-//	CopyOnWritePtr p(new foo);
-//	auto p2 = p;
-//	p2.Fork();
+	CopyOnWritePtr<foo> p(new foo);
+	auto p2 = p;
+	p.TakeOver();
 
 	return 0;
 }

@@ -126,88 +126,9 @@ public:
 	}
 };
 
-template<typename Object1T, class Deleter1T, typename Object2T, class Deleter2T>
-bool operator==(const UniquePtr<Object1T, Deleter1T> &lhs, const UniquePtr<Object2T, Deleter2T> &rhs) noexcept {
-	return lhs.Get() == rhs.Get();
-}
-template<typename ObjectT, class DeleterT>
-bool operator==(const UniquePtr<ObjectT, DeleterT> &lhs, ObjectT *rhs) noexcept {
-	return lhs.Get() == rhs;
-}
-template<typename ObjectT, class DeleterT>
-bool operator==(ObjectT *lhs, const UniquePtr<ObjectT, DeleterT> &rhs) noexcept {
-	return lhs == rhs.Get();
-}
-
-template<typename Object1T, class Deleter1T, typename Object2T, class Deleter2T>
-bool operator!=(const UniquePtr<Object1T, Deleter1T> &lhs, const UniquePtr<Object2T, Deleter2T> &rhs) noexcept {
-	return lhs.Get() != rhs.Get();
-}
-template<typename ObjectT, class DeleterT>
-bool operator!=(const UniquePtr<ObjectT, DeleterT> &lhs, ObjectT *rhs) noexcept {
-	return lhs.Get() != rhs;
-}
-template<typename ObjectT, class DeleterT>
-bool operator!=(ObjectT *lhs, const UniquePtr<ObjectT, DeleterT> &rhs) noexcept {
-	return lhs != rhs.Get();
-}
-
-template<typename Object1T, class Deleter1T, typename Object2T, class Deleter2T>
-bool operator<(const UniquePtr<Object1T, Deleter1T> &lhs, const UniquePtr<Object2T, Deleter2T> &rhs) noexcept {
-	return lhs.Get() < rhs.Get();
-}
-template<typename ObjectT, class DeleterT>
-bool operator<(const UniquePtr<ObjectT, DeleterT> &lhs, ObjectT *rhs) noexcept {
-	return lhs.Get() < rhs;
-}
-template<typename ObjectT, class DeleterT>
-bool operator<(ObjectT *lhs, const UniquePtr<ObjectT, DeleterT> &rhs) noexcept {
-	return lhs < rhs.Get();
-}
-
-template<typename Object1T, class Deleter1T, typename Object2T, class Deleter2T>
-bool operator>(const UniquePtr<Object1T, Deleter1T> &lhs, const UniquePtr<Object2T, Deleter2T> &rhs) noexcept {
-	return lhs.Get() > rhs.Get();
-}
-template<typename ObjectT, class DeleterT>
-bool operator>(const UniquePtr<ObjectT, DeleterT> &lhs, ObjectT *rhs) noexcept {
-	return lhs.Get() > rhs;
-}
-template<typename ObjectT, class DeleterT>
-bool operator>(ObjectT *lhs, const UniquePtr<ObjectT, DeleterT> &rhs) noexcept {
-	return lhs > rhs.Get();
-}
-
-template<typename Object1T, class Deleter1T, typename Object2T, class Deleter2T>
-bool operator<=(const UniquePtr<Object1T, Deleter1T> &lhs, const UniquePtr<Object2T, Deleter2T> &rhs) noexcept {
-	return lhs.Get() <= rhs.Get();
-}
-template<typename ObjectT, class DeleterT>
-bool operator<=(const UniquePtr<ObjectT, DeleterT> &lhs, ObjectT *rhs) noexcept {
-	return lhs.Get() <= rhs;
-}
-template<typename ObjectT, class DeleterT>
-bool operator<=(ObjectT *lhs, const UniquePtr<ObjectT, DeleterT> &rhs) noexcept {
-	return lhs <= rhs.Get();
-}
-
-template<typename Object1T, class Deleter1T, typename Object2T, class Deleter2T>
-bool operator>=(const UniquePtr<Object1T, Deleter1T> &lhs, const UniquePtr<Object2T, Deleter2T> &rhs) noexcept {
-	return lhs.Get() >= rhs.Get();
-}
-template<typename ObjectT, class DeleterT>
-bool operator>=(const UniquePtr<ObjectT, DeleterT> &lhs, ObjectT *rhs) noexcept {
-	return lhs.Get() >= rhs;
-}
-template<typename ObjectT, class DeleterT>
-bool operator>=(ObjectT *lhs, const UniquePtr<ObjectT, DeleterT> &rhs) noexcept {
-	return lhs >= rhs.Get();
-}
-
-template<typename ObjectT, class DeleterT>
-void swap(UniquePtr<ObjectT, DeleterT> &lhs, UniquePtr<ObjectT, DeleterT> &rhs) noexcept {
-	lhs.Swap(rhs);
-}
+#define MCF_SMART_POINTERS_DECLARE_TEMPLATE_PARAMETERS_	template<typename ObjectT, class DeleterT>
+#define MCF_SMART_POINTERS_INVOKE_TEMPLATE_PARAMETERS_	UniquePtr<ObjectT, DeleterT>
+#include "_RationalAndSwap.hpp"
 
 template<typename ObjectT, typename ...ParamsT>
 auto MakeUnique(ParamsT &&...vParams){

@@ -1,8 +1,10 @@
 #include <MCF/StdMCF.hpp>
-#include <MCF/SmartPointers/CopyOnWritePtr.hpp>
+#include <MCF/SmartPointers/CopyOnWriteSharedPtr.hpp>
 using namespace MCF;
 
-struct foo : public CopyOnWriteBase<foo> {
+struct foo {
+	int i = 12345;
+
 	foo(){
 		std::puts("foo::foo()");
 	}
@@ -26,9 +28,18 @@ struct foo : public CopyOnWriteBase<foo> {
 };
 
 extern "C" unsigned int MCFMain() noexcept {
-	CopyOnWritePtr<foo> p(new foo);
+	CopyOnWriteWeakPtr<foo> wp;
+
+	auto p = MakeCopyOnWriteShared<foo>();
 	auto p2 = p;
+
+	wp = p2;
+
+	std::printf("-- equal? %d\n", p == p2);
 	p.TakeOver();
+	std::printf("-- equal? %d\n", p == p2);
+
+	std::printf("p->i = %d, p2->i = %d\n", p->i, p2->i);
 
 	return 0;
 }

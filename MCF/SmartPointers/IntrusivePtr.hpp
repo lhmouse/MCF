@@ -172,7 +172,7 @@ private:
 	const volatile BuddyType *x_pBuddy;
 
 public:
-	constexpr explicit IntrusivePtr(ElementType *pElement = nullptr) noexcept
+	explicit constexpr IntrusivePtr(ElementType *pElement = nullptr) noexcept
 		: x_pBuddy(pElement)
 	{
 	}
@@ -267,14 +267,14 @@ public:
 		return pRet;
 	}
 
+	bool IsUnique() const noexcept {
+		return GetSharedCount() == 1;
+	}
 	std::size_t GetSharedCount() const noexcept {
 		if(!x_pBuddy){
 			return 0;
 		}
 		return x_pBuddy->GetSharedCount();
-	}
-	IntrusivePtr Share() const noexcept {
-		return IntrusivePtr(*this);
 	}
 
 	IntrusivePtr &Reset(ElementType *pElement = nullptr) noexcept {
@@ -321,22 +321,16 @@ public:
 	}
 
 	template<typename TestT = ObjectT>
-	std::enable_if_t<!std::is_void<TestT>::value && !std::is_array<TestT>::value, ElementType> &operator*() const noexcept {
+	std::enable_if_t<!std::is_void<TestT>::value, ElementType> &operator*() const noexcept {
 		ASSERT(IsNonnull());
 
 		return *Get();
 	}
 	template<typename TestT = ObjectT>
-	std::enable_if_t<!std::is_void<TestT>::value && !std::is_array<TestT>::value, ElementType> *operator->() const noexcept {
+	std::enable_if_t<!std::is_void<TestT>::value, ElementType> *operator->() const noexcept {
 		ASSERT(IsNonnull());
 
 		return Get();
-	}
-	template<typename TestT = ObjectT>
-	std::enable_if_t<std::is_array<TestT>::value, ElementType> &operator[](std::size_t uIndex) const noexcept {
-		ASSERT(IsNonnull());
-
-		return Get()[uIndex];
 	}
 };
 
@@ -383,88 +377,9 @@ namespace Impl {
 	}
 }
 
-template<typename ObjectT, class DeleterT>
-bool operator==(const IntrusivePtr<ObjectT, DeleterT> &lhs, const IntrusivePtr<ObjectT, DeleterT> &rhs) noexcept {
-	return lhs.Get() == rhs.Get();
-}
-template<typename ObjectT, class DeleterT>
-bool operator==(const IntrusivePtr<ObjectT, DeleterT> &lhs, ObjectT *rhs) noexcept {
-	return lhs.Get() == rhs;
-}
-template<typename ObjectT, class DeleterT>
-bool operator==(ObjectT *lhs, const IntrusivePtr<ObjectT, DeleterT> &rhs) noexcept {
-	return lhs == rhs.Get();
-}
-
-template<typename ObjectT, class DeleterT>
-bool operator!=(const IntrusivePtr<ObjectT, DeleterT> &lhs, const IntrusivePtr<ObjectT, DeleterT> &rhs) noexcept {
-	return lhs.Get() != rhs.Get();
-}
-template<typename ObjectT, class DeleterT>
-bool operator!=(const IntrusivePtr<ObjectT, DeleterT> &lhs, ObjectT *rhs) noexcept {
-	return lhs.Get() != rhs;
-}
-template<typename ObjectT, class DeleterT>
-bool operator!=(ObjectT *lhs, const IntrusivePtr<ObjectT, DeleterT> &rhs) noexcept {
-	return lhs != rhs.Get();
-}
-
-template<typename ObjectT, class DeleterT>
-bool operator<(const IntrusivePtr<ObjectT, DeleterT> &lhs, const IntrusivePtr<ObjectT, DeleterT> &rhs) noexcept {
-	return lhs.Get() < rhs.Get();
-}
-template<typename ObjectT, class DeleterT>
-bool operator<(const IntrusivePtr<ObjectT, DeleterT> &lhs, ObjectT *rhs) noexcept {
-	return lhs.Get() < rhs;
-}
-template<typename ObjectT, class DeleterT>
-bool operator<(ObjectT *lhs, const IntrusivePtr<ObjectT, DeleterT> &rhs) noexcept {
-	return lhs < rhs.Get();
-}
-
-template<typename ObjectT, class DeleterT>
-bool operator>(const IntrusivePtr<ObjectT, DeleterT> &lhs, const IntrusivePtr<ObjectT, DeleterT> &rhs) noexcept {
-	return lhs.Get() > rhs.Get();
-}
-template<typename ObjectT, class DeleterT>
-bool operator>(const IntrusivePtr<ObjectT, DeleterT> &lhs, ObjectT *rhs) noexcept {
-	return lhs.Get() > rhs;
-}
-template<typename ObjectT, class DeleterT>
-bool operator>(ObjectT *lhs, const IntrusivePtr<ObjectT, DeleterT> &rhs) noexcept {
-	return lhs > rhs.Get();
-}
-
-template<typename ObjectT, class DeleterT>
-bool operator<=(const IntrusivePtr<ObjectT, DeleterT> &lhs, const IntrusivePtr<ObjectT, DeleterT> &rhs) noexcept {
-	return lhs.Get() <= rhs.Get();
-}
-template<typename ObjectT, class DeleterT>
-bool operator<=(const IntrusivePtr<ObjectT, DeleterT> &lhs, ObjectT *rhs) noexcept {
-	return lhs.Get() <= rhs;
-}
-template<typename ObjectT, class DeleterT>
-bool operator<=(ObjectT *lhs, const IntrusivePtr<ObjectT, DeleterT> &rhs) noexcept {
-	return lhs <= rhs.Get();
-}
-
-template<typename ObjectT, class DeleterT>
-bool operator>=(const IntrusivePtr<ObjectT, DeleterT> &lhs, const IntrusivePtr<ObjectT, DeleterT> &rhs) noexcept {
-	return lhs.Get() >= rhs.Get();
-}
-template<typename ObjectT, class DeleterT>
-bool operator>=(const IntrusivePtr<ObjectT, DeleterT> &lhs, ObjectT *rhs) noexcept {
-	return lhs.Get() >= rhs;
-}
-template<typename ObjectT, class DeleterT>
-bool operator>=(ObjectT *lhs, const IntrusivePtr<ObjectT, DeleterT> &rhs) noexcept {
-	return lhs >= rhs.Get();
-}
-
-template<typename ObjectT, class DeleterT>
-void swap(IntrusivePtr<ObjectT, DeleterT> &lhs, IntrusivePtr<ObjectT, DeleterT> &rhs) noexcept {
-	lhs.Swap(rhs);
-}
+#define MCF_SMART_POINTERS_DECLARE_TEMPLATE_PARAMETERS_	template<typename ObjectT, class DeleterT>
+#define MCF_SMART_POINTERS_INVOKE_TEMPLATE_PARAMETERS_	IntrusivePtr<ObjectT, DeleterT>
+#include "_RationalAndSwap.hpp"
 
 template<typename ObjectT, typename ...ParamsT>
 auto MakeIntrusive(ParamsT &&...vParams){

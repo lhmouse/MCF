@@ -402,6 +402,10 @@ public:
 	}
 };
 
+#define MCF_SMART_POINTERS_DECLARE_TEMPLATE_PARAMETERS_	template<typename ObjectT, class DeleterT>
+#define MCF_SMART_POINTERS_INVOKE_TEMPLATE_PARAMETERS_	SharedPtr<ObjectT, DeleterT>
+#include "_RationalAndSwap.hpp"
+
 template<typename ObjectT, class DeleterT>
 class WeakPtr {
 	template<typename, class>
@@ -421,6 +425,16 @@ public:
 		: x_pControl(nullptr), x_pElement(nullptr)
 	{
 	}
+	WeakPtr(const SharedPtr<ObjectT, DeleterT> &rhs) noexcept
+		: WeakPtr()
+	{
+		Reset(rhs);
+	}
+	WeakPtr(SharedPtr<ObjectT, DeleterT> &&rhs) noexcept
+		: WeakPtr()
+	{
+		Reset(std::move(rhs));
+	}
 	WeakPtr(const WeakPtr &rhs) noexcept
 		: WeakPtr()
 	{
@@ -431,10 +445,13 @@ public:
 	{
 		Reset(std::move(rhs));
 	}
-	WeakPtr(const SharedPtr<ObjectT, DeleterT> &rhs) noexcept
-		: WeakPtr()
-	{
+	WeakPtr &operator=(const SharedPtr<ObjectT, DeleterT> &rhs) noexcept {
 		Reset(rhs);
+		return *this;
+	}
+	WeakPtr &operator=(SharedPtr<ObjectT, DeleterT> &&rhs) noexcept {
+		Reset(std::move(rhs));
+		return *this;
 	}
 	WeakPtr &operator=(const WeakPtr &rhs) noexcept {
 		Reset(rhs);
@@ -442,10 +459,6 @@ public:
 	}
 	WeakPtr &operator=(WeakPtr &&rhs) noexcept {
 		Reset(std::move(rhs));
-		return *this;
-	}
-	WeakPtr &operator=(const SharedPtr<ObjectT, DeleterT> &rhs) noexcept {
-		Reset(rhs);
 		return *this;
 	}
 	~WeakPtr(){
@@ -493,6 +506,30 @@ public:
 		x_pElement = nullptr;
 		return *this;
 	}
+	WeakPtr &Reset(const SharedPtr<ObjectT, DeleterT> &rhs) noexcept {
+		const auto pOldControl = std::exchange(x_pControl, rhs.x_pControl);
+		if(x_pControl){
+			x_pControl->AddWeak(); // noexcept
+		}
+		if(pOldControl){
+			pOldControl->DropWeak(); // noexcept
+		}
+		x_pElement = rhs.x_pElement;
+		return *this;
+	}
+	WeakPtr &Reset(SharedPtr<ObjectT, DeleterT> &&rhs) noexcept {
+		ASSERT(this != &rhs);
+
+		const auto pOldControl = std::exchange(x_pControl, rhs.x_pControl);
+		if(pOldControl){
+			pOldControl->DropWeak(); // noexcept
+		}
+		x_pElement = rhs.x_pElement;
+
+		rhs.x_pControl = nullptr;
+		rhs.x_pElement = nullptr;
+		return *this;
+	}
 	WeakPtr &Reset(const WeakPtr &rhs) noexcept {
 		if(this != &rhs){
 			const auto pOldControl = std::exchange(x_pControl, rhs.x_pControl);
@@ -519,17 +556,6 @@ public:
 		rhs.x_pElement = nullptr;
 		return *this;
 	}
-	WeakPtr &Reset(const SharedPtr<ObjectT, DeleterT> &rhs) noexcept {
-		const auto pOldControl = std::exchange(x_pControl, rhs.x_pControl);
-		if(x_pControl){
-			x_pControl->AddWeak(); // noexcept
-		}
-		if(pOldControl){
-			pOldControl->DropWeak(); // noexcept
-		}
-		x_pElement = rhs.x_pElement;
-		return *this;
-	}
 
 	void Swap(WeakPtr &rhs) noexcept {
 		std::swap(x_pControl, rhs.x_pControl);
@@ -537,99 +563,6 @@ public:
 	}
 };
 
-template<typename ObjectT, class DeleterT>
-	template<typename OtherObjectT, class OtherDeleterT>
-bool SharedPtr<ObjectT, DeleterT>::IsSharedWith(const SharedPtr<OtherObjectT, OtherDeleterT> &rhs) const noexcept {
-	return x_pControl == rhs.x_pControl;
-}
-template<typename ObjectT, class DeleterT>
-	template<typename OtherObjectT, class OtherDeleterT>
-bool SharedPtr<ObjectT, DeleterT>::IsSharedWith(const WeakPtr<OtherObjectT, OtherDeleterT> &rhs) const noexcept {
-	return x_pControl == rhs.x_pControl;
-}
-
-template<typename Object1T, class Deleter1T, typename Object2T, class Deleter2T>
-bool operator==(const SharedPtr<Object1T, Deleter1T> &lhs, const SharedPtr<Object2T, Deleter2T> &rhs) noexcept {
-	return lhs.Get() == rhs.x_pElement;
-}
-template<typename ObjectT, class DeleterT>
-bool operator==(const SharedPtr<ObjectT, DeleterT> &lhs, ObjectT *rhs) noexcept {
-	return lhs.Get() == rhs;
-}
-template<typename ObjectT, class DeleterT>
-bool operator==(ObjectT *lhs, const SharedPtr<ObjectT, DeleterT> &rhs) noexcept {
-	return lhs == rhs.x_pElement;
-}
-
-template<typename Object1T, class Deleter1T, typename Object2T, class Deleter2T>
-bool operator!=(const SharedPtr<Object1T, Deleter1T> &lhs, const SharedPtr<Object2T, Deleter2T> &rhs) noexcept {
-	return lhs.Get() != rhs.x_pElement;
-}
-template<typename ObjectT, class DeleterT>
-bool operator!=(const SharedPtr<ObjectT, DeleterT> &lhs, ObjectT *rhs) noexcept {
-	return lhs.Get() != rhs;
-}
-template<typename ObjectT, class DeleterT>
-bool operator!=(ObjectT *lhs, const SharedPtr<ObjectT, DeleterT> &rhs) noexcept {
-	return lhs != rhs.x_pElement;
-}
-
-template<typename Object1T, class Deleter1T, typename Object2T, class Deleter2T>
-bool operator<(const SharedPtr<Object1T, Deleter1T> &lhs, const SharedPtr<Object2T, Deleter2T> &rhs) noexcept {
-	return lhs.Get() < rhs.x_pElement;
-}
-template<typename ObjectT, class DeleterT>
-bool operator<(const SharedPtr<ObjectT, DeleterT> &lhs, ObjectT *rhs) noexcept {
-	return lhs.Get() < rhs;
-}
-template<typename ObjectT, class DeleterT>
-bool operator<(ObjectT *lhs, const SharedPtr<ObjectT, DeleterT> &rhs) noexcept {
-	return lhs < rhs.x_pElement;
-}
-
-template<typename Object1T, class Deleter1T, typename Object2T, class Deleter2T>
-bool operator>(const SharedPtr<Object1T, Deleter1T> &lhs, const SharedPtr<Object2T, Deleter2T> &rhs) noexcept {
-	return lhs.Get() > rhs.x_pElement;
-}
-template<typename ObjectT, class DeleterT>
-bool operator>(const SharedPtr<ObjectT, DeleterT> &lhs, ObjectT *rhs) noexcept {
-	return lhs.Get() > rhs;
-}
-template<typename ObjectT, class DeleterT>
-bool operator>(ObjectT *lhs, const SharedPtr<ObjectT, DeleterT> &rhs) noexcept {
-	return lhs > rhs.x_pElement;
-}
-
-template<typename Object1T, class Deleter1T, typename Object2T, class Deleter2T>
-bool operator<=(const SharedPtr<Object1T, Deleter1T> &lhs, const SharedPtr<Object2T, Deleter2T> &rhs) noexcept {
-	return lhs.Get() <= rhs.x_pElement;
-}
-template<typename ObjectT, class DeleterT>
-bool operator<=(const SharedPtr<ObjectT, DeleterT> &lhs, ObjectT *rhs) noexcept {
-	return lhs.Get() <= rhs;
-}
-template<typename ObjectT, class DeleterT>
-bool operator<=(ObjectT *lhs, const SharedPtr<ObjectT, DeleterT> &rhs) noexcept {
-	return lhs <= rhs.x_pElement;
-}
-
-template<typename Object1T, class Deleter1T, typename Object2T, class Deleter2T>
-bool operator>=(const SharedPtr<Object1T, Deleter1T> &lhs, const SharedPtr<Object2T, Deleter2T> &rhs) noexcept {
-	return lhs.Get() >= rhs.x_pElement;
-}
-template<typename ObjectT, class DeleterT>
-bool operator>=(const SharedPtr<ObjectT, DeleterT> &lhs, ObjectT *rhs) noexcept {
-	return lhs.Get() >= rhs;
-}
-template<typename ObjectT, class DeleterT>
-bool operator>=(ObjectT *lhs, const SharedPtr<ObjectT, DeleterT> &rhs) noexcept {
-	return lhs >= rhs.x_pElement;
-}
-
-template<typename ObjectT, class DeleterT>
-void swap(SharedPtr<ObjectT, DeleterT> &lhs, SharedPtr<ObjectT, DeleterT> &rhs) noexcept {
-	lhs.Swap(rhs);
-}
 template<typename ObjectT, class DeleterT>
 void swap(WeakPtr<ObjectT, DeleterT> &lhs, WeakPtr<ObjectT, DeleterT> &rhs) noexcept {
 	lhs.Swap(rhs);
@@ -649,7 +582,11 @@ auto StaticPointerCast(SharedPtr<SrcT, DeleterT> rhs) noexcept {
 }
 template<typename DstT, typename SrcT, class DeleterT>
 auto DynamicPointerCast(SharedPtr<SrcT, DeleterT> rhs) noexcept {
-	return SharedPtr<DstT, DeleterT>(std::move(rhs), dynamic_cast<DstT *>(rhs.x_pElement));
+	const auto pElement = dynamic_cast<DstT *>(rhs.x_pElement);
+	if(!pElement){
+		return SharedPtr<DstT, DeleterT>();
+	}
+	return SharedPtr<DstT, DeleterT>(std::move(rhs), pElement);
 }
 template<typename DstT, typename SrcT, class DeleterT>
 auto ConstPointerCast(SharedPtr<SrcT, DeleterT> rhs) noexcept {

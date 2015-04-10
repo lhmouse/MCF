@@ -1,8 +1,8 @@
 #include <MCF/StdMCF.hpp>
-#include <MCF/SmartPointers/CopyOnWriteSharedPtr.hpp>
+#include <MCF/SmartPointers/CopyOnWriteIntrusivePtr.hpp>
 using namespace MCF;
 
-struct foo {
+struct foo : CopyOnWriteIntrusiveBase<foo> {
 	int i = 12345;
 
 	foo(){
@@ -28,12 +28,8 @@ struct foo {
 };
 
 extern "C" unsigned int MCFMain() noexcept {
-	CopyOnWriteWeakPtr<foo> wp;
-
-	auto p = MakeCopyOnWriteShared<foo>();
+	auto p = MakeCopyOnWriteIntrusive<foo>();
 	auto p2 = p;
-
-	wp = p2;
 
 	std::printf("-- equal? %d\n", p == p2);
 	p.TakeOver();

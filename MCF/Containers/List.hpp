@@ -175,8 +175,8 @@ public:
 	};
 
 private:
-	xNode *x_pFirst;
-	xNode *x_pLast;
+	Node *x_pFirst;
+	Node *x_pLast;
 
 public:
 	constexpr List() noexcept
@@ -239,16 +239,16 @@ public:
 	}
 
 public:
-	const xNode *GetFirst() const noexcept {
+	const Node *GetFirst() const noexcept {
 		return x_pFirst;
 	}
-	xNode *GetFirst() noexcept {
+	Node *GetFirst() noexcept {
 		return x_pFirst;
 	}
-	const xNode *GetLast() const noexcept {
+	const Node *GetLast() const noexcept {
 		return x_pLast;
 	}
-	xNode *GetLast() noexcept {
+	Node *GetLast() noexcept {
 		return x_pLast;
 	}
 
@@ -293,8 +293,8 @@ public:
 	}
 
 	template<typename ...ParamsT>
-	xNode *Insert(xNode *pPos, ParamsT &&...vParams){
-		auto pNode = new xNode(std::forward<ParamsT>(vParams)...);
+	Node *Insert(Node *pPos, ParamsT &&...vParams){
+		auto pNode = new Node(std::forward<ParamsT>(vParams)...);
 
 		const auto pPrev = std::exchange((pPos ? pPos->x_pPrev : x_pLast), pNode);
 		(pPrev ? pPrev->x_pNext : x_pFirst) = pNode;
@@ -303,7 +303,7 @@ public:
 
 		return pNode;
 	}
-	xNode *Erase(xNode *pNode) noexcept {
+	Node *Erase(Node *pNode) noexcept {
 		const auto pNext = pNode->x_pNext;
 
 		const auto pOldPrev = pNode->x_pPrev;
@@ -313,7 +313,7 @@ public:
 		delete pNode;
 		return pNext;
 	}
-	xNode *Erase(xNode *pBegin, xNode *pEnd) noexcept {
+	Node *Erase(Node *pBegin, Node *pEnd) noexcept {
 		if(pBegin != pEnd){
 			const auto pOldPrev = pBegin->x_pPrev;
 			(pOldPrev ? pOldPrev->x_pNext : x_pFirst) = pEnd;
@@ -329,16 +329,16 @@ public:
 		return pEnd;
 	}
 
-	xNode *Splice(xNode *pPos, List &lstSource) noexcept {
+	Node *Splice(Node *pPos, List &lstSource) noexcept {
 		const auto pRet = Splice(pPos, lstSource, lstSource.x_pFirst, nullptr);
 		ASSERT(lstSource.IsEmpty());
 		return pRet;
 	}
-	xNode *Splice(xNode *pPos, List &lstSource, xNode *pSingle) noexcept {
+	Node *Splice(Node *pPos, List &lstSource, Node *pSingle) noexcept {
 		ASSERT(pSingle);
 		return Splice(pPos, lstSource, pSingle, pSingle->x_pNext);
 	}
-	xNode *Splice(xNode *pPos, List &lstSource, xNode *pBegin, xNode *pEnd) noexcept {
+	Node *Splice(Node *pPos, List &lstSource, Node *pBegin, Node *pEnd) noexcept {
 #ifndef NDEBUG
 		{
 			auto p = pBegin;
@@ -365,18 +365,18 @@ public:
 		return pPos;
 	}
 
-	xNode *Splice(xNode *pPos, List &&lstSource) noexcept {
+	Node *Splice(Node *pPos, List &&lstSource) noexcept {
 		return Splice(pPos, lstSource);
 	}
-	xNode *Splice(xNode *pPos, List &&lstSource, xNode *pSingle) noexcept {
+	Node *Splice(Node *pPos, List &&lstSource, Node *pSingle) noexcept {
 		return Splice(pPos, lstSource, pSingle);
 	}
-	xNode *Splice(xNode *pPos, List &&lstSource, xNode *pBegin, xNode *pEnd) noexcept {
+	Node *Splice(Node *pPos, List &&lstSource, Node *pBegin, Node *pEnd) noexcept {
 		return Splice(pPos, lstSource, pBegin, pEnd);
 	}
 
 	template<typename ...ParamsT>
-	xNode *Push(ParamsT &&...vParams){
+	Node *Push(ParamsT &&...vParams){
 		return Insert(nullptr, std::forward<ParamsT>(vParams)...);
 	}
 	void Pop() noexcept {
@@ -384,7 +384,7 @@ public:
 	}
 
 	template<typename ...ParamsT>
-	xNode *Unshift(ParamsT &&...vParams){
+	Node *Unshift(ParamsT &&...vParams){
 		return Insert(x_pFirst, std::forward<ParamsT>(vParams)...);
 	}
 	void Shift() noexcept {
@@ -531,7 +531,7 @@ public:
 
 	// std::insert_iterator
 	template<typename ParamT>
-	xNode *insert(xNode *pPos, ParamT &&vParams){
+	Node *insert(Node *pPos, ParamT &&vParams){
 		return Insert(pPos, std::forward<ParamT>(vParams));
 	}
 };

@@ -14,14 +14,23 @@ namespace MCF {
 namespace {
 	class Generator {
 	private:
+		const unsigned long x_ulProcessIdHigh;
+
 		Mutex x_vMutex;
-		std::uint32_t x_u32AutoId = 0;
+		unsigned x_uAutoId;
 		FastGenerator x_rngRandom;
+
+	public:
+		Generator()
+			: x_ulProcessIdHigh(::GetCurrentProcessId() << 16)
+			, x_uAutoId(0)
+		{
+		}
 
 	public:
 		std::pair<std::uint32_t, std::uint32_t> operator()() noexcept {
 			const auto vLock = x_vMutex.GetLock();
-			return std::make_pair(++x_u32AutoId, x_rngRandom());
+			return std::make_pair(x_ulProcessIdHigh | (++x_uAutoId & 0xFFFFu), x_rngRandom());
 		}
 	} g_vGenerator __attribute__((__init_priority__(101)));
 }

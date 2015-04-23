@@ -216,7 +216,7 @@ std::pair<TExpression::ErrorType, const wchar_t *> TExpression::Parse(const Wide
 	const auto PushNode = [&]{
 		ASSERT(!vecNodeStack.IsEmpty());
 
-		auto &lstChildren = vecNodeStack.GetEnd()[-1]->x_lstChildren;
+		auto &lstChildren = vecNodeStack.GetBack()->x_lstChildren;
 		auto &vNewNode = lstChildren.Push()->Get();
 		vNewNode.first = Unescape(WideStringObserver(pwcNameBegin, pwcRead));
 		vecNodeStack.Push(&vNewNode.second);
@@ -224,7 +224,7 @@ std::pair<TExpression::ErrorType, const wchar_t *> TExpression::Parse(const Wide
 	const auto PushUnnamedNode = [&]{
 		ASSERT(!vecNodeStack.IsEmpty());
 
-		auto &lstChildren = vecNodeStack.GetEnd()[-1]->x_lstChildren;
+		auto &lstChildren = vecNodeStack.GetBack()->x_lstChildren;
 		auto &vNewNode = lstChildren.Push()->Get();
 		vecNodeStack.Push(&vNewNode.second);
 	};
@@ -459,7 +459,7 @@ WideString TExpression::Export(const WideStringObserver &wsoIndent) const {
 	vecNodeStack.Push(this, x_lstChildren.GetFirst());
 	WideString wsIndent;
 	for(;;){
-		auto &vTop = vecNodeStack.GetEnd()[-1];
+		auto &vTop = vecNodeStack.GetBack();
 		const auto &vTopNode = *vTop.first;
 
 	jNextChild:

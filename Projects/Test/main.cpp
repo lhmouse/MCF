@@ -1,41 +1,22 @@
 #include <MCF/StdMCF.hpp>
-#include <MCF/SmartPointers/CopyOnWriteIntrusivePtr.hpp>
+#include <MCF/Languages/MNotation.hpp>
 using namespace MCF;
 
-struct foo : CopyOnWriteIntrusiveBase<foo> {
-	int i = 12345;
-
-	foo(){
-		std::puts("foo::foo()");
-	}
-	foo(const foo &){
-		std::puts("foo::foo(const foo &)");
-	}
-	foo(foo &&) noexcept {
-		std::puts("foo::foo(foo &&)");
-	}
-	foo &operator=(const foo &){
-		std::puts("foo::operator=(const foo &)");
-		return *this;
-	}
-	foo &operator=(foo &&) noexcept {
-		std::puts("foo::operator=(foo &&)");
-		return *this;
-	}
-	~foo(){
-		std::puts("foo::~foo()");
-	}
-};
-
 extern "C" unsigned int MCFMain() noexcept {
-	auto p = MakeCopyOnWriteIntrusive<foo>();
-	auto p2 = p;
+	MNotation n;
+	n.Parse(LR"___(
+		foo {
+			child1 = this is value 1
+		}
+		bar = foo {
+			child2 = this is value 2
+		}
+	)___"_wso);
 
-	std::printf("-- equal? %d\n", p == p2);
-	p.TakeOver();
-	std::printf("-- equal? %d\n", p == p2);
+	auto fchild1 = n.Get(L"foo"_wso)->Get().second.Get(L"child1"_wso);
+	auto bchild1 = n.Get(L"bar"_wso)->Get().second.Get(L"child1"_wso);
 
-	std::printf("p->i = %d, p2->i = %d\n", p->i, p2->i);
+	std::printf("%ls\n---------\nfoo.child1 = %p\nbar.child1 = %p\n", n.Export().GetStr(), fchild1, bchild1);
 
 	return 0;
 }

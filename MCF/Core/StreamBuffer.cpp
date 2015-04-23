@@ -140,7 +140,7 @@ void StreamBuffer::Clear() noexcept {
 	x_uSize = 0;
 }
 
-int StreamBuffer::Peek() const noexcept {
+int StreamBuffer::GetFront() const noexcept {
 	if(x_uSize == 0){
 		return -1;
 	}
@@ -155,6 +155,22 @@ int StreamBuffer::Peek() const noexcept {
 		pNode = pNode->GetNext();
 	}
 }
+int StreamBuffer::GetBack() const noexcept {
+	if(x_uSize == 0){
+		return -1;
+	}
+	auto pNode = x_lstBuffers.GetLast();
+	for(;;){
+		ASSERT(pNode);
+
+		const auto &vBuffer = pNode->Get();
+		if(vBuffer.m_uRead < vBuffer.m_uWrite){
+			return vBuffer.m_abyData[vBuffer.m_uWrite - 1];
+		}
+		pNode = pNode->GetPrev();
+	}
+}
+
 int StreamBuffer::Get() noexcept {
 	if(x_uSize == 0){
 		return -1;

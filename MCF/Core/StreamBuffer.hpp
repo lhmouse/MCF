@@ -100,7 +100,12 @@ public:
 	void Clear() noexcept;
 
 	// 如果为空返回 -1。
-	int Peek() const noexcept;
+	int GetFront() const noexcept;
+	int GetBack() const noexcept;
+
+	int Peek() const noexcept {
+		return GetFront();
+	}
 	int Get() noexcept;
 	void Put(unsigned char by);
 	int Unput() noexcept;
@@ -120,10 +125,8 @@ public:
 		Splice(rhs);
 	}
 
-	bool Traverse(const TraverseContext *&pContext,
-		std::pair<const void *, std::size_t> &vBlock) const noexcept;
-	bool Traverse(TraverseContext *&pContext,
-		std::pair<void *, std::size_t> &vBlock) noexcept;
+	bool Traverse(const TraverseContext *&pContext, std::pair<const void *, std::size_t> &vBlock) const noexcept;
+	bool Traverse(TraverseContext *&pContext, std::pair<void *, std::size_t> &vBlock) noexcept;
 
 	template<typename CallbackT>
 	void Traverse(CallbackT &&vCallback) const {

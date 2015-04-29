@@ -35,7 +35,7 @@ public:
 	static constexpr std::size_t NPOS = ObserverType::NPOS;
 
 public:
-	static UnifiedStringObserver Unify(UnifiedString &&usTempStorage, const ObserverType &obsSrc);
+	static UnifiedStringObserver Unify(UnifiedString &usTempStorage, const ObserverType &obsSrc);
 	static void Deunify(String &strDst, std::size_t uPos, const UnifiedStringObserver &usoSrc);
 
 private:
@@ -411,7 +411,8 @@ public:
 	}
 	template<StringType OTHER_TYPE_T>
 	void Append(const StringObserver<OTHER_TYPE_T> &rhs){
-		Deunify(*this, GetSize(), String<OTHER_TYPE_T>::Unify(UnifiedString(), rhs));
+		UnifiedString ucsTempStorage;
+		Deunify(*this, GetSize(), String<OTHER_TYPE_T>::Unify(ucsTempStorage, rhs));
 	}
 	template<StringType OTHER_TYPE_T>
 	void Append(const String<OTHER_TYPE_T> &rhs){
@@ -484,7 +485,8 @@ public:
 	}
 	template<StringType OTHER_TYPE_T>
 	void Unshift(const StringObserver<OTHER_TYPE_T> &rhs){
-		Deunify(*this, 0, String<OTHER_TYPE_T>::Unify(UnifiedString(), rhs));
+		UnifiedString ucsTempStorage;
+		Deunify(*this, 0, String<OTHER_TYPE_T>::Unify(ucsTempStorage, rhs));
 	}
 	template<StringType OTHER_TYPE_T>
 	void Unshift(const String<OTHER_TYPE_T> &rhs){
@@ -590,7 +592,8 @@ public:
 
 		const auto pchWrite = xChopAndSplice(uRemovedBegin, uRemovedEnd, 0, uRemovedBegin);
 		xSetSize(uRemovedBegin + (uOldLength - uRemovedEnd));
-		Deunify(*this, uRemovedBegin, String<OTHER_TYPE_T>::Unify(UnifiedString(), obsRep));
+		UnifiedString ucsTempStorage;
+		Deunify(*this, uRemovedBegin, String<OTHER_TYPE_T>::Unify(ucsTempStorage, obsRep));
 	}
 	template<StringType OTHER_TYPE_T>
 	void Replace(std::ptrdiff_t nBegin, std::ptrdiff_t nEnd, const String<OTHER_TYPE_T> &strRep){

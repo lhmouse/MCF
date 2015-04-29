@@ -222,13 +222,21 @@ namespace {
 
 	template<class StringT, class FilterT>
 	void Convert(StringT &strWrite, std::size_t uPos, FilterT vFilter){
+		typename StringT::CharType achTemp[256];
+		auto pchWrite = std::begin(achTemp);
+
 		if(uPos == strWrite.GetSize()){
 			while(vFilter){
-				strWrite.Push(vFilter());
+				*pchWrite = vFilter();
+				if(++pchWrite == std::end(achTemp)){
+					strWrite.Append(std::begin(achTemp), pchWrite);
+					pchWrite = std::begin(achTemp);
+				}
+			}
+			if(pchWrite != std::begin(achTemp)){
+				strWrite.Append(std::begin(achTemp), pchWrite);
 			}
 		} else {
-			typename StringT::CharType achTemp[256];
-			auto pchWrite = std::begin(achTemp);
 			while(vFilter){
 				*pchWrite = vFilter();
 				if(++pchWrite == std::end(achTemp)){

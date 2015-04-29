@@ -161,7 +161,7 @@ private:
 		const auto uOldLength = GetLength();
 		auto pchNewBuffer = pchOldBuffer;
 		const auto uNewLength = uThirdOffset + (uOldLength - uRemovedEnd);
-		std::size_t uSizeToAlloc = uNewLength + 1;
+		auto uSizeToAlloc = uNewLength + 1;
 
 		ASSERT(uRemovedBegin <= uOldLength);
 		ASSERT(uRemovedEnd <= uOldLength);

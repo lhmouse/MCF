@@ -5,7 +5,7 @@
 #include "../StdMCF.hpp"
 #include "String.hpp"
 #include "Exception.hpp"
-
+#include "../../MCFCRT/ext/expect.h"
 namespace MCF {
 
 namespace {
@@ -63,25 +63,39 @@ namespace {
 		__attribute__((__always_inline__))
 		std::uint32_t operator()(){
 			auto u32Point = x_vPrev();
-			if((u32Point & 0x80u) != 0){
+			if(EXPECT((u32Point & 0x80u) != 0)){
 				// 这个值是该码点的总字节数。
 				const auto uBytes = CountLeadingZeroes((std::uint8_t)(~u32Point | 1));
 				// UTF-8 理论上最长可以编码 6 个字符，但是标准化以后最多只能使用 4 个。
-				if(uBytes - 2 > 2){ // 2, 3, 4
+				if(EXPECT_NOT(uBytes - 2 > 2)){ // 2, 3, 4
 					DEBUG_THROW(Exception, "Invalid UTF-8 leading byte", ERROR_INVALID_DATA);
 				}
 				u32Point &= (0xFFu >> uBytes);
-				for(std::size_t i = 1; i < uBytes; ++i){
-					const auto u32Temp = x_vPrev();
-					if((u32Temp & 0xC0u) != 0x80u){
-						DEBUG_THROW(Exception, "Invalid UTF-8 non-leading byte", ERROR_INVALID_DATA);
-					}
-					u32Point = (u32Point << 6) | (u32Temp & 0x3Fu);
+
+#define UTF8_DECODER_UNROLLED	\
+				{	\
+					const auto u32Temp = x_vPrev();	\
+					if((u32Temp & 0xC0u) != 0x80u){	\
+						DEBUG_THROW(Exception, "Invalid UTF-8 non-leading byte", ERROR_INVALID_DATA);	\
+					}	\
+					u32Point = (u32Point << 6) | (u32Temp & 0x3Fu);	\
 				}
-				if(u32Point > 0x10FFFFu){
+
+				if(uBytes < 3){
+					UTF8_DECODER_UNROLLED
+				} else if(uBytes == 3){
+					UTF8_DECODER_UNROLLED
+					UTF8_DECODER_UNROLLED
+				} else {
+					UTF8_DECODER_UNROLLED
+					UTF8_DECODER_UNROLLED
+					UTF8_DECODER_UNROLLED
+				}
+
+				if(EXPECT_NOT(u32Point > 0x10FFFFu)){
 					DEBUG_THROW(Exception, "Invalid UTF-32 code point value", ERROR_INVALID_DATA);
 				}
-				if(!IS_CESU8_T && (u32Point - 0xD800 < 0x800)){
+				if(EXPECT_NOT(!IS_CESU8_T && (u32Point - 0xD800 < 0x800))){
 					DEBUG_THROW(Exception, "UTF-32 code point is reserved for UTF-16", ERROR_INVALID_DATA);
 				}
 			}
@@ -117,23 +131,37 @@ namespace {
 		}
 		__attribute__((__always_inline__))
 		std::uint32_t operator()(){
-			if(x_u32Pending){
+			if(EXPECT(x_u32Pending != 0)){
 				const auto u32Ret = x_u32Pending & 0xFFu;
 				x_u32Pending >>= 8;
 				return u32Ret;
 			}
 			auto u32Point = x_vPrev();
-			if(u32Point > 0x10FFFFu){
+			if(EXPECT_NOT(u32Point > 0x10FFFFu)){
 				DEBUG_THROW(Exception, "Invalid UTF-32 code point value", ERROR_INVALID_DATA);
 			}
 			// 这个值是该码点的总字节数。
 			const auto uBytes = (34u - CountLeadingZeroes((std::uint32_t)(u32Point | 0x7F))) / 5u;
-			if(uBytes > 1){
-				for(std::size_t i = 1; i < uBytes; ++i){
-					x_u32Pending <<= 8;
-					x_u32Pending |= (u32Point & 0x3F) | 0x80u;
-					u32Point >>= 6;
+			if(EXPECT(uBytes > 1)){
+
+#define UTF8_ENCODER_UNROLLED	\
+				{	\
+					x_u32Pending <<= 8;	\
+					x_u32Pending |= (u32Point & 0x3F) | 0x80u;	\
+					u32Point >>= 6;	\
 				}
+
+				if(uBytes < 3){
+					UTF8_ENCODER_UNROLLED
+				} else if(uBytes == 3){
+					UTF8_ENCODER_UNROLLED
+					UTF8_ENCODER_UNROLLED
+				} else {
+					UTF8_ENCODER_UNROLLED
+					UTF8_ENCODER_UNROLLED
+					UTF8_ENCODER_UNROLLED
+				}
+
 				u32Point |= -0x100u >> uBytes;
 			}
 			return u32Point;
@@ -166,12 +194,12 @@ namespace {
 			auto u32Point = x_vPrev();
 			// 检测前导代理。
 			const auto u32Leading = u32Point - 0xD800u;
-			if(u32Leading <= 0x7FFu){
-				if(u32Leading > 0x3FFu){
+			if(EXPECT(u32Leading <= 0x7FFu)){
+				if(EXPECT_NOT(u32Leading > 0x3FFu)){
 					DEBUG_THROW(Exception, "Isolated UTF-16 trailing surrogate", ERROR_INVALID_DATA);
 				}
 				u32Point = x_vPrev() - 0xDC00u;
-				if(u32Point > 0x3FFu){
+				if(EXPECT_NOT(u32Point > 0x3FFu)){
 					// 后续代理无效。
 					DEBUG_THROW(Exception, "Leading surrogate followed by non-trailing-surrogate", ERROR_INVALID_DATA);
 				}
@@ -206,16 +234,16 @@ namespace {
 		}
 		__attribute__((__always_inline__))
 		std::uint32_t operator()(){
-			if(x_u32Pending){
+			if(EXPECT(x_u32Pending != 0)){
 				const auto u32Ret = x_u32Pending;
 				x_u32Pending >>= 16;
 				return u32Ret;
 			}
 			auto u32Point = x_vPrev();
-			if(u32Point > 0x10FFFFu){
+			if(EXPECT_NOT(u32Point > 0x10FFFFu)){
 				DEBUG_THROW(Exception, "Invalid UTF-32 code point value", ERROR_INVALID_DATA);
 			}
-			if(u32Point > 0xFFFFu){
+			if(EXPECT_NOT(u32Point > 0xFFFFu)){
 				// 编码成代理对。
 				u32Point -= 0x10000u;
 				x_u32Pending = (u32Point & 0x3FFu) | 0xDC00u;

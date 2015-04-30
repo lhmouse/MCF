@@ -29,7 +29,7 @@ namespace {
 		explicit operator bool() const noexcept {
 			return x_pchRead != x_pchEnd;
 		}
-		unsigned long operator()(){
+		char32_t operator()(){
 			if(x_pchRead == x_pchEnd){
 				DEBUG_THROW(Exception, "String is truncated", ERROR_HANDLE_EOF);
 			}
@@ -57,31 +57,31 @@ namespace {
 		explicit operator bool() const noexcept {
 			return !!x_vPrev;
 		}
-		unsigned long operator()(){
-			auto ulPoint = x_vPrev();
-			if((ulPoint & 0x80u) != 0){
+		char32_t operator()(){
+			auto c32Point = x_vPrev();
+			if((c32Point & 0x80u) != 0){
 				// 这个值是该码点的总字节数。
-				const auto uBytes = CountLeadingZeroes((std::uint8_t)(~ulPoint | 1));
+				const auto uBytes = CountLeadingZeroes((std::uint8_t)(~c32Point | 1));
 				// UTF-8 理论上最长可以编码 6 个字符，但是标准化以后最多只能使用 4 个。
 				if(uBytes - 2 > 2){ // 2, 3, 4
 					DEBUG_THROW(Exception, "Invalid UTF-8 leading byte", ERROR_INVALID_DATA);
 				}
-				ulPoint &= (0xFFu >> uBytes);
+				c32Point &= (0xFFu >> uBytes);
 				for(std::size_t i = 1; i < uBytes; ++i){
-					const auto ulTemp = x_vPrev();
-					if((ulTemp & 0xC0u) != 0x80u){
+					const auto c32Temp = x_vPrev();
+					if((c32Temp & 0xC0u) != 0x80u){
 						DEBUG_THROW(Exception, "Invalid UTF-8 non-leading byte", ERROR_INVALID_DATA);
 					}
-					ulPoint = (ulPoint << 6) | (ulTemp & 0x3Fu);
+					c32Point = (c32Point << 6) | (c32Temp & 0x3Fu);
 				}
-				if(ulPoint > 0x10FFFFu){
+				if(c32Point > 0x10FFFFu){
 					DEBUG_THROW(Exception, "Invalid UTF-32 code point value", ERROR_INVALID_DATA);
 				}
-				if(!IS_CESU8_T && (ulPoint - 0xD800 < 0x800)){
+				if(!IS_CESU8_T && (c32Point - 0xD800 < 0x800)){
 					DEBUG_THROW(Exception, "UTF-32 code point is reserved for UTF-16", ERROR_INVALID_DATA);
 				}
 			}
-			return ulPoint;
+			return c32Point;
 		}
 	};
 
@@ -98,39 +98,39 @@ namespace {
 	class Utf8Encoder {
 	private:
 		PrevT x_vPrev;
-		unsigned long x_ulPending;
+		char32_t x_c32Pending;
 
 	public:
 		explicit Utf8Encoder(PrevT vPrev)
-			: x_vPrev(std::move(vPrev)), x_ulPending(0)
+			: x_vPrev(std::move(vPrev)), x_c32Pending(0)
 		{
 		}
 
 	public:
 		explicit operator bool() const noexcept {
-			return x_ulPending || !!x_vPrev;
+			return x_c32Pending || !!x_vPrev;
 		}
-		unsigned long operator()(){
-			if(x_ulPending){
-				const auto ulRet = x_ulPending & 0xFFu;
-				x_ulPending >>= 8;
-				return ulRet;
+		char32_t operator()(){
+			if(x_c32Pending){
+				const auto c32Ret = x_c32Pending & 0xFFu;
+				x_c32Pending >>= 8;
+				return c32Ret;
 			}
-			auto ulPoint = x_vPrev();
-			if(ulPoint > 0x10FFFFu){
+			auto c32Point = x_vPrev();
+			if(c32Point > 0x10FFFFu){
 				DEBUG_THROW(Exception, "Invalid UTF-32 code point value", ERROR_INVALID_DATA);
 			}
 			// 这个值是该码点的总字节数。
-			const auto uBytes = (34u - CountLeadingZeroes((std::uint32_t)(ulPoint | 0x7F))) / 5u;
+			const auto uBytes = (34u - CountLeadingZeroes((std::uint32_t)(c32Point | 0x7F))) / 5u;
 			if(uBytes > 1){
 				for(std::size_t i = 1; i < uBytes; ++i){
-					x_ulPending <<= 8;
-					x_ulPending |= (ulPoint & 0x3F) | 0x80u;
-					ulPoint >>= 6;
+					x_c32Pending <<= 8;
+					x_c32Pending |= (c32Point & 0x3F) | 0x80u;
+					c32Point >>= 6;
 				}
-				ulPoint |= -0x100ul >> uBytes;
+				c32Point |= -0x100u >> uBytes;
 			}
-			return ulPoint;
+			return c32Point;
 		}
 	};
 
@@ -154,23 +154,23 @@ namespace {
 		explicit operator bool() const noexcept {
 			return !!x_vPrev;
 		}
-		unsigned long operator()(){
-			auto ulPoint = x_vPrev();
+		char32_t operator()(){
+			auto c32Point = x_vPrev();
 			// 检测前导代理。
-			const auto ulLeading = ulPoint - 0xD800u;
-			if(ulLeading <= 0x7FFu){
-				if(ulLeading > 0x3FFu){
+			const auto c32Leading = c32Point - 0xD800u;
+			if(c32Leading <= 0x7FFu){
+				if(c32Leading > 0x3FFu){
 					DEBUG_THROW(Exception, "Isolated UTF-16 trailing surrogate", ERROR_INVALID_DATA);
 				}
-				ulPoint = x_vPrev() - 0xDC00u;
-				if(ulPoint > 0x3FFu){
+				c32Point = x_vPrev() - 0xDC00u;
+				if(c32Point > 0x3FFu){
 					// 后续代理无效。
 					DEBUG_THROW(Exception, "Leading surrogate followed by non-trailing-surrogate", ERROR_INVALID_DATA);
 				}
 				// 将代理对拼成一个码点。
-				ulPoint = ((ulLeading << 10) | ulPoint) + 0x10000u;
+				c32Point = ((c32Leading << 10) | c32Point) + 0x10000u;
 			}
-			return ulPoint;
+			return c32Point;
 		}
 	};
 
@@ -183,35 +183,35 @@ namespace {
 	class Utf16Encoder {
 	private:
 		PrevT x_vPrev;
-		unsigned long x_ulPending;
+		char32_t x_c32Pending;
 
 	public:
 		explicit Utf16Encoder(PrevT vPrev)
-			: x_vPrev(std::move(vPrev)), x_ulPending(0)
+			: x_vPrev(std::move(vPrev)), x_c32Pending(0)
 		{
 		}
 
 	public:
 		explicit operator bool() const noexcept {
-			return x_ulPending || !!x_vPrev;
+			return x_c32Pending || !!x_vPrev;
 		}
-		unsigned long operator()(){
-			if(x_ulPending){
-				const auto ulRet = x_ulPending;
-				x_ulPending >>= 16;
-				return ulRet;
+		char32_t operator()(){
+			if(x_c32Pending){
+				const auto c32Ret = x_c32Pending;
+				x_c32Pending >>= 16;
+				return c32Ret;
 			}
-			auto ulPoint = x_vPrev();
-			if(ulPoint > 0x10FFFFu){
+			auto c32Point = x_vPrev();
+			if(c32Point > 0x10FFFFu){
 				DEBUG_THROW(Exception, "Invalid UTF-32 code point value", ERROR_INVALID_DATA);
 			}
-			if(ulPoint > 0xFFFFu){
+			if(c32Point > 0xFFFFu){
 				// 编码成代理对。
-				ulPoint -= 0x10000u;
-				x_ulPending = (ulPoint & 0x3FFu) | 0xDC00u;
-				ulPoint = (ulPoint >> 10) | 0xD800u;
+				c32Point -= 0x10000u;
+				x_c32Pending = (c32Point & 0x3FFu) | 0xDC00u;
+				c32Point = (c32Point >> 10) | 0xD800u;
 			}
-			return ulPoint;
+			return c32Point;
 		}
 	};
 

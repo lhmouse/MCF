@@ -26,9 +26,11 @@ namespace {
 		}
 
 	public:
+		__attribute__((__always_inline__))
 		explicit operator bool() const noexcept {
 			return x_pchRead != x_pchEnd;
 		}
+		__attribute__((__always_inline__))
 		std::uint32_t operator()(){
 			if(x_pchRead == x_pchEnd){
 				DEBUG_THROW(Exception, "String is truncated", ERROR_HANDLE_EOF);
@@ -54,9 +56,11 @@ namespace {
 		}
 
 	public:
+		__attribute__((__always_inline__))
 		explicit operator bool() const noexcept {
 			return !!x_vPrev;
 		}
+		__attribute__((__always_inline__))
 		std::uint32_t operator()(){
 			auto u32Point = x_vPrev();
 			if((u32Point & 0x80u) != 0){
@@ -107,9 +111,11 @@ namespace {
 		}
 
 	public:
+		__attribute__((__always_inline__))
 		explicit operator bool() const noexcept {
 			return x_u32Pending || !!x_vPrev;
 		}
+		__attribute__((__always_inline__))
 		std::uint32_t operator()(){
 			if(x_u32Pending){
 				const auto u32Ret = x_u32Pending & 0xFFu;
@@ -151,9 +157,11 @@ namespace {
 		}
 
 	public:
+		__attribute__((__always_inline__))
 		explicit operator bool() const noexcept {
 			return !!x_vPrev;
 		}
+		__attribute__((__always_inline__))
 		std::uint32_t operator()(){
 			auto u32Point = x_vPrev();
 			// 检测前导代理。
@@ -192,9 +200,11 @@ namespace {
 		}
 
 	public:
+		__attribute__((__always_inline__))
 		explicit operator bool() const noexcept {
 			return x_u32Pending || !!x_vPrev;
 		}
+		__attribute__((__always_inline__))
 		std::uint32_t operator()(){
 			if(x_u32Pending){
 				const auto u32Ret = x_u32Pending;

@@ -6,6 +6,7 @@
 #include "String.hpp"
 #include "Exception.hpp"
 #include "../../MCFCRT/ext/expect.h"
+
 namespace MCF {
 
 namespace {

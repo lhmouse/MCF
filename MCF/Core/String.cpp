@@ -63,7 +63,7 @@ namespace {
 		__attribute__((__always_inline__))
 		std::uint32_t operator()(){
 			auto u32Point = x_vPrev();
-			if(EXPECT((u32Point & 0x80u) != 0)){
+			if(EXPECT_NOT((u32Point & 0x80u) != 0)){
 				// 这个值是该码点的总字节数。
 				const auto uBytes = CountLeadingZeroes((std::uint8_t)(~u32Point | 1));
 				// UTF-8 理论上最长可以编码 6 个字符，但是标准化以后最多只能使用 4 个。
@@ -95,7 +95,7 @@ namespace {
 				if(EXPECT_NOT(u32Point > 0x10FFFFu)){
 					DEBUG_THROW(Exception, "Invalid UTF-32 code point value", ERROR_INVALID_DATA);
 				}
-				if(EXPECT_NOT(!IS_CESU8_T && (u32Point - 0xD800 < 0x800))){
+				if(EXPECT_NOT(!IS_CESU8_T && (u32Point - 0xD800u < 0x800u))){
 					DEBUG_THROW(Exception, "UTF-32 code point is reserved for UTF-16", ERROR_INVALID_DATA);
 				}
 			}
@@ -136,13 +136,14 @@ namespace {
 				x_u32Pending >>= 8;
 				return u32Ret;
 			}
+
 			auto u32Point = x_vPrev();
 			if(EXPECT_NOT(u32Point > 0x10FFFFu)){
 				DEBUG_THROW(Exception, "Invalid UTF-32 code point value", ERROR_INVALID_DATA);
 			}
 			// 这个值是该码点的总字节数。
-			const auto uBytes = (34u - CountLeadingZeroes((std::uint32_t)(u32Point | 0x7F))) / 5u;
-			if(EXPECT(uBytes > 1)){
+			const auto uBytes = (34u - CountLeadingZeroes((std::uint32_t)(u32Point | 0x7Fu))) / 5u;
+			if(EXPECT_NOT(uBytes > 1)){
 
 #define UTF8_ENCODER_UNROLLED	\
 				{	\
@@ -194,7 +195,7 @@ namespace {
 			auto u32Point = x_vPrev();
 			// 检测前导代理。
 			const auto u32Leading = u32Point - 0xD800u;
-			if(EXPECT(u32Leading <= 0x7FFu)){
+			if(EXPECT_NOT(u32Leading <= 0x7FFu)){
 				if(EXPECT_NOT(u32Leading > 0x3FFu)){
 					DEBUG_THROW(Exception, "Isolated UTF-16 trailing surrogate", ERROR_INVALID_DATA);
 				}
@@ -239,6 +240,7 @@ namespace {
 				x_u32Pending >>= 16;
 				return u32Ret;
 			}
+
 			auto u32Point = x_vPrev();
 			if(EXPECT_NOT(u32Point > 0x10FFFFu)){
 				DEBUG_THROW(Exception, "Invalid UTF-32 code point value", ERROR_INVALID_DATA);
@@ -260,7 +262,7 @@ namespace {
 
 	template<class StringT, class FilterT>
 	void Convert(StringT &strWrite, std::size_t uPos, FilterT vFilter){
-		typename StringT::CharType achTemp[256];
+		typename StringT::CharType achTemp[1024];
 		auto pchWrite = std::begin(achTemp);
 
 		if(uPos == strWrite.GetSize()){

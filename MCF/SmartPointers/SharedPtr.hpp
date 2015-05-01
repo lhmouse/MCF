@@ -218,7 +218,13 @@ public:
 		Reset(std::move(rhs));
 	}
 	template<typename OtherT>
-	SharedPtr(SharedPtr<OtherT, DeleterT> rhs, ElementType *pElement) noexcept
+	SharedPtr(const SharedPtr<OtherT, DeleterT> &rhs, ElementType *pElement) noexcept
+		: SharedPtr()
+	{
+		Reset(rhs, pElement);
+	}
+	template<typename OtherT>
+	SharedPtr(SharedPtr<OtherT, DeleterT> &&rhs, ElementType *pElement) noexcept
 		: SharedPtr()
 	{
 		Reset(std::move(rhs), pElement);

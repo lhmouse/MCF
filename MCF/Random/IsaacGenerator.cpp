@@ -63,26 +63,20 @@ void IsaacGenerator::xRefreshInternal() noexcept {
 	x_u32B += x_u32C;
 
 	for(std::size_t i = 0; i < 256; i += 4){
-		register std::uint32_t x, y;
+		const auto Step = [&](unsigned j, auto fnSpec){
+			const auto x = x_u32Internal[i + j];
+			fnSpec(x_u32A);
+			x_u32A += x_u32Internal[(i + j + 128) % 256];
+			const auto y = x_u32Internal[(x >> 2) % 256] + x_u32A + x_u32B;
+			x_u32Internal[i + j] = y;
+			x_u32B = x_u32Internal[(y >> 10) % 256] + x;
+			x_u32Results[i + j] = x_u32B;
+		};
 
-#define SPEC_0	(x_u32A ^= (x_u32A << 13))
-#define SPEC_1	(x_u32A ^= (x_u32A >>  6))
-#define SPEC_2	(x_u32A ^= (x_u32A <<  2))
-#define SPEC_3	(x_u32A ^= (x_u32A >> 16))
-
-#define STEP(j_, spec_)	\
-		x = x_u32Internal[i + j_];	\
-		spec_;	\
-		x_u32A += x_u32Internal[(i + j_ + 128) % 256];	\
-		y = x_u32Internal[(x >> 2) % 256] + x_u32A + x_u32B;	\
-		x_u32Internal[i + j_] = y;	\
-		x_u32B = x_u32Internal[(y >> 10) % 256] + x;	\
-		x_u32Results[i + j_] = x_u32B;
-
-		STEP(0, SPEC_0);
-		STEP(1, SPEC_1);
-		STEP(2, SPEC_2);
-		STEP(3, SPEC_3);
+		Step(0, [](auto &a){ a ^= (a << 13); });
+		Step(1, [](auto &a){ a ^= (a >>  6); });
+		Step(2, [](auto &a){ a ^= (a <<  2); });
+		Step(3, [](auto &a){ a ^= (a >> 16); });
 	}
 }
 

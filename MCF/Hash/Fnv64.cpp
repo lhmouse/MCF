@@ -17,7 +17,7 @@ Fnv64::Fnv64() noexcept
 }
 
 // 其他非静态成员函数。
-void Fnv64::Abort() noexcept{
+void Fnv64::Abort() noexcept {
 	x_bInited = false;
 }
 void Fnv64::Update(const void *pData, std::size_t uSize) noexcept {

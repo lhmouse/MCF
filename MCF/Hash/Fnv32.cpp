@@ -17,7 +17,7 @@ Fnv32::Fnv32() noexcept
 }
 
 // 其他非静态成员函数。
-void Fnv32::Abort() noexcept{
+void Fnv32::Abort() noexcept {
 	x_bInited = false;
 }
 void Fnv32::Update(const void *pData, std::size_t uSize) noexcept {

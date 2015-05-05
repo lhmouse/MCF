@@ -41,7 +41,7 @@ Crc32::Crc32(std::uint32_t u32Divisor) noexcept
 }
 
 // 其他非静态成员函数。
-void Crc32::Abort() noexcept{
+void Crc32::Abort() noexcept {
 	x_bInited = false;
 }
 void Crc32::Update(const void *pData, std::size_t uSize) noexcept {

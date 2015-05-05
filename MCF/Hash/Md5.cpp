@@ -355,7 +355,7 @@ Md5::Md5() noexcept
 }
 
 // 其他非静态成员函数。
-void Md5::Abort() noexcept{
+void Md5::Abort() noexcept {
 	x_bInited = false;
 }
 void Md5::Update(const void *pData, std::size_t uSize) noexcept {

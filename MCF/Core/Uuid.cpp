@@ -5,61 +5,56 @@
 #include "../StdMCF.hpp"
 #include "Uuid.hpp"
 #include "Exception.hpp"
+#include "../Core/Time.hpp"
 #include "../Utilities/Endian.hpp"
-#include "../Random/FastGenerator.hpp"
-#include "../Thread/Mutex.hpp"
+#include "../Thread/Atomic.hpp"
 
 namespace MCF {
 
 namespace {
-	class Generator {
-	private:
-		const unsigned long x_ulProcessIdHigh;
+	const unsigned g_uPid = ::GetCurrentProcessId() & 0xFFFFu;
 
-		Mutex x_vMutex;
-		unsigned x_uAutoId;
-		FastGenerator x_rngRandom;
+	volatile std::uint64_t g_u64RandSeed = 0;
+	volatile std::uint32_t g_u32AutoInc = 0;
 
-	public:
-		Generator()
-			: x_ulProcessIdHigh(::GetCurrentProcessId() << 16)
-			, x_uAutoId(0)
-		{
-		}
-
-	public:
-		std::pair<std::uint32_t, std::uint32_t> operator()() noexcept {
-			const auto vLock = x_vMutex.GetLock();
-			return std::make_pair(x_ulProcessIdHigh | (++x_uAutoId & 0xFFFFu), x_rngRandom());
-		}
-	} g_vGenerator __attribute__((__init_priority__(101)));
+	inline std::uint32_t GetRandomUint32(){
+		std::uint64_t u64OldSeed, u64Seed;
+		u64OldSeed = AtomicLoad(g_u64RandSeed, MemoryModel::ACQUIRE);
+		do {
+			u64Seed = u64OldSeed ^ ReadTimestampCounter();
+			u64Seed *= 6364136223846793005ull;
+			u64Seed += 1442695040888963407ull;
+		} while(!AtomicCompareExchange(g_u64RandSeed, u64OldSeed, u64Seed, MemoryModel::ACQ_REL));
+		return u64Seed >> 32;
+	}
 }
 
 // 静态成员函数。
 Uuid Uuid::Generate(){
 	const auto u64Now = GetUtcTime();
-	const auto vUnique = g_vGenerator();
+	const auto u32AutoInc = AtomicAdd(g_u32AutoInc, 1, MemoryModel::RELAXED);
 
 	Uuid vRet(nullptr);
-	StoreBe(vRet.x_unData.au32[0], u64Now >> 28);
-	StoreBe(vRet.x_unData.au16[2], u64Now >> 12);
-	StoreBe(vRet.x_unData.au16[3], u64Now & 0x0FFFu); // 版本 = 0
-	StoreBe(vRet.x_unData.au32[2], 0xC0000000u | vUnique.first); // 变种 = 3
-	StoreBe(vRet.x_unData.au32[3], vUnique.second);
+	StoreBe(vRet.x_unData.au32[0], u64Now >> 12);
+	StoreBe(vRet.x_unData.au16[2], (u64Now << 4) | (g_uPid >> 12));
+	StoreBe(vRet.x_unData.au16[3], g_uPid & 0x0FFFu); // 版本 = 0
+	StoreBe(vRet.x_unData.au16[4], 0xC000u | (u32AutoInc & 0x3FFFu)); // 变种 = 3
+	StoreBe(vRet.x_unData.au16[5], GetRandomUint32());
+	StoreBe(vRet.x_unData.au32[3], GetRandomUint32());
 	return vRet;
 }
 
 // 构造函数和析构函数。
-Uuid::Uuid(const char (&pszString)[36]){
-	if(!Scan(pszString)){
+Uuid::Uuid(const char (&pchString)[36]){
+	if(!Scan(pchString)){
 		DEBUG_THROW(Exception, "Invalid UUID string", ERROR_INVALID_PARAMETER);
 	}
 }
 
 // 其他非静态成员函数。
-void Uuid::Print(char (&pszString)[36], bool bUpperCase) const noexcept {
+void Uuid::Print(char (&pchString)[36], bool bUpperCase) const noexcept {
 	auto pbyRead = GetBegin();
-	auto pchWrite = pszString;
+	auto pchWrite = pchString;
 
 #define PRINT(count_)	\
 	for(std::size_t i = 0; i < count_; ++i){	\
@@ -90,8 +85,8 @@ void Uuid::Print(char (&pszString)[36], bool bUpperCase) const noexcept {
 	PRINT(2) *(pchWrite++) = '-';
 	PRINT(6)
 }
-bool Uuid::Scan(const char (&pszString)[36]) noexcept {
-	auto pchRead = pszString;
+bool Uuid::Scan(const char (&pchString)[36]) noexcept {
+	auto pchRead = pchString;
 	auto pbyWrite = GetBegin();
 
 #define SCAN(count_)	\

@@ -1,12 +1,15 @@
 #include <MCF/StdMCF.hpp>
-#include <MCF/Random/IsaacGenerator.hpp>
+#include <MCF/Core/Uuid.hpp>
+#include <iostream>
 
 using namespace MCF;
 
 extern "C" unsigned int MCFMain() noexcept {
-	IsaacGenerator gen(0);
-	for(unsigned i = 0; i < 10; ++i){
-		std::printf("%08lX\n", (unsigned long)gen());
-	}
+	auto uuid = Uuid::Generate();
+
+	char temp[36];
+	uuid.Print(temp);
+	std::endl(std::cout.write(temp, sizeof(temp)));
+
 	return 0;
 }

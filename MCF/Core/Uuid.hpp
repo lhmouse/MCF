@@ -38,7 +38,7 @@ public:
 		BCopy(x_unData, abyData);
 	}
 	// 根据字符串创建。字符串无效抛出异常。
-	explicit Uuid(const char (&pszString)[36]);
+	explicit Uuid(const char (&pchString)[36]);
 
 public:
 	const unsigned char *GetBegin() const noexcept {
@@ -68,8 +68,8 @@ public:
 		BSwap(x_unData, rhs.x_unData);
 	}
 
-	void Print(char (&pszString)[36], bool bUpperCase = true) const noexcept;
-	bool Scan(const char (&pszString)[36]) noexcept;
+	void Print(char (&pchString)[36], bool bUpperCase = true) const noexcept;
+	bool Scan(const char (&pchString)[36]) noexcept;
 
 public:
 	const unsigned char &operator[](std::size_t uIndex) const noexcept {

@@ -14,7 +14,7 @@
 
 namespace MCF {
 
-class Thread : public IntrusiveBase<Thread>, NONCOPYABLE {
+class Thread : NONCOPYABLE, public IntrusiveBase<Thread> {
 public:
 	static std::size_t GetCurrentId() noexcept;
 

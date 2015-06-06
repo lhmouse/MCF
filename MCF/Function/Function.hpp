@@ -20,10 +20,13 @@ class Function {
 template<typename RetT, typename ...ParamsT>
 class Function<RetT (ParamsT...)> {
 private:
+	template<typename T>
+		using xForwardedNonScalar = std::conditional_t<std::is_scalar<T>::value, T, T &&>;
+
 	struct xCallableBase : IntrusiveBase<xCallableBase> {
 		virtual ~xCallableBase() = default;
 
-		virtual RetT Invoke(ParamsT &&...vParams) const = 0;
+		virtual RetT Invoke(xForwardedNonScalar<ParamsT>...vParams) const = 0;
 	};
 
 private:
@@ -34,7 +37,7 @@ public:
 
 	template<typename FuncT,
 		std::enable_if_t<
-			std::is_convertible<std::result_of_t<FuncT && (ParamsT &&...)>, RetT>::value,
+			std::is_convertible<std::result_of_t<FuncT && (xForwardedNonScalar<ParamsT>...)>, RetT>::value,
 			int> = 0>
 	explicit Function(FuncT &&vFunc){
 		Reset(std::forward<FuncT>(vFunc));
@@ -46,7 +49,7 @@ public:
 	}
 	template<typename FuncT,
 		std::enable_if_t<
-			std::is_convertible<std::result_of_t<FuncT && (ParamsT &&...)>, RetT>::value,
+			std::is_convertible<std::result_of_t<FuncT && (xForwardedNonScalar<ParamsT>...)>, RetT>::value,
 			int> = 0>
 	void Reset(FuncT &&vFunc){
 		struct Callable : xCallableBase {
@@ -57,7 +60,7 @@ public:
 			{
 			}
 
-			RetT Invoke(ParamsT &&...vParams) const override {
+			RetT Invoke(xForwardedNonScalar<ParamsT>...vParams) const override {
 				return vCallableFunc(std::forward<ParamsT>(vParams)...);
 			}
 		};

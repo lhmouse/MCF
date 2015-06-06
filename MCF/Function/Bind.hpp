@@ -5,4 +5,10 @@
 #ifndef MCF_FUNCTION_BIND_HPP_
 #define MCF_FUNCTION_BIND_HPP_
 
+namespace MCF {
+
+
+
+}
+
 #endif

@@ -2,8 +2,8 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2013 - 2015, LH_Mouse. All wrongs reserved.
 
-#ifndef MCF_UTILITIES_TUPLE_FUNCTORS_HPP_
-#define MCF_UTILITIES_TUPLE_FUNCTORS_HPP_
+#ifndef MCF_UTILITIES_TUPLE_MANIP_HPP_
+#define MCF_UTILITIES_TUPLE_MANIP_HPP_
 
 #include <tuple>
 #include <utility>

@@ -65,9 +65,7 @@ public:
 	explicit ThreadLocal(ObjectT vTemplate = ObjectT())
 		: x_vTemplate(std::move(vTemplate))
 	{
-		if(!x_pTlsKey.Reset(::MCF_CRT_TlsAllocKey(
-			[](std::intptr_t nValue) noexcept { delete (ObjectT *)nValue; })))
-		{
+		if(!x_pTlsKey.Reset(::MCF_CRT_TlsAllocKey([](std::intptr_t nValue) noexcept { delete (ObjectT *)nValue; }))){
 			DEBUG_THROW(SystemError, "MCF_CRT_TlsAllocKey");
 		}
 	}

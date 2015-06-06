@@ -7,10 +7,43 @@
 
 #include <type_traits>
 #include <utility>
+#include <functional>
 #include "../SmartPointers/IntrusivePtr.hpp"
 #include "../Utilities/Assert.hpp"
+#include "../Utilities/Invoke.hpp"
 
 namespace MCF {
+
+namespace Impl {
+	template<typename T>
+		using ForwardedNonScalar = std::conditional_t<std::is_scalar<T>::value, std::decay_t<T>, T &&>;
+
+	template<typename RetT, typename ...ParamsT>
+	class FunctorBase : public IntrusiveBase<FunctorBase<RetT, ParamsT...>> {
+	public:
+		virtual ~FunctorBase() = default;
+
+	public:
+		virtual RetT Dispatch(ForwardedNonScalar<ParamsT>...vParams) const = 0;
+	};
+
+	template<typename FuncT, typename RetT, typename ...ParamsT>
+	class Functor : public FunctorBase<RetT, ParamsT...> {
+	private:
+		const std::remove_reference_t<FuncT> x_vFunc;
+
+	public:
+		explicit Functor(FuncT &&vFunc)
+			: x_vFunc(std::forward<FuncT>(vFunc))
+		{
+		}
+
+	public:
+		RetT Dispatch(ForwardedNonScalar<ParamsT>...vParams) const override {
+			return Invoke(x_vFunc, std::forward<ParamsT>(vParams)...);
+		}
+	};
+}
 
 template<typename FuncT>
 class Function {
@@ -20,66 +53,43 @@ class Function {
 template<typename RetT, typename ...ParamsT>
 class Function<RetT (ParamsT...)> {
 private:
-	template<typename T>
-		using xForwardedNonScalar = std::conditional_t<std::is_scalar<T>::value, std::decay_t<T>, std::decay_t<T> &&>;
-
-	struct xCallableBase : IntrusiveBase<xCallableBase> {
-		virtual ~xCallableBase() = default;
-
-		virtual RetT Invoke(xForwardedNonScalar<ParamsT>...vParams) const = 0;
-	};
-
-private:
-	IntrusivePtr<const xCallableBase> x_pCallable;
+	IntrusivePtr<const Impl::FunctorBase<RetT, ParamsT...>> x_pFunctor;
 
 public:
 	constexpr Function() = default;
 
 	template<typename FuncT,
 		std::enable_if_t<
-			std::is_convertible<std::result_of_t<FuncT && (xForwardedNonScalar<ParamsT>...)>, RetT>::value,
+			std::is_convertible<std::result_of_t<FuncT && (Impl::ForwardedNonScalar<ParamsT>...)>, RetT>::value,
 			int> = 0>
-	explicit Function(FuncT &&vFunc){
-		Reset(std::forward<FuncT>(vFunc));
+	explicit Function(FuncT &&x_vFunc){
+		Reset(std::forward<FuncT>(x_vFunc));
 	}
 
 public:
 	void Reset() noexcept {
-		x_pCallable.Reset();
+		x_pFunctor.Reset();
 	}
 	template<typename FuncT,
 		std::enable_if_t<
-			std::is_convertible<std::result_of_t<FuncT && (xForwardedNonScalar<ParamsT>...)>, RetT>::value,
+			std::is_convertible<std::result_of_t<FuncT && (Impl::ForwardedNonScalar<ParamsT>...)>, RetT>::value,
 			int> = 0>
-	void Reset(FuncT &&vFunc){
-		struct Callable : xCallableBase {
-			const std::remove_reference_t<FuncT> vCallableFunc;
-
-			explicit Callable(FuncT &&vFunc)
-				: vCallableFunc(std::forward<FuncT>(vFunc))
-			{
-			}
-
-			RetT Invoke(xForwardedNonScalar<ParamsT>...vParams) const override {
-				return vCallableFunc(std::forward<ParamsT>(vParams)...);
-			}
-		};
-
-		x_pCallable.Reset(new Callable(std::forward<FuncT>(vFunc)));
+	void Reset(FuncT &&x_vFunc){
+		x_pFunctor.Reset(new Impl::Functor<FuncT, RetT, ParamsT...>(std::forward<FuncT>(x_vFunc)));
 	}
 
 	void Swap(Function &rhs) noexcept {
-		x_pCallable.Swap(rhs.x_pCallable);
+		x_pFunctor.Swap(rhs.x_pFunctor);
 	}
 
 public:
 	explicit operator bool() const noexcept {
-		return !!x_pCallable;
+		return !!x_pFunctor;
 	}
 	RetT operator()(ParamsT ...vParams) const {
-		ASSERT(x_pCallable);
+		ASSERT(x_pFunctor);
 
-		return x_pCallable->Invoke(std::forward<ParamsT>(vParams)...); // 值形参当作右值引用传递。
+		return x_pFunctor->Dispatch(std::forward<ParamsT>(vParams)...); // 值形参当作右值引用传递。
 	}
 };
 

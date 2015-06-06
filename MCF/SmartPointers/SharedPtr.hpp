@@ -164,7 +164,7 @@ class SharedPtr {
 	static_assert(noexcept(DeleterT()(DeleterT()())), "Deleter must not throw.");
 
 public:
-	using Raw = std::remove_pointer_t<std::remove_cv_t<std::remove_reference_t<decltype(DeleterT()())>>>;
+	using Raw = std::remove_pointer_t<std::decay_t<decltype(DeleterT()())>>;
 	using ElementType = std::remove_extent_t<ObjectT>;
 
 private:

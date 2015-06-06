@@ -14,7 +14,7 @@ namespace MCF {
 template<class CloserT>
 class UniqueHandle {
 public:
-	using Handle = std::remove_cv_t<std::remove_reference_t<decltype(CloserT()())>>;
+	using Handle = std::decay_t<decltype(CloserT()())>;
 
 	static_assert(std::is_scalar<Handle>::value, "Handle must be a scalar type.");
 	static_assert(noexcept(CloserT()(Handle())), "Handle closer must not throw.");

@@ -18,13 +18,15 @@
 namespace MCF {
 
 template<typename ObjectT, class DeleterT = DefaultDeleter<std::remove_cv_t<ObjectT>>>
+	class IntrusiveBase;
+template<typename ObjectT, class DeleterT = DefaultDeleter<std::remove_cv_t<ObjectT>>>
 	class IntrusivePtr;
 
 namespace Impl {
 	template<class DeleterT>
 	class IntrusiveSentry {
 	public:
-		using Pointee = std::remove_cv_t<std::remove_reference_t<decltype(*DeleterT()())>>;
+		using Pointee = std::decay_t<decltype(*DeleterT()())>;
 
 	private:
 		Pointee *x_pToDelete;
@@ -63,98 +65,95 @@ namespace Impl {
 			return static_cast<DstT *>(pSrc);
 		}
 	};
-
-	template<class DeleterT>
-	class IntrusiveBase {
-	public:
-		using Sentry = IntrusiveSentry<DeleterT>;
-		using Pointee = typename Sentry::Pointee;
-
-	private:
-		mutable volatile std::size_t x_uRefCount;
-
-	protected:
-		IntrusiveBase() noexcept {
-			AtomicStore(x_uRefCount, 1, MemoryModel::RELEASE);
-		}
-
-	public:
-		IntrusiveBase(const IntrusiveBase &) noexcept
-			: IntrusiveBase() // 默认构造。
-		{
-		}
-		IntrusiveBase(IntrusiveBase &&) noexcept
-			: IntrusiveBase() // 同上。
-		{
-		}
-		IntrusiveBase &operator=(const IntrusiveBase &) noexcept {
-			return *this; // 无操作。
-		}
-		IntrusiveBase &operator=(IntrusiveBase &&) noexcept {
-			return *this; // 同上。
-		}
-
-	public:
-		std::size_t GetSharedCount() const volatile noexcept {
-			return AtomicLoad(x_uRefCount, MemoryModel::RELAXED);
-		}
-		void AddRef() const volatile noexcept {
-			ASSERT((std::ptrdiff_t)AtomicLoad(x_uRefCount, MemoryModel::ACQUIRE) > 0);
-
-			AtomicIncrement(x_uRefCount, MemoryModel::RELEASE);
-		}
-		Sentry DropRef() const volatile noexcept {
-			ASSERT((std::ptrdiff_t)AtomicLoad(x_uRefCount, MemoryModel::ACQUIRE) > 0);
-
-			Pointee *pToDelete = nullptr;
-			if(AtomicDecrement(x_uRefCount, MemoryModel::ACQUIRE) == 0){
-				pToDelete = static_cast<Pointee *>(const_cast<IntrusiveBase *>(this));
-			}
-			return Sentry(pToDelete);
-		}
-
-		template<typename OtherT>
-		const volatile OtherT *Get() const volatile noexcept {
-			ASSERT((std::ptrdiff_t)AtomicLoad(x_uRefCount, MemoryModel::ACQUIRE) > 0);
-
-			return IntrusiveCastHelper<const volatile OtherT, const volatile Pointee>()(
-				static_cast<const volatile Pointee *>(this));
-		}
-		template<typename OtherT>
-		const OtherT *Get() const noexcept {
-			ASSERT((std::ptrdiff_t)AtomicLoad(x_uRefCount, MemoryModel::ACQUIRE) > 0);
-
-			return IntrusiveCastHelper<const OtherT, const Pointee>()(
-				static_cast<const Pointee *>(this));
-		}
-		template<typename OtherT>
-		volatile OtherT *Get() volatile noexcept {
-			ASSERT((std::ptrdiff_t)AtomicLoad(x_uRefCount, MemoryModel::ACQUIRE) > 0);
-
-			return IntrusiveCastHelper<volatile OtherT, volatile Pointee>()(
-				static_cast<volatile Pointee *>(this));
-		}
-		template<typename OtherT>
-		OtherT *Get() noexcept {
-			ASSERT((std::ptrdiff_t)AtomicLoad(x_uRefCount, MemoryModel::ACQUIRE) > 0);
-
-			return IntrusiveCastHelper<OtherT, Pointee>()(
-				static_cast<Pointee *>(this));
-		}
-
-		template<typename OtherT>
-			IntrusivePtr<const volatile OtherT, DeleterT> Share() const volatile noexcept;
-		template<typename OtherT>
-			IntrusivePtr<const OtherT, DeleterT> Share() const noexcept;
-		template<typename OtherT>
-			IntrusivePtr<volatile OtherT, DeleterT> Share() volatile noexcept;
-		template<typename OtherT>
-			IntrusivePtr<OtherT, DeleterT> Share() noexcept;
-	};
 }
 
-template<typename ObjectT, class DeleterT = DefaultDeleter<std::remove_cv_t<ObjectT>>>
-	using IntrusiveBase = Impl::IntrusiveBase<DeleterT>;
+template<typename ObjectT, class DeleterT>
+class IntrusiveBase {
+public:
+	using Sentry = Impl::IntrusiveSentry<DeleterT>;
+	using Pointee = typename Sentry::Pointee;
+
+private:
+	mutable volatile std::size_t x_uRefCount;
+
+protected:
+	IntrusiveBase() noexcept {
+		AtomicStore(x_uRefCount, 1, MemoryModel::RELEASE);
+	}
+
+public:
+	IntrusiveBase(const IntrusiveBase &) noexcept
+		: IntrusiveBase() // 默认构造。
+	{
+	}
+	IntrusiveBase(IntrusiveBase &&) noexcept
+		: IntrusiveBase() // 同上。
+	{
+	}
+	IntrusiveBase &operator=(const IntrusiveBase &) noexcept {
+		return *this; // 无操作。
+	}
+	IntrusiveBase &operator=(IntrusiveBase &&) noexcept {
+		return *this; // 同上。
+	}
+
+public:
+	std::size_t GetSharedCount() const volatile noexcept {
+		return AtomicLoad(x_uRefCount, MemoryModel::RELAXED);
+	}
+	void AddRef() const volatile noexcept {
+		ASSERT((std::ptrdiff_t)AtomicLoad(x_uRefCount, MemoryModel::ACQUIRE) > 0);
+
+		AtomicIncrement(x_uRefCount, MemoryModel::RELEASE);
+	}
+	Sentry DropRef() const volatile noexcept {
+		ASSERT((std::ptrdiff_t)AtomicLoad(x_uRefCount, MemoryModel::ACQUIRE) > 0);
+
+		Pointee *pToDelete = nullptr;
+		if(AtomicDecrement(x_uRefCount, MemoryModel::ACQUIRE) == 0){
+			pToDelete = static_cast<Pointee *>(const_cast<IntrusiveBase *>(this));
+		}
+		return Sentry(pToDelete);
+	}
+
+	template<typename OtherT = ObjectT>
+	const volatile OtherT *Get() const volatile noexcept {
+		ASSERT((std::ptrdiff_t)AtomicLoad(x_uRefCount, MemoryModel::ACQUIRE) > 0);
+
+		return Impl::IntrusiveCastHelper<const volatile OtherT, const volatile Pointee>()(
+			static_cast<const volatile Pointee *>(this));
+	}
+	template<typename OtherT = ObjectT>
+	const OtherT *Get() const noexcept {
+		ASSERT((std::ptrdiff_t)AtomicLoad(x_uRefCount, MemoryModel::ACQUIRE) > 0);
+
+		return Impl::IntrusiveCastHelper<const OtherT, const Pointee>()(
+			static_cast<const Pointee *>(this));
+	}
+	template<typename OtherT = ObjectT>
+	volatile OtherT *Get() volatile noexcept {
+		ASSERT((std::ptrdiff_t)AtomicLoad(x_uRefCount, MemoryModel::ACQUIRE) > 0);
+
+		return Impl::IntrusiveCastHelper<volatile OtherT, volatile Pointee>()(
+			static_cast<volatile Pointee *>(this));
+	}
+	template<typename OtherT = ObjectT>
+	OtherT *Get() noexcept {
+		ASSERT((std::ptrdiff_t)AtomicLoad(x_uRefCount, MemoryModel::ACQUIRE) > 0);
+
+		return Impl::IntrusiveCastHelper<OtherT, Pointee>()(
+			static_cast<Pointee *>(this));
+	}
+
+	template<typename OtherT = ObjectT>
+		IntrusivePtr<const volatile OtherT, DeleterT> Share() const volatile noexcept;
+	template<typename OtherT = ObjectT>
+		IntrusivePtr<const OtherT, DeleterT> Share() const noexcept;
+	template<typename OtherT = ObjectT>
+		IntrusivePtr<volatile OtherT, DeleterT> Share() volatile noexcept;
+	template<typename OtherT = ObjectT>
+		IntrusivePtr<OtherT, DeleterT> Share() noexcept;
+};
 
 template<typename ObjectT, class DeleterT>
 class IntrusivePtr {
@@ -166,7 +165,7 @@ class IntrusivePtr {
 
 public:
 	using ElementType = ObjectT;
-	using BuddyType = Impl::IntrusiveBase<DeleterT>;
+	using BuddyType = IntrusiveBase<std::remove_cv_t<ObjectT>, DeleterT>;
 
 private:
 	const volatile BuddyType *x_pBuddy;
@@ -334,47 +333,45 @@ public:
 	}
 };
 
-namespace Impl {
-	template<class DeleterT>
-		template<typename OtherT>
-	IntrusivePtr<const volatile OtherT, DeleterT> IntrusiveBase<DeleterT>::Share() const volatile noexcept {
-		const auto pShared = Get<const volatile OtherT>();
-		if(!pShared){
-			return nullptr;
-		}
-		pShared->AddRef();
-		return IntrusivePtr<const volatile OtherT, DeleterT>(pShared);
+template<typename ObjectT, class DeleterT>
+	template<typename OtherT>
+IntrusivePtr<const volatile OtherT, DeleterT> IntrusiveBase<ObjectT, DeleterT>::Share() const volatile noexcept {
+	const auto pShared = Get<const volatile OtherT>();
+	if(!pShared){
+		return nullptr;
 	}
-	template<class DeleterT>
-		template<typename OtherT>
-	IntrusivePtr<const OtherT, DeleterT> IntrusiveBase<DeleterT>::Share() const noexcept {
-		const auto pShared = Get<const OtherT>();
-		if(!pShared){
-			return nullptr;
-		}
-		pShared->AddRef();
-		return IntrusivePtr<const OtherT, DeleterT>(pShared);
+	pShared->AddRef();
+	return IntrusivePtr<const volatile OtherT, DeleterT>(pShared);
+}
+template<typename ObjectT, class DeleterT>
+	template<typename OtherT>
+IntrusivePtr<const OtherT, DeleterT> IntrusiveBase<ObjectT, DeleterT>::Share() const noexcept {
+	const auto pShared = Get<const OtherT>();
+	if(!pShared){
+		return nullptr;
 	}
-	template<class DeleterT>
-		template<typename OtherT>
-	IntrusivePtr<volatile OtherT, DeleterT> IntrusiveBase<DeleterT>::Share() volatile noexcept {
-		const auto pShared = Get<volatile OtherT>();
-		if(!pShared){
-			return nullptr;
-		}
-		pShared->AddRef();
-		return IntrusivePtr<volatile OtherT, DeleterT>(pShared);
+	pShared->AddRef();
+	return IntrusivePtr<const OtherT, DeleterT>(pShared);
+}
+template<typename ObjectT, class DeleterT>
+	template<typename OtherT>
+IntrusivePtr<volatile OtherT, DeleterT> IntrusiveBase<ObjectT, DeleterT>::Share() volatile noexcept {
+	const auto pShared = Get<volatile OtherT>();
+	if(!pShared){
+		return nullptr;
 	}
-	template<class DeleterT>
-		template<typename OtherT>
-	IntrusivePtr<OtherT, DeleterT> IntrusiveBase<DeleterT>::Share() noexcept {
-		const auto pShared = Get<OtherT>();
-		if(!pShared){
-			return nullptr;
-		}
-		pShared->AddRef();
-		return IntrusivePtr<OtherT, DeleterT>(pShared);
+	pShared->AddRef();
+	return IntrusivePtr<volatile OtherT, DeleterT>(pShared);
+}
+template<typename ObjectT, class DeleterT>
+	template<typename OtherT>
+IntrusivePtr<OtherT, DeleterT> IntrusiveBase<ObjectT, DeleterT>::Share() noexcept {
+	const auto pShared = Get<OtherT>();
+	if(!pShared){
+		return nullptr;
 	}
+	pShared->AddRef();
+	return IntrusivePtr<OtherT, DeleterT>(pShared);
 }
 
 #define MCF_SMART_POINTERS_DECLARE_TEMPLATE_PARAMETERS_	template<typename ObjectT, class DeleterT>

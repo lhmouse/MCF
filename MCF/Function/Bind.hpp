@@ -8,6 +8,7 @@
 #include <type_traits>
 #include <utility>
 #include <tuple>
+#include "../Utilities/Invoke.hpp"
 
 namespace MCF {
 
@@ -50,17 +51,18 @@ namespace Impl {
 
 	private:
 		template<std::size_t ...PARAM_INDICES_T, typename ...ParamsAddT>
-		decltype(auto) xInvoke(std::index_sequence<PARAM_INDICES_T...>, ParamsAddT &&...vParamsAdd) const {
+		decltype(auto) xDispatchParams(std::index_sequence<PARAM_INDICES_T...>, ParamsAddT &&...vParamsAdd) const {
 			ParamSelector<ParamsAddT...> vSelector(std::forward<ParamsAddT>(vParamsAdd)...);
-			return x_vFunc(vSelector(std::get<PARAM_INDICES_T>(x_tupParams))...);
+			return Invoke(x_vFunc, vSelector(std::get<PARAM_INDICES_T>(x_tupParams))...);
 		}
 
 	public:
 		template<typename ...ParamsAddT>
 		decltype(auto) operator()(ParamsAddT &&...vParamsAdd) const {
-			return xInvoke(std::index_sequence_for<ParamsT...>(), std::forward<ParamsAddT>(vParamsAdd)...);
+			return xDispatchParams(std::index_sequence_for<ParamsT...>(), std::forward<ParamsAddT>(vParamsAdd)...);
 		}
 	};
+
 }
 
 constexpr Impl::Placeholder< 1>  _1;

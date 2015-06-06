@@ -6,9 +6,39 @@
 #define MCF_UTILITIES_ENDIAN_HPP_
 
 #include <type_traits>
-#include <climits>
+#include <cstdint>
 
 namespace MCF {
+
+namespace Impl {
+	template<unsigned BYTES_T>
+	struct ByteSwapper;
+
+	template<>
+	struct ByteSwapper<1> {
+		std::uint8_t operator()(std::uint8_t u8Val) const noexcept {
+			return u8Val;
+		}
+	};
+	template<>
+	struct ByteSwapper<2> {
+		std::uint16_t operator()(std::uint16_t u16Val) const noexcept {
+			return __builtin_bswap16(u16Val);
+		}
+	};
+	template<>
+	struct ByteSwapper<4> {
+		std::uint32_t operator()(std::uint32_t u32Val) const noexcept {
+			return __builtin_bswap32(u32Val);
+		}
+	};
+	template<>
+	struct ByteSwapper<8> {
+		std::uint64_t operator()(std::uint64_t u64Val) const noexcept {
+			return __builtin_bswap64(u64Val);
+		}
+	};
+}
 
 template<typename ValueT>
 inline ValueT LoadLe(const ValueT &vMem) noexcept {
@@ -17,31 +47,17 @@ inline ValueT LoadLe(const ValueT &vMem) noexcept {
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
 	return vMem;
 #else
-	using Unsigned = std::make_unsigned_t<ValueT>;
-
-	const auto &abyMem = reinterpret_cast<const unsigned char (&)[sizeof(vMem)]>(vMem);
-	Unsigned uTemp = 0;
-	for(unsigned i = 0; i < sizeof(vMem); ++i){
-		uTemp |= static_cast<Unsigned>(abyMem[i]) << (i * CHAR_BIT);
-	}
-	return static_cast<ValueT>(uTemp);
+	return static_cast<ValueT>(Impl::ByteSwapper<sizeof(vMem)>()(static_cast<std::make_unsigned_t<ValueT>>(vMem)));
 #endif
 }
 template<typename ValueT>
 inline ValueT LoadBe(const ValueT &vMem) noexcept {
 	static_assert(std::is_integral<ValueT>::value, "ValueT must be an integral type.");
 
-#if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
-	return vMem;
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+	return static_cast<ValueT>(Impl::ByteSwapper<sizeof(vMem)>()(static_cast<std::make_unsigned_t<ValueT>>(vMem)));
 #else
-	using Unsigned = std::make_unsigned_t<ValueT>;
-
-	const auto &abyMem = reinterpret_cast<const unsigned char (&)[sizeof(vMem)]>(vMem);
-	Unsigned uTemp = 0;
-	for(unsigned i = 0; i < sizeof(vMem); ++i){
-		uTemp |= static_cast<Unsigned>(abyMem[sizeof(vMem) - 1 - i]) << (i * CHAR_BIT);
-	}
-	return static_cast<ValueT>(uTemp);
+	return vMem;
 #endif
 }
 
@@ -52,27 +68,17 @@ inline void StoreLe(ValueT &vMem, std::common_type_t<ValueT> vVal) noexcept {
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
 	vMem = vVal;
 #else
-	using Unsigned = std::make_unsigned_t<ValueT>;
-
-	auto &abyMem = reinterpret_cast<unsigned char (&)[sizeof(vMem)]>(vMem);
-	for(unsigned i = 0; i < sizeof(vMem); ++i){
-		abyMem[i] = static_cast<Unsigned>(vVal) >> (i * CHAR_BIT);
-	}
+	vMem = static_cast<ValueT>(Impl::ByteSwapper<sizeof(vMem)>()(static_cast<std::make_unsigned_t<ValueT>>(vVal)));
 #endif
 }
 template<typename ValueT>
 inline void StoreBe(ValueT &vMem, std::common_type_t<ValueT> vVal) noexcept {
 	static_assert(std::is_integral<ValueT>::value, "ValueT must be an integral type.");
 
-#if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
-	vMem = vVal;
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+	vMem = static_cast<ValueT>(Impl::ByteSwapper<sizeof(vMem)>()(static_cast<std::make_unsigned_t<ValueT>>(vVal)));
 #else
-	using Unsigned = std::make_unsigned_t<ValueT>;
-
-	auto &abyMem = reinterpret_cast<unsigned char (&)[sizeof(vMem)]>(vMem);
-	for(unsigned i = 0; i < sizeof(vMem); ++i){
-		abyMem[sizeof(vMem) - 1 - i] = static_cast<Unsigned>(vVal) >> (i * CHAR_BIT);
-	}
+	vMem = vVal;
 #endif
 }
 

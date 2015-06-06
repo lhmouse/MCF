@@ -25,7 +25,7 @@ namespace Impl {
 		template<typename ClassT, typename ...ParamsT,	\
 			std::enable_if_t<std::is_base_of<PtClassT, std::decay_t<ClassT>>::value,	\
 				int> = 0>	\
-		decltype(auto) operator()(PtRetT (PtClassT::*pMemFunc)(PtParamsT...) cv_, ClassT *pObj, ParamsT &&...vParams) const {	\
+		decltype(auto) operator()(PtRetT (PtClassT::*pMemFunc)(PtParamsT...) cv_, cv_ ClassT *pObj, ParamsT &&...vParams) const {	\
 			return (pObj->*pMemFunc)(std::forward<ParamsT>(vParams)...);	\
 		}	\
 		template<typename ClassT, typename ...ParamsT,	\
@@ -35,7 +35,7 @@ namespace Impl {
 			return (std::forward<ClassT>(vObj).*pMemFunc)(std::forward<ParamsT>(vParams)...);	\
 		}	\
 		template<typename ClassT, typename ...ParamsT,	\
-			std::enable_if_t<!std::is_convertible<std::decay_t<ClassT>, const volatile PtClassT *>::value && !std::is_base_of<PtClassT, std::decay_t<ClassT>>::value,	\
+			std::enable_if_t<!std::is_convertible<std::decay_t<ClassT>, cv_ PtClassT *>::value && !std::is_base_of<PtClassT, std::decay_t<ClassT>>::value,	\
 				int> = 0>	\
 		decltype(auto) operator()(PtRetT (PtClassT::*pMemFunc)(PtParamsT...) cv_, ClassT &&vObj, ParamsT &&...vParams) const {	\
 			return ((*std::forward<ClassT>(vObj)).*pMemFunc)(std::forward<ParamsT>(vParams)...);	\

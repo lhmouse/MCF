@@ -21,6 +21,8 @@ template<typename RetT, typename ...ParamsT>
 class Function<RetT (ParamsT...)> {
 private:
 	struct xCallableBase : IntrusiveBase<xCallableBase> {
+		virtual ~xCallableBase() = default;
+
 		virtual RetT Invoke(ParamsT &&...vParams) const = 0;
 	};
 

@@ -21,7 +21,7 @@ template<typename RetT, typename ...ParamsT>
 class Function<RetT (ParamsT...)> {
 private:
 	template<typename T>
-		using xForwardedNonScalar = std::conditional_t<std::is_scalar<T>::value, T, T &&>;
+		using xForwardedNonScalar = std::conditional_t<std::is_scalar<T>::value, std::decay_t<T>, std::decay_t<T> &&>;
 
 	struct xCallableBase : IntrusiveBase<xCallableBase> {
 		virtual ~xCallableBase() = default;

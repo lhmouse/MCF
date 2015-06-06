@@ -1,15 +1,14 @@
 #include <MCF/StdMCF.hpp>
-#include <MCF/Core/Uuid.hpp>
+#include <MCF/Function/Function.hpp>
 #include <iostream>
 
 using namespace MCF;
 
 extern "C" unsigned int MCFMain() noexcept {
-	auto uuid = Uuid::Generate();
+	Function<int (int, int)> fn([](auto i, auto j){ return i + j; });
 
-	char temp[36];
-	uuid.Print(temp);
-	std::endl(std::cout.write(temp, sizeof(temp)));
+	std::cout <<fn(1, 2) <<std::endl;
+	std::cout <<fn(3, 4) <<std::endl;
 
 	return 0;
 }

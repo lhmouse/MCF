@@ -77,6 +77,8 @@ namespace Impl {
 		IntrusiveBase() noexcept {
 			AtomicStore(x_uRefCount, 1, MemoryModel::RELEASE);
 		}
+		virtual ~IntrusiveBase() noexcept(false) {
+		}
 
 	public:
 		IntrusiveBase(const IntrusiveBase &) noexcept

@@ -1,15 +1,15 @@
 #include <MCF/StdMCF.hpp>
-#include <MCF/Thread/Thread.hpp>
+#include <MCF/Core/Variant.hpp>
 #include <iostream>
+#include <string>
 
 using namespace MCF;
 
 extern "C" unsigned int MCFMain() noexcept {
-	std::string s = "hello world!";
-	auto pThread = Thread::Create([=]{ std::cout <<s <<std::endl; }, true);
-	s.clear();
+/*
+	Variant<int, double, std::string> v;
 
-	pThread->Resume();
-	pThread->Join();
+	std::cout <<"ptr = " <<(const void *)v.GetByType<double>() <<std::endl;
+*/
 	return 0;
 }

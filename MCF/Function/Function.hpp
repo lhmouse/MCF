@@ -14,7 +14,7 @@
 
 namespace MCF {
 
-namespace Impl {
+namespace Impl_Function {
 	template<typename T>
 		using ForwardedNonScalar = std::conditional_t<std::is_scalar<T>::value, std::decay_t<T>, T &&>;
 
@@ -53,21 +53,21 @@ class Function {
 template<typename RetT, typename ...ParamsT>
 class Function<RetT (ParamsT...)> {
 private:
-	IntrusivePtr<const Impl::FunctorBase<RetT, ParamsT...>> x_pFunctor;
+	IntrusivePtr<const Impl_Function::FunctorBase<RetT, ParamsT...>> x_pFunctor;
 
 public:
 	constexpr Function() = default;
 
 	template<typename FuncT,
 		std::enable_if_t<
-			std::is_convertible<std::result_of_t<FuncT && (Impl::ForwardedNonScalar<ParamsT>...)>, RetT>::value,
+			std::is_convertible<std::result_of_t<FuncT && (Impl_Function::ForwardedNonScalar<ParamsT>...)>, RetT>::value,
 			int> = 0>
 	Function(FuncT &&x_vFunc){
 		Reset(std::forward<FuncT>(x_vFunc));
 	}
 	template<typename FuncT,
 		std::enable_if_t<
-			std::is_convertible<std::result_of_t<FuncT && (Impl::ForwardedNonScalar<ParamsT>...)>, RetT>::value,
+			std::is_convertible<std::result_of_t<FuncT && (Impl_Function::ForwardedNonScalar<ParamsT>...)>, RetT>::value,
 			int> = 0>
 	Function &operator=(FuncT &&x_vFunc){
 		Reset(std::forward<FuncT>(x_vFunc));
@@ -80,10 +80,10 @@ public:
 	}
 	template<typename FuncT,
 		std::enable_if_t<
-			std::is_convertible<std::result_of_t<FuncT && (Impl::ForwardedNonScalar<ParamsT>...)>, RetT>::value,
+			std::is_convertible<std::result_of_t<FuncT && (Impl_Function::ForwardedNonScalar<ParamsT>...)>, RetT>::value,
 			int> = 0>
 	void Reset(FuncT &&x_vFunc){
-		x_pFunctor.Reset(new Impl::Functor<FuncT, RetT, ParamsT...>(std::forward<FuncT>(x_vFunc)));
+		x_pFunctor.Reset(new Impl_Function::Functor<FuncT, RetT, ParamsT...>(std::forward<FuncT>(x_vFunc)));
 	}
 
 	void Swap(Function &rhs) noexcept {

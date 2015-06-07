@@ -10,7 +10,7 @@
 
 namespace MCF {
 
-namespace Impl {
+namespace Impl_Endian {
 	template<unsigned BYTES_T>
 	struct ByteSwapper;
 
@@ -47,7 +47,7 @@ inline ValueT LoadLe(const ValueT &vMem) noexcept {
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
 	return vMem;
 #else
-	return static_cast<ValueT>(Impl::ByteSwapper<sizeof(vMem)>()(static_cast<std::make_unsigned_t<ValueT>>(vMem)));
+	return static_cast<ValueT>(Impl_Endian::ByteSwapper<sizeof(vMem)>()(static_cast<std::make_unsigned_t<ValueT>>(vMem)));
 #endif
 }
 template<typename ValueT>
@@ -55,7 +55,7 @@ inline ValueT LoadBe(const ValueT &vMem) noexcept {
 	static_assert(std::is_integral<ValueT>::value, "ValueT must be an integral type.");
 
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
-	return static_cast<ValueT>(Impl::ByteSwapper<sizeof(vMem)>()(static_cast<std::make_unsigned_t<ValueT>>(vMem)));
+	return static_cast<ValueT>(Impl_Endian::ByteSwapper<sizeof(vMem)>()(static_cast<std::make_unsigned_t<ValueT>>(vMem)));
 #else
 	return vMem;
 #endif
@@ -68,7 +68,7 @@ inline void StoreLe(ValueT &vMem, std::common_type_t<ValueT> vVal) noexcept {
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
 	vMem = vVal;
 #else
-	vMem = static_cast<ValueT>(Impl::ByteSwapper<sizeof(vMem)>()(static_cast<std::make_unsigned_t<ValueT>>(vVal)));
+	vMem = static_cast<ValueT>(Impl_Endian::ByteSwapper<sizeof(vMem)>()(static_cast<std::make_unsigned_t<ValueT>>(vVal)));
 #endif
 }
 template<typename ValueT>
@@ -76,7 +76,7 @@ inline void StoreBe(ValueT &vMem, std::common_type_t<ValueT> vVal) noexcept {
 	static_assert(std::is_integral<ValueT>::value, "ValueT must be an integral type.");
 
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
-	vMem = static_cast<ValueT>(Impl::ByteSwapper<sizeof(vMem)>()(static_cast<std::make_unsigned_t<ValueT>>(vVal)));
+	vMem = static_cast<ValueT>(Impl_Endian::ByteSwapper<sizeof(vMem)>()(static_cast<std::make_unsigned_t<ValueT>>(vVal)));
 #else
 	vMem = vVal;
 #endif

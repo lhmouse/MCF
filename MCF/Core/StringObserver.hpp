@@ -60,7 +60,7 @@ struct StringEncodingTrait<StringType::ANSI> {
 	using Type = char;
 };
 
-namespace Impl {
+namespace Impl_StringObserver {
 	constexpr std::size_t NPOS = (std::size_t)-1;
 
 	template<typename CharT>
@@ -179,7 +179,7 @@ public:
 	static constexpr StringType Type = TYPE_T;
 	using CharType = typename StringEncodingTrait<TYPE_T>::Type;
 
-	static constexpr std::size_t NPOS = Impl::NPOS;
+	static constexpr std::size_t NPOS = Impl_StringObserver::NPOS;
 
 	static_assert(std::is_integral<CharType>::value, "CharType must be an integral type.");
 
@@ -226,7 +226,7 @@ public:
 	{
 	}
 	explicit StringObserver(const CharType *pszBegin) noexcept
-		: StringObserver(pszBegin, Impl::StrEndOf(pszBegin))
+		: StringObserver(pszBegin, Impl_StringObserver::StrEndOf(pszBegin))
 	{
 	}
 
@@ -295,7 +295,7 @@ public:
 		Assign(rhs.begin(), rhs.end());
 	}
 	void Assign(const CharType *pszBegin) noexcept {
-		Assign(pszBegin, Impl::StrEndOf(pszBegin));
+		Assign(pszBegin, Impl_StringObserver::StrEndOf(pszBegin));
 	}
 
 	// 举例：
@@ -326,7 +326,7 @@ public:
 		if(uRealBegin + uLenToFind > uLength){
 			return NPOS;
 		}
-		const auto uPos = Impl::StrStr(GetBegin() + uRealBegin, GetEnd(), obsToFind.GetBegin(), obsToFind.GetEnd());
+		const auto uPos = Impl_StringObserver::StrStr(GetBegin() + uRealBegin, GetEnd(), obsToFind.GetBegin(), obsToFind.GetEnd());
 		if(uPos == NPOS){
 			return NPOS;
 		}
@@ -347,7 +347,7 @@ public:
 		}
 		std::reverse_iterator<const CharType *> itBegin(GetBegin() + uRealEnd), itEnd(GetBegin()),
 			itToFindBegin(obsToFind.GetEnd()), itToFindEnd(obsToFind.GetBegin());
-		const auto uPos = Impl::StrStr(itBegin, itEnd, itToFindBegin, itToFindEnd);
+		const auto uPos = Impl_StringObserver::StrStr(itBegin, itEnd, itToFindBegin, itToFindEnd);
 		if(uPos == NPOS){
 			return NPOS;
 		}
@@ -371,7 +371,7 @@ public:
 		if(uRealBegin < uRepCount){
 			return NPOS;
 		}
-		const auto uPos = Impl::StrChrRep(GetBegin() + uRealBegin, GetEnd(), chToFind, uRepCount);
+		const auto uPos = Impl_StringObserver::StrChrRep(GetBegin() + uRealBegin, GetEnd(), chToFind, uRepCount);
 		if(uPos == NPOS){
 			return NPOS;
 		}
@@ -390,7 +390,7 @@ public:
 			return NPOS;
 		}
 		std::reverse_iterator<const CharType *> itBegin(GetBegin() + uRealEnd), itEnd(GetBegin());
-		const auto uPos = Impl::StrChrRep(itBegin, itEnd, chToFind, uRepCount);
+		const auto uPos = Impl_StringObserver::StrChrRep(itBegin, itEnd, chToFind, uRepCount);
 		if(uPos == NPOS){
 			return NPOS;
 		}

@@ -22,7 +22,7 @@ template<typename ObjectT, class DeleterT = DefaultDeleter<std::remove_cv_t<Obje
 template<typename ObjectT, class DeleterT = DefaultDeleter<std::remove_cv_t<ObjectT>>>
 	class IntrusivePtr;
 
-namespace Impl {
+namespace Impl_IntrusivePtr {
 	template<class DeleterT>
 	class IntrusiveSentry {
 	public:
@@ -70,7 +70,7 @@ namespace Impl {
 template<typename ObjectT, class DeleterT>
 class IntrusiveBase {
 public:
-	using Sentry = Impl::IntrusiveSentry<DeleterT>;
+	using Sentry = Impl_IntrusivePtr::IntrusiveSentry<DeleterT>;
 	using Pointee = typename Sentry::Pointee;
 
 private:
@@ -120,28 +120,28 @@ public:
 	const volatile OtherT *Get() const volatile noexcept {
 		ASSERT((std::ptrdiff_t)AtomicLoad(x_uRefCount, MemoryModel::RELAXED) > 0);
 
-		return Impl::IntrusiveCastHelper<const volatile OtherT, const volatile Pointee>()(
+		return Impl_IntrusivePtr::IntrusiveCastHelper<const volatile OtherT, const volatile Pointee>()(
 			static_cast<const volatile Pointee *>(this));
 	}
 	template<typename OtherT = ObjectT>
 	const OtherT *Get() const noexcept {
 		ASSERT((std::ptrdiff_t)AtomicLoad(x_uRefCount, MemoryModel::RELAXED) > 0);
 
-		return Impl::IntrusiveCastHelper<const OtherT, const Pointee>()(
+		return Impl_IntrusivePtr::IntrusiveCastHelper<const OtherT, const Pointee>()(
 			static_cast<const Pointee *>(this));
 	}
 	template<typename OtherT = ObjectT>
 	volatile OtherT *Get() volatile noexcept {
 		ASSERT((std::ptrdiff_t)AtomicLoad(x_uRefCount, MemoryModel::RELAXED) > 0);
 
-		return Impl::IntrusiveCastHelper<volatile OtherT, volatile Pointee>()(
+		return Impl_IntrusivePtr::IntrusiveCastHelper<volatile OtherT, volatile Pointee>()(
 			static_cast<volatile Pointee *>(this));
 	}
 	template<typename OtherT = ObjectT>
 	OtherT *Get() noexcept {
 		ASSERT((std::ptrdiff_t)AtomicLoad(x_uRefCount, MemoryModel::RELAXED) > 0);
 
-		return Impl::IntrusiveCastHelper<OtherT, Pointee>()(
+		return Impl_IntrusivePtr::IntrusiveCastHelper<OtherT, Pointee>()(
 			static_cast<Pointee *>(this));
 	}
 

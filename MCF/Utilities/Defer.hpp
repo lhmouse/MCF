@@ -10,7 +10,7 @@
 
 namespace MCF {
 
-namespace Impl {
+namespace Impl_Defer {
 	template<typename CallbackT>
 	class DeferredCallback {
 	private:
@@ -40,6 +40,6 @@ namespace Impl {
 #define DEFER_UNIQUE_ID_2_(cnt_)	MCF_DeferredCallback_ ## cnt_ ## X_
 #define DEFER_UNIQUE_ID_(cnt_)		DEFER_UNIQUE_ID_2_(cnt_)
 
-#define DEFER(func_)				const auto DEFER_UNIQUE_ID_(__COUNTER__) = ::MCF::Impl::CreateDeferredCallback(func_)
+#define DEFER(func_)				const auto DEFER_UNIQUE_ID_(__COUNTER__) = ::MCF::Impl_Defer::CreateDeferredCallback(func_)
 
 #endif

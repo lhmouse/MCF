@@ -13,7 +13,7 @@ namespace MCF {
 namespace {
 	union alignas(std::max_align_t) PooledSharedControl {
 		PooledSharedControl *pNext;
-		char achDummy[sizeof(Impl::SharedControl)];
+		char achDummy[sizeof(Impl_SharedPtr::SharedControl)];
 	};
 
 	class Pool : NONCOPYABLE {
@@ -53,12 +53,12 @@ namespace {
 	} g_vPool __attribute__((__init_priority__(101)));
 }
 
-void *Impl::SharedControl::operator new(std::size_t uSize){
+void *Impl_SharedPtr::SharedControl::operator new(std::size_t uSize){
 	ASSERT(uSize == sizeof(PooledSharedControl));
 	(void)uSize;
 	return g_vPool.Alloc();
 }
-void Impl::SharedControl::operator delete(void *pData) noexcept {
+void Impl_SharedPtr::SharedControl::operator delete(void *pData) noexcept {
 	if(!pData){
 		return;
 	}

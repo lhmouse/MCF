@@ -13,7 +13,7 @@
 
 namespace MCF {
 
-namespace Impl {
+namespace Impl_CopyMoveFill {
 	template<typename OutputIteratorT, typename InputIteratorT, typename ValueT,
 		typename TraitHelper = void>
 	struct CopyTrait {
@@ -189,7 +189,7 @@ inline OutputIteratorT
 	Copy(OutputIteratorT itOutputBegin,
 		InputIteratorT itInputBegin, std::common_type_t<InputIteratorT> itInputEnd)
 {
-	return Impl::CopyTrait<OutputIteratorT, InputIteratorT,
+	return Impl_CopyMoveFill::CopyTrait<OutputIteratorT, InputIteratorT,
 		std::remove_reference_t<
 			typename std::iterator_traits<InputIteratorT>::value_type>
 		>::DoCopy(itOutputBegin, itInputBegin, itInputEnd);
@@ -199,7 +199,7 @@ inline std::pair<OutputIteratorT, InputIteratorT>
 	CopyN(OutputIteratorT itOutputBegin,
 		InputIteratorT itInputBegin, std::size_t uCount)
 {
-	return Impl::CopyTrait<OutputIteratorT, InputIteratorT,
+	return Impl_CopyMoveFill::CopyTrait<OutputIteratorT, InputIteratorT,
 		std::remove_reference_t<
 			typename std::iterator_traits<InputIteratorT>::value_type>
 		>::DoCopyN(itOutputBegin, itInputBegin, uCount);
@@ -209,7 +209,7 @@ inline OutputIteratorT
 	CopyBackward(OutputIteratorT itOutputEnd,
 		InputIteratorT itInputBegin, std::common_type_t<InputIteratorT> itInputEnd)
 {
-	return Impl::CopyTrait<OutputIteratorT, InputIteratorT,
+	return Impl_CopyMoveFill::CopyTrait<OutputIteratorT, InputIteratorT,
 		std::remove_reference_t<
 			typename std::iterator_traits<InputIteratorT>::value_type>
 		>::DoCopyBackward(itOutputEnd, itInputBegin, itInputEnd);
@@ -219,7 +219,7 @@ inline std::pair<OutputIteratorT, InputIteratorT>
 	CopyBackwardN(OutputIteratorT itOutputEnd, std::size_t uCount,
 		InputIteratorT itInputEnd)
 {
-	return Impl::CopyTrait<OutputIteratorT, InputIteratorT,
+	return Impl_CopyMoveFill::CopyTrait<OutputIteratorT, InputIteratorT,
 		std::remove_reference_t<
 			typename std::iterator_traits<InputIteratorT>::value_type>
 		>::DoCopyBackwardN(itOutputEnd, uCount, itInputEnd);
@@ -265,7 +265,7 @@ inline OutputIteratorT
 	Move(OutputIteratorT itOutputBegin,
 	 InputIteratorT itInputBegin, std::common_type_t<InputIteratorT> itInputEnd)
 {
-	return Impl::CopyTrait<OutputIteratorT, InputIteratorT,
+	return Impl_CopyMoveFill::CopyTrait<OutputIteratorT, InputIteratorT,
 		std::remove_reference_t<
 			typename std::iterator_traits<InputIteratorT>::value_type>
 		>::DoMove(itOutputBegin, itInputBegin, itInputEnd);
@@ -275,7 +275,7 @@ inline std::pair<OutputIteratorT, InputIteratorT>
 	MoveN(OutputIteratorT itOutputBegin,
 		InputIteratorT itInputBegin, std::size_t uCount)
 {
-	return Impl::CopyTrait<OutputIteratorT, InputIteratorT,
+	return Impl_CopyMoveFill::CopyTrait<OutputIteratorT, InputIteratorT,
 		std::remove_reference_t<
 			typename std::iterator_traits<InputIteratorT>::value_type>
 		>::DoMoveN(itOutputBegin, itInputBegin, uCount);
@@ -285,7 +285,7 @@ inline OutputIteratorT
 	MoveBackward(OutputIteratorT itOutputEnd,
 		InputIteratorT itInputBegin, std::common_type_t<InputIteratorT> itInputEnd)
 {
-	return Impl::CopyTrait<OutputIteratorT, InputIteratorT,
+	return Impl_CopyMoveFill::CopyTrait<OutputIteratorT, InputIteratorT,
 		std::remove_reference_t<
 			typename std::iterator_traits<InputIteratorT>::value_type>
 		>::DoMoveBackward(itOutputEnd, itInputBegin, itInputEnd);
@@ -295,7 +295,7 @@ inline std::pair<OutputIteratorT, InputIteratorT>
 	MoveBackwardN(OutputIteratorT itOutputEnd, std::size_t uCount,
 		InputIteratorT itInputEnd)
 {
-	return Impl::CopyTrait<OutputIteratorT, InputIteratorT,
+	return Impl_CopyMoveFill::CopyTrait<OutputIteratorT, InputIteratorT,
 		std::remove_reference_t<
 			typename std::iterator_traits<InputIteratorT>::value_type>
 		>::DoMoveBackwardN(itOutputEnd, uCount, itInputEnd);

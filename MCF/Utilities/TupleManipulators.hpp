@@ -11,7 +11,7 @@
 
 namespace MCF {
 
-namespace Impl {
+namespace Impl_TupleManipulators {
 	template<typename FunctionT, typename TupleT>
 	struct AbsorbTupleHelper {
 		FunctionT &vFunction;
@@ -45,19 +45,19 @@ namespace Impl {
 // AbsorbTuple(foo, std::make_tuple(1, 2, 3)); -> { foo(1); foo(2); foo(3); }
 template<typename FunctionT, typename ...ElementsT>
 FunctionT &&AbsorbTuple(FunctionT &&vFunction, const std::tuple<ElementsT...> &vTuple){
-	Impl::AbsorbTupleHelper<FunctionT, const std::tuple<ElementsT...> &>(vFunction, vTuple).template DoForwards<
+	Impl_TupleManipulators::AbsorbTupleHelper<FunctionT, const std::tuple<ElementsT...> &>(vFunction, vTuple).template DoForwards<
 		void, std::conditional_t<std::is_reference<ElementsT>::value, ElementsT, const ElementsT &>...>();
 	return std::forward<FunctionT>(vFunction);
 }
 template<typename FunctionT, typename ...ElementsT>
 FunctionT &&AbsorbTuple(FunctionT &&vFunction, std::tuple<ElementsT...> &vTuple){
-	Impl::AbsorbTupleHelper<FunctionT, std::tuple<ElementsT...> &>(vFunction, vTuple).template DoForwards<
+	Impl_TupleManipulators::AbsorbTupleHelper<FunctionT, std::tuple<ElementsT...> &>(vFunction, vTuple).template DoForwards<
 		void, std::conditional_t<std::is_reference<ElementsT>::value, ElementsT, ElementsT &>...>();
 	return std::forward<FunctionT>(vFunction);
 }
 template<typename FunctionT, typename ...ElementsT>
 FunctionT &&AbsorbTuple(FunctionT &&vFunction, std::tuple<ElementsT...> &&vTuple){
-	Impl::AbsorbTupleHelper<FunctionT, std::tuple<ElementsT...> &>(vFunction, vTuple).template DoForwards<
+	Impl_TupleManipulators::AbsorbTupleHelper<FunctionT, std::tuple<ElementsT...> &>(vFunction, vTuple).template DoForwards<
 		void, std::conditional_t<std::is_reference<ElementsT>::value, ElementsT, ElementsT &&>...>();
 	return std::forward<FunctionT>(vFunction);
 }
@@ -65,24 +65,24 @@ FunctionT &&AbsorbTuple(FunctionT &&vFunction, std::tuple<ElementsT...> &&vTuple
 // ReverseAbsorbTuple(foo, std::make_tuple(1, 2, 3)); -> { foo(3); foo(2); foo(1); }
 template<typename FunctionT, typename ...ElementsT>
 FunctionT &&ReverseAbsorbTuple(FunctionT &&vFunction, const std::tuple<ElementsT...> &vTuple){
-	Impl::AbsorbTupleHelper<FunctionT, const std::tuple<ElementsT...> &>(vFunction, vTuple).template DoReversely<
+	Impl_TupleManipulators::AbsorbTupleHelper<FunctionT, const std::tuple<ElementsT...> &>(vFunction, vTuple).template DoReversely<
 		void, std::conditional_t<std::is_reference<ElementsT>::value, ElementsT, const ElementsT &>...>();
 	return std::forward<FunctionT>(vFunction);
 }
 template<typename FunctionT, typename ...ElementsT>
 FunctionT &&ReverseAbsorbTuple(FunctionT &&vFunction, std::tuple<ElementsT...> &vTuple){
-	Impl::AbsorbTupleHelper<FunctionT, std::tuple<ElementsT...> &>(vFunction, vTuple).template DoReversely<
+	Impl_TupleManipulators::AbsorbTupleHelper<FunctionT, std::tuple<ElementsT...> &>(vFunction, vTuple).template DoReversely<
 		void, std::conditional_t<std::is_reference<ElementsT>::value, ElementsT, ElementsT &>...>();
 	return std::forward<FunctionT>(vFunction);
 }
 template<typename FunctionT, typename ...ElementsT>
 FunctionT &&ReverseAbsorbTuple(FunctionT &&vFunction, std::tuple<ElementsT...> &&vTuple){
-	Impl::AbsorbTupleHelper<FunctionT, std::tuple<ElementsT...> &>(vFunction, vTuple).template DoReversely<
+	Impl_TupleManipulators::AbsorbTupleHelper<FunctionT, std::tuple<ElementsT...> &>(vFunction, vTuple).template DoReversely<
 		void, std::conditional_t<std::is_reference<ElementsT>::value, ElementsT, ElementsT &&>...>();
 	return std::forward<FunctionT>(vFunction);
 }
 
-namespace Impl {
+namespace Impl_TupleManipulators {
 	template<typename FunctionT, typename TupleT>
 	struct SqueezeTupleHelper {
 		FunctionT &vFunction;
@@ -108,34 +108,34 @@ namespace Impl {
 // SqueezeTuple(foo, std::make_tuple(1, 2, 3)); -> foo(1, 2, 3);
 template<typename FunctionT, typename ...ElementsT>
 decltype(auto) SqueezeTuple(FunctionT &&vFunction, const std::tuple<ElementsT...> &vTuple){
-	return Impl::SqueezeTupleHelper<FunctionT, const std::tuple<ElementsT...> &>(vFunction, vTuple).template DoForwards<
+	return Impl_TupleManipulators::SqueezeTupleHelper<FunctionT, const std::tuple<ElementsT...> &>(vFunction, vTuple).template DoForwards<
 		std::conditional_t<std::is_reference<ElementsT>::value, ElementsT, const ElementsT &>...>(std::index_sequence_for<ElementsT...>());
 }
 template<typename FunctionT, typename ...ElementsT>
 decltype(auto) SqueezeTuple(FunctionT &&vFunction, std::tuple<ElementsT...> &vTuple){
-	return Impl::SqueezeTupleHelper<FunctionT, std::tuple<ElementsT...> &>(vFunction, vTuple).template DoForwards<
+	return Impl_TupleManipulators::SqueezeTupleHelper<FunctionT, std::tuple<ElementsT...> &>(vFunction, vTuple).template DoForwards<
 		std::conditional_t<std::is_reference<ElementsT>::value, ElementsT, ElementsT &>...>(std::index_sequence_for<ElementsT...>());
 }
 template<typename FunctionT, typename ...ElementsT>
 decltype(auto) SqueezeTuple(FunctionT &&vFunction, std::tuple<ElementsT...> &&vTuple){
-	return Impl::SqueezeTupleHelper<FunctionT, std::tuple<ElementsT...> &>(vFunction, vTuple).template DoForwards<
+	return Impl_TupleManipulators::SqueezeTupleHelper<FunctionT, std::tuple<ElementsT...> &>(vFunction, vTuple).template DoForwards<
 		std::conditional_t<std::is_reference<ElementsT>::value, ElementsT, ElementsT &&>...>(std::index_sequence_for<ElementsT...>());
 }
 
 // ReverseSqueezeTuple(foo, std::make_tuple(1, 2, 3)); -> foo(3, 2, 1);
 template<typename FunctionT, typename ...ElementsT>
 decltype(auto) ReverseSqueezeTuple(FunctionT &&vFunction, const std::tuple<ElementsT...> &vTuple){
-	return Impl::SqueezeTupleHelper<FunctionT, const std::tuple<ElementsT...> &>(vFunction, vTuple).template DoReversely<
+	return Impl_TupleManipulators::SqueezeTupleHelper<FunctionT, const std::tuple<ElementsT...> &>(vFunction, vTuple).template DoReversely<
 		std::conditional_t<std::is_reference<ElementsT>::value, ElementsT, const ElementsT &>...>(std::index_sequence_for<ElementsT...>());
 }
 template<typename FunctionT, typename ...ElementsT>
 decltype(auto) ReverseSqueezeTuple(FunctionT &&vFunction, std::tuple<ElementsT...> &vTuple){
-	return Impl::SqueezeTupleHelper<FunctionT, std::tuple<ElementsT...> &>(vFunction, vTuple).template DoReversely<
+	return Impl_TupleManipulators::SqueezeTupleHelper<FunctionT, std::tuple<ElementsT...> &>(vFunction, vTuple).template DoReversely<
 		std::conditional_t<std::is_reference<ElementsT>::value, ElementsT, ElementsT &>...>(std::index_sequence_for<ElementsT...>());
 }
 template<typename FunctionT, typename ...ElementsT>
 decltype(auto) ReverseSqueezeTuple(FunctionT &&vFunction, std::tuple<ElementsT...> &&vTuple){
-	return Impl::SqueezeTupleHelper<FunctionT, std::tuple<ElementsT...> &>(vFunction, vTuple).template DoReversely<
+	return Impl_TupleManipulators::SqueezeTupleHelper<FunctionT, std::tuple<ElementsT...> &>(vFunction, vTuple).template DoReversely<
 		std::conditional_t<std::is_reference<ElementsT>::value, ElementsT, ElementsT &&>...>(std::index_sequence_for<ElementsT...>());
 }
 

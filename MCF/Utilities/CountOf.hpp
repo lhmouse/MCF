@@ -9,7 +9,7 @@
 
 namespace MCF {
 
-namespace Impl {
+namespace Impl_CountOf {
 	template<typename Ty, std::size_t N>
 	constexpr std::size_t CountOfHelper(Ty (&)[N]) noexcept {
 		return N;
@@ -23,6 +23,6 @@ namespace Impl {
 
 }
 
-#define COUNT_OF(x_)		(::MCF::Impl::CountOfHelper(x_))
+#define COUNT_OF(x_)		(::MCF::Impl_CountOf::CountOfHelper(x_))
 
 #endif

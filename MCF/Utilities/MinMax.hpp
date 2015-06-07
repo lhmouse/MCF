@@ -5,37 +5,31 @@
 #ifndef MCF_UTILITIES_MIN_MAX_HPP_
 #define MCF_UTILITIES_MIN_MAX_HPP_
 
-#include <type_traits>
 #include <functional>
+#include <utility>
 
 namespace MCF {
 
-template<typename Tx, typename Ty, typename ComparatorT = std::less<void>>
-constexpr decltype(auto) Min(Tx &&x, Ty &&y){
-	static_assert(std::is_scalar<std::remove_reference_t<Tx>>::value && std::is_scalar<std::remove_reference_t<Ty>>::value,
-		"Only scalar types are supported.");
-	static_assert(std::is_signed<std::remove_reference_t<Tx>>::value == std::is_signed<std::remove_reference_t<Ty>>::value,
-		"Comparison between signed and unsigned integers.");
-
-	return ComparatorT()(std::forward<Tx>(x), std::forward<Ty>(y)) ? std::forward<Tx>(x) : std::forward<Ty>(y);
+template<typename ComparatorT = std::less<void>, typename FirstT>
+constexpr decltype(auto) Min(FirstT &&first){
+	return std::forward<FirstT>(first);
 }
-template<typename Tx, typename Ty, typename ComparatorT = std::less<void>, typename ...MoreT>
-constexpr decltype(auto) Min(Tx &&x, Ty &&y, MoreT &&...vMore){
-	return Min(Min(std::forward<Tx>(x), std::forward<Ty>(y)), std::forward<MoreT>(vMore)...);
+template<typename ComparatorT = std::less<void>, typename FirstT>
+constexpr decltype(auto) Max(FirstT &&first){
+	return std::forward<FirstT>(first);
 }
 
-template<typename Tx, typename Ty, typename ComparatorT = std::less<void>>
-constexpr decltype(auto) Max(Tx &&x, Ty &&y){
-	static_assert(std::is_scalar<std::remove_reference_t<Tx>>::value && std::is_scalar<std::remove_reference_t<Ty>>::value,
-		"Only scalar types are supported.");
-	static_assert(std::is_signed<std::remove_reference_t<Tx>>::value == std::is_signed<std::remove_reference_t<Ty>>::value,
-		"Comparison between signed and unsigned integers.");
-
-	return ComparatorT()(std::forward<Tx>(x), std::forward<Ty>(y)) ? std::forward<Ty>(y) : std::forward<Tx>(x);
+template<typename ComparatorT = std::less<void>, typename FirstT, typename SecondT, typename ...RemainingT>
+constexpr decltype(auto) Min(FirstT &&first, SecondT &&second, RemainingT &&...remaining){
+	return Min<ComparatorT>(
+		ComparatorT()(first, second) ? std::forward<FirstT>(first) : std::forward<SecondT>(second),
+		std::forward<RemainingT>(remaining)...);
 }
-template<typename Tx, typename Ty, typename ComparatorT = std::less<void>, typename ...MoreT>
-constexpr decltype(auto) Max(Tx &&x, Ty &&y, MoreT &&...vMore){
-	return Max(Max(std::forward<Tx>(x), std::forward<Ty>(y)), std::forward<MoreT>(vMore)...);
+template<typename ComparatorT = std::less<void>, typename FirstT, typename SecondT, typename ...RemainingT>
+constexpr decltype(auto) Max(FirstT &&first, SecondT &&second, RemainingT &&...remaining){
+	return Max<ComparatorT>(
+		!ComparatorT()(first, second) ? std::forward<FirstT>(first) : std::forward<SecondT>(second),
+		std::forward<RemainingT>(remaining)...);
 }
 
 }

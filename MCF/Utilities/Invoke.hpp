@@ -10,7 +10,7 @@
 
 namespace MCF {
 
-namespace Impl {
+namespace Impl_Invoke {
 	template<typename PrototypeT>
 	struct Invoker {
 		template<typename FuncT, typename ...ParamsT>
@@ -53,7 +53,7 @@ DEFINE_NON_STATIC_MEMBER_FUNCTION_INVOKER_()
 
 template<typename FuncT, typename ...ParamsT>
 decltype(auto) Invoke(FuncT &&vFunc, ParamsT &&...vParams){
-	return Impl::Invoker<std::decay_t<FuncT>>()(std::forward<FuncT>(vFunc), std::forward<ParamsT>(vParams)...);
+	return Impl_Invoke::Invoker<std::decay_t<FuncT>>()(std::forward<FuncT>(vFunc), std::forward<ParamsT>(vParams)...);
 }
 
 }

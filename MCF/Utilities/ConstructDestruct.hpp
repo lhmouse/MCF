@@ -10,7 +10,7 @@
 
 namespace MCF {
 
-namespace Impl {
+namespace Impl_ConstructDestruct {
 	struct DirectConstructTag {
 	};
 }
@@ -18,15 +18,15 @@ namespace Impl {
 }
 
 // FIXME: 我只能说 GCC 是个白痴！为什么要检查 placement new 的返回值是否为 nullptr？
-inline void *operator new(std::size_t, void *p, const ::MCF::Impl::DirectConstructTag &){
+inline void *operator new(std::size_t, void *p, const ::MCF::Impl_ConstructDestruct::DirectConstructTag &){
 	return p;
 }
-inline void operator delete(void *, void *, const ::MCF::Impl::DirectConstructTag &) noexcept {
+inline void operator delete(void *, void *, const ::MCF::Impl_ConstructDestruct::DirectConstructTag &) noexcept {
 }
 
 namespace MCF {
 
-namespace Impl {
+namespace Impl_ConstructDestruct {
 	template<typename ObjectT>
 	struct DirectConstructor {
 		template<typename ...ParamsT>
@@ -54,19 +54,19 @@ template<typename ObjectT, typename ...ParamsT>
 inline void Construct(ObjectT *pObject, ParamsT &&...vParams)
 	noexcept(std::is_nothrow_constructible<ObjectT, ParamsT &&...>::value)
 {
-	Impl::DirectConstructor<ObjectT>::Construct(pObject, std::forward<ParamsT>(vParams)...);
+	Impl_ConstructDestruct::DirectConstructor<ObjectT>::Construct(pObject, std::forward<ParamsT>(vParams)...);
 }
 template<typename ObjectT, typename ...ParamsT>
 inline void DefaultConstruct(ObjectT *pObject, ParamsT &&...vParams)
 	noexcept(std::is_nothrow_constructible<ObjectT, ParamsT &&...>::value)
 {
-	Impl::DirectConstructor<ObjectT>::DefaultConstruct(pObject, std::forward<ParamsT>(vParams)...);
+	Impl_ConstructDestruct::DirectConstructor<ObjectT>::DefaultConstruct(pObject, std::forward<ParamsT>(vParams)...);
 }
 template<typename ObjectT>
 inline void Destruct(ObjectT *pObject)
 	noexcept(std::is_nothrow_destructible<ObjectT>::value)
 {
-	Impl::DirectConstructor<ObjectT>::Destruct(pObject);
+	Impl_ConstructDestruct::DirectConstructor<ObjectT>::Destruct(pObject);
 }
 
 template<typename ObjectT, typename ...ParamsT>
@@ -124,6 +124,6 @@ inline void DestructArray(ObjectT *pBegin, std::size_t uCount) noexcept {
 
 }
 
-#define FRIEND_CONSTRUCT_DESTRUCT(type_)		friend class ::MCF::Impl::DirectConstructor<type_>
+#define FRIEND_CONSTRUCT_DESTRUCT(type_)		friend class ::MCF::Impl_ConstructDestruct::DirectConstructor<type_>
 
 #endif

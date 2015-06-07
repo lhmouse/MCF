@@ -17,7 +17,7 @@ class KernelMutex;
 template<class ObjectT, class MutexT>
 	class MonitorTemplate;
 
-namespace Impl {
+namespace Impl_Monitor {
 	template<class ObjectT>
 	class MonitorObserverAsReference {
 	private:

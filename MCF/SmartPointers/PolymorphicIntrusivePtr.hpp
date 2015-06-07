@@ -25,7 +25,7 @@ private:
 			int> = 0>
 	TestObjectT *xDoClone() const {
 		return new TestObjectT(
-			*Impl::IntrusiveCastHelper<const TestObjectT, const PolymorphicIntrusiveBase>()(this));
+			*Impl_IntrusivePtr::IntrusiveCastHelper<const TestObjectT, const PolymorphicIntrusiveBase>()(this));
 	}
 	template<typename TestObjectT = ObjectT,
 		std::enable_if_t<

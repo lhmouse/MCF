@@ -12,7 +12,7 @@
 
 namespace MCF {
 
-namespace Impl {
+namespace Impl_CallOnce {
 	class OnceFlag {
 	public:
 		static Mutex &GetMutex() noexcept;
@@ -39,7 +39,7 @@ namespace Impl {
 	};
 }
 
-using OnceFlag = volatile Impl::OnceFlag;
+using OnceFlag = volatile Impl_CallOnce::OnceFlag;
 
 template<typename FunctionT, typename ...ParamsT>
 bool CallOnce(OnceFlag &vFlag, FunctionT &&vFunction, ParamsT &&...vParams){
@@ -49,7 +49,7 @@ bool CallOnce(OnceFlag &vFlag, FunctionT &&vFunction, ParamsT &&...vParams){
 		return false;
 	}
 	{
-		const auto vLock = Impl::OnceFlag::GetMutex().GetLock();
+		const auto vLock = Impl_CallOnce::OnceFlag::GetMutex().GetLock();
 		if(AtomicLoad(bFlag, MemoryModel::ACQUIRE)){
 			return false;
 		}

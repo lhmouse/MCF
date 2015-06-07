@@ -15,7 +15,7 @@
 
 namespace MCF {
 
-namespace Impl {
+namespace Impl_ThreadLocal {
 	template<bool>
 	struct ExceptionWrapper {
 		using ExceptionPtr = std::exception_ptr;
@@ -45,7 +45,7 @@ namespace Impl {
 template<class ObjectT>
 class ThreadLocal : NONCOPYABLE {
 private:
-	using xExceptionWrapper = Impl::ExceptionWrapper<std::is_nothrow_copy_constructible<ObjectT>::value>;
+	using xExceptionWrapper = Impl_ThreadLocal::ExceptionWrapper<std::is_nothrow_copy_constructible<ObjectT>::value>;
 	using xExceptionPtr = typename xExceptionWrapper::ExceptionPtr;
 
 	struct xTlsKeyDeleter {

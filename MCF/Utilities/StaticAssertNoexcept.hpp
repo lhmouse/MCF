@@ -7,7 +7,7 @@
 
 namespace MCF {
 
-namespace Impl {
+namespace Impl_StaticAssertNoexcept {
 	__attribute__((__error__("noexcept static assertion failed."), __noreturn__))
 	void StaticAssertNoexcept() noexcept;
 }
@@ -19,14 +19,14 @@ namespace Impl {
 
 #define STATIC_ASSERT_NOEXCEPT_END	\
 	} catch(...){	\
-		::MCF::Impl::StaticAssertNoexcept();	\
+		::MCF::Impl_StaticAssertNoexcept::StaticAssertNoexcept();	\
 		__builtin_unreachable();	\
 	}
 
 #define STATIC_ASSERT_NOEXCEPT_END_COND(cond)	\
 	} catch(...){	\
 		if(cond){	\
-			::MCF::Impl::StaticAssertNoexcept();	\
+			::MCF::Impl_StaticAssertNoexcept::StaticAssertNoexcept();	\
 		}	\
 		throw;	\
 	}

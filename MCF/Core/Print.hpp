@@ -123,7 +123,7 @@ namespace Printers {
 		using X = IntegralPrinter<Tx, Ty, 16, true>;
 }
 
-namespace Impl {
+namespace Impl_Print {
 	template<
 		template<typename, typename>
 			class ...PrintersT,
@@ -142,14 +142,14 @@ template<
 		class ...PrintersT,
 	typename OutputIteratorT, typename ...ParamsT>
 OutputIteratorT Print(OutputIteratorT itOutput, std::common_type_t<OutputIteratorT> itEnd, const ParamsT &... vParams){
-	return Impl::PrintPred<PrintersT...>(itOutput, [&](const auto &it){ return it == itEnd; }, vParams...);
+	return Impl_Print::PrintPred<PrintersT...>(itOutput, [&](const auto &it){ return it == itEnd; }, vParams...);
 }
 template<
 	template<typename, typename>
 		class ...PrintersT,
 	typename OutputIteratorT, typename ...ParamsT>
 OutputIteratorT Print(OutputIteratorT itOutput, const ParamsT &... vParams){
-	return Impl::PrintPred<PrintersT...>(itOutput, []{ return false; }, vParams...);
+	return Impl_Print::PrintPred<PrintersT...>(itOutput, []{ return false; }, vParams...);
 }
 
 template<
@@ -157,7 +157,7 @@ template<
 		class ...PrintersT,
 	StringType STR_TYPE_T, typename ...ParamsT>
 String<STR_TYPE_T> &PrintStr(String<STR_TYPE_T> &strDst, const ParamsT &... vParams){
-	Impl::PrintPred<PrintersT...>(std::back_inserter(strDst), []{ return false; }, vParams...);
+	Impl_Print::PrintPred<PrintersT...>(std::back_inserter(strDst), []{ return false; }, vParams...);
 	return strDst;
 }
 template<
@@ -165,7 +165,7 @@ template<
 		class ...PrintersT,
 	StringType STR_TYPE_T, typename ...ParamsT>
 String<STR_TYPE_T> &&PrintStr(String<STR_TYPE_T> &&strDst, const ParamsT &... vParams){
-	Impl::PrintPred<PrintersT...>(std::back_inserter(strDst), []{ return false; }, vParams...);
+	Impl_Print::PrintPred<PrintersT...>(std::back_inserter(strDst), []{ return false; }, vParams...);
 	return std::move(strDst);
 }
 

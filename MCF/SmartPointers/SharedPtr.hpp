@@ -23,7 +23,7 @@ template<typename ObjectT, class DeleterT = DefaultDeleter<std::remove_cv_t<Obje
 template<typename ObjectT, class DeleterT = DefaultDeleter<std::remove_cv_t<ObjectT>>>
 	class WeakPtr;
 
-namespace Impl {
+namespace Impl_SharedPtr {
 	class SharedControl final {
 	public:
 		class Sentry {
@@ -168,7 +168,7 @@ public:
 	using ElementType = std::remove_extent_t<ObjectT>;
 
 private:
-	Impl::SharedControl *x_pControl;
+	Impl_SharedPtr::SharedControl *x_pControl;
 	ElementType *x_pElement;
 
 public:
@@ -303,9 +303,9 @@ public:
 	SharedPtr &Reset(Raw *pRaw, ElementType *pElement){
 		ASSERT(!(pRaw && (GetRaw() == pRaw)));
 
-		Impl::SharedControl *pControl;
+		Impl_SharedPtr::SharedControl *pControl;
 		try {
-			pControl = new Impl::SharedControl(
+			pControl = new Impl_SharedPtr::SharedControl(
 				[](void *pToDelete) noexcept {
 					DeleterT()(static_cast<Raw *>(pToDelete));
 				},
@@ -423,7 +423,7 @@ public:
 	using ElementType = std::remove_extent_t<ObjectT>;
 
 private:
-	Impl::SharedControl *x_pControl;
+	Impl_SharedPtr::SharedControl *x_pControl;
 	ElementType *x_pElement;
 
 public:

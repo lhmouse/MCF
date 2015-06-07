@@ -31,7 +31,7 @@ struct TripleComparator {
 template<typename KeyT>
 	TripleComparator<std::less<void>> GetDefaultComparator(const KeyT &) noexcept; // ADL
 
-namespace Impl {
+namespace Impl_MultiIndexMap {
 	template<std::size_t INDEX_ID_T>
 	class OrderedMapIndexNode : private ::MCF_AvlNodeHeader {
 		template<std::size_t, class>
@@ -371,10 +371,10 @@ template<class ElementT,
 	class ComparatorT = decltype(GetDefaultComparator(std::declval<const ElementT &>()))>
 struct MultiOrderedIndex {
 	template<std::size_t INDEX_ID_T>
-		using IndexNode = Impl::OrderedMapIndexNode<INDEX_ID_T>;
+		using IndexNode = Impl_MultiIndexMap::OrderedMapIndexNode<INDEX_ID_T>;
 	template<class NodeT, std::size_t INDEX_ID_T>
-		using IndexType = Impl::MultiOrderedMapIndex<INDEX_ID_T,
-			Impl::OrderedMapIndexNodeComparator<
+		using IndexType = Impl_MultiIndexMap::MultiOrderedMapIndex<INDEX_ID_T,
+			Impl_MultiIndexMap::OrderedMapIndexNodeComparator<
 				NodeT, ElementT, INDEX_ID_T, IndexNode<INDEX_ID_T>, ComparatorT>
 			>;
 
@@ -387,10 +387,10 @@ template<class ElementT,
 	class ComparatorT = decltype(GetDefaultComparator(std::declval<const ElementT &>()))>
 struct UniqueOrderedIndex {
 	template<std::size_t INDEX_ID_T>
-		using IndexNode = Impl::OrderedMapIndexNode<INDEX_ID_T>;
+		using IndexNode = Impl_MultiIndexMap::OrderedMapIndexNode<INDEX_ID_T>;
 	template<class NodeT, std::size_t INDEX_ID_T>
-		using IndexType = Impl::UniqueOrderedMapIndex<INDEX_ID_T,
-			Impl::OrderedMapIndexNodeComparator<
+		using IndexType = Impl_MultiIndexMap::UniqueOrderedMapIndex<INDEX_ID_T,
+			Impl_MultiIndexMap::OrderedMapIndexNodeComparator<
 				NodeT, ElementT, INDEX_ID_T, IndexNode<INDEX_ID_T>, ComparatorT>
 			>;
 
@@ -403,12 +403,12 @@ template<class ElementT, class KeyTypeT, KeyTypeT ElementT::*PTR_TO_KEY_T,
 	class ComparatorT = decltype(GetDefaultComparator(std::declval<const KeyTypeT &>()))>
 struct MultiOrderedMemberIndex {
 	template<std::size_t INDEX_ID_T>
-		using IndexNode = Impl::OrderedMapIndexNode<INDEX_ID_T>;
+		using IndexNode = Impl_MultiIndexMap::OrderedMapIndexNode<INDEX_ID_T>;
 	template<class NodeT, std::size_t INDEX_ID_T>
-		using IndexType = Impl::MultiOrderedMapIndex<INDEX_ID_T,
-			Impl::OrderedMapIndexNodeComparator<
+		using IndexType = Impl_MultiIndexMap::MultiOrderedMapIndex<INDEX_ID_T,
+			Impl_MultiIndexMap::OrderedMapIndexNodeComparator<
 				NodeT, ElementT, INDEX_ID_T, IndexNode<INDEX_ID_T>,
-				Impl::MemberComparator<ElementT, KeyTypeT, PTR_TO_KEY_T, ComparatorT>>
+				Impl_MultiIndexMap::MemberComparator<ElementT, KeyTypeT, PTR_TO_KEY_T, ComparatorT>>
 			>;
 
 	static KeyTypeT &GetKey(ElementT &vElement) noexcept {
@@ -420,12 +420,12 @@ template<class ElementT, class KeyTypeT, KeyTypeT ElementT::*PTR_TO_KEY_T,
 	class ComparatorT = decltype(GetDefaultComparator(std::declval<const KeyTypeT &>()))>
 struct UniqueOrderedMemberIndex {
 	template<std::size_t INDEX_ID_T>
-		using IndexNode = Impl::OrderedMapIndexNode<INDEX_ID_T>;
+		using IndexNode = Impl_MultiIndexMap::OrderedMapIndexNode<INDEX_ID_T>;
 	template<class NodeT, std::size_t INDEX_ID_T>
-		using IndexType = Impl::UniqueOrderedMapIndex<INDEX_ID_T,
-			Impl::OrderedMapIndexNodeComparator<
+		using IndexType = Impl_MultiIndexMap::UniqueOrderedMapIndex<INDEX_ID_T,
+			Impl_MultiIndexMap::OrderedMapIndexNodeComparator<
 				NodeT, ElementT, INDEX_ID_T, IndexNode<INDEX_ID_T>,
-				Impl::MemberComparator<ElementT, KeyTypeT, PTR_TO_KEY_T, ComparatorT>>
+				Impl_MultiIndexMap::MemberComparator<ElementT, KeyTypeT, PTR_TO_KEY_T, ComparatorT>>
 			>;
 
 	static KeyTypeT &GetKey(ElementT &vElement) noexcept {
@@ -436,9 +436,9 @@ struct UniqueOrderedMemberIndex {
 template<class ElementT>
 struct SequencedIndex {
 	template<std::size_t INDEX_ID_T>
-		using IndexNode = Impl::SequencedMapIndexNode<INDEX_ID_T>;
+		using IndexNode = Impl_MultiIndexMap::SequencedMapIndexNode<INDEX_ID_T>;
 	template<class NodeT, std::size_t INDEX_ID_T>
-		using IndexType = Impl::SequencedMapIndex<INDEX_ID_T>;
+		using IndexType = Impl_MultiIndexMap::SequencedMapIndex<INDEX_ID_T>;
 
 	static ElementT &GetKey(ElementT &vElement) noexcept {
 		return vElement;

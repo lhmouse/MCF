@@ -5,26 +5,24 @@
 #ifndef MCF_FUNCTION_FUNCTION_HPP_
 #define MCF_FUNCTION_FUNCTION_HPP_
 
-#include <type_traits>
-#include <utility>
-#include <functional>
 #include "../SmartPointers/IntrusivePtr.hpp"
 #include "../Utilities/Assert.hpp"
 #include "../Utilities/Invoke.hpp"
+#include "_ForwardedParam.hpp"
+#include <type_traits>
+#include <utility>
+#include <functional>
 
 namespace MCF {
 
 namespace Impl_Function {
-	template<typename T>
-		using ForwardedNonScalar = std::conditional_t<std::is_scalar<T>::value, std::decay_t<T>, T &&>;
-
 	template<typename RetT, typename ...ParamsT>
 	class FunctorBase : public IntrusiveBase<FunctorBase<RetT, ParamsT...>> {
 	public:
 		virtual ~FunctorBase() = default;
 
 	public:
-		virtual RetT Dispatch(ForwardedNonScalar<ParamsT>...vParams) const = 0;
+		virtual RetT Dispatch(ForwardedParam<ParamsT>...vParams) const = 0;
 	};
 
 	template<typename FuncT, typename RetT, typename ...ParamsT>
@@ -39,7 +37,7 @@ namespace Impl_Function {
 		}
 
 	public:
-		RetT Dispatch(ForwardedNonScalar<ParamsT>...vParams) const override {
+		RetT Dispatch(ForwardedParam<ParamsT>...vParams) const override {
 			return Invoke(x_vFunc, std::forward<ParamsT>(vParams)...);
 		}
 	};
@@ -47,7 +45,7 @@ namespace Impl_Function {
 
 template<typename FuncT>
 class Function {
-	static_assert((std::declval<FuncT &>(), false), "Class template Function instantiated with non-function template type parameter.");
+	static_assert((sizeof(FuncT), false), "Class template Function instantiated with non-function template type parameter.");
 };
 
 template<typename RetT, typename ...ParamsT>
@@ -60,14 +58,14 @@ public:
 
 	template<typename FuncT,
 		std::enable_if_t<
-			std::is_convertible<std::result_of_t<FuncT && (Impl_Function::ForwardedNonScalar<ParamsT>...)>, RetT>::value,
+			std::is_convertible<std::result_of_t<FuncT && (ForwardedParam<ParamsT>...)>, RetT>::value,
 			int> = 0>
 	Function(FuncT &&x_vFunc){
 		Reset(std::forward<FuncT>(x_vFunc));
 	}
 	template<typename FuncT,
 		std::enable_if_t<
-			std::is_convertible<std::result_of_t<FuncT && (Impl_Function::ForwardedNonScalar<ParamsT>...)>, RetT>::value,
+			std::is_convertible<std::result_of_t<FuncT && (ForwardedParam<ParamsT>...)>, RetT>::value,
 			int> = 0>
 	Function &operator=(FuncT &&x_vFunc){
 		Reset(std::forward<FuncT>(x_vFunc));
@@ -80,7 +78,7 @@ public:
 	}
 	template<typename FuncT,
 		std::enable_if_t<
-			std::is_convertible<std::result_of_t<FuncT && (Impl_Function::ForwardedNonScalar<ParamsT>...)>, RetT>::value,
+			std::is_convertible<std::result_of_t<FuncT && (ForwardedParam<ParamsT>...)>, RetT>::value,
 			int> = 0>
 	void Reset(FuncT &&x_vFunc){
 		x_pFunctor.Reset(new Impl_Function::Functor<FuncT, RetT, ParamsT...>(std::forward<FuncT>(x_vFunc)));

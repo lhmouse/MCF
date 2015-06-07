@@ -47,7 +47,7 @@ namespace Impl_ParameterPackManipulators {
 }
 
 template<std::size_t INDEX_T, typename ...TypesT>
-	using NthType = typename Impl_ParameterPackManipulators::ParameterPackExpander<INDEX_T, TypesT...>::Type;
+using NthType = typename Impl_ParameterPackManipulators::ParameterPackExpander<INDEX_T, TypesT...>::Type;
 
 template<typename ToFindT, typename ...TypesT>
 constexpr std::size_t FindFirstType() noexcept {

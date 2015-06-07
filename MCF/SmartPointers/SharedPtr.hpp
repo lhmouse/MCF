@@ -19,9 +19,9 @@
 namespace MCF {
 
 template<typename ObjectT, class DeleterT = DefaultDeleter<std::remove_cv_t<ObjectT>>>
-	class SharedPtr;
+class SharedPtr;
 template<typename ObjectT, class DeleterT = DefaultDeleter<std::remove_cv_t<ObjectT>>>
-	class WeakPtr;
+class WeakPtr;
 
 namespace Impl_SharedPtr {
 	class SharedControl final {
@@ -157,9 +157,9 @@ namespace Impl_SharedPtr {
 template<typename ObjectT, class DeleterT>
 class SharedPtr {
 	template<typename, class>
-		friend class SharedPtr;
+	friend class SharedPtr;
 	template<typename, class>
-		friend class WeakPtr;
+	friend class WeakPtr;
 
 	static_assert(noexcept(DeleterT()(DeleterT()())), "Deleter must not throw.");
 
@@ -284,9 +284,9 @@ public:
 	}
 
 	template<typename OtherObjectT, class OtherDeleterT>
-		bool IsSharedWith(const SharedPtr<OtherObjectT, OtherDeleterT> &rhs) const noexcept;
+	bool IsSharedWith(const SharedPtr<OtherObjectT, OtherDeleterT> &rhs) const noexcept;
 	template<typename OtherObjectT, class OtherDeleterT>
-		bool IsSharedWith(const WeakPtr<OtherObjectT, OtherDeleterT> &rhs) const noexcept;
+	bool IsSharedWith(const WeakPtr<OtherObjectT, OtherDeleterT> &rhs) const noexcept;
 
 	SharedPtr &Reset(std::nullptr_t = nullptr) noexcept {
 		const auto pOldControl = std::exchange(x_pControl, nullptr);
@@ -415,9 +415,9 @@ public:
 template<typename ObjectT, class DeleterT>
 class WeakPtr {
 	template<typename, class>
-		friend class SharedPtr;
+	friend class SharedPtr;
 	template<typename, class>
-		friend class WeakPtr;
+	friend class WeakPtr;
 
 public:
 	using ElementType = std::remove_extent_t<ObjectT>;

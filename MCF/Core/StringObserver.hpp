@@ -535,7 +535,7 @@ struct StringObserverTripleComparator {
 };
 
 template<StringType TYPE_T>
-	StringObserverTripleComparator<TYPE_T> GetDefaultComparator(const StringObserver<TYPE_T> &) noexcept;
+StringObserverTripleComparator<TYPE_T> GetDefaultComparator(const StringObserver<TYPE_T> &) noexcept;
 
 }
 

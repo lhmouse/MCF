@@ -19,7 +19,7 @@
 namespace MCF {
 
 template<StringType TYPE_T>
-	class String;
+class String;
 
 using UnifiedString = String<StringType::UTF32>;
 using UnifiedStringObserver = StringObserver<StringType::UTF32>;
@@ -879,7 +879,7 @@ struct StringTripleComparator {
 };
 
 template<StringType TYPE_T>
-	StringTripleComparator<TYPE_T> GetDefaultComparator(const String<TYPE_T> &) noexcept;
+StringTripleComparator<TYPE_T> GetDefaultComparator(const String<TYPE_T> &) noexcept;
 
 }
 

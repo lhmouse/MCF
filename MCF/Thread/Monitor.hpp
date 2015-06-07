@@ -15,7 +15,7 @@ class RecursiveMutex;
 class KernelMutex;
 
 template<class ObjectT, class MutexT>
-	class MonitorTemplate;
+class MonitorTemplate;
 
 namespace Impl_Monitor {
 	template<class ObjectT>
@@ -111,11 +111,11 @@ public:
 };
 
 template<class ObjectT>
-	using Monitor = MonitorTemplate<ObjectT, Mutex>;
+using Monitor = MonitorTemplate<ObjectT, Mutex>;
 template<class ObjectT>
-	using RecursiveMonitor = MonitorTemplate<ObjectT, RecursiveMutex>;
+using RecursiveMonitor = MonitorTemplate<ObjectT, RecursiveMutex>;
 template<class ObjectT>
-	using KernelMonitor = MonitorTemplate<ObjectT, KernelMutex>;
+using KernelMonitor = MonitorTemplate<ObjectT, KernelMutex>;
 
 }
 

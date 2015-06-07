@@ -105,22 +105,22 @@ namespace Printers {
 	};
 
 	template<typename Tx, typename Ty>
-		using b = IntegralPrinter<Tx, Ty,  2, false>;
+	using b = IntegralPrinter<Tx, Ty,  2, false>;
 	template<typename Tx, typename Ty>
-		using o = IntegralPrinter<Tx, Ty,  8, false>;
+	using o = IntegralPrinter<Tx, Ty,  8, false>;
 	template<typename Tx, typename Ty>
-		using d = IntegralPrinter<Tx, Ty, 10, false>;
+	using d = IntegralPrinter<Tx, Ty, 10, false>;
 	template<typename Tx, typename Ty>
-		using x = IntegralPrinter<Tx, Ty, 16, false>;
+	using x = IntegralPrinter<Tx, Ty, 16, false>;
 
 	template<typename Tx, typename Ty>
-		using B = IntegralPrinter<Tx, Ty,  2, true>;
+	using B = IntegralPrinter<Tx, Ty,  2, true>;
 	template<typename Tx, typename Ty>
-		using O = IntegralPrinter<Tx, Ty,  8, true>;
+	using O = IntegralPrinter<Tx, Ty,  8, true>;
 	template<typename Tx, typename Ty>
-		using D = IntegralPrinter<Tx, Ty, 10, true>;
+	using D = IntegralPrinter<Tx, Ty, 10, true>;
 	template<typename Tx, typename Ty>
-		using X = IntegralPrinter<Tx, Ty, 16, true>;
+	using X = IntegralPrinter<Tx, Ty, 16, true>;
 }
 
 namespace Impl_Print {

@@ -1,18 +1,15 @@
 #include <MCF/StdMCF.hpp>
-#include <MCF/Function/Function.hpp>
-#include <MCF/Function/Bind.hpp>
+#include <MCF/Thread/Thread.hpp>
 #include <iostream>
 
 using namespace MCF;
 
 extern "C" unsigned int MCFMain() noexcept {
-	std::string s;
+	std::string s = "hello world!";
+	auto pThread = Thread::Create([=]{ std::cout <<s <<std::endl; }, true);
+	s.clear();
 
-	auto fn = Bind(&std::string::push_back, &s, _1);
-
-	fn('a');
-	fn('b');
-	std::cout <<s;
-
+	pThread->Resume();
+	pThread->Join();
 	return 0;
 }

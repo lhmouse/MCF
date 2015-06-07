@@ -17,12 +17,12 @@ std::size_t Thread::GetCurrentId() noexcept {
 	return ::GetCurrentThreadId();
 }
 
-IntrusivePtr<Thread> Thread::Create(std::function<void ()> fnProc, bool bSuspended){
+IntrusivePtr<Thread> Thread::Create(Function<void ()> fnProc, bool bSuspended){
 	return IntrusivePtr<Thread>(new Thread(std::move(fnProc), bSuspended));
 }
 
 // 构造函数和析构函数。
-Thread::Thread(std::function<void ()> fnProc, bool bSuspended)
+Thread::Thread(Function<void ()> fnProc, bool bSuspended)
 	: x_fnProc(std::move(fnProc))
 {
 	const auto ThreadProc = [](std::intptr_t nParam) noexcept -> unsigned {

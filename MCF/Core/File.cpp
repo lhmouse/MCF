@@ -122,8 +122,8 @@ void File::Clear(){
 	Resize(0);
 }
 
-std::size_t File::Read(void *pBuffer, std::size_t uBytesToRead, std::uint64_t u64Offset,
-	const std::function<void ()> &fnAsyncProc, const std::function<void ()> &fnCompleteCallback) const
+std::size_t File::Read(void *pBuffer, std::uint32_t u32BytesToRead, std::uint64_t u64Offset,
+	const Function<void ()> &fnAsyncProc, const Function<void ()> &fnCompleteCallback) const
 {
 	if(!x_hFile){
 		DEBUG_THROW(Exception, "No file opened", ERROR_INVALID_HANDLE);
@@ -131,13 +131,12 @@ std::size_t File::Read(void *pBuffer, std::size_t uBytesToRead, std::uint64_t u6
 
 	DWORD dwErrorCode;
 	DWORD dwTransferred;
-	DWORD dwBlockSize = Min(0xFFFFF000u, uBytesToRead);
 
 	::OVERLAPPED vOverlapped;
 	BZero(vOverlapped);
 	vOverlapped.Offset = u64Offset;
 	vOverlapped.OffsetHigh = (u64Offset >> 32);
-	if(::ReadFile(x_hFile.Get(), pBuffer, dwBlockSize, nullptr, &vOverlapped)){
+	if(::ReadFile(x_hFile.Get(), pBuffer, u32BytesToRead, nullptr, &vOverlapped)){
 		dwErrorCode = ERROR_SUCCESS;
 	} else {
 		dwErrorCode = ::GetLastError();
@@ -154,33 +153,13 @@ std::size_t File::Read(void *pBuffer, std::size_t uBytesToRead, std::uint64_t u6
 		}
 	}
 
-	std::size_t uBytesRead = dwTransferred;
-	while((uBytesRead < uBytesToRead) && (dwTransferred == dwBlockSize)){
-		dwBlockSize = Min(0xFFFFF000u, uBytesToRead - uBytesRead);
-
-		BZero(vOverlapped);
-		const auto u64NewOffset = u64Offset + uBytesRead;
-		vOverlapped.Offset = u64NewOffset;
-		vOverlapped.OffsetHigh = (u64NewOffset >> 32);
-		if(!::ReadFile(x_hFile.Get(), (char *)pBuffer + uBytesRead, dwBlockSize, nullptr, &vOverlapped)){
-			dwErrorCode = ::GetLastError();
-			if(dwErrorCode != ERROR_IO_PENDING){
-				DEBUG_THROW(SystemError, "ReadFile", dwErrorCode);
-			}
-			if(!::GetOverlappedResult(x_hFile.Get(), &vOverlapped, &dwTransferred, true)){
-				DEBUG_THROW(SystemError, "GetOverlappedResult");
-			}
-		}
-		uBytesRead += dwTransferred;
-	}
-
 	if(fnCompleteCallback){
 		fnCompleteCallback();
 	}
-	return uBytesRead;
+	return dwTransferred;
 }
-void File::Write(std::uint64_t u64Offset, const void *pBuffer, std::size_t uBytesToWrite,
-	const std::function<void ()> &fnAsyncProc, const std::function<void ()> &fnCompleteCallback)
+std::size_t File::Write(std::uint64_t u64Offset, const void *pBuffer, std::uint32_t u32BytesToWrite,
+	const Function<void ()> &fnAsyncProc, const Function<void ()> &fnCompleteCallback)
 {
 	if(!x_hFile){
 		DEBUG_THROW(Exception, "No file opened", ERROR_INVALID_HANDLE);
@@ -188,13 +167,12 @@ void File::Write(std::uint64_t u64Offset, const void *pBuffer, std::size_t uByte
 
 	DWORD dwErrorCode;
 	DWORD dwTransferred;
-	DWORD dwBlockSize = Min(0xFFFFF000u, uBytesToWrite);
 
 	::OVERLAPPED vOverlapped;
 	BZero(vOverlapped);
 	vOverlapped.Offset = u64Offset;
 	vOverlapped.OffsetHigh = (u64Offset >> 32);
-	if(::WriteFile(x_hFile.Get(), pBuffer, dwBlockSize, nullptr, &vOverlapped)){
+	if(::WriteFile(x_hFile.Get(), pBuffer, u32BytesToWrite, nullptr, &vOverlapped)){
 		dwErrorCode = ERROR_SUCCESS;
 	} else {
 		dwErrorCode = ::GetLastError();
@@ -211,29 +189,10 @@ void File::Write(std::uint64_t u64Offset, const void *pBuffer, std::size_t uByte
 		}
 	}
 
-	std::size_t uBytesWritten = dwTransferred;
-	while(uBytesWritten < uBytesToWrite){
-		dwBlockSize = Min(0xFFFFF000u, uBytesToWrite - uBytesWritten);
-
-		BZero(vOverlapped);
-		const auto u64NewOffset = u64Offset + uBytesWritten;
-		vOverlapped.Offset = u64NewOffset;
-		vOverlapped.OffsetHigh = (u64NewOffset >> 32);
-		if(!::WriteFile(x_hFile.Get(), (char *)pBuffer + uBytesWritten, dwBlockSize, nullptr, &vOverlapped)){
-			dwErrorCode = ::GetLastError();
-			if(dwErrorCode != ERROR_IO_PENDING){
-				DEBUG_THROW(SystemError, "WriteFile", dwErrorCode);
-			}
-			if(!::GetOverlappedResult(x_hFile.Get(), &vOverlapped, &dwTransferred, true)){
-				DEBUG_THROW(SystemError, "GetOverlappedResult");
-			}
-		}
-		uBytesWritten += dwTransferred;
-	}
-
 	if(fnCompleteCallback){
 		fnCompleteCallback();
 	}
+	return dwTransferred;
 }
 void File::Flush() const {
 	if(!x_hFile){

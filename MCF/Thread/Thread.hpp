@@ -7,8 +7,8 @@
 
 #include "../Utilities/Noncopyable.hpp"
 #include "../SmartPointers/IntrusivePtr.hpp"
+#include "../Function/Function.hpp"
 #include "_UniqueWin32Handle.hpp"
-#include <functional>
 #include <exception>
 #include <cstddef>
 
@@ -18,17 +18,17 @@ class Thread : NONCOPYABLE, public IntrusiveBase<Thread> {
 public:
 	static std::size_t GetCurrentId() noexcept;
 
-	static IntrusivePtr<Thread> Create(std::function<void ()> fnProc, bool bSuspended = false);
+	static IntrusivePtr<Thread> Create(Function<void ()> fnProc, bool bSuspended = false);
 
 private:
-	const std::function<void ()> x_fnProc;
+	const Function<void ()> x_fnProc;
 
 	UniqueWin32Handle x_hThread;
 	volatile unsigned long x_ulThreadId;
 	std::exception_ptr x_pException;
 
 private:
-	Thread(std::function<void ()> fnProc, bool bSuspended);
+	Thread(Function<void ()> fnProc, bool bSuspended);
 
 public:
 	bool Wait(unsigned long long ullMilliSeconds) const noexcept;

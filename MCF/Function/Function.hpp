@@ -62,8 +62,16 @@ public:
 		std::enable_if_t<
 			std::is_convertible<std::result_of_t<FuncT && (Impl::ForwardedNonScalar<ParamsT>...)>, RetT>::value,
 			int> = 0>
-	explicit Function(FuncT &&x_vFunc){
+	Function(FuncT &&x_vFunc){
 		Reset(std::forward<FuncT>(x_vFunc));
+	}
+	template<typename FuncT,
+		std::enable_if_t<
+			std::is_convertible<std::result_of_t<FuncT && (Impl::ForwardedNonScalar<ParamsT>...)>, RetT>::value,
+			int> = 0>
+	Function &operator=(FuncT &&x_vFunc){
+		Reset(std::forward<FuncT>(x_vFunc));
+		return *this;
 	}
 
 public:

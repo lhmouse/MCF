@@ -5,13 +5,31 @@
 #ifndef MCF_CORE_VARIANT_HPP_
 #define MCF_CORE_VARIANT_HPP_
 
-#include <utility>
-#include <type_traits>
+#include <new>
+#include <tuple>
 #include <cstddef>
+#include "../Utilities/MinMax.hpp"
 
 namespace MCF {
 
+template<typename ...TypesT>
+class Variant {
+	static_assert(sizeof...(TypesT) > 0, "No type specified for Variant?");
 
+private:
+	using xTypes = std::tuple<TypesT...>;
+
+private:
+	alignas(Max(alignof(TypesT)...)) unsigned char x_abyBuffer[Max(sizeof(TypesT)...)];
+	std::size_t x_uType;
+
+public:
+	Variant()
+		: x_uType(0)
+	{
+		::new((void *)x_abyBuffer) std::tuple_element_t<0, xTypes>;
+	}
+};
 
 }
 

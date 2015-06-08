@@ -10,26 +10,34 @@
 
 namespace MCF {
 
+namespace Impl_MinMax {
+	template<typename T>
+	T ForwardAsLvalueOrPrvalue(T &&val){
+		return std::forward<T>(val);
+	}
+}
+
 template<typename ComparatorT = std::less<void>, typename FirstT>
 constexpr decltype(auto) Min(FirstT &&first){
-	return std::forward<FirstT>(first);
+	return Impl_MinMax::ForwardAsLvalueOrPrvalue(std::forward<FirstT>(first));
 }
 template<typename ComparatorT = std::less<void>, typename FirstT>
 constexpr decltype(auto) Max(FirstT &&first){
-	return std::forward<FirstT>(first);
+	return Impl_MinMax::ForwardAsLvalueOrPrvalue(std::forward<FirstT>(first));
 }
 
 template<typename ComparatorT = std::less<void>, typename FirstT, typename SecondT, typename ...RemainingT>
 constexpr decltype(auto) Min(FirstT &&first, SecondT &&second, RemainingT &&...remaining){
-	return Min<ComparatorT>(
-		ComparatorT()(first, second) ? std::forward<FirstT>(first) : std::forward<SecondT>(second),
-		std::forward<RemainingT>(remaining)...);
+	return Impl_MinMax::ForwardAsLvalueOrPrvalue(Min<ComparatorT>(
+			ComparatorT()(first, second) ? std::forward<FirstT>(first) : std::forward<SecondT>(second),
+			std::forward<RemainingT>(remaining)...));
 }
 template<typename ComparatorT = std::less<void>, typename FirstT, typename SecondT, typename ...RemainingT>
 constexpr decltype(auto) Max(FirstT &&first, SecondT &&second, RemainingT &&...remaining){
-	return Max<ComparatorT>(
-		!ComparatorT()(first, second) ? std::forward<FirstT>(first) : std::forward<SecondT>(second),
-		std::forward<RemainingT>(remaining)...);
+	return Impl_MinMax::ForwardAsLvalueOrPrvalue(
+		Max<ComparatorT>(
+			!ComparatorT()(first, second) ? std::forward<FirstT>(first) : std::forward<SecondT>(second),
+			std::forward<RemainingT>(remaining)...));
 }
 
 }

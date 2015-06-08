@@ -136,13 +136,6 @@ public:
 
 	static_assert(std::is_base_of<BuddyType, ElementType>::value, "ElementType is not derived from IntrusiveBase<ElementType> ??");
 
-public:
-	static void Reclaim(BuddyType *pBuddy) noexcept {
-		if(pBuddy->DropRef()){
-			DeleterT()(static_cast<std::decay_t<decltype(*DeleterT()())> *>(const_cast<std::remove_cv_t<BuddyType> *>(pBuddy)));
-		}
-	}
-
 private:
 	BuddyType *x_pBuddy;
 
@@ -229,9 +222,7 @@ public:
 		const auto pOldBuddy = std::exchange(x_pBuddy, nullptr);
 		if(pOldBuddy){
 			pRet = Impl_IntrusivePtr::StaticOrDynamicCast<ElementType *>(pOldBuddy);
-		}
-		if(pOldBuddy && !pRet){
-			Reclaim(pOldBuddy);
+			ASSERT(pRet);
 		}
 		return pRet;
 	}
@@ -246,7 +237,9 @@ public:
 	IntrusivePtr &Reset(ElementType *pElement = nullptr) noexcept {
 		const auto pOldBuddy = std::exchange(x_pBuddy, pElement);
 		if(pOldBuddy){
-			Reclaim(pOldBuddy);
+			if(pOldBuddy->DropRef()){
+				DeleterT()(static_cast<std::decay_t<decltype(*DeleterT()())> *>(const_cast<std::remove_cv_t<BuddyType> *>(pOldBuddy)));
+			}
 		}
 		return *this;
 	}
@@ -256,13 +249,11 @@ public:
 				std::is_convertible<OtherDeleterT, DeleterT>::value,
 			int> = 0>
 	IntrusivePtr &Reset(const IntrusivePtr<OtherT, OtherDeleterT> &rhs) noexcept {
-		const auto pOldBuddy = std::exchange(x_pBuddy, rhs.x_pBuddy);
-		if(pOldBuddy){
-			Reclaim(pOldBuddy);
+		const auto pElement = rhs.Get();
+		if(pElement){
+			static_cast<BuddyType *>(pElement)->AddRef();
 		}
-		if(x_pBuddy){
-			x_pBuddy->AddRef();
-		}
+		Reset(pElement);
 		return *this;
 	}
 	template<typename OtherT, typename OtherDeleterT,

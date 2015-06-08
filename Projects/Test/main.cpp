@@ -1,20 +1,20 @@
 #include <MCF/StdMCF.hpp>
-#include <MCF/SmartPointers/IntrusivePtr.hpp>
+#include <MCF/SmartPointers/PolymorphicIntrusivePtr.hpp>
 #include <iostream>
 #include <string>
 
 using namespace MCF;
 
-struct foo : IntrusiveBase<foo> {
+struct foo : PolymorphicIntrusiveBase<foo> {
 	foo(int, const char *){
 	}
 };
 
 extern "C" unsigned int MCFMain() noexcept {
-	IntrusivePtr<foo> p1 = MakeIntrusive<foo>(1, "a");
-	IntrusivePtr<const foo> p2 = p1;
-	IntrusivePtr<volatile foo> p3 = p1;
-	IntrusivePtr<const volatile foo> p4 = p1;
+	PolymorphicIntrusivePtr<foo> p1 = MakePolymorphicIntrusive<foo>(1, "a");
+	PolymorphicIntrusivePtr<const foo> p2 = p1;
+	PolymorphicIntrusivePtr<volatile foo> p3 = p1;
+	PolymorphicIntrusivePtr<const volatile foo> p4 = p1;
 
 	std::cout <<"ref = " <<p1.GetSharedCount() <<std::endl;
 

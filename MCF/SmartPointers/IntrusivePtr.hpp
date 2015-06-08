@@ -24,6 +24,54 @@ template<typename ObjectT, class DeleterT = DefaultDeleter<std::remove_cv_t<Obje
 class IntrusivePtr;
 
 namespace Impl_IntrusivePtr {
+	class RefCountBase {
+	private:
+		mutable volatile std::size_t x_uRef;
+
+	protected:
+		RefCountBase() noexcept {
+			AtomicStore(x_uRef, 1, MemoryModel::kRelaxed);
+		}
+
+	public:
+		RefCountBase(const RefCountBase &) noexcept
+			: RefCountBase() // 默认构造。
+		{
+		}
+		RefCountBase(RefCountBase &&) noexcept
+			: RefCountBase() // 同上。
+		{
+		}
+		RefCountBase &operator=(const RefCountBase &) noexcept {
+			return *this; // 无操作。
+		}
+		RefCountBase &operator=(RefCountBase &&) noexcept {
+			return *this; // 同上。
+		}
+		~RefCountBase(){
+			ASSERT(AtomicLoad(x_uRef, MemoryModel::kRelaxed) == 0);
+		}
+
+	public:
+		std::size_t GetRef() const volatile noexcept {
+			return AtomicLoad(x_uRef, MemoryModel::kRelaxed);
+		}
+		void AddRef() const volatile noexcept {
+			ASSERT((std::ptrdiff_t)AtomicLoad(x_uRef, MemoryModel::kRelaxed) > 0);
+
+			AtomicIncrement(x_uRef, MemoryModel::kRelaxed);
+		}
+		bool DropRef() const volatile noexcept {
+			ASSERT((std::ptrdiff_t)AtomicLoad(x_uRef, MemoryModel::kRelaxed) > 0);
+
+			return AtomicDecrement(x_uRef, MemoryModel::kRelaxed) == 0;
+		}
+	};
+
+	template<typename DeleterT>
+	class DeletableRefCountBase : public RefCountBase {
+	};
+
 	template<typename DstT, typename SrcT>
 	struct CvCopier {
 		using Type = DstT;
@@ -63,49 +111,7 @@ namespace Impl_IntrusivePtr {
 }
 
 template<typename ObjectT, class DeleterT>
-class IntrusiveBase {
-private:
-	mutable volatile std::size_t x_uRefCount;
-
-protected:
-	IntrusiveBase() noexcept {
-		AtomicStore(x_uRefCount, 1, MemoryModel::kRelaxed);
-	}
-
-public:
-	IntrusiveBase(const IntrusiveBase &) noexcept
-		: IntrusiveBase() // 默认构造。
-	{
-	}
-	IntrusiveBase(IntrusiveBase &&) noexcept
-		: IntrusiveBase() // 同上。
-	{
-	}
-	IntrusiveBase &operator=(const IntrusiveBase &) noexcept {
-		return *this; // 无操作。
-	}
-	IntrusiveBase &operator=(IntrusiveBase &&) noexcept {
-		return *this; // 同上。
-	}
-	~IntrusiveBase(){
-		ASSERT(AtomicLoad(x_uRefCount, MemoryModel::kRelaxed) == 0);
-	}
-
-public:
-	std::size_t GetSharedCount() const volatile noexcept {
-		return AtomicLoad(x_uRefCount, MemoryModel::kRelaxed);
-	}
-	void AddRef() const volatile noexcept {
-		ASSERT((std::ptrdiff_t)AtomicLoad(x_uRefCount, MemoryModel::kRelaxed) > 0);
-
-		AtomicIncrement(x_uRefCount, MemoryModel::kRelaxed);
-	}
-	bool DropRef() const volatile noexcept {
-		ASSERT((std::ptrdiff_t)AtomicLoad(x_uRefCount, MemoryModel::kRelaxed) > 0);
-
-		return AtomicDecrement(x_uRefCount, MemoryModel::kRelaxed) == 0;
-	}
-
+struct IntrusiveBase : public Impl_IntrusivePtr::DeletableRefCountBase<DeleterT> {
 	template<typename OtherT = ObjectT>
 	IntrusivePtr<const volatile OtherT, DeleterT> Share() const volatile noexcept;
 	template<typename OtherT = ObjectT>
@@ -126,9 +132,9 @@ class IntrusivePtr {
 
 public:
 	using ElementType = ObjectT;
-	using BuddyType = typename Impl_IntrusivePtr::CvCopier<IntrusiveBase<std::remove_cv_t<ObjectT>, DeleterT>, ElementType>::Type;
+	using BuddyType = typename Impl_IntrusivePtr::CvCopier<Impl_IntrusivePtr::DeletableRefCountBase<DeleterT>, ElementType>::Type;
 
-	static_assert(std::is_base_of<BuddyType, ElementType>::value, "ElementType is not derived from IntrusiveBase<ElementType>?");
+	static_assert(std::is_base_of<BuddyType, ElementType>::value, "ElementType is not derived from IntrusiveBase<ElementType> ??");
 
 private:
 	BuddyType *x_pBuddy;
@@ -212,16 +218,15 @@ public:
 		return Impl_IntrusivePtr::StaticOrDynamicCast<ElementType *>(x_pBuddy);
 	}
 	ElementType *Release() noexcept {
+		ElementType *pRet = nullptr;
 		const auto pBuddy = std::exchange(x_pBuddy, nullptr);
-		if(!pBuddy){
-			return nullptr;
+		if(pBuddy){
+			pRet = Impl_IntrusivePtr::StaticOrDynamicCast<ElementType *>(pBuddy);
 		}
-		const auto pRet = Impl_IntrusivePtr::StaticOrDynamicCast<ElementType *>(pBuddy);
-		if(!pRet){
+		if(pBuddy && !pRet){
 			if(pBuddy->DropRef()){
 				DeleterT()(static_cast<std::decay_t<decltype(*DeleterT()())> *>(const_cast<std::remove_cv_t<BuddyType> *>(pBuddy)));
 			}
-			return nullptr;
 		}
 		return pRet;
 	}
@@ -230,7 +235,7 @@ public:
 		return GetSharedCount() == 1;
 	}
 	std::size_t GetSharedCount() const noexcept {
-		return x_pBuddy ? x_pBuddy->GetSharedCount() : 0;
+		return x_pBuddy ? x_pBuddy->GetRef() : 0;
 	}
 
 	IntrusivePtr &Reset(ElementType *pElement = nullptr) noexcept {

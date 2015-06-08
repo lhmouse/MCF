@@ -107,7 +107,8 @@ namespace Impl_IntrusivePtr {
 }
 
 template<typename ObjectT, class DeleterT>
-struct IntrusiveBase : public Impl_IntrusivePtr::RefCountBase {
+class IntrusiveBase : public Impl_IntrusivePtr::RefCountBase {
+public:
 	template<typename OtherT = ObjectT>
 	IntrusivePtr<const volatile OtherT, DeleterT> Share() const volatile noexcept;
 	template<typename OtherT = ObjectT>
@@ -248,7 +249,7 @@ public:
 	IntrusivePtr &Reset(const IntrusivePtr<OtherT, OtherDeleterT> &rhs) noexcept {
 		const auto pElement = rhs.Get();
 		if(pElement){
-			static_cast<BuddyType *>(pElement)->Impl_IntrusivePtr::RefCountBase::AddRef();
+			pElement->Impl_IntrusivePtr::RefCountBase::AddRef();
 		}
 		Reset(pElement);
 		return *this;
@@ -291,42 +292,46 @@ public:
 template<typename ObjectT, class DeleterT>
 	template<typename OtherT>
 IntrusivePtr<const volatile OtherT, DeleterT> IntrusiveBase<ObjectT, DeleterT>::Share() const volatile noexcept {
+	IntrusivePtr<const volatile OtherT, DeleterT> pRet;
 	const auto pShared = Impl_IntrusivePtr::StaticOrDynamicCast<const volatile OtherT *>(this);
-	if(!pShared){
-		return nullptr;
+	if(pShared){
+		pShared->Impl_IntrusivePtr::RefCountBase::AddRef();
+		pRet.Reset(pShared);
 	}
-	pShared->AddRef();
-	return IntrusivePtr<const volatile OtherT, DeleterT>(pShared);
+	return pRet;
 }
 template<typename ObjectT, class DeleterT>
 	template<typename OtherT>
 IntrusivePtr<const OtherT, DeleterT> IntrusiveBase<ObjectT, DeleterT>::Share() const noexcept {
+	IntrusivePtr<const volatile OtherT, DeleterT> pRet;
 	const auto pShared = Impl_IntrusivePtr::StaticOrDynamicCast<const OtherT *>(this);
-	if(!pShared){
-		return nullptr;
+	if(pShared){
+		pShared->Impl_IntrusivePtr::RefCountBase::AddRef();
+		pRet.Reset(pShared);
 	}
-	pShared->AddRef();
-	return IntrusivePtr<const OtherT, DeleterT>(pShared);
+	return pRet;
 }
 template<typename ObjectT, class DeleterT>
 	template<typename OtherT>
 IntrusivePtr<volatile OtherT, DeleterT> IntrusiveBase<ObjectT, DeleterT>::Share() volatile noexcept {
+	IntrusivePtr<const volatile OtherT, DeleterT> pRet;
 	const auto pShared = Impl_IntrusivePtr::StaticOrDynamicCast<volatile OtherT *>(this);
-	if(!pShared){
-		return nullptr;
+	if(pShared){
+		pShared->Impl_IntrusivePtr::RefCountBase::AddRef();
+		pRet.Reset(pShared);
 	}
-	pShared->AddRef();
-	return IntrusivePtr<volatile OtherT, DeleterT>(pShared);
+	return pRet;
 }
 template<typename ObjectT, class DeleterT>
 	template<typename OtherT>
 IntrusivePtr<OtherT, DeleterT> IntrusiveBase<ObjectT, DeleterT>::Share() noexcept {
+	IntrusivePtr<const volatile OtherT, DeleterT> pRet;
 	const auto pShared = Impl_IntrusivePtr::StaticOrDynamicCast<OtherT *>(this);
-	if(!pShared){
-		return nullptr;
+	if(pShared){
+		pShared->Impl_IntrusivePtr::RefCountBase::AddRef();
+		pRet.Reset(pShared);
 	}
-	pShared->AddRef();
-	return IntrusivePtr<OtherT, DeleterT>(pShared);
+	return pRet;
 }
 
 #define MCF_SMART_POINTERS_DECLARE_TEMPLATE_PARAMETERS_	template<typename ObjectT, class DeleterT>

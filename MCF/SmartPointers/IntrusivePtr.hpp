@@ -68,10 +68,6 @@ namespace Impl_IntrusivePtr {
 		}
 	};
 
-	template<typename DeleterT>
-	class DeletableRefCountBase : public RefCountBase {
-	};
-
 	template<typename DstT, typename SrcT>
 	struct CvCopier {
 		using Type = DstT;
@@ -111,7 +107,7 @@ namespace Impl_IntrusivePtr {
 }
 
 template<typename ObjectT, class DeleterT>
-struct IntrusiveBase : public Impl_IntrusivePtr::DeletableRefCountBase<DeleterT> {
+struct IntrusiveBase : public Impl_IntrusivePtr::RefCountBase {
 	template<typename OtherT = ObjectT>
 	IntrusivePtr<const volatile OtherT, DeleterT> Share() const volatile noexcept;
 	template<typename OtherT = ObjectT>

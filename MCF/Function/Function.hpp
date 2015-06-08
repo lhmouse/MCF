@@ -54,7 +54,11 @@ private:
 	IntrusivePtr<const Impl_Function::FunctorBase<RetT, ParamsT...>> x_pFunctor;
 
 public:
-	constexpr Function() = default;
+	constexpr Function() noexcept = default;
+	Function(const Function &) noexcept = default;
+	Function(Function &&) noexcept = default;
+	Function &operator=(const Function &) noexcept = default;
+	Function &operator=(Function &&) noexcept = default;
 
 	template<typename FuncT,
 		std::enable_if_t<

@@ -132,7 +132,8 @@ public:
 		std::decay_t<decltype(*std::declval<std::decay_t<decltype(DeleterT()())>>())>,
 		ElementType>::Type;
 
-	static_assert(std::is_base_of<BuddyType, ElementType>::value, "ElementType is not derived from IntrusiveBase<ElementType> ??");
+	static_assert(std::is_base_of<BuddyType, ElementType>::value, "ElementType is not derived from BuddyType ??");
+	static_assert(std::is_base_of<Impl_IntrusivePtr::RefCountBase, BuddyType>::value, "BuddyType is not derived from Impl_IntrusivePtr::RefCountBase ??");
 
 private:
 	BuddyType *x_pBuddy;
@@ -229,13 +230,13 @@ public:
 		return GetSharedCount() == 1;
 	}
 	std::size_t GetSharedCount() const noexcept {
-		return x_pBuddy ? x_pBuddy->GetRef() : 0;
+		return x_pBuddy ? x_pBuddy->Impl_IntrusivePtr::RefCountBase::GetRef() : 0;
 	}
 
 	IntrusivePtr &Reset(ElementType *pElement = nullptr) noexcept {
 		const auto pOldBuddy = std::exchange(x_pBuddy, pElement);
 		if(pOldBuddy){
-			if(pOldBuddy->DropRef()){
+			if(pOldBuddy->Impl_IntrusivePtr::RefCountBase::DropRef()){
 				DeleterT()(const_cast<std::remove_cv_t<BuddyType> *>(pOldBuddy));
 			}
 		}
@@ -249,7 +250,7 @@ public:
 	IntrusivePtr &Reset(const IntrusivePtr<OtherT, OtherDeleterT> &rhs) noexcept {
 		const auto pElement = rhs.Get();
 		if(pElement){
-			static_cast<BuddyType *>(pElement)->AddRef();
+			static_cast<BuddyType *>(pElement)->Impl_IntrusivePtr::RefCountBase::AddRef();
 		}
 		Reset(pElement);
 		return *this;

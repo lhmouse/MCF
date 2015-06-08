@@ -25,7 +25,7 @@ private:
 			int> = 0>
 	TestObjectT *xDoClone() const {
 		return new TestObjectT(
-			*Impl_IntrusivePtr::StaticOrDynamicCast<const TestObjectT>(this));
+			*Impl_IntrusivePtr::StaticOrDynamicCast<const TestObjectT *>(this));
 	}
 	template<typename TestObjectT = ObjectT,
 		std::enable_if_t<

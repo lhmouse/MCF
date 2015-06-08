@@ -41,24 +41,24 @@ namespace Impl_IntrusivePtr {
 		using Type = const volatile DstT;
 	};
 
-	template<typename DstT, typename SrcT, typename = DstT *>
+	template<typename DstT, typename SrcT, typename = DstT>
 	struct StaticOrDynamicCastHelper {
-		DstT *operator()(SrcT *pSrc) const noexcept {
-			return dynamic_cast<DstT *>(pSrc);
+		DstT operator()(SrcT vSrc) const noexcept {
+			return dynamic_cast<DstT>(vSrc);
 		}
 	};
 	template<typename DstT, typename SrcT>
 	struct StaticOrDynamicCastHelper<DstT, SrcT,
-		decltype(static_cast<DstT *>(std::declval<SrcT *>()))>
+		decltype(static_cast<DstT>(std::declval<SrcT>()))>
 	{
-		constexpr DstT *operator()(SrcT *pSrc) const noexcept {
-			return static_cast<DstT *>(pSrc);
+		constexpr DstT operator()(SrcT vSrc) const noexcept {
+			return static_cast<DstT>(vSrc);
 		}
 	};
 
 	template<typename DstT, typename SrcT>
-	DstT *StaticOrDynamicCast(SrcT *pSrc) noexcept {
-		return StaticOrDynamicCastHelper<DstT, SrcT>()(pSrc);
+	DstT StaticOrDynamicCast(SrcT vSrc) noexcept {
+		return StaticOrDynamicCastHelper<DstT, SrcT>()(vSrc);
 	}
 }
 
@@ -204,7 +204,7 @@ public:
 		if(!x_pBuddy){
 			return nullptr;
 		}
-		return Impl_IntrusivePtr::StaticOrDynamicCast<ElementType>(
+		return Impl_IntrusivePtr::StaticOrDynamicCast<ElementType *>(
 			static_cast<std::decay_t<decltype(*DeleterT()())> *>(const_cast<BuddyType *>(x_pBuddy)));
 	}
 	auto ReleaseBuddy() noexcept {
@@ -215,7 +215,7 @@ public:
 		if(!pOldBuddy){
 			return nullptr;
 		}
-		const auto pRet = Impl_IntrusivePtr::StaticOrDynamicCast<ElementType>(
+		const auto pRet = Impl_IntrusivePtr::StaticOrDynamicCast<ElementType *>(
 			static_cast<std::decay_t<decltype(*DeleterT()())> *>(const_cast<BuddyType *>(pOldBuddy)));
 		if(!pRet){
 			if(pOldBuddy->DropRef()){
@@ -298,7 +298,7 @@ public:
 template<typename ObjectT, class DeleterT>
 	template<typename OtherT>
 IntrusivePtr<const volatile OtherT, DeleterT> IntrusiveBase<ObjectT, DeleterT>::Share() const volatile noexcept {
-	const auto pShared = Impl_IntrusivePtr::StaticOrDynamicCast<const volatile OtherT>(
+	const auto pShared = Impl_IntrusivePtr::StaticOrDynamicCast<const volatile OtherT *>(
 		static_cast<std::decay_t<decltype(*DeleterT()())> *>(this));
 	if(!pShared){
 		return nullptr;
@@ -309,7 +309,7 @@ IntrusivePtr<const volatile OtherT, DeleterT> IntrusiveBase<ObjectT, DeleterT>::
 template<typename ObjectT, class DeleterT>
 	template<typename OtherT>
 IntrusivePtr<const OtherT, DeleterT> IntrusiveBase<ObjectT, DeleterT>::Share() const noexcept {
-	const auto pShared = Impl_IntrusivePtr::StaticOrDynamicCast<const OtherT>(
+	const auto pShared = Impl_IntrusivePtr::StaticOrDynamicCast<const OtherT *>(
 		static_cast<std::decay_t<decltype(*DeleterT()())> *>(this));
 	if(!pShared){
 		return nullptr;
@@ -320,7 +320,7 @@ IntrusivePtr<const OtherT, DeleterT> IntrusiveBase<ObjectT, DeleterT>::Share() c
 template<typename ObjectT, class DeleterT>
 	template<typename OtherT>
 IntrusivePtr<volatile OtherT, DeleterT> IntrusiveBase<ObjectT, DeleterT>::Share() volatile noexcept {
-	const auto pShared = Impl_IntrusivePtr::StaticOrDynamicCast<volatile OtherT>(
+	const auto pShared = Impl_IntrusivePtr::StaticOrDynamicCast<volatile OtherT *>(
 		static_cast<std::decay_t<decltype(*DeleterT()())> *>(this));
 	if(!pShared){
 		return nullptr;
@@ -331,7 +331,7 @@ IntrusivePtr<volatile OtherT, DeleterT> IntrusiveBase<ObjectT, DeleterT>::Share(
 template<typename ObjectT, class DeleterT>
 	template<typename OtherT>
 IntrusivePtr<OtherT, DeleterT> IntrusiveBase<ObjectT, DeleterT>::Share() noexcept {
-	const auto pShared = Impl_IntrusivePtr::StaticOrDynamicCast<OtherT>(
+	const auto pShared = Impl_IntrusivePtr::StaticOrDynamicCast<OtherT *>(
 		static_cast<std::decay_t<decltype(*DeleterT()())> *>(this));
 	if(!pShared){
 		return nullptr;

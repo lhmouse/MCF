@@ -87,22 +87,22 @@ namespace Impl_IntrusivePtr {
 
 	template<typename DstT, typename SrcT, typename = DstT>
 	struct StaticOrDynamicCastHelper {
-		DstT operator()(SrcT vSrc) const noexcept {
-			return dynamic_cast<DstT>(vSrc);
+		DstT operator()(SrcT &&vSrc) const noexcept {
+			return dynamic_cast<DstT>(std::forward<SrcT>(vSrc));
 		}
 	};
 	template<typename DstT, typename SrcT>
 	struct StaticOrDynamicCastHelper<DstT, SrcT,
 		decltype(static_cast<DstT>(std::declval<SrcT>()))>
 	{
-		constexpr DstT operator()(SrcT vSrc) const noexcept {
-			return static_cast<DstT>(vSrc);
+		constexpr DstT operator()(SrcT &&vSrc) const noexcept {
+			return static_cast<DstT>(std::forward<SrcT>(vSrc));
 		}
 	};
 
 	template<typename DstT, typename SrcT>
-	DstT StaticOrDynamicCast(SrcT vSrc) noexcept {
-		return StaticOrDynamicCastHelper<DstT, SrcT>()(vSrc);
+	DstT StaticOrDynamicCast(SrcT &&vSrc) noexcept {
+		return StaticOrDynamicCastHelper<DstT, SrcT>()(std::forward<SrcT>(vSrc));
 	}
 }
 

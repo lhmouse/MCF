@@ -7,42 +7,42 @@
 
 #include "IntrusivePtr.hpp"
 #include "../Core/Exception.hpp"
+#include <type_traits>
 
 namespace MCF {
 
-struct PolymorphicIntrusiveDeletableBase : public virtual IntrusiveBase<PolymorphicIntrusiveDeletableBase> {
-	virtual ~PolymorphicIntrusiveDeletableBase();
+struct PolymorphicIntrusiveDeleteableBase : public virtual IntrusiveBase<PolymorphicIntrusiveDeleteableBase> {
+	virtual ~PolymorphicIntrusiveDeleteableBase();
 
-	virtual void *MCF_Impl_IntrusiveClone_() const = 0;
+	virtual PolymorphicIntrusiveDeleteableBase *MCF_Impl_IntrusiveClone_() const = 0;
+};
+
+namespace Impl_PolymorphicIntrusivePtr {
+	template<typename ObjectT, bool kIsCopyConstructible = std::is_copy_constructible<std::decay_t<ObjectT>>::value>
+	struct VirtualCloner {
+		PolymorphicIntrusiveDeleteableBase *operator()(const std::decay_t<ObjectT> &src) const {
+			return new std::decay_t<ObjectT>(src);
+		}
+	};
+	template<typename ObjectT>
+	struct VirtualCloner<ObjectT, false> {
+		[[noreturn]]
+		PolymorphicIntrusiveDeleteableBase *operator()(const std::decay_t<ObjectT> &src) const {
+			DEBUG_THROW(Exception, "Class is not copy-constructible", ERROR_INVALID_PARAMETER);
+		}
+	};
+}
+
+template<typename ObjectT>
+struct PolymorphicIntrusiveBase : public PolymorphicIntrusiveDeleteableBase {
+	PolymorphicIntrusiveDeleteableBase *MCF_Impl_IntrusiveClone_() const override {
+		return Impl_PolymorphicIntrusivePtr::VirtualCloner<ObjectT>()(
+			Impl_IntrusivePtr::StaticOrDynamicCast<const std::decay_t<ObjectT> &>(*this));
+	}
 };
 
 template<typename ObjectT>
-class PolymorphicIntrusiveBase : public PolymorphicIntrusiveDeletableBase {
-private:
-	template<typename TestObjectT = ObjectT,
-		std::enable_if_t<
-			std::is_copy_constructible<TestObjectT>::value,
-			int> = 0>
-	TestObjectT *xDoClone() const {
-		return new TestObjectT(*Impl_IntrusivePtr::StaticOrDynamicCast<const TestObjectT *>(this));
-	}
-	template<typename TestObjectT = ObjectT,
-		std::enable_if_t<
-			!std::is_copy_constructible<TestObjectT>::value,
-			int> = 0>
-	[[noreturn]]
-	TestObjectT *xDoClone() const {
-		DEBUG_THROW(Exception, "Class is not copy-constructible", ERROR_INVALID_PARAMETER);
-	}
-
-public:
-	void *MCF_Impl_IntrusiveClone_() const override {
-		return xDoClone();
-	}
-};
-
-template<typename ObjectT>
-using PolymorphicIntrusivePtr = IntrusivePtr<ObjectT, DefaultDeleter<PolymorphicIntrusiveDeletableBase>>;
+using PolymorphicIntrusivePtr = IntrusivePtr<ObjectT, DefaultDeleter<PolymorphicIntrusiveDeleteableBase>>;
 
 template<typename ObjectT, typename ...ParamsT>
 auto MakePolymorphicIntrusive(ParamsT &&...vParams){
@@ -53,9 +53,10 @@ auto MakePolymorphicIntrusive(ParamsT &&...vParams){
 
 template<typename ObjectT>
 auto DynamicClone(const PolymorphicIntrusivePtr<ObjectT> &rhs){
-	PolymorphicIntrusivePtr<std::remove_cv_t<ObjectT>> pNew;
+	PolymorphicIntrusivePtr<std::decay_t<ObjectT>> pNew;
 	if(rhs){
-		pNew.Reset(static_cast<std::remove_cv_t<ObjectT> *>(rhs->MCF_Impl_IntrusiveClone_()));
+		pNew.Reset(Impl_IntrusivePtr::StaticOrDynamicCast<std::decay_t<ObjectT> *>(rhs->MCF_Impl_IntrusiveClone_()));
+		ASSERT(pNew);
 	}
 	return pNew;
 }

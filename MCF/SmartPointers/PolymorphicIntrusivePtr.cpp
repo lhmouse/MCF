@@ -7,7 +7,7 @@
 
 namespace MCF {
 
-PolymorphicIntrusiveDeletableBase::~PolymorphicIntrusiveDeletableBase(){
+PolymorphicIntrusiveDeleteableBase::~PolymorphicIntrusiveDeleteableBase(){
 }
 
 }

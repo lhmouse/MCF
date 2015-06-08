@@ -14,7 +14,8 @@ extern "C" unsigned int MCFMain() noexcept {
 	PolymorphicIntrusivePtr<foo> p1 = MakePolymorphicIntrusive<foo>(1, "a");
 	PolymorphicIntrusivePtr<const foo> p2 = p1;
 	PolymorphicIntrusivePtr<volatile foo> p3 = std::move(p1);
-	PolymorphicIntrusivePtr<const volatile foo> p4 = std::move(p2);
+	PolymorphicIntrusivePtr<const volatile foo> p4 = p2;
+	auto px = DynamicClone(p2);
 
 	std::cout <<"ref1 = " <<p1.GetSharedCount() <<std::endl;
 	std::cout <<"ref2 = " <<p2.GetSharedCount() <<std::endl;

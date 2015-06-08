@@ -126,10 +126,12 @@ class IntrusivePtr {
 
 public:
 	using ElementType = ObjectT;
-	using BuddyType = IntrusiveBase<std::remove_cv_t<ObjectT>, DeleterT>;
+	using BuddyType = typename Impl_IntrusivePtr::CvCopier<IntrusiveBase<std::remove_cv_t<ObjectT>, DeleterT>, ElementType>::Type;
+
+	static_assert(std::is_base_of<BuddyType, ElementType>::value, "ElementType is not derived from IntrusiveBase<ElementType>?");
 
 private:
-	const volatile BuddyType *x_pBuddy;
+	BuddyType *x_pBuddy;
 
 public:
 	explicit constexpr IntrusivePtr(ElementType *pElement = nullptr) noexcept
@@ -198,28 +200,26 @@ public:
 
 public:
 	bool IsNonnull() const noexcept {
-		return Get() != nullptr;
+		return !!x_pBuddy;
+	}
+	BuddyType *GetBuddy() const noexcept {
+		return x_pBuddy;
+	}
+	BuddyType *ReleaseBuddy() noexcept {
+		return std::exchange(x_pBuddy, nullptr);
 	}
 	ElementType *Get() const noexcept {
-		if(!x_pBuddy){
-			return nullptr;
-		}
-		return Impl_IntrusivePtr::StaticOrDynamicCast<ElementType *>(
-			static_cast<std::decay_t<decltype(*DeleterT()())> *>(const_cast<BuddyType *>(x_pBuddy)));
-	}
-	auto ReleaseBuddy() noexcept {
-		return const_cast<typename Impl_IntrusivePtr::CvCopier<BuddyType, ElementType>::Type *>(std::exchange(x_pBuddy, nullptr));
+		return Impl_IntrusivePtr::StaticOrDynamicCast<ElementType *>(x_pBuddy);
 	}
 	ElementType *Release() noexcept {
-		const auto pOldBuddy = ReleaseBuddy();
-		if(!pOldBuddy){
+		const auto pBuddy = std::exchange(x_pBuddy, nullptr);
+		if(!pBuddy){
 			return nullptr;
 		}
-		const auto pRet = Impl_IntrusivePtr::StaticOrDynamicCast<ElementType *>(
-			static_cast<std::decay_t<decltype(*DeleterT()())> *>(const_cast<BuddyType *>(pOldBuddy)));
+		const auto pRet = Impl_IntrusivePtr::StaticOrDynamicCast<ElementType *>(pBuddy);
 		if(!pRet){
-			if(pOldBuddy->DropRef()){
-				DeleterT()(static_cast<std::decay_t<decltype(*DeleterT()())> *>(const_cast<BuddyType *>(pOldBuddy)));
+			if(pBuddy->DropRef()){
+				DeleterT()(static_cast<std::decay_t<decltype(*DeleterT()())> *>(const_cast<std::remove_cv_t<BuddyType> *>(pBuddy)));
 			}
 			return nullptr;
 		}
@@ -230,18 +230,16 @@ public:
 		return GetSharedCount() == 1;
 	}
 	std::size_t GetSharedCount() const noexcept {
-		if(!x_pBuddy){
-			return 0;
-		}
-		return x_pBuddy->GetSharedCount();
+		return x_pBuddy ? x_pBuddy->GetSharedCount() : 0;
 	}
 
 	IntrusivePtr &Reset(ElementType *pElement = nullptr) noexcept {
 		ASSERT(!(pElement && (Get() == pElement)));
-		const auto pOldBuddy = std::exchange(x_pBuddy, pElement);
-		if(pOldBuddy){
-			if(pOldBuddy->DropRef()){
-				DeleterT()(static_cast<std::decay_t<decltype(*DeleterT()())> *>(const_cast<BuddyType *>(pOldBuddy)));
+
+		const auto pBuddy = std::exchange(x_pBuddy, pElement);
+		if(pBuddy){
+			if(pBuddy->DropRef()){
+				DeleterT()(static_cast<std::decay_t<decltype(*DeleterT()())> *>(const_cast<std::remove_cv_t<BuddyType> *>(pBuddy)));
 			}
 		}
 		return *this;
@@ -254,7 +252,7 @@ public:
 	IntrusivePtr &Reset(const IntrusivePtr<OtherT, OtherDeleterT> &rhs) noexcept {
 		const auto pObject = static_cast<ElementType *>(rhs.Get());
 		if(pObject){
-			pObject->AddRef();
+			static_cast<BuddyType *>(pObject)->AddRef();
 		}
 		Reset(pObject);
 		return *this;
@@ -265,8 +263,7 @@ public:
 				std::is_convertible<OtherDeleterT, DeleterT>::value,
 			int> = 0>
 	IntrusivePtr &Reset(IntrusivePtr<OtherT, OtherDeleterT> &&rhs) noexcept {
-		Reset(rhs.Release());
-		return *this;
+		return Reset(static_cast<ElementType *>(rhs.Release()));
 	}
 
 	void Swap(IntrusivePtr &rhs) noexcept {

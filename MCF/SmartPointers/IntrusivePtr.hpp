@@ -132,7 +132,9 @@ class IntrusivePtr {
 
 public:
 	using ElementType = ObjectT;
-	using BuddyType = typename Impl_IntrusivePtr::CvCopier<std::decay_t<decltype(*DeleterT()())>, ElementType>::Type;
+	using BuddyType = typename Impl_IntrusivePtr::CvCopier<
+		std::decay_t<decltype(*std::declval<std::decay_t<decltype(DeleterT()())>>())>,
+		ElementType>::Type;
 
 	static_assert(std::is_base_of<BuddyType, ElementType>::value, "ElementType is not derived from IntrusiveBase<ElementType> ??");
 

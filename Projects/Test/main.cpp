@@ -15,12 +15,13 @@ extern "C" unsigned int MCFMain() noexcept {
 	PolymorphicIntrusivePtr<const foo> p2 = p1;
 	PolymorphicIntrusivePtr<volatile foo> p3 = std::move(p1);
 	PolymorphicIntrusivePtr<const volatile foo> p4 = p2;
-	auto px = DynamicClone(p2);
+	PolymorphicIntrusivePtr<foo> p5 = DynamicClone(p2);
 
-	std::cout <<"ref1 = " <<p1.GetSharedCount() <<std::endl;
-	std::cout <<"ref2 = " <<p2.GetSharedCount() <<std::endl;
-	std::cout <<"ref3 = " <<p3.GetSharedCount() <<std::endl;
-	std::cout <<"ref4 = " <<p4.GetSharedCount() <<std::endl;
+	std::printf("ref1 = %zu\n", p1.GetSharedCount());
+	std::printf("ref2 = %zu\n", p2.GetSharedCount());
+	std::printf("ref3 = %zu\n", p3.GetSharedCount());
+	std::printf("ref4 = %zu\n", p4.GetSharedCount());
+	std::printf("ref5 = %zu\n", p5.GetSharedCount());
 
 	return 0;
 }

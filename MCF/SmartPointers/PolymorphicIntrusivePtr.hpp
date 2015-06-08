@@ -27,7 +27,7 @@ namespace Impl_PolymorphicIntrusivePtr {
 	template<typename ObjectT>
 	struct VirtualCloner<ObjectT, false> {
 		[[noreturn]]
-		PolymorphicIntrusiveDeleteableBase *operator()(const std::decay_t<ObjectT> &src) const {
+		PolymorphicIntrusiveDeleteableBase *operator()(const std::decay_t<ObjectT> &) const {
 			DEBUG_THROW(Exception, "Class is not copy-constructible", ERROR_INVALID_PARAMETER);
 		}
 	};

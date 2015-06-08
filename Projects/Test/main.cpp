@@ -8,6 +8,7 @@ using namespace MCF;
 struct foo : PolymorphicIntrusiveBase<foo> {
 	foo(int, const char *){
 	}
+	foo(const foo &) = delete;
 };
 
 extern "C" unsigned int MCFMain() noexcept {

@@ -357,9 +357,11 @@ auto StaticPointerCast(IntrusivePtr<SrcT, DeleterT> rhs) noexcept {
 }
 template<typename DstT, typename SrcT, class DeleterT>
 auto DynamicPointerCast(IntrusivePtr<SrcT, DeleterT> rhs) noexcept {
-	IntrusivePtr<DstT, DeleterT> pRet(dynamic_cast<DstT *>(rhs.Get()));
-	if(pRet){
+	IntrusivePtr<DstT, DeleterT> pRet;
+	const auto pShared = dynamic_cast<DstT *>(rhs.Get());
+	if(pShared){
 		rhs.ReleaseBuddy();
+		pRet.Reset(pShared);
 	}
 	return pRet;
 }

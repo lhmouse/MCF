@@ -11,7 +11,7 @@
 
 namespace MCF {
 
-struct PolymorphicIntrusiveDeleteableBase : public virtual IntrusiveBase<PolymorphicIntrusiveDeleteableBase> {
+struct PolymorphicIntrusiveDeleteableBase : public IntrusiveBase<PolymorphicIntrusiveDeleteableBase> {
 	virtual ~PolymorphicIntrusiveDeleteableBase();
 
 	virtual PolymorphicIntrusiveDeleteableBase *MCF_Impl_IntrusiveClone_() const = 0;
@@ -34,7 +34,7 @@ namespace Impl_PolymorphicIntrusivePtr {
 }
 
 template<typename ObjectT>
-struct PolymorphicIntrusiveBase : public PolymorphicIntrusiveDeleteableBase {
+struct PolymorphicIntrusiveBase : public virtual PolymorphicIntrusiveDeleteableBase {
 	PolymorphicIntrusiveDeleteableBase *MCF_Impl_IntrusiveClone_() const override {
 		return Impl_PolymorphicIntrusivePtr::VirtualCloner<ObjectT>()(
 			Impl_IntrusivePtr::StaticOrDynamicCast<const std::decay_t<ObjectT> &>(*this));

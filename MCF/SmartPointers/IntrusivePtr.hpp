@@ -244,8 +244,6 @@ public:
 	}
 
 	IntrusivePtr &Reset(ElementType *pElement = nullptr) noexcept {
-		ASSERT(!(pElement && (Get() == pElement)));
-
 		const auto pOldBuddy = std::exchange(x_pBuddy, pElement);
 		if(pOldBuddy){
 			Reclaim(pOldBuddy);

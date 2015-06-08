@@ -78,7 +78,6 @@ public:
 	}
 
 	UniquePtr &Reset(ElementType *pElement = nullptr) noexcept {
-		ASSERT(!(pElement && (Get() == pElement)));
 		const auto pOld = std::exchange(x_pElement, pElement);
 		if(pOld){
 			DeleterT()(const_cast<std::remove_cv_t<ElementType> *>(pOld));

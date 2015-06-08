@@ -10,7 +10,7 @@
 
 namespace MCF {
 
-struct PolymorphicIntrusiveDeletableBase : virtual public IntrusiveBase<PolymorphicIntrusiveDeletableBase> {
+struct PolymorphicIntrusiveDeletableBase : public virtual IntrusiveBase<PolymorphicIntrusiveDeletableBase> {
 	virtual ~PolymorphicIntrusiveDeletableBase();
 
 	virtual void *MCF_Impl_IntrusiveClone_() const = 0;

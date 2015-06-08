@@ -16,7 +16,7 @@ namespace MCF {
 class SpinLock : NONCOPYABLE {
 public:
 	enum : std::uintptr_t {
-		LOCKED_COUNT = (std::uintptr_t)-1
+		kLockedCount = (std::uintptr_t)-1
 	};
 
 private:
@@ -24,16 +24,16 @@ private:
 
 public:
 	explicit SpinLock(std::uintptr_t uCount = 0) noexcept {
-		ASSERT(uCount != LOCKED_COUNT);
-		AtomicStore(x_uCount, uCount, MemoryModel::RELEASE);
+		ASSERT(uCount != kLockedCount);
+		AtomicStore(x_uCount, uCount, MemoryModel::kRelease);
 	}
 
 public:
 	std::uintptr_t Lock() volatile noexcept {
 		std::uintptr_t uOld;
 		for(;;){
-			uOld = AtomicExchange(x_uCount, LOCKED_COUNT, MemoryModel::SEQ_CST);
-			if(EXPECT_NOT(uOld != LOCKED_COUNT)){
+			uOld = AtomicExchange(x_uCount, kLockedCount, MemoryModel::kSeqCst);
+			if(EXPECT_NOT(uOld != kLockedCount)){
 				break;
 			}
 			AtomicPause();
@@ -41,7 +41,7 @@ public:
 		return uOld;
 	}
 	void Unlock(std::uintptr_t uOld) volatile noexcept {
-		AtomicStore(x_uCount, uOld, MemoryModel::SEQ_CST);
+		AtomicStore(x_uCount, uOld, MemoryModel::kSeqCst);
 	}
 };
 

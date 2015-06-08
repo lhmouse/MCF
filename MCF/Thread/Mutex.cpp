@@ -28,7 +28,7 @@ Mutex::Mutex(std::size_t uSpinCount)
 {
 	SetSpinCount(uSpinCount);
 
-	AtomicFence(MemoryModel::RELEASE);
+	AtomicFence(MemoryModel::kRelease);
 }
 
 // 其他非静态成员函数。
@@ -38,7 +38,7 @@ bool Mutex::xTryWithHint(unsigned long ulThreadId) noexcept {
 	std::size_t i = GetSpinCount();
 	for(;;){
 		std::size_t uExpected = 0;
-		if(EXPECT_NOT(AtomicCompareExchange(x_uLockingThreadId, uExpected, ulThreadId, MemoryModel::ACQ_REL))){
+		if(EXPECT_NOT(AtomicCompareExchange(x_uLockingThreadId, uExpected, ulThreadId, MemoryModel::kAcqRel))){
 			return true;
 		}
 		if(EXPECT_NOT(i == 0)){
@@ -53,11 +53,11 @@ void Mutex::SetSpinCount(std::size_t uSpinCount) noexcept {
 	if(GetProcessorCount() == 0){
 		return;
 	}
-	AtomicStore(x_uSpinCount, uSpinCount, MemoryModel::RELAXED);
+	AtomicStore(x_uSpinCount, uSpinCount, MemoryModel::kRelaxed);
 }
 
 bool Mutex::IsLockedByCurrentThread() const noexcept {
-	return AtomicLoad(x_uLockingThreadId, MemoryModel::ACQUIRE) == ::GetCurrentThreadId();
+	return AtomicLoad(x_uLockingThreadId, MemoryModel::kAcquire) == ::GetCurrentThreadId();
 }
 
 bool Mutex::Try() noexcept {
@@ -92,7 +92,7 @@ void Mutex::Lock() noexcept {
 void Mutex::Unlock() noexcept {
 	ASSERT(IsLockedByCurrentThread());
 
-	AtomicStore(x_uLockingThreadId, 0, MemoryModel::RELEASE);
+	AtomicStore(x_uLockingThreadId, 0, MemoryModel::kRelease);
 
 	auto uQueueSize = x_splQueueSize.Lock();
 	if(EXPECT(uQueueSize != 0)){

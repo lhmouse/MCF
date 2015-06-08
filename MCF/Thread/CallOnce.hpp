@@ -45,16 +45,16 @@ template<typename FunctionT, typename ...ParamsT>
 bool CallOnce(OnceFlag &vFlag, FunctionT &&vFunction, ParamsT &&...vParams){
 	auto &bFlag = static_cast<volatile bool &>(vFlag);
 
-	if(AtomicLoad(bFlag, MemoryModel::ACQUIRE)){
+	if(AtomicLoad(bFlag, MemoryModel::kAcquire)){
 		return false;
 	}
 	{
 		const auto vLock = Impl_CallOnce::OnceFlag::GetMutex().GetLock();
-		if(AtomicLoad(bFlag, MemoryModel::ACQUIRE)){
+		if(AtomicLoad(bFlag, MemoryModel::kAcquire)){
 			return false;
 		}
 		std::forward<FunctionT>(vFunction)(std::forward<ParamsT>(vParams)...);
-		AtomicStore(bFlag, true, MemoryModel::RELEASE);
+		AtomicStore(bFlag, true, MemoryModel::kRelease);
 	}
 	return true;
 }

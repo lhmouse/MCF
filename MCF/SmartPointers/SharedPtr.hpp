@@ -69,7 +69,7 @@ namespace Impl_SharedPtr {
 			: x_pfnDeleter(pfnDeleter)
 			, x_pToDelete(pData), x_uSharedCount(1), x_uWeakCount(1)
 		{
-			AtomicFence(MemoryModel::RELAXED);
+			AtomicFence(MemoryModel::kRelaxed);
 		}
 
 	private:
@@ -85,23 +85,23 @@ namespace Impl_SharedPtr {
 
 	public:
 		std::size_t GetShared() const noexcept {
-			return AtomicLoad(x_uSharedCount, MemoryModel::RELAXED);
+			return AtomicLoad(x_uSharedCount, MemoryModel::kRelaxed);
 		}
 		void AddShared() noexcept {
 			AddWeak();
 
-			ASSERT(AtomicLoad(x_uSharedCount, MemoryModel::RELAXED) != 0);
-			AtomicIncrement(x_uSharedCount, MemoryModel::RELAXED);
+			ASSERT(AtomicLoad(x_uSharedCount, MemoryModel::kRelaxed) != 0);
+			AtomicIncrement(x_uSharedCount, MemoryModel::kRelaxed);
 		}
 		Sentry TryAddShared(bool &bResult) noexcept {
 			AddWeak();
 
-			auto uOldShared = AtomicLoad(x_uSharedCount, MemoryModel::RELAXED);
+			auto uOldShared = AtomicLoad(x_uSharedCount, MemoryModel::kRelaxed);
 			for(;;){
 				if(EXPECT_NOT(uOldShared == 0)){
 					goto jFailed;
 				}
-				if(EXPECT_NOT(AtomicCompareExchange(x_uSharedCount, uOldShared, uOldShared + 1, MemoryModel::RELAXED))){
+				if(EXPECT_NOT(AtomicCompareExchange(x_uSharedCount, uOldShared, uOldShared + 1, MemoryModel::kRelaxed))){
 					goto jDone;
 				}
 			}
@@ -115,8 +115,8 @@ namespace Impl_SharedPtr {
 			return Sentry(nullptr);
 		}
 		Sentry DropShared() noexcept {
-			ASSERT(AtomicLoad(x_uSharedCount, MemoryModel::RELAXED) != 0);
-			if(AtomicDecrement(x_uSharedCount, MemoryModel::RELAXED) == 0){
+			ASSERT(AtomicLoad(x_uSharedCount, MemoryModel::kRelaxed) != 0);
+			if(AtomicDecrement(x_uSharedCount, MemoryModel::kRelaxed) == 0){
 				(*x_pfnDeleter)(x_pToDelete);
 #ifndef NDEBUG
 				x_pToDelete = (void *)
@@ -133,16 +133,16 @@ namespace Impl_SharedPtr {
 		}
 
 		std::size_t GetWeak() const noexcept {
-			return AtomicLoad(x_uWeakCount, MemoryModel::RELAXED);
+			return AtomicLoad(x_uWeakCount, MemoryModel::kRelaxed);
 		}
 		void AddWeak() noexcept {
-			ASSERT(AtomicLoad(x_uWeakCount, MemoryModel::RELAXED) != 0);
-			AtomicIncrement(x_uWeakCount, MemoryModel::RELAXED);
+			ASSERT(AtomicLoad(x_uWeakCount, MemoryModel::kRelaxed) != 0);
+			AtomicIncrement(x_uWeakCount, MemoryModel::kRelaxed);
 		}
 		Sentry DropWeak() noexcept {
-			ASSERT(AtomicLoad(x_uWeakCount, MemoryModel::RELAXED) != 0);
+			ASSERT(AtomicLoad(x_uWeakCount, MemoryModel::kRelaxed) != 0);
 			SharedControl *pToDelete = nullptr;
-			if(AtomicDecrement(x_uWeakCount, MemoryModel::RELAXED) == 0){
+			if(AtomicDecrement(x_uWeakCount, MemoryModel::kRelaxed) == 0){
 				pToDelete = this;
 			}
 			return Sentry(pToDelete);

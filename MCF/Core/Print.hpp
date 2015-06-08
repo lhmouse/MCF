@@ -14,9 +14,9 @@
 namespace MCF {
 
 namespace Printers {
-	template<typename OutputIteratorT, typename EndPredT, unsigned RADIX_T, bool UPPER_CASE_T>
+	template<typename OutputIteratorT, typename EndPredT, unsigned kRadixT, bool bUpperCaseT>
 	class IntegralPrinter {
-		static_assert((RADIX_T != 0) && (RADIX_T <= 36), "RADIX_T is invalid");
+		static_assert((kRadixT != 0) && (kRadixT <= 36), "kRadixT is invalid");
 
 	private:
 		OutputIteratorT &x_itOutput;
@@ -33,14 +33,14 @@ namespace Printers {
 		void xDoPrintUnsigned(ParamT vParam){
 			static_assert(std::is_unsigned<ParamT>::value, "ParamT must be an unsigned type");
 
-			static constexpr char ASCII_DIGITS[] = "00112233445566778899aAbBcCdDeEfFgGhHiIjJkKlLmMnNoOpPqQrRsStTuUvVwWxXyYzZ";
+			static constexpr char kAsciiDigits[] = "00112233445566778899aAbBcCdDeEfFgGhHiIjJkKlLmMnNoOpPqQrRsStTuUvVwWxXyYzZ";
 
 			char achTemp[sizeof(ParamT) * CHAR_BIT];
 			auto pchWrite = achTemp;
 			do {
-				const unsigned uDigit = vParam % RADIX_T;
-				vParam /= RADIX_T;
-				*pchWrite = ASCII_DIGITS[uDigit * 2 + static_cast<unsigned>(UPPER_CASE_T)];
+				const unsigned uDigit = vParam % kRadixT;
+				vParam /= kRadixT;
+				*pchWrite = kAsciiDigits[uDigit * 2 + static_cast<unsigned>(bUpperCaseT)];
 				++pchWrite;
 			} while(vParam != 0);
 
@@ -155,16 +155,16 @@ OutputIteratorT Print(OutputIteratorT itOutput, const ParamsT &... vParams){
 template<
 	template<typename, typename>
 		class ...PrintersT,
-	StringType STR_TYPE_T, typename ...ParamsT>
-String<STR_TYPE_T> &PrintStr(String<STR_TYPE_T> &strDst, const ParamsT &... vParams){
+	StringType kStringTypeT, typename ...ParamsT>
+String<kStringTypeT> &PrintStr(String<kStringTypeT> &strDst, const ParamsT &... vParams){
 	Impl_Print::PrintPred<PrintersT...>(std::back_inserter(strDst), []{ return false; }, vParams...);
 	return strDst;
 }
 template<
 	template<typename, typename>
 		class ...PrintersT,
-	StringType STR_TYPE_T, typename ...ParamsT>
-String<STR_TYPE_T> &&PrintStr(String<STR_TYPE_T> &&strDst, const ParamsT &... vParams){
+	StringType kStringTypeT, typename ...ParamsT>
+String<kStringTypeT> &&PrintStr(String<kStringTypeT> &&strDst, const ParamsT &... vParams){
 	Impl_Print::PrintPred<PrintersT...>(std::back_inserter(strDst), []{ return false; }, vParams...);
 	return std::move(strDst);
 }

@@ -10,9 +10,9 @@
 namespace MCF {
 
 namespace Impl_ParameterPackManipulators {
-	template<std::size_t INDEX_T, typename FirstT, typename ...RemainingT>
+	template<std::size_t kIndexT, typename FirstT, typename ...RemainingT>
 	struct ParameterPackExpander {
-		using Type = typename ParameterPackExpander<INDEX_T - 1, RemainingT...>::Type;
+		using Type = typename ParameterPackExpander<kIndexT - 1, RemainingT...>::Type;
 	};
 	template<typename FirstT, typename ...RemainingT>
 	struct ParameterPackExpander<0, FirstT, RemainingT...> {
@@ -22,13 +22,13 @@ namespace Impl_ParameterPackManipulators {
 	template<typename ToFindT, typename FirstT, typename ...RemainingT>
 	struct FirstTypeFinder {
 		enum : std::size_t {
-			INDEX = FirstTypeFinder<ToFindT, RemainingT...>::INDEX + 1
+			kIndex = FirstTypeFinder<ToFindT, RemainingT...>::kIndex + 1
 		};
 	};
 	template<typename ToFindT, typename ...RemainingT>
 	struct FirstTypeFinder<ToFindT, ToFindT, RemainingT...> {
 		enum : std::size_t {
-			INDEX = 0
+			kIndex = 0
 		};
 	};
 
@@ -42,16 +42,16 @@ namespace Impl_ParameterPackManipulators {
 	}
 	template<typename ToFindT, typename ...ReversedT>
 	constexpr std::size_t FindLastTypeHelper(DummyTuple<>, DummyTuple<ReversedT...>) noexcept {
-		return sizeof...(ReversedT) - 1 - FirstTypeFinder<ToFindT, ReversedT...>::INDEX;
+		return sizeof...(ReversedT) - 1 - FirstTypeFinder<ToFindT, ReversedT...>::kIndex;
 	}
 }
 
-template<std::size_t INDEX_T, typename ...TypesT>
-using NthType = typename Impl_ParameterPackManipulators::ParameterPackExpander<INDEX_T, TypesT...>::Type;
+template<std::size_t kIndexT, typename ...TypesT>
+using NthType = typename Impl_ParameterPackManipulators::ParameterPackExpander<kIndexT, TypesT...>::Type;
 
 template<typename ToFindT, typename ...TypesT>
 constexpr std::size_t FindFirstType() noexcept {
-	return Impl_ParameterPackManipulators::FirstTypeFinder<ToFindT, TypesT...>::INDEX;
+	return Impl_ParameterPackManipulators::FirstTypeFinder<ToFindT, TypesT...>::kIndex;
 }
 
 template<typename ToFindT, typename ...TypesT>

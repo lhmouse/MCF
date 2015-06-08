@@ -13,8 +13,8 @@ namespace MCF {
 class Crc32 {
 public:
 	enum : std::uint32_t {
-		DIVISOR_IEEE_802_3	= 0xEDB88320,
-		DIVISOR_CASTAGNOLI	= 0x82F63B78
+		kDivisorIeee802_3	= 0xEDB88320,
+		kDivisorCastagnoli	= 0x82F63B78,
 	};
 
 private:
@@ -24,7 +24,7 @@ private:
 	std::uint32_t x_u32Reg;
 
 public:
-	explicit Crc32(std::uint32_t u32Divisor = DIVISOR_IEEE_802_3) noexcept;
+	explicit Crc32(std::uint32_t u32Divisor = kDivisorIeee802_3) noexcept;
 
 public:
 	void Abort() noexcept;

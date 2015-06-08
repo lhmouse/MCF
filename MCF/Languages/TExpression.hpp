@@ -81,10 +81,10 @@ inline void swap(TExpressionNode &lhs, TExpressionNode &rhs) noexcept {
 class TExpression : public TExpressionNode {
 public:
 	enum ErrorType {
-		ERR_NONE					= 0,
-		ERR_UNEXCEPTED_NODE_CLOSE	= 1,
-		ERR_UNCLOSED_QUOTE			= 2,
-		ERR_UNCLOSED_NODE			= 3,
+		kErrNone				= 0,
+		kErrUnexpectedNodeClose	= 1,
+		kErrUnclosedQuote		= 2,
+		kErrUnclosedNode		= 3,
 	};
 
 public:

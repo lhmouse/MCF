@@ -78,7 +78,7 @@ public:
 	}
 };
 
-template<class MutexT, unsigned LOCK_TYPE_T = 0>
+template<class MutexT, std::size_t kLockType = 0>
 class UniqueLockTemplate final : public UniqueLockTemplateBase {
 private:
 	MutexT *x_pOwner;
@@ -126,9 +126,9 @@ public:
 	}
 };
 
-template<class MutexT, std::size_t LOCK_TYPE_T>
-void swap(UniqueLockTemplate<MutexT, LOCK_TYPE_T> &lhs,
-	UniqueLockTemplate<MutexT, LOCK_TYPE_T> &rhs) noexcept
+template<class MutexT, std::size_t kLockTypeT>
+void swap(UniqueLockTemplate<MutexT, kLockTypeT> &lhs,
+	UniqueLockTemplate<MutexT, kLockTypeT> &rhs) noexcept
 {
 	lhs.Swap(rhs);
 }

@@ -14,10 +14,10 @@ namespace {
 		wsRet.Reserve(wsoSrc.GetSize());
 
 		enum {
-			NORMAL,
-			ESCAPED,
-			UCS_CODE
-		} eState = NORMAL;
+			kStNormal,
+			kStEscaped,
+			kStUcsCode,
+		} eState = kStNormal;
 
 		char32_t c32CodePoint = 0;
 		std::size_t uHexExpecting = 0;
@@ -27,75 +27,75 @@ namespace {
 			const auto wc = *pwcCur;
 
 			switch(eState){
-			case NORMAL:
+			case kStNormal:
 				switch(wc){
 				case L'\\':
-					eState = ESCAPED;
+					eState = kStEscaped;
 					break;
 
 				case L'\"':
-					// eState = NORMAL;
+					// eState = kStNormal;
 					break;
 
 				default:
-					// eState = NORMAL;
+					// eState = kStNormal;
 					wsRet.Push(wc);
 					break;
 				}
 				break;
 
-			case ESCAPED:
+			case kStEscaped:
 				switch(wc){
 				case L'n':
 					wsRet += L'\n';
-					eState = NORMAL;
+					eState = kStNormal;
 					break;
 
 				case L'b':
 					wsRet += L'\b';
-					eState = NORMAL;
+					eState = kStNormal;
 					break;
 
 				case L'r':
 					wsRet += L'\r';
-					eState = NORMAL;
+					eState = kStNormal;
 					break;
 
 				case L't':
 					wsRet += L'\t';
-					eState = NORMAL;
+					eState = kStNormal;
 					break;
 
 				case L'\n':
-					eState = NORMAL;
+					eState = kStNormal;
 					break;
 
 				case L'x':
 					c32CodePoint = 0;
 					uHexExpecting = 2;
-					eState = UCS_CODE;
+					eState = kStUcsCode;
 					break;
 
 				case L'u':
 					c32CodePoint = 0;
 					uHexExpecting = 4;
-					eState = UCS_CODE;
+					eState = kStUcsCode;
 					break;
 
 				case L'U':
 					c32CodePoint = 0;
 					uHexExpecting = 8;
-					eState = UCS_CODE;
+					eState = kStUcsCode;
 					break;
 
 				default:
 					wsRet += wc;
-					eState = NORMAL;
+					eState = kStNormal;
 					break;
 				}
 				break;
 
-			case UCS_CODE:
+			case kStUcsCode:
 				{
 					auto uHex = (unsigned)(wc - L'0');
 					do {
@@ -122,10 +122,10 @@ namespace {
 						uHexExpecting = 0;
 					}
 					if(uHexExpecting != 0){
-						// eState = UCS_CODE;
+						// eState = kStUcsCode;
 					} else {
 						wsRet += Utf32StringObserver(&c32CodePoint, 1);
-						eState = NORMAL;
+						eState = kStNormal;
 					}
 				}
 				break;
@@ -134,7 +134,7 @@ namespace {
 				ASSERT(false);
 			}
 		}
-		if(eState == UCS_CODE){
+		if(eState == kStUcsCode){
 			wsRet += Utf32StringObserver(&c32CodePoint, 1);
 		}
 
@@ -196,7 +196,7 @@ std::pair<TExpression::ErrorType, const wchar_t *> TExpression::Parse(const Wide
 	auto pwcRead = wsoData.GetBegin();
 	const auto pwcEnd = wsoData.GetEnd();
 	if(pwcRead == pwcEnd){
-		return std::make_pair(ERR_NONE, pwcRead);
+		return std::make_pair(kErrNone, pwcRead);
 	}
 
 	Vector<TExpressionNode *> vecNodeStack(1, &vTemp);
@@ -204,14 +204,14 @@ std::pair<TExpression::ErrorType, const wchar_t *> TExpression::Parse(const Wide
 	auto pwcNameBegin = pwcRead;
 
 	enum {
-		DELIMITER,
-		NAME,
-		COMMENT,
-		NAME_QUOTED,
-		NAME_ESCAPED,
-		NAME_QUO_ESC,
-		COMMENT_ESCAPED
-	} eState = DELIMITER;
+		kStDelimiter,
+		kStName,
+		kStComment,
+		kStNameQuoted,
+		kStNameEscaped,
+		kStNameQuotedEscaped,
+		kStCommentEscaped
+	} eState = kStDelimiter;
 
 	const auto PushNode = [&]{
 		ASSERT(!vecNodeStack.IsEmpty());
@@ -240,71 +240,71 @@ std::pair<TExpression::ErrorType, const wchar_t *> TExpression::Parse(const Wide
 		switch(wc){
 		case L'(':
 			switch(eState){
-			case DELIMITER:
+			case kStDelimiter:
 				PushUnnamedNode();
-				// eState = DELIMITER;
+				// eState = kStDelimiter;
 				continue;
 
-			case NAME:
+			case kStName:
 				PushNode();
-				eState = DELIMITER;
+				eState = kStDelimiter;
 				continue;
 
-			case COMMENT:
-			case NAME_QUOTED:
-			case NAME_ESCAPED:
-			case NAME_QUO_ESC:
-			case COMMENT_ESCAPED:
+			case kStComment:
+			case kStNameQuoted:
+			case kStNameEscaped:
+			case kStNameQuotedEscaped:
+			case kStCommentEscaped:
 				break;
 			};
 			break;
 
 		case L')':
 			switch(eState){
-			case DELIMITER:
+			case kStDelimiter:
 				if(vecNodeStack.GetSize() <= 1){
-					return std::make_pair(ERR_UNEXCEPTED_NODE_CLOSE, pwcRead);
+					return std::make_pair(kErrUnexpectedNodeClose, pwcRead);
 				}
 				PopNode();
-				// eState = DELIMITER;
+				// eState = kStDelimiter;
 				continue;
 
-			case NAME:
+			case kStName:
 				PushNode();
 				PopNode();
 				if(vecNodeStack.GetSize() <= 1){
-					return std::make_pair(ERR_UNEXCEPTED_NODE_CLOSE, pwcRead);
+					return std::make_pair(kErrUnexpectedNodeClose, pwcRead);
 				}
 				PopNode();
-				eState = DELIMITER;
+				eState = kStDelimiter;
 				continue;
 
-			case COMMENT:
-			case NAME_QUOTED:
-			case NAME_ESCAPED:
-			case NAME_QUO_ESC:
-			case COMMENT_ESCAPED:
+			case kStComment:
+			case kStNameQuoted:
+			case kStNameEscaped:
+			case kStNameQuotedEscaped:
+			case kStCommentEscaped:
 				break;
 			};
 			break;
 
 		case L';':
 			switch(eState){
-			case DELIMITER:
-				eState = COMMENT;
+			case kStDelimiter:
+				eState = kStComment;
 				continue;
 
-			case NAME:
+			case kStName:
 				PushNode();
 				PopNode();
-				eState = COMMENT;
+				eState = kStComment;
 				continue;
 
-			case COMMENT:
-			case NAME_QUOTED:
-			case NAME_ESCAPED:
-			case NAME_QUO_ESC:
-			case COMMENT_ESCAPED:
+			case kStComment:
+			case kStNameQuoted:
+			case kStNameEscaped:
+			case kStNameQuotedEscaped:
+			case kStCommentEscaped:
 				break;
 			};
 			break;
@@ -312,145 +312,145 @@ std::pair<TExpression::ErrorType, const wchar_t *> TExpression::Parse(const Wide
 		case L' ':
 		case L'\t':
 			switch(eState){
-			case DELIMITER:
-				// eState = DELIMITER;
+			case kStDelimiter:
+				// eState = kStDelimiter;
 				continue;
 
-			case NAME:
+			case kStName:
 				PushNode();
 				PopNode();
-				eState = DELIMITER;
+				eState = kStDelimiter;
 				continue;
 
-			case COMMENT:
-			case NAME_QUOTED:
-			case NAME_ESCAPED:
-			case NAME_QUO_ESC:
-			case COMMENT_ESCAPED:
+			case kStComment:
+			case kStNameQuoted:
+			case kStNameEscaped:
+			case kStNameQuotedEscaped:
+			case kStCommentEscaped:
 				break;
 			};
 			break;
 
 		case L'\n':
 			switch(eState){
-			case DELIMITER:
-				// eState = DELIMITER;
+			case kStDelimiter:
+				// eState = kStDelimiter;
 				continue;
 
-			case NAME:
+			case kStName:
 				PushNode();
 				PopNode();
-				eState = DELIMITER;
+				eState = kStDelimiter;
 				continue;
 
-			case COMMENT:
-				eState = DELIMITER;
+			case kStComment:
+				eState = kStDelimiter;
 				continue;
 
-			case NAME_QUOTED:
-			case NAME_ESCAPED:
-			case NAME_QUO_ESC:
-			case COMMENT_ESCAPED:
+			case kStNameQuoted:
+			case kStNameEscaped:
+			case kStNameQuotedEscaped:
+			case kStCommentEscaped:
 				break;
 			};
 			break;
 		}
 
 		switch(eState){
-		case DELIMITER:
+		case kStDelimiter:
 			pwcNameBegin = pwcRead;
 
 			switch(wc){
 			case L'\"':
-				eState = NAME_QUOTED;
+				eState = kStNameQuoted;
 				break;
 
 			case L'\\':
-				eState = NAME_ESCAPED;
+				eState = kStNameEscaped;
 				break;
 
 			default:
-				eState = NAME;
+				eState = kStName;
 				break;
 			}
 			break;
 
-		case NAME:
+		case kStName:
 			switch(wc){
 			case L'\"':
-				eState = NAME_QUOTED;
+				eState = kStNameQuoted;
 				break;
 
 			case L'\\':
-				eState = NAME_ESCAPED;
+				eState = kStNameEscaped;
 				break;
 			}
 			break;
 
-		case COMMENT:
+		case kStComment:
 			if(wc == L'\\'){
-				eState = COMMENT_ESCAPED;
+				eState = kStCommentEscaped;
 			}
 			break;
 
-		case NAME_QUOTED:
+		case kStNameQuoted:
 			switch(wc){
 			case L'\"':
-				eState = NAME;
+				eState = kStName;
 				break;
 
 			case L'\\':
-				eState = NAME_QUO_ESC;
+				eState = kStNameQuotedEscaped;
 				break;
 			}
 			break;
 
-		case NAME_ESCAPED:
-			eState = NAME;
+		case kStNameEscaped:
+			eState = kStName;
 			break;
 
-		case NAME_QUO_ESC:
-			eState = NAME_QUOTED;
+		case kStNameQuotedEscaped:
+			eState = kStNameQuoted;
 			break;
 
-		case COMMENT_ESCAPED:
-			eState = COMMENT;
+		case kStCommentEscaped:
+			eState = kStComment;
 			break;
 		}
 	} while(++pwcRead != pwcEnd);
 
 	switch(eState){
-	case DELIMITER:
+	case kStDelimiter:
 		break;
 
-	case NAME:
+	case kStName:
 		PushNode();
 		PopNode();
 		break;
 
-	case COMMENT:
+	case kStComment:
 		break;
 
-	case NAME_QUOTED:
-		return std::make_pair(ERR_UNCLOSED_QUOTE, pwcRead);
+	case kStNameQuoted:
+		return std::make_pair(kErrUnclosedQuote, pwcRead);
 
-	case NAME_ESCAPED:
+	case kStNameEscaped:
 		PushNode();
 		PopNode();
 		break;
 
-	case NAME_QUO_ESC:
-		return std::make_pair(ERR_UNCLOSED_QUOTE, pwcRead);
+	case kStNameQuotedEscaped:
+		return std::make_pair(kErrUnclosedQuote, pwcRead);
 
-	case COMMENT_ESCAPED:
+	case kStCommentEscaped:
 		break;
 	}
 	if(vecNodeStack.GetSize() > 1){
-		return std::make_pair(ERR_UNCLOSED_NODE, pwcRead);
+		return std::make_pair(kErrUnclosedNode, pwcRead);
 	}
 
 	Swap(vTemp);
-	return std::make_pair(ERR_NONE, pwcRead);
+	return std::make_pair(kErrNone, pwcRead);
 }
 WideString TExpression::Export(const WideStringObserver &wsoIndent) const {
 	WideString wsRet;

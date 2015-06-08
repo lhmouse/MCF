@@ -45,7 +45,7 @@ namespace {
 		return StringSource<typename StringObserverT::CharType>(soRead.GetBegin(), soRead.GetEnd());
 	}
 
-	template<class PrevT, bool IS_CESU8_T>
+	template<class PrevT, bool kIsCesu8T>
 	class Utf8Decoder {
 	private:
 		PrevT x_vPrev;
@@ -96,7 +96,7 @@ namespace {
 				if(EXPECT_NOT(u32Point > 0x10FFFFu)){
 					DEBUG_THROW(Exception, "Invalid UTF-32 code point value", ERROR_INVALID_DATA);
 				}
-				if(EXPECT_NOT(!IS_CESU8_T && (u32Point - 0xD800u < 0x800u))){
+				if(EXPECT_NOT(!kIsCesu8T && (u32Point - 0xD800u < 0x800u))){
 					DEBUG_THROW(Exception, "UTF-32 code point is reserved for UTF-16", ERROR_INVALID_DATA);
 				}
 			}

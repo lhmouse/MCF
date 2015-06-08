@@ -14,7 +14,7 @@ namespace MCF {
 class StreamBuffer::xChunk {
 public:
 	enum : std::size_t {
-		CHUNK_SIZE = 0x100
+		kChunkSize = 0x100
 	};
 
 private:
@@ -79,7 +79,7 @@ public:
 	}
 
 public:
-	unsigned char m_abyData[CHUNK_SIZE];
+	unsigned char m_abyData[kChunkSize];
 	unsigned m_uRead;
 	unsigned m_uWrite;
 };
@@ -190,7 +190,7 @@ int StreamBuffer::Get() noexcept {
 }
 void StreamBuffer::Put(unsigned char by){
 	const auto pNode = x_lstBuffers.GetLast();
-	if(pNode && (pNode->Get().m_uWrite < xChunk::CHUNK_SIZE)){
+	if(pNode && (pNode->Get().m_uWrite < xChunk::kChunkSize)){
 		auto &vBuffer = pNode->Get();
 		vBuffer.m_abyData[vBuffer.m_uWrite] = by;
 		++vBuffer.m_uWrite;
@@ -230,9 +230,9 @@ void StreamBuffer::Unget(unsigned char by){
 		return;
 	}
 	auto &vBuffer = xChunk::UnshiftPooled(x_lstBuffers);
-	vBuffer.m_abyData[xChunk::CHUNK_SIZE - 1] = by;
-	vBuffer.m_uRead = xChunk::CHUNK_SIZE - 1;
-	vBuffer.m_uWrite = xChunk::CHUNK_SIZE;
+	vBuffer.m_abyData[xChunk::kChunkSize - 1] = by;
+	vBuffer.m_uRead = xChunk::kChunkSize - 1;
+	vBuffer.m_uWrite = xChunk::kChunkSize;
 	++x_uSize;
 }
 
@@ -308,9 +308,9 @@ void StreamBuffer::Put(const void *pData, std::size_t uSize){
 	auto pbyRead = (unsigned char *)pData;
 	std::size_t uCopied = 0;
 	auto pNode = x_lstBuffers.GetLast();
-	if(pNode && (pNode->Get().m_uWrite < xChunk::CHUNK_SIZE)){
+	if(pNode && (pNode->Get().m_uWrite < xChunk::kChunkSize)){
 		auto &vBuffer = pNode->Get();
-		const auto uToCopy = Min(uSize - uCopied, xChunk::CHUNK_SIZE - vBuffer.m_uWrite);
+		const auto uToCopy = Min(uSize - uCopied, xChunk::kChunkSize - vBuffer.m_uWrite);
 		std::memcpy(vBuffer.m_abyData + vBuffer.m_uWrite, pbyRead, uToCopy);
 		vBuffer.m_uWrite += uToCopy;
 		pbyRead += uToCopy;
@@ -319,7 +319,7 @@ void StreamBuffer::Put(const void *pData, std::size_t uSize){
 	}
 	while(uCopied < uSize){
 		auto &vBuffer = xChunk::PushPooled(x_lstBuffers);
-		const auto uToCopy = Min(uSize - uCopied, xChunk::CHUNK_SIZE);
+		const auto uToCopy = Min(uSize - uCopied, xChunk::kChunkSize);
 		std::memcpy(vBuffer.m_abyData, pbyRead, uToCopy);
 		vBuffer.m_uRead = 0;
 		vBuffer.m_uWrite = uToCopy;

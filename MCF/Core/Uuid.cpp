@@ -19,12 +19,12 @@ namespace {
 
 	inline std::uint32_t GetRandomUint32(){
 		std::uint64_t u64OldSeed, u64Seed;
-		u64OldSeed = AtomicLoad(g_u64RandSeed, MemoryModel::ACQUIRE);
+		u64OldSeed = AtomicLoad(g_u64RandSeed, MemoryModel::kAcquire);
 		do {
 			u64Seed = u64OldSeed ^ ReadTimestampCounter();
 			u64Seed *= 6364136223846793005ull;
 			u64Seed += 1442695040888963407ull;
-		} while(!AtomicCompareExchange(g_u64RandSeed, u64OldSeed, u64Seed, MemoryModel::ACQ_REL));
+		} while(!AtomicCompareExchange(g_u64RandSeed, u64OldSeed, u64Seed, MemoryModel::kAcqRel));
 		return u64Seed >> 32;
 	}
 }
@@ -32,7 +32,7 @@ namespace {
 // 静态成员函数。
 Uuid Uuid::Generate(){
 	const auto u64Now = GetUtcTime();
-	const auto u32AutoInc = AtomicAdd(g_u32AutoInc, 1, MemoryModel::RELAXED);
+	const auto u32AutoInc = AtomicAdd(g_u32AutoInc, 1, MemoryModel::kRelaxed);
 
 	Uuid vRet(nullptr);
 	StoreBe(vRet.x_unData.au32[0], u64Now >> 12);

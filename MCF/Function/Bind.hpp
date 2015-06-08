@@ -13,7 +13,7 @@
 namespace MCF {
 
 namespace Impl_Bind {
-	template<std::size_t INDEX_T>
+	template<std::size_t kIndexT>
 	struct Placeholder {
 	};
 
@@ -30,9 +30,9 @@ namespace Impl_Bind {
 		decltype(auto) operator()(ParamT &vParam) noexcept {
 			return vParam;
 		}
-		template<std::size_t INDEX_T>
-		decltype(auto) operator()(Placeholder<INDEX_T> /* vParam */) noexcept {
-			auto &&vRet = std::get<INDEX_T - 1>(tupParamsAdd);
+		template<std::size_t kIndexT>
+		decltype(auto) operator()(Placeholder<kIndexT> /* vParam */) noexcept {
+			auto &&vRet = std::get<kIndexT - 1>(tupParamsAdd);
 			return static_cast<decltype(vRet)>(vRet);
 		}
 	};
@@ -50,10 +50,10 @@ namespace Impl_Bind {
 		}
 
 	private:
-		template<std::size_t ...PARAM_INDICES_T, typename ...ParamsAddT>
-		decltype(auto) xDispatchParams(std::index_sequence<PARAM_INDICES_T...>, ParamsAddT &&...vParamsAdd) const {
+		template<std::size_t ...kParamIndicesT, typename ...ParamsAddT>
+		decltype(auto) xDispatchParams(std::index_sequence<kParamIndicesT...>, ParamsAddT &&...vParamsAdd) const {
 			ParamSelector<ParamsAddT...> vSelector(std::forward<ParamsAddT>(vParamsAdd)...);
-			return Invoke(x_vFunc, vSelector(std::get<PARAM_INDICES_T>(x_tupParams))...);
+			return Invoke(x_vFunc, vSelector(std::get<kParamIndicesT>(x_tupParams))...);
 		}
 
 	public:

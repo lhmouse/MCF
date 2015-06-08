@@ -32,10 +32,10 @@ bool File::IsOpen() const noexcept {
 }
 void File::Open(const wchar_t *pwszPath, std::uint32_t u32Flags){
 	DWORD dwCreateDisposition;
-	if(u32Flags & TO_WRITE){
-		if(u32Flags & NO_CREATE){
+	if(u32Flags & kToWrite){
+		if(u32Flags & kDontCreate){
 			dwCreateDisposition = OPEN_EXISTING;
-		} else if(u32Flags & FAIL_IF_EXISTS){
+		} else if(u32Flags & kFailIfExists){
 			dwCreateDisposition = CREATE_NEW;
 		} else {
 			dwCreateDisposition = OPEN_ALWAYS;
@@ -45,25 +45,24 @@ void File::Open(const wchar_t *pwszPath, std::uint32_t u32Flags){
 	}
 
 	DWORD dwFlagsAndAttributes = FILE_ATTRIBUTE_NORMAL | FILE_FLAG_OVERLAPPED;
-	if(u32Flags & NO_BUFFERING){
+	if(u32Flags & kNoBuffering){
 		dwFlagsAndAttributes |= FILE_FLAG_NO_BUFFERING;
 	}
-	if(u32Flags & WRITE_THROUGH){
+	if(u32Flags & kWriteThrough){
 		dwFlagsAndAttributes |= FILE_FLAG_WRITE_THROUGH;
 	}
-	if(u32Flags & DEL_ON_CLOSE){
+	if(u32Flags & kDeleteOnClose){
 		dwFlagsAndAttributes |= FILE_FLAG_DELETE_ON_CLOSE;
 	}
 
 	if(!x_hFile.Reset(::CreateFileW(pwszPath,
-		((u32Flags & TO_READ) ? GENERIC_READ : 0) |
-			((u32Flags & TO_WRITE) ? (GENERIC_WRITE | FILE_READ_ATTRIBUTES) : 0),
-		(u32Flags & TO_WRITE) ? 0 : FILE_SHARE_READ,
+		((u32Flags & kToRead) ? GENERIC_READ : 0) | ((u32Flags & kToWrite) ? (GENERIC_WRITE | FILE_READ_ATTRIBUTES) : 0),
+		(u32Flags & kToWrite) ? 0 : FILE_SHARE_READ,
 		nullptr, dwCreateDisposition, dwFlagsAndAttributes, NULL)))
 	{
 		DEBUG_THROW(SystemError, "CreateFileW");
 	}
-	if((u32Flags & TO_WRITE) && !(u32Flags & NO_TRUNC)){
+	if((u32Flags & kToWrite) && !(u32Flags & kDontTruncate)){
 		Resize(0);
 		Flush();
 	}

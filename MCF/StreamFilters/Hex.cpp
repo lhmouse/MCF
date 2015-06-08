@@ -12,13 +12,13 @@ namespace MCF {
 void HexEncoder::xDoInit(){
 }
 void HexEncoder::xDoUpdate(const void *pData, std::size_t uSize){
-	static constexpr unsigned char HEX_TABLE[] = "00112233445566778899aAbBcCdDeEfF";
+	static constexpr unsigned char kHexTable[] = "00112233445566778899aAbBcCdDeEfF";
 
 	for(std::size_t i = 0; i < uSize; ++i){
 		const unsigned uByte = static_cast<const unsigned char *>(pData)[i];
 		unsigned char abyHex[2];
-		abyHex[0] = HEX_TABLE[(uByte >> 4) * 2 + (unsigned)x_bUpperCase];
-		abyHex[1] = HEX_TABLE[(uByte & 0x0F) * 2 + (unsigned)x_bUpperCase];
+		abyHex[0] = kHexTable[(uByte >> 4) * 2 + (unsigned)x_bUpperCase];
+		abyHex[1] = kHexTable[(uByte & 0x0F) * 2 + (unsigned)x_bUpperCase];
 		xOutput(abyHex, sizeof(abyHex));
 	}
 }
@@ -31,7 +31,7 @@ void HexDecoder::xDoInit(){
 	x_nHigh = -1;
 }
 void HexDecoder::xDoUpdate(const void *pData, std::size_t uSize){
-	static constexpr signed char HEX_REVERSE_TABLE[256] = {
+	static constexpr signed char kHexReverseTable[256] = {
 		-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
 		-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
 		-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
@@ -51,7 +51,7 @@ void HexDecoder::xDoUpdate(const void *pData, std::size_t uSize){
 	};
 
 	for(std::size_t i = 0; i < uSize; ++i){
-		const int nDigit = HEX_REVERSE_TABLE[static_cast<const unsigned char *>(pData)[i]];
+		const int nDigit = kHexReverseTable[static_cast<const unsigned char *>(pData)[i]];
 		if(nDigit == -1){
 			continue;
 		}

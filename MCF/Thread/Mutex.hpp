@@ -33,7 +33,7 @@ private:
 
 public:
 	std::size_t GetSpinCount() const noexcept {
-		return AtomicLoad(x_uSpinCount, MemoryModel::RELAXED);
+		return AtomicLoad(x_uSpinCount, MemoryModel::kRelaxed);
 	}
 	void SetSpinCount(std::size_t uSpinCount) noexcept;
 

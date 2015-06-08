@@ -14,7 +14,7 @@
 
 namespace MCF {
 
-class ReaderWriterMutex : NONCOPYABLE {
+class ReaderWriterMutex : NONCOPYABLE, public RecursiveMutexResults {
 private:
 	struct xTlsIndexDeleter {
 		std::size_t operator()() const noexcept;
@@ -22,7 +22,6 @@ private:
 	};
 
 public:
-	using Result = RecursiveMutexResult;
 	using UniqueReaderLock = UniqueLockTemplate<ReaderWriterMutex, 0u>;
 	using UniqueWriterLock = UniqueLockTemplate<ReaderWriterMutex, 1u>;
 

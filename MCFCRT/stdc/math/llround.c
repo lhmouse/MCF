@@ -4,8 +4,8 @@
 
 #include "../../env/_crtdef.h"
 
-static const double POS_HALF = 0.5;
-static const double NEG_HALF = -0.5;
+static const double kPosHalf =  0.5;
+static const double kNegHalf = -0.5;
 
 long long llroundf(float x){
 	long long ret;
@@ -37,7 +37,7 @@ long long llroundf(float x){
 		"fistp qword ptr[%0] \n"
 		"fldcw word ptr[%3] \n"
 		: "=m"(ret), "=r"(unused)
-		: "m"(x), "m"(fcw), "1"(&NEG_HALF), "r"(&POS_HALF)
+		: "m"(x), "m"(fcw), "1"(&kNegHalf), "r"(&kPosHalf)
 		: "ax", "cx", "dx"
 	);
 	return ret;
@@ -73,7 +73,7 @@ long long llround(double x){
 		"fistp qword ptr[%0] \n"
 		"fldcw word ptr[%3] \n"
 		: "=m"(ret), "=r"(unused)
-		: "m"(x), "m"(fcw), "1"(&NEG_HALF), "r"(&POS_HALF)
+		: "m"(x), "m"(fcw), "1"(&kNegHalf), "r"(&kPosHalf)
 		: "ax", "cx", "dx"
 	);
 	return ret;
@@ -109,7 +109,7 @@ long long llroundl(long double x){
 		"fistp qword ptr[%0] \n"
 		"fldcw word ptr[%3] \n"
 		: "=m"(ret), "=r"(unused)
-		: "m"(x), "m"(fcw), "1"(&NEG_HALF), "r"(&POS_HALF)
+		: "m"(x), "m"(fcw), "1"(&kNegHalf), "r"(&kPosHalf)
 		: "ax", "cx", "dx"
 	);
 	return ret;

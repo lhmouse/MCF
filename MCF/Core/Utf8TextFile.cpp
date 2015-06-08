@@ -10,7 +10,7 @@
 namespace MCF {
 
 namespace {
-	constexpr unsigned char UTF8_BOM[] = { 0xEF, 0xBB, 0xBF };
+	constexpr unsigned char kUtf8Bom[] = { 0xEF, 0xBB, 0xBF };
 }
 
 // ========== Utf8TextFileReader ==========
@@ -30,9 +30,9 @@ void Utf8TextFileReader::Reset(File &&vFile){
 	}
 	x_vFile = std::move(vFile);
 
-	unsigned char abyTemp[sizeof(UTF8_BOM)];
-	if((x_vFile.Read(abyTemp, sizeof(abyTemp), 0) == sizeof(abyTemp)) && !BComp(abyTemp, UTF8_BOM)){
-		x_u64Offset += sizeof(UTF8_BOM);
+	unsigned char abyTemp[sizeof(kUtf8Bom)];
+	if((x_vFile.Read(abyTemp, sizeof(abyTemp), 0) == sizeof(abyTemp)) && !BComp(abyTemp, kUtf8Bom)){
+		x_u64Offset += sizeof(kUtf8Bom);
 	}
 }
 
@@ -130,26 +130,26 @@ void Utf8TextFileWriter::Reset(File &&vFile, std::uint32_t u32Flags){
 	x_u32Flags = u32Flags;
 	x_u64Offset = x_vFile.GetSize();
 
-	if((x_u32Flags & BOM_USE) && (x_u64Offset == 0)){
-		x_vFile.Write(0, UTF8_BOM, sizeof(UTF8_BOM));
+	if((x_u32Flags & kHasBom) && (x_u64Offset == 0)){
+		x_vFile.Write(0, kUtf8Bom, sizeof(kUtf8Bom));
 		x_vFile.Flush();
 
-		x_u64Offset += sizeof(UTF8_BOM);
+		x_u64Offset += sizeof(kUtf8Bom);
 	}
 
 }
 
 void Utf8TextFileWriter::Write(char ch){
-	if(x_u32Flags & BUF_NONE){
+	if(x_u32Flags & kUnbuffered){
 		x_vFile.Write(x_u64Offset, &ch, 1);
 	} else {
-		if((ch == '\n') && (x_u32Flags & LES_CRLF)){
+		if((ch == '\n') && (x_u32Flags & kEndlCrLf)){
 			x_u8sLine += '\r';
 		}
 		x_u8sLine += ch;
 
 		bool bFlushNow;
-		if(x_u32Flags & BUF_FULL){
+		if(x_u32Flags & kFullBuffered){
 			bFlushNow = x_u8sLine.GetSize() >= 0x1000;
 		} else {
 			bFlushNow = (ch == '\n');

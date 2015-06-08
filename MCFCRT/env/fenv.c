@@ -24,19 +24,19 @@
 #define PRECISION		PRCS_EXTENDED
 #define EXCEPT_MASK		(EXCEPT_PM | EXCEPT_DM)
 
-static const uint16_t FPU_CONTROL_WORD	= (ROUNDING << 10) | (PRECISION << 8) | (EXCEPT_MASK);
-static const uint32_t MXCSR_REGISTER	= (ROUNDING << 13) |                    (EXCEPT_MASK << 7);
+static const uint16_t kFpuControlWord	= (ROUNDING << 10) | (PRECISION << 8) | (EXCEPT_MASK);
+static const uint32_t kMxcsRegister		= (ROUNDING << 13) |                    (EXCEPT_MASK << 7);
 
 bool __MCF_CRT_FEnvInit(){
 	__asm__ __volatile__(
 		"fldcw word ptr[%0]		\n"
 		:
-		: "m"(FPU_CONTROL_WORD)
+		: "m"(kFpuControlWord)
 	);
 	__asm__ __volatile__(
 		"ldmxcsr dword ptr[%0]		\n"
 		:
-		: "m"(MXCSR_REGISTER)
+		: "m"(kMxcsRegister)
 	);
 	return true;
 }

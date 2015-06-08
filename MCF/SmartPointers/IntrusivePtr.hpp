@@ -78,7 +78,7 @@ private:
 
 protected:
 	IntrusiveBase() noexcept {
-		AtomicStore(x_uRefCount, 1, MemoryModel::RELAXED);
+		AtomicStore(x_uRefCount, 1, MemoryModel::kRelaxed);
 	}
 
 public:
@@ -99,18 +99,18 @@ public:
 
 public:
 	std::size_t GetSharedCount() const volatile noexcept {
-		return AtomicLoad(x_uRefCount, MemoryModel::RELAXED);
+		return AtomicLoad(x_uRefCount, MemoryModel::kRelaxed);
 	}
 	void AddRef() const volatile noexcept {
-		ASSERT((std::ptrdiff_t)AtomicLoad(x_uRefCount, MemoryModel::RELAXED) > 0);
+		ASSERT((std::ptrdiff_t)AtomicLoad(x_uRefCount, MemoryModel::kRelaxed) > 0);
 
-		AtomicIncrement(x_uRefCount, MemoryModel::RELAXED);
+		AtomicIncrement(x_uRefCount, MemoryModel::kRelaxed);
 	}
 	Sentry DropRef() const volatile noexcept {
-		ASSERT((std::ptrdiff_t)AtomicLoad(x_uRefCount, MemoryModel::RELAXED) > 0);
+		ASSERT((std::ptrdiff_t)AtomicLoad(x_uRefCount, MemoryModel::kRelaxed) > 0);
 
 		Pointee *pToDelete = nullptr;
-		if(AtomicDecrement(x_uRefCount, MemoryModel::RELAXED) == 0){
+		if(AtomicDecrement(x_uRefCount, MemoryModel::kRelaxed) == 0){
 			pToDelete = static_cast<Pointee *>(const_cast<IntrusiveBase *>(this));
 		}
 		return Sentry(pToDelete);
@@ -118,28 +118,28 @@ public:
 
 	template<typename OtherT = ObjectT>
 	const volatile OtherT *Get() const volatile noexcept {
-		ASSERT((std::ptrdiff_t)AtomicLoad(x_uRefCount, MemoryModel::RELAXED) > 0);
+		ASSERT((std::ptrdiff_t)AtomicLoad(x_uRefCount, MemoryModel::kRelaxed) > 0);
 
 		return Impl_IntrusivePtr::IntrusiveCastHelper<const volatile OtherT, const volatile Pointee>()(
 			static_cast<const volatile Pointee *>(this));
 	}
 	template<typename OtherT = ObjectT>
 	const OtherT *Get() const noexcept {
-		ASSERT((std::ptrdiff_t)AtomicLoad(x_uRefCount, MemoryModel::RELAXED) > 0);
+		ASSERT((std::ptrdiff_t)AtomicLoad(x_uRefCount, MemoryModel::kRelaxed) > 0);
 
 		return Impl_IntrusivePtr::IntrusiveCastHelper<const OtherT, const Pointee>()(
 			static_cast<const Pointee *>(this));
 	}
 	template<typename OtherT = ObjectT>
 	volatile OtherT *Get() volatile noexcept {
-		ASSERT((std::ptrdiff_t)AtomicLoad(x_uRefCount, MemoryModel::RELAXED) > 0);
+		ASSERT((std::ptrdiff_t)AtomicLoad(x_uRefCount, MemoryModel::kRelaxed) > 0);
 
 		return Impl_IntrusivePtr::IntrusiveCastHelper<volatile OtherT, volatile Pointee>()(
 			static_cast<volatile Pointee *>(this));
 	}
 	template<typename OtherT = ObjectT>
 	OtherT *Get() noexcept {
-		ASSERT((std::ptrdiff_t)AtomicLoad(x_uRefCount, MemoryModel::RELAXED) > 0);
+		ASSERT((std::ptrdiff_t)AtomicLoad(x_uRefCount, MemoryModel::kRelaxed) > 0);
 
 		return Impl_IntrusivePtr::IntrusiveCastHelper<OtherT, Pointee>()(
 			static_cast<Pointee *>(this));

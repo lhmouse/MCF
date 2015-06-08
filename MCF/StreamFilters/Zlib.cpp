@@ -14,7 +14,7 @@
 namespace MCF {
 
 namespace {
-	constexpr std::size_t STEP_SIZE		= 0x4000;
+	constexpr std::size_t kStepSize		= 0x4000;
 
 	unsigned long ZlibErrorToWin32Error(int nZlibError) noexcept {
 		switch(nZlibError){
@@ -82,14 +82,14 @@ public:
 		}
 	}
 	void Update(const void *pData, std::size_t uSize){
-		unsigned char abyTemp[STEP_SIZE];
+		unsigned char abyTemp[kStepSize];
 		x_vStream.next_out = abyTemp;
 		x_vStream.avail_out = sizeof(abyTemp);
 
 		auto pbyRead = (const unsigned char *)pData;
 		std::size_t uProcessed = 0;
 		while(uProcessed < uSize){
-			const auto uToProcess = Min(uSize - uProcessed, STEP_SIZE);
+			const auto uToProcess = Min(uSize - uProcessed, kStepSize);
 
 			x_vStream.next_in = pbyRead;
 			x_vStream.avail_in = uToProcess;
@@ -117,7 +117,7 @@ public:
 		}
 	}
 	void Finalize(){
-		unsigned char abyTemp[STEP_SIZE];
+		unsigned char abyTemp[kStepSize];
 		x_vStream.next_out = abyTemp;
 		x_vStream.avail_out = sizeof(abyTemp);
 
@@ -178,14 +178,14 @@ public:
 		}
 	}
 	void Update(const void *pData, std::size_t uSize){
-		unsigned char abyTemp[STEP_SIZE];
+		unsigned char abyTemp[kStepSize];
 		x_vStream.next_out = abyTemp;
 		x_vStream.avail_out = sizeof(abyTemp);
 
 		auto pbyRead = (const unsigned char *)pData;
 		std::size_t uProcessed = 0;
 		while(uProcessed < uSize){
-			const auto uToProcess = Min(uSize - uProcessed, STEP_SIZE);
+			const auto uToProcess = Min(uSize - uProcessed, kStepSize);
 
 			x_vStream.next_in = pbyRead;
 			x_vStream.avail_in = uToProcess;
@@ -213,7 +213,7 @@ public:
 		}
 	}
 	void Finalize(){
-		unsigned char abyTemp[STEP_SIZE];
+		unsigned char abyTemp[kStepSize];
 		x_vStream.next_out = abyTemp;
 		x_vStream.avail_out = sizeof(abyTemp);
 

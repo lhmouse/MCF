@@ -5,8 +5,8 @@
 #include "../../env/_crtdef.h"
 #include "_mathasm.h"
 
-static const double POS_HALF = 0.5;
-static const double NEG_HALF = -0.5;
+static const double kPosHalf =  0.5;
+static const double kNegHalf = -0.5;
 
 float roundf(float x){
 	register float ret;
@@ -38,7 +38,7 @@ float roundf(float x){
 		__MCF_FLT_RET_ST("%2")
 		"fldcw word ptr[%3] \n"
 		: __MCF_FLT_RET_CONS(ret), "=r"(unused)
-		: "m"(x), "m"(fcw), "1"(&NEG_HALF), "r"(&POS_HALF)
+		: "m"(x), "m"(fcw), "1"(&kNegHalf), "r"(&kPosHalf)
 		: "ax", "cx", "dx"
 	);
 	return ret;
@@ -74,7 +74,7 @@ double round(double x){
 		__MCF_DBL_RET_ST("%2")
 		"fldcw word ptr[%3] \n"
 		: __MCF_DBL_RET_CONS(ret), "=r"(unused)
-		: "m"(x), "m"(fcw), "1"(&NEG_HALF), "r"(&POS_HALF)
+		: "m"(x), "m"(fcw), "1"(&kNegHalf), "r"(&kPosHalf)
 		: "ax", "cx", "dx"
 	);
 	return ret;
@@ -110,7 +110,7 @@ __MCF_LDBL_DECL(roundl, long double x){
 		__MCF_LDBL_RET_ST()
 		"fldcw word ptr[%3] \n"
 		: __MCF_LDBL_RET_CONS(ret), "=r"(unused)
-		: "m"(x), "m"(fcw), "1"(&NEG_HALF), "r"(&POS_HALF), __MCF_LDBL_RET_CONS_IN()
+		: "m"(x), "m"(fcw), "1"(&kNegHalf), "r"(&kPosHalf), __MCF_LDBL_RET_CONS_IN()
 		: "ax", "cx", "dx"
 	);
 	__MCF_LDBL_RETURN(ret);

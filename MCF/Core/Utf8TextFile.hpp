@@ -50,15 +50,15 @@ public:
 class Utf8TextFileWriter : NONCOPYABLE {
 public:
 	enum : std::uint32_t {
-		BOM_NONE		= 0x00000000,
-		BOM_USE			= 0x00000001,
+		kNoBom			= 0x00000000,
+		kHasBom			= 0x00000001,
 
-		LES_LF			= 0x00000000,
-		LES_CRLF		= 0x00000002,
+		kEndlLf			= 0x00000000,
+		kEndlCrLf		= 0x00000002,
 
-		BUF_LINE		= 0x00000000,
-		BUF_NONE		= 0x00000004,
-		BUF_FULL		= 0x00000008,
+		kLineBuffered	= 0x00000000,
+		kUnbuffered		= 0x00000004,
+		kFullBuffered	= 0x00000008,
 	};
 
 private:

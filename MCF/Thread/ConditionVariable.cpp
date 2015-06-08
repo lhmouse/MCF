@@ -17,7 +17,6 @@ namespace MCF {
 ConditionVariable::ConditionVariable(Mutex &vMutex)
 	: x_vMutex(vMutex), x_uWaiting(0), x_vSemaphore(0, nullptr)
 {
-	AtomicFence(MemoryModel::RELEASE);
 }
 
 // 其他非静态成员函数。

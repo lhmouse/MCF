@@ -9,9 +9,9 @@
 
 namespace MCF {
 
-constexpr char BASE64_TABLE_MIME	[66] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
-constexpr char BASE64_TABLE_URL		[66] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789*-";
-constexpr char BASE64_TABLE_REGEXP	[66] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!-=";
+constexpr char kBase64TableMime		[66] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
+constexpr char kBase64TableUrl		[66] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789*-";
+constexpr char kBase64TableRegexp	[66] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!-=";
 
 class Base64Encoder : public StreamFilterBase {
 private:
@@ -21,7 +21,7 @@ private:
 	unsigned long x_ulWord;
 
 public:
-	explicit Base64Encoder(const char *pchTable = BASE64_TABLE_MIME) noexcept;
+	explicit Base64Encoder(const char *pchTable = kBase64TableMime) noexcept;
 
 protected:
 	void xDoInit() override;
@@ -37,7 +37,7 @@ private:
 	unsigned long x_ulWord;
 
 public:
-	explicit Base64Decoder(const char *pchTable = BASE64_TABLE_MIME) noexcept;
+	explicit Base64Decoder(const char *pchTable = kBase64TableMime) noexcept;
 
 protected:
 	void xDoInit() override;

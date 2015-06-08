@@ -16,11 +16,11 @@ private:
 	class xChunk {
 	public:
 		enum : std::size_t {
-			CHUNK_SIZE = 255 / sizeof(ElementT) + 1
+			kChunkSize = 255 / sizeof(ElementT) + 1
 		};
 
 	private:
-		alignas(ElementT) char x_aachStorage[CHUNK_SIZE][sizeof(ElementT)];
+		alignas(ElementT) char x_aachStorage[kChunkSize][sizeof(ElementT)];
 		ElementT *x_pBegin;
 		ElementT *x_pEnd;
 

@@ -5,7 +5,7 @@
 #include "../../env/_crtdef.h"
 #include "_mathasm.h"
 
-static const double HALF = 0.5;
+static const double kHalf = 0.5;
 
 float frexpf(float x, int *exp){
 	register float ret;
@@ -27,7 +27,7 @@ float frexpf(float x, int *exp){
 		"fistp dword ptr[%2] \n"
 		__MCF_FLT_RET_ST("%1")
 		: __MCF_FLT_RET_CONS(ret)
-		: "m"(x), "r"(exp), "m"(HALF)
+		: "m"(x), "r"(exp), "m"(kHalf)
 		: "ax"
 	);
 	return ret;
@@ -53,7 +53,7 @@ double frexp(double x, int *exp){
 		"fistp dword ptr[%2] \n"
 		__MCF_DBL_RET_ST("%1")
 		: __MCF_DBL_RET_CONS(ret)
-		: "m"(x), "r"(exp), "m"(HALF)
+		: "m"(x), "r"(exp), "m"(kHalf)
 		: "ax"
 	);
 	return ret;
@@ -79,7 +79,7 @@ __MCF_LDBL_DECL(frexpl, long double x, int *exp){
 		"fistp dword ptr[%2] \n"
 		__MCF_LDBL_RET_ST()
 		: __MCF_LDBL_RET_CONS(ret)
-		: "m"(x), "r"(exp), "m"(HALF), __MCF_LDBL_RET_CONS_IN()
+		: "m"(x), "r"(exp), "m"(kHalf), __MCF_LDBL_RET_CONS_IN()
 		: "ax"
 	);
 	__MCF_LDBL_RETURN(ret);

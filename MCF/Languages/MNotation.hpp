@@ -137,11 +137,11 @@ inline void swap(MNotationNode &lhs, MNotationNode &rhs) noexcept {
 class MNotation : public MNotationNode {
 public:
 	enum ErrorType {
-		ERR_NONE						= 0,
-		ERR_UNEXCEPTED_PACKAGE_CLOSE	= 1,
-		ERR_EQU_EXPECTED				= 2,
-		ERR_UNCLOSED_PACKAGE			= 3,
-		ERR_SOURCE_PACKAGE_NOT_FOUND	= 4,
+		kErrNone					= 0,
+		kErrUnexpectedPackageClose	= 1,
+		kErrEquExpected				= 2,
+		kErrUnclosedPackage			= 3,
+		kErrSourcePackageNotFound	= 4,
 	};
 
 public:

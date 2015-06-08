@@ -11,7 +11,7 @@
 namespace MCF {
 
 namespace Impl_Endian {
-	template<unsigned BYTES_T>
+	template<unsigned kSizeT>
 	struct ByteSwapper;
 
 	template<>

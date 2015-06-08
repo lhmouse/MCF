@@ -14,10 +14,10 @@ namespace {
 		wsRet.Reserve(wsoSrc.GetSize());
 
 		enum {
-			NORMAL,
-			ESCAPED,
-			UCS_CODE
-		} eState = NORMAL;
+			kStNormal,
+			kStEscaped,
+			kStUcsCode,
+		} eState = kStNormal;
 
 		char32_t c32CodePoint = 0;
 		std::size_t uHexExpecting = 0;
@@ -27,67 +27,67 @@ namespace {
 			const auto wc = *pwcCur;
 
 			switch(eState){
-			case NORMAL:
+			case kStNormal:
 				if(wc == L'\\'){
-					eState = ESCAPED;
+					eState = kStEscaped;
 				} else {
-					// eState = NORMAL;
+					// eState = kStNormal;
 					wsRet.Push(wc);
 				}
 				break;
 
-			case ESCAPED:
+			case kStEscaped:
 				switch(wc){
 				case L'n':
 					wsRet += L'\n';
-					eState = NORMAL;
+					eState = kStNormal;
 					break;
 
 				case L'b':
 					wsRet += L'\b';
-					eState = NORMAL;
+					eState = kStNormal;
 					break;
 
 				case L'r':
 					wsRet += L'\r';
-					eState = NORMAL;
+					eState = kStNormal;
 					break;
 
 				case L't':
 					wsRet += L'\t';
-					eState = NORMAL;
+					eState = kStNormal;
 					break;
 
 				case L'\n':
-					eState = NORMAL;
+					eState = kStNormal;
 					break;
 
 				case L'x':
 					c32CodePoint = 0;
 					uHexExpecting = 2;
-					eState = UCS_CODE;
+					eState = kStUcsCode;
 					break;
 
 				case L'u':
 					c32CodePoint = 0;
 					uHexExpecting = 4;
-					eState = UCS_CODE;
+					eState = kStUcsCode;
 					break;
 
 				case L'U':
 					c32CodePoint = 0;
 					uHexExpecting = 8;
-					eState = UCS_CODE;
+					eState = kStUcsCode;
 					break;
 
 				default:
 					wsRet += wc;
-					eState = NORMAL;
+					eState = kStNormal;
 					break;
 				}
 				break;
 
-			case UCS_CODE:
+			case kStUcsCode:
 				{
 					auto uHex = (unsigned)(wc - L'0');
 					do {
@@ -114,16 +114,16 @@ namespace {
 						uHexExpecting = 0;
 					}
 					if(uHexExpecting != 0){
-						// eState = UCS_CODE;
+						// eState = kStUcsCode;
 					} else {
 						wsRet += Utf32StringObserver(&c32CodePoint, 1);
-						eState = NORMAL;
+						eState = kStNormal;
 					}
 				}
 				break;
 			}
 		}
-		if(eState == UCS_CODE){
+		if(eState == kStUcsCode){
 			wsRet += Utf32StringObserver(&c32CodePoint, 1);
 		}
 
@@ -183,7 +183,7 @@ std::pair<MNotation::ErrorType, const wchar_t *> MNotation::Parse(const WideStri
 	auto pwcRead = wsoData.GetBegin();
 	const auto pwcEnd = wsoData.GetEnd();
 	if(pwcRead == pwcEnd){
-		return std::make_pair(ERR_NONE, pwcRead);
+		return std::make_pair(kErrNone, pwcRead);
 	}
 
 	Vector<MNotationNode *> vecPackageStack(1, &vTemp);
@@ -194,17 +194,17 @@ std::pair<MNotation::ErrorType, const wchar_t *> MNotation::Parse(const WideStri
 	const wchar_t *pwcValueEnd = nullptr;
 
 	enum {
-		NAME_INDENT,
-		NAME_BODY,
-		NAME_PADDING,
-		VAL_INDENT,
-		VAL_BODY,
-		VAL_PADDING,
-		COMMENT,
-		NAME_ESCAPED,
-		VAL_ESCAPED,
-		COMMENT_ESCAPED
-	} eState = NAME_INDENT;
+		kStNameIndent,
+		kStNameBody,
+		kStNamePadding,
+		kStValueIndent,
+		kStValueBody,
+		kStValPadding,
+		kStComment,
+		kStNameEscaped,
+		kStValueEscaped,
+		kStCommentEscaped,
+	} eState = kStNameIndent;
 
 	ErrorType eError;
 	const auto PushPackage = [&]{
@@ -215,7 +215,7 @@ std::pair<MNotation::ErrorType, const wchar_t *> MNotation::Parse(const WideStri
 			const auto wsSourceName = Unescape(WideStringObserver(pwcValueBegin, pwcValueEnd));
 			const auto pSourceNode = vecPackageStack.GetEnd()[-1]->Get(wsSourceName);
 			if(!pSourceNode){
-				eError = ERR_SOURCE_PACKAGE_NOT_FOUND;
+				eError = kErrSourcePackageNotFound;
 				return false;
 			}
 			ppkgSource = &(pSourceNode->Get().second);
@@ -239,7 +239,7 @@ std::pair<MNotation::ErrorType, const wchar_t *> MNotation::Parse(const WideStri
 	};
 	const auto PopPackage = [&]{
 		if(vecPackageStack.GetSize() <= 1){
-			eError = ERR_UNEXCEPTED_PACKAGE_CLOSE;
+			eError = kErrUnexpectedPackageClose;
 			return false;
 		}
 
@@ -255,7 +255,7 @@ std::pair<MNotation::ErrorType, const wchar_t *> MNotation::Parse(const WideStri
 
 		const auto vResult = vecPackageStack.GetEnd()[-1]->Insert(Unescape(WideStringObserver(pwcNameBegin, pwcNameEnd)));
 		if(!vResult.second){
-//			eError = ERR_DUPLICATE_VALUE;
+//			eError = kErrDuplicateValue;
 //			return false;
 		}
 		vResult.first->Get().second.Insert(Unescape(WideStringObserver(pwcValueBegin, pwcValueEnd)));
@@ -273,283 +273,283 @@ std::pair<MNotation::ErrorType, const wchar_t *> MNotation::Parse(const WideStri
 		switch(wc){
 		case L'=':
 			switch(eState){
-			case NAME_INDENT:
-			case NAME_BODY:
-			case NAME_PADDING:
-				eState = VAL_INDENT;
+			case kStNameIndent:
+			case kStNameBody:
+			case kStNamePadding:
+				eState = kStValueIndent;
 				continue;
 
-			case VAL_INDENT:
-			case VAL_BODY:
-			case VAL_PADDING:
-			case COMMENT:
-			case NAME_ESCAPED:
-			case VAL_ESCAPED:
-			case COMMENT_ESCAPED:
+			case kStValueIndent:
+			case kStValueBody:
+			case kStValPadding:
+			case kStComment:
+			case kStNameEscaped:
+			case kStValueEscaped:
+			case kStCommentEscaped:
 				break;
 			};
 			break;
 
 		case L'{':
 			switch(eState){
-			case NAME_INDENT:
-			case NAME_BODY:
-			case NAME_PADDING:
+			case kStNameIndent:
+			case kStNameBody:
+			case kStNamePadding:
 				if(!PushPackage()){
 					return std::make_pair(eError, pwcRead);
 				}
-				eState = NAME_INDENT;
+				eState = kStNameIndent;
 				continue;
 
-			case VAL_INDENT:
-			case VAL_BODY:
-			case VAL_PADDING:
+			case kStValueIndent:
+			case kStValueBody:
+			case kStValPadding:
 				if(!PushPackage()){
 					return std::make_pair(eError, pwcRead);
 				}
-				eState = NAME_INDENT;
+				eState = kStNameIndent;
 				continue;
 
-			case COMMENT:
-			case NAME_ESCAPED:
-			case VAL_ESCAPED:
-			case COMMENT_ESCAPED:
+			case kStComment:
+			case kStNameEscaped:
+			case kStValueEscaped:
+			case kStCommentEscaped:
 				break;
 			};
 			break;
 
 		case L'}':
 			switch(eState){
-			case NAME_INDENT:
+			case kStNameIndent:
 				if(!PopPackage()){
 					return std::make_pair(eError, pwcRead);
 				}
-				// eState = NAME_INDENT;
+				// eState = kStNameIndent;
 				continue;
 
-			case NAME_BODY:
-			case NAME_PADDING:
-				return std::make_pair(ERR_EQU_EXPECTED, pwcRead);
+			case kStNameBody:
+			case kStNamePadding:
+				return std::make_pair(kErrEquExpected, pwcRead);
 
-			case VAL_INDENT:
-			case VAL_BODY:
-			case VAL_PADDING:
+			case kStValueIndent:
+			case kStValueBody:
+			case kStValPadding:
 				if(!AcceptValue() || !PopPackage()){
 					return std::make_pair(eError, pwcRead);
 				}
-				eState = NAME_INDENT;
+				eState = kStNameIndent;
 				continue;
 
-			case COMMENT:
-			case NAME_ESCAPED:
-			case VAL_ESCAPED:
-			case COMMENT_ESCAPED:
+			case kStComment:
+			case kStNameEscaped:
+			case kStValueEscaped:
+			case kStCommentEscaped:
 				break;
 			};
 			break;
 
 		case L';':
 			switch(eState){
-			case NAME_INDENT:
-				eState = COMMENT;
+			case kStNameIndent:
+				eState = kStComment;
 				continue;
 
-			case NAME_BODY:
-			case NAME_PADDING:
-				return std::make_pair(ERR_EQU_EXPECTED, pwcRead);
+			case kStNameBody:
+			case kStNamePadding:
+				return std::make_pair(kErrEquExpected, pwcRead);
 
-			case VAL_INDENT:
-			case VAL_BODY:
-			case VAL_PADDING:
+			case kStValueIndent:
+			case kStValueBody:
+			case kStValPadding:
 				if(!AcceptValue()){
 					return std::make_pair(eError, pwcRead);
 				}
-				eState = COMMENT;
+				eState = kStComment;
 				continue;
 
-			case COMMENT:
-			case NAME_ESCAPED:
-			case VAL_ESCAPED:
-			case COMMENT_ESCAPED:
+			case kStComment:
+			case kStNameEscaped:
+			case kStValueEscaped:
+			case kStCommentEscaped:
 				break;
 			};
 			break;
 
 		case L'\n':
 			switch(eState){
-			case NAME_INDENT:
+			case kStNameIndent:
 				continue;
 
-			case NAME_BODY:
-			case NAME_PADDING:
-				return std::make_pair(ERR_EQU_EXPECTED, pwcRead);
+			case kStNameBody:
+			case kStNamePadding:
+				return std::make_pair(kErrEquExpected, pwcRead);
 
-			case VAL_INDENT:
-			case VAL_BODY:
-			case VAL_PADDING:
+			case kStValueIndent:
+			case kStValueBody:
+			case kStValPadding:
 				if(!AcceptValue()){
 					return std::make_pair(eError, pwcRead);
 				}
-				eState = NAME_INDENT;
+				eState = kStNameIndent;
 				continue;
 
-			case COMMENT:
-				eState = NAME_INDENT;
+			case kStComment:
+				eState = kStNameIndent;
 				continue;
 
-			case NAME_ESCAPED:
-			case VAL_ESCAPED:
-			case COMMENT_ESCAPED:
+			case kStNameEscaped:
+			case kStValueEscaped:
+			case kStCommentEscaped:
 				break;
 			};
 			break;
 		}
 
 		switch(eState){
-		case NAME_INDENT:
+		case kStNameIndent:
 			switch(wc){
 			case L' ':
 			case L'\t':
 				pwcNameBegin = pwcRead;
 				pwcNameEnd = pwcRead;
-				// eState = NAME_INDENT;
+				// eState = kStNameIndent;
 				break;
 
 			default:
 				pwcNameBegin = pwcRead;
 				pwcNameEnd = pwcRead + 1;
-				eState = (wc == L'\\') ? NAME_ESCAPED : NAME_BODY;
+				eState = (wc == L'\\') ? kStNameEscaped : kStNameBody;
 				break;
 			}
 			break;
 
-		case NAME_BODY:
+		case kStNameBody:
 			switch(wc){
 			case L' ':
 			case L'\t':
-				eState = NAME_PADDING;
+				eState = kStNamePadding;
 				break;
 
 			default:
 				pwcNameEnd = pwcRead + 1;
 				if(wc == L'\\'){
-					eState = NAME_ESCAPED;
+					eState = kStNameEscaped;
 				}
 				break;
 			}
 			break;
 
-		case NAME_PADDING:
+		case kStNamePadding:
 			switch(wc){
 			case L' ':
 			case L'\t':
-				// eState = NAME_PADDING;
+				// eState = kStNamePadding;
 				break;
 
 			default:
 				pwcNameEnd = pwcRead + 1;
-				eState = (wc == L'\\') ? NAME_ESCAPED : NAME_BODY;
+				eState = (wc == L'\\') ? kStNameEscaped : kStNameBody;
 				break;
 			}
 			break;
 
-		case VAL_INDENT:
+		case kStValueIndent:
 			switch(wc){
 			case L' ':
 			case L'\t':
 				pwcValueBegin = pwcRead;
 				pwcValueEnd = pwcRead;
-				// eState = VAL_INDENT;
+				// eState = kStValueIndent;
 				break;
 
 			default:
 				pwcValueBegin = pwcRead;
 				pwcValueEnd = pwcRead + 1;
-				eState = (wc == L'\\') ? VAL_ESCAPED : VAL_BODY;
+				eState = (wc == L'\\') ? kStValueEscaped : kStValueBody;
 				break;
 			}
 			break;
 
-		case VAL_BODY:
+		case kStValueBody:
 			switch(wc){
 			case L' ':
 			case L'\t':
-				eState = VAL_PADDING;
+				eState = kStValPadding;
 				break;
 
 			default:
 				pwcValueEnd = pwcRead + 1;
 				if(wc == L'\\'){
-					eState = VAL_ESCAPED;
+					eState = kStValueEscaped;
 				}
 				break;
 			}
 			break;
 
-		case VAL_PADDING:
+		case kStValPadding:
 			switch(wc){
 			case L' ':
 			case L'\t':
-				// eState = VAL_PADDING;
+				// eState = kStValPadding;
 				break;
 
 			default:
 				pwcValueEnd = pwcRead + 1;
-				eState = (wc == L'\\') ? VAL_ESCAPED : VAL_BODY;
+				eState = (wc == L'\\') ? kStValueEscaped : kStValueBody;
 				break;
 			}
 			break;
 
-		case COMMENT:
+		case kStComment:
 			if(wc == L'\\'){
-				eState = COMMENT_ESCAPED;
+				eState = kStCommentEscaped;
 			}
 			break;
 
-		case NAME_ESCAPED:
+		case kStNameEscaped:
 			pwcNameEnd = pwcRead + 1;
-			eState = NAME_BODY;
+			eState = kStNameBody;
 			break;
 
-		case VAL_ESCAPED:
+		case kStValueEscaped:
 			pwcValueEnd = pwcRead + 1;
-			eState = VAL_BODY;
+			eState = kStValueBody;
 			break;
 
-		case COMMENT_ESCAPED:
-			eState = COMMENT;
+		case kStCommentEscaped:
+			eState = kStComment;
 			break;
 		}
 	} while(++pwcRead != pwcEnd);
 
 	switch(eState){
-	case NAME_INDENT:
+	case kStNameIndent:
 		break;
 
-	case NAME_BODY:
-	case NAME_PADDING:
-	case NAME_ESCAPED:
-		return std::make_pair(ERR_EQU_EXPECTED, pwcRead);
+	case kStNameBody:
+	case kStNamePadding:
+	case kStNameEscaped:
+		return std::make_pair(kErrEquExpected, pwcRead);
 
-	case VAL_INDENT:
-	case VAL_BODY:
-	case VAL_PADDING:
-	case VAL_ESCAPED:
+	case kStValueIndent:
+	case kStValueBody:
+	case kStValPadding:
+	case kStValueEscaped:
 		if(!AcceptValue()){
 			return std::make_pair(eError, pwcRead);
 		}
 		break;
 
-	case COMMENT:
-	case COMMENT_ESCAPED:
+	case kStComment:
+	case kStCommentEscaped:
 		break;
 	};
 	if(vecPackageStack.GetSize() > 1){
-		return std::make_pair(ERR_UNCLOSED_PACKAGE, pwcRead);
+		return std::make_pair(kErrUnclosedPackage, pwcRead);
 	}
 
 	Swap(vTemp);
-	return std::make_pair(ERR_NONE, pwcRead);
+	return std::make_pair(kErrNone, pwcRead);
 }
 WideString MNotation::Export(const WideStringObserver &wsoIndent) const {
 	WideString wsRet;

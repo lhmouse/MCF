@@ -26,9 +26,9 @@ namespace {
 		{
 		}
 		~Pool(){
-			auto pHead = AtomicLoad(x_pHead, MemoryModel::RELAXED);
+			auto pHead = AtomicLoad(x_pHead, MemoryModel::kRelaxed);
 			while(pHead){
-				if(EXPECT(AtomicCompareExchange(x_pHead, pHead, pHead->pNext, MemoryModel::RELAXED))){
+				if(EXPECT(AtomicCompareExchange(x_pHead, pHead, pHead->pNext, MemoryModel::kRelaxed))){
 					delete pHead;
 				}
 			}
@@ -36,19 +36,19 @@ namespace {
 
 	public:
 		PooledSharedControl *Alloc(){
-			auto pHead = AtomicLoad(x_pHead, MemoryModel::RELAXED);
+			auto pHead = AtomicLoad(x_pHead, MemoryModel::kRelaxed);
 			while(pHead){
-				if(EXPECT_NOT(AtomicCompareExchange(x_pHead, pHead, pHead->pNext, MemoryModel::RELAXED))){
+				if(EXPECT_NOT(AtomicCompareExchange(x_pHead, pHead, pHead->pNext, MemoryModel::kRelaxed))){
 					return pHead;
 				}
 			}
 			return new PooledSharedControl;
 		}
 		void Dealloc(PooledSharedControl *pControl) noexcept {
-			auto pHead = AtomicLoad(x_pHead, MemoryModel::RELAXED);
+			auto pHead = AtomicLoad(x_pHead, MemoryModel::kRelaxed);
 			do {
 				pControl->pNext = pHead;
-			} while(EXPECT(!AtomicCompareExchange(x_pHead, pHead, pControl, MemoryModel::RELAXED)));
+			} while(EXPECT(!AtomicCompareExchange(x_pHead, pHead, pControl, MemoryModel::kRelaxed)));
 		}
 	} g_vPool __attribute__((__init_priority__(101)));
 }

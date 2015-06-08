@@ -5,8 +5,8 @@
 #include "../../env/_crtdef.h"
 #include "_mathasm.h"
 
-static const double NEG_THRESHOLD = -0.292892;
-static const double POS_THRESHOLD =  0.292892;
+static const double kPosThreshould =  0.292892;
+static const double kNegThreshould = -0.292892;
 
 float log1pf(float x){
 	register float ret;
@@ -30,7 +30,7 @@ float log1pf(float x){
 		"2: \n"
 		__MCF_FLT_RET_ST("%1")
 		: __MCF_FLT_RET_CONS(ret)
-		: "m"(x), "m"(NEG_THRESHOLD), "m"(POS_THRESHOLD)
+		: "m"(x), "m"(kNegThreshould), "m"(kPosThreshould)
 		: "ax"
 	);
 	return ret;
@@ -58,7 +58,7 @@ double log1p(double x){
 		"2: \n"
 		__MCF_DBL_RET_ST("%1")
 		: __MCF_DBL_RET_CONS(ret)
-		: "m"(x), "m"(NEG_THRESHOLD), "m"(POS_THRESHOLD)
+		: "m"(x), "m"(kNegThreshould), "m"(kPosThreshould)
 		: "ax"
 	);
 	return ret;
@@ -86,7 +86,7 @@ __MCF_LDBL_DECL(log1pl, long double x){
 		"2: \n"
 		__MCF_LDBL_RET_ST()
 		: __MCF_LDBL_RET_CONS(ret)
-		: "m"(x), "m"(NEG_THRESHOLD), "m"(POS_THRESHOLD), __MCF_LDBL_RET_CONS_IN()
+		: "m"(x), "m"(kNegThreshould), "m"(kPosThreshould), __MCF_LDBL_RET_CONS_IN()
 		: "ax"
 	);
 	__MCF_LDBL_RETURN(ret);

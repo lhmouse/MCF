@@ -11,8 +11,8 @@
 namespace MCF {
 
 namespace {
-	constexpr std::size_t STEP_SIZE			= 0x4000;
-	constexpr ::lzma_stream INIT_STREAM		= LZMA_STREAM_INIT;
+	constexpr std::size_t kStepSize			= 0x4000;
+	constexpr ::lzma_stream kInitStream		= LZMA_STREAM_INIT;
 
 	unsigned long LzmaErrorToWin32Error(::lzma_ret eLzmaError) noexcept {
 		switch(eLzmaError){
@@ -81,7 +81,7 @@ private:
 public:
 	xDelegate(LzmaEncoder &vOwner, unsigned uLevel, unsigned long ulDictSize)
 		: x_vOwner(vOwner), x_vOptions(MakeOptions(uLevel, ulDictSize))
-		, x_vStream(INIT_STREAM)
+		, x_vStream(kInitStream)
 	{
 	}
 
@@ -96,14 +96,14 @@ public:
 		x_pStream.Reset(&x_vStream);
 	}
 	void Update(const void *pData, std::size_t uSize){
-		unsigned char abyTemp[STEP_SIZE];
+		unsigned char abyTemp[kStepSize];
 		x_pStream->next_out = abyTemp;
 		x_pStream->avail_out = sizeof(abyTemp);
 
 		auto pbyRead = (const unsigned char *)pData;
 		std::size_t uProcessed = 0;
 		while(uProcessed < uSize){
-			const auto uToProcess = Min(uSize - uProcessed, STEP_SIZE);
+			const auto uToProcess = Min(uSize - uProcessed, kStepSize);
 
 			x_pStream->next_in = pbyRead;
 			x_pStream->avail_in = uToProcess;
@@ -131,7 +131,7 @@ public:
 		}
 	}
 	void Finalize(){
-		unsigned char abyTemp[STEP_SIZE];
+		unsigned char abyTemp[kStepSize];
 		x_pStream->next_out = abyTemp;
 		x_pStream->avail_out = sizeof(abyTemp);
 
@@ -168,7 +168,7 @@ private:
 public:
 	explicit xDelegate(LzmaDecoder &vOwner)
 		: x_vOwner(vOwner)
-		, x_vStream(INIT_STREAM)
+		, x_vStream(kInitStream)
 	{
 	}
 
@@ -183,14 +183,14 @@ public:
 		x_pStream.Reset(&x_vStream);
 	}
 	void Update(const void *pData, std::size_t uSize){
-		unsigned char abyTemp[STEP_SIZE];
+		unsigned char abyTemp[kStepSize];
 		x_pStream->next_out = abyTemp;
 		x_pStream->avail_out = sizeof(abyTemp);
 
 		auto pbyRead = (const unsigned char *)pData;
 		std::size_t uProcessed = 0;
 		while(uProcessed < uSize){
-			const auto uToProcess = Min(uSize - uProcessed, STEP_SIZE);
+			const auto uToProcess = Min(uSize - uProcessed, kStepSize);
 
 			x_pStream->next_in = pbyRead;
 			x_pStream->avail_in = uToProcess;
@@ -218,7 +218,7 @@ public:
 		}
 	}
 	void Finalize(){
-		unsigned char abyTemp[STEP_SIZE];
+		unsigned char abyTemp[kStepSize];
 		x_pStream->next_out = abyTemp;
 		x_pStream->avail_out = sizeof(abyTemp);
 

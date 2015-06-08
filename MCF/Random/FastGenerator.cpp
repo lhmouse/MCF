@@ -12,8 +12,8 @@ namespace MCF {
 
 namespace {
 	enum : std::uint64_t {
-		MULTIPLIER	= 6364136223846793005ull,
-		INCREMENT	= 1442695040888963407ull,
+		kMultiplier	= 6364136223846793005ull,
+		kIncrement	= 1442695040888963407ull,
 	};
 }
 
@@ -21,13 +21,13 @@ namespace {
 void FastGenerator::Init(std::uint32_t u32Seed) noexcept {
 	auto u64Seed = 0x0123456789ABCDEFull | u32Seed;
 	for(unsigned i = 0; i < 8; ++i){
-		u64Seed = u64Seed * MULTIPLIER + INCREMENT;
+		u64Seed = u64Seed * kMultiplier + kIncrement;
 	}
 	x_u64Seed = u64Seed;
 }
 
 std::uint32_t FastGenerator::Get() noexcept {
-	const auto u64NewSeed = x_u64Seed * MULTIPLIER + INCREMENT;
+	const auto u64NewSeed = x_u64Seed * kMultiplier + kIncrement;
 	x_u64Seed = u64NewSeed;
 	return u64NewSeed >> 32;
 }

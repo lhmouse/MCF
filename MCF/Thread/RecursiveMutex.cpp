@@ -9,7 +9,7 @@ namespace MCF {
 
 template<>
 bool RecursiveMutex::UniqueLock::xDoTry() const noexcept {
-	return x_pOwner->Try() != RecursiveMutex::Result::R_TRY_FAILED;
+	return x_pOwner->Try() != RecursiveMutex::Result::kResTryFailed;
 }
 template<>
 void RecursiveMutex::UniqueLock::xDoLock() const noexcept {
@@ -30,31 +30,31 @@ RecursiveMutex::RecursiveMutex(std::size_t uSpinCount)
 RecursiveMutex::Result RecursiveMutex::Try() noexcept {
 	if(x_vMutex.IsLockedByCurrentThread()){
 		++x_uRecursionCount;
-		return R_RECURSIVE;
+		return kResRecursive;
 	}
 	if(x_vMutex.Try()){
 		++x_uRecursionCount;
-		return R_STATE_CHANGED;
+		return kResStateChanged;
 	}
-	return R_TRY_FAILED;
+	return kResTryFailed;
 }
 RecursiveMutex::Result RecursiveMutex::Lock() noexcept {
 	if(x_vMutex.IsLockedByCurrentThread()){
 		++x_uRecursionCount;
-		return R_RECURSIVE;
+		return kResRecursive;
 	}
 	x_vMutex.Lock();
 	++x_uRecursionCount;
-	return R_STATE_CHANGED;
+	return kResStateChanged;
 }
 RecursiveMutex::Result RecursiveMutex::Unlock() noexcept {
 	ASSERT(IsLockedByCurrentThread());
 
 	if(--x_uRecursionCount != 0){
-		return R_RECURSIVE;
+		return kResRecursive;
 	}
 	x_vMutex.Unlock();
-	return R_STATE_CHANGED;
+	return kResStateChanged;
 }
 
 }

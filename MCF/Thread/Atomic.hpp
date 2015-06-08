@@ -10,11 +10,11 @@
 namespace MCF {
 
 enum class MemoryModel {
-	RELAXED		= __ATOMIC_RELAXED,
-	ACQUIRE		= __ATOMIC_ACQUIRE,
-	RELEASE		= __ATOMIC_RELEASE,
-	ACQ_REL		= __ATOMIC_ACQ_REL,
-	SEQ_CST		= __ATOMIC_SEQ_CST,
+	kRelaxed	= __ATOMIC_RELAXED,
+	kAcquire	= __ATOMIC_ACQUIRE,
+	kRelease	= __ATOMIC_RELEASE,
+	kAcqRel		= __ATOMIC_ACQ_REL,
+	kSeqCst		= __ATOMIC_SEQ_CST,
 };
 
 template<typename T>
@@ -74,8 +74,8 @@ inline bool AtomicCompareExchange(volatile T &ref, std::common_type_t<T> &cmp, s
 	MemoryModel model) noexcept
 {
 	return AtomicCompareExchange(ref, cmp, xchg, model,
-		(model == MemoryModel::ACQ_REL) ? MemoryModel::ACQUIRE : (
-			(model == MemoryModel::RELEASE) ? MemoryModel::RELAXED : model));
+		(model == MemoryModel::kAcqRel) ? MemoryModel::kAcquire : (
+			(model == MemoryModel::kRelease) ? MemoryModel::kRelaxed : model));
 }
 
 }

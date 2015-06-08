@@ -93,14 +93,14 @@ namespace Impl_TupleManipulators {
 		{
 		}
 
-		template<typename ...ReferencesT, std::size_t ...INDICES_T>
-		decltype(auto) DoForwards(std::index_sequence<INDICES_T...>){
-			return std::forward<FunctionT>(vFunction)(static_cast<ReferencesT>(std::get<INDICES_T>(vTuple))...);
+		template<typename ...ReferencesT, std::size_t ...kIndicesT>
+		decltype(auto) DoForwards(std::index_sequence<kIndicesT...>){
+			return std::forward<FunctionT>(vFunction)(static_cast<ReferencesT>(std::get<kIndicesT>(vTuple))...);
 		}
 
-		template<typename ...ReferencesT, std::size_t ...INDICES_T>
-		decltype(auto) DoReversely(std::index_sequence<INDICES_T...>){
-			return std::forward<FunctionT>(vFunction)(static_cast<ReferencesT>(std::get<sizeof...(INDICES_T) - 1 - INDICES_T>(vTuple))...);
+		template<typename ...ReferencesT, std::size_t ...kIndicesT>
+		decltype(auto) DoReversely(std::index_sequence<kIndicesT...>){
+			return std::forward<FunctionT>(vFunction)(static_cast<ReferencesT>(std::get<sizeof...(kIndicesT) - 1 - kIndicesT>(vTuple))...);
 		}
 	};
 }

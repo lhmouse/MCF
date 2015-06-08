@@ -61,7 +61,7 @@ struct StringEncodingTrait<StringType::ANSI> {
 };
 
 namespace Impl_StringObserver {
-	constexpr std::size_t NPOS = (std::size_t)-1;
+	constexpr std::size_t kNpos = (std::size_t)-1;
 
 	template<typename CharT>
 	const CharT *StrEndOf(const CharT *pszBegin) noexcept {
@@ -83,7 +83,7 @@ namespace Impl_StringObserver {
 
 		const auto itSearchEnd = itEnd - (std::ptrdiff_t)(uRepCount - 1);
 
-		std::size_t uFound = NPOS;
+		std::size_t uFound = kNpos;
 
 		auto itCur = itBegin;
 		do {
@@ -129,11 +129,11 @@ namespace Impl_StringObserver {
 						return (std::size_t)(itCur - itBegin);
 					}
 				}
-				return NPOS;
+				return kNpos;
 			}
 		}
 
-		std::size_t uFound = NPOS;
+		std::size_t uFound = kNpos;
 
 		puKmpTable[0] = 0;
 		puKmpTable[1] = 0;
@@ -173,13 +173,13 @@ namespace Impl_StringObserver {
 	}
 }
 
-template<StringType TYPE_T>
+template<StringType kTypeT>
 struct StringObserver {
 public:
-	static constexpr StringType Type = TYPE_T;
-	using CharType = typename StringEncodingTrait<TYPE_T>::Type;
+	static constexpr StringType Type = kTypeT;
+	using CharType = typename StringEncodingTrait<kTypeT>::Type;
 
-	static constexpr std::size_t NPOS = Impl_StringObserver::NPOS;
+	static constexpr std::size_t kNpos = Impl_StringObserver::kNpos;
 
 	static_assert(std::is_integral<CharType>::value, "CharType must be an integral type.");
 
@@ -310,8 +310,8 @@ public:
 
 	// 举例：
 	//   Find("def", 3)				返回 3；
-	//   Find("def", 4)				返回 NPOS；
-	//   FindBackward("def", 5)		返回 NPOS；
+	//   Find("def", 4)				返回 kNpos；
+	//   FindBackward("def", 5)		返回 kNpos；
 	//   FindBackward("def", 6)		返回 3。
 	std::size_t Find(const StringObserver &obsToFind, std::ptrdiff_t nBegin = 0) const noexcept {
 		const auto uLength = GetLength();
@@ -321,14 +321,14 @@ public:
 			return uRealBegin;
 		}
 		if(uLength < uLenToFind){
-			return NPOS;
+			return kNpos;
 		}
 		if(uRealBegin + uLenToFind > uLength){
-			return NPOS;
+			return kNpos;
 		}
 		const auto uPos = Impl_StringObserver::StrStr(GetBegin() + uRealBegin, GetEnd(), obsToFind.GetBegin(), obsToFind.GetEnd());
-		if(uPos == NPOS){
-			return NPOS;
+		if(uPos == kNpos){
+			return kNpos;
 		}
 		return uPos + uRealBegin;
 	}
@@ -340,25 +340,25 @@ public:
 			return uRealEnd;
 		}
 		if(uLength < uLenToFind){
-			return NPOS;
+			return kNpos;
 		}
 		if(uRealEnd < uLenToFind){
-			return NPOS;
+			return kNpos;
 		}
 		std::reverse_iterator<const CharType *> itBegin(GetBegin() + uRealEnd), itEnd(GetBegin()),
 			itToFindBegin(obsToFind.GetEnd()), itToFindEnd(obsToFind.GetBegin());
 		const auto uPos = Impl_StringObserver::StrStr(itBegin, itEnd, itToFindBegin, itToFindEnd);
-		if(uPos == NPOS){
-			return NPOS;
+		if(uPos == kNpos){
+			return kNpos;
 		}
 		return uRealEnd - uPos - uLenToFind;
 	}
 
 	// 举例：
-	//   Find('c', 3)			返回 NPOS；
+	//   Find('c', 3)			返回 kNpos；
 	//   Find('d', 3)			返回 3；
 	//   FindBackward('c', 3)	返回 2；
-	//   FindBackward('d', 3)	返回 NPOS。
+	//   FindBackward('d', 3)	返回 kNpos。
 	std::size_t FindRep(CharType chToFind, std::size_t uRepCount, std::ptrdiff_t nBegin = 0) const noexcept {
 		const auto uLength = GetLength();
 		const auto uRealBegin = xTranslateOffset(nBegin, uLength);
@@ -366,14 +366,14 @@ public:
 			return uRealBegin;
 		}
 		if(uLength < uRepCount){
-			return NPOS;
+			return kNpos;
 		}
 		if(uRealBegin < uRepCount){
-			return NPOS;
+			return kNpos;
 		}
 		const auto uPos = Impl_StringObserver::StrChrRep(GetBegin() + uRealBegin, GetEnd(), chToFind, uRepCount);
-		if(uPos == NPOS){
-			return NPOS;
+		if(uPos == kNpos){
+			return kNpos;
 		}
 		return uPos + uRealBegin;
 	}
@@ -384,15 +384,15 @@ public:
 			return uRealEnd;
 		}
 		if(uLength < uRepCount){
-			return NPOS;
+			return kNpos;
 		}
 		if(uRealEnd < uRepCount){
-			return NPOS;
+			return kNpos;
 		}
 		std::reverse_iterator<const CharType *> itBegin(GetBegin() + uRealEnd), itEnd(GetBegin());
 		const auto uPos = Impl_StringObserver::StrChrRep(itBegin, itEnd, chToFind, uRepCount);
-		if(uPos == NPOS){
-			return NPOS;
+		if(uPos == kNpos){
+			return kNpos;
 		}
 		return uRealEnd - uPos - uRepCount;
 	}
@@ -418,56 +418,56 @@ public:
 	}
 };
 
-template<StringType TYPE_T>
-bool operator==(const StringObserver<TYPE_T> &lhs, const StringObserver<TYPE_T> &rhs) noexcept {
+template<StringType kTypeT>
+bool operator==(const StringObserver<kTypeT> &lhs, const StringObserver<kTypeT> &rhs) noexcept {
 	if(lhs.GetSize() != rhs.GetSize()){
 		return false;
 	}
 	return lhs.Compare(rhs) == 0;
 }
-template<StringType TYPE_T>
-bool operator!=(const StringObserver<TYPE_T> &lhs, const StringObserver<TYPE_T> &rhs) noexcept {
+template<StringType kTypeT>
+bool operator!=(const StringObserver<kTypeT> &lhs, const StringObserver<kTypeT> &rhs) noexcept {
 	if(lhs.GetSize() != rhs.GetSize()){
 		return true;
 	}
 	return lhs.Compare(rhs) != 0;
 }
-template<StringType TYPE_T>
-bool operator<(const StringObserver<TYPE_T> &lhs, const StringObserver<TYPE_T> &rhs) noexcept {
+template<StringType kTypeT>
+bool operator<(const StringObserver<kTypeT> &lhs, const StringObserver<kTypeT> &rhs) noexcept {
 	return lhs.Compare(rhs) < 0;
 }
-template<StringType TYPE_T>
-bool operator>(const StringObserver<TYPE_T> &lhs, const StringObserver<TYPE_T> &rhs) noexcept {
+template<StringType kTypeT>
+bool operator>(const StringObserver<kTypeT> &lhs, const StringObserver<kTypeT> &rhs) noexcept {
 	return lhs.Compare(rhs) > 0;
 }
-template<StringType TYPE_T>
-bool operator<=(const StringObserver<TYPE_T> &lhs, const StringObserver<TYPE_T> &rhs) noexcept {
+template<StringType kTypeT>
+bool operator<=(const StringObserver<kTypeT> &lhs, const StringObserver<kTypeT> &rhs) noexcept {
 	return lhs.Compare(rhs) <= 0;
 }
-template<StringType TYPE_T>
-bool operator>=(const StringObserver<TYPE_T> &lhs, const StringObserver<TYPE_T> &rhs) noexcept {
+template<StringType kTypeT>
+bool operator>=(const StringObserver<kTypeT> &lhs, const StringObserver<kTypeT> &rhs) noexcept {
 	return lhs.Compare(rhs) >= 0;
 }
 
-template<StringType TYPE_T>
-void swap(StringObserver<TYPE_T> &lhs, StringObserver<TYPE_T> &rhs) noexcept {
+template<StringType kTypeT>
+void swap(StringObserver<kTypeT> &lhs, StringObserver<kTypeT> &rhs) noexcept {
 	lhs.Swap(rhs);
 }
 
-template<StringType TYPE_T>
-auto begin(const StringObserver<TYPE_T> &lhs) noexcept {
+template<StringType kTypeT>
+auto begin(const StringObserver<kTypeT> &lhs) noexcept {
 	return lhs.GetBegin();
 }
-template<StringType TYPE_T>
-auto cbegin(const StringObserver<TYPE_T> &lhs) noexcept {
+template<StringType kTypeT>
+auto cbegin(const StringObserver<kTypeT> &lhs) noexcept {
 	return lhs.GetBegin();
 }
-template<StringType TYPE_T>
-auto end(const StringObserver<TYPE_T> &lhs) noexcept {
+template<StringType kTypeT>
+auto end(const StringObserver<kTypeT> &lhs) noexcept {
 	return lhs.GetEnd();
 }
-template<StringType TYPE_T>
-auto cend(const StringObserver<TYPE_T> &lhs) noexcept {
+template<StringType kTypeT>
+auto cend(const StringObserver<kTypeT> &lhs) noexcept {
 	return lhs.GetEnd();
 }
 
@@ -490,52 +490,51 @@ using AnsiStringObserver		= StringObserver<StringType::ANSI>;
 // 字面量运算符。
 // 注意 StringObserver 并不是所谓“零结尾的字符串”。
 // 这些运算符经过特意设计防止这种用法。
-template<typename CharT, CharT ...STRING_T>
-[[deprecated("Be warned that encodings of narrow string literals vary from compilers to compilers "
-	"and might even depend on encodings of source files on g++.")]]
+template<typename CharT, CharT ...kCharsT>
+[[deprecated("Be warned that encodings of narrow string literals vary from compilers to compilers and might even depend on encodings of source files on g++.")]]
 extern inline auto operator""_nso() noexcept {
-	static constexpr char s_achData[] = { STRING_T..., '$' };
-	return NarrowStringObserver(s_achData, sizeof...(STRING_T));
+	static constexpr char s_achData[] = { kCharsT..., '$' };
+	return NarrowStringObserver(s_achData, sizeof...(kCharsT));
 }
-template<typename CharT, CharT ...STRING_T>
+template<typename CharT, CharT ...kCharsT>
 extern inline auto operator""_wso() noexcept {
-	static constexpr wchar_t s_awcData[] = { STRING_T..., '$' };
-	return WideStringObserver(s_awcData, sizeof...(STRING_T));
+	static constexpr wchar_t s_awcData[] = { kCharsT..., '$' };
+	return WideStringObserver(s_awcData, sizeof...(kCharsT));
 }
-template<typename CharT, CharT ...STRING_T>
+template<typename CharT, CharT ...kCharsT>
 extern inline auto operator""_u8so() noexcept {
-	static constexpr char s_au8cData[] = { STRING_T..., '$' };
-	return Utf8StringObserver(s_au8cData, sizeof...(STRING_T));
+	static constexpr char s_au8cData[] = { kCharsT..., '$' };
+	return Utf8StringObserver(s_au8cData, sizeof...(kCharsT));
 }
-template<typename CharT, CharT ...STRING_T>
+template<typename CharT, CharT ...kCharsT>
 extern inline auto operator""_u16so() noexcept {
-	static constexpr char16_t s_au16cData[] = { STRING_T..., '$' };
-	return Utf16StringObserver(s_au16cData, sizeof...(STRING_T));
+	static constexpr char16_t s_au16cData[] = { kCharsT..., '$' };
+	return Utf16StringObserver(s_au16cData, sizeof...(kCharsT));
 }
-template<typename CharT, CharT ...STRING_T>
+template<typename CharT, CharT ...kCharsT>
 extern inline auto operator""_u32so() noexcept {
-	static constexpr char32_t s_au32cData[] = { STRING_T..., '$' };
-	return Utf32StringObserver(s_au32cData, sizeof...(STRING_T));
+	static constexpr char32_t s_au32cData[] = { kCharsT..., '$' };
+	return Utf32StringObserver(s_au32cData, sizeof...(kCharsT));
 }
 
 // MultiIndexMap
-template<StringType TYPE_T>
+template<StringType kTypeT>
 struct StringObserverTripleComparator {
-	int operator()(const StringObserver<TYPE_T> &lhs, const StringObserver<TYPE_T> &rhs) const noexcept {
+	int operator()(const StringObserver<kTypeT> &lhs, const StringObserver<kTypeT> &rhs) const noexcept {
 		return lhs.Compare(rhs);
 	}
 	template<typename ComparandT>
-	int operator()(const StringObserver<TYPE_T> &lhs, const ComparandT &rhs) const noexcept {
+	int operator()(const StringObserver<kTypeT> &lhs, const ComparandT &rhs) const noexcept {
 		return lhs.Compare(rhs);
 	}
 	template<typename ComparandT>
-	int operator()(const ComparandT &lhs, const StringObserver<TYPE_T> &rhs) const noexcept {
+	int operator()(const ComparandT &lhs, const StringObserver<kTypeT> &rhs) const noexcept {
 		return -rhs.Compare(lhs);
 	}
 };
 
-template<StringType TYPE_T>
-StringObserverTripleComparator<TYPE_T> GetDefaultComparator(const StringObserver<TYPE_T> &) noexcept;
+template<StringType kTypeT>
+StringObserverTripleComparator<kTypeT> GetDefaultComparator(const StringObserver<kTypeT> &) noexcept;
 
 }
 

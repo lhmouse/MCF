@@ -13,15 +13,16 @@
 
 namespace MCF {
 
-enum RecursiveMutexResult {
-	R_TRY_FAILED	= 0,
-	R_STATE_CHANGED	= 1,
-	R_RECURSIVE		= 2,
+struct RecursiveMutexResults {
+	enum Result {
+		kResTryFailed		= 0,
+		kResStateChanged	= 1,
+		kResRecursive		= 2,
+	};
 };
 
-class RecursiveMutex : NONCOPYABLE {
+class RecursiveMutex : NONCOPYABLE, public RecursiveMutexResults {
 public:
-	using Result = RecursiveMutexResult;
 	using UniqueLock = UniqueLockTemplate<RecursiveMutex>;
 
 private:

@@ -23,6 +23,23 @@ template<typename ObjectT, class DeleterT = DefaultDeleter<std::remove_cv_t<Obje
 class IntrusivePtr;
 
 namespace Impl_IntrusivePtr {
+	template<typename DstT, typename SrcT>
+	struct CvCopier {
+		using Type = DstT;
+	};
+	template<typename DstT, typename SrcT>
+	struct CvCopier<DstT, const SrcT> {
+		using Type = const DstT;
+	};
+	template<typename DstT, typename SrcT>
+	struct CvCopier<DstT, volatile SrcT> {
+		using Type = volatile DstT;
+	};
+	template<typename DstT, typename SrcT>
+	struct CvCopier<DstT, const volatile SrcT> {
+		using Type = const volatile DstT;
+	};
+
 	template<class DeleterT>
 	class IntrusiveSentry {
 	public:
@@ -246,12 +263,7 @@ public:
 		return const_cast<ElementType *>(x_pBuddy->template Get<const volatile ElementType>());
 	}
 	auto ReleaseBuddy() noexcept {
-		return const_cast<
-			std::conditional_t<std::is_same<const volatile ElementType, ElementType>::value, const volatile BuddyType *,
-				std::conditional_t<std::is_same<const ElementType, ElementType>::value, const BuddyType *,
-					std::conditional_t<std::is_same<volatile ElementType, ElementType>::value, volatile BuddyType *,
-						BuddyType *>>>
-			>(std::exchange(x_pBuddy, nullptr));
+		return const_cast<typename Impl_IntrusivePtr::CvCopier<BuddyType, ElementType>::Type *>(std::exchange(x_pBuddy, nullptr));
 	}
 	ElementType *Release() noexcept {
 		const auto pOldBuddy = ReleaseBuddy();

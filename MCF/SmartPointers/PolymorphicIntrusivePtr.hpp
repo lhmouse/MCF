@@ -10,7 +10,7 @@
 
 namespace MCF {
 
-struct PolymorphicIntrusiveDeletableBase : public IntrusiveBase<PolymorphicIntrusiveDeletableBase> {
+struct PolymorphicIntrusiveDeletableBase : virtual public IntrusiveBase<PolymorphicIntrusiveDeletableBase> {
 	virtual ~PolymorphicIntrusiveDeletableBase();
 
 	virtual void *MCF_Impl_IntrusiveClone_() const = 0;
@@ -24,8 +24,7 @@ private:
 			std::is_copy_constructible<TestObjectT>::value,
 			int> = 0>
 	TestObjectT *xDoClone() const {
-		return new TestObjectT(
-			*Impl_IntrusivePtr::StaticOrDynamicCast<const TestObjectT *>(this));
+		return new TestObjectT(*Impl_IntrusivePtr::StaticOrDynamicCast<const TestObjectT *>(this));
 	}
 	template<typename TestObjectT = ObjectT,
 		std::enable_if_t<

@@ -56,7 +56,8 @@ template<typename ObjectT>
 auto DynamicClone(const PolymorphicIntrusivePtr<ObjectT> &rhs){
 	PolymorphicIntrusivePtr<std::decay_t<ObjectT>> pNew;
 	if(rhs){
-		pNew.Reset(Impl_IntrusivePtr::StaticOrDynamicCast<std::decay_t<ObjectT> *>(rhs->MCF_Impl_IntrusiveClone_()));
+		pNew.Reset(Impl_IntrusivePtr::StaticOrDynamicCast<std::decay_t<ObjectT> *>(
+			static_cast<const PolymorphicIntrusiveDeleteableBase *>(rhs.Get())->MCF_Impl_IntrusiveClone_()));
 		ASSERT(pNew);
 	}
 	return pNew;

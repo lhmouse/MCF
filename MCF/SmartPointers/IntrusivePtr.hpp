@@ -136,6 +136,13 @@ public:
 
 	static_assert(std::is_base_of<BuddyType, ElementType>::value, "ElementType is not derived from IntrusiveBase<ElementType> ??");
 
+public:
+	static void Reclaim(BuddyType *pBuddy) noexcept {
+		if(pBuddy->DropRef()){
+			DeleterT()(static_cast<std::decay_t<decltype(*DeleterT()())> *>(const_cast<std::remove_cv_t<BuddyType> *>(pBuddy)));
+		}
+	}
+
 private:
 	BuddyType *x_pBuddy;
 
@@ -219,14 +226,12 @@ public:
 	}
 	ElementType *Release() noexcept {
 		ElementType *pRet = nullptr;
-		const auto pBuddy = std::exchange(x_pBuddy, nullptr);
-		if(pBuddy){
-			pRet = Impl_IntrusivePtr::StaticOrDynamicCast<ElementType *>(pBuddy);
+		const auto pOldBuddy = std::exchange(x_pBuddy, nullptr);
+		if(pOldBuddy){
+			pRet = Impl_IntrusivePtr::StaticOrDynamicCast<ElementType *>(pOldBuddy);
 		}
-		if(pBuddy && !pRet){
-			if(pBuddy->DropRef()){
-				DeleterT()(static_cast<std::decay_t<decltype(*DeleterT()())> *>(const_cast<std::remove_cv_t<BuddyType> *>(pBuddy)));
-			}
+		if(pOldBuddy && !pRet){
+			Reclaim(pOldBuddy);
 		}
 		return pRet;
 	}
@@ -241,11 +246,9 @@ public:
 	IntrusivePtr &Reset(ElementType *pElement = nullptr) noexcept {
 		ASSERT(!(pElement && (Get() == pElement)));
 
-		const auto pBuddy = std::exchange(x_pBuddy, pElement);
-		if(pBuddy){
-			if(pBuddy->DropRef()){
-				DeleterT()(static_cast<std::decay_t<decltype(*DeleterT()())> *>(const_cast<std::remove_cv_t<BuddyType> *>(pBuddy)));
-			}
+		const auto pOldBuddy = std::exchange(x_pBuddy, pElement);
+		if(pOldBuddy){
+			Reclaim(pOldBuddy);
 		}
 		return *this;
 	}
@@ -255,11 +258,13 @@ public:
 				std::is_convertible<OtherDeleterT, DeleterT>::value,
 			int> = 0>
 	IntrusivePtr &Reset(const IntrusivePtr<OtherT, OtherDeleterT> &rhs) noexcept {
-		const auto pObject = static_cast<ElementType *>(rhs.Get());
-		if(pObject){
-			static_cast<BuddyType *>(pObject)->AddRef();
+		const auto pOldBuddy = std::exchange(x_pBuddy, rhs.x_pBuddy);
+		if(pOldBuddy){
+			Reclaim(pOldBuddy);
 		}
-		Reset(pObject);
+		if(x_pBuddy){
+			x_pBuddy->AddRef();
+		}
 		return *this;
 	}
 	template<typename OtherT, typename OtherDeleterT,

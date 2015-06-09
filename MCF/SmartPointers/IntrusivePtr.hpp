@@ -353,6 +353,7 @@ IntrusivePtr<OtherT, DeleterT> IntrusiveBase<ObjectT, DeleterT>::Share() noexcep
 template<typename ObjectT, typename ...ParamsT>
 IntrusivePtr<ObjectT, DefaultDeleter<ObjectT>> MakeIntrusive(ParamsT &&...vParams){
 	static_assert(!std::is_array<ObjectT>::value, "ObjectT shall not be an array type.");
+	static_assert(!std::is_reference<ObjectT>::value, "ObjectT shall not be a reference type.");
 
 	return IntrusivePtr<ObjectT, DefaultDeleter<ObjectT>>(new ObjectT(std::forward<ParamsT>(vParams)...));
 }

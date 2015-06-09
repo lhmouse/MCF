@@ -27,7 +27,11 @@ private:
 	ElementType *x_pElement;
 
 public:
-	constexpr explicit UniquePtr(ElementType *pElement = nullptr) noexcept
+	constexpr UniquePtr(std::nullptr_t = nullptr) noexcept
+		: x_pElement(nullptr)
+	{
+	}
+	explicit constexpr UniquePtr(ElementType *pElement) noexcept
 		: x_pElement(pElement)
 	{
 	}
@@ -45,6 +49,10 @@ public:
 		: UniquePtr()
 	{
 		Reset(std::move(rhs));
+	}
+	UniquePtr &operator=(std::nullptr_t) noexcept {
+		Reset();
+		return *this;
 	}
 	UniquePtr &operator=(UniquePtr &&rhs) noexcept {
 		Reset(std::move(rhs));

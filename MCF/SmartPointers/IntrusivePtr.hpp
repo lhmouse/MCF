@@ -143,7 +143,11 @@ private:
 	BuddyType *x_pBuddy;
 
 public:
-	explicit constexpr IntrusivePtr(ElementType *pElement = nullptr) noexcept
+	constexpr IntrusivePtr(std::nullptr_t = nullptr) noexcept
+		: x_pBuddy(nullptr)
+	{
+	}
+	explicit constexpr IntrusivePtr(ElementType *pElement) noexcept
 		: x_pBuddy(pElement)
 	{
 	}
@@ -181,6 +185,10 @@ public:
 		: IntrusivePtr()
 	{
 		Reset(std::move(rhs));
+	}
+	IntrusivePtr &operator=(std::nullptr_t) noexcept {
+		Reset();
+		return *this;
 	}
 	IntrusivePtr &operator=(UniquePtr<ObjectT, DeleterT> &&rhs) noexcept {
 		Reset(std::move(rhs));

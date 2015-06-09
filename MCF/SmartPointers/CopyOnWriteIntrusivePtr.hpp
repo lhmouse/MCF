@@ -22,7 +22,11 @@ private:
 	PolyIntrusivePtr<ObjectT> x_pObject;
 
 public:
-	explicit constexpr CopyOnWriteIntrusivePtr(ElementType *pElement = nullptr) noexcept
+	constexpr CopyOnWriteIntrusivePtr(std::nullptr_t = nullptr) noexcept
+		: x_pObject(nullptr)
+	{
+	}
+	explicit constexpr CopyOnWriteIntrusivePtr(ElementType *pElement) noexcept
 		: x_pObject(pElement)
 	{
 	}
@@ -38,6 +42,10 @@ public:
 	CopyOnWriteIntrusivePtr(CopyOnWriteIntrusivePtr &&rhs) noexcept
 		: x_pObject(std::move(rhs.x_pObject))
 	{
+	}
+	CopyOnWriteIntrusivePtr &operator=(std::nullptr_t) noexcept {
+		Reset();
+		return *this;
 	}
 	template<typename OtherT>
 	CopyOnWriteIntrusivePtr &operator=(PolyIntrusivePtr<OtherT> rhs) noexcept {

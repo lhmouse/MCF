@@ -60,12 +60,18 @@ public:
 	Function &operator=(const Function &) noexcept = default;
 	Function &operator=(Function &&) noexcept = default;
 
+	constexpr Function(std::nullptr_t) noexcept {
+	}
 	template<typename FuncT,
 		std::enable_if_t<
 			std::is_convertible<std::result_of_t<FuncT && (ForwardedParam<ParamsT>...)>, RetT>::value,
 			int> = 0>
 	Function(FuncT &&x_vFunc){
 		Reset(std::forward<FuncT>(x_vFunc));
+	}
+	Function &operator=(std::nullptr_t) noexcept {
+		Reset();
+		return *this;
 	}
 	template<typename FuncT,
 		std::enable_if_t<
@@ -77,7 +83,7 @@ public:
 	}
 
 public:
-	void Reset() noexcept {
+	void Reset(std::nullptr_t = nullptr) noexcept {
 		x_pFunctor.Reset();
 	}
 	template<typename FuncT,

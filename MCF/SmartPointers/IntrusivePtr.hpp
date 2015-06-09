@@ -308,46 +308,42 @@ public:
 template<typename ObjectT, class DeleterT>
 	template<typename OtherT>
 IntrusivePtr<const volatile OtherT, DeleterT> IntrusiveBase<ObjectT, DeleterT>::Share() const volatile noexcept {
-	IntrusivePtr<const volatile OtherT, DeleterT> pRet;
 	const auto pObj = Impl_IntrusivePtr::StaticOrDynamicCast<const volatile OtherT *>(this);
-	if(pObj){
-		pObj->Impl_IntrusivePtr::RefCountBase::AddRef();
-		pRet.Reset(pObj);
+	if(!pObj){
+		return nullptr;
 	}
-	return pRet;
+	pObj->Impl_IntrusivePtr::RefCountBase::AddRef();
+	return IntrusivePtr<const volatile OtherT, DeleterT>(pObj);
 }
 template<typename ObjectT, class DeleterT>
 	template<typename OtherT>
 IntrusivePtr<const OtherT, DeleterT> IntrusiveBase<ObjectT, DeleterT>::Share() const noexcept {
-	IntrusivePtr<const OtherT, DeleterT> pRet;
 	const auto pObj = Impl_IntrusivePtr::StaticOrDynamicCast<const OtherT *>(this);
-	if(pObj){
-		pObj->Impl_IntrusivePtr::RefCountBase::AddRef();
-		pRet.Reset(pObj);
+	if(!pObj){
+		return nullptr;
 	}
-	return pRet;
+	pObj->Impl_IntrusivePtr::RefCountBase::AddRef();
+	return IntrusivePtr<const OtherT, DeleterT>(pObj);
 }
 template<typename ObjectT, class DeleterT>
 	template<typename OtherT>
 IntrusivePtr<volatile OtherT, DeleterT> IntrusiveBase<ObjectT, DeleterT>::Share() volatile noexcept {
-	IntrusivePtr<volatile OtherT, DeleterT> pRet;
 	const auto pObj = Impl_IntrusivePtr::StaticOrDynamicCast<volatile OtherT *>(this);
-	if(pObj){
-		pObj->Impl_IntrusivePtr::RefCountBase::AddRef();
-		pRet.Reset(pObj);
+	if(!pObj){
+		return nullptr;
 	}
-	return pRet;
+	pObj->Impl_IntrusivePtr::RefCountBase::AddRef();
+	return IntrusivePtr<volatile OtherT, DeleterT>(pObj);
 }
 template<typename ObjectT, class DeleterT>
 	template<typename OtherT>
 IntrusivePtr<OtherT, DeleterT> IntrusiveBase<ObjectT, DeleterT>::Share() noexcept {
-	IntrusivePtr<OtherT, DeleterT> pRet;
 	const auto pObj = Impl_IntrusivePtr::StaticOrDynamicCast<OtherT *>(this);
-	if(pObj){
-		pObj->Impl_IntrusivePtr::RefCountBase::AddRef();
-		pRet.Reset(pObj);
+	if(!pObj){
+		return nullptr;
 	}
-	return pRet;
+	pObj->Impl_IntrusivePtr::RefCountBase::AddRef();
+	return IntrusivePtr<OtherT, DeleterT>(pObj);
 }
 
 #define MCF_SMART_POINTERS_DECLARE_TEMPLATE_PARAMETERS_	template<typename ObjectT, class DeleterT>

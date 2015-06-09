@@ -11,18 +11,20 @@
 
 namespace MCF {
 
-struct PolymorphicIntrusiveDeleteableBase : public IntrusiveBase<PolymorphicIntrusiveDeleteableBase> {
-	virtual ~PolymorphicIntrusiveDeleteableBase();
+namespace Impl_IntrusivePtr {
+	struct DeletableBase : public IntrusiveBase<DeletableBase> {
+		virtual ~DeletableBase();
+	};
+}
+
+template<typename ObjectT>
+struct PolymorphicIntrusiveBase : public virtual Impl_IntrusivePtr::DeletableBase {
 };
 
 template<typename ObjectT>
-struct PolymorphicIntrusiveBase : public virtual PolymorphicIntrusiveDeleteableBase {
-};
+using PolymorphicIntrusivePtr = IntrusivePtr<ObjectT, DefaultDeleter<Impl_IntrusivePtr::DeletableBase>>;
 
-template<typename ObjectT>
-using PolymorphicIntrusivePtr = IntrusivePtr<ObjectT, DefaultDeleter<PolymorphicIntrusiveDeleteableBase>>;
-
-using PolymorphicIntrusiveUnknownPtr = PolymorphicIntrusivePtr<PolymorphicIntrusiveDeleteableBase>;
+using PolymorphicIntrusiveUnknownPtr = PolymorphicIntrusivePtr<Impl_IntrusivePtr::DeletableBase>;
 
 template<typename ObjectT, typename ...ParamsT>
 PolymorphicIntrusivePtr<ObjectT> MakePolymorphicIntrusive(ParamsT &&...vParams){

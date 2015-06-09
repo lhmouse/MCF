@@ -7,15 +7,14 @@ using namespace MCF;
 
 struct foo : PolymorphicIntrusiveBase<foo> {
 };
-struct bar : foo {
+struct bar : PolymorphicIntrusiveBase<bar>, foo {
 };
 
 extern "C" unsigned int MCFMain() noexcept {
-	PolymorphicIntrusiveUnknownPtr p1 = MakePolymorphicIntrusive<bar>();
-	auto p2 = DynamicClone(p1);
+	PolymorphicIntrusiveUnknownPtr p = MakePolymorphicIntrusive<bar>();
 
-	std::printf("typeid of p2 is %s\n", typeid(p2).name());
-	std::printf("typeid of *p2 is %s\n", typeid(*p2).name());
+	std::printf("typeid of p is %s\n", typeid(p).name());
+	std::printf("typeid of *p is %s\n", typeid(*p).name());
 
 	return 0;
 }

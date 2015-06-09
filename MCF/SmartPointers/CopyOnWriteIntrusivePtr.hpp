@@ -5,21 +5,21 @@
 #ifndef MCF_SMART_POINTERS_COPY_ON_WRITE_INTRUSIVE_PTR_HPP_
 #define MCF_SMART_POINTERS_COPY_ON_WRITE_INTRUSIVE_PTR_HPP_
 
-#include "PolymorphicIntrusivePtr.hpp"
+#include "PolyIntrusivePtr.hpp"
 
 namespace MCF {
 
 template<typename ObjectT>
-using CopyOnWriteIntrusiveBase = PolymorphicIntrusiveBase<ObjectT>;
+using CopyOnWriteIntrusiveBase = PolyIntrusiveBase<ObjectT>;
 
 template<typename ObjectT>
 class CopyOnWriteIntrusivePtr {
 public:
-	using ElementType = typename PolymorphicIntrusivePtr<ObjectT>::ElementType;
-	using BuddyType = typename PolymorphicIntrusivePtr<ObjectT>::BuddyType;
+	using ElementType = typename PolyIntrusivePtr<ObjectT>::ElementType;
+	using BuddyType = typename PolyIntrusivePtr<ObjectT>::BuddyType;
 
 private:
-	PolymorphicIntrusivePtr<ObjectT> x_pObject;
+	PolyIntrusivePtr<ObjectT> x_pObject;
 
 public:
 	explicit constexpr CopyOnWriteIntrusivePtr(ElementType *pElement = nullptr) noexcept
@@ -27,7 +27,7 @@ public:
 	{
 	}
 	template<typename OtherT>
-	CopyOnWriteIntrusivePtr(PolymorphicIntrusivePtr<OtherT> rhs) noexcept
+	CopyOnWriteIntrusivePtr(PolyIntrusivePtr<OtherT> rhs) noexcept
 		: x_pObject(std::move(rhs))
 	{
 	}
@@ -40,7 +40,7 @@ public:
 	{
 	}
 	template<typename OtherT>
-	CopyOnWriteIntrusivePtr &operator=(PolymorphicIntrusivePtr<OtherT> rhs) noexcept {
+	CopyOnWriteIntrusivePtr &operator=(PolyIntrusivePtr<OtherT> rhs) noexcept {
 		Reset(std::move(rhs));
 		return *this;
 	}
@@ -89,7 +89,7 @@ public:
 		return *this;
 	}
 	template<typename OtherT>
-	CopyOnWriteIntrusivePtr &Reset(PolymorphicIntrusivePtr<OtherT> rhs) noexcept {
+	CopyOnWriteIntrusivePtr &Reset(PolyIntrusivePtr<OtherT> rhs) noexcept {
 		x_pObject.Reset(std::move(rhs));
 		return *this;
 	}
@@ -114,13 +114,13 @@ public:
 		return Get();
 	}
 
-	operator const PolymorphicIntrusivePtr<ObjectT> &() const & noexcept {
+	operator const PolyIntrusivePtr<ObjectT> &() const & noexcept {
 		return x_pObject;
 	}
-	operator PolymorphicIntrusivePtr<ObjectT> &() & noexcept {
+	operator PolyIntrusivePtr<ObjectT> &() & noexcept {
 		return x_pObject;
 	}
-	operator PolymorphicIntrusivePtr<ObjectT> &&() && noexcept {
+	operator PolyIntrusivePtr<ObjectT> &&() && noexcept {
 		return std::move(x_pObject);
 	}
 
@@ -152,15 +152,15 @@ CopyOnWriteIntrusivePtr<ObjectT> MakeCopyOnWriteIntrusive(ParamsT &&...vParams){
 
 template<typename DstT, typename SrcT>
 CopyOnWriteIntrusivePtr<DstT> StaticPointerCast(CopyOnWriteIntrusivePtr<SrcT> rhs) noexcept {
-	return CopyOnWriteIntrusivePtr<DstT>(StaticPointerCast<PolymorphicIntrusivePtr<SrcT>>(std::move(rhs)));
+	return CopyOnWriteIntrusivePtr<DstT>(StaticPointerCast<PolyIntrusivePtr<SrcT>>(std::move(rhs)));
 }
 template<typename DstT, typename SrcT>
 CopyOnWriteIntrusivePtr<DstT> DynamicPointerCast(CopyOnWriteIntrusivePtr<SrcT> rhs) noexcept {
-	return CopyOnWriteIntrusivePtr<DstT>(DynamicPointerCast<PolymorphicIntrusivePtr<SrcT>>(std::move(rhs)));
+	return CopyOnWriteIntrusivePtr<DstT>(DynamicPointerCast<PolyIntrusivePtr<SrcT>>(std::move(rhs)));
 }
 template<typename DstT, typename SrcT>
 CopyOnWriteIntrusivePtr<DstT> ConstPointerCast(CopyOnWriteIntrusivePtr<SrcT> rhs) noexcept {
-	return CopyOnWriteIntrusivePtr<DstT>(ConstPointerCast<PolymorphicIntrusivePtr<SrcT>>(std::move(rhs)));
+	return CopyOnWriteIntrusivePtr<DstT>(ConstPointerCast<PolyIntrusivePtr<SrcT>>(std::move(rhs)));
 }
 
 }

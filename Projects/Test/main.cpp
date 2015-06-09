@@ -1,17 +1,17 @@
 #include <MCF/StdMCF.hpp>
-#include <MCF/SmartPointers/PolymorphicIntrusivePtr.hpp>
+#include <MCF/SmartPointers/PolyIntrusivePtr.hpp>
 #include <iostream>
 #include <string>
 
 using namespace MCF;
 
-struct foo : PolymorphicIntrusiveBase<foo> {
+struct foo : PolyIntrusiveBase<foo> {
 };
-struct bar : PolymorphicIntrusiveBase<bar>, foo {
+struct bar : PolyIntrusiveBase<bar>, foo {
 };
 
 extern "C" unsigned int MCFMain() noexcept {
-	PolymorphicIntrusivePtrUnknown p = MakePolymorphicIntrusive<bar>();
+	PolyIntrusivePtrUnknown p = MakePolyIntrusive<bar>();
 
 	std::printf("typeid of p is %s\n", typeid(p).name());
 	std::printf("typeid of *p is %s\n", typeid(*p).name());

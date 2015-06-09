@@ -2,8 +2,8 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2013 - 2015, LH_Mouse. All wrongs reserved.
 
-#ifndef MCF_SMART_POINTERS_POLYMORPHIC_INTRUSIVE_PTR_HPP_
-#define MCF_SMART_POINTERS_POLYMORPHIC_INTRUSIVE_PTR_HPP_
+#ifndef MCF_SMART_POINTERS_POLY_INTRUSIVE_PTR_HPP_
+#define MCF_SMART_POINTERS_POLY_INTRUSIVE_PTR_HPP_
 
 #include "IntrusivePtr.hpp"
 #include "../Core/Exception.hpp"
@@ -11,27 +11,27 @@
 
 namespace MCF {
 
-namespace Impl_IntrusivePtr {
+namespace Impl_PolyIntrusivePtr {
 	struct UnknownBase : public IntrusiveBase<UnknownBase> {
 		virtual ~UnknownBase();
 	};
 }
 
 template<typename ObjectT>
-struct PolymorphicIntrusiveBase : public virtual Impl_IntrusivePtr::UnknownBase {
+struct PolyIntrusiveBase : public virtual Impl_PolyIntrusivePtr::UnknownBase {
 };
 
 template<typename ObjectT>
-using PolymorphicIntrusivePtr = IntrusivePtr<ObjectT, DefaultDeleter<Impl_IntrusivePtr::UnknownBase>>;
+using PolyIntrusivePtr = IntrusivePtr<ObjectT, DefaultDeleter<Impl_PolyIntrusivePtr::UnknownBase>>;
 
-using PolymorphicIntrusivePtrUnknown = PolymorphicIntrusivePtr<Impl_IntrusivePtr::UnknownBase>;
+using PolyIntrusivePtrUnknown = PolyIntrusivePtr<Impl_PolyIntrusivePtr::UnknownBase>;
 
 template<typename ObjectT, typename ...ParamsT>
-PolymorphicIntrusivePtr<ObjectT> MakePolymorphicIntrusive(ParamsT &&...vParams){
+PolyIntrusivePtr<ObjectT> MakePolyIntrusive(ParamsT &&...vParams){
 	static_assert(!std::is_array<ObjectT>::value, "ObjectT shall not be an array type.");
 	static_assert(!std::is_reference<ObjectT>::value, "ObjectT shall not be a reference type.");
 
-	return PolymorphicIntrusivePtr<ObjectT>(new ObjectT(std::forward<ParamsT>(vParams)...));
+	return PolyIntrusivePtr<ObjectT>(new ObjectT(std::forward<ParamsT>(vParams)...));
 }
 
 }

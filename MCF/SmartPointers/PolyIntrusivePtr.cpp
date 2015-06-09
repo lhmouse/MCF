@@ -3,11 +3,11 @@
 // Copyleft 2013 - 2015, LH_Mouse. All wrongs reserved.
 
 #include "../StdMCF.hpp"
-#include "PolymorphicIntrusivePtr.hpp"
+#include "PolyIntrusivePtr.hpp"
 
 namespace MCF {
 
-namespace Impl_IntrusivePtr {
+namespace Impl_PolyIntrusivePtr {
 	UnknownBase::~UnknownBase(){
 	}
 }

@@ -8,7 +8,7 @@
 namespace MCF {
 
 namespace Impl_IntrusivePtr {
-	DeletableBase::~DeletableBase(){
+	UnknownBase::~UnknownBase(){
 	}
 }
 

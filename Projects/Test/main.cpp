@@ -11,7 +11,7 @@ struct bar : PolymorphicIntrusiveBase<bar>, foo {
 };
 
 extern "C" unsigned int MCFMain() noexcept {
-	PolymorphicIntrusiveUnknownPtr p = MakePolymorphicIntrusive<bar>();
+	PolymorphicIntrusivePtrUnknown p = MakePolymorphicIntrusive<bar>();
 
 	std::printf("typeid of p is %s\n", typeid(p).name());
 	std::printf("typeid of *p is %s\n", typeid(*p).name());

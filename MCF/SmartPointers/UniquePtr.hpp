@@ -63,7 +63,7 @@ public:
 			std::is_convertible<typename UniquePtr<OtherT, OtherDeleterT>::ElementType *, ElementType *>::value &&
 				std::is_convertible<OtherDeleterT, DeleterT>::value,
 			int> = 0>
-	UniquePtr &operator=(UniquePtr<OtherT, OtherDeleterT> rhs) noexcept {
+	UniquePtr &operator=(UniquePtr<OtherT, OtherDeleterT> &&rhs) noexcept {
 		Reset(std::move(rhs));
 		return *this;
 	}

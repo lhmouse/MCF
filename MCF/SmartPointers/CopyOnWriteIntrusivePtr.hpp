@@ -60,7 +60,7 @@ public:
 	const ElementType *Get() const noexcept {
 		return x_pObject.Get();
 	}
-	auto ReleaseBuddy() noexcept {
+	BuddyType *ReleaseBuddy() noexcept {
 		return x_pObject.ReleaseBuddy();
 	}
 	const ElementType *Release() noexcept {
@@ -143,7 +143,7 @@ public:
 #include "_RationalAndSwap.hpp"
 
 template<typename ObjectT, typename ...ParamsT>
-auto MakeCopyOnWriteIntrusive(ParamsT &&...vParams){
+CopyOnWriteIntrusivePtr<ObjectT> MakeCopyOnWriteIntrusive(ParamsT &&...vParams){
 	static_assert(!std::is_array<ObjectT>::value, "ObjectT shall not be an array type.");
 	static_assert(!std::is_reference<ObjectT>::value, "ObjectT shall not be a reference type.");
 
@@ -151,15 +151,15 @@ auto MakeCopyOnWriteIntrusive(ParamsT &&...vParams){
 }
 
 template<typename DstT, typename SrcT>
-auto StaticPointerCast(CopyOnWriteIntrusivePtr<SrcT> rhs) noexcept {
+CopyOnWriteIntrusivePtr<DstT> StaticPointerCast(CopyOnWriteIntrusivePtr<SrcT> rhs) noexcept {
 	return CopyOnWriteIntrusivePtr<DstT>(StaticPointerCast<PolymorphicIntrusivePtr<SrcT>>(std::move(rhs)));
 }
 template<typename DstT, typename SrcT>
-auto DynamicPointerCast(CopyOnWriteIntrusivePtr<SrcT> rhs) noexcept {
+CopyOnWriteIntrusivePtr<DstT> DynamicPointerCast(CopyOnWriteIntrusivePtr<SrcT> rhs) noexcept {
 	return CopyOnWriteIntrusivePtr<DstT>(DynamicPointerCast<PolymorphicIntrusivePtr<SrcT>>(std::move(rhs)));
 }
 template<typename DstT, typename SrcT>
-auto ConstPointerCast(CopyOnWriteIntrusivePtr<SrcT> rhs) noexcept {
+CopyOnWriteIntrusivePtr<DstT> ConstPointerCast(CopyOnWriteIntrusivePtr<SrcT> rhs) noexcept {
 	return CopyOnWriteIntrusivePtr<DstT>(ConstPointerCast<PolymorphicIntrusivePtr<SrcT>>(std::move(rhs)));
 }
 

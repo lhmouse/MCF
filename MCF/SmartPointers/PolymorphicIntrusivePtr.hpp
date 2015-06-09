@@ -14,20 +14,20 @@ namespace MCF {
 struct PolymorphicIntrusiveDeleteableBase : public IntrusiveBase<PolymorphicIntrusiveDeleteableBase> {
 	virtual ~PolymorphicIntrusiveDeleteableBase();
 
-	virtual PolymorphicIntrusiveDeleteableBase *MCF_Impl_IntrusiveClone_() const = 0;
+	virtual UniquePtr<PolymorphicIntrusiveDeleteableBase> MCF_Impl_IntrusiveClone_() const = 0;
 };
 
 namespace Impl_PolymorphicIntrusivePtr {
-	template<typename ObjectT, bool kIsCopyConstructible = std::is_copy_constructible<std::decay_t<ObjectT>>::value>
+	template<typename ObjectT, bool kIsCopyConstructible = std::is_copy_constructible<ObjectT>::value>
 	struct VirtualCloner {
-		PolymorphicIntrusiveDeleteableBase *operator()(const std::decay_t<ObjectT> &src) const {
-			return new std::decay_t<ObjectT>(src);
+		UniquePtr<PolymorphicIntrusiveDeleteableBase> operator()(const ObjectT &src) const {
+			return MakeUnique<ObjectT>(src);
 		}
 	};
 	template<typename ObjectT>
 	struct VirtualCloner<ObjectT, false> {
 		[[noreturn]]
-		PolymorphicIntrusiveDeleteableBase *operator()(const std::decay_t<ObjectT> &) const {
+		UniquePtr<PolymorphicIntrusiveDeleteableBase> operator()(const ObjectT &) const {
 			DEBUG_THROW(Exception, "Class is not copy-constructible", ERROR_INVALID_PARAMETER);
 		}
 	};
@@ -35,17 +35,19 @@ namespace Impl_PolymorphicIntrusivePtr {
 
 template<typename ObjectT>
 struct PolymorphicIntrusiveBase : public virtual PolymorphicIntrusiveDeleteableBase {
-	PolymorphicIntrusiveDeleteableBase *MCF_Impl_IntrusiveClone_() const override {
+	UniquePtr<PolymorphicIntrusiveDeleteableBase> MCF_Impl_IntrusiveClone_() const override {
 		return Impl_PolymorphicIntrusivePtr::VirtualCloner<ObjectT>()(
-			Impl_IntrusivePtr::StaticOrDynamicCast<const std::decay_t<ObjectT> &>(*this));
+			Impl_IntrusivePtr::StaticOrDynamicCast<const ObjectT &>(*this));
 	}
 };
 
 template<typename ObjectT>
 using PolymorphicIntrusivePtr = IntrusivePtr<ObjectT, DefaultDeleter<PolymorphicIntrusiveDeleteableBase>>;
 
+using PolymorphicIntrusiveUnknownPtr = PolymorphicIntrusivePtr<PolymorphicIntrusiveDeleteableBase>;
+
 template<typename ObjectT, typename ...ParamsT>
-auto MakePolymorphicIntrusive(ParamsT &&...vParams){
+PolymorphicIntrusivePtr<ObjectT> MakePolymorphicIntrusive(ParamsT &&...vParams){
 	static_assert(!std::is_array<ObjectT>::value, "ObjectT shall not be an array type.");
 	static_assert(!std::is_reference<ObjectT>::value, "ObjectT shall not be a reference type.");
 
@@ -53,14 +55,16 @@ auto MakePolymorphicIntrusive(ParamsT &&...vParams){
 }
 
 template<typename ObjectT>
-auto DynamicClone(const PolymorphicIntrusivePtr<ObjectT> &rhs){
-	PolymorphicIntrusivePtr<std::decay_t<ObjectT>> pNew;
+PolymorphicIntrusivePtr<ObjectT> DynamicClone(const PolymorphicIntrusivePtr<ObjectT> &rhs){
+	PolymorphicIntrusivePtr<ObjectT> pRet;
 	if(rhs){
-		pNew.Reset(Impl_IntrusivePtr::StaticOrDynamicCast<std::decay_t<ObjectT> *>(
-			static_cast<const PolymorphicIntrusiveDeleteableBase *>(rhs.Get())->MCF_Impl_IntrusiveClone_()));
-		ASSERT(pNew);
+		const auto pBase = static_cast<const PolymorphicIntrusiveDeleteableBase *>(rhs.Get());
+		auto pUnknown = pBase->MCF_Impl_IntrusiveClone_();
+		pRet.Reset(Impl_IntrusivePtr::StaticOrDynamicCast<ObjectT *>(pUnknown.Get()));
+		ASSERT(pRet);
+		pUnknown.Release();
 	}
-	return pNew;
+	return pRet;
 }
 
 }

@@ -130,7 +130,7 @@ public:
 #include "_RationalAndSwap.hpp"
 
 template<typename ObjectT, typename ...ParamsT>
-auto MakeUnique(ParamsT &&...vParams){
+UniquePtr<ObjectT, DefaultDeleter<ObjectT>> MakeUnique(ParamsT &&...vParams){
 	static_assert(!std::is_array<ObjectT>::value, "ObjectT shall not be an array type.");
 	static_assert(!std::is_reference<ObjectT>::value, "ObjectT shall not be a reference type.");
 

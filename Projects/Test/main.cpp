@@ -11,7 +11,7 @@ struct bar : foo {
 };
 
 extern "C" unsigned int MCFMain() noexcept {
-	PolymorphicIntrusivePtr<foo> p1 = MakePolymorphicIntrusive<bar>();
+	PolymorphicIntrusiveUnknownPtr p1 = MakePolymorphicIntrusive<bar>();
 	auto p2 = DynamicClone(p1);
 
 	std::printf("typeid of p2 is %s\n", typeid(p2).name());

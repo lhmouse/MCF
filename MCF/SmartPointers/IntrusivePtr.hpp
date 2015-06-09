@@ -12,6 +12,7 @@
 #include "../Thread/_SpinLock.hpp"
 #include "../Thread/Atomic.hpp"
 #include "DefaultDeleter.hpp"
+#include "UniquePtr.hpp"
 #include <utility>
 #include <type_traits>
 #include <cstddef>
@@ -146,6 +147,11 @@ public:
 		: x_pBuddy(pElement)
 	{
 	}
+	explicit IntrusivePtr(UniquePtr<ObjectT, DeleterT> &&rhs) noexcept
+		: IntrusivePtr()
+	{
+		Reset(std::move(rhs));
+	}
 	IntrusivePtr(const IntrusivePtr &rhs) noexcept
 		: IntrusivePtr()
 	{
@@ -175,6 +181,10 @@ public:
 		: IntrusivePtr()
 	{
 		Reset(std::move(rhs));
+	}
+	IntrusivePtr &operator=(UniquePtr<ObjectT, DeleterT> &&rhs) noexcept {
+		Reset(std::move(rhs));
+		return *this;
 	}
 	IntrusivePtr &operator=(const IntrusivePtr &rhs) noexcept {
 		Reset(rhs);
@@ -245,6 +255,9 @@ public:
 		}
 		return *this;
 	}
+	IntrusivePtr &Reset(UniquePtr<ObjectT, DeleterT> &&rhs) noexcept {
+		return Reset(rhs.Release());
+	}
 	template<typename OtherT, typename OtherDeleterT,
 		std::enable_if_t<
 			std::is_convertible<typename IntrusivePtr<OtherT, OtherDeleterT>::ElementType *, ElementType *>::value &&
@@ -255,8 +268,7 @@ public:
 		if(pElement){
 			pElement->Impl_IntrusivePtr::RefCountBase::AddRef();
 		}
-		Reset(pElement);
-		return *this;
+		return Reset(pElement);
 	}
 	template<typename OtherT, typename OtherDeleterT,
 		std::enable_if_t<
@@ -343,18 +355,18 @@ IntrusivePtr<OtherT, DeleterT> IntrusiveBase<ObjectT, DeleterT>::Share() noexcep
 #include "_RationalAndSwap.hpp"
 
 template<typename ObjectT, typename ...ParamsT>
-auto MakeIntrusive(ParamsT &&...vParams){
+IntrusivePtr<ObjectT, DefaultDeleter<ObjectT>> MakeIntrusive(ParamsT &&...vParams){
 	static_assert(!std::is_array<ObjectT>::value, "ObjectT shall not be an array type.");
 
 	return IntrusivePtr<ObjectT, DefaultDeleter<ObjectT>>(new ObjectT(std::forward<ParamsT>(vParams)...));
 }
 
 template<typename DstT, typename SrcT, class DeleterT>
-auto StaticPointerCast(IntrusivePtr<SrcT, DeleterT> rhs) noexcept {
+IntrusivePtr<DstT, DeleterT> StaticPointerCast(IntrusivePtr<SrcT, DeleterT> rhs) noexcept {
 	return IntrusivePtr<DstT, DeleterT>(static_cast<DstT *>(rhs.Release()));
 }
 template<typename DstT, typename SrcT, class DeleterT>
-auto DynamicPointerCast(IntrusivePtr<SrcT, DeleterT> rhs) noexcept {
+IntrusivePtr<DstT, DeleterT> DynamicPointerCast(IntrusivePtr<SrcT, DeleterT> rhs) noexcept {
 	IntrusivePtr<DstT, DeleterT> pRet;
 	const auto pShared = dynamic_cast<DstT *>(rhs.Get());
 	if(pShared){
@@ -364,7 +376,7 @@ auto DynamicPointerCast(IntrusivePtr<SrcT, DeleterT> rhs) noexcept {
 	return pRet;
 }
 template<typename DstT, typename SrcT, class DeleterT>
-auto ConstPointerCast(IntrusivePtr<SrcT, DeleterT> rhs) noexcept {
+IntrusivePtr<DstT, DeleterT> ConstPointerCast(IntrusivePtr<SrcT, DeleterT> rhs) noexcept {
 	return IntrusivePtr<DstT, DeleterT>(const_cast<DstT *>(rhs.Release()));
 }
 

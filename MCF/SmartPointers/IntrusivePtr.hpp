@@ -115,8 +115,10 @@ namespace Impl_IntrusivePtr {
 
 template<typename ObjectT, class DeleterT>
 class IntrusiveBase : public Impl_IntrusivePtr::RefCountBase {
-	friend IntrusivePtr<ObjectT, DeleterT>;
-	friend IntrusiveWeakPtr<ObjectT, DeleterT>;
+	template<typename, class>
+	friend class IntrusivePtr;
+	template<typename, class>
+	friend class IntrusiveWeakPtr;
 
 private:
 	template<typename CvOtherT, typename CvThisT>

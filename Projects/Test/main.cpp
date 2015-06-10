@@ -12,15 +12,33 @@ struct bar : foo {
 };
 
 extern "C" unsigned int MCFMain() noexcept {
-	PolyIntrusivePtrUnknown p1 = MakePolyIntrusive<foo>();
-	PolyIntrusivePtr<foo> p2 = DynamicPointerCast<foo>(p1);
-	PolyIntrusivePtr<foo> p3 = StaticPointerCast<foo>(p2);
-	PolyIntrusivePtr<bar> p4 = DynamicPointerCast<bar>(p3);
+//	PolyIntrusiveWeakPtrUnknown wp1;
+//	PolyIntrusiveWeakPtr<foo> wp2;
 
-	std::printf("p1 = %p\n", p1.Get());
-	std::printf("p2 = %p, i = %d\n", p2.Get(), p2->i);
-	std::printf("p3 = %p, i = %d\n", p3.Get(), p3->i);
-	std::printf("p4 = %p\n", p4.Get());
+	{
+		PolyIntrusivePtrUnknown p1 = MakePolyIntrusive<foo>();
+		PolyIntrusivePtr<foo> p2 = DynamicPointerCast<foo>(p1);
+		PolyIntrusivePtr<foo> p3 = StaticPointerCast<foo>(p2);
+		PolyIntrusivePtr<bar> p4 = DynamicPointerCast<bar>(p3);
+		PolyIntrusivePtr<foo> p5 = p2->Share<foo>();
+		PolyIntrusivePtr<bar> p6 = p3->Share<bar>();
+
+//		wp1 = p1;
+//		wp2 = p2;
+
+		std::printf("p1 = %p\n", p1.Get());
+		std::printf("p2 = %p, i = %d\n", p2.Get(), p2->i);
+		std::printf("p3 = %p, i = %d\n", p3.Get(), p3->i);
+		std::printf("p4 = %p\n", p4.Get());
+		std::printf("p5 = %p, i = %d\n", p5.Get(), p5->i);
+		std::printf("p6 = %p\n", p6.Get());
+
+//		std::printf("wp1 = %p\n", wp1.Lock().Get());
+//		std::printf("wp2 = %p\n", wp2.Lock().Get());
+	}
+
+//	std::printf("wp1 = %p\n", wp1.Lock().Get());
+//	std::printf("wp2 = %p\n", wp2.Lock().Get());
 
 	return 0;
 }

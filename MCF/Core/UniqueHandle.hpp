@@ -5,6 +5,7 @@
 #ifndef MCF_CORE_UNIQUE_HANDLE_HPP_
 #define MCF_CORE_UNIQUE_HANDLE_HPP_
 
+#include "../Utilities/Assert.hpp"
 #include <utility>
 #include <type_traits>
 #include <cstddef>
@@ -15,20 +16,17 @@ template<class CloserT>
 class UniqueHandle {
 public:
 	using Handle = std::decay_t<decltype(CloserT()())>;
+	using Closer = CloserT;
 
 	static_assert(std::is_scalar<Handle>::value, "Handle must be a scalar type.");
-	static_assert(noexcept(CloserT()(Handle())), "Handle closer must not throw.");
+	static_assert(noexcept(Closer()(Handle())), "Handle closer must not throw.");
 
 private:
 	Handle x_hObject;
 
 public:
-	constexpr UniqueHandle() noexcept
-		: UniqueHandle(CloserT()())
-	{
-	}
-	constexpr explicit UniqueHandle(Handle hObject) noexcept
-		: x_hObject(hObject)
+	explicit UniqueHandle(Handle rhs = Closer()()) noexcept
+		: x_hObject(rhs)
 	{
 	}
 	UniqueHandle(UniqueHandle &&rhs) noexcept
@@ -37,8 +35,7 @@ public:
 		Reset(std::move(rhs));
 	}
 	UniqueHandle &operator=(UniqueHandle &&rhs) noexcept {
-		Reset(std::move(rhs));
-		return *this;
+		return Reset(std::move(rhs));
 	}
 	~UniqueHandle(){
 		Reset();
@@ -49,29 +46,32 @@ public:
 
 public:
 	bool IsNonnull() const noexcept {
-		return Get() != CloserT()();
+		return x_hObject != Closer()();
 	}
 	Handle Get() const noexcept {
 		return x_hObject;
 	}
-	Handle Release() noexcept {
-		return std::exchange(x_hObject, CloserT()());
+	Handle Exchange(Handle hNewObject) noexcept {
+		return std::exchange(x_hObject, hNewObject);
 	}
 
-	UniqueHandle &Reset(Handle hObject = CloserT()()) noexcept {
-		const auto hOld = std::exchange(x_hObject, hObject);
-		if(hOld != CloserT()()){
-			ASSERT(hOld != hObject);
-			CloserT()(hOld);
+	Handle Release() noexcept {
+		return Exchange(Closer()());
+	}
+	void Swap(UniqueHandle &rhs) noexcept {
+		std::swap(x_hObject, rhs.x_hObject);
+	}
+
+	UniqueHandle &Reset(Handle hObject = Closer()()) noexcept {
+		const auto hOldObject = Exchange(hObject);
+		if(hOldObject != Closer()()){
+			ASSERT(hOldObject != hObject);
+			Closer()(hOldObject);
 		}
 		return *this;
 	}
 	UniqueHandle &Reset(UniqueHandle &&rhs) noexcept {
 		return Reset(rhs.Release());
-	}
-
-	void Swap(UniqueHandle &rhs) noexcept {
-		std::swap(x_hObject, rhs.x_hObject);
 	}
 
 public:
@@ -85,80 +85,80 @@ public:
 
 template<class CloserT>
 bool operator==(const UniqueHandle<CloserT> &lhs, const UniqueHandle<CloserT> &rhs) noexcept {
-	return lhs.Get() == rhs.Get();
+	return std::equal_to<void>()(lhs.Get(), rhs.Get());
 }
 template<class CloserT>
 bool operator==(const UniqueHandle<CloserT> &lhs, typename UniqueHandle<CloserT>::Handle rhs) noexcept {
-	return lhs.Get() == rhs;
+	return std::equal_to<void>()(lhs.Get(), rhs);
 }
 template<class CloserT>
 bool operator==(typename UniqueHandle<CloserT>::Handle lhs, const UniqueHandle<CloserT> &rhs) noexcept {
-	return lhs == rhs.Get();
+	return std::equal_to<void>()(lhs, rhs.Get());
 }
 
 template<class CloserT>
 bool operator!=(const UniqueHandle<CloserT> &lhs, const UniqueHandle<CloserT> &rhs) noexcept {
-	return lhs.Get() != rhs.Get();
+	return std::not_equal_to<void>()(lhs.Get(), rhs.Get());
 }
 template<class CloserT>
 bool operator!=(const UniqueHandle<CloserT> &lhs, typename UniqueHandle<CloserT>::Handle rhs) noexcept {
-	return lhs.Get() != rhs;
+	return std::not_equal_to<void>()(lhs.Get(), rhs);
 }
 template<class CloserT>
 bool operator!=(typename UniqueHandle<CloserT>::Handle lhs, const UniqueHandle<CloserT> &rhs) noexcept {
-	return lhs != rhs.Get();
+	return std::not_equal_to<void>()(lhs, rhs.Get());
 }
 
 template<class CloserT>
 bool operator<(const UniqueHandle<CloserT> &lhs, const UniqueHandle<CloserT> &rhs) noexcept {
-	return lhs.Get() < rhs.Get();
+	return std::less<void>()(lhs.Get(), rhs.Get());
 }
 template<class CloserT>
 bool operator<(const UniqueHandle<CloserT> &lhs, typename UniqueHandle<CloserT>::Handle rhs) noexcept {
-	return lhs.Get() < rhs;
+	return std::less<void>()(lhs.Get(), rhs);
 }
 template<class CloserT>
 bool operator<(typename UniqueHandle<CloserT>::Handle lhs, const UniqueHandle<CloserT> &rhs) noexcept {
-	return lhs < rhs.Get();
+	return std::less<void>()(lhs, rhs.Get());
 }
 
 template<class CloserT>
 bool operator>(const UniqueHandle<CloserT> &lhs, const UniqueHandle<CloserT> &rhs) noexcept {
-	return lhs.Get() > rhs.Get();
+	return std::greater<void>()(lhs.Get(), rhs.Get());
 }
 template<class CloserT>
 bool operator>(const UniqueHandle<CloserT> &lhs, typename UniqueHandle<CloserT>::Handle rhs) noexcept {
-	return lhs.Get() > rhs;
+	return std::greater<void>()(lhs.Get(), rhs);
 }
 template<class CloserT>
 bool operator>(typename UniqueHandle<CloserT>::Handle lhs, const UniqueHandle<CloserT> &rhs) noexcept {
-	return lhs > rhs.Get();
+	return std::greater<void>()(lhs, rhs.Get());
 }
 
 template<class CloserT>
 bool operator<=(const UniqueHandle<CloserT> &lhs, const UniqueHandle<CloserT> &rhs) noexcept {
-	return lhs.Get() <= rhs.Get();
+	return std::less_equal<void>()(lhs.Get(), rhs.Get());
 }
 template<class CloserT>
 bool operator<=(const UniqueHandle<CloserT> &lhs, typename UniqueHandle<CloserT>::Handle rhs) noexcept {
-	return lhs.Get() <= rhs;
+	return std::less_equal<void>()(lhs.Get(), rhs);
 }
 template<class CloserT>
 bool operator<=(typename UniqueHandle<CloserT>::Handle lhs, const UniqueHandle<CloserT> &rhs) noexcept {
-	return lhs <= rhs.Get();
+	return std::less_equal<void>()(lhs, rhs.Get());
 }
 
 template<class CloserT>
 bool operator>=(const UniqueHandle<CloserT> &lhs, const UniqueHandle<CloserT> &rhs) noexcept {
-	return lhs.Get() >= rhs.Get();
+	return std::greater_equal<void>()(lhs.Get(), rhs.Get());
 }
 template<class CloserT>
 bool operator>=(const UniqueHandle<CloserT> &lhs, typename UniqueHandle<CloserT>::Handle rhs) noexcept {
-	return lhs.Get() >= rhs;
+	return std::greater_equal<void>()(lhs.Get(), rhs);
 }
 template<class CloserT>
 bool operator>=(typename UniqueHandle<CloserT>::Handle lhs, const UniqueHandle<CloserT> &rhs) noexcept {
-	return lhs >= rhs.Get();
+	return std::greater_equal<void>()(lhs, rhs.Get());
 }
 
 template<class CloserT>

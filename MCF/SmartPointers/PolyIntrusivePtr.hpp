@@ -26,6 +26,11 @@ using PolyIntrusivePtr = IntrusivePtr<ObjectT, DefaultDeleter<Impl_PolyIntrusive
 
 using PolyIntrusivePtrUnknown = PolyIntrusivePtr<Impl_PolyIntrusivePtr::UnknownBase>;
 
+template<typename ObjectT>
+using PolyIntrusiveWeakPtr = IntrusiveWeakPtr<ObjectT, DefaultDeleter<Impl_PolyIntrusivePtr::UnknownBase>>;
+
+using PolyIntrusiveWeakPtrUnknown = PolyIntrusiveWeakPtr<Impl_PolyIntrusivePtr::UnknownBase>;
+
 template<typename ObjectT, typename ...ParamsT>
 PolyIntrusivePtr<ObjectT> MakePolyIntrusive(ParamsT &&...vParams){
 	static_assert(!std::is_array<ObjectT>::value, "ObjectT shall not be an array type.");

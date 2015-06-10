@@ -5,9 +5,6 @@
 #ifndef MCF_SMART_POINTERS_UNIQUE_PTR_HPP_
 #define MCF_SMART_POINTERS_UNIQUE_PTR_HPP_
 
-// 1) 构造函数（包含复制构造函数、转移构造函数以及构造函数模板）、赋值运算符和析构函数应当调用 Reset()；
-// 2) Reset() 的形参若具有 UniquePtr 的某模板类类型，则禁止传值，必须传引用。
-
 #include "../Utilities/Assert.hpp"
 #include "DefaultDeleter.hpp"
 #include <utility>
@@ -16,56 +13,62 @@
 
 namespace MCF {
 
-template<typename ObjectT, class DeleterT = DefaultDeleter<std::remove_cv_t<ObjectT>>>
-class UniquePtr {
-	static_assert(noexcept(DeleterT()(DeleterT()())), "Deleter must not throw.");
+template<typename ObjectT, class DeleterT = DefaultDeleter<ObjectT>>
+class UniquePtr;
 
+template<typename ObjectT, class DeleterT>
+class UniquePtr {
 public:
-	using ElementType = std::remove_extent_t<ObjectT>;
+	using Element = std::remove_extent_t<ObjectT>;
+	using Deleter = DeleterT;
+
+	static_assert(noexcept(Deleter()(std::declval<std::remove_cv_t<Element> *>())), "Deleter must not throw.");
 
 private:
-	ElementType *x_pElement;
+	Element *x_pElement;
 
 public:
 	constexpr UniquePtr(std::nullptr_t = nullptr) noexcept
 		: x_pElement(nullptr)
 	{
 	}
-	explicit constexpr UniquePtr(ElementType *pElement) noexcept
-		: x_pElement(pElement)
+	explicit UniquePtr(Element *rhs) noexcept
+		: UniquePtr()
 	{
+		Reset(rhs);
+	}
+	template<typename OtherObjectT, typename OtherDeleterT,
+		std::enable_if_t<
+			((!std::is_void<ObjectT>::value && !std::is_array<ObjectT>::value)
+					? std::is_convertible<OtherObjectT *, Element *>::value
+					: std::is_same<std::decay_t<OtherObjectT>, std::decay_t<ObjectT>>::value) &&
+				std::is_convertible<OtherDeleterT, DeleterT>::value,
+			int> = 0>
+	UniquePtr(UniquePtr<OtherObjectT, OtherDeleterT> &&rhs) noexcept
+		: UniquePtr()
+	{
+		Reset(std::move(rhs));
 	}
 	UniquePtr(UniquePtr &&rhs) noexcept
 		: UniquePtr()
 	{
 		Reset(std::move(rhs));
 	}
-	template<typename OtherT, typename OtherDeleterT,
+	UniquePtr &operator=(std::nullptr_t) noexcept {
+		return Reset();
+	}
+	template<typename OtherObjectT, typename OtherDeleterT,
 		std::enable_if_t<
-			std::is_convertible<typename UniquePtr<OtherT, OtherDeleterT>::ElementType *, ElementType *>::value &&
+			((!std::is_void<ObjectT>::value && !std::is_array<ObjectT>::value)
+					? std::is_convertible<OtherObjectT *, Element *>::value
+					: std::is_same<std::decay_t<OtherObjectT>, std::decay_t<ObjectT>>::value) &&
 				std::is_convertible<OtherDeleterT, DeleterT>::value,
 			int> = 0>
-	UniquePtr(UniquePtr<OtherT, OtherDeleterT> &&rhs) noexcept
-		: UniquePtr()
-	{
-		Reset(std::move(rhs));
-	}
-	UniquePtr &operator=(std::nullptr_t) noexcept {
-		Reset();
-		return *this;
+	UniquePtr &operator=(UniquePtr<OtherObjectT, OtherDeleterT> &&rhs) noexcept {
+		return Reset(std::move(rhs));
 	}
 	UniquePtr &operator=(UniquePtr &&rhs) noexcept {
-		Reset(std::move(rhs));
-		return *this;
-	}
-	template<typename OtherT, typename OtherDeleterT,
-		std::enable_if_t<
-			std::is_convertible<typename UniquePtr<OtherT, OtherDeleterT>::ElementType *, ElementType *>::value &&
-				std::is_convertible<OtherDeleterT, DeleterT>::value,
-			int> = 0>
-	UniquePtr &operator=(UniquePtr<OtherT, OtherDeleterT> &&rhs) noexcept {
-		Reset(std::move(rhs));
-		return *this;
+		return Reset(std::move(rhs));
 	}
 	~UniquePtr(){
 		Reset();
@@ -76,29 +79,33 @@ public:
 
 public:
 	bool IsNonnull() const noexcept {
-		return Get() != nullptr;
+		return !!x_pElement;
 	}
-	ElementType *Get() const noexcept {
+	Element *Get() const noexcept {
 		return x_pElement;
 	}
-	ElementType *Release() noexcept {
+	Element *Release() noexcept {
 		return std::exchange(x_pElement, nullptr);
 	}
 
-	UniquePtr &Reset(ElementType *pElement = nullptr) noexcept {
-		const auto pOld = std::exchange(x_pElement, pElement);
-		if(pOld){
-			DeleterT()(const_cast<std::remove_cv_t<ElementType> *>(pOld));
+	UniquePtr &Reset(Element *pElement = nullptr) noexcept {
+		const auto pOldElement = std::exchange(x_pElement, pElement);
+		if(pOldElement){
+			ASSERT(pOldElement != pElement);
+
+			Deleter()(const_cast<std::remove_cv_t<Element> *>(pOldElement));
 		}
 		return *this;
 	}
-	template<typename OtherT, typename OtherDeleterT,
+	template<typename OtherObjectT, typename OtherDeleterT,
 		std::enable_if_t<
-			std::is_convertible<typename UniquePtr<OtherT, OtherDeleterT>::ElementType *, ElementType *>::value &&
+			((!std::is_void<ObjectT>::value && !std::is_array<ObjectT>::value)
+					? std::is_convertible<OtherObjectT *, Element *>::value
+					: std::is_same<std::decay_t<OtherObjectT>, std::decay_t<ObjectT>>::value) &&
 				std::is_convertible<OtherDeleterT, DeleterT>::value,
 			int> = 0>
-	UniquePtr &Reset(UniquePtr<OtherT, OtherDeleterT> &&rhs) noexcept {
-		return Reset(static_cast<ElementType *>(rhs.Release()));
+	UniquePtr &Reset(UniquePtr<OtherObjectT, OtherDeleterT> &&rhs) noexcept {
+		return Reset(rhs.Release());
 	}
 
 	void Swap(UniquePtr &rhs) noexcept {
@@ -109,40 +116,150 @@ public:
 	explicit operator bool() const noexcept {
 		return IsNonnull();
 	}
-	explicit operator ElementType *() const noexcept {
+	explicit operator Element *() const noexcept {
 		return Get();
 	}
 
-	template<typename TestT = ObjectT>
-	std::enable_if_t<!std::is_void<TestT>::value && !std::is_array<TestT>::value, ElementType> &operator*() const noexcept {
+	template<typename TestObjectT = ObjectT>
+	auto operator*() const noexcept
+		-> std::enable_if_t<
+			!std::is_void<TestObjectT>::value && !std::is_array<TestObjectT>::value,
+			Element> &
+	{
 		ASSERT(IsNonnull());
 
 		return *Get();
 	}
-	template<typename TestT = ObjectT>
-	std::enable_if_t<!std::is_void<TestT>::value && !std::is_array<TestT>::value, ElementType> *operator->() const noexcept {
+	template<typename TestObjectT = ObjectT>
+	auto operator->() const noexcept
+		-> std::enable_if_t<
+			!std::is_void<TestObjectT>::value && !std::is_array<TestObjectT>::value,
+			Element> *
+	{
 		ASSERT(IsNonnull());
 
 		return Get();
 	}
-	template<typename TestT = ObjectT>
-	std::enable_if_t<std::is_array<TestT>::value, ElementType> &operator[](std::size_t uIndex) const noexcept {
+	template<typename TestObjectT = ObjectT>
+	auto operator[](std::size_t uIndex) const noexcept
+		-> std::enable_if_t<
+			std::is_array<TestObjectT>::value,
+			Element> &
+	{
 		ASSERT(IsNonnull());
 
 		return Get()[uIndex];
 	}
 };
 
-#define MCF_SMART_POINTERS_DECLARE_TEMPLATE_PARAMETERS_	template<typename ObjectT, class DeleterT>
-#define MCF_SMART_POINTERS_INVOKE_TEMPLATE_PARAMETERS_	UniquePtr<ObjectT, DeleterT>
-#include "_RationalAndSwap.hpp"
+template<typename ObjectT, class DeleterT>
+bool operator==(const UniquePtr<ObjectT, DeleterT> &lhs, const UniquePtr<ObjectT, DeleterT> &rhs) noexcept {
+	return std::equal_to<void>()(lhs.Get(), rhs.Get());
+}
+template<typename ObjectT, class DeleterT>
+bool operator==(const UniquePtr<ObjectT, DeleterT> &lhs, typename UniquePtr<ObjectT, DeleterT>::Element *rhs) noexcept {
+	return std::equal_to<void>()(lhs.Get(), rhs);
+}
+template<typename ObjectT, class DeleterT>
+bool operator==(typename UniquePtr<ObjectT, DeleterT>::Element *lhs, const UniquePtr<ObjectT, DeleterT> &rhs) noexcept {
+	return std::equal_to<void>()(lhs, rhs.Get());
+}
 
-template<typename ObjectT, typename ...ParamsT>
-UniquePtr<ObjectT, DefaultDeleter<ObjectT>> MakeUnique(ParamsT &&...vParams){
+template<typename ObjectT, class DeleterT>
+bool operator!=(const UniquePtr<ObjectT, DeleterT> &lhs, const UniquePtr<ObjectT, DeleterT> &rhs) noexcept {
+	return std::not_equal_to<void>()(lhs.Get(), rhs.Get());
+}
+template<typename ObjectT, class DeleterT>
+bool operator!=(const UniquePtr<ObjectT, DeleterT> &lhs, typename UniquePtr<ObjectT, DeleterT>::Element *rhs) noexcept {
+	return std::not_equal_to<void>()(lhs.Get(), rhs);
+}
+template<typename ObjectT, class DeleterT>
+bool operator!=(typename UniquePtr<ObjectT, DeleterT>::Element *lhs, const UniquePtr<ObjectT, DeleterT> &rhs) noexcept {
+	return std::not_equal_to<void>()(lhs, rhs.Get());
+}
+
+template<typename ObjectT, class DeleterT>
+bool operator<(const UniquePtr<ObjectT, DeleterT> &lhs, const UniquePtr<ObjectT, DeleterT> &rhs) noexcept {
+	return std::less<void>()(lhs.Get(), rhs.Get());
+}
+template<typename ObjectT, class DeleterT>
+bool operator<(const UniquePtr<ObjectT, DeleterT> &lhs, typename UniquePtr<ObjectT, DeleterT>::Element *rhs) noexcept {
+	return std::less<void>()(lhs.Get(), rhs);
+}
+template<typename ObjectT, class DeleterT>
+bool operator<(typename UniquePtr<ObjectT, DeleterT>::Element *lhs, const UniquePtr<ObjectT, DeleterT> &rhs) noexcept {
+	return std::less<void>()(lhs, rhs.Get());
+}
+
+template<typename ObjectT, class DeleterT>
+bool operator>(const UniquePtr<ObjectT, DeleterT> &lhs, const UniquePtr<ObjectT, DeleterT> &rhs) noexcept {
+	return std::greater<void>()(lhs.Get(), rhs.Get());
+}
+template<typename ObjectT, class DeleterT>
+bool operator>(const UniquePtr<ObjectT, DeleterT> &lhs, typename UniquePtr<ObjectT, DeleterT>::Element *rhs) noexcept {
+	return std::greater<void>()(lhs.Get(), rhs);
+}
+template<typename ObjectT, class DeleterT>
+bool operator>(typename UniquePtr<ObjectT, DeleterT>::Element *lhs, const UniquePtr<ObjectT, DeleterT> &rhs) noexcept {
+	return std::greater<void>()(lhs, rhs.Get());
+}
+
+template<typename ObjectT, class DeleterT>
+bool operator<=(const UniquePtr<ObjectT, DeleterT> &lhs, const UniquePtr<ObjectT, DeleterT> &rhs) noexcept {
+	return std::less_equal<void>()(lhs.Get(), rhs.Get());
+}
+template<typename ObjectT, class DeleterT>
+bool operator<=(const UniquePtr<ObjectT, DeleterT> &lhs, typename UniquePtr<ObjectT, DeleterT>::Element *rhs) noexcept {
+	return std::less_equal<void>()(lhs.Get(), rhs);
+}
+template<typename ObjectT, class DeleterT>
+bool operator<=(typename UniquePtr<ObjectT, DeleterT>::Element *lhs, const UniquePtr<ObjectT, DeleterT> &rhs) noexcept {
+	return std::less_equal<void>()(lhs, rhs.Get());
+}
+
+template<typename ObjectT, class DeleterT>
+bool operator>=(const UniquePtr<ObjectT, DeleterT> &lhs, const UniquePtr<ObjectT, DeleterT> &rhs) noexcept {
+	return std::greater_equal<void>()(lhs.Get(), rhs.Get());
+}
+template<typename ObjectT, class DeleterT>
+bool operator>=(const UniquePtr<ObjectT, DeleterT> &lhs, typename UniquePtr<ObjectT, DeleterT>::Element *rhs) noexcept {
+	return std::greater_equal<void>()(lhs.Get(), rhs);
+}
+template<typename ObjectT, class DeleterT>
+bool operator>=(typename UniquePtr<ObjectT, DeleterT>::Element *lhs, const UniquePtr<ObjectT, DeleterT> &rhs) noexcept {
+	return std::greater_equal<void>()(lhs, rhs.Get());
+}
+
+template<typename ObjectT, class DeleterT>
+void swap(UniquePtr<ObjectT, DeleterT> &lhs, UniquePtr<ObjectT, DeleterT> &rhs) noexcept {
+	lhs.Swap(rhs);
+}
+
+template<typename ObjectT, typename DeleterT = DefaultDeleter<ObjectT>, typename ...ParamsT>
+UniquePtr<ObjectT, DeleterT> MakeUnique(ParamsT &&...vParams){
 	static_assert(!std::is_array<ObjectT>::value, "ObjectT shall not be an array type.");
 	static_assert(!std::is_reference<ObjectT>::value, "ObjectT shall not be a reference type.");
 
-	return UniquePtr<ObjectT, DefaultDeleter<ObjectT>>(new ObjectT(std::forward<ParamsT>(vParams)...));
+	return UniquePtr<ObjectT, DeleterT>(new ObjectT(std::forward<ParamsT>(vParams)...));
+}
+
+template<typename DstT, typename SrcT, class DeleterT>
+UniquePtr<DstT, DeleterT> StaticPointerCast(UniquePtr<SrcT, DeleterT> &&pSrc) noexcept {
+	return UniquePtr<DstT, DeleterT>(static_cast<DstT *>(pSrc.Release()));
+}
+template<typename DstT, typename SrcT, class DeleterT>
+UniquePtr<DstT, DeleterT> ConstPointerCast(UniquePtr<SrcT, DeleterT> &&pSrc) noexcept {
+	return UniquePtr<DstT, DeleterT>(const_cast<DstT *>(pSrc.Release()));
+}
+
+template<typename DstT, typename SrcT, class DeleterT>
+UniquePtr<DstT, DeleterT> DynamicPointerCast(UniquePtr<SrcT, DeleterT> &&pSrc) noexcept {
+	const auto pTest = dynamic_cast<DstT *>(pSrc.Get());
+	if(!pTest){
+		return nullptr;
+	}
+	pSrc.Release();
+	return UniquePtr<DstT, DeleterT>(pTest);
 }
 
 }

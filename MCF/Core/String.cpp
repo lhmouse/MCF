@@ -42,7 +42,7 @@ namespace {
 
 	template<class StringObserverT>
 	auto MakeStringSource(const StringObserverT &soRead) noexcept {
-		return StringSource<typename StringObserverT::CharType>(soRead.GetBegin(), soRead.GetEnd());
+		return StringSource<typename StringObserverT::Char>(soRead.GetBegin(), soRead.GetEnd());
 	}
 
 	template<class PrevT, bool kIsCesu8T>
@@ -263,7 +263,7 @@ namespace {
 
 	template<class StringT, class FilterT>
 	void Convert(StringT &strWrite, std::size_t uPos, FilterT vFilter){
-		typename StringT::CharType achTemp[1024];
+		typename StringT::Char achTemp[1024];
 		auto pchWrite = std::begin(achTemp);
 
 		if(uPos == strWrite.GetSize()){

@@ -41,12 +41,12 @@ private:
 	UniqueHandle<xFileCloser> x_hFile;
 
 public:
-	File(const wchar_t *pwszPath, std::uint32_t u32Flags);
-	File(const WideString &wsPath, std::uint32_t u32Flags);
-
-	constexpr File() noexcept = default;
+	File() noexcept = default;
 	File(File &&) noexcept = default;
 	File &operator=(File &&) = default;
+
+	File(const wchar_t *pwszPath, std::uint32_t u32Flags);
+	File(const WideString &wsPath, std::uint32_t u32Flags);
 
 	File(const File &) = delete;
 	File &operator=(const File &) = delete;

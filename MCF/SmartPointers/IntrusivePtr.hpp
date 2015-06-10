@@ -312,7 +312,7 @@ IntrusivePtr<CvOtherT, DeleterT> IntrusiveBase<ObjectT, DeleterT>::xForkShared(C
 	if(!pOther){
 		return nullptr;
 	}
-	static_cast<const volatile Impl_IntrusivePtr::RefCountBase *>(pOther)->AddRef();
+	static_cast<const volatile Impl_IntrusivePtr::RefCountBase *>(pThis)->AddRef();
 	return IntrusivePtr<CvOtherT, DeleterT>(pOther);
 }
 

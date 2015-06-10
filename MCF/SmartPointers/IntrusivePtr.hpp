@@ -568,7 +568,7 @@ public:
 		std::enable_if_t<
 			std::is_convertible<OtherObjectT *, Element *>::value,
 			int> = 0>
-	IntrusiveWeakPtr(const IntrusivePtr<OtherObjectT, OtherDeleterT> &rhs) noexcept
+	IntrusiveWeakPtr(const IntrusivePtr<OtherObjectT, OtherDeleterT> &rhs)
 		: IntrusiveWeakPtr()
 	{
 		Reset(rhs);
@@ -608,7 +608,7 @@ public:
 		std::enable_if_t<
 			std::is_convertible<OtherObjectT *, Element *>::value,
 			int> = 0>
-	IntrusiveWeakPtr &operator=(const IntrusivePtr<OtherObjectT, OtherDeleterT> &&rhs) noexcept {
+	IntrusiveWeakPtr &operator=(const IntrusivePtr<OtherObjectT, OtherDeleterT> &&rhs){
 		return Reset(rhs);
 	}
 	template<typename OtherObjectT, typename OtherDeleterT,

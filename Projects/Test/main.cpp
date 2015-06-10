@@ -12,8 +12,8 @@ struct bar : foo {
 };
 
 extern "C" unsigned int MCFMain() noexcept {
-//	PolyIntrusiveWeakPtrUnknown wp1;
-//	PolyIntrusiveWeakPtr<foo> wp2;
+	PolyIntrusiveWeakPtrUnknown wp1;
+	PolyIntrusiveWeakPtr<foo> wp2;
 
 	{
 		PolyIntrusivePtrUnknown p1 = MakePolyIntrusive<foo>();
@@ -23,8 +23,8 @@ extern "C" unsigned int MCFMain() noexcept {
 		PolyIntrusivePtr<foo> p5 = p2->Share<foo>();
 		PolyIntrusivePtr<bar> p6 = p3->Share<bar>();
 
-//		wp1 = p1;
-//		wp2 = p2;
+		wp1 = p1;
+		wp2 = p2;
 
 		std::printf("p1 = %p\n", p1.Get());
 		std::printf("p2 = %p, i = %d\n", p2.Get(), p2->i);
@@ -33,12 +33,23 @@ extern "C" unsigned int MCFMain() noexcept {
 		std::printf("p5 = %p, i = %d\n", p5.Get(), p5->i);
 		std::printf("p6 = %p\n", p6.Get());
 
-//		std::printf("wp1 = %p\n", wp1.Lock().Get());
-//		std::printf("wp2 = %p\n", wp2.Lock().Get());
+		std::printf("wp1 = %p\n", wp1.Lock().Get());
+		std::printf("wp2 = %p\n", wp2.Lock().Get());
 	}
 
-//	std::printf("wp1 = %p\n", wp1.Lock().Get());
-//	std::printf("wp2 = %p\n", wp2.Lock().Get());
+	std::printf("wp1 = %p\n", wp1.Lock().Get());
+	std::printf("wp2 = %p\n", wp2.Lock().Get());
+
+	// p1 = 00000000002e01e0
+	// p2 = 00000000002e01d0, i = 12345
+	// p3 = 00000000002e01d0, i = 12345
+	// p4 = 0000000000000000
+	// p5 = 00000000002e01d0, i = 12345
+	// p6 = 0000000000000000
+	// wp1 = 00000000002e01e0
+	// wp2 = 00000000002e01d0
+	// wp1 = 0000000000000000
+	// wp2 = 0000000000000000
 
 	return 0;
 }

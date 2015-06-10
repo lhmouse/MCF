@@ -107,6 +107,11 @@ public:
 	UniquePtr &Reset(UniquePtr<OtherObjectT, OtherDeleterT> &&rhs) noexcept {
 		return Reset(rhs.Release());
 	}
+	UniquePtr &Reset(UniquePtr &&rhs) noexcept {
+		ASSERT(&rhs != this);
+
+		return Reset(rhs.Release());
+	}
 
 	void Swap(UniquePtr &rhs) noexcept {
 		std::swap(x_pElement, rhs.x_pElement);

@@ -429,18 +429,20 @@ public:
 	}
 };
 
-template<class DeleterT>
-	template<typename OtherT>
-IntrusivePtr<OtherT, DeleterT> Impl_IntrusivePtr::DeletableBase<DeleterT>::xWeakObserver::GetOwner() const noexcept {
-	const auto uLocked = x_splOwnerMutex.Lock();
-	auto pOther = StaticCastOrDynamicCast<OtherT *>(x_pOwner);
-	if(pOther){
-		if(!static_cast<const volatile RefCountBase *>(pOther)->TryAddRef()){
-			pOther = nullptr;
+namespace Impl_IntrusivePtr {
+	template<class DeleterT>
+		template<typename OtherT>
+	IntrusivePtr<OtherT, DeleterT> DeletableBase<DeleterT>::xWeakObserver::GetOwner() const noexcept {
+		const auto uLocked = x_splOwnerMutex.Lock();
+		auto pOther = StaticCastOrDynamicCast<OtherT *>(x_pOwner);
+		if(pOther){
+			if(!static_cast<const volatile RefCountBase *>(pOther)->TryAddRef()){
+				pOther = nullptr;
+			}
 		}
+		x_splOwnerMutex.Unlock(uLocked);
+		return IntrusivePtr<OtherT, DeleterT>(pOther);
 	}
-	x_splOwnerMutex.Unlock(uLocked);
-	return IntrusivePtr<OtherT, DeleterT>(pOther);
 }
 
 template<typename ObjectT, class DeleterT>

@@ -11,7 +11,6 @@
 #include "_ForwardedParam.hpp"
 #include <type_traits>
 #include <utility>
-#include <functional>
 
 namespace MCF {
 
@@ -54,20 +53,23 @@ private:
 	IntrusivePtr<const Impl_Function::FunctorBase<RetT, ParamsT...>> x_pFunctor;
 
 public:
-	constexpr Function() noexcept = default;
 	Function(const Function &) noexcept = default;
 	Function(Function &&) noexcept = default;
 	Function &operator=(const Function &) noexcept = default;
 	Function &operator=(Function &&) noexcept = default;
 
-	constexpr Function(std::nullptr_t) noexcept {
+	constexpr Function(std::nullptr_t = nullptr) noexcept
+		: x_pFunctor(nullptr)
+	{
 	}
 	template<typename FuncT,
 		std::enable_if_t<
 			std::is_convertible<std::result_of_t<FuncT && (ForwardedParam<ParamsT>...)>, RetT>::value,
 			int> = 0>
-	Function(FuncT &&x_vFunc){
-		Reset(std::forward<FuncT>(x_vFunc));
+	Function(FuncT &&vFunc)
+		: Function()
+	{
+		Reset(std::forward<FuncT>(vFunc));
 	}
 	Function &operator=(std::nullptr_t) noexcept {
 		Reset();
@@ -77,8 +79,8 @@ public:
 		std::enable_if_t<
 			std::is_convertible<std::result_of_t<FuncT && (ForwardedParam<ParamsT>...)>, RetT>::value,
 			int> = 0>
-	Function &operator=(FuncT &&x_vFunc){
-		Reset(std::forward<FuncT>(x_vFunc));
+	Function &operator=(FuncT &&vFunc){
+		Reset(std::forward<FuncT>(vFunc));
 		return *this;
 	}
 
@@ -90,8 +92,8 @@ public:
 		std::enable_if_t<
 			std::is_convertible<std::result_of_t<FuncT && (ForwardedParam<ParamsT>...)>, RetT>::value,
 			int> = 0>
-	void Reset(FuncT &&x_vFunc){
-		x_pFunctor.Reset(new Impl_Function::Functor<FuncT, RetT, ParamsT...>(std::forward<FuncT>(x_vFunc)));
+	void Reset(FuncT &&vFunc){
+		x_pFunctor.Reset(new Impl_Function::Functor<FuncT, RetT, ParamsT...>(std::forward<FuncT>(vFunc)));
 	}
 
 	void Swap(Function &rhs) noexcept {
@@ -106,6 +108,25 @@ public:
 		ASSERT(x_pFunctor);
 
 		return x_pFunctor->Dispatch(std::forward<ParamsT>(vParams)...); // 值形参当作右值引用传递。
+	}
+
+	bool operator==(const Function &rhs) const noexcept {
+		return x_pFunctor == rhs.x_pFunctor;
+	}
+	bool operator!=(const Function &rhs) const noexcept {
+		return x_pFunctor != rhs.x_pFunctor;
+	}
+	bool operator<(const Function &rhs) const noexcept {
+		return x_pFunctor < rhs.x_pFunctor;
+	}
+	bool operator>(const Function &rhs) const noexcept {
+		return x_pFunctor > rhs.x_pFunctor;
+	}
+	bool operator<=(const Function &rhs) const noexcept {
+		return x_pFunctor <= rhs.x_pFunctor;
+	}
+	bool operator>=(const Function &rhs) const noexcept {
+		return x_pFunctor >= rhs.x_pFunctor;
 	}
 };
 

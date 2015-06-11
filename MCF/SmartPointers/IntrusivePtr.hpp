@@ -149,7 +149,7 @@ namespace Impl_IntrusivePtr {
 					}
 				}
 				x_splOwnerMutex.Unlock(uLocked);
-				return !!pOwner;
+				return !pOwner;
 			}
 			void ClearOwner() noexcept {
 				const auto uLocked = x_splOwnerMutex.Lock();

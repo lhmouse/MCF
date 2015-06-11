@@ -133,10 +133,10 @@ namespace Impl_IntrusivePtr {
 			DeletableBase *x_pOwner;
 
 		public:
-			explicit xWeakObserver(DeletableBase *pOwner) noexcept {
-				const auto uLocked = x_splOwnerMutex.Lock();
-				x_pOwner = pOwner;
-				x_splOwnerMutex.Unlock(uLocked);
+			explicit xWeakObserver(DeletableBase *pOwner) noexcept
+				: x_pOwner(pOwner)
+			{
+				AtomicFence(MemoryModel::kRelease);
 			}
 
 		public:

@@ -61,7 +61,14 @@ namespace Impl_IntrusivePtr {
 			ASSERT((std::ptrdiff_t)AtomicLoad(x_uRef, MemoryModel::kRelaxed) >= 0);
 
 			auto uOldRef = AtomicLoad(x_uRef, MemoryModel::kRelaxed);
-			return AtomicCompareExchange(x_uRef, uOldRef, uOldRef + 1, MemoryModel::kRelaxed);
+			for(;;){
+				if(uOldRef == 0){
+					return false;
+				}
+				if(AtomicCompareExchange(x_uRef, uOldRef, uOldRef + 1, MemoryModel::kRelaxed)){
+					return true;
+				}
+			}
 		}
 		void AddRef() const volatile noexcept {
 			ASSERT((std::ptrdiff_t)AtomicLoad(x_uRef, MemoryModel::kRelaxed) > 0);

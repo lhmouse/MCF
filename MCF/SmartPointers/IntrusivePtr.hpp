@@ -140,6 +140,18 @@ namespace Impl_IntrusivePtr {
 			}
 
 		public:
+			bool HasOwnerExpired() const noexcept {
+				const auto uLocked = x_splOwnerMutex.Lock();
+				auto pOwner = x_pOwner;
+				if(pOwner){
+					if(static_cast<const volatile RefCountBase *>(pOwner)->GetRef() == 0){
+						pOwner = nullptr;
+					}
+				}
+				x_splOwnerMutex.Unlock(uLocked);
+				return !!pOwner;
+			}
+			// 注意这里返回的是带所有权的裸指针。
 			template<typename OtherT>
 			OtherT *GetOwner() const noexcept {
 				const auto uLocked = x_splOwnerMutex.Lock();
@@ -615,7 +627,7 @@ public:
 		std::enable_if_t<
 			std::is_convertible<OtherObjectT *, Element *>::value,
 			int> = 0>
-	IntrusiveWeakPtr &operator=(const IntrusivePtr<OtherObjectT, OtherDeleterT> &&rhs){
+	IntrusiveWeakPtr &operator=(const IntrusivePtr<OtherObjectT, OtherDeleterT> &rhs){
 		return Reset(rhs);
 	}
 	template<typename OtherObjectT, typename OtherDeleterT,
@@ -658,8 +670,11 @@ private:
 	}
 
 public:
-	bool IsNonempty() const noexcept {
-		return !!x_pObserver;
+	bool HasExpired() const noexcept {
+		if(!x_pObserver){
+			return true;
+		}
+		return x_pObserver->HasOwnerExpired();
 	}
 	IntrusivePtr<ObjectT, DeleterT> Lock() const noexcept {
 		if(!x_pObserver){
@@ -681,7 +696,7 @@ public:
 		std::enable_if_t<
 			std::is_convertible<OtherObjectT *, Element *>::value,
 			int> = 0>
-	IntrusiveWeakPtr &Reset(const IntrusivePtr<OtherObjectT, OtherDeleterT> &&rhs) noexcept {
+	IntrusiveWeakPtr &Reset(const IntrusivePtr<OtherObjectT, OtherDeleterT> &rhs){
 		return Reset(rhs.Get());
 	}
 	template<typename OtherObjectT, typename OtherDeleterT,
@@ -701,13 +716,6 @@ public:
 			int> = 0>
 	IntrusiveWeakPtr &Reset(IntrusiveWeakPtr<OtherObjectT, OtherDeleterT> &&rhs) noexcept {
 		return xResetObserver(std::exchange(rhs.x_pObserver, nullptr));
-	}
-	template<typename OtherObjectT, typename OtherDeleterT,
-		std::enable_if_t<
-			std::is_convertible<OtherObjectT *, Element *>::value,
-			int> = 0>
-	IntrusiveWeakPtr &Reset(const IntrusivePtr<OtherObjectT, OtherDeleterT> &rhs){
-		return Reset(rhs.Get());
 	}
 	IntrusiveWeakPtr &Reset(const IntrusiveWeakPtr &rhs) noexcept {
 		const auto pObserver = rhs.x_pObserver;

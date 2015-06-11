@@ -33,12 +33,12 @@ extern "C" unsigned int MCFMain() noexcept {
 		std::printf("p5 = %p, i = %d\n", p5.Get(), p5->i);
 		std::printf("p6 = %p\n", p6.Get());
 
-		std::printf("wp1 = %p\n", wp1.Lock().Get());
-		std::printf("wp2 = %p\n", wp2.Lock().Get());
+		std::printf("wp1 = %d\n", wp1.HasExpired());
+		std::printf("wp2 = %d\n", wp2.HasExpired());
 	}
 
-	std::printf("wp1 = %p\n", wp1.Lock().Get());
-	std::printf("wp2 = %p\n", wp2.Lock().Get());
+	std::printf("wp1 = %d\n", wp1.HasExpired());
+	std::printf("wp2 = %d\n", wp2.HasExpired());
 
 	// p1 = 00000000002e01e0
 	// p2 = 00000000002e01d0, i = 12345

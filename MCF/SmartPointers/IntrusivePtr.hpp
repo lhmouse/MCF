@@ -151,24 +151,14 @@ namespace Impl_IntrusivePtr {
 				x_splOwnerMutex.Unlock(uLocked);
 				return !!pOwner;
 			}
-			// 注意这里返回的是带所有权的裸指针。
-			template<typename OtherT>
-			OtherT *GetOwner() const noexcept {
-				const auto uLocked = x_splOwnerMutex.Lock();
-				auto pOther = StaticCastOrDynamicCast<OtherT *>(x_pOwner);
-				if(pOther){
-					if(!static_cast<const volatile RefCountBase *>(pOther)->TryAddRef()){
-						pOther = nullptr;
-					}
-				}
-				x_splOwnerMutex.Unlock(uLocked);
-				return pOther;
-			}
 			void ClearOwner() noexcept {
 				const auto uLocked = x_splOwnerMutex.Lock();
 				x_pOwner = nullptr;
 				x_splOwnerMutex.Unlock(uLocked);
 			}
+
+			template<typename OtherT>
+			IntrusivePtr<OtherT, DeleterT> GetOwner() const noexcept;
 		};
 
 	private:
@@ -438,6 +428,20 @@ public:
 		return Get();
 	}
 };
+
+template<class DeleterT>
+	template<typename OtherT>
+IntrusivePtr<OtherT, DeleterT> Impl_IntrusivePtr::DeletableBase<DeleterT>::xWeakObserver::GetOwner() const noexcept {
+	const auto uLocked = x_splOwnerMutex.Lock();
+	auto pOther = StaticCastOrDynamicCast<OtherT *>(x_pOwner);
+	if(pOther){
+		if(!static_cast<const volatile RefCountBase *>(pOther)->TryAddRef()){
+			pOther = nullptr;
+		}
+	}
+	x_splOwnerMutex.Unlock(uLocked);
+	return IntrusivePtr<OtherT, DeleterT>(pOther);
+}
 
 template<typename ObjectT, class DeleterT>
 	template<typename CvOtherT, typename CvThisT>

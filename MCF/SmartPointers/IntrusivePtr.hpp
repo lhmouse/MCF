@@ -82,23 +82,6 @@ namespace Impl_IntrusivePtr {
 		}
 	};
 
-	template<typename DstT, typename SrcT>
-	struct CvCopier {
-		using Type = DstT;
-	};
-	template<typename DstT, typename SrcT>
-	struct CvCopier<DstT, const SrcT> {
-		using Type = const DstT;
-	};
-	template<typename DstT, typename SrcT>
-	struct CvCopier<DstT, volatile SrcT> {
-		using Type = volatile DstT;
-	};
-	template<typename DstT, typename SrcT>
-	struct CvCopier<DstT, const volatile SrcT> {
-		using Type = const volatile DstT;
-	};
-
 	template<typename DstT, typename SrcT, typename = DstT>
 	struct StaticCastOrDynamicCastHelper {
 		DstT operator()(SrcT &&vSrc) const {

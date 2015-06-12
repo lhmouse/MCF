@@ -720,6 +720,9 @@ public:
 			int> = 0>
 	IntrusiveWeakPtr &Reset(const IntrusiveWeakPtr<OtherObjectT, OtherDeleterT> &rhs) noexcept {
 		const auto pObserver = rhs.x_pObserver;
+		if(pObserver == x_pObserver){
+			return *this;
+		}
 		if(pObserver){
 			static_cast<const volatile Impl_IntrusivePtr::RefCountBase *>(pObserver)->AddRef();
 		}
@@ -731,19 +734,6 @@ public:
 				std::is_convertible<OtherDeleterT, DeleterT>::value,
 			int> = 0>
 	IntrusiveWeakPtr &Reset(IntrusiveWeakPtr<OtherObjectT, OtherDeleterT> &&rhs) noexcept {
-		return xResetObserver(std::exchange(rhs.x_pObserver, nullptr));
-	}
-	IntrusiveWeakPtr &Reset(const IntrusiveWeakPtr &rhs) noexcept {
-		const auto pObserver = rhs.x_pObserver;
-		if(pObserver != x_pObserver){
-			static_cast<const volatile Impl_IntrusivePtr::RefCountBase *>(pObserver)->AddRef();
-			xResetObserver(pObserver);
-		}
-		return *this;
-	}
-	IntrusiveWeakPtr &Reset(IntrusiveWeakPtr &&rhs) noexcept {
-		ASSERT(&rhs != this);
-
 		return xResetObserver(std::exchange(rhs.x_pObserver, nullptr));
 	}
 

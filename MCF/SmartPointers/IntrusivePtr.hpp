@@ -388,6 +388,9 @@ public:
 			int> = 0>
 	IntrusivePtr &Reset(const IntrusivePtr<OtherObjectT, OtherDeleterT> &rhs) noexcept {
 		const auto pElement = rhs.Get();
+		if(pElement == x_pElement){
+			return *this;
+		}
 		if(pElement){
 			static_cast<const volatile Impl_IntrusivePtr::RefCountBase *>(pElement)->AddRef();
 		}
@@ -399,19 +402,6 @@ public:
 				std::is_convertible<OtherDeleterT, DeleterT>::value,
 			int> = 0>
 	IntrusivePtr &Reset(IntrusivePtr<OtherObjectT, OtherDeleterT> &&rhs) noexcept {
-		return Reset(rhs.Release());
-	}
-	IntrusivePtr &Reset(const IntrusivePtr &rhs) noexcept {
-		const auto pElement = rhs.x_pElement;
-		if(pElement != x_pElement){
-			static_cast<const volatile Impl_IntrusivePtr::RefCountBase *>(pElement)->AddRef();
-			Reset(pElement);
-		}
-		return *this;
-	}
-	IntrusivePtr &Reset(IntrusivePtr &&rhs) noexcept {
-		ASSERT(&rhs != this);
-
 		return Reset(rhs.Release());
 	}
 

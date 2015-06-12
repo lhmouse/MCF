@@ -577,7 +577,7 @@ public:
 	static_assert(noexcept(Deleter()(std::declval<std::remove_cv_t<Element> *>())), "Deleter must not throw.");
 
 private:
-	typename IntrusiveBase<ObjectT, DeleterT>::xWeakObserver *x_pObserver;
+	typename Impl_IntrusivePtr::DeletableBase<DeleterT>::xWeakObserver *x_pObserver;
 
 public:
 	constexpr IntrusiveWeakPtr(std::nullptr_t = nullptr) noexcept

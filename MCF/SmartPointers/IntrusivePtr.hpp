@@ -693,7 +693,7 @@ public:
 		if(!x_pObserver){
 			return nullptr;
 		}
-		return IntrusivePtr<ObjectT, DeleterT>(x_pObserver->template GetOwner<ObjectT>());
+		return x_pObserver->template GetOwner<ObjectT>();
 	}
 
 	IntrusiveWeakPtr &Reset(Element *pElement = nullptr){

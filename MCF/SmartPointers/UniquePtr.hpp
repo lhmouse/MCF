@@ -157,81 +157,81 @@ public:
 	}
 };
 
-template<typename ObjectT, class DeleterT>
-bool operator==(const UniquePtr<ObjectT, DeleterT> &lhs, const UniquePtr<ObjectT, DeleterT> &rhs) noexcept {
+template<typename ObjectLhsT, typename ObjectRhsT, class DeleterT>
+bool operator==(const UniquePtr<ObjectLhsT, DeleterT> &lhs, const UniquePtr<ObjectRhsT, DeleterT> &rhs) noexcept {
 	return std::equal_to<void>()(lhs.Get(), rhs.Get());
 }
-template<typename ObjectT, class DeleterT>
-bool operator==(const UniquePtr<ObjectT, DeleterT> &lhs, typename UniquePtr<ObjectT, DeleterT>::Element *rhs) noexcept {
+template<typename ObjectLhsT, typename ObjectRhsT, class DeleterT>
+bool operator==(const UniquePtr<ObjectLhsT, DeleterT> &lhs, typename UniquePtr<ObjectRhsT, DeleterT>::Element *rhs) noexcept {
 	return std::equal_to<void>()(lhs.Get(), rhs);
 }
-template<typename ObjectT, class DeleterT>
-bool operator==(typename UniquePtr<ObjectT, DeleterT>::Element *lhs, const UniquePtr<ObjectT, DeleterT> &rhs) noexcept {
+template<typename ObjectLhsT, typename ObjectRhsT, class DeleterT>
+bool operator==(typename UniquePtr<ObjectLhsT, DeleterT>::Element *lhs, const UniquePtr<ObjectRhsT, DeleterT> &rhs) noexcept {
 	return std::equal_to<void>()(lhs, rhs.Get());
 }
 
-template<typename ObjectT, class DeleterT>
-bool operator!=(const UniquePtr<ObjectT, DeleterT> &lhs, const UniquePtr<ObjectT, DeleterT> &rhs) noexcept {
+template<typename ObjectLhsT, typename ObjectRhsT, class DeleterT>
+bool operator!=(const UniquePtr<ObjectLhsT, DeleterT> &lhs, const UniquePtr<ObjectRhsT, DeleterT> &rhs) noexcept {
 	return std::not_equal_to<void>()(lhs.Get(), rhs.Get());
 }
-template<typename ObjectT, class DeleterT>
-bool operator!=(const UniquePtr<ObjectT, DeleterT> &lhs, typename UniquePtr<ObjectT, DeleterT>::Element *rhs) noexcept {
+template<typename ObjectLhsT, typename ObjectRhsT, class DeleterT>
+bool operator!=(const UniquePtr<ObjectLhsT, DeleterT> &lhs, typename UniquePtr<ObjectRhsT, DeleterT>::Element *rhs) noexcept {
 	return std::not_equal_to<void>()(lhs.Get(), rhs);
 }
-template<typename ObjectT, class DeleterT>
-bool operator!=(typename UniquePtr<ObjectT, DeleterT>::Element *lhs, const UniquePtr<ObjectT, DeleterT> &rhs) noexcept {
+template<typename ObjectLhsT, typename ObjectRhsT, class DeleterT>
+bool operator!=(typename UniquePtr<ObjectLhsT, DeleterT>::Element *lhs, const UniquePtr<ObjectRhsT, DeleterT> &rhs) noexcept {
 	return std::not_equal_to<void>()(lhs, rhs.Get());
 }
 
-template<typename ObjectT, class DeleterT>
-bool operator<(const UniquePtr<ObjectT, DeleterT> &lhs, const UniquePtr<ObjectT, DeleterT> &rhs) noexcept {
+template<typename ObjectLhsT, typename ObjectRhsT, class DeleterT>
+bool operator<(const UniquePtr<ObjectLhsT, DeleterT> &lhs, const UniquePtr<ObjectRhsT, DeleterT> &rhs) noexcept {
 	return std::less<void>()(lhs.Get(), rhs.Get());
 }
-template<typename ObjectT, class DeleterT>
-bool operator<(const UniquePtr<ObjectT, DeleterT> &lhs, typename UniquePtr<ObjectT, DeleterT>::Element *rhs) noexcept {
+template<typename ObjectLhsT, typename ObjectRhsT, class DeleterT>
+bool operator<(const UniquePtr<ObjectLhsT, DeleterT> &lhs, typename UniquePtr<ObjectRhsT, DeleterT>::Element *rhs) noexcept {
 	return std::less<void>()(lhs.Get(), rhs);
 }
-template<typename ObjectT, class DeleterT>
-bool operator<(typename UniquePtr<ObjectT, DeleterT>::Element *lhs, const UniquePtr<ObjectT, DeleterT> &rhs) noexcept {
+template<typename ObjectLhsT, typename ObjectRhsT, class DeleterT>
+bool operator<(typename UniquePtr<ObjectLhsT, DeleterT>::Element *lhs, const UniquePtr<ObjectRhsT, DeleterT> &rhs) noexcept {
 	return std::less<void>()(lhs, rhs.Get());
 }
 
-template<typename ObjectT, class DeleterT>
-bool operator>(const UniquePtr<ObjectT, DeleterT> &lhs, const UniquePtr<ObjectT, DeleterT> &rhs) noexcept {
+template<typename ObjectLhsT, typename ObjectRhsT, class DeleterT>
+bool operator>(const UniquePtr<ObjectLhsT, DeleterT> &lhs, const UniquePtr<ObjectRhsT, DeleterT> &rhs) noexcept {
 	return std::greater<void>()(lhs.Get(), rhs.Get());
 }
-template<typename ObjectT, class DeleterT>
-bool operator>(const UniquePtr<ObjectT, DeleterT> &lhs, typename UniquePtr<ObjectT, DeleterT>::Element *rhs) noexcept {
+template<typename ObjectLhsT, typename ObjectRhsT, class DeleterT>
+bool operator>(const UniquePtr<ObjectLhsT, DeleterT> &lhs, typename UniquePtr<ObjectRhsT, DeleterT>::Element *rhs) noexcept {
 	return std::greater<void>()(lhs.Get(), rhs);
 }
-template<typename ObjectT, class DeleterT>
-bool operator>(typename UniquePtr<ObjectT, DeleterT>::Element *lhs, const UniquePtr<ObjectT, DeleterT> &rhs) noexcept {
+template<typename ObjectLhsT, typename ObjectRhsT, class DeleterT>
+bool operator>(typename UniquePtr<ObjectLhsT, DeleterT>::Element *lhs, const UniquePtr<ObjectRhsT, DeleterT> &rhs) noexcept {
 	return std::greater<void>()(lhs, rhs.Get());
 }
 
-template<typename ObjectT, class DeleterT>
-bool operator<=(const UniquePtr<ObjectT, DeleterT> &lhs, const UniquePtr<ObjectT, DeleterT> &rhs) noexcept {
+template<typename ObjectLhsT, typename ObjectRhsT, class DeleterT>
+bool operator<=(const UniquePtr<ObjectLhsT, DeleterT> &lhs, const UniquePtr<ObjectRhsT, DeleterT> &rhs) noexcept {
 	return std::less_equal<void>()(lhs.Get(), rhs.Get());
 }
-template<typename ObjectT, class DeleterT>
-bool operator<=(const UniquePtr<ObjectT, DeleterT> &lhs, typename UniquePtr<ObjectT, DeleterT>::Element *rhs) noexcept {
+template<typename ObjectLhsT, typename ObjectRhsT, class DeleterT>
+bool operator<=(const UniquePtr<ObjectLhsT, DeleterT> &lhs, typename UniquePtr<ObjectRhsT, DeleterT>::Element *rhs) noexcept {
 	return std::less_equal<void>()(lhs.Get(), rhs);
 }
-template<typename ObjectT, class DeleterT>
-bool operator<=(typename UniquePtr<ObjectT, DeleterT>::Element *lhs, const UniquePtr<ObjectT, DeleterT> &rhs) noexcept {
+template<typename ObjectLhsT, typename ObjectRhsT, class DeleterT>
+bool operator<=(typename UniquePtr<ObjectLhsT, DeleterT>::Element *lhs, const UniquePtr<ObjectRhsT, DeleterT> &rhs) noexcept {
 	return std::less_equal<void>()(lhs, rhs.Get());
 }
 
-template<typename ObjectT, class DeleterT>
-bool operator>=(const UniquePtr<ObjectT, DeleterT> &lhs, const UniquePtr<ObjectT, DeleterT> &rhs) noexcept {
+template<typename ObjectLhsT, typename ObjectRhsT, class DeleterT>
+bool operator>=(const UniquePtr<ObjectLhsT, DeleterT> &lhs, const UniquePtr<ObjectRhsT, DeleterT> &rhs) noexcept {
 	return std::greater_equal<void>()(lhs.Get(), rhs.Get());
 }
-template<typename ObjectT, class DeleterT>
-bool operator>=(const UniquePtr<ObjectT, DeleterT> &lhs, typename UniquePtr<ObjectT, DeleterT>::Element *rhs) noexcept {
+template<typename ObjectLhsT, typename ObjectRhsT, class DeleterT>
+bool operator>=(const UniquePtr<ObjectLhsT, DeleterT> &lhs, typename UniquePtr<ObjectRhsT, DeleterT>::Element *rhs) noexcept {
 	return std::greater_equal<void>()(lhs.Get(), rhs);
 }
-template<typename ObjectT, class DeleterT>
-bool operator>=(typename UniquePtr<ObjectT, DeleterT>::Element *lhs, const UniquePtr<ObjectT, DeleterT> &rhs) noexcept {
+template<typename ObjectLhsT, typename ObjectRhsT, class DeleterT>
+bool operator>=(typename UniquePtr<ObjectLhsT, DeleterT>::Element *lhs, const UniquePtr<ObjectRhsT, DeleterT> &rhs) noexcept {
 	return std::greater_equal<void>()(lhs, rhs.Get());
 }
 

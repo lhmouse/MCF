@@ -584,7 +584,7 @@ public:
 		: x_pObserver(nullptr)
 	{
 	}
-	explicit IntrusiveWeakPtr(Element *rhs) noexcept
+	explicit IntrusiveWeakPtr(Element *rhs)
 		: IntrusiveWeakPtr()
 	{
 		Reset(rhs);

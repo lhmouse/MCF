@@ -168,8 +168,9 @@ namespace Impl_IntrusivePtr {
 		DeletableBase() noexcept {
 			AtomicStore(x_pObserver, nullptr, MemoryModel::kRelease);
 		}
-		DeletableBase(const DeletableBase &) noexcept {
-			AtomicStore(x_pObserver, nullptr, MemoryModel::kRelease);
+		DeletableBase(const DeletableBase &) noexcept
+			: DeletableBase()
+		{
 		}
 		DeletableBase &operator=(const DeletableBase &) noexcept {
 			return *this;

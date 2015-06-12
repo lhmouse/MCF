@@ -40,9 +40,9 @@ public:
 	template<typename OtherObjectT, typename OtherDeleterT,
 		std::enable_if_t<
 			((!std::is_void<ObjectT>::value && !std::is_array<ObjectT>::value)
-					? std::is_convertible<OtherObjectT *, Element *>::value
+					? std::is_convertible<typename UniquePtr<OtherObjectT, OtherDeleterT>::Element *, Element *>::value
 					: std::is_same<std::decay_t<OtherObjectT>, std::decay_t<ObjectT>>::value) &&
-				std::is_convertible<OtherDeleterT, DeleterT>::value,
+				std::is_convertible<typename UniquePtr<OtherObjectT, OtherDeleterT>::Deleter, Deleter>::value,
 			int> = 0>
 	UniquePtr(UniquePtr<OtherObjectT, OtherDeleterT> &&rhs) noexcept
 		: UniquePtr()
@@ -60,9 +60,9 @@ public:
 	template<typename OtherObjectT, typename OtherDeleterT,
 		std::enable_if_t<
 			((!std::is_void<ObjectT>::value && !std::is_array<ObjectT>::value)
-					? std::is_convertible<OtherObjectT *, Element *>::value
+					? std::is_convertible<typename UniquePtr<OtherObjectT, OtherDeleterT>::Element *, Element *>::value
 					: std::is_same<std::decay_t<OtherObjectT>, std::decay_t<ObjectT>>::value) &&
-				std::is_convertible<OtherDeleterT, DeleterT>::value,
+				std::is_convertible<typename UniquePtr<OtherObjectT, OtherDeleterT>::Deleter, Deleter>::value,
 			int> = 0>
 	UniquePtr &operator=(UniquePtr<OtherObjectT, OtherDeleterT> &&rhs) noexcept {
 		return Reset(std::move(rhs));
@@ -100,9 +100,9 @@ public:
 	template<typename OtherObjectT, typename OtherDeleterT,
 		std::enable_if_t<
 			((!std::is_void<ObjectT>::value && !std::is_array<ObjectT>::value)
-					? std::is_convertible<OtherObjectT *, Element *>::value
+					? std::is_convertible<typename UniquePtr<OtherObjectT, OtherDeleterT>::Element *, Element *>::value
 					: std::is_same<std::decay_t<OtherObjectT>, std::decay_t<ObjectT>>::value) &&
-				std::is_convertible<OtherDeleterT, DeleterT>::value,
+				std::is_convertible<typename UniquePtr<OtherObjectT, OtherDeleterT>::Deleter, Deleter>::value,
 			int> = 0>
 	UniquePtr &Reset(UniquePtr<OtherObjectT, OtherDeleterT> &&rhs) noexcept {
 		return Reset(rhs.Release());

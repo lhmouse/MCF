@@ -24,7 +24,7 @@ namespace {
 			u64Seed = u64OldSeed ^ ReadTimestampCounter();
 			u64Seed *= 6364136223846793005ull;
 			u64Seed += 1442695040888963407ull;
-		} while(!AtomicCompareExchange(g_u64RandSeed, u64OldSeed, u64Seed, MemoryModel::kAcqRel));
+		} while(!AtomicCompareExchange(g_u64RandSeed, u64OldSeed, u64Seed, MemoryModel::kAcqRel, MemoryModel::kConsume));
 		return u64Seed >> 32;
 	}
 }

@@ -70,9 +70,13 @@ inline T AtomicDecrement(volatile T &ref, MemoryModel model) noexcept {
 
 template<typename T>
 inline bool AtomicCompareExchange(volatile T &ref, std::common_type_t<T> &cmp, std::common_type_t<T> xchg, MemoryModel model) noexcept {
-	return AtomicCompareExchange(ref, cmp, xchg, model,
-		(model == MemoryModel::kAcqRel) ? MemoryModel::kAcquire : (
-			(model == MemoryModel::kRelease) ? MemoryModel::kRelaxed : model));
+	if(model == MemoryModel::kAcqRel){
+		return AtomicCompareExchange(ref, cmp, xchg, model, MemoryModel::kAcquire);
+	} else if(model == MemoryModel::kRelease){
+		return AtomicCompareExchange(ref, cmp, xchg, model, MemoryModel::kRelaxed);
+	} else {
+		return AtomicCompareExchange(ref, cmp, xchg, model, model);
+	}
 }
 
 }

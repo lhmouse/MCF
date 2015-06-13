@@ -174,7 +174,7 @@ namespace Impl_IntrusivePtr {
 			auto pObserver = AtomicLoad(x_pObserver, MemoryModel::kConsume);
 			if(!pObserver){
 				const auto pNewObserver = new xWeakObserver(const_cast<DeletableBase *>(this));
-				if(AtomicCompareExchange(x_pObserver, pObserver, pNewObserver, MemoryModel::kAcqRel)){
+				if(AtomicCompareExchange(x_pObserver, pObserver, pNewObserver, MemoryModel::kAcqRel, MemoryModel::kConsume)){
 					pObserver = pNewObserver;
 				} else {
 					delete pNewObserver;

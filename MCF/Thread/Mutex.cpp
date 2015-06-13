@@ -38,7 +38,7 @@ bool Mutex::xTryWithHint(unsigned long ulThreadId) noexcept {
 	std::size_t i = GetSpinCount();
 	for(;;){
 		std::size_t uExpected = 0;
-		if(EXPECT_NOT(AtomicCompareExchange(x_uLockingThreadId, uExpected, ulThreadId, MemoryModel::kAcqRel))){
+		if(EXPECT_NOT(AtomicCompareExchange(x_uLockingThreadId, uExpected, ulThreadId, MemoryModel::kAcqRel, MemoryModel::kConsume))){
 			return true;
 		}
 		if(EXPECT_NOT(i == 0)){

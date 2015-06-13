@@ -19,7 +19,7 @@ namespace {
 
 	inline std::uint32_t GetRandomUint32(){
 		std::uint64_t u64OldSeed, u64Seed;
-		u64OldSeed = AtomicLoad(g_u64RandSeed, MemoryModel::kAcquire);
+		u64OldSeed = AtomicLoad(g_u64RandSeed, MemoryModel::kConsume);
 		do {
 			u64Seed = u64OldSeed ^ ReadTimestampCounter();
 			u64Seed *= 6364136223846793005ull;

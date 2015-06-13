@@ -92,7 +92,7 @@ bool Thread::IsAlive() const noexcept {
 	return GetId() != 0;
 }
 std::size_t Thread::GetId() const noexcept {
-	return AtomicLoad(x_ulThreadId, MemoryModel::kAcquire);
+	return AtomicLoad(x_ulThreadId, MemoryModel::kRelaxed);
 }
 
 void Thread::Suspend() noexcept {

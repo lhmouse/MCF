@@ -11,6 +11,7 @@ namespace MCF {
 
 enum class MemoryModel {
 	kRelaxed	= __ATOMIC_RELAXED,
+	kConsume	= __ATOMIC_CONSUME,
 	kAcquire	= __ATOMIC_ACQUIRE,
 	kRelease	= __ATOMIC_RELEASE,
 	kAcqRel		= __ATOMIC_ACQ_REL,
@@ -40,9 +41,7 @@ inline T AtomicSub(volatile T &ref, std::common_type_t<T> val, MemoryModel model
 }
 
 template<typename T>
-inline bool AtomicCompareExchange(volatile T &ref, std::common_type_t<T> &cmp, std::common_type_t<T> xchg,
-	MemoryModel succ, MemoryModel fail) noexcept
-{
+inline bool AtomicCompareExchange(volatile T &ref, std::common_type_t<T> &cmp, std::common_type_t<T> xchg, MemoryModel succ, MemoryModel fail) noexcept {
 	static_assert(std::is_integral<T>::value || std::is_pointer<T>::value, "Only integers and pointers are supported.");
 	return __atomic_compare_exchange_n(&ref, &cmp, xchg, false, static_cast<int>(succ), static_cast<int>(fail));
 }
@@ -70,9 +69,7 @@ inline T AtomicDecrement(volatile T &ref, MemoryModel model) noexcept {
 }
 
 template<typename T>
-inline bool AtomicCompareExchange(volatile T &ref, std::common_type_t<T> &cmp, std::common_type_t<T> xchg,
-	MemoryModel model) noexcept
-{
+inline bool AtomicCompareExchange(volatile T &ref, std::common_type_t<T> &cmp, std::common_type_t<T> xchg, MemoryModel model) noexcept {
 	return AtomicCompareExchange(ref, cmp, xchg, model,
 		(model == MemoryModel::kAcqRel) ? MemoryModel::kAcquire : (
 			(model == MemoryModel::kRelease) ? MemoryModel::kRelaxed : model));

@@ -50,7 +50,7 @@ bool CallOnce(OnceFlag &vFlag, FunctionT &&vFunction, ParamsT &&...vParams){
 	}
 	{
 		const auto vLock = Impl_CallOnce::OnceFlag::GetMutex().GetLock();
-		if(AtomicLoad(bFlag, MemoryModel::kAcquire)){
+		if(AtomicLoad(bFlag, MemoryModel::kRelaxed)){
 			return false;
 		}
 		std::forward<FunctionT>(vFunction)(std::forward<ParamsT>(vParams)...);

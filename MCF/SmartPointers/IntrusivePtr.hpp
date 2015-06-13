@@ -159,7 +159,7 @@ namespace Impl_IntrusivePtr {
 			return *this;
 		}
 		virtual ~DeletableBase(){
-			const auto pObserver = AtomicLoad(x_pObserver, MemoryModel::kAcquire);
+			const auto pObserver = AtomicLoad(x_pObserver, MemoryModel::kConsume);
 			if(pObserver){
 				if(static_cast<const volatile RefCountBase *>(pObserver)->DropRef()){
 					delete pObserver;
@@ -171,7 +171,7 @@ namespace Impl_IntrusivePtr {
 
 	private:
 		xWeakObserver *xCreateObserver() const volatile {
-			auto pObserver = AtomicLoad(x_pObserver, MemoryModel::kAcquire);
+			auto pObserver = AtomicLoad(x_pObserver, MemoryModel::kConsume);
 			if(!pObserver){
 				const auto pNewObserver = new xWeakObserver(const_cast<DeletableBase *>(this));
 				if(AtomicCompareExchange(x_pObserver, pObserver, pNewObserver, MemoryModel::kAcqRel)){

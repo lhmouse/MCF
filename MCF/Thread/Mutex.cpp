@@ -57,7 +57,7 @@ void Mutex::SetSpinCount(std::size_t uSpinCount) noexcept {
 }
 
 bool Mutex::IsLockedByCurrentThread() const noexcept {
-	return AtomicLoad(x_uLockingThreadId, MemoryModel::kAcquire) == ::GetCurrentThreadId();
+	return AtomicLoad(x_uLockingThreadId, MemoryModel::kRelaxed) == ::GetCurrentThreadId();
 }
 
 bool Mutex::Try() noexcept {

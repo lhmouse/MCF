@@ -313,8 +313,8 @@ void MCF_AvlInternalDetach(const MCF_AvlNodeHeader *pNode){
 			|     /              \      |     /              \      |
 			| left                right | left                right |
 			|     \                     |     \                     |
-			|      prevp                |      prevp                |
-			|           \               >           \               |
+			|      prevp                >      prevp                |
+			|           \               |           \               |
 			|            prev           |            prevl          |
 			|           /               |                           |
 			|      prevl                |                           |

@@ -82,7 +82,7 @@ namespace Impl_IntrusivePtr {
 		}
 	};
 
-	template<typename DstT, typename SrcT, typename = DstT>
+	template<typename DstT, typename SrcT, typename = void>
 	struct StaticCastOrDynamicCastHelper {
 		DstT operator()(SrcT &&vSrc) const {
 			return dynamic_cast<DstT>(std::forward<SrcT>(vSrc));
@@ -90,7 +90,7 @@ namespace Impl_IntrusivePtr {
 	};
 	template<typename DstT, typename SrcT>
 	struct StaticCastOrDynamicCastHelper<DstT, SrcT,
-		decltype(static_cast<DstT>(std::declval<SrcT>()))>
+		decltype(static_cast<void>(static_cast<DstT>(std::declval<SrcT>())))>
 	{
 		constexpr DstT operator()(SrcT &&vSrc) const noexcept {
 			return static_cast<DstT>(std::forward<SrcT>(vSrc));

@@ -12,7 +12,7 @@
 namespace MCF {
 
 namespace {
-	const unsigned g_uPid = ::GetCurrentProcessId() & 0xFFFFu;
+	const std::uint32_t g_u32Pid = ::GetCurrentProcessId() & 0xFFFFu;
 
 	volatile std::uint64_t g_u64RandSeed = 0;
 	volatile std::uint32_t g_u32AutoInc = 0;
@@ -32,13 +32,13 @@ namespace {
 // 静态成员函数。
 Uuid Uuid::Generate(){
 	const auto u64Now = GetUtcTime();
-	const auto u32AutoInc = AtomicAdd(g_u32AutoInc, 1, MemoryModel::kRelaxed);
+	const auto u32Unique = ((AtomicAdd(g_u32AutoInc, 1, MemoryModel::kRelaxed) << 16) & 0x3FFFFFFFu) | g_u32Pid;
 
 	Uuid vRet(nullptr);
 	StoreBe(vRet.x_unData.au32[0], u64Now >> 12);
-	StoreBe(vRet.x_unData.au16[2], (u64Now << 4) | (g_uPid >> 12));
-	StoreBe(vRet.x_unData.au16[3], g_uPid & 0x0FFFu); // 版本 = 0
-	StoreBe(vRet.x_unData.au16[4], 0xC000u | (u32AutoInc & 0x3FFFu)); // 变种 = 3
+	StoreBe(vRet.x_unData.au16[2], (u64Now << 4) | (u32Unique >> 26));
+	StoreBe(vRet.x_unData.au16[3], (u32Unique >> 14) & 0x0FFFu); // 版本 = 0
+	StoreBe(vRet.x_unData.au16[4], 0xC000u | (u32Unique & 0x3FFFu)); // 变种 = 3
 	StoreBe(vRet.x_unData.au16[5], GetRandomUint32());
 	StoreBe(vRet.x_unData.au32[3], GetRandomUint32());
 	return vRet;

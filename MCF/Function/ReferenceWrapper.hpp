@@ -5,6 +5,7 @@
 #ifndef MCF_FUNCTION_REFERENCE_WRAPPER_HPP_
 #define MCF_FUNCTION_REFERENCE_WRAPPER_HPP_
 
+#include <type_traits>
 #include <utility>
 #include <memory>
 
@@ -13,7 +14,7 @@ namespace MCF {
 template<typename ObjectT>
 class ReferenceWrapper {
 private:
-	ObjectT *x_pObject;
+	std::remove_reference_t<ObjectT> *x_pObject;
 
 public:
 	constexpr ReferenceWrapper(ObjectT &vObject) noexcept
@@ -43,7 +44,7 @@ public:
 template<typename ObjectT>
 class ReferenceWrapper<ObjectT &&> {
 private:
-	ObjectT *x_pObject;
+	std::remove_reference_t<ObjectT> *x_pObject;
 
 public:
 	constexpr ReferenceWrapper(ObjectT &&vObject) noexcept

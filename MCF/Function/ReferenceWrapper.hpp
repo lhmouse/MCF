@@ -6,26 +6,27 @@
 #define MCF_FUNCTION_REFERENCE_WRAPPER_HPP_
 
 #include <utility>
+#include <memory>
 
 namespace MCF {
 
 template<typename ObjectT>
 class ReferenceWrapper {
 private:
-	ObjectT &x_vObject;
+	ObjectT *x_pObject;
 
 public:
 	constexpr ReferenceWrapper(ObjectT &vObject) noexcept
-		: x_vObject(vObject)
+		: x_pObject(std::addressof(vObject))
 	{
 	}
 
 public:
 	ObjectT &Get() const noexcept {
-		return x_vObject;
+		return *x_pObject;
 	}
 	ObjectT &Forward() const noexcept {
-		return x_vObject;
+		return *x_pObject;
 	}
 
 public:
@@ -42,20 +43,20 @@ public:
 template<typename ObjectT>
 class ReferenceWrapper<ObjectT &&> {
 private:
-	ObjectT &&x_vObject;
+	ObjectT *x_pObject;
 
 public:
 	constexpr ReferenceWrapper(ObjectT &&vObject) noexcept
-		: x_vObject(std::move(vObject))
+		: x_pObject(std::addressof(vObject))
 	{
 	}
 
 public:
 	ObjectT &Get() const noexcept {
-		return x_vObject;
+		return *x_pObject;
 	}
 	ObjectT &&Forward() const noexcept {
-		return std::move(x_vObject);
+		return std::move(*x_pObject);
 	}
 
 public:

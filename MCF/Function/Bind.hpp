@@ -9,7 +9,7 @@
 #include <utility>
 #include <tuple>
 #include "../Utilities/Invoke.hpp"
-#include "ReferenceWrapper.hpp"
+#include "RefWrapper.hpp"
 
 namespace MCF {
 
@@ -36,7 +36,7 @@ namespace Impl_Bind {
 			return vParam;
 		}
 		template<typename ParamT>
-		decltype(auto) operator()(const ReferenceWrapper<ParamT> &vParam) noexcept {
+		decltype(auto) operator()(const RefWrapper<ParamT> &vParam) noexcept {
 			return vParam.Forward();
 		}
 	};

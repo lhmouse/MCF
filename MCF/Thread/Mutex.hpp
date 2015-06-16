@@ -28,9 +28,6 @@ private:
 public:
 	explicit Mutex(std::size_t uSpinCount = 0x400);
 
-private:
-	bool xTryWithHint(unsigned long ulThreadId) noexcept;
-
 public:
 	std::size_t GetSpinCount() const noexcept {
 		return AtomicLoad(x_uSpinCount, MemoryModel::kRelaxed);

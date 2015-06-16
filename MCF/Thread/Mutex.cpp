@@ -8,6 +8,23 @@
 
 namespace MCF {
 
+namespace {
+	bool TryMutexWithHint(volatile std::size_t &uLockingThreadId, std::size_t uSpinCount, unsigned long ulThreadId) noexcept {
+		std::size_t i = uSpinCount;
+		for(;;){
+			std::size_t uExpected = 0;
+			if(EXPECT_NOT(AtomicCompareExchange(uLockingThreadId, uExpected, ulThreadId, MemoryModel::kSeqCst, MemoryModel::kSeqCst))){
+				return true;
+			}
+			if(EXPECT_NOT(i == 0)){
+				return false;
+			}
+			--i;
+			AtomicPause();
+		}
+	}
+}
+
 template<>
 bool Mutex::UniqueLock::xDoTry() const noexcept {
 	return x_pOwner->Try();
@@ -32,23 +49,6 @@ Mutex::Mutex(std::size_t uSpinCount)
 }
 
 // 其他非静态成员函数。
-bool Mutex::xTryWithHint(unsigned long ulThreadId) noexcept {
-	ASSERT(!IsLockedByCurrentThread());
-
-	std::size_t i = GetSpinCount();
-	for(;;){
-		std::size_t uExpected = 0;
-		if(EXPECT_NOT(AtomicCompareExchange(x_uLockingThreadId, uExpected, ulThreadId, MemoryModel::kAcqRel, MemoryModel::kConsume))){
-			return true;
-		}
-		if(EXPECT_NOT(i == 0)){
-			return false;
-		}
-		--i;
-		AtomicPause();
-	}
-}
-
 void Mutex::SetSpinCount(std::size_t uSpinCount) noexcept {
 	if(GetProcessorCount() == 0){
 		return;
@@ -63,7 +63,9 @@ bool Mutex::IsLockedByCurrentThread() const noexcept {
 bool Mutex::Try() noexcept {
 	ASSERT(!IsLockedByCurrentThread());
 
-	return xTryWithHint(::GetCurrentThreadId());
+	const auto dwThreadId = ::GetCurrentThreadId();
+
+	return TryMutexWithHint(x_uLockingThreadId, x_uSpinCount, dwThreadId);
 }
 void Mutex::Lock() noexcept {
 	ASSERT(!IsLockedByCurrentThread());
@@ -73,7 +75,7 @@ void Mutex::Lock() noexcept {
 	auto uQueueSize = x_splQueueSize.Lock();
 	if(EXPECT(uQueueSize == 0)){
 		x_splQueueSize.Unlock(uQueueSize);
-		if(EXPECT(xTryWithHint(dwThreadId))){
+		if(EXPECT(TryMutexWithHint(x_uLockingThreadId, x_uSpinCount, dwThreadId))){
 			return;
 		}
 		uQueueSize = x_splQueueSize.Lock();
@@ -83,7 +85,7 @@ void Mutex::Lock() noexcept {
 		x_splQueueSize.Unlock(uQueueSize);
 		x_vSemaphore.Wait();
 
-		if(EXPECT_NOT(xTryWithHint(dwThreadId))){
+		if(EXPECT_NOT(TryMutexWithHint(x_uLockingThreadId, x_uSpinCount, dwThreadId))){
 			return;
 		}
 		uQueueSize = x_splQueueSize.Lock();

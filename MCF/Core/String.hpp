@@ -654,6 +654,11 @@ String<kTypeT> &operator+=(String<kTypeT> &lhs, typename String<kTypeT>::Char rh
 	lhs.Append(rhs);
 	return lhs;
 }
+template<StringType kTypeT>
+String<kTypeT> &operator+=(String<kTypeT> &lhs, const typename String<kTypeT>::Char *rhs){
+	lhs.Append(rhs);
+	return lhs;
+}
 template<StringType kTypeT, StringType OTHER_kTypeT>
 String<kTypeT> &&operator+=(String<kTypeT> &&lhs, const String<OTHER_kTypeT> &rhs){
 	lhs.Append(rhs);
@@ -666,6 +671,11 @@ String<kTypeT> &&operator+=(String<kTypeT> &&lhs, const StringObserver<OTHER_kTy
 }
 template<StringType kTypeT>
 String<kTypeT> &&operator+=(String<kTypeT> &&lhs, typename String<kTypeT>::Char rhs){
+	lhs.Append(rhs);
+	return std::move(lhs);
+}
+template<StringType kTypeT>
+String<kTypeT> &&operator+=(String<kTypeT> &&lhs, const typename String<kTypeT>::Char *rhs){
 	lhs.Append(rhs);
 	return std::move(lhs);
 }
@@ -693,6 +703,12 @@ String<kTypeT> operator+(const String<kTypeT> &lhs, typename String<kTypeT>::Cha
 	strRet += rhs;
 	return strRet;
 }
+template<StringType kTypeT>
+String<kTypeT> operator+(const String<kTypeT> &lhs, const typename String<kTypeT>::Char *rhs){
+	String<kTypeT> strRet(lhs);
+	strRet += rhs;
+	return strRet;
+}
 template<StringType kTypeT, StringType OTHER_kTypeT>
 String<kTypeT> &&operator+(String<kTypeT> &&lhs, const String<OTHER_kTypeT> &rhs){
 	return std::move(lhs += rhs);
@@ -703,6 +719,10 @@ String<kTypeT> &&operator+(String<kTypeT> &&lhs, const StringObserver<OTHER_kTyp
 }
 template<StringType kTypeT>
 String<kTypeT> &&operator+(String<kTypeT> &&lhs, typename String<kTypeT>::Char rhs){
+	return std::move(lhs += rhs);
+}
+template<StringType kTypeT>
+String<kTypeT> &&operator+(String<kTypeT> &&lhs, const typename String<kTypeT>::Char *rhs){
 	return std::move(lhs += rhs);
 }
 template<StringType kTypeT>

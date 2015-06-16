@@ -9,6 +9,7 @@
 #include <utility>
 #include <tuple>
 #include "../Utilities/Invoke.hpp"
+#include "ReferenceWrapper.hpp"
 
 namespace MCF {
 
@@ -26,14 +27,17 @@ namespace Impl_Bind {
 		{
 		}
 
+		template<std::size_t kIndexT>
+		decltype(auto) operator()(Placeholder<kIndexT> /* vParam */) noexcept {
+			return static_cast<std::tuple_element_t<kIndexT - 1, decltype(tupParamsAdd)> &&>(std::get<kIndexT - 1>(tupParamsAdd));
+		}
 		template<typename ParamT>
 		decltype(auto) operator()(ParamT &vParam) noexcept {
 			return vParam;
 		}
-		template<std::size_t kIndexT>
-		decltype(auto) operator()(Placeholder<kIndexT> /* vParam */) noexcept {
-			auto &&vRet = std::get<kIndexT - 1>(tupParamsAdd);
-			return static_cast<decltype(vRet)>(vRet);
+		template<typename ParamT>
+		decltype(auto) operator()(const ReferenceWrapper<ParamT> &vParam) noexcept {
+			return vParam.Forward();
 		}
 	};
 

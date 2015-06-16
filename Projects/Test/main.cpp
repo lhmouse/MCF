@@ -1,13 +1,15 @@
 #include <MCF/StdMCF.hpp>
 #include <MCF/Core/String.hpp>
-#include <MCF/Core/LastError.hpp>
+#include <MCF/Function/Bind.hpp>
 #include <iostream>
 
 using namespace MCF;
 
 extern "C" unsigned int MCFMain() noexcept {
-	SetWin32LastError(ERROR_PROCESS_ABORTED);
-	auto wcs = GetWin32ErrorDescription();
-	std::cout <<AnsiString(wcs).GetStr() <<std::endl;
+	AnsiString str;
+	auto fn = Bind([](auto &str, auto s){ str += s; }, Ref(str), _1);
+	fn("hello ");
+	fn("world!");
+	std::cout <<str.GetStr() <<std::endl;
 	return 0;
 }

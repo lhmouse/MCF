@@ -13,6 +13,9 @@ namespace MCF {
 
 template<typename ObjectT>
 class ReferenceWrapper {
+public:
+	using Reference = ObjectT &;
+
 private:
 	std::remove_reference_t<ObjectT> *x_pObject;
 
@@ -43,6 +46,9 @@ public:
 
 template<typename ObjectT>
 class ReferenceWrapper<ObjectT &&> {
+public:
+	using Reference = ObjectT &&;
+
 private:
 	std::remove_reference_t<ObjectT> *x_pObject;
 

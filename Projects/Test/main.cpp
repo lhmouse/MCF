@@ -1,18 +1,13 @@
 #include <MCF/StdMCF.hpp>
-#include <MCF/Thread/Mutex.hpp>
+#include <MCF/Core/String.hpp>
+#include <MCF/Core/LastError.hpp>
 #include <iostream>
-#include <string>
 
 using namespace MCF;
 
 extern "C" unsigned int MCFMain() noexcept {
-	Mutex m;
-
-	Mutex::UniqueLock l1(m);
-	l1.Unlock();
-
-	Mutex::UniqueLock l2(m);
-	l2.Unlock();
-
+	SetWin32LastError(ERROR_PROCESS_ABORTED);
+	auto wcs = GetWin32ErrorDescription();
+	std::cout <<AnsiString(wcs).GetStr() <<std::endl;
 	return 0;
 }

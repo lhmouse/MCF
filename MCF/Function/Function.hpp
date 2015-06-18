@@ -72,28 +72,28 @@ public:
 		Reset(std::forward<FuncT>(vFunc));
 	}
 	Function &operator=(std::nullptr_t) noexcept {
-		Reset();
-		return *this;
+		return Reset();
 	}
 	template<typename FuncT,
 		std::enable_if_t<
 			std::is_convertible<std::result_of_t<FuncT && (ForwardedParam<ParamsT>...)>, RetT>::value,
 			int> = 0>
 	Function &operator=(FuncT &&vFunc){
-		Reset(std::forward<FuncT>(vFunc));
-		return *this;
+		return Reset(std::forward<FuncT>(vFunc));
 	}
 
 public:
-	void Reset(std::nullptr_t = nullptr) noexcept {
+	Function &Reset(std::nullptr_t = nullptr) noexcept {
 		x_pFunctor.Reset();
+		return *this;
 	}
 	template<typename FuncT,
 		std::enable_if_t<
 			std::is_convertible<std::result_of_t<FuncT && (ForwardedParam<ParamsT>...)>, RetT>::value,
 			int> = 0>
-	void Reset(FuncT &&vFunc){
+	Function &Reset(FuncT &&vFunc){
 		x_pFunctor.Reset(new Impl_Function::Functor<FuncT, RetT, ParamsT...>(std::forward<FuncT>(vFunc)));
+		return *this;
 	}
 
 	void Swap(Function &rhs) noexcept {

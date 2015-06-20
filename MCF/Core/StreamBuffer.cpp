@@ -3,7 +3,7 @@
 // Copyleft 2013 - 2015, LH_Mouse. All wrongs reserved.
 
 #include "../StdMCF.hpp"
-#include "../Core/StreamBuffer.hpp"
+#include "StreamBuffer.hpp"
 #include "../Utilities/Assert.hpp"
 #include "../Utilities/MinMax.hpp"
 #include "../Utilities/CopyMoveFill.hpp"

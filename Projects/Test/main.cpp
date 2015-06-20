@@ -1,15 +1,16 @@
 #include <MCF/StdMCF.hpp>
-#include <MCF/Core/String.hpp>
-#include <MCF/Function/Bind.hpp>
-#include <iostream>
+#include <MCF/Core/DynamicLinkLibrary.hpp>
+#include <cstdio>
 
 using namespace MCF;
 
 extern "C" unsigned int MCFMain() noexcept {
-	AnsiString str;
-	auto fn = Bind([](auto &str, auto s){ str += s; }, Ref(str), _1);
-	fn("hello ");
-	fn("world!");
-	std::cout <<str.GetStr() <<std::endl;
+	DynamicLinkLibrary dll(L"msvcr100.dll");
+	auto pfn = dll.GetProcAddress<int __cdecl(const char *, ...)>("printf");
+	if(!pfn){
+		std::puts("failed to get address of printf()");
+	} else {
+		(*pfn)("hello world! i = %d\n", 123);
+	}
 	return 0;
 }

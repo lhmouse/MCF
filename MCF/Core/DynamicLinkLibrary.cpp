@@ -19,7 +19,7 @@ void DynamicLinkLibrary::xLibraryFreer::operator()(DynamicLinkLibrary::xLibraryF
 const void *DynamicLinkLibrary::GetBaseAddress() const noexcept {
 	return x_hDll.Get();
 }
-auto DynamicLinkLibrary::GetProcAddress(const char *pszName) -> std::intptr_t (__stdcall *)() {
+auto DynamicLinkLibrary::RawGetProcAddress(const char *pszName) -> std::intptr_t (__stdcall *)() {
 	if(!x_hDll){
 		DEBUG_THROW(Exception, "No shared library open", ERROR_INVALID_HANDLE);
 	}

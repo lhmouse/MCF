@@ -53,13 +53,13 @@ public:
 	void Close() noexcept;
 
 	const void *GetBaseAddress() const noexcept;
-	auto GetProcAddress(const char *pszName) -> std::intptr_t (__stdcall *)();
+	auto RawGetProcAddress(const char *pszName) -> std::intptr_t (__stdcall *)();
 
 	template<typename FunctionT>
 	FunctionT *GetProcAddress(const char *pszName){
 		static_assert(std::is_function<FunctionT>::value, "FunctionT shall be a function type");
 
-		return reinterpret_cast<FunctionT *>(GetProcAddress(pszName));
+		return reinterpret_cast<FunctionT *>(RawGetProcAddress(pszName));
 	}
 
 public:

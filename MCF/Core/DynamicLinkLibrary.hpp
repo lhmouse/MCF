@@ -22,6 +22,9 @@ private:
 		void operator()(Handle hDll) noexcept;
 	};
 
+public:
+	using RawProc = std::intptr_t (__stdcall *)();
+
 private:
 	UniqueHandle<xLibraryFreer> x_hDll;
 
@@ -53,7 +56,7 @@ public:
 	void Close() noexcept;
 
 	const void *GetBaseAddress() const noexcept;
-	auto RawGetProcAddress(const char *pszName) -> std::intptr_t (__stdcall *)();
+	RawProc RawGetProcAddress(const char *pszName);
 
 	template<typename FunctionT>
 	FunctionT *GetProcAddress(const char *pszName){

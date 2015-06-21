@@ -39,10 +39,12 @@ public:
 	}
 	const wchar_t *GetStr(std::size_t uIndex) const noexcept {
 		ASSERT(uIndex <= x_uArgc); // 传入 x_uArgc 会得到一个空指针。
+
 		return x_pArgv[uIndex].pwszStr;
 	}
 	std::size_t GetLen(std::size_t uIndex) const noexcept {
 		ASSERT(uIndex <= x_uArgc);
+
 		return x_pArgv[uIndex].uLen;
 	}
 	WideStringObserver Get(std::size_t uIndex) const noexcept {

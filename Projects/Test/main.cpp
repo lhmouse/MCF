@@ -1,14 +1,12 @@
 #include <MCF/StdMCF.hpp>
-#include <MCF/Function/Bind.hpp>
-#include <MCF/Core/String.hpp>
+#include <MCF/Utilities/CountLeadingTrailingZeroes.hpp>
 #include <cstdio>
 
 using namespace MCF;
 
 extern "C" unsigned int MCFMain() noexcept {
-	auto s = "hello world!"_u8s;
-	auto fn = Bind([](auto &&s){ return static_cast<decltype(s)>(s); }, RefWrapper<Utf8String &&>(s));
-	std::printf("fn() = %s\n", fn().GetStr());
-	std::printf("s = %s\n", s.GetStr());
+	constexpr std::uint32_t v = 0x12345;
+	std::int32_t a[CountLeadingZeroes(v)];
+	std::printf("sizeof(a) = %zu\n", sizeof(a));
 	return 0;
 }

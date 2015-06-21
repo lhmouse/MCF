@@ -99,14 +99,14 @@ public:
 	{
 		Swap(rhs);
 	}
-	template<StringType OTHER_kTypeT>
-	explicit String(const StringObserver<OTHER_kTypeT> &rhs)
+	template<StringType kOtherTypeT>
+	explicit String(const StringObserver<kOtherTypeT> &rhs)
 		: String()
 	{
 		Append(rhs);
 	}
-	template<StringType OTHER_kTypeT>
-	explicit String(const String<OTHER_kTypeT> &rhs)
+	template<StringType kOtherTypeT>
+	explicit String(const String<kOtherTypeT> &rhs)
 		: String()
 	{
 		Append(rhs);
@@ -135,13 +135,13 @@ public:
 		Assign(std::move(rhs));
 		return *this;
 	}
-	template<StringType OTHER_kTypeT>
-	String &operator=(const StringObserver<OTHER_kTypeT> &rhs){
+	template<StringType kOtherTypeT>
+	String &operator=(const StringObserver<kOtherTypeT> &rhs){
 		Assign(rhs);
 		return *this;
 	}
-	template<StringType OTHER_kTypeT>
-	String &operator=(const String<OTHER_kTypeT> &rhs){
+	template<StringType kOtherTypeT>
+	String &operator=(const String<kOtherTypeT> &rhs){
 		Assign(rhs);
 		return *this;
 	}
@@ -360,14 +360,14 @@ public:
 	void Assign(std::initializer_list<Char> rhs){
 		Assign(Observer(rhs));
 	}
-	template<StringType OTHER_kTypeT>
-	void Assign(const StringObserver<OTHER_kTypeT> &rhs){
+	template<StringType kOtherTypeT>
+	void Assign(const StringObserver<kOtherTypeT> &rhs){
 		Clear();
 		Append(rhs);
 	}
-	template<StringType OTHER_kTypeT>
-	void Assign(const String<OTHER_kTypeT> &rhs){
-		Assign(StringObserver<OTHER_kTypeT>(rhs));
+	template<StringType kOtherTypeT>
+	void Assign(const String<kOtherTypeT> &rhs){
+		Assign(StringObserver<kOtherTypeT>(rhs));
 	}
 	void Assign(const String &rhs){
 		if(&rhs != this){
@@ -410,13 +410,13 @@ public:
 			Swap(rhs);
 		}
 	}
-	template<StringType OTHER_kTypeT>
-	void Append(const StringObserver<OTHER_kTypeT> &rhs){
+	template<StringType kOtherTypeT>
+	void Append(const StringObserver<kOtherTypeT> &rhs){
 		UnifiedString ucsTempStorage;
-		Deunify(*this, GetSize(), String<OTHER_kTypeT>::Unify(ucsTempStorage, rhs));
+		Deunify(*this, GetSize(), String<kOtherTypeT>::Unify(ucsTempStorage, rhs));
 	}
-	template<StringType OTHER_kTypeT>
-	void Append(const String<OTHER_kTypeT> &rhs){
+	template<StringType kOtherTypeT>
+	void Append(const String<kOtherTypeT> &rhs){
 		Append(rhs.GetObserver());
 	}
 	void Truncate(std::size_t uCount = 1) noexcept {
@@ -484,13 +484,13 @@ public:
 			Swap(rhs);
 		}
 	}
-	template<StringType OTHER_kTypeT>
-	void Unshift(const StringObserver<OTHER_kTypeT> &rhs){
+	template<StringType kOtherTypeT>
+	void Unshift(const StringObserver<kOtherTypeT> &rhs){
 		UnifiedString ucsTempStorage;
-		Deunify(*this, 0, String<OTHER_kTypeT>::Unify(ucsTempStorage, rhs));
+		Deunify(*this, 0, String<kOtherTypeT>::Unify(ucsTempStorage, rhs));
 	}
-	template<StringType OTHER_kTypeT>
-	void Unshift(const String<OTHER_kTypeT> &rhs){
+	template<StringType kOtherTypeT>
+	void Unshift(const String<kOtherTypeT> &rhs){
 		Unshift(rhs.GetObserver());
 	}
 	void Shift(std::size_t uCount = 1) noexcept {
@@ -581,8 +581,8 @@ public:
 			xSetSize(uRemovedBegin + obsRep.GetSize() + (uOldLength - uRemovedEnd));
 		}
 	}
-	template<StringType OTHER_kTypeT>
-	void Replace(std::ptrdiff_t nBegin, std::ptrdiff_t nEnd, const StringObserver<OTHER_kTypeT> &obsRep){
+	template<StringType kOtherTypeT>
+	void Replace(std::ptrdiff_t nBegin, std::ptrdiff_t nEnd, const StringObserver<kOtherTypeT> &obsRep){
 		// 基本异常安全保证。
 		const auto obsCurrent(GetObserver());
 		const auto uOldLength = obsCurrent.GetLength();
@@ -594,10 +594,10 @@ public:
 		const auto pchWrite = xChopAndSplice(uRemovedBegin, uRemovedEnd, 0, uRemovedBegin);
 		xSetSize(uRemovedBegin + (uOldLength - uRemovedEnd));
 		UnifiedString ucsTempStorage;
-		Deunify(*this, uRemovedBegin, String<OTHER_kTypeT>::Unify(ucsTempStorage, obsRep));
+		Deunify(*this, uRemovedBegin, String<kOtherTypeT>::Unify(ucsTempStorage, obsRep));
 	}
-	template<StringType OTHER_kTypeT>
-	void Replace(std::ptrdiff_t nBegin, std::ptrdiff_t nEnd, const String<OTHER_kTypeT> &strRep){
+	template<StringType kOtherTypeT>
+	void Replace(std::ptrdiff_t nBegin, std::ptrdiff_t nEnd, const String<kOtherTypeT> &strRep){
 		Replace(nBegin, nEnd, strRep.GetObserver());
 	}
 
@@ -639,13 +639,13 @@ public:
 	}
 };
 
-template<StringType kTypeT, StringType OTHER_kTypeT>
-String<kTypeT> &operator+=(String<kTypeT> &lhs, const String<OTHER_kTypeT> &rhs){
+template<StringType kTypeT, StringType kOtherTypeT>
+String<kTypeT> &operator+=(String<kTypeT> &lhs, const String<kOtherTypeT> &rhs){
 	lhs.Append(rhs);
 	return lhs;
 }
-template<StringType kTypeT, StringType OTHER_kTypeT>
-String<kTypeT> &operator+=(String<kTypeT> &lhs, const StringObserver<OTHER_kTypeT> &rhs){
+template<StringType kTypeT, StringType kOtherTypeT>
+String<kTypeT> &operator+=(String<kTypeT> &lhs, const StringObserver<kOtherTypeT> &rhs){
 	lhs.Append(rhs);
 	return lhs;
 }
@@ -659,13 +659,13 @@ String<kTypeT> &operator+=(String<kTypeT> &lhs, const typename String<kTypeT>::C
 	lhs.Append(rhs);
 	return lhs;
 }
-template<StringType kTypeT, StringType OTHER_kTypeT>
-String<kTypeT> &&operator+=(String<kTypeT> &&lhs, const String<OTHER_kTypeT> &rhs){
+template<StringType kTypeT, StringType kOtherTypeT>
+String<kTypeT> &&operator+=(String<kTypeT> &&lhs, const String<kOtherTypeT> &rhs){
 	lhs.Append(rhs);
 	return std::move(lhs);
 }
-template<StringType kTypeT, StringType OTHER_kTypeT>
-String<kTypeT> &&operator+=(String<kTypeT> &&lhs, const StringObserver<OTHER_kTypeT> &rhs){
+template<StringType kTypeT, StringType kOtherTypeT>
+String<kTypeT> &&operator+=(String<kTypeT> &&lhs, const StringObserver<kOtherTypeT> &rhs){
 	lhs.Append(rhs);
 	return std::move(lhs);
 }
@@ -685,14 +685,14 @@ String<kTypeT> &&operator+=(String<kTypeT> &&lhs, String<kTypeT> &&rhs){
 	return std::move(lhs);
 }
 
-template<StringType kTypeT, StringType OTHER_kTypeT>
-String<kTypeT> operator+(const String<kTypeT> &lhs, const String<OTHER_kTypeT> &rhs){
+template<StringType kTypeT, StringType kOtherTypeT>
+String<kTypeT> operator+(const String<kTypeT> &lhs, const String<kOtherTypeT> &rhs){
 	String<kTypeT> strRet(lhs);
 	strRet += rhs;
 	return strRet;
 }
-template<StringType kTypeT, StringType OTHER_kTypeT>
-String<kTypeT> operator+(const String<kTypeT> &lhs, const StringObserver<OTHER_kTypeT> &rhs){
+template<StringType kTypeT, StringType kOtherTypeT>
+String<kTypeT> operator+(const String<kTypeT> &lhs, const StringObserver<kOtherTypeT> &rhs){
 	String<kTypeT> strRet(lhs);
 	strRet += rhs;
 	return strRet;
@@ -709,12 +709,12 @@ String<kTypeT> operator+(const String<kTypeT> &lhs, const typename String<kTypeT
 	strRet += rhs;
 	return strRet;
 }
-template<StringType kTypeT, StringType OTHER_kTypeT>
-String<kTypeT> &&operator+(String<kTypeT> &&lhs, const String<OTHER_kTypeT> &rhs){
+template<StringType kTypeT, StringType kOtherTypeT>
+String<kTypeT> &&operator+(String<kTypeT> &&lhs, const String<kOtherTypeT> &rhs){
 	return std::move(lhs += rhs);
 }
-template<StringType kTypeT, StringType OTHER_kTypeT>
-String<kTypeT> &&operator+(String<kTypeT> &&lhs, const StringObserver<OTHER_kTypeT> &rhs){
+template<StringType kTypeT, StringType kOtherTypeT>
+String<kTypeT> &&operator+(String<kTypeT> &&lhs, const StringObserver<kOtherTypeT> &rhs){
 	return std::move(lhs += rhs);
 }
 template<StringType kTypeT>

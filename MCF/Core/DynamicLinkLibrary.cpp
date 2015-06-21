@@ -26,6 +26,17 @@ DynamicLinkLibrary::RawProc DynamicLinkLibrary::RawGetProcAddress(const char *ps
 
 	return ::GetProcAddress(reinterpret_cast<HINSTANCE>(x_hDll.Get()), pszName);
 }
+DynamicLinkLibrary::RawProc DynamicLinkLibrary::RawRequireProcAddress(const char *pszName){
+	if(!x_hDll){
+		DEBUG_THROW(Exception, "No shared library open", ERROR_INVALID_HANDLE);
+	}
+
+	const auto pfnRet = ::GetProcAddress(reinterpret_cast<HINSTANCE>(x_hDll.Get()), pszName);
+	if(!pfnRet){
+		DEBUG_THROW(SystemError, "GetProcAddress");
+	}
+	return pfnRet;
+}
 
 bool DynamicLinkLibrary::IsOpen() const noexcept {
 	return !!x_hDll;

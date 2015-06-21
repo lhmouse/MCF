@@ -57,12 +57,19 @@ public:
 
 	const void *GetBaseAddress() const noexcept;
 	RawProc RawGetProcAddress(const char *pszName);
+	RawProc RawRequireProcAddress(const char *pszName);
 
 	template<typename FunctionT>
 	FunctionT *GetProcAddress(const char *pszName){
 		static_assert(std::is_function<FunctionT>::value, "FunctionT shall be a function type");
 
 		return reinterpret_cast<FunctionT *>(RawGetProcAddress(pszName));
+	}
+	template<typename FunctionT>
+	FunctionT *RequireProcAddress(const char *pszName){
+		static_assert(std::is_function<FunctionT>::value, "FunctionT shall be a function type");
+
+		return reinterpret_cast<FunctionT *>(RawRequireProcAddress(pszName));
 	}
 
 public:

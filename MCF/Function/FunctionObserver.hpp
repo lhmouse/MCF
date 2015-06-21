@@ -10,6 +10,7 @@
 #include "_ForwardedParam.hpp"
 #include <type_traits>
 #include <utility>
+#include <memory>
 
 namespace MCF {
 
@@ -21,7 +22,8 @@ class FunctionObserver {
 template<typename RetT, typename ...ParamsT>
 class FunctionObserver<RetT (ParamsT...)> {
 private:
-	RetT (*const x_pfnLambda)(ParamsT &&...);
+	RetT (*x_pfnLambda)(const void *, ParamsT &&...);
+	const void *x_pContext;
 
 public:
 	FunctionObserver(const FunctionObserver &) noexcept = default;
@@ -63,7 +65,8 @@ public:
 			std::is_convertible<std::result_of_t<FuncT && (ForwardedParam<ParamsT>...)>, RetT>::value,
 			int> = 0>
 	FunctionObserver &Reset(const FuncT &vFunc){
-		x_pfnLambda = [&](ParamsT &&...vParams){ return Invoke(vFunc, std::forward<ParamsT>(vParams)...); };
+		x_pfnLambda = [](const void *pContext, ParamsT &&...vParams){ return Invoke(*static_cast<const FuncT *>(pContext), std::forward<ParamsT>(vParams)...); };
+		x_pContext = std::addressof(vFunc);
 		return *this;
 	}
 
@@ -78,7 +81,7 @@ public:
 	RetT operator()(ParamsT ...vParams) const {
 		ASSERT(x_pfnLambda);
 
-		return (*x_pfnLambda)(std::forward<ParamsT>(vParams)...); // 值形参当作右值引用传递。
+		return (*x_pfnLambda)(x_pContext, std::forward<ParamsT>(vParams)...); // 值形参当作右值引用传递。
 	}
 };
 

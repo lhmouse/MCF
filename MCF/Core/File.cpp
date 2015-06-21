@@ -132,7 +132,7 @@ void File::Clear(){
 }
 
 std::size_t File::Read(void *pBuffer, std::uint32_t u32BytesToRead, std::uint64_t u64Offset,
-	const Function<void ()> &fnAsyncProc, const Function<void ()> &fnCompleteCallback) const
+	const FunctionObserver<void ()> &fnAsyncProc, const FunctionObserver<void ()> &fnCompleteCallback) const
 {
 	if(!x_hFile){
 		DEBUG_THROW(Exception, "No file open", ERROR_INVALID_HANDLE);
@@ -168,7 +168,7 @@ std::size_t File::Read(void *pBuffer, std::uint32_t u32BytesToRead, std::uint64_
 	return dwTransferred;
 }
 std::size_t File::Write(std::uint64_t u64Offset, const void *pBuffer, std::uint32_t u32BytesToWrite,
-	const Function<void ()> &fnAsyncProc, const Function<void ()> &fnCompleteCallback)
+	const FunctionObserver<void ()> &fnAsyncProc, const FunctionObserver<void ()> &fnCompleteCallback)
 {
 	if(!x_hFile){
 		DEBUG_THROW(Exception, "No file open", ERROR_INVALID_HANDLE);

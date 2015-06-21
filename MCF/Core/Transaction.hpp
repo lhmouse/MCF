@@ -65,9 +65,7 @@ public:
 
 	template<typename LockFuncT, typename CommitFuncT, typename UnlockFuncT>
 	void Add(LockFuncT fnLock, CommitFuncT fnCommit, UnlockFuncT fnUnlock){
-		Add(MakeUnique<
-			TransactionTemplate<LockFuncT, CommitFuncT, UnlockFuncT>
-			>(std::move(fnLock), std::move(fnCommit), std::move(fnUnlock)));
+		Add(MakeUnique<TransactionTemplate<LockFuncT, CommitFuncT, UnlockFuncT>>(std::move(fnLock), std::move(fnCommit), std::move(fnUnlock)));
 	}
 
 	bool Commit() const;

@@ -1,17 +1,14 @@
 #include <MCF/StdMCF.hpp>
-#include <MCF/Core/DynamicLinkLibrary.hpp>
-#include <MCF/Core/Exception.hpp>
-#include <MCF/Core/LastError.hpp>
+#include <MCF/Function/Bind.hpp>
+#include <MCF/Core/String.hpp>
 #include <cstdio>
 
 using namespace MCF;
 
 extern "C" unsigned int MCFMain() noexcept {
-	DynamicLinkLibrary dll(L"msvcr100.dll");
-	try {
-		auto pfn = dll.RequireProcAddress<int __cdecl(const char *, ...)>("printf_not_exist");
-	} catch(SystemError &e){
-		std::printf("SystemError caught: code = %lu, desc = %s\n", e.GetCode(), AnsiString(GetWin32ErrorDescription(e.GetCode())).GetStr());
-	}
+	auto s = "hello world!"_u8s;
+	auto fn = Bind([](auto &&s){ return static_cast<decltype(s)>(s); }, RefWrapper<Utf8String &&>(s));
+	std::printf("fn() = %s\n", fn().GetStr());
+	std::printf("s = %s\n", s.GetStr());
 	return 0;
 }

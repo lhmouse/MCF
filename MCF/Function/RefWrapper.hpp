@@ -53,8 +53,12 @@ private:
 	std::remove_reference_t<ObjectT> *x_pObject;
 
 public:
-	constexpr RefWrapper(ObjectT &&vObject) noexcept
+	constexpr RefWrapper(ObjectT &vObject) noexcept
 		: x_pObject(std::addressof(vObject))
+	{
+	}
+	constexpr RefWrapper(ObjectT &&vObject) noexcept
+		: RefWrapper(vObject)
 	{
 	}
 

@@ -329,19 +329,11 @@ public:
 		}
 		return *this;
 	}
-	template<typename OtherObjectT, typename OtherDeleterT,
-		std::enable_if_t<
-			std::is_convertible<typename UniquePtr<OtherObjectT, OtherDeleterT>::Element *, Element *>::value &&
-				std::is_convertible<typename UniquePtr<OtherObjectT, OtherDeleterT>::Deleter, Deleter>::value,
-			int> = 0>
+	template<typename OtherObjectT, typename OtherDeleterT>
 	IntrusivePtr &Reset(UniquePtr<OtherObjectT, OtherDeleterT> &&rhs) noexcept {
-		return Reset(rhs.Release());
+		return Reset(static_cast<Element *>(rhs.Release()));
 	}
-	template<typename OtherObjectT, typename OtherDeleterT,
-		std::enable_if_t<
-			std::is_convertible<typename IntrusivePtr<OtherObjectT, OtherDeleterT>::Element *, Element *>::value &&
-				std::is_convertible<typename IntrusivePtr<OtherObjectT, OtherDeleterT>::Deleter, Deleter>::value,
-			int> = 0>
+	template<typename OtherObjectT, typename OtherDeleterT>
 	IntrusivePtr &Reset(const IntrusivePtr<OtherObjectT, OtherDeleterT> &rhs) noexcept {
 		const auto pElement = rhs.Get();
 		if(pElement == x_pElement){
@@ -350,15 +342,11 @@ public:
 		if(pElement){
 			static_cast<const volatile Impl_IntrusivePtr::RefCountBase *>(pElement)->AddRef();
 		}
-		return Reset(pElement);
+		return Reset(static_cast<Element *>(pElement));
 	}
-	template<typename OtherObjectT, typename OtherDeleterT,
-		std::enable_if_t<
-			std::is_convertible<typename IntrusivePtr<OtherObjectT, OtherDeleterT>::Element *, Element *>::value &&
-				std::is_convertible<typename IntrusivePtr<OtherObjectT, OtherDeleterT>::Deleter, Deleter>::value,
-			int> = 0>
+	template<typename OtherObjectT, typename OtherDeleterT>
 	IntrusivePtr &Reset(IntrusivePtr<OtherObjectT, OtherDeleterT> &&rhs) noexcept {
-		return Reset(rhs.Release());
+		return Reset(static_cast<Element *>(rhs.Release()));
 	}
 
 	void Swap(IntrusivePtr &rhs) noexcept {

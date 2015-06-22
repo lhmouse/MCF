@@ -54,19 +54,6 @@ public:
 	{
 		Reset(std::move(rhs));
 	}
-	UniquePtr &operator=(std::nullptr_t) noexcept {
-		return Reset();
-	}
-	template<typename OtherObjectT, typename OtherDeleterT,
-		std::enable_if_t<
-			((!std::is_void<ObjectT>::value && !std::is_array<ObjectT>::value)
-					? std::is_convertible<typename UniquePtr<OtherObjectT, OtherDeleterT>::Element *, Element *>::value
-					: std::is_same<std::decay_t<OtherObjectT>, std::decay_t<ObjectT>>::value) &&
-				std::is_convertible<typename UniquePtr<OtherObjectT, OtherDeleterT>::Deleter, Deleter>::value,
-			int> = 0>
-	UniquePtr &operator=(UniquePtr<OtherObjectT, OtherDeleterT> &&rhs) noexcept {
-		return Reset(std::move(rhs));
-	}
 	UniquePtr &operator=(UniquePtr &&rhs) noexcept {
 		return Reset(std::move(rhs));
 	}

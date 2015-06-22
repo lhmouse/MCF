@@ -44,16 +44,6 @@ public:
 	{
 		Reset(vFunc);
 	}
-	FunctionObserver &operator=(std::nullptr_t) noexcept {
-		return Reset();
-	}
-	template<typename FuncT,
-		std::enable_if_t<
-			std::is_convertible<std::result_of_t<FuncT && (ForwardedParam<ParamsT>...)>, RetT>::value,
-			int> = 0>
-	FunctionObserver &operator=(const FuncT &vFunc) noexcept {
-		return Reset(vFunc);
-	}
 
 public:
 	FunctionObserver &Reset(std::nullptr_t = nullptr) noexcept {

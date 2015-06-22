@@ -63,10 +63,6 @@ public:
 	{
 		Swap(rhs);
 	}
-	Vector &operator=(std::initializer_list<ElementT> rhs){
-		Vector(rhs).Swap(*this);
-		return *this;
-	}
 	Vector &operator=(const Vector &rhs){
 		if(&rhs != this){
 			Vector(rhs).Swap(*this);
@@ -349,28 +345,28 @@ void swap(Vector<ElementT> &lhs, Vector<ElementT> &rhs) noexcept {
 }
 
 template<class ElementT>
-auto begin(const Vector<ElementT> &lhs) noexcept {
-	return lhs.GetBegin();
+auto begin(const Vector<ElementT> &rhs) noexcept {
+	return rhs.GetBegin();
 }
 template<class ElementT>
-auto begin(Vector<ElementT> &lhs) noexcept {
-	return lhs.GetBegin();
+auto begin(Vector<ElementT> &rhs) noexcept {
+	return rhs.GetBegin();
 }
 template<class ElementT>
-auto cbegin(const Vector<ElementT> &lhs) noexcept {
-	return lhs.GetBegin();
+auto cbegin(const Vector<ElementT> &rhs) noexcept {
+	return rhs.GetBegin();
 }
 template<class ElementT>
-auto end(const Vector<ElementT> &lhs) noexcept {
-	return lhs.GetEnd();
+auto end(const Vector<ElementT> &rhs) noexcept {
+	return rhs.GetEnd();
 }
 template<class ElementT>
-auto end(Vector<ElementT> &lhs) noexcept {
-	return lhs.GetEnd();
+auto end(Vector<ElementT> &rhs) noexcept {
+	return rhs.GetEnd();
 }
 template<class ElementT>
-auto cend(const Vector<ElementT> &lhs) noexcept {
-	return lhs.GetEnd();
+auto cend(const Vector<ElementT> &rhs) noexcept {
+	return rhs.GetEnd();
 }
 
 }

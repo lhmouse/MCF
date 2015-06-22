@@ -47,27 +47,12 @@ private:
 				UncheckedPush(std::move(*pCur));
 			}
 		}
-		xChunk &operator=(const xChunk &rhs)
-			noexcept(std::is_nothrow_copy_constructible<ElementT>::value)
-		{
-			Clear(true);
-			for(auto pCur = rhs.x_pBegin; pCur != x_pEnd; ++pCur){
-				UncheckedPush(*pCur);
-			}
-			return *this;
-		}
-		xChunk &operator=(xChunk &&rhs)
-			noexcept(std::is_nothrow_move_constructible<ElementT>::value)
-		{
-			Clear(true);
-			for(auto pCur = rhs.x_pBegin; pCur != x_pEnd; ++pCur){
-				UncheckedPush(std::move(*pCur));
-			}
-			return *this;
-		}
 		~xChunk(){
 			Clear(true);
 		}
+
+		xChunk &operator=(const xChunk &rhs) = delete;
+		xChunk &operator=(xChunk &&rhs) = delete;
 
 	public:
 		const ElementT *GetBegin() const noexcept {
@@ -266,7 +251,9 @@ private:
 
 public:
 	constexpr Deque() noexcept = default;
+	Deque(const Deque &) = default;
 	Deque(Deque &&) noexcept = default;
+	Deque &operator=(const Deque &) = default;
 	Deque &operator=(Deque &&) noexcept = default;
 
 	template<typename ...ParamsT>
@@ -289,25 +276,10 @@ public:
 	{
 		AppendCopy(itBegin, uCount);
 	}
-	Deque(std::initializer_list<ElementT> rhs)
+	explicit Deque(std::initializer_list<ElementT> rhs)
 		: Deque()
 	{
 		AppendCopy(rhs.begin(), rhs.size());
-	}
-	Deque(const Deque &rhs)
-		: Deque()
-	{
-		AppendCopy(rhs.GetFirstCursor(), ConstCursor());
-	}
-	Deque &operator=(std::initializer_list<ElementT> rhs){
-		Deque(rhs).Swap(*this);
-		return *this;
-	}
-	Deque &operator=(const Deque &rhs){
-		if(&rhs != this){
-			Deque(rhs).Swap(*this);
-		}
-		return *this;
 	}
 
 public:
@@ -562,16 +534,16 @@ void swap(Deque<ElementT> &lhs, Deque<ElementT> &rhs) noexcept {
 }
 
 template<class ElementT>
-auto begin(const Deque<ElementT> &lhs) noexcept {
-	return lhs.GetFirstCursor();
+auto begin(const Deque<ElementT> &rhs) noexcept {
+	return rhs.GetFirstCursor();
 }
 template<class ElementT>
-auto begin(Deque<ElementT> &lhs) noexcept {
-	return lhs.GetFirstCursor();
+auto begin(Deque<ElementT> &rhs) noexcept {
+	return rhs.GetFirstCursor();
 }
 template<class ElementT>
-auto cbegin(const Deque<ElementT> &lhs) noexcept {
-	return lhs.GetFirstCursor();
+auto cbegin(const Deque<ElementT> &rhs) noexcept {
+	return rhs.GetFirstCursor();
 }
 template<class ElementT>
 auto end(const Deque<ElementT> &) noexcept {

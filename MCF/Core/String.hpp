@@ -111,38 +111,12 @@ public:
 	{
 		Append(rhs);
 	}
-	String &operator=(Char ch) noexcept {
-		Assign(ch);
-		return *this;
-	}
-	String &operator=(const Char *pszBegin){
-		Assign(pszBegin);
-		return *this;
-	}
-	String &operator=(const Observer &rhs){
-		Assign(rhs);
-		return *this;
-	}
-	String &operator=(std::initializer_list<Char> rhs){
-		Assign(rhs);
-		return *this;
-	}
 	String &operator=(const String &rhs){
 		Assign(rhs);
 		return *this;
 	}
 	String &operator=(String &&rhs) noexcept {
 		Assign(std::move(rhs));
-		return *this;
-	}
-	template<StringType kOtherTypeT>
-	String &operator=(const StringObserver<kOtherTypeT> &rhs){
-		Assign(rhs);
-		return *this;
-	}
-	template<StringType kOtherTypeT>
-	String &operator=(const String<kOtherTypeT> &rhs){
-		Assign(rhs);
 		return *this;
 	}
 	~String() noexcept {
@@ -814,28 +788,28 @@ void swap(String<kTypeT> &lhs, String<kTypeT> &rhs) noexcept {
 }
 
 template<StringType kTypeT>
-auto begin(const String<kTypeT> &lhs) noexcept {
-	return lhs.GetBegin();
+auto begin(const String<kTypeT> &rhs) noexcept {
+	return rhs.GetBegin();
 }
 template<StringType kTypeT>
-auto begin(String<kTypeT> &lhs) noexcept {
-	return lhs.GetBegin();
+auto begin(String<kTypeT> &rhs) noexcept {
+	return rhs.GetBegin();
 }
 template<StringType kTypeT>
-auto cbegin(const String<kTypeT> &lhs) noexcept {
-	return lhs.GetBegin();
+auto cbegin(const String<kTypeT> &rhs) noexcept {
+	return rhs.GetBegin();
 }
 template<StringType kTypeT>
-auto end(const String<kTypeT> &lhs) noexcept {
-	return lhs.GetEnd();
+auto end(const String<kTypeT> &rhs) noexcept {
+	return rhs.GetEnd();
 }
 template<StringType kTypeT>
-auto end(String<kTypeT> &lhs) noexcept {
-	return lhs.GetEnd();
+auto end(String<kTypeT> &rhs) noexcept {
+	return rhs.GetEnd();
 }
 template<StringType kTypeT>
-auto cend(const String<kTypeT> &lhs) noexcept {
-	return lhs.GetEnd();
+auto cend(const String<kTypeT> &rhs) noexcept {
+	return rhs.GetEnd();
 }
 
 extern template class String<StringType::NARROW>;

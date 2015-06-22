@@ -220,12 +220,6 @@ public:
 	{
 		Swap(rhs);
 	}
-	List &operator=(std::initializer_list<ElementT> rhs){
-		if(&rhs != this){
-			List(rhs).Swap(*this);
-		}
-		return *this;
-	}
 	List &operator=(const List &rhs){
 		if(&rhs != this){
 			List(rhs).Swap(*this);
@@ -544,16 +538,16 @@ void swap(List<ElementT> &lhs, List<ElementT> &rhs) noexcept {
 }
 
 template<class ElementT>
-auto begin(const List<ElementT> &lhs) noexcept {
-	return lhs.GetFirstCursor();
+auto begin(const List<ElementT> &rhs) noexcept {
+	return rhs.GetFirstCursor();
 }
 template<class ElementT>
-auto begin(List<ElementT> &lhs) noexcept {
-	return lhs.GetFirstCursor();
+auto begin(List<ElementT> &rhs) noexcept {
+	return rhs.GetFirstCursor();
 }
 template<class ElementT>
-auto cbegin(const List<ElementT> &lhs) noexcept {
-	return lhs.GetFirstCursor();
+auto cbegin(const List<ElementT> &rhs) noexcept {
+	return rhs.GetFirstCursor();
 }
 template<class ElementT>
 auto end(const List<ElementT> &) noexcept {

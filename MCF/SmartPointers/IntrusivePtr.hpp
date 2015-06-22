@@ -297,33 +297,6 @@ public:
 	{
 		Reset(std::move(rhs));
 	}
-	IntrusivePtr &operator=(std::nullptr_t) noexcept {
-		return Reset();
-	}
-	template<typename OtherObjectT, typename OtherDeleterT,
-		std::enable_if_t<
-			std::is_convertible<typename UniquePtr<OtherObjectT, OtherDeleterT>::Element *, Element *>::value &&
-				std::is_convertible<typename UniquePtr<OtherObjectT, OtherDeleterT>::Deleter, Deleter>::value,
-			int> = 0>
-	IntrusivePtr &operator=(UniquePtr<OtherObjectT, OtherDeleterT> &&rhs) noexcept {
-		return Reset(std::move(rhs));
-	}
-	template<typename OtherObjectT, typename OtherDeleterT,
-		std::enable_if_t<
-			std::is_convertible<typename IntrusivePtr<OtherObjectT, OtherDeleterT>::Element *, Element *>::value &&
-				std::is_convertible<typename IntrusivePtr<OtherObjectT, OtherDeleterT>::Deleter, Deleter>::value,
-			int> = 0>
-	IntrusivePtr &operator=(const IntrusivePtr<OtherObjectT, OtherDeleterT> &rhs) noexcept {
-		return Reset(rhs);
-	}
-	template<typename OtherObjectT, typename OtherDeleterT,
-		std::enable_if_t<
-			std::is_convertible<typename IntrusivePtr<OtherObjectT, OtherDeleterT>::Element *, Element *>::value &&
-				std::is_convertible<typename IntrusivePtr<OtherObjectT, OtherDeleterT>::Deleter, Deleter>::value,
-			int> = 0>
-	IntrusivePtr &operator=(IntrusivePtr<OtherObjectT, OtherDeleterT> &&rhs) noexcept {
-		return Reset(std::move(rhs));
-	}
 	IntrusivePtr &operator=(const IntrusivePtr &rhs) noexcept {
 		return Reset(rhs);
 	}
@@ -611,33 +584,6 @@ public:
 		: IntrusiveWeakPtr()
 	{
 		Reset(std::move(rhs));
-	}
-	IntrusiveWeakPtr &operator=(std::nullptr_t) noexcept {
-		return Reset();
-	}
-	template<typename OtherObjectT, typename OtherDeleterT,
-		std::enable_if_t<
-			std::is_convertible<typename IntrusivePtr<OtherObjectT, OtherDeleterT>::Element *, Element *>::value &&
-				std::is_convertible<typename IntrusivePtr<OtherObjectT, OtherDeleterT>::Deleter, Deleter>::value,
-			int> = 0>
-	IntrusiveWeakPtr &operator=(const IntrusivePtr<OtherObjectT, OtherDeleterT> &rhs){
-		return Reset(rhs);
-	}
-	template<typename OtherObjectT, typename OtherDeleterT,
-		std::enable_if_t<
-			std::is_convertible<typename IntrusiveWeakPtr<OtherObjectT, OtherDeleterT>::Element *, Element *>::value &&
-				std::is_convertible<typename IntrusiveWeakPtr<OtherObjectT, OtherDeleterT>::Deleter, Deleter>::value,
-			int> = 0>
-	IntrusiveWeakPtr &operator=(const IntrusiveWeakPtr<OtherObjectT, OtherDeleterT> &rhs) noexcept {
-		return Reset(rhs);
-	}
-	template<typename OtherObjectT, typename OtherDeleterT,
-		std::enable_if_t<
-			std::is_convertible<typename IntrusiveWeakPtr<OtherObjectT, OtherDeleterT>::Element *, Element *>::value &&
-				std::is_convertible<typename IntrusiveWeakPtr<OtherObjectT, OtherDeleterT>::Deleter, Deleter>::value,
-			int> = 0>
-	IntrusiveWeakPtr &operator=(IntrusiveWeakPtr<OtherObjectT, OtherDeleterT> &&rhs) noexcept {
-		return Reset(std::move(rhs));
 	}
 	IntrusiveWeakPtr &operator=(const IntrusiveWeakPtr &rhs) noexcept {
 		return Reset(rhs);

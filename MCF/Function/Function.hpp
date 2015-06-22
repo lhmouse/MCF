@@ -71,16 +71,6 @@ public:
 	{
 		Reset(std::forward<FuncT>(vFunc));
 	}
-	Function &operator=(std::nullptr_t) noexcept {
-		return Reset();
-	}
-	template<typename FuncT,
-		std::enable_if_t<
-			std::is_convertible<std::result_of_t<FuncT && (ForwardedParam<ParamsT>...)>, RetT>::value,
-			int> = 0>
-	Function &operator=(FuncT &&vFunc){
-		return Reset(std::forward<FuncT>(vFunc));
-	}
 
 public:
 	Function &Reset(std::nullptr_t = nullptr) noexcept {

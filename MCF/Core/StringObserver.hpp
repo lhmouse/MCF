@@ -174,7 +174,7 @@ namespace Impl_StringObserver {
 }
 
 template<StringType kTypeT>
-struct StringObserver {
+class StringObserver {
 public:
 	using Char = typename StringEncodingTrait<kTypeT>::Type;
 
@@ -258,6 +258,8 @@ public:
 	}
 
 	int Compare(const StringObserver &rhs) const noexcept {
+		using UChar = std::make_unsigned_t<Char>;
+
 		auto pLRead = GetBegin();
 		const auto pLEnd = GetEnd();
 		auto pRRead = rhs.GetBegin();
@@ -270,9 +272,8 @@ public:
 				return nResult;
 			}
 
-			using UChar = std::make_unsigned_t<Char>;
-			const auto uchLhs = (UChar)*pLRead;
-			const auto uchRhs = (UChar)*pRRead;
+			const auto uchLhs = static_cast<UChar>(*pLRead);
+			const auto uchRhs = static_cast<UChar>(*pRRead);
 			if(uchLhs != uchRhs){
 				return (uchLhs < uchRhs) ? -1 : 1;
 			}
@@ -456,20 +457,20 @@ void swap(StringObserver<kTypeT> &lhs, StringObserver<kTypeT> &rhs) noexcept {
 }
 
 template<StringType kTypeT>
-auto begin(const StringObserver<kTypeT> &lhs) noexcept {
-	return lhs.GetBegin();
+auto begin(const StringObserver<kTypeT> &rhs) noexcept {
+	return rhs.GetBegin();
 }
 template<StringType kTypeT>
-auto cbegin(const StringObserver<kTypeT> &lhs) noexcept {
-	return lhs.GetBegin();
+auto cbegin(const StringObserver<kTypeT> &rhs) noexcept {
+	return rhs.GetBegin();
 }
 template<StringType kTypeT>
-auto end(const StringObserver<kTypeT> &lhs) noexcept {
-	return lhs.GetEnd();
+auto end(const StringObserver<kTypeT> &rhs) noexcept {
+	return rhs.GetEnd();
 }
 template<StringType kTypeT>
-auto cend(const StringObserver<kTypeT> &lhs) noexcept {
-	return lhs.GetEnd();
+auto cend(const StringObserver<kTypeT> &rhs) noexcept {
+	return rhs.GetEnd();
 }
 
 extern template class StringObserver<StringType::NARROW>;

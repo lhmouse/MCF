@@ -62,54 +62,70 @@ public:
 	explicit String(Char ch, std::size_t uCount = 1)
 		: String()
 	{
-		Append(ch, uCount);
+		Assign(ch, uCount);
 	}
 	explicit String(const Char *pszBegin)
 		: String()
 	{
-		Append(pszBegin);
+		Assign(pszBegin);
 	}
 	String(const Char *pchBegin, const Char *pchEnd)
 		: String()
 	{
-		Append(pchBegin, pchEnd);
+		Assign(pchBegin, pchEnd);
 	}
 	String(const Char *pchBegin, std::size_t uLen)
 		: String()
 	{
-		Append(pchBegin, uLen);
+		Assign(pchBegin, uLen);
 	}
 	explicit String(const Observer &rhs)
 		: String()
 	{
-		Append(rhs);
+		Assign(rhs);
 	}
 	explicit String(std::initializer_list<Char> rhs)
 		: String()
 	{
-		Append(rhs);
+		Assign(rhs);
+	}
+	template<StringType kOtherTypeT>
+	explicit String(const StringObserver<kOtherTypeT> &rhs)
+		: String()
+	{
+		Assign(rhs);
+	}
+	template<StringType kOtherTypeT>
+	explicit String(const String<kOtherTypeT> &rhs)
+		: String()
+	{
+		Assign(rhs);
 	}
 	String(const String &rhs)
 		: String()
 	{
-		Append(rhs);
+		Assign(rhs);
 	}
 	String(String &&rhs) noexcept
 		: String()
 	{
 		Swap(rhs);
 	}
-	template<StringType kOtherTypeT>
-	explicit String(const StringObserver<kOtherTypeT> &rhs)
-		: String()
-	{
-		Append(rhs);
+	String &operator=(Char ch){
+		Assign(ch, 1);
+		return *this;
 	}
-	template<StringType kOtherTypeT>
-	explicit String(const String<kOtherTypeT> &rhs)
-		: String()
-	{
-		Append(rhs);
+	String &operator=(const Char *pszBegin){
+		Assign(pszBegin);
+		return *this;
+	}
+	String &operator=(const Observer &rhs){
+		Assign(rhs);
+		return *this;
+	}
+	String &operator=(std::initializer_list<Char> rhs){
+		Assign(rhs);
+		return *this;
 	}
 	String &operator=(const String &rhs){
 		Assign(rhs);
@@ -336,8 +352,9 @@ public:
 	}
 	template<StringType kOtherTypeT>
 	void Assign(const StringObserver<kOtherTypeT> &rhs){
-		Clear();
-		Append(rhs);
+		String strTemp;
+		strTemp.Append(rhs);
+		Swap(strTemp);
 	}
 	template<StringType kOtherTypeT>
 	void Assign(const String<kOtherTypeT> &rhs){
@@ -350,6 +367,7 @@ public:
 	}
 	void Assign(String &&rhs) noexcept {
 		ASSERT(this != &rhs);
+
 		Swap(rhs);
 	}
 

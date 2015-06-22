@@ -34,13 +34,15 @@ public:
 	{
 		AppendFill(uCount, vParams...);
 	}
-	template<class IteratorT>
+	template<class IteratorT,
+		typename std::iterator_traits<IteratorT>::iterator_category * = nullptr>
 	Vector(IteratorT itBegin, std::common_type_t<IteratorT> itEnd)
 		: Vector()
 	{
 		AppendCopy(itBegin, itEnd);
 	}
-	template<class IteratorT>
+	template<class IteratorT,
+		typename std::iterator_traits<IteratorT>::iterator_category * = nullptr>
 	Vector(IteratorT itBegin, std::size_t uCount)
 		: Vector()
 	{

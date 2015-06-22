@@ -275,13 +275,15 @@ public:
 	{
 		AppendFill(uCount, vParams...);
 	}
-	template<class IteratorT>
+	template<class IteratorT,
+		typename std::iterator_traits<IteratorT>::iterator_category * = nullptr>
 	Deque(IteratorT itBegin, std::common_type_t<IteratorT> itEnd)
 		: Deque()
 	{
 		AppendCopy(itBegin, itEnd);
 	}
-	template<class IteratorT>
+	template<class IteratorT,
+		typename std::iterator_traits<IteratorT>::iterator_category * = nullptr>
 	Deque(IteratorT itBegin, std::size_t uCount)
 		: Deque()
 	{

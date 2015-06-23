@@ -94,9 +94,9 @@ void Deallocate(void *pBlock, bool bIsArray, const void *pRetAddr) noexcept {
 #if __MCF_CRT_REQUIRE_HEAPDBG_LEVEL(1)
 	void *const pRaw = (unsigned char *)pBlock - sizeof(std::max_align_t);
 	if(*(std::uintptr_t *)pRaw != GetMagic(bIsArray)){
-		const wchar_t *const pwcArrayDeleteFormat = L"试图使用 operator delete[] 释放不是由 operator new[] 分配的内存。\n调用返回地址：%0*zX";
-		const wchar_t *const pwcScalarDeleteFormat = L"试图使用 operator delete 释放不是由 operator new 分配的内存。\n调用返回地址：%0*zX";
-		MCF_CRT_BailF(bIsArray ? pwcArrayDeleteFormat : pwcScalarDeleteFormat, (int)(sizeof(std::size_t) * 2), (std::size_t)pRetAddr);
+		const wchar_t *const pwcSuffix = bIsArray ? L"[]" : L"";
+		MCF_CRT_BailF(L"试图使用 operator delete%ls() 释放不是由 operator new%ls() 分配的内存。\n调用返回地址：%0*zX",
+			pwcSuffix, pwcSuffix, (int)(sizeof(std::size_t) * 2), (std::size_t)pRetAddr);
 	}
 #else
 	UNREF_PARAM(bIsArray);

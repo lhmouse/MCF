@@ -35,6 +35,7 @@ public:
 
 		vLock.Lock();
 		x_vMutex.Unlock();
+
 		return bResult;
 	}
 	void Wait(UniqueLockTemplateBase &vLock) noexcept {

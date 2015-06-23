@@ -7,7 +7,7 @@
 
 namespace MCF {
 
-// 如果 pullMilliSeconds 不为空，则其指定一个出入参，表示需等待的时间；函数返回 false 时，其值为剩余的时间。
+// 如果 pullMilliSeconds 不为空，则其指定一个出入参，表示需等待的时间；函数返回时，其值为剩余的时间。
 // 如果 pullMilliSeconds 为空则无限等待，此时不可能返回 false。
 extern bool WaitForSingleObject64(void *hObject, unsigned long long *pullMilliSeconds) noexcept;
 

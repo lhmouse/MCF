@@ -17,15 +17,19 @@ bool WaitForSingleObject64(void *hObject, unsigned long long *pullMilliSeconds) 
 			if(dwResult == WAIT_FAILED){
 				ASSERT_MSG(false, L"WaitForSingleObject() 失败。");
 			}
-			if(dwResult != WAIT_TIMEOUT){
-				return true;
-			}
 			const auto ullNow = GetFastMonoClock();
 			if(ullUntil <= ullNow){
 				*pullMilliSeconds = 0;
+			} else {
+				*pullMilliSeconds = ullUntil - ullNow;
+			}
+
+			if(dwResult != WAIT_TIMEOUT){
+				return true;
+			}
+			if(ullUntil <= ullNow){
 				return false;
 			}
-			*pullMilliSeconds = ullUntil - ullNow;
 		}
 	} else {
 		const auto dwResult = ::WaitForSingleObject(hObject, INFINITE);

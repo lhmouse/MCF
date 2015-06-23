@@ -1,18 +1,12 @@
 #include <MCF/StdMCF.hpp>
-#include <MCF/Utilities/Invoke.hpp>
-#include <string>
+#include <MCF/Thread/Semaphore.hpp>
 #include <cstdio>
 
 using namespace MCF;
 
-struct foo {
-	void bark() const && {
-	};
-};
-
 extern "C" unsigned int MCFMain() noexcept {
-	auto fn = &foo::bark;
-	foo f;
-	Invoke(fn, std::move(f));
+	Semaphore sem(2);
+	unsigned cnt = sem.BatchWait(5000, 3);
+	std::printf("cnt = %u\n", cnt);
 	return 0;
 }

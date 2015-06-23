@@ -12,17 +12,17 @@
 
 // -static -Wl,-e__MCF_ExeStartup,--disable-runtime-pseudo-reloc,--disable-auto-import
 
-#define MCF_SECTION(x)	__attribute__((__section__(x), __used__))
+#define DEF_SECTION(x)	__attribute__((__section__(x), __used__))
 
-MCF_SECTION(".CRT$XL@") const PIMAGE_TLS_CALLBACK vCallbackAt	= &__MCF_CRT_TlsCallback;
-MCF_SECTION(".CRT$XL_") const PIMAGE_TLS_CALLBACK vCallback_	= nullptr;
+DEF_SECTION(".CRT$XL@") const PIMAGE_TLS_CALLBACK vCallbackAt	= &__MCF_CRT_TlsCallback;
+DEF_SECTION(".CRT$XL_") const PIMAGE_TLS_CALLBACK vCallback_	= nullptr;
 
 DWORD _tls_index = 0;
 
-MCF_SECTION(".tls$@@@") const unsigned char _tls_start	= 0;
-MCF_SECTION(".tls$___") const unsigned char _tls_end	= 0;
+DEF_SECTION(".tls$@@@") const unsigned char _tls_start	= 0;
+DEF_SECTION(".tls$___") const unsigned char _tls_end	= 0;
 
-MCF_SECTION(".tls") const IMAGE_TLS_DIRECTORY _tls_used = {
+DEF_SECTION(".tls") const IMAGE_TLS_DIRECTORY _tls_used = {
 	.StartAddressOfRawData	= (UINT_PTR)&_tls_start,
 	.EndAddressOfRawData	= (UINT_PTR)&_tls_end,
 	.AddressOfIndex			= (UINT_PTR)&_tls_index,

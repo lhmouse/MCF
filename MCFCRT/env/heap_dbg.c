@@ -3,7 +3,7 @@
 // Copyleft 2013 - 2015, LH_Mouse. All wrongs reserved.
 
 #include "heap_dbg.h"
-#include "../ext/strcpyout.h"
+#include "../ext/stpcpy.h"
 #include "../ext/unref_param.h"
 #include "bail.h"
 #include "mcfwin.h"

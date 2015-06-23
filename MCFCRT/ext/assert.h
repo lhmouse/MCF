@@ -12,8 +12,8 @@
 	(!(expr_) && (__MCF_CRT_OnAssertFail(L ## plain_, __FILE__, __LINE__, (msg_)), 1))
 #endif
 
-#ifndef MCF_CRT_ASSERT_H_
-#define MCF_CRT_ASSERT_H_
+#ifndef __MCF_CRT_ASSERT_H_
+#define __MCF_CRT_ASSERT_H_
 
 #include "../env/_crtdef.h"
 #include "../env/bail.h"

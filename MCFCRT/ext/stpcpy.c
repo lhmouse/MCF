@@ -4,7 +4,7 @@
 
 #include "../env/_crtdef.h"
 
-char *MCF_strcpyout(char *restrict dst, const char *restrict src){
+char *MCF_stpcpy(char *restrict dst, const char *restrict src){
 	register const char *rp = src;
 	register char *wp = dst;
 

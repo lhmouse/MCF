@@ -4,10 +4,9 @@
 
 #include "../StdMCF.hpp"
 #include "Event.hpp"
+#include "_WaitForSingleObject64.hpp"
 #include "../Core/Exception.hpp"
 #include "../Core/String.hpp"
-#include "../Core/Time.hpp"
-#include "../Utilities/MinMax.hpp"
 
 namespace MCF {
 
@@ -30,31 +29,10 @@ Event::Event(bool bInitSet, const WideString &wsName)
 
 // 其他非静态成员函数。
 bool Event::Wait(unsigned long long ullMilliSeconds) const noexcept {
-	const auto ullUntil = GetFastMonoClock() + ullMilliSeconds;
-	bool bResult = false;
-	auto ullTimeRemaining = ullMilliSeconds;
-	for(;;){
-		const auto dwResult = ::WaitForSingleObject(x_hEvent.Get(), Min(ullTimeRemaining, ULONG_MAX >> 1));
-		if(dwResult == WAIT_FAILED){
-			ASSERT_MSG(false, L"WaitForSingleObject() 失败。");
-		}
-		if(dwResult != WAIT_TIMEOUT){
-			bResult = true;
-			break;
-		}
-		const auto ullNow = GetFastMonoClock();
-		if(ullUntil <= ullNow){
-			break;
-		}
-		ullTimeRemaining = ullUntil - ullNow;
-	}
-	return bResult;
+	return WaitForSingleObject64(x_hEvent.Get(), &ullMilliSeconds);
 }
 void Event::Wait() const noexcept {
-	const auto dwResult = ::WaitForSingleObject(x_hEvent.Get(), INFINITE);
-	if(dwResult == WAIT_FAILED){
-		ASSERT_MSG(false, L"WaitForSingleObject() 失败。");
-	}
+	WaitForSingleObject64(x_hEvent.Get(), nullptr);
 }
 bool Event::IsSet() const noexcept {
 	const auto dwResult = ::WaitForSingleObject(x_hEvent.Get(), 0);

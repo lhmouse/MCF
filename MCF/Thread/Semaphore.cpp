@@ -4,10 +4,9 @@
 
 #include "../StdMCF.hpp"
 #include "Semaphore.hpp"
+#include "_WaitForSingleObject64.hpp"
 #include "../Core/Exception.hpp"
 #include "../Core/String.hpp"
-#include "../Core/Time.hpp"
-#include "../Utilities/MinMax.hpp"
 
 namespace MCF {
 
@@ -30,31 +29,10 @@ Semaphore::Semaphore(std::size_t uInitCount, const WideString &wsName)
 
 // 其他非静态成员函数。
 std::size_t Semaphore::Wait(unsigned long long ullMilliSeconds) noexcept {
-	const auto ullUntil = GetFastMonoClock() + ullMilliSeconds;
-	bool bResult = false;
-	auto ullTimeRemaining = ullMilliSeconds;
-	for(;;){
-		const auto dwResult = ::WaitForSingleObject(x_hSemaphore.Get(), Min(ullTimeRemaining, ULONG_MAX >> 1));
-		if(dwResult == WAIT_FAILED){
-			ASSERT_MSG(false, L"WaitForSingleObject() 失败。");
-		}
-		if(dwResult != WAIT_TIMEOUT){
-			bResult = true;
-			break;
-		}
-		const auto ullNow = GetFastMonoClock();
-		if(ullUntil <= ullNow){
-			break;
-		}
-		ullTimeRemaining = ullUntil - ullNow;
-	}
-	return bResult;
+	return WaitForSingleObject64(x_hSemaphore.Get(), &ullMilliSeconds);
 }
 void Semaphore::Wait() noexcept {
-	const auto dwResult = ::WaitForSingleObject(x_hSemaphore.Get(), INFINITE);
-	if(dwResult == WAIT_FAILED){
-		ASSERT_MSG(false, L"WaitForSingleObject() 失败。");
-	}
+	WaitForSingleObject64(x_hSemaphore.Get(), nullptr);
 }
 std::size_t Semaphore::Post(std::size_t uPostCount) noexcept {
 	long lPrevCount;
@@ -65,34 +43,19 @@ std::size_t Semaphore::Post(std::size_t uPostCount) noexcept {
 }
 
 std::size_t Semaphore::BatchWait(unsigned long long ullMilliSeconds, std::size_t uWaitCount) noexcept {
-	const auto ullUntil = GetFastMonoClock() + ullMilliSeconds;
 	std::size_t uSucceeded = 0;
-	auto ullTimeRemaining = ullMilliSeconds;
 	while(uSucceeded < uWaitCount){
-		const auto dwResult = ::WaitForSingleObject(x_hSemaphore.Get(), Min(ullTimeRemaining, ULONG_MAX >> 1));
-		if(dwResult == WAIT_FAILED){
-			ASSERT_MSG(false, L"WaitForSingleObject() 失败。");
-		}
-		if(dwResult != WAIT_TIMEOUT){
-			++uSucceeded;
-			continue;
-		}
-		const auto ullNow = GetFastMonoClock();
-		if(ullUntil <= ullNow){
+		if(!WaitForSingleObject64(x_hSemaphore.Get(), &ullMilliSeconds)){
 			break;
 		}
-		ullTimeRemaining = ullUntil - ullNow;
+		++uSucceeded;
 	}
 	return uSucceeded;
 }
 void Semaphore::BatchWait(std::size_t uWaitCount) noexcept {
 	std::size_t uSucceeded = 0;
 	while(uSucceeded < uWaitCount){
-		const auto dwResult = ::WaitForSingleObject(x_hSemaphore.Get(), INFINITE);
-		if(dwResult == WAIT_FAILED){
-			ASSERT_MSG(false, L"WaitForSingleObject() 失败。");
-		}
-		++uSucceeded;
+		WaitForSingleObject64(x_hSemaphore.Get(), nullptr);
 	}
 }
 

@@ -5,10 +5,10 @@
 #include "../StdMCF.hpp"
 #include "Thread.hpp"
 #include "../../MCFCRT/env/thread.h"
+#include "_WaitForSingleObject64.hpp"
 #include "Atomic.hpp"
 #include "../Core/Exception.hpp"
 #include "../Core/Time.hpp"
-#include "../Utilities/MinMax.hpp"
 
 namespace MCF {
 
@@ -50,31 +50,10 @@ Thread::Thread(Function<void ()> fnProc, bool bSuspended)
 }
 
 bool Thread::Wait(unsigned long long ullMilliSeconds) const noexcept {
-	const auto ullUntil = GetFastMonoClock() + ullMilliSeconds;
-	bool bResult = false;
-	auto ullTimeRemaining = ullMilliSeconds;
-	for(;;){
-		const auto dwResult = ::WaitForSingleObject(x_hThread.Get(), Min(ullTimeRemaining, ULONG_MAX >> 1));
-		if(dwResult == WAIT_FAILED){
-			ASSERT_MSG(false, L"WaitForSingleObject() 失败。");
-		}
-		if(dwResult != WAIT_TIMEOUT){
-			bResult = true;
-			break;
-		}
-		const auto ullNow = GetFastMonoClock();
-		if(ullUntil <= ullNow){
-			break;
-		}
-		ullTimeRemaining = ullUntil - ullNow;
-	}
-	return bResult;
+	return WaitForSingleObject64(x_hThread.Get(), &ullMilliSeconds);
 }
 void Thread::Wait() const noexcept {
-	const auto dwResult = ::WaitForSingleObject(x_hThread.Get(), INFINITE);
-	if(dwResult == WAIT_FAILED){
-		ASSERT_MSG(false, L"WaitForSingleObject() 失败。");
-	}
+	WaitForSingleObject64(x_hThread.Get(), nullptr);
 }
 
 std::exception_ptr Thread::JoinNoThrow() const noexcept {

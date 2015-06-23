@@ -30,38 +30,40 @@ public:
 		: x_pBegin(nullptr), x_uSize(0)
 	{
 	}
-	constexpr ArrayObserver(const ElementT &rhs) noexcept
+	constexpr ArrayObserver(ElementT &rhs) noexcept
 		: x_pBegin(std::addressof(rhs)), x_uSize(1)
 	{
 	}
-	constexpr ArrayObserver(std::initializer_list<ElementT> rhs) noexcept
-		: x_pBegin(rhs.begin()), x_uSize(rhs.size())
+	template<std::size_t kSizeT>
+	constexpr ArrayObserver(ElementT (&rhs)[kSizeT]) noexcept
+		: x_pBegin(rhs), x_uSize(kSizeT)
 	{
 	}
 	template<typename TraitsT, typename AllocatorT>
-	constexpr ArrayObserver(const std::basic_string<ElementT, TraitsT, AllocatorT> &rhs) noexcept
-		: x_pBegin(rhs.data()), x_pEnd(rhs.size())
+	constexpr ArrayObserver(std::basic_string<ElementT, TraitsT, AllocatorT> &rhs) noexcept
+		: x_pBegin(rhs.data()), x_uSize(rhs.size())
 	{
 	}
 	template<typename AllocatorT>
-	constexpr ArrayObserver(const std::vector<ElementT, AllocatorT> &rhs) noexcept
-		: x_pBegin(rhs.data()), x_pEnd(rhs.size())
+	constexpr ArrayObserver(std::vector<ElementT, AllocatorT> &rhs) noexcept
+		: x_pBegin(rhs.data()), x_uSize(rhs.size())
 	{
 	}
-	constexpr ArrayObserver(const std::array<ElementT> &rhs) noexcept
-		: x_pBegin(rhs.data()), x_pEnd(rhs.size())
+	template<std::size_t kSizeT>
+	constexpr ArrayObserver(std::array<ElementT, kSizeT> &rhs) noexcept
+		: x_pBegin(rhs.data()), x_uSize(rhs.size())
 	{
 	}
 	template<StringType kTypeT,
 		std::enable_if_t<
 			std::is_same<typename StringObserver<kTypeT>::Char, ElementT>::value,
 			int> = 0>
-	constexpr ArrayObserver(const StringObserver<kTypeT> &rhs) noexcept
-		: x_pBegin(rhs.GetData()), x_pEnd(rhs.GetSize())
+	constexpr ArrayObserver(StringObserver<kTypeT> &rhs) noexcept
+		: x_pBegin(rhs.GetData()), x_uSize(rhs.GetSize())
 	{
 	}
-	constexpr ArrayObserver(const Vector<ElementT> &rhs) noexcept
-		: x_pBegin(rhs.GetData()), x_pEnd(rhs.GetSize())
+	constexpr ArrayObserver(Vector<ElementT> &rhs) noexcept
+		: x_pBegin(rhs.GetData()), x_uSize(rhs.GetSize())
 	{
 	}
 
@@ -75,7 +77,7 @@ public:
 	constexpr ElementT *GetData() const noexcept {
 		return x_pBegin;
 	}
-	constexpr std::Size_t GetSize() const noexcept {
+	constexpr std::size_t GetSize() const noexcept {
 		return x_uSize;
 	}
 
@@ -83,7 +85,112 @@ public:
 	explicit constexpr operator ElementT *() const noexcept {
 		return GetData();
 	}
-	constexpr Element &operator[](std::size_t uIndex) const noexcept {
+	constexpr ElementT &operator[](std::size_t uIndex) const noexcept {
+		ASSERT_MSG(uIndex < GetSize(), L"索引越界。");
+
+		return GetData();
+	}
+};
+
+template<class ElementT>
+class ArrayObserver<const ElementT> {
+private:
+	const ElementT *x_pBegin;
+	std::size_t x_uSize;
+
+public:
+	constexpr ArrayObserver(std::nullptr_t = nullptr) noexcept
+		: x_pBegin(nullptr), x_uSize(0)
+	{
+	}
+	constexpr ArrayObserver(const ElementT &rhs) noexcept
+		: x_pBegin(std::addressof(rhs)), x_uSize(1)
+	{
+	}
+	template<std::size_t kSizeT>
+	constexpr ArrayObserver(const ElementT (&rhs)[kSizeT]) noexcept
+		: x_pBegin(rhs), x_uSize(kSizeT)
+	{
+	}
+	template<std::size_t kSizeT>
+	constexpr ArrayObserver(ElementT (&rhs)[kSizeT]) noexcept
+		: x_pBegin(rhs), x_uSize(kSizeT)
+	{
+	}
+	template<typename TraitsT, typename AllocatorT>
+	constexpr ArrayObserver(const std::basic_string<const ElementT, TraitsT, AllocatorT> &rhs) noexcept
+		: x_pBegin(rhs.data()), x_uSize(rhs.size())
+	{
+	}
+	template<typename TraitsT, typename AllocatorT>
+	constexpr ArrayObserver(const std::basic_string<ElementT, TraitsT, AllocatorT> &rhs) noexcept
+		: x_pBegin(rhs.data()), x_uSize(rhs.size())
+	{
+	}
+	template<typename AllocatorT>
+	constexpr ArrayObserver(const std::vector<const ElementT, AllocatorT> &rhs) noexcept
+		: x_pBegin(rhs.data()), x_uSize(rhs.size())
+	{
+	}
+	template<typename AllocatorT>
+	constexpr ArrayObserver(const std::vector<ElementT, AllocatorT> &rhs) noexcept
+		: x_pBegin(rhs.data()), x_uSize(rhs.size())
+	{
+	}
+	template<std::size_t kSizeT>
+	constexpr ArrayObserver(const std::array<const ElementT, kSizeT> &rhs) noexcept
+		: x_pBegin(rhs.data()), x_uSize(rhs.size())
+	{
+	}
+	template<std::size_t kSizeT>
+	constexpr ArrayObserver(const std::array<ElementT, kSizeT> &rhs) noexcept
+		: x_pBegin(rhs.data()), x_uSize(rhs.size())
+	{
+	}
+	template<StringType kTypeT,
+		std::enable_if_t<
+			std::is_same<typename StringObserver<kTypeT>::Char, ElementT>::value,
+			int> = 0>
+	constexpr ArrayObserver(const StringObserver<kTypeT> &rhs) noexcept
+		: x_pBegin(rhs.GetData()), x_uSize(rhs.GetSize())
+	{
+	}
+	constexpr ArrayObserver(const Vector<const ElementT> &rhs) noexcept
+		: x_pBegin(rhs.GetData()), x_uSize(rhs.GetSize())
+	{
+	}
+	constexpr ArrayObserver(const Vector<ElementT> &rhs) noexcept
+		: x_pBegin(rhs.GetData()), x_uSize(rhs.GetSize())
+	{
+	}
+	constexpr ArrayObserver(std::initializer_list<const ElementT> rhs) noexcept
+		: x_pBegin(rhs.begin()), x_uSize(rhs.size())
+	{
+	}
+	constexpr ArrayObserver(std::initializer_list<ElementT> rhs) noexcept
+		: x_pBegin(rhs.begin()), x_uSize(rhs.size())
+	{
+	}
+
+public:
+	constexpr const ElementT *GetBegin() const noexcept {
+		return x_pBegin;
+	}
+	constexpr const ElementT *GetEnd() const noexcept {
+		return x_pBegin + x_uSize;
+	}
+	constexpr const ElementT *GetData() const noexcept {
+		return x_pBegin;
+	}
+	constexpr std::size_t GetSize() const noexcept {
+		return x_uSize;
+	}
+
+public:
+	explicit constexpr operator const ElementT *() const noexcept {
+		return GetData();
+	}
+	constexpr const ElementT &operator[](std::size_t uIndex) const noexcept {
 		ASSERT_MSG(uIndex < GetSize(), L"索引越界。");
 
 		return GetData();

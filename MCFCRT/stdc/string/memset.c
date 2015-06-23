@@ -8,8 +8,8 @@
 void *memset(void *dst, int ch, size_t cb){
 	uintptr_t unused;
 	__asm__ __volatile__(
-		"mov " RCX ", %5 \n"
-		"cmp " RCX ", 16 \n"
+		"mov " __RCX ", %5 \n"
+		"cmp " __RCX ", 16 \n"
 		"jb 1f  \n"
 #ifdef _WIN64
 		"test rdi, 7 \n"
@@ -27,16 +27,16 @@ void *memset(void *dst, int ch, size_t cb){
 #endif
 		"	jnz 3b \n"
 		"2: \n"
-		"movzx " RAX ", al \n"
+		"movzx " __RAX ", al \n"
 		"mov ah, al \n"
-		"movzx " RCX ", ax \n"
-		"shl " RCX ", 16 \n"
-		"or " RAX ", " RCX " \n"
+		"movzx " __RCX ", ax \n"
+		"shl " __RCX ", 16 \n"
+		"or " __RAX ", " __RCX " \n"
 #ifdef _WIN64
 		"shl rcx, 32 \n"
 		"or rax, rcx \n"
 #endif
-		"mov " RCX ", %5 \n"
+		"mov " __RCX ", %5 \n"
 #ifdef _WIN64
 		"shr rcx, 3 \n"
 		"rep stosq \n"

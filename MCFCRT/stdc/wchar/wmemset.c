@@ -8,15 +8,15 @@
 wchar_t *wmemset(wchar_t *dst, wchar_t ch, size_t cnt){
 	uintptr_t unused;
 	__asm__ __volatile__(
-		"mov " RCX ", %5 \n"
-		"cmp " RCX ", 8 \n"
+		"mov " __RCX ", %5 \n"
+		"cmp " __RCX ", 8 \n"
 		"jb 1f  \n"
-		"test " RDI ", 1 \n"
+		"test " __RDI ", 1 \n"
 		"jz 4f \n"
-		"	mov byte ptr[" RDI "], al \n"
+		"	mov byte ptr[" __RDI "], al \n"
 		"	xchg al, ah \n"
-		"	mov byte ptr[" RDI " + %5 * 2 - 1], al \n"
-		"	inc " RDI " \n"
+		"	mov byte ptr[" __RDI " + %5 * 2 - 1], al \n"
+		"	inc " __RDI " \n"
 		"	dec %5 \n"
 		"4: \n"
 #ifdef _WIN64
@@ -35,14 +35,14 @@ wchar_t *wmemset(wchar_t *dst, wchar_t ch, size_t cnt){
 #endif
 		"	jnz 3b \n"
 		"2: \n"
-		"movzx " RCX ", ax \n"
-		"shl " RCX ", 16 \n"
-		"or " RAX ", " RCX " \n"
+		"movzx " __RCX ", ax \n"
+		"shl " __RCX ", 16 \n"
+		"or " __RAX ", " __RCX " \n"
 #ifdef _WIN64
 		"shl rcx, 32 \n"
 		"or rax, rcx \n"
 #endif
-		"mov " RCX ", %5 \n"
+		"mov " __RCX ", %5 \n"
 #ifdef _WIN64
 		"shr rcx, 2 \n"
 		"rep stosq \n"

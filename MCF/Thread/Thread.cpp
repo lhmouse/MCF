@@ -82,9 +82,9 @@ std::exception_ptr Thread::JoinNoThrow() const noexcept {
 	return x_pException; // 不要 move()。
 }
 void Thread::Join() const {
-	const auto pException = JoinNoThrow();
+	auto pException = JoinNoThrow();
 	if(pException){
-		std::rethrow_exception(pException);
+		std::rethrow_exception(std::move(pException));
 	}
 }
 

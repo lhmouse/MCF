@@ -26,6 +26,8 @@ BOOL __MCF_DllStartup(HINSTANCE hDll, DWORD dwReason, LPVOID pReserved){
 		if(!__MCF_CRT_HeapInit()){
 			break;
 		}
+		__MCF_CRT_RegisterFrameInfo();
+
 		__MCF_EH_TOP_BEGIN
 		{
 			if(!__MCF_CRT_BeginModule()){
@@ -41,7 +43,9 @@ BOOL __MCF_DllStartup(HINSTANCE hDll, DWORD dwReason, LPVOID pReserved){
 			;
 		}
 		__MCF_EH_TOP_END
+
 		if(!bRet){
+			__MCF_CRT_UnregisterFrameInfo();
 			__MCF_CRT_HeapUninit();
 		}
 		break;
@@ -72,6 +76,8 @@ BOOL __MCF_DllStartup(HINSTANCE hDll, DWORD dwReason, LPVOID pReserved){
 			__MCF_CRT_EndModule();
 		}
 		__MCF_EH_TOP_END
+
+		__MCF_CRT_UnregisterFrameInfo();
 		__MCF_CRT_HeapUninit();
 		break;
 	}

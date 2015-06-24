@@ -28,6 +28,8 @@ DWORD __MCF_ExeStartup(LPVOID pReserved){
 	if(!__MCF_CRT_HeapInit()){
 		MCF_CRT_BailF(L"MCFCRT 堆初始化失败。\n\n错误代码：%lu", MCF_CRT_GetWin32LastError());
 	}
+	__MCF_CRT_RegisterFrameInfo();
+
 	__MCF_EH_TOP_BEGIN
 	{
 		if(!__MCF_CRT_BeginModule()){
@@ -37,6 +39,8 @@ DWORD __MCF_ExeStartup(LPVOID pReserved){
 		__MCF_CRT_EndModule();
 	}
 	__MCF_EH_TOP_END
+
+	__MCF_CRT_UnregisterFrameInfo();
 	__MCF_CRT_HeapUninit();
 
 	ExitProcess(dwExitCode);

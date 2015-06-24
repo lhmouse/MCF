@@ -33,14 +33,7 @@ __MCF_CRT_EXTERN_C_END
 		"	.section .text$ \n"	\
 	);
 
-#elif defined(__GCC_HAVE_DWARF2_CFI_ASM)	// DWARF
-
-#	define __MCF_EH_TOP_BEGIN	\
-	__MCF_CRT_RegisterFrameInfo();
-#	define __MCF_EH_TOP_END	\
-	__MCF_CRT_UnregisterFrameInfo();
-
-#else	// SJLJ
+#else	// DWARF, SJLJ
 
 #	define __MCF_EH_TOP_BEGIN
 #	define __MCF_EH_TOP_END

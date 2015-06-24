@@ -22,6 +22,14 @@ extern "C" unsigned int MCFMain() noexcept {
 			const auto key = (void *)k;
 			::MCF_CRT_TlsReset(key, (std::intptr_t)new int(1));
 			::MCF_CRT_TlsReset(key, (std::intptr_t)new int(2));
+
+			try {
+				std::puts("about to throw...");
+				throw std::out_of_range("test out_of_range in thread");
+			} catch(std::exception &e){
+				std::printf("exception caught: what = %s\n", e.what());
+			}
+
 			return 0;
 		},
 		(std::intptr_t)key, false, nullptr);
@@ -33,6 +41,7 @@ extern "C" unsigned int MCFMain() noexcept {
 	} catch(std::exception &e){
 		std::printf("exception caught: what = %s\n", e.what());
 	}
+
 	return 0;
 }
 

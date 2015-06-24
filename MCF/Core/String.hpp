@@ -40,11 +40,16 @@ public:
 	static void Deunify(String &strDst, std::size_t uPos, const UnifiedStringObserver &usoSrc);
 
 private:
+	enum : unsigned {
+		x_kMaxSsoLength		= (4 * sizeof(void *)) / sizeof(Char) - 1,
+		x_kIsDynamic		= 0xFFu,
+	};
+
+private:
 	union xStorage {
 		struct {
-			Char achData[(4 * sizeof(void *)) / sizeof(Char) - 2];
-			Char chNull;
-			std::make_unsigned_t<Char> uchLength;
+			Char achData[x_kMaxSsoLength];
+			std::make_unsigned_t<Char> uchComplLength;
 		} vSmall;
 
 		struct {
@@ -56,8 +61,7 @@ private:
 
 public:
 	String() noexcept {
-		x_vStorage.vSmall.chNull = Char();
-		x_vStorage.vSmall.uchLength = 0;
+		x_vStorage.vSmall.uchComplLength = x_kMaxSsoLength;
 	}
 	explicit String(Char ch, std::size_t uCount = 1)
 		: String()
@@ -136,7 +140,7 @@ public:
 		return *this;
 	}
 	~String() noexcept {
-		if(x_vStorage.vSmall.chNull != Char()){
+		if(x_vStorage.vSmall.uchComplLength == x_kIsDynamic){
 			delete[] x_vStorage.vLarge.pchBegin;
 		}
 #ifndef NDEBUG
@@ -176,8 +180,8 @@ private:
 		}
 
 		if(pchNewBuffer != pchOldBuffer){
-			if(x_vStorage.vSmall.chNull == Char()){
-				++x_vStorage.vSmall.chNull;
+			if(x_vStorage.vSmall.uchComplLength != x_kIsDynamic){
+				x_vStorage.vSmall.uchComplLength = x_kIsDynamic;
 			} else {
 				delete[] pchOldBuffer;
 			}
@@ -192,8 +196,8 @@ private:
 	void xSetSize(std::size_t uNewSize) noexcept {
 		ASSERT(uNewSize <= GetCapacity());
 
-		if(x_vStorage.vSmall.chNull == Char()){
-			x_vStorage.vSmall.uchLength = uNewSize;
+		if(x_vStorage.vSmall.uchComplLength != x_kIsDynamic){
+			x_vStorage.vSmall.uchComplLength = x_kMaxSsoLength - uNewSize;
 		} else {
 			x_vStorage.vLarge.uLength = uNewSize;
 		}
@@ -201,14 +205,14 @@ private:
 
 public:
 	const Char *GetBegin() const noexcept {
-		if(x_vStorage.vSmall.chNull == Char()){
+		if(x_vStorage.vSmall.uchComplLength != x_kIsDynamic){
 			return x_vStorage.vSmall.achData;
 		} else {
 			return x_vStorage.vLarge.pchBegin;
 		}
 	}
 	Char *GetBegin() noexcept {
-		if(x_vStorage.vSmall.chNull == Char()){
+		if(x_vStorage.vSmall.uchComplLength != x_kIsDynamic){
 			return x_vStorage.vSmall.achData;
 		} else {
 			return x_vStorage.vLarge.pchBegin;
@@ -216,15 +220,15 @@ public:
 	}
 
 	const Char *GetEnd() const noexcept {
-		if(x_vStorage.vSmall.chNull == Char()){
-			return x_vStorage.vSmall.achData + x_vStorage.vSmall.uchLength;
+		if(x_vStorage.vSmall.uchComplLength != x_kIsDynamic){
+			return x_vStorage.vSmall.achData + (x_kMaxSsoLength - x_vStorage.vSmall.uchComplLength);
 		} else {
 			return x_vStorage.vLarge.pchBegin + x_vStorage.vLarge.uLength;
 		}
 	}
 	Char *GetEnd() noexcept {
-		if(x_vStorage.vSmall.chNull == Char()){
-			return x_vStorage.vSmall.achData + x_vStorage.vSmall.uchLength;
+		if(x_vStorage.vSmall.uchComplLength != x_kIsDynamic){
+			return x_vStorage.vSmall.achData + (x_kMaxSsoLength - x_vStorage.vSmall.uchComplLength);
 		} else {
 			return x_vStorage.vLarge.pchBegin + x_vStorage.vLarge.uLength;
 		}
@@ -237,8 +241,8 @@ public:
 		return GetBegin();
 	}
 	std::size_t GetSize() const noexcept {
-		if(x_vStorage.vSmall.chNull == Char()){
-			return x_vStorage.vSmall.uchLength;
+		if(x_vStorage.vSmall.uchComplLength != x_kIsDynamic){
+			return x_kMaxSsoLength - x_vStorage.vSmall.uchComplLength;
 		} else {
 			return x_vStorage.vLarge.uLength;
 		}
@@ -257,15 +261,15 @@ public:
 	}
 
 	Observer GetObserver() const noexcept {
-		if(x_vStorage.vSmall.chNull == Char()){
-			return Observer(x_vStorage.vSmall.achData, x_vStorage.vSmall.uchLength);
+		if(x_vStorage.vSmall.uchComplLength != x_kIsDynamic){
+			return Observer(x_vStorage.vSmall.achData, x_kMaxSsoLength - x_vStorage.vSmall.uchComplLength);
 		} else {
 			return Observer(x_vStorage.vLarge.pchBegin, x_vStorage.vLarge.uLength);
 		}
 	}
 
 	std::size_t GetCapacity() const noexcept {
-		if(x_vStorage.vSmall.chNull == Char()){
+		if(x_vStorage.vSmall.uchComplLength != x_kIsDynamic){
 			return COUNT_OF(x_vStorage.vSmall.achData);
 		} else {
 			return x_vStorage.vLarge.uCapacity - 1;
@@ -427,9 +431,9 @@ public:
 	void UncheckedPush(Char ch) noexcept {
 		ASSERT_MSG(GetLength() < GetCapacity(), L"容器已满。");
 
-		if(x_vStorage.vSmall.chNull == Char()){
-			x_vStorage.vSmall.achData[x_vStorage.vSmall.uchLength] = ch;
-			++x_vStorage.vSmall.uchLength;
+		if(x_vStorage.vSmall.uchComplLength != x_kIsDynamic){
+			x_vStorage.vSmall.achData[x_kMaxSsoLength - x_vStorage.vSmall.uchComplLength] = ch;
+			--x_vStorage.vSmall.uchComplLength;
 		} else {
 			x_vStorage.vLarge.pchBegin[x_vStorage.vLarge.uLength] = ch;
 			++x_vStorage.vLarge.uLength;
@@ -438,8 +442,8 @@ public:
 	void UncheckedPop() noexcept {
 		ASSERT_MSG(GetLength() != 0, L"容器已空。");
 
-		if(x_vStorage.vSmall.chNull == Char()){
-			--x_vStorage.vSmall.uchLength;
+		if(x_vStorage.vSmall.uchComplLength != x_kIsDynamic){
+			++x_vStorage.vSmall.uchComplLength;
 		} else {
 			--x_vStorage.vLarge.uLength;
 		}

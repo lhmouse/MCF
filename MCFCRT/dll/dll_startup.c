@@ -12,8 +12,6 @@
 
 // -static -Wl,-e__MCF_DllStartup,--disable-runtime-pseudo-reloc,--disable-auto-import
 
-extern "C" {
-
 __MCF_C_STDCALL __MCF_HAS_EH_TOP
 BOOL __MCF_DllStartup(HINSTANCE hDll, DWORD dwReason, LPVOID pReserved)
 	__asm__("__MCF_DllStartup");
@@ -25,34 +23,32 @@ BOOL __MCF_DllStartup(HINSTANCE hDll, DWORD dwReason, LPVOID pReserved){
 	{
 		switch(dwReason){
 		case DLL_PROCESS_ATTACH:
-			if(!::__MCF_CRT_BeginModule()){
+			if(!__MCF_CRT_BeginModule()){
 				break;
 			}
-			if(!::MCFDll_OnProcessAttach(!pReserved)){
-				::__MCF_CRT_EndModule();
+			if(!MCFDll_OnProcessAttach(!pReserved)){
+				__MCF_CRT_EndModule();
 				break;
 			}
 			bRet = TRUE;
 			break;
 
 		case DLL_PROCESS_DETACH:
-			::MCFDll_OnProcessDetach(!pReserved);
-			::__MCF_CRT_EndModule();
+			MCFDll_OnProcessDetach(!pReserved);
+			__MCF_CRT_EndModule();
 			break;
 
 		case DLL_THREAD_ATTACH:
-			::MCFDll_OnThreadAttach();
-			::__MCF_CRT_TlsCallback(hDll, dwReason, pReserved);
+			MCFDll_OnThreadAttach();
+			__MCF_CRT_TlsCallback(hDll, dwReason, pReserved);
 			break;
 
 		case DLL_THREAD_DETACH:
-			::__MCF_CRT_TlsCallback(hDll, dwReason, pReserved);
-			::MCFDll_OnThreadDetach();
+			__MCF_CRT_TlsCallback(hDll, dwReason, pReserved);
+			MCFDll_OnThreadDetach();
 			break;
 		}
 	}
 	__MCF_EH_TOP_END
 	return bRet;
-}
-
 }

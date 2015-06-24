@@ -8,7 +8,7 @@
 #include "avl_tree.h"
 #include "bail.h"
 #include "mingw_hacks.h"
-#include "_eh_top.h"
+#include "eh_top.h"
 #include "../ext/assert.h"
 #include "../ext/unref_param.h"
 #include <stdlib.h>

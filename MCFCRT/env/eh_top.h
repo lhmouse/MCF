@@ -10,6 +10,18 @@
 #define __MCF_HAS_EH_TOP	\
 	__attribute__((__section__(".text$")))
 
+__MCF_CRT_EXTERN_C_BEGIN
+
+struct __MCF_CRT_DwarfObject;
+
+extern const char					__eh_frame_begin;
+extern struct __MCF_CRT_DwarfObject	__eh_dwarf_obj;
+
+extern void __register_frame_info(const void *, struct __MCF_CRT_DwarfObject *) MCF_NOEXCEPT;
+extern void *__deregister_frame_info(const void *) MCF_NOEXCEPT;
+
+__MCF_CRT_EXTERN_C_END
+
 #if defined(__SEH__)	// SEH
 
 #	define __MCF_EH_TOP_BEGIN	\
@@ -28,17 +40,10 @@
 
 #elif defined(__GCC_HAVE_DWARF2_CFI_ASM)	// DWARF
 
-__MCF_CRT_EXTERN_C_BEGIN
-
-extern void __MCF_CRT_RegisterFrame(void) MCF_NOEXCEPT;
-extern void __MCF_CRT_UnregisterFrame(void) MCF_NOEXCEPT;
-
-__MCF_CRT_EXTERN_C_END
-
 #	define __MCF_EH_TOP_BEGIN	\
-	__MCF_CRT_RegisterFrame();
+	__register_frame_info(&__eh_frame_begin, &__eh_dwarf_obj);
 #	define __MCF_EH_TOP_END	\
-	__MCF_CRT_UnregisterFrame();
+	__deregister_frame_info(&__eh_frame_begin);
 
 #else	// SJLJ
 

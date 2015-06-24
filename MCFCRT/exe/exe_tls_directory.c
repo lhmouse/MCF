@@ -5,7 +5,7 @@
 #include "../env/mcfwin.h"
 #include "../env/thread.h"
 
-#define DEF_SECTION(x)	__attribute__((__section__(x), __used__))
+#define DEF_SECTION(x_)	__attribute__((__section__(x_), __used__))
 
 DEF_SECTION(".CRT$XL@") const PIMAGE_TLS_CALLBACK vCallbackAt	= &__MCF_CRT_TlsCallback;
 DEF_SECTION(".CRT$XL_") const PIMAGE_TLS_CALLBACK vCallback_	= nullptr;

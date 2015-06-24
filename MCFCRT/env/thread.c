@@ -414,5 +414,5 @@ void *MCF_CRT_CreateThread(unsigned (*pfnThreadProc)(intptr_t), intptr_t nParam,
 	if(!bSuspended){
 		ResumeThread(hThread);
 	}
-	return hThread;
+	return (void *)hThread;
 }

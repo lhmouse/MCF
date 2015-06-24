@@ -4,22 +4,24 @@
 
 #include "../env/eh_top.h"
 #include "../env/mcfwin.h"
+#include "../ext/unref_param.h"
 
 // 参见 gcc/libgcc/unwind-dw2-fde.h 里面的 old_object 的注释。
 struct object {
-	void *impl[6]; // 实际上在这里这个尺寸并不重要。
+	void *impl[6];
 };
 
 extern const uintptr_t __MCF_CRT_EhFrameBegin[];
 
 __attribute__((__weak__))
 void __register_frame_info(const void *p, struct object *o){
-	(void)p;
-	(void)o;
+	UNREF_PARAM(p);
+	UNREF_PARAM(o);
 }
 __attribute__((__weak__))
 void *__deregister_frame_info(const void *p){
-	(void)p;
+	UNREF_PARAM(p);
+
 	return nullptr;
 }
 

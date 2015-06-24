@@ -9,10 +9,10 @@
 #include "../env/thread.h"
 #include "../env/eh_top.h"
 #include "../env/heap.h"
-#include "../env/last_error.h"
 
 // -static -Wl,-e__MCF_DllStartup,--disable-runtime-pseudo-reloc,--disable-auto-import
 
+// __MCF_DllStartup 模块入口点。
 __MCF_C_STDCALL __MCF_HAS_EH_TOP
 BOOL __MCF_DllStartup(HINSTANCE hDll, DWORD dwReason, LPVOID pReserved)
 	__asm__("__MCF_DllStartup");
@@ -78,3 +78,7 @@ BOOL __MCF_DllStartup(HINSTANCE hDll, DWORD dwReason, LPVOID pReserved){
 
 	return bRet;
 }
+
+// 异常处理帧目录初始化，用于 DWARF 实现退栈。
+__attribute__((__section__(".eh_frame$@@@"), __used__))
+	const uintptr_t __MCF_CRT_EhFrameBegin[1] = { 0 };

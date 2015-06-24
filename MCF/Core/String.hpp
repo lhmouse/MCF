@@ -352,7 +352,7 @@ public:
 	void Assign(const StringObserver<kOtherTypeT> &rhs){
 		String strTemp;
 		strTemp.Append(rhs);
-		Swap(strTemp);
+		Assign(std::move(strTemp));
 	}
 	template<StringType kOtherTypeT>
 	void Assign(const String<kOtherTypeT> &rhs){
@@ -404,7 +404,7 @@ public:
 			Append(obsToAppend);
 		} else {
 			rhs.Unshift(obsToAppend);
-			Swap(rhs);
+			Assign(std::move(rhs));
 		}
 	}
 	template<StringType kOtherTypeT>
@@ -478,7 +478,7 @@ public:
 			Unshift(obsToAppend);
 		} else {
 			rhs.Append(obsToAppend);
-			Swap(rhs);
+			Assign(std::move(rhs));
 		}
 	}
 	template<StringType kOtherTypeT>
@@ -571,7 +571,7 @@ public:
 			pchWrite = Copy(pchWrite, obsCurrent.GetBegin(), obsCurrent.GetBegin() + uRemovedBegin);
 			pchWrite = Copy(pchWrite, obsRep.GetBegin(), obsRep.GetEnd());
 			pchWrite = Copy(pchWrite, obsCurrent.GetBegin() + uRemovedEnd, obsCurrent.GetEnd());
-			Swap(strTemp);
+			Assign(std::move(strTemp));
 		} else {
 			const auto pchWrite = xChopAndSplice(uRemovedBegin, uRemovedEnd, 0, uRemovedBegin + obsRep.GetSize());
 			CopyN(pchWrite, obsRep.GetBegin(), obsRep.GetSize());

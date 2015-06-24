@@ -12,6 +12,7 @@ extern "C" unsigned int MCFMain() noexcept {
 	std::puts(s.GetStr());
 	auto s2 = std::move(s);
 	std::puts(s.GetStr());
+	std::puts(s2.GetStr());
 	return 0;
 }
 

@@ -201,6 +201,15 @@ bool MCF_CRT_TlsFreeKey(void *pTlsKey){
 	return true;
 }
 
+void (__cdecl *MCF_CRT_TlsGetCallback(void *pTlsKey))(intptr_t){
+	TlsKey *const pKey = pTlsKey;
+	if(!pKey){
+		SetLastError(ERROR_INVALID_PARAMETER);
+		return nullptr;
+	}
+	SetLastError(ERROR_SUCCESS);
+	return pKey->pfnCallback;
+}
 bool MCF_CRT_TlsGet(void *pTlsKey, bool *pbHasValue, intptr_t *pnValue){
 	TlsKey *const pKey = pTlsKey;
 	if(!pKey){

@@ -18,6 +18,7 @@ extern void __stdcall __MCF_CRT_TlsCallback(void *hModule, unsigned long ulReaso
 extern void *MCF_CRT_TlsAllocKey(void (__cdecl *pfnCallback)(MCF_STD intptr_t)) MCF_NOEXCEPT;
 extern bool MCF_CRT_TlsFreeKey(void *pTlsKey) MCF_NOEXCEPT;
 
+extern void (__cdecl *MCF_CRT_TlsGetCallback(void *pTlsKey))(MCF_STD intptr_t) MCF_NOEXCEPT;
 extern bool MCF_CRT_TlsGet(void *pTlsKey, bool *pbHasValue, MCF_STD intptr_t *pnValue) MCF_NOEXCEPT;
 // 触发回调。
 extern bool MCF_CRT_TlsReset(void *pTlsKey, MCF_STD intptr_t nNewValue) MCF_NOEXCEPT;

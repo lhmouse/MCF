@@ -5,15 +5,15 @@
 #include "../env/eh_top.h"
 #include "../env/mcfwin.h"
 
-// GCC 中无扩展时候数组长度是 6，带扩展时候是 7。
-struct __MCF_CRT_DwarfObject {
-	void *opaque[8];
+// 参见 gcc/libgcc/unwind-dw2-fde.h 里面的 old_object 的注释。
+struct object {
+	void *impl[6]; // 实际上在这里这个尺寸并不重要。
 };
 
-struct __MCF_CRT_DwarfObject __eh_dwarf_obj;
+extern const uintptr_t __MCF_CRT_EhFrameBegin[];
 
 __attribute__((__weak__))
-void __register_frame_info(const void *p, struct __MCF_CRT_DwarfObject *o){
+void __register_frame_info(const void *p, struct object *o){
 	(void)p;
 	(void)o;
 }
@@ -21,4 +21,13 @@ __attribute__((__weak__))
 void *__deregister_frame_info(const void *p){
 	(void)p;
 	return nullptr;
+}
+
+void __MCF_CRT_RegisterFrameInfo(){
+	static struct object s_obj;
+
+	__register_frame_info(__MCF_CRT_EhFrameBegin + 1, &s_obj);
+}
+void __MCF_CRT_UnregisterFrameInfo(){
+	__deregister_frame_info(__MCF_CRT_EhFrameBegin + 1);
 }

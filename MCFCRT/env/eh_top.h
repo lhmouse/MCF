@@ -12,13 +12,8 @@
 
 __MCF_CRT_EXTERN_C_BEGIN
 
-struct __MCF_CRT_DwarfObject;
-
-extern const char					__eh_frame_begin;
-extern struct __MCF_CRT_DwarfObject	__eh_dwarf_obj;
-
-extern void __register_frame_info(const void *, struct __MCF_CRT_DwarfObject *) MCF_NOEXCEPT;
-extern void *__deregister_frame_info(const void *) MCF_NOEXCEPT;
+extern void __MCF_CRT_RegisterFrameInfo(void) MCF_NOEXCEPT;
+extern void __MCF_CRT_UnregisterFrameInfo(void) MCF_NOEXCEPT;
 
 __MCF_CRT_EXTERN_C_END
 
@@ -41,9 +36,9 @@ __MCF_CRT_EXTERN_C_END
 #elif defined(__GCC_HAVE_DWARF2_CFI_ASM)	// DWARF
 
 #	define __MCF_EH_TOP_BEGIN	\
-	__register_frame_info(&__eh_frame_begin, &__eh_dwarf_obj);
+	__MCF_CRT_RegisterFrameInfo();
 #	define __MCF_EH_TOP_END	\
-	__deregister_frame_info(&__eh_frame_begin);
+	__MCF_CRT_UnregisterFrameInfo();
 
 #else	// SJLJ
 

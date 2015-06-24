@@ -248,7 +248,9 @@ bool MCF_CRT_TlsReset(void *pTlsKey, intptr_t nNewValue){
 	intptr_t nOldValue;
 	if(!MCF_CRT_TlsExchange(pTlsKey, &bHasOldValue, &nOldValue, nNewValue)){
 		if(pKey->pfnCallback){
+			const DWORD dwErrorCode = GetLastError();
 			(*pKey->pfnCallback)(nNewValue);
+			SetLastError(dwErrorCode);
 		}
 		return false;
 	}

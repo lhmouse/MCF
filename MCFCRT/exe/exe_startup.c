@@ -66,7 +66,3 @@ __attribute__((__section__(".tls"), __used__))
 	.SizeOfZeroFill			= 0,
 	.Characteristics		= 0
 };
-
-// 异常处理帧目录初始化，用于 DWARF 实现退栈。
-__attribute__((__section__(".eh_frame$@@@"), __used__))
-	const uintptr_t __MCF_CRT_EhFrameBegin[1] = { 0 };

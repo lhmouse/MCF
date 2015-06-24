@@ -78,7 +78,3 @@ BOOL __MCF_DllStartup(HINSTANCE hDll, DWORD dwReason, LPVOID pReserved){
 
 	return bRet;
 }
-
-// 异常处理帧目录初始化，用于 DWARF 实现退栈。
-__attribute__((__section__(".eh_frame$@@@"), __used__))
-	const uintptr_t __MCF_CRT_EhFrameBegin[1] = { 0 };

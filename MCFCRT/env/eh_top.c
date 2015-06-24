@@ -11,7 +11,11 @@ struct object {
 	void *impl[6];
 };
 
-extern const uintptr_t __MCF_CRT_EhFrameBegin[];
+// 异常处理帧目录初始化，用于 DWARF 实现退栈。
+__attribute__((__section__(".eh_frame$@@@"), __used__))
+	static const uintptr_t _eh_frame_begin[1] = { 0 };
+__attribute__((__section__(".data"), __used__))
+	static struct object _eh_obj[1];
 
 __attribute__((__weak__))
 void __register_frame_info(const void *p, struct object *o){
@@ -26,10 +30,8 @@ void *__deregister_frame_info(const void *p){
 }
 
 void __MCF_CRT_RegisterFrameInfo(){
-	static struct object s_obj;
-
-	__register_frame_info(__MCF_CRT_EhFrameBegin + 1, &s_obj);
+	__register_frame_info(_eh_frame_begin + 1, _eh_obj);
 }
 void __MCF_CRT_UnregisterFrameInfo(){
-	__deregister_frame_info(__MCF_CRT_EhFrameBegin + 1);
+	__deregister_frame_info(_eh_frame_begin + 1);
 }

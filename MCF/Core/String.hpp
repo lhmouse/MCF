@@ -55,6 +55,9 @@ private:
 
 public:
 	String() noexcept {
+#ifndef NDEBUG
+		std::memset(x_vStorage.vSmall.achData, 0xFF, sizeof(x_vStorage.vSmall.achData));
+#endif
 		x_vStorage.vSmall.schComplLength = static_cast<std::make_signed_t<Char>>(COUNT_OF(x_vStorage.vSmall.achData));
 	}
 	explicit String(Char ch, std::size_t uCount = 1)

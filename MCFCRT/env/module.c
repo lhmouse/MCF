@@ -64,6 +64,7 @@ bool __MCF_CRT_BeginModule(void){
 	case (n):	\
 		{	\
 			if(!(exp)){	\
+				__MCF_CRT_EndModule();	\
 				return false;	\
 			}	\
 			++g_uInitState;	\

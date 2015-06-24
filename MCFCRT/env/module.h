@@ -10,7 +10,6 @@
 __MCF_CRT_EXTERN_C_BEGIN
 
 // __MCF_CRT_BeginModule() 在所有 CRT 功能都初始化成功后返回 true。
-// 即使返回 false 也需要调用 __MCF_CRT_EndModule()。
 extern bool __MCF_CRT_BeginModule(void);
 extern void __MCF_CRT_EndModule(void);
 

@@ -110,7 +110,7 @@ public:
 	String(String &&rhs) noexcept
 		: String()
 	{
-		Swap(rhs);
+		Assign(std::move(rhs));
 	}
 	String &operator=(Char ch){
 		Assign(ch, 1);
@@ -318,10 +318,7 @@ public:
 	}
 
 	void Swap(String &rhs) noexcept {
-		xStorage vStorage;
-		std::memcpy(&vStorage, &x_vStorage, sizeof(vStorage));
-		std::memcpy(&x_vStorage, &rhs.x_vStorage, sizeof(vStorage));
-		std::memcpy(&rhs.x_vStorage, &vStorage, sizeof(vStorage));
+		std::swap(x_vStorage, rhs.x_vStorage);
 	}
 
 	int Compare(const Observer &rhs) const noexcept {
@@ -369,7 +366,14 @@ public:
 	void Assign(String &&rhs) noexcept {
 		ASSERT(this != &rhs);
 
-		Swap(rhs);
+		if(x_vStorage.vSmall.schComplLength < 0){
+			delete[] x_vStorage.vLarge.pchBegin;
+		}
+		x_vStorage = rhs.x_vStorage;
+#ifndef NDEBUG
+		std::memset(rhs.x_vStorage.vSmall.achData, 0xCD, sizeof(rhs.x_vStorage.vSmall.achData));
+#endif
+		rhs.x_vStorage.vSmall.schComplLength = 0;
 	}
 
 	void Append(Char ch, std::size_t uCount = 1){

@@ -10,6 +10,8 @@ extern "C" unsigned int MCFMain() noexcept {
 		s.Push(' ' + i);
 	}
 	std::puts(s.GetStr());
+	auto s2 = std::move(s);
+	std::puts(s.GetStr());
 	return 0;
 }
 

@@ -68,5 +68,5 @@ __attribute__((__section__(".tls"), __used__))
 	.AddressOfIndex			= (UINT_PTR)&_tls_index,
 	.AddressOfCallBacks		= (UINT_PTR)&_callback_start,
 	.SizeOfZeroFill			= 0,
-	.Characteristics		= 0
+	.Characteristics		= 0,
 };

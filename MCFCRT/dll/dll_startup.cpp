@@ -7,7 +7,8 @@
 #include "../env/bail.h"
 #include "../env/module.h"
 #include "../env/thread.h"
-#include "../env/_eh_top.h"
+#include "../env/eh_top.h"
+#include "../env/last_error.h"
 
 // -static -Wl,-e__MCF_DllStartup,--disable-runtime-pseudo-reloc,--disable-auto-import
 

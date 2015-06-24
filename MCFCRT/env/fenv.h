@@ -9,9 +9,7 @@
 
 __MCF_CRT_EXTERN_C_BEGIN
 
-extern bool __MCF_CRT_FEnvInit(void) MCF_NOEXCEPT;
-
-#define __MCF_CRT_FEnvUninit()	((void)0)
+extern void __MCF_CRT_FEnvInit(void) MCF_NOEXCEPT;
 
 __MCF_CRT_EXTERN_C_END
 

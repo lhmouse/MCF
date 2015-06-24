@@ -8,6 +8,7 @@
 #include "../env/module.h"
 #include "../env/thread.h"
 #include "../env/eh_top.h"
+#include "../env/heap.h"
 #include "../env/last_error.h"
 
 // -static -Wl,-e__MCF_DllStartup,--disable-runtime-pseudo-reloc,--disable-auto-import
@@ -19,36 +20,61 @@ BOOL __MCF_DllStartup(HINSTANCE hDll, DWORD dwReason, LPVOID pReserved)
 __MCF_C_STDCALL __MCF_HAS_EH_TOP
 BOOL __MCF_DllStartup(HINSTANCE hDll, DWORD dwReason, LPVOID pReserved){
 	BOOL bRet = FALSE;
-	__MCF_EH_TOP_BEGIN
-	{
-		switch(dwReason){
-		case DLL_PROCESS_ATTACH:
+
+	switch(dwReason){
+	case DLL_PROCESS_ATTACH:
+		if(!__MCF_CRT_HeapInit()){
+			break;
+		}
+		__MCF_EH_TOP_BEGIN
+		{
 			if(!__MCF_CRT_BeginModule()){
-				break;
+				goto jTryInitDone;
 			}
 			if(!MCFDll_OnProcessAttach(!pReserved)){
 				__MCF_CRT_EndModule();
-				break;
+				goto jTryInitDone;
 			}
+			__MCF_CRT_TlsCallback(hDll, dwReason, pReserved);
 			bRet = TRUE;
-			break;
+		jTryInitDone:
+			;
+		}
+		__MCF_EH_TOP_END
+		if(!bRet){
+			__MCF_CRT_HeapUninit();
+		}
+		break;
 
-		case DLL_PROCESS_DETACH:
-			MCFDll_OnProcessDetach(!pReserved);
-			__MCF_CRT_EndModule();
-			break;
-
-		case DLL_THREAD_ATTACH:
+	case DLL_THREAD_ATTACH:
+		__MCF_EH_TOP_BEGIN
+		{
 			MCFDll_OnThreadAttach();
 			__MCF_CRT_TlsCallback(hDll, dwReason, pReserved);
-			break;
+		}
+		__MCF_EH_TOP_END
+		break;
 
-		case DLL_THREAD_DETACH:
+	case DLL_THREAD_DETACH:
+		__MCF_EH_TOP_BEGIN
+		{
 			__MCF_CRT_TlsCallback(hDll, dwReason, pReserved);
 			MCFDll_OnThreadDetach();
-			break;
 		}
+		__MCF_EH_TOP_END
+		break;
+
+	case DLL_PROCESS_DETACH:
+		__MCF_EH_TOP_BEGIN
+		{
+			__MCF_CRT_TlsCallback(hDll, dwReason, pReserved);
+			MCFDll_OnProcessDetach(!pReserved);
+			__MCF_CRT_EndModule();
+		}
+		__MCF_EH_TOP_END
+		__MCF_CRT_HeapUninit();
+		break;
 	}
-	__MCF_EH_TOP_END
+
 	return bRet;
 }

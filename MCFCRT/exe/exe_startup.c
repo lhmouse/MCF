@@ -8,6 +8,7 @@
 #include "../env/module.h"
 #include "../env/thread.h"
 #include "../env/eh_top.h"
+#include "../env/heap.h"
 #include "../env/last_error.h"
 
 // -static -Wl,-e__MCF_ExeStartup,--disable-runtime-pseudo-reloc,--disable-auto-import
@@ -18,9 +19,13 @@ DWORD __MCF_ExeStartup(LPVOID pReserved)
 
 _Noreturn __MCF_C_STDCALL __MCF_HAS_EH_TOP
 DWORD __MCF_ExeStartup(LPVOID pReserved){
+	DWORD dwExitCode;
+
 	(void)pReserved;
 
-	DWORD dwExitCode;
+	if(!__MCF_CRT_HeapInit()){
+		MCF_CRT_BailF(L"MCFCRT 堆初始化失败。\n\n错误代码：%lu", MCF_CRT_GetWin32LastError());
+	}
 	__MCF_EH_TOP_BEGIN
 	{
 		if(!__MCF_CRT_BeginModule()){
@@ -30,6 +35,8 @@ DWORD __MCF_ExeStartup(LPVOID pReserved){
 		__MCF_CRT_EndModule();
 	}
 	__MCF_EH_TOP_END
+	__MCF_CRT_HeapUninit();
+
 	ExitProcess(dwExitCode);
 	__builtin_trap();
 }

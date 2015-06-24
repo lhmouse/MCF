@@ -6,8 +6,6 @@
 #include "mcfwin.h"
 #include "mingw_hacks.h"
 #include "fenv.h"
-#include "heap.h"
-#include "heap_dbg.h"
 #include "thread.h"
 #include "static_ctors.h"
 #include "../ext/expect.h"
@@ -21,7 +19,6 @@ typedef struct tagAtExitNode {
 } AtExitNode;
 
 static AtExitNode *volatile g_pAtExitHead = nullptr;
-static unsigned g_uInitState = 0;
 
 static void PumpAtEndModule(){
 	// ISO C++
@@ -58,61 +55,30 @@ static void __MCF_CRT_StaticObjectsUninit(){
 }
 
 bool __MCF_CRT_BeginModule(void){
-	switch(g_uInitState){
+	__MCF_CRT_FEnvInit();
 
-#define DO_INIT(n, exp)	\
-	case (n):	\
-		{	\
-			if(!(exp)){	\
-				__MCF_CRT_EndModule();	\
-				return false;	\
-			}	\
-			++g_uInitState;	\
-		}
-
-//	=========================================================
-	DO_INIT(0, __MCF_CRT_FEnvInit());
-	DO_INIT(1, __MCF_CRT_HeapInit());
-	DO_INIT(2, __MCF_CRT_HeapDbgInit());
-	DO_INIT(3, __MCF_CRT_TlsEnvInit());
-	DO_INIT(4, __MCF_CRT_MinGWHacksInit());
-	DO_INIT(5, __MCF_CRT_StaticObjectsInit());
-//	=========================================================
-
-		break;
-	default:
-		__builtin_trap();
+	if(!__MCF_CRT_TlsEnvInit()){
+		return false;
+	}
+	if(!__MCF_CRT_MinGWHacksInit()){
+		const DWORD dwLastError = GetLastError();
+		__MCF_CRT_TlsEnvUninit();
+		SetLastError(dwLastError);
+		return false;
+	}
+	if(!__MCF_CRT_StaticObjectsInit()){
+		const DWORD dwLastError = GetLastError();
+		__MCF_CRT_MinGWHacksUninit();
+		__MCF_CRT_TlsEnvUninit();
+		SetLastError(dwLastError);
+		return false;
 	}
 	return true;
 }
 void __MCF_CRT_EndModule(void){
-	if(g_uInitState == 0){
-		return;
-	}
-	const DWORD dwLastError = GetLastError();
-	switch(--g_uInitState){
-
-#define DO_UNINIT(n, exp)	\
-	case (n):	\
-		{	\
-			(exp);	\
-			--g_uInitState;	\
-		}
-
-//	=========================================================
-	DO_UNINIT(5, __MCF_CRT_StaticObjectsUninit());
-	DO_UNINIT(4, __MCF_CRT_MinGWHacksUninit());
-	DO_UNINIT(3, __MCF_CRT_TlsEnvUninit());
-	DO_UNINIT(2, __MCF_CRT_HeapDbgUninit());
-	DO_UNINIT(1, __MCF_CRT_HeapUninit());
-	DO_UNINIT(0, __MCF_CRT_FEnvUninit());
-//	=========================================================
-
-		break;
-	default:
-		__builtin_trap();
-	}
-	SetLastError(dwLastError);
+	__MCF_CRT_StaticObjectsUninit();
+	__MCF_CRT_MinGWHacksUninit();
+	__MCF_CRT_TlsEnvUninit();
 }
 
 int MCF_CRT_AtEndModule(void (__cdecl *pfnProc)(intptr_t), intptr_t nContext){

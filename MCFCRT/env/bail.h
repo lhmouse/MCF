@@ -15,8 +15,10 @@ __MCF_CRT_EXTERN_C_BEGIN
 #	define MCF_CRT_NORETURN_IF_NDEBUG
 #endif
 
-extern MCF_CRT_NORETURN_IF_NDEBUG void MCF_CRT_Bail(const wchar_t *pwszDescription) MCF_NOEXCEPT;
-extern MCF_CRT_NORETURN_IF_NDEBUG void MCF_CRT_BailF(const wchar_t *pwszFormat, ...) MCF_NOEXCEPT;
+MCF_CRT_NORETURN_IF_NDEBUG
+extern void MCF_CRT_Bail(const wchar_t *pwszDescription) MCF_NOEXCEPT;
+MCF_CRT_NORETURN_IF_NDEBUG
+extern void MCF_CRT_BailF(const wchar_t *pwszFormat, ...) MCF_NOEXCEPT;
 
 __MCF_CRT_EXTERN_C_END
 

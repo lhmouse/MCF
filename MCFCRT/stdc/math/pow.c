@@ -83,7 +83,7 @@ static long double ppowlu(long double x, unsigned y){
 		default:	ppowlu)(x_, y_)
 
 // postive pow float float
-static __attribute__((__cdecl__)) float ppowf(float x, float y){
+static float ppowf(float x, float y){
 	register float ret;
 	__asm__ __volatile__(
 		"fld dword ptr[%2] \n"
@@ -106,7 +106,7 @@ static __attribute__((__cdecl__)) float ppowf(float x, float y){
 	);
 	return ret;
 }
-static __attribute__((__cdecl__)) double ppowd(double x, double y){
+static double ppowd(double x, double y){
 	register double ret;
 	__asm__ __volatile__(
 		"fld qword ptr[%2] \n"
@@ -129,7 +129,7 @@ static __attribute__((__cdecl__)) double ppowd(double x, double y){
 	);
 	return ret;
 }
-static __attribute__((__cdecl__)) __MCF_LDBL_DECL(ppowl, double x, double y){
+static __MCF_LDBL_DECL(ppowl, double x, double y){
 	register long double ret;
 	__asm__ __volatile__(
 		"fld tbyte ptr[%2] \n"

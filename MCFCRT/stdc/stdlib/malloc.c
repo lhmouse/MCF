@@ -5,9 +5,10 @@
 #include "../../env/_crtdef.h"
 #include "../../env/heap.h"
 
-__attribute__((__noinline__)) void *__wrap_malloc(size_t cb){
+__attribute__((__noinline__))
+void *__wrap_malloc(size_t cb){
 	return __MCF_CRT_HeapAlloc(cb, __builtin_return_address(0));
 }
 
-void *malloc(size_t cb)
-	__attribute__((__alias__("__wrap_malloc")));
+__attribute__((__alias__("__wrap_malloc")))
+void *malloc(size_t cb);

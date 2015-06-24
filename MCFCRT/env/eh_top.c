@@ -13,9 +13,9 @@ struct object {
 
 // 异常处理帧目录初始化，用于 DWARF 实现退栈。
 __attribute__((__section__(".eh_frame$@@@"), __used__))
-	static const uintptr_t _eh_frame_begin[1] = { 0 };
+static const uintptr_t _eh_frame_begin[1] = { 0 };
 __attribute__((__section__(".data"), __used__))
-	static struct object _eh_obj[1];
+static struct object _eh_obj[1];
 
 __attribute__((__weak__))
 void __register_frame_info(const void *p, struct object *o){

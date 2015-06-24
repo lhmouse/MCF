@@ -49,20 +49,19 @@ DWORD __MCF_ExeStartup(LPVOID pReserved){
 
 // 线程局部存储（TLS）目录，用于执行 TLS 的析构函数。
 __attribute__((__section__(".tls$@@@"), __used__))
-	const unsigned char _tls_start;
+const unsigned char _tls_start;
 __attribute__((__section__(".tls$___"), __used__))
-	const unsigned char _tls_end;
+const unsigned char _tls_end;
 __attribute__((__section__(".tls"), __used__))
-	const DWORD _tls_index = 0;
+const DWORD _tls_index = 0;
 
 __attribute__((__section__(".CRT$@@@"), __used__))
-	const PIMAGE_TLS_CALLBACK _callback_start = &__MCF_CRT_TlsCallback;
+const PIMAGE_TLS_CALLBACK _callback_start = &__MCF_CRT_TlsCallback;
 __attribute__((__section__(".CRT$___"), __used__))
-	const PIMAGE_TLS_CALLBACK _callback_end = nullptr;
+const PIMAGE_TLS_CALLBACK _callback_end = nullptr;
 
 __attribute__((__section__(".tls"), __used__))
-	const IMAGE_TLS_DIRECTORY _tls_used =
-{
+const IMAGE_TLS_DIRECTORY _tls_used = {
 	.StartAddressOfRawData	= (UINT_PTR)&_tls_start,
 	.EndAddressOfRawData	= (UINT_PTR)&_tls_end,
 	.AddressOfIndex			= (UINT_PTR)&_tls_index,

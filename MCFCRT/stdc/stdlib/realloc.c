@@ -5,7 +5,8 @@
 #include "../../env/_crtdef.h"
 #include "../../env/heap.h"
 
-__attribute__((__noinline__)) void *__wrap_realloc(void *p, size_t cb){
+__attribute__((__noinline__))
+void *__wrap_realloc(void *p, size_t cb){
 	if(p){
 		return __MCF_CRT_HeapReAlloc(p, cb, __builtin_return_address(0));
 	} else {
@@ -13,5 +14,5 @@ __attribute__((__noinline__)) void *__wrap_realloc(void *p, size_t cb){
 	}
 }
 
-void *realloc(void *p, size_t cb)
-	__attribute__((__alias__("__wrap_realloc")));
+__attribute__((__alias__("__wrap_realloc")))
+void *realloc(void *p, size_t cb);

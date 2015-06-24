@@ -10,5 +10,5 @@ int __wrap_atexit(void (__cdecl *func)(void)){
 	return MCF_CRT_AtEndModule((void (__cdecl *)(intptr_t))func, 0);
 }
 
-int atexit(void (*func)(void))
-	__attribute__((__alias__("__wrap_atexit")));
+__attribute__((__alias__("__wrap_atexit")))
+int atexit(void (*func)(void));

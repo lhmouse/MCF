@@ -6,7 +6,10 @@ using namespace MCF;
 
 extern "C" unsigned int MCFMain() noexcept {
 	Utf8String s;
-	std::printf("size = %zu, cap = %zu\n", sizeof(s), s.GetCapacity());
+	for(int i = 0; i < 80; ++i){
+		s.Push(' ' + i);
+	}
+	std::puts(s.GetStr());
 	return 0;
 }
 

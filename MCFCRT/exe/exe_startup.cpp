@@ -8,6 +8,7 @@
 #include "../env/module.h"
 #include "../env/thread.h"
 #include "../env/_eh_top.h"
+#include "../env/last_error.h"
 
 // -static -Wl,-e__MCF_ExeStartup,--disable-runtime-pseudo-reloc,--disable-auto-import
 
@@ -23,7 +24,7 @@ DWORD __MCF_ExeStartup(LPVOID){
 	__MCF_EH_TOP_BEGIN
 	{
 		if(!::__MCF_CRT_BeginModule()){
-			::MCF_CRT_BailF(L"MCFCRT 初始化失败。\n\n错误代码：%lu", (unsigned long)GetLastError());
+			::MCF_CRT_BailF(L"MCFCRT 初始化失败。\n\n错误代码：%lu", ::MCF_CRT_GetWin32LastError());
 		}
 		dwExitCode = MCFMain();
 		::__MCF_CRT_EndModule();

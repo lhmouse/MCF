@@ -238,13 +238,21 @@ bool MCF_CRT_TlsGet(void *pTlsKey, bool *pbHasValue, intptr_t *pnValue){
 	return true;
 }
 bool MCF_CRT_TlsReset(void *pTlsKey, intptr_t nNewValue){
+	TlsKey *const pKey = pTlsKey;
+	if(!pKey){
+		SetLastError(ERROR_INVALID_PARAMETER);
+		return false;
+	}
+
 	bool bHasOldValue;
 	intptr_t nOldValue;
 	if(!MCF_CRT_TlsExchange(pTlsKey, &bHasOldValue, &nOldValue, nNewValue)){
+		if(pKey->pfnCallback){
+			(*pKey->pfnCallback)(nNewValue);
+		}
 		return false;
 	}
 	if(bHasOldValue){
-		TlsKey *const pKey = pTlsKey;
 		if(pKey->pfnCallback){
 			(*pKey->pfnCallback)(nOldValue);
 		}

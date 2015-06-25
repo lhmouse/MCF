@@ -210,7 +210,7 @@ void (__cdecl *MCF_CRT_TlsGetCallback(void *pTlsKey))(intptr_t){
 	SetLastError(ERROR_SUCCESS);
 	return pKey->pfnCallback;
 }
-bool MCF_CRT_TlsGet(void *pTlsKey, bool *pbHasValue, intptr_t *pnValue){
+bool MCF_CRT_TlsGet(void *pTlsKey, bool *restrict pbHasValue, intptr_t *restrict pnValue){
 	TlsKey *const pKey = pTlsKey;
 	if(!pKey){
 		SetLastError(ERROR_INVALID_PARAMETER);
@@ -261,7 +261,7 @@ bool MCF_CRT_TlsReset(void *pTlsKey, intptr_t nNewValue){
 	}
 	return true;
 }
-bool MCF_CRT_TlsExchange(void *pTlsKey, bool *pbHasOldValue, intptr_t *pnOldValue, intptr_t nNewValue){
+bool MCF_CRT_TlsExchange(void *pTlsKey, bool *restrict pbHasOldValue, intptr_t *restrict pnOldValue, intptr_t nNewValue){
 	TlsKey *const pKey = pTlsKey;
 	if(!pKey){
 		SetLastError(ERROR_INVALID_PARAMETER);
@@ -414,7 +414,7 @@ DWORD CRTThreadProc(LPVOID pParam){
 	return dwExitCode;
 }
 
-void *MCF_CRT_CreateThread(unsigned (*pfnThreadProc)(intptr_t), intptr_t nParam, bool bSuspended, unsigned long *pulThreadId){
+void *MCF_CRT_CreateThread(unsigned (*pfnThreadProc)(intptr_t), intptr_t nParam, bool bSuspended, unsigned long *restrict pulThreadId){
 	ThreadInitInfo *const pInitInfo = malloc(sizeof(ThreadInitInfo));
 	if(!pInitInfo){
 		return nullptr;

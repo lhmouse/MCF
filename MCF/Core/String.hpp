@@ -49,7 +49,7 @@ private:
 		struct {
 			Char *pchBegin;
 			std::size_t uLength;
-			std::size_t uCapacity;
+			std::size_t uSizeAllocated;
 		} vLarge;
 	} x_vStorage;
 
@@ -190,7 +190,7 @@ private:
 
 			x_vStorage.vLarge.pchBegin = pchNewBuffer;
 			x_vStorage.vLarge.uLength = uOldLength;
-			x_vStorage.vLarge.uCapacity = uSizeToAlloc;
+			x_vStorage.vLarge.uSizeAllocated = uSizeToAlloc;
 		}
 
 		return pchNewBuffer + uFirstOffset + uRemovedBegin;
@@ -284,7 +284,7 @@ public:
 		if(x_vStorage.vSmall.schComplLength >= 0){
 			return COUNT_OF(x_vStorage.vSmall.achData);
 		} else {
-			return x_vStorage.vLarge.uCapacity - 1;
+			return x_vStorage.vLarge.uSizeAllocated - 1;
 		}
 	}
 	void Reserve(std::size_t uNewCapacity){

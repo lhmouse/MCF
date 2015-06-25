@@ -119,7 +119,6 @@ namespace Impl_IntrusivePtr {
 			explicit xWeakObserver(DeletableBase *pOwner) noexcept
 				: x_pOwner(pOwner)
 			{
-				AtomicFence(MemoryModel::kRelease);
 			}
 
 		public:

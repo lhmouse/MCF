@@ -1,17 +1,17 @@
 #include <MCF/StdMCF.hpp>
-#include <MCF/Core/String.hpp>
+#include <MCF/Core/StreamBuffer.hpp>
 #include <cstdio>
 
 using namespace MCF;
 
-__attribute__((__noinline__))
-void foo(Utf8String &s){
-	auto p = s.GetStr();
-	std::puts(p);
-}
-
 extern "C" unsigned int MCFMain() noexcept {
-	Utf8String s('a', 50);
-	foo(s);
+	StreamBuffer buf;
+	for(std::size_t i = 0; i < 10000; ++i){
+		buf.Put(i);
+	}
+	buf.Clear();
+	for(std::size_t i = 0; i < 10000; ++i){
+		buf.Put(i);
+	}
 	return 0;
 }

@@ -46,7 +46,7 @@ typedef struct tagTlsKey {
 	MCF_AvlNodeHeader vHeader;
 
 	CRITICAL_SECTION csMutex;
-	void (__cdecl *pfnCallback)(intptr_t);
+	void (*pfnCallback)(intptr_t);
 	struct tagTlsObject *pLastByKey;
 } TlsKey;
 
@@ -123,7 +123,7 @@ void __stdcall __MCF_CRT_TlsCallback(void *hModule, unsigned long ulReason, void
 	}
 }
 
-void *MCF_CRT_TlsAllocKey(void (__cdecl *pfnCallback)(intptr_t)){
+void *MCF_CRT_TlsAllocKey(void (*pfnCallback)(intptr_t)){
 	TlsKey *const pKey = malloc(sizeof(TlsKey));
 	if(!pKey){
 		SetLastError(ERROR_NOT_ENOUGH_MEMORY);
@@ -201,7 +201,7 @@ bool MCF_CRT_TlsFreeKey(void *pTlsKey){
 	return true;
 }
 
-void (__cdecl *MCF_CRT_TlsGetCallback(void *pTlsKey))(intptr_t){
+void (*MCF_CRT_TlsGetCallback(void *pTlsKey))(intptr_t){
 	TlsKey *const pKey = pTlsKey;
 	if(!pKey){
 		SetLastError(ERROR_INVALID_PARAMETER);
@@ -379,7 +379,7 @@ void MCF_CRT_TlsClearAll(){
 	__MCF_CRT_RunEmutlsDtors();
 }
 
-int MCF_CRT_AtEndThread(void (__cdecl *pfnProc)(intptr_t), intptr_t nContext){
+int MCF_CRT_AtEndThread(void (*pfnProc)(intptr_t), intptr_t nContext){
 	void *const pKey = MCF_CRT_TlsAllocKey(pfnProc);
 	if(!pKey){
 		return -1;

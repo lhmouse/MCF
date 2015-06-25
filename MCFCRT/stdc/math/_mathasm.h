@@ -20,7 +20,7 @@
 
 // x64 ABI 中 long double 使用引用返回。必须定义一个函数接受隐式传递的返回地址以便应用 RVO。
 #	define __MCF_LDBL_DECL(name_, ...)		long double name_(__VA_ARGS__) __attribute__((alias("__MCF_CRT_Ldbl_" #name_)));	\
-											static __attribute__((__cdecl__)) long double *__MCF_CRT_Ldbl_##name_(long double *__MCF_LdblRetAddr, __VA_ARGS__)
+											static long double *__cdecl __MCF_CRT_Ldbl_##name_(long double *__MCF_LdblRetAddr, __VA_ARGS__)
 #	define __MCF_LDBL_RETURN(v_)			return __MCF_LdblRetAddr
 #	define __MCF_LDBL_RET_ST()				"fstp tbyte ptr[%[__MCF_LdblRetAddr]] \n"
 #	define __MCF_LDBL_RET_MEM(mem_, tmp_)	"mov r" tmp_ "x, qword ptr[" mem_ "] \n"	\

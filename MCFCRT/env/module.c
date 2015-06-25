@@ -15,7 +15,7 @@
 typedef struct tagAtExitNode {
 	struct tagAtExitNode *pPrev;
 
-	void (__cdecl *pfnProc)(intptr_t);
+	void (*pfnProc)(intptr_t);
 	intptr_t nContext;
 } AtExitNode;
 
@@ -82,7 +82,7 @@ void __MCF_CRT_EndModule(void){
 	__MCF_CRT_TlsEnvUninit();
 }
 
-int MCF_CRT_AtEndModule(void (__cdecl *pfnProc)(intptr_t), intptr_t nContext){
+int MCF_CRT_AtEndModule(void (*pfnProc)(intptr_t), intptr_t nContext){
 	AtExitNode *const pNode = malloc(sizeof(AtExitNode));
 	if(!pNode){
 		return -1;
@@ -104,7 +104,7 @@ extern IMAGE_DOS_HEADER __image_base__ __asm__("__image_base__");
 void *MCF_CRT_GetModuleBase(){
 	return &__image_base__;
 }
-bool MCF_CRT_TraverseModuleSections(bool (__cdecl *pfnCallback)(intptr_t, const char [8], void *, size_t), intptr_t nContext){
+bool MCF_CRT_TraverseModuleSections(bool (*pfnCallback)(intptr_t, const char [8], void *, size_t), intptr_t nContext){
 	if(__image_base__.e_magic != IMAGE_DOS_SIGNATURE){
 		SetLastError(ERROR_BAD_FORMAT);
 		return false;

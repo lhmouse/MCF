@@ -10,6 +10,7 @@
 #include "static_ctors.h"
 #include "../ext/expect.h"
 #include <stdlib.h>
+#include <winnt.h>
 
 typedef struct tagAtExitNode {
 	struct tagAtExitNode *pPrev;
@@ -90,18 +91,37 @@ int MCF_CRT_AtEndModule(void (__cdecl *pfnProc)(intptr_t), intptr_t nContext){
 	pNode->nContext	= nContext;
 
 	pNode->pPrev = __atomic_load_n(&g_pAtExitHead, __ATOMIC_RELAXED);
-	while(EXPECT(!__atomic_compare_exchange_n(
-		&g_pAtExitHead, &(pNode->pPrev), pNode, false, __ATOMIC_RELAXED, __ATOMIC_RELAXED)))
-	{
+	while(EXPECT(!__atomic_compare_exchange_n(&g_pAtExitHead, &(pNode->pPrev), pNode, false, __ATOMIC_RELAXED, __ATOMIC_RELAXED))){
 		// 空的。
 	}
 
 	return 0;
 }
 
-void *MCF_CRT_GetModuleBase(){
-	// ld 自动添加此符号。
-	extern IMAGE_DOS_HEADER vDosHeader __asm__("__image_base__");
+// ld 自动添加此符号。
+extern IMAGE_DOS_HEADER __image_base__ __asm__("__image_base__");
 
-	return &vDosHeader;
+void *MCF_CRT_GetModuleBase(){
+	return &__image_base__;
+}
+bool MCF_CRT_TraverseModuleSections(bool (__cdecl *pfnCallback)(intptr_t, const char [8], void *, size_t), intptr_t nContext){
+	if(__image_base__.e_magic != IMAGE_DOS_SIGNATURE){
+		SetLastError(ERROR_BAD_FORMAT);
+		return false;
+	}
+	const PIMAGE_NT_HEADERS32 pNtHeaders = (PIMAGE_NT_HEADERS32)((char *)&__image_base__ + __image_base__.e_lfanew);
+	if(pNtHeaders->Signature != IMAGE_NT_SIGNATURE){
+		SetLastError(ERROR_BAD_FORMAT);
+		return false;
+	}
+
+	const PIMAGE_SECTION_HEADER pSections = (PIMAGE_SECTION_HEADER)((char *)&(pNtHeaders->OptionalHeader) + pNtHeaders->FileHeader.SizeOfOptionalHeader);
+	const size_t uSectionCount = pNtHeaders->FileHeader.NumberOfSections;
+	for(size_t i = 0; i < uSectionCount; ++i){
+		if(!(*pfnCallback)(nContext, (const char *)pSections[i].Name, (char *)&__image_base__ + pSections[i].VirtualAddress, pSections[i].Misc.VirtualSize)){
+			SetLastError(ERROR_SUCCESS);
+			return false;
+		}
+	}
+	return true;
 }

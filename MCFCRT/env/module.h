@@ -16,6 +16,8 @@ extern void __MCF_CRT_EndModule(void);
 extern int MCF_CRT_AtEndModule(void (__cdecl *pfnProc)(MCF_STD intptr_t), MCF_STD intptr_t nContext) MCF_NOEXCEPT;
 
 extern void *MCF_CRT_GetModuleBase(void) MCF_NOEXCEPT;
+// 如果回调函数返回 true 则循环继续，直到遍历完毕，此时返回 true；否则返回 false，GetLastError() 返回 ERROR_SUCCESS。失败返回 false。
+extern bool MCF_CRT_TraverseModuleSections(bool (__cdecl *pfnCallback)(MCF_STD intptr_t /* context */, const char /* name */ [8], void * /* base */, MCF_STD size_t /* size */), MCF_STD intptr_t nContext) MCF_NOEXCEPT;
 
 __MCF_CRT_EXTERN_C_END
 

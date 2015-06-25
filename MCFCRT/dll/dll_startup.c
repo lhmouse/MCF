@@ -26,7 +26,10 @@ BOOL __MCF_DllStartup(HINSTANCE hDll, DWORD dwReason, LPVOID pReserved){
 		if(!__MCF_CRT_HeapInit()){
 			break;
 		}
-		__MCF_CRT_RegisterFrameInfo();
+		if(!__MCF_CRT_RegisterFrameInfo()){
+			__MCF_CRT_HeapUninit();
+			break;
+		}
 
 		__MCF_EH_TOP_BEGIN
 		{

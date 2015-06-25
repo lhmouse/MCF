@@ -28,7 +28,9 @@ DWORD __MCF_ExeStartup(LPVOID pReserved){
 	if(!__MCF_CRT_HeapInit()){
 		MCF_CRT_BailF(L"MCFCRT 堆初始化失败。\n\n错误代码：%lu", MCF_CRT_GetWin32LastError());
 	}
-	__MCF_CRT_RegisterFrameInfo();
+	if(!__MCF_CRT_RegisterFrameInfo()){
+		MCF_CRT_BailF(L"MCFCRT 异常处理程序初始化失败。\n\n错误代码：%lu", MCF_CRT_GetWin32LastError());
+	}
 
 	__MCF_EH_TOP_BEGIN
 	{

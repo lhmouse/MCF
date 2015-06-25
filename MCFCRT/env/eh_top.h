@@ -12,7 +12,7 @@
 
 __MCF_CRT_EXTERN_C_BEGIN
 
-extern void __MCF_CRT_RegisterFrameInfo(void) MCF_NOEXCEPT;
+extern bool __MCF_CRT_RegisterFrameInfo(void) MCF_NOEXCEPT;
 extern void __MCF_CRT_UnregisterFrameInfo(void) MCF_NOEXCEPT;
 
 __MCF_CRT_EXTERN_C_END

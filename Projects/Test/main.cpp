@@ -21,7 +21,7 @@ struct foo {
 	foo &operator=(const foo &r){
 		int old = id;
 		id = r.id;
-		std::printf("foo &foo::operator=(const foo &r), odl = %d, id = %d\n", old, id);
+		std::printf("foo &foo::operator=(const foo &r), old = %d, id = %d\n", old, id);
 		return *this;
 	}
 	~foo(){

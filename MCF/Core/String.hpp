@@ -53,6 +53,11 @@ private:
 		} vLarge;
 	} x_vStorage;
 
+private:
+	std::size_t xGetSmallLength() const noexcept {
+		return COUNT_OF(x_vStorage.vSmall.achData) - static_cast<std::make_unsigned_t<Char>>(x_vStorage.vSmall.schComplLength);
+	}
+
 public:
 	String() noexcept {
 #ifndef NDEBUG
@@ -218,14 +223,14 @@ public:
 
 	const Char *GetEnd() const noexcept {
 		if(x_vStorage.vSmall.schComplLength >= 0){
-			return x_vStorage.vSmall.achData + (COUNT_OF(x_vStorage.vSmall.achData) - static_cast<std::make_unsigned_t<Char>>(x_vStorage.vSmall.schComplLength));
+			return x_vStorage.vSmall.achData + xGetSmallLength();
 		} else {
 			return x_vStorage.vLarge.pchBegin + x_vStorage.vLarge.uLength;
 		}
 	}
 	Char *GetEnd() noexcept {
 		if(x_vStorage.vSmall.schComplLength >= 0){
-			return x_vStorage.vSmall.achData + (COUNT_OF(x_vStorage.vSmall.achData) - static_cast<std::make_unsigned_t<Char>>(x_vStorage.vSmall.schComplLength));
+			return x_vStorage.vSmall.achData + xGetSmallLength();
 		} else {
 			return x_vStorage.vLarge.pchBegin + x_vStorage.vLarge.uLength;
 		}
@@ -239,19 +244,29 @@ public:
 	}
 	std::size_t GetSize() const noexcept {
 		if(x_vStorage.vSmall.schComplLength >= 0){
-			return COUNT_OF(x_vStorage.vSmall.achData) - static_cast<std::make_unsigned_t<Char>>(x_vStorage.vSmall.schComplLength);
+			return xGetSmallLength();
 		} else {
 			return x_vStorage.vLarge.uLength;
 		}
 	}
 
 	const Char *GetStr() const noexcept {
-		const_cast<Char &>(GetEnd()[0]) = Char();
-		return GetBegin();
+		if(x_vStorage.vSmall.schComplLength >= 0){
+			const_cast<Char &>(x_vStorage.vSmall.achData[xGetSmallLength()]) = Char();
+			return x_vStorage.vSmall.achData;
+		} else {
+			x_vStorage.vLarge.pchBegin[x_vStorage.vLarge.uLength] = Char();
+			return x_vStorage.vLarge.pchBegin;
+		}
 	}
 	Char *GetStr() noexcept {
-		GetEnd()[0] = Char();
-		return GetBegin();
+		if(x_vStorage.vSmall.schComplLength >= 0){
+			x_vStorage.vSmall.achData[xGetSmallLength()] = Char();
+			return x_vStorage.vSmall.achData;
+		} else {
+			x_vStorage.vLarge.pchBegin[x_vStorage.vLarge.uLength] = Char();
+			return x_vStorage.vLarge.pchBegin;
+		}
 	}
 	std::size_t GetLength() const noexcept {
 		return GetSize();
@@ -259,7 +274,7 @@ public:
 
 	Observer GetObserver() const noexcept {
 		if(x_vStorage.vSmall.schComplLength >= 0){
-			return Observer(x_vStorage.vSmall.achData, COUNT_OF(x_vStorage.vSmall.achData) - static_cast<std::make_unsigned_t<Char>>(x_vStorage.vSmall.schComplLength));
+			return Observer(x_vStorage.vSmall.achData, xGetSmallLength());
 		} else {
 			return Observer(x_vStorage.vLarge.pchBegin, x_vStorage.vLarge.uLength);
 		}
@@ -433,7 +448,7 @@ public:
 		ASSERT_MSG(GetLength() < GetCapacity(), L"容器已满。");
 
 		if(x_vStorage.vSmall.schComplLength >= 0){
-			x_vStorage.vSmall.achData[COUNT_OF(x_vStorage.vSmall.achData) - static_cast<std::make_unsigned_t<Char>>(x_vStorage.vSmall.schComplLength)] = ch;
+			x_vStorage.vSmall.achData[xGetSmallLength()] = ch;
 			--x_vStorage.vSmall.schComplLength;
 		} else {
 			x_vStorage.vLarge.pchBegin[x_vStorage.vLarge.uLength] = ch;

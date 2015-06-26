@@ -8,6 +8,7 @@
 #include <tuple>
 #include <utility>
 #include <type_traits>
+#include "ParameterPackManipulators.hpp"
 
 namespace MCF {
 
@@ -137,6 +138,16 @@ template<typename FunctionT, typename ...ElementsT>
 decltype(auto) ReverseSqueezeTuple(FunctionT &&vFunction, std::tuple<ElementsT...> &&vTuple){
 	return Impl_TupleManipulators::SqueezeTupleHelper<FunctionT, std::tuple<ElementsT...> &>(vFunction, vTuple).template DoReversely<
 		std::conditional_t<std::is_reference<ElementsT>::value, ElementsT, ElementsT &&>...>(std::index_sequence_for<ElementsT...>());
+}
+
+template<typename ToFindT, typename ...TypesT>
+constexpr std::size_t FindFirstType(const std::tuple<TypesT...> &) noexcept {
+	return FindFirstType<ToFindT, TypesT...>();
+}
+
+template<typename ToFindT, typename ...TypesT>
+constexpr std::size_t FindLastType(const std::tuple<TypesT...> &) noexcept {
+	return FindLastType<ToFindT, TypesT...>();
 }
 
 }

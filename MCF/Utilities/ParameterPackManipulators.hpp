@@ -18,7 +18,12 @@ namespace Impl_ParameterPackManipulators {
 	struct ParameterPackExpander<0, FirstT, RemainingT...> {
 		using Type = FirstT;
 	};
+}
 
+template<std::size_t kIndexT, typename ...TypesT>
+using NthType = typename Impl_ParameterPackManipulators::ParameterPackExpander<kIndexT, TypesT...>::Type;
+
+namespace Impl_ParameterPackManipulators {
 	template<typename ToFindT, typename FirstT, typename ...RemainingT>
 	struct FirstTypeFinder {
 		enum : std::size_t {
@@ -45,9 +50,6 @@ namespace Impl_ParameterPackManipulators {
 		return sizeof...(ReversedT) - 1 - FirstTypeFinder<ToFindT, ReversedT...>::kIndex;
 	}
 }
-
-template<std::size_t kIndexT, typename ...TypesT>
-using NthType = typename Impl_ParameterPackManipulators::ParameterPackExpander<kIndexT, TypesT...>::Type;
 
 template<typename ToFindT, typename ...TypesT>
 constexpr std::size_t FindFirstType() noexcept {

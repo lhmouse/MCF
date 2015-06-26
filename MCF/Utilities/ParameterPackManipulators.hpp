@@ -26,6 +26,8 @@ using NthType = typename Impl_ParameterPackManipulators::ParameterPackExpander<k
 namespace Impl_ParameterPackManipulators {
 	template<typename ToFindT, typename FirstT, typename ...RemainingT>
 	struct FirstTypeFinder {
+		static_assert(sizeof...(RemainingT) != 0, "Type not found.");
+
 		enum : std::size_t {
 			kIndex = FirstTypeFinder<ToFindT, RemainingT...>::kIndex + 1
 		};

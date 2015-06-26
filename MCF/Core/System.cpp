@@ -13,13 +13,6 @@ namespace {
 			::GetNativeSystemInfo(this);
 		}
 	} g_vSystemInfo __attribute__((__init_priority__(101)));
-
-	struct OsVersionInfo : public ::OSVERSIONINFOW {
-		OsVersionInfo() noexcept {
-			dwOSVersionInfoSize = sizeof(::OSVERSIONINFOW);
-			::GetVersionExW(this);
-		}
-	} g_vOsVersionInfo __attribute__((__init_priority__(101)));
 }
 
 std::size_t GetProcessorCount() noexcept {
@@ -27,6 +20,15 @@ std::size_t GetProcessorCount() noexcept {
 }
 std::size_t GetPageSize() noexcept {
 	return g_vSystemInfo.dwPageSize;
+}
+
+namespace {
+	struct OsVersionInfo : public ::OSVERSIONINFOW {
+		OsVersionInfo() noexcept {
+			dwOSVersionInfoSize = sizeof(::OSVERSIONINFOW);
+			::GetVersionExW(this);
+		}
+	} g_vOsVersionInfo __attribute__((__init_priority__(101)));
 }
 
 WindowsVersion GetWindowsVersion() noexcept {

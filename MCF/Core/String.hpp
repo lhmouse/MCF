@@ -310,7 +310,7 @@ public:
 			Truncate(uOldSize - uNewSize);
 		}
 	}
-	Char *ResizeFront(std::size_t uDeltaSize){
+	Char *ResizeMoreFront(std::size_t uDeltaSize){
 		const auto uOldSize = GetSize();
 		xChopAndSplice(uOldSize, uOldSize, uDeltaSize, uOldSize + uDeltaSize);
 		xSetSize(uOldSize + uDeltaSize);
@@ -469,7 +469,7 @@ public:
 	}
 
 	void Unshift(Char ch, std::size_t uCount = 1){
-		FillN(ResizeFront(uCount), uCount, ch);
+		FillN(ResizeMoreFront(uCount), uCount, ch);
 	}
 	void Unshift(const Char *pszBegin){
 		Unshift(Observer(pszBegin));

@@ -1,17 +1,16 @@
 #include <MCF/StdMCF.hpp>
-#include <MCF/Core/StreamBuffer.hpp>
+#include <MCF/Core/String.hpp>
 #include <cstdio>
 
 using namespace MCF;
 
+__attribute__((__noinline__))
+void foo(Utf8String &s, std::size_t c){
+	s.Resize(c);
+}
+
 extern "C" unsigned int MCFMain() noexcept {
-	StreamBuffer buf;
-	for(std::size_t i = 0; i < 10000; ++i){
-		buf.Put(i);
-	}
-	buf.Clear();
-	for(std::size_t i = 0; i < 10000; ++i){
-		buf.Put(i);
-	}
+	Utf8String s;
+	foo(s, 500);
 	return 0;
 }

@@ -57,13 +57,16 @@ private:
 	std::size_t xGetSmallLength() const noexcept {
 		return COUNT_OF(x_vStorage.vSmall.achData) - static_cast<std::make_unsigned_t<Char>>(x_vStorage.vSmall.schComplLength);
 	}
+	void xSetSmallLength(std::size_t uLength) noexcept {
+		x_vStorage.vSmall.schComplLength = static_cast<std::make_signed_t<Char>>(COUNT_OF(x_vStorage.vSmall.achData) - uLength);
+	}
 
 public:
 	String() noexcept {
 #ifndef NDEBUG
 		std::memset(x_vStorage.vSmall.achData, 0xCC, sizeof(x_vStorage.vSmall.achData));
 #endif
-		x_vStorage.vSmall.schComplLength = static_cast<std::make_signed_t<Char>>(COUNT_OF(x_vStorage.vSmall.achData));
+		xSetSmallLength(0);
 	}
 	explicit String(Char ch, std::size_t uCount = 1)
 		: String()
@@ -199,7 +202,7 @@ private:
 		ASSERT(uNewSize <= GetCapacity());
 
 		if(x_vStorage.vSmall.schComplLength >= 0){
-			x_vStorage.vSmall.schComplLength = static_cast<std::make_signed_t<Char>>(COUNT_OF(x_vStorage.vSmall.achData) - uNewSize);
+			xSetSmallLength(uNewSize);
 		} else {
 			x_vStorage.vLarge.uLength = uNewSize;
 		}

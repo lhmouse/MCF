@@ -16,6 +16,9 @@
 #include <cstddef>
 #include <cstdint>
 
+// 借用了 https://github.com/elliotgoodrich/SSO-23 的一些想法。然而我们可以优化更多……
+// 我们支持的最大 SSO 长度是 31 个“字符”，而不是 23 个“字节”。
+
 namespace MCF {
 
 template<StringType kTypeT>
@@ -42,7 +45,7 @@ public:
 private:
 	union xStorage {
 		struct {
-			Char achData[(4 * sizeof(void *)) / sizeof(Char) - 1];
+			Char achData[31];
 			std::make_signed_t<Char> schComplLength;
 		} vSmall;
 

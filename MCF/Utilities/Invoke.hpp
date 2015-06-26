@@ -25,19 +25,23 @@ namespace Impl_Invoke {
 		using PtrToMemFunc = PtRetT (PtClassT::*)(PtParamsT...) cv_ ref_;	\
 		\
 		template<typename ClassT, typename ...ParamsT,	\
-			std::enable_if_t<std::is_base_of<PtClassT, std::decay_t<ClassT>>::value,	\
+			std::enable_if_t<	\
+				std::is_base_of<PtClassT, std::decay_t<ClassT>>::value,	\
 				int> = 0>	\
-		decltype(auto) operator()(PtrToMemFunc pMemFunc, cv_ ClassT *pObj, ParamsT &&...vParams) const {	\
+		decltype(auto) operator()(PtrToMemFunc pMemFunc, ClassT *pObj, ParamsT &&...vParams) const {	\
 			return (pObj->*pMemFunc)(std::forward<ParamsT>(vParams)...);	\
 		}	\
 		template<typename ClassT, typename ...ParamsT,	\
-			std::enable_if_t<std::is_base_of<PtClassT, std::decay_t<ClassT>>::value,	\
+			std::enable_if_t<	\
+				std::is_base_of<PtClassT, std::decay_t<ClassT>>::value &&	\
+					!std::is_pointer<std::decay_t<ClassT>>::value,	\
 				int> = 0>	\
 		decltype(auto) operator()(PtrToMemFunc pMemFunc, ClassT &&vObj, ParamsT &&...vParams) const {	\
 			return (std::forward<ClassT>(vObj).*pMemFunc)(std::forward<ParamsT>(vParams)...);	\
 		}	\
 		template<typename ClassT, typename ...ParamsT,	\
-			std::enable_if_t<!std::is_convertible<std::decay_t<ClassT>, cv_ PtClassT *>::value && !std::is_base_of<PtClassT, std::decay_t<ClassT>>::value,	\
+			std::enable_if_t<	\
+				!std::is_base_of<PtClassT, std::decay_t<ClassT>>::value,	\
 				int> = 0>	\
 		decltype(auto) operator()(PtrToMemFunc pMemFunc, ClassT &&vObj, ParamsT &&...vParams) const {	\
 			return ((*std::forward<ClassT>(vObj)).*pMemFunc)(std::forward<ParamsT>(vParams)...);	\

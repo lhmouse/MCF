@@ -34,7 +34,7 @@ namespace Impl_Invoke {
 		template<typename ClassT, typename ...ParamsT,	\
 			std::enable_if_t<	\
 				std::is_base_of<PtClassT, std::decay_t<ClassT>>::value &&	\
-					!std::is_pointer<std::decay_t<ClassT>>::value,	\
+					!std::is_convertible<ClassT &&, const volatile PtClassT *>::value,	\
 				int> = 0>	\
 		decltype(auto) operator()(PtrToMemFunc pMemFunc, ClassT &&vObj, ParamsT &&...vParams) const {	\
 			return (std::forward<ClassT>(vObj).*pMemFunc)(std::forward<ParamsT>(vParams)...);	\

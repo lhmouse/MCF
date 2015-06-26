@@ -48,8 +48,7 @@ void BSwap(Tx &vDst, Ty &vSrc) noexcept {
 	static_assert(std::is_trivial<Ty>::value, "Ty must be a trivial type.");
 	static_assert(sizeof(vDst) == sizeof(vSrc), "Source and destination sizes do not match.");
 
-	using Array = unsigned char [sizeof(Tx)];
-	std::swap(reinterpret_cast<Array &>(vDst), reinterpret_cast<Array &>(vSrc));
+	std::swap(reinterpret_cast<unsigned char (&)[sizeof(Tx)]>(vDst), reinterpret_cast<unsigned char (&)[sizeof(Ty)]>(vSrc));
 }
 
 template<typename Ty>

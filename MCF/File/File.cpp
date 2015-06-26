@@ -4,7 +4,7 @@
 
 #include "../StdMCF.hpp"
 #include "File.hpp"
-#include "Exception.hpp"
+#include "../Core/Exception.hpp"
 #include "../Utilities/BinaryOperations.hpp"
 #include "../Utilities/MinMax.hpp"
 

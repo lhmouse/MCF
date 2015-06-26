@@ -4,8 +4,8 @@
 
 #include "../StdMCF.hpp"
 #include "Uuid.hpp"
-#include "Exception.hpp"
-#include "Time.hpp"
+#include "../Core/Exception.hpp"
+#include "../Core/Time.hpp"
 #include "../Utilities/Endian.hpp"
 #include "../Thread/Atomic.hpp"
 

@@ -5,8 +5,8 @@
 #ifndef MCF_CORE_FILE_HPP_
 #define MCF_CORE_FILE_HPP_
 
-#include "String.hpp"
-#include "UniqueHandle.hpp"
+#include "../Core/String.hpp"
+#include "../Core/UniqueHandle.hpp"
 #include "../Function/FunctionObserver.hpp"
 #include <cstddef>
 #include <cstdint>

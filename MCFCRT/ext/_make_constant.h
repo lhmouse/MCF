@@ -1,5 +1,5 @@
-// Õâ¸öÎÄ¼þÊÇ MCF µÄÒ»²¿·Ö¡£
-// ÓÐ¹Ø¾ßÌåÊÚÈ¨ËµÃ÷£¬Çë²ÎÔÄ MCFLicense.txt¡£
+// è¿™ä¸ªæ–‡ä»¶æ˜¯ MCF çš„ä¸€éƒ¨åˆ†ã€‚
+// æœ‰å…³å…·ä½“æŽˆæƒè¯´æ˜Žï¼Œè¯·å‚é˜… MCFLicense.txtã€‚
 // Copyleft 2013 - 2015, LH_Mouse. All wrongs reserved.
 
 #ifndef __MCF_CRT_MAKE_CONSTANT_H_

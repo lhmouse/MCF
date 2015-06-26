@@ -1,5 +1,5 @@
-// Õâ¸öÎÄ¼şÊÇ MCF µÄÒ»²¿·Ö¡£
-// ÓĞ¹Ø¾ßÌåÊÚÈ¨ËµÃ÷£¬Çë²ÎÔÄ MCFLicense.txt¡£
+// è¿™ä¸ªæ–‡ä»¶æ˜¯ MCF çš„ä¸€éƒ¨åˆ†ã€‚
+// æœ‰å…³å…·ä½“æˆæƒè¯´æ˜ï¼Œè¯·å‚é˜… MCFLicense.txtã€‚
 // Copyleft 2013 - 2015, LH_Mouse. All wrongs reserved.
 
 #ifndef __MCF_CRT_OFFSET_OF_H_
@@ -21,7 +21,7 @@
 	(__MCF_CRT_MAKE_CONSTANT((MCF_STD size_t)(	\
 		__MCF_ADDRESS_OF(((s_ *)(unsigned char *)1)->m_) - (unsigned char *)1)))
 
-// ³ÉÔ±Ö¸Õë×ª»»³É¾ÛºÏÖ¸Õë¡£
+// æˆå‘˜æŒ‡é’ˆè½¬æ¢æˆèšåˆæŒ‡é’ˆã€‚
 #define DOWN_CAST(s_, m_, p_)	\
 	((s_ *)((unsigned char *)(p_) - OFFSET_OF(s_, m_)))
 

@@ -311,6 +311,9 @@ public:
 	bool IsNonnull() const noexcept {
 		return !!x_pElement;
 	}
+	std::size_t GetRefCount() const noexcept {
+		return static_cast<const volatile Impl_IntrusivePtr::RefCountBase *>(x_pElement)->GetRef();
+	}
 	Element *Get() const noexcept {
 		return x_pElement;
 	}

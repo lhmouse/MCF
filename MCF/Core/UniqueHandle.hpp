@@ -30,15 +30,18 @@ public:
 	{
 	}
 	UniqueHandle(UniqueHandle &&rhs) noexcept
-		: UniqueHandle()
+		: x_hObject(rhs.x_hObject)
 	{
-		Reset(std::move(rhs));
+		rhs.x_hObject = Closer()();
 	}
 	UniqueHandle &operator=(UniqueHandle &&rhs) noexcept {
 		return Reset(std::move(rhs));
 	}
 	~UniqueHandle(){
-		Reset();
+		const auto hObject = x_hObject;
+		if(hObject != Closer()()){
+			Closer()(hObject);
+		}
 	}
 
 	UniqueHandle(const UniqueHandle &) = delete;
@@ -51,27 +54,21 @@ public:
 	Handle Get() const noexcept {
 		return x_hObject;
 	}
-	Handle Exchange(Handle hNewObject) noexcept {
-		return std::exchange(x_hObject, hNewObject);
-	}
-
 	Handle Release() noexcept {
-		return Exchange(Closer()());
-	}
-	void Swap(UniqueHandle &rhs) noexcept {
-		std::swap(x_hObject, rhs.x_hObject);
+		return std::exchange(x_hObject, Closer()());
 	}
 
-	UniqueHandle &Reset(Handle hObject = Closer()()) noexcept {
-		const auto hOldObject = Exchange(hObject);
-		if(hOldObject != Closer()()){
-			ASSERT(hOldObject != hObject);
-			Closer()(hOldObject);
-		}
+	UniqueHandle &Reset(Handle rhs = Closer()()) noexcept {
+		UniqueHandle(rhs).Swap(*this);
 		return *this;
 	}
 	UniqueHandle &Reset(UniqueHandle &&rhs) noexcept {
-		return Reset(rhs.Release());
+		UniqueHandle(std::move(rhs)).Swap(*this);
+		return *this;
+	}
+
+	void Swap(UniqueHandle &rhs) noexcept {
+		std::swap(x_hObject, rhs.x_hObject);
 	}
 
 public:

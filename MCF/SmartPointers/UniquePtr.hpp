@@ -33,9 +33,8 @@ public:
 	{
 	}
 	explicit UniquePtr(Element *rhs) noexcept
-		: UniquePtr()
+		: x_pElement(rhs)
 	{
-		Reset(rhs);
 	}
 	template<typename OtherObjectT, typename OtherDeleterT,
 		std::enable_if_t<
@@ -45,20 +44,20 @@ public:
 				std::is_convertible<typename UniquePtr<OtherObjectT, OtherDeleterT>::Deleter, Deleter>::value,
 			int> = 0>
 	UniquePtr(UniquePtr<OtherObjectT, OtherDeleterT> &&rhs) noexcept
-		: UniquePtr()
+		: x_pElement(rhs.Release())
 	{
-		Reset(std::move(rhs));
 	}
 	UniquePtr(UniquePtr &&rhs) noexcept
-		: UniquePtr()
+		: x_pElement(rhs.Release())
 	{
-		Reset(std::move(rhs));
 	}
 	UniquePtr &operator=(UniquePtr &&rhs) noexcept {
 		return Reset(std::move(rhs));
 	}
 	~UniquePtr(){
-		Reset();
+		if(x_pElement){
+			Deleter()(const_cast<std::remove_cv_t<Element> *>(x_pElement));
+		}
 	}
 
 	UniquePtr(const UniquePtr &) = delete;
@@ -75,23 +74,20 @@ public:
 		return std::exchange(x_pElement, nullptr);
 	}
 
-	UniquePtr &Reset(Element *pElement = nullptr) noexcept {
-		const auto pOldElement = std::exchange(x_pElement, pElement);
-		if(pOldElement){
-			ASSERT(pOldElement != pElement);
-
-			Deleter()(const_cast<std::remove_cv_t<Element> *>(pOldElement));
-		}
+	UniquePtr &Reset(Element *rhs = nullptr) noexcept {
+		UniquePtr(rhs).Swap(*this);
 		return *this;
 	}
 	template<typename OtherObjectT, typename OtherDeleterT>
 	UniquePtr &Reset(UniquePtr<OtherObjectT, OtherDeleterT> &&rhs) noexcept {
-		return Reset(static_cast<Element *>(rhs.Release()));
+		UniquePtr(std::move(rhs)).Swap(*this);
+		return *this;
 	}
 	UniquePtr &Reset(UniquePtr &&rhs) noexcept {
 		ASSERT(&rhs != this);
 
-		return Reset(rhs.Release());
+		UniquePtr(std::move(rhs)).Swap(*this);
+		return *this;
 	}
 
 	void Swap(UniquePtr &rhs) noexcept {

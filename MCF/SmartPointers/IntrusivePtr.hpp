@@ -49,9 +49,6 @@ namespace Impl_IntrusivePtr {
 		RefCountBase &operator=(RefCountBase &&) noexcept {
 			return *this; // 同上。
 		}
-		~RefCountBase(){
-			ASSERT(AtomicLoad(x_uRef, MemoryModel::kRelaxed) == 0);
-		}
 
 	public:
 		std::size_t GetRef() const volatile noexcept {
@@ -235,9 +232,9 @@ public:
 
 template<typename ObjectT, class DeleterT>
 class IntrusivePtr {
-public:
 	static_assert(!std::is_array<ObjectT>::value, "Intrusive pointers don't accept arrays.");
 
+public:
 	using Element = ObjectT;
 	using Deleter = DeleterT;
 
@@ -252,9 +249,8 @@ public:
 	{
 	}
 	explicit IntrusivePtr(Element *rhs) noexcept
-		: IntrusivePtr()
+		: x_pElement(rhs)
 	{
-		Reset(rhs);
 	}
 	template<typename OtherObjectT, typename OtherDeleterT,
 		std::enable_if_t<
@@ -262,9 +258,8 @@ public:
 				std::is_convertible<typename UniquePtr<OtherObjectT, OtherDeleterT>::Deleter, Deleter>::value,
 			int> = 0>
 	IntrusivePtr(UniquePtr<OtherObjectT, OtherDeleterT> &&rhs) noexcept
-		: IntrusivePtr()
+		: x_pElement(rhs.Release())
 	{
-		Reset(std::move(rhs));
 	}
 	template<typename OtherObjectT, typename OtherDeleterT,
 		std::enable_if_t<
@@ -272,9 +267,11 @@ public:
 				std::is_convertible<typename IntrusivePtr<OtherObjectT, OtherDeleterT>::Deleter, Deleter>::value,
 			int> = 0>
 	IntrusivePtr(const IntrusivePtr<OtherObjectT, OtherDeleterT> &rhs) noexcept
-		: IntrusivePtr()
+		: x_pElement(rhs.Get())
 	{
-		Reset(rhs);
+		if(x_pElement){
+			static_cast<const volatile Impl_IntrusivePtr::RefCountBase *>(x_pElement)->AddRef();
+		}
 	}
 	template<typename OtherObjectT, typename OtherDeleterT,
 		std::enable_if_t<
@@ -282,19 +279,19 @@ public:
 				std::is_convertible<typename IntrusivePtr<OtherObjectT, OtherDeleterT>::Deleter, Deleter>::value,
 			int> = 0>
 	IntrusivePtr(IntrusivePtr<OtherObjectT, OtherDeleterT> &&rhs) noexcept
-		: IntrusivePtr()
+		: x_pElement(rhs.Release())
 	{
-		Reset(std::move(rhs));
 	}
 	IntrusivePtr(const IntrusivePtr &rhs) noexcept
-		: IntrusivePtr()
+		: x_pElement(rhs.Get())
 	{
-		Reset(rhs);
+		if(x_pElement){
+			static_cast<const volatile Impl_IntrusivePtr::RefCountBase *>(x_pElement)->AddRef();
+		}
 	}
 	IntrusivePtr(IntrusivePtr &&rhs) noexcept
-		: IntrusivePtr()
+		: x_pElement(rhs.Release())
 	{
-		Reset(std::move(rhs));
 	}
 	IntrusivePtr &operator=(const IntrusivePtr &rhs) noexcept {
 		return Reset(rhs);
@@ -303,7 +300,11 @@ public:
 		return Reset(std::move(rhs));
 	}
 	~IntrusivePtr(){
-		Reset();
+		if(x_pElement){
+			if(static_cast<const volatile Impl_IntrusivePtr::RefCountBase *>(x_pElement)->DropRef()){
+				Deleter()(const_cast<std::remove_cv_t<Element> *>(x_pElement));
+			}
+		}
 	}
 
 public:
@@ -317,35 +318,24 @@ public:
 		return std::exchange(x_pElement, nullptr);
 	}
 
-	IntrusivePtr &Reset(Element *pElement = nullptr) noexcept {
-		const auto pOldElement = std::exchange(x_pElement, pElement);
-		if(pOldElement){
-			ASSERT(pOldElement != pElement);
-
-			if(static_cast<const volatile Impl_IntrusivePtr::RefCountBase *>(pOldElement)->DropRef()){
-				Deleter()(const_cast<std::remove_cv_t<Element> *>(pOldElement));
-			}
-		}
+	IntrusivePtr &Reset(Element *rhs = nullptr) noexcept {
+		IntrusivePtr(rhs).Swap(*this);
 		return *this;
 	}
 	template<typename OtherObjectT, typename OtherDeleterT>
 	IntrusivePtr &Reset(UniquePtr<OtherObjectT, OtherDeleterT> &&rhs) noexcept {
-		return Reset(static_cast<Element *>(rhs.Release()));
+		IntrusivePtr(std::move(rhs)).Swap(*this);
+		return *this;
 	}
 	template<typename OtherObjectT, typename OtherDeleterT>
 	IntrusivePtr &Reset(const IntrusivePtr<OtherObjectT, OtherDeleterT> &rhs) noexcept {
-		const auto pElement = rhs.Get();
-		if(pElement == x_pElement){
-			return *this;
-		}
-		if(pElement){
-			static_cast<const volatile Impl_IntrusivePtr::RefCountBase *>(pElement)->AddRef();
-		}
-		return Reset(static_cast<Element *>(pElement));
+		IntrusivePtr(rhs).Swap(*this);
+		return *this;
 	}
 	template<typename OtherObjectT, typename OtherDeleterT>
 	IntrusivePtr &Reset(IntrusivePtr<OtherObjectT, OtherDeleterT> &&rhs) noexcept {
-		return Reset(static_cast<Element *>(rhs.Release()));
+		IntrusivePtr(std::move(rhs)).Swap(*this);
+		return *this;
 	}
 
 	void Swap(IntrusivePtr &rhs) noexcept {
@@ -643,27 +633,27 @@ public:
 public:
 	template<typename ObjectRhsT>
 	bool operator==(const IntrusiveWeakPtr<ObjectRhsT, DeleterT> &rhs) const noexcept {
-		return std::equal_to<void>(x_pObserver, rhs.x_pObserver);
+		return std::equal_to<void>()(x_pObserver, rhs.x_pObserver);
 	}
 	template<typename ObjectRhsT>
 	bool operator!=(const IntrusiveWeakPtr<ObjectRhsT, DeleterT> &rhs) const noexcept {
-		return std::not_equal_to<void>(x_pObserver, rhs.x_pObserver);
+		return std::not_equal_to<void>()(x_pObserver, rhs.x_pObserver);
 	}
 	template<typename ObjectRhsT>
 	bool operator<(const IntrusiveWeakPtr<ObjectRhsT, DeleterT> &rhs) const noexcept {
-		return std::less<void>(x_pObserver, rhs.x_pObserver);
+		return std::less<void>()(x_pObserver, rhs.x_pObserver);
 	}
 	template<typename ObjectRhsT>
 	bool operator>(const IntrusiveWeakPtr<ObjectRhsT, DeleterT> &rhs) const noexcept {
-		return std::greater<void>(x_pObserver, rhs.x_pObserver);
+		return std::greater<void>()(x_pObserver, rhs.x_pObserver);
 	}
 	template<typename ObjectRhsT>
 	bool operator<=(const IntrusiveWeakPtr<ObjectRhsT, DeleterT> &rhs) const noexcept {
-		return std::less_equal<void>(x_pObserver, rhs.x_pObserver);
+		return std::less_equal<void>()(x_pObserver, rhs.x_pObserver);
 	}
 	template<typename ObjectRhsT>
 	bool operator>=(const IntrusiveWeakPtr<ObjectRhsT, DeleterT> &rhs) const noexcept {
-		return std::greater_equal<void>(x_pObserver, rhs.x_pObserver);
+		return std::greater_equal<void>()(x_pObserver, rhs.x_pObserver);
 	}
 };
 

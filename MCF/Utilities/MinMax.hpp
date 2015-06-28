@@ -12,7 +12,7 @@ namespace MCF {
 
 namespace Impl_MinMax {
 	template<typename T>
-	T ForwardAsLvalueOrPrvalue(T &&val){
+	constexpr T ForwardAsLvalueOrPrvalue(T &&val){
 		return std::forward<T>(val);
 	}
 }

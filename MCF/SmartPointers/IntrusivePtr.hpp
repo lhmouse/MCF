@@ -33,21 +33,12 @@ namespace Impl_IntrusivePtr {
 		RefCountBase() noexcept {
 			AtomicStore(x_uRef, 1, MemoryModel::kRelaxed);
 		}
-
-	public:
 		RefCountBase(const RefCountBase &) noexcept
 			: RefCountBase() // 默认构造。
 		{
 		}
-		RefCountBase(RefCountBase &&) noexcept
-			: RefCountBase() // 同上。
-		{
-		}
 		RefCountBase &operator=(const RefCountBase &) noexcept {
 			return *this; // 无操作。
-		}
-		RefCountBase &operator=(RefCountBase &&) noexcept {
-			return *this; // 同上。
 		}
 
 	public:

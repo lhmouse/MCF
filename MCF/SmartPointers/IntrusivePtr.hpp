@@ -174,6 +174,8 @@ namespace Impl_IntrusivePtr {
 
 template<typename ObjectT, class DeleterT>
 class IntrusiveBase : public Impl_IntrusivePtr::DeletableBase<DeleterT> {
+	static_assert(!std::is_array<ObjectT>::value, "IntrusiveBase doesn't accept arrays.");
+
 	template<typename, class>
 	friend class IntrusivePtr;
 	template<typename, class>
@@ -223,7 +225,8 @@ public:
 
 template<typename ObjectT, class DeleterT>
 class IntrusivePtr {
-	static_assert(!std::is_array<ObjectT>::value, "Intrusive pointers don't accept arrays.");
+	static_assert(sizeof(IntrusiveBase<ObjectT, DeleterT>) > 0, "IntrusiveBase<ObjectT, DeleterT> is not an object type or is an incomplete type.");
+	static_assert(sizeof(dynamic_cast<const volatile IntrusiveBase<ObjectT, DeleterT> *>(std::declval<ObjectT *>())), "Unable to locate IntrusiveBase for the managed object type.");
 
 public:
 	using Element = ObjectT;
@@ -495,9 +498,10 @@ IntrusivePtr<DstT, DeleterT> DynamicPointerCast(IntrusivePtr<SrcT, DeleterT> pSr
 
 template<typename ObjectT, class DeleterT>
 class IntrusiveWeakPtr {
-public:
-	static_assert(!std::is_array<ObjectT>::value, "Intrusive pointers don't accept arrays.");
+	static_assert(sizeof(IntrusiveBase<ObjectT, DeleterT>) > 0, "IntrusiveBase<ObjectT, DeleterT> is not an object type or is an incomplete type.");
+	static_assert(sizeof(dynamic_cast<const volatile IntrusiveBase<ObjectT, DeleterT> *>(std::declval<ObjectT *>())), "Unable to locate IntrusiveBase for the managed object type.");
 
+public:
 	using Element = ObjectT;
 	using Deleter = DeleterT;
 

@@ -10,6 +10,8 @@
 namespace MCF {
 
 extern std::uint32_t GetRandomUint32() noexcept;
+extern std::uint64_t GetRandomUint64() noexcept;
+extern double GetRandomDouble() noexcept;
 
 }
 

@@ -15,13 +15,21 @@ namespace {
 
 std::uint32_t GetRandomUint32() noexcept {
 	std::uint64_t u64OldSeed, u64Seed;
+
 	u64OldSeed = AtomicLoad(g_u64RandSeed, MemoryModel::kConsume);
 	do {
 		u64Seed = u64OldSeed ^ ReadTimestampCounter();
 		u64Seed *= 6364136223846793005ull;
 		u64Seed += 1442695040888963407ull;
 	} while(!AtomicCompareExchange(g_u64RandSeed, u64OldSeed, u64Seed, MemoryModel::kAcqRel, MemoryModel::kConsume));
+
 	return u64Seed >> 32;
+}
+std::uint64_t GetRandomUint64() noexcept {
+	return (static_cast<std::uint64_t>(GetRandomUint32()) << 32) | GetRandomUint32();
+}
+double GetRandomDouble() noexcept {
+	return static_cast<std::int64_t>(GetRandomUint64() & 0x7FFFFFFFFFFFFFFFull) / 0x1p63;
 }
 
 }

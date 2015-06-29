@@ -5,8 +5,8 @@
 #ifndef MCF_UTILITIES_UUID_HPP_
 #define MCF_UTILITIES_UUID_HPP_
 
-#include "../Utilities/Assert.hpp"
-#include "../Utilities/BinaryOperations.hpp"
+#include "Assert.hpp"
+#include "BinaryOperations.hpp"
 #include <cstddef>
 #include <cstdint>
 

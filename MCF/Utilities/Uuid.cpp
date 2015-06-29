@@ -4,35 +4,23 @@
 
 #include "../StdMCF.hpp"
 #include "Uuid.hpp"
+#include "Random.hpp"
+#include "Endian.hpp"
 #include "../Core/Exception.hpp"
 #include "../Core/Time.hpp"
-#include "../Utilities/Endian.hpp"
 #include "../Thread/Atomic.hpp"
 
 namespace MCF {
 
 namespace {
-	const std::uint32_t g_u32Pid = ::GetCurrentProcessId() & 0xFFFFu;
-
-	volatile std::uint64_t g_u64RandSeed = 0;
+	const std::uint16_t g_u16Pid = ::GetCurrentProcessId();
 	volatile std::uint32_t g_u32AutoInc = 0;
-
-	inline std::uint32_t GetRandomUint32(){
-		std::uint64_t u64OldSeed, u64Seed;
-		u64OldSeed = AtomicLoad(g_u64RandSeed, MemoryModel::kConsume);
-		do {
-			u64Seed = u64OldSeed ^ ReadTimestampCounter();
-			u64Seed *= 6364136223846793005ull;
-			u64Seed += 1442695040888963407ull;
-		} while(!AtomicCompareExchange(g_u64RandSeed, u64OldSeed, u64Seed, MemoryModel::kAcqRel, MemoryModel::kConsume));
-		return u64Seed >> 32;
-	}
 }
 
 // 静态成员函数。
 Uuid Uuid::Generate(){
 	const auto u64Now = GetUtcTime();
-	const auto u32Unique = ((AtomicAdd(g_u32AutoInc, 1, MemoryModel::kRelaxed) << 16) & 0x3FFFFFFFu) | g_u32Pid;
+	const auto u32Unique = g_u16Pid | ((AtomicAdd(g_u32AutoInc, 1, MemoryModel::kRelaxed) << 16) & 0x3FFFFFFFu);
 
 	Uuid vRet(nullptr);
 	StoreBe(vRet.x_unData.au32[0], u64Now >> 12);

@@ -30,7 +30,7 @@
 #	define restrict			__restrict__
 #endif
 
-#if __cplusplus < 201103l
+#if !defined(__cplusplus) || __cplusplus < 201103l
 #	define nullptr			((void *)0)
 #endif
 

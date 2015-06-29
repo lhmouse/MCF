@@ -5,7 +5,7 @@
 #ifndef MCF_UTILITIES_TRANSACTION_HPP_
 #define MCF_UTILITIES_TRANSACTION_HPP_
 
-#include "../Utilities/Noncopyable.hpp"
+#include "Noncopyable.hpp"
 #include "../Containers/Deque.hpp"
 #include "../SmartPointers/UniquePtr.hpp"
 #include <utility>

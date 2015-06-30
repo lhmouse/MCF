@@ -61,7 +61,7 @@ MCF_CRT_NORETURN_IF_NDEBUG void MCF_CRT_Bail(const wchar_t *pwszDescription){
 	DoBail(pwszDescription);
 }
 MCF_CRT_NORETURN_IF_NDEBUG void MCF_CRT_BailF(const wchar_t *pwszFormat, ...){
-	wchar_t awcBuffer[1025];
+	wchar_t awcBuffer[1024 / sizeof(wchar_t)];
 	va_list ap;
 	va_start(ap, pwszFormat);
 	__mingw_vsnwprintf(awcBuffer, sizeof(awcBuffer) / sizeof(wchar_t), pwszFormat, ap);

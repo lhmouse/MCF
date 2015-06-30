@@ -48,6 +48,11 @@ Thread::Thread(Function<void ()> fnProc, bool bSuspended)
 		Resume();
 	}
 }
+Thread::~Thread(){
+	if(x_pException){
+		std::terminate();
+	}
+}
 
 bool Thread::Wait(unsigned long long ullMilliSeconds) const noexcept {
 	return WaitForSingleObject64(x_hThread.Get(), &ullMilliSeconds);
@@ -58,10 +63,13 @@ void Thread::Wait() const noexcept {
 
 std::exception_ptr Thread::JoinNoThrow() const noexcept {
 	Wait();
+
 	return x_pException; // 不要 move()。
 }
-void Thread::Join() const {
-	auto pException = JoinNoThrow();
+void Thread::Join(){
+	Wait();
+
+	auto pException = std::exchange(x_pException, std::exception_ptr());
 	if(pException){
 		std::rethrow_exception(std::move(pException));
 	}

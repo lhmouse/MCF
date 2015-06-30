@@ -31,11 +31,14 @@ private:
 	Thread(Function<void ()> fnProc, bool bSuspended);
 
 public:
+	~Thread(); // 如果有被捕获的异常，调用 std::terminate()。
+
+public:
 	bool Wait(unsigned long long ullMilliSeconds) const noexcept;
 	void Wait() const noexcept;
 
 	std::exception_ptr JoinNoThrow() const noexcept;
-	void Join() const; // 如果线程中有被捕获的异常，抛出异常。
+	void Join(); // 如果线程中有被捕获的异常，抛出异常。
 
 	bool IsAlive() const noexcept;
 	std::size_t GetId() const noexcept;

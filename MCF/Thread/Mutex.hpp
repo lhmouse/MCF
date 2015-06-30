@@ -9,7 +9,6 @@
 #include "Atomic.hpp"
 #include "UniqueLockTemplate.hpp"
 #include "Semaphore.hpp"
-#include "_SpinLock.hpp"
 #include <cstddef>
 
 namespace MCF {
@@ -22,7 +21,7 @@ private:
 	Semaphore x_vSemaphore;
 	volatile std::size_t x_uSpinCount;
 
-	SpinLock x_splQueueSize;
+	volatile std::size_t x_uQueueSize;
 	volatile std::size_t x_uLockingThreadId;
 
 public:

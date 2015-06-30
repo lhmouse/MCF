@@ -1,46 +1,25 @@
 #include <MCF/StdMCF.hpp>
-#include <MCF/SmartPointers/IntrusivePtr.hpp>
+#include <MCF/Thread/Thread.hpp>
+#include <MCF/Thread/Mutex.hpp>
 
 using namespace MCF;
 
-struct probe {
-	probe(){
-		std::puts("probe::probe()");
-	}
-	probe(const probe &){
-		std::puts("probe::probe(const probe &)");
-	}
-	probe(probe &&) noexcept {
-		std::puts("probe::probe(probe &&)");
-	}
-	~probe(){
-		std::puts("probe::~probe()");
-	}
-};
-
-struct foo : IntrusiveBase<foo> {
-	probe p;
-
-	foo();
-};
-
-template class IntrusiveBase<foo>;
-template class IntrusivePtr<foo>;
-template class IntrusiveWeakPtr<foo>;
-
-IntrusivePtr<foo> gp;
-
-foo::foo(){
-	gp = Share();
-
-	throw 123;
-}
+Mutex m;
+volatile int c = 0;
 
 extern "C" unsigned MCFMain(){
-	try {
-		auto p = MakeIntrusive<foo>();
-	} catch(int e){
-		std::printf("caught exception: e = %d\n", e);
+	std::array<IntrusivePtr<Thread>, 100> threads;
+	for(auto &p : threads){
+		p = Thread::Create([]{
+			for(int i = 0; i < 10000; ++i){
+				const Mutex::UniqueLock l(m);
+				++c;
+			}
+		});
 	}
+	for(auto &p : threads){
+		p->Join();
+	}
+	std::printf("c = %d\n", c);
 	return 0;
 }

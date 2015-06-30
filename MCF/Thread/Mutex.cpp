@@ -93,7 +93,6 @@ void Mutex::Unlock() noexcept {
 	ASSERT(IsLockedByCurrentThread());
 
 	AtomicStore(x_uLockingThreadId, 0, MemoryModel::kRelaxed);
-
 	const auto uQueueSize = AtomicDecrement(x_uQueueSize, MemoryModel::kRelease);
 	if(uQueueSize != 0){
 		x_vSemaphore.Post();

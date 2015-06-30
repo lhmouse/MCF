@@ -6,6 +6,7 @@
 #define MCF_SMART_POINTERS_INTRUSIVE_PTR_HPP_
 
 #include "../Utilities/Assert.hpp"
+#include "../Utilities/Bail.hpp"
 #include "../Thread/_SpinLock.hpp"
 #include "../Thread/Atomic.hpp"
 #include "DefaultDeleter.hpp"
@@ -39,6 +40,11 @@ namespace Impl_IntrusivePtr {
 		}
 		RefCountBase &operator=(const RefCountBase &) noexcept {
 			return *this; // 无操作。
+		}
+		~RefCountBase(){
+			if(AtomicLoad(x_uRef, MemoryModel::kRelaxed) > 1){
+				Bail(L"析构正在共享的被引用计数管理的对象。");
+			}
 		}
 
 	public:
@@ -145,7 +151,7 @@ namespace Impl_IntrusivePtr {
 		DeletableBase &operator=(const DeletableBase &) noexcept {
 			return *this;
 		}
-		virtual ~DeletableBase(){
+		~DeletableBase(){
 			const auto pObserver = AtomicLoad(x_pObserver, MemoryModel::kConsume);
 			if(pObserver){
 				if(static_cast<const volatile RefCountBase *>(pObserver)->DropRef()){

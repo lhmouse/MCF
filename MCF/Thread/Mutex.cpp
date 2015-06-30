@@ -63,25 +63,27 @@ bool Mutex::IsLockedByCurrentThread() const noexcept {
 bool Mutex::Try() noexcept {
 	ASSERT(!IsLockedByCurrentThread());
 
+	const auto uSpinCount = GetSpinCount();
 	const auto dwThreadId = ::GetCurrentThreadId();
 
 	AtomicFence(MemoryModel::kAcquire);
-	return TryMutexWithHint(x_uLockingThreadId, GetSpinCount(), dwThreadId);
+	return TryMutexWithHint(x_uLockingThreadId, uSpinCount, dwThreadId);
 }
 void Mutex::Lock() noexcept {
 	ASSERT(!IsLockedByCurrentThread());
 
+	const auto uSpinCount = GetSpinCount();
 	const auto dwThreadId = ::GetCurrentThreadId();
 
 	const auto uQueueSize = AtomicIncrement(x_uQueueSize, MemoryModel::kAcquire);
 	if(uQueueSize == 1){
-		if(TryMutexWithHint(x_uLockingThreadId, GetSpinCount(), dwThreadId)){
+		if(TryMutexWithHint(x_uLockingThreadId, uSpinCount, dwThreadId)){
 			return;
 		}
 	}
 	for(;;){
 		x_vSemaphore.Wait();
-		if(TryMutexWithHint(x_uLockingThreadId, GetSpinCount(), dwThreadId)){
+		if(TryMutexWithHint(x_uLockingThreadId, uSpinCount, dwThreadId)){
 			return;
 		}
 		x_vSemaphore.Post();

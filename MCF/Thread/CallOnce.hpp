@@ -45,7 +45,7 @@ template<typename FunctionT, typename ...ParamsT>
 bool CallOnce(OnceFlag &vFlag, FunctionT &&vFunction, ParamsT &&...vParams){
 	auto &bFlag = static_cast<volatile bool &>(vFlag);
 
-	if(AtomicLoad(bFlag, MemoryModel::kAcquire)){
+	if(AtomicLoad(bFlag, MemoryModel::kConsume)){
 		return false;
 	}
 	{

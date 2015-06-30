@@ -2,13 +2,13 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2013 - 2015, LH_Mouse. All wrongs reserved.
 
-#undef MCF_ASSERT_MSG_
+#undef __MCF_CRT_ASSERT_MSG
 
 #ifdef NDEBUG
-#	define MCF_ASSERT_MSG_(plain_, expr_, msg_)	\
+#	define __MCF_CRT_ASSERT_MSG(plain_, expr_, msg_)	\
 	((void)sizeof(expr_))
 #else
-#	define MCF_ASSERT_MSG_(plain_, expr_, msg_)	\
+#	define __MCF_CRT_ASSERT_MSG(plain_, expr_, msg_)	\
 	(!(expr_) && (__MCF_CRT_OnAssertFail(L ## plain_, __FILE__, __LINE__, (msg_)), 1))
 #endif
 
@@ -26,7 +26,7 @@ void __MCF_CRT_OnAssertFail(const wchar_t *pwszExpression,
 		pwszExpression, pszFile, ulLine, pwszMessage);
 }
 
-#define ASSERT(expr_)				(MCF_ASSERT_MSG_(#expr_, (expr_), L""))
-#define ASSERT_MSG(expr_, msg_)		(MCF_ASSERT_MSG_(#expr_, (expr_), (msg_)))
+#define ASSERT(expr_)				(__MCF_CRT_ASSERT_MSG(#expr_, (expr_), L""))
+#define ASSERT_MSG(expr_, msg_)		(__MCF_CRT_ASSERT_MSG(#expr_, (expr_), (msg_)))
 
 #endif

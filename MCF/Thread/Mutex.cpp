@@ -13,7 +13,7 @@ namespace {
 		std::size_t i = uSpinCount;
 		for(;;){
 			std::size_t uExpected = 0;
-			if(EXPECT_NOT(AtomicCompareExchange(uLockingThreadId, uExpected, ulThreadId, MemoryModel::kRelaxed, MemoryModel::kRelaxed))){
+			if(EXPECT_NOT(AtomicCompareExchange(uLockingThreadId, uExpected, ulThreadId, MemoryModel::kSeqCst, MemoryModel::kSeqCst))){
 				return true;
 			}
 			if(EXPECT_NOT(i == 0)){
@@ -66,7 +66,6 @@ bool Mutex::Try() noexcept {
 	const auto uSpinCount = GetSpinCount();
 	const auto dwThreadId = ::GetCurrentThreadId();
 
-	AtomicFence(MemoryModel::kAcquire);
 	return TryMutexWithHint(x_uLockingThreadId, uSpinCount, dwThreadId);
 }
 void Mutex::Lock() noexcept {
@@ -75,7 +74,7 @@ void Mutex::Lock() noexcept {
 	const auto uSpinCount = GetSpinCount();
 	const auto dwThreadId = ::GetCurrentThreadId();
 
-	const auto uQueueSize = AtomicIncrement(x_uQueueSize, MemoryModel::kAcquire);
+	const auto uQueueSize = AtomicIncrement(x_uQueueSize, MemoryModel::kRelaxed);
 	if(uQueueSize == 1){
 		if(TryMutexWithHint(x_uLockingThreadId, uSpinCount, dwThreadId)){
 			return;
@@ -93,7 +92,7 @@ void Mutex::Unlock() noexcept {
 	ASSERT(IsLockedByCurrentThread());
 
 	AtomicStore(x_uLockingThreadId, 0, MemoryModel::kRelaxed);
-	const auto uQueueSize = AtomicDecrement(x_uQueueSize, MemoryModel::kRelease);
+	const auto uQueueSize = AtomicDecrement(x_uQueueSize, MemoryModel::kRelaxed);
 	if(uQueueSize != 0){
 		x_vSemaphore.Post();
 	}

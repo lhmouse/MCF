@@ -66,7 +66,14 @@ bool Mutex::Try() noexcept {
 	const auto uSpinCount = GetSpinCount();
 	const auto dwThreadId = ::GetCurrentThreadId();
 
-	return TryMutexWithHint(x_uLockingThreadId, uSpinCount, dwThreadId);
+	const auto uQueueSize = AtomicIncrement(x_uQueueSize, MemoryModel::kRelaxed);
+	if(uQueueSize == 1){
+		if(TryMutexWithHint(x_uLockingThreadId, uSpinCount, dwThreadId)){
+			return true;
+		}
+	}
+	AtomicDecrement(x_uQueueSize, MemoryModel::kRelaxed);
+	return false;
 }
 void Mutex::Lock() noexcept {
 	ASSERT(!IsLockedByCurrentThread());

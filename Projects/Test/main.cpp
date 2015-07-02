@@ -5,7 +5,7 @@
 
 using namespace MCF;
 
-RecursiveMutex m(1000);
+RecursiveMutex m(256);
 volatile int c = 0;
 
 extern "C" unsigned MCFMain(){

@@ -19,8 +19,7 @@ private:
 	const unsigned long x_ulCode;
 
 public:
-	Exception(const char *pszFile, unsigned long ulLine,
-		const char *pszMessage, unsigned long ulCode) noexcept
+	Exception(const char *pszFile, unsigned long ulLine, const char *pszMessage, unsigned long ulCode) noexcept
 		: x_pszFile(pszFile), x_ulLine(ulLine), x_pszMessage(pszMessage), x_ulCode(ulCode)
 	{
 	}

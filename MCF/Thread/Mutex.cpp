@@ -46,7 +46,7 @@ Mutex::xQueueNode *Mutex::xLockQueue() noexcept {
 		if(pQueueHead != (xQueueNode *)-1){
 			return pQueueHead;
 		}
-		::SwitchToThread();
+		AtomicPause();
 	}
 }
 void Mutex::xUnlockQueue(Mutex::xQueueNode *pQueueHead) noexcept {
@@ -91,19 +91,15 @@ void Mutex::Lock() noexcept {
 		if(AtomicCompareExchange(x_uLockingThreadId, uExpected, dwThreadId, MemoryModel::kSeqCst, MemoryModel::kSeqCst)){
 			return;
 		}
+		::Sleep(1);
 
 		const auto uSpinCount = GetSpinCount();
-		if(uSpinCount != 0){
-			::Sleep(1);
-
-			std::size_t i = 0;
-			do {
-				std::size_t uExpected = 0;
-				if(AtomicCompareExchange(x_uLockingThreadId, uExpected, dwThreadId, MemoryModel::kSeqCst, MemoryModel::kConsume)){
-					return;
-				}
-				::SwitchToThread();
-			} while(++i < uSpinCount);
+		for(std::size_t i = 0; i < uSpinCount; ++i){
+			std::size_t uExpected = 0;
+			if(AtomicCompareExchange(x_uLockingThreadId, uExpected, dwThreadId, MemoryModel::kSeqCst, MemoryModel::kConsume)){
+				return;
+			}
+			::SwitchToThread();
 		}
 
 		pQueueHead = xLockQueue();
@@ -127,7 +123,6 @@ void Mutex::Lock() noexcept {
 
 	for(;;){
 		x_vSemaphore.Wait();
-
 		auto pQueueHead = xLockQueue();
 		if(pQueueHead == &vThisThread){
 			std::size_t uExpected = 0;
@@ -137,9 +132,8 @@ void Mutex::Lock() noexcept {
 				break;
 			}
 		}
-		xUnlockQueue(pQueueHead);
-
 		x_vSemaphore.Post();
+		xUnlockQueue(pQueueHead);
 	}
 }
 void Mutex::Unlock() noexcept {

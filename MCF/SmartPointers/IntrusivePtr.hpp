@@ -676,6 +676,11 @@ void swap(IntrusiveWeakPtr<ObjectT, DeleterT> &lhs, IntrusiveWeakPtr<ObjectT, De
 	lhs.Swap(rhs);
 }
 
+template<typename ObjectT, class DeleterT>
+IntrusiveWeakPtr<ObjectT, DeleterT> Weaken(const IntrusivePtr<ObjectT, DeleterT> &rhs) noexcept {
+	return IntrusiveWeakPtr<ObjectT, DeleterT>(rhs);
+}
+
 }
 
 #endif

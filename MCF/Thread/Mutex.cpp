@@ -8,23 +8,6 @@
 
 namespace MCF {
 
-namespace {
-	bool TryMutexWithHint(volatile std::size_t &uLockingThreadId, std::size_t uSpinCount, unsigned long ulThreadId) noexcept {
-		std::size_t i = uSpinCount;
-		for(;;){
-			std::size_t uExpected = 0;
-			if(EXPECT_NOT(AtomicCompareExchange(uLockingThreadId, uExpected, ulThreadId, MemoryModel::kSeqCst, MemoryModel::kSeqCst))){
-				return true;
-			}
-			if(EXPECT_NOT(i == 0)){
-				return false;
-			}
-			--i;
-			AtomicPause();
-		}
-	}
-}
-
 template<>
 bool Mutex::UniqueLock::xDoTry() const noexcept {
 	return x_pOwner->Try();
@@ -38,10 +21,15 @@ void Mutex::UniqueLock::xDoUnlock() const noexcept {
 	x_pOwner->Unlock();
 }
 
+// 嵌套类定义。
+struct Mutex::xQueueNode {
+	xQueueNode *pNext;
+};
+
 // 构造函数和析构函数。
 Mutex::Mutex(std::size_t uSpinCount)
 	: x_vSemaphore(0), x_uSpinCount(0)
-	, x_uQueueSize(0), x_uLockingThreadId(0)
+	, x_uLockingThreadId(0), x_pQueueHead(nullptr)
 {
 	SetSpinCount(uSpinCount);
 
@@ -49,6 +37,19 @@ Mutex::Mutex(std::size_t uSpinCount)
 }
 
 // 其他非静态成员函数。
+Mutex::xQueueNode *Mutex::xLockQueue() noexcept {
+	for(;;){
+		const auto pQueueHead = AtomicExchange(x_pQueueHead, (xQueueNode *)-1, MemoryModel::kAcquire);
+		if(pQueueHead != (xQueueNode *)-1){
+			return pQueueHead;
+		}
+		::SwitchToThread();
+	}
+}
+void Mutex::xUnlockQueue(Mutex::xQueueNode *pQueueHead) noexcept {
+	AtomicStore(x_pQueueHead, pQueueHead, MemoryModel::kRelease);
+}
+
 void Mutex::SetSpinCount(std::size_t uSpinCount) noexcept {
 	if(GetLogicalProcessorCount() == 0){
 		return;
@@ -57,52 +58,93 @@ void Mutex::SetSpinCount(std::size_t uSpinCount) noexcept {
 }
 
 bool Mutex::IsLockedByCurrentThread() const noexcept {
-	return AtomicLoad(x_uLockingThreadId, MemoryModel::kRelaxed) == ::GetCurrentThreadId();
+	const auto dwThreadId = ::GetCurrentThreadId();
+
+	return AtomicLoad(x_uLockingThreadId, MemoryModel::kConsume) == dwThreadId;
 }
 
 bool Mutex::Try() noexcept {
-	ASSERT(!IsLockedByCurrentThread());
+	ASSERT_MSG(!IsLockedByCurrentThread(), L"在不可重入的互斥锁中检测到死锁。");
 
-	const auto uSpinCount = GetSpinCount();
 	const auto dwThreadId = ::GetCurrentThreadId();
 
-	const auto uQueueSize = AtomicIncrement(x_uQueueSize, MemoryModel::kRelaxed);
-	if(uQueueSize == 1){
-		if(TryMutexWithHint(x_uLockingThreadId, uSpinCount, dwThreadId)){
-			return true;
-		}
+	if(AtomicLoad(x_pQueueHead, MemoryModel::kConsume) == nullptr){
+		std::size_t uExpected = 0;
+		return AtomicCompareExchange(x_uLockingThreadId, uExpected, dwThreadId, MemoryModel::kSeqCst, MemoryModel::kSeqCst);
 	}
-	AtomicDecrement(x_uQueueSize, MemoryModel::kRelaxed);
 	return false;
 }
 void Mutex::Lock() noexcept {
-	ASSERT(!IsLockedByCurrentThread());
+	ASSERT_MSG(!IsLockedByCurrentThread(), L"在不可重入的互斥锁中检测到死锁。");
 
-	const auto uSpinCount = GetSpinCount();
 	const auto dwThreadId = ::GetCurrentThreadId();
 
-	const auto uQueueSize = AtomicIncrement(x_uQueueSize, MemoryModel::kRelaxed);
-	if(uQueueSize == 1){
-		if(TryMutexWithHint(x_uLockingThreadId, uSpinCount, dwThreadId)){
+	auto pQueueHead = xLockQueue();
+	if(!pQueueHead){
+		xUnlockQueue(pQueueHead);
+
+		// 尝试忙等待。
+		std::size_t uExpected = 0;
+		if(AtomicCompareExchange(x_uLockingThreadId, uExpected, dwThreadId, MemoryModel::kSeqCst, MemoryModel::kSeqCst)){
 			return;
 		}
+		::Sleep(1);
+
+		const auto uSpinCount = GetSpinCount();
+		for(std::size_t i = 0; i < uSpinCount; ++i){
+			std::size_t uExpected = 0;
+			if(AtomicCompareExchange(x_uLockingThreadId, uExpected, dwThreadId, MemoryModel::kSeqCst, MemoryModel::kConsume)){
+				return;
+			}
+			::SwitchToThread();
+		}
+
+		pQueueHead = xLockQueue();
 	}
+	// 如果忙等待超过了自旋次数，就使用信号量同步。
+	xQueueNode vThisThread = { nullptr };
+	if(pQueueHead){
+		auto pIns = pQueueHead;
+		for(;;){
+			const auto pNext = pIns->pNext;
+			if(!pNext){
+				pIns->pNext = &vThisThread;
+				break;
+			}
+			pIns = pNext;
+		}
+	} else {
+		pQueueHead = &vThisThread;
+	}
+	xUnlockQueue(pQueueHead);
+
 	for(;;){
 		x_vSemaphore.Wait();
-		if(TryMutexWithHint(x_uLockingThreadId, uSpinCount, dwThreadId)){
-			return;
+
+		auto pQueueHead = xLockQueue();
+		if(pQueueHead == &vThisThread){
+			std::size_t uExpected = 0;
+			if(AtomicCompareExchange(x_uLockingThreadId, uExpected, dwThreadId, MemoryModel::kSeqCst, MemoryModel::kConsume)){
+				pQueueHead = pQueueHead->pNext;
+				xUnlockQueue(pQueueHead);
+				break;
+			}
 		}
+		xUnlockQueue(pQueueHead);
+
 		x_vSemaphore.Post();
 	}
 }
 void Mutex::Unlock() noexcept {
-	ASSERT(IsLockedByCurrentThread());
+	ASSERT_MSG(IsLockedByCurrentThread(), L"只能由持有互斥锁的线程释放该互斥锁。");
 
-	AtomicStore(x_uLockingThreadId, 0, MemoryModel::kRelaxed);
-	const auto uQueueSize = AtomicDecrement(x_uQueueSize, MemoryModel::kSeqCst);
-	if(uQueueSize != 0){
+	auto pQueueHead = xLockQueue();
+	if(pQueueHead){
 		x_vSemaphore.Post();
 	}
+	xUnlockQueue(pQueueHead);
+
+	AtomicStore(x_uLockingThreadId, 0, MemoryModel::kSeqCst);
 }
 
 }

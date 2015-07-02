@@ -1,11 +1,11 @@
 #include <MCF/StdMCF.hpp>
 #include <MCF/Thread/Thread.hpp>
-#include <MCF/Thread/Mutex.hpp>
+#include <MCF/Thread/RecursiveMutex.hpp>
 #include <MCF/Core/Time.hpp>
 
 using namespace MCF;
 
-Mutex m;
+RecursiveMutex m(1000);
 volatile int c = 0;
 
 extern "C" unsigned MCFMain(){
@@ -13,7 +13,7 @@ extern "C" unsigned MCFMain(){
 	for(auto &p : threads){
 		p = Thread::Create([]{
 			for(int i = 0; i < 500000; ++i){
-				const Mutex::UniqueLock l(m);
+				const RecursiveMutex::UniqueLock l(m);
 				++c;
 			}
 		}, true);

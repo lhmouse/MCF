@@ -37,6 +37,9 @@ Mutex::Mutex(std::size_t uSpinCount)
 }
 
 // 其他非静态成员函数。
+bool Mutex::xIsQueueEmpty() const noexcept {
+	return AtomicLoad(x_pQueueHead, MemoryModel::kConsume) == nullptr;
+}
 Mutex::xQueueNode *Mutex::xLockQueue() noexcept {
 	for(;;){
 		const auto pQueueHead = AtomicExchange(x_pQueueHead, (xQueueNode *)-1, MemoryModel::kAcquire);
@@ -68,7 +71,7 @@ bool Mutex::Try() noexcept {
 
 	const auto dwThreadId = ::GetCurrentThreadId();
 
-	if(AtomicLoad(x_pQueueHead, MemoryModel::kConsume) == nullptr){
+	if(xIsQueueEmpty()){
 		std::size_t uExpected = 0;
 		return AtomicCompareExchange(x_uLockingThreadId, uExpected, dwThreadId, MemoryModel::kSeqCst, MemoryModel::kSeqCst);
 	}

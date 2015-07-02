@@ -31,6 +31,7 @@ public:
 	explicit Mutex(std::size_t uSpinCount = 0x400);
 
 private:
+	bool xIsQueueEmpty() const noexcept;
 	xQueueNode *xLockQueue() noexcept;
 	void xUnlockQueue(xQueueNode *pQueueHead) noexcept;
 

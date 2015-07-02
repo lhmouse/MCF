@@ -3,7 +3,7 @@
 // Copyleft 2013 - 2015, LH_Mouse. All wrongs reserved.
 
 #include "../StdMCF.hpp"
-#include "_WaitForSingleObject64.hpp"
+#include "WaitForSingleObject64.hpp"
 #include "../Core/Time.hpp"
 #include "../Utilities/MinMax.hpp"
 

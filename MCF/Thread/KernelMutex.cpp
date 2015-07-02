@@ -4,7 +4,7 @@
 
 #include "../StdMCF.hpp"
 #include "KernelMutex.hpp"
-#include "_WaitForSingleObject64.hpp"
+#include "WaitForSingleObject64.hpp"
 #include "../Core/Exception.hpp"
 #include "../Core/String.hpp"
 

@@ -5,7 +5,7 @@
 #include "../StdMCF.hpp"
 #include "Thread.hpp"
 #include "../../MCFCRT/env/thread.h"
-#include "_WaitForSingleObject64.hpp"
+#include "WaitForSingleObject64.hpp"
 #include "Atomic.hpp"
 #include "../Core/Exception.hpp"
 #include "../Core/Time.hpp"

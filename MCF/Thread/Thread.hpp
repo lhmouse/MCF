@@ -8,7 +8,7 @@
 #include "../Utilities/Noncopyable.hpp"
 #include "../SmartPointers/IntrusivePtr.hpp"
 #include "../Function/Function.hpp"
-#include "_UniqueWin32Handle.hpp"
+#include "../Core/UniqueWin32Handle.hpp"
 #include <exception>
 #include <cstddef>
 

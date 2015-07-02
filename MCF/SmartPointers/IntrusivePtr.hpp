@@ -7,7 +7,7 @@
 
 #include "../Utilities/Assert.hpp"
 #include "../Utilities/Bail.hpp"
-#include "../Thread/_SpinLock.hpp"
+#include "../Thread/SpinLock.hpp"
 #include "../Thread/Atomic.hpp"
 #include "DefaultDeleter.hpp"
 #include "UniquePtr.hpp"

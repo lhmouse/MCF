@@ -4,7 +4,7 @@
 
 #include "../StdMCF.hpp"
 #include "Semaphore.hpp"
-#include "_WaitForSingleObject64.hpp"
+#include "WaitForSingleObject64.hpp"
 #include "../Core/Exception.hpp"
 #include "../Core/String.hpp"
 

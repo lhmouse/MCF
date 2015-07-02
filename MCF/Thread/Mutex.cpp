@@ -50,7 +50,7 @@ Mutex::Mutex(std::size_t uSpinCount)
 
 // 其他非静态成员函数。
 void Mutex::SetSpinCount(std::size_t uSpinCount) noexcept {
-	if(GetProcessorCount() == 0){
+	if(GetLogicalProcessorCount() == 0){
 		return;
 	}
 	AtomicStore(x_uSpinCount, uSpinCount, MemoryModel::kRelaxed);

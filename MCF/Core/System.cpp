@@ -15,7 +15,7 @@ namespace {
 	} g_vSystemInfo __attribute__((__init_priority__(101)));
 }
 
-std::size_t GetProcessorCount() noexcept {
+std::size_t GetLogicalProcessorCount() noexcept {
 	return g_vSystemInfo.dwNumberOfProcessors;
 }
 std::size_t GetPageSize() noexcept {

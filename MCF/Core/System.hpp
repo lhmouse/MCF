@@ -9,7 +9,7 @@
 
 namespace MCF {
 
-std::size_t GetProcessorCount() noexcept;
+std::size_t GetLogicalProcessorCount() noexcept;
 std::size_t GetPageSize() noexcept;
 
 struct WindowsVersion {

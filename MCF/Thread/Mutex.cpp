@@ -82,30 +82,25 @@ void Mutex::Lock() noexcept {
 
 	const auto dwThreadId = ::GetCurrentThreadId();
 
-	auto pQueueHead = xLockQueue();
-	if(!pQueueHead){
-		xUnlockQueue(pQueueHead);
+	// 尝试忙等待。
+	std::size_t uExpected = 0;
+	if(AtomicCompareExchange(x_uLockingThreadId, uExpected, dwThreadId, MemoryModel::kSeqCst, MemoryModel::kSeqCst)){
+		return;
+	}
+	::Sleep(1);
 
-		// 尝试忙等待。
+	const auto uSpinCount = GetSpinCount();
+	for(std::size_t i = 0; i < uSpinCount; ++i){
 		std::size_t uExpected = 0;
-		if(AtomicCompareExchange(x_uLockingThreadId, uExpected, dwThreadId, MemoryModel::kSeqCst, MemoryModel::kSeqCst)){
+		if(AtomicCompareExchange(x_uLockingThreadId, uExpected, dwThreadId, MemoryModel::kSeqCst, MemoryModel::kConsume)){
 			return;
 		}
-		::Sleep(1);
-
-		const auto uSpinCount = GetSpinCount();
-		for(std::size_t i = 0; i < uSpinCount; ++i){
-			std::size_t uExpected = 0;
-			if(AtomicCompareExchange(x_uLockingThreadId, uExpected, dwThreadId, MemoryModel::kSeqCst, MemoryModel::kConsume)){
-				return;
-			}
-			::SwitchToThread();
-		}
-
-		pQueueHead = xLockQueue();
+		::SwitchToThread();
 	}
+
 	// 如果忙等待超过了自旋次数，就使用信号量同步。
 	xQueueNode vThisThread = { nullptr };
+	auto pQueueHead = xLockQueue();
 	if(pQueueHead){
 		auto pIns = pQueueHead;
 		for(;;){

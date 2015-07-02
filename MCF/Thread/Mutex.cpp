@@ -91,15 +91,19 @@ void Mutex::Lock() noexcept {
 		if(AtomicCompareExchange(x_uLockingThreadId, uExpected, dwThreadId, MemoryModel::kSeqCst, MemoryModel::kSeqCst)){
 			return;
 		}
-		::Sleep(1);
 
 		const auto uSpinCount = GetSpinCount();
-		for(std::size_t i = 0; i < uSpinCount; ++i){
-			std::size_t uExpected = 0;
-			if(AtomicCompareExchange(x_uLockingThreadId, uExpected, dwThreadId, MemoryModel::kSeqCst, MemoryModel::kConsume)){
-				return;
-			}
-			::SwitchToThread();
+		if(uSpinCount != 0){
+			::Sleep(1);
+
+			std::size_t i = 0;
+			do {
+				std::size_t uExpected = 0;
+				if(AtomicCompareExchange(x_uLockingThreadId, uExpected, dwThreadId, MemoryModel::kSeqCst, MemoryModel::kConsume)){
+					return;
+				}
+				::SwitchToThread();
+			} while(++i < uSpinCount);
 		}
 
 		pQueueHead = xLockQueue();

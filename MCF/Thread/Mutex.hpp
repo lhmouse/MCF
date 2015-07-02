@@ -6,8 +6,8 @@
 #define MCF_THREAD_USER_MUTEX_HPP_
 
 #include "../Utilities/Noncopyable.hpp"
-#include "Atomic.hpp"
 #include "UniqueLockTemplate.hpp"
+#include "Atomic.hpp"
 #include "Semaphore.hpp"
 #include <cstddef>
 

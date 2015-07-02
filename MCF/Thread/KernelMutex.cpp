@@ -10,6 +10,16 @@
 
 namespace MCF {
 
+namespace {
+	UniqueWin32Handle CheckedCreateMutex(const wchar_t *pwszName){
+		UniqueWin32Handle hMutex(::CreateMutexW(nullptr, false, pwszName));
+		if(!hMutex){
+			DEBUG_THROW(SystemError, "CreateMutexW");
+		}
+		return hMutex;
+	}
+}
+
 template<>
 bool KernelMutex::UniqueLock::xDoTry() const noexcept {
 	return x_pOwner->Try(0);
@@ -25,14 +35,7 @@ void KernelMutex::UniqueLock::xDoUnlock() const noexcept {
 
 // 构造函数和析构函数。
 KernelMutex::KernelMutex(const wchar_t *pwszName)
-	: x_hMutex(
-		[&]{
-			UniqueWin32Handle hEvent(::CreateMutexW(nullptr, false, pwszName));
-			if(!hEvent){
-				DEBUG_THROW(SystemError, "CreateMutexW");
-			}
-			return hEvent;
-		}())
+	: x_hMutex(CheckedCreateMutex(pwszName))
 {
 }
 KernelMutex::KernelMutex(const WideString &wsName)

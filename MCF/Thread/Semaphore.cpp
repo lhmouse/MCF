@@ -10,16 +10,19 @@
 
 namespace MCF {
 
+namespace {
+	UniqueWin32Handle CheckedCreateSemaphore(std::size_t uInitCount, const wchar_t *pwszName){
+		UniqueWin32Handle hSemaphore(::CreateSemaphoreW(nullptr, (long)uInitCount, LONG_MAX, pwszName));
+		if(!hSemaphore){
+			DEBUG_THROW(SystemError, "CreateSemaphoreW");
+		}
+		return hSemaphore;
+	}
+}
+
 // 构造函数和析构函数。
 Semaphore::Semaphore(std::size_t uInitCount, const wchar_t *pwszName)
-	: x_hSemaphore(
-		[&]{
-			UniqueWin32Handle hSemaphore(::CreateSemaphoreW(nullptr, (long)uInitCount, LONG_MAX, pwszName));
-			if(!hSemaphore){
-				DEBUG_THROW(SystemError, "CreateSemaphoreW");
-			}
-			return hSemaphore;
-		}())
+	: x_hSemaphore(CheckedCreateSemaphore(uInitCount, pwszName))
 {
 }
 Semaphore::Semaphore(std::size_t uInitCount, const WideString &wsName)

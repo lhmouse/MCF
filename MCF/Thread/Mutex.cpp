@@ -4,6 +4,8 @@
 
 #include "../StdMCF.hpp"
 #include "Mutex.hpp"
+#include "Atomic.hpp"
+#include "../Core/Exception.hpp"
 #include "../Core/System.hpp"
 
 namespace MCF {
@@ -98,8 +100,9 @@ void Mutex::Lock() noexcept {
 		::SwitchToThread();
 	}
 
-	// 如果忙等待超过了自旋次数，就使用信号量同步。
+	// 如果忙等待超过了自旋次数，就使用内核态互斥体同步。
 	xQueueNode vThisThread = { nullptr };
+
 	auto pQueueHead = xLockQueue();
 	if(pQueueHead){
 		auto pIns = pQueueHead;

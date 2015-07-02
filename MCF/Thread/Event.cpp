@@ -10,16 +10,19 @@
 
 namespace MCF {
 
+namespace {
+	UniqueWin32Handle CheckedCreateEvent(bool bInitSet, const wchar_t *pwszName){
+		UniqueWin32Handle hEvent(::CreateEventW(nullptr, true, bInitSet, pwszName));
+		if(!hEvent){
+			DEBUG_THROW(SystemError, "CreateEventW");
+		}
+		return hEvent;
+	}
+}
+
 // 构造函数和析构函数。
 Event::Event(bool bInitSet, const wchar_t *pwszName)
-	: x_hEvent(
-		[&]{
-			UniqueWin32Handle hEvent(::CreateEventW(nullptr, true, bInitSet, pwszName));
-			if(!hEvent){
-				DEBUG_THROW(SystemError, "CreateEventW");
-			}
-			return hEvent;
-		}())
+	: x_hEvent(CheckedCreateEvent(bInitSet, pwszName))
 {
 }
 Event::Event(bool bInitSet, const WideString &wsName)

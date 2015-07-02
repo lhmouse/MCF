@@ -32,7 +32,7 @@ private:
 	UniqueHandle<xTlsIndexDeleter> x_uTlsIndex;
 
 public:
-	explicit ReaderWriterMutex(std::size_t uSpinCount = 0x40);
+	explicit ReaderWriterMutex(std::size_t uSpinCount = 0x100);
 
 public:
 	std::size_t GetSpinCount() const noexcept {

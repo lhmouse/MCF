@@ -19,7 +19,7 @@ private:
 	ConditionVariable x_vDelegate;
 
 public:
-	explicit UniversalConditionVariable(std::size_t uSpinCount = 0x400)
+	explicit UniversalConditionVariable(std::size_t uSpinCount = 0x40)
 		: x_vMutex(uSpinCount), x_vDelegate(x_vMutex)
 	{
 	}

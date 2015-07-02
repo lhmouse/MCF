@@ -28,7 +28,7 @@ private:
 	xQueueNode *volatile x_pQueueHead;
 
 public:
-	explicit Mutex(std::size_t uSpinCount = 0x400);
+	explicit Mutex(std::size_t uSpinCount = 0x40);
 
 private:
 	bool xIsQueueEmpty() const noexcept;

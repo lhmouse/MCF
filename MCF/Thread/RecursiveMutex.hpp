@@ -30,7 +30,7 @@ private:
 	std::size_t x_uRecursionCount;
 
 public:
-	explicit RecursiveMutex(std::size_t uSpinCount = 0x400);
+	explicit RecursiveMutex(std::size_t uSpinCount = 0x40);
 
 public:
 	std::size_t GetSpinCount() const noexcept {

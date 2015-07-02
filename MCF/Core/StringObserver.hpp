@@ -32,32 +32,32 @@ struct StringEncodingTrait;
 
 template<>
 struct StringEncodingTrait<StringType::NARROW> {
-	using Type = char;
+	using Char = char;
 };
 template<>
 struct StringEncodingTrait<StringType::WIDE> {
-	using Type = wchar_t;
+	using Char = wchar_t;
 };
 
 template<>
 struct StringEncodingTrait<StringType::UTF8> {
-	using Type = char;
+	using Char = char;
 };
 template<>
 struct StringEncodingTrait<StringType::UTF16> {
-	using Type = char16_t;
+	using Char = char16_t;
 };
 template<>
 struct StringEncodingTrait<StringType::UTF32> {
-	using Type = char32_t;
+	using Char = char32_t;
 };
 template<>
 struct StringEncodingTrait<StringType::CESU8> {
-	using Type = char;
+	using Char = char;
 };
 template<>
 struct StringEncodingTrait<StringType::ANSI> {
-	using Type = char;
+	using Char = char;
 };
 
 namespace Impl_StringObserver {
@@ -176,7 +176,7 @@ namespace Impl_StringObserver {
 template<StringType kTypeT>
 class StringObserver {
 public:
-	using Char = typename StringEncodingTrait<kTypeT>::Type;
+	using Char = typename StringEncodingTrait<kTypeT>::Char;
 
 	enum : std::size_t {
 		kNpos = Impl_StringObserver::kNpos

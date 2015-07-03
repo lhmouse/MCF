@@ -68,12 +68,12 @@ void Mutex::SetSpinCount(std::size_t uSpinCount) noexcept {
 
 bool Mutex::Try() noexcept {
 #ifndef NDEBUG
-	const unsigned uThreadId = ::GetCurrentThreadId();
+	const std::size_t uThreadId = ::GetCurrentThreadId();
 	if(AtomicLoad(x_uLockingThreadId, MemoryModel::kConsume) == uThreadId){
 		Bail(L"在不可重入的互斥锁中检测到死锁。");
 	}
 #else
-	const unsigned uThreadId = 1;
+	const std::size_t uThreadId = 1;
 #endif
 
 	if(xIsQueueEmpty()){
@@ -86,12 +86,12 @@ bool Mutex::Try() noexcept {
 }
 void Mutex::Lock() noexcept {
 #ifndef NDEBUG
-	const unsigned uThreadId = ::GetCurrentThreadId();
+	const std::size_t uThreadId = ::GetCurrentThreadId();
 	if(AtomicLoad(x_uLockingThreadId, MemoryModel::kConsume) == uThreadId){
 		Bail(L"在不可重入的互斥锁中检测到死锁。");
 	}
 #else
-	const unsigned uThreadId = 1;
+	const std::size_t uThreadId = 1;
 #endif
 
 	if(xIsQueueEmpty()){

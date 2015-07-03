@@ -14,8 +14,8 @@ extern "C" unsigned MCFMain(){
 	for(auto &p : threads){
 		p = Thread::Create([]{
 			for(int i = 0; i < 500000; ++i){
-//				const auto l = rwm.GetWriterLock();
-				const auto l = m.GetLock();
+				const auto l = rwm.GetWriterLock();
+//				const auto l = m.GetLock();
 				++c;
 			}
 		}, true);

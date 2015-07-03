@@ -9,7 +9,7 @@
 #include "../Core/UniqueHandle.hpp"
 #include "UniqueLockTemplate.hpp"
 #include "RecursiveMutex.hpp"
-#include "Semaphore.hpp"
+#include "Mutex.hpp"
 #include <cstddef>
 
 namespace MCF {
@@ -27,7 +27,7 @@ public:
 
 private:
 	RecursiveMutex x_mtxWriterGuard;
-	Semaphore x_semExclusive;
+	Mutex x_mtxExclusive;
 	volatile std::size_t x_uReaderCount;
 	UniqueHandle<xTlsIndexDeleter> x_uTlsIndex;
 

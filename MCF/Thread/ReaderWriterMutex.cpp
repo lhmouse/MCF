@@ -45,7 +45,7 @@ void ReaderWriterMutex::UniqueWriterLock::xDoUnlock() const noexcept {
 
 // 构造函数和析构函数。
 ReaderWriterMutex::ReaderWriterMutex(std::size_t uSpinCount)
-	: x_mtxWriterGuard(uSpinCount), x_semExclusive(1, nullptr), x_uReaderCount(0)
+	: x_mtxWriterGuard(uSpinCount), x_mtxExclusive(uSpinCount), x_uReaderCount(0)
 {
 	if(!x_uTlsIndex.Reset(::TlsAlloc())){
 		DEBUG_THROW(SystemError, "TlsAlloc");
@@ -66,7 +66,7 @@ ReaderWriterMutex::Result ReaderWriterMutex::TryAsReader() noexcept {
 				goto jDone;
 			}
 			if(AtomicIncrement(x_uReaderCount, MemoryModel::kRelaxed) == 1){
-				if(!x_semExclusive.Wait(0)){
+				if(!x_mtxExclusive.Try()){
 					AtomicDecrement(x_uReaderCount, MemoryModel::kRelaxed);
 					x_mtxWriterGuard.Unlock();
 					eResult = kResTryFailed;
@@ -90,7 +90,7 @@ ReaderWriterMutex::Result ReaderWriterMutex::LockAsReader() noexcept {
 		} else {
 			x_mtxWriterGuard.Lock();
 			if(AtomicIncrement(x_uReaderCount, MemoryModel::kRelaxed) == 1){
-				x_semExclusive.Wait();
+				x_mtxExclusive.Lock();
 				eResult = kResStateChanged;
 			}
 			x_mtxWriterGuard.Unlock();
@@ -107,7 +107,7 @@ ReaderWriterMutex::Result ReaderWriterMutex::UnlockAsReader() noexcept {
 			AtomicDecrement(x_uReaderCount, MemoryModel::kRelaxed);
 		} else {
 			if(AtomicDecrement(x_uReaderCount, MemoryModel::kRelaxed) == 0){
-				x_semExclusive.Post();
+				x_mtxExclusive.Unlock();
 				eResult = kResStateChanged;
 			}
 		}
@@ -131,7 +131,7 @@ ReaderWriterMutex::Result ReaderWriterMutex::TryAsWriter() noexcept {
 	if(eResult != kResStateChanged){
 		return eResult;
 	}
-	if(!x_semExclusive.Wait(0)){
+	if(!x_mtxExclusive.Try()){
 		x_mtxWriterGuard.Unlock();
 		return kResTryFailed;
 	}
@@ -144,7 +144,7 @@ ReaderWriterMutex::Result ReaderWriterMutex::LockAsWriter() noexcept {
 	if(eResult != kResStateChanged){
 		return eResult;
 	}
-	x_semExclusive.Wait();
+	x_mtxExclusive.Lock();
 	return kResStateChanged;
 }
 ReaderWriterMutex::Result ReaderWriterMutex::UnlockAsWriter() noexcept {
@@ -154,7 +154,7 @@ ReaderWriterMutex::Result ReaderWriterMutex::UnlockAsWriter() noexcept {
 	}
 	const auto uRecurReading = (std::uintptr_t)::TlsGetValue(x_uTlsIndex.Get());
 	if(uRecurReading == 0){
-		x_semExclusive.Post();
+		x_mtxExclusive.Unlock();
 	}
 	return kResStateChanged;
 }

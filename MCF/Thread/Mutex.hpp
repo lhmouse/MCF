@@ -22,11 +22,9 @@ public:
 private:
 	volatile std::size_t x_uSpinCount;
 
-	volatile bool x_bLocked;
+	volatile std::size_t x_uLockingThreadId;
 	Semaphore x_vSemaphore;
 	xQueueNode *volatile x_pQueueHead;
-
-	volatile std::size_t x_uLockingThreadId; // 仅供调试使用。
 
 public:
 	explicit Mutex(std::size_t uSpinCount = 0x100);

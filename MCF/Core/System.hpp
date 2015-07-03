@@ -10,17 +10,17 @@
 namespace MCF {
 
 inline std::size_t GetLogicalProcessorCount() noexcept {
-	return MCF_GetLogicalProcessorCount();
+	return ::MCF_GetLogicalProcessorCount();
 }
 inline std::size_t GetPageSize() noexcept {
-	return MCF_GetPageSize();
+	return ::MCF_GetPageSize();
 }
 
-using WindowsVersion = MCF_WindowsVersion;
+using WindowsVersion = ::MCF_WindowsVersion;
 
 inline WindowsVersion GetWindowsVersion() noexcept {
 	WindowsVersion vVersion;
-	MCF_GetWindowsVersion(&vVersion);
+	::MCF_GetWindowsVersion(&vVersion);
 	return vVersion;
 }
 

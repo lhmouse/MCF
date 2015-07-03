@@ -5,21 +5,24 @@
 #ifndef MCF_CORE_SYSTEM_HPP_
 #define MCF_CORE_SYSTEM_HPP_
 
-#include <cstddef>
+#include "../../MCFCRT/env/system.h"
 
 namespace MCF {
 
-std::size_t GetLogicalProcessorCount() noexcept;
-std::size_t GetPageSize() noexcept;
+inline std::size_t GetLogicalProcessorCount() noexcept {
+	return MCF_GetLogicalProcessorCount();
+}
+inline std::size_t GetPageSize() noexcept {
+	return MCF_GetPageSize();
+}
 
-struct WindowsVersion {
-	unsigned uMajor;
-	unsigned uMinor;
-	unsigned uBuild;
-	const wchar_t *pwszServPack;
-};
+using WindowsVersion = MCF_WindowsVersion;
 
-WindowsVersion GetWindowsVersion() noexcept;
+inline WindowsVersion GetWindowsVersion() noexcept {
+	WindowsVersion vVersion;
+	MCF_GetWindowsVersion(&vVersion);
+	return vVersion;
+}
 
 }
 

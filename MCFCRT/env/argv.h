@@ -2,14 +2,14 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2013 - 2015, LH_Mouse. All wrongs reserved.
 
-#ifndef __MCF_CRT_ARGV_H_
-#define __MCF_CRT_ARGV_H_
+#ifndef __MCF_CRT_ENV_ARGV_H_
+#define __MCF_CRT_ENV_ARGV_H_
 
 #include "_crtdef.h"
 
 __MCF_CRT_EXTERN_C_BEGIN
 
-typedef struct tagMCF_ArgItem {
+typedef struct MCF_tagArgItem {
 	const wchar_t *pwszStr;
 	MCF_STD size_t uLen;
 } MCF_ArgItem;

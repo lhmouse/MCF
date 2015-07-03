@@ -10,7 +10,6 @@
 #include "offset_of.h"
 #include "expect.h"
 #include "stpcpy.h"
-
-#include "../env/_crtdef.h"
+#include "wcpcpy.h"
 
 #endif

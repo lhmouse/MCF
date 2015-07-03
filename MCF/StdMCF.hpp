@@ -18,12 +18,9 @@
 #include <type_traits>
 
 #include "../MCFCRT/env/mcfwin.h"
-#include "../MCFCRT/ext/ext_include.h"
+#include "../MCFCRT/ext/include.h"
 
 #undef NULL
 #define NULL	nullptr
-
-namespace MCF {
-}
 
 #endif

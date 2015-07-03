@@ -5,39 +5,30 @@
 #ifndef MCF_CORE_TIME_HPP_
 #define MCF_CORE_TIME_HPP_
 
-#include <cstdint>
+#include "../../MCFCRT/env/system.h"
 
 namespace MCF {
 
-inline std::uint32_t ReadTimestampCounterLow() noexcept {
-	std::uint32_t u32Ret;
-	__asm__ __volatile__(
-		"rdtsc \n"
-		: "=a"(u32Ret) : : "dx"
-		);
-	return u32Ret;
+inline std::uint32_t ReadTimestampCounter32() noexcept {
+	return MCF_ReadTimestampCounter32();
 }
-inline std::uint64_t ReadTimestampCounter() noexcept {
-	std::uint64_t u64Ret;
-	__asm__ __volatile__(
-		"rdtsc \n"
-#ifdef _WIN64
-		"shl rdx, 32 \n"
-		"or rax, rdx \n"
-		: "=a"(u64Ret) : : "dx"
-#else
-		: "=A"(u64Ret) : :
-#endif
-		);
-	return u64Ret;
+inline std::uint32_t ReadTimestampCounter64() noexcept {
+	return MCF_ReadTimestampCounter64();
 }
 
-// 单位是毫秒。
-extern std::uint64_t GetUtcTime() noexcept;
-extern std::uint64_t GetLocalTime() noexcept;
+inline std::uint64_t GetUtcTime() noexcept {
+	return MCF_GetUtcTime();
+}
+inline std::uint64_t GetLocalTime() noexcept {
+	return MCF_GetLocalTime();
+}
 
-extern std::uint64_t GetFastMonoClock() noexcept;
-extern double GetHiResMonoClock() noexcept;
+inline std::uint64_t GetFastMonoClock() noexcept {
+	return MCF_GetFastMonoClock();
+}
+inline double GetHiResMonoClock() noexcept {
+	return MCF_GetHiResMonoClock();
+}
 
 }
 

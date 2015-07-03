@@ -2,22 +2,22 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2013 - 2015, LH_Mouse. All wrongs reserved.
 
-#ifndef __MCF_CRT_AVL_H_
-#define __MCF_CRT_AVL_H_
+#ifndef __MCF_CRT_ENV_AVL_H_
+#define __MCF_CRT_ENV_AVL_H_
 
 #include "_crtdef.h"
 #include "../ext/assert.h"
 
 __MCF_CRT_EXTERN_C_BEGIN
 
-typedef struct tagMCF_AvlNodeHeader {
-	struct tagMCF_AvlNodeHeader *pParent;
-	struct tagMCF_AvlNodeHeader **ppRefl;
-	struct tagMCF_AvlNodeHeader *pLeft;
-	struct tagMCF_AvlNodeHeader *pRight;
+typedef struct MCF_tagAvlNodeHeader {
+	struct MCF_tagAvlNodeHeader *pParent;
+	struct MCF_tagAvlNodeHeader **ppRefl;
+	struct MCF_tagAvlNodeHeader *pLeft;
+	struct MCF_tagAvlNodeHeader *pRight;
 	MCF_STD size_t uHeight;
-	struct tagMCF_AvlNodeHeader *pPrev;
-	struct tagMCF_AvlNodeHeader *pNext;
+	struct MCF_tagAvlNodeHeader *pPrev;
+	struct MCF_tagAvlNodeHeader *pNext;
 } MCF_AvlNodeHeader;
 
 static inline MCF_AvlNodeHeader *MCF_AvlPrev(const MCF_AvlNodeHeader *pNode) MCF_NOEXCEPT {

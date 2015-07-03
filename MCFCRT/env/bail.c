@@ -4,7 +4,7 @@
 
 #include "bail.h"
 #include "mcfwin.h"
-#include "../ext/stpcpy.h"
+#include "../ext/wcpcpy.h"
 #include <stdarg.h>
 #include <wchar.h>
 #include <stdlib.h>

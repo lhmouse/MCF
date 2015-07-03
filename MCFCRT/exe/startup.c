@@ -2,7 +2,7 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2013 - 2015, LH_Mouse. All wrongs reserved.
 
-#include "exe_decl.h"
+#include "decl.h"
 #include "../env/mcfwin.h"
 #include "../env/bail.h"
 #include "../env/module.h"

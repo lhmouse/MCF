@@ -2,8 +2,8 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2013 - 2015, LH_Mouse. All wrongs reserved.
 
-#ifndef __MCF_CRT_HEAP_DBG_H_
-#define __MCF_CRT_HEAP_DBG_H_
+#ifndef __MCF_CRT_ENV_HEAP_DBG_H_
+#define __MCF_CRT_ENV_HEAP_DBG_H_
 
 #include "_crtdef.h"
 
@@ -35,7 +35,7 @@ extern void __MCF_CRT_HeapDbgUninit(void) MCF_NOEXCEPT;
 
 #if __MCF_CRT_REQUIRE_HEAPDBG_LEVEL(3)
 
-typedef struct __tagMCF_HeapDbgBlockInfo {
+typedef struct __MCF_tagHeapDbgBlockInfo {
 	MCF_AvlNodeHeader vHeader;
 
 	void *pContents;

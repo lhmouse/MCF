@@ -2,8 +2,8 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2013 - 2015, LH_Mouse. All wrongs reserved.
 
-#ifndef __MCF_CRT_OFFSET_OF_H_
-#define __MCF_CRT_OFFSET_OF_H_
+#ifndef __MCF_CRT_EXT_OFFSET_OF_H_
+#define __MCF_CRT_EXT_OFFSET_OF_H_
 
 #include "../env/_crtdef.h"
 #include "_make_constant.h"

@@ -31,7 +31,7 @@ static void PumpAtEndModule(){
 	// static storage duration. (...)
 	MCF_CRT_TlsClearAll();
 
-	AtExitNode *pHead = __atomic_exchange_n(&g_pAtExitHead, nullptr, __ATOMIC_RELAXED);
+	AtExitNode *pHead = __atomic_exchange_n(&g_pAtExitHead, nullptr, __ATOMIC_SEQ_CST);
 	while(pHead){
 		(*(pHead->pfnProc))(pHead->nContext);
 
@@ -90,8 +90,8 @@ int MCF_CRT_AtEndModule(void (*pfnProc)(intptr_t), intptr_t nContext){
 	pNode->pfnProc	= pfnProc;
 	pNode->nContext	= nContext;
 
-	pNode->pPrev = __atomic_load_n(&g_pAtExitHead, __ATOMIC_RELAXED);
-	while(EXPECT(!__atomic_compare_exchange_n(&g_pAtExitHead, &(pNode->pPrev), pNode, false, __ATOMIC_RELAXED, __ATOMIC_RELAXED))){
+	pNode->pPrev = __atomic_load_n(&g_pAtExitHead, __ATOMIC_SEQ_CST);
+	while(EXPECT(!__atomic_compare_exchange_n(&g_pAtExitHead, &(pNode->pPrev), pNode, false, __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST))){
 		// 空的。
 	}
 

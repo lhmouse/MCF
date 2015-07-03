@@ -2,8 +2,8 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2013 - 2015, LH_Mouse. All wrongs reserved.
 
-#ifndef __MCF_CRT_LAST_ERROR_H_
-#define __MCF_CRT_LAST_ERROR_H_
+#ifndef __MCF_CRT_ENV_LAST_ERROR_H_
+#define __MCF_CRT_ENV_LAST_ERROR_H_
 
 #include "_crtdef.h"
 #include <winerror.h>

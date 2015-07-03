@@ -77,7 +77,7 @@ bool Mutex::Try() noexcept {
 #endif
 
 	if(xIsQueueEmpty()){
-		unsigned uExpected = 0;
+		std::size_t uExpected = 0;
 		if(AtomicCompareExchange(x_uLockingThreadId, uExpected, uThreadId, MemoryModel::kAcqRel, MemoryModel::kConsume)){
 			return true;
 		}
@@ -95,7 +95,7 @@ void Mutex::Lock() noexcept {
 #endif
 
 	if(xIsQueueEmpty()){
-		unsigned uExpected = 0;
+		std::size_t uExpected = 0;
 		if(AtomicCompareExchange(x_uLockingThreadId, uExpected, uThreadId, MemoryModel::kAcqRel, MemoryModel::kConsume)){
 			return;
 		}
@@ -105,7 +105,7 @@ void Mutex::Lock() noexcept {
 		for(std::size_t i = 0; i < uSpinCount; ++i){
 			::SwitchToThread();
 
-			unsigned uExpected = 0;
+			std::size_t uExpected = 0;
 			if(AtomicCompareExchange(x_uLockingThreadId, uExpected, uThreadId, MemoryModel::kAcqRel, MemoryModel::kConsume)){
 				return;
 			}
@@ -129,7 +129,7 @@ void Mutex::Lock() noexcept {
 			pIns = pNext;
 		}
 	} else {
-		unsigned uExpected = 0;
+		std::size_t uExpected = 0;
 		if(AtomicCompareExchange(x_uLockingThreadId, uExpected, uThreadId, MemoryModel::kAcqRel, MemoryModel::kConsume)){
 			xUnlockQueue(pQueueHead);
 			return;
@@ -143,7 +143,7 @@ void Mutex::Lock() noexcept {
 
 		pQueueHead = xLockQueue();
 		if(pQueueHead == &vThisThread){
-			unsigned uExpected = 0;
+			std::size_t uExpected = 0;
 			if(AtomicCompareExchange(x_uLockingThreadId, uExpected, uThreadId, MemoryModel::kAcqRel, MemoryModel::kConsume)){
 				pQueueHead = pQueueHead->pNext;
 				xUnlockQueue(pQueueHead);

@@ -18,7 +18,7 @@ WideString GetWin32ErrorDescription(unsigned long ulErrorCode){
 		DEBUG_THROW(SystemError, "FormatMessageW");
 	}
 	try {
-		wcsRet.Assign(reinterpret_cast<const wchar_t *>(pBuffer), uLen);
+		wcsRet.Assign(static_cast<const wchar_t *>(pBuffer), uLen);
 	} catch(...){
 		::LocalFree(pBuffer);
 		throw;

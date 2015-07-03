@@ -131,11 +131,11 @@ ReaderWriterMutex::Result ReaderWriterMutex::TryAsWriter() noexcept {
 	if(eResult != kResStateChanged){
 		return eResult;
 	}
-	if(x_semExclusive.Wait(0)){
-		return kResStateChanged;
+	if(!x_semExclusive.Wait(0)){
+		x_mtxWriterGuard.Unlock();
+		return kResTryFailed;
 	}
-	x_mtxWriterGuard.Unlock();
-	return kResTryFailed;
+	return kResStateChanged;
 }
 ReaderWriterMutex::Result ReaderWriterMutex::LockAsWriter() noexcept {
 	ASSERT_MSG((std::uintptr_t)::TlsGetValue(x_uTlsIndex.Get()) == 0, L"获取写锁前必须先释放读锁。");

@@ -117,11 +117,11 @@ void Mutex::Lock() noexcept {
 	} else {
 		pQueueHead = &vThisThread;
 	}
-	xUnlockQueue(pQueueHead);
-
 	for(;;){
+		xUnlockQueue(pQueueHead);
 		x_vSemaphore.Wait();
-		auto pQueueHead = xLockQueue();
+
+		pQueueHead = xLockQueue();
 		if(pQueueHead == &vThisThread){
 			std::size_t uExpected = 0;
 			if(AtomicCompareExchange(x_uLockingThreadId, uExpected, dwThreadId, MemoryModel::kSeqCst, MemoryModel::kConsume)){
@@ -131,7 +131,6 @@ void Mutex::Lock() noexcept {
 			}
 		}
 		x_vSemaphore.Post();
-		xUnlockQueue(pQueueHead);
 	}
 }
 void Mutex::Unlock() noexcept {

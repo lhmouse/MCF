@@ -117,8 +117,9 @@ void Mutex::Lock() noexcept {
 	} else {
 		pQueueHead = &vThisThread;
 	}
+	xUnlockQueue(pQueueHead);
+
 	for(;;){
-		xUnlockQueue(pQueueHead);
 		x_vSemaphore.Wait();
 
 		pQueueHead = xLockQueue();
@@ -131,6 +132,7 @@ void Mutex::Lock() noexcept {
 			}
 		}
 		x_vSemaphore.Post();
+		xUnlockQueue(pQueueHead);
 	}
 }
 void Mutex::Unlock() noexcept {

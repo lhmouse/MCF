@@ -1,33 +1,38 @@
 #include <MCF/StdMCF.hpp>
 #include <MCF/Thread/Thread.hpp>
 #include <MCF/Thread/RecursiveMutex.hpp>
-#include <MCF/Core/Time.hpp>
 
 using namespace MCF;
 
-RecursiveMutex m(0);
-volatile int c = 0;
-
 extern "C" unsigned MCFMain(){
-	std::array<IntrusivePtr<Thread>, 4> threads;
-	for(auto &p : threads){
-		p = Thread::Create([]{
-			for(int i = 0; i < 500000; ++i){
-				const RecursiveMutex::UniqueLock l(m);
-				++c;
-			}
-		}, true);
-	}
+	RecursiveMutex m;
+	m.Lock();
+	auto p1 = Thread::Create([&]{
+		::Sleep(1000);
+		std::puts("Thread1 unlocking...");
+		m.Unlock();
+	});
+	auto p2 = Thread::Create([&]{
+		::Sleep(2000);
+		std::puts("Thread2 locking...");
+		m.Lock();
 
-	const auto t1 = GetHiResMonoClock();
-	for(auto &p : threads){
-		p->Resume();
-	}
-	for(auto &p : threads){
-		p->Join();
-	}
-	const auto t2 = GetHiResMonoClock();
+		::Sleep(5000);
+		std::puts("Thread2 unlocking...");
+		m.Unlock();
+	});
+	auto p3 = Thread::Create([&]{
+		::Sleep(3000);
+		std::puts("Thread3 locking...");
+		m.Lock();
 
-	std::printf("c = %d, time = %f\n", c, t2 - t1);
+		std::puts("Thread3 unlocking...");
+		m.Unlock();
+	});
+
+	p1->Join();
+	p2->Join();
+	p3->Join();
+
 	return 0;
 }

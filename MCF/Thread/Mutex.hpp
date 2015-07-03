@@ -7,7 +7,6 @@
 
 #include "../Utilities/Noncopyable.hpp"
 #include "UniqueLockTemplate.hpp"
-#include "Atomic.hpp"
 #include "Semaphore.hpp"
 #include <cstddef>
 
@@ -21,11 +20,13 @@ public:
 	using UniqueLock = UniqueLockTemplate<Mutex>;
 
 private:
-	Semaphore x_vSemaphore;
 	volatile std::size_t x_uSpinCount;
 
-	volatile std::size_t x_uLockingThreadId;
+	volatile bool x_bLocked;
+	Semaphore x_vSemaphore;
 	xQueueNode *volatile x_pQueueHead;
+
+	volatile std::size_t x_uLockingThreadId; // 仅供调试使用。
 
 public:
 	explicit Mutex(std::size_t uSpinCount = 0x100);
@@ -36,12 +37,8 @@ private:
 	void xUnlockQueue(xQueueNode *pQueueHead) noexcept;
 
 public:
-	std::size_t GetSpinCount() const noexcept {
-		return AtomicLoad(x_uSpinCount, MemoryModel::kRelaxed);
-	}
+	std::size_t GetSpinCount() const noexcept;
 	void SetSpinCount(std::size_t uSpinCount) noexcept;
-
-	bool IsLockedByCurrentThread() const noexcept;
 
 	bool Try() noexcept;
 	void Lock() noexcept;

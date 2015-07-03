@@ -21,13 +21,11 @@ ConditionVariable::ConditionVariable(Mutex &vMutex)
 
 // 其他非静态成员函数。
 bool ConditionVariable::Wait(unsigned long long ullMilliSeconds) noexcept {
-	ASSERT(x_vMutex.IsLockedByCurrentThread());
-
 	++x_uWaiting;
 	x_vMutex.Unlock();
-//	\\ 退出临界区。
+
 	const bool bResult = x_vSemaphore.Wait(ullMilliSeconds);
-//	// 进入临界区。
+
 	x_vMutex.Lock();
 	if(!bResult){
 		--x_uWaiting;
@@ -35,44 +33,24 @@ bool ConditionVariable::Wait(unsigned long long ullMilliSeconds) noexcept {
 	return bResult;
 }
 void ConditionVariable::Wait() noexcept {
-	ASSERT(x_vMutex.IsLockedByCurrentThread());
-
 	++x_uWaiting;
 	x_vMutex.Unlock();
-//	\\ 退出临界区。
+
 	x_vSemaphore.Wait();
-//	// 进入临界区。
+
 	x_vMutex.Lock();
 }
 void ConditionVariable::Signal(std::size_t uMaxCount) noexcept {
-	const bool bIsLocking = x_vMutex.IsLockedByCurrentThread();
-	if(!bIsLocking){
-		x_vMutex.Lock();
-	}
-//	// 进入临界区。
 	const auto uToPost = Min(x_uWaiting, uMaxCount);
 	if(uToPost != 0){
 		x_vSemaphore.Post(uToPost);
 		x_uWaiting -= uToPost;
 	}
-//	\\ 退出临界区。
-	if(!bIsLocking){
-		x_vMutex.Unlock();
-	}
 }
 void ConditionVariable::Broadcast() noexcept {
-	const bool bIsLocking = x_vMutex.IsLockedByCurrentThread();
-	if(!bIsLocking){
-		x_vMutex.Lock();
-	}
-//	// 进入临界区。
 	if(x_uWaiting != 0){
 		x_vSemaphore.Post(x_uWaiting);
 		x_uWaiting = 0;
-	}
-//	\\ 退出临界区。
-	if(!bIsLocking){
-		x_vMutex.Unlock();
 	}
 }
 

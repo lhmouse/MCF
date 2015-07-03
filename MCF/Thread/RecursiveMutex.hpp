@@ -27,6 +27,7 @@ public:
 
 private:
 	Mutex x_vMutex;
+	volatile std::size_t x_uLockingThreadId;
 	std::size_t x_uRecursionCount;
 
 public:
@@ -40,9 +41,7 @@ public:
 		x_vMutex.SetSpinCount(uSpinCount);
 	}
 
-	bool IsLockedByCurrentThread() const noexcept {
-		return x_vMutex.IsLockedByCurrentThread();
-	}
+	bool IsLockedByCurrentThread() const noexcept;
 
 	Result Try() noexcept;
 	Result Lock() noexcept;

@@ -84,13 +84,13 @@ void Mutex::Lock() noexcept {
 
 	const auto dwThreadId = ::GetCurrentThreadId();
 
-	// 尝试忙等待。
 	std::size_t uExpected = 0;
 	if(AtomicCompareExchange(x_uLockingThreadId, uExpected, dwThreadId, MemoryModel::kSeqCst, MemoryModel::kSeqCst)){
 		return;
 	}
 	::Sleep(1);
 
+	// 尝试忙等待。
 	const auto uSpinCount = GetSpinCount();
 	for(std::size_t i = 0; i < uSpinCount; ++i){
 		std::size_t uExpected = 0;

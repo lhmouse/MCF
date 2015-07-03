@@ -88,17 +88,18 @@ void Mutex::Lock() noexcept {
 	if(AtomicCompareExchange(x_uLockingThreadId, uExpected, dwThreadId, MemoryModel::kSeqCst, MemoryModel::kSeqCst)){
 		return;
 	}
-	::Sleep(1);
 
 	// 尝试忙等待。
 	const auto uSpinCount = GetSpinCount();
 	for(std::size_t i = 0; i < uSpinCount; ++i){
+		::SwitchToThread();
+
 		std::size_t uExpected = 0;
 		if(AtomicCompareExchange(x_uLockingThreadId, uExpected, dwThreadId, MemoryModel::kSeqCst, MemoryModel::kConsume)){
 			return;
 		}
-		::SwitchToThread();
 	}
+	::Sleep(1);
 
 	// 如果忙等待超过了自旋次数，就使用内核态互斥体同步。
 	xQueueNode vThisThread = { nullptr };

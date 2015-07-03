@@ -99,6 +99,7 @@ void Mutex::Lock() noexcept {
 			return;
 		}
 	}
+
 	::Sleep(1);
 
 	// 如果忙等待超过了自旋次数，就使用内核态互斥体同步。

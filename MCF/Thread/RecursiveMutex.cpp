@@ -59,7 +59,7 @@ RecursiveMutex::Result RecursiveMutex::Lock() noexcept {
 	return kResStateChanged;
 }
 RecursiveMutex::Result RecursiveMutex::Unlock() noexcept {
-	ASSERT(IsLockedByCurrentThread());
+	ASSERT_MSG(IsLockedByCurrentThread(), L"试图使用当前不持有递归互斥体的线程释放递归互斥体。");
 
 	if(--x_uRecursionCount != 0){
 		return kResRecursive;

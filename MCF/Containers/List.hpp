@@ -59,7 +59,7 @@ private:
 
 	template<typename CursorT, typename RealElementT, typename RealNodeT>
 	class xCursorTemplate
-		: public std::iterator<std::bidirectional_iterator_tag, RealElementT>
+		: public std::iterator<std::forward_iterator_tag, RealElementT>
 	{
 	protected:
 		RealNodeT *x_pNode;

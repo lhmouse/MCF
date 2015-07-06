@@ -62,6 +62,7 @@ public:
 
 	void Swap(FunctionObserver &rhs) noexcept {
 		std::swap(x_pfnLambda, rhs.x_pfnLambda);
+		std::swap(x_pContext, rhs.x_pContext);
 	}
 
 public:

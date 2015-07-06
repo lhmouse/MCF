@@ -103,7 +103,7 @@ void Mutex::Lock() noexcept {
 		// 尝试忙等待。
 		const auto uSpinCount = GetSpinCount();
 		for(std::size_t i = 0; i < uSpinCount; ++i){
-			::SwitchToThread();
+			AtomicPause();
 
 			std::size_t uExpected = 0;
 			if(AtomicCompareExchange(x_uLockingThreadId, uExpected, uThreadId, MemoryModel::kAcqRel, MemoryModel::kConsume)){

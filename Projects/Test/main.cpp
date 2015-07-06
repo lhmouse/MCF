@@ -5,8 +5,8 @@
 
 using namespace MCF;
 
-ReaderWriterMutex rwm(100);
-Mutex m(100);
+ReaderWriterMutex rwm(1000);
+Mutex m(1000);
 volatile int c = 0;
 
 extern "C" unsigned MCFMain(){
@@ -14,8 +14,8 @@ extern "C" unsigned MCFMain(){
 	for(auto &p : threads){
 		p = Thread::Create([]{
 			for(int i = 0; i < 500000; ++i){
-				const auto l = rwm.GetWriterLock();
-//				const auto l = m.GetLock();
+//				const auto l = rwm.GetWriterLock();
+				const auto l = m.GetLock();
 				++c;
 			}
 		}, true);

@@ -67,22 +67,18 @@ public:
 			std::is_convertible<std::result_of_t<FuncT && (ForwardedParam<ParamsT>...)>, RetT>::value,
 			int> = 0>
 	Function(FuncT &&vFunc)
-		: Function()
+		: x_pFunctor(new Impl_Function::Functor<FuncT, RetT, ParamsT...>(std::forward<FuncT>(vFunc)))
 	{
-		Reset(std::forward<FuncT>(vFunc));
 	}
 
 public:
 	Function &Reset(std::nullptr_t = nullptr) noexcept {
-		x_pFunctor.Reset();
+		Function().Swap(*this);
 		return *this;
 	}
-	template<typename FuncT,
-		std::enable_if_t<
-			std::is_convertible<std::result_of_t<FuncT && (ForwardedParam<ParamsT>...)>, RetT>::value,
-			int> = 0>
+	template<typename FuncT>
 	Function &Reset(FuncT &&vFunc){
-		x_pFunctor.Reset(new Impl_Function::Functor<FuncT, RetT, ParamsT...>(std::forward<FuncT>(vFunc)));
+		Function(std::forward<FuncT>(vFunc)).Swap(*this);
 		return *this;
 	}
 

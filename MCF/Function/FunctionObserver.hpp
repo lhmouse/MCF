@@ -37,26 +37,22 @@ public:
 	}
 	template<typename FuncT,
 		std::enable_if_t<
-			std::is_convertible<std::result_of_t<FuncT && (ForwardedParam<ParamsT>...)>, RetT>::value,
+			std::is_convertible<std::result_of_t<const FuncT & (ForwardedParam<ParamsT>...)>, RetT>::value,
 			int> = 0>
 	FunctionObserver(const FuncT &vFunc) noexcept
-		: FunctionObserver()
+		: x_pfnLambda([](const void *pContext, ParamsT &&...vParams){ return Invoke(*static_cast<const FuncT *>(pContext), std::forward<ParamsT>(vParams)...);  })
+		, x_pContext(std::addressof(vFunc))
 	{
-		Reset(vFunc);
 	}
 
 public:
 	FunctionObserver &Reset(std::nullptr_t = nullptr) noexcept {
-		x_pfnLambda = nullptr;
+		FunctionObserver().Swap(*this);
 		return *this;
 	}
-	template<typename FuncT,
-		std::enable_if_t<
-			std::is_convertible<std::result_of_t<FuncT && (ForwardedParam<ParamsT>...)>, RetT>::value,
-			int> = 0>
+	template<typename FuncT>
 	FunctionObserver &Reset(const FuncT &vFunc){
-		x_pfnLambda = [](const void *pContext, ParamsT &&...vParams){ return Invoke(*static_cast<const FuncT *>(pContext), std::forward<ParamsT>(vParams)...); };
-		x_pContext = std::addressof(vFunc);
+		FunctionObserver(vFunc).Swap(*this);
 		return *this;
 	}
 

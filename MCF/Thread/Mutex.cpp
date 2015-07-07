@@ -110,9 +110,9 @@ void Mutex::Lock() noexcept {
 				return;
 			}
 		}
+	} else {
+		::SleepEx(1, false);
 	}
-
-	::Sleep(1);
 
 	// 如果忙等待超过了自旋次数，就使用信号量同步。
 	xQueueNode vThisThread = { nullptr };

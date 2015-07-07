@@ -5,8 +5,8 @@
 
 using namespace MCF;
 
-ReaderWriterMutex rwm(1000);
-Mutex m(1000);
+ReaderWriterMutex rwm(100);
+Mutex m(100);
 volatile int c = 0;
 
 extern "C" unsigned MCFMain(){

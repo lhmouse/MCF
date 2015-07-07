@@ -131,8 +131,7 @@ void Mutex::Lock() noexcept {
 	} else {
 		std::size_t uExpected = 0;
 		if(AtomicCompareExchange(x_uLockingThreadId, uExpected, uThreadId, MemoryModel::kAcqRel, MemoryModel::kConsume)){
-			xUnlockQueue(pQueueHead);
-			return;
+			goto jLocked;
 		}
 		pQueueHead = &vThisThread;
 	}
@@ -146,13 +145,15 @@ void Mutex::Lock() noexcept {
 			std::size_t uExpected = 0;
 			if(AtomicCompareExchange(x_uLockingThreadId, uExpected, uThreadId, MemoryModel::kAcqRel, MemoryModel::kConsume)){
 				pQueueHead = pQueueHead->pNext;
-				xUnlockQueue(pQueueHead);
-				return;
+				break;
 			}
 		}
 		x_vSemaphore.Post();
 		xUnlockQueue(pQueueHead);
 	}
+jLocked:
+	xUnlockQueue(pQueueHead);
+	return;
 }
 void Mutex::Unlock() noexcept {
 #ifndef NDEBUG

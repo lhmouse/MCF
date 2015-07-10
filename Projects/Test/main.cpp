@@ -5,21 +5,14 @@
 using namespace MCF;
 
 extern "C" unsigned MCFMain(){
-	auto fn = [](auto i){
-		std::printf("outer, i = %d\n", i);
-		return [](auto i){ std::printf("inner, i = %d\n", i); };
-	};
-	auto invoke = [](auto f, auto p){
-		return f(p);
-	};
 
-	std::puts("-- Bind() inside Bind() --");
-	auto f1 = Bind(invoke, Bind(fn, _1), _1);
-	f1(123);
+	auto fn = []{ std::puts("outer");
+		return []{ std::puts("inner"); }; };
+	auto invoke = [](auto f){ f(); };
 
-	std::puts("-- Curry() inside Curry() --");
-	auto f2 = Curry(invoke, Curry(fn, _1), _1);
-	f2(123);
+	Bind(invoke, Bind(fn))();
+	std::puts("---");
+	Curry(invoke, Curry(fn))();
 
 	return 0;
 }

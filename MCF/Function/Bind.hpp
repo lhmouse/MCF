@@ -73,6 +73,7 @@ namespace Impl_Bind {
 		template<std::size_t ...kParamIndicesT, typename ...ParamsAddT>
 		decltype(auto) xDispatchParams(std::index_sequence<kParamIndicesT...>, ParamsAddT &&...vParamsAdd) const {
 			ParamSelector<ParamsAddT...> vSelector(std::forward<ParamsAddT>(vParamsAdd)...);
+			(void)vSelector;
 			return Invoke(x_vFunc, vSelector(std::get<kParamIndicesT>(x_tupParams))...);
 		}
 

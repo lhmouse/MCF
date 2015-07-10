@@ -35,7 +35,7 @@ namespace Impl_Bind {
 	private:
 		template<std::size_t ...kParamIndicesT, typename CurriedT>
 		decltype(auto) xForwardCurriedParams(std::index_sequence<kParamIndicesT...>, const CurriedT &vCurried) const {
-			return vCurried(std::get<kParamIndicesT>(x_tupParamsAdd)...);
+			return vCurried(static_cast<std::tuple_element_t<kParamIndicesT, decltype(x_tupParamsAdd)> &&>(std::get<kParamIndicesT>(x_tupParamsAdd))...);
 		}
 
 	public:

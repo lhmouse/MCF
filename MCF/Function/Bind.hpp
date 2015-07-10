@@ -14,34 +14,50 @@
 namespace MCF {
 
 namespace Impl_Bind {
+	template<typename FuncT, bool kIsCurried, typename ...ParamsT>
+	class BindResult;
+
 	template<std::size_t kIndexT>
 	struct Placeholder {
 	};
 
 	template<typename ...ParamsAddT>
-	struct ParamSelector {
-		std::tuple<ParamsAddT &&...> tupParamsAdd;
+	class ParamSelector {
+	private:
+		std::tuple<ParamsAddT &&...> x_tupParamsAdd;
 
+	public:
 		explicit ParamSelector(ParamsAddT &&...vParamsAdd) noexcept
-			: tupParamsAdd(std::forward<ParamsAddT>(vParamsAdd)...)
+			: x_tupParamsAdd(std::forward<ParamsAddT>(vParamsAdd)...)
 		{
 		}
 
-		template<std::size_t kIndexT>
-		decltype(auto) operator()(Placeholder<kIndexT> /* vParam */) noexcept {
-			return static_cast<std::tuple_element_t<kIndexT - 1, decltype(tupParamsAdd)> &&>(std::get<kIndexT - 1>(tupParamsAdd));
+	private:
+		template<std::size_t ...kParamIndicesT, typename CurriedT>
+		decltype(auto) xForwardCurriedParams(std::index_sequence<kParamIndicesT...>, const CurriedT &vCurried) const {
+			return vCurried(std::get<kParamIndicesT>(x_tupParamsAdd)...);
 		}
+
+	public:
 		template<typename ParamT>
 		decltype(auto) operator()(ParamT &vParam) noexcept {
 			return vParam;
+		}
+		template<std::size_t kIndexT>
+		decltype(auto) operator()(Placeholder<kIndexT> /* vParam */) noexcept {
+			return static_cast<std::tuple_element_t<kIndexT - 1, decltype(x_tupParamsAdd)> &&>(std::get<kIndexT - 1>(x_tupParamsAdd));
 		}
 		template<typename ParamT>
 		decltype(auto) operator()(const RefWrapper<ParamT> &vParam) noexcept {
 			return vParam.Forward();
 		}
+		template<typename FuncT, typename ...ParamsT>
+		decltype(auto) operator()(const BindResult<FuncT, true, ParamsT...> &vCurried) noexcept {
+			return xForwardCurriedParams(std::index_sequence_for<ParamsT...>(), vCurried);
+		}
 	};
 
-	template<typename FuncT, typename ...ParamsT>
+	template<typename FuncT, bool kIsCurried, typename ...ParamsT>
 	class BindResult {
 	private:
 		FuncT x_vFunc;
@@ -66,7 +82,6 @@ namespace Impl_Bind {
 			return xDispatchParams(std::index_sequence_for<ParamsT...>(), std::forward<ParamsAddT>(vParamsAdd)...);
 		}
 	};
-
 }
 
 constexpr Impl_Bind::Placeholder< 1>  _1;
@@ -103,7 +118,11 @@ constexpr Impl_Bind::Placeholder<29> _29;
 
 template<typename FuncT, typename ...ParamsT>
 auto Bind(FuncT &&vFunc, ParamsT &&...vParams){
-	return Impl_Bind::BindResult<std::decay_t<FuncT>, std::decay_t<ParamsT>...>(std::forward<FuncT>(vFunc), std::forward<ParamsT>(vParams)...);
+	return Impl_Bind::BindResult<std::decay_t<FuncT>, false, std::decay_t<ParamsT>...>(std::forward<FuncT>(vFunc), std::forward<ParamsT>(vParams)...);
+}
+template<typename FuncT, typename ...ParamsT>
+auto Curry(FuncT &&vFunc, ParamsT &&...vParams){
+	return Impl_Bind::BindResult<std::decay_t<FuncT>, true, std::decay_t<ParamsT>...>(std::forward<FuncT>(vFunc), std::forward<ParamsT>(vParams)...);
 }
 
 }

@@ -38,6 +38,16 @@ public:
 		kNpos = Observer::kNpos
 	};
 
+private:
+	__attribute__((__always_inline__))
+	static std::size_t xCheckedAddSize(std::size_t uLhs, std::size_t uRhs){
+		const auto uRet = uLhs + uRhs;
+		if(uRet < uLhs){
+			throw std::bad_alloc();
+		}
+		return uRet;
+	}
+
 public:
 	static UnifiedStringObserver Unify(UnifiedString &usTempStorage, const Observer &obsSrc);
 	static void Deunify(String &strDst, std::size_t uPos, const UnifiedStringObserver &usoSrc);
@@ -149,7 +159,7 @@ public:
 	}
 	~String() noexcept {
 		if(x_vStorage.vSmall.schComplLength < 0){
-			delete[] x_vStorage.vLarge.pchBegin;
+			::operator delete[](x_vStorage.vLarge.pchBegin);
 		}
 #ifndef NDEBUG
 		std::memset(&x_vStorage, 0xDD, sizeof(x_vStorage));
@@ -157,9 +167,7 @@ public:
 	}
 
 private:
-	Char *xChopAndSplice(std::size_t uRemovedBegin, std::size_t uRemovedEnd,
-		std::size_t uFirstOffset, std::size_t uThirdOffset)
-	{
+	Char *xChopAndSplice(std::size_t uRemovedBegin, std::size_t uRemovedEnd, std::size_t uFirstOffset, std::size_t uThirdOffset){
 		const auto pchOldBuffer = GetBegin();
 		const auto uOldLength = GetLength();
 		auto pchNewBuffer = pchOldBuffer;
@@ -177,7 +185,12 @@ private:
 			if(uSizeToAlloc < uNewLength + 1){
 				uSizeToAlloc = uNewLength + 1;
 			}
-			pchNewBuffer = new Char[uSizeToAlloc];
+			const std::size_t uBytesToAlloc = sizeof(Char) * uSizeToAlloc;
+			if(uBytesToAlloc / sizeof(Char) != uSizeToAlloc){
+				throw std::bad_alloc();
+			}
+
+			pchNewBuffer = (Char *)::operator new[](uBytesToAlloc);
 		}
 
 		if((pchNewBuffer + uFirstOffset != pchOldBuffer) && (uRemovedBegin != 0)){
@@ -191,7 +204,7 @@ private:
 			if(x_vStorage.vSmall.schComplLength >= 0){
 				x_vStorage.vSmall.schComplLength = -1;
 			} else {
-				delete[] pchOldBuffer;
+				::operator delete[](pchOldBuffer);
 			}
 
 			x_vStorage.vLarge.pchBegin = pchNewBuffer;
@@ -295,13 +308,17 @@ public:
 	}
 	void Reserve(std::size_t uNewCapacity){
 		if(uNewCapacity > GetCapacity()){
-			const auto uOldLength = GetLength();
-			xChopAndSplice(uOldLength, uOldLength, 0, uNewCapacity);
+			const auto uOldSize = GetSize();
+			xChopAndSplice(uOldSize, uOldSize, 0, uNewCapacity);
 		}
 	}
 	void ReserveMore(std::size_t uDeltaCapacity){
-		const auto uOldLength = GetLength();
-		xChopAndSplice(uOldLength, uOldLength, 0, uOldLength + uDeltaCapacity);
+		const auto uOldSize = GetSize();
+		const auto uNewCapacity = uOldSize + uDeltaCapacity;
+		if(uNewCapacity < uOldSize){
+			throw std::bad_alloc();
+		}
+		Reserve(uNewCapacity);
 	}
 
 	void Resize(std::size_t uNewSize){
@@ -315,14 +332,22 @@ public:
 	}
 	Char *ResizeMoreFront(std::size_t uDeltaSize){
 		const auto uOldSize = GetSize();
-		xChopAndSplice(uOldSize, uOldSize, uDeltaSize, uOldSize + uDeltaSize);
-		xSetSize(uOldSize + uDeltaSize);
-		return GetData();
+		const auto uNewSize = uOldSize + uDeltaSize;
+		if(uNewSize < uOldSize){
+			throw std::bad_alloc();
+		}
+		xChopAndSplice(uOldSize, uOldSize, uDeltaSize, uNewSize);
+		xSetSize(uNewSize);
+		return GetData() + uOldSize;
 	}
 	Char *ResizeMore(std::size_t uDeltaSize){
 		const auto uOldSize = GetSize();
-		xChopAndSplice(uOldSize, uOldSize, 0, uOldSize + uDeltaSize);
-		xSetSize(uOldSize + uDeltaSize);
+		const auto uNewSize = uOldSize + uDeltaSize;
+		if(uNewSize < uOldSize){
+			throw std::bad_alloc();
+		}
+		xChopAndSplice(uOldSize, uOldSize, 0, uNewSize);
+		xSetSize(uNewSize);
 		return GetData() + uOldSize;
 	}
 	void Shrink() noexcept {
@@ -388,7 +413,7 @@ public:
 		ASSERT(this != &rhs);
 
 		if(x_vStorage.vSmall.schComplLength < 0){
-			delete[] x_vStorage.vLarge.pchBegin;
+			::operator delete[](x_vStorage.vLarge.pchBegin);
 		}
 		x_vStorage = rhs.x_vStorage;
 #ifndef NDEBUG
@@ -410,23 +435,15 @@ public:
 		Append(Observer(pchBegin, uCount));
 	}
 	void Append(const Observer &rhs){
-		Replace(-1, -1, rhs);
+		const auto pWrite = ResizeMore(rhs.GetSize());
+		Copy(pWrite, rhs.GetBegin(), rhs.GetEnd());
 	}
 	void Append(std::initializer_list<Char> rhs){
 		Append(Observer(rhs));
 	}
 	void Append(const String &rhs){
-		Append(Observer(rhs));
-	}
-	void Append(String &&rhs){
-		const Observer obsToAppend(rhs);
-		const auto uSizeTotal = GetSize() + obsToAppend.GetSize();
-		if((GetCapacity() >= uSizeTotal) || (rhs.GetCapacity() < uSizeTotal)){
-			Append(obsToAppend);
-		} else {
-			rhs.Unshift(obsToAppend);
-			Assign(std::move(rhs));
-		}
+		const auto pWrite = ResizeMore(rhs.GetSize());
+		Copy(pWrite, rhs.GetBegin(), rhs.GetEnd()); // 这是正确的即使对于 &rhs == this 的情况。
 	}
 	template<StringType kOtherTypeT>
 	void Append(const StringObserver<kOtherTypeT> &rhs){
@@ -483,24 +500,16 @@ public:
 	void Unshift(const Char *pchBegin, std::size_t uCount){
 		Unshift(Observer(pchBegin, uCount));
 	}
-	void Unshift(const Observer &obs){
-		Replace(0, 0, obs);
+	void Unshift(const Observer &rhs){
+		const auto pWrite = ResizeMoreFront(rhs.GetSize());
+		Copy(pWrite, rhs.GetBegin(), rhs.GetEnd());
 	}
 	void Unshift(std::initializer_list<Char> rhs){
 		Unshift(Observer(rhs));
 	}
 	void Unshift(const String &rhs){
-		Unshift(Observer(rhs));
-	}
-	void Unshift(String &&rhs){
-		const Observer obsToAppend(rhs);
-		const auto uSizeTotal = GetSize() + obsToAppend.GetSize();
-		if((GetCapacity() >= uSizeTotal) || (rhs.GetCapacity() < uSizeTotal)){
-			Unshift(obsToAppend);
-		} else {
-			rhs.Append(obsToAppend);
-			Assign(std::move(rhs));
-		}
+		const auto pWrite = ResizeMoreFront(rhs.GetSize());
+		Copy(pWrite, rhs.GetBegin(), rhs.GetEnd()); // 这是正确的即使对于 &rhs == this 的情况。
 	}
 	template<StringType kOtherTypeT>
 	void Unshift(const StringObserver<kOtherTypeT> &rhs){
@@ -564,6 +573,11 @@ public:
 		const auto uRemovedBegin = (std::size_t)(obsRemoved.GetBegin() - obsCurrent.GetBegin());
 		const auto uRemovedEnd = (std::size_t)(obsRemoved.GetEnd() - obsCurrent.GetBegin());
 
+		const auto uNewLength = uOldLength - (uRemovedEnd - uRemovedBegin) + uCount;
+		if(uNewLength < uOldLength){
+			throw std::bad_alloc();
+		}
+
 		const auto pchWrite = xChopAndSplice(uRemovedBegin, uRemovedEnd, 0, uRemovedBegin + uCount);
 		FillN(pchWrite, uCount, chRep);
 		xSetSize(uRemovedBegin + uCount + (uOldLength - uRemovedEnd));
@@ -585,6 +599,11 @@ public:
 		const auto uRemovedBegin = (std::size_t)(obsRemoved.GetBegin() - obsCurrent.GetBegin());
 		const auto uRemovedEnd = (std::size_t)(obsRemoved.GetEnd() - obsCurrent.GetBegin());
 
+		const auto uNewLength = uOldLength - (uRemovedEnd - uRemovedBegin) + obsRep.GetSize();
+		if(uNewLength < uOldLength){
+			throw std::bad_alloc();
+		}
+
 		if(obsCurrent.DoesOverlapWith(obsRep)){
 			String strTemp;
 			strTemp.Resize(uRemovedBegin + obsRep.GetSize() + (uOldLength - uRemovedEnd));
@@ -598,25 +617,6 @@ public:
 			CopyN(pchWrite, obsRep.GetBegin(), obsRep.GetSize());
 			xSetSize(uRemovedBegin + obsRep.GetSize() + (uOldLength - uRemovedEnd));
 		}
-	}
-	template<StringType kOtherTypeT>
-	void Replace(std::ptrdiff_t nBegin, std::ptrdiff_t nEnd, const StringObserver<kOtherTypeT> &obsRep){
-		// 基本异常安全保证。
-		const auto obsCurrent(GetObserver());
-		const auto uOldLength = obsCurrent.GetLength();
-
-		const auto obsRemoved(obsCurrent.Slice(nBegin, nEnd));
-		const auto uRemovedBegin = (std::size_t)(obsRemoved.GetBegin() - obsCurrent.GetBegin());
-		const auto uRemovedEnd = (std::size_t)(obsRemoved.GetEnd() - obsCurrent.GetBegin());
-
-		const auto pchWrite = xChopAndSplice(uRemovedBegin, uRemovedEnd, 0, uRemovedBegin);
-		xSetSize(uRemovedBegin + (uOldLength - uRemovedEnd));
-		UnifiedString ucsTempStorage;
-		Deunify(*this, uRemovedBegin, String<kOtherTypeT>::Unify(ucsTempStorage, obsRep));
-	}
-	template<StringType kOtherTypeT>
-	void Replace(std::ptrdiff_t nBegin, std::ptrdiff_t nEnd, const String<kOtherTypeT> &strRep){
-		Replace(nBegin, nEnd, strRep.GetObserver());
 	}
 
 public:
@@ -635,10 +635,12 @@ public:
 	}
 	const Char &operator[](std::size_t uIndex) const noexcept {
 		ASSERT_MSG(uIndex <= GetLength(), L"索引越界。");
+
 		return GetBegin()[uIndex];
 	}
 	Char &operator[](std::size_t uIndex) noexcept {
 		ASSERT_MSG(uIndex <= GetLength(), L"索引越界。");
+
 		return GetBegin()[uIndex];
 	}
 

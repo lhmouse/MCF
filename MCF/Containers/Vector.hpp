@@ -160,10 +160,14 @@ public:
 			if(uSizeToAlloc < uNewCapacity){
 				uSizeToAlloc = uNewCapacity;
 			}
+			const std::size_t uBytesToAlloc = sizeof(ElementT) * uSizeToAlloc;
+			if(uBytesToAlloc / sizeof(ElementT) != uSizeToAlloc){
+				throw std::bad_alloc();
+			}
 
 			const auto pOldBegin = GetBegin();
 			const auto pOldEnd = GetEnd();
-			const auto pNewBegin = (ElementT *)::operator new[](sizeof(ElementT) * uSizeToAlloc);
+			const auto pNewBegin = (ElementT *)::operator new[](uBytesToAlloc);
 			auto pRead = pOldBegin;
 			auto pWrite = pNewBegin;
 			try {
@@ -192,15 +196,22 @@ public:
 		}
 	}
 	void ReserveMore(std::size_t uDeltaCapacity){
-		Reserve(GetSize() + uDeltaCapacity);
+		const auto uOldSize = GetSize();
+		const auto uNewCapacity = uOldSize + uDeltaCapacity;
+		if(uNewCapacity < uOldSize){
+			throw std::bad_alloc();
+		}
+		Reserve(uNewCapacity);
 	}
 
 	const ElementT &GetAt(std::size_t uIndex) const noexcept {
 		ASSERT_MSG(uIndex < GetSize(), L"索引越界。");
+
 		return x_pBegin[uIndex];
 	}
 	ElementT &GetAt(std::size_t uIndex) noexcept {
 		ASSERT_MSG(uIndex < GetSize(), L"索引越界。");
+
 		return x_pBegin[uIndex];
 	}
 
@@ -215,7 +226,7 @@ public:
 	}
 	template<typename ...ParamsT>
 	ElementT *Push(ParamsT &&...vParams){
-		Reserve(GetSize() + 1);
+		ReserveMore(1);
 		return UncheckedPush(std::forward<ParamsT>(vParams)...);
 	}
 	void Pop() noexcept {
@@ -282,7 +293,7 @@ public:
 	}
 	template<typename ...ParamsT>
 	void AppendFill(std::size_t uCount, const ParamsT &...vParams){
-		Reserve(GetSize() + uCount);
+		ReserveMore(uCount);
 		UncheckedAppendFill(uCount, vParams...);
 	}
 	template<class IteratorT>

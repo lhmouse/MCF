@@ -25,6 +25,7 @@ private:
 public:
 	explicit SpinLock(std::uintptr_t uCount = 0) noexcept {
 		ASSERT(uCount != kLockedCount);
+
 		AtomicStore(x_uCount, uCount, MemoryModel::kRelease);
 	}
 

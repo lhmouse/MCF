@@ -26,11 +26,6 @@ private:
 	const void *x_pContext;
 
 public:
-	FunctionObserver(const FunctionObserver &) noexcept = default;
-	FunctionObserver(FunctionObserver &&) noexcept = default;
-	FunctionObserver &operator=(const FunctionObserver &) noexcept = default;
-	FunctionObserver &operator=(FunctionObserver &&) noexcept = default;
-
 	constexpr FunctionObserver(std::nullptr_t = nullptr) noexcept
 		: x_pfnLambda(nullptr)
 	{

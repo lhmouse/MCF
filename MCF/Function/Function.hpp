@@ -5,6 +5,7 @@
 #ifndef MCF_FUNCTION_FUNCTION_HPP_
 #define MCF_FUNCTION_FUNCTION_HPP_
 
+#include "../Core/Exception.hpp"
 #include "../SmartPointers/IntrusivePtr.hpp"
 #include "../Utilities/Assert.hpp"
 #include "../Utilities/Invoke.hpp"
@@ -15,6 +16,22 @@
 namespace MCF {
 
 namespace Impl_Function {
+	template<typename ElementT, typename = void>
+	struct CopyOrThrowHelper {
+		[[noreturn]]
+		IntrusivePtr<ElementT> operator()(const ElementT & /* vElement */) const {
+			DEBUG_THROW(Exception, "CopyOrThrowHelper::operator()()", ERROR_ACCESS_DENIED);
+		}
+	};
+	template<typename ElementT>
+	struct CopyOrThrowHelper<ElementT,
+		std::enable_if_t<std::is_copy_constructible<ElementT>::value>>
+	{
+		IntrusivePtr<ElementT> operator()(const ElementT &vElement) const {
+			return IntrusivePtr<ElementT>(new ElementT(vElement));
+		}
+	};
+
 	template<typename RetT, typename ...ParamsT>
 	class FunctorBase : public IntrusiveBase<FunctorBase<RetT, ParamsT...>> {
 	public:
@@ -22,6 +39,7 @@ namespace Impl_Function {
 
 	public:
 		virtual RetT Dispatch(ForwardedParam<ParamsT>...vParams) const = 0;
+		virtual IntrusivePtr<FunctorBase> Fork() const = 0;
 	};
 
 	template<typename FuncT, typename RetT, typename ...ParamsT>
@@ -39,6 +57,9 @@ namespace Impl_Function {
 		RetT Dispatch(ForwardedParam<ParamsT>...vParams) const override {
 			return Invoke(x_vFunc, std::forward<ParamsT>(vParams)...);
 		}
+		IntrusivePtr<FunctorBase<RetT, ParamsT...>> Fork() const override {
+			return CopyOrThrowHelper<Functor>()(*this);
+		}
 	};
 }
 
@@ -53,18 +74,14 @@ private:
 	IntrusivePtr<const Impl_Function::FunctorBase<RetT, ParamsT...>> x_pFunctor;
 
 public:
-	Function(const Function &) noexcept = default;
-	Function(Function &&) noexcept = default;
-	Function &operator=(const Function &) noexcept = default;
-	Function &operator=(Function &&) noexcept = default;
-
 	constexpr Function(std::nullptr_t = nullptr) noexcept
 		: x_pFunctor(nullptr)
 	{
 	}
 	template<typename FuncT,
 		std::enable_if_t<
-			std::is_convertible<std::result_of_t<FuncT && (ForwardedParam<ParamsT>...)>, RetT>::value,
+			std::is_convertible<std::result_of_t<FuncT && (ForwardedParam<ParamsT>...)>, RetT>::value &&
+				!std::is_same<std::decay_t<FuncT>, Function>::value,
 			int> = 0>
 	Function(FuncT &&vFunc)
 		: x_pFunctor(new Impl_Function::Functor<FuncT, RetT, ParamsT...>(std::forward<FuncT>(vFunc)))
@@ -72,6 +89,13 @@ public:
 	}
 
 public:
+	bool IsNonnull() const noexcept {
+		return x_pFunctor.IsNonnull();
+	}
+	std::size_t GetRefCount() const noexcept {
+		return x_pFunctor.GetRefCount();
+	}
+
 	Function &Reset(std::nullptr_t = nullptr) noexcept {
 		Function().Swap(*this);
 		return *this;
@@ -80,6 +104,13 @@ public:
 	Function &Reset(FuncT &&vFunc){
 		Function(std::forward<FuncT>(vFunc)).Swap(*this);
 		return *this;
+	}
+
+	// 后置条件：GetRefCount() <= 1
+	void Fork(){
+		if(x_pFunctor.GetRefCount() > 1){
+			x_pFunctor = x_pFunctor->Fork();
+		}
 	}
 
 	void Swap(Function &rhs) noexcept {

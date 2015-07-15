@@ -1,18 +1,33 @@
 #include <MCF/StdMCF.hpp>
-#include <MCF/Core/String.hpp>
+#include <MCF/Function/Function.hpp>
 
 using namespace MCF;
 
-__attribute__((__noinline__))
-void replace(Utf8String &s){
-	s.Replace(2, 2, s);
-}
+struct foo {
+	foo(){
+		std::puts("foo::foo()");
+	}
+	foo(const foo &){
+		std::puts("foo::foo(const foo &)");
+	}
+	foo(foo &&) noexcept {
+		std::puts("foo::foo(foo &&)");
+	}
+	~foo(){
+		std::puts("foo::~foo()");
+	}
+
+	void operator()() const {
+		std::puts("foo::operator()()");
+	}
+};
 
 extern "C" unsigned MCFMain(){
-	Utf8String s("hello world!");
-	for(unsigned i = 0; i < 10; ++i){
-		replace(s);
-		std::puts(s.GetStr());
-	}
+	auto f1 = Function<void ()>(foo());
+	auto f2 = f1;
+
+	std::puts("-- Ready to fork!");
+	f2.Fork();
+
 	return 0;
 }

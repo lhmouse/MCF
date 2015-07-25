@@ -17,7 +17,7 @@ class ConditionVariable : NONCOPYABLE {
 private:
 	Mutex &x_vMutex;
 
-	std::size_t x_uWaiting;
+	volatile std::size_t x_uWaiting;
 	Semaphore x_vSemaphore;
 
 public:

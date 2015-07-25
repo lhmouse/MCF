@@ -17,23 +17,24 @@ namespace MCF {
 ConditionVariable::ConditionVariable(Mutex &vMutex)
 	: x_vMutex(vMutex), x_uWaiting(0), x_vSemaphore(0, nullptr)
 {
+	AtomicFence(MemoryModel::kRelease);
 }
 
 // 其他非静态成员函数。
 bool ConditionVariable::Wait(unsigned long long ullMilliSeconds) noexcept {
-	++x_uWaiting;
+	AtomicIncrement(x_uWaiting, MemoryModel::kRelaxed);
 	x_vMutex.Unlock();
 
 	const bool bResult = x_vSemaphore.Wait(ullMilliSeconds);
 
 	x_vMutex.Lock();
 	if(!bResult){
-		--x_uWaiting;
+		AtomicDecrement(x_uWaiting, MemoryModel::kRelaxed);
 	}
 	return bResult;
 }
 void ConditionVariable::Wait() noexcept {
-	++x_uWaiting;
+	AtomicIncrement(x_uWaiting, MemoryModel::kRelaxed);
 	x_vMutex.Unlock();
 
 	x_vSemaphore.Wait();
@@ -41,16 +42,27 @@ void ConditionVariable::Wait() noexcept {
 	x_vMutex.Lock();
 }
 void ConditionVariable::Signal(std::size_t uMaxCount) noexcept {
-	const auto uToPost = Min(x_uWaiting, uMaxCount);
+	std::size_t uToPost;
+	std::size_t uOld = AtomicLoad(x_uWaiting, MemoryModel::kRelaxed), uNew;
+	do {
+		if(uOld >= uMaxCount){
+			uToPost = uMaxCount;
+			uNew = uOld - uMaxCount;
+		} else {
+			uToPost = uOld;
+			uNew = 0;
+		}
+	} while(!AtomicCompareExchange(x_uWaiting, uOld, uNew, MemoryModel::kRelaxed));
+
 	if(uToPost != 0){
 		x_vSemaphore.Post(uToPost);
-		x_uWaiting -= uToPost;
 	}
 }
 void ConditionVariable::Broadcast() noexcept {
-	if(x_uWaiting != 0){
-		x_vSemaphore.Post(x_uWaiting);
-		x_uWaiting = 0;
+	const auto uToPost = AtomicExchange(x_uWaiting, 0, MemoryModel::kRelaxed);
+
+	if(uToPost != 0){
+		x_vSemaphore.Post(uToPost);
 	}
 }
 

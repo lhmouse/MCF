@@ -151,7 +151,6 @@ void Mutex::Lock() noexcept {
 	}
 jLocked:
 	xUnlockQueue(pQueueHead);
-	return;
 }
 void Mutex::Unlock() noexcept {
 #ifndef NDEBUG

@@ -9,6 +9,7 @@
 #include "../Core/String.hpp"
 #include "../Core/UniqueWin32Handle.hpp"
 #include <cstddef>
+#include <cstdint>
 
 namespace MCF {
 
@@ -21,11 +22,11 @@ public:
 	Semaphore(std::size_t uInitCount, const WideString &wsName);
 
 public:
-	std::size_t Wait(unsigned long long ullMilliSeconds) noexcept;
+	std::size_t Wait(std::uint64_t u64MilliSeconds) noexcept;
 	void Wait() noexcept;
 	std::size_t Post(std::size_t uPostCount = 1) noexcept;
 
-	std::size_t BatchWait(unsigned long long ullMilliSeconds, std::size_t uWaitCount) noexcept;
+	std::size_t BatchWait(std::uint64_t u64MilliSeconds, std::size_t uWaitCount) noexcept;
 	void BatchWait(std::size_t uWaitCount) noexcept;
 };
 

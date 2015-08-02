@@ -12,8 +12,8 @@ namespace Impl_Noncopyable {
 	struct NoncopyableBase {
 		constexpr NoncopyableBase() noexcept = default;
 
-		NoncopyableBase(const NoncopyableBase &) = delete;
-		NoncopyableBase &operator=(const NoncopyableBase &) = delete;
+		NoncopyableBase(const NoncopyableBase &) noexcept = delete;
+		NoncopyableBase &operator=(const NoncopyableBase &) noexcept = delete;
 	};
 }
 

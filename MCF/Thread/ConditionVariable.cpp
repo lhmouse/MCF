@@ -21,11 +21,11 @@ ConditionVariable::ConditionVariable(Mutex &vMutex)
 }
 
 // 其他非静态成员函数。
-bool ConditionVariable::Wait(unsigned long long ullMilliSeconds) noexcept {
+bool ConditionVariable::Wait(std::uint64_t u64MilliSeconds) noexcept {
 	AtomicIncrement(x_uWaiting, MemoryModel::kRelaxed);
 	x_vMutex.Unlock();
 
-	const bool bResult = x_vSemaphore.Wait(ullMilliSeconds);
+	const bool bResult = x_vSemaphore.Wait(u64MilliSeconds);
 
 	x_vMutex.Lock();
 	if(!bResult){

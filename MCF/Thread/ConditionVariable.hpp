@@ -8,6 +8,7 @@
 #include "../Utilities/Noncopyable.hpp"
 #include "Semaphore.hpp"
 #include <cstddef>
+#include <cstdint>
 
 namespace MCF {
 
@@ -24,7 +25,7 @@ public:
 	explicit ConditionVariable(Mutex &vMutex);
 
 public:
-	bool Wait(unsigned long long ullMilliSeconds) noexcept;
+	bool Wait(std::uint64_t u64MilliSeconds) noexcept;
 	void Wait() noexcept;
 	void Signal(std::size_t uMaxCount = 1) noexcept;
 	void Broadcast() noexcept;

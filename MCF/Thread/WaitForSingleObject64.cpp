@@ -9,25 +9,25 @@
 
 namespace MCF {
 
-bool WaitForSingleObject64(void *hObject, unsigned long long *pullMilliSeconds) noexcept {
-	if(pullMilliSeconds){
-		const auto ullUntil = GetFastMonoClock() + *pullMilliSeconds;
+bool WaitForSingleObject64(void *hObject, std::uint64_t *pu64MilliSeconds) noexcept {
+	if(pu64MilliSeconds){
+		const auto u64Until = GetFastMonoClock() + *pu64MilliSeconds;
 		for(;;){
-			const auto dwResult = ::WaitForSingleObject(hObject, Min(*pullMilliSeconds, 0x7FFFFFFFu));
+			const auto dwResult = ::WaitForSingleObject(hObject, Min(*pu64MilliSeconds, 0x7FFFFFFFu));
 			if(dwResult == WAIT_FAILED){
 				ASSERT_MSG(false, L"WaitForSingleObject() 失败。");
 			}
-			const auto ullNow = GetFastMonoClock();
-			if(ullUntil <= ullNow){
-				*pullMilliSeconds = 0;
+			const auto u64Now = GetFastMonoClock();
+			if(u64Until <= u64Now){
+				*pu64MilliSeconds = 0;
 			} else {
-				*pullMilliSeconds = ullUntil - ullNow;
+				*pu64MilliSeconds = u64Until - u64Now;
 			}
 
 			if(dwResult != WAIT_TIMEOUT){
 				return true;
 			}
-			if(ullUntil <= ullNow){
+			if(u64Until <= u64Now){
 				return false;
 			}
 		}

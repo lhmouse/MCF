@@ -9,6 +9,7 @@
 #include "../Core/String.hpp"
 #include "../Core/UniqueWin32Handle.hpp"
 #include "UniqueLockTemplate.hpp"
+#include <cstdint>
 
 namespace MCF {
 
@@ -24,7 +25,7 @@ public:
 	explicit KernelMutex(const WideString &wsName);
 
 public:
-	bool Try(unsigned long long ullMilliSeconds = 0) noexcept;
+	bool Try(std::uint64_t u64MilliSeconds = 0) noexcept;
 	void Lock() noexcept;
 	void Unlock() noexcept;
 

@@ -11,6 +11,7 @@
 #include "../Core/UniqueWin32Handle.hpp"
 #include <exception>
 #include <cstddef>
+#include <cstdint>
 
 namespace MCF {
 
@@ -34,7 +35,7 @@ public:
 	~Thread(); // 如果有被捕获的异常，调用 std::terminate()。
 
 public:
-	bool Wait(unsigned long long ullMilliSeconds) const noexcept;
+	bool Wait(std::uint64_t u64MilliSeconds) const noexcept;
 	void Wait() const noexcept;
 
 	std::exception_ptr JoinNoThrow() const noexcept;

@@ -31,8 +31,8 @@ Event::Event(bool bInitSet, const WideString &wsName)
 }
 
 // 其他非静态成员函数。
-bool Event::Wait(unsigned long long ullMilliSeconds) const noexcept {
-	return WaitForSingleObject64(x_hEvent.Get(), &ullMilliSeconds);
+bool Event::Wait(std::uint64_t u64MilliSeconds) const noexcept {
+	return WaitForSingleObject64(x_hEvent.Get(), &u64MilliSeconds);
 }
 void Event::Wait() const noexcept {
 	WaitForSingleObject64(x_hEvent.Get(), nullptr);

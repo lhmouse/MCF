@@ -10,6 +10,7 @@
 #include "Mutex.hpp"
 #include "ConditionVariable.hpp"
 #include <cstddef>
+#include <cstdint>
 
 namespace MCF {
 
@@ -25,13 +26,13 @@ public:
 	}
 
 public:
-	bool Wait(UniqueLockTemplateBase &vLock, unsigned long long ullMilliSeconds) noexcept {
+	bool Wait(UniqueLockTemplateBase &vLock, std::uint64_t u64MilliSeconds) noexcept {
 		ASSERT(vLock.GetLockCount() == 1);
 
 		x_vMutex.Lock();
 		vLock.Unlock();
 
-		const bool bResult = x_vDelegate.Wait(ullMilliSeconds);
+		const bool bResult = x_vDelegate.Wait(u64MilliSeconds);
 
 		vLock.Lock();
 		x_vMutex.Unlock();

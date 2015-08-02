@@ -54,8 +54,8 @@ Thread::~Thread(){
 	}
 }
 
-bool Thread::Wait(unsigned long long ullMilliSeconds) const noexcept {
-	return WaitForSingleObject64(x_hThread.Get(), &ullMilliSeconds);
+bool Thread::Wait(std::uint64_t u64MilliSeconds) const noexcept {
+	return WaitForSingleObject64(x_hThread.Get(), &u64MilliSeconds);
 }
 void Thread::Wait() const noexcept {
 	WaitForSingleObject64(x_hThread.Get(), nullptr);

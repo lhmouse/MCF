@@ -5,11 +5,13 @@
 #ifndef MCF_THREAD_WAIT_FOR_SINGLE_OBJECT_64_HPP_
 #define MCF_THREAD_WAIT_FOR_SINGLE_OBJECT_64_HPP_
 
+#include <cstdint>
+
 namespace MCF {
 
-// 如果 pullMilliSeconds 不为空，则其指定一个出入参，表示需等待的时间；函数返回时，其值为剩余的时间。
-// 如果 pullMilliSeconds 为空则无限等待，此时不可能返回 false。
-extern bool WaitForSingleObject64(void *hObject, unsigned long long *pullMilliSeconds) noexcept;
+// 如果 pu64MilliSeconds 不为空，则其指定一个出入参，表示需等待的时间；函数返回时，其值为剩余的时间。
+// 如果 pu64MilliSeconds 为空则无限等待，此时不可能返回 false。
+extern bool WaitForSingleObject64(void *hObject, std::uint64_t *pu64MilliSeconds) noexcept;
 
 }
 

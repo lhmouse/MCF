@@ -31,8 +31,8 @@ Semaphore::Semaphore(std::size_t uInitCount, const WideString &wsName)
 }
 
 // 其他非静态成员函数。
-std::size_t Semaphore::Wait(unsigned long long ullMilliSeconds) noexcept {
-	return WaitForSingleObject64(x_hSemaphore.Get(), &ullMilliSeconds);
+std::size_t Semaphore::Wait(std::uint64_t u64MilliSeconds) noexcept {
+	return WaitForSingleObject64(x_hSemaphore.Get(), &u64MilliSeconds);
 }
 void Semaphore::Wait() noexcept {
 	WaitForSingleObject64(x_hSemaphore.Get(), nullptr);
@@ -45,10 +45,10 @@ std::size_t Semaphore::Post(std::size_t uPostCount) noexcept {
 	return (std::size_t)lPrevCount;
 }
 
-std::size_t Semaphore::BatchWait(unsigned long long ullMilliSeconds, std::size_t uWaitCount) noexcept {
+std::size_t Semaphore::BatchWait(std::uint64_t u64MilliSeconds, std::size_t uWaitCount) noexcept {
 	std::size_t uSucceeded = 0;
 	while(uSucceeded < uWaitCount){
-		if(!WaitForSingleObject64(x_hSemaphore.Get(), &ullMilliSeconds)){
+		if(!WaitForSingleObject64(x_hSemaphore.Get(), &u64MilliSeconds)){
 			break;
 		}
 		++uSucceeded;

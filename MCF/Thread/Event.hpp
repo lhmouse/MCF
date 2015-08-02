@@ -8,6 +8,7 @@
 #include "../Utilities/Noncopyable.hpp"
 #include "../Core/String.hpp"
 #include "../Core/UniqueWin32Handle.hpp"
+#include <cstdint>
 
 namespace MCF {
 
@@ -20,7 +21,7 @@ public:
 	Event(bool bInitSet, const WideString &wsName);
 
 public:
-	bool Wait(unsigned long long ullMilliSeconds) const noexcept;
+	bool Wait(std::uint64_t u64MilliSeconds) const noexcept;
 	void Wait() const noexcept;
 	bool IsSet() const noexcept;
 	void Set() noexcept;

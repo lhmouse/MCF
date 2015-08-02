@@ -44,8 +44,8 @@ KernelMutex::KernelMutex(const WideString &wsName)
 }
 
 // 其他非静态成员函数。
-bool KernelMutex::Try(unsigned long long ullMilliSeconds) noexcept {
-	return WaitForSingleObject64(x_hMutex.Get(), &ullMilliSeconds);
+bool KernelMutex::Try(std::uint64_t u64MilliSeconds) noexcept {
+	return WaitForSingleObject64(x_hMutex.Get(), &u64MilliSeconds);
 }
 void KernelMutex::Lock() noexcept {
 	WaitForSingleObject64(x_hMutex.Get(), nullptr);

@@ -28,11 +28,14 @@ void *memset(void *dst, int ch, size_t cb){
 		"	jnz 3b \n"
 		"2: \n"
 		"movzx " __RAX ", al \n"
-		"mov ah, al \n"
-		"movzx " __RCX ", ax \n"
+		"mov " __RCX ", " __RAX " \n"
+		"shl " __RCX ", 8 \n"
+		"or " __RAX ", " __RCX " \n"
+		"mov " __RCX ", " __RAX " \n"
 		"shl " __RCX ", 16 \n"
 		"or " __RAX ", " __RCX " \n"
 #ifdef _WIN64
+		"mov rcx, rax \n"
 		"shl rcx, 32 \n"
 		"or rax, rcx \n"
 #endif

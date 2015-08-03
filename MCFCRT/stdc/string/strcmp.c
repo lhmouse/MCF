@@ -7,10 +7,10 @@
 int strcmp(const char *s1, const char *s2){
 	for(;;){
 
-#define UNROLLED(index)	\
+#define UNROLLED(idx_)	\
 		{	\
-			const char ch1 = s1[index];	\
-			const int delta = (int)(unsigned char)ch1 - (int)(unsigned char)s2[index];	\
+			const char ch1 = s1[idx_];	\
+			const int delta = (int)(unsigned char)ch1 - (int)(unsigned char)s2[idx_];	\
 			if(delta != 0){	\
 				return (delta >> (sizeof(int) * __CHAR_BIT__ - 1)) | 1;	\
 			}	\

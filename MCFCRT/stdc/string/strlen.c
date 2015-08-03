@@ -25,18 +25,18 @@ size_t strlen(const char *s){
 #	define MASK	0x01010101ul
 #endif
 
-#define UNROLLED(index)	\
+#define UNROLLED(idx_)	\
 		{	\
-			register uintptr_t wrd = ((const uintptr_t *)rp)[(index)];	\
+			register uintptr_t wrd = ((const uintptr_t *)rp)[(idx_)];	\
 			wrd = (wrd - MASK) & ~wrd;	\
 			if((wrd & (MASK << 7)) != 0){	\
 				for(size_t i = 0; i < sizeof(uintptr_t) - 1; ++i){	\
 					if((wrd & 0x80) != 0){	\
-						return (size_t)(rp + (index) * sizeof(uintptr_t) + i - s);	\
+						return (size_t)(rp + (idx_) * sizeof(uintptr_t) + i - s);	\
 					}	\
 					wrd >>= 8;	\
 				}	\
-				return (size_t)(rp + ((index) + 1) * sizeof(uintptr_t) - 1 - s);	\
+				return (size_t)(rp + ((idx_) + 1) * sizeof(uintptr_t) - 1 - s);	\
 			}	\
 		}
 

@@ -9,13 +9,13 @@ int strncmp(const char *s1, const char *s2, size_t n){
 	++cnt;
 	for(;;){
 
-#define UNROLLED(index)	\
+#define UNROLLED(idx_)	\
 		{	\
 			if(--cnt == 0){	\
 				return 0;	\
 			}	\
-			const int ch1 = (unsigned char)s1[index];	\
-			const int ch2 = (unsigned char)s2[index];	\
+			const int ch1 = (unsigned char)s1[idx_];	\
+			const int ch2 = (unsigned char)s2[idx_];	\
 			if(ch1 != ch2){	\
 				return (ch1 > ch2) ? 1 : -1;	\
 			}	\

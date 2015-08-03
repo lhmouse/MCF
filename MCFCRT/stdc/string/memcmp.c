@@ -18,15 +18,15 @@ int memcmp(const void *p1, const void *p2, size_t cb){
 	++wcnt;
 	for(;;){
 
-#define UNROLLED(index)	\
+#define UNROLLED(idx_)	\
 		{	\
 			if(--wcnt == 0){	\
-				rp1 += (index) * sizeof(uintptr_t);	\
-				rp2 += (index) * sizeof(uintptr_t);	\
+				rp1 += (idx_) * sizeof(uintptr_t);	\
+				rp2 += (idx_) * sizeof(uintptr_t);	\
 				break;	\
 			}	\
-			const uintptr_t wrd1 = ((const uintptr_t *)rp1)[index];	\
-			const uintptr_t wrd2 = ((const uintptr_t *)rp2)[index];	\
+			const uintptr_t wrd1 = ((const uintptr_t *)rp1)[idx_];	\
+			const uintptr_t wrd2 = ((const uintptr_t *)rp2)[idx_];	\
 			if(wrd1 != wrd2){	\
 				return (BSWAP_PTR(wrd1) > BSWAP_PTR(wrd2)) ? 1 : -1;	\
 			}	\

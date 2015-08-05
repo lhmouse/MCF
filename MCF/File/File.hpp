@@ -83,11 +83,19 @@ public:
 		FunctionObserver<void ()> fnAsyncProc = nullptr, FunctionObserver<void ()> fnCompleteCallback = nullptr);
 	void Flush() const;
 
+	void Swap(File &rhs) noexcept {
+		x_hFile.Swap(rhs.x_hFile);
+	}
+
 public:
 	explicit operator bool() const noexcept {
 		return IsOpen();
 	}
 };
+
+inline void swap(File &lhs, File &rhs) noexcept {
+	lhs.Swap(rhs);
+}
 
 }
 

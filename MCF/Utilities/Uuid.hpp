@@ -25,11 +25,8 @@ private:
 	} x_unData;
 
 public:
-	// 不初始化。
-	explicit Uuid(std::nullptr_t) noexcept {
-	}
 	// 填零。
-	constexpr Uuid() noexcept
+	constexpr Uuid(std::nullptr_t = nullptr) noexcept
 		: x_unData()
 	{
 	}

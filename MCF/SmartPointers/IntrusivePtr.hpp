@@ -240,6 +240,9 @@ public:
 
 	static_assert(noexcept(Deleter()(std::declval<std::remove_cv_t<Element> *>())), "Deleter must not throw.");
 
+public:
+	static const IntrusivePtr kNull;
+
 private:
 	Element *x_pElement;
 
@@ -364,6 +367,9 @@ public:
 		return Get();
 	}
 };
+
+template<typename ObjectT, class DeleterT>
+const IntrusivePtr<ObjectT, DeleterT> IntrusivePtr<ObjectT, DeleterT>::kNull;
 
 namespace Impl_IntrusivePtr {
 	template<class DeleterT>
@@ -513,6 +519,9 @@ public:
 
 	static_assert(noexcept(Deleter()(std::declval<std::remove_cv_t<Element> *>())), "Deleter must not throw.");
 
+public:
+	static const IntrusiveWeakPtr kNull;
+
 private:
 	typename Impl_IntrusivePtr::DeletableBase<DeleterT>::xWeakObserver *x_pObserver;
 
@@ -660,6 +669,9 @@ public:
 		return std::greater_equal<void>()(x_pObserver, rhs.x_pObserver);
 	}
 };
+
+template<typename ObjectT, class DeleterT>
+const IntrusiveWeakPtr<ObjectT, DeleterT> IntrusiveWeakPtr<ObjectT, DeleterT>::kNull;
 
 template<typename ObjectT, class DeleterT>
 	template<typename CvOtherT, typename CvThisT>

@@ -38,6 +38,9 @@ public:
 		kNpos = Observer::kNpos
 	};
 
+public:
+	static const String kEmpty;
+
 private:
 	__attribute__((__always_inline__))
 	static std::size_t xCheckedAddSize(std::size_t uLhs, std::size_t uRhs){
@@ -658,6 +661,9 @@ public:
 		Unshift(std::forward<ParamT>(vParam));
 	}
 };
+
+template<StringType kTypeT>
+const String<kTypeT> String<kTypeT>::kEmpty;
 
 template<StringType kTypeT, StringType kOtherTypeT>
 String<kTypeT> &operator+=(String<kTypeT> &lhs, const String<kOtherTypeT> &rhs){

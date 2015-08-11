@@ -61,7 +61,9 @@ struct StringEncodingTrait<StringType::ANSI> {
 };
 
 namespace Impl_StringObserver {
-	constexpr std::size_t kNpos = (std::size_t)-1;
+	enum : std::size_t {
+		kNpos = static_cast<std::size_t>(-1)
+	};
 
 	template<typename CharT>
 	const CharT *StrEndOf(const CharT *pszBegin) noexcept {

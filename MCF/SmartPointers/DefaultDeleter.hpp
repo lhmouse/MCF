@@ -18,7 +18,7 @@ struct DefaultDeleter {
 		std::enable_if_t<
 			std::is_convertible<std::remove_cv_t<U> *, std::remove_cv_t<T> *>::value,
 			int> = 0>
-	DefaultDeleter(const DefaultDeleter<U> &rhs){
+	DefaultDeleter(const DefaultDeleter<U> &rhs) noexcept {
 	}
 
 	constexpr T *operator()() const noexcept {
@@ -37,7 +37,7 @@ struct DefaultDeleter<T []> {
 		std::enable_if_t<
 			std::is_same<std::remove_cv_t<U>, std::remove_cv_t<T>>::value,
 			int> = 0>
-	DefaultDeleter(const DefaultDeleter<U []> &rhs){
+	DefaultDeleter(const DefaultDeleter<U []> &rhs) noexcept {
 	}
 
 	constexpr T *operator()() const noexcept {

@@ -4,7 +4,6 @@
 
 #include "static_ctors.h"
 #include "mcfwin.h"
-#include <utility>
 #include <cstdint>
 #include <csetjmp>
 
@@ -20,18 +19,15 @@ extern std::jmp_buf *__MCF_CRT_pAbortHookBuf;
 bool __MCF_CRT_CallStaticCtors() noexcept {
 	// 如果在 DLL 的静态构造函数抛出异常，我们不终止进程，而是返回 false。
 	// 这将导致 DllMain() 返回 FALSE，而不会终止当前进程。
-	std::jmp_buf vJmpBuf;
-	const auto pOldAbortHookBuf = std::exchange(::__MCF_CRT_pAbortHookBuf, &vJmpBuf);
 	int nResult;
+	std::jmp_buf vJmpBuf;
+	const auto pOldAbortHookBuf = ::__MCF_CRT_pAbortHookBuf;
+	::__MCF_CRT_pAbortHookBuf = &vJmpBuf;
 	if((nResult = setjmp(vJmpBuf)) == 0){
 		const auto ppfnBegin = __CTOR_LIST__ + 1;
 		auto ppfnCur = ppfnBegin;
-		if(reinterpret_cast<std::uintptr_t>(ppfnBegin[-1]) == (std::uintptr_t)-1){
-			while(*ppfnCur){
-				++ppfnCur;
-			}
-		} else {
-			ppfnCur += reinterpret_cast<std::uintptr_t>(ppfnBegin[-1]);
+		while(*ppfnCur){
+			++ppfnCur;
 		}
 		while(ppfnCur != ppfnBegin){
 			--ppfnCur;

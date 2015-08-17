@@ -28,7 +28,7 @@ public:
 private:
 	RecursiveMutex x_mtxWriterGuard;
 	Mutex x_mtxExclusive;
-	volatile std::size_t x_uReaderCount;
+	Atomic<std::size_t> x_uReaderCount;
 	UniqueHandle<xTlsIndexDeleter> x_uTlsIndex;
 
 public:

@@ -1,10 +1,11 @@
 #include <MCF/StdMCF.hpp>
-#include <MCF/Utilities/MinMax.hpp>
+#include <MCF/Thread/Atomic.hpp>
 
 using namespace MCF;
 
-extern "C" unsigned MCFMain(){
-	std::printf("max = %f\n", Max(2,5l,6ll,1.0f,'\x8',4,3));
+template class Impl_Atomic::Atomic<int, 1, 0>;
+template class Impl_Atomic::Atomic<int *, 0, 1>;
 
+extern "C" unsigned MCFMain(){
 	return 0;
 }

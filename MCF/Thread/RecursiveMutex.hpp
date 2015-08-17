@@ -27,7 +27,7 @@ public:
 
 private:
 	Mutex x_vMutex;
-	volatile std::size_t x_uLockingThreadId;
+	Atomic<std::size_t> x_uLockingThreadId;
 	std::size_t x_uRecursionCount;
 
 public:

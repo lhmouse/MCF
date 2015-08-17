@@ -50,7 +50,7 @@ struct DefaultDeleter<T []> {
 
 template<class T, std::size_t N>
 struct DefaultDeleter<T [N]> {
-	static_assert((N >= 0, false), "Deleting fixed-sized arrays is not supported.");
+	static_assert(((void)sizeof(T), false), "Deleting fixed-sized arrays is not supported.");
 };
 
 }

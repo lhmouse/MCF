@@ -7,6 +7,7 @@
 
 #include "../Utilities/Noncopyable.hpp"
 #include "Semaphore.hpp"
+#include "Atomic.hpp"
 #include <cstddef>
 #include <cstdint>
 
@@ -18,7 +19,7 @@ class ConditionVariable : NONCOPYABLE {
 private:
 	Mutex &x_vMutex;
 
-	volatile std::size_t x_uWaiting;
+	Atomic<std::size_t> x_uWaiting;
 	Semaphore x_vSemaphore;
 
 public:

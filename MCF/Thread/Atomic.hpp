@@ -6,6 +6,7 @@
 #define MCF_THREAD_ATOMIC_HPP_
 
 #include <type_traits>
+#include <cstddef>
 
 namespace MCF {
 
@@ -18,65 +19,165 @@ enum class MemoryModel {
 	kSeqCst		= __ATOMIC_SEQ_CST,
 };
 
-template<typename T>
-inline T AtomicLoad(volatile T &ref, MemoryModel model) noexcept {
-	static_assert(std::is_integral<T>::value || std::is_pointer<T>::value, "Only integers and pointers are supported.");
-	return __atomic_load_n(&ref, static_cast<int>(model));
-}
-template<typename T>
-inline void AtomicStore(volatile T &ref, std::common_type_t<T> val, MemoryModel model) noexcept {
-	static_assert(std::is_integral<T>::value || std::is_pointer<T>::value, "Only integers and pointers are supported.");
-	__atomic_store_n(&ref, val, static_cast<int>(model));
+namespace Impl_Atomic {
+	template<typename ElementT, bool kIsIntegral, bool kIsPointer>
+	class Atomic final {
+		static_assert(((void)sizeof(ElementT), false), "Only integers and pointers are supported.");
+	};
+
+	template<typename ElementT>
+	class Atomic<ElementT, true, false> final {
+	private:
+		volatile ElementT x_vElement;
+
+	public:
+		explicit constexpr Atomic(ElementT vElement = 0) noexcept
+			: x_vElement(vElement)
+		{
+		}
+
+		Atomic(const Atomic &) noexcept = delete;
+		Atomic &operator=(const Atomic &) noexcept = delete;
+
+	public:
+		ElementT Load(MemoryModel eModel) const volatile noexcept {
+			return __atomic_load_n(&x_vElement, static_cast<int>(eModel));
+		}
+		void Store(ElementT vOperand, MemoryModel eModel) volatile noexcept {
+			__atomic_store_n(&x_vElement, vOperand, static_cast<int>(eModel));
+		}
+
+		ElementT AndFetch(ElementT vOperand, MemoryModel eModel) volatile noexcept {
+			return __atomic_and_fetch(&x_vElement, vOperand, static_cast<int>(eModel));
+		}
+		ElementT FetchAnd(ElementT vOperand, MemoryModel eModel) volatile noexcept {
+			return __atomic_fetch_and(&x_vElement, vOperand, static_cast<int>(eModel));
+		}
+
+		ElementT OrFetch(ElementT vOperand, MemoryModel eModel) volatile noexcept {
+			return __atomic_or_fetch(&x_vElement, vOperand, static_cast<int>(eModel));
+		}
+		ElementT FetchOr(ElementT vOperand, MemoryModel eModel) volatile noexcept {
+			return __atomic_fetch_or(&x_vElement, vOperand, static_cast<int>(eModel));
+		}
+
+		ElementT XorFetch(ElementT vOperand, MemoryModel eModel) volatile noexcept {
+			return __atomic_xor_fetch(&x_vElement, vOperand, static_cast<int>(eModel));
+		}
+		ElementT FetchXor(ElementT vOperand, MemoryModel eModel) volatile noexcept {
+			return __atomic_fetch_xor(&x_vElement, vOperand, static_cast<int>(eModel));
+		}
+
+		ElementT AddFetch(ElementT vOperand, MemoryModel eModel) volatile noexcept {
+			return __atomic_add_fetch(&x_vElement, vOperand, static_cast<int>(eModel));
+		}
+		ElementT FetchAdd(ElementT vOperand, MemoryModel eModel) volatile noexcept {
+			return __atomic_fetch_add(&x_vElement, vOperand, static_cast<int>(eModel));
+		}
+
+		ElementT SubFetch(ElementT vOperand, MemoryModel eModel) volatile noexcept {
+			return __atomic_sub_fetch(&x_vElement, vOperand, static_cast<int>(eModel));
+		}
+		ElementT FetchSub(ElementT vOperand, MemoryModel eModel) volatile noexcept {
+			return __atomic_fetch_sub(&x_vElement, vOperand, static_cast<int>(eModel));
+		}
+
+		bool CompareExchange(ElementT &vComparand, ElementT vExchangeWith, MemoryModel eSuccessModel, MemoryModel eFailureModel) volatile noexcept {
+			return __atomic_compare_exchange_n(&x_vElement, &vComparand, vExchangeWith, false, static_cast<int>(eSuccessModel), static_cast<int>(eFailureModel));
+		}
+		ElementT Exchange(ElementT vOperand, MemoryModel eModel) volatile noexcept {
+			return __atomic_exchange_n(&x_vElement, vOperand, static_cast<int>(eModel));
+		}
+
+		ElementT Increment(MemoryModel eModel) volatile noexcept {
+			return AddFetch(1, eModel);
+		}
+		ElementT Decrement(MemoryModel eModel) volatile noexcept {
+			return SubFetch(1, eModel);
+		}
+		bool CompareExchange(ElementT &vComparand, ElementT vExchangeWith, MemoryModel eModel) volatile noexcept {
+			switch(__builtin_constant_p(eModel) ? eModel : MemoryModel::kSeqCst){
+			case MemoryModel::kAcqRel:
+				return CompareExchange(vComparand, vExchangeWith, eModel, MemoryModel::kAcquire);
+			case MemoryModel::kRelease:
+				return CompareExchange(vComparand, vExchangeWith, eModel, MemoryModel::kRelaxed);
+			default:
+				return CompareExchange(vComparand, vExchangeWith, eModel, eModel);
+			}
+		}
+	};
+
+	template<typename ElementT>
+	class Atomic<ElementT, false, true> final {
+	private:
+		volatile ElementT x_pElement;
+
+	public:
+		explicit constexpr Atomic(ElementT pElement = nullptr) noexcept
+			: x_pElement(pElement)
+		{
+		}
+
+		Atomic(const Atomic &) noexcept = delete;
+		Atomic &operator=(const Atomic &) noexcept = delete;
+
+	public:
+		ElementT Load(MemoryModel eModel) const volatile noexcept {
+			return __atomic_load_n(&x_pElement, static_cast<int>(eModel));
+		}
+		void Store(ElementT pOperand, MemoryModel eModel) volatile noexcept {
+			__atomic_store_n(&x_pElement, pOperand, static_cast<int>(eModel));
+		}
+
+		ElementT AddFetch(std::ptrdiff_t nOperand, MemoryModel eModel) volatile noexcept {
+			return __atomic_add_fetch(&x_pElement, nOperand, static_cast<int>(eModel));
+		}
+		ElementT FetchAdd(std::ptrdiff_t nOperand, MemoryModel eModel) volatile noexcept {
+			return __atomic_fetch_add(&x_pElement, nOperand, static_cast<int>(eModel));
+		}
+
+		ElementT SubFetch(std::ptrdiff_t nOperand, MemoryModel eModel) volatile noexcept {
+			return __atomic_sub_fetch(&x_pElement, nOperand, static_cast<int>(eModel));
+		}
+		ElementT FetchSub(std::ptrdiff_t nOperand, MemoryModel eModel) volatile noexcept {
+			return __atomic_fetch_sub(&x_pElement, nOperand, static_cast<int>(eModel));
+		}
+
+		bool CompareExchange(ElementT &vComparand, ElementT vExchangeWith, MemoryModel eSuccessModel, MemoryModel eFailureModel) volatile noexcept {
+			return __atomic_compare_exchange_n(&x_pElement, &vComparand, vExchangeWith, false, static_cast<int>(eSuccessModel), static_cast<int>(eFailureModel));
+		}
+		ElementT Exchange(ElementT pOperand, MemoryModel eModel) volatile noexcept {
+			return __atomic_exchange_n(&x_pElement, pOperand, static_cast<int>(eModel));
+		}
+
+		ElementT Increment(MemoryModel eModel) volatile noexcept {
+			return AddFetch(1, eModel);
+		}
+		ElementT Decrement(MemoryModel eModel) volatile noexcept {
+			return SubFetch(1, eModel);
+		}
+		bool CompareExchange(ElementT &vComparand, ElementT vExchangeWith, MemoryModel eModel) volatile noexcept {
+			switch(__builtin_constant_p(eModel) ? eModel : MemoryModel::kSeqCst){
+			case MemoryModel::kAcqRel:
+				return CompareExchange(vComparand, vExchangeWith, eModel, MemoryModel::kAcquire);
+			case MemoryModel::kRelease:
+				return CompareExchange(vComparand, vExchangeWith, eModel, MemoryModel::kRelaxed);
+			default:
+				return CompareExchange(vComparand, vExchangeWith, eModel, eModel);
+			}
+		}
+	};
 }
 
-template<typename T>
-inline T AtomicAdd(volatile T &ref, std::common_type_t<T> val, MemoryModel model) noexcept {
-	static_assert(std::is_integral<T>::value || std::is_pointer<T>::value, "Only integers and pointers are supported.");
-	return __atomic_add_fetch(&ref, val, static_cast<int>(model));
-}
-template<typename T>
-inline T AtomicSub(volatile T &ref, std::common_type_t<T> val, MemoryModel model) noexcept {
-	static_assert(std::is_integral<T>::value || std::is_pointer<T>::value, "Only integers and pointers are supported.");
-	return __atomic_sub_fetch(&ref, val, static_cast<int>(model));
-}
+template<typename ElementT>
+using Atomic = Impl_Atomic::Atomic<ElementT, std::is_integral<ElementT>::value, std::is_pointer<ElementT>::value>;
 
-template<typename T>
-inline bool AtomicCompareExchange(volatile T &ref, std::common_type_t<T> &cmp, std::common_type_t<T> xchg, MemoryModel succ, MemoryModel fail) noexcept {
-	static_assert(std::is_integral<T>::value || std::is_pointer<T>::value, "Only integers and pointers are supported.");
-	return __atomic_compare_exchange_n(&ref, &cmp, xchg, false, static_cast<int>(succ), static_cast<int>(fail));
-}
-template<typename T>
-inline T AtomicExchange(volatile T &ref, std::common_type_t<T> val, MemoryModel model) noexcept {
-	static_assert(std::is_integral<T>::value || std::is_pointer<T>::value, "Only integers and pointers are supported.");
-	return __atomic_exchange_n(&ref, val, static_cast<int>(model));
-}
-
-inline void AtomicFence(MemoryModel model) noexcept {
-	__atomic_thread_fence(static_cast<int>(model));
+inline void AtomicFence(MemoryModel eModel) noexcept {
+	__atomic_thread_fence(static_cast<int>(eModel));
 }
 
 inline void AtomicPause() throw() { // FIXME: g++ 4.9.2 ICE.
 	__builtin_ia32_pause();
-}
-
-template<typename T>
-inline T AtomicIncrement(volatile T &ref, MemoryModel model) noexcept {
-	return AtomicAdd(ref, 1, model);
-}
-template<typename T>
-inline T AtomicDecrement(volatile T &ref, MemoryModel model) noexcept {
-	return AtomicSub(ref, 1, model);
-}
-
-template<typename T>
-inline bool AtomicCompareExchange(volatile T &ref, std::common_type_t<T> &cmp, std::common_type_t<T> xchg, MemoryModel model) noexcept {
-	if(model == MemoryModel::kAcqRel){
-		return AtomicCompareExchange(ref, cmp, xchg, model, MemoryModel::kAcquire);
-	} else if(model == MemoryModel::kRelease){
-		return AtomicCompareExchange(ref, cmp, xchg, model, MemoryModel::kRelaxed);
-	} else {
-		return AtomicCompareExchange(ref, cmp, xchg, model, model);
-	}
 }
 
 }

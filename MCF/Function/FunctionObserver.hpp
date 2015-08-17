@@ -16,7 +16,7 @@ namespace MCF {
 
 template<typename FuncT>
 class FunctionObserver {
-	static_assert((sizeof(FuncT), false), "Class template FunctionObserver instantiated with non-function template type parameter.");
+	static_assert(((void)sizeof(FuncT), false), "Class template FunctionObserver instantiated with non-function template type parameter.");
 };
 
 template<typename RetT, typename ...ParamsT>

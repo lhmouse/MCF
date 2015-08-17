@@ -4,7 +4,6 @@
 
 #include "../StdMCF.hpp"
 #include "ConditionVariable.hpp"
-#include "Atomic.hpp"
 #include "Mutex.hpp"
 #include "../Utilities/MinMax.hpp"
 
@@ -17,24 +16,23 @@ namespace MCF {
 ConditionVariable::ConditionVariable(Mutex &vMutex)
 	: x_vMutex(vMutex), x_uWaiting(0), x_vSemaphore(0, nullptr)
 {
-	AtomicFence(MemoryModel::kRelease);
 }
 
 // 其他非静态成员函数。
 bool ConditionVariable::Wait(std::uint64_t u64MilliSeconds) noexcept {
-	AtomicIncrement(x_uWaiting, MemoryModel::kRelaxed);
+	x_uWaiting.Increment(MemoryModel::kRelaxed);
 	x_vMutex.Unlock();
 
 	const bool bResult = x_vSemaphore.Wait(u64MilliSeconds);
 
 	x_vMutex.Lock();
 	if(!bResult){
-		AtomicDecrement(x_uWaiting, MemoryModel::kRelaxed);
+		x_uWaiting.Decrement(MemoryModel::kRelaxed);
 	}
 	return bResult;
 }
 void ConditionVariable::Wait() noexcept {
-	AtomicIncrement(x_uWaiting, MemoryModel::kRelaxed);
+	x_uWaiting.Increment(MemoryModel::kRelaxed);
 	x_vMutex.Unlock();
 
 	x_vSemaphore.Wait();
@@ -43,7 +41,7 @@ void ConditionVariable::Wait() noexcept {
 }
 void ConditionVariable::Signal(std::size_t uMaxCount) noexcept {
 	std::size_t uToPost;
-	std::size_t uOld = AtomicLoad(x_uWaiting, MemoryModel::kRelaxed), uNew;
+	std::size_t uOld = x_uWaiting.Load(MemoryModel::kRelaxed), uNew;
 	do {
 		if(uOld >= uMaxCount){
 			uToPost = uMaxCount;
@@ -52,14 +50,14 @@ void ConditionVariable::Signal(std::size_t uMaxCount) noexcept {
 			uToPost = uOld;
 			uNew = 0;
 		}
-	} while(!AtomicCompareExchange(x_uWaiting, uOld, uNew, MemoryModel::kRelaxed));
+	} while(!x_uWaiting.CompareExchange(uOld, uNew, MemoryModel::kRelaxed));
 
 	if(uToPost != 0){
 		x_vSemaphore.Post(uToPost);
 	}
 }
 void ConditionVariable::Broadcast() noexcept {
-	const auto uToPost = AtomicExchange(x_uWaiting, 0, MemoryModel::kRelaxed);
+	const auto uToPost = x_uWaiting.Exchange(0, MemoryModel::kRelaxed);
 
 	if(uToPost != 0){
 		x_vSemaphore.Post(uToPost);

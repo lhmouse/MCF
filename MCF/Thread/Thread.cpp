@@ -6,7 +6,6 @@
 #include "Thread.hpp"
 #include "../../MCFCRT/env/thread.h"
 #include "WaitForSingleObject64.hpp"
-#include "Atomic.hpp"
 #include "../Core/Exception.hpp"
 #include "../Core/Time.hpp"
 
@@ -32,7 +31,7 @@ Thread::Thread(Function<void ()> fnProc, bool bSuspended)
 		} catch(...){
 			pThis->x_pException = std::current_exception();
 		}
-		AtomicStore(pThis->x_ulThreadId, 0, MemoryModel::kRelease);
+		pThis->x_ulThreadId.Store(0, MemoryModel::kRelease);
 		pThis->DropRef();
 		return 0;
 	};
@@ -42,7 +41,7 @@ Thread::Thread(Function<void ()> fnProc, bool bSuspended)
 		DEBUG_THROW(SystemError, "MCF_CRT_CreateThread");
 	}
 	AddRef();
-	AtomicStore(x_ulThreadId, ulThreadId, MemoryModel::kRelease);
+	x_ulThreadId.Store(ulThreadId, MemoryModel::kRelease);
 
 	if(!bSuspended){
 		Resume();
@@ -79,7 +78,7 @@ bool Thread::IsAlive() const noexcept {
 	return GetId() != 0;
 }
 std::size_t Thread::GetId() const noexcept {
-	return AtomicLoad(x_ulThreadId, MemoryModel::kRelaxed);
+	return x_ulThreadId.Load(MemoryModel::kRelaxed);
 }
 
 void Thread::Suspend() noexcept {

@@ -4,7 +4,6 @@
 
 #include "../StdMCF.hpp"
 #include "Mutex.hpp"
-#include "Atomic.hpp"
 #include "../Core/Exception.hpp"
 #include "../Core/System.hpp"
 #include "../Utilities/Bail.hpp"
@@ -35,17 +34,15 @@ Mutex::Mutex(std::size_t uSpinCount)
 	, x_uLockingThreadId(0), x_vSemaphore(0), x_pQueueHead(nullptr)
 {
 	SetSpinCount(uSpinCount);
-
-	AtomicFence(MemoryModel::kRelease);
 }
 
 // 其他非静态成员函数。
 bool Mutex::xIsQueueEmpty() const noexcept {
-	return AtomicLoad(x_pQueueHead, MemoryModel::kConsume) == nullptr;
+	return x_pQueueHead.Load(MemoryModel::kConsume) == nullptr;
 }
 Mutex::xQueueNode *Mutex::xLockQueue() noexcept {
 	for(;;){
-		const auto pQueueHead = AtomicExchange(x_pQueueHead, (xQueueNode *)-1, MemoryModel::kRelease);
+		const auto pQueueHead = x_pQueueHead.Exchange((xQueueNode *)-1, MemoryModel::kRelease);
 		if(pQueueHead != (xQueueNode *)-1){
 			return pQueueHead;
 		}
@@ -53,23 +50,23 @@ Mutex::xQueueNode *Mutex::xLockQueue() noexcept {
 	}
 }
 void Mutex::xUnlockQueue(Mutex::xQueueNode *pQueueHead) noexcept {
-	AtomicStore(x_pQueueHead, pQueueHead, MemoryModel::kRelease);
+	x_pQueueHead.Store(pQueueHead, MemoryModel::kRelease);
 }
 
 std::size_t Mutex::GetSpinCount() const noexcept {
-	return AtomicLoad(x_uSpinCount, MemoryModel::kRelaxed);
+	return x_uSpinCount.Load(MemoryModel::kRelaxed);
 }
 void Mutex::SetSpinCount(std::size_t uSpinCount) noexcept {
 	if(GetLogicalProcessorCount() == 0){
 		return;
 	}
-	AtomicStore(x_uSpinCount, uSpinCount, MemoryModel::kRelaxed);
+	x_uSpinCount.Store(uSpinCount, MemoryModel::kRelaxed);
 }
 
 bool Mutex::Try() noexcept {
 #ifndef NDEBUG
 	const std::size_t uThreadId = ::GetCurrentThreadId();
-	if(AtomicLoad(x_uLockingThreadId, MemoryModel::kConsume) == uThreadId){
+	if(x_uLockingThreadId.Load(MemoryModel::kConsume) == uThreadId){
 		Bail(L"在不可重入的互斥锁中检测到死锁。");
 	}
 #else
@@ -78,7 +75,7 @@ bool Mutex::Try() noexcept {
 
 	if(xIsQueueEmpty()){
 		std::size_t uExpected = 0;
-		if(AtomicCompareExchange(x_uLockingThreadId, uExpected, uThreadId, MemoryModel::kAcqRel, MemoryModel::kConsume)){
+		if(x_uLockingThreadId.CompareExchange(uExpected, uThreadId, MemoryModel::kAcqRel, MemoryModel::kConsume)){
 			return true;
 		}
 	}
@@ -87,7 +84,7 @@ bool Mutex::Try() noexcept {
 void Mutex::Lock() noexcept {
 #ifndef NDEBUG
 	const std::size_t uThreadId = ::GetCurrentThreadId();
-	if(AtomicLoad(x_uLockingThreadId, MemoryModel::kConsume) == uThreadId){
+	if(x_uLockingThreadId.Load(MemoryModel::kConsume) == uThreadId){
 		Bail(L"在不可重入的互斥锁中检测到死锁。");
 	}
 #else
@@ -96,7 +93,7 @@ void Mutex::Lock() noexcept {
 
 	if(xIsQueueEmpty()){
 		std::size_t uExpected = 0;
-		if(AtomicCompareExchange(x_uLockingThreadId, uExpected, uThreadId, MemoryModel::kAcqRel, MemoryModel::kConsume)){
+		if(x_uLockingThreadId.CompareExchange(uExpected, uThreadId, MemoryModel::kAcqRel, MemoryModel::kConsume)){
 			return;
 		}
 
@@ -106,7 +103,7 @@ void Mutex::Lock() noexcept {
 			AtomicPause();
 
 			std::size_t uExpected = 0;
-			if(AtomicCompareExchange(x_uLockingThreadId, uExpected, uThreadId, MemoryModel::kAcqRel, MemoryModel::kConsume)){
+			if(x_uLockingThreadId.CompareExchange(uExpected, uThreadId, MemoryModel::kAcqRel, MemoryModel::kConsume)){
 				return;
 			}
 		}
@@ -130,7 +127,7 @@ void Mutex::Lock() noexcept {
 		}
 	} else {
 		std::size_t uExpected = 0;
-		if(AtomicCompareExchange(x_uLockingThreadId, uExpected, uThreadId, MemoryModel::kAcqRel, MemoryModel::kConsume)){
+		if(x_uLockingThreadId.CompareExchange(uExpected, uThreadId, MemoryModel::kAcqRel, MemoryModel::kConsume)){
 			goto jLocked;
 		}
 		pQueueHead = &vThisThread;
@@ -142,7 +139,7 @@ void Mutex::Lock() noexcept {
 		pQueueHead = xLockQueue();
 		if(pQueueHead == &vThisThread){
 			std::size_t uExpected = 0;
-			if(AtomicCompareExchange(x_uLockingThreadId, uExpected, uThreadId, MemoryModel::kAcqRel, MemoryModel::kConsume)){
+			if(x_uLockingThreadId.CompareExchange(uExpected, uThreadId, MemoryModel::kAcqRel, MemoryModel::kConsume)){
 				pQueueHead = pQueueHead->pNext;
 				break;
 			}
@@ -154,12 +151,12 @@ jLocked:
 }
 void Mutex::Unlock() noexcept {
 #ifndef NDEBUG
-	if(AtomicLoad(x_uLockingThreadId, MemoryModel::kConsume) == 0){
+	if(x_uLockingThreadId.Load(MemoryModel::kConsume) == 0){
 		Bail(L"互斥锁没有被任何线程锁定。");
 	}
 #endif
 
-	AtomicStore(x_uLockingThreadId, 0, MemoryModel::kRelease);
+	x_uLockingThreadId.Store(0, MemoryModel::kRelease);
 
 	auto pQueueHead = xLockQueue();
 	if(pQueueHead){

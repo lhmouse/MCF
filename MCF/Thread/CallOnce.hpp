@@ -18,7 +18,7 @@ namespace Impl_CallOnce {
 		static Mutex &GetMutex() noexcept;
 
 	private:
-		bool x_bFlag;
+		Atomic<bool> x_bFlag;
 
 	public:
 		constexpr OnceFlag() noexcept
@@ -30,11 +30,11 @@ namespace Impl_CallOnce {
 		OnceFlag &operator=(const OnceFlag &) = delete;
 
 	public:
-		operator const volatile bool &() const volatile & noexcept {
-			return x_bFlag;
+		bool Load(MemoryModel eModel) const volatile noexcept {
+			return x_bFlag.Load(eModel);
 		}
-		operator volatile bool &() volatile & noexcept {
-			return x_bFlag;
+		void Store(bool bOperand, MemoryModel eModel) volatile noexcept {
+			x_bFlag.Store(bOperand, eModel);
 		}
 	};
 }
@@ -43,18 +43,16 @@ using OnceFlag = volatile Impl_CallOnce::OnceFlag;
 
 template<typename FunctionT, typename ...ParamsT>
 bool CallOnce(OnceFlag &vFlag, FunctionT &&vFunction, ParamsT &&...vParams){
-	auto &bFlag = static_cast<volatile bool &>(vFlag);
-
-	if(AtomicLoad(bFlag, MemoryModel::kConsume)){
+	if(vFlag.Load(MemoryModel::kConsume)){
 		return false;
 	}
 	{
 		const auto vLock = Impl_CallOnce::OnceFlag::GetMutex().GetLock();
-		if(AtomicLoad(bFlag, MemoryModel::kRelaxed)){
+		if(vFlag.Load(MemoryModel::kRelaxed)){
 			return false;
 		}
 		std::forward<FunctionT>(vFunction)(std::forward<ParamsT>(vParams)...);
-		AtomicStore(bFlag, true, MemoryModel::kRelease);
+		vFlag.Store(true, MemoryModel::kRelease);
 	}
 	return true;
 }

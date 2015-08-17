@@ -9,6 +9,7 @@
 #include "../SmartPointers/IntrusivePtr.hpp"
 #include "../Function/Function.hpp"
 #include "../Core/UniqueWin32Handle.hpp"
+#include "Atomic.hpp"
 #include <exception>
 #include <cstddef>
 #include <cstdint>
@@ -25,7 +26,7 @@ private:
 	const Function<void ()> x_fnProc;
 
 	UniqueWin32Handle x_hThread;
-	volatile unsigned long x_ulThreadId;
+	Atomic<unsigned long> x_ulThreadId;
 	std::exception_ptr x_pException;
 
 private:

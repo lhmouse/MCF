@@ -4,7 +4,6 @@
 
 #include "../StdMCF.hpp"
 #include "ReaderWriterMutex.hpp"
-#include "Atomic.hpp"
 #include "../Core/UniqueHandle.hpp"
 #include "../Core/Exception.hpp"
 
@@ -50,7 +49,6 @@ ReaderWriterMutex::ReaderWriterMutex(std::size_t uSpinCount)
 	if(!x_uTlsIndex.Reset(::TlsAlloc())){
 		DEBUG_THROW(SystemError, "TlsAlloc");
 	}
-	AtomicFence(MemoryModel::kRelease);
 }
 
 // 其他非静态成员函数。
@@ -59,15 +57,15 @@ ReaderWriterMutex::Result ReaderWriterMutex::TryAsReader() noexcept {
 	auto uReaderRecur = (std::uintptr_t)::TlsGetValue(x_uTlsIndex.Get());
 	if(uReaderRecur == 0){
 		if(x_mtxWriterGuard.IsLockedByCurrentThread()){
-			AtomicIncrement(x_uReaderCount, MemoryModel::kRelaxed);
+			x_uReaderCount.Increment(MemoryModel::kRelaxed);
 		} else {
 			if(x_mtxWriterGuard.Try() == kResTryFailed){
 				eResult = kResTryFailed;
 				goto jDone;
 			}
-			if(AtomicIncrement(x_uReaderCount, MemoryModel::kRelaxed) == 1){
+			if(x_uReaderCount.Increment(MemoryModel::kRelaxed) == 1){
 				if(!x_mtxExclusive.Try()){
-					AtomicDecrement(x_uReaderCount, MemoryModel::kRelaxed);
+					x_uReaderCount.Decrement(MemoryModel::kRelaxed);
 					x_mtxWriterGuard.Unlock();
 					eResult = kResTryFailed;
 					goto jDone;
@@ -86,10 +84,10 @@ ReaderWriterMutex::Result ReaderWriterMutex::LockAsReader() noexcept {
 	auto uReaderRecur = (std::uintptr_t)::TlsGetValue(x_uTlsIndex.Get());
 	if(uReaderRecur == 0){
 		if(x_mtxWriterGuard.IsLockedByCurrentThread()){
-			AtomicIncrement(x_uReaderCount, MemoryModel::kRelaxed);
+			x_uReaderCount.Increment(MemoryModel::kRelaxed);
 		} else {
 			x_mtxWriterGuard.Lock();
-			if(AtomicIncrement(x_uReaderCount, MemoryModel::kRelaxed) == 1){
+			if(x_uReaderCount.Increment(MemoryModel::kRelaxed) == 1){
 				x_mtxExclusive.Lock();
 				eResult = kResStateChanged;
 			}
@@ -104,9 +102,9 @@ ReaderWriterMutex::Result ReaderWriterMutex::UnlockAsReader() noexcept {
 	auto uReaderRecur = (std::uintptr_t)::TlsGetValue(x_uTlsIndex.Get());
 	if(uReaderRecur == 1){
 		if(x_mtxWriterGuard.IsLockedByCurrentThread()){
-			AtomicDecrement(x_uReaderCount, MemoryModel::kRelaxed);
+			x_uReaderCount.Decrement(MemoryModel::kRelaxed);
 		} else {
-			if(AtomicDecrement(x_uReaderCount, MemoryModel::kRelaxed) == 0){
+			if(x_uReaderCount.Decrement(MemoryModel::kRelaxed) == 0){
 				x_mtxExclusive.Unlock();
 				eResult = kResStateChanged;
 			}

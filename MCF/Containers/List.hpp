@@ -142,7 +142,7 @@ public:
 		using xBase = xCursorTemplate<Cursor, ElementT, Node>;
 
 	private:
-		constexpr explicit Cursor(Node *pNode) noexcept
+		explicit constexpr Cursor(Node *pNode) noexcept
 			: xBase(pNode)
 		{
 		}
@@ -160,7 +160,7 @@ public:
 		using xBase = xCursorTemplate<ConstCursor, const ElementT, const Node>;
 
 	private:
-		constexpr explicit ConstCursor(const Node *pNode) noexcept
+		explicit constexpr ConstCursor(const Node *pNode) noexcept
 			: xBase(pNode)
 		{
 		}

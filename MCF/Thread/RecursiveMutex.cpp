@@ -4,7 +4,6 @@
 
 #include "../StdMCF.hpp"
 #include "RecursiveMutex.hpp"
-#include "Atomic.hpp"
 
 namespace MCF {
 
@@ -31,30 +30,30 @@ RecursiveMutex::RecursiveMutex(std::size_t uSpinCount)
 // 其他非静态成员函数。
 bool RecursiveMutex::IsLockedByCurrentThread() const noexcept {
 	const auto dwThreadId = ::GetCurrentThreadId();
-	return AtomicLoad(x_uLockingThreadId, MemoryModel::kConsume) == dwThreadId;
+	return x_uLockingThreadId.Load(MemoryModel::kConsume) == dwThreadId;
 }
 
 RecursiveMutex::Result RecursiveMutex::Try() noexcept {
 	const auto dwThreadId = ::GetCurrentThreadId();
-	if(AtomicLoad(x_uLockingThreadId, MemoryModel::kConsume) == dwThreadId){
+	if(x_uLockingThreadId.Load(MemoryModel::kConsume) == dwThreadId){
 		++x_uRecursionCount;
 		return kResRecursive;
 	}
 	if(!x_vMutex.Try()){
 		return kResTryFailed;
 	}
-	AtomicStore(x_uLockingThreadId, dwThreadId, MemoryModel::kRelease);
+	x_uLockingThreadId.Store(dwThreadId, MemoryModel::kRelease);
 	++x_uRecursionCount;
 	return kResStateChanged;
 }
 RecursiveMutex::Result RecursiveMutex::Lock() noexcept {
 	const auto dwThreadId = ::GetCurrentThreadId();
-	if(AtomicLoad(x_uLockingThreadId, MemoryModel::kConsume) == dwThreadId){
+	if(x_uLockingThreadId.Load(MemoryModel::kConsume) == dwThreadId){
 		++x_uRecursionCount;
 		return kResRecursive;
 	}
 	x_vMutex.Lock();
-	AtomicStore(x_uLockingThreadId, dwThreadId, MemoryModel::kRelease);
+	x_uLockingThreadId.Store(dwThreadId, MemoryModel::kRelease);
 	++x_uRecursionCount;
 	return kResStateChanged;
 }
@@ -64,7 +63,7 @@ RecursiveMutex::Result RecursiveMutex::Unlock() noexcept {
 	if(--x_uRecursionCount != 0){
 		return kResRecursive;
 	}
-	AtomicStore(x_uLockingThreadId, 0, MemoryModel::kRelaxed);
+	x_uLockingThreadId.Store(0, MemoryModel::kRelaxed);
 	x_vMutex.Unlock();
 	return kResStateChanged;
 }

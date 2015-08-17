@@ -13,14 +13,14 @@
 namespace MCF {
 
 namespace {
-	const std::uint16_t g_u16Pid = ::GetCurrentProcessId();
-	volatile std::uint32_t g_u32AutoInc = 0;
+	const std::uint16_t g_u16Pid(::GetCurrentProcessId());
+	Atomic<std::uint32_t> g_u32AutoInc(0);
 }
 
 // 静态成员函数。
 Uuid Uuid::Generate(){
 	const auto u64Now = GetUtcTime();
-	const auto u32Unique = g_u16Pid | ((AtomicAdd(g_u32AutoInc, 1, MemoryModel::kRelaxed) << 16) & 0x3FFFFFFFu);
+	const auto u32Unique = g_u16Pid | ((g_u32AutoInc.Increment(MemoryModel::kRelaxed) << 16) & 0x3FFFFFFFu);
 
 	Uuid vRet(nullptr);
 	StoreBe(vRet.x_unData.au32[0], u64Now >> 12);

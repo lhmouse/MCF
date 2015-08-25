@@ -56,9 +56,7 @@ namespace Impl_Monitor {
 }
 
 template<class ObjectT, class MutexT, class ObserverT>
-class MonitorLock
-	: private MutexT::UniqueLock, public ObserverT
-{
+class MonitorLock : private MutexT::UniqueLock, public ObserverT {
 	friend MonitorTemplate<const volatile ObjectT, MutexT>;
 	friend MonitorTemplate<const ObjectT, MutexT>;
 	friend MonitorTemplate<volatile ObjectT, MutexT>;

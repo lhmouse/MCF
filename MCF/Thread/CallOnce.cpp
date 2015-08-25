@@ -7,12 +7,10 @@
 
 namespace MCF {
 
-namespace {
-	Mutex g_vCallOnceMutex __attribute__((__init_priority__(101)));
-}
-
-Mutex &Impl_CallOnce::OnceFlag::GetMutex() noexcept {
-	return g_vCallOnceMutex;
+namespace Impl_CallOnce {
+	void MilliSleep(unsigned uMilliSeconds) noexcept {
+		::Sleep(uMilliSeconds);
+	}
 }
 
 }

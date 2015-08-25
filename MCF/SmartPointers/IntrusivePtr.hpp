@@ -43,37 +43,37 @@ namespace Impl_IntrusivePtr {
 			return *this; // 无操作。
 		}
 		~RefCountBase(){
-			if(x_uRef.Load(MemoryModel::kRelaxed) > 1){
+			if(x_uRef.Load(kAtomicRelaxed) > 1){
 				Bail(L"析构正在共享的被引用计数管理的对象。");
 			}
 		}
 
 	public:
 		std::size_t GetRef() const volatile noexcept {
-			return x_uRef.Load(MemoryModel::kRelaxed);
+			return x_uRef.Load(kAtomicRelaxed);
 		}
 		bool TryAddRef() const volatile noexcept {
-			ASSERT((std::ptrdiff_t)x_uRef.Load(MemoryModel::kRelaxed) >= 0);
+			ASSERT((std::ptrdiff_t)x_uRef.Load(kAtomicRelaxed) >= 0);
 
-			auto uOldRef = x_uRef.Load(MemoryModel::kRelaxed);
+			auto uOldRef = x_uRef.Load(kAtomicRelaxed);
 			for(;;){
 				if(uOldRef == 0){
 					return false;
 				}
-				if(x_uRef.CompareExchange(uOldRef, uOldRef + 1, MemoryModel::kRelaxed)){
+				if(x_uRef.CompareExchange(uOldRef, uOldRef + 1, kAtomicRelaxed)){
 					return true;
 				}
 			}
 		}
 		void AddRef() const volatile noexcept {
-			ASSERT((std::ptrdiff_t)x_uRef.Load(MemoryModel::kRelaxed) > 0);
+			ASSERT((std::ptrdiff_t)x_uRef.Load(kAtomicRelaxed) > 0);
 
-			x_uRef.Increment(MemoryModel::kRelaxed);
+			x_uRef.Increment(kAtomicRelaxed);
 		}
 		bool DropRef() const volatile noexcept {
-			ASSERT((std::ptrdiff_t)x_uRef.Load(MemoryModel::kRelaxed) > 0);
+			ASSERT((std::ptrdiff_t)x_uRef.Load(kAtomicRelaxed) > 0);
 
-			return x_uRef.Decrement(MemoryModel::kRelaxed) == 0;
+			return x_uRef.Decrement(kAtomicRelaxed) == 0;
 		}
 	};
 
@@ -143,7 +143,7 @@ namespace Impl_IntrusivePtr {
 
 	public:
 		DeletableBase() noexcept {
-			x_pObserver.Store(nullptr, MemoryModel::kRelease);
+			x_pObserver.Store(nullptr, kAtomicRelease);
 		}
 		DeletableBase(const DeletableBase &) noexcept
 			: DeletableBase()
@@ -153,7 +153,7 @@ namespace Impl_IntrusivePtr {
 			return *this;
 		}
 		~DeletableBase(){
-			const auto pObserver = x_pObserver.Load(MemoryModel::kConsume);
+			const auto pObserver = x_pObserver.Load(kAtomicConsume);
 			if(pObserver){
 				if(static_cast<const volatile RefCountBase *>(pObserver)->DropRef()){
 					delete pObserver;
@@ -165,10 +165,10 @@ namespace Impl_IntrusivePtr {
 
 	private:
 		xWeakObserver *xCreateObserver() const volatile {
-			auto pObserver = x_pObserver.Load(MemoryModel::kConsume);
+			auto pObserver = x_pObserver.Load(kAtomicConsume);
 			if(!pObserver){
 				const auto pNewObserver = new xWeakObserver(const_cast<DeletableBase *>(this));
-				if(x_uRef.CompareExchange(pObserver, pNewObserver, MemoryModel::kAcqRel, MemoryModel::kConsume)){
+				if(x_uRef.CompareExchange(pObserver, pNewObserver, kAtomicAcqRel, kAtomicConsume)){
 					pObserver = pNewObserver;
 				} else {
 					delete pNewObserver;

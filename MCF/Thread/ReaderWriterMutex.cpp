@@ -57,15 +57,15 @@ ReaderWriterMutex::Result ReaderWriterMutex::TryAsReader() noexcept {
 	auto uReaderRecur = (std::uintptr_t)::TlsGetValue(x_uTlsIndex.Get());
 	if(uReaderRecur == 0){
 		if(x_mtxWriterGuard.IsLockedByCurrentThread()){
-			x_uReaderCount.Increment(MemoryModel::kRelaxed);
+			x_uReaderCount.Increment(kAtomicRelaxed);
 		} else {
 			if(x_mtxWriterGuard.Try() == kResTryFailed){
 				eResult = kResTryFailed;
 				goto jDone;
 			}
-			if(x_uReaderCount.Increment(MemoryModel::kRelaxed) == 1){
+			if(x_uReaderCount.Increment(kAtomicRelaxed) == 1){
 				if(!x_mtxExclusive.Try()){
-					x_uReaderCount.Decrement(MemoryModel::kRelaxed);
+					x_uReaderCount.Decrement(kAtomicRelaxed);
 					x_mtxWriterGuard.Unlock();
 					eResult = kResTryFailed;
 					goto jDone;
@@ -84,10 +84,10 @@ ReaderWriterMutex::Result ReaderWriterMutex::LockAsReader() noexcept {
 	auto uReaderRecur = (std::uintptr_t)::TlsGetValue(x_uTlsIndex.Get());
 	if(uReaderRecur == 0){
 		if(x_mtxWriterGuard.IsLockedByCurrentThread()){
-			x_uReaderCount.Increment(MemoryModel::kRelaxed);
+			x_uReaderCount.Increment(kAtomicRelaxed);
 		} else {
 			x_mtxWriterGuard.Lock();
-			if(x_uReaderCount.Increment(MemoryModel::kRelaxed) == 1){
+			if(x_uReaderCount.Increment(kAtomicRelaxed) == 1){
 				x_mtxExclusive.Lock();
 				eResult = kResStateChanged;
 			}
@@ -102,9 +102,9 @@ ReaderWriterMutex::Result ReaderWriterMutex::UnlockAsReader() noexcept {
 	auto uReaderRecur = (std::uintptr_t)::TlsGetValue(x_uTlsIndex.Get());
 	if(uReaderRecur == 1){
 		if(x_mtxWriterGuard.IsLockedByCurrentThread()){
-			x_uReaderCount.Decrement(MemoryModel::kRelaxed);
+			x_uReaderCount.Decrement(kAtomicRelaxed);
 		} else {
-			if(x_uReaderCount.Decrement(MemoryModel::kRelaxed) == 0){
+			if(x_uReaderCount.Decrement(kAtomicRelaxed) == 0){
 				x_mtxExclusive.Unlock();
 				eResult = kResStateChanged;
 			}

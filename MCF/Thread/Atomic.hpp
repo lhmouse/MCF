@@ -10,13 +10,13 @@
 
 namespace MCF {
 
-enum class MemoryModel {
-	kRelaxed	= __ATOMIC_RELAXED,
-	kConsume	= __ATOMIC_CONSUME,
-	kAcquire	= __ATOMIC_ACQUIRE,
-	kRelease	= __ATOMIC_RELEASE,
-	kAcqRel		= __ATOMIC_ACQ_REL,
-	kSeqCst		= __ATOMIC_SEQ_CST,
+enum MemoryModel {
+	kAtomicRelaxed	= __ATOMIC_RELAXED,
+	kAtomicConsume	= __ATOMIC_CONSUME,
+	kAtomicAcquire	= __ATOMIC_ACQUIRE,
+	kAtomicRelease	= __ATOMIC_RELEASE,
+	kAtomicAcqRel	= __ATOMIC_ACQ_REL,
+	kAtomicSeqCst	= __ATOMIC_SEQ_CST,
 };
 
 namespace Impl_Atomic {
@@ -50,11 +50,11 @@ namespace Impl_Atomic {
 		}
 
 		bool CompareExchange(ElementT &vComparand, ElementT vExchangeWith, MemoryModel eModel) volatile noexcept {
-			switch(__builtin_constant_p(eModel) ? eModel : MemoryModel::kSeqCst){
-			case MemoryModel::kAcqRel:
-				return CompareExchange(vComparand, vExchangeWith, eModel, MemoryModel::kAcquire);
-			case MemoryModel::kRelease:
-				return CompareExchange(vComparand, vExchangeWith, eModel, MemoryModel::kRelaxed);
+			switch(__builtin_constant_p(eModel) ? eModel : kAtomicSeqCst){
+			case kAtomicAcqRel:
+				return CompareExchange(vComparand, vExchangeWith, eModel, kAtomicAcquire);
+			case kAtomicRelease:
+				return CompareExchange(vComparand, vExchangeWith, eModel, kAtomicRelaxed);
 			default:
 				return CompareExchange(vComparand, vExchangeWith, eModel, eModel);
 			}
@@ -158,7 +158,7 @@ namespace Impl_Atomic {
 }
 
 template<typename ElementT>
-using Atomic = Impl_Atomic::Atomic<ElementT, std::is_integral<ElementT>::value, std::is_pointer<ElementT>::value>;
+using Atomic = Impl_Atomic::Atomic<ElementT, std::is_integral<ElementT>::value || std::is_enum<ElementT>::value, std::is_pointer<ElementT>::value>;
 
 inline void AtomicFence(MemoryModel eModel) noexcept {
 	__atomic_thread_fence(static_cast<int>(eModel));

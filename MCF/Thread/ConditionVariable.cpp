@@ -20,19 +20,19 @@ ConditionVariable::ConditionVariable(Mutex &vMutex)
 
 // 其他非静态成员函数。
 bool ConditionVariable::Wait(std::uint64_t u64MilliSeconds) noexcept {
-	x_uWaiting.Increment(MemoryModel::kRelaxed);
+	x_uWaiting.Increment(kAtomicRelaxed);
 	x_vMutex.Unlock();
 
 	const bool bResult = x_vSemaphore.Wait(u64MilliSeconds);
 
 	x_vMutex.Lock();
 	if(!bResult){
-		x_uWaiting.Decrement(MemoryModel::kRelaxed);
+		x_uWaiting.Decrement(kAtomicRelaxed);
 	}
 	return bResult;
 }
 void ConditionVariable::Wait() noexcept {
-	x_uWaiting.Increment(MemoryModel::kRelaxed);
+	x_uWaiting.Increment(kAtomicRelaxed);
 	x_vMutex.Unlock();
 
 	x_vSemaphore.Wait();
@@ -41,7 +41,7 @@ void ConditionVariable::Wait() noexcept {
 }
 void ConditionVariable::Signal(std::size_t uMaxCount) noexcept {
 	std::size_t uToPost;
-	std::size_t uOld = x_uWaiting.Load(MemoryModel::kRelaxed), uNew;
+	std::size_t uOld = x_uWaiting.Load(kAtomicRelaxed), uNew;
 	do {
 		if(uOld >= uMaxCount){
 			uToPost = uMaxCount;
@@ -50,14 +50,14 @@ void ConditionVariable::Signal(std::size_t uMaxCount) noexcept {
 			uToPost = uOld;
 			uNew = 0;
 		}
-	} while(!x_uWaiting.CompareExchange(uOld, uNew, MemoryModel::kRelaxed));
+	} while(!x_uWaiting.CompareExchange(uOld, uNew, kAtomicRelaxed));
 
 	if(uToPost != 0){
 		x_vSemaphore.Post(uToPost);
 	}
 }
 void ConditionVariable::Broadcast() noexcept {
-	const auto uToPost = x_uWaiting.Exchange(0, MemoryModel::kRelaxed);
+	const auto uToPost = x_uWaiting.Exchange(0, kAtomicRelaxed);
 
 	if(uToPost != 0){
 		x_vSemaphore.Post(uToPost);

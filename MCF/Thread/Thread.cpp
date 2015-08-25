@@ -31,7 +31,7 @@ Thread::Thread(Function<void ()> fnProc, bool bSuspended)
 		} catch(...){
 			pThis->x_pException = std::current_exception();
 		}
-		pThis->x_ulThreadId.Store(0, MemoryModel::kRelease);
+		pThis->x_ulThreadId.Store(0, kAtomicRelease);
 		pThis->DropRef();
 		return 0;
 	};
@@ -41,7 +41,7 @@ Thread::Thread(Function<void ()> fnProc, bool bSuspended)
 		DEBUG_THROW(SystemError, "MCF_CRT_CreateThread");
 	}
 	AddRef();
-	x_ulThreadId.Store(ulThreadId, MemoryModel::kRelease);
+	x_ulThreadId.Store(ulThreadId, kAtomicRelease);
 
 	if(!bSuspended){
 		Resume();
@@ -78,7 +78,7 @@ bool Thread::IsAlive() const noexcept {
 	return GetId() != 0;
 }
 std::size_t Thread::GetId() const noexcept {
-	return x_ulThreadId.Load(MemoryModel::kRelaxed);
+	return x_ulThreadId.Load(kAtomicRelaxed);
 }
 
 void Thread::Suspend() noexcept {

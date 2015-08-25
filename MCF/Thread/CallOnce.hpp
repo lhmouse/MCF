@@ -8,21 +8,26 @@
 #include <utility>
 #include <cstddef>
 #include "Atomic.hpp"
-#include "Mutex.hpp"
 
 namespace MCF {
 
 namespace Impl_CallOnce {
+	extern void MilliSleep(unsigned uMilliSeconds) noexcept;
+
 	class OnceFlag {
 	public:
-		static Mutex &GetMutex() noexcept;
+		enum State {
+			kUninitialized	= 0,
+			kInitializing	= 1,
+			kInitialized	= 2,
+		};
 
 	private:
-		Atomic<bool> x_bFlag;
+		Atomic<State> x_eState;
 
 	public:
 		constexpr OnceFlag() noexcept
-			: x_bFlag(false)
+			: x_eState(kUninitialized)
 		{
 		}
 
@@ -30,11 +35,14 @@ namespace Impl_CallOnce {
 		OnceFlag &operator=(const OnceFlag &) = delete;
 
 	public:
-		bool Load(MemoryModel eModel) const volatile noexcept {
-			return x_bFlag.Load(eModel);
+		State Load(MemoryModel eModel) const volatile noexcept {
+			return x_eState.Load(eModel);
 		}
-		void Store(bool bOperand, MemoryModel eModel) volatile noexcept {
-			x_bFlag.Store(bOperand, eModel);
+		void Store(State eState, MemoryModel eModel) volatile noexcept {
+			x_eState.Store(eState, eModel);
+		}
+		State Exchange(State eState, MemoryModel eModel) volatile noexcept {
+			return x_eState.Exchange(eState, eModel);
 		}
 	};
 }
@@ -43,17 +51,33 @@ using OnceFlag = volatile Impl_CallOnce::OnceFlag;
 
 template<typename FunctionT, typename ...ParamsT>
 bool CallOnce(OnceFlag &vFlag, FunctionT &&vFunction, ParamsT &&...vParams){
-	if(vFlag.Load(MemoryModel::kConsume)){
+	auto eState = vFlag.Load(kAtomicConsume);
+	if(eState == OnceFlag::kInitialized){
 		return false;
 	}
-	{
-		const auto vLock = Impl_CallOnce::OnceFlag::GetMutex().GetLock();
-		if(vFlag.Load(MemoryModel::kRelaxed)){
-			return false;
+
+	unsigned uSleepDuration = 1;
+	for(;;){
+		eState = vFlag.Exchange(OnceFlag::kInitializing, kAtomicSeqCst);
+		if(eState != OnceFlag::kInitializing){
+			break;
 		}
-		std::forward<FunctionT>(vFunction)(std::forward<ParamsT>(vParams)...);
-		vFlag.Store(true, MemoryModel::kRelease);
+		Impl_CallOnce::MilliSleep(uSleepDuration);
+		if(uSleepDuration < 1000){
+			uSleepDuration <<= 1;
+		}
 	}
+	if(eState == OnceFlag::kInitialized){
+		vFlag.Store(OnceFlag::kInitialized, kAtomicRelease);
+		return false;
+	}
+	try {
+		std::forward<FunctionT>(vFunction)(std::forward<ParamsT>(vParams)...);
+	} catch(...){
+		vFlag.Store(OnceFlag::kUninitialized, kAtomicRelease);
+		throw;
+	}
+	vFlag.Store(OnceFlag::kInitialized, kAtomicRelease);
 	return true;
 }
 

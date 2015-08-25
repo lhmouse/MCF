@@ -20,7 +20,7 @@ namespace {
 // 静态成员函数。
 Uuid Uuid::Generate(){
 	const auto u64Now = GetUtcTime();
-	const auto u32Unique = g_u16Pid | ((g_u32AutoInc.Increment(MemoryModel::kRelaxed) << 16) & 0x3FFFFFFFu);
+	const auto u32Unique = g_u16Pid | ((g_u32AutoInc.Increment(kAtomicRelaxed) << 16) & 0x3FFFFFFFu);
 
 	Uuid vRet(nullptr);
 	StoreBe(vRet.x_unData.au32[0], u64Now >> 12);

@@ -34,6 +34,10 @@ public:
 	}
 
 public:
+	decltype(auto) operator&() const && noexcept {
+		return &Get();
+	}
+
 	operator ObjectT &() const noexcept {
 		return Get();
 	}
@@ -71,6 +75,8 @@ public:
 	}
 
 public:
+	decltype(auto) operator&() const && noexcept = delete;
+
 	operator ObjectT &() const & noexcept {
 		return Get();
 	}

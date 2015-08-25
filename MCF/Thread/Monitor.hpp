@@ -30,8 +30,15 @@ namespace Impl_Monitor {
 		}
 
 	public:
+		decltype(auto) operator&() const && noexcept {
+			return &x_vObject;
+		}
 		operator ObjectT &() const && noexcept {
 			return x_vObject;
+		}
+		template<typename ...ArgsT>
+		decltype(auto) operator()(ArgsT &&...vArgs) const && {
+			return x_vObject(std::forward<ArgsT>(vArgs)...);
 		}
 	};
 	template<class ObjectT>
@@ -49,8 +56,8 @@ namespace Impl_Monitor {
 		ObjectT &operator*() const && noexcept {
 			return x_vObject;
 		}
-		decltype(auto) operator->() const && noexcept {
-			return &x_vObject;
+		ObjectT *operator->() const && noexcept {
+			return std::addressof(x_vObject);
 		}
 	};
 }

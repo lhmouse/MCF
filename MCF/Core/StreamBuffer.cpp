@@ -52,7 +52,7 @@ struct StreamBuffer::xChunk final {
 	xChunk *pNext;
 	unsigned uBegin;
 	unsigned uEnd;
-	unsigned char abyData[10];
+	unsigned char abyData[0x100];
 };
 
 SpinLock StreamBuffer::xChunk::s_splPoolMutex;

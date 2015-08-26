@@ -4,18 +4,59 @@
 
 #include "../StdMCF.hpp"
 #include "StreamBuffer.hpp"
-#include "../Utilities/ASSERT.hpp"
+#include "../Utilities/Assert.hpp"
 #include "../Utilities/MinMax.hpp"
+#include "../Thread/SpinLock.hpp"
 
 namespace MCF {
 
-struct StreamBuffer::xChunk {
-	xChunk *pNext;
+struct StreamBuffer::xChunk final {
+	static SpinLock s_splPoolMutex;
+	static xChunk *restrict s_pPoolHead;
+
+	static void *operator new(std::size_t uSize){
+		ASSERT(uSize == sizeof(xChunk));
+
+		const auto uLockValue = s_splPoolMutex.Lock();
+		const auto pPooled = s_pPoolHead;
+		if(!pPooled){
+			s_splPoolMutex.Unlock(uLockValue);
+			return ::operator new(uSize);
+		}
+		s_pPoolHead = pPooled->pPrev;
+		s_splPoolMutex.Unlock(uLockValue);
+		return pPooled;
+	}
+	static void operator delete(void *pRaw) noexcept {
+		if(!pRaw){
+			return;
+		}
+		const auto pPooled = static_cast<xChunk *>(pRaw);
+
+		const auto uLockValue = s_splPoolMutex.Lock();
+		pPooled->pPrev = s_pPoolHead;
+		s_pPoolHead = pPooled;
+		s_splPoolMutex.Unlock(uLockValue);
+	}
+
+	__attribute__((__destructor__))
+	static void PoolDestructor() noexcept {
+		while(s_pPoolHead){
+			const auto pPooled = s_pPoolHead;
+			s_pPoolHead = pPooled->pPrev;
+			::operator delete(pPooled);
+		}
+	}
+
 	xChunk *pPrev;
+	xChunk *pNext;
 	unsigned uBegin;
 	unsigned uEnd;
 	unsigned char abyData[10];
 };
+
+SpinLock StreamBuffer::xChunk::s_splPoolMutex;
+StreamBuffer::xChunk *restrict StreamBuffer::xChunk::s_pPoolHead = nullptr;
 
 unsigned char *StreamBuffer::ChunkEnumerator::GetBegin() const noexcept {
 	ASSERT(x_pChunk);

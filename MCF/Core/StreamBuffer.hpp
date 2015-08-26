@@ -92,8 +92,8 @@ public:
 	};
 
 private:
-	xChunk *x_pFirst;
-	xChunk *x_pLast;
+	xChunk *restrict x_pFirst;
+	xChunk *restrict x_pLast;
 	std::size_t x_uSize;
 
 public:

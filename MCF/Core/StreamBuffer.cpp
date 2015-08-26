@@ -323,7 +323,7 @@ std::size_t StreamBuffer::Discard(std::size_t uSize) noexcept {
 
 		delete x_pFirst;
 		x_pFirst = pChunk;
-		pChunk->pNext = nullptr;
+		pChunk->pPrev = nullptr;
 	}
 }
 void StreamBuffer::Put(const void *pData, std::size_t uSize){

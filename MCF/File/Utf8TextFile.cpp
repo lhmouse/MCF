@@ -5,7 +5,6 @@
 #include "../StdMCF.hpp"
 #include "Utf8TextFile.hpp"
 #include "../Utilities/BinaryOperations.hpp"
-#include "../Containers/Vector.hpp"
 
 namespace MCF {
 

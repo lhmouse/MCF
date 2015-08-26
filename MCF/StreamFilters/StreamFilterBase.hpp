@@ -80,7 +80,9 @@ public:
 	StreamFilterBase &Filter(const StreamBuffer &sbufData){
 		ASSERT(&x_sbufOutput != &sbufData);
 
-		sbufData.Traverse([this](auto pbyData, auto uSize){ this->Update(pbyData, uSize); });
+		for(auto ce = sbufData.GetChunkEnumerator(); ce; ++ce){
+			Update(ce.GetData(), ce.GetSize());
+		}
 		return *this;
 	}
 	StreamFilterBase &FilterInPlace(StreamBuffer &sbufData){

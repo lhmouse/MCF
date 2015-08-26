@@ -5,8 +5,6 @@
 #ifndef MCF_CORE_STREAM_BUFFER_HPP_
 #define MCF_CORE_STREAM_BUFFER_HPP_
 
-#include "../Containers/List.hpp"
-#include <iterator>
 #include <utility>
 #include <cstddef>
 
@@ -14,74 +12,96 @@ namespace MCF {
 
 class StreamBuffer {
 private:
-	class xChunk;
+	struct xChunk;
 
 public:
-	class TraverseContext;
+	class ConstChunkEnumerator;
 
-	class ReadIterator
-		: public std::iterator<std::input_iterator_tag, int>
-	{
+	class ChunkEnumerator {
+		friend ConstChunkEnumerator;
+
 	private:
-		StreamBuffer *x_psbufOwner;
+		xChunk *x_pChunk;
 
 	public:
-		explicit constexpr ReadIterator(StreamBuffer &sbufOwner) noexcept
-			: x_psbufOwner(&sbufOwner)
+		explicit ChunkEnumerator(StreamBuffer &rhs) noexcept
+			: x_pChunk(rhs.x_pFirst)
 		{
 		}
 
 	public:
-		ReadIterator &operator++() noexcept {
-			x_psbufOwner->Get();
-			return *this;
+		unsigned char *GetBegin() const noexcept;
+		unsigned char *GetEnd() const noexcept;
+
+		unsigned char *GetData() const noexcept {
+			return GetBegin();
 		}
-		ReadIterator operator++(int) noexcept {
-			const auto itRet = *this;
-			++*this;
-			return itRet;
+		unsigned GetSize() const noexcept {
+			return static_cast<unsigned>(GetEnd() - GetBegin());
 		}
 
-		int operator*() const noexcept {
-			return x_psbufOwner->Peek();
+	public:
+		explicit operator bool() const noexcept {
+			return x_pChunk != nullptr;
+		}
+
+		ChunkEnumerator &operator++() noexcept;
+		ChunkEnumerator operator++(int) noexcept {
+			auto ceRet = *this;
+			++*this;
+			return ceRet;
 		}
 	};
 
-	class WriteIterator
-		: public std::iterator<std::output_iterator_tag, unsigned char>
-	{
+	class ConstChunkEnumerator {
 	private:
-		StreamBuffer *x_psbufOwner;
+		const xChunk *x_pChunk;
 
 	public:
-		explicit constexpr WriteIterator(StreamBuffer &sbufOwner) noexcept
-			: x_psbufOwner(&sbufOwner)
+		explicit ConstChunkEnumerator(const StreamBuffer &rhs) noexcept
+			: x_pChunk(rhs.x_pFirst)
+		{
+		}
+		ConstChunkEnumerator(ChunkEnumerator &rhs) noexcept
+			: x_pChunk(rhs.x_pChunk)
 		{
 		}
 
 	public:
-		WriteIterator &operator++() noexcept {
-			return *this;
+		const unsigned char *GetBegin() const noexcept;
+		const unsigned char *GetEnd() const noexcept;
+
+		const unsigned char *GetData() const noexcept {
+			return GetBegin();
 		}
-		WriteIterator operator++(int) noexcept {
-			return *this;
+		std::size_t GetSize() const noexcept {
+			return static_cast<std::size_t>(GetEnd() - GetBegin());
 		}
 
-		WriteIterator &operator*() noexcept {
-			return *this;
+	public:
+		explicit operator bool() const noexcept {
+			return x_pChunk != nullptr;
 		}
-		WriteIterator &operator=(unsigned char by){
-			x_psbufOwner->Put(by);
-			return *this;
+
+		ConstChunkEnumerator &operator++() noexcept;
+		ConstChunkEnumerator operator++(int) noexcept {
+			auto ceRet = *this;
+			++*this;
+			return ceRet;
 		}
 	};
 
 private:
-	List<xChunk> x_lstBuffers;
+	xChunk *x_pFirst;
+	xChunk *x_pLast;
 	std::size_t x_uSize;
 
 public:
-	StreamBuffer() noexcept;
+	constexpr StreamBuffer() noexcept
+		: x_pFirst(nullptr), x_pLast(nullptr), x_uSize(0)
+	{
+	}
+
 	StreamBuffer(const void *pData, std::size_t uSize);
 	StreamBuffer(const char *pszData);
 	StreamBuffer(const StreamBuffer &rhs);
@@ -97,14 +117,15 @@ public:
 	std::size_t GetSize() const noexcept {
 		return x_uSize;
 	}
-	void Clear() noexcept;
 
 	// 如果为空返回 -1。
-	int GetFront() const noexcept;
-	int GetBack() const noexcept;
+	int PeekFront() const noexcept;
+	int PeekBack() const noexcept;
+
+	void Clear() noexcept;
 
 	int Peek() const noexcept {
-		return GetFront();
+		return PeekFront();
 	}
 	int Get() noexcept;
 	void Put(unsigned char by);
@@ -117,6 +138,16 @@ public:
 	void Put(const void *pData, std::size_t uSize);
 	void Put(const char *pszData);
 
+	ConstChunkEnumerator GetChunkEnumerator() const noexcept {
+		return ConstChunkEnumerator(*this);
+	}
+	ChunkEnumerator GetChunkEnumerator() noexcept {
+		return ChunkEnumerator(*this);
+	}
+	ConstChunkEnumerator GetConstChunkEnumerator() const noexcept {
+		return ConstChunkEnumerator(*this);
+	}
+
 	// 拆分成两部分，返回 [0, uSize) 部分，[uSize, -) 部分仍保存于当前对象中。
 	StreamBuffer CutOff(std::size_t uSize);
 	// CutOff() 的逆操作。该函数返回后 src 为空。
@@ -125,40 +156,19 @@ public:
 		Splice(rhs);
 	}
 
-	bool Traverse(const TraverseContext *&pContext, std::pair<const void *, std::size_t> &vBlock) const noexcept;
-	bool Traverse(TraverseContext *&pContext, std::pair<void *, std::size_t> &vBlock) noexcept;
-
-	template<typename CallbackT>
-	void Traverse(CallbackT &&vCallback) const {
-		const TraverseContext *pContext = nullptr;
-		std::pair<const void *, std::size_t> vBlock;
-		while(Traverse(pContext, vBlock)){
-			std::forward<CallbackT>(vCallback)(vBlock.first, vBlock.second);
-		}
-	}
-	template<typename CallbackT>
-	void Traverse(CallbackT &&vCallback){
-		TraverseContext *pContext = nullptr;
-		std::pair<void *, std::size_t> vBlock;
-		while(Traverse(pContext, vBlock)){
-			std::forward<CallbackT>(vCallback)(vBlock.first, vBlock.second);
-		}
-	}
-
-	ReadIterator GetReadIterator() noexcept {
-		return ReadIterator(*this);
-	}
-	WriteIterator GetWriteIterator() noexcept {
-		return WriteIterator(*this);
-	}
-
 	void Swap(StreamBuffer &rhs) noexcept {
-		x_lstBuffers.Swap(rhs.x_lstBuffers);
+		std::swap(x_pFirst, rhs.x_pFirst);
+		std::swap(x_pLast, rhs.x_pLast);
 		std::swap(x_uSize, rhs.x_uSize);
 	}
 
 public:
 	using value_type = unsigned char;
+
+	// std::front_insert_iterator
+	void push_front(unsigned char byParam){
+		Unget(byParam);
+	}
 
 	// std::back_insert_iterator
 	void push_back(unsigned char byParam){

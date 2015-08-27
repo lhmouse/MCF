@@ -270,8 +270,8 @@ void StreamBuffer::Unget(unsigned char by){
 		auto pChunk = new xChunk;
 		// pChunk->pNext = nullptr;
 		pChunk->pPrev = nullptr;
-		pChunk->uBegin = sizeof(x_pFirst->abyData);
-		pChunk->uEnd = sizeof(x_pFirst->abyData);
+		pChunk->uBegin = sizeof(pChunk->abyData);
+		pChunk->uEnd = sizeof(pChunk->abyData);
 
 		if(x_pFirst){
 			x_pFirst->pPrev = pChunk;
@@ -380,7 +380,7 @@ void StreamBuffer::Put(const void *pData, std::size_t uSize){
 		pLastChunk = x_pLast;
 	}
 	if(uBytesToCopy > uLastChunkAvail){
-		const auto uNewChunks = (uBytesToCopy - uLastChunkAvail - 1) / sizeof(x_pLast->abyData) + 1;
+		const auto uNewChunks = (uBytesToCopy - uLastChunkAvail - 1) / sizeof(pLastChunk->abyData) + 1;
 		ASSERT(uNewChunks != 0);
 
 		auto pChunk = new xChunk;
@@ -427,7 +427,7 @@ void StreamBuffer::Put(const void *pData, std::size_t uSize){
 	auto pChunk = pLastChunk;
 	do {
 		const auto pbyRead = static_cast<const unsigned char *>(pData) + uBytesCopied;
-		const auto uBytesToCopyThisTime = Min(uBytesToCopy - uBytesCopied, sizeof(x_pLast->abyData) - x_pLast->uEnd);
+		const auto uBytesToCopyThisTime = Min(uBytesToCopy - uBytesCopied, sizeof(pChunk->abyData) - pChunk->uEnd);
 		std::memcpy(pChunk->abyData + pChunk->uEnd, pbyRead, uBytesToCopyThisTime);
 		pChunk->uEnd += uBytesToCopyThisTime;
 		uBytesCopied += uBytesToCopyThisTime;

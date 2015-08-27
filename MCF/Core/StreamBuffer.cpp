@@ -403,10 +403,11 @@ void StreamBuffer::Put(const void *pData, std::size_t uSize){
 			}
 		} catch(...){
 			do {
-				const auto pChunk = pToSpliceFirst;
+				pChunk = pToSpliceFirst;
 				pToSpliceFirst = pChunk->pNext;
 				delete pChunk;
 			} while(pToSpliceFirst);
+
 			throw;
 		}
 		if(x_pLast){

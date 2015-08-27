@@ -1,38 +1,39 @@
 #include <MCF/StdMCF.hpp>
 #include <MCF/Core/StreamBuffer.hpp>
+#include <MCF/Hash/Crc32.hpp>
 
 using namespace MCF;
 
 extern "C" unsigned MCFMain(){
 	static constexpr unsigned char data[] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 
-	char temp[1024];
-	std::size_t len;
-	int c;
+	Crc32 hasher;
+	std::string str;
 
 	for(unsigned i = 0; i < 400; ++i){
 		StreamBuffer buf2;
-		for(unsigned k = 0; k < 5; ++k){
-//			for(unsigned j = 0; j < sizeof(data) - 1; ++j){
-//				buf2.Put(data[j]);
-//				// buf2.Unget(data[j]);
-//			}
+		for(unsigned k = 0; k < 100; ++k){
+			for(unsigned j = 0; j < sizeof(data) - 1; ++j){
+				buf2.Put(data[j]);
+				// buf2.Unget(data[j]);
+			}
 			buf2.Put((const char *)data);
 		}
-		auto buf1 = buf2.CutOff(i);
 
-		len = buf1.Get(temp, sizeof(temp));
-		temp[len] = 0;
-		std::printf("buf1 = (%04zu) %s\n", buf1.GetSize(), temp);
-//		len = buf2.Get(temp, sizeof(temp));
-//		temp[len] = 0;
-//		std::printf("buf2 = (%04zu) %s\n", buf2.GetSize(), temp);
-		std::printf("buf2 = (%04zu) ", buf2.GetSize());
-		while((c = buf2.Get()) >= 0){
-//		while((c = buf2.Unput()) >= 0){
-			std::putchar(c);
-		}
-		std::putchar('\n');
+		str.resize(buf2.GetSize());
+		buf2.Peek(&str[0], str.size());
+		hasher.Update(str.data(), str.size());
+		unsigned long crc = hasher.Finalize();
+		std::printf("crc   = %08lX\n", crc);
+
+		auto buf1 = buf2.CutOff(i);
+		buf1.Splice(buf2);
+
+		str.resize(buf1.GetSize());
+		buf1.Get(&str[0], str.size());
+		hasher.Update(str.data(), str.size());
+		crc = hasher.Finalize();
+		std::printf("  crc = %08lX\n", crc);
 	}
 	return 0;
 }

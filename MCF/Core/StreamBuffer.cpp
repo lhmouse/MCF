@@ -12,7 +12,7 @@ namespace MCF {
 
 struct StreamBuffer::xChunk final {
 	static SpinLock s_splPoolMutex;
-	static xChunk *restrict s_pPoolHead;
+	static xChunk *__restrict__ s_pPoolHead;
 
 	static void *operator new(std::size_t uSize){
 		ASSERT(uSize == sizeof(xChunk));
@@ -56,7 +56,7 @@ struct StreamBuffer::xChunk final {
 };
 
 SpinLock StreamBuffer::xChunk::s_splPoolMutex;
-StreamBuffer::xChunk *restrict StreamBuffer::xChunk::s_pPoolHead = nullptr;
+StreamBuffer::xChunk *__restrict__ StreamBuffer::xChunk::s_pPoolHead = nullptr;
 
 unsigned char *StreamBuffer::ChunkEnumerator::GetBegin() const noexcept {
 	ASSERT(x_pChunk);

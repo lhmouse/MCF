@@ -24,12 +24,18 @@ struct PolyIntrusiveBase : public virtual Impl_PolyIntrusivePtr::UnknownBase {
 template<typename ObjectT>
 using PolyIntrusivePtr = IntrusivePtr<ObjectT, DefaultDeleter<Impl_PolyIntrusivePtr::UnknownBase>>;
 
-using PolyIntrusivePtrUnknown = PolyIntrusivePtr<Impl_PolyIntrusivePtr::UnknownBase>;
+using PolyIntrusivePtrConstVolatileUnknown	= PolyIntrusivePtr<const volatile Impl_PolyIntrusivePtr::UnknownBase>;
+using PolyIntrusivePtrConstUnknown			= PolyIntrusivePtr<const Impl_PolyIntrusivePtr::UnknownBase>;
+using PolyIntrusivePtrVolatileUnknown		= PolyIntrusivePtr<volatile Impl_PolyIntrusivePtr::UnknownBase>;
+using PolyIntrusivePtrUnknown				= PolyIntrusivePtr<Impl_PolyIntrusivePtr::UnknownBase>;
 
 template<typename ObjectT>
 using PolyIntrusiveWeakPtr = IntrusiveWeakPtr<ObjectT, DefaultDeleter<Impl_PolyIntrusivePtr::UnknownBase>>;
 
-using PolyIntrusiveWeakPtrUnknown = PolyIntrusiveWeakPtr<Impl_PolyIntrusivePtr::UnknownBase>;
+using PolyIntrusiveWeakPtrConstVolatileUnknown	= PolyIntrusiveWeakPtr<const volatile Impl_PolyIntrusivePtr::UnknownBase>;
+using PolyIntrusiveWeakPtrConstUnknown			= PolyIntrusiveWeakPtr<const Impl_PolyIntrusivePtr::UnknownBase>;
+using PolyIntrusiveWeakPtrVolatileUnknown		= PolyIntrusiveWeakPtr<volatile Impl_PolyIntrusivePtr::UnknownBase>;
+using PolyIntrusiveWeakPtrUnknown				= PolyIntrusiveWeakPtr<Impl_PolyIntrusivePtr::UnknownBase>;
 
 template<typename ObjectT, typename ...ParamsT>
 PolyIntrusivePtr<ObjectT> MakePolyIntrusive(ParamsT &&...vParams){

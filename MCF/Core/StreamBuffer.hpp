@@ -161,19 +161,6 @@ public:
 		std::swap(x_pLast, rhs.x_pLast);
 		std::swap(x_uSize, rhs.x_uSize);
 	}
-
-public:
-	using value_type = unsigned char;
-
-	// std::front_insert_iterator
-	void push_front(unsigned char byParam){
-		Unget(byParam);
-	}
-
-	// std::back_insert_iterator
-	void push_back(unsigned char byParam){
-		Put(byParam);
-	}
 };
 
 inline void swap(StreamBuffer &lhs, StreamBuffer &rhs) noexcept {

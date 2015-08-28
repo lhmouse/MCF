@@ -330,7 +330,7 @@ public:
 			Reserve(uNewSize);
 			xSetSize(uNewSize);
 		} else if(uNewSize < uOldSize){
-			Truncate(uOldSize - uNewSize);
+			Pop(uOldSize - uNewSize);
 		}
 	}
 	Char *ResizeMoreFront(std::size_t uDeltaSize){
@@ -457,19 +457,9 @@ public:
 	void Append(const String<kOtherTypeT> &rhs){
 		Append(rhs.GetObserver());
 	}
-	void Truncate(std::size_t uCount = 1) noexcept {
-		const auto uOldSize = GetSize();
-		ASSERT_MSG(uOldSize >= uCount, L"删除的字符数太多。");
-		xSetSize(uOldSize - uCount);
-	}
-
 	void Push(Char ch){
 		Append(ch, 1);
 	}
-	void Pop() noexcept {
-		Truncate(1);
-	}
-
 	void UncheckedPush(Char ch) noexcept {
 		ASSERT_MSG(GetLength() < GetCapacity(), L"容器已满。");
 
@@ -481,14 +471,10 @@ public:
 			++x_vStorage.vLarge.uLength;
 		}
 	}
-	void UncheckedPop() noexcept {
-		ASSERT_MSG(GetLength() != 0, L"容器已空。");
-
-		if(x_vStorage.vSmall.schComplLength >= 0){
-			++x_vStorage.vSmall.schComplLength;
-		} else {
-			--x_vStorage.vLarge.uLength;
-		}
+	void Pop(std::size_t uCount = 1) noexcept {
+		const auto uOldSize = GetSize();
+		ASSERT_MSG(uOldSize >= uCount, L"删除的字符数太多。");
+		xSetSize(uOldSize - uCount);
 	}
 
 	void Unshift(Char ch, std::size_t uCount = 1){
@@ -645,20 +631,6 @@ public:
 		ASSERT_MSG(uIndex <= GetLength(), L"索引越界。");
 
 		return GetBegin()[uIndex];
-	}
-
-public:
-	using value_type = Char;
-
-	// std::back_insert_iterator
-	template<typename ParamT>
-	void push_back(ParamT &&vParam){
-		Push(std::forward<ParamT>(vParam));
-	}
-	// std::front_insert_iterator
-	template<typename ParamT>
-	void push_front(ParamT &&vParam){
-		Unshift(std::forward<ParamT>(vParam));
 	}
 };
 

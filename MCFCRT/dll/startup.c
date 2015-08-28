@@ -18,14 +18,14 @@ BOOL __MCF_DllStartup(HINSTANCE hDll, DWORD dwReason, LPVOID pReserved)
 	__asm__("__MCF_DllStartup");
 
 enum {
-	FL_HEAP,
-	FL_FRAME_INFO,
-	FL_CRT_MODULE,
+	kFlagHeap,
+	kFlagFrameInfo,
+	kFlagCrtModule,
 
-	FL_COUNT
+	kFlagCount
 };
 
-static bool g_abFlags[FL_COUNT] = { 0 };
+static bool g_abFlags[kFlagCount] = { 0 };
 
 #define DO_INIT(ret_, fl_, fn_)	\
 	if(ret_){	\
@@ -51,12 +51,12 @@ BOOL __MCF_DllStartup(HINSTANCE hDll, DWORD dwReason, LPVOID pReserved){
 
 	switch(dwReason){
 	case DLL_PROCESS_ATTACH:
-		DO_INIT(bRet, FL_HEAP, __MCF_CRT_HeapInit);
-		DO_INIT(bRet, FL_FRAME_INFO, __MCF_CRT_RegisterFrameInfo);
+		DO_INIT(bRet, kFlagHeap, __MCF_CRT_HeapInit);
+		DO_INIT(bRet, kFlagFrameInfo, __MCF_CRT_RegisterFrameInfo);
 
 		__MCF_EH_TOP_BEGIN
 		{
-			DO_INIT(bRet, FL_CRT_MODULE, __MCF_CRT_BeginModule);
+			DO_INIT(bRet, kFlagCrtModule, __MCF_CRT_BeginModule);
 
 			if(bRet){
 				bRet = MCFDll_OnProcessAttach(hDll, !pReserved);
@@ -88,12 +88,12 @@ BOOL __MCF_DllStartup(HINSTANCE hDll, DWORD dwReason, LPVOID pReserved){
 		{
 			MCFDll_OnProcessDetach(hDll, !pReserved);
 
-			DO_UNINIT(FL_CRT_MODULE, __MCF_CRT_EndModule);
+			DO_UNINIT(kFlagCrtModule, __MCF_CRT_EndModule);
 		}
 		__MCF_EH_TOP_END
 
-		DO_UNINIT(FL_FRAME_INFO, __MCF_CRT_UnregisterFrameInfo);
-		DO_UNINIT(FL_HEAP, __MCF_CRT_HeapUninit);
+		DO_UNINIT(kFlagFrameInfo, __MCF_CRT_UnregisterFrameInfo);
+		DO_UNINIT(kFlagHeap, __MCF_CRT_HeapUninit);
 		break;
 	}
 

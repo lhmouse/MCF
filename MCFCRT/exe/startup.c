@@ -35,7 +35,7 @@ DWORD __MCF_ExeStartup(LPVOID pReserved){
 	__builtin_trap();
 }
 
- __MCF_C_STDCALL __MCF_HAS_EH_TOP
+__MCF_C_STDCALL __MCF_HAS_EH_TOP
 static void TlsCallback(void *hModule, DWORD dwReason, void *pReserved){
 	UNREF_PARAM(hModule);
 	UNREF_PARAM(pReserved);

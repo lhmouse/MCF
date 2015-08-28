@@ -12,8 +12,6 @@ __MCF_CRT_EXTERN_C_BEGIN
 extern bool __MCF_CRT_TlsEnvInit(void) MCF_NOEXCEPT;
 extern void __MCF_CRT_TlsEnvUninit(void) MCF_NOEXCEPT;
 
-extern void __stdcall __MCF_CRT_TlsCallback(void *hModule, unsigned long ulReason, void *pReserved) MCF_NOEXCEPT;
-
 // 失败返回 nullptr。
 extern void *MCF_CRT_TlsAllocKey(void (*pfnCallback)(MCF_STD intptr_t)) MCF_NOEXCEPT;
 extern bool MCF_CRT_TlsFreeKey(void *pTlsKey) MCF_NOEXCEPT;

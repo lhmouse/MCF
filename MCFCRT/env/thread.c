@@ -114,15 +114,6 @@ void __MCF_CRT_TlsEnvUninit(){
 	DeleteCriticalSection(&g_csKeyMutex);
 }
 
-void __stdcall __MCF_CRT_TlsCallback(void *hModule, unsigned long ulReason, void *pReserved){
-	UNREF_PARAM(hModule);
-	UNREF_PARAM(pReserved);
-
-	if(ulReason == DLL_THREAD_DETACH){
-		MCF_CRT_TlsClearAll();
-	}
-}
-
 void *MCF_CRT_TlsAllocKey(void (*pfnCallback)(intptr_t)){
 	TlsKey *const pKey = malloc(sizeof(TlsKey));
 	if(!pKey){

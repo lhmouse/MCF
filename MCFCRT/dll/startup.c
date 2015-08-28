@@ -17,47 +17,58 @@ __MCF_C_STDCALL __MCF_HAS_EH_TOP
 BOOL __MCF_DllStartup(HINSTANCE hDll, DWORD dwReason, LPVOID pReserved)
 	__asm__("__MCF_DllStartup");
 
+enum {
+	FL_HEAP,
+	FL_FRAME_INFO,
+	FL_CRT_MODULE,
+
+	FL_COUNT
+};
+
+static bool g_abFlags[FL_COUNT] = { 0 };
+
+#define DO_INIT(ret_, fl_, fn_)	\
+	if(ret_){	\
+		if(!g_abFlags[fl_]){	\
+			const bool succ_ = (fn_)();	\
+			if(succ_){	\
+				g_abFlags[fl_] = true;	\
+			} else {	\
+				(ret_) = FALSE;	\
+			}	\
+		}	\
+	}
+
+#define DO_UNINIT(fl_, fn_)	\
+	if(g_abFlags[fl_]){	\
+		(fn_)();	\
+		g_abFlags[fl_] = false;	\
+	}
+
 __MCF_C_STDCALL __MCF_HAS_EH_TOP
 BOOL __MCF_DllStartup(HINSTANCE hDll, DWORD dwReason, LPVOID pReserved){
-	BOOL bRet = FALSE;
+	BOOL bRet = TRUE;
 
 	switch(dwReason){
 	case DLL_PROCESS_ATTACH:
-		if(!__MCF_CRT_HeapInit()){
-			break;
-		}
-		if(!__MCF_CRT_RegisterFrameInfo()){
-			__MCF_CRT_HeapUninit();
-			break;
-		}
+		DO_INIT(bRet, FL_HEAP, __MCF_CRT_HeapInit);
+		DO_INIT(bRet, FL_FRAME_INFO, __MCF_CRT_RegisterFrameInfo);
 
 		__MCF_EH_TOP_BEGIN
 		{
-			if(!__MCF_CRT_BeginModule()){
-				goto jTryInitDone;
+			DO_INIT(bRet, FL_CRT_MODULE, __MCF_CRT_BeginModule);
+
+			if(bRet){
+				bRet = MCFDll_OnProcessAttach(hDll, !pReserved);
 			}
-			if(!MCFDll_OnProcessAttach(!pReserved)){
-				__MCF_CRT_EndModule();
-				goto jTryInitDone;
-			}
-			__MCF_CRT_TlsCallback(hDll, dwReason, pReserved);
-			bRet = TRUE;
-		jTryInitDone:
-			;
 		}
 		__MCF_EH_TOP_END
-
-		if(!bRet){
-			__MCF_CRT_UnregisterFrameInfo();
-			__MCF_CRT_HeapUninit();
-		}
 		break;
 
 	case DLL_THREAD_ATTACH:
 		__MCF_EH_TOP_BEGIN
 		{
-			MCFDll_OnThreadAttach();
-			__MCF_CRT_TlsCallback(hDll, dwReason, pReserved);
+			MCFDll_OnThreadAttach(hDll);
 		}
 		__MCF_EH_TOP_END
 		break;
@@ -65,8 +76,9 @@ BOOL __MCF_DllStartup(HINSTANCE hDll, DWORD dwReason, LPVOID pReserved){
 	case DLL_THREAD_DETACH:
 		__MCF_EH_TOP_BEGIN
 		{
-			__MCF_CRT_TlsCallback(hDll, dwReason, pReserved);
-			MCFDll_OnThreadDetach();
+			MCFDll_OnThreadDetach(hDll);
+
+			MCF_CRT_TlsClearAll();
 		}
 		__MCF_EH_TOP_END
 		break;
@@ -74,14 +86,14 @@ BOOL __MCF_DllStartup(HINSTANCE hDll, DWORD dwReason, LPVOID pReserved){
 	case DLL_PROCESS_DETACH:
 		__MCF_EH_TOP_BEGIN
 		{
-			__MCF_CRT_TlsCallback(hDll, dwReason, pReserved);
-			MCFDll_OnProcessDetach(!pReserved);
-			__MCF_CRT_EndModule();
+			MCFDll_OnProcessDetach(hDll, !pReserved);
+
+			DO_UNINIT(FL_CRT_MODULE, __MCF_CRT_EndModule);
 		}
 		__MCF_EH_TOP_END
 
-		__MCF_CRT_UnregisterFrameInfo();
-		__MCF_CRT_HeapUninit();
+		DO_UNINIT(FL_FRAME_INFO, __MCF_CRT_UnregisterFrameInfo);
+		DO_UNINIT(FL_HEAP, __MCF_CRT_HeapUninit);
 		break;
 	}
 

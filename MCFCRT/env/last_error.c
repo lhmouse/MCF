@@ -5,7 +5,7 @@
 #include "last_error.h"
 #include "mcfwin.h"
 
-unsigned long MCF_CRT_GetWin32LastError(void){
+unsigned long MCF_CRT_GetWin32LastError(){
 	return GetLastError();
 }
 void MCF_CRT_SetWin32LastError(unsigned long ulErrorCode){

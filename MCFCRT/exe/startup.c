@@ -6,11 +6,11 @@
 #include "../env/mcfwin.h"
 #include "../env/bail.h"
 #include "../env/module.h"
-#include "../env/thread.h"
 #include "../env/eh_top.h"
 #include "../env/heap.h"
 #include "../env/last_error.h"
 #include "../ext/unref_param.h"
+#include "../env/thread.h"
 
 // -static -Wl,-e__MCF_ExeStartup,--disable-runtime-pseudo-reloc,--disable-auto-import
 
@@ -25,28 +25,65 @@ DWORD __MCF_ExeStartup(LPVOID pReserved){
 
 	DWORD dwExitCode;
 
-	if(!__MCF_CRT_HeapInit()){
-		MCF_CRT_BailF(L"MCFCRT 堆初始化失败。\n\n错误代码：%lu", MCF_CRT_GetWin32LastError());
-	}
-	if(!__MCF_CRT_RegisterFrameInfo()){
-		MCF_CRT_BailF(L"MCFCRT 异常处理程序初始化失败。\n\n错误代码：%lu", MCF_CRT_GetWin32LastError());
-	}
-
 	__MCF_EH_TOP_BEGIN
 	{
-		if(!__MCF_CRT_BeginModule()){
-			MCF_CRT_BailF(L"MCFCRT 初始化失败。\n\n错误代码：%lu", MCF_CRT_GetWin32LastError());
-		}
 		dwExitCode = MCFMain();
-		__MCF_CRT_EndModule();
 	}
 	__MCF_EH_TOP_END
 
-	__MCF_CRT_UnregisterFrameInfo();
-	__MCF_CRT_HeapUninit();
-
 	ExitProcess(dwExitCode);
 	__builtin_trap();
+}
+
+ __MCF_C_STDCALL __MCF_HAS_EH_TOP
+static void TlsCallback(void *hModule, DWORD dwReason, void *pReserved){
+	UNREF_PARAM(hModule);
+	UNREF_PARAM(pReserved);
+
+	switch(dwReason){
+	case DLL_PROCESS_ATTACH:
+		if(!__MCF_CRT_HeapInit()){
+			MCF_CRT_BailF(L"MCFCRT 堆初始化失败。\n\n错误代码：%lu", MCF_CRT_GetWin32LastError());
+		}
+		if(!__MCF_CRT_RegisterFrameInfo()){
+			MCF_CRT_BailF(L"MCFCRT 异常处理程序初始化失败。\n\n错误代码：%lu", MCF_CRT_GetWin32LastError());
+		}
+
+		__MCF_EH_TOP_BEGIN
+		{
+			if(!__MCF_CRT_BeginModule()){
+				MCF_CRT_BailF(L"MCFCRT 初始化失败。\n\n错误代码：%lu", MCF_CRT_GetWin32LastError());
+			}
+		}
+		__MCF_EH_TOP_END
+		break;
+/*
+	case DLL_THREAD_ATTACH:
+		__MCF_EH_TOP_BEGIN
+		{
+		}
+		__MCF_EH_TOP_END
+		break;
+*/
+	case DLL_THREAD_DETACH:
+		__MCF_EH_TOP_BEGIN
+		{
+			MCF_CRT_TlsClearAll();
+		}
+		__MCF_EH_TOP_END
+		break;
+
+	case DLL_PROCESS_DETACH:
+		__MCF_EH_TOP_BEGIN
+		{
+			__MCF_CRT_EndModule();
+		}
+		__MCF_EH_TOP_END
+
+		__MCF_CRT_UnregisterFrameInfo();
+		__MCF_CRT_HeapUninit();
+		break;
+	}
 }
 
 // 线程局部存储（TLS）目录，用于执行 TLS 的析构函数。
@@ -58,7 +95,7 @@ __attribute__((__section__(".tls"), __used__))
 const DWORD _tls_index = 0;
 
 __attribute__((__section__(".CRT$@@@"), __used__))
-const PIMAGE_TLS_CALLBACK _callback_start = &__MCF_CRT_TlsCallback;
+const PIMAGE_TLS_CALLBACK _callback_start = &TlsCallback;
 __attribute__((__section__(".CRT$___"), __used__))
 const PIMAGE_TLS_CALLBACK _callback_end = nullptr;
 

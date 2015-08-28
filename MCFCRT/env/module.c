@@ -55,7 +55,7 @@ static void __MCF_CRT_StaticObjectsUninit(){
 	__MCF_CRT_CallStaticDtors();
 }
 
-bool __MCF_CRT_BeginModule(void){
+bool __MCF_CRT_BeginModule(){
 	__MCF_CRT_FEnvInit();
 
 	if(!__MCF_CRT_TlsEnvInit()){
@@ -76,7 +76,7 @@ bool __MCF_CRT_BeginModule(void){
 	}
 	return true;
 }
-void __MCF_CRT_EndModule(void){
+void __MCF_CRT_EndModule(){
 	__MCF_CRT_StaticObjectsUninit();
 	__MCF_CRT_MinGWHacksUninit();
 	__MCF_CRT_TlsEnvUninit();

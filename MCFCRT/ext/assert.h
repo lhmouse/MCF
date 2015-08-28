@@ -8,7 +8,7 @@
 #include "../env/_crtdef.h"
 #include "../env/bail.h"
 
-static inline MCF_CRT_NORETURN_IF_NDEBUG
+static inline __attribute__((__noreturn__))
 void __MCF_CRT_OnAssertFail(const wchar_t *pwszExpression,
 	const char *pszFile, unsigned long ulLine, const wchar_t *pwszMessage) MCF_NOEXCEPT
 {

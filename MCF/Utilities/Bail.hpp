@@ -10,11 +10,13 @@
 namespace MCF {
 
 template<typename ...ParamsT>
-inline MCF_CRT_NORETURN_IF_NDEBUG void BailF(const wchar_t *pwszFormat, const ParamsT &...vParams){
+[[noreturn]] inline
+void BailF(const wchar_t *pwszFormat, const ParamsT &...vParams){
 	::MCF_CRT_BailF(pwszFormat, vParams...);
 }
 
-inline MCF_CRT_NORETURN_IF_NDEBUG void Bail(const wchar_t *pwszDescription){
+[[noreturn]] inline
+void Bail(const wchar_t *pwszDescription){
 	::MCF_CRT_Bail(pwszDescription);
 }
 

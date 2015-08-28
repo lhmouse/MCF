@@ -9,16 +9,10 @@
 
 __MCF_CRT_EXTERN_C_BEGIN
 
-#ifdef NDEBUG
-#	define MCF_CRT_NORETURN_IF_NDEBUG	__attribute__((__noreturn__))
-#else
-#	define MCF_CRT_NORETURN_IF_NDEBUG
-#endif
-
-MCF_CRT_NORETURN_IF_NDEBUG
-extern void MCF_CRT_Bail(const wchar_t *pwszDescription) MCF_NOEXCEPT;
-MCF_CRT_NORETURN_IF_NDEBUG
-extern void MCF_CRT_BailF(const wchar_t *pwszFormat, ...) MCF_NOEXCEPT;
+extern __attribute__((__noreturn__))
+void MCF_CRT_Bail(const wchar_t *pwszDescription) MCF_NOEXCEPT;
+extern __attribute__((__noreturn__))
+void MCF_CRT_BailF(const wchar_t *pwszFormat, ...) MCF_NOEXCEPT;
 
 __MCF_CRT_EXTERN_C_END
 

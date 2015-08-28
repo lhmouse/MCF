@@ -28,5 +28,5 @@ void __MCF_CRT_OnAssertFail(const wchar_t *pwszExpression,
 	((void)sizeof(expr_))
 #else
 #	define __MCF_CRT_ASSERT_MSG(plain_, expr_, msg_)	\
-	(!(expr_) && (__MCF_CRT_OnAssertFail(L ## plain_, __FILE__, __LINE__, (msg_)), 1))
+	((void)(!(expr_) && (__MCF_CRT_OnAssertFail(L ## plain_, __FILE__, __LINE__, (msg_)), 1)))
 #endif

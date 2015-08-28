@@ -48,7 +48,8 @@ static void DoBail(const wchar_t *pwszDescription){
 	*pwcWrite = 0;
 
 	FatalAppExitW(0, awcBuffer);
-	__builtin_trap();
+	TerminateProcess(GetCurrentProcess(), ERROR_PROCESS_ABORTED);
+	__builtin_unreachable();
 }
 
 __attribute__((__noreturn__))

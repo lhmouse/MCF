@@ -9,42 +9,74 @@
 #include <wchar.h>
 #include <stdlib.h>
 
-static DWORD APIENTRY ThreadProc(LPVOID pParam){
-	const LPCWSTR pwszDescription = pParam;
+#define MAX_MESSAGE_BUFFER_SIZE		(1025 + 256)
 
-	wchar_t awcBuffer[1025 + 256];
-	wchar_t *pwcWrite = MCF_wcpcpy(awcBuffer, L"应用程序异常终止。请联系作者寻求协助。");
+static DWORD APIENTRY ThreadProc(LPVOID pParam){
+	return (DWORD)MessageBoxW(nullptr, pParam, L"MCF CRT 错误", MB_ICONERROR | MB_TASKMODAL |
+#ifndef NDEBUG
+		MB_OKCANCEL
+#else
+		MB_OK
+#endif
+		);
+}
+
+MCF_CRT_NORETURN_IF_NDEBUG static void DoBail(const wchar_t *pwszDescription){
+	wchar_t awcBuffer[MAX_MESSAGE_BUFFER_SIZE];
+	wchar_t *pwcMsgEnd = MCF_wcpcpy(awcBuffer, L"应用程序异常终止。请联系作者寻求协助。");
 	if(pwszDescription){
-		pwcWrite = MCF_wcpcpy(pwcWrite, L"\r\n\r\n错误描述：\r\n");
+		pwcMsgEnd = MCF_wcpcpy(pwcMsgEnd, L"\r\n\r\n错误描述：\r\n");
 
 		size_t uLen = wcslen(pwszDescription);
-		const wchar_t *const pwcEnd = awcBuffer + sizeof(awcBuffer) / sizeof(awcBuffer[0]);
-		const size_t uMax = (size_t)(pwcEnd - pwcWrite) - 64; // 后面还有一些内容，保留一些字符。
+		const size_t uMax = (size_t)(awcBuffer + MAX_MESSAGE_BUFFER_SIZE - pwcMsgEnd) - 64; // 后面还有一些内容，保留一些字符。
 		if(uLen > uMax){
 			uLen = uMax;
 		}
-		wmemcpy(pwcWrite, pwszDescription, uLen); // 我们有必要在这个地方拷贝字符串结束符吗？
-		pwcWrite += uLen;
+		wmemcpy(pwcMsgEnd, pwszDescription, uLen);
+		pwcMsgEnd += uLen;
 	}
+	pwcMsgEnd = MCF_wcpcpy(pwcMsgEnd, L"\r\n");
 #ifndef NDEBUG
-	MCF_wcpcpy(pwcWrite, L"\r\n\r\n单击“确定”终止应用程序，单击“取消”调试应用程序。");
-	const int nRet = MessageBoxW(nullptr, awcBuffer, L"MCF CRT 错误", MB_ICONERROR | MB_OKCANCEL | MB_TASKMODAL);
+	MCF_wcpcpy(pwcMsgEnd, L"\r\n单击“确定”终止应用程序，单击“取消”调试应用程序。");
 #else
-	MCF_wcpcpy(pwcWrite, L"\r\n\r\n单击“确定”终止应用程序。");
-	const int nRet =  MessageBoxW(nullptr, awcBuffer, L"MCF CRT 错误", MB_ICONERROR | MB_OK | MB_TASKMODAL);
+	MCF_wcpcpy(pwcMsgEnd, L"\r\n单击“确定”终止应用程序。");
 #endif
-	return (DWORD)nRet;
-}
-MCF_CRT_NORETURN_IF_NDEBUG static void DoBail(const wchar_t *pwszDescription){
-	DWORD dwExitCode = IDCANCEL;
-	const HANDLE hThread = CreateThread(nullptr, 0, &ThreadProc, (LPVOID)pwszDescription, 0, nullptr);
-	if(hThread){
-		WaitForSingleObject(hThread, INFINITE);
-		GetExitCodeThread(hThread, &dwExitCode);
-		CloseHandle(hThread);
-	} else {
-		__asm__ __volatile__("int 3 \n");
+
+	DWORD dwExitCode;
+	{
+		const HANDLE hThread = CreateThread(nullptr, 0, &ThreadProc, awcBuffer, 0, nullptr);
+		if(hThread){
+			WaitForSingleObject(hThread, INFINITE);
+			GetExitCodeThread(hThread, &dwExitCode);
+			CloseHandle(hThread);
+			goto jDone;
+		}
+		*pwcMsgEnd = 0;
+
+		const HANDLE hStdErr = GetStdHandle(STD_ERROR_HANDLE);
+		if(hStdErr != INVALID_HANDLE_VALUE){
+			DWORD dwMode;
+			if(GetConsoleMode(hStdErr, &dwMode)){
+				const wchar_t *pwcRead = awcBuffer;
+				for(;;){
+					const DWORD dwCharsToWrite = (DWORD)(pwcMsgEnd - pwcRead);
+					if(dwCharsToWrite == 0){
+						break;
+					}
+					DWORD dwCharsWritten;
+					if(!WriteConsoleW(hStdErr, pwcRead, dwCharsToWrite, &dwCharsWritten, nullptr)){
+						break;
+					}
+					pwcRead += dwCharsWritten;
+				}
+				goto jDone;
+			}
+		}
+
+		OutputDebugStringW(awcBuffer);
 	}
+jDone:
+	;
 
 #ifndef NDEBUG
 	if(dwExitCode == IDOK){
@@ -54,7 +86,7 @@ MCF_CRT_NORETURN_IF_NDEBUG static void DoBail(const wchar_t *pwszDescription){
 #ifndef NDEBUG
 	}
 #endif
-	__asm__ __volatile__("int 3 \n");
+	__asm__ __volatile__("int3 \n");
 }
 
 MCF_CRT_NORETURN_IF_NDEBUG void MCF_CRT_Bail(const wchar_t *pwszDescription){

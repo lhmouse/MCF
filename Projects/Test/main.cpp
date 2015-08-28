@@ -1,5 +1,6 @@
 #include <MCF/StdMCF.hpp>
 #include <MCF/Core/StreamBuffer.hpp>
+#include <MCF/Utilities/Assert.hpp>
 #include <MCF/Hash/Crc32.hpp>
 
 using namespace MCF;

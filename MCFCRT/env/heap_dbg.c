@@ -71,7 +71,7 @@ void __MCF_CRT_HeapDbgUninit(){
 			pBlockInfo = (const __MCF_HeapDbgBlockInfo *)MCF_AvlNext((const MCF_AvlNodeHeader *)pBlockInfo);
 		} while(pBlockInfo);
 
-		__asm__ __volatile__("int 3 \n");
+		__asm__ __volatile__("int3 \n");
 	}
 
 	g_pavlBlocks = nullptr;

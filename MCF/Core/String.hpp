@@ -882,25 +882,6 @@ extern inline const auto &operator""_u32s(){
 	return s_u32sRet;
 }
 
-// MultiIndexMap
-template<StringType kTypeT>
-struct StringTripleComparator {
-	int operator()(const String<kTypeT> &lhs, const String<kTypeT> &rhs) const noexcept {
-		return lhs.Compare(rhs);
-	}
-	template<typename ComparandT>
-	int operator()(const String<kTypeT> &lhs, const ComparandT &rhs) const noexcept {
-		return lhs.Compare(rhs);
-	}
-	template<typename ComparandT>
-	int operator()(const ComparandT &lhs, const String<kTypeT> &rhs) const noexcept {
-		return -rhs.Compare(lhs);
-	}
-};
-
-template<StringType kTypeT>
-StringTripleComparator<kTypeT> GetDefaultComparator(const String<kTypeT> &) noexcept;
-
 }
 
 using ::MCF::operator""_ns;

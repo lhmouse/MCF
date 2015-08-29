@@ -521,25 +521,6 @@ extern inline auto operator""_u32so() noexcept {
 	return Utf32StringObserver(s_au32cData, sizeof...(kCharsT));
 }
 
-// MultiIndexMap
-template<StringType kTypeT>
-struct StringObserverTripleComparator {
-	int operator()(const StringObserver<kTypeT> &lhs, const StringObserver<kTypeT> &rhs) const noexcept {
-		return lhs.Compare(rhs);
-	}
-	template<typename ComparandT>
-	int operator()(const StringObserver<kTypeT> &lhs, const ComparandT &rhs) const noexcept {
-		return lhs.Compare(rhs);
-	}
-	template<typename ComparandT>
-	int operator()(const ComparandT &lhs, const StringObserver<kTypeT> &rhs) const noexcept {
-		return -rhs.Compare(lhs);
-	}
-};
-
-template<StringType kTypeT>
-StringObserverTripleComparator<kTypeT> GetDefaultComparator(const StringObserver<kTypeT> &) noexcept;
-
 }
 
 using ::MCF::operator""_nso;

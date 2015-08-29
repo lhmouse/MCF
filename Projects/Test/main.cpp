@@ -1,8 +1,6 @@
 #include <MCF/StdMCF.hpp>
 #include <MCF/Core/Time.hpp>
 
-#include <MCFCRT/stdc/string/_string_asm.h>
-
 void rep_memset(void *dst, int ch, size_t cb){
 	__asm__ __volatile__(
 		"mov ecx, eax ;"

@@ -554,22 +554,22 @@ public:
 		return GetObserver().FindBackward(chToFind, nEnd);
 	}
 
-	void Replace(std::ptrdiff_t nBegin, std::ptrdiff_t nEnd, Char chRep, std::size_t uCount = 1){
-		const auto obsCurrent(GetObserver());
+	void Replace(std::ptrdiff_t nBegin, std::ptrdiff_t nEnd, Char chRep, std::size_t uRepSize = 1){
+		const auto obsCurrent = GetObserver();
 		const auto uOldLength = obsCurrent.GetLength();
 
-		const auto obsRemoved(obsCurrent.Slice(nBegin, nEnd));
+		const auto obsRemoved = obsCurrent.Slice(nBegin, nEnd);
 		const auto uRemovedBegin = (std::size_t)(obsRemoved.GetBegin() - obsCurrent.GetBegin());
 		const auto uRemovedEnd = (std::size_t)(obsRemoved.GetEnd() - obsCurrent.GetBegin());
-
-		const auto uNewLength = uOldLength - (uRemovedEnd - uRemovedBegin) + uCount;
-		if(uNewLength < uOldLength){
+		const auto uLengthAfterRemoved = uOldLength - (uRemovedEnd - uRemovedBegin);
+		const auto uNewLength = uLengthAfterRemoved + uRepSize;
+		if(uNewLength < uLengthAfterRemoved){
 			throw std::bad_alloc();
 		}
 
-		const auto pchWrite = xChopAndSplice(uRemovedBegin, uRemovedEnd, 0, uRemovedBegin + uCount);
-		FillN(pchWrite, uCount, chRep);
-		xSetSize(uRemovedBegin + uCount + (uOldLength - uRemovedEnd));
+		const auto pchWrite = xChopAndSplice(uRemovedBegin, uRemovedEnd, 0, uRemovedBegin + uRepSize);
+		FillN(pchWrite, uRepSize, chRep);
+		xSetSize(uNewLength);
 	}
 	void Replace(std::ptrdiff_t nBegin, std::ptrdiff_t nEnd, const Char *pchRepBegin){
 		Replace(nBegin, nEnd, Observer(pchRepBegin));
@@ -581,21 +581,23 @@ public:
 		Replace(nBegin, nEnd, Observer(pchRepBegin, uLen));
 	}
 	void Replace(std::ptrdiff_t nBegin, std::ptrdiff_t nEnd, const Observer &obsRep){
-		const auto obsCurrent(GetObserver());
+		const auto uRepSize = obsRep.GetLength();
+
+		const auto obsCurrent = GetObserver();
 		const auto uOldLength = obsCurrent.GetLength();
 
-		const auto obsRemoved(obsCurrent.Slice(nBegin, nEnd));
+		const auto obsRemoved = obsCurrent.Slice(nBegin, nEnd);
 		const auto uRemovedBegin = (std::size_t)(obsRemoved.GetBegin() - obsCurrent.GetBegin());
 		const auto uRemovedEnd = (std::size_t)(obsRemoved.GetEnd() - obsCurrent.GetBegin());
-
-		const auto uNewLength = uOldLength - (uRemovedEnd - uRemovedBegin) + obsRep.GetSize();
-		if(uNewLength < uOldLength){
+		const auto uLengthAfterRemoved = uOldLength - (uRemovedEnd - uRemovedBegin);
+		const auto uNewLength = uLengthAfterRemoved + uRepSize;
+		if(uNewLength < uLengthAfterRemoved){
 			throw std::bad_alloc();
 		}
 
 		if(obsCurrent.DoesOverlapWith(obsRep)){
 			String strTemp;
-			strTemp.Resize(uRemovedBegin + obsRep.GetSize() + (uOldLength - uRemovedEnd));
+			strTemp.Resize(uNewLength);
 			auto pchWrite = strTemp.GetStr();
 			pchWrite = Copy(pchWrite, obsCurrent.GetBegin(), obsCurrent.GetBegin() + uRemovedBegin);
 			pchWrite = Copy(pchWrite, obsRep.GetBegin(), obsRep.GetEnd());
@@ -604,7 +606,7 @@ public:
 		} else {
 			const auto pchWrite = xChopAndSplice(uRemovedBegin, uRemovedEnd, 0, uRemovedBegin + obsRep.GetSize());
 			CopyN(pchWrite, obsRep.GetBegin(), obsRep.GetSize());
-			xSetSize(uRemovedBegin + obsRep.GetSize() + (uOldLength - uRemovedEnd));
+			xSetSize(uNewLength);
 		}
 	}
 

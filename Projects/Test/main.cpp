@@ -1,58 +1,15 @@
 #include <MCF/StdMCF.hpp>
-#include <MCF/Core/Time.hpp>
-
-void rep_memset(void *dst, int ch, size_t cb){
-	__asm__ __volatile__(
-		"mov ecx, eax ;"
-		"shl ecx, 8 ;"
-		"or eax, ecx ;"
-		"mov ecx, eax ;"
-		"shl ecx, 16 ;"
-		"or eax, ecx ;"
-#ifdef _WIN64
-		"mov rcx, rax ;"
-		"shl rcx, 32 ;"
-		"or rax, rcx ;"
-		"mov rcx, rdx ;"
-		"shr rcx, 3 ;"
-		"rep stosq ;"
-		"mov rcx, rdx ;"
-		"and rcx, 7 ;"
-#else
-		"mov ecx, edx ;"
-		"shr ecx, 2 ;"
-		"rep stosd ;"
-		"mov ecx, edx ;"
-		"and ecx, 3 ;"
-#endif
-		"rep stosb ;"
-		: "+D"(dst)
-		: "a"(ch), "d"(cb)
-		: "cx"
-	);
-}
+#include <MCF/Core/String.hpp>
+#include <MCF/Utilities/Bail.hpp>
 
 extern "C" unsigned MCFMain(){
-	constexpr std::size_t clen = 0x10000 + 6;
-	constexpr std::size_t repeat = 100000;
+	MCF::AnsiString s1("0123456789");
+	s1.Replace(3, 5, '_', 4);
+	std::printf("s1 = %s\n", s1.GetStr());
 
-	std::unique_ptr<char []> ptr(new char[clen]);
-	std::memset(ptr.get(), 'a', clen);
-	double t1, t2;
-
-	t1 = MCF::GetHiResMonoClock();
-	for(unsigned i = 0; i < repeat; ++i){
-		rep_memset(ptr.get(), 'b', clen);
-	}
-	t2 = MCF::GetHiResMonoClock();
-	std::printf("rep_memset time = %f\n", t2 - t1);
-
-	t1 = MCF::GetHiResMonoClock();
-	for(unsigned i = 0; i < repeat; ++i){
-		std::memset(ptr.get(), 'c', clen);
-	}
-	t2 = MCF::GetHiResMonoClock();
-	std::printf("MCFCRT memset time = %f\n", t2 - t1);
+	MCF::AnsiString s2("0123456789");
+	s2.Replace(3, 7, '_', 2);
+	std::printf("s2 = %s\n", s2.GetStr());
 
 	return 0;
 }

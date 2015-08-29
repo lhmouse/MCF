@@ -47,7 +47,7 @@ static void DoBail(const wchar_t *pwszDescription){
 	pwcWrite -= 2;
 	*pwcWrite = 0;
 
-	FatalAppExitW(0, awcBuffer);
+	MessageBoxW(NULL, awcBuffer, L"MCF CRT 错误", MB_OK | MB_ICONERROR | MB_TASKMODAL | MB_SERVICE_NOTIFICATION);
 	TerminateProcess(GetCurrentProcess(), ERROR_PROCESS_ABORTED);
 	__builtin_unreachable();
 }

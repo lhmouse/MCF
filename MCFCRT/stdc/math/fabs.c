@@ -6,8 +6,8 @@
 #include "_mathasm.h"
 
 #ifdef _WIN64
-static _Alignas(16) uint32_t FLT_MASK[] = { 0x7FFFFFFF, 0x7FFFFFFF, 0x7FFFFFFF, 0x7FFFFFFF };
-static _Alignas(16) uint64_t DBL_MASK[] = { 0x7FFFFFFFFFFFFFFF, 0x7FFFFFFFFFFFFFFF };
+static alignas(16) uint32_t FLT_MASK[] = { 0x7FFFFFFF, 0x7FFFFFFF, 0x7FFFFFFF, 0x7FFFFFFF };
+static alignas(16) uint64_t DBL_MASK[] = { 0x7FFFFFFFFFFFFFFF, 0x7FFFFFFFFFFFFFFF };
 #endif
 
 float fabsf(float x){

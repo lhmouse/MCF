@@ -5,12 +5,13 @@
 
 void rep_memset(void *dst, int ch, size_t cb){
 	__asm__ __volatile__(
-		"mov rcx, rax ;"
-		"shl rcx, 8 ;"
-		"or rax, rcx ;"
-		"mov rcx, rax ;"
-		"shl rcx, 16 ;"
-		"or rax, rcx ;"
+		"mov ecx, eax ;"
+		"shl ecx, 8 ;"
+		"or eax, ecx ;"
+		"mov ecx, eax ;"
+		"shl ecx, 16 ;"
+		"or eax, ecx ;"
+#ifdef _WIN64
 		"mov rcx, rax ;"
 		"shl rcx, 32 ;"
 		"or rax, rcx ;"
@@ -19,6 +20,13 @@ void rep_memset(void *dst, int ch, size_t cb){
 		"rep stosq ;"
 		"mov rcx, rdx ;"
 		"and rcx, 7 ;"
+#else
+		"mov ecx, edx ;"
+		"shr ecx, 2 ;"
+		"rep stosd ;"
+		"mov ecx, edx ;"
+		"and ecx, 3 ;"
+#endif
 		"rep stosb ;"
 		: "+D"(dst)
 		: "a"(ch), "d"(cb)

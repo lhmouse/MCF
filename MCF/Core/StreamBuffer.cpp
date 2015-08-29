@@ -39,7 +39,7 @@ struct StreamBuffer::xChunk final {
 		s_splPoolMutex.Unlock(uLockValue);
 	}
 
-	__attribute__((__destructor__))
+	__attribute__((__destructor__(1)))
 	static void PoolDestructor() noexcept {
 		while(s_pPoolHead){
 			const auto pPooled = s_pPoolHead;

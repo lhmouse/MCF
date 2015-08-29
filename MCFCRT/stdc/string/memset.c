@@ -20,7 +20,7 @@ void *memset(void *dst, int ch, size_t cb){
 #ifdef _WIN64
 		"mov rcx, rax \n"
 		"shl rcx, 32 \n"
-		"or rcx, rcx \n"
+		"or rax, rcx \n"
 #endif
 		"cmp %2, 64 \n"
 		"jb 1f \n"

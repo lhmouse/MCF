@@ -11,5 +11,7 @@ extern "C" unsigned MCFMain(){
 	s2.Replace(3, 7, '_', 2);
 	std::printf("s2 = %s\n", s2.GetStr());
 
+	new int;
+
 	return 0;
 }

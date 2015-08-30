@@ -10,7 +10,7 @@ extern "C" unsigned MCFMain(){
 	MCF::AnsiString s2("0123456789");
 	s2.Replace(3, 7, '_', 2);
 	std::printf("s2 = %s\n", s2.GetStr());
-
+MCF::Bail(L"aaa");
 	new int;
 
 	return 0;

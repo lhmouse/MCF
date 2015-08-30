@@ -10,7 +10,11 @@
 
 __attribute__((__noreturn__))
 static void DoBail(const wchar_t *pwszDescription){
-	const bool bHasDebugger = IsDebuggerPresent();
+#ifdef NDEBUG
+	const bool bCanBeDebugged = IsDebuggerPresent();
+#else
+	const bool bCanBeDebugged = true;
+#endif
 
 	wchar_t awcBuffer[1024 + 256];
 	wchar_t *pwcWrite = MCF_wcpcpy(awcBuffer, L"应用程序异常终止，请联系作者寻求协助。");
@@ -25,7 +29,8 @@ static void DoBail(const wchar_t *pwszDescription){
 		wmemcpy(pwcWrite, pwszDescription, uLen);
 		pwcWrite += uLen;
 	}
-	pwcWrite = MCF_wcpcpy(pwcWrite, bHasDebugger ? L"\n\n单击“确定”终止应用程序，单击“取消”调试应用程序。\n" : L"\n\n单击“确定”终止应用程序。\n");
+	pwcWrite = MCF_wcpcpy(pwcWrite,
+		bCanBeDebugged ? L"\n\n单击“确定”终止应用程序，单击“取消”调试应用程序。\n" : L"\n\n单击“确定”终止应用程序。\n");
 
 	const HANDLE hStdErr = GetStdHandle(STD_ERROR_HANDLE);
 	if(hStdErr != INVALID_HANDLE_VALUE){
@@ -45,11 +50,11 @@ static void DoBail(const wchar_t *pwszDescription){
 			}
 		}
 	}
-
 	*(pwcWrite--) = 0;
 
-	MessageBoxW(NULL, awcBuffer, L"MCF CRT 错误", (bHasDebugger ? MB_OKCANCEL : MB_OK) | MB_ICONERROR | MB_TASKMODAL | MB_SERVICE_NOTIFICATION);
-	if(bHasDebugger){
+	const int nButton = MessageBoxW(NULL, awcBuffer, L"MCF CRT 错误",
+		(bCanBeDebugged ? MB_OKCANCEL : MB_OK) | MB_ICONERROR | MB_TASKMODAL | MB_SERVICE_NOTIFICATION);
+	if(nButton == IDCANCEL){
 		__asm__ __volatile__("int3 \n");
 	}
 	TerminateProcess(GetCurrentProcess(), ERROR_PROCESS_ABORTED);

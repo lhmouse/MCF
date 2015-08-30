@@ -54,7 +54,7 @@ static void DoBail(const wchar_t *pwszDescription){
 
 	const int nButton = MessageBoxW(NULL, awcBuffer, L"MCF CRT 错误",
 		(bCanBeDebugged ? MB_OKCANCEL : MB_OK) | MB_ICONERROR | MB_TASKMODAL | MB_SERVICE_NOTIFICATION);
-	if(nButton == IDCANCEL){
+	if(nButton != IDOK){
 		__asm__ __volatile__("int3 \n");
 	}
 	TerminateProcess(GetCurrentProcess(), ERROR_PROCESS_ABORTED);

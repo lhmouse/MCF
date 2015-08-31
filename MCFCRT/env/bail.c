@@ -46,6 +46,7 @@ static void DoBail(const wchar_t *pwszDescription){
 #else
 	const bool bCanBeDebugged = true;
 #endif
+	bool bShouldGenerateBreakpoint = bCanBeDebugged;
 
 	wchar_t awcBuffer[1024 + 256];
 	wchar_t *pwcWrite = MCF_wcpcpy(awcBuffer, L"应用程序异常终止，请联系作者寻求协助。");
@@ -93,10 +94,10 @@ static void DoBail(const wchar_t *pwszDescription){
 
 	const ULONG_PTR aulParams[3] = { (ULONG_PTR)&ustrText, (ULONG_PTR)&ustrCaption, uType };
 	HardErrorResponse eResponse;
-	if(!NT_SUCCESS(NtRaiseHardError(STATUS_SERVICE_NOTIFICATION, 4, 3, aulParams, (bCanBeDebugged ? kHardErrorOkCancel : kHardErrorOk), &eResponse))){
-		eResponse = kHardErrorResponseCancel;
+	if(NT_SUCCESS(NtRaiseHardError(STATUS_SERVICE_NOTIFICATION, 4, 3, aulParams, (bCanBeDebugged ? kHardErrorOkCancel : kHardErrorOk), &eResponse))){
+		bShouldGenerateBreakpoint = (eResponse != kHardErrorResponseOk);
 	}
-	if(bCanBeDebugged && (eResponse != kHardErrorResponseOk)){
+	if(bShouldGenerateBreakpoint){
 		__asm__ __volatile__("int3 \n");
 	}
 

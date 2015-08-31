@@ -10,7 +10,37 @@
 
 #include <ntdef.h>
 #include <ntstatus.h>
-#include <winternl.h>
+
+// ntdll.dll
+extern
+__attribute__((__dllimport__, __stdcall__))
+VOID RtlInitUnicodeString(PUNICODE_STRING pDestination, PCWSTR pwszSource);
+
+typedef enum tagHardErrorResponseOption {
+	kHardErrorAbortRetryIgnore,
+	kHardErrorOk,
+	kHardErrorOkCancel,
+	kHardErrorRetryCancel,
+	kHardErrorYesNo,
+	kHardErrorYesNoCancel,
+	kHardErrorShutdownSystem,
+} HardErrorResponseOption;
+
+typedef enum tagHardErrorResponse {
+	kHardErrorResponseUnknown0,
+	kHardErrorResponseUnknown1,
+	kHardErrorResponseAbort,
+	kHardErrorResponseCancel,
+	kHardErrorResponseIgnore,
+	kHardErrorResponseNo,
+	kHardErrorResponseOk,
+	kHardErrorResponseRetry,
+	kHardErrorResponseYes,
+} HardErrorResponse;
+
+extern
+__attribute__((__dllimport__, __stdcall__))
+NTSTATUS NtRaiseHardError(NTSTATUS stError, DWORD dwUnknown, DWORD dwParamCount, const ULONG_PTR *pulParams, HardErrorResponseOption eOption, HardErrorResponse *peResponse);
 
 __attribute__((__noreturn__))
 static void DoBail(const wchar_t *pwszDescription){
@@ -56,56 +86,18 @@ static void DoBail(const wchar_t *pwszDescription){
 	}
 	*(pwcWrite--) = 0;
 
-	// ntdll.dll
-	typedef enum tagHardErrorResponseOption {
-		kHardErrorAbortRetryIgnore,
-		kHardErrorOk,
-		kHardErrorOkCancel,
-		kHardErrorRetryCancel,
-		kHardErrorYesNo,
-		kHardErrorYesNoCancel,
-		kHardErrorShutdownSystem,
-	} HardErrorResponseOption;
+	UNICODE_STRING ustrText;
+	UNICODE_STRING ustrCaption;
+	UINT uType;
 
-	typedef enum tagHardErrorResponse {
-		kHardErrorResponseUnknown0,
-		kHardErrorResponseUnknown1,
-		kHardErrorResponseAbort,
-		kHardErrorResponseCancel,
-		kHardErrorResponseIgnore,
-		kHardErrorResponseNo,
-		kHardErrorResponseOk,
-		kHardErrorResponseRetry,
-		kHardErrorResponseYes,
-	} HardErrorResponse;
+	RtlInitUnicodeString(&ustrText, awcBuffer);
+	RtlInitUnicodeString(&ustrCaption, L"MCF CRT 错误");
+	uType = (bCanBeDebugged ? MB_OKCANCEL : MB_OK) | MB_ICONERROR;
 
-	HardErrorResponse eResponse = kHardErrorResponseCancel;
-	const HMODULE hNtDll = GetModuleHandleW(L"NTDLL.DLL");
-	if(hNtDll){
-		typedef VOID __stdcall PrototypeOfRtlInitUnicodeString(
-			PUNICODE_STRING pDestination, PCWSTR pwszSource);
-		typedef NTSTATUS __stdcall PrototypeOfNtRaiseHardError(
-			NTSTATUS stError, DWORD dwUnknown, DWORD dwParamCount, const ULONG_PTR *pulParams, HardErrorResponseOption eOption, HardErrorResponse *peResponse);
-
-		PrototypeOfRtlInitUnicodeString *const pfnRtlInitUnicodeString = (PrototypeOfRtlInitUnicodeString *)GetProcAddress(hNtDll, "RtlInitUnicodeString");
-		PrototypeOfNtRaiseHardError *const pfnNtRaiseHardError = (PrototypeOfNtRaiseHardError *)GetProcAddress(hNtDll, "NtRaiseHardError");
-		if(pfnRtlInitUnicodeString && pfnNtRaiseHardError){
-			UNICODE_STRING ustrText;
-			UNICODE_STRING ustrCaption;
-			UINT uType;
-
-			(*pfnRtlInitUnicodeString)(&ustrText, awcBuffer);
-			(*pfnRtlInitUnicodeString)(&ustrCaption, L"MCF CRT 错误");
-			uType = (bCanBeDebugged ? MB_OKCANCEL : MB_OK) | MB_ICONERROR;
-
-			const ULONG_PTR aulParams[3] = { (ULONG_PTR)&ustrText, (ULONG_PTR)&ustrCaption, uType };
-			HardErrorResponse eTempResponse;
-			if(NT_SUCCESS((*pfnNtRaiseHardError)(
-				STATUS_SERVICE_NOTIFICATION, 4, 3, aulParams, (bCanBeDebugged ? kHardErrorOkCancel : kHardErrorOk), &eTempResponse)))
-			{
-				eResponse = eTempResponse;
-			}
-		}
+	const ULONG_PTR aulParams[3] = { (ULONG_PTR)&ustrText, (ULONG_PTR)&ustrCaption, uType };
+	HardErrorResponse eResponse;
+	if(!NT_SUCCESS(NtRaiseHardError(STATUS_SERVICE_NOTIFICATION, 4, 3, aulParams, (bCanBeDebugged ? kHardErrorOkCancel : kHardErrorOk), &eResponse))){
+		eResponse = kHardErrorResponseCancel;
 	}
 	if(bCanBeDebugged && (eResponse != kHardErrorResponseOk)){
 		__asm__ __volatile__("int3 \n");

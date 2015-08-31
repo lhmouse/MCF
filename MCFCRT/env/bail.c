@@ -10,12 +10,9 @@
 
 #include <ntdef.h>
 #include <ntstatus.h>
+#include <winternl.h>
 
 // ntdll.dll
-extern
-__attribute__((__dllimport__, __stdcall__))
-VOID RtlInitUnicodeString(PUNICODE_STRING pDestination, PCWSTR pwszSource);
-
 typedef enum tagHardErrorResponseOption {
 	kHardErrorAbortRetryIgnore,
 	kHardErrorOk,

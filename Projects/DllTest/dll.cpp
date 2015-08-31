@@ -1,29 +1,26 @@
 #include <MCF/StdMCF.hpp>
-#include <MCF/Core/StringObserver.hpp>
-#include <MCF/StdMCF.hpp>
+#include <MCF/Core/String.hpp>
 #include <MCF/Thread/Thread.hpp>
 #include <MCF/Thread/ThreadLocal.hpp>
 #include <cstdio>
 
-using namespace MCF;
-
 namespace {
 
-ThreadLocal<int> tls;
+MCF::ThreadLocal<MCF::Utf8String> tls;
 
 }
 
 extern "C" {
 
 __declspec(dllexport) int __stdcall dlltest(int a, int b) noexcept {
-	std::printf("thread %u: tls = %d\n", (unsigned)::GetCurrentThreadId(), *tls);
-	*tls = 1;
-	std::printf("thread %u: tls = %d\n", (unsigned)::GetCurrentThreadId(), *tls);
+	std::printf("thread %u: tls = %s\n", (unsigned)::GetCurrentThreadId(), tls.Get().GetStr());
+	tls.Set("hello"_u8s);
+	std::printf("thread %u: tls = %s\n", (unsigned)::GetCurrentThreadId(), tls.Get().GetStr());
 
 	auto t = MCF::Thread::Create([]{
-		std::printf("child thread %u: tls = %d\n", (unsigned)::GetCurrentThreadId(), *tls);
-		*tls = 2;
-		std::printf("child thread %u: tls = %d\n", (unsigned)::GetCurrentThreadId(), *tls);
+		std::printf("child thread %u: tls = %s\n", (unsigned)::GetCurrentThreadId(), tls.Get().GetStr());
+		tls.Set("world"_u8s);
+		std::printf("child thread %u: tls = %s\n", (unsigned)::GetCurrentThreadId(), tls.Get().GetStr());
 	});
 	t->Join();
 

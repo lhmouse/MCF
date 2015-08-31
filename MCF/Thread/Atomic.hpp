@@ -61,19 +61,13 @@ namespace Impl_Atomic {
 		}
 	};
 
-
-	template<typename ElementT, bool kIsIntegral, bool kIsPointer>
-	class Atomic final {
-		static_assert(((void)sizeof(ElementT), false), "Only integers and pointers are supported.");
-	};
-
 	template<typename ElementT>
-	class Atomic<ElementT, true, false> final : public AtomicCommon<ElementT> {
+	class AtomicInteger final : public AtomicCommon<ElementT> {
 	private:
 		using xBase = AtomicCommon<ElementT>;
 
 	public:
-		explicit constexpr Atomic(ElementT vElement = 0) noexcept
+		explicit constexpr AtomicInteger(ElementT vElement = 0) noexcept
 			: xBase(vElement)
 		{
 		}
@@ -123,13 +117,13 @@ namespace Impl_Atomic {
 	};
 
 	template<typename ElementT>
-	class Atomic<ElementT, false, true> final : public AtomicCommon<ElementT> {
+	class AtomicPointerToObject final : public AtomicCommon<ElementT> {
 	private:
 		using xBase = AtomicCommon<ElementT>;
 
 	public:
-		explicit constexpr Atomic(ElementT vElement = nullptr) noexcept
-			: xBase(vElement)
+		explicit constexpr AtomicPointerToObject(ElementT pElement = nullptr) noexcept
+			: xBase(pElement)
 		{
 		}
 
@@ -155,10 +149,35 @@ namespace Impl_Atomic {
 			return SubFetch(1, eModel);
 		}
 	};
+
+	template<typename ElementT>
+	class AtomicPointerToNonObject final : public AtomicCommon<ElementT> {
+	private:
+		using xBase = AtomicCommon<ElementT>;
+
+	public:
+		explicit constexpr AtomicPointerToNonObject(ElementT pElement = nullptr) noexcept
+			: xBase(pElement)
+		{
+		}
+	};
+
+	template<typename ElementT>
+	class AtomicError final {
+		static_assert(((void)sizeof(ElementT), false), "Only integer, enumeration and pointer types are supported.");
+	};
 }
 
 template<typename ElementT>
-using Atomic = Impl_Atomic::Atomic<ElementT, std::is_integral<ElementT>::value || std::is_enum<ElementT>::value, std::is_pointer<ElementT>::value>;
+using Atomic =
+	std::conditional_t<std::is_integral<ElementT>::value || std::is_enum<ElementT>::value,
+		Impl_Atomic::AtomicInteger<ElementT>,
+		std::conditional_t<std::is_pointer<ElementT>::value && std::is_object<std::remove_pointer_t<ElementT>>::value,
+			Impl_Atomic::AtomicPointerToObject<ElementT>,
+			std::conditional_t<std::is_pointer<ElementT>::value,
+				Impl_Atomic::AtomicPointerToNonObject<ElementT>,
+				Impl_Atomic::AtomicError<ElementT>
+		>>>;
 
 inline void AtomicFence(MemoryModel eModel) noexcept {
 	__atomic_thread_fence(static_cast<int>(eModel));

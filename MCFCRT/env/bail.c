@@ -96,10 +96,10 @@ static void DoBail(const wchar_t *pwszDescription){
 	if(NT_SUCCESS(NtRaiseHardError(STATUS_SERVICE_NOTIFICATION, 4, 3, aulParams, (bCanBeDebugged ? kHardErrorOkCancel : kHardErrorOk), &eResponse))){
 		bShouldGenerateBreakpoint = (eResponse != kHardErrorResponseOk);
 	}
+
 	if(bShouldGenerateBreakpoint){
 		__asm__ __volatile__("int3 \n");
 	}
-
 	TerminateProcess(GetCurrentProcess(), ERROR_PROCESS_ABORTED);
 	__builtin_unreachable();
 }

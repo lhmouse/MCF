@@ -61,8 +61,7 @@ static void DoBail(const wchar_t *pwszDescription){
 		wmemcpy(pwcWrite, pwszDescription, uLen);
 		pwcWrite += uLen;
 	}
-	pwcWrite = MCF_wcpcpy(pwcWrite,
-		bCanBeDebugged ? L"\n\n单击“确定”终止应用程序，单击“取消”调试应用程序。\n" : L"\n\n单击“确定”终止应用程序。\n");
+	pwcWrite = MCF_wcpcpy(pwcWrite, bCanBeDebugged ? L"\n\n单击“确定”终止应用程序，单击“取消”调试应用程序。\n" : L"\n\n单击“确定”终止应用程序。\n");
 
 	const HANDLE hStdErr = GetStdHandle(STD_ERROR_HANDLE);
 	if(hStdErr != INVALID_HANDLE_VALUE){

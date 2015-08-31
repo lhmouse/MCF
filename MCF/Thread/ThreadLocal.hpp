@@ -26,16 +26,16 @@ namespace Impl_ThreadLocal {
 		}
 	};
 
-	template<class ObjectT>
+	template<class ElementT>
 	class ThreadLocalTrivialSmallEnough : NONCOPYABLE {
-		static_assert(std::is_trivial<ObjectT>::value && (sizeof(ObjectT) <= sizeof(std::intptr_t)), "!");
+		static_assert(std::is_trivial<ElementT>::value && (sizeof(ElementT) <= sizeof(std::intptr_t)), "!");
 
 	private:
-		const ObjectT x_vDefault;
+		const ElementT x_vDefault;
 		UniqueHandle<TlsKeyDeleter> x_pTlsKey;
 
 	public:
-		explicit ThreadLocalTrivialSmallEnough(ObjectT vDefault = ObjectT())
+		explicit ThreadLocalTrivialSmallEnough(ElementT vDefault = ElementT())
 			: x_vDefault(std::move(vDefault))
 		{
 			if(!x_pTlsKey.Reset(::MCF_CRT_TlsAllocKey(nullptr))){
@@ -44,69 +44,76 @@ namespace Impl_ThreadLocal {
 		}
 
 	public:
-		ObjectT Get() const noexcept {
+		ElementT Get() const noexcept {
 			bool bHasValue;
-			std::intptr_t nValue;
-			if(!::MCF_CRT_TlsGet(x_pTlsKey.Get(), &bHasValue, &nValue)){
+			union {
+				ElementT v;
+				std::intptr_t n;
+			} un;
+			if(!::MCF_CRT_TlsGet(x_pTlsKey.Get(), &bHasValue, &un.n)){
 				ASSERT_MSG(false, L"MCF_CRT_TlsGet() 失败。");
 			}
 			if(bHasValue){
-				return reinterpret_cast<const ObjectT &>(nValue);
+				return un.v;
 			}
 			return x_vDefault;
 		}
-		void Set(ObjectT vObject){
-			if(!::MCF_CRT_TlsReset(x_pTlsKey.Get(), reinterpret_cast<std::intptr_t &>(vObject))){ // noexcept
+		void Set(ElementT vElement){
+			union {
+				ElementT v;
+				std::intptr_t n;
+			} un = { vElement };
+			if(!::MCF_CRT_TlsReset(x_pTlsKey.Get(), un.n)){ // noexcept
 				DEBUG_THROW(SystemError, "MCF_CRT_TlsReset");
 			}
 		}
 	};
 
-	template<class ObjectT>
+	template<class ElementT>
 	class ThreadLocalGeneric : NONCOPYABLE {
 	private:
-		const ObjectT x_vDefault;
+		const ElementT x_vDefault;
 		UniqueHandle<TlsKeyDeleter> x_pTlsKey;
 
 	public:
-		explicit ThreadLocalGeneric(ObjectT vDefault = ObjectT())
+		explicit ThreadLocalGeneric(ElementT vDefault = ElementT())
 			: x_vDefault(std::move(vDefault))
 		{
-			if(!x_pTlsKey.Reset(::MCF_CRT_TlsAllocKey([](std::intptr_t nValue){ delete reinterpret_cast<ObjectT *>(nValue); }))){
+			if(!x_pTlsKey.Reset(::MCF_CRT_TlsAllocKey([](std::intptr_t nValue){ delete reinterpret_cast<ElementT *>(nValue); }))){
 				DEBUG_THROW(SystemError, "MCF_CRT_TlsAllocKey");
 			}
 		}
 
 	public:
-		const ObjectT &Get() const noexcept {
+		const ElementT &Get() const noexcept {
 			bool bHasValue;
 			std::intptr_t nValue;
 			if(!::MCF_CRT_TlsGet(x_pTlsKey.Get(), &bHasValue, &nValue)){
 				ASSERT_MSG(false, L"MCF_CRT_TlsGet() 失败。");
 			}
 			if(bHasValue){
-				const auto pObject = reinterpret_cast<const ObjectT *>(nValue);
-				if(pObject){
-					return *pObject;
+				const auto pElement = reinterpret_cast<const ElementT *>(nValue);
+				if(pElement){
+					return *pElement;
 				}
 			}
 			return x_vDefault;
 		}
-		void Set(ObjectT vObject){
-			const auto pObject = new ObjectT(vObject);
-			if(!::MCF_CRT_TlsReset(x_pTlsKey.Get(), reinterpret_cast<std::intptr_t>(pObject))){ // noexcept
-				delete pObject;
+		void Set(ElementT vElement){
+			const auto pElement = new ElementT(vElement);
+			if(!::MCF_CRT_TlsReset(x_pTlsKey.Get(), reinterpret_cast<std::intptr_t>(pElement))){ // noexcept
+				delete pElement;
 				DEBUG_THROW(SystemError, "MCF_CRT_TlsReset");
 			}
 		}
 	};
 }
 
-template<class ObjectT>
+template<class ElementT>
 using ThreadLocal =
-	std::conditional_t<std::is_trivial<ObjectT>::value && (sizeof(ObjectT) <= sizeof(std::intptr_t)),
-		Impl_ThreadLocal::ThreadLocalTrivialSmallEnough<ObjectT>,
-		Impl_ThreadLocal::ThreadLocalGeneric<ObjectT>
+	std::conditional_t<std::is_trivial<ElementT>::value && (sizeof(ElementT) <= sizeof(std::intptr_t)),
+		Impl_ThreadLocal::ThreadLocalTrivialSmallEnough<ElementT>,
+		Impl_ThreadLocal::ThreadLocalGeneric<ElementT>
 		>;
 
 }

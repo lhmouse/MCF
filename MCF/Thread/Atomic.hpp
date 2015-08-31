@@ -63,6 +63,8 @@ namespace Impl_Atomic {
 
 	template<typename ElementT>
 	class AtomicInteger final : public AtomicCommon<ElementT> {
+		static_assert(std::is_integral<ElementT>::value || std::is_enum<ElementT>::value, "!");
+
 	private:
 		using xBase = AtomicCommon<ElementT>;
 
@@ -118,6 +120,8 @@ namespace Impl_Atomic {
 
 	template<typename ElementT>
 	class AtomicPointerToObject final : public AtomicCommon<ElementT> {
+		static_assert(std::is_pointer<ElementT>::value && std::is_object<std::remove_pointer_t<ElementT>>::value, "!");
+
 	private:
 		using xBase = AtomicCommon<ElementT>;
 
@@ -152,6 +156,8 @@ namespace Impl_Atomic {
 
 	template<typename ElementT>
 	class AtomicPointerToNonObject final : public AtomicCommon<ElementT> {
+		static_assert(std::is_pointer<ElementT>::value && !std::is_object<std::remove_pointer_t<ElementT>>::value, "!");
+
 	private:
 		using xBase = AtomicCommon<ElementT>;
 

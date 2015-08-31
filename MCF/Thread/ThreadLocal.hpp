@@ -28,6 +28,8 @@ namespace Impl_ThreadLocal {
 
 	template<class ObjectT>
 	class ThreadLocalTrivialSmallEnough : NONCOPYABLE {
+		static_assert(std::is_trivial<ObjectT>::value && (sizeof(ObjectT) <= sizeof(std::intptr_t)), "!");
+
 	private:
 		const ObjectT x_vDefault;
 		UniqueHandle<TlsKeyDeleter> x_pTlsKey;

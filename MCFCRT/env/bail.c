@@ -8,6 +8,10 @@
 #include <stdarg.h>
 #include <wchar.h>
 
+#include <ntdef.h>
+#include <ntstatus.h>
+#include <winternl.h>
+
 __attribute__((__noreturn__))
 static void DoBail(const wchar_t *pwszDescription){
 #ifdef NDEBUG
@@ -52,11 +56,58 @@ static void DoBail(const wchar_t *pwszDescription){
 	}
 	*(pwcWrite--) = 0;
 
-	const int nButton = MessageBoxW(NULL, awcBuffer, L"MCF CRT 错误",
-		(bCanBeDebugged ? MB_OKCANCEL : MB_OK) | MB_ICONERROR | MB_TASKMODAL | MB_SERVICE_NOTIFICATION);
-	if(nButton != IDOK){
+	// ntdll.dll
+	typedef enum tagHardErrorResponseOption {
+		kHardErrorAbortRetryIgnore,
+		kHardErrorOk,
+		kHardErrorOkCancel,
+		kHardErrorRetryCancel,
+		kHardErrorYesNo,
+		kHardErrorYesNoCancel,
+		kHardErrorShutdownSystem,
+	} HardErrorResponseOption;
+
+	typedef enum tagHardErrorResponse {
+		kHardErrorResponseUnknown0,
+		kHardErrorResponseUnknown1,
+		kHardErrorResponseAbort,
+		kHardErrorResponseCancel,
+		kHardErrorResponseIgnore,
+		kHardErrorResponseNo,
+		kHardErrorResponseOk,
+		kHardErrorResponseRetry,
+		kHardErrorResponseYes,
+	} HardErrorResponse;
+
+	HardErrorResponse eResponse = kHardErrorResponseCancel;
+	const HMODULE hNtDll = GetModuleHandleW(L"NTDLL.DLL");
+	if(hNtDll){
+		typedef VOID __stdcall PrototypeOfRtlInitUnicodeString(
+			PUNICODE_STRING pDestination, PCWSTR pwszSource);
+		typedef NTSTATUS __stdcall PrototypeOfNtRaiseHardError(
+			NTSTATUS stError, DWORD dwUnknown, DWORD dwParamCount, const ULONG_PTR *pulParams, HardErrorResponseOption nOption, HardErrorResponse *peResponse);
+
+		PrototypeOfRtlInitUnicodeString *const pfnRtlInitUnicodeString = (PrototypeOfRtlInitUnicodeString *)GetProcAddress(hNtDll, "RtlInitUnicodeString");
+		PrototypeOfNtRaiseHardError *const pfnNtRaiseHardError = (PrototypeOfNtRaiseHardError *)GetProcAddress(hNtDll, "NtRaiseHardError");
+		if(pfnRtlInitUnicodeString && pfnNtRaiseHardError){
+			UNICODE_STRING ustrText;
+			UNICODE_STRING ustrCaption;
+			UINT uType;
+
+			(*pfnRtlInitUnicodeString)(&ustrText, awcBuffer);
+			(*pfnRtlInitUnicodeString)(&ustrCaption, L"MCF CRT 错误");
+			uType = (bCanBeDebugged ? MB_OKCANCEL : MB_OK) | MB_ICONERROR;
+
+			const ULONG_PTR aulParams[3] = { (ULONG_PTR)&ustrText, (ULONG_PTR)&ustrCaption, uType };
+			if(!NT_SUCCESS((*pfnNtRaiseHardError)(STATUS_SERVICE_NOTIFICATION, 4, 3, aulParams, kHardErrorOkCancel, &eResponse))){
+				eResponse = kHardErrorResponseCancel;
+			}
+		}
+	}
+	if(bCanBeDebugged && (eResponse != kHardErrorResponseOk)){
 		__asm__ __volatile__("int3 \n");
 	}
+
 	TerminateProcess(GetCurrentProcess(), ERROR_PROCESS_ABORTED);
 	__builtin_unreachable();
 }

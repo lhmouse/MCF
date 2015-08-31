@@ -49,7 +49,7 @@ void __MCF_CRT_HeapDbgUninit(){
 
 				char achTemp[1024];
 				char *pchWrite = achTemp + sprintf(achTemp,
-					"Memory leak: address = %p, size = %p, return address = %p, leading bytes = ",
+					"Memory leak: address = %p, size = %p, return address = %p, leading bytes =",
 					(void *)pbyDump, (void *)pBlockInfo->uSize, (void *)pBlockInfo->pRetAddr);
 				for(size_t i = 0; i < 16; ++i){
 					*(pchWrite++) = ' ';

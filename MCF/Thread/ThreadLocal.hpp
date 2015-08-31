@@ -28,7 +28,7 @@ namespace Impl_ThreadLocal {
 
 	template<class ElementT>
 	class ThreadLocalTrivialSmallEnough : NONCOPYABLE {
-		static_assert(std::is_trivial<ElementT>::value && (sizeof(ElementT) <= sizeof(std::intptr_t)), "!");
+		static_assert(std::is_trivial<ElementT>::value && !std::is_array<ElementT>::value && (sizeof(ElementT) <= sizeof(std::intptr_t)), "!");
 
 	private:
 		const ElementT x_vDefault;
@@ -46,24 +46,21 @@ namespace Impl_ThreadLocal {
 	public:
 		ElementT Get() const noexcept {
 			bool bHasValue;
-			union {
-				ElementT v;
-				std::intptr_t n;
-			} un;
-			if(!::MCF_CRT_TlsGet(x_pTlsKey.Get(), &bHasValue, &un.n)){
+			std::intptr_t nValue;
+			if(!::MCF_CRT_TlsGet(x_pTlsKey.Get(), &bHasValue, &nValue)){
 				ASSERT_MSG(false, L"MCF_CRT_TlsGet() 失败。");
 			}
 			if(bHasValue){
-				return un.v;
+				ElementT vElement;
+				std::memcpy(&vElement, &nValue, sizeof(vElement));
+				return vElement;
 			}
 			return x_vDefault;
 		}
 		void Set(ElementT vElement){
-			union {
-				ElementT v;
-				std::intptr_t n;
-			} un = { vElement };
-			if(!::MCF_CRT_TlsReset(x_pTlsKey.Get(), un.n)){ // noexcept
+			std::intptr_t nValue = 0;
+			std::memcpy(&nValue, &vElement, sizeof(vElement));
+			if(!::MCF_CRT_TlsReset(x_pTlsKey.Get(), nValue)){ // noexcept
 				DEBUG_THROW(SystemError, "MCF_CRT_TlsReset");
 			}
 		}
@@ -111,7 +108,7 @@ namespace Impl_ThreadLocal {
 
 template<class ElementT>
 using ThreadLocal =
-	std::conditional_t<std::is_trivial<ElementT>::value && (sizeof(ElementT) <= sizeof(std::intptr_t)),
+	std::conditional_t<std::is_trivial<ElementT>::value && !std::is_array<ElementT>::value && (sizeof(ElementT) <= sizeof(std::intptr_t)),
 		Impl_ThreadLocal::ThreadLocalTrivialSmallEnough<ElementT>,
 		Impl_ThreadLocal::ThreadLocalGeneric<ElementT>
 		>;

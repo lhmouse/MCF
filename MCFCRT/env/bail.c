@@ -99,10 +99,11 @@ static void DoBail(const wchar_t *pwszDescription){
 			uType = (bCanBeDebugged ? MB_OKCANCEL : MB_OK) | MB_ICONERROR;
 
 			const ULONG_PTR aulParams[3] = { (ULONG_PTR)&ustrText, (ULONG_PTR)&ustrCaption, uType };
-			if(!NT_SUCCESS((*pfnNtRaiseHardError)(
-				STATUS_SERVICE_NOTIFICATION, 4, 3, aulParams, (bCanBeDebugged ? kHardErrorOkCancel : kHardErrorOk), &eResponse)))
+			HardErrorResponse eTempResponse;
+			if(NT_SUCCESS((*pfnNtRaiseHardError)(
+				STATUS_SERVICE_NOTIFICATION, 4, 3, aulParams, (bCanBeDebugged ? kHardErrorOkCancel : kHardErrorOk), &eTempResponse)))
 			{
-				eResponse = kHardErrorResponseCancel;
+				eResponse = eTempResponse;
 			}
 		}
 	}

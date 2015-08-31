@@ -27,11 +27,11 @@ std::uintptr_t GetMagic(bool bIsArray){
 
 #endif
 
-static_assert(sizeof(std::uintptr_t) <= sizeof(std::max_align_t), "wtf?");
+static_assert(sizeof(std::uintptr_t) <= alignof(std::max_align_t), "wtf?");
 
 void *Allocate(std::size_t uSize, bool bIsArray, const void *pRetAddr){
 #if __MCF_CRT_REQUIRE_HEAPDBG_LEVEL(1)
-	const auto uSizeToAlloc = sizeof(std::max_align_t) + uSize;
+	const auto uSizeToAlloc = alignof(std::max_align_t) + uSize;
 	if(uSizeToAlloc < uSize){
 		throw std::bad_alloc();
 	}
@@ -49,7 +49,7 @@ void *Allocate(std::size_t uSize, bool bIsArray, const void *pRetAddr){
 	}
 #if __MCF_CRT_REQUIRE_HEAPDBG_LEVEL(1)
 	*(std::uintptr_t *)pRaw = GetMagic(bIsArray);
-	return (unsigned char *)pRaw + sizeof(std::max_align_t);
+	return (unsigned char *)pRaw + alignof(std::max_align_t);
 #else
 	UNREF_PARAM(bIsArray);
 	return pRaw;
@@ -57,7 +57,7 @@ void *Allocate(std::size_t uSize, bool bIsArray, const void *pRetAddr){
 }
 void *AllocateNoThrow(std::size_t uSize, bool bIsArray, const void *pRetAddr) noexcept {
 #if __MCF_CRT_REQUIRE_HEAPDBG_LEVEL(1)
-	const auto uSizeToAlloc = sizeof(std::max_align_t) + uSize;
+	const auto uSizeToAlloc = alignof(std::max_align_t) + uSize;
 	if(uSizeToAlloc < uSize){
 		return nullptr;
 	}
@@ -81,7 +81,7 @@ void *AllocateNoThrow(std::size_t uSize, bool bIsArray, const void *pRetAddr) no
 	}
 #if __MCF_CRT_REQUIRE_HEAPDBG_LEVEL(1)
 	*(std::uintptr_t *)pRaw = GetMagic(bIsArray);
-	return pRaw + sizeof(std::max_align_t);
+	return pRaw + alignof(std::max_align_t);
 #else
 	UNREF_PARAM(bIsArray);
 	return pRaw;
@@ -92,7 +92,7 @@ void Deallocate(void *pBlock, bool bIsArray, const void *pRetAddr) noexcept {
 		return;
 	}
 #if __MCF_CRT_REQUIRE_HEAPDBG_LEVEL(1)
-	void *const pRaw = (unsigned char *)pBlock - sizeof(std::max_align_t);
+	void *const pRaw = (unsigned char *)pBlock - alignof(std::max_align_t);
 	if(*(std::uintptr_t *)pRaw != GetMagic(bIsArray)){
 		const wchar_t *const pwcSuffix = bIsArray ? L"[]" : L"";
 		MCF_CRT_BailF(L"试图使用 operator delete%ls() 释放不是由 operator new%ls() 分配的内存。\n调用返回地址：%0*zX",

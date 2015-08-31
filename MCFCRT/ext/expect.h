@@ -7,7 +7,7 @@
 
 #include "../env/_crtdef.h"
 
-#define EXPECT(x_)		(__builtin_expect(!!(x_), 1))
-#define EXPECT_NOT(x_)	(__builtin_expect(!!(x_), 0))
+#define EXPECT(__x_)		(__builtin_expect(!!(__x_), 1))
+#define EXPECT_NOT(__x_)	(__builtin_expect(!!(__x_), 0))
 
 #endif

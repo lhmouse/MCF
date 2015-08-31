@@ -14,9 +14,9 @@ typedef struct MCF_tagArgItem {
 	MCF_STD size_t uLen;
 } MCF_ArgItem;
 
-extern const MCF_ArgItem *MCF_CRT_AllocArgv(MCF_STD size_t *pArgc, const wchar_t *pwszCommandLine) MCF_NOEXCEPT;
-extern const MCF_ArgItem *MCF_CRT_AllocArgvFromCommandLine(MCF_STD size_t *pArgc) MCF_NOEXCEPT; // 根据当前 GetCommandLineW() 的返回值创建。
-extern void MCF_CRT_FreeArgv(const MCF_ArgItem *pArgItems) MCF_NOEXCEPT;
+extern const MCF_ArgItem *MCF_CRT_AllocArgv(MCF_STD size_t *__pArgc, const wchar_t *__pwszCommandLine) MCF_NOEXCEPT;
+extern const MCF_ArgItem *MCF_CRT_AllocArgvFromCommandLine(MCF_STD size_t *__pArgc) MCF_NOEXCEPT; // 根据当前 GetCommandLineW() 的返回值创建。
+extern void MCF_CRT_FreeArgv(const MCF_ArgItem *__pArgItems) MCF_NOEXCEPT;
 
 __MCF_CRT_EXTERN_C_END
 

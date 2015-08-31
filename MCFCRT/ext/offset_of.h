@@ -10,19 +10,19 @@
 
 #ifdef __cplusplus
 #	include <memory>
-#	define __MCF_ADDRESS_OF(lval_)	\
-	((unsigned char *)::std::addressof(lval_))
+#	define __MCF_ADDRESS_OF(__lval_)	\
+	((unsigned char *)::std::addressof(__lval_))
 #else
-#	define __MCF_ADDRESS_OF(lval_)	\
-	((unsigned char *)&(lval_))
+#	define __MCF_ADDRESS_OF(__lval_)	\
+	((unsigned char *)&(__lval_))
 #endif
 
-#define OFFSET_OF(s_, m_)	\
+#define OFFSET_OF(__s_, __m_)	\
 	(__MCF_CRT_MAKE_CONSTANT((MCF_STD size_t)(	\
-		__MCF_ADDRESS_OF(((s_ *)(unsigned char *)1)->m_) - (unsigned char *)1)))
+		__MCF_ADDRESS_OF(((__s_ *)(unsigned char *)1)->__m_) - (unsigned char *)1)))
 
 // 成员指针转换成聚合指针。
-#define DOWN_CAST(s_, m_, p_)	\
-	((s_ *)((unsigned char *)(p_) - OFFSET_OF(s_, m_)))
+#define DOWN_CAST(__s_, __m_, __p_)	\
+	((__s_ *)((unsigned char *)(__p_) - OFFSET_OF(__s_, __m_)))
 
 #endif

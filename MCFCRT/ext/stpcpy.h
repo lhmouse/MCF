@@ -9,7 +9,7 @@
 
 __MCF_CRT_EXTERN_C_BEGIN
 
-extern char *MCF_stpcpy(char *restrict dst, const char *restrict src) MCF_NOEXCEPT;
+extern char *MCF_stpcpy(char *restrict __dst, const char *restrict __src) MCF_NOEXCEPT;
 
 __MCF_CRT_EXTERN_C_END
 

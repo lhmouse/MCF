@@ -19,29 +19,29 @@ typedef struct MCF_tagWindowsVersion {
 	const wchar_t *pwszServPack;
 } MCF_WindowsVersion;
 
-extern void MCF_GetWindowsVersion(MCF_WindowsVersion *pVersion) MCF_NOEXCEPT;
+extern void MCF_GetWindowsVersion(MCF_WindowsVersion *__pVersion) MCF_NOEXCEPT;
 
 inline MCF_STD uint32_t MCF_ReadTimestampCounter32() MCF_NOEXCEPT {
-	MCF_STD uint32_t u32Ret;
+	MCF_STD uint32_t __u32Ret;
 	__asm__ __volatile__(
 		"rdtsc \n"
-		: "=a"(u32Ret) : : "dx"
+		: "=a"(__u32Ret) : : "dx"
 		);
-	return u32Ret;
+	return __u32Ret;
 }
 inline MCF_STD uint64_t MCF_ReadTimestampCounter64() MCF_NOEXCEPT {
-	MCF_STD uint64_t u64Ret;
+	MCF_STD uint64_t __u64Ret;
 	__asm__ __volatile__(
 		"rdtsc \n"
 #ifdef _WIN64
 		"shl rdx, 32 \n"
 		"or rax, rdx \n"
-		: "=a"(u64Ret) : : "dx"
+		: "=a"(__u64Ret) : : "dx"
 #else
-		: "=A"(u64Ret) : :
+		: "=A"(__u64Ret) : :
 #endif
 		);
-	return u64Ret;
+	return __u64Ret;
 }
 
 extern MCF_STD uint64_t MCF_GetUtcTime() MCF_NOEXCEPT;

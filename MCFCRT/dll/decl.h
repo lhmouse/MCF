@@ -10,16 +10,16 @@
 __MCF_CRT_EXTERN_C_BEGIN
 
 __attribute__((__weak__))
-extern bool MCFDll_OnProcessAttach(void *hDll, bool bDynamic) MCF_NOEXCEPT;
+extern bool MCFDll_OnProcessAttach(void *__hDll, bool __bDynamic) MCF_NOEXCEPT;
 
 __attribute__((__weak__))
-extern void MCFDll_OnProcessDetach(void *hDll, bool bDynamic) MCF_NOEXCEPT;
+extern void MCFDll_OnProcessDetach(void *__hDll, bool __bDynamic) MCF_NOEXCEPT;
 
 __attribute__((__weak__))
-extern void MCFDll_OnThreadAttach(void *hDll) MCF_NOEXCEPT;
+extern void MCFDll_OnThreadAttach(void *__hDll) MCF_NOEXCEPT;
 
 __attribute__((__weak__))
-extern void MCFDll_OnThreadDetach(void *hDll) MCF_NOEXCEPT;
+extern void MCFDll_OnThreadDetach(void *__hDll) MCF_NOEXCEPT;
 
 __MCF_CRT_EXTERN_C_END
 

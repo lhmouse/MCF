@@ -17,12 +17,12 @@ static HANDLE		g_hMapAllocator;
 static MCF_AvlRoot	g_pavlBlocks;
 
 static int BlockInfoComparatorNodeKey(const MCF_AvlNodeHeader *pInfo1, intptr_t nKey2){
-	const uintptr_t uKey1 = (uintptr_t)(((const __MCF_HeapDbgBlockInfo *)pInfo1)->pContents);
+	const uintptr_t uKey1 = (uintptr_t)(((const __MCF_HeapDbgBlockInfo *)pInfo1)->__pContents);
 	const uintptr_t uKey2 = (uintptr_t)(void *)nKey2;
 	return (uKey1 < uKey2) ? -1 : ((uKey1 > uKey2) ? 1 : 0);
 }
 static int BlockInfoComparatorNodes(const MCF_AvlNodeHeader *pInfo1, const MCF_AvlNodeHeader *pInfo2){
-	return BlockInfoComparatorNodeKey(pInfo1, (intptr_t)(((const __MCF_HeapDbgBlockInfo *)pInfo2)->pContents));
+	return BlockInfoComparatorNodeKey(pInfo1, (intptr_t)(((const __MCF_HeapDbgBlockInfo *)pInfo2)->__pContents));
 }
 
 #endif
@@ -45,12 +45,12 @@ void __MCF_CRT_HeapDbgUninit(){
 		} else {
 			const __MCF_HeapDbgBlockInfo *pBlockInfo = (const __MCF_HeapDbgBlockInfo *)MCF_AvlFront(&g_pavlBlocks);
 			do {
-				const unsigned char *pbyDump = pBlockInfo->pContents;
+				const unsigned char *pbyDump = pBlockInfo->__pContents;
 
 				char achTemp[1024];
 				char *pchWrite = achTemp + sprintf(achTemp,
 					"Memory leak: address = %p, size = %p, return address = %p, leading bytes =",
-					(void *)pbyDump, (void *)pBlockInfo->uSize, (void *)pBlockInfo->pRetAddr);
+					(void *)pbyDump, (void *)pBlockInfo->__uSize, (void *)pBlockInfo->__pRetAddr);
 				for(size_t i = 0; i < 16; ++i){
 					*(pchWrite++) = ' ';
 					if(IsBadReadPtr(pbyDump, 1)){
@@ -118,9 +118,9 @@ unsigned char *__MCF_CRT_HeapDbgAddGuardsAndRegister(
 		MCF_CRT_BailF(L"__MCF_CRT_HeapDbgAddGuardsAndRegister() 失败：内存不足。\n调用返回地址：%0*zX",
 			(int)(sizeof(size_t) * 2), (size_t)pRetAddr);
 	}
-	pBlockInfo->pContents	= pContents;
-	pBlockInfo->uSize		= uContentSize;
-	pBlockInfo->pRetAddr	= pRetAddr;
+	pBlockInfo->__pContents	= pContents;
+	pBlockInfo->__uSize		= uContentSize;
+	pBlockInfo->__pRetAddr	= pRetAddr;
 	MCF_AvlAttach(&g_pavlBlocks, (MCF_AvlNodeHeader *)pBlockInfo, &BlockInfoComparatorNodes);
 
 	return pContents;
@@ -139,7 +139,7 @@ const __MCF_HeapDbgBlockInfo *__MCF_CRT_HeapDbgValidate(
 	}
 
 	void *const *ppGuard1 = (void *const *)pContents;
-	void *const *ppGuard2 = (void *const *)(pContents + pBlockInfo->uSize);
+	void *const *ppGuard2 = (void *const *)(pContents + pBlockInfo->__uSize);
 	for(unsigned i = 0; i < GUARD_BAND_SIZE; i += sizeof(void *)){
 		--ppGuard1;
 

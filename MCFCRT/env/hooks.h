@@ -10,16 +10,16 @@
 __MCF_CRT_EXTERN_C_BEGIN
 
 // heap.c
-extern void (*__MCF_OnHeapAlloc)(void *pNewBlock, MCF_STD size_t uSize, const void *pRetAddr) MCF_NOEXCEPT;
-extern void (*__MCF_OnHeapRealloc)(void *pNewBlock, void *pBlock, MCF_STD size_t uSize, const void *pRetAddr) MCF_NOEXCEPT;
-extern void (*__MCF_OnHeapDealloc)(void *pBlock, const void *pRetAddr) MCF_NOEXCEPT;
-extern bool (*__MCF_OnBadAlloc)(const void *pRetAddr) MCF_NOEXCEPT;
+extern void (*__MCF_OnHeapAlloc)(void *__pNewBlock, MCF_STD size_t __uSize, const void *__pRetAddr) MCF_NOEXCEPT;
+extern void (*__MCF_OnHeapRealloc)(void *__pNewBlock, void *__pBlock, MCF_STD size_t __uSize, const void *__pRetAddr) MCF_NOEXCEPT;
+extern void (*__MCF_OnHeapDealloc)(void *__pBlock, const void *__pRetAddr) MCF_NOEXCEPT;
+extern bool (*__MCF_OnBadAlloc)(const void *__pRetAddr) MCF_NOEXCEPT;
 
 #ifdef __cplusplus
 #	include <cxxabi.h>
 
 // cxa_throw.cpp
-extern void (*__MCF_OnException)(void *pException, const std::type_info &tiType, const void *pRetAddr);
+extern void (*__MCF_OnException)(void *__pException, const std::type_info &__tiType, const void *__pRetAddr);
 
 #endif // __cplusplus
 

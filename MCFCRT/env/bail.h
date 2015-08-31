@@ -10,9 +10,9 @@
 __MCF_CRT_EXTERN_C_BEGIN
 
 extern __attribute__((__noreturn__))
-void MCF_CRT_Bail(const wchar_t *pwszDescription) MCF_NOEXCEPT;
+void MCF_CRT_Bail(const wchar_t *__pwszDescription) MCF_NOEXCEPT;
 extern __attribute__((__noreturn__))
-void MCF_CRT_BailF(const wchar_t *pwszFormat, ...) MCF_NOEXCEPT;
+void MCF_CRT_BailF(const wchar_t *__pwszFormat, ...) MCF_NOEXCEPT;
 
 __MCF_CRT_EXTERN_C_END
 

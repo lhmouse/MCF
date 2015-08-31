@@ -11,7 +11,7 @@
 __MCF_CRT_EXTERN_C_BEGIN
 
 extern unsigned long MCF_CRT_GetWin32LastError(void) MCF_NOEXCEPT;
-extern void MCF_CRT_SetWin32LastError(unsigned long ulErrorCode) MCF_NOEXCEPT;
+extern void MCF_CRT_SetWin32LastError(unsigned long __ulErrorCode) MCF_NOEXCEPT;
 
 __MCF_CRT_EXTERN_C_END
 

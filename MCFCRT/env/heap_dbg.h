@@ -36,23 +36,23 @@ extern void __MCF_CRT_HeapDbgUninit(void) MCF_NOEXCEPT;
 #if __MCF_CRT_REQUIRE_HEAPDBG_LEVEL(3)
 
 typedef struct __MCF_tagHeapDbgBlockInfo {
-	MCF_AvlNodeHeader vHeader;
+	MCF_AvlNodeHeader __vHeader;
 
-	void *pContents;
-	MCF_STD size_t uSize;
-	const void *pRetAddr;
+	void *__pContents;
+	MCF_STD size_t __uSize;
+	const void *__pRetAddr;
 } __MCF_HeapDbgBlockInfo;
 
-extern MCF_STD size_t __MCF_CRT_HeapDbgGetRawSize(MCF_STD size_t uContentSize) MCF_NOEXCEPT;
+extern MCF_STD size_t __MCF_CRT_HeapDbgGetRawSize(MCF_STD size_t __uContentSize) MCF_NOEXCEPT;
 
-// 返回 pContents，后续的 __MCF_CRT_HeapDbgValidate() 使用这个返回值。
+// 返回 __pContents，后续的 __MCF_CRT_HeapDbgValidate() 使用这个返回值。
 extern unsigned char *__MCF_CRT_HeapDbgAddGuardsAndRegister(
-	unsigned char *pRaw, MCF_STD size_t uContentSize, const void *pRetAddr) MCF_NOEXCEPT;
+	unsigned char *__pRaw, MCF_STD size_t __uContentSize, const void *__pRetAddr) MCF_NOEXCEPT;
 
 extern const __MCF_HeapDbgBlockInfo *__MCF_CRT_HeapDbgValidate(
-	unsigned char **ppRaw, unsigned char *pContents, const void *pRetAddr) MCF_NOEXCEPT;
+	unsigned char **__ppRaw, unsigned char *__pContents, const void *__pRetAddr) MCF_NOEXCEPT;
 
-extern void __MCF_CRT_HeapDbgUnregister(const __MCF_HeapDbgBlockInfo *pBlockInfo) MCF_NOEXCEPT;
+extern void __MCF_CRT_HeapDbgUnregister(const __MCF_HeapDbgBlockInfo *__pBlockInfo) MCF_NOEXCEPT;
 
 #endif
 

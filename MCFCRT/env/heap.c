@@ -119,7 +119,7 @@ unsigned char *__MCF_CRT_HeapReAlloc(void *pBlock, size_t uSize, const void *pRe
 #	if __MCF_CRT_REQUIRE_HEAPDBG_LEVEL(3)
 		unsigned char *pRawOriginal;
 		const __MCF_HeapDbgBlockInfo *const pBlockInfo = __MCF_CRT_HeapDbgValidate(&pRawOriginal, pBlock, pRetAddr);
-		const size_t uOriginalSize = pBlockInfo->uSize;
+		const size_t uOriginalSize = pBlockInfo->__uSize;
 #	else
 		unsigned char *const pRawOriginal = pBlock;
 		const size_t uOriginalSize = dlmalloc_usable_size(pRawOriginal);

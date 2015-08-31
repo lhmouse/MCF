@@ -9,24 +9,24 @@
 #include "../env/bail.h"
 
 static inline __attribute__((__noreturn__))
-void __MCF_CRT_OnAssertFail(const wchar_t *pwszExpression,
-	const char *pszFile, unsigned long ulLine, const wchar_t *pwszMessage) MCF_NOEXCEPT
+void __MCF_CRT_OnAssertFail(const wchar_t *__pwszExpression,
+	const char *__pszFile, unsigned long __ulLine, const wchar_t *__pwszMessage) MCF_NOEXCEPT
 {
 	MCF_CRT_BailF(L"调试断言失败。\n\n表达式：%ls\n文件　：%hs\n行号　：%lu\n描述　：%ls",
-		pwszExpression, pszFile, ulLine, pwszMessage);
+		__pwszExpression, __pszFile, __ulLine, __pwszMessage);
 }
 
-#define ASSERT(expr_)				(__MCF_CRT_ASSERT_MSG(#expr_, (expr_), L""))
-#define ASSERT_MSG(expr_, msg_)		(__MCF_CRT_ASSERT_MSG(#expr_, (expr_), (msg_)))
+#define ASSERT(__expr_)				(__MCF_CRT_ASSERT_MSG(#__expr_, (__expr_), L""))
+#define ASSERT_MSG(__expr_, __msg_)	(__MCF_CRT_ASSERT_MSG(#__expr_, (__expr_), (__msg_)))
 
 #endif
 
 #undef __MCF_CRT_ASSERT_MSG
 
 #ifdef NDEBUG
-#	define __MCF_CRT_ASSERT_MSG(plain_, expr_, msg_)	\
-	((void)sizeof(expr_))
+#	define __MCF_CRT_ASSERT_MSG(__plain_, __expr_, __msg_)	\
+	((void)sizeof(__expr_))
 #else
-#	define __MCF_CRT_ASSERT_MSG(plain_, expr_, msg_)	\
-	((void)(!(expr_) && (__MCF_CRT_OnAssertFail(L ## plain_, __FILE__, __LINE__, (msg_)), 1)))
+#	define __MCF_CRT_ASSERT_MSG(__plain_, __expr_, __msg_)	\
+	((void)(!(__expr_) && (__MCF_CRT_OnAssertFail(L ## __plain_, __FILE__, __LINE__, (__msg_)), 1)))
 #endif

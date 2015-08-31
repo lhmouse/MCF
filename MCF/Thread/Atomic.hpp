@@ -172,12 +172,12 @@ template<typename ElementT>
 using Atomic =
 	std::conditional_t<std::is_integral<ElementT>::value || std::is_enum<ElementT>::value,
 		Impl_Atomic::AtomicInteger<ElementT>,
-		std::conditional_t<std::is_pointer<ElementT>::value && std::is_object<std::remove_pointer_t<ElementT>>::value,
-			Impl_Atomic::AtomicPointerToObject<ElementT>,
-			std::conditional_t<std::is_pointer<ElementT>::value,
-				Impl_Atomic::AtomicPointerToNonObject<ElementT>,
-				Impl_Atomic::AtomicError<ElementT>
-		>>>;
+		std::conditional_t<std::is_pointer<ElementT>::value,
+			std::conditional_t<std::is_object<std::remove_pointer_t<ElementT>>::value,
+				Impl_Atomic::AtomicPointerToObject<ElementT>,
+				Impl_Atomic::AtomicPointerToNonObject<ElementT>>,
+			Impl_Atomic::AtomicError<ElementT>
+		>>;
 
 inline void AtomicFence(MemoryModel eModel) noexcept {
 	__atomic_thread_fence(static_cast<int>(eModel));

@@ -85,7 +85,7 @@ static void DoBail(const wchar_t *pwszDescription){
 		typedef VOID __stdcall PrototypeOfRtlInitUnicodeString(
 			PUNICODE_STRING pDestination, PCWSTR pwszSource);
 		typedef NTSTATUS __stdcall PrototypeOfNtRaiseHardError(
-			NTSTATUS stError, DWORD dwUnknown, DWORD dwParamCount, const ULONG_PTR *pulParams, HardErrorResponseOption nOption, HardErrorResponse *peResponse);
+			NTSTATUS stError, DWORD dwUnknown, DWORD dwParamCount, const ULONG_PTR *pulParams, HardErrorResponseOption eOption, HardErrorResponse *peResponse);
 
 		PrototypeOfRtlInitUnicodeString *const pfnRtlInitUnicodeString = (PrototypeOfRtlInitUnicodeString *)GetProcAddress(hNtDll, "RtlInitUnicodeString");
 		PrototypeOfNtRaiseHardError *const pfnNtRaiseHardError = (PrototypeOfNtRaiseHardError *)GetProcAddress(hNtDll, "NtRaiseHardError");
@@ -99,7 +99,9 @@ static void DoBail(const wchar_t *pwszDescription){
 			uType = (bCanBeDebugged ? MB_OKCANCEL : MB_OK) | MB_ICONERROR;
 
 			const ULONG_PTR aulParams[3] = { (ULONG_PTR)&ustrText, (ULONG_PTR)&ustrCaption, uType };
-			if(!NT_SUCCESS((*pfnNtRaiseHardError)(STATUS_SERVICE_NOTIFICATION, 4, 3, aulParams, kHardErrorOkCancel, &eResponse))){
+			if(!NT_SUCCESS((*pfnNtRaiseHardError)(
+				STATUS_SERVICE_NOTIFICATION, 4, 3, aulParams, (bCanBeDebugged ? kHardErrorOkCancel : kHardErrorOk), &eResponse)))
+			{
 				eResponse = kHardErrorResponseCancel;
 			}
 		}

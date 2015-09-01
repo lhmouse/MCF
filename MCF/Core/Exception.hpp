@@ -5,26 +5,31 @@
 #ifndef MCF_CORE_EXCEPTION_HPP_
 #define MCF_CORE_EXCEPTION_HPP_
 
+#include "../Utilities/MinMax.hpp"
 #include "LastError.hpp"
 #include <exception>
-#include <utility>
 #include <cstring>
 
 namespace MCF {
 
 class Exception : public std::exception {
+public:
+	enum : std::size_t {
+		kMaxMessageLength = 1023
+	};
+
 private:
 	const char *x_pszFile;
 	unsigned long x_ulLine;
 	unsigned long x_ulCode;
-	char x_achMessage[1024];
+	char x_achMessage[kMaxMessageLength + 1];
 
 public:
 	Exception(const char *pszFile, unsigned long ulLine, unsigned long ulCode, const char *pszMessage) noexcept
 		: std::exception()
 		, x_pszFile(pszFile), x_ulLine(ulLine), x_ulCode(ulCode)
 	{
-		const auto uLen = std::min(std::strlen(pszMessage), sizeof(x_achMessage) - 1);
+		const auto uLen = Min(std::strlen(pszMessage), kMaxMessageLength);
 		std::memcpy(x_achMessage, pszMessage, uLen);
 		x_achMessage[uLen] = 0;
 	}

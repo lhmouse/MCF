@@ -27,11 +27,8 @@ namespace Impl_Defer {
 	};
 
 	template<typename CallbackT>
-	auto CreateDeferredCallback(CallbackT &&vCallback)
-		-> DeferredCallback<std::decay_t<std::remove_reference_t<CallbackT>>>
-	{
-		return DeferredCallback<std::decay_t<std::remove_reference_t<CallbackT>>>(
-			std::forward<CallbackT>(vCallback));
+	auto CreateDeferredCallback(CallbackT &&vCallback){
+		return DeferredCallback<std::decay_t<CallbackT>>(std::forward<CallbackT>(vCallback));
 	}
 }
 

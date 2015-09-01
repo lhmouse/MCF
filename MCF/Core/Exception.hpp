@@ -13,25 +13,23 @@ namespace MCF {
 
 class Exception : public std::exception {
 private:
-	const char *const x_pszFile;
-	const unsigned long x_ulLine;
-
-	char x_achMessage[1024 + 8];
+	const char *x_pszFile;
+	unsigned long x_ulLine;
 	unsigned long x_ulCode;
+	char x_achMessage[1024];
 
 public:
-	Exception(const char *pszFile, unsigned long ulLine,
-		const char *pszMessage, unsigned long ulCode) noexcept
-		: x_pszFile(pszFile), x_ulLine(ulLine)
+	Exception(const char *pszFile, unsigned long ulLine, unsigned long ulCode, const char *pszMessage) noexcept
+		: x_pszFile(pszFile)
+		, x_ulLine(ulLine)
+		, x_ulCode(ulCode)
 	{
 		auto uLen = std::strlen(pszMessage);
-		if(uLen > sizeof(x_achMessage) - 1){
-			uLen = sizeof(x_achMessage) - 1;
+		if(uLen > sizeof(pszMessage) - 1){
+			uLen = sizeof(pszMessage) - 1;
 		}
 		std::memcpy(x_achMessage, pszMessage, uLen);
 		x_achMessage[uLen] = 0;
-
-		x_ulCode = ulCode;
 	}
 	~Exception() override;
 
@@ -46,20 +44,18 @@ public:
 	unsigned long GetLine() const noexcept {
 		return x_ulLine;
 	}
-
-	const char *GetMessage() const noexcept {
-		return x_achMessage;
-	}
 	unsigned long GetCode() const noexcept {
 		return x_ulCode;
+	}
+	const char *GetMessage() const noexcept {
+		return x_achMessage;
 	}
 };
 
 class SystemError : public Exception {
 public:
-	SystemError(const char *pszFile, unsigned long ulLine,
-		const char *pszMessage, unsigned long ulCode = GetWin32LastError()) noexcept
-		: Exception(pszFile, ulLine, pszMessage, ulCode)
+	SystemError(const char *pszFile, unsigned long ulLine, const char *pszFunction, unsigned long ulCode = GetWin32LastError()) noexcept
+		: Exception(pszFile, ulLine, ulCode, pszFunction)
 	{
 	}
 	~SystemError() override;

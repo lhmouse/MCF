@@ -53,7 +53,7 @@ private:
 	long x_lLzmaError;
 
 public:
-	LzmaError(const char *pszFile, unsigned long ulLine, const char *pszMessage, long lLzmaError) noexcept;
+	LzmaError(const char *pszFile, unsigned long ulLine, long lLzmaError, const char *pszFunction) noexcept;
 	~LzmaError() override;
 
 public:

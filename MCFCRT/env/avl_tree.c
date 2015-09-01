@@ -22,8 +22,8 @@ static void UpdateRecur(MCF_AvlNodeHeader *pWhere){
 
 		MCF_AvlNodeHeader *const pParent = pNode->__pParent;
 		MCF_AvlNodeHeader **const ppRefl = pNode->__ppRefl;
-		MCF_AvlNodeHeader *const pLeft = pNode->__pLeft;
-		MCF_AvlNodeHeader *const pRight = pNode->__pRight;
+		MCF_AvlNodeHeader *const pLeft   = pNode->__pLeft;
+		MCF_AvlNodeHeader *const pRight  = pNode->__pRight;
 
 		if(uLeftHeight > uRightHeight){
 			ASSERT(uLeftHeight - uRightHeight <= 2);
@@ -55,18 +55,18 @@ static void UpdateRecur(MCF_AvlNodeHeader *pWhere){
 					}
 
 					pLL->__pParent = pLeft;
-					pLL->__ppRefl = &(pLeft->__pLeft);
+					pLL->__ppRefl  = &(pLeft->__pLeft);
 
 					pNode->__pParent = pLeft;
-					pNode->__ppRefl = &(pLeft->__pRight);
-					pNode->__pLeft = pLR;
+					pNode->__ppRefl  = &(pLeft->__pRight);
+					pNode->__pLeft   = pLR;
 					// H(lr) >= H(l) - 2   // 平衡二叉树的要求。
 					//        = H(r)       // 前置条件。
 					pNode->__uHeight = uLRHeight + 1;
 
 					pLeft->__pParent = pParent;
-					pLeft->__ppRefl = ppRefl;
-					pLeft->__pRight = pNode;
+					pLeft->__ppRefl  = ppRefl;
+					pLeft->__pRight  = pNode;
 					pLeft->__uHeight = Max(pLL->__uHeight, pNode->__uHeight) + 1;
 
 					*ppRefl = pLeft;
@@ -226,11 +226,11 @@ void MCF_AvlInternalAttach(MCF_AvlNodeHeader *pNode,
 
 	*ppRefl = pNode;
 
-	pNode->__pParent	= pParent;
-	pNode->__ppRefl	= ppRefl;
-	pNode->__pLeft	= nullptr;
-	pNode->__pRight	= nullptr;
-	pNode->__uHeight	= 1;
+	pNode->__pParent = pParent;
+	pNode->__ppRefl  = ppRefl;
+	pNode->__pLeft   = nullptr;
+	pNode->__pRight  = nullptr;
+	pNode->__uHeight = 1;
 
 	if(!pParent){
 		pNode->__pPrev = nullptr;
@@ -301,10 +301,10 @@ void MCF_AvlInternalDetach(const MCF_AvlNodeHeader *pNode){
 				pRight->__ppRefl = &(pLeft->__pRight);
 			}
 
-			pLeft->__pParent	= pParent;
-			pLeft->__ppRefl	= ppRefl;
-			pLeft->__pRight	= pRight;
-			pLeft->__uHeight	= pNode->__uHeight;
+			pLeft->__pParent = pParent;
+			pLeft->__ppRefl  = ppRefl;
+			pLeft->__pRight  = pRight;
+			pLeft->__uHeight = pNode->__uHeight;
 
 			UpdateRecur(pLeft);
 		} else {
@@ -328,11 +328,11 @@ void MCF_AvlInternalDetach(const MCF_AvlNodeHeader *pNode){
 
 			*ppRefl = pPrev;
 
-			pPrev->__pParent	= pParent;
-			pPrev->__ppRefl	= ppRefl;
-			pPrev->__pLeft	= pLeft;
-			pPrev->__pRight	= pRight;
-			pPrev->__uHeight	= pNode->__uHeight;
+			pPrev->__pParent = pParent;
+			pPrev->__ppRefl  = ppRefl;
+			pPrev->__pLeft   = pLeft;
+			pPrev->__pRight  = pRight;
+			pPrev->__uHeight = pNode->__uHeight;
 
 			pLeft->__pParent = pPrev;
 			pLeft->__ppRefl = &(pPrev->__pLeft);

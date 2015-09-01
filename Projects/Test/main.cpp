@@ -3,7 +3,7 @@
 #include <MCF/Utilities/BinaryOperations.hpp>
 
 extern "C" unsigned MCFMain(){
-	static constexpr auto src = { 'a','b','c','d','e','f','g' };
+	static const std::initializer_list<volatile char> src = { 'a','b','c','d','e','f','g' };
 
 	char dst[16] = { };
 	const auto begin = std::begin(dst) + 1;

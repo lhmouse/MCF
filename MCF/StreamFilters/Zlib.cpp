@@ -14,7 +14,7 @@
 namespace MCF {
 
 namespace {
-	constexpr std::size_t kStepSize		= 0x4000;
+	constexpr std::size_t kStepSize = 0x4000;
 
 	unsigned long ZlibErrorToWin32Error(int nZlibError) noexcept {
 		switch(nZlibError){
@@ -61,9 +61,9 @@ public:
 	xDelegate(ZlibEncoder &vOwner, bool bRaw, unsigned uLevel)
 		: x_vOwner(vOwner)
 	{
-		x_vStream.zalloc	= nullptr;
-		x_vStream.zfree	= nullptr;
-		x_vStream.opaque	= nullptr;
+		x_vStream.zalloc = nullptr;
+		x_vStream.zfree  = nullptr;
+		x_vStream.opaque = nullptr;
 
 		const auto nError = ::deflateInit2(&x_vStream, (int)uLevel, Z_DEFLATED, bRaw ? -15 : 15, 9, Z_DEFAULT_STRATEGY);
 		if(nError != Z_OK){
@@ -154,12 +154,12 @@ public:
 	xDelegate(ZlibDecoder &vOwner, bool bRaw)
 		: x_vOwner(vOwner)
 	{
-		x_vStream.zalloc	= nullptr;
-		x_vStream.zfree	= nullptr;
-		x_vStream.opaque	= nullptr;
+		x_vStream.zalloc   = nullptr;
+		x_vStream.zfree    = nullptr;
+		x_vStream.opaque   = nullptr;
 
-		x_vStream.next_in	= nullptr;
-		x_vStream.avail_in	= 0;
+		x_vStream.next_in  = nullptr;
+		x_vStream.avail_in = 0;
 
 		const auto nError = ::inflateInit2(&x_vStream, bRaw ? -15 : 15);
 		if(nError != Z_OK){

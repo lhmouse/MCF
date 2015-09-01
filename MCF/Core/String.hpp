@@ -846,13 +846,13 @@ extern template class String<StringType::UTF32>;
 extern template class String<StringType::CESU8>;
 extern template class String<StringType::ANSI>;
 
-using NarrowString		= String<StringType::NARROW>;
-using WideString		= String<StringType::WIDE>;
-using Utf8String		= String<StringType::UTF8>;
-using Utf16String		= String<StringType::UTF16>;
-using Utf32String		= String<StringType::UTF32>;
-using Cesu8String		= String<StringType::CESU8>;
-using AnsiString		= String<StringType::ANSI>;
+using NarrowString = String<StringType::NARROW>;
+using WideString   = String<StringType::WIDE>;
+using Utf8String   = String<StringType::UTF8>;
+using Utf16String  = String<StringType::UTF16>;
+using Utf32String  = String<StringType::UTF32>;
+using Cesu8String  = String<StringType::CESU8>;
+using AnsiString   = String<StringType::ANSI>;
 
 // 字面量运算符。
 template<typename CharT, CharT ...kCharsT>

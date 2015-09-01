@@ -15,9 +15,9 @@ namespace MCF {
 
 struct RecursiveMutexResults {
 	enum Result {
-		kResTryFailed		= 0,
-		kResStateChanged	= 1,
-		kResRecursive		= 2,
+		kResTryFailed    = 0,
+		kResStateChanged = 1,
+		kResRecursive    = 2,
 	};
 };
 

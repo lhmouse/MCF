@@ -13,8 +13,8 @@ namespace MCF {
 class Crc32 {
 public:
 	enum : std::uint32_t {
-		kDivisorIeee802_3	= 0xEDB88320,
-		kDivisorCastagnoli	= 0x82F63B78,
+		kDivisorIeee802_3  = 0xEDB88320,
+		kDivisorCastagnoli = 0x82F63B78,
 	};
 
 private:

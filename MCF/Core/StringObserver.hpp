@@ -483,13 +483,13 @@ extern template class StringObserver<StringType::UTF32>;
 extern template class StringObserver<StringType::CESU8>;
 extern template class StringObserver<StringType::ANSI>;
 
-using NarrowStringObserver		= StringObserver<StringType::NARROW>;
-using WideStringObserver		= StringObserver<StringType::WIDE>;
-using Utf8StringObserver		= StringObserver<StringType::UTF8>;
-using Utf16StringObserver		= StringObserver<StringType::UTF16>;
-using Utf32StringObserver		= StringObserver<StringType::UTF32>;
-using Cesu8StringObserver		= StringObserver<StringType::CESU8>;
-using AnsiStringObserver		= StringObserver<StringType::ANSI>;
+using NarrowStringObserver = StringObserver<StringType::NARROW>;
+using WideStringObserver   = StringObserver<StringType::WIDE>;
+using Utf8StringObserver   = StringObserver<StringType::UTF8>;
+using Utf16StringObserver  = StringObserver<StringType::UTF16>;
+using Utf32StringObserver  = StringObserver<StringType::UTF32>;
+using Cesu8StringObserver  = StringObserver<StringType::CESU8>;
+using AnsiStringObserver   = StringObserver<StringType::ANSI>;
 
 // 字面量运算符。
 // 注意 StringObserver 并不是所谓“零结尾的字符串”。

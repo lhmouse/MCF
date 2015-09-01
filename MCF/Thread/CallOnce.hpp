@@ -17,9 +17,9 @@ namespace Impl_CallOnce {
 	class OnceFlag {
 	public:
 		enum State {
-			kUninitialized	= 0,
-			kInitializing	= 1,
-			kInitialized	= 2,
+			kUninitialized = 0,
+			kInitializing  = 1,
+			kInitialized   = 2,
 		};
 
 	private:

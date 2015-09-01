@@ -59,9 +59,9 @@ static int KeyComparatorNodes(const MCF_AvlNodeHeader *pObj1, const MCF_AvlNodeH
 	return KeyComparatorNodeKey(pObj1, (intptr_t)(void *)pObj2);
 }
 
-static CRITICAL_SECTION	g_csKeyMutex;
-static DWORD			g_dwTlsIndex	= TLS_OUT_OF_INDEXES;
-static MCF_AvlRoot		g_pavlKeys		= nullptr;
+static CRITICAL_SECTION g_csKeyMutex;
+static DWORD            g_dwTlsIndex = TLS_OUT_OF_INDEXES;
+static MCF_AvlRoot      g_pavlKeys   = nullptr;
 
 bool __MCF_CRT_TlsEnvInit(){
 	if(!InitializeCriticalSectionEx(&g_csKeyMutex, 0x400u,
@@ -410,8 +410,8 @@ void *MCF_CRT_CreateThread(unsigned (*pfnThreadProc)(intptr_t), intptr_t nParam,
 	if(!pInitInfo){
 		return nullptr;
 	}
-	pInitInfo->pfnProc	= pfnThreadProc;
-	pInitInfo->nParam	= nParam;
+	pInitInfo->pfnProc  = pfnThreadProc;
+	pInitInfo->nParam   = nParam;
 
 	const HANDLE hThread = CreateThread(nullptr, 0, &CRTThreadProc, pInitInfo, CREATE_SUSPENDED, pulThreadId);
 	if(!hThread){

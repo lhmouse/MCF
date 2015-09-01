@@ -28,9 +28,9 @@ static int DtorComparatorNodes(const MCF_AvlNodeHeader *pObj1, const MCF_AvlNode
 	return DtorComparatorNodeKey(pObj1, (intptr_t)(uintptr_t)((const KeyDtorNode *)pObj2)->ulKey);
 }
 
-static CRITICAL_SECTION	g_csMutex;
-static KeyDtorNode *	g_pDtorHead		= nullptr;
-static MCF_AvlRoot		g_pavlDtorRoot	= nullptr;
+static CRITICAL_SECTION g_csMutex;
+static KeyDtorNode *    g_pDtorHead    = nullptr;
+static MCF_AvlRoot      g_pavlDtorRoot = nullptr;
 
 bool __MCF_CRT_MinGWHacksInit(){
 	if(!InitializeCriticalSectionEx(&g_csMutex, 0x400u,
@@ -82,9 +82,9 @@ int __mingwthr_key_dtor(unsigned long ulKey, void (*pfnDtor)(void *)){
 		if(!pNode){
 			return -1;
 		}
-		pNode->ulKey	= ulKey;
-		pNode->pfnDtor	= pfnDtor;
-		pNode->pPrev	= nullptr;
+		pNode->ulKey   = ulKey;
+		pNode->pfnDtor = pfnDtor;
+		pNode->pPrev   = nullptr;
 
 		EnterCriticalSection(&g_csMutex);
 		{

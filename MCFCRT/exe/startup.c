@@ -101,10 +101,10 @@ const PIMAGE_TLS_CALLBACK _callback_end = nullptr;
 
 __attribute__((__section__(".tls"), __used__))
 const IMAGE_TLS_DIRECTORY _tls_used = {
-	.StartAddressOfRawData	= (UINT_PTR)&_tls_start,
-	.EndAddressOfRawData	= (UINT_PTR)&_tls_end,
-	.AddressOfIndex			= (UINT_PTR)&_tls_index,
-	.AddressOfCallBacks		= (UINT_PTR)&_callback_start,
-	.SizeOfZeroFill			= 0,
-	.Characteristics		= 0,
+	.StartAddressOfRawData = (UINT_PTR)&_tls_start,
+	.EndAddressOfRawData   = (UINT_PTR)&_tls_end,
+	.AddressOfIndex        = (UINT_PTR)&_tls_index,
+	.AddressOfCallBacks    = (UINT_PTR)&_callback_start,
+	.SizeOfZeroFill        = 0,
+	.Characteristics       = 0,
 };

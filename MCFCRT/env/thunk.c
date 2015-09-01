@@ -51,14 +51,14 @@ static int FreeSizeComparatorNodes(const MCF_AvlNodeHeader *pIndex1, const MCF_A
 	return FreeSizeComparatorNodeKey(pIndex1, (intptr_t)GetInfoFromFreeSizeIndex(pIndex2)->uFreeSize);
 }
 
-static CRITICAL_SECTION	g_csMutex;
+static CRITICAL_SECTION g_csMutex;
 
-static uintptr_t		g_uPageMask				= 0;
-static ThunkInfo *		g_pSpare				= nullptr;
-static bool				g_bCleanupRegistered	= false;
+static uintptr_t   g_uPageMask            = 0;
+static ThunkInfo * g_pSpare               = nullptr;
+static bool        g_bCleanupRegistered   = false;
 
-static MCF_AvlRoot		g_pavlThunksByThunk		= nullptr;
-static MCF_AvlRoot		g_pavlThunksByFreeSize	= nullptr;
+static MCF_AvlRoot g_pavlThunksByThunk    = nullptr;
+static MCF_AvlRoot g_pavlThunksByFreeSize = nullptr;
 
 static void BackupCleanup(){
 	free(g_pSpare);
@@ -129,11 +129,11 @@ void *MCF_CRT_AllocateThunk(const void *pInit, size_t uSize){
 		const size_t uRemaining = pInfo->uFreeSize - uThunkSize;
 		if(uRemaining >= 0x20){
 			// 如果剩下的空间还很大，保存成一个新的空闲 thunk。
-			g_pSpare->pChunk		= pInfo->pChunk;
-			g_pSpare->uChunkSize	= pInfo->uChunkSize;
-			g_pSpare->pThunk		= pRet + uThunkSize;
-			g_pSpare->uThunkSize	= uRemaining;
-			g_pSpare->uFreeSize		= uRemaining;
+			g_pSpare->pChunk     = pInfo->pChunk;
+			g_pSpare->uChunkSize = pInfo->uChunkSize;
+			g_pSpare->pThunk     = pRet + uThunkSize;
+			g_pSpare->uThunkSize = uRemaining;
+			g_pSpare->uFreeSize  = uRemaining;
 
 			MCF_AvlAttach(&g_pavlThunksByThunk, &(g_pSpare->vThunkIndex), &ThunkComparatorNodes);
 			MCF_AvlAttach(&g_pavlThunksByFreeSize, &(g_pSpare->vFreeSizeIndex), &FreeSizeComparatorNodes);

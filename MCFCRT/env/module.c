@@ -87,8 +87,8 @@ int MCF_CRT_AtEndModule(void (*pfnProc)(intptr_t), intptr_t nContext){
 	if(!pNode){
 		return -1;
 	}
-	pNode->pfnProc	= pfnProc;
-	pNode->nContext	= nContext;
+	pNode->pfnProc  = pfnProc;
+	pNode->nContext = nContext;
 
 	pNode->pPrev = __atomic_load_n(&g_pAtExitHead, __ATOMIC_SEQ_CST);
 	while(EXPECT(!__atomic_compare_exchange_n(&g_pAtExitHead, &(pNode->pPrev), pNode, false, __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST))){

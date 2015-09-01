@@ -11,8 +11,8 @@
 namespace MCF {
 
 namespace {
-	constexpr std::size_t kStepSize			= 0x4000;
-	constexpr ::lzma_stream kInitStream		= LZMA_STREAM_INIT;
+	constexpr std::size_t kStepSize     = 0x4000;
+	constexpr ::lzma_stream kInitStream = LZMA_STREAM_INIT;
 
 	unsigned long LzmaErrorToWin32Error(::lzma_ret eLzmaError) noexcept {
 		switch(eLzmaError){
@@ -132,11 +132,11 @@ public:
 	}
 	void Finalize(){
 		unsigned char abyTemp[kStepSize];
-		x_pStream->next_out = abyTemp;
+		x_pStream->next_out  = abyTemp;
 		x_pStream->avail_out = sizeof(abyTemp);
 
-		x_pStream->next_in = nullptr;
-		x_pStream->avail_in = 0;
+		x_pStream->next_in   = nullptr;
+		x_pStream->avail_in  = 0;
 		for(;;){
 			const auto eError = ::lzma_code(x_pStream.Get(), LZMA_FINISH);
 			if(eError == LZMA_STREAM_END){
@@ -219,11 +219,11 @@ public:
 	}
 	void Finalize(){
 		unsigned char abyTemp[kStepSize];
-		x_pStream->next_out = abyTemp;
+		x_pStream->next_out  = abyTemp;
 		x_pStream->avail_out = sizeof(abyTemp);
 
-		x_pStream->next_in = nullptr;
-		x_pStream->avail_in = 0;
+		x_pStream->next_in   = nullptr;
+		x_pStream->avail_in  = 0;
 		for(;;){
 			const auto eError = ::lzma_code(x_pStream.Get(), LZMA_FINISH);
 			if(eError == LZMA_STREAM_END){

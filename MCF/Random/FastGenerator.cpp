@@ -12,8 +12,8 @@ namespace MCF {
 
 namespace {
 	enum : std::uint64_t {
-		kMultiplier	= 6364136223846793005ull,
-		kIncrement	= 1442695040888963407ull,
+		kMultiplier = 6364136223846793005ull,
+		kIncrement  = 1442695040888963407ull,
 	};
 }
 

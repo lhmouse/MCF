@@ -11,12 +11,12 @@
 namespace MCF {
 
 enum MemoryModel {
-	kAtomicRelaxed	= __ATOMIC_RELAXED,
-	kAtomicConsume	= __ATOMIC_CONSUME,
-	kAtomicAcquire	= __ATOMIC_ACQUIRE,
-	kAtomicRelease	= __ATOMIC_RELEASE,
-	kAtomicAcqRel	= __ATOMIC_ACQ_REL,
-	kAtomicSeqCst	= __ATOMIC_SEQ_CST,
+	kAtomicRelaxed = __ATOMIC_RELAXED,
+	kAtomicConsume = __ATOMIC_CONSUME,
+	kAtomicAcquire = __ATOMIC_ACQUIRE,
+	kAtomicRelease = __ATOMIC_RELEASE,
+	kAtomicAcqRel  = __ATOMIC_ACQ_REL,
+	kAtomicSeqCst  = __ATOMIC_SEQ_CST,
 };
 
 namespace Impl_Atomic {

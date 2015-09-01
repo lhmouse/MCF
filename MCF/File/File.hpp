@@ -17,18 +17,18 @@ class File {
 public:
 	enum : std::uint32_t {
 		// 权限控制。
-		kToRead			= 0x00000001,
-		kToWrite		= 0x00000002,
+		kToRead        = 0x00000001,
+		kToWrite       = 0x00000002,
 
 		// 创建行为控制。如果没有指定 TO_WRITE，这些选项都无效。
-		kDontCreate		= 0x00000004,	// 文件不存在则失败。若指定该选项则 kFailIfExists 无效。
-		kFailIfExists	= 0x00000008,	// 文件已存在则失败。
+		kDontCreate    = 0x00000004, // 文件不存在则失败。若指定该选项则 kFailIfExists 无效。
+		kFailIfExists  = 0x00000008, // 文件已存在则失败。
 
 		// 杂项。
-		kNoBuffering	= 0x00000010,
-		kWriteThrough	= 0x00000020,
-		kDeleteOnClose	= 0x00000040,
-		kDontTruncate	= 0x00000080,	// 默认情况下使用 kToWrite 打开文件会清空现有内容。
+		kNoBuffering   = 0x00000010,
+		kWriteThrough  = 0x00000020,
+		kDeleteOnClose = 0x00000040,
+		kDontTruncate  = 0x00000080, // 默认情况下使用 kToWrite 打开文件会清空现有内容。
 	};
 
 private:

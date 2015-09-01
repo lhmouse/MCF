@@ -115,12 +115,11 @@ unsigned char *__MCF_CRT_HeapDbgAddGuardsAndRegister(
 
 	__MCF_HeapDbgBlockInfo *const pBlockInfo = HeapAlloc(g_hMapAllocator, 0, sizeof(__MCF_HeapDbgBlockInfo));
 	if(!pBlockInfo){
-		MCF_CRT_BailF(L"__MCF_CRT_HeapDbgAddGuardsAndRegister() 失败：内存不足。\n调用返回地址：%0*zX",
-			(int)(sizeof(size_t) * 2), (size_t)pRetAddr);
+		MCF_CRT_BailF(L"__MCF_CRT_HeapDbgAddGuardsAndRegister() 失败：内存不足。\n调用返回地址：%p", pRetAddr);
 	}
-	pBlockInfo->__pContents	= pContents;
-	pBlockInfo->__uSize		= uContentSize;
-	pBlockInfo->__pRetAddr	= pRetAddr;
+	pBlockInfo->__pContents = pContents;
+	pBlockInfo->__uSize     = uContentSize;
+	pBlockInfo->__pRetAddr  = pRetAddr;
 	MCF_AvlAttach(&g_pavlBlocks, (MCF_AvlNodeHeader *)pBlockInfo, &BlockInfoComparatorNodes);
 
 	return pContents;
@@ -134,8 +133,7 @@ const __MCF_HeapDbgBlockInfo *__MCF_CRT_HeapDbgValidate(
 	const __MCF_HeapDbgBlockInfo *const pBlockInfo = (const __MCF_HeapDbgBlockInfo *)MCF_AvlFind(
 		&g_pavlBlocks, (intptr_t)pContents, &BlockInfoComparatorNodeKey);
 	if(!pBlockInfo){
-		MCF_CRT_BailF(L"__MCF_CRT_HeapDbgValidate() 失败：传入的指针无效。\n调用返回地址：%0*zX",
-			(int)(sizeof(size_t) * 2), (size_t)pRetAddr);
+		MCF_CRT_BailF(L"__MCF_CRT_HeapDbgValidate() 失败：传入的指针无效。\n调用返回地址：%p", pRetAddr);
 	}
 
 	void *const *ppGuard1 = (void *const *)pContents;
@@ -147,8 +145,7 @@ const __MCF_HeapDbgBlockInfo *__MCF_CRT_HeapDbgValidate(
 		__builtin_memcpy(&pTemp1, ppGuard1, sizeof(void *));
 		__builtin_memcpy(&pTemp2, ppGuard2, sizeof(void *));
 		if((DecodePointer(pTemp1) != ppGuard2) || (DecodePointer(pTemp2) != ppGuard1)){
-			MCF_CRT_BailF(L"__MCF_CRT_HeapDbgValidate() 失败：侦测到堆损坏。\n调用返回地址：%0*zX",
-				(int)(sizeof(size_t) * 2), (size_t)pRetAddr);
+			MCF_CRT_BailF(L"__MCF_CRT_HeapDbgValidate() 失败：侦测到堆损坏。\n调用返回地址：%p", pRetAddr);
 		}
 
 		++ppGuard2;

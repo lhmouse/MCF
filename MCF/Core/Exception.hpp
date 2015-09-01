@@ -5,8 +5,9 @@
 #ifndef MCF_CORE_EXCEPTION_HPP_
 #define MCF_CORE_EXCEPTION_HPP_
 
-#include "../../MCFCRT/env/last_error.h"
+#include "LastError.hpp"
 #include <exception>
+#include <cstring>
 
 namespace MCF {
 
@@ -15,19 +16,28 @@ private:
 	const char *const x_pszFile;
 	const unsigned long x_ulLine;
 
-	const char *const x_pszMessage;
-	const unsigned long x_ulCode;
+	char x_achMessage[1024 + 8];
+	unsigned long x_ulCode;
 
 public:
-	Exception(const char *pszFile, unsigned long ulLine, const char *pszMessage, unsigned long ulCode) noexcept
-		: x_pszFile(pszFile), x_ulLine(ulLine), x_pszMessage(pszMessage), x_ulCode(ulCode)
+	Exception(const char *pszFile, unsigned long ulLine,
+		const char *pszMessage, unsigned long ulCode) noexcept
+		: x_pszFile(pszFile), x_ulLine(ulLine)
 	{
+		auto uLen = std::strlen(pszMessage);
+		if(uLen > sizeof(x_achMessage) - 1){
+			uLen = sizeof(x_achMessage) - 1;
+		}
+		std::memcpy(x_achMessage, pszMessage, uLen);
+		x_achMessage[uLen] = 0;
+
+		x_ulCode = ulCode;
 	}
 	~Exception() override;
 
 public:
 	const char *what() const noexcept override {
-		return x_pszMessage;
+		return x_achMessage;
 	}
 
 	const char *GetFile() const noexcept {
@@ -38,7 +48,7 @@ public:
 	}
 
 	const char *GetMessage() const noexcept {
-		return x_pszMessage;
+		return x_achMessage;
 	}
 	unsigned long GetCode() const noexcept {
 		return x_ulCode;
@@ -48,7 +58,7 @@ public:
 class SystemError : public Exception {
 public:
 	SystemError(const char *pszFile, unsigned long ulLine,
-		const char *pszMessage, unsigned long ulCode = ::MCF_CRT_GetWin32LastError()) noexcept
+		const char *pszMessage, unsigned long ulCode = GetWin32LastError()) noexcept
 		: Exception(pszFile, ulLine, pszMessage, ulCode)
 	{
 	}

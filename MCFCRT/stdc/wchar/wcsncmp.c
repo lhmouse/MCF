@@ -4,7 +4,7 @@
 
 #include "../../env/_crtdef.h"
 
-int wsncmp(const wchar_t *s1, const wchar_t *s2, size_t n){
+int wcsncmp(const wchar_t *s1, const wchar_t *s2, size_t n){
 	size_t cnt = n;
 	++cnt;
 	for(;;){

@@ -16,10 +16,10 @@ namespace MCF {
 namespace Impl_CopyMoveFill {
 	template<typename OutputIteratorT, typename InputIteratorT, typename ValueT,
 		typename TraitHelper = void>
-	struct CopyTrait {
+	struct CopyTraits {
 		static OutputIteratorT
 			DoCopy(OutputIteratorT itOutputBegin,
-				InputIteratorT itInputBegin, std::common_type_t<InputIteratorT> itInputEnd)
+				InputIteratorT itInputBegin, InputIteratorT itInputEnd)
 		{
 			while(itInputBegin != itInputEnd){
 				*itOutputBegin = *itInputBegin;
@@ -41,7 +41,7 @@ namespace Impl_CopyMoveFill {
 		}
 		static OutputIteratorT
 			DoCopyBackward(OutputIteratorT itOutputEnd,
-				InputIteratorT itInputBegin, std::common_type_t<InputIteratorT> itInputEnd)
+				InputIteratorT itInputBegin, InputIteratorT itInputEnd)
 		{
 			while(itInputBegin != itInputEnd){
 				--itOutputEnd;
@@ -51,8 +51,8 @@ namespace Impl_CopyMoveFill {
 			return itOutputEnd;
 		}
 		static std::pair<OutputIteratorT, InputIteratorT>
-			DoCopyBackwardN(OutputIteratorT itOutputEnd, std::size_t uCount,
-				InputIteratorT itInputEnd)
+			DoCopyNBackward(OutputIteratorT itOutputEnd,
+				std::size_t uCount, InputIteratorT itInputEnd)
 		{
 			for(auto i = uCount; i; --i){
 				--itOutputEnd;
@@ -63,8 +63,8 @@ namespace Impl_CopyMoveFill {
 		}
 
 		static OutputIteratorT
-			DoMove(OutputIteratorT itOutputBegin, InputIteratorT itInputBegin,
-				std::common_type_t<InputIteratorT> itInputEnd)
+			DoMove(OutputIteratorT itOutputBegin,
+				InputIteratorT itInputBegin, InputIteratorT itInputEnd)
 		{
 			while(itInputBegin != itInputEnd){
 				*itOutputBegin = std::move(*itInputBegin);
@@ -86,7 +86,7 @@ namespace Impl_CopyMoveFill {
 		}
 		static OutputIteratorT
 			DoMoveBackward(OutputIteratorT itOutputEnd,
-				InputIteratorT itInputBegin, std::common_type_t<InputIteratorT> itInputEnd)
+				InputIteratorT itInputBegin, InputIteratorT itInputEnd)
 		{
 			while(itInputBegin != itInputEnd){
 				--itOutputEnd;
@@ -96,8 +96,8 @@ namespace Impl_CopyMoveFill {
 			return itOutputEnd;
 		}
 		static std::pair<OutputIteratorT, InputIteratorT>
-			DoMoveBackwardN(OutputIteratorT itOutputEnd, std::size_t uCount,
-				InputIteratorT itInputEnd)
+			DoMoveNBackward(OutputIteratorT itOutputEnd,
+				std::size_t uCount, InputIteratorT itInputEnd)
 		{
 			for(auto i = uCount; i; --i){
 				--itOutputEnd;
@@ -109,7 +109,7 @@ namespace Impl_CopyMoveFill {
 	};
 
 	template<typename TriviallyCopyableT, typename InputIteratorT>
-	struct CopyTrait<TriviallyCopyableT *, InputIteratorT, TriviallyCopyableT,
+	struct CopyTraits<TriviallyCopyableT *, InputIteratorT, TriviallyCopyableT,
 		std::enable_if_t<
 //			std::is_trivially_copyable<TriviallyCopyableT>::value &&
 				std::is_trivial<TriviallyCopyableT>::value &&				// FIXME: Fuck GCC.
@@ -128,7 +128,7 @@ namespace Impl_CopyMoveFill {
 
 		static OutputIterator
 			DoCopy(OutputIterator itOutputBegin,
-				InputIteratorT itInputBegin, std::common_type_t<InputIteratorT> itInputEnd)
+				InputIteratorT itInputBegin, InputIteratorT itInputEnd)
 		{
 			const auto uCount = (std::size_t)(itInputEnd - itInputBegin);
 			std::memmove(itOutputBegin, itInputBegin, uCount * sizeof(TriviallyCopyableT));
@@ -143,15 +143,15 @@ namespace Impl_CopyMoveFill {
 		}
 		static OutputIterator
 			DoCopyBackward(OutputIterator itOutputEnd,
-				InputIteratorT itInputBegin, std::common_type_t<InputIteratorT> itInputEnd)
+				InputIteratorT itInputBegin, InputIteratorT itInputEnd)
 		{
 			const auto uCount = (std::size_t)(itInputEnd - itInputBegin);
 			std::memmove(itOutputEnd - uCount, itInputEnd - uCount, uCount * sizeof(TriviallyCopyableT));
 			return itOutputEnd - uCount;
 		}
 		static std::pair<OutputIterator, InputIteratorT>
-			DoCopyBackwardN(OutputIterator itOutputEnd, std::size_t uCount,
-				InputIteratorT itInputEnd)
+			DoCopyNBackward(OutputIterator itOutputEnd,
+				std::size_t uCount, InputIteratorT itInputEnd)
 		{
 			std::memmove(itOutputEnd - uCount, itInputEnd - uCount, uCount * sizeof(TriviallyCopyableT));
 			return std::make_pair(itOutputEnd - uCount, itInputEnd - uCount);
@@ -159,7 +159,7 @@ namespace Impl_CopyMoveFill {
 
 		static OutputIterator
 			DoMove(OutputIterator itOutputBegin,
-				InputIteratorT itInputBegin, std::common_type_t<InputIteratorT> itInputEnd)
+				InputIteratorT itInputBegin, InputIteratorT itInputEnd)
 		{
 			return DoCopy(itOutputBegin, itInputBegin, itInputEnd);
 		}
@@ -171,15 +171,15 @@ namespace Impl_CopyMoveFill {
 		}
 		static OutputIterator
 			DoMoveBackward(OutputIterator itOutputEnd,
-				InputIteratorT itInputBegin, std::common_type_t<InputIteratorT> itInputEnd)
+				InputIteratorT itInputBegin, InputIteratorT itInputEnd)
 		{
 			return DoCopyBackward(itOutputEnd, itInputBegin, itInputEnd);
 		}
 		static std::pair<OutputIterator, InputIteratorT>
-			DoMoveBackwardN(OutputIterator itOutputEnd, std::size_t uCount,
-				InputIteratorT itInputEnd)
+			DoMoveNBackward(OutputIterator itOutputEnd,
+				std::size_t uCount, InputIteratorT itInputEnd)
 		{
-			return DoCopyBackwardN(itOutputEnd, uCount, itInputEnd);
+			return DoCopyNBackward(itOutputEnd, uCount, itInputEnd);
 		}
 	};
 }
@@ -189,9 +189,8 @@ inline OutputIteratorT
 	Copy(OutputIteratorT itOutputBegin,
 		InputIteratorT itInputBegin, std::common_type_t<InputIteratorT> itInputEnd)
 {
-	return Impl_CopyMoveFill::CopyTrait<OutputIteratorT, InputIteratorT,
-		std::remove_reference_t<
-			typename std::iterator_traits<InputIteratorT>::value_type>
+	return Impl_CopyMoveFill::CopyTraits<OutputIteratorT, InputIteratorT,
+		std::decay_t<typename std::iterator_traits<InputIteratorT>::value_type>
 		>::DoCopy(itOutputBegin, itInputBegin, itInputEnd);
 }
 template<typename OutputIteratorT, typename InputIteratorT>
@@ -199,75 +198,36 @@ inline std::pair<OutputIteratorT, InputIteratorT>
 	CopyN(OutputIteratorT itOutputBegin,
 		InputIteratorT itInputBegin, std::size_t uCount)
 {
-	return Impl_CopyMoveFill::CopyTrait<OutputIteratorT, InputIteratorT,
-		std::remove_reference_t<
-			typename std::iterator_traits<InputIteratorT>::value_type>
+	return Impl_CopyMoveFill::CopyTraits<OutputIteratorT, InputIteratorT,
+		std::decay_t<typename std::iterator_traits<InputIteratorT>::value_type>
 		>::DoCopyN(itOutputBegin, itInputBegin, uCount);
 }
 template<typename OutputIteratorT, typename InputIteratorT>
 inline OutputIteratorT
 	CopyBackward(OutputIteratorT itOutputEnd,
-		InputIteratorT itInputBegin, std::common_type_t<InputIteratorT> itInputEnd)
+		std::common_type_t<InputIteratorT> itInputBegin, InputIteratorT itInputEnd)
 {
-	return Impl_CopyMoveFill::CopyTrait<OutputIteratorT, InputIteratorT,
-		std::remove_reference_t<
-			typename std::iterator_traits<InputIteratorT>::value_type>
+	return Impl_CopyMoveFill::CopyTraits<OutputIteratorT, InputIteratorT,
+		std::decay_t<typename std::iterator_traits<InputIteratorT>::value_type>
 		>::DoCopyBackward(itOutputEnd, itInputBegin, itInputEnd);
 }
 template<typename OutputIteratorT, typename InputIteratorT>
 inline std::pair<OutputIteratorT, InputIteratorT>
-	CopyBackwardN(OutputIteratorT itOutputEnd, std::size_t uCount,
-		InputIteratorT itInputEnd)
+	CopyNBackward(OutputIteratorT itOutputEnd,
+		std::size_t uCount, InputIteratorT itInputEnd)
 {
-	return Impl_CopyMoveFill::CopyTrait<OutputIteratorT, InputIteratorT,
-		std::remove_reference_t<
-			typename std::iterator_traits<InputIteratorT>::value_type>
-		>::DoCopyBackwardN(itOutputEnd, uCount, itInputEnd);
-}
-
-template<typename OutputIteratorT, typename InputIteratorT>
-inline OutputIteratorT
-	ReverseCopy(OutputIteratorT itOutputBegin,
-		InputIteratorT itInputBegin, std::common_type_t<InputIteratorT> itInputEnd)
-{
-	using RevInputIter = std::reverse_iterator<InputIteratorT>;
-	return Copy(itOutputBegin, RevInputIter(itInputEnd), RevInputIter(itInputBegin));
-}
-template<typename OutputIteratorT, typename InputIteratorT>
-inline std::pair<OutputIteratorT, InputIteratorT>
-	ReverseCopyN(OutputIteratorT itOutputBegin, std::size_t uCount,
-		InputIteratorT itInputEnd)
-{
-	using RevInputIter = std::reverse_iterator<InputIteratorT>;
-	const auto vResult = CopyN(itOutputBegin, RevInputIter(itInputEnd), uCount);
-	return std::make_pair(vResult.first, vResult.second.base());
-}
-template<typename OutputIteratorT, typename InputIteratorT>
-inline OutputIteratorT
-	ReverseCopyBackward(OutputIteratorT itOutputEnd,
-		InputIteratorT itInputBegin, std::common_type_t<InputIteratorT> itInputEnd)
-{
-	using RevInputIter = std::reverse_iterator<InputIteratorT>;
-	return CopyBackward(itOutputEnd, RevInputIter(itInputEnd), RevInputIter(itInputBegin));
-}
-template<typename OutputIteratorT, typename InputIteratorT>
-inline std::pair<OutputIteratorT, InputIteratorT>
-	ReverseCopyBackwardN(OutputIteratorT itOutputEnd,
-		InputIteratorT itInputBegin, std::size_t uCount)
-{
-	using RevInputIter = std::reverse_iterator<InputIteratorT>;
-	const auto vResult = CopyBackwardN(itOutputEnd, uCount, RevInputIter(itInputBegin));
-	return std::make_pair(vResult.first, vResult.second.base());
+	return Impl_CopyMoveFill::CopyTraits<OutputIteratorT, InputIteratorT,
+		std::decay_t<typename std::iterator_traits<InputIteratorT>::value_type>
+		>::DoCopyNBackward(itOutputEnd, uCount, itInputEnd);
 }
 
 template<typename OutputIteratorT, typename InputIteratorT>
 inline OutputIteratorT
 	Move(OutputIteratorT itOutputBegin,
-	 InputIteratorT itInputBegin, std::common_type_t<InputIteratorT> itInputEnd)
+		InputIteratorT itInputBegin, std::common_type_t<InputIteratorT> itInputEnd)
 {
-	return Impl_CopyMoveFill::CopyTrait<OutputIteratorT, InputIteratorT,
-		std::remove_reference_t<
-			typename std::iterator_traits<InputIteratorT>::value_type>
+	return Impl_CopyMoveFill::CopyTraits<OutputIteratorT, InputIteratorT,
+		std::decay_t<typename std::iterator_traits<InputIteratorT>::value_type>
 		>::DoMove(itOutputBegin, itInputBegin, itInputEnd);
 }
 template<typename OutputIteratorT, typename InputIteratorT>
@@ -275,65 +235,125 @@ inline std::pair<OutputIteratorT, InputIteratorT>
 	MoveN(OutputIteratorT itOutputBegin,
 		InputIteratorT itInputBegin, std::size_t uCount)
 {
-	return Impl_CopyMoveFill::CopyTrait<OutputIteratorT, InputIteratorT,
-		std::remove_reference_t<
-			typename std::iterator_traits<InputIteratorT>::value_type>
+	return Impl_CopyMoveFill::CopyTraits<OutputIteratorT, InputIteratorT,
+		std::decay_t<typename std::iterator_traits<InputIteratorT>::value_type>
 		>::DoMoveN(itOutputBegin, itInputBegin, uCount);
 }
 template<typename OutputIteratorT, typename InputIteratorT>
 inline OutputIteratorT
 	MoveBackward(OutputIteratorT itOutputEnd,
-		InputIteratorT itInputBegin, std::common_type_t<InputIteratorT> itInputEnd)
+		std::common_type_t<InputIteratorT> itInputBegin, InputIteratorT itInputEnd)
 {
-	return Impl_CopyMoveFill::CopyTrait<OutputIteratorT, InputIteratorT,
-		std::remove_reference_t<
-			typename std::iterator_traits<InputIteratorT>::value_type>
+	return Impl_CopyMoveFill::CopyTraits<OutputIteratorT, InputIteratorT,
+		std::decay_t<typename std::iterator_traits<InputIteratorT>::value_type>
 		>::DoMoveBackward(itOutputEnd, itInputBegin, itInputEnd);
 }
 template<typename OutputIteratorT, typename InputIteratorT>
 inline std::pair<OutputIteratorT, InputIteratorT>
-	MoveBackwardN(OutputIteratorT itOutputEnd, std::size_t uCount,
-		InputIteratorT itInputEnd)
+	MoveNBackward(OutputIteratorT itOutputEnd,
+		std::size_t uCount, InputIteratorT itInputEnd)
 {
-	return Impl_CopyMoveFill::CopyTrait<OutputIteratorT, InputIteratorT,
-		std::remove_reference_t<
-			typename std::iterator_traits<InputIteratorT>::value_type>
-		>::DoMoveBackwardN(itOutputEnd, uCount, itInputEnd);
+	return Impl_CopyMoveFill::CopyTraits<OutputIteratorT, InputIteratorT,
+		std::decay_t<typename std::iterator_traits<InputIteratorT>::value_type>
+		>::DoMoveNBackward(itOutputEnd, uCount, itInputEnd);
+}
+
+template<typename OutputIteratorT, typename InputIteratorT>
+inline OutputIteratorT
+	ReverseCopy(OutputIteratorT itOutputBegin,
+		std::common_type_t<InputIteratorT> itInputBegin, InputIteratorT itInputEnd)
+{
+	while(itInputBegin != itInputEnd){
+		--itInputEnd;
+		*itOutputBegin = *itInputEnd;
+		++itOutputBegin;
+	}
+	return itOutputBegin;
+}
+template<typename OutputIteratorT, typename InputIteratorT>
+inline std::pair<OutputIteratorT, InputIteratorT>
+	ReverseCopyN(OutputIteratorT itOutputBegin,
+		std::size_t uCount, InputIteratorT itInputEnd)
+{
+	for(auto i = uCount; i; --i){
+		--itInputEnd;
+		*itOutputBegin = *itInputEnd;
+		++itOutputBegin;
+	}
+	return std::make_pair(itOutputBegin, itInputEnd);
+}
+template<typename OutputIteratorT, typename InputIteratorT>
+inline OutputIteratorT
+	ReverseCopyBackward(OutputIteratorT itOutputEnd,
+		InputIteratorT itInputBegin, std::common_type_t<InputIteratorT> itInputEnd)
+{
+	while(itInputBegin != itInputEnd){
+		--itOutputEnd;
+		*itOutputEnd = *itInputBegin;
+		++itInputBegin;
+	}
+	return itOutputEnd;
+}
+template<typename OutputIteratorT, typename InputIteratorT>
+inline std::pair<OutputIteratorT, InputIteratorT>
+	ReverseCopyNBackward(OutputIteratorT itOutputEnd,
+		InputIteratorT itInputBegin, std::size_t uCount)
+{
+	for(auto i = uCount; i; --i){
+		--itOutputEnd;
+		*itOutputEnd = *itInputBegin;
+		++itInputBegin;
+	}
+	return std::make_pair(itOutputEnd, itInputBegin);
 }
 
 template<typename OutputIteratorT, typename InputIteratorT>
 inline OutputIteratorT
 	ReverseMove(OutputIteratorT itOutputBegin,
-		InputIteratorT itInputBegin, std::common_type_t<InputIteratorT> itInputEnd)
+		std::common_type_t<InputIteratorT> itInputBegin, InputIteratorT itInputEnd)
 {
-	using RevInputIter = std::reverse_iterator<InputIteratorT>;
-	return Move(itOutputBegin, RevInputIter(itInputEnd), RevInputIter(itInputBegin));
+	while(itInputBegin != itInputEnd){
+		--itInputEnd;
+		*itOutputBegin = std::move(*itInputEnd);
+		++itOutputBegin;
+	}
+	return itOutputBegin;
 }
 template<typename OutputIteratorT, typename InputIteratorT>
 inline std::pair<OutputIteratorT, InputIteratorT>
-	ReverseMoveN(OutputIteratorT itOutputBegin, std::size_t uCount,
-		InputIteratorT itInputEnd)
+	ReverseMoveN(OutputIteratorT itOutputBegin,
+		std::size_t uCount, InputIteratorT itInputEnd)
 {
-	using RevInputIter = std::reverse_iterator<InputIteratorT>;
-	const auto vResult = MoveN(itOutputBegin, RevInputIter(itInputEnd), uCount);
-	return std::make_pair(vResult.first, vResult.second.base());
+	for(auto i = uCount; i; --i){
+		--itInputEnd;
+		*itOutputBegin = std::move(*itInputEnd);
+		++itOutputBegin;
+	}
+	return std::make_pair(itOutputBegin, itInputEnd);
 }
 template<typename OutputIteratorT, typename InputIteratorT>
 inline OutputIteratorT
 	ReverseMoveBackward(OutputIteratorT itOutputEnd,
 		InputIteratorT itInputBegin, std::common_type_t<InputIteratorT> itInputEnd)
 {
-	using RevInputIter = std::reverse_iterator<InputIteratorT>;
-	return MoveBackward(itOutputEnd, RevInputIter(itInputEnd), RevInputIter(itInputBegin));
+	while(itInputBegin != itInputEnd){
+		--itOutputEnd;
+		*itOutputEnd = std::move(*itInputBegin);
+		++itInputBegin;
+	}
+	return itOutputEnd;
 }
 template<typename OutputIteratorT, typename InputIteratorT>
 inline std::pair<OutputIteratorT, InputIteratorT>
-	ReverseMoveBackwardN(OutputIteratorT itOutputEnd,
+	ReverseMoveNBackward(OutputIteratorT itOutputEnd,
 		InputIteratorT itInputBegin, std::size_t uCount)
 {
-	using RevInputIter = std::reverse_iterator<InputIteratorT>;
-	const auto vResult = MoveBackwardN(itOutputEnd, uCount, RevInputIter(itInputBegin));
-	return std::make_pair(vResult.first, vResult.second.base());
+	for(auto i = uCount; i; --i){
+		--itOutputEnd;
+		*itOutputEnd = std::move(*itInputBegin);
+		++itInputBegin;
+	}
+	return std::make_pair(itOutputEnd, itInputBegin);
 }
 
 template<typename ValueT = void, typename OutputIteratorT, typename ...ParamsT>
@@ -341,11 +361,9 @@ inline OutputIteratorT
 	Fill(OutputIteratorT itOutputBegin, std::common_type_t<OutputIteratorT> itOutputEnd,
 		const ParamsT &...vParams)
 {
-	using ToConstruct = std::conditional_t<std::is_void<ValueT>::value,
-		std::remove_reference_t<decltype(*itOutputBegin)>, ValueT>;
-
 	while(itOutputBegin != itOutputEnd){
-		*itOutputBegin = ToConstruct(vParams...);
+		*itOutputBegin = std::conditional_t<std::is_void<ValueT>::value,
+			std::remove_reference_t<decltype(*itOutputBegin)>, ValueT>(vParams...);
 		++itOutputBegin;
 	}
 	return itOutputBegin;
@@ -355,14 +373,36 @@ inline OutputIteratorT
 	FillN(OutputIteratorT itOutputBegin, std::size_t uCount,
 		const ParamsT &...vParams)
 {
-	using ToConstruct = std::conditional_t<std::is_void<ValueT>::value,
-		std::remove_reference_t<decltype(*itOutputBegin)>, ValueT>;
-
 	for(auto i = uCount; i; --i){
-		*itOutputBegin = ToConstruct(vParams...);
+		*itOutputBegin = std::conditional_t<std::is_void<ValueT>::value,
+			std::remove_reference_t<decltype(*itOutputBegin)>, ValueT>(vParams...);
 		++itOutputBegin;
 	}
 	return itOutputBegin;
+}
+template<typename ValueT = void, typename OutputIteratorT, typename ...ParamsT>
+inline OutputIteratorT
+	FillBackward(std::common_type_t<OutputIteratorT> itOutputBegin, OutputIteratorT itOutputEnd,
+		const ParamsT &...vParams)
+{
+	while(itOutputBegin != itOutputEnd){
+		--itOutputEnd;
+		*itOutputEnd = std::conditional_t<std::is_void<ValueT>::value,
+			std::remove_reference_t<decltype(*itOutputEnd)>, ValueT>(vParams...);
+	}
+	return itOutputEnd;
+}
+template<typename ValueT = void, typename OutputIteratorT, typename ...ParamsT>
+inline OutputIteratorT
+	FillNBackward(std::size_t uCount, OutputIteratorT itOutputEnd,
+		const ParamsT &...vParams)
+{
+	for(auto i = uCount; i; --i){
+		--itOutputEnd;
+		*itOutputEnd = std::conditional_t<std::is_void<ValueT>::value,
+			std::remove_reference_t<decltype(*itOutputEnd)>, ValueT>(vParams...);
+	}
+	return itOutputEnd;
 }
 
 }

@@ -1,21 +1,73 @@
 #include <MCF/StdMCF.hpp>
-#include <MCF/Thread/Thread.hpp>
-#include <MCF/Thread/ThreadLocal.hpp>
-#include <MCF/Core/String.hpp>
-
-MCF::ThreadLocal<int> tls;
+#include <MCF/Utilities/CopyMoveFill.hpp>
+#include <MCF/Utilities/BinaryOperations.hpp>
 
 extern "C" unsigned MCFMain(){
-	std::printf("thread %u: tls = %d\n", (unsigned)::GetCurrentThreadId(), tls.Get());
-	tls.Set(1);
-	std::printf("thread %u: tls = %d\n", (unsigned)::GetCurrentThreadId(), tls.Get());
+	static constexpr auto src = { 'a','b','c','d','e','f','g' };
 
-	auto t = MCF::Thread::Create([]{
-		std::printf("child thread %u: tls = %d\n", (unsigned)::GetCurrentThreadId(), tls.Get());
-		tls.Set(2);
-		std::printf("child thread %u: tls = %d\n", (unsigned)::GetCurrentThreadId(), tls.Get());
-	});
-	t->Join();
+	char dst[16] = { };
+	const auto begin = std::begin(dst) + 1;
+	const auto end = std::end(dst) - 2;
+
+	std::memset(dst, '_', sizeof(dst) - 1);
+	auto out1 = MCF::Copy(begin, src.begin(), src.end());
+	ASSERT(out1 - begin == src.size());
+	std::printf("str1  = %s\n", dst);
+
+	std::memset(dst, '_', sizeof(dst) - 1);
+	auto out2 = MCF::CopyBackward(end, src.begin(), src.end());
+	ASSERT(end - out2 == src.size());
+	std::printf("str2  = %s\n", dst);
+
+	std::memset(dst, '_', sizeof(dst) - 1);
+	auto out3 = MCF::CopyN(begin, src.begin(), src.size()).first;
+	ASSERT(out3 - begin == src.size());
+	std::printf("str3  = %s\n", dst);
+
+	std::memset(dst, '_', sizeof(dst) - 1);
+	auto out4 = MCF::CopyNBackward(end, src.size(), src.end()).first;
+	ASSERT(end - out4 == src.size());
+	std::printf("str4  = %s\n", dst);
+
+	std::memset(dst, '_', sizeof(dst) - 1);
+	auto out5 = MCF::ReverseCopy(begin, src.begin(), src.end());
+	ASSERT(out5 - begin == src.size());
+	std::printf("str5  = %s\n", dst);
+
+	std::memset(dst, '_', sizeof(dst) - 1);
+	auto out6 = MCF::ReverseCopyBackward(end, src.begin(), src.end());
+	ASSERT(end - out6 == src.size());
+	std::printf("str6  = %s\n", dst);
+
+	std::memset(dst, '_', sizeof(dst) - 1);
+	auto out7 = MCF::ReverseCopyN(begin, src.size(), src.end()).first;
+	ASSERT(out7 - begin == src.size());
+	std::printf("str7  = %s\n", dst);
+
+	std::memset(dst, '_', sizeof(dst) - 1);
+	auto out8 = MCF::ReverseCopyNBackward(end, src.begin(), src.size()).first;
+	ASSERT(end - out8 == src.size());
+	std::printf("str8  = %s\n", dst);
+
+	std::memset(dst, '_', sizeof(dst) - 1);
+	auto out9 = MCF::Fill(begin, end, 'a');
+	ASSERT(out9 == end);
+	std::printf("str9  = %s\n", dst);
+
+	std::memset(dst, '_', sizeof(dst) - 1);
+	auto out10 = MCF::FillN(begin, src.size(), 'b');
+	ASSERT(out10 - begin == src.size());
+	std::printf("str10 = %s\n", dst);
+
+	std::memset(dst, '_', sizeof(dst) - 1);
+	auto out11 = MCF::FillBackward(begin, end, 'c');
+	ASSERT(out11 == begin);
+	std::printf("str11 = %s\n", dst);
+
+	std::memset(dst, '_', sizeof(dst) - 1);
+	auto out12 = MCF::FillNBackward(src.size(), end, 'd');
+	ASSERT(end - out12 == src.size());
+	std::printf("str12 = %s\n", dst);
 
 	return 0;
 }

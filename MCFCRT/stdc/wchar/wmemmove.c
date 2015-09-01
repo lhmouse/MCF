@@ -6,5 +6,5 @@
 #include <string.h>
 
 wchar_t *wmemmove(wchar_t *dst, const wchar_t *src, size_t cnt){
-	return (wchar_t *)memmove(dst, src, cnt * sizeof(wchar_t));
+	return memmove(dst, src, cnt * sizeof(wchar_t));
 }

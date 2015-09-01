@@ -6,5 +6,5 @@
 #include <string.h>
 
 wchar_t *wmemcpy(wchar_t *restrict dst, const wchar_t *restrict src, size_t cnt){
-	return (wchar_t *)memcpy(dst, src, cnt * sizeof(wchar_t));
+	return memcpy(dst, src, cnt * sizeof(wchar_t));
 }

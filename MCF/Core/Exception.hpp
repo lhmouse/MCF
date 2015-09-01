@@ -6,6 +6,7 @@
 #define MCF_CORE_EXCEPTION_HPP_
 
 #include "LastError.hpp"
+#include "../../MCFCRT/ext/stpcpy.h"
 #include <exception>
 #include <cstring>
 
@@ -28,6 +29,18 @@ public:
 		}
 		std::memcpy(x_achMessage, pszMessage, uLen);
 		x_achMessage[uLen] = 0;
+	}
+	Exception(const Exception &rhs) noexcept
+		: x_pszFile(rhs.x_pszFile), x_ulLine(rhs.x_ulLine), x_ulCode(rhs.x_ulCode)
+	{
+		::MCF_stpcpy(x_achMessage, rhs.x_achMessage);
+	}
+	Exception &operator=(const Exception &rhs) noexcept {
+		x_pszFile = rhs.x_pszFile;
+		x_ulLine  = rhs.x_ulLine;
+		x_ulCode  = rhs.x_ulCode;
+		::MCF_stpcpy(x_achMessage, rhs.x_achMessage);
+		return *this;
 	}
 	~Exception() override;
 

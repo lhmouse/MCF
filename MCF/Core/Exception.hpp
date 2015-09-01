@@ -29,13 +29,13 @@ public:
 		x_achMessage[uLen] = 0;
 	}
 	Exception(const Exception &rhs) noexcept
-		: std::exception(rhs)
+		: std::exception(static_cast<const std::exception &>(rhs))
 		, x_pszFile(rhs.x_pszFile), x_ulLine(rhs.x_ulLine), x_ulCode(rhs.x_ulCode)
 	{
 		std::strcpy(x_achMessage, rhs.x_achMessage);
 	}
 	Exception &operator=(const Exception &rhs) noexcept {
-		std::exception::operator=(rhs);
+		std::exception::operator=(static_cast<const std::exception &>(rhs));
 
 		x_pszFile = rhs.x_pszFile;
 		x_ulLine  = rhs.x_ulLine;

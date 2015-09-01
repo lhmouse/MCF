@@ -57,7 +57,7 @@ namespace Impl_ThreadLocal {
 			}
 			return x_vDefault;
 		}
-		void Set(ElementT vElement){
+		void Set(const ElementT &vElement){
 			std::intptr_t nValue = 0;
 			std::memcpy(&nValue, &vElement, sizeof(vElement));
 			if(!::MCF_CRT_TlsReset(x_pTlsKey.Get(), nValue)){ // noexcept
@@ -97,7 +97,7 @@ namespace Impl_ThreadLocal {
 			return x_vDefault;
 		}
 		void Set(ElementT vElement){
-			const auto pElement = new ElementT(vElement);
+			const auto pElement = new ElementT(std::move(vElement));
 			if(!::MCF_CRT_TlsReset(x_pTlsKey.Get(), reinterpret_cast<std::intptr_t>(pElement))){ // noexcept
 				delete pElement;
 				DEBUG_THROW(SystemError, "MCF_CRT_TlsReset");

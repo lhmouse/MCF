@@ -17,10 +17,10 @@
 #include "../../External/dlmalloc/malloc.h"
 
 // hooks.h
-void (*__MCF_OnHeapAlloc)(void *pNewBlock, size_t uSize, const void *pRetAddr);
-void (*__MCF_OnHeapRealloc)(void *pNewBlock, void *pBlock, size_t uSize, const void *pRetAddr);
-void (*__MCF_OnHeapDealloc)(void *pBlock, const void *pRetAddr);
-bool (*__MCF_OnBadAlloc)(const void *pRetAddr);
+void (*__MCF_CRT_OnHeapAlloc)(void *pNewBlock, size_t uSize, const void *pRetAddr);
+void (*__MCF_CRT_OnHeapRealloc)(void *pNewBlock, void *pBlock, size_t uSize, const void *pRetAddr);
+void (*__MCF_CRT_OnHeapDealloc)(void *pBlock, const void *pRetAddr);
+bool (*__MCF_CRT_OnBadAlloc)(const void *pRetAddr);
 
 static CRITICAL_SECTION g_csHeapMutex;
 
@@ -83,13 +83,13 @@ unsigned char *__MCF_CRT_HeapAlloc(size_t uSize, const void *pRetAddr){
 		LeaveCriticalSection(&g_csHeapMutex);
 
 		if(pRet){
-			if(__MCF_OnHeapAlloc){
-				(*__MCF_OnHeapAlloc)(pRet, uSize, pRetAddr);
+			if(__MCF_CRT_OnHeapAlloc){
+				(*__MCF_CRT_OnHeapAlloc)(pRet, uSize, pRetAddr);
 			}
 			return pRet;
 		}
 
-		if(!(__MCF_OnBadAlloc && (*__MCF_OnBadAlloc)(pRetAddr))){
+		if(!(__MCF_CRT_OnBadAlloc && (*__MCF_CRT_OnBadAlloc)(pRetAddr))){
 			SetLastError(ERROR_NOT_ENOUGH_MEMORY);
 			return nullptr;
 		}
@@ -153,13 +153,13 @@ unsigned char *__MCF_CRT_HeapReAlloc(void *pBlock, size_t uSize, const void *pRe
 		LeaveCriticalSection(&g_csHeapMutex);
 
 		if(pRet){
-			if(__MCF_OnHeapRealloc){
-				(*__MCF_OnHeapRealloc)(pRet, pBlock, uSize, pRetAddr);
+			if(__MCF_CRT_OnHeapRealloc){
+				(*__MCF_CRT_OnHeapRealloc)(pRet, pBlock, uSize, pRetAddr);
 			}
 			return pRet;
 		}
 
-		if(!(__MCF_OnBadAlloc && (*__MCF_OnBadAlloc)(pRetAddr))){
+		if(!(__MCF_CRT_OnBadAlloc && (*__MCF_CRT_OnBadAlloc)(pRetAddr))){
 			SetLastError(ERROR_NOT_ENOUGH_MEMORY);
 			return nullptr;
 		}
@@ -191,7 +191,7 @@ void __MCF_CRT_HeapFree(void *pBlock, const void *pRetAddr){
 	}
 	LeaveCriticalSection(&g_csHeapMutex);
 
-	if(__MCF_OnHeapDealloc){
-		(*__MCF_OnHeapDealloc)(pBlock, pRetAddr);
+	if(__MCF_CRT_OnHeapDealloc){
+		(*__MCF_CRT_OnHeapDealloc)(pBlock, pRetAddr);
 	}
 }

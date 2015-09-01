@@ -7,6 +7,7 @@
 
 #include "LastError.hpp"
 #include <exception>
+#include <utility>
 #include <cstring>
 
 namespace MCF {
@@ -22,10 +23,7 @@ public:
 	Exception(const char *pszFile, unsigned long ulLine, unsigned long ulCode, const char *pszMessage) noexcept
 		: x_pszFile(pszFile), x_ulLine(ulLine), x_ulCode(ulCode)
 	{
-		auto uLen = std::strlen(pszMessage);
-		if(uLen > sizeof(pszMessage) - 1){
-			uLen = sizeof(pszMessage) - 1;
-		}
+		const auto uLen = std::min(std::strlen(pszMessage), sizeof(x_achMessage) - 1);
 		std::memcpy(x_achMessage, pszMessage, uLen);
 		x_achMessage[uLen] = 0;
 	}
@@ -35,6 +33,8 @@ public:
 		std::strcpy(x_achMessage, rhs.x_achMessage);
 	}
 	Exception &operator=(const Exception &rhs) noexcept {
+		std::exception::operator=(rhs);
+
 		x_pszFile = rhs.x_pszFile;
 		x_ulLine  = rhs.x_ulLine;
 		x_ulCode  = rhs.x_ulCode;

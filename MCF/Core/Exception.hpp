@@ -21,14 +21,16 @@ private:
 
 public:
 	Exception(const char *pszFile, unsigned long ulLine, unsigned long ulCode, const char *pszMessage) noexcept
-		: x_pszFile(pszFile), x_ulLine(ulLine), x_ulCode(ulCode)
+		: std::exception()
+		, x_pszFile(pszFile), x_ulLine(ulLine), x_ulCode(ulCode)
 	{
 		const auto uLen = std::min(std::strlen(pszMessage), sizeof(x_achMessage) - 1);
 		std::memcpy(x_achMessage, pszMessage, uLen);
 		x_achMessage[uLen] = 0;
 	}
 	Exception(const Exception &rhs) noexcept
-		: x_pszFile(rhs.x_pszFile), x_ulLine(rhs.x_ulLine), x_ulCode(rhs.x_ulCode)
+		: std::exception(rhs)
+		, x_pszFile(rhs.x_pszFile), x_ulLine(rhs.x_ulLine), x_ulCode(rhs.x_ulCode)
 	{
 		std::strcpy(x_achMessage, rhs.x_achMessage);
 	}

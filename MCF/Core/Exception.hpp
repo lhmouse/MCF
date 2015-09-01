@@ -20,9 +20,7 @@ private:
 
 public:
 	Exception(const char *pszFile, unsigned long ulLine, unsigned long ulCode, const char *pszMessage) noexcept
-		: x_pszFile(pszFile)
-		, x_ulLine(ulLine)
-		, x_ulCode(ulCode)
+		: x_pszFile(pszFile), x_ulLine(ulLine), x_ulCode(ulCode)
 	{
 		auto uLen = std::strlen(pszMessage);
 		if(uLen > sizeof(pszMessage) - 1){

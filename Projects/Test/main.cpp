@@ -11,42 +11,42 @@ extern "C" unsigned MCFMain(){
 
 	std::memset(dst, '_', sizeof(dst) - 1);
 	auto out1 = MCF::Copy(begin, src.begin(), src.end());
-	ASSERT(out1 - begin == src.size());
+	ASSERT(static_cast<std::size_t>(out1 - begin) == src.size());
 	std::printf("str1  = %s\n", dst);
 
 	std::memset(dst, '_', sizeof(dst) - 1);
 	auto out2 = MCF::CopyBackward(end, src.begin(), src.end());
-	ASSERT(end - out2 == src.size());
+	ASSERT(static_cast<std::size_t>(end - out2) == src.size());
 	std::printf("str2  = %s\n", dst);
 
 	std::memset(dst, '_', sizeof(dst) - 1);
 	auto out3 = MCF::CopyN(begin, src.begin(), src.size()).first;
-	ASSERT(out3 - begin == src.size());
+	ASSERT(static_cast<std::size_t>(out3 - begin) == src.size());
 	std::printf("str3  = %s\n", dst);
 
 	std::memset(dst, '_', sizeof(dst) - 1);
 	auto out4 = MCF::CopyNBackward(end, src.size(), src.end()).first;
-	ASSERT(end - out4 == src.size());
+	ASSERT(static_cast<std::size_t>(end - out4) == src.size());
 	std::printf("str4  = %s\n", dst);
 
 	std::memset(dst, '_', sizeof(dst) - 1);
 	auto out5 = MCF::ReverseCopy(begin, src.begin(), src.end());
-	ASSERT(out5 - begin == src.size());
+	ASSERT(static_cast<std::size_t>(out5 - begin) == src.size());
 	std::printf("str5  = %s\n", dst);
 
 	std::memset(dst, '_', sizeof(dst) - 1);
 	auto out6 = MCF::ReverseCopyBackward(end, src.begin(), src.end());
-	ASSERT(end - out6 == src.size());
+	ASSERT(static_cast<std::size_t>(end - out6) == src.size());
 	std::printf("str6  = %s\n", dst);
 
 	std::memset(dst, '_', sizeof(dst) - 1);
 	auto out7 = MCF::ReverseCopyN(begin, src.size(), src.end()).first;
-	ASSERT(out7 - begin == src.size());
+	ASSERT(static_cast<std::size_t>(out7 - begin) == src.size());
 	std::printf("str7  = %s\n", dst);
 
 	std::memset(dst, '_', sizeof(dst) - 1);
 	auto out8 = MCF::ReverseCopyNBackward(end, src.begin(), src.size()).first;
-	ASSERT(end - out8 == src.size());
+	ASSERT(static_cast<std::size_t>(end - out8) == src.size());
 	std::printf("str8  = %s\n", dst);
 
 	std::memset(dst, '_', sizeof(dst) - 1);
@@ -56,7 +56,7 @@ extern "C" unsigned MCFMain(){
 
 	std::memset(dst, '_', sizeof(dst) - 1);
 	auto out10 = MCF::FillN(begin, src.size(), 'b');
-	ASSERT(out10 - begin == src.size());
+	ASSERT(static_cast<std::size_t>(out10 - begin) == src.size());
 	std::printf("str10 = %s\n", dst);
 
 	std::memset(dst, '_', sizeof(dst) - 1);
@@ -66,7 +66,7 @@ extern "C" unsigned MCFMain(){
 
 	std::memset(dst, '_', sizeof(dst) - 1);
 	auto out12 = MCF::FillNBackward(src.size(), end, 'd');
-	ASSERT(end - out12 == src.size());
+	ASSERT(static_cast<std::size_t>(end - out12) == src.size());
 	std::printf("str12 = %s\n", dst);
 
 	return 0;

@@ -313,10 +313,10 @@ public:
 	}
 
 	// 举例：
-	//   Find("def", 3)				返回 3；
-	//   Find("def", 4)				返回 kNpos；
-	//   FindBackward("def", 5)		返回 kNpos；
-	//   FindBackward("def", 6)		返回 3。
+	//   Find("def", 3)             返回 3；
+	//   Find("def", 4)             返回 kNpos；
+	//   FindBackward("def", 5)     返回 kNpos；
+	//   FindBackward("def", 6)     返回 3。
 	std::size_t Find(const StringObserver &obsToFind, std::ptrdiff_t nBegin = 0) const noexcept {
 		const auto uLength = GetLength();
 		const auto uRealBegin = xTranslateOffset(nBegin, uLength);
@@ -359,10 +359,10 @@ public:
 	}
 
 	// 举例：
-	//   Find('c', 3)			返回 kNpos；
-	//   Find('d', 3)			返回 3；
-	//   FindBackward('c', 3)	返回 2；
-	//   FindBackward('d', 3)	返回 kNpos。
+	//   Find('c', 3)           返回 kNpos；
+	//   Find('d', 3)           返回 3；
+	//   FindBackward('c', 3)   返回 2；
+	//   FindBackward('d', 3)   返回 kNpos。
 	std::size_t FindRep(Char chToFind, std::size_t uRepCount, std::ptrdiff_t nBegin = 0) const noexcept {
 		const auto uLength = GetLength();
 		const auto uRealBegin = xTranslateOffset(nBegin, uLength);

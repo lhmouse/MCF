@@ -38,6 +38,7 @@ const MCF_ArgItem *MCF_CRT_AllocArgv(size_t *pArgc, const wchar_t *pwszCommandLi
 
 	const wchar_t *pwcRead = pwszCommandLine;
 	wchar_t *pwcWrite = pStorage;
+	size_t uArgc = 0;
 	*pArgc = 0;
 
 	enum {
@@ -58,7 +59,7 @@ const MCF_ArgItem *MCF_CRT_AllocArgv(size_t *pArgc, const wchar_t *pwszCommandLi
 			if((wc == L' ') || (wc == L'\t')){
 				// eState = ST_DELIM;
 			} else {
-				if(*pArgc == uCapacity){
+				if(uArgc == uCapacity){
 					uCapacity = uCapacity * 3 / 2;
 					const size_t uNewSizeToAlloc = uPrefixSize + (uCapacity + 2) * sizeof(MCF_ArgItem);
 					if((uNewSizeToAlloc <= uSizeToAlloc) || (uNewSizeToAlloc >= (SIZE_MAX >> 2))){
@@ -76,8 +77,8 @@ const MCF_ArgItem *MCF_CRT_AllocArgv(size_t *pArgc, const wchar_t *pwszCommandLi
 
 					pStorage = pNewStorage;
 				}
-				++*pArgc;
-				pArgv[*pArgc - 1].pwszStr = pwcWrite;
+				++uArgc;
+				pArgv[uArgc - 1].pwszStr = pwcWrite;
 
 				if(wc == L'\"'){
 					eState = ST_QUOTE_OPEN;
@@ -90,7 +91,7 @@ const MCF_ArgItem *MCF_CRT_AllocArgv(size_t *pArgc, const wchar_t *pwszCommandLi
 
 		case ST_IN_ARG:
 			if((wc == L' ') || (wc == L'\t')){
-				pArgv[*pArgc - 1].uLen = (size_t)(pwcWrite - pArgv[*pArgc - 1].pwszStr);
+				pArgv[uArgc - 1].uLen = (size_t)(pwcWrite - pArgv[uArgc - 1].pwszStr);
 				*(pwcWrite++) = 0;
 				eState = ST_DELIM;
 			} else if(wc == L'\"'){
@@ -121,7 +122,7 @@ const MCF_ArgItem *MCF_CRT_AllocArgv(size_t *pArgc, const wchar_t *pwszCommandLi
 
 		case ST_QUOTE_CLOSED:
 			if((wc == L' ') || (wc == L'\t')){
-				pArgv[*pArgc - 1].uLen = (size_t)(pwcWrite - pArgv[*pArgc - 1].pwszStr);
+				pArgv[uArgc - 1].uLen = (size_t)(pwcWrite - pArgv[uArgc - 1].pwszStr);
 				*(pwcWrite++) = 0;
 				eState = ST_DELIM;
 			} else if(wc == L'\"'){
@@ -142,14 +143,15 @@ const MCF_ArgItem *MCF_CRT_AllocArgv(size_t *pArgc, const wchar_t *pwszCommandLi
 	case ST_QUOTE_OPEN:
 	case ST_IN_QUOTE:
 	case ST_QUOTE_CLOSED:
-		pArgv[*pArgc - 1].uLen = (size_t)(pwcWrite - pArgv[*pArgc - 1].pwszStr);
+		pArgv[uArgc - 1].uLen = (size_t)(pwcWrite - pArgv[uArgc - 1].pwszStr);
 		*(pwcWrite++) = 0;
 		break;
 	}
 
-	pArgv[*pArgc].pwszStr = nullptr;
-	pArgv[*pArgc].uLen = 0;
+	pArgv[uArgc].pwszStr = nullptr;
+	pArgv[uArgc].uLen = 0;
 
+	*pArgc = uArgc;
 	return pArgv;
 
 jBadAlloc:

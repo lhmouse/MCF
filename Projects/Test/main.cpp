@@ -1,25 +1,14 @@
 #include <MCF/StdMCF.hpp>
-#include <MCFCRT/ext/stpcpy.h>
-#include <MCFCRT/ext/wcpcpy.h>
+#include <MCF/Core/Argv.hpp>
 
 extern "C" unsigned MCFMain(){
-	{
-		static const char src[] = "abcdefghijklmn";
-		char dst[32] = { };
-		for(unsigned i = 0; i < 20; ++i){
-			std::memset(dst, '_', sizeof(dst) - 1);
-			::MCF_stppcpy(dst, dst + i + 1, src);
-			std::printf("dst = %s\n", dst);
+	MCF::Argv args;
+	for(unsigned i = 0; ; ++i){
+		const auto ptr = args.GetStr(i);
+		if(!ptr){
+			break;
 		}
-	}
-	{
-		static const wchar_t src[] = L"abcdefghijklmn";
-		wchar_t dst[32] = { };
-		for(unsigned i = 0; i < 20; ++i){
-			std::wmemset(dst, L'_', sizeof(dst) / sizeof(wchar_t) - 1);
-			::MCF_wcppcpy(dst, dst + i + 1, src);
-			std::printf("dst = %ls\n", dst);
-		}
+		std::printf("arg %u = %ls\n", i, ptr);
 	}
 	return 0;
 }

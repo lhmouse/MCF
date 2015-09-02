@@ -7,22 +7,7 @@
 
 #include <type_traits>
 #include <utility>
-
-namespace MCF {
-
-namespace Impl_ConstructDestruct {
-	struct DirectConstructTag {
-	};
-}
-
-}
-
-// FIXME: 我只能说 GCC 是个白痴！为什么要检查 placement new 的返回值是否为 nullptr？
-inline void *operator new(std::size_t, void *p, const ::MCF::Impl_ConstructDestruct::DirectConstructTag &){
-	return p;
-}
-inline void operator delete(void *, void *, const ::MCF::Impl_ConstructDestruct::DirectConstructTag &) noexcept {
-}
+#include <new>
 
 namespace MCF {
 
@@ -31,21 +16,22 @@ namespace Impl_ConstructDestruct {
 	struct DirectConstructor {
 		template<typename ...ParamsT>
 		static void Construct(ObjectT *pObject, ParamsT &&...vParams){
-			::new(pObject, DirectConstructTag()) ObjectT(std::forward<ParamsT>(vParams)...);
-		}
-		static void Destruct(ObjectT *pObject){
-			pObject->~ObjectT();
+			::new(static_cast<void *>(pObject)) ObjectT(std::forward<ParamsT>(vParams)...);
 		}
 
 		static void DefaultConstruct(ObjectT *pObject){
 #ifndef NDEBUG
 			__builtin_memset(pObject, 0xCC, sizeof(ObjectT));
 #endif
-			::new(pObject, DirectConstructTag()) ObjectT;
+			::new(static_cast<void *>(pObject)) ObjectT;
 		}
 		template<typename ...ParamsT>
 		static void DefaultConstruct(ObjectT *pObject, ParamsT &&...vParams){
-			::new(pObject, DirectConstructTag()) ObjectT(std::forward<ParamsT>(vParams)...);
+			::new(static_cast<void *>(pObject)) ObjectT(std::forward<ParamsT>(vParams)...);
+		}
+
+		static void Destruct(ObjectT *pObject){
+			pObject->~ObjectT();
 		}
 	};
 }

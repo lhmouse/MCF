@@ -67,7 +67,7 @@ double fmin(double x, double y){
 	return ret;
 }
 
-__MCF_LDBL_DECL(fminl, long double x, long double y){
+long double fminl(long double x, long double y){
 	register long double ret;
 	uintptr_t unused;
 	__asm__ __volatile__(
@@ -88,10 +88,10 @@ __MCF_LDBL_DECL(fminl, long double x, long double y){
 		"and %4, eax \n"
 		"xor %4, %3 \n"
 #endif
-		__MCF_LDBL_RET_MEM("%4", "a")
+		"fld tbyte ptr[%4] \n"
 		: "=r"(unused), "=r"(unused), __MCF_LDBL_RET_CONS(ret)
-		: "0"(&x), "1"(&y), __MCF_LDBL_RET_CONS_IN()
+		: "0"(&x), "1"(&y)
 		: "ax"
 	);
-	__MCF_LDBL_RETURN(ret);
+	return ret;
 }

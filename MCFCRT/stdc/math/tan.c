@@ -59,7 +59,7 @@ double tan(double x){
 	return ret;
 }
 
-__MCF_LDBL_DECL(tanl, long double x){
+long double tanl(long double x){
 	register long double ret;
 	__asm__ __volatile__(
 		"fld tbyte ptr[%1] \n"
@@ -78,10 +78,10 @@ __MCF_LDBL_DECL(tanl, long double x){
 		"	fptan \n"
 		"1: \n"
 		"fstp st \n"
-		__MCF_LDBL_RET_ST()
+		__MCF_LDBL_RET_ST("%1")
 		: __MCF_LDBL_RET_CONS(ret)
-		: "m"(x), __MCF_LDBL_RET_CONS_IN()
+		: "m"(x)
 		: "ax"
 	);
-	__MCF_LDBL_RETURN(ret);
+	return ret;
 }

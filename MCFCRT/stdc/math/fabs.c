@@ -56,16 +56,14 @@ double fabs(double x){
 	return ret;
 }
 
-__MCF_LDBL_DECL(fabsl, long double x){
+long double fabsl(long double x){
 	register long double ret;
 	__asm__ __volatile__(
 #ifdef _WIN64
-		"mov rdx, qword ptr[%1] \n"
-		"mov qword ptr[%2], rdx \n"
 		"movzx edx, word ptr[%1 + 8] \n"
 		"shl edx, 17 \n"
 		"shr edx, 17 \n"
-		"mov word ptr[%2 + 8], dx \n"
+		"mov word ptr[%1 + 8], dx \n"
 #else
 		"movzx edx, word ptr[%1 + 8] \n"
 		"shl edx, 17 \n"
@@ -74,8 +72,8 @@ __MCF_LDBL_DECL(fabsl, long double x){
 		"fld tbyte ptr[%1] \n"
 #endif
 		: __MCF_LDBL_RET_CONS(ret)
-		: "m"(x), __MCF_LDBL_RET_CONS_IN()
+		: "m"(x)
 		: "dx"
 	);
-	__MCF_LDBL_RETURN(ret);
+	return ret;
 }

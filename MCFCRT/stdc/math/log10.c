@@ -31,16 +31,16 @@ double log10(double x){
 	return ret;
 }
 
-__MCF_LDBL_DECL(log10l, long double x){
+long double log10l(long double x){
 	register long double ret;
 	__asm__ __volatile__(
 		"fldlg2 \n"
 		"fld tbyte ptr[%1] \n"
 		"fyl2x \n"
-		__MCF_LDBL_RET_ST()
+		__MCF_LDBL_RET_ST("%1")
 		: __MCF_LDBL_RET_CONS(ret)
-		: "m"(x), __MCF_LDBL_RET_CONS_IN()
+		: "m"(x)
 		: "ax"
 	);
-	__MCF_LDBL_RETURN(ret);
+	return ret;
 }

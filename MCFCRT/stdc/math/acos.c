@@ -41,7 +41,7 @@ double acos(double x){
 	return ret;
 }
 
-__MCF_LDBL_DECL(acosl, long double x){
+long double acosl(long double x){
 	register long double ret;
 	__asm__ __volatile__(
 		"fld tbyte ptr[%1] \n"
@@ -52,9 +52,9 @@ __MCF_LDBL_DECL(acosl, long double x){
 		"fsqrt \n"
 		"fxch st(1) \n"
 		"fpatan \n"
-		__MCF_LDBL_RET_ST()
+		__MCF_LDBL_RET_ST("%1")
 		: __MCF_LDBL_RET_CONS(ret)
-		: "m"(x), __MCF_LDBL_RET_CONS_IN()
+		: "m"(x)
 	);
-	__MCF_LDBL_RETURN(ret);
+	return ret;
 }

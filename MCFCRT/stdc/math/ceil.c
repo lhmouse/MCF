@@ -51,7 +51,7 @@ double ceil(double x){
 	return ret;
 }
 
-__MCF_LDBL_DECL(ceill, long double x){
+long double ceill(long double x){
 	register long double ret;
 	uint16_t fcw;
 	__asm__ __volatile__(
@@ -65,11 +65,11 @@ __MCF_LDBL_DECL(ceill, long double x){
 		"fldcw word ptr[%2] \n"
 		"frndint \n"
 		"mov word ptr[%2], ax \n"
-		__MCF_LDBL_RET_ST()
+		__MCF_LDBL_RET_ST("%1")
 		"fldcw word ptr[%2] \n"
 		: __MCF_LDBL_RET_CONS(ret)
-		: "m"(x), "m"(fcw), __MCF_LDBL_RET_CONS_IN()
+		: "m"(x), "m"(fcw)
 		: "ax", "cx"
 	);
-	__MCF_LDBL_RETURN(ret);
+	return ret;
 }

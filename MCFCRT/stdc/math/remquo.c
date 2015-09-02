@@ -75,7 +75,7 @@ double remquo(double x, double y, int *quo){
 	return ret;
 }
 
-__MCF_LDBL_DECL(remquol, long double x, long double y, int *quo){
+long double remquol(long double x, long double y, int *quo){
 	register long double ret;
 	__asm__ __volatile__(
 		"fld tbyte ptr[%2] \n"
@@ -102,11 +102,11 @@ __MCF_LDBL_DECL(remquol, long double x, long double y, int *quo){
 		"sar eax, 31 \n"
 		"xor ecx, eax \n"
 		"sub ecx, eax \n"
-		__MCF_LDBL_RET_ST()
+		__MCF_LDBL_RET_ST("%1")
 		"mov dword ptr[%3], ecx \n"
 		: __MCF_LDBL_RET_CONS(ret)
-		: "m"(x), "m"(y), "r"(quo), __MCF_LDBL_RET_CONS_IN()
+		: "m"(x), "m"(y), "r"(quo)
 		: "ax", "cx"
 	);
-	__MCF_LDBL_RETURN(ret);
+	return ret;
 }

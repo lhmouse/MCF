@@ -59,7 +59,7 @@ double frexp(double x, int *exp){
 	return ret;
 }
 
-__MCF_LDBL_DECL(frexpl, long double x, int *exp){
+long double frexpl(long double x, int *exp){
 	register long double ret;
 	__asm__ __volatile__(
 		"fld tbyte ptr[%1] \n"
@@ -77,10 +77,10 @@ __MCF_LDBL_DECL(frexpl, long double x, int *exp){
 		"fxch st(1) \n"
 		"2: \n"
 		"fistp dword ptr[%2] \n"
-		__MCF_LDBL_RET_ST()
+		__MCF_LDBL_RET_ST("%1")
 		: __MCF_LDBL_RET_CONS(ret)
-		: "m"(x), "r"(exp), "m"(kHalf), __MCF_LDBL_RET_CONS_IN()
+		: "m"(x), "r"(exp), "m"(kHalf)
 		: "ax"
 	);
-	__MCF_LDBL_RETURN(ret);
+	return ret;
 }

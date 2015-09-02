@@ -43,7 +43,7 @@ double remainder(double x, double y){
 	return ret;
 }
 
-__MCF_LDBL_DECL(remainderl, long double x, long double y){
+long double remainderl(long double x, long double y){
 	register long double ret;
 	__asm__ __volatile__(
 		"fld tbyte ptr[%2] \n"
@@ -54,10 +54,10 @@ __MCF_LDBL_DECL(remainderl, long double x, long double y){
 		"	test ah, 4 \n"
 		"jnz 1b \n"
 		"fstp st(1) \n"
-		__MCF_LDBL_RET_ST()
+		__MCF_LDBL_RET_ST("%1")
 		: __MCF_LDBL_RET_CONS(ret)
-		: "m"(x), "m"(y), __MCF_LDBL_RET_CONS_IN()
+		: "m"(x), "m"(y)
 		: "ax"
 	);
-	__MCF_LDBL_RETURN(ret);
+	return ret;
 }

@@ -1,13 +1,9 @@
 #include <MCF/StdMCF.hpp>
 
-wchar_t s1[] = L"abcd";
-wchar_t s2[] = L"abc";
+long double x = 1.0, y = 2.0;
 
 extern "C" unsigned MCFMain(){
-	std::printf("cmp = %d\n", std::wcscmp(s1, s2));
-	std::printf("cmp = %d\n", std::wcscmp(s2, s1));
-	std::printf("cmp = %d\n", std::wcsncmp(s1, s2, 3));
-	std::printf("cmp = %d\n", std::wcsncmp(s1, s2, 4));
-	std::printf("cmp = %d\n", std::wcsncmp(s1, s2, 10));
+	std::printf("fdim(x, y) = %Lf\n", std::fdim(x, y));
+	std::printf("fdim(y, x) = %Lf\n", std::fdim(y, x));
 	return 0;
 }

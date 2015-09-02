@@ -64,7 +64,7 @@ double log1p(double x){
 	return ret;
 }
 
-__MCF_LDBL_DECL(log1pl, long double x){
+long double log1pl(long double x){
 	register long double ret;
 	__asm__ __volatile__(
 		"fldln2 \n"
@@ -84,10 +84,10 @@ __MCF_LDBL_DECL(log1pl, long double x){
 		"faddp st(1), st \n"
 		"fyl2x \n"
 		"2: \n"
-		__MCF_LDBL_RET_ST()
+		__MCF_LDBL_RET_ST("%1")
 		: __MCF_LDBL_RET_CONS(ret)
-		: "m"(x), "m"(kNegThreshould), "m"(kPosThreshould), __MCF_LDBL_RET_CONS_IN()
+		: "m"(x), "m"(kNegThreshould), "m"(kPosThreshould)
 		: "ax"
 	);
-	__MCF_LDBL_RETURN(ret);
+	return ret;
 }

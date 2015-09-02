@@ -29,14 +29,14 @@ double sqrt(double x){
 	return ret;
 }
 
-__MCF_LDBL_DECL(sqrtl, long double x){
+long double sqrtl(long double x){
 	register long double ret;
 	__asm__ __volatile__(
 		"fld tbyte ptr[%1] \n"
 		"fsqrt \n"
-		__MCF_LDBL_RET_ST()
+		__MCF_LDBL_RET_ST("%1")
 		: __MCF_LDBL_RET_CONS(ret)
-		: "m"(x), __MCF_LDBL_RET_CONS_IN()
+		: "m"(x)
 	);
-	__MCF_LDBL_RETURN(ret);
+	return ret;
 }

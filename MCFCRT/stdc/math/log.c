@@ -31,15 +31,15 @@ double log(double x){
 	return ret;
 }
 
-__MCF_LDBL_DECL(logl, long double x){
+long double logl(long double x){
 	register long double ret;
 	__asm__ __volatile__(
 		"fldln2 \n"
 		"fld tbyte ptr[%1] \n"
 		"fyl2x \n"
-		__MCF_LDBL_RET_ST()
+		__MCF_LDBL_RET_ST("%1")
 		: __MCF_LDBL_RET_CONS(ret)
-		: "m"(x), __MCF_LDBL_RET_CONS_IN()
+		: "m"(x)
 	);
-	__MCF_LDBL_RETURN(ret);
+	return ret;
 }

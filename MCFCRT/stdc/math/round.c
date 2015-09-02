@@ -80,7 +80,7 @@ double round(double x){
 	return ret;
 }
 
-__MCF_LDBL_DECL(roundl, long double x){
+long double roundl(long double x){
 	register long double ret;
 	uintptr_t unused;
 	uint16_t fcw;
@@ -107,11 +107,11 @@ __MCF_LDBL_DECL(roundl, long double x){
 		"fldcw word ptr[%3] \n"
 		"frndint \n"
 		"mov word ptr[%3], ax \n"
-		__MCF_LDBL_RET_ST()
+		__MCF_LDBL_RET_ST("%1")
 		"fldcw word ptr[%3] \n"
 		: __MCF_LDBL_RET_CONS(ret), "=r"(unused)
-		: "m"(x), "m"(fcw), "1"(&kNegHalf), "r"(&kPosHalf), __MCF_LDBL_RET_CONS_IN()
+		: "m"(x), "m"(fcw), "1"(&kNegHalf), "r"(&kPosHalf)
 		: "ax", "cx", "dx"
 	);
-	__MCF_LDBL_RETURN(ret);
+	return ret;
 }

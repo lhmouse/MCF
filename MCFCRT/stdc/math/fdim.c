@@ -64,7 +64,7 @@ double fdim(double x, double y){
 	return ret;
 }
 
-__MCF_LDBL_DECL(fdiml, long double x, long double y){
+long double fdiml(long double x, long double y){
 	register long double ret;
 	__asm__ __volatile__(
 		"fld tbyte ptr[%1] \n"
@@ -86,10 +86,10 @@ __MCF_LDBL_DECL(fdiml, long double x, long double y){
 		"and dword ptr[%1 + 4], eax \n"
 #endif
 		"and word ptr[%1 + 8], ax \n"
-		__MCF_LDBL_RET_MEM("%1", "a")
+		"fld tbyte ptr[%1] \n"
 		: __MCF_LDBL_RET_CONS(ret)
-		: "m"(x), "m"(y), __MCF_LDBL_RET_CONS_IN()
+		: "m"(x), "m"(y)
 		: "ax"
 	);
-	__MCF_LDBL_RETURN(ret);
+	return ret;
 }

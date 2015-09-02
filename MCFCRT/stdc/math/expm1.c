@@ -80,7 +80,7 @@ double expm1(double x){
 	return ret;
 }
 
-__MCF_LDBL_DECL(expm1l, long double x){
+long double expm1l(long double x){
 	register long double ret;
 	__asm__ __volatile__(
 		"fld tbyte ptr[%1] \n"
@@ -109,10 +109,10 @@ __MCF_LDBL_DECL(expm1l, long double x){
 		"fmulp st(1), st \n"
 		"fadd qword ptr[%2] \n"
 		"2: \n"
-		__MCF_LDBL_RET_ST()
+		__MCF_LDBL_RET_ST("%1")
 		: __MCF_LDBL_RET_CONS(ret)
-		: "m"(x), "m"(kNegThreshould), "m"(kPosThreshould), __MCF_LDBL_RET_CONS_IN()
+		: "m"(x), "m"(kNegThreshould), "m"(kPosThreshould)
 		: "ax"
 	);
-	__MCF_LDBL_RETURN(ret);
+	return ret;
 }

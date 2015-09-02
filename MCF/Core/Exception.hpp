@@ -13,8 +13,13 @@ namespace MCF {
 
 namespace Impl_Exception {
 	class NtsBuffer {
+	public:
+		enum : std::size_t {
+			kMaxTextLength = 1023
+		};
+
 	private:
-		char x_achText[1024];
+		char x_achText[kMaxTextLength + 1];
 
 	public:
 		explicit NtsBuffer(const char *pszText) noexcept {
@@ -39,11 +44,6 @@ namespace Impl_Exception {
 }
 
 class Exception : public std::exception {
-public:
-	enum : std::size_t {
-		kMessageBufferSize = 1024
-	};
-
 private:
 	const char *x_pszFile;
 	unsigned long x_ulLine;

@@ -18,13 +18,16 @@
 	};
 */
 
-#define FIX_ALIGNMENT(cb_, as_)		(((cb_) + alignof(as_) - 1) / alignof(as_) * alignof(as_))
-
 const MCF_ArgItem *MCF_CRT_AllocArgv(size_t *pArgc, const wchar_t *pwszCommandLine){
-	const size_t uPrefixSize = FIX_ALIGNMENT((wcslen(pwszCommandLine) + 1) * sizeof(wchar_t), MCF_ArgItem);
+	const size_t uPrefixSize = (((wcslen(pwszCommandLine) + 1) * sizeof(wchar_t) - 1) / alignof(MCF_ArgItem) + 1) * alignof(MCF_ArgItem);
 
 	size_t uCapacity = 4;
-	void *pStorage = malloc(uPrefixSize + (uCapacity + 2) * sizeof(MCF_ArgItem));
+	const size_t uSizeToAlloc = uPrefixSize + (uCapacity + 2) * sizeof(MCF_ArgItem);
+	if((uSizeToAlloc < uPrefixSize) || (uSizeToAlloc >= (SIZE_MAX >> 2))){
+		SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+		return nullptr;
+	}
+	void *pStorage = malloc(uSizeToAlloc);
 	if(!pStorage){
 		SetLastError(ERROR_NOT_ENOUGH_MEMORY);
 		return nullptr;
@@ -57,7 +60,11 @@ const MCF_ArgItem *MCF_CRT_AllocArgv(size_t *pArgc, const wchar_t *pwszCommandLi
 			} else {
 				if(*pArgc == uCapacity){
 					uCapacity = uCapacity * 3 / 2;
-					void *pNewStorage = realloc(pStorage, uPrefixSize + (uCapacity + 2) * sizeof(MCF_ArgItem));
+					const size_t uNewSizeToAlloc = uPrefixSize + (uCapacity + 2) * sizeof(MCF_ArgItem);
+					if((uNewSizeToAlloc <= uSizeToAlloc) || (uNewSizeToAlloc >= (SIZE_MAX >> 2))){
+						goto jError;
+					}
+					void *pNewStorage = realloc(pStorage, uNewSizeToAlloc);
 					if(!pNewStorage){
 						goto jError;
 					}

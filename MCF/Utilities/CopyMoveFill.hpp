@@ -13,212 +13,53 @@
 
 namespace MCF {
 
-namespace Impl_CopyMoveFill {
-	template<typename OutputIteratorT, typename InputIteratorT, typename ValueT,
-		typename TraitHelper = void>
-	struct CopyTraits {
-		static OutputIteratorT
-			DoCopy(OutputIteratorT itOutputBegin,
-				InputIteratorT itInputBegin, InputIteratorT itInputEnd)
-		{
-			while(itInputBegin != itInputEnd){
-				*itOutputBegin = *itInputBegin;
-				++itOutputBegin;
-				++itInputBegin;
-			}
-			return itOutputBegin;
-		}
-		static std::pair<OutputIteratorT, InputIteratorT>
-			DoCopyN(OutputIteratorT itOutputBegin,
-				InputIteratorT itInputBegin, std::size_t uCount)
-		{
-			for(auto i = uCount; i; --i){
-				*itOutputBegin = *itInputBegin;
-				++itOutputBegin;
-				++itInputBegin;
-			}
-			return std::make_pair(itOutputBegin, itInputBegin);
-		}
-		static OutputIteratorT
-			DoCopyBackward(OutputIteratorT itOutputEnd,
-				InputIteratorT itInputBegin, InputIteratorT itInputEnd)
-		{
-			while(itInputBegin != itInputEnd){
-				--itOutputEnd;
-				--itInputEnd;
-				*itOutputEnd = *itInputEnd;
-			}
-			return itOutputEnd;
-		}
-		static std::pair<OutputIteratorT, InputIteratorT>
-			DoCopyNBackward(OutputIteratorT itOutputEnd,
-				std::size_t uCount, InputIteratorT itInputEnd)
-		{
-			for(auto i = uCount; i; --i){
-				--itOutputEnd;
-				--itInputEnd;
-				*itOutputEnd = *itInputEnd;
-			}
-			return std::make_pair(itOutputEnd, itInputEnd);
-		}
-
-		static OutputIteratorT
-			DoMove(OutputIteratorT itOutputBegin,
-				InputIteratorT itInputBegin, InputIteratorT itInputEnd)
-		{
-			while(itInputBegin != itInputEnd){
-				*itOutputBegin = std::move(*itInputBegin);
-				++itOutputBegin;
-				++itInputBegin;
-			}
-			return itOutputBegin;
-		}
-		static std::pair<OutputIteratorT, InputIteratorT>
-			DoMoveN(OutputIteratorT itOutputBegin,
-				InputIteratorT itInputBegin, std::size_t uCount)
-		{
-			for(auto i = uCount; i; --i){
-				*itOutputBegin = std::move(*itInputBegin);
-				++itOutputBegin;
-				++itInputBegin;
-			}
-			return std::make_pair(itOutputBegin, itInputBegin);
-		}
-		static OutputIteratorT
-			DoMoveBackward(OutputIteratorT itOutputEnd,
-				InputIteratorT itInputBegin, InputIteratorT itInputEnd)
-		{
-			while(itInputBegin != itInputEnd){
-				--itOutputEnd;
-				--itInputEnd;
-				*itOutputEnd = std::move(*itInputEnd);
-			}
-			return itOutputEnd;
-		}
-		static std::pair<OutputIteratorT, InputIteratorT>
-			DoMoveNBackward(OutputIteratorT itOutputEnd,
-				std::size_t uCount, InputIteratorT itInputEnd)
-		{
-			for(auto i = uCount; i; --i){
-				--itOutputEnd;
-				--itInputEnd;
-				*itOutputEnd = std::move(*itInputEnd);
-			}
-			return std::make_pair(itOutputEnd, itInputEnd);
-		}
-	};
-
-	template<typename TriviallyCopyableT, typename InputIteratorT>
-	struct CopyTraits<TriviallyCopyableT *, InputIteratorT, TriviallyCopyableT,
-		std::enable_if_t<
-//			std::is_trivially_copyable<TriviallyCopyableT>::value &&
-				std::is_trivial<TriviallyCopyableT>::value &&				// FIXME: Fuck GCC.
-				!std::is_volatile<TriviallyCopyableT>::value &&				//
-				std::is_copy_constructible<TriviallyCopyableT>::value &&	//
-				std::is_move_constructible<TriviallyCopyableT>::value &&	//
-			std::is_pointer<InputIteratorT>::value &&
-			std::is_same<
-				std::remove_const_t<std::remove_pointer_t<InputIteratorT>>,
-				TriviallyCopyableT
-				>::value
-			>
-		>
-	{
-		using OutputIterator = TriviallyCopyableT *;
-
-		static OutputIterator
-			DoCopy(OutputIterator itOutputBegin,
-				InputIteratorT itInputBegin, InputIteratorT itInputEnd)
-		{
-			const auto uCount = (std::size_t)(itInputEnd - itInputBegin);
-			std::memmove(itOutputBegin, itInputBegin, uCount * sizeof(TriviallyCopyableT));
-			return itOutputBegin + uCount;
-		}
-		static std::pair<OutputIterator, InputIteratorT>
-			DoCopyN(OutputIterator itOutputBegin,
-				InputIteratorT itInputBegin, std::size_t uCount)
-		{
-			std::memmove(itOutputBegin, itInputBegin, uCount * sizeof(TriviallyCopyableT));
-			return std::make_pair(itOutputBegin + uCount, itInputBegin + uCount);
-		}
-		static OutputIterator
-			DoCopyBackward(OutputIterator itOutputEnd,
-				InputIteratorT itInputBegin, InputIteratorT itInputEnd)
-		{
-			const auto uCount = (std::size_t)(itInputEnd - itInputBegin);
-			std::memmove(itOutputEnd - uCount, itInputEnd - uCount, uCount * sizeof(TriviallyCopyableT));
-			return itOutputEnd - uCount;
-		}
-		static std::pair<OutputIterator, InputIteratorT>
-			DoCopyNBackward(OutputIterator itOutputEnd,
-				std::size_t uCount, InputIteratorT itInputEnd)
-		{
-			std::memmove(itOutputEnd - uCount, itInputEnd - uCount, uCount * sizeof(TriviallyCopyableT));
-			return std::make_pair(itOutputEnd - uCount, itInputEnd - uCount);
-		}
-
-		static OutputIterator
-			DoMove(OutputIterator itOutputBegin,
-				InputIteratorT itInputBegin, InputIteratorT itInputEnd)
-		{
-			return DoCopy(itOutputBegin, itInputBegin, itInputEnd);
-		}
-		static std::pair<OutputIterator, InputIteratorT>
-			DoMoveN(OutputIterator itOutputBegin,
-				InputIteratorT itInputBegin, std::size_t uCount)
-		{
-			return DoCopyN(itOutputBegin, itInputBegin, uCount);
-		}
-		static OutputIterator
-			DoMoveBackward(OutputIterator itOutputEnd,
-				InputIteratorT itInputBegin, InputIteratorT itInputEnd)
-		{
-			return DoCopyBackward(itOutputEnd, itInputBegin, itInputEnd);
-		}
-		static std::pair<OutputIterator, InputIteratorT>
-			DoMoveNBackward(OutputIterator itOutputEnd,
-				std::size_t uCount, InputIteratorT itInputEnd)
-		{
-			return DoCopyNBackward(itOutputEnd, uCount, itInputEnd);
-		}
-	};
-}
-
 template<typename OutputIteratorT, typename InputIteratorT>
 inline OutputIteratorT
 	Copy(OutputIteratorT itOutputBegin,
 		InputIteratorT itInputBegin, std::common_type_t<InputIteratorT> itInputEnd)
 {
-	return Impl_CopyMoveFill::CopyTraits<OutputIteratorT, InputIteratorT,
-		std::decay_t<typename std::iterator_traits<InputIteratorT>::value_type>
-		>::DoCopy(itOutputBegin, itInputBegin, itInputEnd);
+	while(itInputBegin != itInputEnd){
+		*itOutputBegin = *itInputBegin;
+		++itOutputBegin;
+		++itInputBegin;
+	}
+	return itOutputBegin;
 }
 template<typename OutputIteratorT, typename InputIteratorT>
 inline std::pair<OutputIteratorT, InputIteratorT>
 	CopyN(OutputIteratorT itOutputBegin,
 		InputIteratorT itInputBegin, std::size_t uCount)
 {
-	return Impl_CopyMoveFill::CopyTraits<OutputIteratorT, InputIteratorT,
-		std::decay_t<typename std::iterator_traits<InputIteratorT>::value_type>
-		>::DoCopyN(itOutputBegin, itInputBegin, uCount);
+	for(auto i = uCount; i; --i){
+		*itOutputBegin = *itInputBegin;
+		++itOutputBegin;
+		++itInputBegin;
+	}
+	return std::make_pair(itOutputBegin, itInputBegin);
 }
 template<typename OutputIteratorT, typename InputIteratorT>
 inline OutputIteratorT
 	CopyBackward(OutputIteratorT itOutputEnd,
 		std::common_type_t<InputIteratorT> itInputBegin, InputIteratorT itInputEnd)
 {
-	return Impl_CopyMoveFill::CopyTraits<OutputIteratorT, InputIteratorT,
-		std::decay_t<typename std::iterator_traits<InputIteratorT>::value_type>
-		>::DoCopyBackward(itOutputEnd, itInputBegin, itInputEnd);
+	while(itInputBegin != itInputEnd){
+		--itOutputEnd;
+		--itInputEnd;
+		*itOutputEnd = *itInputEnd;
+	}
+	return itOutputEnd;
 }
 template<typename OutputIteratorT, typename InputIteratorT>
 inline std::pair<OutputIteratorT, InputIteratorT>
 	CopyNBackward(OutputIteratorT itOutputEnd,
 		std::size_t uCount, InputIteratorT itInputEnd)
 {
-	return Impl_CopyMoveFill::CopyTraits<OutputIteratorT, InputIteratorT,
-		std::decay_t<typename std::iterator_traits<InputIteratorT>::value_type>
-		>::DoCopyNBackward(itOutputEnd, uCount, itInputEnd);
+	for(auto i = uCount; i; --i){
+		--itOutputEnd;
+		--itInputEnd;
+		*itOutputEnd = *itInputEnd;
+	}
+	return std::make_pair(itOutputEnd, itInputEnd);
 }
 
 template<typename OutputIteratorT, typename InputIteratorT>
@@ -226,36 +67,48 @@ inline OutputIteratorT
 	Move(OutputIteratorT itOutputBegin,
 		InputIteratorT itInputBegin, std::common_type_t<InputIteratorT> itInputEnd)
 {
-	return Impl_CopyMoveFill::CopyTraits<OutputIteratorT, InputIteratorT,
-		std::decay_t<typename std::iterator_traits<InputIteratorT>::value_type>
-		>::DoMove(itOutputBegin, itInputBegin, itInputEnd);
+	while(itInputBegin != itInputEnd){
+		*itOutputBegin = std::move(*itInputBegin);
+		++itOutputBegin;
+		++itInputBegin;
+	}
+	return itOutputBegin;
 }
 template<typename OutputIteratorT, typename InputIteratorT>
 inline std::pair<OutputIteratorT, InputIteratorT>
 	MoveN(OutputIteratorT itOutputBegin,
 		InputIteratorT itInputBegin, std::size_t uCount)
 {
-	return Impl_CopyMoveFill::CopyTraits<OutputIteratorT, InputIteratorT,
-		std::decay_t<typename std::iterator_traits<InputIteratorT>::value_type>
-		>::DoMoveN(itOutputBegin, itInputBegin, uCount);
+	for(auto i = uCount; i; --i){
+		*itOutputBegin = std::move(*itInputBegin);
+		++itOutputBegin;
+		++itInputBegin;
+	}
+	return std::make_pair(itOutputBegin, itInputBegin);
 }
 template<typename OutputIteratorT, typename InputIteratorT>
 inline OutputIteratorT
 	MoveBackward(OutputIteratorT itOutputEnd,
 		std::common_type_t<InputIteratorT> itInputBegin, InputIteratorT itInputEnd)
 {
-	return Impl_CopyMoveFill::CopyTraits<OutputIteratorT, InputIteratorT,
-		std::decay_t<typename std::iterator_traits<InputIteratorT>::value_type>
-		>::DoMoveBackward(itOutputEnd, itInputBegin, itInputEnd);
+	while(itInputBegin != itInputEnd){
+		--itOutputEnd;
+		--itInputEnd;
+		*itOutputEnd = std::move(*itInputEnd);
+	}
+	return itOutputEnd;
 }
 template<typename OutputIteratorT, typename InputIteratorT>
 inline std::pair<OutputIteratorT, InputIteratorT>
 	MoveNBackward(OutputIteratorT itOutputEnd,
 		std::size_t uCount, InputIteratorT itInputEnd)
 {
-	return Impl_CopyMoveFill::CopyTraits<OutputIteratorT, InputIteratorT,
-		std::decay_t<typename std::iterator_traits<InputIteratorT>::value_type>
-		>::DoMoveNBackward(itOutputEnd, uCount, itInputEnd);
+	for(auto i = uCount; i; --i){
+		--itOutputEnd;
+		--itInputEnd;
+		*itOutputEnd = std::move(*itInputEnd);
+	}
+	return std::make_pair(itOutputEnd, itInputEnd);
 }
 
 template<typename OutputIteratorT, typename InputIteratorT>

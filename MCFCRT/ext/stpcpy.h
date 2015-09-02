@@ -10,6 +10,7 @@
 __MCF_CRT_EXTERN_C_BEGIN
 
 extern char *MCF_stpcpy(char *restrict __dst, const char *restrict __src) MCF_NOEXCEPT;
+extern char *MCF_stppcpy(char *restrict __dst, char *restrict __end, const char *restrict __src) MCF_NOEXCEPT;
 
 __MCF_CRT_EXTERN_C_END
 

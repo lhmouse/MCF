@@ -5,39 +5,36 @@
 #ifndef MCF_CORE_EXCEPTION_HPP_
 #define MCF_CORE_EXCEPTION_HPP_
 
-#include "../Utilities/MinMax.hpp"
 #include "LastError.hpp"
+#include "../../MCFCRT/ext/stpcpy.h"
 #include <exception>
-#include <cstring>
 
 namespace MCF {
 
 class Exception : public std::exception {
 public:
 	enum : std::size_t {
-		kMaxMessageLength = 1023
+		kMessageBufferSize = 1024
 	};
 
 private:
 	const char *x_pszFile;
 	unsigned long x_ulLine;
 	unsigned long x_ulCode;
-	char x_achMessage[kMaxMessageLength + 1];
+	char x_achMessage[kMessageBufferSize];
 
 public:
 	Exception(const char *pszFile, unsigned long ulLine, unsigned long ulCode, const char *pszMessage) noexcept
 		: std::exception()
 		, x_pszFile(pszFile), x_ulLine(ulLine), x_ulCode(ulCode)
 	{
-		const auto uLen = Min(std::strlen(pszMessage), kMaxMessageLength);
-		std::memcpy(x_achMessage, pszMessage, uLen);
-		x_achMessage[uLen] = 0;
+		::MCF_stppcpy(x_achMessage, x_achMessage + kMessageBufferSize, pszMessage);
 	}
 	Exception(const Exception &rhs) noexcept
 		: std::exception(static_cast<const std::exception &>(rhs))
 		, x_pszFile(rhs.x_pszFile), x_ulLine(rhs.x_ulLine), x_ulCode(rhs.x_ulCode)
 	{
-		std::strcpy(x_achMessage, rhs.x_achMessage);
+		::MCF_stpcpy(x_achMessage, rhs.x_achMessage);
 	}
 	Exception &operator=(const Exception &rhs) noexcept {
 		std::exception::operator=(static_cast<const std::exception &>(rhs));
@@ -45,7 +42,7 @@ public:
 		x_pszFile = rhs.x_pszFile;
 		x_ulLine  = rhs.x_ulLine;
 		x_ulCode  = rhs.x_ulCode;
-		std::strcpy(x_achMessage, rhs.x_achMessage);
+		::MCF_stpcpy(x_achMessage, rhs.x_achMessage);
 		return *this;
 	}
 	~Exception() override;

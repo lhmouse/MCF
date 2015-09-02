@@ -4,6 +4,12 @@
 
 #include "../env/_crtdef.h"
 
+#ifdef _WIN64
+#	define MASK	0x0001000100010001ull
+#else
+#	define MASK	0x00010001ul
+#endif
+
 wchar_t *MCF_wcpcpy(wchar_t *restrict dst, const wchar_t *restrict src){
 	register const wchar_t *rp = src;
 	register wchar_t *wp = dst;
@@ -29,17 +35,11 @@ wchar_t *MCF_wcpcpy(wchar_t *restrict dst, const wchar_t *restrict src){
 
 	for(;;){
 
-#ifdef _WIN64
-#	define MASK	0x0001000100010001ull
-#else
-#	define MASK	0x00010001ul
-#endif
-
-#define UNROLLED(index)	\
+#define UNROLLED(index_)	\
 		{	\
-			register uintptr_t wrd = ((const uintptr_t *)rp)[(index)];	\
+			register uintptr_t wrd = ((const uintptr_t *)rp)[(index_)];	\
 			if(((wrd - MASK) & ~wrd & (MASK << 15)) != 0){	\
-				wp += (index) * sizeof(uintptr_t) / sizeof(wchar_t);	\
+				wp += (index_) * sizeof(uintptr_t) / sizeof(wchar_t);	\
 				for(size_t i = 0; i < sizeof(uintptr_t) / sizeof(wchar_t) - 1; ++i){	\
 					if((*wp = (wchar_t)(uint16_t)(wrd & 0xFFFF)) == 0){	\
 						return wp;	\
@@ -50,7 +50,7 @@ wchar_t *MCF_wcpcpy(wchar_t *restrict dst, const wchar_t *restrict src){
 				*wp = 0;	\
 				return wp;	\
 			}	\
-			((uintptr_t *)wp)[(index)] = wrd;	\
+			((uintptr_t *)wp)[(index_)] = wrd;	\
 		}
 
 		UNROLLED(0)
@@ -61,6 +61,82 @@ wchar_t *MCF_wcpcpy(wchar_t *restrict dst, const wchar_t *restrict src){
 		UNROLLED(5)
 		UNROLLED(6)
 		UNROLLED(7)
+
+		rp += 8 * sizeof(uintptr_t) / sizeof(wchar_t);
+		wp += 8 * sizeof(uintptr_t) / sizeof(wchar_t);
+	}
+}
+wchar_t *MCF_wcppcpy(wchar_t *restrict dst, wchar_t *restrict end, const wchar_t *restrict src){
+	register const wchar_t *rp = src;
+	register wchar_t *wp = dst;
+
+	if(((uintptr_t)rp & 1) != 0){
+		for(;;){
+			if((*wp = *(rp++)) == 0){
+				return wp;
+			}
+			++wp;
+		}
+	}
+
+	// 如果 rp 是对齐到字的，就不用考虑越界的问题。
+	// 因为内存按页分配的，也自然对齐到页，并且也对齐到字。
+	// 每个字内的字节的权限必然一致。
+	while(((uintptr_t)rp & (sizeof(uintptr_t) - 1)) != 0){
+		if(wp >= end - 1){
+			*wp = 0;
+			return wp;
+		}
+		if((*wp = *(rp++)) == 0){
+			return wp;
+		}
+		++wp;
+	}
+
+	for(;;){
+
+#define UNROLLED_P(index_)	\
+		{	\
+			register uintptr_t wrd = ((const uintptr_t *)rp)[(index_)];	\
+			if((size_t)(end - 1 - wp) < ((index_) + 1) * sizeof(uintptr_t) / sizeof(wchar_t)){	\
+				wp += (index_) * sizeof(uintptr_t) / sizeof(wchar_t);	\
+				for(size_t i = 0; i < sizeof(uintptr_t) / sizeof(wchar_t) - 1; ++i){	\
+					if(wp >= end - 1){	\
+						*wp = 0;	\
+						return wp;	\
+					}	\
+					if((*wp = (wchar_t)(uint16_t)(wrd & 0xFFFF)) == 0){	\
+						return wp;	\
+					}	\
+					++wp;	\
+					wrd >>= 16;	\
+				}	\
+				*wp = 0;	\
+				return wp;	\
+			}	\
+			if(((wrd - MASK) & ~wrd & (MASK << 15)) != 0){	\
+				wp += (index_) * sizeof(uintptr_t) / sizeof(wchar_t);	\
+				for(size_t i = 0; i < sizeof(uintptr_t) / sizeof(wchar_t) - 1; ++i){	\
+					if((*wp = (wchar_t)(uint16_t)(wrd & 0xFFFF)) == 0){	\
+						return wp;	\
+					}	\
+					++wp;	\
+					wrd >>= 16;	\
+				}	\
+				*wp = 0;	\
+				return wp;	\
+			}	\
+			((uintptr_t *)wp)[(index_)] = wrd;	\
+		}
+
+		UNROLLED_P(0)
+		UNROLLED_P(1)
+		UNROLLED_P(2)
+		UNROLLED_P(3)
+		UNROLLED_P(4)
+		UNROLLED_P(5)
+		UNROLLED_P(6)
+		UNROLLED_P(7)
 
 		rp += 8 * sizeof(uintptr_t) / sizeof(wchar_t);
 		wp += 8 * sizeof(uintptr_t) / sizeof(wchar_t);

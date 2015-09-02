@@ -9,13 +9,13 @@ int wcsncmp(const wchar_t *s1, const wchar_t *s2, size_t n){
 	++cnt;
 	for(;;){
 
-#define UNROLLED(index)	\
+#define UNROLLED(index_)	\
 		{	\
 			if(--cnt == 0){	\
 				return 0;	\
 			}	\
-			const int ch1 = (uint16_t)s1[index];	\
-			const int ch2 = (uint16_t)s2[index];	\
+			const int ch1 = (uint16_t)s1[index_];	\
+			const int ch2 = (uint16_t)s2[index_];	\
 			if(ch1 != ch2){	\
 				return (ch1 > ch2) ? 1 : -1;	\
 			}	\

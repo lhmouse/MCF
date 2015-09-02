@@ -34,15 +34,15 @@ int wmemcmp(const wchar_t *p1, const wchar_t *p2, size_t cnt){
 		COMPARE_LOWORD_AND_SHIFT
 #endif
 
-#define UNROLLED(index)	\
+#define UNROLLED(index_)	\
 		{	\
 			if(--wcnt == 0){	\
-				rp1 += (index) * (sizeof(uintptr_t) / sizeof(wchar_t));	\
-				rp2 += (index) * (sizeof(uintptr_t) / sizeof(wchar_t));	\
+				rp1 += (index_) * (sizeof(uintptr_t) / sizeof(wchar_t));	\
+				rp2 += (index_) * (sizeof(uintptr_t) / sizeof(wchar_t));	\
 				break;	\
 			}	\
-			register uintptr_t wrd1 = ((const uintptr_t *)rp1)[index];	\
-			register uintptr_t wrd2 = ((const uintptr_t *)rp2)[index];	\
+			register uintptr_t wrd1 = ((const uintptr_t *)rp1)[index_];	\
+			register uintptr_t wrd2 = ((const uintptr_t *)rp2)[index_];	\
 			if(wrd1 != wrd2){	\
 				COMPARE_UINTPTR	\
 			}	\

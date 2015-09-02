@@ -10,6 +10,7 @@
 __MCF_CRT_EXTERN_C_BEGIN
 
 extern wchar_t *MCF_wcpcpy(wchar_t *restrict __dst, const wchar_t *restrict __src) MCF_NOEXCEPT;
+extern wchar_t *MCF_wcppcpy(wchar_t *restrict __dst, wchar_t *restrict __end, const wchar_t *restrict __src) MCF_NOEXCEPT;
 
 __MCF_CRT_EXTERN_C_END
 

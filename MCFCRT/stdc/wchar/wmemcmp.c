@@ -14,9 +14,9 @@ int wmemcmp(const wchar_t *p1, const wchar_t *p2, size_t cnt){
 
 #define COMPARE_LOWORD_AND_SHIFT	\
 		{	\
-			const int delta = (int)(uint16_t)wrd1 - (int)(uint16_t)wrd2;	\
+			const long delta = (long)(uint16_t)wrd1 - (long)(uint16_t)wrd2;	\
 			if(delta != 0){	\
-				return (delta >> (sizeof(int) * __CHAR_BIT__ - 1)) | 1;	\
+				return (delta >> (sizeof(delta) * __CHAR_BIT__ - 1)) | 1;	\
 			}	\
 			wrd1 >>= 16;	\
 			wrd2 >>= 16;	\
@@ -34,15 +34,15 @@ int wmemcmp(const wchar_t *p1, const wchar_t *p2, size_t cnt){
 		COMPARE_LOWORD_AND_SHIFT
 #endif
 
-#define UNROLLED(index_)	\
+#define UNROLLED(idx_)	\
 		{	\
 			if(--wcnt == 0){	\
-				rp1 += (index_) * (sizeof(uintptr_t) / sizeof(wchar_t));	\
-				rp2 += (index_) * (sizeof(uintptr_t) / sizeof(wchar_t));	\
+				rp1 += (idx_) * (sizeof(uintptr_t) / sizeof(wchar_t));	\
+				rp2 += (idx_) * (sizeof(uintptr_t) / sizeof(wchar_t));	\
 				break;	\
 			}	\
-			register uintptr_t wrd1 = ((const uintptr_t *)rp1)[index_];	\
-			register uintptr_t wrd2 = ((const uintptr_t *)rp2)[index_];	\
+			register uintptr_t wrd1 = ((const uintptr_t *)rp1)[idx_];	\
+			register uintptr_t wrd2 = ((const uintptr_t *)rp2)[idx_];	\
 			if(wrd1 != wrd2){	\
 				COMPARE_UINTPTR	\
 			}	\
@@ -62,9 +62,9 @@ int wmemcmp(const wchar_t *p1, const wchar_t *p2, size_t cnt){
 	}
 	size_t rem = cnt % (sizeof(uintptr_t) / sizeof(wchar_t));
 	while(rem-- != 0){
-		const int delta = (int)(uint16_t)*(rp1++) - (int)(uint16_t)*(rp2++);
+		const long delta = (long)(uint16_t)*(rp1++) - (long)(uint16_t)*(rp2++);
 		if(delta != 0){
-			return (delta >> (sizeof(int) * __CHAR_BIT__ - 1)) | 1;
+			return (delta >> (sizeof(delta) * __CHAR_BIT__ - 1)) | 1;
 		}
 	}
 	return 0;

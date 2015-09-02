@@ -33,18 +33,18 @@ size_t wcslen(const wchar_t *s){
 
 	for(;;){
 
-#define UNROLLED(index_)	\
+#define UNROLLED(idx_)	\
 		{	\
-			register uintptr_t wrd = ((const uintptr_t *)rp)[(index_)];	\
+			register uintptr_t wrd = ((const uintptr_t *)rp)[(idx_)];	\
 			wrd = (wrd - MASK) & ~wrd & (MASK << 15);	\
 			if(wrd != 0){	\
 				for(size_t i = 0; i < sizeof(uintptr_t) / sizeof(wchar_t) - 1; ++i){	\
 					if((wrd & 0x8000) != 0){	\
-						return (size_t)(rp + (index_) * sizeof(uintptr_t) / sizeof(wchar_t) + i - s);	\
+						return (size_t)(rp + (idx_) * sizeof(uintptr_t) / sizeof(wchar_t) + i - s);	\
 					}	\
 					wrd >>= 16;	\
 				}	\
-				return (size_t)(rp + ((index_) + 1) * sizeof(uintptr_t) / sizeof(wchar_t) - 1 - s);	\
+				return (size_t)(rp + ((idx_) + 1) * sizeof(uintptr_t) / sizeof(wchar_t) - 1 - s);	\
 			}	\
 		}
 

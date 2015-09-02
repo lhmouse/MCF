@@ -27,11 +27,11 @@ char *MCF_stpcpy(char *restrict dst, const char *restrict src){
 
 	for(;;){
 
-#define UNROLLED(index_)	\
+#define UNROLLED(idx_)	\
 		{	\
-			register uintptr_t wrd = ((const uintptr_t *)rp)[(index_)];	\
+			register uintptr_t wrd = ((const uintptr_t *)rp)[(idx_)];	\
 			if(((wrd - MASK) & ~wrd & (MASK << 7)) != 0){	\
-				wp += (index_) * sizeof(uintptr_t);	\
+				wp += (idx_) * sizeof(uintptr_t);	\
 				for(size_t i = 0; i < sizeof(uintptr_t) - 1; ++i){	\
 					if((*wp = (char)(unsigned char)(wrd & 0xFF)) == 0){	\
 						return wp;	\
@@ -42,7 +42,7 @@ char *MCF_stpcpy(char *restrict dst, const char *restrict src){
 				*wp = 0;	\
 				return wp;	\
 			}	\
-			((uintptr_t *)wp)[(index_)] = wrd;	\
+			((uintptr_t *)wp)[(idx_)] = wrd;	\
 		}
 
 		UNROLLED(0)
@@ -82,11 +82,11 @@ char *MCF_stppcpy(char *restrict dst, char *restrict end, const char *restrict s
 
 	for(;;){
 
-#define UNROLLED_P(index_)	\
+#define UNROLLED_P(idx_)	\
 		{	\
-			register uintptr_t wrd = ((const uintptr_t *)rp)[(index_)];	\
-			if((size_t)(end - 1 - wp) < ((index_) + 1) * sizeof(uintptr_t)){	\
-				wp += (index_) * sizeof(uintptr_t);	\
+			register uintptr_t wrd = ((const uintptr_t *)rp)[(idx_)];	\
+			if((size_t)(end - 1 - wp) < ((idx_) + 1) * sizeof(uintptr_t)){	\
+				wp += (idx_) * sizeof(uintptr_t);	\
 				for(size_t i = 0; i < sizeof(uintptr_t) - 1; ++i){	\
 					if(wp >= end - 1){	\
 						*wp = 0;	\
@@ -102,7 +102,7 @@ char *MCF_stppcpy(char *restrict dst, char *restrict end, const char *restrict s
 				return wp;	\
 			}	\
 			if(((wrd - MASK) & ~wrd & (MASK << 7)) != 0){	\
-				wp += (index_) * sizeof(uintptr_t);	\
+				wp += (idx_) * sizeof(uintptr_t);	\
 				for(size_t i = 0; i < sizeof(uintptr_t) - 1; ++i){	\
 					if((*wp = (char)(unsigned char)(wrd & 0xFF)) == 0){	\
 						return wp;	\
@@ -113,7 +113,7 @@ char *MCF_stppcpy(char *restrict dst, char *restrict end, const char *restrict s
 				*wp = 0;	\
 				return wp;	\
 			}	\
-			((uintptr_t *)wp)[(index_)] = wrd;	\
+			((uintptr_t *)wp)[(idx_)] = wrd;	\
 		}
 
 		UNROLLED_P(0)

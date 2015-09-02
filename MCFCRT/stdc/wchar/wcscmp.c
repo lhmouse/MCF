@@ -7,12 +7,13 @@
 int wcscmp(const wchar_t *s1, const wchar_t *s2){
 	for(;;){
 
-#define UNROLLED(index_)	\
+#define UNROLLED(idx_)	\
 		{	\
-			const int ch1 = (uint16_t)s1[index_];	\
-			const int ch2 = (uint16_t)s2[index_];	\
-			if(ch1 != ch2){	\
-				return (ch1 > ch2) ? 1 : -1;	\
+			const long ch1 = (long)(uint16_t)s1[idx_];	\
+			const long ch2 = (long)(uint16_t)s2[idx_];	\
+			const long delta = ch1 - ch2;	\
+			if(delta != 0){	\
+				return (delta >> (sizeof(delta) * __CHAR_BIT__ - 1)) | 1;	\
 			}	\
 			if(ch1 == 0){	\
 				return 0;	\

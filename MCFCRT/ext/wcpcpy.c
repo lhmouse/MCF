@@ -35,11 +35,11 @@ wchar_t *MCF_wcpcpy(wchar_t *restrict dst, const wchar_t *restrict src){
 
 	for(;;){
 
-#define UNROLLED(index_)	\
+#define UNROLLED(idx_)	\
 		{	\
-			register uintptr_t wrd = ((const uintptr_t *)rp)[(index_)];	\
+			register uintptr_t wrd = ((const uintptr_t *)rp)[(idx_)];	\
 			if(((wrd - MASK) & ~wrd & (MASK << 15)) != 0){	\
-				wp += (index_) * sizeof(uintptr_t) / sizeof(wchar_t);	\
+				wp += (idx_) * sizeof(uintptr_t) / sizeof(wchar_t);	\
 				for(size_t i = 0; i < sizeof(uintptr_t) / sizeof(wchar_t) - 1; ++i){	\
 					if((*wp = (wchar_t)(uint16_t)(wrd & 0xFFFF)) == 0){	\
 						return wp;	\
@@ -50,7 +50,7 @@ wchar_t *MCF_wcpcpy(wchar_t *restrict dst, const wchar_t *restrict src){
 				*wp = 0;	\
 				return wp;	\
 			}	\
-			((uintptr_t *)wp)[(index_)] = wrd;	\
+			((uintptr_t *)wp)[(idx_)] = wrd;	\
 		}
 
 		UNROLLED(0)
@@ -95,11 +95,11 @@ wchar_t *MCF_wcppcpy(wchar_t *restrict dst, wchar_t *restrict end, const wchar_t
 
 	for(;;){
 
-#define UNROLLED_P(index_)	\
+#define UNROLLED_P(idx_)	\
 		{	\
-			register uintptr_t wrd = ((const uintptr_t *)rp)[(index_)];	\
-			if((size_t)(end - 1 - wp) < ((index_) + 1) * sizeof(uintptr_t) / sizeof(wchar_t)){	\
-				wp += (index_) * sizeof(uintptr_t) / sizeof(wchar_t);	\
+			register uintptr_t wrd = ((const uintptr_t *)rp)[(idx_)];	\
+			if((size_t)(end - 1 - wp) < ((idx_) + 1) * sizeof(uintptr_t) / sizeof(wchar_t)){	\
+				wp += (idx_) * sizeof(uintptr_t) / sizeof(wchar_t);	\
 				for(size_t i = 0; i < sizeof(uintptr_t) / sizeof(wchar_t) - 1; ++i){	\
 					if(wp >= end - 1){	\
 						*wp = 0;	\
@@ -115,7 +115,7 @@ wchar_t *MCF_wcppcpy(wchar_t *restrict dst, wchar_t *restrict end, const wchar_t
 				return wp;	\
 			}	\
 			if(((wrd - MASK) & ~wrd & (MASK << 15)) != 0){	\
-				wp += (index_) * sizeof(uintptr_t) / sizeof(wchar_t);	\
+				wp += (idx_) * sizeof(uintptr_t) / sizeof(wchar_t);	\
 				for(size_t i = 0; i < sizeof(uintptr_t) / sizeof(wchar_t) - 1; ++i){	\
 					if((*wp = (wchar_t)(uint16_t)(wrd & 0xFFFF)) == 0){	\
 						return wp;	\
@@ -126,7 +126,7 @@ wchar_t *MCF_wcppcpy(wchar_t *restrict dst, wchar_t *restrict end, const wchar_t
 				*wp = 0;	\
 				return wp;	\
 			}	\
-			((uintptr_t *)wp)[(index_)] = wrd;	\
+			((uintptr_t *)wp)[(idx_)] = wrd;	\
 		}
 
 		UNROLLED_P(0)

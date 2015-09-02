@@ -1,14 +1,13 @@
 #include <MCF/StdMCF.hpp>
-#include <MCF/Core/Argv.hpp>
+
+wchar_t s1[] = L"abcd";
+wchar_t s2[] = L"abc";
 
 extern "C" unsigned MCFMain(){
-	MCF::Argv args;
-	for(unsigned i = 0; ; ++i){
-		const auto ptr = args.GetStr(i);
-		if(!ptr){
-			break;
-		}
-		std::printf("arg %u = %ls\n", i, ptr);
-	}
+	std::printf("cmp = %d\n", std::wcscmp(s1, s2));
+	std::printf("cmp = %d\n", std::wcscmp(s2, s1));
+	std::printf("cmp = %d\n", std::wcsncmp(s1, s2, 3));
+	std::printf("cmp = %d\n", std::wcsncmp(s1, s2, 4));
+	std::printf("cmp = %d\n", std::wcsncmp(s1, s2, 10));
 	return 0;
 }

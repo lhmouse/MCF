@@ -11,6 +11,33 @@
 
 namespace MCF {
 
+namespace Impl_Exception {
+	class NtsBuffer {
+	private:
+		char x_achText[1024];
+
+	public:
+		explicit NtsBuffer(const char *pszText) noexcept {
+			::MCF_stppcpy(x_achText, x_achText + sizeof(x_achText), pszText);
+		}
+		NtsBuffer(const NtsBuffer &rhs) noexcept {
+			::MCF_stpcpy(x_achText, rhs.x_achText);
+		}
+		NtsBuffer &operator=(const NtsBuffer &rhs) noexcept {
+			::MCF_stpcpy(x_achText, rhs.x_achText);
+			return *this;
+		}
+
+	public:
+		operator const char *() const noexcept {
+			return x_achText;
+		}
+		operator char *() noexcept {
+			return x_achText;
+		}
+	};
+}
+
 class Exception : public std::exception {
 public:
 	enum : std::size_t {
@@ -21,35 +48,19 @@ private:
 	const char *x_pszFile;
 	unsigned long x_ulLine;
 	unsigned long x_ulCode;
-	char x_achMessage[kMessageBufferSize];
+	Impl_Exception::NtsBuffer x_ntsMessage;
 
 public:
 	Exception(const char *pszFile, unsigned long ulLine, unsigned long ulCode, const char *pszMessage) noexcept
 		: std::exception()
-		, x_pszFile(pszFile), x_ulLine(ulLine), x_ulCode(ulCode)
+		, x_pszFile(pszFile), x_ulLine(ulLine), x_ulCode(ulCode), x_ntsMessage(pszMessage)
 	{
-		::MCF_stppcpy(x_achMessage, x_achMessage + kMessageBufferSize, pszMessage);
-	}
-	Exception(const Exception &rhs) noexcept
-		: std::exception(static_cast<const std::exception &>(rhs))
-		, x_pszFile(rhs.x_pszFile), x_ulLine(rhs.x_ulLine), x_ulCode(rhs.x_ulCode)
-	{
-		::MCF_stpcpy(x_achMessage, rhs.x_achMessage);
-	}
-	Exception &operator=(const Exception &rhs) noexcept {
-		std::exception::operator=(static_cast<const std::exception &>(rhs));
-
-		x_pszFile = rhs.x_pszFile;
-		x_ulLine  = rhs.x_ulLine;
-		x_ulCode  = rhs.x_ulCode;
-		::MCF_stpcpy(x_achMessage, rhs.x_achMessage);
-		return *this;
 	}
 	~Exception() override;
 
 public:
 	const char *what() const noexcept override {
-		return x_achMessage;
+		return x_ntsMessage;
 	}
 
 	const char *GetFile() const noexcept {
@@ -62,7 +73,7 @@ public:
 		return x_ulCode;
 	}
 	const char *GetMessage() const noexcept {
-		return x_achMessage;
+		return x_ntsMessage;
 	}
 };
 

@@ -62,11 +62,11 @@ const MCF_ArgItem *MCF_CRT_AllocArgv(size_t *pArgc, const wchar_t *pwszCommandLi
 					uCapacity = uCapacity * 3 / 2;
 					const size_t uNewSizeToAlloc = uPrefixSize + (uCapacity + 2) * sizeof(MCF_ArgItem);
 					if((uNewSizeToAlloc <= uSizeToAlloc) || (uNewSizeToAlloc >= (SIZE_MAX >> 2))){
-						goto jError;
+						goto jBadAlloc;
 					}
 					void *pNewStorage = realloc(pStorage, uNewSizeToAlloc);
 					if(!pNewStorage){
-						goto jError;
+						goto jBadAlloc;
 					}
 					MCF_ArgItem *pArgv = (MCF_ArgItem *)((char *)pNewStorage + uPrefixSize + sizeof(MCF_ArgItem));
 					pArgv[-1].pwszStr = pNewStorage;
@@ -152,7 +152,7 @@ const MCF_ArgItem *MCF_CRT_AllocArgv(size_t *pArgc, const wchar_t *pwszCommandLi
 
 	return pArgv;
 
-jError:
+jBadAlloc:
 	free(pStorage);
 	SetLastError(ERROR_NOT_ENOUGH_MEMORY);
 	return nullptr;

@@ -189,7 +189,7 @@ inline void AtomicFence(MemoryModel eModel) noexcept {
 	__atomic_thread_fence(static_cast<int>(eModel));
 }
 
-inline void AtomicPause() throw() { // FIXME: g++ 4.9.2 ICE.
+inline void AtomicPause() noexcept {
 	__builtin_ia32_pause();
 }
 

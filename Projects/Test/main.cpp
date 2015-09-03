@@ -7,13 +7,13 @@ template class MCF::Variant<int, double, std::string>;
 extern "C" unsigned MCFMain(){
 	MCF::Variant<int, double, std::string> v;
 
-	v.Set(123);
+	v.Emplace<int>(123);
 	std::printf("type name = %s\n", v.GetTypeInfo()->name());
 
-	v.Set(45.6);
+	v.Emplace<double>(45.6);
 	std::printf("type name = %s\n", v.GetTypeInfo()->name());
 
-	v.Set(std::string("hello world!"));
+	v.Emplace<std::string>("hello world!");
 	std::printf("type name = %s\n", v.GetTypeInfo()->name());
 
 	int *iptr = v.Get<int>();

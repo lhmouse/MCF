@@ -140,7 +140,7 @@ public:
 		FindFirstType<ElementT, ElementsT...>() == FindLastType<ElementT, ElementsT...>(),
 		int> = 0>
 	void Emplace(ParamsT &&...vParams){
-		x_pElement = MakeUnique<xActiveElement<std::remove_cv_t<ElementT>>>(std::forward(vParams)...);
+		x_pElement = MakeUnique<xActiveElement<std::remove_cv_t<ElementT>>>(std::forward<ParamsT>(vParams)...);
 	}
 
 	void Swap(Variant<ElementsT...> &rhs) noexcept {

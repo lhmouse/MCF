@@ -41,16 +41,6 @@ public:
 public:
 	static const String kEmpty;
 
-private:
-	__attribute__((__always_inline__))
-	static std::size_t xCheckedAddSize(std::size_t uLhs, std::size_t uRhs){
-		const auto uRet = uLhs + uRhs;
-		if(uRet < uLhs){
-			throw std::bad_alloc();
-		}
-		return uRet;
-	}
-
 public:
 	static UnifiedStringObserver Unify(UnifiedString &usTempStorage, const Observer &obsSrc);
 	static void Deunify(String &strDst, std::size_t uPos, const UnifiedStringObserver &usoSrc);
@@ -330,7 +320,7 @@ public:
 			Reserve(uNewSize);
 			xSetSize(uNewSize);
 		} else if(uNewSize < uOldSize){
-			Pop(uOldSize - uNewSize);
+			UncheckedPop(uOldSize - uNewSize);
 		}
 	}
 	Char *ResizeMoreFront(std::size_t uDeltaSize){
@@ -461,7 +451,7 @@ public:
 		Append(ch, 1);
 	}
 	void UncheckedPush(Char ch) noexcept {
-		ASSERT_MSG(GetLength() < GetCapacity(), L"容器已满。");
+		ASSERT(GetLength() < GetCapacity());
 
 		if(x_vStorage.vSmall.schComplLength >= 0){
 			x_vStorage.vSmall.achData[xGetSmallLength()] = ch;
@@ -473,7 +463,15 @@ public:
 	}
 	void Pop(std::size_t uCount = 1) noexcept {
 		const auto uOldSize = GetSize();
-		ASSERT_MSG(uOldSize >= uCount, L"删除的字符数太多。");
+		if(uOldSize >= uCount){
+			xSetSize(uOldSize - uCount);
+		} else {
+			xSetSize(0);
+		}
+	}
+	void UncheckedPop(std::size_t uCount = 1) noexcept {
+		const auto uOldSize = GetSize();
+		ASSERT(uOldSize >= uCount);
 		xSetSize(uOldSize - uCount);
 	}
 
@@ -511,10 +509,20 @@ public:
 	}
 	void Shift(std::size_t uCount = 1) noexcept {
 		const auto uOldSize = GetSize();
-		ASSERT_MSG(uOldSize >= uCount, L"删除的字符数太多。");
+		ASSERT(uOldSize >= uCount);
 		const auto pchWrite = GetBegin();
 		CopyN(pchWrite, pchWrite + uCount, uOldSize - uCount);
 		xSetSize(uOldSize - uCount);
+	}
+	void UncheckedShift(std::size_t uCount = 1) noexcept {
+		const auto uOldSize = GetSize();
+		if(uOldSize >= uCount){
+			const auto pchWrite = GetBegin();
+			CopyN(pchWrite, pchWrite + uCount, uOldSize - uCount);
+			xSetSize(uOldSize - uCount);
+		} else {
+			xSetSize(0);
+		}
 	}
 
 	Observer Slice(std::ptrdiff_t nBegin, std::ptrdiff_t nEnd = -1) const noexcept {
@@ -625,12 +633,12 @@ public:
 		return GetStr();
 	}
 	const Char &operator[](std::size_t uIndex) const noexcept {
-		ASSERT_MSG(uIndex <= GetLength(), L"索引越界。");
+		ASSERT(uIndex <= GetLength());
 
 		return GetBegin()[uIndex];
 	}
 	Char &operator[](std::size_t uIndex) noexcept {
-		ASSERT_MSG(uIndex <= GetLength(), L"索引越界。");
+		ASSERT(uIndex <= GetLength());
 
 		return GetBegin()[uIndex];
 	}

@@ -10,7 +10,7 @@
 #include "../Utilities/ConstructDestruct.hpp"
 #include "../Core/Exception.hpp"
 #include <utility>
-#include <memory>
+#include <new>
 #include <initializer_list>
 #include <type_traits>
 #include <cstddef>
@@ -241,7 +241,7 @@ public:
 		const auto uOldSize = x_uSize;
 		const auto uNewCapacity = uOldSize + uDeltaCapacity;
 		if(uNewCapacity < uOldSize){
-			throw std::bad_alloc();
+			throw std::bad_array_new_length();
 		}
 		Reserve(uNewCapacity);
 	}
@@ -268,11 +268,12 @@ public:
 	}
 
 	template<typename ...ParamsT>
-	void Append(std::size_t uSize, const ParamsT &...vParams){
+	void Append(std::size_t uDeltaSize, const ParamsT &...vParams){
+		ReserveMore(uDeltaSize);
+
 		const auto uOldSize = x_uSize;
-		ReserveMore(uSize);
 		try {
-			for(std::size_t i = 0; i < uSize; ++i){
+			for(std::size_t i = 0; i < uDeltaSize; ++i){
 				UncheckedPush(vParams...);
 			}
 		} catch(...){
@@ -285,10 +286,13 @@ public:
 		int> = 0>
 	void Append(IteratorT itBegin, std::common_type_t<IteratorT> itEnd){
 		constexpr bool kHasDeltaSizeHint = std::is_base_of<std::forward_iterator_tag, typename std::iterator_traits<IteratorT>::iterator_category>::value;
-		const auto uOldSize = x_uSize;
+
 		if(kHasDeltaSizeHint){
-			ReserveMore(static_cast<std::size_t>(std::distance(itBegin, itEnd)));
+			const auto uDeltaSize = static_cast<std::size_t>(std::distance(itBegin, itEnd));
+			ReserveMore(uDeltaSize);
 		}
+
+		const auto uOldSize = x_uSize;
 		try {
 			if(kHasDeltaSizeHint){
 				for(auto it = itBegin; it != itEnd; ++it){

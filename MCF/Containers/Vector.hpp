@@ -10,7 +10,7 @@
 #include "../Utilities/ConstructDestruct.hpp"
 #include "../Core/Exception.hpp"
 #include <utility>
-#include <memory>
+#include <new>
 #include <initializer_list>
 #include <type_traits>
 #include <cstddef>
@@ -244,28 +244,31 @@ public:
 		}
 		const std::size_t uBytesToAlloc = sizeof(ElementT) * uElementsToAlloc;
 		if(uBytesToAlloc / sizeof(ElementT) != uElementsToAlloc){
-			throw std::bad_alloc();
+			throw std::bad_array_new_length();
 		}
 
-		const auto pOldStorage = static_cast<ElementT *>(x_pStorage);
-		std::size_t uCopied = 0;
 		const auto pNewStorage = static_cast<ElementT *>(::operator new[](uBytesToAlloc));
+		const auto pOldStorage = static_cast<ElementT *>(x_pStorage);
+		const auto pOldEnd = pOldStorage + x_uSize;
+		auto pWrite = pNewStorage;
+		auto pRead = pOldStorage;
 		try {
-			while(uCopied < x_uSize){
-				Construct(pNewStorage + uCopied, std::move_if_noexcept(pOldStorage[uCopied]));
-				++uCopied;
+			while(pRead < pOldEnd){
+				Construct(pWrite, std::move_if_noexcept(*pRead));
+				++pWrite;
+				++pRead;
 			}
 		} catch(...){
-			while(uCopied != 0){
-				--uCopied;
-				Destruct(pNewStorage + uCopied);
+			while(pWrite != pNewStorage){
+				--pWrite;
+				Destruct(pWrite);
 			}
 			::operator delete[](pNewStorage);
 			throw;
 		}
-		while(uCopied != 0){
-			--uCopied;
-			Destruct(pOldStorage + uCopied);
+		while(pRead != pOldStorage){
+			--pRead;
+			Destruct(pRead);
 		}
 		::operator delete[](pOldStorage);
 
@@ -276,7 +279,7 @@ public:
 		const auto uOldSize = x_uSize;
 		const auto uNewCapacity = uOldSize + uDeltaCapacity;
 		if(uNewCapacity < uOldSize){
-			throw std::bad_alloc();
+			throw std::bad_array_new_length();
 		}
 		Reserve(uNewCapacity);
 	}
@@ -303,11 +306,12 @@ public:
 	}
 
 	template<typename ...ParamsT>
-	void Append(std::size_t uSize, const ParamsT &...vParams){
+	void Append(std::size_t uDeltaSize, const ParamsT &...vParams){
+		ReserveMore(uDeltaSize);
+
 		const auto uOldSize = x_uSize;
-		ReserveMore(uSize);
 		try {
-			for(std::size_t i = 0; i < uSize; ++i){
+			for(std::size_t i = 0; i < uDeltaSize; ++i){
 				UncheckedPush(vParams...);
 			}
 		} catch(...){
@@ -320,10 +324,13 @@ public:
 		int> = 0>
 	void Append(IteratorT itBegin, std::common_type_t<IteratorT> itEnd){
 		constexpr bool kHasDeltaSizeHint = std::is_base_of<std::forward_iterator_tag, typename std::iterator_traits<IteratorT>::iterator_category>::value;
-		const auto uOldSize = x_uSize;
+
 		if(kHasDeltaSizeHint){
-			ReserveMore(static_cast<std::size_t>(std::distance(itBegin, itEnd)));
+			const auto uDeltaSize = static_cast<std::size_t>(std::distance(itBegin, itEnd));
+			ReserveMore(uDeltaSize);
 		}
+
+		const auto uOldSize = x_uSize;
 		try {
 			if(kHasDeltaSizeHint){
 				for(auto it = itBegin; it != itEnd; ++it){
@@ -338,6 +345,200 @@ public:
 			Pop(x_uSize - uOldSize);
 			throw;
 		}
+	}
+
+	template<typename ...ParamsT>
+	void Insert(const ElementT *pPos, std::size_t uDeltaSize, const ParamsT &...vParams){
+		ASSERT(pPos);
+		ASSERT((GetBegin() <= pPos) && (pPos <= GetEnd()));
+
+		if(pPos == GetEnd()){
+			Append(uDeltaSize, vParams...);
+			return;
+		}
+
+		if(std::is_nothrow_move_constructible<ElementT>::value){
+			const auto nOffset = pPos - GetBegin();
+			ReserveMore(uDeltaSize);
+			pPos = GetBegin() + nOffset;
+
+			const auto pNewEnd = GetEnd() + uDeltaSize;
+			const auto pDestroyedBegin = GetBegin() + (pPos - GetBegin());
+			const auto pDestroyedEnd = GetEnd();
+
+			auto pWrite = pNewEnd;
+			auto pRead = GetEnd();
+			while(pRead != pPos){
+				--pWrite;
+				--pRead;
+				Construct(pWrite, std::move(*pRead));
+				Destruct(pRead);
+			}
+			pRead = pWrite;
+
+			pWrite = pDestroyedBegin;
+			try {
+				for(std::size_t i = 0; i < uDeltaSize; ++i){
+					DefaultConstruct(pWrite, vParams...);
+					++pWrite;
+				}
+			} catch(...){
+				while(pWrite != pDestroyedBegin){
+					--pWrite;
+					Destruct(pWrite);
+				}
+				while(pWrite != pDestroyedEnd){
+					Construct(pWrite, std::move(*pRead));
+					Destruct(pRead);
+					++pWrite;
+					++pRead;
+				}
+				throw;
+			}
+
+			x_uSize = static_cast<std::size_t>(pNewEnd - GetBegin());
+		} else {
+			const auto uNewSize = GetSize() + uDeltaSize;
+			if(uNewSize < GetSize()){
+				throw std::bad_array_new_length();
+			}
+			Vector vTemp;
+			vTemp.Reserve(uNewSize);
+			for(auto pCur = GetBegin(); pCur != pPos; ++pCur){
+				vTemp.UncheckedPush(*pCur);
+			}
+			for(std::size_t i = 0; i < uDeltaSize; ++i){
+				vTemp.UncheckedPush(vParams...);
+			}
+			for(auto pCur = pPos; pCur != GetEnd(); ++pCur){
+				vTemp.UncheckedPush(*pCur);
+			}
+			*this = std::move(vTemp);
+		}
+	}
+	template<typename IteratorT, std::enable_if_t<
+		sizeof(typename std::iterator_traits<IteratorT>::value_type *),
+		int> = 0>
+	void Insert(const ElementT *pPos, IteratorT itBegin, std::common_type_t<IteratorT> itEnd){
+		ASSERT(pPos);
+		ASSERT((GetBegin() <= pPos) && (pPos <= GetEnd()));
+
+		if(pPos == GetEnd()){
+			Append(itBegin, itEnd);
+			return;
+		}
+
+		constexpr bool kHasDeltaSizeHint = std::is_base_of<std::forward_iterator_tag, typename std::iterator_traits<IteratorT>::iterator_category>::value;
+
+		if(kHasDeltaSizeHint && std::is_nothrow_move_constructible<ElementT>::value){
+			const auto uDeltaSize = static_cast<std::size_t>(std::distance(itBegin, itEnd));
+
+			const auto nOffset = pPos - GetBegin();
+			ReserveMore(uDeltaSize);
+			pPos = GetBegin() + nOffset;
+
+			const auto pNewEnd = GetEnd() + uDeltaSize;
+			const auto pDestroyedBegin = GetBegin() + (pPos - GetBegin());
+			const auto pDestroyedEnd = GetEnd();
+
+			auto pWrite = pNewEnd;
+			auto pRead = GetEnd();
+			while(pRead != pPos){
+				--pWrite;
+				--pRead;
+				Construct(pWrite, std::move(*pRead));
+				Destruct(pRead);
+			}
+			pRead = pWrite;
+
+			pWrite = pDestroyedBegin;
+			try {
+				for(auto it = itBegin; it != itEnd; ++it){
+					DefaultConstruct(pWrite, *it);
+					++pWrite;
+				}
+			} catch(...){
+				while(pWrite != pDestroyedBegin){
+					--pWrite;
+					Destruct(pWrite);
+				}
+				while(pWrite != pDestroyedEnd){
+					Construct(pWrite, std::move(*pRead));
+					Destruct(pRead);
+					++pWrite;
+					++pRead;
+				}
+				throw;
+			}
+
+			x_uSize = static_cast<std::size_t>(pNewEnd - GetBegin());
+		} else {
+			Vector vTemp;
+			if(kHasDeltaSizeHint){
+				const auto uDeltaSize = static_cast<std::size_t>(std::distance(itBegin, itEnd));
+				const auto uNewSize = GetSize() + uDeltaSize;
+				if(uNewSize < GetSize()){
+					throw std::bad_array_new_length();
+				}
+				vTemp.Reserve(uNewSize);
+				for(auto pCur = GetBegin(); pCur != pPos; ++pCur){
+					vTemp.UncheckedPush(*pCur);
+				}
+				for(auto it = itBegin; it != itEnd; ++it){
+					vTemp.UncheckedPush(*it);
+				}
+				for(auto pCur = pPos; pCur != GetEnd(); ++pCur){
+					vTemp.UncheckedPush(*pCur);
+				}
+			} else {
+				vTemp.Reserve(GetSize());
+				for(auto pCur = GetBegin(); pCur != pPos; ++pCur){
+					vTemp.UncheckedPush(*pCur);
+				}
+				for(auto it = itBegin; it != itEnd; ++it){
+					vTemp.Push(*it);
+				}
+				for(auto pCur = pPos; pCur != GetEnd(); ++pCur){
+					vTemp.Push(*pCur);
+				}
+			}
+			*this = std::move(vTemp);
+		}
+	}
+
+	void Erase(const ElementT *pBegin, const ElementT *pEnd) noexcept(std::is_nothrow_move_constructible<ElementT>::value) {
+		ASSERT(pBegin && pEnd);
+		ASSERT((GetBegin() <= pBegin) && (pBegin <= pEnd) && (pEnd <= GetEnd()));
+
+		if(pEnd == GetEnd()){
+			Pop(static_cast<std::size_t>(pEnd - pBegin));
+			return;
+		}
+
+		if(std::is_nothrow_move_constructible<ElementT>::value){
+			for(auto pCur = pBegin; pCur != pEnd; ++pCur){
+				Destruct(pCur);
+			}
+			auto pWrite = GetBegin() + (pBegin - GetBegin());
+			for(auto pCur = pEnd; pCur != GetEnd(); ++pCur){
+				Construct(pWrite, std::move(*pCur));
+				++pWrite;
+			}
+			x_uSize = static_cast<std::size_t>(pWrite - GetBegin());
+		} else {
+			Vector vTemp;
+			vTemp.Reserve(GetSize() - static_cast<std::size_t>(pEnd - pBegin));
+			for(auto pCur = GetBegin(); pCur != pBegin; ++pCur){
+				vTemp.UncheckedPush(*pCur);
+			}
+			for(auto pCur = pEnd; pCur != GetEnd(); ++pCur){
+				vTemp.UncheckedPush(*pCur);
+			}
+			*this = std::move(vTemp);
+		}
+	}
+	void Erase(const ElementT *pPos) noexcept(noexcept(std::declval<Vector &>().Erase(pPos, pPos))) {
+		Erase(pPos, pPos + 1);
 	}
 
 	const ElementT &operator[](std::size_t uIndex) const noexcept {

@@ -1,25 +1,27 @@
-#include <MCF/StdMCF.hpp>
 #include <MCF/Containers/Vector.hpp>
+#include <MCF/Core/String.hpp>
 
-template class MCF::Vector<int>;
+template class MCF::Vector<MCF::AnsiString>;
 
 extern "C" unsigned MCFMain(){
-	MCF::Vector<int> v;
-	for(int i = 0; i < 100; ++i){
-		v.Push(i);
+	MCF::Vector<MCF::AnsiString> v1, v2;
+	for(int i = 0; i < 10; ++i){
+		char temp[64];
+		std::sprintf(temp, "---------------------------------- hello %d", i);
+		v1.Push(temp);
+		std::sprintf(temp, "---------------------------------- world %d", i);
+		v2.Push(temp);
 	}
 
-	std::printf("forward : ");
-	for(auto e = v.EnumerateFirst(); e; ++e){
-		std::printf("%d ", *e);
+	try {
+		// v1.Insert(v1.GetData() + 5, v2.GetBegin() + 2, v2.GetBegin() + 6);
+		v1.Insert(v1.GetData() + 5, 30, "meow");
+	} catch(std::exception &e){
+		std::printf("exception: what = %s\n", e.what());
 	}
-	std::puts("");
 
-	std::printf("backward: ");
-	for(auto e = v.EnumerateLast(); e; --e){
-		std::printf("%d ", *e);
+	for(auto &s : v1){
+		std::printf("v1: %s\n", s.GetStr());
 	}
-	std::puts("");
-
 	return 0;
 }

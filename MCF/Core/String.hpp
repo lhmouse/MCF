@@ -12,6 +12,7 @@
 #include "../Utilities/CountLeadingTrailingZeroes.hpp"
 #include "../Utilities/CopyMoveFill.hpp"
 #include <type_traits>
+#include <new>
 #include <cstring>
 #include <cstddef>
 #include <cstdint>
@@ -180,7 +181,7 @@ private:
 			}
 			const std::size_t uBytesToAlloc = sizeof(Char) * uCharsToAlloc;
 			if(uBytesToAlloc / sizeof(Char) != uCharsToAlloc){
-				throw std::bad_alloc();
+				throw std::bad_array_new_length();
 			}
 
 			pchNewBuffer = (Char *)::operator new[](uBytesToAlloc);
@@ -309,7 +310,7 @@ public:
 		const auto uOldSize = GetSize();
 		const auto uNewCapacity = uOldSize + uDeltaCapacity;
 		if(uNewCapacity < uOldSize){
-			throw std::bad_alloc();
+			throw std::bad_array_new_length();
 		}
 		Reserve(uNewCapacity);
 	}
@@ -327,7 +328,7 @@ public:
 		const auto uOldSize = GetSize();
 		const auto uNewSize = uOldSize + uDeltaSize;
 		if(uNewSize < uOldSize){
-			throw std::bad_alloc();
+			throw std::bad_array_new_length();
 		}
 		xChopAndSplice(uOldSize, uOldSize, uDeltaSize, uNewSize);
 		xSetSize(uNewSize);
@@ -337,7 +338,7 @@ public:
 		const auto uOldSize = GetSize();
 		const auto uNewSize = uOldSize + uDeltaSize;
 		if(uNewSize < uOldSize){
-			throw std::bad_alloc();
+			throw std::bad_array_new_length();
 		}
 		xChopAndSplice(uOldSize, uOldSize, 0, uNewSize);
 		xSetSize(uNewSize);
@@ -554,7 +555,7 @@ public:
 		const auto uLengthAfterRemoved = uOldLength - (uRemovedEnd - uRemovedBegin);
 		const auto uNewLength = uLengthAfterRemoved + uRepSize;
 		if(uNewLength < uLengthAfterRemoved){
-			throw std::bad_alloc();
+			throw std::bad_array_new_length();
 		}
 
 		const auto pchWrite = xChopAndSplice(uRemovedBegin, uRemovedEnd, 0, uRemovedBegin + uRepSize);
@@ -582,7 +583,7 @@ public:
 		const auto uLengthAfterRemoved = uOldLength - (uRemovedEnd - uRemovedBegin);
 		const auto uNewLength = uLengthAfterRemoved + uRepSize;
 		if(uNewLength < uLengthAfterRemoved){
-			throw std::bad_alloc();
+			throw std::bad_array_new_length();
 		}
 
 		if(obsCurrent.DoesOverlapWith(obsRep)){

@@ -320,7 +320,7 @@ public:
 			Reserve(uNewSize);
 			xSetSize(uNewSize);
 		} else if(uNewSize < uOldSize){
-			UncheckedPop(uOldSize - uNewSize);
+			Pop(uOldSize - uNewSize);
 		}
 	}
 	Char *ResizeMoreFront(std::size_t uDeltaSize){
@@ -463,14 +463,6 @@ public:
 	}
 	void Pop(std::size_t uCount = 1) noexcept {
 		const auto uOldSize = GetSize();
-		if(uOldSize >= uCount){
-			xSetSize(uOldSize - uCount);
-		} else {
-			xSetSize(0);
-		}
-	}
-	void UncheckedPop(std::size_t uCount = 1) noexcept {
-		const auto uOldSize = GetSize();
 		ASSERT(uOldSize >= uCount);
 		xSetSize(uOldSize - uCount);
 	}
@@ -513,16 +505,6 @@ public:
 		const auto pchWrite = GetBegin();
 		CopyN(pchWrite, pchWrite + uCount, uOldSize - uCount);
 		xSetSize(uOldSize - uCount);
-	}
-	void UncheckedShift(std::size_t uCount = 1) noexcept {
-		const auto uOldSize = GetSize();
-		if(uOldSize >= uCount){
-			const auto pchWrite = GetBegin();
-			CopyN(pchWrite, pchWrite + uCount, uOldSize - uCount);
-			xSetSize(uOldSize - uCount);
-		} else {
-			xSetSize(0);
-		}
 	}
 
 	Observer Slice(std::ptrdiff_t nBegin, std::ptrdiff_t nEnd = -1) const noexcept {

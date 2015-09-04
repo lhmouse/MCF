@@ -22,7 +22,7 @@ class StaticVector {
 	static_assert(kCapacity > 0, "A StaticVector shall have a non-zero capacity.");
 
 private:
-	alignas(ElementT) char x_aachElements[kCapacity][sizeof(ElementT)];
+	alignas(ElementT) char x_aStorage[kCapacity][sizeof(ElementT)];
 	std::size_t x_uSize;
 
 public:
@@ -169,10 +169,10 @@ public:
 
 	// StaticVector 需求。
 	const ElementT *GetData() const noexcept {
-		return static_cast<const ElementT *>(static_cast<const void *>(x_aachElements));
+		return static_cast<const ElementT *>(static_cast<const void *>(x_aStorage));
 	}
 	ElementT *GetData() noexcept {
-		return static_cast<ElementT *>(static_cast<void *>(x_aachElements));
+		return static_cast<ElementT *>(static_cast<void *>(x_aStorage));
 	}
 	std::size_t GetSize() const noexcept {
 		return x_uSize;
@@ -218,6 +218,38 @@ public:
 	}
 
 	template<typename ...ParamsT>
+	void Resize(std::size_t uSize, ParamsT &&...vParams){
+		if(uSize > GetCapacity()){
+			DEBUG_THROW(Exception, ERROR_OUTOFMEMORY, __PRETTY_FUNCTION__);
+		}
+		if(uSize > x_uSize){
+			Append(uSize - x_uSize, std::forward<ParamsT>(vParams)...);
+		} else {
+			Pop(x_uSize - uSize);
+		}
+	}
+	template<typename ...ParamsT>
+	ElementT *ResizeMore(std::size_t uDeltaSize, ParamsT &&...vParams){
+		const auto uOldSize = x_uSize;
+		Append(uDeltaSize - x_uSize, std::forward<ParamsT>(vParams)...);
+		return GetData() + uOldSize;
+	}
+
+	void Reserve(std::size_t uNewCapacity){
+		if(uNewCapacity > GetCapacity()){
+			DEBUG_THROW(Exception, ERROR_OUTOFMEMORY, __PRETTY_FUNCTION__);
+		}
+	}
+	void ReserveMore(std::size_t uDeltaCapacity){
+		const auto uOldSize = x_uSize;
+		const auto uNewCapacity = uOldSize + uDeltaCapacity;
+		if(uNewCapacity < uOldSize){
+			throw std::bad_alloc();
+		}
+		Reserve(uNewCapacity);
+	}
+
+	template<typename ...ParamsT>
 	void Push(ParamsT &&...vParams){
 		if(GetCapacity() - x_uSize == 0){
 			DEBUG_THROW(Exception, ERROR_OUTOFMEMORY, __PRETTY_FUNCTION__);
@@ -228,13 +260,10 @@ public:
 	void UncheckedPush(ParamsT &&...vParams) noexcept(std::is_nothrow_constructible<ElementT, ParamsT &&...>::value) {
 		ASSERT(GetCapacity() - x_uSize > 0);
 
-		Construct(GetData() + x_uSize, std::forward<ParamsT>(vParams)...);
+		DefaultConstruct(GetData() + x_uSize, std::forward<ParamsT>(vParams)...);
 		++x_uSize;
 	}
 	void Pop(std::size_t uCount = 0) noexcept {
-		UncheckedPop((uCount <= x_uSize) ? uCount : x_uSize);
-	}
-	void UncheckedPop(std::size_t uCount = 0) noexcept {
 		ASSERT(uCount <= x_uSize);
 
 		for(std::size_t i = 0; i < uCount; ++i){
@@ -246,9 +275,10 @@ public:
 	template<typename ...ParamsT>
 	void Append(std::size_t uSize, const ParamsT &...vParams){
 		const auto uOldSize = x_uSize;
+		ReserveMore(uSize);
 		try {
 			for(std::size_t i = 0; i < uSize; ++i){
-				Push(vParams...);
+				UncheckedPush(vParams...);
 			}
 		} catch(...){
 			Pop(x_uSize - uOldSize);
@@ -259,14 +289,27 @@ public:
 		sizeof(typename std::iterator_traits<IteratorT>::value_type *),
 		int> = 0>
 	void Append(IteratorT itBegin, std::common_type_t<IteratorT> itEnd){
+		constexpr bool kHasDeltaSizeHint = std::is_base_of<std::forward_iterator_tag, typename std::iterator_traits<IteratorT>::iterator_category>::value;
 		const auto uOldSize = x_uSize;
-		try {
-			for(auto it = itBegin; it != itEnd; ++it){
-				Push(*it);
+		if(kHasDeltaSizeHint){
+			ReserveMore(static_cast<std::size_t>(std::distance(itBegin, itEnd)));
+			try {
+				for(auto it = itBegin; it != itEnd; ++it){
+					UncheckedPush(*it);
+				}
+			} catch(...){
+				Pop(x_uSize - uOldSize);
+				throw;
 			}
-		} catch(...){
-			Pop(x_uSize - uOldSize);
-			throw;
+		} else {
+			try {
+				for(auto it = itBegin; it != itEnd; ++it){
+					Push(*it);
+				}
+			} catch(...){
+				Pop(x_uSize - uOldSize);
+				throw;
+			}
 		}
 	}
 

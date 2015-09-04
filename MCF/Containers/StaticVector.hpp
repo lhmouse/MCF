@@ -293,23 +293,20 @@ public:
 		const auto uOldSize = x_uSize;
 		if(kHasDeltaSizeHint){
 			ReserveMore(static_cast<std::size_t>(std::distance(itBegin, itEnd)));
-			try {
+		}
+		try {
+			if(kHasDeltaSizeHint){
 				for(auto it = itBegin; it != itEnd; ++it){
 					UncheckedPush(*it);
 				}
-			} catch(...){
-				Pop(x_uSize - uOldSize);
-				throw;
-			}
-		} else {
-			try {
+			} else {
 				for(auto it = itBegin; it != itEnd; ++it){
 					Push(*it);
 				}
-			} catch(...){
-				Pop(x_uSize - uOldSize);
-				throw;
 			}
+		} catch(...){
+			Pop(x_uSize - uOldSize);
+			throw;
 		}
 	}
 

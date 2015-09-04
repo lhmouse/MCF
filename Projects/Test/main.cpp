@@ -16,5 +16,8 @@ extern "C" unsigned MCFMain(){
 	for(auto e = v.EnumerateFirst(); e; ++e){
 		std::printf("element: %d\n", *e);
 	}
+	for(auto e = v.EnumerateLast(); e; --e){
+		std::printf("element: %d\n", *e);
+	}
 	return 0;
 }

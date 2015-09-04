@@ -79,15 +79,39 @@ public:
 
 	struct AdvanceOnce {
 		void operator()(const StaticVector &v, const ElementType *&p) noexcept {
-			(void)((++p == v.GetEnd()) && (p = nullptr));
+			if(p + 1 == v.GetEnd()){
+				p = nullptr;
+			} else {
+				++p;
+			}
 		}
 		void operator()(StaticVector &v, ElementType *&p) noexcept {
-			(void)((++p == v.GetEnd()) && (p = nullptr));
+			if(p + 1 == v.GetEnd()){
+				p = nullptr;
+			} else {
+				++p;
+			}
+		}
+	};
+	struct RetreatOnce {
+		void operator()(const StaticVector &v, const ElementType *&p) noexcept {
+			if(p == v.GetBegin()){
+				p = nullptr;
+			} else {
+				--p;
+			}
+		}
+		void operator()(StaticVector &v, ElementType *&p) noexcept {
+			if(p == v.GetBegin()){
+				p = nullptr;
+			} else {
+				--p;
+			}
 		}
 	};
 
-	using ConstEnumerator = Impl_EnumeratorTemplate::ConstEnumerator<StaticVector, AdvanceOnce>;
-	using Enumerator      = Impl_EnumeratorTemplate::Enumerator<StaticVector, AdvanceOnce>;
+	using ConstEnumerator = Impl_EnumeratorTemplate::ConstEnumerator <StaticVector, AdvanceOnce, RetreatOnce>;
+	using Enumerator      = Impl_EnumeratorTemplate::Enumerator      <StaticVector, AdvanceOnce, RetreatOnce>;
 
 	bool IsEmpty() const noexcept {
 		return x_uSize == 0;

@@ -11,13 +11,12 @@
 namespace MCF {
 
 namespace Impl_EnumeratorTemplate {
-	template<typename ContainerT, typename AdvanceOnceT>
+	template<typename ContainerT, typename AdvanceOnceT, typename RetreatOnceT>
 	class ConstEnumerator;
 
-	template<typename ContainerT, typename AdvanceOnceT>
+	template<typename ContainerT, typename AdvanceOnceT, typename RetreatOnceT>
 	class Enumerator : public std::iterator<std::forward_iterator_tag, typename ContainerT::ElementType> {
-		template<typename, typename>
-		friend class ConstEnumerator;
+		friend ConstEnumerator<ContainerT, AdvanceOnceT, RetreatOnceT>;
 
 	public:
 		using ElementType = typename ContainerT::ElementType;
@@ -51,9 +50,22 @@ namespace Impl_EnumeratorTemplate {
 			AdvanceOnceT()(*x_pContainer, x_pElement);
 			return *this;
 		}
+		Enumerator &operator--(){
+			ASSERT(x_pContainer);
+			ASSERT(x_pElement);
+
+			RetreatOnceT()(*x_pContainer, x_pElement);
+			return *this;
+		}
+
 		Enumerator operator++(int){
 			auto enRet = *this;
 			++(*this);
+			return enRet;
+		}
+		Enumerator operator--(int){
+			auto enRet = *this;
+			--(*this);
 			return enRet;
 		}
 
@@ -64,12 +76,11 @@ namespace Impl_EnumeratorTemplate {
 		}
 
 		explicit operator bool() const noexcept {
-			__asm__(""); // 这里可以优化掉一个分支。
 			return !!x_pElement;
 		}
 	};
 
-	template<typename ContainerT, typename AdvanceOnceT>
+	template<typename ContainerT, typename AdvanceOnceT, typename RetreatOnceT>
 	class ConstEnumerator : public std::iterator<std::forward_iterator_tag, const typename ContainerT::ElementType> {
 	public:
 		using ElementType = const typename ContainerT::ElementType;
@@ -87,7 +98,7 @@ namespace Impl_EnumeratorTemplate {
 			: x_pContainer(&vContainer), x_pElement(pElement)
 		{
 		}
-		constexpr ConstEnumerator(const Enumerator<ContainerT, AdvanceOnceT> &rhs) noexcept
+		constexpr ConstEnumerator(const Enumerator<ContainerT, AdvanceOnceT, RetreatOnceT> &rhs) noexcept
 			: x_pContainer(rhs.x_pContainer), x_pElement(rhs.x_pElement)
 		{
 		}
@@ -107,9 +118,22 @@ namespace Impl_EnumeratorTemplate {
 			AdvanceOnceT()(*x_pContainer, x_pElement);
 			return *this;
 		}
+		ConstEnumerator &operator--(){
+			ASSERT(x_pContainer);
+			ASSERT(x_pElement);
+
+			RetreatOnceT()(*x_pContainer, x_pElement);
+			return *this;
+		}
+
 		ConstEnumerator operator++(int){
 			auto enRet = *this;
 			++(*this);
+			return enRet;
+		}
+		ConstEnumerator operator--(int){
+			auto enRet = *this;
+			--(*this);
 			return enRet;
 		}
 
@@ -120,7 +144,6 @@ namespace Impl_EnumeratorTemplate {
 		}
 
 		explicit operator bool() const noexcept {
-			__asm__(""); // 这里可以优化掉一个分支。
 			return !!x_pElement;
 		}
 	};

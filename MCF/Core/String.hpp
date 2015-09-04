@@ -165,7 +165,7 @@ private:
 		const auto uOldLength = GetLength();
 		auto pchNewBuffer = pchOldBuffer;
 		const auto uNewLength = uThirdOffset + (uOldLength - uRemovedEnd);
-		auto uSizeToAlloc = uNewLength + 1;
+		auto uCharsToAlloc = uNewLength + 1;
 
 		ASSERT(uRemovedBegin <= uOldLength);
 		ASSERT(uRemovedEnd <= uOldLength);
@@ -173,13 +173,13 @@ private:
 		ASSERT(uFirstOffset + uRemovedBegin <= uThirdOffset);
 
 		if(GetCapacity() < uNewLength){
-			uSizeToAlloc += (uSizeToAlloc >> 1);
-			uSizeToAlloc = (uSizeToAlloc + 0x0F) & (std::size_t)-0x10;
-			if(uSizeToAlloc < uNewLength + 1){
-				uSizeToAlloc = uNewLength + 1;
+			uCharsToAlloc += (uCharsToAlloc >> 1);
+			uCharsToAlloc = (uCharsToAlloc + 0x0F) & (std::size_t)-0x10;
+			if(uCharsToAlloc < uNewLength + 1){
+				uCharsToAlloc = uNewLength + 1;
 			}
-			const std::size_t uBytesToAlloc = sizeof(Char) * uSizeToAlloc;
-			if(uBytesToAlloc / sizeof(Char) != uSizeToAlloc){
+			const std::size_t uBytesToAlloc = sizeof(Char) * uCharsToAlloc;
+			if(uBytesToAlloc / sizeof(Char) != uCharsToAlloc){
 				throw std::bad_alloc();
 			}
 
@@ -202,7 +202,7 @@ private:
 
 			x_vStorage.vLarge.pchBegin = pchNewBuffer;
 			x_vStorage.vLarge.uLength = uOldLength;
-			x_vStorage.vLarge.uSizeAllocated = uSizeToAlloc;
+			x_vStorage.vLarge.uSizeAllocated = uCharsToAlloc;
 		}
 
 		return pchNewBuffer + uFirstOffset + uRemovedBegin;

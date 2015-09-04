@@ -2,8 +2,8 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2013 - 2015, LH_Mouse. All wrongs reserved.
 
-#ifndef MCF_CONTAINERS_STATIC_VECTOR_HPP_
-#define MCF_CONTAINERS_STATIC_VECTOR_HPP_
+#ifndef MCF_CONTAINERS_VECTOR_HPP_
+#define MCF_CONTAINERS_VECTOR_HPP_
 
 #include "_EnumeratorTemplate.hpp"
 #include "../Utilities/Assert.hpp"
@@ -17,60 +17,58 @@
 
 namespace MCF {
 
-template<typename ElementT, std::size_t kCapacity>
-class StaticVector {
-	static_assert(kCapacity > 0, "A StaticVector shall have a non-zero capacity.");
-
+template<typename ElementT>
+class Vector {
 private:
-	alignas(ElementT) char x_aStorage[kCapacity][sizeof(ElementT)];
+	void *x_pStorage;
 	std::size_t x_uSize;
+	std::size_t x_uCapacity;
 
 public:
-	StaticVector() noexcept
-		: x_uSize(0)
+	constexpr Vector() noexcept
+		: x_pStorage(nullptr), x_uSize(0), x_uCapacity(0)
 	{
 	}
 	template<typename ...ParamsT>
-	explicit StaticVector(std::size_t uSize, const ParamsT &...vParams)
-		: StaticVector()
+	explicit Vector(std::size_t uSize, const ParamsT &...vParams)
+		: Vector()
 	{
 		Append(uSize, vParams...);
 	}
 	template<typename IteratorT, std::enable_if_t<
 		sizeof(typename std::iterator_traits<IteratorT>::value_type *),
 		int> = 0>
-	StaticVector(IteratorT itBegin, std::common_type_t<IteratorT> itEnd)
-		: StaticVector()
+	Vector(IteratorT itBegin, std::common_type_t<IteratorT> itEnd)
+		: Vector()
 	{
 		Append(itBegin, itEnd);
 	}
-	StaticVector(std::initializer_list<ElementT> rhs)
-		: StaticVector()
+	Vector(std::initializer_list<ElementT> rhs)
+		: Vector()
 	{
 		Append(rhs.begin(), rhs.end());
 	}
-	StaticVector(const StaticVector &rhs)
-		: StaticVector()
+	Vector(const Vector &rhs)
+		: Vector()
 	{
 		Append(rhs.GetBegin(), rhs.GetEnd());
 	}
-	StaticVector(StaticVector &&rhs) noexcept(std::is_nothrow_move_constructible<ElementT>::value)
-		: StaticVector()
+	Vector(Vector &&rhs) noexcept
+		: Vector()
 	{
-		Append(std::make_move_iterator(rhs.GetBegin()), std::make_move_iterator(rhs.GetEnd()));
+		rhs.Swap(*this);
 	}
-	StaticVector &operator=(const StaticVector &rhs){
-		Clear();
-		Append(rhs.GetBegin(), rhs.GetEnd());
+	Vector &operator=(const Vector &rhs){
+		Vector(rhs).Swap(*this);
 		return *this;
 	}
-	StaticVector &operator=(StaticVector &&rhs) noexcept(std::is_nothrow_move_constructible<ElementT>::value) {
-		Clear();
-		Append(std::make_move_iterator(rhs.GetBegin()), std::make_move_iterator(rhs.GetEnd()));
+	Vector &operator=(Vector &&rhs) noexcept {
+		rhs.Swap(*this);
 		return *this;
 	}
-	~StaticVector(){
+	~Vector(){
 		Clear();
+		::operator delete[](x_pStorage);
 	}
 
 public:
@@ -78,14 +76,14 @@ public:
 	using ElementType = ElementT;
 
 	struct AdvanceOnce {
-		void operator()(const StaticVector &v, const ElementType *&p) noexcept {
+		void operator()(const Vector &v, const ElementType *&p) noexcept {
 			if(p + 1 == v.GetEnd()){
 				p = nullptr;
 			} else {
 				++p;
 			}
 		}
-		void operator()(StaticVector &v, ElementType *&p) noexcept {
+		void operator()(Vector &v, ElementType *&p) noexcept {
 			if(p + 1 == v.GetEnd()){
 				p = nullptr;
 			} else {
@@ -94,14 +92,14 @@ public:
 		}
 	};
 	struct RetreatOnce {
-		void operator()(const StaticVector &v, const ElementType *&p) noexcept {
+		void operator()(const Vector &v, const ElementType *&p) noexcept {
 			if(p == v.GetBegin()){
 				p = nullptr;
 			} else {
 				--p;
 			}
 		}
-		void operator()(StaticVector &v, ElementType *&p) noexcept {
+		void operator()(Vector &v, ElementType *&p) noexcept {
 			if(p == v.GetBegin()){
 				p = nullptr;
 			} else {
@@ -110,8 +108,8 @@ public:
 		}
 	};
 
-	using ConstEnumerator = Impl_EnumeratorTemplate::ConstEnumerator <StaticVector, AdvanceOnce, RetreatOnce>;
-	using Enumerator      = Impl_EnumeratorTemplate::Enumerator      <StaticVector, AdvanceOnce, RetreatOnce>;
+	using ConstEnumerator = Impl_EnumeratorTemplate::ConstEnumerator <Vector, AdvanceOnce, RetreatOnce>;
+	using Enumerator      = Impl_EnumeratorTemplate::Enumerator      <Vector, AdvanceOnce, RetreatOnce>;
 
 	bool IsEmpty() const noexcept {
 		return x_uSize == 0;
@@ -161,24 +159,24 @@ public:
 		return Enumerator(*this, nullptr);
 	}
 
-	void Swap(StaticVector &rhs) noexcept(std::is_nothrow_move_constructible<ElementT>::value) {
-		auto vTemp = std::move(rhs);
-		*this = std::move(rhs);
-		rhs = std::move(vTemp);
+	void Swap(Vector &rhs) noexcept {
+		std::swap(x_pStorage,  rhs.x_pStorage);
+		std::swap(x_uSize,     rhs.x_uSize);
+		std::swap(x_uCapacity, rhs.x_uCapacity);
 	}
 
-	// StaticVector 需求。
+	// Vector 需求。
 	const ElementT *GetData() const noexcept {
-		return static_cast<const ElementT *>(static_cast<const void *>(x_aStorage));
+		return static_cast<const ElementT *>(x_pStorage);
 	}
 	ElementT *GetData() noexcept {
-		return static_cast<ElementT *>(static_cast<void *>(x_aStorage));
+		return static_cast<ElementT *>(x_pStorage);
 	}
 	std::size_t GetSize() const noexcept {
 		return x_uSize;
 	}
-	static constexpr std::size_t GetCapacity() noexcept {
-		return kCapacity;
+	std::size_t GetCapacity() noexcept {
+		return x_uCapacity;
 	}
 
 	const ElementT *GetBegin() const noexcept {
@@ -233,9 +231,46 @@ public:
 	}
 
 	void Reserve(std::size_t uNewCapacity){
-		if(uNewCapacity > GetCapacity()){
-			DEBUG_THROW(Exception, ERROR_OUTOFMEMORY, __PRETTY_FUNCTION__);
+		const auto uOldCapacity = GetCapacity();
+		if(uNewCapacity <= uOldCapacity){
+			return;
 		}
+
+		auto uElementsToAlloc = uOldCapacity + 1;
+		uElementsToAlloc += (uElementsToAlloc >> 1);
+		uElementsToAlloc = (uElementsToAlloc + 0x0F) & (std::size_t)-0x10;
+		if(uElementsToAlloc < uNewCapacity){
+			uElementsToAlloc = uNewCapacity;
+		}
+		const std::size_t uBytesToAlloc = sizeof(ElementT) * uElementsToAlloc;
+		if(uBytesToAlloc / sizeof(ElementT) != uElementsToAlloc){
+			throw std::bad_alloc();
+		}
+
+		const auto pOldStorage = static_cast<ElementT *>(x_pStorage);
+		std::size_t uCopied = 0;
+		const auto pNewStorage = static_cast<ElementT *>(::operator new[](uBytesToAlloc));
+		try {
+			while(uCopied < x_uSize){
+				Construct(pNewStorage + uCopied, std::move_if_noexcept(pOldStorage[uCopied]));
+				++uCopied;
+			}
+		} catch(...){
+			while(uCopied != 0){
+				--uCopied;
+				Destruct(pNewStorage + uCopied);
+			}
+			::operator delete[](pNewStorage);
+			throw;
+		}
+		while(uCopied != 0){
+			--uCopied;
+			Destruct(pOldStorage + uCopied);
+		}
+		::operator delete[](pOldStorage);
+
+		x_pStorage  = pNewStorage;
+		x_uCapacity = uElementsToAlloc;
 	}
 	void ReserveMore(std::size_t uDeltaCapacity){
 		const auto uOldSize = x_uSize;
@@ -313,26 +348,26 @@ public:
 	}
 };
 
-template<typename ElementT, std::size_t kCapacity>
-void swap(StaticVector<ElementT, kCapacity> &lhs, StaticVector<ElementT, kCapacity> &rhs) noexcept(noexcept(lhs.Swap(rhs))) {
+template<typename ElementT>
+void swap(Vector<ElementT> &lhs, Vector<ElementT> &rhs) noexcept {
 	lhs.Swap(rhs);
 }
 
-template<typename ElementT, std::size_t kCapacity>
-decltype(auto) begin(const StaticVector<ElementT, kCapacity> &rhs) noexcept {
+template<typename ElementT>
+decltype(auto) begin(const Vector<ElementT> &rhs) noexcept {
 	return rhs.EnumerateFirst();
 }
-template<typename ElementT, std::size_t kCapacity>
-decltype(auto) begin(StaticVector<ElementT, kCapacity> &rhs) noexcept {
+template<typename ElementT>
+decltype(auto) begin(Vector<ElementT> &rhs) noexcept {
 	return rhs.EnumerateFirst();
 }
 
-template<typename ElementT, std::size_t kCapacity>
-decltype(auto) end(const StaticVector<ElementT, kCapacity> &rhs) noexcept {
+template<typename ElementT>
+decltype(auto) end(const Vector<ElementT> &rhs) noexcept {
 	return rhs.EnumerateSingular();
 }
-template<typename ElementT, std::size_t kCapacity>
-decltype(auto) end(StaticVector<ElementT, kCapacity> &rhs) noexcept {
+template<typename ElementT>
+decltype(auto) end(Vector<ElementT> &rhs) noexcept {
 	return rhs.EnumerateSingular();
 }
 

@@ -11,10 +11,10 @@
 	这里的内存布局可以如此表示：
 
 	struct Storage {
-		wchar_t cmdline[];		// 动态确定。
-		MCF_ArgItem stub;		// pwszStr 指向 cmdline，uLen 是后面的 argv 的元素容量。
-		MCF_ArgItem argv[];		// MCF_CRT_AllocArgv 返回的指针指向这里。
-		MCF_ArgItem nil;		// pwszStr 为 nullptr，uLen 为 0。
+		wchar_t cmdline[];  // 动态确定。
+		MCF_ArgItem stub;   // pwszStr 指向 cmdline，uLen 是后面的 argv 的元素容量。
+		MCF_ArgItem argv[]; // MCF_CRT_AllocArgv 返回的指针指向这里。
+		MCF_ArgItem nil;    // pwszStr 为 nullptr，uLen 为 0。
 	};
 */
 

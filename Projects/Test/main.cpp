@@ -1,26 +1,20 @@
 #include <MCF/StdMCF.hpp>
-#include <MCF/Utilities/Variant.hpp>
-#include <string>
+#include <MCF/Containers/StaticVector.hpp>
 
-template class MCF::Variant<int, double, std::string>;
+template class MCF::StaticVector<int, 5>;
 
 extern "C" unsigned MCFMain(){
-	MCF::Variant<int, double, std::string> v;
+	MCF::StaticVector<int, 5> v;
+	try {
+		for(int i = 0; i < 6; ++i){
+			v.Push(i);
+		}
+	} catch(std::exception &e){
+		std::printf("exception: what = %s\n", e.what());
+	}
 
-	v.Emplace<int>(123);
-	std::printf("type name = %s\n", v.GetTypeInfo()->name());
-
-	v.Emplace<double>(45.6);
-	std::printf("type name = %s\n", v.GetTypeInfo()->name());
-
-	v.Emplace<std::string>("hello world!");
-	std::printf("type name = %s\n", v.GetTypeInfo()->name());
-
-	int *iptr = v.Get<int>();
-	std::printf("iptr = %p\n", (void *)iptr);
-
-	std::string *sptr = v.Get<std::string>();
-	std::printf("sptr = %p, s = %s\n", (void *)sptr, sptr->c_str());
-
+	for(auto e = v.EnumerateFirst(); e; ++e){
+		std::printf("element: %d\n", *e);
+	}
 	return 0;
 }

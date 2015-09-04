@@ -814,27 +814,19 @@ void swap(String<kTypeT> &lhs, String<kTypeT> &rhs) noexcept {
 }
 
 template<StringType kTypeT>
-auto begin(const String<kTypeT> &rhs) noexcept {
+decltype(auto) begin(const String<kTypeT> &rhs) noexcept {
 	return rhs.GetBegin();
 }
 template<StringType kTypeT>
-auto begin(String<kTypeT> &rhs) noexcept {
+decltype(auto) begin(String<kTypeT> &rhs) noexcept {
 	return rhs.GetBegin();
 }
 template<StringType kTypeT>
-auto cbegin(const String<kTypeT> &rhs) noexcept {
-	return rhs.GetBegin();
-}
-template<StringType kTypeT>
-auto end(const String<kTypeT> &rhs) noexcept {
+decltype(auto) end(const String<kTypeT> &rhs) noexcept {
 	return rhs.GetEnd();
 }
 template<StringType kTypeT>
-auto end(String<kTypeT> &rhs) noexcept {
-	return rhs.GetEnd();
-}
-template<StringType kTypeT>
-auto cend(const String<kTypeT> &rhs) noexcept {
+decltype(auto) end(String<kTypeT> &rhs) noexcept {
 	return rhs.GetEnd();
 }
 

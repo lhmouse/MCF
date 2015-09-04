@@ -198,19 +198,11 @@ public:
 };
 
 template<class ElementT>
-auto begin(const ArrayObserver<ElementT> &rhs) noexcept {
+decltype(auto) begin(const ArrayObserver<ElementT> &rhs) noexcept {
 	return rhs.GetBegin();
 }
 template<class ElementT>
-auto cbegin(const ArrayObserver<ElementT> &rhs) noexcept {
-	return rhs.GetBegin();
-}
-template<class ElementT>
-auto end(const ArrayObserver<ElementT> &rhs) noexcept {
-	return rhs.GetEnd();
-}
-template<class ElementT>
-auto cend(const ArrayObserver<ElementT> &rhs) noexcept {
+decltype(auto) end(const ArrayObserver<ElementT> &rhs) noexcept {
 	return rhs.GetEnd();
 }
 

@@ -459,19 +459,11 @@ void swap(StringObserver<kTypeT> &lhs, StringObserver<kTypeT> &rhs) noexcept {
 }
 
 template<StringType kTypeT>
-auto begin(const StringObserver<kTypeT> &rhs) noexcept {
+decltype(auto) begin(const StringObserver<kTypeT> &rhs) noexcept {
 	return rhs.GetBegin();
 }
 template<StringType kTypeT>
-auto cbegin(const StringObserver<kTypeT> &rhs) noexcept {
-	return rhs.GetBegin();
-}
-template<StringType kTypeT>
-auto end(const StringObserver<kTypeT> &rhs) noexcept {
-	return rhs.GetEnd();
-}
-template<StringType kTypeT>
-auto cend(const StringObserver<kTypeT> &rhs) noexcept {
+decltype(auto) end(const StringObserver<kTypeT> &rhs) noexcept {
 	return rhs.GetEnd();
 }
 

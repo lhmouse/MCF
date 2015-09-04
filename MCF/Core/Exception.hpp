@@ -89,9 +89,9 @@ public:
 }
 
 #define DEBUG_THROW(etype_, ...)	\
-	([&]() [[noreturn]] {	\
+	__extension__ ({	\
 		etype_ e_ (__FILE__, __LINE__, __VA_ARGS__);	\
 		throw e_;	\
-	}())
+	})
 
 #endif

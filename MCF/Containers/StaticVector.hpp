@@ -219,9 +219,6 @@ public:
 
 	template<typename ...ParamsT>
 	void Resize(std::size_t uSize, ParamsT &&...vParams){
-		if(uSize > GetCapacity()){
-			DEBUG_THROW(Exception, ERROR_OUTOFMEMORY, __PRETTY_FUNCTION__);
-		}
 		if(uSize > x_uSize){
 			Append(uSize - x_uSize, std::forward<ParamsT>(vParams)...);
 		} else {

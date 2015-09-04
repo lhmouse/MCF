@@ -6,8 +6,7 @@ template class MCF::StaticVector<int, 5>;
 extern "C" unsigned MCFMain(){
 	MCF::StaticVector<int, 5> v;
 	try {
-		long a[] = { 0, 1, 2, 3, 4 };
-		v.Append(std::begin(a), std::end(a));
+		v.Resize(5);
 	} catch(std::exception &e){
 		std::printf("exception: what = %s\n", e.what());
 	}

@@ -398,12 +398,15 @@ public:
 
 			x_uSize = static_cast<std::size_t>(pNewEnd - GetBegin());
 		} else {
-			const auto uNewSize = GetSize() + uDeltaSize;
-			if(uNewSize < GetSize()){
+			auto uNewCapacity = GetSize() + uDeltaSize;
+			if(uNewCapacity < GetSize()){
 				throw std::bad_array_new_length();
 			}
+			if(uNewCapacity < GetCapacity()){
+				uNewCapacity = GetCapacity();
+			}
 			Vector vTemp;
-			vTemp.Reserve(uNewSize);
+			vTemp.Reserve(uNewCapacity);
 			for(auto pCur = GetBegin(); pCur != pPos; ++pCur){
 				vTemp.UncheckedPush(*pCur);
 			}
@@ -473,14 +476,17 @@ public:
 
 			x_uSize = static_cast<std::size_t>(pNewEnd - GetBegin());
 		} else {
-			Vector vTemp;
 			if(kHasDeltaSizeHint){
 				const auto uDeltaSize = static_cast<std::size_t>(std::distance(itBegin, itEnd));
-				const auto uNewSize = GetSize() + uDeltaSize;
-				if(uNewSize < GetSize()){
+				auto uNewCapacity = GetSize() + uDeltaSize;
+				if(uNewCapacity < GetSize()){
 					throw std::bad_array_new_length();
 				}
-				vTemp.Reserve(uNewSize);
+				if(uNewCapacity < GetCapacity()){
+					uNewCapacity = GetCapacity();
+				}
+				Vector vTemp;
+				vTemp.Reserve(uNewCapacity);
 				for(auto pCur = GetBegin(); pCur != pPos; ++pCur){
 					vTemp.UncheckedPush(*pCur);
 				}
@@ -490,8 +496,10 @@ public:
 				for(auto pCur = pPos; pCur != GetEnd(); ++pCur){
 					vTemp.UncheckedPush(*pCur);
 				}
+				*this = std::move(vTemp);
 			} else {
-				vTemp.Reserve(GetSize());
+				Vector vTemp;
+				vTemp.Reserve(GetCapacity());
 				for(auto pCur = GetBegin(); pCur != pPos; ++pCur){
 					vTemp.UncheckedPush(*pCur);
 				}
@@ -501,8 +509,8 @@ public:
 				for(auto pCur = pPos; pCur != GetEnd(); ++pCur){
 					vTemp.Push(*pCur);
 				}
+				*this = std::move(vTemp);
 			}
-			*this = std::move(vTemp);
 		}
 	}
 
@@ -527,7 +535,7 @@ public:
 			x_uSize = static_cast<std::size_t>(pWrite - GetBegin());
 		} else {
 			Vector vTemp;
-			vTemp.Reserve(GetSize() - static_cast<std::size_t>(pEnd - pBegin));
+			vTemp.Reserve(GetCapacity());
 			for(auto pCur = GetBegin(); pCur != pBegin; ++pCur){
 				vTemp.UncheckedPush(*pCur);
 			}

@@ -9,7 +9,6 @@
 #include <utility>
 #include <iterator>
 #include <cstddef>
-#include <cstring>
 
 namespace MCF {
 

@@ -2,27 +2,18 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2013 - 2015, LH_Mouse. All wrongs reserved.
 
-#ifndef MCF_UTILITIES_COUNT_OF_HPP_
-#define MCF_UTILITIES_COUNT_OF_HPP_
+#ifndef MCF_UTILITIES_CountOf_HPP_
+#define MCF_UTILITIES_CountOf_HPP_
 
 #include <cstddef>
 
 namespace MCF {
 
-namespace Impl_CountOf {
-	template<typename Ty, std::size_t N>
-	constexpr std::size_t CountOfHelper(Ty (&)[N]) noexcept {
-		return N;
-	}
-
-	template<typename Ty, std::size_t N>
-	constexpr std::size_t CountOfHelper(Ty (&&)[N]) noexcept {
-		return N;
-	}
+template<typename Ty, std::size_t N>
+constexpr std::size_t CountOf(const Ty (&)[N]) noexcept {
+	return N;
 }
 
 }
-
-#define COUNT_OF($)		(::MCF::Impl_CountOf::CountOfHelper($))
 
 #endif

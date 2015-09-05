@@ -155,7 +155,7 @@ std::size_t File::Read(void *pBuffer, std::uint32_t u32BytesToRead, std::uint64_
 	}
 	if(dwErrorCode != ERROR_SUCCESS){
 		if(dwErrorCode != ERROR_IO_PENDING){
-			DEBUG_THROW(SystemError, "ReadFile", dwErrorCode);
+			DEBUG_THROW(SystemError, dwErrorCode, "ReadFile");
 		}
 		if(!::GetOverlappedResult(reinterpret_cast<HANDLE>($hFile.Get()), &vOverlapped, &dwTransferred, true)){
 			DEBUG_THROW(SystemError, "GetOverlappedResult");
@@ -191,7 +191,7 @@ std::size_t File::Write(std::uint64_t u64Offset, const void *pBuffer, std::uint3
 	}
 	if(dwErrorCode != ERROR_SUCCESS){
 		if(dwErrorCode != ERROR_IO_PENDING){
-			DEBUG_THROW(SystemError, "WriteFile", dwErrorCode);
+			DEBUG_THROW(SystemError, dwErrorCode, "WriteFile");
 		}
 		if(!::GetOverlappedResult(reinterpret_cast<HANDLE>($hFile.Get()), &vOverlapped, &dwTransferred, true)){
 			DEBUG_THROW(SystemError, "GetOverlappedResult");

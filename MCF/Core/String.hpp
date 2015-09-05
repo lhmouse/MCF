@@ -25,7 +25,7 @@ namespace MCF {
 template<StringType kTypeT>
 class String;
 
-using UnifiedString = String<StringType::UTF32>;
+using UnifiedString         = String<StringType::UTF32>;
 using UnifiedStringObserver = StringObserver<StringType::UTF32>;
 
 template<StringType kTypeT>
@@ -62,10 +62,10 @@ private:
 
 private:
 	std::size_t $GetSmallLength() const noexcept {
-		return COUNT_OF($vStorage.vSmall.achData) - static_cast<std::make_unsigned_t<Char>>($vStorage.vSmall.schComplLength);
+		return CountOf($vStorage.vSmall.achData) - static_cast<std::make_unsigned_t<Char>>($vStorage.vSmall.schComplLength);
 	}
 	void $SetSmallLength(std::size_t uLength) noexcept {
-		$vStorage.vSmall.schComplLength = static_cast<std::make_signed_t<Char>>(COUNT_OF($vStorage.vSmall.achData) - uLength);
+		$vStorage.vSmall.schComplLength = static_cast<std::make_signed_t<Char>>(CountOf($vStorage.vSmall.achData) - uLength);
 	}
 
 public:
@@ -285,6 +285,29 @@ public:
 		return GetSize();
 	}
 
+	const Char &Get(std::size_t uIndex) const {
+		if(uIndex >= GetSize()){
+			DEBUG_THROW(Exception, ERROR_INVALID_PARAMETER, __PRETTY_FUNCTION__);
+		}
+		return UncheckedGet(uIndex);
+	}
+	Char &Get(std::size_t uIndex){
+		if(uIndex >= GetSize()){
+			DEBUG_THROW(Exception, ERROR_INVALID_PARAMETER, __PRETTY_FUNCTION__);
+		}
+		return UncheckedGet(uIndex);
+	}
+	const Char &UncheckedGet(std::size_t uIndex) const noexcept {
+		ASSERT(uIndex < GetSize());
+
+		return GetBegin()[uIndex];
+	}
+	Char &UncheckedGet(std::size_t uIndex) noexcept {
+		ASSERT(uIndex < GetSize());
+
+		return GetBegin()[uIndex];
+	}
+
 	Observer GetObserver() const noexcept {
 		if($vStorage.vSmall.schComplLength >= 0){
 			return Observer($vStorage.vSmall.achData, $GetSmallLength());
@@ -295,7 +318,7 @@ public:
 
 	std::size_t GetCapacity() const noexcept {
 		if($vStorage.vSmall.schComplLength >= 0){
-			return COUNT_OF($vStorage.vSmall.achData);
+			return CountOf($vStorage.vSmall.achData);
 		} else {
 			return $vStorage.vLarge.uSizeAllocated - 1;
 		}
@@ -616,14 +639,10 @@ public:
 		return GetStr();
 	}
 	const Char &operator[](std::size_t uIndex) const noexcept {
-		ASSERT(uIndex <= GetLength());
-
-		return GetBegin()[uIndex];
+		return UncheckedGet(uIndex);
 	}
 	Char &operator[](std::size_t uIndex) noexcept {
-		ASSERT(uIndex <= GetLength());
-
-		return GetBegin()[uIndex];
+		return UncheckedGet(uIndex);
 	}
 };
 

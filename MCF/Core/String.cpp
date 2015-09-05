@@ -282,7 +282,7 @@ namespace {
 				*pchWrite = vFilter();
 				if(++pchWrite == std::end(achTemp)){
 					strWrite.Replace((std::ptrdiff_t)uPos, (std::ptrdiff_t)uPos, std::begin(achTemp), pchWrite);
-					uPos += COUNT_OF(achTemp);
+					uPos += CountOf(achTemp);
 					pchWrite = std::begin(achTemp);
 				}
 			}

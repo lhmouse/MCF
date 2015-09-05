@@ -5,7 +5,7 @@
 #ifndef MCF_CORE_EXCEPTION_HPP_
 #define MCF_CORE_EXCEPTION_HPP_
 
-#include "LastError.hpp"
+#include "../../MCFCRT/env/last_error.h"
 #include "../../MCFCRT/ext/stpcpy.h"
 #include <exception>
 
@@ -15,7 +15,7 @@ namespace Impl_Exception {
 	class NtsBuffer {
 	public:
 		enum : std::size_t {
-			kMaxTextLength = 1023
+			kMaxTextLength = 159
 		};
 
 	private:
@@ -79,8 +79,12 @@ public:
 
 class SystemError : public Exception {
 public:
-	SystemError(const char *pszFile, unsigned long ulLine, const char *pszFunction, unsigned long ulCode = GetWin32LastError()) noexcept
+	SystemError(const char *pszFile, unsigned long ulLine, unsigned long ulCode, const char *pszFunction) noexcept
 		: Exception(pszFile, ulLine, ulCode, pszFunction)
+	{
+	}
+	SystemError(const char *pszFile, unsigned long ulLine, const char *pszFunction) noexcept
+		: SystemError(pszFile, ulLine, ::MCF_CRT_GetWin32LastError(), pszFunction)
 	{
 	}
 	~SystemError() override;

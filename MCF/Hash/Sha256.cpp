@@ -31,7 +31,7 @@ namespace {
 		for(std::size_t i = 0; i < 16; ++i){
 			w[i] = LoadBe(((const std::uint32_t *)pbyChunk)[i]);
 		}
-		for(std::size_t i = 16; i < COUNT_OF(w); ++i){
+		for(std::size_t i = 16; i < CountOf(w); ++i){
 			//const std::uint32_t s0 = ::_rotr(w[i - 15], 7) ^ ::_rotr(w[i - 15], 18) ^ (w[i - 15] >> 3);
 			const std::uint32_t s0 = ::_rotr((::_rotr(w[i - 15], 11) ^ w[i - 15]), 7) ^ (w[i - 15] >> 3);
 			//const std::uint32_t s1 = ::_rotr(w[i - 2], 17) ^ ::_rotr(w[i - 2], 19) ^ (w[i - 2] >> 10);
@@ -151,7 +151,7 @@ namespace {
 			w[i] = LoadBe(((const std::uint32_t *)pbyChunk)[i]);
 		}
 /*
-		for(std::size_t i = 16; i < COUNT_OF(w); ++i){
+		for(std::size_t i = 16; i < CountOf(w); ++i){
 			//const std::uint32_t s0 = ::_rotr(w[i - 15], 7) ^ ::_rotr(w[i - 15], 18) ^ (w[i - 15] >> 3);
 			const std::uint32_t s0 = ::_rotr((::_rotr(w[i - 15], 11) ^ w[i - 15]), 7) ^ (w[i - 15] >> 3);
 			//const std::uint32_t s1 = ::_rotr(w[i - 2], 17) ^ ::_rotr(w[i - 2], 19) ^ (w[i - 2] >> 10);

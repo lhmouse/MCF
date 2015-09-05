@@ -23,7 +23,7 @@ namespace {
 		for(std::size_t i = 16; i < 32; ++i){
 			w[i] = ::_rotl(w[i - 3] ^ w[i - 8] ^ w[i - 14] ^ w[i - 16], 1);
 		}
-		for(std::size_t i = 32; i < COUNT_OF(w); ++i){
+		for(std::size_t i = 32; i < CountOf(w); ++i){
 			w[i] = ::_rotl(w[i - 6] ^ w[i - 16] ^ w[i - 28] ^ w[i - 32], 2);
 		}
 
@@ -84,7 +84,7 @@ namespace {
 			w[i] = ::_rotl(w[i - 3] ^ w[i - 8] ^ w[i - 14] ^ w[i - 16], 1);
 		}
 /*
-		for(std::size_t i = 32; i < COUNT_OF(w); ++i){
+		for(std::size_t i = 32; i < CountOf(w); ++i){
 			w[i] = ::_rotl(w[i - 6] ^ w[i - 16] ^ w[i - 28] ^ w[i - 32], 2);
 		}
 */

@@ -23,12 +23,12 @@ Uuid Uuid::Generate(){
 	const auto u32Unique = g_u16Pid | ((g_u32AutoInc.Increment(kAtomicRelaxed) << 16) & 0x3FFFFFFFu);
 
 	Uuid vRet(nullptr);
-	StoreBe(vRet.x_unData.au32[0], u64Now >> 12);
-	StoreBe(vRet.x_unData.au16[2], (u64Now << 4) | (u32Unique >> 26));
-	StoreBe(vRet.x_unData.au16[3], (u32Unique >> 14) & 0x0FFFu); // 版本 = 0
-	StoreBe(vRet.x_unData.au16[4], 0xC000u | (u32Unique & 0x3FFFu)); // 变种 = 3
-	StoreBe(vRet.x_unData.au16[5], GetRandomUint32());
-	StoreBe(vRet.x_unData.au32[3], GetRandomUint32());
+	StoreBe(vRet.$unData.au32[0], u64Now >> 12);
+	StoreBe(vRet.$unData.au16[2], (u64Now << 4) | (u32Unique >> 26));
+	StoreBe(vRet.$unData.au16[3], (u32Unique >> 14) & 0x0FFFu); // 版本 = 0
+	StoreBe(vRet.$unData.au16[4], 0xC000u | (u32Unique & 0x3FFFu)); // 变种 = 3
+	StoreBe(vRet.$unData.au16[5], GetRandomUint32());
+	StoreBe(vRet.$unData.au32[3], GetRandomUint32());
 	return vRet;
 }
 

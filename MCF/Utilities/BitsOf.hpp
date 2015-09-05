@@ -5,6 +5,6 @@
 #ifndef MCF_UTILITIES_BITS_OF_HPP_
 #define MCF_UTILITIES_BITS_OF_HPP_
 
-#define BITS_OF(x_)		(sizeof(x_) * __CHAR_BIT__)
+#define BITS_OF($)		(sizeof($) * __CHAR_BIT__)
 
 #endif

@@ -20,13 +20,13 @@ namespace MCF {
 template<typename ElementT>
 class Vector {
 private:
-	void *x_pStorage;
-	std::size_t x_uSize;
-	std::size_t x_uCapacity;
+	void *$pStorage;
+	std::size_t $uSize;
+	std::size_t $uCapacity;
 
 public:
 	constexpr Vector() noexcept
-		: x_pStorage(nullptr), x_uSize(0), x_uCapacity(0)
+		: $pStorage(nullptr), $uSize(0), $uCapacity(0)
 	{
 	}
 	template<typename ...ParamsT>
@@ -68,7 +68,7 @@ public:
 	}
 	~Vector(){
 		Clear();
-		::operator delete[](x_pStorage);
+		::operator delete[]($pStorage);
 	}
 
 public:
@@ -112,10 +112,10 @@ public:
 	using Enumerator      = Impl_EnumeratorTemplate::Enumerator      <Vector, AdvanceOnce, RetreatOnce>;
 
 	bool IsEmpty() const noexcept {
-		return x_uSize == 0;
+		return $uSize == 0;
 	}
 	void Clear() noexcept {
-		Pop(x_uSize);
+		Pop($uSize);
 	}
 
 	ConstEnumerator EnumerateFirst() const noexcept {
@@ -160,23 +160,23 @@ public:
 	}
 
 	void Swap(Vector &rhs) noexcept {
-		std::swap(x_pStorage,  rhs.x_pStorage);
-		std::swap(x_uSize,     rhs.x_uSize);
-		std::swap(x_uCapacity, rhs.x_uCapacity);
+		std::swap($pStorage,  rhs.$pStorage);
+		std::swap($uSize,     rhs.$uSize);
+		std::swap($uCapacity, rhs.$uCapacity);
 	}
 
 	// Vector 需求。
 	const ElementT *GetData() const noexcept {
-		return static_cast<const ElementT *>(x_pStorage);
+		return static_cast<const ElementT *>($pStorage);
 	}
 	ElementT *GetData() noexcept {
-		return static_cast<ElementT *>(x_pStorage);
+		return static_cast<ElementT *>($pStorage);
 	}
 	std::size_t GetSize() const noexcept {
-		return x_uSize;
+		return $uSize;
 	}
 	std::size_t GetCapacity() noexcept {
-		return x_uCapacity;
+		return $uCapacity;
 	}
 
 	const ElementT *GetBegin() const noexcept {
@@ -186,47 +186,47 @@ public:
 		return GetData();
 	}
 	const ElementT *GetEnd() const noexcept {
-		return GetData() + x_uSize;
+		return GetData() + $uSize;
 	}
 	ElementT *GetEnd() noexcept {
-		return GetData() + x_uSize;
+		return GetData() + $uSize;
 	}
 
 	const ElementT &Get(std::size_t uIndex) const {
-		if(uIndex >= x_uSize){
+		if(uIndex >= $uSize){
 			DEBUG_THROW(Exception, ERROR_INVALID_PARAMETER, __PRETTY_FUNCTION__);
 		}
 		return GetData()[uIndex];
 	}
 	ElementT &Get(std::size_t uIndex){
-		if(uIndex >= x_uSize){
+		if(uIndex >= $uSize){
 			DEBUG_THROW(Exception, ERROR_INVALID_PARAMETER, __PRETTY_FUNCTION__);
 		}
 		return GetData()[uIndex];
 	}
 	const ElementT &UncheckedGet(std::size_t uIndex) const noexcept {
-		ASSERT(uIndex < x_uSize);
+		ASSERT(uIndex < $uSize);
 
 		return GetData()[uIndex];
 	}
 	ElementT &UncheckedGet(std::size_t uIndex) noexcept {
-		ASSERT(uIndex < x_uSize);
+		ASSERT(uIndex < $uSize);
 
 		return GetData()[uIndex];
 	}
 
 	template<typename ...ParamsT>
 	void Resize(std::size_t uSize, ParamsT &&...vParams){
-		if(uSize > x_uSize){
-			Append(uSize - x_uSize, std::forward<ParamsT>(vParams)...);
+		if(uSize > $uSize){
+			Append(uSize - $uSize, std::forward<ParamsT>(vParams)...);
 		} else {
-			Pop(x_uSize - uSize);
+			Pop($uSize - uSize);
 		}
 	}
 	template<typename ...ParamsT>
 	ElementT *ResizeMore(std::size_t uDeltaSize, ParamsT &&...vParams){
-		const auto uOldSize = x_uSize;
-		Append(uDeltaSize - x_uSize, std::forward<ParamsT>(vParams)...);
+		const auto uOldSize = $uSize;
+		Append(uDeltaSize - $uSize, std::forward<ParamsT>(vParams)...);
 		return GetData() + uOldSize;
 	}
 
@@ -248,8 +248,8 @@ public:
 		}
 
 		const auto pNewStorage = static_cast<ElementT *>(::operator new[](uBytesToAlloc));
-		const auto pOldStorage = static_cast<ElementT *>(x_pStorage);
-		const auto pOldEnd = pOldStorage + x_uSize;
+		const auto pOldStorage = static_cast<ElementT *>($pStorage);
+		const auto pOldEnd = pOldStorage + $uSize;
 		auto pWrite = pNewStorage;
 		auto pRead = pOldStorage;
 		try {
@@ -272,11 +272,11 @@ public:
 		}
 		::operator delete[](pOldStorage);
 
-		x_pStorage  = pNewStorage;
-		x_uCapacity = uElementsToAlloc;
+		$pStorage  = pNewStorage;
+		$uCapacity = uElementsToAlloc;
 	}
 	void ReserveMore(std::size_t uDeltaCapacity){
-		const auto uOldSize = x_uSize;
+		const auto uOldSize = $uSize;
 		const auto uNewCapacity = uOldSize + uDeltaCapacity;
 		if(uNewCapacity < uOldSize){
 			throw std::bad_array_new_length();
@@ -291,31 +291,31 @@ public:
 	}
 	template<typename ...ParamsT>
 	void UncheckedPush(ParamsT &&...vParams) noexcept(std::is_nothrow_constructible<ElementT, ParamsT &&...>::value) {
-		ASSERT(GetCapacity() - x_uSize > 0);
+		ASSERT(GetCapacity() - $uSize > 0);
 
-		DefaultConstruct(GetData() + x_uSize, std::forward<ParamsT>(vParams)...);
-		++x_uSize;
+		DefaultConstruct(GetData() + $uSize, std::forward<ParamsT>(vParams)...);
+		++$uSize;
 	}
 	void Pop(std::size_t uCount = 1) noexcept {
-		ASSERT(uCount <= x_uSize);
+		ASSERT(uCount <= $uSize);
 
 		for(std::size_t i = 0; i < uCount; ++i){
-			Destruct(GetData() + x_uSize - i - 1);
+			Destruct(GetData() + $uSize - i - 1);
 		}
-		x_uSize -= uCount;
+		$uSize -= uCount;
 	}
 
 	template<typename ...ParamsT>
 	void Append(std::size_t uDeltaSize, const ParamsT &...vParams){
 		ReserveMore(uDeltaSize);
 
-		const auto uOldSize = x_uSize;
+		const auto uOldSize = $uSize;
 		try {
 			for(std::size_t i = 0; i < uDeltaSize; ++i){
 				UncheckedPush(vParams...);
 			}
 		} catch(...){
-			Pop(x_uSize - uOldSize);
+			Pop($uSize - uOldSize);
 			throw;
 		}
 	}
@@ -330,7 +330,7 @@ public:
 			ReserveMore(uDeltaSize);
 		}
 
-		const auto uOldSize = x_uSize;
+		const auto uOldSize = $uSize;
 		try {
 			if(kHasDeltaSizeHint){
 				for(auto it = itBegin; it != itEnd; ++it){
@@ -342,7 +342,7 @@ public:
 				}
 			}
 		} catch(...){
-			Pop(x_uSize - uOldSize);
+			Pop($uSize - uOldSize);
 			throw;
 		}
 	}
@@ -396,7 +396,7 @@ public:
 				throw;
 			}
 
-			x_uSize = static_cast<std::size_t>(pNewEnd - GetBegin());
+			$uSize = static_cast<std::size_t>(pNewEnd - GetBegin());
 		} else {
 			auto uNewCapacity = GetSize() + uDeltaSize;
 			if(uNewCapacity < GetSize()){
@@ -474,7 +474,7 @@ public:
 				throw;
 			}
 
-			x_uSize = static_cast<std::size_t>(pNewEnd - GetBegin());
+			$uSize = static_cast<std::size_t>(pNewEnd - GetBegin());
 		} else {
 			if(kHasDeltaSizeHint){
 				const auto uDeltaSize = static_cast<std::size_t>(std::distance(itBegin, itEnd));
@@ -532,7 +532,7 @@ public:
 				Construct(pWrite, std::move(*pCur));
 				++pWrite;
 			}
-			x_uSize = static_cast<std::size_t>(pWrite - GetBegin());
+			$uSize = static_cast<std::size_t>(pWrite - GetBegin());
 		} else {
 			Vector vTemp;
 			vTemp.Reserve(GetCapacity());

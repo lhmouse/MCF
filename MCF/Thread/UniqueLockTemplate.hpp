@@ -14,61 +14,61 @@ namespace MCF {
 
 class UniqueLockTemplateBase : NONCOPYABLE {
 protected:
-	std::size_t x_uLockCount;
+	std::size_t $uLockCount;
 
 protected:
 	constexpr UniqueLockTemplateBase() noexcept
-		: x_uLockCount(0)
+		: $uLockCount(0)
 	{
 	}
 
 public:
 	virtual ~UniqueLockTemplateBase(){
-		ASSERT(x_uLockCount == 0);
+		ASSERT($uLockCount == 0);
 	}
 
 protected:
-	std::size_t xUnlockAll() noexcept {
-		const auto uOldLockCount = x_uLockCount;
+	std::size_t $UnlockAll() noexcept {
+		const auto uOldLockCount = $uLockCount;
 		if(uOldLockCount != 0){
-			xDoUnlock();
-			x_uLockCount = 0;
+			$DoUnlock();
+			$uLockCount = 0;
 		}
 		return uOldLockCount;
 	}
 
 private:
-	virtual bool xDoTry() const noexcept = 0;
-	virtual void xDoLock() const noexcept = 0;
-	virtual void xDoUnlock() const noexcept = 0;
+	virtual bool $DoTry() const noexcept = 0;
+	virtual void $DoLock() const noexcept = 0;
+	virtual void $DoUnlock() const noexcept = 0;
 
 public:
 	bool IsLocking() const noexcept {
-		return x_uLockCount > 0;
+		return $uLockCount > 0;
 	}
 	std::size_t GetLockCount() const noexcept {
-		return x_uLockCount;
+		return $uLockCount;
 	}
 
 	bool Try() noexcept {
-		if(x_uLockCount == 0){
-			if(!xDoTry()){
+		if($uLockCount == 0){
+			if(!$DoTry()){
 				return false;
 			}
 		}
-		++x_uLockCount;
+		++$uLockCount;
 		return true;
 	}
 	void Lock() noexcept {
-		if(++x_uLockCount == 1){
-			xDoLock();
+		if(++$uLockCount == 1){
+			$DoLock();
 		}
 	}
 	void Unlock() noexcept {
-		ASSERT(x_uLockCount != 0);
+		ASSERT($uLockCount != 0);
 
-		if(--x_uLockCount == 0){
-			xDoUnlock();
+		if(--$uLockCount == 0){
+			$DoUnlock();
 		}
 	}
 
@@ -81,48 +81,48 @@ public:
 template<class MutexT, std::size_t kLockType = 0>
 class UniqueLockTemplate final : public UniqueLockTemplateBase {
 private:
-	MutexT *x_pOwner;
+	MutexT *$pOwner;
 
 public:
 	explicit UniqueLockTemplate(MutexT &vOwner, bool bInitLocked = true) noexcept
-		: x_pOwner(&vOwner)
+		: $pOwner(&vOwner)
 	{
 		if(bInitLocked){
 			Lock();
 		}
 	}
 	UniqueLockTemplate(UniqueLockTemplate &&rhs) noexcept
-		: x_pOwner(rhs.x_pOwner)
+		: $pOwner(rhs.$pOwner)
 	{
 		Swap(rhs);
 	}
 	UniqueLockTemplate &operator=(UniqueLockTemplate &&rhs) noexcept {
 		ASSERT(&rhs != this);
 
-		xUnlockAll();
+		$UnlockAll();
 		Swap(rhs);
 		return *this;
 	}
 	virtual ~UniqueLockTemplate(){
-		xUnlockAll();
+		$UnlockAll();
 	}
 
 private:
-	bool xDoTry() const noexcept override;
-	void xDoLock() const noexcept override;
-	void xDoUnlock() const noexcept override;
+	bool $DoTry() const noexcept override;
+	void $DoLock() const noexcept override;
+	void $DoUnlock() const noexcept override;
 
 public:
 	void Join(UniqueLockTemplate &&rhs) noexcept {
-		ASSERT(x_pOwner == rhs.x_pOwner);
+		ASSERT($pOwner == rhs.$pOwner);
 
-		x_uLockCount += rhs.x_uLockCount;
-		rhs.x_uLockCount = 0;
+		$uLockCount += rhs.$uLockCount;
+		rhs.$uLockCount = 0;
 	}
 
 	void Swap(UniqueLockTemplate &rhs) noexcept {
-		std::swap(x_pOwner, rhs.x_pOwner);
-		std::swap(x_uLockCount, rhs.x_uLockCount);
+		std::swap($pOwner, rhs.$pOwner);
+		std::swap($uLockCount, rhs.$uLockCount);
 	}
 };
 

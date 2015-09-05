@@ -19,61 +19,61 @@ namespace Impl_Exception {
 		};
 
 	private:
-		char x_achText[kMaxTextLength + 1];
+		char $achText[kMaxTextLength + 1];
 
 	public:
 		explicit NtsBuffer(const char *pszText) noexcept {
-			::MCF_stppcpy(x_achText, x_achText + sizeof(x_achText), pszText);
+			::MCF_stppcpy($achText, $achText + sizeof($achText), pszText);
 		}
 		NtsBuffer(const NtsBuffer &rhs) noexcept {
-			::MCF_stpcpy(x_achText, rhs.x_achText);
+			::MCF_stpcpy($achText, rhs.$achText);
 		}
 		NtsBuffer &operator=(const NtsBuffer &rhs) noexcept {
-			::MCF_stpcpy(x_achText, rhs.x_achText);
+			::MCF_stpcpy($achText, rhs.$achText);
 			return *this;
 		}
 
 	public:
 		operator const char *() const noexcept {
-			return x_achText;
+			return $achText;
 		}
 		operator char *() noexcept {
-			return x_achText;
+			return $achText;
 		}
 	};
 }
 
 class Exception : public std::exception {
 private:
-	const char *x_pszFile;
-	unsigned long x_ulLine;
-	unsigned long x_ulCode;
-	Impl_Exception::NtsBuffer x_ntsMessage;
+	const char *$pszFile;
+	unsigned long $ulLine;
+	unsigned long $ulCode;
+	Impl_Exception::NtsBuffer $ntsMessage;
 
 public:
 	Exception(const char *pszFile, unsigned long ulLine, unsigned long ulCode, const char *pszMessage) noexcept
 		: std::exception()
-		, x_pszFile(pszFile), x_ulLine(ulLine), x_ulCode(ulCode), x_ntsMessage(pszMessage)
+		, $pszFile(pszFile), $ulLine(ulLine), $ulCode(ulCode), $ntsMessage(pszMessage)
 	{
 	}
 	~Exception() override;
 
 public:
 	const char *what() const noexcept override {
-		return x_ntsMessage;
+		return $ntsMessage;
 	}
 
 	const char *GetFile() const noexcept {
-		return x_pszFile;
+		return $pszFile;
 	}
 	unsigned long GetLine() const noexcept {
-		return x_ulLine;
+		return $ulLine;
 	}
 	unsigned long GetCode() const noexcept {
-		return x_ulCode;
+		return $ulCode;
 	}
 	const char *GetMessage() const noexcept {
-		return x_ntsMessage;
+		return $ntsMessage;
 	}
 };
 

@@ -17,26 +17,26 @@ namespace {
 	template<typename CharT>
 	class StringSource {
 	private:
-		const CharT *x_pchRead;
-		const CharT *const x_pchEnd;
+		const CharT *$pchRead;
+		const CharT *const $pchEnd;
 
 	public:
 		StringSource(const CharT *pchBegin, const CharT *pchEnd) noexcept
-			: x_pchRead(pchBegin), x_pchEnd(pchEnd)
+			: $pchRead(pchBegin), $pchEnd(pchEnd)
 		{
 		}
 
 	public:
 		__attribute__((__always_inline__))
 		explicit operator bool() const noexcept {
-			return x_pchRead != x_pchEnd;
+			return $pchRead != $pchEnd;
 		}
 		__attribute__((__always_inline__))
 		std::uint32_t operator()(){
-			if(x_pchRead == x_pchEnd){
+			if($pchRead == $pchEnd){
 				DEBUG_THROW(Exception, ERROR_HANDLE_EOF, "String is truncated");
 			}
-			return static_cast<std::make_unsigned_t<CharT>>(*(x_pchRead++));
+			return static_cast<std::make_unsigned_t<CharT>>(*($pchRead++));
 		}
 	};
 
@@ -48,22 +48,22 @@ namespace {
 	template<class PrevT, bool kIsCesu8T>
 	class Utf8Decoder {
 	private:
-		PrevT x_vPrev;
+		PrevT $vPrev;
 
 	public:
 		explicit Utf8Decoder(PrevT vPrev)
-			: x_vPrev(std::move(vPrev))
+			: $vPrev(std::move(vPrev))
 		{
 		}
 
 	public:
 		__attribute__((__always_inline__))
 		explicit operator bool() const noexcept {
-			return !!x_vPrev;
+			return !!$vPrev;
 		}
 		__attribute__((__always_inline__))
 		std::uint32_t operator()(){
-			auto u32Point = x_vPrev();
+			auto u32Point = $vPrev();
 			if(EXPECT_NOT((u32Point & 0x80u) != 0)){
 				// 这个值是该码点的总字节数。
 				const auto uBytes = CountLeadingZeroes((std::uint8_t)(~u32Point | 1));
@@ -75,7 +75,7 @@ namespace {
 
 #define UTF8_DECODER_UNROLLED	\
 				{	\
-					const auto u32Temp = x_vPrev();	\
+					const auto u32Temp = $vPrev();	\
 					if((u32Temp & 0xC0u) != 0x80u){	\
 						DEBUG_THROW(Exception, ERROR_INVALID_DATA, "Invalid UTF-8 non-leading byte");	\
 					}	\
@@ -116,29 +116,29 @@ namespace {
 	template<class PrevT>
 	class Utf8Encoder {
 	private:
-		PrevT x_vPrev;
-		std::uint32_t x_u32Pending;
+		PrevT $vPrev;
+		std::uint32_t $u32Pending;
 
 	public:
 		explicit Utf8Encoder(PrevT vPrev)
-			: x_vPrev(std::move(vPrev)), x_u32Pending(0)
+			: $vPrev(std::move(vPrev)), $u32Pending(0)
 		{
 		}
 
 	public:
 		__attribute__((__always_inline__))
 		explicit operator bool() const noexcept {
-			return x_u32Pending || !!x_vPrev;
+			return $u32Pending || !!$vPrev;
 		}
 		__attribute__((__always_inline__))
 		std::uint32_t operator()(){
-			if(EXPECT(x_u32Pending != 0)){
-				const auto u32Ret = x_u32Pending & 0xFFu;
-				x_u32Pending >>= 8;
+			if(EXPECT($u32Pending != 0)){
+				const auto u32Ret = $u32Pending & 0xFFu;
+				$u32Pending >>= 8;
 				return u32Ret;
 			}
 
-			auto u32Point = x_vPrev();
+			auto u32Point = $vPrev();
 			if(EXPECT_NOT(u32Point > 0x10FFFFu)){
 				DEBUG_THROW(Exception, ERROR_INVALID_DATA, "Invalid UTF-32 code point value");
 			}
@@ -148,8 +148,8 @@ namespace {
 
 #define UTF8_ENCODER_UNROLLED	\
 				{	\
-					x_u32Pending <<= 8;	\
-					x_u32Pending |= (u32Point & 0x3F) | 0x80u;	\
+					$u32Pending <<= 8;	\
+					$u32Pending |= (u32Point & 0x3F) | 0x80u;	\
 					u32Point >>= 6;	\
 				}
 
@@ -178,29 +178,29 @@ namespace {
 	template<class PrevT>
 	class Utf16Decoder {
 	private:
-		PrevT x_vPrev;
+		PrevT $vPrev;
 
 	public:
 		explicit Utf16Decoder(PrevT vPrev)
-			: x_vPrev(std::move(vPrev))
+			: $vPrev(std::move(vPrev))
 		{
 		}
 
 	public:
 		__attribute__((__always_inline__))
 		explicit operator bool() const noexcept {
-			return !!x_vPrev;
+			return !!$vPrev;
 		}
 		__attribute__((__always_inline__))
 		std::uint32_t operator()(){
-			auto u32Point = x_vPrev();
+			auto u32Point = $vPrev();
 			// 检测前导代理。
 			const auto u32Leading = u32Point - 0xD800u;
 			if(EXPECT_NOT(u32Leading <= 0x7FFu)){
 				if(EXPECT_NOT(u32Leading > 0x3FFu)){
 					DEBUG_THROW(Exception, ERROR_INVALID_DATA, "Isolated UTF-16 trailing surrogate");
 				}
-				u32Point = x_vPrev() - 0xDC00u;
+				u32Point = $vPrev() - 0xDC00u;
 				if(EXPECT_NOT(u32Point > 0x3FFu)){
 					// 后续代理无效。
 					DEBUG_THROW(Exception, ERROR_INVALID_DATA, "Leading surrogate followed by non-trailing-surrogate");
@@ -220,36 +220,36 @@ namespace {
 	template<class PrevT>
 	class Utf16Encoder {
 	private:
-		PrevT x_vPrev;
-		std::uint32_t x_u32Pending;
+		PrevT $vPrev;
+		std::uint32_t $u32Pending;
 
 	public:
 		explicit Utf16Encoder(PrevT vPrev)
-			: x_vPrev(std::move(vPrev)), x_u32Pending(0)
+			: $vPrev(std::move(vPrev)), $u32Pending(0)
 		{
 		}
 
 	public:
 		__attribute__((__always_inline__))
 		explicit operator bool() const noexcept {
-			return x_u32Pending || !!x_vPrev;
+			return $u32Pending || !!$vPrev;
 		}
 		__attribute__((__always_inline__))
 		std::uint32_t operator()(){
-			if(EXPECT(x_u32Pending != 0)){
-				const auto u32Ret = x_u32Pending;
-				x_u32Pending >>= 16;
+			if(EXPECT($u32Pending != 0)){
+				const auto u32Ret = $u32Pending;
+				$u32Pending >>= 16;
 				return u32Ret;
 			}
 
-			auto u32Point = x_vPrev();
+			auto u32Point = $vPrev();
 			if(EXPECT_NOT(u32Point > 0x10FFFFu)){
 				DEBUG_THROW(Exception, ERROR_INVALID_DATA, "Invalid UTF-32 code point value");
 			}
 			if(EXPECT_NOT(u32Point > 0xFFFFu)){
 				// 编码成代理对。
 				u32Point -= 0x10000u;
-				x_u32Pending = (u32Point & 0x3FFu) | 0xDC00u;
+				$u32Pending = (u32Point & 0x3FFu) | 0xDC00u;
 				u32Point = (u32Point >> 10) | 0xD800u;
 			}
 			return u32Point;

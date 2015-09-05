@@ -22,39 +22,39 @@ namespace Impl_EnumeratorTemplate {
 		using ElementType = typename ContainerT::ElementType;
 
 	private:
-		ContainerT *x_pContainer;
-		ElementType *x_pElement;
+		ContainerT *$pContainer;
+		ElementType *$pElement;
 
 	public:
 		explicit constexpr Enumerator() noexcept
-			: x_pContainer(nullptr), x_pElement(nullptr)
+			: $pContainer(nullptr), $pElement(nullptr)
 		{
 		}
 		explicit constexpr Enumerator(ContainerT &vContainer, ElementType *pElement) noexcept
-			: x_pContainer(&vContainer), x_pElement(pElement)
+			: $pContainer(&vContainer), $pElement(pElement)
 		{
 		}
 
 	public:
 		bool operator==(const Enumerator &rhs) const noexcept {
-			return x_pElement == rhs.x_pElement;
+			return $pElement == rhs.$pElement;
 		}
 		bool operator!=(const Enumerator &rhs) const noexcept {
 			return !(*this == rhs);
 		}
 
 		Enumerator &operator++(){
-			ASSERT(x_pContainer);
-			ASSERT(x_pElement);
+			ASSERT($pContainer);
+			ASSERT($pElement);
 
-			AdvanceOnceT()(*x_pContainer, x_pElement);
+			AdvanceOnceT()(*$pContainer, $pElement);
 			return *this;
 		}
 		Enumerator &operator--(){
-			ASSERT(x_pContainer);
-			ASSERT(x_pElement);
+			ASSERT($pContainer);
+			ASSERT($pElement);
 
-			RetreatOnceT()(*x_pContainer, x_pElement);
+			RetreatOnceT()(*$pContainer, $pElement);
 			return *this;
 		}
 
@@ -70,13 +70,13 @@ namespace Impl_EnumeratorTemplate {
 		}
 
 		ElementType &operator*() const noexcept {
-			ASSERT(x_pElement);
+			ASSERT($pElement);
 
-			return *x_pElement;
+			return *$pElement;
 		}
 
 		explicit operator bool() const noexcept {
-			return !!x_pElement;
+			return !!$pElement;
 		}
 	};
 
@@ -86,43 +86,43 @@ namespace Impl_EnumeratorTemplate {
 		using ElementType = const typename ContainerT::ElementType;
 
 	private:
-		const ContainerT *x_pContainer;
-		const ElementType *x_pElement;
+		const ContainerT *$pContainer;
+		const ElementType *$pElement;
 
 	public:
 		explicit constexpr ConstEnumerator() noexcept
-			: x_pContainer(nullptr), x_pElement(nullptr)
+			: $pContainer(nullptr), $pElement(nullptr)
 		{
 		}
 		explicit constexpr ConstEnumerator(const ContainerT &vContainer, const ElementType *pElement) noexcept
-			: x_pContainer(&vContainer), x_pElement(pElement)
+			: $pContainer(&vContainer), $pElement(pElement)
 		{
 		}
 		constexpr ConstEnumerator(const Enumerator<ContainerT, AdvanceOnceT, RetreatOnceT> &rhs) noexcept
-			: x_pContainer(rhs.x_pContainer), x_pElement(rhs.x_pElement)
+			: $pContainer(rhs.$pContainer), $pElement(rhs.$pElement)
 		{
 		}
 
 	public:
 		bool operator==(const ConstEnumerator &rhs) const noexcept {
-			return x_pElement == rhs.x_pElement;
+			return $pElement == rhs.$pElement;
 		}
 		bool operator!=(const ConstEnumerator &rhs) const noexcept {
 			return !(*this == rhs);
 		}
 
 		ConstEnumerator &operator++(){
-			ASSERT(x_pContainer);
-			ASSERT(x_pElement);
+			ASSERT($pContainer);
+			ASSERT($pElement);
 
-			AdvanceOnceT()(*x_pContainer, x_pElement);
+			AdvanceOnceT()(*$pContainer, $pElement);
 			return *this;
 		}
 		ConstEnumerator &operator--(){
-			ASSERT(x_pContainer);
-			ASSERT(x_pElement);
+			ASSERT($pContainer);
+			ASSERT($pElement);
 
-			RetreatOnceT()(*x_pContainer, x_pElement);
+			RetreatOnceT()(*$pContainer, $pElement);
 			return *this;
 		}
 
@@ -138,13 +138,13 @@ namespace Impl_EnumeratorTemplate {
 		}
 
 		const ElementType &operator*() const noexcept {
-			ASSERT(x_pElement);
+			ASSERT($pElement);
 
-			return *x_pElement;
+			return *$pElement;
 		}
 
 		explicit operator bool() const noexcept {
-			return !!x_pElement;
+			return !!$pElement;
 		}
 	};
 

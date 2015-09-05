@@ -10,32 +10,32 @@ namespace MCF {
 // ========== Base64Encoder ==========
 // 构造函数和析构函数。
 Base64Encoder::Base64Encoder(const char *pchTable) noexcept {
-	std::memcpy(x_abyTable, pchTable, sizeof(x_abyTable));
+	std::memcpy($abyTable, pchTable, sizeof($abyTable));
 }
 
 // 其他非静态成员函数。
-void Base64Encoder::xDoInit(){
-	x_uState = 0;
+void Base64Encoder::$DoInit(){
+	$uState = 0;
 }
-void Base64Encoder::xDoUpdate(const void *pData, std::size_t uSize){
+void Base64Encoder::$DoUpdate(const void *pData, std::size_t uSize){
 	auto pbyRead = static_cast<const unsigned char *>(pData);
 	const auto pbyEnd = pbyRead + uSize;
 
 	if(uSize > 6){
-		switch(x_uState){
+		switch($uState){
 		case 0:
 			break;
 
 		case 1:
-			x_ulWord = (x_ulWord << 8) | *pbyRead;
+			$ulWord = ($ulWord << 8) | *pbyRead;
 			++pbyRead;
-			xOutput(x_abyTable[(x_ulWord >> 4) & 0x3F]);
+			$Output($abyTable[($ulWord >> 4) & 0x3F]);
 		case 2:
-			x_ulWord = (x_ulWord << 8) | *pbyRead;
+			$ulWord = ($ulWord << 8) | *pbyRead;
 			++pbyRead;
-			xOutput(x_abyTable[(x_ulWord >> 6) & 0x3F]);
-			xOutput(x_abyTable[ x_ulWord       & 0x3F]);
-			x_uState = 0;
+			$Output($abyTable[($ulWord >> 6) & 0x3F]);
+			$Output($abyTable[ $ulWord       & 0x3F]);
+			$uState = 0;
 			break;
 
 		default:
@@ -49,33 +49,33 @@ void Base64Encoder::xDoUpdate(const void *pData, std::size_t uSize){
 			ulWord = (ulWord << 8) | pbyRead[2];
 			pbyRead += 3;
 
-			xOutput(x_abyTable[(ulWord >> 18) & 0x3F]);
-			xOutput(x_abyTable[(ulWord >> 12) & 0x3F]);
-			xOutput(x_abyTable[(ulWord >>  6) & 0x3F]);
-			xOutput(x_abyTable[ ulWord        & 0x3F]);
+			$Output($abyTable[(ulWord >> 18) & 0x3F]);
+			$Output($abyTable[(ulWord >> 12) & 0x3F]);
+			$Output($abyTable[(ulWord >>  6) & 0x3F]);
+			$Output($abyTable[ ulWord        & 0x3F]);
 
 			--i;
 		}
 	}
 	while(pbyRead != pbyEnd){
-		x_ulWord = (x_ulWord << 8) | *pbyRead;
+		$ulWord = ($ulWord << 8) | *pbyRead;
 		++pbyRead;
 
-		switch(x_uState){
+		switch($uState){
 		case 0:
-			xOutput(x_abyTable[(x_ulWord >> 2) & 0x3F]);
-			x_uState = 1;
+			$Output($abyTable[($ulWord >> 2) & 0x3F]);
+			$uState = 1;
 			break;
 
 		case 1:
-			xOutput(x_abyTable[(x_ulWord >> 4) & 0x3F]);
-			x_uState = 2;
+			$Output($abyTable[($ulWord >> 4) & 0x3F]);
+			$uState = 2;
 			break;
 
 		case 2:
-			xOutput(x_abyTable[(x_ulWord >> 6) & 0x3F]);
-			xOutput(x_abyTable[ x_ulWord       & 0x3F]);
-			x_uState = 0;
+			$Output($abyTable[($ulWord >> 6) & 0x3F]);
+			$Output($abyTable[ $ulWord       & 0x3F]);
+			$uState = 0;
 			break;
 
 		default:
@@ -83,26 +83,26 @@ void Base64Encoder::xDoUpdate(const void *pData, std::size_t uSize){
 		}
 	}
 }
-void Base64Encoder::xDoFinalize(){
-	switch(x_uState){
+void Base64Encoder::$DoFinalize(){
+	switch($uState){
 	case 0:
 		break;
 
 	case 1:
-		xOutput(x_abyTable[(x_ulWord << 4) & 0x30]);
-		if(x_abyTable[64] != 0){
-			xOutput(x_abyTable[64]);
-			xOutput(x_abyTable[64]);
+		$Output($abyTable[($ulWord << 4) & 0x30]);
+		if($abyTable[64] != 0){
+			$Output($abyTable[64]);
+			$Output($abyTable[64]);
 		}
-		x_uState = 0;
+		$uState = 0;
 		break;
 
 	case 2:
-		xOutput(x_abyTable[(x_ulWord << 2) & 0x3C]);
-		if(x_abyTable[64] != 0){
-			xOutput(x_abyTable[64]);
+		$Output($abyTable[($ulWord << 2) & 0x3C]);
+		if($abyTable[64] != 0){
+			$Output($abyTable[64]);
 		}
-		x_uState = 0;
+		$uState = 0;
 		break;
 
 	default:
@@ -113,46 +113,46 @@ void Base64Encoder::xDoFinalize(){
 // ========== Base64Decoder ==========
 // 构造函数和析构函数。
 Base64Decoder::Base64Decoder(const char *pchTable) noexcept {
-	std::memset(x_aschTable, -1, sizeof(x_aschTable));
+	std::memset($aschTable, -1, sizeof($aschTable));
 	for(std::size_t i = 0; i < 64; ++i){
-		x_aschTable[(unsigned char)pchTable[i]] = i;
+		$aschTable[(unsigned char)pchTable[i]] = i;
 	}
 }
 
 // 其他非静态成员函数。
-void Base64Decoder::xDoInit(){
-	x_uState = 0;
+void Base64Decoder::$DoInit(){
+	$uState = 0;
 }
-void Base64Decoder::xDoUpdate(const void *pData, std::size_t uSize){
+void Base64Decoder::$DoUpdate(const void *pData, std::size_t uSize){
 	auto pbyRead = static_cast<const unsigned char *>(pData);
 	const auto pbyEnd = pbyRead + uSize;
 
 	while(pbyRead != pbyEnd){
-		const int nDigit  = x_aschTable[*pbyRead];
+		const int nDigit  = $aschTable[*pbyRead];
 		++pbyRead;
 		if(nDigit == -1){
 			continue;
 		}
 
-		x_ulWord = (x_ulWord << 6) | (unsigned char)nDigit;
-		switch(x_uState){
+		$ulWord = ($ulWord << 6) | (unsigned char)nDigit;
+		switch($uState){
 		case 0:
-			x_uState = 1;
+			$uState = 1;
 			break;
 
 		case 1:
-			xOutput((unsigned char)(x_ulWord >> 4));
-			x_uState = 2;
+			$Output((unsigned char)($ulWord >> 4));
+			$uState = 2;
 			break;
 
 		case 2:
-			xOutput((unsigned char)(x_ulWord >> 2));
-			x_uState = 3;
+			$Output((unsigned char)($ulWord >> 2));
+			$uState = 3;
 			break;
 
 		case 3:
-			xOutput((unsigned char)x_ulWord);
-			x_uState = 0;
+			$Output((unsigned char)$ulWord);
+			$uState = 0;
 			break;
 
 		default:
@@ -160,7 +160,7 @@ void Base64Decoder::xDoUpdate(const void *pData, std::size_t uSize){
 		}
 	}
 }
-void Base64Decoder::xDoFinalize(){
+void Base64Decoder::$DoFinalize(){
 }
 
 }

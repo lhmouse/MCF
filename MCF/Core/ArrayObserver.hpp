@@ -22,36 +22,36 @@ namespace MCF {
 template<class ElementT>
 class ArrayObserver {
 private:
-	ElementT *x_pBegin;
-	std::size_t x_uSize;
+	ElementT *$pBegin;
+	std::size_t $uSize;
 
 public:
 	constexpr ArrayObserver(std::nullptr_t = nullptr) noexcept
-		: x_pBegin(nullptr), x_uSize(0)
+		: $pBegin(nullptr), $uSize(0)
 	{
 	}
 	constexpr ArrayObserver(ElementT &rhs) noexcept
-		: x_pBegin(std::addressof(rhs)), x_uSize(1)
+		: $pBegin(std::addressof(rhs)), $uSize(1)
 	{
 	}
 	template<std::size_t kSizeT>
 	constexpr ArrayObserver(ElementT (&rhs)[kSizeT]) noexcept
-		: x_pBegin(rhs), x_uSize(kSizeT)
+		: $pBegin(rhs), $uSize(kSizeT)
 	{
 	}
 	template<typename TraitsT, typename AllocatorT>
 	constexpr ArrayObserver(std::basic_string<ElementT, TraitsT, AllocatorT> &rhs) noexcept
-		: x_pBegin(rhs.data()), x_uSize(rhs.size())
+		: $pBegin(rhs.data()), $uSize(rhs.size())
 	{
 	}
 	template<typename AllocatorT>
 	constexpr ArrayObserver(std::vector<ElementT, AllocatorT> &rhs) noexcept
-		: x_pBegin(rhs.data()), x_uSize(rhs.size())
+		: $pBegin(rhs.data()), $uSize(rhs.size())
 	{
 	}
 	template<std::size_t kSizeT>
 	constexpr ArrayObserver(std::array<ElementT, kSizeT> &rhs) noexcept
-		: x_pBegin(rhs.data()), x_uSize(rhs.size())
+		: $pBegin(rhs.data()), $uSize(rhs.size())
 	{
 	}
 	template<StringType kTypeT,
@@ -59,26 +59,26 @@ public:
 			std::is_same<typename StringObserver<kTypeT>::Char, std::remove_cv_t<ElementT>>::value,
 			int> = 0>
 	constexpr ArrayObserver(StringObserver<kTypeT> rhs) noexcept
-		: x_pBegin(rhs.GetData()), x_uSize(rhs.GetSize())
+		: $pBegin(rhs.GetData()), $uSize(rhs.GetSize())
 	{
 	}
 	constexpr ArrayObserver(Vector<ElementT> &rhs) noexcept
-		: x_pBegin(rhs.GetData()), x_uSize(rhs.GetSize())
+		: $pBegin(rhs.GetData()), $uSize(rhs.GetSize())
 	{
 	}
 
 public:
 	constexpr ElementT *GetBegin() const noexcept {
-		return x_pBegin;
+		return $pBegin;
 	}
 	constexpr ElementT *GetEnd() const noexcept {
-		return x_pBegin + x_uSize;
+		return $pBegin + $uSize;
 	}
 	constexpr ElementT *GetData() const noexcept {
-		return x_pBegin;
+		return $pBegin;
 	}
 	constexpr std::size_t GetSize() const noexcept {
-		return x_uSize;
+		return $uSize;
 	}
 
 public:
@@ -95,56 +95,56 @@ public:
 template<class ElementT>
 class ArrayObserver<const ElementT> {
 private:
-	const ElementT *x_pBegin;
-	std::size_t x_uSize;
+	const ElementT *$pBegin;
+	std::size_t $uSize;
 
 public:
 	constexpr ArrayObserver(std::nullptr_t = nullptr) noexcept
-		: x_pBegin(nullptr), x_uSize(0)
+		: $pBegin(nullptr), $uSize(0)
 	{
 	}
 	constexpr ArrayObserver(const ElementT &rhs) noexcept
-		: x_pBegin(std::addressof(rhs)), x_uSize(1)
+		: $pBegin(std::addressof(rhs)), $uSize(1)
 	{
 	}
 	template<std::size_t kSizeT>
 	constexpr ArrayObserver(const ElementT (&rhs)[kSizeT]) noexcept
-		: x_pBegin(rhs), x_uSize(kSizeT)
+		: $pBegin(rhs), $uSize(kSizeT)
 	{
 	}
 	template<std::size_t kSizeT>
 	constexpr ArrayObserver(ElementT (&rhs)[kSizeT]) noexcept
-		: x_pBegin(rhs), x_uSize(kSizeT)
+		: $pBegin(rhs), $uSize(kSizeT)
 	{
 	}
 	template<typename TraitsT, typename AllocatorT>
 	constexpr ArrayObserver(const std::basic_string<const ElementT, TraitsT, AllocatorT> &rhs) noexcept
-		: x_pBegin(rhs.data()), x_uSize(rhs.size())
+		: $pBegin(rhs.data()), $uSize(rhs.size())
 	{
 	}
 	template<typename TraitsT, typename AllocatorT>
 	constexpr ArrayObserver(const std::basic_string<ElementT, TraitsT, AllocatorT> &rhs) noexcept
-		: x_pBegin(rhs.data()), x_uSize(rhs.size())
+		: $pBegin(rhs.data()), $uSize(rhs.size())
 	{
 	}
 	template<typename AllocatorT>
 	constexpr ArrayObserver(const std::vector<const ElementT, AllocatorT> &rhs) noexcept
-		: x_pBegin(rhs.data()), x_uSize(rhs.size())
+		: $pBegin(rhs.data()), $uSize(rhs.size())
 	{
 	}
 	template<typename AllocatorT>
 	constexpr ArrayObserver(const std::vector<ElementT, AllocatorT> &rhs) noexcept
-		: x_pBegin(rhs.data()), x_uSize(rhs.size())
+		: $pBegin(rhs.data()), $uSize(rhs.size())
 	{
 	}
 	template<std::size_t kSizeT>
 	constexpr ArrayObserver(const std::array<const ElementT, kSizeT> &rhs) noexcept
-		: x_pBegin(rhs.data()), x_uSize(rhs.size())
+		: $pBegin(rhs.data()), $uSize(rhs.size())
 	{
 	}
 	template<std::size_t kSizeT>
 	constexpr ArrayObserver(const std::array<ElementT, kSizeT> &rhs) noexcept
-		: x_pBegin(rhs.data()), x_uSize(rhs.size())
+		: $pBegin(rhs.data()), $uSize(rhs.size())
 	{
 	}
 	template<StringType kTypeT,
@@ -152,38 +152,38 @@ public:
 			std::is_same<typename StringObserver<kTypeT>::Char, std::remove_cv_t<ElementT>>::value,
 			int> = 0>
 	constexpr ArrayObserver(StringObserver<kTypeT> rhs) noexcept
-		: x_pBegin(rhs.GetData()), x_uSize(rhs.GetSize())
+		: $pBegin(rhs.GetData()), $uSize(rhs.GetSize())
 	{
 	}
 	constexpr ArrayObserver(const Vector<const ElementT> &rhs) noexcept
-		: x_pBegin(rhs.GetData()), x_uSize(rhs.GetSize())
+		: $pBegin(rhs.GetData()), $uSize(rhs.GetSize())
 	{
 	}
 	constexpr ArrayObserver(const Vector<ElementT> &rhs) noexcept
-		: x_pBegin(rhs.GetData()), x_uSize(rhs.GetSize())
+		: $pBegin(rhs.GetData()), $uSize(rhs.GetSize())
 	{
 	}
 	constexpr ArrayObserver(std::initializer_list<const ElementT> rhs) noexcept
-		: x_pBegin(rhs.begin()), x_uSize(rhs.size())
+		: $pBegin(rhs.begin()), $uSize(rhs.size())
 	{
 	}
 	constexpr ArrayObserver(std::initializer_list<ElementT> rhs) noexcept
-		: x_pBegin(rhs.begin()), x_uSize(rhs.size())
+		: $pBegin(rhs.begin()), $uSize(rhs.size())
 	{
 	}
 
 public:
 	constexpr const ElementT *GetBegin() const noexcept {
-		return x_pBegin;
+		return $pBegin;
 	}
 	constexpr const ElementT *GetEnd() const noexcept {
-		return x_pBegin + x_uSize;
+		return $pBegin + $uSize;
 	}
 	constexpr const ElementT *GetData() const noexcept {
-		return x_pBegin;
+		return $pBegin;
 	}
 	constexpr std::size_t GetSize() const noexcept {
-		return x_uSize;
+		return $uSize;
 	}
 
 public:

@@ -350,69 +350,69 @@ namespace {
 
 // 构造函数和析构函数。
 Md5::Md5() noexcept
-	: x_bInited(false)
+	: $bInited(false)
 {
 }
 
 // 其他非静态成员函数。
 void Md5::Abort() noexcept {
-	x_bInited = false;
+	$bInited = false;
 }
 void Md5::Update(const void *pData, std::size_t uSize) noexcept {
-	if(!x_bInited){
-		x_auResult[0] = 0x67452301u;
-		x_auResult[1] = 0xEFCDAB89u;
-		x_auResult[2] = 0x98BADCFEu;
-		x_auResult[3] = 0x10325476u;
+	if(!$bInited){
+		$auResult[0] = 0x67452301u;
+		$auResult[1] = 0xEFCDAB89u;
+		$auResult[2] = 0x98BADCFEu;
+		$auResult[3] = 0x10325476u;
 
-		x_uBytesInChunk = 0;
-		x_u64BytesTotal = 0;
+		$uBytesInChunk = 0;
+		$u64BytesTotal = 0;
 
-		x_bInited = true;
+		$bInited = true;
 	}
 
 	auto pbyRead = (const unsigned char *)pData;
 	std::size_t uBytesRemaining = uSize;
-	const std::size_t uBytesFree = sizeof(x_vChunk.aby) - x_uBytesInChunk;
+	const std::size_t uBytesFree = sizeof($vChunk.aby) - $uBytesInChunk;
 	if(uBytesRemaining >= uBytesFree){
-		if(x_uBytesInChunk != 0){
-			std::memcpy(x_vChunk.aby + x_uBytesInChunk, pbyRead, uBytesFree);
-			DoMd5Chunk(x_auResult, x_vChunk.aby);
-			x_uBytesInChunk = 0;
+		if($uBytesInChunk != 0){
+			std::memcpy($vChunk.aby + $uBytesInChunk, pbyRead, uBytesFree);
+			DoMd5Chunk($auResult, $vChunk.aby);
+			$uBytesInChunk = 0;
 			pbyRead += uBytesFree;
 			uBytesRemaining -= uBytesFree;
 		}
-		while(uBytesRemaining >= sizeof(x_vChunk.aby)){
-			DoMd5Chunk(x_auResult, pbyRead);
-			pbyRead += sizeof(x_vChunk.aby);
-			uBytesRemaining -= sizeof(x_vChunk.aby);
+		while(uBytesRemaining >= sizeof($vChunk.aby)){
+			DoMd5Chunk($auResult, pbyRead);
+			pbyRead += sizeof($vChunk.aby);
+			uBytesRemaining -= sizeof($vChunk.aby);
 		}
 	}
 	if(uBytesRemaining != 0){
-		std::memcpy(x_vChunk.aby + x_uBytesInChunk, pbyRead, uBytesRemaining);
-		x_uBytesInChunk += uBytesRemaining;
+		std::memcpy($vChunk.aby + $uBytesInChunk, pbyRead, uBytesRemaining);
+		$uBytesInChunk += uBytesRemaining;
 	}
-	x_u64BytesTotal += uSize;
+	$u64BytesTotal += uSize;
 }
 void Md5::Finalize(unsigned char (&abyOutput)[16]) noexcept {
-	if(x_bInited){
-		x_vChunk.aby[x_uBytesInChunk++] = 0x80;
-		if(x_uBytesInChunk > sizeof(x_vChunk.vLast.abyData)){
-			std::memset(x_vChunk.aby + x_uBytesInChunk, 0, sizeof(x_vChunk.aby) - x_uBytesInChunk);
-			DoMd5Chunk(x_auResult, x_vChunk.aby);
-			x_uBytesInChunk = 0;
+	if($bInited){
+		$vChunk.aby[$uBytesInChunk++] = 0x80;
+		if($uBytesInChunk > sizeof($vChunk.vLast.abyData)){
+			std::memset($vChunk.aby + $uBytesInChunk, 0, sizeof($vChunk.aby) - $uBytesInChunk);
+			DoMd5Chunk($auResult, $vChunk.aby);
+			$uBytesInChunk = 0;
 		}
-		if(x_uBytesInChunk < sizeof(x_vChunk.vLast.abyData)){
-			std::memset(x_vChunk.aby + x_uBytesInChunk, 0, sizeof(x_vChunk.vLast.abyData) - x_uBytesInChunk);
+		if($uBytesInChunk < sizeof($vChunk.vLast.abyData)){
+			std::memset($vChunk.aby + $uBytesInChunk, 0, sizeof($vChunk.vLast.abyData) - $uBytesInChunk);
 		}
-		StoreLe(x_vChunk.vLast.u64Bits, x_u64BytesTotal * 8);
-		DoMd5Chunk(x_auResult, x_vChunk.aby);
+		StoreLe($vChunk.vLast.u64Bits, $u64BytesTotal * 8);
+		DoMd5Chunk($auResult, $vChunk.aby);
 
-		x_bInited = false;
+		$bInited = false;
 	}
 
 	for(unsigned i = 0; i < 4; ++i){
-		StoreLe(((std::uint32_t *)abyOutput)[i], x_auResult[i]);
+		StoreLe(((std::uint32_t *)abyOutput)[i], $auResult[i]);
 	}
 }
 

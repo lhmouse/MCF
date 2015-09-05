@@ -23,6 +23,6 @@ namespace Impl_CountOf {
 
 }
 
-#define COUNT_OF(x_)		(::MCF::Impl_CountOf::CountOfHelper(x_))
+#define COUNT_OF($)		(::MCF::Impl_CountOf::CountOfHelper($))
 
 #endif

@@ -16,36 +16,36 @@ struct IsaacFilterKeyHash {
 
 class IsaacExEncoder : public StreamFilterBase {
 private:
-	IsaacFilterKeyHash x_vKeyHash;
+	IsaacFilterKeyHash $vKeyHash;
 
-	IsaacGenerator x_vIsaacGenerator;
-	unsigned char x_byLastEncoded;
-	long x_lLastHighWord;
+	IsaacGenerator $vIsaacGenerator;
+	unsigned char $byLastEncoded;
+	long $lLastHighWord;
 
 public:
 	IsaacExEncoder(const void *pKey, std::size_t uKeyLen) noexcept;
 
 protected:
-	void xDoInit() override;
-	void xDoUpdate(const void *pData, std::size_t uSize) override;
-	void xDoFinalize() override;
+	void $DoInit() override;
+	void $DoUpdate(const void *pData, std::size_t uSize) override;
+	void $DoFinalize() override;
 };
 
 class IsaacExDecoder : public StreamFilterBase {
 private:
-	IsaacFilterKeyHash x_vKeyHash;
+	IsaacFilterKeyHash $vKeyHash;
 
-	IsaacGenerator x_vIsaacGenerator;
-	unsigned char x_byLastEncoded;
-	long x_lLastHighWord;
+	IsaacGenerator $vIsaacGenerator;
+	unsigned char $byLastEncoded;
+	long $lLastHighWord;
 
 public:
 	IsaacExDecoder(const void *pKey, std::size_t uKeyLen) noexcept;
 
 protected:
-	void xDoInit() override;
-	void xDoUpdate(const void *pData, std::size_t uSize) override;
-	void xDoFinalize() override;
+	void $DoInit() override;
+	void $DoUpdate(const void *pData, std::size_t uSize) override;
+	void $DoFinalize() override;
 };
 
 }

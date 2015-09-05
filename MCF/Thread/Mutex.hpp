@@ -17,25 +17,25 @@ namespace MCF {
 
 class Mutex : NONCOPYABLE {
 private:
-	struct xQueueNode;
+	struct $QueueNode;
 
 public:
 	using UniqueLock = UniqueLockTemplate<Mutex>;
 
 private:
-	Atomic<std::size_t> x_uSpinCount;
+	Atomic<std::size_t> $uSpinCount;
 
-	Atomic<std::size_t> x_uLockingThreadId;
-	Semaphore x_vSemaphore;
-	Atomic<xQueueNode *> x_pQueueHead;
+	Atomic<std::size_t> $uLockingThreadId;
+	Semaphore $vSemaphore;
+	Atomic<$QueueNode *> $pQueueHead;
 
 public:
 	explicit Mutex(std::size_t uSpinCount = 0x100);
 
 private:
-	bool xIsQueueEmpty() const noexcept;
-	xQueueNode *xLockQueue() noexcept;
-	void xUnlockQueue(xQueueNode *pQueueHead) noexcept;
+	bool $IsQueueEmpty() const noexcept;
+	$QueueNode *$LockQueue() noexcept;
+	void $UnlockQueue($QueueNode *pQueueHead) noexcept;
 
 public:
 	std::size_t GetSpinCount() const noexcept;

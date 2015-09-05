@@ -15,7 +15,7 @@ namespace MCF {
 
 class Semaphore : NONCOPYABLE {
 private:
-	const UniqueWin32Handle x_hSemaphore;
+	const UniqueWin32Handle $hSemaphore;
 
 public:
 	explicit Semaphore(std::size_t uInitCount, const wchar_t *pwszName = nullptr);

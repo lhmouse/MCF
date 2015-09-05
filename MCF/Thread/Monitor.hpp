@@ -21,43 +21,43 @@ namespace Impl_Monitor {
 	template<class ObjectT>
 	class MonitorObserverAsReference {
 	private:
-		ObjectT &x_vObject;
+		ObjectT &$vObject;
 
 	public:
 		explicit MonitorObserverAsReference(ObjectT &vObject) noexcept
-			: x_vObject(vObject)
+			: $vObject(vObject)
 		{
 		}
 
 	public:
 		decltype(auto) operator&() const && noexcept {
-			return &x_vObject;
+			return &$vObject;
 		}
 		operator ObjectT &() const && noexcept {
-			return x_vObject;
+			return $vObject;
 		}
 		template<typename ...ArgsT>
 		decltype(auto) operator()(ArgsT &&...vArgs) const && {
-			return x_vObject(std::forward<ArgsT>(vArgs)...);
+			return $vObject(std::forward<ArgsT>(vArgs)...);
 		}
 	};
 	template<class ObjectT>
 	class MonitorObserverAsPointer {
 	private:
-		ObjectT &x_vObject;
+		ObjectT &$vObject;
 
 	public:
 		explicit MonitorObserverAsPointer(ObjectT &vObject) noexcept
-			: x_vObject(vObject)
+			: $vObject(vObject)
 		{
 		}
 
 	public:
 		ObjectT &operator*() const && noexcept {
-			return x_vObject;
+			return $vObject;
 		}
 		ObjectT *operator->() const && noexcept {
-			return std::addressof(x_vObject);
+			return std::addressof($vObject);
 		}
 	};
 }
@@ -85,33 +85,33 @@ private:
 template<class ObjectT, class MutexT>
 class MonitorTemplate : NONCOPYABLE {
 private:
-	mutable MutexT x_vMutex;
-	ObjectT x_vObject;
+	mutable MutexT $vMutex;
+	ObjectT $vObject;
 
 public:
 	template<typename ...ParamsT>
 	explicit MonitorTemplate(ParamsT &&...vParams)
-		: x_vObject(std::forward<ParamsT>(vParams)...)
+		: $vObject(std::forward<ParamsT>(vParams)...)
 	{
 	}
 
 public:
 	auto operator*() const noexcept {
 		return MonitorLock<const ObjectT, MutexT,
-			MonitorObserverAsReference<const ObjectT>>(x_vMutex.GetLock(), x_vObject);
+			MonitorObserverAsReference<const ObjectT>>($vMutex.GetLock(), $vObject);
 	}
 	auto operator*() noexcept {
 		return MonitorLock<ObjectT, MutexT,
-			MonitorObserverAsReference<ObjectT>>(x_vMutex.GetLock(), x_vObject);
+			MonitorObserverAsReference<ObjectT>>($vMutex.GetLock(), $vObject);
 	}
 
 	auto operator->() const noexcept {
 		return MonitorLock<const ObjectT,
-			MutexT, MonitorObserverAsPointer<const ObjectT>>(x_vMutex.GetLock(), x_vObject);
+			MutexT, MonitorObserverAsPointer<const ObjectT>>($vMutex.GetLock(), $vObject);
 	}
 	auto operator->() noexcept {
 		return MonitorLock<ObjectT, MutexT,
-			MonitorObserverAsPointer<ObjectT>>(x_vMutex.GetLock(), x_vObject);
+			MonitorObserverAsPointer<ObjectT>>($vMutex.GetLock(), $vObject);
 	}
 };
 

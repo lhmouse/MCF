@@ -12,8 +12,8 @@ namespace MCF {
 
 class Fnv64 {
 private:
-	bool x_bInited;
-	std::uint64_t x_u64Reg;
+	bool $bInited;
+	std::uint64_t $u64Reg;
 
 public:
 	Fnv64() noexcept;

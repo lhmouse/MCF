@@ -22,7 +22,7 @@ namespace {
 
 // 构造函数和析构函数。
 Event::Event(bool bInitSet, const wchar_t *pwszName)
-	: x_hEvent(CheckedCreateEvent(bInitSet, pwszName))
+	: $hEvent(CheckedCreateEvent(bInitSet, pwszName))
 {
 }
 Event::Event(bool bInitSet, const WideString &wsName)
@@ -32,25 +32,25 @@ Event::Event(bool bInitSet, const WideString &wsName)
 
 // 其他非静态成员函数。
 bool Event::Wait(std::uint64_t u64MilliSeconds) const noexcept {
-	return WaitForSingleObject64(x_hEvent.Get(), &u64MilliSeconds);
+	return WaitForSingleObject64($hEvent.Get(), &u64MilliSeconds);
 }
 void Event::Wait() const noexcept {
-	WaitForSingleObject64(x_hEvent.Get(), nullptr);
+	WaitForSingleObject64($hEvent.Get(), nullptr);
 }
 bool Event::IsSet() const noexcept {
-	const auto dwResult = ::WaitForSingleObject(x_hEvent.Get(), 0);
+	const auto dwResult = ::WaitForSingleObject($hEvent.Get(), 0);
 	if(dwResult == WAIT_FAILED){
 		ASSERT_MSG(false, L"WaitForSingleObject() 失败。");
 	}
 	return dwResult != WAIT_TIMEOUT;
 }
 void Event::Set() noexcept {
-	if(!::SetEvent(x_hEvent.Get())){
+	if(!::SetEvent($hEvent.Get())){
 		ASSERT_MSG(false, L"SetEvent() 失败。");
 	}
 }
 void Event::Clear() noexcept {
-	if(!::ResetEvent(x_hEvent.Get())){
+	if(!::ResetEvent($hEvent.Get())){
 		ASSERT_MSG(false, L"ResetEvent() 失败。");
 	}
 }

@@ -22,7 +22,7 @@ namespace {
 
 // 构造函数和析构函数。
 Semaphore::Semaphore(std::size_t uInitCount, const wchar_t *pwszName)
-	: x_hSemaphore(CheckedCreateSemaphore(uInitCount, pwszName))
+	: $hSemaphore(CheckedCreateSemaphore(uInitCount, pwszName))
 {
 }
 Semaphore::Semaphore(std::size_t uInitCount, const WideString &wsName)
@@ -32,14 +32,14 @@ Semaphore::Semaphore(std::size_t uInitCount, const WideString &wsName)
 
 // 其他非静态成员函数。
 std::size_t Semaphore::Wait(std::uint64_t u64MilliSeconds) noexcept {
-	return WaitForSingleObject64(x_hSemaphore.Get(), &u64MilliSeconds);
+	return WaitForSingleObject64($hSemaphore.Get(), &u64MilliSeconds);
 }
 void Semaphore::Wait() noexcept {
-	WaitForSingleObject64(x_hSemaphore.Get(), nullptr);
+	WaitForSingleObject64($hSemaphore.Get(), nullptr);
 }
 std::size_t Semaphore::Post(std::size_t uPostCount) noexcept {
 	long lPrevCount;
-	if(!::ReleaseSemaphore(x_hSemaphore.Get(), (long)uPostCount, &lPrevCount)){
+	if(!::ReleaseSemaphore($hSemaphore.Get(), (long)uPostCount, &lPrevCount)){
 		ASSERT_MSG(false, L"ReleaseSemaphore() 失败。");
 	}
 	return (std::size_t)lPrevCount;
@@ -48,7 +48,7 @@ std::size_t Semaphore::Post(std::size_t uPostCount) noexcept {
 std::size_t Semaphore::BatchWait(std::uint64_t u64MilliSeconds, std::size_t uWaitCount) noexcept {
 	std::size_t uSucceeded = 0;
 	while(uSucceeded < uWaitCount){
-		if(!WaitForSingleObject64(x_hSemaphore.Get(), &u64MilliSeconds)){
+		if(!WaitForSingleObject64($hSemaphore.Get(), &u64MilliSeconds)){
 			break;
 		}
 		++uSucceeded;
@@ -58,7 +58,7 @@ std::size_t Semaphore::BatchWait(std::uint64_t u64MilliSeconds, std::size_t uWai
 void Semaphore::BatchWait(std::size_t uWaitCount) noexcept {
 	std::size_t uSucceeded = 0;
 	while(uSucceeded < uWaitCount){
-		WaitForSingleObject64(x_hSemaphore.Get(), nullptr);
+		WaitForSingleObject64($hSemaphore.Get(), nullptr);
 	}
 }
 

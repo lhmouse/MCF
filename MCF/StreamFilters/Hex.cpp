@@ -9,28 +9,28 @@ namespace MCF {
 
 // ========== HexEncoder ==========
 // 其他非静态成员函数。
-void HexEncoder::xDoInit(){
+void HexEncoder::$DoInit(){
 }
-void HexEncoder::xDoUpdate(const void *pData, std::size_t uSize){
+void HexEncoder::$DoUpdate(const void *pData, std::size_t uSize){
 	static constexpr unsigned char kHexTable[] = "00112233445566778899aAbBcCdDeEfF";
 
 	for(std::size_t i = 0; i < uSize; ++i){
 		const unsigned uByte = static_cast<const unsigned char *>(pData)[i];
 		unsigned char abyHex[2];
-		abyHex[0] = kHexTable[(uByte >> 4) * 2 + (unsigned)x_bUpperCase];
-		abyHex[1] = kHexTable[(uByte & 0x0F) * 2 + (unsigned)x_bUpperCase];
-		xOutput(abyHex, sizeof(abyHex));
+		abyHex[0] = kHexTable[(uByte >> 4) * 2 + (unsigned)$bUpperCase];
+		abyHex[1] = kHexTable[(uByte & 0x0F) * 2 + (unsigned)$bUpperCase];
+		$Output(abyHex, sizeof(abyHex));
 	}
 }
-void HexEncoder::xDoFinalize(){
+void HexEncoder::$DoFinalize(){
 }
 
 // ========== HexDecoder ==========
 // 其他非静态成员函数。
-void HexDecoder::xDoInit(){
-	x_nHigh = -1;
+void HexDecoder::$DoInit(){
+	$nHigh = -1;
 }
-void HexDecoder::xDoUpdate(const void *pData, std::size_t uSize){
+void HexDecoder::$DoUpdate(const void *pData, std::size_t uSize){
 	static constexpr signed char kHexReverseTable[256] = {
 		-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
 		-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
@@ -55,15 +55,15 @@ void HexDecoder::xDoUpdate(const void *pData, std::size_t uSize){
 		if(nDigit == -1){
 			continue;
 		}
-		if(x_nHigh == -1){
-			x_nHigh = nDigit;
+		if($nHigh == -1){
+			$nHigh = nDigit;
 		} else {
-			xOutput((unsigned char)((x_nHigh << 4) | nDigit));
-			x_nHigh = -1;
+			$Output((unsigned char)(($nHigh << 4) | nDigit));
+			$nHigh = -1;
 		}
 	}
 }
-void HexDecoder::xDoFinalize(){
+void HexDecoder::$DoFinalize(){
 }
 
 }

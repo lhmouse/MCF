@@ -1,4 +1,3 @@
-#include <MCF/StdMCF.hpp>
 #include <MCF/Containers/StaticVector.hpp>
 
 template class MCF::StaticVector<int, 5>;

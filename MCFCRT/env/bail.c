@@ -39,7 +39,7 @@ extern
 __attribute__((__dllimport__, __stdcall__))
 NTSTATUS NtRaiseHardError(NTSTATUS stError, DWORD dwUnknown, DWORD dwParamCount, const ULONG_PTR *pulParams, HardErrorResponseOption eOption, HardErrorResponse *peResponse);
 
-__attribute__((__noreturn__))
+_Noreturn
 static void DoBail(const wchar_t *pwszDescription){
 #ifdef NDEBUG
 	const bool bCanBeDebugged = IsDebuggerPresent();
@@ -98,16 +98,14 @@ static void DoBail(const wchar_t *pwszDescription){
 	__builtin_unreachable();
 }
 
-__attribute__((__noreturn__))
+_Noreturn
 void MCF_CRT_Bail(const wchar_t *pwszDescription){
 	DoBail(pwszDescription);
 }
-__attribute__((__noreturn__))
-void MCF_CRT_BailF(const wchar_t *pwszFormat, ...){
+
+_Noreturn
+void MCF_CRT_BailV(const wchar_t *pwszFormat, va_list pArgs){
 	wchar_t awcBuffer[1024];
-	va_list ap;
-	va_start(ap, pwszFormat);
-	vswprintf(awcBuffer, sizeof(awcBuffer) / sizeof(wchar_t), pwszFormat, ap);
-	va_end(ap);
+	vswprintf(awcBuffer, sizeof(awcBuffer) / sizeof(wchar_t), pwszFormat, pArgs);
 	DoBail(awcBuffer);
 }

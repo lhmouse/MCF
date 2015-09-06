@@ -9,15 +9,22 @@
 
 namespace MCF {
 
-template<typename ...ParamsT>
 [[noreturn]] inline
-void BailF(const wchar_t *pwszFormat, const ParamsT &...vParams){
-	::MCF_CRT_BailF(pwszFormat, vParams...);
+void Bail(const wchar_t *pwszDescription) noexcept {
+	::MCF_CRT_Bail(pwszDescription);
 }
 
 [[noreturn]] inline
-void Bail(const wchar_t *pwszDescription){
-	::MCF_CRT_Bail(pwszDescription);
+void BailV(const wchar_t *pwszFormat, std::va_list pArgs) noexcept {
+	::MCF_CRT_BailV(pwszFormat, pArgs);
+}
+
+[[noreturn]] inline /* __attribute__((__format__(__printf__, 1, 2))) */
+void BailF(const wchar_t *pwszFormat, ...) noexcept {
+	std::va_list pArgs;
+	va_start(pArgs, pwszFormat);
+	::MCF_CRT_BailV(pwszFormat, pArgs);
+	va_end(pArgs);
 }
 
 }

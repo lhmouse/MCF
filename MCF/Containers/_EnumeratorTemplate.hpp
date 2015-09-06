@@ -11,12 +11,12 @@
 namespace MCF {
 
 namespace Impl_EnumeratorTemplate {
-	template<typename ContainerT, typename AdvanceOnceT, typename RetreatOnceT>
+	template<typename ContainerT>
 	class ConstEnumerator;
 
-	template<typename ContainerT, typename AdvanceOnceT, typename RetreatOnceT>
+	template<typename ContainerT>
 	class Enumerator : public std::iterator<std::forward_iterator_tag, typename ContainerT::ElementType> {
-		friend ConstEnumerator<ContainerT, AdvanceOnceT, RetreatOnceT>;
+		friend ConstEnumerator<ContainerT>;
 
 	public:
 		using ElementType = typename ContainerT::ElementType;
@@ -47,14 +47,14 @@ namespace Impl_EnumeratorTemplate {
 			ASSERT($pContainer);
 			ASSERT($pElement);
 
-			AdvanceOnceT()(*$pContainer, $pElement);
+			$pElement = $pContainer->GetNext($pElement);
 			return *this;
 		}
 		Enumerator &operator--(){
 			ASSERT($pContainer);
 			ASSERT($pElement);
 
-			RetreatOnceT()(*$pContainer, $pElement);
+			$pElement = $pContainer->GetPrev($pElement);
 			return *this;
 		}
 
@@ -80,7 +80,7 @@ namespace Impl_EnumeratorTemplate {
 		}
 	};
 
-	template<typename ContainerT, typename AdvanceOnceT, typename RetreatOnceT>
+	template<typename ContainerT>
 	class ConstEnumerator : public std::iterator<std::forward_iterator_tag, const typename ContainerT::ElementType> {
 	public:
 		using ElementType = const typename ContainerT::ElementType;
@@ -98,7 +98,7 @@ namespace Impl_EnumeratorTemplate {
 			: $pContainer(&vContainer), $pElement(pElement)
 		{
 		}
-		constexpr ConstEnumerator(const Enumerator<ContainerT, AdvanceOnceT, RetreatOnceT> &rhs) noexcept
+		constexpr ConstEnumerator(const Enumerator<ContainerT> &rhs) noexcept
 			: $pContainer(rhs.$pContainer), $pElement(rhs.$pElement)
 		{
 		}
@@ -115,14 +115,14 @@ namespace Impl_EnumeratorTemplate {
 			ASSERT($pContainer);
 			ASSERT($pElement);
 
-			AdvanceOnceT()(*$pContainer, $pElement);
+			$pElement = $pContainer->GetNext($pElement);
 			return *this;
 		}
 		ConstEnumerator &operator--(){
 			ASSERT($pContainer);
 			ASSERT($pElement);
 
-			RetreatOnceT()(*$pContainer, $pElement);
+			$pElement = $pContainer->GetPrev($pElement);
 			return *this;
 		}
 

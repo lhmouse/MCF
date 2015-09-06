@@ -73,43 +73,9 @@ public:
 
 public:
 	// 容器需求。
-	using ElementType = ElementT;
-
-	struct AdvanceOnce {
-		void operator()(const Vector &v, const ElementType *&p) noexcept {
-			if(p + 1 == v.GetEnd()){
-				p = nullptr;
-			} else {
-				++p;
-			}
-		}
-		void operator()(Vector &v, ElementType *&p) noexcept {
-			if(p + 1 == v.GetEnd()){
-				p = nullptr;
-			} else {
-				++p;
-			}
-		}
-	};
-	struct RetreatOnce {
-		void operator()(const Vector &v, const ElementType *&p) noexcept {
-			if(p == v.GetBegin()){
-				p = nullptr;
-			} else {
-				--p;
-			}
-		}
-		void operator()(Vector &v, ElementType *&p) noexcept {
-			if(p == v.GetBegin()){
-				p = nullptr;
-			} else {
-				--p;
-			}
-		}
-	};
-
-	using ConstEnumerator = Impl_EnumeratorTemplate::ConstEnumerator <Vector, AdvanceOnce, RetreatOnce>;
-	using Enumerator      = Impl_EnumeratorTemplate::Enumerator      <Vector, AdvanceOnce, RetreatOnce>;
+	using ElementType     = ElementT;
+	using ConstEnumerator = Impl_EnumeratorTemplate::ConstEnumerator <Vector>;
+	using Enumerator      = Impl_EnumeratorTemplate::Enumerator      <Vector>;
 
 	bool IsEmpty() const noexcept {
 		return $uSize == 0;
@@ -157,6 +123,36 @@ public:
 	}
 	Enumerator EnumerateSingular() noexcept {
 		return Enumerator(*this, nullptr);
+	}
+
+	const ElementType *GetNext(const ElementType *pPos) const noexcept {
+		const auto uOffset = static_cast<std::size_t>(pPos - GetBegin());
+		if(uOffset + 1 == GetSize()){
+			return nullptr;
+		}
+		return GetBegin() + uOffset + 1;
+	}
+	ElementType *GetNext(const ElementType *pPos) noexcept {
+		const auto uOffset = static_cast<std::size_t>(pPos - GetBegin());
+		if(uOffset + 1 == GetSize()){
+			return nullptr;
+		}
+		return GetBegin() + uOffset + 1;
+	}
+
+	const ElementType *GetPrev(const ElementType *pPos) const noexcept {
+		const auto uOffset = static_cast<std::size_t>(pPos - GetBegin());
+		if(uOffset == 0){
+			return nullptr;
+		}
+		return GetBegin() + uOffset - 1;
+	}
+	ElementType *GetPrev(const ElementType *pPos) noexcept {
+		const auto uOffset = static_cast<std::size_t>(pPos - GetBegin());
+		if(uOffset == 0){
+			return nullptr;
+		}
+		return GetBegin() + uOffset - 1;
 	}
 
 	void Swap(Vector &rhs) noexcept {

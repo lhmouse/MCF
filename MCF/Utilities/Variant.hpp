@@ -21,30 +21,30 @@ public:
 	};
 
 private:
-	class $ActiveElementBase {
+	class XActiveElementBase {
 	public:
-		virtual ~$ActiveElementBase(){
+		virtual ~XActiveElementBase(){
 		}
 
 	public:
 		virtual std::size_t GetIndex() const noexcept = 0;
 		virtual const std::type_info *GetTypeInfo() const noexcept = 0;
 		virtual void *GetAddress() noexcept = 0;
-		virtual UniquePtr<$ActiveElementBase> Clone() const = 0;
+		virtual UniquePtr<XActiveElementBase> Clone() const = 0;
 	};
 
 	template<typename ElementT>
-	class $ActiveElement : public $ActiveElementBase {
+	class XActiveElement : public XActiveElementBase {
 	private:
-		ElementT $vElement;
+		ElementT x_vElement;
 
 	public:
 		template<typename ...ParamsT>
-		explicit $ActiveElement(ParamsT &&...vParams)
-			: $vElement(std::forward<ParamsT>(vParams)...)
+		explicit XActiveElement(ParamsT &&...vParams)
+			: x_vElement(std::forward<ParamsT>(vParams)...)
 		{
 		}
-		~$ActiveElement() override {
+		~XActiveElement() override {
 		}
 
 	public:
@@ -55,68 +55,68 @@ private:
 			return &typeid(ElementT);
 		}
 		void *GetAddress() noexcept override {
-			return &reinterpret_cast<char &>($vElement);
+			return &reinterpret_cast<char &>(x_vElement);
 		}
-		UniquePtr<$ActiveElementBase> Clone() const override {
-			return UniquePtr<$ActiveElementBase>(new auto(*this));
+		UniquePtr<XActiveElementBase> Clone() const override {
+			return UniquePtr<XActiveElementBase>(new auto(*this));
 		}
 	};
 
 private:
-	UniquePtr<$ActiveElementBase> $pElement;
+	UniquePtr<XActiveElementBase> x_pElement;
 
 public:
 	constexpr Variant() noexcept
-		: $pElement()
+		: x_pElement()
 	{
 	}
 	template<typename ElementT, std::enable_if_t<
 		FindFirstType<ElementT, ElementsT...>() == FindLastType<ElementT, ElementsT...>(),
 		int> = 0>
 	Variant(ElementT vElement)
-		: $pElement(MakeUnique<$ActiveElement<std::remove_cv_t<ElementT>>>(std::move(vElement)))
+		: x_pElement(MakeUnique<XActiveElement<std::remove_cv_t<ElementT>>>(std::move(vElement)))
 	{
 	}
 	Variant(const Variant &rhs)
-		: $pElement(rhs.$pElement ? rhs.$pElement->Clone() : nullptr)
+		: x_pElement(rhs.x_pElement ? rhs.x_pElement->Clone() : nullptr)
 	{
 	}
 	Variant(Variant &&rhs) noexcept
-		: $pElement(std::move(rhs.$pElement))
+		: x_pElement(std::move(rhs.x_pElement))
 	{
 	}
 	template<typename ElementT, std::enable_if_t<
 		FindFirstType<ElementT, ElementsT...>() == FindLastType<ElementT, ElementsT...>(),
 		int> = 0>
 	Variant &operator=(ElementT vElement){
-		$pElement = MakeUnique<$ActiveElement<std::remove_cv_t<ElementT>>>(std::move(vElement));
+		x_pElement = MakeUnique<XActiveElement<std::remove_cv_t<ElementT>>>(std::move(vElement));
 		return *this;
 	}
 	Variant &operator=(const Variant &rhs){
-		$pElement = rhs.$pElement ? rhs.$pElement->Clone() : nullptr;
+		x_pElement = rhs.x_pElement ? rhs.x_pElement->Clone() : nullptr;
 		return *this;
 	}
 	Variant &operator=(Variant &&rhs) noexcept {
-		$pElement = std::move(rhs.$pElement);
+		x_pElement = std::move(rhs.x_pElement);
 		return *this;
 	}
 
 public:
 	std::size_t GetIndex() const noexcept {
-		if(!$pElement){
+		if(!x_pElement){
 			return kEmpty;
 		}
-		return $pElement->GetIndex();
+		return x_pElement->GetIndex();
 	}
 	const std::type_info *GetTypeInfo() const noexcept {
-		if(!$pElement){
+		if(!x_pElement){
 			return nullptr;
 		}
-		return $pElement->GetTypeInfo();
+		return x_pElement->GetTypeInfo();
 	}
 	template<typename ElementT>
 	const ElementT *Get() const noexcept {
-		const auto pElement = dynamic_cast<$ActiveElement<std::remove_cv_t<ElementT>> *>($pElement.Get());
+		const auto pElement = dynamic_cast<XActiveElement<std::remove_cv_t<ElementT>> *>(x_pElement.Get());
 		if(!pElement){
 			return nullptr;
 		}
@@ -124,7 +124,7 @@ public:
 	}
 	template<typename ElementT>
 	ElementT *Get() noexcept {
-		const auto pElement = dynamic_cast<$ActiveElement<std::remove_cv_t<ElementT>> *>($pElement.Get());
+		const auto pElement = dynamic_cast<XActiveElement<std::remove_cv_t<ElementT>> *>(x_pElement.Get());
 		if(!pElement){
 			return nullptr;
 		}
@@ -134,17 +134,17 @@ public:
 		FindFirstType<ElementT, ElementsT...>() == FindLastType<ElementT, ElementsT...>(),
 		int> = 0>
 	void Set(ElementT vElement){
-		$pElement = MakeUnique<$ActiveElement<std::remove_cv_t<ElementT>>>(std::move(vElement));
+		x_pElement = MakeUnique<XActiveElement<std::remove_cv_t<ElementT>>>(std::move(vElement));
 	}
 	template<typename ElementT, typename ...ParamsT, std::enable_if_t<
 		FindFirstType<ElementT, ElementsT...>() == FindLastType<ElementT, ElementsT...>(),
 		int> = 0>
 	void Emplace(ParamsT &&...vParams){
-		$pElement = MakeUnique<$ActiveElement<std::remove_cv_t<ElementT>>>(std::forward<ParamsT>(vParams)...);
+		x_pElement = MakeUnique<XActiveElement<std::remove_cv_t<ElementT>>>(std::forward<ParamsT>(vParams)...);
 	}
 
 	void Swap(Variant<ElementsT...> &rhs) noexcept {
-		$pElement.Swap(rhs.$pElement);
+		x_pElement.Swap(rhs.x_pElement);
 	}
 };
 

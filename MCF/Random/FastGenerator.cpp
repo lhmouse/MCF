@@ -23,12 +23,12 @@ void FastGenerator::Init(std::uint32_t u32Seed) noexcept {
 	for(unsigned i = 0; i < 8; ++i){
 		u64Seed = u64Seed * kMultiplier + kIncrement;
 	}
-	$u64Seed = u64Seed;
+	x_u64Seed = u64Seed;
 }
 
 std::uint32_t FastGenerator::Get() noexcept {
-	const auto u64NewSeed = $u64Seed * kMultiplier + kIncrement;
-	$u64Seed = u64NewSeed;
+	const auto u64NewSeed = x_u64Seed * kMultiplier + kIncrement;
+	x_u64Seed = u64NewSeed;
 	return u64NewSeed >> 32;
 }
 

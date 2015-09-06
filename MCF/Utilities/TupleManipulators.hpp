@@ -95,12 +95,12 @@ namespace Impl_TupleManipulators {
 		}
 
 		template<typename ...ReferencesT, std::size_t ...kIndicesT>
-		decltype(auto) Perform(std::id$sequence<kIndicesT...>){
+		decltype(auto) Perform(std::idx_sequence<kIndicesT...>){
 			return std::forward<FunctionT>(vFunction)(static_cast<ReferencesT>(std::get<kIndicesT>(vTuple))...);
 		}
 
 		template<typename ...ReferencesT, std::size_t ...kIndicesT>
-		decltype(auto) ReversePerform(std::id$sequence<kIndicesT...>){
+		decltype(auto) ReversePerform(std::idx_sequence<kIndicesT...>){
 			return std::forward<FunctionT>(vFunction)(static_cast<ReferencesT>(std::get<sizeof...(kIndicesT) - 1 - kIndicesT>(vTuple))...);
 		}
 	};
@@ -110,34 +110,34 @@ namespace Impl_TupleManipulators {
 template<typename FunctionT, typename ...ElementsT>
 decltype(auto) SqueezeTuple(FunctionT &&vFunction, const std::tuple<ElementsT...> &vTuple){
 	Impl_TupleManipulators::SqueezeTupleHelper<FunctionT, const std::tuple<ElementsT...> &> vHelper(vFunction, vTuple);
-	return vHelper.template Perform<std::conditional_t<std::is_reference<ElementsT>::value, ElementsT, const ElementsT &>...>(std::id$sequence_for<ElementsT...>());
+	return vHelper.template Perform<std::conditional_t<std::is_reference<ElementsT>::value, ElementsT, const ElementsT &>...>(std::idx_sequence_for<ElementsT...>());
 }
 template<typename FunctionT, typename ...ElementsT>
 decltype(auto) SqueezeTuple(FunctionT &&vFunction, std::tuple<ElementsT...> &vTuple){
 	Impl_TupleManipulators::SqueezeTupleHelper<FunctionT, std::tuple<ElementsT...> &> vHelper(vFunction, vTuple);
-	return vHelper.template Perform<std::conditional_t<std::is_reference<ElementsT>::value, ElementsT, ElementsT &>...>(std::id$sequence_for<ElementsT...>());
+	return vHelper.template Perform<std::conditional_t<std::is_reference<ElementsT>::value, ElementsT, ElementsT &>...>(std::idx_sequence_for<ElementsT...>());
 }
 template<typename FunctionT, typename ...ElementsT>
 decltype(auto) SqueezeTuple(FunctionT &&vFunction, std::tuple<ElementsT...> &&vTuple){
 	Impl_TupleManipulators::SqueezeTupleHelper<FunctionT, std::tuple<ElementsT...> &> vHelper(vFunction, vTuple);
-	return vHelper.template Perform<std::conditional_t<std::is_reference<ElementsT>::value, ElementsT, ElementsT &&>...>(std::id$sequence_for<ElementsT...>());
+	return vHelper.template Perform<std::conditional_t<std::is_reference<ElementsT>::value, ElementsT, ElementsT &&>...>(std::idx_sequence_for<ElementsT...>());
 }
 
 // ReverseSqueezeTuple(foo, std::make_tuple(1, 2, 3)); -> foo(3, 2, 1);
 template<typename FunctionT, typename ...ElementsT>
 decltype(auto) ReverseSqueezeTuple(FunctionT &&vFunction, const std::tuple<ElementsT...> &vTuple){
 	Impl_TupleManipulators::SqueezeTupleHelper<FunctionT, const std::tuple<ElementsT...> &> vHelper(vFunction, vTuple);
-	return vHelper.template ReversePerform<std::conditional_t<std::is_reference<ElementsT>::value, ElementsT, const ElementsT &>...>(std::id$sequence_for<ElementsT...>());
+	return vHelper.template ReversePerform<std::conditional_t<std::is_reference<ElementsT>::value, ElementsT, const ElementsT &>...>(std::idx_sequence_for<ElementsT...>());
 }
 template<typename FunctionT, typename ...ElementsT>
 decltype(auto) ReverseSqueezeTuple(FunctionT &&vFunction, std::tuple<ElementsT...> &vTuple){
 	Impl_TupleManipulators::SqueezeTupleHelper<FunctionT, std::tuple<ElementsT...> &> vHelper(vFunction, vTuple);
-	return vHelper.template ReversePerform<std::conditional_t<std::is_reference<ElementsT>::value, ElementsT, ElementsT &>...>(std::id$sequence_for<ElementsT...>());
+	return vHelper.template ReversePerform<std::conditional_t<std::is_reference<ElementsT>::value, ElementsT, ElementsT &>...>(std::idx_sequence_for<ElementsT...>());
 }
 template<typename FunctionT, typename ...ElementsT>
 decltype(auto) ReverseSqueezeTuple(FunctionT &&vFunction, std::tuple<ElementsT...> &&vTuple){
 	Impl_TupleManipulators::SqueezeTupleHelper<FunctionT, std::tuple<ElementsT...> &> vHelper(vFunction, vTuple);
-	return vHelper.template ReversePerform<std::conditional_t<std::is_reference<ElementsT>::value, ElementsT, ElementsT &&>...>(std::id$sequence_for<ElementsT...>());
+	return vHelper.template ReversePerform<std::conditional_t<std::is_reference<ElementsT>::value, ElementsT, ElementsT &&>...>(std::idx_sequence_for<ElementsT...>());
 }
 
 template<typename ToFindT, typename ...TypesT>

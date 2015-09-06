@@ -10,16 +10,16 @@
 
 namespace MCF {
 
-File::$FileCloser::Handle File::$FileCloser::operator()() const noexcept {
+File::XFileCloser::Handle File::XFileCloser::operator()() const noexcept {
 	return reinterpret_cast<Handle>(INVALID_HANDLE_VALUE);
 }
-void File::$FileCloser::operator()(File::$FileCloser::Handle hFile) const noexcept {
+void File::XFileCloser::operator()(File::XFileCloser::Handle hFile) const noexcept {
 	::CloseHandle(reinterpret_cast<HANDLE>(hFile));
 }
 
 // 其他非静态成员函数。
 bool File::IsOpen() const noexcept {
-	return !!$hFile;
+	return !!x_hFile;
 }
 void File::Open(const wchar_t *pwszPath, std::uint32_t u32Flags){
 	DWORD dwDesiredAccess = 0;
@@ -59,8 +59,8 @@ void File::Open(const wchar_t *pwszPath, std::uint32_t u32Flags){
 		dwFlagsAndAttributes |= FILE_FLAG_DELETE_ON_CLOSE;
 	}
 
-	UniqueHandle<$FileCloser> hFile;
-	if(!hFile.Reset(reinterpret_cast<$FileCloser::Handle>(
+	UniqueHandle<XFileCloser> hFile;
+	if(!hFile.Reset(reinterpret_cast<XFileCloser::Handle>(
 		::CreateFileW(pwszPath, dwDesiredAccess, dwShareMode, nullptr, dwCreateDisposition, dwFlagsAndAttributes, NULL))))
 	{
 		DEBUG_THROW(SystemError, "CreateFileW");
@@ -75,7 +75,7 @@ void File::Open(const wchar_t *pwszPath, std::uint32_t u32Flags){
 		}
 	}
 
-	$hFile = std::move(hFile);
+	x_hFile = std::move(hFile);
 }
 void File::Open(const WideString &wsPath, std::uint32_t u32Flags){
 	Open(wsPath.GetStr(), u32Flags);
@@ -99,31 +99,31 @@ bool File::OpenNoThrow(const WideString &wsPath, std::uint32_t u32Flags){
 	}
 }
 void File::Close() noexcept {
-	$hFile.Reset();
+	x_hFile.Reset();
 }
 
 std::uint64_t File::GetSize() const {
-	if(!$hFile){
+	if(!x_hFile){
 		DEBUG_THROW(Exception, ERROR_INVALID_HANDLE, "No file open");
 	}
 
 	::LARGE_INTEGER liFileSize;
-	if(!::GetFileSizeEx(reinterpret_cast<HANDLE>($hFile.Get()), &liFileSize)){
+	if(!::GetFileSizeEx(reinterpret_cast<HANDLE>(x_hFile.Get()), &liFileSize)){
 		DEBUG_THROW(SystemError, "GetFileSizeEx");
 	}
 	return (std::uint64_t)liFileSize.QuadPart;
 }
 void File::Resize(std::uint64_t u64NewSize){
-	if(!$hFile){
+	if(!x_hFile){
 		DEBUG_THROW(Exception, ERROR_INVALID_HANDLE, "No file open");
 	}
 
 	::LARGE_INTEGER liNewSize;
 	liNewSize.QuadPart = (long long)u64NewSize;
-	if(!::SetFilePointerEx(reinterpret_cast<HANDLE>($hFile.Get()), liNewSize, nullptr, FILE_BEGIN)){
+	if(!::SetFilePointerEx(reinterpret_cast<HANDLE>(x_hFile.Get()), liNewSize, nullptr, FILE_BEGIN)){
 		DEBUG_THROW(SystemError, "SetFilePointerEx");
 	}
-	if(!::SetEndOfFile(reinterpret_cast<HANDLE>($hFile.Get()))){
+	if(!::SetEndOfFile(reinterpret_cast<HANDLE>(x_hFile.Get()))){
 		DEBUG_THROW(SystemError, "SetEndOfFile");
 	}
 }
@@ -134,7 +134,7 @@ void File::Clear(){
 std::size_t File::Read(void *pBuffer, std::uint32_t u32BytesToRead, std::uint64_t u64Offset,
 	FunctionObserver<void ()> fnAsyncProc, FunctionObserver<void ()> fnCompleteCallback) const
 {
-	if(!$hFile){
+	if(!x_hFile){
 		DEBUG_THROW(Exception, ERROR_INVALID_HANDLE, "No file open");
 	}
 
@@ -145,7 +145,7 @@ std::size_t File::Read(void *pBuffer, std::uint32_t u32BytesToRead, std::uint64_
 	BZero(vOverlapped);
 	vOverlapped.Offset = u64Offset;
 	vOverlapped.OffsetHigh = (u64Offset >> 32);
-	if(::ReadFile(reinterpret_cast<HANDLE>($hFile.Get()), pBuffer, u32BytesToRead, nullptr, &vOverlapped)){
+	if(::ReadFile(reinterpret_cast<HANDLE>(x_hFile.Get()), pBuffer, u32BytesToRead, nullptr, &vOverlapped)){
 		dwErrorCode = ERROR_SUCCESS;
 	} else {
 		dwErrorCode = ::GetLastError();
@@ -157,7 +157,7 @@ std::size_t File::Read(void *pBuffer, std::uint32_t u32BytesToRead, std::uint64_
 		if(dwErrorCode != ERROR_IO_PENDING){
 			DEBUG_THROW(SystemError, dwErrorCode, "ReadFile");
 		}
-		if(!::GetOverlappedResult(reinterpret_cast<HANDLE>($hFile.Get()), &vOverlapped, &dwTransferred, true)){
+		if(!::GetOverlappedResult(reinterpret_cast<HANDLE>(x_hFile.Get()), &vOverlapped, &dwTransferred, true)){
 			DEBUG_THROW(SystemError, "GetOverlappedResult");
 		}
 	}
@@ -170,7 +170,7 @@ std::size_t File::Read(void *pBuffer, std::uint32_t u32BytesToRead, std::uint64_
 std::size_t File::Write(std::uint64_t u64Offset, const void *pBuffer, std::uint32_t u32BytesToWrite,
 	FunctionObserver<void ()> fnAsyncProc, FunctionObserver<void ()> fnCompleteCallback)
 {
-	if(!$hFile){
+	if(!x_hFile){
 		DEBUG_THROW(Exception, ERROR_INVALID_HANDLE, "No file open");
 	}
 
@@ -181,7 +181,7 @@ std::size_t File::Write(std::uint64_t u64Offset, const void *pBuffer, std::uint3
 	BZero(vOverlapped);
 	vOverlapped.Offset = u64Offset;
 	vOverlapped.OffsetHigh = (u64Offset >> 32);
-	if(::WriteFile(reinterpret_cast<HANDLE>($hFile.Get()), pBuffer, u32BytesToWrite, nullptr, &vOverlapped)){
+	if(::WriteFile(reinterpret_cast<HANDLE>(x_hFile.Get()), pBuffer, u32BytesToWrite, nullptr, &vOverlapped)){
 		dwErrorCode = ERROR_SUCCESS;
 	} else {
 		dwErrorCode = ::GetLastError();
@@ -193,7 +193,7 @@ std::size_t File::Write(std::uint64_t u64Offset, const void *pBuffer, std::uint3
 		if(dwErrorCode != ERROR_IO_PENDING){
 			DEBUG_THROW(SystemError, dwErrorCode, "WriteFile");
 		}
-		if(!::GetOverlappedResult(reinterpret_cast<HANDLE>($hFile.Get()), &vOverlapped, &dwTransferred, true)){
+		if(!::GetOverlappedResult(reinterpret_cast<HANDLE>(x_hFile.Get()), &vOverlapped, &dwTransferred, true)){
 			DEBUG_THROW(SystemError, "GetOverlappedResult");
 		}
 	}
@@ -204,11 +204,11 @@ std::size_t File::Write(std::uint64_t u64Offset, const void *pBuffer, std::uint3
 	return dwTransferred;
 }
 void File::Flush() const {
-	if(!$hFile){
+	if(!x_hFile){
 		DEBUG_THROW(Exception, ERROR_INVALID_HANDLE, "No file open");
 	}
 
-	if(!::FlushFileBuffers(reinterpret_cast<HANDLE>($hFile.Get()))){
+	if(!::FlushFileBuffers(reinterpret_cast<HANDLE>(x_hFile.Get()))){
 		DEBUG_THROW(SystemError, "FlushFileBuffers");
 	}
 }

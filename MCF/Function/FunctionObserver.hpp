@@ -22,12 +22,12 @@ class FunctionObserver {
 template<typename RetT, typename ...ParamsT>
 class FunctionObserver<RetT (ParamsT...)> {
 private:
-	RetT (*$pfnLambda)(const void *, ParamsT &&...);
-	const void *$pContext;
+	RetT (*x_pfnLambda)(const void *, ParamsT &&...);
+	const void *x_pContext;
 
 public:
 	constexpr FunctionObserver(std::nullptr_t = nullptr) noexcept
-		: $pfnLambda(nullptr)
+		: x_pfnLambda(nullptr)
 	{
 	}
 	template<typename FuncT,
@@ -35,8 +35,8 @@ public:
 			std::is_convertible<std::result_of_t<const FuncT & (ForwardedParam<ParamsT>...)>, RetT>::value,
 			int> = 0>
 	FunctionObserver(const FuncT &vFunc) noexcept
-		: $pfnLambda([](const void *pContext, ParamsT &&...vParams){ return Invoke(*static_cast<const FuncT *>(pContext), std::forward<ParamsT>(vParams)...);  })
-		, $pContext(std::addressof(vFunc))
+		: x_pfnLambda([](const void *pContext, ParamsT &&...vParams){ return Invoke(*static_cast<const FuncT *>(pContext), std::forward<ParamsT>(vParams)...);  })
+		, x_pContext(std::addressof(vFunc))
 	{
 	}
 
@@ -52,18 +52,18 @@ public:
 	}
 
 	void Swap(FunctionObserver &rhs) noexcept {
-		std::swap($pfnLambda, rhs.$pfnLambda);
-		std::swap($pContext, rhs.$pContext);
+		std::swap(x_pfnLambda, rhs.x_pfnLambda);
+		std::swap(x_pContext, rhs.x_pContext);
 	}
 
 public:
 	explicit operator bool() const noexcept {
-		return !!$pfnLambda;
+		return !!x_pfnLambda;
 	}
 	RetT operator()(ParamsT ...vParams) const {
-		ASSERT($pfnLambda);
+		ASSERT(x_pfnLambda);
 
-		return (*$pfnLambda)($pContext, std::forward<ParamsT>(vParams)...); // 值形参当作右值引用传递。
+		return (*x_pfnLambda)(x_pContext, std::forward<ParamsT>(vParams)...); // 值形参当作右值引用传递。
 	}
 };
 

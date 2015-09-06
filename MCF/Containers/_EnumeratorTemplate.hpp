@@ -22,39 +22,39 @@ namespace Impl_EnumeratorTemplate {
 		using ElementType = typename ContainerT::ElementType;
 
 	private:
-		ContainerT *$pContainer;
-		ElementType *$pElement;
+		ContainerT *x_pContainer;
+		ElementType *x_pElement;
 
 	public:
 		explicit constexpr Enumerator() noexcept
-			: $pContainer(nullptr), $pElement(nullptr)
+			: x_pContainer(nullptr), x_pElement(nullptr)
 		{
 		}
 		explicit constexpr Enumerator(ContainerT &vContainer, ElementType *pElement) noexcept
-			: $pContainer(&vContainer), $pElement(pElement)
+			: x_pContainer(&vContainer), x_pElement(pElement)
 		{
 		}
 
 	public:
 		bool operator==(const Enumerator &rhs) const noexcept {
-			return $pElement == rhs.$pElement;
+			return x_pElement == rhs.x_pElement;
 		}
 		bool operator!=(const Enumerator &rhs) const noexcept {
 			return !(*this == rhs);
 		}
 
 		Enumerator &operator++(){
-			ASSERT($pContainer);
-			ASSERT($pElement);
+			ASSERT(x_pContainer);
+			ASSERT(x_pElement);
 
-			$pElement = $pContainer->GetNext($pElement);
+			x_pElement = x_pContainer->GetNext(x_pElement);
 			return *this;
 		}
 		Enumerator &operator--(){
-			ASSERT($pContainer);
-			ASSERT($pElement);
+			ASSERT(x_pContainer);
+			ASSERT(x_pElement);
 
-			$pElement = $pContainer->GetPrev($pElement);
+			x_pElement = x_pContainer->GetPrev(x_pElement);
 			return *this;
 		}
 
@@ -70,13 +70,13 @@ namespace Impl_EnumeratorTemplate {
 		}
 
 		ElementType &operator*() const noexcept {
-			ASSERT($pElement);
+			ASSERT(x_pElement);
 
-			return *$pElement;
+			return *x_pElement;
 		}
 
 		explicit operator bool() const noexcept {
-			return !!$pElement;
+			return !!x_pElement;
 		}
 	};
 
@@ -86,43 +86,43 @@ namespace Impl_EnumeratorTemplate {
 		using ElementType = const typename ContainerT::ElementType;
 
 	private:
-		const ContainerT *$pContainer;
-		const ElementType *$pElement;
+		const ContainerT *x_pContainer;
+		const ElementType *x_pElement;
 
 	public:
 		explicit constexpr ConstEnumerator() noexcept
-			: $pContainer(nullptr), $pElement(nullptr)
+			: x_pContainer(nullptr), x_pElement(nullptr)
 		{
 		}
 		explicit constexpr ConstEnumerator(const ContainerT &vContainer, const ElementType *pElement) noexcept
-			: $pContainer(&vContainer), $pElement(pElement)
+			: x_pContainer(&vContainer), x_pElement(pElement)
 		{
 		}
 		constexpr ConstEnumerator(const Enumerator<ContainerT> &rhs) noexcept
-			: $pContainer(rhs.$pContainer), $pElement(rhs.$pElement)
+			: x_pContainer(rhs.x_pContainer), x_pElement(rhs.x_pElement)
 		{
 		}
 
 	public:
 		bool operator==(const ConstEnumerator &rhs) const noexcept {
-			return $pElement == rhs.$pElement;
+			return x_pElement == rhs.x_pElement;
 		}
 		bool operator!=(const ConstEnumerator &rhs) const noexcept {
 			return !(*this == rhs);
 		}
 
 		ConstEnumerator &operator++(){
-			ASSERT($pContainer);
-			ASSERT($pElement);
+			ASSERT(x_pContainer);
+			ASSERT(x_pElement);
 
-			$pElement = $pContainer->GetNext($pElement);
+			x_pElement = x_pContainer->GetNext(x_pElement);
 			return *this;
 		}
 		ConstEnumerator &operator--(){
-			ASSERT($pContainer);
-			ASSERT($pElement);
+			ASSERT(x_pContainer);
+			ASSERT(x_pElement);
 
-			$pElement = $pContainer->GetPrev($pElement);
+			x_pElement = x_pContainer->GetPrev(x_pElement);
 			return *this;
 		}
 
@@ -138,13 +138,13 @@ namespace Impl_EnumeratorTemplate {
 		}
 
 		const ElementType &operator*() const noexcept {
-			ASSERT($pElement);
+			ASSERT(x_pElement);
 
-			return *$pElement;
+			return *x_pElement;
 		}
 
 		explicit operator bool() const noexcept {
-			return !!$pElement;
+			return !!x_pElement;
 		}
 	};
 

@@ -22,12 +22,12 @@ class StaticVector {
 	static_assert(kCapacity > 0, "A StaticVector shall have a non-zero capacity.");
 
 private:
-	alignas(ElementT) char $aStorage[kCapacity][sizeof(ElementT)];
-	std::size_t $uSize;
+	alignas(ElementT) char x_aStorage[kCapacity][sizeof(ElementT)];
+	std::size_t x_uSize;
 
 public:
 	StaticVector() noexcept
-		: $uSize(0)
+		: x_uSize(0)
 	{
 	}
 	template<typename ...ParamsT>
@@ -80,10 +80,10 @@ public:
 	using Enumerator      = Impl_EnumeratorTemplate::Enumerator      <StaticVector>;
 
 	bool IsEmpty() const noexcept {
-		return $uSize == 0;
+		return x_uSize == 0;
 	}
 	void Clear() noexcept {
-		Pop($uSize);
+		Pop(x_uSize);
 	}
 
 	ConstEnumerator EnumerateFirst() const noexcept {
@@ -169,13 +169,13 @@ public:
 
 	// StaticVector 需求。
 	const ElementT *GetData() const noexcept {
-		return static_cast<const ElementT *>(static_cast<const void *>($aStorage));
+		return static_cast<const ElementT *>(static_cast<const void *>(x_aStorage));
 	}
 	ElementT *GetData() noexcept {
-		return static_cast<ElementT *>(static_cast<void *>($aStorage));
+		return static_cast<ElementT *>(static_cast<void *>(x_aStorage));
 	}
 	std::size_t GetSize() const noexcept {
-		return $uSize;
+		return x_uSize;
 	}
 	static constexpr std::size_t GetCapacity() noexcept {
 		return kCapacity;
@@ -188,47 +188,47 @@ public:
 		return GetData();
 	}
 	const ElementT *GetEnd() const noexcept {
-		return GetData() + $uSize;
+		return GetData() + x_uSize;
 	}
 	ElementT *GetEnd() noexcept {
-		return GetData() + $uSize;
+		return GetData() + x_uSize;
 	}
 
 	const ElementT &Get(std::size_t uIndex) const {
-		if(uIndex >= $uSize){
+		if(uIndex >= x_uSize){
 			DEBUG_THROW(Exception, ERROR_INVALID_PARAMETER, __PRETTY_FUNCTION__);
 		}
 		return GetData()[uIndex];
 	}
 	ElementT &Get(std::size_t uIndex){
-		if(uIndex >= $uSize){
+		if(uIndex >= x_uSize){
 			DEBUG_THROW(Exception, ERROR_INVALID_PARAMETER, __PRETTY_FUNCTION__);
 		}
 		return GetData()[uIndex];
 	}
 	const ElementT &UncheckedGet(std::size_t uIndex) const noexcept {
-		ASSERT(uIndex < $uSize);
+		ASSERT(uIndex < x_uSize);
 
 		return GetData()[uIndex];
 	}
 	ElementT &UncheckedGet(std::size_t uIndex) noexcept {
-		ASSERT(uIndex < $uSize);
+		ASSERT(uIndex < x_uSize);
 
 		return GetData()[uIndex];
 	}
 
 	template<typename ...ParamsT>
 	void Resize(std::size_t uSize, ParamsT &&...vParams){
-		if(uSize > $uSize){
-			Append(uSize - $uSize, std::forward<ParamsT>(vParams)...);
+		if(uSize > x_uSize){
+			Append(uSize - x_uSize, std::forward<ParamsT>(vParams)...);
 		} else {
-			Pop($uSize - uSize);
+			Pop(x_uSize - uSize);
 		}
 	}
 	template<typename ...ParamsT>
 	ElementT *ResizeMore(std::size_t uDeltaSize, ParamsT &&...vParams){
-		const auto uOldSize = $uSize;
-		Append(uDeltaSize - $uSize, std::forward<ParamsT>(vParams)...);
+		const auto uOldSize = x_uSize;
+		Append(uDeltaSize - x_uSize, std::forward<ParamsT>(vParams)...);
 		return GetData() + uOldSize;
 	}
 
@@ -238,7 +238,7 @@ public:
 		}
 	}
 	void ReserveMore(std::size_t uDeltaCapacity){
-		const auto uOldSize = $uSize;
+		const auto uOldSize = x_uSize;
 		const auto uNewCapacity = uOldSize + uDeltaCapacity;
 		if(uNewCapacity < uOldSize){
 			throw std::bad_array_new_length();
@@ -253,31 +253,31 @@ public:
 	}
 	template<typename ...ParamsT>
 	void UncheckedPush(ParamsT &&...vParams) noexcept(std::is_nothrow_constructible<ElementT, ParamsT &&...>::value) {
-		ASSERT(GetCapacity() - $uSize > 0);
+		ASSERT(GetCapacity() - x_uSize > 0);
 
-		DefaultConstruct(GetData() + $uSize, std::forward<ParamsT>(vParams)...);
-		++$uSize;
+		DefaultConstruct(GetData() + x_uSize, std::forward<ParamsT>(vParams)...);
+		++x_uSize;
 	}
 	void Pop(std::size_t uCount = 1) noexcept {
-		ASSERT(uCount <= $uSize);
+		ASSERT(uCount <= x_uSize);
 
 		for(std::size_t i = 0; i < uCount; ++i){
-			Destruct(GetData() + $uSize - i - 1);
+			Destruct(GetData() + x_uSize - i - 1);
 		}
-		$uSize -= uCount;
+		x_uSize -= uCount;
 	}
 
 	template<typename ...ParamsT>
 	void Append(std::size_t uDeltaSize, const ParamsT &...vParams){
 		ReserveMore(uDeltaSize);
 
-		const auto uOldSize = $uSize;
+		const auto uOldSize = x_uSize;
 		try {
 			for(std::size_t i = 0; i < uDeltaSize; ++i){
 				UncheckedPush(vParams...);
 			}
 		} catch(...){
-			Pop($uSize - uOldSize);
+			Pop(x_uSize - uOldSize);
 			throw;
 		}
 	}
@@ -292,7 +292,7 @@ public:
 			ReserveMore(uDeltaSize);
 		}
 
-		const auto uOldSize = $uSize;
+		const auto uOldSize = x_uSize;
 		try {
 			if(kHasDeltaSizeHint){
 				for(auto it = itBegin; it != itEnd; ++it){
@@ -304,7 +304,7 @@ public:
 				}
 			}
 		} catch(...){
-			Pop($uSize - uOldSize);
+			Pop(x_uSize - uOldSize);
 			throw;
 		}
 	}

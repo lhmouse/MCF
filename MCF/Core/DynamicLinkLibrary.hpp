@@ -14,7 +14,7 @@ namespace MCF {
 
 class DynamicLinkLibrary {
 private:
-	struct $LibraryFreer {
+	struct XLibraryFreer {
 		struct Impl;
 		using Handle = Impl *;
 
@@ -26,7 +26,7 @@ public:
 	using RawProc = std::intptr_t (__stdcall *)();
 
 private:
-	UniqueHandle<$LibraryFreer> $hDll;
+	UniqueHandle<XLibraryFreer> x_hDll;
 
 public:
 	DynamicLinkLibrary() noexcept = default;

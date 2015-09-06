@@ -22,47 +22,47 @@ private:
 		std::uint16_t au16[8];
 		std::uint32_t au32[4];
 		std::uint64_t au64[2];
-	} $unData;
+	} x_unData;
 
 public:
 	// 填零。
 	constexpr Uuid(std::nullptr_t = nullptr) noexcept
-		: $unData()
+		: x_unData()
 	{
 	}
 	// 填指定字节。
 	explicit Uuid(unsigned char (&abyData)[16]) noexcept {
-		BCopy($unData, abyData);
+		BCopy(x_unData, abyData);
 	}
 	// 根据字符串创建。字符串无效抛出异常。
 	explicit Uuid(const char (&pchString)[36]);
 
 public:
 	const unsigned char *GetBegin() const noexcept {
-		return $unData.aby;
+		return x_unData.aby;
 	}
 	unsigned char *GetBegin() noexcept {
-		return $unData.aby;
+		return x_unData.aby;
 	}
 	const unsigned char *GetEnd() const noexcept {
-		return $unData.aby + 16;
+		return x_unData.aby + 16;
 	}
 	unsigned char *GetEnd() noexcept {
-		return $unData.aby + 16;
+		return x_unData.aby + 16;
 	}
 	constexpr std::size_t GetSize() const noexcept {
-		return sizeof($unData);
+		return sizeof(x_unData);
 	}
 
 	auto GetBytes() const noexcept -> const unsigned char (&)[16] {
-		return $unData.aby;
+		return x_unData.aby;
 	}
 	auto GetBytes() noexcept -> unsigned char (&)[16] {
-		return $unData.aby;
+		return x_unData.aby;
 	}
 
 	void Swap(Uuid &rhs) noexcept {
-		BSwap($unData, rhs.$unData);
+		BSwap(x_unData, rhs.x_unData);
 	}
 
 	void Print(char (&pchString)[36], bool bUpperCase = true) const noexcept;

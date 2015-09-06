@@ -15,10 +15,10 @@ namespace MCF {
 
 class Utf8TextFileReader : NONCOPYABLE {
 private:
-    File $vFile;
+    File x_vFile;
 
-    std::uint64_t $u64Offset;
-    StreamBuffer $sbufCache;
+    std::uint64_t x_u64Offset;
+    StreamBuffer x_sbufCache;
 
 public:
     explicit Utf8TextFileReader(File &&vFile){
@@ -27,10 +27,10 @@ public:
 
 public:
     const File &Get() const noexcept {
-        return $vFile;
+        return x_vFile;
     }
     File &Get() noexcept {
-        return $vFile;
+        return x_vFile;
     }
     void Reset() noexcept;
     void Reset(File &&vFile);
@@ -62,11 +62,11 @@ public:
     };
 
 private:
-    File $vFile;
-    std::uint32_t $u32Flags;
+    File x_vFile;
+    std::uint32_t x_u32Flags;
 
-    std::uint64_t $u64Offset;
-    Utf8String $u8sLine;
+    std::uint64_t x_u64Offset;
+    Utf8String x_u8sLine;
 
 public:
     explicit Utf8TextFileWriter(File &&vFile, std::uint32_t u32Flags = 0){
@@ -78,23 +78,23 @@ public:
 
 public:
     const File &Get() const noexcept {
-        return $vFile;
+        return x_vFile;
     }
     File &Get() noexcept {
-        return $vFile;
+        return x_vFile;
     }
     void Reset() noexcept;
     void Reset(File &&vFile, std::uint32_t u32Flags = 0);
 
     std::uint32_t GetFlags() const noexcept {
-        return $u32Flags;
+        return x_u32Flags;
     }
     std::uint32_t SetFlags(std::uint32_t u32Flags){
-        if($u32Flags == u32Flags){
-            return $u32Flags;
+        if(x_u32Flags == u32Flags){
+            return x_u32Flags;
         }
         Flush();
-        return std::exchange($u32Flags, u32Flags);
+        return std::exchange(x_u32Flags, u32Flags);
     }
 
     void Write(char ch);

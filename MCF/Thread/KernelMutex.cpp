@@ -21,21 +21,21 @@ namespace {
 }
 
 template<>
-bool KernelMutex::UniqueLock::$DoTry() const noexcept {
-	return $pOwner->Try(0);
+bool KernelMutex::UniqueLock::XDoTry() const noexcept {
+	return x_pOwner->Try(0);
 }
 template<>
-void KernelMutex::UniqueLock::$DoLock() const noexcept {
-	$pOwner->Lock();
+void KernelMutex::UniqueLock::XDoLock() const noexcept {
+	x_pOwner->Lock();
 }
 template<>
-void KernelMutex::UniqueLock::$DoUnlock() const noexcept {
-	$pOwner->Unlock();
+void KernelMutex::UniqueLock::XDoUnlock() const noexcept {
+	x_pOwner->Unlock();
 }
 
 // 构造函数和析构函数。
 KernelMutex::KernelMutex(const wchar_t *pwszName)
-	: $hMutex(CheckedCreateMutex(pwszName))
+	: x_hMutex(CheckedCreateMutex(pwszName))
 {
 }
 KernelMutex::KernelMutex(const WideString &wsName)
@@ -45,13 +45,13 @@ KernelMutex::KernelMutex(const WideString &wsName)
 
 // 其他非静态成员函数。
 bool KernelMutex::Try(std::uint64_t u64MilliSeconds) noexcept {
-	return WaitForSingleObject64($hMutex.Get(), &u64MilliSeconds);
+	return WaitForSingleObject64(x_hMutex.Get(), &u64MilliSeconds);
 }
 void KernelMutex::Lock() noexcept {
-	WaitForSingleObject64($hMutex.Get(), nullptr);
+	WaitForSingleObject64(x_hMutex.Get(), nullptr);
 }
 void KernelMutex::Unlock() noexcept {
-	if(!::ReleaseMutex($hMutex.Get())){
+	if(!::ReleaseMutex(x_hMutex.Get())){
 		ASSERT_MSG(false, L"ReleaseMutex() 失败。");
 	}
 }

@@ -25,15 +25,15 @@ public:
 	static_assert(noexcept(Deleter()(std::declval<std::remove_cv_t<Element> *>())), "Deleter must not throw.");
 
 private:
-	Element *$pElement;
+	Element *x_pElement;
 
 public:
 	constexpr UniquePtr(std::nullptr_t = nullptr) noexcept
-		: $pElement(nullptr)
+		: x_pElement(nullptr)
 	{
 	}
 	explicit UniquePtr(Element *rhs) noexcept
-		: $pElement(rhs)
+		: x_pElement(rhs)
 	{
 	}
 	template<typename OtherObjectT, typename OtherDeleterT,
@@ -44,19 +44,19 @@ public:
 				std::is_convertible<typename UniquePtr<OtherObjectT, OtherDeleterT>::Deleter, Deleter>::value,
 			int> = 0>
 	UniquePtr(UniquePtr<OtherObjectT, OtherDeleterT> &&rhs) noexcept
-		: $pElement(rhs.Release())
+		: x_pElement(rhs.Release())
 	{
 	}
 	UniquePtr(UniquePtr &&rhs) noexcept
-		: $pElement(rhs.Release())
+		: x_pElement(rhs.Release())
 	{
 	}
 	UniquePtr &operator=(UniquePtr &&rhs) noexcept {
 		return Reset(std::move(rhs));
 	}
 	~UniquePtr(){
-		if($pElement){
-			Deleter()(const_cast<std::remove_cv_t<Element> *>($pElement));
+		if(x_pElement){
+			Deleter()(const_cast<std::remove_cv_t<Element> *>(x_pElement));
 		}
 	}
 
@@ -65,13 +65,13 @@ public:
 
 public:
 	bool IsNonnull() const noexcept {
-		return !!$pElement;
+		return !!x_pElement;
 	}
 	Element *Get() const noexcept {
-		return $pElement;
+		return x_pElement;
 	}
 	Element *Release() noexcept {
-		return std::exchange($pElement, nullptr);
+		return std::exchange(x_pElement, nullptr);
 	}
 
 	UniquePtr &Reset(Element *rhs = nullptr) noexcept {
@@ -91,7 +91,7 @@ public:
 	}
 
 	void Swap(UniquePtr &rhs) noexcept {
-		std::swap($pElement, rhs.$pElement);
+		std::swap(x_pElement, rhs.x_pElement);
 	}
 
 public:

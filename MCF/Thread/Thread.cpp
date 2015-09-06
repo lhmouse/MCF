@@ -22,53 +22,53 @@ IntrusivePtr<Thread> Thread::Create(Function<void ()> fnProc, bool bSuspended){
 
 // 构造函数和析构函数。
 Thread::Thread(Function<void ()> fnProc, bool bSuspended)
-	: $fnProc(std::move(fnProc))
+	: x_fnProc(std::move(fnProc))
 {
 	const auto ThreadProc = [](std::intptr_t nParam) noexcept -> unsigned {
 		const auto pThis = (Thread *)nParam;
 		try {
-			pThis->$fnProc();
+			pThis->x_fnProc();
 		} catch(...){
-			pThis->$pException = std::current_exception();
+			pThis->x_pException = std::current_exception();
 		}
-		pThis->$ulThreadId.Store(0, kAtomicRelease);
+		pThis->x_ulThreadId.Store(0, kAtomicRelease);
 		pThis->DropRef();
 		return 0;
 	};
 
 	unsigned long ulThreadId;
-	if(!$hThread.Reset(::MCF_CRT_CreateThread(ThreadProc, (std::intptr_t)this, CREATE_SUSPENDED, &ulThreadId))){
+	if(!x_hThread.Reset(::MCF_CRT_CreateThread(ThreadProc, (std::intptr_t)this, CREATE_SUSPENDED, &ulThreadId))){
 		DEBUG_THROW(SystemError, "MCF_CRT_CreateThread");
 	}
 	AddRef();
-	$ulThreadId.Store(ulThreadId, kAtomicRelease);
+	x_ulThreadId.Store(ulThreadId, kAtomicRelease);
 
 	if(!bSuspended){
 		Resume();
 	}
 }
 Thread::~Thread(){
-	if($pException){
+	if(x_pException){
 		std::terminate();
 	}
 }
 
 bool Thread::Wait(std::uint64_t u64MilliSeconds) const noexcept {
-	return WaitForSingleObject64($hThread.Get(), &u64MilliSeconds);
+	return WaitForSingleObject64(x_hThread.Get(), &u64MilliSeconds);
 }
 void Thread::Wait() const noexcept {
-	WaitForSingleObject64($hThread.Get(), nullptr);
+	WaitForSingleObject64(x_hThread.Get(), nullptr);
 }
 
 std::exception_ptr Thread::JoinNoThrow() const noexcept {
 	Wait();
 
-	return $pException; // 不要 move()。
+	return x_pException; // 不要 move()。
 }
 void Thread::Join(){
 	Wait();
 
-	auto pException = std::exchange($pException, std::exception_ptr());
+	auto pException = std::exchange(x_pException, std::exception_ptr());
 	if(pException){
 		std::rethrow_exception(std::move(pException));
 	}
@@ -78,16 +78,16 @@ bool Thread::IsAlive() const noexcept {
 	return GetId() != 0;
 }
 std::size_t Thread::GetId() const noexcept {
-	return $ulThreadId.Load(kAtomicRelaxed);
+	return x_ulThreadId.Load(kAtomicRelaxed);
 }
 
 void Thread::Suspend() noexcept {
-	if(::SuspendThread($hThread.Get()) == (DWORD)-1){
+	if(::SuspendThread(x_hThread.Get()) == (DWORD)-1){
 		ASSERT_MSG(false, L"SuspendThread() 失败。");
 	}
 }
 void Thread::Resume() noexcept {
-	if(::ResumeThread($hThread.Get()) == (DWORD)-1){
+	if(::ResumeThread(x_hThread.Get()) == (DWORD)-1){
 		ASSERT_MSG(false, L"ResumeThread() 失败。");
 	}
 }

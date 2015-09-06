@@ -51,191 +51,191 @@ namespace {
 	}
 }
 
-class ZlibEncoder::$Delegate {
+class ZlibEncoder::XDelegate {
 private:
-	ZlibEncoder &$vOwner;
+	ZlibEncoder &x_vOwner;
 
-	::z_stream $vStream;
+	::z_stream x_vStream;
 
 public:
-	$Delegate(ZlibEncoder &vOwner, bool bRaw, unsigned uLevel)
-		: $vOwner(vOwner)
+	XDelegate(ZlibEncoder &vOwner, bool bRaw, unsigned uLevel)
+		: x_vOwner(vOwner)
 	{
-		$vStream.zalloc = nullptr;
-		$vStream.zfree  = nullptr;
-		$vStream.opaque = nullptr;
+		x_vStream.zalloc = nullptr;
+		x_vStream.zfree  = nullptr;
+		x_vStream.opaque = nullptr;
 
-		const auto nError = ::deflateInit2(&$vStream, (int)uLevel, Z_DEFLATED, bRaw ? -15 : 15, 9, Z_DEFAULT_STRATEGY);
+		const auto nError = ::deflateInit2(&x_vStream, (int)uLevel, Z_DEFLATED, bRaw ? -15 : 15, 9, Z_DEFAULT_STRATEGY);
 		if(nError != Z_OK){
 			DEBUG_THROW(ZlibError, nError, "deflateInit2");
 		}
 	}
-	~$Delegate(){
-		::deflateEnd(&$vStream);
+	~XDelegate(){
+		::deflateEnd(&x_vStream);
 	}
 
 public:
 	void Init(){
-		const auto nError = ::deflateReset(&$vStream);
+		const auto nError = ::deflateReset(&x_vStream);
 		if(nError != Z_OK){
 			DEBUG_THROW(ZlibError, nError, "deflateReset");
 		}
 	}
 	void Update(const void *pData, std::size_t uSize){
 		unsigned char abyTemp[kStepSize];
-		$vStream.next_out = abyTemp;
-		$vStream.avail_out = sizeof(abyTemp);
+		x_vStream.next_out = abyTemp;
+		x_vStream.avail_out = sizeof(abyTemp);
 
 		auto pbyRead = (const unsigned char *)pData;
 		std::size_t uProcessed = 0;
 		while(uProcessed < uSize){
 			const auto uToProcess = Min(uSize - uProcessed, kStepSize);
 
-			$vStream.next_in = pbyRead;
-			$vStream.avail_in = uToProcess;
+			x_vStream.next_in = pbyRead;
+			x_vStream.avail_in = uToProcess;
 			do {
-				const auto nError = ::deflate(&$vStream, Z_NO_FLUSH);
+				const auto nError = ::deflate(&x_vStream, Z_NO_FLUSH);
 				if(nError == Z_STREAM_END){
 					break;
 				}
 				if(nError != Z_OK){
 					DEBUG_THROW(ZlibError, nError, "deflate");
 				}
-				if($vStream.avail_out == 0){
-					$vOwner.$Output(abyTemp, sizeof(abyTemp));
+				if(x_vStream.avail_out == 0){
+					x_vOwner.XOutput(abyTemp, sizeof(abyTemp));
 
-					$vStream.next_out = abyTemp;
-					$vStream.avail_out = sizeof(abyTemp);
+					x_vStream.next_out = abyTemp;
+					x_vStream.avail_out = sizeof(abyTemp);
 				}
-			} while($vStream.avail_in != 0);
+			} while(x_vStream.avail_in != 0);
 
 			pbyRead += uToProcess;
 			uProcessed += uToProcess;
 		}
-		if($vStream.avail_out != 0){
-			$vOwner.$Output(abyTemp, sizeof(abyTemp) - $vStream.avail_out);
+		if(x_vStream.avail_out != 0){
+			x_vOwner.XOutput(abyTemp, sizeof(abyTemp) - x_vStream.avail_out);
 		}
 	}
 	void Finalize(){
 		unsigned char abyTemp[kStepSize];
-		$vStream.next_out = abyTemp;
-		$vStream.avail_out = sizeof(abyTemp);
+		x_vStream.next_out = abyTemp;
+		x_vStream.avail_out = sizeof(abyTemp);
 
-		$vStream.next_in = nullptr;
-		$vStream.avail_in = 0;
+		x_vStream.next_in = nullptr;
+		x_vStream.avail_in = 0;
 		for(;;){
-			const auto nError = ::deflate(&$vStream, Z_FINISH);
+			const auto nError = ::deflate(&x_vStream, Z_FINISH);
 			if(nError == Z_STREAM_END){
 				break;
 			}
 			if(nError != Z_OK){
 				DEBUG_THROW(ZlibError, nError, "deflate");
 			}
-			if($vStream.avail_out == 0){
-				$vOwner.$Output(abyTemp, sizeof(abyTemp));
+			if(x_vStream.avail_out == 0){
+				x_vOwner.XOutput(abyTemp, sizeof(abyTemp));
 
-				$vStream.next_out = abyTemp;
-				$vStream.avail_out = sizeof(abyTemp);
+				x_vStream.next_out = abyTemp;
+				x_vStream.avail_out = sizeof(abyTemp);
 			}
 		}
-		if($vStream.avail_out != 0){
-			$vOwner.$Output(abyTemp, sizeof(abyTemp) - $vStream.avail_out);
+		if(x_vStream.avail_out != 0){
+			x_vOwner.XOutput(abyTemp, sizeof(abyTemp) - x_vStream.avail_out);
 		}
 	}
 };
 
-class ZlibDecoder::$Delegate {
+class ZlibDecoder::XDelegate {
 private:
-	ZlibDecoder &$vOwner;
+	ZlibDecoder &x_vOwner;
 
-	::z_stream $vStream;
+	::z_stream x_vStream;
 
 public:
-	$Delegate(ZlibDecoder &vOwner, bool bRaw)
-		: $vOwner(vOwner)
+	XDelegate(ZlibDecoder &vOwner, bool bRaw)
+		: x_vOwner(vOwner)
 	{
-		$vStream.zalloc   = nullptr;
-		$vStream.zfree    = nullptr;
-		$vStream.opaque   = nullptr;
+		x_vStream.zalloc   = nullptr;
+		x_vStream.zfree    = nullptr;
+		x_vStream.opaque   = nullptr;
 
-		$vStream.next_in  = nullptr;
-		$vStream.avail_in = 0;
+		x_vStream.next_in  = nullptr;
+		x_vStream.avail_in = 0;
 
-		const auto nError = ::inflateInit2(&$vStream, bRaw ? -15 : 15);
+		const auto nError = ::inflateInit2(&x_vStream, bRaw ? -15 : 15);
 		if(nError != Z_OK){
 			DEBUG_THROW(ZlibError, nError, "inflateInit2");
 		}
 	}
-	~$Delegate(){
-		::inflateEnd(&$vStream);
+	~XDelegate(){
+		::inflateEnd(&x_vStream);
 	}
 
 public:
 	void Init(){
-		const auto nError = ::inflateReset(&$vStream);
+		const auto nError = ::inflateReset(&x_vStream);
 		if(nError != Z_OK){
 			DEBUG_THROW(ZlibError, nError, "inflateReset");
 		}
 	}
 	void Update(const void *pData, std::size_t uSize){
 		unsigned char abyTemp[kStepSize];
-		$vStream.next_out = abyTemp;
-		$vStream.avail_out = sizeof(abyTemp);
+		x_vStream.next_out = abyTemp;
+		x_vStream.avail_out = sizeof(abyTemp);
 
 		auto pbyRead = (const unsigned char *)pData;
 		std::size_t uProcessed = 0;
 		while(uProcessed < uSize){
 			const auto uToProcess = Min(uSize - uProcessed, kStepSize);
 
-			$vStream.next_in = pbyRead;
-			$vStream.avail_in = uToProcess;
+			x_vStream.next_in = pbyRead;
+			x_vStream.avail_in = uToProcess;
 			do {
-				const auto nError = ::inflate(&$vStream, Z_NO_FLUSH);
+				const auto nError = ::inflate(&x_vStream, Z_NO_FLUSH);
 				if(nError == Z_STREAM_END){
 					break;
 				}
 				if(nError != Z_OK){
 					DEBUG_THROW(ZlibError, nError, "inflate");
 				}
-				if($vStream.avail_out == 0){
-					$vOwner.$Output(abyTemp, sizeof(abyTemp));
+				if(x_vStream.avail_out == 0){
+					x_vOwner.XOutput(abyTemp, sizeof(abyTemp));
 
-					$vStream.next_out = abyTemp;
-					$vStream.avail_out = sizeof(abyTemp);
+					x_vStream.next_out = abyTemp;
+					x_vStream.avail_out = sizeof(abyTemp);
 				}
-			} while($vStream.avail_in != 0);
+			} while(x_vStream.avail_in != 0);
 
 			pbyRead += uToProcess;
 			uProcessed += uToProcess;
 		}
-		if($vStream.avail_out != 0){
-			$vOwner.$Output(abyTemp, sizeof(abyTemp) - $vStream.avail_out);
+		if(x_vStream.avail_out != 0){
+			x_vOwner.XOutput(abyTemp, sizeof(abyTemp) - x_vStream.avail_out);
 		}
 	}
 	void Finalize(){
 		unsigned char abyTemp[kStepSize];
-		$vStream.next_out = abyTemp;
-		$vStream.avail_out = sizeof(abyTemp);
+		x_vStream.next_out = abyTemp;
+		x_vStream.avail_out = sizeof(abyTemp);
 
-		$vStream.next_in = nullptr;
-		$vStream.avail_in = 0;
+		x_vStream.next_in = nullptr;
+		x_vStream.avail_in = 0;
 		for(;;){
-			const auto nError = ::inflate(&$vStream, Z_FINISH);
+			const auto nError = ::inflate(&x_vStream, Z_FINISH);
 			if(nError == Z_STREAM_END){
 				break;
 			}
 			if(nError != Z_OK){
 				DEBUG_THROW(ZlibError, nError, "inflate");
 			}
-			if($vStream.avail_out == 0){
-				$vOwner.$Output(abyTemp, sizeof(abyTemp));
+			if(x_vStream.avail_out == 0){
+				x_vOwner.XOutput(abyTemp, sizeof(abyTemp));
 
-				$vStream.next_out = abyTemp;
-				$vStream.avail_out = sizeof(abyTemp);
+				x_vStream.next_out = abyTemp;
+				x_vStream.avail_out = sizeof(abyTemp);
 			}
 		}
-		if($vStream.avail_out != 0){
-			$vOwner.$Output(abyTemp, sizeof(abyTemp) - $vStream.avail_out);
+		if(x_vStream.avail_out != 0){
+			x_vOwner.XOutput(abyTemp, sizeof(abyTemp) - x_vStream.avail_out);
 		}
 	}
 };
@@ -243,51 +243,51 @@ public:
 // ========== ZlibEncoder ==========
 // 静态成员函数。
 ZlibEncoder::ZlibEncoder(bool bRaw, unsigned uLevel) noexcept
-	: $bRaw(bRaw), $uLevel(uLevel)
+	: x_bRaw(bRaw), x_uLevel(uLevel)
 {
 }
 ZlibEncoder::~ZlibEncoder(){
 }
 
-void ZlibEncoder::$DoInit(){
-	if(!$pDelegate){
-		$pDelegate.Reset(new $Delegate(*this, $bRaw, $uLevel));
+void ZlibEncoder::XDoInit(){
+	if(!x_pDelegate){
+		x_pDelegate.Reset(new XDelegate(*this, x_bRaw, x_uLevel));
 	}
-	$pDelegate->Init();
+	x_pDelegate->Init();
 }
-void ZlibEncoder::$DoUpdate(const void *pData, std::size_t uSize){
-	$pDelegate->Update(pData, uSize);
+void ZlibEncoder::XDoUpdate(const void *pData, std::size_t uSize){
+	x_pDelegate->Update(pData, uSize);
 }
-void ZlibEncoder::$DoFinalize(){
-	$pDelegate->Finalize();
+void ZlibEncoder::XDoFinalize(){
+	x_pDelegate->Finalize();
 }
 
 // ========== ZlibDecoder ==========
 // 静态成员函数。
 ZlibDecoder::ZlibDecoder(bool bRaw) noexcept
-	: $bRaw(bRaw)
+	: x_bRaw(bRaw)
 {
 }
 ZlibDecoder::~ZlibDecoder(){
 }
 
-void ZlibDecoder::$DoInit(){
-	if(!$pDelegate){
-		$pDelegate.Reset(new $Delegate(*this, $bRaw));
+void ZlibDecoder::XDoInit(){
+	if(!x_pDelegate){
+		x_pDelegate.Reset(new XDelegate(*this, x_bRaw));
 	}
-	$pDelegate->Init();
+	x_pDelegate->Init();
 }
-void ZlibDecoder::$DoUpdate(const void *pData, std::size_t uSize){
-	$pDelegate->Update(pData, uSize);
+void ZlibDecoder::XDoUpdate(const void *pData, std::size_t uSize){
+	x_pDelegate->Update(pData, uSize);
 }
-void ZlibDecoder::$DoFinalize(){
-	$pDelegate->Finalize();
+void ZlibDecoder::XDoFinalize(){
+	x_pDelegate->Finalize();
 }
 
 // ========== ZlibError ==========
 ZlibError::ZlibError(const char *pszFile, unsigned long ulLine, long lZlibError, const char *pszFunction) noexcept
 	: Exception(pszFile, ulLine, ZlibErrorToWin32Error(lZlibError), pszFunction)
-	, $lZlibError(lZlibError)
+	, x_lZlibError(lZlibError)
 {
 }
 ZlibError::~ZlibError(){

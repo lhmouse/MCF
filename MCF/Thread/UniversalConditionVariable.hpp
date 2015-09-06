@@ -16,12 +16,12 @@ namespace MCF {
 
 class UniversalConditionVariable : NONCOPYABLE {
 private:
-	Mutex $vMutex;
-	ConditionVariable $vDelegate;
+	Mutex x_vMutex;
+	ConditionVariable x_vDelegate;
 
 public:
 	explicit UniversalConditionVariable(std::size_t uSpinCount = 0x100)
-		: $vMutex(uSpinCount), $vDelegate($vMutex)
+		: x_vMutex(uSpinCount), x_vDelegate(x_vMutex)
 	{
 	}
 
@@ -29,32 +29,32 @@ public:
 	bool Wait(UniqueLockTemplateBase &vLock, std::uint64_t u64MilliSeconds) noexcept {
 		ASSERT(vLock.GetLockCount() == 1);
 
-		$vMutex.Lock();
+		x_vMutex.Lock();
 		vLock.Unlock();
 
-		const bool bResult = $vDelegate.Wait(u64MilliSeconds);
+		const bool bResult = x_vDelegate.Wait(u64MilliSeconds);
 
 		vLock.Lock();
-		$vMutex.Unlock();
+		x_vMutex.Unlock();
 
 		return bResult;
 	}
 	void Wait(UniqueLockTemplateBase &vLock) noexcept {
 		ASSERT(vLock.GetLockCount() == 1);
 
-		$vMutex.Lock();
+		x_vMutex.Lock();
 		vLock.Unlock();
 
-		$vDelegate.Wait();
+		x_vDelegate.Wait();
 
 		vLock.Lock();
-		$vMutex.Unlock();
+		x_vMutex.Unlock();
 	}
 	void Signal(std::size_t uMaxCount) noexcept {
-		$vDelegate.Signal(uMaxCount);
+		x_vDelegate.Signal(uMaxCount);
 	}
 	void Broadcast() noexcept {
-		$vDelegate.Broadcast();
+		x_vDelegate.Broadcast();
 	}
 };
 

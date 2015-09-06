@@ -3,7 +3,7 @@
  * For conditions of distribution and use, see copyright notice in zlib.h
  */
 
-/* @(#) $Id$ */
+/* @(#) XId$ */
 
 #include "zutil.h"
 #ifndef Z_SOLO

@@ -13,44 +13,44 @@ namespace MCF {
 
 class LzmaEncoder : public StreamFilterBase {
 private:
-	class $Delegate;
+	class XDelegate;
 
 private:
-	const unsigned $uLevel;
-	const unsigned long $ulDictSize;
+	const unsigned x_uLevel;
+	const unsigned long x_ulDictSize;
 
-	UniquePtr<$Delegate> $pDelegate;
+	UniquePtr<XDelegate> x_pDelegate;
 
 public:
 	explicit LzmaEncoder(unsigned uLevel = 6, unsigned long ulDictSize = 1ul << 23) noexcept;
 	~LzmaEncoder();
 
 protected:
-	void $DoInit() override;
-	void $DoUpdate(const void *pData, std::size_t uSize) override;
-	void $DoFinalize() override;
+	void XDoInit() override;
+	void XDoUpdate(const void *pData, std::size_t uSize) override;
+	void XDoFinalize() override;
 };
 
 class LzmaDecoder : public StreamFilterBase {
 private:
-	class $Delegate;
+	class XDelegate;
 
 private:
-	UniquePtr<$Delegate> $pDelegate;
+	UniquePtr<XDelegate> x_pDelegate;
 
 public:
 	LzmaDecoder() noexcept;
 	~LzmaDecoder();
 
 protected:
-	void $DoInit() override;
-	void $DoUpdate(const void *pData, std::size_t uSize) override;
-	void $DoFinalize() override;
+	void XDoInit() override;
+	void XDoUpdate(const void *pData, std::size_t uSize) override;
+	void XDoFinalize() override;
 };
 
 class LzmaError : public Exception {
 private:
-	long $lLzmaError;
+	long x_lLzmaError;
 
 public:
 	LzmaError(const char *pszFile, unsigned long ulLine, long lLzmaError, const char *pszFunction) noexcept;
@@ -58,7 +58,7 @@ public:
 
 public:
 	long GetLzmaError() const noexcept {
-		return $lLzmaError;
+		return x_lLzmaError;
 	}
 };
 

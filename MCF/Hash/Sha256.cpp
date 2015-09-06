@@ -911,73 +911,73 @@ namespace {
 
 // 构造函数和析构函数。
 Sha256::Sha256() noexcept
-	: $bInited(false)
+	: x_bInited(false)
 {
 }
 
 // 其他非静态成员函数。
 void Sha256::Abort() noexcept {
-	$bInited = false;
+	x_bInited = false;
 }
 void Sha256::Update(const void *pData, std::size_t uSize) noexcept {
-	if(!$bInited){
-		$auResult[0] = 0x6A09E667u;
-		$auResult[1] = 0xBB67AE85u;
-		$auResult[2] = 0x3C6EF372u;
-		$auResult[3] = 0xA54FF53Au;
-		$auResult[4] = 0x510E527Fu;
-		$auResult[5] = 0x9B05688Cu;
-		$auResult[6] = 0x1F83D9ABu;
-		$auResult[7] = 0x5BE0CD19u;
+	if(!x_bInited){
+		x_auResult[0] = 0x6A09E667u;
+		x_auResult[1] = 0xBB67AE85u;
+		x_auResult[2] = 0x3C6EF372u;
+		x_auResult[3] = 0xA54FF53Au;
+		x_auResult[4] = 0x510E527Fu;
+		x_auResult[5] = 0x9B05688Cu;
+		x_auResult[6] = 0x1F83D9ABu;
+		x_auResult[7] = 0x5BE0CD19u;
 
-		$uBytesInChunk = 0;
-		$u64BytesTotal = 0;
+		x_uBytesInChunk = 0;
+		x_u64BytesTotal = 0;
 
-		$bInited = true;
+		x_bInited = true;
 	}
 
 	auto pbyRead = (const unsigned char *)pData;
 	std::size_t uBytesRemaining = uSize;
-	const std::size_t uBytesFree = sizeof($vChunk.aby) - $uBytesInChunk;
+	const std::size_t uBytesFree = sizeof(x_vChunk.aby) - x_uBytesInChunk;
 	if(uBytesRemaining >= uBytesFree){
-		if($uBytesInChunk != 0){
-			std::memcpy($vChunk.aby + $uBytesInChunk, pbyRead, uBytesFree);
-			DoSha256Chunk($auResult, $vChunk.aby);
-			$uBytesInChunk = 0;
+		if(x_uBytesInChunk != 0){
+			std::memcpy(x_vChunk.aby + x_uBytesInChunk, pbyRead, uBytesFree);
+			DoSha256Chunk(x_auResult, x_vChunk.aby);
+			x_uBytesInChunk = 0;
 			pbyRead += uBytesFree;
 			uBytesRemaining -= uBytesFree;
 		}
-		while(uBytesRemaining >= sizeof($vChunk.aby)){
-			DoSha256Chunk($auResult, pbyRead);
-			pbyRead += sizeof($vChunk.aby);
-			uBytesRemaining -= sizeof($vChunk.aby);
+		while(uBytesRemaining >= sizeof(x_vChunk.aby)){
+			DoSha256Chunk(x_auResult, pbyRead);
+			pbyRead += sizeof(x_vChunk.aby);
+			uBytesRemaining -= sizeof(x_vChunk.aby);
 		}
 	}
 	if(uBytesRemaining != 0){
-		std::memcpy($vChunk.aby + $uBytesInChunk, pbyRead, uBytesRemaining);
-		$uBytesInChunk += uBytesRemaining;
+		std::memcpy(x_vChunk.aby + x_uBytesInChunk, pbyRead, uBytesRemaining);
+		x_uBytesInChunk += uBytesRemaining;
 	}
-	$u64BytesTotal += uSize;
+	x_u64BytesTotal += uSize;
 }
 void Sha256::Finalize(unsigned char (&abyOutput)[32]) noexcept {
-	if($bInited){
-		$vChunk.aby[$uBytesInChunk++] = 0x80;
-		if($uBytesInChunk > sizeof($vChunk.vLast.abyData)){
-			std::memset($vChunk.aby + $uBytesInChunk, 0, sizeof($vChunk.aby) - $uBytesInChunk);
-			DoSha256Chunk($auResult, $vChunk.aby);
-			$uBytesInChunk = 0;
+	if(x_bInited){
+		x_vChunk.aby[x_uBytesInChunk++] = 0x80;
+		if(x_uBytesInChunk > sizeof(x_vChunk.vLast.abyData)){
+			std::memset(x_vChunk.aby + x_uBytesInChunk, 0, sizeof(x_vChunk.aby) - x_uBytesInChunk);
+			DoSha256Chunk(x_auResult, x_vChunk.aby);
+			x_uBytesInChunk = 0;
 		}
-		if($uBytesInChunk < sizeof($vChunk.vLast.abyData)){
-			std::memset($vChunk.aby + $uBytesInChunk, 0, sizeof($vChunk.vLast.abyData) - $uBytesInChunk);
+		if(x_uBytesInChunk < sizeof(x_vChunk.vLast.abyData)){
+			std::memset(x_vChunk.aby + x_uBytesInChunk, 0, sizeof(x_vChunk.vLast.abyData) - x_uBytesInChunk);
 		}
-		StoreBe($vChunk.vLast.u64Bits, $u64BytesTotal * 8);
-		DoSha256Chunk($auResult, $vChunk.aby);
+		StoreBe(x_vChunk.vLast.u64Bits, x_u64BytesTotal * 8);
+		DoSha256Chunk(x_auResult, x_vChunk.aby);
 
-		$bInited = false;
+		x_bInited = false;
 	}
 
 	for(unsigned i = 0; i < 8; ++i){
-		StoreBe(((std::uint32_t *)abyOutput)[i], $auResult[i]);
+		StoreBe(((std::uint32_t *)abyOutput)[i], x_auResult[i]);
 	}
 }
 

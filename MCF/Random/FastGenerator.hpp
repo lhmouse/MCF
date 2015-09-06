@@ -11,7 +11,7 @@ namespace MCF {
 
 class FastGenerator {
 private:
-	std::uint64_t $u64Seed;
+	std::uint64_t x_u64Seed;
 
 public:
 	explicit FastGenerator(std::uint32_t u32Seed = ReadTimestampCounter32()) noexcept {

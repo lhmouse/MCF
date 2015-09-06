@@ -12,7 +12,7 @@ namespace MCF {
 
 class StreamBuffer {
 private:
-	struct $Chunk;
+	struct XChunk;
 
 public:
 	class ConstChunkEnumerator;
@@ -21,11 +21,11 @@ public:
 		friend ConstChunkEnumerator;
 
 	private:
-		$Chunk *$pChunk;
+		XChunk *x_pChunk;
 
 	public:
 		explicit ChunkEnumerator(StreamBuffer &rhs) noexcept
-			: $pChunk(rhs.$pFirst)
+			: x_pChunk(rhs.x_pFirst)
 		{
 		}
 
@@ -42,7 +42,7 @@ public:
 
 	public:
 		explicit operator bool() const noexcept {
-			return $pChunk != nullptr;
+			return x_pChunk != nullptr;
 		}
 
 		ChunkEnumerator &operator++() noexcept;
@@ -55,15 +55,15 @@ public:
 
 	class ConstChunkEnumerator {
 	private:
-		const $Chunk *$pChunk;
+		const XChunk *x_pChunk;
 
 	public:
 		explicit ConstChunkEnumerator(const StreamBuffer &rhs) noexcept
-			: $pChunk(rhs.$pFirst)
+			: x_pChunk(rhs.x_pFirst)
 		{
 		}
 		ConstChunkEnumerator(ChunkEnumerator &rhs) noexcept
-			: $pChunk(rhs.$pChunk)
+			: x_pChunk(rhs.x_pChunk)
 		{
 		}
 
@@ -80,7 +80,7 @@ public:
 
 	public:
 		explicit operator bool() const noexcept {
-			return $pChunk != nullptr;
+			return x_pChunk != nullptr;
 		}
 
 		ConstChunkEnumerator &operator++() noexcept;
@@ -92,13 +92,13 @@ public:
 	};
 
 private:
-	$Chunk *__restrict__ $pFirst;
-	$Chunk *__restrict__ $pLast;
-	std::size_t $uSize;
+	XChunk *__restrict__ x_pFirst;
+	XChunk *__restrict__ x_pLast;
+	std::size_t x_uSize;
 
 public:
 	constexpr StreamBuffer() noexcept
-		: $pFirst(nullptr), $pLast(nullptr), $uSize(0)
+		: x_pFirst(nullptr), x_pLast(nullptr), x_uSize(0)
 	{
 	}
 
@@ -112,10 +112,10 @@ public:
 
 public:
 	bool IsEmpty() const noexcept {
-		return $uSize == 0;
+		return x_uSize == 0;
 	}
 	std::size_t GetSize() const noexcept {
-		return $uSize;
+		return x_uSize;
 	}
 
 	// 如果为空返回 -1。
@@ -157,9 +157,9 @@ public:
 	}
 
 	void Swap(StreamBuffer &rhs) noexcept {
-		std::swap($pFirst, rhs.$pFirst);
-		std::swap($pLast, rhs.$pLast);
-		std::swap($uSize, rhs.$uSize);
+		std::swap(x_pFirst, rhs.x_pFirst);
+		std::swap(x_pLast, rhs.x_pLast);
+		std::swap(x_uSize, rhs.x_uSize);
 	}
 };
 

@@ -45,17 +45,17 @@ namespace Impl_Function {
 	template<typename FuncT, typename RetT, typename ...ParamsT>
 	class Functor : public FunctorBase<RetT, ParamsT...> {
 	private:
-		const std::remove_reference_t<FuncT> $vFunc;
+		const std::remove_reference_t<FuncT> x_vFunc;
 
 	public:
 		explicit Functor(FuncT &&vFunc)
-			: $vFunc(std::forward<FuncT>(vFunc))
+			: x_vFunc(std::forward<FuncT>(vFunc))
 		{
 		}
 
 	public:
 		RetT Dispatch(ForwardedParam<ParamsT>...vParams) const override {
-			return Invoke($vFunc, std::forward<ParamsT>(vParams)...);
+			return Invoke(x_vFunc, std::forward<ParamsT>(vParams)...);
 		}
 		IntrusivePtr<FunctorBase<RetT, ParamsT...>> Fork() const override {
 			return CopyOrThrowHelper<Functor>()(*this);
@@ -71,11 +71,11 @@ class Function {
 template<typename RetT, typename ...ParamsT>
 class Function<RetT (ParamsT...)> {
 private:
-	IntrusivePtr<const Impl_Function::FunctorBase<RetT, ParamsT...>> $pFunctor;
+	IntrusivePtr<const Impl_Function::FunctorBase<RetT, ParamsT...>> x_pFunctor;
 
 public:
 	constexpr Function(std::nullptr_t = nullptr) noexcept
-		: $pFunctor(nullptr)
+		: x_pFunctor(nullptr)
 	{
 	}
 	template<typename FuncT,
@@ -84,16 +84,16 @@ public:
 				!std::is_same<std::decay_t<FuncT>, Function>::value,
 			int> = 0>
 	Function(FuncT &&vFunc)
-		: $pFunctor(new Impl_Function::Functor<FuncT, RetT, ParamsT...>(std::forward<FuncT>(vFunc)))
+		: x_pFunctor(new Impl_Function::Functor<FuncT, RetT, ParamsT...>(std::forward<FuncT>(vFunc)))
 	{
 	}
 
 public:
 	bool IsNonnull() const noexcept {
-		return $pFunctor.IsNonnull();
+		return x_pFunctor.IsNonnull();
 	}
 	std::size_t GetRefCount() const noexcept {
-		return $pFunctor.GetRefCount();
+		return x_pFunctor.GetRefCount();
 	}
 
 	Function &Reset(std::nullptr_t = nullptr) noexcept {
@@ -108,42 +108,42 @@ public:
 
 	// 后置条件：GetRefCount() <= 1
 	void Fork(){
-		if($pFunctor.GetRefCount() > 1){
-			$pFunctor = $pFunctor->Fork();
+		if(x_pFunctor.GetRefCount() > 1){
+			x_pFunctor = x_pFunctor->Fork();
 		}
 	}
 
 	void Swap(Function &rhs) noexcept {
-		$pFunctor.Swap(rhs.$pFunctor);
+		x_pFunctor.Swap(rhs.x_pFunctor);
 	}
 
 public:
 	explicit operator bool() const noexcept {
-		return !!$pFunctor;
+		return !!x_pFunctor;
 	}
 	RetT operator()(ParamsT ...vParams) const {
-		ASSERT($pFunctor);
+		ASSERT(x_pFunctor);
 
-		return $pFunctor->Dispatch(std::forward<ParamsT>(vParams)...); // 值形参当作右值引用传递。
+		return x_pFunctor->Dispatch(std::forward<ParamsT>(vParams)...); // 值形参当作右值引用传递。
 	}
 
 	bool operator==(const Function &rhs) const noexcept {
-		return $pFunctor == rhs.$pFunctor;
+		return x_pFunctor == rhs.x_pFunctor;
 	}
 	bool operator!=(const Function &rhs) const noexcept {
-		return $pFunctor != rhs.$pFunctor;
+		return x_pFunctor != rhs.x_pFunctor;
 	}
 	bool operator<(const Function &rhs) const noexcept {
-		return $pFunctor < rhs.$pFunctor;
+		return x_pFunctor < rhs.x_pFunctor;
 	}
 	bool operator>(const Function &rhs) const noexcept {
-		return $pFunctor > rhs.$pFunctor;
+		return x_pFunctor > rhs.x_pFunctor;
 	}
 	bool operator<=(const Function &rhs) const noexcept {
-		return $pFunctor <= rhs.$pFunctor;
+		return x_pFunctor <= rhs.x_pFunctor;
 	}
 	bool operator>=(const Function &rhs) const noexcept {
-		return $pFunctor >= rhs.$pFunctor;
+		return x_pFunctor >= rhs.x_pFunctor;
 	}
 };
 

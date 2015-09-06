@@ -12,8 +12,8 @@ namespace MCF {
 
 class Fnv32 {
 private:
-	bool $bInited;
-	std::uint32_t $u32Reg;
+	bool x_bInited;
+	std::uint32_t x_u32Reg;
 
 public:
 	Fnv32() noexcept;

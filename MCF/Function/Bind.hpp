@@ -24,18 +24,18 @@ namespace Impl_Bind {
 	template<typename ...ParamsAddT>
 	class ParamSelector {
 	private:
-		std::tuple<ParamsAddT &&...> $tupParamsAdd;
+		std::tuple<ParamsAddT &&...> x_tupParamsAdd;
 
 	public:
 		explicit ParamSelector(ParamsAddT &&...vParamsAdd) noexcept
-			: $tupParamsAdd(std::forward<ParamsAddT>(vParamsAdd)...)
+			: x_tupParamsAdd(std::forward<ParamsAddT>(vParamsAdd)...)
 		{
 		}
 
 	private:
 		template<std::size_t ...kParamIndicesT, typename CurriedT>
-		decltype(auto) $ForwardCurriedParams(std::id$sequence<kParamIndicesT...>, const CurriedT &vCurried) const {
-			return vCurried(static_cast<std::tuple_element_t<kParamIndicesT, decltype($tupParamsAdd)> &&>(std::get<kParamIndicesT>($tupParamsAdd))...);
+		decltype(auto) XForwardCurriedParams(std::idx_sequence<kParamIndicesT...>, const CurriedT &vCurried) const {
+			return vCurried(static_cast<std::tuple_element_t<kParamIndicesT, decltype(x_tupParamsAdd)> &&>(std::get<kParamIndicesT>(x_tupParamsAdd))...);
 		}
 
 	public:
@@ -45,7 +45,7 @@ namespace Impl_Bind {
 		}
 		template<std::size_t kIndexT>
 		decltype(auto) operator()(Placeholder<kIndexT> /* vParam */) noexcept {
-			return static_cast<std::tuple_element_t<kIndexT - 1, decltype($tupParamsAdd)> &&>(std::get<kIndexT - 1>($tupParamsAdd));
+			return static_cast<std::tuple_element_t<kIndexT - 1, decltype(x_tupParamsAdd)> &&>(std::get<kIndexT - 1>(x_tupParamsAdd));
 		}
 		template<typename ParamT>
 		decltype(auto) operator()(const RefWrapper<ParamT> &vParam) noexcept {
@@ -53,34 +53,34 @@ namespace Impl_Bind {
 		}
 		template<typename FuncT, typename ...ParamsT>
 		decltype(auto) operator()(const BindResult<FuncT, true, ParamsT...> &vCurried) noexcept {
-			return $ForwardCurriedParams(std::id$sequence_for<ParamsT...>(), vCurried);
+			return XForwardCurriedParams(std::idx_sequence_for<ParamsT...>(), vCurried);
 		}
 	};
 
 	template<typename FuncT, bool kIsCurried, typename ...ParamsT>
 	class BindResult {
 	private:
-		FuncT $vFunc;
-		std::tuple<ParamsT...> $tupParams;
+		FuncT x_vFunc;
+		std::tuple<ParamsT...> x_tupParams;
 
 	public:
 		explicit BindResult(FuncT vFunc, ParamsT ...vParams)
-			: $vFunc(std::move(vFunc)), $tupParams(std::move(vParams)...)
+			: x_vFunc(std::move(vFunc)), x_tupParams(std::move(vParams)...)
 		{
 		}
 
 	private:
 		template<std::size_t ...kParamIndicesT, typename ...ParamsAddT>
-		decltype(auto) $DispatchParams(std::id$sequence<kParamIndicesT...>, ParamsAddT &&...vParamsAdd) const {
+		decltype(auto) XDispatchParams(std::idx_sequence<kParamIndicesT...>, ParamsAddT &&...vParamsAdd) const {
 			ParamSelector<ParamsAddT...> vSelector(std::forward<ParamsAddT>(vParamsAdd)...);
 			(void)vSelector;
-			return Invoke($vFunc, vSelector(std::get<kParamIndicesT>($tupParams))...);
+			return Invoke(x_vFunc, vSelector(std::get<kParamIndicesT>(x_tupParams))...);
 		}
 
 	public:
 		template<typename ...ParamsAddT>
 		decltype(auto) operator()(ParamsAddT &&...vParamsAdd) const {
-			return $DispatchParams(std::id$sequence_for<ParamsT...>(), std::forward<ParamsAddT>(vParamsAdd)...);
+			return XDispatchParams(std::idx_sequence_for<ParamsT...>(), std::forward<ParamsAddT>(vParamsAdd)...);
 		}
 	};
 }

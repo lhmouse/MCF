@@ -23,11 +23,11 @@ namespace Impl_CallOnce {
 		};
 
 	private:
-		Atomic<State> $eState;
+		Atomic<State> x_eState;
 
 	public:
 		constexpr OnceFlag() noexcept
-			: $eState(kUninitialized)
+			: x_eState(kUninitialized)
 		{
 		}
 
@@ -36,13 +36,13 @@ namespace Impl_CallOnce {
 
 	public:
 		State Load(MemoryModel eModel) const volatile noexcept {
-			return $eState.Load(eModel);
+			return x_eState.Load(eModel);
 		}
 		void Store(State eState, MemoryModel eModel) volatile noexcept {
-			$eState.Store(eState, eModel);
+			x_eState.Store(eState, eModel);
 		}
 		State Exchange(State eState, MemoryModel eModel) volatile noexcept {
-			return $eState.Exchange(eState, eModel);
+			return x_eState.Exchange(eState, eModel);
 		}
 	};
 }

@@ -9,44 +9,44 @@
 
 namespace MCF {
 
-std::size_t ReaderWriterMutex::$TlsIndexDeleter::operator()() const noexcept {
+std::size_t ReaderWriterMutex::XTlsIndexDeleter::operator()() const noexcept {
 	return TLS_OUT_OF_INDEXES;
 }
-void ReaderWriterMutex::$TlsIndexDeleter::operator()(std::size_t uTlsIndex) const noexcept {
+void ReaderWriterMutex::XTlsIndexDeleter::operator()(std::size_t uTlsIndex) const noexcept {
 	::TlsFree(uTlsIndex);
 }
 
 template<>
-bool ReaderWriterMutex::UniqueReaderLock::$DoTry() const noexcept {
-	return $pOwner->TryAsReader() != ReaderWriterMutex::Result::kResTryFailed;
+bool ReaderWriterMutex::UniqueReaderLock::XDoTry() const noexcept {
+	return x_pOwner->TryAsReader() != ReaderWriterMutex::Result::kResTryFailed;
 }
 template<>
-void ReaderWriterMutex::UniqueReaderLock::$DoLock() const noexcept {
-	$pOwner->LockAsReader();
+void ReaderWriterMutex::UniqueReaderLock::XDoLock() const noexcept {
+	x_pOwner->LockAsReader();
 }
 template<>
-void ReaderWriterMutex::UniqueReaderLock::$DoUnlock() const noexcept {
-	$pOwner->UnlockAsReader();
+void ReaderWriterMutex::UniqueReaderLock::XDoUnlock() const noexcept {
+	x_pOwner->UnlockAsReader();
 }
 
 template<>
-bool ReaderWriterMutex::UniqueWriterLock::$DoTry() const noexcept {
-	return $pOwner->TryAsWriter() != ReaderWriterMutex::Result::kResTryFailed;
+bool ReaderWriterMutex::UniqueWriterLock::XDoTry() const noexcept {
+	return x_pOwner->TryAsWriter() != ReaderWriterMutex::Result::kResTryFailed;
 }
 template<>
-void ReaderWriterMutex::UniqueWriterLock::$DoLock() const noexcept {
-	$pOwner->LockAsWriter();
+void ReaderWriterMutex::UniqueWriterLock::XDoLock() const noexcept {
+	x_pOwner->LockAsWriter();
 }
 template<>
-void ReaderWriterMutex::UniqueWriterLock::$DoUnlock() const noexcept {
-	$pOwner->UnlockAsWriter();
+void ReaderWriterMutex::UniqueWriterLock::XDoUnlock() const noexcept {
+	x_pOwner->UnlockAsWriter();
 }
 
 // 构造函数和析构函数。
 ReaderWriterMutex::ReaderWriterMutex(std::size_t uSpinCount)
-	: $mtxWriterGuard(uSpinCount), $mtxExclusive(uSpinCount), $uReaderCount(0)
+	: x_mtxWriterGuard(uSpinCount), x_mtxExclusive(uSpinCount), x_uReaderCount(0)
 {
-	if(!$uTlsIndex.Reset(::TlsAlloc())){
+	if(!x_uTlsIndex.Reset(::TlsAlloc())){
 		DEBUG_THROW(SystemError, "TlsAlloc");
 	}
 }
@@ -54,63 +54,63 @@ ReaderWriterMutex::ReaderWriterMutex(std::size_t uSpinCount)
 // 其他非静态成员函数。
 ReaderWriterMutex::Result ReaderWriterMutex::TryAsReader() noexcept {
 	Result eResult = kResRecursive;
-	auto uReaderRecur = (std::uintptr_t)::TlsGetValue($uTlsIndex.Get());
+	auto uReaderRecur = (std::uintptr_t)::TlsGetValue(x_uTlsIndex.Get());
 	if(uReaderRecur == 0){
-		if($mtxWriterGuard.IsLockedByCurrentThread()){
-			$uReaderCount.Increment(kAtomicRelaxed);
+		if(x_mtxWriterGuard.IsLockedByCurrentThread()){
+			x_uReaderCount.Increment(kAtomicRelaxed);
 		} else {
-			if($mtxWriterGuard.Try() == kResTryFailed){
+			if(x_mtxWriterGuard.Try() == kResTryFailed){
 				eResult = kResTryFailed;
 				goto jDone;
 			}
-			if($uReaderCount.Increment(kAtomicRelaxed) == 1){
-				if(!$mtxExclusive.Try()){
-					$uReaderCount.Decrement(kAtomicRelaxed);
-					$mtxWriterGuard.Unlock();
+			if(x_uReaderCount.Increment(kAtomicRelaxed) == 1){
+				if(!x_mtxExclusive.Try()){
+					x_uReaderCount.Decrement(kAtomicRelaxed);
+					x_mtxWriterGuard.Unlock();
 					eResult = kResTryFailed;
 					goto jDone;
 				}
 				eResult = kResStateChanged;
 			}
-			$mtxWriterGuard.Unlock();
+			x_mtxWriterGuard.Unlock();
 		}
 	}
-	::TlsSetValue($uTlsIndex.Get(), (void *)(uReaderRecur + 1));
+	::TlsSetValue(x_uTlsIndex.Get(), (void *)(uReaderRecur + 1));
 jDone:
 	return eResult;
 }
 ReaderWriterMutex::Result ReaderWriterMutex::LockAsReader() noexcept {
 	Result eResult = kResRecursive;
-	auto uReaderRecur = (std::uintptr_t)::TlsGetValue($uTlsIndex.Get());
+	auto uReaderRecur = (std::uintptr_t)::TlsGetValue(x_uTlsIndex.Get());
 	if(uReaderRecur == 0){
-		if($mtxWriterGuard.IsLockedByCurrentThread()){
-			$uReaderCount.Increment(kAtomicRelaxed);
+		if(x_mtxWriterGuard.IsLockedByCurrentThread()){
+			x_uReaderCount.Increment(kAtomicRelaxed);
 		} else {
-			$mtxWriterGuard.Lock();
-			if($uReaderCount.Increment(kAtomicRelaxed) == 1){
-				$mtxExclusive.Lock();
+			x_mtxWriterGuard.Lock();
+			if(x_uReaderCount.Increment(kAtomicRelaxed) == 1){
+				x_mtxExclusive.Lock();
 				eResult = kResStateChanged;
 			}
-			$mtxWriterGuard.Unlock();
+			x_mtxWriterGuard.Unlock();
 		}
 	}
-	::TlsSetValue($uTlsIndex.Get(), (void *)(uReaderRecur + 1));
+	::TlsSetValue(x_uTlsIndex.Get(), (void *)(uReaderRecur + 1));
 	return eResult;
 }
 ReaderWriterMutex::Result ReaderWriterMutex::UnlockAsReader() noexcept {
 	Result eResult = kResRecursive;
-	auto uReaderRecur = (std::uintptr_t)::TlsGetValue($uTlsIndex.Get());
+	auto uReaderRecur = (std::uintptr_t)::TlsGetValue(x_uTlsIndex.Get());
 	if(uReaderRecur == 1){
-		if($mtxWriterGuard.IsLockedByCurrentThread()){
-			$uReaderCount.Decrement(kAtomicRelaxed);
+		if(x_mtxWriterGuard.IsLockedByCurrentThread()){
+			x_uReaderCount.Decrement(kAtomicRelaxed);
 		} else {
-			if($uReaderCount.Decrement(kAtomicRelaxed) == 0){
-				$mtxExclusive.Unlock();
+			if(x_uReaderCount.Decrement(kAtomicRelaxed) == 0){
+				x_mtxExclusive.Unlock();
 				eResult = kResStateChanged;
 			}
 		}
 	}
-	::TlsSetValue($uTlsIndex.Get(), (void *)(uReaderRecur - 1));
+	::TlsSetValue(x_uTlsIndex.Get(), (void *)(uReaderRecur - 1));
 	return eResult;
 }
 
@@ -123,36 +123,36 @@ ReaderWriterMutex::Result ReaderWriterMutex::TryAsWriter() noexcept {
 	//
 	// 这个问题并非无法解决，例如允许 GetWriterLock() 抛出异常。
 	// 但是这样除了使问题复杂化以外没有什么好处。
-	ASSERT_MSG((std::uintptr_t)::TlsGetValue($uTlsIndex.Get()) == 0, L"获取写锁前必须先释放读锁。");
+	ASSERT_MSG((std::uintptr_t)::TlsGetValue(x_uTlsIndex.Get()) == 0, L"获取写锁前必须先释放读锁。");
 
-	const auto eResult = $mtxWriterGuard.Try();
+	const auto eResult = x_mtxWriterGuard.Try();
 	if(eResult != kResStateChanged){
 		return eResult;
 	}
-	if(!$mtxExclusive.Try()){
-		$mtxWriterGuard.Unlock();
+	if(!x_mtxExclusive.Try()){
+		x_mtxWriterGuard.Unlock();
 		return kResTryFailed;
 	}
 	return kResStateChanged;
 }
 ReaderWriterMutex::Result ReaderWriterMutex::LockAsWriter() noexcept {
-	ASSERT_MSG((std::uintptr_t)::TlsGetValue($uTlsIndex.Get()) == 0, L"获取写锁前必须先释放读锁。");
+	ASSERT_MSG((std::uintptr_t)::TlsGetValue(x_uTlsIndex.Get()) == 0, L"获取写锁前必须先释放读锁。");
 
-	const auto eResult = $mtxWriterGuard.Lock();
+	const auto eResult = x_mtxWriterGuard.Lock();
 	if(eResult != kResStateChanged){
 		return eResult;
 	}
-	$mtxExclusive.Lock();
+	x_mtxExclusive.Lock();
 	return kResStateChanged;
 }
 ReaderWriterMutex::Result ReaderWriterMutex::UnlockAsWriter() noexcept {
-	const auto eResult = $mtxWriterGuard.Unlock();
+	const auto eResult = x_mtxWriterGuard.Unlock();
 	if(eResult != kResStateChanged){
 		return eResult;
 	}
-	const auto uRecurReading = (std::uintptr_t)::TlsGetValue($uTlsIndex.Get());
+	const auto uRecurReading = (std::uintptr_t)::TlsGetValue(x_uTlsIndex.Get());
 	if(uRecurReading == 0){
-		$mtxExclusive.Unlock();
+		x_mtxExclusive.Unlock();
 	}
 	return kResStateChanged;
 }

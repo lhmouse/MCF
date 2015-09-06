@@ -12,24 +12,24 @@ namespace MCF {
 
 // 构造函数和析构函数。
 Fnv64::Fnv64() noexcept
-	: $bInited(false)
+	: x_bInited(false)
 {
 }
 
 // 其他非静态成员函数。
 void Fnv64::Abort() noexcept {
-	$bInited = false;
+	x_bInited = false;
 }
 void Fnv64::Update(const void *pData, std::size_t uSize) noexcept {
-	if(!$bInited){
-		$u64Reg = 14695981039346656037u;
+	if(!x_bInited){
+		x_u64Reg = 14695981039346656037u;
 
-		$bInited = true;
+		x_bInited = true;
 	}
 
 	const auto DoFnv64Byte = [&](unsigned char byData){
-		$u64Reg ^= byData;
-		$u64Reg *= 1099511628211u;
+		x_u64Reg ^= byData;
+		x_u64Reg *= 1099511628211u;
 	};
 
 	register auto pbyRead = (const unsigned char *)pData;
@@ -57,10 +57,10 @@ void Fnv64::Update(const void *pData, std::size_t uSize) noexcept {
 	}
 }
 std::uint64_t Fnv64::Finalize() noexcept {
-	if($bInited){
-		$bInited = false;
+	if(x_bInited){
+		x_bInited = false;
 	}
-	return $u64Reg;
+	return x_u64Reg;
 }
 
 }

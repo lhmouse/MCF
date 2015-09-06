@@ -13,46 +13,46 @@ namespace MCF {
 
 class ZlibEncoder : public StreamFilterBase {
 private:
-	class $Delegate;
+	class XDelegate;
 
 private:
-	const bool $bRaw;
-	const unsigned $uLevel;
+	const bool x_bRaw;
+	const unsigned x_uLevel;
 
-	UniquePtr<$Delegate> $pDelegate;
+	UniquePtr<XDelegate> x_pDelegate;
 
 public:
 	explicit ZlibEncoder(bool bRaw = false, unsigned uLevel = 6) noexcept;
 	~ZlibEncoder();
 
 protected:
-	void $DoInit() override;
-	void $DoUpdate(const void *pData, std::size_t uSize) override;
-	void $DoFinalize() override;
+	void XDoInit() override;
+	void XDoUpdate(const void *pData, std::size_t uSize) override;
+	void XDoFinalize() override;
 };
 
 class ZlibDecoder : public StreamFilterBase {
 private:
-	class $Delegate;
+	class XDelegate;
 
 private:
-	const bool $bRaw;
+	const bool x_bRaw;
 
-	UniquePtr<$Delegate> $pDelegate;
+	UniquePtr<XDelegate> x_pDelegate;
 
 public:
 	explicit ZlibDecoder(bool bRaw = false) noexcept;
 	~ZlibDecoder();
 
 protected:
-	void $DoInit() override;
-	void $DoUpdate(const void *pData, std::size_t uSize) override;
-	void $DoFinalize() override;
+	void XDoInit() override;
+	void XDoUpdate(const void *pData, std::size_t uSize) override;
+	void XDoFinalize() override;
 };
 
 class ZlibError : public Exception {
 private:
-	long $lZlibError;
+	long x_lZlibError;
 
 public:
 	ZlibError(const char *pszFile, unsigned long ulLine, long lZlibError, const char *pszFunction) noexcept;
@@ -60,7 +60,7 @@ public:
 
 public:
 	long GetZlibError() const noexcept {
-		return $lZlibError;
+		return x_lZlibError;
 	}
 };
 

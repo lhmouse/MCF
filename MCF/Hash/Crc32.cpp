@@ -14,7 +14,7 @@ namespace MCF {
 
 // 构造函数和析构函数。
 Crc32::Crc32(std::uint32_t u32Divisor) noexcept
-	: $bInited(false)
+	: x_bInited(false)
 {
 	for(std::uint32_t i = 0; i < 256; ++i){
 		register std::uint32_t u32Reg = i;
@@ -36,23 +36,23 @@ Crc32::Crc32(std::uint32_t u32Divisor) noexcept
 				: "ax"
 			);
 		}
-		$au32Table[i] = u32Reg;
+		x_au32Table[i] = u32Reg;
 	}
 }
 
 // 其他非静态成员函数。
 void Crc32::Abort() noexcept {
-	$bInited = false;
+	x_bInited = false;
 }
 void Crc32::Update(const void *pData, std::size_t uSize) noexcept {
-	if(!$bInited){
-		$u32Reg = (std::uint32_t)-1;
+	if(!x_bInited){
+		x_u32Reg = (std::uint32_t)-1;
 
-		$bInited = true;
+		x_bInited = true;
 	}
 
 	const auto DoCrc32Byte = [&](unsigned char byData){
-		$u32Reg = $au32Table[($u32Reg ^ byData) & 0xFF] ^ ($u32Reg >> 8);
+		x_u32Reg = x_au32Table[(x_u32Reg ^ byData) & 0xFF] ^ (x_u32Reg >> 8);
 	};
 
 	register auto pbyRead = (const unsigned char *)pData;
@@ -80,12 +80,12 @@ void Crc32::Update(const void *pData, std::size_t uSize) noexcept {
 	}
 }
 std::uint32_t Crc32::Finalize() noexcept {
-	if($bInited){
-		$u32Reg = ~$u32Reg;
+	if(x_bInited){
+		x_u32Reg = ~x_u32Reg;
 
-		$bInited = false;
+		x_bInited = false;
 	}
-	return $u32Reg;
+	return x_u32Reg;
 }
 
 }

@@ -30,42 +30,42 @@ namespace {
 // ========== IsaacExEncoder ==========
 // 构造函数和析构函数。
 IsaacExEncoder::IsaacExEncoder(const void *pKey, std::size_t uKeyLen) noexcept
-	: $vKeyHash(GenerateKeyHash(pKey, uKeyLen))
+	: x_vKeyHash(GenerateKeyHash(pKey, uKeyLen))
 {
 }
 
 // 其他非静态成员函数。
-void IsaacExEncoder::$DoInit(){
-	$vIsaacGenerator.Init($vKeyHash.au32Words);
-	$byLastEncoded = 0;
-	$lLastHighWord = -1;
+void IsaacExEncoder::XDoInit(){
+	x_vIsaacGenerator.Init(x_vKeyHash.au32Words);
+	x_byLastEncoded = 0;
+	x_lLastHighWord = -1;
 }
-void IsaacExEncoder::$DoUpdate(const void *pData, std::size_t uSize){
+void IsaacExEncoder::XDoUpdate(const void *pData, std::size_t uSize){
 	auto pbyRead = static_cast<const unsigned char *>(pData);
 	const auto pbyEnd = pbyRead + uSize;
 
 	const auto EncodeByte = [&](unsigned uSeed){
 		register auto by = *pbyRead;
 		++pbyRead;
-		const unsigned char byRot = $byLastEncoded & 7;
+		const unsigned char byRot = x_byLastEncoded & 7;
 
 		by ^= uSeed;
 		__asm__ __volatile__("rol %b0, cl \n" : "+q"(by) : "c"(byRot));
-		$byLastEncoded = by ^ (uSeed >> 8);
+		x_byLastEncoded = by ^ (uSeed >> 8);
 
-		$Output(by);
+		XOutput(by);
 	};
 
 	if(uSize > 4){
 		unsigned uSeed;
-		if($lLastHighWord != -1){
-			uSeed = (std::uint16_t)$lLastHighWord;
-			$lLastHighWord = -1;
+		if(x_lLastHighWord != -1){
+			uSeed = (std::uint16_t)x_lLastHighWord;
+			x_lLastHighWord = -1;
 			EncodeByte(uSeed);
 		}
 		register auto i = (std::size_t)(pbyEnd - pbyRead) / 2;
 		while(i != 0){
-			uSeed = $vIsaacGenerator.Get();
+			uSeed = x_vIsaacGenerator.Get();
 			EncodeByte(uSeed);
 			EncodeByte(uSeed >> 16);
 			--i;
@@ -73,59 +73,59 @@ void IsaacExEncoder::$DoUpdate(const void *pData, std::size_t uSize){
 	}
 	while(pbyRead != pbyEnd){
 		unsigned uSeed;
-		if($lLastHighWord == -1){
-			const auto u32Word = $vIsaacGenerator.Get();
+		if(x_lLastHighWord == -1){
+			const auto u32Word = x_vIsaacGenerator.Get();
 			uSeed = u32Word;
-			$lLastHighWord = (long)(u32Word >> 16);
+			x_lLastHighWord = (long)(u32Word >> 16);
 		} else {
-			uSeed = (std::uint16_t)$lLastHighWord;
-			$lLastHighWord = -1;
+			uSeed = (std::uint16_t)x_lLastHighWord;
+			x_lLastHighWord = -1;
 		}
 		EncodeByte(uSeed);
 	}
 }
-void IsaacExEncoder::$DoFinalize(){
+void IsaacExEncoder::XDoFinalize(){
 }
 
 // ========== IsaacExDecoder ==========
 // 构造函数和析构函数。
 IsaacExDecoder::IsaacExDecoder(const void *pKey, std::size_t uKeyLen) noexcept
-	: $vKeyHash(GenerateKeyHash(pKey, uKeyLen))
+	: x_vKeyHash(GenerateKeyHash(pKey, uKeyLen))
 {
 }
 
 // 其他非静态成员函数。
-void IsaacExDecoder::$DoInit(){
-	$vIsaacGenerator.Init($vKeyHash.au32Words);
-	$byLastEncoded = 0;
-	$lLastHighWord = -1;
+void IsaacExDecoder::XDoInit(){
+	x_vIsaacGenerator.Init(x_vKeyHash.au32Words);
+	x_byLastEncoded = 0;
+	x_lLastHighWord = -1;
 }
-void IsaacExDecoder::$DoUpdate(const void *pData, std::size_t uSize){
+void IsaacExDecoder::XDoUpdate(const void *pData, std::size_t uSize){
 	auto pbyRead = static_cast<const unsigned char *>(pData);
 	const auto pbyEnd = pbyRead + uSize;
 
 	const auto DecodeByte = [&](unsigned uSeed){
 		register auto by = *pbyRead;
 		++pbyRead;
-		const unsigned char byRot = $byLastEncoded & 7;
+		const unsigned char byRot = x_byLastEncoded & 7;
 
-		$byLastEncoded = by ^ (uSeed >> 8);
+		x_byLastEncoded = by ^ (uSeed >> 8);
 		__asm__ __volatile__("ror %b0, cl \n" : "+q"(by) : "c"(byRot));
 		by ^= uSeed;
 
-		$Output(by);
+		XOutput(by);
 	};
 
 	if(uSize > 4){
 		unsigned uSeed;
-		if($lLastHighWord != -1){
-			uSeed = (std::uint16_t)$lLastHighWord;
-			$lLastHighWord = -1;
+		if(x_lLastHighWord != -1){
+			uSeed = (std::uint16_t)x_lLastHighWord;
+			x_lLastHighWord = -1;
 			DecodeByte(uSeed);
 		}
 		register auto i = (std::size_t)(pbyEnd - pbyRead) / 2;
 		while(i != 0){
-			uSeed = $vIsaacGenerator.Get();
+			uSeed = x_vIsaacGenerator.Get();
 			DecodeByte(uSeed);
 			DecodeByte(uSeed >> 16);
 			--i;
@@ -133,18 +133,18 @@ void IsaacExDecoder::$DoUpdate(const void *pData, std::size_t uSize){
 	}
 	while(pbyRead != pbyEnd){
 		unsigned uSeed;
-		if($lLastHighWord == -1){
-			const auto u32Word = $vIsaacGenerator.Get();
+		if(x_lLastHighWord == -1){
+			const auto u32Word = x_vIsaacGenerator.Get();
 			uSeed = u32Word;
-			$lLastHighWord = (long)(u32Word >> 16);
+			x_lLastHighWord = (long)(u32Word >> 16);
 		} else {
-			uSeed = (std::uint16_t)$lLastHighWord;
-			$lLastHighWord = -1;
+			uSeed = (std::uint16_t)x_lLastHighWord;
+			x_lLastHighWord = -1;
 		}
 		DecodeByte(uSeed);
 	}
 }
-void IsaacExDecoder::$DoFinalize(){
+void IsaacExDecoder::XDoFinalize(){
 }
 
 }

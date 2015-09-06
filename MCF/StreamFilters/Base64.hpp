@@ -15,34 +15,34 @@ constexpr char kBase64TableRegexp	[66] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijkl
 
 class Base64Encoder : public StreamFilterBase {
 private:
-	unsigned char $abyTable[65];
+	unsigned char x_abyTable[65];
 
-	unsigned $uState;
-	unsigned long $ulWord;
+	unsigned x_uState;
+	unsigned long x_ulWord;
 
 public:
 	explicit Base64Encoder(const char *pchTable = kBase64TableMime) noexcept;
 
 protected:
-	void $DoInit() override;
-	void $DoUpdate(const void *pData, std::size_t uSize) override;
-	void $DoFinalize() override;
+	void XDoInit() override;
+	void XDoUpdate(const void *pData, std::size_t uSize) override;
+	void XDoFinalize() override;
 };
 
 class Base64Decoder : public StreamFilterBase {
 private:
-	signed char $aschTable[0x100];
+	signed char x_aschTable[0x100];
 
-	unsigned $uState;
-	unsigned long $ulWord;
+	unsigned x_uState;
+	unsigned long x_ulWord;
 
 public:
 	explicit Base64Decoder(const char *pchTable = kBase64TableMime) noexcept;
 
 protected:
-	void $DoInit() override;
-	void $DoUpdate(const void *pData, std::size_t uSize) override;
-	void $DoFinalize() override;
+	void XDoInit() override;
+	void XDoUpdate(const void *pData, std::size_t uSize) override;
+	void XDoFinalize() override;
 };
 
 }

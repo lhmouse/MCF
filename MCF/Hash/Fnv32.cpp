@@ -12,24 +12,24 @@ namespace MCF {
 
 // 构造函数和析构函数。
 Fnv32::Fnv32() noexcept
-	: $bInited(false)
+	: x_bInited(false)
 {
 }
 
 // 其他非静态成员函数。
 void Fnv32::Abort() noexcept {
-	$bInited = false;
+	x_bInited = false;
 }
 void Fnv32::Update(const void *pData, std::size_t uSize) noexcept {
-	if(!$bInited){
-		$u32Reg = 2166136261u;
+	if(!x_bInited){
+		x_u32Reg = 2166136261u;
 
-		$bInited = true;
+		x_bInited = true;
 	}
 
 	const auto DoFnv32Byte = [&](unsigned char byData){
-		$u32Reg ^= byData;
-		$u32Reg *= 16777619u;
+		x_u32Reg ^= byData;
+		x_u32Reg *= 16777619u;
 	};
 
 	register auto pbyRead = (const unsigned char *)pData;
@@ -57,10 +57,10 @@ void Fnv32::Update(const void *pData, std::size_t uSize) noexcept {
 	}
 }
 std::uint32_t Fnv32::Finalize() noexcept {
-	if($bInited){
-		$bInited = false;
+	if(x_bInited){
+		x_bInited = false;
 	}
-	return $u32Reg;
+	return x_u32Reg;
 }
 
 }

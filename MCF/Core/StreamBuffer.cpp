@@ -10,12 +10,12 @@
 
 namespace MCF {
 
-struct StreamBuffer::$Chunk final {
+struct StreamBuffer::XChunk final {
 	static SpinLock s_splPoolMutex;
-	static $Chunk *__restrict__ s_pPoolHead;
+	static XChunk *__restrict__ s_pPoolHead;
 
 	static void *operator new(std::size_t uSize){
-		ASSERT(uSize == sizeof($Chunk));
+		ASSERT(uSize == sizeof(XChunk));
 
 		const auto uLockValue = s_splPoolMutex.Lock();
 		const auto pPooled = s_pPoolHead;
@@ -31,7 +31,7 @@ struct StreamBuffer::$Chunk final {
 		if(!pRaw){
 			return;
 		}
-		const auto pPooled = static_cast<$Chunk *>(pRaw);
+		const auto pPooled = static_cast<XChunk *>(pRaw);
 
 		const auto uLockValue = s_splPoolMutex.Lock();
 		pPooled->pPrev = s_pPoolHead;
@@ -48,49 +48,49 @@ struct StreamBuffer::$Chunk final {
 		}
 	}
 
-	$Chunk *pPrev;
-	$Chunk *pNext;
+	XChunk *pPrev;
+	XChunk *pNext;
 	unsigned uBegin;
 	unsigned uEnd;
 	unsigned char abyData[0x100];
 };
 
-SpinLock StreamBuffer::$Chunk::s_splPoolMutex;
-StreamBuffer::$Chunk *__restrict__ StreamBuffer::$Chunk::s_pPoolHead = nullptr;
+SpinLock StreamBuffer::XChunk::s_splPoolMutex;
+StreamBuffer::XChunk *__restrict__ StreamBuffer::XChunk::s_pPoolHead = nullptr;
 
 unsigned char *StreamBuffer::ChunkEnumerator::GetBegin() const noexcept {
-	ASSERT($pChunk);
+	ASSERT(x_pChunk);
 
-	return $pChunk->abyData + $pChunk->uBegin;
+	return x_pChunk->abyData + x_pChunk->uBegin;
 }
 unsigned char *StreamBuffer::ChunkEnumerator::GetEnd() const noexcept {
-	ASSERT($pChunk);
+	ASSERT(x_pChunk);
 
-	return $pChunk->abyData + $pChunk->uEnd;
+	return x_pChunk->abyData + x_pChunk->uEnd;
 }
 
 StreamBuffer::ChunkEnumerator &StreamBuffer::ChunkEnumerator::operator++() noexcept {
-	ASSERT($pChunk);
+	ASSERT(x_pChunk);
 
-	$pChunk = $pChunk->pNext;
+	x_pChunk = x_pChunk->pNext;
 	return *this;
 }
 
 const unsigned char *StreamBuffer::ConstChunkEnumerator::GetBegin() const noexcept {
-	ASSERT($pChunk);
+	ASSERT(x_pChunk);
 
-	return $pChunk->abyData + $pChunk->uBegin;
+	return x_pChunk->abyData + x_pChunk->uBegin;
 }
 const unsigned char *StreamBuffer::ConstChunkEnumerator::GetEnd() const noexcept {
-	ASSERT($pChunk);
+	ASSERT(x_pChunk);
 
-	return $pChunk->abyData + $pChunk->uEnd;
+	return x_pChunk->abyData + x_pChunk->uEnd;
 }
 
 StreamBuffer::ConstChunkEnumerator &StreamBuffer::ConstChunkEnumerator::operator++() noexcept {
-	ASSERT($pChunk);
+	ASSERT(x_pChunk);
 
-	$pChunk = $pChunk->pNext;
+	x_pChunk = x_pChunk->pNext;
 	return *this;
 }
 
@@ -131,12 +131,12 @@ StreamBuffer::~StreamBuffer(){
 
 // 其他非静态成员函数。
 int StreamBuffer::PeekFront() const noexcept {
-	if($uSize == 0){
+	if(x_uSize == 0){
 		return -1;
 	}
 
 	int nRet = -1;
-	auto pChunk = $pFirst;
+	auto pChunk = x_pFirst;
 	do {
 		if(pChunk->uEnd != pChunk->uBegin){
 			nRet = pChunk->abyData[pChunk->uBegin];
@@ -146,12 +146,12 @@ int StreamBuffer::PeekFront() const noexcept {
 	return nRet;
 }
 int StreamBuffer::PeekBack() const noexcept {
-	if($uSize == 0){
+	if(x_uSize == 0){
 		return -1;
 	}
 
 	int nRet = -1;
-	auto pChunk = $pLast;
+	auto pChunk = x_pLast;
 	do {
 		if(pChunk->uEnd != pChunk->uBegin){
 			nRet = pChunk->abyData[pChunk->uEnd - 1];
@@ -162,22 +162,22 @@ int StreamBuffer::PeekBack() const noexcept {
 }
 
 void StreamBuffer::Clear() noexcept {
-	while($pFirst){
-		const auto pChunk = $pFirst;
-		$pFirst = pChunk->pNext;
+	while(x_pFirst){
+		const auto pChunk = x_pFirst;
+		x_pFirst = pChunk->pNext;
 		delete pChunk;
 	}
-	$pLast = nullptr;
-	$uSize = 0;
+	x_pLast = nullptr;
+	x_uSize = 0;
 }
 
 int StreamBuffer::Get() noexcept {
-	if($uSize == 0){
+	if(x_uSize == 0){
 		return -1;
 	}
 
 	int nRet = -1;
-	auto pChunk = $pFirst;
+	auto pChunk = x_pFirst;
 	do {
 		if(pChunk->uEnd != pChunk->uBegin){
 			nRet = pChunk->abyData[pChunk->uBegin];
@@ -185,41 +185,41 @@ int StreamBuffer::Get() noexcept {
 		}
 		if(pChunk->uBegin == pChunk->uEnd){
 			pChunk = pChunk->pNext;
-			delete $pFirst;
-			$pFirst = pChunk;
+			delete x_pFirst;
+			x_pFirst = pChunk;
 
 			if(pChunk){
 				pChunk->pPrev = nullptr;
 			} else {
-				$pLast = nullptr;
+				x_pLast = nullptr;
 			}
 		}
 	} while(nRet < 0);
-	$uSize -= 1;
+	x_uSize -= 1;
 	return nRet;
 }
 void StreamBuffer::Put(unsigned char by){
 	std::size_t uLastChunkAvail = 0;
-	if($pLast){
-		uLastChunkAvail = sizeof($pLast->abyData) - $pLast->uEnd;
+	if(x_pLast){
+		uLastChunkAvail = sizeof(x_pLast->abyData) - x_pLast->uEnd;
 	}
-	$Chunk *pLastChunk = nullptr;
+	XChunk *pLastChunk = nullptr;
 	if(uLastChunkAvail != 0){
-		pLastChunk = $pLast;
+		pLastChunk = x_pLast;
 	} else {
-		auto pChunk = new $Chunk;
+		auto pChunk = new XChunk;
 		pChunk->pNext = nullptr;
 		// pChunk->pPrev = nullptr;
 		pChunk->uBegin = 0;
 		pChunk->uEnd = 0;
 
-		if($pLast){
-			$pLast->pNext = pChunk;
+		if(x_pLast){
+			x_pLast->pNext = pChunk;
 		} else {
-			$pFirst = pChunk;
+			x_pFirst = pChunk;
 		}
-		pChunk->pPrev = $pLast;
-		$pLast = pChunk;
+		pChunk->pPrev = x_pLast;
+		x_pLast = pChunk;
 
 		if(!pLastChunk){
 			pLastChunk = pChunk;
@@ -229,15 +229,15 @@ void StreamBuffer::Put(unsigned char by){
 	auto pChunk = pLastChunk;
 	pChunk->abyData[pChunk->uEnd] = by;
 	++(pChunk->uEnd);
-	++$uSize;
+	++x_uSize;
 }
 int StreamBuffer::Unput() noexcept {
-	if($uSize == 0){
+	if(x_uSize == 0){
 		return -1;
 	}
 
 	int nRet = -1;
-	auto pChunk = $pLast;
+	auto pChunk = x_pLast;
 	do {
 		if(pChunk->uEnd != pChunk->uBegin){
 			--(pChunk->uEnd);
@@ -245,41 +245,41 @@ int StreamBuffer::Unput() noexcept {
 		}
 		if(pChunk->uBegin == pChunk->uEnd){
 			pChunk = pChunk->pPrev;
-			delete $pLast;
-			$pLast = pChunk;
+			delete x_pLast;
+			x_pLast = pChunk;
 
 			if(pChunk){
 				pChunk->pNext = nullptr;
 			} else {
-				$pFirst = nullptr;
+				x_pFirst = nullptr;
 			}
 		}
 	} while(nRet < 0);
-	$uSize -= 1;
+	x_uSize -= 1;
 	return nRet;
 }
 void StreamBuffer::Unget(unsigned char by){
 	std::size_t uFirstChunkAvail = 0;
-	if($pFirst){
-		uFirstChunkAvail = $pFirst->uBegin;
+	if(x_pFirst){
+		uFirstChunkAvail = x_pFirst->uBegin;
 	}
-	$Chunk *pFirstChunk = nullptr;
+	XChunk *pFirstChunk = nullptr;
 	if(uFirstChunkAvail != 0){
-		pFirstChunk = $pFirst;
+		pFirstChunk = x_pFirst;
 	} else {
-		auto pChunk = new $Chunk;
+		auto pChunk = new XChunk;
 		// pChunk->pNext = nullptr;
 		pChunk->pPrev = nullptr;
 		pChunk->uBegin = sizeof(pChunk->abyData);
 		pChunk->uEnd = sizeof(pChunk->abyData);
 
-		if($pFirst){
-			$pFirst->pPrev = pChunk;
+		if(x_pFirst){
+			x_pFirst->pPrev = pChunk;
 		} else {
-			$pLast = pChunk;
+			x_pLast = pChunk;
 		}
-		pChunk->pNext = $pFirst;
-		$pFirst = pChunk;
+		pChunk->pNext = x_pFirst;
+		x_pFirst = pChunk;
 
 		if(!pFirstChunk){
 			pFirstChunk = pChunk;
@@ -289,17 +289,17 @@ void StreamBuffer::Unget(unsigned char by){
 	auto pChunk = pFirstChunk;
 	--(pChunk->uBegin);
 	pChunk->abyData[pChunk->uBegin] = by;
-	++$uSize;
+	++x_uSize;
 }
 
 std::size_t StreamBuffer::Peek(void *pData, std::size_t uSize) const noexcept {
-	const auto uBytesToCopy = Min(uSize, $uSize);
+	const auto uBytesToCopy = Min(uSize, x_uSize);
 	if(uBytesToCopy == 0){
 		return 0;
 	}
 
 	std::size_t uBytesCopied = 0;
-	auto pChunk = $pFirst;
+	auto pChunk = x_pFirst;
 	do {
 		const auto pbyWrite = static_cast<unsigned char *>(pData) + uBytesCopied;
 		const auto uBytesToCopyThisTime = Min(uBytesToCopy - uBytesCopied, pChunk->uEnd - pChunk->uBegin);
@@ -310,13 +310,13 @@ std::size_t StreamBuffer::Peek(void *pData, std::size_t uSize) const noexcept {
 	return uBytesCopied;
 }
 std::size_t StreamBuffer::Get(void *pData, std::size_t uSize) noexcept {
-	const auto uBytesToCopy = Min(uSize, $uSize);
+	const auto uBytesToCopy = Min(uSize, x_uSize);
 	if(uBytesToCopy == 0){
 		return 0;
 	}
 
 	std::size_t uBytesCopied = 0;
-	auto pChunk = $pFirst;
+	auto pChunk = x_pFirst;
 	do {
 		const auto pbyWrite = static_cast<unsigned char *>(pData) + uBytesCopied;
 		const auto uBytesToCopyThisTime = Min(uBytesToCopy - uBytesCopied, pChunk->uEnd - pChunk->uBegin);
@@ -325,44 +325,44 @@ std::size_t StreamBuffer::Get(void *pData, std::size_t uSize) noexcept {
 		pChunk->uBegin += uBytesToCopyThisTime;
 		if(pChunk->uBegin == pChunk->uEnd){
 			pChunk = pChunk->pNext;
-			delete $pFirst;
-			$pFirst = pChunk;
+			delete x_pFirst;
+			x_pFirst = pChunk;
 
 			if(pChunk){
 				pChunk->pPrev = nullptr;
 			} else {
-				$pLast = nullptr;
+				x_pLast = nullptr;
 			}
 		}
 	} while(uBytesCopied < uBytesToCopy);
-	$uSize -= uBytesToCopy;
+	x_uSize -= uBytesToCopy;
 	return uBytesCopied;
 }
 std::size_t StreamBuffer::Discard(std::size_t uSize) noexcept {
-	const auto uBytesToCopy = Min(uSize, $uSize);
+	const auto uBytesToCopy = Min(uSize, x_uSize);
 	if(uBytesToCopy == 0){
 		return 0;
 	}
 
 	std::size_t uBytesCopied = 0;
-	auto pChunk = $pFirst;
+	auto pChunk = x_pFirst;
 	do {
 		const auto uBytesToCopyThisTime = Min(uBytesToCopy - uBytesCopied, pChunk->uEnd - pChunk->uBegin);
 		uBytesCopied += uBytesToCopyThisTime;
 		pChunk->uBegin += uBytesToCopyThisTime;
 		if(pChunk->uBegin == pChunk->uEnd){
 			pChunk = pChunk->pNext;
-			delete $pFirst;
-			$pFirst = pChunk;
+			delete x_pFirst;
+			x_pFirst = pChunk;
 
 			if(pChunk){
 				pChunk->pPrev = nullptr;
 			} else {
-				$pLast = nullptr;
+				x_pLast = nullptr;
 			}
 		}
 	} while(uBytesCopied < uBytesToCopy);
-	$uSize -= uBytesToCopy;
+	x_uSize -= uBytesToCopy;
 	return uBytesCopied;
 }
 void StreamBuffer::Put(const void *pData, std::size_t uSize){
@@ -372,18 +372,18 @@ void StreamBuffer::Put(const void *pData, std::size_t uSize){
 	}
 
 	std::size_t uLastChunkAvail = 0;
-	if($pLast){
-		uLastChunkAvail = sizeof($pLast->abyData) - $pLast->uEnd;
+	if(x_pLast){
+		uLastChunkAvail = sizeof(x_pLast->abyData) - x_pLast->uEnd;
 	}
-	$Chunk *pLastChunk = nullptr;
+	XChunk *pLastChunk = nullptr;
 	if(uLastChunkAvail != 0){
-		pLastChunk = $pLast;
+		pLastChunk = x_pLast;
 	}
 	if(uBytesToCopy > uLastChunkAvail){
 		const auto uNewChunks = (uBytesToCopy - uLastChunkAvail - 1) / sizeof(pLastChunk->abyData) + 1;
 		ASSERT(uNewChunks != 0);
 
-		auto pChunk = new $Chunk;
+		auto pChunk = new XChunk;
 		pChunk->pNext = nullptr;
 		pChunk->pPrev = nullptr;
 		pChunk->uBegin = 0;
@@ -392,7 +392,7 @@ void StreamBuffer::Put(const void *pData, std::size_t uSize){
 		auto pToSpliceFirst = pChunk, pToSpliceLast = pChunk;
 		try {
 			for(std::size_t i = 1; i < uNewChunks; ++i){
-				pChunk = new $Chunk;
+				pChunk = new XChunk;
 				pChunk->pNext = nullptr;
 				pChunk->pPrev = pToSpliceLast;
 				pChunk->uBegin = 0;
@@ -410,13 +410,13 @@ void StreamBuffer::Put(const void *pData, std::size_t uSize){
 
 			throw;
 		}
-		if($pLast){
-			$pLast->pNext = pToSpliceFirst;
+		if(x_pLast){
+			x_pLast->pNext = pToSpliceFirst;
 		} else {
-			$pFirst = pToSpliceFirst;
+			x_pFirst = pToSpliceFirst;
 		}
-		pToSpliceFirst->pPrev = $pLast;
-		$pLast = pToSpliceLast;
+		pToSpliceFirst->pPrev = x_pLast;
+		x_pLast = pToSpliceLast;
 
 		if(!pLastChunk){
 			pLastChunk = pToSpliceFirst;
@@ -433,7 +433,7 @@ void StreamBuffer::Put(const void *pData, std::size_t uSize){
 		uBytesCopied += uBytesToCopyThisTime;
 		pChunk = pChunk->pNext;
 	} while(uBytesCopied < uBytesToCopy);
-	$uSize += uBytesToCopy;
+	x_uSize += uBytesToCopy;
 }
 void StreamBuffer::Put(const char *pszData){
 	Put(pszData, std::strlen(pszData));
@@ -442,18 +442,18 @@ void StreamBuffer::Put(const char *pszData){
 StreamBuffer StreamBuffer::CutOff(std::size_t uSize){
 	StreamBuffer sbufRet;
 
-	const auto uBytesToCopy = Min(uSize, $uSize);
+	const auto uBytesToCopy = Min(uSize, x_uSize);
 	if(uBytesToCopy == 0){
 		return sbufRet;
 	}
 
-	if($uSize <= uBytesToCopy){
+	if(x_uSize <= uBytesToCopy){
 		sbufRet.Swap(*this);
 		return sbufRet;
 	}
 
 	std::size_t uBytesCopied = 0;
-	auto pCutEnd = $pFirst;
+	auto pCutEnd = x_pFirst;
 	for(;;){
 		const auto uBytesRemaining = uBytesToCopy - uBytesCopied;
 		const auto uBytesAvail = pCutEnd->uEnd - pCutEnd->uBegin;
@@ -461,7 +461,7 @@ StreamBuffer StreamBuffer::CutOff(std::size_t uSize){
 			if(uBytesRemaining == uBytesAvail){
 				pCutEnd = pCutEnd->pNext;
 			} else {
-				const auto pChunk = new $Chunk;
+				const auto pChunk = new XChunk;
 				pChunk->pNext = pCutEnd;
 				pChunk->pPrev = pCutEnd->pPrev;
 				pChunk->uBegin = 0;
@@ -473,7 +473,7 @@ StreamBuffer StreamBuffer::CutOff(std::size_t uSize){
 				if(pCutEnd->pPrev){
 					pCutEnd->pPrev->pNext = pChunk;
 				} else {
-					$pFirst = pChunk;
+					x_pFirst = pChunk;
 				}
 				pCutEnd->pPrev = pChunk;
 			}
@@ -483,39 +483,39 @@ StreamBuffer StreamBuffer::CutOff(std::size_t uSize){
 		pCutEnd = pCutEnd->pNext;
 	}
 
-	const auto pCutFirst = $pFirst;
+	const auto pCutFirst = x_pFirst;
 	const auto pCutLast = pCutEnd->pPrev;
 	pCutLast->pNext = nullptr;
 	pCutEnd->pPrev = nullptr;
 
-	$pFirst = pCutEnd;
-	$uSize -= uBytesToCopy;
+	x_pFirst = pCutEnd;
+	x_uSize -= uBytesToCopy;
 
-	sbufRet.$pFirst = pCutFirst;
-	sbufRet.$pLast = pCutLast;
-	sbufRet.$uSize = uBytesToCopy;
+	sbufRet.x_pFirst = pCutFirst;
+	sbufRet.x_pLast = pCutLast;
+	sbufRet.x_uSize = uBytesToCopy;
 	return sbufRet;
 }
 void StreamBuffer::Splice(StreamBuffer &rhs) noexcept {
 	if(&rhs == this){
 		return;
 	}
-	if(!rhs.$pFirst){
+	if(!rhs.x_pFirst){
 		return;
 	}
 
-	if($pLast){
-		$pLast->pNext = rhs.$pFirst;
+	if(x_pLast){
+		x_pLast->pNext = rhs.x_pFirst;
 	} else {
-		$pFirst = rhs.$pFirst;
+		x_pFirst = rhs.x_pFirst;
 	}
-	rhs.$pFirst->pPrev = $pLast;
-	$pLast = rhs.$pLast;
-	$uSize += rhs.$uSize;
+	rhs.x_pFirst->pPrev = x_pLast;
+	x_pLast = rhs.x_pLast;
+	x_uSize += rhs.x_uSize;
 
-	rhs.$pFirst = nullptr;
-	rhs.$pLast = nullptr;
-	rhs.$uSize = 0;
+	rhs.x_pFirst = nullptr;
+	rhs.x_pLast = nullptr;
+	rhs.x_uSize = 0;
 }
 
 }

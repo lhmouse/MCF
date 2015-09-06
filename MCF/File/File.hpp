@@ -32,7 +32,7 @@ public:
 	};
 
 private:
-	struct $FileCloser {
+	struct XFileCloser {
 		struct Impl;
 		using Handle = Impl *;
 
@@ -41,7 +41,7 @@ private:
 	};
 
 private:
-	UniqueHandle<$FileCloser> $hFile;
+	UniqueHandle<XFileCloser> x_hFile;
 
 public:
 	File() noexcept = default;
@@ -84,7 +84,7 @@ public:
 	void Flush() const;
 
 	void Swap(File &rhs) noexcept {
-		$hFile.Swap(rhs.$hFile);
+		x_hFile.Swap(rhs.x_hFile);
 	}
 
 public:

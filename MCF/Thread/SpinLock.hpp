@@ -20,20 +20,20 @@ public:
 	};
 
 private:
-	Atomic<std::uintptr_t> $uCount;
+	Atomic<std::uintptr_t> x_uCount;
 
 public:
 	explicit SpinLock(std::uintptr_t uCount = 0) noexcept {
 		ASSERT(uCount != kLockedCount);
 
-		$uCount.Store(uCount, kAtomicRelease);
+		x_uCount.Store(uCount, kAtomicRelease);
 	}
 
 public:
 	std::uintptr_t Lock() volatile noexcept {
 		std::uintptr_t uOld;
 		for(;;){
-			uOld = $uCount.Exchange(kLockedCount, kAtomicSeqCst);
+			uOld = x_uCount.Exchange(kLockedCount, kAtomicSeqCst);
 			if(EXPECT_NOT(uOld != kLockedCount)){
 				break;
 			}
@@ -42,7 +42,7 @@ public:
 		return uOld;
 	}
 	void Unlock(std::uintptr_t uOld) volatile noexcept {
-		$uCount.Store(uOld, kAtomicSeqCst);
+		x_uCount.Store(uOld, kAtomicSeqCst);
 	}
 };
 

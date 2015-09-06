@@ -13,72 +13,72 @@ namespace MCF {
 
 class StreamFilterBase {
 private:
-	bool $bInited;
-	StreamBuffer $sbufOutput;
-	std::uint64_t $u64BytesProcessed;
+	bool x_bInited;
+	StreamBuffer x_sbufOutput;
+	std::uint64_t x_u64BytesProcessed;
 
 protected:
 	StreamFilterBase() noexcept
-		: $bInited(false), $u64BytesProcessed(0)
+		: x_bInited(false), x_u64BytesProcessed(0)
 	{
 	}
 	virtual ~StreamFilterBase();
 
 protected:
-	virtual void $DoInit() = 0;
-	virtual void $DoUpdate(const void *pData, std::size_t uSize) = 0;
-	virtual void $DoFinalize() = 0;
+	virtual void XDoInit() = 0;
+	virtual void XDoUpdate(const void *pData, std::size_t uSize) = 0;
+	virtual void XDoFinalize() = 0;
 
 	// 子类中使用这两个函数输出数据。
-	void $Output(unsigned char by){
-		$sbufOutput.Put(by);
+	void XOutput(unsigned char by){
+		x_sbufOutput.Put(by);
 	}
-	void $Output(const void *pData, std::size_t uSize){
-		$sbufOutput.Put(pData, uSize);
+	void XOutput(const void *pData, std::size_t uSize){
+		x_sbufOutput.Put(pData, uSize);
 	}
 
 public:
 	void Abort() noexcept {
-		if($bInited){
-			$sbufOutput.Clear();
-			$u64BytesProcessed = 0;
+		if(x_bInited){
+			x_sbufOutput.Clear();
+			x_u64BytesProcessed = 0;
 
-			$bInited = false;
+			x_bInited = false;
 		}
 	}
 	void Update(const void *pData, std::size_t uSize){
-		if(!$bInited){
-			$sbufOutput.Clear();
-			$u64BytesProcessed = 0;
+		if(!x_bInited){
+			x_sbufOutput.Clear();
+			x_u64BytesProcessed = 0;
 
-			$DoInit();
+			XDoInit();
 
-			$bInited = true;
+			x_bInited = true;
 		}
 
-		$DoUpdate(pData, uSize);
-		$u64BytesProcessed += uSize;
+		XDoUpdate(pData, uSize);
+		x_u64BytesProcessed += uSize;
 	}
 	void Finalize(){
-		if($bInited){
-			$DoFinalize();
+		if(x_bInited){
+			XDoFinalize();
 
-			$bInited = false;
+			x_bInited = false;
 		}
 	}
 
 	std::size_t QueryBytesProcessed() const noexcept {
-		return $u64BytesProcessed;
+		return x_u64BytesProcessed;
 	}
 	const StreamBuffer &GetOutputBuffer() const noexcept {
-		return $sbufOutput;
+		return x_sbufOutput;
 	}
 	StreamBuffer &GetOutputBuffer() noexcept {
-		return $sbufOutput;
+		return x_sbufOutput;
 	}
 
 	StreamFilterBase &Filter(const StreamBuffer &sbufData){
-		ASSERT(&$sbufOutput != &sbufData);
+		ASSERT(&x_sbufOutput != &sbufData);
 
 		for(auto ce = sbufData.GetChunkEnumerator(); ce; ++ce){
 			Update(ce.GetData(), ce.GetSize());
@@ -88,10 +88,10 @@ public:
 	StreamFilterBase &FilterInPlace(StreamBuffer &sbufData){
 		Filter(sbufData);
 		Finalize();
-		sbufData.Swap($sbufOutput);
+		sbufData.Swap(x_sbufOutput);
 
-		$sbufOutput.Clear();
-		$u64BytesProcessed = 0;
+		x_sbufOutput.Clear();
+		x_u64BytesProcessed = 0;
 		return *this;
 	}
 };

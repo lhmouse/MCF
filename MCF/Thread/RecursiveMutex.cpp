@@ -8,63 +8,63 @@
 namespace MCF {
 
 template<>
-bool RecursiveMutex::UniqueLock::$DoTry() const noexcept {
-	return $pOwner->Try() != RecursiveMutex::Result::kResTryFailed;
+bool RecursiveMutex::UniqueLock::XDoTry() const noexcept {
+	return x_pOwner->Try() != RecursiveMutex::Result::kResTryFailed;
 }
 template<>
-void RecursiveMutex::UniqueLock::$DoLock() const noexcept {
-	$pOwner->Lock();
+void RecursiveMutex::UniqueLock::XDoLock() const noexcept {
+	x_pOwner->Lock();
 }
 template<>
-void RecursiveMutex::UniqueLock::$DoUnlock() const noexcept {
-	$pOwner->Unlock();
+void RecursiveMutex::UniqueLock::XDoUnlock() const noexcept {
+	x_pOwner->Unlock();
 }
 
 // 构造函数和析构函数。
 RecursiveMutex::RecursiveMutex(std::size_t uSpinCount)
-	: $vMutex(uSpinCount)
-	, $uLockingThreadId(0), $uRecursionCount(0)
+	: x_vMutex(uSpinCount)
+	, x_uLockingThreadId(0), x_uRecursionCount(0)
 {
 }
 
 // 其他非静态成员函数。
 bool RecursiveMutex::IsLockedByCurrentThread() const noexcept {
 	const auto dwThreadId = ::GetCurrentThreadId();
-	return $uLockingThreadId.Load(kAtomicConsume) == dwThreadId;
+	return x_uLockingThreadId.Load(kAtomicConsume) == dwThreadId;
 }
 
 RecursiveMutex::Result RecursiveMutex::Try() noexcept {
 	const auto dwThreadId = ::GetCurrentThreadId();
-	if($uLockingThreadId.Load(kAtomicConsume) == dwThreadId){
-		++$uRecursionCount;
+	if(x_uLockingThreadId.Load(kAtomicConsume) == dwThreadId){
+		++x_uRecursionCount;
 		return kResRecursive;
 	}
-	if(!$vMutex.Try()){
+	if(!x_vMutex.Try()){
 		return kResTryFailed;
 	}
-	$uLockingThreadId.Store(dwThreadId, kAtomicRelease);
-	++$uRecursionCount;
+	x_uLockingThreadId.Store(dwThreadId, kAtomicRelease);
+	++x_uRecursionCount;
 	return kResStateChanged;
 }
 RecursiveMutex::Result RecursiveMutex::Lock() noexcept {
 	const auto dwThreadId = ::GetCurrentThreadId();
-	if($uLockingThreadId.Load(kAtomicConsume) == dwThreadId){
-		++$uRecursionCount;
+	if(x_uLockingThreadId.Load(kAtomicConsume) == dwThreadId){
+		++x_uRecursionCount;
 		return kResRecursive;
 	}
-	$vMutex.Lock();
-	$uLockingThreadId.Store(dwThreadId, kAtomicRelease);
-	++$uRecursionCount;
+	x_vMutex.Lock();
+	x_uLockingThreadId.Store(dwThreadId, kAtomicRelease);
+	++x_uRecursionCount;
 	return kResStateChanged;
 }
 RecursiveMutex::Result RecursiveMutex::Unlock() noexcept {
 	ASSERT_MSG(IsLockedByCurrentThread(), L"试图使用当前不持有递归互斥体的线程释放递归互斥体。");
 
-	if(--$uRecursionCount != 0){
+	if(--x_uRecursionCount != 0){
 		return kResRecursive;
 	}
-	$uLockingThreadId.Store(0, kAtomicRelaxed);
-	$vMutex.Unlock();
+	x_uLockingThreadId.Store(0, kAtomicRelaxed);
+	x_vMutex.Unlock();
 	return kResStateChanged;
 }
 

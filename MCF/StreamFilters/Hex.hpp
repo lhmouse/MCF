@@ -11,28 +11,28 @@ namespace MCF {
 
 class HexEncoder : public StreamFilterBase {
 private:
-	const bool $bUpperCase;
+	const bool x_bUpperCase;
 
 public:
 	explicit HexEncoder(bool bUpperCase = true) noexcept
-		: $bUpperCase(bUpperCase)
+		: x_bUpperCase(bUpperCase)
 	{
 	}
 
 protected:
-	void $DoInit() override;
-	void $DoUpdate(const void *pData, std::size_t uSize) override;
-	void $DoFinalize() override;
+	void XDoInit() override;
+	void XDoUpdate(const void *pData, std::size_t uSize) override;
+	void XDoFinalize() override;
 };
 
 class HexDecoder : public StreamFilterBase {
 private:
-	int $nHigh;
+	int x_nHigh;
 
 protected:
-	void $DoInit() override;
-	void $DoUpdate(const void *pData, std::size_t uSize) override;
-	void $DoFinalize() override;
+	void XDoInit() override;
+	void XDoUpdate(const void *pData, std::size_t uSize) override;
+	void XDoFinalize() override;
 };
 
 }

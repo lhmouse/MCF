@@ -194,7 +194,7 @@ private:
 	// 负光标位置： -8  -7  -6  -5  -4  -3  -2  -1
 
 	// 以下均以此字符串为例。
-	static std::size_t $TranslateOffset(std::ptrdiff_t nOffset, std::size_t uLength) noexcept {
+	static std::size_t XTranslateOffset(std::ptrdiff_t nOffset, std::size_t uLength) noexcept {
 		auto uRet = static_cast<std::size_t>(nOffset);
 		if(nOffset < 0){
 			uRet += uLength + 1;
@@ -204,16 +204,16 @@ private:
 	}
 
 private:
-	const Char *$pchBegin;
-	const Char *$pchEnd;
+	const Char *x_pchBegin;
+	const Char *x_pchEnd;
 
 public:
 	constexpr StringObserver() noexcept
-		: $pchBegin(nullptr), $pchEnd(nullptr)
+		: x_pchBegin(nullptr), x_pchEnd(nullptr)
 	{
 	}
 	constexpr StringObserver(const Char *pchBegin, const Char *pchEnd) noexcept
-		: $pchBegin(pchBegin), $pchEnd(pchEnd)
+		: x_pchBegin(pchBegin), x_pchEnd(pchEnd)
 	{
 	}
 	constexpr StringObserver(std::nullptr_t, std::nullptr_t = nullptr) noexcept
@@ -221,7 +221,7 @@ public:
 	{
 	}
 	constexpr StringObserver(const Char *pchBegin, std::size_t uLen) noexcept
-		: $pchBegin(pchBegin), $pchEnd(pchBegin + uLen)
+		: x_pchBegin(pchBegin), x_pchEnd(pchBegin + uLen)
 	{
 	}
 	constexpr StringObserver(std::initializer_list<Char> rhs) noexcept
@@ -235,13 +235,13 @@ public:
 
 public:
 	const Char *GetBegin() const noexcept {
-		return $pchBegin;
+		return x_pchBegin;
 	}
 	const Char *GetEnd() const noexcept {
-		return $pchEnd;
+		return x_pchEnd;
 	}
 	std::size_t GetSize() const noexcept {
-		return static_cast<std::size_t>($pchEnd - $pchBegin);
+		return static_cast<std::size_t>(x_pchEnd - x_pchBegin);
 	}
 	std::size_t GetLength() const noexcept {
 		return GetSize();
@@ -263,12 +263,12 @@ public:
 		return GetSize() == 0;
 	}
 	void Clear() noexcept {
-		$pchEnd = $pchBegin;
+		x_pchEnd = x_pchBegin;
 	}
 
 	void Swap(StringObserver &rhs) noexcept {
-		std::swap($pchBegin, rhs.$pchBegin);
-		std::swap($pchEnd, rhs.$pchEnd);
+		std::swap(x_pchBegin, rhs.x_pchBegin);
+		std::swap(x_pchEnd, rhs.x_pchEnd);
 	}
 
 	int Compare(const StringObserver &rhs) const noexcept {
@@ -297,12 +297,12 @@ public:
 	}
 
 	void Assign(const Char *pchBegin, const Char *pchEnd) noexcept {
-		$pchBegin = pchBegin;
-		$pchEnd = pchEnd;
+		x_pchBegin = pchBegin;
+		x_pchEnd = pchEnd;
 	}
 	void Assign(std::nullptr_t, std::nullptr_t = nullptr) noexcept {
-		$pchBegin = nullptr;
-		$pchEnd = nullptr;
+		x_pchBegin = nullptr;
+		x_pchEnd = nullptr;
 	}
 	void Assign(const Char *pchBegin, std::size_t uLen) noexcept {
 		Assign(pchBegin, pchBegin + uLen);
@@ -321,7 +321,7 @@ public:
 	//   Slice(-5, -1)   返回 "defg"。
 	StringObserver Slice(std::ptrdiff_t nBegin, std::ptrdiff_t nEnd) const noexcept {
 		const auto uLength = GetLength();
-		return StringObserver($pchBegin + $TranslateOffset(nBegin, uLength), $pchBegin + $TranslateOffset(nEnd, uLength));
+		return StringObserver(x_pchBegin + XTranslateOffset(nBegin, uLength), x_pchBegin + XTranslateOffset(nEnd, uLength));
 	}
 
 	// 举例：
@@ -331,7 +331,7 @@ public:
 	//   FindBackward("def", 6)     返回 3。
 	std::size_t Find(const StringObserver &obsToFind, std::ptrdiff_t nBegin = 0) const noexcept {
 		const auto uLength = GetLength();
-		const auto uRealBegin = $TranslateOffset(nBegin, uLength);
+		const auto uRealBegin = XTranslateOffset(nBegin, uLength);
 		const auto uLenToFind = obsToFind.GetLength();
 		if(uLenToFind == 0){
 			return uRealBegin;
@@ -350,7 +350,7 @@ public:
 	}
 	std::size_t FindBackward(const StringObserver &obsToFind, std::ptrdiff_t nEnd = -1) const noexcept {
 		const auto uLength = GetLength();
-		const auto uRealEnd = $TranslateOffset(nEnd, uLength);
+		const auto uRealEnd = XTranslateOffset(nEnd, uLength);
 		const auto uLenToFind = obsToFind.GetLength();
 		if(uLenToFind == 0){
 			return uRealEnd;
@@ -377,7 +377,7 @@ public:
 	//   FindBackward('d', 3)   返回 kNpos。
 	std::size_t FindRep(Char chToFind, std::size_t uFindCount, std::ptrdiff_t nBegin = 0) const noexcept {
 		const auto uLength = GetLength();
-		const auto uRealBegin = $TranslateOffset(nBegin, uLength);
+		const auto uRealBegin = XTranslateOffset(nBegin, uLength);
 		if(uFindCount == 0){
 			return uRealBegin;
 		}
@@ -395,7 +395,7 @@ public:
 	}
 	std::size_t FindRepBackward(Char chToFind, std::size_t uFindCount, std::ptrdiff_t nEnd = -1) const noexcept {
 		const auto uLength = GetLength();
-		const auto uRealEnd = $TranslateOffset(nEnd, uLength);
+		const auto uRealEnd = XTranslateOffset(nEnd, uLength);
 		if(uFindCount == 0){
 			return uRealEnd;
 		}
@@ -420,7 +420,7 @@ public:
 	}
 
 	bool DoesOverlapWith(const StringObserver &rhs) const noexcept {
-		return std::less<void>()($pchBegin, rhs.$pchEnd) && std::less<void>()(rhs.$pchBegin, $pchEnd);
+		return std::less<void>()(x_pchBegin, rhs.x_pchEnd) && std::less<void>()(rhs.x_pchBegin, x_pchEnd);
 	}
 
 public:

@@ -22,23 +22,23 @@ public:
 	static_assert(noexcept(Closer()(Handle())), "Handle closer must not throw.");
 
 private:
-	Handle $hObject;
+	Handle x_hObject;
 
 public:
 	explicit UniqueHandle(Handle rhs = Closer()()) noexcept
-		: $hObject(rhs)
+		: x_hObject(rhs)
 	{
 	}
 	UniqueHandle(UniqueHandle &&rhs) noexcept
-		: $hObject(rhs.$hObject)
+		: x_hObject(rhs.x_hObject)
 	{
-		rhs.$hObject = Closer()();
+		rhs.x_hObject = Closer()();
 	}
 	UniqueHandle &operator=(UniqueHandle &&rhs) noexcept {
 		return Reset(std::move(rhs));
 	}
 	~UniqueHandle(){
-		const auto hObject = $hObject;
+		const auto hObject = x_hObject;
 		if(hObject != Closer()()){
 			Closer()(hObject);
 		}
@@ -49,13 +49,13 @@ public:
 
 public:
 	bool IsNonnull() const noexcept {
-		return $hObject != Closer()();
+		return x_hObject != Closer()();
 	}
 	Handle Get() const noexcept {
-		return $hObject;
+		return x_hObject;
 	}
 	Handle Release() noexcept {
-		return std::exchange($hObject, Closer()());
+		return std::exchange(x_hObject, Closer()());
 	}
 
 	UniqueHandle &Reset(Handle rhs = Closer()()) noexcept {
@@ -68,7 +68,7 @@ public:
 	}
 
 	void Swap(UniqueHandle &rhs) noexcept {
-		std::swap($hObject, rhs.$hObject);
+		std::swap(x_hObject, rhs.x_hObject);
 	}
 
 public:

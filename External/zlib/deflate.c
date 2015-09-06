@@ -47,7 +47,7 @@
  *
  */
 
-/* @(#) $Id$ */
+/* @(#) XId$ */
 
 #include "deflate.h"
 

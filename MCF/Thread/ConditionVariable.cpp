@@ -14,34 +14,34 @@ namespace MCF {
 
 // 构造函数和析构函数。
 ConditionVariable::ConditionVariable(Mutex &vMutex)
-	: $vMutex(vMutex), $uWaiting(0), $vSemaphore(0, nullptr)
+	: x_vMutex(vMutex), x_uWaiting(0), x_vSemaphore(0, nullptr)
 {
 }
 
 // 其他非静态成员函数。
 bool ConditionVariable::Wait(std::uint64_t u64MilliSeconds) noexcept {
-	$uWaiting.Increment(kAtomicRelaxed);
-	$vMutex.Unlock();
+	x_uWaiting.Increment(kAtomicRelaxed);
+	x_vMutex.Unlock();
 
-	const bool bResult = $vSemaphore.Wait(u64MilliSeconds);
+	const bool bResult = x_vSemaphore.Wait(u64MilliSeconds);
 
-	$vMutex.Lock();
+	x_vMutex.Lock();
 	if(!bResult){
-		$uWaiting.Decrement(kAtomicRelaxed);
+		x_uWaiting.Decrement(kAtomicRelaxed);
 	}
 	return bResult;
 }
 void ConditionVariable::Wait() noexcept {
-	$uWaiting.Increment(kAtomicRelaxed);
-	$vMutex.Unlock();
+	x_uWaiting.Increment(kAtomicRelaxed);
+	x_vMutex.Unlock();
 
-	$vSemaphore.Wait();
+	x_vSemaphore.Wait();
 
-	$vMutex.Lock();
+	x_vMutex.Lock();
 }
 void ConditionVariable::Signal(std::size_t uMaxCount) noexcept {
 	std::size_t uToPost;
-	std::size_t uOld = $uWaiting.Load(kAtomicRelaxed), uNew;
+	std::size_t uOld = x_uWaiting.Load(kAtomicRelaxed), uNew;
 	do {
 		if(uOld >= uMaxCount){
 			uToPost = uMaxCount;
@@ -50,17 +50,17 @@ void ConditionVariable::Signal(std::size_t uMaxCount) noexcept {
 			uToPost = uOld;
 			uNew = 0;
 		}
-	} while(!$uWaiting.CompareExchange(uOld, uNew, kAtomicRelaxed));
+	} while(!x_uWaiting.CompareExchange(uOld, uNew, kAtomicRelaxed));
 
 	if(uToPost != 0){
-		$vSemaphore.Post(uToPost);
+		x_vSemaphore.Post(uToPost);
 	}
 }
 void ConditionVariable::Broadcast() noexcept {
-	const auto uToPost = $uWaiting.Exchange(0, kAtomicRelaxed);
+	const auto uToPost = x_uWaiting.Exchange(0, kAtomicRelaxed);
 
 	if(uToPost != 0){
-		$vSemaphore.Post(uToPost);
+		x_vSemaphore.Post(uToPost);
 	}
 }
 

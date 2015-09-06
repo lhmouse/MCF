@@ -11,71 +11,71 @@
 namespace MCF {
 
 template<>
-bool Mutex::UniqueLock::$DoTry() const noexcept {
-	return $pOwner->Try();
+bool Mutex::UniqueLock::XDoTry() const noexcept {
+	return x_pOwner->Try();
 }
 template<>
-void Mutex::UniqueLock::$DoLock() const noexcept {
-	$pOwner->Lock();
+void Mutex::UniqueLock::XDoLock() const noexcept {
+	x_pOwner->Lock();
 }
 template<>
-void Mutex::UniqueLock::$DoUnlock() const noexcept {
-	$pOwner->Unlock();
+void Mutex::UniqueLock::XDoUnlock() const noexcept {
+	x_pOwner->Unlock();
 }
 
 // 嵌套类定义。
-struct Mutex::$QueueNode {
-	$QueueNode *pNext;
+struct Mutex::XQueueNode {
+	XQueueNode *pNext;
 };
 
 // 构造函数和析构函数。
 Mutex::Mutex(std::size_t uSpinCount)
-	: $uSpinCount(0)
-	, $uLockingThreadId(0), $vSemaphore(0), $pQueueHead(nullptr)
+	: x_uSpinCount(0)
+	, x_uLockingThreadId(0), x_vSemaphore(0), x_pQueueHead(nullptr)
 {
 	SetSpinCount(uSpinCount);
 }
 
 // 其他非静态成员函数。
-bool Mutex::$IsQueueEmpty() const noexcept {
-	return $pQueueHead.Load(kAtomicConsume) == nullptr;
+bool Mutex::XIsQueueEmpty() const noexcept {
+	return x_pQueueHead.Load(kAtomicConsume) == nullptr;
 }
-Mutex::$QueueNode *Mutex::$LockQueue() noexcept {
+Mutex::XQueueNode *Mutex::XLockQueue() noexcept {
 	for(;;){
-		const auto pQueueHead = $pQueueHead.Exchange(($QueueNode *)-1, kAtomicRelease);
-		if(pQueueHead != ($QueueNode *)-1){
+		const auto pQueueHead = x_pQueueHead.Exchange((XQueueNode *)-1, kAtomicRelease);
+		if(pQueueHead != (XQueueNode *)-1){
 			return pQueueHead;
 		}
 		AtomicPause();
 	}
 }
-void Mutex::$UnlockQueue(Mutex::$QueueNode *pQueueHead) noexcept {
-	$pQueueHead.Store(pQueueHead, kAtomicRelease);
+void Mutex::XUnlockQueue(Mutex::XQueueNode *pQueueHead) noexcept {
+	x_pQueueHead.Store(pQueueHead, kAtomicRelease);
 }
 
 std::size_t Mutex::GetSpinCount() const noexcept {
-	return $uSpinCount.Load(kAtomicRelaxed);
+	return x_uSpinCount.Load(kAtomicRelaxed);
 }
 void Mutex::SetSpinCount(std::size_t uSpinCount) noexcept {
 	if(GetLogicalProcessorCount() == 0){
 		return;
 	}
-	$uSpinCount.Store(uSpinCount, kAtomicRelaxed);
+	x_uSpinCount.Store(uSpinCount, kAtomicRelaxed);
 }
 
 bool Mutex::Try() noexcept {
 #ifndef NDEBUG
 	const std::size_t uThreadId = ::GetCurrentThreadId();
-	if($uLockingThreadId.Load(kAtomicConsume) == uThreadId){
+	if(x_uLockingThreadId.Load(kAtomicConsume) == uThreadId){
 		Bail(L"在不可重入的互斥锁中检测到死锁。");
 	}
 #else
 	const std::size_t uThreadId = 1;
 #endif
 
-	if($IsQueueEmpty()){
+	if(XIsQueueEmpty()){
 		std::size_t uExpected = 0;
-		if($uLockingThreadId.CompareExchange(uExpected, uThreadId, kAtomicAcqRel, kAtomicConsume)){
+		if(x_uLockingThreadId.CompareExchange(uExpected, uThreadId, kAtomicAcqRel, kAtomicConsume)){
 			return true;
 		}
 	}
@@ -84,16 +84,16 @@ bool Mutex::Try() noexcept {
 void Mutex::Lock() noexcept {
 #ifndef NDEBUG
 	const std::size_t uThreadId = ::GetCurrentThreadId();
-	if($uLockingThreadId.Load(kAtomicConsume) == uThreadId){
+	if(x_uLockingThreadId.Load(kAtomicConsume) == uThreadId){
 		Bail(L"在不可重入的互斥锁中检测到死锁。");
 	}
 #else
 	const std::size_t uThreadId = 1;
 #endif
 
-	if($IsQueueEmpty()){
+	if(XIsQueueEmpty()){
 		std::size_t uExpected = 0;
-		if($uLockingThreadId.CompareExchange(uExpected, uThreadId, kAtomicAcqRel, kAtomicConsume)){
+		if(x_uLockingThreadId.CompareExchange(uExpected, uThreadId, kAtomicAcqRel, kAtomicConsume)){
 			return;
 		}
 
@@ -103,7 +103,7 @@ void Mutex::Lock() noexcept {
 			AtomicPause();
 
 			std::size_t uExpected = 0;
-			if($uLockingThreadId.CompareExchange(uExpected, uThreadId, kAtomicAcqRel, kAtomicConsume)){
+			if(x_uLockingThreadId.CompareExchange(uExpected, uThreadId, kAtomicAcqRel, kAtomicConsume)){
 				return;
 			}
 		}
@@ -112,9 +112,9 @@ void Mutex::Lock() noexcept {
 	}
 
 	// 如果忙等待超过了自旋次数，就使用信号量同步。
-	$QueueNode vThisThread = { nullptr };
+	XQueueNode vThisThread = { nullptr };
 
-	auto pQueueHead = $LockQueue();
+	auto pQueueHead = XLockQueue();
 	if(pQueueHead){
 		auto pIns = pQueueHead;
 		for(;;){
@@ -127,42 +127,42 @@ void Mutex::Lock() noexcept {
 		}
 	} else {
 		std::size_t uExpected = 0;
-		if($uLockingThreadId.CompareExchange(uExpected, uThreadId, kAtomicAcqRel, kAtomicConsume)){
+		if(x_uLockingThreadId.CompareExchange(uExpected, uThreadId, kAtomicAcqRel, kAtomicConsume)){
 			goto jLocked;
 		}
 		pQueueHead = &vThisThread;
 	}
 	for(;;){
-		$UnlockQueue(pQueueHead);
-		$vSemaphore.Wait();
+		XUnlockQueue(pQueueHead);
+		x_vSemaphore.Wait();
 
-		pQueueHead = $LockQueue();
+		pQueueHead = XLockQueue();
 		if(pQueueHead == &vThisThread){
 			std::size_t uExpected = 0;
-			if($uLockingThreadId.CompareExchange(uExpected, uThreadId, kAtomicAcqRel, kAtomicConsume)){
+			if(x_uLockingThreadId.CompareExchange(uExpected, uThreadId, kAtomicAcqRel, kAtomicConsume)){
 				pQueueHead = pQueueHead->pNext;
 				break;
 			}
 		}
-		$vSemaphore.Post();
+		x_vSemaphore.Post();
 	}
 jLocked:
-	$UnlockQueue(pQueueHead);
+	XUnlockQueue(pQueueHead);
 }
 void Mutex::Unlock() noexcept {
 #ifndef NDEBUG
-	if($uLockingThreadId.Load(kAtomicConsume) == 0){
+	if(x_uLockingThreadId.Load(kAtomicConsume) == 0){
 		Bail(L"互斥锁没有被任何线程锁定。");
 	}
 #endif
 
-	$uLockingThreadId.Store(0, kAtomicRelease);
+	x_uLockingThreadId.Store(0, kAtomicRelease);
 
-	auto pQueueHead = $LockQueue();
+	auto pQueueHead = XLockQueue();
 	if(pQueueHead){
-		$vSemaphore.Post();
+		x_vSemaphore.Post();
 	}
-	$UnlockQueue(pQueueHead);
+	XUnlockQueue(pQueueHead);
 }
 
 }

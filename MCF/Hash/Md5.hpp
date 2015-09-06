@@ -12,8 +12,8 @@ namespace MCF {
 
 class Md5 {
 private:
-	bool $bInited;
-	std::uint32_t $auResult[4];
+	bool x_bInited;
+	std::uint32_t x_auResult[4];
 
 	union {
 		unsigned char aby[64];
@@ -21,10 +21,10 @@ private:
 			unsigned char abyData[56];
 			std::uint64_t u64Bits;
 		} vLast;
-	} $vChunk;
+	} x_vChunk;
 
-	std::size_t $uBytesInChunk;
-	std::uint64_t $u64BytesTotal;
+	std::size_t x_uBytesInChunk;
+	std::uint64_t x_u64BytesTotal;
 
 public:
 	Md5() noexcept;

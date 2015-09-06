@@ -16,7 +16,7 @@ namespace MCF {
 
 class ReaderWriterMutex : NONCOPYABLE, public RecursiveMutexResults {
 private:
-	struct $TlsIndexDeleter {
+	struct XTlsIndexDeleter {
 		std::size_t operator()() const noexcept;
 		void operator()(std::size_t uTlsIndex) const noexcept;
 	};
@@ -26,20 +26,20 @@ public:
 	using UniqueWriterLock = UniqueLockTemplate<ReaderWriterMutex, 1u>;
 
 private:
-	RecursiveMutex $mtxWriterGuard;
-	Mutex $mtxExclusive;
-	Atomic<std::size_t> $uReaderCount;
-	UniqueHandle<$TlsIndexDeleter> $uTlsIndex;
+	RecursiveMutex x_mtxWriterGuard;
+	Mutex x_mtxExclusive;
+	Atomic<std::size_t> x_uReaderCount;
+	UniqueHandle<XTlsIndexDeleter> x_uTlsIndex;
 
 public:
 	explicit ReaderWriterMutex(std::size_t uSpinCount = 0x100);
 
 public:
 	std::size_t GetSpinCount() const noexcept {
-		return $mtxWriterGuard.GetSpinCount();
+		return x_mtxWriterGuard.GetSpinCount();
 	}
 	void SetSpinCount(std::size_t uSpinCount) noexcept {
-		$mtxWriterGuard.SetSpinCount(uSpinCount);
+		x_mtxWriterGuard.SetSpinCount(uSpinCount);
 	}
 
 	Result TryAsReader() noexcept;

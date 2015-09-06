@@ -23,11 +23,11 @@ public:
 	static IntrusivePtr<Thread> Create(Function<void ()> fnProc, bool bSuspended = false);
 
 private:
-	const Function<void ()> $fnProc;
+	const Function<void ()> x_fnProc;
 
-	UniqueWin32Handle $hThread;
-	Atomic<unsigned long> $ulThreadId;
-	std::exception_ptr $pException;
+	UniqueWin32Handle x_hThread;
+	Atomic<unsigned long> x_ulThreadId;
+	std::exception_ptr x_pException;
 
 private:
 	Thread(Function<void ()> fnProc, bool bSuspended);

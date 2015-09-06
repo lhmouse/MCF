@@ -16,7 +16,7 @@ namespace MCF {
 
 class Argv : NONCOPYABLE {
 private:
-	struct $ArgItemDeleter {
+	struct XArgItemDeleter {
 		constexpr ::MCF_ArgItem *operator()() const noexcept {
 			return nullptr;
 		}
@@ -26,8 +26,8 @@ private:
 	};
 
 private:
-	std::size_t $uArgc;
-	UniquePtr<const ::MCF_ArgItem [], $ArgItemDeleter> $pArgv;
+	std::size_t x_uArgc;
+	UniquePtr<const ::MCF_ArgItem [], XArgItemDeleter> x_pArgv;
 
 public:
 	// 如果传入空指针，就使用当前 GetCommandLineW() 的返回值。
@@ -35,17 +35,17 @@ public:
 
 public:
 	std::size_t GetSize() const noexcept {
-		return $uArgc;
+		return x_uArgc;
 	}
 	const wchar_t *GetStr(std::size_t uIndex) const noexcept {
-		ASSERT(uIndex <= $uArgc); // 传入 $uArgc 会得到一个空指针。
+		ASSERT(uIndex <= x_uArgc); // 传入 x_uArgc 会得到一个空指针。
 
-		return $pArgv[uIndex].pwszStr;
+		return x_pArgv[uIndex].pwszStr;
 	}
 	std::size_t GetLen(std::size_t uIndex) const noexcept {
-		ASSERT(uIndex <= $uArgc);
+		ASSERT(uIndex <= x_uArgc);
 
-		return $pArgv[uIndex].uLen;
+		return x_pArgv[uIndex].uLen;
 	}
 	WideStringObserver Get(std::size_t uIndex) const noexcept {
 		return WideStringObserver(GetStr(uIndex), GetLen(uIndex));

@@ -17,20 +17,20 @@ public:
 	using Reference = ObjectT &;
 
 private:
-	std::remove_reference_t<ObjectT> *$pObject;
+	std::remove_reference_t<ObjectT> *x_pObject;
 
 public:
 	constexpr RefWrapper(ObjectT &vObject) noexcept
-		: $pObject(std::addressof(vObject))
+		: x_pObject(std::addressof(vObject))
 	{
 	}
 
 public:
 	ObjectT &Get() const noexcept {
-		return *$pObject;
+		return *x_pObject;
 	}
 	ObjectT &Forward() const noexcept {
-		return *$pObject;
+		return *x_pObject;
 	}
 
 public:
@@ -54,11 +54,11 @@ public:
 	using Reference = ObjectT &&;
 
 private:
-	std::remove_reference_t<ObjectT> *$pObject;
+	std::remove_reference_t<ObjectT> *x_pObject;
 
 public:
 	constexpr RefWrapper(ObjectT &vObject) noexcept
-		: $pObject(std::addressof(vObject))
+		: x_pObject(std::addressof(vObject))
 	{
 	}
 	constexpr RefWrapper(ObjectT &&vObject) noexcept
@@ -68,10 +68,10 @@ public:
 
 public:
 	ObjectT &Get() const noexcept {
-		return *$pObject;
+		return *x_pObject;
 	}
 	ObjectT &&Forward() const noexcept {
-		return std::move(*$pObject);
+		return std::move(*x_pObject);
 	}
 
 public:

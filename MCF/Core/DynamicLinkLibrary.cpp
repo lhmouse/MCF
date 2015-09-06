@@ -8,30 +8,30 @@
 
 namespace MCF {
 
-DynamicLinkLibrary::$LibraryFreer::Handle DynamicLinkLibrary::$LibraryFreer::operator()() noexcept {
+DynamicLinkLibrary::XLibraryFreer::Handle DynamicLinkLibrary::XLibraryFreer::operator()() noexcept {
 	return NULL;
 }
-void DynamicLinkLibrary::$LibraryFreer::operator()(DynamicLinkLibrary::$LibraryFreer::Handle hDll) noexcept {
+void DynamicLinkLibrary::XLibraryFreer::operator()(DynamicLinkLibrary::XLibraryFreer::Handle hDll) noexcept {
 	::FreeLibrary(reinterpret_cast<HINSTANCE>(hDll));
 }
 
 // 其他非静态成员函数。
 const void *DynamicLinkLibrary::GetBaseAddress() const noexcept {
-	return $hDll.Get();
+	return x_hDll.Get();
 }
 DynamicLinkLibrary::RawProc DynamicLinkLibrary::RawGetProcAddress(const char *pszName){
-	if(!$hDll){
+	if(!x_hDll){
 		DEBUG_THROW(Exception, ERROR_INVALID_HANDLE, "No shared library open");
 	}
 
-	return ::GetProcAddress(reinterpret_cast<HINSTANCE>($hDll.Get()), pszName);
+	return ::GetProcAddress(reinterpret_cast<HINSTANCE>(x_hDll.Get()), pszName);
 }
 DynamicLinkLibrary::RawProc DynamicLinkLibrary::RawRequireProcAddress(const char *pszName){
-	if(!$hDll){
+	if(!x_hDll){
 		DEBUG_THROW(Exception, ERROR_INVALID_HANDLE, "No shared library open");
 	}
 
-	const auto pfnRet = ::GetProcAddress(reinterpret_cast<HINSTANCE>($hDll.Get()), pszName);
+	const auto pfnRet = ::GetProcAddress(reinterpret_cast<HINSTANCE>(x_hDll.Get()), pszName);
 	if(!pfnRet){
 		DEBUG_THROW(SystemError, "GetProcAddress");
 	}
@@ -39,15 +39,15 @@ DynamicLinkLibrary::RawProc DynamicLinkLibrary::RawRequireProcAddress(const char
 }
 
 bool DynamicLinkLibrary::IsOpen() const noexcept {
-	return !!$hDll;
+	return !!x_hDll;
 }
 void DynamicLinkLibrary::Open(const wchar_t *pwszPath){
-	UniqueHandle<$LibraryFreer> hDll;
-	if(!hDll.Reset(reinterpret_cast<$LibraryFreer::Handle>(::LoadLibraryW(pwszPath)))){
+	UniqueHandle<XLibraryFreer> hDll;
+	if(!hDll.Reset(reinterpret_cast<XLibraryFreer::Handle>(::LoadLibraryW(pwszPath)))){
 		DEBUG_THROW(SystemError, "LoadLibraryW");
 	}
 
-	$hDll = std::move(hDll);
+	x_hDll = std::move(hDll);
 }
 void DynamicLinkLibrary::Open(const WideString &wsPath){
 	Open(wsPath.GetStr());
@@ -71,7 +71,7 @@ bool DynamicLinkLibrary::OpenNoThrow(const WideString &wsPath){
 	}
 }
 void DynamicLinkLibrary::Close() noexcept {
-	$hDll.Reset();
+	x_hDll.Reset();
 }
 
 }

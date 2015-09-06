@@ -8,7 +8,6 @@
 #include "../env/module.h"
 #include "../env/eh_top.h"
 #include "../env/heap.h"
-#include "../env/last_error.h"
 #include "../ext/unref_param.h"
 #include "../env/thread.h"
 
@@ -35,6 +34,14 @@ DWORD __MCF_ExeStartup(LPVOID pReserved){
 	__builtin_trap();
 }
 
+__MCF_C_STDCALL
+static BOOL TopCtrlHandler(DWORD dwCtrlType){
+	UNREF_PARAM(dwCtrlType);
+
+	TerminateProcess(GetCurrentProcess(), ERROR_PROCESS_ABORTED);
+	__builtin_trap();
+}
+
 __MCF_C_STDCALL __MCF_HAS_EH_TOP
 static void TlsCallback(void *hModule, DWORD dwReason, void *pReserved){
 	UNREF_PARAM(hModule);
@@ -42,17 +49,20 @@ static void TlsCallback(void *hModule, DWORD dwReason, void *pReserved){
 
 	switch(dwReason){
 	case DLL_PROCESS_ATTACH:
+		if(!SetConsoleCtrlHandler(&TopCtrlHandler, true)){
+			MCF_CRT_BailF(L"MCFCRT Ctrl 处理程序注册失败。\n\n错误代码：%lu", GetLastError());
+		}
 		if(!__MCF_CRT_HeapInit()){
-			MCF_CRT_BailF(L"MCFCRT 堆初始化失败。\n\n错误代码：%lu", MCF_CRT_GetWin32LastError());
+			MCF_CRT_BailF(L"MCFCRT 堆初始化失败。\n\n错误代码：%lu", GetLastError());
 		}
 		if(!__MCF_CRT_RegisterFrameInfo()){
-			MCF_CRT_BailF(L"MCFCRT 异常处理程序初始化失败。\n\n错误代码：%lu", MCF_CRT_GetWin32LastError());
+			MCF_CRT_BailF(L"MCFCRT 异常处理程序初始化失败。\n\n错误代码：%lu", GetLastError());
 		}
 
 		__MCF_EH_TOP_BEGIN
 		{
 			if(!__MCF_CRT_BeginModule()){
-				MCF_CRT_BailF(L"MCFCRT 初始化失败。\n\n错误代码：%lu", MCF_CRT_GetWin32LastError());
+				MCF_CRT_BailF(L"MCFCRT 初始化失败。\n\n错误代码：%lu", GetLastError());
 			}
 		}
 		__MCF_EH_TOP_END
@@ -82,6 +92,7 @@ static void TlsCallback(void *hModule, DWORD dwReason, void *pReserved){
 
 		__MCF_CRT_UnregisterFrameInfo();
 		__MCF_CRT_HeapUninit();
+		SetConsoleCtrlHandler(&TopCtrlHandler, false);
 		break;
 	}
 }

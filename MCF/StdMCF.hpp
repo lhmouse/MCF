@@ -22,6 +22,6 @@
 #include "../MCFCRT/ext/include.h"
 
 #undef NULL
-#define NULL	nullptr
+#define NULL    nullptr
 
 #endif

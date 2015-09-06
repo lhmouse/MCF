@@ -105,6 +105,10 @@ unsigned char *__MCF_CRT_HeapDbgAddGuardsAndRegister(
 	if(!pBlockInfo){
 		return nullptr;
 	}
+	pBlockInfo->__pContents = pContents;
+	pBlockInfo->__uSize     = uContentSize;
+	pBlockInfo->__pRetAddr  = pRetAddr;
+	MCF_AvlAttach(&g_pavlBlocks, (MCF_AvlNodeHeader *)pBlockInfo, &BlockInfoComparatorNodes);
 
 	void **ppGuard1 = (void **)pContents;
 	void **ppGuard2 = (void **)(pContents + uContentSize);
@@ -117,11 +121,6 @@ unsigned char *__MCF_CRT_HeapDbgAddGuardsAndRegister(
 
 		++ppGuard2;
 	}
-
-	pBlockInfo->__pContents = pContents;
-	pBlockInfo->__uSize     = uContentSize;
-	pBlockInfo->__pRetAddr  = pRetAddr;
-	MCF_AvlAttach(&g_pavlBlocks, (MCF_AvlNodeHeader *)pBlockInfo, &BlockInfoComparatorNodes);
 
 	return pContents;
 }

@@ -6,6 +6,7 @@
 #define MCF_CORE_STRING_HPP_
 
 #include "StringObserver.hpp"
+#include "../Containers/_EnumeratorTemplate.hpp"
 #include "../Utilities/Assert.hpp"
 #include "../Utilities/CountOf.hpp"
 #include "../Utilities/BitsOf.hpp"
@@ -219,6 +220,98 @@ private:
 	}
 
 public:
+	// 容器需求。
+	using ElementType     = Char;
+	using ConstEnumerator = Impl_EnumeratorTemplate::ConstEnumerator <String>;
+	using Enumerator      = Impl_EnumeratorTemplate::Enumerator      <String>;
+
+	bool IsEmpty() const noexcept {
+		return GetBegin() == GetEnd();
+	}
+	void Clear() noexcept {
+		$SetSize(0);
+	}
+
+	ConstEnumerator EnumerateFirst() const noexcept {
+		const auto pBegin = GetBegin();
+		if(pBegin == GetEnd()){
+			return ConstEnumerator(*this, nullptr);
+		} else {
+			return ConstEnumerator(*this, pBegin);
+		}
+	}
+	Enumerator EnumerateFirst() noexcept {
+		auto pBegin = GetBegin();
+		if(pBegin == GetEnd()){
+			return Enumerator(*this, nullptr);
+		} else {
+			return Enumerator(*this, pBegin);
+		}
+	}
+
+	ConstEnumerator EnumerateLast() const noexcept {
+		const auto pEnd = GetEnd();
+		if(GetBegin() == pEnd){
+			return ConstEnumerator(*this, nullptr);
+		} else {
+			return ConstEnumerator(*this, pEnd - 1);
+		}
+	}
+	Enumerator EnumerateLast() noexcept {
+		auto pEnd = GetEnd();
+		if(GetBegin() == pEnd){
+			return Enumerator(*this, nullptr);
+		} else {
+			return Enumerator(*this, pEnd - 1);
+		}
+	}
+
+	constexpr ConstEnumerator EnumerateSingular() const noexcept {
+		return ConstEnumerator(*this, nullptr);
+	}
+	Enumerator EnumerateSingular() noexcept {
+		return Enumerator(*this, nullptr);
+	}
+
+	const ElementType *GetNext(const ElementType *pPos) const noexcept {
+		const auto pBegin = GetBegin();
+		const auto uOffset = static_cast<std::size_t>(pPos - pBegin);
+		if(uOffset + 1 == GetSize()){
+			return nullptr;
+		}
+		return pBegin + uOffset + 1;
+	}
+	ElementType *GetNext(const ElementType *pPos) noexcept {
+		const auto pBegin = GetBegin();
+		const auto uOffset = static_cast<std::size_t>(pPos - pBegin);
+		if(uOffset + 1 == GetSize()){
+			return nullptr;
+		}
+		return pBegin + uOffset + 1;
+	}
+
+	const ElementType *GetPrev(const ElementType *pPos) const noexcept {
+		const auto pBegin = GetBegin();
+		const auto uOffset = static_cast<std::size_t>(pPos - pBegin);
+		if(uOffset == 0){
+			return nullptr;
+		}
+		return pBegin + uOffset - 1;
+	}
+	ElementType *GetPrev(const ElementType *pPos) noexcept {
+		const auto pBegin = GetBegin();
+		const auto uOffset = static_cast<std::size_t>(pPos - pBegin);
+		if(uOffset == 0){
+			return nullptr;
+		}
+		return pBegin + uOffset - 1;
+	}
+
+	void Swap(String &rhs) noexcept {
+		std::swap($vStorage, rhs.$vStorage);
+	}
+
+	// String 需求。
 	const Char *GetBegin() const noexcept {
 		if($vStorage.vSmall.schComplLength >= 0){
 			return $vStorage.vSmall.achData;
@@ -371,17 +464,6 @@ public:
 		const auto uSzLen = Observer(GetStr()).GetLength();
 		ASSERT(uSzLen <= GetSize());
 		$SetSize(uSzLen);
-	}
-
-	bool IsEmpty() const noexcept {
-		return GetBegin() == GetEnd();
-	}
-	void Clear() noexcept {
-		$SetSize(0);
-	}
-
-	void Swap(String &rhs) noexcept {
-		std::swap($vStorage, rhs.$vStorage);
 	}
 
 	int Compare(const Observer &rhs) const noexcept {

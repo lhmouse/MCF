@@ -128,33 +128,37 @@ public:
 	}
 
 	const ElementType *GetNext(const ElementType *pPos) const noexcept {
-		const auto uOffset = static_cast<std::size_t>(pPos - GetBegin());
+		const auto pBegin = GetBegin();
+		const auto uOffset = static_cast<std::size_t>(pPos - pBegin);
 		if(uOffset + 1 == GetSize()){
 			return nullptr;
 		}
-		return GetBegin() + uOffset + 1;
+		return pBegin + uOffset + 1;
 	}
 	ElementType *GetNext(const ElementType *pPos) noexcept {
-		const auto uOffset = static_cast<std::size_t>(pPos - GetBegin());
+		const auto pBegin = GetBegin();
+		const auto uOffset = static_cast<std::size_t>(pPos - pBegin);
 		if(uOffset + 1 == GetSize()){
 			return nullptr;
 		}
-		return GetBegin() + uOffset + 1;
+		return pBegin + uOffset + 1;
 	}
 
 	const ElementType *GetPrev(const ElementType *pPos) const noexcept {
-		const auto uOffset = static_cast<std::size_t>(pPos - GetBegin());
+		const auto pBegin = GetBegin();
+		const auto uOffset = static_cast<std::size_t>(pPos - pBegin);
 		if(uOffset == 0){
 			return nullptr;
 		}
-		return GetBegin() + uOffset - 1;
+		return pBegin + uOffset - 1;
 	}
 	ElementType *GetPrev(const ElementType *pPos) noexcept {
-		const auto uOffset = static_cast<std::size_t>(pPos - GetBegin());
+		const auto pBegin = GetBegin();
+		const auto uOffset = static_cast<std::size_t>(pPos - pBegin);
 		if(uOffset == 0){
 			return nullptr;
 		}
-		return GetBegin() + uOffset - 1;
+		return pBegin + uOffset - 1;
 	}
 
 	void Swap(StaticVector &rhs) noexcept(std::is_nothrow_move_constructible<ElementT>::value) {

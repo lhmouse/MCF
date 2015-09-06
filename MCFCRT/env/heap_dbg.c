@@ -11,10 +11,10 @@
 
 #if __MCF_CRT_REQUIRE_HEAPDBG_LEVEL(3)
 
-#define GUARD_BAND_SIZE	0x20u
+#define GUARD_BAND_SIZE     0x20u
 
-static HANDLE		g_hMapAllocator;
-static MCF_AvlRoot	g_pavlBlocks;
+static HANDLE       g_hMapAllocator;
+static MCF_AvlRoot  g_pavlBlocks;
 
 static int BlockInfoComparatorNodeKey(const MCF_AvlNodeHeader *pInfo1, intptr_t nKey2){
 	const uintptr_t uKey1 = (uintptr_t)(((const __MCF_HeapDbgBlockInfo *)pInfo1)->__pContents);
@@ -101,6 +101,11 @@ unsigned char *__MCF_CRT_HeapDbgAddGuardsAndRegister(
 {
 	unsigned char *const pContents = pRaw + GUARD_BAND_SIZE;
 
+	__MCF_HeapDbgBlockInfo *const pBlockInfo = HeapAlloc(g_hMapAllocator, 0, sizeof(__MCF_HeapDbgBlockInfo));
+	if(!pBlockInfo){
+		return nullptr;
+	}
+
 	void **ppGuard1 = (void **)pContents;
 	void **ppGuard2 = (void **)(pContents + uContentSize);
 	for(unsigned i = 0; i < GUARD_BAND_SIZE; i += sizeof(void *)){
@@ -113,10 +118,6 @@ unsigned char *__MCF_CRT_HeapDbgAddGuardsAndRegister(
 		++ppGuard2;
 	}
 
-	__MCF_HeapDbgBlockInfo *const pBlockInfo = HeapAlloc(g_hMapAllocator, 0, sizeof(__MCF_HeapDbgBlockInfo));
-	if(!pBlockInfo){
-		MCF_CRT_BailF(L"__MCF_CRT_HeapDbgAddGuardsAndRegister() 失败：内存不足。\n调用返回地址：%p", pRetAddr);
-	}
 	pBlockInfo->__pContents = pContents;
 	pBlockInfo->__uSize     = uContentSize;
 	pBlockInfo->__pRetAddr  = pRetAddr;

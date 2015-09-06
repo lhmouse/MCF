@@ -17,10 +17,10 @@
 #include "../../External/dlmalloc/malloc.h"
 
 // hooks.h
-void (*__MCF_CRT_OnHeapAlloc)(void *pNewBlock, size_t uSize, const void *pRetAddr);
-void (*__MCF_CRT_OnHeapRealloc)(void *pNewBlock, void *pBlock, size_t uSize, const void *pRetAddr);
-void (*__MCF_CRT_OnHeapDealloc)(void *pBlock, const void *pRetAddr);
-bool (*__MCF_CRT_OnBadAlloc)(const void *pRetAddr);
+void (*__MCF_CRT_OnHeapAlloc)(void *, size_t , const void *)            = nullptr;
+void (*__MCF_CRT_OnHeapReAlloc)(void *, void *, size_t, const void *)   = nullptr;
+void (*__MCF_CRT_OnHeapFree)(void *__pBlock, const void *)              = nullptr;
+bool (*__MCF_CRT_OnHeapBadAlloc)(const void *)                          = nullptr;
 
 static CRITICAL_SECTION g_csHeapMutex;
 
@@ -71,6 +71,9 @@ unsigned char *__MCF_CRT_HeapAlloc(size_t uSize, const void *pRetAddr){
 			if(pRaw){
 #if __MCF_CRT_REQUIRE_HEAPDBG_LEVEL(3)
 				pRet = __MCF_CRT_HeapDbgAddGuardsAndRegister(pRaw, uSize, pRetAddr);
+				if(!pRet){
+					dlfree(pRaw);
+				}
 #else
 				pRet = pRaw;
 #endif
@@ -89,7 +92,7 @@ unsigned char *__MCF_CRT_HeapAlloc(size_t uSize, const void *pRetAddr){
 			return pRet;
 		}
 
-		if(!(__MCF_CRT_OnBadAlloc && (*__MCF_CRT_OnBadAlloc)(pRetAddr))){
+		if(!(__MCF_CRT_OnHeapBadAlloc && (*__MCF_CRT_OnHeapBadAlloc)(pRetAddr))){
 			SetLastError(ERROR_NOT_ENOUGH_MEMORY);
 			return nullptr;
 		}
@@ -139,6 +142,9 @@ unsigned char *__MCF_CRT_HeapReAlloc(void *pBlock, size_t uSize, const void *pRe
 #if __MCF_CRT_REQUIRE_HEAPDBG_LEVEL(3)
 				__MCF_CRT_HeapDbgUnregister(pBlockInfo);
 				pRet = __MCF_CRT_HeapDbgAddGuardsAndRegister(pRaw, uSize, pRetAddr);
+				if(!pRet){
+					dlfree(pRaw);
+				}
 #else
 				pRet = pRaw;
 #endif
@@ -153,13 +159,13 @@ unsigned char *__MCF_CRT_HeapReAlloc(void *pBlock, size_t uSize, const void *pRe
 		LeaveCriticalSection(&g_csHeapMutex);
 
 		if(pRet){
-			if(__MCF_CRT_OnHeapRealloc){
-				(*__MCF_CRT_OnHeapRealloc)(pRet, pBlock, uSize, pRetAddr);
+			if(__MCF_CRT_OnHeapReAlloc){
+				(*__MCF_CRT_OnHeapReAlloc)(pRet, pBlock, uSize, pRetAddr);
 			}
 			return pRet;
 		}
 
-		if(!(__MCF_CRT_OnBadAlloc && (*__MCF_CRT_OnBadAlloc)(pRetAddr))){
+		if(!(__MCF_CRT_OnHeapBadAlloc && (*__MCF_CRT_OnHeapBadAlloc)(pRetAddr))){
 			SetLastError(ERROR_NOT_ENOUGH_MEMORY);
 			return nullptr;
 		}
@@ -191,7 +197,7 @@ void __MCF_CRT_HeapFree(void *pBlock, const void *pRetAddr){
 	}
 	LeaveCriticalSection(&g_csHeapMutex);
 
-	if(__MCF_CRT_OnHeapDealloc){
-		(*__MCF_CRT_OnHeapDealloc)(pBlock, pRetAddr);
+	if(__MCF_CRT_OnHeapFree){
+		(*__MCF_CRT_OnHeapFree)(pBlock, pRetAddr);
 	}
 }

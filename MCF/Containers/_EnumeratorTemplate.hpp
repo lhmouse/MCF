@@ -11,6 +11,15 @@
 namespace MCF {
 
 namespace Impl_EnumeratorTemplate {
+	// ConstEnumerator 和 Enumerator 需求：
+	// 0) 成员类型：
+	//   ElementType
+	// 1) 成员函数：
+	//   const ElementType *GetPrev(const ElementType *) const;
+	//   ElementType *GetNext(const ElementType *);
+	//   const ElementType *GetPrev(const ElementType *) const;
+	//   ElementType *GetNext(const ElementType *);
+
 	template<typename ContainerT>
 	class ConstEnumerator;
 

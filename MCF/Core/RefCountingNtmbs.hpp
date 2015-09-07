@@ -31,7 +31,7 @@ public:
 		return RefCountingNtmbs(1, puRef, pszStr);
 	}
 	static RefCountingNtmbs View(const char *pszSrc) noexcept {
-		return RefCountingNtmbs(1, nullptr, pszSrc);
+		return RefCountingNtmbs(1, nullptr, pszSrc ? pszSrc : "");
 	}
 
 private:
@@ -39,8 +39,8 @@ private:
 	const char *x_pszStr;
 
 private:
-	RefCountingNtmbs(int, Atomic<std::size_t> *puRef, const char *pszStr) noexcept
-		: x_puRef(puRef), x_pszStr(pszStr ? pszStr : "")
+	constexpr RefCountingNtmbs(int, Atomic<std::size_t> *puRef, const char *pszStr) noexcept
+		: x_puRef(puRef), x_pszStr(pszStr)
 	{
 	}
 

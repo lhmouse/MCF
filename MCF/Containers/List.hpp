@@ -50,9 +50,8 @@ public:
 		Append(itBegin, itEnd);
 	}
 	List(std::initializer_list<ElementT> rhs)
-		: List()
+		: List(rhs.begin(), rhs.end())
 	{
-		Append(rhs.begin(), rhs.end());
 	}
 	List(const List &rhs)
 		: List()

@@ -45,9 +45,8 @@ public:
 		Append(itBegin, itEnd);
 	}
 	StaticVector(std::initializer_list<ElementT> rhs)
-		: StaticVector()
+		: StaticVector(rhs.begin(), rhs.end())
 	{
-		Append(rhs.begin(), rhs.end());
 	}
 	StaticVector(const StaticVector &rhs)
 		: StaticVector()

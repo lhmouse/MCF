@@ -44,9 +44,8 @@ public:
 		Append(itBegin, itEnd);
 	}
 	Vector(std::initializer_list<ElementT> rhs)
-		: Vector()
+		: Vector(rhs.begin(), rhs.end())
 	{
-		Append(rhs.begin(), rhs.end());
 	}
 	Vector(const Vector &rhs)
 		: Vector()

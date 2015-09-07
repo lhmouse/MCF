@@ -161,18 +161,18 @@ public:
 		return pBegin + uOffset - 1;
 	}
 
-	void Swap(StaticVector &rhs) noexcept(std::is_nothrow_move_constructible<ElementT>::value) {
-		auto vTemp = std::move(rhs);
+	void Swap(StaticVector &rhs) noexcept(std::is_nothrow_move_constructible<ElementType>::value) {
+		auto vecTemp = std::move(rhs);
 		*this = std::move(rhs);
-		rhs = std::move(vTemp);
+		rhs = std::move(vecTemp);
 	}
 
 	// StaticVector 需求。
-	const ElementT *GetData() const noexcept {
-		return static_cast<const ElementT *>(static_cast<const void *>(x_aStorage));
+	const ElementType *GetData() const noexcept {
+		return static_cast<const ElementType *>(static_cast<const void *>(x_aStorage));
 	}
-	ElementT *GetData() noexcept {
-		return static_cast<ElementT *>(static_cast<void *>(x_aStorage));
+	ElementType *GetData() noexcept {
+		return static_cast<ElementType *>(static_cast<void *>(x_aStorage));
 	}
 	std::size_t GetSize() const noexcept {
 		return x_uSize;
@@ -181,37 +181,37 @@ public:
 		return kCapacity;
 	}
 
-	const ElementT *GetBegin() const noexcept {
+	const ElementType *GetBegin() const noexcept {
 		return GetData();
 	}
-	ElementT *GetBegin() noexcept {
+	ElementType *GetBegin() noexcept {
 		return GetData();
 	}
-	const ElementT *GetEnd() const noexcept {
+	const ElementType *GetEnd() const noexcept {
 		return GetData() + x_uSize;
 	}
-	ElementT *GetEnd() noexcept {
+	ElementType *GetEnd() noexcept {
 		return GetData() + x_uSize;
 	}
 
-	const ElementT &Get(std::size_t uIndex) const {
+	const ElementType &Get(std::size_t uIndex) const {
 		if(uIndex >= x_uSize){
 			DEBUG_THROW(Exception, ERROR_INVALID_PARAMETER, RefCountingNtmbs::View(__PRETTY_FUNCTION__));
 		}
 		return GetData()[uIndex];
 	}
-	ElementT &Get(std::size_t uIndex){
+	ElementType &Get(std::size_t uIndex){
 		if(uIndex >= x_uSize){
 			DEBUG_THROW(Exception, ERROR_INVALID_PARAMETER, RefCountingNtmbs::View(__PRETTY_FUNCTION__));
 		}
 		return GetData()[uIndex];
 	}
-	const ElementT &UncheckedGet(std::size_t uIndex) const noexcept {
+	const ElementType &UncheckedGet(std::size_t uIndex) const noexcept {
 		ASSERT(uIndex < x_uSize);
 
 		return GetData()[uIndex];
 	}
-	ElementT &UncheckedGet(std::size_t uIndex) noexcept {
+	ElementType &UncheckedGet(std::size_t uIndex) noexcept {
 		ASSERT(uIndex < x_uSize);
 
 		return GetData()[uIndex];
@@ -226,7 +226,7 @@ public:
 		}
 	}
 	template<typename ...ParamsT>
-	ElementT *ResizeMore(std::size_t uDeltaSize, ParamsT &&...vParams){
+	ElementType *ResizeMore(std::size_t uDeltaSize, ParamsT &&...vParams){
 		const auto uOldSize = x_uSize;
 		Append(uDeltaSize - x_uSize, std::forward<ParamsT>(vParams)...);
 		return GetData() + uOldSize;
@@ -252,7 +252,7 @@ public:
 		UncheckedPush(std::forward<ParamsT>(vParams)...);
 	}
 	template<typename ...ParamsT>
-	void UncheckedPush(ParamsT &&...vParams) noexcept(std::is_nothrow_constructible<ElementT, ParamsT &&...>::value) {
+	void UncheckedPush(ParamsT &&...vParams) noexcept(std::is_nothrow_constructible<ElementType, ParamsT &&...>::value) {
 		ASSERT(GetCapacity() - x_uSize > 0);
 
 		DefaultConstruct(GetData() + x_uSize, std::forward<ParamsT>(vParams)...);
@@ -312,10 +312,10 @@ public:
 		}
 	}
 
-	const ElementT &operator[](std::size_t uIndex) const noexcept {
+	const ElementType &operator[](std::size_t uIndex) const noexcept {
 		return UncheckedGet(uIndex);
 	}
-	ElementT &operator[](std::size_t uIndex) noexcept {
+	ElementType &operator[](std::size_t uIndex) noexcept {
 		return UncheckedGet(uIndex);
 	}
 };

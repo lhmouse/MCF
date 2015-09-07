@@ -166,11 +166,11 @@ public:
 	}
 
 	// Vector 需求。
-	const ElementT *GetData() const noexcept {
-		return static_cast<const ElementT *>(x_pStorage);
+	const ElementType *GetData() const noexcept {
+		return static_cast<const ElementType *>(x_pStorage);
 	}
-	ElementT *GetData() noexcept {
-		return static_cast<ElementT *>(x_pStorage);
+	ElementType *GetData() noexcept {
+		return static_cast<ElementType *>(x_pStorage);
 	}
 	std::size_t GetSize() const noexcept {
 		return x_uSize;
@@ -179,37 +179,37 @@ public:
 		return x_uCapacity;
 	}
 
-	const ElementT *GetBegin() const noexcept {
+	const ElementType *GetBegin() const noexcept {
 		return GetData();
 	}
-	ElementT *GetBegin() noexcept {
+	ElementType *GetBegin() noexcept {
 		return GetData();
 	}
-	const ElementT *GetEnd() const noexcept {
+	const ElementType *GetEnd() const noexcept {
 		return GetData() + x_uSize;
 	}
-	ElementT *GetEnd() noexcept {
+	ElementType *GetEnd() noexcept {
 		return GetData() + x_uSize;
 	}
 
-	const ElementT &Get(std::size_t uIndex) const {
+	const ElementType &Get(std::size_t uIndex) const {
 		if(uIndex >= x_uSize){
 			DEBUG_THROW(Exception, ERROR_INVALID_PARAMETER, RefCountingNtmbs::View(__PRETTY_FUNCTION__));
 		}
 		return GetData()[uIndex];
 	}
-	ElementT &Get(std::size_t uIndex){
+	ElementType &Get(std::size_t uIndex){
 		if(uIndex >= x_uSize){
 			DEBUG_THROW(Exception, ERROR_INVALID_PARAMETER, RefCountingNtmbs::View(__PRETTY_FUNCTION__));
 		}
 		return GetData()[uIndex];
 	}
-	const ElementT &UncheckedGet(std::size_t uIndex) const noexcept {
+	const ElementType &UncheckedGet(std::size_t uIndex) const noexcept {
 		ASSERT(uIndex < x_uSize);
 
 		return GetData()[uIndex];
 	}
-	ElementT &UncheckedGet(std::size_t uIndex) noexcept {
+	ElementType &UncheckedGet(std::size_t uIndex) noexcept {
 		ASSERT(uIndex < x_uSize);
 
 		return GetData()[uIndex];
@@ -224,7 +224,7 @@ public:
 		}
 	}
 	template<typename ...ParamsT>
-	ElementT *ResizeMore(std::size_t uDeltaSize, ParamsT &&...vParams){
+	ElementType *ResizeMore(std::size_t uDeltaSize, ParamsT &&...vParams){
 		const auto uOldSize = x_uSize;
 		Append(uDeltaSize - x_uSize, std::forward<ParamsT>(vParams)...);
 		return GetData() + uOldSize;
@@ -242,13 +242,13 @@ public:
 		if(uElementsToAlloc < uNewCapacity){
 			uElementsToAlloc = uNewCapacity;
 		}
-		const std::size_t uBytesToAlloc = sizeof(ElementT) * uElementsToAlloc;
-		if(uBytesToAlloc / sizeof(ElementT) != uElementsToAlloc){
+		const std::size_t uBytesToAlloc = sizeof(ElementType) * uElementsToAlloc;
+		if(uBytesToAlloc / sizeof(ElementType) != uElementsToAlloc){
 			throw std::bad_array_new_length();
 		}
 
-		const auto pNewStorage = static_cast<ElementT *>(::operator new[](uBytesToAlloc));
-		const auto pOldStorage = static_cast<ElementT *>(x_pStorage);
+		const auto pNewStorage = static_cast<ElementType *>(::operator new[](uBytesToAlloc));
+		const auto pOldStorage = static_cast<ElementType *>(x_pStorage);
 		const auto pOldEnd = pOldStorage + x_uSize;
 		auto pWrite = pNewStorage;
 		auto pRead = pOldStorage;
@@ -290,7 +290,7 @@ public:
 		UncheckedPush(std::forward<ParamsT>(vParams)...);
 	}
 	template<typename ...ParamsT>
-	void UncheckedPush(ParamsT &&...vParams) noexcept(std::is_nothrow_constructible<ElementT, ParamsT &&...>::value) {
+	void UncheckedPush(ParamsT &&...vParams) noexcept(std::is_nothrow_constructible<ElementType, ParamsT &&...>::value) {
 		ASSERT(GetCapacity() - x_uSize > 0);
 
 		DefaultConstruct(GetData() + x_uSize, std::forward<ParamsT>(vParams)...);
@@ -351,7 +351,69 @@ public:
 	}
 
 	template<typename ...ParamsT>
-	void Insert(const ElementT *pPos, std::size_t uDeltaSize, const ParamsT &...vParams){
+	void Insert(const ElementType *pPos, ParamsT &&...vParams){
+		ASSERT(pPos);
+		ASSERT((GetBegin() <= pPos) && (pPos <= GetEnd()));
+
+		if(pPos == GetEnd()){
+			Push(std::forward<ParamsT>(vParams)...);
+			return;
+		}
+
+		if(std::is_nothrow_move_constructible<ElementType>::value){
+			const auto nOffset = pPos - GetBegin();
+			ReserveMore(1);
+			pPos = GetBegin() + nOffset;
+
+			const auto pNewEnd = GetEnd() + 1;
+			const auto pDestroyedBegin = const_cast<ElementType *>(pPos);
+
+			auto pWrite = pNewEnd;
+			auto pRead = GetEnd();
+			while(pRead != pPos){
+				--pWrite;
+				--pRead;
+				Construct(pWrite, std::move(*pRead));
+				Destruct(pRead);
+			}
+			pRead = pWrite;
+
+			pWrite = pDestroyedBegin;
+			try {
+				DefaultConstruct(pWrite, std::forward<ParamsT>(vParams)...);
+			} catch(...){
+				while(pWrite != GetEnd()){
+					Construct(pWrite, std::move(*pRead));
+					Destruct(pRead);
+					++pWrite;
+					++pRead;
+				}
+				throw;
+			}
+
+			x_uSize = static_cast<std::size_t>(pNewEnd - GetBegin());
+		} else {
+			auto uNewCapacity = GetSize() + 1;
+			if(uNewCapacity < GetSize()){
+				throw std::bad_array_new_length();
+			}
+			if(uNewCapacity < GetCapacity()){
+				uNewCapacity = GetCapacity();
+			}
+			Vector vecTemp;
+			vecTemp.Reserve(uNewCapacity);
+			for(auto pCur = GetBegin(); pCur != pPos; ++pCur){
+				vecTemp.UncheckedPush(*pCur);
+			}
+			vecTemp.UncheckedPush(std::forward<ParamsT>(vParams)...);
+			for(auto pCur = pPos; pCur != GetEnd(); ++pCur){
+				vecTemp.UncheckedPush(*pCur);
+			}
+			*this = std::move(vecTemp);
+		}
+	}
+	template<typename ...ParamsT>
+	void InsertN(const ElementType *pPos, std::size_t uDeltaSize, const ParamsT &...vParams){
 		ASSERT(pPos);
 		ASSERT((GetBegin() <= pPos) && (pPos <= GetEnd()));
 
@@ -360,14 +422,13 @@ public:
 			return;
 		}
 
-		if(std::is_nothrow_move_constructible<ElementT>::value){
+		if(std::is_nothrow_move_constructible<ElementType>::value){
 			const auto nOffset = pPos - GetBegin();
 			ReserveMore(uDeltaSize);
 			pPos = GetBegin() + nOffset;
 
 			const auto pNewEnd = GetEnd() + uDeltaSize;
-			const auto pDestroyedBegin = const_cast<ElementT *>(pPos);
-			const auto pDestroyedEnd = GetEnd();
+			const auto pDestroyedBegin = const_cast<ElementType *>(pPos);
 
 			auto pWrite = pNewEnd;
 			auto pRead = GetEnd();
@@ -390,7 +451,7 @@ public:
 					--pWrite;
 					Destruct(pWrite);
 				}
-				while(pWrite != pDestroyedEnd){
+				while(pWrite != GetEnd()){
 					Construct(pWrite, std::move(*pRead));
 					Destruct(pRead);
 					++pWrite;
@@ -408,24 +469,22 @@ public:
 			if(uNewCapacity < GetCapacity()){
 				uNewCapacity = GetCapacity();
 			}
-			Vector vTemp;
-			vTemp.Reserve(uNewCapacity);
+			Vector vecTemp;
+			vecTemp.Reserve(uNewCapacity);
 			for(auto pCur = GetBegin(); pCur != pPos; ++pCur){
-				vTemp.UncheckedPush(*pCur);
+				vecTemp.UncheckedPush(*pCur);
 			}
 			for(std::size_t i = 0; i < uDeltaSize; ++i){
-				vTemp.UncheckedPush(vParams...);
+				vecTemp.UncheckedPush(vParams...);
 			}
 			for(auto pCur = pPos; pCur != GetEnd(); ++pCur){
-				vTemp.UncheckedPush(*pCur);
+				vecTemp.UncheckedPush(*pCur);
 			}
-			*this = std::move(vTemp);
+			*this = std::move(vecTemp);
 		}
 	}
-	template<typename IteratorT, std::enable_if_t<
-		sizeof(typename std::iterator_traits<IteratorT>::value_type *),
-		int> = 0>
-	void Insert(const ElementT *pPos, IteratorT itBegin, std::common_type_t<IteratorT> itEnd){
+	template<typename IteratorT>
+	void InsertRange(const ElementType *pPos, IteratorT itBegin, std::common_type_t<IteratorT> itEnd){
 		ASSERT(pPos);
 		ASSERT((GetBegin() <= pPos) && (pPos <= GetEnd()));
 
@@ -436,7 +495,7 @@ public:
 
 		constexpr bool kHasDeltaSizeHint = std::is_base_of<std::forward_iterator_tag, typename std::iterator_traits<IteratorT>::iterator_category>::value;
 
-		if(kHasDeltaSizeHint && std::is_nothrow_move_constructible<ElementT>::value){
+		if(kHasDeltaSizeHint && std::is_nothrow_move_constructible<ElementType>::value){
 			const auto uDeltaSize = static_cast<std::size_t>(std::distance(itBegin, itEnd));
 
 			const auto nOffset = pPos - GetBegin();
@@ -444,7 +503,7 @@ public:
 			pPos = GetBegin() + nOffset;
 
 			const auto pNewEnd = GetEnd() + uDeltaSize;
-			const auto pDestroyedBegin = const_cast<ElementT *>(pPos);
+			const auto pDestroyedBegin = const_cast<ElementType *>(pPos);
 			const auto pDestroyedEnd = GetEnd();
 
 			auto pWrite = pNewEnd;
@@ -488,36 +547,36 @@ public:
 				if(uNewCapacity < GetCapacity()){
 					uNewCapacity = GetCapacity();
 				}
-				Vector vTemp;
-				vTemp.Reserve(uNewCapacity);
+				Vector vecTemp;
+				vecTemp.Reserve(uNewCapacity);
 				for(auto pCur = GetBegin(); pCur != pPos; ++pCur){
-					vTemp.UncheckedPush(*pCur);
+					vecTemp.UncheckedPush(*pCur);
 				}
 				for(auto it = itBegin; it != itEnd; ++it){
-					vTemp.UncheckedPush(*it);
+					vecTemp.UncheckedPush(*it);
 				}
 				for(auto pCur = pPos; pCur != GetEnd(); ++pCur){
-					vTemp.UncheckedPush(*pCur);
+					vecTemp.UncheckedPush(*pCur);
 				}
-				*this = std::move(vTemp);
+				*this = std::move(vecTemp);
 			} else {
-				Vector vTemp;
-				vTemp.Reserve(GetCapacity());
+				Vector vecTemp;
+				vecTemp.Reserve(GetCapacity());
 				for(auto pCur = GetBegin(); pCur != pPos; ++pCur){
-					vTemp.UncheckedPush(*pCur);
+					vecTemp.UncheckedPush(*pCur);
 				}
 				for(auto it = itBegin; it != itEnd; ++it){
-					vTemp.Push(*it);
+					vecTemp.Push(*it);
 				}
 				for(auto pCur = pPos; pCur != GetEnd(); ++pCur){
-					vTemp.Push(*pCur);
+					vecTemp.Push(*pCur);
 				}
-				*this = std::move(vTemp);
+				*this = std::move(vecTemp);
 			}
 		}
 	}
 
-	void Erase(const ElementT *pBegin, const ElementT *pEnd) noexcept(std::is_nothrow_move_constructible<ElementT>::value) {
+	void Erase(const ElementType *pBegin, const ElementType *pEnd) noexcept(std::is_nothrow_move_constructible<ElementType>::value) {
 		ASSERT(pBegin && pEnd);
 		ASSERT((GetBegin() <= pBegin) && (pBegin <= pEnd) && (pEnd <= GetEnd()));
 
@@ -526,38 +585,38 @@ public:
 			return;
 		}
 
-		if(std::is_nothrow_move_constructible<ElementT>::value){
+		if(std::is_nothrow_move_constructible<ElementType>::value){
 			for(auto pCur = pBegin; pCur != pEnd; ++pCur){
 				Destruct(pCur);
 			}
-			auto pWrite = const_cast<ElementT *>(pBegin);
+			auto pWrite = const_cast<ElementType *>(pBegin);
 			for(auto pCur = pEnd; pCur != GetEnd(); ++pCur){
 				Construct(pWrite, std::move(*pCur));
 				++pWrite;
 			}
 			x_uSize = static_cast<std::size_t>(pWrite - GetBegin());
 		} else {
-			Vector vTemp;
-			vTemp.Reserve(GetCapacity());
+			Vector vecTemp;
+			vecTemp.Reserve(GetCapacity());
 			for(auto pCur = GetBegin(); pCur != pBegin; ++pCur){
-				vTemp.UncheckedPush(*pCur);
+				vecTemp.UncheckedPush(*pCur);
 			}
 			for(auto pCur = pEnd; pCur != GetEnd(); ++pCur){
-				vTemp.UncheckedPush(*pCur);
+				vecTemp.UncheckedPush(*pCur);
 			}
-			*this = std::move(vTemp);
+			*this = std::move(vecTemp);
 		}
 	}
-	void Erase(const ElementT *pPos) noexcept(noexcept(std::declval<Vector &>().Erase(pPos, pPos))) {
+	void Erase(const ElementType *pPos) noexcept(noexcept(std::declval<Vector &>().Erase(pPos, pPos))) {
 		ASSERT(pPos);
 
 		Erase(pPos, pPos + 1);
 	}
 
-	const ElementT &operator[](std::size_t uIndex) const noexcept {
+	const ElementType &operator[](std::size_t uIndex) const noexcept {
 		return UncheckedGet(uIndex);
 	}
-	ElementT &operator[](std::size_t uIndex) noexcept {
+	ElementType &operator[](std::size_t uIndex) noexcept {
 		return UncheckedGet(uIndex);
 	}
 };

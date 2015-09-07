@@ -1,37 +1,27 @@
-#include <MCF/Containers/List.hpp>
-#include <cstdio>
+#include <MCF/Containers/Vector.hpp>
+#include <MCF/Core/String.hpp>
 
-template class MCF::List<int>;
+template class MCF::Vector<MCF::AnsiString>;
 
 extern "C" unsigned MCFMain(){
-	for(int begin = 0; begin < 10; ++begin){
-		for(int end = begin; end < 10; ++end){
-			MCF::List<int> l;
-			for(int i = 0; i < 10; ++i){
-				l.Push(i);
-			}
+	MCF::Vector<MCF::AnsiString> v1, v2;
+	for(int i = 0; i < 10; ++i){
+		char temp[64];
+		std::sprintf(temp, "---------------------------------- hello %d", i);
+		v1.Push(temp);
+		std::sprintf(temp, "---------------------------------- world %d", i);
+		v2.Push(temp);
+	}
 
-			auto p1 = l.GetFirst();
-			for(int i = 0; i < begin; ++i){
-				p1 = l.GetNext(p1);
-			}
-			auto p2 = l.GetFirst();
-			for(int i = 0; i < end; ++i){
-				p2 = l.GetNext(p2);
-			}
-			MCF::List<int> sp;
-			sp.Splice(nullptr, l, p1, p2);
+	try {
+		// v1.InsertRange(v1.GetData() + 5, v2.GetBegin() + 2, v2.GetBegin() + 6);
+		v1.Insert(v1.GetData() + 5, "meow");
+	} catch(std::exception &e){
+		std::printf("exception: what = %s\n", e.what());
+	}
 
-			std::printf("source : ");
-			for(auto e = l.EnumerateFirst(); e; ++e){
-				std::printf("%d ", *e);
-			}
-			std::printf("\nspliced: ");
-			for(auto e = sp.EnumerateFirst(); e; ++e){
-				std::printf("%d ", *e);
-			}
-			std::printf("\n-----\n");
-		}
+	for(auto &s : v1){
+		std::printf("v1: %s\n", s.GetStr());
 	}
 	return 0;
 }

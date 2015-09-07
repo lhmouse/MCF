@@ -380,13 +380,13 @@ public:
 
 	const Char &Get(std::size_t uIndex) const {
 		if(uIndex >= GetSize()){
-			DEBUG_THROW(Exception, ERROR_INVALID_PARAMETER, __PRETTY_FUNCTION__);
+			DEBUG_THROW(Exception, ERROR_INVALID_PARAMETER, RefCountingNtmbs::View(__PRETTY_FUNCTION__));
 		}
 		return UncheckedGet(uIndex);
 	}
 	Char &Get(std::size_t uIndex){
 		if(uIndex >= GetSize()){
-			DEBUG_THROW(Exception, ERROR_INVALID_PARAMETER, __PRETTY_FUNCTION__);
+			DEBUG_THROW(Exception, ERROR_INVALID_PARAMETER, RefCountingNtmbs::View(__PRETTY_FUNCTION__));
 		}
 		return UncheckedGet(uIndex);
 	}
@@ -967,11 +967,5 @@ extern inline const auto &operator""_u32s(){
 }
 
 }
-
-using ::MCF::operator""_ns;
-using ::MCF::operator""_ws;
-using ::MCF::operator""_u8s;
-using ::MCF::operator""_u16s;
-using ::MCF::operator""_u32s;
 
 #endif

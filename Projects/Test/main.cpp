@@ -1,23 +1,14 @@
-#include <MCF/Containers/StaticVector.hpp>
-#include <MCFCRT/env/mcfwin.h>
-
-template class MCF::StaticVector<int, 5>;
+#include <MCF/Core/RefCountingNtmbs.hpp>
+#include <cstdio>
 
 extern "C" unsigned MCFMain(){
-	MCF::StaticVector<int, 5> v;
-	try {
-		for(int i = 0; i < 6; ++i){
-			v.Push(i);
-		}
-	} catch(std::exception &e){
-		std::printf("exception: what = %s\n", e.what());
-	}
-
-	for(auto e = v.EnumerateFirst(); e; ++e){
-		std::printf("element: %d\n", *e);
-	}
-	for(auto e = v.EnumerateLast(); e; --e){
-		std::printf("element: %d\n", *e);
-	}
+	auto s1 = MCF::RefCountingNtmbs::Copy("hello world!");
+	auto s2 = MCF::RefCountingNtmbs::View("hello world!");
+	auto s3 = s1;
+	auto s4 = s2;
+	std::printf("s1 = %p\n", (const void *)s1.GetStr());
+	std::printf("s2 = %p\n", (const void *)s2.GetStr());
+	std::printf("s3 = %p\n", (const void *)s3.GetStr());
+	std::printf("s4 = %p\n", (const void *)s4.GetStr());
 	return 0;
 }

@@ -84,11 +84,11 @@ unsigned System::Shell(MCF::WideString &wcsStdOut, MCF::WideString &wcsStdErr, M
 		const auto CreateInputPipe = []{
 			HANDLE hRead, hWrite;
 			if(!::CreatePipe(&hRead, &hWrite, nullptr, 0)){
-				DEBUG_THROW(MCF::SystemError, "CreatePipe");
+				DEBUG_THROW(MCF::SystemError, "CreatePipe"_rcs);
 			}
 			auto vRet = std::make_pair(WindowsHandle(hRead), WindowsHandle(hWrite));
 			if(!::SetHandleInformation(hWrite, HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT)){
-				DEBUG_THROW(MCF::SystemError, "SetHandleInformation");
+				DEBUG_THROW(MCF::SystemError, "SetHandleInformation"_rcs);
 			}
 			return vRet;
 		};
@@ -109,7 +109,7 @@ unsigned System::Shell(MCF::WideString &wcsStdOut, MCF::WideString &wcsStdErr, M
 
 		::PROCESS_INFORMATION vProcessInfo;
 		if(!::CreateProcessW(nullptr, wcsCommandLine.GetStr(), nullptr, nullptr, true, 0, nullptr, nullptr, &vStartupInfo, &vProcessInfo)){
-			DEBUG_THROW(MCF::SystemError, "CreateProcessW");
+			DEBUG_THROW(MCF::SystemError, "CreateProcessW"_rcs);
 		}
 		const WindowsHandle hPrimaryThread(vProcessInfo.hThread);
 		const WindowsHandle hProcess(vProcessInfo.hProcess);
@@ -224,7 +224,7 @@ MCF::Vector<MCF::WideString> System::GetFileList(MCF::WideString wcsPath, bool b
 	::WIN32_FIND_DATAW vFindData;
 	const FindHandle hFind(::FindFirstFileW((wcsPath += L"\\*.*"_wso).GetStr(), &vFindData));
 	if(!hFind){
-		DEBUG_THROW(MCF::SystemError, "FindFirstFileW");
+		DEBUG_THROW(MCF::SystemError, "FindFirstFileW"_rcs);
 	}
 	do {
 		if(std::wcscmp(vFindData.cFileName, L".") == 0){
@@ -243,7 +243,7 @@ MCF::Vector<MCF::WideString> System::GetFileList(MCF::WideString wcsPath, bool b
 	} while(::FindNextFileW(hFind.Get(), &vFindData));
 	const auto dwError = ::GetLastError();
 	if(dwError != ERROR_NO_MORE_FILES){
-		DEBUG_THROW(MCF::SystemError, "FindNextFileW", dwError);
+		DEBUG_THROW(MCF::SystemError, "FindNextFileW"_rcs, dwError);
 	}
 
 	return vecRet;

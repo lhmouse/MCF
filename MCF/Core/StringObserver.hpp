@@ -249,7 +249,7 @@ public:
 
 	const Char &Get(std::size_t uIndex) const {
 		if(uIndex >= GetSize()){
-			DEBUG_THROW(Exception, ERROR_INVALID_PARAMETER, __PRETTY_FUNCTION__);
+			DEBUG_THROW(Exception, ERROR_INVALID_PARAMETER, RefCountingNtmbs::View(__PRETTY_FUNCTION__));
 		}
 		return UncheckedGet(uIndex);
 	}
@@ -315,7 +315,7 @@ public:
 	}
 
 	// 举例：
-	//   Slice( 1,  5)   返回 "bcde"；
+	//   Slice( 1,  5)   返回 "bcde"_rcs；
 	//   Slice( 1, -5)   返回 "bc"；
 	//   Slice( 5, -1)   返回 "fg"；
 	//   Slice(-5, -1)   返回 "defg"。
@@ -524,11 +524,5 @@ extern inline auto operator""_u32so() noexcept {
 }
 
 }
-
-using ::MCF::operator""_nso;
-using ::MCF::operator""_wso;
-using ::MCF::operator""_u8so;
-using ::MCF::operator""_u16so;
-using ::MCF::operator""_u32so;
 
 #endif

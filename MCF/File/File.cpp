@@ -63,15 +63,15 @@ void File::Open(const wchar_t *pwszPath, std::uint32_t u32Flags){
 	if(!hFile.Reset(reinterpret_cast<X_FileCloser::Handle>(
 		::CreateFileW(pwszPath, dwDesiredAccess, dwShareMode, nullptr, dwCreateDisposition, dwFlagsAndAttributes, NULL))))
 	{
-		DEBUG_THROW(SystemError, "CreateFileW");
+		DEBUG_THROW(SystemError, "CreateFileW"_rcs);
 	}
 
 	if((u32Flags & kToWrite) && !(u32Flags & kDontTruncate)){
 		if(!::SetEndOfFile(reinterpret_cast<HANDLE>(hFile.Get()))){
-			DEBUG_THROW(SystemError, "SetEndOfFile");
+			DEBUG_THROW(SystemError, "SetEndOfFile"_rcs);
 		}
 		if(!::FlushFileBuffers(reinterpret_cast<HANDLE>(hFile.Get()))){
-			DEBUG_THROW(SystemError, "FlushFileBuffers");
+			DEBUG_THROW(SystemError, "FlushFileBuffers"_rcs);
 		}
 	}
 
@@ -104,27 +104,27 @@ void File::Close() noexcept {
 
 std::uint64_t File::GetSize() const {
 	if(!x_hFile){
-		DEBUG_THROW(Exception, ERROR_INVALID_HANDLE, "No file open");
+		DEBUG_THROW(Exception, ERROR_INVALID_HANDLE, "No file open"_rcs);
 	}
 
 	::LARGE_INTEGER liFileSize;
 	if(!::GetFileSizeEx(reinterpret_cast<HANDLE>(x_hFile.Get()), &liFileSize)){
-		DEBUG_THROW(SystemError, "GetFileSizeEx");
+		DEBUG_THROW(SystemError, "GetFileSizeEx"_rcs);
 	}
 	return (std::uint64_t)liFileSize.QuadPart;
 }
 void File::Resize(std::uint64_t u64NewSize){
 	if(!x_hFile){
-		DEBUG_THROW(Exception, ERROR_INVALID_HANDLE, "No file open");
+		DEBUG_THROW(Exception, ERROR_INVALID_HANDLE, "No file open"_rcs);
 	}
 
 	::LARGE_INTEGER liNewSize;
 	liNewSize.QuadPart = (long long)u64NewSize;
 	if(!::SetFilePointerEx(reinterpret_cast<HANDLE>(x_hFile.Get()), liNewSize, nullptr, FILE_BEGIN)){
-		DEBUG_THROW(SystemError, "SetFilePointerEx");
+		DEBUG_THROW(SystemError, "SetFilePointerEx"_rcs);
 	}
 	if(!::SetEndOfFile(reinterpret_cast<HANDLE>(x_hFile.Get()))){
-		DEBUG_THROW(SystemError, "SetEndOfFile");
+		DEBUG_THROW(SystemError, "SetEndOfFile"_rcs);
 	}
 }
 void File::Clear(){
@@ -135,7 +135,7 @@ std::size_t File::Read(void *pBuffer, std::uint32_t u32BytesToRead, std::uint64_
 	FunctionObserver<void ()> fnAsyncProc, FunctionObserver<void ()> fnCompleteCallback) const
 {
 	if(!x_hFile){
-		DEBUG_THROW(Exception, ERROR_INVALID_HANDLE, "No file open");
+		DEBUG_THROW(Exception, ERROR_INVALID_HANDLE, "No file open"_rcs);
 	}
 
 	DWORD dwErrorCode;
@@ -155,10 +155,10 @@ std::size_t File::Read(void *pBuffer, std::uint32_t u32BytesToRead, std::uint64_
 	}
 	if(dwErrorCode != ERROR_SUCCESS){
 		if(dwErrorCode != ERROR_IO_PENDING){
-			DEBUG_THROW(SystemError, dwErrorCode, "ReadFile");
+			DEBUG_THROW(SystemError, dwErrorCode, "ReadFile"_rcs);
 		}
 		if(!::GetOverlappedResult(reinterpret_cast<HANDLE>(x_hFile.Get()), &vOverlapped, &dwTransferred, true)){
-			DEBUG_THROW(SystemError, "GetOverlappedResult");
+			DEBUG_THROW(SystemError, "GetOverlappedResult"_rcs);
 		}
 	}
 
@@ -171,7 +171,7 @@ std::size_t File::Write(std::uint64_t u64Offset, const void *pBuffer, std::uint3
 	FunctionObserver<void ()> fnAsyncProc, FunctionObserver<void ()> fnCompleteCallback)
 {
 	if(!x_hFile){
-		DEBUG_THROW(Exception, ERROR_INVALID_HANDLE, "No file open");
+		DEBUG_THROW(Exception, ERROR_INVALID_HANDLE, "No file open"_rcs);
 	}
 
 	DWORD dwErrorCode;
@@ -191,10 +191,10 @@ std::size_t File::Write(std::uint64_t u64Offset, const void *pBuffer, std::uint3
 	}
 	if(dwErrorCode != ERROR_SUCCESS){
 		if(dwErrorCode != ERROR_IO_PENDING){
-			DEBUG_THROW(SystemError, dwErrorCode, "WriteFile");
+			DEBUG_THROW(SystemError, dwErrorCode, "WriteFile"_rcs);
 		}
 		if(!::GetOverlappedResult(reinterpret_cast<HANDLE>(x_hFile.Get()), &vOverlapped, &dwTransferred, true)){
-			DEBUG_THROW(SystemError, "GetOverlappedResult");
+			DEBUG_THROW(SystemError, "GetOverlappedResult"_rcs);
 		}
 	}
 
@@ -205,11 +205,11 @@ std::size_t File::Write(std::uint64_t u64Offset, const void *pBuffer, std::uint3
 }
 void File::Flush() const {
 	if(!x_hFile){
-		DEBUG_THROW(Exception, ERROR_INVALID_HANDLE, "No file open");
+		DEBUG_THROW(Exception, ERROR_INVALID_HANDLE, "No file open"_rcs);
 	}
 
 	if(!::FlushFileBuffers(reinterpret_cast<HANDLE>(x_hFile.Get()))){
-		DEBUG_THROW(SystemError, "FlushFileBuffers");
+		DEBUG_THROW(SystemError, "FlushFileBuffers"_rcs);
 	}
 }
 

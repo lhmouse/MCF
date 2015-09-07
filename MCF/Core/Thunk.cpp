@@ -16,7 +16,7 @@ void ThunkDeleter::operator()(void *pThunk) const noexcept {
 ThunkPtr CreateThunk(const void *pInit, std::size_t uSize){
 	ThunkPtr pThunk;
 	if(!pThunk.Reset(::MCF_CRT_AllocateThunk(pInit, uSize))){
-		DEBUG_THROW(SystemError, "MCF_CRT_AllocateThunk");
+		DEBUG_THROW(SystemError, "MCF_CRT_AllocateThunk"_rcs);
 	}
 	return pThunk;
 }

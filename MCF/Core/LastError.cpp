@@ -15,7 +15,7 @@ WideString GetWin32ErrorDescription(unsigned long ulErrorCode){
 	void *pBuffer;
 	const auto uLen = ::FormatMessageW(kFlags, nullptr, ulErrorCode, MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL), reinterpret_cast<LPWSTR>(&pBuffer), 0, nullptr);
 	if(uLen == 0){
-		DEBUG_THROW(SystemError, "FormatMessageW");
+		DEBUG_THROW(SystemError, "FormatMessageW"_rcs);
 	}
 	try {
 		wcsRet.Assign(static_cast<const wchar_t *>(pBuffer), uLen);

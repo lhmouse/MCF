@@ -194,13 +194,13 @@ public:
 
 	const ElementT &Get(std::size_t uIndex) const {
 		if(uIndex >= x_uSize){
-			DEBUG_THROW(Exception, ERROR_INVALID_PARAMETER, __PRETTY_FUNCTION__);
+			DEBUG_THROW(Exception, ERROR_INVALID_PARAMETER, RefCountingNtmbs::View(__PRETTY_FUNCTION__));
 		}
 		return GetData()[uIndex];
 	}
 	ElementT &Get(std::size_t uIndex){
 		if(uIndex >= x_uSize){
-			DEBUG_THROW(Exception, ERROR_INVALID_PARAMETER, __PRETTY_FUNCTION__);
+			DEBUG_THROW(Exception, ERROR_INVALID_PARAMETER, RefCountingNtmbs::View(__PRETTY_FUNCTION__));
 		}
 		return GetData()[uIndex];
 	}

@@ -14,7 +14,7 @@ namespace {
 	UniqueWin32Handle CheckedCreateMutex(const wchar_t *pwszName){
 		UniqueWin32Handle hMutex(::CreateMutexW(nullptr, false, pwszName));
 		if(!hMutex){
-			DEBUG_THROW(SystemError, "CreateMutexW");
+			DEBUG_THROW(SystemError, "CreateMutexW"_rcs);
 		}
 		return hMutex;
 	}

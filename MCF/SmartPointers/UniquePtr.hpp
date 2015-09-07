@@ -74,7 +74,11 @@ public:
 		return std::exchange(x_pElement, nullptr);
 	}
 
-	UniquePtr &Reset(Element *rhs = nullptr) noexcept {
+	UniquePtr &Reset(std::nullptr_t = nullptr) noexcept {
+		UniquePtr().Swap(*this);
+		return *this;
+	}
+	UniquePtr &Reset(Element *rhs) noexcept {
 		UniquePtr(rhs).Swap(*this);
 		return *this;
 	}
@@ -84,9 +88,7 @@ public:
 		return *this;
 	}
 	UniquePtr &Reset(UniquePtr &&rhs) noexcept {
-		ASSERT(&rhs != this);
-
-		UniquePtr(std::move(rhs)).Swap(*this);
+		rhs.Swap(*this);
 		return *this;
 	}
 

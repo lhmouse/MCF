@@ -63,7 +63,7 @@ namespace {
 	::lzma_options_lzma MakeOptions(unsigned uLevel, unsigned long ulDictSize){
 		::lzma_options_lzma vRet;
 		if(::lzma_lzma_preset(&vRet, uLevel)){
-			DEBUG_THROW(LzmaError, LZMA_OPTIONS_ERROR, "lzma_lzma_preset");
+			DEBUG_THROW(LzmaError, LZMA_OPTIONS_ERROR, "lzma_lzma_preset"_rcs);
 		}
 		vRet.dict_size = ulDictSize;
 		return vRet;
@@ -91,7 +91,7 @@ public:
 
 		const auto eError = ::lzma_alone_encoder(&x_vStream, &x_vOptions);
 		if(eError != LZMA_OK){
-			DEBUG_THROW(LzmaError, eError, "lzma_alone_encoder");
+			DEBUG_THROW(LzmaError, eError, "lzma_alone_encoder"_rcs);
 		}
 		x_pStream.Reset(&x_vStream);
 	}
@@ -113,7 +113,7 @@ public:
 					break;
 				}
 				if(eError != LZMA_OK){
-					DEBUG_THROW(LzmaError, eError, "lzma_code");
+					DEBUG_THROW(LzmaError, eError, "lzma_code"_rcs);
 				}
 				if(x_pStream->avail_out == 0){
 					x_vOwner.X_Output(abyTemp, sizeof(abyTemp));
@@ -143,7 +143,7 @@ public:
 				break;
 			}
 			if(eError != LZMA_OK){
-				DEBUG_THROW(LzmaError, eError, "lzma_code");
+				DEBUG_THROW(LzmaError, eError, "lzma_code"_rcs);
 			}
 			if(x_pStream->avail_out == 0){
 				x_vOwner.X_Output(abyTemp, sizeof(abyTemp));
@@ -178,7 +178,7 @@ public:
 
 		const auto eError = ::lzma_alone_decoder(&x_vStream, UINT64_MAX);
 		if(eError != LZMA_OK){
-			DEBUG_THROW(LzmaError, eError, "lzma_alone_decoder");
+			DEBUG_THROW(LzmaError, eError, "lzma_alone_decoder"_rcs);
 		}
 		x_pStream.Reset(&x_vStream);
 	}
@@ -200,7 +200,7 @@ public:
 					break;
 				}
 				if(eError != LZMA_OK){
-					DEBUG_THROW(LzmaError, eError, "lzma_code");
+					DEBUG_THROW(LzmaError, eError, "lzma_code"_rcs);
 				}
 				if(x_pStream->avail_out == 0){
 					x_vOwner.X_Output(abyTemp, sizeof(abyTemp));
@@ -230,7 +230,7 @@ public:
 				break;
 			}
 			if(eError != LZMA_OK){
-				DEBUG_THROW(LzmaError, eError, "lzma_code");
+				DEBUG_THROW(LzmaError, eError, "lzma_code"_rcs);
 			}
 			if(x_pStream->avail_out == 0){
 				x_vOwner.X_Output(abyTemp, sizeof(abyTemp));
@@ -289,8 +289,8 @@ void LzmaDecoder::X_DoFinalize(){
 }
 
 // ========== LzmaError ==========
-LzmaError::LzmaError(const char *pszFile, unsigned long ulLine, long lLzmaError, const char *pszFunction) noexcept
-	: Exception(pszFile, ulLine, LzmaErrorToWin32Error(static_cast<::lzma_ret>(lLzmaError)), pszFunction)
+LzmaError::LzmaError(const char *pszFile, unsigned long ulLine, long lLzmaError, RefCountingNtmbs rcsFunction) noexcept
+	: Exception(pszFile, ulLine, LzmaErrorToWin32Error(static_cast<::lzma_ret>(lLzmaError)), std::move(rcsFunction))
 	, x_lLzmaError(lLzmaError)
 {
 }

@@ -67,7 +67,7 @@ public:
 
 		const auto nError = ::deflateInit2(&x_vStream, (int)uLevel, Z_DEFLATED, bRaw ? -15 : 15, 9, Z_DEFAULT_STRATEGY);
 		if(nError != Z_OK){
-			DEBUG_THROW(ZlibError, nError, "deflateInit2");
+			DEBUG_THROW(ZlibError, nError, "deflateInit2"_rcs);
 		}
 	}
 	~X_Delegate(){
@@ -78,7 +78,7 @@ public:
 	void Init(){
 		const auto nError = ::deflateReset(&x_vStream);
 		if(nError != Z_OK){
-			DEBUG_THROW(ZlibError, nError, "deflateReset");
+			DEBUG_THROW(ZlibError, nError, "deflateReset"_rcs);
 		}
 	}
 	void Update(const void *pData, std::size_t uSize){
@@ -99,7 +99,7 @@ public:
 					break;
 				}
 				if(nError != Z_OK){
-					DEBUG_THROW(ZlibError, nError, "deflate");
+					DEBUG_THROW(ZlibError, nError, "deflate"_rcs);
 				}
 				if(x_vStream.avail_out == 0){
 					x_vOwner.X_Output(abyTemp, sizeof(abyTemp));
@@ -129,7 +129,7 @@ public:
 				break;
 			}
 			if(nError != Z_OK){
-				DEBUG_THROW(ZlibError, nError, "deflate");
+				DEBUG_THROW(ZlibError, nError, "deflate"_rcs);
 			}
 			if(x_vStream.avail_out == 0){
 				x_vOwner.X_Output(abyTemp, sizeof(abyTemp));
@@ -163,7 +163,7 @@ public:
 
 		const auto nError = ::inflateInit2(&x_vStream, bRaw ? -15 : 15);
 		if(nError != Z_OK){
-			DEBUG_THROW(ZlibError, nError, "inflateInit2");
+			DEBUG_THROW(ZlibError, nError, "inflateInit2"_rcs);
 		}
 	}
 	~X_Delegate(){
@@ -174,7 +174,7 @@ public:
 	void Init(){
 		const auto nError = ::inflateReset(&x_vStream);
 		if(nError != Z_OK){
-			DEBUG_THROW(ZlibError, nError, "inflateReset");
+			DEBUG_THROW(ZlibError, nError, "inflateReset"_rcs);
 		}
 	}
 	void Update(const void *pData, std::size_t uSize){
@@ -195,7 +195,7 @@ public:
 					break;
 				}
 				if(nError != Z_OK){
-					DEBUG_THROW(ZlibError, nError, "inflate");
+					DEBUG_THROW(ZlibError, nError, "inflate"_rcs);
 				}
 				if(x_vStream.avail_out == 0){
 					x_vOwner.X_Output(abyTemp, sizeof(abyTemp));
@@ -225,7 +225,7 @@ public:
 				break;
 			}
 			if(nError != Z_OK){
-				DEBUG_THROW(ZlibError, nError, "inflate");
+				DEBUG_THROW(ZlibError, nError, "inflate"_rcs);
 			}
 			if(x_vStream.avail_out == 0){
 				x_vOwner.X_Output(abyTemp, sizeof(abyTemp));
@@ -285,8 +285,8 @@ void ZlibDecoder::X_DoFinalize(){
 }
 
 // ========== ZlibError ==========
-ZlibError::ZlibError(const char *pszFile, unsigned long ulLine, long lZlibError, const char *pszFunction) noexcept
-	: Exception(pszFile, ulLine, ZlibErrorToWin32Error(lZlibError), pszFunction)
+ZlibError::ZlibError(const char *pszFile, unsigned long ulLine, long lZlibError, RefCountingNtmbs rcsFunction) noexcept
+	: Exception(pszFile, ulLine, ZlibErrorToWin32Error(lZlibError), std::move(rcsFunction))
 	, x_lZlibError(lZlibError)
 {
 }

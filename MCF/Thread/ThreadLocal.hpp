@@ -39,7 +39,7 @@ namespace Impl_ThreadLocal {
 			: x_vDefault(std::move(vDefault))
 		{
 			if(!x_pTlsKey.Reset(::MCF_CRT_TlsAllocKey(nullptr))){
-				DEBUG_THROW(SystemError, "MCF_CRT_TlsAllocKey");
+				DEBUG_THROW(SystemError, "MCF_CRT_TlsAllocKey"_rcs);
 			}
 		}
 
@@ -61,7 +61,7 @@ namespace Impl_ThreadLocal {
 			std::intptr_t nValue = 0;
 			std::memcpy(&nValue, &vElement, sizeof(vElement));
 			if(!::MCF_CRT_TlsReset(x_pTlsKey.Get(), nValue)){ // noexcept
-				DEBUG_THROW(SystemError, "MCF_CRT_TlsReset");
+				DEBUG_THROW(SystemError, "MCF_CRT_TlsReset"_rcs);
 			}
 		}
 	};
@@ -77,7 +77,7 @@ namespace Impl_ThreadLocal {
 			: x_vDefault(std::move(vDefault))
 		{
 			if(!x_pTlsKey.Reset(::MCF_CRT_TlsAllocKey([](std::intptr_t nValue){ delete reinterpret_cast<ElementT *>(nValue); }))){
-				DEBUG_THROW(SystemError, "MCF_CRT_TlsAllocKey");
+				DEBUG_THROW(SystemError, "MCF_CRT_TlsAllocKey"_rcs);
 			}
 		}
 
@@ -100,7 +100,7 @@ namespace Impl_ThreadLocal {
 			const auto pElement = new ElementT(std::move(vElement));
 			if(!::MCF_CRT_TlsReset(x_pTlsKey.Get(), reinterpret_cast<std::intptr_t>(pElement))){ // noexcept
 				delete pElement;
-				DEBUG_THROW(SystemError, "MCF_CRT_TlsReset");
+				DEBUG_THROW(SystemError, "MCF_CRT_TlsReset"_rcs);
 			}
 		}
 	};

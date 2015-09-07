@@ -38,7 +38,7 @@ Thread::Thread(Function<void ()> fnProc, bool bSuspended)
 
 	unsigned long ulThreadId;
 	if(!x_hThread.Reset(::MCF_CRT_CreateThread(ThreadProc, (std::intptr_t)this, CREATE_SUSPENDED, &ulThreadId))){
-		DEBUG_THROW(SystemError, "MCF_CRT_CreateThread");
+		DEBUG_THROW(SystemError, "MCF_CRT_CreateThread"_rcs);
 	}
 	AddRef();
 	x_ulThreadId.Store(ulThreadId, kAtomicRelease);

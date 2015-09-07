@@ -47,7 +47,7 @@ ReaderWriterMutex::ReaderWriterMutex(std::size_t uSpinCount)
 	: x_mtxWriterGuard(uSpinCount), x_mtxExclusive(uSpinCount), x_uReaderCount(0)
 {
 	if(!x_uTlsIndex.Reset(::TlsAlloc())){
-		DEBUG_THROW(SystemError, "TlsAlloc");
+		DEBUG_THROW(SystemError, "TlsAlloc"_rcs);
 	}
 }
 

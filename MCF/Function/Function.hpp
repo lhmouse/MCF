@@ -20,7 +20,7 @@ namespace Impl_Function {
 	struct CopyOrThrowHelper {
 		[[noreturn]]
 		IntrusivePtr<ElementT> operator()(const ElementT & /* vElement */) const {
-			DEBUG_THROW(Exception, ERROR_ACCESS_DENIED, "CopyOrThrowHelper::operator()()");
+			DEBUG_THROW(Exception, ERROR_ACCESS_DENIED, "CopyOrThrowHelper::operator()()"_rcs);
 		}
 	};
 	template<typename ElementT>

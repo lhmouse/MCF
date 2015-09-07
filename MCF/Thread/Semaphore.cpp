@@ -14,7 +14,7 @@ namespace {
 	UniqueWin32Handle CheckedCreateSemaphore(std::size_t uInitCount, const wchar_t *pwszName){
 		UniqueWin32Handle hSemaphore(::CreateSemaphoreW(nullptr, (long)uInitCount, LONG_MAX, pwszName));
 		if(!hSemaphore){
-			DEBUG_THROW(SystemError, "CreateSemaphoreW");
+			DEBUG_THROW(SystemError, "CreateSemaphoreW"_rcs);
 		}
 		return hSemaphore;
 	}

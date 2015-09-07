@@ -5,62 +5,30 @@
 #ifndef MCF_CORE_EXCEPTION_HPP_
 #define MCF_CORE_EXCEPTION_HPP_
 
-#include "../../MCFCRT/env/last_error.h"
-#include "../../MCFCRT/ext/stpcpy.h"
 #include <exception>
+#include "RefCountingNtmbs.hpp"
+#include "../../MCFCRT/env/last_error.h"
 
 namespace MCF {
-
-namespace Impl_Exception {
-	class NtsBuffer {
-	public:
-		enum : std::size_t {
-			kMaxTextLength = 159
-		};
-
-	private:
-		char x_achText[kMaxTextLength + 1];
-
-	public:
-		explicit NtsBuffer(const char *pszText) noexcept {
-			::MCF_stppcpy(x_achText, x_achText + sizeof(x_achText), pszText);
-		}
-		NtsBuffer(const NtsBuffer &rhs) noexcept {
-			::MCF_stpcpy(x_achText, rhs.x_achText);
-		}
-		NtsBuffer &operator=(const NtsBuffer &rhs) noexcept {
-			::MCF_stpcpy(x_achText, rhs.x_achText);
-			return *this;
-		}
-
-	public:
-		operator const char *() const noexcept {
-			return x_achText;
-		}
-		operator char *() noexcept {
-			return x_achText;
-		}
-	};
-}
 
 class Exception : public std::exception {
 private:
 	const char *x_pszFile;
 	unsigned long x_ulLine;
 	unsigned long x_ulCode;
-	Impl_Exception::NtsBuffer x_ntsMessage;
+	RefCountingNtmbs x_rcsMessage;
 
 public:
-	Exception(const char *pszFile, unsigned long ulLine, unsigned long ulCode, const char *pszMessage) noexcept
+	Exception(const char *pszFile, unsigned long ulLine, unsigned long ulCode, RefCountingNtmbs rcsMessage) noexcept
 		: std::exception()
-		, x_pszFile(pszFile), x_ulLine(ulLine), x_ulCode(ulCode), x_ntsMessage(pszMessage)
+		, x_pszFile(pszFile), x_ulLine(ulLine), x_ulCode(ulCode), x_rcsMessage(std::move(rcsMessage))
 	{
 	}
 	~Exception() override;
 
 public:
 	const char *what() const noexcept override {
-		return x_ntsMessage;
+		return x_rcsMessage;
 	}
 
 	const char *GetFile() const noexcept {
@@ -73,18 +41,18 @@ public:
 		return x_ulCode;
 	}
 	const char *GetMessage() const noexcept {
-		return x_ntsMessage;
+		return x_rcsMessage;
 	}
 };
 
 class SystemError : public Exception {
 public:
-	SystemError(const char *pszFile, unsigned long ulLine, unsigned long ulCode, const char *pszFunction) noexcept
-		: Exception(pszFile, ulLine, ulCode, pszFunction)
+	SystemError(const char *pszFile, unsigned long ulLine, unsigned long ulCode, RefCountingNtmbs rcsFunction) noexcept
+		: Exception(pszFile, ulLine, ulCode, std::move(rcsFunction))
 	{
 	}
-	SystemError(const char *pszFile, unsigned long ulLine, const char *pszFunction) noexcept
-		: SystemError(pszFile, ulLine, ::MCF_CRT_GetWin32LastError(), pszFunction)
+	SystemError(const char *pszFile, unsigned long ulLine, RefCountingNtmbs rcsFunction) noexcept
+		: SystemError(pszFile, ulLine, ::MCF_CRT_GetWin32LastError(), std::move(rcsFunction))
 	{
 	}
 	~SystemError() override;

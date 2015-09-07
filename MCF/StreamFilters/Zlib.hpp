@@ -55,7 +55,7 @@ private:
 	long x_lZlibError;
 
 public:
-	ZlibError(const char *pszFile, unsigned long ulLine, long lZlibError, const char *pszFunction) noexcept;
+	ZlibError(const char *pszFile, unsigned long ulLine, long lZlibError, RefCountingNtmbs rcsFunction) noexcept;
 	~ZlibError() override;
 
 public:

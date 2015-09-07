@@ -21,19 +21,19 @@ const void *DynamicLinkLibrary::GetBaseAddress() const noexcept {
 }
 DynamicLinkLibrary::RawProc DynamicLinkLibrary::RawGetProcAddress(const char *pszName){
 	if(!x_hDll){
-		DEBUG_THROW(Exception, ERROR_INVALID_HANDLE, "No shared library open");
+		DEBUG_THROW(Exception, ERROR_INVALID_HANDLE, "No shared library open"_rcs);
 	}
 
 	return ::GetProcAddress(reinterpret_cast<HINSTANCE>(x_hDll.Get()), pszName);
 }
 DynamicLinkLibrary::RawProc DynamicLinkLibrary::RawRequireProcAddress(const char *pszName){
 	if(!x_hDll){
-		DEBUG_THROW(Exception, ERROR_INVALID_HANDLE, "No shared library open");
+		DEBUG_THROW(Exception, ERROR_INVALID_HANDLE, "No shared library open"_rcs);
 	}
 
 	const auto pfnRet = ::GetProcAddress(reinterpret_cast<HINSTANCE>(x_hDll.Get()), pszName);
 	if(!pfnRet){
-		DEBUG_THROW(SystemError, "GetProcAddress");
+		DEBUG_THROW(SystemError, "GetProcAddress"_rcs);
 	}
 	return pfnRet;
 }
@@ -44,7 +44,7 @@ bool DynamicLinkLibrary::IsOpen() const noexcept {
 void DynamicLinkLibrary::Open(const wchar_t *pwszPath){
 	UniqueHandle<X_LibraryFreer> hDll;
 	if(!hDll.Reset(reinterpret_cast<X_LibraryFreer::Handle>(::LoadLibraryW(pwszPath)))){
-		DEBUG_THROW(SystemError, "LoadLibraryW");
+		DEBUG_THROW(SystemError, "LoadLibraryW"_rcs);
 	}
 
 	x_hDll = std::move(hDll);

@@ -35,7 +35,7 @@ Uuid Uuid::Generate(){
 // 构造函数和析构函数。
 Uuid::Uuid(const char (&pchString)[36]){
 	if(!Scan(pchString)){
-		DEBUG_THROW(Exception, ERROR_INVALID_PARAMETER, "Invalid UUID string");
+		DEBUG_THROW(Exception, ERROR_INVALID_PARAMETER, "Invalid UUID string"_rcs);
 	}
 }
 

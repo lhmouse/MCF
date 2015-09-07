@@ -14,7 +14,7 @@ namespace {
 	UniqueWin32Handle CheckedCreateEvent(bool bInitSet, const wchar_t *pwszName){
 		UniqueWin32Handle hEvent(::CreateEventW(nullptr, true, bInitSet, pwszName));
 		if(!hEvent){
-			DEBUG_THROW(SystemError, "CreateEventW");
+			DEBUG_THROW(SystemError, "CreateEventW"_rcs);
 		}
 		return hEvent;
 	}

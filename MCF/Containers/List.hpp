@@ -357,13 +357,9 @@ public:
 		Splice(pInsert, lstSrc, lstSrc.GetFirst(), nullptr);
 	}
 	void Splice(const ElementT *pInsert, List &lstSrc, const ElementT *pPos) noexcept {
-		ASSERT(pPos);
-
 		Splice(pInsert, lstSrc, pPos, lstSrc.GetNext(pPos));
 	}
 	void Splice(const ElementT *pInsert, List &lstSrc, const ElementT *pBegin, const ElementT *pEnd) noexcept {
-		ASSERT(pBegin);
-
 		const auto pInsertNode = reinterpret_cast<X_Node *>(const_cast<ElementT *>(pInsert));
 		const auto pBeginNode = reinterpret_cast<X_Node *>(const_cast<ElementT *>(pBegin));
 		const auto pEndNode = reinterpret_cast<X_Node *>(const_cast<ElementT *>(pEnd));
@@ -371,6 +367,8 @@ public:
 		if(pBeginNode == pEndNode){
 			return;
 		}
+
+		ASSERT(pBeginNode);
 
 		const auto pNodeBeforeBegin = pBeginNode->pPrev;
 		const auto pNodeBeforeEnd = pEndNode ? pEndNode->pPrev : lstSrc.x_pLast;

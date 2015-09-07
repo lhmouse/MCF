@@ -1,14 +1,31 @@
-#include <MCF/Core/RefCountingNtmbs.hpp>
+#include <MCF/Containers/List.hpp>
 #include <cstdio>
 
+template class MCF::List<int>;
+
 extern "C" unsigned MCFMain(){
-	auto s1 = MCF::RefCountingNtmbs::Copy("hello world!");
-	auto s2 = MCF::RefCountingNtmbs::View("hello world!");
-	auto s3 = s1;
-	auto s4 = s2;
-	std::printf("s1 = %p\n", (const void *)s1.GetStr());
-	std::printf("s2 = %p\n", (const void *)s2.GetStr());
-	std::printf("s3 = %p\n", (const void *)s3.GetStr());
-	std::printf("s4 = %p\n", (const void *)s4.GetStr());
+	MCF::List<int> l;
+	for(int i = 0; i < 10; ++i){
+		l.Push(i);
+	}
+
+	auto begin = l.EnumerateFirst();
+	auto end = begin;
+	for(unsigned i = 0; i < 3; ++i){
+		++begin;
+	}
+	for(unsigned i = 0; i < 6; ++i){
+		++end;
+	}
+	l.Erase(l.GetFirst(), &*begin);
+	l.Erase(&*begin, &*end);
+//	l.Erase(&*end, nullptr);
+
+	for(auto e = l.EnumerateFirst(); e; ++e){
+		std::printf("element + : %d\n", *e);
+	}
+	for(auto e = l.EnumerateLast(); e; --e){
+		std::printf("element - : %d\n", *e);
+	}
 	return 0;
 }

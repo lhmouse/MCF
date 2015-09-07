@@ -16,9 +16,9 @@ namespace Impl_EnumeratorTemplate {
 	//   ElementType
 	// 1) 成员函数：
 	//   const ElementType *GetPrev(const ElementType *) const;
-	//   ElementType *GetNext(const ElementType *);
+	//   ElementType *GetNext(ElementType *);
 	//   const ElementType *GetPrev(const ElementType *) const;
-	//   ElementType *GetNext(const ElementType *);
+	//   ElementType *GetNext(ElementType *);
 
 	template<typename ContainerT>
 	class ConstEnumerator;

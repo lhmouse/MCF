@@ -93,7 +93,7 @@ public:
 		}
 	}
 	Enumerator EnumerateFirst() noexcept {
-		auto pBegin = GetBegin();
+		const auto pBegin = GetBegin();
 		if(pBegin == GetEnd()){
 			return Enumerator(*this, nullptr);
 		} else {
@@ -110,7 +110,7 @@ public:
 		}
 	}
 	Enumerator EnumerateLast() noexcept {
-		auto pEnd = GetEnd();
+		const auto pEnd = GetEnd();
 		if(GetBegin() == pEnd){
 			return Enumerator(*this, nullptr);
 		} else {
@@ -133,7 +133,7 @@ public:
 		}
 		return pBegin + uOffset + 1;
 	}
-	ElementType *GetNext(const ElementType *pPos) noexcept {
+	ElementType *GetNext(ElementType *pPos) noexcept {
 		const auto pBegin = GetBegin();
 		const auto uOffset = static_cast<std::size_t>(pPos - pBegin);
 		if(uOffset + 1 == GetSize()){
@@ -150,7 +150,7 @@ public:
 		}
 		return pBegin + uOffset - 1;
 	}
-	ElementType *GetPrev(const ElementType *pPos) noexcept {
+	ElementType *GetPrev(ElementType *pPos) noexcept {
 		const auto pBegin = GetBegin();
 		const auto uOffset = static_cast<std::size_t>(pPos - pBegin);
 		if(uOffset == 0){
@@ -309,13 +309,14 @@ public:
 	void Append(std::size_t uDeltaSize, const ParamsT &...vParams){
 		ReserveMore(uDeltaSize);
 
-		const auto uOldSize = x_uSize;
+		std::size_t uElementsPushed = 0;
 		try {
 			for(std::size_t i = 0; i < uDeltaSize; ++i){
 				UncheckedPush(vParams...);
+				++uElementsPushed;
 			}
 		} catch(...){
-			Pop(x_uSize - uOldSize);
+			Pop(uElementsPushed);
 			throw;
 		}
 	}
@@ -330,19 +331,21 @@ public:
 			ReserveMore(uDeltaSize);
 		}
 
-		const auto uOldSize = x_uSize;
+		std::size_t uElementsPushed = 0;
 		try {
 			if(kHasDeltaSizeHint){
 				for(auto it = itBegin; it != itEnd; ++it){
 					UncheckedPush(*it);
+					++uElementsPushed;
 				}
 			} else {
 				for(auto it = itBegin; it != itEnd; ++it){
 					Push(*it);
+					++uElementsPushed;
 				}
 			}
 		} catch(...){
-			Pop(x_uSize - uOldSize);
+			Pop(uElementsPushed);
 			throw;
 		}
 	}
@@ -363,7 +366,7 @@ public:
 			pPos = GetBegin() + nOffset;
 
 			const auto pNewEnd = GetEnd() + uDeltaSize;
-			const auto pDestroyedBegin = GetBegin() + (pPos - GetBegin());
+			const auto pDestroyedBegin = const_cast<ElementT *>(pPos);
 			const auto pDestroyedEnd = GetEnd();
 
 			auto pWrite = pNewEnd;
@@ -441,7 +444,7 @@ public:
 			pPos = GetBegin() + nOffset;
 
 			const auto pNewEnd = GetEnd() + uDeltaSize;
-			const auto pDestroyedBegin = GetBegin() + (pPos - GetBegin());
+			const auto pDestroyedBegin = const_cast<ElementT *>(pPos);
 			const auto pDestroyedEnd = GetEnd();
 
 			auto pWrite = pNewEnd;
@@ -527,7 +530,7 @@ public:
 			for(auto pCur = pBegin; pCur != pEnd; ++pCur){
 				Destruct(pCur);
 			}
-			auto pWrite = GetBegin() + (pBegin - GetBegin());
+			auto pWrite = const_cast<ElementT *>(pBegin);
 			for(auto pCur = pEnd; pCur != GetEnd(); ++pCur){
 				Construct(pWrite, std::move(*pCur));
 				++pWrite;
@@ -546,6 +549,8 @@ public:
 		}
 	}
 	void Erase(const ElementT *pPos) noexcept(noexcept(std::declval<Vector &>().Erase(pPos, pPos))) {
+		ASSERT(pPos);
+
 		Erase(pPos, pPos + 1);
 	}
 

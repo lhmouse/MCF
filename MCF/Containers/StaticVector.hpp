@@ -95,7 +95,7 @@ public:
 		}
 	}
 	Enumerator EnumerateFirst() noexcept {
-		auto pBegin = GetBegin();
+		const auto pBegin = GetBegin();
 		if(pBegin == GetEnd()){
 			return Enumerator(*this, nullptr);
 		} else {
@@ -112,7 +112,7 @@ public:
 		}
 	}
 	Enumerator EnumerateLast() noexcept {
-		auto pEnd = GetEnd();
+		const auto pEnd = GetEnd();
 		if(GetBegin() == pEnd){
 			return Enumerator(*this, nullptr);
 		} else {
@@ -271,13 +271,14 @@ public:
 	void Append(std::size_t uDeltaSize, const ParamsT &...vParams){
 		ReserveMore(uDeltaSize);
 
-		const auto uOldSize = x_uSize;
+		std::size_t uElementsPushed = 0;
 		try {
 			for(std::size_t i = 0; i < uDeltaSize; ++i){
 				UncheckedPush(vParams...);
+				++uElementsPushed;
 			}
 		} catch(...){
-			Pop(x_uSize - uOldSize);
+			Pop(uElementsPushed);
 			throw;
 		}
 	}
@@ -292,19 +293,21 @@ public:
 			ReserveMore(uDeltaSize);
 		}
 
-		const auto uOldSize = x_uSize;
+		std::size_t uElementsPushed = 0;
 		try {
 			if(kHasDeltaSizeHint){
 				for(auto it = itBegin; it != itEnd; ++it){
 					UncheckedPush(*it);
+					++uElementsPushed;
 				}
 			} else {
 				for(auto it = itBegin; it != itEnd; ++it){
 					Push(*it);
+					++uElementsPushed;
 				}
 			}
 		} catch(...){
-			Pop(x_uSize - uOldSize);
+			Pop(uElementsPushed);
 			throw;
 		}
 	}

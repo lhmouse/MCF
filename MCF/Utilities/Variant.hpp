@@ -21,30 +21,30 @@ public:
 	};
 
 private:
-	class XActiveElementBase {
+	class X_ActiveElementBase {
 	public:
-		virtual ~XActiveElementBase(){
+		virtual ~X_ActiveElementBase(){
 		}
 
 	public:
 		virtual std::size_t GetIndex() const noexcept = 0;
 		virtual const std::type_info *GetTypeInfo() const noexcept = 0;
 		virtual void *GetAddress() noexcept = 0;
-		virtual UniquePtr<XActiveElementBase> Clone() const = 0;
+		virtual UniquePtr<X_ActiveElementBase> Clone() const = 0;
 	};
 
 	template<typename ElementT>
-	class XActiveElement : public XActiveElementBase {
+	class X_ActiveElement : public X_ActiveElementBase {
 	private:
 		ElementT x_vElement;
 
 	public:
 		template<typename ...ParamsT>
-		explicit XActiveElement(ParamsT &&...vParams)
+		explicit X_ActiveElement(ParamsT &&...vParams)
 			: x_vElement(std::forward<ParamsT>(vParams)...)
 		{
 		}
-		~XActiveElement() override {
+		~X_ActiveElement() override {
 		}
 
 	public:
@@ -57,13 +57,13 @@ private:
 		void *GetAddress() noexcept override {
 			return &reinterpret_cast<char &>(x_vElement);
 		}
-		UniquePtr<XActiveElementBase> Clone() const override {
-			return UniquePtr<XActiveElementBase>(new auto(*this));
+		UniquePtr<X_ActiveElementBase> Clone() const override {
+			return UniquePtr<X_ActiveElementBase>(new auto(*this));
 		}
 	};
 
 private:
-	UniquePtr<XActiveElementBase> x_pElement;
+	UniquePtr<X_ActiveElementBase> x_pElement;
 
 public:
 	constexpr Variant() noexcept
@@ -74,7 +74,7 @@ public:
 		FindFirstType<ElementT, ElementsT...>() == FindLastType<ElementT, ElementsT...>(),
 		int> = 0>
 	Variant(ElementT vElement)
-		: x_pElement(MakeUnique<XActiveElement<std::remove_cv_t<ElementT>>>(std::move(vElement)))
+		: x_pElement(MakeUnique<X_ActiveElement<std::remove_cv_t<ElementT>>>(std::move(vElement)))
 	{
 	}
 	Variant(const Variant &rhs)
@@ -89,7 +89,7 @@ public:
 		FindFirstType<ElementT, ElementsT...>() == FindLastType<ElementT, ElementsT...>(),
 		int> = 0>
 	Variant &operator=(ElementT vElement){
-		x_pElement = MakeUnique<XActiveElement<std::remove_cv_t<ElementT>>>(std::move(vElement));
+		x_pElement = MakeUnique<X_ActiveElement<std::remove_cv_t<ElementT>>>(std::move(vElement));
 		return *this;
 	}
 	Variant &operator=(const Variant &rhs){
@@ -116,7 +116,7 @@ public:
 	}
 	template<typename ElementT>
 	const ElementT *Get() const noexcept {
-		const auto pElement = dynamic_cast<XActiveElement<std::remove_cv_t<ElementT>> *>(x_pElement.Get());
+		const auto pElement = dynamic_cast<X_ActiveElement<std::remove_cv_t<ElementT>> *>(x_pElement.Get());
 		if(!pElement){
 			return nullptr;
 		}
@@ -124,7 +124,7 @@ public:
 	}
 	template<typename ElementT>
 	ElementT *Get() noexcept {
-		const auto pElement = dynamic_cast<XActiveElement<std::remove_cv_t<ElementT>> *>(x_pElement.Get());
+		const auto pElement = dynamic_cast<X_ActiveElement<std::remove_cv_t<ElementT>> *>(x_pElement.Get());
 		if(!pElement){
 			return nullptr;
 		}
@@ -134,13 +134,13 @@ public:
 		FindFirstType<ElementT, ElementsT...>() == FindLastType<ElementT, ElementsT...>(),
 		int> = 0>
 	void Set(ElementT vElement){
-		x_pElement = MakeUnique<XActiveElement<std::remove_cv_t<ElementT>>>(std::move(vElement));
+		x_pElement = MakeUnique<X_ActiveElement<std::remove_cv_t<ElementT>>>(std::move(vElement));
 	}
 	template<typename ElementT, typename ...ParamsT, std::enable_if_t<
 		FindFirstType<ElementT, ElementsT...>() == FindLastType<ElementT, ElementsT...>(),
 		int> = 0>
 	void Emplace(ParamsT &&...vParams){
-		x_pElement = MakeUnique<XActiveElement<std::remove_cv_t<ElementT>>>(std::forward<ParamsT>(vParams)...);
+		x_pElement = MakeUnique<X_ActiveElement<std::remove_cv_t<ElementT>>>(std::forward<ParamsT>(vParams)...);
 	}
 
 	void Swap(Variant<ElementsT...> &rhs) noexcept {

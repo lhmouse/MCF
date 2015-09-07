@@ -53,12 +53,12 @@ void IsaacGenerator::Init(const std::uint32_t (&au32Seed)[8]) noexcept {
 	x_u32A = 0;
 	x_u32B = 0;
 	x_u32C = 0;
-	XRefreshInternal();
+	X_RefreshInternal();
 
 	x_u32Read = 0;
 }
 
-void IsaacGenerator::XRefreshInternal() noexcept {
+void IsaacGenerator::X_RefreshInternal() noexcept {
 	++x_u32C;
 	x_u32B += x_u32C;
 
@@ -82,7 +82,7 @@ void IsaacGenerator::XRefreshInternal() noexcept {
 
 std::uint32_t IsaacGenerator::Get() noexcept {
 	if(x_u32Read == 0){
-		XRefreshInternal();
+		X_RefreshInternal();
 	}
 	const auto u32Ret = x_u32Results[x_u32Read];
 	x_u32Read = (x_u32Read + 1) % 256;

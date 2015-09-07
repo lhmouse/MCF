@@ -24,9 +24,9 @@ public:
 	explicit Base64Encoder(const char *pchTable = kBase64TableMime) noexcept;
 
 protected:
-	void XDoInit() override;
-	void XDoUpdate(const void *pData, std::size_t uSize) override;
-	void XDoFinalize() override;
+	void X_DoInit() override;
+	void X_DoUpdate(const void *pData, std::size_t uSize) override;
+	void X_DoFinalize() override;
 };
 
 class Base64Decoder : public StreamFilterBase {
@@ -40,9 +40,9 @@ public:
 	explicit Base64Decoder(const char *pchTable = kBase64TableMime) noexcept;
 
 protected:
-	void XDoInit() override;
-	void XDoUpdate(const void *pData, std::size_t uSize) override;
-	void XDoFinalize() override;
+	void X_DoInit() override;
+	void X_DoUpdate(const void *pData, std::size_t uSize) override;
+	void X_DoFinalize() override;
 };
 
 }

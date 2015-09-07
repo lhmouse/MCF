@@ -194,7 +194,7 @@ private:
 	// 负光标位置： -8  -7  -6  -5  -4  -3  -2  -1
 
 	// 以下均以此字符串为例。
-	static std::size_t XTranslateOffset(std::ptrdiff_t nOffset, std::size_t uLength) noexcept {
+	static std::size_t X_TranslateOffset(std::ptrdiff_t nOffset, std::size_t uLength) noexcept {
 		auto uRet = static_cast<std::size_t>(nOffset);
 		if(nOffset < 0){
 			uRet += uLength + 1;
@@ -321,7 +321,7 @@ public:
 	//   Slice(-5, -1)   返回 "defg"。
 	StringObserver Slice(std::ptrdiff_t nBegin, std::ptrdiff_t nEnd) const noexcept {
 		const auto uLength = GetLength();
-		return StringObserver(x_pchBegin + XTranslateOffset(nBegin, uLength), x_pchBegin + XTranslateOffset(nEnd, uLength));
+		return StringObserver(x_pchBegin + X_TranslateOffset(nBegin, uLength), x_pchBegin + X_TranslateOffset(nEnd, uLength));
 	}
 
 	// 举例：
@@ -331,7 +331,7 @@ public:
 	//   FindBackward("def", 6)     返回 3。
 	std::size_t Find(const StringObserver &obsToFind, std::ptrdiff_t nBegin = 0) const noexcept {
 		const auto uLength = GetLength();
-		const auto uRealBegin = XTranslateOffset(nBegin, uLength);
+		const auto uRealBegin = X_TranslateOffset(nBegin, uLength);
 		const auto uLenToFind = obsToFind.GetLength();
 		if(uLenToFind == 0){
 			return uRealBegin;
@@ -350,7 +350,7 @@ public:
 	}
 	std::size_t FindBackward(const StringObserver &obsToFind, std::ptrdiff_t nEnd = -1) const noexcept {
 		const auto uLength = GetLength();
-		const auto uRealEnd = XTranslateOffset(nEnd, uLength);
+		const auto uRealEnd = X_TranslateOffset(nEnd, uLength);
 		const auto uLenToFind = obsToFind.GetLength();
 		if(uLenToFind == 0){
 			return uRealEnd;
@@ -377,7 +377,7 @@ public:
 	//   FindBackward('d', 3)   返回 kNpos。
 	std::size_t FindRep(Char chToFind, std::size_t uFindCount, std::ptrdiff_t nBegin = 0) const noexcept {
 		const auto uLength = GetLength();
-		const auto uRealBegin = XTranslateOffset(nBegin, uLength);
+		const auto uRealBegin = X_TranslateOffset(nBegin, uLength);
 		if(uFindCount == 0){
 			return uRealBegin;
 		}
@@ -395,7 +395,7 @@ public:
 	}
 	std::size_t FindRepBackward(Char chToFind, std::size_t uFindCount, std::ptrdiff_t nEnd = -1) const noexcept {
 		const auto uLength = GetLength();
-		const auto uRealEnd = XTranslateOffset(nEnd, uLength);
+		const auto uRealEnd = X_TranslateOffset(nEnd, uLength);
 		if(uFindCount == 0){
 			return uRealEnd;
 		}

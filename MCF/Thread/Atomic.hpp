@@ -66,11 +66,11 @@ namespace Impl_Atomic {
 		static_assert(std::is_integral<ElementT>::value || std::is_enum<ElementT>::value, "!");
 
 	private:
-		using XBase = AtomicCommon<ElementT>;
+		using X_Base = AtomicCommon<ElementT>;
 
 	public:
 		explicit constexpr AtomicInteger(ElementT vElement = 0) noexcept
-			: XBase(vElement)
+			: X_Base(vElement)
 		{
 		}
 
@@ -123,11 +123,11 @@ namespace Impl_Atomic {
 		static_assert(std::is_pointer<ElementT>::value && std::is_object<std::remove_pointer_t<ElementT>>::value, "!");
 
 	private:
-		using XBase = AtomicCommon<ElementT>;
+		using X_Base = AtomicCommon<ElementT>;
 
 	public:
 		explicit constexpr AtomicPointerToObject(ElementT pElement = nullptr) noexcept
-			: XBase(pElement)
+			: X_Base(pElement)
 		{
 		}
 
@@ -159,11 +159,11 @@ namespace Impl_Atomic {
 		static_assert(std::is_pointer<ElementT>::value && !std::is_object<std::remove_pointer_t<ElementT>>::value, "!");
 
 	private:
-		using XBase = AtomicCommon<ElementT>;
+		using X_Base = AtomicCommon<ElementT>;
 
 	public:
 		explicit constexpr AtomicPointerToNonObject(ElementT pElement = nullptr) noexcept
-			: XBase(pElement)
+			: X_Base(pElement)
 		{
 		}
 	};

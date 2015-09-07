@@ -34,7 +34,7 @@ namespace Impl_Bind {
 
 	private:
 		template<std::size_t ...kParamIndicesT, typename CurriedT>
-		decltype(auto) XForwardCurriedParams(std::idx_sequence<kParamIndicesT...>, const CurriedT &vCurried) const {
+		decltype(auto) X_ForwardCurriedParams(std::idx_sequence<kParamIndicesT...>, const CurriedT &vCurried) const {
 			return vCurried(static_cast<std::tuple_element_t<kParamIndicesT, decltype(x_tupParamsAdd)> &&>(std::get<kParamIndicesT>(x_tupParamsAdd))...);
 		}
 
@@ -53,7 +53,7 @@ namespace Impl_Bind {
 		}
 		template<typename FuncT, typename ...ParamsT>
 		decltype(auto) operator()(const BindResult<FuncT, true, ParamsT...> &vCurried) noexcept {
-			return XForwardCurriedParams(std::idx_sequence_for<ParamsT...>(), vCurried);
+			return X_ForwardCurriedParams(std::idx_sequence_for<ParamsT...>(), vCurried);
 		}
 	};
 
@@ -71,7 +71,7 @@ namespace Impl_Bind {
 
 	private:
 		template<std::size_t ...kParamIndicesT, typename ...ParamsAddT>
-		decltype(auto) XDispatchParams(std::idx_sequence<kParamIndicesT...>, ParamsAddT &&...vParamsAdd) const {
+		decltype(auto) X_DispatchParams(std::idx_sequence<kParamIndicesT...>, ParamsAddT &&...vParamsAdd) const {
 			ParamSelector<ParamsAddT...> vSelector(std::forward<ParamsAddT>(vParamsAdd)...);
 			(void)vSelector;
 			return Invoke(x_vFunc, vSelector(std::get<kParamIndicesT>(x_tupParams))...);
@@ -80,7 +80,7 @@ namespace Impl_Bind {
 	public:
 		template<typename ...ParamsAddT>
 		decltype(auto) operator()(ParamsAddT &&...vParamsAdd) const {
-			return XDispatchParams(std::idx_sequence_for<ParamsT...>(), std::forward<ParamsAddT>(vParamsAdd)...);
+			return X_DispatchParams(std::idx_sequence_for<ParamsT...>(), std::forward<ParamsAddT>(vParamsAdd)...);
 		}
 	};
 }

@@ -21,15 +21,15 @@ namespace {
 }
 
 template<>
-bool KernelMutex::UniqueLock::XDoTry() const noexcept {
+bool KernelMutex::UniqueLock::X_DoTry() const noexcept {
 	return x_pOwner->Try(0);
 }
 template<>
-void KernelMutex::UniqueLock::XDoLock() const noexcept {
+void KernelMutex::UniqueLock::X_DoLock() const noexcept {
 	x_pOwner->Lock();
 }
 template<>
-void KernelMutex::UniqueLock::XDoUnlock() const noexcept {
+void KernelMutex::UniqueLock::X_DoUnlock() const noexcept {
 	x_pOwner->Unlock();
 }
 

@@ -26,9 +26,9 @@ public:
 	IsaacExEncoder(const void *pKey, std::size_t uKeyLen) noexcept;
 
 protected:
-	void XDoInit() override;
-	void XDoUpdate(const void *pData, std::size_t uSize) override;
-	void XDoFinalize() override;
+	void X_DoInit() override;
+	void X_DoUpdate(const void *pData, std::size_t uSize) override;
+	void X_DoFinalize() override;
 };
 
 class IsaacExDecoder : public StreamFilterBase {
@@ -43,9 +43,9 @@ public:
 	IsaacExDecoder(const void *pKey, std::size_t uKeyLen) noexcept;
 
 protected:
-	void XDoInit() override;
-	void XDoUpdate(const void *pData, std::size_t uSize) override;
-	void XDoFinalize() override;
+	void X_DoInit() override;
+	void X_DoUpdate(const void *pData, std::size_t uSize) override;
+	void X_DoFinalize() override;
 };
 
 }

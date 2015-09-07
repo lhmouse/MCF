@@ -25,15 +25,15 @@ protected:
 	virtual ~StreamFilterBase();
 
 protected:
-	virtual void XDoInit() = 0;
-	virtual void XDoUpdate(const void *pData, std::size_t uSize) = 0;
-	virtual void XDoFinalize() = 0;
+	virtual void X_DoInit() = 0;
+	virtual void X_DoUpdate(const void *pData, std::size_t uSize) = 0;
+	virtual void X_DoFinalize() = 0;
 
 	// 子类中使用这两个函数输出数据。
-	void XOutput(unsigned char by){
+	void X_Output(unsigned char by){
 		x_sbufOutput.Put(by);
 	}
-	void XOutput(const void *pData, std::size_t uSize){
+	void X_Output(const void *pData, std::size_t uSize){
 		x_sbufOutput.Put(pData, uSize);
 	}
 
@@ -51,17 +51,17 @@ public:
 			x_sbufOutput.Clear();
 			x_u64BytesProcessed = 0;
 
-			XDoInit();
+			X_DoInit();
 
 			x_bInited = true;
 		}
 
-		XDoUpdate(pData, uSize);
+		X_DoUpdate(pData, uSize);
 		x_u64BytesProcessed += uSize;
 	}
 	void Finalize(){
 		if(x_bInited){
-			XDoFinalize();
+			X_DoFinalize();
 
 			x_bInited = false;
 		}

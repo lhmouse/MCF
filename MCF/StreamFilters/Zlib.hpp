@@ -13,41 +13,41 @@ namespace MCF {
 
 class ZlibEncoder : public StreamFilterBase {
 private:
-	class XDelegate;
+	class X_Delegate;
 
 private:
 	const bool x_bRaw;
 	const unsigned x_uLevel;
 
-	UniquePtr<XDelegate> x_pDelegate;
+	UniquePtr<X_Delegate> x_pDelegate;
 
 public:
 	explicit ZlibEncoder(bool bRaw = false, unsigned uLevel = 6) noexcept;
 	~ZlibEncoder();
 
 protected:
-	void XDoInit() override;
-	void XDoUpdate(const void *pData, std::size_t uSize) override;
-	void XDoFinalize() override;
+	void X_DoInit() override;
+	void X_DoUpdate(const void *pData, std::size_t uSize) override;
+	void X_DoFinalize() override;
 };
 
 class ZlibDecoder : public StreamFilterBase {
 private:
-	class XDelegate;
+	class X_Delegate;
 
 private:
 	const bool x_bRaw;
 
-	UniquePtr<XDelegate> x_pDelegate;
+	UniquePtr<X_Delegate> x_pDelegate;
 
 public:
 	explicit ZlibDecoder(bool bRaw = false) noexcept;
 	~ZlibDecoder();
 
 protected:
-	void XDoInit() override;
-	void XDoUpdate(const void *pData, std::size_t uSize) override;
-	void XDoFinalize() override;
+	void X_DoInit() override;
+	void X_DoUpdate(const void *pData, std::size_t uSize) override;
+	void X_DoFinalize() override;
 };
 
 class ZlibError : public Exception {

@@ -9,36 +9,36 @@
 
 namespace MCF {
 
-std::size_t ReaderWriterMutex::XTlsIndexDeleter::operator()() const noexcept {
+std::size_t ReaderWriterMutex::X_TlsIndexDeleter::operator()() const noexcept {
 	return TLS_OUT_OF_INDEXES;
 }
-void ReaderWriterMutex::XTlsIndexDeleter::operator()(std::size_t uTlsIndex) const noexcept {
+void ReaderWriterMutex::X_TlsIndexDeleter::operator()(std::size_t uTlsIndex) const noexcept {
 	::TlsFree(uTlsIndex);
 }
 
 template<>
-bool ReaderWriterMutex::UniqueReaderLock::XDoTry() const noexcept {
+bool ReaderWriterMutex::UniqueReaderLock::X_DoTry() const noexcept {
 	return x_pOwner->TryAsReader() != ReaderWriterMutex::Result::kResTryFailed;
 }
 template<>
-void ReaderWriterMutex::UniqueReaderLock::XDoLock() const noexcept {
+void ReaderWriterMutex::UniqueReaderLock::X_DoLock() const noexcept {
 	x_pOwner->LockAsReader();
 }
 template<>
-void ReaderWriterMutex::UniqueReaderLock::XDoUnlock() const noexcept {
+void ReaderWriterMutex::UniqueReaderLock::X_DoUnlock() const noexcept {
 	x_pOwner->UnlockAsReader();
 }
 
 template<>
-bool ReaderWriterMutex::UniqueWriterLock::XDoTry() const noexcept {
+bool ReaderWriterMutex::UniqueWriterLock::X_DoTry() const noexcept {
 	return x_pOwner->TryAsWriter() != ReaderWriterMutex::Result::kResTryFailed;
 }
 template<>
-void ReaderWriterMutex::UniqueWriterLock::XDoLock() const noexcept {
+void ReaderWriterMutex::UniqueWriterLock::X_DoLock() const noexcept {
 	x_pOwner->LockAsWriter();
 }
 template<>
-void ReaderWriterMutex::UniqueWriterLock::XDoUnlock() const noexcept {
+void ReaderWriterMutex::UniqueWriterLock::X_DoUnlock() const noexcept {
 	x_pOwner->UnlockAsWriter();
 }
 

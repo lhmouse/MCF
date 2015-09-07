@@ -12,7 +12,7 @@ namespace MCF {
 
 class StreamBuffer {
 private:
-	struct XChunk;
+	struct X_Chunk;
 
 public:
 	class ConstChunkEnumerator;
@@ -21,7 +21,7 @@ public:
 		friend ConstChunkEnumerator;
 
 	private:
-		XChunk *x_pChunk;
+		X_Chunk *x_pChunk;
 
 	public:
 		explicit ChunkEnumerator(StreamBuffer &rhs) noexcept
@@ -55,7 +55,7 @@ public:
 
 	class ConstChunkEnumerator {
 	private:
-		const XChunk *x_pChunk;
+		const X_Chunk *x_pChunk;
 
 	public:
 		explicit ConstChunkEnumerator(const StreamBuffer &rhs) noexcept
@@ -92,8 +92,8 @@ public:
 	};
 
 private:
-	XChunk *__restrict__ x_pFirst;
-	XChunk *__restrict__ x_pLast;
+	X_Chunk *__restrict__ x_pFirst;
+	X_Chunk *__restrict__ x_pLast;
 	std::size_t x_uSize;
 
 public:

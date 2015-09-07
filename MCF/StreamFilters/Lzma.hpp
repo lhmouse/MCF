@@ -13,39 +13,39 @@ namespace MCF {
 
 class LzmaEncoder : public StreamFilterBase {
 private:
-	class XDelegate;
+	class X_Delegate;
 
 private:
 	const unsigned x_uLevel;
 	const unsigned long x_ulDictSize;
 
-	UniquePtr<XDelegate> x_pDelegate;
+	UniquePtr<X_Delegate> x_pDelegate;
 
 public:
 	explicit LzmaEncoder(unsigned uLevel = 6, unsigned long ulDictSize = 1ul << 23) noexcept;
 	~LzmaEncoder();
 
 protected:
-	void XDoInit() override;
-	void XDoUpdate(const void *pData, std::size_t uSize) override;
-	void XDoFinalize() override;
+	void X_DoInit() override;
+	void X_DoUpdate(const void *pData, std::size_t uSize) override;
+	void X_DoFinalize() override;
 };
 
 class LzmaDecoder : public StreamFilterBase {
 private:
-	class XDelegate;
+	class X_Delegate;
 
 private:
-	UniquePtr<XDelegate> x_pDelegate;
+	UniquePtr<X_Delegate> x_pDelegate;
 
 public:
 	LzmaDecoder() noexcept;
 	~LzmaDecoder();
 
 protected:
-	void XDoInit() override;
-	void XDoUpdate(const void *pData, std::size_t uSize) override;
-	void XDoFinalize() override;
+	void X_DoInit() override;
+	void X_DoUpdate(const void *pData, std::size_t uSize) override;
+	void X_DoFinalize() override;
 };
 
 class LzmaError : public Exception {

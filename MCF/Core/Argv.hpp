@@ -16,7 +16,7 @@ namespace MCF {
 
 class Argv : NONCOPYABLE {
 private:
-	struct XArgItemDeleter {
+	struct X_ArgItemDeleter {
 		constexpr ::MCF_ArgItem *operator()() const noexcept {
 			return nullptr;
 		}
@@ -27,7 +27,7 @@ private:
 
 private:
 	std::size_t x_uArgc;
-	UniquePtr<const ::MCF_ArgItem [], XArgItemDeleter> x_pArgv;
+	UniquePtr<const ::MCF_ArgItem [], X_ArgItemDeleter> x_pArgv;
 
 public:
 	// 如果传入空指针，就使用当前 GetCommandLineW() 的返回值。

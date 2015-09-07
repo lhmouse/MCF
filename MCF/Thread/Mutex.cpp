@@ -11,21 +11,21 @@
 namespace MCF {
 
 template<>
-bool Mutex::UniqueLock::XDoTry() const noexcept {
+bool Mutex::UniqueLock::X_DoTry() const noexcept {
 	return x_pOwner->Try();
 }
 template<>
-void Mutex::UniqueLock::XDoLock() const noexcept {
+void Mutex::UniqueLock::X_DoLock() const noexcept {
 	x_pOwner->Lock();
 }
 template<>
-void Mutex::UniqueLock::XDoUnlock() const noexcept {
+void Mutex::UniqueLock::X_DoUnlock() const noexcept {
 	x_pOwner->Unlock();
 }
 
 // 嵌套类定义。
-struct Mutex::XQueueNode {
-	XQueueNode *pNext;
+struct Mutex::X_QueueNode {
+	X_QueueNode *pNext;
 };
 
 // 构造函数和析构函数。
@@ -37,19 +37,19 @@ Mutex::Mutex(std::size_t uSpinCount)
 }
 
 // 其他非静态成员函数。
-bool Mutex::XIsQueueEmpty() const noexcept {
+bool Mutex::X_IsQueueEmpty() const noexcept {
 	return x_pQueueHead.Load(kAtomicConsume) == nullptr;
 }
-Mutex::XQueueNode *Mutex::XLockQueue() noexcept {
+Mutex::X_QueueNode *Mutex::X_LockQueue() noexcept {
 	for(;;){
-		const auto pQueueHead = x_pQueueHead.Exchange((XQueueNode *)-1, kAtomicRelease);
-		if(pQueueHead != (XQueueNode *)-1){
+		const auto pQueueHead = x_pQueueHead.Exchange((X_QueueNode *)-1, kAtomicRelease);
+		if(pQueueHead != (X_QueueNode *)-1){
 			return pQueueHead;
 		}
 		AtomicPause();
 	}
 }
-void Mutex::XUnlockQueue(Mutex::XQueueNode *pQueueHead) noexcept {
+void Mutex::X_UnlockQueue(Mutex::X_QueueNode *pQueueHead) noexcept {
 	x_pQueueHead.Store(pQueueHead, kAtomicRelease);
 }
 
@@ -73,7 +73,7 @@ bool Mutex::Try() noexcept {
 	const std::size_t uThreadId = 1;
 #endif
 
-	if(XIsQueueEmpty()){
+	if(X_IsQueueEmpty()){
 		std::size_t uExpected = 0;
 		if(x_uLockingThreadId.CompareExchange(uExpected, uThreadId, kAtomicAcqRel, kAtomicConsume)){
 			return true;
@@ -91,7 +91,7 @@ void Mutex::Lock() noexcept {
 	const std::size_t uThreadId = 1;
 #endif
 
-	if(XIsQueueEmpty()){
+	if(X_IsQueueEmpty()){
 		std::size_t uExpected = 0;
 		if(x_uLockingThreadId.CompareExchange(uExpected, uThreadId, kAtomicAcqRel, kAtomicConsume)){
 			return;
@@ -112,9 +112,9 @@ void Mutex::Lock() noexcept {
 	}
 
 	// 如果忙等待超过了自旋次数，就使用信号量同步。
-	XQueueNode vThisThread = { nullptr };
+	X_QueueNode vThisThread = { nullptr };
 
-	auto pQueueHead = XLockQueue();
+	auto pQueueHead = X_LockQueue();
 	if(pQueueHead){
 		auto pIns = pQueueHead;
 		for(;;){
@@ -133,10 +133,10 @@ void Mutex::Lock() noexcept {
 		pQueueHead = &vThisThread;
 	}
 	for(;;){
-		XUnlockQueue(pQueueHead);
+		X_UnlockQueue(pQueueHead);
 		x_vSemaphore.Wait();
 
-		pQueueHead = XLockQueue();
+		pQueueHead = X_LockQueue();
 		if(pQueueHead == &vThisThread){
 			std::size_t uExpected = 0;
 			if(x_uLockingThreadId.CompareExchange(uExpected, uThreadId, kAtomicAcqRel, kAtomicConsume)){
@@ -147,7 +147,7 @@ void Mutex::Lock() noexcept {
 		x_vSemaphore.Post();
 	}
 jLocked:
-	XUnlockQueue(pQueueHead);
+	X_UnlockQueue(pQueueHead);
 }
 void Mutex::Unlock() noexcept {
 #ifndef NDEBUG
@@ -158,11 +158,11 @@ void Mutex::Unlock() noexcept {
 
 	x_uLockingThreadId.Store(0, kAtomicRelease);
 
-	auto pQueueHead = XLockQueue();
+	auto pQueueHead = X_LockQueue();
 	if(pQueueHead){
 		x_vSemaphore.Post();
 	}
-	XUnlockQueue(pQueueHead);
+	X_UnlockQueue(pQueueHead);
 }
 
 }

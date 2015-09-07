@@ -28,7 +28,7 @@ public:
 	}
 
 private:
-	void XRefreshInternal() noexcept;
+	void X_RefreshInternal() noexcept;
 
 public:
 	void Init(std::uint32_t u32Seed = ReadTimestampCounter32()) noexcept;

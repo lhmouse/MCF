@@ -8,10 +8,10 @@
 
 namespace MCF {
 
-DynamicLinkLibrary::XLibraryFreer::Handle DynamicLinkLibrary::XLibraryFreer::operator()() noexcept {
+DynamicLinkLibrary::X_LibraryFreer::Handle DynamicLinkLibrary::X_LibraryFreer::operator()() noexcept {
 	return NULL;
 }
-void DynamicLinkLibrary::XLibraryFreer::operator()(DynamicLinkLibrary::XLibraryFreer::Handle hDll) noexcept {
+void DynamicLinkLibrary::X_LibraryFreer::operator()(DynamicLinkLibrary::X_LibraryFreer::Handle hDll) noexcept {
 	::FreeLibrary(reinterpret_cast<HINSTANCE>(hDll));
 }
 
@@ -42,8 +42,8 @@ bool DynamicLinkLibrary::IsOpen() const noexcept {
 	return !!x_hDll;
 }
 void DynamicLinkLibrary::Open(const wchar_t *pwszPath){
-	UniqueHandle<XLibraryFreer> hDll;
-	if(!hDll.Reset(reinterpret_cast<XLibraryFreer::Handle>(::LoadLibraryW(pwszPath)))){
+	UniqueHandle<X_LibraryFreer> hDll;
+	if(!hDll.Reset(reinterpret_cast<X_LibraryFreer::Handle>(::LoadLibraryW(pwszPath)))){
 		DEBUG_THROW(SystemError, "LoadLibraryW");
 	}
 

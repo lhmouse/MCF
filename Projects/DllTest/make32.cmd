@@ -16,6 +16,6 @@ mcfbuild -p../../MCF/MCFBuild.mcfproj -s../../MCF -d../../.Built/%Config%/mcf -o
 mcfbuild -p../../External/dlmalloc/MCFBuild.mcfproj -s../../External/dlmalloc -d../../.Built/%Config%/dlmalloc -o../../.Built/%Config%/libdlmalloc.a %* || exit /b 1
 mcfbuild -p../../External/zlib/MCFBuild.mcfproj -s../../External/zlib -d../../.Built/%Config%/zlib -o../../.Built/%Config%/libz.a %* || exit /b 1
 
-g++ %CXXFlags% -std=c++14 -Wnoexcept -Wall -Wextra -Wsign-conversion -Wsuggest-attribute=noreturn -pipe -mfpmath=both -march=nocona -masm=intel dll.cpp -shared -o ".dll-%Config%.dll" -I../.. -L../../.Built/%Config% -static -nostdlib -Wl,-e__MCF_DllStartup,--disable-runtime-pseudo-reloc,--disable-auto-import,--wrap=atexit,--wrap=malloc,--wrap=realloc,--wrap=calloc,--wrap=free %Lib% || exit /b 1
+g++ %CXXFlags% -std=c++14 -Wnoexcept -Wall -Wextra -Wsign-conversion -Wsuggest-attribute=noreturn -pipe -mfpmath=both -march=nocona -mno-stack-arg-probe -mno-accumulate-outgoing-args -mpush-args -masm=intel dll.cpp -shared -o ".dll-%Config%.dll" -I../.. -L../../.Built/%Config% -static -nostdlib -Wl,-e__MCF_DllStartup,--disable-runtime-pseudo-reloc,--disable-auto-import,--wrap=atexit,--wrap=malloc,--wrap=realloc,--wrap=calloc,--wrap=free %Lib% || exit /b 1
 
 g++ dlltest.cpp ".dll-%Config%.dll" -std=c++14 -o ".%Config%.exe" -static -O3 -Wl,-s

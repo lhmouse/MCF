@@ -70,7 +70,7 @@ namespace {
 	}
 }
 
-class LzmaEncoder::XDelegate {
+class LzmaEncoder::X_Delegate {
 private:
 	LzmaEncoder &x_vOwner;
 	const ::lzma_options_lzma x_vOptions;
@@ -79,7 +79,7 @@ private:
 	UniquePtr<::lzma_stream, LzmaStreamCloser> x_pStream;
 
 public:
-	XDelegate(LzmaEncoder &vOwner, unsigned uLevel, unsigned long ulDictSize)
+	X_Delegate(LzmaEncoder &vOwner, unsigned uLevel, unsigned long ulDictSize)
 		: x_vOwner(vOwner), x_vOptions(MakeOptions(uLevel, ulDictSize))
 		, x_vStream(kInitStream)
 	{
@@ -116,7 +116,7 @@ public:
 					DEBUG_THROW(LzmaError, eError, "lzma_code");
 				}
 				if(x_pStream->avail_out == 0){
-					x_vOwner.XOutput(abyTemp, sizeof(abyTemp));
+					x_vOwner.X_Output(abyTemp, sizeof(abyTemp));
 
 					x_pStream->next_out = abyTemp;
 					x_pStream->avail_out = sizeof(abyTemp);
@@ -127,7 +127,7 @@ public:
 			uProcessed += uToProcess;
 		}
 		if(x_pStream->avail_out != 0){
-			x_vOwner.XOutput(abyTemp, sizeof(abyTemp) - x_pStream->avail_out);
+			x_vOwner.X_Output(abyTemp, sizeof(abyTemp) - x_pStream->avail_out);
 		}
 	}
 	void Finalize(){
@@ -146,19 +146,19 @@ public:
 				DEBUG_THROW(LzmaError, eError, "lzma_code");
 			}
 			if(x_pStream->avail_out == 0){
-				x_vOwner.XOutput(abyTemp, sizeof(abyTemp));
+				x_vOwner.X_Output(abyTemp, sizeof(abyTemp));
 
 				x_pStream->next_out = abyTemp;
 				x_pStream->avail_out = sizeof(abyTemp);
 			}
 		}
 		if(x_pStream->avail_out != 0){
-			x_vOwner.XOutput(abyTemp, sizeof(abyTemp) - x_pStream->avail_out);
+			x_vOwner.X_Output(abyTemp, sizeof(abyTemp) - x_pStream->avail_out);
 		}
 	}
 };
 
-class LzmaDecoder::XDelegate {
+class LzmaDecoder::X_Delegate {
 private:
 	LzmaDecoder &x_vOwner;
 
@@ -166,7 +166,7 @@ private:
 	UniquePtr<::lzma_stream, LzmaStreamCloser> x_pStream;
 
 public:
-	explicit XDelegate(LzmaDecoder &vOwner)
+	explicit X_Delegate(LzmaDecoder &vOwner)
 		: x_vOwner(vOwner)
 		, x_vStream(kInitStream)
 	{
@@ -203,7 +203,7 @@ public:
 					DEBUG_THROW(LzmaError, eError, "lzma_code");
 				}
 				if(x_pStream->avail_out == 0){
-					x_vOwner.XOutput(abyTemp, sizeof(abyTemp));
+					x_vOwner.X_Output(abyTemp, sizeof(abyTemp));
 
 					x_pStream->next_out = abyTemp;
 					x_pStream->avail_out = sizeof(abyTemp);
@@ -214,7 +214,7 @@ public:
 			uProcessed += uToProcess;
 		}
 		if(x_pStream->avail_out != 0){
-			x_vOwner.XOutput(abyTemp, sizeof(abyTemp) - x_pStream->avail_out);
+			x_vOwner.X_Output(abyTemp, sizeof(abyTemp) - x_pStream->avail_out);
 		}
 	}
 	void Finalize(){
@@ -233,14 +233,14 @@ public:
 				DEBUG_THROW(LzmaError, eError, "lzma_code");
 			}
 			if(x_pStream->avail_out == 0){
-				x_vOwner.XOutput(abyTemp, sizeof(abyTemp));
+				x_vOwner.X_Output(abyTemp, sizeof(abyTemp));
 
 				x_pStream->next_out = abyTemp;
 				x_pStream->avail_out = sizeof(abyTemp);
 			}
 		}
 		if(x_pStream->avail_out != 0){
-			x_vOwner.XOutput(abyTemp, sizeof(abyTemp) - x_pStream->avail_out);
+			x_vOwner.X_Output(abyTemp, sizeof(abyTemp) - x_pStream->avail_out);
 		}
 	}
 };
@@ -254,16 +254,16 @@ LzmaEncoder::LzmaEncoder(unsigned uLevel, unsigned long ulDictSize) noexcept
 LzmaEncoder::~LzmaEncoder(){
 }
 
-void LzmaEncoder::XDoInit(){
+void LzmaEncoder::X_DoInit(){
 	if(!x_pDelegate){
-		x_pDelegate.Reset(new XDelegate(*this, x_uLevel, x_ulDictSize));
+		x_pDelegate.Reset(new X_Delegate(*this, x_uLevel, x_ulDictSize));
 	}
 	x_pDelegate->Init();
 }
-void LzmaEncoder::XDoUpdate(const void *pData, std::size_t uSize){
+void LzmaEncoder::X_DoUpdate(const void *pData, std::size_t uSize){
 	x_pDelegate->Update(pData, uSize);
 }
-void LzmaEncoder::XDoFinalize(){
+void LzmaEncoder::X_DoFinalize(){
 	x_pDelegate->Finalize();
 }
 
@@ -275,16 +275,16 @@ LzmaDecoder::LzmaDecoder() noexcept {
 LzmaDecoder::~LzmaDecoder(){
 }
 
-void LzmaDecoder::XDoInit(){
+void LzmaDecoder::X_DoInit(){
 	if(!x_pDelegate){
-		x_pDelegate.Reset(new XDelegate(*this));
+		x_pDelegate.Reset(new X_Delegate(*this));
 	}
 	x_pDelegate->Init();
 }
-void LzmaDecoder::XDoUpdate(const void *pData, std::size_t uSize){
+void LzmaDecoder::X_DoUpdate(const void *pData, std::size_t uSize){
 	x_pDelegate->Update(pData, uSize);
 }
-void LzmaDecoder::XDoFinalize(){
+void LzmaDecoder::X_DoFinalize(){
 	x_pDelegate->Finalize();
 }
 

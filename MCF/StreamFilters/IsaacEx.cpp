@@ -35,12 +35,12 @@ IsaacExEncoder::IsaacExEncoder(const void *pKey, std::size_t uKeyLen) noexcept
 }
 
 // 其他非静态成员函数。
-void IsaacExEncoder::XDoInit(){
+void IsaacExEncoder::X_DoInit(){
 	x_vIsaacGenerator.Init(x_vKeyHash.au32Words);
 	x_byLastEncoded = 0;
 	x_lLastHighWord = -1;
 }
-void IsaacExEncoder::XDoUpdate(const void *pData, std::size_t uSize){
+void IsaacExEncoder::X_DoUpdate(const void *pData, std::size_t uSize){
 	auto pbyRead = static_cast<const unsigned char *>(pData);
 	const auto pbyEnd = pbyRead + uSize;
 
@@ -53,7 +53,7 @@ void IsaacExEncoder::XDoUpdate(const void *pData, std::size_t uSize){
 		__asm__ __volatile__("rol %b0, cl \n" : "+q"(by) : "c"(byRot));
 		x_byLastEncoded = by ^ (uSeed >> 8);
 
-		XOutput(by);
+		X_Output(by);
 	};
 
 	if(uSize > 4){
@@ -84,7 +84,7 @@ void IsaacExEncoder::XDoUpdate(const void *pData, std::size_t uSize){
 		EncodeByte(uSeed);
 	}
 }
-void IsaacExEncoder::XDoFinalize(){
+void IsaacExEncoder::X_DoFinalize(){
 }
 
 // ========== IsaacExDecoder ==========
@@ -95,12 +95,12 @@ IsaacExDecoder::IsaacExDecoder(const void *pKey, std::size_t uKeyLen) noexcept
 }
 
 // 其他非静态成员函数。
-void IsaacExDecoder::XDoInit(){
+void IsaacExDecoder::X_DoInit(){
 	x_vIsaacGenerator.Init(x_vKeyHash.au32Words);
 	x_byLastEncoded = 0;
 	x_lLastHighWord = -1;
 }
-void IsaacExDecoder::XDoUpdate(const void *pData, std::size_t uSize){
+void IsaacExDecoder::X_DoUpdate(const void *pData, std::size_t uSize){
 	auto pbyRead = static_cast<const unsigned char *>(pData);
 	const auto pbyEnd = pbyRead + uSize;
 
@@ -113,7 +113,7 @@ void IsaacExDecoder::XDoUpdate(const void *pData, std::size_t uSize){
 		__asm__ __volatile__("ror %b0, cl \n" : "+q"(by) : "c"(byRot));
 		by ^= uSeed;
 
-		XOutput(by);
+		X_Output(by);
 	};
 
 	if(uSize > 4){
@@ -144,7 +144,7 @@ void IsaacExDecoder::XDoUpdate(const void *pData, std::size_t uSize){
 		DecodeByte(uSeed);
 	}
 }
-void IsaacExDecoder::XDoFinalize(){
+void IsaacExDecoder::X_DoFinalize(){
 }
 
 }

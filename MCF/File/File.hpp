@@ -32,7 +32,7 @@ public:
 	};
 
 private:
-	struct XFileCloser {
+	struct X_FileCloser {
 		struct Impl;
 		using Handle = Impl *;
 
@@ -41,7 +41,7 @@ private:
 	};
 
 private:
-	UniqueHandle<XFileCloser> x_hFile;
+	UniqueHandle<X_FileCloser> x_hFile;
 
 public:
 	File() noexcept = default;

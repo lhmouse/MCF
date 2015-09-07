@@ -48,7 +48,7 @@ public:
 	static void Deunify(String &strDst, std::size_t uPos, const UnifiedStringObserver &usoSrc);
 
 private:
-	union XStorage {
+	union X_Storage {
 		struct {
 			Char achData[31];
 			std::make_signed_t<Char> schComplLength;
@@ -62,10 +62,10 @@ private:
 	} x_vStorage;
 
 private:
-	std::size_t XGetSmallLength() const noexcept {
+	std::size_t X_GetSmallLength() const noexcept {
 		return CountOf(x_vStorage.vSmall.achData) - static_cast<std::make_unsigned_t<Char>>(x_vStorage.vSmall.schComplLength);
 	}
-	void XSetSmallLength(std::size_t uLength) noexcept {
+	void X_SetSmallLength(std::size_t uLength) noexcept {
 		x_vStorage.vSmall.schComplLength = static_cast<std::make_signed_t<Char>>(CountOf(x_vStorage.vSmall.achData) - uLength);
 	}
 
@@ -74,7 +74,7 @@ public:
 #ifndef NDEBUG
 		std::memset(x_vStorage.vSmall.achData, 0xCC, sizeof(x_vStorage.vSmall.achData));
 #endif
-		XSetSmallLength(0);
+		X_SetSmallLength(0);
 	}
 	explicit String(Char ch, std::size_t uCount = 1)
 		: String()
@@ -162,7 +162,7 @@ public:
 	}
 
 private:
-	Char *XChopAndSplice(std::size_t uRemovedBegin, std::size_t uRemovedEnd, std::size_t uFirstOffset, std::size_t uThirdOffset){
+	Char *X_ChopAndSplice(std::size_t uRemovedBegin, std::size_t uRemovedEnd, std::size_t uFirstOffset, std::size_t uThirdOffset){
 		const auto pchOldBuffer = GetBegin();
 		const auto uOldLength = GetLength();
 		auto pchNewBuffer = pchOldBuffer;
@@ -209,11 +209,11 @@ private:
 
 		return pchNewBuffer + uFirstOffset + uRemovedBegin;
 	}
-	void XSetSize(std::size_t uNewSize) noexcept {
+	void X_SetSize(std::size_t uNewSize) noexcept {
 		ASSERT(uNewSize <= GetCapacity());
 
 		if(x_vStorage.vSmall.schComplLength >= 0){
-			XSetSmallLength(uNewSize);
+			X_SetSmallLength(uNewSize);
 		} else {
 			x_vStorage.vLarge.uLength = uNewSize;
 		}
@@ -229,7 +229,7 @@ public:
 		return GetBegin() == GetEnd();
 	}
 	void Clear() noexcept {
-		XSetSize(0);
+		X_SetSize(0);
 	}
 
 	ConstEnumerator EnumerateFirst() const noexcept {
@@ -329,14 +329,14 @@ public:
 
 	const Char *GetEnd() const noexcept {
 		if(x_vStorage.vSmall.schComplLength >= 0){
-			return x_vStorage.vSmall.achData + XGetSmallLength();
+			return x_vStorage.vSmall.achData + X_GetSmallLength();
 		} else {
 			return x_vStorage.vLarge.pchBegin + x_vStorage.vLarge.uLength;
 		}
 	}
 	Char *GetEnd() noexcept {
 		if(x_vStorage.vSmall.schComplLength >= 0){
-			return x_vStorage.vSmall.achData + XGetSmallLength();
+			return x_vStorage.vSmall.achData + X_GetSmallLength();
 		} else {
 			return x_vStorage.vLarge.pchBegin + x_vStorage.vLarge.uLength;
 		}
@@ -350,7 +350,7 @@ public:
 	}
 	std::size_t GetSize() const noexcept {
 		if(x_vStorage.vSmall.schComplLength >= 0){
-			return XGetSmallLength();
+			return X_GetSmallLength();
 		} else {
 			return x_vStorage.vLarge.uLength;
 		}
@@ -358,7 +358,7 @@ public:
 
 	const Char *GetStr() const noexcept {
 		if(x_vStorage.vSmall.schComplLength >= 0){
-			const_cast<Char &>(x_vStorage.vSmall.achData[XGetSmallLength()]) = Char();
+			const_cast<Char &>(x_vStorage.vSmall.achData[X_GetSmallLength()]) = Char();
 			return x_vStorage.vSmall.achData;
 		} else {
 			x_vStorage.vLarge.pchBegin[x_vStorage.vLarge.uLength] = Char();
@@ -367,7 +367,7 @@ public:
 	}
 	Char *GetStr() noexcept {
 		if(x_vStorage.vSmall.schComplLength >= 0){
-			x_vStorage.vSmall.achData[XGetSmallLength()] = Char();
+			x_vStorage.vSmall.achData[X_GetSmallLength()] = Char();
 			return x_vStorage.vSmall.achData;
 		} else {
 			x_vStorage.vLarge.pchBegin[x_vStorage.vLarge.uLength] = Char();
@@ -403,7 +403,7 @@ public:
 
 	Observer GetObserver() const noexcept {
 		if(x_vStorage.vSmall.schComplLength >= 0){
-			return Observer(x_vStorage.vSmall.achData, XGetSmallLength());
+			return Observer(x_vStorage.vSmall.achData, X_GetSmallLength());
 		} else {
 			return Observer(x_vStorage.vLarge.pchBegin, x_vStorage.vLarge.uLength);
 		}
@@ -419,7 +419,7 @@ public:
 	void Reserve(std::size_t uNewCapacity){
 		if(uNewCapacity > GetCapacity()){
 			const auto uOldSize = GetSize();
-			XChopAndSplice(uOldSize, uOldSize, 0, uNewCapacity);
+			X_ChopAndSplice(uOldSize, uOldSize, 0, uNewCapacity);
 		}
 	}
 	void ReserveMore(std::size_t uDeltaCapacity){
@@ -435,7 +435,7 @@ public:
 		const std::size_t uOldSize = GetSize();
 		if(uNewSize > uOldSize){
 			Reserve(uNewSize);
-			XSetSize(uNewSize);
+			X_SetSize(uNewSize);
 		} else if(uNewSize < uOldSize){
 			Pop(uOldSize - uNewSize);
 		}
@@ -446,8 +446,8 @@ public:
 		if(uNewSize < uOldSize){
 			throw std::bad_array_new_length();
 		}
-		XChopAndSplice(uOldSize, uOldSize, uDeltaSize, uNewSize);
-		XSetSize(uNewSize);
+		X_ChopAndSplice(uOldSize, uOldSize, uDeltaSize, uNewSize);
+		X_SetSize(uNewSize);
 		return GetData() + uOldSize;
 	}
 	Char *ResizeMore(std::size_t uDeltaSize){
@@ -456,14 +456,14 @@ public:
 		if(uNewSize < uOldSize){
 			throw std::bad_array_new_length();
 		}
-		XChopAndSplice(uOldSize, uOldSize, 0, uNewSize);
-		XSetSize(uNewSize);
+		X_ChopAndSplice(uOldSize, uOldSize, 0, uNewSize);
+		X_SetSize(uNewSize);
 		return GetData() + uOldSize;
 	}
 	void Shrink() noexcept {
 		const auto uSzLen = Observer(GetStr()).GetLength();
 		ASSERT(uSzLen <= GetSize());
-		XSetSize(uSzLen);
+		X_SetSize(uSzLen);
 	}
 
 	int Compare(const Observer &rhs) const noexcept {
@@ -560,7 +560,7 @@ public:
 		ASSERT(GetLength() < GetCapacity());
 
 		if(x_vStorage.vSmall.schComplLength >= 0){
-			x_vStorage.vSmall.achData[XGetSmallLength()] = ch;
+			x_vStorage.vSmall.achData[X_GetSmallLength()] = ch;
 			--x_vStorage.vSmall.schComplLength;
 		} else {
 			x_vStorage.vLarge.pchBegin[x_vStorage.vLarge.uLength] = ch;
@@ -570,7 +570,7 @@ public:
 	void Pop(std::size_t uCount = 1) noexcept {
 		const auto uOldSize = GetSize();
 		ASSERT(uOldSize >= uCount);
-		XSetSize(uOldSize - uCount);
+		X_SetSize(uOldSize - uCount);
 	}
 
 	void Unshift(Char ch, std::size_t uCount = 1){
@@ -610,7 +610,7 @@ public:
 		ASSERT(uOldSize >= uCount);
 		const auto pchWrite = GetBegin();
 		CopyN(pchWrite, pchWrite + uCount, uOldSize - uCount);
-		XSetSize(uOldSize - uCount);
+		X_SetSize(uOldSize - uCount);
 	}
 
 	Observer Slice(std::ptrdiff_t nBegin, std::ptrdiff_t nEnd = -1) const noexcept {
@@ -663,9 +663,9 @@ public:
 			throw std::bad_array_new_length();
 		}
 
-		const auto pchWrite = XChopAndSplice(uRemovedBegin, uRemovedEnd, 0, uRemovedBegin + uRepSize);
+		const auto pchWrite = X_ChopAndSplice(uRemovedBegin, uRemovedEnd, 0, uRemovedBegin + uRepSize);
 		FillN(pchWrite, uRepSize, chRep);
-		XSetSize(uNewLength);
+		X_SetSize(uNewLength);
 	}
 	void Replace(std::ptrdiff_t nBegin, std::ptrdiff_t nEnd, const Char *pchRepBegin){
 		Replace(nBegin, nEnd, Observer(pchRepBegin));
@@ -700,9 +700,9 @@ public:
 			pchWrite = Copy(pchWrite, obsCurrent.GetBegin() + uRemovedEnd, obsCurrent.GetEnd());
 			Assign(std::move(strTemp));
 		} else {
-			const auto pchWrite = XChopAndSplice(uRemovedBegin, uRemovedEnd, 0, uRemovedBegin + obsRep.GetSize());
+			const auto pchWrite = X_ChopAndSplice(uRemovedBegin, uRemovedEnd, 0, uRemovedBegin + obsRep.GetSize());
 			CopyN(pchWrite, obsRep.GetBegin(), obsRep.GetSize());
-			XSetSize(uNewLength);
+			X_SetSize(uNewLength);
 		}
 	}
 

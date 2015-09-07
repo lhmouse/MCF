@@ -10,10 +10,10 @@
 
 namespace MCF {
 
-File::XFileCloser::Handle File::XFileCloser::operator()() const noexcept {
+File::X_FileCloser::Handle File::X_FileCloser::operator()() const noexcept {
 	return reinterpret_cast<Handle>(INVALID_HANDLE_VALUE);
 }
-void File::XFileCloser::operator()(File::XFileCloser::Handle hFile) const noexcept {
+void File::X_FileCloser::operator()(File::X_FileCloser::Handle hFile) const noexcept {
 	::CloseHandle(reinterpret_cast<HANDLE>(hFile));
 }
 
@@ -59,8 +59,8 @@ void File::Open(const wchar_t *pwszPath, std::uint32_t u32Flags){
 		dwFlagsAndAttributes |= FILE_FLAG_DELETE_ON_CLOSE;
 	}
 
-	UniqueHandle<XFileCloser> hFile;
-	if(!hFile.Reset(reinterpret_cast<XFileCloser::Handle>(
+	UniqueHandle<X_FileCloser> hFile;
+	if(!hFile.Reset(reinterpret_cast<X_FileCloser::Handle>(
 		::CreateFileW(pwszPath, dwDesiredAccess, dwShareMode, nullptr, dwCreateDisposition, dwFlagsAndAttributes, NULL))))
 	{
 		DEBUG_THROW(SystemError, "CreateFileW");

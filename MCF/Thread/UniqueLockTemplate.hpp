@@ -28,19 +28,19 @@ public:
 	}
 
 protected:
-	std::size_t XUnlockAll() noexcept {
+	std::size_t X_UnlockAll() noexcept {
 		const auto uOldLockCount = x_uLockCount;
 		if(uOldLockCount != 0){
-			XDoUnlock();
+			X_DoUnlock();
 			x_uLockCount = 0;
 		}
 		return uOldLockCount;
 	}
 
 private:
-	virtual bool XDoTry() const noexcept = 0;
-	virtual void XDoLock() const noexcept = 0;
-	virtual void XDoUnlock() const noexcept = 0;
+	virtual bool X_DoTry() const noexcept = 0;
+	virtual void X_DoLock() const noexcept = 0;
+	virtual void X_DoUnlock() const noexcept = 0;
 
 public:
 	bool IsLocking() const noexcept {
@@ -52,7 +52,7 @@ public:
 
 	bool Try() noexcept {
 		if(x_uLockCount == 0){
-			if(!XDoTry()){
+			if(!X_DoTry()){
 				return false;
 			}
 		}
@@ -61,14 +61,14 @@ public:
 	}
 	void Lock() noexcept {
 		if(++x_uLockCount == 1){
-			XDoLock();
+			X_DoLock();
 		}
 	}
 	void Unlock() noexcept {
 		ASSERT(x_uLockCount != 0);
 
 		if(--x_uLockCount == 0){
-			XDoUnlock();
+			X_DoUnlock();
 		}
 	}
 
@@ -99,18 +99,18 @@ public:
 	UniqueLockTemplate &operator=(UniqueLockTemplate &&rhs) noexcept {
 		ASSERT(&rhs != this);
 
-		XUnlockAll();
+		X_UnlockAll();
 		Swap(rhs);
 		return *this;
 	}
 	virtual ~UniqueLockTemplate(){
-		XUnlockAll();
+		X_UnlockAll();
 	}
 
 private:
-	bool XDoTry() const noexcept override;
-	void XDoLock() const noexcept override;
-	void XDoUnlock() const noexcept override;
+	bool X_DoTry() const noexcept override;
+	void X_DoLock() const noexcept override;
+	void X_DoUnlock() const noexcept override;
 
 public:
 	void Join(UniqueLockTemplate &&rhs) noexcept {

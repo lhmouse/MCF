@@ -104,7 +104,7 @@ void File::Close() noexcept {
 
 std::uint64_t File::GetSize() const {
 	if(!x_hFile){
-		DEBUG_THROW(Exception, ERROR_INVALID_HANDLE, "No file open"_rcs);
+		DEBUG_THROW(Exception, ERROR_INVALID_HANDLE, "No file opened"_rcs);
 	}
 
 	::LARGE_INTEGER liFileSize;
@@ -115,7 +115,7 @@ std::uint64_t File::GetSize() const {
 }
 void File::Resize(std::uint64_t u64NewSize){
 	if(!x_hFile){
-		DEBUG_THROW(Exception, ERROR_INVALID_HANDLE, "No file open"_rcs);
+		DEBUG_THROW(Exception, ERROR_INVALID_HANDLE, "No file opened"_rcs);
 	}
 
 	::LARGE_INTEGER liNewSize;
@@ -135,7 +135,7 @@ std::size_t File::Read(void *pBuffer, std::uint32_t u32BytesToRead, std::uint64_
 	FunctionObserver<void ()> fnAsyncProc, FunctionObserver<void ()> fnCompleteCallback) const
 {
 	if(!x_hFile){
-		DEBUG_THROW(Exception, ERROR_INVALID_HANDLE, "No file open"_rcs);
+		DEBUG_THROW(Exception, ERROR_INVALID_HANDLE, "No file opened"_rcs);
 	}
 
 	DWORD dwErrorCode;
@@ -171,7 +171,7 @@ std::size_t File::Write(std::uint64_t u64Offset, const void *pBuffer, std::uint3
 	FunctionObserver<void ()> fnAsyncProc, FunctionObserver<void ()> fnCompleteCallback)
 {
 	if(!x_hFile){
-		DEBUG_THROW(Exception, ERROR_INVALID_HANDLE, "No file open"_rcs);
+		DEBUG_THROW(Exception, ERROR_INVALID_HANDLE, "No file opened"_rcs);
 	}
 
 	DWORD dwErrorCode;
@@ -205,7 +205,7 @@ std::size_t File::Write(std::uint64_t u64Offset, const void *pBuffer, std::uint3
 }
 void File::Flush() const {
 	if(!x_hFile){
-		DEBUG_THROW(Exception, ERROR_INVALID_HANDLE, "No file open"_rcs);
+		DEBUG_THROW(Exception, ERROR_INVALID_HANDLE, "No file opened"_rcs);
 	}
 
 	if(!::FlushFileBuffers(reinterpret_cast<HANDLE>(x_hFile.Get()))){

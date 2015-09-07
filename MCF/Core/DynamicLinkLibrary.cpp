@@ -21,14 +21,14 @@ const void *DynamicLinkLibrary::GetBaseAddress() const noexcept {
 }
 DynamicLinkLibrary::RawProc DynamicLinkLibrary::RawGetProcAddress(const char *pszName){
 	if(!x_hDll){
-		DEBUG_THROW(Exception, ERROR_INVALID_HANDLE, "No shared library open"_rcs);
+		DEBUG_THROW(Exception, ERROR_INVALID_HANDLE, "No shared library opened"_rcs);
 	}
 
 	return ::GetProcAddress(reinterpret_cast<HINSTANCE>(x_hDll.Get()), pszName);
 }
 DynamicLinkLibrary::RawProc DynamicLinkLibrary::RawRequireProcAddress(const char *pszName){
 	if(!x_hDll){
-		DEBUG_THROW(Exception, ERROR_INVALID_HANDLE, "No shared library open"_rcs);
+		DEBUG_THROW(Exception, ERROR_INVALID_HANDLE, "No shared library opened"_rcs);
 	}
 
 	const auto pfnRet = ::GetProcAddress(reinterpret_cast<HINSTANCE>(x_hDll.Get()), pszName);

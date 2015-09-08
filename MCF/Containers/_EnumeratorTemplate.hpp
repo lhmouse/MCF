@@ -83,9 +83,15 @@ namespace Impl_EnumeratorTemplate {
 
 			return *x_pElement;
 		}
+		ElementType *operator->() const noexcept {
+			return x_pElement;
+		}
 
 		explicit operator bool() const noexcept {
 			return !!x_pElement;
+		}
+		operator ElementType *() const noexcept {
+			return x_pElement;
 		}
 	};
 
@@ -151,9 +157,15 @@ namespace Impl_EnumeratorTemplate {
 
 			return *x_pElement;
 		}
+		const ElementType *operator->() const noexcept {
+			return x_pElement;
+		}
 
 		explicit operator bool() const noexcept {
 			return !!x_pElement;
+		}
+		operator const ElementType *() const noexcept {
+			return x_pElement;
 		}
 	};
 

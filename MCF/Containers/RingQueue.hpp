@@ -86,93 +86,79 @@ public:
 	}
 
 private:
-	std::pair<ElementT *, std::size_t> X_PrepareForInsertion(const ElementT *pPos, std::size_t uDeltaSize){
+	const ElementT *X_GetStorage() const noexcept {
+		return static_cast<const ElementT *>(x_pStorage);
+	}
+	ElementT *X_GetStorage() noexcept {
+		return static_cast<ElementT *>(x_pStorage);
+	}
+
+	ElementT *X_PrepareForInsertion(const ElementT *pPos, std::size_t uDeltaSize){
 		ASSERT(std::is_nothrow_move_constructible<ElementT>::value);
 		ASSERT(!IsEmpty());
 		ASSERT(pPos);
 
-		auto uIndex = static_cast<std::size_t>(pPos - static_cast<ElementT *>(x_pStorage));
+		auto uIndex = static_cast<std::size_t>(pPos - X_GetStorage());
 		if(uIndex < x_uFirst){
 			uIndex += x_uRingCap;
 		}
 		uIndex -= x_uFirst;
 		ReserveMore(uDeltaSize);
-		const auto pStorage = static_cast<const ElementT *>(x_pStorage);
-		auto uOffset = x_uFirst + uIndex;
+		const auto pStorage = X_GetStorage();
+		auto uOffset = uIndex + x_uFirst;
 		if(uOffset >= x_uRingCap){
 			uOffset -= x_uRingCap;
 		}
 
-//		const auto uWrapAfter = x_uRingCap - x_uFirst -
+		auto uReadOffset = x_uLast;
+		for(;;){
+			auto uWriteOffset = uReadOffset + uDeltaSize;
+			if(uWriteOffset >= x_uRingCap){
+				uWriteOffset -= x_uRingCap;
+			}
+			Construct(pStorage + uWriteOffset, std::move(pStorage[uReadOffset]));
+			Destruct(pStorage + uReadOffset);
 
-//		return pStorage + uOffset;
+			if(uReadOffset == uOffset){
+				break;
+			}
+
+			if(uReadOffset == 0){
+				uReadOffset = x_uRingCap;
+			}
+			--uReadOffset;
+		}
+
+		return pStorage + uOffset;
 	}
-/*
-
-			uOffset = static_cast<std::size_t>(pPos - pStorage) - x_uFirst;
-
-		const auto pStorage = static_cast<ElementType *>(x_pStorage);
-		auto uOffset = x_uFirst + uIndex;
-		if(uOffset >= x_uRingCap){
-			uOffset -= x_uRingCap;
-		}
-		return pStorage[uOffset];
-
-
-
-
-
-
-
-
-
-
-		const auto pStorage = static_cast<const ElementT *>(rhs.x_pStorage);
-		if(rhs.x_uFirst <= rhs.x_uLast){
-			for(std::size_t i = rhs.x_uFirst; i <= rhs.x_uLast; ++i){
-				UncheckedPush(pStorage[i]);
-			}
-		} else if(rhs.x_uFirst - rhs.x_uLast != 1){
-			for(std::size_t i = rhs.x_uFirst; i < rhs.x_uRingCap; ++i){
-				UncheckedPush(pStorage[i]);
-			}
-			for(std::size_t i = 0; i <= rhs.x_uLast; ++i){
-				UncheckedPush(pStorage[i]);
-			}
-		}
-
-
-
-		const auto nOffset = pPos - GetBegin();
-		ReserveMore(uDeltaSize);
-
-		auto pRead = GetEnd();
-		auto pWrite = pRead + uDeltaSize;
-		while(pRead != pPos){
-			--pRead;
-			--pWrite;
-			Construct(pWrite, std::move(*pRead));
-			Destruct(pRead);
-		}
-
-		return GetBegin() + nOffset;
-	}
-*/	void X_UndoPreparation(const std::pair<ElementT *, std::size_t> &vPrepared, std::size_t uDeltaSize) noexcept {
+	void X_UndoPreparation(ElementT *pPrepared, std::size_t uDeltaSize) noexcept {
 		ASSERT(std::is_nothrow_move_constructible<ElementT>::value);
 		ASSERT(!IsEmpty());
-		ASSERT(vPrepared.first);
+		ASSERT(pPrepared);
 		ASSERT(uDeltaSize <= GetCapacity() - GetSize());
-/*
-		auto pWrite = const_cast<ElementT *>(pPrepared);
-		auto pRead = pWrite + uDeltaSize;
 
-		while(pWrite != GetEnd()){
-			Construct(pWrite, std::move(*pRead));
-			Destruct(pRead);
-			++pWrite;
-			++pRead;
+		const auto pStorage = X_GetStorage();
+		const auto uOffset = static_cast<std::size_t>(pPrepared - pStorage);
+
+		auto uWriteOffset = uOffset;
+		for(;;){
+			auto uReadOffset = uWriteOffset + uDeltaSize;
+			if(uReadOffset >= x_uRingCap){
+				uReadOffset -= x_uRingCap;
+			}
+			Construct(pStorage + uWriteOffset, std::move(pStorage[uReadOffset]));
+			Destruct(pStorage + uReadOffset);
+
+			if(uWriteOffset == x_uLast){
+				break;
+			}
+
+			++uWriteOffset;
+			if(uWriteOffset == x_uRingCap){
+				uWriteOffset = 0;
+			}
 		}
-*/	}
+	}
 
 public:
 	// 容器需求。
@@ -184,7 +170,11 @@ public:
 		return x_uFirst - x_uLast == 1;
 	}
 	void Clear() noexcept {
-		const auto pStorage = static_cast<ElementT *>(x_pStorage);
+		if(IsEmpty()){
+			return;
+		}
+
+		const auto pStorage = X_GetStorage();
 		if(x_uFirst <= x_uLast){
 			for(std::size_t i = x_uFirst; i <= x_uLast; ++i){
 				Destruct(pStorage + x_uFirst + x_uLast - i);
@@ -223,7 +213,7 @@ public:
 	}
 
 	const ElementType *GetNext(const ElementType *pPos) const noexcept {
-		const auto pStorage = static_cast<const ElementT *>(x_pStorage);
+		const auto pStorage = X_GetStorage();
 		auto uOffset = static_cast<std::size_t>(pPos - pStorage);
 		if(uOffset == x_uLast){
 			return nullptr;
@@ -235,7 +225,7 @@ public:
 		return pStorage + uOffset;
 	}
 	ElementType *GetNext(ElementType *pPos) noexcept {
-		const auto pStorage = static_cast<ElementT *>(x_pStorage);
+		const auto pStorage = X_GetStorage();
 		auto uOffset = static_cast<std::size_t>(pPos - pStorage);
 		if(uOffset == x_uLast){
 			return nullptr;
@@ -247,7 +237,7 @@ public:
 		return pStorage + uOffset;
 	}
 	const ElementType *GetPrev(const ElementType *pPos) const noexcept {
-		const auto pStorage = static_cast<const ElementT *>(x_pStorage);
+		const auto pStorage = X_GetStorage();
 		auto uOffset = static_cast<std::size_t>(pPos - pStorage);
 		if(uOffset == x_uFirst){
 			return nullptr;
@@ -259,7 +249,7 @@ public:
 		return pStorage + uOffset;
 	}
 	ElementType *GetPrev(ElementType *pPos) noexcept {
-		const auto pStorage = static_cast<ElementT *>(x_pStorage);
+		const auto pStorage = X_GetStorage();
 		auto uOffset = static_cast<std::size_t>(pPos - pStorage);
 		if(uOffset == x_uFirst){
 			return nullptr;
@@ -296,28 +286,28 @@ public:
 		if(IsEmpty()){
 			return nullptr;
 		}
-		const auto pStorage = static_cast<const ElementT *>(x_pStorage);
+		const auto pStorage = X_GetStorage();
 		return pStorage + x_uFirst;
 	}
 	ElementType *GetFirst() noexcept {
 		if(IsEmpty()){
 			return nullptr;
 		}
-		const auto pStorage = static_cast<ElementT *>(x_pStorage);
+		const auto pStorage = X_GetStorage();
 		return pStorage + x_uFirst;
 	}
 	const ElementType *GetLast() const noexcept {
 		if(IsEmpty()){
 			return nullptr;
 		}
-		const auto pStorage = static_cast<const ElementT *>(x_pStorage);
+		const auto pStorage = X_GetStorage();
 		return pStorage + x_uLast;
 	}
 	ElementType *GetLast() noexcept {
 		if(IsEmpty()){
 			return nullptr;
 		}
-		const auto pStorage = static_cast<ElementT *>(x_pStorage);
+		const auto pStorage = X_GetStorage();
 		return pStorage + x_uLast;
 	}
 
@@ -475,7 +465,11 @@ public:
 	void Pop(std::size_t uCount = 1) noexcept {
 		ASSERT(uCount <= GetSize());
 
-		const auto pStorage = static_cast<ElementT *>(x_pStorage);
+		if(uCount == 0){
+			return;
+		}
+
+		const auto pStorage = X_GetStorage();
 		auto uNewLast = x_uLast;
 		if(uNewLast < uCount){
 			uNewLast += x_uRingCap;
@@ -518,7 +512,11 @@ public:
 	void Shift(std::size_t uCount = 1) noexcept {
 		ASSERT(uCount <= GetSize());
 
-		const auto pStorage = static_cast<ElementT *>(x_pStorage);
+		if(uCount == 0){
+			return;
+		}
+
+		const auto pStorage = X_GetStorage();
 		auto uNewFirst = x_uFirst;
 		uNewFirst += uCount;
 		if(uNewFirst >= x_uRingCap){
@@ -642,14 +640,19 @@ public:
 			Push(std::forward<ParamsT>(vParams)...);
 			return;
 		}
-/*
+
 		if(std::is_nothrow_move_constructible<ElementType>::value){
-			const auto vPrepared = X_PrepareForInsertion(pPos, 1);
+			const auto pWriteBegin = X_PrepareForInsertion(pPos, 1);
+			const auto pStorage = X_GetStorage();
 			try {
-				DefaultConstruct(vPrepared.first, std::forward<ParamsT>(vParams)...);
+				DefaultConstruct(pWriteBegin, std::forward<ParamsT>(vParams)...);
 			} catch(...){
-				X_UndoPreparation(vPrepared, 1);
+				X_UndoPreparation(pWriteBegin, 1);
 				throw;
+			}
+			++x_uLast;
+			if(x_uLast == x_uRingCap){
+				x_uLast = 0;
 			}
 		} else {
 			auto uNewCapacity = GetSize() + 1;
@@ -661,15 +664,15 @@ public:
 			}
 			RingQueue queTemp;
 			queTemp.Reserve(uNewCapacity);
-			for(auto pCur = GetBegin(); pCur != pPos; ++pCur){
+			for(auto pCur = GetFirst(); pCur != pPos; pCur = GetNext(pCur)){
 				queTemp.UncheckedPush(*pCur);
 			}
 			queTemp.UncheckedPush(std::forward<ParamsT>(vParams)...);
-			for(auto pCur = pPos; pCur != GetEnd(); ++pCur){
+			for(auto pCur = pPos; pCur; pCur = GetNext(pCur)){
 				queTemp.UncheckedPush(*pCur);
 			}
 			*this = std::move(queTemp);
-		}*/
+		}
 	}
 
 	template<typename ...ParamsT>
@@ -678,24 +681,34 @@ public:
 			Append(uDeltaSize, vParams...);
 			return;
 		}
-/*
+
 		if(std::is_nothrow_move_constructible<ElementType>::value){
 			const auto pWriteBegin = X_PrepareForInsertion(pPos, uDeltaSize);
+			const auto pStorage = X_GetStorage();
 			auto pWrite = pWriteBegin;
 			try {
 				for(std::size_t i = 0; i < uDeltaSize; ++i){
 					DefaultConstruct(pWrite, vParams...);
 					++pWrite;
+					if(pWrite == pStorage + x_uRingCap){
+						pWrite = pStorage;
+					}
 				}
 			} catch(...){
 				while(pWrite != pWriteBegin){
+					if(pWrite == pStorage){
+						pWrite = pStorage + x_uRingCap;
+					}
 					--pWrite;
 					Destruct(pWrite);
 				}
 				X_UndoPreparation(pWriteBegin, uDeltaSize);
 				throw;
 			}
-			x_uSize += uDeltaSize;
+			x_uLast += uDeltaSize;
+			if(x_uLast >= x_uRingCap){
+				x_uLast -= x_uRingCap;
+			}
 		} else {
 			auto uNewCapacity = GetSize() + uDeltaSize;
 			if(uNewCapacity < GetSize()){
@@ -704,16 +717,20 @@ public:
 			if(uNewCapacity < GetCapacity()){
 				uNewCapacity = GetCapacity();
 			}
-			RingQueue queTemp(*this);
+			RingQueue queTemp;
+			queTemp.Reserve(uNewCapacity);
+			for(auto pCur = GetFirst(); pCur != pPos; pCur = GetNext(pCur)){
+				queTemp.UncheckedPush(*pCur);
+			}
 			for(std::size_t i = 0; i < uDeltaSize; ++i){
 				queTemp.UncheckedPush(vParams...);
 			}
-			for(auto pCur = pPos; pCur != GetEnd(); ++pCur){
+			for(auto pCur = pPos; pCur; pCur = GetNext(pCur)){
 				queTemp.UncheckedPush(*pCur);
 			}
 			*this = std::move(queTemp);
 		}
-*/	}
+	}
 	template<typename IteratorT, std::enable_if_t<
 		sizeof(typename std::iterator_traits<IteratorT>::value_type *),
 		int> = 0>
@@ -724,26 +741,35 @@ public:
 		}
 
 		constexpr bool kHasDeltaSizeHint = std::is_base_of<std::forward_iterator_tag, typename std::iterator_traits<IteratorT>::iterator_category>::value;
-/*
+
 		if(kHasDeltaSizeHint && std::is_nothrow_move_constructible<ElementType>::value){
 			const auto uDeltaSize = static_cast<std::size_t>(std::distance(itBegin, itEnd));
 			const auto pWriteBegin = X_PrepareForInsertion(pPos, uDeltaSize);
+			const auto pStorage = X_GetStorage();
 			auto pWrite = pWriteBegin;
 			try {
 				for(auto it = itBegin; it != itEnd; ++it){
 					Construct(pWrite, *it);
 					++pWrite;
+					if(pWrite == pStorage + x_uRingCap){
+						pWrite = pStorage;
+					}
 				}
 			} catch(...){
 				while(pWrite != pWriteBegin){
+					if(pWrite == pStorage){
+						pWrite = pStorage + x_uRingCap;
+					}
 					--pWrite;
 					Destruct(pWrite);
 				}
 				X_UndoPreparation(pWriteBegin, uDeltaSize);
 				throw;
 			}
-
-			x_uSize += uDeltaSize;
+			x_uLast += uDeltaSize;
+			if(x_uLast >= x_uRingCap){
+				x_uLast -= x_uRingCap;
+			}
 		} else {
 			if(kHasDeltaSizeHint){
 				const auto uDeltaSize = static_cast<std::size_t>(std::distance(itBegin, itEnd));
@@ -756,58 +782,93 @@ public:
 				}
 				RingQueue queTemp;
 				queTemp.Reserve(uNewCapacity);
-				for(auto pCur = GetBegin(); pCur != pPos; ++pCur){
+				for(auto pCur = GetFirst(); pCur != pPos; pCur = GetNext(pCur)){
 					queTemp.UncheckedPush(*pCur);
 				}
 				for(auto it = itBegin; it != itEnd; ++it){
 					queTemp.UncheckedPush(*it);
 				}
-				for(auto pCur = pPos; pCur != GetEnd(); ++pCur){
+				for(auto pCur = pPos; pCur; pCur = GetNext(pCur)){
 					queTemp.UncheckedPush(*pCur);
 				}
 				*this = std::move(queTemp);
 			} else {
-				RingQueue queTemp(*this);
+				RingQueue queTemp;
+				queTemp.Reserve(GetCapacity());
+				for(auto pCur = GetFirst(); pCur != pPos; pCur = GetNext(pCur)){
+					queTemp.UncheckedPush(*pCur);
+				}
 				for(auto it = itBegin; it != itEnd; ++it){
 					queTemp.Push(*it);
 				}
-				for(auto pCur = pPos; pCur != GetEnd(); ++pCur){
+				for(auto pCur = pPos; pCur; pCur = GetNext(pCur)){
 					queTemp.Push(*pCur);
 				}
 				*this = std::move(queTemp);
 			}
 		}
-*/	}
+	}
 	void Insert(const ElementType *pPos, std::initializer_list<ElementType> ilElements){
 		Insert(pPos, ilElements.begin(), ilElements.end());
 	}
 
 	void Erase(const ElementType *pBegin, const ElementType *pEnd) noexcept(std::is_nothrow_move_constructible<ElementType>::value) {
-		ASSERT(pBegin);
-
-		if(!pEnd){
-			Pop(static_cast<std::size_t>(pEnd - pBegin));
+		if(pBegin == pEnd){
 			return;
 		}
-/*
+		ASSERT(pBegin);
+
+		const auto pStorage = X_GetStorage();
+
+		if(!pEnd){
+			const auto uBeginOffset = static_cast<std::size_t>(pBegin - pStorage);
+			auto uDeltaCount = x_uLast;
+			if(uDeltaCount < uBeginOffset){
+				uDeltaCount += x_uRingCap;
+			}
+			uDeltaCount -= uBeginOffset;
+			++uDeltaCount;
+
+			Pop(uDeltaCount);
+			return;
+		}
+
 		if(std::is_nothrow_move_constructible<ElementType>::value){
+			const auto uBeginOffset = static_cast<std::size_t>(pBegin - pStorage);
+			auto uDeltaCount = static_cast<std::size_t>(pEnd - pStorage);
+			if(uDeltaCount < uBeginOffset){
+				uDeltaCount += x_uRingCap;
+			}
+			uDeltaCount -= uBeginOffset;
+
 			auto pWrite = const_cast<ElementType *>(pBegin);
-			for(auto pCur = pWrite; pCur != pEnd; ++pCur){
+			for(auto pCur = pWrite; pCur != pEnd; pCur = GetNext(pCur)){
 				Destruct(pCur);
 			}
-			for(auto pCur = pEnd; pCur != GetEnd(); ++pCur){
+			for(auto pCur = const_cast<ElementType *>(pEnd); pCur; pCur = GetNext(pCur)){
 				Construct(pWrite, std::move(*pCur));
+				Destruct(pCur);
 				++pWrite;
+				if(pWrite == pStorage + x_uRingCap){
+					pWrite = pStorage;
+				}
 			}
-			x_uSize = static_cast<std::size_t>(pWrite - GetBegin());
+			if(x_uLast < uDeltaCount){
+				x_uLast += x_uRingCap;
+			}
+			x_uLast -= uDeltaCount;
 		} else {
-			RingQueue queTemp(*this);
-			for(auto pCur = pEnd; pCur != GetEnd(); ++pCur){
+			RingQueue queTemp;
+			queTemp.Reserve(GetCapacity());
+			for(auto pCur = GetFirst(); pCur != pBegin; pCur = GetNext(pCur)){
+				queTemp.UncheckedPush(*pCur);
+			}
+			for(auto pCur = pEnd; pCur; pCur = GetNext(pCur)){
 				queTemp.UncheckedPush(*pCur);
 			}
 			*this = std::move(queTemp);
 		}
-*/	}
+	}
 	void Erase(const ElementType *pPos) noexcept(noexcept(std::declval<RingQueue &>().Erase(pPos, pPos))) {
 		ASSERT(pPos);
 

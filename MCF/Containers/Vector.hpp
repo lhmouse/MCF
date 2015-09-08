@@ -82,17 +82,16 @@ private:
 
 		const auto uOffset = static_cast<std::size_t>(pPos - GetBegin());
 		ReserveMore(uDeltaSize);
+		const auto pBegin = GetBegin();
 
-		auto pRead = GetEnd();
-		auto pWrite = pRead + uDeltaSize;
-		while(pRead != pPos){
-			--pRead;
-			--pWrite;
+		for(std::size_t i = x_uSize; i > uOffset; --i){
+			const auto pRead = pBegin + i - 1;
+			const auto pWrite = pRead + uDeltaSize;
 			Construct(pWrite, std::move(*pRead));
 			Destruct(pRead);
 		}
 
-		return GetBegin() + uOffset;
+		return pBegin + uOffset;
 	}
 	void X_UndoPreparation(ElementT *pPrepared, std::size_t uDeltaSize) noexcept {
 		ASSERT(std::is_nothrow_move_constructible<ElementT>::value);
@@ -100,14 +99,14 @@ private:
 		ASSERT(pPrepared);
 		ASSERT(uDeltaSize <= GetCapacity() - GetSize());
 
-		auto pWrite = const_cast<ElementT *>(pPrepared);
-		auto pRead = pWrite + uDeltaSize;
+		const auto pBegin = GetBegin();
+		const auto uOffset = static_cast<std::size_t>(pPrepared - pBegin);
 
-		while(pWrite != GetEnd()){
+		for(std::size_t i = uOffset; i < x_uSize; ++i){
+			const auto pWrite = pBegin + i;
+			const auto pRead = pWrite + uDeltaSize;
 			Construct(pWrite, std::move(*pRead));
 			Destruct(pRead);
-			++pWrite;
-			++pRead;
 		}
 	}
 
@@ -414,7 +413,7 @@ public:
 				X_UndoPreparation(pWriteBegin, 1);
 				throw;
 			}
-			x_uSize += 1;
+			++x_uSize;
 		} else {
 			auto uNewCapacity = GetSize() + 1;
 			if(uNewCapacity < GetSize()){
@@ -556,22 +555,32 @@ public:
 	}
 
 	void Erase(const ElementType *pBegin, const ElementType *pEnd) noexcept(std::is_nothrow_move_constructible<ElementType>::value) {
+		if(pBegin == pEnd){
+			return;
+		}
+		ASSERT(pBegin);
+
 		if(!pEnd || (pEnd == GetEnd())){
-			Pop(static_cast<std::size_t>(pEnd - pBegin));
+			const auto uDeltaCount = static_cast<std::size_t>(GetEnd() - pBegin);
+
+			Pop(uDeltaCount);
 			return;
 		}
 		ASSERT((GetBegin() <= pBegin) && (pBegin <= pEnd) && (pEnd <= GetEnd()));
 
 		if(std::is_nothrow_move_constructible<ElementType>::value){
+			const auto uDeltaCount = static_cast<std::size_t>(pEnd - pBegin);
+
 			auto pWrite = const_cast<ElementType *>(pBegin);
 			for(auto pCur = pWrite; pCur != pEnd; ++pCur){
 				Destruct(pCur);
 			}
-			for(auto pCur = pEnd; pCur != GetEnd(); ++pCur){
+			for(auto pCur = const_cast<ElementType *>(pEnd); pCur != GetEnd(); ++pCur){
 				Construct(pWrite, std::move(*pCur));
+				Destruct(pCur);
 				++pWrite;
 			}
-			x_uSize = static_cast<std::size_t>(pWrite - GetBegin());
+			x_uSize -= uDeltaCount;
 		} else {
 			Vector vecTemp;
 			vecTemp.Reserve(GetCapacity());

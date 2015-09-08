@@ -404,6 +404,19 @@ public:
 	void Splice(const ElementType *pInsert, List &&lstSrc, const ElementType *pBegin, const ElementType *pEnd) noexcept {
 		Splice(pInsert, lstSrc, pBegin, pEnd);
 	}
+
+	void Reverse() noexcept {
+		auto pNode = x_pFirst;
+		x_pFirst = x_pLast;
+		x_pLast = pNode;
+
+		while(pNode){
+			const auto pNext = pNode->pNext;
+			pNode->pNext = pNode->pPrev;
+			pNode->pPrev = pNext;
+			pNode = pNext;
+		}
+	}
 };
 
 template<typename ElementT>

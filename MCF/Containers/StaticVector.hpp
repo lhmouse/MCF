@@ -86,39 +86,17 @@ public:
 	}
 
 	ConstEnumerator EnumerateFirst() const noexcept {
-		const auto pBegin = GetBegin();
-		if(pBegin == GetEnd()){
-			return ConstEnumerator(*this, nullptr);
-		} else {
-			return ConstEnumerator(*this, pBegin);
-		}
+		return ConstEnumerator(*this, GetFirst());
 	}
 	Enumerator EnumerateFirst() noexcept {
-		const auto pBegin = GetBegin();
-		if(pBegin == GetEnd()){
-			return Enumerator(*this, nullptr);
-		} else {
-			return Enumerator(*this, pBegin);
-		}
+		return Enumerator(*this, GetFirst());
 	}
-
 	ConstEnumerator EnumerateLast() const noexcept {
-		const auto pEnd = GetEnd();
-		if(GetBegin() == pEnd){
-			return ConstEnumerator(*this, nullptr);
-		} else {
-			return ConstEnumerator(*this, pEnd - 1);
-		}
+		return ConstEnumerator(*this, GetLast());
 	}
 	Enumerator EnumerateLast() noexcept {
-		const auto pEnd = GetEnd();
-		if(GetBegin() == pEnd){
-			return Enumerator(*this, nullptr);
-		} else {
-			return Enumerator(*this, pEnd - 1);
-		}
+		return Enumerator(*this, GetLast());
 	}
-
 	constexpr ConstEnumerator EnumerateSingular() const noexcept {
 		return ConstEnumerator(*this, nullptr);
 	}
@@ -191,6 +169,19 @@ public:
 	}
 	ElementType *GetEnd() noexcept {
 		return GetData() + x_uSize;
+	}
+
+	const ElementType *GetFirst() const noexcept {
+		return IsEmpty() ? GetBegin() : nullptr;
+	}
+	ElementType *GetFirst() noexcept {
+		return IsEmpty() ? GetBegin() : nullptr;
+	}
+	const ElementType *GetLast() const noexcept {
+		return IsEmpty() ? (GetEnd() - 1) : nullptr;
+	}
+	ElementType *GetLast() noexcept {
+		return IsEmpty() ? (GetEnd() - 1) : nullptr;
 	}
 
 	const ElementType &Get(std::size_t uIndex) const {

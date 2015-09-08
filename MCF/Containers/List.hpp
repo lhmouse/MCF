@@ -105,14 +105,12 @@ public:
 	Enumerator EnumerateFirst() noexcept {
 		return Enumerator(*this, GetFirst());
 	}
-
 	ConstEnumerator EnumerateLast() const noexcept {
 		return ConstEnumerator(*this, GetLast());
 	}
 	Enumerator EnumerateLast() noexcept {
 		return Enumerator(*this, GetLast());
 	}
-
 	constexpr ConstEnumerator EnumerateSingular() const noexcept {
 		return ConstEnumerator(*this, nullptr);
 	}

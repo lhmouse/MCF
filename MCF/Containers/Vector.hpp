@@ -70,6 +70,39 @@ public:
 		::operator delete[](x_pStorage);
 	}
 
+private:
+	ElementT *X_PrepareForInsertion(const ElementT *pPos, std::size_t uDeltaSize){
+		ASSERT(std::is_nothrow_move_constructible<ElementType>::value);
+
+		const auto nOffset = pPos - GetBegin();
+		ReserveMore(uDeltaSize);
+
+		auto pRead = GetEnd();
+		auto pWrite = pRead + uDeltaSize;
+		while(pRead != pPos){
+			--pRead;
+			--pWrite;
+			Construct(pWrite, std::move(*pRead));
+			Destruct(pRead);
+		}
+
+		return GetBegin() + nOffset;
+	}
+	void X_UndoPreparation(const ElementT *pPos, std::size_t uDeltaSize) noexcept {
+		ASSERT(std::is_nothrow_move_constructible<ElementType>::value);
+		ASSERT(uDeltaSize <= GetCapacity() - GetSize());
+
+		auto pWrite = const_cast<ElementT *>(pPos);
+		auto pRead = pWrite + uDeltaSize;
+
+		while(pWrite != GetEnd()){
+			Construct(pWrite, std::move(*pRead));
+			Destruct(pRead);
+			++pWrite;
+			++pRead;
+		}
+	}
+
 public:
 	// 容器需求。
 	using ElementType     = ElementT;
@@ -350,7 +383,7 @@ public:
 	}
 
 	template<typename ...ParamsT>
-	void Insert(const ElementType *pPos, ParamsT &&...vParams){
+	void InsertOne(const ElementType *pPos, ParamsT &&...vParams){
 		ASSERT(pPos);
 		ASSERT((GetBegin() <= pPos) && (pPos <= GetEnd()));
 
@@ -360,37 +393,15 @@ public:
 		}
 
 		if(std::is_nothrow_move_constructible<ElementType>::value){
-			const auto nOffset = pPos - GetBegin();
-			ReserveMore(1);
-			pPos = GetBegin() + nOffset;
-
-			const auto pNewEnd = GetEnd() + 1;
-			const auto pDestroyedBegin = const_cast<ElementType *>(pPos);
-
-			auto pWrite = pNewEnd;
-			auto pRead = GetEnd();
-			while(pRead != pPos){
-				--pWrite;
-				--pRead;
-				Construct(pWrite, std::move(*pRead));
-				Destruct(pRead);
-			}
-			pRead = pWrite;
-
-			pWrite = pDestroyedBegin;
+			const auto pWriteBegin = X_PrepareForInsertion(pPos, 1);
 			try {
-				DefaultConstruct(pWrite, std::forward<ParamsT>(vParams)...);
+				DefaultConstruct(pWriteBegin, std::forward<ParamsT>(vParams)...);
 			} catch(...){
-				while(pWrite != GetEnd()){
-					Construct(pWrite, std::move(*pRead));
-					Destruct(pRead);
-					++pWrite;
-					++pRead;
-				}
+				X_UndoPreparation(pWriteBegin, 1);
 				throw;
 			}
 
-			x_uSize = static_cast<std::size_t>(pNewEnd - GetBegin());
+			x_uSize += 1;
 		} else {
 			auto uNewCapacity = GetSize() + 1;
 			if(uNewCapacity < GetSize()){
@@ -411,8 +422,9 @@ public:
 			*this = std::move(vecTemp);
 		}
 	}
+
 	template<typename ...ParamsT>
-	void InsertN(const ElementType *pPos, std::size_t uDeltaSize, const ParamsT &...vParams){
+	void Insert(const ElementType *pPos, std::size_t uDeltaSize, const ParamsT &...vParams){
 		ASSERT(pPos);
 		ASSERT((GetBegin() <= pPos) && (pPos <= GetEnd()));
 
@@ -422,44 +434,23 @@ public:
 		}
 
 		if(std::is_nothrow_move_constructible<ElementType>::value){
-			const auto nOffset = pPos - GetBegin();
-			ReserveMore(uDeltaSize);
-			pPos = GetBegin() + nOffset;
-
-			const auto pNewEnd = GetEnd() + uDeltaSize;
-			const auto pDestroyedBegin = const_cast<ElementType *>(pPos);
-
-			auto pWrite = pNewEnd;
-			auto pRead = GetEnd();
-			while(pRead != pPos){
-				--pWrite;
-				--pRead;
-				Construct(pWrite, std::move(*pRead));
-				Destruct(pRead);
-			}
-			pRead = pWrite;
-
-			pWrite = pDestroyedBegin;
+			const auto pWriteBegin = X_PrepareForInsertion(pPos, uDeltaSize);
+			auto pWrite = pWriteBegin;
 			try {
 				for(std::size_t i = 0; i < uDeltaSize; ++i){
 					DefaultConstruct(pWrite, vParams...);
 					++pWrite;
 				}
 			} catch(...){
-				while(pWrite != pDestroyedBegin){
+				while(pWrite != pWriteBegin){
 					--pWrite;
 					Destruct(pWrite);
 				}
-				while(pWrite != GetEnd()){
-					Construct(pWrite, std::move(*pRead));
-					Destruct(pRead);
-					++pWrite;
-					++pRead;
-				}
+				X_UndoPreparation(pWriteBegin, uDeltaSize);
 				throw;
 			}
 
-			x_uSize = static_cast<std::size_t>(pNewEnd - GetBegin());
+			x_uSize += uDeltaSize;
 		} else {
 			auto uNewCapacity = GetSize() + uDeltaSize;
 			if(uNewCapacity < GetSize()){
@@ -482,8 +473,10 @@ public:
 			*this = std::move(vecTemp);
 		}
 	}
-	template<typename IteratorT>
-	void InsertRange(const ElementType *pPos, IteratorT itBegin, std::common_type_t<IteratorT> itEnd){
+	template<typename IteratorT, std::enable_if_t<
+		sizeof(typename std::iterator_traits<IteratorT>::value_type *),
+		int> = 0>
+	void Insert(const ElementType *pPos, IteratorT itBegin, std::common_type_t<IteratorT> itEnd){
 		ASSERT(pPos);
 		ASSERT((GetBegin() <= pPos) && (pPos <= GetEnd()));
 
@@ -496,46 +489,23 @@ public:
 
 		if(kHasDeltaSizeHint && std::is_nothrow_move_constructible<ElementType>::value){
 			const auto uDeltaSize = static_cast<std::size_t>(std::distance(itBegin, itEnd));
-
-			const auto nOffset = pPos - GetBegin();
-			ReserveMore(uDeltaSize);
-			pPos = GetBegin() + nOffset;
-
-			const auto pNewEnd = GetEnd() + uDeltaSize;
-			const auto pDestroyedBegin = const_cast<ElementType *>(pPos);
-			const auto pDestroyedEnd = GetEnd();
-
-			auto pWrite = pNewEnd;
-			auto pRead = GetEnd();
-			while(pRead != pPos){
-				--pWrite;
-				--pRead;
-				Construct(pWrite, std::move(*pRead));
-				Destruct(pRead);
-			}
-			pRead = pWrite;
-
-			pWrite = pDestroyedBegin;
+			const auto pWriteBegin = X_PrepareForInsertion(pPos, uDeltaSize);
+			auto pWrite = pWriteBegin;
 			try {
 				for(auto it = itBegin; it != itEnd; ++it){
-					DefaultConstruct(pWrite, *it);
+					Construct(pWrite, *it);
 					++pWrite;
 				}
 			} catch(...){
-				while(pWrite != pDestroyedBegin){
+				while(pWrite != pWriteBegin){
 					--pWrite;
 					Destruct(pWrite);
 				}
-				while(pWrite != pDestroyedEnd){
-					Construct(pWrite, std::move(*pRead));
-					Destruct(pRead);
-					++pWrite;
-					++pRead;
-				}
+				X_UndoPreparation(pWriteBegin, uDeltaSize);
 				throw;
 			}
 
-			x_uSize = static_cast<std::size_t>(pNewEnd - GetBegin());
+			x_uSize += uDeltaSize;
 		} else {
 			if(kHasDeltaSizeHint){
 				const auto uDeltaSize = static_cast<std::size_t>(std::distance(itBegin, itEnd));

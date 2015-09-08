@@ -15,7 +15,7 @@ extern "C" unsigned MCFMain(){
 
 	try {
 		// v1.InsertRange(v1.GetData() + 5, v2.GetBegin() + 2, v2.GetBegin() + 6);
-		v1.Insert(v1.GetData() + 5, "meow");
+		v1.Insert(v1.GetData() + 5, 3, "meow");
 	} catch(std::exception &e){
 		std::printf("exception: what = %s\n", e.what());
 	}

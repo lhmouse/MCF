@@ -327,21 +327,24 @@ public:
 	}
 
 	template<typename ...ParamsT>
-	void Insert(const ElementType *pPos, ParamsT &&...vParams){
+	void InsertOne(const ElementType *pPos, ParamsT &&...vParams){
 		List lstNew;
 		lstNew.Push(std::forward<ParamsT>(vParams)...);
 		Splice(pPos, lstNew);
 	}
+
 	template<typename ...ParamsT>
-	void InsertN(const ElementType *pPos, std::size_t uDeltaSize, const ParamsT &...vParams){
+	void Insert(const ElementType *pPos, std::size_t uDeltaSize, const ParamsT &...vParams){
 		List lstNew;
 		for(std::size_t i = 0; i < uDeltaSize; ++i){
 			lstNew.Push(vParams...);
 		}
 		Splice(pPos, lstNew);
 	}
-	template<typename IteratorT>
-	void InsertRange(const ElementType *pPos, IteratorT itBegin, std::common_type_t<IteratorT> itEnd){
+	template<typename IteratorT, std::enable_if_t<
+		sizeof(typename std::iterator_traits<IteratorT>::value_type *),
+		int> = 0>
+	void Insert(const ElementType *pPos, IteratorT itBegin, std::common_type_t<IteratorT> itEnd){
 		List lstNew;
 		for(auto it = itBegin; it != itEnd; ++it){
 			lstNew.Push(*it);

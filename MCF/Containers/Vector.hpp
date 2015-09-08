@@ -88,11 +88,11 @@ private:
 
 		return GetBegin() + nOffset;
 	}
-	void X_UndoPreparation(const ElementT *pPos, std::size_t uDeltaSize) noexcept {
+	void X_UndoPreparation(ElementT *pPrepared, std::size_t uDeltaSize) noexcept {
 		ASSERT(std::is_nothrow_move_constructible<ElementType>::value);
 		ASSERT(uDeltaSize <= GetCapacity() - GetSize());
 
-		auto pWrite = const_cast<ElementT *>(pPos);
+		auto pWrite = const_cast<ElementT *>(pPrepared);
 		auto pRead = pWrite + uDeltaSize;
 
 		while(pWrite != GetEnd()){
@@ -203,16 +203,28 @@ public:
 	}
 
 	const ElementType *GetFirst() const noexcept {
-		return IsEmpty() ? GetBegin() : nullptr;
+		if(IsEmpty()){
+			return nullptr;
+		}
+		return GetBegin();
 	}
 	ElementType *GetFirst() noexcept {
-		return IsEmpty() ? GetBegin() : nullptr;
+		if(IsEmpty()){
+			return nullptr;
+		}
+		return GetBegin();
 	}
 	const ElementType *GetLast() const noexcept {
-		return IsEmpty() ? (GetEnd() - 1) : nullptr;
+		if(IsEmpty()){
+			return nullptr;
+		}
+		return GetEnd() - 1;
 	}
 	ElementType *GetLast() noexcept {
-		return IsEmpty() ? (GetEnd() - 1) : nullptr;
+		if(IsEmpty()){
+			return nullptr;
+		}
+		return GetEnd() - 1;
 	}
 
 	const ElementType &Get(std::size_t uIndex) const {

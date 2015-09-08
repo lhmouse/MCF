@@ -172,16 +172,28 @@ public:
 	}
 
 	const ElementType *GetFirst() const noexcept {
-		return IsEmpty() ? GetBegin() : nullptr;
+		if(IsEmpty()){
+			return nullptr;
+		}
+		return GetBegin();
 	}
 	ElementType *GetFirst() noexcept {
-		return IsEmpty() ? GetBegin() : nullptr;
+		if(IsEmpty()){
+			return nullptr;
+		}
+		return GetBegin();
 	}
 	const ElementType *GetLast() const noexcept {
-		return IsEmpty() ? (GetEnd() - 1) : nullptr;
+		if(IsEmpty()){
+			return nullptr;
+		}
+		return GetEnd() - 1;
 	}
 	ElementType *GetLast() noexcept {
-		return IsEmpty() ? (GetEnd() - 1) : nullptr;
+		if(IsEmpty()){
+			return nullptr;
+		}
+		return GetEnd() - 1;
 	}
 
 	const ElementType &Get(std::size_t uIndex) const {

@@ -32,39 +32,40 @@ namespace Impl_ConstructDestruct {
 
 		static void Destruct(ObjectT *pObject){
 			pObject->~ObjectT();
+#ifndef NDEBUG
+			__builtin_memset(pObject, 0xDD, sizeof(ObjectT));
+#endif
 		}
 	};
 }
 
 template<typename ObjectT, typename ...ParamsT>
-inline void Construct(ObjectT *pObject, ParamsT &&...vParams)
-	noexcept(std::is_nothrow_constructible<ObjectT, ParamsT &&...>::value)
-{
-	Impl_ConstructDestruct::DirectConstructor<ObjectT>::Construct(pObject, std::forward<ParamsT>(vParams)...);
+inline void Construct(ObjectT *pObject, ParamsT &&...vParams) noexcept(std::is_nothrow_constructible<std::remove_cv_t<ObjectT>, ParamsT &&...>::value) {
+	Impl_ConstructDestruct::DirectConstructor<std::remove_cv_t<ObjectT>>::Construct(pObject, std::forward<ParamsT>(vParams)...);
 }
 template<typename ObjectT, typename ...ParamsT>
-inline void DefaultConstruct(ObjectT *pObject, ParamsT &&...vParams)
-	noexcept(std::is_nothrow_constructible<ObjectT, ParamsT &&...>::value)
-{
-	Impl_ConstructDestruct::DirectConstructor<ObjectT>::DefaultConstruct(pObject, std::forward<ParamsT>(vParams)...);
+inline void DefaultConstruct(ObjectT *pObject, ParamsT &&...vParams) noexcept(std::is_nothrow_constructible<std::remove_cv_t<ObjectT>, ParamsT &&...>::value) {
+	Impl_ConstructDestruct::DirectConstructor<std::remove_cv_t<ObjectT>>::DefaultConstruct(pObject, std::forward<ParamsT>(vParams)...);
 }
 template<typename ObjectT>
-inline void Destruct(ObjectT *pObject)
-	noexcept(std::is_nothrow_destructible<ObjectT>::value)
-{
-	Impl_ConstructDestruct::DirectConstructor<ObjectT>::Destruct(pObject);
+inline void Destruct(ObjectT *pObject) noexcept(std::is_nothrow_destructible<std::remove_cv_t<ObjectT>>::value) {
+	Impl_ConstructDestruct::DirectConstructor<std::remove_cv_t<ObjectT>>::Destruct(pObject);
 }
 
 template<typename ObjectT, typename ...ParamsT>
-inline void ConstructArray(ObjectT *pBegin, std::size_t uCount, const ParamsT &...vParams)
-	noexcept(std::is_nothrow_constructible<ObjectT, const ParamsT &...>::value)
-{
+void Construct(const ObjectT *pObject, ParamsT &&...vParams) noexcept = delete;
+template<typename ObjectT, typename ...ParamsT>
+void DefaultConstruct(const ObjectT *pObject, ParamsT &&...vParams) noexcept = delete;
+template<typename ObjectT>
+void Destruct(const ObjectT *pObject) noexcept = delete;
+
+template<typename ObjectT, typename ...ParamsT>
+inline void ConstructArray(ObjectT *pBegin, std::size_t uCount, const ParamsT &...vParams) noexcept(std::is_nothrow_constructible<ObjectT, const ParamsT &...>::value) {
 	static_assert(std::is_nothrow_destructible<ObjectT>::value, "ObjectT shall be nothrow destructible.");
 
-	const auto pEnd = pBegin + uCount;
 	auto pCur = pBegin;
 	try {
-		while(pCur != pEnd){
+		for(std::size_t i = 0; i < uCount; ++i){
 			Construct(pCur, vParams...);
 			++pCur;
 		}
@@ -77,15 +78,12 @@ inline void ConstructArray(ObjectT *pBegin, std::size_t uCount, const ParamsT &.
 	}
 }
 template<typename ObjectT, typename ...ParamsT>
-inline void DefaultConstructArray(ObjectT *pBegin, std::size_t uCount, const ParamsT &...vParams)
-	noexcept(std::is_nothrow_constructible<ObjectT, const ParamsT &...>::value)
-{
+inline void DefaultConstructArray(ObjectT *pBegin, std::size_t uCount, const ParamsT &...vParams) noexcept(std::is_nothrow_constructible<ObjectT, const ParamsT &...>::value) {
 	static_assert(std::is_nothrow_destructible<ObjectT>::value, "ObjectT shall be nothrow destructible.");
 
-	const auto pEnd = pBegin + uCount;
 	auto pCur = pBegin;
 	try {
-		while(pCur != pEnd){
+		for(std::size_t i = 0; i < uCount; ++i){
 			DefaultConstruct(pCur, vParams...);
 			++pCur;
 		}

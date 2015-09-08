@@ -51,12 +51,20 @@ public:
 	StaticVector(const StaticVector &rhs)
 		: StaticVector()
 	{
-		Append(rhs.GetBegin(), rhs.GetEnd());
+		// Reserve(rhs.x_uSize);
+
+		for(auto pElem = rhs.GetBegin(); pElem != rhs.GetEnd(); ++pElem){
+			UncheckedPush(*pElem);
+		}
 	}
 	StaticVector(StaticVector &&rhs) noexcept(std::is_nothrow_move_constructible<ElementT>::value)
 		: StaticVector()
 	{
-		Append(std::make_move_iterator(rhs.GetBegin()), std::make_move_iterator(rhs.GetEnd()));
+		// Reserve(rhs.x_uSize);
+
+		for(auto pElem = rhs.GetBegin(); pElem != rhs.GetEnd(); ++pElem){
+			UncheckedPush(std::move(*pElem));
+		}
 	}
 	StaticVector &operator=(const StaticVector &rhs){
 		Clear();
@@ -106,36 +114,39 @@ public:
 
 	const ElementType *GetNext(const ElementType *pPos) const noexcept {
 		const auto pBegin = GetBegin();
-		const auto uOffset = static_cast<std::size_t>(pPos - pBegin);
-		if(uOffset + 1 == GetSize()){
+		auto uOffset = static_cast<std::size_t>(pPos - pBegin);
+		++uOffset;
+		if(uOffset == x_uSize){
 			return nullptr;
 		}
-		return pBegin + uOffset + 1;
+		return pBegin + uOffset;
 	}
 	ElementType *GetNext(const ElementType *pPos) noexcept {
 		const auto pBegin = GetBegin();
-		const auto uOffset = static_cast<std::size_t>(pPos - pBegin);
-		if(uOffset + 1 == GetSize()){
+		auto uOffset = static_cast<std::size_t>(pPos - pBegin);
+		++uOffset;
+		if(uOffset == x_uSize){
 			return nullptr;
 		}
-		return pBegin + uOffset + 1;
+		return pBegin + uOffset;
 	}
-
 	const ElementType *GetPrev(const ElementType *pPos) const noexcept {
 		const auto pBegin = GetBegin();
-		const auto uOffset = static_cast<std::size_t>(pPos - pBegin);
+		auto uOffset = static_cast<std::size_t>(pPos - pBegin);
 		if(uOffset == 0){
 			return nullptr;
 		}
-		return pBegin + uOffset - 1;
+		--uOffset;
+		return pBegin + uOffset;
 	}
 	ElementType *GetPrev(const ElementType *pPos) noexcept {
 		const auto pBegin = GetBegin();
-		const auto uOffset = static_cast<std::size_t>(pPos - pBegin);
+		auto uOffset = static_cast<std::size_t>(pPos - pBegin);
 		if(uOffset == 0){
 			return nullptr;
 		}
-		return pBegin + uOffset - 1;
+		--uOffset;
+		return pBegin + uOffset;
 	}
 
 	void Swap(StaticVector &rhs) noexcept(std::is_nothrow_move_constructible<ElementType>::value) {
@@ -257,14 +268,16 @@ public:
 	void UncheckedPush(ParamsT &&...vParams) noexcept(std::is_nothrow_constructible<ElementType, ParamsT &&...>::value) {
 		ASSERT(GetCapacity() - x_uSize > 0);
 
-		DefaultConstruct(GetData() + x_uSize, std::forward<ParamsT>(vParams)...);
+		const auto pBegin = GetBegin();
+		DefaultConstruct(pBegin + x_uSize, std::forward<ParamsT>(vParams)...);
 		++x_uSize;
 	}
 	void Pop(std::size_t uCount = 1) noexcept {
 		ASSERT(uCount <= x_uSize);
 
+		const auto pBegin = GetBegin();
 		for(std::size_t i = 0; i < uCount; ++i){
-			Destruct(GetData() + x_uSize - i - 1);
+			Destruct(pBegin + x_uSize - i - 1);
 		}
 		x_uSize -= uCount;
 	}

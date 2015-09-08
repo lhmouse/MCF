@@ -50,7 +50,11 @@ public:
 	Vector(const Vector &rhs)
 		: Vector()
 	{
-		Append(rhs.GetBegin(), rhs.GetEnd());
+		Reserve(rhs.GetSize());
+
+		for(auto pElem = rhs.GetBegin(); pElem != rhs.GetEnd(); ++pElem){
+			UncheckedPush(*pElem);
+		}
 	}
 	Vector(Vector &&rhs) noexcept
 		: Vector()
@@ -72,9 +76,11 @@ public:
 
 private:
 	ElementT *X_PrepareForInsertion(const ElementT *pPos, std::size_t uDeltaSize){
-		ASSERT(std::is_nothrow_move_constructible<ElementType>::value);
+		ASSERT(std::is_nothrow_move_constructible<ElementT>::value);
+		ASSERT(!IsEmpty());
+		ASSERT(pPos);
 
-		const auto nOffset = pPos - GetBegin();
+		const auto uOffset = static_cast<std::size_t>(pPos - GetBegin());
 		ReserveMore(uDeltaSize);
 
 		auto pRead = GetEnd();
@@ -86,10 +92,12 @@ private:
 			Destruct(pRead);
 		}
 
-		return GetBegin() + nOffset;
+		return GetBegin() + uOffset;
 	}
 	void X_UndoPreparation(ElementT *pPrepared, std::size_t uDeltaSize) noexcept {
-		ASSERT(std::is_nothrow_move_constructible<ElementType>::value);
+		ASSERT(std::is_nothrow_move_constructible<ElementT>::value);
+		ASSERT(!IsEmpty());
+		ASSERT(pPrepared);
 		ASSERT(uDeltaSize <= GetCapacity() - GetSize());
 
 		auto pWrite = const_cast<ElementT *>(pPrepared);
@@ -137,36 +145,40 @@ public:
 
 	const ElementType *GetNext(const ElementType *pPos) const noexcept {
 		const auto pBegin = GetBegin();
-		const auto uOffset = static_cast<std::size_t>(pPos - pBegin);
-		if(uOffset + 1 == GetSize()){
+		auto uOffset = static_cast<std::size_t>(pPos - pBegin);
+		++uOffset;
+		if(uOffset == x_uSize){
 			return nullptr;
 		}
-		return pBegin + uOffset + 1;
+		return pBegin + uOffset;
 	}
 	ElementType *GetNext(ElementType *pPos) noexcept {
 		const auto pBegin = GetBegin();
-		const auto uOffset = static_cast<std::size_t>(pPos - pBegin);
-		if(uOffset + 1 == GetSize()){
+		auto uOffset = static_cast<std::size_t>(pPos - pBegin);
+		++uOffset;
+		if(uOffset == x_uSize){
 			return nullptr;
 		}
-		return pBegin + uOffset + 1;
+		return pBegin + uOffset;
 	}
 
 	const ElementType *GetPrev(const ElementType *pPos) const noexcept {
 		const auto pBegin = GetBegin();
-		const auto uOffset = static_cast<std::size_t>(pPos - pBegin);
+		auto uOffset = static_cast<std::size_t>(pPos - pBegin);
 		if(uOffset == 0){
 			return nullptr;
 		}
-		return pBegin + uOffset - 1;
+		--uOffset;
+		return pBegin + uOffset;
 	}
 	ElementType *GetPrev(ElementType *pPos) noexcept {
 		const auto pBegin = GetBegin();
-		const auto uOffset = static_cast<std::size_t>(pPos - pBegin);
+		auto uOffset = static_cast<std::size_t>(pPos - pBegin);
 		if(uOffset == 0){
 			return nullptr;
 		}
-		return pBegin + uOffset - 1;
+		--uOffset;
+		return pBegin + uOffset;
 	}
 
 	void Swap(Vector &rhs) noexcept {
@@ -324,14 +336,16 @@ public:
 	void UncheckedPush(ParamsT &&...vParams) noexcept(std::is_nothrow_constructible<ElementType, ParamsT &&...>::value) {
 		ASSERT(GetCapacity() - x_uSize > 0);
 
-		DefaultConstruct(GetData() + x_uSize, std::forward<ParamsT>(vParams)...);
+		const auto pBegin = GetBegin();
+		DefaultConstruct(pBegin + x_uSize, std::forward<ParamsT>(vParams)...);
 		++x_uSize;
 	}
 	void Pop(std::size_t uCount = 1) noexcept {
 		ASSERT(uCount <= x_uSize);
 
+		const auto pBegin = GetBegin();
 		for(std::size_t i = 0; i < uCount; ++i){
-			Destruct(GetData() + x_uSize - i - 1);
+			Destruct(pBegin + x_uSize - i - 1);
 		}
 		x_uSize -= uCount;
 	}
@@ -380,16 +394,17 @@ public:
 			throw;
 		}
 	}
+	void Append(std::initializer_list<ElementType> ilElements){
+		Append(ilElements.begin(), ilElements.end());
+	}
 
 	template<typename ...ParamsT>
-	void InsertOne(const ElementType *pPos, ParamsT &&...vParams){
-		ASSERT(pPos);
-		ASSERT((GetBegin() <= pPos) && (pPos <= GetEnd()));
-
-		if(pPos == GetEnd()){
+	void Emplace(const ElementType *pPos, ParamsT &&...vParams){
+		if(!pPos || (pPos == GetEnd())){
 			Push(std::forward<ParamsT>(vParams)...);
 			return;
 		}
+		ASSERT((GetBegin() <= pPos) && (pPos <= GetEnd()));
 
 		if(std::is_nothrow_move_constructible<ElementType>::value){
 			const auto pWriteBegin = X_PrepareForInsertion(pPos, 1);
@@ -399,7 +414,6 @@ public:
 				X_UndoPreparation(pWriteBegin, 1);
 				throw;
 			}
-
 			x_uSize += 1;
 		} else {
 			auto uNewCapacity = GetSize() + 1;
@@ -424,13 +438,11 @@ public:
 
 	template<typename ...ParamsT>
 	void Insert(const ElementType *pPos, std::size_t uDeltaSize, const ParamsT &...vParams){
-		ASSERT(pPos);
-		ASSERT((GetBegin() <= pPos) && (pPos <= GetEnd()));
-
-		if(pPos == GetEnd()){
+		if(!pPos || (pPos == GetEnd())){
 			Append(uDeltaSize, vParams...);
 			return;
 		}
+		ASSERT((GetBegin() <= pPos) && (pPos <= GetEnd()));
 
 		if(std::is_nothrow_move_constructible<ElementType>::value){
 			const auto pWriteBegin = X_PrepareForInsertion(pPos, uDeltaSize);
@@ -448,7 +460,6 @@ public:
 				X_UndoPreparation(pWriteBegin, uDeltaSize);
 				throw;
 			}
-
 			x_uSize += uDeltaSize;
 		} else {
 			auto uNewCapacity = GetSize() + uDeltaSize;
@@ -476,13 +487,11 @@ public:
 		sizeof(typename std::iterator_traits<IteratorT>::value_type *),
 		int> = 0>
 	void Insert(const ElementType *pPos, IteratorT itBegin, std::common_type_t<IteratorT> itEnd){
-		ASSERT(pPos);
-		ASSERT((GetBegin() <= pPos) && (pPos <= GetEnd()));
-
-		if(pPos == GetEnd()){
+		if(!pPos || (pPos == GetEnd())){
 			Append(itBegin, itEnd);
 			return;
 		}
+		ASSERT((GetBegin() <= pPos) && (pPos <= GetEnd()));
 
 		constexpr bool kHasDeltaSizeHint = std::is_base_of<std::forward_iterator_tag, typename std::iterator_traits<IteratorT>::iterator_category>::value;
 
@@ -503,7 +512,6 @@ public:
 				X_UndoPreparation(pWriteBegin, uDeltaSize);
 				throw;
 			}
-
 			x_uSize += uDeltaSize;
 		} else {
 			if(kHasDeltaSizeHint){
@@ -543,21 +551,22 @@ public:
 			}
 		}
 	}
+	void Insert(const ElementType *pPos, std::initializer_list<ElementType> ilElements){
+		Insert(pPos, ilElements.begin(), ilElements.end());
+	}
 
 	void Erase(const ElementType *pBegin, const ElementType *pEnd) noexcept(std::is_nothrow_move_constructible<ElementType>::value) {
-		ASSERT(pBegin && pEnd);
-		ASSERT((GetBegin() <= pBegin) && (pBegin <= pEnd) && (pEnd <= GetEnd()));
-
-		if(pEnd == GetEnd()){
+		if(!pEnd || (pEnd == GetEnd())){
 			Pop(static_cast<std::size_t>(pEnd - pBegin));
 			return;
 		}
+		ASSERT((GetBegin() <= pBegin) && (pBegin <= pEnd) && (pEnd <= GetEnd()));
 
 		if(std::is_nothrow_move_constructible<ElementType>::value){
-			for(auto pCur = pBegin; pCur != pEnd; ++pCur){
+			auto pWrite = const_cast<ElementType *>(pBegin);
+			for(auto pCur = pWrite; pCur != pEnd; ++pCur){
 				Destruct(pCur);
 			}
-			auto pWrite = const_cast<ElementType *>(pBegin);
 			for(auto pCur = pEnd; pCur != GetEnd(); ++pCur){
 				Construct(pWrite, std::move(*pCur));
 				++pWrite;

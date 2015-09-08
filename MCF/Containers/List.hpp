@@ -94,9 +94,8 @@ public:
 			::delete pNode;
 			pNode = pPrev;
 		}
-
 		x_pFirst = nullptr;
-		x_pLast = nullptr;
+		x_pLast  = nullptr;
 	}
 
 	ConstEnumerator EnumerateFirst() const noexcept {
@@ -132,7 +131,6 @@ public:
 		}
 		return static_cast<ElementType *>(static_cast<void *>(pNode->aStorage));
 	}
-
 	static const ElementType *GetPrev(const ElementType *pPos) noexcept {
 		const auto pNode = reinterpret_cast<const X_Node *>(pPos)->pPrev;
 		if(!pNode){
@@ -294,38 +292,30 @@ public:
 			throw;
 		}
 	}
+	void Append(std::initializer_list<ElementType> ilElements){
+		Append(ilElements.begin(), ilElements.end());
+	}
 
 	template<typename ...ParamsT>
 	void Prepend(std::size_t uDeltaSize, const ParamsT &...vParams){
-		std::size_t uElementsPushed = 0;
-		try {
-			for(std::size_t i = 0; i < uDeltaSize; ++i){
-				Unshift(vParams...);
-				++uElementsPushed;
-			}
-		} catch(...){
-			Pop(uElementsPushed);
-			throw;
-		}
+		List lstNew;
+		lstNew.Append(uDeltaSize, vParams...);
+		Splice(GetFirst(), lstNew);
 	}
 	template<typename IteratorT, std::enable_if_t<
 		sizeof(typename std::iterator_traits<IteratorT>::value_type *),
 		int> = 0>
 	void Prepend(IteratorT itBegin, std::common_type_t<IteratorT> itEnd){
-		std::size_t uElementsPushed = 0;
-		try {
-			for(auto it = itBegin; it != itEnd; ++it){
-				Unshift(*it);
-				++uElementsPushed;
-			}
-		} catch(...){
-			Pop(uElementsPushed);
-			throw;
-		}
+		List lstNew;
+		lstNew.Append(itBegin, itEnd);
+		Splice(GetFirst(), lstNew);
+	}
+	void Prepend(std::initializer_list<ElementType> ilElements){
+		Prepend(ilElements.begin(), ilElements.end());
 	}
 
 	template<typename ...ParamsT>
-	void InsertOne(const ElementType *pPos, ParamsT &&...vParams){
+	void Emplace(const ElementType *pPos, ParamsT &&...vParams){
 		List lstNew;
 		lstNew.Push(std::forward<ParamsT>(vParams)...);
 		Splice(pPos, lstNew);
@@ -334,9 +324,7 @@ public:
 	template<typename ...ParamsT>
 	void Insert(const ElementType *pPos, std::size_t uDeltaSize, const ParamsT &...vParams){
 		List lstNew;
-		for(std::size_t i = 0; i < uDeltaSize; ++i){
-			lstNew.Push(vParams...);
-		}
+		lstNew.Append(uDeltaSize, vParams...);
 		Splice(pPos, lstNew);
 	}
 	template<typename IteratorT, std::enable_if_t<
@@ -344,17 +332,20 @@ public:
 		int> = 0>
 	void Insert(const ElementType *pPos, IteratorT itBegin, std::common_type_t<IteratorT> itEnd){
 		List lstNew;
-		for(auto it = itBegin; it != itEnd; ++it){
-			lstNew.Push(*it);
-		}
+		lstNew.Append(itBegin, itEnd);
 		Splice(pPos, lstNew);
+	}
+	void Insert(const ElementType *pPos, std::initializer_list<ElementType> ilElements){
+		Insert(pPos, ilElements.begin(), ilElements.end());
 	}
 
 	void Erase(const ElementType *pBegin, const ElementType *pEnd) noexcept {
-		List().Splice(nullptr, *this, pBegin, pEnd);
+		List lstErased;
+		lstErased.Splice(nullptr, *this, pBegin, pEnd);
 	}
 	void Erase(const ElementType *pPos) noexcept {
-		List().Splice(nullptr, *this, pPos);
+		List lstErased;
+		lstErased.Splice(nullptr, *this, pPos);
 	}
 
 	void Splice(const ElementType *pInsert, List &lstSrc) noexcept {
@@ -371,7 +362,6 @@ public:
 		if(pBeginNode == pEndNode){
 			return;
 		}
-
 		ASSERT(pBeginNode);
 
 		const auto pNodeBeforeBegin = pBeginNode->pPrev;

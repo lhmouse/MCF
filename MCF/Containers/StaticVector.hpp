@@ -200,13 +200,13 @@ public:
 		if(uIndex >= x_uSize){
 			DEBUG_THROW(Exception, ERROR_INVALID_PARAMETER, RefCountingNtmbs::View(__PRETTY_FUNCTION__));
 		}
-		return GetData()[uIndex];
+		return UncheckedGet(uIndex);
 	}
 	ElementType &Get(std::size_t uIndex){
 		if(uIndex >= x_uSize){
 			DEBUG_THROW(Exception, ERROR_INVALID_PARAMETER, RefCountingNtmbs::View(__PRETTY_FUNCTION__));
 		}
-		return GetData()[uIndex];
+		return UncheckedGet(uIndex);
 	}
 	const ElementType &UncheckedGet(std::size_t uIndex) const noexcept {
 		ASSERT(uIndex < x_uSize);

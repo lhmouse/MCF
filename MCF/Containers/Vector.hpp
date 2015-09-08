@@ -148,26 +148,9 @@ public:
 		return GetEnd() - 1;
 	}
 
-	const ElementType *GetNext(const ElementType *pPos) const noexcept {
-		const auto pBegin = GetBegin();
-		auto uOffset = static_cast<std::size_t>(pPos - pBegin);
-		++uOffset;
-		if(uOffset == x_uSize){
-			return nullptr;
-		}
-		return pBegin + uOffset;
-	}
-	ElementType *GetNext(ElementType *pPos) noexcept {
-		const auto pBegin = GetBegin();
-		auto uOffset = static_cast<std::size_t>(pPos - pBegin);
-		++uOffset;
-		if(uOffset == x_uSize){
-			return nullptr;
-		}
-		return pBegin + uOffset;
-	}
-
 	const ElementType *GetPrev(const ElementType *pPos) const noexcept {
+		ASSERT(pPos);
+
 		const auto pBegin = GetBegin();
 		auto uOffset = static_cast<std::size_t>(pPos - pBegin);
 		if(uOffset == 0){
@@ -177,12 +160,36 @@ public:
 		return pBegin + uOffset;
 	}
 	ElementType *GetPrev(ElementType *pPos) noexcept {
+		ASSERT(pPos);
+
 		const auto pBegin = GetBegin();
 		auto uOffset = static_cast<std::size_t>(pPos - pBegin);
 		if(uOffset == 0){
 			return nullptr;
 		}
 		--uOffset;
+		return pBegin + uOffset;
+	}
+	const ElementType *GetNext(const ElementType *pPos) const noexcept {
+		ASSERT(pPos);
+
+		const auto pBegin = GetBegin();
+		auto uOffset = static_cast<std::size_t>(pPos - pBegin);
+		++uOffset;
+		if(uOffset == x_uSize){
+			return nullptr;
+		}
+		return pBegin + uOffset;
+	}
+	ElementType *GetNext(ElementType *pPos) noexcept {
+		ASSERT(pPos);
+
+		const auto pBegin = GetBegin();
+		auto uOffset = static_cast<std::size_t>(pPos - pBegin);
+		++uOffset;
+		if(uOffset == x_uSize){
+			return nullptr;
+		}
 		return pBegin + uOffset;
 	}
 

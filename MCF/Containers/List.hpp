@@ -128,21 +128,9 @@ public:
 		return static_cast<ElementType *>(static_cast<void *>(pNode->aStorage));
 	}
 
-	static const ElementType *GetNext(const ElementType *pPos) noexcept {
-		const auto pNode = reinterpret_cast<const X_Node *>(pPos)->pNext;
-		if(!pNode){
-			return nullptr;
-		}
-		return static_cast<const ElementType *>(static_cast<void *>(pNode->aStorage));
-	}
-	static ElementType *GetNext(ElementType *pPos) noexcept {
-		const auto pNode = reinterpret_cast<const X_Node *>(pPos)->pNext;
-		if(!pNode){
-			return nullptr;
-		}
-		return static_cast<ElementType *>(static_cast<void *>(pNode->aStorage));
-	}
 	static const ElementType *GetPrev(const ElementType *pPos) noexcept {
+		ASSERT(pPos);
+
 		const auto pNode = reinterpret_cast<const X_Node *>(pPos)->pPrev;
 		if(!pNode){
 			return nullptr;
@@ -150,7 +138,27 @@ public:
 		return static_cast<const ElementType *>(static_cast<void *>(pNode->aStorage));
 	}
 	static ElementType *GetPrev(ElementType *pPos) noexcept {
+		ASSERT(pPos);
+
 		const auto pNode = reinterpret_cast<const X_Node *>(pPos)->pPrev;
+		if(!pNode){
+			return nullptr;
+		}
+		return static_cast<ElementType *>(static_cast<void *>(pNode->aStorage));
+	}
+	static const ElementType *GetNext(const ElementType *pPos) noexcept {
+		ASSERT(pPos);
+
+		const auto pNode = reinterpret_cast<const X_Node *>(pPos)->pNext;
+		if(!pNode){
+			return nullptr;
+		}
+		return static_cast<const ElementType *>(static_cast<void *>(pNode->aStorage));
+	}
+	static ElementType *GetNext(ElementType *pPos) noexcept {
+		ASSERT(pPos);
+
+		const auto pNode = reinterpret_cast<const X_Node *>(pPos)->pNext;
 		if(!pNode){
 			return nullptr;
 		}

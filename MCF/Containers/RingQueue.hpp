@@ -220,31 +220,9 @@ public:
 		return pStorage + x_uLast;
 	}
 
-	const ElementType *GetNext(const ElementType *pPos) const noexcept {
-		const auto pStorage = X_GetStorage();
-		auto uOffset = static_cast<std::size_t>(pPos - pStorage);
-		if(uOffset == x_uLast){
-			return nullptr;
-		}
-		++uOffset;
-		if(uOffset == x_uRingCap){
-			uOffset = 0;
-		}
-		return pStorage + uOffset;
-	}
-	ElementType *GetNext(ElementType *pPos) noexcept {
-		const auto pStorage = X_GetStorage();
-		auto uOffset = static_cast<std::size_t>(pPos - pStorage);
-		if(uOffset == x_uLast){
-			return nullptr;
-		}
-		++uOffset;
-		if(uOffset == x_uRingCap){
-			uOffset = 0;
-		}
-		return pStorage + uOffset;
-	}
 	const ElementType *GetPrev(const ElementType *pPos) const noexcept {
+		ASSERT(pPos);
+
 		const auto pStorage = X_GetStorage();
 		auto uOffset = static_cast<std::size_t>(pPos - pStorage);
 		if(uOffset == x_uFirst){
@@ -257,6 +235,8 @@ public:
 		return pStorage + uOffset;
 	}
 	ElementType *GetPrev(ElementType *pPos) noexcept {
+		ASSERT(pPos);
+
 		const auto pStorage = X_GetStorage();
 		auto uOffset = static_cast<std::size_t>(pPos - pStorage);
 		if(uOffset == x_uFirst){
@@ -266,6 +246,34 @@ public:
 			uOffset = x_uRingCap;
 		}
 		--uOffset;
+		return pStorage + uOffset;
+	}
+	const ElementType *GetNext(const ElementType *pPos) const noexcept {
+		ASSERT(pPos);
+
+		const auto pStorage = X_GetStorage();
+		auto uOffset = static_cast<std::size_t>(pPos - pStorage);
+		if(uOffset == x_uLast){
+			return nullptr;
+		}
+		++uOffset;
+		if(uOffset == x_uRingCap){
+			uOffset = 0;
+		}
+		return pStorage + uOffset;
+	}
+	ElementType *GetNext(ElementType *pPos) noexcept {
+		ASSERT(pPos);
+
+		const auto pStorage = X_GetStorage();
+		auto uOffset = static_cast<std::size_t>(pPos - pStorage);
+		if(uOffset == x_uLast){
+			return nullptr;
+		}
+		++uOffset;
+		if(uOffset == x_uRingCap){
+			uOffset = 0;
+		}
 		return pStorage + uOffset;
 	}
 

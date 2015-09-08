@@ -191,25 +191,33 @@ public:
 		x_uLast  = 0;
 	}
 
-	ConstEnumerator EnumerateFirst() const noexcept {
-		return ConstEnumerator(*this, GetFirst());
+	const ElementType *GetFirst() const noexcept {
+		if(IsEmpty()){
+			return nullptr;
+		}
+		const auto pStorage = X_GetStorage();
+		return pStorage + x_uFirst;
 	}
-	Enumerator EnumerateFirst() noexcept {
-		return Enumerator(*this, GetFirst());
+	ElementType *GetFirst() noexcept {
+		if(IsEmpty()){
+			return nullptr;
+		}
+		const auto pStorage = X_GetStorage();
+		return pStorage + x_uFirst;
 	}
-
-	ConstEnumerator EnumerateLast() const noexcept {
-		return ConstEnumerator(*this, GetLast());
+	const ElementType *GetLast() const noexcept {
+		if(IsEmpty()){
+			return nullptr;
+		}
+		const auto pStorage = X_GetStorage();
+		return pStorage + x_uLast;
 	}
-	Enumerator EnumerateLast() noexcept {
-		return Enumerator(*this, GetLast());
-	}
-
-	constexpr ConstEnumerator EnumerateSingular() const noexcept {
-		return ConstEnumerator(*this, nullptr);
-	}
-	Enumerator EnumerateSingular() noexcept {
-		return Enumerator(*this, nullptr);
+	ElementType *GetLast() noexcept {
+		if(IsEmpty()){
+			return nullptr;
+		}
+		const auto pStorage = X_GetStorage();
+		return pStorage + x_uLast;
 	}
 
 	const ElementType *GetNext(const ElementType *pPos) const noexcept {
@@ -261,6 +269,27 @@ public:
 		return pStorage + uOffset;
 	}
 
+	ConstEnumerator EnumerateFirst() const noexcept {
+		return ConstEnumerator(*this, GetFirst());
+	}
+	Enumerator EnumerateFirst() noexcept {
+		return Enumerator(*this, GetFirst());
+	}
+
+	ConstEnumerator EnumerateLast() const noexcept {
+		return ConstEnumerator(*this, GetLast());
+	}
+	Enumerator EnumerateLast() noexcept {
+		return Enumerator(*this, GetLast());
+	}
+
+	constexpr ConstEnumerator EnumerateSingular() const noexcept {
+		return ConstEnumerator(*this, nullptr);
+	}
+	Enumerator EnumerateSingular() noexcept {
+		return Enumerator(*this, nullptr);
+	}
+
 	void Swap(RingQueue &rhs) noexcept {
 		std::swap(x_pStorage,  rhs.x_pStorage);
 		std::swap(x_uFirst,    rhs.x_uFirst);
@@ -280,35 +309,6 @@ public:
 	}
 	std::size_t GetCapacity() noexcept {
 		return x_uRingCap - 1;
-	}
-
-	const ElementType *GetFirst() const noexcept {
-		if(IsEmpty()){
-			return nullptr;
-		}
-		const auto pStorage = X_GetStorage();
-		return pStorage + x_uFirst;
-	}
-	ElementType *GetFirst() noexcept {
-		if(IsEmpty()){
-			return nullptr;
-		}
-		const auto pStorage = X_GetStorage();
-		return pStorage + x_uFirst;
-	}
-	const ElementType *GetLast() const noexcept {
-		if(IsEmpty()){
-			return nullptr;
-		}
-		const auto pStorage = X_GetStorage();
-		return pStorage + x_uLast;
-	}
-	ElementType *GetLast() noexcept {
-		if(IsEmpty()){
-			return nullptr;
-		}
-		const auto pStorage = X_GetStorage();
-		return pStorage + x_uLast;
 	}
 
 	const ElementType &Get(std::size_t uIndex) const {

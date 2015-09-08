@@ -98,23 +98,34 @@ public:
 		x_pLast  = nullptr;
 	}
 
-	ConstEnumerator EnumerateFirst() const noexcept {
-		return ConstEnumerator(*this, GetFirst());
+	const ElementType *GetFirst() const noexcept {
+		const auto pNode = x_pFirst;
+		if(!pNode){
+			return nullptr;
+		}
+		return static_cast<const ElementType *>(static_cast<void *>(pNode->aStorage));
 	}
-	Enumerator EnumerateFirst() noexcept {
-		return Enumerator(*this, GetFirst());
+	ElementType *GetFirst() noexcept {
+		const auto pNode = x_pFirst;
+		if(!pNode){
+			return nullptr;
+		}
+		return static_cast<ElementType *>(static_cast<void *>(pNode->aStorage));
 	}
-	ConstEnumerator EnumerateLast() const noexcept {
-		return ConstEnumerator(*this, GetLast());
+
+	const ElementType *GetLast() const noexcept {
+		const auto pNode = x_pLast;
+		if(!pNode){
+			return nullptr;
+		}
+		return static_cast<const ElementType *>(static_cast<void *>(pNode->aStorage));
 	}
-	Enumerator EnumerateLast() noexcept {
-		return Enumerator(*this, GetLast());
-	}
-	constexpr ConstEnumerator EnumerateSingular() const noexcept {
-		return ConstEnumerator(*this, nullptr);
-	}
-	Enumerator EnumerateSingular() noexcept {
-		return Enumerator(*this, nullptr);
+	ElementType *GetLast() noexcept {
+		const auto pNode = x_pLast;
+		if(!pNode){
+			return nullptr;
+		}
+		return static_cast<ElementType *>(static_cast<void *>(pNode->aStorage));
 	}
 
 	static const ElementType *GetNext(const ElementType *pPos) noexcept {
@@ -146,6 +157,25 @@ public:
 		return static_cast<ElementType *>(static_cast<void *>(pNode->aStorage));
 	}
 
+	ConstEnumerator EnumerateFirst() const noexcept {
+		return ConstEnumerator(*this, GetFirst());
+	}
+	Enumerator EnumerateFirst() noexcept {
+		return Enumerator(*this, GetFirst());
+	}
+	ConstEnumerator EnumerateLast() const noexcept {
+		return ConstEnumerator(*this, GetLast());
+	}
+	Enumerator EnumerateLast() noexcept {
+		return Enumerator(*this, GetLast());
+	}
+	constexpr ConstEnumerator EnumerateSingular() const noexcept {
+		return ConstEnumerator(*this, nullptr);
+	}
+	Enumerator EnumerateSingular() noexcept {
+		return Enumerator(*this, nullptr);
+	}
+
 	void Swap(List &rhs) noexcept {
 		std::swap(x_pFirst, rhs.x_pFirst);
 		std::swap(x_pLast,  rhs.x_pLast);
@@ -158,36 +188,6 @@ public:
 			++uCount;
 		}
 		return uCount;
-	}
-
-	const ElementType *GetFirst() const noexcept {
-		const auto pNode = x_pFirst;
-		if(!pNode){
-			return nullptr;
-		}
-		return static_cast<const ElementType *>(static_cast<void *>(pNode->aStorage));
-	}
-	ElementType *GetFirst() noexcept {
-		const auto pNode = x_pFirst;
-		if(!pNode){
-			return nullptr;
-		}
-		return static_cast<ElementType *>(static_cast<void *>(pNode->aStorage));
-	}
-
-	const ElementType *GetLast() const noexcept {
-		const auto pNode = x_pLast;
-		if(!pNode){
-			return nullptr;
-		}
-		return static_cast<const ElementType *>(static_cast<void *>(pNode->aStorage));
-	}
-	ElementType *GetLast() noexcept {
-		const auto pNode = x_pLast;
-		if(!pNode){
-			return nullptr;
-		}
-		return static_cast<ElementType *>(static_cast<void *>(pNode->aStorage));
 	}
 
 	template<typename ...ParamsT>

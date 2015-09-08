@@ -123,23 +123,29 @@ public:
 		Pop(x_uSize);
 	}
 
-	ConstEnumerator EnumerateFirst() const noexcept {
-		return ConstEnumerator(*this, GetFirst());
+	const ElementType *GetFirst() const noexcept {
+		if(IsEmpty()){
+			return nullptr;
+		}
+		return GetBegin();
 	}
-	Enumerator EnumerateFirst() noexcept {
-		return Enumerator(*this, GetFirst());
+	ElementType *GetFirst() noexcept {
+		if(IsEmpty()){
+			return nullptr;
+		}
+		return GetBegin();
 	}
-	ConstEnumerator EnumerateLast() const noexcept {
-		return ConstEnumerator(*this, GetLast());
+	const ElementType *GetLast() const noexcept {
+		if(IsEmpty()){
+			return nullptr;
+		}
+		return GetEnd() - 1;
 	}
-	Enumerator EnumerateLast() noexcept {
-		return Enumerator(*this, GetLast());
-	}
-	constexpr ConstEnumerator EnumerateSingular() const noexcept {
-		return ConstEnumerator(*this, nullptr);
-	}
-	Enumerator EnumerateSingular() noexcept {
-		return Enumerator(*this, nullptr);
+	ElementType *GetLast() noexcept {
+		if(IsEmpty()){
+			return nullptr;
+		}
+		return GetEnd() - 1;
 	}
 
 	const ElementType *GetNext(const ElementType *pPos) const noexcept {
@@ -180,6 +186,25 @@ public:
 		return pBegin + uOffset;
 	}
 
+	ConstEnumerator EnumerateFirst() const noexcept {
+		return ConstEnumerator(*this, GetFirst());
+	}
+	Enumerator EnumerateFirst() noexcept {
+		return Enumerator(*this, GetFirst());
+	}
+	ConstEnumerator EnumerateLast() const noexcept {
+		return ConstEnumerator(*this, GetLast());
+	}
+	Enumerator EnumerateLast() noexcept {
+		return Enumerator(*this, GetLast());
+	}
+	constexpr ConstEnumerator EnumerateSingular() const noexcept {
+		return ConstEnumerator(*this, nullptr);
+	}
+	Enumerator EnumerateSingular() noexcept {
+		return Enumerator(*this, nullptr);
+	}
+
 	void Swap(Vector &rhs) noexcept {
 		std::swap(x_pStorage,  rhs.x_pStorage);
 		std::swap(x_uSize,     rhs.x_uSize);
@@ -211,31 +236,6 @@ public:
 	}
 	ElementType *GetEnd() noexcept {
 		return GetData() + x_uSize;
-	}
-
-	const ElementType *GetFirst() const noexcept {
-		if(IsEmpty()){
-			return nullptr;
-		}
-		return GetBegin();
-	}
-	ElementType *GetFirst() noexcept {
-		if(IsEmpty()){
-			return nullptr;
-		}
-		return GetBegin();
-	}
-	const ElementType *GetLast() const noexcept {
-		if(IsEmpty()){
-			return nullptr;
-		}
-		return GetEnd() - 1;
-	}
-	ElementType *GetLast() noexcept {
-		if(IsEmpty()){
-			return nullptr;
-		}
-		return GetEnd() - 1;
 	}
 
 	const ElementType &Get(std::size_t uIndex) const {

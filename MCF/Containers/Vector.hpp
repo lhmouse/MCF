@@ -239,17 +239,17 @@ public:
 	}
 
 	template<typename ...ParamsT>
-	void Resize(std::size_t uSize, ParamsT &&...vParams){
+	void Resize(std::size_t uSize, const ParamsT &...vParams){
 		if(uSize > x_uSize){
-			Append(uSize - x_uSize, std::forward<ParamsT>(vParams)...);
+			Append(uSize - x_uSize, vParams...);
 		} else {
 			Pop(x_uSize - uSize);
 		}
 	}
 	template<typename ...ParamsT>
-	ElementType *ResizeMore(std::size_t uDeltaSize, ParamsT &&...vParams){
+	ElementType *ResizeMore(std::size_t uDeltaSize, const ParamsT &...vParams){
 		const auto uOldSize = x_uSize;
-		Append(uDeltaSize - x_uSize, std::forward<ParamsT>(vParams)...);
+		Append(uDeltaSize - x_uSize, vParams...);
 		return GetData() + uOldSize;
 	}
 

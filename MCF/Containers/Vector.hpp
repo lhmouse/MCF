@@ -284,14 +284,11 @@ public:
 
 		const auto pNewStorage = static_cast<ElementType *>(::operator new[](uBytesToAlloc));
 		const auto pOldStorage = static_cast<ElementType *>(x_pStorage);
-		const auto pOldEnd = pOldStorage + x_uSize;
 		auto pWrite = pNewStorage;
-		auto pRead = pOldStorage;
 		try {
-			while(pRead < pOldEnd){
-				Construct(pWrite, std::move_if_noexcept(*pRead));
+			for(std::size_t i = 0; i < x_uSize; ++i){
+				Construct(pWrite, std::move_if_noexcept(pOldStorage[i]));
 				++pWrite;
-				++pRead;
 			}
 		} catch(...){
 			while(pWrite != pNewStorage){
@@ -301,9 +298,8 @@ public:
 			::operator delete[](pNewStorage);
 			throw;
 		}
-		while(pRead != pOldStorage){
-			--pRead;
-			Destruct(pRead);
+		for(std::size_t i = x_uSize; i > 0; --i){
+			Destruct(pOldStorage + i - 1);
 		}
 		::operator delete[](pOldStorage);
 

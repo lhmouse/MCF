@@ -5,6 +5,7 @@
 #include "../StdMCF.hpp"
 #include "LastError.hpp"
 #include "Exception.hpp"
+#include "../Utilities/Defer.hpp"
 
 namespace MCF {
 
@@ -17,13 +18,8 @@ WideString GetWin32ErrorDescription(unsigned long ulErrorCode){
 	if(uLen == 0){
 		DEBUG_THROW(SystemError, "FormatMessageW"_rcs);
 	}
-	try {
-		wcsRet.Assign(static_cast<const wchar_t *>(pBuffer), uLen);
-	} catch(...){
-		::LocalFree(pBuffer);
-		throw;
-	}
-	::LocalFree(pBuffer);
+	DEFER([&]{ ::LocalFree(pBuffer); });
+	wcsRet.Assign(static_cast<const wchar_t *>(pBuffer), uLen);
 	return wcsRet;
 }
 

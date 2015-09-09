@@ -7,6 +7,7 @@
 
 #include <utility>
 #include <cstddef>
+#include <iterator>
 
 namespace MCF {
 
@@ -17,7 +18,7 @@ private:
 public:
 	class ConstChunkEnumerator;
 
-	class ChunkEnumerator {
+	class ChunkEnumerator : public std::iterator<std::forward_iterator_tag, const std::pair<unsigned char *, unsigned char *>> {
 		friend ConstChunkEnumerator;
 
 	private:
@@ -41,8 +42,11 @@ public:
 		}
 
 	public:
-		explicit operator bool() const noexcept {
-			return x_pChunk != nullptr;
+		bool operator==(const ChunkEnumerator &rhs) const noexcept {
+			return x_pChunk == rhs.x_pChunk;
+		}
+		bool operator!=(const ChunkEnumerator &rhs) const noexcept {
+			return !(*this == rhs);
 		}
 
 		ChunkEnumerator &operator++() noexcept;
@@ -51,9 +55,17 @@ public:
 			++*this;
 			return ceRet;
 		}
+
+		const std::pair<unsigned char *, unsigned char *> operator*() const noexcept {
+			return std::make_pair(GetBegin(), GetEnd());
+		}
+
+		explicit operator bool() const noexcept {
+			return !!x_pChunk;
+		}
 	};
 
-	class ConstChunkEnumerator {
+	class ConstChunkEnumerator : public std::iterator<std::forward_iterator_tag, const std::pair<const unsigned char *, const unsigned char *>> {
 	private:
 		const X_Chunk *x_pChunk;
 
@@ -79,8 +91,11 @@ public:
 		}
 
 	public:
-		explicit operator bool() const noexcept {
-			return x_pChunk != nullptr;
+		bool operator==(const ConstChunkEnumerator &rhs) const noexcept {
+			return x_pChunk == rhs.x_pChunk;
+		}
+		bool operator!=(const ConstChunkEnumerator &rhs) const noexcept {
+			return !(*this == rhs);
 		}
 
 		ConstChunkEnumerator &operator++() noexcept;
@@ -89,11 +104,19 @@ public:
 			++*this;
 			return ceRet;
 		}
+
+		const std::pair<const unsigned char *, const unsigned char *> operator*() const noexcept {
+			return std::make_pair(GetBegin(), GetEnd());
+		}
+
+		explicit operator bool() const noexcept {
+			return !!x_pChunk;
+		}
 	};
 
 private:
-	X_Chunk *__restrict__ x_pFirst;
-	X_Chunk *__restrict__ x_pLast;
+	X_Chunk *x_pFirst;
+	X_Chunk *x_pLast;
 	std::size_t x_uSize;
 
 public:
@@ -138,13 +161,13 @@ public:
 	void Put(const void *pData, std::size_t uSize);
 	void Put(const char *pszData);
 
-	ConstChunkEnumerator GetChunkEnumerator() const noexcept {
+	ConstChunkEnumerator EnumerateFirstChunk() const noexcept {
 		return ConstChunkEnumerator(*this);
 	}
-	ChunkEnumerator GetChunkEnumerator() noexcept {
+	ChunkEnumerator EnumerateFirstChunk() noexcept {
 		return ChunkEnumerator(*this);
 	}
-	ConstChunkEnumerator GetConstChunkEnumerator() const noexcept {
+	ConstChunkEnumerator EnumerateConstFirstChunk() const noexcept {
 		return ConstChunkEnumerator(*this);
 	}
 

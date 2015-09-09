@@ -112,7 +112,9 @@ public:
 		}
 		return static_cast<ElementType *>(static_cast<void *>(pNode->aStorage));
 	}
-
+	const ElementType *GetConstFirst() const noexcept {
+		return GetFirst();
+	}
 	const ElementType *GetLast() const noexcept {
 		const auto pNode = x_pLast;
 		if(!pNode){
@@ -126,6 +128,9 @@ public:
 			return nullptr;
 		}
 		return static_cast<ElementType *>(static_cast<void *>(pNode->aStorage));
+	}
+	const ElementType *GetConstLast() const noexcept {
+		return GetLast();
 	}
 
 	static const ElementType *GetPrev(const ElementType *pPos) noexcept {
@@ -171,17 +176,26 @@ public:
 	Enumerator EnumerateFirst() noexcept {
 		return Enumerator(*this, GetFirst());
 	}
+	ConstEnumerator EnumerateConstFirst() const noexcept {
+		return EnumerateFirst();
+	}
 	ConstEnumerator EnumerateLast() const noexcept {
 		return ConstEnumerator(*this, GetLast());
 	}
 	Enumerator EnumerateLast() noexcept {
 		return Enumerator(*this, GetLast());
 	}
+	ConstEnumerator EnumerateConstLast() const noexcept {
+		return EnumerateLast();
+	}
 	constexpr ConstEnumerator EnumerateSingular() const noexcept {
 		return ConstEnumerator(*this, nullptr);
 	}
 	Enumerator EnumerateSingular() noexcept {
 		return Enumerator(*this, nullptr);
+	}
+	constexpr ConstEnumerator EnumerateConstSingular() const noexcept {
+		return EnumerateSingular();
 	}
 
 	void Swap(List &rhs) noexcept {

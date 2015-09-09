@@ -135,6 +135,9 @@ public:
 		}
 		return GetBegin();
 	}
+	const ElementType *GetConstFirst() const noexcept {
+		return GetFirst();
+	}
 	const ElementType *GetLast() const noexcept {
 		if(IsEmpty()){
 			return nullptr;
@@ -146,6 +149,9 @@ public:
 			return nullptr;
 		}
 		return GetEnd() - 1;
+	}
+	const ElementType *GetConstLast() const noexcept {
+		return GetLast();
 	}
 
 	const ElementType *GetPrev(const ElementType *pPos) const noexcept {
@@ -199,17 +205,26 @@ public:
 	Enumerator EnumerateFirst() noexcept {
 		return Enumerator(*this, GetFirst());
 	}
+	ConstEnumerator EnumerateConstFirst() const noexcept {
+		return EnumerateFirst();
+	}
 	ConstEnumerator EnumerateLast() const noexcept {
 		return ConstEnumerator(*this, GetLast());
 	}
 	Enumerator EnumerateLast() noexcept {
 		return Enumerator(*this, GetLast());
 	}
+	ConstEnumerator EnumerateConstLast() const noexcept {
+		return EnumerateLast();
+	}
 	constexpr ConstEnumerator EnumerateSingular() const noexcept {
 		return ConstEnumerator(*this, nullptr);
 	}
 	Enumerator EnumerateSingular() noexcept {
 		return Enumerator(*this, nullptr);
+	}
+	constexpr ConstEnumerator EnumerateConstSingular() const noexcept {
+		return EnumerateSingular();
 	}
 
 	void Swap(Vector &rhs) noexcept {
@@ -225,6 +240,9 @@ public:
 	ElementType *GetData() noexcept {
 		return static_cast<ElementType *>(x_pStorage);
 	}
+	const ElementType *GetConstData() const noexcept {
+		return GetData();
+	}
 	std::size_t GetSize() const noexcept {
 		return x_uSize;
 	}
@@ -238,11 +256,17 @@ public:
 	ElementType *GetBegin() noexcept {
 		return GetData();
 	}
+	const ElementType *GetConstBegin() const noexcept {
+		return GetBegin();
+	}
 	const ElementType *GetEnd() const noexcept {
 		return GetData() + x_uSize;
 	}
 	ElementType *GetEnd() noexcept {
 		return GetData() + x_uSize;
+	}
+	const ElementType *GetConstEnd() const noexcept {
+		return GetEnd();
 	}
 
 	const ElementType &Get(std::size_t uIndex) const {

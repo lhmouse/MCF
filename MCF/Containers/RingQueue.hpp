@@ -218,6 +218,9 @@ public:
 		const auto pStorage = X_GetStorage();
 		return pStorage + x_uFirst;
 	}
+	const ElementType *GetConstFirst() const noexcept {
+		return GetFirst();
+	}
 	const ElementType *GetLast() const noexcept {
 		if(IsEmpty()){
 			return nullptr;
@@ -231,6 +234,9 @@ public:
 		}
 		const auto pStorage = X_GetStorage();
 		return pStorage + x_uLast;
+	}
+	const ElementType *GetConstLast() const noexcept {
+		return GetLast();
 	}
 
 	const ElementType *GetPrev(const ElementType *pPos) const noexcept {
@@ -296,19 +302,26 @@ public:
 	Enumerator EnumerateFirst() noexcept {
 		return Enumerator(*this, GetFirst());
 	}
-
+	ConstEnumerator EnumerateConstFirst() const noexcept {
+		return EnumerateFirst();
+	}
 	ConstEnumerator EnumerateLast() const noexcept {
 		return ConstEnumerator(*this, GetLast());
 	}
 	Enumerator EnumerateLast() noexcept {
 		return Enumerator(*this, GetLast());
 	}
-
+	ConstEnumerator EnumerateConstLast() const noexcept {
+		return EnumerateLast();
+	}
 	constexpr ConstEnumerator EnumerateSingular() const noexcept {
 		return ConstEnumerator(*this, nullptr);
 	}
 	Enumerator EnumerateSingular() noexcept {
 		return Enumerator(*this, nullptr);
+	}
+	constexpr ConstEnumerator EnumerateConstSingular() const noexcept {
+		return EnumerateSingular();
 	}
 
 	void Swap(RingQueue &rhs) noexcept {

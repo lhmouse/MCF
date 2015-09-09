@@ -108,7 +108,7 @@ StreamBuffer::StreamBuffer(const char *pszData)
 StreamBuffer::StreamBuffer(const StreamBuffer &rhs)
 	: StreamBuffer()
 {
-	for(auto ce = rhs.GetChunkEnumerator(); ce; ++ce){
+	for(auto ce = rhs.EnumerateFirstChunk(); ce; ++ce){
 		Put(ce.GetData(), ce.GetSize());
 	}
 }

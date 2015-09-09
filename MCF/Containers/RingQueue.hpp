@@ -170,16 +170,12 @@ public:
 		return x_uFirst - x_uLast == 1;
 	}
 	void Clear() noexcept {
-		if(IsEmpty()){
-			return;
-		}
-
 		const auto pStorage = X_GetStorage();
 		if(x_uFirst <= x_uLast){
 			for(std::size_t i = x_uFirst; i <= x_uLast; ++i){
 				Destruct(pStorage + x_uFirst + x_uLast - i);
 			}
-		} else {
+		} else if(x_uFirst - x_uLast != 1){
 			for(std::size_t i = 0; i <= x_uLast; ++i){
 				Destruct(pStorage + x_uLast - i);
 			}

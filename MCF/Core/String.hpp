@@ -9,7 +9,6 @@
 #include "../Containers/_EnumeratorTemplate.hpp"
 #include "../Utilities/Assert.hpp"
 #include "../Utilities/CountOf.hpp"
-#include "../Utilities/BitsOf.hpp"
 #include "../Utilities/CountLeadingTrailingZeroes.hpp"
 #include "../Utilities/CopyMoveFill.hpp"
 #include <type_traits>

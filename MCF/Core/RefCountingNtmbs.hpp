@@ -17,9 +17,15 @@ namespace MCF {
 class RefCountingNtmbs {
 public:
 	static RefCountingNtmbs Copy(const char *pszSrc){
+		if(!pszSrc){
+			return RefCountingNtmbs();
+		}
 		return Copy(pszSrc, std::strlen(pszSrc));
 	}
 	static RefCountingNtmbs Copy(const char *pszSrc, std::size_t uLen){
+		if(uLen == 0){
+			return RefCountingNtmbs();
+		}
 		const auto uSizeToAlloc = sizeof(Atomic<std::size_t>) + uLen + 1;
 		if(uSizeToAlloc < uLen){
 			throw std::bad_array_new_length();
@@ -31,7 +37,10 @@ public:
 		return RefCountingNtmbs(1, puRef, pszStr);
 	}
 	static RefCountingNtmbs View(const char *pszSrc) noexcept {
-		return RefCountingNtmbs(1, nullptr, pszSrc ? pszSrc : "");
+		if(!pszSrc){
+			return RefCountingNtmbs();
+		}
+		return RefCountingNtmbs(1, nullptr, pszSrc);
 	}
 
 private:

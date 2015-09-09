@@ -606,13 +606,17 @@ public:
 		std::size_t uElementsPushed = 0;
 		try {
 			if(kHasDeltaSizeHint){
-				for(auto it = itBegin; it != itEnd; ++it){
+				auto it = itBegin;
+				while(it != itEnd){
 					UncheckedPush(*it);
+					++it;
 					++uElementsPushed;
 				}
 			} else {
-				for(auto it = itBegin; it != itEnd; ++it){
+				auto it = itBegin;
+				while(it != itEnd){
 					Push(*it);
+					++it;
 					++uElementsPushed;
 				}
 			}
@@ -654,12 +658,16 @@ public:
 		std::size_t uElementsUnshifted = 0;
 		try {
 			if(kHasDeltaSizeHint){
-				for(auto it = itBegin; it != itEnd; ++it){
+				auto it = itEnd;
+				while(it != itBegin){
+					--it;
 					UncheckedUnshift(*it);
 					++uElementsUnshifted;
 				}
 			} else {
-				for(auto it = itBegin; it != itEnd; ++it){
+				auto it = itEnd;
+				while(it != itBegin){
+					--it;
 					Unshift(*it);
 					++uElementsUnshifted;
 				}

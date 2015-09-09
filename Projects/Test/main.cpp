@@ -1,9 +1,10 @@
-#include <MCF/Core/String.hpp>
+#include <MCF/Containers/RingQueue.hpp>
 
 using namespace MCF;
 
 extern "C" unsigned MCFMain(){
-	auto s = "____1___1__1_1__1___1____1_____1______1"_u8so;
-	std::printf("offset = %zu\n", s.Find("______1"_u8so));
+	RingQueue<int> q;
+	q.Append({0,1,2,3,4,5,6,7,8,9});
+	q.Shift(3);
 	return 0;
 }

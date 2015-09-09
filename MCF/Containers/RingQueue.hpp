@@ -928,7 +928,7 @@ public:
 			} else {
 				const auto pWrapAt = pStorage + x_uRingCap;
 				auto pRead = pReadFirst;
-				while(pRead != pWrapAt){
+				for(;;){
 					Construct(pWrite, std::move(*pRead));
 					Destruct(pRead);
 
@@ -937,6 +937,10 @@ public:
 						pWrite = pStorage;
 					}
 					++pRead;
+
+					if(pRead == pWrapAt){
+						break;
+					}
 				}
 				pRead = pStorage;
 				for(;;){

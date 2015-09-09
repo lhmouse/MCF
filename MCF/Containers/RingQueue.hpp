@@ -895,7 +895,6 @@ public:
 			uDeltaCount -= uBeginOffset;
 
 			auto pWrite = const_cast<ElementType *>(pBegin);
-
 			if(pBegin < pEnd){
 				for(auto pCur = pWrite; pCur != pEnd; ++pCur){
 					Destruct(pCur);
@@ -909,7 +908,6 @@ public:
 					Destruct(pCur);
 				}
 			}
-
 			const auto pReadBegin = const_cast<ElementType *>(pEnd);
 			const auto pReadEnd = pStorage + x_uLast + 1;
 			if(pReadBegin < pReadEnd){
@@ -940,7 +938,6 @@ public:
 					}
 				}
 			}
-
 			if(x_uLast < uDeltaCount){
 				x_uLast += x_uRingCap;
 			}

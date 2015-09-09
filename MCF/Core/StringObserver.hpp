@@ -5,6 +5,7 @@
 #ifndef MCF_CORE_STRING_OBSERVER_HPP_
 #define MCF_CORE_STRING_OBSERVER_HPP_
 
+#include "../../MCFCRT/ext/alloca.h"
 #include "../Utilities/Assert.hpp"
 #include "../Utilities/CountOf.hpp"
 #include "../Utilities/Defer.hpp"
@@ -101,13 +102,16 @@ namespace Impl_StringObserver {
 				if(uMatchLen == uFindCount){
 					return static_cast<std::size_t>(itCur - itBegin) - uFindCount;
 				}
-				if(itCur == itCurEnd){
+				if(itCur == itEnd){
 					return kNpos;
 				}
 				if(*itCur != chToFind){
 					break;
 				}
 				++uMatchLen;
+			}
+			if(itCur >= itCurEnd){
+				return kNpos;
 			}
 		}
 	}
@@ -123,9 +127,18 @@ namespace Impl_StringObserver {
 		}
 		ASSERT(uFindCount >= 2);
 
-		std::size_t auSmallTable[256];
-		const auto puKmpTable = ((uFindCount - 2 <= CountOf(auSmallTable))) ? auSmallTable : new(std::nothrow) std::size_t[uFindCount - 2];
-		DEFER([&]{ if(puKmpTable != auSmallTable){ delete[] puKmpTable; } });
+		std::size_t *puKmpTable;
+		bool bWasTableAllocatedFromHeap;
+		const auto uSizeToAlloc = sizeof(std::size_t) * (uFindCount - 2);
+		if((uSizeToAlloc >= 0x10000) || (uSizeToAlloc / sizeof(std::size_t) != uFindCount - 2)){
+			puKmpTable = static_cast<std::size_t *>(::operator new[](uSizeToAlloc, std::nothrow));
+			bWasTableAllocatedFromHeap = true;
+		} else {
+			puKmpTable = static_cast<std::size_t *>(ALLOCA(uSizeToAlloc));
+			bWasTableAllocatedFromHeap = false;
+		}
+		DEFER([&]{ if(bWasTableAllocatedFromHeap){ ::operator delete[](puKmpTable); }; });
+
 		if(puKmpTable){
 			std::size_t uPos = 0;
 			std::size_t uCand = 0;
@@ -159,13 +172,16 @@ namespace Impl_StringObserver {
 				if(uMatchLen == uFindCount){
 					return static_cast<std::size_t>(itCur - itBegin) - uFindCount;
 				}
-				if(itCur == itCurEnd){
+				if(itCur == itEnd){
 					return kNpos;
 				}
 				if(*itCur != itToFindBegin[static_cast<std::ptrdiff_t>(uMatchLen)]){
 					break;
 				}
 				++uMatchLen;
+			}
+			if(itCur >= itCurEnd){
+				return kNpos;
 			}
 			itCur -= static_cast<std::ptrdiff_t>(uMatchLen - 1);
 			if((uMatchLen >= 2) && puKmpTable){

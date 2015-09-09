@@ -11,5 +11,6 @@
 #include "expect.h"
 #include "stpcpy.h"
 #include "wcpcpy.h"
+#include "alloca.h"
 
 #endif

@@ -908,34 +908,49 @@ public:
 					Destruct(pCur);
 				}
 			}
-			const auto pReadBegin = const_cast<ElementType *>(pEnd);
-			const auto pReadEnd = pStorage + x_uLast + 1;
-			if(pReadBegin < pReadEnd){
-				for(auto pRead = pReadBegin; pRead != pReadEnd; ++pRead){
+			const auto pReadFirst = const_cast<ElementType *>(pEnd);
+			const auto pReadLast = pStorage + x_uLast;
+			if(pReadFirst <= pReadLast){
+				auto pRead = pReadFirst;
+				for(;;){
 					Construct(pWrite, std::move(*pRead));
 					Destruct(pRead);
+					if(pRead == pReadLast){
+						break;
+					}
+
 					++pWrite;
 					if(pWrite == pStorage + x_uRingCap){
 						pWrite = pStorage;
 					}
+					++pRead;
 				}
 			} else {
 				const auto pWrapAt = pStorage + x_uRingCap;
-				for(auto pRead = pReadBegin; pRead != pWrapAt; ++pRead){
+				auto pRead = pReadFirst;
+				while(pRead != pWrapAt){
 					Construct(pWrite, std::move(*pRead));
 					Destruct(pRead);
+
 					++pWrite;
 					if(pWrite == pStorage + x_uRingCap){
 						pWrite = pStorage;
 					}
+					++pRead;
 				}
-				for(auto pRead = pStorage; pRead != pReadEnd; ++pRead){
+				pRead = pStorage;
+				for(;;){
 					Construct(pWrite, std::move(*pRead));
 					Destruct(pRead);
+					if(pRead == pReadLast){
+						break;
+					}
+
 					++pWrite;
 					if(pWrite == pStorage + x_uRingCap){
 						pWrite = pStorage;
 					}
+					++pRead;
 				}
 			}
 			if(x_uLast < uDeltaCount){

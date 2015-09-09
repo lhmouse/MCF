@@ -43,11 +43,11 @@ extern "C" unsigned MCFMain(){
 //	}
 
 	auto p1 = q.GetFirst();
-	for(int i = 0; p1 && i < 5; ++i){
+	for(int i = 0; p1 && i < 8; ++i){
 		p1 = q.GetNext(p1);
 	}
 	auto p2 = p1;
-	for(int i = 0; p2 && i < 5; ++i){
+	for(int i = 0; p2 && i < 20; ++i){
 		p2 = q.GetNext(p2);
 	}
 	q.Erase(p1, p2);

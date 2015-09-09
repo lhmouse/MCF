@@ -836,7 +836,7 @@ public:
 				for(auto it = itBegin; it != itEnd; ++it){
 					queTemp.Push(*it);
 				}
-				queTemp.X_UnsafeCopyFrom<false>(*this, pPos, pStorage + x_uLast + 1);
+				queTemp.X_UnsafeCopyFrom<true>(*this, pPos, pStorage + x_uLast + 1);
 				*this = std::move(queTemp);
 			}
 		}

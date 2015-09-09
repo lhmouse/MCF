@@ -232,62 +232,35 @@ public:
 		X_SetSize(0);
 	}
 
-	ConstEnumerator EnumerateFirst() const noexcept {
-		const auto pBegin = GetBegin();
-		if(pBegin == GetEnd()){
-			return ConstEnumerator(*this, nullptr);
-		} else {
-			return ConstEnumerator(*this, pBegin);
-		}
-	}
-	Enumerator EnumerateFirst() noexcept {
-		auto pBegin = GetBegin();
-		if(pBegin == GetEnd()){
-			return Enumerator(*this, nullptr);
-		} else {
-			return Enumerator(*this, pBegin);
-		}
-	}
-
-	ConstEnumerator EnumerateLast() const noexcept {
-		const auto pEnd = GetEnd();
-		if(GetBegin() == pEnd){
-			return ConstEnumerator(*this, nullptr);
-		} else {
-			return ConstEnumerator(*this, pEnd - 1);
-		}
-	}
-	Enumerator EnumerateLast() noexcept {
-		auto pEnd = GetEnd();
-		if(GetBegin() == pEnd){
-			return Enumerator(*this, nullptr);
-		} else {
-			return Enumerator(*this, pEnd - 1);
-		}
-	}
-
-	constexpr ConstEnumerator EnumerateSingular() const noexcept {
-		return ConstEnumerator(*this, nullptr);
-	}
-	Enumerator EnumerateSingular() noexcept {
-		return Enumerator(*this, nullptr);
-	}
-
-	const ElementType *GetNext(const ElementType *pPos) const noexcept {
-		const auto pBegin = GetBegin();
-		const auto uOffset = static_cast<std::size_t>(pPos - pBegin);
-		if(uOffset + 1 == GetSize()){
+	const ElementType *GetFirst() const noexcept {
+		if(IsEmpty()){
 			return nullptr;
 		}
-		return pBegin + uOffset + 1;
+		return GetBegin();
 	}
-	ElementType *GetNext(const ElementType *pPos) noexcept {
-		const auto pBegin = GetBegin();
-		const auto uOffset = static_cast<std::size_t>(pPos - pBegin);
-		if(uOffset + 1 == GetSize()){
+	ElementType *GetFirst() noexcept {
+		if(IsEmpty()){
 			return nullptr;
 		}
-		return pBegin + uOffset + 1;
+		return GetBegin();
+	}
+	const ElementType *GetConstFirst() const noexcept {
+		return GetFirst();
+	}
+	const ElementType *GetLast() const noexcept {
+		if(IsEmpty()){
+			return nullptr;
+		}
+		return GetEnd() - 1;
+	}
+	ElementType *GetLast() noexcept {
+		if(IsEmpty()){
+			return nullptr;
+		}
+		return GetEnd() - 1;
+	}
+	const ElementType *GetConstLast() const noexcept {
+		return GetLast();
 	}
 
 	const ElementType *GetPrev(const ElementType *pPos) const noexcept {
@@ -305,6 +278,50 @@ public:
 			return nullptr;
 		}
 		return pBegin + uOffset - 1;
+	}
+	const ElementType *GetNext(const ElementType *pPos) const noexcept {
+		const auto pBegin = GetBegin();
+		const auto uOffset = static_cast<std::size_t>(pPos - pBegin);
+		if(uOffset + 1 == GetSize()){
+			return nullptr;
+		}
+		return pBegin + uOffset + 1;
+	}
+	ElementType *GetNext(const ElementType *pPos) noexcept {
+		const auto pBegin = GetBegin();
+		const auto uOffset = static_cast<std::size_t>(pPos - pBegin);
+		if(uOffset + 1 == GetSize()){
+			return nullptr;
+		}
+		return pBegin + uOffset + 1;
+	}
+
+	ConstEnumerator EnumerateFirst() const noexcept {
+		return ConstEnumerator(*this, GetFirst());
+	}
+	Enumerator EnumerateFirst() noexcept {
+		return Enumerator(*this, GetFirst());
+	}
+	ConstEnumerator EnumerateConstFirst() const noexcept {
+		return EnumerateFirst();
+	}
+	ConstEnumerator EnumerateLast() const noexcept {
+		return ConstEnumerator(*this, GetLast());
+	}
+	Enumerator EnumerateLast() noexcept {
+		return Enumerator(*this, GetLast());
+	}
+	ConstEnumerator EnumerateConstLast() const noexcept {
+		return EnumerateLast();
+	}
+	constexpr ConstEnumerator EnumerateSingular() const noexcept {
+		return ConstEnumerator(*this, nullptr);
+	}
+	Enumerator EnumerateSingular() noexcept {
+		return Enumerator(*this, nullptr);
+	}
+	constexpr ConstEnumerator EnumerateConstSingular() const noexcept {
+		return EnumerateSingular();
 	}
 
 	void Swap(String &rhs) noexcept {
@@ -341,13 +358,6 @@ public:
 			return x_vStorage.vLarge.pchBegin + x_vStorage.vLarge.uLength;
 		}
 	}
-
-	const Char *GetData() const noexcept {
-		return GetBegin();
-	}
-	Char *GetData() noexcept {
-		return GetBegin();
-	}
 	std::size_t GetSize() const noexcept {
 		if(x_vStorage.vSmall.schComplLength >= 0){
 			return X_GetSmallLength();
@@ -356,6 +366,15 @@ public:
 		}
 	}
 
+	const Char *GetData() const noexcept {
+		return GetBegin();
+	}
+	Char *GetData() noexcept {
+		return GetBegin();
+	}
+	const Char *GetConstData() const noexcept {
+		return GetData();
+	}
 	const Char *GetStr() const noexcept {
 		if(x_vStorage.vSmall.schComplLength >= 0){
 			const_cast<Char &>(x_vStorage.vSmall.achData[X_GetSmallLength()]) = Char();
@@ -373,6 +392,9 @@ public:
 			x_vStorage.vLarge.pchBegin[x_vStorage.vLarge.uLength] = Char();
 			return x_vStorage.vLarge.pchBegin;
 		}
+	}
+	const Char *GetConstStr() const noexcept {
+		return GetStr();
 	}
 	std::size_t GetLength() const noexcept {
 		return GetSize();

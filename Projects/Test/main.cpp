@@ -1,10 +1,10 @@
-#include <MCF/Containers/RingQueue.hpp>
+#include <MCF/Containers/Vector.hpp>
 #include <MCF/Core/String.hpp>
 
-template class MCF::RingQueue<int>;
-template class MCF::RingQueue<MCF::Utf8String>;
+template class MCF::Vector<int>;
+template class MCF::Vector<MCF::Utf8String>;
 
-MCF::RingQueue<int> q;
+MCF::Vector<int> q;
 
 __attribute__((__noinline__))
 void uninline_pop(const int *p1, const int *p2){
@@ -12,7 +12,7 @@ void uninline_pop(const int *p1, const int *p2){
 }
 
 extern "C" unsigned MCFMain(){
-//	MCF::RingQueue<MCF::Utf8String> q;
+//	MCF::Vector<MCF::Utf8String> q;
 //
 //	for(int i = 0; i < 10; ++i){
 //		char temp[256];
@@ -27,11 +27,11 @@ extern "C" unsigned MCFMain(){
 //	}
 
 	q.Append(30, 0);
-	q.Shift(30);
+//	q.Shift(30);
 
 	for(int i = 0; i < 15; ++i){
 		q.Push(i);
-		q.Unshift(-i);
+//		q.Unshift(-i);
 	}
 
 //	auto p = q.GetFirst();

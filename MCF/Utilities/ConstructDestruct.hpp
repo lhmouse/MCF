@@ -12,22 +12,38 @@
 namespace MCF {
 
 namespace Impl_ConstructDestruct {
+	struct Tag {
+		char chUnused;
+	};
+}
+
+}
+
+inline void *operator new(std::size_t, ::MCF::Impl_ConstructDestruct::Tag *p){
+	return p;
+}
+inline void operator delete(void *, ::MCF::Impl_ConstructDestruct::Tag *) noexcept {
+}
+
+namespace MCF {
+
+namespace Impl_ConstructDestruct {
 	template<typename ObjectT>
 	struct DirectConstructor {
 		template<typename ...ParamsT>
 		static void Construct(ObjectT *pObject, ParamsT &&...vParams){
-			::new(static_cast<void *>(pObject)) ObjectT(std::forward<ParamsT>(vParams)...);
+			::new(reinterpret_cast<Tag *>(pObject)) ObjectT(std::forward<ParamsT>(vParams)...);
 		}
 
 		static void DefaultConstruct(ObjectT *pObject){
 #ifndef NDEBUG
 			__builtin_memset(pObject, 0xCC, sizeof(ObjectT));
 #endif
-			::new(static_cast<void *>(pObject)) ObjectT;
+			::new(reinterpret_cast<Tag *>(pObject)) ObjectT;
 		}
 		template<typename ...ParamsT>
 		static void DefaultConstruct(ObjectT *pObject, ParamsT &&...vParams){
-			::new(static_cast<void *>(pObject)) ObjectT(std::forward<ParamsT>(vParams)...);
+			::new(reinterpret_cast<Tag *>(pObject)) ObjectT(std::forward<ParamsT>(vParams)...);
 		}
 
 		static void Destruct(ObjectT *pObject){

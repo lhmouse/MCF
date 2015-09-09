@@ -4,6 +4,13 @@
 template class MCF::RingQueue<int>;
 template class MCF::RingQueue<MCF::Utf8String>;
 
+MCF::RingQueue<int> q;
+
+__attribute__((__noinline__))
+void uninline_pop(const int *p1, const int *p2){
+	q.Erase(p1, p2);
+}
+
 extern "C" unsigned MCFMain(){
 //	MCF::RingQueue<MCF::Utf8String> q;
 //
@@ -19,17 +26,12 @@ extern "C" unsigned MCFMain(){
 //		std::printf("element %2u = %s\n", i, q[i].GetStr());
 //	}
 
-	MCF::RingQueue<MCF::Utf8String> q;
-
-	q.Append(30, "00000");
+	q.Append(30, 0);
 	q.Shift(30);
 
 	for(int i = 0; i < 15; ++i){
-		char temp[256];
-		std::sprintf(temp, "---------------------------------- hello %2d ----------------------------------", i);
-		q.Push(temp);
-		std::sprintf(temp, "---------------------------------- world %2d ----------------------------------", i);
-		q.Unshift(temp);
+		q.Push(i);
+		q.Unshift(-i);
 	}
 
 //	auto p = q.GetFirst();
@@ -50,11 +52,12 @@ extern "C" unsigned MCFMain(){
 	for(int i = 0; p2 && i < 5; ++i){
 		p2 = q.GetNext(p2);
 	}
-	q.Erase(p1, p2);
+//	q.Erase(p1, p2);
+	uninline_pop(p1, p2);
 
 	auto &q2 = q;
 	for(unsigned i = 0; i < q2.GetSize(); ++i){
-		std::printf("element %2u = %s\n", i, q2[i].GetStr());
+		std::printf("element %2u = %d\n", i, q2[i]);
 	}
 //	for(auto &e : q){
 //		std::printf("element %d\n", e);

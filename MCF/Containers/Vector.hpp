@@ -303,6 +303,10 @@ public:
 	template<typename ...ParamsT>
 	ElementType *ResizeMore(std::size_t uDeltaSize, const ParamsT &...vParams){
 		const auto uOldSize = x_uSize;
+		const auto uNewSize = uOldSize + uDeltaSize;
+		if(uNewSize < uOldSize){
+			throw std::bad_array_new_length();
+		}
 		Append(uDeltaSize - x_uSize, vParams...);
 		return GetData() + uOldSize;
 	}
@@ -592,15 +596,15 @@ public:
 		ASSERT(pBegin);
 
 		if(!pEnd || (pEnd == GetEnd())){
-			const auto uDeltaCount = static_cast<std::size_t>(GetEnd() - pBegin);
+			const auto uDeltaSize = static_cast<std::size_t>(GetEnd() - pBegin);
 
-			Pop(uDeltaCount);
+			Pop(uDeltaSize);
 			return;
 		}
 		ASSERT((GetBegin() <= pBegin) && (pBegin <= pEnd) && (pEnd <= GetEnd()));
 
 		if(std::is_nothrow_move_constructible<ElementType>::value){
-			const auto uDeltaCount = static_cast<std::size_t>(pEnd - pBegin);
+			const auto uDeltaSize = static_cast<std::size_t>(pEnd - pBegin);
 
 			auto pWrite = const_cast<ElementType *>(pBegin);
 			for(auto pCur = pWrite; pCur != pEnd; ++pCur){
@@ -611,7 +615,7 @@ public:
 				Destruct(pCur);
 				++pWrite;
 			}
-			x_uSize -= uDeltaCount;
+			x_uSize -= uDeltaSize;
 		} else {
 			Vector vecTemp;
 			vecTemp.Reserve(GetCapacity());

@@ -1,9 +1,16 @@
 #include <MCF/Containers/RingQueue.hpp>
+#include <MCF/Containers/Vector.hpp>
+#include <MCF/Containers/StaticVector.hpp>
+#include <MCF/Containers/List.hpp>
 #include <MCF/Core/String.hpp>
 
 using namespace MCF;
 
 template class RingQueue<int>;
+template class Vector<int>;
+template class StaticVector<int, 8>;
+template class List<int>;
+
 template class RingQueue<Utf8String>;
 
 extern "C" unsigned MCFMain(){
@@ -44,8 +51,8 @@ extern "C" unsigned MCFMain(){
 		p = q.GetNext(p);
 	}
 	try {
-		q.Insert(p, 9, "11111");
-//		q.Insert(p, {"s 0"_u8s,"s 1"_u8s,"s 2"_u8s,"s 3"_u8s,"s 4"_u8s,"s 5"_u8s,"s 6"_u8s});
+		p = q.Insert(p, 9, "11111");
+		p = q.Insert(p, {"s 0"_u8s,"s 1"_u8s,"s 2"_u8s,"s 3"_u8s,"s 4"_u8s,"s 5"_u8s,"s 6"_u8s});
 //		q.Insert(p, 9, 11111);
 //		q.Insert(p, {100,101,102,103,104,105,106});
 	} catch(std::exception &e){
@@ -70,6 +77,12 @@ extern "C" unsigned MCFMain(){
 //	for(auto e = q2.EnumerateLast(); e; --e){
 //		std::printf("element %s\n", e->GetStr());
 //	}
+
+
+	RingQueue<int>       a0{0,1,2,3,4,5,6};
+	Vector<int>          a1{0,1,2,3,4,5,6};
+	StaticVector<int, 8> a2{0,1,2,3,4,5,6};
+	List<int>            a3{0,1,2,3,4,5,6};
 
 	return 0;
 }

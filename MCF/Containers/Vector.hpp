@@ -362,17 +362,20 @@ public:
 	}
 
 	template<typename ...ParamsT>
-	void Push(ParamsT &&...vParams){
+	ElementType &Push(ParamsT &&...vParams){
 		ReserveMore(1);
-		UncheckedPush(std::forward<ParamsT>(vParams)...);
+		return UncheckedPush(std::forward<ParamsT>(vParams)...);
 	}
 	template<typename ...ParamsT>
-	void UncheckedPush(ParamsT &&...vParams) noexcept(std::is_nothrow_constructible<ElementType, ParamsT &&...>::value) {
+	ElementType &UncheckedPush(ParamsT &&...vParams) noexcept(std::is_nothrow_constructible<ElementType, ParamsT &&...>::value) {
 		ASSERT(GetCapacity() - x_uSize > 0);
 
 		const auto pBegin = GetBegin();
-		DefaultConstruct(pBegin + x_uSize, std::forward<ParamsT>(vParams)...);
+		const auto pElem = pBegin + x_uSize;
+		DefaultConstruct(pElem, std::forward<ParamsT>(vParams)...);
 		++x_uSize;
+
+		return *pElem;
 	}
 	void Pop(std::size_t uCount = 1) noexcept {
 		ASSERT(uCount <= x_uSize);
@@ -433,12 +436,14 @@ public:
 	}
 
 	template<typename ...ParamsT>
-	void Emplace(const ElementType *pPos, ParamsT &&...vParams){
+	ElementType *Emplace(const ElementType *pPos, ParamsT &&...vParams){
 		if(!pPos || (pPos == GetEnd())){
 			Push(std::forward<ParamsT>(vParams)...);
-			return;
+			return nullptr;
 		}
 		ASSERT((GetBegin() <= pPos) && (pPos <= GetEnd()));
+
+		const auto uOffset = static_cast<std::size_t>(pPos - GetBegin());
 
 		if(std::is_nothrow_move_constructible<ElementType>::value){
 			const auto pWriteBegin = X_PrepareForInsertion(pPos, 1);
@@ -468,15 +473,19 @@ public:
 			}
 			*this = std::move(vecTemp);
 		}
+
+		return GetBegin() + uOffset;
 	}
 
 	template<typename ...ParamsT>
-	void Insert(const ElementType *pPos, std::size_t uDeltaSize, const ParamsT &...vParams){
+	ElementType *Insert(const ElementType *pPos, std::size_t uDeltaSize, const ParamsT &...vParams){
 		if(!pPos || (pPos == GetEnd())){
 			Append(uDeltaSize, vParams...);
-			return;
+			return nullptr;
 		}
 		ASSERT((GetBegin() <= pPos) && (pPos <= GetEnd()));
+
+		const auto uOffset = static_cast<std::size_t>(pPos - GetBegin());
 
 		if(std::is_nothrow_move_constructible<ElementType>::value){
 			const auto pWriteBegin = X_PrepareForInsertion(pPos, uDeltaSize);
@@ -516,18 +525,22 @@ public:
 			}
 			*this = std::move(vecTemp);
 		}
+
+		return GetBegin() + uOffset;
 	}
 	template<typename IteratorT, std::enable_if_t<
 		sizeof(typename std::iterator_traits<IteratorT>::value_type *),
 		int> = 0>
-	void Insert(const ElementType *pPos, IteratorT itBegin, std::common_type_t<IteratorT> itEnd){
+	ElementType *Insert(const ElementType *pPos, IteratorT itBegin, std::common_type_t<IteratorT> itEnd){
 		if(!pPos || (pPos == GetEnd())){
 			Append(itBegin, itEnd);
-			return;
+			return nullptr;
 		}
 		ASSERT((GetBegin() <= pPos) && (pPos <= GetEnd()));
 
 		constexpr bool kHasDeltaSizeHint = std::is_base_of<std::forward_iterator_tag, typename std::iterator_traits<IteratorT>::iterator_category>::value;
+
+		const auto uOffset = static_cast<std::size_t>(pPos - GetBegin());
 
 		if(kHasDeltaSizeHint && std::is_nothrow_move_constructible<ElementType>::value){
 			const auto uDeltaSize = static_cast<std::size_t>(std::distance(itBegin, itEnd));
@@ -584,14 +597,16 @@ public:
 				*this = std::move(vecTemp);
 			}
 		}
+
+		return GetBegin() + uOffset;
 	}
-	void Insert(const ElementType *pPos, std::initializer_list<ElementType> ilElements){
-		Insert(pPos, ilElements.begin(), ilElements.end());
+	ElementType *Insert(const ElementType *pPos, std::initializer_list<ElementType> ilElements){
+		return Insert(pPos, ilElements.begin(), ilElements.end());
 	}
 
-	void Erase(const ElementType *pBegin, const ElementType *pEnd) noexcept(std::is_nothrow_move_constructible<ElementType>::value) {
+	ElementType *Erase(const ElementType *pBegin, const ElementType *pEnd) noexcept(std::is_nothrow_move_constructible<ElementType>::value) {
 		if(pBegin == pEnd){
-			return;
+			return const_cast<ElementType *>(pEnd);
 		}
 		ASSERT(pBegin);
 
@@ -599,9 +614,11 @@ public:
 			const auto uDeltaSize = static_cast<std::size_t>(GetEnd() - pBegin);
 
 			Pop(uDeltaSize);
-			return;
+			return nullptr;
 		}
 		ASSERT((GetBegin() <= pBegin) && (pBegin <= pEnd) && (pEnd <= GetEnd()));
+
+		const auto uOffset = static_cast<std::size_t>(pBegin - GetBegin());
 
 		if(std::is_nothrow_move_constructible<ElementType>::value){
 			const auto uDeltaSize = static_cast<std::size_t>(pEnd - pBegin);
@@ -627,11 +644,13 @@ public:
 			}
 			*this = std::move(vecTemp);
 		}
+
+		return GetBegin() + uOffset;
 	}
-	void Erase(const ElementType *pPos) noexcept(noexcept(std::declval<Vector &>().Erase(pPos, pPos))) {
+	ElementType *Erase(const ElementType *pPos) noexcept(noexcept(std::declval<Vector &>().Erase(pPos, pPos))) {
 		ASSERT(pPos);
 
-		Erase(pPos, pPos + 1);
+		return Erase(pPos, pPos + 1);
 	}
 
 	const ElementType &operator[](std::size_t uIndex) const noexcept {

@@ -111,7 +111,7 @@ private:
 	std::pair<std::size_t, bool> X_PrepareForInsertion(std::size_t uPos, std::size_t uDeltaSize){
 		ASSERT(std::is_nothrow_move_constructible<ElementT>::value);
 		ASSERT(!IsEmpty());
-		ASSERT(uPos <= GetSize());
+		ASSERT(X_Advance(x_uBegin, uPos) <= GetSize());
 
 		const auto uCountBefore = X_Retreat(uPos, x_uBegin);
 		const auto uCountAfter = X_Retreat(x_uEnd, uPos);
@@ -172,7 +172,7 @@ private:
 		ASSERT(std::is_nothrow_move_constructible<ElementT>::value);
 		ASSERT(!IsEmpty());
 		ASSERT(uDeltaSize <= GetCapacity() - GetSize());
-		ASSERT((vPrepared.second ? vPrepared.first : X_Advance(vPrepared.first, uDeltaSize)) <= GetSize());
+		ASSERT(X_Advance(x_uBegin, vPrepared.second ? vPrepared.first : X_Advance(vPrepared.first, uDeltaSize)) <= GetSize());
 
 		const auto pStorage = X_GetStorage();
 
@@ -520,18 +520,21 @@ public:
 	}
 
 	template<typename ...ParamsT>
-	void Push(ParamsT &&...vParams){
+	ElementType &Push(ParamsT &&...vParams){
 		ReserveMore(1);
-		UncheckedPush(std::forward<ParamsT>(vParams)...);
+		return UncheckedPush(std::forward<ParamsT>(vParams)...);
 	}
 	template<typename ...ParamsT>
-	void UncheckedPush(ParamsT &&...vParams) noexcept(std::is_nothrow_constructible<ElementType, ParamsT &&...>::value) {
+	ElementType &UncheckedPush(ParamsT &&...vParams) noexcept(std::is_nothrow_constructible<ElementType, ParamsT &&...>::value) {
 		ASSERT(GetCapacity() - GetSize() > 0);
 
 		const auto pStorage = static_cast<ElementType *>(x_pStorage);
 		const auto uNewEnd = X_Advance(x_uEnd, 1);
-		Construct(pStorage + x_uEnd, std::forward<ParamsT>(vParams)...);
+		const auto pElem = pStorage + x_uEnd;
+		DefaultConstruct(pElem, std::forward<ParamsT>(vParams)...);
 		x_uEnd = uNewEnd;
+
+		return *pElem;
 	}
 	void Pop(std::size_t uCount = 1) noexcept {
 		ASSERT(uCount <= GetSize());
@@ -554,19 +557,23 @@ public:
 	}
 
 	template<typename ...ParamsT>
-	void Unshift(ParamsT &&...vParams){
+	ElementType &Unshift(ParamsT &&...vParams){
 		ReserveMore(1);
-		UncheckedUnshift(std::forward<ParamsT>(vParams)...);
+		return UncheckedUnshift(std::forward<ParamsT>(vParams)...);
 	}
 	template<typename ...ParamsT>
-	void UncheckedUnshift(ParamsT &&...vParams) noexcept(std::is_nothrow_constructible<ElementType, ParamsT &&...>::value) {
+	ElementType &UncheckedUnshift(ParamsT &&...vParams) noexcept(std::is_nothrow_constructible<ElementType, ParamsT &&...>::value) {
 		ASSERT(GetCapacity() - GetSize() > 0);
 
 		const auto pStorage = static_cast<ElementType *>(x_pStorage);
 		const auto uNewBegin = X_Retreat(x_uBegin, 1);
-		Construct(pStorage + uNewBegin, std::forward<ParamsT>(vParams)...);
+		const auto pElem = pStorage + uNewBegin;
+		DefaultConstruct(pElem, std::forward<ParamsT>(vParams)...);
 		x_uBegin = uNewBegin;
+
+		return *pElem;
 	}
+
 	void Shift(std::size_t uCount = 1) noexcept {
 		ASSERT(uCount <= GetSize());
 
@@ -692,13 +699,14 @@ public:
 	}
 
 	template<typename ...ParamsT>
-	void Emplace(const ElementType *pPos, ParamsT &&...vParams){
+	ElementType *Emplace(const ElementType *pPos, ParamsT &&...vParams){
 		if(!pPos){
 			Push(std::forward<ParamsT>(vParams)...);
-			return;
+			return nullptr;
 		}
 
 		const auto uPos = static_cast<std::size_t>(pPos - X_GetStorage());
+		const auto uCountBefore = X_Retreat(uPos, x_uBegin);
 		if(std::is_nothrow_move_constructible<ElementType>::value){
 			const auto vPrepared = X_PrepareForInsertion(uPos, 1);
 			const auto pStorage = X_GetStorage();
@@ -728,16 +736,19 @@ public:
 			queTemp.X_UncheckedUnsafeCopyFrom(*this, uPos, x_uEnd);
 			*this = std::move(queTemp);
 		}
+
+		return X_GetStorage() + X_Advance(x_uBegin, uCountBefore);
 	}
 
 	template<typename ...ParamsT>
-	void Insert(const ElementType *pPos, std::size_t uDeltaSize, const ParamsT &...vParams){
+	ElementType *Insert(const ElementType *pPos, std::size_t uDeltaSize, const ParamsT &...vParams){
 		if(!pPos){
 			Append(uDeltaSize, vParams...);
-			return;
+			return nullptr;
 		}
 
 		const auto uPos = static_cast<std::size_t>(pPos - X_GetStorage());
+		const auto uCountBefore = X_Retreat(uPos, x_uBegin);
 		if(std::is_nothrow_move_constructible<ElementType>::value){
 			const auto vPrepared = X_PrepareForInsertion(uPos, uDeltaSize);
 			const auto pStorage = X_GetStorage();
@@ -777,19 +788,23 @@ public:
 			queTemp.X_UncheckedUnsafeCopyFrom(*this, uPos, x_uEnd);
 			*this = std::move(queTemp);
 		}
+
+		return X_GetStorage() + X_Advance(x_uBegin, uCountBefore);
 	}
 	template<typename IteratorT, std::enable_if_t<
 		sizeof(typename std::iterator_traits<IteratorT>::value_type *),
 		int> = 0>
-	void Insert(const ElementType *pPos, IteratorT itBegin, std::common_type_t<IteratorT> itEnd){
+	ElementType *Insert(const ElementType *pPos, IteratorT itBegin, std::common_type_t<IteratorT> itEnd){
 		if(!pPos){
 			Append(itBegin, itEnd);
-			return;
+			return nullptr;
 		}
 
 		constexpr bool kHasDeltaSizeHint = std::is_base_of<std::forward_iterator_tag, typename std::iterator_traits<IteratorT>::iterator_category>::value;
 
 		const auto uPos = static_cast<std::size_t>(pPos - X_GetStorage());
+
+		const auto uCountBefore = X_Retreat(uPos, x_uBegin);
 		if(kHasDeltaSizeHint && std::is_nothrow_move_constructible<ElementType>::value){
 			const auto uDeltaSize = static_cast<std::size_t>(std::distance(itBegin, itEnd));
 
@@ -798,7 +813,6 @@ public:
 			auto uWrite = vPrepared.first;
 			try {
 				for(auto it = itBegin; it != itEnd; ++it){
-static int k = 0; if(++k == 5){ throw std::bad_alloc(); }
 					Construct(pStorage + uWrite, *it);
 					uWrite = X_Advance(uWrite, 1);
 				}
@@ -844,14 +858,16 @@ static int k = 0; if(++k == 5){ throw std::bad_alloc(); }
 				*this = std::move(queTemp);
 			}
 		}
+
+		return X_GetStorage() + X_Advance(x_uBegin, uCountBefore);
 	}
-	void Insert(const ElementType *pPos, std::initializer_list<ElementType> ilElements){
-		Insert(pPos, ilElements.begin(), ilElements.end());
+	ElementType *Insert(const ElementType *pPos, std::initializer_list<ElementType> ilElements){
+		return Insert(pPos, ilElements.begin(), ilElements.end());
 	}
 
-	void Erase(const ElementType *pBegin, const ElementType *pEnd) noexcept(std::is_nothrow_move_constructible<ElementType>::value) {
+	ElementType *Erase(const ElementType *pBegin, const ElementType *pEnd) noexcept(std::is_nothrow_move_constructible<ElementType>::value) {
 		if(pBegin == pEnd){
-			return;
+			return const_cast<ElementType *>(pEnd);
 		}
 		ASSERT(pBegin);
 
@@ -861,11 +877,11 @@ static int k = 0; if(++k == 5){ throw std::bad_alloc(); }
 			const auto uDeltaSize = X_Retreat(x_uEnd, uBegin);
 
 			Pop(uDeltaSize);
-			return;
+			return nullptr;
 		}
+		const auto uCountBefore = X_Retreat(uBegin, x_uBegin);
 		const auto uEnd = static_cast<std::size_t>(pEnd - pStorage);
 		if(std::is_nothrow_move_constructible<ElementType>::value){
-			const auto uCountBefore = X_Retreat(uBegin, x_uBegin);
 			const auto uCountAfter = X_Retreat(x_uEnd, uEnd);
 			if(uCountBefore >= uCountAfter){
 				if(uBegin <= uEnd){
@@ -943,11 +959,13 @@ static int k = 0; if(++k == 5){ throw std::bad_alloc(); }
 			queTemp.X_UncheckedUnsafeCopyFrom(*this, uEnd, x_uEnd);
 			*this = std::move(queTemp);
 		}
+
+		return pStorage + X_Advance(x_uBegin, uCountBefore);
 	}
-	void Erase(const ElementType *pPos) noexcept(noexcept(std::declval<RingQueue &>().Erase(pPos, pPos))) {
+	ElementType *Erase(const ElementType *pPos) noexcept(noexcept(std::declval<RingQueue &>().Erase(pPos, pPos))) {
 		ASSERT(pPos);
 
-		Erase(pPos, GetNext(pPos));
+		return Erase(pPos, GetNext(pPos));
 	}
 
 	const ElementType &operator[](std::size_t uIndex) const noexcept {

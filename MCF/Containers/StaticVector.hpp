@@ -276,7 +276,7 @@ public:
 
 	void Reserve(std::size_t uNewCapacity){
 		if(uNewCapacity > GetCapacity()){
-			DEBUG_THROW(Exception, ERROR_OUTOFMEMORY, __PRETTY_FUNCTION__);
+			DEBUG_THROW(Exception, ERROR_OUTOFMEMORY, RefCountingNtmbs::View(__PRETTY_FUNCTION__));
 		}
 	}
 	void ReserveMore(std::size_t uDeltaCapacity){
@@ -289,17 +289,20 @@ public:
 	}
 
 	template<typename ...ParamsT>
-	void Push(ParamsT &&...vParams){
+	ElementType &Push(ParamsT &&...vParams){
 		ReserveMore(1);
-		UncheckedPush(std::forward<ParamsT>(vParams)...);
+		return UncheckedPush(std::forward<ParamsT>(vParams)...);
 	}
 	template<typename ...ParamsT>
-	void UncheckedPush(ParamsT &&...vParams) noexcept(std::is_nothrow_constructible<ElementType, ParamsT &&...>::value) {
+	ElementType &UncheckedPush(ParamsT &&...vParams) noexcept(std::is_nothrow_constructible<ElementType, ParamsT &&...>::value) {
 		ASSERT(GetCapacity() - x_uSize > 0);
 
 		const auto pBegin = GetBegin();
-		DefaultConstruct(pBegin + x_uSize, std::forward<ParamsT>(vParams)...);
+		const auto pElem = pBegin + x_uSize;
+		DefaultConstruct(pElem, std::forward<ParamsT>(vParams)...);
 		++x_uSize;
+
+		return *pElem;
 	}
 	void Pop(std::size_t uCount = 1) noexcept {
 		ASSERT(uCount <= x_uSize);

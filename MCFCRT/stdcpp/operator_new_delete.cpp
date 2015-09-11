@@ -13,16 +13,12 @@
 
 namespace {
 
-#if __MCF_CRT_REQUIRE_HEAPDBG_LEVEL(1)
+#if __MCF_CRT_REQUIRE_HEAPDBG_LEVEL(2)
 
-std::uintptr_t GetMagic(bool bIsArray){
-	return (std::uintptr_t)::EncodePointer((void *)(bIsArray ?
-#ifdef _WIN64
-		0xDEADBEEFDEADBEEF : 0xBEEFDEADBEEFDEAD
-#else
-		0xDEADBEEF : 0xBEEFDEAD
-#endif
-		));
+std::uintptr_t GetMagic(void *pRaw, bool bIsArray){
+	const auto uEncoded = reinterpret_cast<std::uintptr_t>(::EncodePointer(pRaw));
+	const auto uMask = static_cast<std::uintptr_t>(bIsArray ? 0xDEADBEEFDEADBEEF : 0xBEEFDEADBEEFDEAD);
+	return uEncoded ^ uMask;
 }
 
 #endif
@@ -30,7 +26,7 @@ std::uintptr_t GetMagic(bool bIsArray){
 static_assert(sizeof(std::uintptr_t) <= alignof(std::max_align_t), "wtf?");
 
 void *Allocate(std::size_t uSize, bool bIsArray, const void *pRetAddr){
-#if __MCF_CRT_REQUIRE_HEAPDBG_LEVEL(1)
+#if __MCF_CRT_REQUIRE_HEAPDBG_LEVEL(2)
 	const auto uSizeToAlloc = alignof(std::max_align_t) + uSize;
 	if(uSizeToAlloc < uSize){
 		throw std::bad_alloc();
@@ -38,7 +34,7 @@ void *Allocate(std::size_t uSize, bool bIsArray, const void *pRetAddr){
 #else
 	const auto uSizeToAlloc = uSize;
 #endif
-	auto pRaw = ::__MCF_CRT_HeapAlloc(uSizeToAlloc, pRetAddr);
+	void *pRaw = ::__MCF_CRT_HeapAlloc(uSizeToAlloc, pRetAddr);
 	while(!pRaw){
 		const auto pfnHandler = std::get_new_handler();
 		if(!pfnHandler){
@@ -47,16 +43,19 @@ void *Allocate(std::size_t uSize, bool bIsArray, const void *pRetAddr){
 		(*pfnHandler)();
 		pRaw = ::__MCF_CRT_HeapAlloc(uSizeToAlloc, pRetAddr);
 	}
-#if __MCF_CRT_REQUIRE_HEAPDBG_LEVEL(1)
-	*(std::uintptr_t *)pRaw = GetMagic(bIsArray);
-	return (unsigned char *)pRaw + alignof(std::max_align_t);
+#if __MCF_CRT_REQUIRE_HEAPDBG_LEVEL(2)
+	const auto uMagic = GetMagic(pRaw, bIsArray);
+	for(std::size_t i = 0; i < alignof(std::max_align_t) / sizeof(std::uintptr_t); ++i){
+		static_cast<std::uintptr_t *>(pRaw)[i] = uMagic;
+	}
+	return static_cast<char *>(pRaw) + alignof(std::max_align_t);
 #else
 	UNREF_PARAM(bIsArray);
 	return pRaw;
 #endif
 }
 void *AllocateNoThrow(std::size_t uSize, bool bIsArray, const void *pRetAddr) noexcept {
-#if __MCF_CRT_REQUIRE_HEAPDBG_LEVEL(1)
+#if __MCF_CRT_REQUIRE_HEAPDBG_LEVEL(2)
 	const auto uSizeToAlloc = alignof(std::max_align_t) + uSize;
 	if(uSizeToAlloc < uSize){
 		return nullptr;
@@ -64,7 +63,7 @@ void *AllocateNoThrow(std::size_t uSize, bool bIsArray, const void *pRetAddr) no
 #else
 	const auto uSizeToAlloc = uSize;
 #endif
-	auto pRaw = ::__MCF_CRT_HeapAlloc(uSizeToAlloc, pRetAddr);
+	void *pRaw = ::__MCF_CRT_HeapAlloc(uSizeToAlloc, pRetAddr);
 	if(!pRaw){
 		try {
 			do {
@@ -79,9 +78,12 @@ void *AllocateNoThrow(std::size_t uSize, bool bIsArray, const void *pRetAddr) no
 			return nullptr;
 		}
 	}
-#if __MCF_CRT_REQUIRE_HEAPDBG_LEVEL(1)
-	*(std::uintptr_t *)pRaw = GetMagic(bIsArray);
-	return pRaw + alignof(std::max_align_t);
+#if __MCF_CRT_REQUIRE_HEAPDBG_LEVEL(2)
+	const auto uMagic = GetMagic(pRaw, bIsArray);
+	for(std::size_t i = 0; i < alignof(std::max_align_t) / sizeof(std::uintptr_t); ++i){
+		static_cast<std::uintptr_t *>(pRaw)[i] = uMagic;
+	}
+	return static_cast<char *>(pRaw) + alignof(std::max_align_t);
 #else
 	UNREF_PARAM(bIsArray);
 	return pRaw;
@@ -91,11 +93,19 @@ void Deallocate(void *pBlock, bool bIsArray, const void *pRetAddr) noexcept {
 	if(!pBlock){
 		return;
 	}
-#if __MCF_CRT_REQUIRE_HEAPDBG_LEVEL(1)
-	void *const pRaw = (unsigned char *)pBlock - alignof(std::max_align_t);
-	if(*(std::uintptr_t *)pRaw != GetMagic(bIsArray)){
-		const auto pwcSuffix = bIsArray ? L"[]" : L"";
-		MCF_CRT_BailF(L"试图使用 operator delete%ls() 释放不是由 operator new%ls() 分配的内存。\n调用返回地址：%p", pwcSuffix, pwcSuffix, pRetAddr);
+#if __MCF_CRT_REQUIRE_HEAPDBG_LEVEL(2)
+	void *const pRaw = static_cast<char *>(pBlock) - alignof(std::max_align_t);
+	const auto uMagic = GetMagic(pRaw, bIsArray);
+	const auto uOtherMagic = GetMagic(pRaw, !bIsArray);
+	for(std::size_t i = 0; i < alignof(std::max_align_t) / sizeof(std::uintptr_t); ++i){
+		const auto uTest = static_cast<std::uintptr_t *>(pRaw)[i];
+		if(uTest != uMagic){
+			const auto pwcSuffix = bIsArray ? L"[]" : L"";
+			if(uTest == uOtherMagic){
+				MCF_CRT_BailF(L"试图使用 operator delete%ls() 释放不是由 operator new%ls() 分配的内存。\n调用返回地址：%p", pwcSuffix, pwcSuffix, pRetAddr);
+			}
+			MCF_CRT_BailF(L"在 operator delete%ls() 中侦测到堆损坏。\n调用返回地址：%p", pwcSuffix, pRetAddr);
+		}
 	}
 #else
 	UNREF_PARAM(bIsArray);

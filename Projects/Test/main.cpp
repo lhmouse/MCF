@@ -1,6 +1,8 @@
 extern "C" unsigned MCFMain(){
-	auto p = new char[100];
-	// p[-1] = 0;
-	delete[] p;
+	try {
+		throw 123;
+	} catch(int e){
+		__builtin_printf("exception: e = %d\n", e);
+	}
 	return 0;
 }

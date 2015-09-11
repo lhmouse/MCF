@@ -45,6 +45,11 @@ namespace Impl_EnumeratorTemplate {
 		}
 
 	public:
+		ElementType *GetPtr() const noexcept {
+			return x_pElement;
+		}
+
+	public:
 		bool operator==(const Enumerator &rhs) const noexcept {
 			return x_pElement == rhs.x_pElement;
 		}
@@ -90,9 +95,6 @@ namespace Impl_EnumeratorTemplate {
 		explicit operator bool() const noexcept {
 			return !!x_pElement;
 		}
-		operator ElementType *() const noexcept {
-			return x_pElement;
-		}
 	};
 
 	template<typename ContainerT>
@@ -116,6 +118,11 @@ namespace Impl_EnumeratorTemplate {
 		constexpr ConstEnumerator(const Enumerator<ContainerT> &rhs) noexcept
 			: x_pContainer(rhs.x_pContainer), x_pElement(rhs.x_pElement)
 		{
+		}
+
+	public:
+		const ElementType *GetPtr() const noexcept {
+			return x_pElement;
 		}
 
 	public:
@@ -163,9 +170,6 @@ namespace Impl_EnumeratorTemplate {
 
 		explicit operator bool() const noexcept {
 			return !!x_pElement;
-		}
-		operator const ElementType *() const noexcept {
-			return x_pElement;
 		}
 	};
 

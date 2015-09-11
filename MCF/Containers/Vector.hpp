@@ -75,38 +75,30 @@ public:
 	}
 
 private:
-	ElementT *X_PrepareForInsertion(const ElementT *pPos, std::size_t uDeltaSize){
+	void X_PrepareForInsertion(std::size_t uPos, std::size_t uDeltaSize){
 		ASSERT(std::is_nothrow_move_constructible<ElementT>::value);
 		ASSERT(!IsEmpty());
-		ASSERT(pPos);
+		ASSERT(uPos <= GetSize());
 
-		const auto uOffset = static_cast<std::size_t>(pPos - GetBegin());
 		ReserveMore(uDeltaSize);
 		const auto pBegin = GetBegin();
-
-		for(std::size_t i = x_uSize; i > uOffset; --i){
+		for(std::size_t i = x_uSize; i > uPos; --i){
 			const auto pRead = pBegin + i - 1;
-			const auto pWrite = pRead + uDeltaSize;
-			Construct(pWrite, std::move(*pRead));
+			Construct(pRead + uDeltaSize, std::move(pRead[0]));
 			Destruct(pRead);
 		}
-
-		return pBegin + uOffset;
 	}
-	void X_UndoPreparation(ElementT *pPrepared, std::size_t uDeltaSize) noexcept {
+	void X_UndoPreparation(std::size_t uPos, std::size_t uDeltaSize) noexcept {
 		ASSERT(std::is_nothrow_move_constructible<ElementT>::value);
 		ASSERT(!IsEmpty());
-		ASSERT(pPrepared);
-		ASSERT(uDeltaSize <= GetCapacity() - GetSize());
+		ASSERT(uPos <= GetSize());
+		ASSERT(uDeltaSize <= GetSize() - uPos);
 
 		const auto pBegin = GetBegin();
-		const auto uOffset = static_cast<std::size_t>(pPrepared - pBegin);
-
-		for(std::size_t i = uOffset; i < x_uSize; ++i){
+		for(std::size_t i = uPos; i < x_uSize; ++i){
 			const auto pWrite = pBegin + i;
-			const auto pRead = pWrite + uDeltaSize;
-			Construct(pWrite, std::move(*pRead));
-			Destruct(pRead);
+			Construct(pWrite, std::move(pWrite[uDeltaSize]));
+			Destruct(pWrite + uDeltaSize);
 		}
 	}
 
@@ -446,11 +438,12 @@ public:
 		const auto uOffset = static_cast<std::size_t>(pPos - GetBegin());
 
 		if(std::is_nothrow_move_constructible<ElementType>::value){
-			const auto pWriteBegin = X_PrepareForInsertion(pPos, 1);
+			X_PrepareForInsertion(uOffset, 1);
+			const auto pBegin = GetBegin();
 			try {
-				DefaultConstruct(pWriteBegin, std::forward<ParamsT>(vParams)...);
+				DefaultConstruct(pBegin + uOffset, std::forward<ParamsT>(vParams)...);
 			} catch(...){
-				X_UndoPreparation(pWriteBegin, 1);
+				X_UndoPreparation(uOffset, 1);
 				throw;
 			}
 			++x_uSize;
@@ -488,19 +481,20 @@ public:
 		const auto uOffset = static_cast<std::size_t>(pPos - GetBegin());
 
 		if(std::is_nothrow_move_constructible<ElementType>::value){
-			const auto pWriteBegin = X_PrepareForInsertion(pPos, uDeltaSize);
-			auto pWrite = pWriteBegin;
+			X_PrepareForInsertion(uOffset, uDeltaSize);
+			const auto pBegin = GetBegin();
+			std::size_t uWrite = 0;
 			try {
 				for(std::size_t i = 0; i < uDeltaSize; ++i){
-					DefaultConstruct(pWrite, vParams...);
-					++pWrite;
+					DefaultConstruct(pBegin + uOffset + uWrite, vParams...);
+					++uWrite;
 				}
 			} catch(...){
-				while(pWrite != pWriteBegin){
-					--pWrite;
-					Destruct(pWrite);
+				while(uWrite != 0){
+					--uWrite;
+					Destruct(pBegin + uWrite);
 				}
-				X_UndoPreparation(pWriteBegin, uDeltaSize);
+				X_UndoPreparation(uWrite, uDeltaSize);
 				throw;
 			}
 			x_uSize += uDeltaSize;
@@ -544,19 +538,20 @@ public:
 
 		if(kHasDeltaSizeHint && std::is_nothrow_move_constructible<ElementType>::value){
 			const auto uDeltaSize = static_cast<std::size_t>(std::distance(itBegin, itEnd));
-			const auto pWriteBegin = X_PrepareForInsertion(pPos, uDeltaSize);
-			auto pWrite = pWriteBegin;
+			X_PrepareForInsertion(uOffset, uDeltaSize);
+			const auto pBegin = GetBegin();
+			std::size_t uWrite = 0;
 			try {
 				for(auto it = itBegin; it != itEnd; ++it){
-					Construct(pWrite, *it);
-					++pWrite;
+					Construct(pBegin + uOffset + uWrite, *it);
+					++uWrite;
 				}
 			} catch(...){
-				while(pWrite != pWriteBegin){
-					--pWrite;
-					Destruct(pWrite);
+				while(uWrite != 0){
+					--uWrite;
+					Destruct(pBegin + uWrite);
 				}
-				X_UndoPreparation(pWriteBegin, uDeltaSize);
+				X_UndoPreparation(uWrite, uDeltaSize);
 				throw;
 			}
 			x_uSize += uDeltaSize;

@@ -51,7 +51,7 @@ using OnceFlag = volatile Impl_CallOnce::OnceFlag;
 
 template<typename FunctionT, typename ...ParamsT>
 bool CallOnce(OnceFlag &vFlag, FunctionT &&vFunction, ParamsT &&...vParams){
-	auto eState = vFlag.Load(kAcquire);
+	auto eState = vFlag.Load(kAtomicAcquire);
 	if(eState == OnceFlag::kInitialized){
 		return false;
 	}

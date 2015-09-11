@@ -372,7 +372,10 @@ template<typename ElementT, std::size_t kCapacity>
 decltype(auto) begin(StaticVector<ElementT, kCapacity> &rhs) noexcept {
 	return rhs.EnumerateFirst();
 }
-
+template<typename ElementT, std::size_t kCapacity>
+decltype(auto) cbegin(const StaticVector<ElementT, kCapacity> &rhs) noexcept {
+	return begin(rhs);
+}
 template<typename ElementT, std::size_t kCapacity>
 decltype(auto) end(const StaticVector<ElementT, kCapacity> &rhs) noexcept {
 	return rhs.EnumerateSingular();
@@ -380,6 +383,10 @@ decltype(auto) end(const StaticVector<ElementT, kCapacity> &rhs) noexcept {
 template<typename ElementT, std::size_t kCapacity>
 decltype(auto) end(StaticVector<ElementT, kCapacity> &rhs) noexcept {
 	return rhs.EnumerateSingular();
+}
+template<typename ElementT, std::size_t kCapacity>
+decltype(auto) cend(const StaticVector<ElementT, kCapacity> &rhs) noexcept {
+	return end(rhs);
 }
 
 }

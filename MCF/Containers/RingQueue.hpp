@@ -989,7 +989,10 @@ template<typename ElementT>
 decltype(auto) begin(RingQueue<ElementT> &rhs) noexcept {
 	return rhs.EnumerateFirst();
 }
-
+template<typename ElementT>
+decltype(auto) cbegin(const RingQueue<ElementT> &rhs) noexcept {
+	return begin(rhs);
+}
 template<typename ElementT>
 decltype(auto) end(const RingQueue<ElementT> &rhs) noexcept {
 	return rhs.EnumerateSingular();
@@ -997,6 +1000,10 @@ decltype(auto) end(const RingQueue<ElementT> &rhs) noexcept {
 template<typename ElementT>
 decltype(auto) end(RingQueue<ElementT> &rhs) noexcept {
 	return rhs.EnumerateSingular();
+}
+template<typename ElementT>
+decltype(auto) cend(const RingQueue<ElementT> &rhs) noexcept {
+	return end(rhs);
 }
 
 }

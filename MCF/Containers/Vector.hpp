@@ -668,7 +668,10 @@ template<typename ElementT>
 decltype(auto) begin(Vector<ElementT> &rhs) noexcept {
 	return rhs.EnumerateFirst();
 }
-
+template<typename ElementT>
+decltype(auto) cbegin(const Vector<ElementT> &rhs) noexcept {
+	return begin(rhs);
+}
 template<typename ElementT>
 decltype(auto) end(const Vector<ElementT> &rhs) noexcept {
 	return rhs.EnumerateSingular();
@@ -676,6 +679,10 @@ decltype(auto) end(const Vector<ElementT> &rhs) noexcept {
 template<typename ElementT>
 decltype(auto) end(Vector<ElementT> &rhs) noexcept {
 	return rhs.EnumerateSingular();
+}
+template<typename ElementT>
+decltype(auto) cend(const Vector<ElementT> &rhs) noexcept {
+	return end(rhs);
 }
 
 }

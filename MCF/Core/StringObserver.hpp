@@ -489,8 +489,16 @@ decltype(auto) begin(const StringObserver<kTypeT> &rhs) noexcept {
 	return rhs.GetBegin();
 }
 template<StringType kTypeT>
+decltype(auto) cbegin(const StringObserver<kTypeT> &rhs) noexcept {
+	return begin(rhs);
+}
+template<StringType kTypeT>
 decltype(auto) end(const StringObserver<kTypeT> &rhs) noexcept {
 	return rhs.GetEnd();
+}
+template<StringType kTypeT>
+decltype(auto) cend(const StringObserver<kTypeT> &rhs) noexcept {
+	return end(rhs);
 }
 
 extern template class StringObserver<StringType::NARROW>;

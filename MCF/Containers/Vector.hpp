@@ -51,7 +51,6 @@ public:
 		: Vector()
 	{
 		Reserve(rhs.GetSize());
-
 		for(auto pElem = rhs.GetBegin(); pElem != rhs.GetEnd(); ++pElem){
 			UncheckedPush(*pElem);
 		}

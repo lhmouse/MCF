@@ -51,20 +51,12 @@ public:
 	StaticVector(const StaticVector &rhs)
 		: StaticVector()
 	{
-		// Reserve(rhs.x_uSize);
-
-		for(auto pElem = rhs.GetBegin(); pElem != rhs.GetEnd(); ++pElem){
-			UncheckedPush(*pElem);
-		}
+		Append(rhs.GetBegin(), rhs.GetEnd());
 	}
 	StaticVector(StaticVector &&rhs) noexcept(std::is_nothrow_move_constructible<ElementT>::value)
 		: StaticVector()
 	{
-		// Reserve(rhs.x_uSize);
-
-		for(auto pElem = rhs.GetBegin(); pElem != rhs.GetEnd(); ++pElem){
-			UncheckedPush(std::move(*pElem));
-		}
+		Append(std::make_move_iterator(rhs.GetBegin()), std::make_move_iterator(rhs.GetEnd()));
 	}
 	StaticVector &operator=(const StaticVector &rhs){
 		Clear();

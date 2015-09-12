@@ -25,7 +25,7 @@
 #	endif
 #endif
 
-#define __MCF_CRT_REQUIRE_HEAPDBG_LEVEL(lv_)	((__MCF_CRT_HEAPDBG_LEVEL + 0) >= lv_)
+#define __MCF_CRT_REQUIRE_HEAPDBG_LEVEL(lv_)	((__MCF_CRT_HEAPDBG_LEVEL + 0) >= (lv_))
 
 #include "avl_tree.h"
 

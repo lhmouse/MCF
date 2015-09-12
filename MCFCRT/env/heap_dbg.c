@@ -9,9 +9,12 @@
 #include "mcfwin.h"
 #include <stdio.h>
 
-#if __MCF_CRT_REQUIRE_HEAPDBG_LEVEL(3)
+#define USE_DL_PREFIX
+#include "../../External/dlmalloc/malloc.h"
 
 #define GUARD_BAND_SIZE     0x20u
+
+#if __MCF_CRT_REQUIRE_HEAPDBG_LEVEL(3)
 
 static HANDLE       g_hMapAllocator;
 static MCF_AvlRoot  g_pavlBlocks;
@@ -91,7 +94,7 @@ void __MCF_CRT_HeapDbgUninit(){
 #endif
 }
 
-#if __MCF_CRT_REQUIRE_HEAPDBG_LEVEL(3)
+#if __MCF_CRT_REQUIRE_HEAPDBG_LEVEL(2)
 
 size_t __MCF_CRT_HeapDbgGetRawSize(size_t uContentSize){
 	return uContentSize + GUARD_BAND_SIZE * 2;
@@ -101,6 +104,7 @@ unsigned char *__MCF_CRT_HeapDbgAddGuardsAndRegister(
 {
 	unsigned char *const pContents = pRaw + GUARD_BAND_SIZE;
 
+#if __MCF_CRT_REQUIRE_HEAPDBG_LEVEL(3)
 	__MCF_HeapDbgBlockInfo *const pBlockInfo = HeapAlloc(g_hMapAllocator, 0, sizeof(__MCF_HeapDbgBlockInfo));
 	if(!pBlockInfo){
 		return nullptr;
@@ -109,9 +113,18 @@ unsigned char *__MCF_CRT_HeapDbgAddGuardsAndRegister(
 	pBlockInfo->__uSize     = uContentSize;
 	pBlockInfo->__pRetAddr  = pRetAddr;
 	MCF_AvlAttach(&g_pavlBlocks, (MCF_AvlNodeHeader *)pBlockInfo, &BlockInfoComparatorNodes);
+#else
+	(void)pRetAddr;
+#endif
 
+#if __MCF_CRT_REQUIRE_HEAPDBG_LEVEL(3)
+	const size_t uSize = uContentSize;
+#else
+	(void)uContentSize;
+	const size_t uSize = dlmalloc_usable_size(pRaw) - GUARD_BAND_SIZE * 2;
+#endif
 	void **ppGuard1 = (void **)pContents;
-	void **ppGuard2 = (void **)(pContents + uContentSize);
+	void **ppGuard2 = (void **)(pContents + uSize);
 	for(unsigned i = 0; i < GUARD_BAND_SIZE; i += sizeof(void *)){
 		--ppGuard1;
 
@@ -130,14 +143,20 @@ const __MCF_HeapDbgBlockInfo *__MCF_CRT_HeapDbgValidate(
 	unsigned char *const pRaw = pContents - GUARD_BAND_SIZE;
 	*ppRaw = pRaw;
 
+#if __MCF_CRT_REQUIRE_HEAPDBG_LEVEL(3)
 	const __MCF_HeapDbgBlockInfo *const pBlockInfo = (const __MCF_HeapDbgBlockInfo *)MCF_AvlFind(
 		&g_pavlBlocks, (intptr_t)pContents, &BlockInfoComparatorNodeKey);
 	if(!pBlockInfo){
 		MCF_CRT_BailF(L"__MCF_CRT_HeapDbgValidate() 失败：传入的指针无效。\n调用返回地址：%p", pRetAddr);
 	}
+	const size_t uSize = pBlockInfo->__uSize;
+#else
+	const __MCF_HeapDbgBlockInfo *const pBlockInfo = nullptr;
+	const size_t uSize = dlmalloc_usable_size(pRaw) - GUARD_BAND_SIZE * 2;
+#endif
 
 	void *const *ppGuard1 = (void *const *)pContents;
-	void *const *ppGuard2 = (void *const *)(pContents + pBlockInfo->__uSize);
+	void *const *ppGuard2 = (void *const *)(pContents + uSize);
 	for(unsigned i = 0; i < GUARD_BAND_SIZE; i += sizeof(void *)){
 		--ppGuard1;
 
@@ -154,8 +173,12 @@ const __MCF_HeapDbgBlockInfo *__MCF_CRT_HeapDbgValidate(
 	return pBlockInfo;
 }
 void __MCF_CRT_HeapDbgUnregister(const __MCF_HeapDbgBlockInfo *pBlockInfo){
+#if __MCF_CRT_REQUIRE_HEAPDBG_LEVEL(3)
 	MCF_AvlDetach((const MCF_AvlNodeHeader *)pBlockInfo);
 	HeapFree(g_hMapAllocator, 0, (void *)pBlockInfo);
+#else
+	(void)pBlockInfo;
+#endif
 }
 
 #endif

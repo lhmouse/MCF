@@ -10,17 +10,18 @@
 /*
 	__MCF_CRT_HEAPDBG_LEVEL
 
-	0	禁用。
-	1	添加临界区检查，对 GetLastError() 投毒。
-	2	在 1 的基础上，向新分配和已释放的内存投毒。
-	3	在 2 的基础上，捕获越界的内存操作及内存泄漏。
+	0 禁用。
+	1 对 GetLastError() 投毒。
+	2 在 1 的基础上，捕获部分越界的内存操作。
+	3 在 2 的基础上，捕获全部越界的内存操作及内存泄漏。
+	4 在 3 的基础上，添加临界区检查，向新分配和已释放的内存投毒。
 */
 
 #ifndef __MCF_CRT_HEAPDBG_LEVEL
 #	ifdef NDEBUG
-#		define __MCF_CRT_HEAPDBG_LEVEL	1
+#		define __MCF_CRT_HEAPDBG_LEVEL	2
 #	else
-#		define __MCF_CRT_HEAPDBG_LEVEL	3
+#		define __MCF_CRT_HEAPDBG_LEVEL	4
 #	endif
 #endif
 
@@ -33,7 +34,7 @@ __MCF_CRT_EXTERN_C_BEGIN
 extern bool __MCF_CRT_HeapDbgInit(void) MCF_NOEXCEPT;
 extern void __MCF_CRT_HeapDbgUninit(void) MCF_NOEXCEPT;
 
-#if __MCF_CRT_REQUIRE_HEAPDBG_LEVEL(3)
+#if __MCF_CRT_REQUIRE_HEAPDBG_LEVEL(2)
 
 typedef struct __MCF_tagHeapDbgBlockInfo {
 	MCF_AvlNodeHeader __vHeader;

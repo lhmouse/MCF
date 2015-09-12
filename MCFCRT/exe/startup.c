@@ -108,8 +108,7 @@ static const PIMAGE_TLS_CALLBACK _callback_start = &TlsCallback;
 __attribute__((__section__(".CRT$___"), __used__))
 static const PIMAGE_TLS_CALLBACK _callback_end   = nullptr;
 
-__attribute__((__section__(".tls"), __used__))
-const DWORD _tls_index   = 0;
+DWORD _tls_index;
 
 __attribute__((__section__(".tls"), __used__))
 const IMAGE_TLS_DIRECTORY _tls_used = {

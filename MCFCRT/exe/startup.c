@@ -99,23 +99,23 @@ static void TlsCallback(void *hModule, DWORD dwReason, void *pReserved){
 
 // 线程局部存储（TLS）目录，用于执行 TLS 的析构函数。
 __extension__ __attribute__((__section__(".tls$@@@"), __used__))
-static const char _tls_start[0] = { };
+static const char tls_start[0] = { };
 __extension__ __attribute__((__section__(".tls$___"), __used__))
-static const char _tls_end[0]   = { };
+static const char tls_end[0]   = { };
 
 __attribute__((__section__(".CRT$@@@"), __used__))
-static const PIMAGE_TLS_CALLBACK _callback_start = &TlsCallback;
+static const PIMAGE_TLS_CALLBACK callback_start = &TlsCallback;
 __attribute__((__section__(".CRT$___"), __used__))
-static const PIMAGE_TLS_CALLBACK _callback_end   = nullptr;
+static const PIMAGE_TLS_CALLBACK callback_end   = nullptr;
 
 DWORD _tls_index;
 
-__attribute__((__section__(".tls"), __used__))
+__attribute__((__section__(".rdata"), __used__))
 const IMAGE_TLS_DIRECTORY _tls_used = {
-	.StartAddressOfRawData = (UINT_PTR)&_tls_start,
-	.EndAddressOfRawData   = (UINT_PTR)&_tls_end,
+	.StartAddressOfRawData = (UINT_PTR)&tls_start,
+	.EndAddressOfRawData   = (UINT_PTR)&tls_end,
 	.AddressOfIndex        = (UINT_PTR)&_tls_index,
-	.AddressOfCallBacks    = (UINT_PTR)&_callback_start,
+	.AddressOfCallBacks    = (UINT_PTR)&callback_start,
 	.SizeOfZeroFill        = 0,
 	.Characteristics       = 0,
 };

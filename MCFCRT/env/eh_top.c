@@ -25,7 +25,7 @@ void *__deregister_frame_info(const void *p){
 }
 
 __extension__ __attribute__((__section__(".eh_fram$@@@"), __used__))
-static const char _eh_begin[0] = { };
+static const char eh_begin[0] = { };
 
 static struct object _eh_obj;
 static void *_eh_frame_base;
@@ -34,7 +34,7 @@ static bool TraverseModuleSectionsCallback(intptr_t nContext, const char achName
 	UNREF_PARAM(nContext);
 	UNREF_PARAM(achName);
 
-	if(((uintptr_t)pBase <= (uintptr_t)_eh_begin) && ((uintptr_t)_eh_begin < (uintptr_t)pBase + uSize)){
+	if(((uintptr_t)pBase <= (uintptr_t)eh_begin) && ((uintptr_t)eh_begin < (uintptr_t)pBase + uSize)){
 		*(void **)nContext = pBase;
 		return false;
 	}

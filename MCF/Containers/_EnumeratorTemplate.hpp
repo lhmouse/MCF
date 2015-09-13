@@ -21,10 +21,10 @@ namespace Impl_EnumeratorTemplate {
 	//         ElementType * GetFirst (                   )       noexcept;
 	//   const ElementType * GetLast  (                   ) const noexcept;
 	//         ElementType * GetLast  (                   )       noexcept;
-	//   const ElementType * GetPrev  (const ElementType *) const         ;
-	//         ElementType * GetNext  (      ElementType *)               ;
-	//   const ElementType * GetPrev  (const ElementType *) const         ;
-	//         ElementType * GetNext  (      ElementType *)               ;
+	//   const ElementType * GetPrev  (const ElementType *) const noexcept;
+	//         ElementType * GetNext  (      ElementType *)       noexcept;
+	//   const ElementType * GetPrev  (const ElementType *) const noexcept;
+	//         ElementType * GetNext  (      ElementType *)       noexcept;
 
 	template<typename ContainerT>
 	class ConstEnumerator;
@@ -63,7 +63,7 @@ namespace Impl_EnumeratorTemplate {
 			return !(*this == rhs);
 		}
 
-		Enumerator &operator++(){
+		Enumerator &operator++() noexcept {
 			ASSERT(x_pContainer);
 
 			if(x_pElement){
@@ -73,7 +73,7 @@ namespace Impl_EnumeratorTemplate {
 			}
 			return *this;
 		}
-		Enumerator &operator--(){
+		Enumerator &operator--() noexcept {
 			ASSERT(x_pContainer);
 
 			if(x_pElement){
@@ -84,12 +84,12 @@ namespace Impl_EnumeratorTemplate {
 			return *this;
 		}
 
-		Enumerator operator++(int){
+		Enumerator operator++(int) noexcept {
 			auto enRet = *this;
 			++(*this);
 			return enRet;
 		}
-		Enumerator operator--(int){
+		Enumerator operator--(int) noexcept {
 			auto enRet = *this;
 			--(*this);
 			return enRet;
@@ -145,7 +145,7 @@ namespace Impl_EnumeratorTemplate {
 			return !(*this == rhs);
 		}
 
-		ConstEnumerator &operator++(){
+		ConstEnumerator &operator++() noexcept {
 			ASSERT(x_pContainer);
 
 			if(x_pElement){
@@ -155,7 +155,7 @@ namespace Impl_EnumeratorTemplate {
 			}
 			return *this;
 		}
-		ConstEnumerator &operator--(){
+		ConstEnumerator &operator--() noexcept {
 			ASSERT(x_pContainer);
 
 			if(x_pElement){
@@ -166,12 +166,12 @@ namespace Impl_EnumeratorTemplate {
 			return *this;
 		}
 
-		ConstEnumerator operator++(int){
+		ConstEnumerator operator++(int) noexcept {
 			auto enRet = *this;
 			++(*this);
 			return enRet;
 		}
-		ConstEnumerator operator--(int){
+		ConstEnumerator operator--(int) noexcept {
 			auto enRet = *this;
 			--(*this);
 			return enRet;

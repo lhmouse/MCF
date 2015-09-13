@@ -11,20 +11,26 @@
 namespace MCF {
 
 namespace Impl_EnumeratorTemplate {
-	// ConstEnumerator 和 Enumerator 需求：
+	// ConstEnumerator 和 Enumerator 需求
+	// ------------------------------------------------------------
+	// ContainerT 必须具有：
 	// 0) 成员类型：
 	//   ElementType
 	// 1) 成员函数：
-	//   const ElementType *GetPrev(const ElementType *) const;
-	//   ElementType *GetNext(ElementType *);
-	//   const ElementType *GetPrev(const ElementType *) const;
-	//   ElementType *GetNext(ElementType *);
+	//   const ElementType * GetFirst (                   ) const noexcept;
+	//         ElementType * GetFirst (                   )       noexcept;
+	//   const ElementType * GetLast  (                   ) const noexcept;
+	//         ElementType * GetLast  (                   )       noexcept;
+	//   const ElementType * GetPrev  (const ElementType *) const         ;
+	//         ElementType * GetNext  (      ElementType *)               ;
+	//   const ElementType * GetPrev  (const ElementType *) const         ;
+	//         ElementType * GetNext  (      ElementType *)               ;
 
 	template<typename ContainerT>
 	class ConstEnumerator;
 
 	template<typename ContainerT>
-	class Enumerator : public std::iterator<std::forward_iterator_tag, typename ContainerT::ElementType> {
+	class Enumerator : public std::iterator<std::bidirectional_iterator_tag, typename ContainerT::ElementType> {
 		friend ConstEnumerator<ContainerT>;
 
 	public:
@@ -59,16 +65,22 @@ namespace Impl_EnumeratorTemplate {
 
 		Enumerator &operator++(){
 			ASSERT(x_pContainer);
-			ASSERT(x_pElement);
 
-			x_pElement = x_pContainer->GetNext(x_pElement);
+			if(x_pElement){
+				x_pElement = x_pContainer->GetNext(x_pElement);
+			} else {
+				x_pElement = x_pContainer->GetFirst();
+			}
 			return *this;
 		}
 		Enumerator &operator--(){
 			ASSERT(x_pContainer);
-			ASSERT(x_pElement);
 
-			x_pElement = x_pContainer->GetPrev(x_pElement);
+			if(x_pElement){
+				x_pElement = x_pContainer->GetPrev(x_pElement);
+			} else {
+				x_pElement = x_pContainer->GetLast();
+			}
 			return *this;
 		}
 
@@ -98,7 +110,7 @@ namespace Impl_EnumeratorTemplate {
 	};
 
 	template<typename ContainerT>
-	class ConstEnumerator : public std::iterator<std::forward_iterator_tag, const typename ContainerT::ElementType> {
+	class ConstEnumerator : public std::iterator<std::bidirectional_iterator_tag, const typename ContainerT::ElementType> {
 	public:
 		using ElementType = const typename ContainerT::ElementType;
 
@@ -135,16 +147,22 @@ namespace Impl_EnumeratorTemplate {
 
 		ConstEnumerator &operator++(){
 			ASSERT(x_pContainer);
-			ASSERT(x_pElement);
 
-			x_pElement = x_pContainer->GetNext(x_pElement);
+			if(x_pElement){
+				x_pElement = x_pContainer->GetNext(x_pElement);
+			} else {
+				x_pElement = x_pContainer->GetFirst();
+			}
 			return *this;
 		}
 		ConstEnumerator &operator--(){
 			ASSERT(x_pContainer);
-			ASSERT(x_pElement);
 
-			x_pElement = x_pContainer->GetPrev(x_pElement);
+			if(x_pElement){
+				x_pElement = x_pContainer->GetPrev(x_pElement);
+			} else {
+				x_pElement = x_pContainer->GetLast();
+			}
 			return *this;
 		}
 

@@ -201,6 +201,7 @@ void __MCF_CRT_HeapFree(void *pBlock, const void *pRetAddr){
 		unsigned char *pRaw;
 #if __MCF_CRT_REQUIRE_HEAPDBG_LEVEL(3)
 		__MCF_HeapDbgBlockInfo *const pBlockInfo = __MCF_CRT_HeapDbgValidateBlock(&pRaw, pBlock, pRetAddr);
+
 		__MCF_CRT_HeapDbgUnregisterBlockInfo(pBlockInfo);
 		__MCF_CRT_HeapDbgDeallocateBlockInfo(pBlockInfo);
 #elif __MCF_CRT_REQUIRE_HEAPDBG_LEVEL(2)

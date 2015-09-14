@@ -36,6 +36,8 @@ extern void __MCF_CRT_HeapDbgUninit(void) MCF_NOEXCEPT;
 
 #if __MCF_CRT_REQUIRE_HEAPDBG_LEVEL(2)
 
+extern MCF_STD size_t __MCF_CRT_HeapDbgGetRawSize(MCF_STD size_t __uContentSize) MCF_NOEXCEPT;
+
 #	if __MCF_CRT_REQUIRE_HEAPDBG_LEVEL(3)
 
 typedef struct __MCF_tagHeapDbgBlockInfo {
@@ -45,12 +47,6 @@ typedef struct __MCF_tagHeapDbgBlockInfo {
 	MCF_STD size_t __uSize;
 	const void *__pRetAddr;
 } __MCF_HeapDbgBlockInfo;
-
-#	endif
-
-extern MCF_STD size_t __MCF_CRT_HeapDbgGetRawSize(MCF_STD size_t __uContentSize) MCF_NOEXCEPT;
-
-#	if __MCF_CRT_REQUIRE_HEAPDBG_LEVEL(3)
 
 // 失败返回空指针。
 extern __MCF_HeapDbgBlockInfo *__MCF_CRT_HeapDbgAllocateBlockInfo() MCF_NOEXCEPT;

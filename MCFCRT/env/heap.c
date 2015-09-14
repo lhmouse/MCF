@@ -74,7 +74,7 @@ unsigned char *__MCF_CRT_HeapAlloc(size_t uSize, const void *pRetAddr){
 				}
 				pRet = __MCF_CRT_HeapDbgRegisterBlockInfo(pBlockInfo, pRaw, uSize, pRetAddr);
 #elif __MCF_CRT_REQUIRE_HEAPDBG_LEVEL(2)
-				pRet = __MCF_CRT_HeapDbgRegisterBlockInfoBasic(pRaw, uSize, pRetAddr);
+				pRet = __MCF_CRT_HeapDbgRegisterBlockInfoBasic(pRaw);
 #else
 				pRet = pRaw;
 #endif
@@ -160,7 +160,7 @@ unsigned char *__MCF_CRT_HeapRealloc(void *pBlock, size_t uSize, const void *pRe
 				__MCF_CRT_HeapDbgUnregisterBlockInfo(pBlockInfo);
 				pRet = __MCF_CRT_HeapDbgRegisterBlockInfo(pBlockInfo, pRaw, uSize, pRetAddr);
 #elif __MCF_CRT_REQUIRE_HEAPDBG_LEVEL(2)
-				pRet = __MCF_CRT_HeapDbgRegisterBlockInfoBasic(pRaw, uSize, pRetAddr);
+				pRet = __MCF_CRT_HeapDbgRegisterBlockInfoBasic(pRaw);
 #else
 				pRet = pRaw;
 #endif

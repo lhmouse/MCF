@@ -59,7 +59,7 @@ extern void __MCF_CRT_HeapDbgUnregisterBlockInfo(__MCF_HeapDbgBlockInfo *__pBloc
 
 #	else
 
-extern unsigned char *__MCF_CRT_HeapDbgRegisterBlockInfoBasic(unsigned char *__pRaw, MCF_STD size_t __uContentSize, const void *__pRetAddr) MCF_NOEXCEPT;
+extern unsigned char *__MCF_CRT_HeapDbgRegisterBlockInfoBasic(unsigned char *__pRaw) MCF_NOEXCEPT;
 extern void __MCF_CRT_HeapDbgValidateBlockBasic(unsigned char **__ppRaw, unsigned char *__pContents, const void *__pRetAddr) MCF_NOEXCEPT;
 
 #	endif

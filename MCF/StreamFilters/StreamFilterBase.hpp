@@ -18,8 +18,8 @@ private:
 	std::uint64_t x_u64BytesProcessed;
 
 protected:
-	StreamFilterBase() noexcept
-		: x_bInited(false), x_u64BytesProcessed(0)
+	constexpr StreamFilterBase() noexcept
+		: x_bInited(false), x_sbufOutput(), x_u64BytesProcessed(0)
 	{
 	}
 	virtual ~StreamFilterBase();
@@ -67,7 +67,7 @@ public:
 		}
 	}
 
-	std::size_t QueryBytesProcessed() const noexcept {
+	std::uint64_t QueryBytesProcessed() const noexcept {
 		return x_u64BytesProcessed;
 	}
 	const StreamBuffer &GetOutputBuffer() const noexcept {

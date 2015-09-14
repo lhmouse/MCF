@@ -1,11 +1,15 @@
-#include <MCF/Containers/Vector.hpp>
+#include <MCF/Utilities/RationalFunctors.hpp>
+#include <cstdio>
 
 using namespace MCF;
 
 extern "C" unsigned MCFMain(){
-	Vector<int> v{0,1,2,3,4,5,6,7,8,9};
-	for(auto e = v.EnumerateFirst(); e; ++e){
-		std::printf("element: %d\n", *e);
-	}
+	int i, j;
+	std::printf("r = %d\n", EqualTo      ()(&i, &j));
+	std::printf("r = %d\n", NotEqualTo   ()(&i, &j));
+	std::printf("r = %d\n", Less         ()(&i, &j));
+	std::printf("r = %d\n", Greater      ()(&i, &j));
+	std::printf("r = %d\n", LessEqual    ()(&i, &j));
+	std::printf("r = %d\n", GreaterEqual ()(&i, &j));
 	return 0;
 }

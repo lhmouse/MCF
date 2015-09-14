@@ -163,7 +163,7 @@ void __MCF_CRT_HeapDbgUnregisterBlockInfo(__MCF_HeapDbgBlockInfo *pBlockInfo){
 
 #	else
 
-unsigned char *__MCF_CRT_HeapDbgRegisterBlockInfoBasic(unsigned char *pRaw){
+unsigned char *__MCF_CRT_HeapDbgAddBlockGuardsBasic(unsigned char *pRaw){
 	unsigned char *const pContents = pRaw + GUARD_BAND_SIZE;
 	const size_t uSize = __MCF_CRT_ReallyGetUsableSize(pRaw) - GUARD_BAND_SIZE * 2;
 

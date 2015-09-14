@@ -37,6 +37,11 @@ bool __MCF_CRT_HeapInit(){
 		__MCF_CRT_HeapDbgUninit();
 		return false;
 	}
+
+	// 启用 FLH，但是忽略任何错误。
+	ULONG ulMagic = 2;
+	HeapSetInformation(GetProcessHeap(), HeapCompatibilityInformation, &ulMagic, sizeof(ulMagic));
+
 	return true;
 }
 void __MCF_CRT_HeapUninit(){

@@ -30,10 +30,16 @@ static int BlockInfoComparatorNodes(const MCF_AvlNodeHeader *pInfo1, const MCF_A
 
 bool __MCF_CRT_HeapDbgInit(){
 #if __MCF_CRT_REQUIRE_HEAPDBG_LEVEL(3)
-	g_hMapAllocator = HeapCreate(HEAP_NO_SERIALIZE, 0, 0);
-	if(!g_hMapAllocator){
+	const HANDLE hAllocator = HeapCreate(0, 0, 0);
+	if(!hAllocator){
 		return false;
 	}
+
+	// 启用 FLH，但是忽略任何错误。
+	ULONG ulMagic = 2;
+	HeapSetInformation(hAllocator, HeapCompatibilityInformation, &ulMagic, sizeof(ulMagic));
+
+	g_hMapAllocator = hAllocator;
 #endif
 	return true;
 }

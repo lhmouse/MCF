@@ -9,9 +9,9 @@
 #include "../Utilities/CountOf.hpp"
 #include <type_traits>
 #include <initializer_list>
-#include <string>
-#include <vector>
-#include <array>
+// #include <string>
+// #include <vector>
+// #include <array>
 #include <cstddef>
 #include "StringObserver.hpp"
 
@@ -35,26 +35,30 @@ public:
 		: x_pBegin(std::addressof(rhs)), x_uSize(1)
 	{
 	}
+	constexpr ArrayObserver(ElementT *pBegin, std::size_t uSize) noexcept
+		: x_pBegin(pBegin), x_uSize(uSize)
+	{
+	}
 	template<std::size_t kSizeT>
 	constexpr ArrayObserver(ElementT (&rhs)[kSizeT]) noexcept
 		: x_pBegin(rhs), x_uSize(kSizeT)
 	{
 	}
-	template<typename TraitsT, typename AllocatorT>
-	constexpr ArrayObserver(std::basic_string<ElementT, TraitsT, AllocatorT> &rhs) noexcept
-		: x_pBegin(rhs.data()), x_uSize(rhs.size())
-	{
-	}
-	template<typename AllocatorT>
-	constexpr ArrayObserver(std::vector<ElementT, AllocatorT> &rhs) noexcept
-		: x_pBegin(rhs.data()), x_uSize(rhs.size())
-	{
-	}
-	template<std::size_t kSizeT>
-	constexpr ArrayObserver(std::array<ElementT, kSizeT> &rhs) noexcept
-		: x_pBegin(rhs.data()), x_uSize(rhs.size())
-	{
-	}
+//	template<typename TraitsT, typename AllocatorT>
+//	constexpr ArrayObserver(std::basic_string<ElementT, TraitsT, AllocatorT> &rhs) noexcept
+//		: x_pBegin(rhs.data()), x_uSize(rhs.size())
+//	{
+//	}
+//	template<typename AllocatorT>
+//	constexpr ArrayObserver(std::vector<ElementT, AllocatorT> &rhs) noexcept
+//		: x_pBegin(rhs.data()), x_uSize(rhs.size())
+//	{
+//	}
+//	template<std::size_t kSizeT>
+//	constexpr ArrayObserver(std::array<ElementT, kSizeT> &rhs) noexcept
+//		: x_pBegin(rhs.data()), x_uSize(rhs.size())
+//	{
+//	}
 	template<StringType kTypeT,
 		std::enable_if_t<
 			std::is_same<typename StringObserver<kTypeT>::Char, std::remove_cv_t<ElementT>>::value,
@@ -108,6 +112,10 @@ public:
 		: x_pBegin(std::addressof(rhs)), x_uSize(1)
 	{
 	}
+	constexpr ArrayObserver(const ElementT *pBegin, std::size_t uSize) noexcept
+		: x_pBegin(pBegin), x_uSize(uSize)
+	{
+	}
 	template<std::size_t kSizeT>
 	constexpr ArrayObserver(const ElementT (&rhs)[kSizeT]) noexcept
 		: x_pBegin(rhs), x_uSize(kSizeT)
@@ -118,36 +126,36 @@ public:
 		: x_pBegin(rhs), x_uSize(kSizeT)
 	{
 	}
-	template<typename TraitsT, typename AllocatorT>
-	constexpr ArrayObserver(const std::basic_string<const ElementT, TraitsT, AllocatorT> &rhs) noexcept
-		: x_pBegin(rhs.data()), x_uSize(rhs.size())
-	{
-	}
-	template<typename TraitsT, typename AllocatorT>
-	constexpr ArrayObserver(const std::basic_string<ElementT, TraitsT, AllocatorT> &rhs) noexcept
-		: x_pBegin(rhs.data()), x_uSize(rhs.size())
-	{
-	}
-	template<typename AllocatorT>
-	constexpr ArrayObserver(const std::vector<const ElementT, AllocatorT> &rhs) noexcept
-		: x_pBegin(rhs.data()), x_uSize(rhs.size())
-	{
-	}
-	template<typename AllocatorT>
-	constexpr ArrayObserver(const std::vector<ElementT, AllocatorT> &rhs) noexcept
-		: x_pBegin(rhs.data()), x_uSize(rhs.size())
-	{
-	}
-	template<std::size_t kSizeT>
-	constexpr ArrayObserver(const std::array<const ElementT, kSizeT> &rhs) noexcept
-		: x_pBegin(rhs.data()), x_uSize(rhs.size())
-	{
-	}
-	template<std::size_t kSizeT>
-	constexpr ArrayObserver(const std::array<ElementT, kSizeT> &rhs) noexcept
-		: x_pBegin(rhs.data()), x_uSize(rhs.size())
-	{
-	}
+//	template<typename TraitsT, typename AllocatorT>
+//	constexpr ArrayObserver(const std::basic_string<const ElementT, TraitsT, AllocatorT> &rhs) noexcept
+//		: x_pBegin(rhs.data()), x_uSize(rhs.size())
+//	{
+//	}
+//	template<typename TraitsT, typename AllocatorT>
+//	constexpr ArrayObserver(const std::basic_string<ElementT, TraitsT, AllocatorT> &rhs) noexcept
+//		: x_pBegin(rhs.data()), x_uSize(rhs.size())
+//	{
+//	}
+//	template<typename AllocatorT>
+//	constexpr ArrayObserver(const std::vector<const ElementT, AllocatorT> &rhs) noexcept
+//		: x_pBegin(rhs.data()), x_uSize(rhs.size())
+//	{
+//	}
+//	template<typename AllocatorT>
+//	constexpr ArrayObserver(const std::vector<ElementT, AllocatorT> &rhs) noexcept
+//		: x_pBegin(rhs.data()), x_uSize(rhs.size())
+//	{
+//	}
+//	template<std::size_t kSizeT>
+//	constexpr ArrayObserver(const std::array<const ElementT, kSizeT> &rhs) noexcept
+//		: x_pBegin(rhs.data()), x_uSize(rhs.size())
+//	{
+//	}
+//	template<std::size_t kSizeT>
+//	constexpr ArrayObserver(const std::array<ElementT, kSizeT> &rhs) noexcept
+//		: x_pBegin(rhs.data()), x_uSize(rhs.size())
+//	{
+//	}
 	template<StringType kTypeT,
 		std::enable_if_t<
 			std::is_same<typename StringObserver<kTypeT>::Char, std::remove_cv_t<ElementT>>::value,

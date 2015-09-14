@@ -5,6 +5,7 @@
 #ifndef MCF_CORE_ARRAY_HPP_
 #define MCF_CORE_ARRAY_HPP_
 
+#include "ArrayObserver.hpp"
 #include "../Containers/_EnumeratorTemplate.hpp"
 #include "../Utilities/Assert.hpp"
 #include "Exception.hpp"
@@ -20,10 +21,14 @@ class Array {
 	static_assert(kSize > 0, "An array shall have a non-zero size.");
 
 public:
+	using ConstObserver = ArrayObserver<const ElementT>;
+	using Observer      = ArrayObserver<      ElementT>;
+
+public:
 	ElementT m_aStorage[kSize];
 
 public:
-	// 仿造容器。
+	// 整体仿造容器，唯独没有 Clear()。
 	using Element         = ElementT;
 	using ConstEnumerator = Impl_EnumeratorTemplate::ConstEnumerator <Array>;
 	using Enumerator      = Impl_EnumeratorTemplate::Enumerator      <Array>;
@@ -186,6 +191,29 @@ public:
 	}
 	Element &operator[](std::size_t uIndex) noexcept {
 		return UncheckedGet(uIndex);
+	}
+
+public:
+	ConstObserver GetObserver() const noexcept {
+		return ConstObserver(GetData(), GetSize());
+	}
+	Observer GetObserver() noexcept {
+		return Observer(GetData(), GetSize());
+	}
+
+public:
+	operator ConstObserver() const noexcept {
+		return GetObserver();
+	}
+	operator Observer() noexcept {
+		return GetObserver();
+	}
+
+	explicit operator const ElementT *() const noexcept {
+		return GetData();
+	}
+	explicit operator ElementT *() noexcept {
+		return GetData();
 	}
 };
 

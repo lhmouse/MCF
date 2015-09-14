@@ -3,6 +3,8 @@
 
 using namespace MCF;
 
+template class Array<int, 5>;
+
 extern "C" unsigned MCFMain(){
 	constexpr char data[] = "hello world!";
 	Sha1 h;

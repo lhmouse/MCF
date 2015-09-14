@@ -31,17 +31,17 @@ Thread::Thread(Function<void ()> fnProc, bool bSuspended)
 		} catch(...){
 			pThis->x_pException = std::current_exception();
 		}
-		pThis->x_ulThreadId.Store(0, kAtomicRelease);
+		pThis->x_uThreadId.Store(0, kAtomicRelease);
 		pThis->DropRef();
 		return 0;
 	};
 
-	unsigned long ulThreadId;
-	if(!x_hThread.Reset(::MCF_CRT_CreateThread(ThreadProc, (std::intptr_t)this, CREATE_SUSPENDED, &ulThreadId))){
+	DWORD dwThreadId;
+	if(!x_hThread.Reset(::MCF_CRT_CreateThread(ThreadProc, (std::intptr_t)this, CREATE_SUSPENDED, &dwThreadId))){
 		DEBUG_THROW(SystemError, "MCF_CRT_CreateThread"_rcs);
 	}
 	AddRef();
-	x_ulThreadId.Store(ulThreadId, kAtomicRelease);
+	x_uThreadId.Store(dwThreadId, kAtomicRelease);
 
 	if(!bSuspended){
 		Resume();
@@ -78,7 +78,7 @@ bool Thread::IsAlive() const noexcept {
 	return GetId() != 0;
 }
 std::size_t Thread::GetId() const noexcept {
-	return x_ulThreadId.Load(kAtomicRelaxed);
+	return x_uThreadId.Load(kAtomicRelaxed);
 }
 
 void Thread::Suspend() noexcept {

@@ -26,7 +26,7 @@ private:
 	const Function<void ()> x_fnProc;
 
 	UniqueWin32Handle x_hThread;
-	Atomic<unsigned long> x_ulThreadId;
+	Atomic<std::size_t> x_uThreadId;
 	std::exception_ptr x_pException;
 
 private:

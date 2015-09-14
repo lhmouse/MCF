@@ -15,43 +15,43 @@ namespace Impl_EnumeratorTemplate {
 	// ------------------------------------------------------------
 	// ContainerT 必须具有：
 	// 0) 成员类型：
-	//   ElementType
+	//   Element
 	// 1) 成员函数：
-	//   const ElementType * GetFirst (                   ) const noexcept;
-	//         ElementType * GetFirst (                   )       noexcept;
-	//   const ElementType * GetLast  (                   ) const noexcept;
-	//         ElementType * GetLast  (                   )       noexcept;
-	//   const ElementType * GetPrev  (const ElementType *) const noexcept;
-	//         ElementType * GetNext  (      ElementType *)       noexcept;
-	//   const ElementType * GetPrev  (const ElementType *) const noexcept;
-	//         ElementType * GetNext  (      ElementType *)       noexcept;
+	//   const Element * GetFirst (               ) const noexcept;
+	//         Element * GetFirst (               )       noexcept;
+	//   const Element * GetLast  (               ) const noexcept;
+	//         Element * GetLast  (               )       noexcept;
+	//   const Element * GetPrev  (const Element *) const noexcept;
+	//         Element * GetNext  (      Element *)       noexcept;
+	//   const Element * GetPrev  (const Element *) const noexcept;
+	//         Element * GetNext  (      Element *)       noexcept;
 
 	template<typename ContainerT>
 	class ConstEnumerator;
 
 	template<typename ContainerT>
-	class Enumerator : public std::iterator<std::bidirectional_iterator_tag, typename ContainerT::ElementType> {
+	class Enumerator : public std::iterator<std::bidirectional_iterator_tag, typename ContainerT::Element> {
 		friend ConstEnumerator<ContainerT>;
 
 	public:
-		using ElementType = typename ContainerT::ElementType;
+		using Element = typename ContainerT::Element;
 
 	private:
 		ContainerT *x_pContainer;
-		ElementType *x_pElement;
+		Element *x_pElement;
 
 	public:
 		explicit constexpr Enumerator() noexcept
 			: x_pContainer(nullptr), x_pElement(nullptr)
 		{
 		}
-		explicit constexpr Enumerator(ContainerT &vContainer, ElementType *pElement) noexcept
+		explicit constexpr Enumerator(ContainerT &vContainer, Element *pElement) noexcept
 			: x_pContainer(&vContainer), x_pElement(pElement)
 		{
 		}
 
 	public:
-		ElementType *GetPtr() const noexcept {
+		Element *GetPtr() const noexcept {
 			return x_pElement;
 		}
 
@@ -95,12 +95,12 @@ namespace Impl_EnumeratorTemplate {
 			return enRet;
 		}
 
-		ElementType &operator*() const noexcept {
+		Element &operator*() const noexcept {
 			ASSERT(x_pElement);
 
 			return *x_pElement;
 		}
-		ElementType *operator->() const noexcept {
+		Element *operator->() const noexcept {
 			return x_pElement;
 		}
 
@@ -110,20 +110,20 @@ namespace Impl_EnumeratorTemplate {
 	};
 
 	template<typename ContainerT>
-	class ConstEnumerator : public std::iterator<std::bidirectional_iterator_tag, const typename ContainerT::ElementType> {
+	class ConstEnumerator : public std::iterator<std::bidirectional_iterator_tag, const typename ContainerT::Element> {
 	public:
-		using ElementType = const typename ContainerT::ElementType;
+		using Element = const typename ContainerT::Element;
 
 	private:
 		const ContainerT *x_pContainer;
-		const ElementType *x_pElement;
+		const Element *x_pElement;
 
 	public:
 		explicit constexpr ConstEnumerator() noexcept
 			: x_pContainer(nullptr), x_pElement(nullptr)
 		{
 		}
-		explicit constexpr ConstEnumerator(const ContainerT &vContainer, const ElementType *pElement) noexcept
+		explicit constexpr ConstEnumerator(const ContainerT &vContainer, const Element *pElement) noexcept
 			: x_pContainer(&vContainer), x_pElement(pElement)
 		{
 		}
@@ -133,7 +133,7 @@ namespace Impl_EnumeratorTemplate {
 		}
 
 	public:
-		const ElementType *GetPtr() const noexcept {
+		const Element *GetPtr() const noexcept {
 			return x_pElement;
 		}
 
@@ -177,12 +177,12 @@ namespace Impl_EnumeratorTemplate {
 			return enRet;
 		}
 
-		const ElementType &operator*() const noexcept {
+		const Element &operator*() const noexcept {
 			ASSERT(x_pElement);
 
 			return *x_pElement;
 		}
-		const ElementType *operator->() const noexcept {
+		const Element *operator->() const noexcept {
 			return x_pElement;
 		}
 

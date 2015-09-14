@@ -103,7 +103,7 @@ private:
 
 public:
 	// 容器需求。
-	using ElementType     = ElementT;
+	using Element         = ElementT;
 	using ConstEnumerator = Impl_EnumeratorTemplate::ConstEnumerator <Vector>;
 	using Enumerator      = Impl_EnumeratorTemplate::Enumerator      <Vector>;
 
@@ -114,38 +114,38 @@ public:
 		Pop(x_uSize);
 	}
 
-	const ElementType *GetFirst() const noexcept {
+	const Element *GetFirst() const noexcept {
 		if(IsEmpty()){
 			return nullptr;
 		}
 		return GetBegin();
 	}
-	ElementType *GetFirst() noexcept {
+	Element *GetFirst() noexcept {
 		if(IsEmpty()){
 			return nullptr;
 		}
 		return GetBegin();
 	}
-	const ElementType *GetConstFirst() const noexcept {
+	const Element *GetConstFirst() const noexcept {
 		return GetFirst();
 	}
-	const ElementType *GetLast() const noexcept {
+	const Element *GetLast() const noexcept {
 		if(IsEmpty()){
 			return nullptr;
 		}
 		return GetEnd() - 1;
 	}
-	ElementType *GetLast() noexcept {
+	Element *GetLast() noexcept {
 		if(IsEmpty()){
 			return nullptr;
 		}
 		return GetEnd() - 1;
 	}
-	const ElementType *GetConstLast() const noexcept {
+	const Element *GetConstLast() const noexcept {
 		return GetLast();
 	}
 
-	const ElementType *GetPrev(const ElementType *pPos) const noexcept {
+	const Element *GetPrev(const Element *pPos) const noexcept {
 		ASSERT(pPos);
 
 		const auto pBegin = GetBegin();
@@ -156,7 +156,7 @@ public:
 		--uOffset;
 		return pBegin + uOffset;
 	}
-	ElementType *GetPrev(ElementType *pPos) noexcept {
+	Element *GetPrev(Element *pPos) noexcept {
 		ASSERT(pPos);
 
 		const auto pBegin = GetBegin();
@@ -167,7 +167,7 @@ public:
 		--uOffset;
 		return pBegin + uOffset;
 	}
-	const ElementType *GetNext(const ElementType *pPos) const noexcept {
+	const Element *GetNext(const Element *pPos) const noexcept {
 		ASSERT(pPos);
 
 		const auto pBegin = GetBegin();
@@ -178,7 +178,7 @@ public:
 		}
 		return pBegin + uOffset;
 	}
-	ElementType *GetNext(ElementType *pPos) noexcept {
+	Element *GetNext(Element *pPos) noexcept {
 		ASSERT(pPos);
 
 		const auto pBegin = GetBegin();
@@ -225,13 +225,13 @@ public:
 	}
 
 	// Vector 需求。
-	const ElementType *GetData() const noexcept {
-		return static_cast<const ElementType *>(x_pStorage);
+	const Element *GetData() const noexcept {
+		return static_cast<const Element *>(x_pStorage);
 	}
-	ElementType *GetData() noexcept {
-		return static_cast<ElementType *>(x_pStorage);
+	Element *GetData() noexcept {
+		return static_cast<Element *>(x_pStorage);
 	}
-	const ElementType *GetConstData() const noexcept {
+	const Element *GetConstData() const noexcept {
 		return GetData();
 	}
 	std::size_t GetSize() const noexcept {
@@ -241,43 +241,43 @@ public:
 		return x_uCapacity;
 	}
 
-	const ElementType *GetBegin() const noexcept {
+	const Element *GetBegin() const noexcept {
 		return GetData();
 	}
-	ElementType *GetBegin() noexcept {
+	Element *GetBegin() noexcept {
 		return GetData();
 	}
-	const ElementType *GetConstBegin() const noexcept {
+	const Element *GetConstBegin() const noexcept {
 		return GetBegin();
 	}
-	const ElementType *GetEnd() const noexcept {
+	const Element *GetEnd() const noexcept {
 		return GetData() + x_uSize;
 	}
-	ElementType *GetEnd() noexcept {
+	Element *GetEnd() noexcept {
 		return GetData() + x_uSize;
 	}
-	const ElementType *GetConstEnd() const noexcept {
+	const Element *GetConstEnd() const noexcept {
 		return GetEnd();
 	}
 
-	const ElementType &Get(std::size_t uIndex) const {
+	const Element &Get(std::size_t uIndex) const {
 		if(uIndex >= x_uSize){
 			DEBUG_THROW(Exception, ERROR_INVALID_PARAMETER, RefCountingNtmbs::View(__PRETTY_FUNCTION__));
 		}
 		return UncheckedGet(uIndex);
 	}
-	ElementType &Get(std::size_t uIndex){
+	Element &Get(std::size_t uIndex){
 		if(uIndex >= x_uSize){
 			DEBUG_THROW(Exception, ERROR_INVALID_PARAMETER, RefCountingNtmbs::View(__PRETTY_FUNCTION__));
 		}
 		return UncheckedGet(uIndex);
 	}
-	const ElementType &UncheckedGet(std::size_t uIndex) const noexcept {
+	const Element &UncheckedGet(std::size_t uIndex) const noexcept {
 		ASSERT(uIndex < x_uSize);
 
 		return GetData()[uIndex];
 	}
-	ElementType &UncheckedGet(std::size_t uIndex) noexcept {
+	Element &UncheckedGet(std::size_t uIndex) noexcept {
 		ASSERT(uIndex < x_uSize);
 
 		return GetData()[uIndex];
@@ -292,7 +292,7 @@ public:
 		}
 	}
 	template<typename ...ParamsT>
-	ElementType *ResizeMore(std::size_t uDeltaSize, const ParamsT &...vParams){
+	Element *ResizeMore(std::size_t uDeltaSize, const ParamsT &...vParams){
 		const auto uOldSize = x_uSize;
 		const auto uNewSize = uOldSize + uDeltaSize;
 		if(uNewSize < uOldSize){
@@ -314,13 +314,13 @@ public:
 		if(uElementsToAlloc < uNewCapacity){
 			uElementsToAlloc = uNewCapacity;
 		}
-		const std::size_t uBytesToAlloc = sizeof(ElementType) * uElementsToAlloc;
-		if(uBytesToAlloc / sizeof(ElementType) != uElementsToAlloc){
+		const std::size_t uBytesToAlloc = sizeof(Element) * uElementsToAlloc;
+		if(uBytesToAlloc / sizeof(Element) != uElementsToAlloc){
 			throw std::bad_array_new_length();
 		}
 
-		const auto pNewStorage = static_cast<ElementType *>(::operator new[](uBytesToAlloc));
-		const auto pOldStorage = static_cast<ElementType *>(x_pStorage);
+		const auto pNewStorage = static_cast<Element *>(::operator new[](uBytesToAlloc));
+		const auto pOldStorage = static_cast<Element *>(x_pStorage);
 		auto pWrite = pNewStorage;
 		try {
 			for(std::size_t i = 0; i < x_uSize; ++i){
@@ -353,12 +353,12 @@ public:
 	}
 
 	template<typename ...ParamsT>
-	ElementType &Push(ParamsT &&...vParams){
+	Element &Push(ParamsT &&...vParams){
 		ReserveMore(1);
 		return UncheckedPush(std::forward<ParamsT>(vParams)...);
 	}
 	template<typename ...ParamsT>
-	ElementType &UncheckedPush(ParamsT &&...vParams) noexcept(std::is_nothrow_constructible<ElementType, ParamsT &&...>::value) {
+	Element &UncheckedPush(ParamsT &&...vParams) noexcept(std::is_nothrow_constructible<Element, ParamsT &&...>::value) {
 		ASSERT(GetCapacity() - x_uSize > 0);
 
 		const auto pBegin = GetBegin();
@@ -422,12 +422,12 @@ public:
 			throw;
 		}
 	}
-	void Append(std::initializer_list<ElementType> ilElements){
+	void Append(std::initializer_list<Element> ilElements){
 		Append(ilElements.begin(), ilElements.end());
 	}
 
 	template<typename ...ParamsT>
-	ElementType *Emplace(const ElementType *pPos, ParamsT &&...vParams){
+	Element *Emplace(const Element *pPos, ParamsT &&...vParams){
 		if(!pPos || (pPos == GetEnd())){
 			Push(std::forward<ParamsT>(vParams)...);
 			return nullptr;
@@ -436,7 +436,7 @@ public:
 
 		const auto uOffset = static_cast<std::size_t>(pPos - GetBegin());
 
-		if(std::is_nothrow_move_constructible<ElementType>::value){
+		if(std::is_nothrow_move_constructible<Element>::value){
 			X_PrepareForInsertion(uOffset, 1);
 			const auto pBegin = GetBegin();
 			try {
@@ -470,7 +470,7 @@ public:
 	}
 
 	template<typename ...ParamsT>
-	ElementType *Insert(const ElementType *pPos, std::size_t uDeltaSize, const ParamsT &...vParams){
+	Element *Insert(const Element *pPos, std::size_t uDeltaSize, const ParamsT &...vParams){
 		if(!pPos || (pPos == GetEnd())){
 			Append(uDeltaSize, vParams...);
 			return nullptr;
@@ -479,7 +479,7 @@ public:
 
 		const auto uOffset = static_cast<std::size_t>(pPos - GetBegin());
 
-		if(std::is_nothrow_move_constructible<ElementType>::value){
+		if(std::is_nothrow_move_constructible<Element>::value){
 			X_PrepareForInsertion(uOffset, uDeltaSize);
 			const auto pBegin = GetBegin();
 			std::size_t uWrite = 0;
@@ -524,7 +524,7 @@ public:
 	template<typename IteratorT, std::enable_if_t<
 		sizeof(typename std::iterator_traits<IteratorT>::value_type *),
 		int> = 0>
-	ElementType *Insert(const ElementType *pPos, IteratorT itBegin, std::common_type_t<IteratorT> itEnd){
+	Element *Insert(const Element *pPos, IteratorT itBegin, std::common_type_t<IteratorT> itEnd){
 		if(!pPos || (pPos == GetEnd())){
 			Append(itBegin, itEnd);
 			return nullptr;
@@ -535,7 +535,7 @@ public:
 
 		const auto uOffset = static_cast<std::size_t>(pPos - GetBegin());
 
-		if(kHasDeltaSizeHint && std::is_nothrow_move_constructible<ElementType>::value){
+		if(kHasDeltaSizeHint && std::is_nothrow_move_constructible<Element>::value){
 			const auto uDeltaSize = static_cast<std::size_t>(std::distance(itBegin, itEnd));
 			X_PrepareForInsertion(uOffset, uDeltaSize);
 			const auto pBegin = GetBegin();
@@ -594,13 +594,13 @@ public:
 
 		return GetBegin() + uOffset;
 	}
-	ElementType *Insert(const ElementType *pPos, std::initializer_list<ElementType> ilElements){
+	Element *Insert(const Element *pPos, std::initializer_list<Element> ilElements){
 		return Insert(pPos, ilElements.begin(), ilElements.end());
 	}
 
-	ElementType *Erase(const ElementType *pBegin, const ElementType *pEnd) noexcept(std::is_nothrow_move_constructible<ElementType>::value) {
+	Element *Erase(const Element *pBegin, const Element *pEnd) noexcept(std::is_nothrow_move_constructible<Element>::value) {
 		if(pBegin == pEnd){
-			return const_cast<ElementType *>(pEnd);
+			return const_cast<Element *>(pEnd);
 		}
 		ASSERT(pBegin);
 
@@ -614,14 +614,14 @@ public:
 
 		const auto uOffset = static_cast<std::size_t>(pBegin - GetBegin());
 
-		if(std::is_nothrow_move_constructible<ElementType>::value){
+		if(std::is_nothrow_move_constructible<Element>::value){
 			const auto uDeltaSize = static_cast<std::size_t>(pEnd - pBegin);
 
-			auto pWrite = const_cast<ElementType *>(pBegin);
+			auto pWrite = const_cast<Element *>(pBegin);
 			for(auto pCur = pWrite; pCur != pEnd; ++pCur){
 				Destruct(pCur);
 			}
-			for(auto pCur = const_cast<ElementType *>(pEnd); pCur != GetEnd(); ++pCur){
+			for(auto pCur = const_cast<Element *>(pEnd); pCur != GetEnd(); ++pCur){
 				Construct(pWrite, std::move(*pCur));
 				Destruct(pCur);
 				++pWrite;
@@ -641,16 +641,16 @@ public:
 
 		return GetBegin() + uOffset;
 	}
-	ElementType *Erase(const ElementType *pPos) noexcept(noexcept(std::declval<Vector &>().Erase(pPos, pPos))) {
+	Element *Erase(const Element *pPos) noexcept(noexcept(std::declval<Vector &>().Erase(pPos, pPos))) {
 		ASSERT(pPos);
 
 		return Erase(pPos, pPos + 1);
 	}
 
-	const ElementType &operator[](std::size_t uIndex) const noexcept {
+	const Element &operator[](std::size_t uIndex) const noexcept {
 		return UncheckedGet(uIndex);
 	}
-	ElementType &operator[](std::size_t uIndex) noexcept {
+	Element &operator[](std::size_t uIndex) noexcept {
 		return UncheckedGet(uIndex);
 	}
 };

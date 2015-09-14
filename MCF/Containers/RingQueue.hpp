@@ -261,7 +261,7 @@ private:
 
 public:
 	// 容器需求。
-	using ElementType     = ElementT;
+	using Element         = ElementT;
 	using ConstEnumerator = Impl_EnumeratorTemplate::ConstEnumerator <RingQueue>;
 	using Enumerator      = Impl_EnumeratorTemplate::Enumerator      <RingQueue>;
 
@@ -272,42 +272,42 @@ public:
 		Shift(GetSize());
 	}
 
-	const ElementType *GetFirst() const noexcept {
+	const Element *GetFirst() const noexcept {
 		if(IsEmpty()){
 			return nullptr;
 		}
 		const auto pStorage = X_GetStorage();
 		return pStorage + x_uBegin;
 	}
-	ElementType *GetFirst() noexcept {
+	Element *GetFirst() noexcept {
 		if(IsEmpty()){
 			return nullptr;
 		}
 		const auto pStorage = X_GetStorage();
 		return pStorage + x_uBegin;
 	}
-	const ElementType *GetConstFirst() const noexcept {
+	const Element *GetConstFirst() const noexcept {
 		return GetFirst();
 	}
-	const ElementType *GetLast() const noexcept {
+	const Element *GetLast() const noexcept {
 		if(IsEmpty()){
 			return nullptr;
 		}
 		const auto pStorage = X_GetStorage();
 		return pStorage + X_Retreat(x_uEnd, 1);
 	}
-	ElementType *GetLast() noexcept {
+	Element *GetLast() noexcept {
 		if(IsEmpty()){
 			return nullptr;
 		}
 		const auto pStorage = X_GetStorage();
 		return pStorage + X_Retreat(x_uEnd, 1);
 	}
-	const ElementType *GetConstLast() const noexcept {
+	const Element *GetConstLast() const noexcept {
 		return GetLast();
 	}
 
-	const ElementType *GetPrev(const ElementType *pPos) const noexcept {
+	const Element *GetPrev(const Element *pPos) const noexcept {
 		ASSERT(pPos);
 
 		const auto pStorage = X_GetStorage();
@@ -318,7 +318,7 @@ public:
 		uOffset = X_Retreat(uOffset, 1);
 		return pStorage + uOffset;
 	}
-	ElementType *GetPrev(ElementType *pPos) noexcept {
+	Element *GetPrev(Element *pPos) noexcept {
 		ASSERT(pPos);
 
 		const auto pStorage = X_GetStorage();
@@ -329,7 +329,7 @@ public:
 		uOffset = X_Retreat(uOffset, 1);
 		return pStorage + uOffset;
 	}
-	const ElementType *GetNext(const ElementType *pPos) const noexcept {
+	const Element *GetNext(const Element *pPos) const noexcept {
 		ASSERT(pPos);
 
 		const auto pStorage = X_GetStorage();
@@ -340,7 +340,7 @@ public:
 		}
 		return pStorage + uOffset;
 	}
-	ElementType *GetNext(ElementType *pPos) noexcept {
+	Element *GetNext(Element *pPos) noexcept {
 		ASSERT(pPos);
 
 		const auto pStorage = X_GetStorage();
@@ -399,28 +399,28 @@ public:
 		return x_uRingCap - 1;
 	}
 
-	const ElementType &Get(std::size_t uIndex) const {
+	const Element &Get(std::size_t uIndex) const {
 		if(uIndex >= GetSize()){
 			DEBUG_THROW(Exception, ERROR_INVALID_PARAMETER, RefCountingNtmbs::View(__PRETTY_FUNCTION__));
 		}
 		return UncheckedGet(uIndex);
 	}
-	ElementType &Get(std::size_t uIndex){
+	Element &Get(std::size_t uIndex){
 		if(uIndex >= GetSize()){
 			DEBUG_THROW(Exception, ERROR_INVALID_PARAMETER, RefCountingNtmbs::View(__PRETTY_FUNCTION__));
 		}
 		return UncheckedGet(uIndex);
 	}
-	const ElementType &UncheckedGet(std::size_t uIndex) const noexcept {
+	const Element &UncheckedGet(std::size_t uIndex) const noexcept {
 		ASSERT(uIndex < GetSize());
 
-		const auto pStorage = static_cast<const ElementType *>(x_pStorage);
+		const auto pStorage = static_cast<const Element *>(x_pStorage);
 		return pStorage[X_Advance(x_uBegin, uIndex)];
 	}
-	ElementType &UncheckedGet(std::size_t uIndex) noexcept {
+	Element &UncheckedGet(std::size_t uIndex) noexcept {
 		ASSERT(uIndex < GetSize());
 
-		const auto pStorage = static_cast<ElementType *>(x_pStorage);
+		const auto pStorage = static_cast<Element *>(x_pStorage);
 		return pStorage[X_Advance(x_uBegin, uIndex)];
 	}
 
@@ -459,13 +459,13 @@ public:
 		if(uElementsToAlloc < uNewCapacity + 1){
 			uElementsToAlloc = uNewCapacity + 1;
 		}
-		const auto uBytesToAlloc = sizeof(ElementType) * uElementsToAlloc;
-		if(uBytesToAlloc / sizeof(ElementType) != uElementsToAlloc){
+		const auto uBytesToAlloc = sizeof(Element) * uElementsToAlloc;
+		if(uBytesToAlloc / sizeof(Element) != uElementsToAlloc){
 			throw std::bad_array_new_length();
 		}
 
-		const auto pNewStorage = static_cast<ElementType *>(::operator new[](uBytesToAlloc));
-		const auto pOldStorage = static_cast<ElementType *>(x_pStorage);
+		const auto pNewStorage = static_cast<Element *>(::operator new[](uBytesToAlloc));
+		const auto pOldStorage = static_cast<Element *>(x_pStorage);
 		auto pWrite = pNewStorage;
 		try {
 			if(x_uBegin <= x_uEnd){
@@ -520,15 +520,15 @@ public:
 	}
 
 	template<typename ...ParamsT>
-	ElementType &Push(ParamsT &&...vParams){
+	Element &Push(ParamsT &&...vParams){
 		ReserveMore(1);
 		return UncheckedPush(std::forward<ParamsT>(vParams)...);
 	}
 	template<typename ...ParamsT>
-	ElementType &UncheckedPush(ParamsT &&...vParams) noexcept(std::is_nothrow_constructible<ElementType, ParamsT &&...>::value) {
+	Element &UncheckedPush(ParamsT &&...vParams) noexcept(std::is_nothrow_constructible<Element, ParamsT &&...>::value) {
 		ASSERT(GetCapacity() - GetSize() > 0);
 
-		const auto pStorage = static_cast<ElementType *>(x_pStorage);
+		const auto pStorage = static_cast<Element *>(x_pStorage);
 		const auto uNewEnd = X_Advance(x_uEnd, 1);
 		const auto pElem = pStorage + x_uEnd;
 		DefaultConstruct(pElem, std::forward<ParamsT>(vParams)...);
@@ -539,7 +539,7 @@ public:
 	void Pop(std::size_t uCount = 1) noexcept {
 		ASSERT(uCount <= GetSize());
 
-		const auto pStorage = static_cast<ElementType *>(x_pStorage);
+		const auto pStorage = static_cast<Element *>(x_pStorage);
 		const auto uNewEnd = X_Retreat(x_uEnd, uCount);
 		if(uNewEnd <= x_uEnd){
 			for(std::size_t i = x_uEnd; i != uNewEnd; --i){
@@ -557,15 +557,15 @@ public:
 	}
 
 	template<typename ...ParamsT>
-	ElementType &Unshift(ParamsT &&...vParams){
+	Element &Unshift(ParamsT &&...vParams){
 		ReserveMore(1);
 		return UncheckedUnshift(std::forward<ParamsT>(vParams)...);
 	}
 	template<typename ...ParamsT>
-	ElementType &UncheckedUnshift(ParamsT &&...vParams) noexcept(std::is_nothrow_constructible<ElementType, ParamsT &&...>::value) {
+	Element &UncheckedUnshift(ParamsT &&...vParams) noexcept(std::is_nothrow_constructible<Element, ParamsT &&...>::value) {
 		ASSERT(GetCapacity() - GetSize() > 0);
 
-		const auto pStorage = static_cast<ElementType *>(x_pStorage);
+		const auto pStorage = static_cast<Element *>(x_pStorage);
 		const auto uNewBegin = X_Retreat(x_uBegin, 1);
 		const auto pElem = pStorage + uNewBegin;
 		DefaultConstruct(pElem, std::forward<ParamsT>(vParams)...);
@@ -577,7 +577,7 @@ public:
 	void Shift(std::size_t uCount = 1) noexcept {
 		ASSERT(uCount <= GetSize());
 
-		const auto pStorage = static_cast<ElementType *>(x_pStorage);
+		const auto pStorage = static_cast<Element *>(x_pStorage);
 		const auto uNewBegin = X_Advance(x_uBegin, uCount);
 		if(x_uBegin <= uNewBegin){
 			for(std::size_t i = x_uBegin; i != uNewBegin; ++i){
@@ -642,7 +642,7 @@ public:
 			throw;
 		}
 	}
-	void Append(std::initializer_list<ElementType> ilElements){
+	void Append(std::initializer_list<Element> ilElements){
 		Append(ilElements.begin(), ilElements.end());
 	}
 
@@ -694,12 +694,12 @@ public:
 			throw;
 		}
 	}
-	void Prepend(std::initializer_list<ElementType> ilElements){
+	void Prepend(std::initializer_list<Element> ilElements){
 		Prepend(ilElements.begin(), ilElements.end());
 	}
 
 	template<typename ...ParamsT>
-	ElementType *Emplace(const ElementType *pPos, ParamsT &&...vParams){
+	Element *Emplace(const Element *pPos, ParamsT &&...vParams){
 		if(!pPos){
 			Push(std::forward<ParamsT>(vParams)...);
 			return nullptr;
@@ -707,7 +707,7 @@ public:
 
 		const auto uPos = static_cast<std::size_t>(pPos - X_GetStorage());
 		const auto uCountBefore = X_Retreat(uPos, x_uBegin);
-		if(std::is_nothrow_move_constructible<ElementType>::value){
+		if(std::is_nothrow_move_constructible<Element>::value){
 			const auto vPrepared = X_PrepareForInsertion(uPos, 1);
 			const auto pStorage = X_GetStorage();
 			try {
@@ -741,7 +741,7 @@ public:
 	}
 
 	template<typename ...ParamsT>
-	ElementType *Insert(const ElementType *pPos, std::size_t uDeltaSize, const ParamsT &...vParams){
+	Element *Insert(const Element *pPos, std::size_t uDeltaSize, const ParamsT &...vParams){
 		if(!pPos){
 			Append(uDeltaSize, vParams...);
 			return nullptr;
@@ -749,7 +749,7 @@ public:
 
 		const auto uPos = static_cast<std::size_t>(pPos - X_GetStorage());
 		const auto uCountBefore = X_Retreat(uPos, x_uBegin);
-		if(std::is_nothrow_move_constructible<ElementType>::value){
+		if(std::is_nothrow_move_constructible<Element>::value){
 			const auto vPrepared = X_PrepareForInsertion(uPos, uDeltaSize);
 			const auto pStorage = X_GetStorage();
 			auto uWrite = vPrepared.first;
@@ -794,7 +794,7 @@ public:
 	template<typename IteratorT, std::enable_if_t<
 		sizeof(typename std::iterator_traits<IteratorT>::value_type *),
 		int> = 0>
-	ElementType *Insert(const ElementType *pPos, IteratorT itBegin, std::common_type_t<IteratorT> itEnd){
+	Element *Insert(const Element *pPos, IteratorT itBegin, std::common_type_t<IteratorT> itEnd){
 		if(!pPos){
 			Append(itBegin, itEnd);
 			return nullptr;
@@ -805,7 +805,7 @@ public:
 		const auto uPos = static_cast<std::size_t>(pPos - X_GetStorage());
 
 		const auto uCountBefore = X_Retreat(uPos, x_uBegin);
-		if(kHasDeltaSizeHint && std::is_nothrow_move_constructible<ElementType>::value){
+		if(kHasDeltaSizeHint && std::is_nothrow_move_constructible<Element>::value){
 			const auto uDeltaSize = static_cast<std::size_t>(std::distance(itBegin, itEnd));
 
 			const auto vPrepared = X_PrepareForInsertion(uPos, uDeltaSize);
@@ -861,13 +861,13 @@ public:
 
 		return X_GetStorage() + X_Advance(x_uBegin, uCountBefore);
 	}
-	ElementType *Insert(const ElementType *pPos, std::initializer_list<ElementType> ilElements){
+	Element *Insert(const Element *pPos, std::initializer_list<Element> ilElements){
 		return Insert(pPos, ilElements.begin(), ilElements.end());
 	}
 
-	ElementType *Erase(const ElementType *pBegin, const ElementType *pEnd) noexcept(std::is_nothrow_move_constructible<ElementType>::value) {
+	Element *Erase(const Element *pBegin, const Element *pEnd) noexcept(std::is_nothrow_move_constructible<Element>::value) {
 		if(pBegin == pEnd){
-			return const_cast<ElementType *>(pEnd);
+			return const_cast<Element *>(pEnd);
 		}
 		ASSERT(pBegin);
 
@@ -881,7 +881,7 @@ public:
 		}
 		const auto uCountBefore = X_Retreat(uBegin, x_uBegin);
 		const auto uEnd = static_cast<std::size_t>(pEnd - pStorage);
-		if(std::is_nothrow_move_constructible<ElementType>::value){
+		if(std::is_nothrow_move_constructible<Element>::value){
 			const auto uCountAfter = X_Retreat(x_uEnd, uEnd);
 			if(uCountBefore >= uCountAfter){
 				if(uBegin <= uEnd){
@@ -962,16 +962,16 @@ public:
 
 		return pStorage + X_Advance(x_uBegin, uCountBefore);
 	}
-	ElementType *Erase(const ElementType *pPos) noexcept(noexcept(std::declval<RingQueue &>().Erase(pPos, pPos))) {
+	Element *Erase(const Element *pPos) noexcept(noexcept(std::declval<RingQueue &>().Erase(pPos, pPos))) {
 		ASSERT(pPos);
 
 		return Erase(pPos, GetNext(pPos));
 	}
 
-	const ElementType &operator[](std::size_t uIndex) const noexcept {
+	const Element &operator[](std::size_t uIndex) const noexcept {
 		return UncheckedGet(uIndex);
 	}
-	ElementType &operator[](std::size_t uIndex) noexcept {
+	Element &operator[](std::size_t uIndex) noexcept {
 		return UncheckedGet(uIndex);
 	}
 };

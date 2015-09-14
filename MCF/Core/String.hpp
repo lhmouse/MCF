@@ -220,7 +220,7 @@ private:
 
 public:
 	// 容器需求。
-	using ElementType     = Char;
+	using Element         = Char;
 	using ConstEnumerator = Impl_EnumeratorTemplate::ConstEnumerator <String>;
 	using Enumerator      = Impl_EnumeratorTemplate::Enumerator      <String>;
 
@@ -231,38 +231,38 @@ public:
 		X_SetSize(0);
 	}
 
-	const ElementType *GetFirst() const noexcept {
+	const Element *GetFirst() const noexcept {
 		if(IsEmpty()){
 			return nullptr;
 		}
 		return GetBegin();
 	}
-	ElementType *GetFirst() noexcept {
+	Element *GetFirst() noexcept {
 		if(IsEmpty()){
 			return nullptr;
 		}
 		return GetBegin();
 	}
-	const ElementType *GetConstFirst() const noexcept {
+	const Element *GetConstFirst() const noexcept {
 		return GetFirst();
 	}
-	const ElementType *GetLast() const noexcept {
+	const Element *GetLast() const noexcept {
 		if(IsEmpty()){
 			return nullptr;
 		}
 		return GetEnd() - 1;
 	}
-	ElementType *GetLast() noexcept {
+	Element *GetLast() noexcept {
 		if(IsEmpty()){
 			return nullptr;
 		}
 		return GetEnd() - 1;
 	}
-	const ElementType *GetConstLast() const noexcept {
+	const Element *GetConstLast() const noexcept {
 		return GetLast();
 	}
 
-	const ElementType *GetPrev(const ElementType *pPos) const noexcept {
+	const Element *GetPrev(const Element *pPos) const noexcept {
 		const auto pBegin = GetBegin();
 		const auto uOffset = static_cast<std::size_t>(pPos - pBegin);
 		if(uOffset == 0){
@@ -270,7 +270,7 @@ public:
 		}
 		return pBegin + uOffset - 1;
 	}
-	ElementType *GetPrev(const ElementType *pPos) noexcept {
+	Element *GetPrev(const Element *pPos) noexcept {
 		const auto pBegin = GetBegin();
 		const auto uOffset = static_cast<std::size_t>(pPos - pBegin);
 		if(uOffset == 0){
@@ -278,7 +278,7 @@ public:
 		}
 		return pBegin + uOffset - 1;
 	}
-	const ElementType *GetNext(const ElementType *pPos) const noexcept {
+	const Element *GetNext(const Element *pPos) const noexcept {
 		const auto pBegin = GetBegin();
 		const auto uOffset = static_cast<std::size_t>(pPos - pBegin);
 		if(uOffset + 1 == GetSize()){
@@ -286,7 +286,7 @@ public:
 		}
 		return pBegin + uOffset + 1;
 	}
-	ElementType *GetNext(const ElementType *pPos) noexcept {
+	Element *GetNext(const Element *pPos) noexcept {
 		const auto pBegin = GetBegin();
 		const auto uOffset = static_cast<std::size_t>(pPos - pBegin);
 		if(uOffset + 1 == GetSize()){

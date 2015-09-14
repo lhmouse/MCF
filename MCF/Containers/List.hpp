@@ -79,7 +79,7 @@ public:
 
 public:
 	// 容器需求。
-	using ElementType     = ElementT;
+	using Element         = ElementT;
 	using ConstEnumerator = Impl_EnumeratorTemplate::ConstEnumerator <List>;
 	using Enumerator      = Impl_EnumeratorTemplate::Enumerator      <List>;
 
@@ -90,7 +90,7 @@ public:
 		auto pNode = x_pLast;
 		while(pNode){
 			const auto pPrev = pNode->pPrev;
-			Destruct(static_cast<ElementType *>(static_cast<void *>(pNode->aStorage)));
+			Destruct(static_cast<Element *>(static_cast<void *>(pNode->aStorage)));
 			::delete pNode;
 			pNode = pPrev;
 		}
@@ -98,76 +98,76 @@ public:
 		x_pLast  = nullptr;
 	}
 
-	const ElementType *GetFirst() const noexcept {
+	const Element *GetFirst() const noexcept {
 		const auto pNode = x_pFirst;
 		if(!pNode){
 			return nullptr;
 		}
-		return static_cast<const ElementType *>(static_cast<void *>(pNode->aStorage));
+		return static_cast<const Element *>(static_cast<void *>(pNode->aStorage));
 	}
-	ElementType *GetFirst() noexcept {
+	Element *GetFirst() noexcept {
 		const auto pNode = x_pFirst;
 		if(!pNode){
 			return nullptr;
 		}
-		return static_cast<ElementType *>(static_cast<void *>(pNode->aStorage));
+		return static_cast<Element *>(static_cast<void *>(pNode->aStorage));
 	}
-	const ElementType *GetConstFirst() const noexcept {
+	const Element *GetConstFirst() const noexcept {
 		return GetFirst();
 	}
-	const ElementType *GetLast() const noexcept {
+	const Element *GetLast() const noexcept {
 		const auto pNode = x_pLast;
 		if(!pNode){
 			return nullptr;
 		}
-		return static_cast<const ElementType *>(static_cast<void *>(pNode->aStorage));
+		return static_cast<const Element *>(static_cast<void *>(pNode->aStorage));
 	}
-	ElementType *GetLast() noexcept {
+	Element *GetLast() noexcept {
 		const auto pNode = x_pLast;
 		if(!pNode){
 			return nullptr;
 		}
-		return static_cast<ElementType *>(static_cast<void *>(pNode->aStorage));
+		return static_cast<Element *>(static_cast<void *>(pNode->aStorage));
 	}
-	const ElementType *GetConstLast() const noexcept {
+	const Element *GetConstLast() const noexcept {
 		return GetLast();
 	}
 
-	static const ElementType *GetPrev(const ElementType *pPos) noexcept {
+	static const Element *GetPrev(const Element *pPos) noexcept {
 		ASSERT(pPos);
 
 		const auto pNode = reinterpret_cast<const X_Node *>(pPos)->pPrev;
 		if(!pNode){
 			return nullptr;
 		}
-		return static_cast<const ElementType *>(static_cast<void *>(pNode->aStorage));
+		return static_cast<const Element *>(static_cast<void *>(pNode->aStorage));
 	}
-	static ElementType *GetPrev(ElementType *pPos) noexcept {
+	static Element *GetPrev(Element *pPos) noexcept {
 		ASSERT(pPos);
 
 		const auto pNode = reinterpret_cast<const X_Node *>(pPos)->pPrev;
 		if(!pNode){
 			return nullptr;
 		}
-		return static_cast<ElementType *>(static_cast<void *>(pNode->aStorage));
+		return static_cast<Element *>(static_cast<void *>(pNode->aStorage));
 	}
-	static const ElementType *GetNext(const ElementType *pPos) noexcept {
+	static const Element *GetNext(const Element *pPos) noexcept {
 		ASSERT(pPos);
 
 		const auto pNode = reinterpret_cast<const X_Node *>(pPos)->pNext;
 		if(!pNode){
 			return nullptr;
 		}
-		return static_cast<const ElementType *>(static_cast<void *>(pNode->aStorage));
+		return static_cast<const Element *>(static_cast<void *>(pNode->aStorage));
 	}
-	static ElementType *GetNext(ElementType *pPos) noexcept {
+	static Element *GetNext(Element *pPos) noexcept {
 		ASSERT(pPos);
 
 		const auto pNode = reinterpret_cast<const X_Node *>(pPos)->pNext;
 		if(!pNode){
 			return nullptr;
 		}
-		return static_cast<ElementType *>(static_cast<void *>(pNode->aStorage));
+		return static_cast<Element *>(static_cast<void *>(pNode->aStorage));
 	}
 
 	ConstEnumerator EnumerateFirst() const noexcept {
@@ -213,9 +213,9 @@ public:
 	}
 
 	template<typename ...ParamsT>
-	ElementType &Push(ParamsT &&...vParams){
+	Element &Push(ParamsT &&...vParams){
 		const auto pNode = ::new X_Node;
-		const auto pElem = static_cast<ElementType *>(static_cast<void *>(pNode->aStorage));
+		const auto pElem = static_cast<Element *>(static_cast<void *>(pNode->aStorage));
 		try {
 			DefaultConstruct(pElem, std::forward<ParamsT>(vParams)...);
 		} catch(...){
@@ -240,7 +240,7 @@ public:
 		auto pNode = x_pLast;
 		for(std::size_t i = 0; i < uCount; ++i){
 			const auto pPrev = pNode->pPrev;
-			Destruct(static_cast<ElementType *>(static_cast<void *>(pNode->aStorage)));
+			Destruct(static_cast<Element *>(static_cast<void *>(pNode->aStorage)));
 			::delete pNode;
 			pNode = pPrev;
 		}
@@ -253,9 +253,9 @@ public:
 	}
 
 	template<typename ...ParamsT>
-	ElementType &Unshift(ParamsT &&...vParams){
+	Element &Unshift(ParamsT &&...vParams){
 		const auto pNode = ::new X_Node;
-		const auto pElem = static_cast<ElementType *>(static_cast<void *>(pNode->aStorage));
+		const auto pElem = static_cast<Element *>(static_cast<void *>(pNode->aStorage));
 		try {
 			DefaultConstruct(pElem, std::forward<ParamsT>(vParams)...);
 		} catch(...){
@@ -280,7 +280,7 @@ public:
 		auto pNode = x_pFirst;
 		for(std::size_t i = 0; i < uCount; ++i){
 			const auto pNext = pNode->pNext;
-			Destruct(static_cast<ElementType *>(static_cast<void *>(pNode->aStorage)));
+			Destruct(static_cast<Element *>(static_cast<void *>(pNode->aStorage)));
 			::delete pNode;
 			pNode = pNext;
 		}
@@ -320,7 +320,7 @@ public:
 			throw;
 		}
 	}
-	void Append(std::initializer_list<ElementType> ilElements){
+	void Append(std::initializer_list<Element> ilElements){
 		Append(ilElements.begin(), ilElements.end());
 	}
 
@@ -338,19 +338,19 @@ public:
 		lstNew.Append(itBegin, itEnd);
 		Splice(GetFirst(), lstNew);
 	}
-	void Prepend(std::initializer_list<ElementType> ilElements){
+	void Prepend(std::initializer_list<Element> ilElements){
 		Prepend(ilElements.begin(), ilElements.end());
 	}
 
 	template<typename ...ParamsT>
-	ElementType *Emplace(const ElementType *pPos, ParamsT &&...vParams){
+	Element *Emplace(const Element *pPos, ParamsT &&...vParams){
 		List lstNew;
 		lstNew.Push(std::forward<ParamsT>(vParams)...);
 		return Splice(pPos, lstNew);
 	}
 
 	template<typename ...ParamsT>
-	ElementType *Insert(const ElementType *pPos, std::size_t uDeltaSize, const ParamsT &...vParams){
+	Element *Insert(const Element *pPos, std::size_t uDeltaSize, const ParamsT &...vParams){
 		List lstNew;
 		lstNew.Append(uDeltaSize, vParams...);
 		return Splice(pPos, lstNew);
@@ -358,37 +358,37 @@ public:
 	template<typename IteratorT, std::enable_if_t<
 		sizeof(typename std::iterator_traits<IteratorT>::value_type *),
 		int> = 0>
-	ElementType *Insert(const ElementType *pPos, IteratorT itBegin, std::common_type_t<IteratorT> itEnd){
+	Element *Insert(const Element *pPos, IteratorT itBegin, std::common_type_t<IteratorT> itEnd){
 		List lstNew;
 		lstNew.Append(itBegin, itEnd);
 		return Splice(pPos, lstNew);
 	}
-	ElementType *Insert(const ElementType *pPos, std::initializer_list<ElementType> ilElements){
+	Element *Insert(const Element *pPos, std::initializer_list<Element> ilElements){
 		return Insert(pPos, ilElements.begin(), ilElements.end());
 	}
 
-	ElementType *Erase(const ElementType *pBegin, const ElementType *pEnd) noexcept {
+	Element *Erase(const Element *pBegin, const Element *pEnd) noexcept {
 		List lstErased;
 		lstErased.Splice(nullptr, *this, pBegin, pEnd);
-		return const_cast<ElementType *>(pEnd);
+		return const_cast<Element *>(pEnd);
 	}
-	ElementType *Erase(const ElementType *pPos) noexcept {
+	Element *Erase(const Element *pPos) noexcept {
 		return Erase(pPos, GetNext(pPos));
 	}
 
-	ElementType *Splice(const ElementType *pInsert, List &lstSrc) noexcept {
+	Element *Splice(const Element *pInsert, List &lstSrc) noexcept {
 		return Splice(pInsert, lstSrc, lstSrc.GetFirst(), nullptr);
 	}
-	ElementType *Splice(const ElementType *pInsert, List &lstSrc, const ElementType *pPos) noexcept {
+	Element *Splice(const Element *pInsert, List &lstSrc, const Element *pPos) noexcept {
 		return Splice(pInsert, lstSrc, pPos, lstSrc.GetNext(pPos));
 	}
-	ElementType *Splice(const ElementType *pInsert, List &lstSrc, const ElementType *pBegin, const ElementType *pEnd) noexcept {
-		const auto pInsertNode = reinterpret_cast<X_Node *>(const_cast<ElementType *>(pInsert));
-		const auto pBeginNode = reinterpret_cast<X_Node *>(const_cast<ElementType *>(pBegin));
-		const auto pEndNode = reinterpret_cast<X_Node *>(const_cast<ElementType *>(pEnd));
+	Element *Splice(const Element *pInsert, List &lstSrc, const Element *pBegin, const Element *pEnd) noexcept {
+		const auto pInsertNode = reinterpret_cast<X_Node *>(const_cast<Element *>(pInsert));
+		const auto pBeginNode = reinterpret_cast<X_Node *>(const_cast<Element *>(pBegin));
+		const auto pEndNode = reinterpret_cast<X_Node *>(const_cast<Element *>(pEnd));
 
 		if(pBeginNode == pEndNode){
-			return const_cast<ElementType *>(pInsert);
+			return const_cast<Element *>(pInsert);
 		}
 		ASSERT(pBeginNode);
 
@@ -422,16 +422,16 @@ public:
 		pBeginNode->pPrev = pNodeBeforeInsert;
 		pNodeBeforeEnd->pNext = pInsertNode;
 
-		return const_cast<ElementType *>(pInsert);
+		return const_cast<Element *>(pInsert);
 	}
 
-	ElementType *Splice(const ElementType *pInsert, List &&lstSrc) noexcept {
+	Element *Splice(const Element *pInsert, List &&lstSrc) noexcept {
 		return Splice(pInsert, lstSrc);
 	}
-	ElementType *Splice(const ElementType *pInsert, List &&lstSrc, const ElementType *pPos) noexcept {
+	Element *Splice(const Element *pInsert, List &&lstSrc, const Element *pPos) noexcept {
 		return Splice(pInsert, lstSrc, pPos);
 	}
-	ElementType *Splice(const ElementType *pInsert, List &&lstSrc, const ElementType *pBegin, const ElementType *pEnd) noexcept {
+	Element *Splice(const Element *pInsert, List &&lstSrc, const Element *pBegin, const Element *pEnd) noexcept {
 		return Splice(pInsert, lstSrc, pBegin, pEnd);
 	}
 

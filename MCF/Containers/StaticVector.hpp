@@ -74,7 +74,7 @@ public:
 
 public:
 	// 容器需求。
-	using ElementType     = ElementT;
+	using Element         = ElementT;
 	using ConstEnumerator = Impl_EnumeratorTemplate::ConstEnumerator <StaticVector>;
 	using Enumerator      = Impl_EnumeratorTemplate::Enumerator      <StaticVector>;
 
@@ -85,38 +85,38 @@ public:
 		Pop(x_uSize);
 	}
 
-	const ElementType *GetFirst() const noexcept {
+	const Element *GetFirst() const noexcept {
 		if(IsEmpty()){
 			return nullptr;
 		}
 		return GetBegin();
 	}
-	ElementType *GetFirst() noexcept {
+	Element *GetFirst() noexcept {
 		if(IsEmpty()){
 			return nullptr;
 		}
 		return GetBegin();
 	}
-	const ElementType *GetConstFirst() const noexcept {
+	const Element *GetConstFirst() const noexcept {
 		return GetFirst();
 	}
-	const ElementType *GetLast() const noexcept {
+	const Element *GetLast() const noexcept {
 		if(IsEmpty()){
 			return nullptr;
 		}
 		return GetEnd() - 1;
 	}
-	ElementType *GetLast() noexcept {
+	Element *GetLast() noexcept {
 		if(IsEmpty()){
 			return nullptr;
 		}
 		return GetEnd() - 1;
 	}
-	const ElementType *GetConstLast() const noexcept {
+	const Element *GetConstLast() const noexcept {
 		return GetLast();
 	}
 
-	const ElementType *GetPrev(const ElementType *pPos) const noexcept {
+	const Element *GetPrev(const Element *pPos) const noexcept {
 		ASSERT(pPos);
 
 		const auto pBegin = GetBegin();
@@ -127,7 +127,7 @@ public:
 		--uOffset;
 		return pBegin + uOffset;
 	}
-	ElementType *GetPrev(ElementType *pPos) noexcept {
+	Element *GetPrev(Element *pPos) noexcept {
 		ASSERT(pPos);
 
 		const auto pBegin = GetBegin();
@@ -138,7 +138,7 @@ public:
 		--uOffset;
 		return pBegin + uOffset;
 	}
-	const ElementType *GetNext(const ElementType *pPos) const noexcept {
+	const Element *GetNext(const Element *pPos) const noexcept {
 		ASSERT(pPos);
 
 		const auto pBegin = GetBegin();
@@ -149,7 +149,7 @@ public:
 		}
 		return pBegin + uOffset;
 	}
-	ElementType *GetNext(ElementType *pPos) noexcept {
+	Element *GetNext(Element *pPos) noexcept {
 		ASSERT(pPos);
 
 		const auto pBegin = GetBegin();
@@ -189,18 +189,18 @@ public:
 		return EnumerateSingular();
 	}
 
-	void Swap(StaticVector &rhs) noexcept(std::is_nothrow_move_constructible<ElementType>::value) {
+	void Swap(StaticVector &rhs) noexcept(std::is_nothrow_move_constructible<Element>::value) {
 		auto vecTemp = std::move(rhs);
 		*this = std::move(rhs);
 		rhs = std::move(vecTemp);
 	}
 
 	// StaticVector 需求。
-	const ElementType *GetData() const noexcept {
-		return static_cast<const ElementType *>(static_cast<const void *>(x_aStorage));
+	const Element *GetData() const noexcept {
+		return static_cast<const Element *>(static_cast<const void *>(x_aStorage));
 	}
-	ElementType *GetData() noexcept {
-		return static_cast<ElementType *>(static_cast<void *>(x_aStorage));
+	Element *GetData() noexcept {
+		return static_cast<Element *>(static_cast<void *>(x_aStorage));
 	}
 	std::size_t GetSize() const noexcept {
 		return x_uSize;
@@ -209,43 +209,43 @@ public:
 		return kCapacity;
 	}
 
-	const ElementType *GetBegin() const noexcept {
+	const Element *GetBegin() const noexcept {
 		return GetData();
 	}
-	ElementType *GetBegin() noexcept {
+	Element *GetBegin() noexcept {
 		return GetData();
 	}
-	const ElementType *GetConstBegin() const noexcept {
+	const Element *GetConstBegin() const noexcept {
 		return GetBegin();
 	}
-	const ElementType *GetEnd() const noexcept {
+	const Element *GetEnd() const noexcept {
 		return GetData() + x_uSize;
 	}
-	ElementType *GetEnd() noexcept {
+	Element *GetEnd() noexcept {
 		return GetData() + x_uSize;
 	}
-	const ElementType *GetConstEnd() const noexcept {
+	const Element *GetConstEnd() const noexcept {
 		return GetEnd();
 	}
 
-	const ElementType &Get(std::size_t uIndex) const {
+	const Element &Get(std::size_t uIndex) const {
 		if(uIndex >= x_uSize){
 			DEBUG_THROW(Exception, ERROR_INVALID_PARAMETER, RefCountingNtmbs::View(__PRETTY_FUNCTION__));
 		}
 		return UncheckedGet(uIndex);
 	}
-	ElementType &Get(std::size_t uIndex){
+	Element &Get(std::size_t uIndex){
 		if(uIndex >= x_uSize){
 			DEBUG_THROW(Exception, ERROR_INVALID_PARAMETER, RefCountingNtmbs::View(__PRETTY_FUNCTION__));
 		}
 		return UncheckedGet(uIndex);
 	}
-	const ElementType &UncheckedGet(std::size_t uIndex) const noexcept {
+	const Element &UncheckedGet(std::size_t uIndex) const noexcept {
 		ASSERT(uIndex < x_uSize);
 
 		return GetData()[uIndex];
 	}
-	ElementType &UncheckedGet(std::size_t uIndex) noexcept {
+	Element &UncheckedGet(std::size_t uIndex) noexcept {
 		ASSERT(uIndex < x_uSize);
 
 		return GetData()[uIndex];
@@ -260,7 +260,7 @@ public:
 		}
 	}
 	template<typename ...ParamsT>
-	ElementType *ResizeMore(std::size_t uDeltaSize, const ParamsT &...vParams){
+	Element *ResizeMore(std::size_t uDeltaSize, const ParamsT &...vParams){
 		const auto uOldSize = x_uSize;
 		Append(uDeltaSize - x_uSize, vParams...);
 		return GetData() + uOldSize;
@@ -281,12 +281,12 @@ public:
 	}
 
 	template<typename ...ParamsT>
-	ElementType &Push(ParamsT &&...vParams){
+	Element &Push(ParamsT &&...vParams){
 		ReserveMore(1);
 		return UncheckedPush(std::forward<ParamsT>(vParams)...);
 	}
 	template<typename ...ParamsT>
-	ElementType &UncheckedPush(ParamsT &&...vParams) noexcept(std::is_nothrow_constructible<ElementType, ParamsT &&...>::value) {
+	Element &UncheckedPush(ParamsT &&...vParams) noexcept(std::is_nothrow_constructible<Element, ParamsT &&...>::value) {
 		ASSERT(GetCapacity() - x_uSize > 0);
 
 		const auto pBegin = GetBegin();
@@ -351,10 +351,10 @@ public:
 		}
 	}
 
-	const ElementType &operator[](std::size_t uIndex) const noexcept {
+	const Element &operator[](std::size_t uIndex) const noexcept {
 		return UncheckedGet(uIndex);
 	}
-	ElementType &operator[](std::size_t uIndex) noexcept {
+	Element &operator[](std::size_t uIndex) noexcept {
 		return UncheckedGet(uIndex);
 	}
 };

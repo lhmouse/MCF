@@ -17,8 +17,7 @@ namespace MCF {
 		}	\
 		template<typename Tx, typename Ty>	\
 		bool operator()(Tx *const &px, Ty *const &py) const {	\
-			return reinterpret_cast<std::uintptr_t>(static_cast<const volatile void *>(px)) \
-				op_ reinterpret_cast<std::uintptr_t>(static_cast<const volatile void *>(py));	\
+			return reinterpret_cast<std::uintptr_t>(static_cast<const volatile void *>(px)) op_ reinterpret_cast<std::uintptr_t>(static_cast<const volatile void *>(py));	\
 		}	\
 	};
 

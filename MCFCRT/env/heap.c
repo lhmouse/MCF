@@ -13,9 +13,6 @@
 #include <limits.h>
 #include <errno.h>
 
-#define USE_DL_PREFIX
-#include "../../External/dlmalloc/malloc.h"
-
 // hooks.h
 void (*__MCF_CRT_OnHeapAlloc)(void *, size_t , const void *)            = nullptr;
 void (*__MCF_CRT_OnHeapRealloc)(void *, void *, size_t, const void *)   = nullptr;
@@ -67,13 +64,17 @@ unsigned char *__MCF_CRT_HeapAlloc(size_t uSize, const void *pRetAddr){
 
 		EnterCriticalSection(&g_csHeapMutex);
 		{
-			unsigned char *const pRaw = dlmalloc(uRawSize);
+			unsigned char *const pRaw = __MCF_CRT_ReallyAlloc(uRawSize);
 			if(pRaw){
-#if __MCF_CRT_REQUIRE_HEAPDBG_LEVEL(2)
-				pRet = __MCF_CRT_HeapDbgAddGuardsAndRegister(pRaw, uSize, pRetAddr);
-				if(!pRet){
-					dlfree(pRaw);
+#if __MCF_CRT_REQUIRE_HEAPDBG_LEVEL(3)
+				__MCF_HeapDbgBlockInfo *const pBlockInfo = __MCF_CRT_HeapDbgAllocateBlockInfo();
+				if(!pBlockInfo){
+					__MCF_CRT_ReallyFree(pRaw);
+					goto jFailed;
 				}
+				pRet = __MCF_CRT_HeapDbgRegisterBlockInfo(pBlockInfo, pRaw, uSize, pRetAddr);
+#elif __MCF_CRT_REQUIRE_HEAPDBG_LEVEL(2)
+				pRet = __MCF_CRT_HeapDbgRegisterBlockInfo(pRaw, uSize, pRetAddr);
 #else
 				pRet = pRaw;
 #endif
@@ -83,6 +84,9 @@ unsigned char *__MCF_CRT_HeapAlloc(size_t uSize, const void *pRetAddr){
 #endif
 			}
 		}
+#if __MCF_CRT_REQUIRE_HEAPDBG_LEVEL(3)
+	jFailed:
+#endif
 		LeaveCriticalSection(&g_csHeapMutex);
 
 		if(pRet){
@@ -119,19 +123,25 @@ unsigned char *__MCF_CRT_HeapRealloc(void *pBlock, size_t uSize, const void *pRe
 
 	unsigned char *pRawOriginal;
 #if __MCF_CRT_REQUIRE_HEAPDBG_LEVEL(2)
-	const __MCF_HeapDbgBlockInfo *pBlockInfo;
-#	if __MCF_CRT_REQUIRE_HEAPDBG_LEVEL(4)
+#	if __MCF_CRT_REQUIRE_HEAPDBG_LEVEL(3)
+	__MCF_HeapDbgBlockInfo *pBlockInfo;
+#		if __MCF_CRT_REQUIRE_HEAPDBG_LEVEL(4)
 	size_t uOriginalSize;
+#		endif
 #	endif
 	EnterCriticalSection(&g_csHeapMutex);
 	{
-		pBlockInfo = __MCF_CRT_HeapDbgValidate(&pRawOriginal, pBlock, pRetAddr);
-#	if __MCF_CRT_REQUIRE_HEAPDBG_LEVEL(4)
+#	if __MCF_CRT_REQUIRE_HEAPDBG_LEVEL(3)
+		pBlockInfo = __MCF_CRT_HeapDbgValidateBlock(&pRawOriginal, pBlock, pRetAddr);
+#		if __MCF_CRT_REQUIRE_HEAPDBG_LEVEL(4)
 		if(pBlockInfo){
 			uOriginalSize = pBlockInfo->__uSize;
 		} else {
-			uOriginalSize = dlmalloc_usable_size(pRawOriginal);
+			uOriginalSize = __MCF_CRT_ReallyGetUsableSize(pRawOriginal);
 		}
+#		endif
+#	else
+		__MCF_CRT_HeapDbgValidateBlock(&pRawOriginal, pBlock, pRetAddr);
 #	endif
 	}
 	LeaveCriticalSection(&g_csHeapMutex);
@@ -144,14 +154,13 @@ unsigned char *__MCF_CRT_HeapRealloc(void *pBlock, size_t uSize, const void *pRe
 
 		EnterCriticalSection(&g_csHeapMutex);
 		{
-			unsigned char *const pRaw = dlrealloc(pRawOriginal, uRawSize);
+			unsigned char *const pRaw = __MCF_CRT_ReallyRealloc(pRawOriginal, uRawSize);
 			if(pRaw){
-#if __MCF_CRT_REQUIRE_HEAPDBG_LEVEL(2)
-				__MCF_CRT_HeapDbgUnregister(pBlockInfo);
-				pRet = __MCF_CRT_HeapDbgAddGuardsAndRegister(pRaw, uSize, pRetAddr);
-				if(!pRet){
-					dlfree(pRaw);
-				}
+#if __MCF_CRT_REQUIRE_HEAPDBG_LEVEL(3)
+				__MCF_CRT_HeapDbgUnregisterBlockInfo(pBlockInfo);
+				pRet = __MCF_CRT_HeapDbgRegisterBlockInfo(pBlockInfo, pRaw, uSize, pRetAddr);
+#elif __MCF_CRT_REQUIRE_HEAPDBG_LEVEL(2)
+				pRet = __MCF_CRT_HeapDbgRegisterBlockInfo(pRaw, uSize, pRetAddr);
 #else
 				pRet = pRaw;
 #endif
@@ -190,21 +199,60 @@ void __MCF_CRT_HeapFree(void *pBlock, const void *pRetAddr){
 	EnterCriticalSection(&g_csHeapMutex);
 	{
 		unsigned char *pRaw;
-#if __MCF_CRT_REQUIRE_HEAPDBG_LEVEL(2)
-		const __MCF_HeapDbgBlockInfo *const pBlockInfo = __MCF_CRT_HeapDbgValidate(&pRaw, pBlock, pRetAddr);
-		__MCF_CRT_HeapDbgUnregister(pBlockInfo);
+#if __MCF_CRT_REQUIRE_HEAPDBG_LEVEL(3)
+		__MCF_HeapDbgBlockInfo *const pBlockInfo = __MCF_CRT_HeapDbgValidateBlock(&pRaw, pBlock, pRetAddr);
+		__MCF_CRT_HeapDbgUnregisterBlockInfo(pBlockInfo);
+		__MCF_CRT_HeapDbgDeallocateBlockInfo(pBlockInfo);
+#elif __MCF_CRT_REQUIRE_HEAPDBG_LEVEL(2)
+		__MCF_CRT_HeapDbgValidateBlock(&pRaw, pBlock, pRetAddr);
 #else
 		pRaw = pBlock;
 #endif
 
 #if __MCF_CRT_REQUIRE_HEAPDBG_LEVEL(4)
-		memset(pRaw, 0xFE, dlmalloc_usable_size(pRaw));
+		memset(pRaw, 0xFE, __MCF_CRT_ReallyGetUsableSize(pRaw));
 #endif
-		dlfree(pRaw);
+		__MCF_CRT_ReallyFree(pRaw);
 	}
 	LeaveCriticalSection(&g_csHeapMutex);
 
 	if(__MCF_CRT_OnHeapFree){
 		(*__MCF_CRT_OnHeapFree)(pBlock, pRetAddr);
 	}
+}
+
+#define USE_DLMALLOC	1
+
+#if USE_DLMALLOC
+#	define USE_DL_PREFIX
+#	include "../../External/dlmalloc/malloc.h"
+#endif
+
+void *__MCF_CRT_ReallyAlloc(size_t uSize){
+#if USE_DLMALLOC
+	return dlmalloc(uSize);
+#else
+	return HeapAlloc(GetProcessHeap(), 0, uSize);
+#endif
+}
+void *__MCF_CRT_ReallyRealloc(void *pBlock, size_t uSize){
+#if USE_DLMALLOC
+	return dlrealloc(pBlock, uSize);
+#else
+	return HeapReAlloc(GetProcessHeap(), 0, pBlock, uSize);
+#endif
+}
+void __MCF_CRT_ReallyFree(void *pBlock){
+#if USE_DLMALLOC
+	dlfree(pBlock);
+#else
+	HeapFree(GetProcessHeap(), 0, pBlock);
+#endif
+}
+size_t __MCF_CRT_ReallyGetUsableSize(void *pBlock){
+#if USE_DLMALLOC
+	return dlmalloc_usable_size(pBlock);
+#else
+	return HeapSize(GetProcessHeap(), 0, pBlock);
+#endif
 }

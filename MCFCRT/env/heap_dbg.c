@@ -3,14 +3,12 @@
 // Copyleft 2013 - 2015, LH_Mouse. All wrongs reserved.
 
 #include "heap_dbg.h"
+#include "heap.h"
 #include "../ext/stpcpy.h"
 #include "../ext/unref_param.h"
 #include "bail.h"
 #include "mcfwin.h"
 #include <stdio.h>
-
-#define USE_DL_PREFIX
-#include "../../External/dlmalloc/malloc.h"
 
 #define GUARD_BAND_SIZE     0x20u
 
@@ -99,27 +97,24 @@ void __MCF_CRT_HeapDbgUninit(){
 size_t __MCF_CRT_HeapDbgGetRawSize(size_t uContentSize){
 	return uContentSize + GUARD_BAND_SIZE * 2;
 }
-unsigned char *__MCF_CRT_HeapDbgAddGuardsAndRegister(
-	unsigned char *pRaw, size_t uContentSize, const void *pRetAddr)
-{
-	unsigned char *const pContents = pRaw + GUARD_BAND_SIZE;
 
-#if __MCF_CRT_REQUIRE_HEAPDBG_LEVEL(3)
-	__MCF_HeapDbgBlockInfo *const pBlockInfo = HeapAlloc(g_hMapAllocator, 0, sizeof(__MCF_HeapDbgBlockInfo));
-	if(!pBlockInfo){
-		return nullptr;
-	}
+#	if __MCF_CRT_REQUIRE_HEAPDBG_LEVEL(3)
+
+__MCF_HeapDbgBlockInfo *__MCF_CRT_HeapDbgAllocateBlockInfo(){
+	return HeapAlloc(g_hMapAllocator, 0, sizeof(__MCF_HeapDbgBlockInfo));
+}
+void __MCF_CRT_HeapDbgDeallocateBlockInfo(__MCF_HeapDbgBlockInfo *pBlockInfo){
+	HeapFree(g_hMapAllocator, 0, pBlockInfo);
+}
+
+unsigned char *__MCF_CRT_HeapDbgRegisterBlockInfo(__MCF_HeapDbgBlockInfo *pBlockInfo, unsigned char *pRaw, MCF_STD size_t uContentSize, const void *pRetAddr){
+	unsigned char *const pContents = pRaw + GUARD_BAND_SIZE;
+	const size_t uSize = uContentSize;
+
 	pBlockInfo->__pContents = pContents;
 	pBlockInfo->__uSize     = uContentSize;
 	pBlockInfo->__pRetAddr  = pRetAddr;
 	MCF_AvlAttach(&g_pavlBlocks, (MCF_AvlNodeHeader *)pBlockInfo, &BlockInfoComparatorNodes);
-
-	const size_t uSize = uContentSize;
-#else
-	(void)uContentSize;
-	(void)pRetAddr;
-	const size_t uSize = dlmalloc_usable_size(pRaw) - GUARD_BAND_SIZE * 2;
-#endif
 
 	void **ppGuard1 = (void **)pContents;
 	void **ppGuard2 = (void **)(pContents + uSize);
@@ -135,23 +130,15 @@ unsigned char *__MCF_CRT_HeapDbgAddGuardsAndRegister(
 
 	return pContents;
 }
-const __MCF_HeapDbgBlockInfo *__MCF_CRT_HeapDbgValidate(
-	unsigned char **ppRaw, unsigned char *pContents, const void *pRetAddr)
-{
+__MCF_HeapDbgBlockInfo *__MCF_CRT_HeapDbgValidateBlock(unsigned char **ppRaw, unsigned char *pContents, const void *pRetAddr){
 	unsigned char *const pRaw = pContents - GUARD_BAND_SIZE;
 	*ppRaw = pRaw;
 
-#if __MCF_CRT_REQUIRE_HEAPDBG_LEVEL(3)
-	const __MCF_HeapDbgBlockInfo *const pBlockInfo = (const __MCF_HeapDbgBlockInfo *)MCF_AvlFind(
-		&g_pavlBlocks, (intptr_t)pContents, &BlockInfoComparatorNodeKey);
+	__MCF_HeapDbgBlockInfo *const pBlockInfo = (__MCF_HeapDbgBlockInfo *)MCF_AvlFind(&g_pavlBlocks, (intptr_t)pContents, &BlockInfoComparatorNodeKey);
 	if(!pBlockInfo){
 		MCF_CRT_BailF(L"__MCF_CRT_HeapDbgValidate() 失败：传入的指针无效。\n调用返回地址：%p", pRetAddr);
 	}
 	const size_t uSize = pBlockInfo->__uSize;
-#else
-	const __MCF_HeapDbgBlockInfo *const pBlockInfo = nullptr;
-	const size_t uSize = dlmalloc_usable_size(pRaw) - GUARD_BAND_SIZE * 2;
-#endif
 
 	void *const *ppGuard1 = (void *const *)pContents;
 	void *const *ppGuard2 = (void *const *)(pContents + uSize);
@@ -170,13 +157,55 @@ const __MCF_HeapDbgBlockInfo *__MCF_CRT_HeapDbgValidate(
 
 	return pBlockInfo;
 }
-void __MCF_CRT_HeapDbgUnregister(const __MCF_HeapDbgBlockInfo *pBlockInfo){
-#if __MCF_CRT_REQUIRE_HEAPDBG_LEVEL(3)
+void __MCF_CRT_HeapDbgUnregisterBlockInfo(__MCF_HeapDbgBlockInfo *pBlockInfo){
 	MCF_AvlDetach((const MCF_AvlNodeHeader *)pBlockInfo);
-	HeapFree(g_hMapAllocator, 0, (void *)pBlockInfo);
-#else
-	(void)pBlockInfo;
-#endif
 }
+
+#	else
+
+unsigned char *__MCF_CRT_HeapDbgRegisterBlockInfo(unsigned char *pRaw, MCF_STD size_t uContentSize, const void *pRetAddr){
+	(void)uContentSize;
+	(void)pRetAddr;
+
+	unsigned char *const pContents = pRaw + GUARD_BAND_SIZE;
+	const size_t uSize = __MCF_CRT_ReallyGetUsableSize(pRaw) - GUARD_BAND_SIZE * 2;
+
+	void **ppGuard1 = (void **)pContents;
+	void **ppGuard2 = (void **)(pContents + uSize);
+	for(unsigned i = 0; i < GUARD_BAND_SIZE; i += sizeof(void *)){
+		--ppGuard1;
+
+		void *const pTemp1 = EncodePointer(ppGuard2), *const pTemp2 = EncodePointer(ppGuard1);
+		__builtin_memcpy(ppGuard1, &pTemp1, sizeof(void *));
+		__builtin_memcpy(ppGuard2, &pTemp2, sizeof(void *));
+
+		++ppGuard2;
+	}
+
+	return pContents;
+}
+void __MCF_CRT_HeapDbgValidateBlock(unsigned char **ppRaw, unsigned char *pContents, const void *pRetAddr){
+	unsigned char *const pRaw = pContents - GUARD_BAND_SIZE;
+	*ppRaw = pRaw;
+
+	const size_t uSize = __MCF_CRT_ReallyGetUsableSize(pRaw) - GUARD_BAND_SIZE * 2;
+
+	void *const *ppGuard1 = (void *const *)pContents;
+	void *const *ppGuard2 = (void *const *)(pContents + uSize);
+	for(unsigned i = 0; i < GUARD_BAND_SIZE; i += sizeof(void *)){
+		--ppGuard1;
+
+		void *pTemp1, *pTemp2;
+		__builtin_memcpy(&pTemp1, ppGuard1, sizeof(void *));
+		__builtin_memcpy(&pTemp2, ppGuard2, sizeof(void *));
+		if((DecodePointer(pTemp1) != ppGuard2) || (DecodePointer(pTemp2) != ppGuard1)){
+			MCF_CRT_BailF(L"__MCF_CRT_HeapDbgValidate() 失败：侦测到堆损坏。\n调用返回地址：%p", pRetAddr);
+		}
+
+		++ppGuard2;
+	}
+}
+
+#	endif
 
 #endif

@@ -74,7 +74,7 @@ unsigned char *__MCF_CRT_HeapAlloc(size_t uSize, const void *pRetAddr){
 				}
 				pRet = __MCF_CRT_HeapDbgRegisterBlockInfo(pBlockInfo, pRaw, uSize, pRetAddr);
 #elif __MCF_CRT_REQUIRE_HEAPDBG_LEVEL(2)
-				pRet = __MCF_CRT_HeapDbgRegisterBlockInfo(pRaw, uSize, pRetAddr);
+				pRet = __MCF_CRT_HeapDbgRegisterBlockInfoBasic(pRaw, uSize, pRetAddr);
 #else
 				pRet = pRaw;
 #endif
@@ -141,7 +141,7 @@ unsigned char *__MCF_CRT_HeapRealloc(void *pBlock, size_t uSize, const void *pRe
 		}
 #		endif
 #	else
-		__MCF_CRT_HeapDbgValidateBlock(&pRawOriginal, pBlock, pRetAddr);
+		__MCF_CRT_HeapDbgValidateBlockBasic(&pRawOriginal, pBlock, pRetAddr);
 #	endif
 	}
 	LeaveCriticalSection(&g_csHeapMutex);
@@ -160,7 +160,7 @@ unsigned char *__MCF_CRT_HeapRealloc(void *pBlock, size_t uSize, const void *pRe
 				__MCF_CRT_HeapDbgUnregisterBlockInfo(pBlockInfo);
 				pRet = __MCF_CRT_HeapDbgRegisterBlockInfo(pBlockInfo, pRaw, uSize, pRetAddr);
 #elif __MCF_CRT_REQUIRE_HEAPDBG_LEVEL(2)
-				pRet = __MCF_CRT_HeapDbgRegisterBlockInfo(pRaw, uSize, pRetAddr);
+				pRet = __MCF_CRT_HeapDbgRegisterBlockInfoBasic(pRaw, uSize, pRetAddr);
 #else
 				pRet = pRaw;
 #endif
@@ -204,7 +204,7 @@ void __MCF_CRT_HeapFree(void *pBlock, const void *pRetAddr){
 		__MCF_CRT_HeapDbgUnregisterBlockInfo(pBlockInfo);
 		__MCF_CRT_HeapDbgDeallocateBlockInfo(pBlockInfo);
 #elif __MCF_CRT_REQUIRE_HEAPDBG_LEVEL(2)
-		__MCF_CRT_HeapDbgValidateBlock(&pRaw, pBlock, pRetAddr);
+		__MCF_CRT_HeapDbgValidateBlockBasic(&pRaw, pBlock, pRetAddr);
 #else
 		pRaw = pBlock;
 #endif

@@ -6,8 +6,7 @@ using namespace MCF;
 
 extern "C" unsigned MCFMain(){
 	void *p = std::malloc(200);
-	((char *)p)[208] = 'a';
 	p = std::realloc(p, 100);
-	free(p);
+	// free(p);
 	return 0;
 }

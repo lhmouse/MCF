@@ -163,7 +163,7 @@ void __MCF_CRT_HeapDbgUnregisterBlockInfo(__MCF_HeapDbgBlockInfo *pBlockInfo){
 
 #	else
 
-unsigned char *__MCF_CRT_HeapDbgRegisterBlockInfo(unsigned char *pRaw, MCF_STD size_t uContentSize, const void *pRetAddr){
+unsigned char *__MCF_CRT_HeapDbgRegisterBlockInfoBasic(unsigned char *pRaw, MCF_STD size_t uContentSize, const void *pRetAddr){
 	(void)uContentSize;
 	(void)pRetAddr;
 
@@ -184,7 +184,7 @@ unsigned char *__MCF_CRT_HeapDbgRegisterBlockInfo(unsigned char *pRaw, MCF_STD s
 
 	return pContents;
 }
-void __MCF_CRT_HeapDbgValidateBlock(unsigned char **ppRaw, unsigned char *pContents, const void *pRetAddr){
+void __MCF_CRT_HeapDbgValidateBlockBasic(unsigned char **ppRaw, unsigned char *pContents, const void *pRetAddr){
 	unsigned char *const pRaw = pContents - GUARD_BAND_SIZE;
 	*ppRaw = pRaw;
 

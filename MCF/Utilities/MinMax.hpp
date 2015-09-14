@@ -5,6 +5,7 @@
 #ifndef MCF_UTILITIES_MIN_MAX_HPP_
 #define MCF_UTILITIES_MIN_MAX_HPP_
 
+#include "RationalFunctors.hpp"
 #include <utility>
 
 namespace MCF {
@@ -16,25 +17,25 @@ namespace Impl_MinMax {
 	}
 }
 
-template<typename FirstT>
+template<typename ComparatorT = Less, typename FirstT>
 constexpr decltype(auto) Min(FirstT &&first){
 	return Impl_MinMax::ForwardAsLvalueOrPrvalue(std::forward<FirstT>(first));
 }
-template<typename FirstT>
+template<typename ComparatorT = Less, typename FirstT>
 constexpr decltype(auto) Max(FirstT &&first){
 	return Impl_MinMax::ForwardAsLvalueOrPrvalue(std::forward<FirstT>(first));
 }
 
-template<typename FirstT, typename SecondT, typename ...RemainingT>
+template<typename ComparatorT = Less, typename FirstT, typename SecondT, typename ...RemainingT>
 constexpr decltype(auto) Min(FirstT &&first, SecondT &&second, RemainingT &&...remaining){
 	return Impl_MinMax::ForwardAsLvalueOrPrvalue(Min(
-		(first < second) ? std::forward<FirstT>(first) : std::forward<SecondT>(second),
+		Less()(first, second) ? std::forward<FirstT>(first) : std::forward<SecondT>(second),
 		std::forward<RemainingT>(remaining)...));
 }
-template<typename FirstT, typename SecondT, typename ...RemainingT>
+template<typename ComparatorT = Less, typename FirstT, typename SecondT, typename ...RemainingT>
 constexpr decltype(auto) Max(FirstT &&first, SecondT &&second, RemainingT &&...remaining){
 	return Impl_MinMax::ForwardAsLvalueOrPrvalue(Max(
-		(second < first) ? std::forward<FirstT>(first) : std::forward<SecondT>(second),
+		Less()(second, first) ? std::forward<FirstT>(first) : std::forward<SecondT>(second),
 		std::forward<RemainingT>(remaining)...));
 }
 

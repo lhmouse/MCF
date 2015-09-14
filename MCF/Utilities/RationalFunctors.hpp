@@ -12,7 +12,7 @@ namespace MCF {
 #define DEFINE_RATIONAL_FUNCTOR_(name_, op_)	\
 	struct name_ {	\
 		template<typename Tx, typename Ty>	\
-		bool operator()(const Tx &x, const Ty &y) const {	\
+		constexpr bool operator()(const Tx &x, const Ty &y) const {	\
 			return x op_ y;	\
 		}	\
 		template<typename Tx, typename Ty>	\

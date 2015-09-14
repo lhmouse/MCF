@@ -1,12 +1,10 @@
-#include <MCF/Utilities/RationalFunctors.hpp>
-#include <cstdlib>
+#include <MCF/Utilities/MinMax.hpp>
 #include <cstdio>
 
 using namespace MCF;
 
 extern "C" unsigned MCFMain(){
-	void *p = std::malloc(200);
-	p = std::realloc(p, 100);
-	// free(p);
+	char a[Min(10, 20, 5)];
+	std::printf("size = %zu\n", sizeof(a));
 	return 0;
 }

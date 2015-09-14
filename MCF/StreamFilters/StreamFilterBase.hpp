@@ -59,12 +59,14 @@ public:
 		X_DoUpdate(pData, uSize);
 		x_u64BytesProcessed += uSize;
 	}
-	void Finalize(){
+	StreamBuffer &Finalize(){
 		if(x_bInited){
 			X_DoFinalize();
 
 			x_bInited = false;
 		}
+
+		return GetOutputBuffer();
 	}
 
 	std::uint64_t QueryBytesProcessed() const noexcept {

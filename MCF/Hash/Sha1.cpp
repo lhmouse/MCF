@@ -311,7 +311,7 @@ void Sha1::Update(const void *pData, std::size_t uSize) noexcept {
 		x_bInited = true;
 	}
 
-	auto pbyRead = (const unsigned char *)pData;
+	auto pbyRead = static_cast<const unsigned char *>(pData);
 	std::size_t uBytesRemaining = uSize;
 	const std::size_t uBytesFree = sizeof(x_vChunk.aby) - x_uBytesInChunk;
 	if(uBytesRemaining >= uBytesFree){
@@ -334,7 +334,7 @@ void Sha1::Update(const void *pData, std::size_t uSize) noexcept {
 	}
 	x_u64BytesTotal += uSize;
 }
-void Sha1::Finalize(unsigned char (&abyOutput)[20]) noexcept {
+Array<unsigned char, 20> Sha1::Finalize() noexcept {
 	if(x_bInited){
 		x_vChunk.aby[x_uBytesInChunk++] = 0x80;
 		if(x_uBytesInChunk > sizeof(x_vChunk.vLast.abyData)){
@@ -351,9 +351,11 @@ void Sha1::Finalize(unsigned char (&abyOutput)[20]) noexcept {
 		x_bInited = false;
 	}
 
+	Array<unsigned char, 20> abyRet;
 	for(unsigned i = 0; i < 5; ++i){
-		StoreBe(((std::uint32_t *)abyOutput)[i], x_auResult[i]);
+		StoreBe(reinterpret_cast<std::uint32_t *>(abyRet.GetData())[i], x_auResult[i]);
 	}
+	return abyRet;
 }
 
 }

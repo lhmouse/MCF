@@ -5,6 +5,7 @@
 #ifndef MCF_HASH_MD5_HPP_
 #define MCF_HASH_MD5_HPP_
 
+#include "../Core/Array.hpp"
 #include <cstddef>
 #include <cstdint>
 
@@ -32,7 +33,7 @@ public:
 public:
 	void Abort() noexcept;
 	void Update(const void *pData, std::size_t uSize) noexcept;
-	void Finalize(unsigned char (&abyOutput)[16]) noexcept;
+	Array<unsigned char, 16> Finalize() noexcept;
 };
 
 }

@@ -371,7 +371,7 @@ void Md5::Update(const void *pData, std::size_t uSize) noexcept {
 		x_bInited = true;
 	}
 
-	auto pbyRead = (const unsigned char *)pData;
+	auto pbyRead = static_cast<const unsigned char *>(pData);
 	std::size_t uBytesRemaining = uSize;
 	const std::size_t uBytesFree = sizeof(x_vChunk.aby) - x_uBytesInChunk;
 	if(uBytesRemaining >= uBytesFree){
@@ -394,7 +394,7 @@ void Md5::Update(const void *pData, std::size_t uSize) noexcept {
 	}
 	x_u64BytesTotal += uSize;
 }
-void Md5::Finalize(unsigned char (&abyOutput)[16]) noexcept {
+Array<unsigned char, 16> Md5::Finalize() noexcept {
 	if(x_bInited){
 		x_vChunk.aby[x_uBytesInChunk++] = 0x80;
 		if(x_uBytesInChunk > sizeof(x_vChunk.vLast.abyData)){
@@ -411,9 +411,11 @@ void Md5::Finalize(unsigned char (&abyOutput)[16]) noexcept {
 		x_bInited = false;
 	}
 
+	Array<unsigned char, 16> abyRet;
 	for(unsigned i = 0; i < 4; ++i){
-		StoreLe(((std::uint32_t *)abyOutput)[i], x_auResult[i]);
+		StoreLe(reinterpret_cast<std::uint32_t *>(abyRet.GetData())[i], x_auResult[i]);
 	}
+	return abyRet;
 }
 
 }

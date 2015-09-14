@@ -14,9 +14,11 @@
 #include <array>
 #include <cstddef>
 #include "StringObserver.hpp"
-#include "../Containers/Vector.hpp"
 
 namespace MCF {
+
+template<typename ElementT>
+class Vector;
 
 template<class ElementT>
 class ArrayObserver {

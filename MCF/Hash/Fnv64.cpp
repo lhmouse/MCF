@@ -32,7 +32,7 @@ void Fnv64::Update(const void *pData, std::size_t uSize) noexcept {
 		x_u64Reg *= 1099511628211u;
 	};
 
-	register auto pbyRead = (const unsigned char *)pData;
+	register auto pbyRead = static_cast<const unsigned char *>(pData);
 	const auto pbyEnd = pbyRead + uSize;
 
 	if(uSize >= sizeof(std::uintptr_t) * 2){

@@ -5,6 +5,7 @@
 #ifndef MCF_HASH_SHA256_HPP_
 #define MCF_HASH_SHA256_HPP_
 
+#include "../Core/Array.hpp"
 #include <cstddef>
 #include <cstdint>
 
@@ -32,7 +33,7 @@ public:
 public:
 	void Abort() noexcept;
 	void Update(const void *pData, std::size_t uSize) noexcept;
-	void Finalize(unsigned char (&abyOutput)[32]) noexcept;
+	Array<unsigned char, 32> Finalize() noexcept;
 };
 
 }

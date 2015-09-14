@@ -9,12 +9,9 @@
 #include <cstdint>
 #include <cstdlib>
 #include <cstring>
+#include <climits>
 
-#include <memory>
-#include <algorithm>
-#include <limits>
 #include <utility>
-#include <functional>
 #include <type_traits>
 #include <initializer_list>
 

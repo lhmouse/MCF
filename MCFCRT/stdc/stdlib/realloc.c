@@ -8,7 +8,7 @@
 __attribute__((__noinline__))
 void *__wrap_realloc(void *p, size_t cb){
 	if(p){
-		return __MCF_CRT_HeapReAlloc(p, cb, __builtin_return_address(0));
+		return __MCF_CRT_HeapRealloc(p, cb, __builtin_return_address(0));
 	} else {
 		return __MCF_CRT_HeapAlloc(cb, __builtin_return_address(0));
 	}

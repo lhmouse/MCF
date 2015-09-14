@@ -14,7 +14,6 @@
 #include <iterator>
 #include <type_traits>
 #include <initializer_list>
-#include <functional>
 #include <cstddef>
 
 namespace MCF {

@@ -18,7 +18,7 @@
 
 // hooks.h
 void (*__MCF_CRT_OnHeapAlloc)(void *, size_t , const void *)            = nullptr;
-void (*__MCF_CRT_OnHeapReAlloc)(void *, void *, size_t, const void *)   = nullptr;
+void (*__MCF_CRT_OnHeapRealloc)(void *, void *, size_t, const void *)   = nullptr;
 void (*__MCF_CRT_OnHeapFree)(void *__pBlock, const void *)              = nullptr;
 bool (*__MCF_CRT_OnHeapBadAlloc)(const void *)                          = nullptr;
 
@@ -98,9 +98,9 @@ unsigned char *__MCF_CRT_HeapAlloc(size_t uSize, const void *pRetAddr){
 		}
 	}
 }
-unsigned char *__MCF_CRT_HeapReAlloc(void *pBlock, size_t uSize, const void *pRetAddr){
+unsigned char *__MCF_CRT_HeapRealloc(void *pBlock, size_t uSize, const void *pRetAddr){
 	if(!pBlock){
-		MCF_CRT_Bail(L"__MCF_CRT_HeapReAlloc() 失败：传入了一个空指针。\n\n");
+		MCF_CRT_Bail(L"__MCF_CRT_HeapRealloc() 失败：传入了一个空指针。\n\n");
 	}
 
 #if __MCF_CRT_REQUIRE_HEAPDBG_LEVEL(1)
@@ -166,8 +166,8 @@ unsigned char *__MCF_CRT_HeapReAlloc(void *pBlock, size_t uSize, const void *pRe
 		LeaveCriticalSection(&g_csHeapMutex);
 
 		if(pRet){
-			if(__MCF_CRT_OnHeapReAlloc){
-				(*__MCF_CRT_OnHeapReAlloc)(pRet, pBlock, uSize, pRetAddr);
+			if(__MCF_CRT_OnHeapRealloc){
+				(*__MCF_CRT_OnHeapRealloc)(pRet, pBlock, uSize, pRetAddr);
 			}
 			return pRet;
 		}

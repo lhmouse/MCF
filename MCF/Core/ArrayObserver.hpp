@@ -12,7 +12,6 @@
 #include <string>
 #include <vector>
 #include <array>
-#include <memory>
 #include <cstddef>
 #include "StringObserver.hpp"
 #include "../Containers/Vector.hpp"

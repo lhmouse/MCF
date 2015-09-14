@@ -11,7 +11,7 @@ __MCF_CRT_EXTERN_C_BEGIN
 
 // heap.c
 extern void (*__MCF_CRT_OnHeapAlloc)(void *__pNewBlock, MCF_STD size_t __uSize, const void *__pRetAddr) MCF_NOEXCEPT;
-extern void (*__MCF_CRT_OnHeapReAlloc)(void *__pNewBlock, void *__pBlock, MCF_STD size_t __uSize, const void *__pRetAddr) MCF_NOEXCEPT;
+extern void (*__MCF_CRT_OnHeapRealloc)(void *__pNewBlock, void *__pBlock, MCF_STD size_t __uSize, const void *__pRetAddr) MCF_NOEXCEPT;
 extern void (*__MCF_CRT_OnHeapFree)(void *__pBlock, const void *__pRetAddr) MCF_NOEXCEPT;
 extern bool (*__MCF_CRT_OnHeapBadAlloc)(const void *__pRetAddr) MCF_NOEXCEPT;
 

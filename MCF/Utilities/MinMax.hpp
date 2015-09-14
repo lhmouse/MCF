@@ -5,7 +5,6 @@
 #ifndef MCF_UTILITIES_MIN_MAX_HPP_
 #define MCF_UTILITIES_MIN_MAX_HPP_
 
-#include <functional>
 #include <utility>
 
 namespace MCF {

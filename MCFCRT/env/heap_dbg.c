@@ -45,47 +45,47 @@ void __MCF_CRT_HeapDbgUninit(){
 		const HANDLE hStdErr = GetStdHandle(STD_ERROR_HANDLE);
 		if(hStdErr == INVALID_HANDLE_VALUE){
 			MCF_CRT_Bail(L"__MCF_CRT_HeapDbgUninit() 失败：侦测到内存泄漏。无法打开标准错误流，没有生成内存泄漏信息。");
-		} else {
-			const __MCF_HeapDbgBlockInfo *pBlockInfo = (const __MCF_HeapDbgBlockInfo *)MCF_AvlFront(&g_pavlBlocks);
-			do {
-				const unsigned char *pbyDump = pBlockInfo->__pContents;
-
-				char achTemp[1024];
-				char *pchWrite = achTemp + sprintf(achTemp,
-					"Memory leak: address = %p, size = %p, return address = %p, leading bytes =",
-					(void *)pbyDump, (void *)pBlockInfo->__uSize, (void *)pBlockInfo->__pRetAddr);
-				for(size_t i = 0; i < 16; ++i){
-					*(pchWrite++) = ' ';
-					if(IsBadReadPtr(pbyDump, 1)){
-						*(pchWrite++) = '?';
-						*(pchWrite++) = '?';
-					} else {
-						static const char kHexTable[16] = "0123456789ABCDEF";
-						*(pchWrite++) = kHexTable[(*pbyDump) >> 4];
-						*(pchWrite++) = kHexTable[(*pbyDump) & 0x0F];
-					}
-					++pbyDump;
-				}
-				*(pchWrite++) = '\n';
-
-				const char *pchRead = achTemp;
-				for(;;){
-					const DWORD dwBytesToWrite = (DWORD)(pchWrite - pchRead);
-					if(dwBytesToWrite == 0){
-						break;
-					}
-					DWORD dwBytesWritten;
-					if(!WriteFile(hStdErr, pchRead, dwBytesToWrite, &dwBytesWritten, nullptr)){
-						break;
-					}
-					pchRead += dwBytesWritten;
-				}
-
-				pBlockInfo = (const __MCF_HeapDbgBlockInfo *)MCF_AvlNext((const MCF_AvlNodeHeader *)pBlockInfo);
-			} while(pBlockInfo);
-
-			MCF_CRT_Bail(L"__MCF_CRT_HeapDbgUninit() 失败：侦测到内存泄漏。内存泄漏的详细信息已经输出至标准错误流中。");
 		}
+
+		const __MCF_HeapDbgBlockInfo *pBlockInfo = (const __MCF_HeapDbgBlockInfo *)MCF_AvlFront(&g_pavlBlocks);
+		do {
+			const unsigned char *pbyDump = pBlockInfo->__pContents;
+
+			char achTemp[1024];
+			char *pchWrite = achTemp + sprintf(achTemp,
+				"Memory leak: address = %p, size = %p, return address = %p, leading bytes =",
+				(void *)pbyDump, (void *)pBlockInfo->__uSize, (void *)pBlockInfo->__pRetAddr);
+			for(size_t i = 0; i < 16; ++i){
+				*(pchWrite++) = ' ';
+				if(IsBadReadPtr(pbyDump, 1)){
+					*(pchWrite++) = '?';
+					*(pchWrite++) = '?';
+				} else {
+					static const char kHexTable[16] = "0123456789ABCDEF";
+					*(pchWrite++) = kHexTable[(*pbyDump) >> 4];
+					*(pchWrite++) = kHexTable[(*pbyDump) & 0x0F];
+				}
+				++pbyDump;
+			}
+			*(pchWrite++) = '\n';
+
+			const char *pchRead = achTemp;
+			for(;;){
+				const DWORD dwBytesToWrite = (DWORD)(pchWrite - pchRead);
+				if(dwBytesToWrite == 0){
+					break;
+				}
+				DWORD dwBytesWritten;
+				if(!WriteFile(hStdErr, pchRead, dwBytesToWrite, &dwBytesWritten, nullptr)){
+					break;
+				}
+				pchRead += dwBytesWritten;
+			}
+
+			pBlockInfo = (const __MCF_HeapDbgBlockInfo *)MCF_AvlNext((const MCF_AvlNodeHeader *)pBlockInfo);
+		} while(pBlockInfo);
+
+		MCF_CRT_Bail(L"__MCF_CRT_HeapDbgUninit() 失败：侦测到内存泄漏。内存泄漏的详细信息已经输出至标准错误流中。");
 	}
 
 	g_pavlBlocks = nullptr;
@@ -113,16 +113,14 @@ unsigned char *__MCF_CRT_HeapDbgAddGuardsAndRegister(
 	pBlockInfo->__uSize     = uContentSize;
 	pBlockInfo->__pRetAddr  = pRetAddr;
 	MCF_AvlAttach(&g_pavlBlocks, (MCF_AvlNodeHeader *)pBlockInfo, &BlockInfoComparatorNodes);
-#else
-	(void)pRetAddr;
-#endif
 
-#if __MCF_CRT_REQUIRE_HEAPDBG_LEVEL(3)
 	const size_t uSize = uContentSize;
 #else
 	(void)uContentSize;
+	(void)pRetAddr;
 	const size_t uSize = dlmalloc_usable_size(pRaw) - GUARD_BAND_SIZE * 2;
 #endif
+
 	void **ppGuard1 = (void **)pContents;
 	void **ppGuard2 = (void **)(pContents + uSize);
 	for(unsigned i = 0; i < GUARD_BAND_SIZE; i += sizeof(void *)){

@@ -32,6 +32,10 @@ public:
 	FlatMultiSet(IteratorT itBegin, std::common_type_t<IteratorT> itEnd)
 		: FlatMultiSet()
 	{
+		if(std::is_base_of<std::forward_iterator_tag, typename std::iterator_traits<IteratorT>::iterator_category>::value){
+			const auto uDeltaSize = static_cast<std::size_t>(std::distance(itBegin, itEnd));
+			Reserve(uDeltaSize);
+		}
 		for(auto it = itBegin; it != itEnd; ++it){
 			AddUsingHint(nullptr, *it);
 		}

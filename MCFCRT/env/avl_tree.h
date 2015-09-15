@@ -60,8 +60,8 @@ static inline void MCF_AvlAttachWithHint(MCF_AvlRoot *__ppRoot,
 				__pParent = __pHint;
 				__ppRefl = &(__pHint->__pLeft);
 			} else if((*__pfnComparator)(__pNode, __pPrev) >= 0){
-				// 条件：	node		<	hint
-				//			hint->__prev	<=	node
+				// 条件：  node        <   hint
+				//         hint->prev  <=  node
 				if(__pPrev->__uHeight < __pHint->__uHeight){
 					ASSERT(!__pPrev->__pRight);
 
@@ -82,8 +82,8 @@ static inline void MCF_AvlAttachWithHint(MCF_AvlRoot *__ppRoot,
 				__pParent = __pHint;
 				__ppRefl = &(__pHint->__pRight);
 			} else if((*__pfnComparator)(__pNode, __pNext) < 0){
-				// 条件：	hint	<=	node
-				//			node	<	hint->next
+				// 条件：  hint  <=  node
+				//         node  <   hint->next
 				if(__pHint->__uHeight < __pNext->__uHeight){
 					ASSERT(!__pHint->__pRight);
 
@@ -170,10 +170,10 @@ static inline MCF_AvlNodeHeader *MCF_AvlFind(
 		} else if(__nResult > 0){
 			__pCur = __pCur->__pLeft;
 		} else {
-			break;
+			return (MCF_AvlNodeHeader *)__pCur;
 		}
 	}
-	return (MCF_AvlNodeHeader *)__pCur;
+	return nullptr;
 }
 
 static inline void MCF_AvlEqualRange(

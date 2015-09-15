@@ -22,7 +22,7 @@ Uuid Uuid::Generate(){
 	const auto u64Now = GetUtcTime();
 	const auto u32Unique = g_u16Pid | ((g_u32AutoInc.Increment(kAtomicRelaxed) << 16) & 0x3FFFFFFFu);
 
-	Uuid vRet(nullptr);
+	Uuid vRet;
 	StoreBe(vRet.x_unData.au32[0], u64Now >> 12);
 	StoreBe(vRet.x_unData.au16[2], (u64Now << 4) | (u32Unique >> 26));
 	StoreBe(vRet.x_unData.au16[3], (u32Unique >> 14) & 0x0FFFu); // 版本 = 0
@@ -33,16 +33,16 @@ Uuid Uuid::Generate(){
 }
 
 // 构造函数和析构函数。
-Uuid::Uuid(const char (&pchString)[36]){
-	if(!Scan(pchString)){
+Uuid::Uuid(const char (&achHex)[36]){
+	if(!Scan(achHex)){
 		DEBUG_THROW(Exception, ERROR_INVALID_PARAMETER, "Invalid UUID string"_rcs);
 	}
 }
 
 // 其他非静态成员函数。
-void Uuid::Print(char (&pchString)[36], bool bUpperCase) const noexcept {
-	auto pbyRead = GetBegin();
-	auto pchWrite = pchString;
+void Uuid::Print(char (&achHex)[36], bool bUpperCase) const noexcept {
+	auto *pbyRead = x_unData.aby;
+	auto *pchWrite = achHex;
 
 #define PRINT(count_)	\
 	for(std::size_t i = 0; i < count_; ++i){	\
@@ -73,9 +73,11 @@ void Uuid::Print(char (&pchString)[36], bool bUpperCase) const noexcept {
 	PRINT(2) *(pchWrite++) = '-';
 	PRINT(6)
 }
-bool Uuid::Scan(const char (&pchString)[36]) noexcept {
-	auto pchRead = pchString;
-	auto pbyWrite = GetBegin();
+bool Uuid::Scan(const char (&achHex)[36]) noexcept {
+	unsigned char abyTemp[16];
+
+	auto *pchRead = achHex;
+	auto *pbyWrite = abyTemp;
 
 #define SCAN(count_)	\
 	for(std::size_t i = 0; i < count_; ++i){	\
@@ -111,6 +113,7 @@ bool Uuid::Scan(const char (&pchString)[36]) noexcept {
 	SCAN(2) if(*(pchRead++) != '-'){ return false; }
 	SCAN(6)
 
+	BCopy(x_unData, abyTemp);
 	return true;
 }
 

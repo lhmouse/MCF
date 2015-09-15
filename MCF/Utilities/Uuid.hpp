@@ -26,7 +26,7 @@ private:
 
 public:
 	// 填零。
-	constexpr Uuid(std::nullptr_t = nullptr) noexcept
+	constexpr Uuid() noexcept
 		: x_unData()
 	{
 	}
@@ -35,7 +35,7 @@ public:
 		BCopy(x_unData, abyData);
 	}
 	// 根据字符串创建。字符串无效抛出异常。
-	explicit Uuid(const char (&pchString)[36]);
+	explicit Uuid(const char (&achHex)[36]);
 
 public:
 	const unsigned char *GetBegin() const noexcept {
@@ -65,16 +65,18 @@ public:
 		BSwap(x_unData, rhs.x_unData);
 	}
 
-	void Print(char (&pchString)[36], bool bUpperCase = true) const noexcept;
-	bool Scan(const char (&pchString)[36]) noexcept;
+	void Print(char (&achHex)[36], bool bUpperCase = true) const noexcept;
+	bool Scan(const char (&achHex)[36]) noexcept;
 
 public:
 	const unsigned char &operator[](std::size_t uIndex) const noexcept {
-		ASSERT(uIndex <= GetSize());
+		ASSERT(uIndex < GetSize());
+
 		return GetBytes()[uIndex];
 	}
 	unsigned char &operator[](std::size_t uIndex) noexcept {
-		ASSERT(uIndex <= GetSize());
+		ASSERT(uIndex < GetSize());
+
 		return GetBytes()[uIndex];
 	}
 };

@@ -38,27 +38,14 @@ public:
 	explicit Uuid(const char (&achHex)[36]);
 
 public:
-	const unsigned char *GetBegin() const noexcept {
+	const unsigned char *GetData() const noexcept {
 		return x_unData.aby;
 	}
-	unsigned char *GetBegin() noexcept {
+	unsigned char *GetData() noexcept {
 		return x_unData.aby;
 	}
-	const unsigned char *GetEnd() const noexcept {
-		return x_unData.aby + 16;
-	}
-	unsigned char *GetEnd() noexcept {
-		return x_unData.aby + 16;
-	}
-	constexpr std::size_t GetSize() const noexcept {
-		return sizeof(x_unData);
-	}
-
-	auto GetBytes() const noexcept -> const unsigned char (&)[16] {
-		return x_unData.aby;
-	}
-	auto GetBytes() noexcept -> unsigned char (&)[16] {
-		return x_unData.aby;
+	static constexpr std::size_t GetSize() noexcept {
+		return 16;
 	}
 
 	void Swap(Uuid &rhs) noexcept {
@@ -72,32 +59,32 @@ public:
 	const unsigned char &operator[](std::size_t uIndex) const noexcept {
 		ASSERT(uIndex < GetSize());
 
-		return GetBytes()[uIndex];
+		return GetData()[uIndex];
 	}
 	unsigned char &operator[](std::size_t uIndex) noexcept {
 		ASSERT(uIndex < GetSize());
 
-		return GetBytes()[uIndex];
+		return GetData()[uIndex];
 	}
 };
 
 inline bool operator==(const Uuid &lhs, const Uuid &rhs) noexcept {
-	return BComp(lhs.GetBytes(), rhs.GetBytes()) == 0;
+	return BComp(lhs.GetData(), rhs.GetData()) == 0;
 }
 inline bool operator!=(const Uuid &lhs, const Uuid &rhs) noexcept {
-	return BComp(lhs.GetBytes(), rhs.GetBytes()) != 0;
+	return BComp(lhs.GetData(), rhs.GetData()) != 0;
 }
 inline bool operator<(const Uuid &lhs, const Uuid &rhs) noexcept {
-	return BComp(lhs.GetBytes(), rhs.GetBytes()) < 0;
+	return BComp(lhs.GetData(), rhs.GetData()) < 0;
 }
 inline bool operator>(const Uuid &lhs, const Uuid &rhs) noexcept {
-	return BComp(lhs.GetBytes(), rhs.GetBytes()) > 0;
+	return BComp(lhs.GetData(), rhs.GetData()) > 0;
 }
 inline bool operator<=(const Uuid &lhs, const Uuid &rhs) noexcept {
-	return BComp(lhs.GetBytes(), rhs.GetBytes()) <= 0;
+	return BComp(lhs.GetData(), rhs.GetData()) <= 0;
 }
 inline bool operator>=(const Uuid &lhs, const Uuid &rhs) noexcept {
-	return BComp(lhs.GetBytes(), rhs.GetBytes()) >= 0;
+	return BComp(lhs.GetData(), rhs.GetData()) >= 0;
 }
 
 inline void swap(Uuid &lhs, Uuid &rhs) noexcept {

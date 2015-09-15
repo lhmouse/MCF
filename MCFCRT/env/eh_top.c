@@ -24,6 +24,11 @@ void *__deregister_frame_info(const void *p){
 	return nullptr;
 }
 
+__attribute__((__section__(".MCFCRT"), __shared__))
+void (*const volatile __MCF_CRT_register_frame_info)(const void *, struct object *) = &__register_frame_info;
+__attribute__((__section__(".MCFCRT"), __shared__))
+void *(*const volatile __MCF_CRT_deregister_frame_info)(const void *)               = &__deregister_frame_info;
+
 __extension__ __attribute__((__section__(".eh_fram$@@@"), __used__))
 static const char eh_begin[0] = { };
 
@@ -48,7 +53,7 @@ bool __MCF_CRT_RegisterFrameInfo(){
 		return false;
 	}
 
-	__register_frame_info(pBase, &_eh_obj);
+	(*__MCF_CRT_register_frame_info)(pBase, &_eh_obj);
 	_eh_frame_base = pBase;
 	return true;
 }
@@ -57,6 +62,6 @@ void __MCF_CRT_UnregisterFrameInfo(){
 	_eh_frame_base = nullptr;
 
 	if(pBase){
-		__deregister_frame_info(pBase);
+		(*__MCF_CRT_deregister_frame_info)(pBase);
 	}
 }

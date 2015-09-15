@@ -1,19 +1,11 @@
-#include <MCF/Hash/Sha1.hpp>
 #include <cstdio>
+#include <cmath>
 
-using namespace MCF;
-
-template class Array<int, 5>;
+double t = 12.345;
 
 extern "C" unsigned MCFMain(){
-	constexpr char data[] = "hello world!";
-	Sha1 h;
-	h.Update(data, sizeof(data) - 1);
-	auto r = h.Finalize();
-	std::printf(R"_(sha1("%s") = )_", data);
-	for(auto by : r){
-		std::printf("%02hhx", by);
-	}
-	std::putchar('\n');
+	int exp;
+	auto d = std::frexp(t, &exp);
+	std::printf("%d, %f\n", exp, d);
 	return 0;
 }

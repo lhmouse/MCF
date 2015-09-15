@@ -3,7 +3,7 @@
 // Copyleft 2013 - 2015, LH_Mouse. All wrongs reserved.
 
 #include "../../env/_crtdef.h"
-#include "_mathasm.h"
+#include "_math_asm.h"
 
 static const double kHalf = 0.5;
 

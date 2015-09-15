@@ -3,7 +3,7 @@
 // Copyleft 2013 - 2015, LH_Mouse. All wrongs reserved.
 
 #include "../../env/_crtdef.h"
-#include "_mathasm.h"
+#include "_math_asm.h"
 
 static const double kPosThreshould =  0.292892;
 static const double kNegThreshould = -0.292892;

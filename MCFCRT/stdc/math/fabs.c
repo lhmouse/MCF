@@ -3,7 +3,7 @@
 // Copyleft 2013 - 2015, LH_Mouse. All wrongs reserved.
 
 #include "../../env/_crtdef.h"
-#include "_mathasm.h"
+#include "_math_asm.h"
 
 #ifdef _WIN64
 static alignas(16) uint32_t kFloatMask [] = { 0x7FFFFFFF, 0x7FFFFFFF, 0x7FFFFFFF, 0x7FFFFFFF };

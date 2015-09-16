@@ -741,7 +741,6 @@ public:
 
 		return X_GetStorage() + X_Advance(x_uBegin, uCountBefore);
 	}
-
 	template<typename ...ParamsT>
 	Element *Insert(const Element *pPos, std::size_t uDeltaSize, const ParamsT &...vParams){
 		if(!pPos){

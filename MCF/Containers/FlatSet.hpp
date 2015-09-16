@@ -228,11 +228,11 @@ public:
 	}
 
 	template<typename ComparandT>
-	Element *Insert(const Element *pPos, ComparandT &&vComparand){
+	Element *Emplace(const Element *pPos, ComparandT &&vComparand){
 		return AddUsingHint(pPos, std::forward<ComparandT>(vComparand)).first;
 	}
 	template<typename FirstT, typename SecondT, typename ...RemainingT>
-	Element *Insert(const Element *pPos, FirstT &&vFirst, SecondT &&vSecond, RemainingT &&...vRemaining){
+	Element *Emplace(const Element *pPos, FirstT &&vFirst, SecondT &&vSecond, RemainingT &&...vRemaining){
 		return AddUsingHint(pPos, Element(std::forward<FirstT>(vFirst), std::forward<SecondT>(vSecond), std::forward<RemainingT>(vRemaining)...)).first;
 	}
 	Element *Erase(const Element *pBegin, const Element *pEnd) noexcept(noexcept(std::declval<FlatSet &>().x_vecStorage.Erase(pBegin, pEnd))) {

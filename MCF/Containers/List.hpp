@@ -348,7 +348,6 @@ public:
 		lstNew.Push(std::forward<ParamsT>(vParams)...);
 		return Splice(pPos, lstNew);
 	}
-
 	template<typename ...ParamsT>
 	Element *Insert(const Element *pPos, std::size_t uDeltaSize, const ParamsT &...vParams){
 		List lstNew;

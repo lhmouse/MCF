@@ -59,8 +59,8 @@ public:
 		Open(wsPath, u32Flags);
 	}
 
-	File(const File &) = delete;
-	File &operator=(const File &) = delete;
+	File(const File &) noexcept = delete;
+	File &operator=(const File &) noexcept = delete;
 
 public:
 	bool IsOpen() const noexcept;

@@ -239,13 +239,6 @@ public:
 		return x_vecStorage.Erase(pPos);
 	}
 
-	const Element &operator[](std::size_t uIndex) const noexcept {
-		return x_vecStorage[uIndex];
-	}
-	Element &operator[](std::size_t uIndex) noexcept {
-		return x_vecStorage[uIndex];
-	}
-
 	template<typename ComparandT>
 	const Element *GetLowerBound(const ComparandT &vComparand) const {
 		auto pLower = x_vecStorage.GetBegin(), pUpper = x_vecStorage.GetEnd();

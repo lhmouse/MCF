@@ -37,20 +37,20 @@ static bool g_abFlags[kFlagCount] = { 0 };
 			if(succ_){	\
 				g_abFlags[fl_] = true;	\
 			} else {	\
-				(ret_) = FALSE;	\
+				(ret_) = false;	\
 			}	\
 		}	\
 	}
 
 #define DO_UNINIT(fl_, fn_)	\
 	if(g_abFlags[fl_]){	\
-		(fn_)();	\
 		g_abFlags[fl_] = false;	\
+		(fn_)();	\
 	}
 
 __MCF_C_STDCALL __MCF_HAS_EH_TOP
 BOOL __MCF_DllStartup(HINSTANCE hDll, DWORD dwReason, LPVOID pReserved){
-	BOOL bRet = TRUE;
+	BOOL bRet = true;
 
 	switch(dwReason){
 	case DLL_PROCESS_ATTACH:

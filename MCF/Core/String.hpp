@@ -542,6 +542,26 @@ public:
 		rhs.x_vStorage.vSmall.schComplLength = 0;
 	}
 
+	void Push(Char ch){
+		Append(ch, 1);
+	}
+	void UncheckedPush(Char ch) noexcept {
+		ASSERT(GetLength() < GetCapacity());
+
+		if(x_vStorage.vSmall.schComplLength >= 0){
+			x_vStorage.vSmall.achData[X_GetSmallLength()] = ch;
+			--x_vStorage.vSmall.schComplLength;
+		} else {
+			x_vStorage.vLarge.pchBegin[x_vStorage.vLarge.uLength] = ch;
+			++x_vStorage.vLarge.uLength;
+		}
+	}
+	void Pop(std::size_t uCount = 1) noexcept {
+		const auto uOldSize = GetSize();
+		ASSERT(uOldSize >= uCount);
+		X_SetSize(uOldSize - uCount);
+	}
+
 	void Append(Char ch, std::size_t uCount = 1){
 		FillN(ResizeMore(uCount), uCount, ch);
 	}
@@ -573,65 +593,6 @@ public:
 	template<StringType kOtherTypeT>
 	void Append(const String<kOtherTypeT> &rhs){
 		Append(rhs.GetObserver());
-	}
-	void Push(Char ch){
-		Append(ch, 1);
-	}
-	void UncheckedPush(Char ch) noexcept {
-		ASSERT(GetLength() < GetCapacity());
-
-		if(x_vStorage.vSmall.schComplLength >= 0){
-			x_vStorage.vSmall.achData[X_GetSmallLength()] = ch;
-			--x_vStorage.vSmall.schComplLength;
-		} else {
-			x_vStorage.vLarge.pchBegin[x_vStorage.vLarge.uLength] = ch;
-			++x_vStorage.vLarge.uLength;
-		}
-	}
-	void Pop(std::size_t uCount = 1) noexcept {
-		const auto uOldSize = GetSize();
-		ASSERT(uOldSize >= uCount);
-		X_SetSize(uOldSize - uCount);
-	}
-
-	void Unshift(Char ch, std::size_t uCount = 1){
-		FillN(ResizeMoreFront(uCount), uCount, ch);
-	}
-	void Unshift(const Char *pszBegin){
-		Unshift(Observer(pszBegin));
-	}
-	void Unshift(const Char *pchBegin, const Char *pchEnd){
-		Unshift(Observer(pchBegin, pchEnd));
-	}
-	void Unshift(const Char *pchBegin, std::size_t uCount){
-		Unshift(Observer(pchBegin, uCount));
-	}
-	void Unshift(const Observer &rhs){
-		const auto pWrite = ResizeMoreFront(rhs.GetSize());
-		Copy(pWrite, rhs.GetBegin(), rhs.GetEnd());
-	}
-	void Unshift(std::initializer_list<Char> rhs){
-		Unshift(Observer(rhs));
-	}
-	void Unshift(const String &rhs){
-		const auto pWrite = ResizeMoreFront(rhs.GetSize());
-		Copy(pWrite, rhs.GetBegin(), rhs.GetEnd()); // 这是正确的即使对于 &rhs == this 的情况。
-	}
-	template<StringType kOtherTypeT>
-	void Unshift(const StringObserver<kOtherTypeT> &rhs){
-		UnifiedString ucsTempStorage;
-		Deunify(*this, 0, String<kOtherTypeT>::Unify(ucsTempStorage, rhs));
-	}
-	template<StringType kOtherTypeT>
-	void Unshift(const String<kOtherTypeT> &rhs){
-		Unshift(rhs.GetObserver());
-	}
-	void Shift(std::size_t uCount = 1) noexcept {
-		const auto uOldSize = GetSize();
-		ASSERT(uOldSize >= uCount);
-		const auto pchWrite = GetBegin();
-		CopyN(pchWrite, pchWrite + uCount, uOldSize - uCount);
-		X_SetSize(uOldSize - uCount);
 	}
 
 	Observer Slice(std::ptrdiff_t nBegin, std::ptrdiff_t nEnd = -1) const noexcept {

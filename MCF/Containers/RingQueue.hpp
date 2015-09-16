@@ -522,6 +522,43 @@ public:
 	}
 
 	template<typename ...ParamsT>
+	Element &Unshift(ParamsT &&...vParams){
+		ReserveMore(1);
+		return UncheckedUnshift(std::forward<ParamsT>(vParams)...);
+	}
+	template<typename ...ParamsT>
+	Element &UncheckedUnshift(ParamsT &&...vParams) noexcept(std::is_nothrow_constructible<Element, ParamsT &&...>::value) {
+		ASSERT(GetCapacity() - GetSize() > 0);
+
+		const auto pStorage = static_cast<Element *>(x_pStorage);
+		const auto uNewBegin = X_Retreat(x_uBegin, 1);
+		const auto pElem = pStorage + uNewBegin;
+		DefaultConstruct(pElem, std::forward<ParamsT>(vParams)...);
+		x_uBegin = uNewBegin;
+
+		return *pElem;
+	}
+	void Shift(std::size_t uCount = 1) noexcept {
+		ASSERT(uCount <= GetSize());
+
+		const auto pStorage = static_cast<Element *>(x_pStorage);
+		const auto uNewBegin = X_Advance(x_uBegin, uCount);
+		if(x_uBegin <= uNewBegin){
+			for(std::size_t i = x_uBegin; i != uNewBegin; ++i){
+				Destruct(pStorage + i);
+			}
+		} else {
+			for(std::size_t i = x_uBegin; i != x_uRingCap; ++i){
+				Destruct(pStorage + i);
+			}
+			for(std::size_t i = 0; i != uNewBegin; ++i){
+				Destruct(pStorage + i);
+			}
+		}
+		x_uBegin = uNewBegin;
+	}
+
+	template<typename ...ParamsT>
 	Element &Push(ParamsT &&...vParams){
 		ReserveMore(1);
 		return UncheckedPush(std::forward<ParamsT>(vParams)...);
@@ -556,96 +593,6 @@ public:
 			}
 		}
 		x_uEnd = uNewEnd;
-	}
-
-	template<typename ...ParamsT>
-	Element &Unshift(ParamsT &&...vParams){
-		ReserveMore(1);
-		return UncheckedUnshift(std::forward<ParamsT>(vParams)...);
-	}
-	template<typename ...ParamsT>
-	Element &UncheckedUnshift(ParamsT &&...vParams) noexcept(std::is_nothrow_constructible<Element, ParamsT &&...>::value) {
-		ASSERT(GetCapacity() - GetSize() > 0);
-
-		const auto pStorage = static_cast<Element *>(x_pStorage);
-		const auto uNewBegin = X_Retreat(x_uBegin, 1);
-		const auto pElem = pStorage + uNewBegin;
-		DefaultConstruct(pElem, std::forward<ParamsT>(vParams)...);
-		x_uBegin = uNewBegin;
-
-		return *pElem;
-	}
-
-	void Shift(std::size_t uCount = 1) noexcept {
-		ASSERT(uCount <= GetSize());
-
-		const auto pStorage = static_cast<Element *>(x_pStorage);
-		const auto uNewBegin = X_Advance(x_uBegin, uCount);
-		if(x_uBegin <= uNewBegin){
-			for(std::size_t i = x_uBegin; i != uNewBegin; ++i){
-				Destruct(pStorage + i);
-			}
-		} else {
-			for(std::size_t i = x_uBegin; i != x_uRingCap; ++i){
-				Destruct(pStorage + i);
-			}
-			for(std::size_t i = 0; i != uNewBegin; ++i){
-				Destruct(pStorage + i);
-			}
-		}
-		x_uBegin = uNewBegin;
-	}
-
-	template<typename ...ParamsT>
-	void Append(std::size_t uDeltaSize, const ParamsT &...vParams){
-		ReserveMore(uDeltaSize);
-
-		std::size_t uElementsPushed = 0;
-		try {
-			for(std::size_t i = 0; i < uDeltaSize; ++i){
-				UncheckedPush(vParams...);
-				++uElementsPushed;
-			}
-		} catch(...){
-			Pop(uElementsPushed);
-			throw;
-		}
-	}
-	template<typename IteratorT, std::enable_if_t<
-		sizeof(typename std::iterator_traits<IteratorT>::value_type *),
-		int> = 0>
-	void Append(IteratorT itBegin, std::common_type_t<IteratorT> itEnd){
-		constexpr bool kHasDeltaSizeHint = std::is_base_of<std::forward_iterator_tag, typename std::iterator_traits<IteratorT>::iterator_category>::value;
-
-		if(kHasDeltaSizeHint){
-			const auto uDeltaSize = static_cast<std::size_t>(std::distance(itBegin, itEnd));
-			ReserveMore(uDeltaSize);
-		}
-
-		std::size_t uElementsPushed = 0;
-		try {
-			if(kHasDeltaSizeHint){
-				auto it = itBegin;
-				while(it != itEnd){
-					UncheckedPush(*it);
-					++it;
-					++uElementsPushed;
-				}
-			} else {
-				auto it = itBegin;
-				while(it != itEnd){
-					Push(*it);
-					++it;
-					++uElementsPushed;
-				}
-			}
-		} catch(...){
-			Pop(uElementsPushed);
-			throw;
-		}
-	}
-	void Append(std::initializer_list<Element> ilElements){
-		Append(ilElements.begin(), ilElements.end());
 	}
 
 	template<typename ...ParamsT>
@@ -698,6 +645,58 @@ public:
 	}
 	void Prepend(std::initializer_list<Element> ilElements){
 		Prepend(ilElements.begin(), ilElements.end());
+	}
+
+	template<typename ...ParamsT>
+	void Append(std::size_t uDeltaSize, const ParamsT &...vParams){
+		ReserveMore(uDeltaSize);
+
+		std::size_t uElementsPushed = 0;
+		try {
+			for(std::size_t i = 0; i < uDeltaSize; ++i){
+				UncheckedPush(vParams...);
+				++uElementsPushed;
+			}
+		} catch(...){
+			Pop(uElementsPushed);
+			throw;
+		}
+	}
+	template<typename IteratorT, std::enable_if_t<
+		sizeof(typename std::iterator_traits<IteratorT>::value_type *),
+		int> = 0>
+	void Append(IteratorT itBegin, std::common_type_t<IteratorT> itEnd){
+		constexpr bool kHasDeltaSizeHint = std::is_base_of<std::forward_iterator_tag, typename std::iterator_traits<IteratorT>::iterator_category>::value;
+
+		if(kHasDeltaSizeHint){
+			const auto uDeltaSize = static_cast<std::size_t>(std::distance(itBegin, itEnd));
+			ReserveMore(uDeltaSize);
+		}
+
+		std::size_t uElementsPushed = 0;
+		try {
+			if(kHasDeltaSizeHint){
+				auto it = itBegin;
+				while(it != itEnd){
+					UncheckedPush(*it);
+					++it;
+					++uElementsPushed;
+				}
+			} else {
+				auto it = itBegin;
+				while(it != itEnd){
+					Push(*it);
+					++it;
+					++uElementsPushed;
+				}
+			}
+		} catch(...){
+			Pop(uElementsPushed);
+			throw;
+		}
+	}
+	void Append(std::initializer_list<Element> ilElements){
+		Append(ilElements.begin(), ilElements.end());
 	}
 
 	template<typename ...ParamsT>

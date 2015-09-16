@@ -213,46 +213,6 @@ public:
 	}
 
 	template<typename ...ParamsT>
-	Element &Push(ParamsT &&...vParams){
-		const auto pNode = ::new X_Node;
-		const auto pElem = static_cast<Element *>(static_cast<void *>(pNode->aStorage));
-		try {
-			DefaultConstruct(pElem, std::forward<ParamsT>(vParams)...);
-		} catch(...){
-			::delete pNode;
-			throw;
-		}
-		pNode->pPrev = x_pLast;
-		pNode->pNext = nullptr;
-
-		if(x_pLast){
-			x_pLast->pNext = pNode;
-		} else {
-			x_pFirst = pNode;
-		}
-		x_pLast = pNode;
-
-		return *pElem;
-	}
-	void Pop(std::size_t uCount = 1) noexcept {
-		ASSERT(uCount <= CountElements());
-
-		auto pNode = x_pLast;
-		for(std::size_t i = 0; i < uCount; ++i){
-			const auto pPrev = pNode->pPrev;
-			Destruct(static_cast<Element *>(static_cast<void *>(pNode->aStorage)));
-			::delete pNode;
-			pNode = pPrev;
-		}
-		if(pNode){
-			pNode->pNext = nullptr;
-		} else {
-			x_pFirst = nullptr;
-		}
-		x_pLast = pNode;
-	}
-
-	template<typename ...ParamsT>
 	Element &Unshift(ParamsT &&...vParams){
 		const auto pNode = ::new X_Node;
 		const auto pElem = static_cast<Element *>(static_cast<void *>(pNode->aStorage));
@@ -293,6 +253,64 @@ public:
 	}
 
 	template<typename ...ParamsT>
+	Element &Push(ParamsT &&...vParams){
+		const auto pNode = ::new X_Node;
+		const auto pElem = static_cast<Element *>(static_cast<void *>(pNode->aStorage));
+		try {
+			DefaultConstruct(pElem, std::forward<ParamsT>(vParams)...);
+		} catch(...){
+			::delete pNode;
+			throw;
+		}
+		pNode->pPrev = x_pLast;
+		pNode->pNext = nullptr;
+
+		if(x_pLast){
+			x_pLast->pNext = pNode;
+		} else {
+			x_pFirst = pNode;
+		}
+		x_pLast = pNode;
+
+		return *pElem;
+	}
+	void Pop(std::size_t uCount = 1) noexcept {
+		ASSERT(uCount <= CountElements());
+
+		auto pNode = x_pLast;
+		for(std::size_t i = 0; i < uCount; ++i){
+			const auto pPrev = pNode->pPrev;
+			Destruct(static_cast<Element *>(static_cast<void *>(pNode->aStorage)));
+			::delete pNode;
+			pNode = pPrev;
+		}
+		if(pNode){
+			pNode->pNext = nullptr;
+		} else {
+			x_pFirst = nullptr;
+		}
+		x_pLast = pNode;
+	}
+
+	template<typename ...ParamsT>
+	void Prepend(std::size_t uDeltaSize, const ParamsT &...vParams){
+		List lstNew;
+		lstNew.Append(uDeltaSize, vParams...);
+		Splice(GetFirst(), lstNew);
+	}
+	template<typename IteratorT, std::enable_if_t<
+		sizeof(typename std::iterator_traits<IteratorT>::value_type *),
+		int> = 0>
+	void Prepend(IteratorT itBegin, std::common_type_t<IteratorT> itEnd){
+		List lstNew;
+		lstNew.Append(itBegin, itEnd);
+		Splice(GetFirst(), lstNew);
+	}
+	void Prepend(std::initializer_list<Element> ilElements){
+		Prepend(ilElements.begin(), ilElements.end());
+	}
+
+	template<typename ...ParamsT>
 	void Append(std::size_t uDeltaSize, const ParamsT &...vParams){
 		std::size_t uElementsPushed = 0;
 		try {
@@ -322,24 +340,6 @@ public:
 	}
 	void Append(std::initializer_list<Element> ilElements){
 		Append(ilElements.begin(), ilElements.end());
-	}
-
-	template<typename ...ParamsT>
-	void Prepend(std::size_t uDeltaSize, const ParamsT &...vParams){
-		List lstNew;
-		lstNew.Append(uDeltaSize, vParams...);
-		Splice(GetFirst(), lstNew);
-	}
-	template<typename IteratorT, std::enable_if_t<
-		sizeof(typename std::iterator_traits<IteratorT>::value_type *),
-		int> = 0>
-	void Prepend(IteratorT itBegin, std::common_type_t<IteratorT> itEnd){
-		List lstNew;
-		lstNew.Append(itBegin, itEnd);
-		Splice(GetFirst(), lstNew);
-	}
-	void Prepend(std::initializer_list<Element> ilElements){
-		Prepend(ilElements.begin(), ilElements.end());
 	}
 
 	template<typename ...ParamsT>

@@ -474,17 +474,23 @@ public:
 
 	template<typename ComparandT>
 	std::pair<ConstEnumerator, ConstEnumerator> EnumerateEqualRange(const ComparandT &vComparand) const {
-		const auto vRange = GetEqualRange(vComparand);
-		if(vRange.first == vRange.second){
-			return std::make_pair(ConstEnumerator(*this, nullptr), ConstEnumerator(*this, nullptr));
+		auto vRange = GetEqualRange(vComparand);
+		if(vRange.first == GetEnd()){
+			vRange.first = nullptr;
+		}
+		if(vRange.second == GetEnd()){
+			vRange.second = nullptr;
 		}
 		return std::make_pair(ConstEnumerator(*this, vRange.first), ConstEnumerator(*this, vRange.second));
 	}
 	template<typename ComparandT>
 	std::pair<Enumerator, Enumerator> EnumerateEqualRange(const ComparandT &vComparand){
-		const auto vRange = GetEqualRange(vComparand);
-		if(vRange.first == vRange.second){
-			return std::make_pair(Enumerator(*this, nullptr), Enumerator(*this, nullptr));
+		auto vRange = GetEqualRange(vComparand);
+		if(vRange.first == GetEnd()){
+			vRange.first = nullptr;
+		}
+		if(vRange.second == GetEnd()){
+			vRange.second = nullptr;
 		}
 		return std::make_pair(Enumerator(*this, vRange.first), Enumerator(*this, vRange.second));
 	}

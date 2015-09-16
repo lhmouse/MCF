@@ -7,11 +7,11 @@
 #include "../../env/mcfwin.h"
 #include <setjmp.h>
 
-jmp_buf *__MCF_CRT_abort_hool_jmpbuf = nullptr;
+jmp_buf *__MCF_CRT_abort_hook_jmpbuf = nullptr;
 
 _Noreturn void abort(){
-	if(__MCF_CRT_abort_hool_jmpbuf){
-		longjmp(*__MCF_CRT_abort_hool_jmpbuf, ERROR_PROCESS_ABORTED);
+	if(__MCF_CRT_abort_hook_jmpbuf){
+		longjmp(*__MCF_CRT_abort_hook_jmpbuf, ERROR_PROCESS_ABORTED);
 	}
 
 	MCF_CRT_Bail(L"应用程序调用了 abort()。");

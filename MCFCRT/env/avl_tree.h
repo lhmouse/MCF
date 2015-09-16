@@ -187,6 +187,7 @@ static inline void MCF_AvlEqualRange(
 		*__ppUpper = nullptr;
 	} else {
 		const MCF_AvlNodeHeader *__pLower = nullptr, *__pUpper = nullptr;
+
 		const MCF_AvlNodeHeader *__pCur = __pTop->__pLeft;
 		while(__pCur){
 			if((*__pfnComparatorNodeOther)(__pCur, __nOther) < 0){

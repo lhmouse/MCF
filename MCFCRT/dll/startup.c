@@ -9,6 +9,8 @@
 #include "../env/thread.h"
 #include "../env/eh_top.h"
 #include "../env/heap.h"
+#include "../env/heap_dbg.h"
+#include "../ext/unref_param.h"
 
 // -static -Wl,-e__MCF_DllStartup,--disable-runtime-pseudo-reloc,--disable-auto-import
 
@@ -19,6 +21,7 @@ BOOL __MCF_DllStartup(HINSTANCE hDll, DWORD dwReason, LPVOID pReserved)
 
 enum {
 	kFlagHeap,
+	kFlagHeapDbg,
 	kFlagFrameInfo,
 	kFlagCrtModule,
 
@@ -51,7 +54,8 @@ BOOL __MCF_DllStartup(HINSTANCE hDll, DWORD dwReason, LPVOID pReserved){
 
 	switch(dwReason){
 	case DLL_PROCESS_ATTACH:
-		DO_INIT(bRet, kFlagHeap, __MCF_CRT_HeapInit);
+		DO_INIT(bRet, kFlagHeap,      __MCF_CRT_HeapInit);
+		DO_INIT(bRet, kFlagHeapDbg,   __MCF_CRT_HeapDbgInit);
 		DO_INIT(bRet, kFlagFrameInfo, __MCF_CRT_RegisterFrameInfo);
 
 		__MCF_EH_TOP_BEGIN
@@ -93,7 +97,8 @@ BOOL __MCF_DllStartup(HINSTANCE hDll, DWORD dwReason, LPVOID pReserved){
 		__MCF_EH_TOP_END
 
 		DO_UNINIT(kFlagFrameInfo, __MCF_CRT_UnregisterFrameInfo);
-		DO_UNINIT(kFlagHeap, __MCF_CRT_HeapUninit);
+		DO_UNINIT(kFlagHeapDbg,   __MCF_CRT_HeapDbgUninit);
+		DO_UNINIT(kFlagHeap,      __MCF_CRT_HeapUninit);
 		break;
 	}
 

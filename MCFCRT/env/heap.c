@@ -22,10 +22,6 @@ bool (*__MCF_CRT_OnHeapBadAlloc)(const void *)                          = nullpt
 static CRITICAL_SECTION g_csHeapMutex;
 
 bool __MCF_CRT_HeapInit(){
-	if(!__MCF_CRT_HeapDbgInit()){
-		return false;
-	}
-
 	if(!InitializeCriticalSectionEx(&g_csHeapMutex, 0x1000u,
 #if __MCF_CRT_REQUIRE_HEAPDBG_LEVEL(4)
 		0
@@ -34,7 +30,6 @@ bool __MCF_CRT_HeapInit(){
 #endif
 		))
 	{
-		__MCF_CRT_HeapDbgUninit();
 		return false;
 	}
 
@@ -46,7 +41,6 @@ bool __MCF_CRT_HeapInit(){
 }
 void __MCF_CRT_HeapUninit(){
 	DeleteCriticalSection(&g_csHeapMutex);
-	__MCF_CRT_HeapDbgUninit();
 }
 
 unsigned char *__MCF_CRT_HeapAlloc(size_t uSize, const void *pRetAddr){

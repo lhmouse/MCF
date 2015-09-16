@@ -6,10 +6,11 @@
 #include "../env/mcfwin.h"
 #include "../env/bail.h"
 #include "../env/module.h"
+#include "../env/thread.h"
 #include "../env/eh_top.h"
 #include "../env/heap.h"
+#include "../env/heap_dbg.h"
 #include "../ext/unref_param.h"
-#include "../env/thread.h"
 
 // -static -Wl,-e__MCF_ExeStartup,--disable-runtime-pseudo-reloc,--disable-auto-import
 
@@ -55,6 +56,9 @@ static void TlsCallback(void *hModule, DWORD dwReason, void *pReserved){
 		if(!__MCF_CRT_HeapInit()){
 			MCF_CRT_BailF(L"MCFCRT 堆初始化失败。\n\n错误代码：%lu", GetLastError());
 		}
+		if(!__MCF_CRT_HeapDbgInit()){
+			MCF_CRT_BailF(L"MCFCRT 堆调试器初始化失败。\n\n错误代码：%lu", GetLastError());
+		}
 		if(!__MCF_CRT_RegisterFrameInfo()){
 			MCF_CRT_BailF(L"MCFCRT 异常处理程序初始化失败。\n\n错误代码：%lu", GetLastError());
 		}
@@ -91,6 +95,7 @@ static void TlsCallback(void *hModule, DWORD dwReason, void *pReserved){
 		__MCF_EH_TOP_END
 
 		__MCF_CRT_UnregisterFrameInfo();
+		__MCF_CRT_HeapDbgUninit();
 		__MCF_CRT_HeapUninit();
 		SetConsoleCtrlHandler(&TopCtrlHandler, false);
 		break;

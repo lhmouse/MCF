@@ -12,7 +12,7 @@ extern "C" unsigned MCFMain(){
 	set.AddUsingHint(set.GetBegin() + 5, 3);
 	set.AddUsingHint(set.GetBegin() + 6, 6);
 	set.AddUsingHint(set.GetBegin() + 7, 4);
-	auto r = set.EnumerateEqualRange(10);
+	auto r = set.EnumerateEqualRange(6);
 	for(auto e = r.first; e != r.second; ++e){
 		std::printf("element: %d\n", *e);
 	}

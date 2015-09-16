@@ -33,8 +33,8 @@ static bool g_abFlags[kFlagCount] = { 0 };
 #define DO_INIT(ret_, fl_, fn_)	\
 	if(ret_){	\
 		if(!g_abFlags[fl_]){	\
-			const bool succ_ = (fn_)();	\
-			if(succ_){	\
+			const bool succ = (fn_)();	\
+			if(succ){	\
 				g_abFlags[fl_] = true;	\
 			} else {	\
 				(ret_) = false;	\

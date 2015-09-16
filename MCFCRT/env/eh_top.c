@@ -32,8 +32,8 @@ void *(*const volatile __MCF_CRT_deregister_frame_info)(const void *)           
 __extension__ __attribute__((__section__(".eh_fram$@@@"), __used__))
 static const char eh_begin[0] = { };
 
-static struct object _eh_obj;
-static void *_eh_frame_base;
+static struct object eh_obj;
+static void *eh_frame_base;
 
 static bool TraverseModuleSectionsCallback(intptr_t nContext, const char achName[8], void *pBase, size_t uSize){
 	UNREF_PARAM(nContext);
@@ -53,13 +53,13 @@ bool __MCF_CRT_RegisterFrameInfo(){
 		return false;
 	}
 
-	(*__MCF_CRT_register_frame_info)(pBase, &_eh_obj);
-	_eh_frame_base = pBase;
+	(*__MCF_CRT_register_frame_info)(pBase, &eh_obj);
+	eh_frame_base = pBase;
 	return true;
 }
 void __MCF_CRT_UnregisterFrameInfo(){
-	void *const pBase = _eh_frame_base;
-	_eh_frame_base = nullptr;
+	void *const pBase = eh_frame_base;
+	eh_frame_base = nullptr;
 
 	if(pBase){
 		(*__MCF_CRT_deregister_frame_info)(pBase);

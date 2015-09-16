@@ -14,7 +14,7 @@ namespace MCF {
 template<typename ElementT, typename ComparatorT = Less>
 class FlatMultiSet {
 private:
-	Vector<ElementT> x_vecStorage;
+	Vector<const ElementT> x_vecStorage;
 
 public:
 	constexpr FlatMultiSet() noexcept
@@ -240,7 +240,7 @@ public:
 
 	template<typename ComparandT>
 	const Element *GetLowerBound(const ComparandT &vComparand) const {
-		const Element *pLower = x_vecStorage.GetBegin(), *pUpper = x_vecStorage.GetEnd();
+		auto pLower = x_vecStorage.GetBegin(), pUpper = x_vecStorage.GetEnd();
 		while(pLower != pUpper){
 			const auto pMiddle = pLower + (pUpper - pLower) / 2;
 			if(ComparatorT()(*pMiddle, vComparand)){
@@ -253,7 +253,7 @@ public:
 	}
 	template<typename ComparandT>
 	Element *GetLowerBound(const ComparandT &vComparand){
-		Element *pLower = x_vecStorage.GetBegin(), *pUpper = x_vecStorage.GetEnd();
+		auto pLower = x_vecStorage.GetBegin(), pUpper = x_vecStorage.GetEnd();
 		while(pLower != pUpper){
 			const auto pMiddle = pLower + (pUpper - pLower) / 2;
 			if(ComparatorT()(*pMiddle, vComparand)){
@@ -271,7 +271,7 @@ public:
 
 	template<typename ComparandT>
 	const Element *GetUpperBound(const ComparandT &vComparand) const {
-		const Element *pLower = x_vecStorage.GetBegin(), *pUpper = x_vecStorage.GetEnd();
+		auto pLower = x_vecStorage.GetBegin(), pUpper = x_vecStorage.GetEnd();
 		while(pLower != pUpper){
 			const auto pMiddle = pLower + (pUpper - pLower) / 2;
 			if(!ComparatorT()(vComparand, *pMiddle)){
@@ -284,7 +284,7 @@ public:
 	}
 	template<typename ComparandT>
 	Element *GetUpperBound(const ComparandT &vComparand){
-		Element *pLower = x_vecStorage.GetBegin(), *pUpper = x_vecStorage.GetEnd();
+		auto pLower = x_vecStorage.GetBegin(), pUpper = x_vecStorage.GetEnd();
 		while(pLower != pUpper){
 			const auto pMiddle = pLower + (pUpper - pLower) / 2;
 			if(!ComparatorT()(vComparand, *pMiddle)){
@@ -302,7 +302,7 @@ public:
 
 	template<typename ComparandT>
 	const Element *Find(const ComparandT &vComparand) const {
-		const Element *pLower = x_vecStorage.GetBegin(), *pUpper = x_vecStorage.GetEnd();
+		auto pLower = x_vecStorage.GetBegin(), pUpper = x_vecStorage.GetEnd();
 		while(pLower != pUpper){
 			const auto pMiddle = pLower + (pUpper - pLower) / 2;
 			if(ComparatorT()(*pMiddle, vComparand)){
@@ -317,7 +317,7 @@ public:
 	}
 	template<typename ComparandT>
 	Element *Find(const ComparandT &vComparand){
-		Element *pLower = x_vecStorage.GetBegin(), *pUpper = x_vecStorage.GetEnd();
+		auto pLower = x_vecStorage.GetBegin(), pUpper = x_vecStorage.GetEnd();
 		while(pLower != pUpper){
 			const auto pMiddle = pLower + (pUpper - pLower) / 2;
 			if(ComparatorT()(*pMiddle, vComparand)){
@@ -337,14 +337,14 @@ public:
 
 	template<typename ComparandT>
 	std::pair<const Element *, const Element *> GetEqualRange(const ComparandT &vComparand) const {
-		std::pair<const Element *, const Element *> vRange(x_vecStorage.GetEnd(), x_vecStorage.GetEnd());
+		auto vRange = std::make_pair(x_vecStorage.GetEnd(), x_vecStorage.GetEnd());
 
 		const auto pTop = Find(vComparand);
 		if(pTop == x_vecStorage.GetEnd()){
 			return vRange;
 		}
 
-		Element *pLower = x_vecStorage.GetBegin(), *pUpper = pTop;
+		auto pLower = x_vecStorage.GetBegin(), pUpper = pTop;
 		while(pLower != pUpper){
 			const auto pMiddle = pLower + (pUpper - pLower) / 2;
 			if(ComparatorT()(*pMiddle, vComparand)){
@@ -370,14 +370,14 @@ public:
 	}
 	template<typename ComparandT>
 	std::pair<Element *, Element *> GetEqualRange(const ComparandT &vComparand){
-		std::pair<Element *, Element *> vRange(x_vecStorage.GetEnd(), x_vecStorage.GetEnd());
+		auto vRange = std::make_pair(x_vecStorage.GetEnd(), x_vecStorage.GetEnd());
 
 		const auto pTop = Find(vComparand);
 		if(pTop == x_vecStorage.GetEnd()){
 			return vRange;
 		}
 
-		Element *pLower = x_vecStorage.GetBegin(), *pUpper = pTop;
+		auto pLower = x_vecStorage.GetBegin(), pUpper = pTop;
 		while(pLower != pUpper){
 			const auto pMiddle = pLower + (pUpper - pLower) / 2;
 			if(ComparatorT()(*pMiddle, vComparand)){

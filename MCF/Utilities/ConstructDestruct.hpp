@@ -12,17 +12,15 @@
 namespace MCF {
 
 namespace Impl_ConstructDestruct {
-	struct Tag {
-		char chUnused;
-	};
+	struct Tag { };
 }
 
 }
 
-inline void *operator new(std::size_t, ::MCF::Impl_ConstructDestruct::Tag *p){
+inline void *operator new(std::size_t, void *p, ::MCF::Impl_ConstructDestruct::Tag){
 	return p;
 }
-inline void operator delete(void *, ::MCF::Impl_ConstructDestruct::Tag *) noexcept {
+inline void operator delete(void *, void *, ::MCF::Impl_ConstructDestruct::Tag) noexcept {
 }
 
 namespace MCF {
@@ -32,48 +30,59 @@ namespace Impl_ConstructDestruct {
 	struct DirectConstructor {
 		template<typename ...ParamsT>
 		static void Construct(ObjectT *pObject, ParamsT &&...vParams){
-			::new(reinterpret_cast<Tag *>(pObject)) ObjectT(std::forward<ParamsT>(vParams)...);
+			const auto pStorage = const_cast<void *>(static_cast<const volatile void *>(pObject));
+			(void)pStorage;
+
+#ifndef NDEBUG
+			__builtin_memset(pStorage, 0xBB, sizeof(ObjectT));
+#endif
+			::new(pStorage, Tag()) ObjectT(std::forward<ParamsT>(vParams)...);
 		}
 
 		static void DefaultConstruct(ObjectT *pObject){
+			const auto pStorage = const_cast<void *>(static_cast<const volatile void *>(pObject));
+			(void)pStorage;
+
 #ifndef NDEBUG
-			__builtin_memset(pObject, 0xCC, sizeof(ObjectT));
+			__builtin_memset(pStorage, 0xCC, sizeof(ObjectT));
 #endif
-			::new(reinterpret_cast<Tag *>(pObject)) ObjectT;
+			::new(pStorage, Tag()) ObjectT;
 		}
 		template<typename ...ParamsT>
 		static void DefaultConstruct(ObjectT *pObject, ParamsT &&...vParams){
-			::new(reinterpret_cast<Tag *>(pObject)) ObjectT(std::forward<ParamsT>(vParams)...);
+			const auto pStorage = const_cast<void *>(static_cast<const volatile void *>(pObject));
+			(void)pStorage;
+
+#ifndef NDEBUG
+			__builtin_memset(pStorage, 0xCC, sizeof(ObjectT));
+#endif
+			::new(pStorage, Tag()) ObjectT(std::forward<ParamsT>(vParams)...);
 		}
 
 		static void Destruct(ObjectT *pObject){
+			const auto pStorage = const_cast<void *>(static_cast<const volatile void *>(pObject));
+			(void)pStorage;
+
 			pObject->~ObjectT();
 #ifndef NDEBUG
-			__builtin_memset(pObject, 0xDD, sizeof(ObjectT));
+			__builtin_memset(pStorage, 0xDD, sizeof(ObjectT));
 #endif
 		}
 	};
 }
 
 template<typename ObjectT, typename ...ParamsT>
-inline void Construct(ObjectT *pObject, ParamsT &&...vParams) noexcept(std::is_nothrow_constructible<std::remove_cv_t<ObjectT>, ParamsT &&...>::value) {
-	Impl_ConstructDestruct::DirectConstructor<std::remove_cv_t<ObjectT>>::Construct(pObject, std::forward<ParamsT>(vParams)...);
+inline void Construct(ObjectT *pObject, ParamsT &&...vParams) noexcept(std::is_nothrow_constructible<ObjectT, ParamsT &&...>::value) {
+	Impl_ConstructDestruct::DirectConstructor<ObjectT>::Construct(pObject, std::forward<ParamsT>(vParams)...);
 }
 template<typename ObjectT, typename ...ParamsT>
-inline void DefaultConstruct(ObjectT *pObject, ParamsT &&...vParams) noexcept(std::is_nothrow_constructible<std::remove_cv_t<ObjectT>, ParamsT &&...>::value) {
-	Impl_ConstructDestruct::DirectConstructor<std::remove_cv_t<ObjectT>>::DefaultConstruct(pObject, std::forward<ParamsT>(vParams)...);
+inline void DefaultConstruct(ObjectT *pObject, ParamsT &&...vParams) noexcept(std::is_nothrow_constructible<ObjectT, ParamsT &&...>::value) {
+	Impl_ConstructDestruct::DirectConstructor<ObjectT>::DefaultConstruct(pObject, std::forward<ParamsT>(vParams)...);
 }
 template<typename ObjectT>
-inline void Destruct(ObjectT *pObject) noexcept(std::is_nothrow_destructible<std::remove_cv_t<ObjectT>>::value) {
-	Impl_ConstructDestruct::DirectConstructor<std::remove_cv_t<ObjectT>>::Destruct(pObject);
+inline void Destruct(ObjectT *pObject) noexcept(std::is_nothrow_destructible<ObjectT>::value) {
+	Impl_ConstructDestruct::DirectConstructor<ObjectT>::Destruct(pObject);
 }
-
-template<typename ObjectT, typename ...ParamsT>
-void Construct(const ObjectT *pObject, ParamsT &&...vParams) noexcept = delete;
-template<typename ObjectT, typename ...ParamsT>
-void DefaultConstruct(const ObjectT *pObject, ParamsT &&...vParams) noexcept = delete;
-template<typename ObjectT>
-void Destruct(const ObjectT *pObject) noexcept = delete;
 
 template<typename ObjectT, typename ...ParamsT>
 inline void ConstructArray(ObjectT *pBegin, std::size_t uCount, const ParamsT &...vParams) noexcept(std::is_nothrow_constructible<ObjectT, const ParamsT &...>::value) {

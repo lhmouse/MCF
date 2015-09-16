@@ -319,16 +319,18 @@ public:
 			throw std::bad_array_new_length();
 		}
 
-		const auto pNewStorage = static_cast<Element *>(::operator new[](uBytesToAlloc));
-		const auto pOldStorage = static_cast<Element *>(x_pStorage);
-		auto pWrite = pNewStorage;
+		const auto pNewStorage = ::operator new[](uBytesToAlloc);
+		const auto pOldStorage = x_pStorage;
+		const auto pNewBegin = static_cast<Element *>(pNewStorage);
+		const auto pOldBegin = static_cast<Element *>(pOldStorage);
+		auto pWrite = pNewBegin;
 		try {
 			for(std::size_t i = 0; i < x_uSize; ++i){
-				Construct(pWrite, std::move_if_noexcept(pOldStorage[i]));
+				Construct(pWrite, std::move_if_noexcept(pOldBegin[i]));
 				++pWrite;
 			}
 		} catch(...){
-			while(pWrite != pNewStorage){
+			while(pWrite != pNewBegin){
 				--pWrite;
 				Destruct(pWrite);
 			}
@@ -336,7 +338,7 @@ public:
 			throw;
 		}
 		for(std::size_t i = x_uSize; i > 0; --i){
-			Destruct(pOldStorage + i - 1);
+			Destruct(pOldBegin + i - 1);
 		}
 		::operator delete[](pOldStorage);
 

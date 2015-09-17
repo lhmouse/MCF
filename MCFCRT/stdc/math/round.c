@@ -4,41 +4,38 @@
 
 #include "../../env/_crtdef.h"
 #include "_math_asm.h"
-
-static const double kPosHalf =  0.5;
-static const double kNegHalf = -0.5;
+#include "_constants.h"
 
 float roundf(float x){
 	register float ret;
-	uintptr_t unused;
 	uint16_t fcw;
 	__asm__ __volatile__(
-		"fstcw word ptr[%3] \n"
+		"fstcw word ptr[%1] \n"
 #ifdef _WIN64
 		"movsx rdx, dword ptr[%2] \n"
 		"sar rdx, 63 \n"
-		"xor %4, %5 \n"
-		"and %4, rdx \n"
+		"xor %3, %4 \n"
+		"and %3, rdx \n"
 #else
 		"mov edx, dword ptr[%2] \n"
 		"sar edx, 31 \n"
-		"xor %4, %5 \n"
-		"and %4, edx \n"
+		"xor %3, %4 \n"
+		"and %3, edx \n"
 #endif
-		"xor %4, %5 \n"
+		"xor %3, %4 \n"
 		"fld dword ptr[%2] \n"
-		"movzx eax, word ptr[%3] \n"
+		"movzx eax, word ptr[%1] \n"
 		"mov ecx, eax \n"
-		"or ch, 0x0C \n"
-		"fadd qword ptr[%4] \n"
-		"mov word ptr[%3], cx \n"
-		"fldcw word ptr[%3] \n"
+		"or ecx, 0x0C00 \n"
+		"fadd qword ptr[%3] \n"
+		"mov word ptr[%1], cx \n"
+		"fldcw word ptr[%1] \n"
 		"frndint \n"
-		"mov word ptr[%3], ax \n"
+		"mov word ptr[%1], ax \n"
 		__MCF_FLT_RET_ST("%2")
-		"fldcw word ptr[%3] \n"
-		: __MCF_FLT_RET_CONS(ret), "=r"(unused)
-		: "m"(x), "m"(fcw), "1"(&kNegHalf), "r"(&kPosHalf)
+		"fldcw word ptr[%1] \n"
+		: __MCF_FLT_RET_CONS(ret), "=m"(fcw)
+		: "m"(x), "r"(&__MCF_CRT_kMath_Neg_0_5), "r"(&__MCF_CRT_kMath_Pos_0_5)
 		: "ax", "cx", "dx"
 	);
 	return ret;
@@ -46,35 +43,34 @@ float roundf(float x){
 
 double round(double x){
 	register double ret;
-	uintptr_t unused;
 	uint16_t fcw;
 	__asm__ __volatile__(
-		"fstcw word ptr[%3] \n"
+		"fstcw word ptr[%1] \n"
 #ifdef _WIN64
 		"movsx rdx, dword ptr[%2 + 4] \n"
 		"sar rdx, 63 \n"
-		"xor %4, %5 \n"
-		"and %4, rdx \n"
+		"xor %3, %4 \n"
+		"and %3, rdx \n"
 #else
 		"mov edx, dword ptr[%2 + 4] \n"
 		"sar edx, 31 \n"
-		"xor %4, %5 \n"
-		"and %4, edx \n"
+		"xor %3, %4 \n"
+		"and %3, edx \n"
 #endif
-		"xor %4, %5 \n"
+		"xor %3, %4 \n"
 		"fld qword ptr[%2] \n"
-		"movzx eax, word ptr[%3] \n"
+		"movzx eax, word ptr[%1] \n"
 		"mov ecx, eax \n"
-		"or ch, 0x0C \n"
-		"fadd qword ptr[%4] \n"
-		"mov word ptr[%3], cx \n"
-		"fldcw word ptr[%3] \n"
+		"or ecx, 0x0C00 \n"
+		"fadd qword ptr[%3] \n"
+		"mov word ptr[%1], cx \n"
+		"fldcw word ptr[%1] \n"
 		"frndint \n"
-		"mov word ptr[%3], ax \n"
+		"mov word ptr[%1], ax \n"
 		__MCF_DBL_RET_ST("%2")
-		"fldcw word ptr[%3] \n"
-		: __MCF_DBL_RET_CONS(ret), "=r"(unused)
-		: "m"(x), "m"(fcw), "1"(&kNegHalf), "r"(&kPosHalf)
+		"fldcw word ptr[%1] \n"
+		: __MCF_DBL_RET_CONS(ret), "=m"(fcw)
+		: "m"(x), "r"(&__MCF_CRT_kMath_Neg_0_5), "r"(&__MCF_CRT_kMath_Pos_0_5)
 		: "ax", "cx", "dx"
 	);
 	return ret;
@@ -82,35 +78,34 @@ double round(double x){
 
 long double roundl(long double x){
 	register long double ret;
-	uintptr_t unused;
 	uint16_t fcw;
 	__asm__ __volatile__(
-		"fstcw word ptr[%3] \n"
+		"fstcw word ptr[%1] \n"
 #ifdef _WIN64
 		"movsx rdx, word ptr[%2 + 8] \n"
 		"sar rdx, 63 \n"
-		"xor %4, %5 \n"
-		"and %4, rdx \n"
+		"xor %3, %4 \n"
+		"and %3, rdx \n"
 #else
 		"movsx edx, word ptr[%2 + 8] \n"
 		"sar edx, 31 \n"
-		"xor %4, %5 \n"
-		"and %4, edx \n"
+		"xor %3, %4 \n"
+		"and %3, edx \n"
 #endif
-		"xor %4, %5 \n"
+		"xor %3, %4 \n"
 		"fld tbyte ptr[%2] \n"
-		"movzx eax, word ptr[%3] \n"
+		"movzx eax, word ptr[%1] \n"
 		"mov ecx, eax \n"
-		"or ch, 0x0C \n"
-		"fadd qword ptr[%4] \n"
-		"mov word ptr[%3], cx \n"
-		"fldcw word ptr[%3] \n"
+		"or ecx, 0x0C00 \n"
+		"fadd qword ptr[%3] \n"
+		"mov word ptr[%1], cx \n"
+		"fldcw word ptr[%1] \n"
 		"frndint \n"
-		"mov word ptr[%3], ax \n"
+		"mov word ptr[%1], ax \n"
 		__MCF_LDBL_RET_ST("%1")
-		"fldcw word ptr[%3] \n"
-		: __MCF_LDBL_RET_CONS(ret), "=r"(unused)
-		: "m"(x), "m"(fcw), "1"(&kNegHalf), "r"(&kPosHalf)
+		"fldcw word ptr[%1] \n"
+		: __MCF_LDBL_RET_CONS(ret), "=m"(fcw)
+		: "m"(x), "r"(&__MCF_CRT_kMath_Neg_0_5), "r"(&__MCF_CRT_kMath_Pos_0_5)
 		: "ax", "cx", "dx"
 	);
 	return ret;

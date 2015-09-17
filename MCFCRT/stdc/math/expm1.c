@@ -4,9 +4,7 @@
 
 #include "../../env/_crtdef.h"
 #include "_math_asm.h"
-
-static const double kPosThreshould =  1.0;
-static const double kNegThreshould = -1.0;
+#include "_constants.h"
 
 float expm1f(float x){
 	register float ret;
@@ -38,7 +36,7 @@ float expm1f(float x){
 		"2: \n"
 		__MCF_FLT_RET_ST("%1")
 		: __MCF_FLT_RET_CONS(ret)
-		: "m"(x), "m"(kNegThreshould), "m"(kPosThreshould)
+		: "m"(x), "m"(__MCF_CRT_kMath_Neg_1_0), "m"(__MCF_CRT_kMath_Pos_1_0)
 		: "ax"
 	);
 	return ret;
@@ -74,7 +72,7 @@ double expm1(double x){
 		"2: \n"
 		__MCF_DBL_RET_ST("%1")
 		: __MCF_DBL_RET_CONS(ret)
-		: "m"(x), "m"(kNegThreshould), "m"(kPosThreshould)
+		: "m"(x), "m"(__MCF_CRT_kMath_Neg_1_0), "m"(__MCF_CRT_kMath_Pos_1_0)
 		: "ax"
 	);
 	return ret;
@@ -111,7 +109,7 @@ long double expm1l(long double x){
 		"2: \n"
 		__MCF_LDBL_RET_ST("%1")
 		: __MCF_LDBL_RET_CONS(ret)
-		: "m"(x), "m"(kNegThreshould), "m"(kPosThreshould)
+		: "m"(x), "m"(__MCF_CRT_kMath_Neg_1_0), "m"(__MCF_CRT_kMath_Pos_1_0)
 		: "ax"
 	);
 	return ret;

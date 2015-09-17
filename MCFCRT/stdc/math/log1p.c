@@ -4,9 +4,10 @@
 
 #include "../../env/_crtdef.h"
 #include "_math_asm.h"
+#include "_constants.h"
 
-static const double kPosThreshould =  0.292892;
-static const double kNegThreshould = -0.292892;
+static const double kPosThreshould =  0.292892; // < (1 - sqrt(2) / 2)
+static const double kNegThreshould = -0.292892; // > -(1 - sqrt(2) / 2)
 
 float log1pf(float x){
 	register float ret;

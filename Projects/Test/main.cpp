@@ -1,9 +1,6 @@
-#include <cmath>
-#include <cstdio>
-
-volatile double d = 1e100;
-
 extern "C" unsigned MCFMain(){
-	std::printf("%.20f\n", std::cos(d));
+	volatile double f = 5.9;
+	double d = __builtin_floor(f);
+	__builtin_printf("d = %f\n", d);
 	return 0;
 }

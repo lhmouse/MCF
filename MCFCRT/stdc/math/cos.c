@@ -4,8 +4,7 @@
 
 #include "../../env/_crtdef.h"
 #include "_math_asm.h"
-
-static const long double kLargePeriod =  3.1415926535897932384626 * 0x1p61;
+#include "_constants.h"
 
 float cosf(float x){
 	register float ret;
@@ -27,7 +26,7 @@ float cosf(float x){
 		"1: \n"
 		__MCF_FLT_RET_ST("%1")
 		: __MCF_FLT_RET_CONS(ret)
-		: "m"(x), "m"(kLargePeriod)
+		: "m"(x), "m"(__MCF_CRT_kMath_Pos_1p61_PI)
 		: "ax"
 	);
 	return ret;
@@ -53,7 +52,7 @@ double cos(double x){
 		"1: \n"
 		__MCF_DBL_RET_ST("%1")
 		: __MCF_DBL_RET_CONS(ret)
-		: "m"(x), "m"(kLargePeriod)
+		: "m"(x), "m"(__MCF_CRT_kMath_Pos_1p61_PI)
 		: "ax"
 	);
 	return ret;
@@ -79,7 +78,7 @@ long double cosl(long double x){
 		"1: \n"
 		__MCF_LDBL_RET_ST("%1")
 		: __MCF_LDBL_RET_CONS(ret)
-		: "m"(x), "m"(kLargePeriod)
+		: "m"(x), "m"(__MCF_CRT_kMath_Pos_1p61_PI)
 		: "ax"
 	);
 	return ret;

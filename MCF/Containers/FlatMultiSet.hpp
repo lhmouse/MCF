@@ -21,12 +21,7 @@ public:
 		: x_vecStorage()
 	{
 	}
-	template<typename ...ParamsT>
-	explicit FlatMultiSet(std::size_t uSize, const ParamsT &...vParams)
-		: x_vecStorage(uSize, vParams...)
-	{
-	}
-	// 如果元素有序，则效率最大化。
+	// 如果键有序，则效率最大化；并且是稳定的。
 	template<typename IteratorT, std::enable_if_t<
 		sizeof(typename std::iterator_traits<IteratorT>::value_type *),
 		int> = 0>
@@ -41,7 +36,7 @@ public:
 			AddUsingHint(nullptr, *it);
 		}
 	}
-	// 如果元素有序，则效率最大化。
+	// 如果键有序，则效率最大化；并且是稳定的。
 	FlatMultiSet(std::initializer_list<ElementT> rhs)
 		: FlatMultiSet(rhs.begin(), rhs.end())
 	{

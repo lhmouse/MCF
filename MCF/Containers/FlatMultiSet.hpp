@@ -33,7 +33,7 @@ public:
 			Reserve(uDeltaSize);
 		}
 		for(auto it = itBegin; it != itEnd; ++it){
-			AddUsingHint(nullptr, *it);
+			AddWithHint(nullptr, *it);
 		}
 	}
 	// 如果键有序，则效率最大化；并且是稳定的。
@@ -193,10 +193,10 @@ public:
 
 	template<typename ComparandT>
 	std::pair<Element *, bool> Add(ComparandT &&vComparand){
-		return AddUsingHint(nullptr, std::forward<ComparandT>(vComparand));
+		return AddWithHint(nullptr, std::forward<ComparandT>(vComparand));
 	}
 	template<typename ComparandT>
-	std::pair<Element *, bool> AddUsingHint(const Element *pHint, ComparandT &&vComparand){
+	std::pair<Element *, bool> AddWithHint(const Element *pHint, ComparandT &&vComparand){
 		if(!pHint){
 			pHint = GetEnd();
 			if((pHint == GetBegin()) || !ComparatorT()(vComparand, pHint[-1])){
@@ -223,11 +223,11 @@ public:
 
 	template<typename ComparandT>
 	Element *Emplace(const Element *pPos, ComparandT &&vComparand){
-		return AddUsingHint(pPos, std::forward<ComparandT>(vComparand)).first;
+		return AddWithHint(pPos, std::forward<ComparandT>(vComparand)).first;
 	}
 	template<typename FirstT, typename SecondT, typename ...RemainingT>
 	Element *Emplace(const Element *pPos, FirstT &&vFirst, SecondT &&vSecond, RemainingT &&...vRemaining){
-		return AddUsingHint(pPos, Element(std::forward<FirstT>(vFirst), std::forward<SecondT>(vSecond), std::forward<RemainingT>(vRemaining)...)).first;
+		return AddWithHint(pPos, Element(std::forward<FirstT>(vFirst), std::forward<SecondT>(vSecond), std::forward<RemainingT>(vRemaining)...)).first;
 	}
 	Element *Erase(const Element *pBegin, const Element *pEnd) noexcept(noexcept(std::declval<FlatMultiSet &>().x_vecStorage.Erase(pBegin, pEnd))) {
 		return x_vecStorage.Erase(pBegin, pEnd);

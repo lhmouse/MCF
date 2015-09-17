@@ -362,7 +362,7 @@ public:
 				pUpper = pMiddle;
 			}
 		}
-		vRange.second = pUpper;
+		vRange.second = pLower;
 
 		return vRange;
 	}
@@ -395,7 +395,7 @@ public:
 				pUpper = pMiddle;
 			}
 		}
-		vRange.second = pUpper;
+		vRange.second = pLower;
 
 		return vRange;
 	}

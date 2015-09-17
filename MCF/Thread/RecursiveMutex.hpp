@@ -47,15 +47,16 @@ public:
 	Result Lock() noexcept;
 	Result Unlock() noexcept;
 
-	std::size_t UncheckedGetRecursionCount() const noexcept {
-		ASSERT(IsLockedByCurrentThread());
-		return x_uRecursionCount;
-	}
 	std::size_t GetRecursionCount() const noexcept {
 		if(!IsLockedByCurrentThread()){
 			return 0;
 		}
 		return UncheckedGetRecursionCount();
+	}
+	std::size_t UncheckedGetRecursionCount() const noexcept {
+		ASSERT(IsLockedByCurrentThread());
+
+		return x_uRecursionCount;
 	}
 
 	UniqueLock TryLock() noexcept {

@@ -5,6 +5,8 @@
 #include "../../env/_crtdef.h"
 #include "_math_asm.h"
 
+static const long double kLargePeriod =  3.1415926535897932384626 * 0x1p61;
+
 float sinf(float x){
 	register float ret;
 	__asm__ __volatile__(
@@ -13,8 +15,7 @@ float sinf(float x){
 		"fstsw ax \n"
 		"test ah, 4 \n"
 		"jz 1f \n"
-		"	fldpi \n"
-		"	fadd st, st \n"
+		"	fld tbyte ptr[%2] \n"
 		"	fxch st(1) \n"
 		"	2: \n"
 		"		fprem \n"
@@ -26,7 +27,7 @@ float sinf(float x){
 		"1: \n"
 		__MCF_FLT_RET_ST("%1")
 		: __MCF_FLT_RET_CONS(ret)
-		: "m"(x)
+		: "m"(x), "m"(kLargePeriod)
 		: "ax"
 	);
 	return ret;
@@ -40,8 +41,7 @@ double sin(double x){
 		"fstsw ax \n"
 		"test ah, 4 \n"
 		"jz 1f \n"
-		"	fldpi \n"
-		"	fadd st, st \n"
+		"	fld tbyte ptr[%2] \n"
 		"	fxch st(1) \n"
 		"	2: \n"
 		"		fprem \n"
@@ -53,7 +53,7 @@ double sin(double x){
 		"1: \n"
 		__MCF_DBL_RET_ST("%1")
 		: __MCF_DBL_RET_CONS(ret)
-		: "m"(x)
+		: "m"(x), "m"(kLargePeriod)
 		: "ax"
 	);
 	return ret;
@@ -67,8 +67,7 @@ long double sinl(long double x){
 		"fstsw ax \n"
 		"test ah, 4 \n"
 		"jz 1f \n"
-		"	fldpi \n"
-		"	fadd st, st \n"
+		"	fld tbyte ptr[%2] \n"
 		"	fxch st(1) \n"
 		"	2: \n"
 		"		fprem \n"
@@ -80,7 +79,7 @@ long double sinl(long double x){
 		"1: \n"
 		__MCF_LDBL_RET_ST("%1")
 		: __MCF_LDBL_RET_CONS(ret)
-		: "m"(x)
+		: "m"(x), "m"(kLargePeriod)
 		: "ax"
 	);
 	return ret;

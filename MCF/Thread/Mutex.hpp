@@ -25,7 +25,7 @@ public:
 private:
 	Atomic<std::size_t> x_uSpinCount;
 
-	Atomic<std::size_t> x_uLockingThreadId;
+	Atomic<std::size_t> x_uLockingThreadId; // 如果带错误检测，这个是锁定的线程 ID；否则是一个布尔值，表示是否已被锁定。
 	Semaphore x_vSemaphore;
 	Atomic<X_QueueNode *> x_pQueueHead;
 

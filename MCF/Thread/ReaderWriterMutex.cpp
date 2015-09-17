@@ -19,7 +19,7 @@ void ReaderWriterMutex::X_TlsIndexDeleter::operator()(std::size_t uTlsIndex) con
 namespace Impl_UniqueLockTemplate {
 	template<>
 	bool ReaderWriterMutex::UniqueReaderLock::X_DoTry() const noexcept {
-		return x_pOwner->TryAsReader() != ReaderWriterMutex::Result::kResTryFailed;
+		return x_pOwner->TryAsReader() != ReaderWriterMutex::Result::kTryFailed;
 	}
 	template<>
 	void ReaderWriterMutex::UniqueReaderLock::X_DoLock() const noexcept {
@@ -32,7 +32,7 @@ namespace Impl_UniqueLockTemplate {
 
 	template<>
 	bool ReaderWriterMutex::UniqueWriterLock::X_DoTry() const noexcept {
-		return x_pOwner->TryAsWriter() != ReaderWriterMutex::Result::kResTryFailed;
+		return x_pOwner->TryAsWriter() != ReaderWriterMutex::Result::kTryFailed;
 	}
 	template<>
 	void ReaderWriterMutex::UniqueWriterLock::X_DoLock() const noexcept {
@@ -55,24 +55,24 @@ ReaderWriterMutex::ReaderWriterMutex(std::size_t uSpinCount)
 
 // 其他非静态成员函数。
 ReaderWriterMutex::Result ReaderWriterMutex::TryAsReader() noexcept {
-	Result eResult = kResRecursive;
+	Result eResult = kRecursive;
 	auto uReaderRecur = (std::uintptr_t)::TlsGetValue(x_uTlsIndex.Get());
 	if(uReaderRecur == 0){
 		if(x_mtxWriterGuard.IsLockedByCurrentThread()){
 			x_uReaderCount.Increment(kAtomicRelaxed);
 		} else {
-			if(x_mtxWriterGuard.Try() == kResTryFailed){
-				eResult = kResTryFailed;
+			if(x_mtxWriterGuard.Try() == kTryFailed){
+				eResult = kTryFailed;
 				goto jDone;
 			}
 			if(x_uReaderCount.Increment(kAtomicRelaxed) == 1){
 				if(!x_mtxExclusive.Try()){
 					x_uReaderCount.Decrement(kAtomicRelaxed);
 					x_mtxWriterGuard.Unlock();
-					eResult = kResTryFailed;
+					eResult = kTryFailed;
 					goto jDone;
 				}
-				eResult = kResStateChanged;
+				eResult = kStateChanged;
 			}
 			x_mtxWriterGuard.Unlock();
 		}
@@ -82,7 +82,7 @@ jDone:
 	return eResult;
 }
 ReaderWriterMutex::Result ReaderWriterMutex::LockAsReader() noexcept {
-	Result eResult = kResRecursive;
+	Result eResult = kRecursive;
 	auto uReaderRecur = (std::uintptr_t)::TlsGetValue(x_uTlsIndex.Get());
 	if(uReaderRecur == 0){
 		if(x_mtxWriterGuard.IsLockedByCurrentThread()){
@@ -91,7 +91,7 @@ ReaderWriterMutex::Result ReaderWriterMutex::LockAsReader() noexcept {
 			x_mtxWriterGuard.Lock();
 			if(x_uReaderCount.Increment(kAtomicRelaxed) == 1){
 				x_mtxExclusive.Lock();
-				eResult = kResStateChanged;
+				eResult = kStateChanged;
 			}
 			x_mtxWriterGuard.Unlock();
 		}
@@ -100,7 +100,7 @@ ReaderWriterMutex::Result ReaderWriterMutex::LockAsReader() noexcept {
 	return eResult;
 }
 ReaderWriterMutex::Result ReaderWriterMutex::UnlockAsReader() noexcept {
-	Result eResult = kResRecursive;
+	Result eResult = kRecursive;
 	auto uReaderRecur = (std::uintptr_t)::TlsGetValue(x_uTlsIndex.Get());
 	if(uReaderRecur == 1){
 		if(x_mtxWriterGuard.IsLockedByCurrentThread()){
@@ -108,7 +108,7 @@ ReaderWriterMutex::Result ReaderWriterMutex::UnlockAsReader() noexcept {
 		} else {
 			if(x_uReaderCount.Decrement(kAtomicRelaxed) == 0){
 				x_mtxExclusive.Unlock();
-				eResult = kResStateChanged;
+				eResult = kStateChanged;
 			}
 		}
 	}
@@ -128,35 +128,35 @@ ReaderWriterMutex::Result ReaderWriterMutex::TryAsWriter() noexcept {
 	ASSERT_MSG((std::uintptr_t)::TlsGetValue(x_uTlsIndex.Get()) == 0, L"获取写锁前必须先释放读锁。");
 
 	const auto eResult = x_mtxWriterGuard.Try();
-	if(eResult != kResStateChanged){
+	if(eResult != kStateChanged){
 		return eResult;
 	}
 	if(!x_mtxExclusive.Try()){
 		x_mtxWriterGuard.Unlock();
-		return kResTryFailed;
+		return kTryFailed;
 	}
-	return kResStateChanged;
+	return kStateChanged;
 }
 ReaderWriterMutex::Result ReaderWriterMutex::LockAsWriter() noexcept {
 	ASSERT_MSG((std::uintptr_t)::TlsGetValue(x_uTlsIndex.Get()) == 0, L"获取写锁前必须先释放读锁。");
 
 	const auto eResult = x_mtxWriterGuard.Lock();
-	if(eResult != kResStateChanged){
+	if(eResult != kStateChanged){
 		return eResult;
 	}
 	x_mtxExclusive.Lock();
-	return kResStateChanged;
+	return kStateChanged;
 }
 ReaderWriterMutex::Result ReaderWriterMutex::UnlockAsWriter() noexcept {
 	const auto eResult = x_mtxWriterGuard.Unlock();
-	if(eResult != kResStateChanged){
+	if(eResult != kStateChanged){
 		return eResult;
 	}
 	const auto uRecurReading = (std::uintptr_t)::TlsGetValue(x_uTlsIndex.Get());
 	if(uRecurReading == 0){
 		x_mtxExclusive.Unlock();
 	}
-	return kResStateChanged;
+	return kStateChanged;
 }
 
 }

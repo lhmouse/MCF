@@ -26,6 +26,7 @@ public:
 		: x_vecStorage(uSize, vParams...)
 	{
 	}
+	// 如果元素有序，则效率最大化。
 	template<typename IteratorT, std::enable_if_t<
 		sizeof(typename std::iterator_traits<IteratorT>::value_type *),
 		int> = 0>
@@ -40,6 +41,7 @@ public:
 			AddUsingHint(nullptr, *it);
 		}
 	}
+	// 如果元素有序，则效率最大化。
 	FlatMultiSet(std::initializer_list<ElementT> rhs)
 		: FlatMultiSet(rhs.begin(), rhs.end())
 	{

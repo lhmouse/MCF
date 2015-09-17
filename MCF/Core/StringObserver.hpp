@@ -9,6 +9,7 @@
 #include "../Utilities/Assert.hpp"
 #include "../Utilities/CountOf.hpp"
 #include "../Utilities/Defer.hpp"
+#include "../Utilities/RationalFunctors.hpp"
 #include "Exception.hpp"
 #include <utility>
 #include <iterator>
@@ -435,7 +436,7 @@ public:
 	}
 
 	bool DoesOverlapWith(const StringObserver &rhs) const noexcept {
-		return std::less<void>()(x_pchBegin, rhs.x_pchEnd) && std::less<void>()(rhs.x_pchBegin, x_pchEnd);
+		return Less()(x_pchBegin, rhs.x_pchEnd) && Less()(rhs.x_pchBegin, x_pchEnd);
 	}
 
 public:

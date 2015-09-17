@@ -17,17 +17,15 @@ class Mutex;
 
 class ConditionVariable : NONCOPYABLE {
 private:
-	Mutex &x_vMutex;
-
 	Atomic<std::size_t> x_uWaiting;
 	Semaphore x_vSemaphore;
 
 public:
-	explicit ConditionVariable(Mutex &vMutex);
+	ConditionVariable();
 
 public:
-	bool Wait(std::uint64_t u64MilliSeconds) noexcept;
-	void Wait() noexcept;
+	bool Wait(Mutex &vMutex, std::uint64_t u64MilliSeconds) noexcept;
+	void Wait(Mutex &vMutex) noexcept;
 	void Signal(std::size_t uMaxCount = 1) noexcept;
 	void Broadcast() noexcept;
 };

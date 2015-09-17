@@ -7,6 +7,7 @@
 
 #include "../Utilities/Assert.hpp"
 #include "../Utilities/Bail.hpp"
+#include "../Utilities/RationalFunctors.hpp"
 #include "../Thread/SpinLock.hpp"
 #include "../Thread/Atomic.hpp"
 #include "DefaultDeleter.hpp"
@@ -235,6 +236,11 @@ class IntrusivePtr {
 	static_assert(sizeof(IntrusiveBase<ObjectT, DeleterT>) > 0, "IntrusiveBase<ObjectT, DeleterT> is not an object type or is an incomplete type.");
 	static_assert(sizeof(dynamic_cast<const volatile IntrusiveBase<ObjectT, DeleterT> *>(std::declval<ObjectT *>())), "Unable to locate IntrusiveBase for the managed object type.");
 
+	template<typename, class>
+	friend class IntrusivePtr;
+	template<typename, class>
+	friend class WeakIntrusivePtr;
+
 public:
 	using Element = ObjectT;
 	using Deleter = DeleterT;
@@ -415,80 +421,80 @@ IntrusivePtr<CvOtherT, DeleterT> IntrusiveBase<ObjectT, DeleterT>::X_ForkShared(
 
 template<typename ObjectLhsT, typename ObjectRhsT, class DeleterT>
 bool operator==(const IntrusivePtr<ObjectLhsT, DeleterT> &lhs, const IntrusivePtr<ObjectRhsT, DeleterT> &rhs) noexcept {
-	return std::equal_to<void>()(lhs.Get(), rhs.Get());
+	return Equal()(lhs.Get(), rhs.Get());
 }
 template<typename ObjectLhsT, typename ObjectRhsT, class DeleterT>
 bool operator==(const IntrusivePtr<ObjectLhsT, DeleterT> &lhs, typename IntrusivePtr<ObjectRhsT, DeleterT>::Element *rhs) noexcept {
-	return std::equal_to<void>()(lhs.Get(), rhs);
+	return Equal()(lhs.Get(), rhs);
 }
 template<typename ObjectLhsT, typename ObjectRhsT, class DeleterT>
 bool operator==(typename IntrusivePtr<ObjectLhsT, DeleterT>::Element *lhs, const IntrusivePtr<ObjectRhsT, DeleterT> &rhs) noexcept {
-	return std::equal_to<void>()(lhs, rhs.Get());
+	return Equal()(lhs, rhs.Get());
 }
 
 template<typename ObjectLhsT, typename ObjectRhsT, class DeleterT>
 bool operator!=(const IntrusivePtr<ObjectLhsT, DeleterT> &lhs, const IntrusivePtr<ObjectRhsT, DeleterT> &rhs) noexcept {
-	return std::not_equal_to<void>()(lhs.Get(), rhs.Get());
+	return Unequal()(lhs.Get(), rhs.Get());
 }
 template<typename ObjectLhsT, typename ObjectRhsT, class DeleterT>
 bool operator!=(const IntrusivePtr<ObjectLhsT, DeleterT> &lhs, typename IntrusivePtr<ObjectRhsT, DeleterT>::Element *rhs) noexcept {
-	return std::not_equal_to<void>()(lhs.Get(), rhs);
+	return Unequal()(lhs.Get(), rhs);
 }
 template<typename ObjectLhsT, typename ObjectRhsT, class DeleterT>
 bool operator!=(typename IntrusivePtr<ObjectLhsT, DeleterT>::Element *lhs, const IntrusivePtr<ObjectRhsT, DeleterT> &rhs) noexcept {
-	return std::not_equal_to<void>()(lhs, rhs.Get());
+	return Unequal()(lhs, rhs.Get());
 }
 
 template<typename ObjectLhsT, typename ObjectRhsT, class DeleterT>
 bool operator<(const IntrusivePtr<ObjectLhsT, DeleterT> &lhs, const IntrusivePtr<ObjectRhsT, DeleterT> &rhs) noexcept {
-	return std::less<void>()(lhs.Get(), rhs.Get());
+	return Less()(lhs.Get(), rhs.Get());
 }
 template<typename ObjectLhsT, typename ObjectRhsT, class DeleterT>
 bool operator<(const IntrusivePtr<ObjectLhsT, DeleterT> &lhs, typename IntrusivePtr<ObjectRhsT, DeleterT>::Element *rhs) noexcept {
-	return std::less<void>()(lhs.Get(), rhs);
+	return Less()(lhs.Get(), rhs);
 }
 template<typename ObjectLhsT, typename ObjectRhsT, class DeleterT>
 bool operator<(typename IntrusivePtr<ObjectLhsT, DeleterT>::Element *lhs, const IntrusivePtr<ObjectRhsT, DeleterT> &rhs) noexcept {
-	return std::less<void>()(lhs, rhs.Get());
+	return Less()(lhs, rhs.Get());
 }
 
 template<typename ObjectLhsT, typename ObjectRhsT, class DeleterT>
 bool operator>(const IntrusivePtr<ObjectLhsT, DeleterT> &lhs, const IntrusivePtr<ObjectRhsT, DeleterT> &rhs) noexcept {
-	return std::greater<void>()(lhs.Get(), rhs.Get());
+	return Greater()(lhs.Get(), rhs.Get());
 }
 template<typename ObjectLhsT, typename ObjectRhsT, class DeleterT>
 bool operator>(const IntrusivePtr<ObjectLhsT, DeleterT> &lhs, typename IntrusivePtr<ObjectRhsT, DeleterT>::Element *rhs) noexcept {
-	return std::greater<void>()(lhs.Get(), rhs);
+	return Greater()(lhs.Get(), rhs);
 }
 template<typename ObjectLhsT, typename ObjectRhsT, class DeleterT>
 bool operator>(typename IntrusivePtr<ObjectLhsT, DeleterT>::Element *lhs, const IntrusivePtr<ObjectRhsT, DeleterT> &rhs) noexcept {
-	return std::greater<void>()(lhs, rhs.Get());
+	return Greater()(lhs, rhs.Get());
 }
 
 template<typename ObjectLhsT, typename ObjectRhsT, class DeleterT>
 bool operator<=(const IntrusivePtr<ObjectLhsT, DeleterT> &lhs, const IntrusivePtr<ObjectRhsT, DeleterT> &rhs) noexcept {
-	return std::less_equal<void>()(lhs.Get(), rhs.Get());
+	return LessEqual()(lhs.Get(), rhs.Get());
 }
 template<typename ObjectLhsT, typename ObjectRhsT, class DeleterT>
 bool operator<=(const IntrusivePtr<ObjectLhsT, DeleterT> &lhs, typename IntrusivePtr<ObjectRhsT, DeleterT>::Element *rhs) noexcept {
-	return std::less_equal<void>()(lhs.Get(), rhs);
+	return LessEqual()(lhs.Get(), rhs);
 }
 template<typename ObjectLhsT, typename ObjectRhsT, class DeleterT>
 bool operator<=(typename IntrusivePtr<ObjectLhsT, DeleterT>::Element *lhs, const IntrusivePtr<ObjectRhsT, DeleterT> &rhs) noexcept {
-	return std::less_equal<void>()(lhs, rhs.Get());
+	return LessEqual()(lhs, rhs.Get());
 }
 
 template<typename ObjectLhsT, typename ObjectRhsT, class DeleterT>
 bool operator>=(const IntrusivePtr<ObjectLhsT, DeleterT> &lhs, const IntrusivePtr<ObjectRhsT, DeleterT> &rhs) noexcept {
-	return std::greater_equal<void>()(lhs.Get(), rhs.Get());
+	return GreaterEqual()(lhs.Get(), rhs.Get());
 }
 template<typename ObjectLhsT, typename ObjectRhsT, class DeleterT>
 bool operator>=(const IntrusivePtr<ObjectLhsT, DeleterT> &lhs, typename IntrusivePtr<ObjectRhsT, DeleterT>::Element *rhs) noexcept {
-	return std::greater_equal<void>()(lhs.Get(), rhs);
+	return GreaterEqual()(lhs.Get(), rhs);
 }
 template<typename ObjectLhsT, typename ObjectRhsT, class DeleterT>
 bool operator>=(typename IntrusivePtr<ObjectLhsT, DeleterT>::Element *lhs, const IntrusivePtr<ObjectRhsT, DeleterT> &rhs) noexcept {
-	return std::greater_equal<void>()(lhs, rhs.Get());
+	return GreaterEqual()(lhs, rhs.Get());
 }
 
 template<typename ObjectT, class DeleterT>
@@ -527,6 +533,11 @@ template<typename ObjectT, class DeleterT>
 class IntrusiveWeakPtr {
 	static_assert(sizeof(IntrusiveBase<ObjectT, DeleterT>) > 0, "IntrusiveBase<ObjectT, DeleterT> is not an object type or is an incomplete type.");
 	static_assert(sizeof(dynamic_cast<const volatile IntrusiveBase<ObjectT, DeleterT> *>(std::declval<ObjectT *>())), "Unable to locate IntrusiveBase for the managed object type.");
+
+	template<typename, class>
+	friend class IntrusivePtr;
+	template<typename, class>
+	friend class WeakIntrusivePtr;
 
 public:
 	using Element = ObjectT;
@@ -665,27 +676,27 @@ public:
 public:
 	template<typename ObjectRhsT>
 	bool operator==(const IntrusiveWeakPtr<ObjectRhsT, DeleterT> &rhs) const noexcept {
-		return std::equal_to<void>()(x_pObserver, rhs.x_pObserver);
+		return Equal()(x_pObserver, rhs.x_pObserver);
 	}
 	template<typename ObjectRhsT>
 	bool operator!=(const IntrusiveWeakPtr<ObjectRhsT, DeleterT> &rhs) const noexcept {
-		return std::not_equal_to<void>()(x_pObserver, rhs.x_pObserver);
+		return Unequal()(x_pObserver, rhs.x_pObserver);
 	}
 	template<typename ObjectRhsT>
 	bool operator<(const IntrusiveWeakPtr<ObjectRhsT, DeleterT> &rhs) const noexcept {
-		return std::less<void>()(x_pObserver, rhs.x_pObserver);
+		return Less()(x_pObserver, rhs.x_pObserver);
 	}
 	template<typename ObjectRhsT>
 	bool operator>(const IntrusiveWeakPtr<ObjectRhsT, DeleterT> &rhs) const noexcept {
-		return std::greater<void>()(x_pObserver, rhs.x_pObserver);
+		return Greater()(x_pObserver, rhs.x_pObserver);
 	}
 	template<typename ObjectRhsT>
 	bool operator<=(const IntrusiveWeakPtr<ObjectRhsT, DeleterT> &rhs) const noexcept {
-		return std::less_equal<void>()(x_pObserver, rhs.x_pObserver);
+		return LessEqual()(x_pObserver, rhs.x_pObserver);
 	}
 	template<typename ObjectRhsT>
 	bool operator>=(const IntrusiveWeakPtr<ObjectRhsT, DeleterT> &rhs) const noexcept {
-		return std::greater_equal<void>()(x_pObserver, rhs.x_pObserver);
+		return GreaterEqual()(x_pObserver, rhs.x_pObserver);
 	}
 };
 

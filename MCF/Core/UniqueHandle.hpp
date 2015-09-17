@@ -6,6 +6,7 @@
 #define MCF_CORE_UNIQUE_HANDLE_HPP_
 
 #include "../Utilities/Assert.hpp"
+#include "../Utilities/RationalFunctors.hpp"
 #include <utility>
 #include <type_traits>
 #include <cstddef>
@@ -82,80 +83,80 @@ public:
 
 template<class CloserT>
 bool operator==(const UniqueHandle<CloserT> &lhs, const UniqueHandle<CloserT> &rhs) noexcept {
-	return std::equal_to<void>()(lhs.Get(), rhs.Get());
+	return Equal()(lhs.Get(), rhs.Get());
 }
 template<class CloserT>
 bool operator==(const UniqueHandle<CloserT> &lhs, typename UniqueHandle<CloserT>::Handle rhs) noexcept {
-	return std::equal_to<void>()(lhs.Get(), rhs);
+	return Equal()(lhs.Get(), rhs);
 }
 template<class CloserT>
 bool operator==(typename UniqueHandle<CloserT>::Handle lhs, const UniqueHandle<CloserT> &rhs) noexcept {
-	return std::equal_to<void>()(lhs, rhs.Get());
+	return Equal()(lhs, rhs.Get());
 }
 
 template<class CloserT>
 bool operator!=(const UniqueHandle<CloserT> &lhs, const UniqueHandle<CloserT> &rhs) noexcept {
-	return std::not_equal_to<void>()(lhs.Get(), rhs.Get());
+	return Unequal()(lhs.Get(), rhs.Get());
 }
 template<class CloserT>
 bool operator!=(const UniqueHandle<CloserT> &lhs, typename UniqueHandle<CloserT>::Handle rhs) noexcept {
-	return std::not_equal_to<void>()(lhs.Get(), rhs);
+	return Unequal()(lhs.Get(), rhs);
 }
 template<class CloserT>
 bool operator!=(typename UniqueHandle<CloserT>::Handle lhs, const UniqueHandle<CloserT> &rhs) noexcept {
-	return std::not_equal_to<void>()(lhs, rhs.Get());
+	return Unequal()(lhs, rhs.Get());
 }
 
 template<class CloserT>
 bool operator<(const UniqueHandle<CloserT> &lhs, const UniqueHandle<CloserT> &rhs) noexcept {
-	return std::less<void>()(lhs.Get(), rhs.Get());
+	return Less()(lhs.Get(), rhs.Get());
 }
 template<class CloserT>
 bool operator<(const UniqueHandle<CloserT> &lhs, typename UniqueHandle<CloserT>::Handle rhs) noexcept {
-	return std::less<void>()(lhs.Get(), rhs);
+	return Less()(lhs.Get(), rhs);
 }
 template<class CloserT>
 bool operator<(typename UniqueHandle<CloserT>::Handle lhs, const UniqueHandle<CloserT> &rhs) noexcept {
-	return std::less<void>()(lhs, rhs.Get());
+	return Less()(lhs, rhs.Get());
 }
 
 template<class CloserT>
 bool operator>(const UniqueHandle<CloserT> &lhs, const UniqueHandle<CloserT> &rhs) noexcept {
-	return std::greater<void>()(lhs.Get(), rhs.Get());
+	return Greater()(lhs.Get(), rhs.Get());
 }
 template<class CloserT>
 bool operator>(const UniqueHandle<CloserT> &lhs, typename UniqueHandle<CloserT>::Handle rhs) noexcept {
-	return std::greater<void>()(lhs.Get(), rhs);
+	return Greater()(lhs.Get(), rhs);
 }
 template<class CloserT>
 bool operator>(typename UniqueHandle<CloserT>::Handle lhs, const UniqueHandle<CloserT> &rhs) noexcept {
-	return std::greater<void>()(lhs, rhs.Get());
+	return Greater()(lhs, rhs.Get());
 }
 
 template<class CloserT>
 bool operator<=(const UniqueHandle<CloserT> &lhs, const UniqueHandle<CloserT> &rhs) noexcept {
-	return std::less_equal<void>()(lhs.Get(), rhs.Get());
+	return LessEqual()(lhs.Get(), rhs.Get());
 }
 template<class CloserT>
 bool operator<=(const UniqueHandle<CloserT> &lhs, typename UniqueHandle<CloserT>::Handle rhs) noexcept {
-	return std::less_equal<void>()(lhs.Get(), rhs);
+	return LessEqual()(lhs.Get(), rhs);
 }
 template<class CloserT>
 bool operator<=(typename UniqueHandle<CloserT>::Handle lhs, const UniqueHandle<CloserT> &rhs) noexcept {
-	return std::less_equal<void>()(lhs, rhs.Get());
+	return LessEqual()(lhs, rhs.Get());
 }
 
 template<class CloserT>
 bool operator>=(const UniqueHandle<CloserT> &lhs, const UniqueHandle<CloserT> &rhs) noexcept {
-	return std::greater_equal<void>()(lhs.Get(), rhs.Get());
+	return GreaterEqual()(lhs.Get(), rhs.Get());
 }
 template<class CloserT>
 bool operator>=(const UniqueHandle<CloserT> &lhs, typename UniqueHandle<CloserT>::Handle rhs) noexcept {
-	return std::greater_equal<void>()(lhs.Get(), rhs);
+	return GreaterEqual()(lhs.Get(), rhs);
 }
 template<class CloserT>
 bool operator>=(typename UniqueHandle<CloserT>::Handle lhs, const UniqueHandle<CloserT> &rhs) noexcept {
-	return std::greater_equal<void>()(lhs, rhs.Get());
+	return GreaterEqual()(lhs, rhs.Get());
 }
 
 template<class CloserT>

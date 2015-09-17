@@ -27,7 +27,7 @@ private:
 
 public:
 	constexpr RingQueue() noexcept
-		: x_pStorage(nullptr), x_uBegin(1), x_uEnd(0), x_uRingCap(1)
+		: x_pStorage(nullptr), x_uBegin(0), x_uEnd(0), x_uRingCap(1)
 	{
 	}
 	template<typename ...ParamsT>
@@ -509,7 +509,7 @@ public:
 
 		x_pStorage  = pNewStorage;
 		x_uBegin    = 0;
-		x_uEnd      = static_cast<std::size_t>(pWrite - pNewStorage);
+		x_uEnd      = static_cast<std::size_t>(pWrite - pNewBegin);
 		x_uRingCap  = uElementsToAlloc;
 	}
 	void ReserveMore(std::size_t uDeltaCapacity){

@@ -13,31 +13,30 @@ namespace MCF {
 // 因为 Semaphore 现在维护一个大体上 FIFO 的顺序，我们就没必要操心了。
 
 // 构造函数和析构函数。
-ConditionVariable::ConditionVariable(Mutex &vMutex)
-	: x_vMutex(vMutex), x_uWaiting(0), x_vSemaphore(0, nullptr)
+ConditionVariable::ConditionVariable()
+	: x_uWaiting(0), x_vSemaphore(0, nullptr)
 {
 }
 
 // 其他非静态成员函数。
-bool ConditionVariable::Wait(std::uint64_t u64MilliSeconds) noexcept {
+bool ConditionVariable::Wait(Mutex &vMutex, std::uint64_t u64MilliSeconds) noexcept {
 	x_uWaiting.Increment(kAtomicRelaxed);
-	x_vMutex.Unlock();
+	vMutex.Unlock();
+	const bool bTakenOver = x_vSemaphore.Wait(u64MilliSeconds);
 
-	const bool bResult = x_vSemaphore.Wait(u64MilliSeconds);
-
-	x_vMutex.Lock();
-	if(!bResult){
+	vMutex.Lock();
+	if(!bTakenOver){
 		x_uWaiting.Decrement(kAtomicRelaxed);
+		return false;
 	}
-	return bResult;
+	return true;
 }
-void ConditionVariable::Wait() noexcept {
+void ConditionVariable::Wait(Mutex &vMutex) noexcept {
 	x_uWaiting.Increment(kAtomicRelaxed);
-	x_vMutex.Unlock();
-
+	vMutex.Unlock();
 	x_vSemaphore.Wait();
 
-	x_vMutex.Lock();
+	vMutex.Lock();
 }
 void ConditionVariable::Signal(std::size_t uMaxCount) noexcept {
 	std::size_t uToPost;

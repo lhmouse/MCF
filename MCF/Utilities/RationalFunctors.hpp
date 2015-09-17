@@ -21,8 +21,8 @@ namespace MCF {
 		}	\
 	};
 
-DEFINE_RATIONAL_FUNCTOR_(EqualTo,      ==)
-DEFINE_RATIONAL_FUNCTOR_(NotEqualTo,   !=)
+DEFINE_RATIONAL_FUNCTOR_(Equal,        ==)
+DEFINE_RATIONAL_FUNCTOR_(Unequal,      !=)
 DEFINE_RATIONAL_FUNCTOR_(Less,         < )
 DEFINE_RATIONAL_FUNCTOR_(Greater,      > )
 DEFINE_RATIONAL_FUNCTOR_(LessEqual,    <=)

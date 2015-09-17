@@ -16,19 +16,17 @@
 namespace MCF {
 
 namespace Impl_Function {
-	template<typename ElementT, typename = void>
-	struct CopyOrThrowHelper {
-		[[noreturn]]
-		IntrusivePtr<ElementT> operator()(const ElementT & /* vElement */) const {
-			DEBUG_THROW(Exception, ERROR_ACCESS_DENIED, "CopyOrThrowHelper::operator()()"_rcs);
+	struct FunctorCopier {
+		template<typename FuncT>
+		IntrusivePtr<FuncT> operator()(const FuncT &vFunc) const {
+			return IntrusivePtr<FuncT>(new auto(vFunc));
 		}
 	};
-	template<typename ElementT>
-	struct CopyOrThrowHelper<ElementT,
-		std::enable_if_t<std::is_copy_constructible<ElementT>::value>>
-	{
-		IntrusivePtr<ElementT> operator()(const ElementT &vElement) const {
-			return IntrusivePtr<ElementT>(new ElementT(vElement));
+	struct DummyFunctorCopier {
+		template<typename FuncT>
+		[[noreturn]]
+		IntrusivePtr<FuncT> operator()(const FuncT & /* vFunc */) const {
+			DEBUG_THROW(Exception, ERROR_ACCESS_DENIED, "DummyFunctorCopier::operator()()"_rcs);
 		}
 	};
 
@@ -58,7 +56,7 @@ namespace Impl_Function {
 			return Invoke(x_vFunc, std::forward<ParamsT>(vParams)...);
 		}
 		IntrusivePtr<FunctorBase<RetT, ParamsT...>> Fork() const override {
-			return CopyOrThrowHelper<Functor>()(*this);
+			return std::conditional_t<std::is_copy_constructible<FuncT>::value, FunctorCopier, DummyFunctorCopier>()(*this);
 		}
 	};
 }

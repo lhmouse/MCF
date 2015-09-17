@@ -6,14 +6,13 @@
 #define MCF_THREAD_CONDITION_VARIABLE_HPP_
 
 #include "../Utilities/Noncopyable.hpp"
+#include "_UniqueLockTemplate.hpp"
 #include "Semaphore.hpp"
 #include "Atomic.hpp"
 #include <cstddef>
 #include <cstdint>
 
 namespace MCF {
-
-class Mutex;
 
 class ConditionVariable : NONCOPYABLE {
 private:
@@ -24,8 +23,8 @@ public:
 	ConditionVariable();
 
 public:
-	bool Wait(Mutex &vMutex, std::uint64_t u64MilliSeconds) noexcept;
-	void Wait(Mutex &vMutex) noexcept;
+	bool Wait(Impl_UniqueLockTemplate::UniqueLockTemplateBase &vLock, std::uint64_t u64MilliSeconds) noexcept;
+	void Wait(Impl_UniqueLockTemplate::UniqueLockTemplateBase &vLock) noexcept;
 	void Signal(std::size_t uMaxCount = 1) noexcept;
 	void Broadcast() noexcept;
 };

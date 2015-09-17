@@ -19,24 +19,28 @@ ConditionVariable::ConditionVariable()
 }
 
 // 其他非静态成员函数。
-bool ConditionVariable::Wait(Mutex &vMutex, std::uint64_t u64MilliSeconds) noexcept {
+bool ConditionVariable::Wait(Impl_UniqueLockTemplate::UniqueLockTemplateBase &vLock, std::uint64_t u64MilliSeconds) noexcept {
+	ASSERT(vLock.GetLockCount() == 1);
+
 	x_uWaiting.Increment(kAtomicRelaxed);
-	vMutex.Unlock();
+	vLock.Unlock();
 	const bool bTakenOver = x_vSemaphore.Wait(u64MilliSeconds);
 
-	vMutex.Lock();
+	vLock.Lock();
 	if(!bTakenOver){
 		x_uWaiting.Decrement(kAtomicRelaxed);
 		return false;
 	}
 	return true;
 }
-void ConditionVariable::Wait(Mutex &vMutex) noexcept {
+void ConditionVariable::Wait(Impl_UniqueLockTemplate::UniqueLockTemplateBase &vLock) noexcept {
+	ASSERT(vLock.GetLockCount() == 1);
+
 	x_uWaiting.Increment(kAtomicRelaxed);
-	vMutex.Unlock();
+	vLock.Unlock();
 	x_vSemaphore.Wait();
 
-	vMutex.Lock();
+	vLock.Lock();
 }
 void ConditionVariable::Signal(std::size_t uMaxCount) noexcept {
 	std::size_t uToPost;

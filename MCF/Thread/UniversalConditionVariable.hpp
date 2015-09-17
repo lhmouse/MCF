@@ -26,28 +26,28 @@ public:
 	}
 
 public:
-	bool Wait(UniqueLockTemplateBase &vLock, std::uint64_t u64MilliSeconds) noexcept {
+	bool Wait(Impl_UniqueLockTemplate::UniqueLockTemplateBase &vLock, std::uint64_t u64MilliSeconds) noexcept {
 		ASSERT(vLock.GetLockCount() == 1);
 
 		x_mtxGuard.Lock();
 		vLock.Unlock();
-		const bool bTakenOver = x_condDelegator.Wait(u64MilliSeconds);
+		const bool bTakenOver = x_condDelegator.Wait(x_mtxGuard, u64MilliSeconds);
 
 		x_mtxGuard.Unlock();
 		vLock.Lock();
 		return bTakenOver;
 	}
-	void Wait(UniqueLockTemplateBase &vLock) noexcept {
+	void Wait(Impl_UniqueLockTemplate::UniqueLockTemplateBase &vLock) noexcept {
 		ASSERT(vLock.GetLockCount() == 1);
 
 		x_mtxGuard.Lock();
 		vLock.Unlock();
-		x_condDelegator.Wait();
+		x_condDelegator.Wait(x_mtxGuard);
 
 		x_mtxGuard.Unlock();
 		vLock.Lock();
 	}
-	void Signal(std::size_t uMaxCount) noexcept {
+	void Signal(std::size_t uMaxCount = 1) noexcept {
 		x_condDelegator.Signal(uMaxCount);
 	}
 	void Broadcast() noexcept {

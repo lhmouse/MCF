@@ -1,6 +1,6 @@
 #include <MCF/Thread/Thread.hpp>
 #include <MCF/Thread/Mutex.hpp>
-#include <MCF/Thread/ConditionVariable.hpp>
+#include <MCF/Thread/UniversalConditionVariable.hpp>
 #include <MCF/Containers/RingQueue.hpp>
 #include <MCFCRT/env/mcfwin.h>
 #include <iostream>
@@ -9,7 +9,7 @@
 using namespace MCF;
 
 Mutex queue_mutex;
-ConditionVariable queue_cv;
+UniversalConditionVariable queue_cv;
 RingQueue<std::string> queue;
 
 Mutex cout_mutex;
@@ -21,7 +21,7 @@ extern "C" unsigned MCFMain(){
 			while(queue.IsEmpty()){
 				{ const Mutex::UniqueLock cout_lock(cout_mutex);
 				  std::cout <<"Consumer is waiting for data..." <<std::endl; }
-				queue_cv.Wait(queue_mutex);
+				queue_cv.Wait(lock);
 			}
 			auto str = *std::move(queue.GetFirst());
 			queue.Shift();

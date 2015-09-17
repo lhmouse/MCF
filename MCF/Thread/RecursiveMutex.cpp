@@ -7,17 +7,19 @@
 
 namespace MCF {
 
-template<>
-bool RecursiveMutex::UniqueLock::X_DoTry() const noexcept {
-	return x_pOwner->Try() != RecursiveMutex::Result::kResTryFailed;
-}
-template<>
-void RecursiveMutex::UniqueLock::X_DoLock() const noexcept {
-	x_pOwner->Lock();
-}
-template<>
-void RecursiveMutex::UniqueLock::X_DoUnlock() const noexcept {
-	x_pOwner->Unlock();
+namespace Impl_UniqueLockTemplate {
+	template<>
+	bool RecursiveMutex::UniqueLock::X_DoTry() const noexcept {
+		return x_pOwner->Try() != RecursiveMutex::Result::kResTryFailed;
+	}
+	template<>
+	void RecursiveMutex::UniqueLock::X_DoLock() const noexcept {
+		x_pOwner->Lock();
+	}
+	template<>
+	void RecursiveMutex::UniqueLock::X_DoUnlock() const noexcept {
+		x_pOwner->Unlock();
+	}
 }
 
 // 构造函数和析构函数。

@@ -6,7 +6,7 @@
 #define MCF_THREAD_USER_MUTEX_HPP_
 
 #include "../Utilities/Noncopyable.hpp"
-#include "UniqueLockTemplate.hpp"
+#include "_UniqueLockTemplate.hpp"
 #include "Atomic.hpp"
 #include "Semaphore.hpp"
 #include <cstddef>
@@ -20,7 +20,7 @@ private:
 	struct X_QueueNode;
 
 public:
-	using UniqueLock = UniqueLockTemplate<Mutex>;
+	using UniqueLock = Impl_UniqueLockTemplate::UniqueLockTemplate<Mutex>;
 
 private:
 	Atomic<std::size_t> x_uSpinCount;

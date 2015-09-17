@@ -5,7 +5,7 @@
 #include "../StdMCF.hpp"
 #include "Thread.hpp"
 #include "../../MCFCRT/env/thread.h"
-#include "WaitForSingleObject64.hpp"
+#include "_WaitForSingleObject64.hpp"
 #include "../Core/Exception.hpp"
 #include "../Core/Time.hpp"
 
@@ -54,10 +54,10 @@ Thread::~Thread(){
 }
 
 bool Thread::Wait(std::uint64_t u64MilliSeconds) const noexcept {
-	return WaitForSingleObject64(x_hThread.Get(), &u64MilliSeconds);
+	return Impl_WaitForSingleObject64::WaitForSingleObject64(x_hThread.Get(), &u64MilliSeconds);
 }
 void Thread::Wait() const noexcept {
-	WaitForSingleObject64(x_hThread.Get(), nullptr);
+	Impl_WaitForSingleObject64::WaitForSingleObject64(x_hThread.Get(), nullptr);
 }
 
 std::exception_ptr Thread::JoinNoThrow() const noexcept {

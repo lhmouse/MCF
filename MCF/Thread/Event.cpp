@@ -4,7 +4,7 @@
 
 #include "../StdMCF.hpp"
 #include "Event.hpp"
-#include "WaitForSingleObject64.hpp"
+#include "_WaitForSingleObject64.hpp"
 #include "../Core/Exception.hpp"
 #include "../Core/String.hpp"
 
@@ -32,10 +32,10 @@ Event::Event(bool bInitSet, const WideString &wsName)
 
 // 其他非静态成员函数。
 bool Event::Wait(std::uint64_t u64MilliSeconds) const noexcept {
-	return WaitForSingleObject64(x_hEvent.Get(), &u64MilliSeconds);
+	return Impl_WaitForSingleObject64::WaitForSingleObject64(x_hEvent.Get(), &u64MilliSeconds);
 }
 void Event::Wait() const noexcept {
-	WaitForSingleObject64(x_hEvent.Get(), nullptr);
+	Impl_WaitForSingleObject64::WaitForSingleObject64(x_hEvent.Get(), nullptr);
 }
 bool Event::IsSet() const noexcept {
 	const auto dwResult = ::WaitForSingleObject(x_hEvent.Get(), 0);

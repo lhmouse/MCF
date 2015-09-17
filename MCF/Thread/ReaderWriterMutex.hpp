@@ -7,7 +7,7 @@
 
 #include "../Utilities/Noncopyable.hpp"
 #include "../Core/UniqueHandle.hpp"
-#include "UniqueLockTemplate.hpp"
+#include "_UniqueLockTemplate.hpp"
 #include "RecursiveMutex.hpp"
 #include "Mutex.hpp"
 #include <cstddef>
@@ -22,8 +22,8 @@ private:
 	};
 
 public:
-	using UniqueReaderLock = UniqueLockTemplate<ReaderWriterMutex, 0u>;
-	using UniqueWriterLock = UniqueLockTemplate<ReaderWriterMutex, 1u>;
+	using UniqueReaderLock = Impl_UniqueLockTemplate::UniqueLockTemplate<ReaderWriterMutex, 0u>;
+	using UniqueWriterLock = Impl_UniqueLockTemplate::UniqueLockTemplate<ReaderWriterMutex, 1u>;
 
 private:
 	RecursiveMutex x_mtxWriterGuard;

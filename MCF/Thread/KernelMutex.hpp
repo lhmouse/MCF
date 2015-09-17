@@ -8,14 +8,14 @@
 #include "../Utilities/Noncopyable.hpp"
 #include "../Core/String.hpp"
 #include "../Core/UniqueWin32Handle.hpp"
-#include "UniqueLockTemplate.hpp"
+#include "_UniqueLockTemplate.hpp"
 #include <cstdint>
 
 namespace MCF {
 
 class KernelMutex : NONCOPYABLE {
 public:
-	using UniqueLock = UniqueLockTemplate<KernelMutex>;
+	using UniqueLock = Impl_UniqueLockTemplate::UniqueLockTemplate<KernelMutex>;
 
 private:
 	const UniqueWin32Handle x_hMutex;

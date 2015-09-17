@@ -4,7 +4,7 @@
 
 #include "../StdMCF.hpp"
 #include "Semaphore.hpp"
-#include "WaitForSingleObject64.hpp"
+#include "_WaitForSingleObject64.hpp"
 #include "../Core/Exception.hpp"
 #include "../Core/String.hpp"
 
@@ -32,10 +32,10 @@ Semaphore::Semaphore(std::size_t uInitCount, const WideString &wsName)
 
 // 其他非静态成员函数。
 std::size_t Semaphore::Wait(std::uint64_t u64MilliSeconds) noexcept {
-	return WaitForSingleObject64(x_hSemaphore.Get(), &u64MilliSeconds);
+	return Impl_WaitForSingleObject64::WaitForSingleObject64(x_hSemaphore.Get(), &u64MilliSeconds);
 }
 void Semaphore::Wait() noexcept {
-	WaitForSingleObject64(x_hSemaphore.Get(), nullptr);
+	Impl_WaitForSingleObject64::WaitForSingleObject64(x_hSemaphore.Get(), nullptr);
 }
 std::size_t Semaphore::Post(std::size_t uPostCount) noexcept {
 	long lPrevCount;
@@ -48,7 +48,7 @@ std::size_t Semaphore::Post(std::size_t uPostCount) noexcept {
 std::size_t Semaphore::BatchWait(std::uint64_t u64MilliSeconds, std::size_t uWaitCount) noexcept {
 	std::size_t uSucceeded = 0;
 	while(uSucceeded < uWaitCount){
-		if(!WaitForSingleObject64(x_hSemaphore.Get(), &u64MilliSeconds)){
+		if(!Impl_WaitForSingleObject64::WaitForSingleObject64(x_hSemaphore.Get(), &u64MilliSeconds)){
 			break;
 		}
 		++uSucceeded;
@@ -58,7 +58,7 @@ std::size_t Semaphore::BatchWait(std::uint64_t u64MilliSeconds, std::size_t uWai
 void Semaphore::BatchWait(std::size_t uWaitCount) noexcept {
 	std::size_t uSucceeded = 0;
 	while(uSucceeded < uWaitCount){
-		WaitForSingleObject64(x_hSemaphore.Get(), nullptr);
+		Impl_WaitForSingleObject64::WaitForSingleObject64(x_hSemaphore.Get(), nullptr);
 	}
 }
 

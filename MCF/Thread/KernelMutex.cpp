@@ -4,7 +4,7 @@
 
 #include "../StdMCF.hpp"
 #include "KernelMutex.hpp"
-#include "WaitForSingleObject64.hpp"
+#include "_WaitForSingleObject64.hpp"
 #include "../Core/Exception.hpp"
 #include "../Core/String.hpp"
 
@@ -20,17 +20,19 @@ namespace {
 	}
 }
 
-template<>
-bool KernelMutex::UniqueLock::X_DoTry() const noexcept {
-	return x_pOwner->Try(0);
-}
-template<>
-void KernelMutex::UniqueLock::X_DoLock() const noexcept {
-	x_pOwner->Lock();
-}
-template<>
-void KernelMutex::UniqueLock::X_DoUnlock() const noexcept {
-	x_pOwner->Unlock();
+namespace Impl_UniqueLockTemplate {
+	template<>
+	bool KernelMutex::UniqueLock::X_DoTry() const noexcept {
+		return x_pOwner->Try(0);
+	}
+	template<>
+	void KernelMutex::UniqueLock::X_DoLock() const noexcept {
+		x_pOwner->Lock();
+	}
+	template<>
+	void KernelMutex::UniqueLock::X_DoUnlock() const noexcept {
+		x_pOwner->Unlock();
+	}
 }
 
 // 构造函数和析构函数。
@@ -45,10 +47,10 @@ KernelMutex::KernelMutex(const WideString &wsName)
 
 // 其他非静态成员函数。
 bool KernelMutex::Try(std::uint64_t u64MilliSeconds) noexcept {
-	return WaitForSingleObject64(x_hMutex.Get(), &u64MilliSeconds);
+	return Impl_WaitForSingleObject64::WaitForSingleObject64(x_hMutex.Get(), &u64MilliSeconds);
 }
 void KernelMutex::Lock() noexcept {
-	WaitForSingleObject64(x_hMutex.Get(), nullptr);
+	Impl_WaitForSingleObject64::WaitForSingleObject64(x_hMutex.Get(), nullptr);
 }
 void KernelMutex::Unlock() noexcept {
 	if(!::ReleaseMutex(x_hMutex.Get())){

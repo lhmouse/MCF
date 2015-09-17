@@ -10,17 +10,19 @@
 
 namespace MCF {
 
-template<>
-bool Mutex::UniqueLock::X_DoTry() const noexcept {
-	return x_pOwner->Try();
-}
-template<>
-void Mutex::UniqueLock::X_DoLock() const noexcept {
-	x_pOwner->Lock();
-}
-template<>
-void Mutex::UniqueLock::X_DoUnlock() const noexcept {
-	x_pOwner->Unlock();
+namespace Impl_UniqueLockTemplate {
+	template<>
+	bool Mutex::UniqueLock::X_DoTry() const noexcept {
+		return x_pOwner->Try();
+	}
+	template<>
+	void Mutex::UniqueLock::X_DoLock() const noexcept {
+		x_pOwner->Lock();
+	}
+	template<>
+	void Mutex::UniqueLock::X_DoUnlock() const noexcept {
+		x_pOwner->Unlock();
+	}
 }
 
 // 嵌套类定义。

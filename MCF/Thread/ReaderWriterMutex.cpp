@@ -16,30 +16,32 @@ void ReaderWriterMutex::X_TlsIndexDeleter::operator()(std::size_t uTlsIndex) con
 	::TlsFree(uTlsIndex);
 }
 
-template<>
-bool ReaderWriterMutex::UniqueReaderLock::X_DoTry() const noexcept {
-	return x_pOwner->TryAsReader() != ReaderWriterMutex::Result::kResTryFailed;
-}
-template<>
-void ReaderWriterMutex::UniqueReaderLock::X_DoLock() const noexcept {
-	x_pOwner->LockAsReader();
-}
-template<>
-void ReaderWriterMutex::UniqueReaderLock::X_DoUnlock() const noexcept {
-	x_pOwner->UnlockAsReader();
-}
+namespace Impl_UniqueLockTemplate {
+	template<>
+	bool ReaderWriterMutex::UniqueReaderLock::X_DoTry() const noexcept {
+		return x_pOwner->TryAsReader() != ReaderWriterMutex::Result::kResTryFailed;
+	}
+	template<>
+	void ReaderWriterMutex::UniqueReaderLock::X_DoLock() const noexcept {
+		x_pOwner->LockAsReader();
+	}
+	template<>
+	void ReaderWriterMutex::UniqueReaderLock::X_DoUnlock() const noexcept {
+		x_pOwner->UnlockAsReader();
+	}
 
-template<>
-bool ReaderWriterMutex::UniqueWriterLock::X_DoTry() const noexcept {
-	return x_pOwner->TryAsWriter() != ReaderWriterMutex::Result::kResTryFailed;
-}
-template<>
-void ReaderWriterMutex::UniqueWriterLock::X_DoLock() const noexcept {
-	x_pOwner->LockAsWriter();
-}
-template<>
-void ReaderWriterMutex::UniqueWriterLock::X_DoUnlock() const noexcept {
-	x_pOwner->UnlockAsWriter();
+	template<>
+	bool ReaderWriterMutex::UniqueWriterLock::X_DoTry() const noexcept {
+		return x_pOwner->TryAsWriter() != ReaderWriterMutex::Result::kResTryFailed;
+	}
+	template<>
+	void ReaderWriterMutex::UniqueWriterLock::X_DoLock() const noexcept {
+		x_pOwner->LockAsWriter();
+	}
+	template<>
+	void ReaderWriterMutex::UniqueWriterLock::X_DoUnlock() const noexcept {
+		x_pOwner->UnlockAsWriter();
+	}
 }
 
 // 构造函数和析构函数。

@@ -7,7 +7,7 @@
 
 #include "../Utilities/Noncopyable.hpp"
 #include "../Utilities/Assert.hpp"
-#include "UniqueLockTemplate.hpp"
+#include "_UniqueLockTemplate.hpp"
 #include "Mutex.hpp"
 #include <cstddef>
 
@@ -23,7 +23,7 @@ struct RecursiveMutexResults {
 
 class RecursiveMutex : NONCOPYABLE, public RecursiveMutexResults {
 public:
-	using UniqueLock = UniqueLockTemplate<RecursiveMutex>;
+	using UniqueLock = Impl_UniqueLockTemplate::UniqueLockTemplate<RecursiveMutex>;
 
 private:
 	Mutex x_vMutex;

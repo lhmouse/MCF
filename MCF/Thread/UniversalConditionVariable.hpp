@@ -6,7 +6,7 @@
 #define MCF_THREAD_UNIVERSAL_CONDITION_VARIABLE_HPP_
 
 #include "../Utilities/Noncopyable.hpp"
-#include "UniqueLockTemplate.hpp"
+#include "_UniqueLockTemplate.hpp"
 #include "Mutex.hpp"
 #include "ConditionVariable.hpp"
 #include <cstddef>

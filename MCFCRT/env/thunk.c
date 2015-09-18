@@ -24,10 +24,12 @@ typedef struct tagThunkInfo {
 
 static inline ThunkInfo *GetInfoFromThunkIndex(const MCF_AvlNodeHeader *pThunkIndex){
 	ASSERT(pThunkIndex);
+
 	return (ThunkInfo *)((char *)pThunkIndex - offsetof(ThunkInfo, vThunkIndex));
 }
 static inline ThunkInfo *GetInfoFromFreeSizeIndex(const MCF_AvlNodeHeader *pFreeSizeIndex){
 	ASSERT(pFreeSizeIndex);
+
 	return (ThunkInfo *)((char *)pFreeSizeIndex - offsetof(ThunkInfo, vFreeSizeIndex));
 }
 

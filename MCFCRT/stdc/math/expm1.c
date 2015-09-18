@@ -34,8 +34,8 @@ float expm1f(float x){
 		"fmulp st(1), st \n"
 		"fadd qword ptr[%2] \n"
 		"2: \n"
-		__MCF_FLT_RET_ST("%1")
-		: __MCF_FLT_RET_CONS(ret)
+		__FLT_RET_ST("%1")
+		: __FLT_RET_CONS(ret)
 		: "m"(x), "m"(__MCF_CRT_kMath_Neg_1_0), "m"(__MCF_CRT_kMath_Pos_1_0)
 		: "ax"
 	);
@@ -70,8 +70,8 @@ double expm1(double x){
 		"fmulp st(1), st \n"
 		"fadd qword ptr[%2] \n"
 		"2: \n"
-		__MCF_DBL_RET_ST("%1")
-		: __MCF_DBL_RET_CONS(ret)
+		__DBL_RET_ST("%1")
+		: __DBL_RET_CONS(ret)
 		: "m"(x), "m"(__MCF_CRT_kMath_Neg_1_0), "m"(__MCF_CRT_kMath_Pos_1_0)
 		: "ax"
 	);
@@ -107,8 +107,8 @@ long double expm1l(long double x){
 		"fmulp st(1), st \n"
 		"fadd qword ptr[%2] \n"
 		"2: \n"
-		__MCF_LDBL_RET_ST("%1")
-		: __MCF_LDBL_RET_CONS(ret)
+		__LDBL_RET_ST("%1")
+		: __LDBL_RET_CONS(ret)
 		: "m"(x), "m"(__MCF_CRT_kMath_Neg_1_0), "m"(__MCF_CRT_kMath_Pos_1_0)
 		: "ax"
 	);

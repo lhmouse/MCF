@@ -29,7 +29,7 @@ float fmaxf(float x, float y){
 		"xor %4, %3 \n"
 		"fld dword ptr[%4] \n"
 #endif
-		: "=r"(unused), "=r"(unused), __MCF_FLT_RET_CONS(ret)
+		: "=r"(unused), "=r"(unused), __FLT_RET_CONS(ret)
 		: "0"(&x), "1"(&y)
 		: "ax"
 	);
@@ -60,7 +60,7 @@ double fmax(double x, double y){
 		"xor %4, %3 \n"
 		"fld qword ptr[%4] \n"
 #endif
-		: "=r"(unused), "=r"(unused), __MCF_DBL_RET_CONS(ret)
+		: "=r"(unused), "=r"(unused), __DBL_RET_CONS(ret)
 		: "0"(&x), "1"(&y)
 		: "ax"
 	);
@@ -89,7 +89,7 @@ long double fmaxl(long double x, long double y){
 		"xor %4, %3 \n"
 #endif
 		"fld tbyte ptr[%4] \n"
-		: "=r"(unused), "=r"(unused), __MCF_LDBL_RET_CONS(ret)
+		: "=r"(unused), "=r"(unused), __LDBL_RET_CONS(ret)
 		: "0"(&x), "1"(&y)
 		: "ax"
 	);

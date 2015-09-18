@@ -31,9 +31,9 @@ float remquof(float x, float y, int *quo){
 		"sar eax, 31 \n"
 		"xor ecx, eax \n"
 		"sub ecx, eax \n"
-		__MCF_FLT_RET_ST("%1")
+		__FLT_RET_ST("%1")
 		"mov dword ptr[%3], ecx \n"
-		: __MCF_FLT_RET_CONS(ret)
+		: __FLT_RET_CONS(ret)
 		: "m"(x), "m"(y), "r"(quo)
 		: "ax", "cx"
 	);
@@ -66,9 +66,9 @@ double remquo(double x, double y, int *quo){
 		"sar eax, 31 \n"
 		"xor ecx, eax \n"
 		"sub ecx, eax \n"
-		__MCF_DBL_RET_ST("%1")
+		__DBL_RET_ST("%1")
 		"mov dword ptr[%3], ecx \n"
-		: __MCF_DBL_RET_CONS(ret)
+		: __DBL_RET_CONS(ret)
 		: "m"(x), "m"(y), "r"(quo)
 		: "ax", "cx"
 	);
@@ -102,9 +102,9 @@ long double remquol(long double x, long double y, int *quo){
 		"sar eax, 31 \n"
 		"xor ecx, eax \n"
 		"sub ecx, eax \n"
-		__MCF_LDBL_RET_ST("%1")
+		__LDBL_RET_ST("%1")
 		"mov dword ptr[%3], ecx \n"
-		: __MCF_LDBL_RET_CONS(ret)
+		: __LDBL_RET_CONS(ret)
 		: "m"(x), "m"(y), "r"(quo)
 		: "ax", "cx"
 	);

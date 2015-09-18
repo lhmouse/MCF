@@ -7,22 +7,22 @@
 
 float ceilf(float x){
 	register float ret;
-	uint16_t fcw;
+	uint64_t temp[2];
 	__asm__ __volatile__(
-		"fstcw word ptr[%2] \n"
-		"fld dword ptr[%1] \n"
-		"movzx eax, word ptr[%2] \n"
+		"fstcw word ptr[%1] \n"
+		"fld dword ptr[%2] \n"
+		"movzx eax, word ptr[%1] \n"
 		"mov ecx, eax \n"
 		"and ecx, 0xF3FF \n"
 		"or ecx, 0x0800 \n"
-		"mov word ptr[%2], cx \n"
-		"fldcw word ptr[%2] \n"
+		"mov word ptr[%1], cx \n"
+		"fldcw word ptr[%1] \n"
 		"frndint \n"
-		"mov word ptr[%2], ax \n"
-		__MCF_FLT_RET_ST("%1")
-		"fldcw word ptr[%2] \n"
-		: __MCF_FLT_RET_CONS(ret)
-		: "m"(x), "m"(fcw)
+		"mov word ptr[%1], ax \n"
+		__FLT_RET_ST("%2")
+		"fldcw word ptr[%1] \n"
+		: __FLT_RET_CONS(ret), "=m"(temp)
+		: "m"(x)
 		: "ax", "cx"
 	);
 	return ret;
@@ -30,22 +30,22 @@ float ceilf(float x){
 
 double ceil(double x){
 	register double ret;
-	uint16_t fcw;
+	uint64_t temp[2];
 	__asm__ __volatile__(
-		"fstcw word ptr[%2] \n"
-		"fld qword ptr[%1] \n"
-		"movzx eax, word ptr[%2] \n"
+		"fstcw word ptr[%1] \n"
+		"fld qword ptr[%2] \n"
+		"movzx eax, word ptr[%1] \n"
 		"mov ecx, eax \n"
 		"and ecx, 0xF3FF \n"
 		"or ecx, 0x0800 \n"
-		"mov word ptr[%2], cx \n"
-		"fldcw word ptr[%2] \n"
+		"mov word ptr[%1], cx \n"
+		"fldcw word ptr[%1] \n"
 		"frndint \n"
-		"mov word ptr[%2], ax \n"
-		__MCF_DBL_RET_ST("%1")
-		"fldcw word ptr[%2] \n"
-		: __MCF_DBL_RET_CONS(ret)
-		: "m"(x), "m"(fcw)
+		"mov word ptr[%1], ax \n"
+		__DBL_RET_ST("%2")
+		"fldcw word ptr[%1] \n"
+		: __DBL_RET_CONS(ret), "=m"(temp)
+		: "m"(x)
 		: "ax", "cx"
 	);
 	return ret;
@@ -53,22 +53,22 @@ double ceil(double x){
 
 long double ceill(long double x){
 	register long double ret;
-	uint16_t fcw;
+	uint64_t temp[2];
 	__asm__ __volatile__(
-		"fstcw word ptr[%2] \n"
-		"fld tbyte ptr[%1] \n"
-		"movzx eax, word ptr[%2] \n"
+		"fstcw word ptr[%1] \n"
+		"fld tbyte ptr[%2] \n"
+		"movzx eax, word ptr[%1] \n"
 		"mov ecx, eax \n"
 		"and ecx, 0xF3FF \n"
 		"or ecx, 0x0800 \n"
-		"mov word ptr[%2], cx \n"
-		"fldcw word ptr[%2] \n"
+		"mov word ptr[%1], cx \n"
+		"fldcw word ptr[%1] \n"
 		"frndint \n"
-		"mov word ptr[%2], ax \n"
-		__MCF_LDBL_RET_ST("%1")
-		"fldcw word ptr[%2] \n"
-		: __MCF_LDBL_RET_CONS(ret)
-		: "m"(x), "m"(fcw)
+		"mov word ptr[%1], ax \n"
+		__LDBL_RET_ST("%2")
+		"fldcw word ptr[%1] \n"
+		: __LDBL_RET_CONS(ret), "=m"(temp)
+		: "m"(x)
 		: "ax", "cx"
 	);
 	return ret;

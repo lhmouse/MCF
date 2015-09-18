@@ -21,8 +21,8 @@ float expf(float x){
 		"fld1 \n"
 		"faddp st(1), st \n"
 		"fmulp st(1), st \n"
-		__MCF_FLT_RET_ST("%1")
-		: __MCF_FLT_RET_CONS(ret)
+		__FLT_RET_ST("%1")
+		: __FLT_RET_CONS(ret)
 		: "m"(x)
 	);
 	return ret;
@@ -44,8 +44,8 @@ double exp(double x){
 		"fld1 \n"
 		"faddp st(1), st \n"
 		"fmulp st(1), st \n"
-		__MCF_DBL_RET_ST("%1")
-		: __MCF_DBL_RET_CONS(ret)
+		__DBL_RET_ST("%1")
+		: __DBL_RET_CONS(ret)
 		: "m"(x)
 	);
 	return ret;
@@ -68,8 +68,8 @@ long double expl(long double x){
 		"fld1 \n"
 		"faddp st(1), st \n"
 		"fmulp st(1), st \n"
-		__MCF_LDBL_RET_ST("%1")
-		: __MCF_LDBL_RET_CONS(ret)
+		__LDBL_RET_ST("%1")
+		: __LDBL_RET_CONS(ret)
 		: "m"(x)
 	);
 	return ret;

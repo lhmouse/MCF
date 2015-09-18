@@ -100,8 +100,8 @@ static float ppowf(float x, float y){
 		"fld1 \n"
 		"faddp st(1), st \n"
 		"fmulp st(1), st \n"
-		__MCF_FLT_RET_ST("%1")
-		: __MCF_FLT_RET_CONS(ret)
+		__FLT_RET_ST("%1")
+		: __FLT_RET_CONS(ret)
 		: "m"(x), "m"(y)
 	);
 	return ret;
@@ -123,8 +123,8 @@ static double ppowd(double x, double y){
 		"fld1 \n"
 		"faddp st(1), st \n"
 		"fmulp st(1), st \n"
-		__MCF_DBL_RET_ST("%1")
-		: __MCF_DBL_RET_CONS(ret)
+		__DBL_RET_ST("%1")
+		: __DBL_RET_CONS(ret)
 		: "m"(x), "m"(y)
 	);
 	return ret;
@@ -146,8 +146,8 @@ static long double ppowl(double x, double y){
 		"fld1 \n"
 		"faddp st(1), st \n"
 		"fmulp st(1), st \n"
-		__MCF_LDBL_RET_ST("%1")
-		: __MCF_LDBL_RET_CONS(ret)
+		__LDBL_RET_ST("%1")
+		: __LDBL_RET_CONS(ret)
 		: "m"(x), "m"(y)
 	);
 	return ret;

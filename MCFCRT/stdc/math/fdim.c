@@ -27,7 +27,7 @@ float fdimf(float x, float y){
 		"and dword ptr[%1], eax \n"
 		"fld dword ptr[%1] \n"
 #endif
-		: __MCF_FLT_RET_CONS(ret)
+		: __FLT_RET_CONS(ret)
 		: "m"(x), "m"(y)
 		: "ax"
 	);
@@ -57,7 +57,7 @@ double fdim(double x, double y){
 		"and dword ptr[%1 + 4], eax \n"
 		"fld qword ptr[%1] \n"
 #endif
-		: __MCF_DBL_RET_CONS(ret)
+		: __DBL_RET_CONS(ret)
 		: "m"(x), "m"(y)
 		: "ax"
 	);
@@ -87,7 +87,7 @@ long double fdiml(long double x, long double y){
 #endif
 		"and word ptr[%1 + 8], ax \n"
 		"fld tbyte ptr[%1] \n"
-		: __MCF_LDBL_RET_CONS(ret)
+		: __LDBL_RET_CONS(ret)
 		: "m"(x), "m"(y)
 		: "ax"
 	);

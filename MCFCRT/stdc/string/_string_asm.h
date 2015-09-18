@@ -9,23 +9,23 @@
 
 #if defined(__x86_64__)
 
-#	define __RAX		"rax"
-#	define __RCX		"rcx"
-#	define __RDX		"rdx"
-#	define __RBX		"rbx"
-#	define __RBP		"rbp"
-#	define __RSI		"rsi"
-#	define __RDI		"rdi"
+#	define __RAX	"rax"
+#	define __RCX	"rcx"
+#	define __RDX	"rdx"
+#	define __RBX	"rbx"
+#	define __RBP	"rbp"
+#	define __RSI	"rsi"
+#	define __RDI	"rdi"
 
 #elif defined(__i386__)
 
-#	define __RAX		"eax"
-#	define __RCX		"ecx"
-#	define __RDX		"edx"
-#	define __RBX		"ebx"
-#	define __RBP		"ebp"
-#	define __RSI		"esi"
-#	define __RDI		"edi"
+#	define __RAX	"eax"
+#	define __RCX	"ecx"
+#	define __RDX	"edx"
+#	define __RBX	"ebx"
+#	define __RBP	"ebp"
+#	define __RSI	"esi"
+#	define __RDI	"edi"
 
 #else
 

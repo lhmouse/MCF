@@ -11,8 +11,8 @@ float log2f(float x){
 		"fld1 \n"
 		"fld dword ptr[%1] \n"
 		"fyl2x \n"
-		__MCF_FLT_RET_ST("%1")
-		: __MCF_FLT_RET_CONS(ret)
+		__FLT_RET_ST("%1")
+		: __FLT_RET_CONS(ret)
 		: "m"(x)
 	);
 	return ret;
@@ -24,8 +24,8 @@ double log2(double x){
 		"fld1 \n"
 		"fld qword ptr[%1] \n"
 		"fyl2x \n"
-		__MCF_DBL_RET_ST("%1")
-		: __MCF_DBL_RET_CONS(ret)
+		__DBL_RET_ST("%1")
+		: __DBL_RET_CONS(ret)
 		: "m"(x)
 	);
 	return ret;
@@ -37,8 +37,8 @@ long double log2l(long double x){
 		"fld1 \n"
 		"fld tbyte ptr[%1] \n"
 		"fyl2x \n"
-		__MCF_LDBL_RET_ST("%1")
-		: __MCF_LDBL_RET_CONS(ret)
+		__LDBL_RET_ST("%1")
+		: __LDBL_RET_CONS(ret)
 		: "m"(x)
 	);
 	return ret;

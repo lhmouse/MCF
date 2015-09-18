@@ -7,7 +7,7 @@
 
 long lroundf(float x){
 	long ret;
-	uint16_t fcw;
+	uint64_t temp[2];
 	__asm__ __volatile__(
 		"fstcw word ptr[%1] \n"
 #ifdef _WIN64
@@ -33,7 +33,7 @@ long lroundf(float x){
 		"mov word ptr[%1], ax \n"
 		"fistp dword ptr[%0] \n"
 		"fldcw word ptr[%1] \n"
-		: "=m"(ret), "=m"(fcw)
+		: "=m"(ret), "=m"(temp)
 		: "m"(x), "r"(&__MCF_CRT_kMath_Neg_0_5), "r"(&__MCF_CRT_kMath_Pos_0_5)
 		: "ax", "cx", "dx"
 	);
@@ -42,7 +42,7 @@ long lroundf(float x){
 
 long lround(double x){
 	long ret;
-	uint16_t fcw;
+	uint64_t temp[2];
 	__asm__ __volatile__(
 		"fstcw word ptr[%1] \n"
 #ifdef _WIN64
@@ -68,7 +68,7 @@ long lround(double x){
 		"mov word ptr[%1], ax \n"
 		"fistp dword ptr[%0] \n"
 		"fldcw word ptr[%1] \n"
-		: "=m"(ret), "=m"(fcw)
+		: "=m"(ret), "=m"(temp)
 		: "m"(x), "r"(&__MCF_CRT_kMath_Neg_0_5), "r"(&__MCF_CRT_kMath_Pos_0_5)
 		: "ax", "cx", "dx"
 	);
@@ -77,7 +77,7 @@ long lround(double x){
 
 long lroundl(long double x){
 	long ret;
-	uint16_t fcw;
+	uint64_t temp[2];
 	__asm__ __volatile__(
 		"fstcw word ptr[%1] \n"
 #ifdef _WIN64
@@ -103,7 +103,7 @@ long lroundl(long double x){
 		"mov word ptr[%1], ax \n"
 		"fistp dword ptr[%0] \n"
 		"fldcw word ptr[%1] \n"
-		: "=m"(ret), "=m"(fcw)
+		: "=m"(ret), "=m"(temp)
 		: "m"(x), "r"(&__MCF_CRT_kMath_Neg_0_5), "r"(&__MCF_CRT_kMath_Pos_0_5)
 		: "ax", "cx", "dx"
 	);

@@ -8,7 +8,7 @@
 
 float roundf(float x){
 	register float ret;
-	uint16_t fcw;
+	uint64_t temp[2];
 	__asm__ __volatile__(
 		"fstcw word ptr[%1] \n"
 #ifdef _WIN64
@@ -32,9 +32,9 @@ float roundf(float x){
 		"fldcw word ptr[%1] \n"
 		"frndint \n"
 		"mov word ptr[%1], ax \n"
-		__MCF_FLT_RET_ST("%2")
+		__FLT_RET_ST("%2")
 		"fldcw word ptr[%1] \n"
-		: __MCF_FLT_RET_CONS(ret), "=m"(fcw)
+		: __FLT_RET_CONS(ret), "=m"(temp)
 		: "m"(x), "r"(&__MCF_CRT_kMath_Neg_0_5), "r"(&__MCF_CRT_kMath_Pos_0_5)
 		: "ax", "cx", "dx"
 	);
@@ -43,7 +43,7 @@ float roundf(float x){
 
 double round(double x){
 	register double ret;
-	uint16_t fcw;
+	uint64_t temp[2];
 	__asm__ __volatile__(
 		"fstcw word ptr[%1] \n"
 #ifdef _WIN64
@@ -67,9 +67,9 @@ double round(double x){
 		"fldcw word ptr[%1] \n"
 		"frndint \n"
 		"mov word ptr[%1], ax \n"
-		__MCF_DBL_RET_ST("%2")
+		__DBL_RET_ST("%2")
 		"fldcw word ptr[%1] \n"
-		: __MCF_DBL_RET_CONS(ret), "=m"(fcw)
+		: __DBL_RET_CONS(ret), "=m"(temp)
 		: "m"(x), "r"(&__MCF_CRT_kMath_Neg_0_5), "r"(&__MCF_CRT_kMath_Pos_0_5)
 		: "ax", "cx", "dx"
 	);
@@ -78,7 +78,7 @@ double round(double x){
 
 long double roundl(long double x){
 	register long double ret;
-	uint16_t fcw;
+	uint64_t temp[2];
 	__asm__ __volatile__(
 		"fstcw word ptr[%1] \n"
 #ifdef _WIN64
@@ -102,9 +102,9 @@ long double roundl(long double x){
 		"fldcw word ptr[%1] \n"
 		"frndint \n"
 		"mov word ptr[%1], ax \n"
-		__MCF_LDBL_RET_ST("%1")
+		__LDBL_RET_ST("%1")
 		"fldcw word ptr[%1] \n"
-		: __MCF_LDBL_RET_CONS(ret), "=m"(fcw)
+		: __LDBL_RET_CONS(ret), "=m"(temp)
 		: "m"(x), "r"(&__MCF_CRT_kMath_Neg_0_5), "r"(&__MCF_CRT_kMath_Pos_0_5)
 		: "ax", "cx", "dx"
 	);

@@ -11,8 +11,8 @@ float atanf(float x){
 		"fld dword ptr[%1] \n"
 		"fld1 \n"
 		"fpatan \n"
-		__MCF_FLT_RET_ST("%1")
-		: __MCF_FLT_RET_CONS(ret)
+		__FLT_RET_ST("%1")
+		: __FLT_RET_CONS(ret)
 		: "m"(x)
 	);
 	return ret;
@@ -24,8 +24,8 @@ double atan(double x){
 		"fld qword ptr[%1] \n"
 		"fld1 \n"
 		"fpatan \n"
-		__MCF_DBL_RET_ST("%1")
-		: __MCF_DBL_RET_CONS(ret)
+		__DBL_RET_ST("%1")
+		: __DBL_RET_CONS(ret)
 		: "m"(x)
 	);
 	return ret;
@@ -37,8 +37,8 @@ long double atanl(long double x){
 		"fld tbyte ptr[%1] \n"
 		"fld1 \n"
 		"fpatan \n"
-		__MCF_LDBL_RET_ST("%1")
-		: __MCF_LDBL_RET_CONS(ret)
+		__LDBL_RET_ST("%1")
+		: __LDBL_RET_CONS(ret)
 		: "m"(x)
 	);
 	return ret;

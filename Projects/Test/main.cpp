@@ -1,9 +1,16 @@
+#include <MCF/Core/Thunk.hpp>
+#include <MCF/Containers/RingQueue.hpp>
 #include <cstdio>
-#include <cmath>
-
-double d = -9.9999;
 
 extern "C" unsigned MCFMain(){
-	std::printf("floor = %f\n", std::floor(d));
+	MCF::RingQueue<MCF::ThunkPtr> thunks;
+	try {
+		static char data[100];
+		for(;;){
+			thunks.Push(MCF::CreateThunk(data, sizeof(data)));
+		}
+	} catch(std::bad_alloc&e){
+		std::printf("bad_alloc: allocated %zu thunks\n", thunks.GetSize());
+	}
 	return 0;
 }

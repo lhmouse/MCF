@@ -44,8 +44,8 @@ typedef int (*MCF_AvlComparatorNodeOther)(const MCF_AvlNodeHeader *, MCF_STD int
 
 static inline void MCF_AvlAttachWithHint(MCF_AvlRoot *__ppRoot,
 	// 如果新节点被插入到该节点前后相邻的位置，则效率被优化。
-	// 此处行为和 C++03 C++11 都兼容。
-	// __pHint 为空则调用 MCF_AvlAttach()。
+	// 此处行为和 C++03 以及 C++11 都兼容。
+	// __pHint 可以为空。
 	MCF_AvlNodeHeader *__pHint,
 	MCF_AvlNodeHeader *__pNode, MCF_AvlComparatorNodes __pfnComparator)
 {

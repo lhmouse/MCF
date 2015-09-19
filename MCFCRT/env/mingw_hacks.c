@@ -126,6 +126,7 @@ int __mingwthr_remove_key_dtor(unsigned long ulKey){
 	return 0;
 }
 
+__attribute__((__weak__))
 unsigned _get_output_format(){
 	return 0;
 }

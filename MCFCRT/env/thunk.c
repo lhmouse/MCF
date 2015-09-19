@@ -53,18 +53,38 @@ static int FreeSizeComparatorNodes(const MCF_AvlNodeHeader *pIndex1, const MCF_A
 	return FreeSizeComparatorNodeKey(pIndex1, (intptr_t)GetInfoFromFreeSizeIndex(pIndex2)->uFreeSize);
 }
 
-static SRWLOCK     g_srwlMutex            = SRWLOCK_INIT;
-static uintptr_t   g_uPageMask            = 0;
+static CRITICAL_SECTION g_csMutex;
 
-static MCF_AvlRoot g_pavlThunksByThunk    = nullptr;
-static MCF_AvlRoot g_pavlThunksByFreeSize = nullptr;
+__attribute__((__constructor__(101)))
+static void MutexCtor(){
+	if(!InitializeCriticalSectionEx(&g_csMutex, 0x1000u,
+#ifdef NDEBUG
+		CRITICAL_SECTION_NO_DEBUG_INFO
+#else
+		0
+#endif
+		))
+	{
+		abort();
+	}
+}
+
+__attribute__((__destructor__(101)))
+static void MutexDtor(){
+	DeleteCriticalSection(&g_csMutex);
+}
+
+static uintptr_t        g_uPageMask            = 0;
+
+static MCF_AvlRoot      g_pavlThunksByThunk    = nullptr;
+static MCF_AvlRoot      g_pavlThunksByFreeSize = nullptr;
 
 void *MCF_CRT_AllocateThunk(const void *pInit, size_t uSize){
 	ASSERT(pInit);
 
 	char *pRet = nullptr;
 
-	AcquireSRWLockExclusive(&g_srwlMutex);
+	EnterCriticalSection(&g_csMutex);
 	{
 		if(g_uPageMask == 0){
 			SYSTEM_INFO vSystemInfo;
@@ -149,7 +169,7 @@ void *MCF_CRT_AllocateThunk(const void *pInit, size_t uSize){
 		VirtualProtect(pRet, uThunkSize, PAGE_EXECUTE_READ, &dwOldProtect);
 	}
 jDone:
-	ReleaseSRWLockExclusive(&g_srwlMutex);
+	LeaveCriticalSection(&g_csMutex);
 
 	if(!pRet){
 		SetLastError(ERROR_NOT_ENOUGH_MEMORY);
@@ -159,7 +179,7 @@ jDone:
 void MCF_CRT_DeallocateThunk(void *pThunk, bool bToPoison){
 	void *pPageToRelease;
 
-	AcquireSRWLockExclusive(&g_srwlMutex);
+	EnterCriticalSection(&g_csMutex);
 	{
 		MCF_AvlNodeHeader *pThunkIndex = MCF_AvlFind(&g_pavlThunksByThunk, (intptr_t)pThunk, &ThunkComparatorNodeKey);
 		ThunkInfo *pInfo;
@@ -221,7 +241,7 @@ void MCF_CRT_DeallocateThunk(void *pThunk, bool bToPoison){
 			MCF_AvlAttach(&g_pavlThunksByFreeSize, &(pInfo->vFreeSizeIndex), &FreeSizeComparatorNodes);
 		}
 	}
-	ReleaseSRWLockExclusive(&g_srwlMutex);
+	LeaveCriticalSection(&g_csMutex);
 
 	if(pPageToRelease){
 		VirtualFree(pPageToRelease, 0, MEM_RELEASE);

@@ -9,8 +9,10 @@
 
 __MCF_CRT_EXTERN_C_BEGIN
 
-extern bool __MCF_CRT_TlsEnvInit(void) MCF_NOEXCEPT;
-extern void __MCF_CRT_TlsEnvUninit(void) MCF_NOEXCEPT;
+extern bool __MCF_CRT_ThreadEnvInit(void) MCF_NOEXCEPT;
+extern void __MCF_CRT_ThreadEnvUninit(void) MCF_NOEXCEPT;
+
+extern void __MCF_CRT_TlsThreadCleanup() MCF_NOEXCEPT;
 
 // 失败返回 nullptr。
 extern void *MCF_CRT_TlsAllocKey(void (*__pfnCallback)(MCF_STD intptr_t)) MCF_NOEXCEPT;
@@ -22,8 +24,6 @@ extern bool MCF_CRT_TlsGet(void *__pTlsKey, bool *restrict __pbHasValue, MCF_STD
 extern bool MCF_CRT_TlsReset(void *__pTlsKey, MCF_STD intptr_t __nNewValue) MCF_NOEXCEPT;
 // 不触发回调，__pnOldValue 不得为空。
 extern bool MCF_CRT_TlsExchange(void *__pTlsKey, bool *restrict __pbHasOldValue, MCF_STD intptr_t *restrict __pnOldValue, MCF_STD intptr_t __nNewValue) MCF_NOEXCEPT;
-// 删除所有 Tls。
-extern void MCF_CRT_TlsClearAll() MCF_NOEXCEPT;
 
 extern int MCF_CRT_AtEndThread(void (*__pfnProc)(MCF_STD intptr_t), MCF_STD intptr_t __nContext);
 

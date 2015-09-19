@@ -29,7 +29,7 @@ static void PumpAtEndModule(){
 	// with thread storage duration within that thread are sequenced
 	// before the initiation of the destructors of any object with
 	// static storage duration. (...)
-	MCF_CRT_TlsClearAll();
+	__MCF_CRT_TlsThreadCleanup();
 
 	AtExitNode *pHead = __atomic_exchange_n(&g_pAtExitHead, nullptr, __ATOMIC_SEQ_CST);
 	while(pHead){
@@ -58,19 +58,19 @@ static void __MCF_CRT_StaticObjectsUninit(){
 bool __MCF_CRT_BeginModule(){
 	__MCF_CRT_FEnvInit();
 
-	if(!__MCF_CRT_TlsEnvInit()){
+	if(!__MCF_CRT_ThreadEnvInit()){
 		return false;
 	}
 	if(!__MCF_CRT_MinGWHacksInit()){
 		const DWORD dwLastError = GetLastError();
-		__MCF_CRT_TlsEnvUninit();
+		__MCF_CRT_ThreadEnvUninit();
 		SetLastError(dwLastError);
 		return false;
 	}
 	if(!__MCF_CRT_StaticObjectsInit()){
 		const DWORD dwLastError = GetLastError();
 		__MCF_CRT_MinGWHacksUninit();
-		__MCF_CRT_TlsEnvUninit();
+		__MCF_CRT_ThreadEnvUninit();
 		SetLastError(dwLastError);
 		return false;
 	}
@@ -79,7 +79,7 @@ bool __MCF_CRT_BeginModule(){
 void __MCF_CRT_EndModule(){
 	__MCF_CRT_StaticObjectsUninit();
 	__MCF_CRT_MinGWHacksUninit();
-	__MCF_CRT_TlsEnvUninit();
+	__MCF_CRT_ThreadEnvUninit();
 }
 
 int MCF_CRT_AtEndModule(void (*pfnProc)(intptr_t), intptr_t nContext){

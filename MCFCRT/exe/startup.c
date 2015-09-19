@@ -82,7 +82,7 @@ static void TlsCallback(void *hModule, DWORD dwReason, void *pReserved){
 	case DLL_THREAD_DETACH:
 		__MCF_EH_TOP_BEGIN
 		{
-			MCF_CRT_TlsClearAll();
+			__MCF_CRT_TlsThreadCleanup();
 		}
 		__MCF_EH_TOP_END
 		break;

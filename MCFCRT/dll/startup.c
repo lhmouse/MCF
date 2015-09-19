@@ -82,7 +82,7 @@ BOOL __MCF_DllStartup(HINSTANCE hDll, DWORD dwReason, LPVOID pReserved){
 		{
 			MCFDll_OnThreadDetach(hDll);
 
-			MCF_CRT_TlsClearAll();
+			__MCF_CRT_TlsThreadCleanup();
 		}
 		__MCF_EH_TOP_END
 		break;

@@ -8,11 +8,13 @@
 #include <utility>
 #include <cstddef>
 #include "Atomic.hpp"
+#include "../Utilities/Defer.hpp"
 
 namespace MCF {
 
 namespace Impl_CallOnce {
-	extern void MilliSleep(unsigned uMilliSeconds) noexcept;
+	extern void OnceMutexLock() noexcept;
+	extern void OnceMutexUnlock() noexcept;
 
 	class OnceFlag {
 	public:
@@ -41,9 +43,6 @@ namespace Impl_CallOnce {
 		void Store(State eState, MemoryModel eModel) volatile noexcept {
 			x_eState.Store(eState, eModel);
 		}
-		State Exchange(State eState, MemoryModel eModel) volatile noexcept {
-			return x_eState.Exchange(eState, eModel);
-		}
 	};
 }
 
@@ -51,33 +50,27 @@ using OnceFlag = volatile Impl_CallOnce::OnceFlag;
 
 template<typename FunctionT, typename ...ParamsT>
 bool CallOnce(OnceFlag &vFlag, FunctionT &&vFunction, ParamsT &&...vParams){
-	auto eState = vFlag.Load(kAtomicAcquire);
-	if(eState == OnceFlag::kInitialized){
+	if(vFlag.Load(kAtomicConsume) == OnceFlag::kInitialized){
 		return false;
 	}
 
-	unsigned uSleepDuration = 1;
-	for(;;){
-		eState = vFlag.Exchange(OnceFlag::kInitializing, kAtomicAcqRel);
-		if(eState != OnceFlag::kInitializing){
-			break;
-		}
-		Impl_CallOnce::MilliSleep(uSleepDuration);
-		if(uSleepDuration < 1000){
-			uSleepDuration <<= 1;
-		}
-	}
-	if(eState == OnceFlag::kInitialized){
-		vFlag.Store(OnceFlag::kInitialized, kAtomicRelease);
+	Impl_CallOnce::OnceMutexLock();
+	DEFER([&]{ Impl_CallOnce::OnceMutexUnlock(); });
+
+	if(vFlag.Load(kAtomicRelaxed) == OnceFlag::kInitialized){
 		return false;
 	}
+
+	vFlag.Store(OnceFlag::kInitializing, kAtomicRelaxed);
 	try {
 		std::forward<FunctionT>(vFunction)(std::forward<ParamsT>(vParams)...);
 	} catch(...){
-		vFlag.Store(OnceFlag::kUninitialized, kAtomicRelease);
+		// vFlag.Store(OnceFlag::kUninitialized, kAtomicRelease);
+		vFlag.Store(OnceFlag::kUninitialized, kAtomicRelaxed);
 		throw;
 	}
-	vFlag.Store(OnceFlag::kInitialized, kAtomicAcqRel);
+	// vFlag.Store(OnceFlag::kInitialized, kAtomicRelease);
+	vFlag.Store(OnceFlag::kInitialized, kAtomicRelaxed);
 	return true;
 }
 

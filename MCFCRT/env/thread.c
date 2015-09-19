@@ -63,7 +63,7 @@ static CRITICAL_SECTION g_csKeyMutex;
 static DWORD            g_dwTlsIndex = TLS_OUT_OF_INDEXES;
 static MCF_AvlRoot      g_pavlKeys   = nullptr;
 
-bool __MCF_CRT_TlsEnvInit(){
+bool __MCF_CRT_ThreadEnvInit(){
 	if(!InitializeCriticalSectionEx(&g_csKeyMutex, 0x400u,
 #ifdef NDEBUG
 		CRITICAL_SECTION_NO_DEBUG_INFO
@@ -83,7 +83,7 @@ bool __MCF_CRT_TlsEnvInit(){
 	}
 	return true;
 }
-void __MCF_CRT_TlsEnvUninit(){
+void __MCF_CRT_ThreadEnvUninit(){
 	if(g_pavlKeys){
 		MCF_AvlNodeHeader *const pRoot = g_pavlKeys;
 		g_pavlKeys = nullptr;
@@ -112,6 +112,37 @@ void __MCF_CRT_TlsEnvUninit(){
 	g_dwTlsIndex = TLS_OUT_OF_INDEXES;
 
 	DeleteCriticalSection(&g_csKeyMutex);
+}
+
+void __MCF_CRT_TlsThreadCleanup(){
+	ThreadMap *const pMap = TlsGetValue(g_dwTlsIndex);
+	if(pMap){
+		TlsObject *pObject = pMap->pLastByThread;
+		while(pObject){
+			TlsKey *const pKey = pObject->pKey;
+
+			EnterCriticalSection(&(pKey->csMutex));
+			{
+				if(pKey->pLastByKey == pObject){
+					pKey->pLastByKey = pObject->pPrevByKey;
+				}
+			}
+			LeaveCriticalSection(&(pKey->csMutex));
+
+			if(pKey->pfnCallback){
+				(*pKey->pfnCallback)(pObject->nValue);
+			}
+
+			TlsObject *const pTemp = pObject->pPrevByThread;
+			free(pObject);
+			pObject = pTemp;
+		}
+		DeleteCriticalSection(&(pMap->csMutex));
+		free(pMap);
+		TlsSetValue(g_dwTlsIndex, nullptr);
+	}
+
+	__MCF_CRT_RunEmutlsDtors();
 }
 
 void *MCF_CRT_TlsAllocKey(void (*pfnCallback)(intptr_t)){
@@ -338,36 +369,6 @@ bool MCF_CRT_TlsExchange(void *pTlsKey, bool *restrict pbHasOldValue, intptr_t *
 	}
 
 	return true;
-}
-void MCF_CRT_TlsClearAll(){
-	ThreadMap *const pMap = TlsGetValue(g_dwTlsIndex);
-	if(pMap){
-		TlsObject *pObject = pMap->pLastByThread;
-		while(pObject){
-			TlsKey *const pKey = pObject->pKey;
-
-			EnterCriticalSection(&(pKey->csMutex));
-			{
-				if(pKey->pLastByKey == pObject){
-					pKey->pLastByKey = pObject->pPrevByKey;
-				}
-			}
-			LeaveCriticalSection(&(pKey->csMutex));
-
-			if(pKey->pfnCallback){
-				(*pKey->pfnCallback)(pObject->nValue);
-			}
-
-			TlsObject *const pTemp = pObject->pPrevByThread;
-			free(pObject);
-			pObject = pTemp;
-		}
-		DeleteCriticalSection(&(pMap->csMutex));
-		free(pMap);
-		TlsSetValue(g_dwTlsIndex, nullptr);
-	}
-
-	__MCF_CRT_RunEmutlsDtors();
 }
 
 int MCF_CRT_AtEndThread(void (*pfnProc)(intptr_t), intptr_t nContext){

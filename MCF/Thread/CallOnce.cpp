@@ -4,12 +4,20 @@
 
 #include "../StdMCF.hpp"
 #include "CallOnce.hpp"
+#include "Mutex.hpp"
 
 namespace MCF {
 
+namespace {
+	Mutex g_vOnceMutex;
+}
+
 namespace Impl_CallOnce {
-	void MilliSleep(unsigned uMilliSeconds) noexcept {
-		::Sleep(uMilliSeconds);
+	void OnceMutexLock() noexcept {
+		g_vOnceMutex.Lock();
+	}
+	void OnceMutexUnlock() noexcept {
+		g_vOnceMutex.Unlock();
 	}
 }
 

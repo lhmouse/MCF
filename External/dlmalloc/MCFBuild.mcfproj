@@ -1,7 +1,7 @@
 Default = Debug
 
 General {
-	CompilerFlags		= -Wall -Wextra -pedantic -pipe -mfpmath=both -march=nocona -mno-stack-arg-probe -mno-accumulate-outgoing-args -mpush-args -DUSE_DL_PREFIX -DUSE_BUILTIN_FFS
+	CompilerFlags		= -Wall -Wextra -pedantic -pedantic-errors -pipe -mfpmath=both -march=nocona -mno-stack-arg-probe -mno-accumulate-outgoing-args -mpush-args -DUSE_DL_PREFIX -DUSE_BUILTIN_FFS
 
 	CFlags				= -std=c11
 

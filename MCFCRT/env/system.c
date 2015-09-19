@@ -10,7 +10,7 @@ static SYSTEM_INFO g_vSystemInfo;
 
 __attribute__((__constructor__))
 static void SystemInfoCtor(){
-	GetNativeSystemInfo(&g_vSystemInfo);
+	GetSystemInfo(&g_vSystemInfo);
 }
 
 size_t MCF_GetLogicalProcessorCount(){

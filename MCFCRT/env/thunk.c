@@ -54,23 +54,15 @@ static int FreeSizeComparatorNodes(const MCF_AvlNodeHeader *pIndex1, const MCF_A
 }
 
 static SRWLOCK     g_srwlMutex            = SRWLOCK_INIT;
-
 static uintptr_t   g_uPageMask            = 0;
-static ThunkInfo * g_pSpare               = nullptr;
-static bool        g_bCleanupRegistered   = false;
 
 static MCF_AvlRoot g_pavlThunksByThunk    = nullptr;
 static MCF_AvlRoot g_pavlThunksByFreeSize = nullptr;
 
-static void BackupCleanup(){
-	free(g_pSpare);
-	g_pSpare = nullptr;
-}
-
 void *MCF_CRT_AllocateThunk(const void *pInit, size_t uSize){
 	ASSERT(pInit);
 
-	unsigned char *pRet = nullptr;
+	char *pRet = nullptr;
 
 	AcquireSRWLockExclusive(&g_srwlMutex);
 	{
@@ -79,19 +71,6 @@ void *MCF_CRT_AllocateThunk(const void *pInit, size_t uSize){
 			GetSystemInfo(&vSystemInfo);
 			g_uPageMask = vSystemInfo.dwPageSize - 1;
 		}
-		if(!g_bCleanupRegistered){
-			if(atexit(&BackupCleanup)){
-				goto jDone;
-			}
-			g_bCleanupRegistered = true;
-		}
-
-		if(!g_pSpare){
-			g_pSpare = malloc(sizeof(ThunkInfo));
-			if(!g_pSpare){
-				goto jDone;
-			}
-		}
 
 		size_t uThunkSize = uSize + 8;
 		uThunkSize = (uThunkSize + 0x0F) & (size_t)-0x10;
@@ -99,11 +78,12 @@ void *MCF_CRT_AllocateThunk(const void *pInit, size_t uSize){
 			goto jDone;
 		}
 
-		MCF_AvlNodeHeader *pFreeSizeIndex = MCF_AvlLowerBound(&g_pavlThunksByFreeSize,
-			(intptr_t)uThunkSize, &FreeSizeComparatorNodeKey);
+		MCF_AvlNodeHeader *pFreeSizeIndex = MCF_AvlLowerBound(&g_pavlThunksByFreeSize, (intptr_t)uThunkSize, &FreeSizeComparatorNodeKey);
 		ThunkInfo *pInfo;
+		bool bNeedsCleanup;
 		if(pFreeSizeIndex){
 			pInfo = GetInfoFromFreeSizeIndex(pFreeSizeIndex);
+			bNeedsCleanup = false;
 		} else {
 			// 如果没有足够大的 thunk，我们先分配一个新的 chunk。
 			pInfo = malloc(sizeof(ThunkInfo));
@@ -124,23 +104,31 @@ void *MCF_CRT_AllocateThunk(const void *pInit, size_t uSize){
 			MCF_AvlAttach(&g_pavlThunksByFreeSize, &(pInfo->vFreeSizeIndex), &FreeSizeComparatorNodes);
 
 			pFreeSizeIndex = &(pInfo->vFreeSizeIndex);
+			bNeedsCleanup = true;
 		}
 		ASSERT(pInfo->uFreeSize >= uThunkSize);
 
-		pRet = pInfo->pThunk;
 		const size_t uRemaining = pInfo->uFreeSize - uThunkSize;
 		if(uRemaining >= 0x20){
 			// 如果剩下的空间还很大，保存成一个新的空闲 thunk。
-			g_pSpare->pChunk     = pInfo->pChunk;
-			g_pSpare->uChunkSize = pInfo->uChunkSize;
-			g_pSpare->pThunk     = pRet + uThunkSize;
-			g_pSpare->uThunkSize = uRemaining;
-			g_pSpare->uFreeSize  = uRemaining;
+			ThunkInfo *const pSpare = malloc(sizeof(ThunkInfo));
+			if(!pSpare){
+				if(bNeedsCleanup){
+					MCF_AvlDetach(&(pInfo->vThunkIndex));
+					MCF_AvlDetach(&(pInfo->vFreeSizeIndex));
+					VirtualFree(pInfo->pChunk, 0, MEM_RELEASE);
+					free(pInfo);
+				}
+				goto jDone;
+			}
+			pSpare->pChunk     = pInfo->pChunk;
+			pSpare->uChunkSize = pInfo->uChunkSize;
+			pSpare->pThunk     = (char *)pInfo->pThunk + uThunkSize;
+			pSpare->uThunkSize = uRemaining;
+			pSpare->uFreeSize  = uRemaining;
 
-			MCF_AvlAttach(&g_pavlThunksByThunk, &(g_pSpare->vThunkIndex), &ThunkComparatorNodes);
-			MCF_AvlAttach(&g_pavlThunksByFreeSize, &(g_pSpare->vFreeSizeIndex), &FreeSizeComparatorNodes);
-
-			g_pSpare = nullptr;
+			MCF_AvlAttach(&g_pavlThunksByThunk, &(pSpare->vThunkIndex), &ThunkComparatorNodes);
+			MCF_AvlAttach(&g_pavlThunksByFreeSize, &(pSpare->vFreeSizeIndex), &FreeSizeComparatorNodes);
 
 			pInfo->uThunkSize = uThunkSize;
 		} else {
@@ -150,6 +138,8 @@ void *MCF_CRT_AllocateThunk(const void *pInit, size_t uSize){
 		MCF_AvlDetach(&(pInfo->vFreeSizeIndex));
 		pInfo->uFreeSize = 0;
 		MCF_AvlAttach(&g_pavlThunksByFreeSize, &(pInfo->vFreeSizeIndex), &FreeSizeComparatorNodes);
+
+		pRet = pInfo->pThunk;
 
 		// 由于其他 thunk 可能共享了当前内存页，所以不能设置为 PAGE_READWRITE。
 		DWORD dwOldProtect;

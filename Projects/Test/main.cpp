@@ -5,7 +5,7 @@
 extern "C" unsigned MCFMain(){
 	MCF::RingQueue<MCF::ThunkPtr> thunks;
 	try {
-		static char data[100];
+		static char data[1000];
 		for(;;){
 			thunks.Push(MCF::CreateThunk(data, sizeof(data)));
 		}

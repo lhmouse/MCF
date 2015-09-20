@@ -324,7 +324,8 @@ public:
 	}
 
 	void Swap(String &rhs) noexcept {
-		std::swap(x_vStorage, rhs.x_vStorage);
+		using std::swap;
+		swap(x_vStorage, rhs.x_vStorage);
 	}
 
 	// String 需求。

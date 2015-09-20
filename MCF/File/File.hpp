@@ -33,11 +33,8 @@ public:
 
 private:
 	struct X_FileCloser {
-		struct Impl;
-		using Handle = Impl *;
-
-		Handle operator()() const noexcept;
-		void operator()(Handle hFile) const noexcept;
+		void *operator()() const noexcept;
+		void operator()(void *hFile) const noexcept;
 	};
 
 private:
@@ -48,16 +45,9 @@ public:
 	File(File &&) noexcept = default;
 	File &operator=(File &&) = default;
 
-	File(const wchar_t *pwszPath, std::uint32_t u32Flags)
-		: File()
-	{
-		Open(pwszPath, u32Flags);
-	}
-	File(const WideString &wsPath, std::uint32_t u32Flags)
-		: File()
-	{
-		Open(wsPath, u32Flags);
-	}
+	File(const wchar_t *pwszPath, std::uint32_t u32Flags);
+	File(const WideString &wsPath, std::uint32_t u32Flags);
+	~File();
 
 	File(const File &) noexcept = delete;
 	File &operator=(const File &) noexcept = delete;
@@ -84,7 +74,8 @@ public:
 	void Flush() const;
 
 	void Swap(File &rhs) noexcept {
-		x_hFile.Swap(rhs.x_hFile);
+		using std::swap;
+		swap(x_hFile, rhs.x_hFile);
 	}
 
 public:

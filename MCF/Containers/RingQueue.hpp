@@ -381,10 +381,11 @@ public:
 	}
 
 	void Swap(RingQueue &rhs) noexcept {
-		std::swap(x_pStorage, rhs.x_pStorage);
-		std::swap(x_uBegin,   rhs.x_uBegin);
-		std::swap(x_uEnd,     rhs.x_uEnd);
-		std::swap(x_uRingCap, rhs.x_uRingCap);
+		using std::swap;
+		swap(x_pStorage, rhs.x_pStorage);
+		swap(x_uBegin,   rhs.x_uBegin);
+		swap(x_uEnd,     rhs.x_uEnd);
+		swap(x_uRingCap, rhs.x_uRingCap);
 	}
 
 	// RingQueue 需求。

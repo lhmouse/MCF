@@ -219,9 +219,10 @@ public:
 	}
 
 	void Swap(Vector &rhs) noexcept {
-		std::swap(x_pStorage,  rhs.x_pStorage);
-		std::swap(x_uSize,     rhs.x_uSize);
-		std::swap(x_uCapacity, rhs.x_uCapacity);
+		using std::swap;
+		swap(x_pStorage,  rhs.x_pStorage);
+		swap(x_uSize,     rhs.x_uSize);
+		swap(x_uCapacity, rhs.x_uCapacity);
 	}
 
 	// Vector 需求。

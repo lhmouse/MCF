@@ -670,7 +670,8 @@ public:
 	}
 
 	void Swap(IntrusiveWeakPtr &rhs) noexcept {
-		std::swap(x_pObserver, rhs.x_pObserver);
+		using std::swap;
+		swap(x_pObserver, rhs.x_pObserver);
 	}
 
 public:

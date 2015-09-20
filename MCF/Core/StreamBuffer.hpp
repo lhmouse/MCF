@@ -180,9 +180,10 @@ public:
 	}
 
 	void Swap(StreamBuffer &rhs) noexcept {
-		std::swap(x_pFirst, rhs.x_pFirst);
-		std::swap(x_pLast, rhs.x_pLast);
-		std::swap(x_uSize, rhs.x_uSize);
+		using std::swap;
+		swap(x_pFirst, rhs.x_pFirst);
+		swap(x_pLast,  rhs.x_pLast);
+		swap(x_uSize,  rhs.x_uSize);
 	}
 };
 

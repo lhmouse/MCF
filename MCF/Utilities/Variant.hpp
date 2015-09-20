@@ -144,7 +144,8 @@ public:
 	}
 
 	void Swap(Variant<ElementsT...> &rhs) noexcept {
-		x_pElement.Swap(rhs.x_pElement);
+		using std::swap;
+		swap(x_pElement, rhs.x_pElement);
 	}
 };
 

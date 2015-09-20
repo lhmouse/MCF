@@ -108,8 +108,9 @@ public:
 	}
 
 	void Swap(RefCountingNtmbs &rhs) noexcept {
-		std::swap(x_puRef,  rhs.x_puRef);
-		std::swap(x_pszStr, rhs.x_pszStr);
+		using std::swap;
+		swap(x_puRef,  rhs.x_puRef);
+		swap(x_pszStr, rhs.x_pszStr);
 	}
 
 public:

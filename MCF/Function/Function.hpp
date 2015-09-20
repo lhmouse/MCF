@@ -112,7 +112,8 @@ public:
 	}
 
 	void Swap(Function &rhs) noexcept {
-		x_pFunctor.Swap(rhs.x_pFunctor);
+		using std::swap;
+		swap(x_pFunctor, rhs.x_pFunctor);
 	}
 
 public:

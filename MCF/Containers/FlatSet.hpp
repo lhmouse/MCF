@@ -132,7 +132,8 @@ public:
 	}
 
 	void Swap(FlatSet &rhs) noexcept {
-		x_vecStorage.Swap(rhs.x_vecStorage);
+		using std::swap;
+		swap(x_vecStorage, rhs.x_vecStorage);
 	}
 
 	// FlatSet 需求。

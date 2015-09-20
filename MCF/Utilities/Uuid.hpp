@@ -49,7 +49,8 @@ public:
 	}
 
 	void Swap(Uuid &rhs) noexcept {
-		BSwap(x_unData, rhs.x_unData);
+		using std::swap;
+		swap(x_unData, rhs.x_unData);
 	}
 
 	void Print(char (&achHex)[36], bool bUpperCase = true) const noexcept;

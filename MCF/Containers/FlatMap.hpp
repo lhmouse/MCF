@@ -134,7 +134,8 @@ public:
 	}
 
 	void Swap(FlatMap &rhs) noexcept {
-		x_vecStorage.Swap(rhs.x_vecStorage);
+		using std::swap;
+		swap(x_vecStorage, rhs.x_vecStorage);
 	}
 
 	// FlatMap 需求。

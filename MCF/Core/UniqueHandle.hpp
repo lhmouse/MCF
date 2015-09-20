@@ -69,7 +69,8 @@ public:
 	}
 
 	void Swap(UniqueHandle &rhs) noexcept {
-		std::swap(x_hObject, rhs.x_hObject);
+		using std::swap;
+		swap(x_hObject, rhs.x_hObject);
 	}
 
 public:

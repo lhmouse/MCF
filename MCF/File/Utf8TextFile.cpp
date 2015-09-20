@@ -13,26 +13,27 @@ namespace {
 }
 
 // ========== Utf8TextFileReader ==========
+// 构造函数和析构函数。
+Utf8TextFileReader::Utf8TextFileReader(File &&vFile)
+	: x_vFile(std::move(vFile))
+	, x_u64Offset(0), x_sbufCache()
+{
+	if(x_vFile){
+		unsigned char abyTemp[sizeof(kUtf8Bom)];
+		if((x_vFile.Read(abyTemp, sizeof(abyTemp), 0) == sizeof(abyTemp)) && (BComp(abyTemp, kUtf8Bom) == 0)){
+			x_u64Offset += sizeof(kUtf8Bom);
+		}
+	}
+}
+Utf8TextFileReader::~Utf8TextFileReader(){
+}
+
 // 其他非静态成员函数。
 void Utf8TextFileReader::Reset() noexcept {
-	x_vFile.Close();
-	x_u64Offset = 0;
-	x_sbufCache.Clear();
+	Utf8TextFileReader().Swap(*this);
 }
 void Utf8TextFileReader::Reset(File &&vFile){
-	ASSERT(&x_vFile != &vFile);
-
-	Reset();
-
-	if(!vFile){
-		return;
-	}
-	x_vFile = std::move(vFile);
-
-	unsigned char abyTemp[sizeof(kUtf8Bom)];
-	if((x_vFile.Read(abyTemp, sizeof(abyTemp), 0) == sizeof(abyTemp)) && !BComp(abyTemp, kUtf8Bom)){
-		x_u64Offset += sizeof(kUtf8Bom);
-	}
+	Utf8TextFileReader(std::move(vFile)).Swap(*this);
 }
 
 bool Utf8TextFileReader::IsAtEndOfFile() const {
@@ -40,12 +41,10 @@ bool Utf8TextFileReader::IsAtEndOfFile() const {
 }
 int Utf8TextFileReader::Read(){
 	if(x_sbufCache.GetSize() <= 1){
-		unsigned char abyTemp[0x1000];
+		unsigned char abyTemp[1024];
 		const auto uBytesRead = x_vFile.Read(abyTemp, sizeof(abyTemp), x_u64Offset);
-		if(uBytesRead != 0){
-			x_sbufCache.Put(abyTemp, uBytesRead);
-			x_u64Offset += uBytesRead;
-		}
+		x_sbufCache.Put(abyTemp, uBytesRead);
+		x_u64Offset += uBytesRead;
 	}
 	int nRet = x_sbufCache.Get();
 	if((nRet == '\r') && (x_sbufCache.Peek() == '\n')){
@@ -66,7 +65,7 @@ bool Utf8TextFileReader::Read(Utf8String &u8sData, std::size_t uCount){
 		return false;
 	}
 	for(;;){
-		u8sData.UncheckedPush((char)nChar);
+		u8sData.UncheckedPush(static_cast<char>(nChar));
 		if(u8sData.GetSize() == uCount){
 			break;
 		}
@@ -87,7 +86,7 @@ bool Utf8TextFileReader::ReadLine(Utf8String &u8sData){
 		if(nChar == '\n'){
 			break;
 		}
-		u8sData.Push((char)nChar);
+		u8sData.Push(static_cast<char>(nChar));
 		if((nChar = Read()) < 0){
 			break;
 		}
@@ -102,7 +101,7 @@ bool Utf8TextFileReader::ReadTillEof(Utf8String &u8sData){
 		return false;
 	}
 	for(;;){
-		u8sData.Push((char)nChar);
+		u8sData.Push(static_cast<char>(nChar));
 		if((nChar = Read()) < 0){
 			break;
 		}
@@ -111,31 +110,31 @@ bool Utf8TextFileReader::ReadTillEof(Utf8String &u8sData){
 }
 
 // ========== Utf8TextFileWriter ==========
-// 其他非静态成员函数。
-void Utf8TextFileWriter::Reset() noexcept {
-	try {
-		Flush();
-	} catch(...){
-	}
-	x_vFile.Close();
-	x_u32Flags = 0;
-	x_u64Offset = 0;
-	x_u8sLine.Clear();
-}
-void Utf8TextFileWriter::Reset(File &&vFile, std::uint32_t u32Flags){
-	ASSERT(&x_vFile != &vFile);
-
-	x_vFile = std::move(vFile);
-	x_u32Flags = u32Flags;
-	x_u64Offset = x_vFile.GetSize();
-
-	if((x_u32Flags & kHasBom) && (x_u64Offset == 0)){
+// 构造函数和析构函数。
+Utf8TextFileWriter::Utf8TextFileWriter(File &&vFile, std::uint32_t u32Flags)
+	: x_vFile(std::move(vFile)), x_u32Flags(u32Flags)
+	, x_u64Offset(x_vFile.GetSize()), x_u8sLine()
+{
+	if(x_vFile && (x_u32Flags & kHasBom) && (x_u64Offset == 0)){
 		x_vFile.Write(0, kUtf8Bom, sizeof(kUtf8Bom));
 		x_vFile.Flush();
 
 		x_u64Offset += sizeof(kUtf8Bom);
 	}
+}
+Utf8TextFileWriter::~Utf8TextFileWriter(){
+	try {
+		Flush();
+	} catch(...){
+	}
+}
 
+// 其他非静态成员函数。
+void Utf8TextFileWriter::Reset() noexcept {
+	Utf8TextFileWriter().Swap(*this);
+}
+void Utf8TextFileWriter::Reset(File &&vFile, std::uint32_t u32Flags){
+	Utf8TextFileWriter(std::move(vFile), u32Flags).Swap(*this);
 }
 
 void Utf8TextFileWriter::Write(char ch){
@@ -169,8 +168,8 @@ void Utf8TextFileWriter::WriteLine(const Utf8StringObserver &u8soData){
 }
 void Utf8TextFileWriter::Flush(){
 	x_vFile.Write(x_u64Offset, x_u8sLine.GetData(), x_u8sLine.GetSize());
-	x_u8sLine.Clear();
 	x_u64Offset += x_u8sLine.GetSize();
+	x_u8sLine.Clear();
 
 	x_vFile.Flush();
 }

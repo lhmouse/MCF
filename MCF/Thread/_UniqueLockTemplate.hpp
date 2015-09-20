@@ -122,8 +122,9 @@ namespace Impl_UniqueLockTemplate {
 		}
 
 		void Swap(UniqueLockTemplate &rhs) noexcept {
-			std::swap(x_pOwner,     rhs.x_pOwner);
-			std::swap(x_uLockCount, rhs.x_uLockCount);
+			using std::swap;
+			swap(x_pOwner,     rhs.x_pOwner);
+			swap(x_uLockCount, rhs.x_uLockCount);
 		}
 	};
 

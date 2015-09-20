@@ -199,8 +199,9 @@ public:
 	}
 
 	void Swap(List &rhs) noexcept {
-		std::swap(x_pFirst, rhs.x_pFirst);
-		std::swap(x_pLast,  rhs.x_pLast);
+		using std::swap;
+		swap(x_pFirst, rhs.x_pFirst);
+		swap(x_pLast,  rhs.x_pLast);
 	}
 
 	// List 需求。

@@ -130,7 +130,8 @@ public:
 	}
 
 	void Swap(Array &rhs) noexcept(noexcept(std::swap(std::declval<ElementT (&)[kSize]>(), std::declval<ElementT (&)[kSize]>()))) {
-		std::swap(m_aStorage, rhs.m_aStorage);
+		using std::swap;
+		swap(m_aStorage, rhs.m_aStorage);
 	}
 
 	// Array 需求。

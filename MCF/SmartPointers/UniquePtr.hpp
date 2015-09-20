@@ -97,7 +97,8 @@ public:
 	}
 
 	void Swap(UniquePtr &rhs) noexcept {
-		std::swap(x_pElement, rhs.x_pElement);
+		using std::swap;
+		swap(x_pElement, rhs.x_pElement);
 	}
 
 public:

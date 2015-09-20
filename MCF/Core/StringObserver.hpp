@@ -283,8 +283,9 @@ public:
 	}
 
 	void Swap(StringObserver &rhs) noexcept {
-		std::swap(x_pchBegin, rhs.x_pchBegin);
-		std::swap(x_pchEnd, rhs.x_pchEnd);
+		using std::swap;
+		swap(x_pchBegin, rhs.x_pchBegin);
+		swap(x_pchEnd,   rhs.x_pchEnd);
 	}
 
 	int Compare(const StringObserver &rhs) const noexcept {

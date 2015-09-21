@@ -25,8 +25,8 @@ bool ConditionVariable::Wait(Mutex::UniqueLock &vLock, std::uint64_t u64MilliSec
 	auto u64Now = GetFastMonoClock();
 	const auto u64Until = u64Now + u64MilliSeconds;
 	for(;;){
-		const bool bTakenOver = ::SleepConditionVariableSRW(
-			reinterpret_cast<::CONDITION_VARIABLE *>(x_aImpl), reinterpret_cast<::SRWLOCK *>(vLock.GetOwner().x_aImpl), Min(u64MilliSeconds, 0x7FFFFFFFu), 0);
+		const bool bTakenOver = ::SleepConditionVariableSRW(reinterpret_cast<::CONDITION_VARIABLE *>(x_aImpl),
+			reinterpret_cast<::SRWLOCK *>(vLock.GetOwner().x_aImpl), Min(u64MilliSeconds, 0x7FFFFFFFu), 0);
 		if(bTakenOver){
 			return true;
 		}
@@ -42,8 +42,8 @@ bool ConditionVariable::Wait(Mutex::UniqueLock &vLock, std::uint64_t u64MilliSec
 void ConditionVariable::Wait(Mutex::UniqueLock &vLock) noexcept {
 	ASSERT(vLock.GetLockCount() == 1);
 
-	::SleepConditionVariableSRW(
-		reinterpret_cast<::CONDITION_VARIABLE *>(x_aImpl), reinterpret_cast<::SRWLOCK *>(vLock.GetOwner().x_aImpl), INFINITE, 0);
+	::SleepConditionVariableSRW(reinterpret_cast<::CONDITION_VARIABLE *>(x_aImpl),
+		reinterpret_cast<::SRWLOCK *>(vLock.GetOwner().x_aImpl), INFINITE, 0);
 }
 
 bool ConditionVariable::Wait(Impl_UniqueLockTemplate::UniqueLockTemplateBase &vLock, std::uint64_t u64MilliSeconds) noexcept {

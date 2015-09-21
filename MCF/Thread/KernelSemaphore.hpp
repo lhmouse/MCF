@@ -2,25 +2,24 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2013 - 2015, LH_Mouse. All wrongs reserved.
 
-#ifndef MCF_THREAD_SEMAPHORE_HPP_
-#define MCF_THREAD_SEMAPHORE_HPP_
+#ifndef MCF_THREAD_KERNEL_SEMAPHORE_HPP_
+#define MCF_THREAD_KERNEL_SEMAPHORE_HPP_
 
 #include "../Utilities/Noncopyable.hpp"
-#include "Mutex.hpp"
-#include "ConditionVariable.hpp"
+#include "../Core/String.hpp"
+#include "../Core/UniqueWin32Handle.hpp"
 #include <cstddef>
 #include <cstdint>
 
 namespace MCF {
 
-class Semaphore : NONCOPYABLE {
+class KernelSemaphore : NONCOPYABLE {
 private:
-	Mutex x_mtxGuard;
-	ConditionVariable x_cvWaiter;
-	std::size_t x_uCount;
+	const UniqueWin32Handle x_hSemaphore;
 
 public:
-	explicit Semaphore(std::size_t uInitCount) noexcept;
+	explicit KernelSemaphore(std::size_t uInitCount, const wchar_t *pwszName = nullptr);
+	KernelSemaphore(std::size_t uInitCount, const WideString &wsName);
 
 public:
 	bool Wait(std::uint64_t u64MilliSeconds) noexcept;

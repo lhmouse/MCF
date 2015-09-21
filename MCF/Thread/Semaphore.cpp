@@ -4,63 +4,61 @@
 
 #include "../StdMCF.hpp"
 #include "Semaphore.hpp"
-#include "../Core/Exception.hpp"
-#include "../Core/String.hpp"
 #include "../Core/Time.hpp"
-#include "../Utilities/MinMax.hpp"
 
 namespace MCF {
 
-namespace {
-	UniqueWin32Handle CheckedCreateSemaphore(std::size_t uInitCount, const wchar_t *pwszName){
-		UniqueWin32Handle hSemaphore(::CreateSemaphoreW(nullptr, (long)uInitCount, LONG_MAX, pwszName));
-		if(!hSemaphore){
-			DEBUG_THROW(SystemError, "CreateSemaphoreW"_rcs);
-		}
-		return hSemaphore;
-	}
-}
-
 // 构造函数和析构函数。
-Semaphore::Semaphore(std::size_t uInitCount, const wchar_t *pwszName)
-	: x_hSemaphore(CheckedCreateSemaphore(uInitCount, pwszName))
-{
-}
-Semaphore::Semaphore(std::size_t uInitCount, const WideString &wsName)
-	: Semaphore(uInitCount, wsName.GetStr())
+Semaphore::Semaphore(std::size_t uInitCount) noexcept
+	: x_mtxGuard(), x_cvWaiter(), x_uCount(uInitCount)
 {
 }
 
 // 其他非静态成员函数。
-std::size_t Semaphore::Wait(std::uint64_t u64MilliSeconds) noexcept {
+bool Semaphore::Wait(std::uint64_t u64MilliSeconds) noexcept {
 	auto u64Now = GetFastMonoClock();
 	const auto u64Until = u64Now + u64MilliSeconds;
-	for(;;){
-		const auto dwResult = ::WaitForSingleObject(x_hSemaphore.Get(), Min(u64Until - u64Now, 0x7FFFFFFFu));
-		if(dwResult == WAIT_FAILED){
-			ASSERT_MSG(false, L"WaitForSingleObject() 失败。");
-		}
-		if(dwResult != WAIT_TIMEOUT){
-			return true;
-		}
-		u64Now = GetFastMonoClock();
+
+	Mutex::UniqueLock vLock(x_mtxGuard);
+	while(x_uCount == 0){
 		if(u64Until <= u64Now){
 			return false;
 		}
+		if(!x_cvWaiter.Wait(vLock, u64Until - u64Now)){
+			return false;
+		}
+		u64Now = GetFastMonoClock();
 	}
+	--x_uCount;
+	return true;
 }
 void Semaphore::Wait() noexcept {
-	const auto dwResult = ::WaitForSingleObject(x_hSemaphore.Get(), INFINITE);
-	if(dwResult == WAIT_FAILED){
-		ASSERT_MSG(false, L"WaitForSingleObject() 失败。");
+	Mutex::UniqueLock vLock(x_mtxGuard);
+	while(x_uCount == 0){
+		x_cvWaiter.Wait(vLock);
 	}
+	--x_uCount;
 }
 std::size_t Semaphore::Post(std::size_t uPostCount) noexcept {
-	long lPrevCount;
-	if(!::ReleaseSemaphore(x_hSemaphore.Get(), (long)uPostCount, &lPrevCount)){
-		ASSERT_MSG(false, L"ReleaseSemaphore() 失败。");
+	Mutex::UniqueLock vLock(x_mtxGuard);
+	const auto uOldCount = x_uCount;
+	const auto uNewCount = uOldCount + uPostCount;
+	if(uNewCount < uOldCount){
+		ASSERT_MSG(false, L"算术运算结果超出可表示范围。");
 	}
-	return (std::size_t)lPrevCount;
+	switch(uNewCount - uOldCount){
+	case 0:
+		break;
+	case 1:
+		x_cvWaiter.Signal();
+		x_uCount = uNewCount;
+		break;
+	default:
+		x_cvWaiter.Broadcast();
+		x_uCount = uNewCount;
+		break;
+	}
+	return uOldCount;
 }
 
 }

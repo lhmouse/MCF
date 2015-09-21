@@ -31,9 +31,11 @@ namespace Impl_UniqueLockTemplate {
 
 // 构造函数和析构函数。
 Mutex::Mutex(std::size_t uSpinCount) noexcept
-	: x_uSpinCount(uSpinCount)
+	: x_uSpinCount(0)
 {
 	::InitializeSRWLock(reinterpret_cast<::SRWLOCK *>(x_aImpl));
+
+	SetSpinCount(uSpinCount);
 }
 
 // 其他非静态成员函数。

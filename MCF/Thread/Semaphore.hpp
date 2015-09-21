@@ -25,9 +25,6 @@ public:
 	std::size_t Wait(std::uint64_t u64MilliSeconds) noexcept;
 	void Wait() noexcept;
 	std::size_t Post(std::size_t uPostCount = 1) noexcept;
-
-	std::size_t BatchWait(std::uint64_t u64MilliSeconds, std::size_t uWaitCount) noexcept;
-	void BatchWait(std::size_t uWaitCount) noexcept;
 };
 
 }

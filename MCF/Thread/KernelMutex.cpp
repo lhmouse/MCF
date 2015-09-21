@@ -4,9 +4,10 @@
 
 #include "../StdMCF.hpp"
 #include "KernelMutex.hpp"
-#include "_WaitForSingleObject64.hpp"
 #include "../Core/Exception.hpp"
 #include "../Core/String.hpp"
+#include "../Core/Time.hpp"
+#include "../Utilities/MinMax.hpp"
 
 namespace MCF {
 
@@ -47,10 +48,27 @@ KernelMutex::KernelMutex(const WideString &wsName)
 
 // 其他非静态成员函数。
 bool KernelMutex::Try(std::uint64_t u64MilliSeconds) noexcept {
-	return Impl_WaitForSingleObject64::WaitForSingleObject64(x_hMutex.Get(), &u64MilliSeconds);
+	auto u64Now = GetFastMonoClock();
+	const auto u64Until = u64Now + u64MilliSeconds;
+	for(;;){
+		const auto dwResult = ::WaitForSingleObject(x_hMutex.Get(), Min(u64Until - u64Now, 0x7FFFFFFFu));
+		if(dwResult == WAIT_FAILED){
+			ASSERT_MSG(false, L"WaitForSingleObject() 失败。");
+		}
+		if(dwResult != WAIT_TIMEOUT){
+			return true;
+		}
+		u64Now = GetFastMonoClock();
+		if(u64Until <= u64Now){
+			return false;
+		}
+	}
 }
 void KernelMutex::Lock() noexcept {
-	Impl_WaitForSingleObject64::WaitForSingleObject64(x_hMutex.Get(), nullptr);
+	const auto dwResult = ::WaitForSingleObject(x_hMutex.Get(), INFINITE);
+	if(dwResult == WAIT_FAILED){
+		ASSERT_MSG(false, L"WaitForSingleObject() 失败。");
+	}
 }
 void KernelMutex::Unlock() noexcept {
 	if(!::ReleaseMutex(x_hMutex.Get())){

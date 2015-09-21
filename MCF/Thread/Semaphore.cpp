@@ -4,9 +4,10 @@
 
 #include "../StdMCF.hpp"
 #include "Semaphore.hpp"
-#include "_WaitForSingleObject64.hpp"
 #include "../Core/Exception.hpp"
 #include "../Core/String.hpp"
+#include "../Core/Time.hpp"
+#include "../Utilities/MinMax.hpp"
 
 namespace MCF {
 
@@ -32,10 +33,27 @@ Semaphore::Semaphore(std::size_t uInitCount, const WideString &wsName)
 
 // 其他非静态成员函数。
 std::size_t Semaphore::Wait(std::uint64_t u64MilliSeconds) noexcept {
-	return Impl_WaitForSingleObject64::WaitForSingleObject64(x_hSemaphore.Get(), &u64MilliSeconds);
+	auto u64Now = GetFastMonoClock();
+	const auto u64Until = u64Now + u64MilliSeconds;
+	for(;;){
+		const auto dwResult = ::WaitForSingleObject(x_hSemaphore.Get(), Min(u64Until - u64Now, 0x7FFFFFFFu));
+		if(dwResult == WAIT_FAILED){
+			ASSERT_MSG(false, L"WaitForSingleObject() 失败。");
+		}
+		if(dwResult != WAIT_TIMEOUT){
+			return true;
+		}
+		u64Now = GetFastMonoClock();
+		if(u64Until <= u64Now){
+			return false;
+		}
+	}
 }
 void Semaphore::Wait() noexcept {
-	Impl_WaitForSingleObject64::WaitForSingleObject64(x_hSemaphore.Get(), nullptr);
+	const auto dwResult = ::WaitForSingleObject(x_hSemaphore.Get(), INFINITE);
+	if(dwResult == WAIT_FAILED){
+		ASSERT_MSG(false, L"WaitForSingleObject() 失败。");
+	}
 }
 std::size_t Semaphore::Post(std::size_t uPostCount) noexcept {
 	long lPrevCount;
@@ -43,23 +61,6 @@ std::size_t Semaphore::Post(std::size_t uPostCount) noexcept {
 		ASSERT_MSG(false, L"ReleaseSemaphore() 失败。");
 	}
 	return (std::size_t)lPrevCount;
-}
-
-std::size_t Semaphore::BatchWait(std::uint64_t u64MilliSeconds, std::size_t uWaitCount) noexcept {
-	std::size_t uSucceeded = 0;
-	while(uSucceeded < uWaitCount){
-		if(!Impl_WaitForSingleObject64::WaitForSingleObject64(x_hSemaphore.Get(), &u64MilliSeconds)){
-			break;
-		}
-		++uSucceeded;
-	}
-	return uSucceeded;
-}
-void Semaphore::BatchWait(std::size_t uWaitCount) noexcept {
-	std::size_t uSucceeded = 0;
-	while(uSucceeded < uWaitCount){
-		Impl_WaitForSingleObject64::WaitForSingleObject64(x_hSemaphore.Get(), nullptr);
-	}
 }
 
 }

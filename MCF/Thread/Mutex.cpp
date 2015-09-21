@@ -6,13 +6,10 @@
 #include "Mutex.hpp"
 #include "../Core/Exception.hpp"
 #include "../Core/System.hpp"
-#include "../Utilities/Bail.hpp"
+#include "../Core/Time.hpp"
+#include "../Utilities/MinMax.hpp"
 
 namespace MCF {
-
-namespace {
-	constexpr ::SRWLOCK kInitedLock = SRWLOCK_INIT;
-}
 
 namespace Impl_UniqueLockTemplate {
 	template<>
@@ -33,6 +30,8 @@ namespace Impl_UniqueLockTemplate {
 Mutex::Mutex(std::size_t uSpinCount) noexcept
 	: x_uSpinCount(0)
 {
+	static_assert(sizeof(x_aImpl) == sizeof(::SRWLOCK), "!");
+
 	::InitializeSRWLock(reinterpret_cast<::SRWLOCK *>(x_aImpl));
 
 	SetSpinCount(uSpinCount);

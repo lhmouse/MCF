@@ -7,7 +7,7 @@
 
 #include "../Utilities/Noncopyable.hpp"
 #include "_UniqueLockTemplate.hpp"
-#include "Semaphore.hpp"
+#include "Mutex.hpp"
 #include "Atomic.hpp"
 #include <cstddef>
 #include <cstdint>
@@ -16,16 +16,22 @@ namespace MCF {
 
 class ConditionVariable : NONCOPYABLE {
 private:
-	Atomic<std::size_t> x_uWaiting;
-	Semaphore x_vSemaphore;
+	Mutex x_mtxGuard;
+	std::intptr_t x_aImpl[1];
 
 public:
-	ConditionVariable();
+	ConditionVariable() noexcept;
+
+private:
+	bool X_SleepOnMutex(Mutex &vMutex, std::uint64_t u64MilliSeconds) noexcept;
+	bool X_SleepOnMutex(Mutex &vMutex) noexcept;
 
 public:
+	bool Wait(Mutex::UniqueLock &vLock, std::uint64_t u64MilliSeconds) noexcept;
+	void Wait(Mutex::UniqueLock &vLock) noexcept;
 	bool Wait(Impl_UniqueLockTemplate::UniqueLockTemplateBase &vLock, std::uint64_t u64MilliSeconds) noexcept;
 	void Wait(Impl_UniqueLockTemplate::UniqueLockTemplateBase &vLock) noexcept;
-	void Signal(std::size_t uMaxCount = 1) noexcept;
+	void Signal() noexcept;
 	void Broadcast() noexcept;
 };
 

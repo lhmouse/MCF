@@ -14,7 +14,11 @@ namespace MCF {
 
 // 由一个线程锁定的互斥锁可以由另一个线程解锁。
 
+class ConditionVariable;
+
 class Mutex : NONCOPYABLE {
+	friend ConditionVariable;
+
 public:
 	using UniqueLock = Impl_UniqueLockTemplate::UniqueLockTemplate<Mutex>;
 

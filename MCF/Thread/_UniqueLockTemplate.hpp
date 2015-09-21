@@ -114,6 +114,10 @@ namespace Impl_UniqueLockTemplate {
 		void X_DoUnlock() const noexcept override;
 
 	public:
+		MutexT &GetOwner() const noexcept {
+			return *x_pOwner;
+		}
+
 		void Join(UniqueLockTemplate &&rhs) noexcept {
 			ASSERT(x_pOwner == rhs.x_pOwner);
 

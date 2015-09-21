@@ -9,9 +9,6 @@
 
 namespace MCF {
 
-// http://research.microsoft.com/pubs/64242/ImplementingCVs.pdf
-// 因为 Semaphore 现在维护一个大体上 FIFO 的顺序，我们就没必要操心了。
-
 // 构造函数和析构函数。
 ConditionVariable::ConditionVariable() noexcept
 	: x_mtxGuard()

@@ -4,20 +4,19 @@
 
 #include "../StdMCF.hpp"
 #include "CallOnce.hpp"
-#include "Mutex.hpp"
 
 namespace MCF {
 
 namespace {
-	Mutex g_vOnceMutex;
+	::SRWLOCK g_srwLock;
 }
 
 namespace Impl_CallOnce {
 	void OnceMutexLock() noexcept {
-		g_vOnceMutex.Lock();
+		::AcquireSRWLockExclusive(&g_srwLock);
 	}
 	void OnceMutexUnlock() noexcept {
-		g_vOnceMutex.Unlock();
+		::ReleaseSRWLockExclusive(&g_srwLock);
 	}
 }
 

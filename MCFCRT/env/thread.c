@@ -37,7 +37,7 @@ static int ObjectComparatorNodes(const MCF_AvlNodeHeader *pObj1, const MCF_AvlNo
 }
 
 typedef struct tagThreadMap {
-	CRITICAL_SECTION csMutex;
+	SRWLOCK srwLock;
 	MCF_AvlRoot pavlObjects;
 	struct tagTlsObject *pLastByThread;
 } ThreadMap;
@@ -45,7 +45,7 @@ typedef struct tagThreadMap {
 typedef struct tagTlsKey {
 	MCF_AvlNodeHeader vHeader;
 
-	CRITICAL_SECTION csMutex;
+	SRWLOCK srwLock;
 	void (*pfnCallback)(intptr_t);
 	struct tagTlsObject *pLastByKey;
 } TlsKey;
@@ -59,26 +59,13 @@ static int KeyComparatorNodes(const MCF_AvlNodeHeader *pObj1, const MCF_AvlNodeH
 	return KeyComparatorNodeKey(pObj1, (intptr_t)(void *)pObj2);
 }
 
-static CRITICAL_SECTION g_csKeyMutex;
-static DWORD            g_dwTlsIndex = TLS_OUT_OF_INDEXES;
-static MCF_AvlRoot      g_pavlKeys   = nullptr;
+static SRWLOCK     g_csKeyMutex = SRWLOCK_INIT;
+static DWORD       g_dwTlsIndex = TLS_OUT_OF_INDEXES;
+static MCF_AvlRoot g_pavlKeys   = nullptr;
 
 bool __MCF_CRT_ThreadEnvInit(){
-	if(!InitializeCriticalSectionEx(&g_csKeyMutex, 0x400u,
-#ifdef NDEBUG
-		CRITICAL_SECTION_NO_DEBUG_INFO
-#else
-		0
-#endif
-		))
-	{
-		return false;
-	}
 	g_dwTlsIndex = TlsAlloc();
 	if(g_dwTlsIndex == TLS_OUT_OF_INDEXES){
-		const DWORD dwError = GetLastError();
-		DeleteCriticalSection(&g_csKeyMutex);
-		SetLastError(dwError);
 		return false;
 	}
 	return true;
@@ -93,25 +80,20 @@ void __MCF_CRT_ThreadEnvUninit(){
 		while(pCur){
 			pKey = (TlsKey *)pCur;
 			pCur = MCF_AvlPrev(pCur);
-			DeleteCriticalSection(&(pKey->csMutex));
 			free(pKey);
 		}
 		pCur = MCF_AvlNext(pRoot);
 		while(pCur){
 			pKey = (TlsKey *)pCur;
 			pCur = MCF_AvlNext(pCur);
-			DeleteCriticalSection(&(pKey->csMutex));
 			free(pKey);
 		}
 		pKey = (TlsKey *)pRoot;
-		DeleteCriticalSection(&(pKey->csMutex));
 		free(pKey);
 	}
 
 	TlsFree(g_dwTlsIndex);
 	g_dwTlsIndex = TLS_OUT_OF_INDEXES;
-
-	DeleteCriticalSection(&g_csKeyMutex);
 }
 
 void __MCF_CRT_TlsThreadCleanup(){
@@ -121,13 +103,13 @@ void __MCF_CRT_TlsThreadCleanup(){
 		while(pObject){
 			TlsKey *const pKey = pObject->pKey;
 
-			EnterCriticalSection(&(pKey->csMutex));
+			AcquireSRWLockExclusive(&(pKey->srwLock));
 			{
 				if(pKey->pLastByKey == pObject){
 					pKey->pLastByKey = pObject->pPrevByKey;
 				}
 			}
-			LeaveCriticalSection(&(pKey->csMutex));
+			ReleaseSRWLockExclusive(&(pKey->srwLock));
 
 			if(pKey->pfnCallback){
 				(*pKey->pfnCallback)(pObject->nValue);
@@ -137,7 +119,6 @@ void __MCF_CRT_TlsThreadCleanup(){
 			free(pObject);
 			pObject = pTemp;
 		}
-		DeleteCriticalSection(&(pMap->csMutex));
 		free(pMap);
 		TlsSetValue(g_dwTlsIndex, nullptr);
 	}
@@ -151,27 +132,15 @@ void *MCF_CRT_TlsAllocKey(void (*pfnCallback)(intptr_t)){
 		SetLastError(ERROR_NOT_ENOUGH_MEMORY);
 		return nullptr;
 	}
-	if(!InitializeCriticalSectionEx(&(pKey->csMutex), 0x400u,
-#ifdef NDEBUG
-		CRITICAL_SECTION_NO_DEBUG_INFO
-#else
-		0
-#endif
-		))
-	{
-		const DWORD dwError = GetLastError();
-		free(pKey);
-		SetLastError(dwError);
-		return nullptr;
-	}
+	InitializeSRWLock(&(pKey->srwLock));
 	pKey->pfnCallback = pfnCallback;
-	pKey->pLastByKey = nullptr;
+	pKey->pLastByKey  = nullptr;
 
-	EnterCriticalSection(&g_csKeyMutex);
+	AcquireSRWLockExclusive(&g_csKeyMutex);
 	{
 		MCF_AvlAttach(&g_pavlKeys, (MCF_AvlNodeHeader *)pKey, &KeyComparatorNodes);
 	}
-	LeaveCriticalSection(&g_csKeyMutex);
+	ReleaseSRWLockExclusive(&g_csKeyMutex);
 
 	return pKey;
 }
@@ -182,17 +151,17 @@ bool MCF_CRT_TlsFreeKey(void *pTlsKey){
 		return false;
 	}
 
-	EnterCriticalSection(&g_csKeyMutex);
+	AcquireSRWLockExclusive(&g_csKeyMutex);
 	{
 		MCF_AvlDetach((MCF_AvlNodeHeader *)pKey);
 	}
-	LeaveCriticalSection(&g_csKeyMutex);
+	ReleaseSRWLockExclusive(&g_csKeyMutex);
 
 	TlsObject *pObject = pKey->pLastByKey;
 	while(pObject){
 		ThreadMap *const pMap = pObject->pMap;
 
-		EnterCriticalSection(&(pMap->csMutex));
+		AcquireSRWLockExclusive(&(pMap->srwLock));
 		{
 			TlsObject *const pPrev = pObject->pPrevByThread;
 			TlsObject *const pNext = pObject->pNextByThread;
@@ -207,7 +176,7 @@ bool MCF_CRT_TlsFreeKey(void *pTlsKey){
 				pMap->pLastByThread = pObject->pPrevByThread;
 			}
 		}
-		LeaveCriticalSection(&(pMap->csMutex));
+		ReleaseSRWLockExclusive(&(pMap->srwLock));
 
 		if(pKey->pfnCallback){
 			(*pKey->pfnCallback)(pObject->nValue);
@@ -217,7 +186,6 @@ bool MCF_CRT_TlsFreeKey(void *pTlsKey){
 		free(pObject);
 		pObject = pTemp;
 	}
-	DeleteCriticalSection(&(pKey->csMutex));
 	free(pKey);
 
 	return true;
@@ -246,7 +214,7 @@ bool MCF_CRT_TlsGet(void *pTlsKey, bool *restrict pbHasValue, intptr_t *restrict
 		return true;
 	}
 
-	EnterCriticalSection(&(pMap->csMutex));
+	AcquireSRWLockExclusive(&(pMap->srwLock));
 	{
 		TlsObject *const pObject = (TlsObject *)MCF_AvlFind(
 			&(pMap->pavlObjects), (intptr_t)pKey, &ObjectComparatorNodeKey);
@@ -255,7 +223,7 @@ bool MCF_CRT_TlsGet(void *pTlsKey, bool *restrict pbHasValue, intptr_t *restrict
 			*pnValue = pObject->nValue;
 		}
 	}
-	LeaveCriticalSection(&(pMap->csMutex));
+	ReleaseSRWLockExclusive(&(pMap->srwLock));
 
 	return true;
 }
@@ -299,26 +267,14 @@ bool MCF_CRT_TlsExchange(void *pTlsKey, bool *restrict pbHasOldValue, intptr_t *
 			SetLastError(ERROR_NOT_ENOUGH_MEMORY);
 			return false;
 		}
-		if(!InitializeCriticalSectionEx(&(pMap->csMutex), 0x400u,
-#ifdef NDEBUG
-			CRITICAL_SECTION_NO_DEBUG_INFO
-#else
-			0
-#endif
-			))
-		{
-			const DWORD dwError = GetLastError();
-			free(pMap);
-			SetLastError(dwError);
-			return false;
-		}
-		pMap->pavlObjects = nullptr;
+		InitializeSRWLock(&(pMap->srwLock));
+		pMap->pavlObjects   = nullptr;
 		pMap->pLastByThread = nullptr;
 
 		TlsSetValue(g_dwTlsIndex, pMap);
 	}
 
-	EnterCriticalSection(&(pMap->csMutex));
+	AcquireSRWLockExclusive(&(pMap->srwLock));
 	{
 		TlsObject *const pObject = (TlsObject *)MCF_AvlFind(
 			&(pMap->pavlObjects), (intptr_t)pKey, &ObjectComparatorNodeKey);
@@ -328,7 +284,7 @@ bool MCF_CRT_TlsExchange(void *pTlsKey, bool *restrict pbHasOldValue, intptr_t *
 			pObject->nValue = nNewValue;
 		}
 	}
-	LeaveCriticalSection(&(pMap->csMutex));
+	ReleaseSRWLockExclusive(&(pMap->srwLock));
 
 	if(!*pbHasOldValue){
 		TlsObject *const pObject = malloc(sizeof(TlsObject));
@@ -340,7 +296,7 @@ bool MCF_CRT_TlsExchange(void *pTlsKey, bool *restrict pbHasOldValue, intptr_t *
 		pObject->pMap = pMap;
 		pObject->pKey = pKey;
 
-		EnterCriticalSection(&(pMap->csMutex));
+		AcquireSRWLockExclusive(&(pMap->srwLock));
 		{
 			TlsObject *const pPrev = pMap->pLastByThread;
 			pMap->pLastByThread = pObject;
@@ -352,9 +308,9 @@ bool MCF_CRT_TlsExchange(void *pTlsKey, bool *restrict pbHasOldValue, intptr_t *
 			}
 			MCF_AvlAttach(&(pMap->pavlObjects), (MCF_AvlNodeHeader *)pObject, &ObjectComparatorNodes);
 		}
-		LeaveCriticalSection(&(pMap->csMutex));
+		ReleaseSRWLockExclusive(&(pMap->srwLock));
 
-		EnterCriticalSection(&(pKey->csMutex));
+		AcquireSRWLockExclusive(&(pKey->srwLock));
 		{
 			TlsObject *const pPrev = pKey->pLastByKey;
 			pKey->pLastByKey = pObject;
@@ -365,7 +321,7 @@ bool MCF_CRT_TlsExchange(void *pTlsKey, bool *restrict pbHasOldValue, intptr_t *
 				pPrev->pNextByKey = pObject;
 			}
 		}
-		LeaveCriticalSection(&(pKey->csMutex));
+		ReleaseSRWLockExclusive(&(pKey->srwLock));
 	}
 
 	return true;

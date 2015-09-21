@@ -8,7 +8,6 @@
 #include "../Utilities/Noncopyable.hpp"
 #include "_UniqueLockTemplate.hpp"
 #include "Atomic.hpp"
-#include "Semaphore.hpp"
 #include <cstddef>
 
 namespace MCF {
@@ -16,26 +15,16 @@ namespace MCF {
 // 由一个线程锁定的互斥锁可以由另一个线程解锁。
 
 class Mutex : NONCOPYABLE {
-private:
-	struct X_QueueNode;
-
 public:
 	using UniqueLock = Impl_UniqueLockTemplate::UniqueLockTemplate<Mutex>;
 
 private:
 	Atomic<std::size_t> x_uSpinCount;
 
-	Atomic<std::size_t> x_uLockingThreadId; // 如果带错误检测，这个是锁定的线程 ID；否则是一个布尔值，表示是否已被锁定。
-	Semaphore x_vSemaphore;
-	Atomic<X_QueueNode *> x_pQueueHead;
+	std::intptr_t x_aImpl[1];
 
 public:
-	explicit Mutex(std::size_t uSpinCount = 0x100);
-
-private:
-	bool X_IsQueueEmpty() const noexcept;
-	X_QueueNode *X_LockQueue() noexcept;
-	void X_UnlockQueue(X_QueueNode *pQueueHead) noexcept;
+	explicit Mutex(std::size_t uSpinCount = 0x100) noexcept;
 
 public:
 	std::size_t GetSpinCount() const noexcept;

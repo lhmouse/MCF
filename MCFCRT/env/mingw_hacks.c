@@ -28,21 +28,11 @@ static int DtorComparatorNodes(const MCF_AvlNodeHeader *pObj1, const MCF_AvlNode
 	return DtorComparatorNodeKey(pObj1, (intptr_t)(uintptr_t)((const KeyDtorNode *)pObj2)->ulKey);
 }
 
-static CRITICAL_SECTION g_csMutex;
-static KeyDtorNode *    g_pDtorHead    = nullptr;
-static MCF_AvlRoot      g_pavlDtorRoot = nullptr;
+static SRWLOCK          g_srwDtorMapLock = SRWLOCK_INIT;
+static KeyDtorNode *    g_pDtorHead      = nullptr;
+static MCF_AvlRoot      g_pavlDtorRoot   = nullptr;
 
 bool __MCF_CRT_MinGWHacksInit(){
-	if(!InitializeCriticalSectionEx(&g_csMutex, 0x400u,
-#ifdef NDEBUG
-		CRITICAL_SECTION_NO_DEBUG_INFO
-#else
-		0
-#endif
-		))
-	{
-		return false;
-	}
 	return true;
 }
 void __MCF_CRT_MinGWHacksUninit(){
@@ -58,12 +48,10 @@ void __MCF_CRT_MinGWHacksUninit(){
 		g_pDtorHead = pNext;
 	}
 	g_pavlDtorRoot = nullptr;
-
-	DeleteCriticalSection(&g_csMutex);
 }
 
 void __MCF_CRT_RunEmutlsDtors(){
-	EnterCriticalSection(&g_csMutex);
+	AcquireSRWLockExclusive(&g_srwDtorMapLock);
 	{
 		for(const KeyDtorNode *pCur = g_pDtorHead; pCur; pCur = pCur->pNext){
 			const LPVOID pMem = TlsGetValue(pCur->ulKey);
@@ -73,7 +61,7 @@ void __MCF_CRT_RunEmutlsDtors(){
 			}
 		}
 	}
-	LeaveCriticalSection(&g_csMutex);
+	ReleaseSRWLockExclusive(&g_srwDtorMapLock);
 }
 
 int __mingwthr_key_dtor(unsigned long ulKey, void (*pfnDtor)(void *)){
@@ -86,7 +74,7 @@ int __mingwthr_key_dtor(unsigned long ulKey, void (*pfnDtor)(void *)){
 		pNode->pfnDtor = pfnDtor;
 		pNode->pPrev   = nullptr;
 
-		EnterCriticalSection(&g_csMutex);
+		AcquireSRWLockExclusive(&g_srwDtorMapLock);
 		{
 			pNode->pNext = g_pDtorHead;
 			if(g_pDtorHead){
@@ -96,13 +84,13 @@ int __mingwthr_key_dtor(unsigned long ulKey, void (*pfnDtor)(void *)){
 
 			MCF_AvlAttach(&g_pavlDtorRoot, (MCF_AvlNodeHeader *)pNode, &DtorComparatorNodes);
 		}
-		LeaveCriticalSection(&g_csMutex);
+		ReleaseSRWLockExclusive(&g_srwDtorMapLock);
 	}
 	return 0;
 }
 
 int __mingwthr_remove_key_dtor(unsigned long ulKey){
-	EnterCriticalSection(&g_csMutex);
+	AcquireSRWLockExclusive(&g_srwDtorMapLock);
 	{
 		KeyDtorNode *pNode = (KeyDtorNode *)MCF_AvlFind(
 			&g_pavlDtorRoot, (intptr_t)ulKey, &DtorComparatorNodeKey);
@@ -122,7 +110,7 @@ int __mingwthr_remove_key_dtor(unsigned long ulKey){
 			free(pNode);
 		}
 	}
-	LeaveCriticalSection(&g_csMutex);
+	ReleaseSRWLockExclusive(&g_srwDtorMapLock);
 	return 0;
 }
 

@@ -22,11 +22,14 @@ ConditionVariable::ConditionVariable() noexcept
 }
 
 // 其他非静态成员函数。
-bool ConditionVariable::X_SleepOnMutex(Mutex &vMutex, std::uint64_t u64MilliSeconds) noexcept {
+bool ConditionVariable::Wait(Mutex::UniqueLock &vLock, std::uint64_t u64MilliSeconds) noexcept {
+	ASSERT(vLock.GetLockCount() == 1);
+
 	auto u64Now = GetFastMonoClock();
 	const auto u64Until = u64Now + u64MilliSeconds;
 	for(;;){
-		const bool bTakenOver = ::SleepConditionVariableSRW(reinterpret_cast<::CONDITION_VARIABLE *>(x_aImpl), reinterpret_cast<::SRWLOCK *>(vMutex.x_aImpl), Min(u64MilliSeconds, 0x7FFFFFFFu), 0);
+		const bool bTakenOver = ::SleepConditionVariableSRW(
+			reinterpret_cast<::CONDITION_VARIABLE *>(x_aImpl), reinterpret_cast<::SRWLOCK *>(vLock.GetOwner().x_aImpl), Min(u64MilliSeconds, 0x7FFFFFFFu), 0);
 		if(bTakenOver){
 			return true;
 		}
@@ -39,41 +42,33 @@ bool ConditionVariable::X_SleepOnMutex(Mutex &vMutex, std::uint64_t u64MilliSeco
 		}
 	}
 }
-bool ConditionVariable::X_SleepOnMutex(Mutex &vMutex) noexcept {
-	const bool bTakenOver = ::SleepConditionVariableSRW(reinterpret_cast<::CONDITION_VARIABLE *>(x_aImpl), reinterpret_cast<::SRWLOCK *>(vMutex.x_aImpl), INFINITE, 0);
-	return bTakenOver;
-}
-
-bool ConditionVariable::Wait(Mutex::UniqueLock &vLock, std::uint64_t u64MilliSeconds) noexcept {
-	ASSERT(vLock.GetLockCount() == 1);
-
-	const bool bTakenOver = X_SleepOnMutex(vLock.GetOwner(), u64MilliSeconds);
-	return bTakenOver;
-}
 void ConditionVariable::Wait(Mutex::UniqueLock &vLock) noexcept {
 	ASSERT(vLock.GetLockCount() == 1);
 
-	X_SleepOnMutex(vLock.GetOwner());
+	::SleepConditionVariableSRW(
+		reinterpret_cast<::CONDITION_VARIABLE *>(x_aImpl), reinterpret_cast<::SRWLOCK *>(vLock.GetOwner().x_aImpl), INFINITE, 0);
 }
+
 bool ConditionVariable::Wait(Impl_UniqueLockTemplate::UniqueLockTemplateBase &vLock, std::uint64_t u64MilliSeconds) noexcept {
 	ASSERT(vLock.GetLockCount() == 1);
 
-	x_mtxGuard.Lock();
+	Mutex::UniqueLock vGuardLock(x_mtxGuard);
 	vLock.Unlock();
-	const bool bTakenOver = X_SleepOnMutex(x_mtxGuard, u64MilliSeconds);
-	x_mtxGuard.Unlock();
+	const auto bTakenOver = Wait(vGuardLock, u64MilliSeconds);
+	vGuardLock.Unlock();
 	vLock.Lock();
 	return bTakenOver;
 }
 void ConditionVariable::Wait(Impl_UniqueLockTemplate::UniqueLockTemplateBase &vLock) noexcept {
 	ASSERT(vLock.GetLockCount() == 1);
 
-	x_mtxGuard.Lock();
+	Mutex::UniqueLock vGuardLock(x_mtxGuard);
 	vLock.Unlock();
-	X_SleepOnMutex(x_mtxGuard);
-	x_mtxGuard.Unlock();
+	Wait(vGuardLock);
+	vGuardLock.Unlock();
 	vLock.Lock();
 }
+
 void ConditionVariable::Signal() noexcept {
 	::WakeConditionVariable(reinterpret_cast<::CONDITION_VARIABLE *>(x_aImpl));
 }

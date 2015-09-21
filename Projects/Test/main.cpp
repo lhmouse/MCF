@@ -1,5 +1,6 @@
 #include <MCF/Thread/Thread.hpp>
 #include <MCF/Thread/Mutex.hpp>
+#include <MCF/Thread/KernelMutex.hpp>
 #include <MCF/Thread/ConditionVariable.hpp>
 #include <MCF/Containers/RingQueue.hpp>
 #include <MCFCRT/env/mcfwin.h>
@@ -8,7 +9,7 @@
 
 using namespace MCF;
 
-Mutex queue_mutex;
+KernelMutex queue_mutex;
 ConditionVariable queue_cv;
 RingQueue<std::string> queue;
 
@@ -19,7 +20,7 @@ extern "C" unsigned MCFMain(){
 		unsigned delay = 0;
 
 		for(;;){
-			Mutex::UniqueLock lock(queue_mutex);
+			KernelMutex::UniqueLock lock(queue_mutex);
 			while(queue.IsEmpty()){
 				{ const Mutex::UniqueLock cout_lock(cout_mutex);
 				  std::cout <<"Consumer is waiting for data..." <<std::endl; }
@@ -50,13 +51,13 @@ extern "C" unsigned MCFMain(){
 			{ const Mutex::UniqueLock cout_lock(cout_mutex);
 			  std::cout <<"Produced          : " <<str <<std::endl; }
 
-			Mutex::UniqueLock lock(queue_mutex);
+			KernelMutex::UniqueLock lock(queue_mutex);
 			queue.Push(str);
 			queue_cv.Signal();
 		}
 	}
 
-	{ Mutex::UniqueLock lock(queue_mutex);
+	{ KernelMutex::UniqueLock lock(queue_mutex);
 	  queue.Push(); }
 	thread->Join();
 

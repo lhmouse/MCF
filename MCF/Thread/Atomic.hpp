@@ -118,6 +118,40 @@ namespace Impl_Atomic {
 		}
 	};
 
+	template<>
+	class AtomicInteger<bool> final : public AtomicCommon<bool> {
+	private:
+		using X_Base = AtomicCommon<bool>;
+
+	public:
+		explicit constexpr AtomicInteger(bool bElement = 0) noexcept
+			: X_Base(bElement)
+		{
+		}
+
+	public:
+		bool AndFetch(bool bOperand, MemoryModel eModel) volatile noexcept {
+			return __atomic_and_fetch(&this->x_vElement, bOperand, static_cast<int>(eModel));
+		}
+		bool FetchAnd(bool bOperand, MemoryModel eModel) volatile noexcept {
+			return __atomic_fetch_and(&this->x_vElement, bOperand, static_cast<int>(eModel));
+		}
+
+		bool OrFetch(bool bOperand, MemoryModel eModel) volatile noexcept {
+			return __atomic_or_fetch(&this->x_vElement, bOperand, static_cast<int>(eModel));
+		}
+		bool FetchOr(bool bOperand, MemoryModel eModel) volatile noexcept {
+			return __atomic_fetch_or(&this->x_vElement, bOperand, static_cast<int>(eModel));
+		}
+
+		bool XorFetch(bool bOperand, MemoryModel eModel) volatile noexcept {
+			return __atomic_xor_fetch(&this->x_vElement, bOperand, static_cast<int>(eModel));
+		}
+		bool FetchXor(bool bOperand, MemoryModel eModel) volatile noexcept {
+			return __atomic_fetch_xor(&this->x_vElement, bOperand, static_cast<int>(eModel));
+		}
+	};
+
 	template<typename ElementT>
 	class AtomicPointerToObject final : public AtomicCommon<ElementT> {
 		static_assert(std::is_pointer<ElementT>::value && std::is_object<std::remove_pointer_t<ElementT>>::value, "!");

@@ -484,17 +484,17 @@ public:
 
 		if(std::is_nothrow_move_constructible<Element>::value){
 			X_PrepareForInsertion(uOffset, uDeltaSize);
-			const auto pBegin = GetBegin();
+			const auto pWriteBegin = GetBegin() + uOffset;
 			std::size_t uWrite = 0;
 			try {
 				for(std::size_t i = 0; i < uDeltaSize; ++i){
-					DefaultConstruct(pBegin + uOffset + uWrite, vParams...);
+					DefaultConstruct(pWriteBegin + uWrite, vParams...);
 					++uWrite;
 				}
 			} catch(...){
 				while(uWrite != 0){
 					--uWrite;
-					Destruct(pBegin + uWrite);
+					Destruct(pWriteBegin + uWrite);
 				}
 				X_UndoPreparation(uWrite, uDeltaSize);
 				throw;
@@ -541,17 +541,17 @@ public:
 		if(kHasDeltaSizeHint && std::is_nothrow_move_constructible<Element>::value){
 			const auto uDeltaSize = static_cast<std::size_t>(std::distance(itBegin, itEnd));
 			X_PrepareForInsertion(uOffset, uDeltaSize);
-			const auto pBegin = GetBegin();
+			const auto pWriteBegin = GetBegin() + uOffset;
 			std::size_t uWrite = 0;
 			try {
 				for(auto it = itBegin; it != itEnd; ++it){
-					Construct(pBegin + uOffset + uWrite, *it);
+					Construct(pWriteBegin + uWrite, *it);
 					++uWrite;
 				}
 			} catch(...){
 				while(uWrite != 0){
 					--uWrite;
-					Destruct(pBegin + uWrite);
+					Destruct(pWriteBegin + uWrite);
 				}
 				X_UndoPreparation(uWrite, uDeltaSize);
 				throw;

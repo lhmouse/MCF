@@ -52,20 +52,23 @@ void ConditionVariable::Wait(Mutex::UniqueLock &vLock) noexcept {
 bool ConditionVariable::Wait(Impl_UniqueLockTemplate::UniqueLockTemplateBase &vLock, std::uint64_t u64MilliSeconds) noexcept {
 	ASSERT(vLock.GetLockCount() == 1);
 
-	Mutex::UniqueLock vGuardLock(x_mtxGuard);
-	vLock.Unlock();
-	const auto bTakenOver = Wait(vGuardLock, u64MilliSeconds);
-	vGuardLock.Unlock();
+	bool bTakenOver;
+	{
+		Mutex::UniqueLock vGuardLock(x_mtxGuard);
+		vLock.Unlock();
+		bTakenOver = Wait(vGuardLock, u64MilliSeconds);
+	}
 	vLock.Lock();
 	return bTakenOver;
 }
 void ConditionVariable::Wait(Impl_UniqueLockTemplate::UniqueLockTemplateBase &vLock) noexcept {
 	ASSERT(vLock.GetLockCount() == 1);
 
-	Mutex::UniqueLock vGuardLock(x_mtxGuard);
-	vLock.Unlock();
-	Wait(vGuardLock);
-	vGuardLock.Unlock();
+	{
+		Mutex::UniqueLock vGuardLock(x_mtxGuard);
+		vLock.Unlock();
+		Wait(vGuardLock);
+	}
 	vLock.Lock();
 }
 

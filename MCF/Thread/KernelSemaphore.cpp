@@ -13,6 +13,9 @@ namespace MCF {
 
 namespace {
 	UniqueWin32Handle CheckedCreateSemaphore(std::size_t uInitCount, const wchar_t *pwszName){
+		if(uInitCount >= static_cast<std::size_t>(LONG_MAX)){
+			DEBUG_THROW(Exception, ERROR_INVALID_PARAMETER, "Initial count for a kernel semaphore is too large"_rcs);
+		}
 		UniqueWin32Handle hSemaphore(::CreateSemaphoreW(nullptr, static_cast<long>(uInitCount), LONG_MAX, pwszName));
 		if(!hSemaphore){
 			DEBUG_THROW(SystemError, "CreateSemaphoreW"_rcs);

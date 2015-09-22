@@ -4,30 +4,13 @@
 
 #include "../StdMCF.hpp"
 #include "Event.hpp"
-#include "../Core/Exception.hpp"
-#include "../Core/String.hpp"
 #include "../Core/Time.hpp"
-#include "../Utilities/MinMax.hpp"
 
 namespace MCF {
 
-namespace {
-	UniqueWin32Handle CheckedCreateEvent(bool bInitSet, const wchar_t *pwszName){
-		UniqueWin32Handle hEvent(::CreateEventW(nullptr, true, bInitSet, pwszName));
-		if(!hEvent){
-			DEBUG_THROW(SystemError, "CreateEventW"_rcs);
-		}
-		return hEvent;
-	}
-}
-
 // 构造函数和析构函数。
-Event::Event(bool bInitSet, const wchar_t *pwszName)
-	: x_hEvent(CheckedCreateEvent(bInitSet, pwszName))
-{
-}
-Event::Event(bool bInitSet, const WideString &wsName)
-	: Event(bInitSet, wsName.GetStr())
+Event::Event(bool bInitSet) noexcept
+	: x_mtxGuard(), x_cvWaiter(), x_bSet(bInitSet)
 {
 }
 
@@ -35,42 +18,36 @@ Event::Event(bool bInitSet, const WideString &wsName)
 bool Event::Wait(std::uint64_t u64MilliSeconds) const noexcept {
 	auto u64Now = GetFastMonoClock();
 	const auto u64Until = u64Now + u64MilliSeconds;
-	for(;;){
-		const auto dwResult = ::WaitForSingleObject(x_hEvent.Get(), Min(u64Until - u64Now, 0x7FFFFFFFu));
-		if(dwResult == WAIT_FAILED){
-			ASSERT_MSG(false, L"WaitForSingleObject() 失败。");
-		}
-		if(dwResult != WAIT_TIMEOUT){
-			return true;
-		}
-		u64Now = GetFastMonoClock();
+
+	Mutex::UniqueLock vLock(x_mtxGuard);
+	while(!x_bSet){
 		if(u64Until <= u64Now){
 			return false;
 		}
+		if(!x_cvWaiter.Wait(vLock, u64Until - u64Now)){
+			return false;
+		}
+		u64Now = GetFastMonoClock();
 	}
+	return true;
 }
 void Event::Wait() const noexcept {
-	const auto dwResult = ::WaitForSingleObject(x_hEvent.Get(), INFINITE);
-	if(dwResult == WAIT_FAILED){
-		ASSERT_MSG(false, L"WaitForSingleObject() 失败。");
+	Mutex::UniqueLock vLock(x_mtxGuard);
+	while(!x_bSet){
+		x_cvWaiter.Wait(vLock);
 	}
 }
 bool Event::IsSet() const noexcept {
-	const auto dwResult = ::WaitForSingleObject(x_hEvent.Get(), 0);
-	if(dwResult == WAIT_FAILED){
-		ASSERT_MSG(false, L"WaitForSingleObject() 失败。");
-	}
-	return dwResult != WAIT_TIMEOUT;
+	return Wait(0);
 }
 void Event::Set() noexcept {
-	if(!::SetEvent(x_hEvent.Get())){
-		ASSERT_MSG(false, L"SetEvent() 失败。");
-	}
+	Mutex::UniqueLock vLock(x_mtxGuard);
+	x_bSet = true;
+	x_cvWaiter.Broadcast();
 }
-void Event::Clear() noexcept {
-	if(!::ResetEvent(x_hEvent.Get())){
-		ASSERT_MSG(false, L"ResetEvent() 失败。");
-	}
+void Event::Reset() noexcept {
+	Mutex::UniqueLock vLock(x_mtxGuard);
+	x_bSet = false;
 }
 
 }

@@ -15,8 +15,8 @@ namespace MCF {
 
 class Semaphore : NONCOPYABLE {
 private:
-	Mutex x_mtxGuard;
-	ConditionVariable x_cvWaiter;
+	mutable Mutex x_mtxGuard;
+	mutable ConditionVariable x_cvWaiter;
 	std::size_t x_uCount;
 
 public:

@@ -26,8 +26,8 @@ public:
 	using UniqueWriterLock = Impl_UniqueLockTemplate::UniqueLockTemplate<ReaderWriterMutex, 1u>;
 
 private:
-	RecursiveMutex x_mtxWriterGuard;
-	Mutex x_mtxExclusive;
+	mutable RecursiveMutex x_mtxWriterGuard;
+	mutable Mutex x_mtxExclusive;
 	Atomic<std::size_t> x_uReaderCount;
 	UniqueHandle<X_TlsIndexDeleter> x_uTlsIndex;
 

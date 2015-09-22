@@ -1,6 +1,6 @@
 #include <MCF/Thread/Thread.hpp>
 #include <MCF/Thread/Mutex.hpp>
-#include <MCF/Thread/Semaphore.hpp>
+#include <MCF/Thread/Event.hpp>
 #include <MCF/Containers/RingQueue.hpp>
 #include <MCFCRT/env/mcfwin.h>
 #include <iostream>
@@ -9,7 +9,7 @@
 using namespace MCF;
 
 Mutex queue_mutex;
-Semaphore sem(0);
+Event sem(false);
 RingQueue<std::string> queue;
 
 Mutex cout_mutex;
@@ -23,6 +23,9 @@ extern "C" unsigned MCFMain(){
 			Mutex::UniqueLock lock(queue_mutex);
 			auto str = *std::move(queue.GetFirst());
 			queue.Shift();
+			if(queue.IsEmpty()){
+				sem.Reset();
+			}
 			lock.Unlock();
 
 			if(str.empty()){
@@ -53,13 +56,13 @@ extern "C" unsigned MCFMain(){
 
 			Mutex::UniqueLock lock(queue_mutex);
 			queue.Push(str);
-			sem.Post();
+			sem.Set();
 		}
 	}
 
 	{ Mutex::UniqueLock lock(queue_mutex);
 	  queue.Push();
-	  sem.Post(); }
+	  sem.Set(); }
 	thread->Join();
 
 	return 0;

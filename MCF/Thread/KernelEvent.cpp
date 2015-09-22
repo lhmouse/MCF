@@ -5,12 +5,11 @@
 #include "../StdMCF.hpp"
 #include "KernelEvent.hpp"
 #include "../Core/Exception.hpp"
-#include "../Utilities/MinMax.hpp"
 #include <winternl.h>
 #include <ntdef.h>
 
 extern "C" __attribute__((__dllimport__, __stdcall__))
-NTSTATUS NtCreateEvent(HANDLE *pHandle, ACCESS_MASK dwDesiredAccess, OBJECT_ATTRIBUTES *pObjectAttributes, EVENT_TYPE eEventType, BOOL bInitialState) noexcept;
+NTSTATUS NtCreateEvent(HANDLE *pHandle, ::ACCESS_MASK dwDesiredAccess, ::OBJECT_ATTRIBUTES *pObjectAttributes, EVENT_TYPE eEventType, BOOL bInitialState) noexcept;
 
 struct EventBasicInformation {
 	EVENT_TYPE eEventType;
@@ -26,29 +25,25 @@ NTSTATUS NtResetEvent(HANDLE hEvent, LONG *plPrevState) noexcept;
 
 namespace MCF {
 
-namespace {
-	Impl_UniqueNtHandle::UniqueNtHandle CheckedCreateEvent(bool bInitSet, const WideStringObserver &wsoName){
-		const auto uLength = Min(wsoName.GetSize(), 0xFFFFu);
-		UNICODE_STRING ustrObjectName;
-		ustrObjectName.Length        = uLength;
-		ustrObjectName.MaximumLength = uLength;
-		ustrObjectName.Buffer        = (PWSTR)wsoName.GetBegin();
-		OBJECT_ATTRIBUTES vObjectAttributes;
-		InitializeObjectAttributes(&vObjectAttributes, &ustrObjectName, 0, nullptr, nullptr);
-
-		HANDLE hEvent;
-		const auto lStatus = ::NtCreateEvent(&hEvent, EVENT_ALL_ACCESS, &vObjectAttributes, NotificationEvent, bInitSet);
-		if(!NT_SUCCESS(lStatus)){
-			DEBUG_THROW(SystemError, ::RtlNtStatusToDosError(lStatus), "NtCreateEvent"_rcs);
-		}
-		return Impl_UniqueNtHandle::UniqueNtHandle(hEvent);
-	}
-}
-
 // 构造函数和析构函数。
-KernelEvent::KernelEvent(bool bInitSet, const WideStringObserver &wsoName)
-	: x_hEvent(CheckedCreateEvent(bInitSet, wsoName))
-{
+KernelEvent::KernelEvent(bool bInitSet, const WideStringObserver &wsoName){
+	const auto uSize = wsoName.GetSize() * sizeof(wchar_t);
+	if(uSize > UINT16_MAX){
+		DEBUG_THROW(SystemError, ERROR_INVALID_PARAMETER, "The name for a kernel event is too long"_rcs);
+	}
+	::UNICODE_STRING ustrObjectName;
+	ustrObjectName.Length        = uSize;
+	ustrObjectName.MaximumLength = uSize;
+	ustrObjectName.Buffer        = (PWSTR)wsoName.GetBegin();
+	::OBJECT_ATTRIBUTES vObjectAttributes;
+	InitializeObjectAttributes(&vObjectAttributes, &ustrObjectName, 0, nullptr, nullptr);
+
+	HANDLE hEvent;
+	const auto lStatus = ::NtCreateEvent(&hEvent, EVENT_ALL_ACCESS, &vObjectAttributes, NotificationEvent, bInitSet);
+	if(!NT_SUCCESS(lStatus)){
+		DEBUG_THROW(SystemError, ::RtlNtStatusToDosError(lStatus), "NtCreateEvent"_rcs);
+	}
+	x_hEvent.Reset(hEvent);
 }
 
 // 其他非静态成员函数。
@@ -61,11 +56,11 @@ bool KernelEvent::Wait(std::uint64_t u64MilliSeconds) const noexcept {
 	::LARGE_INTEGER liTimeout;
 	liTimeout.QuadPart = -static_cast<std::int64_t>(u64MilliSeconds * 10000);
 	const auto lStatus = ::NtWaitForSingleObject(x_hEvent.Get(), false, &liTimeout);
-	if(lStatus == STATUS_TIMEOUT){
-		return false;
-	}
 	if(!NT_SUCCESS(lStatus)){
 		ASSERT_MSG(false, L"NtWaitForSingleObject() 失败。");
+	}
+	if(lStatus == STATUS_TIMEOUT){
+		return false;
 	}
 	return true;
 }

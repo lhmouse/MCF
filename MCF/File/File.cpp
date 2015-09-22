@@ -5,99 +5,169 @@
 #include "../StdMCF.hpp"
 #include "File.hpp"
 #include "../Core/Exception.hpp"
+#include "../Core/String.hpp"
 #include "../Utilities/BinaryOperations.hpp"
 #include "../Utilities/MinMax.hpp"
+#include "../Utilities/Defer.hpp"
+#include <winternl.h>
+#include <ntdef.h>
+#include <ntstatus.h>
+
+extern "C" __attribute__((__dllimport__, __stdcall__))
+NTSTATUS RtlGetFullPathName_UstrEx(const ::UNICODE_STRING *pFileName, ::UNICODE_STRING *pStaticBuffer, ::UNICODE_STRING *pDynamicBuffer,
+	::UNICODE_STRING **ppWhichBufferIsUsed, SIZE_T *puPrefixChars, BOOLEAN *pbValid, int *pnPathType, SIZE_T *puBytesRequired);
+
+extern "C" __attribute__((__dllimport__, __stdcall__))
+NTSTATUS NtCreateEvent(HANDLE *pHandle, ::ACCESS_MASK dwDesiredAccess, ::OBJECT_ATTRIBUTES *pObjectAttributes, EVENT_TYPE eEventType, BOOL bInitialState) noexcept;
+
+extern "C" __attribute__((__dllimport__, __stdcall__))
+NTSTATUS NtReadFile(HANDLE hFile, HANDLE hEvent, PIO_APC_ROUTINE pfnApcRoutine, void *pApcContext, IO_STATUS_BLOCK *pIoStatus,
+	void *pBuffer, ULONG ulLength, LARGE_INTEGER *pliOffset, ULONG *pulKey) noexcept;
+extern "C" __attribute__((__dllimport__, __stdcall__))
+NTSTATUS NtWriteFile(HANDLE hFile, HANDLE hEvent, PIO_APC_ROUTINE pfnApcRoutine, void *pApcContext, IO_STATUS_BLOCK *pIoStatus,
+	const void *pBuffer, ULONG ulLength, LARGE_INTEGER *pliOffset, ULONG *pulKey) noexcept;
+
+extern "C" __attribute__((__dllimport__, __stdcall__))
+NTSTATUS NtFlushBuffersFile(HANDLE hFile, IO_STATUS_BLOCK *pIoStatus) noexcept;
 
 namespace MCF {
 
-void *File::X_FileCloser::operator()() const noexcept {
-	return INVALID_HANDLE_VALUE;
+void Impl_File::NtHandleCloser::operator()(void *hFile) const noexcept {
+	const auto lStatus = ::NtClose(hFile);
+	if(!NT_SUCCESS(lStatus)){
+		ASSERT_MSG(false, L"::NtClose() 失败。");
+	}
 }
-void File::X_FileCloser::operator()(void *hFile) const noexcept {
-	::CloseHandle(hFile);
+
+namespace {
+	UniqueHandle<Impl_File::NtHandleCloser> CreateNotificationEvent(){
+		::UNICODE_STRING ustrObjectName;
+		ustrObjectName.Length        = 0;
+		ustrObjectName.MaximumLength = 0;
+		ustrObjectName.Buffer        = (PWSTR)L"";
+		::OBJECT_ATTRIBUTES vObjectAttributes;
+		InitializeObjectAttributes(&vObjectAttributes, &ustrObjectName, 0, nullptr, nullptr);
+
+		HANDLE hEvent;
+		const auto lStatus = ::NtCreateEvent(&hEvent, EVENT_ALL_ACCESS, &vObjectAttributes, NotificationEvent, false);
+		if(!NT_SUCCESS(lStatus)){
+			DEBUG_THROW(SystemError, ::RtlNtStatusToDosError(lStatus), "NtCreateEvent"_rcs);
+		}
+		return UniqueHandle<Impl_File::NtHandleCloser>(hEvent);
+	}
 }
 
 // 构造函数和析构函数。
-File::File(const wchar_t *pwszPath, std::uint32_t u32Flags){
-	DWORD dwDesiredAccess = 0;
+File::File(const WideStringObserver &wsoPath, std::uint32_t u32Flags){
+	const auto uSize = wsoPath.GetSize() * sizeof(wchar_t);
+	if(uSize > UINT16_MAX){
+		DEBUG_THROW(SystemError, ERROR_INVALID_PARAMETER, "The path for a file is too long"_rcs);
+	}
+	::UNICODE_STRING ustrRawPath;
+	ustrRawPath.Length              = uSize;
+	ustrRawPath.MaximumLength       = uSize;
+	ustrRawPath.Buffer              = (PWSTR)wsoPath.GetBegin();
+
+	wchar_t awcStaticStr[MAX_PATH];
+	::UNICODE_STRING ustrStaticBuffer;
+	ustrStaticBuffer.Length         = 0;
+	ustrStaticBuffer.MaximumLength  = sizeof(awcStaticStr);
+	ustrStaticBuffer.Buffer         = awcStaticStr;
+
+	::UNICODE_STRING ustrDynamicBuffer;
+	ustrDynamicBuffer.Length        = 0;
+	ustrDynamicBuffer.MaximumLength = 0;
+	ustrDynamicBuffer.Buffer        = (PWSTR)L"";
+
+	::UNICODE_STRING *pustrUnprefixedFullPath;
+	int nPathType;
+	const auto lPathStatus = ::RtlGetFullPathName_UstrEx(&ustrRawPath, &ustrStaticBuffer, &ustrDynamicBuffer, &pustrUnprefixedFullPath, nullptr, nullptr, &nPathType, nullptr);
+	if(!NT_SUCCESS(lPathStatus)){
+		DEBUG_THROW(SystemError, ::RtlNtStatusToDosError(lPathStatus), "RtlGetFullPathName_UstrEx"_rcs);
+	}
+	DEFER([&]{ if(pustrUnprefixedFullPath == &ustrDynamicBuffer){ ::RtlFreeUnicodeString(pustrUnprefixedFullPath); } });
+
+	static constexpr wchar_t kPrefix[] = LR"(\??\)";
+	static constexpr auto kPrefixSize = sizeof(kPrefix) - sizeof(wchar_t);
+
+	const auto uPrefixedPathSize = pustrUnprefixedFullPath->Length + kPrefixSize;
+	unsigned char *pbyPrefixedPathBuffer;
+	if(static_cast<std::size_t>(pustrUnprefixedFullPath->MaximumLength) - pustrUnprefixedFullPath->Length <= uPrefixedPathSize){
+		pbyPrefixedPathBuffer = reinterpret_cast<unsigned char *>(pustrUnprefixedFullPath->Buffer);
+	} else {
+		pbyPrefixedPathBuffer = static_cast<unsigned char *>(::operator new[](uPrefixedPathSize));
+	}
+	DEFER([&]{ if(pbyPrefixedPathBuffer != reinterpret_cast<unsigned char *>(pustrUnprefixedFullPath->Buffer)){ ::operator delete[](pbyPrefixedPathBuffer); } });
+	std::memmove(pbyPrefixedPathBuffer + kPrefixSize, pustrUnprefixedFullPath->Buffer, pustrUnprefixedFullPath->Length);
+	std::memcpy(pbyPrefixedPathBuffer, kPrefix, kPrefixSize);
+
+	::ACCESS_MASK dwDesiredAccess = 0;
 	if(u32Flags & kToRead){
-		dwDesiredAccess |= GENERIC_READ;
+		dwDesiredAccess |= FILE_GENERIC_READ;
 	}
 	if(u32Flags & kToWrite){
-		dwDesiredAccess |= GENERIC_WRITE | FILE_READ_ATTRIBUTES;
+		dwDesiredAccess |= FILE_GENERIC_WRITE;
 	}
 
-	DWORD dwShareMode = FILE_SHARE_READ;
+	::UNICODE_STRING ustrPrefixedFullPath;
+	ustrPrefixedFullPath.Length        = uPrefixedPathSize;
+	ustrPrefixedFullPath.MaximumLength = uPrefixedPathSize;
+	ustrPrefixedFullPath.Buffer        = (PWSTR)pbyPrefixedPathBuffer;
+	::OBJECT_ATTRIBUTES vObjectAttributes;
+	InitializeObjectAttributes(&vObjectAttributes, &ustrPrefixedFullPath, OBJ_CASE_INSENSITIVE, nullptr, nullptr);
+
+	::IO_STATUS_BLOCK vIoStatus;
+
+	DWORD dwSharedAccess;
 	if(u32Flags & kToWrite){
-		dwShareMode = 0;
+		dwSharedAccess = 0;
+	} else {
+		dwSharedAccess = FILE_SHARE_READ;
 	}
 
 	DWORD dwCreateDisposition;
 	if(u32Flags & kToWrite){
 		if(u32Flags & kDontCreate){
-			dwCreateDisposition = OPEN_EXISTING;
+			dwCreateDisposition = FILE_OPEN;
 		} else if(u32Flags & kFailIfExists){
-			dwCreateDisposition = CREATE_NEW;
+			dwCreateDisposition = FILE_CREATE;
 		} else {
-			dwCreateDisposition = OPEN_ALWAYS;
+			dwCreateDisposition = FILE_OPEN_IF;
 		}
 	} else {
-		dwCreateDisposition = OPEN_EXISTING;
+		dwCreateDisposition = FILE_OPEN;
 	}
 
-	DWORD dwFlagsAndAttributes = FILE_ATTRIBUTE_NORMAL | FILE_FLAG_OVERLAPPED;
+	DWORD dwCreateOptions = FILE_NON_DIRECTORY_FILE | FILE_RANDOM_ACCESS;
 	if(u32Flags & kNoBuffering){
-		dwFlagsAndAttributes |= FILE_FLAG_NO_BUFFERING;
+		dwCreateOptions |= FILE_NO_INTERMEDIATE_BUFFERING;
 	}
 	if(u32Flags & kWriteThrough){
-		dwFlagsAndAttributes |= FILE_FLAG_WRITE_THROUGH;
+		dwCreateOptions |= FILE_WRITE_THROUGH;
 	}
 	if(u32Flags & kDeleteOnClose){
-		dwFlagsAndAttributes |= FILE_FLAG_DELETE_ON_CLOSE;
+		dwDesiredAccess |= DELETE;
+		dwCreateOptions |= FILE_DELETE_ON_CLOSE;
 	}
 
-	if(!x_hFile.Reset(::CreateFileW(pwszPath, dwDesiredAccess, dwShareMode, nullptr, dwCreateDisposition, dwFlagsAndAttributes, NULL))){
-		DEBUG_THROW(SystemError, "CreateFileW"_rcs);
+	HANDLE hFile;
+	const auto lStatus = ::NtCreateFile(&hFile, dwDesiredAccess, &vObjectAttributes, &vIoStatus, nullptr, FILE_ATTRIBUTE_NORMAL, dwSharedAccess, dwCreateDisposition, dwCreateOptions, nullptr, 0);
+	if(!NT_SUCCESS(lStatus)){
+		DEBUG_THROW(SystemError, ::RtlNtStatusToDosError(lStatus), "NtCreateFile"_rcs);
 	}
-
-	if((u32Flags & kToWrite) && !(u32Flags & kDontTruncate)){
-		if(!::SetEndOfFile(x_hFile.Get())){
-			DEBUG_THROW(SystemError, "SetEndOfFile"_rcs);
-		}
-		if(!::FlushFileBuffers(x_hFile.Get())){
-			DEBUG_THROW(SystemError, "FlushFileBuffers"_rcs);
-		}
-	}
-}
-File::File(const WideString &wsPath, std::uint32_t u32Flags)
-	: File(wsPath.GetStr(), u32Flags)
-{
-}
-File::~File(){
+	x_hFile.Reset(hFile);
 }
 
 // 其他非静态成员函数。
 bool File::IsOpen() const noexcept {
 	return !!x_hFile;
 }
-void File::Open(const wchar_t *pwszPath, std::uint32_t u32Flags){
-	File(pwszPath, u32Flags).Swap(*this);
+void File::Open(const WideStringObserver &wsoPath, std::uint32_t u32Flags){
+	File(wsoPath, u32Flags).Swap(*this);
 }
-void File::Open(const WideString &wsPath, std::uint32_t u32Flags){
-	File(wsPath, u32Flags).Swap(*this);
-}
-bool File::OpenNoThrow(const wchar_t *pwszPath, std::uint32_t u32Flags){
+bool File::OpenNoThrow(const WideStringObserver &wsoPath, std::uint32_t u32Flags){
 	try {
-		Open(pwszPath, u32Flags);
-		return true;
-	} catch(SystemError &e){
-		::SetLastError(e.GetCode());
-		return false;
-	}
-}
-bool File::OpenNoThrow(const WideString &wsPath, std::uint32_t u32Flags){
-	try {
-		Open(wsPath, u32Flags);
+		Open(wsoPath, u32Flags);
 		return true;
 	} catch(SystemError &e){
 		::SetLastError(e.GetCode());
@@ -105,7 +175,7 @@ bool File::OpenNoThrow(const WideString &wsPath, std::uint32_t u32Flags){
 	}
 }
 void File::Close() noexcept {
-	x_hFile.Reset();
+	File().Swap(*this);
 }
 
 std::uint64_t File::GetSize() const {
@@ -113,24 +183,29 @@ std::uint64_t File::GetSize() const {
 		return 0;
 	}
 
-	::LARGE_INTEGER liFileSize;
-	if(!::GetFileSizeEx(x_hFile.Get(), &liFileSize)){
-		DEBUG_THROW(SystemError, "GetFileSizeEx"_rcs);
+	::IO_STATUS_BLOCK vIoStatus;
+	::FILE_STANDARD_INFORMATION vStandardInfo;
+	const auto lStatus = ::NtQueryInformationFile(x_hFile.Get(), &vIoStatus, &vStandardInfo, sizeof(vStandardInfo), FileStandardInformation);
+	if(!NT_SUCCESS(lStatus)){
+		DEBUG_THROW(SystemError, ::RtlNtStatusToDosError(lStatus), "NtQueryInformationFile"_rcs);
 	}
-	return (std::uint64_t)liFileSize.QuadPart;
+	return static_cast<std::uint64_t>(vStandardInfo.EndOfFile.QuadPart);
 }
 void File::Resize(std::uint64_t u64NewSize){
 	if(!x_hFile){
 		DEBUG_THROW(Exception, ERROR_INVALID_HANDLE, "No file opened"_rcs);
 	}
 
-	::LARGE_INTEGER liNewSize;
-	liNewSize.QuadPart = static_cast<long long>(u64NewSize);
-	if(!::SetFilePointerEx(x_hFile.Get(), liNewSize, nullptr, FILE_BEGIN)){
-		DEBUG_THROW(SystemError, "SetFilePointerEx"_rcs);
+	if(u64NewSize >= static_cast<std::uint64_t>(INT64_MAX)){
+		DEBUG_THROW(Exception, ERROR_INVALID_PARAMETER, "File size is too large"_rcs);
 	}
-	if(!::SetEndOfFile(x_hFile.Get())){
-		DEBUG_THROW(SystemError, "SetEndOfFile"_rcs);
+
+	::IO_STATUS_BLOCK vIoStatus;
+	::FILE_END_OF_FILE_INFORMATION vEofInfo;
+	vEofInfo.EndOfFile.QuadPart = static_cast<std::int64_t>(u64NewSize);
+	const auto lStatus = ::NtSetInformationFile(x_hFile.Get(), &vIoStatus, &vEofInfo, sizeof(vEofInfo), FileEndOfFileInformation);
+	if(!NT_SUCCESS(lStatus)){
+		DEBUG_THROW(SystemError, ::RtlNtStatusToDosError(lStatus), "NtSetInformationFile"_rcs);
 	}
 }
 void File::Clear(){
@@ -144,37 +219,33 @@ std::size_t File::Read(void *pBuffer, std::uint32_t u32BytesToRead, std::uint64_
 		DEBUG_THROW(Exception, ERROR_INVALID_HANDLE, "No file opened"_rcs);
 	}
 
-	DWORD dwErrorCode;
-	DWORD dwTransferred;
-
-	::OVERLAPPED vOverlapped;
-	BZero(vOverlapped);
-	vOverlapped.Offset = u64Offset;
-	vOverlapped.OffsetHigh = (u64Offset >> 32);
-	if(::ReadFile(x_hFile.Get(), pBuffer, u32BytesToRead, nullptr, &vOverlapped)){
-		dwErrorCode = ERROR_SUCCESS;
-	} else {
-		dwErrorCode = ::GetLastError();
+	if(u64Offset >= static_cast<std::uint64_t>(INT64_MAX)){
+		DEBUG_THROW(Exception, ERROR_INVALID_PARAMETER, "File offset is too large"_rcs);
 	}
+
+	const auto hEvent = CreateNotificationEvent();
+	::IO_STATUS_BLOCK vIoStatus;
+	::LARGE_INTEGER liOffset;
+	liOffset.QuadPart = static_cast<std::int64_t>(u64Offset);
+	const auto lStatus = ::NtReadFile(x_hFile.Get(), hEvent.Get(), nullptr, nullptr, &vIoStatus, pBuffer, u32BytesToRead, &liOffset, nullptr);
 	if(fnAsyncProc){
 		fnAsyncProc();
 	}
-	if(dwErrorCode != ERROR_SUCCESS){
-		if(dwErrorCode != ERROR_IO_PENDING){
-			DEBUG_THROW(SystemError, dwErrorCode, "ReadFile"_rcs);
+	if(lStatus != STATUS_END_OF_FILE){
+		if(!NT_SUCCESS(lStatus)){
+			DEBUG_THROW(SystemError, ::RtlNtStatusToDosError(lStatus), "NtReadFile"_rcs);
 		}
-		if(!::GetOverlappedResult(x_hFile.Get(), &vOverlapped, &dwTransferred, true)){
-			if(::GetLastError() != ERROR_HANDLE_EOF){
-				DEBUG_THROW(SystemError, "GetOverlappedResult"_rcs);
+		if(lStatus == STATUS_PENDING){
+			const auto lWaitStatus = ::NtWaitForSingleObject(hEvent.Get(), false, nullptr);
+			if(!NT_SUCCESS(lWaitStatus)){
+				ASSERT_MSG(false, L"NtWaitForSingleObject() 失败。");
 			}
-			dwTransferred = 0;
 		}
 	}
-
 	if(fnCompleteCallback){
 		fnCompleteCallback();
 	}
-	return dwTransferred;
+	return vIoStatus.Information;
 }
 std::size_t File::Write(std::uint64_t u64Offset, const void *pBuffer, std::uint32_t u32BytesToWrite,
 	FunctionObserver<void ()> fnAsyncProc, FunctionObserver<void ()> fnCompleteCallback)
@@ -183,42 +254,43 @@ std::size_t File::Write(std::uint64_t u64Offset, const void *pBuffer, std::uint3
 		DEBUG_THROW(Exception, ERROR_INVALID_HANDLE, "No file opened"_rcs);
 	}
 
-	DWORD dwErrorCode;
-	DWORD dwTransferred;
-
-	::OVERLAPPED vOverlapped;
-	BZero(vOverlapped);
-	vOverlapped.Offset = u64Offset;
-	vOverlapped.OffsetHigh = (u64Offset >> 32);
-	if(::WriteFile(x_hFile.Get(), pBuffer, u32BytesToWrite, nullptr, &vOverlapped)){
-		dwErrorCode = ERROR_SUCCESS;
-	} else {
-		dwErrorCode = ::GetLastError();
+	if(u64Offset >= static_cast<std::uint64_t>(INT64_MAX)){
+		DEBUG_THROW(Exception, ERROR_INVALID_PARAMETER, "File offset is too large"_rcs);
 	}
+
+	const auto hEvent = CreateNotificationEvent();
+	::IO_STATUS_BLOCK vIoStatus;
+	::LARGE_INTEGER liOffset;
+	liOffset.QuadPart = static_cast<std::int64_t>(u64Offset);
+	const auto lStatus = ::NtWriteFile(x_hFile.Get(), hEvent.Get(), nullptr, nullptr, &vIoStatus, pBuffer, u32BytesToWrite, &liOffset, nullptr);
 	if(fnAsyncProc){
 		fnAsyncProc();
 	}
-	if(dwErrorCode != ERROR_SUCCESS){
-		if(dwErrorCode != ERROR_IO_PENDING){
-			DEBUG_THROW(SystemError, dwErrorCode, "WriteFile"_rcs);
+	{
+		if(!NT_SUCCESS(lStatus)){
+			DEBUG_THROW(SystemError, ::RtlNtStatusToDosError(lStatus), "NtWriteFile"_rcs);
 		}
-		if(!::GetOverlappedResult(x_hFile.Get(), &vOverlapped, &dwTransferred, true)){
-			DEBUG_THROW(SystemError, "GetOverlappedResult"_rcs);
+		if(lStatus == STATUS_PENDING){
+			const auto lWaitStatus = ::NtWaitForSingleObject(hEvent.Get(), false, nullptr);
+			if(!NT_SUCCESS(lWaitStatus)){
+				ASSERT_MSG(false, L"NtWaitForSingleObject() 失败。");
+			}
 		}
 	}
-
 	if(fnCompleteCallback){
 		fnCompleteCallback();
 	}
-	return dwTransferred;
+	return vIoStatus.Information;
 }
 void File::Flush() const {
 	if(!x_hFile){
 		DEBUG_THROW(Exception, ERROR_INVALID_HANDLE, "No file opened"_rcs);
 	}
 
-	if(!::FlushFileBuffers(x_hFile.Get())){
-		DEBUG_THROW(SystemError, "FlushFileBuffers"_rcs);
+	::IO_STATUS_BLOCK vIoStatus;
+	const auto lStatus = ::NtFlushBuffersFile(x_hFile.Get(), &vIoStatus);
+	if(!NT_SUCCESS(lStatus)){
+		DEBUG_THROW(SystemError, ::RtlNtStatusToDosError(lStatus), "NtFlushBuffersFile"_rcs);
 	}
 }
 

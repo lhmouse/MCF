@@ -1,66 +1,25 @@
-#include <MCF/Thread/Thread.hpp>
-#include <MCF/Thread/Mutex.hpp>
-#include <MCF/Thread/Semaphore.hpp>
-#include <MCF/Containers/RingQueue.hpp>
-#include <MCFCRT/env/mcfwin.h>
-#include <iostream>
-#include <string>
+#include <MCF/File/File.hpp>
+#include <MCF/Core/Exception.hpp>
+#include <MCF/Hash/Crc32.hpp>
+#include <cstdio>
 
 using namespace MCF;
 
-Mutex queue_mutex;
-Semaphore sem(0);
-RingQueue<std::string> queue;
-
-Mutex cout_mutex;
-
 extern "C" unsigned MCFMain(){
-	auto thread = Thread::Create([]{
-		unsigned delay = 0;
+	try {
+		File f(L".\\make64.cmd"_wso, File::kToRead);
 
-		for(;;){
-			sem.Wait();
-			Mutex::UniqueLock lock(queue_mutex);
-			auto str = *std::move(queue.GetFirst());
-			queue.Shift();
-			lock.Unlock();
-
-			if(str.empty()){
-				break;
-			}
-
-			::Sleep(delay);
-			delay += 1;
-
-			{ const Mutex::UniqueLock cout_lock(cout_mutex);
-			  std::cout <<"         Consumed : " <<str <<std::endl; }
+		Crc32 crc32;
+		char data[512];
+		std::size_t size;
+		std::uint64_t offset = 0;
+		while((size = f.Read(data, sizeof(data), offset)) != 0){
+			crc32.Update(data, size);
+			offset += size;
 		}
-	});
-
-	unsigned delay = 1000;
-
-	for(unsigned i = 0; i < 10; ++i){
-		::Sleep(delay);
-		if(delay > 0){
-			delay -= 100;
-		}
-
-		for(unsigned j = 0; j < 10; ++j){
-			char str[256];
-			std::sprintf(str, "string %u ---------------------------", i * 100 + j);
-			{ const Mutex::UniqueLock cout_lock(cout_mutex);
-			  std::cout <<"Produced          : " <<str <<std::endl; }
-
-			Mutex::UniqueLock lock(queue_mutex);
-			queue.Push(str);
-			sem.Post();
-		}
+		std::printf("crc = %08lX\n", (unsigned long)crc32.Finalize());
+	} catch(Exception &e){
+		std::printf("exception %lu: %s\n", e.GetCode(), e.GetMsg());
 	}
-
-	{ Mutex::UniqueLock lock(queue_mutex);
-	  queue.Push();
-	  sem.Post(); }
-	thread->Join();
-
 	return 0;
 }

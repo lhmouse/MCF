@@ -18,7 +18,7 @@ public:
 	using UniqueLock = Impl_UniqueLockTemplate::UniqueLockTemplate<KernelRecursiveMutex>;
 
 private:
-	const Impl_UniqueNtHandle::UniqueNtHandle x_hMutex;
+	Impl_UniqueNtHandle::UniqueNtHandle x_hMutex;
 
 public:
 	explicit KernelRecursiveMutex(const WideStringObserver &wsoName = nullptr);

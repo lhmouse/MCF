@@ -7,7 +7,6 @@
 #include "../../MCFCRT/env/thread.h"
 #include "../Core/Exception.hpp"
 #include "../Core/Time.hpp"
-#include "../Utilities/MinMax.hpp"
 
 namespace MCF {
 

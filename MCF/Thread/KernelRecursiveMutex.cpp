@@ -5,36 +5,16 @@
 #include "../StdMCF.hpp"
 #include "KernelRecursiveMutex.hpp"
 #include "../Core/Exception.hpp"
-#include "../Utilities/MinMax.hpp"
 #include <winternl.h>
 #include <ntdef.h>
 
 extern "C" __attribute__((__dllimport__, __stdcall__))
-NTSTATUS NtCreateMutant(HANDLE *pHandle, ACCESS_MASK dwDesiredAccess, OBJECT_ATTRIBUTES *pObjectAttributes, BOOL bInitialOwner) noexcept;
+NTSTATUS NtCreateMutant(HANDLE *pHandle, ::ACCESS_MASK dwDesiredAccess, ::OBJECT_ATTRIBUTES *pObjectAttributes, BOOL bInitialOwner) noexcept;
 
 extern "C" __attribute__((__dllimport__, __stdcall__))
 NTSTATUS NtReleaseMutant(HANDLE hMutant, LONG *plPrevCount) noexcept;
 
 namespace MCF {
-
-namespace {
-	Impl_UniqueNtHandle::UniqueNtHandle CheckedCreateMutex(const WideStringObserver &wsoName){
-		const auto uLength = Min(wsoName.GetSize(), 0xFFFFu);
-		UNICODE_STRING ustrObjectName;
-		ustrObjectName.Length        = uLength;
-		ustrObjectName.MaximumLength = uLength;
-		ustrObjectName.Buffer        = (PWSTR)wsoName.GetBegin();
-		OBJECT_ATTRIBUTES vObjectAttributes;
-		InitializeObjectAttributes(&vObjectAttributes, &ustrObjectName, OBJ_OPENIF, nullptr, nullptr);
-
-		HANDLE hMutex;
-		const auto lStatus = ::NtCreateMutant(&hMutex, MUTANT_ALL_ACCESS, &vObjectAttributes, false);
-		if(!NT_SUCCESS(lStatus)){
-			DEBUG_THROW(SystemError, ::RtlNtStatusToDosError(lStatus), "NtCreateMutant"_rcs);
-		}
-		return Impl_UniqueNtHandle::UniqueNtHandle(hMutex);
-	}
-}
 
 namespace Impl_UniqueLockTemplate {
 	template<>
@@ -52,9 +32,24 @@ namespace Impl_UniqueLockTemplate {
 }
 
 // 构造函数和析构函数。
-KernelRecursiveMutex::KernelRecursiveMutex(const WideStringObserver &wsoName)
-	: x_hMutex(CheckedCreateMutex(wsoName))
-{
+KernelRecursiveMutex::KernelRecursiveMutex(const WideStringObserver &wsoName){
+	const auto uSize = wsoName.GetSize() * sizeof(wchar_t);
+	if(uSize > UINT16_MAX){
+		DEBUG_THROW(SystemError, ERROR_INVALID_PARAMETER, "The name for a kernel mutex is too long"_rcs);
+	}
+	::UNICODE_STRING ustrObjectName;
+	ustrObjectName.Length        = uSize;
+	ustrObjectName.MaximumLength = uSize;
+	ustrObjectName.Buffer        = (PWSTR)wsoName.GetBegin();
+	::OBJECT_ATTRIBUTES vObjectAttributes;
+	InitializeObjectAttributes(&vObjectAttributes, &ustrObjectName, OBJ_OPENIF, nullptr, nullptr);
+
+	HANDLE hMutex;
+	const auto lStatus = ::NtCreateMutant(&hMutex, MUTANT_ALL_ACCESS, &vObjectAttributes, false);
+	if(!NT_SUCCESS(lStatus)){
+		DEBUG_THROW(SystemError, ::RtlNtStatusToDosError(lStatus), "NtCreateMutant"_rcs);
+	}
+	x_hMutex.Reset(hMutex);
 }
 
 // 其他非静态成员函数。
@@ -67,11 +62,11 @@ bool KernelRecursiveMutex::Try(std::uint64_t u64MilliSeconds) noexcept {
 	::LARGE_INTEGER liTimeout;
 	liTimeout.QuadPart = -static_cast<std::int64_t>(u64MilliSeconds * 10000);
 	const auto lStatus = ::NtWaitForSingleObject(x_hMutex.Get(), false, &liTimeout);
-	if(lStatus == STATUS_TIMEOUT){
-		return false;
-	}
 	if(!NT_SUCCESS(lStatus)){
 		ASSERT_MSG(false, L"NtWaitForSingleObject() 失败。");
+	}
+	if(lStatus == STATUS_TIMEOUT){
+		return false;
 	}
 	return true;
 }

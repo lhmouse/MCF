@@ -5,13 +5,22 @@
 #ifndef MCF_CORE_FILE_HPP_
 #define MCF_CORE_FILE_HPP_
 
-#include "../Core/String.hpp"
+#include "../Core/StringObserver.hpp"
 #include "../Core/UniqueHandle.hpp"
 #include "../Function/FunctionObserver.hpp"
 #include <cstddef>
 #include <cstdint>
 
 namespace MCF {
+
+namespace Impl_File {
+	struct NtHandleCloser {
+		constexpr void *operator()() const noexcept {
+			return nullptr;
+		}
+		void operator()(void *hFile) const noexcept;
+	};
+}
 
 class File {
 public:
@@ -32,32 +41,20 @@ public:
 	};
 
 private:
-	struct X_FileCloser {
-		void *operator()() const noexcept;
-		void operator()(void *hFile) const noexcept;
-	};
-
-private:
-	UniqueHandle<X_FileCloser> x_hFile;
+	UniqueHandle<Impl_File::NtHandleCloser> x_hFile;
 
 public:
-	File() noexcept = default;
-	File(File &&) noexcept = default;
-	File &operator=(File &&) = default;
+	constexpr File() noexcept
+		: x_hFile()
+	{
+	}
 
-	File(const wchar_t *pwszPath, std::uint32_t u32Flags);
-	File(const WideString &wsPath, std::uint32_t u32Flags);
-	~File();
-
-	File(const File &) noexcept = delete;
-	File &operator=(const File &) noexcept = delete;
+	File(const WideStringObserver &wsoPath, std::uint32_t u32Flags);
 
 public:
 	bool IsOpen() const noexcept;
-	void Open(const wchar_t *pwszPath, std::uint32_t u32Flags);
-	void Open(const WideString &wsPath, std::uint32_t u32Flags);
-	bool OpenNoThrow(const wchar_t *pwszPath, std::uint32_t u32Flags);
-	bool OpenNoThrow(const WideString &wsPath, std::uint32_t u32Flags);
+	void Open(const WideStringObserver &wsoPath, std::uint32_t u32Flags);
+	bool OpenNoThrow(const WideStringObserver &wsoPath, std::uint32_t u32Flags);
 	void Close() noexcept;
 
 	std::uint64_t GetSize() const;

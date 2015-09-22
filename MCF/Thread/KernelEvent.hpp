@@ -15,7 +15,7 @@ namespace MCF {
 
 class KernelEvent : NONCOPYABLE {
 private:
-	const Impl_UniqueNtHandle::UniqueNtHandle x_hEvent;
+	Impl_UniqueNtHandle::UniqueNtHandle x_hEvent;
 
 public:
 	explicit KernelEvent(bool bInitSet, const WideStringObserver &wsoName = nullptr);

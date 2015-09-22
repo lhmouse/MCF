@@ -15,7 +15,7 @@ namespace MCF {
 
 class KernelSemaphore : NONCOPYABLE {
 private:
-	const Impl_UniqueNtHandle::UniqueNtHandle x_hSemaphore;
+	Impl_UniqueNtHandle::UniqueNtHandle x_hSemaphore;
 
 public:
 	explicit KernelSemaphore(std::size_t uInitCount, const WideStringObserver &wsoName = nullptr);

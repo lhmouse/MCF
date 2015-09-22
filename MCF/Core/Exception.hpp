@@ -16,19 +16,19 @@ private:
 	const char *x_pszFile;
 	unsigned long x_ulLine;
 	unsigned long x_ulCode;
-	RefCountingNtmbs x_rcsMessage;
+	RefCountingNtmbs x_rcsMsg;
 
 public:
-	Exception(const char *pszFile, unsigned long ulLine, unsigned long ulCode, RefCountingNtmbs rcsMessage) noexcept
+	Exception(const char *pszFile, unsigned long ulLine, unsigned long ulCode, RefCountingNtmbs rcsMsg) noexcept
 		: std::exception()
-		, x_pszFile(pszFile), x_ulLine(ulLine), x_ulCode(ulCode), x_rcsMessage(std::move(rcsMessage))
+		, x_pszFile(pszFile), x_ulLine(ulLine), x_ulCode(ulCode), x_rcsMsg(std::move(rcsMsg))
 	{
 	}
 	~Exception() override;
 
 public:
 	const char *what() const noexcept override {
-		return x_rcsMessage;
+		return x_rcsMsg;
 	}
 
 	const char *GetFile() const noexcept {
@@ -40,19 +40,19 @@ public:
 	unsigned long GetCode() const noexcept {
 		return x_ulCode;
 	}
-	const char *GetMessage() const noexcept {
-		return x_rcsMessage;
+	const char *GetMsg() const noexcept {
+		return x_rcsMsg;
 	}
 };
 
 class SystemError : public Exception {
 public:
-	SystemError(const char *pszFile, unsigned long ulLine, unsigned long ulCode, RefCountingNtmbs rcsFunction) noexcept
-		: Exception(pszFile, ulLine, ulCode, std::move(rcsFunction))
+	SystemError(const char *pszFile, unsigned long ulLine, unsigned long ulCode, RefCountingNtmbs rcsFunc) noexcept
+		: Exception(pszFile, ulLine, ulCode, std::move(rcsFunc))
 	{
 	}
-	SystemError(const char *pszFile, unsigned long ulLine, RefCountingNtmbs rcsFunction) noexcept
-		: SystemError(pszFile, ulLine, ::MCF_CRT_GetWin32LastError(), std::move(rcsFunction))
+	SystemError(const char *pszFile, unsigned long ulLine, RefCountingNtmbs rcsFunc) noexcept
+		: SystemError(pszFile, ulLine, ::MCF_CRT_GetWin32LastError(), std::move(rcsFunc))
 	{
 	}
 	~SystemError() override;

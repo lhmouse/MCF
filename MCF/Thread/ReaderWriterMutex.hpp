@@ -6,21 +6,15 @@
 #define MCF_THREAD_READER_WRITER_MUTEX_HPP_
 
 #include "../Utilities/Noncopyable.hpp"
-#include "../Core/UniqueHandle.hpp"
 #include "_UniqueLockTemplate.hpp"
 #include "RecursiveMutex.hpp"
 #include "Mutex.hpp"
+#include "ThreadLocal.hpp"
 #include <cstddef>
 
 namespace MCF {
 
 class ReaderWriterMutex : NONCOPYABLE, public RecursiveMutexResults {
-private:
-	struct X_TlsIndexDeleter {
-		std::size_t operator()() const noexcept;
-		void operator()(std::size_t uTlsIndex) const noexcept;
-	};
-
 public:
 	using UniqueReaderLock = Impl_UniqueLockTemplate::UniqueLockTemplate<ReaderWriterMutex, 0u>;
 	using UniqueWriterLock = Impl_UniqueLockTemplate::UniqueLockTemplate<ReaderWriterMutex, 1u>;
@@ -29,7 +23,7 @@ private:
 	mutable RecursiveMutex x_mtxWriterGuard;
 	mutable Mutex x_mtxExclusive;
 	Atomic<std::size_t> x_uReaderCount;
-	UniqueHandle<X_TlsIndexDeleter> x_uTlsIndex;
+	ThreadLocal<std::size_t> x_tlsReaderReentranceCount;
 
 public:
 	explicit ReaderWriterMutex(std::size_t uSpinCount = 0x100);

@@ -20,21 +20,31 @@ bool Event::Wait(std::uint64_t u64MilliSeconds) const noexcept {
 	const auto u64Until = u64Now + u64MilliSeconds;
 
 	Mutex::UniqueLock vLock(x_mtxGuard);
-	while(!x_bSet){
-		if(u64Until <= u64Now){
-			return false;
+	if(!x_bSet){
+		for(;;){
+			if(u64Until <= u64Now){
+				return false;
+			}
+			if(!x_cvWaiter.Wait(vLock, u64Until - u64Now)){
+				return false;
+			}
+			if(x_bSet){
+				break;
+			}
+			u64Now = GetFastMonoClock();
 		}
-		if(!x_cvWaiter.Wait(vLock, u64Until - u64Now)){
-			return false;
-		}
-		u64Now = GetFastMonoClock();
 	}
 	return true;
 }
 void Event::Wait() const noexcept {
 	Mutex::UniqueLock vLock(x_mtxGuard);
-	while(!x_bSet){
-		x_cvWaiter.Wait(vLock);
+	if(!x_bSet){
+		for(;;){
+			x_cvWaiter.Wait(vLock);
+			if(x_bSet){
+				break;
+			}
+		}
 	}
 }
 bool Event::IsSet() const noexcept {

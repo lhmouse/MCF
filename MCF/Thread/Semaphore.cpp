@@ -20,22 +20,32 @@ bool Semaphore::Wait(std::uint64_t u64MilliSeconds) noexcept {
 	const auto u64Until = u64Now + u64MilliSeconds;
 
 	Mutex::UniqueLock vLock(x_mtxGuard);
-	while(x_uCount == 0){
-		if(u64Until <= u64Now){
-			return false;
+	if(x_uCount == 0){
+		for(;;){
+			if(u64Until <= u64Now){
+				return false;
+			}
+			if(!x_cvWaiter.Wait(vLock, u64Until - u64Now)){
+				return false;
+			}
+			if(x_uCount != 0){
+				break;
+			}
+			u64Now = GetFastMonoClock();
 		}
-		if(!x_cvWaiter.Wait(vLock, u64Until - u64Now)){
-			return false;
-		}
-		u64Now = GetFastMonoClock();
 	}
 	--x_uCount;
 	return true;
 }
 void Semaphore::Wait() noexcept {
 	Mutex::UniqueLock vLock(x_mtxGuard);
-	while(x_uCount == 0){
-		x_cvWaiter.Wait(vLock);
+	if(x_uCount == 0){
+		for(;;){
+			x_cvWaiter.Wait(vLock);
+			if(x_uCount != 0){
+				break;
+			}
+		}
 	}
 	--x_uCount;
 }

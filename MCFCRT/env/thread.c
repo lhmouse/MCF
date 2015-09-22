@@ -425,11 +425,10 @@ bool MCF_CRT_WaitForThread(void *hThread, MCF_STD uint64_t u64MilliSeconds){
 	LARGE_INTEGER liTimeout;
 	liTimeout.QuadPart = -(int64_t)(u64MilliSeconds * 10000);
 	const NTSTATUS lStatus = NtWaitForSingleObject((HANDLE)hThread, false, &liTimeout);
+	if(lStatus == STATUS_TIMEOUT){
+		return false;
+	}
 	if(!NT_SUCCESS(lStatus)){
-		const DWORD dwErrorCode = RtlNtStatusToDosError(lStatus);
-		if(dwErrorCode == STATUS_TIMEOUT){
-			return false;
-		}
 		ASSERT_MSG(false, L"NtWaitForSingleObject() 失败。");
 	}
 	return true;

@@ -67,11 +67,10 @@ bool KernelRecursiveMutex::Try(std::uint64_t u64MilliSeconds) noexcept {
 	::LARGE_INTEGER liTimeout;
 	liTimeout.QuadPart = -static_cast<std::int64_t>(u64MilliSeconds * 10000);
 	const auto lStatus = ::NtWaitForSingleObject(x_hMutex.Get(), false, &liTimeout);
+	if(lStatus == STATUS_TIMEOUT){
+		return false;
+	}
 	if(!NT_SUCCESS(lStatus)){
-		const DWORD dwErrorCode = ::RtlNtStatusToDosError(lStatus);
-		if(dwErrorCode == STATUS_TIMEOUT){
-			return false;
-		}
 		ASSERT_MSG(false, L"NtWaitForSingleObject() 失败。");
 	}
 	return true;

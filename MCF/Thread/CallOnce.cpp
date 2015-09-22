@@ -8,7 +8,7 @@
 namespace MCF {
 
 namespace {
-	::SRWLOCK g_srwLock;
+	::SRWLOCK g_srwLock = SRWLOCK_INIT;
 }
 
 namespace Impl_CallOnce {

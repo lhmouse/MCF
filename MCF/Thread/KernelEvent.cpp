@@ -9,7 +9,7 @@
 #include <ntdef.h>
 
 extern "C" __attribute__((__dllimport__, __stdcall__))
-NTSTATUS NtCreateEvent(HANDLE *pHandle, ::ACCESS_MASK dwDesiredAccess, ::OBJECT_ATTRIBUTES *pObjectAttributes, EVENT_TYPE eEventType, BOOL bInitialState) noexcept;
+NTSTATUS NtCreateEvent(HANDLE *pHandle, ::ACCESS_MASK dwDesiredAccess, ::OBJECT_ATTRIBUTES *pObjectAttributes, EVENT_TYPE eEventType, BOOLEAN bInitialState) noexcept;
 
 struct EventBasicInformation {
 	EVENT_TYPE eEventType;

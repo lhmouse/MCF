@@ -77,7 +77,7 @@ File::File(const WideStringObserver &wsoPath, std::uint32_t u32Flags){
 	::UNICODE_STRING ustrDynamicBuffer;
 	ustrDynamicBuffer.Length        = 0;
 	ustrDynamicBuffer.MaximumLength = 0;
-	ustrDynamicBuffer.Buffer        = (PWSTR)L"";
+	ustrDynamicBuffer.Buffer        = nullptr;
 
 	::UNICODE_STRING *pustrUnprefixedFullPath;
 	int nPathType;

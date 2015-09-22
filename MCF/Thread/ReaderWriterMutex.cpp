@@ -4,13 +4,16 @@
 
 #include "../StdMCF.hpp"
 #include "ReaderWriterMutex.hpp"
+#include "../Core/Exception.hpp"
+#include "../Core/System.hpp"
+#include "../Utilities/MinMax.hpp"
 
 namespace MCF {
 
 namespace Impl_UniqueLockTemplate {
 	template<>
 	bool ReaderWriterMutex::UniqueReaderLock::X_DoTry() const noexcept {
-		return x_pOwner->TryAsReader() != ReaderWriterMutex::Result::kTryFailed;
+		return x_pOwner->TryAsReader();
 	}
 	template<>
 	void ReaderWriterMutex::UniqueReaderLock::X_DoLock() const noexcept {
@@ -23,7 +26,7 @@ namespace Impl_UniqueLockTemplate {
 
 	template<>
 	bool ReaderWriterMutex::UniqueWriterLock::X_DoTry() const noexcept {
-		return x_pOwner->TryAsWriter() != ReaderWriterMutex::Result::kTryFailed;
+		return x_pOwner->TryAsWriter();
 	}
 	template<>
 	void ReaderWriterMutex::UniqueWriterLock::X_DoLock() const noexcept {
@@ -36,115 +39,71 @@ namespace Impl_UniqueLockTemplate {
 }
 
 // 构造函数和析构函数。
-ReaderWriterMutex::ReaderWriterMutex(std::size_t uSpinCount)
-	: x_mtxWriterGuard(uSpinCount), x_mtxExclusive(uSpinCount), x_uReaderCount(0), x_tlsReaderReentranceCount(0)
+ReaderWriterMutex::ReaderWriterMutex(std::size_t uSpinCount) noexcept
+	: x_uSpinCount(0)
 {
+	static_assert(sizeof(x_aImpl) == sizeof(::SRWLOCK), "!");
+
+	::InitializeSRWLock(reinterpret_cast<::SRWLOCK *>(x_aImpl));
+
+	SetSpinCount(uSpinCount);
 }
 
 // 其他非静态成员函数。
-ReaderWriterMutex::Result ReaderWriterMutex::TryAsReader() noexcept {
-	Result eResult = kRecursive;
-	auto uReaderRecur = x_tlsReaderReentranceCount.Get();
-	if(uReaderRecur == 0){
-		if(x_mtxWriterGuard.IsLockedByCurrentThread()){
-			x_uReaderCount.Increment(kAtomicRelaxed);
-		} else {
-			if(x_mtxWriterGuard.Try() == kTryFailed){
-				eResult = kTryFailed;
-				goto jDone;
-			}
-			if(x_uReaderCount.Increment(kAtomicRelaxed) == 1){
-				if(!x_mtxExclusive.Try()){
-					x_uReaderCount.Decrement(kAtomicRelaxed);
-					x_mtxWriterGuard.Unlock();
-					eResult = kTryFailed;
-					goto jDone;
-				}
-				eResult = kStateChanged;
-			}
-			x_mtxWriterGuard.Unlock();
-		}
-	}
-	x_tlsReaderReentranceCount.Set(uReaderRecur + 1);
-jDone:
-	return eResult;
+std::size_t ReaderWriterMutex::GetSpinCount() const noexcept {
+	return x_uSpinCount.Load(kAtomicRelaxed);
 }
-ReaderWriterMutex::Result ReaderWriterMutex::LockAsReader() noexcept {
-	Result eResult = kRecursive;
-	auto uReaderRecur = x_tlsReaderReentranceCount.Get();
-	if(uReaderRecur == 0){
-		if(x_mtxWriterGuard.IsLockedByCurrentThread()){
-			x_uReaderCount.Increment(kAtomicRelaxed);
-		} else {
-			x_mtxWriterGuard.Lock();
-			if(x_uReaderCount.Increment(kAtomicRelaxed) == 1){
-				x_mtxExclusive.Lock();
-				eResult = kStateChanged;
-			}
-			x_mtxWriterGuard.Unlock();
-		}
+void ReaderWriterMutex::SetSpinCount(std::size_t uSpinCount) noexcept {
+	if(GetLogicalProcessorCount() == 0){
+		return;
 	}
-	x_tlsReaderReentranceCount.Set(uReaderRecur + 1);
-	return eResult;
-}
-ReaderWriterMutex::Result ReaderWriterMutex::UnlockAsReader() noexcept {
-	Result eResult = kRecursive;
-	auto uReaderRecur = x_tlsReaderReentranceCount.Get();
-	if(uReaderRecur == 1){
-		if(x_mtxWriterGuard.IsLockedByCurrentThread()){
-			x_uReaderCount.Decrement(kAtomicRelaxed);
-		} else {
-			if(x_uReaderCount.Decrement(kAtomicRelaxed) == 0){
-				x_mtxExclusive.Unlock();
-				eResult = kStateChanged;
-			}
-		}
-	}
-	x_tlsReaderReentranceCount.Set(uReaderRecur + 1);
-	return eResult;
+	x_uSpinCount.Store(uSpinCount, kAtomicRelaxed);
 }
 
-ReaderWriterMutex::Result ReaderWriterMutex::TryAsWriter() noexcept {
-	// 假定有两个线程运行同样的函数：
-	//
-	//   GetReaderLock();
-	//   ::Sleep(1000);
-	//   GetWriterLock(); // 死锁，因为没有任何一个线程可以获得写锁。
-	//
-	// 这个问题并非无法解决，例如允许 GetWriterLock() 抛出异常。
-	// 但是这样除了使问题复杂化以外没有什么好处。
-	ASSERT_MSG(x_tlsReaderReentranceCount.Get() == 0, L"获取写锁前必须先释放读锁。");
-
-	const auto eResult = x_mtxWriterGuard.Try();
-	if(eResult != kStateChanged){
-		return eResult;
-	}
-	if(!x_mtxExclusive.Try()){
-		x_mtxWriterGuard.Unlock();
-		return kTryFailed;
-	}
-	return kStateChanged;
+bool ReaderWriterMutex::TryAsReader() noexcept {
+	return ::TryAcquireSRWLockShared(reinterpret_cast<::SRWLOCK *>(x_aImpl));
 }
-ReaderWriterMutex::Result ReaderWriterMutex::LockAsWriter() noexcept {
-	ASSERT_MSG(x_tlsReaderReentranceCount.Get() == 0, L"获取写锁前必须先释放读锁。");
+void ReaderWriterMutex::LockAsReader() noexcept {
+	if(::TryAcquireSRWLockShared(reinterpret_cast<::SRWLOCK *>(x_aImpl))){
+		return;
+	}
 
-	const auto eResult = x_mtxWriterGuard.Lock();
-	if(eResult != kStateChanged){
-		return eResult;
+	const auto uSpinCount = GetSpinCount() / 0x400; // FIXME: SRWLOCK 里面自己实现了一个自旋。
+	for(std::size_t i = 0; i < uSpinCount; ++i){
+		::SwitchToThread();
+
+		if(::TryAcquireSRWLockShared(reinterpret_cast<::SRWLOCK *>(x_aImpl))){
+			return;
+		}
 	}
-	x_mtxExclusive.Lock();
-	return kStateChanged;
+
+	::AcquireSRWLockShared(reinterpret_cast<::SRWLOCK *>(x_aImpl));
 }
-ReaderWriterMutex::Result ReaderWriterMutex::UnlockAsWriter() noexcept {
-	const auto eResult = x_mtxWriterGuard.Unlock();
-	if(eResult != kStateChanged){
-		return eResult;
+void ReaderWriterMutex::UnlockAsReader() noexcept {
+	::ReleaseSRWLockShared(reinterpret_cast<::SRWLOCK *>(x_aImpl));
+}
+
+bool ReaderWriterMutex::TryAsWriter() noexcept {
+	return ::TryAcquireSRWLockExclusive(reinterpret_cast<::SRWLOCK *>(x_aImpl));
+}
+void ReaderWriterMutex::LockAsWriter() noexcept {
+	if(::TryAcquireSRWLockExclusive(reinterpret_cast<::SRWLOCK *>(x_aImpl))){
+		return;
 	}
-	const auto uRecurReading = x_tlsReaderReentranceCount.Get();
-	if(uRecurReading == 0){
-		x_mtxExclusive.Unlock();
+
+	const auto uSpinCount = GetSpinCount() / 0x400; // FIXME: SRWLOCK 里面自己实现了一个自旋。
+	for(std::size_t i = 0; i < uSpinCount; ++i){
+		::SwitchToThread();
+
+		if(::TryAcquireSRWLockExclusive(reinterpret_cast<::SRWLOCK *>(x_aImpl))){
+			return;
+		}
 	}
-	return kStateChanged;
+
+	::AcquireSRWLockExclusive(reinterpret_cast<::SRWLOCK *>(x_aImpl));
+}
+void ReaderWriterMutex::UnlockAsWriter() noexcept {
+	::ReleaseSRWLockExclusive(reinterpret_cast<::SRWLOCK *>(x_aImpl));
 }
 
 }

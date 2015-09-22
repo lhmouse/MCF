@@ -12,6 +12,13 @@
 #include "../ext/assert.h"
 #include "../ext/unref_param.h"
 #include <stdlib.h>
+#include <winternl.h>
+#include <ntdef.h>
+
+extern __attribute__((__dllimport__, __stdcall__))
+NTSTATUS NtSuspendThread(HANDLE hThread, LONG *plPrevCount);
+extern __attribute__((__dllimport__, __stdcall__))
+NTSTATUS NtResumeThread(HANDLE hThread, LONG *plPrevCount);
 
 typedef struct tagTlsObject {
 	MCF_AvlNodeHeader vHeader;
@@ -382,4 +389,54 @@ void *MCF_CRT_CreateThread(unsigned (*pfnThreadProc)(intptr_t), intptr_t nParam,
 		ResumeThread(hThread);
 	}
 	return (void *)hThread;
+}
+void MCF_CRT_CloseThread(void *hThread){
+	if(!CloseHandle((HANDLE)hThread)){
+		ASSERT_MSG(false, L"CloseHandle() 失败。");
+	}
+}
+unsigned long MCF_CRT_GetCurrentThreadId(){
+	return GetCurrentThreadId();
+}
+
+long MCF_CRT_SuspendThread(void *hThread){
+	LONG lPrevCount;
+	const NTSTATUS lStatus = NtSuspendThread((HANDLE)hThread, &lPrevCount);
+	if(!NT_SUCCESS(lStatus)){
+		ASSERT_MSG(false, L"NtSuspendThread() 失败。");
+	}
+	return lPrevCount;
+}
+long MCF_CRT_ResumeThread(void *hThread){
+	LONG lPrevCount;
+	const NTSTATUS lStatus = NtResumeThread((HANDLE)hThread, &lPrevCount);
+	if(!NT_SUCCESS(lStatus)){
+		ASSERT_MSG(false, L"NtResumeThread() 失败。");
+	}
+	return lPrevCount;
+}
+
+bool MCF_CRT_WaitForThread(void *hThread, MCF_STD uint64_t u64MilliSeconds){
+	if(u64MilliSeconds > (uint64_t)INT64_MIN / 10000){
+		MCF_CRT_WaitForThreadInfinitely(hThread);
+		return true;
+	}
+
+	LARGE_INTEGER liTimeout;
+	liTimeout.QuadPart = -(int64_t)(u64MilliSeconds * 10000);
+	const NTSTATUS lStatus = NtWaitForSingleObject((HANDLE)hThread, false, &liTimeout);
+	if(!NT_SUCCESS(lStatus)){
+		const DWORD dwErrorCode = RtlNtStatusToDosError(lStatus);
+		if(dwErrorCode == STATUS_TIMEOUT){
+			return false;
+		}
+		ASSERT_MSG(false, L"NtWaitForSingleObject() 失败。");
+	}
+	return true;
+}
+void MCF_CRT_WaitForThreadInfinitely(void *hThread){
+	const NTSTATUS lStatus = NtWaitForSingleObject((HANDLE)hThread, false, nullptr);
+	if(!NT_SUCCESS(lStatus)){
+		ASSERT_MSG(false, L"NtWaitForSingleObject() 失败。");
+	}
 }

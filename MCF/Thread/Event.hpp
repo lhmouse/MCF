@@ -26,8 +26,8 @@ public:
 	bool Wait(std::uint64_t u64MilliSeconds) const noexcept;
 	void Wait() const noexcept;
 	bool IsSet() const noexcept;
-	void Set() noexcept;
-	void Reset() noexcept;
+	bool Set() noexcept;
+	bool Reset() noexcept;
 };
 
 }

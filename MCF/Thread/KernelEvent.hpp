@@ -6,26 +6,26 @@
 #define MCF_THREAD_KERNEL_EVENT_HPP_
 
 #include "../Utilities/Noncopyable.hpp"
-#include "../Core/String.hpp"
-#include "../Core/UniqueWin32Handle.hpp"
+#include "../Core/StringObserver.hpp"
+#include "_UniqueNtHandle.hpp"
+#include <cstddef>
 #include <cstdint>
 
 namespace MCF {
 
 class KernelEvent : NONCOPYABLE {
 private:
-	const UniqueWin32Handle x_hEvent;
+	const Impl_UniqueNtHandle::UniqueNtHandle x_hEvent;
 
 public:
-	explicit KernelEvent(bool bInitSet, const wchar_t *pwszName = nullptr);
-	KernelEvent(bool bInitSet, const WideString &wsName);
+	explicit KernelEvent(bool bInitSet, const WideStringObserver &wsoName = nullptr);
 
 public:
 	bool Wait(std::uint64_t u64MilliSeconds) const noexcept;
 	void Wait() const noexcept;
 	bool IsSet() const noexcept;
-	void Set() noexcept;
-	void Reset() noexcept;
+	bool Set() noexcept;
+	bool Reset() noexcept;
 };
 
 }

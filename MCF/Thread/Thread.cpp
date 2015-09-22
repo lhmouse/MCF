@@ -11,9 +11,13 @@
 
 namespace MCF {
 
+void Thread::X_ThreadCloser::operator()(void *hThread) const noexcept {
+	::MCF_CRT_CloseThread(hThread);
+}
+
 // 静态成员函数。
 std::size_t Thread::GetCurrentId() noexcept {
-	return ::GetCurrentThreadId();
+	return ::MCF_CRT_GetCurrentThreadId();
 }
 
 IntrusivePtr<Thread> Thread::Create(Function<void ()> fnProc, bool bSuspended){
@@ -36,12 +40,12 @@ Thread::Thread(Function<void ()> fnProc, bool bSuspended)
 		return 0;
 	};
 
-	DWORD dwThreadId;
-	if(!x_hThread.Reset(::MCF_CRT_CreateThread(ThreadProc, (std::intptr_t)this, CREATE_SUSPENDED, &dwThreadId))){
+	unsigned long ulThreadId;
+	if(!x_hThread.Reset(::MCF_CRT_CreateThread(ThreadProc, (std::intptr_t)this, CREATE_SUSPENDED, &ulThreadId))){
 		DEBUG_THROW(SystemError, "MCF_CRT_CreateThread"_rcs);
 	}
 	AddRef();
-	x_uThreadId.Store(dwThreadId, kAtomicRelease);
+	x_uThreadId.Store(ulThreadId, kAtomicRelease);
 
 	if(!bSuspended){
 		Resume();
@@ -54,27 +58,10 @@ Thread::~Thread(){
 }
 
 bool Thread::Wait(std::uint64_t u64MilliSeconds) const noexcept {
-	auto u64Now = GetFastMonoClock();
-	const auto u64Until = u64Now + u64MilliSeconds;
-	for(;;){
-		const auto dwResult = ::WaitForSingleObject(x_hThread.Get(), Min(u64Until - u64Now, 0x7FFFFFFFu));
-		if(dwResult == WAIT_FAILED){
-			ASSERT_MSG(false, L"WaitForSingleObject() 失败。");
-		}
-		if(dwResult != WAIT_TIMEOUT){
-			return true;
-		}
-		u64Now = GetFastMonoClock();
-		if(u64Until <= u64Now){
-			return false;
-		}
-	}
+	return ::MCF_CRT_WaitForThread(x_hThread.Get(), u64MilliSeconds);
 }
 void Thread::Wait() const noexcept {
-	const auto dwResult = ::WaitForSingleObject(x_hThread.Get(), INFINITE);
-	if(dwResult == WAIT_FAILED){
-		ASSERT_MSG(false, L"WaitForSingleObject() 失败。");
-	}
+	::MCF_CRT_WaitForThread(x_hThread.Get(), static_cast<std::uint64_t>(-1));
 }
 
 std::exception_ptr Thread::JoinNoThrow() const noexcept {
@@ -99,14 +86,10 @@ std::size_t Thread::GetId() const noexcept {
 }
 
 void Thread::Suspend() noexcept {
-	if(::SuspendThread(x_hThread.Get()) == (DWORD)-1){
-		ASSERT_MSG(false, L"SuspendThread() 失败。");
-	}
+	::MCF_CRT_SuspendThread(x_hThread.Get());
 }
 void Thread::Resume() noexcept {
-	if(::ResumeThread(x_hThread.Get()) == (DWORD)-1){
-		ASSERT_MSG(false, L"ResumeThread() 失败。");
-	}
+	::MCF_CRT_ResumeThread(x_hThread.Get());
 }
 
 }

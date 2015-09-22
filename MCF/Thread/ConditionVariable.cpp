@@ -31,7 +31,7 @@ bool ConditionVariable::Wait(Mutex::UniqueLock &vLock, std::uint64_t u64MilliSec
 			return true;
 		}
 		if(GetLastError() != ERROR_TIMEOUT){
-			ASSERT_MSG(false, L"WaitForSingleObject() 失败。");
+			ASSERT_MSG(false, L"SleepConditionVariableSRW() 失败。");
 		}
 		u64Now = GetFastMonoClock();
 		if(u64Until <= u64Now){

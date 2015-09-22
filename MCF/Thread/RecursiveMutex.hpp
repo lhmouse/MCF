@@ -2,8 +2,8 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2013 - 2015, LH_Mouse. All wrongs reserved.
 
-#ifndef MCF_THREAD_USER_RECURSIVE_MUTEX_HPP_
-#define MCF_THREAD_USER_RECURSIVE_MUTEX_HPP_
+#ifndef MCF_THREAD_RECURSIVE_MUTEX_HPP_
+#define MCF_THREAD_RECURSIVE_MUTEX_HPP_
 
 #include "../Utilities/Noncopyable.hpp"
 #include "../Utilities/Assert.hpp"
@@ -13,15 +13,7 @@
 
 namespace MCF {
 
-struct RecursiveMutexResults {
-	enum Result {
-		kTryFailed    = 0,
-		kStateChanged = 1,
-		kRecursive    = 2,
-	};
-};
-
-class RecursiveMutex : NONCOPYABLE, public RecursiveMutexResults {
+class RecursiveMutex : NONCOPYABLE {
 public:
 	using UniqueLock = Impl_UniqueLockTemplate::UniqueLockTemplate<RecursiveMutex>;
 
@@ -43,9 +35,9 @@ public:
 
 	bool IsLockedByCurrentThread() const noexcept;
 
-	Result Try() noexcept;
-	Result Lock() noexcept;
-	Result Unlock() noexcept;
+	bool Try() noexcept;
+	void Lock() noexcept;
+	void Unlock() noexcept;
 
 	std::size_t GetRecursionCount() const noexcept {
 		if(!IsLockedByCurrentThread()){

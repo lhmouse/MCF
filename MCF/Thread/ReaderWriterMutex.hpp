@@ -7,42 +7,31 @@
 
 #include "../Utilities/Noncopyable.hpp"
 #include "_UniqueLockTemplate.hpp"
-#include "RecursiveMutex.hpp"
-#include "Mutex.hpp"
-#include "ThreadLocal.hpp"
+#include "Atomic.hpp"
 #include <cstddef>
 
 namespace MCF {
 
-class ReaderWriterMutex : NONCOPYABLE, public RecursiveMutexResults {
+class ReaderWriterMutex : NONCOPYABLE {
 public:
 	using UniqueReaderLock = Impl_UniqueLockTemplate::UniqueLockTemplate<ReaderWriterMutex, 0u>;
 	using UniqueWriterLock = Impl_UniqueLockTemplate::UniqueLockTemplate<ReaderWriterMutex, 1u>;
 
 private:
-	mutable RecursiveMutex x_mtxWriterGuard;
-	mutable Mutex x_mtxExclusive;
-	Atomic<std::size_t> x_uReaderCount;
-	ThreadLocal<std::size_t> x_tlsReaderReentranceCount;
+	Atomic<std::size_t> x_uSpinCount;
+
+	std::intptr_t x_aImpl[1];
 
 public:
-	explicit ReaderWriterMutex(std::size_t uSpinCount = 0x100);
+	explicit ReaderWriterMutex(std::size_t uSpinCount = 0x100) noexcept;
 
 public:
-	std::size_t GetSpinCount() const noexcept {
-		return x_mtxWriterGuard.GetSpinCount();
-	}
-	void SetSpinCount(std::size_t uSpinCount) noexcept {
-		x_mtxWriterGuard.SetSpinCount(uSpinCount);
-	}
+	std::size_t GetSpinCount() const noexcept;
+	void SetSpinCount(std::size_t uSpinCount) noexcept;
 
-	Result TryAsReader() noexcept;
-	Result LockAsReader() noexcept;
-	Result UnlockAsReader() noexcept;
-
-	Result TryAsWriter() noexcept;
-	Result LockAsWriter() noexcept;
-	Result UnlockAsWriter() noexcept;
+	bool TryAsReader() noexcept;
+	void LockAsReader() noexcept;
+	void UnlockAsReader() noexcept;
 
 	UniqueReaderLock TryReaderLock() noexcept {
 		UniqueReaderLock vLock(*this, false);
@@ -52,6 +41,10 @@ public:
 	UniqueReaderLock GetReaderLock() noexcept {
 		return UniqueReaderLock(*this);
 	}
+
+	bool TryAsWriter() noexcept;
+	void LockAsWriter() noexcept;
+	void UnlockAsWriter() noexcept;
 
 	UniqueWriterLock TryWriterLock() noexcept {
 		UniqueWriterLock vLock(*this, false);

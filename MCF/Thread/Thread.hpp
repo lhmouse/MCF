@@ -8,7 +8,7 @@
 #include "../Utilities/Noncopyable.hpp"
 #include "../SmartPointers/IntrusivePtr.hpp"
 #include "../Function/Function.hpp"
-#include "../Core/UniqueWin32Handle.hpp"
+#include "../Core/UniqueHandle.hpp"
 #include "Atomic.hpp"
 #include <exception>
 #include <cstddef>
@@ -17,6 +17,14 @@
 namespace MCF {
 
 class Thread : NONCOPYABLE, public IntrusiveBase<Thread> {
+private:
+	struct X_ThreadCloser {
+		constexpr void *operator()() const noexcept {
+			return nullptr;
+		}
+		void operator()(void *hThread) const noexcept;
+	};
+
 public:
 	static std::size_t GetCurrentId() noexcept;
 
@@ -25,7 +33,7 @@ public:
 private:
 	const Function<void ()> x_fnProc;
 
-	UniqueWin32Handle x_hThread;
+	UniqueHandle<X_ThreadCloser> x_hThread;
 	Atomic<std::size_t> x_uThreadId;
 	std::exception_ptr x_pException;
 

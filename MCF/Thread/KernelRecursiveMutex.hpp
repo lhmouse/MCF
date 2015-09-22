@@ -2,27 +2,26 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2013 - 2015, LH_Mouse. All wrongs reserved.
 
-#ifndef MCF_THREAD_MUTEX_HPP_
-#define MCF_THREAD_MUTEX_HPP_
+#ifndef MCF_THREAD_KERNEL_RECURSIVE_MUTEX_HPP_
+#define MCF_THREAD_KERNEL_RECURSIVE_MUTEX_HPP_
 
 #include "../Utilities/Noncopyable.hpp"
-#include "../Core/String.hpp"
-#include "../Core/UniqueWin32Handle.hpp"
+#include "../Core/StringObserver.hpp"
 #include "_UniqueLockTemplate.hpp"
+#include "_UniqueNtHandle.hpp"
 #include <cstdint>
 
 namespace MCF {
 
-class KernelMutex : NONCOPYABLE {
+class KernelRecursiveMutex : NONCOPYABLE {
 public:
-	using UniqueLock = Impl_UniqueLockTemplate::UniqueLockTemplate<KernelMutex>;
+	using UniqueLock = Impl_UniqueLockTemplate::UniqueLockTemplate<KernelRecursiveMutex>;
 
 private:
-	const UniqueWin32Handle x_hMutex;
+	const Impl_UniqueNtHandle::UniqueNtHandle x_hMutex;
 
 public:
-	explicit KernelMutex(const wchar_t *pwszName = nullptr);
-	explicit KernelMutex(const WideString &wsName);
+	explicit KernelRecursiveMutex(const WideStringObserver &wsoName = nullptr);
 
 public:
 	bool Try(std::uint64_t u64MilliSeconds = 0) noexcept;

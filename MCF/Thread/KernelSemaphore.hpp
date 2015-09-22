@@ -6,8 +6,8 @@
 #define MCF_THREAD_KERNEL_SEMAPHORE_HPP_
 
 #include "../Utilities/Noncopyable.hpp"
-#include "../Core/String.hpp"
-#include "../Core/UniqueWin32Handle.hpp"
+#include "../Core/StringObserver.hpp"
+#include "_UniqueNtHandle.hpp"
 #include <cstddef>
 #include <cstdint>
 
@@ -15,11 +15,10 @@ namespace MCF {
 
 class KernelSemaphore : NONCOPYABLE {
 private:
-	const UniqueWin32Handle x_hSemaphore;
+	const Impl_UniqueNtHandle::UniqueNtHandle x_hSemaphore;
 
 public:
-	explicit KernelSemaphore(std::size_t uInitCount, const wchar_t *pwszName = nullptr);
-	KernelSemaphore(std::size_t uInitCount, const WideString &wsName);
+	explicit KernelSemaphore(std::size_t uInitCount, const WideStringObserver &wsoName = nullptr);
 
 public:
 	bool Wait(std::uint64_t u64MilliSeconds) noexcept;

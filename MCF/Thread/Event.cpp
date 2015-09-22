@@ -48,16 +48,21 @@ void Event::Wait() const noexcept {
 	}
 }
 bool Event::IsSet() const noexcept {
-	return Wait(0);
-}
-void Event::Set() noexcept {
 	Mutex::UniqueLock vLock(x_mtxGuard);
+	return x_bSet;
+}
+bool Event::Set() noexcept {
+	Mutex::UniqueLock vLock(x_mtxGuard);
+	const auto bOld = x_bSet;
 	x_bSet = true;
 	x_cvWaiter.Broadcast();
+	return bOld;
 }
-void Event::Reset() noexcept {
+bool Event::Reset() noexcept {
 	Mutex::UniqueLock vLock(x_mtxGuard);
+	const auto bOld = x_bSet;
 	x_bSet = false;
+	return bOld;
 }
 
 }

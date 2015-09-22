@@ -2,8 +2,8 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2013 - 2015, LH_Mouse. All wrongs reserved.
 
-#ifndef MCF_THREAD_USER_MUTEX_HPP_
-#define MCF_THREAD_USER_MUTEX_HPP_
+#ifndef MCF_THREAD_MUTEX_HPP_
+#define MCF_THREAD_MUTEX_HPP_
 
 #include "../Utilities/Noncopyable.hpp"
 #include "_UniqueLockTemplate.hpp"

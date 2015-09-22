@@ -68,7 +68,7 @@ File::File(const WideStringObserver &wsoPath, std::uint32_t u32Flags){
 	ustrRawPath.MaximumLength       = uSize;
 	ustrRawPath.Buffer              = (PWSTR)wsoPath.GetBegin();
 
-	wchar_t awcStaticStr[MAX_PATH];
+	wchar_t awcStaticStr[4096 / sizeof(wchar_t)];
 	::UNICODE_STRING ustrStaticBuffer;
 	ustrStaticBuffer.Length         = 0;
 	ustrStaticBuffer.MaximumLength  = sizeof(awcStaticStr);

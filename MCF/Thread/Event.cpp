@@ -55,7 +55,9 @@ bool Event::Set() noexcept {
 	Mutex::UniqueLock vLock(x_mtxGuard);
 	const auto bOld = x_bSet;
 	x_bSet = true;
-	x_cvWaiter.Broadcast();
+	if(!bOld){
+		x_cvWaiter.Broadcast();
+	}
 	return bOld;
 }
 bool Event::Reset() noexcept {

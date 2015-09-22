@@ -12,10 +12,10 @@ namespace {
 }
 
 namespace Impl_CallOnce {
-	void OnceMutexLock() noexcept {
+	void LockOnceMutex() noexcept {
 		::AcquireSRWLockExclusive(&g_srwLock);
 	}
-	void OnceMutexUnlock() noexcept {
+	void UnlockOnceMutex() noexcept {
 		::ReleaseSRWLockExclusive(&g_srwLock);
 	}
 }

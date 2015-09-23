@@ -408,6 +408,7 @@ unsigned long MCF_CRT_GetCurrentThreadId(){
 void MCF_CRT_Sleep(uint64_t u64MilliSeconds){
 	if(u64MilliSeconds > (uint64_t)INT64_MIN / 10000){
 		ASSERT_MSG(false, L"MCF_CRT_Sleep() 指定了一个非常大的延迟，当前线程将会永久睡眠。");
+		abort();
 	}
 
 	LARGE_INTEGER liTimeout;

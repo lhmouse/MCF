@@ -14,11 +14,8 @@
 #include <ntstatus.h>
 
 extern "C" __attribute__((__dllimport__, __stdcall__))
-NTSTATUS RtlGetFullPathName_UstrEx(const ::UNICODE_STRING *pFileName, ::UNICODE_STRING *pStaticBuffer, ::UNICODE_STRING *pDynamicBuffer,
-	::UNICODE_STRING **ppWhichBufferIsUsed, SIZE_T *puPrefixChars, BOOLEAN *pbValid, int *pnPathType, SIZE_T *puBytesRequired);
-
-extern "C" __attribute__((__dllimport__, __stdcall__))
-NTSTATUS NtCreateEvent(HANDLE *pHandle, ::ACCESS_MASK dwDesiredAccess, ::OBJECT_ATTRIBUTES *pObjectAttributes, EVENT_TYPE eEventType, BOOL bInitialState) noexcept;
+NTSTATUS RtlGetFullPathName_UstrEx(const UNICODE_STRING *pFileName, UNICODE_STRING *pStaticBuffer, UNICODE_STRING *pDynamicBuffer,
+	UNICODE_STRING **ppWhichBufferIsUsed, SIZE_T *puPrefixChars, BOOLEAN *pbValid, int *pnPathType, SIZE_T *puBytesRequired);
 
 extern "C" __attribute__((__dllimport__, __stdcall__))
 NTSTATUS NtReadFile(HANDLE hFile, HANDLE hEvent, PIO_APC_ROUTINE pfnApcRoutine, void *pApcContext, IO_STATUS_BLOCK *pIoStatus,
@@ -40,20 +37,10 @@ void Impl_File::NtHandleCloser::operator()(void *hFile) const noexcept {
 }
 
 namespace {
-	UniqueHandle<Impl_File::NtHandleCloser> CreateNotificationEvent(){
-		::UNICODE_STRING ustrObjectName;
-		ustrObjectName.Length        = 0;
-		ustrObjectName.MaximumLength = 0;
-		ustrObjectName.Buffer        = (PWSTR)L"";
-		::OBJECT_ATTRIBUTES vObjectAttributes;
-		InitializeObjectAttributes(&vObjectAttributes, &ustrObjectName, 0, nullptr, nullptr);
-
-		HANDLE hEvent;
-		const auto lStatus = ::NtCreateEvent(&hEvent, EVENT_ALL_ACCESS, &vObjectAttributes, NotificationEvent, false);
-		if(!NT_SUCCESS(lStatus)){
-			DEBUG_THROW(SystemError, ::RtlNtStatusToDosError(lStatus), "NtCreateEvent"_rcs);
-		}
-		return UniqueHandle<Impl_File::NtHandleCloser>(hEvent);
+	__attribute__((__stdcall__))
+	void IoApcCallback(void *pContext, IO_STATUS_BLOCK * /* pIoStatus */, ULONG /* ulReserved */) noexcept {
+		const auto pbFlag = static_cast<bool *>(pContext);
+		*pbFlag = true;
 	}
 }
 
@@ -223,25 +210,30 @@ std::size_t File::Read(void *pBuffer, std::uint32_t u32BytesToRead, std::uint64_
 		DEBUG_THROW(Exception, ERROR_INVALID_PARAMETER, "File offset is too large"_rcs);
 	}
 
-	const auto hEvent = CreateNotificationEvent();
+	bool bCompleted = false;
 	::IO_STATUS_BLOCK vIoStatus;
+
 	::LARGE_INTEGER liOffset;
 	liOffset.QuadPart = static_cast<std::int64_t>(u64Offset);
-	const auto lStatus = ::NtReadFile(x_hFile.Get(), hEvent.Get(), nullptr, nullptr, &vIoStatus, pBuffer, u32BytesToRead, &liOffset, nullptr);
+	const auto lStatus = ::NtReadFile(x_hFile.Get(), nullptr, &IoApcCallback, &bCompleted, &vIoStatus, pBuffer, u32BytesToRead, &liOffset, nullptr);
 	if(fnAsyncProc){
 		fnAsyncProc();
 	}
-	if(lStatus != STATUS_END_OF_FILE){
-		if(!NT_SUCCESS(lStatus)){
-			DEBUG_THROW(SystemError, ::RtlNtStatusToDosError(lStatus), "NtReadFile"_rcs);
+	if(lStatus == STATUS_END_OF_FILE){
+		if(fnCompleteCallback){
+			fnCompleteCallback();
 		}
-		if(lStatus == STATUS_PENDING){
-			const auto lWaitStatus = ::NtWaitForSingleObject(hEvent.Get(), false, nullptr);
-			if(!NT_SUCCESS(lWaitStatus)){
-				ASSERT_MSG(false, L"NtWaitForSingleObject() 失败。");
-			}
-		}
+		return 0;
 	}
+	if(!NT_SUCCESS(lStatus)){
+		DEBUG_THROW(SystemError, ::RtlNtStatusToDosError(lStatus), "NtReadFile"_rcs);
+	}
+	do {
+		const auto dwResult = ::SleepEx(INFINITE, true);
+		(void)dwResult;
+		ASSERT(dwResult == WAIT_IO_COMPLETION);
+	} while(!bCompleted);
+
 	if(fnCompleteCallback){
 		fnCompleteCallback();
 	}
@@ -258,25 +250,24 @@ std::size_t File::Write(std::uint64_t u64Offset, const void *pBuffer, std::uint3
 		DEBUG_THROW(Exception, ERROR_INVALID_PARAMETER, "File offset is too large"_rcs);
 	}
 
-	const auto hEvent = CreateNotificationEvent();
+	bool bCompleted = false;
 	::IO_STATUS_BLOCK vIoStatus;
+
 	::LARGE_INTEGER liOffset;
 	liOffset.QuadPart = static_cast<std::int64_t>(u64Offset);
-	const auto lStatus = ::NtWriteFile(x_hFile.Get(), hEvent.Get(), nullptr, nullptr, &vIoStatus, pBuffer, u32BytesToWrite, &liOffset, nullptr);
+	const auto lStatus = ::NtWriteFile(x_hFile.Get(), nullptr, &IoApcCallback, &bCompleted, &vIoStatus, pBuffer, u32BytesToWrite, &liOffset, nullptr);
 	if(fnAsyncProc){
 		fnAsyncProc();
 	}
-	{
-		if(!NT_SUCCESS(lStatus)){
-			DEBUG_THROW(SystemError, ::RtlNtStatusToDosError(lStatus), "NtWriteFile"_rcs);
-		}
-		if(lStatus == STATUS_PENDING){
-			const auto lWaitStatus = ::NtWaitForSingleObject(hEvent.Get(), false, nullptr);
-			if(!NT_SUCCESS(lWaitStatus)){
-				ASSERT_MSG(false, L"NtWaitForSingleObject() 失败。");
-			}
-		}
+	if(!NT_SUCCESS(lStatus)){
+		DEBUG_THROW(SystemError, ::RtlNtStatusToDosError(lStatus), "NtWriteFile"_rcs);
 	}
+	do {
+		const auto dwResult = ::SleepEx(INFINITE, true);
+		(void)dwResult;
+		ASSERT(dwResult == WAIT_IO_COMPLETION);
+	} while(!bCompleted);
+
 	if(fnCompleteCallback){
 		fnCompleteCallback();
 	}

@@ -6,45 +6,46 @@
 #include "StreamBuffer.hpp"
 #include "../Utilities/Assert.hpp"
 #include "../Utilities/MinMax.hpp"
-#include "../Thread/SpinLock.hpp"
+#include "../Thread/Mutex.hpp"
 
 namespace MCF {
 
 struct StreamBuffer::X_Chunk final {
-	static SpinLock s_splPoolMutex;
+	static Mutex                 s_mtxPoolMutex;
 	static X_Chunk *__restrict__ s_pPoolHead;
 
 	static void *operator new(std::size_t uSize){
 		ASSERT(uSize == sizeof(X_Chunk));
 
-		const auto uLockValue = s_splPoolMutex.Lock();
-		const auto pPooled = s_pPoolHead;
-		if(!pPooled){
-			s_splPoolMutex.Unlock(uLockValue);
-			return ::operator new(uSize);
+		{
+			const Mutex::UniqueLock vLock(s_mtxPoolMutex);
+
+			const auto pChunk = s_pPoolHead;
+			if(pChunk){
+				s_pPoolHead = pChunk->pPrev;
+				return pChunk;
+			}
 		}
-		s_pPoolHead = pPooled->pPrev;
-		s_splPoolMutex.Unlock(uLockValue);
-		return pPooled;
+		return ::operator new(uSize);
 	}
 	static void operator delete(void *pRaw) noexcept {
 		if(!pRaw){
 			return;
 		}
-		const auto pPooled = static_cast<X_Chunk *>(pRaw);
 
-		const auto uLockValue = s_splPoolMutex.Lock();
-		pPooled->pPrev = s_pPoolHead;
-		s_pPoolHead = pPooled;
-		s_splPoolMutex.Unlock(uLockValue);
+		const Mutex::UniqueLock vLock(s_mtxPoolMutex);
+
+		const auto pChunk = static_cast<X_Chunk *>(pRaw);
+		pChunk->pPrev = s_pPoolHead;
+		s_pPoolHead = pChunk;
 	}
 
 	__attribute__((__destructor__(101)))
 	static void PoolDestructor() noexcept {
 		while(s_pPoolHead){
-			const auto pPooled = s_pPoolHead;
-			s_pPoolHead = pPooled->pPrev;
-			::operator delete(pPooled);
+			const auto pChunk = s_pPoolHead;
+			s_pPoolHead = pChunk->pPrev;
+			::operator delete(pChunk);
 		}
 	}
 
@@ -55,8 +56,8 @@ struct StreamBuffer::X_Chunk final {
 	unsigned char abyData[0x100];
 };
 
-SpinLock StreamBuffer::X_Chunk::s_splPoolMutex;
-StreamBuffer::X_Chunk *__restrict__ StreamBuffer::X_Chunk::s_pPoolHead = nullptr;
+Mutex                               StreamBuffer::X_Chunk::s_mtxPoolMutex;
+StreamBuffer::X_Chunk *__restrict__ StreamBuffer::X_Chunk::s_pPoolHead     = nullptr;
 
 unsigned char *StreamBuffer::ChunkEnumerator::GetBegin() const noexcept {
 	ASSERT(x_pChunk);

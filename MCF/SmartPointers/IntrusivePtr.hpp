@@ -119,15 +119,15 @@ namespace Impl_IntrusivePtr {
 
 		public:
 			bool HasOwnerExpired() const noexcept {
+				bool bOwnerExpired = true;
 				const auto uLocked = x_splOwnerMutex.Lock();
-				auto pOwner = x_pOwner;
-				if(pOwner){
-					if(static_cast<const volatile RefCountBase *>(pOwner)->GetRef() == 0){
-						pOwner = nullptr;
+				{
+					const auto pOwner = x_pOwner;
+					if(pOwner && (static_cast<const volatile RefCountBase *>(pOwner)->GetRef() > 0)){
+						bOwnerExpired = false;
 					}
 				}
-				x_splOwnerMutex.Unlock(uLocked);
-				return !pOwner;
+				return bOwnerExpired;
 			}
 			void ClearOwner() noexcept {
 				const auto uLocked = x_splOwnerMutex.Lock();
@@ -396,11 +396,12 @@ namespace Impl_IntrusivePtr {
 	template<class DeleterT>
 		template<typename OtherT>
 	IntrusivePtr<OtherT, DeleterT> DeletableBase<DeleterT>::X_WeakObserver::GetOwner() const noexcept {
+		OtherT *pOther = nullptr;
 		const auto uLocked = x_splOwnerMutex.Lock();
-		auto pOther = StaticCastOrDynamicCast<OtherT *>(x_pOwner);
-		if(pOther){
-			if(!static_cast<const volatile RefCountBase *>(pOther)->TryAddRef()){
-				pOther = nullptr;
+		{
+			const auto pTest = StaticCastOrDynamicCast<OtherT *>(x_pOwner);
+			if(pTest && static_cast<const volatile RefCountBase *>(pTest)->TryAddRef()){
+				pOther = pTest;
 			}
 		}
 		x_splOwnerMutex.Unlock(uLocked);

@@ -32,7 +32,7 @@ namespace Impl_UniqueLockTemplate {
 }
 
 // 构造函数和析构函数。
-KernelRecursiveMutex::KernelRecursiveMutex(const WideStringObserver &wsoName){
+KernelRecursiveMutex::KernelRecursiveMutex(WideStringObserver wsoName){
 	const auto uSize = wsoName.GetSize() * sizeof(wchar_t);
 	if(uSize > UINT16_MAX){
 		DEBUG_THROW(SystemError, ERROR_INVALID_PARAMETER, "The name for a kernel mutex is too long"_rcs);

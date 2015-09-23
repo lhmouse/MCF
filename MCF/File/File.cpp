@@ -57,7 +57,7 @@ namespace {
 }
 
 // 构造函数和析构函数。
-File::File(const WideStringObserver &wsoPath, std::uint32_t u32Flags){
+File::File(WideStringObserver wsoPath, std::uint32_t u32Flags){
 	const auto uSize = wsoPath.GetSize() * sizeof(wchar_t);
 	if(uSize > UINT16_MAX){
 		DEBUG_THROW(SystemError, ERROR_INVALID_PARAMETER, "The path for a file is too long"_rcs);
@@ -165,10 +165,10 @@ File::File(const WideStringObserver &wsoPath, std::uint32_t u32Flags){
 bool File::IsOpen() const noexcept {
 	return !!x_hFile;
 }
-void File::Open(const WideStringObserver &wsoPath, std::uint32_t u32Flags){
+void File::Open(WideStringObserver wsoPath, std::uint32_t u32Flags){
 	File(wsoPath, u32Flags).Swap(*this);
 }
-bool File::OpenNoThrow(const WideStringObserver &wsoPath, std::uint32_t u32Flags){
+bool File::OpenNoThrow(WideStringObserver wsoPath, std::uint32_t u32Flags){
 	try {
 		Open(wsoPath, u32Flags);
 		return true;

@@ -21,7 +21,7 @@ private:
 	Impl_UniqueNtHandle::UniqueNtHandle x_hMutex;
 
 public:
-	explicit KernelRecursiveMutex(const WideStringObserver &wsoName = nullptr);
+	explicit KernelRecursiveMutex(WideStringObserver wsoName = nullptr);
 
 public:
 	bool Try(std::uint64_t u64MilliSeconds = 0) noexcept;

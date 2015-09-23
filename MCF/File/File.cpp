@@ -49,10 +49,10 @@ void Impl_File::NtHandleCloser::operator()(void *hFile) const noexcept {
 }
 
 namespace {
-	__attribute__((__stdcall__))
-	void IoApcCallback(void *pContext, IO_STATUS_BLOCK * /* pIoStatus */, ULONG /* ulReserved */) noexcept {
-		const auto pbFlag = static_cast<bool *>(pContext);
-		*pbFlag = true;
+	__attribute__((__stdcall__, __force_align_arg_pointer__, __aligned__(16)))
+	void IoApcCallback(void *pContext, ::IO_STATUS_BLOCK * /* pIoStatus */, ULONG /* ulReserved */) noexcept {
+		const auto pbIoPending = static_cast<bool *>(pContext);
+		*pbIoPending = false;
 	}
 }
 
@@ -226,25 +226,21 @@ std::size_t File::Read(void *pBuffer, std::uint32_t u32BytesToRead, std::uint64_
 		DEBUG_THROW(Exception, ERROR_INVALID_PARAMETER, "File offset is too large"_rcs);
 	}
 
-	bool bCompleted = false;
+	bool bIoPending = true;
 	::IO_STATUS_BLOCK vIoStatus;
 
 	::LARGE_INTEGER liOffset;
 	liOffset.QuadPart = static_cast<std::int64_t>(u64Offset);
-	const auto lStatus = ::NtReadFile(x_hFile.Get(), nullptr, &IoApcCallback, &bCompleted, &vIoStatus, pBuffer, u32BytesToRead, &liOffset, nullptr);
+	const auto lStatus = ::NtReadFile(x_hFile.Get(), nullptr, &IoApcCallback, &bIoPending, &vIoStatus, pBuffer, u32BytesToRead, &liOffset, nullptr);
 	if(fnAsyncProc){
 		fnAsyncProc();
-	}
-	if(lStatus == STATUS_END_OF_FILE){
-		if(fnCompleteCallback){
-			fnCompleteCallback();
-		}
-		return 0;
 	}
 	if(!NT_SUCCESS(lStatus)){
 		DEBUG_THROW(SystemError, ::RtlNtStatusToDosError(lStatus), "NtReadFile"_rcs);
 	}
-	Thread::Sleep(true);
+	do {
+		Thread::AlertableSleep();
+	} while(bIoPending);
 
 	if(fnCompleteCallback){
 		fnCompleteCallback();
@@ -262,19 +258,21 @@ std::size_t File::Write(std::uint64_t u64Offset, const void *pBuffer, std::uint3
 		DEBUG_THROW(Exception, ERROR_INVALID_PARAMETER, "File offset is too large"_rcs);
 	}
 
-	bool bCompleted = false;
+	bool bIoPending = true;
 	::IO_STATUS_BLOCK vIoStatus;
 
 	::LARGE_INTEGER liOffset;
 	liOffset.QuadPart = static_cast<std::int64_t>(u64Offset);
-	const auto lStatus = ::NtWriteFile(x_hFile.Get(), nullptr, &IoApcCallback, &bCompleted, &vIoStatus, pBuffer, u32BytesToWrite, &liOffset, nullptr);
+	const auto lStatus = ::NtWriteFile(x_hFile.Get(), nullptr, &IoApcCallback, &bIoPending, &vIoStatus, pBuffer, u32BytesToWrite, &liOffset, nullptr);
 	if(fnAsyncProc){
 		fnAsyncProc();
 	}
 	if(!NT_SUCCESS(lStatus)){
 		DEBUG_THROW(SystemError, ::RtlNtStatusToDosError(lStatus), "NtWriteFile"_rcs);
 	}
-	Thread::Sleep(true);
+	do {
+		Thread::AlertableSleep();
+	} while(bIoPending);
 
 	if(fnCompleteCallback){
 		fnCompleteCallback();

@@ -30,8 +30,9 @@ public:
 
 	static std::size_t GetCurrentId() noexcept;
 
-	static bool Sleep(std::uint64_t u64MilliSeconds, bool bAlertable = false) noexcept;
-	static void Sleep(bool bAlertable = false) noexcept;
+	static void Sleep(std::uint64_t u64MilliSeconds) noexcept;
+	static bool AlertableSleep(std::uint64_t u64MilliSeconds) noexcept;
+	static void AlertableSleep() noexcept;
 
 private:
 	const Function<void ()> x_fnProc;

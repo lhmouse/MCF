@@ -23,11 +23,14 @@ std::size_t Thread::GetCurrentId() noexcept {
 	return ::MCF_CRT_GetCurrentThreadId();
 }
 
-bool Thread::Sleep(std::uint64_t u64MilliSeconds, bool bAlertable) noexcept {
-	return ::MCF_CRT_Sleep(u64MilliSeconds, bAlertable);
+void Thread::Sleep(std::uint64_t u64MilliSeconds) noexcept {
+	::MCF_CRT_Sleep(u64MilliSeconds);
 }
-void Thread::Sleep(bool bAlertable) noexcept {
-	::MCF_CRT_SleepInfinitely(bAlertable);
+bool Thread::AlertableSleep(std::uint64_t u64MilliSeconds) noexcept {
+	return ::MCF_CRT_AlertableSleep(u64MilliSeconds);
+}
+void Thread::AlertableSleep() noexcept {
+	::MCF_CRT_AlertableSleepInfinitely();
 }
 
 // 构造函数和析构函数。

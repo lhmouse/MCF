@@ -32,9 +32,10 @@ extern void MCF_CRT_CloseThread(void *__hThread) MCF_NOEXCEPT;
 
 extern unsigned long MCF_CRT_GetCurrentThreadId(void) MCF_NOEXCEPT;
 
+extern void MCF_CRT_Sleep(MCF_STD uint64_t __u64MilliSeconds) MCF_NOEXCEPT;
 // 被 APC 打断返回 true，超时返回 false。
-extern bool MCF_CRT_Sleep(MCF_STD uint64_t __u64MilliSeconds, bool __bAlertable) MCF_NOEXCEPT;
-extern void MCF_CRT_SleepInfinitely(bool __bAlertable) MCF_NOEXCEPT;
+extern bool MCF_CRT_AlertableSleep(MCF_STD uint64_t __u64MilliSeconds) MCF_NOEXCEPT;
+extern void MCF_CRT_AlertableSleepInfinitely() MCF_NOEXCEPT;
 
 extern long MCF_CRT_SuspendThread(void *__hThread) MCF_NOEXCEPT;
 extern long MCF_CRT_ResumeThread(void *__hThread) MCF_NOEXCEPT;

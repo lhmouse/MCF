@@ -402,15 +402,28 @@ void MCF_CRT_CloseThread(void *hThread){
 unsigned long MCF_CRT_GetCurrentThreadId(){
 	return GetCurrentThreadId();
 }
-bool MCF_CRT_Sleep(uint64_t u64MilliSeconds, bool bAlertable){
+
+void MCF_CRT_Sleep(uint64_t u64MilliSeconds){
 	if(u64MilliSeconds > (uint64_t)INT64_MIN / 10000){
-		MCF_CRT_SleepInfinitely(bAlertable);
+		ASSERT_MSG(false, L"MCF_CRT_Sleep() 指定了一个非常大的延迟，当前线程将会永久睡眠。");
+	}
+
+	LARGE_INTEGER liTimeout;
+	liTimeout.QuadPart = -(int64_t)(u64MilliSeconds * 10000);
+	const NTSTATUS lStatus = NtDelayExecution(false, &liTimeout);
+	if(!NT_SUCCESS(lStatus)){
+		ASSERT_MSG(false, L"NtDelayExecution() 失败。");
+	}
+}
+bool MCF_CRT_AlertableSleep(uint64_t u64MilliSeconds){
+	if(u64MilliSeconds > (uint64_t)INT64_MIN / 10000){
+		MCF_CRT_AlertableSleepInfinitely();
 		return true;
 	}
 
 	LARGE_INTEGER liTimeout;
 	liTimeout.QuadPart = -(int64_t)(u64MilliSeconds * 10000);
-	const NTSTATUS lStatus = NtDelayExecution(bAlertable, &liTimeout);
+	const NTSTATUS lStatus = NtDelayExecution(true, &liTimeout);
 	if(!NT_SUCCESS(lStatus)){
 		ASSERT_MSG(false, L"NtDelayExecution() 失败。");
 	}
@@ -419,10 +432,10 @@ bool MCF_CRT_Sleep(uint64_t u64MilliSeconds, bool bAlertable){
 	}
 	return true;
 }
-void MCF_CRT_SleepInfinitely(bool bAlertable){
+void MCF_CRT_AlertableSleepInfinitely(){
 	LARGE_INTEGER liTimeout;
 	liTimeout.QuadPart = INT64_MAX;
-	const NTSTATUS lStatus = NtDelayExecution(bAlertable, &liTimeout);
+	const NTSTATUS lStatus = NtDelayExecution(true, &liTimeout);
 	if(!NT_SUCCESS(lStatus)){
 		ASSERT_MSG(false, L"NtDelayExecution() 失败。");
 	}

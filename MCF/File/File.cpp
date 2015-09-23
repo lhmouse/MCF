@@ -4,6 +4,7 @@
 
 #include "../StdMCF.hpp"
 #include "File.hpp"
+#include "../../MCFCRT/env/thread.h"
 #include "../Core/Exception.hpp"
 #include "../Core/String.hpp"
 #include "../Utilities/BinaryOperations.hpp"
@@ -55,7 +56,10 @@ File::File(const WideStringObserver &wsoPath, std::uint32_t u32Flags){
 	ustrRawPath.MaximumLength       = uSize;
 	ustrRawPath.Buffer              = (PWSTR)wsoPath.GetBegin();
 
-	wchar_t awcStaticStr[4096 / sizeof(wchar_t)];
+	static constexpr wchar_t kPrefix[] = LR"(\??\)";
+	static constexpr auto kPrefixSize = sizeof(kPrefix) - sizeof(wchar_t);
+
+	wchar_t awcStaticStr[MAX_PATH + kPrefixSize];
 	::UNICODE_STRING ustrStaticBuffer;
 	ustrStaticBuffer.Length         = 0;
 	ustrStaticBuffer.MaximumLength  = sizeof(awcStaticStr);
@@ -73,9 +77,6 @@ File::File(const WideStringObserver &wsoPath, std::uint32_t u32Flags){
 		DEBUG_THROW(SystemError, ::RtlNtStatusToDosError(lPathStatus), "RtlGetFullPathName_UstrEx"_rcs);
 	}
 	DEFER([&]{ if(pustrUnprefixedFullPath == &ustrDynamicBuffer){ ::RtlFreeUnicodeString(pustrUnprefixedFullPath); } });
-
-	static constexpr wchar_t kPrefix[] = LR"(\??\)";
-	static constexpr auto kPrefixSize = sizeof(kPrefix) - sizeof(wchar_t);
 
 	const auto uPrefixedPathSize = pustrUnprefixedFullPath->Length + kPrefixSize;
 	unsigned char *pbyPrefixedPathBuffer;
@@ -228,11 +229,7 @@ std::size_t File::Read(void *pBuffer, std::uint32_t u32BytesToRead, std::uint64_
 	if(!NT_SUCCESS(lStatus)){
 		DEBUG_THROW(SystemError, ::RtlNtStatusToDosError(lStatus), "NtReadFile"_rcs);
 	}
-	do {
-		const auto dwResult = ::SleepEx(INFINITE, true);
-		(void)dwResult;
-		ASSERT(dwResult == WAIT_IO_COMPLETION);
-	} while(!bCompleted);
+	::MCF_CRT_SleepInfinitely(true);
 
 	if(fnCompleteCallback){
 		fnCompleteCallback();
@@ -262,11 +259,7 @@ std::size_t File::Write(std::uint64_t u64Offset, const void *pBuffer, std::uint3
 	if(!NT_SUCCESS(lStatus)){
 		DEBUG_THROW(SystemError, ::RtlNtStatusToDosError(lStatus), "NtWriteFile"_rcs);
 	}
-	do {
-		const auto dwResult = ::SleepEx(INFINITE, true);
-		(void)dwResult;
-		ASSERT(dwResult == WAIT_IO_COMPLETION);
-	} while(!bCompleted);
+	::MCF_CRT_SleepInfinitely(true);
 
 	if(fnCompleteCallback){
 		fnCompleteCallback();

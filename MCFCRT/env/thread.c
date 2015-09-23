@@ -16,6 +16,9 @@
 #include <ntdef.h>
 
 extern __attribute__((__dllimport__, __stdcall__))
+NTSTATUS NtDelayExecution(BOOLEAN bAlertable, const LARGE_INTEGER *pInterval);
+
+extern __attribute__((__dllimport__, __stdcall__))
 NTSTATUS NtSuspendThread(HANDLE hThread, LONG *plPrevCount);
 extern __attribute__((__dllimport__, __stdcall__))
 NTSTATUS NtResumeThread(HANDLE hThread, LONG *plPrevCount);
@@ -395,8 +398,34 @@ void MCF_CRT_CloseThread(void *hThread){
 		ASSERT_MSG(false, L"CloseHandle() 失败。");
 	}
 }
+
 unsigned long MCF_CRT_GetCurrentThreadId(){
 	return GetCurrentThreadId();
+}
+bool MCF_CRT_Sleep(bool bAlertable, uint64_t u64MilliSeconds){
+	if(u64MilliSeconds > (uint64_t)INT64_MIN / 10000){
+		MCF_CRT_SleepInfinitely(bAlertable);
+		return true;
+	}
+
+	LARGE_INTEGER liTimeout;
+	liTimeout.QuadPart = -(int64_t)(u64MilliSeconds * 10000);
+	const NTSTATUS lStatus = NtDelayExecution(bAlertable, &liTimeout);
+	if(!NT_SUCCESS(lStatus)){
+		ASSERT_MSG(false, L"NtDelayExecution() 失败。");
+	}
+	if(lStatus == STATUS_TIMEOUT){
+		return false;
+	}
+	return true;
+}
+void MCF_CRT_SleepInfinitely(bool bAlertable){
+	LARGE_INTEGER liTimeout;
+	liTimeout.QuadPart = INT64_MAX;
+	const NTSTATUS lStatus = NtDelayExecution(bAlertable, &liTimeout);
+	if(!NT_SUCCESS(lStatus)){
+		ASSERT_MSG(false, L"NtDelayExecution() 失败。");
+	}
 }
 
 long MCF_CRT_SuspendThread(void *hThread){

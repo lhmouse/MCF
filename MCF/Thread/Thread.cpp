@@ -32,6 +32,9 @@ bool Thread::AlertableSleep(std::uint64_t u64MilliSeconds) noexcept {
 void Thread::AlertableSleep() noexcept {
 	::MCF_CRT_AlertableSleepInfinitely();
 }
+void Thread::YieldExecution() noexcept {
+	::MCF_CRT_YieldThread();
+}
 
 // 构造函数和析构函数。
 Thread::Thread(Function<void ()> fnProc, bool bSuspended)

@@ -7,6 +7,7 @@
 #include "../Core/Exception.hpp"
 #include "../Core/System.hpp"
 #include "../Utilities/MinMax.hpp"
+#include "../Thread/Thread.hpp"
 
 namespace MCF {
 
@@ -57,7 +58,7 @@ void Mutex::Lock() noexcept {
 
 	const auto uSpinCount = GetSpinCount() / 0x400; // FIXME: SRWLOCK 里面自己实现了一个自旋。
 	for(std::size_t i = 0; i < uSpinCount; ++i){
-		::SwitchToThread();
+		Thread::YieldExecution();
 
 		if(::TryAcquireSRWLockExclusive(reinterpret_cast<::SRWLOCK *>(x_aImpl))){
 			return;

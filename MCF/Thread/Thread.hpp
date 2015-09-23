@@ -33,6 +33,7 @@ public:
 	static void Sleep(std::uint64_t u64MilliSeconds) noexcept;
 	static bool AlertableSleep(std::uint64_t u64MilliSeconds) noexcept;
 	static void AlertableSleep() noexcept;
+	static void YieldExecution() noexcept;
 
 private:
 	const Function<void ()> x_fnProc;

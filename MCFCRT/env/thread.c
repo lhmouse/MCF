@@ -17,6 +17,8 @@
 
 extern __attribute__((__dllimport__, __stdcall__))
 NTSTATUS NtDelayExecution(BOOLEAN bAlertable, const LARGE_INTEGER *pInterval);
+extern __attribute__((__dllimport__, __stdcall__))
+NTSTATUS NtYieldExecution(void);
 
 extern __attribute__((__dllimport__, __stdcall__))
 NTSTATUS NtSuspendThread(HANDLE hThread, LONG *plPrevCount);
@@ -438,6 +440,12 @@ void MCF_CRT_AlertableSleepInfinitely(){
 	const NTSTATUS lStatus = NtDelayExecution(true, &liTimeout);
 	if(!NT_SUCCESS(lStatus)){
 		ASSERT_MSG(false, L"NtDelayExecution() 失败。");
+	}
+}
+void MCF_CRT_YieldThread(){
+	const NTSTATUS lStatus = NtYieldExecution();
+	if(!NT_SUCCESS(lStatus)){
+		ASSERT_MSG(false, L"NtYieldExecution() 失败。");
 	}
 }
 

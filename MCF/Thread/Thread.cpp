@@ -15,12 +15,19 @@ void Thread::X_ThreadCloser::operator()(void *hThread) const noexcept {
 }
 
 // 静态成员函数。
+IntrusivePtr<Thread> Thread::Create(Function<void ()> fnProc, bool bSuspended){
+	return IntrusivePtr<Thread>(new Thread(std::move(fnProc), bSuspended));
+}
+
 std::size_t Thread::GetCurrentId() noexcept {
 	return ::MCF_CRT_GetCurrentThreadId();
 }
 
-IntrusivePtr<Thread> Thread::Create(Function<void ()> fnProc, bool bSuspended){
-	return IntrusivePtr<Thread>(new Thread(std::move(fnProc), bSuspended));
+bool Thread::Sleep(std::uint64_t u64MilliSeconds, bool bAlertable) noexcept {
+	return ::MCF_CRT_Sleep(u64MilliSeconds, bAlertable);
+}
+void Thread::Sleep(bool bAlertable) noexcept {
+	::MCF_CRT_SleepInfinitely(bAlertable);
 }
 
 // 构造函数和析构函数。

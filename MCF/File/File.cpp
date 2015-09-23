@@ -4,12 +4,12 @@
 
 #include "../StdMCF.hpp"
 #include "File.hpp"
-#include "../../MCFCRT/env/thread.h"
 #include "../Core/Exception.hpp"
 #include "../Core/String.hpp"
 #include "../Utilities/BinaryOperations.hpp"
 #include "../Utilities/MinMax.hpp"
 #include "../Utilities/Defer.hpp"
+#include "../Thread/Thread.hpp"
 #include <winternl.h>
 #include <ntdef.h>
 #include <ntstatus.h>
@@ -229,7 +229,7 @@ std::size_t File::Read(void *pBuffer, std::uint32_t u32BytesToRead, std::uint64_
 	if(!NT_SUCCESS(lStatus)){
 		DEBUG_THROW(SystemError, ::RtlNtStatusToDosError(lStatus), "NtReadFile"_rcs);
 	}
-	::MCF_CRT_SleepInfinitely(true);
+	Thread::Sleep(true);
 
 	if(fnCompleteCallback){
 		fnCompleteCallback();
@@ -259,7 +259,7 @@ std::size_t File::Write(std::uint64_t u64Offset, const void *pBuffer, std::uint3
 	if(!NT_SUCCESS(lStatus)){
 		DEBUG_THROW(SystemError, ::RtlNtStatusToDosError(lStatus), "NtWriteFile"_rcs);
 	}
-	::MCF_CRT_SleepInfinitely(true);
+	Thread::Sleep(true);
 
 	if(fnCompleteCallback){
 		fnCompleteCallback();

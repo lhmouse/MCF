@@ -402,7 +402,7 @@ void MCF_CRT_CloseThread(void *hThread){
 unsigned long MCF_CRT_GetCurrentThreadId(){
 	return GetCurrentThreadId();
 }
-bool MCF_CRT_Sleep(bool bAlertable, uint64_t u64MilliSeconds){
+bool MCF_CRT_Sleep(uint64_t u64MilliSeconds, bool bAlertable){
 	if(u64MilliSeconds > (uint64_t)INT64_MIN / 10000){
 		MCF_CRT_SleepInfinitely(bAlertable);
 		return true;

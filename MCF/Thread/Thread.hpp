@@ -26,9 +26,12 @@ private:
 	};
 
 public:
+	static IntrusivePtr<Thread> Create(Function<void ()> fnProc, bool bSuspended = false);
+
 	static std::size_t GetCurrentId() noexcept;
 
-	static IntrusivePtr<Thread> Create(Function<void ()> fnProc, bool bSuspended = false);
+	static bool Sleep(std::uint64_t u64MilliSeconds, bool bAlertable = false) noexcept;
+	static void Sleep(bool bAlertable = false) noexcept;
 
 private:
 	const Function<void ()> x_fnProc;

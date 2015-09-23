@@ -235,6 +235,10 @@ std::size_t File::Read(void *pBuffer, std::uint32_t u32BytesToRead, std::uint64_
 	if(fnAsyncProc){
 		fnAsyncProc();
 	}
+	if(lStatus == STATUS_END_OF_FILE){
+		vIoStatus.Information = 0;
+		goto jEof;
+	}
 	if(!NT_SUCCESS(lStatus)){
 		DEBUG_THROW(SystemError, ::RtlNtStatusToDosError(lStatus), "NtReadFile"_rcs);
 	}
@@ -242,6 +246,7 @@ std::size_t File::Read(void *pBuffer, std::uint32_t u32BytesToRead, std::uint64_
 		Thread::AlertableSleep();
 	} while(bIoPending);
 
+jEof:
 	if(fnCompleteCallback){
 		fnCompleteCallback();
 	}

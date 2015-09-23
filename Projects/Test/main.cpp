@@ -7,7 +7,7 @@ using namespace MCF;
 
 extern "C" unsigned MCFMain(){
 	try {
-		File f(L".\\make64.cmd"_wso, File::kToRead);
+		File f(LR"(.\\make64.cmd)"_wso, File::kToRead);
 
 		Crc32 crc32;
 		char data[512];

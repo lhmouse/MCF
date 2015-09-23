@@ -14,9 +14,20 @@
 #include <ntdef.h>
 #include <ntstatus.h>
 
+typedef enum tagRTL_PATH_TYPE {
+	RtlPathTypeUnknown,
+	RtlPathTypeUncAbsolute,
+	RtlPathTypeDriveAbsolute,
+	RtlPathTypeDriveRelative,
+	RtlPathTypeRooted,
+	RtlPathTypeRelative,
+	RtlPathTypeLocalDevice,
+	RtlPathTypeRootLocalDevice,
+} RTL_PATH_TYPE;
+
 extern "C" __attribute__((__dllimport__, __stdcall__))
 NTSTATUS RtlGetFullPathName_UstrEx(const UNICODE_STRING *pFileName, UNICODE_STRING *pStaticBuffer, UNICODE_STRING *pDynamicBuffer,
-	UNICODE_STRING **ppWhichBufferIsUsed, SIZE_T *puPrefixChars, BOOLEAN *pbValid, int *pnPathType, SIZE_T *puBytesRequired);
+	UNICODE_STRING **ppWhichBufferIsUsed, SIZE_T *puPrefixChars, BOOLEAN *pbValid, RTL_PATH_TYPE *pePathType, SIZE_T *puBytesRequired);
 
 extern "C" __attribute__((__dllimport__, __stdcall__))
 NTSTATUS NtReadFile(HANDLE hFile, HANDLE hEvent, PIO_APC_ROUTINE pfnApcRoutine, void *pApcContext, IO_STATUS_BLOCK *pIoStatus,
@@ -56,10 +67,10 @@ File::File(const WideStringObserver &wsoPath, std::uint32_t u32Flags){
 	ustrRawPath.MaximumLength       = uSize;
 	ustrRawPath.Buffer              = (PWSTR)wsoPath.GetBegin();
 
-	static constexpr wchar_t kPrefix[] = LR"(\??\)";
-	static constexpr auto kPrefixSize = sizeof(kPrefix) - sizeof(wchar_t);
+	static constexpr wchar_t kDosPathPrefix[] = LR"(\??\)";
+	static constexpr auto kDosPathPrefixSize = sizeof(kDosPathPrefix) - sizeof(wchar_t);
 
-	wchar_t awcStaticStr[MAX_PATH + kPrefixSize];
+	wchar_t awcStaticStr[MAX_PATH + kDosPathPrefixSize];
 	::UNICODE_STRING ustrStaticBuffer;
 	ustrStaticBuffer.Length         = 0;
 	ustrStaticBuffer.MaximumLength  = sizeof(awcStaticStr);
@@ -69,25 +80,29 @@ File::File(const WideStringObserver &wsoPath, std::uint32_t u32Flags){
 	ustrDynamicBuffer.Length        = 0;
 	ustrDynamicBuffer.MaximumLength = 0;
 	ustrDynamicBuffer.Buffer        = nullptr;
+	DEFER([&]{ ::RtlFreeUnicodeString(&ustrDynamicBuffer); });
 
 	::UNICODE_STRING *pustrUnprefixedFullPath;
-	int nPathType;
-	const auto lPathStatus = ::RtlGetFullPathName_UstrEx(&ustrRawPath, &ustrStaticBuffer, &ustrDynamicBuffer, &pustrUnprefixedFullPath, nullptr, nullptr, &nPathType, nullptr);
+	::RTL_PATH_TYPE ePathType;
+	const auto lPathStatus = ::RtlGetFullPathName_UstrEx(&ustrRawPath, &ustrStaticBuffer, &ustrDynamicBuffer, &pustrUnprefixedFullPath, nullptr, nullptr, &ePathType, nullptr);
 	if(!NT_SUCCESS(lPathStatus)){
 		DEBUG_THROW(SystemError, ::RtlNtStatusToDosError(lPathStatus), "RtlGetFullPathName_UstrEx"_rcs);
 	}
-	DEFER([&]{ if(pustrUnprefixedFullPath == &ustrDynamicBuffer){ ::RtlFreeUnicodeString(pustrUnprefixedFullPath); } });
 
-	const auto uPrefixedPathSize = pustrUnprefixedFullPath->Length + kPrefixSize;
-	unsigned char *pbyPrefixedPathBuffer;
-	if(static_cast<std::size_t>(pustrUnprefixedFullPath->MaximumLength) - pustrUnprefixedFullPath->Length <= uPrefixedPathSize){
-		pbyPrefixedPathBuffer = reinterpret_cast<unsigned char *>(pustrUnprefixedFullPath->Buffer);
-	} else {
-		pbyPrefixedPathBuffer = static_cast<unsigned char *>(::operator new[](uPrefixedPathSize));
-	}
+	auto uPrefixedPathSize = pustrUnprefixedFullPath->Length;
+	auto pbyPrefixedPathBuffer = reinterpret_cast<unsigned char *>(pustrUnprefixedFullPath->Buffer);
 	DEFER([&]{ if(pbyPrefixedPathBuffer != reinterpret_cast<unsigned char *>(pustrUnprefixedFullPath->Buffer)){ ::operator delete[](pbyPrefixedPathBuffer); } });
-	std::memmove(pbyPrefixedPathBuffer + kPrefixSize, pustrUnprefixedFullPath->Buffer, pustrUnprefixedFullPath->Length);
-	std::memcpy(pbyPrefixedPathBuffer, kPrefix, kPrefixSize);
+
+	if((RtlPathTypeDriveAbsolute <= ePathType) && (ePathType <= RtlPathTypeRelative)){
+		uPrefixedPathSize += kDosPathPrefixSize;
+		if(static_cast<std::size_t>(pustrUnprefixedFullPath->MaximumLength) - pustrUnprefixedFullPath->Length <= uPrefixedPathSize){
+			pbyPrefixedPathBuffer = reinterpret_cast<unsigned char *>(pustrUnprefixedFullPath->Buffer);
+		} else {
+			pbyPrefixedPathBuffer = static_cast<unsigned char *>(::operator new[](uPrefixedPathSize));
+		}
+		std::memmove(pbyPrefixedPathBuffer + kDosPathPrefixSize, pustrUnprefixedFullPath->Buffer, pustrUnprefixedFullPath->Length);
+		std::memcpy(pbyPrefixedPathBuffer, kDosPathPrefix, kDosPathPrefixSize);
+	}
 
 	::ACCESS_MASK dwDesiredAccess = 0;
 	if(u32Flags & kToRead){

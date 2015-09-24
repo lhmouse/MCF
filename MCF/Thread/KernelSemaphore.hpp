@@ -18,7 +18,7 @@ private:
 	Impl_UniqueNtHandle::UniqueNtHandle x_hSemaphore;
 
 public:
-	explicit KernelSemaphore(std::size_t uInitCount, WideStringObserver wsoName = nullptr);
+	explicit KernelSemaphore(std::size_t uInitCount, const WideStringObserver &wsoName = nullptr);
 
 public:
 	bool Wait(std::uint64_t u64MilliSeconds) noexcept;

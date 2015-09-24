@@ -33,10 +33,42 @@ extern void MCF_AvlInternalDetach(const MCF_AvlNodeHeader *__pNode) MCF_NOEXCEPT
 
 typedef MCF_AvlNodeHeader *MCF_AvlRoot;
 
-extern MCF_AvlNodeHeader *MCF_AvlFront(const MCF_AvlRoot *__ppRoot) MCF_NOEXCEPT;
-extern MCF_AvlNodeHeader *MCF_AvlBack(const MCF_AvlRoot *__ppRoot) MCF_NOEXCEPT;
+static inline MCF_AvlNodeHeader *MCF_AvlFront(const MCF_AvlRoot *__ppRoot) MCF_NOEXCEPT {
+	MCF_AvlNodeHeader *__pCur = *__ppRoot;
+	if(__pCur){
+		while(__pCur->__pLeft){
+			__pCur = __pCur->__pLeft;
+		}
+	}
+	return __pCur;
+}
+static inline MCF_AvlNodeHeader *MCF_AvlBack(const MCF_AvlRoot *__ppRoot) MCF_NOEXCEPT {
+	MCF_AvlNodeHeader *__pCur = *__ppRoot;
+	if(__pCur){
+		while(__pCur->__pRight){
+			__pCur = __pCur->__pRight;
+		}
+	}
+	return __pCur;
+}
+static inline void MCF_AvlSwap(MCF_AvlRoot *__ppRoot1, MCF_AvlRoot *__ppRoot2) MCF_NOEXCEPT {
+	if(__ppRoot1 == __ppRoot2){
+		return;
+	}
 
-extern void MCF_AvlSwap(MCF_AvlRoot *__ppRoot1, MCF_AvlRoot *__ppRoot2) MCF_NOEXCEPT;
+	MCF_AvlNodeHeader *const __pRoot1 = *__ppRoot1;
+	MCF_AvlNodeHeader *const __pRoot2 = *__ppRoot2;
+
+	*__ppRoot2 = __pRoot1;
+	if(__pRoot1){
+		__pRoot1->__ppRefl = __ppRoot2;
+	}
+
+	*__ppRoot1 = __pRoot2;
+	if(__pRoot2){
+		__pRoot2->__ppRefl = __ppRoot1;
+	}
+}
 
 // 参考 strcmp()。
 typedef int (*MCF_AvlComparatorNodes)(const MCF_AvlNodeHeader *, const MCF_AvlNodeHeader *);

@@ -15,9 +15,6 @@ namespace MCF {
 namespace Impl_MultiIndexMap {
 	template<typename KeyT, typename ComparatorT>
 	class AssociativeIndex {
-	public:
-		using IndexNode = ::MCF_AvlNodeHeader;
-
 	private:
 		::MCF_AvlRoot x_pRoot;
 		::MCF_AvlNodeHeader x_pFirst;
@@ -30,6 +27,9 @@ namespace Impl_MultiIndexMap {
 		}
 
 	public:
+		// 索引需求。
+		using IndexNode = ::MCF_AvlNodeHeader;
+
 		const IndexNode *GetFirst() const noexcept {
 			return x_pFirst;
 		}
@@ -43,16 +43,16 @@ namespace Impl_MultiIndexMap {
 			return x_pLast;
 		}
 
-		const IndexNode *GetPrev(const IndexNode *pPos) const noexcept {
+		static const IndexNode *GetPrev(const IndexNode *pPos) noexcept {
 			return ::MCF_AvlPrev(pPos);
 		}
-		IndexNode *GetPrev(IndexNode *pPos) noexcept {
+		static IndexNode *GetPrev(IndexNode *pPos) noexcept {
 			return ::MCF_AvlPrev(pPos);
 		}
-		const IndexNode *GetNext(const IndexNode *pPos) const noexcept {
+		static const IndexNode *GetNext(const IndexNode *pPos) noexcept {
 			return ::MCF_AvlNext(pPos);
 		}
-		IndexNode *GetNext(IndexNode *pPos) noexcept {
+		static IndexNode *GetNext(IndexNode *pPos) noexcept {
 			return ::MCF_AvlNext(pPos);
 		}
 
@@ -62,27 +62,32 @@ namespace Impl_MultiIndexMap {
 			swap(x_pFirst, rhs.x_pFirst);
 			swap(x_pLast,  rhs.x_pLast);
 		}
+
+		// AssociativeIndex 需求。
 	};
 
-	template<typename KeyT, typename ComparatorT>
-	class SequenceIndex {
-	public:
-		struct IndexNode {
-			IndexNode *pPrev;
-			IndexNode *pNext;
+	template<typename KeyT>
+	class SequentialIndex {
+	private:
+		struct X_Node {
+			X_Node *pPrev;
+			X_Node *pNext;
 		};
 
 	private:
-		IndexNode x_pFirst;
-		IndexNode x_pLast;
+		X_Node *x_pFirst;
+		X_Node *x_pLast;
 
 	public:
-		constexpr SequenceIndex() noexcept
+		constexpr SequentialIndex() noexcept
 			: x_pFirst(nullptr), x_pLast(nullptr)
 		{
 		}
 
 	public:
+		// 索引需求。
+		using IndexNode = X_Node;
+
 		const IndexNode *GetFirst() const noexcept {
 			return x_pFirst;
 		}
@@ -96,26 +101,41 @@ namespace Impl_MultiIndexMap {
 			return x_pLast;
 		}
 
-		const IndexNode *GetPrev(const IndexNode *pPos) const noexcept {
+		static const IndexNode *GetPrev(const IndexNode *pPos) noexcept {
 			return pPos->pPrev;
 		}
-		IndexNode *GetPrev(IndexNode *pPos) noexcept {
+		static IndexNode *GetPrev(IndexNode *pPos) noexcept {
 			return pPos->pPrev;
 		}
-		const IndexNode *GetNext(const IndexNode *pPos) const noexcept {
+		static const IndexNode *GetNext(const IndexNode *pPos) noexcept {
 			return pPos->pNext;
 		}
-		IndexNode *GetNext(IndexNode *pPos) noexcept {
+		static IndexNode *GetNext(IndexNode *pPos) noexcept {
 			return pPos->pNext;
 		}
 
-		void Swap(SequenceIndex &rhs) noexcept {
+		void Swap(SequentialIndex &rhs) noexcept {
 			using std::swap;
 			swap(x_pFirst, rhs.x_pFirst);
 			swap(x_pLast,  rhs.x_pLast);
 		}
+
+		// SequentialIndex 需求。
 	};
 }
+
+template<typename KeyT, typename Comparator = Less>
+struct AssociativeIndex {
+};
+
+template<typename KeyT, typename Comparator = Less>
+struct AssociativeMultiIndex {
+};
+
+template<typename KeyT>
+struct SequentialIndex {
+};
+
 
 /*
 template<typename KeyT, typename ValueT, typename ComparatorT = Less>

@@ -143,7 +143,7 @@ namespace Impl_StringObserver {
 			std::size_t uPos = 0;
 			std::size_t uCand = 0;
 			while(uPos < uFindCount - 2){
-				if(itToFindBegin[static_cast<std::ptrdiff_t>(uPos)] == itToFindBegin[static_cast<std::ptrdiff_t>(uCand)]){
+				if(itToFindBegin[static_cast<std::ptrdiff_t>(uPos - 2)] == itToFindBegin[static_cast<std::ptrdiff_t>(uCand)]){
 					puKmpTable[uPos++] = ++uCand;
 				} else if(uCand != 0){
 					uCand = puKmpTable[uCand];

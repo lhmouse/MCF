@@ -125,15 +125,15 @@ namespace Impl_MultiIndexMap {
 }
 
 template<typename KeyT, typename Comparator = Less>
-struct AssociativeIndex {
+struct MapIndex {
 };
 
 template<typename KeyT, typename Comparator = Less>
-struct AssociativeMultiIndex {
+struct MultiMapIndex {
 };
 
 template<typename KeyT>
-struct SequentialIndex {
+struct ListIndex {
 };
 
 

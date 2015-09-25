@@ -96,23 +96,17 @@ namespace Impl_StringObserver {
 				++itCur;
 			}
 
-			std::size_t uMatchLen = 1;
+			std::ptrdiff_t nMatchLen = 1;
 			for(;;){
-				++itCur;
-				if(uMatchLen == uFindCount){
-					return static_cast<std::size_t>(itCur - itBegin) - uFindCount;
+				if(static_cast<std::size_t>(nMatchLen) >= uFindCount){
+					return static_cast<std::size_t>(itCur - itBegin);
 				}
-				if(itCur == itEnd){
-					return kNpos;
-				}
-				if(*itCur != chToFind){
+				if(itCur[nMatchLen] != chToFind){
 					break;
 				}
-				++uMatchLen;
+				++nMatchLen;
 			}
-			if(itCur >= itCurEnd){
-				return kNpos;
-			}
+			itCur += nMatchLen;
 		}
 	}
 
@@ -122,36 +116,39 @@ namespace Impl_StringObserver {
 		ASSERT(static_cast<std::size_t>(itEnd - itBegin) >= static_cast<std::size_t>(itToFindEnd - itToFindBegin));
 
 		const auto uFindCount = static_cast<std::size_t>(itToFindEnd - itToFindBegin);
-		if(uFindCount == 1){
-			return StrChrRep(itBegin, itEnd, *itToFindBegin, 1);
-		}
-		ASSERT(uFindCount >= 2);
 
-		std::size_t *puKmpTable;
+		std::ptrdiff_t *pnKmpTable;
 		bool bWasTableAllocatedFromHeap;
-		const auto uSizeToAlloc = sizeof(std::size_t) * (uFindCount - 2);
-		if((uSizeToAlloc >= 0x10000) || (uSizeToAlloc / sizeof(std::size_t) != uFindCount - 2)){
-			puKmpTable = static_cast<std::size_t *>(::operator new[](uSizeToAlloc, std::nothrow));
+		const auto uSizeToAlloc = sizeof(std::ptrdiff_t) * (uFindCount - 1);
+		if(uSizeToAlloc / sizeof(std::ptrdiff_t) != uFindCount - 1){
+			pnKmpTable = nullptr;
+			bWasTableAllocatedFromHeap = false;
+		} else if(uSizeToAlloc >= 0x10000){
+			pnKmpTable = static_cast<std::ptrdiff_t *>(::operator new[](uSizeToAlloc, std::nothrow));
 			bWasTableAllocatedFromHeap = true;
 		} else {
-			puKmpTable = static_cast<std::size_t *>(ALLOCA(uSizeToAlloc));
+			pnKmpTable = static_cast<std::ptrdiff_t *>(ALLOCA(uSizeToAlloc));
 			bWasTableAllocatedFromHeap = false;
 		}
-		DEFER([&]{ if(bWasTableAllocatedFromHeap){ ::operator delete[](puKmpTable); }; });
+		DEFER([&]{ if(bWasTableAllocatedFromHeap){ ::operator delete[](pnKmpTable); }; });
 
-		if(puKmpTable){
-			std::size_t uPos = 0;
-			std::size_t uCand = 0;
+		if(pnKmpTable){
+			std::memset(pnKmpTable, 0,  uSizeToAlloc);
+/*			std::ptrdiff_t nPos = 1, nCand = 0;
+			while(static_cast<std::size_t>(nPos) < uFindCount){
+				if(itToFindBegin[nPos
+			};
+
 			while(uPos < uFindCount - 2){
 				if(itToFindBegin[static_cast<std::ptrdiff_t>(uPos - 2)] == itToFindBegin[static_cast<std::ptrdiff_t>(uCand)]){
-					puKmpTable[uPos++] = ++uCand;
+					pnKmpTable[uPos++] = ++uCand;
 				} else if(uCand != 0){
-					uCand = puKmpTable[uCand];
+					uCand = pnKmpTable[uCand];
 				} else {
-					puKmpTable[uPos++] = 0;
+					pnKmpTable[uPos++] = 0;
 				}
 			}
-		}
+*/		}
 
 		auto itCur = itBegin;
 		const auto itCurEnd = itEnd - static_cast<std::ptrdiff_t>(uFindCount) + 1;
@@ -166,26 +163,19 @@ namespace Impl_StringObserver {
 				++itCur;
 			}
 
-			std::size_t uMatchLen = 1;
+			std::ptrdiff_t nMatchLen = 1;
 			for(;;){
-				++itCur;
-				if(uMatchLen == uFindCount){
-					return static_cast<std::size_t>(itCur - itBegin) - uFindCount;
+				if(static_cast<std::size_t>(nMatchLen) >= uFindCount){
+					return static_cast<std::size_t>(itCur - itBegin);
 				}
-				if(itCur == itEnd){
-					return kNpos;
-				}
-				if(*itCur != itToFindBegin[static_cast<std::ptrdiff_t>(uMatchLen)]){
+				if(itCur[nMatchLen] != itToFindBegin[nMatchLen]){
 					break;
 				}
-				++uMatchLen;
+				++nMatchLen;
 			}
-			if(itCur >= itCurEnd){
-				return kNpos;
-			}
-			itCur -= static_cast<std::ptrdiff_t>(uMatchLen - 1);
-			if((uMatchLen >= 2) && puKmpTable){
-				itCur += static_cast<std::ptrdiff_t>(puKmpTable[uMatchLen - 2]);
+			itCur += 1;
+			if(pnKmpTable){
+				nMatchLen += pnKmpTable[nMatchLen - 1];
 			}
 		}
 	}

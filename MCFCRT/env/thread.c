@@ -391,7 +391,10 @@ void *MCF_CRT_CreateThread(unsigned (*pfnThreadProc)(intptr_t), intptr_t nParam,
 	}
 
 	if(!bSuspended){
-		ResumeThread(hThread);
+		const NTSTATUS lStatus = NtResumeThread(hThread, nullptr);
+		if(!NT_SUCCESS(lStatus)){
+			ASSERT_MSG(false, L"NtResumeThread() 失败。");
+		}
 	}
 	return (void *)hThread;
 }

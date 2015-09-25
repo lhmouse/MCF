@@ -156,7 +156,7 @@ static inline void MCF_AvlDetach(const MCF_AvlNodeHeader *__pNode) MCF_NOEXCEPT 
 	MCF_AvlInternalDetach(__pNode);
 }
 
-static inline MCF_AvlNodeHeader *MCF_AvlLowerBound(const MCF_AvlRoot *__ppRoot,
+static inline MCF_AvlNodeHeader *MCF_AvlGetLowerBound(const MCF_AvlRoot *__ppRoot,
 	MCF_STD intptr_t __nOther, MCF_AvlComparatorNodeOther __pfnComparatorNodeOther)
 {
 	const MCF_AvlNodeHeader *__pRet = nullptr;
@@ -172,7 +172,7 @@ static inline MCF_AvlNodeHeader *MCF_AvlLowerBound(const MCF_AvlRoot *__ppRoot,
 	return (MCF_AvlNodeHeader *)__pRet;
 }
 
-static inline MCF_AvlNodeHeader *MCF_AvlUpperBound(const MCF_AvlRoot *__ppRoot,
+static inline MCF_AvlNodeHeader *MCF_AvlGetUpperBound(const MCF_AvlRoot *__ppRoot,
 	MCF_STD intptr_t __nOther, MCF_AvlComparatorNodeOther __pfnComparatorNodeOther)
 {
 	const MCF_AvlNodeHeader *__pRet = nullptr;
@@ -205,7 +205,7 @@ static inline MCF_AvlNodeHeader *MCF_AvlFind(const MCF_AvlRoot *__ppRoot,
 	return nullptr;
 }
 
-static inline void MCF_AvlEqualRange(MCF_AvlNodeHeader **__ppLower, MCF_AvlNodeHeader **__ppUpper,
+static inline void MCF_AvlGetEqualRange(MCF_AvlNodeHeader **__ppLower, MCF_AvlNodeHeader **__ppUpper,
 	const MCF_AvlRoot *__ppRoot, MCF_STD intptr_t __nOther, MCF_AvlComparatorNodeOther __pfnComparatorNodeOther)
 {
 	const MCF_AvlNodeHeader *const __pTop = MCF_AvlFind(__ppRoot, __nOther, __pfnComparatorNodeOther);

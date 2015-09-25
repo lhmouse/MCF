@@ -228,7 +228,6 @@ std::size_t File::Read(void *pBuffer, std::uint32_t u32BytesToRead, std::uint64_
 
 	bool bIoPending = true;
 	::IO_STATUS_BLOCK vIoStatus;
-
 	::LARGE_INTEGER liOffset;
 	liOffset.QuadPart = static_cast<std::int64_t>(u64Offset);
 	const auto lStatus = ::NtReadFile(x_hFile.Get(), nullptr, &IoApcCallback, &bIoPending, &vIoStatus, pBuffer, u32BytesToRead, &liOffset, nullptr);
@@ -265,7 +264,6 @@ std::size_t File::Write(std::uint64_t u64Offset, const void *pBuffer, std::uint3
 
 	bool bIoPending = true;
 	::IO_STATUS_BLOCK vIoStatus;
-
 	::LARGE_INTEGER liOffset;
 	liOffset.QuadPart = static_cast<std::int64_t>(u64Offset);
 	const auto lStatus = ::NtWriteFile(x_hFile.Get(), nullptr, &IoApcCallback, &bIoPending, &vIoStatus, pBuffer, u32BytesToWrite, &liOffset, nullptr);

@@ -78,7 +78,7 @@ void *MCF_CRT_AllocateThunk(const void *pInit, size_t uSize){
 			goto jDone;
 		}
 
-		MCF_AvlNodeHeader *pFreeSizeIndex = MCF_AvlLowerBound(&g_pavlThunksByFreeSize, (intptr_t)uThunkSize, &FreeSizeComparatorNodeKey);
+		MCF_AvlNodeHeader *pFreeSizeIndex = MCF_AvlGetLowerBound(&g_pavlThunksByFreeSize, (intptr_t)uThunkSize, &FreeSizeComparatorNodeKey);
 		ThunkInfo *pInfo;
 		bool bNeedsCleanup;
 		if(pFreeSizeIndex){

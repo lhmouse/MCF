@@ -21,7 +21,7 @@ typedef struct MCF_tagWindowsVersion {
 
 extern void MCF_GetWindowsVersion(MCF_WindowsVersion *__pVersion) MCF_NOEXCEPT;
 
-inline MCF_STD uint32_t MCF_ReadTimestampCounter32() MCF_NOEXCEPT {
+static inline MCF_STD uint32_t MCF_ReadTimestampCounter32() MCF_NOEXCEPT {
 	MCF_STD uint32_t __u32Ret;
 	__asm__ __volatile__(
 		"rdtsc \n"
@@ -29,7 +29,7 @@ inline MCF_STD uint32_t MCF_ReadTimestampCounter32() MCF_NOEXCEPT {
 		);
 	return __u32Ret;
 }
-inline MCF_STD uint64_t MCF_ReadTimestampCounter64() MCF_NOEXCEPT {
+static inline MCF_STD uint64_t MCF_ReadTimestampCounter64() MCF_NOEXCEPT {
 	MCF_STD uint64_t __u64Ret;
 	__asm__ __volatile__(
 		"rdtsc \n"

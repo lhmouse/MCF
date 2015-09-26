@@ -6,20 +6,21 @@
 using namespace MCF;
 
 extern "C" unsigned MCFMain(){
+
 	Utf8String str, to_find;
 	str.Resize(102400);
-	to_find.Resize(5);
+	to_find.Resize(100);
 
 	unsigned faster = 0, slower = 0, correct = 0, incorrect = 0;
 	for(unsigned i = 0; i < 1000; ++i){
 		for(auto ptr = str.GetBegin(); ptr != str.GetEnd(); ++ptr){
-			*ptr = static_cast<char>((GetRandomUint32() % 3) | 1);
+			*ptr = static_cast<char>((GetRandomUint32() % 3) + 'a');
 		}
 		for(auto ptr = to_find.GetBegin(); ptr != to_find.GetEnd(); ++ptr){
-			*ptr = static_cast<char>((GetRandomUint32() % 3) | 1);
+			*ptr = static_cast<char>((GetRandomUint32() % 3) + 'a');
 		}
-
 		std::memcpy(str.GetBegin() + GetRandomUint64() % (str.GetSize() - to_find.GetSize()), to_find.GetBegin(), to_find.GetSize());
+//		std::printf("str = %s\nwrd = %s\n", str.GetStr(), to_find.GetStr());
 
 		double t11, t12, t21, t22;
 		char *pos1, *pos2;

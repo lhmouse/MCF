@@ -84,10 +84,9 @@ namespace Impl_StringObserver {
 		ASSERT(static_cast<std::size_t>(itEnd - itBegin) >= uFindCount);
 
 		auto itCur = itBegin;
-		const auto itCurEnd = itEnd - static_cast<std::ptrdiff_t>(uFindCount) + 1;
 		for(;;){
 			for(;;){
-				if(itCur == itCurEnd){
+				if(itEnd - itCur < static_cast<std::ptrdiff_t>(uFindCount)){
 					return kNpos;
 				}
 				if(*itCur == chToFind){
@@ -106,7 +105,7 @@ namespace Impl_StringObserver {
 				}
 				++nMatchLen;
 			}
-			itCur += nMatchLen;
+			itCur += nMatchLen + 1;
 		}
 	}
 
@@ -117,44 +116,40 @@ namespace Impl_StringObserver {
 
 		const auto uFindCount = static_cast<std::size_t>(itToFindEnd - itToFindBegin);
 
-		std::ptrdiff_t *pnKmpTable;
-		bool bWasTableAllocatedFromHeap;
-		const auto uSizeToAlloc = sizeof(std::ptrdiff_t) * (uFindCount - 1);
-		if(uSizeToAlloc / sizeof(std::ptrdiff_t) != uFindCount - 1){
-			pnKmpTable = nullptr;
-			bWasTableAllocatedFromHeap = false;
-		} else if(uSizeToAlloc >= 0x10000){
-			pnKmpTable = static_cast<std::ptrdiff_t *>(::operator new[](uSizeToAlloc, std::nothrow));
-			bWasTableAllocatedFromHeap = true;
+		std::ptrdiff_t *pnTable;
+		bool bTableAllocatedFromHeap;
+		const auto uTableSize = uFindCount - 1;
+		if(uTableSize >= 0x10000 / sizeof(std::ptrdiff_t)){
+			pnTable = ::new(std::nothrow) std::ptrdiff_t[uTableSize];
+			bTableAllocatedFromHeap = true;
 		} else {
-			pnKmpTable = static_cast<std::ptrdiff_t *>(ALLOCA(uSizeToAlloc));
-			bWasTableAllocatedFromHeap = false;
+			pnTable = static_cast<std::ptrdiff_t *>(ALLOCA(uTableSize * sizeof(std::ptrdiff_t)));
+			bTableAllocatedFromHeap = false;
 		}
-		DEFER([&]{ if(bWasTableAllocatedFromHeap){ ::operator delete[](pnKmpTable); }; });
+		DEFER([&]{ if(bTableAllocatedFromHeap){ ::delete[](pnTable); }; });
 
-		if(pnKmpTable){
-			std::memset(pnKmpTable, 0,  uSizeToAlloc);
-/*			std::ptrdiff_t nPos = 1, nCand = 0;
+		if(pnTable){
+			pnTable[0] = 0;
+
+			std::ptrdiff_t nPos = 2, nCand = 0;
 			while(static_cast<std::size_t>(nPos) < uFindCount){
-				if(itToFindBegin[nPos
-			};
-
-			while(uPos < uFindCount - 2){
-				if(itToFindBegin[static_cast<std::ptrdiff_t>(uPos - 2)] == itToFindBegin[static_cast<std::ptrdiff_t>(uCand)]){
-					pnKmpTable[uPos++] = ++uCand;
-				} else if(uCand != 0){
-					uCand = pnKmpTable[uCand];
+				if(itToFindBegin[nPos - 1] == itToFindBegin[nCand]){
+					pnTable[nPos - 1] = nCand + 1;
+					++nPos;
+					++nCand;
+				} else if(nCand != 0){
+					nCand = pnTable[nCand - 1];
 				} else {
-					pnKmpTable[uPos++] = 0;
+					pnTable[nPos - 1] = 0;
+					++nPos;
 				}
 			}
-*/		}
+		}
 
 		auto itCur = itBegin;
-		const auto itCurEnd = itEnd - static_cast<std::ptrdiff_t>(uFindCount) + 1;
 		for(;;){
 			for(;;){
-				if(itCur == itCurEnd){
+				if(itEnd - itCur < static_cast<std::ptrdiff_t>(uFindCount)){
 					return kNpos;
 				}
 				if(*itCur == *itToFindBegin){
@@ -168,15 +163,21 @@ namespace Impl_StringObserver {
 				if(static_cast<std::size_t>(nMatchLen) >= uFindCount){
 					return static_cast<std::size_t>(itCur - itBegin);
 				}
+		jFallback:
 				if(itCur[nMatchLen] != itToFindBegin[nMatchLen]){
 					break;
 				}
 				++nMatchLen;
 			}
-			itCur += 1;
-			if(pnKmpTable){
-				nMatchLen += pnKmpTable[nMatchLen - 1];
+			if(pnTable){
+				const auto nFallback = pnTable[nMatchLen - 1];
+				if(nFallback != 0){
+					itCur += nMatchLen - nFallback;
+					nMatchLen = nFallback;
+					goto jFallback;
+				}
 			}
+			++itCur;
 		}
 	}
 }

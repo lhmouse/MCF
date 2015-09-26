@@ -8,8 +8,8 @@ using namespace MCF;
 extern "C" unsigned MCFMain(){
 
 	Utf8String str, to_find;
-	str.Resize(102400);
-	to_find.Resize(1024);
+	str.Resize(100000);
+	to_find.Resize(100);
 
 	unsigned seed = GetRandomUint32();
 	auto rand_char = [&]{
@@ -19,7 +19,7 @@ extern "C" unsigned MCFMain(){
 
 	double st1 = 0, st2 = 0;
 	unsigned faster = 0, slower = 0, correct = 0, incorrect = 0;
-	for(unsigned i = 0; i < 1000; ++i){
+	for(unsigned i = 0; i < 10000; ++i){
 		for(auto ptr = str.GetBegin(); ptr != str.GetEnd(); ++ptr){
 			*ptr = rand_char();
 		}
@@ -56,11 +56,16 @@ extern "C" unsigned MCFMain(){
 		if(pos2 == pos1){
 			++correct;
 		} else {
+//			std::printf("incorrect: str = %s, to_find = %s, pos1 = %td, pos2 = %td\n", str.GetStr(), to_find.GetStr(), pos1 - str.GetStr(), pos2 - str.GetStr());
 			++incorrect;
 		}
 	}
 	std::printf("st1 = %f, st2 = %f\n", st1, st2);
 	std::printf("faster = %u, slower = %u, correct = %u, incorrect = %u\n", faster, slower, correct, incorrect);
-
+/*
+	auto s = "ABC ABCDAB ABCDABCDABDE"_u8s;
+	auto w = "ABCDABD"_u8s;
+	s.Find(w);
+*/
 	return 0;
 }

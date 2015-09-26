@@ -9,15 +9,22 @@ extern "C" unsigned MCFMain(){
 
 	Utf8String str, to_find;
 	str.Resize(102400);
-	to_find.Resize(100);
+	to_find.Resize(1024);
 
+	unsigned seed = GetRandomUint32();
+	auto rand_char = [&]{
+		seed = seed * 1664525 + 1013904223;
+		return static_cast<char>((seed >> 16) % 3 + '0');
+	};
+
+	double st1 = 0, st2 = 0;
 	unsigned faster = 0, slower = 0, correct = 0, incorrect = 0;
 	for(unsigned i = 0; i < 1000; ++i){
 		for(auto ptr = str.GetBegin(); ptr != str.GetEnd(); ++ptr){
-			*ptr = static_cast<char>((GetRandomUint32() % 3) + 'a');
+			*ptr = rand_char();
 		}
 		for(auto ptr = to_find.GetBegin(); ptr != to_find.GetEnd(); ++ptr){
-			*ptr = static_cast<char>((GetRandomUint32() % 3) + 'a');
+			*ptr = rand_char();
 		}
 		std::memcpy(str.GetBegin() + GetRandomUint64() % (str.GetSize() - to_find.GetSize()), to_find.GetBegin(), to_find.GetSize());
 //		std::printf("str = %s\nwrd = %s\n", str.GetStr(), to_find.GetStr());
@@ -36,7 +43,11 @@ extern "C" unsigned MCFMain(){
 		t22 = GetHiResMonoClock();
 //		std::printf("String::Find()   time = %f, pos = %p\n", t22 - t21, pos2);
 
-		if(t22 - t21 < t12 - t11){
+		const auto t1 = t12 - t11, t2 = t22 - t21;
+		st1 += t1;
+		st2 += t2;
+
+		if(t1 > t2){
 			++faster;
 		} else {
 			++slower;
@@ -48,6 +59,7 @@ extern "C" unsigned MCFMain(){
 			++incorrect;
 		}
 	}
+	std::printf("st1 = %f, st2 = %f\n", st1, st2);
 	std::printf("faster = %u, slower = %u, correct = %u, incorrect = %u\n", faster, slower, correct, incorrect);
 
 	return 0;

@@ -105,7 +105,8 @@ namespace Impl_StringObserver {
 				}
 				++nMatchLen;
 			}
-			itCur += nMatchLen + 1;
+			itCur += nMatchLen;
+			++itCur;
 		}
 	}
 
@@ -115,6 +116,16 @@ namespace Impl_StringObserver {
 		ASSERT(static_cast<std::size_t>(itEnd - itBegin) >= static_cast<std::size_t>(itToFindEnd - itToFindBegin));
 
 		const auto uFindCount = static_cast<std::size_t>(itToFindEnd - itToFindBegin);
+		if(uFindCount > 1){
+			for(auto it = itToFindBegin + 1; it < itToFindEnd; ++it){
+				if(*it != *itToFindBegin){
+					goto jNormal;
+				}
+			}
+		}
+		return StrChrRep(itBegin, itEnd, *itToFindBegin, uFindCount);
+	jNormal:
+		;
 
 		std::ptrdiff_t *pnTable;
 		bool bTableAllocatedFromHeap;

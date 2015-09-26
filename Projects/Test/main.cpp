@@ -9,12 +9,12 @@ extern "C" unsigned MCFMain(){
 
 	Utf8String str, to_find;
 	str.Resize(100000);
-	to_find.Resize(100);
+	to_find.Resize(1000);
 
 	unsigned seed = GetRandomUint32();
 	auto rand_char = [&]{
-		seed = seed * 1664525 + 1013904223;
-		return static_cast<char>((seed >> 16) % 3 + '0');
+		seed = seed * 9 + 5;
+		return static_cast<char>((seed >> 16) / 0xF000 + '0');
 	};
 
 	double st1 = 0, st2 = 0;

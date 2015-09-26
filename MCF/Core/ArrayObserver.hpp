@@ -211,8 +211,16 @@ decltype(auto) begin(const ArrayObserver<ElementT> &rhs) noexcept {
 	return rhs.GetBegin();
 }
 template<class ElementT>
+decltype(auto) cbegin(const ArrayObserver<ElementT> &rhs) noexcept {
+	return begin(rhs);
+}
+template<class ElementT>
 decltype(auto) end(const ArrayObserver<ElementT> &rhs) noexcept {
 	return rhs.GetEnd();
+}
+template<class ElementT>
+decltype(auto) cend(const ArrayObserver<ElementT> &rhs) noexcept {
+	return end(rhs);
 }
 
 }

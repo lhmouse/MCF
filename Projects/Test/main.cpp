@@ -14,12 +14,12 @@ extern "C" unsigned MCFMain(){
 	unsigned seed = GetRandomUint32();
 	auto rand_char = [&]{
 		seed = seed * 9 + 5;
-		return static_cast<char>((seed >> 16) / 0xF000 + '0');
+		return (seed >= 0xFF000000) ? '1' : '0';
 	};
 
 	double st1 = 0, st2 = 0;
 	unsigned faster = 0, slower = 0, correct = 0, incorrect = 0;
-	for(unsigned i = 0; i < 10000; ++i){
+	for(unsigned i = 0; i < 1000; ++i){
 		for(auto ptr = str.GetBegin(); ptr != str.GetEnd(); ++ptr){
 			*ptr = rand_char();
 		}
@@ -63,8 +63,8 @@ extern "C" unsigned MCFMain(){
 	std::printf("st1 = %f, st2 = %f\n", st1, st2);
 	std::printf("faster = %u, slower = %u, correct = %u, incorrect = %u\n", faster, slower, correct, incorrect);
 /*
-	auto s = "ABC ABCDAB ABCDABCDABDE"_u8s;
-	auto w = "ABCDABD"_u8s;
+	auto s = "aaaaaBBaaaaaaBBaaaaaaBBaaaaaBBaaaaaBBaaaaBBaaaaaBBaaaaaaaBBaaaaaaBBaaaaaaBBaaaaaaBBaaaaaBBaaaaaBBaaaaaaaaBBaaaaaBBaaaaaBBaaaaaBBaaaaaaBBaaaaaaBBaaaaaBBaaaaaaaaaa"_u8s;
+	auto w = "aaaaaBBaaaaaaBBaaaaaBBaaaaaa"_u8s;
 	s.Find(w);
 */
 	return 0;

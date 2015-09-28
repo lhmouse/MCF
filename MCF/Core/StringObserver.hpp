@@ -158,25 +158,6 @@ namespace Impl_StringObserver {
 					}
 				}
 			}
-			if(uFindCount > 2){
-				std::ptrdiff_t nPos = 1, nCand = 0;
-				for(;;){
-					if(itToFindBegin[nPos] == itToFindBegin[nCand]){
-						++nCand;
-						pTable[nPos] = nCand;
-					} else if(nCand == 0){
-						pTable[nPos] = 0;
-					} else {
-						nCand = pTable[nCand - 1];
-						continue;
-					}
-
-					++nPos;
-					if(static_cast<std::size_t>(nPos) >= uFindCount - 1){
-						break;
-					}
-				}
-			}
 		}
 
 		auto itCur = itBegin;

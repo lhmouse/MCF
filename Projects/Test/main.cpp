@@ -8,13 +8,13 @@ using namespace MCF;
 extern "C" unsigned MCFMain(){
 
 	Utf8String str, to_find;
-	str.Resize(1000);
-	to_find.Resize(10);
+	str.Resize(100000);
+	to_find.Resize(100);
 
 	unsigned seed = GetRandomUint32();
 	auto rand_char = [&]{
 		seed = seed * 9 + 5;
-		return (seed >= 0xFF000000) ? '1' : '0';
+		return (seed >= 0xF0000000) ? '1' : '0';
 	};
 
 	double st1 = 0, st2 = 0;

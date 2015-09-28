@@ -135,10 +135,16 @@ namespace Impl_StringObserver {
 
 			if(uFindCount > 2){
 				std::ptrdiff_t nPos = 1, nCand = 0;
+				bool bInitRep = (itToFindBegin[1] == chFirst);
 				for(;;){
 					if(itToFindBegin[nPos] == itToFindBegin[nCand]){
 						++nCand;
-						pTable[nPos] = nCand;
+						bInitRep = bInitRep && (itToFindBegin[nPos + 1] == chFirst);
+						if(bInitRep){
+							pTable[nPos] = 0;
+						} else {
+							pTable[nPos] = nCand;
+						}
 					} else if(nCand == 0){
 						pTable[nPos] = 0;
 					} else {
@@ -181,13 +187,8 @@ namespace Impl_StringObserver {
 				++itCur;
 				continue;
 			}
-			auto nFallback = pTable[nMatchLen - 1];
-			if(static_cast<std::size_t>(nMatchLen) < uTableSize){
-				if(pTable[nMatchLen] == nFallback + 1){
-					nFallback = 0;
-				}
-			}
 			itCur += nMatchLen;
+			const auto nFallback = pTable[nMatchLen - 1];
 			if(nFallback != 0){
 				itCur -= nFallback;
 				nMatchLen = nFallback;

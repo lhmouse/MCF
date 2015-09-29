@@ -9,7 +9,7 @@ extern "C" unsigned MCFMain(){
 
 	Utf8String str, to_find;
 	str.Resize(100000);
-	to_find.Resize(100);
+	to_find.Resize(8);
 
 	unsigned seed = GetRandomUint32();
 	auto rand_char = [&]{
@@ -64,7 +64,7 @@ extern "C" unsigned MCFMain(){
 	std::printf("faster = %u, slower = %u, correct = %u, incorrect = %u\n", faster, slower, correct, incorrect);
 /*
 	auto s = "aaaaaBBaaaaaaBBaaaaaaBBaaaaaBBaaaaaBBaaaaBBaaaaaBBaaaaaaaBBaaaaaaBBaaaaaaBBaaaaaaBBaaaaaBBaaaaaBBaaaaaaaaBBaaaaaBBaaaaaBBaaaaaBBaaaaaaBBaaaaaaBBaaaaaBBaaaaaaaaaa"_u8s;
-	auto w = "aaaaabaaabaabab"_u8s;
+	auto w = "aaaaaBBaaaaaaBBaaaaaBBaaaaaa"_u8s;
 	s.Find(w);
 */
 	return 0;

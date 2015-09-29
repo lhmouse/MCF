@@ -138,23 +138,16 @@ namespace Impl_StringObserver {
 				jTryFallback:
 					if(itToFindBegin[nPos] == itToFindBegin[nCand]){
 						++nCand;
-						pTable[nPos] = nCand;
+						if(itToFindBegin[nPos + 1] == itToFindBegin[nCand]){
+							pTable[nPos] = pTable[nCand - 1];
+						} else {
+							pTable[nPos] = nCand;
+						}
 					} else if(nCand == 0){
 						pTable[nPos] = 0;
 					} else {
 						nCand = pTable[nCand - 1];
 						goto jTryFallback;
-					}
-					++nPos;
-				} while(static_cast<std::size_t>(nPos) <= uFindCount - 1);
-
-				nPos = 1;
-				do {
-					nCand = pTable[nPos - 1];
-					if(nCand != 0){
-						if(itToFindBegin[nPos] == itToFindBegin[nCand]){
-							pTable[nPos - 1] = pTable[nCand - 1];
-						}
 					}
 					++nPos;
 				} while(static_cast<std::size_t>(nPos) <= uFindCount - 1);

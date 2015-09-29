@@ -115,7 +115,6 @@ namespace Impl_StringObserver {
 		ASSERT(itToFindEnd != itToFindBegin);
 		ASSERT(static_cast<std::size_t>(itEnd - itBegin) >= static_cast<std::size_t>(itToFindEnd - itToFindBegin));
 
-		const auto chFirst = *itToFindBegin;
 		const auto uFindCount = static_cast<std::size_t>(itToFindEnd - itToFindBegin);
 
 		std::ptrdiff_t *pTable;
@@ -135,28 +134,30 @@ namespace Impl_StringObserver {
 
 			if(uFindCount > 2){
 				std::ptrdiff_t nPos = 1, nCand = 0;
-				bool bInitRep = (itToFindBegin[1] == chFirst);
-				for(;;){
+				do {
+				jTryFallback:
 					if(itToFindBegin[nPos] == itToFindBegin[nCand]){
 						++nCand;
-						bInitRep = bInitRep && (itToFindBegin[nPos + 1] == chFirst);
-						if(bInitRep){
-							pTable[nPos] = 0;
-						} else {
-							pTable[nPos] = nCand;
-						}
+						pTable[nPos] = nCand;
 					} else if(nCand == 0){
 						pTable[nPos] = 0;
 					} else {
 						nCand = pTable[nCand - 1];
-						continue;
+						goto jTryFallback;
 					}
-
 					++nPos;
-					if(static_cast<std::size_t>(nPos) >= uTableSize){
-						break;
+				} while(static_cast<std::size_t>(nPos) <= uFindCount - 1);
+
+				nPos = 1;
+				do {
+					nCand = pTable[nPos - 1];
+					if(nCand != 0){
+						if(itToFindBegin[nPos] == itToFindBegin[nCand]){
+							pTable[nPos - 1] = pTable[nCand - 1];
+						}
 					}
-				}
+					++nPos;
+				} while(static_cast<std::size_t>(nPos) <= uFindCount - 1);
 			}
 		}
 
@@ -166,7 +167,7 @@ namespace Impl_StringObserver {
 				if(itEnd - itCur < static_cast<std::ptrdiff_t>(uFindCount)){
 					return kNpos;
 				}
-				if(*itCur == chFirst){
+				if(*itCur == *itToFindBegin){
 					break;
 				}
 				++itCur;

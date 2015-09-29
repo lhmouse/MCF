@@ -333,7 +333,7 @@ public:
 	}
 
 	// 举例：
-	//   Slice( 1,  5)   返回 "bcde"_rcs；
+	//   Slice( 1,  5)   返回 "bcde"；
 	//   Slice( 1, -5)   返回 "bc"；
 	//   Slice( 5, -1)   返回 "fg"；
 	//   Slice(-5, -1)   返回 "defg"。

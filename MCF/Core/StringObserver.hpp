@@ -150,7 +150,7 @@ namespace Impl_StringObserver {
 						goto jTryFallback;
 					}
 					++nPos;
-				} while(static_cast<std::size_t>(nPos) <= uFindCount - 1);
+				} while(static_cast<std::size_t>(nPos) < uFindCount - 1);
 			}
 		}
 

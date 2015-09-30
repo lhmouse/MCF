@@ -30,12 +30,8 @@ static const uint32_t kMxcsRegister     = (ROUNDING << 13) |                    
 void __MCF_CRT_FEnvInit(){
 	__asm__ __volatile__(
 		"fldcw word ptr[%0] \n"
+		"ldmxcsr dword ptr[%1] \n"
 		:
-		: "m"(kFpuControlWord)
-	);
-	__asm__ __volatile__(
-		"ldmxcsr dword ptr[%0] \n"
-		:
-		: "m"(kMxcsRegister)
+		: "m"(kFpuControlWord), "m"(kMxcsRegister)
 	);
 }

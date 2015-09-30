@@ -9,7 +9,7 @@ extern "C" unsigned MCFMain(){
 
 	Utf8String str, to_find;
 	str.Resize(100000);
-	to_find.Resize(8);
+	to_find.Resize(100);
 
 	unsigned seed = GetRandomUint32();
 	auto rand_char = [&]{

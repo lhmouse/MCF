@@ -10,7 +10,7 @@
 // 参见 gcc/libgcc/unwind-dw2-fde.h 里面的 old_object 的注释。
 struct object {
 //	void *impl[6];
-	void *impl[7];
+	void *impl[8];
 };
 
 __attribute__((__weak__))
@@ -26,9 +26,9 @@ void *__deregister_frame_info(const void *p){
 }
 
 __attribute__((__section__(".MCFCRT"), __shared__))
-void (*const volatile __MCF_CRT_register_frame_info)(const void *, struct object *) = &__register_frame_info;
+const volatile __auto_type __MCF_CRT_register_frame_info   = &__register_frame_info;
 __attribute__((__section__(".MCFCRT"), __shared__))
-void *(*const volatile __MCF_CRT_deregister_frame_info)(const void *)               = &__deregister_frame_info;
+const volatile __auto_type __MCF_CRT_deregister_frame_info = &__deregister_frame_info;
 
 __extension__ __attribute__((__section__(".eh_fram$@@@"), __used__))
 static const char eh_begin[0] = { };

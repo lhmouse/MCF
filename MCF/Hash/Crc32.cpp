@@ -26,7 +26,7 @@ Crc32::Crc32(std::uint32_t u32Divisor) noexcept
 				u32Reg ^= u32Divisor;
 			}
 */
-			__asm__ __volatile__(
+			__asm__(
 				"shr %0, 1 \n"
 				"sbb eax, eax \n"
 				"and eax, %1 \n"

@@ -5,10 +5,10 @@
 #ifndef MCF_THREAD_CALL_ONCE_HPP_
 #define MCF_THREAD_CALL_ONCE_HPP_
 
-#include <utility>
-#include <cstddef>
 #include "Atomic.hpp"
 #include "../Utilities/Defer.hpp"
+#include <utility>
+#include <cstddef>
 
 namespace MCF {
 

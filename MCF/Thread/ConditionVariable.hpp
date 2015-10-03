@@ -8,6 +8,7 @@
 #include "../Utilities/Noncopyable.hpp"
 #include "_UniqueLockTemplate.hpp"
 #include "Mutex.hpp"
+#include "ReaderWriterMutex.hpp"
 #include "Atomic.hpp"
 #include <cstddef>
 #include <cstdint>

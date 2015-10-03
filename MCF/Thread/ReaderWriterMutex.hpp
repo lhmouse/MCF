@@ -12,7 +12,11 @@
 
 namespace MCF {
 
+class ConditionVariable;
+
 class ReaderWriterMutex : NONCOPYABLE {
+	friend ConditionVariable;
+
 public:
 	using UniqueReaderLock = Impl_UniqueLockTemplate::UniqueLockTemplate<ReaderWriterMutex, 0u>;
 	using UniqueWriterLock = Impl_UniqueLockTemplate::UniqueLockTemplate<ReaderWriterMutex, 1u>;

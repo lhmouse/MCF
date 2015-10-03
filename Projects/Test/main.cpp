@@ -6,14 +6,20 @@ using namespace MCF;
 
 template class Optional<std::string>;
 
-__attribute__((__noinline__))
-Optional<std::string> foo(){
-	Optional<std::string> opt("hello world!");
-	return opt;
-}
-
 extern "C" unsigned MCFMain(){
-	auto opt = foo();
-	std::printf("set = %d, str = %s\n", opt.IsSet(), opt.Get().c_str());
+	Optional<std::string> opt;
+
+	opt.ResetElement("hello world!");
+	std::printf("set = %d, exception set = %d\n", opt.IsSet(), opt.IsExceptionSet());
+	std::printf("str = %s\n", opt.Get().c_str());
+
+	opt.ResetException(std::make_exception_ptr(123));
+	try {
+		std::printf("set = %d, exception set = %d\n", opt.IsSet(), opt.IsExceptionSet());
+		std::printf("str = %s\n", opt.Get().c_str());
+	} catch(int e){
+		std::printf("caught exception: e = %d\n", e);
+	}
+
 	return 0;
 }

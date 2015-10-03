@@ -6,6 +6,7 @@
 #include "ConditionVariable.hpp"
 #include "../Core/Time.hpp"
 #include "../Utilities/MinMax.hpp"
+#include "../Utilities/Defer.hpp"
 
 namespace MCF {
 
@@ -22,11 +23,16 @@ ConditionVariable::ConditionVariable() noexcept
 bool ConditionVariable::Wait(Mutex::UniqueLock &vLock, std::uint64_t u64MilliSeconds) noexcept {
 	ASSERT(vLock.GetLockCount() == 1);
 
+	auto &vLockOwner = vLock.GetOwner();
+
+	Mutex::UniqueLock vTempLock(vLockOwner, false);
+	vLock.Swap(vTempLock);
+	DEFER([&]{ vLock.Swap(vTempLock); });
+
 	auto u64Now = GetFastMonoClock();
 	const auto u64Until = u64Now + u64MilliSeconds;
 	for(;;){
-		const bool bTakenOver = ::SleepConditionVariableSRW(reinterpret_cast<::CONDITION_VARIABLE *>(x_aImpl),
-			reinterpret_cast<::SRWLOCK *>(vLock.GetOwner().x_aImpl), Min(u64MilliSeconds, 0x7FFFFFFFu), 0);
+		const bool bTakenOver = ::SleepConditionVariableSRW(reinterpret_cast<::CONDITION_VARIABLE *>(x_aImpl), reinterpret_cast<::SRWLOCK *>(vLockOwner.x_aImpl), Min(u64MilliSeconds, 0x7FFFFFFFu), 0);
 		if(bTakenOver){
 			return true;
 		}
@@ -42,8 +48,13 @@ bool ConditionVariable::Wait(Mutex::UniqueLock &vLock, std::uint64_t u64MilliSec
 void ConditionVariable::Wait(Mutex::UniqueLock &vLock) noexcept {
 	ASSERT(vLock.GetLockCount() == 1);
 
-	::SleepConditionVariableSRW(reinterpret_cast<::CONDITION_VARIABLE *>(x_aImpl),
-		reinterpret_cast<::SRWLOCK *>(vLock.GetOwner().x_aImpl), INFINITE, 0);
+	auto &vLockOwner = vLock.GetOwner();
+
+	Mutex::UniqueLock vTempLock(vLockOwner, false);
+	vLock.Swap(vTempLock);
+	DEFER([&]{ vLock.Swap(vTempLock); });
+
+	::SleepConditionVariableSRW(reinterpret_cast<::CONDITION_VARIABLE *>(x_aImpl), reinterpret_cast<::SRWLOCK *>(vLockOwner.x_aImpl), INFINITE, 0);
 }
 
 bool ConditionVariable::Wait(Impl_UniqueLockTemplate::UniqueLockTemplateBase &vLock, std::uint64_t u64MilliSeconds) noexcept {

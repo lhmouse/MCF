@@ -154,7 +154,7 @@ public:
 
 public:
 	explicit operator bool() const noexcept {
-		return IsSet();
+		return IsElementSet();
 	}
 };
 

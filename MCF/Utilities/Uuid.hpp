@@ -5,6 +5,7 @@
 #ifndef MCF_UTILITIES_UUID_HPP_
 #define MCF_UTILITIES_UUID_HPP_
 
+#include "../Core/Array.hpp"
 #include "Assert.hpp"
 #include "BinaryOperations.hpp"
 #include <cstddef>
@@ -31,11 +32,11 @@ public:
 	{
 	}
 	// 填指定字节。
-	explicit Uuid(unsigned char (&abyData)[16]) noexcept {
+	explicit Uuid(const Array<unsigned char, 16> &abyData) noexcept {
 		BCopy(x_unData, abyData);
 	}
 	// 根据字符串创建。字符串无效抛出异常。
-	explicit Uuid(const char (&achHex)[36]);
+	explicit Uuid(const Array<char, 36> &achHex);
 
 public:
 	const unsigned char *GetData() const noexcept {
@@ -53,8 +54,8 @@ public:
 		swap(x_unData, rhs.x_unData);
 	}
 
-	void Print(char (&achHex)[36], bool bUpperCase = true) const noexcept;
-	bool Scan(const char (&achHex)[36]) noexcept;
+	void Print(Array<char, 36> &achHex, bool bUpperCase = true) const noexcept;
+	bool Scan(const Array<char, 36> &achHex) noexcept;
 
 public:
 	const unsigned char &operator[](std::size_t uIndex) const noexcept {

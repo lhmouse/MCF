@@ -7,16 +7,13 @@
 
 #include "StreamFilterBase.hpp"
 #include "../Random/IsaacGenerator.hpp"
+#include "../Core/Array.hpp"
 
 namespace MCF {
 
-struct IsaacFilterKeyHash {
-	std::uint32_t au32Words[8];
-};
-
 class IsaacExEncoder : public StreamFilterBase {
 private:
-	IsaacFilterKeyHash x_vKeyHash;
+	Array<std::uint32_t, 8> x_au32KeyHash;
 
 	IsaacGenerator x_vIsaacGenerator;
 	unsigned char x_byLastEncoded;
@@ -33,7 +30,7 @@ protected:
 
 class IsaacExDecoder : public StreamFilterBase {
 private:
-	IsaacFilterKeyHash x_vKeyHash;
+	Array<std::uint32_t, 8> x_au32KeyHash;
 
 	IsaacGenerator x_vIsaacGenerator;
 	unsigned char x_byLastEncoded;

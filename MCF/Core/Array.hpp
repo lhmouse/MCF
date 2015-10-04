@@ -203,6 +203,26 @@ public:
 	}
 
 public:
+	operator Array<const volatile ElementT, kSize> &() const volatile & noexcept {
+		return reinterpret_cast<Array<const volatile ElementT, kSize> &>(const_cast<Array &>(*this));
+	}
+	operator Array<const ElementT, kSize> &() const & noexcept {
+		return reinterpret_cast<Array<const ElementT, kSize> &>(const_cast<Array &>(*this));
+	}
+	operator Array<volatile ElementT, kSize> &() volatile & noexcept {
+		return reinterpret_cast<Array<volatile ElementT, kSize> &>(const_cast<Array &>(*this));
+	}
+
+	operator Array<const volatile ElementT, kSize> &&() const volatile && noexcept {
+		return reinterpret_cast<Array<const volatile ElementT, kSize> &&>(const_cast<Array &>(*this));
+	}
+	operator Array<const ElementT, kSize> &&() const && noexcept {
+		return reinterpret_cast<Array<const ElementT, kSize> &&>(const_cast<Array &>(*this));
+	}
+	operator Array<volatile ElementT, kSize> &&() volatile && noexcept {
+		return reinterpret_cast<Array<volatile ElementT, kSize> &&>(const_cast<Array &>(*this));
+	}
+
 	operator ConstObserver() const noexcept {
 		return GetObserver();
 	}

@@ -6,6 +6,7 @@
 #define MCF_RANDOM_ISAAC_GENERATOR_HPP_
 
 #include "../Core/Time.hpp"
+#include "../Core/Array.hpp"
 
 namespace MCF {
 
@@ -23,7 +24,7 @@ public:
 	explicit IsaacGenerator(std::uint32_t u32Seed = ReadTimestampCounter32()) noexcept {
 		Init(u32Seed);
 	}
-	explicit IsaacGenerator(const std::uint32_t (&au32Seed)[8]) noexcept {
+	explicit IsaacGenerator(const Array<std::uint32_t, 8> &au32Seed) noexcept {
 		Init(au32Seed);
 	}
 
@@ -32,7 +33,7 @@ private:
 
 public:
 	void Init(std::uint32_t u32Seed = ReadTimestampCounter32()) noexcept;
-	void Init(const std::uint32_t (&au32Seed)[8]) noexcept;
+	void Init(const Array<std::uint32_t, 8> &au32Seed) noexcept;
 
 	std::uint32_t Get() noexcept;
 

@@ -33,16 +33,16 @@ Uuid Uuid::Generate(){
 }
 
 // 构造函数和析构函数。
-Uuid::Uuid(const char (&achHex)[36]){
+Uuid::Uuid(const Array<char, 36> &achHex){
 	if(!Scan(achHex)){
 		DEBUG_THROW(Exception, ERROR_INVALID_PARAMETER, "Invalid UUID string"_rcs);
 	}
 }
 
 // 其他非静态成员函数。
-void Uuid::Print(char (&achHex)[36], bool bUpperCase) const noexcept {
-	auto *pbyRead = x_unData.aby;
-	auto *pchWrite = achHex;
+void Uuid::Print(Array<char, 36> &achHex, bool bUpperCase) const noexcept {
+	auto pbyRead = x_unData.aby;
+	auto pchWrite = achHex.GetData();
 
 #define PRINT(count_)	\
 	for(std::size_t i = 0; i < count_; ++i){	\
@@ -73,11 +73,11 @@ void Uuid::Print(char (&achHex)[36], bool bUpperCase) const noexcept {
 	PRINT(2) *(pchWrite++) = '-';
 	PRINT(6)
 }
-bool Uuid::Scan(const char (&achHex)[36]) noexcept {
+bool Uuid::Scan(const Array<char, 36> &achHex) noexcept {
 	unsigned char abyTemp[16];
 
-	auto *pchRead = achHex;
-	auto *pbyWrite = abyTemp;
+	auto pchRead = achHex.GetData();
+	auto pbyWrite = abyTemp;
 
 #define SCAN(count_)	\
 	for(std::size_t i = 0; i < count_; ++i){	\

@@ -13,11 +13,11 @@ namespace MCF {
 
 // 其他非静态成员函数。
 void IsaacGenerator::Init(std::uint32_t u32Seed) noexcept {
-	std::uint32_t au32RealSeed[8];
-	FillN(au32RealSeed, 8, u32Seed);
-	Init(au32RealSeed);
+	Array<std::uint32_t, 8> au32Seed;
+	Fill(au32Seed.GetBegin(), au32Seed.GetEnd(), u32Seed);
+	Init(au32Seed);
 }
-void IsaacGenerator::Init(const std::uint32_t (&au32Seed)[8]) noexcept {
+void IsaacGenerator::Init(const Array<std::uint32_t, 8> &au32Seed) noexcept {
 	std::uint32_t au32Temp[8];
 	FillN(au32Temp, 8, 0x9E3779B9u);
 

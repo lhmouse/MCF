@@ -10,14 +10,14 @@
 namespace MCF {
 
 namespace {
-	IsaacFilterKeyHash GenerateKeyHash(const void *pKey, std::size_t uKeyLen) noexcept {
+	Array<std::uint32_t, 8> GenerateKeyHash(const void *pKey, std::size_t uKeyLen) noexcept {
 		Sha256 vShaHasher;
 		vShaHasher.Update(pKey, uKeyLen);
 		const auto vHash = vShaHasher.Finalize();
 
-		IsaacFilterKeyHash vKeyHash;
+		Array<std::uint32_t, 8> vKeyHash;
 		for(std::size_t i = 0; i < 8; ++i){
-			vKeyHash.au32Words[i] = LoadBe(reinterpret_cast<const std::uint32_t *>(vHash.GetData())[i]);
+			vKeyHash[i] = LoadBe(reinterpret_cast<const std::uint32_t *>(vHash.GetData())[i]);
 		}
 		return vKeyHash;
 	}
@@ -26,13 +26,13 @@ namespace {
 // ========== IsaacExEncoder ==========
 // 构造函数和析构函数。
 IsaacExEncoder::IsaacExEncoder(const void *pKey, std::size_t uKeyLen) noexcept
-	: x_vKeyHash(GenerateKeyHash(pKey, uKeyLen))
+	: x_au32KeyHash(GenerateKeyHash(pKey, uKeyLen))
 {
 }
 
 // 其他非静态成员函数。
 void IsaacExEncoder::X_DoInit(){
-	x_vIsaacGenerator.Init(x_vKeyHash.au32Words);
+	x_vIsaacGenerator.Init(x_au32KeyHash);
 	x_byLastEncoded = 0;
 	x_lLastHighWord = -1;
 }
@@ -43,7 +43,7 @@ void IsaacExEncoder::X_DoUpdate(const void *pData, std::size_t uSize){
 	const auto EncodeByte = [&](unsigned uSeed){
 		register auto by = *pbyRead;
 		++pbyRead;
-		const unsigned char byRot = x_byLastEncoded & 7;
+		const unsigned char byRot = (x_byLastEncoded ^ (x_byLastEncoded >> 3) ^ (x_byLastEncoded >> 6)) & 7;
 
 		by ^= uSeed;
 		__asm__("rol %b0, cl \n" : "+q"(by) : "c"(byRot));
@@ -86,13 +86,13 @@ void IsaacExEncoder::X_DoFinalize(){
 // ========== IsaacExDecoder ==========
 // 构造函数和析构函数。
 IsaacExDecoder::IsaacExDecoder(const void *pKey, std::size_t uKeyLen) noexcept
-	: x_vKeyHash(GenerateKeyHash(pKey, uKeyLen))
+	: x_au32KeyHash(GenerateKeyHash(pKey, uKeyLen))
 {
 }
 
 // 其他非静态成员函数。
 void IsaacExDecoder::X_DoInit(){
-	x_vIsaacGenerator.Init(x_vKeyHash.au32Words);
+	x_vIsaacGenerator.Init(x_au32KeyHash);
 	x_byLastEncoded = 0;
 	x_lLastHighWord = -1;
 }
@@ -103,7 +103,7 @@ void IsaacExDecoder::X_DoUpdate(const void *pData, std::size_t uSize){
 	const auto DecodeByte = [&](unsigned uSeed){
 		register auto by = *pbyRead;
 		++pbyRead;
-		const unsigned char byRot = x_byLastEncoded & 7;
+		const unsigned char byRot = (x_byLastEncoded ^ (x_byLastEncoded >> 3) ^ (x_byLastEncoded >> 6)) & 7;
 
 		x_byLastEncoded = by ^ (uSeed >> 8);
 		__asm__("ror %b0, cl \n" : "+q"(by) : "c"(byRot));

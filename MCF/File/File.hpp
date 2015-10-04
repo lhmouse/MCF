@@ -55,7 +55,7 @@ public:
 	bool IsOpen() const noexcept;
 	void Open(const WideStringObserver &wsoPath, std::uint32_t u32Flags);
 	bool OpenNoThrow(const WideStringObserver &wsoPath, std::uint32_t u32Flags);
-	void Close() noexcept;
+	void Close();
 
 	std::uint64_t GetSize() const;
 	void Resize(std::uint64_t u64NewSize);

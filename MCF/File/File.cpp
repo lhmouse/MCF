@@ -177,7 +177,12 @@ bool File::OpenNoThrow(const WideStringObserver &wsoPath, std::uint32_t u32Flags
 		return false;
 	}
 }
-void File::Close() noexcept {
+void File::Close(){
+	if(!x_hFile){
+		return;
+	}
+
+	Flush();
 	File().Swap(*this);
 }
 

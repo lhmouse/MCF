@@ -87,23 +87,29 @@ public:
 		return x_eState == Impl_Optional::State::kExceptionSet;
 	}
 
-	const ElementT &Get() const {
+	std::exception_ptr GetException() const noexcept {
 		if(x_eState == Impl_Optional::State::kElementSet){
-			return *reinterpret_cast<const ElementT *>(&x_vStorage);
+			return std::exception_ptr();
 		} else if(x_eState == Impl_Optional::State::kExceptionSet){
-			std::rethrow_exception(*reinterpret_cast<const std::exception_ptr *>(&x_vStorage));
+			return *reinterpret_cast<const std::exception_ptr *>(&x_vStorage);
 		} else {
-			DEBUG_THROW(Exception, ERROR_NOT_READY, "Optional is not set"_rcs);
+			return DEBUG_MAKE_EXCEPTION_PTR(Exception, ERROR_NOT_READY, "Optional is not set"_rcs);
 		}
 	}
-	ElementT &Get(){
-		if(x_eState == Impl_Optional::State::kElementSet){
-			return *reinterpret_cast<ElementT *>(&x_vStorage);
-		} else if(x_eState == Impl_Optional::State::kExceptionSet){
-			std::rethrow_exception(*reinterpret_cast<const std::exception_ptr *>(&x_vStorage));
-		} else {
-			DEBUG_THROW(Exception, ERROR_NOT_READY, "Optional is not set"_rcs);
+
+	const ElementT &Get() const {
+		const auto pException = GetException();
+		if(pException){
+			std::rethrow_exception(pException);
 		}
+		return *reinterpret_cast<const ElementT *>(&x_vStorage);
+	}
+	ElementT &Get(){
+		const auto pException = GetException();
+		if(pException){
+			std::rethrow_exception(pException);
+		}
+		return *reinterpret_cast<ElementT *>(&x_vStorage);
 	}
 
 	Optional &Reset() noexcept {
@@ -119,9 +125,9 @@ public:
 	Optional &Reset(const Optional &rhs) noexcept(std::is_nothrow_copy_constructible<ElementT>::value) {
 		Reset();
 
-		if(x_eState == Impl_Optional::State::kElementSet){
+		if(rhs.x_eState == Impl_Optional::State::kElementSet){
 			ResetElement(*reinterpret_cast<const ElementT *>(&rhs.x_vStorage));
-		} else if(x_eState == Impl_Optional::State::kExceptionSet){
+		} else if(rhs.x_eState == Impl_Optional::State::kExceptionSet){
 			ResetException(*reinterpret_cast<const std::exception_ptr *>(&rhs.x_vStorage));
 		}
 		return *this;
@@ -129,10 +135,12 @@ public:
 	Optional &Reset(Optional &&rhs) noexcept(std::is_nothrow_move_constructible<ElementT>::value) {
 		Reset();
 
-		if(x_eState == Impl_Optional::State::kElementSet){
+		if(rhs.x_eState == Impl_Optional::State::kElementSet){
 			ResetElement(std::move(*reinterpret_cast<ElementT *>(&rhs.x_vStorage)));
-		} else if(x_eState == Impl_Optional::State::kExceptionSet){
+			rhs.Reset();
+		} else if(rhs.x_eState == Impl_Optional::State::kExceptionSet){
 			ResetException(std::move(*reinterpret_cast<const std::exception_ptr *>(&rhs.x_vStorage)));
+			rhs.Reset();
 		}
 		return *this;
 	}

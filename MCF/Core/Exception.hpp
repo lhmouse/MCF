@@ -66,4 +66,10 @@ public:
 		throw e_;	\
 	})
 
+#define DEBUG_MAKE_EXCEPTION_PTR(etype_, ...)	\
+	__extension__ ({	\
+		etype_ e_ (__FILE__, __LINE__, __VA_ARGS__);	\
+		::std::make_exception_ptr(static_cast<etype_ &&>(e_));	\
+	})
+
 #endif

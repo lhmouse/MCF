@@ -226,9 +226,9 @@ public:
 	Element *Emplace(const Element *pPos, ComparandT &&vComparand){
 		return AddWithHint(pPos, std::forward<ComparandT>(vComparand)).first;
 	}
-	template<typename FirstT, typename SecondT, typename ...RemainingT>
-	Element *Emplace(const Element *pPos, FirstT &&vFirst, SecondT &&vSecond, RemainingT &&...vRemaining){
-		return AddWithHint(pPos, Element(std::forward<FirstT>(vFirst), std::forward<SecondT>(vSecond), std::forward<RemainingT>(vRemaining)...)).first;
+	template<typename ComparandT, typename ...RemainingT>
+	Element *Emplace(const Element *pPos, ComparandT &&vComparand, RemainingT &&...vRemaining){
+		return AddWithHint(pPos, Element(std::forward<ComparandT>(vComparand), std::forward<RemainingT>(vRemaining)...)).first;
 	}
 	Element *Erase(const Element *pBegin, const Element *pEnd) noexcept(noexcept(std::declval<FlatMultiSet &>().x_vecStorage.Erase(pBegin, pEnd))) {
 		return x_vecStorage.Erase(pBegin, pEnd);

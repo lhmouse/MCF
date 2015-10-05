@@ -12,14 +12,25 @@
 #include <stdlib.h>
 #include <winnt.h>
 
-typedef struct tagAtExitNode {
-	struct tagAtExitNode *pPrev;
-
+typedef struct tagAtExitCallback {
 	void (*pfnProc)(intptr_t);
 	intptr_t nContext;
-} AtExitNode;
+} AtExitCallback;
 
-static AtExitNode *volatile g_pAtExitHead = nullptr;
+enum {
+	kAtExitCallbacksPerBlock = 64,
+};
+
+typedef struct tagAtExitCallbackBlock {
+	struct tagAtExitCallbackBlock *pNextBlock;
+
+	size_t uSize;
+	AtExitCallback aCallbacks[kAtExitCallbacksPerBlock];
+} AtExitCallbackBlock;
+
+static SRWLOCK               g_srwlAtExitMutex  = SRWLOCK_INIT;
+static AtExitCallbackBlock * g_pAtExitFirst     = nullptr;
+static AtExitCallbackBlock * g_pAtExitLast      = nullptr;
 
 static void PumpAtEndModule(){
 	// ISO C++
@@ -31,13 +42,33 @@ static void PumpAtEndModule(){
 	// static storage duration. (...)
 	__MCF_CRT_TlsThreadCleanup();
 
-	AtExitNode *pHead = __atomic_exchange_n(&g_pAtExitHead, nullptr, __ATOMIC_SEQ_CST);
-	while(pHead){
-		(*(pHead->pfnProc))(pHead->nContext);
+	for(;;){
+		AtExitCallbackBlock *pBlock;
 
-		AtExitNode *const pPrev = pHead->pPrev;
-		free(pHead);
-		pHead = pPrev;
+		AcquireSRWLockExclusive(&g_srwlAtExitMutex);
+		{
+			pBlock = g_pAtExitFirst;
+			if(!pBlock){
+				ReleaseSRWLockExclusive(&g_srwlAtExitMutex);
+				break;
+			}
+
+			AtExitCallbackBlock *const pNextBlock = pBlock->pNextBlock;
+			g_pAtExitFirst = pNextBlock;
+			if(pNextBlock){
+				// 单向链表。
+			} else {
+				g_pAtExitLast = nullptr;
+			}
+		}
+		ReleaseSRWLockExclusive(&g_srwlAtExitMutex);
+
+		const AtExitCallback *pCur = pBlock->aCallbacks, *const pEnd = pBlock->aCallbacks + pBlock->uSize;
+		while(pCur != pEnd){
+			(*(pCur->pfnProc))(pCur->nContext);
+			++pCur;
+		}
+		free(pBlock);
 	}
 }
 
@@ -82,20 +113,41 @@ void __MCF_CRT_EndModule(){
 	__MCF_CRT_ThreadEnvUninit();
 }
 
-int MCF_CRT_AtEndModule(void (*pfnProc)(intptr_t), intptr_t nContext){
-	AtExitNode *const pNode = malloc(sizeof(AtExitNode));
-	if(!pNode){
-		return -1;
-	}
-	pNode->pfnProc  = pfnProc;
-	pNode->nContext = nContext;
+bool MCF_CRT_AtEndModule(void (*pfnProc)(intptr_t), intptr_t nContext){
+	AtExitCallbackBlock *pBlock;
 
-	pNode->pPrev = __atomic_load_n(&g_pAtExitHead, __ATOMIC_SEQ_CST);
-	while(EXPECT(!__atomic_compare_exchange_n(&g_pAtExitHead, &(pNode->pPrev), pNode, false, __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST))){
-		// 空的。
-	}
+	AcquireSRWLockExclusive(&g_srwlAtExitMutex);
+	{
+		pBlock = g_pAtExitFirst;
+		if(!pBlock || (pBlock->uSize >= kAtExitCallbacksPerBlock)){
+			pBlock = malloc(sizeof(AtExitCallbackBlock));
+			if(!pBlock){
+				ReleaseSRWLockExclusive(&g_srwlAtExitMutex);
+				goto jFailed;
+			}
+			pBlock->pNextBlock = nullptr;
+			pBlock->uSize      = 0;
 
-	return 0;
+			AtExitCallbackBlock *const pLastBlock = g_pAtExitLast;
+			if(pLastBlock){
+				pLastBlock->pNextBlock = pBlock;
+			} else {
+				g_pAtExitFirst = pBlock;
+			}
+			g_pAtExitLast = pBlock;
+		}
+
+		AtExitCallback *const pCur = pBlock->aCallbacks + pBlock->uSize;
+		pCur->pfnProc  = pfnProc;
+		pCur->nContext = nContext;
+		++(pBlock->uSize);
+	}
+	ReleaseSRWLockExclusive(&g_srwlAtExitMutex);
+	return true;
+
+jFailed:
+	SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+	return false;
 }
 
 // ld 自动添加此符号。

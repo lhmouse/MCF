@@ -13,7 +13,7 @@ __MCF_CRT_EXTERN_C_BEGIN
 extern bool __MCF_CRT_BeginModule(void);
 extern void __MCF_CRT_EndModule(void);
 
-extern int MCF_CRT_AtEndModule(void (*__pfnProc)(MCF_STD intptr_t), MCF_STD intptr_t __nContext) MCF_NOEXCEPT;
+extern bool MCF_CRT_AtEndModule(void (*__pfnProc)(MCF_STD intptr_t), MCF_STD intptr_t __nContext) MCF_NOEXCEPT;
 
 extern void *MCF_CRT_GetModuleBase(void) MCF_NOEXCEPT;
 // 如果回调函数返回 true 则循环继续，直到遍历完毕，此时返回 true；否则返回 false，GetLastError() 返回 ERROR_SUCCESS。失败返回 false。

@@ -13,6 +13,8 @@ __MCF_CRT_EXTERN_C_BEGIN
 extern unsigned long MCF_CRT_GetWin32LastError(void) MCF_NOEXCEPT;
 extern void MCF_CRT_SetWin32LastError(unsigned long __ulErrorCode) MCF_NOEXCEPT;
 
+extern MCF_STD size_t MCF_CRT_GetWin32ErrorDescription(const wchar_t **__ppwszStr, unsigned long __ulErrorCode) MCF_NOEXCEPT;
+
 __MCF_CRT_EXTERN_C_END
 
 #endif

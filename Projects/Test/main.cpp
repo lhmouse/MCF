@@ -1,21 +1,12 @@
+#include <MCF/Core/LastError.hpp>
+#include <MCF/Core/String.hpp>
+#include <MCF/StdMCF.hpp>
 #include <cstdio>
-#include <cstdlib>
-#include <MCFCRT/env/mcfwin.h>
 
-int t;
-
-void foo(){
-	if(t < 10){
-		std::atexit(foo);
-		std::atexit(foo);
-	}
-
-	std::printf("hello! %d\n", ++t);
-	::Sleep(100);
-}
+using namespace MCF;
 
 extern "C" unsigned MCFMain(){
-	std::atexit(foo);
+	std::puts(AnsiString(GetWin32ErrorDescription(ERROR_INVALID_PARAMETER)).GetStr());
 
 	return 0;
 }

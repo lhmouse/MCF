@@ -6,7 +6,7 @@
 #define MCF_CORE_LAST_ERROR_HPP_
 
 #include "../../MCFCRT/env/last_error.h"
-#include "String.hpp"
+#include "StringView.hpp"
 
 namespace MCF {
 
@@ -17,7 +17,11 @@ inline void SetWin32LastError(unsigned long ulErrorCode) noexcept {
 	::MCF_CRT_SetWin32LastError(ulErrorCode);
 }
 
-extern WideString GetWin32ErrorDescription(unsigned long ulErrorCode = GetWin32LastError());
+inline WideStringView GetWin32ErrorDescription(unsigned long ulErrorCode) noexcept {
+	const wchar_t *pwszStr;
+	const auto uLength = ::MCF_CRT_GetWin32ErrorDescription(&pwszStr, ulErrorCode);
+	return WideStringView(pwszStr, uLength);
+}
 
 }
 

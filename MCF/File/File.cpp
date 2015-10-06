@@ -57,15 +57,15 @@ namespace {
 }
 
 // 构造函数和析构函数。
-File::File(const WideStringView &wsoPath, std::uint32_t u32Flags){
-	const auto uSize = wsoPath.GetSize() * sizeof(wchar_t);
+File::File(const WideStringView &wsvPath, std::uint32_t u32Flags){
+	const auto uSize = wsvPath.GetSize() * sizeof(wchar_t);
 	if(uSize > UINT16_MAX){
 		DEBUG_THROW(SystemError, ERROR_INVALID_PARAMETER, "The path for a file is too long"_rcs);
 	}
 	::UNICODE_STRING ustrRawPath;
 	ustrRawPath.Length              = uSize;
 	ustrRawPath.MaximumLength       = uSize;
-	ustrRawPath.Buffer              = (PWSTR)wsoPath.GetBegin();
+	ustrRawPath.Buffer              = (PWSTR)wsvPath.GetBegin();
 
 	static constexpr wchar_t kDosPathPrefix[] = LR"(\??\)";
 	static constexpr auto kDosPathPrefixSize = sizeof(kDosPathPrefix) - sizeof(wchar_t);
@@ -165,12 +165,12 @@ File::File(const WideStringView &wsoPath, std::uint32_t u32Flags){
 bool File::IsOpen() const noexcept {
 	return !!x_hFile;
 }
-void File::Open(const WideStringView &wsoPath, std::uint32_t u32Flags){
-	File(wsoPath, u32Flags).Swap(*this);
+void File::Open(const WideStringView &wsvPath, std::uint32_t u32Flags){
+	File(wsvPath, u32Flags).Swap(*this);
 }
-bool File::OpenNoThrow(const WideStringView &wsoPath, std::uint32_t u32Flags){
+bool File::OpenNoThrow(const WideStringView &wsvPath, std::uint32_t u32Flags){
 	try {
-		Open(wsoPath, u32Flags);
+		Open(wsvPath, u32Flags);
 		return true;
 	} catch(SystemError &e){
 		::SetLastError(e.GetCode());

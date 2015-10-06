@@ -9,9 +9,9 @@
 namespace MCF {
 
 namespace {
-	WideString Unescape(const WideStringView &wsoSrc){
+	WideString Unescape(const WideStringView &wsvSrc){
 		WideString wsRet;
-		wsRet.Reserve(wsoSrc.GetSize());
+		wsRet.Reserve(wsvSrc.GetSize());
 
 		enum {
 			kStNormal,
@@ -22,8 +22,8 @@ namespace {
 		char32_t c32CodePoint = 0;
 		std::size_t uHexExpecting = 0;
 
-		const auto pwcEnd = wsoSrc.GetEnd();
-		for(auto pwcCur = wsoSrc.GetBegin(); pwcCur != pwcEnd; ++pwcCur){
+		const auto pwcEnd = wsvSrc.GetEnd();
+		for(auto pwcCur = wsvSrc.GetBegin(); pwcCur != pwcEnd; ++pwcCur){
 			const auto wc = *pwcCur;
 
 			switch(eState){
@@ -140,12 +140,12 @@ namespace {
 
 		return wsRet;
 	}
-	void Escape(WideString &wsAppendTo, const WideStringView &wsoSrc){
-		const auto uSrcLength = wsoSrc.GetLength();
+	void Escape(WideString &wsAppendTo, const WideStringView &wsvSrc){
+		const auto uSrcLength = wsvSrc.GetLength();
 		wsAppendTo.Reserve(wsAppendTo.GetLength() + uSrcLength);
 
 		for(std::size_t i = 0; i < uSrcLength; ++i){
-			const auto wc = wsoSrc[i];
+			const auto wc = wsvSrc[i];
 
 			switch(wc){
 			case L'(':
@@ -190,11 +190,11 @@ namespace {
 }
 
 // 其他非静态成员函数。
-std::pair<TExpression::ErrorType, const wchar_t *> TExpression::Parse(const WideStringView &wsoData){
+std::pair<TExpression::ErrorType, const wchar_t *> TExpression::Parse(const WideStringView &wsvData){
 	TExpression vTemp;
 
-	auto pwcRead = wsoData.GetBegin();
-	const auto pwcEnd = wsoData.GetEnd();
+	auto pwcRead = wsvData.GetBegin();
+	const auto pwcEnd = wsvData.GetEnd();
 	if(pwcRead == pwcEnd){
 		return std::make_pair(kErrNone, pwcRead);
 	}
@@ -452,7 +452,7 @@ std::pair<TExpression::ErrorType, const wchar_t *> TExpression::Parse(const Wide
 	Swap(vTemp);
 	return std::make_pair(kErrNone, pwcRead);
 }
-WideString TExpression::Export(const WideStringView &wsoIndent) const {
+WideString TExpression::Export(const WideStringView &wsvIndent) const {
 	WideString wsRet;
 
 	Vector<std::pair<const TExpressionNode *, const ChildNode *>> vecNodeStack;
@@ -483,7 +483,7 @@ WideString TExpression::Export(const WideStringView &wsoIndent) const {
 				goto jNextChild;
 			}
 			wsRet += L'\n';
-			wsIndent += wsoIndent;
+			wsIndent += wsvIndent;
 			vecNodeStack.Push(&vNode, vNode.x_lstChildren.GetFirst());
 			continue;
 		}
@@ -493,7 +493,7 @@ WideString TExpression::Export(const WideStringView &wsoIndent) const {
 			break;
 		}
 
-		wsIndent.Truncate(wsoIndent.GetLength());
+		wsIndent.Truncate(wsvIndent.GetLength());
 		wsRet += wsIndent;
 		wsRet += L')';
 		wsRet += L'\n';

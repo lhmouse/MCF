@@ -44,7 +44,7 @@ public:
 
 public:
 	static UnifiedStringView Unify(UnifiedString &usTempStorage, const Observer &obsSrc);
-	static void Deunify(String &strDst, std::size_t uPos, const UnifiedStringView &usoSrc);
+	static void Deunify(String &strDst, std::size_t uPos, const UnifiedStringView &usvSrc);
 
 private:
 	union X_Storage {

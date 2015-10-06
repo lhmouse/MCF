@@ -88,8 +88,8 @@ public:
 	};
 
 public:
-	std::pair<ErrorType, const wchar_t *> Parse(const WideStringView &wsoData);
-	WideString Export(const WideStringView &wsoIndent = L"  "_wsv) const;
+	std::pair<ErrorType, const wchar_t *> Parse(const WideStringView &wsvData);
+	WideString Export(const WideStringView &wsvIndent = L"  "_wsv) const;
 };
 
 }

@@ -32,15 +32,15 @@ namespace Impl_UniqueLockTemplate {
 }
 
 // 构造函数和析构函数。
-KernelRecursiveMutex::KernelRecursiveMutex(const WideStringView &wsoName){
-	const auto uSize = wsoName.GetSize() * sizeof(wchar_t);
+KernelRecursiveMutex::KernelRecursiveMutex(const WideStringView &wsvName){
+	const auto uSize = wsvName.GetSize() * sizeof(wchar_t);
 	if(uSize > UINT16_MAX){
 		DEBUG_THROW(SystemError, ERROR_INVALID_PARAMETER, "The name for a kernel mutex is too long"_rcs);
 	}
 	::UNICODE_STRING ustrObjectName;
 	ustrObjectName.Length        = uSize;
 	ustrObjectName.MaximumLength = uSize;
-	ustrObjectName.Buffer        = (PWSTR)wsoName.GetBegin();
+	ustrObjectName.Buffer        = (PWSTR)wsvName.GetBegin();
 	::OBJECT_ATTRIBUTES vObjectAttributes;
 	InitializeObjectAttributes(&vObjectAttributes, &ustrObjectName, OBJ_OPENIF, nullptr, nullptr);
 

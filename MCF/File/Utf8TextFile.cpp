@@ -157,13 +157,13 @@ void Utf8TextFileWriter::Write(char ch){
 		}
 	}
 }
-void Utf8TextFileWriter::Write(const Utf8StringView &u8soData){
-	for(auto p = u8soData.GetBegin(); p != u8soData.GetEnd(); ++p){
+void Utf8TextFileWriter::Write(const Utf8StringView &u8svData){
+	for(auto p = u8svData.GetBegin(); p != u8svData.GetEnd(); ++p){
 		Write(*p);
 	}
 }
-void Utf8TextFileWriter::WriteLine(const Utf8StringView &u8soData){
-	Write(u8soData);
+void Utf8TextFileWriter::WriteLine(const Utf8StringView &u8svData){
+	Write(u8svData);
 	Write('\n');
 }
 void Utf8TextFileWriter::Flush(){

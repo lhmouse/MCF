@@ -18,7 +18,7 @@ private:
 	Impl_UniqueNtHandle::UniqueNtHandle x_hEvent;
 
 public:
-	explicit KernelEvent(bool bInitSet, const WideStringView &wsoName = nullptr);
+	explicit KernelEvent(bool bInitSet, const WideStringView &wsvName = nullptr);
 
 public:
 	bool Wait(std::uint64_t u64MilliSeconds) const noexcept;

@@ -52,14 +52,14 @@ public:
 		x_mapChildren.Clear();
 	}
 
-	std::pair<const ChildNode *, const ChildNode *> GetRange(const WideStringView &wsoName) const noexcept {
-		return x_mapChildren.GetEqualRange<0>(wsoName);
+	std::pair<const ChildNode *, const ChildNode *> GetRange(const WideStringView &wsvName) const noexcept {
+		return x_mapChildren.GetEqualRange<0>(wsvName);
 	}
-	std::pair<ChildNode *, ChildNode *> GetRange(const WideStringView &wsoName) noexcept {
-		return x_mapChildren.GetEqualRange<0>(wsoName);
+	std::pair<ChildNode *, ChildNode *> GetRange(const WideStringView &wsvName) noexcept {
+		return x_mapChildren.GetEqualRange<0>(wsvName);
 	}
-	std::pair<ChildNode *, bool> Insert(const WideStringView &wsoName, ChildNode *pSeqPos = nullptr){
-		return Insert(WideString(wsoName), pSeqPos);
+	std::pair<ChildNode *, bool> Insert(const WideStringView &wsvName, ChildNode *pSeqPos = nullptr){
+		return Insert(WideString(wsvName), pSeqPos);
 	}
 	std::pair<ChildNode *, bool> Insert(WideString wsName, ChildNode *pSeqPos = nullptr){
 		return x_mapChildren.InsertWithHints(false, std::make_tuple(nullptr, pSeqPos), std::move(wsName), MNotationNode());
@@ -69,8 +69,8 @@ public:
 		x_mapChildren.Erase(pNode);
 		return pRet;
 	}
-	bool Erase(const WideStringView &wsoName) noexcept {
-		const auto pPos = x_mapChildren.Find<0>(wsoName);
+	bool Erase(const WideStringView &wsvName) noexcept {
+		const auto pPos = x_mapChildren.Find<0>(wsvName);
 		if(!pPos){
 			return false;
 		}
@@ -78,16 +78,16 @@ public:
 		return true;
 	}
 
-	const ChildNode *Get(const WideStringView &wsoName) const noexcept {
-		return x_mapChildren.Find<0>(wsoName);
+	const ChildNode *Get(const WideStringView &wsvName) const noexcept {
+		return x_mapChildren.Find<0>(wsvName);
 	}
-	ChildNode *Get(const WideStringView &wsoName) noexcept {
-		return x_mapChildren.Find<0>(wsoName);
+	ChildNode *Get(const WideStringView &wsvName) noexcept {
+		return x_mapChildren.Find<0>(wsvName);
 	}
-	ChildNode *Create(const WideStringView &wsoName, ChildNode *pSeqPos = nullptr) noexcept {
-		auto pNode = x_mapChildren.GetLowerBound<0>(wsoName);
-		if(!pNode || (pNode->Get().first != wsoName)){
-			pNode = x_mapChildren.InsertWithHints(true, std::make_tuple(pNode, pSeqPos), WideString(wsoName), MNotationNode()).first;
+	ChildNode *Create(const WideStringView &wsvName, ChildNode *pSeqPos = nullptr) noexcept {
+		auto pNode = x_mapChildren.GetLowerBound<0>(wsvName);
+		if(!pNode || (pNode->Get().first != wsvName)){
+			pNode = x_mapChildren.InsertWithHints(true, std::make_tuple(pNode, pSeqPos), WideString(wsvName), MNotationNode()).first;
 		}
 		return pNode;
 	}
@@ -145,8 +145,8 @@ public:
 	};
 
 public:
-	std::pair<ErrorType, const wchar_t *> Parse(const WideStringView &wsoData);
-	WideString Export(const WideStringView &wsoIndent = L"  "_wsv) const;
+	std::pair<ErrorType, const wchar_t *> Parse(const WideStringView &wsvData);
+	WideString Export(const WideStringView &wsvIndent = L"  "_wsv) const;
 };
 
 }

@@ -26,15 +26,15 @@ NTSTATUS NtResetEvent(HANDLE hEvent, LONG *plPrevState) noexcept;
 namespace MCF {
 
 // 构造函数和析构函数。
-KernelEvent::KernelEvent(bool bInitSet, const WideStringView &wsoName){
-	const auto uSize = wsoName.GetSize() * sizeof(wchar_t);
+KernelEvent::KernelEvent(bool bInitSet, const WideStringView &wsvName){
+	const auto uSize = wsvName.GetSize() * sizeof(wchar_t);
 	if(uSize > UINT16_MAX){
 		DEBUG_THROW(SystemError, ERROR_INVALID_PARAMETER, "The name for a kernel event is too long"_rcs);
 	}
 	::UNICODE_STRING ustrObjectName;
 	ustrObjectName.Length        = uSize;
 	ustrObjectName.MaximumLength = uSize;
-	ustrObjectName.Buffer        = (PWSTR)wsoName.GetBegin();
+	ustrObjectName.Buffer        = (PWSTR)wsvName.GetBegin();
 	::OBJECT_ATTRIBUTES vObjectAttributes;
 	InitializeObjectAttributes(&vObjectAttributes, &ustrObjectName, 0, nullptr, nullptr);
 

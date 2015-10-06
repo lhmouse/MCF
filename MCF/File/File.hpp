@@ -49,12 +49,12 @@ public:
 	{
 	}
 
-	File(const WideStringView &wsoPath, std::uint32_t u32Flags);
+	File(const WideStringView &wsvPath, std::uint32_t u32Flags);
 
 public:
 	bool IsOpen() const noexcept;
-	void Open(const WideStringView &wsoPath, std::uint32_t u32Flags);
-	bool OpenNoThrow(const WideStringView &wsoPath, std::uint32_t u32Flags);
+	void Open(const WideStringView &wsvPath, std::uint32_t u32Flags);
+	bool OpenNoThrow(const WideStringView &wsvPath, std::uint32_t u32Flags);
 	void Close();
 
 	std::uint64_t GetSize() const;

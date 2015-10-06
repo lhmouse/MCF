@@ -17,19 +17,19 @@ NTSTATUS NtReleaseSemaphore(HANDLE hSemaphore, LONG lReleaseCount, LONG *plPrevC
 namespace MCF {
 
 // 构造函数和析构函数。
-KernelSemaphore::KernelSemaphore(std::size_t uInitCount, const WideStringView &wsoName){
+KernelSemaphore::KernelSemaphore(std::size_t uInitCount, const WideStringView &wsvName){
 	if(uInitCount >= static_cast<std::size_t>(LONG_MAX)){
 		DEBUG_THROW(Exception, ERROR_INVALID_PARAMETER, "Initial count for a kernel semaphore is too large"_rcs);
 	}
 
-	const auto uSize = wsoName.GetSize() * sizeof(wchar_t);
+	const auto uSize = wsvName.GetSize() * sizeof(wchar_t);
 	if(uSize > UINT16_MAX){
 		DEBUG_THROW(SystemError, ERROR_INVALID_PARAMETER, "The name for a kernel semaphore is too long"_rcs);
 	}
 	::UNICODE_STRING ustrObjectName;
 	ustrObjectName.Length        = uSize;
 	ustrObjectName.MaximumLength = uSize;
-	ustrObjectName.Buffer        = (PWSTR)wsoName.GetBegin();
+	ustrObjectName.Buffer        = (PWSTR)wsvName.GetBegin();
 	::OBJECT_ATTRIBUTES vObjectAttributes;
 	InitializeObjectAttributes(&vObjectAttributes, &ustrObjectName, 0, nullptr, nullptr);
 

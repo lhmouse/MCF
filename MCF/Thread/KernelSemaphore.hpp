@@ -18,7 +18,7 @@ private:
 	Impl_UniqueNtHandle::UniqueNtHandle x_hSemaphore;
 
 public:
-	explicit KernelSemaphore(std::size_t uInitCount, const WideStringView &wsoName = nullptr);
+	explicit KernelSemaphore(std::size_t uInitCount, const WideStringView &wsvName = nullptr);
 
 public:
 	bool Wait(std::uint64_t u64MilliSeconds) noexcept;

@@ -28,7 +28,7 @@ namespace {
 	MCF::Mutex g_vConsvleMutex;
 }
 
-void System::Print(MCF::WideStringView wsoText, bool bInsertsNewLine, bool bToStdErr) noexcept {
+void System::Print(MCF::WideStringView wsvText, bool bInsertsNewLine, bool bToStdErr) noexcept {
 	const auto hOutput = ::GetStdHandle(bToStdErr ? STD_ERROR_HANDLE : STD_OUTPUT_HANDLE);
 	DWORD dwMode;
 	if(::GetConsoleMode(hOutput, &dwMode)){
@@ -45,14 +45,14 @@ void System::Print(MCF::WideStringView wsoText, bool bInsertsNewLine, bool bToSt
 
 		{
 			const auto vLock = g_vConsvleMutex.GetLock();
-			Write(wsoText.GetBegin(), wsoText.GetSize());
+			Write(wsvText.GetBegin(), wsvText.GetSize());
 			if(bInsertsNewLine){
 				Write(L"\n", 1);
 			}
 		}
 	} else {
 		// 写文件。
-		const ConsoleNarrowString cnsTemp(wsoText);
+		const ConsoleNarrowString cnsTemp(wsvText);
 
 		const auto Write = [&](const char *pchStr, std::size_t uLen){
 			DWORD dwTotal = 0, dwWritten;
@@ -73,13 +73,13 @@ void System::Print(MCF::WideStringView wsoText, bool bInsertsNewLine, bool bToSt
 		}
 	}
 }
-unsigned System::Shell(MCF::WideString &wcsStdOut, MCF::WideString &wcsStdErr, MCF::WideStringView wsoCommand){
+unsigned System::Shell(MCF::WideString &wcsStdOut, MCF::WideString &wcsStdErr, MCF::WideStringView wsvCommand){
 	DWORD dwExitCode;
 	ConsoleNarrowString cnsStdOut, cnsStdErr;
 
 	{
 		// CreateProcess() 要求路径是可写的。
-		MCF::WideString wcsCommandLine(wsoCommand);
+		MCF::WideString wcsCommandLine(wsvCommand);
 
 		const auto CreateInputPipe = []{
 			HANDLE hRead, hWrite;

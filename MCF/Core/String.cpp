@@ -41,8 +41,8 @@ namespace {
 	};
 
 	template<class StringViewT>
-	auto MakeStringSource(const StringViewT &soRead) noexcept {
-		return StringSource<typename StringViewT::Char>(soRead.GetBegin(), soRead.GetEnd());
+	auto MakeStringSource(const StringViewT &svRead) noexcept {
+		return StringSource<typename StringViewT::Char>(svRead.GetBegin(), svRead.GetEnd());
 	}
 
 	template<class PrevT, bool kIsCesu8T>
@@ -303,87 +303,87 @@ template class String<StringType::kAnsi>;
 
 // UTF-8
 template<>
-UnifiedStringView NarrowString::Unify(UnifiedString &usTempStorage, const NarrowStringView &nsoSrc){
-	usTempStorage.Reserve(nsoSrc.GetSize());
-	Convert(usTempStorage, 0, MakeUtf8Decoder(MakeStringSource(nsoSrc)));
+UnifiedStringView NarrowString::Unify(UnifiedString &usTempStorage, const NarrowStringView &nsvSrc){
+	usTempStorage.Reserve(nsvSrc.GetSize());
+	Convert(usTempStorage, 0, MakeUtf8Decoder(MakeStringSource(nsvSrc)));
 	return usTempStorage;
 }
 template<>
-void NarrowString::Deunify(NarrowString &nsDst, std::size_t uPos, const UnifiedStringView &usoSrc){
-	nsDst.ReserveMore(usoSrc.GetSize() * 2);
-	Convert(nsDst, uPos, MakeUtf8Encoder(MakeStringSource(usoSrc)));
+void NarrowString::Deunify(NarrowString &nsDst, std::size_t uPos, const UnifiedStringView &usvSrc){
+	nsDst.ReserveMore(usvSrc.GetSize() * 2);
+	Convert(nsDst, uPos, MakeUtf8Encoder(MakeStringSource(usvSrc)));
 }
 
 // UTF-16
 template<>
-UnifiedStringView WideString::Unify(UnifiedString &usTempStorage, const WideStringView &wsoSrc){
-	usTempStorage.Reserve(wsoSrc.GetSize());
-	Convert(usTempStorage, 0, MakeUtf16Decoder(MakeStringSource(wsoSrc)));
+UnifiedStringView WideString::Unify(UnifiedString &usTempStorage, const WideStringView &wsvSrc){
+	usTempStorage.Reserve(wsvSrc.GetSize());
+	Convert(usTempStorage, 0, MakeUtf16Decoder(MakeStringSource(wsvSrc)));
 	return usTempStorage;
 }
 template<>
-void WideString::Deunify(WideString &wsDst, std::size_t uPos, const UnifiedStringView &usoSrc){
-	wsDst.ReserveMore(usoSrc.GetSize());
-	Convert(wsDst, uPos, MakeUtf16Encoder(MakeStringSource(usoSrc)));
+void WideString::Deunify(WideString &wsDst, std::size_t uPos, const UnifiedStringView &usvSrc){
+	wsDst.ReserveMore(usvSrc.GetSize());
+	Convert(wsDst, uPos, MakeUtf16Encoder(MakeStringSource(usvSrc)));
 }
 
 // UTF-8
 template<>
-UnifiedStringView Utf8String::Unify(UnifiedString &usTempStorage, const Utf8StringView &u8soSrc){
-	usTempStorage.Reserve(u8soSrc.GetSize());
-	Convert(usTempStorage, 0, MakeUtf8Decoder(MakeStringSource(u8soSrc)));
+UnifiedStringView Utf8String::Unify(UnifiedString &usTempStorage, const Utf8StringView &u8svSrc){
+	usTempStorage.Reserve(u8svSrc.GetSize());
+	Convert(usTempStorage, 0, MakeUtf8Decoder(MakeStringSource(u8svSrc)));
 	return usTempStorage;
 }
 template<>
-void Utf8String::Deunify(Utf8String &u8sDst, std::size_t uPos, const UnifiedStringView &usoSrc){
-	u8sDst.ReserveMore(usoSrc.GetSize() * 3);
-	Convert(u8sDst, uPos, MakeUtf8Encoder(MakeStringSource(usoSrc)));
+void Utf8String::Deunify(Utf8String &u8sDst, std::size_t uPos, const UnifiedStringView &usvSrc){
+	u8sDst.ReserveMore(usvSrc.GetSize() * 3);
+	Convert(u8sDst, uPos, MakeUtf8Encoder(MakeStringSource(usvSrc)));
 }
 
 // UTF-16
 template<>
-UnifiedStringView Utf16String::Unify(UnifiedString &usTempStorage, const Utf16StringView &u16soSrc){
-	usTempStorage.Reserve(u16soSrc.GetSize());
-	Convert(usTempStorage, 0, MakeUtf16Decoder(MakeStringSource(u16soSrc)));
+UnifiedStringView Utf16String::Unify(UnifiedString &usTempStorage, const Utf16StringView &u16svSrc){
+	usTempStorage.Reserve(u16svSrc.GetSize());
+	Convert(usTempStorage, 0, MakeUtf16Decoder(MakeStringSource(u16svSrc)));
 	return usTempStorage;
 }
 template<>
-void Utf16String::Deunify(Utf16String &u16sDst, std::size_t uPos, const UnifiedStringView &usoSrc){
-	u16sDst.ReserveMore(usoSrc.GetSize());
-	Convert(u16sDst, uPos, MakeUtf16Encoder(MakeStringSource(usoSrc)));
+void Utf16String::Deunify(Utf16String &u16sDst, std::size_t uPos, const UnifiedStringView &usvSrc){
+	u16sDst.ReserveMore(usvSrc.GetSize());
+	Convert(u16sDst, uPos, MakeUtf16Encoder(MakeStringSource(usvSrc)));
 }
 
 // UTF-32
 template<>
-UnifiedStringView Utf32String::Unify(UnifiedString & /* usTempStorage */, const Utf32StringView &u32soSrc){
-	return u32soSrc;
+UnifiedStringView Utf32String::Unify(UnifiedString & /* usTempStorage */, const Utf32StringView &u32svSrc){
+	return u32svSrc;
 }
 template<>
-void Utf32String::Deunify(Utf32String &u32sDst, std::size_t uPos, const UnifiedStringView &usoSrc){
-	u32sDst.Replace((std::ptrdiff_t)uPos, (std::ptrdiff_t)uPos, usoSrc);
+void Utf32String::Deunify(Utf32String &u32sDst, std::size_t uPos, const UnifiedStringView &usvSrc){
+	u32sDst.Replace((std::ptrdiff_t)uPos, (std::ptrdiff_t)uPos, usvSrc);
 }
 
 // CESU-8
 template<>
-UnifiedStringView Cesu8String::Unify(UnifiedString &usTempStorage, const Cesu8StringView &cu8soSrc){
-	usTempStorage.Reserve(cu8soSrc.GetSize());
-	Convert(usTempStorage, 0, MakeUtf16Decoder(MakeCesu8Decoder(MakeStringSource(cu8soSrc))));
+UnifiedStringView Cesu8String::Unify(UnifiedString &usTempStorage, const Cesu8StringView &cu8svSrc){
+	usTempStorage.Reserve(cu8svSrc.GetSize());
+	Convert(usTempStorage, 0, MakeUtf16Decoder(MakeCesu8Decoder(MakeStringSource(cu8svSrc))));
 	return usTempStorage;
 }
 template<>
-void Cesu8String::Deunify(Cesu8String &cu8sDst, std::size_t uPos, const UnifiedStringView &usoSrc){
-	cu8sDst.ReserveMore(usoSrc.GetSize() * 3);
-	Convert(cu8sDst, uPos, MakeUtf8Encoder(MakeUtf16Encoder(MakeStringSource(usoSrc))));
+void Cesu8String::Deunify(Cesu8String &cu8sDst, std::size_t uPos, const UnifiedStringView &usvSrc){
+	cu8sDst.ReserveMore(usvSrc.GetSize() * 3);
+	Convert(cu8sDst, uPos, MakeUtf8Encoder(MakeUtf16Encoder(MakeStringSource(usvSrc))));
 }
 
 // kAnsi
 template<>
-UnifiedStringView AnsiString::Unify(UnifiedString &usTempStorage, const AnsiStringView &asoSrc){
-	if(!asoSrc.IsEmpty()){
+UnifiedStringView AnsiString::Unify(UnifiedString &usTempStorage, const AnsiStringView &asvSrc){
+	if(!asvSrc.IsEmpty()){
 		WideString wsTemp;
-		wsTemp.Resize(asoSrc.GetSize());
+		wsTemp.Resize(asvSrc.GetSize());
 		const unsigned uCount = (unsigned)::MultiByteToWideChar(CP_ACP, MB_ERR_INVALID_CHARS,
-			asoSrc.GetBegin(), (int)asoSrc.GetSize(), wsTemp.GetData(), (int)wsTemp.GetSize());
+			asvSrc.GetBegin(), (int)asvSrc.GetSize(), wsTemp.GetData(), (int)wsTemp.GetSize());
 		if(uCount == 0){
 			DEBUG_THROW(SystemError, "MultiByteToWideChar"_rcs);
 		}
@@ -393,11 +393,11 @@ UnifiedStringView AnsiString::Unify(UnifiedString &usTempStorage, const AnsiStri
 	return usTempStorage;
 }
 template<>
-void AnsiString::Deunify(AnsiString &ansDst, std::size_t uPos, const UnifiedStringView &usoSrc){
-	if(!usoSrc.IsEmpty()){
+void AnsiString::Deunify(AnsiString &ansDst, std::size_t uPos, const UnifiedStringView &usvSrc){
+	if(!usvSrc.IsEmpty()){
 		WideString wsTemp;
-		wsTemp.Reserve(usoSrc.GetSize());
-		Convert(wsTemp, 0, MakeUtf16Encoder(MakeStringSource(usoSrc)));
+		wsTemp.Reserve(usvSrc.GetSize());
+		Convert(wsTemp, 0, MakeUtf16Encoder(MakeStringSource(usvSrc)));
 
 		AnsiString ansConverted;
 		ansConverted.Resize(wsTemp.GetSize() * 2);

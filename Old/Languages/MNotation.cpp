@@ -9,9 +9,9 @@
 namespace MCF {
 
 namespace {
-	WideString Unescape(const WideStringView &wsoSrc){
+	WideString Unescape(const WideStringView &wsvSrc){
 		WideString wsRet;
-		wsRet.Reserve(wsoSrc.GetSize());
+		wsRet.Reserve(wsvSrc.GetSize());
 
 		enum {
 			kStNormal,
@@ -22,8 +22,8 @@ namespace {
 		char32_t c32CodePoint = 0;
 		std::size_t uHexExpecting = 0;
 
-		const auto pwcEnd = wsoSrc.GetEnd();
-		for(auto pwcCur = wsoSrc.GetBegin(); pwcCur != pwcEnd; ++pwcCur){
+		const auto pwcEnd = wsvSrc.GetEnd();
+		for(auto pwcCur = wsvSrc.GetBegin(); pwcCur != pwcEnd; ++pwcCur){
 			const auto wc = *pwcCur;
 
 			switch(eState){
@@ -129,12 +129,12 @@ namespace {
 
 		return wsRet;
 	}
-	void Escape(WideString &wsAppendTo, const WideStringView &wsoSrc){
-		const auto uSrcLength = wsoSrc.GetLength();
+	void Escape(WideString &wsAppendTo, const WideStringView &wsvSrc){
+		const auto uSrcLength = wsvSrc.GetLength();
 		wsAppendTo.ReserveMore(uSrcLength);
 
 		for(std::size_t i = 0; i < uSrcLength; ++i){
-			const auto wc = wsoSrc[i];
+			const auto wc = wsvSrc[i];
 
 			switch(wc){
 			case L'\\':
@@ -177,11 +177,11 @@ namespace {
 }
 
 // 其他非静态成员函数。
-std::pair<MNotation::ErrorType, const wchar_t *> MNotation::Parse(const WideStringView &wsoData){
+std::pair<MNotation::ErrorType, const wchar_t *> MNotation::Parse(const WideStringView &wsvData){
 	MNotation vTemp;
 
-	auto pwcRead = wsoData.GetBegin();
-	const auto pwcEnd = wsoData.GetEnd();
+	auto pwcRead = wsvData.GetBegin();
+	const auto pwcEnd = wsvData.GetEnd();
 	if(pwcRead == pwcEnd){
 		return std::make_pair(kErrNone, pwcRead);
 	}
@@ -551,7 +551,7 @@ std::pair<MNotation::ErrorType, const wchar_t *> MNotation::Parse(const WideStri
 	Swap(vTemp);
 	return std::make_pair(kErrNone, pwcRead);
 }
-WideString MNotation::Export(const WideStringView &wsoIndent) const {
+WideString MNotation::Export(const WideStringView &wsvIndent) const {
 	WideString wsRet;
 
 	Vector<std::pair<const MNotationNode *, const ChildNode *>> vecPackageStack;
@@ -584,7 +584,7 @@ WideString MNotation::Export(const WideStringView &wsoIndent) const {
 			}
 			wsRet += L'{';
 			wsRet += L'\n';
-			wsIndent += wsoIndent;
+			wsIndent += wsvIndent;
 			vecPackageStack.Push(&vNode, vNode.x_mapChildren.GetFirst<1>());
 			continue;
 		}
@@ -596,7 +596,7 @@ WideString MNotation::Export(const WideStringView &wsoIndent) const {
 			}
 			wsRet += L'{';
 			wsRet += L'\n';
-			wsIndent += wsoIndent;
+			wsIndent += wsvIndent;
 			vecPackageStack.Push(&(vTop.second->Get().second), vTop.second->Get().second.x_mapChildren.GetFirst<1>());
 			continue;
 		}*/
@@ -614,7 +614,7 @@ WideString MNotation::Export(const WideStringView &wsoIndent) const {
 			break;
 		}
 
-		wsIndent.Truncate(wsoIndent.GetLength());
+		wsIndent.Truncate(wsvIndent.GetLength());
 		wsRet += wsIndent;
 		wsRet += L'}';
 		wsRet += L'\n';

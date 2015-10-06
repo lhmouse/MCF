@@ -103,8 +103,8 @@ public:
 	}
 
 	void Write(char ch);
-	void Write(const Utf8StringObserver &u8soData);
-	void WriteLine(const Utf8StringObserver &u8soData);
+	void Write(const Utf8StringView &u8soData);
+	void WriteLine(const Utf8StringView &u8soData);
 	void Flush();
 
 	void Swap(Utf8TextFileWriter &rhs) noexcept {

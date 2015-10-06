@@ -9,7 +9,7 @@
 namespace MCF {
 
 namespace {
-	WideString Unescape(const WideStringObserver &wsoSrc){
+	WideString Unescape(const WideStringView &wsoSrc){
 		WideString wsRet;
 		wsRet.Reserve(wsoSrc.GetSize());
 
@@ -124,7 +124,7 @@ namespace {
 					if(uHexExpecting != 0){
 						// eState = kStUcsCode;
 					} else {
-						wsRet += Utf32StringObserver(&c32CodePoint, 1);
+						wsRet += Utf32StringView(&c32CodePoint, 1);
 						eState = kStNormal;
 					}
 				}
@@ -135,12 +135,12 @@ namespace {
 			}
 		}
 		if(eState == kStUcsCode){
-			wsRet += Utf32StringObserver(&c32CodePoint, 1);
+			wsRet += Utf32StringView(&c32CodePoint, 1);
 		}
 
 		return wsRet;
 	}
-	void Escape(WideString &wsAppendTo, const WideStringObserver &wsoSrc){
+	void Escape(WideString &wsAppendTo, const WideStringView &wsoSrc){
 		const auto uSrcLength = wsoSrc.GetLength();
 		wsAppendTo.Reserve(wsAppendTo.GetLength() + uSrcLength);
 
@@ -190,7 +190,7 @@ namespace {
 }
 
 // 其他非静态成员函数。
-std::pair<TExpression::ErrorType, const wchar_t *> TExpression::Parse(const WideStringObserver &wsoData){
+std::pair<TExpression::ErrorType, const wchar_t *> TExpression::Parse(const WideStringView &wsoData){
 	TExpression vTemp;
 
 	auto pwcRead = wsoData.GetBegin();
@@ -218,7 +218,7 @@ std::pair<TExpression::ErrorType, const wchar_t *> TExpression::Parse(const Wide
 
 		auto &lstChildren = vecNodeStack.GetBack()->x_lstChildren;
 		auto &vNewNode = lstChildren.Push()->Get();
-		vNewNode.first = Unescape(WideStringObserver(pwcNameBegin, pwcRead));
+		vNewNode.first = Unescape(WideStringView(pwcNameBegin, pwcRead));
 		vecNodeStack.Push(&vNewNode.second);
 	};
 	const auto PushUnnamedNode = [&]{
@@ -452,7 +452,7 @@ std::pair<TExpression::ErrorType, const wchar_t *> TExpression::Parse(const Wide
 	Swap(vTemp);
 	return std::make_pair(kErrNone, pwcRead);
 }
-WideString TExpression::Export(const WideStringObserver &wsoIndent) const {
+WideString TExpression::Export(const WideStringView &wsoIndent) const {
 	WideString wsRet;
 
 	Vector<std::pair<const TExpressionNode *, const ChildNode *>> vecNodeStack;

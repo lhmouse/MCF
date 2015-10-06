@@ -6,7 +6,7 @@
 #define MCF_THREAD_KERNEL_SEMAPHORE_HPP_
 
 #include "../Utilities/Noncopyable.hpp"
-#include "../Core/StringObserver.hpp"
+#include "../Core/StringView.hpp"
 #include "_UniqueNtHandle.hpp"
 #include <cstddef>
 #include <cstdint>
@@ -18,7 +18,7 @@ private:
 	Impl_UniqueNtHandle::UniqueNtHandle x_hSemaphore;
 
 public:
-	explicit KernelSemaphore(std::size_t uInitCount, const WideStringObserver &wsoName = nullptr);
+	explicit KernelSemaphore(std::size_t uInitCount, const WideStringView &wsoName = nullptr);
 
 public:
 	bool Wait(std::uint64_t u64MilliSeconds) noexcept;

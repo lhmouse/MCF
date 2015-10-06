@@ -11,8 +11,8 @@ extern "C" unsigned MCFMain() noexcept {
 	using namespace MCFBuild;
 
 	try {
-		System::Print(L"MCF 构建实用工具"_wso);
-		System::Print(L""_wso);
+		System::Print(L"MCF 构建实用工具"_wsv);
+		System::Print(L""_wsv);
 
 		const MCF::Argv vArgs;
 		for(unsigned i = 0; i < vArgs.GetSize(); ++i){

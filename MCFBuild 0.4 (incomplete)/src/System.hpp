@@ -13,8 +13,8 @@
 namespace MCFBuild {
 
 struct System {
-	static void Print(MCF::WideStringObserver wsoText, bool bInsertsNewLine = true, bool bToStdErr = false) noexcept;
-	static unsigned Shell(MCF::WideString &wcsStdOut, MCF::WideString &wcsStdErr, MCF::WideStringObserver wsoCommand);
+	static void Print(MCF::WideStringView wsoText, bool bInsertsNewLine = true, bool bToStdErr = false) noexcept;
+	static unsigned Shell(MCF::WideString &wcsStdOut, MCF::WideString &wcsStdErr, MCF::WideStringView wsoCommand);
 	static MCF::WideString NormalizePath(const wchar_t *pwcPath);
 
 	static MCF::Vector<MCF::WideString> GetUtf8FileContents(const wchar_t *pwcPath);

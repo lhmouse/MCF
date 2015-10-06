@@ -17,7 +17,7 @@ NTSTATUS NtReleaseSemaphore(HANDLE hSemaphore, LONG lReleaseCount, LONG *plPrevC
 namespace MCF {
 
 // 构造函数和析构函数。
-KernelSemaphore::KernelSemaphore(std::size_t uInitCount, const WideStringObserver &wsoName){
+KernelSemaphore::KernelSemaphore(std::size_t uInitCount, const WideStringView &wsoName){
 	if(uInitCount >= static_cast<std::size_t>(LONG_MAX)){
 		DEBUG_THROW(Exception, ERROR_INVALID_PARAMETER, "Initial count for a kernel semaphore is too large"_rcs);
 	}

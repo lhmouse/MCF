@@ -13,7 +13,7 @@ static void SystemInfoCtor(){
 	GetSystemInfo(&g_vSystemInfo);
 }
 
-size_t MCF_GetLogicalProcessorCount(){
+size_t MCF_GetLogicalProcessvrCount(){
 	return g_vSystemInfo.dwNumberOfProcessors;
 }
 size_t MCF_GetPageSize(){

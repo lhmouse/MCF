@@ -6,7 +6,7 @@
 #define MCF_THREAD_KERNEL_RECURSIVE_MUTEX_HPP_
 
 #include "../Utilities/Noncopyable.hpp"
-#include "../Core/StringObserver.hpp"
+#include "../Core/StringView.hpp"
 #include "_UniqueLockTemplate.hpp"
 #include "_UniqueNtHandle.hpp"
 #include <cstdint>
@@ -21,7 +21,7 @@ private:
 	Impl_UniqueNtHandle::UniqueNtHandle x_hMutex;
 
 public:
-	explicit KernelRecursiveMutex(const WideStringObserver &wsoName = nullptr);
+	explicit KernelRecursiveMutex(const WideStringView &wsoName = nullptr);
 
 public:
 	bool Try(std::uint64_t u64MilliSeconds = 0) noexcept;

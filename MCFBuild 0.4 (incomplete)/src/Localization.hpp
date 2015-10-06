@@ -5,7 +5,7 @@
 #ifndef MCFBUILD_LOCALIZATION_HPP_
 #define MCFBUILD_LOCALIZATION_HPP_
 
-#include <MCF/Core/StringObserver.hpp>
+#include <MCF/Core/StringView.hpp>
 
 namespace MCFBuild {
 

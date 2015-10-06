@@ -25,10 +25,10 @@ namespace {
 
 	using WindowsHandle = MCF::UniqueHandle<WindowsHandleCloser>;
 
-	MCF::Mutex g_vConsoleMutex;
+	MCF::Mutex g_vConsvleMutex;
 }
 
-void System::Print(MCF::WideStringObserver wsoText, bool bInsertsNewLine, bool bToStdErr) noexcept {
+void System::Print(MCF::WideStringView wsoText, bool bInsertsNewLine, bool bToStdErr) noexcept {
 	const auto hOutput = ::GetStdHandle(bToStdErr ? STD_ERROR_HANDLE : STD_OUTPUT_HANDLE);
 	DWORD dwMode;
 	if(::GetConsoleMode(hOutput, &dwMode)){
@@ -44,7 +44,7 @@ void System::Print(MCF::WideStringObserver wsoText, bool bInsertsNewLine, bool b
 		};
 
 		{
-			const auto vLock = g_vConsoleMutex.GetLock();
+			const auto vLock = g_vConsvleMutex.GetLock();
 			Write(wsoText.GetBegin(), wsoText.GetSize());
 			if(bInsertsNewLine){
 				Write(L"\n", 1);
@@ -65,7 +65,7 @@ void System::Print(MCF::WideStringObserver wsoText, bool bInsertsNewLine, bool b
 		};
 
 		{
-			const auto vLock = g_vConsoleMutex.GetLock();
+			const auto vLock = g_vConsvleMutex.GetLock();
 			Write(cnsTemp.GetStr(), cnsTemp.GetSize());
 			if(bInsertsNewLine){
 				Write("\n", 1);
@@ -73,7 +73,7 @@ void System::Print(MCF::WideStringObserver wsoText, bool bInsertsNewLine, bool b
 		}
 	}
 }
-unsigned System::Shell(MCF::WideString &wcsStdOut, MCF::WideString &wcsStdErr, MCF::WideStringObserver wsoCommand){
+unsigned System::Shell(MCF::WideString &wcsStdOut, MCF::WideString &wcsStdErr, MCF::WideStringView wsoCommand){
 	DWORD dwExitCode;
 	ConsoleNarrowString cnsStdOut, cnsStdErr;
 
@@ -222,7 +222,7 @@ MCF::Vector<MCF::WideString> System::GetFileList(MCF::WideString wcsPath, bool b
 	MCF::Vector<MCF::WideString> vecRet;
 
 	::WIN32_FIND_DATAW vFindData;
-	const FindHandle hFind(::FindFirstFileW((wcsPath += L"\\*.*"_wso).GetStr(), &vFindData));
+	const FindHandle hFind(::FindFirstFileW((wcsPath += L"\\*.*"_wsv).GetStr(), &vFindData));
 	if(!hFind){
 		DEBUG_THROW(MCF::SystemError, "FindFirstFileW"_rcs);
 	}

@@ -7,7 +7,7 @@
 
 #include <cstddef>
 #include "../../MCFCRT/env/argv.h"
-#include "../Core/StringObserver.hpp"
+#include "../Core/StringView.hpp"
 #include "../SmartPointers/UniquePtr.hpp"
 #include "../Utilities/Noncopyable.hpp"
 #include "../Utilities/Assert.hpp"
@@ -47,12 +47,12 @@ public:
 
 		return x_pArgv[uIndex].uLen;
 	}
-	WideStringObserver Get(std::size_t uIndex) const noexcept {
-		return WideStringObserver(GetStr(uIndex), GetLen(uIndex));
+	WideStringView Get(std::size_t uIndex) const noexcept {
+		return WideStringView(GetStr(uIndex), GetLen(uIndex));
 	}
 
 public:
-	WideStringObserver operator[](std::size_t uIndex) const noexcept {
+	WideStringView operator[](std::size_t uIndex) const noexcept {
 		return Get(uIndex);
 	}
 };

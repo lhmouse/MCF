@@ -9,7 +9,7 @@
 
 __MCF_CRT_EXTERN_C_BEGIN
 
-extern MCF_STD size_t MCF_GetLogicalProcessorCount() MCF_NOEXCEPT;
+extern MCF_STD size_t MCF_GetLogicalProcessvrCount() MCF_NOEXCEPT;
 extern MCF_STD size_t MCF_GetPageSize() MCF_NOEXCEPT;
 
 typedef struct MCF_tagWindowsVersion {

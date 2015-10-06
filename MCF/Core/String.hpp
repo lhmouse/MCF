@@ -5,7 +5,7 @@
 #ifndef MCF_CORE_STRING_HPP_
 #define MCF_CORE_STRING_HPP_
 
-#include "StringObserver.hpp"
+#include "StringView.hpp"
 #include "../Containers/_EnumeratorTemplate.hpp"
 #include "../Utilities/Assert.hpp"
 #include "../Utilities/CountOf.hpp"
@@ -25,13 +25,13 @@ namespace MCF {
 template<StringType kTypeT>
 class String;
 
-using UnifiedString         = String<StringType::UTF32>;
-using UnifiedStringObserver = StringObserver<StringType::UTF32>;
+using UnifiedString         = String<StringType::kUtf32>;
+using UnifiedStringView = StringView<StringType::kUtf32>;
 
 template<StringType kTypeT>
 class String {
 public:
-	using Observer = StringObserver<kTypeT>;
+	using Observer = StringView<kTypeT>;
 
 	using Char = typename Observer::Char;
 
@@ -43,8 +43,8 @@ public:
 	static const String kEmpty;
 
 public:
-	static UnifiedStringObserver Unify(UnifiedString &usTempStorage, const Observer &obsSrc);
-	static void Deunify(String &strDst, std::size_t uPos, const UnifiedStringObserver &usoSrc);
+	static UnifiedStringView Unify(UnifiedString &usTempStorage, const Observer &obsSrc);
+	static void Deunify(String &strDst, std::size_t uPos, const UnifiedStringView &usoSrc);
 
 private:
 	union X_Storage {
@@ -106,7 +106,7 @@ public:
 		Assign(rhs);
 	}
 	template<StringType kOtherTypeT>
-	explicit String(const StringObserver<kOtherTypeT> &rhs)
+	explicit String(const StringView<kOtherTypeT> &rhs)
 		: String()
 	{
 		Assign(rhs);
@@ -516,14 +516,14 @@ public:
 		Assign(Observer(rhs));
 	}
 	template<StringType kOtherTypeT>
-	void Assign(const StringObserver<kOtherTypeT> &rhs){
+	void Assign(const StringView<kOtherTypeT> &rhs){
 		String strTemp;
 		strTemp.Append(rhs);
 		Assign(std::move(strTemp));
 	}
 	template<StringType kOtherTypeT>
 	void Assign(const String<kOtherTypeT> &rhs){
-		Assign(StringObserver<kOtherTypeT>(rhs));
+		Assign(StringView<kOtherTypeT>(rhs));
 	}
 	void Assign(const String &rhs){
 		if(&rhs != this){
@@ -587,7 +587,7 @@ public:
 		Copy(pWrite, rhs.GetBegin(), rhs.GetEnd()); // 这是正确的即使对于 &rhs == this 的情况。
 	}
 	template<StringType kOtherTypeT>
-	void Append(const StringObserver<kOtherTypeT> &rhs){
+	void Append(const StringView<kOtherTypeT> &rhs){
 		UnifiedString ucsTempStorage;
 		Deunify(*this, GetSize(), String<kOtherTypeT>::Unify(ucsTempStorage, rhs));
 	}
@@ -720,7 +720,7 @@ String<kTypeT> &operator+=(String<kTypeT> &lhs, const String<kOtherTypeT> &rhs){
 	return lhs;
 }
 template<StringType kTypeT, StringType kOtherTypeT>
-String<kTypeT> &operator+=(String<kTypeT> &lhs, const StringObserver<kOtherTypeT> &rhs){
+String<kTypeT> &operator+=(String<kTypeT> &lhs, const StringView<kOtherTypeT> &rhs){
 	lhs.Append(rhs);
 	return lhs;
 }
@@ -740,7 +740,7 @@ String<kTypeT> &&operator+=(String<kTypeT> &&lhs, const String<kOtherTypeT> &rhs
 	return std::move(lhs);
 }
 template<StringType kTypeT, StringType kOtherTypeT>
-String<kTypeT> &&operator+=(String<kTypeT> &&lhs, const StringObserver<kOtherTypeT> &rhs){
+String<kTypeT> &&operator+=(String<kTypeT> &&lhs, const StringView<kOtherTypeT> &rhs){
 	lhs.Append(rhs);
 	return std::move(lhs);
 }
@@ -767,7 +767,7 @@ String<kTypeT> operator+(const String<kTypeT> &lhs, const String<kOtherTypeT> &r
 	return strRet;
 }
 template<StringType kTypeT, StringType kOtherTypeT>
-String<kTypeT> operator+(const String<kTypeT> &lhs, const StringObserver<kOtherTypeT> &rhs){
+String<kTypeT> operator+(const String<kTypeT> &lhs, const StringView<kOtherTypeT> &rhs){
 	String<kTypeT> strRet(lhs);
 	strRet += rhs;
 	return strRet;
@@ -789,7 +789,7 @@ String<kTypeT> &&operator+(String<kTypeT> &&lhs, const String<kOtherTypeT> &rhs)
 	return std::move(lhs += rhs);
 }
 template<StringType kTypeT, StringType kOtherTypeT>
-String<kTypeT> &&operator+(String<kTypeT> &&lhs, const StringObserver<kOtherTypeT> &rhs){
+String<kTypeT> &&operator+(String<kTypeT> &&lhs, const StringView<kOtherTypeT> &rhs){
 	return std::move(lhs += rhs);
 }
 template<StringType kTypeT>
@@ -810,11 +810,11 @@ bool operator==(const String<kTypeT> &lhs, const String<kTypeT> &rhs) noexcept {
 	return lhs.GetObserver() == rhs.GetObserver();
 }
 template<StringType kTypeT>
-bool operator==(const String<kTypeT> &lhs, const StringObserver<kTypeT> &rhs) noexcept {
+bool operator==(const String<kTypeT> &lhs, const StringView<kTypeT> &rhs) noexcept {
 	return lhs.GetObserver() == rhs;
 }
 template<StringType kTypeT>
-bool operator==(const StringObserver<kTypeT> &lhs, const String<kTypeT> &rhs) noexcept {
+bool operator==(const StringView<kTypeT> &lhs, const String<kTypeT> &rhs) noexcept {
 	return lhs == rhs.GetObserver();
 }
 
@@ -823,11 +823,11 @@ bool operator!=(const String<kTypeT> &lhs, const String<kTypeT> &rhs) noexcept {
 	return lhs.GetObserver() != rhs.GetObserver();
 }
 template<StringType kTypeT>
-bool operator!=(const String<kTypeT> &lhs, const StringObserver<kTypeT> &rhs) noexcept {
+bool operator!=(const String<kTypeT> &lhs, const StringView<kTypeT> &rhs) noexcept {
 	return lhs.GetObserver() != rhs;
 }
 template<StringType kTypeT>
-bool operator!=(const StringObserver<kTypeT> &lhs, const String<kTypeT> &rhs) noexcept {
+bool operator!=(const StringView<kTypeT> &lhs, const String<kTypeT> &rhs) noexcept {
 	return lhs != rhs.GetObserver();
 }
 
@@ -836,11 +836,11 @@ bool operator<(const String<kTypeT> &lhs, const String<kTypeT> &rhs) noexcept {
 	return lhs.GetObserver() < rhs.GetObserver();
 }
 template<StringType kTypeT>
-bool operator<(const String<kTypeT> &lhs, const StringObserver<kTypeT> &rhs) noexcept {
+bool operator<(const String<kTypeT> &lhs, const StringView<kTypeT> &rhs) noexcept {
 	return lhs.GetObserver() < rhs;
 }
 template<StringType kTypeT>
-bool operator<(const StringObserver<kTypeT> &lhs, const String<kTypeT> &rhs) noexcept {
+bool operator<(const StringView<kTypeT> &lhs, const String<kTypeT> &rhs) noexcept {
 	return lhs < rhs.GetObserver();
 }
 
@@ -849,11 +849,11 @@ bool operator>(const String<kTypeT> &lhs, const String<kTypeT> &rhs) noexcept {
 	return lhs.GetObserver() > rhs.GetObserver();
 }
 template<StringType   kTypeT>
-bool operator>(const String<kTypeT> &lhs, const StringObserver<kTypeT> &rhs) noexcept {
+bool operator>(const String<kTypeT> &lhs, const StringView<kTypeT> &rhs) noexcept {
 	return lhs.GetObserver() > rhs;
 }
 template<StringType kTypeT>
-bool operator>(const StringObserver<kTypeT> &lhs, const String<kTypeT> &rhs) noexcept {
+bool operator>(const StringView<kTypeT> &lhs, const String<kTypeT> &rhs) noexcept {
 	return lhs > rhs.GetObserver();
 }
 
@@ -862,11 +862,11 @@ bool operator<=(const String<kTypeT> &lhs, const String<kTypeT> &rhs) noexcept {
 	return lhs.GetObserver() <= rhs.GetObserver();
 }
 template<StringType kTypeT>
-bool operator<=(const String<kTypeT> &lhs, const StringObserver<kTypeT> &rhs) noexcept {
+bool operator<=(const String<kTypeT> &lhs, const StringView<kTypeT> &rhs) noexcept {
 	return lhs.GetObserver() <= rhs;
 }
 template<StringType kTypeT>
-bool operator<=(const StringObserver<kTypeT> &lhs, const String<kTypeT> &rhs) noexcept {
+bool operator<=(const StringView<kTypeT> &lhs, const String<kTypeT> &rhs) noexcept {
 	return lhs <= rhs.GetObserver();
 }
 
@@ -875,11 +875,11 @@ bool operator>=(const String<kTypeT> &lhs, const String<kTypeT> &rhs) noexcept {
 	return lhs.GetObserver() >= rhs.GetObserver();
 }
 template<StringType kTypeT>
-bool operator>=(const String<kTypeT> &lhs, const StringObserver<kTypeT> &rhs) noexcept {
+bool operator>=(const String<kTypeT> &lhs, const StringView<kTypeT> &rhs) noexcept {
 	return lhs.GetObserver() >= rhs;
 }
 template<StringType kTypeT>
-bool operator>=(const StringObserver<kTypeT> &lhs, const String<kTypeT> &rhs) noexcept {
+bool operator>=(const StringView<kTypeT> &lhs, const String<kTypeT> &rhs) noexcept {
 	return lhs >= rhs.GetObserver();
 }
 
@@ -913,21 +913,21 @@ decltype(auto) cend(const String<kTypeT> &rhs) noexcept {
 	return end(rhs);
 }
 
-extern template class String<StringType::NARROW>;
-extern template class String<StringType::WIDE>;
-extern template class String<StringType::UTF8>;
-extern template class String<StringType::UTF16>;
-extern template class String<StringType::UTF32>;
-extern template class String<StringType::CESU8>;
-extern template class String<StringType::ANSI>;
+extern template class String<StringType::kNarrow>;
+extern template class String<StringType::kWide>;
+extern template class String<StringType::kUtf8>;
+extern template class String<StringType::kUtf16>;
+extern template class String<StringType::kUtf32>;
+extern template class String<StringType::kCesu8>;
+extern template class String<StringType::kAnsi>;
 
-using NarrowString = String<StringType::NARROW>;
-using WideString   = String<StringType::WIDE>;
-using Utf8String   = String<StringType::UTF8>;
-using Utf16String  = String<StringType::UTF16>;
-using Utf32String  = String<StringType::UTF32>;
-using Cesu8String  = String<StringType::CESU8>;
-using AnsiString   = String<StringType::ANSI>;
+using NarrowString = String<StringType::kNarrow>;
+using WideString   = String<StringType::kWide>;
+using Utf8String   = String<StringType::kUtf8>;
+using Utf16String  = String<StringType::kUtf16>;
+using Utf32String  = String<StringType::kUtf32>;
+using Cesu8String  = String<StringType::kCesu8>;
+using AnsiString   = String<StringType::kAnsi>;
 
 // 字面量运算符。
 template<typename CharT, CharT ...kCharsT>

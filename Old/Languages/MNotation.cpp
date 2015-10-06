@@ -9,7 +9,7 @@
 namespace MCF {
 
 namespace {
-	WideString Unescape(const WideStringObserver &wsoSrc){
+	WideString Unescape(const WideStringView &wsoSrc){
 		WideString wsRet;
 		wsRet.Reserve(wsoSrc.GetSize());
 
@@ -116,7 +116,7 @@ namespace {
 					if(uHexExpecting != 0){
 						// eState = kStUcsCode;
 					} else {
-						wsRet += Utf32StringObserver(&c32CodePoint, 1);
+						wsRet += Utf32StringView(&c32CodePoint, 1);
 						eState = kStNormal;
 					}
 				}
@@ -124,12 +124,12 @@ namespace {
 			}
 		}
 		if(eState == kStUcsCode){
-			wsRet += Utf32StringObserver(&c32CodePoint, 1);
+			wsRet += Utf32StringView(&c32CodePoint, 1);
 		}
 
 		return wsRet;
 	}
-	void Escape(WideString &wsAppendTo, const WideStringObserver &wsoSrc){
+	void Escape(WideString &wsAppendTo, const WideStringView &wsoSrc){
 		const auto uSrcLength = wsoSrc.GetLength();
 		wsAppendTo.ReserveMore(uSrcLength);
 
@@ -177,7 +177,7 @@ namespace {
 }
 
 // 其他非静态成员函数。
-std::pair<MNotation::ErrorType, const wchar_t *> MNotation::Parse(const WideStringObserver &wsoData){
+std::pair<MNotation::ErrorType, const wchar_t *> MNotation::Parse(const WideStringView &wsoData){
 	MNotation vTemp;
 
 	auto pwcRead = wsoData.GetBegin();
@@ -212,7 +212,7 @@ std::pair<MNotation::ErrorType, const wchar_t *> MNotation::Parse(const WideStri
 
 		MNotationNode *ppkgSource = nullptr;
 		if(pwcValueBegin){
-			const auto wsSourceName = Unescape(WideStringObserver(pwcValueBegin, pwcValueEnd));
+			const auto wsSourceName = Unescape(WideStringView(pwcValueBegin, pwcValueEnd));
 			const auto pSourceNode = vecPackageStack.GetEnd()[-1]->Get(wsSourceName);
 			if(!pSourceNode){
 				eError = kErrSourcePackageNotFound;
@@ -221,7 +221,7 @@ std::pair<MNotation::ErrorType, const wchar_t *> MNotation::Parse(const WideStri
 			ppkgSource = &(pSourceNode->Get().second);
 		}
 
-		const auto vResult = vecPackageStack.GetEnd()[-1]->Insert(Unescape(WideStringObserver(pwcNameBegin, pwcNameEnd)));
+		const auto vResult = vecPackageStack.GetEnd()[-1]->Insert(Unescape(WideStringView(pwcNameBegin, pwcNameEnd)));
 		if(!vResult.second){
 //			eError = ERR_DUPLICATE_PACKAGE;
 //			return false;
@@ -253,12 +253,12 @@ std::pair<MNotation::ErrorType, const wchar_t *> MNotation::Parse(const WideStri
 	const auto AcceptValue = [&]{
 		ASSERT(!vecPackageStack.IsEmpty());
 
-		const auto vResult = vecPackageStack.GetEnd()[-1]->Insert(Unescape(WideStringObserver(pwcNameBegin, pwcNameEnd)));
+		const auto vResult = vecPackageStack.GetEnd()[-1]->Insert(Unescape(WideStringView(pwcNameBegin, pwcNameEnd)));
 		if(!vResult.second){
 //			eError = kErrDuplicateValue;
 //			return false;
 		}
-		vResult.first->Get().second.Insert(Unescape(WideStringObserver(pwcValueBegin, pwcValueEnd)));
+		vResult.first->Get().second.Insert(Unescape(WideStringView(pwcValueBegin, pwcValueEnd)));
 
 		pwcNameBegin = nullptr;
 		pwcNameEnd = nullptr;
@@ -551,7 +551,7 @@ std::pair<MNotation::ErrorType, const wchar_t *> MNotation::Parse(const WideStri
 	Swap(vTemp);
 	return std::make_pair(kErrNone, pwcRead);
 }
-WideString MNotation::Export(const WideStringObserver &wsoIndent) const {
+WideString MNotation::Export(const WideStringView &wsoIndent) const {
 	WideString wsRet;
 
 	Vector<std::pair<const MNotationNode *, const ChildNode *>> vecPackageStack;

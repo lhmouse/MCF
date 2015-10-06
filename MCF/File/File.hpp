@@ -5,7 +5,7 @@
 #ifndef MCF_CORE_FILE_HPP_
 #define MCF_CORE_FILE_HPP_
 
-#include "../Core/StringObserver.hpp"
+#include "../Core/StringView.hpp"
 #include "../Core/UniqueHandle.hpp"
 #include "../Function/FunctionObserver.hpp"
 #include <cstddef>
@@ -49,12 +49,12 @@ public:
 	{
 	}
 
-	File(const WideStringObserver &wsoPath, std::uint32_t u32Flags);
+	File(const WideStringView &wsoPath, std::uint32_t u32Flags);
 
 public:
 	bool IsOpen() const noexcept;
-	void Open(const WideStringObserver &wsoPath, std::uint32_t u32Flags);
-	bool OpenNoThrow(const WideStringObserver &wsoPath, std::uint32_t u32Flags);
+	void Open(const WideStringView &wsoPath, std::uint32_t u32Flags);
+	bool OpenNoThrow(const WideStringView &wsoPath, std::uint32_t u32Flags);
 	void Close();
 
 	std::uint64_t GetSize() const;

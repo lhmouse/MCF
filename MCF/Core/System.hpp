@@ -10,7 +10,7 @@
 namespace MCF {
 
 inline std::size_t GetLogicalProcessorCount() noexcept {
-	return ::MCF_GetLogicalProcessorCount();
+	return ::MCF_GetLogicalProcessvrCount();
 }
 inline std::size_t GetPageSize() noexcept {
 	return ::MCF_GetPageSize();

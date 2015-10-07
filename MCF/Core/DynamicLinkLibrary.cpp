@@ -8,11 +8,18 @@
 
 namespace MCF {
 
-DynamicLinkLibrary::X_LibraryFreer::Handle DynamicLinkLibrary::X_LibraryFreer::operator()() noexcept {
-	return NULL;
+void *DynamicLinkLibrary::X_LibraryFreer::operator()() noexcept {
+	return nullptr;
 }
-void DynamicLinkLibrary::X_LibraryFreer::operator()(DynamicLinkLibrary::X_LibraryFreer::Handle hDll) noexcept {
-	::FreeLibrary(reinterpret_cast<HINSTANCE>(hDll));
+void DynamicLinkLibrary::X_LibraryFreer::operator()(void *hDll) noexcept {
+	::FreeLibrary(static_cast<HINSTANCE>(hDll));
+}
+
+// 构造函数和析构函数。
+DynamicLinkLibrary::DynamicLinkLibrary(const wchar_t *pwszPath){
+	if(!x_hDll.Reset(static_cast<void *>(::LoadLibraryW(pwszPath)))){
+		DEBUG_THROW(SystemError, "LoadLibraryW"_rcs);
+	}
 }
 
 // 其他非静态成员函数。
@@ -24,14 +31,14 @@ DynamicLinkLibrary::RawProc DynamicLinkLibrary::RawGetProcAddress(const char *ps
 		DEBUG_THROW(Exception, ERROR_INVALID_HANDLE, "No shared library opened"_rcs);
 	}
 
-	return ::GetProcAddress(reinterpret_cast<HINSTANCE>(x_hDll.Get()), pszName);
+	return ::GetProcAddress(static_cast<HINSTANCE>(x_hDll.Get()), pszName);
 }
 DynamicLinkLibrary::RawProc DynamicLinkLibrary::RawRequireProcAddress(const char *pszName){
 	if(!x_hDll){
 		DEBUG_THROW(Exception, ERROR_INVALID_HANDLE, "No shared library opened"_rcs);
 	}
 
-	const auto pfnRet = ::GetProcAddress(reinterpret_cast<HINSTANCE>(x_hDll.Get()), pszName);
+	const auto pfnRet = ::GetProcAddress(static_cast<HINSTANCE>(x_hDll.Get()), pszName);
 	if(!pfnRet){
 		DEBUG_THROW(SystemError, "GetProcAddress"_rcs);
 	}
@@ -42,15 +49,7 @@ bool DynamicLinkLibrary::IsOpen() const noexcept {
 	return !!x_hDll;
 }
 void DynamicLinkLibrary::Open(const wchar_t *pwszPath){
-	UniqueHandle<X_LibraryFreer> hDll;
-	if(!hDll.Reset(reinterpret_cast<X_LibraryFreer::Handle>(::LoadLibraryW(pwszPath)))){
-		DEBUG_THROW(SystemError, "LoadLibraryW"_rcs);
-	}
-
-	x_hDll = std::move(hDll);
-}
-void DynamicLinkLibrary::Open(const WideString &wsPath){
-	Open(wsPath.GetStr());
+	DynamicLinkLibrary(pwszPath).Swap(*this);
 }
 bool DynamicLinkLibrary::OpenNoThrow(const wchar_t *pwszPath){
 	try {
@@ -61,17 +60,12 @@ bool DynamicLinkLibrary::OpenNoThrow(const wchar_t *pwszPath){
 		return false;
 	}
 }
-bool DynamicLinkLibrary::OpenNoThrow(const WideString &wsPath){
-	try {
-		Open(wsPath);
-		return true;
-	} catch(SystemError &e){
-		::SetLastError(e.GetCode());
-		return false;
-	}
-}
 void DynamicLinkLibrary::Close() noexcept {
-	x_hDll.Reset();
+	if(!x_hDll){
+		return;
+	}
+
+	DynamicLinkLibrary().Swap(*this);
 }
 
 }

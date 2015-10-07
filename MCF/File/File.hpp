@@ -44,10 +44,7 @@ private:
 	UniqueHandle<Impl_File::NtHandleCloser> x_hFile;
 
 public:
-	constexpr File() noexcept
-		: x_hFile()
-	{
-	}
+	constexpr File() noexcept = default;
 
 	File(const WideStringView &wsvPath, std::uint32_t u32Flags);
 

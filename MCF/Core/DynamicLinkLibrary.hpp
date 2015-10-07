@@ -8,18 +8,14 @@
 #include <type_traits>
 #include <cstdint>
 #include "UniqueHandle.hpp"
-#include "String.hpp"
 
 namespace MCF {
 
 class DynamicLinkLibrary {
 private:
 	struct X_LibraryFreer {
-		struct Impl;
-		using Handle = Impl *;
-
-		Handle operator()() noexcept;
-		void operator()(Handle hDll) noexcept;
+		void *operator()() noexcept;
+		void operator()(void *hDll) noexcept;
 	};
 
 public:
@@ -30,29 +26,13 @@ private:
 
 public:
 	DynamicLinkLibrary() noexcept = default;
-	DynamicLinkLibrary(DynamicLinkLibrary &&) noexcept = default;
-	DynamicLinkLibrary &operator=(DynamicLinkLibrary &&) = default;
 
-	explicit DynamicLinkLibrary(const wchar_t *pwszPath)
-		: DynamicLinkLibrary()
-	{
-		Open(pwszPath);
-	}
-	explicit DynamicLinkLibrary(const WideString &wsPath)
-		: DynamicLinkLibrary()
-	{
-		Open(wsPath);
-	}
-
-	DynamicLinkLibrary(const DynamicLinkLibrary &) = delete;
-	DynamicLinkLibrary &operator=(const DynamicLinkLibrary &) = delete;
+	explicit DynamicLinkLibrary(const wchar_t *pwszPath);
 
 public:
 	bool IsOpen() const noexcept;
 	void Open(const wchar_t *pwszPath);
-	void Open(const WideString &wsPath);
 	bool OpenNoThrow(const wchar_t *pwszPath);
-	bool OpenNoThrow(const WideString &wsPath);
 	void Close() noexcept;
 
 	const void *GetBaseAddress() const noexcept;
@@ -72,11 +52,20 @@ public:
 		return reinterpret_cast<FunctionT *>(RawRequireProcAddress(pszName));
 	}
 
+	void Swap(DynamicLinkLibrary &rhs) noexcept {
+		using std::swap;
+		swap(x_hDll, rhs.x_hDll);
+	}
+
 public:
 	explicit operator bool() const noexcept {
 		return IsOpen();
 	}
 };
+
+inline void swap(DynamicLinkLibrary &lhs, DynamicLinkLibrary &rhs) noexcept {
+	lhs.Swap(rhs);
+}
 
 }
 

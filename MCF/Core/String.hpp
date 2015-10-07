@@ -931,7 +931,6 @@ using AnsiString   = String<StringType::kAnsi>;
 
 // 字面量运算符。
 template<typename CharT, CharT ...kCharsT>
-[[deprecated("Be warned that encodings of narrow string literals vary from compilers to compilers and might even depend on encodings of source files on g++.")]]
 extern inline const auto &operator""_ns(){
 	static const NarrowString s_nsRet{ kCharsT... };
 	return s_nsRet;

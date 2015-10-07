@@ -4,9 +4,11 @@
 #include <MCF/Thread/ThreadLocal.hpp>
 #include <cstdio>
 
+using namespace MCF;
+
 namespace {
 
-MCF::ThreadLocal<MCF::Utf8String> tls;
+ThreadLocal<Utf8String> tls;
 
 }
 
@@ -17,7 +19,7 @@ __declspec(dllexport) int __stdcall dlltest(int a, int b) noexcept {
 	tls.Set("hello"_u8s);
 	std::printf("thread %u: tls = %s\n", (unsigned)::GetCurrentThreadId(), tls.Get().GetStr());
 
-	auto t = MCF::Thread::Create([]{
+	auto t = Thread::Create([]{
 		std::printf("child thread %u: tls = %s\n", (unsigned)::GetCurrentThreadId(), tls.Get().GetStr());
 		tls.Set("world"_u8s);
 		std::printf("child thread %u: tls = %s\n", (unsigned)::GetCurrentThreadId(), tls.Get().GetStr());

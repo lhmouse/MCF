@@ -57,7 +57,9 @@ namespace {
 }
 
 // 构造函数和析构函数。
-File::File(const WideStringView &wsvPath, std::uint32_t u32Flags){
+File::File(const WideStringView &wsvPath, std::uint32_t u32Flags)
+	: File()
+{
 	const auto uSize = wsvPath.GetSize() * sizeof(wchar_t);
 	if(uSize > UINT16_MAX){
 		DEBUG_THROW(SystemError, ERROR_INVALID_PARAMETER, "The path for a file is too long"_rcs);

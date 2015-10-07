@@ -523,7 +523,6 @@ using AnsiStringView   = StringView<StringType::kAnsi>;
 // 注意 StringView 并不是所谓“零结尾的字符串”。
 // 这些运算符经过特意设计防止这种用法。
 template<typename CharT, CharT ...kCharsT>
-[[deprecated("Be warned that encodings of narrow string literals vary from compilers to compilers and might even depend on encodings of source files on g++.")]]
 extern inline auto operator""_nsv() noexcept {
 	static constexpr char s_achData[] = { kCharsT..., '$' };
 	return NarrowStringView(s_achData, sizeof...(kCharsT));

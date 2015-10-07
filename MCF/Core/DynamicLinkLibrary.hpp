@@ -8,13 +8,16 @@
 #include <type_traits>
 #include <cstdint>
 #include "UniqueHandle.hpp"
+#include "StringView.hpp"
 
 namespace MCF {
 
 class DynamicLinkLibrary {
 private:
 	struct X_LibraryFreer {
-		void *operator()() noexcept;
+		constexpr void *operator()() noexcept {
+			return nullptr;
+		}
 		void operator()(void *hDll) noexcept;
 	};
 
@@ -27,29 +30,29 @@ private:
 public:
 	DynamicLinkLibrary() noexcept = default;
 
-	explicit DynamicLinkLibrary(const wchar_t *pwszPath);
+	explicit DynamicLinkLibrary(const WideStringView &wsvPath);
 
 public:
 	bool IsOpen() const noexcept;
-	void Open(const wchar_t *pwszPath);
-	bool OpenNoThrow(const wchar_t *pwszPath);
+	void Open(const WideStringView &wsvPath);
+	bool OpenNoThrow(const WideStringView &wsvPath);
 	void Close() noexcept;
 
 	const void *GetBaseAddress() const noexcept;
-	RawProc RawGetProcAddress(const char *pszName);
-	RawProc RawRequireProcAddress(const char *pszName);
+	RawProc RawGetProcAddress(const NarrowStringView &nsvName);
+	RawProc RawRequireProcAddress(const NarrowStringView &nsvName);
 
-	template<typename FunctionT>
-	FunctionT *GetProcAddress(const char *pszName){
-		static_assert(std::is_function<FunctionT>::value, "FunctionT shall be a function type");
+	template<typename FunctionPointerT>
+	FunctionPointerT GetProcAddress(const NarrowStringView &nsvName){
+		static_assert(std::is_pointer<FunctionPointerT>::value, "FunctionPointerT shall be a pointer type");
 
-		return reinterpret_cast<FunctionT *>(RawGetProcAddress(pszName));
+		return reinterpret_cast<FunctionPointerT>(RawGetProcAddress(nsvName));
 	}
-	template<typename FunctionT>
-	FunctionT *RequireProcAddress(const char *pszName){
-		static_assert(std::is_function<FunctionT>::value, "FunctionT shall be a function type");
+	template<typename FunctionPointerT>
+	FunctionPointerT RequireProcAddress(const NarrowStringView &nsvName){
+		static_assert(std::is_pointer<FunctionPointerT>::value, "FunctionPointerT shall be a pointer type");
 
-		return reinterpret_cast<FunctionT *>(RawRequireProcAddress(pszName));
+		return reinterpret_cast<FunctionPointerT>(RawRequireProcAddress(nsvName));
 	}
 
 	void Swap(DynamicLinkLibrary &rhs) noexcept {

@@ -16,19 +16,19 @@ private:
 	const char *x_pszFile;
 	unsigned long x_ulLine;
 	unsigned long x_ulCode;
-	RefCountingNtmbs x_rcsMsg;
+	RefCountingNtmbs x_rcsDescription;
 
 public:
-	Exception(const char *pszFile, unsigned long ulLine, unsigned long ulCode, RefCountingNtmbs rcsMsg) noexcept
+	Exception(const char *pszFile, unsigned long ulLine, unsigned long ulCode, RefCountingNtmbs rcsDescription) noexcept
 		: std::exception()
-		, x_pszFile(pszFile), x_ulLine(ulLine), x_ulCode(ulCode), x_rcsMsg(std::move(rcsMsg))
+		, x_pszFile(pszFile), x_ulLine(ulLine), x_ulCode(ulCode), x_rcsDescription(std::move(rcsDescription))
 	{
 	}
 	~Exception() override;
 
 public:
 	const char *what() const noexcept override {
-		return x_rcsMsg;
+		return x_rcsDescription;
 	}
 
 	const char *GetFile() const noexcept {
@@ -40,8 +40,8 @@ public:
 	unsigned long GetCode() const noexcept {
 		return x_ulCode;
 	}
-	const char *GetMsg() const noexcept {
-		return x_rcsMsg;
+	const char *GetDescription() const noexcept {
+		return x_rcsDescription;
 	}
 };
 

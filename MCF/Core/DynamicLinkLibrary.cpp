@@ -14,11 +14,11 @@ NTSTATUS LdrLoadDll(PCWSTR pwszPathToSearch, DWORD dwFlags, const ::UNICODE_STRI
 extern "C" __attribute__((__dllimport__, __stdcall__))
 NTSTATUS LdrUnloadDll(HANDLE hDll) noexcept;
 extern "C" __attribute__((__dllimport__, __stdcall__))
-NTSTATUS LdrGetProcedureAddress(HANDLE hDll, const ANSI_STRING *pFunctionName, WORD wOridinal, FARPROC *ppfnProcAddress) noexcept;
+NTSTATUS LdrGetProcedureAddress(HANDLE hDll, const ANSI_STRING *pProcName, WORD wOridinal, FARPROC *ppfnProcAddress) noexcept;
 
 namespace MCF {
 
-void DynamicLinkLibrary::X_LibraryFreer::operator()(void *hDll) noexcept {
+void DynamicLinkLibrary::X_DllUnloader::operator()(void *hDll) noexcept {
 	const auto lStatus = ::LdrUnloadDll(hDll);
 	if(!NT_SUCCESS(lStatus)){
 		ASSERT_MSG(false, L"::LdrUnloadDll() 失败。");

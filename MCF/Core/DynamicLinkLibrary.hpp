@@ -14,7 +14,7 @@ namespace MCF {
 
 class DynamicLinkLibrary {
 private:
-	struct X_LibraryFreer {
+	struct X_DllUnloader {
 		constexpr void *operator()() noexcept {
 			return nullptr;
 		}
@@ -25,7 +25,7 @@ public:
 	using RawProc = std::intptr_t (__stdcall *)();
 
 private:
-	UniqueHandle<X_LibraryFreer> x_hDll;
+	UniqueHandle<X_DllUnloader> x_hDll;
 
 public:
 	DynamicLinkLibrary() noexcept = default;

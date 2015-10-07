@@ -1,14 +1,7 @@
-#include <MCF/Core/LastError.hpp>
-#include <MCF/Core/DynamicLinkLibrary.hpp>
-#include <winternl.h>
+#include <type_traits>
 #include <cstdio>
-#include <typeinfo>
-
-using namespace MCF;
 
 extern "C" unsigned MCFMain(){
-	DynamicLinkLibrary d(L"msvcrt.dll"_wsv);
-	const auto f = d.RequireProcAddress<int (*)(const char *)>("puts"_nsv);
-	(*f)("hello world!");
+	std::printf("%d\n", std::is_same<int (__stdcall *)(), __stdcall int (*)()>::value);
 	return 0;
 }

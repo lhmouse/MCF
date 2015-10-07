@@ -361,7 +361,7 @@ public:
 		return *this;
 	}
 	IntrusivePtr &Reset(IntrusivePtr &&rhs) noexcept {
-		rhs.Swap(*this);
+		IntrusivePtr(std::move(rhs)).Swap(*this);
 		return *this;
 	}
 
@@ -666,7 +666,7 @@ public:
 		return *this;
 	}
 	IntrusiveWeakPtr &Reset(IntrusiveWeakPtr &&rhs) noexcept {
-		rhs.Swap(*this);
+		IntrusiveWeakPtr(std::move(rhs)).Swap(*this);
 		return *this;
 	}
 

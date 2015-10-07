@@ -11,8 +11,8 @@
 namespace MCF {
 
 struct StreamBuffer::X_Chunk final {
-	static Mutex                 s_mtxPoolMutex;
-	static X_Chunk *__restrict__ s_pPoolHead;
+	static Mutex             s_mtxPoolMutex;
+	static X_Chunk *restrict s_pPoolHead;
 
 	static void *operator new(std::size_t uSize){
 		ASSERT(uSize == sizeof(X_Chunk));
@@ -56,8 +56,8 @@ struct StreamBuffer::X_Chunk final {
 	unsigned char abyData[0x100];
 };
 
-Mutex                               StreamBuffer::X_Chunk::s_mtxPoolMutex;
-StreamBuffer::X_Chunk *__restrict__ StreamBuffer::X_Chunk::s_pPoolHead     = nullptr;
+Mutex                           StreamBuffer::X_Chunk::s_mtxPoolMutex;
+StreamBuffer::X_Chunk *restrict StreamBuffer::X_Chunk::s_pPoolHead     = nullptr;
 
 unsigned char *StreamBuffer::ChunkEnumerator::GetBegin() const noexcept {
 	ASSERT(x_pChunk);

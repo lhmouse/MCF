@@ -1,12 +1,10 @@
 #include <MCF/Core/LastError.hpp>
-#include <MCF/Core/String.hpp>
-#include <MCF/StdMCF.hpp>
+#include <MCF/Core/DynamicLinkLibrary.hpp>
 #include <cstdio>
 
 using namespace MCF;
 
 extern "C" unsigned MCFMain(){
-	std::puts(AnsiString(GetWin32ErrorDescription(ERROR_INVALID_PARAMETER)).GetStr());
-
+	DynamicLinkLibrary d(L"ntdll.dll");
 	return 0;
 }

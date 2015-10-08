@@ -19,7 +19,7 @@ namespace MCF {
 namespace Impl_UniqueLockTemplate {
 	template<>
 	bool KernelRecursiveMutex::UniqueLock::X_DoTry() const noexcept {
-		return x_pOwner->Try();
+		return x_pOwner->Try(0);
 	}
 	template<>
 	void KernelRecursiveMutex::UniqueLock::X_DoLock() const noexcept {

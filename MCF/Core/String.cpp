@@ -6,6 +6,13 @@
 #include "String.hpp"
 #include "Exception.hpp"
 #include "../../MCFCRT/ext/expect.h"
+#include <winternl.h>
+#include <ntstatus.h>
+
+extern "C" __attribute__((__dllimport__, __stdcall__))
+NTSTATUS RtlMultiByteToUnicodeN(wchar_t *pwcBuffer, ULONG ulBufferSize, ULONG *pulBytesMax, const char *pchMultiByteString, ULONG ulMultiByteStringSize) noexcept;
+extern "C" __attribute__((__dllimport__, __stdcall__))
+NTSTATUS RtlUnicodeToMultiByteN(char *pchBuffer, ULONG ulBufferSize, ULONG *pulBytesMax, const wchar_t *pwcUnicodeString, ULONG ulUnicodeStringSize) noexcept;
 
 namespace MCF {
 
@@ -376,38 +383,66 @@ void Cesu8String::Deunify(Cesu8String &cu8sDst, std::size_t uPos, const UnifiedS
 	Convert(cu8sDst, uPos, MakeUtf8Encoder(MakeUtf16Encoder(MakeStringSource(usvSrc))));
 }
 
-// kAnsi
+// ANSI
 template<>
 UnifiedStringView AnsiString::Unify(UnifiedString &usTempStorage, const AnsiStringView &asvSrc){
-	if(!asvSrc.IsEmpty()){
-		WideString wsTemp;
-		wsTemp.Resize(asvSrc.GetSize());
-		const unsigned uCount = (unsigned)::MultiByteToWideChar(CP_ACP, MB_ERR_INVALID_CHARS,
-			asvSrc.GetBegin(), (int)asvSrc.GetSize(), wsTemp.GetData(), (int)wsTemp.GetSize());
-		if(uCount == 0){
-			DEBUG_THROW(SystemError, "MultiByteToWideChar"_rcs);
-		}
-		usTempStorage.Reserve(uCount);
-		Convert(usTempStorage, 0, MakeUtf16Decoder(MakeStringSource(WideStringView(wsTemp.GetData(), uCount))));
+	if(asvSrc.IsEmpty()){
+		return usTempStorage;
 	}
+
+	const auto uInputSize = asvSrc.GetSize();
+	if(uInputSize > ULONG_MAX){
+		DEBUG_THROW(Exception, ERROR_NOT_ENOUGH_MEMORY, "The input ANSI string is too long"_rcs);
+	}
+	const auto uOutputSizeMax = uInputSize * sizeof(wchar_t);
+	if((uOutputSizeMax > ULONG_MAX) || (uOutputSizeMax / sizeof(wchar_t) != uInputSize)){
+		DEBUG_THROW(Exception, ERROR_NOT_ENOUGH_MEMORY, "The output Unicode string requires more memory than ULONG_MAX bytes"_rcs);
+	}
+	WideString wsTemp;
+	wsTemp.Resize(uOutputSizeMax / sizeof(wchar_t));
+	ULONG ulConvertedSize;
+	const auto lStatus = ::RtlMultiByteToUnicodeN(wsTemp.GetStr(), uOutputSizeMax, &ulConvertedSize, asvSrc.GetBegin(), uInputSize);
+	if(!NT_SUCCESS(lStatus)){
+		DEBUG_THROW(SystemError, ::RtlNtStatusToDosError(lStatus), "RtlMultiByteToUnicodeN"_rcs);
+	}
+	wsTemp.Pop(wsTemp.GetSize() - ulConvertedSize / sizeof(wchar_t));
+
+	usTempStorage.Reserve(ulConvertedSize / sizeof(wchar_t));
+	Convert(usTempStorage, 0, MakeUtf16Decoder(MakeStringSource(wsTemp)));
+
 	return usTempStorage;
 }
 template<>
 void AnsiString::Deunify(AnsiString &ansDst, std::size_t uPos, const UnifiedStringView &usvSrc){
-	if(!usvSrc.IsEmpty()){
-		WideString wsTemp;
-		wsTemp.Reserve(usvSrc.GetSize());
-		Convert(wsTemp, 0, MakeUtf16Encoder(MakeStringSource(usvSrc)));
-
-		AnsiString ansConverted;
-		ansConverted.Resize(wsTemp.GetSize() * 2);
-		const unsigned uCount = (unsigned)::WideCharToMultiByte(CP_ACP, 0,
-			wsTemp.GetData(), (int)wsTemp.GetSize(), ansConverted.GetData(), (int)ansConverted.GetSize(), nullptr, nullptr);
-		if(uCount == 0){
-			DEBUG_THROW(SystemError, "WideCharToMultiByte"_rcs);
-		}
-		ansDst.Replace((std::ptrdiff_t)uPos, (std::ptrdiff_t)uPos, ansConverted.GetData(), uCount);
+	if(usvSrc.IsEmpty()){
+		return;
 	}
+
+	WideString wsTemp;
+	wsTemp.Reserve(usvSrc.GetSize());
+	Convert(wsTemp, 0, MakeUtf16Encoder(MakeStringSource(usvSrc)));
+
+	const auto uInputSize = wsTemp.GetSize() * sizeof(wchar_t);
+	if((uInputSize > ULONG_MAX) || (uInputSize / sizeof(wchar_t) != wsTemp.GetSize())){
+		DEBUG_THROW(Exception, ERROR_NOT_ENOUGH_MEMORY, "The input Unicode string is too long"_rcs);
+	}
+	const auto uOutputSizeMax = uInputSize * 2;
+	if((uOutputSizeMax > ULONG_MAX) || (uOutputSizeMax / 2 != uInputSize)){
+		DEBUG_THROW(Exception, ERROR_NOT_ENOUGH_MEMORY, "The output ANSI string requires more memory than ULONG_MAX bytes"_rcs);
+	}
+	const auto uThirdOffset = uPos + uOutputSizeMax;
+	if(uThirdOffset < uPos){
+		throw std::bad_array_new_length();
+	}
+	const auto uOldSize = ansDst.GetSize();
+	const auto pchWrite = ansDst.X_ChopAndSplice(uPos, uPos, 0, uThirdOffset);
+	ULONG ulConvertedSize;
+	const auto lStatus = ::RtlUnicodeToMultiByteN(pchWrite, uOutputSizeMax, &ulConvertedSize, wsTemp.GetBegin(), uInputSize);
+	if(!NT_SUCCESS(lStatus)){
+		DEBUG_THROW(SystemError, ::RtlNtStatusToDosError(lStatus), "RtlUnicodeToMultiByteN"_rcs);
+	}
+	CopyN(pchWrite + ulConvertedSize, pchWrite + uOutputSizeMax, uOldSize - uPos);
+	ansDst.X_SetSize(uOldSize + ulConvertedSize);
 }
 
 }

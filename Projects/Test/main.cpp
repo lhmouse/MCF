@@ -1,7 +1,11 @@
-#include <type_traits>
+#include <MCF/Core/DynamicLinkLibrary.hpp>
 #include <cstdio>
 
+using namespace MCF;
+
 extern "C" unsigned MCFMain(){
-	std::printf("%d\n", std::is_same<int (__stdcall *)(), __stdcall int (*)()>::value);
+	DynamicLinkLibrary dll(L"msvcrt.dll"_wsv);
+	auto pfn = dll.GetProcAddress<void (*)(void)>(5);
+	std::printf("pfn = %p\n", (void *)pfn);
 	return 0;
 }

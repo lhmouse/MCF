@@ -39,8 +39,11 @@ public:
 	void Close() noexcept;
 
 	const void *GetBaseAddress() const noexcept;
+
 	RawProc RawGetProcAddress(const NarrowStringView &nsvName);
 	RawProc RawRequireProcAddress(const NarrowStringView &nsvName);
+	RawProc RawGetProcAddress(unsigned uOridinal);
+	RawProc RawRequireProcAddress(unsigned uOridinal);
 
 	template<typename FunctionPointerT>
 	FunctionPointerT GetProcAddress(const NarrowStringView &nsvName){
@@ -53,6 +56,18 @@ public:
 		static_assert(std::is_pointer<FunctionPointerT>::value, "FunctionPointerT shall be a pointer type");
 
 		return reinterpret_cast<FunctionPointerT>(RawRequireProcAddress(nsvName));
+	}
+	template<typename FunctionPointerT>
+	FunctionPointerT GetProcAddress(unsigned uOridinal){
+		static_assert(std::is_pointer<FunctionPointerT>::value, "FunctionPointerT shall be a pointer type");
+
+		return reinterpret_cast<FunctionPointerT>(RawGetProcAddress(uOridinal));
+	}
+	template<typename FunctionPointerT>
+	FunctionPointerT RequireProcAddress(unsigned uOridinal){
+		static_assert(std::is_pointer<FunctionPointerT>::value, "FunctionPointerT shall be a pointer type");
+
+		return reinterpret_cast<FunctionPointerT>(RawRequireProcAddress(uOridinal));
 	}
 
 	void Swap(DynamicLinkLibrary &rhs) noexcept {

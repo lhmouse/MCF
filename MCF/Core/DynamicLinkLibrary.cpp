@@ -50,6 +50,7 @@ DynamicLinkLibrary::DynamicLinkLibrary(const WideStringView &wsvPath)
 const void *DynamicLinkLibrary::GetBaseAddress() const noexcept {
 	return x_hDll.Get();
 }
+
 DynamicLinkLibrary::RawProc DynamicLinkLibrary::RawGetProcAddress(const NarrowStringView &nsvName){
 	if(!x_hDll){
 		DEBUG_THROW(Exception, ERROR_INVALID_HANDLE, "No shared library opened"_rcs);
@@ -60,9 +61,9 @@ DynamicLinkLibrary::RawProc DynamicLinkLibrary::RawGetProcAddress(const NarrowSt
 		DEBUG_THROW(SystemError, ERROR_INVALID_PARAMETER, "The path for a library function is too long"_rcs);
 	}
 	::ANSI_STRING strProcName;
-	strProcName.Length              = uSize;
-	strProcName.MaximumLength       = uSize;
-	strProcName.Buffer              = (PSTR)nsvName.GetBegin();
+	strProcName.Length          = uSize;
+	strProcName.MaximumLength   = uSize;
+	strProcName.Buffer          = (PSTR)nsvName.GetBegin();
 
 	::FARPROC pfnProcAddress;
 	const auto lStatus = ::LdrGetProcedureAddress(x_hDll.Get(), &strProcName, 0xFFFF, &pfnProcAddress);
@@ -73,6 +74,31 @@ DynamicLinkLibrary::RawProc DynamicLinkLibrary::RawGetProcAddress(const NarrowSt
 }
 DynamicLinkLibrary::RawProc DynamicLinkLibrary::RawRequireProcAddress(const NarrowStringView &nsvName){
 	const auto pfnRet = RawGetProcAddress(nsvName);
+	if(!pfnRet){
+		DEBUG_THROW(SystemError, "RawGetProcAddress"_rcs);
+	}
+	return pfnRet;
+}
+
+
+DynamicLinkLibrary::RawProc DynamicLinkLibrary::RawGetProcAddress(unsigned uOridinal){
+	if(!x_hDll){
+		DEBUG_THROW(Exception, ERROR_INVALID_HANDLE, "No shared library opened"_rcs);
+	}
+
+	if(uOridinal > UINT16_MAX){
+		DEBUG_THROW(SystemError, ERROR_INVALID_PARAMETER, "The oridinal for a library function is too large"_rcs);
+	}
+
+	::FARPROC pfnProcAddress;
+	const auto lStatus = ::LdrGetProcedureAddress(x_hDll.Get(), nullptr, uOridinal, &pfnProcAddress);
+	if(!NT_SUCCESS(lStatus)){
+		DEBUG_THROW(SystemError, ::RtlNtStatusToDosError(lStatus), "LdrGetProcedureAddress"_rcs);
+	}
+	return pfnProcAddress;
+}
+DynamicLinkLibrary::RawProc DynamicLinkLibrary::RawRequireProcAddress(unsigned uOridinal){
+	const auto pfnRet = RawGetProcAddress(uOridinal);
 	if(!pfnRet){
 		DEBUG_THROW(SystemError, "RawGetProcAddress"_rcs);
 	}

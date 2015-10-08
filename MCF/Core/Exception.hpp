@@ -62,14 +62,14 @@ public:
 
 #define DEBUG_THROW(etype_, ...)	\
 	([&](const char *file_, unsigned long line_) __attribute__((__noreturn__)) -> void {	\
-		etype_ e_(file_, line_, __VA_ARGS__);	\
-		throw static_cast<etype_ &&>(e_);	\
+		auto &&e_ = etype_(file_, line_, __VA_ARGS__);	\
+		throw static_cast<decltype(e_) &&>(e_);	\
 	}(__FILE__, __LINE__))
 
 #define DEBUG_MAKE_EXCEPTION_PTR(etype_, ...)	\
 	([&](const char *file_, unsigned long line_) -> ::std::exception_ptr {	\
-		etype_ e_(file_, line_, __VA_ARGS__);	\
-		return ::std::make_exception_ptr(static_cast<etype_ &&>(e_));	\
+		auto &&e_ = etype_(file_, line_, __VA_ARGS__);	\
+		return ::std::make_exception_ptr(static_cast<decltype(e_) &&>(e_));	\
 	}(__FILE__, __LINE__))
 
 #endif

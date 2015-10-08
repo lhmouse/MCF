@@ -23,7 +23,14 @@ private:
 	std::size_t x_uRecursionCount;
 
 public:
-	explicit RecursiveMutex(std::size_t uSpinCount = 0x100);
+	explicit RecursiveMutex(std::size_t uSpinCount)
+		: x_vMutex(uSpinCount)
+		, x_uLockingThreadId(0), x_uRecursionCount(0)
+	{
+	}
+	~RecursiveMutex(){
+		ASSERT(x_uLockingThreadId.Load(kAtomicConsume) == 0);
+	}
 
 public:
 	std::size_t GetSpinCount() const noexcept {

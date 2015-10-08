@@ -27,7 +27,7 @@ private:
 	std::intptr_t x_aImpl[1];
 
 public:
-	explicit ReaderWriterMutex(std::size_t uSpinCount = 0x100) noexcept;
+	explicit ReaderWriterMutex(std::size_t uSpinCount = 0x400) noexcept;
 
 public:
 	std::size_t GetSpinCount() const noexcept;

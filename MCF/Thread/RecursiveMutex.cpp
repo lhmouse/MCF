@@ -4,6 +4,7 @@
 
 #include "../StdMCF.hpp"
 #include "RecursiveMutex.hpp"
+#include "Thread.hpp"
 
 namespace MCF {
 
@@ -22,21 +23,16 @@ namespace Impl_UniqueLockTemplate {
 	}
 }
 
-// 构造函数和析构函数。
-RecursiveMutex::RecursiveMutex(std::size_t uSpinCount)
-	: x_vMutex(uSpinCount)
-	, x_uLockingThreadId(0), x_uRecursionCount(0)
-{
-}
-
 // 其他非静态成员函数。
 bool RecursiveMutex::IsLockedByCurrentThread() const noexcept {
-	const std::size_t uThreadId = ::GetCurrentThreadId();
+	const auto uThreadId = Thread::GetCurrentId();
+
 	return x_uLockingThreadId.Load(kAtomicConsume) == uThreadId;
 }
 
 bool RecursiveMutex::Try() noexcept {
-	const std::size_t uThreadId = ::GetCurrentThreadId();
+	const auto uThreadId = Thread::GetCurrentId();
+
 	if(x_uLockingThreadId.Load(kAtomicConsume) == uThreadId){
 		++x_uRecursionCount;
 		return true;
@@ -49,7 +45,8 @@ bool RecursiveMutex::Try() noexcept {
 	return true;
 }
 void RecursiveMutex::Lock() noexcept {
-	const std::size_t uThreadId = ::GetCurrentThreadId();
+	const auto uThreadId = Thread::GetCurrentId();
+
 	if(x_uLockingThreadId.Load(kAtomicConsume) == uThreadId){
 		++x_uRecursionCount;
 		return;

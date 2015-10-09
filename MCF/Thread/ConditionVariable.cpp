@@ -11,8 +11,6 @@ namespace MCF {
 
 // 其他非静态成员函数。
 bool ConditionVariable::Wait(Mutex::UniqueLock &vLock, std::uint64_t u64MilliSeconds) noexcept {
-	ASSERT(vLock.GetLockCount() == 1);
-
 	auto &vLockOwner = vLock.GetOwner();
 
 	Mutex::UniqueLock vTempLock(vLockOwner, false);
@@ -37,8 +35,6 @@ bool ConditionVariable::Wait(Mutex::UniqueLock &vLock, std::uint64_t u64MilliSec
 	}
 }
 void ConditionVariable::Wait(Mutex::UniqueLock &vLock) noexcept {
-	ASSERT(vLock.GetLockCount() == 1);
-
 	auto &vLockOwner = vLock.GetOwner();
 
 	Mutex::UniqueLock vTempLock(vLockOwner, false);

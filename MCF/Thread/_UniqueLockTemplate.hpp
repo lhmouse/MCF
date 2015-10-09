@@ -52,23 +52,28 @@ namespace Impl_UniqueLockTemplate {
 		}
 
 		bool Try() noexcept {
-			if(x_uLockCount == 0){
+			const auto uOldCount = x_uLockCount;
+			if(uOldCount == 0){
 				if(!X_DoTry()){
 					return false;
 				}
 			}
-			++x_uLockCount;
+			x_uLockCount = uOldCount + 1;
 			return true;
 		}
 		void Lock() noexcept {
-			if(++x_uLockCount == 1){
+			const auto uOldCount = x_uLockCount;
+			if(uOldCount == 0){
 				X_DoLock();
 			}
+			x_uLockCount = uOldCount + 1;
 		}
 		void Unlock() noexcept {
 			ASSERT(x_uLockCount != 0);
 
-			if(--x_uLockCount == 0){
+			const auto uOldCount = x_uLockCount;
+			x_uLockCount = uOldCount - 1;
+			if(uOldCount == 1){
 				X_DoUnlock();
 			}
 		}
@@ -118,7 +123,7 @@ namespace Impl_UniqueLockTemplate {
 			return *x_pOwner;
 		}
 
-		void Join(UniqueLockTemplate &&rhs) noexcept {
+		void Merge(UniqueLockTemplate &&rhs) noexcept {
 			ASSERT(x_pOwner == rhs.x_pOwner);
 
 			x_uLockCount += rhs.x_uLockCount;

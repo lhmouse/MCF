@@ -84,7 +84,7 @@ namespace Impl_UniqueLockTemplate {
 		}
 	};
 
-	template<class MutexT, std::size_t kLockType = 0>
+	template<class MutexT, int kLockType = 0>
 	class UniqueLockTemplate final : public UniqueLockTemplateBase {
 	private:
 		MutexT *x_pOwner;

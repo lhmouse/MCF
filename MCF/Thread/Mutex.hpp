@@ -6,6 +6,7 @@
 #define MCF_THREAD_MUTEX_HPP_
 
 #include "../Utilities/Noncopyable.hpp"
+#include "../Utilities/Assert.hpp"
 #include "_UniqueLockTemplate.hpp"
 #include "Atomic.hpp"
 #include <cstddef>
@@ -24,15 +25,21 @@ public:
 
 private:
 	Atomic<std::size_t> x_uSpinCount;
-
 	std::intptr_t x_aImpl[1];
 
 public:
-	explicit Mutex(std::size_t uSpinCount = 0x400) noexcept;
+	explicit Mutex(std::size_t uSpinCount = 0x400) noexcept
+		: x_uSpinCount(uSpinCount), x_aImpl()
+	{
+	}
 
 public:
-	std::size_t GetSpinCount() const noexcept;
-	void SetSpinCount(std::size_t uSpinCount) noexcept;
+	std::size_t GetSpinCount() const noexcept {
+		return x_uSpinCount.Load(kAtomicRelaxed);
+	}
+	void SetSpinCount(std::size_t uSpinCount) noexcept {
+		x_uSpinCount.Store(uSpinCount, kAtomicRelaxed);
+	}
 
 	bool Try() noexcept;
 	void Lock() noexcept;
@@ -47,6 +54,21 @@ public:
 		return UniqueLock(*this);
 	}
 };
+
+namespace Impl_UniqueLockTemplate {
+	template<>
+	inline bool Mutex::UniqueLock::X_DoTry() const noexcept {
+		return x_pOwner->Try();
+	}
+	template<>
+	inline void Mutex::UniqueLock::X_DoLock() const noexcept {
+		x_pOwner->Lock();
+	}
+	template<>
+	inline void Mutex::UniqueLock::X_DoUnlock() const noexcept {
+		x_pOwner->Unlock();
+	}
+}
 
 }
 

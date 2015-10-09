@@ -6,13 +6,12 @@
 #define MCF_UTILITIES_CLONE_HPP_
 
 #include <type_traits>
+#include <utility>
 
 namespace MCF {
 
 template<typename T>
-inline auto Clone(T &&vSrc)
-	noexcept(std::is_nothrow_constructible<std::remove_reference_t<T>, T &&>::value)
-{
+inline std::decay_t<T> Clone(T &&vSrc) noexcept(std::is_nothrow_constructible<std::decay_t<T>, T &&>::value) {
 	auto vTemp(std::forward<T>(vSrc));
 	return vTemp;
 }

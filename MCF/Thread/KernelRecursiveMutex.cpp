@@ -9,27 +9,12 @@
 #include <ntdef.h>
 
 extern "C" __attribute__((__dllimport__, __stdcall__))
-NTSTATUS NtCreateMutant(HANDLE *pHandle, ACCESS_MASK dwDesiredAccess, OBJECT_ATTRIBUTES *pObjectAttributes, BOOLEAN bInitialOwner) noexcept;
+NTSTATUS NtCreateMutant(HANDLE *pHandle, ACCESS_MASK dwDesiredAccess, const OBJECT_ATTRIBUTES *pObjectAttributes, BOOLEAN bInitialOwner) noexcept;
 
 extern "C" __attribute__((__dllimport__, __stdcall__))
 NTSTATUS NtReleaseMutant(HANDLE hMutant, LONG *plPrevCount) noexcept;
 
 namespace MCF {
-
-namespace Impl_UniqueLockTemplate {
-	template<>
-	bool KernelRecursiveMutex::UniqueLock::X_DoTry() const noexcept {
-		return x_pOwner->Try(0);
-	}
-	template<>
-	void KernelRecursiveMutex::UniqueLock::X_DoLock() const noexcept {
-		x_pOwner->Lock();
-	}
-	template<>
-	void KernelRecursiveMutex::UniqueLock::X_DoUnlock() const noexcept {
-		x_pOwner->Unlock();
-	}
-}
 
 // 构造函数和析构函数。
 KernelRecursiveMutex::KernelRecursiveMutex(const WideStringView &wsvName){

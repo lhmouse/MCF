@@ -7,6 +7,7 @@
 
 #include <type_traits>
 #include <cstddef>
+#include "../Utilities/AddressOf.hpp"
 
 namespace MCF {
 
@@ -35,18 +36,25 @@ namespace Impl_Atomic {
 		AtomicCommon &operator=(const AtomicCommon &) noexcept = delete;
 
 	public:
+		const volatile ElementT &Get() const volatile noexcept {
+			return x_vElement;
+		}
+		volatile ElementT &Get() volatile noexcept {
+			return x_vElement;
+		}
+
 		ElementT Load(MemoryModel eModel) const volatile noexcept {
-			return __atomic_load_n(&this->x_vElement, static_cast<int>(eModel));
+			return __atomic_load_n(AddressOf(x_vElement), static_cast<int>(eModel));
 		}
 		void Store(ElementT vOperand, MemoryModel eModel) volatile noexcept {
-			__atomic_store_n(&this->x_vElement, vOperand, static_cast<int>(eModel));
+			__atomic_store_n(AddressOf(x_vElement), vOperand, static_cast<int>(eModel));
 		}
 
 		bool CompareExchange(ElementT &vComparand, ElementT vExchangeWith, MemoryModel eSuccessModel, MemoryModel eFailureModel) volatile noexcept {
-			return __atomic_compare_exchange_n(&this->x_vElement, &vComparand, vExchangeWith, false, static_cast<int>(eSuccessModel), static_cast<int>(eFailureModel));
+			return __atomic_compare_exchange_n(AddressOf(x_vElement), &vComparand, vExchangeWith, false, static_cast<int>(eSuccessModel), static_cast<int>(eFailureModel));
 		}
 		ElementT Exchange(ElementT vOperand, MemoryModel eModel) volatile noexcept {
-			return __atomic_exchange_n(&this->x_vElement, vOperand, static_cast<int>(eModel));
+			return __atomic_exchange_n(AddressOf(x_vElement), vOperand, static_cast<int>(eModel));
 		}
 
 		bool CompareExchange(ElementT &vComparand, ElementT vExchangeWith, MemoryModel eModel) volatile noexcept {
@@ -76,38 +84,38 @@ namespace Impl_Atomic {
 
 	public:
 		ElementT AndFetch(ElementT vOperand, MemoryModel eModel) volatile noexcept {
-			return __atomic_and_fetch(&this->x_vElement, vOperand, static_cast<int>(eModel));
+			return __atomic_and_fetch(AddressOf(this->x_vElement), vOperand, static_cast<int>(eModel));
 		}
 		ElementT FetchAnd(ElementT vOperand, MemoryModel eModel) volatile noexcept {
-			return __atomic_fetch_and(&this->x_vElement, vOperand, static_cast<int>(eModel));
+			return __atomic_fetch_and(AddressOf(this->x_vElement), vOperand, static_cast<int>(eModel));
 		}
 
 		ElementT OrFetch(ElementT vOperand, MemoryModel eModel) volatile noexcept {
-			return __atomic_or_fetch(&this->x_vElement, vOperand, static_cast<int>(eModel));
+			return __atomic_or_fetch(AddressOf(this->x_vElement), vOperand, static_cast<int>(eModel));
 		}
 		ElementT FetchOr(ElementT vOperand, MemoryModel eModel) volatile noexcept {
-			return __atomic_fetch_or(&this->x_vElement, vOperand, static_cast<int>(eModel));
+			return __atomic_fetch_or(AddressOf(this->x_vElement), vOperand, static_cast<int>(eModel));
 		}
 
 		ElementT XorFetch(ElementT vOperand, MemoryModel eModel) volatile noexcept {
-			return __atomic_xor_fetch(&this->x_vElement, vOperand, static_cast<int>(eModel));
+			return __atomic_xor_fetch(AddressOf(this->x_vElement), vOperand, static_cast<int>(eModel));
 		}
 		ElementT FetchXor(ElementT vOperand, MemoryModel eModel) volatile noexcept {
-			return __atomic_fetch_xor(&this->x_vElement, vOperand, static_cast<int>(eModel));
+			return __atomic_fetch_xor(AddressOf(this->x_vElement), vOperand, static_cast<int>(eModel));
 		}
 
 		ElementT AddFetch(ElementT vOperand, MemoryModel eModel) volatile noexcept {
-			return __atomic_add_fetch(&this->x_vElement, vOperand, static_cast<int>(eModel));
+			return __atomic_add_fetch(AddressOf(this->x_vElement), vOperand, static_cast<int>(eModel));
 		}
 		ElementT FetchAdd(ElementT vOperand, MemoryModel eModel) volatile noexcept {
-			return __atomic_fetch_add(&this->x_vElement, vOperand, static_cast<int>(eModel));
+			return __atomic_fetch_add(AddressOf(this->x_vElement), vOperand, static_cast<int>(eModel));
 		}
 
 		ElementT SubFetch(ElementT vOperand, MemoryModel eModel) volatile noexcept {
-			return __atomic_sub_fetch(&this->x_vElement, vOperand, static_cast<int>(eModel));
+			return __atomic_sub_fetch(AddressOf(this->x_vElement), vOperand, static_cast<int>(eModel));
 		}
 		ElementT FetchSub(ElementT vOperand, MemoryModel eModel) volatile noexcept {
-			return __atomic_fetch_sub(&this->x_vElement, vOperand, static_cast<int>(eModel));
+			return __atomic_fetch_sub(AddressOf(this->x_vElement), vOperand, static_cast<int>(eModel));
 		}
 
 		ElementT Increment(MemoryModel eModel) volatile noexcept {
@@ -131,24 +139,24 @@ namespace Impl_Atomic {
 
 	public:
 		bool AndFetch(bool bOperand, MemoryModel eModel) volatile noexcept {
-			return __atomic_and_fetch(&this->x_vElement, bOperand, static_cast<int>(eModel));
+			return __atomic_and_fetch(AddressOf(this->x_vElement), bOperand, static_cast<int>(eModel));
 		}
 		bool FetchAnd(bool bOperand, MemoryModel eModel) volatile noexcept {
-			return __atomic_fetch_and(&this->x_vElement, bOperand, static_cast<int>(eModel));
+			return __atomic_fetch_and(AddressOf(this->x_vElement), bOperand, static_cast<int>(eModel));
 		}
 
 		bool OrFetch(bool bOperand, MemoryModel eModel) volatile noexcept {
-			return __atomic_or_fetch(&this->x_vElement, bOperand, static_cast<int>(eModel));
+			return __atomic_or_fetch(AddressOf(this->x_vElement), bOperand, static_cast<int>(eModel));
 		}
 		bool FetchOr(bool bOperand, MemoryModel eModel) volatile noexcept {
-			return __atomic_fetch_or(&this->x_vElement, bOperand, static_cast<int>(eModel));
+			return __atomic_fetch_or(AddressOf(this->x_vElement), bOperand, static_cast<int>(eModel));
 		}
 
 		bool XorFetch(bool bOperand, MemoryModel eModel) volatile noexcept {
-			return __atomic_xor_fetch(&this->x_vElement, bOperand, static_cast<int>(eModel));
+			return __atomic_xor_fetch(AddressOf(this->x_vElement), bOperand, static_cast<int>(eModel));
 		}
 		bool FetchXor(bool bOperand, MemoryModel eModel) volatile noexcept {
-			return __atomic_fetch_xor(&this->x_vElement, bOperand, static_cast<int>(eModel));
+			return __atomic_fetch_xor(AddressOf(this->x_vElement), bOperand, static_cast<int>(eModel));
 		}
 	};
 
@@ -167,17 +175,17 @@ namespace Impl_Atomic {
 
 	public:
 		ElementT AddFetch(std::ptrdiff_t nOperand, MemoryModel eModel) volatile noexcept {
-			return __atomic_add_fetch(&this->x_vElement, nOperand, static_cast<int>(eModel));
+			return __atomic_add_fetch(AddressOf(this->x_vElement), nOperand, static_cast<int>(eModel));
 		}
 		ElementT FetchAdd(std::ptrdiff_t nOperand, MemoryModel eModel) volatile noexcept {
-			return __atomic_fetch_add(&this->x_vElement, nOperand, static_cast<int>(eModel));
+			return __atomic_fetch_add(AddressOf(this->x_vElement), nOperand, static_cast<int>(eModel));
 		}
 
 		ElementT SubFetch(std::ptrdiff_t nOperand, MemoryModel eModel) volatile noexcept {
-			return __atomic_sub_fetch(&this->x_vElement, nOperand, static_cast<int>(eModel));
+			return __atomic_sub_fetch(AddressOf(this->x_vElement), nOperand, static_cast<int>(eModel));
 		}
 		ElementT FetchSub(std::ptrdiff_t nOperand, MemoryModel eModel) volatile noexcept {
-			return __atomic_fetch_sub(&this->x_vElement, nOperand, static_cast<int>(eModel));
+			return __atomic_fetch_sub(AddressOf(this->x_vElement), nOperand, static_cast<int>(eModel));
 		}
 
 		ElementT Increment(MemoryModel eModel) volatile noexcept {

@@ -8,21 +8,6 @@
 
 namespace MCF {
 
-namespace Impl_UniqueLockTemplate {
-	template<>
-	bool RecursiveMutex::UniqueLock::X_DoTry() const noexcept {
-		return x_pOwner->Try();
-	}
-	template<>
-	void RecursiveMutex::UniqueLock::X_DoLock() const noexcept {
-		x_pOwner->Lock();
-	}
-	template<>
-	void RecursiveMutex::UniqueLock::X_DoUnlock() const noexcept {
-		x_pOwner->Unlock();
-	}
-}
-
 // 其他非静态成员函数。
 bool RecursiveMutex::IsLockedByCurrentThread() const noexcept {
 	const auto uThreadId = Thread::GetCurrentId();

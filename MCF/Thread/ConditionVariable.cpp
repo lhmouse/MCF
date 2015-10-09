@@ -4,20 +4,10 @@
 
 #include "../StdMCF.hpp"
 #include "ConditionVariable.hpp"
-#include "../Core/Time.hpp"
-#include "../Utilities/MinMax.hpp"
 #include "../Utilities/Defer.hpp"
+#include "../Core/Time.hpp"
 
 namespace MCF {
-
-// 构造函数和析构函数。
-ConditionVariable::ConditionVariable() noexcept
-	: x_mtxGuard()
-{
-	static_assert(sizeof(x_aImpl) == sizeof(::CONDITION_VARIABLE), "!");
-
-	::InitializeConditionVariable(reinterpret_cast<::CONDITION_VARIABLE *>(x_aImpl));
-}
 
 // 其他非静态成员函数。
 bool ConditionVariable::Wait(Mutex::UniqueLock &vLock, std::uint64_t u64MilliSeconds) noexcept {
@@ -32,7 +22,8 @@ bool ConditionVariable::Wait(Mutex::UniqueLock &vLock, std::uint64_t u64MilliSec
 	auto u64Now = GetFastMonoClock();
 	const auto u64Until = u64Now + u64MilliSeconds;
 	for(;;){
-		const bool bTakenOver = ::SleepConditionVariableSRW(reinterpret_cast<::CONDITION_VARIABLE *>(x_aImpl), reinterpret_cast<::SRWLOCK *>(vLockOwner.x_aImpl), Min(u64MilliSeconds, 0x7FFFFFFFu), 0);
+		const bool bTakenOver = ::SleepConditionVariableSRW(reinterpret_cast<::CONDITION_VARIABLE *>(x_aImpl), reinterpret_cast<::SRWLOCK *>(vLockOwner.x_aImpl),
+			(u64MilliSeconds > 0x7FFFFFFFu) ? 0x7FFFFFFFu : u64MilliSeconds, 0);
 		if(bTakenOver){
 			return true;
 		}
@@ -55,29 +46,6 @@ void ConditionVariable::Wait(Mutex::UniqueLock &vLock) noexcept {
 	DEFER([&]{ vLock.Swap(vTempLock); });
 
 	::SleepConditionVariableSRW(reinterpret_cast<::CONDITION_VARIABLE *>(x_aImpl), reinterpret_cast<::SRWLOCK *>(vLockOwner.x_aImpl), INFINITE, 0);
-}
-
-bool ConditionVariable::Wait(Impl_UniqueLockTemplate::UniqueLockTemplateBase &vLock, std::uint64_t u64MilliSeconds) noexcept {
-	ASSERT(vLock.GetLockCount() == 1);
-
-	bool bTakenOver;
-	{
-		Mutex::UniqueLock vGuardLock(x_mtxGuard);
-		vLock.Unlock();
-		bTakenOver = Wait(vGuardLock, u64MilliSeconds);
-	}
-	vLock.Lock();
-	return bTakenOver;
-}
-void ConditionVariable::Wait(Impl_UniqueLockTemplate::UniqueLockTemplateBase &vLock) noexcept {
-	ASSERT(vLock.GetLockCount() == 1);
-
-	{
-		Mutex::UniqueLock vGuardLock(x_mtxGuard);
-		vLock.Unlock();
-		Wait(vGuardLock);
-	}
-	vLock.Lock();
 }
 
 void ConditionVariable::Signal() noexcept {

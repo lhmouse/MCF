@@ -1,14 +1,33 @@
-#include <MCF/Core/String.hpp>
-#include <cstdio>
+#include <MCF/StdMCF.hpp>
+#include <MCF/Thread/Thread.hpp>
+#include <MCF/Thread/Mutex.hpp>
+#include <MCF/Core/Time.hpp>
 
 using namespace MCF;
 
-extern "C" unsigned MCFMain(){
-	WideString ws(L"一二三四五67890");
-	AnsiString as(ws);
-	std::printf("str = %s$\n", as.GetStr());
+Mutex m;
+volatile int c = 0;
 
-	Utf8String u8s(as);
-	std::printf("u8s = %s$\n", AnsiString(u8s).GetStr());
+extern "C" unsigned MCFMain(){
+	std::array<IntrusivePtr<Thread>, 4> threads;
+	for(auto &p : threads){
+		p = Thread::Create([]{
+			for(int i = 0; i < 500000; ++i){
+				const auto l = m.GetLock();
+				++c;
+			}
+		}, true);
+	}
+
+	const auto t1 = GetHiResMonoClock();
+	for(auto &p : threads){
+		p->Resume();
+	}
+	for(auto &p : threads){
+		p->Join();
+	}
+	const auto t2 = GetHiResMonoClock();
+
+	std::printf("c = %d, time = %f\n", c, t2 - t1);
 	return 0;
 }

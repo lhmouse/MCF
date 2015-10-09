@@ -38,6 +38,21 @@ public:
 	}
 };
 
+namespace Impl_UniqueLockTemplate {
+	template<>
+	inline bool KernelRecursiveMutex::UniqueLock::X_DoTry() const noexcept {
+		return x_pOwner->Try(0);
+	}
+	template<>
+	inline void KernelRecursiveMutex::UniqueLock::X_DoLock() const noexcept {
+		x_pOwner->Lock();
+	}
+	template<>
+	inline void KernelRecursiveMutex::UniqueLock::X_DoUnlock() const noexcept {
+		x_pOwner->Unlock();
+	}
+}
+
 }
 
 #endif

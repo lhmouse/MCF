@@ -271,30 +271,30 @@ namespace {
 	template<class StringT, class FilterT>
 	void Convert(StringT &strWrite, std::size_t uPos, FilterT vFilter){
 		typename StringT::Char achTemp[1024];
-		auto pchWrite = std::begin(achTemp);
+		auto pchWrite = achTemp;
 
 		if(uPos == strWrite.GetSize()){
 			while(vFilter){
 				*pchWrite = vFilter();
 				if(++pchWrite == std::end(achTemp)){
-					strWrite.Append(std::begin(achTemp), pchWrite);
-					pchWrite = std::begin(achTemp);
+					strWrite.Append(achTemp, pchWrite);
+					pchWrite = achTemp;
 				}
 			}
-			if(pchWrite != std::begin(achTemp)){
-				strWrite.Append(std::begin(achTemp), pchWrite);
+			if(pchWrite != achTemp){
+				strWrite.Append(achTemp, pchWrite);
 			}
 		} else {
 			while(vFilter){
 				*pchWrite = vFilter();
 				if(++pchWrite == std::end(achTemp)){
-					strWrite.Replace((std::ptrdiff_t)uPos, (std::ptrdiff_t)uPos, std::begin(achTemp), pchWrite);
+					strWrite.Replace(static_cast<std::ptrdiff_t>(uPos), static_cast<std::ptrdiff_t>(uPos), achTemp, pchWrite);
 					uPos += CountOf(achTemp);
-					pchWrite = std::begin(achTemp);
+					pchWrite = achTemp;
 				}
 			}
-			if(pchWrite != std::begin(achTemp)){
-				strWrite.Replace((std::ptrdiff_t)uPos, (std::ptrdiff_t)uPos, std::begin(achTemp), pchWrite);
+			if(pchWrite != achTemp){
+				strWrite.Replace(static_cast<std::ptrdiff_t>(uPos), static_cast<std::ptrdiff_t>(uPos), achTemp, pchWrite);
 			}
 		}
 	}

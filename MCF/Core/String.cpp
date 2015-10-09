@@ -270,7 +270,7 @@ namespace {
 
 	template<class StringT, class FilterT>
 	void Convert(StringT &strWrite, std::size_t uPos, FilterT vFilter){
-		typename StringT::Char achTemp[1024];
+		typename StringT::Char achTemp[512];
 		auto pchWrite = achTemp;
 
 		if(uPos == strWrite.GetSize()){

@@ -30,6 +30,9 @@ using UnifiedStringView = StringView<StringType::kUtf32>;
 
 template<StringType kTypeT>
 class String {
+	template<StringType>
+	friend class String;
+
 public:
 	using Observer = StringView<kTypeT>;
 

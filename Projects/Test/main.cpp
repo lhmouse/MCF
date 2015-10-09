@@ -9,6 +9,6 @@ extern "C" unsigned MCFMain(){
 	std::printf("str = %s$\n", as.GetStr());
 
 	Utf8String u8s(as);
-//	std::printf("u8s = %s$\n", u8s.GetStr());
+	std::printf("u8s = %s$\n", AnsiString(u8s).GetStr());
 	return 0;
 }

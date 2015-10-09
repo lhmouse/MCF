@@ -399,13 +399,13 @@ UnifiedStringView AnsiString::Unify(UnifiedString &usTempStorage, const AnsiStri
 		DEBUG_THROW(Exception, ERROR_NOT_ENOUGH_MEMORY, "The output Unicode string requires more memory than ULONG_MAX bytes"_rcs);
 	}
 	WideString wsTemp;
-	wsTemp.Resize(uOutputSizeMax / sizeof(wchar_t));
+	const auto pchWrite = wsTemp.X_ChopAndSplice(0, 0, 0, uOutputSizeMax / sizeof(wchar_t));
 	ULONG ulConvertedSize;
-	const auto lStatus = ::RtlMultiByteToUnicodeN(wsTemp.GetStr(), uOutputSizeMax, &ulConvertedSize, asvSrc.GetBegin(), uInputSize);
+	const auto lStatus = ::RtlMultiByteToUnicodeN(pchWrite, uOutputSizeMax, &ulConvertedSize, asvSrc.GetBegin(), uInputSize);
 	if(!NT_SUCCESS(lStatus)){
 		DEBUG_THROW(SystemError, ::RtlNtStatusToDosError(lStatus), "RtlMultiByteToUnicodeN"_rcs);
 	}
-	wsTemp.Pop(wsTemp.GetSize() - ulConvertedSize / sizeof(wchar_t));
+	wsTemp.X_SetSize(ulConvertedSize / sizeof(wchar_t));
 
 	usTempStorage.Reserve(ulConvertedSize / sizeof(wchar_t));
 	Convert(usTempStorage, 0, MakeUtf16Decoder(MakeStringSource(wsTemp)));

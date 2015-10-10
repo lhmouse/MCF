@@ -35,31 +35,66 @@ struct StringEncodingTrait;
 template<>
 struct StringEncodingTrait<StringType::kNarrow> {
 	using Char = char;
+
+	enum {
+		kPreferringConversionAsUtf16 = 0,
+		kPreferringConversionAsUtf32 = 0,
+	};
 };
 template<>
 struct StringEncodingTrait<StringType::kWide> {
 	using Char = wchar_t;
+
+	enum {
+		kPreferringConversionAsUtf16 = 1,
+		kPreferringConversionAsUtf32 = 0,
+	};
 };
 
 template<>
 struct StringEncodingTrait<StringType::kUtf8> {
 	using Char = char;
+
+	enum {
+		kPreferringConversionAsUtf16 = 0,
+		kPreferringConversionAsUtf32 = 0,
+	};
 };
 template<>
 struct StringEncodingTrait<StringType::kUtf16> {
 	using Char = char16_t;
+
+	enum {
+		kPreferringConversionAsUtf16 = 1,
+		kPreferringConversionAsUtf32 = 0,
+	};
 };
 template<>
 struct StringEncodingTrait<StringType::kUtf32> {
 	using Char = char32_t;
+
+	enum {
+		kPreferringConversionAsUtf16 = 0,
+		kPreferringConversionAsUtf32 = 1,
+	};
 };
 template<>
 struct StringEncodingTrait<StringType::kCesu8> {
 	using Char = char;
+
+	enum {
+		kPreferringConversionAsUtf16 = 0,
+		kPreferringConversionAsUtf32 = 0,
+	};
 };
 template<>
 struct StringEncodingTrait<StringType::kAnsi> {
 	using Char = char;
+
+	enum {
+		kPreferringConversionAsUtf16 = 1,
+		kPreferringConversionAsUtf32 = 0,
+	};
 };
 
 namespace Impl_StringView {
@@ -347,10 +382,10 @@ public:
 	//   Find("def", 4)             返回 kNpos；
 	//   FindBackward("def", 5)     返回 kNpos；
 	//   FindBackward("def", 6)     返回 3。
-	std::size_t Find(const StringView &obsToFind, std::ptrdiff_t nBegin = 0) const noexcept {
+	std::size_t Find(const StringView &vToFind, std::ptrdiff_t nBegin = 0) const noexcept {
 		const auto uLength = GetLength();
 		const auto uRealBegin = X_TranslateOffset(nBegin, uLength);
-		const auto uLenToFind = obsToFind.GetLength();
+		const auto uLenToFind = vToFind.GetLength();
 		if(uLenToFind == 0){
 			return uRealBegin;
 		}
@@ -360,16 +395,16 @@ public:
 		if(uRealBegin + uLenToFind > uLength){
 			return kNpos;
 		}
-		const auto uPos = Impl_StringView::StrStr(GetBegin() + uRealBegin, GetEnd(), obsToFind.GetBegin(), obsToFind.GetEnd());
+		const auto uPos = Impl_StringView::StrStr(GetBegin() + uRealBegin, GetEnd(), vToFind.GetBegin(), vToFind.GetEnd());
 		if(uPos == kNpos){
 			return kNpos;
 		}
 		return uPos + uRealBegin;
 	}
-	std::size_t FindBackward(const StringView &obsToFind, std::ptrdiff_t nEnd = -1) const noexcept {
+	std::size_t FindBackward(const StringView &vToFind, std::ptrdiff_t nEnd = -1) const noexcept {
 		const auto uLength = GetLength();
 		const auto uRealEnd = X_TranslateOffset(nEnd, uLength);
-		const auto uLenToFind = obsToFind.GetLength();
+		const auto uLenToFind = vToFind.GetLength();
 		if(uLenToFind == 0){
 			return uRealEnd;
 		}
@@ -380,7 +415,7 @@ public:
 			return kNpos;
 		}
 		std::reverse_iterator<const Char *> itBegin(GetBegin() + uRealEnd), itEnd(GetBegin()),
-			itToFindBegin(obsToFind.GetEnd()), itToFindEnd(obsToFind.GetBegin());
+			itToFindBegin(vToFind.GetEnd()), itToFindEnd(vToFind.GetBegin());
 		const auto uPos = Impl_StringView::StrStr(itBegin, itEnd, itToFindBegin, itToFindEnd);
 		if(uPos == kNpos){
 			return kNpos;

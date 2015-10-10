@@ -34,19 +34,19 @@ class String {
 	friend class String;
 
 public:
-	using Observer = StringView<kTypeT>;
+	using View = StringView<kTypeT>;
 
-	using Char = typename Observer::Char;
+	using Char = typename View::Char;
 
 	enum : std::size_t {
-		kNpos = Observer::kNpos
+		kNpos = View::kNpos
 	};
 
 public:
 	static const String kEmpty;
 
 public:
-	static UnifiedStringView Unify(UnifiedString &usTempStorage, const Observer &obsSrc);
+	static UnifiedStringView Unify(UnifiedString &usTempStorage, const View &vSrc);
 	static void Deunify(String &strDst, std::size_t uPos, const UnifiedStringView &usvSrc);
 
 private:
@@ -98,7 +98,7 @@ public:
 	{
 		Assign(pchBegin, uLen);
 	}
-	explicit String(const Observer &rhs)
+	explicit String(const View &rhs)
 		: String()
 	{
 		Assign(rhs);
@@ -138,7 +138,7 @@ public:
 		Assign(pszBegin);
 		return *this;
 	}
-	String &operator=(const Observer &rhs){
+	String &operator=(const View &rhs){
 		Assign(rhs);
 		return *this;
 	}
@@ -426,11 +426,11 @@ public:
 		return GetBegin()[uIndex];
 	}
 
-	Observer GetObserver() const noexcept {
+	View GetView() const noexcept {
 		if(x_vStorage.vSmall.schComplLength >= 0){
-			return Observer(x_vStorage.vSmall.achData, X_GetSmallLength());
+			return View(x_vStorage.vSmall.achData, X_GetSmallLength());
 		} else {
-			return Observer(x_vStorage.vLarge.pchBegin, x_vStorage.vLarge.uLength);
+			return View(x_vStorage.vLarge.pchBegin, x_vStorage.vLarge.uLength);
 		}
 	}
 
@@ -486,16 +486,16 @@ public:
 		return GetData() + uOldSize;
 	}
 	void Shrink() noexcept {
-		const auto uSzLen = Observer(GetStr()).GetLength();
+		const auto uSzLen = View(GetStr()).GetLength();
 		ASSERT(uSzLen <= GetSize());
 		X_SetSize(uSzLen);
 	}
 
-	int Compare(const Observer &rhs) const noexcept {
-		return GetObserver().Compare(rhs);
+	int Compare(const View &rhs) const noexcept {
+		return GetView().Compare(rhs);
 	}
 	int Compare(const String &rhs) const noexcept {
-		return GetObserver().Compare(rhs.GetObserver());
+		return GetView().Compare(rhs.GetView());
 	}
 
 	void Assign(Char ch, std::size_t uCount = 1){
@@ -503,20 +503,20 @@ public:
 		FillN(GetStr(), uCount, ch);
 	}
 	void Assign(const Char *pszBegin){
-		Assign(Observer(pszBegin));
+		Assign(View(pszBegin));
 	}
 	void Assign(const Char *pchBegin, const Char *pchEnd){
-		Assign(Observer(pchBegin, pchEnd));
+		Assign(View(pchBegin, pchEnd));
 	}
 	void Assign(const Char *pchBegin, std::size_t uCount){
-		Assign(Observer(pchBegin, uCount));
+		Assign(View(pchBegin, uCount));
 	}
-	void Assign(const Observer &rhs){
+	void Assign(const View &rhs){
 		Resize(rhs.GetSize());
 		Copy(GetStr(), rhs.GetBegin(), rhs.GetEnd());
 	}
 	void Assign(std::initializer_list<Char> rhs){
-		Assign(Observer(rhs));
+		Assign(View(rhs));
 	}
 	template<StringType kOtherTypeT>
 	void Assign(const StringView<kOtherTypeT> &rhs){
@@ -530,7 +530,7 @@ public:
 	}
 	void Assign(const String &rhs){
 		if(&rhs != this){
-			Assign(Observer(rhs));
+			Assign(View(rhs));
 		}
 	}
 	void Assign(String &&rhs) noexcept {
@@ -570,20 +570,20 @@ public:
 		FillN(ResizeMore(uCount), uCount, ch);
 	}
 	void Append(const Char *pszBegin){
-		Append(Observer(pszBegin));
+		Append(View(pszBegin));
 	}
 	void Append(const Char *pchBegin, const Char *pchEnd){
-		Append(Observer(pchBegin, pchEnd));
+		Append(View(pchBegin, pchEnd));
 	}
 	void Append(const Char *pchBegin, std::size_t uCount){
-		Append(Observer(pchBegin, uCount));
+		Append(View(pchBegin, uCount));
 	}
-	void Append(const Observer &rhs){
+	void Append(const View &rhs){
 		const auto pWrite = ResizeMore(rhs.GetSize());
 		Copy(pWrite, rhs.GetBegin(), rhs.GetEnd());
 	}
 	void Append(std::initializer_list<Char> rhs){
-		Append(Observer(rhs));
+		Append(View(rhs));
 	}
 	void Append(const String &rhs){
 		const auto pWrite = ResizeMore(rhs.GetSize());
@@ -596,11 +596,11 @@ public:
 	}
 	template<StringType kOtherTypeT>
 	void Append(const String<kOtherTypeT> &rhs){
-		Append(rhs.GetObserver());
+		Append(rhs.GetView());
 	}
 
-	Observer Slice(std::ptrdiff_t nBegin, std::ptrdiff_t nEnd = -1) const noexcept {
-		return GetObserver().Slice(nBegin, nEnd);
+	View Slice(std::ptrdiff_t nBegin, std::ptrdiff_t nEnd = -1) const noexcept {
+		return GetView().Slice(nBegin, nEnd);
 	}
 	String SliceStr(std::ptrdiff_t nBegin, std::ptrdiff_t nEnd = -1) const {
 		return String(Slice(nBegin, nEnd));
@@ -617,32 +617,32 @@ public:
 		}
 	}
 
-	std::size_t Find(const Observer &obsToFind, std::ptrdiff_t nBegin = 0) const noexcept {
-		return GetObserver().Find(obsToFind, nBegin);
+	std::size_t Find(const View &vToFind, std::ptrdiff_t nBegin = 0) const noexcept {
+		return GetView().Find(vToFind, nBegin);
 	}
-	std::size_t FindBackward(const Observer &obsToFind, std::ptrdiff_t nEnd = -1) const noexcept {
-		return GetObserver().FindBackward(obsToFind, nEnd);
+	std::size_t FindBackward(const View &vToFind, std::ptrdiff_t nEnd = -1) const noexcept {
+		return GetView().FindBackward(vToFind, nEnd);
 	}
 	std::size_t FindRep(Char chToFind, std::size_t uRepCount, std::ptrdiff_t nBegin = 0) const noexcept {
-		return GetObserver().FindRep(chToFind, uRepCount, nBegin);
+		return GetView().FindRep(chToFind, uRepCount, nBegin);
 	}
 	std::size_t FindRepBackward(Char chToFind, std::size_t uRepCount, std::ptrdiff_t nEnd = -1) const noexcept {
-		return GetObserver().FindRepBackward(chToFind, uRepCount, nEnd);
+		return GetView().FindRepBackward(chToFind, uRepCount, nEnd);
 	}
 	std::size_t Find(Char chToFind, std::ptrdiff_t nBegin = 0) const noexcept {
-		return GetObserver().Find(chToFind, nBegin);
+		return GetView().Find(chToFind, nBegin);
 	}
 	std::size_t FindBackward(Char chToFind, std::ptrdiff_t nEnd = -1) const noexcept {
-		return GetObserver().FindBackward(chToFind, nEnd);
+		return GetView().FindBackward(chToFind, nEnd);
 	}
 
 	void Replace(std::ptrdiff_t nBegin, std::ptrdiff_t nEnd, Char chRep, std::size_t uRepSize = 1){
-		const auto obsCurrent = GetObserver();
-		const auto uOldLength = obsCurrent.GetLength();
+		const auto vCurrent = GetView();
+		const auto uOldLength = vCurrent.GetLength();
 
-		const auto obsRemoved = obsCurrent.Slice(nBegin, nEnd);
-		const auto uRemovedBegin = (std::size_t)(obsRemoved.GetBegin() - obsCurrent.GetBegin());
-		const auto uRemovedEnd = (std::size_t)(obsRemoved.GetEnd() - obsCurrent.GetBegin());
+		const auto vRemoved = vCurrent.Slice(nBegin, nEnd);
+		const auto uRemovedBegin = (std::size_t)(vRemoved.GetBegin() - vCurrent.GetBegin());
+		const auto uRemovedEnd = (std::size_t)(vRemoved.GetEnd() - vCurrent.GetBegin());
 		const auto uLengthAfterRemoved = uOldLength - (uRemovedEnd - uRemovedBegin);
 		const auto uNewLength = uLengthAfterRemoved + uRepSize;
 		if(uNewLength < uLengthAfterRemoved){
@@ -654,47 +654,47 @@ public:
 		X_SetSize(uNewLength);
 	}
 	void Replace(std::ptrdiff_t nBegin, std::ptrdiff_t nEnd, const Char *pchRepBegin){
-		Replace(nBegin, nEnd, Observer(pchRepBegin));
+		Replace(nBegin, nEnd, View(pchRepBegin));
 	}
 	void Replace(std::ptrdiff_t nBegin, std::ptrdiff_t nEnd, const Char *pchRepBegin, const Char *pchRepEnd){
-		Replace(nBegin, nEnd, Observer(pchRepBegin, pchRepEnd));
+		Replace(nBegin, nEnd, View(pchRepBegin, pchRepEnd));
 	}
 	void Replace(std::ptrdiff_t nBegin, std::ptrdiff_t nEnd, const Char *pchRepBegin, std::size_t uLen){
-		Replace(nBegin, nEnd, Observer(pchRepBegin, uLen));
+		Replace(nBegin, nEnd, View(pchRepBegin, uLen));
 	}
-	void Replace(std::ptrdiff_t nBegin, std::ptrdiff_t nEnd, const Observer &obsRep){
-		const auto uRepSize = obsRep.GetLength();
+	void Replace(std::ptrdiff_t nBegin, std::ptrdiff_t nEnd, const View &vRep){
+		const auto uRepSize = vRep.GetLength();
 
-		const auto obsCurrent = GetObserver();
-		const auto uOldLength = obsCurrent.GetLength();
+		const auto vCurrent = GetView();
+		const auto uOldLength = vCurrent.GetLength();
 
-		const auto obsRemoved = obsCurrent.Slice(nBegin, nEnd);
-		const auto uRemovedBegin = (std::size_t)(obsRemoved.GetBegin() - obsCurrent.GetBegin());
-		const auto uRemovedEnd = (std::size_t)(obsRemoved.GetEnd() - obsCurrent.GetBegin());
+		const auto vRemoved = vCurrent.Slice(nBegin, nEnd);
+		const auto uRemovedBegin = (std::size_t)(vRemoved.GetBegin() - vCurrent.GetBegin());
+		const auto uRemovedEnd = (std::size_t)(vRemoved.GetEnd() - vCurrent.GetBegin());
 		const auto uLengthAfterRemoved = uOldLength - (uRemovedEnd - uRemovedBegin);
 		const auto uNewLength = uLengthAfterRemoved + uRepSize;
 		if(uNewLength < uLengthAfterRemoved){
 			throw std::bad_array_new_length();
 		}
 
-		if(obsCurrent.DoesOverlapWith(obsRep)){
+		if(vCurrent.DoesOverlapWith(vRep)){
 			String strTemp;
 			strTemp.Resize(uNewLength);
 			auto pchWrite = strTemp.GetStr();
-			pchWrite = Copy(pchWrite, obsCurrent.GetBegin(), obsCurrent.GetBegin() + uRemovedBegin);
-			pchWrite = Copy(pchWrite, obsRep.GetBegin(), obsRep.GetEnd());
-			pchWrite = Copy(pchWrite, obsCurrent.GetBegin() + uRemovedEnd, obsCurrent.GetEnd());
+			pchWrite = Copy(pchWrite, vCurrent.GetBegin(), vCurrent.GetBegin() + uRemovedBegin);
+			pchWrite = Copy(pchWrite, vRep.GetBegin(), vRep.GetEnd());
+			pchWrite = Copy(pchWrite, vCurrent.GetBegin() + uRemovedEnd, vCurrent.GetEnd());
 			Assign(std::move(strTemp));
 		} else {
-			const auto pchWrite = X_ChopAndSplice(uRemovedBegin, uRemovedEnd, 0, uRemovedBegin + obsRep.GetSize());
-			CopyN(pchWrite, obsRep.GetBegin(), obsRep.GetSize());
+			const auto pchWrite = X_ChopAndSplice(uRemovedBegin, uRemovedEnd, 0, uRemovedBegin + vRep.GetSize());
+			CopyN(pchWrite, vRep.GetBegin(), vRep.GetSize());
 			X_SetSize(uNewLength);
 		}
 	}
 
 public:
-	operator Observer() const noexcept {
-		return GetObserver();
+	operator View() const noexcept {
+		return GetView();
 	}
 
 	explicit operator bool() const noexcept {
@@ -810,80 +810,80 @@ String<kTypeT> &&operator+(String<kTypeT> &&lhs, String<kTypeT> &&rhs){
 
 template<StringType kTypeT>
 bool operator==(const String<kTypeT> &lhs, const String<kTypeT> &rhs) noexcept {
-	return lhs.GetObserver() == rhs.GetObserver();
+	return lhs.GetView() == rhs.GetView();
 }
 template<StringType kTypeT>
 bool operator==(const String<kTypeT> &lhs, const StringView<kTypeT> &rhs) noexcept {
-	return lhs.GetObserver() == rhs;
+	return lhs.GetView() == rhs;
 }
 template<StringType kTypeT>
 bool operator==(const StringView<kTypeT> &lhs, const String<kTypeT> &rhs) noexcept {
-	return lhs == rhs.GetObserver();
+	return lhs == rhs.GetView();
 }
 
 template<StringType kTypeT>
 bool operator!=(const String<kTypeT> &lhs, const String<kTypeT> &rhs) noexcept {
-	return lhs.GetObserver() != rhs.GetObserver();
+	return lhs.GetView() != rhs.GetView();
 }
 template<StringType kTypeT>
 bool operator!=(const String<kTypeT> &lhs, const StringView<kTypeT> &rhs) noexcept {
-	return lhs.GetObserver() != rhs;
+	return lhs.GetView() != rhs;
 }
 template<StringType kTypeT>
 bool operator!=(const StringView<kTypeT> &lhs, const String<kTypeT> &rhs) noexcept {
-	return lhs != rhs.GetObserver();
+	return lhs != rhs.GetView();
 }
 
 template<StringType kTypeT>
 bool operator<(const String<kTypeT> &lhs, const String<kTypeT> &rhs) noexcept {
-	return lhs.GetObserver() < rhs.GetObserver();
+	return lhs.GetView() < rhs.GetView();
 }
 template<StringType kTypeT>
 bool operator<(const String<kTypeT> &lhs, const StringView<kTypeT> &rhs) noexcept {
-	return lhs.GetObserver() < rhs;
+	return lhs.GetView() < rhs;
 }
 template<StringType kTypeT>
 bool operator<(const StringView<kTypeT> &lhs, const String<kTypeT> &rhs) noexcept {
-	return lhs < rhs.GetObserver();
+	return lhs < rhs.GetView();
 }
 
 template<StringType kTypeT>
 bool operator>(const String<kTypeT> &lhs, const String<kTypeT> &rhs) noexcept {
-	return lhs.GetObserver() > rhs.GetObserver();
+	return lhs.GetView() > rhs.GetView();
 }
 template<StringType   kTypeT>
 bool operator>(const String<kTypeT> &lhs, const StringView<kTypeT> &rhs) noexcept {
-	return lhs.GetObserver() > rhs;
+	return lhs.GetView() > rhs;
 }
 template<StringType kTypeT>
 bool operator>(const StringView<kTypeT> &lhs, const String<kTypeT> &rhs) noexcept {
-	return lhs > rhs.GetObserver();
+	return lhs > rhs.GetView();
 }
 
 template<StringType kTypeT>
 bool operator<=(const String<kTypeT> &lhs, const String<kTypeT> &rhs) noexcept {
-	return lhs.GetObserver() <= rhs.GetObserver();
+	return lhs.GetView() <= rhs.GetView();
 }
 template<StringType kTypeT>
 bool operator<=(const String<kTypeT> &lhs, const StringView<kTypeT> &rhs) noexcept {
-	return lhs.GetObserver() <= rhs;
+	return lhs.GetView() <= rhs;
 }
 template<StringType kTypeT>
 bool operator<=(const StringView<kTypeT> &lhs, const String<kTypeT> &rhs) noexcept {
-	return lhs <= rhs.GetObserver();
+	return lhs <= rhs.GetView();
 }
 
 template<StringType kTypeT>
 bool operator>=(const String<kTypeT> &lhs, const String<kTypeT> &rhs) noexcept {
-	return lhs.GetObserver() >= rhs.GetObserver();
+	return lhs.GetView() >= rhs.GetView();
 }
 template<StringType kTypeT>
 bool operator>=(const String<kTypeT> &lhs, const StringView<kTypeT> &rhs) noexcept {
-	return lhs.GetObserver() >= rhs;
+	return lhs.GetView() >= rhs;
 }
 template<StringType kTypeT>
 bool operator>=(const StringView<kTypeT> &lhs, const String<kTypeT> &rhs) noexcept {
-	return lhs >= rhs.GetObserver();
+	return lhs >= rhs.GetView();
 }
 
 template<StringType kTypeT>

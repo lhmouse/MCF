@@ -78,54 +78,54 @@ public:
 	explicit String(Char ch, std::size_t uCount = 1)
 		: String()
 	{
-		Assign(ch, uCount);
+		Append(ch, uCount);
 	}
 	explicit String(const Char *pszBegin)
 		: String()
 	{
-		Assign(pszBegin);
+		Append(pszBegin);
 	}
 	String(const Char *pchBegin, const Char *pchEnd)
 		: String()
 	{
-		Assign(pchBegin, pchEnd);
+		Append(pchBegin, pchEnd);
 	}
 	String(const Char *pchBegin, std::size_t uLen)
 		: String()
 	{
-		Assign(pchBegin, uLen);
+		Append(pchBegin, uLen);
 	}
 	explicit String(const View &rhs)
 		: String()
 	{
-		Assign(rhs);
+		Append(rhs);
 	}
-	explicit String(std::initializer_list<Char> rhs)
+	String(std::initializer_list<Char> rhs)
 		: String()
 	{
-		Assign(rhs);
+		Append(rhs);
 	}
 	template<StringType kOtherTypeT>
 	explicit String(const StringView<kOtherTypeT> &rhs)
 		: String()
 	{
-		Assign(rhs);
+		Append(rhs);
 	}
 	template<StringType kOtherTypeT>
 	explicit String(const String<kOtherTypeT> &rhs)
 		: String()
 	{
-		Assign(rhs);
+		Append(rhs);
 	}
 	String(const String &rhs)
 		: String()
 	{
-		Assign(rhs);
+		Append(rhs);
 	}
 	String(String &&rhs) noexcept
 		: String()
 	{
-		Assign(std::move(rhs));
+		Swap(rhs);
 	}
 	String &operator=(Char ch){
 		Assign(ch, 1);
@@ -136,10 +136,6 @@ public:
 		return *this;
 	}
 	String &operator=(const View &rhs){
-		Assign(rhs);
-		return *this;
-	}
-	String &operator=(std::initializer_list<Char> rhs){
 		Assign(rhs);
 		return *this;
 	}

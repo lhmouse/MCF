@@ -269,33 +269,19 @@ namespace {
 	}
 
 	template<class StringT, class FilterT>
-	void Convert(StringT &strWrite, std::size_t uPos, FilterT vFilter){
-		typename StringT::Char achTemp[512];
+	void Convert(StringT &strWrite, FilterT vFilter){
+		typename StringT::Char achTemp[256];
 		auto pchWrite = achTemp;
 
-		if(uPos == strWrite.GetSize()){
-			while(vFilter){
-				*pchWrite = vFilter();
-				if(++pchWrite == std::end(achTemp)){
-					strWrite.Append(achTemp, pchWrite);
-					pchWrite = achTemp;
-				}
-			}
-			if(pchWrite != achTemp){
+		while(vFilter){
+			*pchWrite = vFilter();
+			if(++pchWrite == std::end(achTemp)){
 				strWrite.Append(achTemp, pchWrite);
+				pchWrite = achTemp;
 			}
-		} else {
-			while(vFilter){
-				*pchWrite = vFilter();
-				if(++pchWrite == std::end(achTemp)){
-					strWrite.Replace(static_cast<std::ptrdiff_t>(uPos), static_cast<std::ptrdiff_t>(uPos), achTemp, pchWrite);
-					uPos += CountOf(achTemp);
-					pchWrite = achTemp;
-				}
-			}
-			if(pchWrite != achTemp){
-				strWrite.Replace(static_cast<std::ptrdiff_t>(uPos), static_cast<std::ptrdiff_t>(uPos), achTemp, pchWrite);
-			}
+		}
+		if(pchWrite != achTemp){
+			strWrite.Append(achTemp, pchWrite);
 		}
 	}
 }
@@ -308,89 +294,174 @@ template class String<StringType::kUtf32>;
 template class String<StringType::kCesu8>;
 template class String<StringType::kAnsi>;
 
+static_assert(sizeof(wchar_t) == sizeof(char16_t), "wchar_t does not have the same size with char16_t.");
+static_assert(alignof(wchar_t) == alignof(char16_t), "wchar_t does not have the same alignment with char16_t.");
+
 // UTF-8
 template<>
-UnifiedStringView NarrowString::Unify(UnifiedString &usTempStorage, const NarrowStringView &nsvSrc){
-	usTempStorage.ReserveMore(nsvSrc.GetSize());
-	Convert(usTempStorage, 0, MakeUtf8Decoder(MakeStringSource(nsvSrc)));
-	return usTempStorage;
+StringView<StringType::kUtf16> NarrowString::Unify(String<StringType::kUtf16> &u16sTemp, const NarrowStringView &vSrc){
+	ASSERT(u16sTemp.IsEmpty());
+
+	u16sTemp.Reserve(vSrc.GetSize());
+	Convert(u16sTemp, MakeUtf16Encoder(MakeUtf8Decoder(MakeStringSource(vSrc))));
+	return u16sTemp;
 }
 template<>
-void NarrowString::Deunify(NarrowString &nsDst, std::size_t uPos, const UnifiedStringView &usvSrc){
-	nsDst.ReserveMore(usvSrc.GetSize() * 2);
-	Convert(nsDst, uPos, MakeUtf8Encoder(MakeStringSource(usvSrc)));
+void NarrowString::Deunify(NarrowString &strDst, const StringView<StringType::kUtf16> &u16svSrc){
+	strDst.ReserveMore(u16svSrc.GetSize() * 3);
+	Convert(strDst, MakeUtf8Encoder(MakeUtf16Decoder(MakeStringSource(u16svSrc))));
+}
+
+template<>
+StringView<StringType::kUtf32> NarrowString::Unify(String<StringType::kUtf32> &u32sTemp, const NarrowStringView &vSrc){
+	ASSERT(u32sTemp.IsEmpty());
+
+	u32sTemp.Reserve(vSrc.GetSize());
+	Convert(u32sTemp, MakeUtf8Decoder(MakeStringSource(vSrc)));
+	return u32sTemp;
+}
+template<>
+void NarrowString::Deunify(NarrowString &strDst, const StringView<StringType::kUtf32> &u32svSrc){
+	strDst.ReserveMore(u32svSrc.GetSize() * 2);
+	Convert(strDst, MakeUtf8Encoder(MakeStringSource(u32svSrc)));
 }
 
 // UTF-16
 template<>
-UnifiedStringView WideString::Unify(UnifiedString &usTempStorage, const WideStringView &wsvSrc){
-	usTempStorage.ReserveMore(wsvSrc.GetSize());
-	Convert(usTempStorage, 0, MakeUtf16Decoder(MakeStringSource(wsvSrc)));
-	return usTempStorage;
+StringView<StringType::kUtf16> WideString::Unify(String<StringType::kUtf16> & /* u16sTemp */, const WideStringView &vSrc){
+	return StringView<StringType::kUtf16>(reinterpret_cast<const char16_t *>(vSrc.GetBegin()), vSrc.GetSize());
 }
 template<>
-void WideString::Deunify(WideString &wsDst, std::size_t uPos, const UnifiedStringView &usvSrc){
-	wsDst.ReserveMore(usvSrc.GetSize());
-	Convert(wsDst, uPos, MakeUtf16Encoder(MakeStringSource(usvSrc)));
+void WideString::Deunify(WideString &strDst, const StringView<StringType::kUtf16> &u16svSrc){
+	strDst.Append(reinterpret_cast<const wchar_t *>(u16svSrc.GetBegin()), u16svSrc.GetSize());
+}
+
+template<>
+StringView<StringType::kUtf32> WideString::Unify(String<StringType::kUtf32> &u32sTemp, const WideStringView &vSrc){
+	ASSERT(u32sTemp.IsEmpty());
+
+	u32sTemp.Reserve(vSrc.GetSize());
+	Convert(u32sTemp, MakeUtf16Decoder(MakeStringSource(vSrc)));
+	return u32sTemp;
+}
+template<>
+void WideString::Deunify(WideString &strDst, const StringView<StringType::kUtf32> &u32svSrc){
+	strDst.ReserveMore(u32svSrc.GetSize());
+	Convert(strDst, MakeUtf16Encoder(MakeStringSource(u32svSrc)));
 }
 
 // UTF-8
 template<>
-UnifiedStringView Utf8String::Unify(UnifiedString &usTempStorage, const Utf8StringView &u8svSrc){
-	usTempStorage.ReserveMore(u8svSrc.GetSize());
-	Convert(usTempStorage, 0, MakeUtf8Decoder(MakeStringSource(u8svSrc)));
-	return usTempStorage;
+StringView<StringType::kUtf16> Utf8String::Unify(String<StringType::kUtf16> &u16sTemp, const Utf8StringView &vSrc){
+	ASSERT(u16sTemp.IsEmpty());
+
+	u16sTemp.Reserve(vSrc.GetSize());
+	Convert(u16sTemp, MakeUtf16Encoder(MakeUtf8Decoder(MakeStringSource(vSrc))));
+	return u16sTemp;
 }
 template<>
-void Utf8String::Deunify(Utf8String &u8sDst, std::size_t uPos, const UnifiedStringView &usvSrc){
-	u8sDst.ReserveMore(usvSrc.GetSize() * 3);
-	Convert(u8sDst, uPos, MakeUtf8Encoder(MakeStringSource(usvSrc)));
+void Utf8String::Deunify(Utf8String &strDst, const StringView<StringType::kUtf16> &u16svSrc){
+	strDst.ReserveMore(u16svSrc.GetSize() * 3);
+	Convert(strDst, MakeUtf8Encoder(MakeUtf16Decoder(MakeStringSource(u16svSrc))));
+}
+
+template<>
+StringView<StringType::kUtf32> Utf8String::Unify(String<StringType::kUtf32> &u32sTemp, const Utf8StringView &vSrc){
+	ASSERT(u32sTemp.IsEmpty());
+
+	u32sTemp.Reserve(vSrc.GetSize());
+	Convert(u32sTemp, MakeUtf8Decoder(MakeStringSource(vSrc)));
+	return u32sTemp;
+}
+template<>
+void Utf8String::Deunify(Utf8String &strDst, const StringView<StringType::kUtf32> &u32svSrc){
+	strDst.ReserveMore(u32svSrc.GetSize() * 2);
+	Convert(strDst, MakeUtf8Encoder(MakeStringSource(u32svSrc)));
 }
 
 // UTF-16
 template<>
-UnifiedStringView Utf16String::Unify(UnifiedString &usTempStorage, const Utf16StringView &u16svSrc){
-	usTempStorage.ReserveMore(u16svSrc.GetSize());
-	Convert(usTempStorage, 0, MakeUtf16Decoder(MakeStringSource(u16svSrc)));
-	return usTempStorage;
+StringView<StringType::kUtf16> Utf16String::Unify(String<StringType::kUtf16> & /* u16sTemp */, const Utf16StringView &vSrc){
+	return StringView<StringType::kUtf16>(vSrc.GetBegin(), vSrc.GetSize());
 }
 template<>
-void Utf16String::Deunify(Utf16String &u16sDst, std::size_t uPos, const UnifiedStringView &usvSrc){
-	u16sDst.ReserveMore(usvSrc.GetSize());
-	Convert(u16sDst, uPos, MakeUtf16Encoder(MakeStringSource(usvSrc)));
+void Utf16String::Deunify(Utf16String &strDst, const StringView<StringType::kUtf16> &u16svSrc){
+	strDst.Append(u16svSrc.GetBegin(), u16svSrc.GetSize());
+}
+
+template<>
+StringView<StringType::kUtf32> Utf16String::Unify(String<StringType::kUtf32> &u32sTemp, const Utf16StringView &vSrc){
+	ASSERT(u32sTemp.IsEmpty());
+
+	u32sTemp.Reserve(vSrc.GetSize());
+	Convert(u32sTemp, MakeUtf16Decoder(MakeStringSource(vSrc)));
+	return u32sTemp;
+}
+template<>
+void Utf16String::Deunify(Utf16String &strDst, const StringView<StringType::kUtf32> &u32svSrc){
+	strDst.ReserveMore(u32svSrc.GetSize());
+	Convert(strDst, MakeUtf16Encoder(MakeStringSource(u32svSrc)));
 }
 
 // UTF-32
 template<>
-UnifiedStringView Utf32String::Unify(UnifiedString & /* usTempStorage */, const Utf32StringView &u32svSrc){
-	return u32svSrc;
+StringView<StringType::kUtf16> Utf32String::Unify(String<StringType::kUtf16> &u16sTemp, const Utf32StringView &vSrc){
+	ASSERT(u16sTemp.IsEmpty());
+
+	u16sTemp.Reserve(vSrc.GetSize());
+	Convert(u16sTemp, MakeUtf16Encoder(MakeStringSource(vSrc)));
+	return u16sTemp;
 }
 template<>
-void Utf32String::Deunify(Utf32String &u32sDst, std::size_t uPos, const UnifiedStringView &usvSrc){
-	u32sDst.Replace((std::ptrdiff_t)uPos, (std::ptrdiff_t)uPos, usvSrc);
+void Utf32String::Deunify(Utf32String &strDst, const StringView<StringType::kUtf16> &u16svSrc){
+	strDst.ReserveMore(u16svSrc.GetSize());
+	Convert(strDst, MakeUtf16Decoder(MakeStringSource(u16svSrc)));
+}
+
+template<>
+StringView<StringType::kUtf32> Utf32String::Unify(String<StringType::kUtf32> & /* u32sTemp */, const Utf32StringView &vSrc){
+	return StringView<StringType::kUtf32>(vSrc.GetBegin(), vSrc.GetSize());
+}
+template<>
+void Utf32String::Deunify(Utf32String &strDst, const StringView<StringType::kUtf32> &u32svSrc){
+	strDst.Append(u32svSrc.GetBegin(), u32svSrc.GetSize());
 }
 
 // CESU-8
 template<>
-UnifiedStringView Cesu8String::Unify(UnifiedString &usTempStorage, const Cesu8StringView &cu8svSrc){
-	usTempStorage.ReserveMore(cu8svSrc.GetSize());
-	Convert(usTempStorage, 0, MakeUtf16Decoder(MakeCesu8Decoder(MakeStringSource(cu8svSrc))));
-	return usTempStorage;
+StringView<StringType::kUtf16> Cesu8String::Unify(String<StringType::kUtf16> &u16sTemp, const Cesu8StringView &vSrc){
+	ASSERT(u16sTemp.IsEmpty());
+
+	u16sTemp.Reserve(vSrc.GetSize());
+	Convert(u16sTemp, MakeCesu8Decoder(MakeStringSource(vSrc)));
+	return u16sTemp;
 }
 template<>
-void Cesu8String::Deunify(Cesu8String &cu8sDst, std::size_t uPos, const UnifiedStringView &usvSrc){
-	cu8sDst.ReserveMore(usvSrc.GetSize() * 3);
-	Convert(cu8sDst, uPos, MakeUtf8Encoder(MakeUtf16Encoder(MakeStringSource(usvSrc))));
+void Cesu8String::Deunify(Cesu8String &strDst, const StringView<StringType::kUtf16> &u16svSrc){
+	strDst.ReserveMore(u16svSrc.GetSize() * 3);
+	Convert(strDst, MakeUtf8Encoder(MakeStringSource(u16svSrc)));
+}
+
+template<>
+StringView<StringType::kUtf32> Cesu8String::Unify(String<StringType::kUtf32> &u32sTemp, const Cesu8StringView &vSrc){
+	ASSERT(u32sTemp.IsEmpty());
+
+	u32sTemp.Reserve(vSrc.GetSize());
+	Convert(u32sTemp, MakeUtf16Decoder(MakeCesu8Decoder(MakeStringSource(vSrc))));
+	return u32sTemp;
+}
+template<>
+void Cesu8String::Deunify(Cesu8String &strDst, const StringView<StringType::kUtf32> &u32svSrc){
+	strDst.ReserveMore(u32svSrc.GetSize() * 2);
+	Convert(strDst, MakeUtf8Encoder(MakeUtf16Encoder(MakeStringSource(u32svSrc))));
 }
 
 // ANSI
 template<>
-UnifiedStringView AnsiString::Unify(UnifiedString &usTempStorage, const AnsiStringView &asvSrc){
-	if(asvSrc.IsEmpty()){
-		return usTempStorage;
-	}
+StringView<StringType::kUtf16> AnsiString::Unify(String<StringType::kUtf16> &u16sTemp, const AnsiStringView &vSrc){
+	ASSERT(u16sTemp.IsEmpty());
 
-	const auto uInputSize = asvSrc.GetSize();
+	const auto uInputSize = vSrc.GetSize();
 	if(uInputSize > ULONG_MAX){
 		DEBUG_THROW(Exception, ERROR_NOT_ENOUGH_MEMORY, "The input ANSI string is too long"_rcs);
 	}
@@ -398,51 +469,48 @@ UnifiedStringView AnsiString::Unify(UnifiedString &usTempStorage, const AnsiStri
 	if((uOutputSizeMax > ULONG_MAX) || (uOutputSizeMax / sizeof(wchar_t) != uInputSize)){
 		DEBUG_THROW(Exception, ERROR_NOT_ENOUGH_MEMORY, "The output Unicode string requires more memory than ULONG_MAX bytes"_rcs);
 	}
-	WideString wsTemp;
-	const auto pchWrite = wsTemp.X_ChopAndSplice(0, 0, 0, uOutputSizeMax / sizeof(wchar_t));
+	u16sTemp.Resize(uOutputSizeMax / sizeof(wchar_t));
 	ULONG ulConvertedSize;
-	const auto lStatus = ::RtlMultiByteToUnicodeN(pchWrite, uOutputSizeMax, &ulConvertedSize, asvSrc.GetBegin(), uInputSize);
+	const auto lStatus = ::RtlMultiByteToUnicodeN(reinterpret_cast<wchar_t *>(u16sTemp.GetStr()), uOutputSizeMax, &ulConvertedSize, vSrc.GetBegin(), uInputSize);
 	if(!NT_SUCCESS(lStatus)){
 		DEBUG_THROW(SystemError, ::RtlNtStatusToDosError(lStatus), "RtlMultiByteToUnicodeN"_rcs);
 	}
-	wsTemp.X_SetSize(ulConvertedSize / sizeof(wchar_t));
-
-	usTempStorage.ReserveMore(ulConvertedSize / sizeof(wchar_t));
-	Convert(usTempStorage, 0, MakeUtf16Decoder(MakeStringSource(wsTemp)));
-
-	return usTempStorage;
+	u16sTemp.Resize(ulConvertedSize / sizeof(wchar_t));
+	return u16sTemp;
 }
 template<>
-void AnsiString::Deunify(AnsiString &ansDst, std::size_t uPos, const UnifiedStringView &usvSrc){
-	if(usvSrc.IsEmpty()){
-		return;
-	}
-
-	WideString wsTemp;
-	wsTemp.Reserve(usvSrc.GetSize());
-	Convert(wsTemp, 0, MakeUtf16Encoder(MakeStringSource(usvSrc)));
-
-	const auto uInputSize = wsTemp.GetSize() * sizeof(wchar_t);
-	if((uInputSize > ULONG_MAX) || (uInputSize / sizeof(wchar_t) != wsTemp.GetSize())){
+void AnsiString::Deunify(AnsiString &strDst, const StringView<StringType::kUtf16> &u16svSrc){
+	const auto uInputSize = u16svSrc.GetSize() * sizeof(wchar_t);
+	if((uInputSize > ULONG_MAX) || (uInputSize / sizeof(wchar_t) != u16svSrc.GetSize())){
 		DEBUG_THROW(Exception, ERROR_NOT_ENOUGH_MEMORY, "The input Unicode string is too long"_rcs);
 	}
 	const auto uOutputSizeMax = uInputSize * 2;
 	if((uOutputSizeMax > ULONG_MAX) || (uOutputSizeMax / 2 != uInputSize)){
 		DEBUG_THROW(Exception, ERROR_NOT_ENOUGH_MEMORY, "The output ANSI string requires more memory than ULONG_MAX bytes"_rcs);
 	}
-	const auto uThirdOffset = uPos + uOutputSizeMax;
-	if(uThirdOffset < uPos){
-		throw std::bad_array_new_length();
-	}
-	const auto uOldSize = ansDst.GetSize();
-	const auto pchWrite = ansDst.X_ChopAndSplice(uPos, uPos, 0, uThirdOffset);
+	const auto uOldSize = strDst.GetSize();
+	const auto pchWrite = strDst.ResizeMore(uOutputSizeMax);
 	ULONG ulConvertedSize;
-	const auto lStatus = ::RtlUnicodeToMultiByteN(pchWrite, uOutputSizeMax, &ulConvertedSize, wsTemp.GetBegin(), uInputSize);
+	const auto lStatus = ::RtlUnicodeToMultiByteN(pchWrite, uOutputSizeMax, &ulConvertedSize, reinterpret_cast<const wchar_t *>(u16svSrc.GetBegin()), uInputSize);
 	if(!NT_SUCCESS(lStatus)){
 		DEBUG_THROW(SystemError, ::RtlNtStatusToDosError(lStatus), "RtlUnicodeToMultiByteN"_rcs);
 	}
-	CopyN(pchWrite + ulConvertedSize, pchWrite + uOutputSizeMax, uOldSize - uPos);
-	ansDst.X_SetSize(uOldSize + ulConvertedSize);
+	strDst.Resize(uOldSize + ulConvertedSize);
+}
+
+template<>
+StringView<StringType::kUtf32> AnsiString::Unify(String<StringType::kUtf32> &u32sTemp, const AnsiStringView &vSrc){
+	ASSERT(u32sTemp.IsEmpty());
+
+	Utf16String u16sTemp;
+	const auto u16svResult = Unify(u16sTemp, vSrc);
+	return Utf16String::Unify(u32sTemp, u16svResult);
+}
+template<>
+void AnsiString::Deunify(AnsiString &strDst, const StringView<StringType::kUtf32> &u32svSrc){
+	Utf16String u16sTemp;
+	Utf16String::Deunify(u16sTemp, u32svSrc);
+	Deunify(strDst, u16sTemp);
 }
 
 }

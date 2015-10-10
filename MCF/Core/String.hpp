@@ -25,14 +25,8 @@ namespace MCF {
 template<StringType kTypeT>
 class String;
 
-using UnifiedStringView = StringView<StringType::kUtf32>;
-using UnifiedString     = String    <StringType::kUtf32>;
-
 template<StringType kTypeT>
 class String {
-	template<StringType>
-	friend class String;
-
 public:
 	using View = StringView<kTypeT>;
 
@@ -46,8 +40,11 @@ public:
 	static const String kEmpty;
 
 public:
-	static UnifiedStringView Unify(UnifiedString &usTempStorage, const View &vSrc);
-	static void Deunify(String &strDst, std::size_t uPos, const UnifiedStringView &usvSrc);
+	static StringView<StringType::kUtf16> Unify(String<StringType::kUtf16> &u16sTemp, const View &vSrc);
+	static void Deunify(String &strDst, const StringView<StringType::kUtf16> &u16svSrc);
+
+	static StringView<StringType::kUtf32> Unify(String<StringType::kUtf32> &u32sTemp, const View &vSrc);
+	static void Deunify(String &strDst, const StringView<StringType::kUtf32> &u32svSrc);
 
 private:
 	union X_Storage {
@@ -591,8 +588,20 @@ public:
 	}
 	template<StringType kOtherTypeT>
 	void Append(const StringView<kOtherTypeT> &rhs){
-		UnifiedString ucsTempStorage;
-		Deunify(*this, GetSize(), String<kOtherTypeT>::Unify(ucsTempStorage, rhs));
+		constexpr int kConvertViaUtf16Weight = StringEncodingTrait<kTypeT>::kPreferringConversionViaUtf16 + StringEncodingTrait<kOtherTypeT>::kPreferringConversionViaUtf16;
+		constexpr int kConvertViaUtf32Weight = StringEncodingTrait<kTypeT>::kPreferringConversionViaUtf32 + StringEncodingTrait<kOtherTypeT>::kPreferringConversionViaUtf32;
+		using UnifiedString = String<(kConvertViaUtf16Weight > kConvertViaUtf32Weight) ? StringType::kUtf16 : StringType::kUtf32>;
+
+		UnifiedString usTemp;
+		const auto usvResult = String<kOtherTypeT>::Unify(usTemp, rhs);
+
+		const auto uOldSize = GetSize();
+		try {
+			Deunify(*this, usvResult);
+		} catch(...){
+			Pop(GetSize() - uOldSize);
+			throw;
+		}
 	}
 	template<StringType kOtherTypeT>
 	void Append(const String<kOtherTypeT> &rhs){

@@ -37,8 +37,8 @@ struct StringEncodingTrait<StringType::kNarrow> {
 	using Char = char;
 
 	enum {
-		kPreferringConversionViaUtf16 = 0,
-		kPreferringConversionViaUtf32 = 0,
+		kPrefersConversionViaUtf16 = 0,
+		kPrefersConversionViaUtf32 = 0,
 	};
 };
 template<>
@@ -46,8 +46,8 @@ struct StringEncodingTrait<StringType::kWide> {
 	using Char = wchar_t;
 
 	enum {
-		kPreferringConversionViaUtf16 = 1,
-		kPreferringConversionViaUtf32 = 0,
+		kPrefersConversionViaUtf16 = 1,
+		kPrefersConversionViaUtf32 = 0,
 	};
 };
 
@@ -56,8 +56,8 @@ struct StringEncodingTrait<StringType::kUtf8> {
 	using Char = char;
 
 	enum {
-		kPreferringConversionViaUtf16 = 0,
-		kPreferringConversionViaUtf32 = 0,
+		kPrefersConversionViaUtf16 = 0,
+		kPrefersConversionViaUtf32 = 0,
 	};
 };
 template<>
@@ -65,8 +65,8 @@ struct StringEncodingTrait<StringType::kUtf16> {
 	using Char = char16_t;
 
 	enum {
-		kPreferringConversionViaUtf16 = 1,
-		kPreferringConversionViaUtf32 = 0,
+		kPrefersConversionViaUtf16 = 1,
+		kPrefersConversionViaUtf32 = 0,
 	};
 };
 template<>
@@ -74,8 +74,8 @@ struct StringEncodingTrait<StringType::kUtf32> {
 	using Char = char32_t;
 
 	enum {
-		kPreferringConversionViaUtf16 = 0,
-		kPreferringConversionViaUtf32 = 1,
+		kPrefersConversionViaUtf16 = 0,
+		kPrefersConversionViaUtf32 = 1,
 	};
 };
 template<>
@@ -83,8 +83,8 @@ struct StringEncodingTrait<StringType::kCesu8> {
 	using Char = char;
 
 	enum {
-		kPreferringConversionViaUtf16 = 0,
-		kPreferringConversionViaUtf32 = 0,
+		kPrefersConversionViaUtf16 = 0,
+		kPrefersConversionViaUtf32 = 0,
 	};
 };
 template<>
@@ -92,8 +92,8 @@ struct StringEncodingTrait<StringType::kAnsi> {
 	using Char = char;
 
 	enum {
-		kPreferringConversionViaUtf16 = 1,
-		kPreferringConversionViaUtf32 = 0,
+		kPrefersConversionViaUtf16 = 1,
+		kPrefersConversionViaUtf32 = 0,
 	};
 };
 

@@ -588,8 +588,8 @@ public:
 	}
 	template<StringType kOtherTypeT>
 	void Append(const StringView<kOtherTypeT> &rhs){
-		constexpr int kConvertViaUtf16Weight = StringEncodingTrait<kTypeT>::kPreferringConversionViaUtf16 + StringEncodingTrait<kOtherTypeT>::kPreferringConversionViaUtf16;
-		constexpr int kConvertViaUtf32Weight = StringEncodingTrait<kTypeT>::kPreferringConversionViaUtf32 + StringEncodingTrait<kOtherTypeT>::kPreferringConversionViaUtf32;
+		constexpr int kConvertViaUtf16Weight = StringEncodingTrait<kTypeT>::kPrefersConversionViaUtf16 + StringEncodingTrait<kOtherTypeT>::kPrefersConversionViaUtf16;
+		constexpr int kConvertViaUtf32Weight = StringEncodingTrait<kTypeT>::kPrefersConversionViaUtf32 + StringEncodingTrait<kOtherTypeT>::kPrefersConversionViaUtf32;
 		using UnifiedString = String<(kConvertViaUtf16Weight > kConvertViaUtf32Weight) ? StringType::kUtf16 : StringType::kUtf32>;
 
 		UnifiedString usTemp;

@@ -25,8 +25,8 @@ namespace MCF {
 template<StringType kTypeT>
 class String;
 
-using UnifiedString     = String<StringType::kUtf32>;
 using UnifiedStringView = StringView<StringType::kUtf32>;
+using UnifiedString     = String    <StringType::kUtf32>;
 
 template<StringType kTypeT>
 class String {

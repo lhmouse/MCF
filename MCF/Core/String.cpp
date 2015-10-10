@@ -311,7 +311,7 @@ template class String<StringType::kAnsi>;
 // UTF-8
 template<>
 UnifiedStringView NarrowString::Unify(UnifiedString &usTempStorage, const NarrowStringView &nsvSrc){
-	usTempStorage.Reserve(nsvSrc.GetSize());
+	usTempStorage.ReserveMore(nsvSrc.GetSize());
 	Convert(usTempStorage, 0, MakeUtf8Decoder(MakeStringSource(nsvSrc)));
 	return usTempStorage;
 }
@@ -324,7 +324,7 @@ void NarrowString::Deunify(NarrowString &nsDst, std::size_t uPos, const UnifiedS
 // UTF-16
 template<>
 UnifiedStringView WideString::Unify(UnifiedString &usTempStorage, const WideStringView &wsvSrc){
-	usTempStorage.Reserve(wsvSrc.GetSize());
+	usTempStorage.ReserveMore(wsvSrc.GetSize());
 	Convert(usTempStorage, 0, MakeUtf16Decoder(MakeStringSource(wsvSrc)));
 	return usTempStorage;
 }
@@ -337,7 +337,7 @@ void WideString::Deunify(WideString &wsDst, std::size_t uPos, const UnifiedStrin
 // UTF-8
 template<>
 UnifiedStringView Utf8String::Unify(UnifiedString &usTempStorage, const Utf8StringView &u8svSrc){
-	usTempStorage.Reserve(u8svSrc.GetSize());
+	usTempStorage.ReserveMore(u8svSrc.GetSize());
 	Convert(usTempStorage, 0, MakeUtf8Decoder(MakeStringSource(u8svSrc)));
 	return usTempStorage;
 }
@@ -350,7 +350,7 @@ void Utf8String::Deunify(Utf8String &u8sDst, std::size_t uPos, const UnifiedStri
 // UTF-16
 template<>
 UnifiedStringView Utf16String::Unify(UnifiedString &usTempStorage, const Utf16StringView &u16svSrc){
-	usTempStorage.Reserve(u16svSrc.GetSize());
+	usTempStorage.ReserveMore(u16svSrc.GetSize());
 	Convert(usTempStorage, 0, MakeUtf16Decoder(MakeStringSource(u16svSrc)));
 	return usTempStorage;
 }
@@ -373,7 +373,7 @@ void Utf32String::Deunify(Utf32String &u32sDst, std::size_t uPos, const UnifiedS
 // CESU-8
 template<>
 UnifiedStringView Cesu8String::Unify(UnifiedString &usTempStorage, const Cesu8StringView &cu8svSrc){
-	usTempStorage.Reserve(cu8svSrc.GetSize());
+	usTempStorage.ReserveMore(cu8svSrc.GetSize());
 	Convert(usTempStorage, 0, MakeUtf16Decoder(MakeCesu8Decoder(MakeStringSource(cu8svSrc))));
 	return usTempStorage;
 }
@@ -407,7 +407,7 @@ UnifiedStringView AnsiString::Unify(UnifiedString &usTempStorage, const AnsiStri
 	}
 	wsTemp.X_SetSize(ulConvertedSize / sizeof(wchar_t));
 
-	usTempStorage.Reserve(ulConvertedSize / sizeof(wchar_t));
+	usTempStorage.ReserveMore(ulConvertedSize / sizeof(wchar_t));
 	Convert(usTempStorage, 0, MakeUtf16Decoder(MakeStringSource(wsTemp)));
 
 	return usTempStorage;

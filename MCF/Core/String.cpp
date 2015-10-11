@@ -270,7 +270,7 @@ namespace {
 					}
 					pchSegment[i] = vFilter();
 				}
-				strWrite.ResizeMore(64);
+				strWrite.ReserveMore(64);
 			}
 		jDone:
 			;

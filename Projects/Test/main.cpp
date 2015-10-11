@@ -7,11 +7,11 @@ extern "C" unsigned MCFMain(){
 
 	static constexpr unsigned loops = 10000000;
 
-	auto &ku8s  = u8"你是我的小呀小苹果"_u8s;
-	auto &ku16s =  u"你是我的小呀小苹果"_u16s;
-	auto &ku32s =  U"你是我的小呀小苹果"_u32s;
-	auto &kws   =  L"你是我的小呀小苹果"_ws;
-
+	auto &ku8s  = u8"𤭢𤭢𤭢𤭢𤭢𤭢𤭢𤭢𤭢"_u8s;
+	auto &ku16s =  u"𤭢𤭢𤭢𤭢𤭢𤭢𤭢𤭢𤭢"_u16s;
+	auto &ku32s =  U"𤭢𤭢𤭢𤭢𤭢𤭢𤭢𤭢𤭢"_u32s;
+	auto &kws   =  L"𤭢𤭢𤭢𤭢𤭢𤭢𤭢𤭢𤭢"_ws;
+/*
 	Utf32String u32s;
 	auto t1 = GetHiResMonoClock();
 	for(unsigned i = 0; i < loops; ++i){
@@ -22,6 +22,15 @@ extern "C" unsigned MCFMain(){
 	}
 	auto t2 = GetHiResMonoClock();
 	std::printf("MCF  : time elasped = %f, result = %s\n", t2 - t1, AnsiString(u32s).GetStr());
+*/
+
+	Utf16String s1(ku8s); ASSERT(s1 == ku16s);
+	Utf32String s2(s1);   ASSERT(s2 == ku32s);
+	Utf8String  s3(s2);   ASSERT(s3 == ku8s);
+
+	Utf32String s4(s3);   ASSERT(s4 == ku32s);
+	Utf16String s5(s4);   ASSERT(s5 == ku16s);
+	Utf8String  s6(s5);   ASSERT(s6 == ku8s);
 
 	return 0;
 }

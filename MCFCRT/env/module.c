@@ -10,7 +10,6 @@
 #include "static_ctors.h"
 #include "../ext/expect.h"
 #include <stdlib.h>
-#include <winnt.h>
 
 typedef struct tagAtExitCallback {
 	void (*pfnProc)(intptr_t);
@@ -28,11 +27,11 @@ typedef struct tagAtExitCallbackBlock {
 	AtExitCallback aCallbacks[kAtExitCallbacksPerBlock];
 } AtExitCallbackBlock;
 
-static SRWLOCK               g_srwlAtExitMutex  = SRWLOCK_INIT;
-static AtExitCallbackBlock * g_pAtExitFirst     = nullptr;
-static AtExitCallbackBlock * g_pAtExitLast      = nullptr;
+static SRWLOCK               g_srwlAtExitMutex   = SRWLOCK_INIT;
+static AtExitCallbackBlock * g_pAtExitFirst      = nullptr;
+static AtExitCallbackBlock * g_pAtExitLast       = nullptr;
 
-static void PumpAtEndModule(){
+static void __MCF_CRT_PumpAtEndModule(){
 	// ISO C++
 	// 3.6.3 Termination [basic.start.term]
 	// 1 Destructors (12.4) for initialized objects (...)
@@ -75,37 +74,43 @@ static void PumpAtEndModule(){
 static bool __MCF_CRT_StaticObjectsInit(){
 	if(!__MCF_CRT_CallStaticCtors()){
 		const DWORD dwError = GetLastError();
-		PumpAtEndModule();
+		__MCF_CRT_PumpAtEndModule();
 		SetLastError(dwError);
 		return false;
 	}
 	return true;
 }
 static void __MCF_CRT_StaticObjectsUninit(){
-	PumpAtEndModule();
+	__MCF_CRT_PumpAtEndModule();
 	__MCF_CRT_CallStaticDtors();
 }
 
 bool __MCF_CRT_BeginModule(){
 	__MCF_CRT_FEnvInit();
 
+	DWORD dwLastError;
 	if(!__MCF_CRT_ThreadEnvInit()){
-		return false;
+//		dwLastError = GetLastError();
+		goto jFailed0;
 	}
 	if(!__MCF_CRT_MinGWHacksInit()){
-		const DWORD dwLastError = GetLastError();
-		__MCF_CRT_ThreadEnvUninit();
-		SetLastError(dwLastError);
-		return false;
+		dwLastError = GetLastError();
+		goto jFailed1;
 	}
 	if(!__MCF_CRT_StaticObjectsInit()){
-		const DWORD dwLastError = GetLastError();
-		__MCF_CRT_MinGWHacksUninit();
-		__MCF_CRT_ThreadEnvUninit();
-		SetLastError(dwLastError);
-		return false;
+		dwLastError = GetLastError();
+		goto jFailed2;
 	}
 	return true;
+
+//	__MCF_CRT_StaticObjectsUninit();
+jFailed2:
+	__MCF_CRT_MinGWHacksUninit();
+jFailed1:
+	__MCF_CRT_ThreadEnvUninit();
+	SetLastError(dwLastError);
+jFailed0:
+	return false;
 }
 void __MCF_CRT_EndModule(){
 	__MCF_CRT_StaticObjectsUninit();

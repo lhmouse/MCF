@@ -19,6 +19,6 @@ namespace Impl_Noncopyable {
 
 }
 
-#define NONCOPYABLE		private ::MCF::Impl_Noncopyable::NoncopyableBase<__COUNTER__>
+#define NONCOPYABLE     private ::MCF::Impl_Noncopyable::NoncopyableBase<__COUNTER__>
 
 #endif

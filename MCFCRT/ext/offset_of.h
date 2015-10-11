@@ -11,7 +11,7 @@
 #ifdef __cplusplus
 #	include <memory>
 #	define __MCF_ADDRESS_OF(__lval_)	\
-	((unsigned char *)::std::addressof(__lval_))
+	(&(unsigned char &)(__lval_))
 #else
 #	define __MCF_ADDRESS_OF(__lval_)	\
 	((unsigned char *)&(__lval_))

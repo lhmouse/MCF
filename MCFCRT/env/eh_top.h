@@ -17,7 +17,7 @@ extern void __MCF_CRT_UnregisterFrameInfo(void) MCF_NOEXCEPT;
 
 __MCF_CRT_EXTERN_C_END
 
-#if defined(__SEH__)	// SEH
+#if defined(__SEH__) // SEH
 
 #	define __MCF_EH_TOP_BEGIN	\
 	__asm__ __volatile__(	\
@@ -33,7 +33,7 @@ __MCF_CRT_EXTERN_C_END
 		"	.section .text$ \n"	\
 	);
 
-#else	// DWARF, SJLJ
+#else // DWARF, SJLJ
 
 #	define __MCF_EH_TOP_BEGIN
 #	define __MCF_EH_TOP_END

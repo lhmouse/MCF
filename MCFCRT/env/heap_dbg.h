@@ -19,13 +19,13 @@
 
 #ifndef __MCF_CRT_HEAPDBG_LEVEL
 #	ifdef NDEBUG
-#		define __MCF_CRT_HEAPDBG_LEVEL	2
+#		define __MCF_CRT_HEAPDBG_LEVEL  2
 #	else
-#		define __MCF_CRT_HEAPDBG_LEVEL	4
+#		define __MCF_CRT_HEAPDBG_LEVEL  4
 #	endif
 #endif
 
-#define __MCF_CRT_REQUIRE_HEAPDBG_LEVEL(lv_)	((__MCF_CRT_HEAPDBG_LEVEL + 0) >= (lv_))
+#define __MCF_CRT_REQUIRE_HEAPDBG_LEVEL(lv_)    ((__MCF_CRT_HEAPDBG_LEVEL + 0) >= (lv_))
 
 #include "avl_tree.h"
 

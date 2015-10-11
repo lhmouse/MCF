@@ -221,7 +221,7 @@ void __MCF_CRT_HeapFree(void *pBlock, const void *pRetAddr){
 	}
 }
 
-#define USE_DLMALLOC	1
+#define USE_DLMALLOC    1
 
 #if USE_DLMALLOC
 #	define USE_DL_PREFIX

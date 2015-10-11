@@ -5,9 +5,9 @@
 #include "../../env/_crtdef.h"
 
 #ifdef _WIN64
-#	define BSWAP_PTR(val)	__builtin_bswap64(val)
+#	define BSWAP_PTR(val)   __builtin_bswap64(val)
 #else
-#	define BSWAP_PTR(val)	__builtin_bswap32(val)
+#	define BSWAP_PTR(val)   __builtin_bswap32(val)
 #endif
 
 int memcmp(const void *p1, const void *p2, size_t cb){

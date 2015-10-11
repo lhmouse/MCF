@@ -9,9 +9,9 @@
 
 namespace MCF {
 
-constexpr char kBase64TableMime		[66] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
-constexpr char kBase64TableUrl		[66] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789*-";
-constexpr char kBase64TableRegexp	[66] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!-=";
+constexpr char kBase64TableMime   [66] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
+constexpr char kBase64TableUrl    [66] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789*-";
+constexpr char kBase64TableRegexp [66] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!-=";
 
 class Base64Encoder : public StreamFilterBase {
 private:

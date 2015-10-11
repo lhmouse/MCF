@@ -78,9 +78,9 @@ static long double ppowlu(long double x, unsigned y){
 
 #define PPOWU(t_, x_, y_)	\
 	_Generic((t_)0,	\
-		float:		ppowfu,	\
-		double:		ppowdu,	\
-		default:	ppowlu)(x_, y_)
+		float:   ppowfu,	\
+		double:  ppowdu,	\
+		default: ppowlu)(x_, y_)
 
 // postive pow float float
 static float ppowf(float x, float y){
@@ -155,9 +155,9 @@ static long double ppowl(double x, double y){
 
 #define PPOW(t_, x_, y_)	\
 	_Generic((t_)0,	\
-		float:		ppowf,	\
-		double:		ppowd,	\
-		default:	ppowl)(x_, y_)
+		float:   ppowf,	\
+		double:  ppowd,	\
+		default: ppowl)(x_, y_)
 
 #define POW_IMPL(t_)	\
 	if(y == 0){	\
@@ -167,9 +167,9 @@ static long double ppowl(double x, double y){
 		return 0.0;	\
 	}	\
 	const t_ whole = _Generic((t_)0,	\
-		float:		__builtin_floorf,	\
-		double:		__builtin_floor,	\
-		default:	__builtin_floorl)(y);	\
+		float:   __builtin_floorf,	\
+		double:  __builtin_floor,	\
+		default: __builtin_floorl)(y);	\
 	const t_ frac = y - whole;	\
 	if(x > 0){	\
 		if(y > (t_)INT_MAX){	\
@@ -194,9 +194,9 @@ static long double ppowl(double x, double y){
 		}	\
 		if(y > (t_)INT_MAX){	\
 			if(_Generic((t_)0,	\
-				float:		__builtin_fmodf,	\
-				double:		__builtin_fmod,	\
-				default:	__builtin_fmodl)(whole, 2.0) == 0.0)	\
+				float:   __builtin_fmodf,	\
+				double:  __builtin_fmod,	\
+				default: __builtin_fmodl)(whole, 2.0) == 0.0)	\
 			{	\
 				return PPOW(t_, -x, whole);	\
 			} else {	\
@@ -204,9 +204,9 @@ static long double ppowl(double x, double y){
 			}	\
 		} else if(y < (t_)INT_MIN){	\
 			if(_Generic((t_)0,	\
-				float:		__builtin_fmodf,	\
-				double:		__builtin_fmod,	\
-				default:	__builtin_fmodl)(whole, 2.0) == 0.0)	\
+				float:   __builtin_fmodf,	\
+				double:  __builtin_fmod,	\
+				default: __builtin_fmodl)(whole, 2.0) == 0.0)	\
 			{	\
 				return 1.0 / PPOW(t_, -x, whole);	\
 			} else {	\

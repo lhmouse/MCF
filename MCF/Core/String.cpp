@@ -144,7 +144,6 @@ namespace {
 			// 这个值是该码点的总字节数。
 			const auto uBytes = (34u - CountLeadingZeroes((std::uint32_t)(u32Point | 0x7Fu))) / 5u;
 			if(uBytes > 1){
-
 				switch(uBytes){
 
 #define UTF8_ENCODER_UNROLLED	\

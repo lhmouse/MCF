@@ -73,7 +73,7 @@ namespace {
 				if(uBytes - 2 > 2){ // 2, 3, 4
 					DEBUG_THROW(Exception, ERROR_INVALID_DATA, "Invalid UTF-8 leading byte"_rcs);
 				}
-				u32Point &= (0xFFu >> uBytes);
+				u32Point &= 0xFFu >> uBytes;
 
 #define UTF8_DECODER_UNROLLED	\
 				{	\
@@ -132,7 +132,7 @@ namespace {
 			return x_u32Pending || !!x_vPrev;
 		}
 		std::uint32_t operator()(){
-			if(EXPECT(x_u32Pending != 0)){
+			if(x_u32Pending){
 				const auto u32Ret = x_u32Pending & 0xFFu;
 				x_u32Pending >>= 8;
 				return u32Ret;
@@ -164,7 +164,7 @@ namespace {
 					UTF8_ENCODER_UNROLLED
 				}
 
-				u32Point |= -0x100u >> uBytes;
+				u32Point |= ~0xFFu >> uBytes;
 			}
 			return u32Point;
 		}
@@ -232,7 +232,7 @@ namespace {
 			return x_u32Pending || !!x_vPrev;
 		}
 		std::uint32_t operator()(){
-			if(EXPECT(x_u32Pending != 0)){
+			if(x_u32Pending){
 				const auto u32Ret = x_u32Pending;
 				x_u32Pending >>= 16;
 				return u32Ret;

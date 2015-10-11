@@ -32,7 +32,7 @@ General {
 
 	Linkers {
 		Partial			= ld -r %IN% -o %OUT%
-		Full			= ar rcs %OUT% %IN%
+		Full			= gcc-ar rcs %OUT% %IN%
 	}
 
 	DefaultOutput		= libmcfcrt.a
@@ -43,5 +43,5 @@ Debug = General {
 }
 
 Release = General {
-	CompilerFlags		=> -DNDEBUG -O3 -ffunction-sections -fdata-sections
+	CompilerFlags		=> -DNDEBUG -O3 -flto -ffunction-sections -fdata-sections
 }

@@ -9,7 +9,7 @@
 
 jmp_buf *__MCF_CRT_abort_hook_jmpbuf = nullptr;
 
-_Noreturn void abort(){
+_Noreturn void __wrap_abort(){
 	if(__MCF_CRT_abort_hook_jmpbuf){
 		longjmp(*__MCF_CRT_abort_hook_jmpbuf, ERROR_PROCESS_ABORTED);
 	}
@@ -18,3 +18,7 @@ _Noreturn void abort(){
 	TerminateProcess(GetCurrentProcess(), ERROR_PROCESS_ABORTED);
 	__builtin_unreachable();
 }
+
+_Noreturn
+__attribute__((__alias__("__wrap_abort")))
+void abort(void);

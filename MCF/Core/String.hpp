@@ -139,6 +139,16 @@ public:
 		Assign(rhs);
 		return *this;
 	}
+	template<StringType kOtherTypeT>
+	String &operator=(const StringView<kOtherTypeT> &rhs){
+		Assign(rhs);
+		return *this;
+	}
+	template<StringType kOtherTypeT>
+	String &operator=(const String<kOtherTypeT> &rhs){
+		Assign(rhs);
+		return *this;
+	}
 	String &operator=(const String &rhs){
 		Assign(rhs);
 		return *this;

@@ -3,28 +3,25 @@
 #include <cstdio>
 
 extern "C" unsigned MCFMain(){
-	static constexpr unsigned loops = 1000;
-	static constexpr unsigned char str[] = { 0xE4, 0xBD, 0xA0, 0xE6, 0x98, 0xAF, 0xE6, 0x88, 0x91, 0xE7, 0x9A, 0x84, 0xE5, 0xB0, 0x8F, 0xE5, 0x91, 0x80, 0xE5, 0xB0, 0x8F, 0xE8, 0x8B, 0xB9, 0xE6, 0x9E, 0x9C };
+	using namespace MCF;
 
-	MCF::Utf8String u8s((const char *)str, sizeof(str));
-	for(unsigned i = 0; i < 16; ++i){
-		u8s.Append(u8s);
-	}
-	MCF::Utf16String u16s;
-	auto t1 = MCF::GetHiResMonoClock();
+	static constexpr unsigned loops = 10000000;
+
+	auto &ku8s  = u8"你是我的小呀小苹果"_u8s;
+	auto &ku16s =  u"你是我的小呀小苹果"_u16s;
+	auto &ku32s =  U"你是我的小呀小苹果"_u32s;
+	auto &kws   =  L"你是我的小呀小苹果"_ws;
+
+	Utf32String u32s;
+	auto t1 = GetHiResMonoClock();
 	for(unsigned i = 0; i < loops; ++i){
-		u16s.Clear();
+		u32s.Clear();
 
-//		MCF::Utf32String u32s;
-//		MCF::Utf8String::Unify(u32s, u8s);
-//		MCF::Utf16String::Deunify(u16s, u32s);
-
-//		u16s.Append(u8s);						// Slower, strong exception safety guarantee.
-
-		MCF::Utf8String::Unify(u16s, u8s);		// Faster, basic exception safety guarantee.
+//		u32s.Append(ku8s);              // Slower, strong exception safety guarantee.
+		Utf8String::Unify(u32s, ku8s);  // Faster, basic exception safety guarantee.
 	}
-	auto t2 = MCF::GetHiResMonoClock();
-	std::printf("MCF  : time elasped = %f, result = %s\n", t2 - t1, /*MCF::AnsiString(u16s).GetStr()*/"");
+	auto t2 = GetHiResMonoClock();
+	std::printf("MCF  : time elasped = %f, result = %s\n", t2 - t1, AnsiString(u32s).GetStr());
 
 	return 0;
 }

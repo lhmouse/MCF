@@ -75,16 +75,17 @@ namespace {
 				}
 				u32Point &= 0xFFu >> uBytes;
 
-#define UTF8_DECODER_UNROLLED	\
-				{	\
-					const auto u32Temp = x_vPrev();	\
-					if((u32Temp & 0xC0u) != 0x80u){	\
-						DEBUG_THROW(Exception, ERROR_INVALID_DATA, "Invalid UTF-8 non-leading byte"_rcs);	\
-					}	\
-					u32Point = (u32Point << 6) | (u32Temp & 0x3Fu);	\
-				}
-
 				switch(uBytes){
+
+#define UTF8_DECODER_UNROLLED	\
+					{	\
+						const auto u32Temp = x_vPrev();	\
+						if((u32Temp & 0xC0u) != 0x80u){	\
+							DEBUG_THROW(Exception, ERROR_INVALID_DATA, "Invalid UTF-8 non-leading byte"_rcs);	\
+						}	\
+						u32Point = (u32Point << 6) | (u32Temp & 0x3Fu);	\
+					}
+
 				default:
 					UTF8_DECODER_UNROLLED
 				case 3:
@@ -144,14 +145,15 @@ namespace {
 			const auto uBytes = (34u - CountLeadingZeroes((std::uint32_t)(u32Point | 0x7Fu))) / 5u;
 			if(uBytes > 1){
 
-#define UTF8_ENCODER_UNROLLED	\
-				{	\
-					x_u32Pending <<= 8;	\
-					x_u32Pending |= (u32Point & 0x3F) | 0x80u;	\
-					u32Point >>= 6;	\
-				}
-
 				switch(uBytes){
+
+#define UTF8_ENCODER_UNROLLED	\
+					{	\
+						x_u32Pending <<= 8;	\
+						x_u32Pending |= (u32Point & 0x3F) | 0x80u;	\
+						u32Point >>= 6;	\
+					}
+
 				default:
 					UTF8_ENCODER_UNROLLED
 				case 3:

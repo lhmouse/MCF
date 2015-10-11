@@ -20,12 +20,15 @@ bool RecursiveMutex::Try(std::uint64_t u64MilliSeconds) noexcept {
 
 	if(x_uLockingThreadId.Load(kAtomicRelaxed) != uThreadId){
 		if(!x_vMutex.Try(u64MilliSeconds)){
-			return false;
+			goto jFailed;
 		}
 		x_uLockingThreadId.Store(uThreadId, kAtomicRelaxed);
 	}
 	++x_uRecursionCount;
 	return true;
+
+jFailed:
+	return false;
 }
 void RecursiveMutex::Lock() noexcept {
 	const auto uThreadId = Thread::GetCurrentId();

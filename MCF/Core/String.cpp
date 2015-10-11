@@ -84,14 +84,12 @@ namespace {
 					u32Point = (u32Point << 6) | (u32Temp & 0x3Fu);	\
 				}
 
-				if(uBytes < 3){
+				switch(uBytes){
+				default:
 					UTF8_DECODER_UNROLLED
-				} else if(uBytes == 3){
+				case 3:
 					UTF8_DECODER_UNROLLED
-					UTF8_DECODER_UNROLLED
-				} else {
-					UTF8_DECODER_UNROLLED
-					UTF8_DECODER_UNROLLED
+				case 2:
 					UTF8_DECODER_UNROLLED
 				}
 
@@ -153,14 +151,12 @@ namespace {
 					u32Point >>= 6;	\
 				}
 
-				if(uBytes < 3){
+				switch(uBytes){
+				default:
 					UTF8_ENCODER_UNROLLED
-				} else if(uBytes == 3){
+				case 3:
 					UTF8_ENCODER_UNROLLED
-					UTF8_ENCODER_UNROLLED
-				} else {
-					UTF8_ENCODER_UNROLLED
-					UTF8_ENCODER_UNROLLED
+				case 2:
 					UTF8_ENCODER_UNROLLED
 				}
 

@@ -71,9 +71,9 @@ static int KeyComparatorNodes(const MCF_AvlNodeHeader *pObj1, const MCF_AvlNodeH
 	return KeyComparatorNodeKey(pObj1, (intptr_t)(void *)pObj2);
 }
 
-static SRWLOCK     g_csKeyMutex         = SRWLOCK_INIT;
-static DWORD       g_dwTlsIndex         = TLS_OUT_OF_INDEXES;
-static MCF_AvlRoot g_pavlKeys           = nullptr;
+static SRWLOCK     g_csKeyMutex = SRWLOCK_INIT;
+static DWORD       g_dwTlsIndex = TLS_OUT_OF_INDEXES;
+static MCF_AvlRoot g_pavlKeys   = nullptr;
 
 bool __MCF_CRT_ThreadEnvInit(){
 	g_dwTlsIndex = TlsAlloc();

@@ -600,14 +600,7 @@ public:
 
 		UnifiedString usTemp;
 		const auto usvResult = String<kOtherTypeT>::Unify(usTemp, rhs);
-
-		const auto uOldSize = GetSize();
-		try {
-			Deunify(*this, usvResult);
-		} catch(...){
-			Pop(GetSize() - uOldSize);
-			throw;
-		}
+		Deunify(*this, usvResult);
 	}
 	template<StringType kOtherTypeT>
 	void Append(const String<kOtherTypeT> &rhs){

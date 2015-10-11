@@ -257,18 +257,26 @@ namespace {
 	template<class StringT, class FilterT>
 	__attribute__((__flatten__))
 	void Convert(StringT &strWrite, FilterT vFilter){
-		typename StringT::Char achTemp[256];
-		auto pchWrite = achTemp;
-
-		while(vFilter){
-			*pchWrite = vFilter();
-			if(++pchWrite == std::end(achTemp)){
-				strWrite.Append(achTemp, pchWrite);
-				pchWrite = achTemp;
+		const auto uOldSize = strWrite.GetSize();
+		try {
+			for(;;){
+				const auto uOldSize = strWrite.GetSize();
+				const auto uSegmentSize = strWrite.GetCapacity() - uOldSize;
+				const auto pchSegment = strWrite.ResizeMore(uSegmentSize);
+				for(std::size_t i = 0; i < uSegmentSize; ++i){
+					if(!vFilter){
+						strWrite.Pop(strWrite.GetSize() - (uOldSize + i));
+						goto jDone;
+					}
+					pchSegment[i] = vFilter();
+				}
+				strWrite.ResizeMore(64);
 			}
-		}
-		if(pchWrite != achTemp){
-			strWrite.Append(achTemp, pchWrite);
+		jDone:
+			;
+		} catch(...){
+			strWrite.Pop(strWrite.GetSize() - uOldSize);
+			throw;
 		}
 	}
 }
@@ -349,9 +357,7 @@ void WideString::Deunify(WideString &strDst, const StringView<StringType::kUtf32
 template<>
 __attribute__((__flatten__))
 StringView<StringType::kUtf16> Utf8String::Unify(String<StringType::kUtf16> &u16sTemp, const Utf8StringView &vSrc){
-	ASSERT(u16sTemp.IsEmpty());
-
-	u16sTemp.Reserve(vSrc.GetSize());
+	u16sTemp.ReserveMore(vSrc.GetSize());
 	Convert(u16sTemp, MakeUtf16Encoder(MakeUtf8Decoder(MakeStringSource(vSrc))));
 	return u16sTemp;
 }
@@ -365,9 +371,7 @@ void Utf8String::Deunify(Utf8String &strDst, const StringView<StringType::kUtf16
 template<>
 __attribute__((__flatten__))
 StringView<StringType::kUtf32> Utf8String::Unify(String<StringType::kUtf32> &u32sTemp, const Utf8StringView &vSrc){
-	ASSERT(u32sTemp.IsEmpty());
-
-	u32sTemp.Reserve(vSrc.GetSize());
+	u32sTemp.ReserveMore(vSrc.GetSize());
 	Convert(u32sTemp, MakeUtf8Decoder(MakeStringSource(vSrc)));
 	return u32sTemp;
 }
@@ -393,9 +397,7 @@ void Utf16String::Deunify(Utf16String &strDst, const StringView<StringType::kUtf
 template<>
 __attribute__((__flatten__))
 StringView<StringType::kUtf32> Utf16String::Unify(String<StringType::kUtf32> &u32sTemp, const Utf16StringView &vSrc){
-	ASSERT(u32sTemp.IsEmpty());
-
-	u32sTemp.Reserve(vSrc.GetSize());
+	u32sTemp.ReserveMore(vSrc.GetSize());
 	Convert(u32sTemp, MakeUtf16Decoder(MakeStringSource(vSrc)));
 	return u32sTemp;
 }
@@ -410,9 +412,7 @@ void Utf16String::Deunify(Utf16String &strDst, const StringView<StringType::kUtf
 template<>
 __attribute__((__flatten__))
 StringView<StringType::kUtf16> Utf32String::Unify(String<StringType::kUtf16> &u16sTemp, const Utf32StringView &vSrc){
-	ASSERT(u16sTemp.IsEmpty());
-
-	u16sTemp.Reserve(vSrc.GetSize());
+	u16sTemp.ReserveMore(vSrc.GetSize());
 	Convert(u16sTemp, MakeUtf16Encoder(MakeStringSource(vSrc)));
 	return u16sTemp;
 }
@@ -438,9 +438,7 @@ void Utf32String::Deunify(Utf32String &strDst, const StringView<StringType::kUtf
 template<>
 __attribute__((__flatten__))
 StringView<StringType::kUtf16> Cesu8String::Unify(String<StringType::kUtf16> &u16sTemp, const Cesu8StringView &vSrc){
-	ASSERT(u16sTemp.IsEmpty());
-
-	u16sTemp.Reserve(vSrc.GetSize());
+	u16sTemp.ReserveMore(vSrc.GetSize());
 	Convert(u16sTemp, MakeCesu8Decoder(MakeStringSource(vSrc)));
 	return u16sTemp;
 }
@@ -454,9 +452,7 @@ void Cesu8String::Deunify(Cesu8String &strDst, const StringView<StringType::kUtf
 template<>
 __attribute__((__flatten__))
 StringView<StringType::kUtf32> Cesu8String::Unify(String<StringType::kUtf32> &u32sTemp, const Cesu8StringView &vSrc){
-	ASSERT(u32sTemp.IsEmpty());
-
-	u32sTemp.Reserve(vSrc.GetSize());
+	u32sTemp.ReserveMore(vSrc.GetSize());
 	Convert(u32sTemp, MakeUtf16Decoder(MakeCesu8Decoder(MakeStringSource(vSrc))));
 	return u32sTemp;
 }
@@ -471,23 +467,27 @@ void Cesu8String::Deunify(Cesu8String &strDst, const StringView<StringType::kUtf
 template<>
 __attribute__((__flatten__))
 StringView<StringType::kUtf16> AnsiString::Unify(String<StringType::kUtf16> &u16sTemp, const AnsiStringView &vSrc){
-	ASSERT(u16sTemp.IsEmpty());
-
-	const auto uInputSize = vSrc.GetSize();
+	const auto uInputSize = vSrc.GetSize() * sizeof(char);
 	if(uInputSize > ULONG_MAX){
 		DEBUG_THROW(Exception, ERROR_NOT_ENOUGH_MEMORY, "The input ANSI string is too long"_rcs);
 	}
-	const auto uOutputSizeMax = uInputSize * sizeof(wchar_t);
-	if((uOutputSizeMax > ULONG_MAX) || (uOutputSizeMax / sizeof(wchar_t) != uInputSize)){
+	const auto uOutputSizeMax = vSrc.GetSize() * sizeof(wchar_t);
+	if((uOutputSizeMax > ULONG_MAX) || (uOutputSizeMax / sizeof(wchar_t) != vSrc.GetSize())){
 		DEBUG_THROW(Exception, ERROR_NOT_ENOUGH_MEMORY, "The output Unicode string requires more memory than ULONG_MAX bytes"_rcs);
 	}
-	u16sTemp.Resize(uOutputSizeMax / sizeof(wchar_t));
-	ULONG ulConvertedSize;
-	const auto lStatus = ::RtlMultiByteToUnicodeN(reinterpret_cast<wchar_t *>(u16sTemp.GetStr()), uOutputSizeMax, &ulConvertedSize, vSrc.GetBegin(), uInputSize);
-	if(!NT_SUCCESS(lStatus)){
-		DEBUG_THROW(SystemError, ::RtlNtStatusToDosError(lStatus), "RtlMultiByteToUnicodeN"_rcs);
+	const auto uOldSize = u16sTemp.GetSize();
+	try {
+		const auto pchWrite = u16sTemp.ResizeMore(uOutputSizeMax / sizeof(wchar_t));
+		ULONG ulConvertedSize;
+		const auto lStatus = ::RtlMultiByteToUnicodeN(reinterpret_cast<wchar_t *>(pchWrite), uOutputSizeMax, &ulConvertedSize, vSrc.GetBegin(), uInputSize);
+		if(!NT_SUCCESS(lStatus)){
+			DEBUG_THROW(SystemError, ::RtlNtStatusToDosError(lStatus), "RtlMultiByteToUnicodeN"_rcs);
+		}
+		u16sTemp.Pop(u16sTemp.GetSize() - (uOldSize + ulConvertedSize / sizeof(wchar_t)));
+	} catch(...){
+		u16sTemp.Pop(u16sTemp.GetSize() - uOldSize);
+		throw;
 	}
-	u16sTemp.Resize(ulConvertedSize / sizeof(wchar_t));
 	return u16sTemp;
 }
 template<>
@@ -497,18 +497,23 @@ void AnsiString::Deunify(AnsiString &strDst, const StringView<StringType::kUtf16
 	if((uInputSize > ULONG_MAX) || (uInputSize / sizeof(wchar_t) != u16svSrc.GetSize())){
 		DEBUG_THROW(Exception, ERROR_NOT_ENOUGH_MEMORY, "The input Unicode string is too long"_rcs);
 	}
-	const auto uOutputSizeMax = uInputSize * 2;
-	if((uOutputSizeMax > ULONG_MAX) || (uOutputSizeMax / 2 != uInputSize)){
+	const auto uOutputSizeMax = u16svSrc.GetSize() * 2 * sizeof(char);
+	if((uOutputSizeMax > ULONG_MAX) || (uOutputSizeMax / (2 * sizeof(char)) != u16svSrc.GetSize())){
 		DEBUG_THROW(Exception, ERROR_NOT_ENOUGH_MEMORY, "The output ANSI string requires more memory than ULONG_MAX bytes"_rcs);
 	}
 	const auto uOldSize = strDst.GetSize();
-	const auto pchWrite = strDst.ResizeMore(uOutputSizeMax);
-	ULONG ulConvertedSize;
-	const auto lStatus = ::RtlUnicodeToMultiByteN(pchWrite, uOutputSizeMax, &ulConvertedSize, reinterpret_cast<const wchar_t *>(u16svSrc.GetBegin()), uInputSize);
-	if(!NT_SUCCESS(lStatus)){
-		DEBUG_THROW(SystemError, ::RtlNtStatusToDosError(lStatus), "RtlUnicodeToMultiByteN"_rcs);
+	try {
+		const auto pchWrite = strDst.ResizeMore(uOutputSizeMax);
+		ULONG ulConvertedSize;
+		const auto lStatus = ::RtlUnicodeToMultiByteN(pchWrite, uOutputSizeMax, &ulConvertedSize, reinterpret_cast<const wchar_t *>(u16svSrc.GetBegin()), uInputSize);
+		if(!NT_SUCCESS(lStatus)){
+			DEBUG_THROW(SystemError, ::RtlNtStatusToDosError(lStatus), "RtlUnicodeToMultiByteN"_rcs);
+		}
+		strDst.Pop(strDst.GetSize() - (uOldSize + ulConvertedSize / sizeof(char)));
+	} catch(...){
+		strDst.Pop(strDst.GetSize() - uOldSize);
+		throw;
 	}
-	strDst.Resize(uOldSize + ulConvertedSize);
 }
 
 template<>

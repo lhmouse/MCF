@@ -39,7 +39,7 @@ namespace Impl_UniqueLockTemplate {
 		}
 
 	private:
-		virtual bool X_DoTry() const noexcept = 0;
+		virtual bool X_DoTry(std::uint64_t u64MilliSeconds) const noexcept = 0;
 		virtual void X_DoLock() const noexcept = 0;
 		virtual void X_DoUnlock() const noexcept = 0;
 
@@ -51,10 +51,10 @@ namespace Impl_UniqueLockTemplate {
 			return x_uLockCount;
 		}
 
-		bool Try() noexcept {
+		bool Try(std::uint64_t u64MilliSeconds = 0) noexcept {
 			const auto uOldCount = x_uLockCount;
 			if(uOldCount == 0){
-				if(!X_DoTry()){
+				if(!X_DoTry(u64MilliSeconds)){
 					return false;
 				}
 			}
@@ -114,7 +114,7 @@ namespace Impl_UniqueLockTemplate {
 		}
 
 	private:
-		bool X_DoTry() const noexcept override;
+		bool X_DoTry(std::uint64_t u64MilliSeconds) const noexcept override;
 		void X_DoLock() const noexcept override;
 		void X_DoUnlock() const noexcept override;
 

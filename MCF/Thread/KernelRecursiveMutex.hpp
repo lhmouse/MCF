@@ -28,9 +28,9 @@ public:
 	void Lock() noexcept;
 	void Unlock() noexcept;
 
-	UniqueLock TryLock() noexcept {
+	UniqueLock TryLock(std::uint64_t u64MilliSeconds = 0) noexcept {
 		UniqueLock vLock(*this, false);
-		vLock.Try();
+		vLock.Try(u64MilliSeconds);
 		return vLock;
 	}
 	UniqueLock GetLock() noexcept {
@@ -40,8 +40,8 @@ public:
 
 namespace Impl_UniqueLockTemplate {
 	template<>
-	inline bool KernelRecursiveMutex::UniqueLock::X_DoTry() const noexcept {
-		return x_pOwner->Try(0);
+	inline bool KernelRecursiveMutex::UniqueLock::X_DoTry(std::uint64_t u64MilliSeconds) const noexcept {
+		return x_pOwner->Try(u64MilliSeconds);
 	}
 	template<>
 	inline void KernelRecursiveMutex::UniqueLock::X_DoLock() const noexcept {

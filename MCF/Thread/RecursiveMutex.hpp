@@ -42,7 +42,7 @@ public:
 
 	bool IsLockedByCurrentThread() const noexcept;
 
-	bool Try() noexcept;
+	bool Try(std::uint64_t u64MilliSeconds) noexcept;
 	void Lock() noexcept;
 	void Unlock() noexcept;
 
@@ -71,8 +71,8 @@ public:
 
 namespace Impl_UniqueLockTemplate {
 	template<>
-	inline bool RecursiveMutex::UniqueLock::X_DoTry() const noexcept {
-		return x_pOwner->Try();
+	inline bool RecursiveMutex::UniqueLock::X_DoTry(std::uint64_t u64MilliSeconds) const noexcept {
+		return x_pOwner->Try(u64MilliSeconds);
 	}
 	template<>
 	inline void RecursiveMutex::UniqueLock::X_DoLock() const noexcept {

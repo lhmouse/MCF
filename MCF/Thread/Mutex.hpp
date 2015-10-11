@@ -41,7 +41,7 @@ public:
 		x_uSpinCount.Store(uSpinCount, kAtomicRelaxed);
 	}
 
-	bool Try() noexcept;
+	bool Try(std::uint64_t u64MilliSeconds = 0) noexcept;
 	void Lock() noexcept;
 	void Unlock() noexcept;
 
@@ -57,8 +57,8 @@ public:
 
 namespace Impl_UniqueLockTemplate {
 	template<>
-	inline bool Mutex::UniqueLock::X_DoTry() const noexcept {
-		return x_pOwner->Try();
+	inline bool Mutex::UniqueLock::X_DoTry(std::uint64_t u64MilliSeconds) const noexcept {
+		return x_pOwner->Try(u64MilliSeconds);
 	}
 	template<>
 	inline void Mutex::UniqueLock::X_DoLock() const noexcept {

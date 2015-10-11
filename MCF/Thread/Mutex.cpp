@@ -8,7 +8,7 @@
 namespace MCF {
 
 // 其他非静态成员函数。
-bool Mutex::Try() noexcept {
+bool Mutex::Try(std::uint64_t u64MilliSeconds) noexcept {
 	return ::TryAcquireSRWLockExclusive(reinterpret_cast<::SRWLOCK *>(x_aImpl));
 }
 void Mutex::Lock() noexcept {

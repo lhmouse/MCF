@@ -260,15 +260,13 @@ namespace {
 		const auto uOldSize = strWrite.GetSize();
 		try {
 			for(;;){
-				const auto uBeginOffset = strWrite.GetSize();
-				const auto uSegmentSize = strWrite.GetCapacity() - uBeginOffset;
-				const auto pchSegment = strWrite.ResizeMore(uSegmentSize);
-				for(std::size_t i = 0; i < uSegmentSize; ++i){
+				const auto vResult = strWrite.ResizeToCapacity();
+				for(std::size_t i = 0; i < vResult.second; ++i){
 					if(!vFilter){
-						strWrite.Pop(strWrite.GetSize() - (uBeginOffset + i));
+						strWrite.Pop(vResult.second - i);
 						goto jDone;
 					}
-					pchSegment[i] = vFilter();
+					vResult.first[i] = vFilter();
 				}
 				strWrite.ReserveMore(64);
 			}

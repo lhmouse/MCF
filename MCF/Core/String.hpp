@@ -468,16 +468,6 @@ public:
 			Pop(uOldSize - uNewSize);
 		}
 	}
-	Char *ResizeMoreFront(std::size_t uDeltaSize){
-		const auto uOldSize = GetSize();
-		const auto uNewSize = uOldSize + uDeltaSize;
-		if(uNewSize < uOldSize){
-			throw std::bad_array_new_length();
-		}
-		X_ChopAndSplice(uOldSize, uOldSize, uDeltaSize, uNewSize);
-		X_SetSize(uNewSize);
-		return GetData() + uOldSize;
-	}
 	Char *ResizeMore(std::size_t uDeltaSize){
 		const auto uOldSize = GetSize();
 		const auto uNewSize = uOldSize + uDeltaSize;
@@ -487,6 +477,12 @@ public:
 		X_ChopAndSplice(uOldSize, uOldSize, 0, uNewSize);
 		X_SetSize(uNewSize);
 		return GetData() + uOldSize;
+	}
+	std::pair<Char *, std::size_t> ResizeToCapacity() noexcept {
+		const auto uOldSize = GetSize();
+		const auto uNewSize = GetCapacity();
+		X_SetSize(uNewSize);
+		return std::make_pair(GetData() + uOldSize, uNewSize - uOldSize);
 	}
 	void Shrink() noexcept {
 		const auto uSzLen = View(GetStr()).GetLength();

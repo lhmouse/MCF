@@ -17,11 +17,11 @@ namespace MCF {
 class ConditionVariable : NONCOPYABLE {
 private:
 	Mutex x_mtxGuard;
-	Atomic<std::size_t> x_uWaitingThreads;
+	std::uintptr_t x_uImpl;
 
 public:
 	constexpr ConditionVariable() noexcept
-		: x_mtxGuard(), x_uWaitingThreads(0)
+		: x_mtxGuard(), x_uImpl(0)
 	{
 	}
 

@@ -25,12 +25,11 @@ public:
 
 private:
 	Atomic<std::size_t> x_uSpinCount;
-	Atomic<bool> x_bLocked;
-	Atomic<std::size_t> x_uWaitingThreads;
+	std::uintptr_t x_uImpl;
 
 public:
 	explicit constexpr Mutex(std::size_t uSpinCount = 0x400) noexcept
-		: x_uSpinCount(uSpinCount), x_bLocked(false), x_uWaitingThreads(0)
+		: x_uSpinCount(uSpinCount), x_uImpl(0)
 	{
 	}
 

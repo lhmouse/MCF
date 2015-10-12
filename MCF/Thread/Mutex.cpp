@@ -17,13 +17,13 @@ namespace MCF {
 
 // 其他非静态成员函数。
 bool Mutex::Try(std::uint64_t u64MilliSeconds) noexcept {
-	return ::TryAcquireSRWLockExclusive(reinterpret_cast<::SRWLOCK *>(&x_uWaitingThreads));
+	return ::TryAcquireSRWLockExclusive(reinterpret_cast<::SRWLOCK *>(&x_uImpl));
 }
 void Mutex::Lock() noexcept {
-	::AcquireSRWLockExclusive(reinterpret_cast<::SRWLOCK *>(&x_uWaitingThreads));
+	::AcquireSRWLockExclusive(reinterpret_cast<::SRWLOCK *>(&x_uImpl));
 }
 void Mutex::Unlock() noexcept {
-	::ReleaseSRWLockExclusive(reinterpret_cast<::SRWLOCK *>(&x_uWaitingThreads));
+	::ReleaseSRWLockExclusive(reinterpret_cast<::SRWLOCK *>(&x_uImpl));
 }
 
 }

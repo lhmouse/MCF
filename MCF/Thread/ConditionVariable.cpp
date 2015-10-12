@@ -6,21 +6,26 @@
 #include "ConditionVariable.hpp"
 #include "../Utilities/Defer.hpp"
 #include "../Core/Time.hpp"
+#include <winternl.h>
+#include <ntstatus.h>
+
+extern "C" __attribute__((__dllimport__, __stdcall__))
+NTSTATUS NtWaitForKeyedEvent(HANDLE hKeyedEvent, void *pKey, BOOLEAN bAlertable, const LARGE_INTEGER *pliTImeout) noexcept;
+extern "C" __attribute__((__dllimport__, __stdcall__))
+NTSTATUS NtReleaseKeyedEvent(HANDLE hKeyedEvent, void *pKey, BOOLEAN bAlertable, const LARGE_INTEGER *pliTImeout) noexcept;
 
 namespace MCF {
 
 // 其他非静态成员函数。
 bool ConditionVariable::Wait(Mutex::UniqueLock &vLock, std::uint64_t u64MilliSeconds) noexcept {
-	auto &vLockOwner = vLock.GetOwner();
-
-	Mutex::UniqueLock vTempLock(vLockOwner, false);
-	vLock.Swap(vTempLock);
-	DEFER([&]{ vLock.Swap(vTempLock); });
+	auto &vMutex = vLock.GetOwner();
+	auto vTemp = std::move(vLock);
+	DEFER([&]{ vLock = std::move(vTemp); });
 
 	auto u64Now = GetFastMonoClock();
 	const auto u64Until = u64Now + u64MilliSeconds;
 	for(;;){
-		const bool bTakenOver = ::SleepConditionVariableSRW(reinterpret_cast<::CONDITION_VARIABLE *>(x_aImpl), reinterpret_cast<::SRWLOCK *>(vLockOwner.x_aImpl),
+		const bool bTakenOver = ::SleepConditionVariableSRW(reinterpret_cast<::CONDITION_VARIABLE *>(&x_uWaitingThreads), reinterpret_cast<::SRWLOCK *>(&vMutex.x_uWaitingThreads),
 			(u64MilliSeconds > 0x7FFFFFFFu) ? 0x7FFFFFFFu : u64MilliSeconds, 0);
 		if(bTakenOver){
 			return true;
@@ -35,20 +40,18 @@ bool ConditionVariable::Wait(Mutex::UniqueLock &vLock, std::uint64_t u64MilliSec
 	}
 }
 void ConditionVariable::Wait(Mutex::UniqueLock &vLock) noexcept {
-	auto &vLockOwner = vLock.GetOwner();
+	auto &vMutex = vLock.GetOwner();
+	auto vTemp = std::move(vLock);
+	DEFER([&]{ vLock = std::move(vTemp); });
 
-	Mutex::UniqueLock vTempLock(vLockOwner, false);
-	vLock.Swap(vTempLock);
-	DEFER([&]{ vLock.Swap(vTempLock); });
-
-	::SleepConditionVariableSRW(reinterpret_cast<::CONDITION_VARIABLE *>(x_aImpl), reinterpret_cast<::SRWLOCK *>(vLockOwner.x_aImpl), INFINITE, 0);
+	::SleepConditionVariableSRW(reinterpret_cast<::CONDITION_VARIABLE *>(&x_uWaitingThreads), reinterpret_cast<::SRWLOCK *>(&vMutex.x_uWaitingThreads), INFINITE, 0);
 }
 
 void ConditionVariable::Signal() noexcept {
-	::WakeConditionVariable(reinterpret_cast<::CONDITION_VARIABLE *>(x_aImpl));
+	::WakeConditionVariable(reinterpret_cast<::CONDITION_VARIABLE *>(&x_uWaitingThreads));
 }
 void ConditionVariable::Broadcast() noexcept {
-	::WakeAllConditionVariable(reinterpret_cast<::CONDITION_VARIABLE *>(x_aImpl));
+	::WakeAllConditionVariable(reinterpret_cast<::CONDITION_VARIABLE *>(&x_uWaitingThreads));
 }
 
 }

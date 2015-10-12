@@ -4,29 +4,26 @@
 
 #include "../StdMCF.hpp"
 #include "Mutex.hpp"
+#include "../Core/System.hpp"
+#include <winternl.h>
+#include <ntstatus.h>
+
+extern "C" __attribute__((__dllimport__, __stdcall__))
+NTSTATUS NtWaitForKeyedEvent(HANDLE hKeyedEvent, void *pKey, BOOLEAN bAlertable, const LARGE_INTEGER *pliTImeout) noexcept;
+extern "C" __attribute__((__dllimport__, __stdcall__))
+NTSTATUS NtReleaseKeyedEvent(HANDLE hKeyedEvent, void *pKey, BOOLEAN bAlertable, const LARGE_INTEGER *pliTImeout) noexcept;
 
 namespace MCF {
 
 // 其他非静态成员函数。
 bool Mutex::Try(std::uint64_t u64MilliSeconds) noexcept {
-	return ::TryAcquireSRWLockExclusive(reinterpret_cast<::SRWLOCK *>(x_aImpl));
+	return ::TryAcquireSRWLockExclusive(reinterpret_cast<::SRWLOCK *>(&x_uWaitingThreads));
 }
 void Mutex::Lock() noexcept {
-	if(::TryAcquireSRWLockExclusive(reinterpret_cast<::SRWLOCK *>(x_aImpl))){
-		return;
-	}
-
-	const auto uSpinCount = GetSpinCount() / 0x400; // FIXME: SRWLOCK 里面自己实现了一个自旋。
-	for(std::size_t i = 0; i < uSpinCount; ++i){
-		if(::TryAcquireSRWLockExclusive(reinterpret_cast<::SRWLOCK *>(x_aImpl))){
-			return;
-		}
-	}
-
-	::AcquireSRWLockExclusive(reinterpret_cast<::SRWLOCK *>(x_aImpl));
+	::AcquireSRWLockExclusive(reinterpret_cast<::SRWLOCK *>(&x_uWaitingThreads));
 }
 void Mutex::Unlock() noexcept {
-	::ReleaseSRWLockExclusive(reinterpret_cast<::SRWLOCK *>(x_aImpl));
+	::ReleaseSRWLockExclusive(reinterpret_cast<::SRWLOCK *>(&x_uWaitingThreads));
 }
 
 }

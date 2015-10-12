@@ -40,11 +40,11 @@ public:
 	static const String kEmpty;
 
 public:
-	static StringView<StringType::kUtf16> Unify(String<StringType::kUtf16> &u16sTemp, const View &vSrc);
-	static void Deunify(String &strDst, const StringView<StringType::kUtf16> &u16svSrc);
+	static StringView<StringType::kUtf16> UnifyAssign(String<StringType::kUtf16> &u16sTemp, const View &vSrc);
+	static void DeunifyAppend(String &strDst, const StringView<StringType::kUtf16> &u16svSrc);
 
-	static StringView<StringType::kUtf32> Unify(String<StringType::kUtf32> &u32sTemp, const View &vSrc);
-	static void Deunify(String &strDst, const StringView<StringType::kUtf32> &u32svSrc);
+	static StringView<StringType::kUtf32> UnifyAssign(String<StringType::kUtf32> &u32sTemp, const View &vSrc);
+	static void DeunifyAppend(String &strDst, const StringView<StringType::kUtf32> &u32svSrc);
 
 private:
 	union X_Storage {
@@ -595,8 +595,8 @@ public:
 		using UnifiedString = String<(kConvertViaUtf16Weight > kConvertViaUtf32Weight) ? StringType::kUtf16 : StringType::kUtf32>;
 
 		UnifiedString usTemp;
-		const auto usvResult = String<kOtherTypeT>::Unify(usTemp, rhs);
-		Deunify(*this, usvResult);
+		const auto usvResult = String<kOtherTypeT>::UnifyAssign(usTemp, rhs);
+		DeunifyAppend(*this, usvResult);
 	}
 	template<StringType kOtherTypeT>
 	void Append(const String<kOtherTypeT> &rhs){

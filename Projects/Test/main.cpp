@@ -17,7 +17,7 @@ extern "C" unsigned MCFMain(){
 	for(unsigned i = 0; i < loops; ++i){
 //		u32s.Clear();
 //		u32s.Append(ku8s);              // Slower, strong exception safety guarantee.
-		Utf8String::Unify(u32s, ku8s);  // Faster, strong exception safety guarantee.
+		Utf8String::UnifyAssign(u32s, ku8s);  // Faster, strong exception safety guarantee.
 	}
 	auto t2 = GetHiResMonoClock();
 	std::printf("MCF  : time elasped = %f, result = %s\n", t2 - t1, AnsiString(u32s).GetStr());

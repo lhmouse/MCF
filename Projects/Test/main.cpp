@@ -5,7 +5,7 @@
 extern "C" unsigned MCFMain(){
 	using namespace MCF;
 
-	static constexpr unsigned loops = 10000000;
+	static constexpr unsigned loops = 1000000;
 
 	auto &ku8s  = u8"𤭢𤭢𤭢𤭢𤭢𤭢𤭢𤭢𤭢"_u8s;
 	auto &ku16s =  u"𤭢𤭢𤭢𤭢𤭢𤭢𤭢𤭢𤭢"_u16s;
@@ -15,9 +15,13 @@ extern "C" unsigned MCFMain(){
 	Utf32String u32s;
 	auto t1 = GetHiResMonoClock();
 	for(unsigned i = 0; i < loops; ++i){
+		u32s.Assign(ku8s);                   // Slowest
+
 //		u32s.Clear();
-//		u32s.Append(ku8s);              // Slower, strong exception safety guarantee.
-		Utf8String::UnifyAssign(u32s, ku8s);  // Faster, strong exception safety guarantee.
+//		u32s.Append(ku8s);                   // Slower
+
+//		u32s.Clear();
+//		Utf8String::UnifyAssign(u32s, ku8s); // Faster
 	}
 	auto t2 = GetHiResMonoClock();
 	std::printf("MCF  : time elasped = %f, result = %s\n", t2 - t1, AnsiString(u32s).GetStr());

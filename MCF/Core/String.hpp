@@ -590,13 +590,27 @@ public:
 	}
 	template<StringType kOtherTypeT>
 	void Append(const StringView<kOtherTypeT> &rhs){
-		constexpr int kConvertViaUtf16Weight = StringEncodingTrait<kTypeT>::kPrefersConversionViaUtf16 + StringEncodingTrait<kOtherTypeT>::kPrefersConversionViaUtf16;
-		constexpr int kConvertViaUtf32Weight = StringEncodingTrait<kTypeT>::kPrefersConversionViaUtf32 + StringEncodingTrait<kOtherTypeT>::kPrefersConversionViaUtf32;
-		using UnifiedString = String<(kConvertViaUtf16Weight > kConvertViaUtf32Weight) ? StringType::kUtf16 : StringType::kUtf32>;
+		if((kTypeT == StringType::kUtf16) && IsEmpty()){
+			auto &strSilentThis = reinterpret_cast<String<StringType::kUtf16> &>(*this);
+			const auto usvResult = String<kOtherTypeT>::UnifyAssign(strSilentThis, rhs);
+			if(strSilentThis.GetBegin() != usvResult.GetBegin()){
+				strSilentThis.Append(usvResult);
+			}
+		} else if((kTypeT == StringType::kUtf32) && IsEmpty()){
+			auto &strSilentThis = reinterpret_cast<String<StringType::kUtf32> &>(*this);
+			const auto usvResult = String<kOtherTypeT>::UnifyAssign(strSilentThis, rhs);
+			if(strSilentThis.GetBegin() != usvResult.GetBegin()){
+				strSilentThis.Append(usvResult);
+			}
+		} else {
+			constexpr int kConvertViaUtf16Weight = StringEncodingTrait<kTypeT>::kPrefersConversionViaUtf16 + StringEncodingTrait<kOtherTypeT>::kPrefersConversionViaUtf16;
+			constexpr int kConvertViaUtf32Weight = StringEncodingTrait<kTypeT>::kPrefersConversionViaUtf32 + StringEncodingTrait<kOtherTypeT>::kPrefersConversionViaUtf32;
+			using UnifiedString = String<(kConvertViaUtf16Weight > kConvertViaUtf32Weight) ? StringType::kUtf16 : StringType::kUtf32>;
 
-		UnifiedString usTemp;
-		const auto usvResult = String<kOtherTypeT>::UnifyAssign(usTemp, rhs);
-		DeunifyAppend(*this, usvResult);
+			UnifiedString usTemp;
+			const auto usvResult = String<kOtherTypeT>::UnifyAssign(usTemp, rhs);
+			DeunifyAppend(*this, usvResult);
+		}
 	}
 	template<StringType kOtherTypeT>
 	void Append(const String<kOtherTypeT> &rhs){

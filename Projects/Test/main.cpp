@@ -9,7 +9,7 @@ Mutex m;
 volatile int c = 0;
 
 extern "C" unsigned MCFMain(){
-	std::array<IntrusivePtr<Thread>, 4> threads;
+	std::array<IntrusivePtr<Thread>, 10> threads;
 	for(auto &p : threads){
 		p = Thread::Create([]{
 			for(int i = 0; i < 1000000; ++i){

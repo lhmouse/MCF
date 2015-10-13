@@ -12,7 +12,7 @@ extern "C" unsigned MCFMain(){
 	std::array<IntrusivePtr<Thread>, 4> threads;
 	for(auto &p : threads){
 		p = Thread::Create([]{
-			for(int i = 0; i < 500000; ++i){
+			for(int i = 0; i < 1000000; ++i){
 				const auto l = m.GetLock();
 				++c;
 			}

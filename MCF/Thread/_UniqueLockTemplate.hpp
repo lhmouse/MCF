@@ -12,8 +12,12 @@
 
 namespace MCF {
 
+class ConditionVariable;
+
 namespace Impl_UniqueLockTemplate {
 	class UniqueLockTemplateBase : NONCOPYABLE {
+		friend ConditionVariable;
+
 	protected:
 		std::size_t x_uLockCount;
 
@@ -24,18 +28,24 @@ namespace Impl_UniqueLockTemplate {
 		}
 
 	public:
-		virtual ~UniqueLockTemplateBase(){
-			ASSERT(x_uLockCount == 0);
-		}
+		virtual ~UniqueLockTemplateBase();
 
 	protected:
 		std::size_t X_UnlockAll() noexcept {
-			const auto uOldLockCount = x_uLockCount;
-			if(uOldLockCount != 0){
+			const auto uOldCount = x_uLockCount;
+			if(uOldCount != 0){
 				X_DoUnlock();
 				x_uLockCount = 0;
 			}
-			return uOldLockCount;
+			return uOldCount;
+		}
+		void X_RelockAll(std::size_t uNewCount) noexcept {
+			ASSERT(x_uLockCount == 0);
+
+			if(uNewCount != 0){
+				X_DoLock();
+				x_uLockCount = uNewCount;
+			}
 		}
 
 	private:

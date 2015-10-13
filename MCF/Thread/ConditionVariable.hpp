@@ -33,26 +33,28 @@ public:
 	void Broadcast() noexcept;
 
 	bool Wait(Impl_UniqueLockTemplate::UniqueLockTemplateBase &vLock, std::uint64_t u64MilliSeconds) noexcept {
-		ASSERT(vLock.GetLockCount() == 1);
+		ASSERT(vLock.IsLocking());
 
+		std::size_t uLockCount;
 		bool bTakenOver;
 		{
 			Mutex::UniqueLock vGuardLock(x_mtxGuard);
-			vLock.Unlock();
+			uLockCount = vLock.X_UnlockAll();
 			bTakenOver = Wait(vGuardLock, u64MilliSeconds);
 		}
-		vLock.Lock();
+		vLock.X_RelockAll(uLockCount);
 		return bTakenOver;
 	}
 	void Wait(Impl_UniqueLockTemplate::UniqueLockTemplateBase &vLock) noexcept {
-		ASSERT(vLock.GetLockCount() == 1);
+		ASSERT(vLock.IsLocking());
 
+		std::size_t uLockCount;
 		{
 			Mutex::UniqueLock vGuardLock(x_mtxGuard);
-			vLock.Unlock();
+			uLockCount = vLock.X_UnlockAll();
 			Wait(vGuardLock);
 		}
-		vLock.Lock();
+		vLock.X_RelockAll(uLockCount);
 	}
 };
 

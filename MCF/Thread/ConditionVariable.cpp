@@ -58,9 +58,10 @@ void ConditionVariable::Wait(Impl_UniqueLockTemplate::UniqueLockTemplateBase &vL
 }
 
 void ConditionVariable::Signal() noexcept {
-	::LARGE_INTEGER liTimeout;
-	liTimeout.QuadPart = 0;
-	if(x_bWaitingThreads.Load(kAtomicRelaxed) != 0){
+	const auto uWaiting = x_bWaitingThreads.Load(kAtomicRelaxed);
+	if(uWaiting != 0){
+		::LARGE_INTEGER liTimeout;
+		liTimeout.QuadPart = 0;
 		const auto lStatus = ::NtWaitForKeyedEvent(nullptr, this, false, &liTimeout);
 		if(!NT_SUCCESS(lStatus)){
 			ASSERT_MSG(false, L"NtWaitForKeyedEvent() 失败。");
@@ -68,16 +69,19 @@ void ConditionVariable::Signal() noexcept {
 	}
 }
 void ConditionVariable::Broadcast() noexcept {
-	::LARGE_INTEGER liTimeout;
-	liTimeout.QuadPart = 0;
-	if(x_bWaitingThreads.Load(kAtomicRelaxed) != 0){
-		NTSTATUS lStatus;
-		do {
-			lStatus = ::NtWaitForKeyedEvent(nullptr, this, false, &liTimeout);
+	const auto uWaiting = x_bWaitingThreads.Load(kAtomicRelaxed);
+	if(uWaiting != 0){
+		::LARGE_INTEGER liTimeout;
+		liTimeout.QuadPart = 0;
+		for(std::size_t i = 0; i < uWaiting; ++i){
+			const auto lStatus = ::NtWaitForKeyedEvent(nullptr, this, false, &liTimeout);
 			if(!NT_SUCCESS(lStatus)){
 				ASSERT_MSG(false, L"NtWaitForKeyedEvent() 失败。");
 			}
-		} while(lStatus != STATUS_TIMEOUT);
+			if(lStatus != STATUS_TIMEOUT){
+				break;
+			}
+		}
 	}
 }
 

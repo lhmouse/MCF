@@ -4,7 +4,6 @@
 
 #include "../StdMCF.hpp"
 #include "ConditionVariable.hpp"
-#include "../Utilities/Defer.hpp"
 #include <winternl.h>
 #include <ntstatus.h>
 
@@ -25,12 +24,8 @@ bool ConditionVariable::Wait(Impl_UniqueLockTemplate::UniqueLockTemplateBase &vL
 	x_mtxGuard.Lock();
 	const auto uCount = vLock.X_UnlockAll();
 	ASSERT_MSG(uCount != 0, L"你会用条件变量吗？");
-	x_bWaitingThreads.Increment(kAtomicRelaxed);
-	DEFER([&]{
-		x_bWaitingThreads.Decrement(kAtomicRelaxed);
-		x_mtxGuard.Unlock();
-		vLock.X_RelockAll(uCount);
-	});
+	x_uWaitingThreads.Increment(kAtomicRelaxed);
+	x_mtxGuard.Unlock();
 
 	::LARGE_INTEGER liTimeout;
 	liTimeout.QuadPart = -static_cast<std::int64_t>(u64MilliSeconds * 10000);
@@ -38,23 +33,25 @@ bool ConditionVariable::Wait(Impl_UniqueLockTemplate::UniqueLockTemplateBase &vL
 	if(!NT_SUCCESS(lStatus)){
 		ASSERT_MSG(false, L"NtWaitForKeyedEvent() 失败。");
 	}
+
+	x_uWaitingThreads.Decrement(kAtomicRelaxed);
+	vLock.X_RelockAll(uCount);
 	return lStatus != STATUS_TIMEOUT;
 }
 void ConditionVariable::Wait(Impl_UniqueLockTemplate::UniqueLockTemplateBase &vLock) noexcept {
 	x_mtxGuard.Lock();
 	const auto uCount = vLock.X_UnlockAll();
 	ASSERT_MSG(uCount != 0, L"你会用条件变量吗？");
-	x_bWaitingThreads.Increment(kAtomicRelaxed);
-	DEFER([&]{
-		x_bWaitingThreads.Decrement(kAtomicRelaxed);
-		x_mtxGuard.Unlock();
-		vLock.X_RelockAll(uCount);
-	});
+	x_uWaitingThreads.Increment(kAtomicRelaxed);
+	x_mtxGuard.Unlock();
 
 	const auto lStatus = ::NtWaitForKeyedEvent(nullptr, this, false, nullptr);
 	if(!NT_SUCCESS(lStatus)){
 		ASSERT_MSG(false, L"NtWaitForKeyedEvent() 失败。");
 	}
+
+	x_uWaitingThreads.Decrement(kAtomicRelaxed);
+	vLock.X_RelockAll(uCount);
 }
 
 namespace {
@@ -62,22 +59,22 @@ namespace {
 }
 
 void ConditionVariable::Signal() noexcept {
-	const auto uWaiting = x_bWaitingThreads.Load(kAtomicRelaxed);
+	const auto uWaiting = x_uWaitingThreads.Load(kAtomicRelaxed);
 	if(uWaiting != 0){
-		const auto lStatus = ::NtWaitForKeyedEvent(nullptr, this, false, &kZeroTimeout);
+		const auto lStatus = ::NtReleaseKeyedEvent(nullptr, this, false, &kZeroTimeout);
 		if(!NT_SUCCESS(lStatus)){
-			ASSERT_MSG(false, L"NtWaitForKeyedEvent() 失败。");
+			ASSERT_MSG(false, L"NtReleaseKeyedEvent() 失败。");
 		}
 	}
 }
 void ConditionVariable::Broadcast() noexcept {
-	const auto uWaiting = x_bWaitingThreads.Load(kAtomicRelaxed);
+	const auto uWaiting = x_uWaitingThreads.Load(kAtomicRelaxed);
 	for(std::size_t i = 0; i < uWaiting; ++i){
-		const auto lStatus = ::NtWaitForKeyedEvent(nullptr, this, false, &kZeroTimeout);
+		const auto lStatus = ::NtReleaseKeyedEvent(nullptr, this, false, &kZeroTimeout);
 		if(!NT_SUCCESS(lStatus)){
-			ASSERT_MSG(false, L"NtWaitForKeyedEvent() 失败。");
+			ASSERT_MSG(false, L"NtReleaseKeyedEvent() 失败。");
 		}
-		if(lStatus != STATUS_TIMEOUT){
+		if(lStatus == STATUS_TIMEOUT){
 			break;
 		}
 	}

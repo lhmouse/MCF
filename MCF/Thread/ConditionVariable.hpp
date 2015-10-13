@@ -6,9 +6,8 @@
 #define MCF_THREAD_CONDITION_VARIABLE_HPP_
 
 #include "../Utilities/Noncopyable.hpp"
-#include "../Utilities/Assert.hpp"
 #include "_UniqueLockTemplate.hpp"
-#include "Mutex.hpp"
+#include "Atomic.hpp"
 #include <cstddef>
 #include <cstdint>
 
@@ -16,12 +15,11 @@ namespace MCF {
 
 class ConditionVariable : NONCOPYABLE {
 private:
-	Mutex x_mtxGuard;
 	Atomic<std::size_t> x_uWaitingThreads;
 
 public:
 	constexpr ConditionVariable() noexcept
-		: x_mtxGuard(), x_uWaitingThreads(0)
+		: x_uWaitingThreads(0)
 	{
 	}
 
@@ -29,7 +27,7 @@ public:
 	bool Wait(Impl_UniqueLockTemplate::UniqueLockTemplateBase &vLock, std::uint64_t u64MilliSeconds) noexcept;
 	void Wait(Impl_UniqueLockTemplate::UniqueLockTemplateBase &vLock) noexcept;
 
-	void Signal() noexcept;
+	void Signal(std::size_t uMaxToWakeUp = 1) noexcept;
 	void Broadcast() noexcept;
 };
 

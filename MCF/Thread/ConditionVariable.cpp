@@ -4,6 +4,7 @@
 
 #include "../StdMCF.hpp"
 #include "ConditionVariable.hpp"
+#include "../Utilities/MinMax.hpp"
 #include <winternl.h>
 #include <ntstatus.h>
 
@@ -21,11 +22,9 @@ bool ConditionVariable::Wait(Impl_UniqueLockTemplate::UniqueLockTemplateBase &vL
 		return true;
 	}
 
-	x_mtxGuard.Lock();
 	const auto uCount = vLock.X_UnlockAll();
 	ASSERT_MSG(uCount != 0, L"你会用条件变量吗？");
 	x_uWaitingThreads.Increment(kAtomicRelaxed);
-	x_mtxGuard.Unlock();
 
 	::LARGE_INTEGER liTimeout;
 	liTimeout.QuadPart = -static_cast<std::int64_t>(u64MilliSeconds * 10000);
@@ -39,11 +38,9 @@ bool ConditionVariable::Wait(Impl_UniqueLockTemplate::UniqueLockTemplateBase &vL
 	return lStatus != STATUS_TIMEOUT;
 }
 void ConditionVariable::Wait(Impl_UniqueLockTemplate::UniqueLockTemplateBase &vLock) noexcept {
-	x_mtxGuard.Lock();
 	const auto uCount = vLock.X_UnlockAll();
 	ASSERT_MSG(uCount != 0, L"你会用条件变量吗？");
 	x_uWaitingThreads.Increment(kAtomicRelaxed);
-	x_mtxGuard.Unlock();
 
 	const auto lStatus = ::NtWaitForKeyedEvent(nullptr, this, false, nullptr);
 	if(!NT_SUCCESS(lStatus)){
@@ -58,18 +55,9 @@ namespace {
 	constexpr ::LARGE_INTEGER kZeroTimeout = { };
 }
 
-void ConditionVariable::Signal() noexcept {
-	const auto uWaiting = x_uWaitingThreads.Load(kAtomicRelaxed);
-	if(uWaiting != 0){
-		const auto lStatus = ::NtReleaseKeyedEvent(nullptr, this, false, &kZeroTimeout);
-		if(!NT_SUCCESS(lStatus)){
-			ASSERT_MSG(false, L"NtReleaseKeyedEvent() 失败。");
-		}
-	}
-}
-void ConditionVariable::Broadcast() noexcept {
-	const auto uWaiting = x_uWaitingThreads.Load(kAtomicRelaxed);
-	for(std::size_t i = 0; i < uWaiting; ++i){
+void ConditionVariable::Signal(std::size_t uMaxToWakeUp) noexcept {
+	const auto uToWakeUp = Min(x_uWaitingThreads.Load(kAtomicRelaxed), uMaxToWakeUp);
+	for(std::size_t i = 0; i < uToWakeUp; ++i){
 		const auto lStatus = ::NtReleaseKeyedEvent(nullptr, this, false, &kZeroTimeout);
 		if(!NT_SUCCESS(lStatus)){
 			ASSERT_MSG(false, L"NtReleaseKeyedEvent() 失败。");
@@ -78,6 +66,9 @@ void ConditionVariable::Broadcast() noexcept {
 			break;
 		}
 	}
+}
+void ConditionVariable::Broadcast() noexcept {
+	Signal(static_cast<std::size_t>(-1));
 }
 
 }

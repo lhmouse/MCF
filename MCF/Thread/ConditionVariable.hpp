@@ -17,45 +17,20 @@ namespace MCF {
 class ConditionVariable : NONCOPYABLE {
 private:
 	Mutex x_mtxGuard;
-	Atomic<std::uintptr_t> x_uControl;
+	Atomic<std::size_t> x_bWaitingThreads;
 
 public:
 	constexpr ConditionVariable() noexcept
-		: x_mtxGuard(), x_uControl(0)
+		: x_mtxGuard(), x_bWaitingThreads(0)
 	{
 	}
 
 public:
-	bool Wait(Mutex::UniqueLock &vLock, std::uint64_t u64MilliSeconds) noexcept;
-	void Wait(Mutex::UniqueLock &vLock) noexcept;
+	bool Wait(Impl_UniqueLockTemplate::UniqueLockTemplateBase &vLock, std::uint64_t u64MilliSeconds) noexcept;
+	void Wait(Impl_UniqueLockTemplate::UniqueLockTemplateBase &vLock) noexcept;
 
 	void Signal() noexcept;
 	void Broadcast() noexcept;
-
-	bool Wait(Impl_UniqueLockTemplate::UniqueLockTemplateBase &vLock, std::uint64_t u64MilliSeconds) noexcept {
-		ASSERT(vLock.IsLocking());
-
-		std::size_t uLockCount;
-		bool bTakenOver;
-		{
-			Mutex::UniqueLock vGuardLock(x_mtxGuard);
-			uLockCount = vLock.X_UnlockAll();
-			bTakenOver = Wait(vGuardLock, u64MilliSeconds);
-		}
-		vLock.X_RelockAll(uLockCount);
-		return bTakenOver;
-	}
-	void Wait(Impl_UniqueLockTemplate::UniqueLockTemplateBase &vLock) noexcept {
-		ASSERT(vLock.IsLocking());
-
-		std::size_t uLockCount;
-		{
-			Mutex::UniqueLock vGuardLock(x_mtxGuard);
-			uLockCount = vLock.X_UnlockAll();
-			Wait(vGuardLock);
-		}
-		vLock.X_RelockAll(uLockCount);
-	}
 };
 
 }

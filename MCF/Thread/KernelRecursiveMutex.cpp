@@ -50,10 +50,7 @@ bool KernelRecursiveMutex::Try(std::uint64_t u64MilliSeconds) noexcept {
 	if(!NT_SUCCESS(lStatus)){
 		ASSERT_MSG(false, L"NtWaitForSingleObject() 失败。");
 	}
-	if(lStatus == STATUS_TIMEOUT){
-		return false;
-	}
-	return true;
+	return lStatus != STATUS_TIMEOUT;
 }
 void KernelRecursiveMutex::Lock() noexcept {
 	const auto lStatus = ::NtWaitForSingleObject(x_hMutex.Get(), false, nullptr);

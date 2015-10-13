@@ -293,11 +293,9 @@ static_assert(alignof(wchar_t) == alignof(char16_t), "wchar_t does not have the 
 // UTF-8
 template<>
 __attribute__((__flatten__))
-StringView<StringType::kUtf16> NarrowString::UnifyAssign(String<StringType::kUtf16> &u16sTemp, const NarrowStringView &vSrc){
-	u16sTemp.Clear();
-	u16sTemp.Reserve(vSrc.GetSize());
-	Convert(u16sTemp, MakeUtf16Encoder(MakeUtf8Decoder(MakeStringSource(vSrc))));
-	return u16sTemp;
+void NarrowString::UnifyAppend(String<StringType::kUtf16> &u16sDst, const NarrowStringView &svSrc){
+	u16sDst.ReserveMore(svSrc.GetSize());
+	Convert(u16sDst, MakeUtf16Encoder(MakeUtf8Decoder(MakeStringSource(svSrc))));
 }
 template<>
 __attribute__((__flatten__))
@@ -308,11 +306,9 @@ void NarrowString::DeunifyAppend(NarrowString &strDst, const StringView<StringTy
 
 template<>
 __attribute__((__flatten__))
-StringView<StringType::kUtf32> NarrowString::UnifyAssign(String<StringType::kUtf32> &u32sTemp, const NarrowStringView &vSrc){
-	u32sTemp.Clear();
-	u32sTemp.Reserve(vSrc.GetSize());
-	Convert(u32sTemp, MakeUtf8Decoder(MakeStringSource(vSrc)));
-	return u32sTemp;
+void NarrowString::UnifyAppend(String<StringType::kUtf32> &u32sDst, const NarrowStringView &svSrc){
+	u32sDst.ReserveMore(svSrc.GetSize());
+	Convert(u32sDst, MakeUtf8Decoder(MakeStringSource(svSrc)));
 }
 template<>
 __attribute__((__flatten__))
@@ -324,9 +320,8 @@ void NarrowString::DeunifyAppend(NarrowString &strDst, const StringView<StringTy
 // UTF-16
 template<>
 __attribute__((__flatten__))
-StringView<StringType::kUtf16> WideString::UnifyAssign(String<StringType::kUtf16> &u16sTemp, const WideStringView &vSrc){
-	u16sTemp.Clear();
-	return StringView<StringType::kUtf16>(reinterpret_cast<const char16_t *>(vSrc.GetBegin()), vSrc.GetSize());
+void WideString::UnifyAppend(String<StringType::kUtf16> &u16sDst, const WideStringView &svSrc){
+	u16sDst.Append(reinterpret_cast<const char16_t *>(svSrc.GetBegin()), svSrc.GetSize());
 }
 template<>
 __attribute__((__flatten__))
@@ -336,11 +331,9 @@ void WideString::DeunifyAppend(WideString &strDst, const StringView<StringType::
 
 template<>
 __attribute__((__flatten__))
-StringView<StringType::kUtf32> WideString::UnifyAssign(String<StringType::kUtf32> &u32sTemp, const WideStringView &vSrc){
-	u32sTemp.Clear();
-	u32sTemp.Reserve(vSrc.GetSize());
-	Convert(u32sTemp, MakeUtf16Decoder(MakeStringSource(vSrc)));
-	return u32sTemp;
+void WideString::UnifyAppend(String<StringType::kUtf32> &u32sDst, const WideStringView &svSrc){
+	u32sDst.ReserveMore(svSrc.GetSize());
+	Convert(u32sDst, MakeUtf16Decoder(MakeStringSource(svSrc)));
 }
 template<>
 __attribute__((__flatten__))
@@ -352,11 +345,9 @@ void WideString::DeunifyAppend(WideString &strDst, const StringView<StringType::
 // UTF-8
 template<>
 __attribute__((__flatten__))
-StringView<StringType::kUtf16> Utf8String::UnifyAssign(String<StringType::kUtf16> &u16sTemp, const Utf8StringView &vSrc){
-	u16sTemp.Clear();
-	u16sTemp.Reserve(vSrc.GetSize());
-	Convert(u16sTemp, MakeUtf16Encoder(MakeUtf8Decoder(MakeStringSource(vSrc))));
-	return u16sTemp;
+void Utf8String::UnifyAppend(String<StringType::kUtf16> &u16sDst, const Utf8StringView &svSrc){
+	u16sDst.ReserveMore(svSrc.GetSize());
+	Convert(u16sDst, MakeUtf16Encoder(MakeUtf8Decoder(MakeStringSource(svSrc))));
 }
 template<>
 __attribute__((__flatten__))
@@ -367,11 +358,9 @@ void Utf8String::DeunifyAppend(Utf8String &strDst, const StringView<StringType::
 
 template<>
 __attribute__((__flatten__))
-StringView<StringType::kUtf32> Utf8String::UnifyAssign(String<StringType::kUtf32> &u32sTemp, const Utf8StringView &vSrc){
-	u32sTemp.Clear();
-	u32sTemp.Reserve(vSrc.GetSize());
-	Convert(u32sTemp, MakeUtf8Decoder(MakeStringSource(vSrc)));
-	return u32sTemp;
+void Utf8String::UnifyAppend(String<StringType::kUtf32> &u32sDst, const Utf8StringView &svSrc){
+	u32sDst.ReserveMore(svSrc.GetSize());
+	Convert(u32sDst, MakeUtf8Decoder(MakeStringSource(svSrc)));
 }
 template<>
 __attribute__((__flatten__))
@@ -383,9 +372,8 @@ void Utf8String::DeunifyAppend(Utf8String &strDst, const StringView<StringType::
 // UTF-16
 template<>
 __attribute__((__flatten__))
-StringView<StringType::kUtf16> Utf16String::UnifyAssign(String<StringType::kUtf16> &u16sTemp, const Utf16StringView &vSrc){
-	u16sTemp.Clear();
-	return StringView<StringType::kUtf16>(vSrc.GetBegin(), vSrc.GetSize());
+void Utf16String::UnifyAppend(String<StringType::kUtf16> &u16sDst, const Utf16StringView &svSrc){
+	u16sDst.Append(svSrc.GetBegin(), svSrc.GetSize());
 }
 template<>
 __attribute__((__flatten__))
@@ -395,11 +383,9 @@ void Utf16String::DeunifyAppend(Utf16String &strDst, const StringView<StringType
 
 template<>
 __attribute__((__flatten__))
-StringView<StringType::kUtf32> Utf16String::UnifyAssign(String<StringType::kUtf32> &u32sTemp, const Utf16StringView &vSrc){
-	u32sTemp.Clear();
-	u32sTemp.Reserve(vSrc.GetSize());
-	Convert(u32sTemp, MakeUtf16Decoder(MakeStringSource(vSrc)));
-	return u32sTemp;
+void Utf16String::UnifyAppend(String<StringType::kUtf32> &u32sDst, const Utf16StringView &svSrc){
+	u32sDst.ReserveMore(svSrc.GetSize());
+	Convert(u32sDst, MakeUtf16Decoder(MakeStringSource(svSrc)));
 }
 template<>
 __attribute__((__flatten__))
@@ -411,11 +397,9 @@ void Utf16String::DeunifyAppend(Utf16String &strDst, const StringView<StringType
 // UTF-32
 template<>
 __attribute__((__flatten__))
-StringView<StringType::kUtf16> Utf32String::UnifyAssign(String<StringType::kUtf16> &u16sTemp, const Utf32StringView &vSrc){
-	u16sTemp.Clear();
-	u16sTemp.Reserve(vSrc.GetSize());
-	Convert(u16sTemp, MakeUtf16Encoder(MakeStringSource(vSrc)));
-	return u16sTemp;
+void Utf32String::UnifyAppend(String<StringType::kUtf16> &u16sDst, const Utf32StringView &svSrc){
+	u16sDst.ReserveMore(svSrc.GetSize());
+	Convert(u16sDst, MakeUtf16Encoder(MakeStringSource(svSrc)));
 }
 template<>
 __attribute__((__flatten__))
@@ -426,9 +410,8 @@ void Utf32String::DeunifyAppend(Utf32String &strDst, const StringView<StringType
 
 template<>
 __attribute__((__flatten__))
-StringView<StringType::kUtf32> Utf32String::UnifyAssign(String<StringType::kUtf32> &u32sTemp, const Utf32StringView &vSrc){
-	u32sTemp.Clear();
-	return StringView<StringType::kUtf32>(vSrc.GetBegin(), vSrc.GetSize());
+void Utf32String::UnifyAppend(String<StringType::kUtf32> &u32sDst, const Utf32StringView &svSrc){
+	u32sDst.Append(svSrc.GetBegin(), svSrc.GetSize());
 }
 template<>
 __attribute__((__flatten__))
@@ -439,11 +422,9 @@ void Utf32String::DeunifyAppend(Utf32String &strDst, const StringView<StringType
 // CESU-8
 template<>
 __attribute__((__flatten__))
-StringView<StringType::kUtf16> Cesu8String::UnifyAssign(String<StringType::kUtf16> &u16sTemp, const Cesu8StringView &vSrc){
-	u16sTemp.Clear();
-	u16sTemp.Reserve(vSrc.GetSize());
-	Convert(u16sTemp, MakeCesu8Decoder(MakeStringSource(vSrc)));
-	return u16sTemp;
+void Cesu8String::UnifyAppend(String<StringType::kUtf16> &u16sDst, const Cesu8StringView &svSrc){
+	u16sDst.ReserveMore(svSrc.GetSize());
+	Convert(u16sDst, MakeCesu8Decoder(MakeStringSource(svSrc)));
 }
 template<>
 __attribute__((__flatten__))
@@ -454,11 +435,9 @@ void Cesu8String::DeunifyAppend(Cesu8String &strDst, const StringView<StringType
 
 template<>
 __attribute__((__flatten__))
-StringView<StringType::kUtf32> Cesu8String::UnifyAssign(String<StringType::kUtf32> &u32sTemp, const Cesu8StringView &vSrc){
-	u32sTemp.Clear();
-	u32sTemp.Reserve(vSrc.GetSize());
-	Convert(u32sTemp, MakeUtf16Decoder(MakeCesu8Decoder(MakeStringSource(vSrc))));
-	return u32sTemp;
+void Cesu8String::UnifyAppend(String<StringType::kUtf32> &u32sDst, const Cesu8StringView &svSrc){
+	u32sDst.ReserveMore(svSrc.GetSize());
+	Convert(u32sDst, MakeUtf16Decoder(MakeCesu8Decoder(MakeStringSource(svSrc))));
 }
 template<>
 __attribute__((__flatten__))
@@ -470,30 +449,28 @@ void Cesu8String::DeunifyAppend(Cesu8String &strDst, const StringView<StringType
 // ANSI
 template<>
 __attribute__((__flatten__))
-StringView<StringType::kUtf16> AnsiString::UnifyAssign(String<StringType::kUtf16> &u16sTemp, const AnsiStringView &vSrc){
-	u16sTemp.Clear();
-	const auto uInputSize = vSrc.GetSize() * sizeof(char);
+void AnsiString::UnifyAppend(String<StringType::kUtf16> &u16sDst, const AnsiStringView &svSrc){
+	const auto uInputSize = svSrc.GetSize() * sizeof(char);
 	if(uInputSize > ULONG_MAX){
 		DEBUG_THROW(Exception, ERROR_NOT_ENOUGH_MEMORY, "The input ANSI string is too long"_rcs);
 	}
-	const auto uOutputSizeMax = vSrc.GetSize() * sizeof(wchar_t);
-	if((uOutputSizeMax > ULONG_MAX) || (uOutputSizeMax / sizeof(wchar_t) != vSrc.GetSize())){
+	const auto uOutputSizeMax = svSrc.GetSize() * sizeof(wchar_t);
+	if((uOutputSizeMax > ULONG_MAX) || (uOutputSizeMax / sizeof(wchar_t) != svSrc.GetSize())){
 		DEBUG_THROW(Exception, ERROR_NOT_ENOUGH_MEMORY, "The output Unicode string requires more memory than ULONG_MAX bytes"_rcs);
 	}
-	const auto uOldSize = u16sTemp.GetSize();
+	const auto uOldSize = u16sDst.GetSize();
 	try {
-		const auto pchWrite = u16sTemp.ResizeMore(uOutputSizeMax / sizeof(wchar_t));
+		const auto pchWrite = u16sDst.ResizeMore(uOutputSizeMax / sizeof(wchar_t));
 		ULONG ulConvertedSize;
-		const auto lStatus = ::RtlMultiByteToUnicodeN(reinterpret_cast<wchar_t *>(pchWrite), uOutputSizeMax, &ulConvertedSize, vSrc.GetBegin(), uInputSize);
+		const auto lStatus = ::RtlMultiByteToUnicodeN(reinterpret_cast<wchar_t *>(pchWrite), uOutputSizeMax, &ulConvertedSize, svSrc.GetBegin(), uInputSize);
 		if(!NT_SUCCESS(lStatus)){
 			DEBUG_THROW(SystemError, ::RtlNtStatusToDosError(lStatus), "RtlMultiByteToUnicodeN"_rcs);
 		}
-		u16sTemp.Pop(u16sTemp.GetSize() - (uOldSize + ulConvertedSize / sizeof(wchar_t)));
+		u16sDst.Pop(u16sDst.GetSize() - uOldSize - ulConvertedSize / sizeof(wchar_t));
 	} catch(...){
-		u16sTemp.Clear();
+		u16sDst.Pop(u16sDst.GetSize() - uOldSize);
 		throw;
 	}
-	return u16sTemp;
 }
 template<>
 __attribute__((__flatten__))
@@ -514,7 +491,7 @@ void AnsiString::DeunifyAppend(AnsiString &strDst, const StringView<StringType::
 		if(!NT_SUCCESS(lStatus)){
 			DEBUG_THROW(SystemError, ::RtlNtStatusToDosError(lStatus), "RtlUnicodeToMultiByteN"_rcs);
 		}
-		strDst.Pop(strDst.GetSize() - (uOldSize + ulConvertedSize / sizeof(char)));
+		strDst.Pop(strDst.GetSize() - uOldSize - ulConvertedSize / sizeof(char));
 	} catch(...){
 		strDst.Pop(strDst.GetSize() - uOldSize);
 		throw;
@@ -523,11 +500,10 @@ void AnsiString::DeunifyAppend(AnsiString &strDst, const StringView<StringType::
 
 template<>
 __attribute__((__flatten__))
-StringView<StringType::kUtf32> AnsiString::UnifyAssign(String<StringType::kUtf32> &u32sTemp, const AnsiStringView &vSrc){
-	u32sTemp.Clear();
+void AnsiString::UnifyAppend(String<StringType::kUtf32> &u32sDst, const AnsiStringView &svSrc){
 	Utf16String u16sTemp;
-	const auto u16svResult = UnifyAssign(u16sTemp, vSrc);
-	return Utf16String::UnifyAssign(u32sTemp, u16svResult);
+	UnifyAppend(u16sTemp, svSrc);
+	Utf16String::UnifyAppend(u32sDst, u16sTemp);
 }
 template<>
 __attribute__((__flatten__))

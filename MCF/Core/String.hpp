@@ -25,6 +25,11 @@ namespace MCF {
 template<StringType kTypeT>
 class String;
 
+namespace Impl_String {
+	template<StringType kSrcTypeT>
+	struct Transcoder;
+}
+
 template<StringType kTypeT>
 class String {
 public:
@@ -40,10 +45,10 @@ public:
 	static const String kEmpty;
 
 public:
-	static StringView<StringType::kUtf16> UnifyAssign(String<StringType::kUtf16> &u16sTemp, const View &vSrc);
+	static void UnifyAppend(String<StringType::kUtf16> &u16sDst, const View &svSrc);
 	static void DeunifyAppend(String &strDst, const StringView<StringType::kUtf16> &u16svSrc);
 
-	static StringView<StringType::kUtf32> UnifyAssign(String<StringType::kUtf32> &u32sTemp, const View &vSrc);
+	static void UnifyAppend(String<StringType::kUtf32> &u32sDst, const View &svSrc);
 	static void DeunifyAppend(String &strDst, const StringView<StringType::kUtf32> &u32svSrc);
 
 private:
@@ -590,27 +595,7 @@ public:
 	}
 	template<StringType kOtherTypeT>
 	void Append(const StringView<kOtherTypeT> &rhs){
-		if((kTypeT == StringType::kUtf16) && IsEmpty()){
-			auto &strSilentThis = reinterpret_cast<String<StringType::kUtf16> &>(*this);
-			const auto usvResult = String<kOtherTypeT>::UnifyAssign(strSilentThis, rhs);
-			if(strSilentThis.GetBegin() != usvResult.GetBegin()){
-				strSilentThis.Append(usvResult);
-			}
-		} else if((kTypeT == StringType::kUtf32) && IsEmpty()){
-			auto &strSilentThis = reinterpret_cast<String<StringType::kUtf32> &>(*this);
-			const auto usvResult = String<kOtherTypeT>::UnifyAssign(strSilentThis, rhs);
-			if(strSilentThis.GetBegin() != usvResult.GetBegin()){
-				strSilentThis.Append(usvResult);
-			}
-		} else {
-			constexpr int kConvertViaUtf16Weight = StringEncodingTrait<kTypeT>::kPrefersConversionViaUtf16 + StringEncodingTrait<kOtherTypeT>::kPrefersConversionViaUtf16;
-			constexpr int kConvertViaUtf32Weight = StringEncodingTrait<kTypeT>::kPrefersConversionViaUtf32 + StringEncodingTrait<kOtherTypeT>::kPrefersConversionViaUtf32;
-			using UnifiedString = String<(kConvertViaUtf16Weight > kConvertViaUtf32Weight) ? StringType::kUtf16 : StringType::kUtf32>;
-
-			UnifiedString usTemp;
-			const auto usvResult = String<kOtherTypeT>::UnifyAssign(usTemp, rhs);
-			DeunifyAppend(*this, usvResult);
-		}
+		Impl_String::Transcoder<kOtherTypeT>()(*this, rhs);
 	}
 	template<StringType kOtherTypeT>
 	void Append(const String<kOtherTypeT> &rhs){
@@ -932,6 +917,47 @@ decltype(auto) end(String<kTypeT> &rhs) noexcept {
 template<StringType kTypeT>
 decltype(auto) cend(const String<kTypeT> &rhs) noexcept {
 	return end(rhs);
+}
+
+namespace Impl_String {
+	template<StringType kSrcTypeT>
+	struct Transcoder {
+		template<StringType kDstTypeT>
+		void operator()(String<kDstTypeT> &strDst, const StringView<kSrcTypeT> &svSrc) const {
+			using DstTrait = StringEncodingTrait<kDstTypeT>;
+			using SrcTrait = StringEncodingTrait<kSrcTypeT>;
+
+			constexpr int kConvertViaUtf16Weight = DstTrait::kPrefersConversionViaUtf16 + SrcTrait::kPrefersConversionViaUtf16;
+			constexpr int kConvertViaUtf32Weight = DstTrait::kPrefersConversionViaUtf32 + SrcTrait::kPrefersConversionViaUtf32;
+			using UnifiedString = String<(kConvertViaUtf16Weight > kConvertViaUtf32Weight) ? StringType::kUtf16 : StringType::kUtf32>;
+
+			UnifiedString usTemp;
+			SrcTrait::UnifyAppend(usTemp, svSrc);
+			DstTrait::DeunifyAppend(strDst, usTemp);
+		}
+
+		void operator()(String<StringType::kUtf16> &u16sDst, const StringView<kSrcTypeT> &svSrc) const {
+			String<kSrcTypeT>::UnifyAppend(u16sDst, svSrc);
+		}
+		void operator()(String<StringType::kUtf32> &u32sDst, const StringView<kSrcTypeT> &svSrc) const {
+			String<kSrcTypeT>::UnifyAppend(u32sDst, svSrc);
+		}
+	};
+
+	template<>
+	struct Transcoder<StringType::kUtf16> {
+		template<StringType kDstTypeT>
+		void operator()(String<kDstTypeT> &strDst, const StringView<StringType::kUtf16> &u16svSrc) const {
+			String<kDstTypeT>::DeunifyAppend(strDst, u16svSrc);
+		}
+	};
+	template<>
+	struct Transcoder<StringType::kUtf32> {
+		template<StringType kDstTypeT>
+		void operator()(String<kDstTypeT> &strDst, const StringView<StringType::kUtf32> &u32svSrc) const {
+			String<kDstTypeT>::DeunifyAppend(strDst, u32svSrc);
+		}
+	};
 }
 
 extern template class String<StringType::kNarrow>;

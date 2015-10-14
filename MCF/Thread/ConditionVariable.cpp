@@ -4,7 +4,6 @@
 
 #include "../StdMCF.hpp"
 #include "ConditionVariable.hpp"
-#include "../Utilities/MinMax.hpp"
 #include "../Utilities/Defer.hpp"
 #include <winternl.h>
 #include <ntstatus.h>
@@ -59,8 +58,11 @@ namespace {
 }
 
 void ConditionVariable::Signal(std::size_t uMaxToWakeUp) noexcept {
-	const auto uToWakeUp = Min(x_uWaitingThreads.Load(kAtomicRelaxed), uMaxToWakeUp);
-	for(std::size_t i = 0; i < uToWakeUp; ++i){
+	auto uToWakeUp = x_uWaitingThreads.Load(kAtomicRelaxed);
+	if(uToWakeUp > uMaxToWakeUp){
+		uToWakeUp = uMaxToWakeUp;
+	}
+	while(uToWakeUp != 0){
 		const auto lStatus = ::NtReleaseKeyedEvent(nullptr, this, false, &kZeroTimeout);
 		if(!NT_SUCCESS(lStatus)){
 			ASSERT_MSG(false, L"NtReleaseKeyedEvent() 失败。");
@@ -68,6 +70,7 @@ void ConditionVariable::Signal(std::size_t uMaxToWakeUp) noexcept {
 		if(lStatus == STATUS_TIMEOUT){
 			break;
 		}
+		--uToWakeUp;
 	}
 }
 void ConditionVariable::Broadcast() noexcept {

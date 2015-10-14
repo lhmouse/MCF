@@ -65,41 +65,50 @@ namespace {
 			return !!x_vPrev;
 		}
 		std::uint32_t operator()(){
+			static constexpr unsigned char kByteCountTable[32] = {
+				1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+				0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 2, 3, 3, 4, 0,
+			};
+
 			auto u32Point = x_vPrev();
-			if(u32Point & 0x80u){
-				// 这个值是该码点的总字节数。
-				const auto uBytes = CountLeadingZeroes((std::uint8_t)(~u32Point | 1));
-				// UTF-8 理论上最长可以编码 6 个字符，但是标准化以后最多只能使用 4 个。
-				if(uBytes - 2 > 2){ // 2, 3, 4
-					DEBUG_THROW(Exception, ERROR_INVALID_DATA, "Invalid UTF-8 leading byte"_rcs);
-				}
-				u32Point &= 0xFFu >> uBytes;
+			// 这个值是该码点的总字节数。
+			const unsigned uBytes = kByteCountTable[(u32Point >> 3) & 0x1F];
+			if(uBytes == 0){
+				DEBUG_THROW(Exception, ERROR_INVALID_DATA, "Invalid UTF-8 leading byte"_rcs);
+			}
+			if(uBytes == 1){
+				return u32Point & 0xFFu;
+			}
 
-				switch(uBytes){
-
-#define UTF8_DECODER_UNROLLED	\
-					{	\
-						const auto u32Temp = x_vPrev();	\
-						if((u32Temp & 0xC0u) != 0x80u){	\
-							DEBUG_THROW(Exception, ERROR_INVALID_DATA, "Invalid UTF-8 non-leading byte"_rcs);	\
-						}	\
-						u32Point = (u32Point << 6) | (u32Temp & 0x3Fu);	\
-					}
-
-				default:
-					UTF8_DECODER_UNROLLED
-				case 3:
-					UTF8_DECODER_UNROLLED
-				case 2:
-					UTF8_DECODER_UNROLLED
+			const auto Unrolled = [&]{
+				const auto u32Temp = x_vPrev();
+				if((u32Temp & 0xC0u) != 0x80u){
+					DEBUG_THROW(Exception, ERROR_INVALID_DATA, "Invalid UTF-8 non-leading byte"_rcs);
 				}
+				u32Point = (u32Point << 6) | (u32Temp & 0x3Fu);
+			};
 
-				if(u32Point > 0x10FFFFu){
-					DEBUG_THROW(Exception, ERROR_INVALID_DATA, "Invalid UTF-32 code point value"_rcs);
-				}
-				if(!kIsCesu8T && (u32Point - 0xD800u < 0x800u)){
-					DEBUG_THROW(Exception, ERROR_INVALID_DATA, "UTF-32 code point is reserved for UTF-16"_rcs);
-				}
+			if(uBytes == 2){
+				u32Point &= 0x3Fu;
+
+				Unrolled();
+			} else if(uBytes == 3){
+				u32Point &= 0x1Fu;
+
+				Unrolled();
+				Unrolled();
+			} else {
+				u32Point &= 0x0Fu;
+
+				Unrolled();
+				Unrolled();
+				Unrolled();
+			}
+			if(u32Point > 0x10FFFFu){
+				DEBUG_THROW(Exception, ERROR_INVALID_DATA, "Invalid UTF-32 code point value"_rcs);
+			}
+			if(!kIsCesu8T && (u32Point - 0xD800u < 0x800u)){
+				DEBUG_THROW(Exception, ERROR_INVALID_DATA, "UTF-32 code point is reserved for UTF-16"_rcs);
 			}
 			return u32Point;
 		}
@@ -142,26 +151,32 @@ namespace {
 				DEBUG_THROW(Exception, ERROR_INVALID_DATA, "Invalid UTF-32 code point value"_rcs);
 			}
 			// 这个值是该码点的总字节数。
-			const auto uBytes = (34u - CountLeadingZeroes((std::uint32_t)(u32Point | 0x7Fu))) / 5u;
-			if(uBytes > 1){
-				switch(uBytes){
+			const auto uBytes = (34u - CountLeadingZeroes(static_cast<std::uint32_t>(u32Point | 0x7Fu))) / 5u;
+			if(uBytes == 1){
+				return u32Point;
+			}
 
-#define UTF8_ENCODER_UNROLLED	\
-					{	\
-						x_u32Pending <<= 8;	\
-						x_u32Pending |= (u32Point & 0x3F) | 0x80u;	\
-						u32Point >>= 6;	\
-					}
+			const auto Unrolled = [&]{
+				x_u32Pending <<= 8;
+				x_u32Pending |= (u32Point & 0x3F) | 0x80u;
+				u32Point >>= 6;
+			};
 
-				default:
-					UTF8_ENCODER_UNROLLED
-				case 3:
-					UTF8_ENCODER_UNROLLED
-				case 2:
-					UTF8_ENCODER_UNROLLED
-				}
+			if(uBytes == 2){
+				Unrolled();
 
-				u32Point |= ~0xFFu >> uBytes;
+				u32Point |= 0xC0;
+			} else if(uBytes == 3){
+				Unrolled();
+				Unrolled();
+
+				u32Point |= 0xE0;
+			} else {
+				Unrolled();
+				Unrolled();
+				Unrolled();
+
+				u32Point |= 0xF0;
 			}
 			return u32Point;
 		}

@@ -17,6 +17,11 @@ namespace MCF {
 
 // 其他非静态成员函数。
 bool Mutex::Try(std::uint64_t u64MilliSeconds) noexcept {
+	if(u64MilliSeconds > static_cast<std::uint64_t>(INT64_MIN) / 10000){
+		Lock();
+		return true;
+	}
+
 	return ::TryAcquireSRWLockExclusive(reinterpret_cast<::SRWLOCK *>(&x_uControl));
 }
 void Mutex::Lock() noexcept {

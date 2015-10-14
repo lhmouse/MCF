@@ -37,10 +37,12 @@ namespace {
 			return x_pchRead != x_pchEnd;
 		}
 		std::uint32_t operator()(){
-			if(x_pchRead == x_pchEnd){
+			const auto pchRead = x_pchRead;
+			if(pchRead == x_pchEnd){
 				DEBUG_THROW(Exception, ERROR_HANDLE_EOF, "String is truncated"_rcs);
 			}
-			return static_cast<std::make_unsigned_t<CharT>>(*(x_pchRead++));
+			x_pchRead = pchRead + 1;
+			return static_cast<std::make_unsigned_t<CharT>>(*pchRead);
 		}
 	};
 

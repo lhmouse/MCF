@@ -23,12 +23,12 @@ bool ConditionVariable::Wait(Impl_UniqueLockTemplate::UniqueLockTemplateBase &vL
 		return true;
 	}
 
+	x_uWaitingThreads.Increment(kAtomicRelaxed);
 	const auto uCount = vLock.X_UnlockAll();
 	ASSERT_MSG(uCount != 0, L"你会用条件变量吗？");
-	x_uWaitingThreads.Increment(kAtomicRelaxed);
 	DEFER([&]{
-		x_uWaitingThreads.Decrement(kAtomicRelaxed);
 		vLock.X_RelockAll(uCount);
+		x_uWaitingThreads.Decrement(kAtomicRelaxed);
 	});
 
 	::LARGE_INTEGER liTimeout;
@@ -40,12 +40,12 @@ bool ConditionVariable::Wait(Impl_UniqueLockTemplate::UniqueLockTemplateBase &vL
 	return lStatus != STATUS_TIMEOUT;
 }
 void ConditionVariable::Wait(Impl_UniqueLockTemplate::UniqueLockTemplateBase &vLock) noexcept {
+	x_uWaitingThreads.Increment(kAtomicRelaxed);
 	const auto uCount = vLock.X_UnlockAll();
 	ASSERT_MSG(uCount != 0, L"你会用条件变量吗？");
-	x_uWaitingThreads.Increment(kAtomicRelaxed);
 	DEFER([&]{
-		x_uWaitingThreads.Decrement(kAtomicRelaxed);
 		vLock.X_RelockAll(uCount);
+		x_uWaitingThreads.Decrement(kAtomicRelaxed);
 	});
 
 	const auto lStatus = ::NtWaitForKeyedEvent(nullptr, this, false, nullptr);

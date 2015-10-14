@@ -455,7 +455,6 @@ void AnsiString::UnifyAppend(String<StringType::kUtf16> &u16sDst, const AnsiStri
 	if((uOutputSizeMax > ULONG_MAX) || (uOutputSizeMax / sizeof(wchar_t) != svSrc.GetSize())){
 		DEBUG_THROW(Exception, ERROR_NOT_ENOUGH_MEMORY, "The output Unicode string requires more memory than ULONG_MAX bytes"_rcs);
 	}
-	const auto uOldSize = u16sDst.GetSize();
 	try {
 		const auto pchWrite = u16sDst.ResizeMore(uOutputSizeMax / sizeof(wchar_t));
 		ULONG ulConvertedSize;
@@ -463,9 +462,9 @@ void AnsiString::UnifyAppend(String<StringType::kUtf16> &u16sDst, const AnsiStri
 		if(!NT_SUCCESS(lStatus)){
 			DEBUG_THROW(SystemError, ::RtlNtStatusToDosError(lStatus), "RtlMultiByteToUnicodeN"_rcs);
 		}
-		u16sDst.Pop(u16sDst.GetSize() - uOldSize - ulConvertedSize / sizeof(wchar_t));
+		u16sDst.Pop(uOutputSizeMax / sizeof(wchar_t) - ulConvertedSize / sizeof(wchar_t));
 	} catch(...){
-		u16sDst.Pop(u16sDst.GetSize() - uOldSize);
+		u16sDst.Pop(uOutputSizeMax / sizeof(wchar_t));
 		throw;
 	}
 }
@@ -480,17 +479,16 @@ void AnsiString::DeunifyAppend(AnsiString &strDst, const StringView<StringType::
 	if((uOutputSizeMax > ULONG_MAX) || (uOutputSizeMax / (2 * sizeof(char)) != u16svSrc.GetSize())){
 		DEBUG_THROW(Exception, ERROR_NOT_ENOUGH_MEMORY, "The output ANSI string requires more memory than ULONG_MAX bytes"_rcs);
 	}
-	const auto uOldSize = strDst.GetSize();
 	try {
-		const auto pchWrite = strDst.ResizeMore(uOutputSizeMax);
+		const auto pchWrite = strDst.ResizeMore(uOutputSizeMax / sizeof(char));
 		ULONG ulConvertedSize;
 		const auto lStatus = ::RtlUnicodeToMultiByteN(pchWrite, uOutputSizeMax, &ulConvertedSize, reinterpret_cast<const wchar_t *>(u16svSrc.GetBegin()), uInputSize);
 		if(!NT_SUCCESS(lStatus)){
 			DEBUG_THROW(SystemError, ::RtlNtStatusToDosError(lStatus), "RtlUnicodeToMultiByteN"_rcs);
 		}
-		strDst.Pop(strDst.GetSize() - uOldSize - ulConvertedSize / sizeof(char));
+		strDst.Pop(uOutputSizeMax / sizeof(char) - ulConvertedSize / sizeof(char));
 	} catch(...){
-		strDst.Pop(strDst.GetSize() - uOldSize);
+		strDst.Pop(uOutputSizeMax / sizeof(char));
 		throw;
 	}
 }

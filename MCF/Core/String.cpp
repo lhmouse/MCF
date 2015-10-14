@@ -33,9 +33,11 @@ namespace {
 		}
 
 	public:
+		__attribute__((__flatten__))
 		explicit operator bool() const noexcept {
 			return x_pchRead != x_pchEnd;
 		}
+		__attribute__((__flatten__))
 		std::uint32_t operator()(){
 			const auto pchRead = x_pchRead;
 			if(pchRead == x_pchEnd){
@@ -63,9 +65,11 @@ namespace {
 		}
 
 	public:
+		__attribute__((__flatten__))
 		explicit operator bool() const noexcept {
 			return !!x_vPrev;
 		}
+		__attribute__((__flatten__))
 		std::uint32_t operator()(){
 			static constexpr unsigned char kByteCountTable[32] = {
 				1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
@@ -138,9 +142,11 @@ namespace {
 		}
 
 	public:
+		__attribute__((__flatten__))
 		explicit operator bool() const noexcept {
 			return x_u32Pending || !!x_vPrev;
 		}
+		__attribute__((__flatten__))
 		std::uint32_t operator()(){
 			if(x_u32Pending){
 				const auto u32Ret = x_u32Pending & 0xFFu;
@@ -153,8 +159,7 @@ namespace {
 				DEBUG_THROW(Exception, ERROR_INVALID_DATA, "Invalid UTF-32 code point value"_rcs);
 			}
 			// 这个值是该码点的总字节数。
-			const auto uBytes = (34u - CountLeadingZeroes(static_cast<std::uint32_t>(u32Point | 0x7Fu))) / 5u;
-			if(uBytes == 1){
+			if((u32Point >> 7) == 0){ // u32Point < 0x80u
 				return u32Point;
 			}
 
@@ -164,11 +169,11 @@ namespace {
 				u32Point >>= 6;
 			};
 
-			if(uBytes == 2){
+			if((u32Point >> 12) == 0){ // u32Point < 0x1000u
 				Unrolled();
 
 				u32Point |= 0xC0;
-			} else if(uBytes == 3){
+			} else if((u32Point >> 17) == 0){ // u32Point < 0x20000u
 				Unrolled();
 				Unrolled();
 
@@ -180,7 +185,7 @@ namespace {
 
 				u32Point |= 0xF0;
 			}
-			return u32Point;
+			return u32Point & 0xFFu;
 		}
 	};
 
@@ -201,9 +206,11 @@ namespace {
 		}
 
 	public:
+		__attribute__((__flatten__))
 		explicit operator bool() const noexcept {
 			return !!x_vPrev;
 		}
+		__attribute__((__flatten__))
 		std::uint32_t operator()(){
 			auto u32Point = x_vPrev();
 			// 检测前导代理。
@@ -242,9 +249,11 @@ namespace {
 		}
 
 	public:
+		__attribute__((__flatten__))
 		explicit operator bool() const noexcept {
 			return x_u32Pending || !!x_vPrev;
 		}
+		__attribute__((__flatten__))
 		std::uint32_t operator()(){
 			if(x_u32Pending){
 				const auto u32Ret = x_u32Pending;

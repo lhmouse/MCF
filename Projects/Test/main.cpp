@@ -7,10 +7,10 @@ extern "C" unsigned MCFMain(){
 
 	static constexpr unsigned loops = 10000000;
 
-	auto &ku8s  = u8"𤭢𤭢𤭢𤭢𤭢𤭢𤭢𤭢𤭢"_u8s;
-	auto &ku16s =  u"𤭢𤭢𤭢𤭢𤭢𤭢𤭢𤭢𤭢"_u16s;
-	auto &ku32s =  U"𤭢𤭢𤭢𤭢𤭢𤭢𤭢𤭢𤭢"_u32s;
-	auto &kws   =  L"𤭢𤭢𤭢𤭢𤭢𤭢𤭢𤭢𤭢"_ws;
+	auto &ku8s  = u8"a𤭢𤭢喵𤭢𤭢𤭢Г𤭢𤭢𤭢𤭢"_u8s;
+	auto &ku16s =  u"a𤭢𤭢喵𤭢𤭢𤭢Г𤭢𤭢𤭢𤭢"_u16s;
+	auto &ku32s =  U"a𤭢𤭢喵𤭢𤭢𤭢Г𤭢𤭢𤭢𤭢"_u32s;
+	auto &kws   =  L"a𤭢𤭢喵𤭢𤭢𤭢Г𤭢𤭢𤭢𤭢"_ws;
 
 	Utf32String u32s;
 	auto t1 = GetHiResMonoClock();
@@ -28,6 +28,7 @@ extern "C" unsigned MCFMain(){
 	Utf32String s4(s3);   ASSERT(s4 == ku32s);
 	Utf16String s5(s4);   ASSERT(s5 == ku16s);
 	Utf8String  s6(s5);   ASSERT(s6 == ku8s);
+	std::puts("passed!");
 */
 	return 0;
 }
@@ -47,7 +48,7 @@ extern "C" unsigned MCFMain(){
 	std::array<IntrusivePtr<Thread>, 4> threads;
 	for(auto &p : threads){
 		p = Thread::Create([]{
-			for(int i = 0; i < 500000; ++i){
+			for(int i = 0; i < 1000000; ++i){
 				const auto l = m.GetLock();
 				++c;
 			}

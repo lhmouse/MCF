@@ -920,6 +920,9 @@ decltype(auto) cend(const String<kTypeT> &rhs) noexcept {
 }
 
 namespace Impl_String {
+	static_assert(sizeof(wchar_t) == sizeof(char16_t), "wchar_t does not have the same size with char16_t.");
+	static_assert(alignof(wchar_t) == alignof(char16_t), "wchar_t does not have the same alignment with char16_t.");
+
 	template<StringType kSrcTypeT>
 	struct Transcoder {
 		template<StringType kDstTypeT>
@@ -936,6 +939,9 @@ namespace Impl_String {
 			DstTrait::DeunifyAppend(strDst, usTemp);
 		}
 
+		void operator()(String<StringType::kWide> &wsDst, const StringView<kSrcTypeT> &svSrc) const {
+			String<kSrcTypeT>::UnifyAppend(reinterpret_cast<String<StringType::kUtf16> &>(wsDst), svSrc);
+		}
 		void operator()(String<StringType::kUtf16> &u16sDst, const StringView<kSrcTypeT> &svSrc) const {
 			String<kSrcTypeT>::UnifyAppend(u16sDst, svSrc);
 		}
@@ -944,6 +950,13 @@ namespace Impl_String {
 		}
 	};
 
+	template<>
+	struct Transcoder<StringType::kWide> {
+		template<StringType kDstTypeT>
+		void operator()(String<kDstTypeT> &strDst, const StringView<StringType::kWide> &wsvSrc) const {
+			String<kDstTypeT>::DeunifyAppend(strDst, reinterpret_cast<const StringView<StringType::kUtf16> &>(wsvSrc));
+		}
+	};
 	template<>
 	struct Transcoder<StringType::kUtf16> {
 		template<StringType kDstTypeT>

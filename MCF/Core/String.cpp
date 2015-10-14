@@ -287,9 +287,6 @@ template class String<StringType::kUtf32>;
 template class String<StringType::kCesu8>;
 template class String<StringType::kAnsi>;
 
-static_assert(sizeof(wchar_t) == sizeof(char16_t), "wchar_t does not have the same size with char16_t.");
-static_assert(alignof(wchar_t) == alignof(char16_t), "wchar_t does not have the same alignment with char16_t.");
-
 // UTF-8
 template<>
 __attribute__((__flatten__))

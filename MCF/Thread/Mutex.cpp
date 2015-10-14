@@ -28,6 +28,8 @@ void Mutex::Lock() noexcept {
 	::AcquireSRWLockExclusive(reinterpret_cast<::SRWLOCK *>(&x_uControl));
 }
 void Mutex::Unlock() noexcept {
+//	ASSERT_MSG(x_uControl.Load(kAtomicRelaxed) & kLockedMask, L"互斥锁没有被任何线程锁定。");
+
 	::ReleaseSRWLockExclusive(reinterpret_cast<::SRWLOCK *>(&x_uControl));
 }
 

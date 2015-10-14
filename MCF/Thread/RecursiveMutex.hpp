@@ -23,12 +23,7 @@ private:
 	std::size_t x_uRecursionCount;
 
 public:
-	constexpr RecursiveMutex() noexcept
-		: x_vMutex()
-		, x_uLockingThreadId(0), x_uRecursionCount(0)
-	{
-	}
-	explicit constexpr RecursiveMutex(std::size_t uSpinCount) noexcept
+	explicit constexpr RecursiveMutex(std::size_t uSpinCount = Mutex::kDefaultSpinCount) noexcept
 		: x_vMutex(uSpinCount)
 		, x_uLockingThreadId(0), x_uRecursionCount(0)
 	{

@@ -21,6 +21,11 @@ class Mutex : NONCOPYABLE {
 	friend ConditionVariable;
 
 public:
+	enum : std::size_t {
+		kDefaultSpinCount = 0x40,
+	};
+
+public:
 	using UniqueLock = Impl_UniqueLockTemplate::UniqueLockTemplate<Mutex>;
 
 private:
@@ -28,11 +33,7 @@ private:
 	Atomic<std::uintptr_t> x_uControl;
 
 public:
-	constexpr Mutex() noexcept
-		: x_uSpinCount(0x400), x_uControl(0)
-	{
-	}
-	explicit constexpr Mutex(std::size_t uSpinCount) noexcept
+	explicit constexpr Mutex(std::size_t uSpinCount = kDefaultSpinCount) noexcept
 		: x_uSpinCount(uSpinCount), x_uControl(0)
 	{
 	}

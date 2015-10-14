@@ -27,8 +27,8 @@ public:
 	bool Wait(Impl_UniqueLockTemplate::UniqueLockTemplateBase &vLock, std::uint64_t u64MilliSeconds) noexcept;
 	void Wait(Impl_UniqueLockTemplate::UniqueLockTemplateBase &vLock) noexcept;
 
-	void Signal(std::size_t uMaxToWakeUp = 1) noexcept;
-	void Broadcast() noexcept;
+	std::size_t Signal(std::size_t uMaxToWakeUp = 1) noexcept;
+	std::size_t Broadcast() noexcept;
 };
 
 }

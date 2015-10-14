@@ -57,12 +57,10 @@ namespace {
 	constexpr ::LARGE_INTEGER kZeroTimeout = { };
 }
 
-void ConditionVariable::Signal(std::size_t uMaxToWakeUp) noexcept {
-	auto uToWakeUp = x_uWaitingThreads.Load(kAtomicRelaxed);
-	if(uToWakeUp > uMaxToWakeUp){
-		uToWakeUp = uMaxToWakeUp;
-	}
-	while(uToWakeUp != 0){
+std::size_t ConditionVariable::Signal(std::size_t uMaxToWakeUp) noexcept {
+	const auto uToWakeUp = std::min(x_uWaitingThreads.Load(kAtomicRelaxed), uMaxToWakeUp);
+	std::size_t uWokenUp = 0;
+	while(uWokenUp < uToWakeUp){
 		const auto lStatus = ::NtReleaseKeyedEvent(nullptr, this, false, &kZeroTimeout);
 		if(!NT_SUCCESS(lStatus)){
 			ASSERT_MSG(false, L"NtReleaseKeyedEvent() 失败。");
@@ -70,11 +68,12 @@ void ConditionVariable::Signal(std::size_t uMaxToWakeUp) noexcept {
 		if(lStatus == STATUS_TIMEOUT){
 			break;
 		}
-		--uToWakeUp;
+		++uWokenUp;
 	}
+	return uWokenUp;
 }
-void ConditionVariable::Broadcast() noexcept {
-	Signal(static_cast<std::size_t>(-1));
+std::size_t ConditionVariable::Broadcast() noexcept {
+	return Signal(static_cast<std::size_t>(-1));
 }
 
 }

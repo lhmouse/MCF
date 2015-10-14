@@ -26,8 +26,8 @@ bool ConditionVariable::Wait(Impl_UniqueLockTemplate::UniqueLockTemplateBase &vL
 	const auto uCount = vLock.X_UnlockAll();
 	ASSERT_MSG(uCount != 0, L"你会用条件变量吗？");
 	DEFER([&]{
-		vLock.X_RelockAll(uCount);
 		x_uWaitingThreads.Decrement(kAtomicRelaxed);
+		vLock.X_RelockAll(uCount);
 	});
 
 	::LARGE_INTEGER liTimeout;
@@ -43,8 +43,8 @@ void ConditionVariable::Wait(Impl_UniqueLockTemplate::UniqueLockTemplateBase &vL
 	const auto uCount = vLock.X_UnlockAll();
 	ASSERT_MSG(uCount != 0, L"你会用条件变量吗？");
 	DEFER([&]{
-		vLock.X_RelockAll(uCount);
 		x_uWaitingThreads.Decrement(kAtomicRelaxed);
+		vLock.X_RelockAll(uCount);
 	});
 
 	const auto lStatus = ::NtWaitForKeyedEvent(nullptr, this, false, nullptr);

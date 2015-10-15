@@ -50,9 +50,9 @@ public:
 	void Lock() noexcept;
 	void Unlock() noexcept;
 
-	UniqueLock TryLock() noexcept {
+	UniqueLock TryGetLock(std::uint64_t u64MilliSeconds = 0) noexcept {
 		UniqueLock vLock(*this, false);
-		vLock.Try();
+		vLock.Try(u64MilliSeconds);
 		return vLock;
 	}
 	UniqueLock GetLock() noexcept {

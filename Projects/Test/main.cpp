@@ -2,6 +2,7 @@
 #include <MCF/Thread/Thread.hpp>
 #include <MCF/Thread/Mutex.hpp>
 #include <MCF/Core/Time.hpp>
+#include <MCF/Core/Array.hpp>
 
 using namespace MCF;
 
@@ -9,7 +10,7 @@ Mutex m;
 volatile int c = 0;
 
 extern "C" unsigned MCFMain(){
-	std::array<IntrusivePtr<Thread>, 10> threads;
+	Array<IntrusivePtr<Thread>, 10> threads;
 	for(auto &p : threads){
 		p = Thread::Create([]{
 			for(int i = 0; i < 1000000; ++i){

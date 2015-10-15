@@ -169,11 +169,11 @@ namespace {
 				u32Point >>= 6;
 			};
 
-			if((u32Point >> 12) == 0){ // u32Point < 0x1000u
+			if((u32Point >> 11) == 0){ // u32Point < 0x800u
 				Unrolled();
 
 				u32Point |= 0xC0;
-			} else if((u32Point >> 17) == 0){ // u32Point < 0x20000u
+			} else if((u32Point >> 16) == 0){ // u32Point < 0x10000
 				Unrolled();
 				Unrolled();
 

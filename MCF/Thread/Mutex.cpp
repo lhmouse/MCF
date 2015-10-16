@@ -34,11 +34,12 @@ bool Mutex::Try(std::uint64_t u64MilliSeconds) noexcept {
 
 	if(u64MilliSeconds == 0){
 		ctlOld.u = x_uControl.Load(kAtomicRelaxed);
+	jCasFailureTest:
 		ctlNew = ctlOld;
 		ctlNew.uIsLocked = true;
 		if(ctlOld.u != ctlNew.u){
 			if(!x_uControl.CompareExchange(ctlOld.u, ctlNew.u, kAtomicSeqCst, kAtomicRelaxed)){
-				return false;
+				goto jCasFailureTest;
 			}
 			return true;
 		}

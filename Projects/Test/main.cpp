@@ -13,9 +13,9 @@ extern "C" unsigned MCFMain(){
 	Array<IntrusivePtr<Thread>, 10> threads;
 	for(auto &p : threads){
 		p = Thread::Create([]{
-			for(int i = 0; i < 1000000; ++i){
+			for(int i = 0; i < 10000; ++i){
 				const auto l = m.GetLock();
-				for(int j = 0; j < 1; ++j){
+				for(int j = 0; j < 10000; ++j){
 					++c;
 				}
 			}

@@ -30,8 +30,9 @@ namespace {
 
 // 其他非静态成员函数。
 bool Mutex::Try(std::uint64_t u64MilliSeconds) noexcept {
+	Control ctlOld, ctlNew;
+
 	if(u64MilliSeconds == 0){
-		Control ctlOld, ctlNew;
 		ctlOld.u = x_uControl.Load(kAtomicRelaxed);
 		ctlNew = ctlOld;
 		ctlNew.uIsLocked = true;
@@ -54,7 +55,6 @@ bool Mutex::Try(std::uint64_t u64MilliSeconds) noexcept {
 
 	std::size_t uSpinnedCount = 0, uMaxSpinCount = x_uSpinCount.Load(kAtomicRelaxed);
 	for(;;){
-		Control ctlOld, ctlNew;
 		ctlOld.u = x_uControl.Load(kAtomicRelaxed);
 	jCasFailure:
 		ctlNew = ctlOld;
@@ -115,9 +115,10 @@ bool Mutex::Try(std::uint64_t u64MilliSeconds) noexcept {
 	return true;
 }
 void Mutex::Lock() noexcept {
+	Control ctlOld, ctlNew;
+
 	std::size_t uSpinnedCount = 0, uMaxSpinCount = x_uSpinCount.Load(kAtomicRelaxed);
 	for(;;){
-		Control ctlOld, ctlNew;
 		ctlOld.u = x_uControl.Load(kAtomicRelaxed);
 	jCasFailure:
 		ctlNew = ctlOld;
@@ -150,6 +151,7 @@ void Mutex::Lock() noexcept {
 }
 void Mutex::Unlock() noexcept {
 	Control ctlOld, ctlNew;
+
 	ctlOld.u = x_uControl.Load(kAtomicRelaxed);
 jCasFailure:
 	ctlNew = ctlOld;

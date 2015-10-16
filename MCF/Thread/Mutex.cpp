@@ -4,7 +4,6 @@
 
 #include "../StdMCF.hpp"
 #include "Mutex.hpp"
-#include "../Core/Time.hpp"
 #include <winternl.h>
 #include <ntstatus.h>
 
@@ -29,10 +28,10 @@ namespace {
 }
 
 // 其他非静态成员函数。
-bool Mutex::Try(std::uint64_t u64MilliSeconds) noexcept {
+bool Mutex::Try(std::uint64_t u64UntilUtcTime) noexcept {
 	Control ctlOld, ctlNew;
 
-	if(u64MilliSeconds == 0){
+	if(u64UntilUtcTime == 0){
 		ctlOld.u = x_uControl.Load(kAtomicRelaxed);
 	jCasFailureTest:
 		ctlNew = ctlOld;
@@ -46,13 +45,12 @@ bool Mutex::Try(std::uint64_t u64MilliSeconds) noexcept {
 		return false;
 	}
 
-	if(u64MilliSeconds > static_cast<std::uint64_t>(INT64_MIN) / 10000){
+	const auto u64HiResUtc = u64UntilUtcTime * 10000;
+	const auto u64WaitUntil = u64HiResUtc + 0x019DB1DED53E8000ull;
+	if((u64HiResUtc / 10000 != u64UntilUtcTime) || (u64WaitUntil >= 0x8000000000000000ull) || (u64WaitUntil < u64HiResUtc)){
 		Lock();
 		return true;
 	}
-
-	auto u64Now = GetFastMonoClock();
-	const auto u64TimeEnd = u64Now + u64MilliSeconds;
 
 	std::size_t uSpinnedCount = 0, uMaxSpinCount = x_uSpinCount.Load(kAtomicRelaxed);
 	for(;;){
@@ -72,16 +70,12 @@ bool Mutex::Try(std::uint64_t u64MilliSeconds) noexcept {
 
 			++uSpinnedCount;
 		} else {
-			if(u64Now >= u64TimeEnd){
-				return false;
-			}
-
 			++ctlNew.uWaitingThreads;
 			if(!x_uControl.CompareExchange(ctlOld.u, ctlNew.u, kAtomicSeqCst, kAtomicRelaxed)){
 				goto jCasFailure;
 			}
 			::LARGE_INTEGER liTimeout;
-			liTimeout.QuadPart = -static_cast<std::int64_t>((u64TimeEnd - u64Now) * 10000);
+			liTimeout.QuadPart = static_cast<std::int64_t>(u64WaitUntil);
 			const auto lStatus = ::NtWaitForKeyedEvent(nullptr, this, false, &liTimeout);
 			if(!NT_SUCCESS(lStatus)){
 				ASSERT_MSG(false, L"NtWaitForKeyedEvent() 失败。");
@@ -106,8 +100,6 @@ bool Mutex::Try(std::uint64_t u64MilliSeconds) noexcept {
 				}
 				return false;
 			}
-
-			u64Now = GetFastMonoClock();
 
 			uSpinnedCount = 0;
 			uMaxSpinCount /= 2;

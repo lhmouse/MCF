@@ -21,7 +21,7 @@ public:
 	explicit KernelSemaphore(std::size_t uInitCount, const WideStringView &wsvName = nullptr);
 
 public:
-	bool Wait(std::uint64_t u64MilliSeconds) noexcept;
+	bool Wait(std::uint64_t u64UntilUtcTime) noexcept;
 	void Wait() noexcept;
 	std::size_t Post(std::size_t uPostCount = 1) noexcept;
 };

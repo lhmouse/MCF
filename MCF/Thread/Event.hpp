@@ -23,7 +23,7 @@ public:
 	explicit Event(bool bInitSet) noexcept;
 
 public:
-	bool Wait(std::uint64_t u64MilliSeconds) const noexcept;
+	bool Wait(std::uint64_t u64UntilUtcTime) const noexcept;
 	void Wait() const noexcept;
 	bool IsSet() const noexcept;
 	bool Set() noexcept;

@@ -29,29 +29,29 @@ static void OsVersionInfoCtor(){
 }
 
 void MCF_GetWindowsVersion(MCF_WindowsVersion *pVersion){
-	pVersion->uMajor = g_vOsVersionInfo.dwMajorVersion;
-	pVersion->uMinor = g_vOsVersionInfo.dwMinorVersion;
-	pVersion->uBuild = g_vOsVersionInfo.dwBuildNumber;
+	pVersion->uMajor       = g_vOsVersionInfo.dwMajorVersion;
+	pVersion->uMinor       = g_vOsVersionInfo.dwMinorVersion;
+	pVersion->uBuild       = g_vOsVersionInfo.dwBuildNumber;
 	pVersion->pwszServPack = g_vOsVersionInfo.szCSDVersion;
 }
 
 uint64_t MCF_GetUtcTime(){
 	union {
 		FILETIME ft;
-		UINT64 u64;
+		ULARGE_INTEGER uli;
 	} unUtc;
 	GetSystemTimeAsFileTime(&unUtc.ft);
 	// 0x019DB1DED53E8000 = 从 1601-01-01 到 1970-01-01 经历的时间纳秒数。
-	return (unUtc.u64 - 0x019DB1DED53E8000ull) / 10000u;
+	return (unUtc.uli.QuadPart - 0x019DB1DED53E8000ull) / 10000;
 }
 uint64_t MCF_GetLocalTime(){
 	union {
 		FILETIME ft;
-		UINT64 u64;
+		ULARGE_INTEGER uli;
 	} unUtc, unLocal;
 	GetSystemTimeAsFileTime(&unUtc.ft);
 	FileTimeToLocalFileTime(&unUtc.ft, &unLocal.ft);
-	return (unLocal.u64 - 0x019DB1DED53E8000ull) / 10000u;
+	return (unLocal.uli.QuadPart - 0x019DB1DED53E8000ull) / 10000;
 }
 
 static double g_lfFrequencyReciprocal;

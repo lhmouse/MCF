@@ -6,7 +6,6 @@
 #include "Thread.hpp"
 #include "../../MCFCRT/env/thread.h"
 #include "../Core/Exception.hpp"
-#include "../Core/Time.hpp"
 
 namespace MCF {
 
@@ -23,11 +22,11 @@ std::size_t Thread::GetCurrentId() noexcept {
 	return ::MCF_CRT_GetCurrentThreadId();
 }
 
-void Thread::Sleep(std::uint64_t u64MilliSeconds) noexcept {
-	::MCF_CRT_Sleep(u64MilliSeconds);
+void Thread::Sleep(std::uint64_t u64UntilUtcTime) noexcept {
+	::MCF_CRT_Sleep(u64UntilUtcTime);
 }
-bool Thread::AlertableSleep(std::uint64_t u64MilliSeconds) noexcept {
-	return ::MCF_CRT_AlertableSleep(u64MilliSeconds);
+bool Thread::AlertableSleep(std::uint64_t u64UntilUtcTime) noexcept {
+	return ::MCF_CRT_AlertableSleep(u64UntilUtcTime);
 }
 void Thread::AlertableSleep() noexcept {
 	::MCF_CRT_AlertableSleepInfinitely();
@@ -69,11 +68,11 @@ Thread::~Thread(){
 	}
 }
 
-bool Thread::Wait(std::uint64_t u64MilliSeconds) const noexcept {
-	return ::MCF_CRT_WaitForThread(x_hThread.Get(), u64MilliSeconds);
+bool Thread::Wait(std::uint64_t u64UntilUtcTime) const noexcept {
+	return ::MCF_CRT_WaitForThread(x_hThread.Get(), u64UntilUtcTime);
 }
 void Thread::Wait() const noexcept {
-	::MCF_CRT_WaitForThread(x_hThread.Get(), static_cast<std::uint64_t>(-1));
+	::MCF_CRT_WaitForThreadInfinitely(x_hThread.Get());
 }
 
 std::exception_ptr Thread::JoinNoThrow() const noexcept {

@@ -8,7 +8,7 @@
 #include "../Utilities/Assert.hpp"
 #include "../Utilities/Bail.hpp"
 #include "../Utilities/RationalFunctors.hpp"
-#include "../Thread/SpinLock.hpp"
+#include "../Thread/Mutex.hpp"
 #include "../Thread/Atomic.hpp"
 #include "DefaultDeleter.hpp"
 #include "UniquePtr.hpp"
@@ -108,7 +108,7 @@ namespace Impl_IntrusivePtr {
 	private:
 		class X_WeakObserver : public RefCountBase {
 		private:
-			mutable SpinLock x_splOwnerMutex;
+			mutable Mutex x_mtxGuard;
 			DeletableBase *x_pOwner;
 
 		public:
@@ -119,20 +119,16 @@ namespace Impl_IntrusivePtr {
 
 		public:
 			bool HasOwnerExpired() const noexcept {
-				bool bOwnerExpired = true;
-				const auto uLocked = x_splOwnerMutex.Lock();
-				{
-					const auto pOwner = x_pOwner;
-					if(pOwner && (static_cast<const volatile RefCountBase *>(pOwner)->GetRef() > 0)){
-						bOwnerExpired = false;
-					}
+				const Mutex::UniqueLock vLock(x_mtxGuard);
+				const auto pOwner = x_pOwner;
+				if(!(pOwner && (static_cast<const volatile RefCountBase *>(pOwner)->GetRef() > 0))){
+					return false;
 				}
-				return bOwnerExpired;
+				return true;
 			}
 			void ClearOwner() noexcept {
-				const auto uLocked = x_splOwnerMutex.Lock();
+				const Mutex::UniqueLock vLock(x_mtxGuard);
 				x_pOwner = nullptr;
-				x_splOwnerMutex.Unlock(uLocked);
 			}
 
 			template<typename OtherT>
@@ -396,15 +392,11 @@ namespace Impl_IntrusivePtr {
 	template<class DeleterT>
 		template<typename OtherT>
 	IntrusivePtr<OtherT, DeleterT> DeletableBase<DeleterT>::X_WeakObserver::GetOwner() const noexcept {
-		OtherT *pOther = nullptr;
-		const auto uLocked = x_splOwnerMutex.Lock();
-		{
-			const auto pTest = StaticCastOrDynamicCast<OtherT *>(x_pOwner);
-			if(pTest && static_cast<const volatile RefCountBase *>(pTest)->TryAddRef()){
-				pOther = pTest;
-			}
+		const Mutex::UniqueLock vLock(x_mtxGuard);
+		const auto pOther = StaticCastOrDynamicCast<OtherT *>(x_pOwner);
+		if(!(pOther && static_cast<const volatile RefCountBase *>(pOther)->TryAddRef())){
+			return nullptr;
 		}
-		x_splOwnerMutex.Unlock(uLocked);
 		return IntrusivePtr<OtherT, DeleterT>(pOther);
 	}
 }

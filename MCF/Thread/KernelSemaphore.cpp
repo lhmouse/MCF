@@ -42,14 +42,16 @@ KernelSemaphore::KernelSemaphore(std::size_t uInitCount, const WideStringView &w
 }
 
 // 其他非静态成员函数。
-bool KernelSemaphore::Wait(std::uint64_t u64MilliSeconds) noexcept {
-	if(u64MilliSeconds > static_cast<std::uint64_t>(INT64_MIN) / 10000){
+bool KernelSemaphore::Wait(std::uint64_t u64UntilUtcTime) noexcept {
+	const auto u64HiResUtc = u64UntilUtcTime * 10000;
+	const auto u64WaitUntil = u64HiResUtc + 0x019DB1DED53E8000ull;
+	if((u64HiResUtc / 10000 != u64UntilUtcTime) || (u64WaitUntil >= 0x8000000000000000ull) || (u64WaitUntil < u64HiResUtc)){
 		Wait();
 		return true;
 	}
 
 	::LARGE_INTEGER liTimeout;
-	liTimeout.QuadPart = -static_cast<std::int64_t>(u64MilliSeconds * 10000);
+	liTimeout.QuadPart = static_cast<std::int64_t>(u64WaitUntil);
 	const auto lStatus = ::NtWaitForSingleObject(x_hSemaphore.Get(), false, &liTimeout);
 	if(!NT_SUCCESS(lStatus)){
 		ASSERT_MSG(false, L"NtWaitForSingleObject() 失败。");

@@ -408,27 +408,31 @@ unsigned long MCF_CRT_GetCurrentThreadId(){
 	return GetCurrentThreadId();
 }
 
-void MCF_CRT_Sleep(uint64_t u64MilliSeconds){
-	if(u64MilliSeconds > (uint64_t)INT64_MIN / 10000){
+void MCF_CRT_Sleep(uint64_t u64UntilUtcTime){
+	const uint64_t u64HiResUtc = u64UntilUtcTime * 10000;
+	const uint64_t u64WaitUntil = u64HiResUtc + 0x019DB1DED53E8000ull;
+	if((u64HiResUtc / 10000 != u64UntilUtcTime) || (u64WaitUntil >= 0x8000000000000000ull) || (u64WaitUntil < u64HiResUtc)){
 		ASSERT_MSG(false, L"MCF_CRT_Sleep() 指定了一个非常大的延迟，当前线程将会永久睡眠。");
 		abort();
 	}
 
 	LARGE_INTEGER liTimeout;
-	liTimeout.QuadPart = -(int64_t)(u64MilliSeconds * 10000);
+	liTimeout.QuadPart = (int64_t)u64WaitUntil;
 	const NTSTATUS lStatus = NtDelayExecution(false, &liTimeout);
 	if(!NT_SUCCESS(lStatus)){
 		ASSERT_MSG(false, L"NtDelayExecution() 失败。");
 	}
 }
-bool MCF_CRT_AlertableSleep(uint64_t u64MilliSeconds){
-	if(u64MilliSeconds > (uint64_t)INT64_MIN / 10000){
+bool MCF_CRT_AlertableSleep(uint64_t u64UntilUtcTime){
+	const uint64_t u64HiResUtc = u64UntilUtcTime * 10000;
+	const uint64_t u64WaitUntil = u64HiResUtc + 0x019DB1DED53E8000ull;
+	if((u64HiResUtc / 10000 != u64UntilUtcTime) || (u64WaitUntil >= 0x8000000000000000ull) || (u64WaitUntil < u64HiResUtc)){
 		MCF_CRT_AlertableSleepInfinitely();
 		return true;
 	}
 
 	LARGE_INTEGER liTimeout;
-	liTimeout.QuadPart = -(int64_t)(u64MilliSeconds * 10000);
+	liTimeout.QuadPart = (int64_t)u64WaitUntil;
 	const NTSTATUS lStatus = NtDelayExecution(true, &liTimeout);
 	if(!NT_SUCCESS(lStatus)){
 		ASSERT_MSG(false, L"NtDelayExecution() 失败。");
@@ -470,14 +474,16 @@ long MCF_CRT_ResumeThread(void *hThread){
 	return lPrevCount;
 }
 
-bool MCF_CRT_WaitForThread(void *hThread, MCF_STD uint64_t u64MilliSeconds){
-	if(u64MilliSeconds > (uint64_t)INT64_MIN / 10000){
+bool MCF_CRT_WaitForThread(void *hThread, MCF_STD uint64_t u64UntilUtcTime){
+	const uint64_t u64HiResUtc = u64UntilUtcTime * 10000;
+	const uint64_t u64WaitUntil = u64HiResUtc + 0x019DB1DED53E8000ull;
+	if((u64HiResUtc / 10000 != u64UntilUtcTime) || (u64WaitUntil >= 0x8000000000000000ull) || (u64WaitUntil < u64HiResUtc)){
 		MCF_CRT_WaitForThreadInfinitely(hThread);
 		return true;
 	}
 
 	LARGE_INTEGER liTimeout;
-	liTimeout.QuadPart = -(int64_t)(u64MilliSeconds * 10000);
+	liTimeout.QuadPart = (int64_t)u64WaitUntil;
 	const NTSTATUS lStatus = NtWaitForSingleObject((HANDLE)hThread, false, &liTimeout);
 	if(!NT_SUCCESS(lStatus)){
 		ASSERT_MSG(false, L"NtWaitForSingleObject() 失败。");

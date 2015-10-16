@@ -30,8 +30,8 @@ public:
 
 	static std::size_t GetCurrentId() noexcept;
 
-	static void Sleep(std::uint64_t u64MilliSeconds) noexcept;
-	static bool AlertableSleep(std::uint64_t u64MilliSeconds) noexcept;
+	static void Sleep(std::uint64_t u64UntilUtcTime) noexcept;
+	static bool AlertableSleep(std::uint64_t u64UntilUtcTime) noexcept;
 	static void AlertableSleep() noexcept;
 	static void YieldExecution() noexcept;
 
@@ -49,7 +49,7 @@ public:
 	~Thread(); // 如果有被捕获的异常，调用 std::terminate()。
 
 public:
-	bool Wait(std::uint64_t u64MilliSeconds) const noexcept;
+	bool Wait(std::uint64_t u64UntilUtcTime) const noexcept;
 	void Wait() const noexcept;
 
 	std::exception_ptr JoinNoThrow() const noexcept;

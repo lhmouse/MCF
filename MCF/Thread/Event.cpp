@@ -4,7 +4,6 @@
 
 #include "../StdMCF.hpp"
 #include "Event.hpp"
-#include "../Core/Time.hpp"
 
 namespace MCF {
 
@@ -15,36 +14,19 @@ Event::Event(bool bInitSet) noexcept
 }
 
 // 其他非静态成员函数。
-bool Event::Wait(std::uint64_t u64MilliSeconds) const noexcept {
-	auto u64Now = GetFastMonoClock();
-	const auto u64Until = u64Now + u64MilliSeconds;
-
+bool Event::Wait(std::uint64_t u64UntilUtcTime) const noexcept {
 	Mutex::UniqueLock vLock(x_mtxGuard);
-	if(!x_bSet){
-		for(;;){
-			if(u64Until <= u64Now){
-				return false;
-			}
-			if(!x_cvWaiter.Wait(vLock, u64Until - u64Now)){
-				return false;
-			}
-			if(x_bSet){
-				break;
-			}
-			u64Now = GetFastMonoClock();
+	while(!x_bSet){
+		if(!x_cvWaiter.Wait(vLock, u64UntilUtcTime)){
+			return false;
 		}
 	}
 	return true;
 }
 void Event::Wait() const noexcept {
 	Mutex::UniqueLock vLock(x_mtxGuard);
-	if(!x_bSet){
-		for(;;){
-			x_cvWaiter.Wait(vLock);
-			if(x_bSet){
-				break;
-			}
-		}
+	while(!x_bSet){
+		x_cvWaiter.Wait(vLock);
 	}
 }
 bool Event::IsSet() const noexcept {
@@ -55,9 +37,7 @@ bool Event::Set() noexcept {
 	Mutex::UniqueLock vLock(x_mtxGuard);
 	const auto bOld = x_bSet;
 	x_bSet = true;
-	if(!bOld){
-		x_cvWaiter.Broadcast();
-	}
+	x_cvWaiter.Broadcast();
 	return bOld;
 }
 bool Event::Reset() noexcept {

@@ -21,7 +21,7 @@ public:
 	explicit KernelEvent(bool bInitSet, const WideStringView &wsvName = nullptr);
 
 public:
-	bool Wait(std::uint64_t u64MilliSeconds) const noexcept;
+	bool Wait(std::uint64_t u64UntilUtcTime) const noexcept;
 	void Wait() const noexcept;
 	bool IsSet() const noexcept;
 	bool Set() noexcept;

@@ -4,7 +4,6 @@
 
 #include "../StdMCF.hpp"
 #include "Semaphore.hpp"
-#include "../Core/Time.hpp"
 
 namespace MCF {
 
@@ -15,23 +14,11 @@ Semaphore::Semaphore(std::size_t uInitCount) noexcept
 }
 
 // 其他非静态成员函数。
-bool Semaphore::Wait(std::uint64_t u64MilliSeconds) noexcept {
-	auto u64Now = GetFastMonoClock();
-	const auto u64Until = u64Now + u64MilliSeconds;
-
+bool Semaphore::Wait(std::uint64_t u64UntilUtcTime) noexcept {
 	Mutex::UniqueLock vLock(x_mtxGuard);
-	if(x_uCount == 0){
-		for(;;){
-			if(u64Until <= u64Now){
-				return false;
-			}
-			if(!x_cvWaiter.Wait(vLock, u64Until - u64Now)){
-				return false;
-			}
-			if(x_uCount != 0){
-				break;
-			}
-			u64Now = GetFastMonoClock();
+	while(x_uCount == 0){
+		if(!x_cvWaiter.Wait(vLock, u64UntilUtcTime)){
+			return false;
 		}
 	}
 	--x_uCount;
@@ -39,13 +26,8 @@ bool Semaphore::Wait(std::uint64_t u64MilliSeconds) noexcept {
 }
 void Semaphore::Wait() noexcept {
 	Mutex::UniqueLock vLock(x_mtxGuard);
-	if(x_uCount == 0){
-		for(;;){
-			x_cvWaiter.Wait(vLock);
-			if(x_uCount != 0){
-				break;
-			}
-		}
+	while(x_uCount == 0){
+		x_cvWaiter.Wait(vLock);
 	}
 	--x_uCount;
 }
@@ -56,18 +38,8 @@ std::size_t Semaphore::Post(std::size_t uPostCount) noexcept {
 	if(uNewCount < uOldCount){
 		ASSERT_MSG(false, L"算术运算结果超出可表示范围。");
 	}
-	switch(uNewCount - uOldCount){
-	case 0:
-		break;
-	case 1:
-		x_cvWaiter.Signal();
-		x_uCount = uNewCount;
-		break;
-	default:
-		x_cvWaiter.Broadcast();
-		x_uCount = uNewCount;
-		break;
-	}
+	x_uCount = uNewCount;
+	x_cvWaiter.Signal(uPostCount);
 	return uOldCount;
 }
 

@@ -36,8 +36,8 @@ bool Mutex::Try(std::uint64_t u64MilliSeconds) noexcept {
 		ctlOld.u = x_uControl.Load(kAtomicRelaxed);
 		ctlNew = ctlOld;
 		ctlNew.uIsLocked = true;
-		if(EXPECT(ctlOld.u != ctlNew.u)){
-			if(EXPECT(!x_uControl.CompareExchange(ctlOld.u, ctlNew.u, kAtomicSeqCst, kAtomicRelaxed))){
+		if(ctlOld.u != ctlNew.u){
+			if(!x_uControl.CompareExchange(ctlOld.u, ctlNew.u, kAtomicSeqCst, kAtomicRelaxed)){
 				return false;
 			}
 			return true;
@@ -59,8 +59,8 @@ bool Mutex::Try(std::uint64_t u64MilliSeconds) noexcept {
 	jCasFailure:
 		ctlNew = ctlOld;
 		ctlNew.uIsLocked = true;
-		if(EXPECT(ctlOld.u != ctlNew.u)){
-			if(EXPECT(!x_uControl.CompareExchange(ctlOld.u, ctlNew.u, kAtomicSeqCst, kAtomicRelaxed))){
+		if(ctlOld.u != ctlNew.u){
+			if(!x_uControl.CompareExchange(ctlOld.u, ctlNew.u, kAtomicSeqCst, kAtomicRelaxed)){
 				goto jCasFailure;
 			}
 			break;
@@ -89,8 +89,8 @@ bool Mutex::Try(std::uint64_t u64MilliSeconds) noexcept {
 				ctlOld.u = x_uControl.Load(kAtomicRelaxed);
 			jCasFailureTimedOut:
 				ctlNew = ctlOld;
-				if(EXPECT(ctlNew.uWaitingThreads == 0)){
-					if(EXPECT(!x_uControl.CompareExchange(ctlOld.u, ctlNew.u, kAtomicSeqCst, kAtomicRelaxed))){
+				if(ctlNew.uWaitingThreads == 0){
+					if(!x_uControl.CompareExchange(ctlOld.u, ctlNew.u, kAtomicSeqCst, kAtomicRelaxed)){
 						goto jCasFailureTimedOut;
 					}
 					const auto lStatus = ::NtWaitForKeyedEvent(nullptr, this, false, nullptr);
@@ -123,8 +123,8 @@ void Mutex::Lock() noexcept {
 	jCasFailure:
 		ctlNew = ctlOld;
 		ctlNew.uIsLocked = true;
-		if(EXPECT(ctlOld.u != ctlNew.u)){
-			if(EXPECT(!x_uControl.CompareExchange(ctlOld.u, ctlNew.u, kAtomicSeqCst, kAtomicRelaxed))){
+		if(ctlOld.u != ctlNew.u){
+			if(!x_uControl.CompareExchange(ctlOld.u, ctlNew.u, kAtomicSeqCst, kAtomicRelaxed)){
 				goto jCasFailure;
 			}
 			break;
@@ -157,8 +157,8 @@ jCasFailure:
 	ctlNew = ctlOld;
 	ASSERT_MSG(ctlNew.uIsLocked, L"互斥锁没有被任何线程锁定。");
 	ctlNew.uIsLocked = false;
-	if(EXPECT(ctlNew.uWaitingThreads == 0)){
-		if(EXPECT(!x_uControl.CompareExchange(ctlOld.u, ctlNew.u, kAtomicSeqCst, kAtomicRelaxed))){
+	if(ctlNew.uWaitingThreads == 0){
+		if(!x_uControl.CompareExchange(ctlOld.u, ctlNew.u, kAtomicSeqCst, kAtomicRelaxed)){
 			goto jCasFailure;
 		}
 	} else {

@@ -32,5 +32,16 @@ extern "C" unsigned MCFMain(){
 	const auto t2 = GetHiResMonoClock();
 
 	std::printf("c = %d, time = %f\n", c, t2 - t1);
+/*
+	auto t1 = GetHiResMonoClock();
+	auto l = m.TryGetLock(1000);
+	auto t2 = GetHiResMonoClock();
+	std::printf("locked? %d  time = %f\n", l.IsLocking(), t2 - t1);
+
+	t1 = GetHiResMonoClock();
+	l = m.TryGetLock(1000);
+	t2 = GetHiResMonoClock();
+	std::printf("locked? %d  time = %f\n", l.IsLocking(), t2 - t1);
+*/
 	return 0;
 }

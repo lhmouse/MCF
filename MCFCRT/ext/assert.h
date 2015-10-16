@@ -22,7 +22,7 @@ void __MCF_CRT_OnAssertFail(const wchar_t *__pwszExpression, const char *__pszFi
 #undef __MCF_CRT_ASSERT_MSG
 
 #ifdef NDEBUG
-#	define __MCF_CRT_ASSERT_MSG(__plain_, __expr_, __msg_)  ((void)sizeof(__expr_))
+#	define __MCF_CRT_ASSERT_MSG(__plain_, __expr_, __msg_)  ((void)(__typeof__((void)(__expr_), 1))0)
 #else
 #	define __MCF_CRT_ASSERT_MSG(__plain_, __expr_, __msg_)  ((void)(!(__expr_) && (__MCF_CRT_OnAssertFail(L ## __plain_, __FILE__, __LINE__, (__msg_)), 1)))
 #endif

@@ -80,9 +80,7 @@ namespace Impl_Monitor {
 		MonitorLock &operator=(const MonitorLock &) = delete;
 		MonitorLock &operator=(MonitorLock &&) noexcept = delete;
 	};
-}
 
-namespace Impl_Monitor {
 	template<class ObjectT, class MutexT>
 	class MonitorTemplate : NONCOPYABLE {
 	private:

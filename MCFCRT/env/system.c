@@ -3,8 +3,14 @@
 // Copyleft 2013 - 2015, LH_Mouse. All wrongs reserved.
 
 #include "system.h"
-#include <stdlib.h>
 #include "mcfwin.h"
+#include "bail.h"
+#include <stdlib.h>
+#include <winternl.h>
+#include <ntdef.h>
+
+extern __attribute__((__dllimport__, __stdcall__))
+NTSTATUS NtQueryPerformanceCounter(LARGE_INTEGER *pCounter, LARGE_INTEGER *pFrequency);
 
 static SYSTEM_INFO g_vSystemInfo;
 
@@ -54,24 +60,14 @@ uint64_t MCF_GetLocalTime(){
 	return (unLocal.uli.QuadPart - 0x019DB1DED53E8000ull) / 10000;
 }
 
-static double g_lfFrequencyReciprocal;
-
-__attribute__((__constructor__))
-static void FrequencyReciprocalCtor(){
-	LARGE_INTEGER liFrequency;
-	if(!QueryPerformanceFrequency(&liFrequency)){
-		abort();
-	}
-	g_lfFrequencyReciprocal = 1000.0 / liFrequency.QuadPart;
-}
-
 uint64_t MCF_GetFastMonoClock(){
 	return GetTickCount64();
 }
 double MCF_GetHiResMonoClock(){
-	LARGE_INTEGER liCounter;
-	if(!QueryPerformanceCounter(&liCounter)){
-		abort();
+	LARGE_INTEGER liCounter, liFrequency;
+	const NTSTATUS lStatus = NtQueryPerformanceCounter(&liCounter, &liFrequency);
+	if(!NT_SUCCESS(lStatus)){
+		MCF_CRT_Bail(L"NtQueryPerformanceCounter() 失败。");
 	}
-	return liCounter.QuadPart * g_lfFrequencyReciprocal;
+	return liCounter.QuadPart * 1000.0 / liFrequency.QuadPart;
 }

@@ -82,45 +82,47 @@ private:
 	MonitorLock &operator=(MonitorLock &&) noexcept = delete;
 };
 
-template<class ObjectT, class MutexT>
-class MonitorTemplate : NONCOPYABLE {
-private:
-	mutable MutexT x_vMutex;
-	ObjectT x_vObject;
+namespace Impl_Monitor {
+	template<class ObjectT, class MutexT>
+	class MonitorTemplate : NONCOPYABLE {
+	private:
+		mutable MutexT x_vMutex;
+		ObjectT x_vObject;
 
-public:
-	template<typename ...ParamsT>
-	explicit MonitorTemplate(ParamsT &&...vParams)
-		: x_vObject(std::forward<ParamsT>(vParams)...)
-	{
-	}
+	public:
+		template<typename ...ParamsT>
+		explicit MonitorTemplate(ParamsT &&...vParams)
+			: x_vObject(std::forward<ParamsT>(vParams)...)
+		{
+		}
 
-public:
-	auto operator*() const noexcept {
-		return MonitorLock<const ObjectT, MutexT,
-			MonitorObserverAsReference<const ObjectT>>(x_vMutex.GetLock(), x_vObject);
-	}
-	auto operator*() noexcept {
-		return MonitorLock<ObjectT, MutexT,
-			MonitorObserverAsReference<ObjectT>>(x_vMutex.GetLock(), x_vObject);
-	}
+	public:
+		auto operator*() const noexcept {
+			return MonitorLock<const ObjectT, MutexT,
+				MonitorObserverAsReference<const ObjectT>>(x_vMutex.GetLock(), x_vObject);
+		}
+		auto operator*() noexcept {
+			return MonitorLock<ObjectT, MutexT,
+				MonitorObserverAsReference<ObjectT>>(x_vMutex.GetLock(), x_vObject);
+		}
 
-	auto operator->() const noexcept {
-		return MonitorLock<const ObjectT,
-			MutexT, MonitorObserverAsPointer<const ObjectT>>(x_vMutex.GetLock(), x_vObject);
-	}
-	auto operator->() noexcept {
-		return MonitorLock<ObjectT, MutexT,
-			MonitorObserverAsPointer<ObjectT>>(x_vMutex.GetLock(), x_vObject);
-	}
-};
+		auto operator->() const noexcept {
+			return MonitorLock<const ObjectT, MutexT,
+				MonitorObserverAsPointer<const ObjectT>>(x_vMutex.GetLock(), x_vObject);
+		}
+		auto operator->() noexcept {
+			return MonitorLock<ObjectT, MutexT,
+				MonitorObserverAsPointer<ObjectT>>(x_vMutex.GetLock(), x_vObject);
+		}
+	};
+}
 
 template<class ObjectT>
-using Monitor = MonitorTemplate<ObjectT, Mutex>;
+using Monitor          = Impl_Monitor::MonitorTemplate<ObjectT, Mutex>;
 template<class ObjectT>
-using RecursiveMonitor = MonitorTemplate<ObjectT, RecursiveMutex>;
+using RecursiveMonitor = Impl_Monitor::MonitorTemplate<ObjectT, RecursiveMutex>;
 template<class ObjectT>
-using KernelMonitor = MonitorTemplate<ObjectT, KernelMutex>;
+using KernelMonitor    = Impl_Monitor::MonitorTemplate<ObjectT, KernelMutex>;
 
 }
 

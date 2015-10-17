@@ -383,19 +383,12 @@ void *MCF_CRT_CreateThread(unsigned (*pfnThreadProc)(intptr_t), intptr_t nParam,
 	pInitInfo->pfnProc  = pfnThreadProc;
 	pInitInfo->nParam   = nParam;
 
-	const HANDLE hThread = CreateThread(nullptr, 0, &CRTThreadProc, pInitInfo, CREATE_SUSPENDED, pulThreadId);
+	const HANDLE hThread = CreateThread(nullptr, 0, &CRTThreadProc, pInitInfo, bSuspended ? CREATE_SUSPENDED : 0, pulThreadId);
 	if(!hThread){
 		const DWORD dwErrorCode = GetLastError();
 		free(pInitInfo);
 		SetLastError(dwErrorCode);
 		return nullptr;
-	}
-
-	if(!bSuspended){
-		const NTSTATUS lStatus = NtResumeThread(hThread, nullptr);
-		if(!NT_SUCCESS(lStatus)){
-			ASSERT_MSG(false, L"NtResumeThread() 失败。");
-		}
 	}
 	return (void *)hThread;
 }

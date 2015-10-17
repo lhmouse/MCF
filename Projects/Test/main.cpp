@@ -10,7 +10,7 @@ Mutex m;
 volatile int c = 0;
 
 extern "C" unsigned MCFMain(){
-/*
+
 	Array<IntrusivePtr<Thread>, 10> threads;
 	for(auto &p : threads){
 		p = Thread::Create([]{
@@ -37,7 +37,7 @@ extern "C" unsigned MCFMain(){
 	const auto t2 = GetHiResMonoClock();
 
 	std::printf("c = %d, time = %f\n", c, t2 - t1);
-*/
+/*
 	auto now = GetFastMonoClock();
 	auto t1 = GetHiResMonoClock();
 	auto l = m.TryGetLock(now + 1000);
@@ -49,6 +49,6 @@ extern "C" unsigned MCFMain(){
 	l = m.TryGetLock(now + 1000);
 	t2 = GetHiResMonoClock();
 	std::printf("locked? %d  time = %f\n", l.IsLocking(), t2 - t1);
-
+*/
 	return 0;
 }

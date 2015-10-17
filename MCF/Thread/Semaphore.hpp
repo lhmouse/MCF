@@ -23,7 +23,7 @@ public:
 	explicit Semaphore(std::size_t uInitCount) noexcept;
 
 public:
-	bool Wait(std::uint64_t u64UntilUtcTime) noexcept;
+	bool Wait(std::uint64_t u64UntilFastMonoClock) noexcept;
 	void Wait() noexcept;
 	std::size_t Post(std::size_t uPostCount = 1) noexcept;
 };

@@ -14,10 +14,10 @@ Semaphore::Semaphore(std::size_t uInitCount) noexcept
 }
 
 // 其他非静态成员函数。
-bool Semaphore::Wait(std::uint64_t u64UntilUtcTime) noexcept {
+bool Semaphore::Wait(std::uint64_t u64UntilFastMonoClock) noexcept {
 	Mutex::UniqueLock vLock(x_mtxGuard);
 	while(x_uCount == 0){
-		if(!x_cvWaiter.Wait(vLock, u64UntilUtcTime)){
+		if(!x_cvWaiter.Wait(vLock, u64UntilFastMonoClock)){
 			return false;
 		}
 	}

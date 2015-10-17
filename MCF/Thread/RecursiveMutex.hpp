@@ -42,7 +42,7 @@ public:
 
 	bool IsLockedByCurrentThread() const noexcept;
 
-	bool Try(std::uint64_t u64UntilUtcTime) noexcept;
+	bool Try(std::uint64_t u64UntilFastMonoClock) noexcept;
 	void Lock() noexcept;
 	void Unlock() noexcept;
 
@@ -58,9 +58,9 @@ public:
 		return x_uRecursionCount;
 	}
 
-	UniqueLock TryGetLock(std::uint64_t u64UntilUtcTime = 0) noexcept {
+	UniqueLock TryGetLock(std::uint64_t u64UntilFastMonoClock = 0) noexcept {
 		UniqueLock vLock(*this, false);
-		vLock.Try(u64UntilUtcTime);
+		vLock.Try(u64UntilFastMonoClock);
 		return vLock;
 	}
 	UniqueLock GetLock() noexcept {
@@ -71,8 +71,8 @@ public:
 
 namespace Impl_UniqueLockTemplate {
 	template<>
-	inline bool RecursiveMutex::UniqueLock::X_DoTry(std::uint64_t u64UntilUtcTime) const noexcept {
-		return x_pOwner->Try(u64UntilUtcTime);
+	inline bool RecursiveMutex::UniqueLock::X_DoTry(std::uint64_t u64UntilFastMonoClock) const noexcept {
+		return x_pOwner->Try(u64UntilFastMonoClock);
 	}
 	template<>
 	inline void RecursiveMutex::UniqueLock::X_DoLock() const noexcept {

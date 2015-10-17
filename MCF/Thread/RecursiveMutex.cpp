@@ -15,11 +15,11 @@ bool RecursiveMutex::IsLockedByCurrentThread() const noexcept {
 	return x_uLockingThreadId.Load(kAtomicRelaxed) == uThreadId;
 }
 
-bool RecursiveMutex::Try(std::uint64_t u64UntilUtcTime) noexcept {
+bool RecursiveMutex::Try(std::uint64_t u64UntilFastMonoClock) noexcept {
 	const auto uThreadId = Thread::GetCurrentId();
 
 	if(x_uLockingThreadId.Load(kAtomicRelaxed) != uThreadId){
-		if(!x_vMutex.Try(u64UntilUtcTime)){
+		if(!x_vMutex.Try(u64UntilFastMonoClock)){
 			return false;
 		}
 		x_uLockingThreadId.Store(uThreadId, kAtomicRelaxed);

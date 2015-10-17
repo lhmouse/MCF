@@ -24,13 +24,13 @@ public:
 	explicit KernelRecursiveMutex(const WideStringView &wsvName = nullptr);
 
 public:
-	bool Try(std::uint64_t u64UntilUtcTime = 0) noexcept;
+	bool Try(std::uint64_t u64UntilFastMonoClock = 0) noexcept;
 	void Lock() noexcept;
 	void Unlock() noexcept;
 
-	UniqueLock TryGetLock(std::uint64_t u64UntilUtcTime = 0) noexcept {
+	UniqueLock TryGetLock(std::uint64_t u64UntilFastMonoClock = 0) noexcept {
 		UniqueLock vLock(*this, false);
-		vLock.Try(u64UntilUtcTime);
+		vLock.Try(u64UntilFastMonoClock);
 		return vLock;
 	}
 	UniqueLock GetLock() noexcept {
@@ -40,8 +40,8 @@ public:
 
 namespace Impl_UniqueLockTemplate {
 	template<>
-	inline bool KernelRecursiveMutex::UniqueLock::X_DoTry(std::uint64_t u64UntilUtcTime) const noexcept {
-		return x_pOwner->Try(u64UntilUtcTime);
+	inline bool KernelRecursiveMutex::UniqueLock::X_DoTry(std::uint64_t u64UntilFastMonoClock) const noexcept {
+		return x_pOwner->Try(u64UntilFastMonoClock);
 	}
 	template<>
 	inline void KernelRecursiveMutex::UniqueLock::X_DoLock() const noexcept {

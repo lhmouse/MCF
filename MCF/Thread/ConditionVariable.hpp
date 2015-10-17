@@ -24,7 +24,7 @@ public:
 	}
 
 public:
-	bool Wait(Impl_UniqueLockTemplate::UniqueLockTemplateBase &vLock, std::uint64_t u64UntilUtcTime) noexcept;
+	bool Wait(Impl_UniqueLockTemplate::UniqueLockTemplateBase &vLock, std::uint64_t u64UntilFastMonoClock) noexcept;
 	void Wait(Impl_UniqueLockTemplate::UniqueLockTemplateBase &vLock) noexcept;
 
 	std::size_t Signal(std::size_t uMaxToWakeUp = 1) noexcept;

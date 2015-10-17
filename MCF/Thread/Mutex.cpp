@@ -4,6 +4,7 @@
 
 #include "../StdMCF.hpp"
 #include "Mutex.hpp"
+#include "../Core/Time.hpp"
 #include <winternl.h>
 #include <ntstatus.h>
 
@@ -28,10 +29,10 @@ namespace {
 }
 
 // 其他非静态成员函数。
-bool Mutex::Try(std::uint64_t u64UntilUtcTime) noexcept {
+bool Mutex::Try(std::uint64_t u64UntilFastMonoClock) noexcept {
 	Control ctlOld, ctlNew;
 
-	if(u64UntilUtcTime == 0){
+	if(u64UntilFastMonoClock == 0){
 		ctlOld.u = x_uControl.Load(kAtomicRelaxed);
 	jCasFailureTest:
 		ctlNew = ctlOld;
@@ -43,13 +44,6 @@ bool Mutex::Try(std::uint64_t u64UntilUtcTime) noexcept {
 			return true;
 		}
 		return false;
-	}
-
-	const auto u64HiResUtc = u64UntilUtcTime * 10000;
-	const auto u64WaitUntil = u64HiResUtc + 0x019DB1DED53E8000ull;
-	if((u64HiResUtc / 10000 != u64UntilUtcTime) || (u64WaitUntil >= 0x8000000000000000ull) || (u64WaitUntil < u64HiResUtc)){
-		Lock();
-		return true;
 	}
 
 	std::size_t uSpinnedCount = 0, uMaxSpinCount = x_uSpinCount.Load(kAtomicRelaxed);
@@ -75,7 +69,18 @@ bool Mutex::Try(std::uint64_t u64UntilUtcTime) noexcept {
 				goto jCasFailure;
 			}
 			::LARGE_INTEGER liTimeout;
-			liTimeout.QuadPart = static_cast<std::int64_t>(u64WaitUntil);
+			const auto u64Now = GetFastMonoClock();
+			if(u64Now >= u64UntilFastMonoClock){
+				liTimeout.QuadPart = 0;
+			} else {
+				const auto u64DeltaMillisec = u64UntilFastMonoClock - u64Now;
+				const auto n64Delta100Nanosec = static_cast<std::int64_t>(u64DeltaMillisec * 10000);
+				if(static_cast<std::uint64_t>(n64Delta100Nanosec / 10000) != u64DeltaMillisec){
+					liTimeout.QuadPart = INT64_MIN;
+				} else {
+					liTimeout.QuadPart = -n64Delta100Nanosec;
+				}
+			}
 			const auto lStatus = ::NtWaitForKeyedEvent(nullptr, this, false, &liTimeout);
 			if(!NT_SUCCESS(lStatus)){
 				ASSERT_MSG(false, L"NtWaitForKeyedEvent() 失败。");

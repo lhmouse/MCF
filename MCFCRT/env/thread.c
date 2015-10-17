@@ -9,6 +9,7 @@
 #include "bail.h"
 #include "mingw_hacks.h"
 #include "eh_top.h"
+#include "system.h"
 #include "../ext/assert.h"
 #include "../ext/unref_param.h"
 #include <stdlib.h>
@@ -408,31 +409,39 @@ unsigned long MCF_CRT_GetCurrentThreadId(){
 	return GetCurrentThreadId();
 }
 
-void MCF_CRT_Sleep(uint64_t u64UntilUtcTime){
-	const uint64_t u64HiResUtc = u64UntilUtcTime * 10000;
-	const uint64_t u64WaitUntil = u64HiResUtc + 0x019DB1DED53E8000ull;
-	if((u64HiResUtc / 10000 != u64UntilUtcTime) || (u64WaitUntil >= 0x8000000000000000ull) || (u64WaitUntil < u64HiResUtc)){
-		ASSERT_MSG(false, L"MCF_CRT_Sleep() 指定了一个非常大的延迟，当前线程将会永久睡眠。");
-		abort();
-	}
-
+void MCF_CRT_Sleep(uint64_t u64UntilFastMonoClock){
 	LARGE_INTEGER liTimeout;
-	liTimeout.QuadPart = (int64_t)u64WaitUntil;
+	const uint64_t u64Now = MCF_GetFastMonoClock();
+	if(u64Now >= u64UntilFastMonoClock){
+		liTimeout.QuadPart = 0;
+	} else {
+		const uint64_t u64DeltaMillisec = u64UntilFastMonoClock - u64Now;
+		const int64_t n64Delta100Nanosec = (int64_t)(u64DeltaMillisec * 10000);
+		if((uint64_t)(n64Delta100Nanosec / 10000) != u64DeltaMillisec){
+			liTimeout.QuadPart = INT64_MIN;
+		} else {
+			liTimeout.QuadPart = -n64Delta100Nanosec;
+		}
+	}
 	const NTSTATUS lStatus = NtDelayExecution(false, &liTimeout);
 	if(!NT_SUCCESS(lStatus)){
 		ASSERT_MSG(false, L"NtDelayExecution() 失败。");
 	}
 }
-bool MCF_CRT_AlertableSleep(uint64_t u64UntilUtcTime){
-	const uint64_t u64HiResUtc = u64UntilUtcTime * 10000;
-	const uint64_t u64WaitUntil = u64HiResUtc + 0x019DB1DED53E8000ull;
-	if((u64HiResUtc / 10000 != u64UntilUtcTime) || (u64WaitUntil >= 0x8000000000000000ull) || (u64WaitUntil < u64HiResUtc)){
-		MCF_CRT_AlertableSleepInfinitely();
-		return true;
-	}
-
+bool MCF_CRT_AlertableSleep(uint64_t u64UntilFastMonoClock){
 	LARGE_INTEGER liTimeout;
-	liTimeout.QuadPart = (int64_t)u64WaitUntil;
+	const uint64_t u64Now = MCF_GetFastMonoClock();
+	if(u64Now >= u64UntilFastMonoClock){
+		liTimeout.QuadPart = 0;
+	} else {
+		const uint64_t u64DeltaMillisec = u64UntilFastMonoClock - u64Now;
+		const int64_t n64Delta100Nanosec = (int64_t)(u64DeltaMillisec * 10000);
+		if((uint64_t)(n64Delta100Nanosec / 10000) != u64DeltaMillisec){
+			liTimeout.QuadPart = INT64_MIN;
+		} else {
+			liTimeout.QuadPart = -n64Delta100Nanosec;
+		}
+	}
 	const NTSTATUS lStatus = NtDelayExecution(true, &liTimeout);
 	if(!NT_SUCCESS(lStatus)){
 		ASSERT_MSG(false, L"NtDelayExecution() 失败。");
@@ -474,16 +483,20 @@ long MCF_CRT_ResumeThread(void *hThread){
 	return lPrevCount;
 }
 
-bool MCF_CRT_WaitForThread(void *hThread, MCF_STD uint64_t u64UntilUtcTime){
-	const uint64_t u64HiResUtc = u64UntilUtcTime * 10000;
-	const uint64_t u64WaitUntil = u64HiResUtc + 0x019DB1DED53E8000ull;
-	if((u64HiResUtc / 10000 != u64UntilUtcTime) || (u64WaitUntil >= 0x8000000000000000ull) || (u64WaitUntil < u64HiResUtc)){
-		MCF_CRT_WaitForThreadInfinitely(hThread);
-		return true;
-	}
-
+bool MCF_CRT_WaitForThread(void *hThread, MCF_STD uint64_t u64UntilFastMonoClock){
 	LARGE_INTEGER liTimeout;
-	liTimeout.QuadPart = (int64_t)u64WaitUntil;
+	const uint64_t u64Now = MCF_GetFastMonoClock();
+	if(u64Now >= u64UntilFastMonoClock){
+		liTimeout.QuadPart = 0;
+	} else {
+		const uint64_t u64DeltaMillisec = u64UntilFastMonoClock - u64Now;
+		const int64_t n64Delta100Nanosec = (int64_t)(u64DeltaMillisec * 10000);
+		if((uint64_t)(n64Delta100Nanosec / 10000) != u64DeltaMillisec){
+			liTimeout.QuadPart = INT64_MIN;
+		} else {
+			liTimeout.QuadPart = -n64Delta100Nanosec;
+		}
+	}
 	const NTSTATUS lStatus = NtWaitForSingleObject((HANDLE)hThread, false, &liTimeout);
 	if(!NT_SUCCESS(lStatus)){
 		ASSERT_MSG(false, L"NtWaitForSingleObject() 失败。");

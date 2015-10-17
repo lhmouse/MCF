@@ -8,12 +8,12 @@
 namespace MCF {
 
 // 其他非静态成员函数。
-bool ReaderWriterMutex::TryAsReader(std::uint64_t u64UntilUtcTime) noexcept {
-	if(!x_mtxReaderGuard.Try(u64UntilUtcTime)){
+bool ReaderWriterMutex::TryAsReader(std::uint64_t u64UntilFastMonoClock) noexcept {
+	if(!x_mtxReaderGuard.Try(u64UntilFastMonoClock)){
 		return false;
 	}
 	if(x_uReaders.Increment(kAtomicRelaxed) == 1){
-		if(!x_mtxExclusive.Try(u64UntilUtcTime)){
+		if(!x_mtxExclusive.Try(u64UntilFastMonoClock)){
 			x_uReaders.Decrement(kAtomicRelaxed);
 			x_mtxReaderGuard.Unlock();
 			return false;
@@ -35,11 +35,11 @@ void ReaderWriterMutex::UnlockAsReader() noexcept {
 	}
 }
 
-bool ReaderWriterMutex::TryAsWriter(std::uint64_t u64UntilUtcTime) noexcept {
-	if(!x_mtxReaderGuard.Try(u64UntilUtcTime)){
+bool ReaderWriterMutex::TryAsWriter(std::uint64_t u64UntilFastMonoClock) noexcept {
+	if(!x_mtxReaderGuard.Try(u64UntilFastMonoClock)){
 		return false;
 	}
-	if(!x_mtxExclusive.Try(u64UntilUtcTime)){
+	if(!x_mtxExclusive.Try(u64UntilFastMonoClock)){
 		x_mtxReaderGuard.Unlock();
 		return false;
 	}

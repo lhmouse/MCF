@@ -22,11 +22,11 @@ std::size_t Thread::GetCurrentId() noexcept {
 	return ::MCF_CRT_GetCurrentThreadId();
 }
 
-void Thread::Sleep(std::uint64_t u64UntilUtcTime) noexcept {
-	::MCF_CRT_Sleep(u64UntilUtcTime);
+void Thread::Sleep(std::uint64_t u64UntilFastMonoClock) noexcept {
+	::MCF_CRT_Sleep(u64UntilFastMonoClock);
 }
-bool Thread::AlertableSleep(std::uint64_t u64UntilUtcTime) noexcept {
-	return ::MCF_CRT_AlertableSleep(u64UntilUtcTime);
+bool Thread::AlertableSleep(std::uint64_t u64UntilFastMonoClock) noexcept {
+	return ::MCF_CRT_AlertableSleep(u64UntilFastMonoClock);
 }
 void Thread::AlertableSleep() noexcept {
 	::MCF_CRT_AlertableSleepInfinitely();
@@ -68,8 +68,8 @@ Thread::~Thread(){
 	}
 }
 
-bool Thread::Wait(std::uint64_t u64UntilUtcTime) const noexcept {
-	return ::MCF_CRT_WaitForThread(x_hThread.Get(), u64UntilUtcTime);
+bool Thread::Wait(std::uint64_t u64UntilFastMonoClock) const noexcept {
+	return ::MCF_CRT_WaitForThread(x_hThread.Get(), u64UntilFastMonoClock);
 }
 void Thread::Wait() const noexcept {
 	::MCF_CRT_WaitForThreadInfinitely(x_hThread.Get());

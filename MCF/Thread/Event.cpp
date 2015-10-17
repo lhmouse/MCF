@@ -14,10 +14,10 @@ Event::Event(bool bInitSet) noexcept
 }
 
 // 其他非静态成员函数。
-bool Event::Wait(std::uint64_t u64UntilUtcTime) const noexcept {
+bool Event::Wait(std::uint64_t u64UntilFastMonoClock) const noexcept {
 	Mutex::UniqueLock vLock(x_mtxGuard);
 	while(!x_bSet){
-		if(!x_cvWaiter.Wait(vLock, u64UntilUtcTime)){
+		if(!x_cvWaiter.Wait(vLock, u64UntilFastMonoClock)){
 			return false;
 		}
 	}

@@ -5,6 +5,7 @@
 #include "../StdMCF.hpp"
 #include "ConditionVariable.hpp"
 #include "../Utilities/Defer.hpp"
+#include "../Core/Time.hpp"
 #include <winternl.h>
 #include <ntstatus.h>
 
@@ -16,14 +17,7 @@ NTSTATUS NtReleaseKeyedEvent(HANDLE hKeyedEvent, void *pKey, BOOLEAN bAlertable,
 namespace MCF {
 
 // 其他非静态成员函数。
-bool ConditionVariable::Wait(Impl_UniqueLockTemplate::UniqueLockTemplateBase &vLock, std::uint64_t u64UntilUtcTime) noexcept {
-	const auto u64HiResUtc = u64UntilUtcTime * 10000;
-	const auto u64WaitUntil = u64HiResUtc + 0x019DB1DED53E8000ull;
-	if((u64HiResUtc / 10000 != u64UntilUtcTime) || (u64WaitUntil >= 0x8000000000000000ull) || (u64WaitUntil < u64HiResUtc)){
-		Wait(vLock);
-		return true;
-	}
-
+bool ConditionVariable::Wait(Impl_UniqueLockTemplate::UniqueLockTemplateBase &vLock, std::uint64_t u64UntilFastMonoClock) noexcept {
 	x_uWaitingThreads.Increment(kAtomicRelaxed);
 	const auto uCount = vLock.X_UnlockAll();
 	ASSERT_MSG(uCount != 0, L"你会用条件变量吗？");
@@ -33,7 +27,18 @@ bool ConditionVariable::Wait(Impl_UniqueLockTemplate::UniqueLockTemplateBase &vL
 	});
 
 	::LARGE_INTEGER liTimeout;
-	liTimeout.QuadPart = static_cast<std::int64_t>(u64WaitUntil);
+	const auto u64Now = GetFastMonoClock();
+	if(u64Now >= u64UntilFastMonoClock){
+		liTimeout.QuadPart = 0;
+	} else {
+		const auto u64DeltaMillisec = u64UntilFastMonoClock - u64Now;
+		const auto n64Delta100Nanosec = static_cast<std::int64_t>(u64DeltaMillisec * 10000);
+		if(static_cast<std::uint64_t>(n64Delta100Nanosec / 10000) != u64DeltaMillisec){
+			liTimeout.QuadPart = INT64_MIN;
+		} else {
+			liTimeout.QuadPart = -n64Delta100Nanosec;
+		}
+	}
 	const auto lStatus = ::NtWaitForKeyedEvent(nullptr, this, false, &liTimeout);
 	if(!NT_SUCCESS(lStatus)){
 		ASSERT_MSG(false, L"NtWaitForKeyedEvent() 失败。");

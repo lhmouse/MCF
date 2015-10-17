@@ -5,6 +5,7 @@
 #include "../StdMCF.hpp"
 #include "KernelEvent.hpp"
 #include "../Core/Exception.hpp"
+#include "../Core/Time.hpp"
 #include <winternl.h>
 #include <ntdef.h>
 
@@ -47,16 +48,20 @@ KernelEvent::KernelEvent(bool bInitSet, const WideStringView &wsvName){
 }
 
 // 其他非静态成员函数。
-bool KernelEvent::Wait(std::uint64_t u64UntilUtcTime) const noexcept {
-	const auto u64HiResUtc = u64UntilUtcTime * 10000;
-	const auto u64WaitUntil = u64HiResUtc + 0x019DB1DED53E8000ull;
-	if((u64HiResUtc / 10000 != u64UntilUtcTime) || (u64WaitUntil >= 0x8000000000000000ull) || (u64WaitUntil < u64HiResUtc)){
-		Wait();
-		return true;
-	}
-
+bool KernelEvent::Wait(std::uint64_t u64UntilFastMonoClock) const noexcept {
 	::LARGE_INTEGER liTimeout;
-	liTimeout.QuadPart = static_cast<std::int64_t>(u64WaitUntil);
+	const auto u64Now = GetFastMonoClock();
+	if(u64Now >= u64UntilFastMonoClock){
+		liTimeout.QuadPart = 0;
+	} else {
+		const auto u64DeltaMillisec = u64UntilFastMonoClock - u64Now;
+		const auto n64Delta100Nanosec = static_cast<std::int64_t>(u64DeltaMillisec * 10000);
+		if(static_cast<std::uint64_t>(n64Delta100Nanosec / 10000) != u64DeltaMillisec){
+			liTimeout.QuadPart = INT64_MIN;
+		} else {
+			liTimeout.QuadPart = -n64Delta100Nanosec;
+		}
+	}
 	const auto lStatus = ::NtWaitForSingleObject(x_hEvent.Get(), false, &liTimeout);
 	if(!NT_SUCCESS(lStatus)){
 		ASSERT_MSG(false, L"NtWaitForSingleObject() 失败。");

@@ -54,113 +54,116 @@ namespace {
 		const auto pbIoPending = static_cast<bool *>(pContext);
 		*pbIoPending = false;
 	}
+
+	Impl_UniqueNtHandle::UniqueNtHandle CreateFileHandle(const WideStringView &wsvPath, std::uint32_t u32Flags){
+		const auto uSize = wsvPath.GetSize() * sizeof(wchar_t);
+		if(uSize > UINT16_MAX){
+			DEBUG_THROW(SystemError, ERROR_INVALID_PARAMETER, "The path for a file is too long"_rcs);
+		}
+		::UNICODE_STRING ustrRawPath;
+		ustrRawPath.Length              = uSize;
+		ustrRawPath.MaximumLength       = uSize;
+		ustrRawPath.Buffer              = (PWSTR)wsvPath.GetBegin();
+
+		static constexpr wchar_t kDosPathPrefix[] = LR"(\??\)";
+		static constexpr auto kDosPathPrefixSize = sizeof(kDosPathPrefix) - sizeof(wchar_t);
+
+		wchar_t awcStaticStr[MAX_PATH + kDosPathPrefixSize];
+		::UNICODE_STRING ustrStaticBuffer;
+		ustrStaticBuffer.Length         = 0;
+		ustrStaticBuffer.MaximumLength  = sizeof(awcStaticStr);
+		ustrStaticBuffer.Buffer         = awcStaticStr;
+
+		::UNICODE_STRING ustrDynamicBuffer;
+		ustrDynamicBuffer.Length        = 0;
+		ustrDynamicBuffer.MaximumLength = 0;
+		ustrDynamicBuffer.Buffer        = nullptr;
+		DEFER([&]{ ::RtlFreeUnicodeString(&ustrDynamicBuffer); });
+
+		::UNICODE_STRING *pustrUnprefixedFullPath;
+		::RTL_PATH_TYPE ePathType;
+		const auto lPathStatus = ::RtlGetFullPathName_UstrEx(&ustrRawPath, &ustrStaticBuffer, &ustrDynamicBuffer, &pustrUnprefixedFullPath, nullptr, nullptr, &ePathType, nullptr);
+		if(!NT_SUCCESS(lPathStatus)){
+			DEBUG_THROW(SystemError, ::RtlNtStatusToDosError(lPathStatus), "RtlGetFullPathName_UstrEx"_rcs);
+		}
+
+		auto uPrefixedPathSize = pustrUnprefixedFullPath->Length;
+		auto pbyPrefixedPathBuffer = reinterpret_cast<unsigned char *>(pustrUnprefixedFullPath->Buffer);
+		DEFER([&]{ if(pbyPrefixedPathBuffer != reinterpret_cast<unsigned char *>(pustrUnprefixedFullPath->Buffer)){ ::operator delete[](pbyPrefixedPathBuffer); } });
+
+		if((RtlPathTypeDriveAbsolute <= ePathType) && (ePathType <= RtlPathTypeRelative)){
+			uPrefixedPathSize += kDosPathPrefixSize;
+			if(static_cast<std::size_t>(pustrUnprefixedFullPath->MaximumLength) - pustrUnprefixedFullPath->Length <= uPrefixedPathSize){
+				pbyPrefixedPathBuffer = reinterpret_cast<unsigned char *>(pustrUnprefixedFullPath->Buffer);
+			} else {
+				pbyPrefixedPathBuffer = static_cast<unsigned char *>(::operator new[](uPrefixedPathSize));
+			}
+			std::memmove(pbyPrefixedPathBuffer + kDosPathPrefixSize, pustrUnprefixedFullPath->Buffer, pustrUnprefixedFullPath->Length);
+			std::memcpy(pbyPrefixedPathBuffer, kDosPathPrefix, kDosPathPrefixSize);
+		}
+
+		::ACCESS_MASK dwDesiredAccess = 0;
+		if(u32Flags & File::kToRead){
+			dwDesiredAccess |= FILE_GENERIC_READ;
+		}
+		if(u32Flags & File::kToWrite){
+			dwDesiredAccess |= FILE_GENERIC_WRITE;
+		}
+
+		::UNICODE_STRING ustrPrefixedFullPath;
+		ustrPrefixedFullPath.Length        = uPrefixedPathSize;
+		ustrPrefixedFullPath.MaximumLength = uPrefixedPathSize;
+		ustrPrefixedFullPath.Buffer        = (PWSTR)pbyPrefixedPathBuffer;
+		::OBJECT_ATTRIBUTES vObjectAttributes;
+		InitializeObjectAttributes(&vObjectAttributes, &ustrPrefixedFullPath, OBJ_CASE_INSENSITIVE, nullptr, nullptr);
+
+		::IO_STATUS_BLOCK vIoStatus;
+
+		DWORD dwSharedAccess;
+		if(u32Flags & File::kToWrite){
+			dwSharedAccess = 0;
+		} else {
+			dwSharedAccess = FILE_SHARE_READ;
+		}
+
+		DWORD dwCreateDisposition;
+		if(u32Flags & File::kToWrite){
+			if(u32Flags & File::kDontCreate){
+				dwCreateDisposition = FILE_OPEN;
+			} else if(u32Flags & File::kFailIfExists){
+				dwCreateDisposition = FILE_CREATE;
+			} else {
+				dwCreateDisposition = FILE_OPEN_IF;
+			}
+		} else {
+			dwCreateDisposition = FILE_OPEN;
+		}
+
+		DWORD dwCreateOptions = FILE_NON_DIRECTORY_FILE | FILE_RANDOM_ACCESS;
+		if(u32Flags & File::kNoBuffering){
+			dwCreateOptions |= FILE_NO_INTERMEDIATE_BUFFERING;
+		}
+		if(u32Flags & File::kWriteThrough){
+			dwCreateOptions |= FILE_WRITE_THROUGH;
+		}
+		if(u32Flags & File::kDeleteOnClose){
+			dwDesiredAccess |= DELETE;
+			dwCreateOptions |= FILE_DELETE_ON_CLOSE;
+		}
+
+		HANDLE hFile;
+		const auto lStatus = ::NtCreateFile(&hFile, dwDesiredAccess, &vObjectAttributes, &vIoStatus, nullptr, FILE_ATTRIBUTE_NORMAL, dwSharedAccess, dwCreateDisposition, dwCreateOptions, nullptr, 0);
+		if(!NT_SUCCESS(lStatus)){
+			DEBUG_THROW(SystemError, ::RtlNtStatusToDosError(lStatus), "NtCreateFile"_rcs);
+		}
+		return Impl_UniqueNtHandle::UniqueNtHandle(hFile);
+	}
 }
 
 // 构造函数和析构函数。
 File::File(const WideStringView &wsvPath, std::uint32_t u32Flags)
-	: File()
+	: x_hFile(CreateFileHandle(wsvPath, u32Flags))
 {
-	const auto uSize = wsvPath.GetSize() * sizeof(wchar_t);
-	if(uSize > UINT16_MAX){
-		DEBUG_THROW(SystemError, ERROR_INVALID_PARAMETER, "The path for a file is too long"_rcs);
-	}
-	::UNICODE_STRING ustrRawPath;
-	ustrRawPath.Length              = uSize;
-	ustrRawPath.MaximumLength       = uSize;
-	ustrRawPath.Buffer              = (PWSTR)wsvPath.GetBegin();
-
-	static constexpr wchar_t kDosPathPrefix[] = LR"(\??\)";
-	static constexpr auto kDosPathPrefixSize = sizeof(kDosPathPrefix) - sizeof(wchar_t);
-
-	wchar_t awcStaticStr[MAX_PATH + kDosPathPrefixSize];
-	::UNICODE_STRING ustrStaticBuffer;
-	ustrStaticBuffer.Length         = 0;
-	ustrStaticBuffer.MaximumLength  = sizeof(awcStaticStr);
-	ustrStaticBuffer.Buffer         = awcStaticStr;
-
-	::UNICODE_STRING ustrDynamicBuffer;
-	ustrDynamicBuffer.Length        = 0;
-	ustrDynamicBuffer.MaximumLength = 0;
-	ustrDynamicBuffer.Buffer        = nullptr;
-	DEFER([&]{ ::RtlFreeUnicodeString(&ustrDynamicBuffer); });
-
-	::UNICODE_STRING *pustrUnprefixedFullPath;
-	::RTL_PATH_TYPE ePathType;
-	const auto lPathStatus = ::RtlGetFullPathName_UstrEx(&ustrRawPath, &ustrStaticBuffer, &ustrDynamicBuffer, &pustrUnprefixedFullPath, nullptr, nullptr, &ePathType, nullptr);
-	if(!NT_SUCCESS(lPathStatus)){
-		DEBUG_THROW(SystemError, ::RtlNtStatusToDosError(lPathStatus), "RtlGetFullPathName_UstrEx"_rcs);
-	}
-
-	auto uPrefixedPathSize = pustrUnprefixedFullPath->Length;
-	auto pbyPrefixedPathBuffer = reinterpret_cast<unsigned char *>(pustrUnprefixedFullPath->Buffer);
-	DEFER([&]{ if(pbyPrefixedPathBuffer != reinterpret_cast<unsigned char *>(pustrUnprefixedFullPath->Buffer)){ ::operator delete[](pbyPrefixedPathBuffer); } });
-
-	if((RtlPathTypeDriveAbsolute <= ePathType) && (ePathType <= RtlPathTypeRelative)){
-		uPrefixedPathSize += kDosPathPrefixSize;
-		if(static_cast<std::size_t>(pustrUnprefixedFullPath->MaximumLength) - pustrUnprefixedFullPath->Length <= uPrefixedPathSize){
-			pbyPrefixedPathBuffer = reinterpret_cast<unsigned char *>(pustrUnprefixedFullPath->Buffer);
-		} else {
-			pbyPrefixedPathBuffer = static_cast<unsigned char *>(::operator new[](uPrefixedPathSize));
-		}
-		std::memmove(pbyPrefixedPathBuffer + kDosPathPrefixSize, pustrUnprefixedFullPath->Buffer, pustrUnprefixedFullPath->Length);
-		std::memcpy(pbyPrefixedPathBuffer, kDosPathPrefix, kDosPathPrefixSize);
-	}
-
-	::ACCESS_MASK dwDesiredAccess = 0;
-	if(u32Flags & kToRead){
-		dwDesiredAccess |= FILE_GENERIC_READ;
-	}
-	if(u32Flags & kToWrite){
-		dwDesiredAccess |= FILE_GENERIC_WRITE;
-	}
-
-	::UNICODE_STRING ustrPrefixedFullPath;
-	ustrPrefixedFullPath.Length        = uPrefixedPathSize;
-	ustrPrefixedFullPath.MaximumLength = uPrefixedPathSize;
-	ustrPrefixedFullPath.Buffer        = (PWSTR)pbyPrefixedPathBuffer;
-	::OBJECT_ATTRIBUTES vObjectAttributes;
-	InitializeObjectAttributes(&vObjectAttributes, &ustrPrefixedFullPath, OBJ_CASE_INSENSITIVE, nullptr, nullptr);
-
-	::IO_STATUS_BLOCK vIoStatus;
-
-	DWORD dwSharedAccess;
-	if(u32Flags & kToWrite){
-		dwSharedAccess = 0;
-	} else {
-		dwSharedAccess = FILE_SHARE_READ;
-	}
-
-	DWORD dwCreateDisposition;
-	if(u32Flags & kToWrite){
-		if(u32Flags & kDontCreate){
-			dwCreateDisposition = FILE_OPEN;
-		} else if(u32Flags & kFailIfExists){
-			dwCreateDisposition = FILE_CREATE;
-		} else {
-			dwCreateDisposition = FILE_OPEN_IF;
-		}
-	} else {
-		dwCreateDisposition = FILE_OPEN;
-	}
-
-	DWORD dwCreateOptions = FILE_NON_DIRECTORY_FILE | FILE_RANDOM_ACCESS;
-	if(u32Flags & kNoBuffering){
-		dwCreateOptions |= FILE_NO_INTERMEDIATE_BUFFERING;
-	}
-	if(u32Flags & kWriteThrough){
-		dwCreateOptions |= FILE_WRITE_THROUGH;
-	}
-	if(u32Flags & kDeleteOnClose){
-		dwDesiredAccess |= DELETE;
-		dwCreateOptions |= FILE_DELETE_ON_CLOSE;
-	}
-
-	HANDLE hFile;
-	const auto lStatus = ::NtCreateFile(&hFile, dwDesiredAccess, &vObjectAttributes, &vIoStatus, nullptr, FILE_ATTRIBUTE_NORMAL, dwSharedAccess, dwCreateDisposition, dwCreateOptions, nullptr, 0);
-	if(!NT_SUCCESS(lStatus)){
-		DEBUG_THROW(SystemError, ::RtlNtStatusToDosError(lStatus), "NtCreateFile"_rcs);
-	}
-	x_hFile.Reset(hFile);
 }
 
 // 其他非静态成员函数。

@@ -1,12 +1,13 @@
 #include <MCF/StdMCF.hpp>
 #include <MCF/Thread/Thread.hpp>
-#include <MCF/Thread/ReaderWriterMutex.hpp>
+#include <MCF/Thread/KernelMutex.hpp>
 #include <MCF/Core/Time.hpp>
 #include <MCF/Core/Array.hpp>
 
 using namespace MCF;
 
-Mutex m;
+KernelMutex m1;
+KernelMutex m2;
 volatile int c = 0;
 
 extern "C" unsigned MCFMain(){
@@ -14,15 +15,10 @@ extern "C" unsigned MCFMain(){
 	Array<IntrusivePtr<Thread>, 10> threads;
 	for(auto &p : threads){
 		p = Thread::Create([]{
-			for(int i = 0; i < 50000; ++i){
-				{
-					const auto l = m.GetLock();
-					++c;
-				}
-				{
-					const auto l = m.GetLock();
-					++c;
-				}
+			for(int i = 0; i < 10000; ++i){
+				m1.Lock();
+				++c;
+				m1.Unlock();
 			}
 		}, true);
 	}

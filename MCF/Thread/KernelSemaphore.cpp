@@ -17,29 +17,41 @@ NTSTATUS NtReleaseSemaphore(HANDLE hSemaphore, LONG lReleaseCount, LONG *plPrevC
 
 namespace MCF {
 
+namespace {
+	Impl_UniqueNtHandle::UniqueNtHandle CreateSemaphoreHandle(std::size_t uInitCount, const WideStringView &wsvName, bool bFailIfExists){
+		if(uInitCount >= static_cast<std::size_t>(LONG_MAX)){
+			DEBUG_THROW(Exception, ERROR_INVALID_PARAMETER, "Initial count for a kernel semaphore is too large"_rcs);
+		}
+
+		const auto uSize = wsvName.GetSize() * sizeof(wchar_t);
+		if(uSize > UINT16_MAX){
+			DEBUG_THROW(SystemError, ERROR_INVALID_PARAMETER, "The name for a kernel semaphore is too long"_rcs);
+		}
+		::UNICODE_STRING ustrObjectName;
+		ustrObjectName.Length        = uSize;
+		ustrObjectName.MaximumLength = uSize;
+		ustrObjectName.Buffer        = (PWSTR)wsvName.GetBegin();
+		::OBJECT_ATTRIBUTES vObjectAttributes;
+		InitializeObjectAttributes(&vObjectAttributes, &ustrObjectName, bFailIfExists ? 0 : OBJ_OPENIF, nullptr, nullptr);
+
+		HANDLE hSemaphore;
+		const auto lStatus = ::NtCreateSemaphore(&hSemaphore, SEMAPHORE_ALL_ACCESS, &vObjectAttributes, static_cast<LONG>(uInitCount), LONG_MAX);
+		if(!NT_SUCCESS(lStatus)){
+			DEBUG_THROW(SystemError, ::RtlNtStatusToDosError(lStatus), "NtCreateSemaphore"_rcs);
+		}
+		return Impl_UniqueNtHandle::UniqueNtHandle(hSemaphore);
+	}
+}
+
+
 // 构造函数和析构函数。
-KernelSemaphore::KernelSemaphore(std::size_t uInitCount, const WideStringView &wsvName){
-	if(uInitCount >= static_cast<std::size_t>(LONG_MAX)){
-		DEBUG_THROW(Exception, ERROR_INVALID_PARAMETER, "Initial count for a kernel semaphore is too large"_rcs);
-	}
-
-	const auto uSize = wsvName.GetSize() * sizeof(wchar_t);
-	if(uSize > UINT16_MAX){
-		DEBUG_THROW(SystemError, ERROR_INVALID_PARAMETER, "The name for a kernel semaphore is too long"_rcs);
-	}
-	::UNICODE_STRING ustrObjectName;
-	ustrObjectName.Length        = uSize;
-	ustrObjectName.MaximumLength = uSize;
-	ustrObjectName.Buffer        = (PWSTR)wsvName.GetBegin();
-	::OBJECT_ATTRIBUTES vObjectAttributes;
-	InitializeObjectAttributes(&vObjectAttributes, &ustrObjectName, 0, nullptr, nullptr);
-
-	HANDLE hSemaphore;
-	const auto lStatus = ::NtCreateSemaphore(&hSemaphore, SEMAPHORE_ALL_ACCESS, &vObjectAttributes, static_cast<LONG>(uInitCount), LONG_MAX);
-	if(!NT_SUCCESS(lStatus)){
-		DEBUG_THROW(SystemError, ::RtlNtStatusToDosError(lStatus), "NtCreateSemaphore"_rcs);
-	}
-	x_hSemaphore.Reset(hSemaphore);
+KernelSemaphore::KernelSemaphore(std::size_t uInitCount)
+	: x_hSemaphore(CreateSemaphoreHandle(uInitCount, nullptr, false))
+{
+}
+KernelSemaphore::KernelSemaphore(std::size_t uInitCount, const WideStringView &wsvName, bool bFailIfExists)
+	: x_hSemaphore(CreateSemaphoreHandle(uInitCount, wsvName, bFailIfExists))
+{
 }
 
 // 其他非静态成员函数。

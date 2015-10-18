@@ -7,7 +7,7 @@
 
 #include "../Utilities/Noncopyable.hpp"
 #include "../Core/StringView.hpp"
-#include "_UniqueNtHandle.hpp"
+#include "../Core/_UniqueNtHandle.hpp"
 #include <cstddef>
 #include <cstdint>
 
@@ -18,7 +18,8 @@ private:
 	Impl_UniqueNtHandle::UniqueNtHandle x_hSemaphore;
 
 public:
-	explicit KernelSemaphore(std::size_t uInitCount, const WideStringView &wsvName = nullptr);
+	explicit KernelSemaphore(std::size_t uInitCount);
+	KernelSemaphore(std::size_t uInitCount, const WideStringView &wsvName, bool bFailIfExists);
 
 public:
 	bool Wait(std::uint64_t u64UntilFastMonoClock) noexcept;

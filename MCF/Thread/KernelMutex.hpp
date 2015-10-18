@@ -2,8 +2,8 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2013 - 2015, LH_Mouse. All wrongs reserved.
 
-#ifndef MCF_THREAD_KERNEL_RECURSIVE_MUTEX_HPP_
-#define MCF_THREAD_KERNEL_RECURSIVE_MUTEX_HPP_
+#ifndef MCF_THREAD_KERNEL_MUTEX_HPP_
+#define MCF_THREAD_KERNEL_MUTEX_HPP_
 
 #include "../Utilities/Noncopyable.hpp"
 #include "../Core/StringView.hpp"
@@ -13,16 +13,16 @@
 
 namespace MCF {
 
-class KernelRecursiveMutex : NONCOPYABLE {
+class KernelMutex : NONCOPYABLE {
 public:
-	using UniqueLock = Impl_UniqueLockTemplate::UniqueLockTemplate<KernelRecursiveMutex>;
+	using UniqueLock = Impl_UniqueLockTemplate::UniqueLockTemplate<KernelMutex>;
 
 private:
-	Impl_UniqueNtHandle::UniqueNtHandle x_hMutex;
+	Impl_UniqueNtHandle::UniqueNtHandle x_hEvent;
 
 public:
-	KernelRecursiveMutex();
-	KernelRecursiveMutex(const WideStringView &wsvName, bool bFailIfExists);
+	KernelMutex();
+	KernelMutex(const WideStringView &wsvName, bool bFailIfExists);
 
 public:
 	bool Try(std::uint64_t u64UntilFastMonoClock = 0) noexcept;
@@ -41,15 +41,15 @@ public:
 
 namespace Impl_UniqueLockTemplate {
 	template<>
-	inline bool KernelRecursiveMutex::UniqueLock::X_DoTry(std::uint64_t u64UntilFastMonoClock) const noexcept {
+	inline bool KernelMutex::UniqueLock::X_DoTry(std::uint64_t u64UntilFastMonoClock) const noexcept {
 		return x_pOwner->Try(u64UntilFastMonoClock);
 	}
 	template<>
-	inline void KernelRecursiveMutex::UniqueLock::X_DoLock() const noexcept {
+	inline void KernelMutex::UniqueLock::X_DoLock() const noexcept {
 		x_pOwner->Lock();
 	}
 	template<>
-	inline void KernelRecursiveMutex::UniqueLock::X_DoUnlock() const noexcept {
+	inline void KernelMutex::UniqueLock::X_DoUnlock() const noexcept {
 		x_pOwner->Unlock();
 	}
 }

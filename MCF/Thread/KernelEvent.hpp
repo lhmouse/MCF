@@ -7,7 +7,7 @@
 
 #include "../Utilities/Noncopyable.hpp"
 #include "../Core/StringView.hpp"
-#include "_UniqueNtHandle.hpp"
+#include "../Core/_UniqueNtHandle.hpp"
 #include <cstddef>
 #include <cstdint>
 
@@ -18,7 +18,8 @@ private:
 	Impl_UniqueNtHandle::UniqueNtHandle x_hEvent;
 
 public:
-	explicit KernelEvent(bool bInitSet, const WideStringView &wsvName = nullptr);
+	explicit KernelEvent(bool bInitSet);
+	KernelEvent(bool bInitSet, const WideStringView &wsvName, bool bFailIfExists);
 
 public:
 	bool Wait(std::uint64_t u64UntilFastMonoClock) const noexcept;

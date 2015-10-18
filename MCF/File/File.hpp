@@ -6,7 +6,7 @@
 #define MCF_CORE_FILE_HPP_
 
 #include "../Core/StringView.hpp"
-#include "../Core/UniqueHandle.hpp"
+#include "../Core/_UniqueNtHandle.hpp"
 #include "../Function/FunctionObserver.hpp"
 #include <cstddef>
 #include <cstdint>
@@ -41,7 +41,7 @@ public:
 	};
 
 private:
-	UniqueHandle<Impl_File::NtHandleCloser> x_hFile;
+	Impl_UniqueNtHandle::UniqueNtHandle x_hFile;
 
 public:
 	constexpr File() noexcept = default;

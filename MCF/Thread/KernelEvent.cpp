@@ -26,25 +26,36 @@ NTSTATUS NtResetEvent(HANDLE hEvent, LONG *plPrevState) noexcept;
 
 namespace MCF {
 
-// 构造函数和析构函数。
-KernelEvent::KernelEvent(bool bInitSet, const WideStringView &wsvName){
-	const auto uSize = wsvName.GetSize() * sizeof(wchar_t);
-	if(uSize > UINT16_MAX){
-		DEBUG_THROW(SystemError, ERROR_INVALID_PARAMETER, "The name for a kernel event is too long"_rcs);
-	}
-	::UNICODE_STRING ustrObjectName;
-	ustrObjectName.Length        = uSize;
-	ustrObjectName.MaximumLength = uSize;
-	ustrObjectName.Buffer        = (PWSTR)wsvName.GetBegin();
-	::OBJECT_ATTRIBUTES vObjectAttributes;
-	InitializeObjectAttributes(&vObjectAttributes, &ustrObjectName, 0, nullptr, nullptr);
+namespace {
+	Impl_UniqueNtHandle::UniqueNtHandle CreateEventHandle(bool bInitSet, const WideStringView &wsvName, bool bFailIfExists){
+		const auto uSize = wsvName.GetSize() * sizeof(wchar_t);
+		if(uSize > UINT16_MAX){
+			DEBUG_THROW(SystemError, ERROR_INVALID_PARAMETER, "The name for a kernel event is too long"_rcs);
+		}
+		::UNICODE_STRING ustrObjectName;
+		ustrObjectName.Length        = uSize;
+		ustrObjectName.MaximumLength = uSize;
+		ustrObjectName.Buffer        = (PWSTR)wsvName.GetBegin();
+		::OBJECT_ATTRIBUTES vObjectAttributes;
+		InitializeObjectAttributes(&vObjectAttributes, &ustrObjectName, bFailIfExists ? 0 : OBJ_OPENIF, nullptr, nullptr);
 
-	HANDLE hEvent;
-	const auto lStatus = ::NtCreateEvent(&hEvent, EVENT_ALL_ACCESS, &vObjectAttributes, NotificationEvent, bInitSet);
-	if(!NT_SUCCESS(lStatus)){
-		DEBUG_THROW(SystemError, ::RtlNtStatusToDosError(lStatus), "NtCreateEvent"_rcs);
+		HANDLE hEvent;
+		const auto lStatus = ::NtCreateEvent(&hEvent, EVENT_ALL_ACCESS, &vObjectAttributes, NotificationEvent, bInitSet);
+		if(!NT_SUCCESS(lStatus)){
+			DEBUG_THROW(SystemError, ::RtlNtStatusToDosError(lStatus), "NtCreateEvent"_rcs);
+		}
+		return Impl_UniqueNtHandle::UniqueNtHandle(hEvent);
 	}
-	x_hEvent.Reset(hEvent);
+}
+
+// 构造函数和析构函数。
+KernelEvent::KernelEvent(bool bInitSet)
+	: x_hEvent(CreateEventHandle(bInitSet, nullptr, false))
+{
+}
+KernelEvent::KernelEvent(bool bInitSet, const WideStringView &wsvName, bool bFailIfExists)
+	: x_hEvent(CreateEventHandle(bInitSet, wsvName, bFailIfExists))
+{
 }
 
 // 其他非静态成员函数。

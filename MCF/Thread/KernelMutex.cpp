@@ -3,25 +3,25 @@
 // Copyleft 2013 - 2015, LH_Mouse. All wrongs reserved.
 
 #include "../StdMCF.hpp"
-#include "KernelRecursiveMutex.hpp"
+#include "KernelMutex.hpp"
 #include "../Core/Exception.hpp"
 #include "../Core/Time.hpp"
 #include <winternl.h>
 #include <ntdef.h>
 
 extern "C" __attribute__((__dllimport__, __stdcall__))
-NTSTATUS NtCreateMutant(HANDLE *pHandle, ACCESS_MASK dwDesiredAccess, const OBJECT_ATTRIBUTES *pObjectAttributes, BOOLEAN bInitialOwner) noexcept;
+NTSTATUS NtCreateEvent(HANDLE *pHandle, ACCESS_MASK dwDesiredAccess, const OBJECT_ATTRIBUTES *pObjectAttributes, EVENT_TYPE eEventType, BOOLEAN bInitialState) noexcept;
 
 extern "C" __attribute__((__dllimport__, __stdcall__))
-NTSTATUS NtReleaseMutant(HANDLE hMutant, LONG *plPrevCount) noexcept;
+NTSTATUS NtSetEvent(HANDLE hEvent, LONG *plPrevState) noexcept;
 
 namespace MCF {
 
 namespace {
-	Impl_UniqueNtHandle::UniqueNtHandle CreateMutexHandle(const WideStringView &wsvName, bool bFailIfExists){
+	Impl_UniqueNtHandle::UniqueNtHandle CreateEventHandle(const WideStringView &wsvName, bool bFailIfExists){
 		const auto uSize = wsvName.GetSize() * sizeof(wchar_t);
 		if(uSize > UINT16_MAX){
-			DEBUG_THROW(SystemError, ERROR_INVALID_PARAMETER, "The name for a kernel mutex is too long"_rcs);
+			DEBUG_THROW(SystemError, ERROR_INVALID_PARAMETER, "The name for a kernel event is too long"_rcs);
 		}
 		::UNICODE_STRING ustrObjectName;
 		ustrObjectName.Length        = uSize;
@@ -30,27 +30,27 @@ namespace {
 		::OBJECT_ATTRIBUTES vObjectAttributes;
 		InitializeObjectAttributes(&vObjectAttributes, &ustrObjectName, bFailIfExists ? 0 : OBJ_OPENIF, nullptr, nullptr);
 
-		HANDLE hMutex;
-		const auto lStatus = ::NtCreateMutant(&hMutex, MUTANT_ALL_ACCESS, &vObjectAttributes, false);
+		HANDLE hEvent;
+		const auto lStatus = ::NtCreateEvent(&hEvent, EVENT_ALL_ACCESS, &vObjectAttributes, SynchronizationEvent, true);
 		if(!NT_SUCCESS(lStatus)){
-			DEBUG_THROW(SystemError, ::RtlNtStatusToDosError(lStatus), "NtCreateMutant"_rcs);
+			DEBUG_THROW(SystemError, ::RtlNtStatusToDosError(lStatus), "NtCreateEvent"_rcs);
 		}
-		return Impl_UniqueNtHandle::UniqueNtHandle(hMutex);
+		return Impl_UniqueNtHandle::UniqueNtHandle(hEvent);
 	}
 }
 
 // 构造函数和析构函数。
-KernelRecursiveMutex::KernelRecursiveMutex()
-	: x_hMutex(CreateMutexHandle(nullptr, false))
+KernelMutex::KernelMutex()
+	: x_hEvent(CreateEventHandle(nullptr, false))
 {
 }
-KernelRecursiveMutex::KernelRecursiveMutex(const WideStringView &wsvName, bool bFailIfExists)
-	: x_hMutex(CreateMutexHandle(wsvName, bFailIfExists))
+KernelMutex::KernelMutex(const WideStringView &wsvName, bool bFailIfExists)
+	: x_hEvent(CreateEventHandle(wsvName, bFailIfExists))
 {
 }
 
 // 其他非静态成员函数。
-bool KernelRecursiveMutex::Try(std::uint64_t u64UntilFastMonoClock) noexcept {
+bool KernelMutex::Try(std::uint64_t u64UntilFastMonoClock) noexcept {
 	::LARGE_INTEGER liTimeout;
 	const auto u64Now = GetFastMonoClock();
 	if(u64Now >= u64UntilFastMonoClock){
@@ -64,24 +64,25 @@ bool KernelRecursiveMutex::Try(std::uint64_t u64UntilFastMonoClock) noexcept {
 			liTimeout.QuadPart = -n64Delta100Nanosec;
 		}
 	}
-	const auto lStatus = ::NtWaitForSingleObject(x_hMutex.Get(), false, &liTimeout);
+	const auto lStatus = ::NtWaitForSingleObject(x_hEvent.Get(), false, &liTimeout);
 	if(!NT_SUCCESS(lStatus)){
 		ASSERT_MSG(false, L"NtWaitForSingleObject() 失败。");
 	}
 	return lStatus != STATUS_TIMEOUT;
 }
-void KernelRecursiveMutex::Lock() noexcept {
-	const auto lStatus = ::NtWaitForSingleObject(x_hMutex.Get(), false, nullptr);
+void KernelMutex::Lock() noexcept {
+	const auto lStatus = ::NtWaitForSingleObject(x_hEvent.Get(), false, nullptr);
 	if(!NT_SUCCESS(lStatus)){
 		ASSERT_MSG(false, L"NtWaitForSingleObject() 失败。");
 	}
 }
-void KernelRecursiveMutex::Unlock() noexcept {
-	LONG lPrevCount;
-	const auto lStatus = ::NtReleaseMutant(x_hMutex.Get(), &lPrevCount);
+void KernelMutex::Unlock() noexcept {
+	LONG lPrevState;
+	const auto lStatus = ::NtSetEvent(x_hEvent.Get(), &lPrevState);
 	if(!NT_SUCCESS(lStatus)){
-		ASSERT_MSG(false, L"NtReleaseMutant() 失败。");
+		ASSERT_MSG(false, L"NtSetEvent() 失败。");
 	}
+	ASSERT_MSG(lPrevState, L"互斥锁没有被任何线程锁定。");
 }
 
 }

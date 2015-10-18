@@ -66,16 +66,20 @@ Impl_UniqueNtHandle::UniqueNtHandle KernelEvent::X_CreateEventHandle(bool bInitS
 			DEBUG_THROW(SystemError, ::RtlNtStatusToDosError(lStatus), "NtCreateEvent"_rcs);
 		}
 	}
-	if(!(u32Flags & kFailIfExists)){
-		EventBasicInformation vBasicInfo;
-		const auto lStatus = ::NtQueryEvent(hEvent, 0 /* EventBasicInformation */, &vBasicInfo, sizeof(vBasicInfo), nullptr);
-		if(!NT_SUCCESS(lStatus)){
-			ASSERT_MSG(false, L"NtQueryEvent() 失败。");
+	try {
+		if(!(u32Flags & kFailIfExists)){
+			EventBasicInformation vBasicInfo;
+			const auto lStatus = ::NtQueryEvent(hEvent, 0 /* EventBasicInformation */, &vBasicInfo, sizeof(vBasicInfo), nullptr);
+			if(!NT_SUCCESS(lStatus)){
+				ASSERT_MSG(false, L"NtQueryEvent() 失败。");
+			}
+			if(vBasicInfo.eEventType != NotificationEvent){
+				DEBUG_THROW(SystemError, ERROR_ALREADY_EXISTS, "CreateEventHandle"_rcs);
+			}
 		}
-		if(vBasicInfo.eEventType != NotificationEvent){
-			Impl_UniqueNtHandle::NtHandleCloser()(hEvent);
-			DEBUG_THROW(SystemError, ERROR_ALREADY_EXISTS, "CreateEventHandle"_rcs);
-		}
+	} catch(...){
+		Impl_UniqueNtHandle::NtHandleCloser()(hEvent);
+		throw;
 	}
 	return Impl_UniqueNtHandle::UniqueNtHandle(hEvent);
 }

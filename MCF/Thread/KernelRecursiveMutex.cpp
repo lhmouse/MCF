@@ -15,31 +15,37 @@ extern "C" __attribute__((__dllimport__, __stdcall__))
 NTSTATUS NtCreateMutant(HANDLE *pHandle, ACCESS_MASK dwDesiredAccess, const OBJECT_ATTRIBUTES *pObjectAttributes, BOOLEAN bInitialOwner) noexcept;
 
 extern "C" __attribute__((__dllimport__, __stdcall__))
-NTSTATUS NtReleaseMutant(HANDLE hMutant, LONG *plPrevCount) noexcept;
+NTSTATUS NtReleaseMutant(HANDLE hMutant, LONG *lPrevState) noexcept;
 
 namespace MCF {
 
 Impl_UniqueNtHandle::UniqueNtHandle KernelRecursiveMutex::X_CreateMutexHandle(const WideStringView &wsvName, std::uint32_t u32Flags){
-	const auto uSize = wsvName.GetSize() * sizeof(wchar_t);
-	if(uSize > UINT16_MAX){
-		DEBUG_THROW(SystemError, ERROR_INVALID_PARAMETER, "The name for a kernel mutex is too long"_rcs);
-	}
-	::UNICODE_STRING ustrObjectName;
-	ustrObjectName.Length        = uSize;
-	ustrObjectName.MaximumLength = uSize;
-	ustrObjectName.Buffer        = (PWSTR)wsvName.GetBegin();
-
-	ULONG ulAttributes;
-	if(u32Flags & kFailIfExists){
-		ulAttributes = 0;
-	} else {
-		ulAttributes = OBJ_OPENIF;
-	}
-
-	const auto hRootDirectory = X_OpenBaseNamedObjectDirectory(u32Flags);
-
+	Impl_UniqueNtHandle::UniqueNtHandle hRootDirectory;
 	::OBJECT_ATTRIBUTES vObjectAttributes;
-	InitializeObjectAttributes(&vObjectAttributes, &ustrObjectName, ulAttributes, hRootDirectory.Get(), nullptr);
+
+	const auto uNameSize = wsvName.GetSize() * sizeof(wchar_t);
+	if(uNameSize == 0){
+		InitializeObjectAttributes(&vObjectAttributes, nullptr, 0, nullptr, nullptr);
+	} else {
+		if(uNameSize > UINT16_MAX){
+			DEBUG_THROW(SystemError, ERROR_INVALID_PARAMETER, "The name for a kernel object is too long"_rcs);
+		}
+		::UNICODE_STRING ustrObjectName;
+		ustrObjectName.Length        = uNameSize;
+		ustrObjectName.MaximumLength = uNameSize;
+		ustrObjectName.Buffer        = (PWSTR)wsvName.GetBegin();
+
+		ULONG ulAttributes;
+		if(u32Flags & kFailIfExists){
+			ulAttributes = 0;
+		} else {
+			ulAttributes = OBJ_OPENIF;
+		}
+
+		hRootDirectory = X_OpenBaseNamedObjectDirectory(u32Flags);
+
+		InitializeObjectAttributes(&vObjectAttributes, &ustrObjectName, ulAttributes, hRootDirectory.Get(), nullptr);
+	}
 
 	HANDLE hTemp;
 	if(u32Flags & kDontCreate){
@@ -86,11 +92,12 @@ void KernelRecursiveMutex::Lock() noexcept {
 	}
 }
 void KernelRecursiveMutex::Unlock() noexcept {
-	LONG lPrevCount;
-	const auto lStatus = ::NtReleaseMutant(x_hMutex.Get(), &lPrevCount);
+	LONG lPrevState;
+	const auto lStatus = ::NtReleaseMutant(x_hMutex.Get(), &lPrevState);
 	if(!NT_SUCCESS(lStatus)){
 		ASSERT_MSG(false, L"NtReleaseMutant() 失败。");
 	}
+	ASSERT_MSG(lPrevState == 0, L"互斥锁没有被任何线程锁定。");
 }
 
 }

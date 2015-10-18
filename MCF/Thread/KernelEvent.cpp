@@ -34,26 +34,31 @@ NTSTATUS NtResetEvent(HANDLE hEvent, LONG *plPrevState) noexcept;
 namespace MCF {
 
 Impl_UniqueNtHandle::UniqueNtHandle KernelEvent::X_CreateEventHandle(bool bInitSet, const WideStringView &wsvName, std::uint32_t u32Flags){
-	const auto uSize = wsvName.GetSize() * sizeof(wchar_t);
-	if(uSize > UINT16_MAX){
-		DEBUG_THROW(SystemError, ERROR_INVALID_PARAMETER, "The name for a kernel event is too long"_rcs);
-	}
-	::UNICODE_STRING ustrObjectName;
-	ustrObjectName.Length        = uSize;
-	ustrObjectName.MaximumLength = uSize;
-	ustrObjectName.Buffer        = (PWSTR)wsvName.GetBegin();
-
-	ULONG ulAttributes;
-	if(u32Flags & kFailIfExists){
-		ulAttributes = 0;
-	} else {
-		ulAttributes = OBJ_OPENIF;
-	}
-
-	const auto hRootDirectory = X_OpenBaseNamedObjectDirectory(u32Flags);
-
+	Impl_UniqueNtHandle::UniqueNtHandle hRootDirectory;
 	::OBJECT_ATTRIBUTES vObjectAttributes;
-	InitializeObjectAttributes(&vObjectAttributes, &ustrObjectName, ulAttributes, hRootDirectory.Get(), nullptr);
+	const auto uNameSize = wsvName.GetSize() * sizeof(wchar_t);
+	if(uNameSize == 0){
+		InitializeObjectAttributes(&vObjectAttributes, nullptr, 0, nullptr, nullptr);
+	} else {
+		if(uNameSize > UINT16_MAX){
+			DEBUG_THROW(SystemError, ERROR_INVALID_PARAMETER, "The name for a kernel object is too long"_rcs);
+		}
+		::UNICODE_STRING ustrObjectName;
+		ustrObjectName.Length        = uNameSize;
+		ustrObjectName.MaximumLength = uNameSize;
+		ustrObjectName.Buffer        = (PWSTR)wsvName.GetBegin();
+
+		ULONG ulAttributes;
+		if(u32Flags & kFailIfExists){
+			ulAttributes = 0;
+		} else {
+			ulAttributes = OBJ_OPENIF;
+		}
+
+		hRootDirectory = X_OpenBaseNamedObjectDirectory(u32Flags);
+
+		InitializeObjectAttributes(&vObjectAttributes, &ustrObjectName, ulAttributes, hRootDirectory.Get(), nullptr);
+	}
 
 	HANDLE hTemp;
 	bool bNameExists;

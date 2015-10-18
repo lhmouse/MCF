@@ -1,6 +1,6 @@
 #include <MCF/StdMCF.hpp>
 #include <MCF/Thread/Thread.hpp>
-#include <MCF/Thread/KernelMutex.hpp>
+#include <MCF/Thread/KernelRecursiveMutex.hpp>
 #include <MCF/Thread/KernelEvent.hpp>
 #include <MCF/Core/Time.hpp>
 #include <MCF/Core/Array.hpp>
@@ -11,8 +11,8 @@ using namespace MCF;
 
 extern "C" unsigned MCFMain()
 try {
-	KernelMutex m1(L"aaa"_wsv, 0);
-	KernelMutex m2(L"aaa"_wsv, 0);
+	KernelRecursiveMutex m1(L"aaa"_wsv, 0);
+	KernelRecursiveMutex m2(L"aaa"_wsv, 0);
 	volatile int c = 0;
 
 	Array<IntrusivePtr<Thread>, 10> threads;

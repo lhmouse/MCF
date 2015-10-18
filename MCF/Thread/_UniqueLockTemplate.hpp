@@ -148,7 +148,9 @@ namespace Impl_UniqueLockTemplate {
 	};
 
 	template<class MutexT, std::size_t kLockTypeT>
-	void swap(Impl_UniqueLockTemplate::UniqueLockTemplate<MutexT, kLockTypeT> &lhs, Impl_UniqueLockTemplate::UniqueLockTemplate<MutexT, kLockTypeT> &rhs) noexcept {
+	void swap(Impl_UniqueLockTemplate::UniqueLockTemplate<MutexT, kLockTypeT> &lhs,
+		Impl_UniqueLockTemplate::UniqueLockTemplate<MutexT, kLockTypeT> &rhs) noexcept
+	{
 		lhs.Swap(rhs);
 	}
 }

@@ -15,7 +15,7 @@ extern "C" __attribute__((__dllimport__, __stdcall__))
 NTSTATUS NtCreateMutant(HANDLE *pHandle, ACCESS_MASK dwDesiredAccess, const OBJECT_ATTRIBUTES *pObjectAttributes, BOOLEAN bInitialOwner) noexcept;
 
 extern "C" __attribute__((__dllimport__, __stdcall__))
-NTSTATUS NtReleaseMutant(HANDLE hMutant, LONG *lPrevState) noexcept;
+NTSTATUS NtReleaseMutant(HANDLE hMutant, LONG *plPrevCount) noexcept;
 
 namespace MCF {
 
@@ -92,12 +92,12 @@ void KernelRecursiveMutex::Lock() noexcept {
 	}
 }
 void KernelRecursiveMutex::Unlock() noexcept {
-	LONG lPrevState;
-	const auto lStatus = ::NtReleaseMutant(x_hMutex.Get(), &lPrevState);
+	LONG lPrevCount;
+	const auto lStatus = ::NtReleaseMutant(x_hMutex.Get(), &lPrevCount);
 	if(!NT_SUCCESS(lStatus)){
 		ASSERT_MSG(false, L"NtReleaseMutant() 失败。");
 	}
-	ASSERT_MSG(lPrevState == 0, L"互斥锁没有被任何线程锁定。");
+	ASSERT_MSG(lPrevCount <= 0, L"互斥锁没有被任何线程锁定。");
 }
 
 }

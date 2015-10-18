@@ -1,19 +1,23 @@
 #include <MCF/StdMCF.hpp>
 #include <MCF/Thread/Thread.hpp>
 #include <MCF/Thread/KernelMutex.hpp>
+#include <MCF/Thread/KernelEvent.hpp>
 #include <MCF/Core/Time.hpp>
 #include <MCF/Core/Array.hpp>
+#include <MCF/Core/LastError.hpp>
+#include <MCF/Core/String.hpp>
 
 using namespace MCF;
 
-KernelMutex m1(L"aaa"_wsv, 0);
-KernelMutex m2(L"aaa"_wsv, 0);
-volatile int c = 0;
+extern "C" unsigned MCFMain()
+try {
+	KernelMutex m1(L"aaa"_wsv, 0);
+	KernelMutex m2(L"aaa"_wsv, 0);
+	volatile int c = 0;
 
-extern "C" unsigned MCFMain(){
 	Array<IntrusivePtr<Thread>, 10> threads;
 	for(auto &p : threads){
-		p = Thread::Create([]{
+		p = Thread::Create([&]{
 			for(int i = 0; i < 10000; ++i){
 				m1.Lock();
 				++c;
@@ -46,4 +50,7 @@ extern "C" unsigned MCFMain(){
 	std::printf("locked? %d  time = %f\n", l.IsLocking(), t2 - t1);
 */
 	return 0;
+} catch(Exception &e){
+	std::printf("MCF::Exception: code = %lu (%s), desc = %s\n", e.GetCode(), AnsiString(GetWin32ErrorDescription(e.GetCode())).GetStr(), e.GetDescription());
+	return 3;
 }

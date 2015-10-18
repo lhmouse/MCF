@@ -8,19 +8,24 @@
 #include "../Core/Time.hpp"
 #include <winternl.h>
 #include <ntdef.h>
+#include <ntstatus.h>
 
 extern "C" __attribute__((__dllimport__, __stdcall__))
 NTSTATUS NtOpenEvent(HANDLE *pHandle, ACCESS_MASK dwDesiredAccess, const OBJECT_ATTRIBUTES *pObjectAttributes) noexcept;
 extern "C" __attribute__((__dllimport__, __stdcall__))
 NTSTATUS NtCreateEvent(HANDLE *pHandle, ACCESS_MASK dwDesiredAccess, const OBJECT_ATTRIBUTES *pObjectAttributes, EVENT_TYPE eEventType, BOOLEAN bInitialState) noexcept;
 
-struct EventBasicInformation {
+typedef enum tagEventInformationClass {
+	EventBasicInformation,
+} EVENT_INFORMATION_CLASS;
+
+typedef struct tagEVENT_BASIC_INFORMATION {
 	EVENT_TYPE eEventType;
 	LONG lState;
-};
+} EVENT_BASIC_INFORMATION;
 
 extern "C" __attribute__((__dllimport__, __stdcall__))
-NTSTATUS NtQueryEvent(HANDLE hEvent, int nInfoClass, void *pInfo, DWORD dwInfoSize, DWORD *pdwInfoSizeRet) noexcept;
+NTSTATUS NtQueryEvent(HANDLE hEvent, EVENT_INFORMATION_CLASS eInfoClass, void *pInfo, DWORD dwInfoSize, DWORD *pdwInfoSizeRet) noexcept;
 extern "C" __attribute__((__dllimport__, __stdcall__))
 NTSTATUS NtSetEvent(HANDLE hEvent, LONG *plPrevState) noexcept;
 extern "C" __attribute__((__dllimport__, __stdcall__))
@@ -39,14 +44,10 @@ Impl_UniqueNtHandle::UniqueNtHandle KernelEvent::X_CreateEventHandle(bool bInitS
 	ustrObjectName.Buffer        = (PWSTR)wsvName.GetBegin();
 
 	ULONG ulAttributes;
-	if(u32Flags & kDontCreate){
-		ulAttributes = OBJ_OPENIF;
+	if(u32Flags & kFailIfExists){
+		ulAttributes = 0;
 	} else {
-		if(u32Flags & kFailIfExists){
-			ulAttributes = 0;
-		} else {
-			ulAttributes = OBJ_OPENIF;
-		}
+		ulAttributes = OBJ_OPENIF;
 	}
 
 	const auto hRootDirectory = X_OpenBaseNamedObjectDirectory(u32Flags);
@@ -54,34 +55,34 @@ Impl_UniqueNtHandle::UniqueNtHandle KernelEvent::X_CreateEventHandle(bool bInitS
 	::OBJECT_ATTRIBUTES vObjectAttributes;
 	InitializeObjectAttributes(&vObjectAttributes, &ustrObjectName, ulAttributes, hRootDirectory.Get(), nullptr);
 
-	HANDLE hEvent;
+	HANDLE hTemp;
+	bool bNewObjectCreated;
 	if(u32Flags & kDontCreate){
-		const auto lStatus = ::NtOpenEvent(&hEvent, EVENT_ALL_ACCESS, &vObjectAttributes);
+		const auto lStatus = ::NtOpenEvent(&hTemp, EVENT_ALL_ACCESS, &vObjectAttributes);
 		if(!NT_SUCCESS(lStatus)){
 			DEBUG_THROW(SystemError, ::RtlNtStatusToDosError(lStatus), "NtOpenEvent"_rcs);
 		}
+		bNewObjectCreated = false;
 	} else {
-		const auto lStatus = ::NtCreateEvent(&hEvent, EVENT_ALL_ACCESS, &vObjectAttributes, NotificationEvent, bInitSet);
+		const auto lStatus = ::NtCreateEvent(&hTemp, EVENT_ALL_ACCESS, &vObjectAttributes, NotificationEvent, bInitSet);
 		if(!NT_SUCCESS(lStatus)){
 			DEBUG_THROW(SystemError, ::RtlNtStatusToDosError(lStatus), "NtCreateEvent"_rcs);
 		}
+		bNewObjectCreated = lStatus != STATUS_OBJECT_NAME_EXISTS;
 	}
-	try {
-		if(!(u32Flags & kFailIfExists)){
-			EventBasicInformation vBasicInfo;
-			const auto lStatus = ::NtQueryEvent(hEvent, 0 /* EventBasicInformation */, &vBasicInfo, sizeof(vBasicInfo), nullptr);
-			if(!NT_SUCCESS(lStatus)){
-				ASSERT_MSG(false, L"NtQueryEvent() 失败。");
-			}
-			if(vBasicInfo.eEventType != NotificationEvent){
-				DEBUG_THROW(SystemError, ERROR_ALREADY_EXISTS, "CreateEventHandle"_rcs);
-			}
+	Impl_UniqueNtHandle::UniqueNtHandle hEvent(hTemp);
+
+	if(!bNewObjectCreated){
+		EVENT_BASIC_INFORMATION vBasicInfo;
+		const auto lStatus = ::NtQueryEvent(hEvent.Get(), EventBasicInformation, &vBasicInfo, sizeof(vBasicInfo), nullptr);
+		if(!NT_SUCCESS(lStatus)){
+			ASSERT_MSG(false, L"NtQueryEvent() 失败。");
 		}
-	} catch(...){
-		Impl_UniqueNtHandle::NtHandleCloser()(hEvent);
-		throw;
+		if(vBasicInfo.eEventType != NotificationEvent){
+			DEBUG_THROW(SystemError, ::RtlNtStatusToDosError(STATUS_OBJECT_TYPE_MISMATCH), "CreateEventHandle"_rcs);
+		}
 	}
-	return Impl_UniqueNtHandle::UniqueNtHandle(hEvent);
+	return hEvent;
 }
 
 // 其他非静态成员函数。
@@ -112,8 +113,8 @@ void KernelEvent::Wait() const noexcept {
 	}
 }
 bool KernelEvent::IsSet() const noexcept {
-	EventBasicInformation vBasicInfo;
-	const auto lStatus = ::NtQueryEvent(x_hEvent.Get(), 0 /* EventBasicInformation */, &vBasicInfo, sizeof(vBasicInfo), nullptr);
+	EVENT_BASIC_INFORMATION vBasicInfo;
+	const auto lStatus = ::NtQueryEvent(x_hEvent.Get(), EventBasicInformation, &vBasicInfo, sizeof(vBasicInfo), nullptr);
 	if(!NT_SUCCESS(lStatus)){
 		ASSERT_MSG(false, L"NtQueryEvent() 失败。");
 	}

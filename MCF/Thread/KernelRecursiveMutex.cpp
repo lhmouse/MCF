@@ -30,14 +30,10 @@ Impl_UniqueNtHandle::UniqueNtHandle KernelRecursiveMutex::X_CreateMutexHandle(co
 	ustrObjectName.Buffer        = (PWSTR)wsvName.GetBegin();
 
 	ULONG ulAttributes;
-	if(u32Flags & kDontCreate){
-		ulAttributes = OBJ_OPENIF;
+	if(u32Flags & kFailIfExists){
+		ulAttributes = 0;
 	} else {
-		if(u32Flags & kFailIfExists){
-			ulAttributes = 0;
-		} else {
-			ulAttributes = OBJ_OPENIF;
-		}
+		ulAttributes = OBJ_OPENIF;
 	}
 
 	const auto hRootDirectory = X_OpenBaseNamedObjectDirectory(u32Flags);
@@ -45,19 +41,21 @@ Impl_UniqueNtHandle::UniqueNtHandle KernelRecursiveMutex::X_CreateMutexHandle(co
 	::OBJECT_ATTRIBUTES vObjectAttributes;
 	InitializeObjectAttributes(&vObjectAttributes, &ustrObjectName, ulAttributes, hRootDirectory.Get(), nullptr);
 
-	HANDLE hMutex;
+	HANDLE hTemp;
 	if(u32Flags & kDontCreate){
-		const auto lStatus = ::NtOpenMutant(&hMutex, MUTANT_ALL_ACCESS, &vObjectAttributes);
+		const auto lStatus = ::NtOpenMutant(&hTemp, MUTANT_ALL_ACCESS, &vObjectAttributes);
 		if(!NT_SUCCESS(lStatus)){
 			DEBUG_THROW(SystemError, ::RtlNtStatusToDosError(lStatus), "NtOpenMutant"_rcs);
 		}
 	} else {
-		const auto lStatus = ::NtCreateMutant(&hMutex, MUTANT_ALL_ACCESS, &vObjectAttributes, false);
+		const auto lStatus = ::NtCreateMutant(&hTemp, MUTANT_ALL_ACCESS, &vObjectAttributes, false);
 		if(!NT_SUCCESS(lStatus)){
 			DEBUG_THROW(SystemError, ::RtlNtStatusToDosError(lStatus), "NtCreateMutant"_rcs);
 		}
 	}
-	return Impl_UniqueNtHandle::UniqueNtHandle(hMutex);
+	Impl_UniqueNtHandle::UniqueNtHandle hMutex(hTemp);
+
+	return hMutex;
 }
 
 // 其他非静态成员函数。

@@ -152,12 +152,14 @@ Impl_UniqueNtHandle::UniqueNtHandle File::X_CreateFileHandle(const WideStringVie
 		dwCreateOptions |= FILE_DELETE_ON_CLOSE;
 	}
 
-	HANDLE hFile;
-	const auto lStatus = ::NtCreateFile(&hFile, dwDesiredAccess, &vObjectAttributes, &vIoStatus, nullptr, FILE_ATTRIBUTE_NORMAL, dwSharedAccess, dwCreateDisposition, dwCreateOptions, nullptr, 0);
+	HANDLE hTemp;
+	const auto lStatus = ::NtCreateFile(&hTemp, dwDesiredAccess, &vObjectAttributes, &vIoStatus, nullptr, FILE_ATTRIBUTE_NORMAL, dwSharedAccess, dwCreateDisposition, dwCreateOptions, nullptr, 0);
 	if(!NT_SUCCESS(lStatus)){
 		DEBUG_THROW(SystemError, ::RtlNtStatusToDosError(lStatus), "NtCreateFile"_rcs);
 	}
-	return Impl_UniqueNtHandle::UniqueNtHandle(hFile);
+	Impl_UniqueNtHandle::UniqueNtHandle hFile(hTemp);
+
+	return hFile;
 }
 
 // 其他非静态成员函数。

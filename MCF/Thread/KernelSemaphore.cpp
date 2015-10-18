@@ -34,14 +34,10 @@ Impl_UniqueNtHandle::UniqueNtHandle KernelSemaphore::X_CreateSemaphoreHandle(std
 	ustrObjectName.Buffer        = (PWSTR)wsvName.GetBegin();
 
 	ULONG ulAttributes;
-	if(u32Flags & kDontCreate){
-		ulAttributes = OBJ_OPENIF;
+	if(u32Flags & kFailIfExists){
+		ulAttributes = 0;
 	} else {
-		if(u32Flags & kFailIfExists){
-			ulAttributes = 0;
-		} else {
-			ulAttributes = OBJ_OPENIF;
-		}
+		ulAttributes = OBJ_OPENIF;
 	}
 
 	const auto hRootDirectory = X_OpenBaseNamedObjectDirectory(u32Flags);
@@ -49,19 +45,21 @@ Impl_UniqueNtHandle::UniqueNtHandle KernelSemaphore::X_CreateSemaphoreHandle(std
 	::OBJECT_ATTRIBUTES vObjectAttributes;
 	InitializeObjectAttributes(&vObjectAttributes, &ustrObjectName, ulAttributes, hRootDirectory.Get(), nullptr);
 
-	HANDLE hSemaphore;
+	HANDLE hTemp;
 	if(u32Flags & kDontCreate){
-		const auto lStatus = ::NtOpenSemaphore(&hSemaphore, SEMAPHORE_ALL_ACCESS, &vObjectAttributes);
+		const auto lStatus = ::NtOpenSemaphore(&hTemp, SEMAPHORE_ALL_ACCESS, &vObjectAttributes);
 		if(!NT_SUCCESS(lStatus)){
 			DEBUG_THROW(SystemError, ::RtlNtStatusToDosError(lStatus), "NtOpenSemaphore"_rcs);
 		}
 	} else {
-		const auto lStatus = ::NtCreateSemaphore(&hSemaphore, SEMAPHORE_ALL_ACCESS, &vObjectAttributes, static_cast<LONG>(uInitCount), LONG_MAX);
+		const auto lStatus = ::NtCreateSemaphore(&hTemp, SEMAPHORE_ALL_ACCESS, &vObjectAttributes, static_cast<LONG>(uInitCount), LONG_MAX);
 		if(!NT_SUCCESS(lStatus)){
 			DEBUG_THROW(SystemError, ::RtlNtStatusToDosError(lStatus), "NtCreateSemaphore"_rcs);
 		}
 	}
-	return Impl_UniqueNtHandle::UniqueNtHandle(hSemaphore);
+	Impl_UniqueNtHandle::UniqueNtHandle hSemaphore(hTemp);
+
+	return hSemaphore;
 }
 
 // 其他非静态成员函数。

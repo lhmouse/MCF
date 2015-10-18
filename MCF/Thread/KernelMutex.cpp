@@ -56,23 +56,23 @@ Impl_UniqueNtHandle::UniqueNtHandle KernelMutex::X_CreateEventHandle(const WideS
 	InitializeObjectAttributes(&vObjectAttributes, &ustrObjectName, ulAttributes, hRootDirectory.Get(), nullptr);
 
 	HANDLE hTemp;
-	bool bNewObjectCreated;
+	bool bNameExists;
 	if(u32Flags & kDontCreate){
 		const auto lStatus = ::NtOpenEvent(&hTemp, EVENT_ALL_ACCESS, &vObjectAttributes);
 		if(!NT_SUCCESS(lStatus)){
 			DEBUG_THROW(SystemError, ::RtlNtStatusToDosError(lStatus), "NtOpenEvent"_rcs);
 		}
-		bNewObjectCreated = false;
+		bNameExists = true;
 	} else {
 		const auto lStatus = ::NtCreateEvent(&hTemp, EVENT_ALL_ACCESS, &vObjectAttributes, SynchronizationEvent, true);
 		if(!NT_SUCCESS(lStatus)){
 			DEBUG_THROW(SystemError, ::RtlNtStatusToDosError(lStatus), "NtCreateEvent"_rcs);
 		}
-		bNewObjectCreated = lStatus != STATUS_OBJECT_NAME_EXISTS;
+		bNameExists = lStatus == STATUS_OBJECT_NAME_EXISTS;
 	}
 	Impl_UniqueNtHandle::UniqueNtHandle hEvent(hTemp);
 
-	if(!bNewObjectCreated){
+	if(bNameExists){
 		EVENT_BASIC_INFORMATION vBasicInfo;
 		const auto lStatus = ::NtQueryEvent(hEvent.Get(), EventBasicInformation, &vBasicInfo, sizeof(vBasicInfo), nullptr);
 		if(!NT_SUCCESS(lStatus)){

@@ -5,24 +5,33 @@
 #ifndef MCF_THREAD_KERNEL_RECURSIVE_MUTEX_HPP_
 #define MCF_THREAD_KERNEL_RECURSIVE_MUTEX_HPP_
 
-#include "../Utilities/Noncopyable.hpp"
 #include "../Core/StringView.hpp"
-#include "../Core/_UniqueNtHandle.hpp"
+#include "_KernelObjectBase.hpp"
 #include "_UniqueLockTemplate.hpp"
 #include <cstdint>
 
 namespace MCF {
 
-class KernelRecursiveMutex : NONCOPYABLE {
+class KernelRecursiveMutex : public Impl_KernelObjectBase::KernelObjectBase {
 public:
 	using UniqueLock = Impl_UniqueLockTemplate::UniqueLockTemplate<KernelRecursiveMutex>;
 
 private:
+	static Impl_UniqueNtHandle::UniqueNtHandle X_CreateMutexHandle(const WideStringView &wsvName, std::uint32_t u32Flags);
+
+private:
 	Impl_UniqueNtHandle::UniqueNtHandle x_hMutex;
 
+
 public:
-	KernelRecursiveMutex();
-	KernelRecursiveMutex(const WideStringView &wsvName, bool bFailIfExists);
+	KernelRecursiveMutex()
+		: x_hMutex(X_CreateMutexHandle(nullptr, kSessionLocal))
+	{
+	}
+	KernelRecursiveMutex(const WideStringView &wsvName, std::uint32_t u32Flags)
+		: x_hMutex(X_CreateMutexHandle(wsvName, u32Flags))
+	{
+	}
 
 public:
 	bool Try(std::uint64_t u64UntilFastMonoClock = 0) noexcept;

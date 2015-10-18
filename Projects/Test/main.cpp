@@ -6,12 +6,11 @@
 
 using namespace MCF;
 
-KernelMutex m1;
-KernelMutex m2;
+KernelMutex m1(L"aaa"_wsv, 0);
+KernelMutex m2(L"aaa"_wsv, 0);
 volatile int c = 0;
 
 extern "C" unsigned MCFMain(){
-
 	Array<IntrusivePtr<Thread>, 10> threads;
 	for(auto &p : threads){
 		p = Thread::Create([]{

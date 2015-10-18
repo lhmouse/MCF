@@ -5,21 +5,29 @@
 #ifndef MCF_THREAD_KERNEL_SEMAPHORE_HPP_
 #define MCF_THREAD_KERNEL_SEMAPHORE_HPP_
 
-#include "../Utilities/Noncopyable.hpp"
 #include "../Core/StringView.hpp"
-#include "../Core/_UniqueNtHandle.hpp"
+#include "_KernelObjectBase.hpp"
 #include <cstddef>
 #include <cstdint>
 
 namespace MCF {
 
-class KernelSemaphore : NONCOPYABLE {
+class KernelSemaphore : public Impl_KernelObjectBase::KernelObjectBase {
+private:
+	static Impl_UniqueNtHandle::UniqueNtHandle X_CreateSemaphoreHandle(std::size_t uInitCount, const WideStringView &wsvName, std::uint32_t u32Flags);
+
 private:
 	Impl_UniqueNtHandle::UniqueNtHandle x_hSemaphore;
 
 public:
-	explicit KernelSemaphore(std::size_t uInitCount);
-	KernelSemaphore(std::size_t uInitCount, const WideStringView &wsvName, bool bFailIfExists);
+	explicit KernelSemaphore(std::size_t uInitCount)
+		: x_hSemaphore(X_CreateSemaphoreHandle(uInitCount, nullptr, kSessionLocal))
+	{
+	}
+	KernelSemaphore(std::size_t uInitCount, const WideStringView &wsvName, std::uint32_t u32Flags)
+		: x_hSemaphore(X_CreateSemaphoreHandle(uInitCount, wsvName, u32Flags))
+	{
+	}
 
 public:
 	bool Wait(std::uint64_t u64UntilFastMonoClock) noexcept;

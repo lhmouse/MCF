@@ -10,6 +10,8 @@
 #include <ntdef.h>
 
 extern "C" __attribute__((__dllimport__, __stdcall__))
+NTSTATUS NtOpenEvent(HANDLE *pHandle, ACCESS_MASK dwDesiredAccess, const OBJECT_ATTRIBUTES *pObjectAttributes) noexcept;
+extern "C" __attribute__((__dllimport__, __stdcall__))
 NTSTATUS NtCreateEvent(HANDLE *pHandle, ACCESS_MASK dwDesiredAccess, const OBJECT_ATTRIBUTES *pObjectAttributes, EVENT_TYPE eEventType, BOOLEAN bInitialState) noexcept;
 
 struct EventBasicInformation {
@@ -26,36 +28,56 @@ NTSTATUS NtResetEvent(HANDLE hEvent, LONG *plPrevState) noexcept;
 
 namespace MCF {
 
-namespace {
-	Impl_UniqueNtHandle::UniqueNtHandle CreateEventHandle(bool bInitSet, const WideStringView &wsvName, bool bFailIfExists){
-		const auto uSize = wsvName.GetSize() * sizeof(wchar_t);
-		if(uSize > UINT16_MAX){
-			DEBUG_THROW(SystemError, ERROR_INVALID_PARAMETER, "The name for a kernel event is too long"_rcs);
-		}
-		::UNICODE_STRING ustrObjectName;
-		ustrObjectName.Length        = uSize;
-		ustrObjectName.MaximumLength = uSize;
-		ustrObjectName.Buffer        = (PWSTR)wsvName.GetBegin();
-		::OBJECT_ATTRIBUTES vObjectAttributes;
-		InitializeObjectAttributes(&vObjectAttributes, &ustrObjectName, bFailIfExists ? 0 : OBJ_OPENIF, nullptr, nullptr);
+Impl_UniqueNtHandle::UniqueNtHandle KernelEvent::X_CreateEventHandle(bool bInitSet, const WideStringView &wsvName, std::uint32_t u32Flags){
+	const auto uSize = wsvName.GetSize() * sizeof(wchar_t);
+	if(uSize > UINT16_MAX){
+		DEBUG_THROW(SystemError, ERROR_INVALID_PARAMETER, "The name for a kernel event is too long"_rcs);
+	}
+	::UNICODE_STRING ustrObjectName;
+	ustrObjectName.Length        = uSize;
+	ustrObjectName.MaximumLength = uSize;
+	ustrObjectName.Buffer        = (PWSTR)wsvName.GetBegin();
 
-		HANDLE hEvent;
+	ULONG ulAttributes;
+	if(u32Flags & kDontCreate){
+		ulAttributes = OBJ_OPENIF;
+	} else {
+		if(u32Flags & kFailIfExists){
+			ulAttributes = 0;
+		} else {
+			ulAttributes = OBJ_OPENIF;
+		}
+	}
+
+	const auto hRootDirectory = X_OpenBaseNamedObjectDirectory(u32Flags);
+
+	::OBJECT_ATTRIBUTES vObjectAttributes;
+	InitializeObjectAttributes(&vObjectAttributes, &ustrObjectName, ulAttributes, hRootDirectory.Get(), nullptr);
+
+	HANDLE hEvent;
+	if(u32Flags & kDontCreate){
+		const auto lStatus = ::NtOpenEvent(&hEvent, EVENT_ALL_ACCESS, &vObjectAttributes);
+		if(!NT_SUCCESS(lStatus)){
+			DEBUG_THROW(SystemError, ::RtlNtStatusToDosError(lStatus), "NtOpenEvent"_rcs);
+		}
+	} else {
 		const auto lStatus = ::NtCreateEvent(&hEvent, EVENT_ALL_ACCESS, &vObjectAttributes, NotificationEvent, bInitSet);
 		if(!NT_SUCCESS(lStatus)){
 			DEBUG_THROW(SystemError, ::RtlNtStatusToDosError(lStatus), "NtCreateEvent"_rcs);
 		}
-		return Impl_UniqueNtHandle::UniqueNtHandle(hEvent);
 	}
-}
-
-// 构造函数和析构函数。
-KernelEvent::KernelEvent(bool bInitSet)
-	: x_hEvent(CreateEventHandle(bInitSet, nullptr, false))
-{
-}
-KernelEvent::KernelEvent(bool bInitSet, const WideStringView &wsvName, bool bFailIfExists)
-	: x_hEvent(CreateEventHandle(bInitSet, wsvName, bFailIfExists))
-{
+	if(!(u32Flags & kFailIfExists)){
+		EventBasicInformation vBasicInfo;
+		const auto lStatus = ::NtQueryEvent(hEvent, 0 /* EventBasicInformation */, &vBasicInfo, sizeof(vBasicInfo), nullptr);
+		if(!NT_SUCCESS(lStatus)){
+			ASSERT_MSG(false, L"NtQueryEvent() 失败。");
+		}
+		if(vBasicInfo.eEventType != NotificationEvent){
+			Impl_UniqueNtHandle::NtHandleCloser()(hEvent);
+			DEBUG_THROW(SystemError, ERROR_ALREADY_EXISTS, "CreateEventHandle"_rcs);
+		}
+	}
+	return Impl_UniqueNtHandle::UniqueNtHandle(hEvent);
 }
 
 // 其他非静态成员函数。

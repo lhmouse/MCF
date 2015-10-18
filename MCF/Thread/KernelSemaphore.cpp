@@ -10,6 +10,8 @@
 #include <ntdef.h>
 
 extern "C" __attribute__((__dllimport__, __stdcall__))
+NTSTATUS NtOpenSemaphore(HANDLE *pHandle, ACCESS_MASK dwDesiredAccess, const OBJECT_ATTRIBUTES *pObjectAttributes) noexcept;
+extern "C" __attribute__((__dllimport__, __stdcall__))
 NTSTATUS NtCreateSemaphore(HANDLE *pHandle, ACCESS_MASK dwDesiredAccess, const OBJECT_ATTRIBUTES *pObjectAttributes, LONG lInitialCount, LONG lMaximumCount) noexcept;
 
 extern "C" __attribute__((__dllimport__, __stdcall__))
@@ -17,41 +19,49 @@ NTSTATUS NtReleaseSemaphore(HANDLE hSemaphore, LONG lReleaseCount, LONG *plPrevC
 
 namespace MCF {
 
-namespace {
-	Impl_UniqueNtHandle::UniqueNtHandle CreateSemaphoreHandle(std::size_t uInitCount, const WideStringView &wsvName, bool bFailIfExists){
-		if(uInitCount >= static_cast<std::size_t>(LONG_MAX)){
-			DEBUG_THROW(Exception, ERROR_INVALID_PARAMETER, "Initial count for a kernel semaphore is too large"_rcs);
-		}
+Impl_UniqueNtHandle::UniqueNtHandle KernelSemaphore::X_CreateSemaphoreHandle(std::size_t uInitCount, const WideStringView &wsvName, std::uint32_t u32Flags){
+	if(uInitCount >= static_cast<std::size_t>(LONG_MAX)){
+		DEBUG_THROW(Exception, ERROR_INVALID_PARAMETER, "Initial count for a kernel semaphore is too large"_rcs);
+	}
 
-		const auto uSize = wsvName.GetSize() * sizeof(wchar_t);
-		if(uSize > UINT16_MAX){
-			DEBUG_THROW(SystemError, ERROR_INVALID_PARAMETER, "The name for a kernel semaphore is too long"_rcs);
-		}
-		::UNICODE_STRING ustrObjectName;
-		ustrObjectName.Length        = uSize;
-		ustrObjectName.MaximumLength = uSize;
-		ustrObjectName.Buffer        = (PWSTR)wsvName.GetBegin();
-		::OBJECT_ATTRIBUTES vObjectAttributes;
-		InitializeObjectAttributes(&vObjectAttributes, &ustrObjectName, bFailIfExists ? 0 : OBJ_OPENIF, nullptr, nullptr);
+	const auto uSize = wsvName.GetSize() * sizeof(wchar_t);
+	if(uSize > UINT16_MAX){
+		DEBUG_THROW(SystemError, ERROR_INVALID_PARAMETER, "The name for a kernel semaphore is too long"_rcs);
+	}
+	::UNICODE_STRING ustrObjectName;
+	ustrObjectName.Length        = uSize;
+	ustrObjectName.MaximumLength = uSize;
+	ustrObjectName.Buffer        = (PWSTR)wsvName.GetBegin();
 
-		HANDLE hSemaphore;
+	ULONG ulAttributes;
+	if(u32Flags & kDontCreate){
+		ulAttributes = OBJ_OPENIF;
+	} else {
+		if(u32Flags & kFailIfExists){
+			ulAttributes = 0;
+		} else {
+			ulAttributes = OBJ_OPENIF;
+		}
+	}
+
+	const auto hRootDirectory = X_OpenBaseNamedObjectDirectory(u32Flags);
+
+	::OBJECT_ATTRIBUTES vObjectAttributes;
+	InitializeObjectAttributes(&vObjectAttributes, &ustrObjectName, ulAttributes, hRootDirectory.Get(), nullptr);
+
+	HANDLE hSemaphore;
+	if(u32Flags & kDontCreate){
+		const auto lStatus = ::NtOpenSemaphore(&hSemaphore, SEMAPHORE_ALL_ACCESS, &vObjectAttributes);
+		if(!NT_SUCCESS(lStatus)){
+			DEBUG_THROW(SystemError, ::RtlNtStatusToDosError(lStatus), "NtOpenSemaphore"_rcs);
+		}
+	} else {
 		const auto lStatus = ::NtCreateSemaphore(&hSemaphore, SEMAPHORE_ALL_ACCESS, &vObjectAttributes, static_cast<LONG>(uInitCount), LONG_MAX);
 		if(!NT_SUCCESS(lStatus)){
 			DEBUG_THROW(SystemError, ::RtlNtStatusToDosError(lStatus), "NtCreateSemaphore"_rcs);
 		}
-		return Impl_UniqueNtHandle::UniqueNtHandle(hSemaphore);
 	}
-}
-
-
-// 构造函数和析构函数。
-KernelSemaphore::KernelSemaphore(std::size_t uInitCount)
-	: x_hSemaphore(CreateSemaphoreHandle(uInitCount, nullptr, false))
-{
-}
-KernelSemaphore::KernelSemaphore(std::size_t uInitCount, const WideStringView &wsvName, bool bFailIfExists)
-	: x_hSemaphore(CreateSemaphoreHandle(uInitCount, wsvName, bFailIfExists))
-{
+	return Impl_UniqueNtHandle::UniqueNtHandle(hSemaphore);
 }
 
 // 其他非静态成员函数。

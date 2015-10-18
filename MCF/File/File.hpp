@@ -41,12 +41,20 @@ public:
 	};
 
 private:
+	static Impl_UniqueNtHandle::UniqueNtHandle X_CreateFileHandle(const WideStringView &wsvPath, std::uint32_t u32Flags);
+
+private:
 	Impl_UniqueNtHandle::UniqueNtHandle x_hFile;
 
 public:
-	constexpr File() noexcept = default;
-
-	File(const WideStringView &wsvPath, std::uint32_t u32Flags);
+	constexpr File() noexcept
+		: x_hFile()
+	{
+	}
+	File(const WideStringView &wsvPath, std::uint32_t u32Flags)
+		: x_hFile(X_CreateFileHandle(wsvPath, u32Flags))
+	{
+	}
 
 public:
 	bool IsOpen() const noexcept;

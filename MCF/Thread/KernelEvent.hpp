@@ -5,21 +5,29 @@
 #ifndef MCF_THREAD_KERNEL_EVENT_HPP_
 #define MCF_THREAD_KERNEL_EVENT_HPP_
 
-#include "../Utilities/Noncopyable.hpp"
 #include "../Core/StringView.hpp"
-#include "../Core/_UniqueNtHandle.hpp"
+#include "_KernelObjectBase.hpp"
 #include <cstddef>
 #include <cstdint>
 
 namespace MCF {
 
-class KernelEvent : NONCOPYABLE {
+class KernelEvent : public Impl_KernelObjectBase::KernelObjectBase {
+private:
+	static Impl_UniqueNtHandle::UniqueNtHandle X_CreateEventHandle(bool bInitSet, const WideStringView &wsvName, std::uint32_t u32Flags);
+
 private:
 	Impl_UniqueNtHandle::UniqueNtHandle x_hEvent;
 
 public:
-	explicit KernelEvent(bool bInitSet);
-	KernelEvent(bool bInitSet, const WideStringView &wsvName, bool bFailIfExists);
+	explicit KernelEvent(bool bInitSet)
+		: x_hEvent(X_CreateEventHandle(bInitSet, nullptr, kSessionLocal))
+	{
+	}
+	KernelEvent(bool bInitSet, const WideStringView &wsvName, std::uint32_t u32Flags)
+		: x_hEvent(X_CreateEventHandle(bInitSet, wsvName, u32Flags))
+	{
+	}
 
 public:
 	bool Wait(std::uint64_t u64UntilFastMonoClock) const noexcept;

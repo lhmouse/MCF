@@ -15,17 +15,18 @@ namespace MCF {
 
 namespace Impl_KernelObjectBase {
 	Impl_UniqueNtHandle::UniqueNtHandle KernelObjectBase::X_OpenBaseNamedObjectDirectory(std::uint32_t u32Flags){
-		static constexpr wchar_t kBaseNameObjects[] = L"\\BaseNamedObjects";
-
 		wchar_t awcBuffer[64];
 
 		::UNICODE_STRING ustrName;
 		if(u32Flags & kGlobal){
+			static constexpr wchar_t kBaseNameObjects[] = L"\\BaseNamedObjects";
+
 			ustrName.Length        = sizeof(kBaseNameObjects) - sizeof(wchar_t);
 			ustrName.MaximumLength = sizeof(kBaseNameObjects);
 			ustrName.Buffer        = (PWSTR)kBaseNameObjects;
 		} else {
 			const auto uLen = (unsigned)swprintf(awcBuffer, sizeof(awcBuffer) / sizeof(wchar_t), L"\\Sessions\\%lu\\BaseNamedObjects", (unsigned long)::WTSGetActiveConsoleSessionId());
+
 			ustrName.Length        = uLen * sizeof(wchar_t);
 			ustrName.MaximumLength = uLen * sizeof(wchar_t) + sizeof(wchar_t);
 			ustrName.Buffer        = awcBuffer;

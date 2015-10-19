@@ -83,10 +83,7 @@ Impl_UniqueNtHandle::UniqueNtHandle File::X_CreateFileHandle(const WideStringVie
 	ustrRawPath.MaximumLength       = uSize;
 	ustrRawPath.Buffer              = (PWSTR)wsvPath.GetBegin();
 
-	static constexpr wchar_t kDosPathPrefix[] = LR"(\??\)";
-	static constexpr auto kDosPathPrefixSize = sizeof(kDosPathPrefix) - sizeof(wchar_t);
-
-	wchar_t awcStaticStr[MAX_PATH + kDosPathPrefixSize];
+	wchar_t awcStaticStr[MAX_PATH];
 	::UNICODE_STRING ustrStaticBuffer;
 	ustrStaticBuffer.Length         = 0;
 	ustrStaticBuffer.MaximumLength  = sizeof(awcStaticStr);

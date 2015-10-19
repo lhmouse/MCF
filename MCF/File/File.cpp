@@ -45,13 +45,13 @@ NTSTATUS NtFlushBuffersFile(HANDLE hFile, IO_STATUS_BLOCK *pIoStatus) noexcept;
 namespace MCF {
 
 namespace {
-	Impl_UniqueNtHandle::UniqueNtHandle OpenDosDeviceDirectory(){
-		static constexpr wchar_t kDosDevices[] = L"\\DosDevices";
+	constexpr wchar_t kDosDevicePath[] = L"\\??";
 
+	Impl_UniqueNtHandle::UniqueNtHandle OpenDosDeviceDirectory(){
 		::UNICODE_STRING ustrName;
-		ustrName.Length        = sizeof(kDosDevices) - sizeof(wchar_t);
-		ustrName.MaximumLength = sizeof(kDosDevices);
-		ustrName.Buffer        = (PWSTR)kDosDevices;
+		ustrName.Length        = sizeof(kDosDevicePath) - sizeof(wchar_t);
+		ustrName.MaximumLength = sizeof(kDosDevicePath);
+		ustrName.Buffer        = (PWSTR)kDosDevicePath;
 
 		::OBJECT_ATTRIBUTES vObjectAttributes;
 		InitializeObjectAttributes(&vObjectAttributes, &ustrName, 0, nullptr, nullptr);
@@ -96,22 +96,25 @@ Impl_UniqueNtHandle::UniqueNtHandle File::X_CreateFileHandle(const WideStringVie
 	DEFER([&]{ ::RtlFreeUnicodeString(&ustrDynamicBuffer); });
 
 	::UNICODE_STRING *pustrFullPath;
-	::RTL_PATH_TYPE ePathType;
-	const auto lPathStatus = ::RtlGetFullPathName_UstrEx(&ustrRawPath, &ustrStaticBuffer, &ustrDynamicBuffer, &pustrFullPath, nullptr, nullptr, &ePathType, nullptr);
-	if(!NT_SUCCESS(lPathStatus)){
-		DEBUG_THROW(SystemError, ::RtlNtStatusToDosError(lPathStatus), "RtlGetFullPathName_UstrEx"_rcs);
-	}
-
 	Impl_UniqueNtHandle::UniqueNtHandle hRootDirectory;
-	if((RtlPathTypeDriveAbsolute <= ePathType) && (ePathType <= RtlPathTypeRelative)){
-		hRootDirectory = OpenDosDeviceDirectory();
+	if((ustrRawPath.Length >= sizeof(kDosDevicePath)) && (std::memcmp(ustrRawPath.Buffer, kDosDevicePath, sizeof(kDosDevicePath) - sizeof(wchar_t)) == 0)){
+		pustrFullPath = &ustrRawPath;
+	} else {
+		::RTL_PATH_TYPE ePathType;
+		const auto lPathStatus = ::RtlGetFullPathName_UstrEx(&ustrRawPath, &ustrStaticBuffer, &ustrDynamicBuffer, &pustrFullPath, nullptr, nullptr, &ePathType, nullptr);
+		if(!NT_SUCCESS(lPathStatus)){
+			DEBUG_THROW(SystemError, ::RtlNtStatusToDosError(lPathStatus), "RtlGetFullPathName_UstrEx"_rcs);
+		}
+		if((RtlPathTypeDriveAbsolute <= ePathType) && (ePathType <= RtlPathTypeRelative)){
+			hRootDirectory = OpenDosDeviceDirectory();
+		}
 	}
 
 	::ACCESS_MASK dwDesiredAccess = 0;
-	if(u32Flags & File::kToRead){
+	if(u32Flags & kToRead){
 		dwDesiredAccess |= FILE_GENERIC_READ;
 	}
-	if(u32Flags & File::kToWrite){
+	if(u32Flags & kToWrite){
 		dwDesiredAccess |= FILE_GENERIC_WRITE;
 	}
 
@@ -121,17 +124,26 @@ Impl_UniqueNtHandle::UniqueNtHandle File::X_CreateFileHandle(const WideStringVie
 	::IO_STATUS_BLOCK vIoStatus;
 
 	DWORD dwSharedAccess;
-	if(u32Flags & File::kToWrite){
+	if(u32Flags & kToWrite){
 		dwSharedAccess = 0;
 	} else {
 		dwSharedAccess = FILE_SHARE_READ;
 	}
+	if(u32Flags & kSharedRead){
+		dwSharedAccess |= FILE_SHARE_READ;
+	}
+	if(u32Flags & kSharedWrite){
+		dwSharedAccess |= FILE_SHARE_WRITE;
+	}
+	if(u32Flags & kSharedDelete){
+		dwSharedAccess |= FILE_SHARE_DELETE;
+	}
 
 	DWORD dwCreateDisposition;
-	if(u32Flags & File::kToWrite){
-		if(u32Flags & File::kDontCreate){
+	if(u32Flags & kToWrite){
+		if(u32Flags & kDontCreate){
 			dwCreateDisposition = FILE_OPEN;
-		} else if(u32Flags & File::kFailIfExists){
+		} else if(u32Flags & kFailIfExists){
 			dwCreateDisposition = FILE_CREATE;
 		} else {
 			dwCreateDisposition = FILE_OPEN_IF;
@@ -141,13 +153,13 @@ Impl_UniqueNtHandle::UniqueNtHandle File::X_CreateFileHandle(const WideStringVie
 	}
 
 	DWORD dwCreateOptions = FILE_NON_DIRECTORY_FILE | FILE_RANDOM_ACCESS;
-	if(u32Flags & File::kNoBuffering){
+	if(u32Flags & kNoBuffering){
 		dwCreateOptions |= FILE_NO_INTERMEDIATE_BUFFERING;
 	}
-	if(u32Flags & File::kWriteThrough){
+	if(u32Flags & kWriteThrough){
 		dwCreateOptions |= FILE_WRITE_THROUGH;
 	}
-	if(u32Flags & File::kDeleteOnClose){
+	if(u32Flags & kDeleteOnClose){
 		dwDesiredAccess |= DELETE;
 		dwCreateOptions |= FILE_DELETE_ON_CLOSE;
 	}

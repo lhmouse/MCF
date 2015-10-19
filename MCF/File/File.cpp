@@ -45,27 +45,6 @@ NTSTATUS NtFlushBuffersFile(HANDLE hFile, IO_STATUS_BLOCK *pIoStatus) noexcept;
 namespace MCF {
 
 namespace {
-	constexpr wchar_t kDosDevicePath[] = L"\\??";
-
-	Impl_UniqueNtHandle::UniqueNtHandle OpenDosDeviceDirectory(){
-		::UNICODE_STRING ustrName;
-		ustrName.Length        = sizeof(kDosDevicePath) - sizeof(wchar_t);
-		ustrName.MaximumLength = sizeof(kDosDevicePath);
-		ustrName.Buffer        = (PWSTR)kDosDevicePath;
-
-		::OBJECT_ATTRIBUTES vObjectAttributes;
-		InitializeObjectAttributes(&vObjectAttributes, &ustrName, 0, nullptr, nullptr);
-
-		HANDLE hDirectory;
-		const auto lStatus = ::NtOpenDirectoryObject(&hDirectory, 0x0F, &vObjectAttributes);
-		if(!NT_SUCCESS(lStatus)){
-			DEBUG_THROW(SystemError, ::RtlNtStatusToDosError(lStatus), "NtOpenDirectoryObject"_rcs);
-		}
-		return Impl_UniqueNtHandle::UniqueNtHandle(hDirectory);
-	}
-}
-
-namespace {
 	__attribute__((__stdcall__, __force_align_arg_pointer__, __aligned__(16)))
 	void IoApcCallback(void *pContext, ::IO_STATUS_BLOCK * /* pIoStatus */, ULONG /* ulReserved */) noexcept {
 		const auto pbIoPending = static_cast<bool *>(pContext);
@@ -74,6 +53,8 @@ namespace {
 }
 
 Impl_UniqueNtHandle::UniqueNtHandle File::X_CreateFileHandle(const WideStringView &wsvPath, std::uint32_t u32Flags){
+	constexpr wchar_t kDosDevicePath[] = L"\\??";
+
 	const auto uSize = wsvPath.GetSize() * sizeof(wchar_t);
 	if(uSize > UINT16_MAX){
 		DEBUG_THROW(SystemError, ERROR_INVALID_PARAMETER, "The path for a file is too long"_rcs);
@@ -106,7 +87,20 @@ Impl_UniqueNtHandle::UniqueNtHandle File::X_CreateFileHandle(const WideStringVie
 			DEBUG_THROW(SystemError, ::RtlNtStatusToDosError(lPathStatus), "RtlGetFullPathName_UstrEx"_rcs);
 		}
 		if((RtlPathTypeDriveAbsolute <= ePathType) && (ePathType <= RtlPathTypeRelative)){
-			hRootDirectory = OpenDosDeviceDirectory();
+			::UNICODE_STRING ustrName;
+			ustrName.Length        = sizeof(kDosDevicePath) - sizeof(wchar_t);
+			ustrName.MaximumLength = sizeof(kDosDevicePath);
+			ustrName.Buffer        = (PWSTR)kDosDevicePath;
+
+			::OBJECT_ATTRIBUTES vObjectAttributes;
+			InitializeObjectAttributes(&vObjectAttributes, &ustrName, 0, nullptr, nullptr);
+
+			HANDLE hTemp;
+			const auto lStatus = ::NtOpenDirectoryObject(&hTemp, 0x0F, &vObjectAttributes);
+			if(!NT_SUCCESS(lStatus)){
+				DEBUG_THROW(SystemError, ::RtlNtStatusToDosError(lStatus), "NtOpenDirectoryObject"_rcs);
+			}
+			hRootDirectory.Reset(hTemp);
 		}
 	}
 

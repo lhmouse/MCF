@@ -8,11 +8,11 @@ using namespace MCF;
 
 extern "C" unsigned MCFMain()
 try {
-//	File f(L"\\??\\PhysicalDrive0"_wsv, File::kToRead);
-	File f(L"main.cpp"_wsv, File::kToRead);
+	File f(L"\\??\\PhysicalDrive0"_wsv, File::kToRead);
+//	File f(L"main.cpp"_wsv, File::kToRead);
 	char temp[4096];
 	auto len = f.Read(temp, sizeof(temp), 0);
-	for(unsigned i = 0; i < len; ++i){
+	for(unsigned i = 0; i < std::min(64u, len); ++i){
 		std::printf("%02hhX ", temp[i]);
 		if(((i + 1) % 16) == 0){
 			std::putchar('\n');

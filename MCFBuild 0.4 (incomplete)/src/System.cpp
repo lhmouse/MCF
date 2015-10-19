@@ -144,7 +144,7 @@ unsigned System::Shell(MCF::WideString &wcsStdOut, MCF::WideString &wcsStdErr, M
 	}
 
 	const auto ZapCrlfs = [](ConsoleNarrowString &cnsInout){
-		const auto uCrlfPos = cnsInout.Find(ConsoleNarrowString::ObserverType("\r\n", 2));
+		const auto uCrlfPos = cnsInout.Find(ConsoleNarrowString::ViewType("\r\n", 2));
 		if(uCrlfPos != ConsoleNarrowString::NPOS){
 			auto pchWrite = cnsInout.GetBegin() + uCrlfPos + 1;
 			pchWrite[-1] = '\n';

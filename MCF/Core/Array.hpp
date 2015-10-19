@@ -5,7 +5,7 @@
 #ifndef MCF_CORE_ARRAY_HPP_
 #define MCF_CORE_ARRAY_HPP_
 
-#include "ArrayObserver.hpp"
+#include "ArrayView.hpp"
 #include "../Containers/_EnumeratorTemplate.hpp"
 #include "../Utilities/Assert.hpp"
 #include "Exception.hpp"
@@ -21,8 +21,8 @@ class Array {
 	static_assert(kSize > 0, "An array shall have a non-zero size.");
 
 public:
-	using ConstObserver = ArrayObserver<const ElementT>;
-	using Observer      = ArrayObserver<      ElementT>;
+	using ConstView = ArrayView<const ElementT>;
+	using View      = ArrayView<      ElementT>;
 
 public:
 	ElementT m_aStorage[kSize];
@@ -195,11 +195,11 @@ public:
 	}
 
 public:
-	ConstObserver GetObserver() const noexcept {
-		return ConstObserver(GetData(), GetSize());
+	ConstView GetView() const noexcept {
+		return ConstView(GetData(), GetSize());
 	}
-	Observer GetObserver() noexcept {
-		return Observer(GetData(), GetSize());
+	View GetView() noexcept {
+		return View(GetData(), GetSize());
 	}
 
 public:
@@ -223,11 +223,11 @@ public:
 		return reinterpret_cast<Array<volatile ElementT, kSize> &&>(const_cast<Array &>(*this));
 	}
 
-	operator ConstObserver() const noexcept {
-		return GetObserver();
+	operator ConstView() const noexcept {
+		return GetView();
 	}
-	operator Observer() noexcept {
-		return GetObserver();
+	operator View() noexcept {
+		return GetView();
 	}
 
 	explicit operator const ElementT *() const noexcept {

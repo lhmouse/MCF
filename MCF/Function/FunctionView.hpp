@@ -2,8 +2,8 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2013 - 2015, LH_Mouse. All wrongs reserved.
 
-#ifndef MCF_FUNCTION_FUNCTION_OBSERVER_HPP_
-#define MCF_FUNCTION_FUNCTION_OBSERVER_HPP_
+#ifndef MCF_FUNCTION_FUNCTION_VIEW_HPP_
+#define MCF_FUNCTION_FUNCTION_VIEW_HPP_
 
 #include "../Utilities/Assert.hpp"
 #include "../Utilities/Invoke.hpp"
@@ -14,18 +14,18 @@
 namespace MCF {
 
 template<typename FuncT>
-class FunctionObserver {
-	static_assert(((void)sizeof(FuncT), false), "Class template FunctionObserver instantiated with non-function template type parameter.");
+class FunctionView {
+	static_assert(((void)sizeof(FuncT), false), "Class template FunctionView instantiated with non-function template type parameter.");
 };
 
 template<typename RetT, typename ...ParamsT>
-class FunctionObserver<RetT (ParamsT...)> {
+class FunctionView<RetT (ParamsT...)> {
 private:
 	RetT (*x_pfnLambda)(const void *, ParamsT &&...);
 	const void *x_pContext;
 
 public:
-	constexpr FunctionObserver(std::nullptr_t = nullptr) noexcept
+	constexpr FunctionView(std::nullptr_t = nullptr) noexcept
 		: x_pfnLambda(nullptr)
 	{
 	}
@@ -33,24 +33,24 @@ public:
 		std::enable_if_t<
 			std::is_convertible<std::result_of_t<const FuncT & (ForwardedParam<ParamsT>...)>, RetT>::value,
 			int> = 0>
-	FunctionObserver(const FuncT &vFunc) noexcept
+	FunctionView(const FuncT &vFunc) noexcept
 		: x_pfnLambda([](const void *pContext, ParamsT &&...vParams){ return Invoke(*static_cast<const FuncT *>(pContext), std::forward<ParamsT>(vParams)...);  })
 		, x_pContext(std::addressof(vFunc))
 	{
 	}
 
 public:
-	FunctionObserver &Reset(std::nullptr_t = nullptr) noexcept {
-		FunctionObserver().Swap(*this);
+	FunctionView &Reset(std::nullptr_t = nullptr) noexcept {
+		FunctionView().Swap(*this);
 		return *this;
 	}
 	template<typename FuncT>
-	FunctionObserver &Reset(const FuncT &vFunc){
-		FunctionObserver(vFunc).Swap(*this);
+	FunctionView &Reset(const FuncT &vFunc){
+		FunctionView(vFunc).Swap(*this);
 		return *this;
 	}
 
-	void Swap(FunctionObserver &rhs) noexcept {
+	void Swap(FunctionView &rhs) noexcept {
 		using std::swap;
 		swap(x_pfnLambda, rhs.x_pfnLambda);
 		swap(x_pContext, rhs.x_pContext);

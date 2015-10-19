@@ -19,12 +19,12 @@ class MonitorTemplate;
 
 namespace Impl_Monitor {
 	template<class ObjectT>
-	class MonitorObserverAsReference {
+	class MonitorViewAsReference {
 	private:
 		ObjectT &x_vObject;
 
 	public:
-		explicit MonitorObserverAsReference(ObjectT &vObject) noexcept
+		explicit MonitorViewAsReference(ObjectT &vObject) noexcept
 			: x_vObject(vObject)
 		{
 		}
@@ -42,12 +42,12 @@ namespace Impl_Monitor {
 		}
 	};
 	template<class ObjectT>
-	class MonitorObserverAsPointer {
+	class MonitorViewAsPointer {
 	private:
 		ObjectT &x_vObject;
 
 	public:
-		explicit MonitorObserverAsPointer(ObjectT &vObject) noexcept
+		explicit MonitorViewAsPointer(ObjectT &vObject) noexcept
 			: x_vObject(vObject)
 		{
 		}
@@ -61,8 +61,8 @@ namespace Impl_Monitor {
 		}
 	};
 
-	template<class ObjectT, class MutexT, class ObserverT>
-	class MonitorLock : private MutexT::UniqueLock, public ObserverT {
+	template<class ObjectT, class MutexT, class ViewT>
+	class MonitorLock : private MutexT::UniqueLock, public ViewT {
 		friend MonitorTemplate<const volatile ObjectT, MutexT>;
 		friend MonitorTemplate<const ObjectT, MutexT>;
 		friend MonitorTemplate<volatile ObjectT, MutexT>;
@@ -70,7 +70,7 @@ namespace Impl_Monitor {
 
 	private:
 		MonitorLock(typename MutexT::UniqueLock &&vLock, ObjectT &vObject) noexcept
-			: MutexT::UniqueLock(std::move(vLock)), ObserverT(vObject)
+			: MutexT::UniqueLock(std::move(vLock)), ViewT(vObject)
 		{
 		}
 
@@ -95,18 +95,18 @@ namespace Impl_Monitor {
 		}
 
 	public:
-		Impl_Monitor::MonitorLock<const ObjectT, MutexT, MonitorObserverAsReference<const ObjectT>> operator*() const noexcept {
-			return Impl_Monitor::MonitorLock<const ObjectT, MutexT, MonitorObserverAsReference<const ObjectT>>(x_vMutex.GetLock(), x_vObject);
+		Impl_Monitor::MonitorLock<const ObjectT, MutexT, MonitorViewAsReference<const ObjectT>> operator*() const noexcept {
+			return Impl_Monitor::MonitorLock<const ObjectT, MutexT, MonitorViewAsReference<const ObjectT>>(x_vMutex.GetLock(), x_vObject);
 		}
-		Impl_Monitor::MonitorLock<ObjectT, MutexT, MonitorObserverAsReference<ObjectT>> operator*() noexcept {
-			return Impl_Monitor::MonitorLock<ObjectT, MutexT, MonitorObserverAsReference<ObjectT>>(x_vMutex.GetLock(), x_vObject);
+		Impl_Monitor::MonitorLock<ObjectT, MutexT, MonitorViewAsReference<ObjectT>> operator*() noexcept {
+			return Impl_Monitor::MonitorLock<ObjectT, MutexT, MonitorViewAsReference<ObjectT>>(x_vMutex.GetLock(), x_vObject);
 		}
 
-		Impl_Monitor::MonitorLock<const ObjectT, MutexT, MonitorObserverAsPointer<const ObjectT>> operator->() const noexcept {
-			return Impl_Monitor::MonitorLock<const ObjectT, MutexT, MonitorObserverAsPointer<const ObjectT>>(x_vMutex.GetLock(), x_vObject);
+		Impl_Monitor::MonitorLock<const ObjectT, MutexT, MonitorViewAsPointer<const ObjectT>> operator->() const noexcept {
+			return Impl_Monitor::MonitorLock<const ObjectT, MutexT, MonitorViewAsPointer<const ObjectT>>(x_vMutex.GetLock(), x_vObject);
 		}
-		Impl_Monitor::MonitorLock<ObjectT, MutexT, MonitorObserverAsPointer<ObjectT>> operator->() noexcept {
-			return Impl_Monitor::MonitorLock<ObjectT, MutexT, MonitorObserverAsPointer<ObjectT>>(x_vMutex.GetLock(), x_vObject);
+		Impl_Monitor::MonitorLock<ObjectT, MutexT, MonitorViewAsPointer<ObjectT>> operator->() noexcept {
+			return Impl_Monitor::MonitorLock<ObjectT, MutexT, MonitorViewAsPointer<ObjectT>>(x_vMutex.GetLock(), x_vObject);
 		}
 	};
 }

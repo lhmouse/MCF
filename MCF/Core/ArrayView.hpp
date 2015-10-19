@@ -2,8 +2,8 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2013 - 2015, LH_Mouse. All wrongs reserved.
 
-#ifndef MCF_CORE_ARRAY_OBSERVER_HPP_
-#define MCF_CORE_ARRAY_OBSERVER_HPP_
+#ifndef MCF_CORE_ARRAY_VIEW_HPP_
+#define MCF_CORE_ARRAY_VIEW_HPP_
 
 #include "../Utilities/Assert.hpp"
 #include "../Utilities/CountOf.hpp"
@@ -18,26 +18,26 @@ template<typename ElementT>
 class Vector;
 
 template<class ElementT>
-class ArrayObserver {
+class ArrayView {
 private:
 	ElementT *x_pBegin;
 	std::size_t x_uSize;
 
 public:
-	constexpr ArrayObserver(std::nullptr_t = nullptr) noexcept
+	constexpr ArrayView(std::nullptr_t = nullptr) noexcept
 		: x_pBegin(nullptr), x_uSize(0)
 	{
 	}
-	constexpr ArrayObserver(ElementT &rhs) noexcept
+	constexpr ArrayView(ElementT &rhs) noexcept
 		: x_pBegin(std::addressof(rhs)), x_uSize(1)
 	{
 	}
-	constexpr ArrayObserver(ElementT *pBegin, std::size_t uSize) noexcept
+	constexpr ArrayView(ElementT *pBegin, std::size_t uSize) noexcept
 		: x_pBegin(pBegin), x_uSize(uSize)
 	{
 	}
 	template<std::size_t kSizeT>
-	constexpr ArrayObserver(ElementT (&rhs)[kSizeT]) noexcept
+	constexpr ArrayView(ElementT (&rhs)[kSizeT]) noexcept
 		: x_pBegin(rhs), x_uSize(kSizeT)
 	{
 	}
@@ -45,11 +45,11 @@ public:
 		std::enable_if_t<
 			std::is_same<typename StringView<kTypeT>::Char, std::remove_cv_t<ElementT>>::value,
 			int> = 0>
-	constexpr ArrayObserver(StringView<kTypeT> rhs) noexcept
+	constexpr ArrayView(StringView<kTypeT> rhs) noexcept
 		: x_pBegin(rhs.GetData()), x_uSize(rhs.GetSize())
 	{
 	}
-	constexpr ArrayObserver(Vector<ElementT> &rhs) noexcept
+	constexpr ArrayView(Vector<ElementT> &rhs) noexcept
 		: x_pBegin(rhs.GetData()), x_uSize(rhs.GetSize())
 	{
 	}
@@ -80,31 +80,31 @@ public:
 };
 
 template<class ElementT>
-class ArrayObserver<const ElementT> {
+class ArrayView<const ElementT> {
 private:
 	const ElementT *x_pBegin;
 	std::size_t x_uSize;
 
 public:
-	constexpr ArrayObserver(std::nullptr_t = nullptr) noexcept
+	constexpr ArrayView(std::nullptr_t = nullptr) noexcept
 		: x_pBegin(nullptr), x_uSize(0)
 	{
 	}
-	constexpr ArrayObserver(const ElementT &rhs) noexcept
+	constexpr ArrayView(const ElementT &rhs) noexcept
 		: x_pBegin(std::addressof(rhs)), x_uSize(1)
 	{
 	}
-	constexpr ArrayObserver(const ElementT *pBegin, std::size_t uSize) noexcept
+	constexpr ArrayView(const ElementT *pBegin, std::size_t uSize) noexcept
 		: x_pBegin(pBegin), x_uSize(uSize)
 	{
 	}
 	template<std::size_t kSizeT>
-	constexpr ArrayObserver(const ElementT (&rhs)[kSizeT]) noexcept
+	constexpr ArrayView(const ElementT (&rhs)[kSizeT]) noexcept
 		: x_pBegin(rhs), x_uSize(kSizeT)
 	{
 	}
 	template<std::size_t kSizeT>
-	constexpr ArrayObserver(ElementT (&rhs)[kSizeT]) noexcept
+	constexpr ArrayView(ElementT (&rhs)[kSizeT]) noexcept
 		: x_pBegin(rhs), x_uSize(kSizeT)
 	{
 	}
@@ -112,23 +112,23 @@ public:
 		std::enable_if_t<
 			std::is_same<typename StringView<kTypeT>::Char, std::remove_cv_t<ElementT>>::value,
 			int> = 0>
-	constexpr ArrayObserver(StringView<kTypeT> rhs) noexcept
+	constexpr ArrayView(StringView<kTypeT> rhs) noexcept
 		: x_pBegin(rhs.GetData()), x_uSize(rhs.GetSize())
 	{
 	}
-	constexpr ArrayObserver(const Vector<const ElementT> &rhs) noexcept
+	constexpr ArrayView(const Vector<const ElementT> &rhs) noexcept
 		: x_pBegin(rhs.GetData()), x_uSize(rhs.GetSize())
 	{
 	}
-	constexpr ArrayObserver(const Vector<ElementT> &rhs) noexcept
+	constexpr ArrayView(const Vector<ElementT> &rhs) noexcept
 		: x_pBegin(rhs.GetData()), x_uSize(rhs.GetSize())
 	{
 	}
-	constexpr ArrayObserver(std::initializer_list<const ElementT> rhs) noexcept
+	constexpr ArrayView(std::initializer_list<const ElementT> rhs) noexcept
 		: x_pBegin(rhs.begin()), x_uSize(rhs.size())
 	{
 	}
-	constexpr ArrayObserver(std::initializer_list<ElementT> rhs) noexcept
+	constexpr ArrayView(std::initializer_list<ElementT> rhs) noexcept
 		: x_pBegin(rhs.begin()), x_uSize(rhs.size())
 	{
 	}
@@ -159,19 +159,19 @@ public:
 };
 
 template<class ElementT>
-decltype(auto) begin(const ArrayObserver<ElementT> &rhs) noexcept {
+decltype(auto) begin(const ArrayView<ElementT> &rhs) noexcept {
 	return rhs.GetBegin();
 }
 template<class ElementT>
-decltype(auto) cbegin(const ArrayObserver<ElementT> &rhs) noexcept {
+decltype(auto) cbegin(const ArrayView<ElementT> &rhs) noexcept {
 	return begin(rhs);
 }
 template<class ElementT>
-decltype(auto) end(const ArrayObserver<ElementT> &rhs) noexcept {
+decltype(auto) end(const ArrayView<ElementT> &rhs) noexcept {
 	return rhs.GetEnd();
 }
 template<class ElementT>
-decltype(auto) cend(const ArrayObserver<ElementT> &rhs) noexcept {
+decltype(auto) cend(const ArrayView<ElementT> &rhs) noexcept {
 	return end(rhs);
 }
 

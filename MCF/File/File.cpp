@@ -225,7 +225,7 @@ void File::Clear(){
 }
 
 std::size_t File::Read(void *pBuffer, std::uint32_t u32BytesToRead, std::uint64_t u64Offset,
-	FunctionObserver<void ()> fnAsyncProc, FunctionObserver<void ()> fnCompleteCallback) const
+	FunctionView<void ()> fnAsyncProc, FunctionView<void ()> fnCompleteCallback) const
 {
 	if(!x_hFile){
 		DEBUG_THROW(Exception, ERROR_INVALID_HANDLE, "No file opened"_rcs);
@@ -261,7 +261,7 @@ jEof:
 	return vIoStatus.Information;
 }
 std::size_t File::Write(std::uint64_t u64Offset, const void *pBuffer, std::uint32_t u32BytesToWrite,
-	FunctionObserver<void ()> fnAsyncProc, FunctionObserver<void ()> fnCompleteCallback)
+	FunctionView<void ()> fnAsyncProc, FunctionView<void ()> fnCompleteCallback)
 {
 	if(!x_hFile){
 		DEBUG_THROW(Exception, ERROR_INVALID_HANDLE, "No file opened"_rcs);

@@ -14,6 +14,9 @@
 #include <ntdef.h>
 #include <ntstatus.h>
 
+extern "C" __attribute__((__dllimport__, __stdcall__))
+NTSTATUS NtOpenDirectoryObject(HANDLE *pHandle, ACCESS_MASK dwDesiredAccess, const OBJECT_ATTRIBUTES *pObjectAttributes) noexcept;
+
 typedef enum tagRTL_PATH_TYPE {
 	RtlPathTypeUnknown,
 	RtlPathTypeUncAbsolute,
@@ -41,10 +44,24 @@ NTSTATUS NtFlushBuffersFile(HANDLE hFile, IO_STATUS_BLOCK *pIoStatus) noexcept;
 
 namespace MCF {
 
-void Impl_File::NtHandleCloser::operator()(void *hFile) const noexcept {
-	const auto lStatus = ::NtClose(hFile);
-	if(!NT_SUCCESS(lStatus)){
-		ASSERT_MSG(false, L"::NtClose() 失败。");
+namespace {
+	Impl_UniqueNtHandle::UniqueNtHandle OpenDosDeviceDirectory(){
+		static constexpr wchar_t kDosDevices[] = L"\\DosDevices";
+
+		::UNICODE_STRING ustrName;
+		ustrName.Length        = sizeof(kDosDevices) - sizeof(wchar_t);
+		ustrName.MaximumLength = sizeof(kDosDevices);
+		ustrName.Buffer        = (PWSTR)kDosDevices;
+
+		::OBJECT_ATTRIBUTES vObjectAttributes;
+		InitializeObjectAttributes(&vObjectAttributes, &ustrName, 0, nullptr, nullptr);
+
+		HANDLE hDirectory;
+		const auto lStatus = ::NtOpenDirectoryObject(&hDirectory, 0x0F, &vObjectAttributes);
+		if(!NT_SUCCESS(lStatus)){
+			DEBUG_THROW(SystemError, ::RtlNtStatusToDosError(lStatus), "NtOpenDirectoryObject"_rcs);
+		}
+		return Impl_UniqueNtHandle::UniqueNtHandle(hDirectory);
 	}
 }
 
@@ -81,26 +98,16 @@ Impl_UniqueNtHandle::UniqueNtHandle File::X_CreateFileHandle(const WideStringVie
 	ustrDynamicBuffer.Buffer        = nullptr;
 	DEFER([&]{ ::RtlFreeUnicodeString(&ustrDynamicBuffer); });
 
-	::UNICODE_STRING *pustrUnprefixedFullPath;
+	::UNICODE_STRING *pustrFullPath;
 	::RTL_PATH_TYPE ePathType;
-	const auto lPathStatus = ::RtlGetFullPathName_UstrEx(&ustrRawPath, &ustrStaticBuffer, &ustrDynamicBuffer, &pustrUnprefixedFullPath, nullptr, nullptr, &ePathType, nullptr);
+	const auto lPathStatus = ::RtlGetFullPathName_UstrEx(&ustrRawPath, &ustrStaticBuffer, &ustrDynamicBuffer, &pustrFullPath, nullptr, nullptr, &ePathType, nullptr);
 	if(!NT_SUCCESS(lPathStatus)){
 		DEBUG_THROW(SystemError, ::RtlNtStatusToDosError(lPathStatus), "RtlGetFullPathName_UstrEx"_rcs);
 	}
 
-	auto uPrefixedPathSize = pustrUnprefixedFullPath->Length;
-	auto pbyPrefixedPathBuffer = reinterpret_cast<unsigned char *>(pustrUnprefixedFullPath->Buffer);
-	DEFER([&]{ if(pbyPrefixedPathBuffer != reinterpret_cast<unsigned char *>(pustrUnprefixedFullPath->Buffer)){ ::operator delete[](pbyPrefixedPathBuffer); } });
-
+	Impl_UniqueNtHandle::UniqueNtHandle hRootDirectory;
 	if((RtlPathTypeDriveAbsolute <= ePathType) && (ePathType <= RtlPathTypeRelative)){
-		uPrefixedPathSize += kDosPathPrefixSize;
-		if(static_cast<std::size_t>(pustrUnprefixedFullPath->MaximumLength) - pustrUnprefixedFullPath->Length <= uPrefixedPathSize){
-			pbyPrefixedPathBuffer = reinterpret_cast<unsigned char *>(pustrUnprefixedFullPath->Buffer);
-		} else {
-			pbyPrefixedPathBuffer = static_cast<unsigned char *>(::operator new[](uPrefixedPathSize));
-		}
-		std::memmove(pbyPrefixedPathBuffer + kDosPathPrefixSize, pustrUnprefixedFullPath->Buffer, pustrUnprefixedFullPath->Length);
-		std::memcpy(pbyPrefixedPathBuffer, kDosPathPrefix, kDosPathPrefixSize);
+		hRootDirectory = OpenDosDeviceDirectory();
 	}
 
 	::ACCESS_MASK dwDesiredAccess = 0;
@@ -111,12 +118,8 @@ Impl_UniqueNtHandle::UniqueNtHandle File::X_CreateFileHandle(const WideStringVie
 		dwDesiredAccess |= FILE_GENERIC_WRITE;
 	}
 
-	::UNICODE_STRING ustrPrefixedFullPath;
-	ustrPrefixedFullPath.Length        = uPrefixedPathSize;
-	ustrPrefixedFullPath.MaximumLength = uPrefixedPathSize;
-	ustrPrefixedFullPath.Buffer        = (PWSTR)pbyPrefixedPathBuffer;
 	::OBJECT_ATTRIBUTES vObjectAttributes;
-	InitializeObjectAttributes(&vObjectAttributes, &ustrPrefixedFullPath, OBJ_CASE_INSENSITIVE, nullptr, nullptr);
+	InitializeObjectAttributes(&vObjectAttributes, pustrFullPath, OBJ_CASE_INSENSITIVE, hRootDirectory.Get(), nullptr);
 
 	::IO_STATUS_BLOCK vIoStatus;
 

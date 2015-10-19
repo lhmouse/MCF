@@ -929,14 +929,13 @@ namespace Impl_String {
 		void operator()(String<kDstTypeT> &strDst, const StringView<kSrcTypeT> &svSrc) const {
 			using DstTrait = StringEncodingTrait<kDstTypeT>;
 			using SrcTrait = StringEncodingTrait<kSrcTypeT>;
-
-			constexpr int kConvertViaUtf16Weight = DstTrait::kPrefersConversionViaUtf16 + SrcTrait::kPrefersConversionViaUtf16;
-			constexpr int kConvertViaUtf32Weight = DstTrait::kPrefersConversionViaUtf32 + SrcTrait::kPrefersConversionViaUtf32;
-			using UnifiedString = String<(kConvertViaUtf16Weight > kConvertViaUtf32Weight) ? StringType::kUtf16 : StringType::kUtf32>;
+			using UnifiedString = String<(
+				DstTrait::kPrefersConversionViaUtf16 + SrcTrait::kPrefersConversionViaUtf16 > DstTrait::kPrefersConversionViaUtf32 + SrcTrait::kPrefersConversionViaUtf32
+				) ? StringType::kUtf16 : StringType::kUtf32>;
 
 			UnifiedString usTemp;
-			SrcTrait::UnifyAppend(usTemp, svSrc);
-			DstTrait::DeunifyAppend(strDst, usTemp);
+			String<kSrcTypeT>::UnifyAppend(usTemp, svSrc);
+			String<kDstTypeT>::DeunifyAppend(strDst, usTemp);
 		}
 
 		void operator()(String<StringType::kWide> &wsDst, const StringView<kSrcTypeT> &svSrc) const {

@@ -13,15 +13,6 @@
 
 namespace MCF {
 
-namespace Impl_File {
-	struct NtHandleCloser {
-		constexpr void *operator()() const noexcept {
-			return nullptr;
-		}
-		void operator()(void *hFile) const noexcept;
-	};
-}
-
 class File {
 public:
 	enum : std::uint32_t {

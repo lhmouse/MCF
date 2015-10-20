@@ -28,7 +28,7 @@ try {
 		p->Resume();
 	}
 	for(auto &p : threads){
-		p->Join();
+		p->Wait();
 	}
 	const auto t2 = GetHiResMonoClock();
 

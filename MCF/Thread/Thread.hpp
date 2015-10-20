@@ -52,8 +52,12 @@ public:
 	bool Wait(std::uint64_t u64UntilFastMonoClock) const noexcept;
 	void Wait() const noexcept;
 
-	std::exception_ptr JoinNoThrow() const noexcept;
-	void Join(); // 如果线程中有被捕获的异常，抛出异常。
+	const std::exception_ptr &GetException() const noexcept {
+		return x_pException;
+	}
+	void ClearException() noexcept {
+		x_pException = std::exception_ptr();
+	}
 
 	bool IsAlive() const noexcept;
 	unsigned GetId() const noexcept;

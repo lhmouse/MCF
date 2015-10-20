@@ -17,6 +17,10 @@
 #include <ntdef.h>
 
 extern __attribute__((__dllimport__, __stdcall__))
+NTSTATUS RtlCreateUserThread(HANDLE hProcess, const SECURITY_DESCRIPTOR *pSecurityDescriptor, BOOLEAN bSuspended,
+	ULONG ulStackZeroBits, ULONG *pulStackReserved, ULONG *pulStackCommitted, PTHREAD_START_ROUTINE pfnThreadProc, VOID *pParam, HANDLE *pHandle, CLIENT_ID *pClientId);
+
+extern __attribute__((__dllimport__, __stdcall__))
 NTSTATUS NtDelayExecution(BOOLEAN bAlertable, const LARGE_INTEGER *pInterval);
 extern __attribute__((__dllimport__, __stdcall__))
 NTSTATUS NtYieldExecution(void);
@@ -354,41 +358,46 @@ int MCF_CRT_AtEndThread(void (*pfnProc)(intptr_t), intptr_t nContext){
 	return 0;
 }
 
-typedef struct tagThreadInitInfo {
+typedef struct tagThreadInitParams {
 	unsigned (*pfnProc)(intptr_t);
 	intptr_t nParam;
-} ThreadInitInfo;
+} ThreadInitParams;
 
 static __MCF_C_STDCALL __MCF_HAS_EH_TOP
 DWORD CRTThreadProc(LPVOID pParam){
 	DWORD dwExitCode;
 	__MCF_EH_TOP_BEGIN
 	{
-		const ThreadInitInfo vInitInfo = *(ThreadInitInfo *)pParam;
+		const ThreadInitParams vInitParams = *(ThreadInitParams *)pParam;
 		free(pParam);
 
 		__MCF_CRT_FEnvInit();
 
-		dwExitCode = (*vInitInfo.pfnProc)(vInitInfo.nParam);
+		dwExitCode = (*vInitParams.pfnProc)(vInitParams.nParam);
 	}
 	__MCF_EH_TOP_END
 	return dwExitCode;
 }
 
-void *MCF_CRT_CreateThread(unsigned (*pfnThreadProc)(intptr_t), intptr_t nParam, bool bSuspended, unsigned long *restrict pulThreadId){
-	ThreadInitInfo *const pInitInfo = malloc(sizeof(ThreadInitInfo));
-	if(!pInitInfo){
+void *MCF_CRT_CreateThread(unsigned (*pfnThreadProc)(intptr_t), intptr_t nParam, bool bSuspended, unsigned *restrict puThreadId){
+	ThreadInitParams *const pInitParams = malloc(sizeof(ThreadInitParams));
+	if(!pInitParams){
 		return nullptr;
 	}
-	pInitInfo->pfnProc  = pfnThreadProc;
-	pInitInfo->nParam   = nParam;
+	pInitParams->pfnProc  = pfnThreadProc;
+	pInitParams->nParam   = nParam;
 
-	const HANDLE hThread = CreateThread(nullptr, 0, &CRTThreadProc, pInitInfo, bSuspended ? CREATE_SUSPENDED : 0, pulThreadId);
-	if(!hThread){
-		const DWORD dwErrorCode = GetLastError();
-		free(pInitInfo);
-		SetLastError(dwErrorCode);
+	ULONG ulStackReserved = 0, ulStackCommitted = 0;
+	HANDLE hThread;
+	CLIENT_ID vClientId;
+	const NTSTATUS lStatus = RtlCreateUserThread(GetCurrentProcess(), nullptr, bSuspended, 0, &ulStackReserved, &ulStackCommitted, CRTThreadProc, pInitParams, &hThread, &vClientId);
+	if(!NT_SUCCESS(lStatus)){
+		free(pInitParams);
+		SetLastError(RtlNtStatusToDosError(lStatus));
 		return nullptr;
+	}
+	if(puThreadId){
+		*puThreadId = (unsigned)(uintptr_t)vClientId.UniqueThread;
 	}
 	return (void *)hThread;
 }
@@ -398,7 +407,7 @@ void MCF_CRT_CloseThread(void *hThread){
 	}
 }
 
-unsigned long MCF_CRT_GetCurrentThreadId(){
+unsigned MCF_CRT_GetCurrentThreadId(){
 	return GetCurrentThreadId();
 }
 

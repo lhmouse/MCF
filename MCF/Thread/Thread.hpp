@@ -28,7 +28,7 @@ private:
 public:
 	static IntrusivePtr<Thread> Create(Function<void ()> fnProc, bool bSuspended = false);
 
-	static std::size_t GetCurrentId() noexcept;
+	static unsigned GetCurrentId() noexcept;
 
 	static void Sleep(std::uint64_t u64UntilFastMonoClock) noexcept;
 	static bool AlertableSleep(std::uint64_t u64UntilFastMonoClock) noexcept;
@@ -39,7 +39,7 @@ private:
 	const Function<void ()> x_fnProc;
 
 	UniqueHandle<X_ThreadCloser> x_hThread;
-	Atomic<std::size_t> x_uThreadId;
+	Atomic<unsigned> x_uThreadId;
 	std::exception_ptr x_pException;
 
 private:
@@ -56,7 +56,7 @@ public:
 	void Join(); // 如果线程中有被捕获的异常，抛出异常。
 
 	bool IsAlive() const noexcept;
-	std::size_t GetId() const noexcept;
+	unsigned GetId() const noexcept;
 
 	void Suspend() noexcept;
 	void Resume() noexcept;

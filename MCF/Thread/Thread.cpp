@@ -18,7 +18,7 @@ IntrusivePtr<Thread> Thread::Create(Function<void ()> fnProc, bool bSuspended){
 	return IntrusivePtr<Thread>(new Thread(std::move(fnProc), bSuspended));
 }
 
-std::size_t Thread::GetCurrentId() noexcept {
+unsigned Thread::GetCurrentId() noexcept {
 	return ::MCF_CRT_GetCurrentThreadId();
 }
 
@@ -51,12 +51,12 @@ Thread::Thread(Function<void ()> fnProc, bool bSuspended)
 		return 0;
 	};
 
-	unsigned long ulThreadId;
-	if(!x_hThread.Reset(::MCF_CRT_CreateThread(ThreadProc, (std::intptr_t)this, CREATE_SUSPENDED, &ulThreadId))){
+	unsigned uThreadId = 0;
+	if(!x_hThread.Reset(::MCF_CRT_CreateThread(ThreadProc, (std::intptr_t)this, CREATE_SUSPENDED, &uThreadId))){
 		DEBUG_THROW(SystemError, "MCF_CRT_CreateThread"_rcs);
 	}
 	AddRef();
-	x_uThreadId.Store(ulThreadId, kAtomicRelease);
+	x_uThreadId.Store(uThreadId, kAtomicRelease);
 
 	if(!bSuspended){
 		Resume();
@@ -92,7 +92,7 @@ void Thread::Join(){
 bool Thread::IsAlive() const noexcept {
 	return GetId() != 0;
 }
-std::size_t Thread::GetId() const noexcept {
+unsigned Thread::GetId() const noexcept {
 	return x_uThreadId.Load(kAtomicRelaxed);
 }
 

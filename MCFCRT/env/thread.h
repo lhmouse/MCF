@@ -27,10 +27,10 @@ extern bool MCF_CRT_TlsExchange(void *__pTlsKey, bool *restrict __pbHasOldValue,
 
 extern int MCF_CRT_AtEndThread(void (*__pfnProc)(MCF_STD intptr_t), MCF_STD intptr_t __nContext);
 
-extern void *MCF_CRT_CreateThread(unsigned (*__pfnThreadProc)(MCF_STD intptr_t), MCF_STD intptr_t __nParam, bool __bSuspended, unsigned long *restrict __pulThreadId) MCF_NOEXCEPT;
+extern void *MCF_CRT_CreateThread(unsigned (*__pfnThreadProc)(MCF_STD intptr_t), MCF_STD intptr_t __nParam, bool __bSuspended, unsigned *restrict __puThreadId) MCF_NOEXCEPT;
 extern void MCF_CRT_CloseThread(void *__hThread) MCF_NOEXCEPT;
 
-extern unsigned long MCF_CRT_GetCurrentThreadId(void) MCF_NOEXCEPT;
+extern unsigned MCF_CRT_GetCurrentThreadId(void) MCF_NOEXCEPT;
 
 extern void MCF_CRT_Sleep(MCF_STD uint64_t __u64UntilFastMonoClock) MCF_NOEXCEPT;
 // 被 APC 打断返回 true，超时返回 false。

@@ -44,20 +44,20 @@ void MCF_GetWindowsVersion(MCF_WindowsVersion *pVersion){
 uint64_t MCF_GetUtcTime(){
 	union {
 		FILETIME ft;
-		ULARGE_INTEGER uli;
+		LARGE_INTEGER li;
 	} unUtc;
 	GetSystemTimeAsFileTime(&unUtc.ft);
 	// 0x019DB1DED53E8000 = 从 1601-01-01 到 1970-01-01 经历的时间纳秒数。
-	return (unUtc.uli.QuadPart - 0x019DB1DED53E8000ull) / 10000;
+	return (uint64_t)(unUtc.li.QuadPart - 0x019DB1DED53E8000ll) / 10000;
 }
 uint64_t MCF_GetLocalTime(){
 	union {
 		FILETIME ft;
-		ULARGE_INTEGER uli;
+		LARGE_INTEGER li;
 	} unUtc, unLocal;
 	GetSystemTimeAsFileTime(&unUtc.ft);
 	FileTimeToLocalFileTime(&unUtc.ft, &unLocal.ft);
-	return (unLocal.uli.QuadPart - 0x019DB1DED53E8000ull) / 10000;
+	return (uint64_t)(unLocal.li.QuadPart - 0x019DB1DED53E8000ll) / 10000;
 }
 
 uint64_t MCF_GetFastMonoClock(){

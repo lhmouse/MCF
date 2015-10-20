@@ -240,24 +240,22 @@ std::size_t File::Read(void *pBuffer, std::uint32_t u32BytesToRead, std::uint64_
 
 	bool bIoPending = true;
 	::IO_STATUS_BLOCK vIoStatus;
+	vIoStatus.Information = 0;
 	::LARGE_INTEGER liOffset;
 	liOffset.QuadPart = static_cast<std::int64_t>(u64Offset);
 	const auto lStatus = ::NtReadFile(x_hFile.Get(), nullptr, &IoApcCallback, &bIoPending, &vIoStatus, pBuffer, u32BytesToRead, &liOffset, nullptr);
 	if(fnAsyncProc){
 		fnAsyncProc();
 	}
-	if(lStatus == STATUS_END_OF_FILE){
-		vIoStatus.Information = 0;
-		goto jEof;
+	if(lStatus != STATUS_END_OF_FILE){
+		if(!NT_SUCCESS(lStatus)){
+			DEBUG_THROW(SystemError, ::RtlNtStatusToDosError(lStatus), "NtReadFile"_rcs);
+		}
+		do {
+			Thread::AlertableSleep();
+		} while(bIoPending);
 	}
-	if(!NT_SUCCESS(lStatus)){
-		DEBUG_THROW(SystemError, ::RtlNtStatusToDosError(lStatus), "NtReadFile"_rcs);
-	}
-	do {
-		Thread::AlertableSleep();
-	} while(bIoPending);
 
-jEof:
 	if(fnCompleteCallback){
 		fnCompleteCallback();
 	}
@@ -276,18 +274,21 @@ std::size_t File::Write(std::uint64_t u64Offset, const void *pBuffer, std::uint3
 
 	bool bIoPending = true;
 	::IO_STATUS_BLOCK vIoStatus;
+	vIoStatus.Information = 0;
 	::LARGE_INTEGER liOffset;
 	liOffset.QuadPart = static_cast<std::int64_t>(u64Offset);
 	const auto lStatus = ::NtWriteFile(x_hFile.Get(), nullptr, &IoApcCallback, &bIoPending, &vIoStatus, pBuffer, u32BytesToWrite, &liOffset, nullptr);
 	if(fnAsyncProc){
 		fnAsyncProc();
 	}
-	if(!NT_SUCCESS(lStatus)){
-		DEBUG_THROW(SystemError, ::RtlNtStatusToDosError(lStatus), "NtWriteFile"_rcs);
+	{
+		if(!NT_SUCCESS(lStatus)){
+			DEBUG_THROW(SystemError, ::RtlNtStatusToDosError(lStatus), "NtWriteFile"_rcs);
+		}
+		do {
+			Thread::AlertableSleep();
+		} while(bIoPending);
 	}
-	do {
-		Thread::AlertableSleep();
-	} while(bIoPending);
 
 	if(fnCompleteCallback){
 		fnCompleteCallback();

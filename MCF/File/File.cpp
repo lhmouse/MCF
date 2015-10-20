@@ -53,7 +53,7 @@ namespace {
 }
 
 Impl_UniqueNtHandle::UniqueNtHandle File::X_CreateFileHandle(const WideStringView &wsvPath, std::uint32_t u32Flags){
-	constexpr wchar_t kDosDevicePath[] = L"\\??";
+	constexpr wchar_t kDosDevicePath[] = { L'\\', L'?', L'?' };
 
 	const auto uSize = wsvPath.GetSize() * sizeof(wchar_t);
 	if(uSize > UINT16_MAX){
@@ -78,7 +78,7 @@ Impl_UniqueNtHandle::UniqueNtHandle File::X_CreateFileHandle(const WideStringVie
 
 	::UNICODE_STRING *pustrFullPath;
 	Impl_UniqueNtHandle::UniqueNtHandle hRootDirectory;
-	if((ustrRawPath.Length >= sizeof(kDosDevicePath)) && (std::memcmp(ustrRawPath.Buffer, kDosDevicePath, sizeof(kDosDevicePath) - sizeof(wchar_t)) == 0)){
+	if((ustrRawPath.Length >= sizeof(kDosDevicePath)) && (std::memcmp(ustrRawPath.Buffer, kDosDevicePath, sizeof(kDosDevicePath)) == 0)){
 		pustrFullPath = &ustrRawPath;
 	} else {
 		::RTL_PATH_TYPE ePathType;
@@ -88,7 +88,7 @@ Impl_UniqueNtHandle::UniqueNtHandle File::X_CreateFileHandle(const WideStringVie
 		}
 		if((RtlPathTypeDriveAbsolute <= ePathType) && (ePathType <= RtlPathTypeRelative)){
 			::UNICODE_STRING ustrName;
-			ustrName.Length        = sizeof(kDosDevicePath) - sizeof(wchar_t);
+			ustrName.Length        = sizeof(kDosDevicePath);
 			ustrName.MaximumLength = sizeof(kDosDevicePath);
 			ustrName.Buffer        = (PWSTR)kDosDevicePath;
 

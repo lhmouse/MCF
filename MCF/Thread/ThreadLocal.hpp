@@ -45,8 +45,8 @@ namespace Impl_ThreadLocal {
 
 	public:
 		ElementT Get() const noexcept {
-			bool bHasValue;
-			std::intptr_t nValue;
+			bool bHasValue = false;
+			std::intptr_t nValue = 0;
 			if(!::MCF_CRT_TlsGet(x_pTlsKey.Get(), &bHasValue, &nValue)){
 				ASSERT_MSG(false, L"MCF_CRT_TlsGet() 失败。");
 			}
@@ -83,8 +83,8 @@ namespace Impl_ThreadLocal {
 
 	public:
 		const ElementT &Get() const noexcept {
-			bool bHasValue;
-			std::intptr_t nValue;
+			bool bHasValue = false;
+			std::intptr_t nValue = 0;
 			if(!::MCF_CRT_TlsGet(x_pTlsKey.Get(), &bHasValue, &nValue)){
 				ASSERT_MSG(false, L"MCF_CRT_TlsGet() 失败。");
 			}

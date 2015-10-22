@@ -4,7 +4,6 @@
 
 #include "../StdMCF.hpp"
 #include "ConditionVariable.hpp"
-#include "../Utilities/Defer.hpp"
 #include "../Core/Time.hpp"
 #include <winternl.h>
 #include <ntstatus.h>
@@ -18,13 +17,8 @@ namespace MCF {
 
 // 其他非静态成员函数。
 bool ConditionVariable::Wait(Impl_UniqueLockTemplate::UniqueLockTemplateBase &vLock, std::uint64_t u64UntilFastMonoClock) noexcept {
-	x_uWaitingThreads.Increment(kAtomicRelaxed);
 	const auto uCount = vLock.X_UnlockAll();
 	ASSERT_MSG(uCount != 0, L"你会用条件变量吗？");
-	DEFER([&]{
-		x_uWaitingThreads.Decrement(kAtomicRelaxed);
-		vLock.X_RelockAll(uCount);
-	});
 
 	::LARGE_INTEGER liTimeout;
 	const auto u64Now = GetFastMonoClock();
@@ -39,25 +33,28 @@ bool ConditionVariable::Wait(Impl_UniqueLockTemplate::UniqueLockTemplateBase &vL
 			liTimeout.QuadPart = -n64Delta100Nanosec;
 		}
 	}
+	x_uWaitingThreads.Increment(kAtomicRelaxed);
 	const auto lStatus = ::NtWaitForKeyedEvent(nullptr, this, false, &liTimeout);
 	if(!NT_SUCCESS(lStatus)){
 		ASSERT_MSG(false, L"NtWaitForKeyedEvent() 失败。");
 	}
+	x_uWaitingThreads.Decrement(kAtomicRelaxed);
+
+	vLock.X_RelockAll(uCount);
 	return lStatus != STATUS_TIMEOUT;
 }
 void ConditionVariable::Wait(Impl_UniqueLockTemplate::UniqueLockTemplateBase &vLock) noexcept {
-	x_uWaitingThreads.Increment(kAtomicRelaxed);
 	const auto uCount = vLock.X_UnlockAll();
 	ASSERT_MSG(uCount != 0, L"你会用条件变量吗？");
-	DEFER([&]{
-		x_uWaitingThreads.Decrement(kAtomicRelaxed);
-		vLock.X_RelockAll(uCount);
-	});
 
+	x_uWaitingThreads.Increment(kAtomicRelaxed);
 	const auto lStatus = ::NtWaitForKeyedEvent(nullptr, this, false, nullptr);
 	if(!NT_SUCCESS(lStatus)){
 		ASSERT_MSG(false, L"NtWaitForKeyedEvent() 失败。");
 	}
+	x_uWaitingThreads.Decrement(kAtomicRelaxed);
+
+	vLock.X_RelockAll(uCount);
 }
 
 namespace {

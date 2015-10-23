@@ -29,20 +29,19 @@ uint64_t MCF_GetFastMonoClock(){
 	return GetTickCount64();
 }
 double MCF_GetHiResMonoClock(){
-	static int64_t s_n64Frequency = 0;
+	static volatile LARGE_INTEGER s_liFrequency;
 
-	int64_t n64Frequency = __atomic_load_n(&s_n64Frequency, __ATOMIC_CONSUME);
-	if(n64Frequency == 0){
-		LARGE_INTEGER liFrequency;
+	LARGE_INTEGER liFrequency;
+	liFrequency.QuadPart = __atomic_load_n(&s_liFrequency.QuadPart, __ATOMIC_CONSUME);
+	if(liFrequency.QuadPart == 0){
 		if(!QueryPerformanceFrequency(&liFrequency)){
 			MCF_CRT_Bail(L"QueryPerformanceFrequency() 失败。");
 		}
-		n64Frequency = liFrequency.QuadPart;
-		__atomic_store_n(&s_n64Frequency, n64Frequency, __ATOMIC_RELEASE);
+		__atomic_store_n(&s_liFrequency.QuadPart, liFrequency.QuadPart, __ATOMIC_RELEASE);
 	}
 	LARGE_INTEGER liCounter;
 	if(!QueryPerformanceCounter(&liCounter)){
 		MCF_CRT_Bail(L"QueryPerformanceCounter() 失败。");
 	}
-	return liCounter.QuadPart * 1000.0 / n64Frequency;
+	return liCounter.QuadPart * 1000.0 / liFrequency.QuadPart;
 }

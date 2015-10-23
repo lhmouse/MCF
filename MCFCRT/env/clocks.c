@@ -12,7 +12,7 @@
 extern __attribute__((__dllimport__, __stdcall__))
 NTSTATUS NtQueryPerformanceCounter(LARGE_INTEGER *pCounter, LARGE_INTEGER *pFrequency);
 
-uint64_t MCF_GetUtcTime(){
+uint64_t MCF_GetUtcClock(){
 	union {
 		FILETIME ft;
 		LARGE_INTEGER li;
@@ -21,7 +21,7 @@ uint64_t MCF_GetUtcTime(){
 	// 0x019DB1DED53E8000 = 从 1601-01-01 到 1970-01-01 经历的时间纳秒数。
 	return (uint64_t)(unUtc.li.QuadPart - 0x019DB1DED53E8000ll) / 10000;
 }
-uint64_t MCF_GetLocalTime(){
+uint64_t MCF_GetLocalClock(){
 	union {
 		FILETIME ft;
 		LARGE_INTEGER li;

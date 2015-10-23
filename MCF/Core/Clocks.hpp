@@ -16,11 +16,11 @@ inline std::uint32_t ReadTimestampCounter64() noexcept {
 	return ::MCF_ReadTimestampCounter64();
 }
 
-inline std::uint64_t GetUtcTime() noexcept {
-	return ::MCF_GetUtcTime();
+inline std::uint64_t GetUtcClock() noexcept {
+	return ::MCF_GetUtcClock();
 }
-inline std::uint64_t GetLocalTime() noexcept {
-	return ::MCF_GetLocalTime();
+inline std::uint64_t GetLocalClock() noexcept {
+	return ::MCF_GetLocalClock();
 }
 
 inline std::uint64_t GetFastMonoClock() noexcept {

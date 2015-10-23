@@ -32,8 +32,8 @@ static inline MCF_STD uint64_t MCF_ReadTimestampCounter64() MCF_NOEXCEPT {
 	return __u64Ret;
 }
 
-extern MCF_STD uint64_t MCF_GetUtcTime() MCF_NOEXCEPT;
-extern MCF_STD uint64_t MCF_GetLocalTime() MCF_NOEXCEPT;
+extern MCF_STD uint64_t MCF_GetUtcClock() MCF_NOEXCEPT;
+extern MCF_STD uint64_t MCF_GetLocalClock() MCF_NOEXCEPT;
 
 extern MCF_STD uint64_t MCF_GetFastMonoClock() MCF_NOEXCEPT;
 extern double MCF_GetHiResMonoClock() MCF_NOEXCEPT;

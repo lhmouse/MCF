@@ -4,7 +4,7 @@
 
 #include "../StdMCF.hpp"
 #include "ConditionVariable.hpp"
-#include "../Core/Time.hpp"
+#include "../Core/Clocks.hpp"
 #include <winternl.h>
 #include <ntstatus.h>
 

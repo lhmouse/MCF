@@ -2,7 +2,7 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2013 - 2015, LH_Mouse. All wrongs reserved.
 
-#include "system.h"
+#include "clocks.h"
 #include "mcfwin.h"
 #include "bail.h"
 #include <stdlib.h>
@@ -11,35 +11,6 @@
 
 extern __attribute__((__dllimport__, __stdcall__))
 NTSTATUS NtQueryPerformanceCounter(LARGE_INTEGER *pCounter, LARGE_INTEGER *pFrequency);
-
-static SYSTEM_INFO g_vSystemInfo;
-
-__attribute__((__constructor__))
-static void SystemInfoCtor(){
-	GetSystemInfo(&g_vSystemInfo);
-}
-
-size_t MCF_GetLogicalProcessvrCount(){
-	return g_vSystemInfo.dwNumberOfProcessors;
-}
-size_t MCF_GetPageSize(){
-	return g_vSystemInfo.dwPageSize;
-}
-
-static OSVERSIONINFOW g_vOsVersionInfo;
-
-__attribute__((__constructor__))
-static void OsVersionInfoCtor(){
-	g_vOsVersionInfo.dwOSVersionInfoSize = sizeof(g_vOsVersionInfo);
-	GetVersionExW(&g_vOsVersionInfo);
-}
-
-void MCF_GetWindowsVersion(MCF_WindowsVersion *pVersion){
-	pVersion->uMajor       = g_vOsVersionInfo.dwMajorVersion;
-	pVersion->uMinor       = g_vOsVersionInfo.dwMinorVersion;
-	pVersion->uBuild       = g_vOsVersionInfo.dwBuildNumber;
-	pVersion->pwszServPack = g_vOsVersionInfo.szCSDVersion;
-}
 
 uint64_t MCF_GetUtcTime(){
 	union {

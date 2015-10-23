@@ -5,7 +5,7 @@
 #include "../StdMCF.hpp"
 #include "KernelMutex.hpp"
 #include "../Core/Exception.hpp"
-#include "../Core/Time.hpp"
+#include "../Core/Clocks.hpp"
 #include <winternl.h>
 #include <ntdef.h>
 #include <ntstatus.h>

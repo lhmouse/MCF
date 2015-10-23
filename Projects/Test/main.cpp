@@ -1,6 +1,6 @@
 #include <MCF/StdMCF.hpp>
 #include <MCF/Thread/Thread.hpp>
-#include <MCF/Core/Time.hpp>
+#include <MCF/Core/Clocks.hpp>
 #include <MCF/Core/Array.hpp>
 #include <MCF/Core/LastError.hpp>
 #include <MCF/Core/String.hpp>

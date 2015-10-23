@@ -5,7 +5,7 @@
 #ifndef MCF_RANDOM_FAST_GENERATOR_HPP_
 #define MCF_RANDOM_FAST_GENERATOR_HPP_
 
-#include "../Core/Time.hpp"
+#include "../Core/Clocks.hpp"
 
 namespace MCF {
 

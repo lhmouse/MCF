@@ -2,24 +2,12 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2013 - 2015, LH_Mouse. All wrongs reserved.
 
-#ifndef __MCF_CRT_ENV_SYSTEM_H_
-#define __MCF_CRT_ENV_SYSTEM_H_
+#ifndef __MCF_CRT_ENV_CLOCKS_H_
+#define __MCF_CRT_ENV_CLOCKS_H_
 
 #include "_crtdef.h"
 
 __MCF_CRT_EXTERN_C_BEGIN
-
-extern MCF_STD size_t MCF_GetLogicalProcessvrCount() MCF_NOEXCEPT;
-extern MCF_STD size_t MCF_GetPageSize() MCF_NOEXCEPT;
-
-typedef struct MCF_tagWindowsVersion {
-	unsigned uMajor;
-	unsigned uMinor;
-	unsigned uBuild;
-	const wchar_t *pwszServPack;
-} MCF_WindowsVersion;
-
-extern void MCF_GetWindowsVersion(MCF_WindowsVersion *__pVersion) MCF_NOEXCEPT;
 
 static inline MCF_STD uint32_t MCF_ReadTimestampCounter32() MCF_NOEXCEPT {
 	MCF_STD uint32_t __u32Ret;

@@ -6,7 +6,7 @@
 #include "Uuid.hpp"
 #include "Endian.hpp"
 #include "../Core/Exception.hpp"
-#include "../Core/Time.hpp"
+#include "../Core/Clocks.hpp"
 #include "../Core/Random.hpp"
 #include "../Thread/Atomic.hpp"
 

@@ -5,7 +5,7 @@
 #ifndef MCF_RANDOM_ISAAC_GENERATOR_HPP_
 #define MCF_RANDOM_ISAAC_GENERATOR_HPP_
 
-#include "../Core/Time.hpp"
+#include "../Core/Clocks.hpp"
 #include "../Core/Array.hpp"
 
 namespace MCF {

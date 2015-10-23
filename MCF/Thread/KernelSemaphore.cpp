@@ -5,7 +5,7 @@
 #include "../StdMCF.hpp"
 #include "KernelSemaphore.hpp"
 #include "../Core/Exception.hpp"
-#include "../Core/Time.hpp"
+#include "../Core/Clocks.hpp"
 #include <winternl.h>
 #include <ntdef.h>
 

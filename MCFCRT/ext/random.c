@@ -3,7 +3,7 @@
 // Copyleft 2013 - 2015, LH_Mouse. All wrongs reserved.
 
 #include "../env/_crtdef.h"
-#include "../env/system.h"
+#include "../env/clocks.h"
 
 static volatile uint64_t g_u64RandSeed = 0;
 

@@ -12,7 +12,7 @@ namespace MCF {
 inline std::uint32_t ReadTimestampCounter32() noexcept {
 	return ::MCF_ReadTimestampCounter32();
 }
-inline std::uint32_t ReadTimestampCounter64() noexcept {
+inline std::uint64_t ReadTimestampCounter64() noexcept {
 	return ::MCF_ReadTimestampCounter64();
 }
 

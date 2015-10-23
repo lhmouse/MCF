@@ -5,12 +5,6 @@
 #include "clocks.h"
 #include "mcfwin.h"
 #include "bail.h"
-#include <stdlib.h>
-#include <winternl.h>
-#include <ntdef.h>
-
-extern __attribute__((__dllimport__, __stdcall__))
-NTSTATUS NtQueryPerformanceCounter(LARGE_INTEGER *pCounter, LARGE_INTEGER *pFrequency);
 
 uint64_t MCF_GetUtcClock(){
 	union {
@@ -35,10 +29,20 @@ uint64_t MCF_GetFastMonoClock(){
 	return GetTickCount64();
 }
 double MCF_GetHiResMonoClock(){
-	LARGE_INTEGER liCounter, liFrequency;
-	const NTSTATUS lStatus = NtQueryPerformanceCounter(&liCounter, &liFrequency);
-	if(!NT_SUCCESS(lStatus)){
-		MCF_CRT_Bail(L"NtQueryPerformanceCounter() 失败。");
+	static int64_t s_n64Frequency = 0;
+
+	int64_t n64Frequency = __atomic_load_n(&s_n64Frequency, __ATOMIC_CONSUME);
+	if(n64Frequency == 0){
+		LARGE_INTEGER liFrequency;
+		if(!QueryPerformanceFrequency(&liFrequency)){
+			MCF_CRT_Bail(L"QueryPerformanceFrequency() 失败。");
+		}
+		n64Frequency = liFrequency.QuadPart;
+		__atomic_store_n(&s_n64Frequency, n64Frequency, __ATOMIC_RELEASE);
 	}
-	return liCounter.QuadPart * 1000.0 / liFrequency.QuadPart;
+	LARGE_INTEGER liCounter;
+	if(!QueryPerformanceCounter(&liCounter)){
+		MCF_CRT_Bail(L"QueryPerformanceCounter() 失败。");
+	}
+	return liCounter.QuadPart * 1000.0 / n64Frequency;
 }

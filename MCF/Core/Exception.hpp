@@ -61,7 +61,7 @@ public:
 }
 
 #define DEBUG_THROW(etype_, ...)	\
-	([&](const char *file_, unsigned long line_) __attribute__((__noreturn__)) -> void {	\
+	([&](const char *file_, unsigned long line_) __attribute__((__noreturn__)) -> bool {	\
 		auto &&e_ = etype_(file_, line_, __VA_ARGS__);	\
 		throw static_cast<decltype(e_) &&>(e_);	\
 	}(__FILE__, __LINE__))

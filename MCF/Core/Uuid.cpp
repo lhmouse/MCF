@@ -4,10 +4,10 @@
 
 #include "../StdMCF.hpp"
 #include "Uuid.hpp"
-#include "Endian.hpp"
-#include "../Core/Exception.hpp"
-#include "../Core/Clocks.hpp"
-#include "../Core/Random.hpp"
+#include "Exception.hpp"
+#include "Clocks.hpp"
+#include "Random.hpp"
+#include "../Utilities/Endian.hpp"
 #include "../Thread/Atomic.hpp"
 
 namespace MCF {

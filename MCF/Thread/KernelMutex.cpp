@@ -93,16 +93,17 @@ Impl_UniqueNtHandle::UniqueNtHandle KernelMutex::X_CreateEventHandle(const WideS
 // 其他非静态成员函数。
 bool KernelMutex::Try(std::uint64_t u64UntilFastMonoClock) noexcept {
 	::LARGE_INTEGER liTimeout;
-	const auto u64Now = GetFastMonoClock();
-	if(u64Now >= u64UntilFastMonoClock){
-		liTimeout.QuadPart = 0;
-	} else {
-		const auto u64DeltaMillisec = u64UntilFastMonoClock - u64Now;
-		const auto n64Delta100Nanosec = static_cast<std::int64_t>(u64DeltaMillisec * 10000);
-		if(static_cast<std::uint64_t>(n64Delta100Nanosec / 10000) != u64DeltaMillisec){
-			liTimeout.QuadPart = INT64_MIN;
-		} else {
-			liTimeout.QuadPart = -n64Delta100Nanosec;
+	liTimeout.QuadPart = 0;
+	if(u64UntilFastMonoClock != 0){
+		const auto u64Now = GetFastMonoClock();
+		if(u64Now < u64UntilFastMonoClock){
+			const auto u64DeltaMillisec = u64UntilFastMonoClock - u64Now;
+			const auto n64Delta100Nanosec = static_cast<std::int64_t>(u64DeltaMillisec * 10000);
+			if(static_cast<std::uint64_t>(n64Delta100Nanosec / 10000) != u64DeltaMillisec){
+				liTimeout.QuadPart = INT64_MIN;
+			} else {
+				liTimeout.QuadPart = -n64Delta100Nanosec;
+			}
 		}
 	}
 	const auto lStatus = ::NtWaitForSingleObject(x_hEvent.Get(), false, &liTimeout);

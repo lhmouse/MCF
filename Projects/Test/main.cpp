@@ -10,6 +10,7 @@ using namespace MCF;
 extern "C" unsigned MCFMain()
 try {
 	Mutex m1;
+/*
 	volatile int c = 0;
 
 	Array<IntrusivePtr<Thread>, 10> threads;
@@ -33,19 +34,19 @@ try {
 	const auto t2 = GetHiResMonoClock();
 
 	std::printf("c = %d, time = %f\n", c, t2 - t1);
-/*
+*/
 	auto now = GetFastMonoClock();
 	auto t1 = GetHiResMonoClock();
-	auto l = m.TryGetLock(now + 1000);
+	auto l = m1.TryGetLock(now + 1000);
 	auto t2 = GetHiResMonoClock();
 	std::printf("locked? %d  time = %f\n", l.IsLocking(), t2 - t1);
 
 	now = GetFastMonoClock();
 	t1 = GetHiResMonoClock();
-	l = m.TryGetLock(now + 1000);
+	l = m1.TryGetLock(now + 1000);
 	t2 = GetHiResMonoClock();
 	std::printf("locked? %d  time = %f\n", l.IsLocking(), t2 - t1);
-*/
+
 	return 0;
 } catch(Exception &e){
 	std::printf("MCF::Exception: code = %lu (%s), desc = %s\n", e.GetCode(), AnsiString(GetWin32ErrorDescription(e.GetCode())).GetStr(), e.GetDescription());

@@ -487,16 +487,17 @@ long MCF_CRT_ResumeThread(void *hThread){
 
 bool MCF_CRT_WaitForThread(void *hThread, MCF_STD uint64_t u64UntilFastMonoClock){
 	LARGE_INTEGER liTimeout;
-	const uint64_t u64Now = MCF_GetFastMonoClock();
-	if(u64Now >= u64UntilFastMonoClock){
-		liTimeout.QuadPart = 0;
-	} else {
-		const uint64_t u64DeltaMillisec = u64UntilFastMonoClock - u64Now;
-		const int64_t n64Delta100Nanosec = (int64_t)(u64DeltaMillisec * 10000);
-		if((uint64_t)(n64Delta100Nanosec / 10000) != u64DeltaMillisec){
-			liTimeout.QuadPart = INT64_MIN;
-		} else {
-			liTimeout.QuadPart = -n64Delta100Nanosec;
+	liTimeout.QuadPart = 0;
+	if(u64UntilFastMonoClock != 0){
+		const uint64_t u64Now = MCF_GetFastMonoClock();
+		if(u64Now < u64UntilFastMonoClock){
+			const uint64_t u64DeltaMillisec = u64UntilFastMonoClock - u64Now;
+			const int64_t n64Delta100Nanosec = (int64_t)(u64DeltaMillisec * 10000);
+			if((uint64_t)(n64Delta100Nanosec / 10000) != u64DeltaMillisec){
+				liTimeout.QuadPart = INT64_MIN;
+			} else {
+				liTimeout.QuadPart = -n64Delta100Nanosec;
+			}
 		}
 	}
 	const NTSTATUS lStatus = NtWaitForSingleObject((HANDLE)hThread, false, &liTimeout);

@@ -1,54 +1,20 @@
 #include <MCF/StdMCF.hpp>
-#include <MCF/Thread/Thread.hpp>
-#include <MCF/Core/Clocks.hpp>
-#include <MCF/Core/Array.hpp>
-#include <MCF/Core/LastError.hpp>
-#include <MCF/Core/String.hpp>
+#include <MCF/Core/Matrix.hpp>
 
 using namespace MCF;
 
-extern "C" unsigned MCFMain()
-try {
-	Mutex m1;
-/*
-	volatile int c = 0;
+extern "C" unsigned MCFMain(){
+	Matrix<unsigned, 2, 3> a = {{{ {1,2,3},{4,5,6} }}};
+	Matrix<unsigned, 3, 2> b = {{{ {1,4},{2,5},{3,6} }}};
+	Matrix<unsigned, 2, 2> c = a * b;
 
-	Array<IntrusivePtr<Thread>, 10> threads;
-	for(auto &p : threads){
-		p = Thread::Create([&]{
-			for(int i = 0; i < 10000; ++i){
-				m1.Lock();
-				++c;
-				m1.Unlock();
-			}
-		}, true);
+	for(unsigned y = 0; y < c.GetRowCount(); ++y){
+		std::printf("[ ");
+		for(unsigned x = 0; x < c.GetColumnCount(); ++x){
+			std::printf("%02u ", c[y][x]);
+		}
+		std::printf("]\n");
 	}
-
-	const auto t1 = GetHiResMonoClock();
-	for(auto &p : threads){
-		p->Resume();
-	}
-	for(auto &p : threads){
-		p->Wait();
-	}
-	const auto t2 = GetHiResMonoClock();
-
-	std::printf("c = %d, time = %f\n", c, t2 - t1);
-*/
-	auto now = GetFastMonoClock();
-	auto t1 = GetHiResMonoClock();
-	auto l = m1.TryGetLock(now + 1000);
-	auto t2 = GetHiResMonoClock();
-	std::printf("locked? %d  time = %f\n", l.IsLocking(), t2 - t1);
-
-	now = GetFastMonoClock();
-	t1 = GetHiResMonoClock();
-	l = m1.TryGetLock(now + 1000);
-	t2 = GetHiResMonoClock();
-	std::printf("locked? %d  time = %f\n", l.IsLocking(), t2 - t1);
 
 	return 0;
-} catch(Exception &e){
-	std::printf("MCF::Exception: code = %lu (%s), desc = %s\n", e.GetCode(), AnsiString(GetWin32ErrorDescription(e.GetCode())).GetStr(), e.GetDescription());
-	return 3;
 }

@@ -768,27 +768,27 @@ String<kTypeT> &&operator+=(String<kTypeT> &&lhs, String<kTypeT> &&rhs){
 
 template<StringType kTypeT, StringType kOtherTypeT>
 String<kTypeT> operator+(const String<kTypeT> &lhs, const String<kOtherTypeT> &rhs){
-	String<kTypeT> strRet(lhs);
-	strRet += rhs;
-	return strRet;
+	auto ret = lhs;
+	ret += rhs;
+	return ret;
 }
 template<StringType kTypeT, StringType kOtherTypeT>
 String<kTypeT> operator+(const String<kTypeT> &lhs, const StringView<kOtherTypeT> &rhs){
-	String<kTypeT> strRet(lhs);
-	strRet += rhs;
-	return strRet;
+	auto ret = lhs;
+	ret += rhs;
+	return ret;
 }
 template<StringType kTypeT>
 String<kTypeT> operator+(const String<kTypeT> &lhs, typename String<kTypeT>::Char rhs){
-	String<kTypeT> strRet(lhs);
-	strRet += rhs;
-	return strRet;
+	auto ret = lhs;
+	ret += rhs;
+	return ret;
 }
 template<StringType kTypeT>
 String<kTypeT> operator+(const String<kTypeT> &lhs, const typename String<kTypeT>::Char *rhs){
-	String<kTypeT> strRet(lhs);
-	strRet += rhs;
-	return strRet;
+	auto ret = lhs;
+	ret += rhs;
+	return ret;
 }
 template<StringType kTypeT, StringType kOtherTypeT>
 String<kTypeT> &&operator+(String<kTypeT> &&lhs, const String<kOtherTypeT> &rhs){

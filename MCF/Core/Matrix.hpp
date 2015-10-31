@@ -78,6 +78,17 @@ Matrix<ElementT, kRows, kColumns> &operator*=(Matrix<ElementT, kRows, kColumns> 
 	}
 	return lhs;
 }
+template<typename ElementT, std::size_t kRows, std::size_t kColumns>
+Matrix<ElementT, kRows, kColumns> &operator/=(Matrix<ElementT, kRows, kColumns> &lhs, const ElementT &rhs){
+#pragma GCC ivdep
+	for(std::size_t r = 0; r < kRows; ++r){
+#pragma GCC ivdep
+		for(std::size_t c = 0; c < kColumns; ++c){
+			lhs[r][c] /= rhs;
+		}
+	}
+	return lhs;
+}
 
 template<typename ElementT, std::size_t kRows, std::size_t kColumns>
 Matrix<ElementT, kRows, kColumns> operator+(const Matrix<ElementT, kRows, kColumns> &rhs){
@@ -95,10 +106,18 @@ Matrix<ElementT, kRows, kColumns> operator+(const Matrix<ElementT, kRows, kColum
 	return ret;
 }
 template<typename ElementT, std::size_t kRows, std::size_t kColumns>
+Matrix<ElementT, kRows, kColumns> operator+(Matrix<ElementT, kRows, kColumns> &&lhs, const Matrix<ElementT, kRows, kColumns> &rhs){
+	return std::move(lhs += rhs);
+}
+template<typename ElementT, std::size_t kRows, std::size_t kColumns>
 Matrix<ElementT, kRows, kColumns> operator-(const Matrix<ElementT, kRows, kColumns> &lhs, const Matrix<ElementT, kRows, kColumns> &rhs){
 	auto ret = lhs;
 	ret -= rhs;
 	return ret;
+}
+template<typename ElementT, std::size_t kRows, std::size_t kColumns>
+Matrix<ElementT, kRows, kColumns> operator-(Matrix<ElementT, kRows, kColumns> &&lhs, const Matrix<ElementT, kRows, kColumns> &rhs){
+	return std::move(lhs -= rhs);
 }
 template<typename ElementT, std::size_t kRows, std::size_t kColumns>
 Matrix<ElementT, kRows, kColumns> operator*(const Matrix<ElementT, kRows, kColumns> &lhs, const ElementT &rhs){
@@ -106,18 +125,19 @@ Matrix<ElementT, kRows, kColumns> operator*(const Matrix<ElementT, kRows, kColum
 	ret *= rhs;
 	return ret;
 }
-
-template<typename ElementT, std::size_t kRows, std::size_t kColumns>
-Matrix<ElementT, kRows, kColumns> operator+(Matrix<ElementT, kRows, kColumns> &&lhs, const Matrix<ElementT, kRows, kColumns> &rhs){
-	return std::move(lhs += rhs);
-}
-template<typename ElementT, std::size_t kRows, std::size_t kColumns>
-Matrix<ElementT, kRows, kColumns> operator-(Matrix<ElementT, kRows, kColumns> &&lhs, const Matrix<ElementT, kRows, kColumns> &rhs){
-	return std::move(lhs -= rhs);
-}
 template<typename ElementT, std::size_t kRows, std::size_t kColumns>
 Matrix<ElementT, kRows, kColumns> operator*(Matrix<ElementT, kRows, kColumns> &&lhs, const ElementT &rhs){
 	return std::move(lhs *= rhs);
+}
+template<typename ElementT, std::size_t kRows, std::size_t kColumns>
+Matrix<ElementT, kRows, kColumns> operator/(const Matrix<ElementT, kRows, kColumns> &lhs, const ElementT &rhs){
+	auto ret = lhs;
+	ret /= rhs;
+	return ret;
+}
+template<typename ElementT, std::size_t kRows, std::size_t kColumns>
+Matrix<ElementT, kRows, kColumns> operator/(Matrix<ElementT, kRows, kColumns> &&lhs, const ElementT &rhs){
+	return std::move(lhs /= rhs);
 }
 
 template<typename ElementT, std::size_t kRowsL, std::size_t kColumnsL, std::size_t kColumnsR>

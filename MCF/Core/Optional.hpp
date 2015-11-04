@@ -49,6 +49,10 @@ public:
 	{
 		ResetElement(std::forward<ParamsT>(vParams)...);
 	}
+	template<typename TestT = ElementT,
+		std::enable_if_t<
+			!std::is_same<TestT, std::exception_ptr>::value,
+			int> = 0>
 	Optional(std::exception_ptr rhs) noexcept
 		: Optional()
 	{

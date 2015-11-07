@@ -20,7 +20,7 @@ private:
 	bool x_bSet;
 
 public:
-	explicit Event(bool bInitSet) noexcept
+	explicit constexpr Event(bool bInitSet) noexcept
 		: x_mtxGuard(), x_cvWaiter(), x_bSet(bInitSet)
 	{
 	}

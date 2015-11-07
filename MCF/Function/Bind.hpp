@@ -14,7 +14,7 @@
 namespace MCF {
 
 namespace Impl_Bind {
-	template<typename FuncT, bool kIsCurried, typename ...ParamsT>
+	template<typename FuncT, bool kIsLazy, typename ...ParamsT>
 	class BindResult;
 
 	template<std::size_t kIndexT>
@@ -57,7 +57,7 @@ namespace Impl_Bind {
 		}
 	};
 
-	template<typename FuncT, bool kIsCurried, typename ...ParamsT>
+	template<typename FuncT, bool kIsLazy, typename ...ParamsT>
 	class BindResult {
 	private:
 		FuncT x_vFunc;
@@ -123,7 +123,7 @@ auto Bind(FuncT &&vFunc, ParamsT &&...vParams){
 	return Impl_Bind::BindResult<std::decay_t<FuncT>, false, std::decay_t<ParamsT>...>(std::forward<FuncT>(vFunc), std::forward<ParamsT>(vParams)...);
 }
 template<typename FuncT, typename ...ParamsT>
-auto Curry(FuncT &&vFunc, ParamsT &&...vParams){
+auto LazyBind(FuncT &&vFunc, ParamsT &&...vParams){
 	return Impl_Bind::BindResult<std::decay_t<FuncT>, true, std::decay_t<ParamsT>...>(std::forward<FuncT>(vFunc), std::forward<ParamsT>(vParams)...);
 }
 

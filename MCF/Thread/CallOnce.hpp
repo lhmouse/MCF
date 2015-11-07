@@ -57,20 +57,18 @@ bool CallOnce(OnceFlag &vFlag, FunctionT &&vFunction, ParamsT &&...vParams){
 	Impl_CallOnce::OnceMutexLock();
 	DEFER([&]{ Impl_CallOnce::OnceMutexUnlock(); });
 
-	if(vFlag.Load(kAtomicRelaxed) == OnceFlag::kInitialized){
+	if(vFlag.Load(kAtomicConsume) == OnceFlag::kInitialized){
 		return false;
 	}
 
-	vFlag.Store(OnceFlag::kInitializing, kAtomicRelaxed);
+	vFlag.Store(OnceFlag::kInitializing, kAtomicRelease);
 	try {
 		std::forward<FunctionT>(vFunction)(std::forward<ParamsT>(vParams)...);
 	} catch(...){
-		// vFlag.Store(OnceFlag::kUninitialized, kAtomicRelease);
-		vFlag.Store(OnceFlag::kUninitialized, kAtomicRelaxed);
+		vFlag.Store(OnceFlag::kUninitialized, kAtomicRelease);
 		throw;
 	}
-	// vFlag.Store(OnceFlag::kInitialized, kAtomicRelease);
-	vFlag.Store(OnceFlag::kInitialized, kAtomicRelaxed);
+	vFlag.Store(OnceFlag::kInitialized, kAtomicRelease);
 	return true;
 }
 

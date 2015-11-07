@@ -20,7 +20,10 @@ private:
 	bool x_bSet;
 
 public:
-	explicit Event(bool bInitSet) noexcept;
+	explicit Event(bool bInitSet) noexcept
+		: x_mtxGuard(), x_cvWaiter(), x_bSet(bInitSet)
+	{
+	}
 
 public:
 	bool Wait(std::uint64_t u64UntilFastMonoClock) const noexcept;

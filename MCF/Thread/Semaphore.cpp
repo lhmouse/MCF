@@ -7,12 +7,6 @@
 
 namespace MCF {
 
-// 构造函数和析构函数。
-Semaphore::Semaphore(std::size_t uInitCount) noexcept
-	: x_mtxGuard(), x_cvWaiter(), x_uCount(uInitCount)
-{
-}
-
 // 其他非静态成员函数。
 bool Semaphore::Wait(std::uint64_t u64UntilFastMonoClock) noexcept {
 	Mutex::UniqueLock vLock(x_mtxGuard);

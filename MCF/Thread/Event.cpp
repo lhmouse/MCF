@@ -7,12 +7,6 @@
 
 namespace MCF {
 
-// 构造函数和析构函数。
-Event::Event(bool bInitSet) noexcept
-	: x_mtxGuard(), x_cvWaiter(), x_bSet(bInitSet)
-{
-}
-
 // 其他非静态成员函数。
 bool Event::Wait(std::uint64_t u64UntilFastMonoClock) const noexcept {
 	Mutex::UniqueLock vLock(x_mtxGuard);

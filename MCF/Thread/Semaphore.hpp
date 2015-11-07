@@ -20,7 +20,10 @@ private:
 	std::size_t x_uCount;
 
 public:
-	explicit Semaphore(std::size_t uInitCount) noexcept;
+	explicit Semaphore(std::size_t uInitCount) noexcept
+		: x_mtxGuard(), x_cvWaiter(), x_uCount(uInitCount)
+	{
+	}
 
 public:
 	bool Wait(std::uint64_t u64UntilFastMonoClock) noexcept;

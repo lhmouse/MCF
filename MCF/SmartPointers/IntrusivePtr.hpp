@@ -32,7 +32,7 @@ namespace Impl_IntrusivePtr {
 		mutable Atomic<std::size_t> x_uRef;
 
 	protected:
-		RefCountBase() noexcept
+		constexpr RefCountBase() noexcept
 			: x_uRef(1)
 		{
 		}
@@ -112,8 +112,8 @@ namespace Impl_IntrusivePtr {
 			DeletableBase *x_pOwner;
 
 		public:
-			explicit X_WeakView(DeletableBase *pOwner) noexcept
-				: x_pOwner(pOwner)
+			explicit constexpr X_WeakView(DeletableBase *pOwner) noexcept
+				: x_mtxGuard(), x_pOwner(pOwner)
 			{
 			}
 

@@ -10,11 +10,13 @@
 namespace MCF {
 
 namespace Impl_UniqueNtHandle {
+	using Handle = void *;
+
 	struct NtHandleCloser {
-		constexpr void *operator()() const noexcept {
+		constexpr Handle operator()() const noexcept {
 			return nullptr;
 		}
-		void operator()(void *hObject) const noexcept;
+		void operator()(Handle hObject) const noexcept;
 	};
 
 	using UniqueNtHandle = UniqueHandle<NtHandleCloser>;

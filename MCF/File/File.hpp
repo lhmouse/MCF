@@ -53,6 +53,10 @@ public:
 	}
 
 public:
+	void *GetHandle() const noexcept {
+		return x_hFile.Get();
+	}
+
 	bool IsOpen() const noexcept;
 	void Open(const WideStringView &wsvPath, std::uint32_t u32Flags);
 	bool OpenNoThrow(const WideStringView &wsvPath, std::uint32_t u32Flags);

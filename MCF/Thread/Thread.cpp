@@ -9,7 +9,7 @@
 
 namespace MCF {
 
-void Thread::X_ThreadCloser::operator()(void *hThread) const noexcept {
+void Thread::X_ThreadCloser::operator()(Thread::Handle hThread) const noexcept {
 	::MCF_CRT_CloseThread(hThread);
 }
 

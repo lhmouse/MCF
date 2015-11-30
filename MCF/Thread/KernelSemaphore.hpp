@@ -30,6 +30,10 @@ public:
 	}
 
 public:
+	void *GetHandle() const noexcept {
+		return x_hSemaphore.Get();
+	}
+
 	bool Wait(std::uint64_t u64UntilFastMonoClock) noexcept;
 	void Wait() noexcept;
 	std::size_t Post(std::size_t uPostCount = 1) noexcept;

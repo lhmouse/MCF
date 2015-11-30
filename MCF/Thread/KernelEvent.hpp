@@ -30,6 +30,10 @@ public:
 	}
 
 public:
+	void *GetHandle() const noexcept {
+		return x_hEvent.Get();
+	}
+
 	bool Wait(std::uint64_t u64UntilFastMonoClock) const noexcept;
 	void Wait() const noexcept;
 	bool IsSet() const noexcept;

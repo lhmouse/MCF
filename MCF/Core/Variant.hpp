@@ -116,18 +116,18 @@ public:
 	}
 	template<typename ElementT>
 	const ElementT *Get() const noexcept {
-		const auto pElement = dynamic_cast<X_ActiveElement<std::remove_cv_t<ElementT>> *>(x_pElement.Get());
-		if(!pElement){
+		if(GetIndex() != FindFirstType<ElementT, ElementsT...>()){
 			return nullptr;
 		}
+		const auto pElement = static_cast<X_ActiveElement<std::remove_cv_t<ElementT>> *>(x_pElement.Get());
 		return static_cast<const ElementT *>(pElement->GetAddress());
 	}
 	template<typename ElementT>
 	ElementT *Get() noexcept {
-		const auto pElement = dynamic_cast<X_ActiveElement<std::remove_cv_t<ElementT>> *>(x_pElement.Get());
-		if(!pElement){
+		if(GetIndex() != FindFirstType<ElementT, ElementsT...>()){
 			return nullptr;
 		}
+		const auto pElement = static_cast<X_ActiveElement<std::remove_cv_t<ElementT>> *>(x_pElement.Get());
 		return static_cast<ElementT *>(pElement->GetAddress());
 	}
 	template<typename ElementT, std::enable_if_t<

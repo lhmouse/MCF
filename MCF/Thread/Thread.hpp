@@ -17,12 +17,15 @@
 namespace MCF {
 
 class Thread : NONCOPYABLE, public IntrusiveBase<Thread> {
+public:
+	using Handle = void *;
+
 private:
 	struct X_ThreadCloser {
-		constexpr void *operator()() const noexcept {
+		constexpr Handle operator()() const noexcept {
 			return nullptr;
 		}
-		void operator()(void *hThread) const noexcept;
+		void operator()(Handle hThread) const noexcept;
 	};
 
 public:
@@ -49,6 +52,10 @@ public:
 	~Thread(); // 如果有被捕获的异常，调用 std::terminate()。
 
 public:
+	Handle GetHandle() const noexcept {
+		return x_hThread.Get();
+	}
+
 	bool Wait(std::uint64_t u64UntilFastMonoClock) const noexcept;
 	void Wait() const noexcept;
 

@@ -34,6 +34,10 @@ public:
 	}
 
 public:
+	void *GetHandle() const noexcept {
+		return x_hMutex.Get();
+	}
+
 	bool Try(std::uint64_t u64UntilFastMonoClock = 0) noexcept;
 	void Lock() noexcept;
 	void Unlock() noexcept;

@@ -9,7 +9,7 @@
 namespace MCF {
 
 namespace Impl_UniqueNtHandle {
-	void NtHandleCloser::operator()(void *hObject) const noexcept {
+	void NtHandleCloser::operator()(Handle hObject) const noexcept {
 		const auto lStatus = ::NtClose(hObject);
 		if(!NT_SUCCESS(lStatus)){
 			ASSERT_MSG(false, L"::NtClose() 失败。");

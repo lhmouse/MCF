@@ -1,21 +1,35 @@
 #include <MCF/StdMCF.hpp>
 #include <MCF/Core/Variant.hpp>
+#include <string>
+#include <iostream>
 
 using namespace MCF;
 
-using V = Variant<int, double>;
+template class Variant<int, double, std::string>;
+
+struct func {
+	void operator()(int v){
+		std::cout <<"func(int): v = " <<v <<std::endl;
+	}
+	void operator()(double v){
+		std::cout <<"func(double): v = " <<v <<std::endl;
+	}
+	void operator()(const std::string &v){
+		std::cout <<"func(double): v = " <<v <<std::endl;
+	}
+};
 
 extern "C" unsigned MCFMain(){
-	V v;
-	std::printf("index = %zu\n", v.GetIndex());
-	v = 1;
-	std::printf("index = %zu\n", v.GetIndex());
-	v = 1.0;
-	std::printf("index = %zu\n", v.GetIndex());
+	Variant<int, double, std::string> v;
 
-	std::printf("ptr = %p\n", (void *)v.Get<int>());
+	v = 123;
+	v.Apply(func());
 
-	std::printf("ptr = %p\n", (void *)v.Get<double>());
+	v = 45.67;
+	v.Apply(func());
+
+	v = std::string("hello world!");
+	v.Apply(func());
 
 	return 0;
 }

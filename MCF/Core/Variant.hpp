@@ -6,12 +6,37 @@
 #define MCF_CORE_VARIANT_HPP_
 
 #include "../Utilities/ParameterPackManipulators.hpp"
+#include "../Utilities/Assert.hpp"
 #include "../SmartPointers/UniquePtr.hpp"
+#include "../Core/Exception.hpp"
 #include <utility>
 #include <typeinfo>
 #include <cstddef>
 
 namespace MCF {
+
+namespace Impl_Variant {
+	template<std::size_t kIndex, typename FirstT, typename ...RemainingT>
+	struct Applier {
+		template<typename FunctorT>
+		void operator()(FunctorT &&vFunctor, std::size_t uActiveIndex, void *pElement) const {
+			if(uActiveIndex == kIndex){
+				return std::forward<FunctorT>(vFunctor)(*static_cast<FirstT *>(pElement));
+			}
+			return Applier<kIndex + 1, RemainingT...>()(std::forward<FunctorT>(vFunctor), uActiveIndex, pElement);
+		}
+	};
+	template<std::size_t kIndex, typename FirstT>
+	struct Applier<kIndex, FirstT> {
+		template<typename FunctorT>
+		void operator()(FunctorT &&vFunctor, std::size_t uActiveIndex, void *pElement) const {
+			if(uActiveIndex == kIndex){
+				return std::forward<FunctorT>(vFunctor)(*static_cast<FirstT *>(pElement));
+			}
+			ASSERT(false);
+		}
+	};
+}
 
 template<typename ...ElementsT>
 class Variant {
@@ -49,7 +74,7 @@ private:
 
 	public:
 		std::size_t GetIndex() const noexcept override {
-			return FindFirstType<ElementT, ElementsT...>();
+			return FindFirstType<std::decay_t<ElementT>, ElementsT...>();
 		}
 		const std::type_info *GetTypeInfo() const noexcept override {
 			return &typeid(ElementT);
@@ -71,10 +96,10 @@ public:
 	{
 	}
 	template<typename ElementT, std::enable_if_t<
-		FindFirstType<ElementT, ElementsT...>() == FindLastType<ElementT, ElementsT...>(),
+		FindFirstType<std::decay_t<ElementT>, ElementsT...>() == FindLastType<std::decay_t<ElementT>, ElementsT...>(),
 		int> = 0>
 	Variant(ElementT vElement)
-		: x_pElement(MakeUnique<X_ActiveElement<std::remove_cv_t<ElementT>>>(std::move(vElement)))
+		: x_pElement(MakeUnique<X_ActiveElement<std::decay_t<ElementT>>>(std::forward<ElementT>(vElement)))
 	{
 	}
 	Variant(const Variant &rhs)
@@ -86,10 +111,10 @@ public:
 	{
 	}
 	template<typename ElementT, std::enable_if_t<
-		FindFirstType<ElementT, ElementsT...>() == FindLastType<ElementT, ElementsT...>(),
+		FindFirstType<std::decay_t<ElementT>, ElementsT...>() == FindLastType<std::decay_t<ElementT>, ElementsT...>(),
 		int> = 0>
 	Variant &operator=(ElementT vElement){
-		x_pElement = MakeUnique<X_ActiveElement<std::remove_cv_t<ElementT>>>(std::move(vElement));
+		x_pElement = MakeUnique<X_ActiveElement<std::decay_t<ElementT>>>(std::forward<ElementT>(vElement));
 		return *this;
 	}
 	Variant &operator=(const Variant &rhs){
@@ -116,31 +141,50 @@ public:
 	}
 	template<typename ElementT>
 	const ElementT *Get() const noexcept {
-		if(GetIndex() != FindFirstType<ElementT, ElementsT...>()){
+		if(GetIndex() != FindFirstType<std::decay_t<ElementT>, ElementsT...>()){
 			return nullptr;
 		}
-		const auto pElement = static_cast<X_ActiveElement<std::remove_cv_t<ElementT>> *>(x_pElement.Get());
+		const auto pElement = static_cast<X_ActiveElement<std::decay_t<ElementT>> *>(x_pElement.Get());
 		return static_cast<const ElementT *>(pElement->GetAddress());
 	}
 	template<typename ElementT>
 	ElementT *Get() noexcept {
-		if(GetIndex() != FindFirstType<ElementT, ElementsT...>()){
+		if(GetIndex() != FindFirstType<std::decay_t<ElementT>, ElementsT...>()){
 			return nullptr;
 		}
-		const auto pElement = static_cast<X_ActiveElement<std::remove_cv_t<ElementT>> *>(x_pElement.Get());
+		const auto pElement = static_cast<X_ActiveElement<std::decay_t<ElementT>> *>(x_pElement.Get());
 		return static_cast<ElementT *>(pElement->GetAddress());
 	}
 	template<typename ElementT, std::enable_if_t<
-		FindFirstType<ElementT, ElementsT...>() == FindLastType<ElementT, ElementsT...>(),
+		FindFirstType<std::decay_t<ElementT>, ElementsT...>() == FindLastType<std::decay_t<ElementT>, ElementsT...>(),
 		int> = 0>
 	void Set(ElementT vElement){
-		x_pElement = MakeUnique<X_ActiveElement<std::remove_cv_t<ElementT>>>(std::move(vElement));
+		x_pElement = MakeUnique<X_ActiveElement<std::decay_t<ElementT>>>(std::forward<ElementT>(vElement));
 	}
 	template<typename ElementT, typename ...ParamsT, std::enable_if_t<
-		FindFirstType<ElementT, ElementsT...>() == FindLastType<ElementT, ElementsT...>(),
+		FindFirstType<std::decay_t<ElementT>, ElementsT...>() == FindLastType<std::decay_t<ElementT>, ElementsT...>(),
 		int> = 0>
 	void Emplace(ParamsT &&...vParams){
-		x_pElement = MakeUnique<X_ActiveElement<std::remove_cv_t<ElementT>>>(std::forward<ParamsT>(vParams)...);
+		x_pElement = MakeUnique<X_ActiveElement<std::decay_t<ElementT>>>(std::forward<ParamsT>(vParams)...);
+	}
+
+	template<typename FunctorT>
+	void Apply(FunctorT &&vFunctor) const {
+		if(!x_pElement){
+			DEBUG_THROW(Exception, ERROR_INVALID_PARAMETER, RefCountingNtmbs::View(__PRETTY_FUNCTION__));
+		}
+		const auto uIndex = x_pElement->GetIndex();
+		const auto pElement = x_pElement->GetAddress();
+		Impl_Variant::Applier<0, const std::decay_t<ElementsT>...>()(std::forward<FunctorT>(vFunctor), uIndex, pElement);
+	}
+	template<typename FunctorT>
+	void Apply(FunctorT &&vFunctor){
+		if(!x_pElement){
+			DEBUG_THROW(Exception, ERROR_INVALID_PARAMETER, RefCountingNtmbs::View(__PRETTY_FUNCTION__));
+		}
+		const auto uIndex = x_pElement->GetIndex();
+		const auto pElement = x_pElement->GetAddress();
+		Impl_Variant::Applier<0, std::decay_t<ElementsT>...>()(std::forward<FunctorT>(vFunctor), uIndex, pElement);
 	}
 
 	void Swap(Variant<ElementsT...> &rhs) noexcept {

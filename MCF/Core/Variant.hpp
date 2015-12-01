@@ -16,19 +16,17 @@
 namespace MCF {
 
 namespace Impl_Variant {
-	template<std::size_t kIndex, typename FirstT, typename ...RemainingT>
+	template<typename FunctorT, std::size_t kIndex, typename FirstT, typename ...RemainingT>
 	struct Applier {
-		template<typename FunctorT>
 		void operator()(FunctorT &&vFunctor, std::size_t uActiveIndex, void *pElement) const {
 			if(uActiveIndex == kIndex){
 				return std::forward<FunctorT>(vFunctor)(*static_cast<FirstT *>(pElement));
 			}
-			return Applier<kIndex + 1, RemainingT...>()(std::forward<FunctorT>(vFunctor), uActiveIndex, pElement);
+			return Applier<FunctorT, kIndex + 1, RemainingT...>()(std::forward<FunctorT>(vFunctor), uActiveIndex, pElement);
 		}
 	};
-	template<std::size_t kIndex, typename FirstT>
-	struct Applier<kIndex, FirstT> {
-		template<typename FunctorT>
+	template<typename FunctorT, std::size_t kIndex, typename FirstT>
+	struct Applier<FunctorT, kIndex, FirstT> {
 		void operator()(FunctorT &&vFunctor, std::size_t uActiveIndex, void *pElement) const {
 			if(uActiveIndex == kIndex){
 				return std::forward<FunctorT>(vFunctor)(*static_cast<FirstT *>(pElement));
@@ -175,7 +173,7 @@ public:
 		}
 		const auto uIndex = x_pElement->GetIndex();
 		const auto pElement = x_pElement->GetAddress();
-		Impl_Variant::Applier<0, const std::decay_t<ElementsT>...>()(std::forward<FunctorT>(vFunctor), uIndex, pElement);
+		Impl_Variant::Applier<FunctorT, 0, const ElementsT...>()(std::forward<FunctorT>(vFunctor), uIndex, pElement);
 	}
 	template<typename FunctorT>
 	void Apply(FunctorT &&vFunctor){
@@ -184,7 +182,7 @@ public:
 		}
 		const auto uIndex = x_pElement->GetIndex();
 		const auto pElement = x_pElement->GetAddress();
-		Impl_Variant::Applier<0, std::decay_t<ElementsT>...>()(std::forward<FunctorT>(vFunctor), uIndex, pElement);
+		Impl_Variant::Applier<FunctorT, 0, ElementsT...>()(std::forward<FunctorT>(vFunctor), uIndex, pElement);
 	}
 
 	void Swap(Variant<ElementsT...> &rhs) noexcept {

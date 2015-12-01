@@ -94,7 +94,7 @@ static void DoBail(const wchar_t *pwszDescription){
 	if(bShouldGenerateBreakpoint){
 		__asm__ __volatile__("int3 \n");
 	}
-	TerminateProcess((HANDLE)-1, ERROR_PROCESS_ABORTED);
+	TerminateProcess(GetCurrentProcess(), ERROR_PROCESS_ABORTED);
 	__builtin_unreachable();
 }
 

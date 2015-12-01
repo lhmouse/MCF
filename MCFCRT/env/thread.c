@@ -390,7 +390,7 @@ void *MCF_CRT_CreateThread(unsigned (*pfnThreadProc)(intptr_t), intptr_t nParam,
 	ULONG ulStackReserved = 0, ulStackCommitted = 0;
 	HANDLE hThread;
 	CLIENT_ID vClientId;
-	const NTSTATUS lStatus = RtlCreateUserThread((HANDLE)-1, nullptr, bSuspended, 0, &ulStackReserved, &ulStackCommitted, CRTThreadProc, pInitParams, &hThread, &vClientId);
+	const NTSTATUS lStatus = RtlCreateUserThread(GetCurrentProcess(), nullptr, bSuspended, 0, &ulStackReserved, &ulStackCommitted, CRTThreadProc, pInitParams, &hThread, &vClientId);
 	if(!NT_SUCCESS(lStatus)){
 		free(pInitParams);
 		SetLastError(RtlNtStatusToDosError(lStatus));

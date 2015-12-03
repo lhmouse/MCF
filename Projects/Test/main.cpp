@@ -1,35 +1,17 @@
 #include <MCF/StdMCF.hpp>
-#include <MCF/Core/Variant.hpp>
-#include <string>
+#include <MCFCRT/env/hooks.h>
 #include <iostream>
-
-using namespace MCF;
-
-template class Variant<int, double, std::string>;
-
-struct func {
-	void operator()(int v){
-		std::cout <<"func(int): v = " <<v <<std::endl;
-	}
-	void operator()(double v){
-		std::cout <<"func(double): v = " <<v <<std::endl;
-	}
-	void operator()(const std::string &v){
-		std::cout <<"func(double): v = " <<v <<std::endl;
-	}
-};
+#include <string>
 
 extern "C" unsigned MCFMain(){
-	Variant<int, double, std::string> v;
+	::__MCF_CRT_OnException = [](void *ptr, const std::type_info &ti, const void *ret){
+		std::cout <<"ptr = " <<ptr <<", type = " <<ti.name() <<", ret = " <<ret <<std::endl;
+	};
 
-	v = 123;
-	v.Apply(func());
-
-	v = 45.67;
-	v.Apply(func());
-
-	v = std::string("hello world!");
-	v.Apply(func());
-
+	try {
+		throw std::string("hello");
+	} catch(...){
+		std::cout <<"unknown exception caught!" <<std::endl;
+	}
 	return 0;
 }

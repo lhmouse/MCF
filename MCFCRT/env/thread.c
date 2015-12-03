@@ -402,8 +402,8 @@ void *MCF_CRT_CreateThread(unsigned (*pfnThreadProc)(intptr_t), intptr_t nParam,
 	return (void *)hThread;
 }
 void MCF_CRT_CloseThread(void *hThread){
-	if(!CloseHandle((HANDLE)hThread)){
-		ASSERT_MSG(false, L"CloseHandle() 失败。");
+	if(!NtClose((HANDLE)hThread)){
+		ASSERT_MSG(false, L"NtClose() 失败。");
 	}
 }
 

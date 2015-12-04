@@ -486,10 +486,11 @@ public:
 	std::pair<Char *, std::size_t> ResizeToCapacity() noexcept {
 		const auto uOldSize = GetSize();
 		const auto uNewSize = GetCapacity();
+		const auto uDeltaSize = uNewSize - uOldSize;
 		X_SetSize(uNewSize);
-		return std::make_pair(GetData() + uOldSize, uNewSize - uOldSize);
+		return std::make_pair(GetData() + uOldSize, uDeltaSize);
 	}
-	void Shrink() noexcept {
+	void ShrinkAsZeroTerminated() noexcept {
 		const auto uSzLen = View(GetStr()).GetLength();
 		ASSERT(uSzLen <= GetSize());
 		X_SetSize(uSzLen);

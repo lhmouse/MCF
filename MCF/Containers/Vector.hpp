@@ -77,7 +77,7 @@ private:
 	void X_PrepareForInsertion(std::size_t uPos, std::size_t uDeltaSize){
 		ASSERT(std::is_nothrow_move_constructible<ElementT>::value);
 		ASSERT(!IsEmpty());
-		ASSERT(uPos <= GetSize());
+		ASSERT(uPos <= x_uSize);
 
 		ReserveMore(uDeltaSize);
 		const auto pBegin = GetBegin();
@@ -90,8 +90,8 @@ private:
 	void X_UndoPreparation(std::size_t uPos, std::size_t uDeltaSize) noexcept {
 		ASSERT(std::is_nothrow_move_constructible<ElementT>::value);
 		ASSERT(!IsEmpty());
-		ASSERT(uPos <= GetSize());
-		ASSERT(uDeltaSize <= GetSize() - uPos);
+		ASSERT(uPos <= x_uSize);
+		ASSERT(uDeltaSize <= x_uSize - uPos);
 
 		const auto pBegin = GetBegin();
 		for(std::size_t i = uPos; i < x_uSize; ++i){
@@ -299,12 +299,20 @@ public:
 		if(uNewSize < uOldSize){
 			throw std::bad_array_new_length();
 		}
-		Append(uDeltaSize - x_uSize, vParams...);
+		Append(uDeltaSize, vParams...);
 		return GetData() + uOldSize;
+	}
+	template<typename ...ParamsT>
+	std::pair<Element *, std::size_t> ResizeToCapacity(const ParamsT &...vParams){
+		const auto uOldSize = x_uSize;
+		const auto uNewSize = x_uCapacity;
+		const auto uDeltaSize = uNewSize - uOldSize;
+		Append(uDeltaSize, vParams...);
+		return std::make_pair(GetData() + uOldSize, uDeltaSize);
 	}
 
 	void Reserve(std::size_t uNewCapacity){
-		const auto uOldCapacity = GetCapacity();
+		const auto uOldCapacity = x_uCapacity;
 		if(uNewCapacity <= uOldCapacity){
 			return;
 		}
@@ -362,7 +370,7 @@ public:
 	}
 	template<typename ...ParamsT>
 	Element &UncheckedPush(ParamsT &&...vParams) noexcept(std::is_nothrow_constructible<Element, ParamsT &&...>::value) {
-		ASSERT(GetCapacity() - x_uSize > 0);
+		ASSERT(x_uCapacity - x_uSize > 0);
 
 		const auto pBegin = GetBegin();
 		const auto pElem = pBegin + x_uSize;
@@ -450,12 +458,12 @@ public:
 			}
 			++x_uSize;
 		} else {
-			auto uNewCapacity = GetSize() + 1;
-			if(uNewCapacity < GetSize()){
+			auto uNewCapacity = x_uSize + 1;
+			if(uNewCapacity < x_uSize){
 				throw std::bad_array_new_length();
 			}
-			if(uNewCapacity < GetCapacity()){
-				uNewCapacity = GetCapacity();
+			if(uNewCapacity < x_uCapacity){
+				uNewCapacity = x_uCapacity;
 			}
 			Vector vecTemp;
 			vecTemp.Reserve(uNewCapacity);
@@ -501,12 +509,12 @@ public:
 			}
 			x_uSize += uDeltaSize;
 		} else {
-			auto uNewCapacity = GetSize() + uDeltaSize;
-			if(uNewCapacity < GetSize()){
+			auto uNewCapacity = x_uSize + uDeltaSize;
+			if(uNewCapacity < x_uSize){
 				throw std::bad_array_new_length();
 			}
-			if(uNewCapacity < GetCapacity()){
-				uNewCapacity = GetCapacity();
+			if(uNewCapacity < x_uCapacity){
+				uNewCapacity = x_uCapacity;
 			}
 			Vector vecTemp;
 			vecTemp.Reserve(uNewCapacity);
@@ -560,12 +568,12 @@ public:
 		} else {
 			if(kHasDeltaSizeHint){
 				const auto uDeltaSize = static_cast<std::size_t>(std::distance(itBegin, itEnd));
-				auto uNewCapacity = GetSize() + uDeltaSize;
-				if(uNewCapacity < GetSize()){
+				auto uNewCapacity = x_uSize + uDeltaSize;
+				if(uNewCapacity < x_uSize){
 					throw std::bad_array_new_length();
 				}
-				if(uNewCapacity < GetCapacity()){
-					uNewCapacity = GetCapacity();
+				if(uNewCapacity < x_uCapacity){
+					uNewCapacity = x_uCapacity;
 				}
 				Vector vecTemp;
 				vecTemp.Reserve(uNewCapacity);
@@ -581,7 +589,7 @@ public:
 				*this = std::move(vecTemp);
 			} else {
 				Vector vecTemp;
-				vecTemp.Reserve(GetCapacity());
+				vecTemp.Reserve(x_uCapacity);
 				for(auto pCur = GetBegin(); pCur != pPos; ++pCur){
 					vecTemp.UncheckedPush(*pCur);
 				}
@@ -632,7 +640,7 @@ public:
 			x_uSize -= uDeltaSize;
 		} else {
 			Vector vecTemp;
-			vecTemp.Reserve(GetCapacity());
+			vecTemp.Reserve(x_uCapacity);
 			for(auto pCur = GetBegin(); pCur != pBegin; ++pCur){
 				vecTemp.UncheckedPush(*pCur);
 			}

@@ -26,7 +26,7 @@ void BFill(Ty &vDst, bool bVal) noexcept {
 	static_assert(!std::is_empty<Ty>::value, "Ty shall not be empty.");
 	static_assert(std::is_trivial<Ty>::value, "Ty must be a trivial type.");
 
-	__builtin_memset(&vDst, bVal ? -1 : 0, sizeof(vDst));
+	__builtin_memset(&vDst, bVal ? 0xFF : 0, sizeof(vDst));
 }
 
 template<typename Tx, typename Ty>

@@ -15,20 +15,20 @@ class Exception : public std::exception {
 private:
 	const char *x_pszFile;
 	unsigned long x_ulLine;
-	unsigned long x_ulCode;
-	RefCountingNtmbs x_rcsDescription;
+	unsigned long x_ulErrorCode;
+	RefCountingNtmbs x_rcsErrorMessage;
 
 public:
-	Exception(const char *pszFile, unsigned long ulLine, unsigned long ulCode, RefCountingNtmbs rcsDescription) noexcept
+	Exception(const char *pszFile, unsigned long ulLine, unsigned long ulErrorCode, RefCountingNtmbs rcsErrorMessage) noexcept
 		: std::exception()
-		, x_pszFile(pszFile), x_ulLine(ulLine), x_ulCode(ulCode), x_rcsDescription(std::move(rcsDescription))
+		, x_pszFile(pszFile), x_ulLine(ulLine), x_ulErrorCode(ulErrorCode), x_rcsErrorMessage(std::move(rcsErrorMessage))
 	{
 	}
 	~Exception() override;
 
 public:
 	const char *what() const noexcept override {
-		return x_rcsDescription;
+		return x_rcsErrorMessage;
 	}
 
 	const char *GetFile() const noexcept {
@@ -38,21 +38,21 @@ public:
 		return x_ulLine;
 	}
 	unsigned long GetCode() const noexcept {
-		return x_ulCode;
+		return x_ulErrorCode;
 	}
-	const char *GetDescription() const noexcept {
-		return x_rcsDescription;
+	const char *GetErrorMessage() const noexcept {
+		return x_rcsErrorMessage;
 	}
 };
 
 class SystemError : public Exception {
 public:
-	SystemError(const char *pszFile, unsigned long ulLine, unsigned long ulCode, RefCountingNtmbs rcsFunc) noexcept
-		: Exception(pszFile, ulLine, ulCode, std::move(rcsFunc))
+	SystemError(const char *pszFile, unsigned long ulLine, unsigned long ulErrorCode, RefCountingNtmbs rcsFunction) noexcept
+		: Exception(pszFile, ulLine, ulErrorCode, std::move(rcsFunction))
 	{
 	}
-	SystemError(const char *pszFile, unsigned long ulLine, RefCountingNtmbs rcsFunc) noexcept
-		: SystemError(pszFile, ulLine, ::MCF_CRT_GetWin32LastError(), std::move(rcsFunc))
+	SystemError(const char *pszFile, unsigned long ulLine, RefCountingNtmbs rcsFunction) noexcept
+		: SystemError(pszFile, ulLine, ::MCF_CRT_GetWin32LastError(), std::move(rcsFunction))
 	{
 	}
 	~SystemError() override;

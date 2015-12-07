@@ -28,6 +28,14 @@ Git is GAAAAAAAARBAGE. Git SUCKs.
 lh_mouse
 2013-10-11
 
+WHY GIT SUCKS
+===================
+@FrankHB recommended this article https://gist.github.com/incompl/3819571 that I'd like to share with you.
+Because that is exactly what I want to say and I am simply too busy to write one.
+
+lh_mouse
+2015-12-07
+
 编译说明
 ===================
 编译器请使用 i686-w64-mingw32-gcc 或 x86_64-w64-mingw32-gcc，线程模型选 Win32。

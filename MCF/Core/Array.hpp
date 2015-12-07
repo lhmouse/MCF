@@ -16,275 +16,480 @@
 
 namespace MCF {
 
-namespace Impl_Array {
-	template<typename ElementT, std::size_t kSize>
-	class Array {
-		static_assert(kSize > 0, "An array shall have a non-zero size.");
+template<typename ElementT, std::size_t kSizeT, std::size_t ...kRemainingT>
+class Array;
 
-	public:
-		using ConstView = ArrayView<const ElementT>;
-		using View      = ArrayView<      ElementT>;
+template<typename ElementT, std::size_t kSizeT>
+class Array<ElementT, kSizeT> {
+	static_assert(kSizeT > 0, "An array shall have a non-zero size.");
 
-	public:
-		ElementT m_aStorage[kSize];
+public:
+	ElementT m_aStorage[kSizeT];
 
-	public:
-		// 整体仿造容器，唯独没有 Clear()。
-		using Element         = ElementT;
-		using ConstEnumerator = Impl_EnumeratorTemplate::ConstEnumerator <Array>;
-		using Enumerator      = Impl_EnumeratorTemplate::Enumerator      <Array>;
+public:
+	// 整体仿造容器，唯独没有 Clear()。
+	using Element         = ElementT;
+	using ConstEnumerator = Impl_EnumeratorTemplate::ConstEnumerator <Array>;
+	using Enumerator      = Impl_EnumeratorTemplate::Enumerator      <Array>;
 
-		constexpr bool IsEmpty() const noexcept {
-			return false;
-		}
+	using ConstView       = ArrayView<const Element>;
+	using View            = ArrayView<      Element>;
 
-		constexpr const Element *GetFirst() const noexcept {
-			return GetBegin();
-		}
-		Element *GetFirst() noexcept {
-			return GetBegin();
-		}
-		constexpr const Element *GetConstFirst() const noexcept {
-			return GetFirst();
-		}
-		constexpr const Element *GetLast() const noexcept {
-			return GetEnd() - 1;
-		}
-		Element *GetLast() noexcept {
-			return GetEnd() - 1;
-		}
-		constexpr const Element *GetConstLast() const noexcept {
-			return GetLast();
-		}
-
-		const Element *GetPrev(const Element *pPos) const noexcept {
-			ASSERT(pPos);
-
-			const auto pBegin = GetBegin();
-			auto uOffset = static_cast<std::size_t>(pPos - pBegin);
-			if(uOffset == 0){
-				return nullptr;
-			}
-			--uOffset;
-			return pBegin + uOffset;
-		}
-		Element *GetPrev(Element *pPos) noexcept {
-			ASSERT(pPos);
-
-			const auto pBegin = GetBegin();
-			auto uOffset = static_cast<std::size_t>(pPos - pBegin);
-			if(uOffset == 0){
-				return nullptr;
-			}
-			--uOffset;
-			return pBegin + uOffset;
-		}
-		const Element *GetNext(const Element *pPos) const noexcept {
-			ASSERT(pPos);
-
-			const auto pBegin = GetBegin();
-			auto uOffset = static_cast<std::size_t>(pPos - pBegin);
-			++uOffset;
-			if(uOffset == kSize){
-				return nullptr;
-			}
-			return pBegin + uOffset;
-		}
-		Element *GetNext(Element *pPos) noexcept {
-			ASSERT(pPos);
-
-			const auto pBegin = GetBegin();
-			auto uOffset = static_cast<std::size_t>(pPos - pBegin);
-			++uOffset;
-			if(uOffset == kSize){
-				return nullptr;
-			}
-			return pBegin + uOffset;
-		}
-
-		ConstEnumerator EnumerateFirst() const noexcept {
-			return ConstEnumerator(*this, GetFirst());
-		}
-		Enumerator EnumerateFirst() noexcept {
-			return Enumerator(*this, GetFirst());
-		}
-		ConstEnumerator EnumerateConstFirst() const noexcept {
-			return EnumerateFirst();
-		}
-		ConstEnumerator EnumerateLast() const noexcept {
-			return ConstEnumerator(*this, GetLast());
-		}
-		Enumerator EnumerateLast() noexcept {
-			return Enumerator(*this, GetLast());
-		}
-		ConstEnumerator EnumerateConstLast() const noexcept {
-			return EnumerateLast();
-		}
-		constexpr ConstEnumerator EnumerateSingular() const noexcept {
-			return ConstEnumerator(*this, nullptr);
-		}
-		Enumerator EnumerateSingular() noexcept {
-			return Enumerator(*this, nullptr);
-		}
-		constexpr ConstEnumerator EnumerateConstSingular() const noexcept {
-			return EnumerateSingular();
-		}
-
-		void Swap(Array &rhs) noexcept(noexcept(std::swap(std::declval<ElementT (&)[kSize]>(), std::declval<ElementT (&)[kSize]>()))) {
-			using std::swap;
-			swap(m_aStorage, rhs.m_aStorage);
-		}
-
-		// Array 需求。
-		const Element *GetData() const noexcept {
-			return m_aStorage;
-		}
-		Element *GetData() noexcept {
-			return m_aStorage;
-		}
-		static constexpr std::size_t GetSize() noexcept {
-			return kSize;
-		}
-
-		const Element *GetBegin() const noexcept {
-			return GetData();
-		}
-		Element *GetBegin() noexcept {
-			return GetData();
-		}
-		const Element *GetConstBegin() const noexcept {
-			return GetBegin();
-		}
-		const Element *GetEnd() const noexcept {
-			return GetData() + kSize;
-		}
-		Element *GetEnd() noexcept {
-			return GetData() + kSize;
-		}
-		const Element *GetConstEnd() const noexcept {
-			return GetEnd();
-		}
-
-		const Element &Get(std::size_t uIndex) const {
-			if(uIndex >= kSize){
-				DEBUG_THROW(Exception, ERROR_INVALID_PARAMETER, RefCountingNtmbs::View(__PRETTY_FUNCTION__));
-			}
-			return UncheckedGet(uIndex);
-		}
-		Element &Get(std::size_t uIndex){
-			if(uIndex >= kSize){
-				DEBUG_THROW(Exception, ERROR_INVALID_PARAMETER, RefCountingNtmbs::View(__PRETTY_FUNCTION__));
-			}
-			return UncheckedGet(uIndex);
-		}
-		const Element &UncheckedGet(std::size_t uIndex) const noexcept {
-			ASSERT(uIndex < kSize);
-
-			return GetData()[uIndex];
-		}
-		Element &UncheckedGet(std::size_t uIndex) noexcept {
-			ASSERT(uIndex < kSize);
-
-			return GetData()[uIndex];
-		}
-
-		const Element &operator[](std::size_t uIndex) const noexcept {
-			return UncheckedGet(uIndex);
-		}
-		Element &operator[](std::size_t uIndex) noexcept {
-			return UncheckedGet(uIndex);
-		}
-
-	public:
-		ConstView GetView() const noexcept {
-			return ConstView(GetData(), GetSize());
-		}
-		View GetView() noexcept {
-			return View(GetData(), GetSize());
-		}
-
-	public:
-		operator Array<const volatile ElementT, kSize> &() const volatile & noexcept {
-			return reinterpret_cast<Array<const volatile ElementT, kSize> &>(const_cast<Array &>(*this));
-		}
-		operator Array<const ElementT, kSize> &() const & noexcept {
-			return reinterpret_cast<Array<const ElementT, kSize> &>(const_cast<Array &>(*this));
-		}
-		operator Array<volatile ElementT, kSize> &() volatile & noexcept {
-			return reinterpret_cast<Array<volatile ElementT, kSize> &>(const_cast<Array &>(*this));
-		}
-
-		operator Array<const volatile ElementT, kSize> &&() const volatile && noexcept {
-			return reinterpret_cast<Array<const volatile ElementT, kSize> &&>(const_cast<Array &>(*this));
-		}
-		operator Array<const ElementT, kSize> &&() const && noexcept {
-			return reinterpret_cast<Array<const ElementT, kSize> &&>(const_cast<Array &>(*this));
-		}
-		operator Array<volatile ElementT, kSize> &&() volatile && noexcept {
-			return reinterpret_cast<Array<volatile ElementT, kSize> &&>(const_cast<Array &>(*this));
-		}
-
-		operator ConstView() const noexcept {
-			return GetView();
-		}
-		operator View() noexcept {
-			return GetView();
-		}
-
-		explicit operator const ElementT *() const noexcept {
-			return GetData();
-		}
-		explicit operator ElementT *() noexcept {
-			return GetData();
-		}
-	};
-
-	template<typename ElementT, std::size_t kCapacity>
-	void swap(Array<ElementT, kCapacity> &lhs, Array<ElementT, kCapacity> &rhs) noexcept(noexcept(lhs.Swap(rhs))) {
-		lhs.Swap(rhs);
+	constexpr bool IsEmpty() const noexcept {
+		return false;
 	}
 
-	template<typename ElementT, std::size_t kCapacity>
-	decltype(auto) begin(const Array<ElementT, kCapacity> &rhs) noexcept {
-		return rhs.EnumerateFirst();
+	constexpr const Element *GetFirst() const noexcept {
+		return GetBegin();
 	}
-	template<typename ElementT, std::size_t kCapacity>
-	decltype(auto) begin(Array<ElementT, kCapacity> &rhs) noexcept {
-		return rhs.EnumerateFirst();
+	Element *GetFirst() noexcept {
+		return GetBegin();
 	}
-	template<typename ElementT, std::size_t kCapacity>
-	decltype(auto) cbegin(const Array<ElementT, kCapacity> &rhs) noexcept {
-		return begin(rhs);
+	constexpr const Element *GetConstFirst() const noexcept {
+		return GetFirst();
 	}
-	template<typename ElementT, std::size_t kCapacity>
-	decltype(auto) end(const Array<ElementT, kCapacity> &rhs) noexcept {
-		return rhs.EnumerateSingular();
+	constexpr const Element *GetLast() const noexcept {
+		return GetEnd() - 1;
 	}
-	template<typename ElementT, std::size_t kCapacity>
-	decltype(auto) end(Array<ElementT, kCapacity> &rhs) noexcept {
-		return rhs.EnumerateSingular();
+	Element *GetLast() noexcept {
+		return GetEnd() - 1;
 	}
-	template<typename ElementT, std::size_t kCapacity>
-	decltype(auto) cend(const Array<ElementT, kCapacity> &rhs) noexcept {
-		return end(rhs);
+	constexpr const Element *GetConstLast() const noexcept {
+		return GetLast();
 	}
 
-	template<typename ElementT, std::size_t kCapacity>
-	auto DimensionExpander() noexcept
-		-> Array<ElementT, kCapacity>;
-	template<typename ElementT, std::size_t kCapacity, std::size_t ...kMore>
-	auto DimensionExpander() noexcept
-		-> Array<decltype(DimensionExpander<ElementT, kMore...>()), kCapacity>;
+	const Element *GetPrev(const Element *pPos) const noexcept {
+		ASSERT(pPos);
+
+		const auto pBegin = GetBegin();
+		auto uOffset = static_cast<std::size_t>(pPos - pBegin);
+		if(uOffset == 0){
+			return nullptr;
+		}
+		--uOffset;
+		return pBegin + uOffset;
+	}
+	Element *GetPrev(Element *pPos) noexcept {
+		ASSERT(pPos);
+
+		const auto pBegin = GetBegin();
+		auto uOffset = static_cast<std::size_t>(pPos - pBegin);
+		if(uOffset == 0){
+			return nullptr;
+		}
+		--uOffset;
+		return pBegin + uOffset;
+	}
+	const Element *GetNext(const Element *pPos) const noexcept {
+		ASSERT(pPos);
+
+		const auto pBegin = GetBegin();
+		auto uOffset = static_cast<std::size_t>(pPos - pBegin);
+		++uOffset;
+		if(uOffset == kSizeT){
+			return nullptr;
+		}
+		return pBegin + uOffset;
+	}
+	Element *GetNext(Element *pPos) noexcept {
+		ASSERT(pPos);
+
+		const auto pBegin = GetBegin();
+		auto uOffset = static_cast<std::size_t>(pPos - pBegin);
+		++uOffset;
+		if(uOffset == kSizeT){
+			return nullptr;
+		}
+		return pBegin + uOffset;
+	}
+
+	ConstEnumerator EnumerateFirst() const noexcept {
+		return ConstEnumerator(*this, GetFirst());
+	}
+	Enumerator EnumerateFirst() noexcept {
+		return Enumerator(*this, GetFirst());
+	}
+	ConstEnumerator EnumerateConstFirst() const noexcept {
+		return EnumerateFirst();
+	}
+	ConstEnumerator EnumerateLast() const noexcept {
+		return ConstEnumerator(*this, GetLast());
+	}
+	Enumerator EnumerateLast() noexcept {
+		return Enumerator(*this, GetLast());
+	}
+	ConstEnumerator EnumerateConstLast() const noexcept {
+		return EnumerateLast();
+	}
+	constexpr ConstEnumerator EnumerateSingular() const noexcept {
+		return ConstEnumerator(*this, nullptr);
+	}
+	Enumerator EnumerateSingular() noexcept {
+		return Enumerator(*this, nullptr);
+	}
+	constexpr ConstEnumerator EnumerateConstSingular() const noexcept {
+		return EnumerateSingular();
+	}
+
+	void Swap(Array &rhs) noexcept(noexcept(std::swap(std::declval<Element (&)[kSizeT]>(), std::declval<Element (&)[kSizeT]>()))) {
+		using std::swap;
+		swap(m_aStorage, rhs.m_aStorage);
+	}
+
+	// Array 需求。
+	const Element *GetData() const noexcept {
+		return m_aStorage;
+	}
+	Element *GetData() noexcept {
+		return m_aStorage;
+	}
+	static constexpr std::size_t GetSize() noexcept {
+		return kSizeT;
+	}
+
+	const Element *GetBegin() const noexcept {
+		return GetData();
+	}
+	Element *GetBegin() noexcept {
+		return GetData();
+	}
+	const Element *GetConstBegin() const noexcept {
+		return GetBegin();
+	}
+	const Element *GetEnd() const noexcept {
+		return GetData() + kSizeT;
+	}
+	Element *GetEnd() noexcept {
+		return GetData() + kSizeT;
+	}
+	const Element *GetConstEnd() const noexcept {
+		return GetEnd();
+	}
+
+	const Element &Get(std::size_t uIndex) const {
+		if(uIndex >= kSizeT){
+			DEBUG_THROW(Exception, ERROR_INVALID_PARAMETER, RefCountingNtmbs::View(__PRETTY_FUNCTION__));
+		}
+		return UncheckedGet(uIndex);
+	}
+	Element &Get(std::size_t uIndex){
+		if(uIndex >= kSizeT){
+			DEBUG_THROW(Exception, ERROR_INVALID_PARAMETER, RefCountingNtmbs::View(__PRETTY_FUNCTION__));
+		}
+		return UncheckedGet(uIndex);
+	}
+	const Element &UncheckedGet(std::size_t uIndex) const noexcept {
+		ASSERT(uIndex < kSizeT);
+
+		return GetData()[uIndex];
+	}
+	Element &UncheckedGet(std::size_t uIndex) noexcept {
+		ASSERT(uIndex < kSizeT);
+
+		return GetData()[uIndex];
+	}
+
+	const Element &operator[](std::size_t uIndex) const noexcept {
+		return UncheckedGet(uIndex);
+	}
+	Element &operator[](std::size_t uIndex) noexcept {
+		return UncheckedGet(uIndex);
+	}
+
+public:
+	ConstView GetView() const noexcept {
+		return ConstView(GetData(), GetSize());
+	}
+	View GetView() noexcept {
+		return View(GetData(), GetSize());
+	}
+
+public:
+	operator Array<const volatile Element, kSizeT> &() const volatile & noexcept {
+		return reinterpret_cast<Array<const volatile Element, kSizeT> &>(const_cast<Array &>(*this));
+	}
+	operator Array<const Element, kSizeT> &() const & noexcept {
+		return reinterpret_cast<Array<const Element, kSizeT> &>(const_cast<Array &>(*this));
+	}
+	operator Array<volatile Element, kSizeT> &() volatile & noexcept {
+		return reinterpret_cast<Array<volatile Element, kSizeT> &>(const_cast<Array &>(*this));
+	}
+
+	operator Array<const volatile Element, kSizeT> &&() const volatile && noexcept {
+		return reinterpret_cast<Array<const volatile Element, kSizeT> &&>(const_cast<Array &>(*this));
+	}
+	operator Array<const Element, kSizeT> &&() const && noexcept {
+		return reinterpret_cast<Array<const Element, kSizeT> &&>(const_cast<Array &>(*this));
+	}
+	operator Array<volatile Element, kSizeT> &&() volatile && noexcept {
+		return reinterpret_cast<Array<volatile Element, kSizeT> &&>(const_cast<Array &>(*this));
+	}
+
+	operator ConstView() const noexcept {
+		return GetView();
+	}
+	operator View() noexcept {
+		return GetView();
+	}
+
+	explicit operator const Element *() const noexcept {
+		return GetData();
+	}
+	explicit operator Element *() noexcept {
+		return GetData();
+	}
+};
+
+template<typename ElementT, std::size_t kSizeT, std::size_t ...kRemainingT>
+class Array {
+	static_assert(kSizeT > 0, "An array shall have a non-zero size.");
+
+public:
+	Array<ElementT, kRemainingT...> m_aStorage[kSizeT];
+
+public:
+	// 整体仿造容器，唯独没有 Clear()。
+	using Element         = Array<ElementT, kRemainingT...>;
+	using ConstEnumerator = Impl_EnumeratorTemplate::ConstEnumerator <Array>;
+	using Enumerator      = Impl_EnumeratorTemplate::Enumerator      <Array>;
+
+	using ConstView       = ArrayView<const Element>;
+	using View            = ArrayView<      Element>;
+
+	constexpr bool IsEmpty() const noexcept {
+		return false;
+	}
+
+	constexpr const Element *GetFirst() const noexcept {
+		return GetBegin();
+	}
+	Element *GetFirst() noexcept {
+		return GetBegin();
+	}
+	constexpr const Element *GetConstFirst() const noexcept {
+		return GetFirst();
+	}
+	constexpr const Element *GetLast() const noexcept {
+		return GetEnd() - 1;
+	}
+	Element *GetLast() noexcept {
+		return GetEnd() - 1;
+	}
+	constexpr const Element *GetConstLast() const noexcept {
+		return GetLast();
+	}
+
+	const Element *GetPrev(const Element *pPos) const noexcept {
+		ASSERT(pPos);
+
+		const auto pBegin = GetBegin();
+		auto uOffset = static_cast<std::size_t>(pPos - pBegin);
+		if(uOffset == 0){
+			return nullptr;
+		}
+		--uOffset;
+		return pBegin + uOffset;
+	}
+	Element *GetPrev(Element *pPos) noexcept {
+		ASSERT(pPos);
+
+		const auto pBegin = GetBegin();
+		auto uOffset = static_cast<std::size_t>(pPos - pBegin);
+		if(uOffset == 0){
+			return nullptr;
+		}
+		--uOffset;
+		return pBegin + uOffset;
+	}
+	const Element *GetNext(const Element *pPos) const noexcept {
+		ASSERT(pPos);
+
+		const auto pBegin = GetBegin();
+		auto uOffset = static_cast<std::size_t>(pPos - pBegin);
+		++uOffset;
+		if(uOffset == kSizeT){
+			return nullptr;
+		}
+		return pBegin + uOffset;
+	}
+	Element *GetNext(Element *pPos) noexcept {
+		ASSERT(pPos);
+
+		const auto pBegin = GetBegin();
+		auto uOffset = static_cast<std::size_t>(pPos - pBegin);
+		++uOffset;
+		if(uOffset == kSizeT){
+			return nullptr;
+		}
+		return pBegin + uOffset;
+	}
+
+	ConstEnumerator EnumerateFirst() const noexcept {
+		return ConstEnumerator(*this, GetFirst());
+	}
+	Enumerator EnumerateFirst() noexcept {
+		return Enumerator(*this, GetFirst());
+	}
+	ConstEnumerator EnumerateConstFirst() const noexcept {
+		return EnumerateFirst();
+	}
+	ConstEnumerator EnumerateLast() const noexcept {
+		return ConstEnumerator(*this, GetLast());
+	}
+	Enumerator EnumerateLast() noexcept {
+		return Enumerator(*this, GetLast());
+	}
+	ConstEnumerator EnumerateConstLast() const noexcept {
+		return EnumerateLast();
+	}
+	constexpr ConstEnumerator EnumerateSingular() const noexcept {
+		return ConstEnumerator(*this, nullptr);
+	}
+	Enumerator EnumerateSingular() noexcept {
+		return Enumerator(*this, nullptr);
+	}
+	constexpr ConstEnumerator EnumerateConstSingular() const noexcept {
+		return EnumerateSingular();
+	}
+
+	void Swap(Array &rhs) noexcept(noexcept(std::swap(std::declval<Element (&)[kSizeT]>(), std::declval<Element (&)[kSizeT]>()))) {
+		using std::swap;
+		swap(m_aStorage, rhs.m_aStorage);
+	}
+
+	// Array 需求。
+	const Element *GetData() const noexcept {
+		return m_aStorage;
+	}
+	Element *GetData() noexcept {
+		return m_aStorage;
+	}
+	static constexpr std::size_t GetSize() noexcept {
+		return kSizeT;
+	}
+
+	const Element *GetBegin() const noexcept {
+		return GetData();
+	}
+	Element *GetBegin() noexcept {
+		return GetData();
+	}
+	const Element *GetConstBegin() const noexcept {
+		return GetBegin();
+	}
+	const Element *GetEnd() const noexcept {
+		return GetData() + kSizeT;
+	}
+	Element *GetEnd() noexcept {
+		return GetData() + kSizeT;
+	}
+	const Element *GetConstEnd() const noexcept {
+		return GetEnd();
+	}
+
+	const Element &Get(std::size_t uIndex) const {
+		if(uIndex >= kSizeT){
+			DEBUG_THROW(Exception, ERROR_INVALID_PARAMETER, RefCountingNtmbs::View(__PRETTY_FUNCTION__));
+		}
+		return UncheckedGet(uIndex);
+	}
+	Element &Get(std::size_t uIndex){
+		if(uIndex >= kSizeT){
+			DEBUG_THROW(Exception, ERROR_INVALID_PARAMETER, RefCountingNtmbs::View(__PRETTY_FUNCTION__));
+		}
+		return UncheckedGet(uIndex);
+	}
+	const Element &UncheckedGet(std::size_t uIndex) const noexcept {
+		ASSERT(uIndex < kSizeT);
+
+		return GetData()[uIndex];
+	}
+	Element &UncheckedGet(std::size_t uIndex) noexcept {
+		ASSERT(uIndex < kSizeT);
+
+		return GetData()[uIndex];
+	}
+
+	const Element &operator[](std::size_t uIndex) const noexcept {
+		return UncheckedGet(uIndex);
+	}
+	Element &operator[](std::size_t uIndex) noexcept {
+		return UncheckedGet(uIndex);
+	}
+
+public:
+	ConstView GetView() const noexcept {
+		return ConstView(GetData(), GetSize());
+	}
+	View GetView() noexcept {
+		return View(GetData(), GetSize());
+	}
+
+public:
+	operator Array<const volatile Element, kSizeT> &() const volatile & noexcept {
+		return reinterpret_cast<Array<const volatile Element, kSizeT> &>(const_cast<Array &>(*this));
+	}
+	operator Array<const Element, kSizeT> &() const & noexcept {
+		return reinterpret_cast<Array<const Element, kSizeT> &>(const_cast<Array &>(*this));
+	}
+	operator Array<volatile Element, kSizeT> &() volatile & noexcept {
+		return reinterpret_cast<Array<volatile Element, kSizeT> &>(const_cast<Array &>(*this));
+	}
+
+	operator Array<const volatile Element, kSizeT> &&() const volatile && noexcept {
+		return reinterpret_cast<Array<const volatile Element, kSizeT> &&>(const_cast<Array &>(*this));
+	}
+	operator Array<const Element, kSizeT> &&() const && noexcept {
+		return reinterpret_cast<Array<const Element, kSizeT> &&>(const_cast<Array &>(*this));
+	}
+	operator Array<volatile Element, kSizeT> &&() volatile && noexcept {
+		return reinterpret_cast<Array<volatile Element, kSizeT> &&>(const_cast<Array &>(*this));
+	}
+
+	operator ConstView() const noexcept {
+		return GetView();
+	}
+	operator View() noexcept {
+		return GetView();
+	}
+
+	explicit operator const Element *() const noexcept {
+		return GetData();
+	}
+	explicit operator Element *() noexcept {
+		return GetData();
+	}
+};
+
+template<typename Element, std::size_t kCapacity>
+void swap(Array<Element, kCapacity> &lhs, Array<Element, kCapacity> &rhs) noexcept(noexcept(lhs.Swap(rhs))) {
+	lhs.Swap(rhs);
 }
 
-template<typename ElementT, std::size_t ...kCapacitySequence>
-using Array = decltype(Impl_Array::DimensionExpander<ElementT, kCapacitySequence...>());
-
-using Impl_Array::swap;
-using Impl_Array::begin;
-using Impl_Array::cbegin;
-using Impl_Array::end;
-using Impl_Array::cend;
+template<typename Element, std::size_t kCapacity>
+decltype(auto) begin(const Array<Element, kCapacity> &rhs) noexcept {
+	return rhs.EnumerateFirst();
+}
+template<typename Element, std::size_t kCapacity>
+decltype(auto) begin(Array<Element, kCapacity> &rhs) noexcept {
+	return rhs.EnumerateFirst();
+}
+template<typename Element, std::size_t kCapacity>
+decltype(auto) cbegin(const Array<Element, kCapacity> &rhs) noexcept {
+	return begin(rhs);
+}
+template<typename Element, std::size_t kCapacity>
+decltype(auto) end(const Array<Element, kCapacity> &rhs) noexcept {
+	return rhs.EnumerateSingular();
+}
+template<typename Element, std::size_t kCapacity>
+decltype(auto) end(Array<Element, kCapacity> &rhs) noexcept {
+	return rhs.EnumerateSingular();
+}
+template<typename Element, std::size_t kCapacity>
+decltype(auto) cend(const Array<Element, kCapacity> &rhs) noexcept {
+	return end(rhs);
+}
 
 }
 

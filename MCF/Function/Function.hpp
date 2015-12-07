@@ -26,7 +26,7 @@ namespace Impl_Function {
 		template<typename FuncT>
 		[[noreturn]]
 		IntrusivePtr<FuncT> operator()(const FuncT & /* vFunc */) const {
-			DEBUG_THROW(Exception, ERROR_ACCESS_DENIED, "DummyFunctorCopier::operator()()"_rcs);
+			DEBUG_THROW(Exception, ERROR_ACCESS_DENIED, RefCountingNtmbs::View(__PRETTY_FUNCTION__));
 		}
 	};
 

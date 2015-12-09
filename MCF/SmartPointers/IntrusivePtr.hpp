@@ -165,7 +165,7 @@ namespace Impl_IntrusivePtr {
 		DeletableBase &operator=(const DeletableBase &) noexcept {
 			return *this;
 		}
-		~DeletableBase(){
+		virtual ~DeletableBase(){
 			const auto pView = x_pView.Load(kAtomicConsume);
 			if(pView){
 				if(static_cast<const volatile RefCountBase *>(pView)->DropRef()){

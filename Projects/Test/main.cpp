@@ -4,7 +4,7 @@
 
 using namespace MCF;
 
-struct foo : IntrusiveBase<foo> {
+struct foo : virtual IntrusiveBase<foo> {
 	foo();
 };
 

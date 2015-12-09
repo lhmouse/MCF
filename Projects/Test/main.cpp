@@ -1,12 +1,26 @@
 #include <MCF/StdMCF.hpp>
-#include <MCF/Core/Array.hpp>
+#include <MCF/SmartPointers/PolyIntrusivePtr.hpp>
+#include <cstdio>
 
 using namespace MCF;
 
-template class Array<int, 3, 2>;
+struct foo : PolyIntrusiveBase<foo> {
+	foo();
+};
+
+PolyIntrusivePtr<foo> gp;
+
+foo::foo(){
+	gp = this->Share();
+	throw 12345; // calls std::terminate()!
+}
 
 extern "C" unsigned MCFMain(){
-	Array<int, 3, 2> a = { 1,2,3,4,5,6, };
-	std::printf("size = %zu\n", a.GetSize());
+	try {
+		auto p = MakePolyIntrusive<foo>();
+	} catch(int e){
+		std::printf("exception caught: e = %d\n", e);
+	}
+
 	return 0;
 }

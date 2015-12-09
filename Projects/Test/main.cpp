@@ -1,20 +1,17 @@
 #include <MCF/StdMCF.hpp>
-#include <MCF/SmartPointers/IntrusivePtr.hpp>
+#include <MCF/SmartPointers/PolyIntrusivePtr.hpp>
 #include <cstdio>
 
 using namespace MCF;
 
-struct foo : virtual IntrusiveBase<foo> {
+struct foo : PolyIntrusiveBase {
 	foo();
 };
 
-template class IntrusivePtr<foo>;
-template class IntrusiveWeakPtr<foo>;
-
-IntrusiveWeakPtr<foo> gp;
+PolyIntrusiveWeakPtr<foo> gp;
 
 foo::foo(){
-	gp = this->Weaken();
+	gp = this->Weaken<foo>();
 	std::printf("inside foo::foo(), gp is now %p\n", (void *)gp.Lock().Get());
 	throw 12345; // ok.
 }

@@ -8,6 +8,9 @@ struct foo : IntrusiveBase<foo> {
 	foo();
 };
 
+template class IntrusivePtr<foo>;
+template class IntrusiveWeakPtr<foo>;
+
 IntrusiveWeakPtr<foo> gp;
 
 foo::foo(){

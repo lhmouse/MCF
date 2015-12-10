@@ -273,7 +273,7 @@ public:
 	{
 	}
 	constexpr StringView(const Char *pchBegin, std::size_t uLen) noexcept
-		: x_pchBegin(pchBegin), x_pchEnd(pchBegin + uLen)
+		: StringView(pchBegin, pchBegin + uLen)
 	{
 	}
 	constexpr StringView(std::initializer_list<Char> rhs) noexcept

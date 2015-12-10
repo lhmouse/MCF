@@ -13,7 +13,8 @@
 namespace MCF {
 
 namespace {
-	const std::uint16_t g_u16Pid(::GetCurrentProcessId());
+	const auto g_u16Pid = (std::uint16_t)::GetCurrentProcessId();
+
 	Atomic<std::uint32_t> g_u32AutoInc(0);
 }
 
@@ -23,12 +24,12 @@ Uuid Uuid::Generate(){
 	const auto u32Unique = g_u16Pid | ((g_u32AutoInc.Increment(kAtomicRelaxed) << 16) & 0x3FFFFFFFu);
 
 	Uuid vRet;
-	StoreBe(vRet.x_unData.au32[0], u64Now >> 12);
-	StoreBe(vRet.x_unData.au16[2], (u64Now << 4) | (u32Unique >> 26));
-	StoreBe(vRet.x_unData.au16[3], (u32Unique >> 14) & 0x0FFFu); // 版本 = 0
-	StoreBe(vRet.x_unData.au16[4], 0xC000u | (u32Unique & 0x3FFFu)); // 变种 = 3
-	StoreBe(vRet.x_unData.au16[5], GetRandomUint32());
-	StoreBe(vRet.x_unData.au32[3], GetRandomUint32());
+	StoreBe(vRet.x_unData.au32[0], (std::uint32_t)(u64Now >> 12));
+	StoreBe(vRet.x_unData.au16[2], (std::uint16_t)((u64Now << 4) | (u32Unique >> 26)));
+	StoreBe(vRet.x_unData.au16[3], (std::uint16_t)((u32Unique >> 14) & 0x0FFFu)); // 版本 = 0
+	StoreBe(vRet.x_unData.au16[4], (std::uint16_t)(0xC000u | (u32Unique & 0x3FFFu))); // 变种 = 3
+	StoreBe(vRet.x_unData.au16[5], (std::uint16_t)GetRandomUint32());
+	StoreBe(vRet.x_unData.au32[3], (std::uint32_t)GetRandomUint32());
 	return vRet;
 }
 
@@ -55,7 +56,7 @@ void Uuid::Print(Array<char, 36> &achHex, bool bUpperCase) const noexcept {
 		} else {	\
 			uChar += 'a' - 0x0A;	\
 		}	\
-		*(pchWrite++) = uChar;	\
+		*(pchWrite++) = (char)uChar;	\
 		uChar = uByte & 0x0F;	\
 		if(uChar <= 9){	\
 			uChar += '0';	\
@@ -64,7 +65,7 @@ void Uuid::Print(Array<char, 36> &achHex, bool bUpperCase) const noexcept {
 		} else {	\
 			uChar += 'a' - 0x0A;	\
 		}	\
-		*(pchWrite++) = uChar;	\
+		*(pchWrite++) = (char)uChar;	\
 	}
 
 	PRINT(4) *(pchWrite++) = '-';
@@ -104,7 +105,7 @@ bool Uuid::Scan(const Array<char, 36> &achHex) noexcept {
 			return false;	\
 		}	\
 		uByte |= uChar;	\
-		*(pbyWrite++) = uByte;	\
+		*(pbyWrite++) = (unsigned char)uByte;	\
 	}
 
 	SCAN(4) if(*(pchRead++) != '-'){ return false; }

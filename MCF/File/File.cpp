@@ -56,12 +56,12 @@ Impl_UniqueNtHandle::UniqueNtHandle File::X_CreateFileHandle(const WideStringVie
 	constexpr wchar_t kDosDevicePath[] = { L'\\', L'?', L'?' };
 
 	const auto uSize = wsvPath.GetSize() * sizeof(wchar_t);
-	if(uSize > UINT16_MAX){
+	if(uSize > USHRT_MAX){
 		DEBUG_THROW(SystemError, ERROR_INVALID_PARAMETER, "The path for a file is too long"_rcs);
 	}
 	::UNICODE_STRING ustrRawPath;
-	ustrRawPath.Length              = uSize;
-	ustrRawPath.MaximumLength       = uSize;
+	ustrRawPath.Length              = (USHORT)uSize;
+	ustrRawPath.MaximumLength       = (USHORT)uSize;
 	ustrRawPath.Buffer              = (PWSTR)wsvPath.GetBegin();
 
 	wchar_t awcStaticStr[MAX_PATH];

@@ -30,12 +30,12 @@ DynamicLinkLibrary::DynamicLinkLibrary(const WideStringView &wsvPath)
 	: DynamicLinkLibrary()
 {
 	const auto uSize = wsvPath.GetSize() * sizeof(wchar_t);
-	if(uSize > UINT16_MAX){
+	if(uSize > USHRT_MAX){
 		DEBUG_THROW(SystemError, ERROR_INVALID_PARAMETER, "The path for a library is too long"_rcs);
 	}
 	::UNICODE_STRING ustrFileName;
-	ustrFileName.Length             = uSize;
-	ustrFileName.MaximumLength      = uSize;
+	ustrFileName.Length             = (USHORT)uSize;
+	ustrFileName.MaximumLength      = (USHORT)uSize;
 	ustrFileName.Buffer             = (PWSTR)wsvPath.GetBegin();
 
 	HANDLE hDll;
@@ -57,12 +57,12 @@ DynamicLinkLibrary::RawProc DynamicLinkLibrary::RawGetProcAddress(const NarrowSt
 	}
 
 	const auto uSize = nsvName.GetSize();
-	if(uSize > UINT16_MAX){
+	if(uSize > USHRT_MAX){
 		DEBUG_THROW(SystemError, ERROR_INVALID_PARAMETER, "The path for a library function is too long"_rcs);
 	}
 	::ANSI_STRING strProcName;
-	strProcName.Length          = uSize;
-	strProcName.MaximumLength   = uSize;
+	strProcName.Length          = (USHORT)uSize;
+	strProcName.MaximumLength   = (USHORT)uSize;
 	strProcName.Buffer          = (PSTR)nsvName.GetBegin();
 
 	::FARPROC pfnProcAddress;
@@ -91,7 +91,7 @@ DynamicLinkLibrary::RawProc DynamicLinkLibrary::RawGetProcAddress(unsigned uOrid
 	}
 
 	::FARPROC pfnProcAddress;
-	const auto lStatus = ::LdrGetProcedureAddress(x_hDll.Get(), nullptr, uOridinal, &pfnProcAddress);
+	const auto lStatus = ::LdrGetProcedureAddress(x_hDll.Get(), nullptr, (WORD)uOridinal, &pfnProcAddress);
 	if(!NT_SUCCESS(lStatus)){
 		DEBUG_THROW(SystemError, ::RtlNtStatusToDosError(lStatus), "LdrGetProcedureAddress"_rcs);
 	}

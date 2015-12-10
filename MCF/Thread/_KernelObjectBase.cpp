@@ -21,14 +21,14 @@ namespace Impl_KernelObjectBase {
 		if(u32Flags & kGlobal){
 			static constexpr wchar_t kBaseNameObjects[] = L"\\BaseNamedObjects";
 
-			ustrName.Length        = sizeof(kBaseNameObjects) - sizeof(wchar_t);
-			ustrName.MaximumLength = sizeof(kBaseNameObjects);
+			ustrName.Length        = (USHORT)(sizeof(kBaseNameObjects) - sizeof(wchar_t));
+			ustrName.MaximumLength = (USHORT)(sizeof(kBaseNameObjects));
 			ustrName.Buffer        = (PWSTR)kBaseNameObjects;
 		} else {
 			const auto uLen = (unsigned)swprintf(awcBuffer, sizeof(awcBuffer) / sizeof(wchar_t), L"\\Sessions\\%lu\\BaseNamedObjects", (unsigned long)::WTSGetActiveConsoleSessionId());
 
-			ustrName.Length        = uLen * sizeof(wchar_t);
-			ustrName.MaximumLength = uLen * sizeof(wchar_t) + sizeof(wchar_t);
+			ustrName.Length        = (USHORT)(uLen * sizeof(wchar_t));
+			ustrName.MaximumLength = (USHORT)(uLen * sizeof(wchar_t) + sizeof(wchar_t));
 			ustrName.Buffer        = awcBuffer;
 		}
 

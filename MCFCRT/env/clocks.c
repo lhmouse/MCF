@@ -43,5 +43,5 @@ double MCF_GetHiResMonoClock(){
 	if(!QueryPerformanceCounter(&liCounter)){
 		MCF_CRT_Bail(L"QueryPerformanceCounter() 失败。");
 	}
-	return liCounter.QuadPart * 1000.0 / liFrequency.QuadPart;
+	return (double)liCounter.QuadPart * 1000.0 / (double)liFrequency.QuadPart;
 }

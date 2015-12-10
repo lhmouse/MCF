@@ -29,7 +29,7 @@ void FastGenerator::Init(std::uint32_t u32Seed) noexcept {
 std::uint32_t FastGenerator::Get() noexcept {
 	const auto u64NewSeed = x_u64Seed * kMultiplier + kIncrement;
 	x_u64Seed = u64NewSeed;
-	return u64NewSeed >> 32;
+	return (std::uint32_t)(u64NewSeed >> 32);
 }
 
 }

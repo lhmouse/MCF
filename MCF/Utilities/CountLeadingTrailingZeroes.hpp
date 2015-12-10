@@ -13,10 +13,10 @@
 namespace MCF {
 
 constexpr unsigned CountLeadingZeroes(unsigned char by) noexcept {
-	return __MCF_CRT_MAKE_CONSTANT((unsigned)__builtin_clz(by) - (sizeof(unsigned) - sizeof(unsigned char)) * CHAR_BIT);
+	return __MCF_CRT_MAKE_CONSTANT((unsigned)__builtin_clz(by) - (unsigned)(sizeof(unsigned) - sizeof(unsigned char)) * CHAR_BIT);
 }
 constexpr unsigned CountLeadingZeroes(unsigned short ush) noexcept {
-	return __MCF_CRT_MAKE_CONSTANT((unsigned)__builtin_clz(ush) - (sizeof(unsigned) - sizeof(unsigned short)) * CHAR_BIT);
+	return __MCF_CRT_MAKE_CONSTANT((unsigned)__builtin_clz(ush) - (unsigned)(sizeof(unsigned) - sizeof(unsigned short)) * CHAR_BIT);
 }
 constexpr unsigned CountLeadingZeroes(unsigned u) noexcept {
 	return __MCF_CRT_MAKE_CONSTANT((unsigned)__builtin_clz(u));

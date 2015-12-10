@@ -21,7 +21,7 @@ _Static_assert(sizeof(unsigned long) <= sizeof(uintptr_t), "This platform is not
 
 static int DtorComparatorNodeKey(const MCF_AvlNodeHeader *pObj1, intptr_t nKey2){
 	const unsigned long ulKey1 = ((const KeyDtorNode *)pObj1)->ulKey;
-	const unsigned long ulKey2 = (uintptr_t)nKey2;
+	const unsigned long ulKey2 = (unsigned long)(uintptr_t)nKey2;
 	return (ulKey1 < ulKey2) ? -1 : ((ulKey1 > ulKey2) ? 1 : 0);
 }
 static int DtorComparatorNodes(const MCF_AvlNodeHeader *pObj1, const MCF_AvlNodeHeader *pObj2){

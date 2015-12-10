@@ -115,7 +115,7 @@ void Base64Encoder::X_DoFinalize(){
 Base64Decoder::Base64Decoder(const char *pchTable) noexcept {
 	std::memset(x_aschTable, -1, sizeof(x_aschTable));
 	for(std::size_t i = 0; i < 64; ++i){
-		x_aschTable[(unsigned char)pchTable[i]] = i;
+		x_aschTable[(unsigned char)pchTable[i]] = (char)i;
 	}
 }
 

@@ -1,28 +1,16 @@
 #include <MCF/StdMCF.hpp>
-#include <MCF/SmartPointers/PolyIntrusivePtr.hpp>
+#include <MCF/Core/String.hpp>
 #include <cstdio>
 
 using namespace MCF;
 
-struct foo : PolyIntrusiveBase {
-	foo();
-};
-
-PolyIntrusiveWeakPtr<foo> gp;
-
-foo::foo(){
-	gp = this->Weaken<foo>();
-	std::printf("inside foo::foo(), gp is now %p\n", (void *)gp.Lock().Get());
-	throw 12345; // ok.
-}
-
 extern "C" unsigned MCFMain(){
-	try {
-		auto p = MakeIntrusive<foo>();
-	} catch(int e){
-		std::printf("exception caught: e = %d\n", e);
-	}
-	std::printf("inside main(), gp is now %p\n", (void *)gp.Lock().Get());
+	auto s = UR"(\帝球是个⑨/)"_u32s; // UTF-32
+	std::printf("s.len = %zu\n", s.GetSize());
+
+	auto sv = Utf32StringView(s);
+	auto s2 = AnsiString(sv);
+	std::printf("s2.len = %zu, s2 = %s\n", s2.GetSize(), s2.GetStr());
 
 	return 0;
 }

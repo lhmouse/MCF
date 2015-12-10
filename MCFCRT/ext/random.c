@@ -17,11 +17,11 @@ uint32_t MCF_GetRandomUint32(){
 		u64Seed += 1442695040888963407ull;
 	} while(!__atomic_compare_exchange_n(&g_u64RandSeed, &u64OldSeed, u64Seed, false, __ATOMIC_ACQ_REL, __ATOMIC_CONSUME));
 
-	return u64Seed >> 32;
+	return (uint32_t)(u64Seed >> 32);
 }
 uint64_t MCF_GetRandomUint64(){
 	return ((uint64_t)MCF_GetRandomUint32() << 32) | MCF_GetRandomUint32();
 }
 double MCF_GetRandomDouble(){
-	return ((int64_t)MCF_GetRandomUint64() & 0x7FFFFFFFFFFFFFFFll) / 0x1p63;
+	return (double)((int64_t)MCF_GetRandomUint64() & 0x7FFFFFFFFFFFFFFFll) / 0x1p63;
 }

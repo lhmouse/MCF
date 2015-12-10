@@ -51,8 +51,8 @@ struct StreamBuffer::X_Chunk final {
 
 	X_Chunk *pPrev;
 	X_Chunk *pNext;
-	unsigned uBegin;
-	unsigned uEnd;
+	std::size_t uBegin;
+	std::size_t uEnd;
 	unsigned char abyData[0x100];
 };
 

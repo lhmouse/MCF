@@ -27,12 +27,12 @@ Impl_UniqueNtHandle::UniqueNtHandle KernelRecursiveMutex::X_CreateMutexHandle(co
 	if(uNameSize == 0){
 		InitializeObjectAttributes(&vObjectAttributes, nullptr, 0, nullptr, nullptr);
 	} else {
-		if(uNameSize > UINT16_MAX){
+		if(uNameSize > USHRT_MAX){
 			DEBUG_THROW(SystemError, ERROR_INVALID_PARAMETER, "The name for a kernel object is too long"_rcs);
 		}
 		::UNICODE_STRING ustrObjectName;
-		ustrObjectName.Length        = uNameSize;
-		ustrObjectName.MaximumLength = uNameSize;
+		ustrObjectName.Length        = (USHORT)uNameSize;
+		ustrObjectName.MaximumLength = (USHORT)uNameSize;
 		ustrObjectName.Buffer        = (PWSTR)wsvName.GetBegin();
 
 		ULONG ulAttributes;

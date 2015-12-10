@@ -148,7 +148,7 @@ void Utf8TextFileWriter::Write(char ch){
 
 		bool bFlushNow;
 		if(x_u32Flags & kFullBuffered){
-			bFlushNow = x_u8sLine.GetSize() >= 0x1000;
+			bFlushNow = (x_u8sLine.GetSize() >= 0x1000);
 		} else {
 			bFlushNow = (ch == '\n');
 		}
@@ -167,7 +167,7 @@ void Utf8TextFileWriter::WriteLine(const Utf8StringView &u8svData){
 	Write('\n');
 }
 void Utf8TextFileWriter::Flush(){
-	x_vFile.Write(x_u64Offset, x_u8sLine.GetData(), x_u8sLine.GetSize());
+	x_vFile.Write(x_u64Offset, x_u8sLine.GetData(), (std::uint32_t)x_u8sLine.GetSize());
 	x_u64Offset += x_u8sLine.GetSize();
 	x_u8sLine.Clear();
 

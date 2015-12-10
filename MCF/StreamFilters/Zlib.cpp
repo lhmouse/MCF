@@ -92,7 +92,7 @@ public:
 			const auto uToProcess = Min(uSize - uProcessed, kStepSize);
 
 			x_vStream.next_in = pbyRead;
-			x_vStream.avail_in = uToProcess;
+			x_vStream.avail_in = (unsigned)uToProcess;
 			do {
 				const auto nError = ::deflate(&x_vStream, Z_NO_FLUSH);
 				if(nError == Z_STREAM_END){
@@ -188,7 +188,7 @@ public:
 			const auto uToProcess = Min(uSize - uProcessed, kStepSize);
 
 			x_vStream.next_in = pbyRead;
-			x_vStream.avail_in = uToProcess;
+			x_vStream.avail_in = (unsigned)uToProcess;
 			do {
 				const auto nError = ::inflate(&x_vStream, Z_NO_FLUSH);
 				if(nError == Z_STREAM_END){

@@ -45,9 +45,9 @@ void IsaacExEncoder::X_DoUpdate(const void *pData, std::size_t uSize){
 		++pbyRead;
 		const unsigned char byRot = (x_byLastEncoded ^ (x_byLastEncoded >> 3) ^ (x_byLastEncoded >> 6)) & 7;
 
-		by ^= uSeed;
+		by ^= (unsigned char)uSeed;
 		__asm__("rol %b0, cl \n" : "+q"(by) : "c"(byRot));
-		x_byLastEncoded = by ^ (uSeed >> 8);
+		x_byLastEncoded = by ^ (unsigned char)(uSeed >> 8);
 
 		X_Output(by);
 	};
@@ -105,9 +105,9 @@ void IsaacExDecoder::X_DoUpdate(const void *pData, std::size_t uSize){
 		++pbyRead;
 		const unsigned char byRot = (x_byLastEncoded ^ (x_byLastEncoded >> 3) ^ (x_byLastEncoded >> 6)) & 7;
 
-		x_byLastEncoded = by ^ (uSeed >> 8);
+		x_byLastEncoded = by ^ (unsigned char)(uSeed >> 8);
 		__asm__("ror %b0, cl \n" : "+q"(by) : "c"(byRot));
-		by ^= uSeed;
+		by ^= (unsigned char)uSeed;
 
 		X_Output(by);
 	};

@@ -124,7 +124,7 @@ unsigned char *__MCF_CRT_HeapDbgRegisterBlockInfo(__MCF_HeapDbgBlockInfo *pBlock
 
 	void **ppGuard1 = (void **)pContents;
 	void **ppGuard2 = (void **)(pContents + uSize);
-	for(unsigned i = 0; i < GUARD_BAND_SIZE; i += sizeof(void *)){
+	for(size_t i = 0; i < GUARD_BAND_SIZE; i += sizeof(void *)){
 		--ppGuard1;
 
 		void *const pTemp1 = EncodePointer(ppGuard2), *const pTemp2 = EncodePointer(ppGuard1);
@@ -148,7 +148,7 @@ __MCF_HeapDbgBlockInfo *__MCF_CRT_HeapDbgValidateBlock(unsigned char **ppRaw, un
 
 	void *const *ppGuard1 = (void *const *)pContents;
 	void *const *ppGuard2 = (void *const *)(pContents + uSize);
-	for(unsigned i = 0; i < GUARD_BAND_SIZE; i += sizeof(void *)){
+	for(size_t i = 0; i < GUARD_BAND_SIZE; i += sizeof(void *)){
 		--ppGuard1;
 
 		void *pTemp1, *pTemp2;
@@ -175,7 +175,7 @@ unsigned char *__MCF_CRT_HeapDbgAddBlockGuardsBasic(unsigned char *pRaw){
 
 	void **ppGuard1 = (void **)pContents;
 	void **ppGuard2 = (void **)(pContents + uSize);
-	for(unsigned i = 0; i < GUARD_BAND_SIZE; i += sizeof(void *)){
+	for(size_t i = 0; i < GUARD_BAND_SIZE; i += sizeof(void *)){
 		--ppGuard1;
 
 		void *const pTemp1 = EncodePointer(ppGuard2), *const pTemp2 = EncodePointer(ppGuard1);
@@ -195,7 +195,7 @@ void __MCF_CRT_HeapDbgValidateBlockBasic(unsigned char **ppRaw, unsigned char *p
 
 	void *const *ppGuard1 = (void *const *)pContents;
 	void *const *ppGuard2 = (void *const *)(pContents + uSize);
-	for(unsigned i = 0; i < GUARD_BAND_SIZE; i += sizeof(void *)){
+	for(size_t i = 0; i < GUARD_BAND_SIZE; i += sizeof(void *)){
 		--ppGuard1;
 
 		void *pTemp1, *pTemp2;

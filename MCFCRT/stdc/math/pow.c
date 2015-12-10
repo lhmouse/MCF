@@ -129,7 +129,7 @@ static double ppowd(double x, double y){
 	);
 	return ret;
 }
-static long double ppowl(double x, double y){
+static long double ppowl(long double x, long double y){
 	register long double ret;
 	__asm__ __volatile__(
 		"fld tbyte ptr[%2] \n"
@@ -161,7 +161,7 @@ static long double ppowl(double x, double y){
 
 #define POW_IMPL(t_)	\
 	if(y == 0){	\
-		return 1.0;	\
+		return (t_)1.0;	\
 	}	\
 	if(x == 0){	\
 		return 0.0;	\
@@ -175,13 +175,13 @@ static long double ppowl(double x, double y){
 		if(y > (t_)INT_MAX){	\
 			return PPOW(t_, x, y);	\
 		} else if(y < (t_)INT_MIN){	\
-			return 1.0 / PPOW(t_, x, -y);	\
+			return (t_)1.0 / PPOW(t_, x, -y);	\
 		} else {	\
 			t_ ret;	\
 			if(y > 0){	\
 				ret = PPOWU(t_, x, (unsigned)whole);	\
 			} else {	\
-				ret = 1.0 / PPOWU(t_, x, (unsigned)-whole);	\
+				ret = (t_)1.0 / PPOWU(t_, x, (unsigned)-whole);	\
 			}	\
 			if(frac != 0){	\
 				ret *= PPOW(t_, x, frac);	\
@@ -208,9 +208,9 @@ static long double ppowl(double x, double y){
 				double:  __builtin_fmod,	\
 				default: __builtin_fmodl)(whole, 2.0) == 0.0)	\
 			{	\
-				return 1.0 / PPOW(t_, -x, whole);	\
+				return (t_)1.0 / PPOW(t_, -x, whole);	\
 			} else {	\
-				return -1.0 / PPOW(t_, -x, whole);	\
+				return (t_)-1.0 / PPOW(t_, -x, whole);	\
 			}	\
 		} else {	\
 			if(whole > 0){	\
@@ -223,9 +223,9 @@ static long double ppowl(double x, double y){
 			} else {	\
 				const unsigned idx = (unsigned)-whole;	\
 				if(idx % 2 == 0){	\
-					return 1.0 / PPOWU(t_, -x, idx);	\
+					return (t_)1.0 / PPOWU(t_, -x, idx);	\
 				} else {	\
-					return -1.0 / PPOWU(t_, -x, idx);	\
+					return (t_)-1.0 / PPOWU(t_, -x, idx);	\
 				}	\
 			}	\
 		}	\

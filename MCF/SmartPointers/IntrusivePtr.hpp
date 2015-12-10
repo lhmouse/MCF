@@ -112,7 +112,7 @@ namespace Impl_IntrusivePtr {
 		friend class IntrusiveWeakPtr;
 
 	private:
-		class X_WeakView : public RefCountBase {
+		class X_WeakView final : public RefCountBase  {
 		private:
 			mutable Mutex x_mtxGuard;
 			DeletableBase *x_pOwner;

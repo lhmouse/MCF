@@ -7,6 +7,7 @@
 
 #include "../Utilities/RationalFunctors.hpp"
 #include "../Utilities/ReconstructOrAssign.hpp"
+#include "../Utilities/AddressOf.hpp"
 #include "Vector.hpp"
 #include <utility>
 #include <tuple>
@@ -234,7 +235,7 @@ public:
 	std::pair<Element *, bool> ReplaceWithHint(const Element *pHint, ComparandT &&vComparand, ValueParamsT &&...vValueParams){
 		const auto vResult = AddWithHint(pHint, std::forward<ComparandT>(vComparand), std::forward<ValueParamsT>(vValueParams)...);
 		if(!vResult.second){
-			ReconstructOrAssign(const_cast<ValueT *>(reinterpret_cast<const volatile ValueT *>(&reinterpret_cast<const volatile char &>(vResult.first->second))), std::forward<ValueParamsT>(vValueParams)...);
+			ReconstructOrAssign(AddressOf(vResult.first->second), std::forward<ValueParamsT>(vValueParams)...);
 		}
 		return vResult;
 	}

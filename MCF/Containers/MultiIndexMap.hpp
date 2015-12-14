@@ -172,64 +172,47 @@ public:
 	}
 
 public:
-
+/*	bool IsEmpty() const noexcept {
+		return x_vecStorage.IsEmpty();
+	}
+	void Clear() noexcept {
+		x_vecStorage.Clear();
+	}
+*/
 };
 
+template<typename IndicesT, typename ValueT>
+void swap(MultiIndexMap<IndicesT, ValueT> &lhs, MultiIndexMap<IndicesT, ValueT> &rhs) noexcept {
+	lhs.Swap(rhs);
+}
+
+template<typename IndicesT, typename ValueT>
+decltype(auto) begin(const MultiIndexMap<IndicesT, ValueT> &rhs) noexcept {
+	return rhs.EnumerateFirst();
+}
+template<typename IndicesT, typename ValueT>
+decltype(auto) begin(MultiIndexMap<IndicesT, ValueT> &rhs) noexcept {
+	return rhs.EnumerateFirst();
+}
+template<typename IndicesT, typename ValueT>
+decltype(auto) cbegin(const MultiIndexMap<IndicesT, ValueT> &rhs) noexcept {
+	return begin(rhs);
+}
+template<typename IndicesT, typename ValueT>
+decltype(auto) end(const MultiIndexMap<IndicesT, ValueT> &rhs) noexcept {
+	return rhs.EnumerateSingular();
+}
+template<typename IndicesT, typename ValueT>
+decltype(auto) end(MultiIndexMap<IndicesT, ValueT> &rhs) noexcept {
+	return rhs.EnumerateSingular();
+}
+template<typename IndicesT, typename ValueT>
+decltype(auto) cend(const MultiIndexMap<IndicesT, ValueT> &rhs) noexcept {
+	return end(rhs);
+}
 
 
 /*
-template<typename KeyT, typename ValueT, typename ComparatorT = Less>
-class FlatMap {
-private:
-	Vector<std::pair<const KeyT, ValueT>> x_vecStorage;
-
-public:
-	constexpr FlatMap() noexcept
-		: x_vecStorage()
-	{
-	}
-	// 如果键有序，则效率最大化；并且是稳定的。
-	template<typename IteratorT, std::enable_if_t<
-		sizeof(typename std::iterator_traits<IteratorT>::value_type *),
-		int> = 0>
-	FlatMap(IteratorT itBegin, std::common_type_t<IteratorT> itEnd)
-		: FlatMap()
-	{
-		if(std::is_base_of<std::forward_iterator_tag, typename std::iterator_traits<IteratorT>::iterator_category>::value){
-			const auto uDeltaSize = static_cast<std::size_t>(std::distance(itBegin, itEnd));
-			Reserve(uDeltaSize);
-		}
-		for(auto it = itBegin; it != itEnd; ++it){
-			AddWithHint(nullptr, *it);
-		}
-	}
-	// 如果键有序，则效率最大化；并且是稳定的。
-	FlatMap(std::initializer_list<std::pair<KeyT, ValueT>> rhs)
-		: FlatMap(rhs.begin(), rhs.end())
-	{
-	}
-	FlatMap(const FlatMap &rhs)
-		: x_vecStorage(rhs.x_vecStorage)
-	{
-	}
-	FlatMap(FlatMap &&rhs) noexcept
-		: x_vecStorage(std::move(rhs.x_vecStorage))
-	{
-	}
-	FlatMap &operator=(const FlatMap &rhs){
-		FlatMap(rhs).Swap(*this);
-		return *this;
-	}
-	FlatMap &operator=(FlatMap &&rhs) noexcept {
-		rhs.Swap(*this);
-		return *this;
-	}
-
-public:
-	// 容器需求。
-	using Element         = std::pair<const KeyT, ValueT>;
-	using ConstEnumerator = Impl_EnumeratorTemplate::ConstEnumerator <FlatMap>;
-	using Enumerator      = Impl_EnumeratorTemplate::Enumerator      <FlatMap>;
 
 	bool IsEmpty() const noexcept {
 		return x_vecStorage.IsEmpty();
@@ -683,35 +666,6 @@ public:
 	}
 };
 
-template<typename ElementT, typename ComparatorT>
-void swap(FlatMap<ElementT, ComparatorT> &lhs, FlatMap<ElementT, ComparatorT> &rhs) noexcept {
-	lhs.Swap(rhs);
-}
-
-template<typename ElementT, typename ComparatorT>
-decltype(auto) begin(const FlatMap<ElementT, ComparatorT> &rhs) noexcept {
-	return rhs.EnumerateFirst();
-}
-template<typename ElementT, typename ComparatorT>
-decltype(auto) begin(FlatMap<ElementT, ComparatorT> &rhs) noexcept {
-	return rhs.EnumerateFirst();
-}
-template<typename ElementT, typename ComparatorT>
-decltype(auto) cbegin(const FlatMap<ElementT, ComparatorT> &rhs) noexcept {
-	return begin(rhs);
-}
-template<typename ElementT, typename ComparatorT>
-decltype(auto) end(const FlatMap<ElementT, ComparatorT> &rhs) noexcept {
-	return rhs.EnumerateSingular();
-}
-template<typename ElementT, typename ComparatorT>
-decltype(auto) end(FlatMap<ElementT, ComparatorT> &rhs) noexcept {
-	return rhs.EnumerateSingular();
-}
-template<typename ElementT, typename ComparatorT>
-decltype(auto) cend(const FlatMap<ElementT, ComparatorT> &rhs) noexcept {
-	return end(rhs);
-}
 */
 
 }

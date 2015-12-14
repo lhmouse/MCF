@@ -19,6 +19,12 @@ namespace MCF {
 
 template<typename ElementT>
 class RingQueue {
+public:
+	// 容器需求。
+	using Element         = ElementT;
+	using ConstEnumerator = Impl_EnumeratorTemplate::ConstEnumerator <RingQueue>;
+	using Enumerator      = Impl_EnumeratorTemplate::Enumerator      <RingQueue>;
+
 private:
 	void *x_pStorage;
 	std::size_t x_uBegin;
@@ -44,7 +50,7 @@ public:
 	{
 		Append(itBegin, itEnd);
 	}
-	RingQueue(std::initializer_list<ElementT> rhs)
+	RingQueue(std::initializer_list<Element> rhs)
 		: RingQueue(rhs.begin(), rhs.end())
 	{
 	}
@@ -76,15 +82,15 @@ public:
 	}
 
 private:
-	const ElementT *X_GetStorage() const noexcept {
+	const Element *X_GetStorage() const noexcept {
 		ASSERT(!IsEmpty());
 
-		return static_cast<const ElementT *>(x_pStorage);
+		return static_cast<const Element *>(x_pStorage);
 	}
-	ElementT *X_GetStorage() noexcept {
+	Element *X_GetStorage() noexcept {
 		ASSERT(!IsEmpty());
 
-		return static_cast<ElementT *>(x_pStorage);
+		return static_cast<Element *>(x_pStorage);
 	}
 
 	std::size_t X_Retreat(std::size_t uIndex, std::size_t uDelta) const noexcept {
@@ -109,7 +115,7 @@ private:
 	}
 
 	std::pair<std::size_t, bool> X_PrepareForInsertion(std::size_t uPos, std::size_t uDeltaSize){
-		ASSERT(std::is_nothrow_move_constructible<ElementT>::value);
+		ASSERT(std::is_nothrow_move_constructible<Element>::value);
 		ASSERT(!IsEmpty());
 		ASSERT(X_Advance(x_uBegin, uPos) <= GetSize());
 
@@ -169,7 +175,7 @@ private:
 		}
 	}
 	void X_UndoPreparation(const std::pair<std::size_t, bool> &vPrepared, std::size_t uDeltaSize) noexcept {
-		ASSERT(std::is_nothrow_move_constructible<ElementT>::value);
+		ASSERT(std::is_nothrow_move_constructible<Element>::value);
 		ASSERT(!IsEmpty());
 		ASSERT(uDeltaSize <= GetCapacity() - GetSize());
 		ASSERT(X_Advance(x_uBegin, vPrepared.second ? vPrepared.first : X_Advance(vPrepared.first, uDeltaSize)) <= GetSize());
@@ -261,10 +267,6 @@ private:
 
 public:
 	// 容器需求。
-	using Element         = ElementT;
-	using ConstEnumerator = Impl_EnumeratorTemplate::ConstEnumerator <RingQueue>;
-	using Enumerator      = Impl_EnumeratorTemplate::Enumerator      <RingQueue>;
-
 	bool IsEmpty() const noexcept {
 		return x_uBegin == x_uEnd;
 	}

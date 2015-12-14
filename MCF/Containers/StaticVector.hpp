@@ -21,8 +21,14 @@ template<typename ElementT, std::size_t kCapacity>
 class StaticVector {
 	static_assert(kCapacity > 0, "A StaticVector shall have a non-zero capacity.");
 
+public:
+	// 容器需求。
+	using Element         = ElementT;
+	using ConstEnumerator = Impl_EnumeratorTemplate::ConstEnumerator <StaticVector>;
+	using Enumerator      = Impl_EnumeratorTemplate::Enumerator      <StaticVector>;
+
 private:
-	alignas(ElementT) char x_aStorage[kCapacity][sizeof(ElementT)];
+	alignas(Element) char x_aStorage[kCapacity][sizeof(Element)];
 	std::size_t x_uSize;
 
 public:
@@ -44,7 +50,7 @@ public:
 	{
 		Append(itBegin, itEnd);
 	}
-	StaticVector(std::initializer_list<ElementT> rhs)
+	StaticVector(std::initializer_list<Element> rhs)
 		: StaticVector(rhs.begin(), rhs.end())
 	{
 	}
@@ -53,7 +59,7 @@ public:
 	{
 		Append(rhs.GetBegin(), rhs.GetEnd());
 	}
-	StaticVector(StaticVector &&rhs) noexcept(std::is_nothrow_move_constructible<ElementT>::value)
+	StaticVector(StaticVector &&rhs) noexcept(std::is_nothrow_move_constructible<Element>::value)
 		: StaticVector()
 	{
 		Append(std::make_move_iterator(rhs.GetBegin()), std::make_move_iterator(rhs.GetEnd()));
@@ -63,7 +69,7 @@ public:
 		Append(rhs.GetBegin(), rhs.GetEnd());
 		return *this;
 	}
-	StaticVector &operator=(StaticVector &&rhs) noexcept(std::is_nothrow_move_constructible<ElementT>::value) {
+	StaticVector &operator=(StaticVector &&rhs) noexcept(std::is_nothrow_move_constructible<Element>::value) {
 		Clear();
 		Append(std::make_move_iterator(rhs.GetBegin()), std::make_move_iterator(rhs.GetEnd()));
 		return *this;
@@ -74,10 +80,6 @@ public:
 
 public:
 	// 容器需求。
-	using Element         = ElementT;
-	using ConstEnumerator = Impl_EnumeratorTemplate::ConstEnumerator <StaticVector>;
-	using Enumerator      = Impl_EnumeratorTemplate::Enumerator      <StaticVector>;
-
 	bool IsEmpty() const noexcept {
 		return x_uSize == 0;
 	}

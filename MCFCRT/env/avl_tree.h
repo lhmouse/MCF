@@ -31,6 +31,7 @@ extern void MCF_AvlInternalAttach(MCF_AvlNodeHeader *__pNode,
 	MCF_AvlNodeHeader *__pParent, MCF_AvlNodeHeader **__ppRefl) MCF_NOEXCEPT;
 extern void MCF_AvlInternalDetach(const MCF_AvlNodeHeader *__pNode) MCF_NOEXCEPT;
 
+__attribute__((__flatten__))
 static inline MCF_AvlNodeHeader *MCF_AvlFront(const MCF_AvlRoot *__ppRoot) MCF_NOEXCEPT {
 	MCF_AvlNodeHeader *__pCur = *__ppRoot;
 	if(__pCur){
@@ -40,6 +41,7 @@ static inline MCF_AvlNodeHeader *MCF_AvlFront(const MCF_AvlRoot *__ppRoot) MCF_N
 	}
 	return __pCur;
 }
+__attribute__((__flatten__))
 static inline MCF_AvlNodeHeader *MCF_AvlBack(const MCF_AvlRoot *__ppRoot) MCF_NOEXCEPT {
 	MCF_AvlNodeHeader *__pCur = *__ppRoot;
 	if(__pCur){
@@ -49,6 +51,7 @@ static inline MCF_AvlNodeHeader *MCF_AvlBack(const MCF_AvlRoot *__ppRoot) MCF_NO
 	}
 	return __pCur;
 }
+__attribute__((__flatten__))
 static inline void MCF_AvlSwap(MCF_AvlRoot *__ppRoot1, MCF_AvlRoot *__ppRoot2) MCF_NOEXCEPT {
 	if(__ppRoot1 == __ppRoot2){
 		return;
@@ -72,6 +75,7 @@ static inline void MCF_AvlSwap(MCF_AvlRoot *__ppRoot1, MCF_AvlRoot *__ppRoot2) M
 typedef int (*MCF_AvlComparatorNodes)(const MCF_AvlNodeHeader *, const MCF_AvlNodeHeader *);
 typedef int (*MCF_AvlComparatorNodeOther)(const MCF_AvlNodeHeader *, MCF_STD intptr_t);
 
+__attribute__((__flatten__))
 static inline void MCF_AvlAttachWithHint(MCF_AvlRoot *__ppRoot,
 	// 如果新节点被插入到该节点前后相邻的位置，则效率被优化。
 	// 此处行为和 C++03 以及 C++11 都兼容。
@@ -146,16 +150,19 @@ static inline void MCF_AvlAttachWithHint(MCF_AvlRoot *__ppRoot,
 	MCF_AvlInternalAttach(__pNode, __pParent, __ppRefl);
 }
 
+__attribute__((__flatten__))
 static inline void MCF_AvlAttach(MCF_AvlRoot *__ppRoot,
 	MCF_AvlNodeHeader *__pNode, MCF_AvlComparatorNodes __pfnComparator)
 {
 	MCF_AvlAttachWithHint(__ppRoot, nullptr, __pNode, __pfnComparator);
 }
 
+__attribute__((__flatten__))
 static inline void MCF_AvlDetach(const MCF_AvlNodeHeader *__pNode) MCF_NOEXCEPT {
 	MCF_AvlInternalDetach(__pNode);
 }
 
+__attribute__((__flatten__))
 static inline MCF_AvlNodeHeader *MCF_AvlGetLowerBound(const MCF_AvlRoot *__ppRoot,
 	MCF_STD intptr_t __nOther, MCF_AvlComparatorNodeOther __pfnComparatorNodeOther)
 {
@@ -172,6 +179,7 @@ static inline MCF_AvlNodeHeader *MCF_AvlGetLowerBound(const MCF_AvlRoot *__ppRoo
 	return (MCF_AvlNodeHeader *)__pRet;
 }
 
+__attribute__((__flatten__))
 static inline MCF_AvlNodeHeader *MCF_AvlGetUpperBound(const MCF_AvlRoot *__ppRoot,
 	MCF_STD intptr_t __nOther, MCF_AvlComparatorNodeOther __pfnComparatorNodeOther)
 {
@@ -188,6 +196,7 @@ static inline MCF_AvlNodeHeader *MCF_AvlGetUpperBound(const MCF_AvlRoot *__ppRoo
 	return (MCF_AvlNodeHeader *)__pRet;
 }
 
+__attribute__((__flatten__))
 static inline MCF_AvlNodeHeader *MCF_AvlFind(const MCF_AvlRoot *__ppRoot,
 	MCF_STD intptr_t __nOther, MCF_AvlComparatorNodeOther __pfnComparatorNodeOther)
 {
@@ -205,6 +214,7 @@ static inline MCF_AvlNodeHeader *MCF_AvlFind(const MCF_AvlRoot *__ppRoot,
 	return nullptr;
 }
 
+__attribute__((__flatten__))
 static inline void MCF_AvlGetEqualRange(MCF_AvlNodeHeader **__ppLower, MCF_AvlNodeHeader **__ppUpper,
 	const MCF_AvlRoot *__ppRoot, MCF_STD intptr_t __nOther, MCF_AvlComparatorNodeOther __pfnComparatorNodeOther)
 {

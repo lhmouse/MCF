@@ -19,9 +19,15 @@ namespace MCF {
 
 template<typename ElementT>
 class List {
+public:
+	// 容器需求。
+	using Element         = ElementT;
+	using ConstEnumerator = Impl_EnumeratorTemplate::ConstEnumerator <List>;
+	using Enumerator      = Impl_EnumeratorTemplate::Enumerator      <List>;
+
 private:
 	struct X_Node {
-		alignas(ElementT) char aStorage[sizeof(ElementT)];
+		alignas(Element) char aStorage[sizeof(Element)];
 		X_Node *pPrev;
 		X_Node *pNext;
 	};
@@ -49,7 +55,7 @@ public:
 	{
 		Append(itBegin, itEnd);
 	}
-	List(std::initializer_list<ElementT> rhs)
+	List(std::initializer_list<Element> rhs)
 		: List(rhs.begin(), rhs.end())
 	{
 	}
@@ -79,10 +85,6 @@ public:
 
 public:
 	// 容器需求。
-	using Element         = ElementT;
-	using ConstEnumerator = Impl_EnumeratorTemplate::ConstEnumerator <List>;
-	using Enumerator      = Impl_EnumeratorTemplate::Enumerator      <List>;
-
 	bool IsEmpty() const noexcept {
 		return !x_pFirst;
 	}

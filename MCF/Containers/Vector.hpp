@@ -19,6 +19,12 @@ namespace MCF {
 
 template<typename ElementT>
 class Vector {
+public:
+	// 容器需求。
+	using Element         = ElementT;
+	using ConstEnumerator = Impl_EnumeratorTemplate::ConstEnumerator <Vector>;
+	using Enumerator      = Impl_EnumeratorTemplate::Enumerator      <Vector>;
+
 private:
 	void *x_pStorage;
 	std::size_t x_uSize;
@@ -43,7 +49,7 @@ public:
 	{
 		Append(itBegin, itEnd);
 	}
-	Vector(std::initializer_list<ElementT> rhs)
+	Vector(std::initializer_list<Element> rhs)
 		: Vector(rhs.begin(), rhs.end())
 	{
 	}
@@ -75,7 +81,7 @@ public:
 
 private:
 	void X_PrepareForInsertion(std::size_t uPos, std::size_t uDeltaSize){
-		ASSERT(std::is_nothrow_move_constructible<ElementT>::value);
+		ASSERT(std::is_nothrow_move_constructible<Element>::value);
 		ASSERT(!IsEmpty());
 		ASSERT(uPos <= x_uSize);
 
@@ -88,7 +94,7 @@ private:
 		}
 	}
 	void X_UndoPreparation(std::size_t uPos, std::size_t uDeltaSize) noexcept {
-		ASSERT(std::is_nothrow_move_constructible<ElementT>::value);
+		ASSERT(std::is_nothrow_move_constructible<Element>::value);
 		ASSERT(!IsEmpty());
 		ASSERT(uPos <= x_uSize);
 		ASSERT(uDeltaSize <= x_uSize - uPos);
@@ -103,10 +109,6 @@ private:
 
 public:
 	// 容器需求。
-	using Element         = ElementT;
-	using ConstEnumerator = Impl_EnumeratorTemplate::ConstEnumerator <Vector>;
-	using Enumerator      = Impl_EnumeratorTemplate::Enumerator      <Vector>;
-
 	bool IsEmpty() const noexcept {
 		return x_uSize == 0;
 	}

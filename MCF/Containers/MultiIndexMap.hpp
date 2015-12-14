@@ -2,29 +2,189 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2013 - 2015, LH_Mouse. All wrongs reserved.
 
-#ifndef MCF_CONTAINERS_FLAT_MULTI_MAP_HPP_
-#define MCF_CONTAINERS_FLAT_MULTI_MAP_HPP_
+#ifndef MCF_CONTAINERS_FLAT_SET_HPP_
+#define MCF_CONTAINERS_FLAT_SET_HPP_
 
+#include "_EnumeratorTemplate.hpp"
+#include "../Utilities/Assert.hpp"
+#include "../Utilities/ConstructDestruct.hpp"
 #include "../Utilities/RationalFunctors.hpp"
-#include "Vector.hpp"
+#include "../Core/Exception.hpp"
+#include "../../MCFCRT/env/avl_tree.h"
 #include <utility>
+#include <new>
+#include <initializer_list>
+#include <type_traits>
+#include <cstddef>
 #include <tuple>
 
 namespace MCF {
 
-template<typename KeyT, typename ValueT, typename ComparatorT = Less>
-class FlatMultiMap {
+template<typename IndicesT, typename ValueT>
+class MultiIndexMap;
+
+template<typename KeyT, typename ComparatorT = Less>
+struct OrderedUniqueIndex {
+	class Element {
+		friend class Root;
+
+	private:
+		::MCF_AvlNodeHeader x_vHeader;
+
+	public:
+	};
+
+	class Root {
+	private:
+		::MCF_AvlRoot x_vRoot;
+		::MCF_AvlNodeHeader *x_pFirst;
+		::MCF_AvlNodeHeader *x_pLast;
+
+	public:
+		constexpr Root() noexcept
+			: x_vRoot(), x_pFirst(), x_pLast()
+		{
+		}
+	};
+
+	//
+};
+
+template<typename KeyT, typename ComparatorT = Less>
+struct OrderedMultiIndex {
+	class Element {
+		friend class Root;
+
+	private:
+		::MCF_AvlNodeHeader x_vHeader;
+
+	public:
+	};
+
+	class Root {
+	private:
+		::MCF_AvlRoot x_vRoot;
+		::MCF_AvlNodeHeader *x_pFirst;
+		::MCF_AvlNodeHeader *x_pLast;
+
+	public:
+		constexpr Root() noexcept
+			: x_vRoot(), x_pFirst(), x_pLast()
+		{
+		}
+	};
+
+	//
+};
+
+struct SequentialIndex {
+	class Element {
+		friend class Root;
+
+	private:
+		Element *x_pPrev;
+		Element *x_pNext;
+
+	public:
+	};
+
+	class Root {
+	private:
+		Element *x_pFirst;
+		Element *x_pLast;
+
+	public:
+		constexpr Root() noexcept
+			: x_pFirst(), x_pLast()
+		{
+		}
+	};
+
+	//
+};
+
+template<typename ...IndicesT>
+struct MultiMapIndices {
+	using IndexTuple   = std::tuple<IndicesT...>;
+	using RootTuple    = std::tuple<typename IndicesT::Root...>;
+	using ElementTuple = std::tuple<typename IndicesT::Element...>;
+
+	template<std::size_t kIndexId>
+	using Index   = std::tuple_element_t<kIndexId, IndexTuple>;
+	template<std::size_t kIndexId>
+	using Root    = std::tuple_element_t<kIndexId, RootTuple>;
+	template<std::size_t kIndexId>
+	using Element = std::tuple_element_t<kIndexId, ElementTuple>;
+};
+
+template<typename KeyT, typename ValueT, typename ComparatorT>
+class MultiIndexMapView {
+	//
+};
+
+template<typename IndicesT, typename ValueT>
+class MultiIndexMap {
 public:
 	// 容器需求。
-	using Element         = std::pair<const KeyT, ValueT>;
-	using ConstEnumerator = Impl_EnumeratorTemplate::ConstEnumerator <FlatMultiMap>;
-	using Enumerator      = Impl_EnumeratorTemplate::Enumerator      <FlatMultiMap>;
+	using Element         = std::pair<const typename IndicesT::ElementTuple, ValueT>;
+	using ConstEnumerator = Impl_EnumeratorTemplate::ConstEnumerator <MultiIndexMap>;
+	using Enumerator      = Impl_EnumeratorTemplate::Enumerator      <MultiIndexMap>;
 
 private:
-	Vector<Element> x_vecStorage;
+	typename IndicesT::RootTuple x_vRoots;
 
 public:
-	constexpr FlatMultiMap() noexcept
+	constexpr MultiIndexMap() noexcept
+		: x_vRoots()
+	{
+	}
+	// 如果键有序，则效率最大化；并且是稳定的。
+	template<typename IteratorT, std::enable_if_t<
+		sizeof(typename std::iterator_traits<IteratorT>::value_type *),
+		int> = 0>
+	MultiIndexMap(IteratorT itBegin, std::common_type_t<IteratorT> itEnd)
+		: MultiIndexMap()
+	{
+//		for(auto it = itBegin; it != itEnd; ++it){
+//			AddWithHint(nullptr, *it);
+//		}
+	}
+	// 如果键有序，则效率最大化；并且是稳定的。
+	MultiIndexMap(std::initializer_list<Element> rhs)
+		: MultiIndexMap(rhs.begin(), rhs.end())
+	{
+	}
+	MultiIndexMap(const MultiIndexMap &rhs)
+//		: x_vecStorage(rhs.x_vecStorage)
+	{
+	}
+	MultiIndexMap(MultiIndexMap &&rhs) noexcept
+//		: x_vecStorage(std::move(rhs.x_vecStorage))
+	{
+	}
+	MultiIndexMap &operator=(const MultiIndexMap &rhs){
+//		MultiIndexMap(rhs).Swap(*this);
+		return *this;
+	}
+	MultiIndexMap &operator=(MultiIndexMap &&rhs) noexcept {
+//		rhs.Swap(*this);
+		return *this;
+	}
+
+public:
+
+};
+
+
+
+/*
+template<typename KeyT, typename ValueT, typename ComparatorT = Less>
+class FlatMap {
+private:
+	Vector<std::pair<const KeyT, ValueT>> x_vecStorage;
+
+public:
+	constexpr FlatMap() noexcept
 		: x_vecStorage()
 	{
 	}
@@ -32,8 +192,8 @@ public:
 	template<typename IteratorT, std::enable_if_t<
 		sizeof(typename std::iterator_traits<IteratorT>::value_type *),
 		int> = 0>
-	FlatMultiMap(IteratorT itBegin, std::common_type_t<IteratorT> itEnd)
-		: FlatMultiMap()
+	FlatMap(IteratorT itBegin, std::common_type_t<IteratorT> itEnd)
+		: FlatMap()
 	{
 		if(std::is_base_of<std::forward_iterator_tag, typename std::iterator_traits<IteratorT>::iterator_category>::value){
 			const auto uDeltaSize = static_cast<std::size_t>(std::distance(itBegin, itEnd));
@@ -44,29 +204,33 @@ public:
 		}
 	}
 	// 如果键有序，则效率最大化；并且是稳定的。
-	FlatMultiMap(std::initializer_list<Element> rhs)
-		: FlatMultiMap(rhs.begin(), rhs.end())
+	FlatMap(std::initializer_list<std::pair<KeyT, ValueT>> rhs)
+		: FlatMap(rhs.begin(), rhs.end())
 	{
 	}
-	FlatMultiMap(const FlatMultiMap &rhs)
+	FlatMap(const FlatMap &rhs)
 		: x_vecStorage(rhs.x_vecStorage)
 	{
 	}
-	FlatMultiMap(FlatMultiMap &&rhs) noexcept
+	FlatMap(FlatMap &&rhs) noexcept
 		: x_vecStorage(std::move(rhs.x_vecStorage))
 	{
 	}
-	FlatMultiMap &operator=(const FlatMultiMap &rhs){
-		FlatMultiMap(rhs).Swap(*this);
+	FlatMap &operator=(const FlatMap &rhs){
+		FlatMap(rhs).Swap(*this);
 		return *this;
 	}
-	FlatMultiMap &operator=(FlatMultiMap &&rhs) noexcept {
+	FlatMap &operator=(FlatMap &&rhs) noexcept {
 		rhs.Swap(*this);
 		return *this;
 	}
 
 public:
 	// 容器需求。
+	using Element         = std::pair<const KeyT, ValueT>;
+	using ConstEnumerator = Impl_EnumeratorTemplate::ConstEnumerator <FlatMap>;
+	using Enumerator      = Impl_EnumeratorTemplate::Enumerator      <FlatMap>;
+
 	bool IsEmpty() const noexcept {
 		return x_vecStorage.IsEmpty();
 	}
@@ -134,12 +298,12 @@ public:
 		return EnumerateSingular();
 	}
 
-	void Swap(FlatMultiMap &rhs) noexcept {
+	void Swap(FlatMap &rhs) noexcept {
 		using std::swap;
 		swap(x_vecStorage, rhs.x_vecStorage);
 	}
 
-	// FlatMultiMap 需求。
+	// FlatMap 需求。
 	const Element *GetData() const noexcept {
 		return x_vecStorage.GetData();
 	}
@@ -213,6 +377,9 @@ public:
 		}
 		pHint = GetUpperBound(vComparand);
 	jUseHint:
+		if((pHint != GetBegin()) && !ComparatorT()(pHint[-1].first, vComparand)){
+			return std::make_pair(const_cast<Element *>(pHint), false);
+		}
 		return std::make_pair(x_vecStorage.Emplace(pHint, std::piecewise_construct,
 			std::forward_as_tuple(std::forward<ComparandT>(vComparand)), std::forward_as_tuple(std::forward<ValueParamsT>(vValueParams)...)), true);
 	}
@@ -230,7 +397,11 @@ public:
 	}
 	template<typename ComparandT, typename ...ValueParamsT>
 	std::pair<Element *, bool> ReplaceWithHint(const Element *pHint, ComparandT &&vComparand, ValueParamsT &&...vValueParams){
-		return AddWithHint(pHint, std::forward<ComparandT>(vComparand), std::forward<ValueParamsT>(vValueParams)...);
+		const auto vResult = AddWithHint(pHint, std::forward<ComparandT>(vComparand), std::forward<ValueParamsT>(vValueParams)...);
+		if(!vResult.second){
+			ReconstructOrAssign(AddressOf(vResult.first->second), std::forward<ValueParamsT>(vValueParams)...);
+		}
+		return vResult;
 	}
 	template<typename ComparandT>
 	bool Remove(const ComparandT &vComparand){
@@ -246,10 +417,10 @@ public:
 	Element *Emplace(const Element *pPos, ComparandT &&vComparand, ValueParamsT &&...vValueParams){
 		return AddWithHint(pPos, std::forward<ComparandT>(vComparand), std::forward<ValueParamsT>(vValueParams)...).first;
 	}
-	Element *Erase(const Element *pBegin, const Element *pEnd) noexcept(noexcept(std::declval<FlatMultiMap &>().x_vecStorage.Erase(pBegin, pEnd))) {
+	Element *Erase(const Element *pBegin, const Element *pEnd) noexcept(noexcept(std::declval<FlatMap &>().x_vecStorage.Erase(pBegin, pEnd))) {
 		return x_vecStorage.Erase(pBegin, pEnd);
 	}
-	Element *Erase(const Element *pPos) noexcept(noexcept(std::declval<FlatMultiMap &>().x_vecStorage.Erase(pPos))) {
+	Element *Erase(const Element *pPos) noexcept(noexcept(std::declval<FlatMap &>().x_vecStorage.Erase(pPos))) {
 		return x_vecStorage.Erase(pPos);
 	}
 
@@ -512,35 +683,36 @@ public:
 	}
 };
 
-template<typename KeyT, typename ValueT, typename ComparatorT>
-void swap(FlatMultiMap<KeyT, ValueT, ComparatorT> &lhs, FlatMultiMap<KeyT, ValueT, ComparatorT> &rhs) noexcept {
+template<typename ElementT, typename ComparatorT>
+void swap(FlatMap<ElementT, ComparatorT> &lhs, FlatMap<ElementT, ComparatorT> &rhs) noexcept {
 	lhs.Swap(rhs);
 }
 
-template<typename KeyT, typename ValueT, typename ComparatorT>
-decltype(auto) begin(const FlatMultiMap<KeyT, ValueT, ComparatorT> &rhs) noexcept {
+template<typename ElementT, typename ComparatorT>
+decltype(auto) begin(const FlatMap<ElementT, ComparatorT> &rhs) noexcept {
 	return rhs.EnumerateFirst();
 }
-template<typename KeyT, typename ValueT, typename ComparatorT>
-decltype(auto) begin(FlatMultiMap<KeyT, ValueT, ComparatorT> &rhs) noexcept {
+template<typename ElementT, typename ComparatorT>
+decltype(auto) begin(FlatMap<ElementT, ComparatorT> &rhs) noexcept {
 	return rhs.EnumerateFirst();
 }
-template<typename KeyT, typename ValueT, typename ComparatorT>
-decltype(auto) cbegin(const FlatMultiMap<KeyT, ValueT, ComparatorT> &rhs) noexcept {
+template<typename ElementT, typename ComparatorT>
+decltype(auto) cbegin(const FlatMap<ElementT, ComparatorT> &rhs) noexcept {
 	return begin(rhs);
 }
-template<typename KeyT, typename ValueT, typename ComparatorT>
-decltype(auto) end(const FlatMultiMap<KeyT, ValueT, ComparatorT> &rhs) noexcept {
+template<typename ElementT, typename ComparatorT>
+decltype(auto) end(const FlatMap<ElementT, ComparatorT> &rhs) noexcept {
 	return rhs.EnumerateSingular();
 }
-template<typename KeyT, typename ValueT, typename ComparatorT>
-decltype(auto) end(FlatMultiMap<KeyT, ValueT, ComparatorT> &rhs) noexcept {
+template<typename ElementT, typename ComparatorT>
+decltype(auto) end(FlatMap<ElementT, ComparatorT> &rhs) noexcept {
 	return rhs.EnumerateSingular();
 }
-template<typename KeyT, typename ValueT, typename ComparatorT>
-decltype(auto) cend(const FlatMultiMap<KeyT, ValueT, ComparatorT> &rhs) noexcept {
+template<typename ElementT, typename ComparatorT>
+decltype(auto) cend(const FlatMap<ElementT, ComparatorT> &rhs) noexcept {
 	return end(rhs);
 }
+*/
 
 }
 

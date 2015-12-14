@@ -16,8 +16,14 @@ namespace MCF {
 
 template<typename KeyT, typename ValueT, typename ComparatorT = Less>
 class FlatMap {
+public:
+	// 容器需求。
+	using Element         = std::pair<const KeyT, ValueT>;
+	using ConstEnumerator = Impl_EnumeratorTemplate::ConstEnumerator <FlatMap>;
+	using Enumerator      = Impl_EnumeratorTemplate::Enumerator      <FlatMap>;
+
 private:
-	Vector<std::pair<const KeyT, ValueT>> x_vecStorage;
+	Vector<Element> x_vecStorage;
 
 public:
 	constexpr FlatMap() noexcept
@@ -40,7 +46,7 @@ public:
 		}
 	}
 	// 如果键有序，则效率最大化；并且是稳定的。
-	FlatMap(std::initializer_list<std::pair<KeyT, ValueT>> rhs)
+	FlatMap(std::initializer_list<Element> rhs)
 		: FlatMap(rhs.begin(), rhs.end())
 	{
 	}
@@ -63,10 +69,6 @@ public:
 
 public:
 	// 容器需求。
-	using Element         = std::pair<const KeyT, ValueT>;
-	using ConstEnumerator = Impl_EnumeratorTemplate::ConstEnumerator <FlatMap>;
-	using Enumerator      = Impl_EnumeratorTemplate::Enumerator      <FlatMap>;
-
 	bool IsEmpty() const noexcept {
 		return x_vecStorage.IsEmpty();
 	}
@@ -519,33 +521,33 @@ public:
 	}
 };
 
-template<typename ElementT, typename ComparatorT>
-void swap(FlatMap<ElementT, ComparatorT> &lhs, FlatMap<ElementT, ComparatorT> &rhs) noexcept {
+template<typename KeyT, typename ValueT, typename ComparatorT>
+void swap(FlatMap<KeyT, ValueT, ComparatorT> &lhs, FlatMap<KeyT, ValueT, ComparatorT> &rhs) noexcept {
 	lhs.Swap(rhs);
 }
 
-template<typename ElementT, typename ComparatorT>
-decltype(auto) begin(const FlatMap<ElementT, ComparatorT> &rhs) noexcept {
+template<typename KeyT, typename ValueT, typename ComparatorT>
+decltype(auto) begin(const FlatMap<KeyT, ValueT, ComparatorT> &rhs) noexcept {
 	return rhs.EnumerateFirst();
 }
-template<typename ElementT, typename ComparatorT>
-decltype(auto) begin(FlatMap<ElementT, ComparatorT> &rhs) noexcept {
+template<typename KeyT, typename ValueT, typename ComparatorT>
+decltype(auto) begin(FlatMap<KeyT, ValueT, ComparatorT> &rhs) noexcept {
 	return rhs.EnumerateFirst();
 }
-template<typename ElementT, typename ComparatorT>
-decltype(auto) cbegin(const FlatMap<ElementT, ComparatorT> &rhs) noexcept {
+template<typename KeyT, typename ValueT, typename ComparatorT>
+decltype(auto) cbegin(const FlatMap<KeyT, ValueT, ComparatorT> &rhs) noexcept {
 	return begin(rhs);
 }
-template<typename ElementT, typename ComparatorT>
-decltype(auto) end(const FlatMap<ElementT, ComparatorT> &rhs) noexcept {
+template<typename KeyT, typename ValueT, typename ComparatorT>
+decltype(auto) end(const FlatMap<KeyT, ValueT, ComparatorT> &rhs) noexcept {
 	return rhs.EnumerateSingular();
 }
-template<typename ElementT, typename ComparatorT>
-decltype(auto) end(FlatMap<ElementT, ComparatorT> &rhs) noexcept {
+template<typename KeyT, typename ValueT, typename ComparatorT>
+decltype(auto) end(FlatMap<KeyT, ValueT, ComparatorT> &rhs) noexcept {
 	return rhs.EnumerateSingular();
 }
-template<typename ElementT, typename ComparatorT>
-decltype(auto) cend(const FlatMap<ElementT, ComparatorT> &rhs) noexcept {
+template<typename KeyT, typename ValueT, typename ComparatorT>
+decltype(auto) cend(const FlatMap<KeyT, ValueT, ComparatorT> &rhs) noexcept {
 	return end(rhs);
 }
 

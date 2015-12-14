@@ -13,8 +13,14 @@ namespace MCF {
 
 template<typename ElementT, typename ComparatorT = Less>
 class FlatSet {
+public:
+	// 容器需求。
+	using Element         = const ElementT;
+	using ConstEnumerator = Impl_EnumeratorTemplate::ConstEnumerator <FlatSet>;
+	using Enumerator      = Impl_EnumeratorTemplate::Enumerator      <FlatSet>;
+
 private:
-	Vector<const ElementT> x_vecStorage;
+	Vector<Element> x_vecStorage;
 
 public:
 	constexpr FlatSet() noexcept
@@ -37,7 +43,7 @@ public:
 		}
 	}
 	// 如果键有序，则效率最大化；并且是稳定的。
-	FlatSet(std::initializer_list<ElementT> rhs)
+	FlatSet(std::initializer_list<Element> rhs)
 		: FlatSet(rhs.begin(), rhs.end())
 	{
 	}
@@ -60,10 +66,6 @@ public:
 
 public:
 	// 容器需求。
-	using Element         = const ElementT;
-	using ConstEnumerator = Impl_EnumeratorTemplate::ConstEnumerator <FlatSet>;
-	using Enumerator      = Impl_EnumeratorTemplate::Enumerator      <FlatSet>;
-
 	bool IsEmpty() const noexcept {
 		return x_vecStorage.IsEmpty();
 	}
@@ -214,6 +216,15 @@ public:
 			return std::make_pair(const_cast<Element *>(pHint), false);
 		}
 		return std::make_pair(x_vecStorage.Emplace(pHint, std::forward<ComparandT>(vComparand)), true);
+	}
+	template<typename ComparandT>
+	std::pair<Element *, bool> Replace(ComparandT &&vComparand){
+		return ReplaceWithHint(nullptr, std::forward<ComparandT>(vComparand));
+	}
+	template<typename ComparandT>
+	std::pair<Element *, bool> ReplaceWithHint(const Element *pHint, ComparandT &&vComparand){
+		const auto vResult = AddWithHint(pHint, std::forward<ComparandT>(vComparand));
+		return vResult;
 	}
 	template<typename ComparandT>
 	bool Remove(const ComparandT &vComparand){

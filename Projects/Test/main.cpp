@@ -19,6 +19,15 @@ template class RingQueue<int>;
 template class StaticVector<int, 5>;
 template class Vector<int>;
 
+template void MCF::swap(FlatMap<int, unsigned> &,             FlatMap<int, unsigned> &);
+template void MCF::swap(FlatMultiMap<int, unsigned> &,        FlatMultiMap<int, unsigned> &);
+template void MCF::swap(FlatMultiSet<int> &,                  FlatMultiSet<int> &);
+template void MCF::swap(FlatSet<int> &,                       FlatSet<int> &);
+template void MCF::swap(List<int> &,                          List<int> &);
+template void MCF::swap(RingQueue<int> &,                     RingQueue<int> &);
+template void MCF::swap(StaticVector<int, 5> &,               StaticVector<int, 5> &);
+template void MCF::swap(Vector<int> &,                        Vector<int> &);
+
 extern "C" unsigned MCFMain(){
 	return 0;
 }

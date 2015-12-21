@@ -23,98 +23,33 @@ namespace MCF {
 template<typename IndicesT, typename ValueT>
 class MultiIndexMap;
 
+
 template<typename KeyT, typename ComparatorT = Less>
 struct OrderedUniqueIndex {
-	class Element {
-		friend class Root;
-
-	private:
-		::MCF_AvlNodeHeader x_vHeader;
-
-	public:
-	};
-
-	class Root {
-	private:
-		::MCF_AvlRoot x_vRoot;
-		::MCF_AvlNodeHeader *x_pFirst;
-		::MCF_AvlNodeHeader *x_pLast;
-
-	public:
-		constexpr Root() noexcept
-			: x_vRoot(), x_pFirst(), x_pLast()
-		{
-		}
-	};
-
 	//
 };
 
 template<typename KeyT, typename ComparatorT = Less>
 struct OrderedMultiIndex {
-	class Element {
-		friend class Root;
-
-	private:
-		::MCF_AvlNodeHeader x_vHeader;
-
-	public:
-	};
-
-	class Root {
-	private:
-		::MCF_AvlRoot x_vRoot;
-		::MCF_AvlNodeHeader *x_pFirst;
-		::MCF_AvlNodeHeader *x_pLast;
-
-	public:
-		constexpr Root() noexcept
-			: x_vRoot(), x_pFirst(), x_pLast()
-		{
-		}
-	};
-
 	//
 };
 
 struct SequentialIndex {
-	class Element {
-		friend class Root;
-
-	private:
-		Element *x_pPrev;
-		Element *x_pNext;
-
-	public:
-	};
-
-	class Root {
-	private:
-		Element *x_pFirst;
-		Element *x_pLast;
-
-	public:
-		constexpr Root() noexcept
-			: x_pFirst(), x_pLast()
-		{
-		}
-	};
-
 	//
 };
 
 template<typename ...IndicesT>
 struct MultiMapIndices {
-	using IndexTuple   = std::tuple<IndicesT...>;
-	using RootTuple    = std::tuple<typename IndicesT::Root...>;
-	using ElementTuple = std::tuple<typename IndicesT::Element...>;
+	using IndexTuple = std::tuple<IndicesT...>;
+	using RootTuple  = std::tuple<typename IndicesT::Root...>;
+	using NodeTuple  = std::tuple<typename IndicesT::Node...>;
 
 	template<std::size_t kIndexId>
-	using Index   = std::tuple_element_t<kIndexId, IndexTuple>;
+	using Index = std::tuple_Node_t<kIndexId, IndexTuple>;
 	template<std::size_t kIndexId>
-	using Root    = std::tuple_element_t<kIndexId, RootTuple>;
+	using Root  = std::tuple_Node_t<kIndexId, RootTuple>;
 	template<std::size_t kIndexId>
-	using Element = std::tuple_element_t<kIndexId, ElementTuple>;
+	using Node  = std::tuple_Node_t<kIndexId, NodeTuple>;
 };
 
 template<typename KeyT, typename ValueT, typename ComparatorT>
@@ -170,6 +105,9 @@ public:
 //		rhs.Swap(*this);
 		return *this;
 	}
+	~MultiIndexMap(){
+		Clear();
+	}
 
 public:
 /*	bool IsEmpty() const noexcept {
@@ -213,7 +151,87 @@ decltype(auto) cend(const MultiIndexMap<IndicesT, ValueT> &rhs) noexcept {
 
 
 /*
+namespace Impl_MultiIndexMap {
+	struct OrderedNode {
+		::MCF_AvlNodeHeader vHeader;
+	};
 
+	template<typename KeyT, typename ComparatorT>
+	inline int OrderedCompare(const KeyT *pKey1, const KeyT *pKey2) noexcept {
+		if(ComparatorT()(*pKey1, *pKey2)){
+			return -1;
+		} else if(ComparatorT()(*pKey2, *pKey1)){
+			return 1;
+		}
+		return 0;
+	}
+	template<typename KeyT, typename ComparatorT>
+	inline int OrderedCompare(const KeyT *pKey1, const std::intptr_t nKey2) noexcept {
+		return OrderedCompare(pKey1, reinterpret_cast<const KeyT *>(nKey2));
+	}
+
+	class OrderedRoot {
+	private:
+		::MCF_AvlRoot x_vRoot;
+		::MCF_AvlNodeHeader *x_pFirst;
+		::MCF_AvlNodeHeader *x_pLast;
+
+	public:
+		constexpr Root() noexcept
+			: x_vRoot(), x_pFirst(), x_pLast()
+		{
+		}
+
+	public:
+		const Node *GetFirst() const noexcept {
+			return reinterpret_cast<const Node *>(x_pFirst);
+		}
+		Node *GetFirst() noexcept {
+			return reinterpret_cast<Node *>(x_pFirst);
+		}
+		const Node *GetLast() const noexcept {
+			return reinterpret_cast<const Node *>(x_pLast);
+		}
+		Node *GetLast() noexcept {
+			return reinterpret_cast<Node *>(x_pLast);
+		}
+
+		static const Node *GetPrev(const Node *pPos) noexcept {
+			ASSERT(pPos);
+
+			return reinterpret_cast<const Node *>(::MCF_AvlPrev(reinterpret_cast<const Node *>(pPos)));
+		}
+		static Node *GetPrev(Node *pPos) noexcept {
+			ASSERT(pPos);
+
+			return reinterpret_cast<Node *>(::MCF_AvlPrev(reinterpret_cast<Node *>(pPos)));
+		}
+		static const Node *GetNext(const Node *pPos) noexcept {
+			ASSERT(pPos);
+
+			return reinterpret_cast<const Node *>(::MCF_AvlNext(reinterpret_cast<const Node *>(pPos)));
+		}
+		static Node *GetNext(Node *pPos) noexcept {
+			ASSERT(pPos);
+
+			return reinterpret_cast<Node *>(::MCF_AvlNext(reinterpret_cast<Node *>(pPos)));
+		}
+
+		void Swap(List &rhs) noexcept {
+			using std::swap;
+			::MCF_AvlSwap(&x_vRoot, &rhs.x_vRoot);
+			swap(x_pFirst, rhs.x_pFirst);
+			swap(x_pLast,  rhs.x_pLast);
+		}
+
+		std::pair<Node *, bool> Attach(const Node *pHint, Node *pNode) noexcept {
+			//
+		}
+		void Detach(const Node *pNode) noexcept {
+			// ::MCF_AvlInternalDetach(
+		}
+	};
+}
 	bool IsEmpty() const noexcept {
 		return x_vecStorage.IsEmpty();
 	}
@@ -470,7 +488,7 @@ decltype(auto) cend(const MultiIndexMap<IndicesT, ValueT> &rhs) noexcept {
 	}
 
 	template<typename ComparandT>
-	const Element *Find(const ComparandT &vComparand) const {
+	const Element *GetMatch(const ComparandT &vComparand) const {
 		auto pLower = x_vecStorage.GetBegin(), pUpper = x_vecStorage.GetEnd();
 		while(pLower != pUpper){
 			const auto pMiddle = pLower + (pUpper - pLower) / 2;
@@ -485,7 +503,7 @@ decltype(auto) cend(const MultiIndexMap<IndicesT, ValueT> &rhs) noexcept {
 		return x_vecStorage.GetEnd();
 	}
 	template<typename ComparandT>
-	Element *Find(const ComparandT &vComparand){
+	Element *GetMatch(const ComparandT &vComparand){
 		auto pLower = x_vecStorage.GetBegin(), pUpper = x_vecStorage.GetEnd();
 		while(pLower != pUpper){
 			const auto pMiddle = pLower + (pUpper - pLower) / 2;
@@ -500,15 +518,15 @@ decltype(auto) cend(const MultiIndexMap<IndicesT, ValueT> &rhs) noexcept {
 		return x_vecStorage.GetEnd();
 	}
 	template<typename ComparandT>
-	const Element *FindConst(const ComparandT &vComparand) const {
-		return Find(vComparand);
+	const Element *GetConstMatch(const ComparandT &vComparand) const {
+		return GetMatch(vComparand);
 	}
 
 	template<typename ComparandT>
 	std::pair<const Element *, const Element *> GetEqualRange(const ComparandT &vComparand) const {
 		auto vRange = std::make_pair(x_vecStorage.GetEnd(), x_vecStorage.GetEnd());
 
-		const auto pTop = Find(vComparand);
+		const auto pTop = GetMatch(vComparand);
 		if(pTop == x_vecStorage.GetEnd()){
 			return vRange;
 		}
@@ -541,7 +559,7 @@ decltype(auto) cend(const MultiIndexMap<IndicesT, ValueT> &rhs) noexcept {
 	std::pair<Element *, Element *> GetEqualRange(const ComparandT &vComparand){
 		auto vRange = std::make_pair(x_vecStorage.GetEnd(), x_vecStorage.GetEnd());
 
-		const auto pTop = Find(vComparand);
+		const auto pTop = GetMatch(vComparand);
 		if(pTop == x_vecStorage.GetEnd()){
 			return vRange;
 		}
@@ -619,7 +637,7 @@ decltype(auto) cend(const MultiIndexMap<IndicesT, ValueT> &rhs) noexcept {
 
 	template<typename ComparandT>
 	ConstEnumerator EnumerateMatch(const ComparandT &vComparand) const {
-		const auto pPos = Find(vComparand);
+		const auto pPos = GetMatch(vComparand);
 		if(pPos == GetEnd()){
 			return ConstEnumerator(*this, nullptr);
 		}
@@ -627,7 +645,7 @@ decltype(auto) cend(const MultiIndexMap<IndicesT, ValueT> &rhs) noexcept {
 	}
 	template<typename ComparandT>
 	Enumerator EnumerateMatch(const ComparandT &vComparand){
-		const auto pPos = Find(vComparand);
+		const auto pPos = GetMatch(vComparand);
 		if(pPos == GetEnd()){
 			return Enumerator(*this, nullptr);
 		}

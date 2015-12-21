@@ -27,8 +27,7 @@ static inline MCF_AvlNodeHeader *MCF_AvlNext(const MCF_AvlNodeHeader *__pNode) M
 	return __pNode->__pNext;
 }
 
-extern void MCF_AvlInternalAttach(MCF_AvlNodeHeader *__pNode,
-	MCF_AvlNodeHeader *__pParent, MCF_AvlNodeHeader **__ppRefl) MCF_NOEXCEPT;
+extern void MCF_AvlInternalAttach(MCF_AvlNodeHeader *__pNode, MCF_AvlNodeHeader *__pParent, MCF_AvlNodeHeader **__ppRefl) MCF_NOEXCEPT;
 extern void MCF_AvlInternalDetach(const MCF_AvlNodeHeader *__pNode) MCF_NOEXCEPT;
 
 __attribute__((__flatten__))
@@ -80,19 +79,20 @@ static inline void MCF_AvlAttachWithHint(MCF_AvlRoot *__ppRoot,
 	// 如果新节点被插入到该节点前后相邻的位置，则效率被优化。
 	// 此处行为和 C++03 以及 C++11 都兼容。
 	// __pHint 可以为空。
-	MCF_AvlNodeHeader *__pHint,
+	const MCF_AvlNodeHeader *__pHint,
 	MCF_AvlNodeHeader *__pNode, MCF_AvlComparatorNodes __pfnComparator)
 {
 	MCF_AvlNodeHeader *__pParent = nullptr;
 	MCF_AvlNodeHeader **__ppRefl = __ppRoot;
 	if(__pHint){
+		MCF_AvlNodeHeader *const __pMutableHint = (MCF_AvlNodeHeader *)__pHint;
 		if((*__pfnComparator)(__pNode, __pHint) < 0){
 			MCF_AvlNodeHeader *const __pPrev = __pHint->__pPrev;
 			if(!__pPrev){
 				ASSERT(!__pHint->__pLeft);
 
-				__pParent = __pHint;
-				__ppRefl = &(__pHint->__pLeft);
+				__pParent = __pMutableHint;
+				__ppRefl = &(__pMutableHint->__pLeft);
 			} else if((*__pfnComparator)(__pNode, __pPrev) >= 0){
 				// 条件：  node        <   hint
 				//         hint->prev  <=  node
@@ -104,8 +104,8 @@ static inline void MCF_AvlAttachWithHint(MCF_AvlRoot *__ppRoot,
 				} else {
 					ASSERT(!__pHint->__pLeft);
 
-					__pParent = __pHint;
-					__ppRefl = &(__pHint->__pLeft);
+					__pParent = __pMutableHint;
+					__ppRefl = &(__pMutableHint->__pLeft);
 				}
 			}
 		} else {
@@ -113,16 +113,16 @@ static inline void MCF_AvlAttachWithHint(MCF_AvlRoot *__ppRoot,
 			if(!__pNext){
 				ASSERT(!__pHint->__pRight);
 
-				__pParent = __pHint;
-				__ppRefl = &(__pHint->__pRight);
+				__pParent = __pMutableHint;
+				__ppRefl = &(__pMutableHint->__pRight);
 			} else if((*__pfnComparator)(__pNode, __pNext) < 0){
 				// 条件：  hint  <=  node
 				//         node  <   hint->next
 				if(__pHint->__uHeight < __pNext->__uHeight){
 					ASSERT(!__pHint->__pRight);
 
-					__pParent = __pHint;
-					__ppRefl = &(__pHint->__pRight);
+					__pParent = __pMutableHint;
+					__ppRefl = &(__pMutableHint->__pRight);
 				} else {
 					ASSERT(!__pNext->__pLeft);
 

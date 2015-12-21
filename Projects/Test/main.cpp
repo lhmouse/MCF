@@ -1,33 +1,18 @@
 #include <MCF/StdMCF.hpp>
 #include <MCF/Containers/FlatMap.hpp>
 #include <MCF/Containers/FlatMultiMap.hpp>
-#include <MCF/Containers/FlatMultiSet.hpp>
-#include <MCF/Containers/FlatSet.hpp>
-#include <MCF/Containers/List.hpp>
-#include <MCF/Containers/RingQueue.hpp>
-#include <MCF/Containers/StaticVector.hpp>
-#include <MCF/Containers/Vector.hpp>
 
 using namespace MCF;
 
-template class FlatMap<int, unsigned>;
-template class FlatMultiMap<int, unsigned>;
-template class FlatMultiSet<int>;
-template class FlatSet<int>;
-template class List<int>;
-template class RingQueue<int>;
-template class StaticVector<int, 5>;
-template class Vector<int>;
-
-template void MCF::swap(FlatMap<int, unsigned> &,             FlatMap<int, unsigned> &);
-template void MCF::swap(FlatMultiMap<int, unsigned> &,        FlatMultiMap<int, unsigned> &);
-template void MCF::swap(FlatMultiSet<int> &,                  FlatMultiSet<int> &);
-template void MCF::swap(FlatSet<int> &,                       FlatSet<int> &);
-template void MCF::swap(List<int> &,                          List<int> &);
-template void MCF::swap(RingQueue<int> &,                     RingQueue<int> &);
-template void MCF::swap(StaticVector<int, 5> &,               StaticVector<int, 5> &);
-template void MCF::swap(Vector<int> &,                        Vector<int> &);
+template class FlatMap<int, long>;
+template class FlatMultiMap<int, long>;
 
 extern "C" unsigned MCFMain(){
+	FlatMultiMap<int, long> s{ {1,0}, {5,0}, {0,0}, {2,0}, {3,0}, {5,1}, {0,1}, {2,1}, {1,1}, {4,0}, {4,1}, {3,1} };
+	auto r = s.GetEqualRange(2);
+	std::printf("r = %td, %td\n", r.first - s.GetBegin(), r.second - s.GetBegin());
+	for(auto it = s.GetBegin(); it != s.GetEnd(); ++it){
+		std::printf("element: %d, %ld\n", it->first, it->second);
+	}
 	return 0;
 }

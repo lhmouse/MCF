@@ -23,6 +23,54 @@ public:
 	using Enumerator      = Impl_EnumeratorTemplate::Enumerator      <FlatMap>;
 
 private:
+	template<typename CvElementT, typename ComparandT>
+	static CvElementT *X_GetLowerBound(CvElementT *pBegin, CvElementT *pEnd, const ComparandT &vComparand){
+		auto pLower = pBegin, pUpper = pEnd;
+		while(pLower != pUpper){
+			const auto pMiddle = pLower + (pUpper - pLower) / 2;
+			if(ComparatorT()(pMiddle->first, vComparand)){
+				pLower = pMiddle + 1;
+			} else {
+				pUpper = pMiddle;
+			}
+		}
+		return pLower;
+	}
+	template<typename CvElementT, typename ComparandT>
+	static CvElementT *X_GetUpperBound(CvElementT *pBegin, CvElementT *pEnd, const ComparandT &vComparand){
+		auto pLower = pBegin, pUpper = pEnd;
+		while(pLower != pUpper){
+			const auto pMiddle = pLower + (pUpper - pLower) / 2;
+			if(!ComparatorT()(vComparand, pMiddle->first)){
+				pLower = pMiddle + 1;
+			} else {
+				pUpper = pMiddle;
+			}
+		}
+		return pLower;
+	}
+	template<typename CvElementT, typename ComparandT>
+	static CvElementT *X_GetMatch(CvElementT *pBegin, CvElementT *pEnd, const ComparandT &vComparand){
+		auto pLower = pBegin, pUpper = pEnd;
+		while(pLower != pUpper){
+			const auto pMiddle = pLower + (pUpper - pLower) / 2;
+			if(ComparatorT()(pMiddle->first, vComparand)){
+				pLower = pMiddle + 1;
+			} else if(ComparatorT()(vComparand, pMiddle->first)){
+				pUpper = pMiddle;
+			} else {
+				return pMiddle;
+			}
+		}
+		return pEnd;
+	}
+	template<typename CvElementT, typename ComparandT>
+	static std::pair<CvElementT *, CvElementT *> X_GetEqualRange(CvElementT *pBegin, CvElementT *pEnd, const ComparandT &vComparand){
+		const auto pMiddle = X_GetMatch(pBegin, pEnd, vComparand);
+		return std::make_pair(pMiddle, pMiddle);
+	}
+
+private:
 	Vector<Element> x_vecStorage;
 
 public:
@@ -264,29 +312,11 @@ public:
 
 	template<typename ComparandT>
 	const Element *GetLowerBound(const ComparandT &vComparand) const {
-		auto pLower = x_vecStorage.GetBegin(), pUpper = x_vecStorage.GetEnd();
-		while(pLower != pUpper){
-			const auto pMiddle = pLower + (pUpper - pLower) / 2;
-			if(ComparatorT()(pMiddle->first, vComparand)){
-				pLower = pMiddle + 1;
-			} else {
-				pUpper = pMiddle;
-			}
-		}
-		return pLower;
+		return X_GetLowerBound(x_vecStorage.GetBegin(), x_vecStorage.GetEnd(), vComparand);
 	}
 	template<typename ComparandT>
 	Element *GetLowerBound(const ComparandT &vComparand){
-		auto pLower = x_vecStorage.GetBegin(), pUpper = x_vecStorage.GetEnd();
-		while(pLower != pUpper){
-			const auto pMiddle = pLower + (pUpper - pLower) / 2;
-			if(ComparatorT()(pMiddle->first, vComparand)){
-				pLower = pMiddle + 1;
-			} else {
-				pUpper = pMiddle;
-			}
-		}
-		return pLower;
+		return X_GetLowerBound(x_vecStorage.GetBegin(), x_vecStorage.GetEnd(), vComparand);
 	}
 	template<typename ComparandT>
 	const Element *GetConstLowerBound(const ComparandT &vComparand) const {
@@ -295,29 +325,11 @@ public:
 
 	template<typename ComparandT>
 	const Element *GetUpperBound(const ComparandT &vComparand) const {
-		auto pLower = x_vecStorage.GetBegin(), pUpper = x_vecStorage.GetEnd();
-		while(pLower != pUpper){
-			const auto pMiddle = pLower + (pUpper - pLower) / 2;
-			if(!ComparatorT()(vComparand, pMiddle->first)){
-				pLower = pMiddle + 1;
-			} else {
-				pUpper = pMiddle;
-			}
-		}
-		return pLower;
+		return X_GetUpperBound(x_vecStorage.GetBegin(), x_vecStorage.GetEnd(), vComparand);
 	}
 	template<typename ComparandT>
 	Element *GetUpperBound(const ComparandT &vComparand){
-		auto pLower = x_vecStorage.GetBegin(), pUpper = x_vecStorage.GetEnd();
-		while(pLower != pUpper){
-			const auto pMiddle = pLower + (pUpper - pLower) / 2;
-			if(!ComparatorT()(vComparand, pMiddle->first)){
-				pLower = pMiddle + 1;
-			} else {
-				pUpper = pMiddle;
-			}
-		}
-		return pLower;
+		return X_GetUpperBound(x_vecStorage.GetBegin(), x_vecStorage.GetEnd(), vComparand);
 	}
 	template<typename ComparandT>
 	const Element *GetConstUpperBound(const ComparandT &vComparand) const {
@@ -325,105 +337,25 @@ public:
 	}
 
 	template<typename ComparandT>
-	const Element *Find(const ComparandT &vComparand) const {
-		auto pLower = x_vecStorage.GetBegin(), pUpper = x_vecStorage.GetEnd();
-		while(pLower != pUpper){
-			const auto pMiddle = pLower + (pUpper - pLower) / 2;
-			if(ComparatorT()(pMiddle->first, vComparand)){
-				pLower = pMiddle + 1;
-			} else if(ComparatorT()(vComparand, pMiddle->first)){
-				pUpper = pMiddle;
-			} else {
-				return pMiddle;
-			}
-		}
-		return x_vecStorage.GetEnd();
+	const Element *GetMatch(const ComparandT &vComparand) const {
+		return X_GetMatch(x_vecStorage.GetBegin(), x_vecStorage.GetEnd(), vComparand);
 	}
 	template<typename ComparandT>
-	Element *Find(const ComparandT &vComparand){
-		auto pLower = x_vecStorage.GetBegin(), pUpper = x_vecStorage.GetEnd();
-		while(pLower != pUpper){
-			const auto pMiddle = pLower + (pUpper - pLower) / 2;
-			if(ComparatorT()(pMiddle->first, vComparand)){
-				pLower = pMiddle + 1;
-			} else if(ComparatorT()(vComparand, pMiddle->first)){
-				pUpper = pMiddle;
-			} else {
-				return pMiddle;
-			}
-		}
-		return x_vecStorage.GetEnd();
+	Element *GetMatch(const ComparandT &vComparand){
+		return X_GetMatch(x_vecStorage.GetBegin(), x_vecStorage.GetEnd(), vComparand);
 	}
 	template<typename ComparandT>
-	const Element *FindConst(const ComparandT &vComparand) const {
-		return Find(vComparand);
+	const Element *GetConstMatch(const ComparandT &vComparand) const {
+		return GetMatch(vComparand);
 	}
 
 	template<typename ComparandT>
 	std::pair<const Element *, const Element *> GetEqualRange(const ComparandT &vComparand) const {
-		auto vRange = std::make_pair(x_vecStorage.GetEnd(), x_vecStorage.GetEnd());
-
-		const auto pTop = Find(vComparand);
-		if(pTop == x_vecStorage.GetEnd()){
-			return vRange;
-		}
-
-		auto pLower = x_vecStorage.GetBegin(), pUpper = pTop;
-		while(pLower != pUpper){
-			const auto pMiddle = pLower + (pUpper - pLower) / 2;
-			if(ComparatorT()(pMiddle->first, vComparand)){
-				pLower = pMiddle + 1;
-			} else {
-				pUpper = pMiddle;
-			}
-		}
-		vRange.first = pLower;
-
-		pLower = pTop, pUpper = x_vecStorage.GetEnd();
-		while(pLower != pUpper){
-			const auto pMiddle = pLower + (pUpper - pLower) / 2;
-			if(!ComparatorT()(vComparand, pMiddle->first)){
-				pLower = pMiddle + 1;
-			} else {
-				pUpper = pMiddle;
-			}
-		}
-		vRange.second = pLower;
-
-		return vRange;
+		return X_GetEqualRange(x_vecStorage.GetBegin(), x_vecStorage.GetEnd(), vComparand);
 	}
 	template<typename ComparandT>
 	std::pair<Element *, Element *> GetEqualRange(const ComparandT &vComparand){
-		auto vRange = std::make_pair(x_vecStorage.GetEnd(), x_vecStorage.GetEnd());
-
-		const auto pTop = Find(vComparand);
-		if(pTop == x_vecStorage.GetEnd()){
-			return vRange;
-		}
-
-		auto pLower = x_vecStorage.GetBegin(), pUpper = pTop;
-		while(pLower != pUpper){
-			const auto pMiddle = pLower + (pUpper - pLower) / 2;
-			if(ComparatorT()(pMiddle->first, vComparand)){
-				pLower = pMiddle + 1;
-			} else {
-				pUpper = pMiddle;
-			}
-		}
-		vRange.first = pLower;
-
-		pLower = pTop, pUpper = x_vecStorage.GetEnd();
-		while(pLower != pUpper){
-			const auto pMiddle = pLower + (pUpper - pLower) / 2;
-			if(!ComparatorT()(vComparand, pMiddle->first)){
-				pLower = pMiddle + 1;
-			} else {
-				pUpper = pMiddle;
-			}
-		}
-		vRange.second = pLower;
-
-		return vRange;
+		return X_GetEqualRange(x_vecStorage.GetBegin(), x_vecStorage.GetEnd(), vComparand);
 	}
 	template<typename ComparandT>
 	std::pair<const Element *, const Element *> GetConstEqualRange(const ComparandT &vComparand) const {
@@ -474,7 +406,7 @@ public:
 
 	template<typename ComparandT>
 	ConstEnumerator EnumerateMatch(const ComparandT &vComparand) const {
-		const auto pPos = Find(vComparand);
+		const auto pPos = GetMatch(vComparand);
 		if(pPos == GetEnd()){
 			return ConstEnumerator(*this, nullptr);
 		}
@@ -482,7 +414,7 @@ public:
 	}
 	template<typename ComparandT>
 	Enumerator EnumerateMatch(const ComparandT &vComparand){
-		const auto pPos = Find(vComparand);
+		const auto pPos = GetMatch(vComparand);
 		if(pPos == GetEnd()){
 			return Enumerator(*this, nullptr);
 		}

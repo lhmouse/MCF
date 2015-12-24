@@ -50,6 +50,7 @@ static inline MCF_AvlNodeHeader *MCF_AvlBack(const MCF_AvlRoot *__ppRoot) MCF_NO
 	}
 	return __pCur;
 }
+
 __attribute__((__flatten__))
 static inline void MCF_AvlSwap(MCF_AvlRoot *__ppRoot1, MCF_AvlRoot *__ppRoot2) MCF_NOEXCEPT {
 	if(__ppRoot1 == __ppRoot2){

@@ -6,6 +6,7 @@
 #define MCF_CORE_UNIQUE_HANDLE_HPP_
 
 #include "../Utilities/Assert.hpp"
+#include "../Utilities/DeclVal.hpp"
 #include "../Utilities/RationalFunctors.hpp"
 #include <utility>
 #include <type_traits>
@@ -20,7 +21,7 @@ public:
 	using Closer = CloserT;
 
 	static_assert(std::is_scalar<Handle>::value, "Handle must be a scalar type.");
-	static_assert(noexcept(Closer()(Handle())), "Handle closer must not throw.");
+	static_assert(noexcept(Closer()(DeclVal<Handle>())), "Handle closer must not throw.");
 
 private:
 	Handle x_hObject;

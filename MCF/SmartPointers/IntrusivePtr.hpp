@@ -196,7 +196,7 @@ template<typename ObjectT, class DeleterT>
 class IntrusiveBase : public Impl_IntrusivePtr::DeletableBase<DeleterT> {
 	static_assert(!std::is_array<ObjectT>::value, "IntrusiveBase doesn't accept arrays.");
 
-private:
+protected:
 	template<typename CvOtherT, typename CvThisT>
 	static IntrusivePtr<CvOtherT, DeleterT> X_ForkShared(CvThisT *pThis) noexcept {
 		const auto pOther = Impl_IntrusivePtr::StaticCastOrDynamicCast<CvOtherT *>(pThis);

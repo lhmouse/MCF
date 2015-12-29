@@ -16,36 +16,36 @@ public:
 public:
 	template<typename ObjectT>
 	IntrusivePtr<const volatile ObjectT, DefaultDeleter<PolyIntrusiveBase>> Share() const volatile {
-		return DynamicPointerCast<ObjectT>(IntrusiveBase<PolyIntrusiveBase>::Share());
+		return IntrusiveBase<PolyIntrusiveBase>::X_ForkShared<const volatile ObjectT>(this);
 	}
 	template<typename ObjectT>
 	IntrusivePtr<const ObjectT, DefaultDeleter<PolyIntrusiveBase>> Share() const {
-		return DynamicPointerCast<ObjectT>(IntrusiveBase<PolyIntrusiveBase>::Share());
+		return IntrusiveBase<PolyIntrusiveBase>::X_ForkShared<const ObjectT>(this);
 	}
 	template<typename ObjectT>
 	IntrusivePtr<volatile ObjectT, DefaultDeleter<PolyIntrusiveBase>> Share() volatile {
-		return DynamicPointerCast<ObjectT>(IntrusiveBase<PolyIntrusiveBase>::Share());
+		return IntrusiveBase<PolyIntrusiveBase>::X_ForkShared<volatile ObjectT>(this);
 	}
 	template<typename ObjectT>
 	IntrusivePtr<ObjectT, DefaultDeleter<PolyIntrusiveBase>> Share(){
-		return DynamicPointerCast<ObjectT>(IntrusiveBase<PolyIntrusiveBase>::Share());
+		return IntrusiveBase<PolyIntrusiveBase>::X_ForkShared<ObjectT>(this);
 	}
 
 	template<typename ObjectT>
 	IntrusiveWeakPtr<const volatile ObjectT, DefaultDeleter<PolyIntrusiveBase>> Weaken() const volatile {
-		return Share<ObjectT>();
+		return IntrusiveBase<PolyIntrusiveBase>::X_ForkWeak<const volatile ObjectT>(this);
 	}
 	template<typename ObjectT>
 	IntrusiveWeakPtr<const ObjectT, DefaultDeleter<PolyIntrusiveBase>> Weaken() const {
-		return Share<ObjectT>();
+		return IntrusiveBase<PolyIntrusiveBase>::X_ForkWeak<const ObjectT>(this);
 	}
 	template<typename ObjectT>
 	IntrusiveWeakPtr<volatile ObjectT, DefaultDeleter<PolyIntrusiveBase>> Weaken() volatile {
-		return Share<ObjectT>();
+		return IntrusiveBase<PolyIntrusiveBase>::X_ForkWeak<volatile ObjectT>(this);
 	}
 	template<typename ObjectT>
 	IntrusiveWeakPtr<ObjectT, DefaultDeleter<PolyIntrusiveBase>> Weaken(){
-		return Share<ObjectT>();
+		return IntrusiveBase<PolyIntrusiveBase>::X_ForkWeak<ObjectT>(this);
 	}
 };
 

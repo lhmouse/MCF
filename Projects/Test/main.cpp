@@ -1,28 +1,38 @@
 #include <MCF/StdMCF.hpp>
-#include <MCF/SmartPointers/PolyIntrusivePtr.hpp>
-#include <cstdio>
+#include <MCF/Function/Function.hpp>
 
 using namespace MCF;
 
-struct foo : PolyIntrusiveBase {
-	foo();
+struct foo {
+	foo(){
+		std::puts(__PRETTY_FUNCTION__);
+	}
+	foo(const foo &){
+		std::puts(__PRETTY_FUNCTION__);
+	}
+	foo(foo &&) noexcept {
+		std::puts(__PRETTY_FUNCTION__);
+	}
+	~foo(){
+		std::puts(__PRETTY_FUNCTION__);
+	}
 };
 
-PolyIntrusiveWeakPtr<foo> gp;
-
-foo::foo(){
-	gp = this->Weaken<foo>();
-	std::printf("inside foo::foo(), gp is now %p\n", (void *)gp.Lock().Get());
-	throw 12345; // ok.
-}
+struct bar {
+	void operator()(foo) const {
+		std::puts(__PRETTY_FUNCTION__);
+	}
+};
 
 extern "C" unsigned MCFMain(){
-	try {
-		auto p = MakeIntrusive<foo>();
-	} catch(int e){
-		std::printf("exception caught: e = %d\n", e);
-	}
-	std::printf("inside main(), gp is now %p\n", (void *)gp.Lock().Get());
+	std::puts("--- test 1 ---");
+	Function<void (foo)> f;
+	f.Reset(bar());
+	f(foo());
+
+	std::puts("--- test 2 ---");
+	bar b;
+	b(foo());
 
 	return 0;
 }

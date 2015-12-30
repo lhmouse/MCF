@@ -9,8 +9,10 @@
 
 namespace MCF {
 
-template<typename T>
-using ForwardedParam = std::conditional_t<!std::is_reference<T>::value && std::is_scalar<std::decay_t<T>>::value, std::decay_t<T>, T &&>;
+namespace Impl_ForwardedParam {
+	template<typename T>
+	using ForwardedParam = std::conditional_t<!std::is_reference<T>::value && std::is_scalar<std::decay_t<T>>::value, std::decay_t<T>, T &&>;
+}
 
 }
 

@@ -36,7 +36,7 @@ namespace Impl_Function {
 		virtual ~FunctorBase() = default;
 
 	public:
-		virtual RetT Dispatch(ForwardedParam<ParamsT>...vParams) const = 0;
+		virtual RetT Dispatch(Impl_ForwardedParam::ForwardedParam<ParamsT>...vParams) const = 0;
 		virtual IntrusivePtr<FunctorBase> Fork() const = 0;
 	};
 
@@ -52,7 +52,7 @@ namespace Impl_Function {
 		}
 
 	public:
-		RetT Dispatch(ForwardedParam<ParamsT>...vParams) const override {
+		RetT Dispatch(Impl_ForwardedParam::ForwardedParam<ParamsT>...vParams) const override {
 			return Invoke(x_vFunc, std::forward<ParamsT>(vParams)...);
 		}
 		IntrusivePtr<FunctorBase<RetT, ParamsT...>> Fork() const override {
@@ -78,7 +78,7 @@ public:
 	}
 	template<typename FuncT,
 		std::enable_if_t<
-			std::is_convertible<std::result_of_t<FuncT && (ForwardedParam<ParamsT>...)>, RetT>::value &&
+			std::is_convertible<std::result_of_t<FuncT && (Impl_ForwardedParam::ForwardedParam<ParamsT>...)>, RetT>::value &&
 				!std::is_same<std::decay_t<FuncT>, Function>::value,
 			int> = 0>
 	Function(FuncT &&vFunc)

@@ -31,7 +31,7 @@ private:
 public:
 	static IntrusivePtr<Thread> Create(Function<void ()> fnProc, bool bSuspended = false);
 
-	static unsigned GetCurrentId() noexcept;
+	static std::uintptr_t GetCurrentId() noexcept;
 
 	static void Sleep(std::uint64_t u64UntilFastMonoClock) noexcept;
 	static bool AlertableSleep(std::uint64_t u64UntilFastMonoClock) noexcept;
@@ -42,7 +42,7 @@ private:
 	const Function<void ()> x_fnProc;
 
 	UniqueHandle<X_ThreadCloser> x_hThread;
-	Atomic<unsigned> x_uThreadId;
+	Atomic<std::uintptr_t> x_uThreadId;
 	std::exception_ptr x_pException;
 
 private:
@@ -67,7 +67,7 @@ public:
 	}
 
 	bool IsAlive() const noexcept;
-	unsigned GetId() const noexcept;
+	std::uintptr_t GetId() const noexcept;
 
 	void Suspend() noexcept;
 	void Resume() noexcept;

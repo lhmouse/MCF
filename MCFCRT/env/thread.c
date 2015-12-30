@@ -379,7 +379,7 @@ DWORD CRTThreadProc(LPVOID pParam){
 	return dwExitCode;
 }
 
-void *MCF_CRT_CreateThread(unsigned (*pfnThreadProc)(intptr_t), intptr_t nParam, bool bSuspended, unsigned *restrict puThreadId){
+void *MCF_CRT_CreateThread(unsigned (*pfnThreadProc)(intptr_t), intptr_t nParam, bool bSuspended, uintptr_t *restrict puThreadId){
 	ThreadInitParams *const pInitParams = malloc(sizeof(ThreadInitParams));
 	if(!pInitParams){
 		return nullptr;
@@ -397,7 +397,7 @@ void *MCF_CRT_CreateThread(unsigned (*pfnThreadProc)(intptr_t), intptr_t nParam,
 		return nullptr;
 	}
 	if(puThreadId){
-		*puThreadId = (unsigned)(uintptr_t)vClientId.UniqueThread;
+		*puThreadId = (uintptr_t)vClientId.UniqueThread;
 	}
 	return (void *)hThread;
 }
@@ -407,7 +407,7 @@ void MCF_CRT_CloseThread(void *hThread){
 	}
 }
 
-unsigned MCF_CRT_GetCurrentThreadId(){
+uintptr_t MCF_CRT_GetCurrentThreadId(){
 	return GetCurrentThreadId();
 }
 

@@ -5,7 +5,7 @@
 #ifndef MCF_CONTAINERS_FLAT_MULTI_SET_HPP_
 #define MCF_CONTAINERS_FLAT_MULTI_SET_HPP_
 
-#include "../Utilities/RationalFunctors.hpp"
+#include "../Function/Comparators.hpp"
 #include "Vector.hpp"
 #include <utility>
 

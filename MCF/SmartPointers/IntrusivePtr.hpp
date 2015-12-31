@@ -7,7 +7,7 @@
 
 #include "../Utilities/Assert.hpp"
 #include "../Utilities/Bail.hpp"
-#include "../Utilities/RationalFunctors.hpp"
+#include "../Function/Comparators.hpp"
 #include "../Thread/Mutex.hpp"
 #include "../Thread/Atomic.hpp"
 #include "DefaultDeleter.hpp"

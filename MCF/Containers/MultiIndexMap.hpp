@@ -8,7 +8,7 @@
 #include "_EnumeratorTemplate.hpp"
 #include "../Utilities/Assert.hpp"
 #include "../Utilities/ConstructDestruct.hpp"
-#include "../Utilities/RationalFunctors.hpp"
+#include "../Function/Comparators.hpp"
 #include "../Core/Exception.hpp"
 #include "../../MCFCRT/env/avl_tree.h"
 #include <utility>

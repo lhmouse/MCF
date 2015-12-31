@@ -9,7 +9,7 @@
 #include "../Utilities/Assert.hpp"
 #include "../Utilities/CountOf.hpp"
 #include "../Utilities/Defer.hpp"
-#include "../Utilities/RationalFunctors.hpp"
+#include "../Function/Comparators.hpp"
 #include "Exception.hpp"
 #include <utility>
 #include <iterator>

@@ -6,7 +6,7 @@
 #define MCF_SMART_POINTERS_UNIQUE_PTR_HPP_
 
 #include "../Utilities/Assert.hpp"
-#include "../Utilities/RationalFunctors.hpp"
+#include "../Function/Comparators.hpp"
 #include "DefaultDeleter.hpp"
 #include <utility>
 #include <type_traits>

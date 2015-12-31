@@ -7,7 +7,7 @@
 
 #include "../Utilities/Assert.hpp"
 #include "../Utilities/DeclVal.hpp"
-#include "../Utilities/RationalFunctors.hpp"
+#include "../Function/Comparators.hpp"
 #include <utility>
 #include <type_traits>
 #include <cstddef>

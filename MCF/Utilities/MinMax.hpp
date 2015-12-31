@@ -5,7 +5,7 @@
 #ifndef MCF_UTILITIES_MIN_MAX_HPP_
 #define MCF_UTILITIES_MIN_MAX_HPP_
 
-#include "RationalFunctors.hpp"
+#include "../Function/Comparators.hpp"
 #include <utility>
 
 namespace MCF {

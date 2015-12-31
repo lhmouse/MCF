@@ -6,6 +6,7 @@
 #define MCF_THREAD_MONITOR_HPP_
 
 #include "../Utilities/Noncopyable.hpp"
+#include "../Utilities/AddressOf.hpp"
 #include <utility>
 
 namespace MCF {
@@ -57,7 +58,7 @@ namespace Impl_Monitor {
 			return x_vObject;
 		}
 		ObjectT *operator->() const && noexcept {
-			return std::addressof(x_vObject);
+			return AddressOf(x_vObject);
 		}
 	};
 

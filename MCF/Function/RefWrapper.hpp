@@ -5,6 +5,7 @@
 #ifndef MCF_FUNCTION_REF_WRAPPER_HPP_
 #define MCF_FUNCTION_REF_WRAPPER_HPP_
 
+#include "../Utilities/AddressOf.hpp"
 #include <type_traits>
 #include <utility>
 
@@ -20,7 +21,7 @@ private:
 
 public:
 	constexpr RefWrapper(ObjectT &vObject) noexcept
-		: x_pObject(std::addressof(vObject))
+		: x_pObject(AddressOf(vObject))
 	{
 	}
 
@@ -57,7 +58,7 @@ private:
 
 public:
 	constexpr RefWrapper(ObjectT &vObject) noexcept
-		: x_pObject(std::addressof(vObject))
+		: x_pObject(AddressOf(vObject))
 	{
 	}
 	constexpr RefWrapper(ObjectT &&vObject) noexcept

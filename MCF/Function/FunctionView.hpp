@@ -6,6 +6,7 @@
 #define MCF_FUNCTION_FUNCTION_VIEW_HPP_
 
 #include "../Utilities/Assert.hpp"
+#include "../Utilities/AddressOf.hpp"
 #include "../Utilities/Invoke.hpp"
 #include "_ForwardedParam.hpp"
 #include <type_traits>
@@ -35,7 +36,7 @@ public:
 			int> = 0>
 	FunctionView(const FuncT &vFunc) noexcept
 		: x_pfnLambda([](const void *pContext, ParamsT &&...vParams){ return Invoke(*static_cast<const FuncT *>(pContext), std::forward<ParamsT>(vParams)...);  })
-		, x_pContext(std::addressof(vFunc))
+		, x_pContext(AddressOf(vFunc))
 	{
 	}
 

@@ -7,6 +7,7 @@
 
 #include "../Utilities/Assert.hpp"
 #include "../Utilities/CountOf.hpp"
+#include "../Utilities/AddressOf.hpp"
 #include <type_traits>
 #include <initializer_list>
 #include <cstddef>
@@ -29,7 +30,7 @@ public:
 	{
 	}
 	constexpr ArrayView(ElementT &rhs) noexcept
-		: x_pBegin(std::addressof(rhs)), x_uSize(1)
+		: x_pBegin(AddressOf(rhs)), x_uSize(1)
 	{
 	}
 	constexpr ArrayView(ElementT *pBegin, std::size_t uSize) noexcept
@@ -91,7 +92,7 @@ public:
 	{
 	}
 	constexpr ArrayView(const ElementT &rhs) noexcept
-		: x_pBegin(std::addressof(rhs)), x_uSize(1)
+		: x_pBegin(AddressOf(rhs)), x_uSize(1)
 	{
 	}
 	constexpr ArrayView(const ElementT *pBegin, std::size_t uSize) noexcept

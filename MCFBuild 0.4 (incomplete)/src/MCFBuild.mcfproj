@@ -2,7 +2,7 @@
 CPPFlags	= -Wall -Wextra -pedantic -pedantic-errors -Wsign-conversion -Wsuggest-attribute=noreturn -Wundef -pipe	\
 				-mfpmath=both -march=nocona -mno-stack-arg-probe -mno-accumulate-outgoing-args -mpush-args -masm=intel -isystem ../../
 CFlags		= -std=c11
-CXXFlags	= -std=c++14 -Wzero-as-null-pointer-constant -Wnoexcept
+CXXFlags	= -std=c++14 -Wzero-as-null-pointer-constant -Wnoexcept -fno-enforce-eh-specs -fnothrow-opt
 LDFlags		= -Wall -Wextra -static -nostdlib -Wl,-e__MCF_ExeStartup,--disable-runtime-pseudo-reloc,--disable-auto-import	\
 				-Wl,--wrap=atexit,--wrap=abort,--wrap=malloc,--wrap=realloc,--wrap=calloc,--wrap=free,--wrap=__cxa_throw
 Libs		= -lmcflite -lstdc++ -lmingwex -lmingw32 -lgcc -lgcc_eh -lmcflite -lmsvcrt -luser32 -lkernel32

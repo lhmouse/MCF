@@ -155,10 +155,11 @@ namespace Impl_IntrusivePtr {
 		mutable Atomic<X_WeakView *> x_pView;
 
 	public:
-		DeletableBase() noexcept {
-			x_pView.Store(nullptr, kAtomicRelease);
+		constexpr DeletableBase() noexcept
+			: x_pView(nullptr)
+		{
 		}
-		DeletableBase(const DeletableBase &) noexcept
+		constexpr DeletableBase(const DeletableBase &) noexcept
 			: DeletableBase()
 		{
 		}

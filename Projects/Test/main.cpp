@@ -1,16 +1,15 @@
 #include <MCF/StdMCF.hpp>
-#include <MCF/Function/Function.hpp>
-#include <MCF/Function/Bind.hpp>
+#include <MCF/Core/Optional.hpp>
 #include <iostream>
+#include <string>
 
 using namespace MCF;
 
-extern "C" unsigned MCFMain(){
-	Function<void(int, bool)> f;
-	f = [](auto x, auto y){
-		std::cout <<std::boolalpha <<"x = " <<x <<", y = " <<y <<std::endl;
-	};
-	f(123, true);
+template class Optional<std::string>;
 
+extern "C" unsigned MCFMain(){
+	Optional<std::string> opt(std::forward_as_tuple("hello world!", 5u));
+	Optional<std::string> opt2 = opt;
+	std::cout <<opt2.Get() <<std::endl;
 	return 0;
 }

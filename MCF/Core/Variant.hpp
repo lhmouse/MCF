@@ -94,7 +94,8 @@ public:
 	{
 	}
 	template<typename ElementT, std::enable_if_t<
-		FindFirstType<std::decay_t<ElementT>, ElementsT...>() == FindLastType<std::decay_t<ElementT>, ElementsT...>(),
+		!std::is_same<std::decay_t<ElementT>, Variant>::value &&
+			(FindFirstType<std::decay_t<ElementT>, ElementsT...>() == FindLastType<std::decay_t<ElementT>, ElementsT...>()),
 		int> = 0>
 	Variant(ElementT &&vElement)
 		: x_pElement(MakeUnique<X_ActiveElement<std::decay_t<ElementT>>>(std::forward<ElementT>(vElement)))
@@ -107,13 +108,6 @@ public:
 	Variant(Variant &&rhs) noexcept
 		: x_pElement(std::move(rhs.x_pElement))
 	{
-	}
-	template<typename ElementT, std::enable_if_t<
-		FindFirstType<std::decay_t<ElementT>, ElementsT...>() == FindLastType<std::decay_t<ElementT>, ElementsT...>(),
-		int> = 0>
-	Variant &operator=(ElementT &&vElement){
-		x_pElement = MakeUnique<X_ActiveElement<std::decay_t<ElementT>>>(std::forward<ElementT>(vElement));
-		return *this;
 	}
 	Variant &operator=(const Variant &rhs){
 		x_pElement = rhs.x_pElement ? rhs.x_pElement->Clone() : nullptr;

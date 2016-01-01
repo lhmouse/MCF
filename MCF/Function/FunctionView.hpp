@@ -33,7 +33,8 @@ public:
 	}
 	template<typename FuncT,
 		std::enable_if_t<
-			std::is_convertible<decltype(DeclVal<FuncT>()(DeclVal<Impl_ForwardedParam::ForwardedParam<ParamsT>>()...)), RetT>::value,
+			!std::is_same<std::decay_t<FuncT>, FunctionView>::value &&
+				std::is_convertible<decltype(DeclVal<FuncT>()(DeclVal<Impl_ForwardedParam::ForwardedParam<ParamsT>>()...)), RetT>::value,
 			int> = 0>
 	FunctionView(const FuncT &vFunc) noexcept
 		: x_pfnLambda([](const void *pContext, ParamsT &&...vParams){ return Invoke(*static_cast<const FuncT *>(pContext), std::forward<ParamsT>(vParams)...);  })

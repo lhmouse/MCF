@@ -549,10 +549,10 @@ private:
 	};
 
 	template<std::size_t ...kIndicesT>
-		static auto xMakeNode(std::idx_sequence<kIndicesT...>) noexcept ->
+		static auto xMakeNode(std::index_sequence<kIndicesT...>) noexcept ->
 			xNodeImpl<kIndicesT...>;
 	template<class NodeT, std::size_t ...kIndicesT>
-		static auto xMakeIndices(std::idx_sequence<kIndicesT...>) noexcept ->
+		static auto xMakeIndices(std::index_sequence<kIndicesT...>) noexcept ->
 			std::tuple<typename IndicesT::template IndexType<NodeT, kIndicesT>...>;
 
 	template<std::size_t kIndexT, typename CursorT, typename RealElementT, typename RealNodeT>
@@ -626,7 +626,7 @@ private:
 	};
 
 public:
-	using Node = decltype(xMakeNode(std::idx_sequence_for<IndicesT...>()));
+	using Node = decltype(xMakeNode(std::index_sequence_for<IndicesT...>()));
 	using Hints = std::tuple<decltype(reinterpret_cast<Node *>(static_cast<IndicesT *>(nullptr)))...>;
 
 	template<std::size_t kIndexT>
@@ -677,7 +677,7 @@ public:
 	};
 
 private:
-	using xIndexTuple = decltype(xMakeIndices<Node>(std::idx_sequence_for<IndicesT...>()));
+	using xIndexTuple = decltype(xMakeIndices<Node>(std::index_sequence_for<IndicesT...>()));
 
 private:
 	template<typename, typename FirstT, typename ...RemainingT>

@@ -6,6 +6,8 @@
 #define MCF_CORE_OPTIONAL_HPP_
 
 #include "../Utilities/ConstructDestruct.hpp"
+#include "../Utilities/TupleManipulators.hpp"
+#include "../Utilities/AddressOf.hpp"
 #include "Exception.hpp"
 #include <exception>
 #include <type_traits>
@@ -23,6 +25,8 @@ namespace Impl_Optional {
 
 template<typename ElementT>
 class Optional {
+	static_assert(!std::is_same<std::decay_t<ElementT>, std::exception_ptr>::value, "Optional<std::exception_ptr> is not supported.");
+
 private:
 	union X_Storage {
 		ElementT v;
@@ -44,15 +48,11 @@ public:
 	{
 	}
 	template<typename ...ParamsT>
-	Optional(ParamsT &&...vParams) noexcept(std::is_nothrow_constructible<ElementT, ParamsT &&...>::value)
+	Optional(std::tuple<ParamsT...> vParamTuple) noexcept(std::is_nothrow_constructible<ElementT, ParamsT &&...>::value)
 		: Optional()
 	{
-		ResetElement(std::forward<ParamsT>(vParams)...);
+		SqueezeTuple([this](auto &&...vParams){ this->ResetElement(static_cast<decltype(vParams) &&>(vParams)...); }, vParamTuple);
 	}
-	template<typename TestT = ElementT,
-		std::enable_if_t<
-			!std::is_same<TestT, std::exception_ptr>::value,
-			int> = 0>
 	Optional(std::exception_ptr rhs) noexcept
 		: Optional()
 	{
@@ -95,7 +95,7 @@ public:
 		if(x_eState == Impl_Optional::State::kElementSet){
 			return std::exception_ptr();
 		} else if(x_eState == Impl_Optional::State::kExceptionSet){
-			return *reinterpret_cast<const std::exception_ptr *>(&x_vStorage);
+			return x_vStorage.ep;
 		} else {
 			return DEBUG_MAKE_EXCEPTION_PTR(Exception, ERROR_NOT_READY, "Optional is not set"_rcs);
 		}
@@ -106,22 +106,22 @@ public:
 		if(pException){
 			std::rethrow_exception(pException);
 		}
-		return *reinterpret_cast<const ElementT *>(&x_vStorage);
+		return x_vStorage.v;
 	}
 	ElementT &Get(){
 		const auto pException = GetException();
 		if(pException){
 			std::rethrow_exception(pException);
 		}
-		return *reinterpret_cast<ElementT *>(&x_vStorage);
+		return x_vStorage.v;
 	}
 
 	Optional &Reset() noexcept {
 		if(x_eState == Impl_Optional::State::kElementSet){
-			Destruct(reinterpret_cast<ElementT *>(&x_vStorage));
+			Destruct(AddressOf(x_vStorage.v));
 			x_eState = Impl_Optional::State::kUnset;
 		} else if(x_eState == Impl_Optional::State::kExceptionSet){
-			Destruct(reinterpret_cast<std::exception_ptr *>(&x_vStorage));
+			Destruct(AddressOf(x_vStorage.ep));
 			x_eState = Impl_Optional::State::kUnset;
 		}
 		return *this;
@@ -130,9 +130,9 @@ public:
 		Reset();
 
 		if(rhs.x_eState == Impl_Optional::State::kElementSet){
-			ResetElement(*reinterpret_cast<const ElementT *>(&rhs.x_vStorage));
+			ResetElement(rhs.x_vStorage.v);
 		} else if(rhs.x_eState == Impl_Optional::State::kExceptionSet){
-			ResetException(*reinterpret_cast<const std::exception_ptr *>(&rhs.x_vStorage));
+			ResetException(rhs.x_vStorage.ep);
 		}
 		return *this;
 	}
@@ -140,10 +140,10 @@ public:
 		Reset();
 
 		if(rhs.x_eState == Impl_Optional::State::kElementSet){
-			ResetElement(std::move(*reinterpret_cast<ElementT *>(&rhs.x_vStorage)));
+			ResetElement(std::move(rhs.x_vStorage.v));
 			rhs.Reset();
 		} else if(rhs.x_eState == Impl_Optional::State::kExceptionSet){
-			ResetException(std::move(*reinterpret_cast<const std::exception_ptr *>(&rhs.x_vStorage)));
+			ResetException(std::move(rhs.x_vStorage.ep));
 			rhs.Reset();
 		}
 		return *this;
@@ -152,14 +152,14 @@ public:
 	Optional &ResetElement(ParamsT &&...vParams) noexcept(std::is_nothrow_constructible<ElementT, ParamsT &&...>::value) {
 		Reset();
 
-		Construct(reinterpret_cast<ElementT *>(&x_vStorage), std::forward<ParamsT>(vParams)...);
+		Construct(AddressOf(x_vStorage.v), std::forward<ParamsT>(vParams)...);
 		x_eState = Impl_Optional::State::kElementSet;
 		return *this;
 	}
 	Optional &ResetException(std::exception_ptr rhs) noexcept {
 		Reset();
 
-		Construct(reinterpret_cast<std::exception_ptr *>(&x_vStorage), std::move(rhs));
+		Construct(AddressOf(x_vStorage.ep), std::move(rhs));
 		x_eState = Impl_Optional::State::kExceptionSet;
 		return *this;
 	}

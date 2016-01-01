@@ -9,6 +9,7 @@
 
 jmp_buf *__MCF_CRT_abort_hook_jmpbuf = nullptr;
 
+__attribute__((__used__))
 _Noreturn void __wrap_abort(){
 	if(__MCF_CRT_abort_hook_jmpbuf){
 		longjmp(*__MCF_CRT_abort_hook_jmpbuf, ERROR_PROCESS_ABORTED);

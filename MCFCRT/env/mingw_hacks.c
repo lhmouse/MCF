@@ -113,3 +113,6 @@ int __mingwthr_remove_key_dtor(unsigned long ulKey){
 	ReleaseSRWLockExclusive(&g_srwDtorMapLock);
 	return 0;
 }
+
+__attribute__((__used__))
+int _CRT_MT = 2;

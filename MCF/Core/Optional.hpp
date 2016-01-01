@@ -25,8 +25,6 @@ namespace Impl_Optional {
 
 template<typename ElementT>
 class Optional {
-	static_assert(!std::is_same<std::decay_t<ElementT>, std::exception_ptr>::value, "Optional<std::exception_ptr> is not supported.");
-
 private:
 	union X_Storage {
 		ElementT v;

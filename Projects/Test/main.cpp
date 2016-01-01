@@ -6,6 +6,7 @@
 using namespace MCF;
 
 template class Optional<std::string>;
+template class Optional<std::exception_ptr>;
 
 extern "C" unsigned MCFMain(){
 	Optional<std::string> opt(std::forward_as_tuple("hello world!", 5u));

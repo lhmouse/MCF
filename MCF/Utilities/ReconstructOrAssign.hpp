@@ -13,7 +13,7 @@ namespace MCF {
 namespace Impl_ReconstructOrAssign {
 	struct ToReconstruct {
 		template<typename ObjectT, typename ...ParamsT>
-		void operator()(ObjectT *pObject, ParamsT &&...vParams) const {
+		void operator()(ObjectT *pObject, ParamsT &&...vParams) const noexcept {
 			Destruct(pObject);
 			Construct(pObject, std::forward<ParamsT>(vParams)...);
 		}
@@ -28,9 +28,13 @@ namespace Impl_ReconstructOrAssign {
 
 template<typename ObjectT, typename ...ParamsT>
 inline void ReconstructOrAssign(ObjectT *pObject, ParamsT &&...vParams)
-	noexcept(std::is_nothrow_destructible<ObjectT>::value && (std::is_nothrow_constructible<ObjectT, ParamsT &&...>::value || std::is_nothrow_move_assignable<ObjectT>::value))
+	noexcept(
+		std::is_nothrow_destructible<ObjectT>::value && std::is_nothrow_constructible<ObjectT, ParamsT &&...>::value)
 {
-	std::conditional_t<std::is_nothrow_constructible<ObjectT, ParamsT &&...>::value, Impl_ReconstructOrAssign::ToReconstruct, Impl_ReconstructOrAssign::ToAssign>()(pObject, std::forward<ParamsT>(vParams)...);
+	std::conditional_t<
+		std::is_nothrow_destructible<ObjectT>::value && std::is_nothrow_constructible<ObjectT, ParamsT &&...>::value,
+		Impl_ReconstructOrAssign::ToReconstruct, Impl_ReconstructOrAssign::ToAssign
+		>()(pObject, std::forward<ParamsT>(vParams)...);
 }
 
 }

@@ -1,26 +1,53 @@
 #include <MCF/StdMCF.hpp>
-#include <MCF/Core/Array.hpp>
+#include <MCF/Utilities/TupleManipulators.hpp>
 
 using namespace MCF;
 
-template class Array<int, 2, 3>;
+struct probe {
+	int id;
+
+	probe()
+		: id(-1)
+	{
+	}
+	probe(int i)
+		: id(i)
+	{
+		std::printf("probe(%d) constructed\n", id);
+	}
+	probe(const probe &r) noexcept
+		: id(r.id)
+	{
+		std::printf("probe(%d) copied\n", id);
+	}
+	probe(probe &&r) noexcept
+		: id(std::exchange(r.id, -1))
+	{
+		std::printf("probe(%d) moved\n", id);
+	}
+	~probe() noexcept {
+		if(id == -1){
+			return;
+		}
+		std::printf("probe(%d) destroyed\n", id);
+	}
+};
 
 extern "C" unsigned MCFMain(){
-	Array<int, 2, 3> a;
-	a.Get(0) = { 1, 2, 3 };
-	a.Get(1) = { 4, 5, 6 };
+	auto t = std::make_tuple(probe(1), probe(2), probe(3));
+	std::puts("----------");
 
-	for(unsigned i = 0; i < 2; ++i){
-		for(unsigned j = 0; j < 3; ++j){
-			std::printf("a[%u][%u] = %d\n", i, j, a[i][j]);
-		}
-	}
+	auto af = [](auto &&p){ std::printf("absorbed probe(%d)\n", std::exchange(p.id, -1)); };
+	AbsorbTuple(af, t);
+	std::puts("----------");
+	ReverseAbsorbTuple(af, t);
+	std::puts("----------");
 
-	try {
-		a.Get(2); // out of range
-	} catch(std::exception &e){
-		std::printf("exception: %s\n", e.what());
-	}
+	auto sf = [](auto &&p1, auto &&p2, auto &&p3){ std::printf("squeezed probe(%d), probe(%d), probe(%d)\n", std::exchange(p1.id, -1), std::exchange(p2.id, -1), std::exchange(p3.id, -1)); };
+	SqueezeTuple(sf, t);
+	std::puts("----------");
+	ReverseSqueezeTuple(sf, t);
+	std::puts("----------");
 
 	return 0;
 }

@@ -49,7 +49,7 @@ public:
 	Optional(std::tuple<ParamsT...> vParamTuple) noexcept(std::is_nothrow_constructible<ElementT, ParamsT &&...>::value)
 		: Optional()
 	{
-		SqueezeTuple([this](auto &&...vParams){ this->ResetElement(static_cast<decltype(vParams) &&>(vParams)...); }, vParamTuple);
+		ResetElement(std::move(vParamTuple));
 	}
 	Optional(std::exception_ptr rhs) noexcept
 		: Optional()
@@ -151,6 +151,14 @@ public:
 		Reset();
 
 		Construct(AddressOf(x_vStorage.v), std::forward<ParamsT>(vParams)...);
+		x_eState = Impl_Optional::State::kElementSet;
+		return *this;
+	}
+	template<typename ...ParamsT>
+	Optional &ResetElement(std::tuple<ParamsT...> vParamTuple) noexcept(std::is_nothrow_constructible<ElementT, ParamsT &&...>::value) {
+		Reset();
+
+		SqueezeTuple([this](auto &&...vParams){ Construct(AddressOf(x_vStorage.v), std::forward<ParamsT>(vParams)...); }, vParamTuple);
 		x_eState = Impl_Optional::State::kElementSet;
 		return *this;
 	}

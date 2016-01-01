@@ -168,13 +168,13 @@ public:
 
 	const Element &Get(std::size_t uIndex) const {
 		if(uIndex >= kSizeT){
-			DEBUG_THROW(Exception, ERROR_INVALID_PARAMETER, RefCountingNtmbs::View(__PRETTY_FUNCTION__));
+			DEBUG_THROW(Exception, ERROR_ACCESS_DENIED, "Array: Subscript out of range"_rcs);
 		}
 		return UncheckedGet(uIndex);
 	}
 	Element &Get(std::size_t uIndex){
 		if(uIndex >= kSizeT){
-			DEBUG_THROW(Exception, ERROR_INVALID_PARAMETER, RefCountingNtmbs::View(__PRETTY_FUNCTION__));
+			DEBUG_THROW(Exception, ERROR_ACCESS_DENIED, "Array: Subscript out of range"_rcs);
 		}
 		return UncheckedGet(uIndex);
 	}
@@ -369,13 +369,13 @@ public:
 
 	const Element &Get(std::size_t uIndex) const {
 		if(uIndex >= kSizeT){
-			DEBUG_THROW(Exception, ERROR_INVALID_PARAMETER, RefCountingNtmbs::View(__PRETTY_FUNCTION__));
+			DEBUG_THROW(Exception, ERROR_ACCESS_DENIED, "Array: Subscript out of range"_rcs);
 		}
 		return UncheckedGet(uIndex);
 	}
 	Element &Get(std::size_t uIndex){
 		if(uIndex >= kSizeT){
-			DEBUG_THROW(Exception, ERROR_INVALID_PARAMETER, RefCountingNtmbs::View(__PRETTY_FUNCTION__));
+			DEBUG_THROW(Exception, ERROR_ACCESS_DENIED, "Array: Subscript out of range"_rcs);
 		}
 		return UncheckedGet(uIndex);
 	}

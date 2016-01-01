@@ -265,13 +265,13 @@ public:
 
 	const Element &Get(std::size_t uIndex) const {
 		if(uIndex >= x_uSize){
-			DEBUG_THROW(Exception, ERROR_ACCESS_DENIED, RefCountingNtmbs::View(__PRETTY_FUNCTION__));
+			DEBUG_THROW(Exception, ERROR_ACCESS_DENIED, "Vector: Subscript out of range"_rcs);
 		}
 		return UncheckedGet(uIndex);
 	}
 	Element &Get(std::size_t uIndex){
 		if(uIndex >= x_uSize){
-			DEBUG_THROW(Exception, ERROR_ACCESS_DENIED, RefCountingNtmbs::View(__PRETTY_FUNCTION__));
+			DEBUG_THROW(Exception, ERROR_ACCESS_DENIED, "Vector: Subscript out of range"_rcs);
 		}
 		return UncheckedGet(uIndex);
 	}

@@ -163,7 +163,7 @@ public:
 	template<typename FunctorT>
 	void Apply(FunctorT &&vFunctor) const {
 		if(!x_pElement){
-			DEBUG_THROW(Exception, ERROR_INVALID_PARAMETER, RefCountingNtmbs::View(__PRETTY_FUNCTION__));
+			DEBUG_THROW(Exception, ERROR_ACCESS_DENIED, "Variant: No element has been set"_rcs);
 		}
 		const auto uIndex = x_pElement->GetIndex();
 		const auto pElement = x_pElement->GetAddress();
@@ -172,7 +172,7 @@ public:
 	template<typename FunctorT>
 	void Apply(FunctorT &&vFunctor){
 		if(!x_pElement){
-			DEBUG_THROW(Exception, ERROR_INVALID_PARAMETER, RefCountingNtmbs::View(__PRETTY_FUNCTION__));
+			DEBUG_THROW(Exception, ERROR_ACCESS_DENIED, "Variant: No element has been set"_rcs);
 		}
 		const auto uIndex = x_pElement->GetIndex();
 		const auto pElement = x_pElement->GetAddress();

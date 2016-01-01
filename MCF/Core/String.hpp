@@ -413,13 +413,13 @@ public:
 
 	const Char &Get(std::size_t uIndex) const {
 		if(uIndex >= GetSize()){
-			DEBUG_THROW(Exception, ERROR_INVALID_PARAMETER, RefCountingNtmbs::View(__PRETTY_FUNCTION__));
+			DEBUG_THROW(Exception, ERROR_ACCESS_DENIED, "String: Subscript out of range"_rcs);
 		}
 		return UncheckedGet(uIndex);
 	}
 	Char &Get(std::size_t uIndex){
 		if(uIndex >= GetSize()){
-			DEBUG_THROW(Exception, ERROR_INVALID_PARAMETER, RefCountingNtmbs::View(__PRETTY_FUNCTION__));
+			DEBUG_THROW(Exception, ERROR_ACCESS_DENIED, "String: Subscript out of range"_rcs);
 		}
 		return UncheckedGet(uIndex);
 	}

@@ -123,7 +123,7 @@ StreamBuffer &StreamBuffer::operator=(const StreamBuffer &rhs){
 	return *this;
 }
 StreamBuffer &StreamBuffer::operator=(StreamBuffer &&rhs) noexcept {
-	StreamBuffer(std::move(rhs)).Swap(*this);
+	rhs.Swap(*this);
 	return *this;
 }
 StreamBuffer::~StreamBuffer(){

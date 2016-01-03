@@ -44,7 +44,7 @@ namespace Impl_Bind {
 			return vParam;
 		}
 		template<std::size_t kIndexT>
-		decltype(auto) operator()(Placeholder<kIndexT> /* vParam */) noexcept {
+		decltype(auto) operator()(const Placeholder<kIndexT> & /* vParam */) noexcept {
 			return static_cast<std::tuple_element_t<kIndexT - 1, decltype(x_tupParamsAdd)> &&>(std::get<kIndexT - 1>(x_tupParamsAdd));
 		}
 		template<typename ParamT>

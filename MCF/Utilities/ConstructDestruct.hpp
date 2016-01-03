@@ -12,7 +12,8 @@
 namespace MCF {
 
 namespace Impl_ConstructDestruct {
-	struct Tag { };
+	struct Tag {
+	};
 }
 
 }

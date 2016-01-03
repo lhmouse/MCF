@@ -42,14 +42,6 @@ public:
 		: x_pBegin(rhs), x_uSize(kSizeT)
 	{
 	}
-	template<StringType kTypeT,
-		std::enable_if_t<
-			std::is_same<typename StringView<kTypeT>::Char, std::remove_cv_t<ElementT>>::value,
-			int> = 0>
-	constexpr ArrayView(StringView<kTypeT> rhs) noexcept
-		: x_pBegin(rhs.GetData()), x_uSize(rhs.GetSize())
-	{
-	}
 	constexpr ArrayView(Vector<ElementT> &rhs) noexcept
 		: x_pBegin(rhs.GetData()), x_uSize(rhs.GetSize())
 	{
@@ -117,16 +109,8 @@ public:
 		: x_pBegin(rhs.GetData()), x_uSize(rhs.GetSize())
 	{
 	}
-	constexpr ArrayView(const Vector<const ElementT> &rhs) noexcept
-		: x_pBegin(rhs.GetData()), x_uSize(rhs.GetSize())
-	{
-	}
 	constexpr ArrayView(const Vector<ElementT> &rhs) noexcept
 		: x_pBegin(rhs.GetData()), x_uSize(rhs.GetSize())
-	{
-	}
-	constexpr ArrayView(std::initializer_list<const ElementT> rhs) noexcept
-		: x_pBegin(rhs.begin()), x_uSize(rhs.size())
 	{
 	}
 	constexpr ArrayView(std::initializer_list<ElementT> rhs) noexcept

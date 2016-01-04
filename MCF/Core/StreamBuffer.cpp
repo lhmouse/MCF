@@ -4,61 +4,65 @@
 
 #include "../StdMCF.hpp"
 #include "StreamBuffer.hpp"
-#include "../Utilities/Assert.hpp"
 #include "../Utilities/MinMax.hpp"
 #include "../Thread/Mutex.hpp"
 
 namespace MCF {
 
-struct StreamBuffer::X_Chunk final {
-	static Mutex             s_mtxPoolMutex;
-	static X_Chunk *restrict s_pPoolHead;
+struct Impl_StreamBuffer::Chunk final {
+	static void *operator new(std::size_t uSize);
+	static void operator delete(void *pRaw) noexcept;
 
-	static void *operator new(std::size_t uSize){
-		ASSERT(uSize == sizeof(X_Chunk));
-
-		{
-			const Mutex::UniqueLock vLock(s_mtxPoolMutex);
-
-			const auto pChunk = s_pPoolHead;
-			if(pChunk){
-				s_pPoolHead = pChunk->pPrev;
-				return pChunk;
-			}
-		}
-		return ::operator new(uSize);
-	}
-	static void operator delete(void *pRaw) noexcept {
-		if(!pRaw){
-			return;
-		}
-
-		const Mutex::UniqueLock vLock(s_mtxPoolMutex);
-
-		const auto pChunk = static_cast<X_Chunk *>(pRaw);
-		pChunk->pPrev = s_pPoolHead;
-		s_pPoolHead = pChunk;
-	}
-
-	__attribute__((__destructor__(101)))
-	static void PoolDestructor() noexcept {
-		while(s_pPoolHead){
-			const auto pChunk = s_pPoolHead;
-			s_pPoolHead = pChunk->pPrev;
-			::operator delete(pChunk);
-		}
-	}
-
-	X_Chunk *pPrev;
-	X_Chunk *pNext;
+	Chunk *pPrev;
+	Chunk *pNext;
 	std::size_t uBegin;
 	std::size_t uEnd;
 	unsigned char abyData[0x100];
 };
 
-Mutex                           StreamBuffer::X_Chunk::s_mtxPoolMutex;
-StreamBuffer::X_Chunk *restrict StreamBuffer::X_Chunk::s_pPoolHead     = nullptr;
+using Chunk = Impl_StreamBuffer::Chunk;
 
+namespace {
+	Mutex g_mtxPoolMutex;
+	Chunk *g_pPoolHead;
+
+	__attribute__((__destructor__(101)))
+	void PoolDestructor() noexcept {
+		auto pCur = g_pPoolHead;
+		while(pCur){
+			const auto pPrev = pCur->pPrev;
+			::operator delete(pCur);
+			pCur = pPrev;
+		}
+		g_pPoolHead = nullptr;
+	}
+}
+
+void *Chunk::operator new(std::size_t uSize){
+	ASSERT(uSize == sizeof(Chunk));
+
+	Chunk *pCur;
+	{
+		const Mutex::UniqueLock vLock(g_mtxPoolMutex);
+		pCur = g_pPoolHead;
+	}
+	if(!pCur){
+		pCur = static_cast<Chunk *>(::operator new(sizeof(Chunk)));
+	}
+	return pCur;
+}
+void Chunk::operator delete(void *pRaw) noexcept {
+	if(!pRaw){
+		return;
+	}
+	const auto pCur = static_cast<Chunk *>(pRaw);
+
+	const Mutex::UniqueLock vLock(g_mtxPoolMutex);
+	pCur->pPrev = g_pPoolHead;
+	g_pPoolHead = pCur;
+}
+
+// 其他非静态成员函数。
 unsigned char *StreamBuffer::ChunkEnumerator::GetBegin() const noexcept {
 	ASSERT(x_pChunk);
 
@@ -204,11 +208,11 @@ void StreamBuffer::Put(unsigned char by){
 	if(x_pLast){
 		uLastChunkAvail = sizeof(x_pLast->abyData) - x_pLast->uEnd;
 	}
-	X_Chunk *pLastChunk = nullptr;
+	Chunk *pLastChunk = nullptr;
 	if(uLastChunkAvail != 0){
 		pLastChunk = x_pLast;
 	} else {
-		auto pChunk = new X_Chunk;
+		auto pChunk = new Chunk;
 		pChunk->pNext = nullptr;
 		// pChunk->pPrev = nullptr;
 		pChunk->uBegin = 0;
@@ -264,11 +268,11 @@ void StreamBuffer::Unget(unsigned char by){
 	if(x_pFirst){
 		uFirstChunkAvail = x_pFirst->uBegin;
 	}
-	X_Chunk *pFirstChunk = nullptr;
+	Chunk *pFirstChunk = nullptr;
 	if(uFirstChunkAvail != 0){
 		pFirstChunk = x_pFirst;
 	} else {
-		auto pChunk = new X_Chunk;
+		auto pChunk = new Chunk;
 		// pChunk->pNext = nullptr;
 		pChunk->pPrev = nullptr;
 		pChunk->uBegin = sizeof(pChunk->abyData);
@@ -376,7 +380,7 @@ void StreamBuffer::Put(const void *pData, std::size_t uSize){
 	if(x_pLast){
 		uLastChunkAvail = sizeof(x_pLast->abyData) - x_pLast->uEnd;
 	}
-	X_Chunk *pLastChunk = nullptr;
+	Chunk *pLastChunk = nullptr;
 	if(uLastChunkAvail != 0){
 		pLastChunk = x_pLast;
 	}
@@ -384,7 +388,7 @@ void StreamBuffer::Put(const void *pData, std::size_t uSize){
 		const auto uNewChunks = (uBytesToCopy - uLastChunkAvail - 1) / sizeof(pLastChunk->abyData) + 1;
 		ASSERT(uNewChunks != 0);
 
-		auto pChunk = new X_Chunk;
+		auto pChunk = new Chunk;
 		pChunk->pNext = nullptr;
 		pChunk->pPrev = nullptr;
 		pChunk->uBegin = 0;
@@ -393,7 +397,7 @@ void StreamBuffer::Put(const void *pData, std::size_t uSize){
 		auto pToSpliceFirst = pChunk, pToSpliceLast = pChunk;
 		try {
 			for(std::size_t i = 1; i < uNewChunks; ++i){
-				pChunk = new X_Chunk;
+				pChunk = new Chunk;
 				pChunk->pNext = nullptr;
 				pChunk->pPrev = pToSpliceLast;
 				pChunk->uBegin = 0;
@@ -462,7 +466,7 @@ StreamBuffer StreamBuffer::CutOff(std::size_t uSize){
 			if(uBytesRemaining == uBytesAvail){
 				pCutEnd = pCutEnd->pNext;
 			} else {
-				const auto pChunk = new X_Chunk;
+				const auto pChunk = new Chunk;
 				pChunk->pNext = pCutEnd;
 				pChunk->pPrev = pCutEnd->pPrev;
 				pChunk->uBegin = 0;

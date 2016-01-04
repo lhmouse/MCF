@@ -104,6 +104,14 @@ namespace Impl_IntrusivePtr {
 		return StaticCastOrDynamicCastHelper<DstT, SrcT>()(std::forward<SrcT>(vSrc));
 	}
 
+	struct ViewPoolElement final {
+		static void *operator new(std::size_t uSize);
+		static void operator delete(void *pRaw) noexcept;
+
+		ViewPoolElement *pPrev;
+		void *apPadding[3];
+	};
+
 	template<class DeleterT>
 	class DeletableBase : public RefCountBase {
 		template<typename, class>
@@ -113,6 +121,22 @@ namespace Impl_IntrusivePtr {
 
 	private:
 		class X_WeakView final : public RefCountBase  {
+		public:
+			static void *operator new(std::size_t uSize){
+				static_assert(sizeof(X_WeakView) <= sizeof(ViewPoolElement), "Please update the definition ViewPoolElement to make sure it is large enough to hold this X_WeakView.");
+
+				ASSERT(uSize == sizeof(X_WeakView));
+
+				return ViewPoolElement::operator new(uSize);
+			}
+			static void operator delete(void *pRaw) noexcept {
+				if(!pRaw){
+					return;
+				}
+
+				ViewPoolElement::operator delete(pRaw);
+			}
+
 		private:
 			mutable Mutex x_mtxGuard;
 			DeletableBase *x_pOwner;

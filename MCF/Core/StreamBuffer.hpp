@@ -11,10 +11,11 @@
 
 namespace MCF {
 
-class StreamBuffer {
-private:
-	struct X_Chunk;
+namespace Impl_StreamBuffer {
+	struct Chunk;
+}
 
+class StreamBuffer {
 public:
 	class ConstChunkEnumerator;
 
@@ -22,7 +23,7 @@ public:
 		friend ConstChunkEnumerator;
 
 	private:
-		X_Chunk *x_pChunk;
+		Impl_StreamBuffer::Chunk *x_pChunk;
 
 	public:
 		explicit ChunkEnumerator(StreamBuffer &rhs) noexcept
@@ -67,7 +68,7 @@ public:
 
 	class ConstChunkEnumerator : public std::iterator<std::forward_iterator_tag, const std::pair<const unsigned char *, const unsigned char *>> {
 	private:
-		const X_Chunk *x_pChunk;
+		const Impl_StreamBuffer::Chunk *x_pChunk;
 
 	public:
 		explicit ConstChunkEnumerator(const StreamBuffer &rhs) noexcept
@@ -115,8 +116,8 @@ public:
 	};
 
 private:
-	X_Chunk *x_pFirst;
-	X_Chunk *x_pLast;
+	Impl_StreamBuffer::Chunk *x_pFirst;
+	Impl_StreamBuffer::Chunk *x_pLast;
 	std::size_t x_uSize;
 
 public:

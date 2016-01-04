@@ -49,12 +49,12 @@ public:
 	Optional(std::tuple<ParamsT...> vParamTuple) noexcept(std::is_nothrow_constructible<ElementT, ParamsT &&...>::value)
 		: Optional()
 	{
-		ResetElement(std::move(vParamTuple));
+		Reset(std::move(vParamTuple));
 	}
 	Optional(std::exception_ptr rhs) noexcept
 		: Optional()
 	{
-		ResetException(std::move(rhs));
+		Reset(std::move(rhs));
 	}
 	Optional(const Optional &rhs) noexcept(std::is_nothrow_copy_constructible<ElementT>::value)
 		: Optional()
@@ -128,9 +128,9 @@ public:
 		Reset();
 
 		if(rhs.x_eState == Impl_Optional::State::kElementSet){
-			ResetElement(rhs.x_vStorage.v);
+			Reset(rhs.x_vStorage.v);
 		} else if(rhs.x_eState == Impl_Optional::State::kExceptionSet){
-			ResetException(rhs.x_vStorage.ep);
+			Reset(rhs.x_vStorage.ep);
 		}
 		return *this;
 	}
@@ -138,31 +138,21 @@ public:
 		Reset();
 
 		if(rhs.x_eState == Impl_Optional::State::kElementSet){
-			ResetElement(std::move(rhs.x_vStorage.v));
-			rhs.Reset();
+			Reset(std::move(rhs.x_vStorage.v));
 		} else if(rhs.x_eState == Impl_Optional::State::kExceptionSet){
-			ResetException(std::move(rhs.x_vStorage.ep));
-			rhs.Reset();
+			Reset(std::move(rhs.x_vStorage.ep));
 		}
 		return *this;
 	}
 	template<typename ...ParamsT>
-	Optional &ResetElement(ParamsT &&...vParams) noexcept(std::is_nothrow_constructible<ElementT, ParamsT &&...>::value) {
-		Reset();
-
-		Construct(AddressOf(x_vStorage.v), std::forward<ParamsT>(vParams)...);
-		x_eState = Impl_Optional::State::kElementSet;
-		return *this;
-	}
-	template<typename ...ParamsT>
-	Optional &ResetElement(std::tuple<ParamsT...> vParamTuple) noexcept(std::is_nothrow_constructible<ElementT, ParamsT &&...>::value) {
+	Optional &Reset(std::tuple<ParamsT...> vParamTuple) noexcept(std::is_nothrow_constructible<ElementT, ParamsT &&...>::value) {
 		Reset();
 
 		SqueezeTuple([this](auto &&...vParams){ Construct(AddressOf(x_vStorage.v), std::forward<ParamsT>(vParams)...); }, vParamTuple);
 		x_eState = Impl_Optional::State::kElementSet;
 		return *this;
 	}
-	Optional &ResetException(std::exception_ptr rhs) noexcept {
+	Optional &Reset(std::exception_ptr rhs) noexcept {
 		Reset();
 
 		Construct(AddressOf(x_vStorage.ep), std::move(rhs));

@@ -1,5 +1,6 @@
 #include <MCF/StdMCF.hpp>
 #include <MCF/SmartPointers/PolyIntrusivePtr.hpp>
+#include <MCF/SmartPointers/UniquePtr.hpp>
 #include <cstdio>
 
 using namespace MCF;
@@ -15,6 +16,10 @@ foo::foo(){
 	std::printf("inside foo::foo(), gp is now %p\n", (void *)gp.Lock().Get());
 	throw 12345; // ok.
 }
+
+template class UniquePtr<foo>;
+template class IntrusivePtr<foo>;
+template class IntrusiveWeakPtr<foo>;
 
 extern "C" unsigned MCFMain(){
 	try {

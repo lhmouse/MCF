@@ -303,51 +303,46 @@ public:
 		: x_pElement(nullptr)
 	{
 	}
-	explicit IntrusivePtr(Element *rhs) noexcept
-		: x_pElement(rhs)
-	{
+	explicit IntrusivePtr(Element *rhs) noexcept {
+		x_pElement = rhs;
 	}
 	template<typename OtherObjectT, typename OtherDeleterT,
 		std::enable_if_t<
 			std::is_convertible<typename UniquePtr<OtherObjectT, OtherDeleterT>::Element *, Element *>::value &&
 				std::is_convertible<typename UniquePtr<OtherObjectT, OtherDeleterT>::Deleter, Deleter>::value,
 			int> = 0>
-	IntrusivePtr(UniquePtr<OtherObjectT, OtherDeleterT> &&rhs) noexcept
-		: x_pElement(rhs.Release())
-	{
-	}
-	template<typename OtherObjectT, typename OtherDeleterT,
-		std::enable_if_t<
-			std::is_convertible<typename IntrusivePtr<OtherObjectT, OtherDeleterT>::Element *, Element *>::value &&
-				std::is_convertible<typename IntrusivePtr<OtherObjectT, OtherDeleterT>::Deleter, Deleter>::value,
-			int> = 0>
-	IntrusivePtr(const IntrusivePtr<OtherObjectT, OtherDeleterT> &rhs) noexcept
-		: x_pElement(rhs.Get())
-	{
-		if(x_pElement){
-			static_cast<const volatile Impl_IntrusivePtr::RefCountBase *>(x_pElement)->AddRef();
-		}
-	}
-	template<typename OtherObjectT, typename OtherDeleterT,
-		std::enable_if_t<
-			std::is_convertible<typename IntrusivePtr<OtherObjectT, OtherDeleterT>::Element *, Element *>::value &&
-				std::is_convertible<typename IntrusivePtr<OtherObjectT, OtherDeleterT>::Deleter, Deleter>::value,
-			int> = 0>
-	IntrusivePtr(IntrusivePtr<OtherObjectT, OtherDeleterT> &&rhs) noexcept
-		: x_pElement(rhs.x_pElement)
-	{
+	IntrusivePtr(UniquePtr<OtherObjectT, OtherDeleterT> &&rhs) noexcept {
+		x_pElement = rhs.x_pElement;
 		rhs.x_pElement = nullptr;
 	}
-	IntrusivePtr(const IntrusivePtr &rhs) noexcept
-		: x_pElement(rhs.Get())
-	{
+	template<typename OtherObjectT, typename OtherDeleterT,
+		std::enable_if_t<
+			std::is_convertible<typename IntrusivePtr<OtherObjectT, OtherDeleterT>::Element *, Element *>::value &&
+				std::is_convertible<typename IntrusivePtr<OtherObjectT, OtherDeleterT>::Deleter, Deleter>::value,
+			int> = 0>
+	IntrusivePtr(const IntrusivePtr<OtherObjectT, OtherDeleterT> &rhs) noexcept {
+		x_pElement = rhs.x_pElement;
 		if(x_pElement){
 			static_cast<const volatile Impl_IntrusivePtr::RefCountBase *>(x_pElement)->AddRef();
 		}
 	}
-	IntrusivePtr(IntrusivePtr &&rhs) noexcept
-		: x_pElement(rhs.x_pElement)
-	{
+	template<typename OtherObjectT, typename OtherDeleterT,
+		std::enable_if_t<
+			std::is_convertible<typename IntrusivePtr<OtherObjectT, OtherDeleterT>::Element *, Element *>::value &&
+				std::is_convertible<typename IntrusivePtr<OtherObjectT, OtherDeleterT>::Deleter, Deleter>::value,
+			int> = 0>
+	IntrusivePtr(IntrusivePtr<OtherObjectT, OtherDeleterT> &&rhs) noexcept {
+		x_pElement = rhs.x_pElement;
+		rhs.x_pElement = nullptr;
+	}
+	IntrusivePtr(const IntrusivePtr &rhs) noexcept {
+		x_pElement = rhs.x_pElement;
+		if(x_pElement){
+			static_cast<const volatile Impl_IntrusivePtr::RefCountBase *>(x_pElement)->AddRef();
+		}
+	}
+	IntrusivePtr(IntrusivePtr &&rhs) noexcept {
+		x_pElement = rhs.x_pElement;
 		rhs.x_pElement = nullptr;
 	}
 	IntrusivePtr &operator=(const IntrusivePtr &rhs) noexcept {
@@ -574,32 +569,36 @@ public:
 		: x_pView(nullptr)
 	{
 	}
-	explicit IntrusiveWeakPtr(Element *rhs)
-		: x_pView(nullptr)
-	{
+	explicit IntrusiveWeakPtr(Element *rhs) {
+		decltype(x_pView) pView = nullptr;
 		const auto pBase = Impl_IntrusivePtr::StaticCastOrDynamicCast<const volatile Impl_IntrusivePtr::DeletableBase<DeleterT> *>(rhs);
 		if(pBase){
-			x_pView = pBase->X_CreateView();
-			static_cast<const volatile Impl_IntrusivePtr::RefCountBase *>(x_pView)->AddRef();
+			pView = pBase->X_CreateView();
+			static_cast<const volatile Impl_IntrusivePtr::RefCountBase *>(pView)->AddRef();
 		}
+		x_pView = pView;
 	}
 	template<typename OtherObjectT, typename OtherDeleterT,
 		std::enable_if_t<
 			std::is_convertible<typename IntrusivePtr<OtherObjectT, OtherDeleterT>::Element *, Element *>::value &&
 				std::is_convertible<typename IntrusivePtr<OtherObjectT, OtherDeleterT>::Deleter, Deleter>::value,
 			int> = 0>
-	IntrusiveWeakPtr(const IntrusivePtr<OtherObjectT, OtherDeleterT> &rhs)
-		: IntrusiveWeakPtr(rhs.Get())
-	{
+	IntrusiveWeakPtr(const IntrusivePtr<OtherObjectT, OtherDeleterT> &rhs) {
+		decltype(x_pView) pView = nullptr;
+		const auto pBase = Impl_IntrusivePtr::StaticCastOrDynamicCast<const volatile Impl_IntrusivePtr::DeletableBase<DeleterT> *>(rhs.x_pElement);
+		if(pBase){
+			pView = pBase->X_CreateView();
+			static_cast<const volatile Impl_IntrusivePtr::RefCountBase *>(pView)->AddRef();
+		}
+		x_pView = pView;
 	}
 	template<typename OtherObjectT, typename OtherDeleterT,
 		std::enable_if_t<
 			std::is_convertible<typename IntrusiveWeakPtr<OtherObjectT, OtherDeleterT>::Element *, Element *>::value &&
 				std::is_convertible<typename IntrusiveWeakPtr<OtherObjectT, OtherDeleterT>::Deleter, Deleter>::value,
 			int> = 0>
-	IntrusiveWeakPtr(const IntrusiveWeakPtr<OtherObjectT, OtherDeleterT> &rhs) noexcept
-		: x_pView(rhs.x_pView)
-	{
+	IntrusiveWeakPtr(const IntrusiveWeakPtr<OtherObjectT, OtherDeleterT> &rhs) noexcept {
+		x_pView = rhs.x_pView;
 		if(x_pView){
 			static_cast<const volatile Impl_IntrusivePtr::RefCountBase *>(x_pView)->AddRef();
 		}
@@ -609,21 +608,18 @@ public:
 			std::is_convertible<typename IntrusiveWeakPtr<OtherObjectT, OtherDeleterT>::Element *, Element *>::value &&
 				std::is_convertible<typename IntrusiveWeakPtr<OtherObjectT, OtherDeleterT>::Deleter, Deleter>::value,
 			int> = 0>
-	IntrusiveWeakPtr(IntrusiveWeakPtr<OtherObjectT, OtherDeleterT> &&rhs) noexcept
-		: x_pView(rhs.x_pView)
-	{
+	IntrusiveWeakPtr(IntrusiveWeakPtr<OtherObjectT, OtherDeleterT> &&rhs) noexcept {
+		x_pView = rhs.x_pView;
 		rhs.x_pView = nullptr;
 	}
-	IntrusiveWeakPtr(const IntrusiveWeakPtr &rhs) noexcept
-		: x_pView(rhs.x_pView)
-	{
+	IntrusiveWeakPtr(const IntrusiveWeakPtr &rhs) noexcept {
+		x_pView = rhs.x_pView;
 		if(x_pView){
 			static_cast<const volatile Impl_IntrusivePtr::RefCountBase *>(x_pView)->AddRef();
 		}
 	}
-	IntrusiveWeakPtr(IntrusiveWeakPtr &&rhs) noexcept
-		: x_pView(rhs.x_pView)
-	{
+	IntrusiveWeakPtr(IntrusiveWeakPtr &&rhs) noexcept {
+		x_pView = rhs.x_pView;
 		rhs.x_pView = nullptr;
 	}
 	IntrusiveWeakPtr &operator=(const IntrusiveWeakPtr &rhs) noexcept {

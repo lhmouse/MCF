@@ -36,24 +36,21 @@ public:
 		: x_pElement(nullptr)
 	{
 	}
-	explicit UniquePtr(Element *rhs) noexcept
-		: x_pElement(rhs)
-	{
+	explicit UniquePtr(Element *rhs) noexcept {
+		x_pElement = rhs;
 	}
 	template<typename OtherObjectT, typename OtherDeleterT,
 		std::enable_if_t<
-			((!std::is_void<ObjectT>::value && !std::is_array<ObjectT>::value)
-					? std::is_convertible<typename UniquePtr<OtherObjectT, OtherDeleterT>::Element *, Element *>::value
-					: std::is_same<std::decay_t<OtherObjectT>, std::decay_t<ObjectT>>::value) &&
+			std::is_convertible<typename UniquePtr<OtherObjectT, OtherDeleterT>::Element *, Element *>::value &&
 				std::is_convertible<typename UniquePtr<OtherObjectT, OtherDeleterT>::Deleter, Deleter>::value,
 			int> = 0>
-	UniquePtr(UniquePtr<OtherObjectT, OtherDeleterT> &&rhs) noexcept
-		: x_pElement(rhs.Release())
-	{
+	UniquePtr(UniquePtr<OtherObjectT, OtherDeleterT> &&rhs) noexcept {
+		x_pElement = rhs.x_pElement;
+		rhs.x_pElement = nullptr;
 	}
-	UniquePtr(UniquePtr &&rhs) noexcept
-		: x_pElement(rhs.Release())
-	{
+	UniquePtr(UniquePtr &&rhs) noexcept {
+		x_pElement = rhs.x_pElement;
+		rhs.x_pElement = nullptr;
 	}
 	UniquePtr &operator=(UniquePtr &&rhs) noexcept {
 		return Reset(std::move(rhs));

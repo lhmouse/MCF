@@ -5,7 +5,7 @@
 #include "../StdMCF.hpp"
 #include "StreamBuffer.hpp"
 #include "../Utilities/MinMax.hpp"
-#include "../Thread/Mutex.hpp"
+#include "../Thread/Atomic.hpp"
 
 namespace MCF {
 
@@ -23,31 +23,32 @@ struct Impl_StreamBuffer::Chunk final {
 using Chunk = Impl_StreamBuffer::Chunk;
 
 namespace {
-	Mutex g_mtxPoolMutex;
-	Chunk *g_pPoolHead;
+	Atomic<Chunk *> g_pPoolHead;
 
 	__attribute__((__destructor__(101)))
 	void PoolDestructor() noexcept {
-		auto pCur = g_pPoolHead;
+		auto pCur = g_pPoolHead.Exchange(nullptr, kAtomicRelaxed);
 		while(pCur){
-			const auto pPrev = pCur->pPrev;
+			const auto pNext = pCur->pNext;
 			::operator delete(pCur);
-			pCur = pPrev;
+			pCur = pNext;
 		}
-		g_pPoolHead = nullptr;
 	}
 }
 
 void *Chunk::operator new(std::size_t uSize){
 	ASSERT(uSize == sizeof(Chunk));
 
-	Chunk *pCur;
-	{
-		const Mutex::UniqueLock vLock(g_mtxPoolMutex);
-		pCur = g_pPoolHead;
-	}
-	if(!pCur){
-		pCur = static_cast<Chunk *>(::operator new(sizeof(Chunk)));
+	auto pCur = g_pPoolHead.Load(kAtomicRelaxed);
+	for(;;){
+		if(!pCur){
+			pCur = static_cast<Chunk *>(::operator new(sizeof(Chunk)));
+			break;
+		}
+		const auto pNext = pCur->pNext;
+		if(g_pPoolHead.CompareExchange(pCur, pNext, kAtomicRelaxed, kAtomicRelaxed)){
+			break;
+		}
 	}
 	return pCur;
 }
@@ -57,9 +58,13 @@ void Chunk::operator delete(void *pRaw) noexcept {
 	}
 	const auto pCur = static_cast<Chunk *>(pRaw);
 
-	const Mutex::UniqueLock vLock(g_mtxPoolMutex);
-	pCur->pPrev = g_pPoolHead;
-	g_pPoolHead = pCur;
+	auto pNext = g_pPoolHead.Load(kAtomicRelaxed);
+	for(;;){
+		pCur->pNext = pNext;
+		if(g_pPoolHead.CompareExchange(pNext, pCur, kAtomicRelaxed, kAtomicRelaxed)){
+			break;
+		}
+	}
 }
 
 // 其他非静态成员函数。

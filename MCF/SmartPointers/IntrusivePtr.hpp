@@ -108,7 +108,7 @@ namespace Impl_IntrusivePtr {
 		static void *operator new(std::size_t uSize);
 		static void operator delete(void *pRaw) noexcept;
 
-		ViewPoolElement *pPrev;
+		ViewPoolElement *pNext;
 		void *apPadding[3];
 	};
 

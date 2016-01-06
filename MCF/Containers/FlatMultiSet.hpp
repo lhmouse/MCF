@@ -258,7 +258,7 @@ public:
 				goto jUseHint;
 			}
 		}
-		pHint = GetUpperBound(vComparand);
+		pHint = X_GetUpperBound(x_vecStorage.GetBegin(), x_vecStorage.GetEnd(), vComparand);
 	jUseHint:
 		return std::make_pair(x_vecStorage.Emplace(pHint, std::forward<ComparandT>(vComparand)), true);
 	}

@@ -1,33 +1,18 @@
 #include <MCF/StdMCF.hpp>
-#include <MCF/SmartPointers/PolyIntrusivePtr.hpp>
-#include <MCF/SmartPointers/UniquePtr.hpp>
-#include <cstdio>
+#include <MCF/Containers/FlatMap.hpp>
+#include <MCF/Containers/FlatMultiMap.hpp>
 
 using namespace MCF;
 
-struct foo : PolyIntrusiveBase {
-	foo();
-};
-
-PolyIntrusiveWeakPtr<foo> gp;
-
-foo::foo(){
-	gp = this->Weaken<foo>();
-	std::printf("inside foo::foo(), gp is now %p\n", (void *)gp.Lock().Get());
-	throw 12345; // ok.
-}
-
-template class UniquePtr<foo>;
-template class IntrusivePtr<foo>;
-template class IntrusiveWeakPtr<foo>;
+template class FlatMap<int, long>;
+template class FlatMultiMap<int, long>;
 
 extern "C" unsigned MCFMain(){
-	try {
-		auto p = MakeIntrusive<foo>();
-	} catch(int e){
-		std::printf("exception caught: e = %d\n", e);
+	FlatMap<int, long> s{ {1,0}, {5,0}, {0,0}, {2,0}, {3,0}, {5,1}, {0,1}, {2,1}, {1,1}, {4,0}, {4,1}, {3,1} };
+	auto r = s.GetEqualRange(2);
+	std::printf("r = %td, %td\n", r.first - s.GetBegin(), r.second - s.GetBegin());
+	for(auto it = s.GetBegin(); it != s.GetEnd(); ++it){
+		std::printf("element: %d, %ld\n", it->first, it->second);
 	}
-	std::printf("inside main(), gp is now %p\n", (void *)gp.Lock().Get());
-
 	return 0;
 }

@@ -15,9 +15,6 @@
 
 namespace MCF {
 
-template<typename ElementT>
-class Vector;
-
 template<class ElementT>
 class ArrayView {
 private:
@@ -40,10 +37,6 @@ public:
 	template<std::size_t kSizeT>
 	constexpr ArrayView(ElementT (&rhs)[kSizeT]) noexcept
 		: x_pBegin(rhs), x_uSize(kSizeT)
-	{
-	}
-	constexpr ArrayView(Vector<ElementT> &rhs) noexcept
-		: x_pBegin(rhs.GetData()), x_uSize(rhs.GetSize())
 	{
 	}
 
@@ -106,10 +99,6 @@ public:
 			std::is_same<typename StringView<kTypeT>::Char, std::remove_cv_t<ElementT>>::value,
 			int> = 0>
 	constexpr ArrayView(StringView<kTypeT> rhs) noexcept
-		: x_pBegin(rhs.GetData()), x_uSize(rhs.GetSize())
-	{
-	}
-	constexpr ArrayView(const Vector<ElementT> &rhs) noexcept
 		: x_pBegin(rhs.GetData()), x_uSize(rhs.GetSize())
 	{
 	}

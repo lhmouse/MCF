@@ -9,6 +9,7 @@
 #include "../Utilities/Assert.hpp"
 #include "../Utilities/ConstructDestruct.hpp"
 #include "../Core/Exception.hpp"
+#include "../Core/ArrayView.hpp"
 #include <utility>
 #include <new>
 #include <initializer_list>
@@ -665,6 +666,10 @@ public:
 	}
 	Element &operator[](std::size_t uIndex) noexcept {
 		return UncheckedGet(uIndex);
+	}
+
+	operator ArrayView<ElementT>() noexcept {
+		return ArrayView<ElementT>(GetData(), GetSize());
 	}
 };
 

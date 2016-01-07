@@ -25,12 +25,12 @@ namespace Impl_TupleManipulators {
 
 		template<std::size_t ...kIndicesT>
 		constexpr void Perform(std::index_sequence<kIndicesT...>) const {
-			char achDummy[] = { ((void)std::forward<FunctionT>(vFunction)(static_cast<ElementsT &&>(std::get<kIndicesT>(vTuple))), 'a')... };
+			char achDummy[] = { ((void)std::forward<FunctionT>(vFunction)(std::forward<ElementsT>(std::get<kIndicesT>(vTuple))), 'a')... };
 			(void)achDummy;
 		}
 		template<std::size_t ...kIndicesT>
 		constexpr void ReversePerform(std::index_sequence<kIndicesT...>) const {
-			char achDummy[] = { ((void)std::forward<FunctionT>(vFunction)(static_cast<ElementsT &&>(std::get<sizeof...(kIndicesT) - 1 - kIndicesT>(vTuple))), 'a')... };
+			char achDummy[] = { ((void)std::forward<FunctionT>(vFunction)(std::forward<ElementsT>(std::get<sizeof...(kIndicesT) - 1 - kIndicesT>(vTuple))), 'a')... };
 			(void)achDummy;
 		}
 	};
@@ -65,11 +65,11 @@ namespace Impl_TupleManipulators {
 
 		template<std::size_t ...kIndicesT>
 		constexpr decltype(auto) Perform(std::index_sequence<kIndicesT...>) const {
-			return std::forward<FunctionT>(vFunction)(static_cast<ElementsT &&>(std::get<kIndicesT>(vTuple))...);
+			return std::forward<FunctionT>(vFunction)(std::forward<ElementsT>(std::get<kIndicesT>(vTuple))...);
 		}
 		template<std::size_t ...kIndicesT>
 		constexpr decltype(auto) ReversePerform(std::index_sequence<kIndicesT...>) const {
-			return std::forward<FunctionT>(vFunction)(static_cast<ElementsT &&>(std::get<sizeof...(kIndicesT) - 1 - kIndicesT>(vTuple))...);
+			return std::forward<FunctionT>(vFunction)(std::forward<ElementsT>(std::get<sizeof...(kIndicesT) - 1 - kIndicesT>(vTuple))...);
 		}
 	};
 }

@@ -668,6 +668,9 @@ public:
 		return UncheckedGet(uIndex);
 	}
 
+	operator ArrayView<const ElementT>() const noexcept {
+		return ArrayView<const ElementT>(GetData(), GetSize());
+	}
 	operator ArrayView<ElementT>() noexcept {
 		return ArrayView<ElementT>(GetData(), GetSize());
 	}

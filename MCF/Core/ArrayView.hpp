@@ -94,6 +94,10 @@ public:
 		: x_pBegin(rhs), x_uSize(kSizeT)
 	{
 	}
+	constexpr ArrayView(const ArrayView<ElementT> &rhs) noexcept
+		: x_pBegin(rhs.GetData()), x_uSize(rhs.GetSize())
+	{
+	}
 	template<StringType kTypeT,
 		std::enable_if_t<
 			std::is_same<typename StringView<kTypeT>::Char, std::remove_cv_t<ElementT>>::value,

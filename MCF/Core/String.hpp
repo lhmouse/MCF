@@ -190,7 +190,7 @@ private:
 
 		if(GetCapacity() < uNewLength){
 			uCharsToAlloc += (uCharsToAlloc >> 1);
-			uCharsToAlloc = (uCharsToAlloc + 0x0F) & (std::size_t)-0x10;
+			uCharsToAlloc = (uCharsToAlloc + 0x0F) & static_cast<std::size_t>(-0x10);
 			if(uCharsToAlloc < uNewLength + 1){
 				uCharsToAlloc = uNewLength + 1;
 			}
@@ -645,8 +645,8 @@ public:
 		const auto uOldLength = vCurrent.GetLength();
 
 		const auto vRemoved = vCurrent.Slice(nBegin, nEnd);
-		const auto uRemovedBegin = (std::size_t)(vRemoved.GetBegin() - vCurrent.GetBegin());
-		const auto uRemovedEnd = (std::size_t)(vRemoved.GetEnd() - vCurrent.GetBegin());
+		const auto uRemovedBegin = static_cast<std::size_t>(vRemoved.GetBegin() - vCurrent.GetBegin());
+		const auto uRemovedEnd = static_cast<std::size_t>(vRemoved.GetEnd() - vCurrent.GetBegin());
 		const auto uLengthAfterRemoved = uOldLength - (uRemovedEnd - uRemovedBegin);
 		const auto uNewLength = uLengthAfterRemoved + uRepSize;
 		if(uNewLength < uLengthAfterRemoved){
@@ -673,8 +673,8 @@ public:
 		const auto uOldLength = vCurrent.GetLength();
 
 		const auto vRemoved = vCurrent.Slice(nBegin, nEnd);
-		const auto uRemovedBegin = (std::size_t)(vRemoved.GetBegin() - vCurrent.GetBegin());
-		const auto uRemovedEnd = (std::size_t)(vRemoved.GetEnd() - vCurrent.GetBegin());
+		const auto uRemovedBegin = static_cast<std::size_t>(vRemoved.GetBegin() - vCurrent.GetBegin());
+		const auto uRemovedEnd = static_cast<std::size_t>(vRemoved.GetEnd() - vCurrent.GetBegin());
 		const auto uLengthAfterRemoved = uOldLength - (uRemovedEnd - uRemovedBegin);
 		const auto uNewLength = uLengthAfterRemoved + uRepSize;
 		if(uNewLength < uLengthAfterRemoved){

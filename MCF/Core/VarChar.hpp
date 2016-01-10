@@ -72,13 +72,43 @@ public:
 		return *this;
 	}
 
+private:
+	Char *X_ChopAndSplice(std::size_t uRemovedBegin, std::size_t uRemovedEnd, std::size_t uFirstOffset, std::size_t uThirdOffset){
+		const auto pchBuffer = GetBegin();
+		const auto uOldLength = GetLength();
+		const auto uNewLength = uThirdOffset + (uOldLength - uRemovedEnd);
+
+		ASSERT(uRemovedBegin <= uOldLength);
+		ASSERT(uRemovedEnd <= uOldLength);
+		ASSERT(uRemovedBegin <= uRemovedEnd);
+		ASSERT(uFirstOffset + uRemovedBegin <= uThirdOffset);
+
+		if(uNewLength > kCapacityT){
+			DEBUG_THROW(Exception, ERROR_OUTOFMEMORY, "VarChar: Max capacity exceeded"_rcs);
+		}
+
+		if((pchBuffer + uFirstOffset != pchBuffer) && (uRemovedBegin != 0)){
+			std::memmove(pchBuffer + uFirstOffset, pchBuffer, uRemovedBegin * sizeof(Char));
+		}
+		if((pchBuffer + uThirdOffset != pchBuffer + uRemovedEnd) && (uOldLength != uRemovedEnd)){
+			std::memmove(pchBuffer + uThirdOffset, pchBuffer + uRemovedEnd, (uOldLength - uRemovedEnd) * sizeof(Char));
+		}
+
+		return pchBuffer + uFirstOffset + uRemovedBegin;
+	}
+	void X_SetSize(std::size_t uNewSize) noexcept {
+		ASSERT(uNewSize <= GetCapacity());
+
+		reinterpret_cast<unsigned char &>(x_achData.GetEnd()[-1]) = GetCapacity() - uNewSize;
+	}
+
 public:
 	// 容器需求。
 	bool IsEmpty() const noexcept {
 		return GetSize() == 0;
 	}
 	void Clear() noexcept {
-		Resize(0);
+		X_SetSize(0);
 	}
 
 	const Element *GetFirst() const noexcept {
@@ -264,10 +294,7 @@ public:
 	}
 
 	void Resize(std::size_t uNewSize){
-		if(uNewSize > kCapacityT){
-			DEBUG_THROW(Exception, ERROR_OUTOFMEMORY, "VarChar: Max capacity exceeded"_rcs);
-		}
-		reinterpret_cast<unsigned char &>(x_achData.GetEnd()[-1]) = kCapacityT - uNewSize;
+		X_SetSize(uNewSize);
 	}
 	Char *ResizeMore(std::size_t uDeltaSize){
 		const auto uOldSize = GetSize();
@@ -275,8 +302,20 @@ public:
 		if(uNewSize < uOldSize){
 			throw std::bad_array_new_length();
 		}
-		Resize(uNewSize);
+		X_SetSize(uNewSize);
 		return GetData() + uOldSize;
+	}
+	std::pair<Char *, std::size_t> ResizeToCapacity() noexcept {
+		const auto uOldSize = GetSize();
+		const auto uNewSize = GetCapacity();
+		const auto uDeltaSize = uNewSize - uOldSize;
+		X_SetSize(uNewSize);
+		return std::make_pair(GetData() + uOldSize, uDeltaSize);
+	}
+	void ShrinkAsZeroTerminated() noexcept {
+		const auto uSzLen = View(GetStr()).GetLength();
+		ASSERT(uSzLen <= GetSize());
+		X_SetSize(uSzLen);
 	}
 
 	int Compare(const View &rhs) const noexcept {
@@ -330,9 +369,7 @@ public:
 	void Pop(std::size_t uCount = 1) noexcept {
 		const auto uOldSize = GetSize();
 		ASSERT(uOldSize >= uCount);
-		(void)uOldSize;
-		auto &byComplLen = reinterpret_cast<unsigned char &>(x_achData.GetEnd()[-1]);
-		byComplLen += uCount;
+		X_SetSize(uOldSize - uCount);
 	}
 
 	void Append(Char ch, std::size_t uCount = 1){
@@ -390,6 +427,62 @@ public:
 	}
 	std::size_t FindBackward(Char chToFind, std::ptrdiff_t nEnd = -1) const noexcept {
 		return GetView().FindBackward(chToFind, nEnd);
+	}
+
+	void Replace(std::ptrdiff_t nBegin, std::ptrdiff_t nEnd, Char chRep, std::size_t uRepSize = 1){
+		const auto vCurrent = GetView();
+		const auto uOldLength = vCurrent.GetLength();
+
+		const auto vRemoved = vCurrent.Slice(nBegin, nEnd);
+		const auto uRemovedBegin = static_cast<std::size_t>(vRemoved.GetBegin() - vCurrent.GetBegin());
+		const auto uRemovedEnd = static_cast<std::size_t>(vRemoved.GetEnd() - vCurrent.GetBegin());
+		const auto uLengthAfterRemoved = uOldLength - (uRemovedEnd - uRemovedBegin);
+		const auto uNewLength = uLengthAfterRemoved + uRepSize;
+		if(uNewLength < uLengthAfterRemoved){
+			throw std::bad_array_new_length();
+		}
+
+		const auto pchWrite = X_ChopAndSplice(uRemovedBegin, uRemovedEnd, 0, uRemovedBegin + uRepSize);
+		FillN(pchWrite, uRepSize, chRep);
+		X_SetSize(uNewLength);
+	}
+	void Replace(std::ptrdiff_t nBegin, std::ptrdiff_t nEnd, const Char *pchRepBegin){
+		Replace(nBegin, nEnd, View(pchRepBegin));
+	}
+	void Replace(std::ptrdiff_t nBegin, std::ptrdiff_t nEnd, const Char *pchRepBegin, const Char *pchRepEnd){
+		Replace(nBegin, nEnd, View(pchRepBegin, pchRepEnd));
+	}
+	void Replace(std::ptrdiff_t nBegin, std::ptrdiff_t nEnd, const Char *pchRepBegin, std::size_t uLen){
+		Replace(nBegin, nEnd, View(pchRepBegin, uLen));
+	}
+	void Replace(std::ptrdiff_t nBegin, std::ptrdiff_t nEnd, const View &vRep){
+		const auto uRepSize = vRep.GetLength();
+
+		const auto vCurrent = GetView();
+		const auto uOldLength = vCurrent.GetLength();
+
+		const auto vRemoved = vCurrent.Slice(nBegin, nEnd);
+		const auto uRemovedBegin = static_cast<std::size_t>(vRemoved.GetBegin() - vCurrent.GetBegin());
+		const auto uRemovedEnd = static_cast<std::size_t>(vRemoved.GetEnd() - vCurrent.GetBegin());
+		const auto uLengthAfterRemoved = uOldLength - (uRemovedEnd - uRemovedBegin);
+		const auto uNewLength = uLengthAfterRemoved + uRepSize;
+		if(uNewLength < uLengthAfterRemoved){
+			throw std::bad_array_new_length();
+		}
+
+		if(vCurrent.DoesOverlapWith(vRep)){
+			VarChar vchTemp;
+			vchTemp.Resize(uNewLength);
+			auto pchWrite = vchTemp.GetData();
+			pchWrite = Copy(pchWrite, vCurrent.GetBegin(), vCurrent.GetBegin() + uRemovedBegin);
+			pchWrite = Copy(pchWrite, vRep.GetBegin(), vRep.GetEnd());
+			pchWrite = Copy(pchWrite, vCurrent.GetBegin() + uRemovedEnd, vCurrent.GetEnd());
+			Assign(std::move(vchTemp));
+		} else {
+			const auto pchWrite = X_ChopAndSplice(uRemovedBegin, uRemovedEnd, 0, uRemovedBegin + vRep.GetSize());
+			CopyN(pchWrite, vRep.GetBegin(), vRep.GetSize());
+			X_SetSize(uNewLength);
+		}
 	}
 
 	explicit operator bool() const noexcept {

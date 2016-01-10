@@ -15,5 +15,8 @@ extern "C" unsigned MCFMain(){
 	s.Append("world!"_nsv);
 	std::printf("s = %s$\n", s.GetStr());
 
+	s.Replace(5, 6, " QuQ "_nsv);
+	std::printf("s = %s$\n", s.GetStr());
+
 	return 0;
 }

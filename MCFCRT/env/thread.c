@@ -384,8 +384,8 @@ void *MCF_CRT_CreateThread(unsigned (*pfnThreadProc)(intptr_t), intptr_t nParam,
 	if(!pInitParams){
 		return nullptr;
 	}
-	pInitParams->pfnProc  = pfnThreadProc;
-	pInitParams->nParam   = nParam;
+	pInitParams->pfnProc = pfnThreadProc;
+	pInitParams->nParam  = nParam;
 
 	ULONG ulStackReserved = 0, ulStackCommitted = 0;
 	HANDLE hThread;
@@ -402,7 +402,9 @@ void *MCF_CRT_CreateThread(unsigned (*pfnThreadProc)(intptr_t), intptr_t nParam,
 	return (void *)hThread;
 }
 void MCF_CRT_CloseThread(void *hThread){
-	if(!NtClose((HANDLE)hThread)){
+
+	const NTSTATUS lStatus = NtClose((HANDLE)hThread);
+	if(!NT_SUCCESS(lStatus)){
 		ASSERT_MSG(false, L"NtClose() 失败。");
 	}
 }

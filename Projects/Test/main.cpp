@@ -1,18 +1,57 @@
 #include <MCF/StdMCF.hpp>
-#include <MCF/Containers/FlatMap.hpp>
-#include <MCF/Containers/FlatMultiMap.hpp>
+#include <MCF/Thread/Thread.hpp>
+#include <MCF/Core/Clocks.hpp>
+#include <MCF/Core/Array.hpp>
+#include <MCF/Core/LastError.hpp>
+#include <MCF/Core/String.hpp>
 
 using namespace MCF;
 
-template class FlatMap<int, long>;
-template class FlatMultiMap<int, long>;
+Mutex m;
+volatile long long c = 0;
+Array<IntrusivePtr<Thread>, 500> threads;
 
-extern "C" unsigned MCFMain(){
-	FlatMultiMap<int, long> s{ {1,0}, {5,0}, {0,0}, {2,0}, {3,0}, {5,1}, {0,1}, {2,1}, {1,1}, {4,0}, {4,1}, {3,1} };
-	auto r = s.GetEqualRange(2);
-	std::printf("r = %td, %td\n", r.first - s.GetBegin(), r.second - s.GetBegin());
-	for(auto it = s.GetBegin(); it != s.GetEnd(); ++it){
-		std::printf("element: %d, %ld\n", it->first, it->second);
+extern "C" unsigned MCFMain()
+try {
+	for(auto &p : threads){
+		p = Thread::Create([&]{
+			for(int i = 0; i < 10000; ++i){
+				m.Lock();
+				++c;
+				m.Unlock();
+			}
+		});
 	}
+
+	const auto t1 = GetHiResMonoClock();
+	for(auto &p : threads){
+		p->Wait();
+	}
+	const auto t2 = GetHiResMonoClock();
+
+	std::printf("c = %lld, time = %f\n", c, t2 - t1);
+/*
+	auto now = GetFastMonoClock();
+	auto t1 = GetHiResMonoClock();
+	auto l = m.TryGetLock(now + 1000);
+	auto t2 = GetHiResMonoClock();
+	std::printf("locked? %d  time = %f\n", l.IsLocking(), t2 - t1);
+
+	now = GetFastMonoClock();
+	t1 = GetHiResMonoClock();
+	l = m.TryGetLock(now + 1000);
+	t2 = GetHiResMonoClock();
+	std::printf("locked? %d  time = %f\n", l.IsLocking(), t2 - t1);
+*/
 	return 0;
+} catch(Exception &e){
+	std::printf("MCF::Exception: code = %lu (%s), desc = %s\n", e.GetCode(), AnsiString(GetWin32ErrorDescription(e.GetCode())).GetStr(), e.GetErrorMessage());
+
+	for(auto &p : threads){
+		if(p){
+			p->Wait();
+		}
+	}
+
+	return 3;
 }

@@ -15,11 +15,11 @@ namespace MCF {
 
 class ConditionVariable : NONCOPYABLE {
 private:
-	Atomic<std::size_t> x_uWaitingThreads;
+	Atomic<std::size_t> x_uControl;
 
 public:
 	constexpr ConditionVariable() noexcept
-		: x_uWaitingThreads(0)
+		: x_uControl(0)
 	{
 	}
 

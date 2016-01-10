@@ -18,7 +18,7 @@ namespace MCF {
 
 // 其他非静态成员函数。
 bool ConditionVariable::Wait(Impl_UniqueLockTemplate::UniqueLockTemplateBase &vLock, std::uint64_t u64UntilFastMonoClock) noexcept {
-	x_uWaitingThreads.Increment(kAtomicRelaxed);
+	x_uControl.Increment(kAtomicRelaxed);
 	const auto uCount = vLock.X_UnlockAll();
 	ASSERT_MSG(uCount != 0, L"你会用条件变量吗？");
 
@@ -41,19 +41,17 @@ bool ConditionVariable::Wait(Impl_UniqueLockTemplate::UniqueLockTemplateBase &vL
 		ASSERT_MSG(false, L"NtWaitForKeyedEvent() 失败。");
 	}
 	if(lStatus == STATUS_TIMEOUT){
-		std::size_t uOldWaitingThreads, uNewWaitingThreads;
-
-		uOldWaitingThreads = x_uWaitingThreads.Load(kAtomicRelaxed);
+		auto uOld = x_uControl.Load(kAtomicRelaxed);
 	jCasFailureTimedOut:
-		uNewWaitingThreads = uOldWaitingThreads;
-		if(uNewWaitingThreads == 0){
+		auto uNew = uOld;
+		if(uNew == 0){
 			const auto lStatus = ::NtWaitForKeyedEvent(nullptr, this, false, nullptr);
 			if(!NT_SUCCESS(lStatus)){
 				ASSERT_MSG(false, L"NtWaitForKeyedEvent() 失败。");
 			}
 		} else {
-			--uNewWaitingThreads;
-			if(!x_uWaitingThreads.CompareExchange(uOldWaitingThreads, uNewWaitingThreads, kAtomicRelaxed, kAtomicRelaxed)){
+			--uNew;
+			if(!x_uControl.CompareExchange(uOld, uNew, kAtomicRelaxed, kAtomicRelaxed)){
 				goto jCasFailureTimedOut;
 			}
 		}
@@ -66,7 +64,7 @@ bool ConditionVariable::Wait(Impl_UniqueLockTemplate::UniqueLockTemplateBase &vL
 	return true;
 }
 void ConditionVariable::Wait(Impl_UniqueLockTemplate::UniqueLockTemplateBase &vLock) noexcept {
-	x_uWaitingThreads.Increment(kAtomicRelaxed);
+	x_uControl.Increment(kAtomicRelaxed);
 
 	const auto uCount = vLock.X_UnlockAll();
 	ASSERT_MSG(uCount != 0, L"你会用条件变量吗？");
@@ -80,17 +78,15 @@ void ConditionVariable::Wait(Impl_UniqueLockTemplate::UniqueLockTemplateBase &vL
 }
 
 std::size_t ConditionVariable::Signal(std::size_t uMaxToWakeUp) noexcept {
-	std::size_t uOldWaitingThreads, uNewWaitingThreads;
-
-	uOldWaitingThreads = x_uWaitingThreads.Load(kAtomicRelaxed);
+	auto uOld = x_uControl.Load(kAtomicRelaxed);
 jCasFailure:
-	uNewWaitingThreads = uOldWaitingThreads;
-	const auto uThreadsToWakeUp = Min(uNewWaitingThreads, uMaxToWakeUp);
+	auto uNew = uOld;
+	const auto uThreadsToWakeUp = Min(uNew, uMaxToWakeUp);
 	if(uThreadsToWakeUp == 0){
 		return 0;
 	}
-	uNewWaitingThreads -= uThreadsToWakeUp;
-	if(!x_uWaitingThreads.CompareExchange(uOldWaitingThreads, uNewWaitingThreads, kAtomicRelaxed, kAtomicRelaxed)){
+	uNew -= uThreadsToWakeUp;
+	if(!x_uControl.CompareExchange(uOld, uNew, kAtomicRelaxed, kAtomicRelaxed)){
 		goto jCasFailure;
 	}
 
@@ -103,7 +99,7 @@ jCasFailure:
 	return uThreadsToWakeUp;
 }
 std::size_t ConditionVariable::Broadcast() noexcept {
-	const auto uThreadsToWakeUp = x_uWaitingThreads.Exchange(0, kAtomicRelaxed);
+	const auto uThreadsToWakeUp = x_uControl.Exchange(0, kAtomicRelaxed);
 	if(uThreadsToWakeUp == 0){
 		return 0;
 	}

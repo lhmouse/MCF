@@ -5,6 +5,7 @@
 #include "../StdMCF.hpp"
 #include "ConditionVariable.hpp"
 #include "../Core/Clocks.hpp"
+#include "../Utilities/MinMax.hpp"
 #include <winternl.h>
 #include <ntstatus.h>
 
@@ -17,6 +18,7 @@ namespace MCF {
 
 // 其他非静态成员函数。
 bool ConditionVariable::Wait(Impl_UniqueLockTemplate::UniqueLockTemplateBase &vLock, std::uint64_t u64UntilFastMonoClock) noexcept {
+	x_uWaitingThreads.Increment(kAtomicRelaxed);
 	const auto uCount = vLock.X_UnlockAll();
 	ASSERT_MSG(uCount != 0, L"你会用条件变量吗？");
 
@@ -34,51 +36,85 @@ bool ConditionVariable::Wait(Impl_UniqueLockTemplate::UniqueLockTemplateBase &vL
 			}
 		}
 	}
-	x_uWaitingThreads.Increment(kAtomicRelaxed);
 	const auto lStatus = ::NtWaitForKeyedEvent(nullptr, this, false, &liTimeout);
 	if(!NT_SUCCESS(lStatus)){
 		ASSERT_MSG(false, L"NtWaitForKeyedEvent() 失败。");
 	}
-	x_uWaitingThreads.Decrement(kAtomicRelaxed);
+	if(lStatus == STATUS_TIMEOUT){
+		std::size_t uOldWaitingThreads, uNewWaitingThreads;
+
+		uOldWaitingThreads = x_uWaitingThreads.Load(kAtomicRelaxed);
+	jCasFailureTimedOut:
+		uNewWaitingThreads = uOldWaitingThreads;
+		if(uNewWaitingThreads == 0){
+			const auto lStatus = ::NtWaitForKeyedEvent(nullptr, this, false, nullptr);
+			if(!NT_SUCCESS(lStatus)){
+				ASSERT_MSG(false, L"NtWaitForKeyedEvent() 失败。");
+			}
+		} else {
+			--uNewWaitingThreads;
+			if(!x_uWaitingThreads.CompareExchange(uOldWaitingThreads, uNewWaitingThreads, kAtomicRelaxed, kAtomicRelaxed)){
+				goto jCasFailureTimedOut;
+			}
+		}
+
+		vLock.X_RelockAll(uCount);
+		return false;
+	}
 
 	vLock.X_RelockAll(uCount);
-	return lStatus != STATUS_TIMEOUT;
+	return true;
 }
 void ConditionVariable::Wait(Impl_UniqueLockTemplate::UniqueLockTemplateBase &vLock) noexcept {
+	x_uWaitingThreads.Increment(kAtomicRelaxed);
+
 	const auto uCount = vLock.X_UnlockAll();
 	ASSERT_MSG(uCount != 0, L"你会用条件变量吗？");
 
-	x_uWaitingThreads.Increment(kAtomicRelaxed);
 	const auto lStatus = ::NtWaitForKeyedEvent(nullptr, this, false, nullptr);
 	if(!NT_SUCCESS(lStatus)){
 		ASSERT_MSG(false, L"NtWaitForKeyedEvent() 失败。");
 	}
-	x_uWaitingThreads.Decrement(kAtomicRelaxed);
 
 	vLock.X_RelockAll(uCount);
 }
 
-namespace {
-	constexpr ::LARGE_INTEGER kZeroTimeout = { };
-}
-
 std::size_t ConditionVariable::Signal(std::size_t uMaxToWakeUp) noexcept {
-	const auto uToWakeUp = std::min(x_uWaitingThreads.Load(kAtomicRelaxed), uMaxToWakeUp);
-	std::size_t uWokenUp = 0;
-	while(uWokenUp < uToWakeUp){
-		const auto lStatus = ::NtReleaseKeyedEvent(nullptr, this, false, &kZeroTimeout);
-		if(!NT_SUCCESS(lStatus)){
-			ASSERT_MSG(false, L"NtReleaseKeyedEvent() 失败。");
-		}
-		if(lStatus == STATUS_TIMEOUT){
-			break;
-		}
-		++uWokenUp;
+	std::size_t uOldWaitingThreads, uNewWaitingThreads;
+
+	uOldWaitingThreads = x_uWaitingThreads.Load(kAtomicRelaxed);
+jCasFailure:
+	uNewWaitingThreads = uOldWaitingThreads;
+	const auto uThreadsToWakeUp = Min(uNewWaitingThreads, uMaxToWakeUp);
+	if(uThreadsToWakeUp == 0){
+		return 0;
 	}
-	return uWokenUp;
+	uNewWaitingThreads -= uThreadsToWakeUp;
+	if(!x_uWaitingThreads.CompareExchange(uOldWaitingThreads, uNewWaitingThreads, kAtomicRelaxed, kAtomicRelaxed)){
+		goto jCasFailure;
+	}
+
+	for(std::size_t i = 0; i < uThreadsToWakeUp; ++i){
+		const auto lStatus = ::NtWaitForKeyedEvent(nullptr, this, false, nullptr);
+		if(!NT_SUCCESS(lStatus)){
+			ASSERT_MSG(false, L"NtWaitForKeyedEvent() 失败。");
+		}
+	}
+	return uThreadsToWakeUp;
 }
 std::size_t ConditionVariable::Broadcast() noexcept {
-	return Signal(static_cast<std::size_t>(-1));
+	const auto uThreadsToWakeUp = x_uWaitingThreads.Exchange(0, kAtomicRelaxed);
+	if(uThreadsToWakeUp == 0){
+		return 0;
+	}
+
+	for(std::size_t i = 0; i < uThreadsToWakeUp; ++i){
+		const auto lStatus = ::NtWaitForKeyedEvent(nullptr, this, false, nullptr);
+		if(!NT_SUCCESS(lStatus)){
+			ASSERT_MSG(false, L"NtWaitForKeyedEvent() 失败。");
+		}
+	}
+	return uThreadsToWakeUp;
 }
 
 }

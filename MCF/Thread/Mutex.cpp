@@ -90,9 +90,6 @@ bool Mutex::Try(std::uint64_t u64UntilFastMonoClock) noexcept {
 			jCasFailureTimedOut:
 				ctlNew = ctlOld;
 				if(ctlNew.uWaitingThreads == 0){
-					if(!x_uControl.CompareExchange(ctlOld.u, ctlNew.u, kAtomicSeqCst, kAtomicRelaxed)){
-						goto jCasFailureTimedOut;
-					}
 					const auto lStatus = ::NtWaitForKeyedEvent(nullptr, this, false, nullptr);
 					if(!NT_SUCCESS(lStatus)){
 						ASSERT_MSG(false, L"NtWaitForKeyedEvent() 失败。");

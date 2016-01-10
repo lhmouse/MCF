@@ -34,12 +34,16 @@ template<StringType kTypeT>
 class String {
 public:
 	using View = StringView<kTypeT>;
-
 	using Char = typename View::Char;
 
 	enum : std::size_t {
 		kNpos = View::kNpos
 	};
+
+	// 容器需求。
+	using Element         = Char;
+	using ConstEnumerator = Impl_EnumeratorTemplate::ConstEnumerator <String>;
+	using Enumerator      = Impl_EnumeratorTemplate::Enumerator      <String>;
 
 public:
 	static const String kEmpty;
@@ -231,10 +235,6 @@ private:
 
 public:
 	// 容器需求。
-	using Element         = Char;
-	using ConstEnumerator = Impl_EnumeratorTemplate::ConstEnumerator <String>;
-	using Enumerator      = Impl_EnumeratorTemplate::Enumerator      <String>;
-
 	bool IsEmpty() const noexcept {
 		return GetBegin() == GetEnd();
 	}
@@ -505,7 +505,7 @@ public:
 
 	void Assign(Char ch, std::size_t uCount = 1){
 		Resize(uCount);
-		FillN(GetStr(), uCount, ch);
+		FillN(GetData(), uCount, ch);
 	}
 	void Assign(const Char *pszBegin){
 		Assign(View(pszBegin));
@@ -518,7 +518,7 @@ public:
 	}
 	void Assign(const View &rhs){
 		Resize(rhs.GetSize());
-		Copy(GetStr(), rhs.GetBegin(), rhs.GetEnd());
+		Copy(GetData(), rhs.GetBegin(), rhs.GetEnd());
 	}
 	void Assign(std::initializer_list<Char> rhs){
 		Assign(View(rhs));
@@ -684,7 +684,7 @@ public:
 		if(vCurrent.DoesOverlapWith(vRep)){
 			String strTemp;
 			strTemp.Resize(uNewLength);
-			auto pchWrite = strTemp.GetStr();
+			auto pchWrite = strTemp.GetData();
 			pchWrite = Copy(pchWrite, vCurrent.GetBegin(), vCurrent.GetBegin() + uRemovedBegin);
 			pchWrite = Copy(pchWrite, vRep.GetBegin(), vRep.GetEnd());
 			pchWrite = Copy(pchWrite, vCurrent.GetBegin() + uRemovedEnd, vCurrent.GetEnd());
@@ -855,7 +855,7 @@ template<StringType kTypeT>
 bool operator>(const String<kTypeT> &lhs, const String<kTypeT> &rhs) noexcept {
 	return lhs.GetView() > rhs.GetView();
 }
-template<StringType   kTypeT>
+template<StringType kTypeT>
 bool operator>(const String<kTypeT> &lhs, const StringView<kTypeT> &rhs) noexcept {
 	return lhs.GetView() > rhs;
 }

@@ -317,7 +317,7 @@ namespace Impl_MultiIndexMap {
 	std::size_t GetSize() const noexcept {
 		return x_vecStorage.GetSize();
 	}
-	std::size_t GetCapacity() noexcept {
+	std::size_t GetCapacity() const noexcept {
 		return x_vecStorage.GetCapacity();
 	}
 

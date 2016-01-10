@@ -241,7 +241,7 @@ public:
 	std::size_t GetSize() const noexcept {
 		return x_uSize;
 	}
-	std::size_t GetCapacity() noexcept {
+	std::size_t GetCapacity() const noexcept {
 		return x_uCapacity;
 	}
 
@@ -668,11 +668,11 @@ public:
 		return UncheckedGet(uIndex);
 	}
 
-	operator ArrayView<const ElementT>() const noexcept {
-		return ArrayView<const ElementT>(GetData(), GetSize());
+	operator ArrayView<const Element>() const noexcept {
+		return ArrayView<const Element>(GetData(), GetSize());
 	}
-	operator ArrayView<ElementT>() noexcept {
-		return ArrayView<ElementT>(GetData(), GetSize());
+	operator ArrayView<Element>() noexcept {
+		return ArrayView<Element>(GetData(), GetSize());
 	}
 };
 

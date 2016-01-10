@@ -8,7 +8,7 @@
 #include "../Utilities/ParameterPackManipulators.hpp"
 #include "../Utilities/Assert.hpp"
 #include "../SmartPointers/UniquePtr.hpp"
-#include "../Core/Exception.hpp"
+#include "Exception.hpp"
 #include <utility>
 #include <typeinfo>
 #include <cstddef>

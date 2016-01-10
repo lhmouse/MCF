@@ -7,10 +7,10 @@
 
 #include <cstddef>
 #include "../../MCFCRT/env/argv.h"
-#include "../Core/StringView.hpp"
 #include "../SmartPointers/UniquePtr.hpp"
 #include "../Utilities/Noncopyable.hpp"
 #include "../Utilities/Assert.hpp"
+#include "StringView.hpp"
 
 namespace MCF {
 

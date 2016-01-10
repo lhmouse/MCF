@@ -398,7 +398,7 @@ public:
 			return x_uEnd + x_uRingCap - x_uBegin;
 		}
 	}
-	std::size_t GetCapacity() noexcept {
+	std::size_t GetCapacity() const noexcept {
 		return x_uRingCap - 1;
 	}
 

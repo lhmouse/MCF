@@ -8,7 +8,7 @@
 #include "../Containers/_EnumeratorTemplate.hpp"
 #include "../Utilities/Assert.hpp"
 #include "../Utilities/CopyMoveFill.hpp"
-#include "../Core/Exception.hpp"
+#include "Exception.hpp"
 #include "Array.hpp"
 #include "ArrayView.hpp"
 #include "StringView.hpp"

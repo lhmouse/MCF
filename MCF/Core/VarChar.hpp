@@ -12,6 +12,7 @@
 #include "Array.hpp"
 #include "ArrayView.hpp"
 #include "StringView.hpp"
+#include <type_traits>
 #include <initializer_list>
 #include <cstring>
 #include <cstddef>
@@ -39,7 +40,7 @@ private:
 
 public:
 	VarChar(std::nullptr_t = nullptr) noexcept {
-		reinterpret_cast<unsigned char &>(x_achData.GetEnd()[-1]) = kCapacityT;
+		reinterpret_cast<std::make_unsigned_t<Char> &>(x_achData.GetEnd()[-1]) = kCapacityT;
 	}
 	VarChar(const Char *pszStr, std::size_t uLen)
 		: VarChar()
@@ -101,7 +102,7 @@ private:
 	void X_SetSize(std::size_t uNewSize) noexcept {
 		ASSERT(uNewSize <= GetCapacity());
 
-		reinterpret_cast<unsigned char &>(x_achData.GetEnd()[-1]) = GetCapacity() - uNewSize;
+		reinterpret_cast<std::make_unsigned_t<Char> &>(x_achData.GetEnd()[-1]) = GetCapacity() - uNewSize;
 	}
 
 public:
@@ -237,7 +238,7 @@ public:
 		return x_achData.GetBegin() + GetSize();
 	}
 	std::size_t GetSize() const noexcept {
-		return kCapacityT - reinterpret_cast<const unsigned char &>(x_achData.GetEnd()[-1]);
+		return kCapacityT - reinterpret_cast<const std::make_unsigned_t<Char> &>(x_achData.GetEnd()[-1]);
 	}
 
 	const Char *GetData() const noexcept {
@@ -364,7 +365,7 @@ public:
 	void UncheckedPush(Char ch) noexcept {
 		ASSERT(GetSize() < GetCapacity());
 
-		auto &byComplLen = reinterpret_cast<unsigned char &>(x_achData.GetEnd()[-1]);
+		auto &byComplLen = reinterpret_cast<std::make_unsigned_t<Char> &>(x_achData.GetEnd()[-1]);
 		x_achData.UncheckedGet(byComplLen) = ch;
 		--byComplLen;
 	}
@@ -518,12 +519,12 @@ public:
 template<unsigned kCapacityT>
 const VarChar<kCapacityT> VarChar<kCapacityT>::kEmpty;
 
-template<unsigned kCapacityT, unsigned char kOtherCapacityT>
+template<unsigned kCapacityT, unsigned kOtherCapacityT>
 VarChar<kCapacityT> &operator+=(VarChar<kCapacityT> &lhs, const VarChar<kOtherCapacityT> &rhs){
 	lhs.Append(rhs);
 	return lhs;
 }
-template<unsigned kCapacityT, unsigned char kOtherCapacityT>
+template<unsigned kCapacityT, unsigned kOtherCapacityT>
 VarChar<kCapacityT> &operator+=(VarChar<kCapacityT> &lhs, const StringView<kOtherCapacityT> &rhs){
 	lhs.Append(rhs);
 	return lhs;
@@ -538,12 +539,12 @@ VarChar<kCapacityT> &operator+=(VarChar<kCapacityT> &lhs, const typename VarChar
 	lhs.Append(rhs);
 	return lhs;
 }
-template<unsigned kCapacityT, unsigned char kOtherCapacityT>
+template<unsigned kCapacityT, unsigned kOtherCapacityT>
 VarChar<kCapacityT> &&operator+=(VarChar<kCapacityT> &&lhs, const VarChar<kOtherCapacityT> &rhs){
 	lhs.Append(rhs);
 	return std::move(lhs);
 }
-template<unsigned kCapacityT, unsigned char kOtherCapacityT>
+template<unsigned kCapacityT, unsigned kOtherCapacityT>
 VarChar<kCapacityT> &&operator+=(VarChar<kCapacityT> &&lhs, const StringView<kOtherCapacityT> &rhs){
 	lhs.Append(rhs);
 	return std::move(lhs);
@@ -564,13 +565,13 @@ VarChar<kCapacityT> &&operator+=(VarChar<kCapacityT> &&lhs, VarChar<kCapacityT> 
 	return std::move(lhs);
 }
 
-template<unsigned kCapacityT, unsigned char kOtherCapacityT>
+template<unsigned kCapacityT, unsigned kOtherCapacityT>
 VarChar<kCapacityT> operator+(const VarChar<kCapacityT> &lhs, const VarChar<kOtherCapacityT> &rhs){
 	auto ret = lhs;
 	ret += rhs;
 	return ret;
 }
-template<unsigned kCapacityT, unsigned char kOtherCapacityT>
+template<unsigned kCapacityT, unsigned kOtherCapacityT>
 VarChar<kCapacityT> operator+(const VarChar<kCapacityT> &lhs, const StringView<kOtherCapacityT> &rhs){
 	auto ret = lhs;
 	ret += rhs;
@@ -588,11 +589,11 @@ VarChar<kCapacityT> operator+(const VarChar<kCapacityT> &lhs, const typename Var
 	ret += rhs;
 	return ret;
 }
-template<unsigned kCapacityT, unsigned char kOtherCapacityT>
+template<unsigned kCapacityT, unsigned kOtherCapacityT>
 VarChar<kCapacityT> &&operator+(VarChar<kCapacityT> &&lhs, const VarChar<kOtherCapacityT> &rhs){
 	return std::move(lhs += rhs);
 }
-template<unsigned kCapacityT, unsigned char kOtherCapacityT>
+template<unsigned kCapacityT, unsigned kOtherCapacityT>
 VarChar<kCapacityT> &&operator+(VarChar<kCapacityT> &&lhs, const StringView<kOtherCapacityT> &rhs){
 	return std::move(lhs += rhs);
 }

@@ -178,21 +178,21 @@ public:
 private:
 	Char *X_ChopAndSplice(std::size_t uRemovedBegin, std::size_t uRemovedEnd, std::size_t uFirstOffset, std::size_t uThirdOffset){
 		const auto pchOldBuffer = GetBegin();
-		const auto uOldLength = GetLength();
+		const auto uOldSize = GetSize();
 		auto pchNewBuffer = pchOldBuffer;
-		const auto uNewLength = uThirdOffset + (uOldLength - uRemovedEnd);
-		auto uCharsToAlloc = uNewLength + 1;
+		const auto uNewSize = uThirdOffset + (uOldSize - uRemovedEnd);
+		auto uCharsToAlloc = uNewSize + 1;
 
-		ASSERT(uRemovedBegin <= uOldLength);
-		ASSERT(uRemovedEnd <= uOldLength);
+		ASSERT(uRemovedBegin <= uOldSize);
+		ASSERT(uRemovedEnd <= uOldSize);
 		ASSERT(uRemovedBegin <= uRemovedEnd);
 		ASSERT(uFirstOffset + uRemovedBegin <= uThirdOffset);
 
-		if(GetCapacity() < uNewLength){
+		if(GetCapacity() < uNewSize){
 			uCharsToAlloc += (uCharsToAlloc >> 1);
 			uCharsToAlloc = (uCharsToAlloc + 0x0F) & static_cast<std::size_t>(-0x10);
-			if(uCharsToAlloc < uNewLength + 1){
-				uCharsToAlloc = uNewLength + 1;
+			if(uCharsToAlloc < uNewSize + 1){
+				uCharsToAlloc = uNewSize + 1;
 			}
 			const std::size_t uBytesToAlloc = sizeof(Char) * uCharsToAlloc;
 			if(uBytesToAlloc / sizeof(Char) != uCharsToAlloc){
@@ -205,8 +205,8 @@ private:
 		if((pchNewBuffer + uFirstOffset != pchOldBuffer) && (uRemovedBegin != 0)){
 			std::memmove(pchNewBuffer + uFirstOffset, pchOldBuffer, uRemovedBegin * sizeof(Char));
 		}
-		if((pchNewBuffer + uThirdOffset != pchOldBuffer + uRemovedEnd) && (uOldLength != uRemovedEnd)){
-			std::memmove(pchNewBuffer + uThirdOffset, pchOldBuffer + uRemovedEnd, (uOldLength - uRemovedEnd) * sizeof(Char));
+		if((pchNewBuffer + uThirdOffset != pchOldBuffer + uRemovedEnd) && (uOldSize != uRemovedEnd)){
+			std::memmove(pchNewBuffer + uThirdOffset, pchOldBuffer + uRemovedEnd, (uOldSize - uRemovedEnd) * sizeof(Char));
 		}
 
 		if(pchNewBuffer != pchOldBuffer){
@@ -217,7 +217,7 @@ private:
 			}
 
 			x_vStorage.vLarge.pchBegin = pchNewBuffer;
-			x_vStorage.vLarge.uLength = uOldLength;
+			x_vStorage.vLarge.uLength = uOldSize;
 			x_vStorage.vLarge.uSizeAllocated = uCharsToAlloc;
 		}
 
@@ -491,7 +491,7 @@ public:
 		return std::make_pair(GetData() + uOldSize, uDeltaSize);
 	}
 	void ShrinkAsZeroTerminated() noexcept {
-		const auto uSzLen = View(GetStr()).GetLength();
+		const auto uSzLen = View(GetStr()).GetSize();
 		ASSERT(uSzLen <= GetSize());
 		X_SetSize(uSzLen);
 	}
@@ -555,7 +555,7 @@ public:
 		Append(ch, 1);
 	}
 	void UncheckedPush(Char ch) noexcept {
-		ASSERT(GetLength() < GetCapacity());
+		ASSERT(GetSize() < GetCapacity());
 
 		if(x_vStorage.vSmall.schComplLength >= 0){
 			x_vStorage.vSmall.achData[X_GetSmallLength()] = ch;
@@ -642,20 +642,20 @@ public:
 
 	void Replace(std::ptrdiff_t nBegin, std::ptrdiff_t nEnd, Char chRep, std::size_t uRepSize = 1){
 		const auto vCurrent = GetView();
-		const auto uOldLength = vCurrent.GetLength();
+		const auto uOldSize = vCurrent.GetSize();
 
 		const auto vRemoved = vCurrent.Slice(nBegin, nEnd);
 		const auto uRemovedBegin = static_cast<std::size_t>(vRemoved.GetBegin() - vCurrent.GetBegin());
 		const auto uRemovedEnd = static_cast<std::size_t>(vRemoved.GetEnd() - vCurrent.GetBegin());
-		const auto uLengthAfterRemoved = uOldLength - (uRemovedEnd - uRemovedBegin);
-		const auto uNewLength = uLengthAfterRemoved + uRepSize;
-		if(uNewLength < uLengthAfterRemoved){
+		const auto uLengthAfterRemoved = uOldSize - (uRemovedEnd - uRemovedBegin);
+		const auto uNewSize = uLengthAfterRemoved + uRepSize;
+		if(uNewSize < uLengthAfterRemoved){
 			throw std::bad_array_new_length();
 		}
 
 		const auto pchWrite = X_ChopAndSplice(uRemovedBegin, uRemovedEnd, 0, uRemovedBegin + uRepSize);
 		FillN(pchWrite, uRepSize, chRep);
-		X_SetSize(uNewLength);
+		X_SetSize(uNewSize);
 	}
 	void Replace(std::ptrdiff_t nBegin, std::ptrdiff_t nEnd, const Char *pchRepBegin){
 		Replace(nBegin, nEnd, View(pchRepBegin));
@@ -667,23 +667,23 @@ public:
 		Replace(nBegin, nEnd, View(pchRepBegin, uLen));
 	}
 	void Replace(std::ptrdiff_t nBegin, std::ptrdiff_t nEnd, const View &vRep){
-		const auto uRepSize = vRep.GetLength();
+		const auto uRepSize = vRep.GetSize();
 
 		const auto vCurrent = GetView();
-		const auto uOldLength = vCurrent.GetLength();
+		const auto uOldSize = vCurrent.GetSize();
 
 		const auto vRemoved = vCurrent.Slice(nBegin, nEnd);
 		const auto uRemovedBegin = static_cast<std::size_t>(vRemoved.GetBegin() - vCurrent.GetBegin());
 		const auto uRemovedEnd = static_cast<std::size_t>(vRemoved.GetEnd() - vCurrent.GetBegin());
-		const auto uLengthAfterRemoved = uOldLength - (uRemovedEnd - uRemovedBegin);
-		const auto uNewLength = uLengthAfterRemoved + uRepSize;
-		if(uNewLength < uLengthAfterRemoved){
+		const auto uLengthAfterRemoved = uOldSize - (uRemovedEnd - uRemovedBegin);
+		const auto uNewSize = uLengthAfterRemoved + uRepSize;
+		if(uNewSize < uLengthAfterRemoved){
 			throw std::bad_array_new_length();
 		}
 
 		if(vCurrent.DoesOverlapWith(vRep)){
 			String strTemp;
-			strTemp.Resize(uNewLength);
+			strTemp.Resize(uNewSize);
 			auto pchWrite = strTemp.GetData();
 			pchWrite = Copy(pchWrite, vCurrent.GetBegin(), vCurrent.GetBegin() + uRemovedBegin);
 			pchWrite = Copy(pchWrite, vRep.GetBegin(), vRep.GetEnd());
@@ -692,7 +692,7 @@ public:
 		} else {
 			const auto pchWrite = X_ChopAndSplice(uRemovedBegin, uRemovedEnd, 0, uRemovedBegin + vRep.GetSize());
 			CopyN(pchWrite, vRep.GetBegin(), vRep.GetSize());
-			X_SetSize(uNewLength);
+			X_SetSize(uNewSize);
 		}
 	}
 

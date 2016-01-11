@@ -75,23 +75,23 @@ public:
 private:
 	Char *X_ChopAndSplice(std::size_t uRemovedBegin, std::size_t uRemovedEnd, std::size_t uFirstOffset, std::size_t uThirdOffset){
 		const auto pchBuffer = GetBegin();
-		const auto uOldLength = GetLength();
-		const auto uNewLength = uThirdOffset + (uOldLength - uRemovedEnd);
+		const auto uOldSize = GetSize();
+		const auto uNewSize = uThirdOffset + (uOldSize - uRemovedEnd);
 
-		ASSERT(uRemovedBegin <= uOldLength);
-		ASSERT(uRemovedEnd <= uOldLength);
+		ASSERT(uRemovedBegin <= uOldSize);
+		ASSERT(uRemovedEnd <= uOldSize);
 		ASSERT(uRemovedBegin <= uRemovedEnd);
 		ASSERT(uFirstOffset + uRemovedBegin <= uThirdOffset);
 
-		if(uNewLength > kCapacityT){
+		if(uNewSize > kCapacityT){
 			DEBUG_THROW(Exception, ERROR_OUTOFMEMORY, "VarChar: Max capacity exceeded"_rcs);
 		}
 
 		if((pchBuffer + uFirstOffset != pchBuffer) && (uRemovedBegin != 0)){
 			std::memmove(pchBuffer + uFirstOffset, pchBuffer, uRemovedBegin * sizeof(Char));
 		}
-		if((pchBuffer + uThirdOffset != pchBuffer + uRemovedEnd) && (uOldLength != uRemovedEnd)){
-			std::memmove(pchBuffer + uThirdOffset, pchBuffer + uRemovedEnd, (uOldLength - uRemovedEnd) * sizeof(Char));
+		if((pchBuffer + uThirdOffset != pchBuffer + uRemovedEnd) && (uOldSize != uRemovedEnd)){
+			std::memmove(pchBuffer + uThirdOffset, pchBuffer + uRemovedEnd, (uOldSize - uRemovedEnd) * sizeof(Char));
 		}
 
 		return pchBuffer + uFirstOffset + uRemovedBegin;
@@ -313,7 +313,7 @@ public:
 		return std::make_pair(GetData() + uOldSize, uDeltaSize);
 	}
 	void ShrinkAsZeroTerminated() noexcept {
-		const auto uSzLen = View(GetStr()).GetLength();
+		const auto uSzLen = View(GetStr()).GetSize();
 		ASSERT(uSzLen <= GetSize());
 		X_SetSize(uSzLen);
 	}
@@ -360,7 +360,7 @@ public:
 		Append(ch, 1);
 	}
 	void UncheckedPush(Char ch) noexcept {
-		ASSERT(GetLength() < GetCapacity());
+		ASSERT(GetSize() < GetCapacity());
 
 		auto &byComplLen = reinterpret_cast<unsigned char &>(x_achData.GetEnd()[-1]);
 		x_achData.UncheckedGet(byComplLen) = ch;
@@ -431,20 +431,20 @@ public:
 
 	void Replace(std::ptrdiff_t nBegin, std::ptrdiff_t nEnd, Char chRep, std::size_t uRepSize = 1){
 		const auto vCurrent = GetView();
-		const auto uOldLength = vCurrent.GetLength();
+		const auto uOldSize = vCurrent.GetSize();
 
 		const auto vRemoved = vCurrent.Slice(nBegin, nEnd);
 		const auto uRemovedBegin = static_cast<std::size_t>(vRemoved.GetBegin() - vCurrent.GetBegin());
 		const auto uRemovedEnd = static_cast<std::size_t>(vRemoved.GetEnd() - vCurrent.GetBegin());
-		const auto uLengthAfterRemoved = uOldLength - (uRemovedEnd - uRemovedBegin);
-		const auto uNewLength = uLengthAfterRemoved + uRepSize;
-		if(uNewLength < uLengthAfterRemoved){
+		const auto uLengthAfterRemoved = uOldSize - (uRemovedEnd - uRemovedBegin);
+		const auto uNewSize = uLengthAfterRemoved + uRepSize;
+		if(uNewSize < uLengthAfterRemoved){
 			throw std::bad_array_new_length();
 		}
 
 		const auto pchWrite = X_ChopAndSplice(uRemovedBegin, uRemovedEnd, 0, uRemovedBegin + uRepSize);
 		FillN(pchWrite, uRepSize, chRep);
-		X_SetSize(uNewLength);
+		X_SetSize(uNewSize);
 	}
 	void Replace(std::ptrdiff_t nBegin, std::ptrdiff_t nEnd, const Char *pchRepBegin){
 		Replace(nBegin, nEnd, View(pchRepBegin));
@@ -456,23 +456,23 @@ public:
 		Replace(nBegin, nEnd, View(pchRepBegin, uLen));
 	}
 	void Replace(std::ptrdiff_t nBegin, std::ptrdiff_t nEnd, const View &vRep){
-		const auto uRepSize = vRep.GetLength();
+		const auto uRepSize = vRep.GetSize();
 
 		const auto vCurrent = GetView();
-		const auto uOldLength = vCurrent.GetLength();
+		const auto uOldSize = vCurrent.GetSize();
 
 		const auto vRemoved = vCurrent.Slice(nBegin, nEnd);
 		const auto uRemovedBegin = static_cast<std::size_t>(vRemoved.GetBegin() - vCurrent.GetBegin());
 		const auto uRemovedEnd = static_cast<std::size_t>(vRemoved.GetEnd() - vCurrent.GetBegin());
-		const auto uLengthAfterRemoved = uOldLength - (uRemovedEnd - uRemovedBegin);
-		const auto uNewLength = uLengthAfterRemoved + uRepSize;
-		if(uNewLength < uLengthAfterRemoved){
+		const auto uLengthAfterRemoved = uOldSize - (uRemovedEnd - uRemovedBegin);
+		const auto uNewSize = uLengthAfterRemoved + uRepSize;
+		if(uNewSize < uLengthAfterRemoved){
 			throw std::bad_array_new_length();
 		}
 
 		if(vCurrent.DoesOverlapWith(vRep)){
 			VarChar vchTemp;
-			vchTemp.Resize(uNewLength);
+			vchTemp.Resize(uNewSize);
 			auto pchWrite = vchTemp.GetData();
 			pchWrite = Copy(pchWrite, vCurrent.GetBegin(), vCurrent.GetBegin() + uRemovedBegin);
 			pchWrite = Copy(pchWrite, vRep.GetBegin(), vRep.GetEnd());
@@ -481,7 +481,7 @@ public:
 		} else {
 			const auto pchWrite = X_ChopAndSplice(uRemovedBegin, uRemovedEnd, 0, uRemovedBegin + vRep.GetSize());
 			CopyN(pchWrite, vRep.GetBegin(), vRep.GetSize());
-			X_SetSize(uNewLength);
+			X_SetSize(uNewSize);
 		}
 	}
 

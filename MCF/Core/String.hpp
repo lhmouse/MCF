@@ -236,7 +236,7 @@ private:
 public:
 	// 容器需求。
 	bool IsEmpty() const noexcept {
-		return GetBegin() == GetEnd();
+		return GetSize() == 0;
 	}
 	void Clear() noexcept {
 		X_SetSize(0);

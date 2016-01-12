@@ -53,7 +53,7 @@ namespace Impl_Bind {
 		}
 		template<typename FuncT, typename ...ParamsT>
 		decltype(auto) operator()(const BindResult<FuncT, true, ParamsT...> &vCurried) noexcept {
-			return X_ForwardCurriedParams(std::index_sequence_for<ParamsT...>(), vCurried);
+			return X_ForwardCurriedParams(std::index_sequence_for<ParamsAddT...>(), vCurried);
 		}
 	};
 
@@ -72,9 +72,7 @@ namespace Impl_Bind {
 	private:
 		template<std::size_t ...kParamIndicesT, typename ...ParamsAddT>
 		decltype(auto) X_DispatchParams(std::index_sequence<kParamIndicesT...>, ParamsAddT &&...vParamsAdd) const {
-			ParamSelector<ParamsAddT...> vSelector(std::forward<ParamsAddT>(vParamsAdd)...);
-			(void)vSelector;
-			return Invoke(x_vFunc, vSelector(std::get<kParamIndicesT>(x_tupParams))...);
+			return Invoke(x_vFunc, ParamSelector<ParamsAddT...>(std::forward<ParamsAddT>(vParamsAdd)...)(std::get<kParamIndicesT>(x_tupParams))...);
 		}
 
 	public:

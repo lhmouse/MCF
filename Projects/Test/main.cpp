@@ -1,11 +1,10 @@
 #include <MCF/StdMCF.hpp>
-#include <MCF/Utilities/ParameterPackManipulators.hpp>
-
-using namespace MCF;
+#include <MCF/Function/Bind.hpp>
 
 extern "C" unsigned MCFMain(){
-	std::printf("first = %zu\n", FindFirstType<int, char, double, int, double, int, char>());
-	std::printf("last  = %zu\n", FindLastType <int, char, double, int, double, int, char>());
+	auto f1 = MCF::LazyBind([](auto a, auto b){ return a + b; }, MCF::_1, 2);
+	auto f2 = MCF::LazyBind([](auto a, auto b){ return a * b; }, f1, MCF::_1);
+	std::printf("f2() = %d\n", f2(3));
 
 	return 0;
 }

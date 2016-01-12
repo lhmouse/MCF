@@ -35,7 +35,7 @@ namespace Impl_Bind {
 	private:
 		template<std::size_t ...kParamIndicesT, typename CurriedT>
 		decltype(auto) X_ForwardCurriedParams(std::index_sequence<kParamIndicesT...>, const CurriedT &vCurried) const {
-			return vCurried(static_cast<std::tuple_element_t<kParamIndicesT, decltype(x_tupParamsAdd)> &&>(std::get<kParamIndicesT>(x_tupParamsAdd))...);
+			return vCurried(std::forward<std::tuple_element_t<kParamIndicesT, decltype(x_tupParamsAdd)>>(std::get<kParamIndicesT>(x_tupParamsAdd))...);
 		}
 
 	public:
@@ -45,7 +45,7 @@ namespace Impl_Bind {
 		}
 		template<std::size_t kIndexT>
 		decltype(auto) operator()(const Placeholder<kIndexT> & /* vParam */) noexcept {
-			return static_cast<std::tuple_element_t<kIndexT - 1, decltype(x_tupParamsAdd)> &&>(std::get<kIndexT - 1>(x_tupParamsAdd));
+			return std::forward<std::tuple_element_t<kIndexT - 1, decltype(x_tupParamsAdd)>>(std::get<kIndexT - 1>(x_tupParamsAdd));
 		}
 		template<typename ParamT>
 		decltype(auto) operator()(const RefWrapper<ParamT> &vParam) noexcept {

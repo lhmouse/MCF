@@ -412,26 +412,26 @@ public:
 	}
 
 	const Char &Get(std::size_t uIndex) const {
-		if(uIndex >= GetSize()){
+		if(uIndex > GetSize()){
 			DEBUG_THROW(Exception, ERROR_ACCESS_DENIED, "String: Subscript out of range"_rcs);
 		}
 		return UncheckedGet(uIndex);
 	}
 	Char &Get(std::size_t uIndex){
-		if(uIndex >= GetSize()){
+		if(uIndex > GetSize()){
 			DEBUG_THROW(Exception, ERROR_ACCESS_DENIED, "String: Subscript out of range"_rcs);
 		}
 		return UncheckedGet(uIndex);
 	}
 	const Char &UncheckedGet(std::size_t uIndex) const noexcept {
-		ASSERT(uIndex < GetSize());
+		ASSERT(uIndex <= GetSize());
 
-		return GetBegin()[uIndex];
+		return GetStr()[uIndex];
 	}
 	Char &UncheckedGet(std::size_t uIndex) noexcept {
-		ASSERT(uIndex < GetSize());
+		ASSERT(uIndex <= GetSize());
 
-		return GetBegin()[uIndex];
+		return GetStr()[uIndex];
 	}
 
 	View GetView() const noexcept {

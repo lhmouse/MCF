@@ -9,8 +9,8 @@
 
 namespace MCF {
 
-template<typename Ty, std::size_t N>
-constexpr std::size_t CountOf(const Ty (&)[N]) noexcept {
+template<typename T, std::size_t N>
+constexpr std::size_t CountOf(const T (&)[N]) noexcept {
 	return N;
 }
 

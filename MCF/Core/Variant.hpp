@@ -81,7 +81,7 @@ private:
 			return &reinterpret_cast<char &>(x_vElement);
 		}
 		UniquePtr<X_ActiveElementBase> Clone() const override {
-			return UniquePtr<X_ActiveElementBase>(new auto(*this));
+			return MakeUnique<X_ActiveElement>(*this);
 		}
 	};
 
@@ -95,7 +95,7 @@ public:
 	}
 	template<typename ElementT, std::enable_if_t<
 		!std::is_same<std::decay_t<ElementT>, Variant>::value &&
-			(FindFirstType<std::decay_t<ElementT>, ElementsT...>() == FindLastType<std::decay_t<ElementT>, ElementsT...>()),
+			(FindFirstType<std::decay_t<ElementT>, ElementsT...>() != (std::size_t)-1),
 		int> = 0>
 	Variant(ElementT &&vElement)
 		: x_pElement(MakeUnique<X_ActiveElement<std::decay_t<ElementT>>>(std::forward<ElementT>(vElement)))
@@ -136,7 +136,8 @@ public:
 		if(GetIndex() != FindFirstType<std::decay_t<ElementT>, ElementsT...>()){
 			return nullptr;
 		}
-		const auto pElement = static_cast<X_ActiveElement<std::decay_t<ElementT>> *>(x_pElement.Get());
+		ASSERT(dynamic_cast<const X_ActiveElement<std::decay_t<ElementT>> *>(x_pElement.Get()));
+		const auto pElement = static_cast<const X_ActiveElement<std::decay_t<ElementT>> *>(x_pElement.Get());
 		return static_cast<const ElementT *>(pElement->GetAddress());
 	}
 	template<typename ElementT>
@@ -144,17 +145,18 @@ public:
 		if(GetIndex() != FindFirstType<std::decay_t<ElementT>, ElementsT...>()){
 			return nullptr;
 		}
+		ASSERT(dynamic_cast<X_ActiveElement<std::decay_t<ElementT>> *>(x_pElement.Get()));
 		const auto pElement = static_cast<X_ActiveElement<std::decay_t<ElementT>> *>(x_pElement.Get());
 		return static_cast<ElementT *>(pElement->GetAddress());
 	}
 	template<typename ElementT, std::enable_if_t<
-		FindFirstType<std::decay_t<ElementT>, ElementsT...>() == FindLastType<std::decay_t<ElementT>, ElementsT...>(),
+		FindFirstType<std::decay_t<ElementT>, ElementsT...>() != (std::size_t)-1,
 		int> = 0>
 	void Set(ElementT vElement){
 		x_pElement = MakeUnique<X_ActiveElement<std::decay_t<ElementT>>>(std::forward<ElementT>(vElement));
 	}
 	template<typename ElementT, typename ...ParamsT, std::enable_if_t<
-		FindFirstType<std::decay_t<ElementT>, ElementsT...>() == FindLastType<std::decay_t<ElementT>, ElementsT...>(),
+		FindFirstType<std::decay_t<ElementT>, ElementsT...>() != (std::size_t)-1,
 		int> = 0>
 	void Emplace(ParamsT &&...vParams){
 		x_pElement = MakeUnique<X_ActiveElement<std::decay_t<ElementT>>>(std::forward<ParamsT>(vParams)...);

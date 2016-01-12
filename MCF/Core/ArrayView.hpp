@@ -100,7 +100,7 @@ public:
 	}
 	template<StringType kTypeT,
 		std::enable_if_t<
-			std::is_same<typename StringView<kTypeT>::Char, std::remove_cv_t<ElementT>>::value,
+			std::is_same<typename StringView<kTypeT>::Char, std::decay_t<ElementT>>::value,
 			int> = 0>
 	constexpr ArrayView(StringView<kTypeT> rhs) noexcept
 		: x_pBegin(rhs.GetData()), x_uSize(rhs.GetSize())

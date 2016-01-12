@@ -37,13 +37,13 @@ namespace Impl_TupleManipulators {
 // AbsorbTuple(foo, std::make_tuple(1, 2, 3)); -> { foo(1); foo(2); foo(3); }
 template<typename FunctionT, typename ...ElementsT>
 constexpr FunctionT &&AbsorbTuple(FunctionT &&vFunction, std::tuple<ElementsT...> vTuple){
-	return Impl_TupleManipulators::AbsorbTupleHelper<FunctionT, ElementsT...>(vFunction, vTuple).Perform(std::index_sequence_for<ElementsT...>()), std::forward<FunctionT>(vFunction);
+	return static_cast<void>(Impl_TupleManipulators::AbsorbTupleHelper<FunctionT, ElementsT...>(vFunction, vTuple).Perform(std::index_sequence_for<ElementsT...>())), std::forward<FunctionT>(vFunction);
 }
 
 // ReverseAbsorbTuple(foo, std::make_tuple(1, 2, 3)); -> { foo(3); foo(2); foo(1); }
 template<typename FunctionT, typename ...ElementsT>
 constexpr FunctionT &&ReverseAbsorbTuple(FunctionT &&vFunction, std::tuple<ElementsT...> vTuple){
-	return Impl_TupleManipulators::AbsorbTupleHelper<FunctionT, ElementsT...>(vFunction, vTuple).ReversePerform(std::index_sequence_for<ElementsT...>()), std::forward<FunctionT>(vFunction);
+	return static_cast<void>(Impl_TupleManipulators::AbsorbTupleHelper<FunctionT, ElementsT...>(vFunction, vTuple).ReversePerform(std::index_sequence_for<ElementsT...>())), std::forward<FunctionT>(vFunction);
 }
 
 namespace Impl_TupleManipulators {

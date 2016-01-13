@@ -12,12 +12,12 @@
 #include "../env/heap_dbg.h"
 #include "../ext/unref_param.h"
 
-// -static -Wl,-e__MCF_DllStartup,--disable-runtime-pseudo-reloc,--disable-auto-import
+// -static -Wl,-e__MCF_CRT_DllStartup,--disable-runtime-pseudo-reloc,--disable-auto-import
 
-// __MCF_DllStartup 模块入口点。
+// __MCF_CRT_DllStartup 模块入口点。
 __MCF_C_STDCALL __MCF_HAS_EH_TOP
-BOOL __MCF_DllStartup(HINSTANCE hDll, DWORD dwReason, LPVOID pReserved)
-	__asm__("__MCF_DllStartup");
+BOOL __MCF_CRT_DllStartup(HINSTANCE hDll, DWORD dwReason, LPVOID pReserved)
+	__asm__("__MCF_CRT_DllStartup");
 
 enum {
 	kFlagHeap,
@@ -49,7 +49,7 @@ static bool g_abFlags[kFlagCount] = { 0 };
 	}
 
 __MCF_C_STDCALL __MCF_HAS_EH_TOP
-BOOL __MCF_DllStartup(HINSTANCE hDll, DWORD dwReason, LPVOID pReserved){
+BOOL __MCF_CRT_DllStartup(HINSTANCE hDll, DWORD dwReason, LPVOID pReserved){
 	BOOL bRet = true;
 
 	switch(dwReason){

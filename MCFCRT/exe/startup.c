@@ -12,15 +12,15 @@
 #include "../env/heap_dbg.h"
 #include "../ext/unref_param.h"
 
-// -static -Wl,-e__MCF_ExeStartup,--disable-runtime-pseudo-reloc,--disable-auto-import
+// -static -Wl,-e__MCF_CRT_ExeStartup,--disable-runtime-pseudo-reloc,--disable-auto-import
 
-// __MCF_ExeStartup 模块入口点。
+// __MCF_CRT_ExeStartup 模块入口点。
 _Noreturn __MCF_C_STDCALL __MCF_HAS_EH_TOP
-DWORD __MCF_ExeStartup(LPVOID pReserved)
-	__asm__("__MCF_ExeStartup");
+DWORD __MCF_CRT_ExeStartup(LPVOID pReserved)
+	__asm__("__MCF_CRT_ExeStartup");
 
 _Noreturn __MCF_C_STDCALL __MCF_HAS_EH_TOP
-DWORD __MCF_ExeStartup(LPVOID pReserved){
+DWORD __MCF_CRT_ExeStartup(LPVOID pReserved){
 	UNREF_PARAM(pReserved);
 
 	DWORD dwExitCode;

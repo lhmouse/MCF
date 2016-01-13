@@ -2,24 +2,24 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2013 - 2016, LH_Mouse. All wrongs reserved.
 
-#ifndef __MCF_CRT_EXT_OFFSET_OF_H_
-#define __MCF_CRT_EXT_OFFSET_OF_H_
+#ifndef __MCFCRT_EXT_OFFSET_OF_H_
+#define __MCFCRT_EXT_OFFSET_OF_H_
 
 #include "../env/_crtdef.h"
 #include "_make_constant.h"
 
 #ifdef __cplusplus
 #	include <memory>
-#	define __MCF_ADDRESS_OF(__lval_)	\
+#	define __MCFCRT_ADDRESS_OF(__lval_)	\
 	(&(unsigned char &)(__lval_))
 #else
-#	define __MCF_ADDRESS_OF(__lval_)	\
+#	define __MCFCRT_ADDRESS_OF(__lval_)	\
 	((unsigned char *)&(__lval_))
 #endif
 
 #define OFFSET_OF(__s_, __m_)	\
-	(__MCF_CRT_MAKE_CONSTANT((MCF_STD size_t)(	\
-		__MCF_ADDRESS_OF(((__s_ *)(unsigned char *)1)->__m_) - (unsigned char *)1)))
+	(__MCFCRT_MAKE_CONSTANT((MCF_STD size_t)(	\
+		__MCFCRT_ADDRESS_OF(((__s_ *)(unsigned char *)1)->__m_) - (unsigned char *)1)))
 
 // 成员指针转换成聚合指针。
 #define DOWN_CAST(__s_, __m_, __p_)	\

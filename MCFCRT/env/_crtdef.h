@@ -2,8 +2,8 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2013 - 2016, LH_Mouse. All wrongs reserved.
 
-#ifndef __MCF_CRT_ENV_CRTDEF_H_
-#define __MCF_CRT_ENV_CRTDEF_H_
+#ifndef __MCFCRT_ENV_CRTDEF_H_
+#define __MCFCRT_ENV_CRTDEF_H_
 
 #ifdef __cplusplus
 #   include <cstddef>
@@ -18,11 +18,11 @@
 #endif
 
 #ifdef __cplusplus
-#   define __MCF_CRT_EXTERN_C_BEGIN     extern "C" {
-#   define __MCF_CRT_EXTERN_C_END       }
+#   define __MCFCRT_EXTERN_C_BEGIN     extern "C" {
+#   define __MCFCRT_EXTERN_C_END       }
 #else
-#   define __MCF_CRT_EXTERN_C_BEGIN
-#   define __MCF_CRT_EXTERN_C_END
+#   define __MCFCRT_EXTERN_C_BEGIN
+#   define __MCFCRT_EXTERN_C_END
 #endif
 
 // C++ 目前还不支持 C99 的 restrict 限定符。

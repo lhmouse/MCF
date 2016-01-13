@@ -16,7 +16,7 @@ void *__wrap_calloc(size_t nmemb, size_t cnt){
 			return nullptr;
 		}
 	}
-	void *const ret = __MCF_CRT_HeapAlloc(cb, __builtin_return_address(0));
+	void *const ret = __MCFCRT_HeapAlloc(cb, __builtin_return_address(0));
 	if(ret){
 		memset(ret, 0, cb);
 	}

@@ -32,10 +32,10 @@ static SRWLOCK          g_srwDtorMapLock = SRWLOCK_INIT;
 static KeyDtorNode *    g_pDtorHead      = nullptr;
 static MCF_AvlRoot      g_pavlDtorRoot   = nullptr;
 
-bool __MCF_CRT_MinGWHacksInit(){
+bool __MCFCRT_MinGWHacksInit(){
 	return true;
 }
-void __MCF_CRT_MinGWHacksUninit(){
+void __MCFCRT_MinGWHacksUninit(){
 	while(g_pDtorHead){
 		const LPVOID pMem = TlsGetValue(g_pDtorHead->ulKey);
 		if(pMem){
@@ -50,7 +50,7 @@ void __MCF_CRT_MinGWHacksUninit(){
 	g_pavlDtorRoot = nullptr;
 }
 
-void __MCF_CRT_RunEmutlsDtors(){
+void __MCFCRT_RunEmutlsDtors(){
 	AcquireSRWLockExclusive(&g_srwDtorMapLock);
 	{
 		for(const KeyDtorNode *pCur = g_pDtorHead; pCur; pCur = pCur->pNext){

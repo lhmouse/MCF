@@ -34,7 +34,7 @@ long long llroundf(float x){
 		"fistp qword ptr[%0] \n"
 		"fldcw word ptr[%1] \n"
 		: "=m"(ret), "=m"(temp)
-		: "m"(x), "r"(&__MCF_CRT_kMath_Neg_0_5), "r"(&__MCF_CRT_kMath_Pos_0_5)
+		: "m"(x), "r"(&__MCFCRT_kMath_Neg_0_5), "r"(&__MCFCRT_kMath_Pos_0_5)
 		: "ax", "cx", "dx"
 	);
 	return ret;
@@ -69,7 +69,7 @@ long long llround(double x){
 		"fistp qword ptr[%0] \n"
 		"fldcw word ptr[%1] \n"
 		: "=m"(ret), "=m"(temp)
-		: "m"(x), "r"(&__MCF_CRT_kMath_Neg_0_5), "r"(&__MCF_CRT_kMath_Pos_0_5)
+		: "m"(x), "r"(&__MCFCRT_kMath_Neg_0_5), "r"(&__MCFCRT_kMath_Pos_0_5)
 		: "ax", "cx", "dx"
 	);
 	return ret;
@@ -104,7 +104,7 @@ long long llroundl(long double x){
 		"fistp qword ptr[%0] \n"
 		"fldcw word ptr[%1] \n"
 		: "=m"(ret), "=m"(temp)
-		: "m"(x), "r"(&__MCF_CRT_kMath_Neg_0_5), "r"(&__MCF_CRT_kMath_Pos_0_5)
+		: "m"(x), "r"(&__MCFCRT_kMath_Neg_0_5), "r"(&__MCFCRT_kMath_Pos_0_5)
 		: "ax", "cx", "dx"
 	);
 	return ret;

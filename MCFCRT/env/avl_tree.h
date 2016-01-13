@@ -2,13 +2,13 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2013 - 2016, LH_Mouse. All wrongs reserved.
 
-#ifndef __MCF_CRT_ENV_AVL_H_
-#define __MCF_CRT_ENV_AVL_H_
+#ifndef __MCFCRT_ENV_AVL_H_
+#define __MCFCRT_ENV_AVL_H_
 
 #include "_crtdef.h"
 #include "../ext/assert.h"
 
-__MCF_CRT_EXTERN_C_BEGIN
+__MCFCRT_EXTERN_C_BEGIN
 
 typedef struct MCF_tagAvlNodeHeader {
 	struct MCF_tagAvlNodeHeader *__pParent;
@@ -251,6 +251,6 @@ static inline void MCF_AvlGetEqualRange(MCF_AvlNodeHeader **__ppLower, MCF_AvlNo
 	}
 }
 
-__MCF_CRT_EXTERN_C_END
+__MCFCRT_EXTERN_C_END
 
 #endif

@@ -13,12 +13,12 @@
 	struct Storage {
 		wchar_t cmdline[];  // 动态确定。
 		MCF_ArgItem stub;   // pwszStr 指向 cmdline，uLen 是后面的 argv 的元素容量。
-		MCF_ArgItem argv[]; // MCF_CRT_AllocArgv 返回的指针指向这里。
+		MCF_ArgItem argv[]; // MCFCRT_AllocArgv 返回的指针指向这里。
 		MCF_ArgItem nil;    // pwszStr 为 nullptr，uLen 为 0。
 	};
 */
 
-const MCF_ArgItem *MCF_CRT_AllocArgv(size_t *pArgc, const wchar_t *pwszCommandLine){
+const MCF_ArgItem *MCFCRT_AllocArgv(size_t *pArgc, const wchar_t *pwszCommandLine){
 	const size_t uPrefixSize = (((wcslen(pwszCommandLine) + 1) * sizeof(wchar_t) - 1) / alignof(MCF_ArgItem) + 1) * alignof(MCF_ArgItem);
 
 	size_t uCapacity = 4;
@@ -160,10 +160,10 @@ jBadAlloc:
 	return nullptr;
 }
 
-const MCF_ArgItem *MCF_CRT_AllocArgvFromCommandLine(size_t *pArgc){
-	return MCF_CRT_AllocArgv(pArgc, GetCommandLineW());
+const MCF_ArgItem *MCFCRT_AllocArgvFromCommandLine(size_t *pArgc){
+	return MCFCRT_AllocArgv(pArgc, GetCommandLineW());
 }
-void MCF_CRT_FreeArgv(const MCF_ArgItem *pArgItems){
+void MCFCRT_FreeArgv(const MCF_ArgItem *pArgItems){
 	if(pArgItems){
 		free((void *)(pArgItems[-1].pwszStr));
 	}

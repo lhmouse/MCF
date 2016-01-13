@@ -25,9 +25,9 @@ void *__deregister_frame_info(const void *p){
 }
 
 __attribute__((__section__(".MCFCRT"), __shared__))
-const volatile __auto_type __MCF_CRT_register_frame_info   = &__register_frame_info;
+const volatile __auto_type __MCFCRT_register_frame_info   = &__register_frame_info;
 __attribute__((__section__(".MCFCRT"), __shared__))
-const volatile __auto_type __MCF_CRT_deregister_frame_info = &__deregister_frame_info;
+const volatile __auto_type __MCFCRT_deregister_frame_info = &__deregister_frame_info;
 
 __extension__ __attribute__((__section__(".eh_fram$@@@"), __used__))
 static const char eh_begin[0] = { };
@@ -46,22 +46,22 @@ static bool TraverseModuleSectionsCallback(intptr_t nContext, const char achName
 	return true;
 }
 
-bool __MCF_CRT_RegisterFrameInfo(){
+bool __MCFCRT_RegisterFrameInfo(){
 	void *pBase = nullptr;
-	MCF_CRT_TraverseModuleSections(&TraverseModuleSectionsCallback, (intptr_t)&pBase);
+	MCFCRT_TraverseModuleSections(&TraverseModuleSectionsCallback, (intptr_t)&pBase);
 	if(!pBase){
 		return false;
 	}
 
-	(*__MCF_CRT_register_frame_info)(pBase, &eh_obj);
+	(*__MCFCRT_register_frame_info)(pBase, &eh_obj);
 	eh_frame_base = pBase;
 	return true;
 }
-void __MCF_CRT_UnregisterFrameInfo(){
+void __MCFCRT_UnregisterFrameInfo(){
 	void *const pBase = eh_frame_base;
 	eh_frame_base = nullptr;
 
 	if(pBase){
-		(*__MCF_CRT_deregister_frame_info)(pBase);
+		(*__MCFCRT_deregister_frame_info)(pBase);
 	}
 }

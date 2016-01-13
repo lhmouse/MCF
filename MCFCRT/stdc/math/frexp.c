@@ -26,7 +26,7 @@ float frexpf(float x, int *exp){
 		"fistp dword ptr[%2] \n"
 		__FLT_RET_ST("%1")
 		: __FLT_RET_CONS(ret)
-		: "m"(x), "r"(exp), "m"(__MCF_CRT_kMath_Pos_0_5)
+		: "m"(x), "r"(exp), "m"(__MCFCRT_kMath_Pos_0_5)
 		: "ax"
 	);
 	return ret;
@@ -52,7 +52,7 @@ double frexp(double x, int *exp){
 		"fistp dword ptr[%2] \n"
 		__DBL_RET_ST("%1")
 		: __DBL_RET_CONS(ret)
-		: "m"(x), "r"(exp), "m"(__MCF_CRT_kMath_Pos_0_5)
+		: "m"(x), "r"(exp), "m"(__MCFCRT_kMath_Pos_0_5)
 		: "ax"
 	);
 	return ret;
@@ -78,7 +78,7 @@ long double frexpl(long double x, int *exp){
 		"fistp dword ptr[%2] \n"
 		__LDBL_RET_ST("%1")
 		: __LDBL_RET_CONS(ret)
-		: "m"(x), "r"(exp), "m"(__MCF_CRT_kMath_Pos_0_5)
+		: "m"(x), "r"(exp), "m"(__MCFCRT_kMath_Pos_0_5)
 		: "ax"
 	);
 	return ret;

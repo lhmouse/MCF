@@ -31,7 +31,7 @@ static SRWLOCK               g_srwlAtExitMutex   = SRWLOCK_INIT;
 static AtExitCallbackBlock * g_pAtExitFirst      = nullptr;
 static AtExitCallbackBlock * g_pAtExitLast       = nullptr;
 
-static void __MCF_CRT_PumpAtEndModule(){
+static void __MCFCRT_PumpAtEndModule(){
 	// ISO C++
 	// 3.6.3 Termination [basic.start.term]
 	// 1 Destructors (12.4) for initialized objects (...)
@@ -39,7 +39,7 @@ static void __MCF_CRT_PumpAtEndModule(){
 	// with thread storage duration within that thread are sequenced
 	// before the initiation of the destructors of any object with
 	// static storage duration. (...)
-	__MCF_CRT_TlsThreadCleanup();
+	__MCFCRT_TlsThreadCleanup();
 
 	for(;;){
 		AtExitCallbackBlock *pBlock;
@@ -71,54 +71,54 @@ static void __MCF_CRT_PumpAtEndModule(){
 	}
 }
 
-static bool __MCF_CRT_StaticObjectsInit(){
-	if(!__MCF_CRT_CallStaticCtors()){
+static bool __MCFCRT_StaticObjectsInit(){
+	if(!__MCFCRT_CallStaticCtors()){
 		const DWORD dwError = GetLastError();
-		__MCF_CRT_PumpAtEndModule();
+		__MCFCRT_PumpAtEndModule();
 		SetLastError(dwError);
 		return false;
 	}
 	return true;
 }
-static void __MCF_CRT_StaticObjectsUninit(){
-	__MCF_CRT_PumpAtEndModule();
-	__MCF_CRT_CallStaticDtors();
+static void __MCFCRT_StaticObjectsUninit(){
+	__MCFCRT_PumpAtEndModule();
+	__MCFCRT_CallStaticDtors();
 }
 
-bool __MCF_CRT_BeginModule(){
-	__MCF_CRT_FEnvInit();
+bool __MCFCRT_BeginModule(){
+	__MCFCRT_FEnvInit();
 
 	DWORD dwLastError;
-	if(!__MCF_CRT_ThreadEnvInit()){
+	if(!__MCFCRT_ThreadEnvInit()){
 //		dwLastError = GetLastError();
 		goto jFailed0;
 	}
-	if(!__MCF_CRT_MinGWHacksInit()){
+	if(!__MCFCRT_MinGWHacksInit()){
 		dwLastError = GetLastError();
 		goto jFailed1;
 	}
-	if(!__MCF_CRT_StaticObjectsInit()){
+	if(!__MCFCRT_StaticObjectsInit()){
 		dwLastError = GetLastError();
 		goto jFailed2;
 	}
 	return true;
 
-//	__MCF_CRT_StaticObjectsUninit();
+//	__MCFCRT_StaticObjectsUninit();
 jFailed2:
-	__MCF_CRT_MinGWHacksUninit();
+	__MCFCRT_MinGWHacksUninit();
 jFailed1:
-	__MCF_CRT_ThreadEnvUninit();
+	__MCFCRT_ThreadEnvUninit();
 	SetLastError(dwLastError);
 jFailed0:
 	return false;
 }
-void __MCF_CRT_EndModule(){
-	__MCF_CRT_StaticObjectsUninit();
-	__MCF_CRT_MinGWHacksUninit();
-	__MCF_CRT_ThreadEnvUninit();
+void __MCFCRT_EndModule(){
+	__MCFCRT_StaticObjectsUninit();
+	__MCFCRT_MinGWHacksUninit();
+	__MCFCRT_ThreadEnvUninit();
 }
 
-bool MCF_CRT_AtEndModule(void (*pfnProc)(intptr_t), intptr_t nContext){
+bool MCFCRT_AtEndModule(void (*pfnProc)(intptr_t), intptr_t nContext){
 	AtExitCallbackBlock *pBlock;
 
 	AcquireSRWLockExclusive(&g_srwlAtExitMutex);
@@ -158,10 +158,10 @@ jFailed:
 // ld 自动添加此符号。
 extern IMAGE_DOS_HEADER __image_base__ __asm__("__image_base__");
 
-void *MCF_CRT_GetModuleBase(){
+void *MCFCRT_GetModuleBase(){
 	return &__image_base__;
 }
-bool MCF_CRT_TraverseModuleSections(bool (*pfnCallback)(intptr_t, const char [8], void *, size_t), intptr_t nContext){
+bool MCFCRT_TraverseModuleSections(bool (*pfnCallback)(intptr_t, const char [8], void *, size_t), intptr_t nContext){
 	if(__image_base__.e_magic != IMAGE_DOS_SIGNATURE){
 		SetLastError(ERROR_BAD_FORMAT);
 		return false;

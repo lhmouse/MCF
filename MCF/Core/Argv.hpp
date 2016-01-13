@@ -21,7 +21,7 @@ private:
 			return nullptr;
 		}
 		void operator()(::MCF_ArgItem *pArgItem) const noexcept {
-			::MCF_CRT_FreeArgv(pArgItem);
+			::MCFCRT_FreeArgv(pArgItem);
 		}
 	};
 

@@ -10,7 +10,7 @@
 namespace MCF {
 
 void Thread::X_ThreadCloser::operator()(Thread::Handle hThread) const noexcept {
-	::MCF_CRT_CloseThread(hThread);
+	::MCFCRT_CloseThread(hThread);
 }
 
 // 静态成员函数。
@@ -19,20 +19,20 @@ IntrusivePtr<Thread> Thread::Create(Function<void ()> fnProc, bool bSuspended){
 }
 
 std::uintptr_t Thread::GetCurrentId() noexcept {
-	return ::MCF_CRT_GetCurrentThreadId();
+	return ::MCFCRT_GetCurrentThreadId();
 }
 
 void Thread::Sleep(std::uint64_t u64UntilFastMonoClock) noexcept {
-	::MCF_CRT_Sleep(u64UntilFastMonoClock);
+	::MCFCRT_Sleep(u64UntilFastMonoClock);
 }
 bool Thread::AlertableSleep(std::uint64_t u64UntilFastMonoClock) noexcept {
-	return ::MCF_CRT_AlertableSleep(u64UntilFastMonoClock);
+	return ::MCFCRT_AlertableSleep(u64UntilFastMonoClock);
 }
 void Thread::AlertableSleep() noexcept {
-	::MCF_CRT_AlertableSleepInfinitely();
+	::MCFCRT_AlertableSleepInfinitely();
 }
 void Thread::YieldExecution() noexcept {
-	::MCF_CRT_YieldThread();
+	::MCFCRT_YieldThread();
 }
 
 // 构造函数和析构函数。
@@ -52,8 +52,8 @@ Thread::Thread(Function<void ()> fnProc, bool bSuspended)
 	};
 
 	std::uintptr_t uThreadId = 0;
-	if(!x_hThread.Reset(::MCF_CRT_CreateThread(ThreadProc, (std::intptr_t)this, CREATE_SUSPENDED, &uThreadId))){
-		DEBUG_THROW(SystemError, "MCF_CRT_CreateThread"_rcs);
+	if(!x_hThread.Reset(::MCFCRT_CreateThread(ThreadProc, (std::intptr_t)this, CREATE_SUSPENDED, &uThreadId))){
+		DEBUG_THROW(SystemError, "MCFCRT_CreateThread"_rcs);
 	}
 	AddRef();
 	x_uThreadId.Store(uThreadId, kAtomicRelease);
@@ -69,10 +69,10 @@ Thread::~Thread(){
 }
 
 bool Thread::Wait(std::uint64_t u64UntilFastMonoClock) const noexcept {
-	return ::MCF_CRT_WaitForThread(x_hThread.Get(), u64UntilFastMonoClock);
+	return ::MCFCRT_WaitForThread(x_hThread.Get(), u64UntilFastMonoClock);
 }
 void Thread::Wait() const noexcept {
-	::MCF_CRT_WaitForThreadInfinitely(x_hThread.Get());
+	::MCFCRT_WaitForThreadInfinitely(x_hThread.Get());
 }
 
 bool Thread::IsAlive() const noexcept {
@@ -83,10 +83,10 @@ std::uintptr_t Thread::GetId() const noexcept {
 }
 
 void Thread::Suspend() noexcept {
-	::MCF_CRT_SuspendThread(x_hThread.Get());
+	::MCFCRT_SuspendThread(x_hThread.Get());
 }
 void Thread::Resume() noexcept {
-	::MCF_CRT_ResumeThread(x_hThread.Get());
+	::MCFCRT_ResumeThread(x_hThread.Get());
 }
 
 }

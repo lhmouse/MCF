@@ -52,7 +52,7 @@ public:
 	{
 	}
 	SystemError(const char *pszFile, unsigned long ulLine, RefCountingNtmbs rcsFunction) noexcept
-		: SystemError(pszFile, ulLine, ::MCF_CRT_GetWin32LastError(), std::move(rcsFunction))
+		: SystemError(pszFile, ulLine, ::MCFCRT_GetWin32LastError(), std::move(rcsFunction))
 	{
 	}
 	~SystemError() override;

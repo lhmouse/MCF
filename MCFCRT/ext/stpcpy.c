@@ -63,7 +63,7 @@ char *MCF_stppcpy(char *restrict dst, char *restrict end, const char *restrict s
 	register char *wp = dst;
 
 	if(wp == end){
-		MCF_CRT_Bail(L"目的缓冲区至少应为一个字符大小以容纳字符串结束符。");
+		MCFCRT_Bail(L"目的缓冲区至少应为一个字符大小以容纳字符串结束符。");
 	}
 
 	// 如果 rp 是对齐到字的，就不用考虑越界的问题。

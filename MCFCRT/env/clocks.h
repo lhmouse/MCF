@@ -2,12 +2,12 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2013 - 2016, LH_Mouse. All wrongs reserved.
 
-#ifndef __MCF_CRT_ENV_CLOCKS_H_
-#define __MCF_CRT_ENV_CLOCKS_H_
+#ifndef __MCFCRT_ENV_CLOCKS_H_
+#define __MCFCRT_ENV_CLOCKS_H_
 
 #include "_crtdef.h"
 
-__MCF_CRT_EXTERN_C_BEGIN
+__MCFCRT_EXTERN_C_BEGIN
 
 static inline MCF_STD uint32_t MCF_ReadTimestampCounter32() MCF_NOEXCEPT {
 	MCF_STD uint32_t __u32Ret;
@@ -38,6 +38,6 @@ extern MCF_STD uint64_t MCF_GetLocalClock() MCF_NOEXCEPT;
 extern MCF_STD uint64_t MCF_GetFastMonoClock() MCF_NOEXCEPT;
 extern double MCF_GetHiResMonoClock() MCF_NOEXCEPT;
 
-__MCF_CRT_EXTERN_C_END
+__MCFCRT_EXTERN_C_END
 
 #endif

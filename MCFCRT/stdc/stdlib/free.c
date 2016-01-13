@@ -8,7 +8,7 @@
 __attribute__((__noinline__))
 void __wrap_free(void *p){
 	if(p){
-		__MCF_CRT_HeapFree(p, __builtin_return_address(0));
+		__MCFCRT_HeapFree(p, __builtin_return_address(0));
 	}
 }
 

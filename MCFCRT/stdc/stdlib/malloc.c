@@ -7,7 +7,7 @@
 
 __attribute__((__noinline__))
 void *__wrap_malloc(size_t cb){
-	return __MCF_CRT_HeapAlloc(cb, __builtin_return_address(0));
+	return __MCFCRT_HeapAlloc(cb, __builtin_return_address(0));
 }
 
 __attribute__((__alias__("__wrap_malloc")))

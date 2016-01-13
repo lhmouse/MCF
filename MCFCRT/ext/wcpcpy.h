@@ -2,16 +2,16 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2013 - 2016, LH_Mouse. All wrongs reserved.
 
-#ifndef __MCF_CRT_EXT_WCPCPY_H_
-#define __MCF_CRT_EXT_WCPCPY_H_
+#ifndef __MCFCRT_EXT_WCPCPY_H_
+#define __MCFCRT_EXT_WCPCPY_H_
 
 #include "../env/_crtdef.h"
 
-__MCF_CRT_EXTERN_C_BEGIN
+__MCFCRT_EXTERN_C_BEGIN
 
 extern wchar_t *MCF_wcpcpy(wchar_t *restrict __dst, const wchar_t *restrict __src) MCF_NOEXCEPT;
 extern wchar_t *MCF_wcppcpy(wchar_t *restrict __dst, wchar_t *restrict __end, const wchar_t *restrict __src) MCF_NOEXCEPT;
 
-__MCF_CRT_EXTERN_C_END
+__MCFCRT_EXTERN_C_END
 
 #endif

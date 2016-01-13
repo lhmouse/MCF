@@ -4,10 +4,10 @@
 
 #include "_constants.h"
 
-const double __MCF_CRT_kMath_Pos_1_0      = +1.0;
-const double __MCF_CRT_kMath_Neg_1_0      = -1.0;
+const double __MCFCRT_kMath_Pos_1_0      = +1.0;
+const double __MCFCRT_kMath_Neg_1_0      = -1.0;
 
-const double __MCF_CRT_kMath_Pos_0_5      = +0.5;
-const double __MCF_CRT_kMath_Neg_0_5      = -0.5;
+const double __MCFCRT_kMath_Pos_0_5      = +0.5;
+const double __MCFCRT_kMath_Neg_0_5      = -0.5;
 
-const double __MCF_CRT_kMath_Pos_1p61_PI  = +0x1p61;
+const double __MCFCRT_kMath_Pos_1p61_PI  = +0x1p61;

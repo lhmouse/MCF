@@ -35,13 +35,13 @@ double MCF_GetHiResMonoClock(){
 	liFrequency.QuadPart = __atomic_load_n(&s_liFrequency.QuadPart, __ATOMIC_CONSUME);
 	if(liFrequency.QuadPart == 0){
 		if(!QueryPerformanceFrequency(&liFrequency)){
-			MCF_CRT_Bail(L"QueryPerformanceFrequency() 失败。");
+			MCFCRT_Bail(L"QueryPerformanceFrequency() 失败。");
 		}
 		__atomic_store_n(&s_liFrequency.QuadPart, liFrequency.QuadPart, __ATOMIC_RELEASE);
 	}
 	LARGE_INTEGER liCounter;
 	if(!QueryPerformanceCounter(&liCounter)){
-		MCF_CRT_Bail(L"QueryPerformanceCounter() 失败。");
+		MCFCRT_Bail(L"QueryPerformanceCounter() 失败。");
 	}
 	return (double)liCounter.QuadPart * 1000.0 / (double)liFrequency.QuadPart;
 }

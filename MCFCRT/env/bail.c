@@ -99,12 +99,12 @@ static void DoBail(const wchar_t *pwszDescription){
 }
 
 _Noreturn
-void MCF_CRT_Bail(const wchar_t *pwszDescription){
+void MCFCRT_Bail(const wchar_t *pwszDescription){
 	DoBail(pwszDescription);
 }
 
 _Noreturn
-void MCF_CRT_BailV(const wchar_t *pwszFormat, va_list pArgs){
+void MCFCRT_BailV(const wchar_t *pwszFormat, va_list pArgs){
 	wchar_t awcBuffer[1024];
 	vswprintf(awcBuffer, sizeof(awcBuffer) / sizeof(wchar_t), pwszFormat, pArgs);
 	DoBail(awcBuffer);

@@ -2,14 +2,14 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2013 - 2016, LH_Mouse. All wrongs reserved.
 
-#ifndef __MCF_CRT_ENV_MCFWIN_H_
-#define __MCF_CRT_ENV_MCFWIN_H_
+#ifndef __MCFCRT_ENV_MCFWIN_H_
+#define __MCFCRT_ENV_MCFWIN_H_
 
-#define __MCF_C_CALLBACK_DECL   __attribute__((__nothrow__, __force_align_arg_pointer__))
+#define __MCFCRT_C_CALLBACK_DECL   __attribute__((__nothrow__, __force_align_arg_pointer__))
 
-#define __MCF_C_CDECL           __attribute__((__cdecl__)) __MCF_C_CALLBACK_DECL
-#define __MCF_C_STDCALL         __attribute__((__stdcall__)) __MCF_C_CALLBACK_DECL
-#define __MCF_C_FASTCALL        __attribute__((__fastcall__)) __MCF_C_CALLBACK_DECL
+#define __MCFCRT_C_CDECL           __attribute__((__cdecl__)) __MCFCRT_C_CALLBACK_DECL
+#define __MCFCRT_C_STDCALL         __attribute__((__stdcall__)) __MCFCRT_C_CALLBACK_DECL
+#define __MCFCRT_C_FASTCALL        __attribute__((__fastcall__)) __MCFCRT_C_CALLBACK_DECL
 
 #undef WINVER
 #undef _WIN32_WINNT
@@ -25,11 +25,11 @@
 #undef WINAPIV
 #undef APIENTRY
 
-#define CDECL                   __MCF_C_CDECL
-#define CALLBACK                __MCF_C_STDCALL
-#define WINAPI                  __MCF_C_STDCALL
-#define WINAPIV                 __MCF_C_CDECL
-#define APIENTRY                __MCF_C_STDCALL
+#define CDECL                   __MCFCRT_C_CDECL
+#define CALLBACK                __MCFCRT_C_STDCALL
+#define WINAPI                  __MCFCRT_C_STDCALL
+#define WINAPIV                 __MCFCRT_C_CDECL
+#define APIENTRY                __MCFCRT_C_STDCALL
 
 #include <windows.h>
 

@@ -59,7 +59,7 @@ static uintptr_t   g_uPageMask            = 0;
 static MCF_AvlRoot g_pavlThunksByThunk    = nullptr;
 static MCF_AvlRoot g_pavlThunksByFreeSize = nullptr;
 
-void *MCF_CRT_AllocateThunk(const void *pInit, size_t uSize){
+void *MCFCRT_AllocateThunk(const void *pInit, size_t uSize){
 	ASSERT(pInit);
 
 	char *pRet = nullptr;
@@ -156,7 +156,7 @@ jDone:
 	}
 	return pRet;
 }
-void MCF_CRT_DeallocateThunk(void *pThunk, bool bToPoison){
+void MCFCRT_DeallocateThunk(void *pThunk, bool bToPoison){
 	void *pPageToRelease;
 
 	AcquireSRWLockExclusive(&g_srwlMutex);
@@ -164,7 +164,7 @@ void MCF_CRT_DeallocateThunk(void *pThunk, bool bToPoison){
 		MCF_AvlNodeHeader *pThunkIndex = MCF_AvlFind(&g_pavlThunksByThunk, (intptr_t)pThunk, &ThunkComparatorNodeKey);
 		ThunkInfo *pInfo;
 		if(!pThunkIndex || ((pInfo = GetInfoFromThunkIndex(pThunkIndex))->uFreeSize != 0)){
-			MCF_CRT_Bail(L"MCF_CRT_DeallocateThunk() 失败：传入的指针无效。");
+			MCFCRT_Bail(L"MCFCRT_DeallocateThunk() 失败：传入的指针无效。");
 		}
 
 #ifndef NDEBUG

@@ -22,7 +22,7 @@ namespace Impl_ThreadLocal {
 			return nullptr;
 		}
 		void operator()(void *pKey) const noexcept {
-			::MCF_CRT_TlsFreeKey(pKey);
+			::MCFCRT_TlsFreeKey(pKey);
 		}
 	};
 
@@ -38,8 +38,8 @@ namespace Impl_ThreadLocal {
 		explicit ThreadLocalTrivialSmallEnough(ElementT vDefault = ElementT())
 			: x_vDefault(std::move(vDefault))
 		{
-			if(!x_pTlsKey.Reset(::MCF_CRT_TlsAllocKey(nullptr))){
-				DEBUG_THROW(SystemError, "MCF_CRT_TlsAllocKey"_rcs);
+			if(!x_pTlsKey.Reset(::MCFCRT_TlsAllocKey(nullptr))){
+				DEBUG_THROW(SystemError, "MCFCRT_TlsAllocKey"_rcs);
 			}
 		}
 
@@ -47,8 +47,8 @@ namespace Impl_ThreadLocal {
 		ElementT Get() const noexcept {
 			bool bHasValue = false;
 			std::intptr_t nValue = 0;
-			if(!::MCF_CRT_TlsGet(x_pTlsKey.Get(), &bHasValue, &nValue)){
-				ASSERT_MSG(false, L"MCF_CRT_TlsGet() 失败。");
+			if(!::MCFCRT_TlsGet(x_pTlsKey.Get(), &bHasValue, &nValue)){
+				ASSERT_MSG(false, L"MCFCRT_TlsGet() 失败。");
 			}
 			if(bHasValue){
 				ElementT vElement;
@@ -60,8 +60,8 @@ namespace Impl_ThreadLocal {
 		void Set(const ElementT &vElement){
 			std::intptr_t nValue = 0;
 			std::memcpy(&nValue, &vElement, sizeof(vElement));
-			if(!::MCF_CRT_TlsReset(x_pTlsKey.Get(), nValue)){ // noexcept
-				DEBUG_THROW(SystemError, "MCF_CRT_TlsReset"_rcs);
+			if(!::MCFCRT_TlsReset(x_pTlsKey.Get(), nValue)){ // noexcept
+				DEBUG_THROW(SystemError, "MCFCRT_TlsReset"_rcs);
 			}
 		}
 	};
@@ -76,8 +76,8 @@ namespace Impl_ThreadLocal {
 		explicit ThreadLocalGeneric(ElementT vDefault = ElementT())
 			: x_vDefault(std::move(vDefault))
 		{
-			if(!x_pTlsKey.Reset(::MCF_CRT_TlsAllocKey([](std::intptr_t nValue){ delete reinterpret_cast<ElementT *>(nValue); }))){
-				DEBUG_THROW(SystemError, "MCF_CRT_TlsAllocKey"_rcs);
+			if(!x_pTlsKey.Reset(::MCFCRT_TlsAllocKey([](std::intptr_t nValue){ delete reinterpret_cast<ElementT *>(nValue); }))){
+				DEBUG_THROW(SystemError, "MCFCRT_TlsAllocKey"_rcs);
 			}
 		}
 
@@ -85,8 +85,8 @@ namespace Impl_ThreadLocal {
 		const ElementT &Get() const noexcept {
 			bool bHasValue = false;
 			std::intptr_t nValue = 0;
-			if(!::MCF_CRT_TlsGet(x_pTlsKey.Get(), &bHasValue, &nValue)){
-				ASSERT_MSG(false, L"MCF_CRT_TlsGet() 失败。");
+			if(!::MCFCRT_TlsGet(x_pTlsKey.Get(), &bHasValue, &nValue)){
+				ASSERT_MSG(false, L"MCFCRT_TlsGet() 失败。");
 			}
 			if(bHasValue){
 				const auto pElement = reinterpret_cast<const ElementT *>(nValue);
@@ -98,9 +98,9 @@ namespace Impl_ThreadLocal {
 		}
 		void Set(ElementT vElement){
 			const auto pElement = new ElementT(std::move(vElement));
-			if(!::MCF_CRT_TlsReset(x_pTlsKey.Get(), reinterpret_cast<std::intptr_t>(pElement))){ // noexcept
+			if(!::MCFCRT_TlsReset(x_pTlsKey.Get(), reinterpret_cast<std::intptr_t>(pElement))){ // noexcept
 				delete pElement;
-				DEBUG_THROW(SystemError, "MCF_CRT_TlsReset"_rcs);
+				DEBUG_THROW(SystemError, "MCFCRT_TlsReset"_rcs);
 			}
 		}
 	};

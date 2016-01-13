@@ -190,7 +190,7 @@ static long double ppowl(long double x, long double y){
 		}	\
 	} else {	\
 		if(frac != 0){	\
-			MCF_CRT_Bail(L"只能求负数的整数次幂。");	\
+			MCFCRT_Bail(L"只能求负数的整数次幂。");	\
 		}	\
 		if(y > (t_)INT_MAX){	\
 			if(_Generic((t_)0,	\

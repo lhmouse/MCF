@@ -35,7 +35,7 @@ float roundf(float x){
 		__FLT_RET_ST("%2")
 		"fldcw word ptr[%1] \n"
 		: __FLT_RET_CONS(ret), "=m"(temp)
-		: "m"(x), "r"(&__MCF_CRT_kMath_Neg_0_5), "r"(&__MCF_CRT_kMath_Pos_0_5)
+		: "m"(x), "r"(&__MCFCRT_kMath_Neg_0_5), "r"(&__MCFCRT_kMath_Pos_0_5)
 		: "ax", "cx", "dx"
 	);
 	return ret;
@@ -70,7 +70,7 @@ double round(double x){
 		__DBL_RET_ST("%2")
 		"fldcw word ptr[%1] \n"
 		: __DBL_RET_CONS(ret), "=m"(temp)
-		: "m"(x), "r"(&__MCF_CRT_kMath_Neg_0_5), "r"(&__MCF_CRT_kMath_Pos_0_5)
+		: "m"(x), "r"(&__MCFCRT_kMath_Neg_0_5), "r"(&__MCFCRT_kMath_Pos_0_5)
 		: "ax", "cx", "dx"
 	);
 	return ret;
@@ -105,7 +105,7 @@ long double roundl(long double x){
 		__LDBL_RET_ST("%1")
 		"fldcw word ptr[%1] \n"
 		: __LDBL_RET_CONS(ret), "=m"(temp)
-		: "m"(x), "r"(&__MCF_CRT_kMath_Neg_0_5), "r"(&__MCF_CRT_kMath_Pos_0_5)
+		: "m"(x), "r"(&__MCFCRT_kMath_Neg_0_5), "r"(&__MCFCRT_kMath_Pos_0_5)
 		: "ax", "cx", "dx"
 	);
 	return ret;

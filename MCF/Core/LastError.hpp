@@ -11,15 +11,15 @@
 namespace MCF {
 
 inline unsigned long GetWin32LastError() noexcept {
-	return ::MCF_CRT_GetWin32LastError();
+	return ::MCFCRT_GetWin32LastError();
 }
 inline void SetWin32LastError(unsigned long ulErrorCode) noexcept {
-	::MCF_CRT_SetWin32LastError(ulErrorCode);
+	::MCFCRT_SetWin32LastError(ulErrorCode);
 }
 
 inline WideStringView GetWin32ErrorDescription(unsigned long ulErrorCode) noexcept {
 	const wchar_t *pwszStr;
-	const auto uLength = ::MCF_CRT_GetWin32ErrorDescription(&pwszStr, ulErrorCode);
+	const auto uLength = ::MCFCRT_GetWin32ErrorDescription(&pwszStr, ulErrorCode);
 	return WideStringView(pwszStr, uLength);
 }
 

@@ -2,18 +2,18 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2013 - 2016, LH_Mouse. All wrongs reserved.
 
-#ifndef __MCF_CRT_ENV_MINGW_HACKS_H_
-#define __MCF_CRT_ENV_MINGW_HACKS_H_
+#ifndef __MCFCRT_ENV_MINGW_HACKS_H_
+#define __MCFCRT_ENV_MINGW_HACKS_H_
 
 #include "_crtdef.h"
 
-__MCF_CRT_EXTERN_C_BEGIN
+__MCFCRT_EXTERN_C_BEGIN
 
-extern bool __MCF_CRT_MinGWHacksInit(void) MCF_NOEXCEPT;
-extern void __MCF_CRT_MinGWHacksUninit(void) MCF_NOEXCEPT;
+extern bool __MCFCRT_MinGWHacksInit(void) MCF_NOEXCEPT;
+extern void __MCFCRT_MinGWHacksUninit(void) MCF_NOEXCEPT;
 
-extern void __MCF_CRT_RunEmutlsDtors(void) MCF_NOEXCEPT;
+extern void __MCFCRT_RunEmutlsDtors(void) MCF_NOEXCEPT;
 
-__MCF_CRT_EXTERN_C_END
+__MCFCRT_EXTERN_C_END
 
 #endif

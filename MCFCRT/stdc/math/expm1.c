@@ -36,7 +36,7 @@ float expm1f(float x){
 		"2: \n"
 		__FLT_RET_ST("%1")
 		: __FLT_RET_CONS(ret)
-		: "m"(x), "m"(__MCF_CRT_kMath_Neg_1_0), "m"(__MCF_CRT_kMath_Pos_1_0)
+		: "m"(x), "m"(__MCFCRT_kMath_Neg_1_0), "m"(__MCFCRT_kMath_Pos_1_0)
 		: "ax"
 	);
 	return ret;
@@ -72,7 +72,7 @@ double expm1(double x){
 		"2: \n"
 		__DBL_RET_ST("%1")
 		: __DBL_RET_CONS(ret)
-		: "m"(x), "m"(__MCF_CRT_kMath_Neg_1_0), "m"(__MCF_CRT_kMath_Pos_1_0)
+		: "m"(x), "m"(__MCFCRT_kMath_Neg_1_0), "m"(__MCFCRT_kMath_Pos_1_0)
 		: "ax"
 	);
 	return ret;
@@ -109,7 +109,7 @@ long double expm1l(long double x){
 		"2: \n"
 		__LDBL_RET_ST("%1")
 		: __LDBL_RET_CONS(ret)
-		: "m"(x), "m"(__MCF_CRT_kMath_Neg_1_0), "m"(__MCF_CRT_kMath_Pos_1_0)
+		: "m"(x), "m"(__MCFCRT_kMath_Neg_1_0), "m"(__MCFCRT_kMath_Pos_1_0)
 		: "ax"
 	);
 	return ret;

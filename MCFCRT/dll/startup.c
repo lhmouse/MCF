@@ -12,12 +12,12 @@
 #include "../env/heap_dbg.h"
 #include "../ext/unref_param.h"
 
-// -static -Wl,-e__MCF_CRT_DllStartup,--disable-runtime-pseudo-reloc,--disable-auto-import
+// -static -Wl,-e__MCFCRT_DllStartup,--disable-runtime-pseudo-reloc,--disable-auto-import
 
-// __MCF_CRT_DllStartup 模块入口点。
-__MCF_C_STDCALL __MCF_HAS_EH_TOP
-BOOL __MCF_CRT_DllStartup(HINSTANCE hDll, DWORD dwReason, LPVOID pReserved)
-	__asm__("__MCF_CRT_DllStartup");
+// __MCFCRT_DllStartup 模块入口点。
+__MCFCRT_C_STDCALL __MCFCRT_HAS_EH_TOP
+BOOL __MCFCRT_DllStartup(HINSTANCE hDll, DWORD dwReason, LPVOID pReserved)
+	__asm__("__MCFCRT_DllStartup");
 
 enum {
 	kFlagHeap,
@@ -48,57 +48,57 @@ static bool g_abFlags[kFlagCount] = { 0 };
 		(fn_)();	\
 	}
 
-__MCF_C_STDCALL __MCF_HAS_EH_TOP
-BOOL __MCF_CRT_DllStartup(HINSTANCE hDll, DWORD dwReason, LPVOID pReserved){
+__MCFCRT_C_STDCALL __MCFCRT_HAS_EH_TOP
+BOOL __MCFCRT_DllStartup(HINSTANCE hDll, DWORD dwReason, LPVOID pReserved){
 	BOOL bRet = true;
 
 	switch(dwReason){
 	case DLL_PROCESS_ATTACH:
-		DO_INIT(bRet, kFlagHeap,      __MCF_CRT_HeapInit);
-		DO_INIT(bRet, kFlagHeapDbg,   __MCF_CRT_HeapDbgInit);
-		DO_INIT(bRet, kFlagFrameInfo, __MCF_CRT_RegisterFrameInfo);
+		DO_INIT(bRet, kFlagHeap,      __MCFCRT_HeapInit);
+		DO_INIT(bRet, kFlagHeapDbg,   __MCFCRT_HeapDbgInit);
+		DO_INIT(bRet, kFlagFrameInfo, __MCFCRT_RegisterFrameInfo);
 
-		__MCF_EH_TOP_BEGIN
+		__MCFCRT_EH_TOP_BEGIN
 		{
-			DO_INIT(bRet, kFlagCrtModule, __MCF_CRT_BeginModule);
+			DO_INIT(bRet, kFlagCrtModule, __MCFCRT_BeginModule);
 
 			if(bRet){
 				bRet = MCFDll_OnProcessAttach(hDll, !pReserved);
 			}
 		}
-		__MCF_EH_TOP_END
+		__MCFCRT_EH_TOP_END
 		break;
 
 	case DLL_THREAD_ATTACH:
-		__MCF_EH_TOP_BEGIN
+		__MCFCRT_EH_TOP_BEGIN
 		{
 			MCFDll_OnThreadAttach(hDll);
 		}
-		__MCF_EH_TOP_END
+		__MCFCRT_EH_TOP_END
 		break;
 
 	case DLL_THREAD_DETACH:
-		__MCF_EH_TOP_BEGIN
+		__MCFCRT_EH_TOP_BEGIN
 		{
 			MCFDll_OnThreadDetach(hDll);
 
-			__MCF_CRT_TlsThreadCleanup();
+			__MCFCRT_TlsThreadCleanup();
 		}
-		__MCF_EH_TOP_END
+		__MCFCRT_EH_TOP_END
 		break;
 
 	case DLL_PROCESS_DETACH:
-		__MCF_EH_TOP_BEGIN
+		__MCFCRT_EH_TOP_BEGIN
 		{
 			MCFDll_OnProcessDetach(hDll, !pReserved);
 
-			DO_UNINIT(kFlagCrtModule, __MCF_CRT_EndModule);
+			DO_UNINIT(kFlagCrtModule, __MCFCRT_EndModule);
 		}
-		__MCF_EH_TOP_END
+		__MCFCRT_EH_TOP_END
 
-		DO_UNINIT(kFlagFrameInfo, __MCF_CRT_UnregisterFrameInfo);
-		DO_UNINIT(kFlagHeapDbg,   __MCF_CRT_HeapDbgUninit);
-		DO_UNINIT(kFlagHeap,      __MCF_CRT_HeapUninit);
+		DO_UNINIT(kFlagFrameInfo, __MCFCRT_UnregisterFrameInfo);
+		DO_UNINIT(kFlagHeapDbg,   __MCFCRT_HeapDbgUninit);
+		DO_UNINIT(kFlagHeap,      __MCFCRT_HeapUninit);
 		break;
 	}
 

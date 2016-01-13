@@ -2,15 +2,15 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2013 - 2016, LH_Mouse. All wrongs reserved.
 
-#ifndef __MCF_CRT_ENV_FENV_H_
-#define __MCF_CRT_ENV_FENV_H_
+#ifndef __MCFCRT_ENV_FENV_H_
+#define __MCFCRT_ENV_FENV_H_
 
 #include "_crtdef.h"
 
-__MCF_CRT_EXTERN_C_BEGIN
+__MCFCRT_EXTERN_C_BEGIN
 
-extern void __MCF_CRT_FEnvInit(void) MCF_NOEXCEPT;
+extern void __MCFCRT_FEnvInit(void) MCF_NOEXCEPT;
 
-__MCF_CRT_EXTERN_C_END
+__MCFCRT_EXTERN_C_END
 
 #endif

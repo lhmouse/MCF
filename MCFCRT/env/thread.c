@@ -80,14 +80,14 @@ static SRWLOCK     g_csKeyMutex = SRWLOCK_INIT;
 static DWORD       g_dwTlsIndex = TLS_OUT_OF_INDEXES;
 static MCF_AvlRoot g_pavlKeys   = nullptr;
 
-bool __MCF_CRT_ThreadEnvInit(){
+bool __MCFCRT_ThreadEnvInit(){
 	g_dwTlsIndex = TlsAlloc();
 	if(g_dwTlsIndex == TLS_OUT_OF_INDEXES){
 		return false;
 	}
 	return true;
 }
-void __MCF_CRT_ThreadEnvUninit(){
+void __MCFCRT_ThreadEnvUninit(){
 	if(g_pavlKeys){
 		MCF_AvlNodeHeader *const pRoot = g_pavlKeys;
 		g_pavlKeys = nullptr;
@@ -113,7 +113,7 @@ void __MCF_CRT_ThreadEnvUninit(){
 	g_dwTlsIndex = TLS_OUT_OF_INDEXES;
 }
 
-void __MCF_CRT_TlsThreadCleanup(){
+void __MCFCRT_TlsThreadCleanup(){
 	ThreadMap *const pMap = TlsGetValue(g_dwTlsIndex);
 	if(pMap){
 		TlsObject *pObject = pMap->pLastByThread;
@@ -140,10 +140,10 @@ void __MCF_CRT_TlsThreadCleanup(){
 		TlsSetValue(g_dwTlsIndex, nullptr);
 	}
 
-	__MCF_CRT_RunEmutlsDtors();
+	__MCFCRT_RunEmutlsDtors();
 }
 
-void *MCF_CRT_TlsAllocKey(void (*pfnCallback)(intptr_t)){
+void *MCFCRT_TlsAllocKey(void (*pfnCallback)(intptr_t)){
 	TlsKey *const pKey = malloc(sizeof(TlsKey));
 	if(!pKey){
 		SetLastError(ERROR_NOT_ENOUGH_MEMORY);
@@ -161,7 +161,7 @@ void *MCF_CRT_TlsAllocKey(void (*pfnCallback)(intptr_t)){
 
 	return pKey;
 }
-bool MCF_CRT_TlsFreeKey(void *pTlsKey){
+bool MCFCRT_TlsFreeKey(void *pTlsKey){
 	TlsKey *const pKey = pTlsKey;
 	if(!pKey){
 		SetLastError(ERROR_INVALID_PARAMETER);
@@ -208,7 +208,7 @@ bool MCF_CRT_TlsFreeKey(void *pTlsKey){
 	return true;
 }
 
-void (*MCF_CRT_TlsGetCallback(void *pTlsKey))(intptr_t){
+void (*MCFCRT_TlsGetCallback(void *pTlsKey))(intptr_t){
 	TlsKey *const pKey = pTlsKey;
 	if(!pKey){
 		SetLastError(ERROR_INVALID_PARAMETER);
@@ -217,7 +217,7 @@ void (*MCF_CRT_TlsGetCallback(void *pTlsKey))(intptr_t){
 	SetLastError(ERROR_SUCCESS);
 	return pKey->pfnCallback;
 }
-bool MCF_CRT_TlsGet(void *pTlsKey, bool *restrict pbHasValue, intptr_t *restrict pnValue){
+bool MCFCRT_TlsGet(void *pTlsKey, bool *restrict pbHasValue, intptr_t *restrict pnValue){
 	TlsKey *const pKey = pTlsKey;
 	if(!pKey){
 		SetLastError(ERROR_INVALID_PARAMETER);
@@ -244,7 +244,7 @@ bool MCF_CRT_TlsGet(void *pTlsKey, bool *restrict pbHasValue, intptr_t *restrict
 
 	return true;
 }
-bool MCF_CRT_TlsReset(void *pTlsKey, intptr_t nNewValue){
+bool MCFCRT_TlsReset(void *pTlsKey, intptr_t nNewValue){
 	TlsKey *const pKey = pTlsKey;
 	if(!pKey){
 		SetLastError(ERROR_INVALID_PARAMETER);
@@ -253,7 +253,7 @@ bool MCF_CRT_TlsReset(void *pTlsKey, intptr_t nNewValue){
 
 	bool bHasOldValue;
 	intptr_t nOldValue;
-	if(!MCF_CRT_TlsExchange(pTlsKey, &bHasOldValue, &nOldValue, nNewValue)){
+	if(!MCFCRT_TlsExchange(pTlsKey, &bHasOldValue, &nOldValue, nNewValue)){
 		if(pKey->pfnCallback){
 			const DWORD dwErrorCode = GetLastError();
 			(*pKey->pfnCallback)(nNewValue);
@@ -268,7 +268,7 @@ bool MCF_CRT_TlsReset(void *pTlsKey, intptr_t nNewValue){
 	}
 	return true;
 }
-bool MCF_CRT_TlsExchange(void *pTlsKey, bool *restrict pbHasOldValue, intptr_t *restrict pnOldValue, intptr_t nNewValue){
+bool MCFCRT_TlsExchange(void *pTlsKey, bool *restrict pbHasOldValue, intptr_t *restrict pnOldValue, intptr_t nNewValue){
 	TlsKey *const pKey = pTlsKey;
 	if(!pKey){
 		SetLastError(ERROR_INVALID_PARAMETER);
@@ -344,14 +344,14 @@ bool MCF_CRT_TlsExchange(void *pTlsKey, bool *restrict pbHasOldValue, intptr_t *
 	return true;
 }
 
-int MCF_CRT_AtEndThread(void (*pfnProc)(intptr_t), intptr_t nContext){
-	void *const pKey = MCF_CRT_TlsAllocKey(pfnProc);
+int MCFCRT_AtEndThread(void (*pfnProc)(intptr_t), intptr_t nContext){
+	void *const pKey = MCFCRT_TlsAllocKey(pfnProc);
 	if(!pKey){
 		return -1;
 	}
-	if(!MCF_CRT_TlsReset(pKey, nContext)){
+	if(!MCFCRT_TlsReset(pKey, nContext)){
 		const DWORD dwLastError = GetLastError();
-		MCF_CRT_TlsFreeKey(pKey);
+		MCFCRT_TlsFreeKey(pKey);
 		SetLastError(dwLastError);
 		return -1;
 	}
@@ -363,23 +363,23 @@ typedef struct tagThreadInitParams {
 	intptr_t nParam;
 } ThreadInitParams;
 
-static __MCF_C_STDCALL __MCF_HAS_EH_TOP
+static __MCFCRT_C_STDCALL __MCFCRT_HAS_EH_TOP
 DWORD CRTThreadProc(LPVOID pParam){
 	DWORD dwExitCode;
-	__MCF_EH_TOP_BEGIN
+	__MCFCRT_EH_TOP_BEGIN
 	{
 		const ThreadInitParams vInitParams = *(ThreadInitParams *)pParam;
 		free(pParam);
 
-		__MCF_CRT_FEnvInit();
+		__MCFCRT_FEnvInit();
 
 		dwExitCode = (*vInitParams.pfnProc)(vInitParams.nParam);
 	}
-	__MCF_EH_TOP_END
+	__MCFCRT_EH_TOP_END
 	return dwExitCode;
 }
 
-void *MCF_CRT_CreateThread(unsigned (*pfnThreadProc)(intptr_t), intptr_t nParam, bool bSuspended, uintptr_t *restrict puThreadId){
+void *MCFCRT_CreateThread(unsigned (*pfnThreadProc)(intptr_t), intptr_t nParam, bool bSuspended, uintptr_t *restrict puThreadId){
 	ThreadInitParams *const pInitParams = malloc(sizeof(ThreadInitParams));
 	if(!pInitParams){
 		return nullptr;
@@ -401,7 +401,7 @@ void *MCF_CRT_CreateThread(unsigned (*pfnThreadProc)(intptr_t), intptr_t nParam,
 	}
 	return (void *)hThread;
 }
-void MCF_CRT_CloseThread(void *hThread){
+void MCFCRT_CloseThread(void *hThread){
 
 	const NTSTATUS lStatus = NtClose((HANDLE)hThread);
 	if(!NT_SUCCESS(lStatus)){
@@ -409,11 +409,11 @@ void MCF_CRT_CloseThread(void *hThread){
 	}
 }
 
-uintptr_t MCF_CRT_GetCurrentThreadId(){
+uintptr_t MCFCRT_GetCurrentThreadId(){
 	return GetCurrentThreadId();
 }
 
-void MCF_CRT_Sleep(uint64_t u64UntilFastMonoClock){
+void MCFCRT_Sleep(uint64_t u64UntilFastMonoClock){
 	LARGE_INTEGER liTimeout;
 	const uint64_t u64Now = MCF_GetFastMonoClock();
 	if(u64Now >= u64UntilFastMonoClock){
@@ -432,7 +432,7 @@ void MCF_CRT_Sleep(uint64_t u64UntilFastMonoClock){
 		ASSERT_MSG(false, L"NtDelayExecution() 失败。");
 	}
 }
-bool MCF_CRT_AlertableSleep(uint64_t u64UntilFastMonoClock){
+bool MCFCRT_AlertableSleep(uint64_t u64UntilFastMonoClock){
 	LARGE_INTEGER liTimeout;
 	const uint64_t u64Now = MCF_GetFastMonoClock();
 	if(u64Now >= u64UntilFastMonoClock){
@@ -455,7 +455,7 @@ bool MCF_CRT_AlertableSleep(uint64_t u64UntilFastMonoClock){
 	}
 	return true;
 }
-void MCF_CRT_AlertableSleepInfinitely(){
+void MCFCRT_AlertableSleepInfinitely(){
 	LARGE_INTEGER liTimeout;
 	liTimeout.QuadPart = INT64_MAX;
 	const NTSTATUS lStatus = NtDelayExecution(true, &liTimeout);
@@ -463,14 +463,14 @@ void MCF_CRT_AlertableSleepInfinitely(){
 		ASSERT_MSG(false, L"NtDelayExecution() 失败。");
 	}
 }
-void MCF_CRT_YieldThread(){
+void MCFCRT_YieldThread(){
 	const NTSTATUS lStatus = NtYieldExecution();
 	if(!NT_SUCCESS(lStatus)){
 		ASSERT_MSG(false, L"NtYieldExecution() 失败。");
 	}
 }
 
-long MCF_CRT_SuspendThread(void *hThread){
+long MCFCRT_SuspendThread(void *hThread){
 	LONG lPrevCount;
 	const NTSTATUS lStatus = NtSuspendThread((HANDLE)hThread, &lPrevCount);
 	if(!NT_SUCCESS(lStatus)){
@@ -478,7 +478,7 @@ long MCF_CRT_SuspendThread(void *hThread){
 	}
 	return lPrevCount;
 }
-long MCF_CRT_ResumeThread(void *hThread){
+long MCFCRT_ResumeThread(void *hThread){
 	LONG lPrevCount;
 	const NTSTATUS lStatus = NtResumeThread((HANDLE)hThread, &lPrevCount);
 	if(!NT_SUCCESS(lStatus)){
@@ -487,7 +487,7 @@ long MCF_CRT_ResumeThread(void *hThread){
 	return lPrevCount;
 }
 
-bool MCF_CRT_WaitForThread(void *hThread, MCF_STD uint64_t u64UntilFastMonoClock){
+bool MCFCRT_WaitForThread(void *hThread, MCF_STD uint64_t u64UntilFastMonoClock){
 	LARGE_INTEGER liTimeout;
 	liTimeout.QuadPart = 0;
 	if(u64UntilFastMonoClock != 0){
@@ -511,7 +511,7 @@ bool MCF_CRT_WaitForThread(void *hThread, MCF_STD uint64_t u64UntilFastMonoClock
 	}
 	return true;
 }
-void MCF_CRT_WaitForThreadInfinitely(void *hThread){
+void MCFCRT_WaitForThreadInfinitely(void *hThread){
 	const NTSTATUS lStatus = NtWaitForSingleObject((HANDLE)hThread, false, nullptr);
 	if(!NT_SUCCESS(lStatus)){
 		ASSERT_MSG(false, L"NtWaitForSingleObject() 失败。");

@@ -14,14 +14,14 @@ NTSTATUS RtlFindMessage(void *pBaseAddress, DWORD dwUnknown, DWORD dwLanguageId,
 extern __attribute__((__dllimport__, __stdcall__))
 void *RtlPcToFileHeader(void *pAddress, void **ppBase);
 
-unsigned long MCF_CRT_GetWin32LastError(){
+unsigned long MCFCRT_GetWin32LastError(){
 	return GetLastError();
 }
-void MCF_CRT_SetWin32LastError(unsigned long ulErrorCode){
+void MCFCRT_SetWin32LastError(unsigned long ulErrorCode){
 	SetLastError(ulErrorCode);
 }
 
-size_t MCF_CRT_GetWin32ErrorDescription(const wchar_t **ppwszStr, unsigned long ulErrorCode){
+size_t MCFCRT_GetWin32ErrorDescription(const wchar_t **ppwszStr, unsigned long ulErrorCode){
 	static const wchar_t kUnknownErrorCode[]   = L"<未知错误码>";
 	static const wchar_t kUnicodeUnavailable[] = L"<Unicode 错误码描述不可用>";
 

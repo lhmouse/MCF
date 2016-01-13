@@ -2,8 +2,8 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2012 - 2013. LH_Mouse. All wrongs reserved.
 
-#ifndef __MCF_CRT_COUNTOF_HPP__
-#define __MCF_CRT_COUNTOF_HPP__
+#ifndef __MCFCRT_COUNTOF_HPP__
+#define __MCFCRT_COUNTOF_HPP__
 
 #include <cstddef>
 

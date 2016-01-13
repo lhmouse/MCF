@@ -12,30 +12,30 @@
 #include "../env/heap_dbg.h"
 #include "../ext/unref_param.h"
 
-// -static -Wl,-e__MCF_CRT_ExeStartup,--disable-runtime-pseudo-reloc,--disable-auto-import
+// -static -Wl,-e__MCFCRT_ExeStartup,--disable-runtime-pseudo-reloc,--disable-auto-import
 
-// __MCF_CRT_ExeStartup 模块入口点。
-_Noreturn __MCF_C_STDCALL __MCF_HAS_EH_TOP
-DWORD __MCF_CRT_ExeStartup(LPVOID pReserved)
-	__asm__("__MCF_CRT_ExeStartup");
+// __MCFCRT_ExeStartup 模块入口点。
+_Noreturn __MCFCRT_C_STDCALL __MCFCRT_HAS_EH_TOP
+DWORD __MCFCRT_ExeStartup(LPVOID pReserved)
+	__asm__("__MCFCRT_ExeStartup");
 
-_Noreturn __MCF_C_STDCALL __MCF_HAS_EH_TOP
-DWORD __MCF_CRT_ExeStartup(LPVOID pReserved){
+_Noreturn __MCFCRT_C_STDCALL __MCFCRT_HAS_EH_TOP
+DWORD __MCFCRT_ExeStartup(LPVOID pReserved){
 	UNREF_PARAM(pReserved);
 
 	DWORD dwExitCode;
 
-	__MCF_EH_TOP_BEGIN
+	__MCFCRT_EH_TOP_BEGIN
 	{
 		dwExitCode = MCFMain();
 	}
-	__MCF_EH_TOP_END
+	__MCFCRT_EH_TOP_END
 
 	ExitProcess(dwExitCode);
 	__builtin_trap();
 }
 
-__MCF_C_STDCALL
+__MCFCRT_C_STDCALL
 static BOOL TopCtrlHandler(DWORD dwCtrlType){
 	UNREF_PARAM(dwCtrlType);
 
@@ -43,7 +43,7 @@ static BOOL TopCtrlHandler(DWORD dwCtrlType){
 	__builtin_trap();
 }
 
-__MCF_C_STDCALL __MCF_HAS_EH_TOP
+__MCFCRT_C_STDCALL __MCFCRT_HAS_EH_TOP
 static void TlsCallback(void *hModule, DWORD dwReason, void *pReserved){
 	UNREF_PARAM(hModule);
 	UNREF_PARAM(pReserved);
@@ -51,52 +51,52 @@ static void TlsCallback(void *hModule, DWORD dwReason, void *pReserved){
 	switch(dwReason){
 	case DLL_PROCESS_ATTACH:
 		if(!SetConsoleCtrlHandler(&TopCtrlHandler, true)){
-			MCF_CRT_BailF(L"MCFCRT Ctrl 处理程序注册失败。\n\n错误代码：%lu", GetLastError());
+			MCFCRT_BailF(L"MCFCRT Ctrl 处理程序注册失败。\n\n错误代码：%lu", GetLastError());
 		}
-		if(!__MCF_CRT_HeapInit()){
-			MCF_CRT_BailF(L"MCFCRT 堆初始化失败。\n\n错误代码：%lu", GetLastError());
+		if(!__MCFCRT_HeapInit()){
+			MCFCRT_BailF(L"MCFCRT 堆初始化失败。\n\n错误代码：%lu", GetLastError());
 		}
-		if(!__MCF_CRT_HeapDbgInit()){
-			MCF_CRT_BailF(L"MCFCRT 堆调试器初始化失败。\n\n错误代码：%lu", GetLastError());
+		if(!__MCFCRT_HeapDbgInit()){
+			MCFCRT_BailF(L"MCFCRT 堆调试器初始化失败。\n\n错误代码：%lu", GetLastError());
 		}
-		if(!__MCF_CRT_RegisterFrameInfo()){
-			MCF_CRT_BailF(L"MCFCRT 异常处理程序初始化失败。\n\n错误代码：%lu", GetLastError());
+		if(!__MCFCRT_RegisterFrameInfo()){
+			MCFCRT_BailF(L"MCFCRT 异常处理程序初始化失败。\n\n错误代码：%lu", GetLastError());
 		}
 
-		__MCF_EH_TOP_BEGIN
+		__MCFCRT_EH_TOP_BEGIN
 		{
-			if(!__MCF_CRT_BeginModule()){
-				MCF_CRT_BailF(L"MCFCRT 初始化失败。\n\n错误代码：%lu", GetLastError());
+			if(!__MCFCRT_BeginModule()){
+				MCFCRT_BailF(L"MCFCRT 初始化失败。\n\n错误代码：%lu", GetLastError());
 			}
 		}
-		__MCF_EH_TOP_END
+		__MCFCRT_EH_TOP_END
 		break;
-/*
+
 	case DLL_THREAD_ATTACH:
-		__MCF_EH_TOP_BEGIN
+		__MCFCRT_EH_TOP_BEGIN
 		{
 		}
-		__MCF_EH_TOP_END
+		__MCFCRT_EH_TOP_END
 		break;
-*/
+
 	case DLL_THREAD_DETACH:
-		__MCF_EH_TOP_BEGIN
+		__MCFCRT_EH_TOP_BEGIN
 		{
-			__MCF_CRT_TlsThreadCleanup();
+			__MCFCRT_TlsThreadCleanup();
 		}
-		__MCF_EH_TOP_END
+		__MCFCRT_EH_TOP_END
 		break;
 
 	case DLL_PROCESS_DETACH:
-		__MCF_EH_TOP_BEGIN
+		__MCFCRT_EH_TOP_BEGIN
 		{
-			__MCF_CRT_EndModule();
+			__MCFCRT_EndModule();
 		}
-		__MCF_EH_TOP_END
+		__MCFCRT_EH_TOP_END
 
-		__MCF_CRT_UnregisterFrameInfo();
-		__MCF_CRT_HeapDbgUninit();
-		__MCF_CRT_HeapUninit();
+		__MCFCRT_UnregisterFrameInfo();
+		__MCFCRT_HeapDbgUninit();
+		__MCFCRT_HeapUninit();
 		SetConsoleCtrlHandler(&TopCtrlHandler, false);
 		break;
 	}

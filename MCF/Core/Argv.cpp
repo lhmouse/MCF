@@ -12,8 +12,8 @@ Argv::Argv(const wchar_t *pwszCommandLine){
 	if(!pwszCommandLine){
 		pwszCommandLine = ::GetCommandLineW();
 	}
-	if(!x_pArgv.Reset(::MCF_CRT_AllocArgv(&x_uArgc, pwszCommandLine))){
-		DEBUG_THROW(SystemError, "MCF_CRT_AllocArgv"_rcs);
+	if(!x_pArgv.Reset(::MCFCRT_AllocArgv(&x_uArgc, pwszCommandLine))){
+		DEBUG_THROW(SystemError, "MCFCRT_AllocArgv"_rcs);
 	}
 }
 

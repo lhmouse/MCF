@@ -10,7 +10,7 @@
 #	define MASK     0x00010001ul
 #endif
 
-wchar_t *MCF_wcpcpy(wchar_t *restrict dst, const wchar_t *restrict src){
+wchar_t *MCFCRT_wcpcpy(wchar_t *restrict dst, const wchar_t *restrict src){
 	register const wchar_t *rp = src;
 	register wchar_t *wp = dst;
 
@@ -66,7 +66,7 @@ wchar_t *MCF_wcpcpy(wchar_t *restrict dst, const wchar_t *restrict src){
 		wp += 8 * sizeof(uintptr_t) / sizeof(wchar_t);
 	}
 }
-wchar_t *MCF_wcppcpy(wchar_t *restrict dst, wchar_t *restrict end, const wchar_t *restrict src){
+wchar_t *MCFCRT_wcppcpy(wchar_t *restrict dst, wchar_t *restrict end, const wchar_t *restrict src){
 	register const wchar_t *rp = src;
 	register wchar_t *wp = dst;
 

@@ -13,13 +13,13 @@ __MCFCRT_EXTERN_C_BEGIN
 extern bool __MCFCRT_BeginModule(void);
 extern void __MCFCRT_EndModule(void);
 
-extern bool MCFCRT_AtEndModule(void (*__pfnProc)(MCF_STD intptr_t), MCF_STD intptr_t __nContext) MCF_NOEXCEPT;
+extern bool MCFCRT_AtEndModule(void (*__pfnProc)(MCFCRT_STD intptr_t), MCFCRT_STD intptr_t __nContext) MCFCRT_NOEXCEPT;
 
-extern void *MCFCRT_GetModuleBase(void) MCF_NOEXCEPT;
+extern void *MCFCRT_GetModuleBase(void) MCFCRT_NOEXCEPT;
 // 如果回调函数返回 true 则循环继续，直到遍历完毕，此时返回 true；否则返回 false，GetLastError() 返回 ERROR_SUCCESS。失败返回 false。
 extern bool MCFCRT_TraverseModuleSections(
-	bool (*__pfnCallback)(MCF_STD intptr_t /* context */, const char /* name */ [8], void * /* base */, MCF_STD size_t /* size */),
-	MCF_STD intptr_t __nContext) MCF_NOEXCEPT;
+	bool (*__pfnCallback)(MCFCRT_STD intptr_t /* context */, const char /* name */ [8], void * /* base */, MCFCRT_STD size_t /* size */),
+	MCFCRT_STD intptr_t __nContext) MCFCRT_NOEXCEPT;
 
 __MCFCRT_EXTERN_C_END
 

@@ -2,8 +2,8 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2013 - 2016, LH_Mouse. All wrongs reserved.
 
-#ifndef MCF_STD_MCF_HPP_
-#define MCF_STD_MCF_HPP_
+#ifndef MCFCRT_STD_MCF_HPP_
+#define MCFCRT_STD_MCF_HPP_
 
 #include <cstddef>
 #include <cstdint>

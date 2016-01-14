@@ -12,17 +12,17 @@
 
 	struct Storage {
 		wchar_t cmdline[];  // 动态确定。
-		MCF_ArgItem stub;   // pwszStr 指向 cmdline，uLen 是后面的 argv 的元素容量。
-		MCF_ArgItem argv[]; // MCFCRT_AllocArgv 返回的指针指向这里。
-		MCF_ArgItem nil;    // pwszStr 为 nullptr，uLen 为 0。
+		MCFCRT_ArgItem stub;   // pwszStr 指向 cmdline，uLen 是后面的 argv 的元素容量。
+		MCFCRT_ArgItem argv[]; // MCFCRT_AllocArgv 返回的指针指向这里。
+		MCFCRT_ArgItem nil;    // pwszStr 为 nullptr，uLen 为 0。
 	};
 */
 
-const MCF_ArgItem *MCFCRT_AllocArgv(size_t *pArgc, const wchar_t *pwszCommandLine){
-	const size_t uPrefixSize = (((wcslen(pwszCommandLine) + 1) * sizeof(wchar_t) - 1) / alignof(MCF_ArgItem) + 1) * alignof(MCF_ArgItem);
+const MCFCRT_ArgItem *MCFCRT_AllocArgv(size_t *pArgc, const wchar_t *pwszCommandLine){
+	const size_t uPrefixSize = (((wcslen(pwszCommandLine) + 1) * sizeof(wchar_t) - 1) / alignof(MCFCRT_ArgItem) + 1) * alignof(MCFCRT_ArgItem);
 
 	size_t uCapacity = 4;
-	const size_t uSizeToAlloc = uPrefixSize + (uCapacity + 2) * sizeof(MCF_ArgItem);
+	const size_t uSizeToAlloc = uPrefixSize + (uCapacity + 2) * sizeof(MCFCRT_ArgItem);
 	if((uSizeToAlloc < uPrefixSize) || (uSizeToAlloc >= (SIZE_MAX >> 2))){
 		SetLastError(ERROR_NOT_ENOUGH_MEMORY);
 		return nullptr;
@@ -32,7 +32,7 @@ const MCF_ArgItem *MCFCRT_AllocArgv(size_t *pArgc, const wchar_t *pwszCommandLin
 		SetLastError(ERROR_NOT_ENOUGH_MEMORY);
 		return nullptr;
 	}
-	MCF_ArgItem *pArgv = (MCF_ArgItem *)((char *)pStorage + uPrefixSize + sizeof(MCF_ArgItem));
+	MCFCRT_ArgItem *pArgv = (MCFCRT_ArgItem *)((char *)pStorage + uPrefixSize + sizeof(MCFCRT_ArgItem));
 	pArgv[-1].pwszStr = pStorage;
 	pArgv[-1].uLen = uCapacity;
 
@@ -61,7 +61,7 @@ const MCF_ArgItem *MCFCRT_AllocArgv(size_t *pArgc, const wchar_t *pwszCommandLin
 			} else {
 				if(uArgc == uCapacity){
 					uCapacity = uCapacity * 3 / 2;
-					const size_t uNewSizeToAlloc = uPrefixSize + (uCapacity + 2) * sizeof(MCF_ArgItem);
+					const size_t uNewSizeToAlloc = uPrefixSize + (uCapacity + 2) * sizeof(MCFCRT_ArgItem);
 					if((uNewSizeToAlloc <= uSizeToAlloc) || (uNewSizeToAlloc >= (SIZE_MAX >> 2))){
 						goto jBadAlloc;
 					}
@@ -69,7 +69,7 @@ const MCF_ArgItem *MCFCRT_AllocArgv(size_t *pArgc, const wchar_t *pwszCommandLin
 					if(!pNewStorage){
 						goto jBadAlloc;
 					}
-					MCF_ArgItem *pArgv = (MCF_ArgItem *)((char *)pNewStorage + uPrefixSize + sizeof(MCF_ArgItem));
+					MCFCRT_ArgItem *pArgv = (MCFCRT_ArgItem *)((char *)pNewStorage + uPrefixSize + sizeof(MCFCRT_ArgItem));
 					pArgv[-1].pwszStr = pNewStorage;
 					pArgv[-1].uLen = uCapacity;
 
@@ -160,10 +160,10 @@ jBadAlloc:
 	return nullptr;
 }
 
-const MCF_ArgItem *MCFCRT_AllocArgvFromCommandLine(size_t *pArgc){
+const MCFCRT_ArgItem *MCFCRT_AllocArgvFromCommandLine(size_t *pArgc){
 	return MCFCRT_AllocArgv(pArgc, GetCommandLineW());
 }
-void MCFCRT_FreeArgv(const MCF_ArgItem *pArgItems){
+void MCFCRT_FreeArgv(const MCFCRT_ArgItem *pArgItems){
 	if(pArgItems){
 		free((void *)(pArgItems[-1].pwszStr));
 	}

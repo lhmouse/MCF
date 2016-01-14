@@ -35,11 +35,11 @@
 #endif
 
 #ifdef __cplusplus
-#   define MCF_STD                      ::std::
-#   define MCF_NOEXCEPT                 noexcept
+#   define MCFCRT_STD                      ::std::
+#   define MCFCRT_NOEXCEPT                 noexcept
 #else
-#   define MCF_STD
-#   define MCF_NOEXCEPT
+#   define MCFCRT_STD
+#   define MCFCRT_NOEXCEPT
 #endif
 
 #endif

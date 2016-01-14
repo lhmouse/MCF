@@ -10,11 +10,11 @@
 __MCFCRT_EXTERN_C_BEGIN
 
 // [0, UINT32_MAX]
-extern MCF_STD uint32_t MCF_GetRandomUint32(void) MCF_NOEXCEPT;
+extern MCFCRT_STD uint32_t MCFCRT_GetRandomUint32(void) MCFCRT_NOEXCEPT;
 // [0, UINT64_MAX]
-extern MCF_STD uint64_t MCF_GetRandomUint64(void) MCF_NOEXCEPT;
+extern MCFCRT_STD uint64_t MCFCRT_GetRandomUint64(void) MCFCRT_NOEXCEPT;
 // [0, 1.0)
-extern double MCF_GetRandomDouble(void) MCF_NOEXCEPT;
+extern double MCFCRT_GetRandomDouble(void) MCFCRT_NOEXCEPT;
 
 __MCFCRT_EXTERN_C_END
 

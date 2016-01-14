@@ -10,24 +10,24 @@
 namespace MCF {
 
 inline std::uint32_t ReadTimestampCounter32() noexcept {
-	return ::MCF_ReadTimestampCounter32();
+	return ::MCFCRT_ReadTimestampCounter32();
 }
 inline std::uint64_t ReadTimestampCounter64() noexcept {
-	return ::MCF_ReadTimestampCounter64();
+	return ::MCFCRT_ReadTimestampCounter64();
 }
 
 inline std::uint64_t GetUtcClock() noexcept {
-	return ::MCF_GetUtcClock();
+	return ::MCFCRT_GetUtcClock();
 }
 inline std::uint64_t GetLocalClock() noexcept {
-	return ::MCF_GetLocalClock();
+	return ::MCFCRT_GetLocalClock();
 }
 
 inline std::uint64_t GetFastMonoClock() noexcept {
-	return ::MCF_GetFastMonoClock();
+	return ::MCFCRT_GetFastMonoClock();
 }
 inline double GetHiResMonoClock() noexcept {
-	return ::MCF_GetHiResMonoClock();
+	return ::MCFCRT_GetHiResMonoClock();
 }
 
 }

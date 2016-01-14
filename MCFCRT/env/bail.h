@@ -16,14 +16,14 @@
 __MCFCRT_EXTERN_C_BEGIN
 
 extern __attribute__((__noreturn__))
-void MCFCRT_Bail(const wchar_t *__pwszDescription) MCF_NOEXCEPT;
+void MCFCRT_Bail(const wchar_t *__pwszDescription) MCFCRT_NOEXCEPT;
 
 extern __attribute__((__noreturn__))
-void MCFCRT_BailV(const wchar_t *__pwszFormat, MCF_STD va_list __pArgs) MCF_NOEXCEPT;
+void MCFCRT_BailV(const wchar_t *__pwszFormat, MCFCRT_STD va_list __pArgs) MCFCRT_NOEXCEPT;
 
 static inline __attribute__((__noreturn__ /*, __format__(__printf__, 1, 2) */))
-void MCFCRT_BailF(const wchar_t *__pwszFormat, ...) MCF_NOEXCEPT {
-	MCF_STD va_list __pArgs;
+void MCFCRT_BailF(const wchar_t *__pwszFormat, ...) MCFCRT_NOEXCEPT {
+	MCFCRT_STD va_list __pArgs;
 	va_start(__pArgs, __pwszFormat);
 	MCFCRT_BailV(__pwszFormat, __pArgs);
 	va_end(__pArgs);

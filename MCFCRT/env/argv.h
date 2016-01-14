@@ -9,14 +9,14 @@
 
 __MCFCRT_EXTERN_C_BEGIN
 
-typedef struct MCF_tagArgItem {
+typedef struct MCFCRT_tagArgItem {
 	const wchar_t *pwszStr;
-	MCF_STD size_t uLen;
-} MCF_ArgItem;
+	MCFCRT_STD size_t uLen;
+} MCFCRT_ArgItem;
 
-extern const MCF_ArgItem *MCFCRT_AllocArgv(MCF_STD size_t *__pArgc, const wchar_t *__pwszCommandLine) MCF_NOEXCEPT;
-extern const MCF_ArgItem *MCFCRT_AllocArgvFromCommandLine(MCF_STD size_t *__pArgc) MCF_NOEXCEPT; // 根据当前 GetCommandLineW() 的返回值创建。
-extern void MCFCRT_FreeArgv(const MCF_ArgItem *__pArgItems) MCF_NOEXCEPT;
+extern const MCFCRT_ArgItem *MCFCRT_AllocArgv(MCFCRT_STD size_t *__pArgc, const wchar_t *__pwszCommandLine) MCFCRT_NOEXCEPT;
+extern const MCFCRT_ArgItem *MCFCRT_AllocArgvFromCommandLine(MCFCRT_STD size_t *__pArgc) MCFCRT_NOEXCEPT; // 根据当前 GetCommandLineW() 的返回值创建。
+extern void MCFCRT_FreeArgv(const MCFCRT_ArgItem *__pArgItems) MCFCRT_NOEXCEPT;
 
 __MCFCRT_EXTERN_C_END
 

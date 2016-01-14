@@ -6,6 +6,6 @@
 #include "../../ext/stpcpy.h"
 
 char *strcpy(char *s1, const char *s2){
-	MCF_stpcpy(s1, s2);
+	MCFCRT_stpcpy(s1, s2);
 	return s1;
 }

@@ -29,18 +29,18 @@ __declspec(dllexport) int __stdcall dlltest(int a, int b) noexcept {
 	return a + b;
 }
 
-bool MCFDll_OnProcessAttach(void *hDll, bool bDynamic) noexcept {
+bool MCFCRT_OnDllProcessAttach(void *hDll, bool bDynamic) noexcept {
 	std::printf("on process attach: hDll = %p, dynamic = %d\n", hDll, bDynamic);
 	return true;
 }
-void MCFDll_OnProcessDetach(void *hDll, bool bDynamic) noexcept {
+void MCFCRT_OnDllProcessDetach(void *hDll, bool bDynamic) noexcept {
 	std::printf("on process detach: hDll = %p, dynamic = %d\n", hDll, bDynamic);
 }
 
-void MCFDll_OnThreadAttach(void *hDll) noexcept {
+void MCFCRT_OnDllThreadAttach(void *hDll) noexcept {
 	std::printf("on thread attach: hDll = %p\n", hDll);
 }
-void MCFDll_OnThreadDetach(void *hDll) noexcept {
+void MCFCRT_OnDllThreadDetach(void *hDll) noexcept {
 	std::printf("on thread detach: hDll = %p\n", hDll);
 }
 

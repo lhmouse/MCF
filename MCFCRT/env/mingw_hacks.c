@@ -9,7 +9,7 @@
 #include <stdlib.h>
 
 typedef struct tagKeyDtorNode {
-	MCF_AvlNodeHeader vHeader;
+	MCFCRT_AvlNodeHeader vHeader;
 	struct tagKeyDtorNode *pPrev;
 	struct tagKeyDtorNode *pNext;
 
@@ -19,18 +19,18 @@ typedef struct tagKeyDtorNode {
 
 _Static_assert(sizeof(unsigned long) <= sizeof(uintptr_t), "This platform is not supported.");
 
-static int DtorComparatorNodeKey(const MCF_AvlNodeHeader *pObj1, intptr_t nKey2){
+static int DtorComparatorNodeKey(const MCFCRT_AvlNodeHeader *pObj1, intptr_t nKey2){
 	const unsigned long ulKey1 = ((const KeyDtorNode *)pObj1)->ulKey;
 	const unsigned long ulKey2 = (unsigned long)(uintptr_t)nKey2;
 	return (ulKey1 < ulKey2) ? -1 : ((ulKey1 > ulKey2) ? 1 : 0);
 }
-static int DtorComparatorNodes(const MCF_AvlNodeHeader *pObj1, const MCF_AvlNodeHeader *pObj2){
+static int DtorComparatorNodes(const MCFCRT_AvlNodeHeader *pObj1, const MCFCRT_AvlNodeHeader *pObj2){
 	return DtorComparatorNodeKey(pObj1, (intptr_t)(uintptr_t)((const KeyDtorNode *)pObj2)->ulKey);
 }
 
 static SRWLOCK          g_srwDtorMapLock = SRWLOCK_INIT;
 static KeyDtorNode *    g_pDtorHead      = nullptr;
-static MCF_AvlRoot      g_pavlDtorRoot   = nullptr;
+static MCFCRT_AvlRoot      g_pavlDtorRoot   = nullptr;
 
 bool __MCFCRT_MinGWHacksInit(){
 	return true;
@@ -82,7 +82,7 @@ int __mingwthr_key_dtor(unsigned long ulKey, void (*pfnDtor)(void *)){
 			}
 			g_pDtorHead = pNode;
 
-			MCF_AvlAttach(&g_pavlDtorRoot, (MCF_AvlNodeHeader *)pNode, &DtorComparatorNodes);
+			MCFCRT_AvlAttach(&g_pavlDtorRoot, (MCFCRT_AvlNodeHeader *)pNode, &DtorComparatorNodes);
 		}
 		ReleaseSRWLockExclusive(&g_srwDtorMapLock);
 	}
@@ -92,7 +92,7 @@ int __mingwthr_key_dtor(unsigned long ulKey, void (*pfnDtor)(void *)){
 int __mingwthr_remove_key_dtor(unsigned long ulKey){
 	AcquireSRWLockExclusive(&g_srwDtorMapLock);
 	{
-		KeyDtorNode *pNode = (KeyDtorNode *)MCF_AvlFind(
+		KeyDtorNode *pNode = (KeyDtorNode *)MCFCRT_AvlFind(
 			&g_pavlDtorRoot, (intptr_t)ulKey, &DtorComparatorNodeKey);
 		if(pNode){
 			if(g_pDtorHead == pNode){
@@ -105,7 +105,7 @@ int __mingwthr_remove_key_dtor(unsigned long ulKey){
 			if(pNode->pPrev){
 				pNode->pPrev->pNext = pNode->pNext;
 			}
-			MCF_AvlDetach((MCF_AvlNodeHeader *)pNode);
+			MCFCRT_AvlDetach((MCFCRT_AvlNodeHeader *)pNode);
 
 			free(pNode);
 		}

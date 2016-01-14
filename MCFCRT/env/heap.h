@@ -9,17 +9,17 @@
 
 __MCFCRT_EXTERN_C_BEGIN
 
-extern bool __MCFCRT_HeapInit(void) MCF_NOEXCEPT;
-extern void __MCFCRT_HeapUninit(void) MCF_NOEXCEPT;
+extern bool __MCFCRT_HeapInit(void) MCFCRT_NOEXCEPT;
+extern void __MCFCRT_HeapUninit(void) MCFCRT_NOEXCEPT;
 
-extern void *__MCFCRT_ReallyAlloc(MCF_STD size_t __uSize) MCF_NOEXCEPT;
-extern void *__MCFCRT_ReallyRealloc(void *__pBlock, MCF_STD size_t __uSize) MCF_NOEXCEPT;
-extern void __MCFCRT_ReallyFree(void *__pBlock) MCF_NOEXCEPT;
-extern MCF_STD size_t __MCFCRT_ReallyGetUsableSize(void *__pBlock) MCF_NOEXCEPT;
+extern void *__MCFCRT_ReallyAlloc(MCFCRT_STD size_t __uSize) MCFCRT_NOEXCEPT;
+extern void *__MCFCRT_ReallyRealloc(void *__pBlock, MCFCRT_STD size_t __uSize) MCFCRT_NOEXCEPT;
+extern void __MCFCRT_ReallyFree(void *__pBlock) MCFCRT_NOEXCEPT;
+extern MCFCRT_STD size_t __MCFCRT_ReallyGetUsableSize(void *__pBlock) MCFCRT_NOEXCEPT;
 
-extern unsigned char *__MCFCRT_HeapAlloc(MCF_STD size_t __uSize, const void *__pRetAddr) MCF_NOEXCEPT;
-extern unsigned char *__MCFCRT_HeapRealloc(void *__pBlock /* not null */, MCF_STD size_t __uSize, const void *__pRetAddr) MCF_NOEXCEPT;
-extern void __MCFCRT_HeapFree(void *__pBlock /* not null */, const void *__pRetAddr) MCF_NOEXCEPT;
+extern unsigned char *__MCFCRT_HeapAlloc(MCFCRT_STD size_t __uSize, const void *__pRetAddr) MCFCRT_NOEXCEPT;
+extern unsigned char *__MCFCRT_HeapRealloc(void *__pBlock /* not null */, MCFCRT_STD size_t __uSize, const void *__pRetAddr) MCFCRT_NOEXCEPT;
+extern void __MCFCRT_HeapFree(void *__pBlock /* not null */, const void *__pRetAddr) MCFCRT_NOEXCEPT;
 
 __MCFCRT_EXTERN_C_END
 

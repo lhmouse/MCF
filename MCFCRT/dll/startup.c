@@ -63,7 +63,7 @@ BOOL __MCFCRT_DllStartup(HINSTANCE hDll, DWORD dwReason, LPVOID pReserved){
 			DO_INIT(bRet, kFlagCrtModule, __MCFCRT_BeginModule);
 
 			if(bRet){
-				bRet = MCFDll_OnProcessAttach(hDll, !pReserved);
+				bRet = MCFCRT_OnDllProcessAttach(hDll, !pReserved);
 			}
 		}
 		__MCFCRT_EH_TOP_END
@@ -72,7 +72,7 @@ BOOL __MCFCRT_DllStartup(HINSTANCE hDll, DWORD dwReason, LPVOID pReserved){
 	case DLL_THREAD_ATTACH:
 		__MCFCRT_EH_TOP_BEGIN
 		{
-			MCFDll_OnThreadAttach(hDll);
+			MCFCRT_OnDllThreadAttach(hDll);
 		}
 		__MCFCRT_EH_TOP_END
 		break;
@@ -80,7 +80,7 @@ BOOL __MCFCRT_DllStartup(HINSTANCE hDll, DWORD dwReason, LPVOID pReserved){
 	case DLL_THREAD_DETACH:
 		__MCFCRT_EH_TOP_BEGIN
 		{
-			MCFDll_OnThreadDetach(hDll);
+			MCFCRT_OnDllThreadDetach(hDll);
 
 			__MCFCRT_TlsThreadCleanup();
 		}
@@ -90,7 +90,7 @@ BOOL __MCFCRT_DllStartup(HINSTANCE hDll, DWORD dwReason, LPVOID pReserved){
 	case DLL_PROCESS_DETACH:
 		__MCFCRT_EH_TOP_BEGIN
 		{
-			MCFDll_OnProcessDetach(hDll, !pReserved);
+			MCFCRT_OnDllProcessDetach(hDll, !pReserved);
 
 			DO_UNINIT(kFlagCrtModule, __MCFCRT_EndModule);
 		}

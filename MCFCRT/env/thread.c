@@ -31,7 +31,7 @@ extern __attribute__((__dllimport__, __stdcall__))
 NTSTATUS NtResumeThread(HANDLE hThread, LONG *plPrevCount);
 
 typedef struct tagTlsObject {
-	MCF_AvlNodeHeader vHeader;
+	MCFCRT_AvlNodeHeader vHeader;
 
 	intptr_t nValue;
 
@@ -44,41 +44,41 @@ typedef struct tagTlsObject {
 	struct tagTlsObject *pNextByKey;
 } TlsObject;
 
-static int ObjectComparatorNodeKey(const MCF_AvlNodeHeader *pObj1, intptr_t nKey2){
+static int ObjectComparatorNodeKey(const MCFCRT_AvlNodeHeader *pObj1, intptr_t nKey2){
 	const uintptr_t uKey1 = (uintptr_t)(((const TlsObject *)pObj1)->pKey);
 	const uintptr_t uKey2 = (uintptr_t)(void *)nKey2;
 	return (uKey1 < uKey2) ? -1 : ((uKey1 > uKey2) ? 1 : 0);
 }
-static int ObjectComparatorNodes(const MCF_AvlNodeHeader *pObj1, const MCF_AvlNodeHeader *pObj2){
+static int ObjectComparatorNodes(const MCFCRT_AvlNodeHeader *pObj1, const MCFCRT_AvlNodeHeader *pObj2){
 	return ObjectComparatorNodeKey(pObj1, (intptr_t)(void *)(((const TlsObject *)pObj2)->pKey));
 }
 
 typedef struct tagThreadMap {
 	SRWLOCK srwLock;
-	MCF_AvlRoot pavlObjects;
+	MCFCRT_AvlRoot pavlObjects;
 	struct tagTlsObject *pLastByThread;
 } ThreadMap;
 
 typedef struct tagTlsKey {
-	MCF_AvlNodeHeader vHeader;
+	MCFCRT_AvlNodeHeader vHeader;
 
 	SRWLOCK srwLock;
 	void (*pfnCallback)(intptr_t);
 	struct tagTlsObject *pLastByKey;
 } TlsKey;
 
-static int KeyComparatorNodeKey(const MCF_AvlNodeHeader *pObj1, intptr_t nKey2){
+static int KeyComparatorNodeKey(const MCFCRT_AvlNodeHeader *pObj1, intptr_t nKey2){
 	const uintptr_t uKey1 = (uintptr_t)(void *)pObj1;
 	const uintptr_t uKey2 = (uintptr_t)(void *)nKey2;
 	return (uKey1 < uKey2) ? -1 : ((uKey1 > uKey2) ? 1 : 0);
 }
-static int KeyComparatorNodes(const MCF_AvlNodeHeader *pObj1, const MCF_AvlNodeHeader *pObj2){
+static int KeyComparatorNodes(const MCFCRT_AvlNodeHeader *pObj1, const MCFCRT_AvlNodeHeader *pObj2){
 	return KeyComparatorNodeKey(pObj1, (intptr_t)(void *)pObj2);
 }
 
 static SRWLOCK     g_csKeyMutex = SRWLOCK_INIT;
 static DWORD       g_dwTlsIndex = TLS_OUT_OF_INDEXES;
-static MCF_AvlRoot g_pavlKeys   = nullptr;
+static MCFCRT_AvlRoot g_pavlKeys   = nullptr;
 
 bool __MCFCRT_ThreadEnvInit(){
 	g_dwTlsIndex = TlsAlloc();
@@ -89,20 +89,20 @@ bool __MCFCRT_ThreadEnvInit(){
 }
 void __MCFCRT_ThreadEnvUninit(){
 	if(g_pavlKeys){
-		MCF_AvlNodeHeader *const pRoot = g_pavlKeys;
+		MCFCRT_AvlNodeHeader *const pRoot = g_pavlKeys;
 		g_pavlKeys = nullptr;
 
 		TlsKey *pKey;
-		MCF_AvlNodeHeader *pCur = MCF_AvlPrev(pRoot);
+		MCFCRT_AvlNodeHeader *pCur = MCFCRT_AvlPrev(pRoot);
 		while(pCur){
 			pKey = (TlsKey *)pCur;
-			pCur = MCF_AvlPrev(pCur);
+			pCur = MCFCRT_AvlPrev(pCur);
 			free(pKey);
 		}
-		pCur = MCF_AvlNext(pRoot);
+		pCur = MCFCRT_AvlNext(pRoot);
 		while(pCur){
 			pKey = (TlsKey *)pCur;
-			pCur = MCF_AvlNext(pCur);
+			pCur = MCFCRT_AvlNext(pCur);
 			free(pKey);
 		}
 		pKey = (TlsKey *)pRoot;
@@ -155,7 +155,7 @@ void *MCFCRT_TlsAllocKey(void (*pfnCallback)(intptr_t)){
 
 	AcquireSRWLockExclusive(&g_csKeyMutex);
 	{
-		MCF_AvlAttach(&g_pavlKeys, (MCF_AvlNodeHeader *)pKey, &KeyComparatorNodes);
+		MCFCRT_AvlAttach(&g_pavlKeys, (MCFCRT_AvlNodeHeader *)pKey, &KeyComparatorNodes);
 	}
 	ReleaseSRWLockExclusive(&g_csKeyMutex);
 
@@ -170,7 +170,7 @@ bool MCFCRT_TlsFreeKey(void *pTlsKey){
 
 	AcquireSRWLockExclusive(&g_csKeyMutex);
 	{
-		MCF_AvlDetach((MCF_AvlNodeHeader *)pKey);
+		MCFCRT_AvlDetach((MCFCRT_AvlNodeHeader *)pKey);
 	}
 	ReleaseSRWLockExclusive(&g_csKeyMutex);
 
@@ -233,7 +233,7 @@ bool MCFCRT_TlsGet(void *pTlsKey, bool *restrict pbHasValue, intptr_t *restrict 
 
 	AcquireSRWLockExclusive(&(pMap->srwLock));
 	{
-		TlsObject *const pObject = (TlsObject *)MCF_AvlFind(
+		TlsObject *const pObject = (TlsObject *)MCFCRT_AvlFind(
 			&(pMap->pavlObjects), (intptr_t)pKey, &ObjectComparatorNodeKey);
 		if(pObject){
 			*pbHasValue = true;
@@ -293,7 +293,7 @@ bool MCFCRT_TlsExchange(void *pTlsKey, bool *restrict pbHasOldValue, intptr_t *r
 
 	AcquireSRWLockExclusive(&(pMap->srwLock));
 	{
-		TlsObject *const pObject = (TlsObject *)MCF_AvlFind(
+		TlsObject *const pObject = (TlsObject *)MCFCRT_AvlFind(
 			&(pMap->pavlObjects), (intptr_t)pKey, &ObjectComparatorNodeKey);
 		if(pObject){
 			*pbHasOldValue = true;
@@ -323,7 +323,7 @@ bool MCFCRT_TlsExchange(void *pTlsKey, bool *restrict pbHasOldValue, intptr_t *r
 			if(pPrev){
 				pPrev->pNextByThread = pObject;
 			}
-			MCF_AvlAttach(&(pMap->pavlObjects), (MCF_AvlNodeHeader *)pObject, &ObjectComparatorNodes);
+			MCFCRT_AvlAttach(&(pMap->pavlObjects), (MCFCRT_AvlNodeHeader *)pObject, &ObjectComparatorNodes);
 		}
 		ReleaseSRWLockExclusive(&(pMap->srwLock));
 
@@ -415,7 +415,7 @@ uintptr_t MCFCRT_GetCurrentThreadId(){
 
 void MCFCRT_Sleep(uint64_t u64UntilFastMonoClock){
 	LARGE_INTEGER liTimeout;
-	const uint64_t u64Now = MCF_GetFastMonoClock();
+	const uint64_t u64Now = MCFCRT_GetFastMonoClock();
 	if(u64Now >= u64UntilFastMonoClock){
 		liTimeout.QuadPart = 0;
 	} else {
@@ -434,7 +434,7 @@ void MCFCRT_Sleep(uint64_t u64UntilFastMonoClock){
 }
 bool MCFCRT_AlertableSleep(uint64_t u64UntilFastMonoClock){
 	LARGE_INTEGER liTimeout;
-	const uint64_t u64Now = MCF_GetFastMonoClock();
+	const uint64_t u64Now = MCFCRT_GetFastMonoClock();
 	if(u64Now >= u64UntilFastMonoClock){
 		liTimeout.QuadPart = 0;
 	} else {
@@ -487,11 +487,11 @@ long MCFCRT_ResumeThread(void *hThread){
 	return lPrevCount;
 }
 
-bool MCFCRT_WaitForThread(void *hThread, MCF_STD uint64_t u64UntilFastMonoClock){
+bool MCFCRT_WaitForThread(void *hThread, MCFCRT_STD uint64_t u64UntilFastMonoClock){
 	LARGE_INTEGER liTimeout;
 	liTimeout.QuadPart = 0;
 	if(u64UntilFastMonoClock != 0){
-		const uint64_t u64Now = MCF_GetFastMonoClock();
+		const uint64_t u64Now = MCFCRT_GetFastMonoClock();
 		if(u64Now < u64UntilFastMonoClock){
 			const uint64_t u64DeltaMillisec = u64UntilFastMonoClock - u64Now;
 			const int64_t n64Delta100Nanosec = (int64_t)(u64DeltaMillisec * 10000);

@@ -27,7 +27,7 @@ DWORD __MCFCRT_ExeStartup(LPVOID pReserved){
 
 	__MCFCRT_EH_TOP_BEGIN
 	{
-		dwExitCode = MCFMain();
+		dwExitCode = MCFCRT_Main();
 	}
 	__MCFCRT_EH_TOP_END
 

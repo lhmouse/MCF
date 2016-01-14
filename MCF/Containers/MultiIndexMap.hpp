@@ -153,7 +153,7 @@ decltype(auto) cend(const MultiIndexMap<IndicesT, ValueT> &rhs) noexcept {
 /*
 namespace Impl_MultiIndexMap {
 	struct OrderedNode {
-		::MCF_AvlNodeHeader vHeader;
+		::MCFCRT_AvlNodeHeader vHeader;
 	};
 
 	template<typename KeyT, typename ComparatorT>
@@ -172,9 +172,9 @@ namespace Impl_MultiIndexMap {
 
 	class OrderedRoot {
 	private:
-		::MCF_AvlRoot x_vRoot;
-		::MCF_AvlNodeHeader *x_pFirst;
-		::MCF_AvlNodeHeader *x_pLast;
+		::MCFCRT_AvlRoot x_vRoot;
+		::MCFCRT_AvlNodeHeader *x_pFirst;
+		::MCFCRT_AvlNodeHeader *x_pLast;
 
 	public:
 		constexpr Root() noexcept
@@ -199,27 +199,27 @@ namespace Impl_MultiIndexMap {
 		static const Node *GetPrev(const Node *pPos) noexcept {
 			ASSERT(pPos);
 
-			return reinterpret_cast<const Node *>(::MCF_AvlPrev(reinterpret_cast<const Node *>(pPos)));
+			return reinterpret_cast<const Node *>(::MCFCRT_AvlPrev(reinterpret_cast<const Node *>(pPos)));
 		}
 		static Node *GetPrev(Node *pPos) noexcept {
 			ASSERT(pPos);
 
-			return reinterpret_cast<Node *>(::MCF_AvlPrev(reinterpret_cast<Node *>(pPos)));
+			return reinterpret_cast<Node *>(::MCFCRT_AvlPrev(reinterpret_cast<Node *>(pPos)));
 		}
 		static const Node *GetNext(const Node *pPos) noexcept {
 			ASSERT(pPos);
 
-			return reinterpret_cast<const Node *>(::MCF_AvlNext(reinterpret_cast<const Node *>(pPos)));
+			return reinterpret_cast<const Node *>(::MCFCRT_AvlNext(reinterpret_cast<const Node *>(pPos)));
 		}
 		static Node *GetNext(Node *pPos) noexcept {
 			ASSERT(pPos);
 
-			return reinterpret_cast<Node *>(::MCF_AvlNext(reinterpret_cast<Node *>(pPos)));
+			return reinterpret_cast<Node *>(::MCFCRT_AvlNext(reinterpret_cast<Node *>(pPos)));
 		}
 
 		void Swap(List &rhs) noexcept {
 			using std::swap;
-			::MCF_AvlSwap(&x_vRoot, &rhs.x_vRoot);
+			::MCFCRT_AvlSwap(&x_vRoot, &rhs.x_vRoot);
 			swap(x_pFirst, rhs.x_pFirst);
 			swap(x_pLast,  rhs.x_pLast);
 		}
@@ -228,7 +228,7 @@ namespace Impl_MultiIndexMap {
 			//
 		}
 		void Detach(const Node *pNode) noexcept {
-			// ::MCF_AvlInternalDetach(
+			// ::MCFCRT_AvlInternalDetach(
 		}
 	};
 }

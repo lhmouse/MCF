@@ -5,19 +5,19 @@
 #include "decl.h"
 #include "../ext/unref_param.h"
 
-bool MCFDll_OnProcessAttach(void *hDll, bool bDynamic){
+bool MCFCRT_OnDllProcessAttach(void *hDll, bool bDynamic){
 	UNREF_PARAM(hDll);
 	UNREF_PARAM(bDynamic);
 
 	return true;
 }
-void MCFDll_OnProcessDetach(void *hDll, bool bDynamic){
+void MCFCRT_OnDllProcessDetach(void *hDll, bool bDynamic){
 	UNREF_PARAM(hDll);
 	UNREF_PARAM(bDynamic);
 }
-void MCFDll_OnThreadAttach(void *hDll){
+void MCFCRT_OnDllThreadAttach(void *hDll){
 	UNREF_PARAM(hDll);
 }
-void MCFDll_OnThreadDetach(void *hDll){
+void MCFCRT_OnDllThreadDetach(void *hDll){
 	UNREF_PARAM(hDll);
 }

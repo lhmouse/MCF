@@ -2,10 +2,10 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2013 - 2016, LH_Mouse. All wrongs reserved.
 
-#ifndef MCF_CORE_T_EXPRESSION_HPP_
-#define MCF_CORE_T_EXPRESSION_HPP_
+#ifndef MCF_INTEROPERATION_T_EXPRESSION_HPP_
+#define MCF_INTEROPERATION_T_EXPRESSION_HPP_
 
-#include "String.hpp"
+#include "../Core/String.hpp"
 #include <cstddef>
 
 namespace MCF {

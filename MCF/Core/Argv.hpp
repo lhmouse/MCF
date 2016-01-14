@@ -17,17 +17,17 @@ namespace MCF {
 class Argv : NONCOPYABLE {
 private:
 	struct X_ArgItemDeleter {
-		constexpr ::MCF_ArgItem *operator()() const noexcept {
+		constexpr ::MCFCRT_ArgItem *operator()() const noexcept {
 			return nullptr;
 		}
-		void operator()(::MCF_ArgItem *pArgItem) const noexcept {
+		void operator()(::MCFCRT_ArgItem *pArgItem) const noexcept {
 			::MCFCRT_FreeArgv(pArgItem);
 		}
 	};
 
 private:
 	std::size_t x_uArgc;
-	UniquePtr<const ::MCF_ArgItem [], X_ArgItemDeleter> x_pArgv;
+	UniquePtr<const ::MCFCRT_ArgItem [], X_ArgItemDeleter> x_pArgv;
 
 public:
 	// 如果传入空指针，就使用当前 GetCommandLineW() 的返回值。

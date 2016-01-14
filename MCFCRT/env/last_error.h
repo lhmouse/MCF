@@ -10,10 +10,10 @@
 
 __MCFCRT_EXTERN_C_BEGIN
 
-extern unsigned long MCFCRT_GetWin32LastError(void) MCF_NOEXCEPT;
-extern void MCFCRT_SetWin32LastError(unsigned long __ulErrorCode) MCF_NOEXCEPT;
+extern unsigned long MCFCRT_GetWin32LastError(void) MCFCRT_NOEXCEPT;
+extern void MCFCRT_SetWin32LastError(unsigned long __ulErrorCode) MCFCRT_NOEXCEPT;
 
-extern MCF_STD size_t MCFCRT_GetWin32ErrorDescription(const wchar_t **__ppwszStr, unsigned long __ulErrorCode) MCF_NOEXCEPT;
+extern MCFCRT_STD size_t MCFCRT_GetWin32ErrorDescription(const wchar_t **__ppwszStr, unsigned long __ulErrorCode) MCFCRT_NOEXCEPT;
 
 __MCFCRT_EXTERN_C_END
 

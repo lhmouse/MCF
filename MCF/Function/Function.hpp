@@ -60,6 +60,25 @@ namespace Impl_Function {
 			return std::conditional_t<std::is_copy_constructible<FuncT>::value, FunctorCopier, DummyFunctorCopier>()(*this);
 		}
 	};
+	template<typename FuncT, typename ...ParamsT>
+	class Functor<FuncT, void, ParamsT...> : public FunctorBase<void, ParamsT...> {
+	private:
+		const std::remove_reference_t<FuncT> x_vFunc;
+
+	public:
+		explicit Functor(FuncT &&vFunc)
+			: x_vFunc(std::forward<FuncT>(vFunc))
+		{
+		}
+
+	public:
+		void Dispatch(Impl_ForwardedParam::ForwardedParam<ParamsT>...vParams) const override {
+			Invoke(x_vFunc, std::forward<ParamsT>(vParams)...);
+		}
+		IntrusivePtr<FunctorBase<void, ParamsT...>> Fork() const override {
+			return std::conditional_t<std::is_copy_constructible<FuncT>::value, FunctorCopier, DummyFunctorCopier>()(*this);
+		}
+	};
 }
 
 template<typename FuncT>
@@ -70,7 +89,7 @@ class Function {
 template<typename RetT, typename ...ParamsT>
 class Function<RetT (ParamsT...)> {
 private:
-	IntrusivePtr<const Impl_Function::FunctorBase<RetT, ParamsT...>> x_pFunctor;
+	IntrusivePtr<const Impl_Function::FunctorBase<std::remove_cv_t<RetT>, ParamsT...>> x_pFunctor;
 
 public:
 	constexpr Function(std::nullptr_t = nullptr) noexcept
@@ -80,10 +99,10 @@ public:
 	template<typename FuncT,
 		std::enable_if_t<
 			!std::is_same<std::decay_t<FuncT>, Function>::value &&
-				std::is_convertible<decltype(DeclVal<FuncT>()(DeclVal<Impl_ForwardedParam::ForwardedParam<ParamsT>>()...)), RetT>::value,
+				(std::is_convertible<decltype(DeclVal<FuncT>()(DeclVal<Impl_ForwardedParam::ForwardedParam<ParamsT>>()...)), RetT>::value || std::is_void<RetT>::value),
 			int> = 0>
 	Function(FuncT &&vFunc)
-		: x_pFunctor(new Impl_Function::Functor<FuncT, RetT, ParamsT...>(std::forward<FuncT>(vFunc)))
+		: x_pFunctor(new Impl_Function::Functor<FuncT, std::remove_cv_t<RetT>, ParamsT...>(std::forward<FuncT>(vFunc)))
 	{
 	}
 
@@ -121,7 +140,7 @@ public:
 	explicit operator bool() const noexcept {
 		return !!x_pFunctor;
 	}
-	RetT operator()(ParamsT ...vParams) const {
+	std::remove_cv_t<RetT> operator()(ParamsT ...vParams) const {
 		ASSERT(x_pFunctor);
 
 		return x_pFunctor->Dispatch(std::forward<ParamsT>(vParams)...); // 值形参当作右值引用传递。

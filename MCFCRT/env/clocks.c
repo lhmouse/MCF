@@ -6,7 +6,7 @@
 #include "mcfwin.h"
 #include "bail.h"
 
-uint64_t MCF_GetUtcClock(){
+uint64_t MCFCRT_GetUtcClock(){
 	union {
 		FILETIME ft;
 		LARGE_INTEGER li;
@@ -15,7 +15,7 @@ uint64_t MCF_GetUtcClock(){
 	// 0x019DB1DED53E8000 = 从 1601-01-01 到 1970-01-01 经历的时间纳秒数。
 	return (uint64_t)(unUtc.li.QuadPart - 0x019DB1DED53E8000ll) / 10000;
 }
-uint64_t MCF_GetLocalClock(){
+uint64_t MCFCRT_GetLocalClock(){
 	union {
 		FILETIME ft;
 		LARGE_INTEGER li;
@@ -25,10 +25,10 @@ uint64_t MCF_GetLocalClock(){
 	return (uint64_t)(unLocal.li.QuadPart - 0x019DB1DED53E8000ll) / 10000;
 }
 
-uint64_t MCF_GetFastMonoClock(){
+uint64_t MCFCRT_GetFastMonoClock(){
 	return GetTickCount64();
 }
-double MCF_GetHiResMonoClock(){
+double MCFCRT_GetHiResMonoClock(){
 	static volatile LARGE_INTEGER s_liFrequency;
 
 	LARGE_INTEGER liFrequency;

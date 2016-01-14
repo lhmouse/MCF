@@ -11,7 +11,7 @@
 #	define MASK     0x01010101ul
 #endif
 
-char *MCF_stpcpy(char *restrict dst, const char *restrict src){
+char *MCFCRT_stpcpy(char *restrict dst, const char *restrict src){
 	register const char *rp = src;
 	register char *wp = dst;
 
@@ -58,7 +58,7 @@ char *MCF_stpcpy(char *restrict dst, const char *restrict src){
 		wp += 8 * sizeof(uintptr_t);
 	}
 }
-char *MCF_stppcpy(char *restrict dst, char *restrict end, const char *restrict src){
+char *MCFCRT_stppcpy(char *restrict dst, char *restrict end, const char *restrict src){
 	register const char *rp = src;
 	register char *wp = dst;
 

@@ -8,6 +8,7 @@
 #include "ArrayView.hpp"
 #include "../Containers/_EnumeratorTemplate.hpp"
 #include "../Utilities/Assert.hpp"
+#include "../Utilities/DeclVal.hpp"
 #include "Exception.hpp"
 #include <utility>
 #include <initializer_list>
@@ -15,6 +16,16 @@
 #include <cstddef>
 
 namespace MCF {
+
+namespace Impl_Array {
+	template<typename ElementT, std::size_t kSizeT>
+	struct IsNoexceptSwappableChecker {
+		constexpr bool operator()() const noexcept {
+			using std::swap;
+			return noexcept(swap(DeclVal<ElementT (&)[kSizeT]>(), DeclVal<ElementT (&)[kSizeT]>()));
+		}
+	};
+}
 
 template<typename ElementT, std::size_t kSizeT, std::size_t ...kRemainingT>
 class Array;
@@ -131,8 +142,9 @@ public:
 		return EnumerateSingular();
 	}
 
-	void Swap(Array &rhs) noexcept(noexcept(std::swap(std::declval<Element (&)[kSizeT]>(), std::declval<Element (&)[kSizeT]>()))) {
-		std::swap(m_aStorage, rhs.m_aStorage);
+	void Swap(Array &rhs) noexcept(Impl_Array::IsNoexceptSwappableChecker<Element, kSizeT>()()) {
+		using std::swap;
+		swap(m_aStorage, rhs.m_aStorage);
 	}
 
 	// Array 需求。
@@ -335,8 +347,9 @@ public:
 		return EnumerateSingular();
 	}
 
-	void Swap(Array &rhs) noexcept(noexcept(std::swap(std::declval<Element (&)[kSizeT]>(), std::declval<Element (&)[kSizeT]>()))) {
-		std::swap(m_aStorage, rhs.m_aStorage);
+	void Swap(Array &rhs) noexcept(Impl_Array::IsNoexceptSwappableChecker<Element, kSizeT>()()) {
+		using std::swap;
+		swap(m_aStorage, rhs.m_aStorage);
 	}
 
 	// Array 需求。

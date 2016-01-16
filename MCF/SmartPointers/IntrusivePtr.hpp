@@ -7,6 +7,7 @@
 
 #include "../Utilities/Assert.hpp"
 #include "../Utilities/Bail.hpp"
+#include "../Utilities/DeclVal.hpp"
 #include "../Function/Comparators.hpp"
 #include "../Thread/Mutex.hpp"
 #include "../Thread/Atomic.hpp"
@@ -92,7 +93,7 @@ namespace Impl_IntrusivePtr {
 	};
 	template<typename DstT, typename SrcT>
 	struct StaticCastOrDynamicCastHelper<DstT, SrcT,
-		decltype(static_cast<DstT>(std::declval<SrcT>()))>
+		decltype(static_cast<DstT>(DeclVal<SrcT>()))>
 	{
 		constexpr DstT operator()(SrcT &&vSrc) const noexcept {
 			return static_cast<DstT>(std::forward<SrcT>(vSrc));
@@ -279,7 +280,7 @@ public:
 template<typename ObjectT, class DeleterT>
 class IntrusivePtr {
 	static_assert(sizeof(IntrusiveBase<ObjectT, DeleterT>) > 0, "IntrusiveBase<ObjectT, DeleterT> is not an object type or is an incomplete type.");
-	static_assert(sizeof(dynamic_cast<const volatile IntrusiveBase<ObjectT, DeleterT> *>(std::declval<ObjectT *>())), "Unable to locate IntrusiveBase for the managed object type.");
+	static_assert(sizeof(dynamic_cast<const volatile IntrusiveBase<ObjectT, DeleterT> *>(DeclVal<ObjectT *>())), "Unable to locate IntrusiveBase for the managed object type.");
 
 	template<typename, class>
 	friend class IntrusivePtr;
@@ -290,7 +291,7 @@ public:
 	using Element = ObjectT;
 	using Deleter = DeleterT;
 
-	static_assert(noexcept(Deleter()(std::declval<std::remove_cv_t<Element> *>())), "Deleter must not throw.");
+	static_assert(noexcept(Deleter()(DeclVal<std::remove_cv_t<Element> *>())), "Deleter must not throw.");
 
 public:
 	static const IntrusivePtr kNull;
@@ -545,7 +546,7 @@ IntrusivePtr<DstT, DeleterT> DynamicPointerCast(IntrusivePtr<SrcT, DeleterT> pSr
 template<typename ObjectT, class DeleterT>
 class IntrusiveWeakPtr {
 	static_assert(sizeof(IntrusiveBase<ObjectT, DeleterT>) > 0, "IntrusiveBase<ObjectT, DeleterT> is not an object type or is an incomplete type.");
-	static_assert(sizeof(dynamic_cast<const volatile IntrusiveBase<ObjectT, DeleterT> *>(std::declval<ObjectT *>())), "Unable to locate IntrusiveBase for the managed object type.");
+	static_assert(sizeof(dynamic_cast<const volatile IntrusiveBase<ObjectT, DeleterT> *>(DeclVal<ObjectT *>())), "Unable to locate IntrusiveBase for the managed object type.");
 
 	template<typename, class>
 	friend class IntrusivePtr;
@@ -556,7 +557,7 @@ public:
 	using Element = ObjectT;
 	using Deleter = DeleterT;
 
-	static_assert(noexcept(Deleter()(std::declval<std::remove_cv_t<Element> *>())), "Deleter must not throw.");
+	static_assert(noexcept(Deleter()(DeclVal<std::remove_cv_t<Element> *>())), "Deleter must not throw.");
 
 public:
 	static const IntrusiveWeakPtr kNull;

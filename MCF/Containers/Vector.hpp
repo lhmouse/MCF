@@ -8,6 +8,7 @@
 #include "_EnumeratorTemplate.hpp"
 #include "../Utilities/Assert.hpp"
 #include "../Utilities/ConstructDestruct.hpp"
+#include "../Utilities/DeclVal.hpp"
 #include "../Core/Exception.hpp"
 #include "../Core/ArrayView.hpp"
 #include <utility>
@@ -655,7 +656,7 @@ public:
 
 		return GetBegin() + uOffset;
 	}
-	Element *Erase(const Element *pPos) noexcept(noexcept(std::declval<Vector &>().Erase(pPos, pPos))) {
+	Element *Erase(const Element *pPos) noexcept(noexcept(DeclVal<Vector &>().Erase(pPos, pPos))) {
 		ASSERT(pPos);
 
 		return Erase(pPos, pPos + 1);

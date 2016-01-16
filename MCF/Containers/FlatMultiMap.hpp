@@ -6,6 +6,7 @@
 #define MCF_CONTAINERS_FLAT_MULTI_MAP_HPP_
 
 #include "../Function/Comparators.hpp"
+#include "../Utilities/DeclVal.hpp"
 #include "Vector.hpp"
 #include <utility>
 #include <tuple>
@@ -294,10 +295,10 @@ public:
 	Element *Emplace(const Element *pPos, ComparandT &&vComparand, ValueParamsT &&...vValueParams){
 		return AddWithHint(pPos, std::forward<ComparandT>(vComparand), std::forward<ValueParamsT>(vValueParams)...).first;
 	}
-	Element *Erase(const Element *pBegin, const Element *pEnd) noexcept(noexcept(std::declval<FlatMultiMap &>().x_vecStorage.Erase(pBegin, pEnd))) {
+	Element *Erase(const Element *pBegin, const Element *pEnd) noexcept(noexcept(DeclVal<FlatMultiMap &>().x_vecStorage.Erase(pBegin, pEnd))) {
 		return x_vecStorage.Erase(pBegin, pEnd);
 	}
-	Element *Erase(const Element *pPos) noexcept(noexcept(std::declval<FlatMultiMap &>().x_vecStorage.Erase(pPos))) {
+	Element *Erase(const Element *pPos) noexcept(noexcept(DeclVal<FlatMultiMap &>().x_vecStorage.Erase(pPos))) {
 		return x_vecStorage.Erase(pPos);
 	}
 

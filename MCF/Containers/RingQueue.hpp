@@ -8,6 +8,7 @@
 #include "_EnumeratorTemplate.hpp"
 #include "../Utilities/Assert.hpp"
 #include "../Utilities/ConstructDestruct.hpp"
+#include "../Utilities/DeclVal.hpp"
 #include "../Core/Exception.hpp"
 #include <utility>
 #include <new>
@@ -965,7 +966,7 @@ public:
 
 		return pStorage + X_Advance(x_uBegin, uCountBefore);
 	}
-	Element *Erase(const Element *pPos) noexcept(noexcept(std::declval<RingQueue &>().Erase(pPos, pPos))) {
+	Element *Erase(const Element *pPos) noexcept(noexcept(DeclVal<RingQueue &>().Erase(pPos, pPos))) {
 		ASSERT(pPos);
 
 		return Erase(pPos, GetNext(pPos));

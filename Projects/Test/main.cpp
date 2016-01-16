@@ -4,25 +4,11 @@
 
 template class MCF::UniquePtr<int>;
 
-struct d1 {
-	constexpr int *operator()() noexcept {
-		return nullptr;
-	}
-	void operator()(int *) noexcept {
-	}
-};
-struct d2 {
-	constexpr int *operator()() noexcept {
-		return nullptr;
-	}
-	void operator()(int *) noexcept {
-	}
-};
-
 extern "C" unsigned MCFCRT_Main(){
-	MCF::UniquePtr<int, d1> p1;
-	MCF::UniquePtr<int, d2> p2;
-	std::printf("%d\n", p1 == p2);
-
+	MCF::UniquePtr<int> p1, p2;
+	p1.Reset(new int(123));
+	p2.Reset(new int(456));
+	swap(p1, p2);
+	std::printf("%d %d\n", *p1, *p2);
 	return 0;
 }

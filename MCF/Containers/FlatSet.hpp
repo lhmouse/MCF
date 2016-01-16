@@ -6,6 +6,7 @@
 #define MCF_CONTAINERS_FLAT_SET_HPP_
 
 #include "../Function/Comparators.hpp"
+#include "../Utilities/DeclVal.hpp"
 #include "Vector.hpp"
 #include <utility>
 
@@ -292,10 +293,10 @@ public:
 	Element *Emplace(const Element *pPos, ComparandT &&vComparand, RemainingT &&...vRemaining){
 		return AddWithHint(pPos, Element(std::forward<ComparandT>(vComparand), std::forward<RemainingT>(vRemaining)...)).first;
 	}
-	Element *Erase(const Element *pBegin, const Element *pEnd) noexcept(noexcept(std::declval<FlatSet &>().x_vecStorage.Erase(pBegin, pEnd))) {
+	Element *Erase(const Element *pBegin, const Element *pEnd) noexcept(noexcept(DeclVal<FlatSet &>().x_vecStorage.Erase(pBegin, pEnd))) {
 		return x_vecStorage.Erase(pBegin, pEnd);
 	}
-	Element *Erase(const Element *pPos) noexcept(noexcept(std::declval<FlatSet &>().x_vecStorage.Erase(pPos))) {
+	Element *Erase(const Element *pPos) noexcept(noexcept(DeclVal<FlatSet &>().x_vecStorage.Erase(pPos))) {
 		return x_vecStorage.Erase(pPos);
 	}
 

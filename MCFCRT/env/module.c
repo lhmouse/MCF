@@ -49,7 +49,7 @@ static void __MCFCRT_PumpAtEndModule(){
 			pBlock = g_pAtExitFirst;
 			if(!pBlock){
 				ReleaseSRWLockExclusive(&g_srwlAtExitMutex);
-				break;
+				goto jDone;
 			}
 
 			AtExitCallbackBlock *const pNextBlock = pBlock->pNextBlock;
@@ -69,6 +69,8 @@ static void __MCFCRT_PumpAtEndModule(){
 		}
 		free(pBlock);
 	}
+jDone:
+	;
 }
 
 static bool __MCFCRT_StaticObjectsInit(){

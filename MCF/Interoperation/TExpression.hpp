@@ -6,6 +6,7 @@
 #define MCF_INTEROPERATION_T_EXPRESSION_HPP_
 
 #include "../Core/String.hpp"
+#include "../Containers/Vector.hpp"
 #include <cstddef>
 
 namespace MCF {

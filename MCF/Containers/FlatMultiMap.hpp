@@ -442,37 +442,30 @@ public:
 	std::pair<ConstEnumerator, ConstEnumerator> EnumerateConstEqualRange(const ComparandT &vComparand) const {
 		return EnumerateEqualRange(vComparand);
 	}
+
+	friend void swap(FlatMultiMap &lhs, FlatMultiMap &rhs) noexcept {
+		lhs.Swap(rhs);
+	}
+
+	friend decltype(auto) begin(const FlatMultiMap &rhs) noexcept {
+		return rhs.EnumerateFirst();
+	}
+	friend decltype(auto) begin(FlatMultiMap &rhs) noexcept {
+		return rhs.EnumerateFirst();
+	}
+	friend decltype(auto) cbegin(const FlatMultiMap &rhs) noexcept {
+		return begin(rhs);
+	}
+	friend decltype(auto) end(const FlatMultiMap &rhs) noexcept {
+		return rhs.EnumerateSingular();
+	}
+	friend decltype(auto) end(FlatMultiMap &rhs) noexcept {
+		return rhs.EnumerateSingular();
+	}
+	friend decltype(auto) cend(const FlatMultiMap &rhs) noexcept {
+		return end(rhs);
+	}
 };
-
-template<typename KeyT, typename ValueT, typename ComparatorT>
-void swap(FlatMultiMap<KeyT, ValueT, ComparatorT> &lhs, FlatMultiMap<KeyT, ValueT, ComparatorT> &rhs) noexcept {
-	lhs.Swap(rhs);
-}
-
-template<typename KeyT, typename ValueT, typename ComparatorT>
-decltype(auto) begin(const FlatMultiMap<KeyT, ValueT, ComparatorT> &rhs) noexcept {
-	return rhs.EnumerateFirst();
-}
-template<typename KeyT, typename ValueT, typename ComparatorT>
-decltype(auto) begin(FlatMultiMap<KeyT, ValueT, ComparatorT> &rhs) noexcept {
-	return rhs.EnumerateFirst();
-}
-template<typename KeyT, typename ValueT, typename ComparatorT>
-decltype(auto) cbegin(const FlatMultiMap<KeyT, ValueT, ComparatorT> &rhs) noexcept {
-	return begin(rhs);
-}
-template<typename KeyT, typename ValueT, typename ComparatorT>
-decltype(auto) end(const FlatMultiMap<KeyT, ValueT, ComparatorT> &rhs) noexcept {
-	return rhs.EnumerateSingular();
-}
-template<typename KeyT, typename ValueT, typename ComparatorT>
-decltype(auto) end(FlatMultiMap<KeyT, ValueT, ComparatorT> &rhs) noexcept {
-	return rhs.EnumerateSingular();
-}
-template<typename KeyT, typename ValueT, typename ComparatorT>
-decltype(auto) cend(const FlatMultiMap<KeyT, ValueT, ComparatorT> &rhs) noexcept {
-	return end(rhs);
-}
 
 }
 

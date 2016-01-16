@@ -49,7 +49,7 @@ namespace Impl_Bind {
 		}
 		template<typename ParamT>
 		decltype(auto) operator()(const RefWrapper<ParamT> &vParam) noexcept {
-			return vParam.Forward();
+			return vParam.Get();
 		}
 		template<typename FuncT, typename ...ParamsT>
 		decltype(auto) operator()(const BindResult<FuncT, true, ParamsT...> &vCurried) noexcept {

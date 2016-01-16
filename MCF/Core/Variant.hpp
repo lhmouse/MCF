@@ -185,12 +185,11 @@ public:
 		using std::swap;
 		swap(x_pElement, rhs.x_pElement);
 	}
-};
 
-template<typename ...ElementsT>
-void swap(Variant<ElementsT...> &lhs, Variant<ElementsT...> &rhs) noexcept {
-	lhs.Swap(rhs);
-}
+	friend void swap(Variant &lhs, Variant &rhs) noexcept {
+		lhs.Swap(rhs);
+	}
+};
 
 }
 

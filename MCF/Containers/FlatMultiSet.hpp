@@ -436,37 +436,30 @@ public:
 	std::pair<ConstEnumerator, ConstEnumerator> EnumerateConstEqualRange(const ComparandT &vComparand) const {
 		return EnumerateEqualRange(vComparand);
 	}
+
+	friend void swap(FlatMultiSet &lhs, FlatMultiSet &rhs) noexcept {
+		lhs.Swap(rhs);
+	}
+
+	friend decltype(auto) begin(const FlatMultiSet &rhs) noexcept {
+		return rhs.EnumerateFirst();
+	}
+	friend decltype(auto) begin(FlatMultiSet &rhs) noexcept {
+		return rhs.EnumerateFirst();
+	}
+	friend decltype(auto) cbegin(const FlatMultiSet &rhs) noexcept {
+		return begin(rhs);
+	}
+	friend decltype(auto) end(const FlatMultiSet &rhs) noexcept {
+		return rhs.EnumerateSingular();
+	}
+	friend decltype(auto) end(FlatMultiSet &rhs) noexcept {
+		return rhs.EnumerateSingular();
+	}
+	friend decltype(auto) cend(const FlatMultiSet &rhs) noexcept {
+		return end(rhs);
+	}
 };
-
-template<typename ElementT, typename ComparatorT>
-void swap(FlatMultiSet<ElementT, ComparatorT> &lhs, FlatMultiSet<ElementT, ComparatorT> &rhs) noexcept {
-	lhs.Swap(rhs);
-}
-
-template<typename ElementT, typename ComparatorT>
-decltype(auto) begin(const FlatMultiSet<ElementT, ComparatorT> &rhs) noexcept {
-	return rhs.EnumerateFirst();
-}
-template<typename ElementT, typename ComparatorT>
-decltype(auto) begin(FlatMultiSet<ElementT, ComparatorT> &rhs) noexcept {
-	return rhs.EnumerateFirst();
-}
-template<typename ElementT, typename ComparatorT>
-decltype(auto) cbegin(const FlatMultiSet<ElementT, ComparatorT> &rhs) noexcept {
-	return begin(rhs);
-}
-template<typename ElementT, typename ComparatorT>
-decltype(auto) end(const FlatMultiSet<ElementT, ComparatorT> &rhs) noexcept {
-	return rhs.EnumerateSingular();
-}
-template<typename ElementT, typename ComparatorT>
-decltype(auto) end(FlatMultiSet<ElementT, ComparatorT> &rhs) noexcept {
-	return rhs.EnumerateSingular();
-}
-template<typename ElementT, typename ComparatorT>
-decltype(auto) cend(const FlatMultiSet<ElementT, ComparatorT> &rhs) noexcept {
-	return end(rhs);
-}
 
 }
 

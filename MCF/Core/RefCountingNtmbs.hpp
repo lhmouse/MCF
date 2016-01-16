@@ -107,6 +107,10 @@ public:
 		View(pszSrc).Swap(*this);
 	}
 
+	int Compare(const char *rhs) const noexcept {
+		return std::strcmp(GetStr(), rhs);
+	}
+
 	void Swap(RefCountingNtmbs &rhs) noexcept {
 		using std::swap;
 		swap(x_puRef,  rhs.x_puRef);
@@ -120,71 +124,71 @@ public:
 	operator const char *() const noexcept {
 		return GetStr();
 	}
+
+	bool operator==(const RefCountingNtmbs &rhs) const noexcept {
+		return std::strcmp(GetStr(), rhs.GetStr()) == 0;
+	}
+	bool operator==(const char *rhs) const noexcept {
+		return std::strcmp(GetStr(), rhs) == 0;
+	}
+	friend bool operator==(const char *lhs, const RefCountingNtmbs &rhs) noexcept {
+		return std::strcmp(lhs, rhs.GetStr()) == 0;
+	}
+
+	bool operator!=(const RefCountingNtmbs &rhs) const noexcept {
+		return std::strcmp(GetStr(), rhs.GetStr()) != 0;
+	}
+	bool operator!=(const char *rhs) const noexcept {
+		return std::strcmp(GetStr(), rhs) != 0;
+	}
+	friend bool operator!=(const char *lhs, const RefCountingNtmbs &rhs) noexcept {
+		return std::strcmp(lhs, rhs.GetStr()) != 0;
+	}
+
+	bool operator<(const RefCountingNtmbs &rhs) const noexcept {
+		return std::strcmp(GetStr(), rhs.GetStr()) < 0;
+	}
+	bool operator<(const char *rhs) const noexcept {
+		return std::strcmp(GetStr(), rhs) < 0;
+	}
+	friend bool operator<(const char *lhs, const RefCountingNtmbs &rhs) noexcept {
+		return std::strcmp(lhs, rhs.GetStr()) < 0;
+	}
+
+	bool operator>(const RefCountingNtmbs &rhs) const noexcept {
+		return std::strcmp(GetStr(), rhs.GetStr()) > 0;
+	}
+	bool operator>(const char *rhs) const noexcept {
+		return std::strcmp(GetStr(), rhs) > 0;
+	}
+	friend bool operator>(const char *lhs, const RefCountingNtmbs &rhs) noexcept {
+		return std::strcmp(lhs, rhs.GetStr()) > 0;
+	}
+
+	bool operator<=(const RefCountingNtmbs &rhs) const noexcept {
+		return std::strcmp(GetStr(), rhs.GetStr()) <= 0;
+	}
+	bool operator<=(const char *rhs) const noexcept {
+		return std::strcmp(GetStr(), rhs) <= 0;
+	}
+	friend bool operator<=(const char *lhs, const RefCountingNtmbs &rhs) noexcept {
+		return std::strcmp(lhs, rhs.GetStr()) <= 0;
+	}
+
+	bool operator>=(const RefCountingNtmbs &rhs) const noexcept {
+		return std::strcmp(GetStr(), rhs.GetStr()) >= 0;
+	}
+	bool operator>=(const char *rhs) const noexcept {
+		return std::strcmp(GetStr(), rhs) >= 0;
+	}
+	friend bool operator>=(const char *lhs, const RefCountingNtmbs &rhs) noexcept {
+		return std::strcmp(lhs, rhs.GetStr()) >= 0;
+	}
+
+	friend void swap(RefCountingNtmbs &lhs, RefCountingNtmbs &rhs) noexcept {
+		lhs.Swap(rhs);
+	}
 };
-
-inline bool operator==(const RefCountingNtmbs &lhs, const RefCountingNtmbs &rhs) noexcept {
-	return std::strcmp(lhs.GetStr(), rhs.GetStr()) == 0;
-}
-inline bool operator==(const RefCountingNtmbs &lhs, const char *rhs) noexcept {
-	return std::strcmp(lhs.GetStr(), rhs) == 0;
-}
-inline bool operator==(const char *lhs, const RefCountingNtmbs &rhs) noexcept {
-	return std::strcmp(lhs, rhs.GetStr()) == 0;
-}
-
-inline bool operator!=(const RefCountingNtmbs &lhs, const RefCountingNtmbs &rhs) noexcept {
-	return std::strcmp(lhs.GetStr(), rhs.GetStr()) != 0;
-}
-inline bool operator!=(const RefCountingNtmbs &lhs, const char *rhs) noexcept {
-	return std::strcmp(lhs.GetStr(), rhs) != 0;
-}
-inline bool operator!=(const char *lhs, const RefCountingNtmbs &rhs) noexcept {
-	return std::strcmp(lhs, rhs.GetStr()) != 0;
-}
-
-inline bool operator<(const RefCountingNtmbs &lhs, const RefCountingNtmbs &rhs) noexcept {
-	return std::strcmp(lhs.GetStr(), rhs.GetStr()) < 0;
-}
-inline bool operator<(const RefCountingNtmbs &lhs, const char *rhs) noexcept {
-	return std::strcmp(lhs.GetStr(), rhs) < 0;
-}
-inline bool operator<(const char *lhs, const RefCountingNtmbs &rhs) noexcept {
-	return std::strcmp(lhs, rhs.GetStr()) < 0;
-}
-
-inline bool operator>(const RefCountingNtmbs &lhs, const RefCountingNtmbs &rhs) noexcept {
-	return std::strcmp(lhs.GetStr(), rhs.GetStr()) > 0;
-}
-inline bool operator>(const RefCountingNtmbs &lhs, const char *rhs) noexcept {
-	return std::strcmp(lhs.GetStr(), rhs) > 0;
-}
-inline bool operator>(const char *lhs, const RefCountingNtmbs &rhs) noexcept {
-	return std::strcmp(lhs, rhs.GetStr()) > 0;
-}
-
-inline bool operator<=(const RefCountingNtmbs &lhs, const RefCountingNtmbs &rhs) noexcept {
-	return std::strcmp(lhs.GetStr(), rhs.GetStr()) <= 0;
-}
-inline bool operator<=(const RefCountingNtmbs &lhs, const char *rhs) noexcept {
-	return std::strcmp(lhs.GetStr(), rhs) <= 0;
-}
-inline bool operator<=(const char *lhs, const RefCountingNtmbs &rhs) noexcept {
-	return std::strcmp(lhs, rhs.GetStr()) <= 0;
-}
-
-inline bool operator>=(const RefCountingNtmbs &lhs, const RefCountingNtmbs &rhs) noexcept {
-	return std::strcmp(lhs.GetStr(), rhs.GetStr()) >= 0;
-}
-inline bool operator>=(const RefCountingNtmbs &lhs, const char *rhs) noexcept {
-	return std::strcmp(lhs.GetStr(), rhs) >= 0;
-}
-inline bool operator>=(const char *lhs, const RefCountingNtmbs &rhs) noexcept {
-	return std::strcmp(lhs, rhs.GetStr()) >= 0;
-}
-
-inline void swap(RefCountingNtmbs &lhs, RefCountingNtmbs &rhs) noexcept {
-	lhs.Swap(rhs);
-}
 
 inline RefCountingNtmbs operator""_rcs(const char *pszStr, std::size_t /* uLen */) noexcept {
 	return RefCountingNtmbs::View(pszStr);

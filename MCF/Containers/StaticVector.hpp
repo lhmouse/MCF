@@ -359,37 +359,30 @@ public:
 	Element &operator[](std::size_t uIndex) noexcept {
 		return UncheckedGet(uIndex);
 	}
+
+	friend void swap(StaticVector &lhs, StaticVector &rhs) noexcept(noexcept(lhs.Swap(rhs))) {
+		lhs.Swap(rhs);
+	}
+
+	friend decltype(auto) begin(const StaticVector &rhs) noexcept {
+		return rhs.EnumerateFirst();
+	}
+	friend decltype(auto) begin(StaticVector &rhs) noexcept {
+		return rhs.EnumerateFirst();
+	}
+	friend decltype(auto) cbegin(const StaticVector &rhs) noexcept {
+		return begin(rhs);
+	}
+	friend decltype(auto) end(const StaticVector &rhs) noexcept {
+		return rhs.EnumerateSingular();
+	}
+	friend decltype(auto) end(StaticVector &rhs) noexcept {
+		return rhs.EnumerateSingular();
+	}
+	friend decltype(auto) cend(const StaticVector &rhs) noexcept {
+		return end(rhs);
+	}
 };
-
-template<typename ElementT, std::size_t kCapacity>
-void swap(StaticVector<ElementT, kCapacity> &lhs, StaticVector<ElementT, kCapacity> &rhs) noexcept(noexcept(lhs.Swap(rhs))) {
-	lhs.Swap(rhs);
-}
-
-template<typename ElementT, std::size_t kCapacity>
-decltype(auto) begin(const StaticVector<ElementT, kCapacity> &rhs) noexcept {
-	return rhs.EnumerateFirst();
-}
-template<typename ElementT, std::size_t kCapacity>
-decltype(auto) begin(StaticVector<ElementT, kCapacity> &rhs) noexcept {
-	return rhs.EnumerateFirst();
-}
-template<typename ElementT, std::size_t kCapacity>
-decltype(auto) cbegin(const StaticVector<ElementT, kCapacity> &rhs) noexcept {
-	return begin(rhs);
-}
-template<typename ElementT, std::size_t kCapacity>
-decltype(auto) end(const StaticVector<ElementT, kCapacity> &rhs) noexcept {
-	return rhs.EnumerateSingular();
-}
-template<typename ElementT, std::size_t kCapacity>
-decltype(auto) end(StaticVector<ElementT, kCapacity> &rhs) noexcept {
-	return rhs.EnumerateSingular();
-}
-template<typename ElementT, std::size_t kCapacity>
-decltype(auto) cend(const StaticVector<ElementT, kCapacity> &rhs) noexcept {
-	return end(rhs);
-}
 
 }
 

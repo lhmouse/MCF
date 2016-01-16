@@ -186,11 +186,11 @@ public:
 		swap(x_pLast,  rhs.x_pLast);
 		swap(x_uSize,  rhs.x_uSize);
 	}
-};
 
-inline void swap(StreamBuffer &lhs, StreamBuffer &rhs) noexcept {
-	lhs.Swap(rhs);
-}
+	friend void swap(StreamBuffer &lhs, StreamBuffer &rhs) noexcept {
+		lhs.Swap(rhs);
+	}
+};
 
 }
 

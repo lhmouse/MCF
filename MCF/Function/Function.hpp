@@ -164,12 +164,11 @@ public:
 	bool operator>=(const Function &rhs) const noexcept {
 		return x_pFunctor >= rhs.x_pFunctor;
 	}
-};
 
-template<typename RetT, typename ...ParamsT>
-void swap(Function<RetT (ParamsT...)> &lhs, Function<RetT (ParamsT...)> &rhs) noexcept {
-	lhs.Swap(rhs);
-}
+	friend void swap(Function &lhs, Function &rhs) noexcept {
+		lhs.Swap(rhs);
+	}
+};
 
 }
 

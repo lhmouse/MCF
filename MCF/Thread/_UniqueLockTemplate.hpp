@@ -145,17 +145,12 @@ namespace Impl_UniqueLockTemplate {
 			swap(x_pOwner,     rhs.x_pOwner);
 			swap(x_uLockCount, rhs.x_uLockCount);
 		}
+
+		friend void swap(UniqueLockTemplate &lhs, UniqueLockTemplate &rhs) noexcept {
+			lhs.Swap(rhs);
+		}
 	};
-
-	template<class MutexT, std::size_t kLockTypeT>
-	void swap(Impl_UniqueLockTemplate::UniqueLockTemplate<MutexT, kLockTypeT> &lhs,
-		Impl_UniqueLockTemplate::UniqueLockTemplate<MutexT, kLockTypeT> &rhs) noexcept
-	{
-		lhs.Swap(rhs);
-	}
 }
-
-using Impl_UniqueLockTemplate::swap;
 
 }
 

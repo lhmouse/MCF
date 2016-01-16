@@ -117,12 +117,10 @@ public:
 		x_vecStorage.Clear();
 	}
 */
+	void swap(MultiIndexMap &lhs, MultiIndexMap &rhs) noexcept {
+		lhs.Swap(rhs);
+	}
 };
-
-template<typename IndicesT, typename ValueT>
-void swap(MultiIndexMap<IndicesT, ValueT> &lhs, MultiIndexMap<IndicesT, ValueT> &rhs) noexcept {
-	lhs.Swap(rhs);
-}
 
 template<typename IndicesT, typename ValueT>
 decltype(auto) begin(const MultiIndexMap<IndicesT, ValueT> &rhs) noexcept {

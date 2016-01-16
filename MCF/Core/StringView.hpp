@@ -483,60 +483,43 @@ public:
 	const Char &operator[](std::size_t uIndex) const noexcept {
 		return UncheckedGet(uIndex);
 	}
+
+	bool operator==(const StringView &rhs) noexcept {
+		return (GetSize() != rhs.GetSize()) ? false : (Compare(rhs) == 0);
+	}
+	bool operator!=(const StringView &rhs) noexcept {
+		return (GetSize() != rhs.GetSize()) ? true : (Compare(rhs) != 0);
+	}
+	bool operator<(const StringView &rhs) noexcept {
+		return Compare(rhs) < 0;
+	}
+	bool operator>(const StringView &rhs) noexcept {
+		return Compare(rhs) > 0;
+	}
+	bool operator<=(const StringView &rhs) noexcept {
+		return Compare(rhs) <= 0;
+	}
+	bool operator>=(const StringView &rhs) noexcept {
+		return Compare(rhs) >= 0;
+	}
+
+	friend void swap(StringView &lhs, StringView &rhs) noexcept {
+		lhs.Swap(rhs);
+	}
+
+	friend decltype(auto) begin(const StringView &rhs) noexcept {
+		return rhs.GetBegin();
+	}
+	friend decltype(auto) cbegin(const StringView &rhs) noexcept {
+		return begin(rhs);
+	}
+	friend decltype(auto) end(const StringView &rhs) noexcept {
+		return rhs.GetEnd();
+	}
+	friend decltype(auto) cend(const StringView &rhs) noexcept {
+		return end(rhs);
+	}
 };
-
-template<StringType kTypeT>
-bool operator==(const StringView<kTypeT> &lhs, const StringView<kTypeT> &rhs) noexcept {
-	if(lhs.GetSize() != rhs.GetSize()){
-		return false;
-	}
-	return lhs.Compare(rhs) == 0;
-}
-template<StringType kTypeT>
-bool operator!=(const StringView<kTypeT> &lhs, const StringView<kTypeT> &rhs) noexcept {
-	if(lhs.GetSize() != rhs.GetSize()){
-		return true;
-	}
-	return lhs.Compare(rhs) != 0;
-}
-template<StringType kTypeT>
-bool operator<(const StringView<kTypeT> &lhs, const StringView<kTypeT> &rhs) noexcept {
-	return lhs.Compare(rhs) < 0;
-}
-template<StringType kTypeT>
-bool operator>(const StringView<kTypeT> &lhs, const StringView<kTypeT> &rhs) noexcept {
-	return lhs.Compare(rhs) > 0;
-}
-template<StringType kTypeT>
-bool operator<=(const StringView<kTypeT> &lhs, const StringView<kTypeT> &rhs) noexcept {
-	return lhs.Compare(rhs) <= 0;
-}
-template<StringType kTypeT>
-bool operator>=(const StringView<kTypeT> &lhs, const StringView<kTypeT> &rhs) noexcept {
-	return lhs.Compare(rhs) >= 0;
-}
-
-template<StringType kTypeT>
-void swap(StringView<kTypeT> &lhs, StringView<kTypeT> &rhs) noexcept {
-	lhs.Swap(rhs);
-}
-
-template<StringType kTypeT>
-decltype(auto) begin(const StringView<kTypeT> &rhs) noexcept {
-	return rhs.GetBegin();
-}
-template<StringType kTypeT>
-decltype(auto) cbegin(const StringView<kTypeT> &rhs) noexcept {
-	return begin(rhs);
-}
-template<StringType kTypeT>
-decltype(auto) end(const StringView<kTypeT> &rhs) noexcept {
-	return rhs.GetEnd();
-}
-template<StringType kTypeT>
-decltype(auto) cend(const StringView<kTypeT> &rhs) noexcept {
-	return end(rhs);
-}
 
 extern template class StringView<StringType::kNarrow>;
 extern template class StringView<StringType::kWide>;

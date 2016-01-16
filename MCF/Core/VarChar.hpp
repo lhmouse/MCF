@@ -514,209 +514,136 @@ public:
 	operator NarrowStringView() const noexcept {
 		return NarrowStringView(GetData(), GetSize());
 	}
+
+	VarChar &operator+=(const NarrowStringView &rhs){
+		Append(rhs);
+		return *this;
+	}
+	VarChar &operator+=(Char rhs){
+		Append(rhs);
+		return *this;
+	}
+	VarChar &operator+=(const Char *rhs){
+		Append(rhs);
+		return *this;
+	}
+	VarChar operator+(const NarrowStringView &rhs) const {
+		auto ret = *this;
+		ret += rhs;
+		return ret;
+	}
+	VarChar operator+(Char rhs) const {
+		auto ret = *this;
+		ret += rhs;
+		return ret;
+	}
+	VarChar operator+(const Char *rhs) const {
+		auto ret = *this;
+		ret += rhs;
+		return ret;
+	}
+	friend VarChar operator+(const NarrowStringView &lhs, const VarChar &rhs) const {
+		auto ret = VarChar(lhs);
+		ret += rhs;
+		return ret;
+	}
+	friend VarChar operator+(Char lhs, const VarChar &rhs) const {
+		auto ret = VarChar(&lhs, 1);
+		ret += rhs;
+		return ret;
+	}
+	friend VarChar operator+(const Char *lhs, const VarChar &rhs) const {
+		auto ret = VarChar(lhs);
+		ret += rhs;
+		return ret;
+	}
+
+	bool operator==(const VarChar &rhs) const noexcept {
+		return GetView() == rhs.GetView();
+	}
+	bool operator==(const NarrowStringView &rhs) const noexcept {
+		return GetView() == rhs;
+	}
+	friend bool operator==(const NarrowStringView &lhs, const VarChar &rhs) noexcept {
+		return lhs == rhs.GetView();
+	}
+
+	bool operator!=(const VarChar &rhs) const noexcept {
+		return GetView() != rhs.GetView();
+	}
+	bool operator!=(const NarrowStringView &rhs) const noexcept {
+		return GetView() != rhs;
+	}
+	friend bool operator!=(const NarrowStringView &lhs, const VarChar &rhs) noexcept {
+		return lhs != rhs.GetView();
+	}
+
+	bool operator<(const VarChar &rhs) const noexcept {
+		return GetView() < rhs.GetView();
+	}
+	bool operator<(const NarrowStringView &rhs) const noexcept {
+		return GetView() < rhs;
+	}
+	friend bool operator<(const NarrowStringView &lhs, const VarChar &rhs) noexcept {
+		return lhs < rhs.GetView();
+	}
+
+	bool operator>(const VarChar &rhs) const noexcept {
+		return GetView() > rhs.GetView();
+	}
+	bool operator>(const NarrowStringView &rhs) const noexcept {
+		return GetView() > rhs;
+	}
+	friend bool operator>(const NarrowStringView &lhs, const VarChar &rhs) noexcept {
+		return lhs > rhs.GetView();
+	}
+
+	bool operator<=(const VarChar &rhs) const noexcept {
+		return GetView() <= rhs.GetView();
+	}
+	bool operator<=(const NarrowStringView &rhs) const noexcept {
+		return GetView() <= rhs;
+	}
+	friend bool operator<=(const NarrowStringView &lhs, const VarChar &rhs) noexcept {
+		return lhs <= rhs.GetView();
+	}
+
+	bool operator>=(const VarChar &rhs) const noexcept {
+		return GetView() >= rhs.GetView();
+	}
+	bool operator>=(const NarrowStringView &rhs) const noexcept {
+		return GetView() >= rhs;
+	}
+	friend bool operator>=(const NarrowStringView &lhs, const VarChar &rhs) noexcept {
+		return lhs >= rhs.GetView();
+	}
+
+	friend void swap(VarChar &lhs, VarChar &rhs) noexcept {
+		lhs.Swap(rhs);
+	}
+
+	friend decltype(auto) begin(const VarChar &rhs) noexcept {
+		return rhs.EnumerateFirst();
+	}
+	friend decltype(auto) begin(VarChar &rhs) noexcept {
+		return rhs.EnumerateFirst();
+	}
+	friend decltype(auto) cbegin(const VarChar &rhs) noexcept {
+		return begin(rhs);
+	}
+	friend decltype(auto) end(const VarChar &rhs) noexcept {
+		return rhs.EnumerateSingular();
+	}
+	friend decltype(auto) end(VarChar &rhs) noexcept {
+		return rhs.EnumerateSingular();
+	}
+	friend decltype(auto) cend(const VarChar &rhs) noexcept {
+		return end(rhs);
+	}
 };
 
 template<unsigned kCapacityT>
 const VarChar<kCapacityT> VarChar<kCapacityT>::kEmpty;
-
-template<unsigned kCapacityT, unsigned kOtherCapacityT>
-VarChar<kCapacityT> &operator+=(VarChar<kCapacityT> &lhs, const VarChar<kOtherCapacityT> &rhs){
-	lhs.Append(rhs);
-	return lhs;
-}
-template<unsigned kCapacityT, unsigned kOtherCapacityT>
-VarChar<kCapacityT> &operator+=(VarChar<kCapacityT> &lhs, const StringView<kOtherCapacityT> &rhs){
-	lhs.Append(rhs);
-	return lhs;
-}
-template<unsigned kCapacityT>
-VarChar<kCapacityT> &operator+=(VarChar<kCapacityT> &lhs, typename VarChar<kCapacityT>::Char rhs){
-	lhs.Append(rhs);
-	return lhs;
-}
-template<unsigned kCapacityT>
-VarChar<kCapacityT> &operator+=(VarChar<kCapacityT> &lhs, const typename VarChar<kCapacityT>::Char *rhs){
-	lhs.Append(rhs);
-	return lhs;
-}
-template<unsigned kCapacityT, unsigned kOtherCapacityT>
-VarChar<kCapacityT> &&operator+=(VarChar<kCapacityT> &&lhs, const VarChar<kOtherCapacityT> &rhs){
-	lhs.Append(rhs);
-	return std::move(lhs);
-}
-template<unsigned kCapacityT, unsigned kOtherCapacityT>
-VarChar<kCapacityT> &&operator+=(VarChar<kCapacityT> &&lhs, const StringView<kOtherCapacityT> &rhs){
-	lhs.Append(rhs);
-	return std::move(lhs);
-}
-template<unsigned kCapacityT>
-VarChar<kCapacityT> &&operator+=(VarChar<kCapacityT> &&lhs, typename VarChar<kCapacityT>::Char rhs){
-	lhs.Append(rhs);
-	return std::move(lhs);
-}
-template<unsigned kCapacityT>
-VarChar<kCapacityT> &&operator+=(VarChar<kCapacityT> &&lhs, const typename VarChar<kCapacityT>::Char *rhs){
-	lhs.Append(rhs);
-	return std::move(lhs);
-}
-template<unsigned kCapacityT>
-VarChar<kCapacityT> &&operator+=(VarChar<kCapacityT> &&lhs, VarChar<kCapacityT> &&rhs){
-	lhs.Append(std::move(rhs));
-	return std::move(lhs);
-}
-
-template<unsigned kCapacityT, unsigned kOtherCapacityT>
-VarChar<kCapacityT> operator+(const VarChar<kCapacityT> &lhs, const VarChar<kOtherCapacityT> &rhs){
-	auto ret = lhs;
-	ret += rhs;
-	return ret;
-}
-template<unsigned kCapacityT, unsigned kOtherCapacityT>
-VarChar<kCapacityT> operator+(const VarChar<kCapacityT> &lhs, const StringView<kOtherCapacityT> &rhs){
-	auto ret = lhs;
-	ret += rhs;
-	return ret;
-}
-template<unsigned kCapacityT>
-VarChar<kCapacityT> operator+(const VarChar<kCapacityT> &lhs, typename VarChar<kCapacityT>::Char rhs){
-	auto ret = lhs;
-	ret += rhs;
-	return ret;
-}
-template<unsigned kCapacityT>
-VarChar<kCapacityT> operator+(const VarChar<kCapacityT> &lhs, const typename VarChar<kCapacityT>::Char *rhs){
-	auto ret = lhs;
-	ret += rhs;
-	return ret;
-}
-template<unsigned kCapacityT, unsigned kOtherCapacityT>
-VarChar<kCapacityT> &&operator+(VarChar<kCapacityT> &&lhs, const VarChar<kOtherCapacityT> &rhs){
-	return std::move(lhs += rhs);
-}
-template<unsigned kCapacityT, unsigned kOtherCapacityT>
-VarChar<kCapacityT> &&operator+(VarChar<kCapacityT> &&lhs, const StringView<kOtherCapacityT> &rhs){
-	return std::move(lhs += rhs);
-}
-template<unsigned kCapacityT>
-VarChar<kCapacityT> &&operator+(VarChar<kCapacityT> &&lhs, typename VarChar<kCapacityT>::Char rhs){
-	return std::move(lhs += rhs);
-}
-template<unsigned kCapacityT>
-VarChar<kCapacityT> &&operator+(VarChar<kCapacityT> &&lhs, const typename VarChar<kCapacityT>::Char *rhs){
-	return std::move(lhs += rhs);
-}
-template<unsigned kCapacityT>
-VarChar<kCapacityT> &&operator+(VarChar<kCapacityT> &&lhs, VarChar<kCapacityT> &&rhs){
-	return std::move(lhs += std::move(rhs));
-}
-
-template<unsigned kCapacityT>
-bool operator==(const VarChar<kCapacityT> &lhs, const VarChar<kCapacityT> &rhs) noexcept {
-	return lhs.GetView() == rhs.GetView();
-}
-template<unsigned kCapacityT>
-bool operator==(const VarChar<kCapacityT> &lhs, const NarrowStringView &rhs) noexcept {
-	return lhs.GetView() == rhs;
-}
-template<unsigned kCapacityT>
-bool operator==(const NarrowStringView &lhs, const VarChar<kCapacityT> &rhs) noexcept {
-	return lhs == rhs.GetView();
-}
-
-template<unsigned kCapacityT>
-bool operator!=(const VarChar<kCapacityT> &lhs, const VarChar<kCapacityT> &rhs) noexcept {
-	return lhs.GetView() != rhs.GetView();
-}
-template<unsigned kCapacityT>
-bool operator!=(const VarChar<kCapacityT> &lhs, const NarrowStringView &rhs) noexcept {
-	return lhs.GetView() != rhs;
-}
-template<unsigned kCapacityT>
-bool operator!=(const NarrowStringView &lhs, const VarChar<kCapacityT> &rhs) noexcept {
-	return lhs != rhs.GetView();
-}
-
-template<unsigned kCapacityT>
-bool operator<(const VarChar<kCapacityT> &lhs, const VarChar<kCapacityT> &rhs) noexcept {
-	return lhs.GetView() < rhs.GetView();
-}
-template<unsigned kCapacityT>
-bool operator<(const VarChar<kCapacityT> &lhs, const NarrowStringView &rhs) noexcept {
-	return lhs.GetView() < rhs;
-}
-template<unsigned kCapacityT>
-bool operator<(const NarrowStringView &lhs, const VarChar<kCapacityT> &rhs) noexcept {
-	return lhs < rhs.GetView();
-}
-
-template<unsigned kCapacityT>
-bool operator>(const VarChar<kCapacityT> &lhs, const VarChar<kCapacityT> &rhs) noexcept {
-	return lhs.GetView() > rhs.GetView();
-}
-template<unsigned kCapacityT>
-bool operator>(const VarChar<kCapacityT> &lhs, const NarrowStringView &rhs) noexcept {
-	return lhs.GetView() > rhs;
-}
-template<unsigned kCapacityT>
-bool operator>(const NarrowStringView &lhs, const VarChar<kCapacityT> &rhs) noexcept {
-	return lhs > rhs.GetView();
-}
-
-template<unsigned kCapacityT>
-bool operator<=(const VarChar<kCapacityT> &lhs, const VarChar<kCapacityT> &rhs) noexcept {
-	return lhs.GetView() <= rhs.GetView();
-}
-template<unsigned kCapacityT>
-bool operator<=(const VarChar<kCapacityT> &lhs, const NarrowStringView &rhs) noexcept {
-	return lhs.GetView() <= rhs;
-}
-template<unsigned kCapacityT>
-bool operator<=(const NarrowStringView &lhs, const VarChar<kCapacityT> &rhs) noexcept {
-	return lhs <= rhs.GetView();
-}
-
-template<unsigned kCapacityT>
-bool operator>=(const VarChar<kCapacityT> &lhs, const VarChar<kCapacityT> &rhs) noexcept {
-	return lhs.GetView() >= rhs.GetView();
-}
-template<unsigned kCapacityT>
-bool operator>=(const VarChar<kCapacityT> &lhs, const NarrowStringView &rhs) noexcept {
-	return lhs.GetView() >= rhs;
-}
-template<unsigned kCapacityT>
-bool operator>=(const NarrowStringView &lhs, const VarChar<kCapacityT> &rhs) noexcept {
-	return lhs >= rhs.GetView();
-}
-
-template<unsigned kCapacityT>
-void swap(VarChar<kCapacityT> &lhs, VarChar<kCapacityT> &rhs) noexcept {
-	lhs.Swap(rhs);
-}
-
-template<unsigned kCapacityT>
-decltype(auto) begin(const VarChar<kCapacityT> &rhs) noexcept {
-	return rhs.GetBegin();
-}
-template<unsigned kCapacityT>
-decltype(auto) begin(VarChar<kCapacityT> &rhs) noexcept {
-	return rhs.GetBegin();
-}
-template<unsigned kCapacityT>
-decltype(auto) cbegin(const VarChar<kCapacityT> &rhs) noexcept {
-	return begin(rhs);
-}
-template<unsigned kCapacityT>
-decltype(auto) end(const VarChar<kCapacityT> &rhs) noexcept {
-	return rhs.GetEnd();
-}
-template<unsigned kCapacityT>
-decltype(auto) end(VarChar<kCapacityT> &rhs) noexcept {
-	return rhs.GetEnd();
-}
-template<unsigned kCapacityT>
-decltype(auto) cend(const VarChar<kCapacityT> &rhs) noexcept {
-	return end(rhs);
-}
 
 }
 

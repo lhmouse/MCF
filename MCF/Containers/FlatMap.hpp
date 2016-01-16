@@ -451,37 +451,30 @@ public:
 	std::pair<ConstEnumerator, ConstEnumerator> EnumerateConstEqualRange(const ComparandT &vComparand) const {
 		return EnumerateEqualRange(vComparand);
 	}
+
+	friend void swap(FlatMap &lhs, FlatMap &rhs) noexcept {
+		lhs.Swap(rhs);
+	}
+
+	friend decltype(auto) begin(const FlatMap &rhs) noexcept {
+		return rhs.EnumerateFirst();
+	}
+	friend decltype(auto) begin(FlatMap &rhs) noexcept {
+		return rhs.EnumerateFirst();
+	}
+	friend decltype(auto) cbegin(const FlatMap &rhs) noexcept {
+		return begin(rhs);
+	}
+	friend decltype(auto) end(const FlatMap &rhs) noexcept {
+		return rhs.EnumerateSingular();
+	}
+	friend decltype(auto) end(FlatMap &rhs) noexcept {
+		return rhs.EnumerateSingular();
+	}
+	friend decltype(auto) cend(const FlatMap &rhs) noexcept {
+		return end(rhs);
+	}
 };
-
-template<typename KeyT, typename ValueT, typename ComparatorT>
-void swap(FlatMap<KeyT, ValueT, ComparatorT> &lhs, FlatMap<KeyT, ValueT, ComparatorT> &rhs) noexcept {
-	lhs.Swap(rhs);
-}
-
-template<typename KeyT, typename ValueT, typename ComparatorT>
-decltype(auto) begin(const FlatMap<KeyT, ValueT, ComparatorT> &rhs) noexcept {
-	return rhs.EnumerateFirst();
-}
-template<typename KeyT, typename ValueT, typename ComparatorT>
-decltype(auto) begin(FlatMap<KeyT, ValueT, ComparatorT> &rhs) noexcept {
-	return rhs.EnumerateFirst();
-}
-template<typename KeyT, typename ValueT, typename ComparatorT>
-decltype(auto) cbegin(const FlatMap<KeyT, ValueT, ComparatorT> &rhs) noexcept {
-	return begin(rhs);
-}
-template<typename KeyT, typename ValueT, typename ComparatorT>
-decltype(auto) end(const FlatMap<KeyT, ValueT, ComparatorT> &rhs) noexcept {
-	return rhs.EnumerateSingular();
-}
-template<typename KeyT, typename ValueT, typename ComparatorT>
-decltype(auto) end(FlatMap<KeyT, ValueT, ComparatorT> &rhs) noexcept {
-	return rhs.EnumerateSingular();
-}
-template<typename KeyT, typename ValueT, typename ComparatorT>
-decltype(auto) cend(const FlatMap<KeyT, ValueT, ComparatorT> &rhs) noexcept {
-	return end(rhs);
-}
 
 }
 

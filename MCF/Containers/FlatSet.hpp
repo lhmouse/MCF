@@ -440,37 +440,30 @@ public:
 	std::pair<ConstEnumerator, ConstEnumerator> EnumerateConstEqualRange(const ComparandT &vComparand) const {
 		return EnumerateEqualRange(vComparand);
 	}
+
+	friend void swap(FlatSet &lhs, FlatSet &rhs) noexcept {
+		lhs.Swap(rhs);
+	}
+
+	friend decltype(auto) begin(const FlatSet &rhs) noexcept {
+		return rhs.EnumerateFirst();
+	}
+	friend decltype(auto) begin(FlatSet &rhs) noexcept {
+		return rhs.EnumerateFirst();
+	}
+	friend decltype(auto) cbegin(const FlatSet &rhs) noexcept {
+		return begin(rhs);
+	}
+	friend decltype(auto) end(const FlatSet &rhs) noexcept {
+		return rhs.EnumerateSingular();
+	}
+	friend decltype(auto) end(FlatSet &rhs) noexcept {
+		return rhs.EnumerateSingular();
+	}
+	friend decltype(auto) cend(const FlatSet &rhs) noexcept {
+		return end(rhs);
+	}
 };
-
-template<typename ElementT, typename ComparatorT>
-void swap(FlatSet<ElementT, ComparatorT> &lhs, FlatSet<ElementT, ComparatorT> &rhs) noexcept {
-	lhs.Swap(rhs);
-}
-
-template<typename ElementT, typename ComparatorT>
-decltype(auto) begin(const FlatSet<ElementT, ComparatorT> &rhs) noexcept {
-	return rhs.EnumerateFirst();
-}
-template<typename ElementT, typename ComparatorT>
-decltype(auto) begin(FlatSet<ElementT, ComparatorT> &rhs) noexcept {
-	return rhs.EnumerateFirst();
-}
-template<typename ElementT, typename ComparatorT>
-decltype(auto) cbegin(const FlatSet<ElementT, ComparatorT> &rhs) noexcept {
-	return begin(rhs);
-}
-template<typename ElementT, typename ComparatorT>
-decltype(auto) end(const FlatSet<ElementT, ComparatorT> &rhs) noexcept {
-	return rhs.EnumerateSingular();
-}
-template<typename ElementT, typename ComparatorT>
-decltype(auto) end(FlatSet<ElementT, ComparatorT> &rhs) noexcept {
-	return rhs.EnumerateSingular();
-}
-template<typename ElementT, typename ComparatorT>
-decltype(auto) cend(const FlatSet<ElementT, ComparatorT> &rhs) noexcept {
-	return end(rhs);
-}
 
 }
 

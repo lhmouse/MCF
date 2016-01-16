@@ -674,37 +674,30 @@ public:
 	operator ArrayView<Element>() noexcept {
 		return ArrayView<Element>(GetData(), GetSize());
 	}
+
+	friend void swap(Vector &lhs, Vector &rhs) noexcept {
+		lhs.Swap(rhs);
+	}
+
+	friend decltype(auto) begin(const Vector &rhs) noexcept {
+		return rhs.EnumerateFirst();
+	}
+	friend decltype(auto) begin(Vector &rhs) noexcept {
+		return rhs.EnumerateFirst();
+	}
+	friend decltype(auto) cbegin(const Vector &rhs) noexcept {
+		return begin(rhs);
+	}
+	friend decltype(auto) end(const Vector &rhs) noexcept {
+		return rhs.EnumerateSingular();
+	}
+	friend decltype(auto) end(Vector &rhs) noexcept {
+		return rhs.EnumerateSingular();
+	}
+	friend decltype(auto) cend(const Vector &rhs) noexcept {
+		return end(rhs);
+	}
 };
-
-template<typename ElementT>
-void swap(Vector<ElementT> &lhs, Vector<ElementT> &rhs) noexcept {
-	lhs.Swap(rhs);
-}
-
-template<typename ElementT>
-decltype(auto) begin(const Vector<ElementT> &rhs) noexcept {
-	return rhs.EnumerateFirst();
-}
-template<typename ElementT>
-decltype(auto) begin(Vector<ElementT> &rhs) noexcept {
-	return rhs.EnumerateFirst();
-}
-template<typename ElementT>
-decltype(auto) cbegin(const Vector<ElementT> &rhs) noexcept {
-	return begin(rhs);
-}
-template<typename ElementT>
-decltype(auto) end(const Vector<ElementT> &rhs) noexcept {
-	return rhs.EnumerateSingular();
-}
-template<typename ElementT>
-decltype(auto) end(Vector<ElementT> &rhs) noexcept {
-	return rhs.EnumerateSingular();
-}
-template<typename ElementT>
-decltype(auto) cend(const Vector<ElementT> &rhs) noexcept {
-	return end(rhs);
-}
 
 }
 

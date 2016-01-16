@@ -79,11 +79,11 @@ public:
 	explicit operator bool() const noexcept {
 		return IsOpen();
 	}
-};
 
-inline void swap(DynamicLinkLibrary &lhs, DynamicLinkLibrary &rhs) noexcept {
-	lhs.Swap(rhs);
-}
+	friend void swap(DynamicLinkLibrary &lhs, DynamicLinkLibrary &rhs) noexcept {
+		lhs.Swap(rhs);
+	}
+};
 
 }
 

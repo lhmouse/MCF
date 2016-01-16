@@ -65,10 +65,10 @@ public:
 	UniquePtr &operator=(const UniquePtr &) = delete;
 
 public:
-	bool IsNonnull() const noexcept {
+	constexpr bool IsNonnull() const noexcept {
 		return !!x_pElement;
 	}
-	Element *Get() const noexcept {
+	constexpr Element *Get() const noexcept {
 		return x_pElement;
 	}
 	Element *Release() noexcept {
@@ -99,15 +99,15 @@ public:
 	}
 
 public:
-	explicit operator bool() const noexcept {
+	explicit constexpr operator bool() const noexcept {
 		return IsNonnull();
 	}
-	explicit operator Element *() const noexcept {
+	explicit constexpr operator Element *() const noexcept {
 		return Get();
 	}
 
 	template<typename TestObjectT = ObjectT>
-	auto operator*() const noexcept
+	constexpr auto operator*() const noexcept
 		-> std::enable_if_t<
 			!std::is_void<TestObjectT>::value && !std::is_array<TestObjectT>::value,
 			Element> &
@@ -117,7 +117,7 @@ public:
 		return *Get();
 	}
 	template<typename TestObjectT = ObjectT>
-	auto operator->() const noexcept
+	constexpr auto operator->() const noexcept
 		-> std::enable_if_t<
 			!std::is_void<TestObjectT>::value && !std::is_array<TestObjectT>::value,
 			Element> *
@@ -127,7 +127,7 @@ public:
 		return Get();
 	}
 	template<typename TestObjectT = ObjectT>
-	auto operator[](std::size_t uIndex) const noexcept
+	constexpr auto operator[](std::size_t uIndex) const noexcept
 		-> std::enable_if_t<
 			std::is_array<TestObjectT>::value,
 			Element> &
@@ -136,90 +136,89 @@ public:
 
 		return Get()[uIndex];
 	}
+
+	template<typename OtherObjectT, class OtherDeleterT>
+	constexpr bool operator==(const UniquePtr<OtherObjectT, OtherDeleterT> &rhs) const noexcept {
+		return Equal()(x_pElement, rhs.x_pElement);
+	}
+	template<typename OtherObjectT>
+	constexpr bool operator==(OtherObjectT *rhs) const noexcept {
+		return Equal()(x_pElement, rhs);
+	}
+	template<typename OtherObjectT>
+	friend constexpr bool operator==(OtherObjectT *lhs, const UniquePtr &rhs) noexcept {
+		return Equal()(lhs, rhs.x_pElement);
+	}
+
+	template<typename OtherObjectT, class OtherDeleterT>
+	constexpr bool operator!=(const UniquePtr<OtherObjectT, OtherDeleterT> &rhs) const noexcept {
+		return Unequal()(x_pElement, rhs.x_pElement);
+	}
+	template<typename OtherObjectT>
+	constexpr bool operator!=(OtherObjectT *rhs) const noexcept {
+		return Unequal()(x_pElement, rhs);
+	}
+	template<typename OtherObjectT>
+	friend constexpr bool operator!=(OtherObjectT *lhs, const UniquePtr &rhs) noexcept {
+		return Unequal()(lhs, rhs.x_pElement);
+	}
+
+	template<typename OtherObjectT, class OtherDeleterT>
+	constexpr bool operator<(const UniquePtr<OtherObjectT, OtherDeleterT> &rhs) const noexcept {
+		return Less()(x_pElement, rhs.x_pElement);
+	}
+	template<typename OtherObjectT>
+	constexpr bool operator<(OtherObjectT *rhs) const noexcept {
+		return Less()(x_pElement, rhs);
+	}
+	template<typename OtherObjectT>
+	friend constexpr bool operator<(OtherObjectT *lhs, const UniquePtr &rhs) noexcept {
+		return Less()(lhs, rhs.x_pElement);
+	}
+
+	template<typename OtherObjectT, class OtherDeleterT>
+	constexpr bool operator>(const UniquePtr<OtherObjectT, OtherDeleterT> &rhs) const noexcept {
+		return Greater()(x_pElement, rhs.x_pElement);
+	}
+	template<typename OtherObjectT>
+	constexpr bool operator>(OtherObjectT *rhs) const noexcept {
+		return Greater()(x_pElement, rhs);
+	}
+	template<typename OtherObjectT>
+	friend constexpr bool operator>(OtherObjectT *lhs, const UniquePtr &rhs) noexcept {
+		return Greater()(lhs, rhs.x_pElement);
+	}
+
+	template<typename OtherObjectT, class OtherDeleterT>
+	constexpr bool operator<=(const UniquePtr<OtherObjectT, OtherDeleterT> &rhs) const noexcept {
+		return LessEqual()(x_pElement, rhs.x_pElement);
+	}
+	template<typename OtherObjectT>
+	constexpr bool operator<=(OtherObjectT *rhs) const noexcept {
+		return LessEqual()(x_pElement, rhs);
+	}
+	template<typename OtherObjectT>
+	friend constexpr bool operator<=(OtherObjectT *lhs, const UniquePtr &rhs) noexcept {
+		return LessEqual()(lhs, rhs.x_pElement);
+	}
+
+	template<typename OtherObjectT, class OtherDeleterT>
+	constexpr bool operator>=(const UniquePtr<OtherObjectT, OtherDeleterT> &rhs) const noexcept {
+		return GreaterEqual()(x_pElement, rhs.x_pElement);
+	}
+	template<typename OtherObjectT>
+	constexpr bool operator>=(OtherObjectT *rhs) const noexcept {
+		return GreaterEqual()(x_pElement, rhs);
+	}
+	template<typename OtherObjectT>
+	friend constexpr bool operator>=(OtherObjectT *lhs, const UniquePtr &rhs) noexcept {
+		return GreaterEqual()(lhs, rhs.x_pElement);
+	}
+
+	friend void swap(UniquePtr &lhs, UniquePtr &rhs) noexcept {
+		lhs.Swap(rhs);
+	}
 };
-
-template<typename ObjectLhsT, typename ObjectRhsT, class DeleterT>
-bool operator==(const UniquePtr<ObjectLhsT, DeleterT> &lhs, const UniquePtr<ObjectRhsT, DeleterT> &rhs) noexcept {
-	return Equal()(lhs.Get(), rhs.Get());
-}
-template<typename ObjectLhsT, typename ObjectRhsT, class DeleterT>
-bool operator==(const UniquePtr<ObjectLhsT, DeleterT> &lhs, typename UniquePtr<ObjectRhsT, DeleterT>::Element *rhs) noexcept {
-	return Equal()(lhs.Get(), rhs);
-}
-template<typename ObjectLhsT, typename ObjectRhsT, class DeleterT>
-bool operator==(typename UniquePtr<ObjectLhsT, DeleterT>::Element *lhs, const UniquePtr<ObjectRhsT, DeleterT> &rhs) noexcept {
-	return Equal()(lhs, rhs.Get());
-}
-
-template<typename ObjectLhsT, typename ObjectRhsT, class DeleterT>
-bool operator!=(const UniquePtr<ObjectLhsT, DeleterT> &lhs, const UniquePtr<ObjectRhsT, DeleterT> &rhs) noexcept {
-	return Unequal()(lhs.Get(), rhs.Get());
-}
-template<typename ObjectLhsT, typename ObjectRhsT, class DeleterT>
-bool operator!=(const UniquePtr<ObjectLhsT, DeleterT> &lhs, typename UniquePtr<ObjectRhsT, DeleterT>::Element *rhs) noexcept {
-	return Unequal()(lhs.Get(), rhs);
-}
-template<typename ObjectLhsT, typename ObjectRhsT, class DeleterT>
-bool operator!=(typename UniquePtr<ObjectLhsT, DeleterT>::Element *lhs, const UniquePtr<ObjectRhsT, DeleterT> &rhs) noexcept {
-	return Unequal()(lhs, rhs.Get());
-}
-
-template<typename ObjectLhsT, typename ObjectRhsT, class DeleterT>
-bool operator<(const UniquePtr<ObjectLhsT, DeleterT> &lhs, const UniquePtr<ObjectRhsT, DeleterT> &rhs) noexcept {
-	return Less()(lhs.Get(), rhs.Get());
-}
-template<typename ObjectLhsT, typename ObjectRhsT, class DeleterT>
-bool operator<(const UniquePtr<ObjectLhsT, DeleterT> &lhs, typename UniquePtr<ObjectRhsT, DeleterT>::Element *rhs) noexcept {
-	return Less()(lhs.Get(), rhs);
-}
-template<typename ObjectLhsT, typename ObjectRhsT, class DeleterT>
-bool operator<(typename UniquePtr<ObjectLhsT, DeleterT>::Element *lhs, const UniquePtr<ObjectRhsT, DeleterT> &rhs) noexcept {
-	return Less()(lhs, rhs.Get());
-}
-
-template<typename ObjectLhsT, typename ObjectRhsT, class DeleterT>
-bool operator>(const UniquePtr<ObjectLhsT, DeleterT> &lhs, const UniquePtr<ObjectRhsT, DeleterT> &rhs) noexcept {
-	return Greater()(lhs.Get(), rhs.Get());
-}
-template<typename ObjectLhsT, typename ObjectRhsT, class DeleterT>
-bool operator>(const UniquePtr<ObjectLhsT, DeleterT> &lhs, typename UniquePtr<ObjectRhsT, DeleterT>::Element *rhs) noexcept {
-	return Greater()(lhs.Get(), rhs);
-}
-template<typename ObjectLhsT, typename ObjectRhsT, class DeleterT>
-bool operator>(typename UniquePtr<ObjectLhsT, DeleterT>::Element *lhs, const UniquePtr<ObjectRhsT, DeleterT> &rhs) noexcept {
-	return Greater()(lhs, rhs.Get());
-}
-
-template<typename ObjectLhsT, typename ObjectRhsT, class DeleterT>
-bool operator<=(const UniquePtr<ObjectLhsT, DeleterT> &lhs, const UniquePtr<ObjectRhsT, DeleterT> &rhs) noexcept {
-	return LessEqual()(lhs.Get(), rhs.Get());
-}
-template<typename ObjectLhsT, typename ObjectRhsT, class DeleterT>
-bool operator<=(const UniquePtr<ObjectLhsT, DeleterT> &lhs, typename UniquePtr<ObjectRhsT, DeleterT>::Element *rhs) noexcept {
-	return LessEqual()(lhs.Get(), rhs);
-}
-template<typename ObjectLhsT, typename ObjectRhsT, class DeleterT>
-bool operator<=(typename UniquePtr<ObjectLhsT, DeleterT>::Element *lhs, const UniquePtr<ObjectRhsT, DeleterT> &rhs) noexcept {
-	return LessEqual()(lhs, rhs.Get());
-}
-
-template<typename ObjectLhsT, typename ObjectRhsT, class DeleterT>
-bool operator>=(const UniquePtr<ObjectLhsT, DeleterT> &lhs, const UniquePtr<ObjectRhsT, DeleterT> &rhs) noexcept {
-	return GreaterEqual()(lhs.Get(), rhs.Get());
-}
-template<typename ObjectLhsT, typename ObjectRhsT, class DeleterT>
-bool operator>=(const UniquePtr<ObjectLhsT, DeleterT> &lhs, typename UniquePtr<ObjectRhsT, DeleterT>::Element *rhs) noexcept {
-	return GreaterEqual()(lhs.Get(), rhs);
-}
-template<typename ObjectLhsT, typename ObjectRhsT, class DeleterT>
-bool operator>=(typename UniquePtr<ObjectLhsT, DeleterT>::Element *lhs, const UniquePtr<ObjectRhsT, DeleterT> &rhs) noexcept {
-	return GreaterEqual()(lhs, rhs.Get());
-}
-
-template<typename ObjectT, class DeleterT>
-void swap(UniquePtr<ObjectT, DeleterT> &lhs, UniquePtr<ObjectT, DeleterT> &rhs) noexcept {
-	lhs.Swap(rhs);
-}
 
 template<typename ObjectT, typename DeleterT = DefaultDeleter<ObjectT>, typename ...ParamsT>
 UniquePtr<ObjectT, DeleterT> MakeUnique(ParamsT &&...vParams){

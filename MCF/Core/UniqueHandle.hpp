@@ -50,10 +50,10 @@ public:
 	UniqueHandle &operator=(const UniqueHandle &) = delete;
 
 public:
-	bool IsNonnull() const noexcept {
+	constexpr bool IsNonnull() const noexcept {
 		return x_hObject != Closer()();
 	}
-	Handle Get() const noexcept {
+	constexpr Handle Get() const noexcept {
 		return x_hObject;
 	}
 	Handle Release() noexcept {
@@ -75,96 +75,84 @@ public:
 	}
 
 public:
-	explicit operator bool() const noexcept {
+	explicit constexpr operator bool() const noexcept {
 		return IsNonnull();
 	}
-	explicit operator Handle() const noexcept {
+	explicit constexpr operator Handle() const noexcept {
 		return Get();
 	}
+
+
+	template<class CloserRhsT>
+	constexpr bool operator==(const UniqueHandle<CloserRhsT> &rhs) const noexcept {
+		return Equal()(x_hObject, rhs.x_hObject);
+	}
+	constexpr bool operator==(Handle rhs) const noexcept {
+		return Equal()(x_hObject, rhs);
+	}
+	friend constexpr bool operator==(Handle lhs, const UniqueHandle &rhs) noexcept {
+		return Equal()(lhs, rhs.x_hObject);
+	}
+
+	template<class CloserRhsT>
+	constexpr bool operator!=(const UniqueHandle<CloserRhsT> &rhs) const noexcept {
+		return Unequal()(x_hObject, rhs.x_hObject);
+	}
+	constexpr bool operator!=(Handle rhs) const noexcept {
+		return Unequal()(x_hObject, rhs);
+	}
+	friend constexpr bool operator!=(Handle lhs, const UniqueHandle &rhs) noexcept {
+		return Unequal()(lhs, rhs.x_hObject);
+	}
+
+	template<class CloserRhsT>
+	constexpr bool operator<(const UniqueHandle<CloserRhsT> &rhs) const noexcept {
+		return Less()(x_hObject, rhs.x_hObject);
+	}
+	constexpr bool operator<(Handle rhs) const noexcept {
+		return Less()(x_hObject, rhs);
+	}
+	friend constexpr bool operator<(Handle lhs, const UniqueHandle &rhs) noexcept {
+		return Less()(lhs, rhs.x_hObject);
+	}
+
+	template<class CloserRhsT>
+	constexpr bool operator>(const UniqueHandle<CloserRhsT> &rhs) const noexcept {
+		return Greater()(x_hObject, rhs.x_hObject);
+	}
+	constexpr bool operator>(Handle rhs) const noexcept {
+		return Greater()(x_hObject, rhs);
+	}
+	friend constexpr bool operator>(Handle lhs, const UniqueHandle &rhs) noexcept {
+		return Greater()(lhs, rhs.x_hObject);
+	}
+
+	template<class CloserRhsT>
+	constexpr bool operator<=(const UniqueHandle<CloserRhsT> &rhs) const noexcept {
+		return LessEqual()(x_hObject, rhs.x_hObject);
+	}
+	constexpr bool operator<=(Handle rhs) const noexcept {
+		return LessEqual()(x_hObject, rhs);
+	}
+	friend constexpr bool operator<=(Handle lhs, const UniqueHandle &rhs) noexcept {
+		return LessEqual()(lhs, rhs.x_hObject);
+	}
+
+	template<class CloserRhsT>
+	constexpr bool operator>=(const UniqueHandle<CloserRhsT> &rhs) const noexcept {
+		return GreaterEqual()(x_hObject, rhs.x_hObject);
+	}
+	constexpr bool operator>=(Handle rhs) const noexcept {
+		return GreaterEqual()(x_hObject, rhs);
+	}
+	friend constexpr bool operator>=(Handle lhs, const UniqueHandle &rhs) noexcept {
+		return GreaterEqual()(lhs, rhs.x_hObject);
+	}
+
+	friend void swap(UniqueHandle &lhs, UniqueHandle &rhs) noexcept {
+		lhs.Swap(rhs);
+	}
 };
-
-template<class CloserT>
-bool operator==(const UniqueHandle<CloserT> &lhs, const UniqueHandle<CloserT> &rhs) noexcept {
-	return Equal()(lhs.Get(), rhs.Get());
-}
-template<class CloserT>
-bool operator==(const UniqueHandle<CloserT> &lhs, typename UniqueHandle<CloserT>::Handle rhs) noexcept {
-	return Equal()(lhs.Get(), rhs);
-}
-template<class CloserT>
-bool operator==(typename UniqueHandle<CloserT>::Handle lhs, const UniqueHandle<CloserT> &rhs) noexcept {
-	return Equal()(lhs, rhs.Get());
-}
-
-template<class CloserT>
-bool operator!=(const UniqueHandle<CloserT> &lhs, const UniqueHandle<CloserT> &rhs) noexcept {
-	return Unequal()(lhs.Get(), rhs.Get());
-}
-template<class CloserT>
-bool operator!=(const UniqueHandle<CloserT> &lhs, typename UniqueHandle<CloserT>::Handle rhs) noexcept {
-	return Unequal()(lhs.Get(), rhs);
-}
-template<class CloserT>
-bool operator!=(typename UniqueHandle<CloserT>::Handle lhs, const UniqueHandle<CloserT> &rhs) noexcept {
-	return Unequal()(lhs, rhs.Get());
-}
-
-template<class CloserT>
-bool operator<(const UniqueHandle<CloserT> &lhs, const UniqueHandle<CloserT> &rhs) noexcept {
-	return Less()(lhs.Get(), rhs.Get());
-}
-template<class CloserT>
-bool operator<(const UniqueHandle<CloserT> &lhs, typename UniqueHandle<CloserT>::Handle rhs) noexcept {
-	return Less()(lhs.Get(), rhs);
-}
-template<class CloserT>
-bool operator<(typename UniqueHandle<CloserT>::Handle lhs, const UniqueHandle<CloserT> &rhs) noexcept {
-	return Less()(lhs, rhs.Get());
-}
-
-template<class CloserT>
-bool operator>(const UniqueHandle<CloserT> &lhs, const UniqueHandle<CloserT> &rhs) noexcept {
-	return Greater()(lhs.Get(), rhs.Get());
-}
-template<class CloserT>
-bool operator>(const UniqueHandle<CloserT> &lhs, typename UniqueHandle<CloserT>::Handle rhs) noexcept {
-	return Greater()(lhs.Get(), rhs);
-}
-template<class CloserT>
-bool operator>(typename UniqueHandle<CloserT>::Handle lhs, const UniqueHandle<CloserT> &rhs) noexcept {
-	return Greater()(lhs, rhs.Get());
-}
-
-template<class CloserT>
-bool operator<=(const UniqueHandle<CloserT> &lhs, const UniqueHandle<CloserT> &rhs) noexcept {
-	return LessEqual()(lhs.Get(), rhs.Get());
-}
-template<class CloserT>
-bool operator<=(const UniqueHandle<CloserT> &lhs, typename UniqueHandle<CloserT>::Handle rhs) noexcept {
-	return LessEqual()(lhs.Get(), rhs);
-}
-template<class CloserT>
-bool operator<=(typename UniqueHandle<CloserT>::Handle lhs, const UniqueHandle<CloserT> &rhs) noexcept {
-	return LessEqual()(lhs, rhs.Get());
-}
-
-template<class CloserT>
-bool operator>=(const UniqueHandle<CloserT> &lhs, const UniqueHandle<CloserT> &rhs) noexcept {
-	return GreaterEqual()(lhs.Get(), rhs.Get());
-}
-template<class CloserT>
-bool operator>=(const UniqueHandle<CloserT> &lhs, typename UniqueHandle<CloserT>::Handle rhs) noexcept {
-	return GreaterEqual()(lhs.Get(), rhs);
-}
-template<class CloserT>
-bool operator>=(typename UniqueHandle<CloserT>::Handle lhs, const UniqueHandle<CloserT> &rhs) noexcept {
-	return GreaterEqual()(lhs, rhs.Get());
-}
-
-template<class CloserT>
-void swap(UniqueHandle<CloserT> &lhs, UniqueHandle<CloserT> &rhs) noexcept {
-	lhs.Swap(rhs);
-}
 
 }
 

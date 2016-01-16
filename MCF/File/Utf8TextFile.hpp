@@ -50,11 +50,11 @@ public:
 	explicit operator bool() const noexcept {
 		return !IsAtEndOfFile();
 	}
-};
 
-inline void swap(Utf8TextFileReader &lhs, Utf8TextFileReader &rhs) noexcept {
-	lhs.Swap(rhs);
-}
+	friend void swap(Utf8TextFileReader &lhs, Utf8TextFileReader &rhs) noexcept {
+		lhs.Swap(rhs);
+	}
+};
 
 class Utf8TextFileWriter  {
 public:
@@ -114,11 +114,11 @@ public:
 		swap(x_u64Offset, rhs.x_u64Offset);
 		swap(x_u8sLine,   rhs.x_u8sLine);
 	}
-};
 
-inline void swap(Utf8TextFileWriter &lhs, Utf8TextFileWriter &rhs) noexcept {
-	lhs.Swap(rhs);
-}
+	friend void swap(Utf8TextFileWriter &lhs, Utf8TextFileWriter &rhs) noexcept {
+		lhs.Swap(rhs);
+	}
+};
 
 }
 

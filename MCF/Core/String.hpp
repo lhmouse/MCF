@@ -716,209 +716,188 @@ public:
 	Char &operator[](std::size_t uIndex) noexcept {
 		return UncheckedGet(uIndex);
 	}
+
+	template<StringType kOtherTypeT>
+	String &operator+=(const String<kOtherTypeT> &rhs) & {
+		Append(rhs);
+		return *this;
+	}
+	template<StringType kOtherTypeT>
+	String &operator+=(const StringView<kOtherTypeT> &rhs) & {
+		Append(rhs);
+		return *this;
+	}
+	String &operator+=(Char rhs) & {
+		Append(rhs);
+		return *this;
+	}
+	String &operator+=(const Char *rhs) & {
+		Append(rhs);
+		return *this;
+	}
+	template<StringType kOtherTypeT>
+	String &&operator+=(const String<kOtherTypeT> &rhs) && {
+		Append(rhs);
+		return std::move(*this);
+	}
+	template<StringType kOtherTypeT>
+	String &&operator+=(const StringView<kOtherTypeT> &rhs) && {
+		Append(rhs);
+		return std::move(*this);
+	}
+	String &&operator+=(Char rhs) && {
+		Append(rhs);
+		return std::move(*this);
+	}
+	String &&operator+=(const Char *rhs) && {
+		Append(rhs);
+		return std::move(*this);
+	}
+	String &&operator+=(String &&rhs) && {
+		Append(std::move(rhs));
+		return std::move(*this);
+	}
+	template<StringType kOtherTypeT>
+	String operator+(const String<kOtherTypeT> &rhs) const {
+		auto temp = *this;
+		temp += rhs;
+		return temp;
+	}
+	template<StringType kOtherTypeT>
+	String operator+(const StringView<kOtherTypeT> &rhs) const {
+		auto temp = *this;
+		temp += rhs;
+		return temp;
+	}
+	String operator+(Char rhs) const {
+		auto temp = *this;
+		temp += rhs;
+		return temp;
+	}
+	String operator+(const Char *rhs) const {
+		auto temp = *this;
+		temp += rhs;
+		return temp;
+	}
+	template<StringType kOtherTypeT>
+	friend String operator+(const StringView<kOtherTypeT> &lhs, const String &rhs){
+		auto temp = String(lhs);
+		temp += rhs;
+		return temp;
+	}
+	friend String operator+(Char lhs, const String &rhs){
+		auto temp = String(lhs);
+		temp += rhs;
+		return temp;
+	}
+	friend String operator+(const Char *lhs, const String &rhs){
+		auto temp = String(lhs);
+		temp += rhs;
+		return temp;
+	}
+	template<StringType kOtherTypeT>
+	friend String operator+(const StringView<kOtherTypeT> &lhs, String &&rhs){
+		auto temp = String(lhs);
+		temp += std::move(rhs);
+		return temp;
+	}
+	friend String operator+(Char lhs, String &rhs){
+		auto temp = String(lhs);
+		temp += std::move(rhs);
+		return temp;
+	}
+	friend String operator+(const Char *lhs, String &&rhs){
+		auto temp = String(lhs);
+		temp += std::move(rhs);
+		return temp;
+	}
+
+	bool operator==(const String &rhs) const noexcept {
+		return GetView() == rhs.GetView();
+	}
+	bool operator==(const View &rhs) const noexcept {
+		return GetView() == rhs;
+	}
+	friend bool operator==(const View &lhs, const String &rhs) noexcept {
+		return lhs == rhs.GetView();
+	}
+
+	bool operator!=(const String &rhs) const noexcept {
+		return GetView() != rhs.GetView();
+	}
+	bool operator!=(const View &rhs) const noexcept {
+		return GetView() != rhs;
+	}
+	friend bool operator!=(const View &lhs, const String &rhs) noexcept {
+		return lhs != rhs.GetView();
+	}
+
+	bool operator<(const String &rhs) const noexcept {
+		return GetView() < rhs.GetView();
+	}
+	bool operator<(const View &rhs) const noexcept {
+		return GetView() < rhs;
+	}
+	friend bool operator<(const View &lhs, const String &rhs) noexcept {
+		return lhs < rhs.GetView();
+	}
+
+	bool operator>(const String &rhs) const noexcept {
+		return GetView() > rhs.GetView();
+	}
+	bool operator>(const View &rhs) const noexcept {
+		return GetView() > rhs;
+	}
+	friend bool operator>(const View &lhs, const String &rhs) noexcept {
+		return lhs > rhs.GetView();
+	}
+
+	bool operator<=(const String &rhs) const noexcept {
+		return GetView() <= rhs.GetView();
+	}
+	bool operator<=(const View &rhs) const noexcept {
+		return GetView() <= rhs;
+	}
+	friend bool operator<=(const View &lhs, const String &rhs) noexcept {
+		return lhs <= rhs.GetView();
+	}
+
+	bool operator>=(const String &rhs) const noexcept {
+		return GetView() >= rhs.GetView();
+	}
+	bool operator>=(const View &rhs) const noexcept {
+		return GetView() >= rhs;
+	}
+	friend bool operator>=(const View &lhs, const String &rhs) noexcept {
+		return lhs >= rhs.GetView();
+	}
+
+	friend void swap(String &lhs, String &rhs) noexcept {
+		lhs.Swap(rhs);
+	}
+
+	friend decltype(auto) begin(const String &rhs) noexcept {
+		return rhs.GetBegin();
+	}
+	friend decltype(auto) begin(String &rhs) noexcept {
+		return rhs.GetBegin();
+	}
+	friend decltype(auto) cbegin(const String &rhs) noexcept {
+		return begin(rhs);
+	}
+	friend decltype(auto) end(const String &rhs) noexcept {
+		return rhs.GetEnd();
+	}
+	friend decltype(auto) end(String &rhs) noexcept {
+		return rhs.GetEnd();
+	}
+	friend decltype(auto) cend(const String &rhs) noexcept {
+		return end(rhs);
+	}
 };
 
 template<StringType kTypeT>
 const String<kTypeT> String<kTypeT>::kEmpty;
-
-template<StringType kTypeT, StringType kOtherTypeT>
-String<kTypeT> &operator+=(String<kTypeT> &lhs, const String<kOtherTypeT> &rhs){
-	lhs.Append(rhs);
-	return lhs;
-}
-template<StringType kTypeT, StringType kOtherTypeT>
-String<kTypeT> &operator+=(String<kTypeT> &lhs, const StringView<kOtherTypeT> &rhs){
-	lhs.Append(rhs);
-	return lhs;
-}
-template<StringType kTypeT>
-String<kTypeT> &operator+=(String<kTypeT> &lhs, typename String<kTypeT>::Char rhs){
-	lhs.Append(rhs);
-	return lhs;
-}
-template<StringType kTypeT>
-String<kTypeT> &operator+=(String<kTypeT> &lhs, const typename String<kTypeT>::Char *rhs){
-	lhs.Append(rhs);
-	return lhs;
-}
-template<StringType kTypeT, StringType kOtherTypeT>
-String<kTypeT> &&operator+=(String<kTypeT> &&lhs, const String<kOtherTypeT> &rhs){
-	lhs.Append(rhs);
-	return std::move(lhs);
-}
-template<StringType kTypeT, StringType kOtherTypeT>
-String<kTypeT> &&operator+=(String<kTypeT> &&lhs, const StringView<kOtherTypeT> &rhs){
-	lhs.Append(rhs);
-	return std::move(lhs);
-}
-template<StringType kTypeT>
-String<kTypeT> &&operator+=(String<kTypeT> &&lhs, typename String<kTypeT>::Char rhs){
-	lhs.Append(rhs);
-	return std::move(lhs);
-}
-template<StringType kTypeT>
-String<kTypeT> &&operator+=(String<kTypeT> &&lhs, const typename String<kTypeT>::Char *rhs){
-	lhs.Append(rhs);
-	return std::move(lhs);
-}
-template<StringType kTypeT>
-String<kTypeT> &&operator+=(String<kTypeT> &&lhs, String<kTypeT> &&rhs){
-	lhs.Append(std::move(rhs));
-	return std::move(lhs);
-}
-
-template<StringType kTypeT, StringType kOtherTypeT>
-String<kTypeT> operator+(const String<kTypeT> &lhs, const String<kOtherTypeT> &rhs){
-	auto ret = lhs;
-	ret += rhs;
-	return ret;
-}
-template<StringType kTypeT, StringType kOtherTypeT>
-String<kTypeT> operator+(const String<kTypeT> &lhs, const StringView<kOtherTypeT> &rhs){
-	auto ret = lhs;
-	ret += rhs;
-	return ret;
-}
-template<StringType kTypeT>
-String<kTypeT> operator+(const String<kTypeT> &lhs, typename String<kTypeT>::Char rhs){
-	auto ret = lhs;
-	ret += rhs;
-	return ret;
-}
-template<StringType kTypeT>
-String<kTypeT> operator+(const String<kTypeT> &lhs, const typename String<kTypeT>::Char *rhs){
-	auto ret = lhs;
-	ret += rhs;
-	return ret;
-}
-template<StringType kTypeT, StringType kOtherTypeT>
-String<kTypeT> &&operator+(String<kTypeT> &&lhs, const String<kOtherTypeT> &rhs){
-	return std::move(lhs += rhs);
-}
-template<StringType kTypeT, StringType kOtherTypeT>
-String<kTypeT> &&operator+(String<kTypeT> &&lhs, const StringView<kOtherTypeT> &rhs){
-	return std::move(lhs += rhs);
-}
-template<StringType kTypeT>
-String<kTypeT> &&operator+(String<kTypeT> &&lhs, typename String<kTypeT>::Char rhs){
-	return std::move(lhs += rhs);
-}
-template<StringType kTypeT>
-String<kTypeT> &&operator+(String<kTypeT> &&lhs, const typename String<kTypeT>::Char *rhs){
-	return std::move(lhs += rhs);
-}
-template<StringType kTypeT>
-String<kTypeT> &&operator+(String<kTypeT> &&lhs, String<kTypeT> &&rhs){
-	return std::move(lhs += std::move(rhs));
-}
-
-template<StringType kTypeT>
-bool operator==(const String<kTypeT> &lhs, const String<kTypeT> &rhs) noexcept {
-	return lhs.GetView() == rhs.GetView();
-}
-template<StringType kTypeT>
-bool operator==(const String<kTypeT> &lhs, const StringView<kTypeT> &rhs) noexcept {
-	return lhs.GetView() == rhs;
-}
-template<StringType kTypeT>
-bool operator==(const StringView<kTypeT> &lhs, const String<kTypeT> &rhs) noexcept {
-	return lhs == rhs.GetView();
-}
-
-template<StringType kTypeT>
-bool operator!=(const String<kTypeT> &lhs, const String<kTypeT> &rhs) noexcept {
-	return lhs.GetView() != rhs.GetView();
-}
-template<StringType kTypeT>
-bool operator!=(const String<kTypeT> &lhs, const StringView<kTypeT> &rhs) noexcept {
-	return lhs.GetView() != rhs;
-}
-template<StringType kTypeT>
-bool operator!=(const StringView<kTypeT> &lhs, const String<kTypeT> &rhs) noexcept {
-	return lhs != rhs.GetView();
-}
-
-template<StringType kTypeT>
-bool operator<(const String<kTypeT> &lhs, const String<kTypeT> &rhs) noexcept {
-	return lhs.GetView() < rhs.GetView();
-}
-template<StringType kTypeT>
-bool operator<(const String<kTypeT> &lhs, const StringView<kTypeT> &rhs) noexcept {
-	return lhs.GetView() < rhs;
-}
-template<StringType kTypeT>
-bool operator<(const StringView<kTypeT> &lhs, const String<kTypeT> &rhs) noexcept {
-	return lhs < rhs.GetView();
-}
-
-template<StringType kTypeT>
-bool operator>(const String<kTypeT> &lhs, const String<kTypeT> &rhs) noexcept {
-	return lhs.GetView() > rhs.GetView();
-}
-template<StringType kTypeT>
-bool operator>(const String<kTypeT> &lhs, const StringView<kTypeT> &rhs) noexcept {
-	return lhs.GetView() > rhs;
-}
-template<StringType kTypeT>
-bool operator>(const StringView<kTypeT> &lhs, const String<kTypeT> &rhs) noexcept {
-	return lhs > rhs.GetView();
-}
-
-template<StringType kTypeT>
-bool operator<=(const String<kTypeT> &lhs, const String<kTypeT> &rhs) noexcept {
-	return lhs.GetView() <= rhs.GetView();
-}
-template<StringType kTypeT>
-bool operator<=(const String<kTypeT> &lhs, const StringView<kTypeT> &rhs) noexcept {
-	return lhs.GetView() <= rhs;
-}
-template<StringType kTypeT>
-bool operator<=(const StringView<kTypeT> &lhs, const String<kTypeT> &rhs) noexcept {
-	return lhs <= rhs.GetView();
-}
-
-template<StringType kTypeT>
-bool operator>=(const String<kTypeT> &lhs, const String<kTypeT> &rhs) noexcept {
-	return lhs.GetView() >= rhs.GetView();
-}
-template<StringType kTypeT>
-bool operator>=(const String<kTypeT> &lhs, const StringView<kTypeT> &rhs) noexcept {
-	return lhs.GetView() >= rhs;
-}
-template<StringType kTypeT>
-bool operator>=(const StringView<kTypeT> &lhs, const String<kTypeT> &rhs) noexcept {
-	return lhs >= rhs.GetView();
-}
-
-template<StringType kTypeT>
-void swap(String<kTypeT> &lhs, String<kTypeT> &rhs) noexcept {
-	lhs.Swap(rhs);
-}
-
-template<StringType kTypeT>
-decltype(auto) begin(const String<kTypeT> &rhs) noexcept {
-	return rhs.GetBegin();
-}
-template<StringType kTypeT>
-decltype(auto) begin(String<kTypeT> &rhs) noexcept {
-	return rhs.GetBegin();
-}
-template<StringType kTypeT>
-decltype(auto) cbegin(const String<kTypeT> &rhs) noexcept {
-	return begin(rhs);
-}
-template<StringType kTypeT>
-decltype(auto) end(const String<kTypeT> &rhs) noexcept {
-	return rhs.GetEnd();
-}
-template<StringType kTypeT>
-decltype(auto) end(String<kTypeT> &rhs) noexcept {
-	return rhs.GetEnd();
-}
-template<StringType kTypeT>
-decltype(auto) cend(const String<kTypeT> &rhs) noexcept {
-	return end(rhs);
-}
 
 namespace Impl_String {
 	static_assert(sizeof(wchar_t) == sizeof(char16_t), "wchar_t does not have the same size with char16_t.");

@@ -977,37 +977,30 @@ public:
 	Element &operator[](std::size_t uIndex) noexcept {
 		return UncheckedGet(uIndex);
 	}
+
+	friend void swap(RingQueue &lhs, RingQueue &rhs) noexcept {
+		lhs.Swap(rhs);
+	}
+
+	friend decltype(auto) begin(const RingQueue &rhs) noexcept {
+		return rhs.EnumerateFirst();
+	}
+	friend decltype(auto) begin(RingQueue &rhs) noexcept {
+		return rhs.EnumerateFirst();
+	}
+	friend decltype(auto) cbegin(const RingQueue &rhs) noexcept {
+		return begin(rhs);
+	}
+	friend decltype(auto) end(const RingQueue &rhs) noexcept {
+		return rhs.EnumerateSingular();
+	}
+	friend decltype(auto) end(RingQueue &rhs) noexcept {
+		return rhs.EnumerateSingular();
+	}
+	friend decltype(auto) cend(const RingQueue &rhs) noexcept {
+		return end(rhs);
+	}
 };
-
-template<typename ElementT>
-void swap(RingQueue<ElementT> &lhs, RingQueue<ElementT> &rhs) noexcept {
-	lhs.Swap(rhs);
-}
-
-template<typename ElementT>
-decltype(auto) begin(const RingQueue<ElementT> &rhs) noexcept {
-	return rhs.EnumerateFirst();
-}
-template<typename ElementT>
-decltype(auto) begin(RingQueue<ElementT> &rhs) noexcept {
-	return rhs.EnumerateFirst();
-}
-template<typename ElementT>
-decltype(auto) cbegin(const RingQueue<ElementT> &rhs) noexcept {
-	return begin(rhs);
-}
-template<typename ElementT>
-decltype(auto) end(const RingQueue<ElementT> &rhs) noexcept {
-	return rhs.EnumerateSingular();
-}
-template<typename ElementT>
-decltype(auto) end(RingQueue<ElementT> &rhs) noexcept {
-	return rhs.EnumerateSingular();
-}
-template<typename ElementT>
-decltype(auto) cend(const RingQueue<ElementT> &rhs) noexcept {
-	return end(rhs);
-}
 
 }
 

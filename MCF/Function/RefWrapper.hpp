@@ -13,9 +13,6 @@ namespace MCF {
 
 template<typename ObjectT>
 class RefWrapper {
-public:
-	using Reference = ObjectT &;
-
 private:
 	std::remove_reference_t<ObjectT> *x_pObject;
 
@@ -26,19 +23,17 @@ public:
 	}
 
 public:
-	ObjectT &Get() const noexcept {
+	constexpr ObjectT &Get() const noexcept {
 		return *x_pObject;
 	}
-	ObjectT &Forward() const noexcept {
-		return *x_pObject;
+
+	void Swap(RefWrapper &rhs) noexcept {
+		using std::swap;
+		swap(x_pObject, rhs.x_pObject);
 	}
 
 public:
-	decltype(auto) operator&() const && {
-		return &Get();
-	}
-
-	operator ObjectT &() const noexcept {
+	constexpr operator ObjectT &() const noexcept {
 		return Get();
 	}
 
@@ -46,157 +41,99 @@ public:
 	decltype(auto) operator()(ParamsT &&...vParams) const {
 		return Get()(std::forward<ParamsT>(vParams)...);
 	}
+
+	constexpr bool operator==(const RefWrapper &rhs) const {
+		return Get() == rhs.Get();
+	}
+	constexpr bool operator==(const ObjectT &rhs) const {
+		return Get() == rhs;
+	}
+	friend constexpr bool operator==(const ObjectT &lhs, const RefWrapper &rhs){
+		return lhs == rhs.Get();
+	}
+
+	constexpr bool operator!=(const RefWrapper &rhs) const {
+		return Get() != rhs.Get();
+	}
+	constexpr bool operator!=(const ObjectT &rhs) const {
+		return Get() != rhs;
+	}
+	friend constexpr bool operator!=(const ObjectT &lhs, const RefWrapper &rhs){
+		return lhs != rhs.Get();
+	}
+
+	constexpr bool operator<(const RefWrapper &rhs) const {
+		return Get() < rhs.Get();
+	}
+	constexpr bool operator<(const ObjectT &rhs) const {
+		return Get() < rhs;
+	}
+	friend constexpr bool operator<(const ObjectT &lhs, const RefWrapper &rhs){
+		return lhs < rhs.Get();
+	}
+
+	constexpr bool operator>(const RefWrapper &rhs) const {
+		return Get() > rhs.Get();
+	}
+	constexpr bool operator>(const ObjectT &rhs) const {
+		return Get() > rhs;
+	}
+	friend constexpr bool operator>(const ObjectT &lhs, const RefWrapper &rhs){
+		return lhs > rhs.Get();
+	}
+
+	constexpr bool operator<=(const RefWrapper &rhs) const {
+		return Get() <= rhs.Get();
+	}
+	constexpr bool operator<=(const ObjectT &rhs) const {
+		return Get() <= rhs;
+	}
+	friend constexpr bool operator<=(const ObjectT &lhs, const RefWrapper &rhs){
+		return lhs <= rhs.Get();
+	}
+
+	constexpr bool operator>=(const RefWrapper &rhs) const {
+		return Get() >= rhs.Get();
+	}
+	constexpr bool operator>=(const ObjectT &rhs) const {
+		return Get() >= rhs;
+	}
+	friend constexpr bool operator>=(const ObjectT &lhs, const RefWrapper &rhs){
+		return lhs >= rhs.Get();
+	}
+
+	friend void swap(RefWrapper &lhs, RefWrapper &rhs) noexcept {
+		lhs.Swap(rhs);
+	}
 };
 
 template<typename ObjectT>
-class RefWrapper<ObjectT &&> {
-public:
-	using Reference = ObjectT &&;
-
-private:
-	std::remove_reference_t<ObjectT> *x_pObject;
-
-public:
-	constexpr RefWrapper(ObjectT &vObject) noexcept
-		: x_pObject(AddressOf(vObject))
-	{
-	}
-	constexpr RefWrapper(ObjectT &&vObject) noexcept
-		: RefWrapper(vObject)
-	{
-	}
-
-public:
-	ObjectT &Get() const noexcept {
-		return *x_pObject;
-	}
-	ObjectT &&Forward() const noexcept {
-		return std::move(*x_pObject);
-	}
-
-public:
-	decltype(auto) operator&() const && = delete;
-
-	operator ObjectT &() const & noexcept {
-		return Get();
-	}
-	operator ObjectT &&() const && noexcept {
-		return Forward();
-	}
-
-	template<typename ...ParamsT>
-	decltype(auto) operator()(ParamsT &&...vParams) const & {
-		return Get()(std::forward<ParamsT>(vParams)...);
-	}
-	template<typename ...ParamsT>
-	decltype(auto) operator()(ParamsT &&...vParams) const && {
-		return Forward()(std::forward<ParamsT>(vParams)...);
-	}
-};
-
-template<typename ObjectT>
-RefWrapper<const volatile ObjectT> Ref(const volatile ObjectT &vObject) noexcept {
+constexpr RefWrapper<const volatile ObjectT> Ref(const volatile ObjectT &vObject) noexcept {
 	return RefWrapper<const volatile ObjectT>(vObject);
 }
 template<typename ObjectT>
-RefWrapper<const ObjectT> Ref(const ObjectT &vObject) noexcept {
+void Ref(const volatile ObjectT &&vObject) noexcept = delete;
+
+template<typename ObjectT>
+constexpr RefWrapper<const ObjectT> Ref(const ObjectT &vObject) noexcept {
 	return RefWrapper<const ObjectT>(vObject);
 }
 template<typename ObjectT>
-RefWrapper<volatile ObjectT> Ref(volatile ObjectT &vObject) noexcept {
+void Ref(const ObjectT &&vObject) noexcept = delete;
+
+template<typename ObjectT>
+constexpr RefWrapper<volatile ObjectT> Ref(volatile ObjectT &vObject) noexcept {
 	return RefWrapper<volatile ObjectT>(vObject);
 }
 template<typename ObjectT>
-RefWrapper<ObjectT> Ref(ObjectT &vObject) noexcept {
+void Ref(volatile ObjectT &&vObject) noexcept = delete;
+
+template<typename ObjectT>
+constexpr RefWrapper<ObjectT> Ref(ObjectT &vObject) noexcept {
 	return RefWrapper<ObjectT>(vObject);
 }
-
 template<typename ObjectT>
-RefWrapper<const volatile ObjectT &&> Ref(const volatile ObjectT &&vObject) noexcept = delete;
-template<typename ObjectT>
-RefWrapper<const ObjectT &&> Ref(const ObjectT &&vObject) noexcept = delete;
-template<typename ObjectT>
-RefWrapper<volatile ObjectT &&> Ref(volatile ObjectT &&vObject) noexcept = delete;
-template<typename ObjectT>
-RefWrapper<ObjectT &&> Ref(ObjectT &&vObject) noexcept = delete;
-
-template<typename ObjectLhsT, typename ObjectRhsT>
-bool operator==(const RefWrapper<ObjectLhsT> &lhs, const RefWrapper<ObjectRhsT> &rhs){
-	return lhs.Get() == rhs.Get();
-}
-template<typename ObjectLhsT, typename ObjectRhsT>
-bool operator==(const ObjectLhsT &lhs, const RefWrapper<ObjectRhsT> &rhs){
-	return lhs == rhs.Get();
-}
-template<typename ObjectLhsT, typename ObjectRhsT>
-bool operator==(const RefWrapper<ObjectLhsT> &lhs, const ObjectRhsT &rhs){
-	return lhs.Get() == rhs;
-}
-
-template<typename ObjectLhsT, typename ObjectRhsT>
-bool operator!=(const RefWrapper<ObjectLhsT> &lhs, const RefWrapper<ObjectRhsT> &rhs){
-	return lhs.Get() != rhs.Get();
-}
-template<typename ObjectLhsT, typename ObjectRhsT>
-bool operator!=(const ObjectLhsT &lhs, const RefWrapper<ObjectRhsT> &rhs){
-	return lhs != rhs.Get();
-}
-template<typename ObjectLhsT, typename ObjectRhsT>
-bool operator!=(const RefWrapper<ObjectLhsT> &lhs, const ObjectRhsT &rhs){
-	return lhs.Get() != rhs;
-}
-
-template<typename ObjectLhsT, typename ObjectRhsT>
-bool operator<(const RefWrapper<ObjectLhsT> &lhs, const RefWrapper<ObjectRhsT> &rhs){
-	return lhs.Get() < rhs.Get();
-}
-template<typename ObjectLhsT, typename ObjectRhsT>
-bool operator<(const ObjectLhsT &lhs, const RefWrapper<ObjectRhsT> &rhs){
-	return lhs < rhs.Get();
-}
-template<typename ObjectLhsT, typename ObjectRhsT>
-bool operator<(const RefWrapper<ObjectLhsT> &lhs, const ObjectRhsT &rhs){
-	return lhs.Get() < rhs;
-}
-
-template<typename ObjectLhsT, typename ObjectRhsT>
-bool operator>(const RefWrapper<ObjectLhsT> &lhs, const RefWrapper<ObjectRhsT> &rhs){
-	return lhs.Get() > rhs.Get();
-}
-template<typename ObjectLhsT, typename ObjectRhsT>
-bool operator>(const ObjectLhsT &lhs, const RefWrapper<ObjectRhsT> &rhs){
-	return lhs > rhs.Get();
-}
-template<typename ObjectLhsT, typename ObjectRhsT>
-bool operator>(const RefWrapper<ObjectLhsT> &lhs, const ObjectRhsT &rhs){
-	return lhs.Get() > rhs;
-}
-
-template<typename ObjectLhsT, typename ObjectRhsT>
-bool operator<=(const RefWrapper<ObjectLhsT> &lhs, const RefWrapper<ObjectRhsT> &rhs){
-	return lhs.Get() <= rhs.Get();
-}
-template<typename ObjectLhsT, typename ObjectRhsT>
-bool operator<=(const ObjectLhsT &lhs, const RefWrapper<ObjectRhsT> &rhs){
-	return lhs <= rhs.Get();
-}
-template<typename ObjectLhsT, typename ObjectRhsT>
-bool operator<=(const RefWrapper<ObjectLhsT> &lhs, const ObjectRhsT &rhs){
-	return lhs.Get() <= rhs;
-}
-
-template<typename ObjectLhsT, typename ObjectRhsT>
-bool operator>=(const RefWrapper<ObjectLhsT> &lhs, const RefWrapper<ObjectRhsT> &rhs){
-	return lhs.Get() >= rhs.Get();
-}
-template<typename ObjectLhsT, typename ObjectRhsT>
-bool operator>=(const ObjectLhsT &lhs, const RefWrapper<ObjectRhsT> &rhs){
-	return lhs >= rhs.Get();
-}
-template<typename ObjectLhsT, typename ObjectRhsT>
-bool operator>=(const RefWrapper<ObjectLhsT> &lhs, const ObjectRhsT &rhs){
-	return lhs.Get() >= rhs;
-}
+void Ref(ObjectT &&vObject) noexcept = delete;
 
 }
 

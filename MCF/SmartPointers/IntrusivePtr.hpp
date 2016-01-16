@@ -360,13 +360,13 @@ public:
 	}
 
 public:
-	bool IsNonnull() const noexcept {
+	constexpr bool IsNonnull() const noexcept {
 		return !!x_pElement;
 	}
 	std::size_t GetRefCount() const noexcept {
 		return static_cast<const volatile Impl_IntrusivePtr::RefCountBase *>(x_pElement)->GetRef();
 	}
-	Element *Get() const noexcept {
+	constexpr Element *Get() const noexcept {
 		return x_pElement;
 	}
 	Element *Release() noexcept {
@@ -411,111 +411,109 @@ public:
 	}
 
 public:
-	explicit operator bool() const noexcept {
+	explicit constexpr operator bool() const noexcept {
 		return IsNonnull();
 	}
-	explicit operator Element *() const noexcept {
+	explicit constexpr operator Element *() const noexcept {
 		return Get();
 	}
 
-	Element &operator*() const noexcept {
+	constexpr Element &operator*() const noexcept {
 		ASSERT(IsNonnull());
 
 		return *Get();
 	}
-	Element *operator->() const noexcept {
+	constexpr Element *operator->() const noexcept {
 		ASSERT(IsNonnull());
 
 		return Get();
+	}
+
+	template<typename OtherObjectT, class OtherDeleterT>
+	constexpr bool operator==(const IntrusivePtr<OtherObjectT, OtherDeleterT> &rhs) const noexcept {
+		return Equal()(x_pElement, rhs.x_pElement);
+	}
+	template<typename OtherObjectT>
+	constexpr bool operator==(OtherObjectT *rhs) const noexcept {
+		return Equal()(x_pElement, rhs);
+	}
+	template<typename OtherObjectT>
+	friend constexpr bool operator==(OtherObjectT *lhs, const IntrusivePtr &rhs) noexcept {
+		return Equal()(lhs, rhs.x_pElement);
+	}
+
+	template<typename OtherObjectT, class OtherDeleterT>
+	constexpr bool operator!=(const IntrusivePtr<OtherObjectT, OtherDeleterT> &rhs) const noexcept {
+		return Unequal()(x_pElement, rhs.x_pElement);
+	}
+	template<typename OtherObjectT>
+	constexpr bool operator!=(OtherObjectT *rhs) const noexcept {
+		return Unequal()(x_pElement, rhs);
+	}
+	template<typename OtherObjectT>
+	friend constexpr bool operator!=(OtherObjectT *lhs, const IntrusivePtr &rhs) noexcept {
+		return Unequal()(lhs, rhs.x_pElement);
+	}
+
+	template<typename OtherObjectT, class OtherDeleterT>
+	constexpr bool operator<(const IntrusivePtr<OtherObjectT, OtherDeleterT> &rhs) const noexcept {
+		return Less()(x_pElement, rhs.x_pElement);
+	}
+	template<typename OtherObjectT>
+	constexpr bool operator<(OtherObjectT *rhs) const noexcept {
+		return Less()(x_pElement, rhs);
+	}
+	template<typename OtherObjectT>
+	friend constexpr bool operator<(OtherObjectT *lhs, const IntrusivePtr &rhs) noexcept {
+		return Less()(lhs, rhs.x_pElement);
+	}
+
+	template<typename OtherObjectT, class OtherDeleterT>
+	constexpr bool operator>(const IntrusivePtr<OtherObjectT, OtherDeleterT> &rhs) const noexcept {
+		return Greater()(x_pElement, rhs.x_pElement);
+	}
+	template<typename OtherObjectT>
+	constexpr bool operator>(OtherObjectT *rhs) const noexcept {
+		return Greater()(x_pElement, rhs);
+	}
+	template<typename OtherObjectT>
+	friend constexpr bool operator>(OtherObjectT *lhs, const IntrusivePtr &rhs) noexcept {
+		return Greater()(lhs, rhs.x_pElement);
+	}
+
+	template<typename OtherObjectT, class OtherDeleterT>
+	constexpr bool operator<=(const IntrusivePtr<OtherObjectT, OtherDeleterT> &rhs) const noexcept {
+		return LessEqual()(x_pElement, rhs.x_pElement);
+	}
+	template<typename OtherObjectT>
+	constexpr bool operator<=(OtherObjectT *rhs) const noexcept {
+		return LessEqual()(x_pElement, rhs);
+	}
+	template<typename OtherObjectT>
+	friend constexpr bool operator<=(OtherObjectT *lhs, const IntrusivePtr &rhs) noexcept {
+		return LessEqual()(lhs, rhs.x_pElement);
+	}
+
+	template<typename OtherObjectT, class OtherDeleterT>
+	constexpr bool operator>=(const IntrusivePtr<OtherObjectT, OtherDeleterT> &rhs) const noexcept {
+		return GreaterEqual()(x_pElement, rhs.x_pElement);
+	}
+	template<typename OtherObjectT>
+	constexpr bool operator>=(OtherObjectT *rhs) const noexcept {
+		return GreaterEqual()(x_pElement, rhs);
+	}
+	template<typename OtherObjectT>
+	friend constexpr bool operator>=(OtherObjectT *lhs, const IntrusivePtr &rhs) noexcept {
+		return GreaterEqual()(lhs, rhs.x_pElement);
+	}
+
+	friend void swap(IntrusivePtr &lhs, IntrusivePtr &rhs) noexcept {
+		lhs.Swap(rhs);
 	}
 };
 
 template<typename ObjectT, class DeleterT>
 const IntrusivePtr<ObjectT, DeleterT> IntrusivePtr<ObjectT, DeleterT>::kNull;
-
-template<typename ObjectLhsT, typename ObjectRhsT, class DeleterT>
-bool operator==(const IntrusivePtr<ObjectLhsT, DeleterT> &lhs, const IntrusivePtr<ObjectRhsT, DeleterT> &rhs) noexcept {
-	return Equal()(lhs.Get(), rhs.Get());
-}
-template<typename ObjectLhsT, class DeleterT>
-bool operator==(const IntrusivePtr<ObjectLhsT, DeleterT> &lhs, typename IntrusivePtr<ObjectLhsT, DeleterT>::Element *rhs) noexcept {
-	return Equal()(lhs.Get(), rhs);
-}
-template<typename ObjectRhsT, class DeleterT>
-bool operator==(typename IntrusivePtr<ObjectRhsT, DeleterT>::Element *lhs, const IntrusivePtr<ObjectRhsT, DeleterT> &rhs) noexcept {
-	return Equal()(lhs, rhs.Get());
-}
-
-template<typename ObjectLhsT, typename ObjectRhsT, class DeleterT>
-bool operator!=(const IntrusivePtr<ObjectLhsT, DeleterT> &lhs, const IntrusivePtr<ObjectRhsT, DeleterT> &rhs) noexcept {
-	return Unequal()(lhs.Get(), rhs.Get());
-}
-template<typename ObjectLhsT, class DeleterT>
-bool operator!=(const IntrusivePtr<ObjectLhsT, DeleterT> &lhs, typename IntrusivePtr<ObjectLhsT, DeleterT>::Element *rhs) noexcept {
-	return Unequal()(lhs.Get(), rhs);
-}
-template<typename ObjectRhsT, class DeleterT>
-bool operator!=(typename IntrusivePtr<ObjectRhsT, DeleterT>::Element *lhs, const IntrusivePtr<ObjectRhsT, DeleterT> &rhs) noexcept {
-	return Unequal()(lhs, rhs.Get());
-}
-
-template<typename ObjectLhsT, typename ObjectRhsT, class DeleterT>
-bool operator<(const IntrusivePtr<ObjectLhsT, DeleterT> &lhs, const IntrusivePtr<ObjectRhsT, DeleterT> &rhs) noexcept {
-	return Less()(lhs.Get(), rhs.Get());
-}
-template<typename ObjectLhsT, class DeleterT>
-bool operator<(const IntrusivePtr<ObjectLhsT, DeleterT> &lhs, typename IntrusivePtr<ObjectLhsT, DeleterT>::Element *rhs) noexcept {
-	return Less()(lhs.Get(), rhs);
-}
-template<typename ObjectRhsT, class DeleterT>
-bool operator<(typename IntrusivePtr<ObjectRhsT, DeleterT>::Element *lhs, const IntrusivePtr<ObjectRhsT, DeleterT> &rhs) noexcept {
-	return Less()(lhs, rhs.Get());
-}
-
-template<typename ObjectLhsT, typename ObjectRhsT, class DeleterT>
-bool operator>(const IntrusivePtr<ObjectLhsT, DeleterT> &lhs, const IntrusivePtr<ObjectRhsT, DeleterT> &rhs) noexcept {
-	return Greater()(lhs.Get(), rhs.Get());
-}
-template<typename ObjectLhsT, class DeleterT>
-bool operator>(const IntrusivePtr<ObjectLhsT, DeleterT> &lhs, typename IntrusivePtr<ObjectLhsT, DeleterT>::Element *rhs) noexcept {
-	return Greater()(lhs.Get(), rhs);
-}
-template<typename ObjectRhsT, class DeleterT>
-bool operator>(typename IntrusivePtr<ObjectRhsT, DeleterT>::Element *lhs, const IntrusivePtr<ObjectRhsT, DeleterT> &rhs) noexcept {
-	return Greater()(lhs, rhs.Get());
-}
-
-template<typename ObjectLhsT, typename ObjectRhsT, class DeleterT>
-bool operator<=(const IntrusivePtr<ObjectLhsT, DeleterT> &lhs, const IntrusivePtr<ObjectRhsT, DeleterT> &rhs) noexcept {
-	return LessEqual()(lhs.Get(), rhs.Get());
-}
-template<typename ObjectLhsT, class DeleterT>
-bool operator<=(const IntrusivePtr<ObjectLhsT, DeleterT> &lhs, typename IntrusivePtr<ObjectLhsT, DeleterT>::Element *rhs) noexcept {
-	return LessEqual()(lhs.Get(), rhs);
-}
-template<typename ObjectRhsT, class DeleterT>
-bool operator<=(typename IntrusivePtr<ObjectRhsT, DeleterT>::Element *lhs, const IntrusivePtr<ObjectRhsT, DeleterT> &rhs) noexcept {
-	return LessEqual()(lhs, rhs.Get());
-}
-
-template<typename ObjectLhsT, typename ObjectRhsT, class DeleterT>
-bool operator>=(const IntrusivePtr<ObjectLhsT, DeleterT> &lhs, const IntrusivePtr<ObjectRhsT, DeleterT> &rhs) noexcept {
-	return GreaterEqual()(lhs.Get(), rhs.Get());
-}
-template<typename ObjectLhsT, class DeleterT>
-bool operator>=(const IntrusivePtr<ObjectLhsT, DeleterT> &lhs, typename IntrusivePtr<ObjectLhsT, DeleterT>::Element *rhs) noexcept {
-	return GreaterEqual()(lhs.Get(), rhs);
-}
-template<typename ObjectRhsT, class DeleterT>
-bool operator>=(typename IntrusivePtr<ObjectRhsT, DeleterT>::Element *lhs, const IntrusivePtr<ObjectRhsT, DeleterT> &rhs) noexcept {
-	return GreaterEqual()(lhs, rhs.Get());
-}
-
-
-template<typename ObjectT, class DeleterT>
-void swap(IntrusivePtr<ObjectT, DeleterT> &lhs, IntrusivePtr<ObjectT, DeleterT> &rhs) noexcept {
-	lhs.Swap(rhs);
-}
 
 template<typename ObjectT, typename DeleterT = DefaultDeleter<ObjectT>, typename ...ParamsT>
 IntrusivePtr<ObjectT, DeleterT> MakeIntrusive(ParamsT &&...vParams){
@@ -564,6 +562,12 @@ public:
 	static const IntrusiveWeakPtr kNull;
 
 private:
+	static auto X_ForkView(Element *rhs){
+		const auto pBase = Impl_IntrusivePtr::StaticCastOrDynamicCast<const volatile Impl_IntrusivePtr::DeletableBase<DeleterT> *>(rhs);
+		return pBase ? pBase->X_CreateView() : nullptr;
+	}
+
+private:
 	typename Impl_IntrusivePtr::DeletableBase<DeleterT>::X_WeakView *x_pView;
 
 public:
@@ -571,14 +575,11 @@ public:
 		: x_pView(nullptr)
 	{
 	}
-	explicit IntrusiveWeakPtr(Element *rhs) {
-		decltype(x_pView) pView = nullptr;
-		const auto pBase = Impl_IntrusivePtr::StaticCastOrDynamicCast<const volatile Impl_IntrusivePtr::DeletableBase<DeleterT> *>(rhs);
-		if(pBase){
-			pView = pBase->X_CreateView();
-			static_cast<const volatile Impl_IntrusivePtr::RefCountBase *>(pView)->AddRef();
+	explicit IntrusiveWeakPtr(Element *rhs){
+		const auto x_pView = X_ForkView(rhs);
+		if(x_pView){
+			static_cast<const volatile Impl_IntrusivePtr::RefCountBase *>(x_pView)->AddRef();
 		}
-		x_pView = pView;
 	}
 	template<typename OtherObjectT, typename OtherDeleterT,
 		std::enable_if_t<
@@ -586,13 +587,10 @@ public:
 				std::is_convertible<typename IntrusivePtr<OtherObjectT, OtherDeleterT>::Deleter, Deleter>::value,
 			int> = 0>
 	IntrusiveWeakPtr(const IntrusivePtr<OtherObjectT, OtherDeleterT> &rhs) {
-		decltype(x_pView) pView = nullptr;
-		const auto pBase = Impl_IntrusivePtr::StaticCastOrDynamicCast<const volatile Impl_IntrusivePtr::DeletableBase<DeleterT> *>(rhs.x_pElement);
-		if(pBase){
-			pView = pBase->X_CreateView();
-			static_cast<const volatile Impl_IntrusivePtr::RefCountBase *>(pView)->AddRef();
+		const auto x_pView = X_ForkView(rhs.x_pElement);
+		if(x_pView){
+			static_cast<const volatile Impl_IntrusivePtr::RefCountBase *>(x_pView)->AddRef();
 		}
-		x_pView = pView;
 	}
 	template<typename OtherObjectT, typename OtherDeleterT,
 		std::enable_if_t<
@@ -631,27 +629,20 @@ public:
 		return Reset(std::move(rhs));
 	}
 	~IntrusiveWeakPtr(){
-		const auto pOldView = x_pView;
-		if(pOldView){
-			if(static_cast<const volatile Impl_IntrusivePtr::RefCountBase *>(pOldView)->DropRef()){
-				delete pOldView;
+		if(x_pView){
+			if(static_cast<const volatile Impl_IntrusivePtr::RefCountBase *>(x_pView)->DropRef()){
+				delete x_pView;
 			}
 		}
 	}
 
 public:
 	bool HasExpired() const noexcept {
-		if(!x_pView){
-			return true;
-		}
-		return x_pView->HasOwnerExpired();
+		return x_pView ? x_pView->HasOwnerExpired() : true;
 	}
 	template<typename OtherT = ObjectT>
 	IntrusivePtr<OtherT, DeleterT> Lock() const noexcept {
-		if(!x_pView){
-			return nullptr;
-		}
-		return x_pView->template GetOwner<OtherT>();
+		return x_pView ? x_pView->template GetOwner<OtherT>() : nullptr;
 	}
 
 	IntrusiveWeakPtr &Reset(std::nullptr_t = nullptr) noexcept {
@@ -692,39 +683,38 @@ public:
 	}
 
 public:
-	template<typename ObjectRhsT>
-	bool operator==(const IntrusiveWeakPtr<ObjectRhsT, DeleterT> &rhs) const noexcept {
+	template<typename OtherObjectT, class OtherDeleterT>
+	bool operator==(const IntrusiveWeakPtr<OtherObjectT, OtherDeleterT> &rhs) const noexcept {
 		return Equal()(x_pView, rhs.x_pView);
 	}
-	template<typename ObjectRhsT>
-	bool operator!=(const IntrusiveWeakPtr<ObjectRhsT, DeleterT> &rhs) const noexcept {
+	template<typename OtherObjectT, class OtherDeleterT>
+	bool operator!=(const IntrusiveWeakPtr<OtherObjectT, OtherDeleterT> &rhs) const noexcept {
 		return Unequal()(x_pView, rhs.x_pView);
 	}
-	template<typename ObjectRhsT>
-	bool operator<(const IntrusiveWeakPtr<ObjectRhsT, DeleterT> &rhs) const noexcept {
+	template<typename OtherObjectT, class OtherDeleterT>
+	bool operator<(const IntrusiveWeakPtr<OtherObjectT, OtherDeleterT> &rhs) const noexcept {
 		return Less()(x_pView, rhs.x_pView);
 	}
-	template<typename ObjectRhsT>
-	bool operator>(const IntrusiveWeakPtr<ObjectRhsT, DeleterT> &rhs) const noexcept {
+	template<typename OtherObjectT, class OtherDeleterT>
+	bool operator>(const IntrusiveWeakPtr<OtherObjectT, OtherDeleterT> &rhs) const noexcept {
 		return Greater()(x_pView, rhs.x_pView);
 	}
-	template<typename ObjectRhsT>
-	bool operator<=(const IntrusiveWeakPtr<ObjectRhsT, DeleterT> &rhs) const noexcept {
+	template<typename OtherObjectT, class OtherDeleterT>
+	bool operator<=(const IntrusiveWeakPtr<OtherObjectT, OtherDeleterT> &rhs) const noexcept {
 		return LessEqual()(x_pView, rhs.x_pView);
 	}
-	template<typename ObjectRhsT>
-	bool operator>=(const IntrusiveWeakPtr<ObjectRhsT, DeleterT> &rhs) const noexcept {
+	template<typename OtherObjectT, class OtherDeleterT>
+	bool operator>=(const IntrusiveWeakPtr<OtherObjectT, OtherDeleterT> &rhs) const noexcept {
 		return GreaterEqual()(x_pView, rhs.x_pView);
+	}
+
+	void swap(IntrusiveWeakPtr &lhs, IntrusiveWeakPtr &rhs) noexcept {
+		lhs.Swap(rhs);
 	}
 };
 
 template<typename ObjectT, class DeleterT>
 const IntrusiveWeakPtr<ObjectT, DeleterT> IntrusiveWeakPtr<ObjectT, DeleterT>::kNull;
-
-template<typename ObjectT, class DeleterT>
-void swap(IntrusiveWeakPtr<ObjectT, DeleterT> &lhs, IntrusiveWeakPtr<ObjectT, DeleterT> &rhs) noexcept {
-	lhs.Swap(rhs);
-}
 
 template<typename ObjectT, class DeleterT>
 IntrusiveWeakPtr<ObjectT, DeleterT> Weaken(const IntrusivePtr<ObjectT, DeleterT> &rhs) noexcept {

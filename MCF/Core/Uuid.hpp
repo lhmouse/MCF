@@ -91,11 +91,11 @@ public:
 	bool operator>=(const Uuid &rhs) const noexcept {
 		return Compare(rhs) >= 0;
 	}
-};
 
-inline void swap(Uuid &lhs, Uuid &rhs) noexcept {
-	lhs.Swap(rhs);
-}
+	friend void swap(Uuid &lhs, Uuid &rhs) noexcept {
+		lhs.Swap(rhs);
+	}
+};
 
 }
 

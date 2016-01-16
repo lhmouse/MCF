@@ -449,37 +449,30 @@ public:
 			pNode = pNext;
 		}
 	}
+
+	friend void swap(List &lhs, List &rhs) noexcept {
+		lhs.Swap(rhs);
+	}
+
+	friend decltype(auto) begin(const List &rhs) noexcept {
+		return rhs.EnumerateFirst();
+	}
+	friend decltype(auto) begin(List &rhs) noexcept {
+		return rhs.EnumerateFirst();
+	}
+	friend decltype(auto) cbegin(const List &rhs) noexcept {
+		return begin(rhs);
+	}
+	friend decltype(auto) end(const List &rhs) noexcept {
+		return rhs.EnumerateSingular();
+	}
+	friend decltype(auto) end(List &rhs) noexcept {
+		return rhs.EnumerateSingular();
+	}
+	friend decltype(auto) cend(const List &rhs) noexcept {
+		return end(rhs);
+	}
 };
-
-template<typename ElementT>
-void swap(List<ElementT> &lhs, List<ElementT> &rhs) noexcept {
-	lhs.Swap(rhs);
-}
-
-template<typename ElementT>
-decltype(auto) begin(const List<ElementT> &rhs) noexcept {
-	return rhs.EnumerateFirst();
-}
-template<typename ElementT>
-decltype(auto) begin(List<ElementT> &rhs) noexcept {
-	return rhs.EnumerateFirst();
-}
-template<typename ElementT>
-decltype(auto) cbegin(const List<ElementT> &rhs) noexcept {
-	return begin(rhs);
-}
-template<typename ElementT>
-decltype(auto) end(const List<ElementT> &rhs) noexcept {
-	return rhs.EnumerateSingular();
-}
-template<typename ElementT>
-decltype(auto) end(List<ElementT> &rhs) noexcept {
-	return rhs.EnumerateSingular();
-}
-template<typename ElementT>
-decltype(auto) cend(const List<ElementT> &rhs) noexcept {
-	return end(rhs);
-}
 
 }
 

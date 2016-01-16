@@ -68,6 +68,10 @@ public:
 
 		return (*x_pfnLambda)(x_pContext, std::forward<ParamsT>(vParams)...); // 值形参当作右值引用传递。
 	}
+
+	friend void swap(FunctionView &lhs, FunctionView &rhs) noexcept {
+		lhs.Swap(rhs);
+	}
 };
 
 }

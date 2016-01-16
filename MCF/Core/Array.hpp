@@ -132,8 +132,7 @@ public:
 	}
 
 	void Swap(Array &rhs) noexcept(noexcept(std::swap(std::declval<Element (&)[kSizeT]>(), std::declval<Element (&)[kSizeT]>()))) {
-		using std::swap;
-		swap(m_aStorage, rhs.m_aStorage);
+		std::swap(m_aStorage, rhs.m_aStorage);
 	}
 
 	// Array 需求。
@@ -217,6 +216,10 @@ public:
 	}
 	explicit operator Element *() noexcept {
 		return GetData();
+	}
+
+	friend void swap(Array &lhs, Array &rhs) noexcept(noexcept(lhs.Swap(rhs))) {
+		lhs.Swap(rhs);
 	}
 };
 
@@ -333,8 +336,7 @@ public:
 	}
 
 	void Swap(Array &rhs) noexcept(noexcept(std::swap(std::declval<Element (&)[kSizeT]>(), std::declval<Element (&)[kSizeT]>()))) {
-		using std::swap;
-		swap(m_aStorage, rhs.m_aStorage);
+		std::swap(m_aStorage, rhs.m_aStorage);
 	}
 
 	// Array 需求。
@@ -419,37 +421,30 @@ public:
 	explicit operator Element *() noexcept {
 		return GetData();
 	}
+
+	friend void swap(Array &lhs, Array &rhs) noexcept(noexcept(lhs.Swap(rhs))) {
+		lhs.Swap(rhs);
+	}
+
+	friend decltype(auto) begin(const Array &rhs) noexcept {
+		return rhs.EnumerateFirst();
+	}
+	friend decltype(auto) begin(Array &rhs) noexcept {
+		return rhs.EnumerateFirst();
+	}
+	friend decltype(auto) cbegin(const Array &rhs) noexcept {
+		return begin(rhs);
+	}
+	friend decltype(auto) end(const Array &rhs) noexcept {
+		return rhs.EnumerateSingular();
+	}
+	friend decltype(auto) end(Array &rhs) noexcept {
+		return rhs.EnumerateSingular();
+	}
+	friend decltype(auto) cend(const Array &rhs) noexcept {
+		return end(rhs);
+	}
 };
-
-template<typename Element, std::size_t kCapacity>
-void swap(Array<Element, kCapacity> &lhs, Array<Element, kCapacity> &rhs) noexcept(noexcept(lhs.Swap(rhs))) {
-	lhs.Swap(rhs);
-}
-
-template<typename Element, std::size_t kCapacity>
-decltype(auto) begin(const Array<Element, kCapacity> &rhs) noexcept {
-	return rhs.EnumerateFirst();
-}
-template<typename Element, std::size_t kCapacity>
-decltype(auto) begin(Array<Element, kCapacity> &rhs) noexcept {
-	return rhs.EnumerateFirst();
-}
-template<typename Element, std::size_t kCapacity>
-decltype(auto) cbegin(const Array<Element, kCapacity> &rhs) noexcept {
-	return begin(rhs);
-}
-template<typename Element, std::size_t kCapacity>
-decltype(auto) end(const Array<Element, kCapacity> &rhs) noexcept {
-	return rhs.EnumerateSingular();
-}
-template<typename Element, std::size_t kCapacity>
-decltype(auto) end(Array<Element, kCapacity> &rhs) noexcept {
-	return rhs.EnumerateSingular();
-}
-template<typename Element, std::size_t kCapacity>
-decltype(auto) cend(const Array<Element, kCapacity> &rhs) noexcept {
-	return end(rhs);
-}
 
 }
 

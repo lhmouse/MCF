@@ -49,6 +49,10 @@ public:
 		return 16;
 	}
 
+	int Compare(const Uuid &rhs) const noexcept {
+		return BComp(GetData(), rhs.GetData());
+	}
+
 	void Swap(Uuid &rhs) noexcept {
 		using std::swap;
 		swap(x_unData, rhs.x_unData);
@@ -68,26 +72,26 @@ public:
 
 		return GetData()[uIndex];
 	}
-};
 
-inline bool operator==(const Uuid &lhs, const Uuid &rhs) noexcept {
-	return BComp(lhs.GetData(), rhs.GetData()) == 0;
-}
-inline bool operator!=(const Uuid &lhs, const Uuid &rhs) noexcept {
-	return BComp(lhs.GetData(), rhs.GetData()) != 0;
-}
-inline bool operator<(const Uuid &lhs, const Uuid &rhs) noexcept {
-	return BComp(lhs.GetData(), rhs.GetData()) < 0;
-}
-inline bool operator>(const Uuid &lhs, const Uuid &rhs) noexcept {
-	return BComp(lhs.GetData(), rhs.GetData()) > 0;
-}
-inline bool operator<=(const Uuid &lhs, const Uuid &rhs) noexcept {
-	return BComp(lhs.GetData(), rhs.GetData()) <= 0;
-}
-inline bool operator>=(const Uuid &lhs, const Uuid &rhs) noexcept {
-	return BComp(lhs.GetData(), rhs.GetData()) >= 0;
-}
+	bool operator==(const Uuid &rhs) const noexcept {
+		return Compare(rhs) == 0;
+	}
+	bool operator!=(const Uuid &rhs) const noexcept {
+		return Compare(rhs) != 0;
+	}
+	bool operator<(const Uuid &rhs) const noexcept {
+		return Compare(rhs) < 0;
+	}
+	bool operator>(const Uuid &rhs) const noexcept {
+		return Compare(rhs) > 0;
+	}
+	bool operator<=(const Uuid &rhs) const noexcept {
+		return Compare(rhs) <= 0;
+	}
+	bool operator>=(const Uuid &rhs) const noexcept {
+		return Compare(rhs) >= 0;
+	}
+};
 
 inline void swap(Uuid &lhs, Uuid &rhs) noexcept {
 	lhs.Swap(rhs);

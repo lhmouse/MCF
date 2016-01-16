@@ -406,7 +406,8 @@ public:
 	}
 
 	void Swap(IntrusivePtr &rhs) noexcept {
-		std::swap(x_pElement, rhs.x_pElement);
+		using std::swap;
+		swap(x_pElement, rhs.x_pElement);
 	}
 
 public:
@@ -436,12 +437,12 @@ template<typename ObjectLhsT, typename ObjectRhsT, class DeleterT>
 bool operator==(const IntrusivePtr<ObjectLhsT, DeleterT> &lhs, const IntrusivePtr<ObjectRhsT, DeleterT> &rhs) noexcept {
 	return Equal()(lhs.Get(), rhs.Get());
 }
-template<typename ObjectLhsT, typename ObjectRhsT, class DeleterT>
-bool operator==(const IntrusivePtr<ObjectLhsT, DeleterT> &lhs, typename IntrusivePtr<ObjectRhsT, DeleterT>::Element *rhs) noexcept {
+template<typename ObjectLhsT, class DeleterT>
+bool operator==(const IntrusivePtr<ObjectLhsT, DeleterT> &lhs, typename IntrusivePtr<ObjectLhsT, DeleterT>::Element *rhs) noexcept {
 	return Equal()(lhs.Get(), rhs);
 }
-template<typename ObjectLhsT, typename ObjectRhsT, class DeleterT>
-bool operator==(typename IntrusivePtr<ObjectLhsT, DeleterT>::Element *lhs, const IntrusivePtr<ObjectRhsT, DeleterT> &rhs) noexcept {
+template<typename ObjectRhsT, class DeleterT>
+bool operator==(typename IntrusivePtr<ObjectRhsT, DeleterT>::Element *lhs, const IntrusivePtr<ObjectRhsT, DeleterT> &rhs) noexcept {
 	return Equal()(lhs, rhs.Get());
 }
 
@@ -449,12 +450,12 @@ template<typename ObjectLhsT, typename ObjectRhsT, class DeleterT>
 bool operator!=(const IntrusivePtr<ObjectLhsT, DeleterT> &lhs, const IntrusivePtr<ObjectRhsT, DeleterT> &rhs) noexcept {
 	return Unequal()(lhs.Get(), rhs.Get());
 }
-template<typename ObjectLhsT, typename ObjectRhsT, class DeleterT>
-bool operator!=(const IntrusivePtr<ObjectLhsT, DeleterT> &lhs, typename IntrusivePtr<ObjectRhsT, DeleterT>::Element *rhs) noexcept {
+template<typename ObjectLhsT, class DeleterT>
+bool operator!=(const IntrusivePtr<ObjectLhsT, DeleterT> &lhs, typename IntrusivePtr<ObjectLhsT, DeleterT>::Element *rhs) noexcept {
 	return Unequal()(lhs.Get(), rhs);
 }
-template<typename ObjectLhsT, typename ObjectRhsT, class DeleterT>
-bool operator!=(typename IntrusivePtr<ObjectLhsT, DeleterT>::Element *lhs, const IntrusivePtr<ObjectRhsT, DeleterT> &rhs) noexcept {
+template<typename ObjectRhsT, class DeleterT>
+bool operator!=(typename IntrusivePtr<ObjectRhsT, DeleterT>::Element *lhs, const IntrusivePtr<ObjectRhsT, DeleterT> &rhs) noexcept {
 	return Unequal()(lhs, rhs.Get());
 }
 
@@ -462,12 +463,12 @@ template<typename ObjectLhsT, typename ObjectRhsT, class DeleterT>
 bool operator<(const IntrusivePtr<ObjectLhsT, DeleterT> &lhs, const IntrusivePtr<ObjectRhsT, DeleterT> &rhs) noexcept {
 	return Less()(lhs.Get(), rhs.Get());
 }
-template<typename ObjectLhsT, typename ObjectRhsT, class DeleterT>
-bool operator<(const IntrusivePtr<ObjectLhsT, DeleterT> &lhs, typename IntrusivePtr<ObjectRhsT, DeleterT>::Element *rhs) noexcept {
+template<typename ObjectLhsT, class DeleterT>
+bool operator<(const IntrusivePtr<ObjectLhsT, DeleterT> &lhs, typename IntrusivePtr<ObjectLhsT, DeleterT>::Element *rhs) noexcept {
 	return Less()(lhs.Get(), rhs);
 }
-template<typename ObjectLhsT, typename ObjectRhsT, class DeleterT>
-bool operator<(typename IntrusivePtr<ObjectLhsT, DeleterT>::Element *lhs, const IntrusivePtr<ObjectRhsT, DeleterT> &rhs) noexcept {
+template<typename ObjectRhsT, class DeleterT>
+bool operator<(typename IntrusivePtr<ObjectRhsT, DeleterT>::Element *lhs, const IntrusivePtr<ObjectRhsT, DeleterT> &rhs) noexcept {
 	return Less()(lhs, rhs.Get());
 }
 
@@ -475,12 +476,12 @@ template<typename ObjectLhsT, typename ObjectRhsT, class DeleterT>
 bool operator>(const IntrusivePtr<ObjectLhsT, DeleterT> &lhs, const IntrusivePtr<ObjectRhsT, DeleterT> &rhs) noexcept {
 	return Greater()(lhs.Get(), rhs.Get());
 }
-template<typename ObjectLhsT, typename ObjectRhsT, class DeleterT>
-bool operator>(const IntrusivePtr<ObjectLhsT, DeleterT> &lhs, typename IntrusivePtr<ObjectRhsT, DeleterT>::Element *rhs) noexcept {
+template<typename ObjectLhsT, class DeleterT>
+bool operator>(const IntrusivePtr<ObjectLhsT, DeleterT> &lhs, typename IntrusivePtr<ObjectLhsT, DeleterT>::Element *rhs) noexcept {
 	return Greater()(lhs.Get(), rhs);
 }
-template<typename ObjectLhsT, typename ObjectRhsT, class DeleterT>
-bool operator>(typename IntrusivePtr<ObjectLhsT, DeleterT>::Element *lhs, const IntrusivePtr<ObjectRhsT, DeleterT> &rhs) noexcept {
+template<typename ObjectRhsT, class DeleterT>
+bool operator>(typename IntrusivePtr<ObjectRhsT, DeleterT>::Element *lhs, const IntrusivePtr<ObjectRhsT, DeleterT> &rhs) noexcept {
 	return Greater()(lhs, rhs.Get());
 }
 
@@ -488,12 +489,12 @@ template<typename ObjectLhsT, typename ObjectRhsT, class DeleterT>
 bool operator<=(const IntrusivePtr<ObjectLhsT, DeleterT> &lhs, const IntrusivePtr<ObjectRhsT, DeleterT> &rhs) noexcept {
 	return LessEqual()(lhs.Get(), rhs.Get());
 }
-template<typename ObjectLhsT, typename ObjectRhsT, class DeleterT>
-bool operator<=(const IntrusivePtr<ObjectLhsT, DeleterT> &lhs, typename IntrusivePtr<ObjectRhsT, DeleterT>::Element *rhs) noexcept {
+template<typename ObjectLhsT, class DeleterT>
+bool operator<=(const IntrusivePtr<ObjectLhsT, DeleterT> &lhs, typename IntrusivePtr<ObjectLhsT, DeleterT>::Element *rhs) noexcept {
 	return LessEqual()(lhs.Get(), rhs);
 }
-template<typename ObjectLhsT, typename ObjectRhsT, class DeleterT>
-bool operator<=(typename IntrusivePtr<ObjectLhsT, DeleterT>::Element *lhs, const IntrusivePtr<ObjectRhsT, DeleterT> &rhs) noexcept {
+template<typename ObjectRhsT, class DeleterT>
+bool operator<=(typename IntrusivePtr<ObjectRhsT, DeleterT>::Element *lhs, const IntrusivePtr<ObjectRhsT, DeleterT> &rhs) noexcept {
 	return LessEqual()(lhs, rhs.Get());
 }
 
@@ -501,14 +502,15 @@ template<typename ObjectLhsT, typename ObjectRhsT, class DeleterT>
 bool operator>=(const IntrusivePtr<ObjectLhsT, DeleterT> &lhs, const IntrusivePtr<ObjectRhsT, DeleterT> &rhs) noexcept {
 	return GreaterEqual()(lhs.Get(), rhs.Get());
 }
-template<typename ObjectLhsT, typename ObjectRhsT, class DeleterT>
-bool operator>=(const IntrusivePtr<ObjectLhsT, DeleterT> &lhs, typename IntrusivePtr<ObjectRhsT, DeleterT>::Element *rhs) noexcept {
+template<typename ObjectLhsT, class DeleterT>
+bool operator>=(const IntrusivePtr<ObjectLhsT, DeleterT> &lhs, typename IntrusivePtr<ObjectLhsT, DeleterT>::Element *rhs) noexcept {
 	return GreaterEqual()(lhs.Get(), rhs);
 }
-template<typename ObjectLhsT, typename ObjectRhsT, class DeleterT>
-bool operator>=(typename IntrusivePtr<ObjectLhsT, DeleterT>::Element *lhs, const IntrusivePtr<ObjectRhsT, DeleterT> &rhs) noexcept {
+template<typename ObjectRhsT, class DeleterT>
+bool operator>=(typename IntrusivePtr<ObjectRhsT, DeleterT>::Element *lhs, const IntrusivePtr<ObjectRhsT, DeleterT> &rhs) noexcept {
 	return GreaterEqual()(lhs, rhs.Get());
 }
+
 
 template<typename ObjectT, class DeleterT>
 void swap(IntrusivePtr<ObjectT, DeleterT> &lhs, IntrusivePtr<ObjectT, DeleterT> &rhs) noexcept {

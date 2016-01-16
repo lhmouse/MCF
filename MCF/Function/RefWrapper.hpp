@@ -120,81 +120,81 @@ RefWrapper<volatile ObjectT &&> Ref(volatile ObjectT &&vObject) noexcept = delet
 template<typename ObjectT>
 RefWrapper<ObjectT &&> Ref(ObjectT &&vObject) noexcept = delete;
 
-template<typename Object1T, typename Object2T>
-bool operator==(const RefWrapper<Object1T> &lhs, const RefWrapper<Object2T> &rhs){
+template<typename ObjectLhsT, typename ObjectRhsT>
+bool operator==(const RefWrapper<ObjectLhsT> &lhs, const RefWrapper<ObjectRhsT> &rhs){
 	return lhs.Get() == rhs.Get();
 }
-template<typename Object1T, typename Object2T>
-bool operator==(const Object1T &lhs, const RefWrapper<Object2T> &rhs){
+template<typename ObjectLhsT, typename ObjectRhsT>
+bool operator==(const ObjectLhsT &lhs, const RefWrapper<ObjectRhsT> &rhs){
 	return lhs == rhs.Get();
 }
-template<typename Object1T, typename Object2T>
-bool operator==(const RefWrapper<Object1T> &lhs, const Object2T &rhs){
+template<typename ObjectLhsT, typename ObjectRhsT>
+bool operator==(const RefWrapper<ObjectLhsT> &lhs, const ObjectRhsT &rhs){
 	return lhs.Get() == rhs;
 }
 
-template<typename Object1T, typename Object2T>
-bool operator!=(const RefWrapper<Object1T> &lhs, const RefWrapper<Object2T> &rhs){
+template<typename ObjectLhsT, typename ObjectRhsT>
+bool operator!=(const RefWrapper<ObjectLhsT> &lhs, const RefWrapper<ObjectRhsT> &rhs){
 	return lhs.Get() != rhs.Get();
 }
-template<typename Object1T, typename Object2T>
-bool operator!=(const Object1T &lhs, const RefWrapper<Object2T> &rhs){
+template<typename ObjectLhsT, typename ObjectRhsT>
+bool operator!=(const ObjectLhsT &lhs, const RefWrapper<ObjectRhsT> &rhs){
 	return lhs != rhs.Get();
 }
-template<typename Object1T, typename Object2T>
-bool operator!=(const RefWrapper<Object1T> &lhs, const Object2T &rhs){
+template<typename ObjectLhsT, typename ObjectRhsT>
+bool operator!=(const RefWrapper<ObjectLhsT> &lhs, const ObjectRhsT &rhs){
 	return lhs.Get() != rhs;
 }
 
-template<typename Object1T, typename Object2T>
-bool operator<(const RefWrapper<Object1T> &lhs, const RefWrapper<Object2T> &rhs){
+template<typename ObjectLhsT, typename ObjectRhsT>
+bool operator<(const RefWrapper<ObjectLhsT> &lhs, const RefWrapper<ObjectRhsT> &rhs){
 	return lhs.Get() < rhs.Get();
 }
-template<typename Object1T, typename Object2T>
-bool operator<(const Object1T &lhs, const RefWrapper<Object2T> &rhs){
+template<typename ObjectLhsT, typename ObjectRhsT>
+bool operator<(const ObjectLhsT &lhs, const RefWrapper<ObjectRhsT> &rhs){
 	return lhs < rhs.Get();
 }
-template<typename Object1T, typename Object2T>
-bool operator<(const RefWrapper<Object1T> &lhs, const Object2T &rhs){
+template<typename ObjectLhsT, typename ObjectRhsT>
+bool operator<(const RefWrapper<ObjectLhsT> &lhs, const ObjectRhsT &rhs){
 	return lhs.Get() < rhs;
 }
 
-template<typename Object1T, typename Object2T>
-bool operator>(const RefWrapper<Object1T> &lhs, const RefWrapper<Object2T> &rhs){
+template<typename ObjectLhsT, typename ObjectRhsT>
+bool operator>(const RefWrapper<ObjectLhsT> &lhs, const RefWrapper<ObjectRhsT> &rhs){
 	return lhs.Get() > rhs.Get();
 }
-template<typename Object1T, typename Object2T>
-bool operator>(const Object1T &lhs, const RefWrapper<Object2T> &rhs){
+template<typename ObjectLhsT, typename ObjectRhsT>
+bool operator>(const ObjectLhsT &lhs, const RefWrapper<ObjectRhsT> &rhs){
 	return lhs > rhs.Get();
 }
-template<typename Object1T, typename Object2T>
-bool operator>(const RefWrapper<Object1T> &lhs, const Object2T &rhs){
+template<typename ObjectLhsT, typename ObjectRhsT>
+bool operator>(const RefWrapper<ObjectLhsT> &lhs, const ObjectRhsT &rhs){
 	return lhs.Get() > rhs;
 }
 
-template<typename Object1T, typename Object2T>
-bool operator<=(const RefWrapper<Object1T> &lhs, const RefWrapper<Object2T> &rhs){
+template<typename ObjectLhsT, typename ObjectRhsT>
+bool operator<=(const RefWrapper<ObjectLhsT> &lhs, const RefWrapper<ObjectRhsT> &rhs){
 	return lhs.Get() <= rhs.Get();
 }
-template<typename Object1T, typename Object2T>
-bool operator<=(const Object1T &lhs, const RefWrapper<Object2T> &rhs){
+template<typename ObjectLhsT, typename ObjectRhsT>
+bool operator<=(const ObjectLhsT &lhs, const RefWrapper<ObjectRhsT> &rhs){
 	return lhs <= rhs.Get();
 }
-template<typename Object1T, typename Object2T>
-bool operator<=(const RefWrapper<Object1T> &lhs, const Object2T &rhs){
+template<typename ObjectLhsT, typename ObjectRhsT>
+bool operator<=(const RefWrapper<ObjectLhsT> &lhs, const ObjectRhsT &rhs){
 	return lhs.Get() <= rhs;
 }
 
-template<typename Object1T, typename Object2T>
-bool operator>=(const RefWrapper<Object1T> &lhs, const RefWrapper<Object2T> &rhs){
+template<typename ObjectLhsT, typename ObjectRhsT>
+bool operator>=(const RefWrapper<ObjectLhsT> &lhs, const RefWrapper<ObjectRhsT> &rhs){
 	return lhs.Get() >= rhs.Get();
 }
-template<typename Object1T, typename Object2T>
-bool operator>=(const Object1T &lhs, const RefWrapper<Object2T> &rhs){
+template<typename ObjectLhsT, typename ObjectRhsT>
+bool operator>=(const ObjectLhsT &lhs, const RefWrapper<ObjectRhsT> &rhs){
 	return lhs >= rhs.Get();
 }
-template<typename Object1T, typename Object2T>
-bool operator>=(const RefWrapper<Object1T> &lhs, const Object2T &rhs){
+template<typename ObjectLhsT, typename ObjectRhsT>
+bool operator>=(const RefWrapper<ObjectLhsT> &lhs, const ObjectRhsT &rhs){
 	return lhs.Get() >= rhs;
 }
 

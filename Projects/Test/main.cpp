@@ -1,14 +1,13 @@
 #include <MCF/StdMCF.hpp>
-#include <MCF/SmartPointers/UniquePtr.hpp>
+#include <MCF/Core/Argv.hpp>
+#include <MCF/Core/String.hpp>
 #include <cstdio>
 
-template class MCF::UniquePtr<int>;
-
 extern "C" unsigned MCFCRT_Main(){
-	MCF::UniquePtr<int> p1, p2;
-	p1.Reset(new int(123));
-	p2.Reset(new int(456));
-	swap(p1, p2);
-	std::printf("%d %d\n", *p1, *p2);
+	auto &&argv = MCF::Argv();
+	for(unsigned i = 0; i < argv.GetSize(); ++i){
+		auto s = MCF::AnsiString(argv[i]);
+		std::printf("arg %u = %s\n", i, s.GetStr());
+	}
 	return 0;
 }

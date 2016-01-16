@@ -708,7 +708,7 @@ public:
 		return GreaterEqual()(x_pView, rhs.x_pView);
 	}
 
-	void swap(IntrusiveWeakPtr &lhs, IntrusiveWeakPtr &rhs) noexcept {
+	friend void swap(IntrusiveWeakPtr &lhs, IntrusiveWeakPtr &rhs) noexcept {
 		lhs.Swap(rhs);
 	}
 };

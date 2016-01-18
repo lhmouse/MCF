@@ -33,9 +33,9 @@ namespace Impl_Bind {
 		}
 
 	private:
-		template<std::size_t ...kParamIndicesT, typename CurriedT>
-		decltype(auto) X_ForwardCurriedParams(std::index_sequence<kParamIndicesT...>, const CurriedT &vCurried) const {
-			return vCurried(std::forward<std::tuple_element_t<kParamIndicesT, decltype(x_tupParamsAdd)>>(std::get<kParamIndicesT>(x_tupParamsAdd))...);
+		template<std::size_t ...kParamIndicesT, typename LazyT>
+		decltype(auto) X_ForwardLazyParams(std::index_sequence<kParamIndicesT...>, const LazyT &vLazy) const {
+			return vLazy(std::forward<std::tuple_element_t<kParamIndicesT, decltype(x_tupParamsAdd)>>(std::get<kParamIndicesT>(x_tupParamsAdd))...);
 		}
 
 	public:
@@ -52,8 +52,8 @@ namespace Impl_Bind {
 			return vParam.Get();
 		}
 		template<typename FuncT, typename ...ParamsT>
-		decltype(auto) operator()(const BindResult<FuncT, true, ParamsT...> &vCurried) noexcept {
-			return X_ForwardCurriedParams(std::index_sequence_for<ParamsAddT...>(), vCurried);
+		decltype(auto) operator()(const BindResult<FuncT, true, ParamsT...> &vLazy) noexcept {
+			return X_ForwardLazyParams(std::index_sequence_for<ParamsAddT...>(), vLazy);
 		}
 	};
 

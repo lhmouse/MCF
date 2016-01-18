@@ -116,6 +116,28 @@ constexpr Impl_Bind::Placeholder<28> _28;
 constexpr Impl_Bind::Placeholder<29> _29;
 constexpr Impl_Bind::Placeholder<30> _30;
 
+constexpr Impl_Bind::Placeholder<31> _31;
+constexpr Impl_Bind::Placeholder<32> _32;
+constexpr Impl_Bind::Placeholder<33> _33;
+constexpr Impl_Bind::Placeholder<34> _34;
+constexpr Impl_Bind::Placeholder<35> _35;
+constexpr Impl_Bind::Placeholder<36> _36;
+constexpr Impl_Bind::Placeholder<37> _37;
+constexpr Impl_Bind::Placeholder<38> _38;
+constexpr Impl_Bind::Placeholder<39> _39;
+constexpr Impl_Bind::Placeholder<40> _40;
+
+constexpr Impl_Bind::Placeholder<41> _41;
+constexpr Impl_Bind::Placeholder<42> _42;
+constexpr Impl_Bind::Placeholder<43> _43;
+constexpr Impl_Bind::Placeholder<44> _44;
+constexpr Impl_Bind::Placeholder<45> _45;
+constexpr Impl_Bind::Placeholder<46> _46;
+constexpr Impl_Bind::Placeholder<47> _47;
+constexpr Impl_Bind::Placeholder<48> _48;
+constexpr Impl_Bind::Placeholder<49> _49;
+constexpr Impl_Bind::Placeholder<50> _50;
+
 template<typename FuncT, typename ...ParamsT>
 auto Bind(FuncT &&vFunc, ParamsT &&...vParams){
 	return Impl_Bind::BindResult<std::decay_t<FuncT>, false, std::decay_t<ParamsT>...>(std::forward<FuncT>(vFunc), std::forward<ParamsT>(vParams)...);

@@ -4,40 +4,39 @@
 
 #include "../StdMCF.hpp"
 #include "Crc32.hpp"
+#include "../Core/Array.hpp"
 #include "../Utilities/Endian.hpp"
 
 // http://www.relisoft.com/science/CrcOptim.html
 // 1. 原文提供的是正序（权较大位向权较小位方向）的 Crc 计算，而这里使用的是反序（权较小位向权较大位方向）。
-// 2. 原文的 Crc 余数的初始值是 0；此处以 -1 为初始值，计算完成后进行按位反。
+// 2. 原文的 CRC 余数的初始值是 0；此处以 -1 为初始值，计算完成后进行按位反。
+
+// 按照 IEEE 802.3 描述的算法，除数为 0xEDB88320。
 
 namespace MCF {
 
+namespace {
+	template<unsigned kRoundT, std::uint32_t kRegT>
+	struct ElementGenerator {
+		static constexpr std::uint32_t kValue = ElementGenerator<kRoundT + 1, (kRegT >> 1) ^ ((kRegT & 1) ? 0xEDB88320 : 0)>::kValue;
+	};
+	template<std::uint32_t kRegT>
+	struct ElementGenerator<8, kRegT> {
+		static constexpr std::uint32_t kValue = kRegT;
+	};
+
+	template<std::size_t ...kIndices>
+	constexpr Array<std::uint32_t, sizeof...(kIndices)> GenerateTable(std::index_sequence<kIndices...>) noexcept {
+		return { ElementGenerator<0, kIndices>::kValue... };
+	}
+
+	constexpr auto kCrcTable = GenerateTable(std::make_index_sequence<256>());
+}
+
 // 构造函数和析构函数。
-Crc32::Crc32(std::uint32_t u32Divisor) noexcept
+Crc32::Crc32() noexcept
 	: x_bInited(false)
 {
-	for(std::uint32_t i = 0; i < 256; ++i){
-		register std::uint32_t u32Reg = i;
-		for(std::size_t j = 0; j < 8; ++j){
-/*
-			const bool bLowerBit = (u32Reg & 1) != 0;
-			u32Reg >>= 1;
-			if(bLowerBit){
-				u32Reg ^= u32Divisor;
-			}
-*/
-			__asm__(
-				"shr %0, 1 \n"
-				"sbb eax, eax \n"
-				"and eax, %1 \n"
-				"xor %0, eax \n"
-				: "=r"(u32Reg)
-				: "r"(u32Divisor), "0"(u32Reg)
-				: "ax"
-			);
-		}
-		x_au32Table[i] = u32Reg;
-	}
 }
 
 // 其他非静态成员函数。
@@ -52,7 +51,7 @@ void Crc32::Update(const void *pData, std::size_t uSize) noexcept {
 	}
 
 	const auto DoCrc32Byte = [&](unsigned char byData){
-		x_u32Reg = x_au32Table[(x_u32Reg ^ byData) & 0xFF] ^ (x_u32Reg >> 8);
+		x_u32Reg = kCrcTable[(x_u32Reg ^ byData) & 0xFF] ^ (x_u32Reg >> 8);
 	};
 
 	register auto pbyRead = static_cast<const unsigned char *>(pData);

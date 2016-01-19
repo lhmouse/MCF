@@ -10,21 +10,15 @@
 
 namespace MCF {
 
+// 按照 IEEE 802.3 描述的算法，除数为 0xEDB88320。
+
 class Crc32 {
-public:
-	enum : std::uint32_t {
-		kDivisorIeee802_3  = 0xEDB88320,
-		kDivisorCastagnoli = 0x82F63B78,
-	};
-
 private:
-	std::uint32_t x_au32Table[0x100];
-
 	bool x_bInited;
 	std::uint32_t x_u32Reg;
 
 public:
-	explicit Crc32(std::uint32_t u32Divisor = kDivisorIeee802_3) noexcept;
+	Crc32() noexcept;
 
 public:
 	void Abort() noexcept;

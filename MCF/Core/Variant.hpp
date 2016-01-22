@@ -94,7 +94,7 @@ public:
 	{
 	}
 	template<typename ElementT, std::enable_if_t<
-		!std::is_same<std::decay_t<ElementT>, Variant>::value &&
+		!std::is_base_of<Variant, std::decay_t<ElementT>>::value &&
 			(FindFirstType<std::decay_t<ElementT>, ElementsT...>() != (std::size_t)-1),
 		int> = 0>
 	Variant(ElementT &&vElement)

@@ -33,7 +33,7 @@ public:
 	}
 	template<typename FuncT,
 		std::enable_if_t<
-			!std::is_same<std::decay_t<FuncT>, FunctionView>::value &&
+			!std::is_base_of<FunctionView, std::decay_t<FuncT>>::value &&
 				std::is_convertible<decltype(DeclVal<FuncT>()(DeclVal<Impl_ForwardedParam::ForwardedParam<ParamsT>>()...)), RetT>::value,
 			int> = 0>
 	FunctionView(const FuncT &vFunc) noexcept

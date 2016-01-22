@@ -98,7 +98,7 @@ public:
 	}
 	template<typename FuncT,
 		std::enable_if_t<
-			!std::is_same<std::decay_t<FuncT>, Function>::value &&
+			!std::is_base_of<Function, std::decay_t<FuncT>>::value &&
 				(std::is_convertible<decltype(Invoke(DeclVal<FuncT>(), DeclVal<Impl_ForwardedParam::ForwardedParam<ParamsT>>()...)), RetT>::value || std::is_void<RetT>::value),
 			int> = 0>
 	Function(FuncT &&vFunc)

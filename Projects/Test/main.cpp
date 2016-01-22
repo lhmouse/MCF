@@ -7,7 +7,7 @@
 using namespace MCF;
 
 extern "C" unsigned MCFCRT_Main(){
-	const auto str = "hello world!"_nsv;
+	const auto str = "123456789"_nsv;
 
 	Crc32 crc32;
 	crc32.Update(str.GetBegin(), str.GetSize());

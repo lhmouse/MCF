@@ -1,25 +1,75 @@
 #include <MCF/StdMCF.hpp>
-#include <MCF/Hash/Crc32.hpp>
-#include <MCF/Hash/Crc64.hpp>
-#include <MCF/Core/StringView.hpp>
+#include <MCF/Containers/FlatMap.hpp>
 #include <cstdio>
 
 using namespace MCF;
 
+struct foo {
+	int a;
+
+	explicit foo(int r)
+		: a(r)
+	{
+		std::printf("foo(): a = %d\n", a);
+	}
+	foo(const foo &r)
+		: a(r.a)
+	{
+		std::printf("foo(const foo &): a = %d\n", a);
+	}
+	foo(foo &&r) noexcept
+		: a(std::exchange(r.a, -1))
+	{
+		std::printf("foo(foo &&): a = %d\n", a);
+	}
+	~foo(){
+		if(a == -1){
+			return;
+		}
+		std::printf("~foo(): a = %d\n", a);
+	}
+};
+
+bool operator<(const foo &l, const foo &r) noexcept {
+	std::printf("cmp(foo, foo) ");
+	return l.a < r.a;
+}
+bool operator<(int l, const foo &r) noexcept {
+	std::printf("cmp(int, foo) ");
+	return l < r.a;
+}
+bool operator<(const foo &l, int r) noexcept {
+	std::printf("cmp(foo, int) ");
+	return l.a < r;
+}
+
+template class FlatMap<foo, int>;
+
 extern "C" unsigned MCFCRT_Main(){
-	const auto str = "123456789"_nsv;
+	FlatMap<foo, int> s;
 
-	Crc32 crc32;
-	crc32.Update(str.GetBegin(), str.GetSize());
-	unsigned long long val = crc32.Finalize();
-	// crc32 = 0x03B4C26D
-	std::printf("crc32 = 0x%08llX\n", val);
+	auto add = [&](int i){
+		std::printf("--- adding: %d\n", i);
+		s.Add(i, i);
+	};
 
-	Crc64 crc;
-	crc.Update(str.GetBegin(), str.GetSize());
-	val = crc.Finalize();
-	// crc64 = 0x8483C0FA32607D61
-	std::printf("crc64 = 0x%016llX\n", val);
+	add(1);
+	add(5);
+	add(3);
+	add(2);
+	add(6);
+	add(0);
+	add(4);
+
+	auto find = [&](int i){
+		std::printf("--- searching for: %d\n", i);
+		auto it = s.GetMatch(i);
+		std::printf(" -- found: %td\n", it - s.GetBegin());
+	};
+
+	for(int i = 0; i < 8; ++i){
+		find(i);
+	}
 
 	return 0;
 }

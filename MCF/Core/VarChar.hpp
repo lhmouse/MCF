@@ -5,7 +5,7 @@
 #ifndef MCF_CORE_VAR_CHAR_HPP_
 #define MCF_CORE_VAR_CHAR_HPP_
 
-#include "../Containers/_EnumeratorTemplate.hpp"
+#include "../Containers/_Enumerator.hpp"
 #include "../Utilities/Assert.hpp"
 #include "../Utilities/CopyMoveFill.hpp"
 #include "Exception.hpp"
@@ -29,8 +29,8 @@ public:
 
 	// 容器需求。
 	using Element         = char;
-	using ConstEnumerator = Impl_EnumeratorTemplate::ConstEnumerator <VarChar>;
-	using Enumerator      = Impl_EnumeratorTemplate::Enumerator      <VarChar>;
+	using ConstEnumerator = Impl_Enumerator::ConstEnumerator <VarChar>;
+	using Enumerator      = Impl_Enumerator::Enumerator      <VarChar>;
 
 public:
 	static const VarChar kEmpty;
@@ -112,6 +112,20 @@ public:
 	}
 	void Clear() noexcept {
 		X_SetSize(0);
+	}
+	template<typename OutputIteratorT>
+	OutputIteratorT Spit(OutputIteratorT itOutput){
+		try {
+			for(auto p = GetBegin(); p != GetEnd(); ++p){
+				*itOutput = std::move(*p);
+				++itOutput;
+			}
+		} catch(...){
+			Clear();
+			throw;
+		}
+		Clear();
+		return itOutput;
 	}
 
 	const Element *GetFirst() const noexcept {

@@ -5,7 +5,7 @@
 #ifndef MCF_CONTAINERS_FLAT_SET_HPP_
 #define MCF_CONTAINERS_FLAT_SET_HPP_
 
-#include "_EnumeratorTemplate.hpp"
+#include "_Enumerator.hpp"
 #include "../Utilities/Assert.hpp"
 #include "../Utilities/ConstructDestruct.hpp"
 #include "../Utilities/DeclVal.hpp"
@@ -63,8 +63,8 @@ class MultiIndexMap {
 public:
 	// 容器需求。
 	using Element         = std::pair<const typename IndicesT::ElementTuple, ValueT>;
-	using ConstEnumerator = Impl_EnumeratorTemplate::ConstEnumerator <MultiIndexMap>;
-	using Enumerator      = Impl_EnumeratorTemplate::Enumerator      <MultiIndexMap>;
+	using ConstEnumerator = Impl_Enumerator::ConstEnumerator <MultiIndexMap>;
+	using Enumerator      = Impl_Enumerator::Enumerator      <MultiIndexMap>;
 
 private:
 	typename IndicesT::RootTuple x_vRoots;

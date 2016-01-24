@@ -6,7 +6,7 @@
 #define MCF_CORE_ARRAY_HPP_
 
 #include "ArrayView.hpp"
-#include "../Containers/_EnumeratorTemplate.hpp"
+#include "../Containers/_Enumerator.hpp"
 #include "../Utilities/Assert.hpp"
 #include "../Utilities/DeclVal.hpp"
 #include "Exception.hpp"
@@ -40,8 +40,8 @@ public:
 public:
 	// 整体仿造容器，唯独没有 Clear()。
 	using Element         = ElementT;
-	using ConstEnumerator = Impl_EnumeratorTemplate::ConstEnumerator <Array>;
-	using Enumerator      = Impl_EnumeratorTemplate::Enumerator      <Array>;
+	using ConstEnumerator = Impl_Enumerator::ConstEnumerator <Array>;
+	using Enumerator      = Impl_Enumerator::Enumerator      <Array>;
 
 	using ConstView       = ArrayView<const Element>;
 	using View            = ArrayView<      Element>;
@@ -245,8 +245,8 @@ public:
 public:
 	// 整体仿造容器，唯独没有 Clear()。
 	using Element         = Array<ElementT, kRemainingT...>;
-	using ConstEnumerator = Impl_EnumeratorTemplate::ConstEnumerator <Array>;
-	using Enumerator      = Impl_EnumeratorTemplate::Enumerator      <Array>;
+	using ConstEnumerator = Impl_Enumerator::ConstEnumerator <Array>;
+	using Enumerator      = Impl_Enumerator::Enumerator      <Array>;
 
 	using ConstView       = ArrayView<const Element>;
 	using View            = ArrayView<      Element>;

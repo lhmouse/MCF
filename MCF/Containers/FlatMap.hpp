@@ -20,8 +20,8 @@ class FlatMap {
 public:
 	// 容器需求。
 	using Element         = std::pair<const KeyT, ValueT>;
-	using ConstEnumerator = Impl_EnumeratorTemplate::ConstEnumerator <FlatMap>;
-	using Enumerator      = Impl_EnumeratorTemplate::Enumerator      <FlatMap>;
+	using ConstEnumerator = Impl_Enumerator::ConstEnumerator <FlatMap>;
+	using Enumerator      = Impl_Enumerator::Enumerator      <FlatMap>;
 
 private:
 	template<typename CvElementT, typename ComparandT>
@@ -123,6 +123,20 @@ public:
 	}
 	void Clear() noexcept {
 		x_vecStorage.Clear();
+	}
+	template<typename OutputIteratorT>
+	OutputIteratorT Spit(OutputIteratorT itOutput){
+		try {
+			for(auto en = EnumerateFirst(); en != EnumerateSingular(); ++en){
+				*itOutput = std::pair<KeyT &&, ValueT &&>(std::move(const_cast<KeyT &>(en->first)), std::move(en->second));
+				++itOutput;
+			}
+		} catch(...){
+			Clear();
+			throw;
+		}
+		Clear();
+		return itOutput;
 	}
 
 	const Element *GetFirst() const noexcept {

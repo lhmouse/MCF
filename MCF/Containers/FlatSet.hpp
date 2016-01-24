@@ -17,8 +17,8 @@ class FlatSet {
 public:
 	// 容器需求。
 	using Element         = const ElementT;
-	using ConstEnumerator = Impl_EnumeratorTemplate::ConstEnumerator <FlatSet>;
-	using Enumerator      = Impl_EnumeratorTemplate::Enumerator      <FlatSet>;
+	using ConstEnumerator = Impl_Enumerator::ConstEnumerator <FlatSet>;
+	using Enumerator      = Impl_Enumerator::Enumerator      <FlatSet>;
 
 private:
 	template<typename CvElementT, typename ComparandT>
@@ -120,6 +120,20 @@ public:
 	}
 	void Clear() noexcept {
 		x_vecStorage.Clear();
+	}
+	template<typename OutputIteratorT>
+	OutputIteratorT Spit(OutputIteratorT itOutput){
+		try {
+			for(auto en = EnumerateFirst(); en != EnumerateSingular(); ++en){
+				*itOutput = const_cast<ElementT &>(*en);
+				++itOutput;
+			}
+		} catch(...){
+			Clear();
+			throw;
+		}
+		Clear();
+		return itOutput;
 	}
 
 	const Element *GetFirst() const noexcept {

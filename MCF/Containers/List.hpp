@@ -5,7 +5,7 @@
 #ifndef MCF_CONTAINERS_LIST_HPP_
 #define MCF_CONTAINERS_LIST_HPP_
 
-#include "_EnumeratorTemplate.hpp"
+#include "_Enumerator.hpp"
 #include "../Utilities/Assert.hpp"
 #include "../Utilities/ConstructDestruct.hpp"
 #include "../Core/Exception.hpp"
@@ -22,8 +22,8 @@ class List {
 public:
 	// 容器需求。
 	using Element         = ElementT;
-	using ConstEnumerator = Impl_EnumeratorTemplate::ConstEnumerator <List>;
-	using Enumerator      = Impl_EnumeratorTemplate::Enumerator      <List>;
+	using ConstEnumerator = Impl_Enumerator::ConstEnumerator <List>;
+	using Enumerator      = Impl_Enumerator::Enumerator      <List>;
 
 private:
 	struct X_Node {
@@ -98,6 +98,20 @@ public:
 		}
 		x_pFirst = nullptr;
 		x_pLast  = nullptr;
+	}
+	template<typename OutputIteratorT>
+	OutputIteratorT Spit(OutputIteratorT itOutput){
+		try {
+			for(auto en = EnumerateFirst(); en != EnumerateSingular(); ++en){
+				*itOutput = std::move(*en);
+				++itOutput;
+			}
+		} catch(...){
+			Clear();
+			throw;
+		}
+		Clear();
+		return itOutput;
 	}
 
 	const Element *GetFirst() const noexcept {

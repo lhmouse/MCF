@@ -2,15 +2,15 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2013 - 2016, LH_Mouse. All wrongs reserved.
 
-#ifndef MCF_CONTAINERS_ENUMERATOR_TEMPLATE_HPP_
-#define MCF_CONTAINERS_ENUMERATOR_TEMPLATE_HPP_
+#ifndef MCF_CONTAINERS_ENUMERATOR_HPP_
+#define MCF_CONTAINERS_ENUMERATOR_HPP_
 
 #include "../Utilities/Assert.hpp"
 #include <iterator>
 
 namespace MCF {
 
-namespace Impl_EnumeratorTemplate {
+namespace Impl_Enumerator {
 	// ConstEnumerator 和 Enumerator 需求
 	// ------------------------------------------------------------
 	// ContainerT 必须具有：
@@ -190,7 +190,6 @@ namespace Impl_EnumeratorTemplate {
 			return !!x_pElement;
 		}
 	};
-
 }
 
 }

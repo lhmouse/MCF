@@ -5,7 +5,7 @@
 #ifndef MCF_CONTAINERS_RING_QUEUE_HPP_
 #define MCF_CONTAINERS_RING_QUEUE_HPP_
 
-#include "_EnumeratorTemplate.hpp"
+#include "_Enumerator.hpp"
 #include "../Utilities/Assert.hpp"
 #include "../Utilities/ConstructDestruct.hpp"
 #include "../Utilities/DeclVal.hpp"
@@ -23,8 +23,8 @@ class RingQueue {
 public:
 	// 容器需求。
 	using Element         = ElementT;
-	using ConstEnumerator = Impl_EnumeratorTemplate::ConstEnumerator <RingQueue>;
-	using Enumerator      = Impl_EnumeratorTemplate::Enumerator      <RingQueue>;
+	using ConstEnumerator = Impl_Enumerator::ConstEnumerator <RingQueue>;
+	using Enumerator      = Impl_Enumerator::Enumerator      <RingQueue>;
 
 private:
 	void *x_pStorage;
@@ -273,6 +273,20 @@ public:
 	}
 	void Clear() noexcept {
 		Shift(GetSize());
+	}
+	template<typename OutputIteratorT>
+	OutputIteratorT Spit(OutputIteratorT itOutput){
+		try {
+			for(auto en = EnumerateFirst(); en != EnumerateSingular(); ++en){
+				*itOutput = std::move(*en);
+				++itOutput;
+			}
+		} catch(...){
+			Clear();
+			throw;
+		}
+		Clear();
+		return itOutput;
 	}
 
 	const Element *GetFirst() const noexcept {

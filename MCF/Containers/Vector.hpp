@@ -5,7 +5,7 @@
 #ifndef MCF_CONTAINERS_VECTOR_HPP_
 #define MCF_CONTAINERS_VECTOR_HPP_
 
-#include "_EnumeratorTemplate.hpp"
+#include "_Enumerator.hpp"
 #include "../Utilities/Assert.hpp"
 #include "../Utilities/ConstructDestruct.hpp"
 #include "../Utilities/DeclVal.hpp"
@@ -24,8 +24,8 @@ class Vector {
 public:
 	// 容器需求。
 	using Element         = ElementT;
-	using ConstEnumerator = Impl_EnumeratorTemplate::ConstEnumerator <Vector>;
-	using Enumerator      = Impl_EnumeratorTemplate::Enumerator      <Vector>;
+	using ConstEnumerator = Impl_Enumerator::ConstEnumerator <Vector>;
+	using Enumerator      = Impl_Enumerator::Enumerator      <Vector>;
 
 private:
 	void *x_pStorage;
@@ -116,6 +116,20 @@ public:
 	}
 	void Clear() noexcept {
 		Pop(x_uSize);
+	}
+	template<typename OutputIteratorT>
+	OutputIteratorT Spit(OutputIteratorT itOutput){
+		try {
+			for(auto en = EnumerateFirst(); en != EnumerateSingular(); ++en){
+				*itOutput = std::move(*en);
+				++itOutput;
+			}
+		} catch(...){
+			Clear();
+			throw;
+		}
+		Clear();
+		return itOutput;
 	}
 
 	const Element *GetFirst() const noexcept {

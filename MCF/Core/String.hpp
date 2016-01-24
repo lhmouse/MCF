@@ -6,7 +6,7 @@
 #define MCF_CORE_STRING_HPP_
 
 #include "StringView.hpp"
-#include "../Containers/_EnumeratorTemplate.hpp"
+#include "../Containers/_Enumerator.hpp"
 #include "../Utilities/Assert.hpp"
 #include "../Utilities/CountOf.hpp"
 #include "../Utilities/CountLeadingTrailingZeroes.hpp"
@@ -42,8 +42,8 @@ public:
 
 	// 容器需求。
 	using Element         = Char;
-	using ConstEnumerator = Impl_EnumeratorTemplate::ConstEnumerator <String>;
-	using Enumerator      = Impl_EnumeratorTemplate::Enumerator      <String>;
+	using ConstEnumerator = Impl_Enumerator::ConstEnumerator <String>;
+	using Enumerator      = Impl_Enumerator::Enumerator      <String>;
 
 public:
 	static const String kEmpty;
@@ -240,6 +240,20 @@ public:
 	}
 	void Clear() noexcept {
 		X_SetSize(0);
+	}
+	template<typename OutputIteratorT>
+	OutputIteratorT Spit(OutputIteratorT itOutput){
+		try {
+			for(auto p = GetBegin(); p != GetEnd(); ++p){
+				*itOutput = std::move(*p);
+				++itOutput;
+			}
+		} catch(...){
+			Clear();
+			throw;
+		}
+		Clear();
+		return itOutput;
 	}
 
 	const Element *GetFirst() const noexcept {

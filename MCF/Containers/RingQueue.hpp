@@ -275,7 +275,7 @@ public:
 		Shift(GetSize());
 	}
 	template<typename OutputIteratorT>
-	OutputIteratorT Spit(OutputIteratorT itOutput){
+	OutputIteratorT Extract(OutputIteratorT itOutput){
 		try {
 			for(auto en = EnumerateFirst(); en != EnumerateSingular(); ++en){
 				*itOutput = std::move(*en);

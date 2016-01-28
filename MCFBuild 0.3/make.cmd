@@ -1,6 +1,6 @@
 @echo off
 
-set CompilerFlags=-Wall -Wextra -pipe -mfpmath=sse,387 -msse2 -mno-stack-arg-probe -mno-accumulate-outgoing-args -mpush-args -masm=intel
+set CompilerFlags=-Wall -Wextra -pipe -mfpmath=sse,387 -msse2 -mno-stack-arg-probe -mno-accumulate-outgoing-args -mpush-args -masm=intel -ffreestanding
 set LinkerFlags=-Wall -Wextra -static
 set ExtraLibs=-lversion -lshlwapi
 

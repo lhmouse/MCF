@@ -58,10 +58,8 @@ public:
 	Vector(const Vector &rhs)
 		: Vector()
 	{
-		Reserve(rhs.GetSize());
-		for(auto pElem = rhs.GetBegin(); pElem != rhs.GetEnd(); ++pElem){
-			UncheckedPush(*pElem);
-		}
+		// Reserve(rhs.GetSize());
+		Append(rhs.GetBegin(), rhs.GetEnd());
 	}
 	Vector(Vector &&rhs) noexcept
 		: Vector()
@@ -118,10 +116,10 @@ public:
 		Pop(x_uSize);
 	}
 	template<typename OutputIteratorT>
-	OutputIteratorT Spit(OutputIteratorT itOutput){
+	OutputIteratorT Extract(OutputIteratorT itOutput){
 		try {
-			for(auto en = EnumerateFirst(); en != EnumerateSingular(); ++en){
-				*itOutput = std::move(*en);
+			for(auto p = GetBegin(); p != GetEnd(); ++p){
+				*itOutput = std::move(*p);
 				++itOutput;
 			}
 		} catch(...){
@@ -629,6 +627,9 @@ public:
 
 	Element *Erase(const Element *pBegin, const Element *pEnd) noexcept(std::is_nothrow_move_constructible<Element>::value) {
 		if(pBegin == pEnd){
+			if(pEnd == GetEnd()){
+				return nullptr;
+			}
 			return const_cast<Element *>(pEnd);
 		}
 		ASSERT(pBegin);

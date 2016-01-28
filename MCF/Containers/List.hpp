@@ -62,9 +62,7 @@ public:
 	List(const List &rhs)
 		: List()
 	{
-		for(auto pElem = rhs.GetFirst(); pElem; pElem = rhs.GetNext(pElem)){
-			Push(*pElem);
-		}
+		Append(rhs.EnumerateFirst(), rhs.EnumerateSingular());
 	}
 	List(List &&rhs) noexcept
 		: List()
@@ -100,10 +98,10 @@ public:
 		x_pLast  = nullptr;
 	}
 	template<typename OutputIteratorT>
-	OutputIteratorT Spit(OutputIteratorT itOutput){
+	OutputIteratorT Extract(OutputIteratorT itOutput){
 		try {
-			for(auto en = EnumerateFirst(); en != EnumerateSingular(); ++en){
-				*itOutput = std::move(*en);
+			for(auto p = GetFirst(); p; p = GetNext(p)){
+				*itOutput = std::move(*p);
 				++itOutput;
 			}
 		} catch(...){

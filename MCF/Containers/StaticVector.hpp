@@ -87,10 +87,10 @@ public:
 		Pop(x_uSize);
 	}
 	template<typename OutputIteratorT>
-	OutputIteratorT Spit(OutputIteratorT itOutput){
+	OutputIteratorT Extract(OutputIteratorT itOutput){
 		try {
-			for(auto en = EnumerateFirst(); en != EnumerateSingular(); ++en){
-				*itOutput = std::move(*en);
+			for(auto p = GetBegin(); p != GetEnd(); ++p){
+				*itOutput = std::move(*p);
 				++itOutput;
 			}
 		} catch(...){

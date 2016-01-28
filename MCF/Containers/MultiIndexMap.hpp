@@ -91,11 +91,11 @@ public:
 	{
 	}
 	MultiIndexMap(const MultiIndexMap &rhs)
-//		: x_vecStorage(rhs.x_vecStorage)
+//		: x_vStorage(rhs.x_vStorage)
 	{
 	}
 	MultiIndexMap(MultiIndexMap &&rhs) noexcept
-//		: x_vecStorage(std::move(rhs.x_vecStorage))
+//		: x_vStorage(std::move(rhs.x_vStorage))
 	{
 	}
 	MultiIndexMap &operator=(const MultiIndexMap &rhs){
@@ -112,10 +112,10 @@ public:
 
 public:
 /*	bool IsEmpty() const noexcept {
-		return x_vecStorage.IsEmpty();
+		return x_vStorage.IsEmpty();
 	}
 	void Clear() noexcept {
-		x_vecStorage.Clear();
+		x_vStorage.Clear();
 	}
 */
 	void swap(MultiIndexMap &lhs, MultiIndexMap &rhs) noexcept {
@@ -232,42 +232,42 @@ namespace Impl_MultiIndexMap {
 	};
 }
 	bool IsEmpty() const noexcept {
-		return x_vecStorage.IsEmpty();
+		return x_vStorage.IsEmpty();
 	}
 	void Clear() noexcept {
-		x_vecStorage.Clear();
+		x_vStorage.Clear();
 	}
 
 	const Element *GetFirst() const noexcept {
-		return x_vecStorage.GetFirst();
+		return x_vStorage.GetFirst();
 	}
 	Element *GetFirst() noexcept {
-		return x_vecStorage.GetFirst();
+		return x_vStorage.GetFirst();
 	}
 	const Element *GetConstFirst() const noexcept {
-		return x_vecStorage.GetConstFirst();
+		return x_vStorage.GetConstFirst();
 	}
 	const Element *GetLast() const noexcept {
-		return x_vecStorage.GetLast();
+		return x_vStorage.GetLast();
 	}
 	Element *GetLast() noexcept {
-		return x_vecStorage.GetLast();
+		return x_vStorage.GetLast();
 	}
 	const Element *GetConstLast() const noexcept {
-		return x_vecStorage.GetConstLast();
+		return x_vStorage.GetConstLast();
 	}
 
 	const Element *GetPrev(const Element *pPos) const noexcept {
-		return x_vecStorage.GetPrev(pPos);
+		return x_vStorage.GetPrev(pPos);
 	}
 	Element *GetPrev(Element *pPos) noexcept {
-		return x_vecStorage.GetPrev(pPos);
+		return x_vStorage.GetPrev(pPos);
 	}
 	const Element *GetNext(const Element *pPos) const noexcept {
-		return x_vecStorage.GetNext(pPos);
+		return x_vStorage.GetNext(pPos);
 	}
 	Element *GetNext(Element *pPos) noexcept {
-		return x_vecStorage.GetNext(pPos);
+		return x_vStorage.GetNext(pPos);
 	}
 
 	ConstEnumerator EnumerateFirst() const noexcept {
@@ -300,63 +300,63 @@ namespace Impl_MultiIndexMap {
 
 	void Swap(FlatMap &rhs) noexcept {
 		using std::swap;
-		swap(x_vecStorage, rhs.x_vecStorage);
+		swap(x_vStorage, rhs.x_vStorage);
 	}
 
 	// FlatMap 需求。
 	const Element *GetData() const noexcept {
-		return x_vecStorage.GetData();
+		return x_vStorage.GetData();
 	}
 	Element *GetData() noexcept {
-		return x_vecStorage.GetData();
+		return x_vStorage.GetData();
 	}
 	const Element *GetConstData() const noexcept {
-		return x_vecStorage.GetConstData();
+		return x_vStorage.GetConstData();
 	}
 	std::size_t GetSize() const noexcept {
-		return x_vecStorage.GetSize();
+		return x_vStorage.GetSize();
 	}
 	std::size_t GetCapacity() const noexcept {
-		return x_vecStorage.GetCapacity();
+		return x_vStorage.GetCapacity();
 	}
 
 	const Element *GetBegin() const noexcept {
-		return x_vecStorage.GetBegin();
+		return x_vStorage.GetBegin();
 	}
 	Element *GetBegin() noexcept {
-		return x_vecStorage.GetBegin();
+		return x_vStorage.GetBegin();
 	}
 	const Element *GetConstBegin() const noexcept {
-		return x_vecStorage.GetConstBegin();
+		return x_vStorage.GetConstBegin();
 	}
 	const Element *GetEnd() const noexcept {
-		return x_vecStorage.GetEnd();
+		return x_vStorage.GetEnd();
 	}
 	Element *GetEnd() noexcept {
-		return x_vecStorage.GetEnd();
+		return x_vStorage.GetEnd();
 	}
 	const Element *GetConstEnd() const noexcept {
-		return x_vecStorage.GetConstEnd();
+		return x_vStorage.GetConstEnd();
 	}
 
 	const Element &Get(std::size_t uIndex) const {
-		return x_vecStorage.Get(uIndex);
+		return x_vStorage.Get(uIndex);
 	}
 	Element &Get(std::size_t uIndex){
-		return x_vecStorage.Get(uIndex);
+		return x_vStorage.Get(uIndex);
 	}
 	const Element &UncheckedGet(std::size_t uIndex) const noexcept {
-		return x_vecStorage.UncheckedGet(uIndex);
+		return x_vStorage.UncheckedGet(uIndex);
 	}
 	Element &UncheckedGet(std::size_t uIndex) noexcept {
-		return x_vecStorage.UncheckedGet(uIndex);
+		return x_vStorage.UncheckedGet(uIndex);
 	}
 
 	void Reserve(std::size_t uNewCapacity){
-		x_vecStorage.Reserve(uNewCapacity);
+		x_vStorage.Reserve(uNewCapacity);
 	}
 	void ReserveMore(std::size_t uDeltaCapacity){
-		x_vecStorage.ReserveMore(uDeltaCapacity);
+		x_vStorage.ReserveMore(uDeltaCapacity);
 	}
 
 	template<typename ComparandT, typename ...ValueParamsT>
@@ -380,7 +380,7 @@ namespace Impl_MultiIndexMap {
 		if((pHint != GetBegin()) && !ComparatorT()(pHint[-1].first, vComparand)){
 			return std::make_pair(const_cast<Element *>(pHint), false);
 		}
-		return std::make_pair(x_vecStorage.Emplace(pHint, std::piecewise_construct,
+		return std::make_pair(x_vStorage.Emplace(pHint, std::piecewise_construct,
 			std::forward_as_tuple(std::forward<ComparandT>(vComparand)), std::forward_as_tuple(std::forward<ValueParamsT>(vValueParams)...)), true);
 	}
 	template<typename FirstT, typename SecondT>
@@ -417,16 +417,16 @@ namespace Impl_MultiIndexMap {
 	Element *Emplace(const Element *pPos, ComparandT &&vComparand, ValueParamsT &&...vValueParams){
 		return AddWithHint(pPos, std::forward<ComparandT>(vComparand), std::forward<ValueParamsT>(vValueParams)...).first;
 	}
-	Element *Erase(const Element *pBegin, const Element *pEnd) noexcept(noexcept(DeclVal<FlatMap &>().x_vecStorage.Erase(pBegin, pEnd))) {
-		return x_vecStorage.Erase(pBegin, pEnd);
+	Element *Erase(const Element *pBegin, const Element *pEnd) noexcept(noexcept(DeclVal<FlatMap &>().x_vStorage.Erase(pBegin, pEnd))) {
+		return x_vStorage.Erase(pBegin, pEnd);
 	}
-	Element *Erase(const Element *pPos) noexcept(noexcept(DeclVal<FlatMap &>().x_vecStorage.Erase(pPos))) {
-		return x_vecStorage.Erase(pPos);
+	Element *Erase(const Element *pPos) noexcept(noexcept(DeclVal<FlatMap &>().x_vStorage.Erase(pPos))) {
+		return x_vStorage.Erase(pPos);
 	}
 
 	template<typename ComparandT>
 	const Element *GetLowerBound(const ComparandT &vComparand) const {
-		auto pLower = x_vecStorage.GetBegin(), pUpper = x_vecStorage.GetEnd();
+		auto pLower = x_vStorage.GetBegin(), pUpper = x_vStorage.GetEnd();
 		while(pLower != pUpper){
 			const auto pMiddle = pLower + (pUpper - pLower) / 2;
 			if(ComparatorT()(pMiddle->first, vComparand)){
@@ -439,7 +439,7 @@ namespace Impl_MultiIndexMap {
 	}
 	template<typename ComparandT>
 	Element *GetLowerBound(const ComparandT &vComparand){
-		auto pLower = x_vecStorage.GetBegin(), pUpper = x_vecStorage.GetEnd();
+		auto pLower = x_vStorage.GetBegin(), pUpper = x_vStorage.GetEnd();
 		while(pLower != pUpper){
 			const auto pMiddle = pLower + (pUpper - pLower) / 2;
 			if(ComparatorT()(pMiddle->first, vComparand)){
@@ -457,7 +457,7 @@ namespace Impl_MultiIndexMap {
 
 	template<typename ComparandT>
 	const Element *GetUpperBound(const ComparandT &vComparand) const {
-		auto pLower = x_vecStorage.GetBegin(), pUpper = x_vecStorage.GetEnd();
+		auto pLower = x_vStorage.GetBegin(), pUpper = x_vStorage.GetEnd();
 		while(pLower != pUpper){
 			const auto pMiddle = pLower + (pUpper - pLower) / 2;
 			if(!ComparatorT()(vComparand, pMiddle->first)){
@@ -470,7 +470,7 @@ namespace Impl_MultiIndexMap {
 	}
 	template<typename ComparandT>
 	Element *GetUpperBound(const ComparandT &vComparand){
-		auto pLower = x_vecStorage.GetBegin(), pUpper = x_vecStorage.GetEnd();
+		auto pLower = x_vStorage.GetBegin(), pUpper = x_vStorage.GetEnd();
 		while(pLower != pUpper){
 			const auto pMiddle = pLower + (pUpper - pLower) / 2;
 			if(!ComparatorT()(vComparand, pMiddle->first)){
@@ -488,7 +488,7 @@ namespace Impl_MultiIndexMap {
 
 	template<typename ComparandT>
 	const Element *GetMatch(const ComparandT &vComparand) const {
-		auto pLower = x_vecStorage.GetBegin(), pUpper = x_vecStorage.GetEnd();
+		auto pLower = x_vStorage.GetBegin(), pUpper = x_vStorage.GetEnd();
 		while(pLower != pUpper){
 			const auto pMiddle = pLower + (pUpper - pLower) / 2;
 			if(ComparatorT()(pMiddle->first, vComparand)){
@@ -499,11 +499,11 @@ namespace Impl_MultiIndexMap {
 				return pMiddle;
 			}
 		}
-		return x_vecStorage.GetEnd();
+		return x_vStorage.GetEnd();
 	}
 	template<typename ComparandT>
 	Element *GetMatch(const ComparandT &vComparand){
-		auto pLower = x_vecStorage.GetBegin(), pUpper = x_vecStorage.GetEnd();
+		auto pLower = x_vStorage.GetBegin(), pUpper = x_vStorage.GetEnd();
 		while(pLower != pUpper){
 			const auto pMiddle = pLower + (pUpper - pLower) / 2;
 			if(ComparatorT()(pMiddle->first, vComparand)){
@@ -514,7 +514,7 @@ namespace Impl_MultiIndexMap {
 				return pMiddle;
 			}
 		}
-		return x_vecStorage.GetEnd();
+		return x_vStorage.GetEnd();
 	}
 	template<typename ComparandT>
 	const Element *GetConstMatch(const ComparandT &vComparand) const {
@@ -523,14 +523,14 @@ namespace Impl_MultiIndexMap {
 
 	template<typename ComparandT>
 	std::pair<const Element *, const Element *> GetEqualRange(const ComparandT &vComparand) const {
-		auto vRange = std::make_pair(x_vecStorage.GetEnd(), x_vecStorage.GetEnd());
+		auto vRange = std::make_pair(x_vStorage.GetEnd(), x_vStorage.GetEnd());
 
 		const auto pTop = GetMatch(vComparand);
-		if(pTop == x_vecStorage.GetEnd()){
+		if(pTop == x_vStorage.GetEnd()){
 			return vRange;
 		}
 
-		auto pLower = x_vecStorage.GetBegin(), pUpper = pTop;
+		auto pLower = x_vStorage.GetBegin(), pUpper = pTop;
 		while(pLower != pUpper){
 			const auto pMiddle = pLower + (pUpper - pLower) / 2;
 			if(ComparatorT()(pMiddle->first, vComparand)){
@@ -541,7 +541,7 @@ namespace Impl_MultiIndexMap {
 		}
 		vRange.first = pLower;
 
-		pLower = pTop, pUpper = x_vecStorage.GetEnd();
+		pLower = pTop, pUpper = x_vStorage.GetEnd();
 		while(pLower != pUpper){
 			const auto pMiddle = pLower + (pUpper - pLower) / 2;
 			if(!ComparatorT()(vComparand, pMiddle->first)){
@@ -556,14 +556,14 @@ namespace Impl_MultiIndexMap {
 	}
 	template<typename ComparandT>
 	std::pair<Element *, Element *> GetEqualRange(const ComparandT &vComparand){
-		auto vRange = std::make_pair(x_vecStorage.GetEnd(), x_vecStorage.GetEnd());
+		auto vRange = std::make_pair(x_vStorage.GetEnd(), x_vStorage.GetEnd());
 
 		const auto pTop = GetMatch(vComparand);
-		if(pTop == x_vecStorage.GetEnd()){
+		if(pTop == x_vStorage.GetEnd()){
 			return vRange;
 		}
 
-		auto pLower = x_vecStorage.GetBegin(), pUpper = pTop;
+		auto pLower = x_vStorage.GetBegin(), pUpper = pTop;
 		while(pLower != pUpper){
 			const auto pMiddle = pLower + (pUpper - pLower) / 2;
 			if(ComparatorT()(pMiddle->first, vComparand)){
@@ -574,7 +574,7 @@ namespace Impl_MultiIndexMap {
 		}
 		vRange.first = pLower;
 
-		pLower = pTop, pUpper = x_vecStorage.GetEnd();
+		pLower = pTop, pUpper = x_vStorage.GetEnd();
 		while(pLower != pUpper){
 			const auto pMiddle = pLower + (pUpper - pLower) / 2;
 			if(!ComparatorT()(vComparand, pMiddle->first)){

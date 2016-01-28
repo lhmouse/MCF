@@ -1,5 +1,8 @@
 #include <MCF/StdMCF.hpp>
 #include <MCF/Containers/FlatMap.hpp>
+#include <MCF/Containers/Vector.hpp>
+#include <MCF/Containers/List.hpp>
+#include <MCF/Containers/RingQueue.hpp>
 #include <cstdio>
 
 using namespace MCF;
@@ -43,9 +46,25 @@ bool operator<(const foo &l, int r) noexcept {
 	return l.a < r;
 }
 
-template class FlatMap<foo, int>;
+// template class FlatMap<foo, int>;
+
+template class Vector<foo>;
+template class List<foo>;
+template class RingQueue<foo>;
 
 extern "C" unsigned MCFCRT_Main(){
+	RingQueue<foo> q;
+	for(int i = 0; i < 10; ++i){
+		q.Push(i);
+	}
+	for(int i = 0; i < 10; ++i){
+		q.Shift();
+	}
+	for(int i = 0; i < 10; ++i){
+		q.Push(i);
+	}
+
+/*
 	FlatMap<foo, int> s;
 
 	auto add = [&](int i){
@@ -70,6 +89,6 @@ extern "C" unsigned MCFCRT_Main(){
 	for(int i = 0; i < 8; ++i){
 		find(i);
 	}
-
+*/
 	return 0;
 }

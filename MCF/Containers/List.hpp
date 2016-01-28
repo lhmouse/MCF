@@ -100,9 +100,12 @@ public:
 	template<typename OutputIteratorT>
 	OutputIteratorT Extract(OutputIteratorT itOutput){
 		try {
-			for(auto p = GetFirst(); p; p = GetNext(p)){
-				*itOutput = std::move(*p);
+			auto pNode = x_pFirst;
+			while(pNode){
+				const auto pNext = pNode->pNext;
+				*itOutput = std::move(*reinterpret_cast<Element *>(pNode->aStorage));
 				++itOutput;
+				pNode = pNext;
 			}
 		} catch(...){
 			Clear();

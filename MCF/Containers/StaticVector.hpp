@@ -54,7 +54,7 @@ public:
 		: StaticVector(rhs.begin(), rhs.end())
 	{
 	}
-	StaticVector(const StaticVector &rhs)
+	StaticVector(const StaticVector &rhs) noexcept(std::is_nothrow_copy_constructible<Element>::value)
 		: StaticVector()
 	{
 		Append(rhs.GetBegin(), rhs.GetEnd());
@@ -64,7 +64,7 @@ public:
 	{
 		Append(std::make_move_iterator(rhs.GetBegin()), std::make_move_iterator(rhs.GetEnd()));
 	}
-	StaticVector &operator=(const StaticVector &rhs){
+	StaticVector &operator=(const StaticVector &rhs) noexcept(std::is_nothrow_copy_constructible<Element>::value) {
 		Clear();
 		Append(rhs.GetBegin(), rhs.GetEnd());
 		return *this;

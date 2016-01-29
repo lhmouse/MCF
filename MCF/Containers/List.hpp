@@ -8,6 +8,7 @@
 #include "_Enumerator.hpp"
 #include "../Utilities/Assert.hpp"
 #include "../Utilities/ConstructDestruct.hpp"
+#include "../Utilities/AlignedUnion.hpp"
 #include "../Core/Exception.hpp"
 #include <utility>
 #include <new>
@@ -27,7 +28,7 @@ public:
 
 private:
 	struct X_Node {
-		alignas(Element) char aStorage[sizeof(Element)];
+		AlignedUnion<0, Element> unElement;
 		X_Node *pPrev;
 		X_Node *pNext;
 	};
@@ -65,7 +66,7 @@ public:
 		auto pNode = rhs.x_pFirst;
 		while(pNode){
 			const auto pNext = pNode->pNext;
-			const auto pElement = reinterpret_cast<const Element *>(pNode->aStorage);
+			const auto pElement = reinterpret_cast<const Element *>(&(pNode->unElement));
 			Push(*pElement);
 			pNode = pNext;
 		}
@@ -96,7 +97,7 @@ public:
 		auto pNode = x_pLast;
 		while(pNode){
 			const auto pPrev = pNode->pPrev;
-			const auto pElement = reinterpret_cast<Element *>(pNode->aStorage);
+			const auto pElement = reinterpret_cast<Element *>(&(pNode->unElement));
 			Destruct(pElement);
 			::delete pNode;
 			pNode = pPrev;
@@ -110,7 +111,7 @@ public:
 			auto pNode = x_pFirst;
 			while(pNode){
 				const auto pNext = pNode->pNext;
-				const auto pElement = reinterpret_cast<Element *>(pNode->aStorage);
+				const auto pElement = reinterpret_cast<Element *>(&(pNode->unElement));
 				*itOutput = std::move(*pElement);
 				++itOutput;
 				pNode = pNext;
@@ -128,14 +129,14 @@ public:
 		if(!pNode){
 			return nullptr;
 		}
-		return reinterpret_cast<const Element *>(pNode->aStorage);
+		return reinterpret_cast<const Element *>(&(pNode->unElement));
 	}
 	Element *GetFirst() noexcept {
 		const auto pNode = x_pFirst;
 		if(!pNode){
 			return nullptr;
 		}
-		return reinterpret_cast<Element *>(pNode->aStorage);
+		return reinterpret_cast<Element *>(&(pNode->unElement));
 	}
 	const Element *GetConstFirst() const noexcept {
 		return GetFirst();
@@ -145,14 +146,14 @@ public:
 		if(!pNode){
 			return nullptr;
 		}
-		return reinterpret_cast<const Element *>(pNode->aStorage);
+		return reinterpret_cast<const Element *>(&(pNode->unElement));
 	}
 	Element *GetLast() noexcept {
 		const auto pNode = x_pLast;
 		if(!pNode){
 			return nullptr;
 		}
-		return reinterpret_cast<Element *>(pNode->aStorage);
+		return reinterpret_cast<Element *>(&(pNode->unElement));
 	}
 	const Element *GetConstLast() const noexcept {
 		return GetLast();
@@ -165,7 +166,7 @@ public:
 		if(!pPrev){
 			return nullptr;
 		}
-		return reinterpret_cast<const Element *>(pPrev->aStorage);
+		return reinterpret_cast<const Element *>(&(pPrev->unElement));
 	}
 	static Element *GetPrev(Element *pPos) noexcept {
 		ASSERT(pPos);
@@ -174,7 +175,7 @@ public:
 		if(!pPrev){
 			return nullptr;
 		}
-		return reinterpret_cast<Element *>(pPrev->aStorage);
+		return reinterpret_cast<Element *>(&(pPrev->unElement));
 	}
 	static const Element *GetNext(const Element *pPos) noexcept {
 		ASSERT(pPos);
@@ -183,7 +184,7 @@ public:
 		if(!pNext){
 			return nullptr;
 		}
-		return reinterpret_cast<const Element *>(pNext->aStorage);
+		return reinterpret_cast<const Element *>(&(pNext->unElement));
 	}
 	static Element *GetNext(Element *pPos) noexcept {
 		ASSERT(pPos);
@@ -192,7 +193,7 @@ public:
 		if(!pNext){
 			return nullptr;
 		}
-		return reinterpret_cast<Element *>(pNext->aStorage);
+		return reinterpret_cast<Element *>(&(pNext->unElement));
 	}
 
 	ConstEnumerator EnumerateFirst() const noexcept {
@@ -241,7 +242,7 @@ public:
 	template<typename ...ParamsT>
 	Element &Unshift(ParamsT &&...vParams){
 		const auto pNode = ::new X_Node;
-		const auto pElement = reinterpret_cast<Element *>(pNode->aStorage);
+		const auto pElement = reinterpret_cast<Element *>(&(pNode->unElement));
 		try {
 			DefaultConstruct(pElement, std::forward<ParamsT>(vParams)...);
 		} catch(...){
@@ -266,7 +267,7 @@ public:
 		auto pNode = x_pFirst;
 		for(std::size_t i = 0; i < uCount; ++i){
 			const auto pNext = pNode->pNext;
-			const auto pElement = reinterpret_cast<Element *>(pNode->aStorage);
+			const auto pElement = reinterpret_cast<Element *>(&(pNode->unElement));
 			Destruct(pElement);
 			::delete pNode;
 			pNode = pNext;
@@ -282,7 +283,7 @@ public:
 	template<typename ...ParamsT>
 	Element &Push(ParamsT &&...vParams){
 		const auto pNode = ::new X_Node;
-		const auto pElement = reinterpret_cast<Element *>(pNode->aStorage);
+		const auto pElement = reinterpret_cast<Element *>(&(pNode->unElement));
 		try {
 			DefaultConstruct(pElement, std::forward<ParamsT>(vParams)...);
 		} catch(...){
@@ -307,7 +308,8 @@ public:
 		auto pNode = x_pLast;
 		for(std::size_t i = 0; i < uCount; ++i){
 			const auto pPrev = pNode->pPrev;
-			Destruct(reinterpret_cast<Element *>(pNode->aStorage));
+			const auto pElement = reinterpret_cast<Element *>(&(pNode->unElement));
+			Destruct(pElement);
 			::delete pNode;
 			pNode = pPrev;
 		}

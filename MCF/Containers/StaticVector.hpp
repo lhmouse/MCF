@@ -29,7 +29,7 @@ public:
 	using Enumerator      = Impl_Enumerator::Enumerator      <StaticVector>;
 
 private:
-	AlignedUnion<0, Element [kCapacity]> x_unStorage;
+	AlignedUnion<0, Element> x_aStorage[kCapacity];
 	std::size_t x_uSize;
 
 public:
@@ -216,10 +216,10 @@ public:
 
 	// StaticVector 需求。
 	const Element *GetData() const noexcept {
-		return reinterpret_cast<const Element *>(&x_unStorage);
+		return reinterpret_cast<const Element *>(x_aStorage);
 	}
 	Element *GetData() noexcept {
-		return reinterpret_cast<Element *>(&x_unStorage);
+		return reinterpret_cast<Element *>(x_aStorage);
 	}
 	std::size_t GetSize() const noexcept {
 		return x_uSize;

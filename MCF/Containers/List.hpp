@@ -62,7 +62,13 @@ public:
 	List(const List &rhs)
 		: List()
 	{
-		Append(rhs.EnumerateFirst(), rhs.EnumerateSingular());
+		auto pNode = rhs.x_pFirst;
+		while(pNode){
+			const auto pNext = pNode->pNext;
+			const auto pElement = reinterpret_cast<const Element *>(pNode->aStorage);
+			Push(*pElement);
+			pNode = pNext;
+		}
 	}
 	List(List &&rhs) noexcept
 		: List()
@@ -90,7 +96,8 @@ public:
 		auto pNode = x_pLast;
 		while(pNode){
 			const auto pPrev = pNode->pPrev;
-			Destruct(reinterpret_cast<Element *>(pNode->aStorage));
+			const auto pElement = reinterpret_cast<Element *>(pNode->aStorage);
+			Destruct(pElement);
 			::delete pNode;
 			pNode = pPrev;
 		}
@@ -103,7 +110,8 @@ public:
 			auto pNode = x_pFirst;
 			while(pNode){
 				const auto pNext = pNode->pNext;
-				*itOutput = std::move(*reinterpret_cast<Element *>(pNode->aStorage));
+				const auto pElement = reinterpret_cast<Element *>(pNode->aStorage);
+				*itOutput = std::move(*pElement);
 				++itOutput;
 				pNode = pNext;
 			}
@@ -153,38 +161,38 @@ public:
 	static const Element *GetPrev(const Element *pPos) noexcept {
 		ASSERT(pPos);
 
-		const auto pNode = reinterpret_cast<const X_Node *>(pPos)->pPrev;
-		if(!pNode){
+		const auto pPrev = reinterpret_cast<const X_Node *>(pPos)->pPrev;
+		if(!pPrev){
 			return nullptr;
 		}
-		return reinterpret_cast<const Element *>(pNode->aStorage);
+		return reinterpret_cast<const Element *>(pPrev->aStorage);
 	}
 	static Element *GetPrev(Element *pPos) noexcept {
 		ASSERT(pPos);
 
-		const auto pNode = reinterpret_cast<const X_Node *>(pPos)->pPrev;
-		if(!pNode){
+		const auto pPrev = reinterpret_cast<const X_Node *>(pPos)->pPrev;
+		if(!pPrev){
 			return nullptr;
 		}
-		return reinterpret_cast<Element *>(pNode->aStorage);
+		return reinterpret_cast<Element *>(pPrev->aStorage);
 	}
 	static const Element *GetNext(const Element *pPos) noexcept {
 		ASSERT(pPos);
 
-		const auto pNode = reinterpret_cast<const X_Node *>(pPos)->pNext;
-		if(!pNode){
+		const auto pNext = reinterpret_cast<const X_Node *>(pPos)->pNext;
+		if(!pNext){
 			return nullptr;
 		}
-		return reinterpret_cast<const Element *>(pNode->aStorage);
+		return reinterpret_cast<const Element *>(pNext->aStorage);
 	}
 	static Element *GetNext(Element *pPos) noexcept {
 		ASSERT(pPos);
 
-		const auto pNode = reinterpret_cast<const X_Node *>(pPos)->pNext;
-		if(!pNode){
+		const auto pNext = reinterpret_cast<const X_Node *>(pPos)->pNext;
+		if(!pNext){
 			return nullptr;
 		}
-		return reinterpret_cast<Element *>(pNode->aStorage);
+		return reinterpret_cast<Element *>(pNext->aStorage);
 	}
 
 	ConstEnumerator EnumerateFirst() const noexcept {
@@ -233,9 +241,9 @@ public:
 	template<typename ...ParamsT>
 	Element &Unshift(ParamsT &&...vParams){
 		const auto pNode = ::new X_Node;
-		const auto pElem = reinterpret_cast<Element *>(pNode->aStorage);
+		const auto pElement = reinterpret_cast<Element *>(pNode->aStorage);
 		try {
-			DefaultConstruct(pElem, std::forward<ParamsT>(vParams)...);
+			DefaultConstruct(pElement, std::forward<ParamsT>(vParams)...);
 		} catch(...){
 			::delete pNode;
 			throw;
@@ -250,7 +258,7 @@ public:
 		}
 		x_pFirst = pNode;
 
-		return *pElem;
+		return *pElement;
 	}
 	void Shift(std::size_t uCount = 1) noexcept {
 		ASSERT(uCount <= CountElements());
@@ -258,7 +266,8 @@ public:
 		auto pNode = x_pFirst;
 		for(std::size_t i = 0; i < uCount; ++i){
 			const auto pNext = pNode->pNext;
-			Destruct(reinterpret_cast<Element *>(pNode->aStorage));
+			const auto pElement = reinterpret_cast<Element *>(pNode->aStorage);
+			Destruct(pElement);
 			::delete pNode;
 			pNode = pNext;
 		}
@@ -273,9 +282,9 @@ public:
 	template<typename ...ParamsT>
 	Element &Push(ParamsT &&...vParams){
 		const auto pNode = ::new X_Node;
-		const auto pElem = reinterpret_cast<Element *>(pNode->aStorage);
+		const auto pElement = reinterpret_cast<Element *>(pNode->aStorage);
 		try {
-			DefaultConstruct(pElem, std::forward<ParamsT>(vParams)...);
+			DefaultConstruct(pElement, std::forward<ParamsT>(vParams)...);
 		} catch(...){
 			::delete pNode;
 			throw;
@@ -290,7 +299,7 @@ public:
 		}
 		x_pLast = pNode;
 
-		return *pElem;
+		return *pElement;
 	}
 	void Pop(std::size_t uCount = 1) noexcept {
 		ASSERT(uCount <= CountElements());
@@ -330,31 +339,17 @@ public:
 
 	template<typename ...ParamsT>
 	void Append(std::size_t uDeltaSize, const ParamsT &...vParams){
-		std::size_t uElementsPushed = 0;
-		try {
-			for(std::size_t i = 0; i < uDeltaSize; ++i){
-				Push(vParams...);
-				++uElementsPushed;
-			}
-		} catch(...){
-			Pop(uElementsPushed);
-			throw;
-		}
+		List lstNew;
+		lstNew.Append(uDeltaSize, vParams...);
+		Splice(nullptr, lstNew);
 	}
 	template<typename IteratorT, std::enable_if_t<
 		sizeof(typename std::iterator_traits<IteratorT>::value_type *),
 		int> = 0>
 	void Append(IteratorT itBegin, std::common_type_t<IteratorT> itEnd){
-		std::size_t uElementsPushed = 0;
-		try {
-			for(auto it = itBegin; it != itEnd; ++it){
-				Push(*it);
-				++uElementsPushed;
-			}
-		} catch(...){
-			Pop(uElementsPushed);
-			throw;
-		}
+		List lstNew;
+		lstNew.Append(itBegin, itEnd);
+		Splice(nullptr, lstNew);
 	}
 	void Append(std::initializer_list<Element> ilElements){
 		Append(ilElements.begin(), ilElements.end());

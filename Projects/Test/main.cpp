@@ -53,7 +53,7 @@ template class List<foo>;
 template class RingQueue<foo>;
 
 extern "C" unsigned MCFCRT_Main(){
-	RingQueue<foo> q;
+	List<foo> q;
 	for(int i = 0; i < 10; ++i){
 		q.Push(i);
 	}

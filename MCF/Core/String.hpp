@@ -244,7 +244,9 @@ public:
 	template<typename OutputIteratorT>
 	OutputIteratorT Spit(OutputIteratorT itOutput){
 		try {
-			for(auto p = GetBegin(); p != GetEnd(); ++p){
+			const auto pBegin = GetBegin();
+			const auto pEnd = GetEnd();
+			for(auto p = pBegin; p != pEnd; ++p){
 				*itOutput = std::move(*p);
 				++itOutput;
 			}

@@ -168,34 +168,34 @@ public:
 		return GetBegin();
 	}
 	const Element *GetEnd() const noexcept {
-		return GetData() + kSizeT;
+		return GetData() + GetSize();
 	}
 	Element *GetEnd() noexcept {
-		return GetData() + kSizeT;
+		return GetData() + GetSize();
 	}
 	const Element *GetConstEnd() const noexcept {
 		return GetEnd();
 	}
 
 	const Element &Get(std::size_t uIndex) const {
-		if(uIndex >= kSizeT){
+		if(uIndex >= GetSize()){
 			DEBUG_THROW(Exception, ERROR_ACCESS_DENIED, "Array: Subscript out of range"_rcs);
 		}
 		return UncheckedGet(uIndex);
 	}
 	Element &Get(std::size_t uIndex){
-		if(uIndex >= kSizeT){
+		if(uIndex >= GetSize()){
 			DEBUG_THROW(Exception, ERROR_ACCESS_DENIED, "Array: Subscript out of range"_rcs);
 		}
 		return UncheckedGet(uIndex);
 	}
 	const Element &UncheckedGet(std::size_t uIndex) const noexcept {
-		ASSERT(uIndex < kSizeT);
+		ASSERT(uIndex < GetSize());
 
 		return GetData()[uIndex];
 	}
 	Element &UncheckedGet(std::size_t uIndex) noexcept {
-		ASSERT(uIndex < kSizeT);
+		ASSERT(uIndex < GetSize());
 
 		return GetData()[uIndex];
 	}

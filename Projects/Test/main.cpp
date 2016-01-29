@@ -1,6 +1,7 @@
 #include <MCF/StdMCF.hpp>
 #include <MCF/Containers/FlatMap.hpp>
 #include <MCF/Containers/Vector.hpp>
+#include <MCF/Containers/StaticVector.hpp>
 #include <MCF/Containers/List.hpp>
 #include <MCF/Containers/RingQueue.hpp>
 #include <cstdio>
@@ -49,46 +50,20 @@ bool operator<(const foo &l, int r) noexcept {
 // template class FlatMap<foo, int>;
 
 template class Vector<foo>;
+template class StaticVector<foo, 100>;
 template class List<foo>;
 template class RingQueue<foo>;
 
 extern "C" unsigned MCFCRT_Main(){
-	List<foo> q;
+	StaticVector<foo, 100> q;
 	for(int i = 0; i < 10; ++i){
 		q.Push(i);
 	}
 	for(int i = 0; i < 10; ++i){
-		q.Shift();
+		q.Pop();
 	}
 	for(int i = 0; i < 10; ++i){
 		q.Push(i);
 	}
-
-/*
-	FlatMap<foo, int> s;
-
-	auto add = [&](int i){
-		std::printf("--- adding: %d\n", i);
-		s.Add(i, i);
-	};
-
-	add(1);
-	add(5);
-	add(3);
-	add(2);
-	add(6);
-	add(0);
-	add(4);
-
-	auto find = [&](int i){
-		std::printf("--- searching for: %d\n", i);
-		auto it = s.GetMatch(i);
-		std::printf(" -- found: %td\n", it - s.GetBegin());
-	};
-
-	for(int i = 0; i < 8; ++i){
-		find(i);
-	}
-*/
 	return 0;
 }

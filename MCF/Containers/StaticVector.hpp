@@ -8,6 +8,7 @@
 #include "_Enumerator.hpp"
 #include "../Utilities/Assert.hpp"
 #include "../Utilities/ConstructDestruct.hpp"
+#include "../Utilities/AlignedUnion.hpp"
 #include "../Core/Exception.hpp"
 #include <utility>
 #include <new>
@@ -28,7 +29,7 @@ public:
 	using Enumerator      = Impl_Enumerator::Enumerator      <StaticVector>;
 
 private:
-	alignas(Element) char x_aStorage[kCapacity][sizeof(Element)];
+	AlignedUnion<0, Element [kCapacity]> x_unStorage;
 	std::size_t x_uSize;
 
 public:
@@ -89,7 +90,9 @@ public:
 	template<typename OutputIteratorT>
 	OutputIteratorT Extract(OutputIteratorT itOutput){
 		try {
-			for(auto p = GetBegin(); p != GetEnd(); ++p){
+			const auto pBegin = GetBegin();
+			const auto pEnd = GetEnd();
+			for(auto p = pBegin; p != pEnd; ++p){
 				*itOutput = std::move(*p);
 				++itOutput;
 			}
@@ -206,17 +209,17 @@ public:
 	}
 
 	void Swap(StaticVector &rhs) noexcept(std::is_nothrow_move_constructible<Element>::value) {
-		auto vecTemp = std::move(rhs);
+		auto vecTemp = std::move_if_noexcept(rhs);
 		*this = std::move(rhs);
 		rhs = std::move(vecTemp);
 	}
 
 	// StaticVector 需求。
 	const Element *GetData() const noexcept {
-		return static_cast<const Element *>(static_cast<const void *>(x_aStorage));
+		return reinterpret_cast<const Element *>(&x_unStorage);
 	}
 	Element *GetData() noexcept {
-		return static_cast<Element *>(static_cast<void *>(x_aStorage));
+		return reinterpret_cast<Element *>(&x_unStorage);
 	}
 	std::size_t GetSize() const noexcept {
 		return x_uSize;
@@ -235,50 +238,51 @@ public:
 		return GetBegin();
 	}
 	const Element *GetEnd() const noexcept {
-		return GetData() + x_uSize;
+		return GetData() + GetSize();
 	}
 	Element *GetEnd() noexcept {
-		return GetData() + x_uSize;
+		return GetData() + GetSize();
 	}
 	const Element *GetConstEnd() const noexcept {
 		return GetEnd();
 	}
 
 	const Element &Get(std::size_t uIndex) const {
-		if(uIndex >= x_uSize){
+		if(uIndex >= GetSize()){
 			DEBUG_THROW(Exception, ERROR_ACCESS_DENIED, "StaticVector: Subscript out of range"_rcs);
 		}
 		return UncheckedGet(uIndex);
 	}
 	Element &Get(std::size_t uIndex){
-		if(uIndex >= x_uSize){
+		if(uIndex >= GetSize()){
 			DEBUG_THROW(Exception, ERROR_ACCESS_DENIED, "StaticVector: Subscript out of range"_rcs);
 		}
 		return UncheckedGet(uIndex);
 	}
 	const Element &UncheckedGet(std::size_t uIndex) const noexcept {
-		ASSERT(uIndex < x_uSize);
+		ASSERT(uIndex < GetSize());
 
 		return GetData()[uIndex];
 	}
 	Element &UncheckedGet(std::size_t uIndex) noexcept {
-		ASSERT(uIndex < x_uSize);
+		ASSERT(uIndex < GetSize());
 
 		return GetData()[uIndex];
 	}
 
 	template<typename ...ParamsT>
 	void Resize(std::size_t uSize, const ParamsT &...vParams){
-		if(uSize > x_uSize){
-			Append(uSize - x_uSize, vParams...);
+		const auto uOldSize = GetSize();
+		if(uSize > uOldSize){
+			Append(uSize - uOldSize, vParams...);
 		} else {
-			Pop(x_uSize - uSize);
+			Pop(uOldSize - uSize);
 		}
 	}
 	template<typename ...ParamsT>
 	Element *ResizeMore(std::size_t uDeltaSize, const ParamsT &...vParams){
-		const auto uOldSize = x_uSize;
-		Append(uDeltaSize - x_uSize, vParams...);
+		const auto uOldSize = GetSize();
+		Append(uDeltaSize - uOldSize, vParams...);
 		return GetData() + uOldSize;
 	}
 
@@ -288,7 +292,7 @@ public:
 		}
 	}
 	void ReserveMore(std::size_t uDeltaCapacity){
-		const auto uOldSize = x_uSize;
+		const auto uOldSize = GetSize();
 		const auto uNewCapacity = uOldSize + uDeltaCapacity;
 		if(uNewCapacity < uOldSize){
 			throw std::bad_array_new_length();
@@ -303,23 +307,24 @@ public:
 	}
 	template<typename ...ParamsT>
 	Element &UncheckedPush(ParamsT &&...vParams) noexcept(std::is_nothrow_constructible<Element, ParamsT &&...>::value) {
-		ASSERT(GetCapacity() - x_uSize > 0);
+		ASSERT(GetCapacity() - GetSize() > 0);
 
-		const auto pBegin = GetBegin();
-		const auto pElem = pBegin + x_uSize;
-		DefaultConstruct(pElem, std::forward<ParamsT>(vParams)...);
+		const auto pData = GetData();
+		const auto pElement = pData + x_uSize;
+		DefaultConstruct(pElement, std::forward<ParamsT>(vParams)...);
 		++x_uSize;
 
-		return *pElem;
+		return *pElement;
 	}
 	void Pop(std::size_t uCount = 1) noexcept {
-		ASSERT(uCount <= x_uSize);
+		ASSERT(uCount <= GetSize());
 
-		const auto pBegin = GetBegin();
+		const auto pData = GetData();
 		for(std::size_t i = 0; i < uCount; ++i){
-			Destruct(pBegin + x_uSize - i - 1);
+			const auto pElement = pData + x_uSize - 1;
+			Destruct(pElement);
+			--x_uSize;
 		}
-		x_uSize -= uCount;
 	}
 
 	template<typename ...ParamsT>
@@ -350,16 +355,13 @@ public:
 
 		std::size_t uElementsPushed = 0;
 		try {
-			if(kHasDeltaSizeHint){
-				for(auto it = itBegin; it != itEnd; ++it){
+			for(auto it = itBegin; it != itEnd; ++it){
+				if(kHasDeltaSizeHint){
 					UncheckedPush(*it);
-					++uElementsPushed;
-				}
-			} else {
-				for(auto it = itBegin; it != itEnd; ++it){
+				} else {
 					Push(*it);
-					++uElementsPushed;
 				}
+				++uElementsPushed;
 			}
 		} catch(...){
 			Pop(uElementsPushed);

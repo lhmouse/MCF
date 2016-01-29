@@ -15,11 +15,13 @@ struct foo {
 		: a(r)
 	{
 		std::printf("foo(): a = %d\n", a);
+//		if(a == 123) throw std::exception();
 	}
 	foo(const foo &r)
 		: a(r.a)
 	{
 		std::printf("foo(const foo &): a = %d\n", a);
+//		if(a == 123) throw std::exception();
 	}
 	foo(foo &&r) noexcept
 		: a(std::exchange(r.a, -1))
@@ -55,15 +57,23 @@ template class List<foo>;
 template class RingQueue<foo>;
 
 extern "C" unsigned MCFCRT_Main(){
-	StaticVector<foo, 100> q;
-	for(int i = 0; i < 10; ++i){
-		q.Push(i);
-	}
-	for(int i = 0; i < 10; ++i){
-		q.Pop();
-	}
-	for(int i = 0; i < 10; ++i){
-		q.Push(i);
+	RingQueue<foo> q;
+	try {
+		for(int i = 0; i < 10; ++i){
+			q.Push(i);
+		}
+
+		auto p1 = q.GetFirst();
+		for(int i = 0; i < 6; ++i){
+			p1 = q.GetNext(p1);
+		}
+		auto p2 = p1;
+		for(int i = 0; i < 2; ++i){
+			p2 = q.GetNext(p2);
+		}
+		q.Erase(p1, p2);
+	} catch(std::exception &e){
+		std::printf("exception: %s\n", e.what());
 	}
 	return 0;
 }

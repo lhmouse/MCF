@@ -57,21 +57,12 @@ template class List<foo>;
 template class RingQueue<foo>;
 
 extern "C" unsigned MCFCRT_Main(){
-	RingQueue<foo> q;
+	Vector<foo> q;
 	try {
 		for(int i = 0; i < 10; ++i){
 			q.Push(i);
 		}
-
-		auto p1 = q.GetFirst();
-		for(int i = 0; i < 6; ++i){
-			p1 = q.GetNext(p1);
-		}
-		auto p2 = p1;
-		for(int i = 0; i < 2; ++i){
-			p2 = q.GetNext(p2);
-		}
-		q.Erase(p1, p2);
+		q.Erase(q.GetBegin() + 3, q.GetBegin() + 6);
 	} catch(std::exception &e){
 		std::printf("exception: %s\n", e.what());
 	}

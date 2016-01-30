@@ -368,6 +368,9 @@ public:
 			throw;
 		}
 	}
+	void Append(std::initializer_list<Element> ilElements){
+		Append(ilElements.begin(), ilElements.end());
+	}
 
 	const Element &operator[](std::size_t uIndex) const noexcept {
 		return UncheckedGet(uIndex);

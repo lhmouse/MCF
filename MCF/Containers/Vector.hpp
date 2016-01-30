@@ -28,7 +28,7 @@ public:
 	using Enumerator      = Impl_Enumerator::Enumerator      <Vector>;
 
 private:
-	void *x_pStorage;
+	Element *x_pStorage;
 	std::size_t x_uSize;
 	std::size_t x_uCapacity;
 
@@ -52,13 +52,13 @@ public:
 		Append(itBegin, itEnd);
 	}
 	Vector(std::initializer_list<Element> rhs)
-		: Vector(rhs.begin(), rhs.end())
+		: Vector()
 	{
+		Append(rhs);
 	}
 	Vector(const Vector &rhs)
 		: Vector()
 	{
-		// Reserve(rhs.GetSize());
 		Append(rhs.GetBegin(), rhs.GetEnd());
 	}
 	Vector(Vector &&rhs) noexcept
@@ -118,7 +118,9 @@ public:
 	template<typename OutputIteratorT>
 	OutputIteratorT Extract(OutputIteratorT itOutput){
 		try {
-			for(auto p = GetBegin(); p != GetEnd(); ++p){
+			const auto pBegin = GetBegin();
+			const auto pEnd = GetEnd();
+			for(auto p = pBegin; p != pEnd; ++p){
 				*itOutput = std::move(*p);
 				++itOutput;
 			}
@@ -243,10 +245,10 @@ public:
 
 	// Vector 需求。
 	const Element *GetData() const noexcept {
-		return static_cast<const Element *>(x_pStorage);
+		return x_pStorage;
 	}
 	Element *GetData() noexcept {
-		return static_cast<Element *>(x_pStorage);
+		return x_pStorage;
 	}
 	const Element *GetConstData() const noexcept {
 		return GetData();
@@ -268,63 +270,52 @@ public:
 		return GetBegin();
 	}
 	const Element *GetEnd() const noexcept {
-		return GetData() + x_uSize;
+		return GetData() + GetSize();
 	}
 	Element *GetEnd() noexcept {
-		return GetData() + x_uSize;
+		return GetData() + GetSize();
 	}
 	const Element *GetConstEnd() const noexcept {
 		return GetEnd();
 	}
 
 	const Element &Get(std::size_t uIndex) const {
-		if(uIndex >= x_uSize){
+		if(uIndex >= GetSize()){
 			DEBUG_THROW(Exception, ERROR_ACCESS_DENIED, "Vector: Subscript out of range"_rcs);
 		}
 		return UncheckedGet(uIndex);
 	}
 	Element &Get(std::size_t uIndex){
-		if(uIndex >= x_uSize){
+		if(uIndex >= GetSize()){
 			DEBUG_THROW(Exception, ERROR_ACCESS_DENIED, "Vector: Subscript out of range"_rcs);
 		}
 		return UncheckedGet(uIndex);
 	}
 	const Element &UncheckedGet(std::size_t uIndex) const noexcept {
-		ASSERT(uIndex < x_uSize);
+		ASSERT(uIndex < GetSize());
 
 		return GetData()[uIndex];
 	}
 	Element &UncheckedGet(std::size_t uIndex) noexcept {
-		ASSERT(uIndex < x_uSize);
+		ASSERT(uIndex < GetSize());
 
 		return GetData()[uIndex];
 	}
 
 	template<typename ...ParamsT>
 	void Resize(std::size_t uSize, const ParamsT &...vParams){
-		if(uSize > x_uSize){
-			Append(uSize - x_uSize, vParams...);
+		const auto uOldSize = GetSize();
+		if(uSize > uOldSize){
+			Append(uSize - uOldSize, vParams...);
 		} else {
-			Pop(x_uSize - uSize);
+			Pop(uOldSize - uSize);
 		}
 	}
 	template<typename ...ParamsT>
 	Element *ResizeMore(std::size_t uDeltaSize, const ParamsT &...vParams){
-		const auto uOldSize = x_uSize;
-		const auto uNewSize = uOldSize + uDeltaSize;
-		if(uNewSize < uOldSize){
-			throw std::bad_array_new_length();
-		}
-		Append(uDeltaSize, vParams...);
+		const auto uOldSize = GetSize();
+		Append(uDeltaSize - uOldSize, vParams...);
 		return GetData() + uOldSize;
-	}
-	template<typename ...ParamsT>
-	std::pair<Element *, std::size_t> ResizeToCapacity(const ParamsT &...vParams){
-		const auto uOldSize = x_uSize;
-		const auto uNewSize = x_uCapacity;
-		const auto uDeltaSize = uNewSize - uOldSize;
-		Append(uDeltaSize, vParams...);
-		return std::make_pair(GetData() + uOldSize, uDeltaSize);
 	}
 
 	void Reserve(std::size_t uNewCapacity){
@@ -344,18 +335,16 @@ public:
 			throw std::bad_array_new_length();
 		}
 
-		const auto pNewStorage = ::operator new[](uBytesToAlloc);
+		const auto pNewStorage = static_cast<Element *>(::operator new[](uBytesToAlloc));
 		const auto pOldStorage = x_pStorage;
-		const auto pNewBegin = static_cast<Element *>(pNewStorage);
-		const auto pOldBegin = static_cast<Element *>(pOldStorage);
-		auto pWrite = pNewBegin;
+		auto pWrite = pNewStorage;
 		try {
 			for(std::size_t i = 0; i < x_uSize; ++i){
-				Construct(pWrite, std::move_if_noexcept(pOldBegin[i]));
+				Construct(pWrite, std::move_if_noexcept(pOldStorage[i]));
 				++pWrite;
 			}
 		} catch(...){
-			while(pWrite != pNewBegin){
+			while(pWrite != pNewStorage){
 				--pWrite;
 				Destruct(pWrite);
 			}
@@ -363,7 +352,7 @@ public:
 			throw;
 		}
 		for(std::size_t i = x_uSize; i > 0; --i){
-			Destruct(pOldBegin + i - 1);
+			Destruct(pOldStorage + i - 1);
 		}
 		::operator delete[](pOldStorage);
 
@@ -371,7 +360,7 @@ public:
 		x_uCapacity = uElementsToAlloc;
 	}
 	void ReserveMore(std::size_t uDeltaCapacity){
-		const auto uOldSize = x_uSize;
+		const auto uOldSize = GetSize();
 		const auto uNewCapacity = uOldSize + uDeltaCapacity;
 		if(uNewCapacity < uOldSize){
 			throw std::bad_array_new_length();
@@ -386,23 +375,24 @@ public:
 	}
 	template<typename ...ParamsT>
 	Element &UncheckedPush(ParamsT &&...vParams) noexcept(std::is_nothrow_constructible<Element, ParamsT &&...>::value) {
-		ASSERT(x_uCapacity - x_uSize > 0);
+		ASSERT(GetCapacity() - GetSize() > 0);
 
-		const auto pBegin = GetBegin();
-		const auto pElem = pBegin + x_uSize;
-		DefaultConstruct(pElem, std::forward<ParamsT>(vParams)...);
+		const auto pData = GetData();
+		const auto pElement = pData + x_uSize;
+		DefaultConstruct(pElement, std::forward<ParamsT>(vParams)...);
 		++x_uSize;
 
-		return *pElem;
+		return *pElement;
 	}
 	void Pop(std::size_t uCount = 1) noexcept {
-		ASSERT(uCount <= x_uSize);
+		ASSERT(uCount <= GetSize());
 
-		const auto pBegin = GetBegin();
+		const auto pData = GetData();
 		for(std::size_t i = 0; i < uCount; ++i){
-			Destruct(pBegin + x_uSize - i - 1);
+			const auto pElement = pData + x_uSize - 1;
+			Destruct(pElement);
+			--x_uSize;
 		}
-		x_uSize -= uCount;
 	}
 
 	template<typename ...ParamsT>
@@ -433,16 +423,13 @@ public:
 
 		std::size_t uElementsPushed = 0;
 		try {
-			if(kHasDeltaSizeHint){
-				for(auto it = itBegin; it != itEnd; ++it){
+			for(auto it = itBegin; it != itEnd; ++it){
+				if(kHasDeltaSizeHint){
 					UncheckedPush(*it);
-					++uElementsPushed;
-				}
-			} else {
-				for(auto it = itBegin; it != itEnd; ++it){
+				} else {
 					Push(*it);
-					++uElementsPushed;
 				}
+				++uElementsPushed;
 			}
 		} catch(...){
 			Pop(uElementsPushed);
@@ -452,7 +439,7 @@ public:
 	void Append(std::initializer_list<Element> ilElements){
 		Append(ilElements.begin(), ilElements.end());
 	}
-
+/*
 	template<typename ...ParamsT>
 	Element *Emplace(const Element *pPos, ParamsT &&...vParams){
 		if(!pPos || (pPos == GetEnd())){
@@ -676,7 +663,7 @@ public:
 
 		return Erase(pPos, pPos + 1);
 	}
-
+*/
 	const Element &operator[](std::size_t uIndex) const noexcept {
 		return UncheckedGet(uIndex);
 	}

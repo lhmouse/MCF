@@ -36,7 +36,7 @@ struct foo {
 	}
 
 	void bark() const {
-		std::printf("foo::bark(): a = %d\n", a);
+		std::printf("!! foo::bark(): a = %d\n", a);
 	}
 };
 
@@ -63,10 +63,10 @@ template class List<foo>;
 template class RingQueue<foo>;
 
 extern "C" unsigned MCFCRT_Main(){
-	FlatMap<foo, int> q;
+	RingQueue<foo> q;
 	try {
 		for(int i = 0; i < 10; ++i){
-			q.Add(i, i);
+			q.Push(i);
 		}
 
 //		q.Emplace(&*std::next(q.EnumerateFirst(), 1), 123);
@@ -74,9 +74,9 @@ extern "C" unsigned MCFCRT_Main(){
 //		q.Insert(&*std::next(q.EnumerateFirst(), 8), 20, 456);
 		q.Erase(&*std::next(q.EnumerateFirst(), 3), &*std::next(q.EnumerateFirst(), 6));
 
-//		for(auto en = q.EnumerateFirst(); en != q.EnumerateSingular(); ++en){
-//			en->bark();
-//		}
+		for(auto en = q.EnumerateFirst(); en; ++en){
+			en->bark();
+		}
 	} catch(std::exception &e){
 		std::printf("exception: %s\n", e.what());
 	}

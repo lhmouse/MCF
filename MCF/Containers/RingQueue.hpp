@@ -143,11 +143,10 @@ private:
 		ASSERT(!IsEmpty());
 		ASSERT(X_Advance(x_uBegin, uPos) <= GetSize());
 
-		const auto uCountBefore = X_Retreat(uPos, x_uBegin);
-		const auto uCountAfter = X_Retreat(x_uEnd, uPos);
+		const auto uCountBefore = X_Distance(x_uBegin, uPos);
+		const auto uCountAfter = X_Distance(uPos, x_uEnd);
 
 		ReserveMore(uDeltaSize);
-		uPos = X_Advance(x_uBegin, uCountBefore);
 
 		if(uCountBefore >= uCountAfter){
 			X_IterateBackward(uPos, x_uEnd,

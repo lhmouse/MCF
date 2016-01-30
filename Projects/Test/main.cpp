@@ -9,26 +9,37 @@
 
 using namespace MCF;
 
+int count = 0;
+
+__attribute__((__destructor__))
+void check(){
+	ASSERT(count == 0);
+}
+
 struct foo {
 	int a;
 
 	explicit foo(int r)
 		: a(r)
 	{
+		++count;
 		std::printf("foo::foo(): a = %d\n", a);
 //		if(a == 123) throw std::exception();
 	}
 	foo(const foo &r)
 		: a(r.a)
 	{
+		++count;
 		std::printf("foo::foo(const foo &): a = %d\n", a);
 	}
 	foo(foo &&r) noexcept
 		: a(std::exchange(r.a, -1))
 	{
+		++count;
 		std::printf("foo::foo(foo &&): a = %d\n", a);
 	}
 	~foo(){
+		--count;
 		if(a == -1){
 			return;
 		}
@@ -69,9 +80,9 @@ extern "C" unsigned MCFCRT_Main(){
 			q.Push(i);
 		}
 
-//		q.Emplace(&*std::next(q.EnumerateFirst(), 1), 123);
-//		q.Emplace(&*std::next(q.EnumerateFirst(), 8), 456);
-//		q.Insert(&*std::next(q.EnumerateFirst(), 8), 20, 456);
+		q.Emplace(&*std::next(q.EnumerateFirst(), 1), 123);
+		q.Emplace(&*std::next(q.EnumerateFirst(), 8), 456);
+		q.Insert(&*std::next(q.EnumerateFirst(), 8), 20, 456);
 		q.Erase(&*std::next(q.EnumerateFirst(), 3), &*std::next(q.EnumerateFirst(), 6));
 
 		for(auto en = q.EnumerateFirst(); en; ++en){

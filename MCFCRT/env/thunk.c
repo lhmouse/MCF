@@ -53,11 +53,11 @@ static int FreeSizeComparatorNodes(const MCFCRT_AvlNodeHeader *pIndex1, const MC
 	return FreeSizeComparatorNodeKey(pIndex1, (intptr_t)GetInfoFromFreeSizeIndex(pIndex2)->uFreeSize);
 }
 
-static SRWLOCK     g_srwlMutex            = SRWLOCK_INIT;
-static uintptr_t   g_uPageMask            = 0;
+static SRWLOCK         g_srwlMutex            = SRWLOCK_INIT;
+static uintptr_t       g_uPageMask            = 0;
 
-static MCFCRT_AvlRoot g_pavlThunksByThunk    = nullptr;
-static MCFCRT_AvlRoot g_pavlThunksByFreeSize = nullptr;
+static MCFCRT_AvlRoot  g_pavlThunksByThunk    = nullptr;
+static MCFCRT_AvlRoot  g_pavlThunksByFreeSize = nullptr;
 
 void *MCFCRT_AllocateThunk(const void *pInit, size_t uSize){
 	ASSERT(pInit);

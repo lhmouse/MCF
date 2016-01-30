@@ -87,9 +87,8 @@ private:
 
 		ReserveMore(uDeltaSize);
 		for(std::size_t i = x_uSize; i > uPos; --i){
-			const auto pRead = x_pStorage + i - 1;
-			Construct(pRead + uDeltaSize, std::move(pRead[0]));
-			Destruct(pRead);
+			Construct(x_pStorage + i - 1 + uDeltaSize, std::move(x_pStorage[i - 1]));
+			Destruct(x_pStorage + i - 1);
 		}
 	}
 	void X_UndoPreparation(std::size_t uPos, std::size_t uDeltaSize) noexcept {
@@ -99,9 +98,8 @@ private:
 		ASSERT(uDeltaSize <= x_uSize - uPos);
 
 		for(std::size_t i = uPos; i < x_uSize; ++i){
-			const auto pWrite = x_pStorage + i;
-			Construct(pWrite, std::move(pWrite[uDeltaSize]));
-			Destruct(pWrite + uDeltaSize);
+			Construct(x_pStorage + i, std::move(x_pStorage[i + uDeltaSize]));
+			Destruct(x_pStorage + i + uDeltaSize);
 		}
 	}
 
@@ -385,10 +383,9 @@ public:
 
 		const auto pData = GetData();
 		for(std::size_t i = 0; i < uCount; ++i){
-			const auto pElement = pData + x_uSize - 1;
-			Destruct(pElement);
-			--x_uSize;
+			Destruct(pData + x_uSize - 1 - i);
 		}
+		x_uSize -= uCount;
 	}
 
 	template<typename ...ParamsT>

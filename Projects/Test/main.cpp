@@ -63,16 +63,16 @@ template class List<foo>;
 template class RingQueue<foo>;
 
 extern "C" unsigned MCFCRT_Main(){
-	RingQueue<foo> q;
+	FlatMap<foo, int> q;
 	try {
 		for(int i = 0; i < 10; ++i){
-			q.Push(i);
+			q.Add(i, i);
 		}
 
-		q.Emplace(&*std::next(q.EnumerateFirst(), 1), 123);
-		q.Emplace(&*std::next(q.EnumerateFirst(), 8), 456);
+//		q.Emplace(&*std::next(q.EnumerateFirst(), 1), 123);
+//		q.Emplace(&*std::next(q.EnumerateFirst(), 8), 456);
 //		q.Insert(&*std::next(q.EnumerateFirst(), 8), 20, 456);
-//		q.Erase(&*std::next(q.EnumerateFirst(), 3), &*std::next(q.EnumerateFirst(), 6));
+		q.Erase(&*std::next(q.EnumerateFirst(), 3), &*std::next(q.EnumerateFirst(), 6));
 
 //		for(auto en = q.EnumerateFirst(); en != q.EnumerateSingular(); ++en){
 //			en->bark();

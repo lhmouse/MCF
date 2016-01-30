@@ -321,10 +321,9 @@ public:
 
 		const auto pData = GetData();
 		for(std::size_t i = 0; i < uCount; ++i){
-			const auto pElement = pData + x_uSize - 1;
-			Destruct(pElement);
-			--x_uSize;
+			Destruct(pData + x_uSize - 1 - i);
 		}
+		x_uSize -= uCount;
 	}
 
 	template<typename ...ParamsT>

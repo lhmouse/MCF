@@ -44,7 +44,7 @@ public:
 		Append(uSize, vParams...);
 	}
 	template<typename IteratorT, std::enable_if_t<
-		sizeof(typename std::iterator_traits<IteratorT>::value_type *),
+		std::is_base_of<std::input_iterator_tag, typename std::iterator_traits<IteratorT>::iterator_category>::value,
 		int> = 0>
 	Vector(IteratorT itBegin, std::common_type_t<IteratorT> itEnd)
 		: Vector()
@@ -404,7 +404,7 @@ public:
 		}
 	}
 	template<typename IteratorT, std::enable_if_t<
-		sizeof(typename std::iterator_traits<IteratorT>::value_type *),
+		std::is_base_of<std::input_iterator_tag, typename std::iterator_traits<IteratorT>::iterator_category>::value,
 		int> = 0>
 	void Append(IteratorT itBegin, std::common_type_t<IteratorT> itEnd){
 		constexpr bool kHasDeltaSizeHint = std::is_base_of<std::forward_iterator_tag, typename std::iterator_traits<IteratorT>::iterator_category>::value;
@@ -530,7 +530,7 @@ public:
 		return x_pStorage + uOffset;
 	}
 	template<typename IteratorT, std::enable_if_t<
-		sizeof(typename std::iterator_traits<IteratorT>::value_type *),
+		std::is_base_of<std::input_iterator_tag, typename std::iterator_traits<IteratorT>::iterator_category>::value,
 		int> = 0>
 	Element *Insert(const Element *pPos, IteratorT itBegin, std::common_type_t<IteratorT> itEnd){
 		std::size_t uOffset;

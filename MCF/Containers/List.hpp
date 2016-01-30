@@ -49,7 +49,7 @@ public:
 		Append(uSize, vParams...);
 	}
 	template<typename IteratorT, std::enable_if_t<
-		sizeof(typename std::iterator_traits<IteratorT>::value_type *),
+		std::is_base_of<std::input_iterator_tag, typename std::iterator_traits<IteratorT>::iterator_category>::value,
 		int> = 0>
 	List(IteratorT itBegin, std::common_type_t<IteratorT> itEnd)
 		: List()
@@ -328,7 +328,7 @@ public:
 		Splice(GetFirst(), lstNew);
 	}
 	template<typename IteratorT, std::enable_if_t<
-		sizeof(typename std::iterator_traits<IteratorT>::value_type *),
+		std::is_base_of<std::bidirectional_iterator_tag, typename std::iterator_traits<IteratorT>::iterator_category>::value,
 		int> = 0>
 	void Prepend(IteratorT itBegin, std::common_type_t<IteratorT> itEnd){
 		List lstNew;
@@ -346,7 +346,7 @@ public:
 		Splice(nullptr, lstNew);
 	}
 	template<typename IteratorT, std::enable_if_t<
-		sizeof(typename std::iterator_traits<IteratorT>::value_type *),
+		std::is_base_of<std::input_iterator_tag, typename std::iterator_traits<IteratorT>::iterator_category>::value,
 		int> = 0>
 	void Append(IteratorT itBegin, std::common_type_t<IteratorT> itEnd){
 		List lstNew;
@@ -370,7 +370,7 @@ public:
 		return Splice(pPos, lstNew);
 	}
 	template<typename IteratorT, std::enable_if_t<
-		sizeof(typename std::iterator_traits<IteratorT>::value_type *),
+		std::is_base_of<std::input_iterator_tag, typename std::iterator_traits<IteratorT>::iterator_category>::value,
 		int> = 0>
 	Element *Insert(const Element *pPos, IteratorT itBegin, std::common_type_t<IteratorT> itEnd){
 		List lstNew;

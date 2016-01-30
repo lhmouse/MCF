@@ -85,7 +85,7 @@ public:
 	}
 	// 如果键有序，则效率最大化；并且是稳定的。
 	template<typename IteratorT, std::enable_if_t<
-		sizeof(typename std::iterator_traits<IteratorT>::value_type *),
+		std::is_base_of<std::input_iterator_tag, typename std::iterator_traits<IteratorT>::iterator_category>::value,
 		int> = 0>
 	FlatSet(IteratorT itBegin, std::common_type_t<IteratorT> itEnd)
 		: FlatSet()

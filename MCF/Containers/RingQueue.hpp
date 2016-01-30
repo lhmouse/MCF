@@ -150,25 +150,19 @@ private:
 		uPos = X_Advance(x_uBegin, uCountBefore);
 
 		if(uCountBefore >= uCountAfter){
-			const auto uReadBegin = uPos;
-			const auto uReadEnd = x_uEnd;
-			auto uWriteEnd = X_Advance(uReadEnd, uDeltaSize);
-			X_IterateBackward(uReadBegin, uReadEnd,
+			X_IterateBackward(uPos, x_uEnd,
 				[&, this](auto i){
-					uWriteEnd = X_Retreat(uWriteEnd, 1);
-					Construct(x_pStorage + uWriteEnd, std::move(x_pStorage[i]));
+					const auto k = X_Advance(i, uDeltaSize);
+					Construct(x_pStorage + k, std::move(x_pStorage[i]));
 					Destruct(x_pStorage + i);
 				});
 			return std::make_pair(uPos, true);
 		} else {
-			const auto uReadBegin = x_uBegin;
-			const auto uReadEnd = uPos;
-			auto uWrite = X_Retreat(uReadBegin, uDeltaSize);
-			X_IterateForward(uReadBegin, uReadEnd,
+			X_IterateForward(x_uBegin, uPos,
 				[&, this](auto i){
-					Construct(x_pStorage + uWrite, std::move(x_pStorage[i]));
+					const auto k = X_Retreat(i, uDeltaSize);
+					Construct(x_pStorage + k, std::move(x_pStorage[i]));
 					Destruct(x_pStorage + i);
-					uWrite = X_Advance(uWrite, 1);
 				});
 			return std::make_pair(X_Retreat(uPos, uDeltaSize), false);
 		}
@@ -180,24 +174,18 @@ private:
 		ASSERT(X_Advance(x_uBegin, vPrepared.second ? vPrepared.first : X_Advance(vPrepared.first, uDeltaSize)) <= GetSize());
 
 		if(vPrepared.second){
-			const auto uWriteBegin = vPrepared.first;
-			const auto uWriteEnd = x_uEnd;
-			auto uRead = X_Advance(uWriteBegin, uDeltaSize);
-			X_IterateForward(uWriteBegin, uWriteEnd,
+			X_IterateForward(vPrepared.first, x_uEnd,
 				[&, this](auto i){
-					Construct(x_pStorage + i, std::move(x_pStorage[uRead]));
-					Destruct(x_pStorage + uRead);
-					uRead = X_Advance(uRead, 1);
+					const auto k = X_Advance(i, uDeltaSize);
+					Construct(x_pStorage + i, std::move(x_pStorage[k]));
+					Destruct(x_pStorage + k);
 				});
 		} else {
-			const auto uWriteBegin = x_uBegin;
-			const auto uWriteEnd = X_Advance(vPrepared.first, uDeltaSize);
-			auto uReadEnd = vPrepared.first;
-			X_IterateBackward(uWriteBegin, uWriteEnd,
+			X_IterateBackward(x_uBegin, X_Advance(vPrepared.first, uDeltaSize),
 				[&, this](auto i){
-					uReadEnd = X_Retreat(uReadEnd, 1);
-					Construct(x_pStorage + i, std::move(x_pStorage[uReadEnd]));
-					Destruct(x_pStorage + uReadEnd);
+					const auto k = X_Retreat(i, uDeltaSize);
+					Construct(x_pStorage + i, std::move(x_pStorage[k]));
+					Destruct(x_pStorage + k);
 				});
 		}
 	}

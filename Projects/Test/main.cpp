@@ -22,7 +22,6 @@ struct foo {
 		: a(r.a)
 	{
 		std::printf("foo::foo(const foo &): a = %d\n", a);
-//		if(a == 123) throw std::exception();
 	}
 	foo(foo &&r) noexcept
 		: a(std::exchange(r.a, -1))
@@ -71,8 +70,9 @@ extern "C" unsigned MCFCRT_Main(){
 		}
 
 		q.Emplace(&*std::next(q.EnumerateFirst(), 1), 123);
+		q.Emplace(&*std::next(q.EnumerateFirst(), 8), 456);
 //		q.Insert(&*std::next(q.EnumerateFirst(), 8), 20, 456);
-		q.Erase(&*std::next(q.EnumerateFirst(), 3), &*std::next(q.EnumerateFirst(), 6));
+//		q.Erase(&*std::next(q.EnumerateFirst(), 3), &*std::next(q.EnumerateFirst(), 6));
 
 //		for(auto en = q.EnumerateFirst(); en != q.EnumerateSingular(); ++en){
 //			en->bark();

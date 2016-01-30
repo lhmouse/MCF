@@ -450,15 +450,16 @@ public:
 	}
 
 	void Reverse() noexcept {
-		auto pNode = x_pFirst;
-		x_pFirst = x_pLast;
-		x_pLast = pNode;
-
-		while(pNode){
-			const auto pNext = pNode->pNext;
-			pNode->pNext = pNode->pPrev;
-			pNode->pPrev = pNext;
-			pNode = pNext;
+		auto ppNext = &x_pFirst, ppPrev = &x_pLast;
+		for(;;){
+			const auto pNext = *ppNext;
+			*ppNext = *ppPrev;
+			*ppPrev = pNext;
+			if(!pNext){
+				break;
+			}
+			ppNext = &(pNext->pNext);
+			ppPrev = &(pNext->pPrev);
 		}
 	}
 

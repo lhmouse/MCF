@@ -111,82 +111,6 @@ namespace Impl_FlatContainer {
 			return itOutput;
 		}
 
-		const Element *GetFirst() const noexcept {
-			if(IsEmpty()){
-				return nullptr;
-			}
-			return GetBegin();
-		}
-		Element *GetFirst() noexcept {
-			if(IsEmpty()){
-				return nullptr;
-			}
-			return GetBegin();
-		}
-		const Element *GetConstFirst() const noexcept {
-			return GetFirst();
-		}
-		const Element *GetLast() const noexcept {
-			if(IsEmpty()){
-				return nullptr;
-			}
-			return GetEnd() - 1;
-		}
-		Element *GetLast() noexcept {
-			if(IsEmpty()){
-				return nullptr;
-			}
-			return GetEnd() - 1;
-		}
-		const Element *GetConstLast() const noexcept {
-			return GetLast();
-		}
-
-		const Element *GetPrev(const Element *pPos) const noexcept {
-			ASSERT(pPos);
-
-			const auto pBegin = GetBegin();
-			auto uOffset = static_cast<std::size_t>(pPos - pBegin);
-			if(uOffset == 0){
-				return nullptr;
-			}
-			--uOffset;
-			return pBegin + uOffset;
-		}
-		Element *GetPrev(Element *pPos) noexcept {
-			ASSERT(pPos);
-
-			const auto pBegin = GetBegin();
-			auto uOffset = static_cast<std::size_t>(pPos - pBegin);
-			if(uOffset == 0){
-				return nullptr;
-			}
-			--uOffset;
-			return pBegin + uOffset;
-		}
-		const Element *GetNext(const Element *pPos) const noexcept {
-			ASSERT(pPos);
-
-			const auto pBegin = GetBegin();
-			auto uOffset = static_cast<std::size_t>(pPos - pBegin);
-			++uOffset;
-			if(uOffset == x_uSize){
-				return nullptr;
-			}
-			return pBegin + uOffset;
-		}
-		Element *GetNext(Element *pPos) noexcept {
-			ASSERT(pPos);
-
-			const auto pBegin = GetBegin();
-			auto uOffset = static_cast<std::size_t>(pPos - pBegin);
-			++uOffset;
-			if(uOffset == x_uSize){
-				return nullptr;
-			}
-			return pBegin + uOffset;
-		}
-
 		void Swap(FlatContainer &rhs) noexcept {
 			using std::swap;
 			swap(x_pStorage,  rhs.x_pStorage);
@@ -199,9 +123,6 @@ namespace Impl_FlatContainer {
 		}
 		Element *GetData() noexcept {
 			return static_cast<Element *>(x_pStorage);
-		}
-		const Element *GetConstData() const noexcept {
-			return GetData();
 		}
 		std::size_t GetSize() const noexcept {
 			return x_uSize;
@@ -216,40 +137,11 @@ namespace Impl_FlatContainer {
 		Element *GetBegin() noexcept {
 			return GetData();
 		}
-		const Element *GetConstBegin() const noexcept {
-			return GetBegin();
-		}
 		const Element *GetEnd() const noexcept {
 			return GetData() + x_uSize;
 		}
 		Element *GetEnd() noexcept {
 			return GetData() + x_uSize;
-		}
-		const Element *GetConstEnd() const noexcept {
-			return GetEnd();
-		}
-
-		const Element &Get(std::size_t uIndex) const {
-			if(uIndex >= x_uSize){
-				DEBUG_THROW(Exception, ERROR_ACCESS_DENIED, "FlatContainer: Subscript out of range"_rcs);
-			}
-			return UncheckedGet(uIndex);
-		}
-		Element &Get(std::size_t uIndex){
-			if(uIndex >= x_uSize){
-				DEBUG_THROW(Exception, ERROR_ACCESS_DENIED, "FlatContainer: Subscript out of range"_rcs);
-			}
-			return UncheckedGet(uIndex);
-		}
-		const Element &UncheckedGet(std::size_t uIndex) const noexcept {
-			ASSERT(uIndex < x_uSize);
-
-			return GetData()[uIndex];
-		}
-		Element &UncheckedGet(std::size_t uIndex) noexcept {
-			ASSERT(uIndex < x_uSize);
-
-			return GetData()[uIndex];
 		}
 
 		void Reserve(std::size_t uNewCapacity){

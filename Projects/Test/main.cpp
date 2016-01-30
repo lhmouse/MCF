@@ -1,5 +1,6 @@
 #include <MCF/StdMCF.hpp>
 #include <MCF/Containers/FlatMap.hpp>
+#include <MCF/Containers/FlatMultiMap.hpp>
 #include <MCF/Containers/Vector.hpp>
 #include <MCF/Containers/StaticVector.hpp>
 #include <MCF/Containers/List.hpp>
@@ -14,25 +15,29 @@ struct foo {
 	explicit foo(int r)
 		: a(r)
 	{
-		std::printf("foo(): a = %d\n", a);
+		std::printf("foo::foo(): a = %d\n", a);
 //		if(a == 123) throw std::exception();
 	}
 	foo(const foo &r)
 		: a(r.a)
 	{
-		std::printf("foo(const foo &): a = %d\n", a);
+		std::printf("foo::foo(const foo &): a = %d\n", a);
 //		if(a == 123) throw std::exception();
 	}
 	foo(foo &&r) noexcept
 		: a(std::exchange(r.a, -1))
 	{
-		std::printf("foo(foo &&): a = %d\n", a);
+		std::printf("foo::foo(foo &&): a = %d\n", a);
 	}
 	~foo(){
 		if(a == -1){
 			return;
 		}
-		std::printf("~foo(): a = %d\n", a);
+		std::printf("foo::~foo(): a = %d\n", a);
+	}
+
+	void bark() const {
+		std::printf("foo::bark(): a = %d\n", a);
 	}
 };
 
@@ -49,20 +54,29 @@ bool operator<(const foo &l, int r) noexcept {
 	return l.a < r;
 }
 
-// template class FlatMap<foo, int>;
-
+template class FlatMap<foo, int>;
+template class FlatMap<int, foo>;
+template class FlatMultiMap<foo, int>;
+template class FlatMultiMap<int, foo>;
 template class Vector<foo>;
 template class StaticVector<foo, 100>;
 template class List<foo>;
 template class RingQueue<foo>;
 
 extern "C" unsigned MCFCRT_Main(){
-	Vector<foo> q;
+	RingQueue<foo> q;
 	try {
 		for(int i = 0; i < 10; ++i){
 			q.Push(i);
 		}
-		q.Erase(q.GetBegin() + 3, q.GetBegin() + 6);
+
+		q.Emplace(&*std::next(q.EnumerateFirst(), 1), 123);
+//		q.Insert(&*std::next(q.EnumerateFirst(), 8), 20, 456);
+		q.Erase(&*std::next(q.EnumerateFirst(), 3), &*std::next(q.EnumerateFirst(), 6));
+
+//		for(auto en = q.EnumerateFirst(); en != q.EnumerateSingular(); ++en){
+//			en->bark();
+//		}
 	} catch(std::exception &e){
 		std::printf("exception: %s\n", e.what());
 	}

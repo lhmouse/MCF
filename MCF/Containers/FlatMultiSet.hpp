@@ -134,35 +134,79 @@ public:
 	}
 
 	const Element *GetFirst() const noexcept {
-		return x_vStorage.GetFirst();
+		if(IsEmpty()){
+			return nullptr;
+		}
+		return GetBegin();
 	}
 	Element *GetFirst() noexcept {
-		return x_vStorage.GetFirst();
+		if(IsEmpty()){
+			return nullptr;
+		}
+		return GetBegin();
 	}
 	const Element *GetConstFirst() const noexcept {
-		return x_vStorage.GetConstFirst();
+		return GetFirst();
 	}
 	const Element *GetLast() const noexcept {
-		return x_vStorage.GetLast();
+		if(IsEmpty()){
+			return nullptr;
+		}
+		return GetEnd() - 1;
 	}
 	Element *GetLast() noexcept {
-		return x_vStorage.GetLast();
+		if(IsEmpty()){
+			return nullptr;
+		}
+		return GetEnd() - 1;
 	}
 	const Element *GetConstLast() const noexcept {
-		return x_vStorage.GetConstLast();
+		return GetLast();
 	}
 
 	const Element *GetPrev(const Element *pPos) const noexcept {
-		return x_vStorage.GetPrev(pPos);
+		ASSERT(pPos);
+
+		const auto pBegin = GetBegin();
+		auto uOffset = static_cast<std::size_t>(pPos - pBegin);
+		if(uOffset == 0){
+			return nullptr;
+		}
+		--uOffset;
+		return pBegin + uOffset;
 	}
 	Element *GetPrev(Element *pPos) noexcept {
-		return x_vStorage.GetPrev(pPos);
+		ASSERT(pPos);
+
+		const auto pBegin = GetBegin();
+		auto uOffset = static_cast<std::size_t>(pPos - pBegin);
+		if(uOffset == 0){
+			return nullptr;
+		}
+		--uOffset;
+		return pBegin + uOffset;
 	}
 	const Element *GetNext(const Element *pPos) const noexcept {
-		return x_vStorage.GetNext(pPos);
+		ASSERT(pPos);
+
+		const auto pBegin = GetBegin();
+		auto uOffset = static_cast<std::size_t>(pPos - pBegin);
+		++uOffset;
+		if(uOffset == GetSize()){
+			return nullptr;
+		}
+		return pBegin + uOffset;
 	}
 	Element *GetNext(Element *pPos) noexcept {
-		return x_vStorage.GetNext(pPos);
+		ASSERT(pPos);
+
+		const auto pBegin = GetBegin();
+		auto uOffset = static_cast<std::size_t>(pPos - pBegin);
+		++uOffset;
+		if(uOffset == GetSize()){
+			return nullptr;
+		}
+		return pBegin + uOffset;
 	}
 
 	ConstEnumerator EnumerateFirst() const noexcept {
@@ -206,7 +250,7 @@ public:
 		return x_vStorage.GetData();
 	}
 	const Element *GetConstData() const noexcept {
-		return x_vStorage.GetConstData();
+		return GetData();
 	}
 	std::size_t GetSize() const noexcept {
 		return x_vStorage.GetSize();
@@ -222,7 +266,7 @@ public:
 		return x_vStorage.GetBegin();
 	}
 	const Element *GetConstBegin() const noexcept {
-		return x_vStorage.GetConstBegin();
+		return GetBegin();
 	}
 	const Element *GetEnd() const noexcept {
 		return x_vStorage.GetEnd();
@@ -231,20 +275,30 @@ public:
 		return x_vStorage.GetEnd();
 	}
 	const Element *GetConstEnd() const noexcept {
-		return x_vStorage.GetConstEnd();
+		return GetEnd();
 	}
 
 	const Element &Get(std::size_t uIndex) const {
-		return x_vStorage.Get(uIndex);
+		if(uIndex >= GetSize()){
+			DEBUG_THROW(Exception, ERROR_ACCESS_DENIED, "FlatContainer: Subscript out of range"_rcs);
+		}
+		return UncheckedGet(uIndex);
 	}
 	Element &Get(std::size_t uIndex){
-		return x_vStorage.Get(uIndex);
+		if(uIndex >= GetSize()){
+			DEBUG_THROW(Exception, ERROR_ACCESS_DENIED, "FlatMap: Subscript out of range"_rcs);
+		}
+		return UncheckedGet(uIndex);
 	}
 	const Element &UncheckedGet(std::size_t uIndex) const noexcept {
-		return x_vStorage.UncheckedGet(uIndex);
+		ASSERT(uIndex < GetSize());
+
+		return GetData()[uIndex];
 	}
 	Element &UncheckedGet(std::size_t uIndex) noexcept {
-		return x_vStorage.UncheckedGet(uIndex);
+		ASSERT(uIndex < GetSize());
+
+		return GetData()[uIndex];
 	}
 
 	void Reserve(std::size_t uNewCapacity){

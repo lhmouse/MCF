@@ -86,9 +86,8 @@ private:
 		ASSERT(uPos <= x_uSize);
 
 		ReserveMore(uDeltaSize);
-		const auto pBegin = GetBegin();
 		for(std::size_t i = x_uSize; i > uPos; --i){
-			const auto pRead = pBegin + i - 1;
+			const auto pRead = x_pStorage + i - 1;
 			Construct(pRead + uDeltaSize, std::move(pRead[0]));
 			Destruct(pRead);
 		}
@@ -99,9 +98,8 @@ private:
 		ASSERT(uPos <= x_uSize);
 		ASSERT(uDeltaSize <= x_uSize - uPos);
 
-		const auto pBegin = GetBegin();
 		for(std::size_t i = uPos; i < x_uSize; ++i){
-			const auto pWrite = pBegin + i;
+			const auto pWrite = x_pStorage + i;
 			Construct(pWrite, std::move(pWrite[uDeltaSize]));
 			Destruct(pWrite + uDeltaSize);
 		}
@@ -118,10 +116,8 @@ public:
 	template<typename OutputIteratorT>
 	OutputIteratorT Extract(OutputIteratorT itOutput){
 		try {
-			const auto pBegin = GetBegin();
-			const auto pEnd = GetEnd();
-			for(auto p = pBegin; p != pEnd; ++p){
-				*itOutput = std::move(*p);
+			for(std::size_t i = 0; i < x_uSize; ++i){
+				*itOutput = std::move(x_pStorage[i]);
 				++itOutput;
 			}
 		} catch(...){
@@ -439,231 +435,222 @@ public:
 	void Append(std::initializer_list<Element> ilElements){
 		Append(ilElements.begin(), ilElements.end());
 	}
-/*
+
 	template<typename ...ParamsT>
 	Element *Emplace(const Element *pPos, ParamsT &&...vParams){
-		if(!pPos || (pPos == GetEnd())){
-			Push(std::forward<ParamsT>(vParams)...);
-			return nullptr;
+		std::size_t uOffset;
+		if(pPos){
+			uOffset = static_cast<std::size_t>(pPos - x_pStorage);
+		} else {
+			uOffset = x_uSize;
 		}
-		ASSERT((GetBegin() <= pPos) && (pPos <= GetEnd()));
-
-		const auto uOffset = static_cast<std::size_t>(pPos - GetBegin());
 
 		if(std::is_nothrow_move_constructible<Element>::value){
 			X_PrepareForInsertion(uOffset, 1);
-			const auto pBegin = GetBegin();
+			auto uWrite = uOffset;
 			try {
-				DefaultConstruct(pBegin + uOffset, std::forward<ParamsT>(vParams)...);
+				DefaultConstruct(x_pStorage + uWrite, std::forward<ParamsT>(vParams)...);
 			} catch(...){
 				X_UndoPreparation(uOffset, 1);
 				throw;
 			}
-			++x_uSize;
+			x_uSize += 1;
 		} else {
-			auto uNewCapacity = x_uSize + 1;
-			if(uNewCapacity < x_uSize){
+			const auto uSize = GetSize();
+			auto uNewCapacity = uSize + 1;
+			if(uNewCapacity < uSize){
 				throw std::bad_array_new_length();
 			}
-			if(uNewCapacity < x_uCapacity){
-				uNewCapacity = x_uCapacity;
+			const auto uCapacity = GetCapacity();
+			if(uNewCapacity < uCapacity){
+				uNewCapacity = uCapacity;
 			}
 			Vector vecTemp;
 			vecTemp.Reserve(uNewCapacity);
-			for(auto pCur = GetBegin(); pCur != pPos; ++pCur){
-				vecTemp.UncheckedPush(*pCur);
+			for(std::size_t i = 0; i < uOffset; ++i){
+				vecTemp.UncheckedPush(x_pStorage[i]);
 			}
 			vecTemp.UncheckedPush(std::forward<ParamsT>(vParams)...);
-			for(auto pCur = pPos; pCur != GetEnd(); ++pCur){
-				vecTemp.UncheckedPush(*pCur);
+			for(std::size_t i = uOffset; i < x_uSize; ++i){
+				vecTemp.UncheckedPush(x_pStorage[i]);
 			}
 			*this = std::move(vecTemp);
 		}
 
-		return GetBegin() + uOffset;
+		return x_pStorage + uOffset;
 	}
 
 	template<typename ...ParamsT>
 	Element *Insert(const Element *pPos, std::size_t uDeltaSize, const ParamsT &...vParams){
-		if(!pPos || (pPos == GetEnd())){
-			Append(uDeltaSize, vParams...);
-			return nullptr;
+		std::size_t uOffset;
+		if(pPos){
+			uOffset = static_cast<std::size_t>(pPos - x_pStorage);
+		} else {
+			uOffset = x_uSize;
 		}
-		ASSERT((GetBegin() <= pPos) && (pPos <= GetEnd()));
-
-		const auto uOffset = static_cast<std::size_t>(pPos - GetBegin());
 
 		if(std::is_nothrow_move_constructible<Element>::value){
 			X_PrepareForInsertion(uOffset, uDeltaSize);
-			const auto pWriteBegin = GetBegin() + uOffset;
-			std::size_t uWrite = 0;
+			auto uWrite = uOffset;
 			try {
 				for(std::size_t i = 0; i < uDeltaSize; ++i){
-					DefaultConstruct(pWriteBegin + uWrite, vParams...);
+					DefaultConstruct(x_pStorage + uWrite, vParams...);
 					++uWrite;
 				}
 			} catch(...){
-				while(uWrite != 0){
+				while(uWrite != uOffset){
 					--uWrite;
-					Destruct(pWriteBegin + uWrite);
+					Destruct(x_pStorage + uWrite);
 				}
-				X_UndoPreparation(uWrite, uDeltaSize);
+				X_UndoPreparation(uOffset, uDeltaSize);
 				throw;
 			}
 			x_uSize += uDeltaSize;
 		} else {
-			auto uNewCapacity = x_uSize + uDeltaSize;
-			if(uNewCapacity < x_uSize){
+			const auto uSize = GetSize();
+			auto uNewCapacity = uSize + uDeltaSize;
+			if(uNewCapacity < uSize){
 				throw std::bad_array_new_length();
 			}
-			if(uNewCapacity < x_uCapacity){
-				uNewCapacity = x_uCapacity;
+			const auto uCapacity = GetCapacity();
+			if(uNewCapacity < uCapacity){
+				uNewCapacity = uCapacity;
 			}
 			Vector vecTemp;
 			vecTemp.Reserve(uNewCapacity);
-			for(auto pCur = GetBegin(); pCur != pPos; ++pCur){
-				vecTemp.UncheckedPush(*pCur);
+			for(std::size_t i = 0; i < uOffset; ++i){
+				vecTemp.UncheckedPush(x_pStorage[i]);
 			}
 			for(std::size_t i = 0; i < uDeltaSize; ++i){
 				vecTemp.UncheckedPush(vParams...);
 			}
-			for(auto pCur = pPos; pCur != GetEnd(); ++pCur){
-				vecTemp.UncheckedPush(*pCur);
+			for(std::size_t i = uOffset; i < x_uSize; ++i){
+				vecTemp.UncheckedPush(x_pStorage[i]);
 			}
 			*this = std::move(vecTemp);
 		}
 
-		return GetBegin() + uOffset;
+		return x_pStorage + uOffset;
 	}
 	template<typename IteratorT, std::enable_if_t<
 		sizeof(typename std::iterator_traits<IteratorT>::value_type *),
 		int> = 0>
 	Element *Insert(const Element *pPos, IteratorT itBegin, std::common_type_t<IteratorT> itEnd){
-		if(!pPos || (pPos == GetEnd())){
-			Append(itBegin, itEnd);
-			return nullptr;
-		}
-		ASSERT((GetBegin() <= pPos) && (pPos <= GetEnd()));
-
-		constexpr bool kHasDeltaSizeHint = std::is_base_of<std::forward_iterator_tag, typename std::iterator_traits<IteratorT>::iterator_category>::value;
-
-		const auto uOffset = static_cast<std::size_t>(pPos - GetBegin());
-
-		if(kHasDeltaSizeHint && std::is_nothrow_move_constructible<Element>::value){
-			const auto uDeltaSize = static_cast<std::size_t>(std::distance(itBegin, itEnd));
-			X_PrepareForInsertion(uOffset, uDeltaSize);
-			const auto pWriteBegin = GetBegin() + uOffset;
-			std::size_t uWrite = 0;
-			try {
-				for(auto it = itBegin; it != itEnd; ++it){
-					Construct(pWriteBegin + uWrite, *it);
-					++uWrite;
-				}
-			} catch(...){
-				while(uWrite != 0){
-					--uWrite;
-					Destruct(pWriteBegin + uWrite);
-				}
-				X_UndoPreparation(uWrite, uDeltaSize);
-				throw;
-			}
-			x_uSize += uDeltaSize;
+		std::size_t uOffset;
+		if(pPos){
+			uOffset = static_cast<std::size_t>(pPos - x_pStorage);
 		} else {
-			if(kHasDeltaSizeHint){
-				const auto uDeltaSize = static_cast<std::size_t>(std::distance(itBegin, itEnd));
-				auto uNewCapacity = x_uSize + uDeltaSize;
-				if(uNewCapacity < x_uSize){
+			uOffset = x_uSize;
+		}
+
+		if(std::is_base_of<std::forward_iterator_tag, typename std::iterator_traits<IteratorT>::iterator_category>::value){
+			const auto uDeltaSize = static_cast<std::size_t>(std::distance(itBegin, itEnd));
+			if(std::is_nothrow_move_constructible<Element>::value){
+				X_PrepareForInsertion(uOffset, uDeltaSize);
+				auto uWrite = uOffset;
+				try {
+					for(auto it = itBegin; it != itEnd; ++it){
+						DefaultConstruct(x_pStorage + uWrite, *it);
+						++uWrite;
+					}
+				} catch(...){
+					while(uWrite != uOffset){
+						--uWrite;
+						Destruct(x_pStorage + uWrite);
+					}
+					X_UndoPreparation(uOffset, uDeltaSize);
+					throw;
+				}
+				x_uSize += uDeltaSize;
+			} else {
+				const auto uSize = GetSize();
+				auto uNewCapacity = uSize + uDeltaSize;
+				if(uNewCapacity < uSize){
 					throw std::bad_array_new_length();
 				}
-				if(uNewCapacity < x_uCapacity){
-					uNewCapacity = x_uCapacity;
+				const auto uCapacity = GetCapacity();
+				if(uNewCapacity < uCapacity){
+					uNewCapacity = uCapacity;
 				}
 				Vector vecTemp;
 				vecTemp.Reserve(uNewCapacity);
-				for(auto pCur = GetBegin(); pCur != pPos; ++pCur){
-					vecTemp.UncheckedPush(*pCur);
+				for(std::size_t i = 0; i < uOffset; ++i){
+					vecTemp.UncheckedPush(x_pStorage[i]);
 				}
 				for(auto it = itBegin; it != itEnd; ++it){
 					vecTemp.UncheckedPush(*it);
 				}
-				for(auto pCur = pPos; pCur != GetEnd(); ++pCur){
-					vecTemp.UncheckedPush(*pCur);
-				}
-				*this = std::move(vecTemp);
-			} else {
-				Vector vecTemp;
-				vecTemp.Reserve(x_uCapacity);
-				for(auto pCur = GetBegin(); pCur != pPos; ++pCur){
-					vecTemp.UncheckedPush(*pCur);
-				}
-				for(auto it = itBegin; it != itEnd; ++it){
-					vecTemp.Push(*it);
-				}
-				for(auto pCur = pPos; pCur != GetEnd(); ++pCur){
-					vecTemp.Push(*pCur);
+				for(std::size_t i = uOffset; i < x_uSize; ++i){
+					vecTemp.UncheckedPush(x_pStorage[i]);
 				}
 				*this = std::move(vecTemp);
 			}
+		} else {
+			Vector vecTemp;
+			const auto uCapacity = GetCapacity();
+			vecTemp.Reserve(uCapacity);
+			for(std::size_t i = 0; i < uOffset; ++i){
+				vecTemp.UncheckedPush(x_pStorage[i]);
+			}
+			for(auto it = itBegin; it != itEnd; ++it){
+				vecTemp.Push(*it);
+			}
+			for(std::size_t i = uOffset; i < x_uSize; ++i){
+				vecTemp.Push(x_pStorage[i]);
+			}
+			*this = std::move(vecTemp);
 		}
 
-		return GetBegin() + uOffset;
+		return x_pStorage + uOffset;
 	}
 	Element *Insert(const Element *pPos, std::initializer_list<Element> ilElements){
 		return Insert(pPos, ilElements.begin(), ilElements.end());
 	}
 
 	Element *Erase(const Element *pBegin, const Element *pEnd) noexcept(std::is_nothrow_move_constructible<Element>::value) {
-		if(pBegin == pEnd){
-			if(pEnd == GetEnd()){
-				return nullptr;
-			}
-			return const_cast<Element *>(pEnd);
+		std::size_t uOffsetBegin, uOffsetEnd;
+		if(pBegin){
+			uOffsetBegin = static_cast<std::size_t>(pBegin - x_pStorage);
+		} else {
+			uOffsetBegin = x_uSize;
 		}
-		ASSERT(pBegin);
-
-		if(!pEnd || (pEnd == GetEnd())){
-			const auto uDeltaSize = static_cast<std::size_t>(GetEnd() - pBegin);
-
-			Pop(uDeltaSize);
-			return nullptr;
+		if(pEnd){
+			uOffsetEnd = static_cast<std::size_t>(pEnd - x_pStorage);
+		} else {
+			uOffsetEnd = x_uSize;
 		}
-		ASSERT((GetBegin() <= pBegin) && (pBegin <= pEnd) && (pEnd <= GetEnd()));
-
-		const auto uOffset = static_cast<std::size_t>(pBegin - GetBegin());
 
 		if(std::is_nothrow_move_constructible<Element>::value){
-			const auto uDeltaSize = static_cast<std::size_t>(pEnd - pBegin);
-
-			auto pWrite = const_cast<Element *>(pBegin);
-			for(auto pCur = pWrite; pCur != pEnd; ++pCur){
-				Destruct(pCur);
+			const auto uDeltaSize = uOffsetEnd - uOffsetBegin;
+			for(std::size_t i = uOffsetBegin; i < uOffsetEnd; ++i){
+				Destruct(x_pStorage + i);
 			}
-			for(auto pCur = const_cast<Element *>(pEnd); pCur != GetEnd(); ++pCur){
-				Construct(pWrite, std::move(*pCur));
-				Destruct(pCur);
-				++pWrite;
+			for(std::size_t i = uOffsetEnd; i < x_uSize; ++i){
+				Construct(x_pStorage + i - uDeltaSize, std::move(x_pStorage[i]));
+				Destruct(x_pStorage + i);
 			}
 			x_uSize -= uDeltaSize;
 		} else {
 			Vector vecTemp;
-			vecTemp.Reserve(x_uCapacity);
-			for(auto pCur = GetBegin(); pCur != pBegin; ++pCur){
-				vecTemp.UncheckedPush(*pCur);
+			const auto uCapacity = GetCapacity();
+			vecTemp.Reserve(uCapacity);
+			for(std::size_t i = 0; i < uOffsetBegin; ++i){
+				vecTemp.UncheckedPush(x_pStorage[i]);
 			}
-			for(auto pCur = pEnd; pCur != GetEnd(); ++pCur){
-				vecTemp.UncheckedPush(*pCur);
+			for(std::size_t i = uOffsetEnd; i < x_uSize; ++i){
+				vecTemp.UncheckedPush(x_pStorage[i]);
 			}
 			*this = std::move(vecTemp);
 		}
 
-		return GetBegin() + uOffset;
+		return x_pStorage + uOffsetBegin;
 	}
 	Element *Erase(const Element *pPos) noexcept(noexcept(DeclVal<Vector &>().Erase(pPos, pPos))) {
 		ASSERT(pPos);
 
 		return Erase(pPos, pPos + 1);
 	}
-*/
+
 	const Element &operator[](std::size_t uIndex) const noexcept {
 		return UncheckedGet(uIndex);
 	}

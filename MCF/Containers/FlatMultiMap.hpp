@@ -352,10 +352,10 @@ public:
 	Element *Emplace(const Element *pPos, ComparandT &&vComparand, ValueParamsT &&...vValueParams){
 		return AddWithHint(pPos, std::forward<ComparandT>(vComparand), std::forward<ValueParamsT>(vValueParams)...).first;
 	}
-	Element *Erase(const Element *pBegin, const Element *pEnd) noexcept(noexcept(DeclVal<FlatMultiMap &>().x_vStorage.Erase(pBegin, pEnd))) {
+	Element *Erase(const Element *pBegin, const Element *pEnd) noexcept(noexcept(DeclVal<decltype((x_vStorage))>().Erase(pBegin, pEnd))) {
 		return x_vStorage.Erase(pBegin, pEnd);
 	}
-	Element *Erase(const Element *pPos) noexcept(noexcept(DeclVal<FlatMultiMap &>().x_vStorage.Erase(pPos))) {
+	Element *Erase(const Element *pPos) noexcept(noexcept(DeclVal<decltype((x_vStorage))>().Erase(pPos))) {
 		return x_vStorage.Erase(pPos);
 	}
 

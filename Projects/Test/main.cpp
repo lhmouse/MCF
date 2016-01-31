@@ -1,4 +1,5 @@
 #include <MCF/StdMCF.hpp>
+#include <MCF/SmartPointers/UniquePtr.hpp>
 #include <MCF/Containers/FlatMap.hpp>
 #include <MCF/Containers/FlatMultiMap.hpp>
 #include <MCF/Containers/Vector.hpp>
@@ -9,59 +10,57 @@
 
 using namespace MCF;
 
-int count = 0;
-
-__attribute__((__destructor__))
-void check(){
-	ASSERT(count == 0);
-}
-
 struct foo {
-	int a;
+	UniquePtr<int> a;
 
-	explicit foo(int r)
-		: a(r)
-	{
-		++count;
-		std::printf("foo::foo(): a = %d\n", a);
-//		if(a == 123) throw std::exception();
+	explicit foo(int r){
+		a = MakeUnique<int>(r);
+		std::printf("foo::foo(): a = %d\n", *a);
 	}
-	foo(const foo &r)
-		: a(r.a)
-	{
-		++count;
-		std::printf("foo::foo(const foo &): a = %d\n", a);
-	}
-	foo(foo &&r) noexcept
-		: a(std::exchange(r.a, -1))
-	{
-		++count;
-		std::printf("foo::foo(foo &&): a = %d\n", a);
-	}
-	~foo(){
-		--count;
-		if(a == -1){
+	foo(const foo &r){
+		if(!r.a){
 			return;
 		}
-		std::printf("foo::~foo(): a = %d\n", a);
+
+		a = MakeUnique<int>(*r.a);
+		std::printf("foo::foo(const foo &): a = %d\n", *a);
+	}
+	foo(foo &&r) noexcept {
+		if(!r.a){
+			return;
+		}
+
+		a = std::move(r.a);
+		std::printf("foo::foo(foo &&): a = %d\n", *a);
+	}
+	~foo(){
+		if(!a){
+			return;
+		}
+
+		std::printf("foo::~foo(): a = %d\n", *a);
 	}
 
 	void bark() const {
-		std::printf("!! foo::bark(): a = %d\n", a);
+		if(a){
+			std::printf("!! foo::bark(): a = %d\n", *a);
+		} else {
+			std::printf("!! foo::bark(): a = ??\n");
+		}
 	}
 };
 
 bool operator<(const foo &l, const foo &r) noexcept {
 	std::printf("cmp(foo, foo) ");
-	return l.a < r.a;
+	return *l.a < *r.a;
 }
 bool operator<(int l, const foo &r) noexcept {
 	std::printf("cmp(int, foo) ");
-	return l < r.a;
+	return l < *r.a;
 }
 bool operator<(const foo &l, int r) noexcept {
 	std::printf("cmp(foo, int) ");
-	return l.a < r;
+	return *l.a < r;
 }
 
 template class FlatMap<foo, int>;
@@ -82,7 +81,7 @@ extern "C" unsigned MCFCRT_Main(){
 
 		q.Emplace(&*std::next(q.EnumerateFirst(), 1), 123);
 		q.Emplace(&*std::next(q.EnumerateFirst(), 8), 456);
-		q.Insert(&*std::next(q.EnumerateFirst(), 8), 20, 456);
+		q.Insert(&*std::next(q.EnumerateFirst(), 8), 8, 456);
 		q.Erase(&*std::next(q.EnumerateFirst(), 3), &*std::next(q.EnumerateFirst(), 6));
 
 		for(auto en = q.EnumerateFirst(); en; ++en){

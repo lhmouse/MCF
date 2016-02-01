@@ -76,15 +76,14 @@ namespace Impl_Thread {
 	template<typename ThreadProcT>
 	class ConcreteThread : public Thread {
 	private:
-		std::remove_reference_t<ThreadProcT> x_fnProc;
+		ThreadProcT x_fnProc;
 
 	public:
-		ConcreteThread(bool bSuspended, ThreadProcT &&fnProc)
+		template<typename T>
+		ConcreteThread(bool bSuspended, T &&fnProc)
 			: Thread(bSuspended)
-			, x_fnProc(std::forward<ThreadProcT>(fnProc))
+			, x_fnProc(std::forward<T>(fnProc))
 		{
-		}
-		~ConcreteThread(){
 		}
 
 	private:
@@ -96,7 +95,7 @@ namespace Impl_Thread {
 
 template<typename ThreadProcT>
 IntrusivePtr<Thread> Thread::Create(ThreadProcT &&fnProc, bool bSuspended){
-	return IntrusivePtr<Thread>(new Impl_Thread::ConcreteThread<ThreadProcT>(bSuspended, std::forward<ThreadProcT>(fnProc)));
+	return IntrusivePtr<Thread>(new Impl_Thread::ConcreteThread<std::decay_t<ThreadProcT>>(bSuspended, std::forward<ThreadProcT>(fnProc)));
 }
 
 }

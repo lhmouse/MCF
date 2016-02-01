@@ -30,7 +30,7 @@ static int DtorComparatorNodes(const MCFCRT_AvlNodeHeader *pObj1, const MCFCRT_A
 
 static SRWLOCK          g_srwDtorMapLock = SRWLOCK_INIT;
 static KeyDtorNode *    g_pDtorHead      = nullptr;
-static MCFCRT_AvlRoot   g_pavlDtorRoot   = nullptr;
+static MCFCRT_AvlRoot   g_avlDtorRoot    = nullptr;
 
 bool __MCFCRT_MinGWHacksInit(){
 	return true;
@@ -47,7 +47,7 @@ void __MCFCRT_MinGWHacksUninit(){
 		free(g_pDtorHead);
 		g_pDtorHead = pNext;
 	}
-	g_pavlDtorRoot = nullptr;
+	g_avlDtorRoot = nullptr;
 }
 
 void __MCFCRT_RunEmutlsDtors(){
@@ -82,7 +82,7 @@ int __mingwthr_key_dtor(unsigned long ulKey, void (*pfnDtor)(void *)){
 			}
 			g_pDtorHead = pNode;
 
-			MCFCRT_AvlAttach(&g_pavlDtorRoot, (MCFCRT_AvlNodeHeader *)pNode, &DtorComparatorNodes);
+			MCFCRT_AvlAttach(&g_avlDtorRoot, (MCFCRT_AvlNodeHeader *)pNode, &DtorComparatorNodes);
 		}
 		ReleaseSRWLockExclusive(&g_srwDtorMapLock);
 	}
@@ -92,8 +92,7 @@ int __mingwthr_key_dtor(unsigned long ulKey, void (*pfnDtor)(void *)){
 int __mingwthr_remove_key_dtor(unsigned long ulKey){
 	AcquireSRWLockExclusive(&g_srwDtorMapLock);
 	{
-		KeyDtorNode *pNode = (KeyDtorNode *)MCFCRT_AvlFind(
-			&g_pavlDtorRoot, (intptr_t)ulKey, &DtorComparatorNodeKey);
+		KeyDtorNode *pNode = (KeyDtorNode *)MCFCRT_AvlFind(&g_avlDtorRoot, (intptr_t)ulKey, &DtorComparatorNodeKey);
 		if(pNode){
 			if(g_pDtorHead == pNode){
 				g_pDtorHead = pNode->pNext;

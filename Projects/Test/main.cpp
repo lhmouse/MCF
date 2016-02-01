@@ -3,10 +3,12 @@
 #include <cstdio>
 
 extern "C" unsigned MCFCRT_Main(){
-	auto t1 = MCF::GetHiResMonoClock();
-	::Sleep(1000);
-	auto t2 = MCF::GetHiResMonoClock();
-	std::printf("t2 - t1 = %f\n", t2 - t1);
+	using Ull = unsigned long long;
+
+	Ull local = MCF::GetLocalClock();
+	Ull utc   = MCF::GetUtcClock();
+	std::printf("local = %llu\n", local);
+	std::printf("utc   = %llu\n", utc);
 
 	return 0;
 }

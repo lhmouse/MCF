@@ -23,6 +23,13 @@ inline std::uint64_t GetLocalClock() noexcept {
 	return ::MCFCRT_GetLocalClock();
 }
 
+inline std::uint64_t GetUtcClockFromLocal(std::uint64_t u64LocalClock) noexcept {
+	return ::MCFCRT_GetUtcClockFromLocal(u64LocalClock);
+}
+inline std::uint64_t GetLocalClockFromUtc(std::uint64_t u64UtcClock) noexcept {
+	return ::MCFCRT_GetLocalClockFromUtc(u64UtcClock);
+}
+
 inline std::uint64_t GetFastMonoClock() noexcept {
 	return ::MCFCRT_GetFastMonoClock();
 }

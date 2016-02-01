@@ -35,6 +35,9 @@ static inline MCFCRT_STD uint64_t MCFCRT_ReadTimestampCounter64() MCFCRT_NOEXCEP
 extern MCFCRT_STD uint64_t MCFCRT_GetUtcClock() MCFCRT_NOEXCEPT;
 extern MCFCRT_STD uint64_t MCFCRT_GetLocalClock() MCFCRT_NOEXCEPT;
 
+extern MCFCRT_STD uint64_t MCFCRT_GetUtcClockFromLocal(MCFCRT_STD uint64_t __u64LocalClock) MCFCRT_NOEXCEPT;
+extern MCFCRT_STD uint64_t MCFCRT_GetLocalClockFromUtc(MCFCRT_STD uint64_t __u64UtcClock) MCFCRT_NOEXCEPT;
+
 extern MCFCRT_STD uint64_t MCFCRT_GetFastMonoClock() MCFCRT_NOEXCEPT;
 extern double MCFCRT_GetHiResMonoClock() MCFCRT_NOEXCEPT;
 

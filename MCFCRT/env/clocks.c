@@ -6,6 +6,43 @@
 #include "mcfwin.h"
 #include "bail.h"
 
+static uint64_t GetTimeZoneOffsetInMillisecondsOnce(){
+	static uint64_t *volatile s_pu64Inited;
+	static uint64_t           s_u64Value;
+
+	uint64_t *pInited = __atomic_load_n(&s_pu64Inited, __ATOMIC_CONSUME);
+	if(!pInited){
+		pInited = &s_u64Value;
+
+		DYNAMIC_TIME_ZONE_INFORMATION vInfo;
+		if(GetDynamicTimeZoneInformation(&vInfo) == TIME_ZONE_ID_INVALID){
+			MCFCRT_Bail(L"GetDynamicTimeZoneInformation() 失败。");
+		}
+		*pInited = (uint64_t)(vInfo.Bias * -60000ll);
+
+		__atomic_store_n(&s_pu64Inited, pInited, __ATOMIC_RELEASE);
+	}
+	return *pInited;
+}
+static double QueryPerformanceFrequencyReciprocalOnce(){
+	static double *volatile s_plfInited;
+	static double           s_ulfValue;
+
+	double *pInited = __atomic_load_n(&s_plfInited, __ATOMIC_CONSUME);
+	if(!pInited){
+		pInited = &s_ulfValue;
+
+		LARGE_INTEGER liFreq;
+		if(!QueryPerformanceFrequency(&liFreq)){
+			MCFCRT_Bail(L"QueryPerformanceFrequency() 失败。");
+		}
+		*pInited = 1000.0 / (double)liFreq.QuadPart;
+
+		__atomic_store_n(&s_plfInited, pInited, __ATOMIC_RELEASE);
+	}
+	return *pInited;
+}
+
 uint64_t MCFCRT_GetUtcClock(){
 	union {
 		FILETIME ft;
@@ -13,35 +50,26 @@ uint64_t MCFCRT_GetUtcClock(){
 	} unUtc;
 	GetSystemTimeAsFileTime(&unUtc.ft);
 	// 0x019DB1DED53E8000 = 从 1601-01-01 到 1970-01-01 经历的时间纳秒数。
-	return (uint64_t)(unUtc.li.QuadPart - 0x019DB1DED53E8000ll) / 10000;
+	return (uint64_t)(unUtc.li.QuadPart - 0x019DB1DED53E8000ll) / 10000;;
 }
 uint64_t MCFCRT_GetLocalClock(){
-	union {
-		FILETIME ft;
-		LARGE_INTEGER li;
-	} unUtc, unLocal;
-	GetSystemTimeAsFileTime(&unUtc.ft);
-	FileTimeToLocalFileTime(&unUtc.ft, &unLocal.ft);
-	return (uint64_t)(unLocal.li.QuadPart - 0x019DB1DED53E8000ll) / 10000;
+	return MCFCRT_GetLocalClockFromUtc(MCFCRT_GetUtcClock());
+}
+
+uint64_t MCFCRT_GetUtcClockFromLocal(uint64_t u64LocalClock){
+	return u64LocalClock - GetTimeZoneOffsetInMillisecondsOnce();
+}
+uint64_t MCFCRT_GetLocalClockFromUtc(uint64_t u64UtcClock){
+	return u64UtcClock + GetTimeZoneOffsetInMillisecondsOnce();
 }
 
 uint64_t MCFCRT_GetFastMonoClock(){
 	return GetTickCount64();
 }
 double MCFCRT_GetHiResMonoClock(){
-	static volatile LARGE_INTEGER s_liFrequency;
-
-	LARGE_INTEGER liFrequency;
-	liFrequency.QuadPart = __atomic_load_n(&s_liFrequency.QuadPart, __ATOMIC_CONSUME);
-	if(liFrequency.QuadPart == 0){
-		if(!QueryPerformanceFrequency(&liFrequency)){
-			MCFCRT_Bail(L"QueryPerformanceFrequency() 失败。");
-		}
-		__atomic_store_n(&s_liFrequency.QuadPart, liFrequency.QuadPart, __ATOMIC_RELEASE);
-	}
 	LARGE_INTEGER liCounter;
 	if(!QueryPerformanceCounter(&liCounter)){
 		MCFCRT_Bail(L"QueryPerformanceCounter() 失败。");
 	}
-	return (double)liCounter.QuadPart * 1000.0 / (double)liFrequency.QuadPart;
+	return (double)liCounter.QuadPart * QueryPerformanceFrequencyReciprocalOnce();
 }

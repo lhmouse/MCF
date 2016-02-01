@@ -27,6 +27,7 @@ extern bool MCFCRT_TlsExchange(void *__pTlsKey, bool *restrict __pbHasOldValue, 
 
 extern int MCFCRT_AtEndThread(void (*__pfnProc)(MCFCRT_STD intptr_t), MCFCRT_STD intptr_t __nContext);
 
+extern void *MCFCRT_CreateNativeThread(unsigned long (*__attribute__((__stdcall__)) __pfnThreadProc)(void *), void *__pParam, bool __bSuspended, MCFCRT_STD uintptr_t *restrict __puThreadId) MCFCRT_NOEXCEPT;
 extern void *MCFCRT_CreateThread(unsigned (*__pfnThreadProc)(MCFCRT_STD intptr_t), MCFCRT_STD intptr_t __nParam, bool __bSuspended, MCFCRT_STD uintptr_t *restrict __puThreadId) MCFCRT_NOEXCEPT;
 extern void MCFCRT_CloseThread(void *__hThread) MCFCRT_NOEXCEPT;
 

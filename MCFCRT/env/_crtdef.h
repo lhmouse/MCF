@@ -18,12 +18,18 @@
 #endif
 
 #ifdef __cplusplus
-#   define __MCFCRT_EXTERN_C_BEGIN     extern "C" {
-#   define __MCFCRT_EXTERN_C_END       }
+#   define __MCFCRT_EXTERN_C_BEGIN      extern "C" {
+#   define __MCFCRT_EXTERN_C_END        }
 #else
 #   define __MCFCRT_EXTERN_C_BEGIN
 #   define __MCFCRT_EXTERN_C_END
 #endif
+
+#define __MCFCRT_C_CALLBACK_DECL        __attribute__((__nothrow__, __force_align_arg_pointer__, __aligned__(16)))
+
+#define __MCFCRT_C_CDECL                __attribute__((__cdecl__)) __MCFCRT_C_CALLBACK_DECL
+#define __MCFCRT_C_STDCALL              __attribute__((__stdcall__)) __MCFCRT_C_CALLBACK_DECL
+#define __MCFCRT_C_FASTCALL             __attribute__((__fastcall__)) __MCFCRT_C_CALLBACK_DECL
 
 // C++ 目前还不支持 C99 的 restrict 限定符。
 #ifdef __cplusplus
@@ -35,8 +41,8 @@
 #endif
 
 #ifdef __cplusplus
-#   define MCFCRT_STD                      ::std::
-#   define MCFCRT_NOEXCEPT                 noexcept
+#   define MCFCRT_STD                   ::std::
+#   define MCFCRT_NOEXCEPT              noexcept
 #else
 #   define MCFCRT_STD
 #   define MCFCRT_NOEXCEPT

@@ -5,11 +5,7 @@
 #ifndef __MCFCRT_ENV_MCFWIN_H_
 #define __MCFCRT_ENV_MCFWIN_H_
 
-#define __MCFCRT_C_CALLBACK_DECL    __attribute__((__nothrow__, __force_align_arg_pointer__))
-
-#define __MCFCRT_C_CDECL            __attribute__((__cdecl__)) __MCFCRT_C_CALLBACK_DECL
-#define __MCFCRT_C_STDCALL          __attribute__((__stdcall__)) __MCFCRT_C_CALLBACK_DECL
-#define __MCFCRT_C_FASTCALL         __attribute__((__fastcall__)) __MCFCRT_C_CALLBACK_DECL
+#include "_crtdef.h"
 
 #undef WINVER
 #undef _WIN32_WINNT

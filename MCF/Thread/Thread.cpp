@@ -5,6 +5,8 @@
 #include "../StdMCF.hpp"
 #include "Thread.hpp"
 #include "../../MCFCRT/env/thread.h"
+#include "../../MCFCRT/env/eh_top.h"
+#include "../../MCFCRT/env/fenv.h"
 #include "../Core/Exception.hpp"
 
 namespace MCF {
@@ -39,20 +41,32 @@ void Thread::YieldExecution() noexcept {
 Thread::Thread(Function<void ()> fnProc, bool bSuspended)
 	: x_fnProc(std::move(fnProc))
 {
-	const auto ThreadProc = [](std::intptr_t nParam) noexcept -> unsigned {
-		const auto pThis = (Thread *)nParam;
-		try {
-			pThis->x_fnProc();
-		} catch(...){
-			pThis->x_pException = std::current_exception();
+	struct Helper {
+		__MCFCRT_C_STDCALL __MCFCRT_HAS_EH_TOP
+		static DWORD ThreadProc(LPVOID pParam){
+			const auto pThis = static_cast<Thread *>(pParam);
+
+			__MCFCRT_EH_TOP_BEGIN
+			{
+				__MCFCRT_FEnvInit();
+
+				try {
+					pThis->x_fnProc();
+				} catch(...){
+					pThis->x_pException = std::current_exception();
+				}
+			}
+			__MCFCRT_EH_TOP_END
+
+			pThis->x_uThreadId.Store(0, kAtomicRelease);
+			pThis->DropRef();
+
+			return 0;
 		}
-		pThis->x_uThreadId.Store(0, kAtomicRelease);
-		pThis->DropRef();
-		return 0;
 	};
 
 	std::uintptr_t uThreadId = 0;
-	if(!x_hThread.Reset(::MCFCRT_CreateThread(ThreadProc, (std::intptr_t)this, CREATE_SUSPENDED, &uThreadId))){
+	if(!x_hThread.Reset(::MCFCRT_CreateNativeThread(&Helper::ThreadProc, this, true, &uThreadId))){
 		DEBUG_THROW(SystemError, "MCFCRT_CreateThread"_rcs);
 	}
 	AddRef();

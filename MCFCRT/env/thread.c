@@ -358,6 +358,21 @@ int MCFCRT_AtEndThread(void (*pfnProc)(intptr_t), intptr_t nContext){
 	return 0;
 }
 
+void *MCFCRT_CreateNativeThread(unsigned long (*__attribute__((__stdcall__)) pfnThreadProc)(void *), void *pParam, bool bSuspended, uintptr_t *restrict puThreadId){
+	ULONG ulStackReserved = 0, ulStackCommitted = 0;
+	HANDLE hThread;
+	CLIENT_ID vClientId;
+	const NTSTATUS lStatus = RtlCreateUserThread(GetCurrentProcess(), nullptr, bSuspended, 0, &ulStackReserved, &ulStackCommitted, pfnThreadProc, pParam, &hThread, &vClientId);
+	if(!NT_SUCCESS(lStatus)){
+		SetLastError(RtlNtStatusToDosError(lStatus));
+		return nullptr;
+	}
+	if(puThreadId){
+		*puThreadId = (uintptr_t)(vClientId.UniqueThread);
+	}
+	return (void *)hThread;
+}
+
 typedef struct tagThreadInitParams {
 	unsigned (*pfnProc)(intptr_t);
 	intptr_t nParam;
@@ -387,22 +402,16 @@ void *MCFCRT_CreateThread(unsigned (*pfnThreadProc)(intptr_t), intptr_t nParam, 
 	pInitParams->pfnProc = pfnThreadProc;
 	pInitParams->nParam  = nParam;
 
-	ULONG ulStackReserved = 0, ulStackCommitted = 0;
-	HANDLE hThread;
-	CLIENT_ID vClientId;
-	const NTSTATUS lStatus = RtlCreateUserThread(GetCurrentProcess(), nullptr, bSuspended, 0, &ulStackReserved, &ulStackCommitted, &CRTThreadProc, pInitParams, &hThread, &vClientId);
-	if(!NT_SUCCESS(lStatus)){
+	void *const hThread = MCFCRT_CreateNativeThread(&CRTThreadProc, pInitParams, bSuspended, puThreadId);
+	if(!hThread){
+		const DWORD dwLastError = GetLastError();
 		free(pInitParams);
-		SetLastError(RtlNtStatusToDosError(lStatus));
+		SetLastError(dwLastError);
 		return nullptr;
 	}
-	if(puThreadId){
-		*puThreadId = (uintptr_t)vClientId.UniqueThread;
-	}
-	return (void *)hThread;
+	return hThread;
 }
 void MCFCRT_CloseThread(void *hThread){
-
 	const NTSTATUS lStatus = NtClose((HANDLE)hThread);
 	if(!NT_SUCCESS(lStatus)){
 		ASSERT_MSG(false, L"NtClose() 失败。");

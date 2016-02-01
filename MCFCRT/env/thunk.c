@@ -56,8 +56,8 @@ static int FreeSizeComparatorNodes(const MCFCRT_AvlNodeHeader *pIndex1, const MC
 static SRWLOCK         g_srwlMutex            = SRWLOCK_INIT;
 static uintptr_t       g_uPageMask            = 0;
 
-static MCFCRT_AvlRoot  g_pavlThunksByThunk    = nullptr;
-static MCFCRT_AvlRoot  g_pavlThunksByFreeSize = nullptr;
+static MCFCRT_AvlRoot  g_avlThunksByThunk     = nullptr;
+static MCFCRT_AvlRoot  g_avlThunksByFreeSize  = nullptr;
 
 void *MCFCRT_AllocateThunk(const void *pInit, size_t uSize){
 	ASSERT(pInit);
@@ -78,7 +78,7 @@ void *MCFCRT_AllocateThunk(const void *pInit, size_t uSize){
 			goto jDone;
 		}
 
-		MCFCRT_AvlNodeHeader *pFreeSizeIndex = MCFCRT_AvlGetLowerBound(&g_pavlThunksByFreeSize, (intptr_t)uThunkSize, &FreeSizeComparatorNodeKey);
+		MCFCRT_AvlNodeHeader *pFreeSizeIndex = MCFCRT_AvlGetLowerBound(&g_avlThunksByFreeSize, (intptr_t)uThunkSize, &FreeSizeComparatorNodeKey);
 		ThunkInfo *pInfo;
 		bool bNeedsCleanup;
 		if(pFreeSizeIndex){
@@ -100,8 +100,8 @@ void *MCFCRT_AllocateThunk(const void *pInit, size_t uSize){
 			pInfo->uThunkSize = pInfo->uChunkSize;
 			pInfo->uFreeSize = pInfo->uChunkSize;
 
-			MCFCRT_AvlAttach(&g_pavlThunksByThunk, &(pInfo->vThunkIndex), &ThunkComparatorNodes);
-			MCFCRT_AvlAttach(&g_pavlThunksByFreeSize, &(pInfo->vFreeSizeIndex), &FreeSizeComparatorNodes);
+			MCFCRT_AvlAttach(&g_avlThunksByThunk, &(pInfo->vThunkIndex), &ThunkComparatorNodes);
+			MCFCRT_AvlAttach(&g_avlThunksByFreeSize, &(pInfo->vFreeSizeIndex), &FreeSizeComparatorNodes);
 
 			pFreeSizeIndex = &(pInfo->vFreeSizeIndex);
 			bNeedsCleanup = true;
@@ -127,8 +127,8 @@ void *MCFCRT_AllocateThunk(const void *pInit, size_t uSize){
 			pSpare->uThunkSize = uRemaining;
 			pSpare->uFreeSize  = uRemaining;
 
-			MCFCRT_AvlAttach(&g_pavlThunksByThunk, &(pSpare->vThunkIndex), &ThunkComparatorNodes);
-			MCFCRT_AvlAttach(&g_pavlThunksByFreeSize, &(pSpare->vFreeSizeIndex), &FreeSizeComparatorNodes);
+			MCFCRT_AvlAttach(&g_avlThunksByThunk, &(pSpare->vThunkIndex), &ThunkComparatorNodes);
+			MCFCRT_AvlAttach(&g_avlThunksByFreeSize, &(pSpare->vFreeSizeIndex), &FreeSizeComparatorNodes);
 
 			pInfo->uThunkSize = uThunkSize;
 		} else {
@@ -137,7 +137,7 @@ void *MCFCRT_AllocateThunk(const void *pInit, size_t uSize){
 
 		MCFCRT_AvlDetach(&(pInfo->vFreeSizeIndex));
 		pInfo->uFreeSize = 0;
-		MCFCRT_AvlAttach(&g_pavlThunksByFreeSize, &(pInfo->vFreeSizeIndex), &FreeSizeComparatorNodes);
+		MCFCRT_AvlAttach(&g_avlThunksByFreeSize, &(pInfo->vFreeSizeIndex), &FreeSizeComparatorNodes);
 
 		pRet = pInfo->pThunk;
 
@@ -161,7 +161,7 @@ void MCFCRT_DeallocateThunk(void *pThunk, bool bToPoison){
 
 	AcquireSRWLockExclusive(&g_srwlMutex);
 	{
-		MCFCRT_AvlNodeHeader *pThunkIndex = MCFCRT_AvlFind(&g_pavlThunksByThunk, (intptr_t)pThunk, &ThunkComparatorNodeKey);
+		MCFCRT_AvlNodeHeader *pThunkIndex = MCFCRT_AvlFind(&g_avlThunksByThunk, (intptr_t)pThunk, &ThunkComparatorNodeKey);
 		ThunkInfo *pInfo;
 		if(!pThunkIndex || ((pInfo = GetInfoFromThunkIndex(pThunkIndex))->uFreeSize != 0)){
 			MCFCRT_Bail(L"MCFCRT_DeallocateThunk() 失败：传入的指针无效。");
@@ -218,7 +218,7 @@ void MCFCRT_DeallocateThunk(void *pThunk, bool bToPoison){
 
 			MCFCRT_AvlDetach(&(pInfo->vFreeSizeIndex));
 			pInfo->uFreeSize = pInfo->uThunkSize;
-			MCFCRT_AvlAttach(&g_pavlThunksByFreeSize, &(pInfo->vFreeSizeIndex), &FreeSizeComparatorNodes);
+			MCFCRT_AvlAttach(&g_avlThunksByFreeSize, &(pInfo->vFreeSizeIndex), &FreeSizeComparatorNodes);
 		}
 	}
 	ReleaseSRWLockExclusive(&g_srwlMutex);

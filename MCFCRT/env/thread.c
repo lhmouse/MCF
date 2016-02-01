@@ -78,7 +78,7 @@ static int KeyComparatorNodes(const MCFCRT_AvlNodeHeader *pObj1, const MCFCRT_Av
 
 static SRWLOCK          g_csKeyMutex  = SRWLOCK_INIT;
 static DWORD            g_dwTlsIndex  = TLS_OUT_OF_INDEXES;
-static MCFCRT_AvlRoot   g_pavlKeys    = nullptr;
+static MCFCRT_AvlRoot   g_avlKeys     = nullptr;
 
 bool __MCFCRT_ThreadEnvInit(){
 	g_dwTlsIndex = TlsAlloc();
@@ -88,9 +88,9 @@ bool __MCFCRT_ThreadEnvInit(){
 	return true;
 }
 void __MCFCRT_ThreadEnvUninit(){
-	if(g_pavlKeys){
-		MCFCRT_AvlNodeHeader *const pRoot = g_pavlKeys;
-		g_pavlKeys = nullptr;
+	if(g_avlKeys){
+		MCFCRT_AvlNodeHeader *const pRoot = g_avlKeys;
+		g_avlKeys = nullptr;
 
 		TlsKey *pKey;
 		MCFCRT_AvlNodeHeader *pCur = MCFCRT_AvlPrev(pRoot);
@@ -155,7 +155,7 @@ void *MCFCRT_TlsAllocKey(void (*pfnCallback)(intptr_t)){
 
 	AcquireSRWLockExclusive(&g_csKeyMutex);
 	{
-		MCFCRT_AvlAttach(&g_pavlKeys, (MCFCRT_AvlNodeHeader *)pKey, &KeyComparatorNodes);
+		MCFCRT_AvlAttach(&g_avlKeys, (MCFCRT_AvlNodeHeader *)pKey, &KeyComparatorNodes);
 	}
 	ReleaseSRWLockExclusive(&g_csKeyMutex);
 

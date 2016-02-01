@@ -16,10 +16,6 @@ void Thread::X_ThreadCloser::operator()(Thread::Handle hThread) const noexcept {
 }
 
 // 静态成员函数。
-IntrusivePtr<Thread> Thread::Create(Function<void ()> fnProc, bool bSuspended){
-	return IntrusivePtr<Thread>(new Thread(std::move(fnProc), bSuspended));
-}
-
 std::uintptr_t Thread::GetCurrentId() noexcept {
 	return ::MCFCRT_GetCurrentThreadId();
 }
@@ -38,9 +34,7 @@ void Thread::YieldExecution() noexcept {
 }
 
 // 构造函数和析构函数。
-Thread::Thread(Function<void ()> fnProc, bool bSuspended)
-	: x_fnProc(std::move(fnProc))
-{
+Thread::Thread(bool bSuspended){
 	struct Helper {
 		__MCFCRT_C_STDCALL __MCFCRT_HAS_EH_TOP
 		static DWORD ThreadProc(LPVOID pParam){
@@ -51,7 +45,7 @@ Thread::Thread(Function<void ()> fnProc, bool bSuspended)
 				__MCFCRT_FEnvInit();
 
 				try {
-					pThis->x_fnProc();
+					pThis->X_ThreadProc();
 				} catch(...){
 					pThis->x_pException = std::current_exception();
 				}

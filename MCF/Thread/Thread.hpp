@@ -7,12 +7,11 @@
 
 #include "../Utilities/Noncopyable.hpp"
 #include "../SmartPointers/IntrusivePtr.hpp"
-#include "../Function/Function.hpp"
 #include "../Core/UniqueHandle.hpp"
 #include "Atomic.hpp"
 #include <exception>
+#include <type_traits>
 #include <cstddef>
-#include <cstdint>
 
 namespace MCF {
 
@@ -29,7 +28,8 @@ private:
 	};
 
 public:
-	static IntrusivePtr<Thread> Create(Function<void ()> fnProc, bool bSuspended = false);
+	template<typename ThreadProcT>
+	static IntrusivePtr<Thread> Create(ThreadProcT &&fnProc, bool bSuspended = false);
 
 	static std::uintptr_t GetCurrentId() noexcept;
 
@@ -39,17 +39,16 @@ public:
 	static void YieldExecution() noexcept;
 
 private:
-	const Function<void ()> x_fnProc;
-
 	UniqueHandle<X_ThreadCloser> x_hThread;
 	Atomic<std::uintptr_t> x_uThreadId;
 	std::exception_ptr x_pException;
 
-private:
-	Thread(Function<void ()> fnProc, bool bSuspended);
-
 public:
+	explicit Thread(bool bSuspended);
 	~Thread(); // 如果有被捕获的异常，调用 std::terminate()。
+
+private:
+	virtual void X_ThreadProc() = 0;
 
 public:
 	Handle GetHandle() const noexcept {
@@ -72,6 +71,33 @@ public:
 	void Suspend() noexcept;
 	void Resume() noexcept;
 };
+
+namespace Impl_Thread {
+	template<typename ThreadProcT>
+	class ConcreteThread : public Thread {
+	private:
+		std::remove_reference_t<ThreadProcT> x_fnProc;
+
+	public:
+		ConcreteThread(bool bSuspended, ThreadProcT &&fnProc)
+			: Thread(bSuspended)
+			, x_fnProc(std::forward<ThreadProcT>(fnProc))
+		{
+		}
+		~ConcreteThread(){
+		}
+
+	private:
+		void X_ThreadProc() override {
+			x_fnProc();
+		}
+	};
+}
+
+template<typename ThreadProcT>
+IntrusivePtr<Thread> Thread::Create(ThreadProcT &&fnProc, bool bSuspended){
+	return IntrusivePtr<Thread>(new Impl_Thread::ConcreteThread<ThreadProcT>(bSuspended, std::forward<ThreadProcT>(fnProc)));
+}
 
 }
 

@@ -358,17 +358,25 @@ int MCFCRT_AtEndThread(void (*pfnProc)(intptr_t), intptr_t nContext){
 	return 0;
 }
 
-void *MCFCRT_CreateNativeThread(unsigned long (*__attribute__((__stdcall__)) pfnThreadProc)(void *), void *pParam, bool bSuspended, uintptr_t *restrict puThreadId){
+static NTSTATUS ReallyCreateNativeThread(HANDLE *phThread, DWORD (*__attribute__((__stdcall__)) pfnThreadProc)(LPVOID), LPVOID pParam, bool bSuspended, uintptr_t *restrict puThreadId){
 	ULONG ulStackReserved = 0, ulStackCommitted = 0;
-	HANDLE hThread;
 	CLIENT_ID vClientId;
-	const NTSTATUS lStatus = RtlCreateUserThread(GetCurrentProcess(), nullptr, bSuspended, 0, &ulStackReserved, &ulStackCommitted, pfnThreadProc, pParam, &hThread, &vClientId);
+	const NTSTATUS lStatus = RtlCreateUserThread(GetCurrentProcess(), nullptr, bSuspended, 0, &ulStackReserved, &ulStackCommitted, pfnThreadProc, pParam, phThread, &vClientId);
 	if(!NT_SUCCESS(lStatus)){
-		SetLastError(RtlNtStatusToDosError(lStatus));
-		return nullptr;
+		return lStatus;
 	}
 	if(puThreadId){
 		*puThreadId = (uintptr_t)(vClientId.UniqueThread);
+	}
+	return lStatus;
+}
+
+void *MCFCRT_CreateNativeThread(unsigned long (*__attribute__((__stdcall__)) pfnThreadProc)(void *), void *pParam, bool bSuspended, uintptr_t *restrict puThreadId){
+	HANDLE hThread;
+	const NTSTATUS lStatus = ReallyCreateNativeThread(&hThread, pfnThreadProc, pParam, bSuspended, puThreadId);
+	if(!NT_SUCCESS(lStatus)){
+		SetLastError(RtlNtStatusToDosError(lStatus));
+		return nullptr;
 	}
 	return (void *)hThread;
 }
@@ -402,14 +410,14 @@ void *MCFCRT_CreateThread(unsigned (*pfnThreadProc)(intptr_t), intptr_t nParam, 
 	pInitParams->pfnProc = pfnThreadProc;
 	pInitParams->nParam  = nParam;
 
-	void *const hThread = MCFCRT_CreateNativeThread(&CRTThreadProc, pInitParams, bSuspended, puThreadId);
-	if(!hThread){
-		const DWORD dwLastError = GetLastError();
+	HANDLE hThread;
+	const NTSTATUS lStatus = ReallyCreateNativeThread(&hThread, &CRTThreadProc, pInitParams, bSuspended, puThreadId);
+	if(!NT_SUCCESS(lStatus)){
 		free(pInitParams);
-		SetLastError(dwLastError);
+		SetLastError(RtlNtStatusToDosError(lStatus));
 		return nullptr;
 	}
-	return hThread;
+	return (void *)hThread;
 }
 void MCFCRT_CloseThread(void *hThread){
 	const NTSTATUS lStatus = NtClose((HANDLE)hThread);

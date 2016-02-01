@@ -254,50 +254,50 @@ public:
 	}
 
 	const Element *GetBegin() const noexcept {
-		return GetData();
+		return x_pStorage;
 	}
 	Element *GetBegin() noexcept {
-		return GetData();
+		return x_pStorage;
 	}
 	const Element *GetConstBegin() const noexcept {
 		return GetBegin();
 	}
 	const Element *GetEnd() const noexcept {
-		return GetData() + GetSize();
+		return x_pStorage + x_uSize;
 	}
 	Element *GetEnd() noexcept {
-		return GetData() + GetSize();
+		return x_pStorage + x_uSize;
 	}
 	const Element *GetConstEnd() const noexcept {
 		return GetEnd();
 	}
 
 	const Element &Get(std::size_t uIndex) const {
-		if(uIndex >= GetSize()){
+		if(uIndex >= x_uSize){
 			DEBUG_THROW(Exception, ERROR_ACCESS_DENIED, "Vector: Subscript out of range"_rcs);
 		}
 		return UncheckedGet(uIndex);
 	}
 	Element &Get(std::size_t uIndex){
-		if(uIndex >= GetSize()){
+		if(uIndex >= x_uSize){
 			DEBUG_THROW(Exception, ERROR_ACCESS_DENIED, "Vector: Subscript out of range"_rcs);
 		}
 		return UncheckedGet(uIndex);
 	}
 	const Element &UncheckedGet(std::size_t uIndex) const noexcept {
-		ASSERT(uIndex < GetSize());
+		ASSERT(uIndex < x_uSize);
 
-		return GetData()[uIndex];
+		return x_pStorage[uIndex];
 	}
 	Element &UncheckedGet(std::size_t uIndex) noexcept {
-		ASSERT(uIndex < GetSize());
+		ASSERT(uIndex < x_uSize);
 
-		return GetData()[uIndex];
+		return x_pStorage[uIndex];
 	}
 
 	template<typename ...ParamsT>
 	void Resize(std::size_t uSize, const ParamsT &...vParams){
-		const auto uOldSize = GetSize();
+		const auto uOldSize = x_uSize;
 		if(uSize > uOldSize){
 			Append(uSize - uOldSize, vParams...);
 		} else {
@@ -306,9 +306,9 @@ public:
 	}
 	template<typename ...ParamsT>
 	Element *ResizeMore(std::size_t uDeltaSize, const ParamsT &...vParams){
-		const auto uOldSize = GetSize();
+		const auto uOldSize = x_uSize;
 		Append(uDeltaSize - uOldSize, vParams...);
-		return GetData() + uOldSize;
+		return x_pStorage + uOldSize;
 	}
 
 	void Reserve(std::size_t uNewCapacity){
@@ -353,7 +353,7 @@ public:
 		x_uCapacity = uElementsToAlloc;
 	}
 	void ReserveMore(std::size_t uDeltaCapacity){
-		const auto uOldSize = GetSize();
+		const auto uOldSize = x_uSize;
 		const auto uNewCapacity = uOldSize + uDeltaCapacity;
 		if(uNewCapacity < uOldSize){
 			throw std::bad_array_new_length();
@@ -370,19 +370,17 @@ public:
 	Element &UncheckedPush(ParamsT &&...vParams) noexcept(std::is_nothrow_constructible<Element, ParamsT &&...>::value) {
 		ASSERT(GetCapacity() - GetSize() > 0);
 
-		const auto pData = GetData();
-		const auto pElement = pData + x_uSize;
+		const auto pElement = x_pStorage + x_uSize;
 		DefaultConstruct(pElement, std::forward<ParamsT>(vParams)...);
 		++x_uSize;
 
 		return *pElement;
 	}
 	void Pop(std::size_t uCount = 1) noexcept {
-		ASSERT(uCount <= GetSize());
+		ASSERT(uCount <= x_uSize);
 
-		const auto pData = GetData();
 		for(std::size_t i = 0; i < uCount; ++i){
-			Destruct(pData + x_uSize - 1 - i);
+			Destruct(x_pStorage + x_uSize - 1 - i);
 		}
 		x_uSize -= uCount;
 	}
@@ -452,7 +450,7 @@ public:
 			}
 			x_uSize += 1;
 		} else {
-			const auto uSize = GetSize();
+			const auto uSize = x_uSize;
 			auto uNewCapacity = uSize + 1;
 			if(uNewCapacity < uSize){
 				throw std::bad_array_new_length();
@@ -503,7 +501,7 @@ public:
 			}
 			x_uSize += uDeltaSize;
 		} else {
-			const auto uSize = GetSize();
+			const auto uSize = x_uSize;
 			auto uNewCapacity = uSize + uDeltaSize;
 			if(uNewCapacity < uSize){
 				throw std::bad_array_new_length();
@@ -559,7 +557,7 @@ public:
 				}
 				x_uSize += uDeltaSize;
 			} else {
-				const auto uSize = GetSize();
+				const auto uSize = x_uSize;
 				auto uNewCapacity = uSize + uDeltaSize;
 				if(uNewCapacity < uSize){
 					throw std::bad_array_new_length();

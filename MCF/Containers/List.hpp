@@ -8,7 +8,6 @@
 #include "_Enumerator.hpp"
 #include "../Utilities/Assert.hpp"
 #include "../Utilities/ConstructDestruct.hpp"
-#include "../Utilities/AlignedUnion.hpp"
 #include "../Core/Exception.hpp"
 #include <utility>
 #include <new>
@@ -28,7 +27,13 @@ public:
 
 private:
 	struct X_Node {
-		AlignedUnion<0, Element> unElement;
+		union Storage {
+			Element v;
+			Storage() noexcept { }
+			~Storage() noexcept { }
+		};
+
+		Storage unElement;
 		X_Node *pPrev;
 		X_Node *pNext;
 	};

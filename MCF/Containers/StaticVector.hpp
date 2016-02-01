@@ -8,7 +8,6 @@
 #include "_Enumerator.hpp"
 #include "../Utilities/Assert.hpp"
 #include "../Utilities/ConstructDestruct.hpp"
-#include "../Utilities/AlignedUnion.hpp"
 #include "../Core/Exception.hpp"
 #include <utility>
 #include <new>
@@ -29,7 +28,14 @@ public:
 	using Enumerator      = Impl_Enumerator::Enumerator      <StaticVector>;
 
 private:
-	AlignedUnion<0, Element> x_aStorage[kCapacity];
+	union Storage {
+		Element a[kCapacity];
+
+		Storage() noexcept { }
+		~Storage() noexcept { }
+	};
+
+	Storage x_unStorage;
 	std::size_t x_uSize;
 
 public:
@@ -90,10 +96,8 @@ public:
 	template<typename OutputIteratorT>
 	OutputIteratorT Extract(OutputIteratorT itOutput){
 		try {
-			const auto pBegin = GetBegin();
-			const auto pEnd = GetEnd();
-			for(auto p = pBegin; p != pEnd; ++p){
-				*itOutput = std::move(*p);
+			for(std::size_t i = 0; i < x_uSize; ++i){
+				*itOutput = std::move(x_unStorage[i]);
 				++itOutput;
 			}
 		} catch(...){
@@ -216,10 +220,13 @@ public:
 
 	// StaticVector 需求。
 	const Element *GetData() const noexcept {
-		return reinterpret_cast<const Element *>(x_aStorage);
+		return x_unStorage.a;
 	}
 	Element *GetData() noexcept {
-		return reinterpret_cast<Element *>(x_aStorage);
+		return x_unStorage.a;
+	}
+	const Element *GetConstData() const noexcept {
+		return GetData();
 	}
 	std::size_t GetSize() const noexcept {
 		return x_uSize;
@@ -229,50 +236,50 @@ public:
 	}
 
 	const Element *GetBegin() const noexcept {
-		return GetData();
+		return x_unStorage.a;
 	}
 	Element *GetBegin() noexcept {
-		return GetData();
+		return x_unStorage.a;
 	}
 	const Element *GetConstBegin() const noexcept {
 		return GetBegin();
 	}
 	const Element *GetEnd() const noexcept {
-		return GetData() + GetSize();
+		return x_unStorage.a + x_uSize;
 	}
 	Element *GetEnd() noexcept {
-		return GetData() + GetSize();
+		return x_unStorage.a + x_uSize;
 	}
 	const Element *GetConstEnd() const noexcept {
 		return GetEnd();
 	}
 
 	const Element &Get(std::size_t uIndex) const {
-		if(uIndex >= GetSize()){
+		if(uIndex >= x_uSize){
 			DEBUG_THROW(Exception, ERROR_ACCESS_DENIED, "StaticVector: Subscript out of range"_rcs);
 		}
 		return UncheckedGet(uIndex);
 	}
 	Element &Get(std::size_t uIndex){
-		if(uIndex >= GetSize()){
+		if(uIndex >= x_uSize){
 			DEBUG_THROW(Exception, ERROR_ACCESS_DENIED, "StaticVector: Subscript out of range"_rcs);
 		}
 		return UncheckedGet(uIndex);
 	}
 	const Element &UncheckedGet(std::size_t uIndex) const noexcept {
-		ASSERT(uIndex < GetSize());
+		ASSERT(uIndex < x_uSize);
 
-		return GetData()[uIndex];
+		return x_unStorage.a[uIndex];
 	}
 	Element &UncheckedGet(std::size_t uIndex) noexcept {
-		ASSERT(uIndex < GetSize());
+		ASSERT(uIndex < x_uSize);
 
-		return GetData()[uIndex];
+		return x_unStorage.a[uIndex];
 	}
 
 	template<typename ...ParamsT>
 	void Resize(std::size_t uSize, const ParamsT &...vParams){
-		const auto uOldSize = GetSize();
+		const auto uOldSize = x_uSize;
 		if(uSize > uOldSize){
 			Append(uSize - uOldSize, vParams...);
 		} else {
@@ -281,9 +288,9 @@ public:
 	}
 	template<typename ...ParamsT>
 	Element *ResizeMore(std::size_t uDeltaSize, const ParamsT &...vParams){
-		const auto uOldSize = GetSize();
+		const auto uOldSize = x_uSize;
 		Append(uDeltaSize - uOldSize, vParams...);
-		return GetData() + uOldSize;
+		return x_unStorage.a + uOldSize;
 	}
 
 	void Reserve(std::size_t uNewCapacity){
@@ -292,7 +299,7 @@ public:
 		}
 	}
 	void ReserveMore(std::size_t uDeltaCapacity){
-		const auto uOldSize = GetSize();
+		const auto uOldSize = x_uSize;
 		const auto uNewCapacity = uOldSize + uDeltaCapacity;
 		if(uNewCapacity < uOldSize){
 			throw std::bad_array_new_length();
@@ -309,19 +316,17 @@ public:
 	Element &UncheckedPush(ParamsT &&...vParams) noexcept(std::is_nothrow_constructible<Element, ParamsT &&...>::value) {
 		ASSERT(GetCapacity() - GetSize() > 0);
 
-		const auto pData = GetData();
-		const auto pElement = pData + x_uSize;
+		const auto pElement = x_unStorage.a + x_uSize;
 		DefaultConstruct(pElement, std::forward<ParamsT>(vParams)...);
 		++x_uSize;
 
 		return *pElement;
 	}
 	void Pop(std::size_t uCount = 1) noexcept {
-		ASSERT(uCount <= GetSize());
+		ASSERT(uCount <= x_uSize);
 
-		const auto pData = GetData();
 		for(std::size_t i = 0; i < uCount; ++i){
-			Destruct(pData + x_uSize - 1 - i);
+			Destruct(x_unStorage.a + x_uSize - 1 - i);
 		}
 		x_uSize -= uCount;
 	}

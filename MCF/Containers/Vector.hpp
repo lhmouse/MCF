@@ -368,7 +368,7 @@ public:
 	}
 	template<typename ...ParamsT>
 	Element &UncheckedPush(ParamsT &&...vParams) noexcept(std::is_nothrow_constructible<Element, ParamsT &&...>::value) {
-		ASSERT(GetCapacity() - GetSize() > 0);
+		ASSERT(x_uCapacity - x_uSize > 0);
 
 		const auto pElement = x_pStorage + x_uSize;
 		DefaultConstruct(pElement, std::forward<ParamsT>(vParams)...);
@@ -455,7 +455,7 @@ public:
 			if(uNewCapacity < uSize){
 				throw std::bad_array_new_length();
 			}
-			const auto uCapacity = GetCapacity();
+			const auto uCapacity = x_uCapacity;
 			if(uNewCapacity < uCapacity){
 				uNewCapacity = uCapacity;
 			}
@@ -506,7 +506,7 @@ public:
 			if(uNewCapacity < uSize){
 				throw std::bad_array_new_length();
 			}
-			const auto uCapacity = GetCapacity();
+			const auto uCapacity = x_uCapacity;
 			if(uNewCapacity < uCapacity){
 				uNewCapacity = uCapacity;
 			}
@@ -562,7 +562,7 @@ public:
 				if(uNewCapacity < uSize){
 					throw std::bad_array_new_length();
 				}
-				const auto uCapacity = GetCapacity();
+				const auto uCapacity = x_uCapacity;
 				if(uNewCapacity < uCapacity){
 					uNewCapacity = uCapacity;
 				}
@@ -581,7 +581,7 @@ public:
 			}
 		} else {
 			Vector vecTemp;
-			const auto uCapacity = GetCapacity();
+			const auto uCapacity = x_uCapacity;
 			vecTemp.Reserve(uCapacity);
 			for(std::size_t i = 0; i < uOffset; ++i){
 				vecTemp.UncheckedPush(x_pStorage[i]);
@@ -626,7 +626,7 @@ public:
 			x_uSize -= uDeltaSize;
 		} else {
 			Vector vecTemp;
-			const auto uCapacity = GetCapacity();
+			const auto uCapacity = x_uCapacity;
 			vecTemp.Reserve(uCapacity);
 			for(std::size_t i = 0; i < uOffsetBegin; ++i){
 				vecTemp.UncheckedPush(x_pStorage[i]);

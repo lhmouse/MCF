@@ -294,7 +294,7 @@ public:
 	}
 
 	void Reserve(std::size_t uNewCapacity){
-		if(uNewCapacity > GetCapacity()){
+		if(uNewCapacity > kCapacity){
 			DEBUG_THROW(Exception, ERROR_OUTOFMEMORY, "StaticVector: Max capacity exceeded"_rcs);
 		}
 	}
@@ -314,7 +314,7 @@ public:
 	}
 	template<typename ...ParamsT>
 	Element &UncheckedPush(ParamsT &&...vParams) noexcept(std::is_nothrow_constructible<Element, ParamsT &&...>::value) {
-		ASSERT(GetCapacity() - GetSize() > 0);
+		ASSERT(kCapacity - x_uSize > 0);
 
 		const auto pElement = x_unStorage.a + x_uSize;
 		DefaultConstruct(pElement, std::forward<ParamsT>(vParams)...);

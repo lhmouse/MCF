@@ -47,7 +47,7 @@ namespace Impl_Invoke {
 
 template<typename FuncT, typename ...ParamsT>
 decltype(auto) Invoke(FuncT &&vFunc, ParamsT &&...vParams){
-	return Impl_Invoke::MemberFunctionPointerChecker<std::is_member_function_pointer<std::decay_t<FuncT>>::value>()(std::forward<FuncT>(vFunc), std::forward<ParamsT>(vParams)...);
+	return Impl_Invoke::MemberFunctionPointerChecker<std::is_member_pointer<std::decay_t<FuncT>>::value>()(std::forward<FuncT>(vFunc), std::forward<ParamsT>(vParams)...);
 }
 
 }

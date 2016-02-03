@@ -4,7 +4,7 @@
 #include <iostream>
 
 struct foo {
-	int bark(char c, int i) const volatile & {
+	int __stdcall bark(char c, int i) const volatile & {
 		std::cout <<"bark: c = " <<c <<", i = " <<i <<std::endl;
 		return 123;
 	}

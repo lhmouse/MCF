@@ -11,65 +11,58 @@
 namespace MCF {
 
 namespace Impl_Invoke {
-	template<typename PrototypeT>
-	struct Invoker {
+	template<typename T> struct ClassGetter;
+
+	template<typename C, typename R, typename ...ParamsT> struct ClassGetter<R (C::*)(ParamsT...) const volatile   > { using Type = const volatile C; };
+	template<typename C, typename R, typename ...ParamsT> struct ClassGetter<R (C::*)(ParamsT...) const volatile & > { using Type = const volatile C; };
+	template<typename C, typename R, typename ...ParamsT> struct ClassGetter<R (C::*)(ParamsT...) const volatile &&> { using Type = const volatile C; };
+
+	template<typename C, typename R, typename ...ParamsT> struct ClassGetter<R (C::*)(ParamsT...) const            > { using Type = const          C; };
+	template<typename C, typename R, typename ...ParamsT> struct ClassGetter<R (C::*)(ParamsT...) const          & > { using Type = const          C; };
+	template<typename C, typename R, typename ...ParamsT> struct ClassGetter<R (C::*)(ParamsT...) const          &&> { using Type = const          C; };
+
+	template<typename C, typename R, typename ...ParamsT> struct ClassGetter<R (C::*)(ParamsT...)       volatile   > { using Type =       volatile C; };
+	template<typename C, typename R, typename ...ParamsT> struct ClassGetter<R (C::*)(ParamsT...)       volatile & > { using Type =       volatile C; };
+	template<typename C, typename R, typename ...ParamsT> struct ClassGetter<R (C::*)(ParamsT...)       volatile &&> { using Type =       volatile C; };
+
+	template<typename C, typename R, typename ...ParamsT> struct ClassGetter<R (C::*)(ParamsT...)                  > { using Type =                C; };
+	template<typename C, typename R, typename ...ParamsT> struct ClassGetter<R (C::*)(ParamsT...)                & > { using Type =                C; };
+	template<typename C, typename R, typename ...ParamsT> struct ClassGetter<R (C::*)(ParamsT...)                &&> { using Type =                C; };
+
+	template<bool>
+	struct ReflexivityChecker {
+		template<typename FuncT, typename ObjectT, typename ...ParamsT>
+		decltype(auto) operator()(FuncT pFunc, ObjectT &&vObject, ParamsT &&...vParams) const {
+			return ((*std::forward<ObjectT>(vObject)).*pFunc)(std::forward<ParamsT>(vParams)...);
+		}
+	};
+	template<>
+	struct ReflexivityChecker<true> {
+		template<typename FuncT, typename ObjectT, typename ...ParamsT>
+		decltype(auto) operator()(FuncT pFunc, ObjectT &&vObject, ParamsT &&...vParams) const {
+			return (std::forward<ObjectT>(vObject).*pFunc)(std::forward<ParamsT>(vParams)...);
+		}
+	};
+
+	template<bool>
+	struct MemberFunctionPointerChecker {
 		template<typename FuncT, typename ...ParamsT>
 		decltype(auto) operator()(FuncT &&vFunc, ParamsT &&...vParams) const {
 			return std::forward<FuncT>(vFunc)(std::forward<ParamsT>(vParams)...);
 		}
 	};
-
-#define DEFINE_NON_STATIC_MEMBER_FUNCTION_INVOKER_(cv_, ref_)	\
-	template<typename PtRetT, typename PtClassT, typename ...PtParamsT>	\
-	struct Invoker<PtRetT (PtClassT::*)(PtParamsT...) cv_ ref_> {	\
-		using PtrToMemFunc = PtRetT (PtClassT::*)(PtParamsT...) cv_ ref_;	\
-		\
-		template<typename ClassT, typename ...ParamsT,	\
-			std::enable_if_t<	\
-				std::is_base_of<PtClassT, std::decay_t<ClassT>>::value,	\
-				int> = 0>	\
-		decltype(auto) operator()(PtrToMemFunc pMemFunc, ClassT *pObj, ParamsT &&...vParams) const {	\
-			return (pObj->*pMemFunc)(std::forward<ParamsT>(vParams)...);	\
-		}	\
-		template<typename ClassT, typename ...ParamsT,	\
-			std::enable_if_t<	\
-				std::is_base_of<PtClassT, std::decay_t<ClassT>>::value &&	\
-					!std::is_convertible<ClassT &&, const volatile PtClassT *>::value,	\
-				int> = 0>	\
-		decltype(auto) operator()(PtrToMemFunc pMemFunc, ClassT &&vObj, ParamsT &&...vParams) const {	\
-			return (std::forward<ClassT>(vObj).*pMemFunc)(std::forward<ParamsT>(vParams)...);	\
-		}	\
-		template<typename ClassT, typename ...ParamsT,	\
-			std::enable_if_t<	\
-				!std::is_base_of<PtClassT, std::decay_t<ClassT>>::value,	\
-				int> = 0>	\
-		decltype(auto) operator()(PtrToMemFunc pMemFunc, ClassT &&vObj, ParamsT &&...vParams) const {	\
-			return ((*std::forward<ClassT>(vObj)).*pMemFunc)(std::forward<ParamsT>(vParams)...);	\
-		}	\
+	template<>
+	struct MemberFunctionPointerChecker<true> {
+		template<typename FuncT, typename ObjectT, typename ...ParamsT>
+		decltype(auto) operator()(FuncT pFunc, ObjectT &&vObject, ParamsT &&...vParams) const {
+			return ReflexivityChecker<std::is_base_of<typename ClassGetter<FuncT>::Type, std::decay_t<ObjectT>>::value>()(pFunc, std::forward<ObjectT>(vObject), std::forward<ParamsT>(vParams)...);
+		}
 	};
-
-DEFINE_NON_STATIC_MEMBER_FUNCTION_INVOKER_(const volatile, )
-DEFINE_NON_STATIC_MEMBER_FUNCTION_INVOKER_(const         , )
-DEFINE_NON_STATIC_MEMBER_FUNCTION_INVOKER_(      volatile, )
-DEFINE_NON_STATIC_MEMBER_FUNCTION_INVOKER_(              , )
-
-DEFINE_NON_STATIC_MEMBER_FUNCTION_INVOKER_(const volatile, &)
-DEFINE_NON_STATIC_MEMBER_FUNCTION_INVOKER_(const         , &)
-DEFINE_NON_STATIC_MEMBER_FUNCTION_INVOKER_(      volatile, &)
-DEFINE_NON_STATIC_MEMBER_FUNCTION_INVOKER_(              , &)
-
-DEFINE_NON_STATIC_MEMBER_FUNCTION_INVOKER_(const volatile, &&)
-DEFINE_NON_STATIC_MEMBER_FUNCTION_INVOKER_(const         , &&)
-DEFINE_NON_STATIC_MEMBER_FUNCTION_INVOKER_(      volatile, &&)
-DEFINE_NON_STATIC_MEMBER_FUNCTION_INVOKER_(              , &&)
-
-#undef DEFINE_NON_STATIC_MEMBER_FUNCTION_INVOKER_
-
 }
 
 template<typename FuncT, typename ...ParamsT>
 decltype(auto) Invoke(FuncT &&vFunc, ParamsT &&...vParams){
-	return Impl_Invoke::Invoker<std::decay_t<FuncT>>()(std::forward<FuncT>(vFunc), std::forward<ParamsT>(vParams)...);
+	return Impl_Invoke::MemberFunctionPointerChecker<std::is_member_function_pointer<std::decay_t<FuncT>>::value>()(std::forward<FuncT>(vFunc), std::forward<ParamsT>(vParams)...);
 }
 
 }

@@ -27,7 +27,7 @@ namespace Impl_Invoke {
 	};
 
 	template<typename C, typename M>
-	constexpr C GetClassFromPointerToMember(M C::*p) noexcept;
+	constexpr C GetClassFromPointerToMember(M C::*) noexcept;
 
 	template<bool>
 	struct MemberFunctionPointerChecker {

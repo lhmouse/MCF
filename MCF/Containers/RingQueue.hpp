@@ -70,9 +70,9 @@ public:
 		rhs.Swap(*this);
 	}
 	RingQueue &operator=(const RingQueue &rhs){
-		if(IsEmpty()){
+		if(std::is_nothrow_copy_constructible<Element>::value || IsEmpty()){
+			Reserve(rhs.GetSize());
 			try {
-				Reserve(rhs.GetSize());
 				rhs.X_IterateForward(rhs.x_uBegin, rhs.x_uEnd,
 					[&, this](auto i){
 						UncheckedPush(rhs.x_pStorage[i]);

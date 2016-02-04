@@ -48,9 +48,9 @@ namespace Impl_FlatContainer {
 			rhs.Swap(*this);
 		}
 		FlatContainer &operator=(const FlatContainer &rhs){
-			if(IsEmpty()){
+			if(std::is_nothrow_copy_constructible<Element>::value || IsEmpty()){
+				Reserve(rhs.x_uSize);
 				try {
-					Reserve(rhs.x_uSize);
 					for(std::size_t i = 0; i < rhs.x_uSize; ++i){
 						X_UncheckedPush(rhs.x_pStorage[i]);
 					}

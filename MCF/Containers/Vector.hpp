@@ -58,7 +58,10 @@ public:
 	Vector(const Vector &rhs)
 		: Vector()
 	{
-		Append(rhs.GetBegin(), rhs.GetEnd());
+		Reserve(rhs.x_uSize);
+		for(std::size_t i = 0; i < rhs.x_uSize; ++i){
+			UncheckedPush(rhs.x_pStorage[i]);
+		}
 	}
 	Vector(Vector &&rhs) noexcept
 		: Vector()
@@ -67,7 +70,15 @@ public:
 	}
 	Vector &operator=(const Vector &rhs){
 		if(IsEmpty()){
-			Append(rhs.GetBegin(), rhs.GetEnd());
+			try {
+				Reserve(rhs.x_uSize);
+				for(std::size_t i = 0; i < rhs.x_uSize; ++i){
+					UncheckedPush(rhs.x_pStorage[i]);
+				}
+			} catch(...){
+				Clear();
+				throw;
+			}
 		} else {
 			Vector(rhs).Swap(*this);
 		}

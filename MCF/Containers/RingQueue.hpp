@@ -70,7 +70,20 @@ public:
 		rhs.Swap(*this);
 	}
 	RingQueue &operator=(const RingQueue &rhs){
-		RingQueue(rhs).Swap(*this);
+		if(IsEmpty()){
+			try {
+				Reserve(rhs.GetSize());
+				rhs.X_IterateForward(rhs.x_uBegin, rhs.x_uEnd,
+					[&, this](auto i){
+						UncheckedPush(rhs.x_pStorage[i]);
+					});
+			} catch(...){
+				Clear();
+				throw;
+			}
+		} else {
+			RingQueue(rhs).Swap(*this);
+		}
 		return *this;
 	}
 	RingQueue &operator=(RingQueue &&rhs) noexcept {

@@ -66,7 +66,11 @@ public:
 		rhs.Swap(*this);
 	}
 	Vector &operator=(const Vector &rhs){
-		Vector(rhs).Swap(*this);
+		if(IsEmpty()){
+			Append(rhs.GetBegin(), rhs.GetEnd());
+		} else {
+			Vector(rhs).Swap(*this);
+		}
 		return *this;
 	}
 	Vector &operator=(Vector &&rhs) noexcept {

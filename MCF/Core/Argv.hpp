@@ -38,23 +38,23 @@ public:
 		return x_uArgc;
 	}
 
-	const wchar_t *GetStr(std::size_t uIndex) const noexcept {
+	const wchar_t *GetStr(std::size_t uIndex) const {
 		if(uIndex > x_uArgc){ // 传入 x_uArgc 会得到一个空指针。
 			DEBUG_THROW(Exception, ERROR_ACCESS_DENIED, "Argv: Subscript out of range"_rcs);
 		}
 		return UncheckedGetStr(uIndex);
 	}
-	std::size_t GetLen(std::size_t uIndex) const noexcept {
-		if(uIndex > x_uArgc){ // 传入 x_uArgc 会得到 0。
-			DEBUG_THROW(Exception, ERROR_ACCESS_DENIED, "Argv: Subscript out of range"_rcs);
-		}
-		return UncheckedGetLen(uIndex);
-	}
-
 	const wchar_t *UncheckedGetStr(std::size_t uIndex) const noexcept {
 		ASSERT(uIndex <= x_uArgc);
 
 		return x_pArgv[uIndex].pwszStr;
+	}
+
+	std::size_t GetLen(std::size_t uIndex) const {
+		if(uIndex > x_uArgc){ // 传入 x_uArgc 会得到 0。
+			DEBUG_THROW(Exception, ERROR_ACCESS_DENIED, "Argv: Subscript out of range"_rcs);
+		}
+		return UncheckedGetLen(uIndex);
 	}
 	std::size_t UncheckedGetLen(std::size_t uIndex) const noexcept {
 		ASSERT(uIndex <= x_uArgc);
@@ -62,15 +62,16 @@ public:
 		return x_pArgv[uIndex].uLen;
 	}
 
-	WideStringView Get(std::size_t uIndex) const noexcept {
-		const auto pwszStr = GetStr(uIndex);
-		const auto uLen = UncheckedGetLen(uIndex);
-		return WideStringView(pwszStr, uLen);
+	WideStringView Get(std::size_t uIndex) const {
+		if(uIndex > x_uArgc){
+			DEBUG_THROW(Exception, ERROR_ACCESS_DENIED, "Argv: Subscript out of range"_rcs);
+		}
+		return UncheckedGet(uIndex);
 	}
 	WideStringView UncheckedGet(std::size_t uIndex) const noexcept {
-		const auto pwszStr = UncheckedGetStr(uIndex);
-		const auto uLen = UncheckedGetLen(uIndex);
-		return WideStringView(pwszStr, uLen);
+		ASSERT(uIndex <= x_uArgc);
+
+		return WideStringView(x_pArgv[uIndex].pwszStr, x_pArgv[uIndex].uLen);
 	}
 
 public:

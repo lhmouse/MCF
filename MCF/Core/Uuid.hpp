@@ -6,6 +6,7 @@
 #define MCF_CORE_UUID_HPP_
 
 #include "Array.hpp"
+#include "../Core/Exception.hpp"
 #include "../Utilities/Assert.hpp"
 #include "../Utilities/BinaryOperations.hpp"
 #include <cstddef>
@@ -19,10 +20,10 @@ public:
 
 private:
 	union {
-		unsigned char aby[16];
-		std::uint16_t au16[8];
-		std::uint32_t au32[4];
-		std::uint64_t au64[2];
+		Array<std::uint8_t, 16> aby;
+		Array<std::uint16_t, 8> au16;
+		Array<std::uint32_t, 4> au32;
+		Array<std::uint64_t, 2> au64;
 	} x_unData;
 
 public:
@@ -40,13 +41,36 @@ public:
 
 public:
 	const unsigned char *GetData() const noexcept {
-		return x_unData.aby;
+		return x_unData.aby.GetData();
 	}
 	unsigned char *GetData() noexcept {
-		return x_unData.aby;
+		return x_unData.aby.GetData();
 	}
 	static constexpr std::size_t GetSize() noexcept {
 		return 16;
+	}
+
+	const unsigned char &Get(std::size_t uIndex) const {
+		if(uIndex > GetSize()){
+			DEBUG_THROW(Exception, ERROR_ACCESS_DENIED, "VarChar: Subscript out of range"_rcs);
+		}
+		return UncheckedGet(uIndex);
+	}
+	unsigned char &Get(std::size_t uIndex){
+		if(uIndex > GetSize()){
+			DEBUG_THROW(Exception, ERROR_ACCESS_DENIED, "VarChar: Subscript out of range"_rcs);
+		}
+		return UncheckedGet(uIndex);
+	}
+	const unsigned char &UncheckedGet(std::size_t uIndex) const noexcept {
+		ASSERT(uIndex <= GetSize());
+
+		return x_unData.aby.UncheckedGet(uIndex);
+	}
+	unsigned char &UncheckedGet(std::size_t uIndex) noexcept {
+		ASSERT(uIndex <= GetSize());
+
+		return x_unData.aby.UncheckedGet(uIndex);
 	}
 
 	int Compare(const Uuid &rhs) const noexcept {
@@ -54,8 +78,7 @@ public:
 	}
 
 	void Swap(Uuid &rhs) noexcept {
-		using std::swap;
-		swap(x_unData, rhs.x_unData);
+		BSwap(x_unData, rhs.x_unData);
 	}
 
 	void Print(Array<char, 36> &achHex, bool bUpperCase = true) const noexcept;
@@ -63,14 +86,10 @@ public:
 
 public:
 	const unsigned char &operator[](std::size_t uIndex) const noexcept {
-		ASSERT(uIndex < GetSize());
-
-		return GetData()[uIndex];
+		return UncheckedGet(uIndex);
 	}
 	unsigned char &operator[](std::size_t uIndex) noexcept {
-		ASSERT(uIndex < GetSize());
-
-		return GetData()[uIndex];
+		return UncheckedGet(uIndex);
 	}
 
 	bool operator==(const Uuid &rhs) const noexcept {

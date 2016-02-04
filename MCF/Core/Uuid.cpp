@@ -13,7 +13,7 @@
 namespace MCF {
 
 namespace {
-	const auto g_u16Pid = (std::uint16_t)::GetCurrentProcessId();
+	const unsigned g_uPid(::GetCurrentProcessId());
 
 	Atomic<std::uint32_t> g_u32AutoInc(0);
 }
@@ -21,7 +21,7 @@ namespace {
 // 静态成员函数。
 Uuid Uuid::Generate(){
 	const auto u64Now = GetUtcClock();
-	const auto u32Unique = g_u16Pid | ((g_u32AutoInc.Increment(kAtomicRelaxed) << 16) & 0x3FFFFFFFu);
+	const auto u32Unique = (g_uPid & 0xFFFF) | ((g_u32AutoInc.Increment(kAtomicRelaxed) << 16) & 0x3FFFFFFFu);
 
 	Uuid vRet;
 	StoreBe(vRet.x_unData.au32[0], (std::uint32_t)(u64Now >> 12));
@@ -42,7 +42,7 @@ Uuid::Uuid(const Array<char, 36> &achHex){
 
 // 其他非静态成员函数。
 void Uuid::Print(Array<char, 36> &achHex, bool bUpperCase) const noexcept {
-	auto pbyRead = x_unData.aby;
+	auto pbyRead = x_unData.aby.GetData();
 	auto pchWrite = achHex.GetData();
 
 #define PRINT(count_)	\
@@ -75,10 +75,10 @@ void Uuid::Print(Array<char, 36> &achHex, bool bUpperCase) const noexcept {
 	PRINT(6)
 }
 bool Uuid::Scan(const Array<char, 36> &achHex) noexcept {
-	unsigned char abyTemp[16];
+	Array<std::uint8_t, 16> abyTemp;
 
 	auto pchRead = achHex.GetData();
-	auto pbyWrite = abyTemp;
+	auto pbyWrite = abyTemp.GetData();
 
 #define SCAN(count_)	\
 	for(std::size_t i = 0; i < count_; ++i){	\

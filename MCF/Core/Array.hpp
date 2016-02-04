@@ -159,52 +159,52 @@ public:
 	}
 
 	const Element *GetBegin() const noexcept {
-		return GetData();
+		return m_aStorage;
 	}
 	Element *GetBegin() noexcept {
-		return GetData();
+		return m_aStorage;
 	}
 	const Element *GetConstBegin() const noexcept {
 		return GetBegin();
 	}
 	const Element *GetEnd() const noexcept {
-		return GetData() + GetSize();
+		return m_aStorage + kSizeT;
 	}
 	Element *GetEnd() noexcept {
-		return GetData() + GetSize();
+		return m_aStorage + kSizeT;
 	}
 	const Element *GetConstEnd() const noexcept {
 		return GetEnd();
 	}
 
 	const Element &Get(std::size_t uIndex) const {
-		if(uIndex >= GetSize()){
+		if(uIndex >= kSizeT){
 			DEBUG_THROW(Exception, ERROR_ACCESS_DENIED, "Array: Subscript out of range"_rcs);
 		}
 		return UncheckedGet(uIndex);
 	}
 	Element &Get(std::size_t uIndex){
-		if(uIndex >= GetSize()){
+		if(uIndex >= kSizeT){
 			DEBUG_THROW(Exception, ERROR_ACCESS_DENIED, "Array: Subscript out of range"_rcs);
 		}
 		return UncheckedGet(uIndex);
 	}
 	const Element &UncheckedGet(std::size_t uIndex) const noexcept {
-		ASSERT(uIndex < GetSize());
+		ASSERT(uIndex < kSizeT);
 
-		return GetData()[uIndex];
+		return m_aStorage[uIndex];
 	}
 	Element &UncheckedGet(std::size_t uIndex) noexcept {
-		ASSERT(uIndex < GetSize());
+		ASSERT(uIndex < kSizeT);
 
-		return GetData()[uIndex];
+		return m_aStorage[uIndex];
 	}
 
-	const Element &operator[](std::size_t uIndex) const noexcept {
-		return UncheckedGet(uIndex);
+	const Element &operator[](std::size_t uIndex) const {
+		return Get(uIndex);
 	}
-	Element &operator[](std::size_t uIndex) noexcept {
-		return UncheckedGet(uIndex);
+	Element &operator[](std::size_t uIndex){
+		return Get(uIndex);
 	}
 
 public:
@@ -364,19 +364,19 @@ public:
 	}
 
 	const Element *GetBegin() const noexcept {
-		return GetData();
+		return m_aStorage;
 	}
 	Element *GetBegin() noexcept {
-		return GetData();
+		return m_aStorage;
 	}
 	const Element *GetConstBegin() const noexcept {
 		return GetBegin();
 	}
 	const Element *GetEnd() const noexcept {
-		return GetData() + kSizeT;
+		return m_aStorage + kSizeT;
 	}
 	Element *GetEnd() noexcept {
-		return GetData() + kSizeT;
+		return m_aStorage + kSizeT;
 	}
 	const Element *GetConstEnd() const noexcept {
 		return GetEnd();
@@ -397,12 +397,12 @@ public:
 	const Element &UncheckedGet(std::size_t uIndex) const noexcept {
 		ASSERT(uIndex < kSizeT);
 
-		return GetData()[uIndex];
+		return m_aStorage[uIndex];
 	}
 	Element &UncheckedGet(std::size_t uIndex) noexcept {
 		ASSERT(uIndex < kSizeT);
 
-		return GetData()[uIndex];
+		return m_aStorage[uIndex];
 	}
 
 	const Element &operator[](std::size_t uIndex) const noexcept {

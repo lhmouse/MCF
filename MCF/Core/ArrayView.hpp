@@ -5,20 +5,23 @@
 #ifndef MCF_CORE_ARRAY_VIEW_HPP_
 #define MCF_CORE_ARRAY_VIEW_HPP_
 
+#include "Exception.hpp"
 #include "../Utilities/Assert.hpp"
 #include "../Utilities/CountOf.hpp"
 #include "../Utilities/AddressOf.hpp"
 #include <type_traits>
 #include <initializer_list>
 #include <cstddef>
-#include "StringView.hpp"
 
 namespace MCF {
 
-template<class ElementT>
+template<typename ElementT>
 class ArrayView {
+public:
+	using Element = ElementT;
+
 private:
-	ElementT *x_pBegin;
+	Element *x_pBegin;
 	std::size_t x_uSize;
 
 public:
@@ -26,49 +29,82 @@ public:
 		: x_pBegin(nullptr), x_uSize(0)
 	{
 	}
-	constexpr ArrayView(ElementT &rhs) noexcept
+	constexpr ArrayView(Element &rhs) noexcept
 		: x_pBegin(AddressOf(rhs)), x_uSize(1)
 	{
 	}
-	constexpr ArrayView(ElementT *pBegin, std::size_t uSize) noexcept
+	constexpr ArrayView(Element *pBegin, std::size_t uSize) noexcept
 		: x_pBegin(pBegin), x_uSize(uSize)
 	{
 	}
 	template<std::size_t kSizeT>
-	constexpr ArrayView(ElementT (&rhs)[kSizeT]) noexcept
+	constexpr ArrayView(Element (&rhs)[kSizeT]) noexcept
 		: x_pBegin(rhs), x_uSize(kSizeT)
 	{
 	}
 
 public:
-	constexpr ElementT *GetBegin() const noexcept {
+	constexpr Element *GetBegin() const noexcept {
 		return x_pBegin;
 	}
-	constexpr ElementT *GetEnd() const noexcept {
+	constexpr Element *GetEnd() const noexcept {
 		return x_pBegin + x_uSize;
 	}
-	constexpr ElementT *GetData() const noexcept {
+	constexpr Element *GetData() const noexcept {
 		return x_pBegin;
 	}
 	constexpr std::size_t GetSize() const noexcept {
 		return x_uSize;
 	}
 
+	Element &Get(std::size_t uIndex) const {
+		if(uIndex >= x_uSize){
+			DEBUG_THROW(Exception, ERROR_ACCESS_DENIED, "ArrayView: Subscript out of range"_rcs);
+		}
+		return UncheckedGet(uIndex);
+	}
+	Element &UncheckedGet(std::size_t uIndex) const noexcept {
+		ASSERT(uIndex < x_uSize);
+
+		return x_pBegin[uIndex];
+	}
+
+	bool IsEmpty() const noexcept {
+		return GetSize() == 0;
+	}
+
 public:
-	explicit constexpr operator ElementT *() const noexcept {
+	explicit constexpr operator bool() const noexcept {
+		return !IsEmpty();
+	}
+	explicit operator Element *() const noexcept {
 		return GetData();
 	}
-	constexpr ElementT &operator[](std::size_t uIndex) const noexcept {
-		ASSERT_MSG(uIndex < GetSize(), L"索引越界。");
+	Element &operator[](std::size_t uIndex) const noexcept {
+		return UncheckedGet(uIndex);
+	}
 
-		return GetData();
+	friend decltype(auto) begin(const ArrayView &rhs) noexcept {
+		return rhs.GetBegin();
+	}
+	friend decltype(auto) cbegin(const ArrayView &rhs) noexcept {
+		return rhs.GetBegin();
+	}
+	friend decltype(auto) end(const ArrayView &rhs) noexcept {
+		return rhs.GetEnd();
+	}
+	friend decltype(auto) cend(const ArrayView &rhs) noexcept {
+		return rhs.GetEnd();
 	}
 };
 
-template<class ElementT>
+template<typename ElementT>
 class ArrayView<const ElementT> {
+public:
+	using Element = const ElementT;
+
 private:
-	const ElementT *x_pBegin;
+	Element *x_pBegin;
 	std::size_t x_uSize;
 
 public:
@@ -76,82 +112,82 @@ public:
 		: x_pBegin(nullptr), x_uSize(0)
 	{
 	}
-	constexpr ArrayView(const ElementT &rhs) noexcept
+	constexpr ArrayView(Element &rhs) noexcept
 		: x_pBegin(AddressOf(rhs)), x_uSize(1)
 	{
 	}
-	constexpr ArrayView(const ElementT *pBegin, std::size_t uSize) noexcept
+	constexpr ArrayView(Element *pBegin, std::size_t uSize) noexcept
 		: x_pBegin(pBegin), x_uSize(uSize)
 	{
 	}
 	template<std::size_t kSizeT>
-	constexpr ArrayView(const ElementT (&rhs)[kSizeT]) noexcept
+	constexpr ArrayView(Element (&rhs)[kSizeT]) noexcept
 		: x_pBegin(rhs), x_uSize(kSizeT)
 	{
 	}
-	template<std::size_t kSizeT>
-	constexpr ArrayView(ElementT (&rhs)[kSizeT]) noexcept
-		: x_pBegin(rhs), x_uSize(kSizeT)
-	{
-	}
-	constexpr ArrayView(const ArrayView<ElementT> &rhs) noexcept
+	constexpr ArrayView(const ArrayView<Element> &rhs) noexcept
 		: x_pBegin(rhs.GetData()), x_uSize(rhs.GetSize())
 	{
 	}
-	template<StringType kTypeT,
-		std::enable_if_t<
-			std::is_same<typename StringView<kTypeT>::Char, std::decay_t<ElementT>>::value,
-			int> = 0>
-	constexpr ArrayView(StringView<kTypeT> rhs) noexcept
-		: x_pBegin(rhs.GetData()), x_uSize(rhs.GetSize())
-	{
-	}
-	constexpr ArrayView(std::initializer_list<ElementT> rhs) noexcept
+	constexpr ArrayView(std::initializer_list<Element> rhs) noexcept
 		: x_pBegin(rhs.begin()), x_uSize(rhs.size())
 	{
 	}
 
 public:
-	constexpr const ElementT *GetBegin() const noexcept {
+	constexpr Element *GetBegin() const noexcept {
 		return x_pBegin;
 	}
-	constexpr const ElementT *GetEnd() const noexcept {
+	constexpr Element *GetEnd() const noexcept {
 		return x_pBegin + x_uSize;
 	}
-	constexpr const ElementT *GetData() const noexcept {
+	constexpr Element *GetData() const noexcept {
 		return x_pBegin;
 	}
 	constexpr std::size_t GetSize() const noexcept {
 		return x_uSize;
 	}
 
+	Element &Get(std::size_t uIndex) const {
+		if(uIndex >= x_uSize){
+			DEBUG_THROW(Exception, ERROR_ACCESS_DENIED, "ArrayView: Subscript out of range"_rcs);
+		}
+		return UncheckedGet(uIndex);
+	}
+	Element &UncheckedGet(std::size_t uIndex) const noexcept {
+		ASSERT(uIndex < x_uSize);
+
+		return x_pBegin[uIndex];
+	}
+
+	bool IsEmpty() const noexcept {
+		return GetSize() == 0;
+	}
+
 public:
-	explicit constexpr operator const ElementT *() const noexcept {
+	explicit constexpr operator bool() const noexcept {
+		return !IsEmpty();
+	}
+	explicit operator Element *() const noexcept {
 		return GetData();
 	}
-	constexpr const ElementT &operator[](std::size_t uIndex) const noexcept {
-		ASSERT_MSG(uIndex < GetSize(), L"索引越界。");
+	Element &operator[](std::size_t uIndex) const noexcept {
+		return UncheckedGet(uIndex);
+	}
 
-		return GetData();
+	friend decltype(auto) begin(const ArrayView &rhs) noexcept {
+		return rhs.GetBegin();
+	}
+	friend decltype(auto) cbegin(const ArrayView &rhs) noexcept {
+		return rhs.GetBegin();
+	}
+	friend decltype(auto) end(const ArrayView &rhs) noexcept {
+		return rhs.GetEnd();
+	}
+	friend decltype(auto) cend(const ArrayView &rhs) noexcept {
+		return rhs.GetEnd();
 	}
 };
-
-template<class ElementT>
-decltype(auto) begin(const ArrayView<ElementT> &rhs) noexcept {
-	return rhs.GetBegin();
-}
-template<class ElementT>
-decltype(auto) cbegin(const ArrayView<ElementT> &rhs) noexcept {
-	return begin(rhs);
-}
-template<class ElementT>
-decltype(auto) end(const ArrayView<ElementT> &rhs) noexcept {
-	return rhs.GetEnd();
-}
-template<class ElementT>
-decltype(auto) cend(const ArrayView<ElementT> &rhs) noexcept {
-	return end(rhs);
-}
 
 }
 

@@ -24,24 +24,24 @@ public:
 	Array<ElementT, kRows, kColumns> m_aStorage;
 
 public:
-	const Array<ElementT, kColumns> &Get(std::size_t kRow) const noexcept {
-		return m_aStorage.Get(kRow);
+	const Array<ElementT, kColumns> &Get(std::size_t uRow) const noexcept {
+		return m_aStorage.Get(uRow);
 	}
-	Array<ElementT, kColumns> &Get(std::size_t kRow) noexcept {
-		return m_aStorage.Get(kRow);
+	Array<ElementT, kColumns> &Get(std::size_t uRow) noexcept {
+		return m_aStorage.Get(uRow);
 	}
-	const Array<ElementT, kColumns> &UncheckedGet(std::size_t kRow) const noexcept {
-		return m_aStorage.UncheckedGet(kRow);
+	const Array<ElementT, kColumns> &UncheckedGet(std::size_t uRow) const noexcept {
+		return m_aStorage.UncheckedGet(uRow);
 	}
-	Array<ElementT, kColumns> &UncheckedGet(std::size_t kRow) noexcept {
-		return m_aStorage.UncheckedGet(kRow);
+	Array<ElementT, kColumns> &UncheckedGet(std::size_t uRow) noexcept {
+		return m_aStorage.UncheckedGet(uRow);
 	}
 
-	const Array<ElementT, kColumns> &operator[](std::size_t kRow) const noexcept {
-		return m_aStorage[kRow];
+	const Array<ElementT, kColumns> &operator[](std::size_t uRow) const noexcept {
+		return m_aStorage[uRow];
 	}
-	Array<ElementT, kColumns> &operator[](std::size_t kRow) noexcept {
-		return m_aStorage[kRow];
+	Array<ElementT, kColumns> &operator[](std::size_t uRow) noexcept {
+		return m_aStorage[uRow];
 	}
 };
 

@@ -1,23 +1,30 @@
 #include <MCF/StdMCF.hpp>
-#include <MCF/Utilities/Invoke.hpp>
-#include <MCF/SmartPointers/UniquePtr.hpp>
+#include <MCF/Utilities/MinMax.hpp>
 #include <iostream>
 
-struct foo {
-	int __stdcall bark(char c, int i) const volatile & {
-		std::cout <<"bark: c = " <<c <<", i = " <<i <<std::endl;
-		return 123;
-	}
-};
 
-struct bar : foo {
+struct foo {
+    int i;
+
+    explicit foo(int x)
+        : i(x)
+    {
+    }
+    foo(const foo &r)
+        : i(r.i)
+    {
+    }
+    ~foo(){
+        i = -1;
+    }
+
+    friend bool operator<(const foo &l, const foo &r){
+        return l.i < r.i;
+    }
 };
 
 extern "C" unsigned MCFCRT_Main(){
-	//bar f;
-	auto f = MCF::MakeUnique<bar>();
-	auto p = &foo::bark;
-	auto ret = MCF::Invoke(p, std::move(f), 'w', 456);
-	std::cout <<"ret = " <<ret <<std::endl;
+    const auto &r = MCF::Max(foo(3), foo(1), foo(2));
+    std::cout <<"r.i = " <<r.i <<std::endl;
 	return 0;
 }

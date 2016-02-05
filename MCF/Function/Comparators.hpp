@@ -5,75 +5,44 @@
 #ifndef MCF_FUNCTION_COMPARATORS_HPP_
 #define MCF_FUNCTION_COMPARATORS_HPP_
 
-#include <cstdint>
-
 namespace MCF {
 
 struct Equal {
-	template<typename Tx, typename Ty>
-	constexpr bool operator()(const Tx &x, const Ty &y) const {
-		return x == y;
-	}
-	template<typename Tx, typename Ty>
-	bool operator()(Tx *const &px, Ty *const &py) const noexcept {
-		return reinterpret_cast<std::uintptr_t>(static_cast<const volatile void *>(px)) == reinterpret_cast<std::uintptr_t>(static_cast<const volatile void *>(py));
+	template<typename T, typename U>
+	constexpr auto operator()(const T &t, const U &u) const -> decltype(t == u) {
+		return t == u;
 	}
 };
 struct Unequal {
-	template<typename Tx, typename Ty>
-	constexpr bool operator()(const Tx &x, const Ty &y) const {
-		return x != y;
-	}
-	template<typename Tx, typename Ty>
-	bool operator()(Tx *const &px, Ty *const &py) const noexcept {
-		return reinterpret_cast<std::uintptr_t>(static_cast<const volatile void *>(px)) != reinterpret_cast<std::uintptr_t>(static_cast<const volatile void *>(py));
+	template<typename T, typename U>
+	constexpr auto operator()(const T &t, const U &u) const -> decltype(t != u) {
+		return t != u;
 	}
 };
-
 struct Less {
-	template<typename Tx, typename Ty>
-	constexpr bool operator()(const Tx &x, const Ty &y) const {
-		return x < y;
-	}
-	template<typename Tx, typename Ty>
-	bool operator()(Tx *const &px, Ty *const &py) const noexcept {
-		return reinterpret_cast<std::uintptr_t>(static_cast<const volatile void *>(px)) < reinterpret_cast<std::uintptr_t>(static_cast<const volatile void *>(py));
+	template<typename T, typename U>
+	constexpr auto operator()(const T &t, const U &u) const -> decltype(t < u) {
+		return t < u;
 	}
 };
 struct Greater {
-	template<typename Tx, typename Ty>
-	constexpr bool operator()(const Tx &x, const Ty &y) const {
-		return x > y;
-	}
-	template<typename Tx, typename Ty>
-	bool operator()(Tx *const &px, Ty *const &py) const noexcept {
-		return reinterpret_cast<std::uintptr_t>(static_cast<const volatile void *>(px)) > reinterpret_cast<std::uintptr_t>(static_cast<const volatile void *>(py));
+	template<typename T, typename U>
+	constexpr auto operator()(const T &t, const U &u) const -> decltype(t > u) {
+		return t > u;
 	}
 };
-
 struct LessEqual {
-	template<typename Tx, typename Ty>
-	constexpr bool operator()(const Tx &x, const Ty &y) const {
-		return x <= y;
-	}
-	template<typename Tx, typename Ty>
-	bool operator()(Tx *const &px, Ty *const &py) const noexcept {
-		return reinterpret_cast<std::uintptr_t>(static_cast<const volatile void *>(px)) <= reinterpret_cast<std::uintptr_t>(static_cast<const volatile void *>(py));
+	template<typename T, typename U>
+	constexpr auto operator()(const T &t, const U &u) const -> decltype(t <= u) {
+		return t <= u;
 	}
 };
 struct GreaterEqual {
-	template<typename Tx, typename Ty>
-	constexpr bool operator()(const Tx &x, const Ty &y) const {
-		return x >= y;
-	}
-	template<typename Tx, typename Ty>
-	bool operator()(Tx *const &px, Ty *const &py) const noexcept {
-		return reinterpret_cast<std::uintptr_t>(static_cast<const volatile void *>(px)) >= reinterpret_cast<std::uintptr_t>(static_cast<const volatile void *>(py));
+	template<typename T, typename U>
+	constexpr auto operator()(const T &t, const U &u) const -> decltype(t >= u) {
+		return t >= u;
 	}
 };
-
-
-#undef DEFINE_COMPARATOR_
 
 }
 

@@ -242,12 +242,12 @@ public:
 		X_SetSize(0);
 	}
 	template<typename OutputIteratorT>
-	OutputIteratorT Spit(OutputIteratorT itOutput){
+	OutputIteratorT Extract(OutputIteratorT itOutput){
 		try {
 			const auto pBegin = GetBegin();
 			const auto pEnd = GetEnd();
 			for(auto p = pBegin; p != pEnd; ++p){
-				*itOutput = std::move(*p);
+				*itOutput = *p;
 				++itOutput;
 			}
 		} catch(...){

@@ -5,6 +5,7 @@
 #ifndef MCF_CORE_STRING_VIEW_HPP_
 #define MCF_CORE_STRING_VIEW_HPP_
 
+#include "../Containers/_Enumerator.hpp"
 #include "../../MCFCRT/ext/alloca.h"
 #include "../Utilities/Assert.hpp"
 #include "../Utilities/CountOf.hpp"
@@ -238,6 +239,11 @@ public:
 
 	static_assert(std::is_integral<Char>::value, "Char must be an integral type.");
 
+	// 容器需求。
+	using Element         = const Char;
+	using ConstEnumerator = Impl_Enumerator::ConstEnumerator <StringView>;
+	using Enumerator      = Impl_Enumerator::Enumerator      <StringView>;
+
 private:
 	// 为了方便理解，想象此处使用的是所谓“插入式光标”：
 
@@ -286,6 +292,129 @@ public:
 	}
 
 public:
+	// 容器需求。
+	bool IsEmpty() const noexcept {
+		return GetSize() == 0;
+	}
+	void Clear() noexcept {
+		x_pchEnd = x_pchBegin;
+	}
+	template<typename OutputIteratorT>
+	OutputIteratorT Extract(OutputIteratorT itOutput){
+		try {
+			const auto pBegin = GetBegin();
+			const auto pEnd = GetEnd();
+			for(auto p = pBegin; p != pEnd; ++p){
+				*itOutput = *p;
+				++itOutput;
+			}
+		} catch(...){
+			Clear();
+			throw;
+		}
+		Clear();
+		return itOutput;
+	}
+
+	const Element *GetFirst() const noexcept {
+		if(IsEmpty()){
+			return nullptr;
+		}
+		return GetBegin();
+	}
+	Element *GetFirst() noexcept {
+		if(IsEmpty()){
+			return nullptr;
+		}
+		return GetBegin();
+	}
+	const Element *GetConstFirst() const noexcept {
+		return GetFirst();
+	}
+	const Element *GetLast() const noexcept {
+		if(IsEmpty()){
+			return nullptr;
+		}
+		return GetEnd() - 1;
+	}
+	Element *GetLast() noexcept {
+		if(IsEmpty()){
+			return nullptr;
+		}
+		return GetEnd() - 1;
+	}
+	const Element *GetConstLast() const noexcept {
+		return GetLast();
+	}
+
+	const Element *GetPrev(const Element *pPos) const noexcept {
+		const auto pBegin = GetBegin();
+		const auto uOffset = static_cast<std::size_t>(pPos - pBegin);
+		if(uOffset == 0){
+			return nullptr;
+		}
+		return pBegin + uOffset - 1;
+	}
+	Element *GetPrev(const Element *pPos) noexcept {
+		const auto pBegin = GetBegin();
+		const auto uOffset = static_cast<std::size_t>(pPos - pBegin);
+		if(uOffset == 0){
+			return nullptr;
+		}
+		return pBegin + uOffset - 1;
+	}
+	const Element *GetNext(const Element *pPos) const noexcept {
+		const auto pBegin = GetBegin();
+		const auto uOffset = static_cast<std::size_t>(pPos - pBegin);
+		if(uOffset + 1 == GetSize()){
+			return nullptr;
+		}
+		return pBegin + uOffset + 1;
+	}
+	Element *GetNext(const Element *pPos) noexcept {
+		const auto pBegin = GetBegin();
+		const auto uOffset = static_cast<std::size_t>(pPos - pBegin);
+		if(uOffset + 1 == GetSize()){
+			return nullptr;
+		}
+		return pBegin + uOffset + 1;
+	}
+
+	ConstEnumerator EnumerateFirst() const noexcept {
+		return ConstEnumerator(*this, GetFirst());
+	}
+	Enumerator EnumerateFirst() noexcept {
+		return Enumerator(*this, GetFirst());
+	}
+	ConstEnumerator EnumerateConstFirst() const noexcept {
+		return EnumerateFirst();
+	}
+	ConstEnumerator EnumerateLast() const noexcept {
+		return ConstEnumerator(*this, GetLast());
+	}
+	Enumerator EnumerateLast() noexcept {
+		return Enumerator(*this, GetLast());
+	}
+	ConstEnumerator EnumerateConstLast() const noexcept {
+		return EnumerateLast();
+	}
+	constexpr ConstEnumerator EnumerateSingular() const noexcept {
+		return ConstEnumerator(*this, nullptr);
+	}
+	Enumerator EnumerateSingular() noexcept {
+		return Enumerator(*this, nullptr);
+	}
+	constexpr ConstEnumerator EnumerateConstSingular() const noexcept {
+		return EnumerateSingular();
+	}
+
+	void Swap(StringView &rhs) noexcept {
+		using std::swap;
+		swap(x_pchBegin, rhs.x_pchBegin);
+		swap(x_pchEnd,   rhs.x_pchEnd);
+	}
+
+	// StringView 需求。
 	const Char *GetBegin() const noexcept {
 		return x_pchBegin;
 	}
@@ -309,19 +438,6 @@ public:
 		ASSERT(uIndex < GetSize());
 
 		return GetBegin()[uIndex];
-	}
-
-	bool IsEmpty() const noexcept {
-		return GetSize() == 0;
-	}
-	void Clear() noexcept {
-		x_pchEnd = x_pchBegin;
-	}
-
-	void Swap(StringView &rhs) noexcept {
-		using std::swap;
-		swap(x_pchBegin, rhs.x_pchBegin);
-		swap(x_pchEnd,   rhs.x_pchEnd);
 	}
 
 	int Compare(const StringView &rhs) const noexcept {

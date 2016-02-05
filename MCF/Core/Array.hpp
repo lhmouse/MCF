@@ -49,6 +49,14 @@ public:
 	constexpr bool IsEmpty() const noexcept {
 		return false;
 	}
+	template<typename OutputIteratorT>
+	OutputIteratorT Extract(OutputIteratorT itOutput){
+		for(std::size_t i = 0; i < kSizeT; ++i){
+			*itOutput = std::move(m_aStorage[i]);
+			++itOutput;
+		}
+		return itOutput;
+	}
 
 	constexpr const Element *GetFirst() const noexcept {
 		return GetBegin();
@@ -253,6 +261,14 @@ public:
 
 	constexpr bool IsEmpty() const noexcept {
 		return false;
+	}
+	template<typename OutputIteratorT>
+	OutputIteratorT Extract(OutputIteratorT itOutput){
+		for(std::size_t i = 0; i < kSizeT; ++i){
+			*itOutput = std::move(m_aStorage[i]);
+			++itOutput;
+		}
+		return itOutput;
 	}
 
 	constexpr const Element *GetFirst() const noexcept {

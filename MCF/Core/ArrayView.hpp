@@ -6,6 +6,7 @@
 #define MCF_CORE_ARRAY_VIEW_HPP_
 
 #include "Exception.hpp"
+#include "../Containers/_Enumerator.hpp"
 #include "../Utilities/Assert.hpp"
 #include "../Utilities/CountOf.hpp"
 #include "../Utilities/AddressOf.hpp"
@@ -18,7 +19,10 @@ namespace MCF {
 template<typename ElementT>
 class ArrayView {
 public:
-	using Element = ElementT;
+	// 容器需求。
+	using Element         = ElementT;
+	using ConstEnumerator = Impl_Enumerator::ConstEnumerator <ArrayView>;
+	using Enumerator      = Impl_Enumerator::Enumerator      <ArrayView>;
 
 private:
 	Element *x_pBegin;
@@ -37,13 +41,128 @@ public:
 		: x_pBegin(pBegin), x_uSize(uSize)
 	{
 	}
-	template<std::size_t kSizeT>
-	constexpr ArrayView(Element (&rhs)[kSizeT]) noexcept
-		: x_pBegin(rhs), x_uSize(kSizeT)
+	template<std::size_t x_uSize>
+	constexpr ArrayView(Element (&rhs)[x_uSize]) noexcept
+		: x_pBegin(rhs), x_uSize(x_uSize)
 	{
 	}
 
 public:
+	// 容器需求。
+	constexpr bool IsEmpty() const noexcept {
+		return x_uSize == 0;
+	}
+	void Clear(){
+		x_uSize = 0;
+	}
+	template<typename OutputIteratorT>
+	OutputIteratorT Extract(OutputIteratorT itOutput){
+		for(std::size_t i = 0; i < x_uSize; ++i){
+			*itOutput = std::move(x_pBegin[i]);
+			++itOutput;
+		}
+		return itOutput;
+	}
+
+	constexpr const Element *GetFirst() const noexcept {
+		return GetBegin();
+	}
+	Element *GetFirst() noexcept {
+		return GetBegin();
+	}
+	constexpr const Element *GetConstFirst() const noexcept {
+		return GetFirst();
+	}
+	constexpr const Element *GetLast() const noexcept {
+		return GetEnd() - 1;
+	}
+	Element *GetLast() noexcept {
+		return GetEnd() - 1;
+	}
+	constexpr const Element *GetConstLast() const noexcept {
+		return GetLast();
+	}
+
+	const Element *GetPrev(const Element *pPos) const noexcept {
+		ASSERT(pPos);
+
+		const auto pBegin = GetBegin();
+		auto uOffset = static_cast<std::size_t>(pPos - pBegin);
+		if(uOffset == 0){
+			return nullptr;
+		}
+		--uOffset;
+		return pBegin + uOffset;
+	}
+	Element *GetPrev(Element *pPos) noexcept {
+		ASSERT(pPos);
+
+		const auto pBegin = GetBegin();
+		auto uOffset = static_cast<std::size_t>(pPos - pBegin);
+		if(uOffset == 0){
+			return nullptr;
+		}
+		--uOffset;
+		return pBegin + uOffset;
+	}
+	const Element *GetNext(const Element *pPos) const noexcept {
+		ASSERT(pPos);
+
+		const auto pBegin = GetBegin();
+		auto uOffset = static_cast<std::size_t>(pPos - pBegin);
+		++uOffset;
+		if(uOffset == x_uSize){
+			return nullptr;
+		}
+		return pBegin + uOffset;
+	}
+	Element *GetNext(Element *pPos) noexcept {
+		ASSERT(pPos);
+
+		const auto pBegin = GetBegin();
+		auto uOffset = static_cast<std::size_t>(pPos - pBegin);
+		++uOffset;
+		if(uOffset == x_uSize){
+			return nullptr;
+		}
+		return pBegin + uOffset;
+	}
+
+	ConstEnumerator EnumerateFirst() const noexcept {
+		return ConstEnumerator(*this, GetFirst());
+	}
+	Enumerator EnumerateFirst() noexcept {
+		return Enumerator(*this, GetFirst());
+	}
+	ConstEnumerator EnumerateConstFirst() const noexcept {
+		return EnumerateFirst();
+	}
+	ConstEnumerator EnumerateLast() const noexcept {
+		return ConstEnumerator(*this, GetLast());
+	}
+	Enumerator EnumerateLast() noexcept {
+		return Enumerator(*this, GetLast());
+	}
+	ConstEnumerator EnumerateConstLast() const noexcept {
+		return EnumerateLast();
+	}
+	constexpr ConstEnumerator EnumerateSingular() const noexcept {
+		return ConstEnumerator(*this, nullptr);
+	}
+	Enumerator EnumerateSingular() noexcept {
+		return Enumerator(*this, nullptr);
+	}
+	constexpr ConstEnumerator EnumerateConstSingular() const noexcept {
+		return EnumerateSingular();
+	}
+
+	void Swap(ArrayView &rhs) noexcept {
+		using std::swap;
+		swap(x_pBegin, rhs.x_pBegin);
+		swap(x_uSize,  rhs.x_uSize);
+	}
+
+	// ArrayView 需求。
 	constexpr Element *GetBegin() const noexcept {
 		return x_pBegin;
 	}
@@ -67,10 +186,6 @@ public:
 		ASSERT(uIndex < x_uSize);
 
 		return x_pBegin[uIndex];
-	}
-
-	bool IsEmpty() const noexcept {
-		return GetSize() == 0;
 	}
 
 public:
@@ -101,7 +216,10 @@ public:
 template<typename ElementT>
 class ArrayView<const ElementT> {
 public:
-	using Element = const ElementT;
+	// 容器需求。
+	using Element         = const ElementT;
+	using ConstEnumerator = Impl_Enumerator::ConstEnumerator <ArrayView>;
+	using Enumerator      = Impl_Enumerator::Enumerator      <ArrayView>;
 
 private:
 	Element *x_pBegin;
@@ -120,9 +238,9 @@ public:
 		: x_pBegin(pBegin), x_uSize(uSize)
 	{
 	}
-	template<std::size_t kSizeT>
-	constexpr ArrayView(Element (&rhs)[kSizeT]) noexcept
-		: x_pBegin(rhs), x_uSize(kSizeT)
+	template<std::size_t x_uSize>
+	constexpr ArrayView(Element (&rhs)[x_uSize]) noexcept
+		: x_pBegin(rhs), x_uSize(x_uSize)
 	{
 	}
 	constexpr ArrayView(const ArrayView<Element> &rhs) noexcept
@@ -135,6 +253,121 @@ public:
 	}
 
 public:
+	// 容器需求。
+	constexpr bool IsEmpty() const noexcept {
+		return x_uSize == 0;
+	}
+	void Clear(){
+		x_uSize = 0;
+	}
+	template<typename OutputIteratorT>
+	OutputIteratorT Extract(OutputIteratorT itOutput){
+		for(std::size_t i = 0; i < x_uSize; ++i){
+			*itOutput = std::move(x_pBegin[i]);
+			++itOutput;
+		}
+		return itOutput;
+	}
+
+	constexpr const Element *GetFirst() const noexcept {
+		return GetBegin();
+	}
+	Element *GetFirst() noexcept {
+		return GetBegin();
+	}
+	constexpr const Element *GetConstFirst() const noexcept {
+		return GetFirst();
+	}
+	constexpr const Element *GetLast() const noexcept {
+		return GetEnd() - 1;
+	}
+	Element *GetLast() noexcept {
+		return GetEnd() - 1;
+	}
+	constexpr const Element *GetConstLast() const noexcept {
+		return GetLast();
+	}
+
+	const Element *GetPrev(const Element *pPos) const noexcept {
+		ASSERT(pPos);
+
+		const auto pBegin = GetBegin();
+		auto uOffset = static_cast<std::size_t>(pPos - pBegin);
+		if(uOffset == 0){
+			return nullptr;
+		}
+		--uOffset;
+		return pBegin + uOffset;
+	}
+	Element *GetPrev(Element *pPos) noexcept {
+		ASSERT(pPos);
+
+		const auto pBegin = GetBegin();
+		auto uOffset = static_cast<std::size_t>(pPos - pBegin);
+		if(uOffset == 0){
+			return nullptr;
+		}
+		--uOffset;
+		return pBegin + uOffset;
+	}
+	const Element *GetNext(const Element *pPos) const noexcept {
+		ASSERT(pPos);
+
+		const auto pBegin = GetBegin();
+		auto uOffset = static_cast<std::size_t>(pPos - pBegin);
+		++uOffset;
+		if(uOffset == x_uSize){
+			return nullptr;
+		}
+		return pBegin + uOffset;
+	}
+	Element *GetNext(Element *pPos) noexcept {
+		ASSERT(pPos);
+
+		const auto pBegin = GetBegin();
+		auto uOffset = static_cast<std::size_t>(pPos - pBegin);
+		++uOffset;
+		if(uOffset == x_uSize){
+			return nullptr;
+		}
+		return pBegin + uOffset;
+	}
+
+	ConstEnumerator EnumerateFirst() const noexcept {
+		return ConstEnumerator(*this, GetFirst());
+	}
+	Enumerator EnumerateFirst() noexcept {
+		return Enumerator(*this, GetFirst());
+	}
+	ConstEnumerator EnumerateConstFirst() const noexcept {
+		return EnumerateFirst();
+	}
+	ConstEnumerator EnumerateLast() const noexcept {
+		return ConstEnumerator(*this, GetLast());
+	}
+	Enumerator EnumerateLast() noexcept {
+		return Enumerator(*this, GetLast());
+	}
+	ConstEnumerator EnumerateConstLast() const noexcept {
+		return EnumerateLast();
+	}
+	constexpr ConstEnumerator EnumerateSingular() const noexcept {
+		return ConstEnumerator(*this, nullptr);
+	}
+	Enumerator EnumerateSingular() noexcept {
+		return Enumerator(*this, nullptr);
+	}
+	constexpr ConstEnumerator EnumerateConstSingular() const noexcept {
+		return EnumerateSingular();
+	}
+
+	void Swap(ArrayView &rhs) noexcept {
+		using std::swap;
+		swap(x_pBegin, rhs.x_pBegin);
+		swap(x_uSize,  rhs.x_uSize);
+	}
+
+	// ArrayView 需求。
 	constexpr Element *GetBegin() const noexcept {
 		return x_pBegin;
 	}
@@ -158,10 +391,6 @@ public:
 		ASSERT(uIndex < x_uSize);
 
 		return x_pBegin[uIndex];
-	}
-
-	bool IsEmpty() const noexcept {
-		return GetSize() == 0;
 	}
 
 public:

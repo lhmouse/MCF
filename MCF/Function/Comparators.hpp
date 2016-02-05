@@ -9,24 +9,69 @@
 
 namespace MCF {
 
-#define DEFINE_COMPARATOR_(name_, op_)	\
-	struct name_ {	\
-		template<typename Tx, typename Ty>	\
-		constexpr bool operator()(const Tx &x, const Ty &y) const {	\
-			return x op_ y;	\
-		}	\
-		template<typename Tx, typename Ty>	\
-		bool operator()(Tx *const &px, Ty *const &py) const {	\
-			return reinterpret_cast<std::uintptr_t>(static_cast<const volatile void *>(px)) op_ reinterpret_cast<std::uintptr_t>(static_cast<const volatile void *>(py));	\
-		}	\
-	};
+struct Equal {
+	template<typename Tx, typename Ty>
+	constexpr bool operator()(const Tx &x, const Ty &y) const {
+		return x == y;
+	}
+	template<typename Tx, typename Ty>
+	bool operator()(Tx *const &px, Ty *const &py) const noexcept {
+		return reinterpret_cast<std::uintptr_t>(static_cast<const volatile void *>(px)) == reinterpret_cast<std::uintptr_t>(static_cast<const volatile void *>(py));
+	}
+};
+struct Unequal {
+	template<typename Tx, typename Ty>
+	constexpr bool operator()(const Tx &x, const Ty &y) const {
+		return x != y;
+	}
+	template<typename Tx, typename Ty>
+	bool operator()(Tx *const &px, Ty *const &py) const noexcept {
+		return reinterpret_cast<std::uintptr_t>(static_cast<const volatile void *>(px)) != reinterpret_cast<std::uintptr_t>(static_cast<const volatile void *>(py));
+	}
+};
 
-DEFINE_COMPARATOR_(Equal,        ==)
-DEFINE_COMPARATOR_(Unequal,      !=)
-DEFINE_COMPARATOR_(Less,         < )
-DEFINE_COMPARATOR_(Greater,      > )
-DEFINE_COMPARATOR_(LessEqual,    <=)
-DEFINE_COMPARATOR_(GreaterEqual, >=)
+struct Less {
+	template<typename Tx, typename Ty>
+	constexpr bool operator()(const Tx &x, const Ty &y) const {
+		return x < y;
+	}
+	template<typename Tx, typename Ty>
+	bool operator()(Tx *const &px, Ty *const &py) const noexcept {
+		return reinterpret_cast<std::uintptr_t>(static_cast<const volatile void *>(px)) < reinterpret_cast<std::uintptr_t>(static_cast<const volatile void *>(py));
+	}
+};
+struct Greater {
+	template<typename Tx, typename Ty>
+	constexpr bool operator()(const Tx &x, const Ty &y) const {
+		return x > y;
+	}
+	template<typename Tx, typename Ty>
+	bool operator()(Tx *const &px, Ty *const &py) const noexcept {
+		return reinterpret_cast<std::uintptr_t>(static_cast<const volatile void *>(px)) > reinterpret_cast<std::uintptr_t>(static_cast<const volatile void *>(py));
+	}
+};
+
+struct LessEqual {
+	template<typename Tx, typename Ty>
+	constexpr bool operator()(const Tx &x, const Ty &y) const {
+		return x <= y;
+	}
+	template<typename Tx, typename Ty>
+	bool operator()(Tx *const &px, Ty *const &py) const noexcept {
+		return reinterpret_cast<std::uintptr_t>(static_cast<const volatile void *>(px)) <= reinterpret_cast<std::uintptr_t>(static_cast<const volatile void *>(py));
+	}
+};
+struct GreaterEqual {
+	template<typename Tx, typename Ty>
+	constexpr bool operator()(const Tx &x, const Ty &y) const {
+		return x >= y;
+	}
+	template<typename Tx, typename Ty>
+	bool operator()(Tx *const &px, Ty *const &py) const noexcept {
+		return reinterpret_cast<std::uintptr_t>(static_cast<const volatile void *>(px)) >= reinterpret_cast<std::uintptr_t>(static_cast<const volatile void *>(py));
+	}
+};
+
 
 #undef DEFINE_COMPARATOR_
 

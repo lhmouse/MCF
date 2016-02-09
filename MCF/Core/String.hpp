@@ -734,92 +734,65 @@ public:
 	}
 
 	template<StringType kOtherTypeT>
-	String &operator+=(const String<kOtherTypeT> &rhs) & {
+	String &operator+=(const String<kOtherTypeT> &rhs){
 		Append(rhs);
 		return *this;
 	}
 	template<StringType kOtherTypeT>
-	String &operator+=(const StringView<kOtherTypeT> &rhs) & {
+	String &operator+=(const StringView<kOtherTypeT> &rhs){
 		Append(rhs);
 		return *this;
 	}
-	String &operator+=(Char rhs) & {
+	String &operator+=(Char rhs){
 		Append(rhs);
 		return *this;
 	}
-	String &operator+=(const Char *rhs) & {
+	String &operator+=(const Char *rhs){
 		Append(rhs);
 		return *this;
 	}
 	template<StringType kOtherTypeT>
-	String &&operator+=(const String<kOtherTypeT> &rhs) && {
-		Append(rhs);
-		return std::move(*this);
-	}
-	template<StringType kOtherTypeT>
-	String &&operator+=(const StringView<kOtherTypeT> &rhs) && {
-		Append(rhs);
-		return std::move(*this);
-	}
-	String &&operator+=(Char rhs) && {
-		Append(rhs);
-		return std::move(*this);
-	}
-	String &&operator+=(const Char *rhs) && {
-		Append(rhs);
-		return std::move(*this);
-	}
-	String &&operator+=(String &&rhs) && {
-		Append(std::move(rhs));
-		return std::move(*this);
-	}
-	template<StringType kOtherTypeT>
-	String operator+(const String<kOtherTypeT> &rhs) const {
-		auto temp = *this;
+	friend String operator+(const String &lhs, const StringView<kOtherTypeT> &rhs){
+		auto temp = lhs;
 		temp += rhs;
 		return temp;
 	}
 	template<StringType kOtherTypeT>
-	String operator+(const StringView<kOtherTypeT> &rhs) const {
-		auto temp = *this;
+	friend String operator+(String &&lhs, const StringView<kOtherTypeT> &rhs){
+		lhs += rhs;
+		return std::move(lhs);
+	}
+	friend String operator+(const String &lhs, Char rhs){
+		auto temp = lhs;
 		temp += rhs;
 		return temp;
 	}
-	String operator+(Char rhs) const {
-		auto temp = *this;
+	friend String operator+(String &&lhs, Char rhs){
+		lhs += rhs;
+		return std::move(lhs);
+	}
+	friend String operator+(const String &lhs, const Char *rhs){
+		auto temp = lhs;
 		temp += rhs;
 		return temp;
 	}
-	String operator+(const Char *rhs) const {
-		auto temp = *this;
-		temp += rhs;
-		return temp;
-	}
-	template<StringType kOtherTypeT>
-	friend String operator+(const StringView<kOtherTypeT> &lhs, const String &rhs){
-		auto temp = String(lhs);
-		temp += rhs;
-		return temp;
+	friend String operator+(String &&lhs, const Char *rhs){
+		lhs += rhs;
+		return std::move(lhs);
 	}
 	friend String operator+(Char lhs, const String &rhs){
 		auto temp = String(lhs);
 		temp += rhs;
 		return temp;
 	}
+	friend String operator+(Char lhs, String &&rhs){
+		auto temp = String(lhs);
+		temp += std::move(rhs);
+		return temp;
+	}
 	friend String operator+(const Char *lhs, const String &rhs){
 		auto temp = String(lhs);
 		temp += rhs;
-		return temp;
-	}
-	template<StringType kOtherTypeT>
-	friend String operator+(const StringView<kOtherTypeT> &lhs, String &&rhs){
-		auto temp = String(lhs);
-		temp += std::move(rhs);
-		return temp;
-	}
-	friend String operator+(Char lhs, String &rhs){
-		auto temp = String(lhs);
-		temp += std::move(rhs);
 		return temp;
 	}
 	friend String operator+(const Char *lhs, String &&rhs){

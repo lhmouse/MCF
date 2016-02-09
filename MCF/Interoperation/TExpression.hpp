@@ -7,26 +7,11 @@
 
 #include "../Core/String.hpp"
 #include "../Containers/Vector.hpp"
+#include <utility>
 #include <cstddef>
 
 namespace MCF {
 
-class TExpression {
-private:
-
-public:
-	constexpr TExpression() noexcept {
-	}
-
-public:
-	void Swap(TExpression &rhs) noexcept {
-		using std::swap;
-	}
-};
-
-void swap(TExpression &lhs, TExpression &rhs) noexcept {
-	lhs.Swap(rhs);
-}
 
 }
 

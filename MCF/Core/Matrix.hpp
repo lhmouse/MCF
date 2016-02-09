@@ -10,151 +10,143 @@
 
 namespace MCF {
 
-template<typename ElementT, std::size_t kRows, std::size_t kColumns>
+template<typename ElementT, std::size_t kRowsT, std::size_t kColumnsT>
 class Matrix {
 public:
-	static constexpr std::size_t GetRowCount() noexcept {
-		return kRows;
-	}
-	static constexpr std::size_t GetColumnCount() noexcept {
-		return kColumns;
-	}
+	using Element = ElementT;
+
+	enum : std::size_t {
+		kRows    = kRowsT,
+		kColumns = kColumnsT,
+	};
 
 public:
-	Array<ElementT, kRows, kColumns> m_aStorage;
+	Array<Element, kRows, kColumns> m_aStorage;
 
 public:
-	const Array<ElementT, kColumns> &Get(std::size_t uRow) const noexcept {
+	const Array<Element, kColumns> &Get(std::size_t uRow) const noexcept {
 		return m_aStorage.Get(uRow);
 	}
-	Array<ElementT, kColumns> &Get(std::size_t uRow) noexcept {
+	Array<Element, kColumns> &Get(std::size_t uRow) noexcept {
 		return m_aStorage.Get(uRow);
 	}
-	const Array<ElementT, kColumns> &UncheckedGet(std::size_t uRow) const noexcept {
+	const Array<Element, kColumns> &UncheckedGet(std::size_t uRow) const noexcept {
 		return m_aStorage.UncheckedGet(uRow);
 	}
-	Array<ElementT, kColumns> &UncheckedGet(std::size_t uRow) noexcept {
+	Array<Element, kColumns> &UncheckedGet(std::size_t uRow) noexcept {
 		return m_aStorage.UncheckedGet(uRow);
 	}
 
-	const Array<ElementT, kColumns> &operator[](std::size_t uRow) const noexcept {
+	const Array<Element, kColumns> &operator[](std::size_t uRow) const noexcept {
 		return m_aStorage[uRow];
 	}
-	Array<ElementT, kColumns> &operator[](std::size_t uRow) noexcept {
+	Array<Element, kColumns> &operator[](std::size_t uRow) noexcept {
 		return m_aStorage[uRow];
 	}
-};
 
-template<typename ElementT, std::size_t kRows, std::size_t kColumns>
-Matrix<ElementT, kRows, kColumns> &operator+=(Matrix<ElementT, kRows, kColumns> &lhs, const Matrix<ElementT, kRows, kColumns> &rhs){
+	Matrix &operator+=(const Matrix &rhs){
 #pragma GCC ivdep
-	for(std::size_t r = 0; r < kRows; ++r){
+		for(std::size_t r = 0; r < kRows; ++r){
 #pragma GCC ivdep
-		for(std::size_t c = 0; c < kColumns; ++c){
-			lhs[r][c] += rhs[r][c];
-		}
-	}
-	return lhs;
-}
-template<typename ElementT, std::size_t kRows, std::size_t kColumns>
-Matrix<ElementT, kRows, kColumns> &operator-=(Matrix<ElementT, kRows, kColumns> &lhs, const Matrix<ElementT, kRows, kColumns> &rhs){
-#pragma GCC ivdep
-	for(std::size_t r = 0; r < kRows; ++r){
-#pragma GCC ivdep
-		for(std::size_t c = 0; c < kColumns; ++c){
-			lhs[r][c] -= rhs[r][c];
-		}
-	}
-	return lhs;
-}
-template<typename ElementT, std::size_t kRows, std::size_t kColumns>
-Matrix<ElementT, kRows, kColumns> &operator*=(Matrix<ElementT, kRows, kColumns> &lhs, const ElementT &rhs){
-#pragma GCC ivdep
-	for(std::size_t r = 0; r < kRows; ++r){
-#pragma GCC ivdep
-		for(std::size_t c = 0; c < kColumns; ++c){
-			lhs[r][c] *= rhs;
-		}
-	}
-	return lhs;
-}
-template<typename ElementT, std::size_t kRows, std::size_t kColumns>
-Matrix<ElementT, kRows, kColumns> &operator/=(Matrix<ElementT, kRows, kColumns> &lhs, const ElementT &rhs){
-#pragma GCC ivdep
-	for(std::size_t r = 0; r < kRows; ++r){
-#pragma GCC ivdep
-		for(std::size_t c = 0; c < kColumns; ++c){
-			lhs[r][c] /= rhs;
-		}
-	}
-	return lhs;
-}
-
-template<typename ElementT, std::size_t kRows, std::size_t kColumns>
-Matrix<ElementT, kRows, kColumns> operator+(const Matrix<ElementT, kRows, kColumns> &rhs){
-	return Matrix<ElementT, kRows, kColumns>() + rhs;
-}
-template<typename ElementT, std::size_t kRows, std::size_t kColumns>
-Matrix<ElementT, kRows, kColumns> operator-(const Matrix<ElementT, kRows, kColumns> &rhs){
-	return Matrix<ElementT, kRows, kColumns>() - rhs;
-}
-
-template<typename ElementT, std::size_t kRows, std::size_t kColumns>
-Matrix<ElementT, kRows, kColumns> operator+(const Matrix<ElementT, kRows, kColumns> &lhs, const Matrix<ElementT, kRows, kColumns> &rhs){
-	auto ret = lhs;
-	ret += rhs;
-	return ret;
-}
-template<typename ElementT, std::size_t kRows, std::size_t kColumns>
-Matrix<ElementT, kRows, kColumns> operator+(Matrix<ElementT, kRows, kColumns> &&lhs, const Matrix<ElementT, kRows, kColumns> &rhs){
-	return std::move(lhs += rhs);
-}
-template<typename ElementT, std::size_t kRows, std::size_t kColumns>
-Matrix<ElementT, kRows, kColumns> operator-(const Matrix<ElementT, kRows, kColumns> &lhs, const Matrix<ElementT, kRows, kColumns> &rhs){
-	auto ret = lhs;
-	ret -= rhs;
-	return ret;
-}
-template<typename ElementT, std::size_t kRows, std::size_t kColumns>
-Matrix<ElementT, kRows, kColumns> operator-(Matrix<ElementT, kRows, kColumns> &&lhs, const Matrix<ElementT, kRows, kColumns> &rhs){
-	return std::move(lhs -= rhs);
-}
-template<typename ElementT, std::size_t kRows, std::size_t kColumns>
-Matrix<ElementT, kRows, kColumns> operator*(const Matrix<ElementT, kRows, kColumns> &lhs, const ElementT &rhs){
-	auto ret = lhs;
-	ret *= rhs;
-	return ret;
-}
-template<typename ElementT, std::size_t kRows, std::size_t kColumns>
-Matrix<ElementT, kRows, kColumns> operator*(Matrix<ElementT, kRows, kColumns> &&lhs, const ElementT &rhs){
-	return std::move(lhs *= rhs);
-}
-template<typename ElementT, std::size_t kRows, std::size_t kColumns>
-Matrix<ElementT, kRows, kColumns> operator/(const Matrix<ElementT, kRows, kColumns> &lhs, const ElementT &rhs){
-	auto ret = lhs;
-	ret /= rhs;
-	return ret;
-}
-template<typename ElementT, std::size_t kRows, std::size_t kColumns>
-Matrix<ElementT, kRows, kColumns> operator/(Matrix<ElementT, kRows, kColumns> &&lhs, const ElementT &rhs){
-	return std::move(lhs /= rhs);
-}
-
-template<typename ElementT, std::size_t kRowsL, std::size_t kColumnsL, std::size_t kColumnsR>
-Matrix<ElementT, kRowsL, kColumnsR> operator*(const Matrix<ElementT, kRowsL, kColumnsL> &lhs, const Matrix<ElementT, kColumnsL, kColumnsR> &rhs){
-	auto ret = Matrix<ElementT, kRowsL, kColumnsR>();
-#pragma GCC ivdep
-	for(std::size_t r = 0; r < kRowsL; ++r){
-#pragma GCC ivdep
-		for(std::size_t c = 0; c < kColumnsR; ++c){
-#pragma GCC ivdep
-			for(std::size_t i = 0; i < kColumnsL; ++i){
-				ret[r][c] += lhs[r][i] * rhs[i][c];
+			for(std::size_t c = 0; c < kColumns; ++c){
+				m_aStorage[r][c] += rhs.m_aStorage[r][c];
 			}
 		}
+		return *this;
 	}
-	return ret;
-}
+	Matrix &operator-=(const Matrix &rhs){
+#pragma GCC ivdep
+		for(std::size_t r = 0; r < kRows; ++r){
+#pragma GCC ivdep
+			for(std::size_t c = 0; c < kColumns; ++c){
+				m_aStorage[r][c] -= rhs.m_aStorage[r][c];
+			}
+		}
+		return *this;
+	}
+
+	Matrix &operator*=(const Element &rhs){
+#pragma GCC ivdep
+		for(std::size_t r = 0; r < kRows; ++r){
+#pragma GCC ivdep
+			for(std::size_t c = 0; c < kColumns; ++c){
+				m_aStorage[r][c] *= rhs;
+			}
+		}
+		return *this;
+	}
+	Matrix &operator/=(const Element &rhs){
+#pragma GCC ivdep
+		for(std::size_t r = 0; r < kRows; ++r){
+#pragma GCC ivdep
+			for(std::size_t c = 0; c < kColumns; ++c){
+				m_aStorage[r][c] /= rhs;
+			}
+		}
+		return *this;
+	}
+
+	Matrix operator+(const Matrix &rhs) const {
+		auto ret = *this;
+		ret += rhs;
+		return ret;
+	}
+	Matrix operator-(const Matrix &rhs) const {
+		auto ret = *this;
+		ret -= rhs;
+		return ret;
+	}
+
+	Matrix operator*(const Element &rhs) const {
+		auto ret = *this;
+		ret *= rhs;
+		return ret;
+	}
+	Matrix operator/(const Element &rhs) const {
+		auto ret = *this;
+		ret /= rhs;
+		return ret;
+	}
+
+	Matrix operator+() const {
+		Matrix ret;
+#pragma GCC ivdep
+		for(std::size_t r = 0; r < kRows; ++r){
+#pragma GCC ivdep
+			for(std::size_t c = 0; c < kColumns; ++c){
+				ret.m_aStorage[r][c] = +(m_aStorage[r][c]);
+			}
+		}
+		return ret;
+	}
+	Matrix operator-() const {
+		Matrix ret;
+#pragma GCC ivdep
+		for(std::size_t r = 0; r < kRows; ++r){
+#pragma GCC ivdep
+			for(std::size_t c = 0; c < kColumns; ++c){
+				ret.m_aStorage[r][c] = -(m_aStorage[r][c]);
+			}
+		}
+		return ret;
+	}
+
+	template<std::size_t kOtherColumnsT>
+	friend Matrix<ElementT, kRowsT, kOtherColumnsT> operator*(const Matrix &lhs, const Matrix<ElementT, kColumnsT, kOtherColumnsT> &rhs){
+		auto ret = Matrix<ElementT, kRowsT, kOtherColumnsT>();
+#pragma GCC ivdep
+		for(std::size_t r = 0; r < kRowsT; ++r){
+#pragma GCC ivdep
+			for(std::size_t c = 0; c < kOtherColumnsT; ++c){
+#pragma GCC ivdep
+				for(std::size_t i = 0; i < kColumnsT; ++i){
+					ret[r][c] += lhs[r][i] * rhs[i][c];
+				}
+			}
+		}
+		return ret;
+	}
+};
 
 }
 

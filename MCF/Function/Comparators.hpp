@@ -9,38 +9,62 @@ namespace MCF {
 
 struct Equal {
 	template<typename T, typename U>
-	constexpr auto operator()(const T &t, const U &u) const -> decltype(t == u) {
+	constexpr decltype(auto) operator()(const T &t, const U &u) const noexcept(noexcept(t == u)) {
 		return t == u;
+	}
+	template<typename T, typename U>
+	constexpr decltype(auto) operator()(T *const &t, U *const &u) const noexcept {
+		return static_cast<const volatile void *>(t) == static_cast<const volatile void *>(u);
 	}
 };
 struct Unequal {
 	template<typename T, typename U>
-	constexpr auto operator()(const T &t, const U &u) const -> decltype(t != u) {
+	constexpr decltype(auto) operator()(const T &t, const U &u) const noexcept(noexcept(t != u)) {
 		return t != u;
+	}
+	template<typename T, typename U>
+	constexpr decltype(auto) operator()(T *const &t, U *const &u) const noexcept {
+		return static_cast<const volatile void *>(t) != static_cast<const volatile void *>(u);
 	}
 };
 struct Less {
 	template<typename T, typename U>
-	constexpr auto operator()(const T &t, const U &u) const -> decltype(t < u) {
+	constexpr decltype(auto) operator()(const T &t, const U &u) const noexcept(noexcept(t < u)) {
 		return t < u;
+	}
+	template<typename T, typename U>
+	constexpr decltype(auto) operator()(T *const &t, U *const &u) const noexcept {
+		return static_cast<const volatile void *>(t) < static_cast<const volatile void *>(u);
 	}
 };
 struct Greater {
 	template<typename T, typename U>
-	constexpr auto operator()(const T &t, const U &u) const -> decltype(t > u) {
+	constexpr decltype(auto) operator()(const T &t, const U &u) const noexcept(noexcept(t > u)) {
 		return t > u;
+	}
+	template<typename T, typename U>
+	constexpr decltype(auto) operator()(T *const &t, U *const &u) const noexcept {
+		return static_cast<const volatile void *>(t) > static_cast<const volatile void *>(u);
 	}
 };
 struct LessEqual {
 	template<typename T, typename U>
-	constexpr auto operator()(const T &t, const U &u) const -> decltype(t <= u) {
+	constexpr decltype(auto) operator()(const T &t, const U &u) const noexcept(noexcept(t <= u)) {
 		return t <= u;
+	}
+	template<typename T, typename U>
+	constexpr decltype(auto) operator()(T *const &t, U *const &u) const noexcept {
+		return static_cast<const volatile void *>(t) <= static_cast<const volatile void *>(u);
 	}
 };
 struct GreaterEqual {
 	template<typename T, typename U>
-	constexpr auto operator()(const T &t, const U &u) const -> decltype(t >= u) {
+	constexpr decltype(auto) operator()(const T &t, const U &u) const noexcept(noexcept(t >= u)) {
 		return t >= u;
+	}
+	template<typename T, typename U>
+	constexpr decltype(auto) operator()(T *const &t, U *const &u) const noexcept {
+		return static_cast<const volatile void *>(t) >= static_cast<const volatile void *>(u);
 	}
 };
 

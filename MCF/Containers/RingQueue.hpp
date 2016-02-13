@@ -661,76 +661,13 @@ public:
 
 		const auto uCountBefore = X_Distance(x_uBegin, uOffset);
 
-		if(std::is_nothrow_move_constructible<Element>::value){
-			const auto vPrepared = X_PrepareForInsertion(uOffset, uDeltaSize);
-			auto uWrite = vPrepared.first;
-			try {
-				for(std::size_t i = 0; i < uDeltaSize; ++i){
-					DefaultConstruct(x_pStorage + uWrite, vParams...);
-					uWrite = X_Advance(uWrite, 1);
-				}
-			} catch(...){
-				while(uWrite != vPrepared.first){
-					uWrite = X_Retreat(uWrite, 1);
-					Destruct(x_pStorage + uWrite);
-				}
-				X_UndoPreparation(vPrepared, uDeltaSize);
-				throw;
-			}
-			if(vPrepared.second){
-				x_uEnd = X_Advance(x_uEnd, uDeltaSize);
-			} else {
-				x_uBegin = X_Retreat(x_uBegin, uDeltaSize);
-			}
-		} else {
-			const auto uSize = GetSize();
-			auto uNewCapacity = uSize + uDeltaSize;
-			if(uNewCapacity < uSize){
-				throw std::bad_array_new_length();
-			}
-			const auto uCapacity = GetCapacity();
-			if(uNewCapacity < uCapacity){
-				uNewCapacity = uCapacity;
-			}
-			RingQueue queTemp;
-			queTemp.Reserve(uNewCapacity);
-			X_IterateForward(x_uBegin, uOffset,
-				[&, this](auto i){
-					queTemp.UncheckedPush(x_pStorage[i]);
-				});
-			for(std::size_t i = 0; i < uDeltaSize; ++i){
-				queTemp.UncheckedPush(vParams...);
-			}
-			X_IterateForward(uOffset, x_uEnd,
-				[&, this](auto i){
-					queTemp.UncheckedPush(x_pStorage[i]);
-				});
-			*this = std::move(queTemp);
-		}
-
-		return x_pStorage + X_Advance(x_uBegin, uCountBefore);
-	}
-	template<typename IteratorT, std::enable_if_t<
-		std::is_base_of<std::input_iterator_tag, typename std::iterator_traits<IteratorT>::iterator_category>::value,
-		int> = 0>
-	Element *Insert(const Element *pPos, IteratorT itBegin, std::common_type_t<IteratorT> itEnd){
-		std::size_t uOffset;
-		if(pPos){
-			uOffset = static_cast<std::size_t>(pPos - x_pStorage);
-		} else {
-			uOffset = x_uEnd;
-		}
-
-		const auto uCountBefore = X_Distance(x_uBegin, uOffset);
-
-		if(std::is_base_of<std::forward_iterator_tag, typename std::iterator_traits<IteratorT>::iterator_category>::value){
-			const auto uDeltaSize = static_cast<std::size_t>(std::distance(itBegin, itEnd));
+		if(uDeltaSize != 0){
 			if(std::is_nothrow_move_constructible<Element>::value){
 				const auto vPrepared = X_PrepareForInsertion(uOffset, uDeltaSize);
 				auto uWrite = vPrepared.first;
 				try {
-					for(auto it = itBegin; it != itEnd; ++it){
-						DefaultConstruct(x_pStorage + uWrite, *it);
+					for(std::size_t i = 0; i < uDeltaSize; ++i){
+						DefaultConstruct(x_pStorage + uWrite, vParams...);
 						uWrite = X_Advance(uWrite, 1);
 					}
 				} catch(...){
@@ -762,8 +699,8 @@ public:
 					[&, this](auto i){
 						queTemp.UncheckedPush(x_pStorage[i]);
 					});
-				for(auto it = itBegin; it != itEnd; ++it){
-					queTemp.UncheckedPush(*it);
+				for(std::size_t i = 0; i < uDeltaSize; ++i){
+					queTemp.UncheckedPush(vParams...);
 				}
 				X_IterateForward(uOffset, x_uEnd,
 					[&, this](auto i){
@@ -771,22 +708,89 @@ public:
 					});
 				*this = std::move(queTemp);
 			}
+		}
+
+		return x_pStorage + X_Advance(x_uBegin, uCountBefore);
+	}
+	template<typename IteratorT, std::enable_if_t<
+		std::is_base_of<std::input_iterator_tag, typename std::iterator_traits<IteratorT>::iterator_category>::value,
+		int> = 0>
+	Element *Insert(const Element *pPos, IteratorT itBegin, std::common_type_t<IteratorT> itEnd){
+		std::size_t uOffset;
+		if(pPos){
+			uOffset = static_cast<std::size_t>(pPos - x_pStorage);
 		} else {
-			RingQueue queTemp;
-			const auto uCapacity = GetCapacity();
-			queTemp.Reserve(uCapacity);
-			X_IterateForward(x_uBegin, uOffset,
-				[&, this](auto i){
-					queTemp.UncheckedPush(x_pStorage[i]);
-				});
-			for(auto it = itBegin; it != itEnd; ++it){
-				queTemp.Push(*it);
+			uOffset = x_uEnd;
+		}
+
+		const auto uCountBefore = X_Distance(x_uBegin, uOffset);
+
+		if(itBegin != itEnd){
+			if(std::is_base_of<std::forward_iterator_tag, typename std::iterator_traits<IteratorT>::iterator_category>::value){
+				const auto uDeltaSize = static_cast<std::size_t>(std::distance(itBegin, itEnd));
+				if(std::is_nothrow_move_constructible<Element>::value){
+					const auto vPrepared = X_PrepareForInsertion(uOffset, uDeltaSize);
+					auto uWrite = vPrepared.first;
+					try {
+						for(auto it = itBegin; it != itEnd; ++it){
+							DefaultConstruct(x_pStorage + uWrite, *it);
+							uWrite = X_Advance(uWrite, 1);
+						}
+					} catch(...){
+						while(uWrite != vPrepared.first){
+							uWrite = X_Retreat(uWrite, 1);
+							Destruct(x_pStorage + uWrite);
+						}
+						X_UndoPreparation(vPrepared, uDeltaSize);
+						throw;
+					}
+					if(vPrepared.second){
+						x_uEnd = X_Advance(x_uEnd, uDeltaSize);
+					} else {
+						x_uBegin = X_Retreat(x_uBegin, uDeltaSize);
+					}
+				} else {
+					const auto uSize = GetSize();
+					auto uNewCapacity = uSize + uDeltaSize;
+					if(uNewCapacity < uSize){
+						throw std::bad_array_new_length();
+					}
+					const auto uCapacity = GetCapacity();
+					if(uNewCapacity < uCapacity){
+						uNewCapacity = uCapacity;
+					}
+					RingQueue queTemp;
+					queTemp.Reserve(uNewCapacity);
+					X_IterateForward(x_uBegin, uOffset,
+						[&, this](auto i){
+							queTemp.UncheckedPush(x_pStorage[i]);
+						});
+					for(auto it = itBegin; it != itEnd; ++it){
+						queTemp.UncheckedPush(*it);
+					}
+					X_IterateForward(uOffset, x_uEnd,
+						[&, this](auto i){
+							queTemp.UncheckedPush(x_pStorage[i]);
+						});
+					*this = std::move(queTemp);
+				}
+			} else {
+				RingQueue queTemp;
+				const auto uCapacity = GetCapacity();
+				queTemp.Reserve(uCapacity);
+				X_IterateForward(x_uBegin, uOffset,
+					[&, this](auto i){
+						queTemp.UncheckedPush(x_pStorage[i]);
+					});
+				for(auto it = itBegin; it != itEnd; ++it){
+					queTemp.Push(*it);
+				}
+				X_IterateForward(uOffset, x_uEnd,
+					[&, this](auto i){
+						queTemp.Push(x_pStorage[i]);
+					});
+				*this = std::move(queTemp);
 			}
-			X_IterateForward(uOffset, x_uEnd,
-				[&, this](auto i){
-					queTemp.Push(x_pStorage[i]);
-				});
-			*this = std::move(queTemp);
 		}
 
 		return x_pStorage + X_Advance(x_uBegin, uCountBefore);
@@ -808,31 +812,39 @@ public:
 			uOffsetEnd = x_uEnd;
 		}
 
-		if(std::is_nothrow_move_constructible<Element>::value){
-			const auto uDeltaSize = uOffsetEnd - uOffsetBegin;
-			X_IterateForward(uOffsetBegin, uOffsetEnd,
-				[&, this](auto i){
-					Destruct(x_pStorage + i);
-				});
-			X_IterateForward(uOffsetEnd, x_uEnd,
-				[&, this](auto i){
-					Construct(x_pStorage + X_Retreat(i, uDeltaSize), std::move(x_pStorage[i]));
-					Destruct(x_pStorage + i);
-				});
-			x_uEnd = X_Retreat(x_uEnd, uDeltaSize);
-		} else {
-			RingQueue queTemp;
-			const auto uCapacity = GetCapacity();
-			queTemp.Reserve(uCapacity);
-			X_IterateForward(x_uBegin, uOffsetBegin,
-				[&, this](auto i){
-					queTemp.UncheckedPush(x_pStorage[i]);
-				});
-			X_IterateForward(uOffsetEnd, x_uEnd,
-				[&, this](auto i){
-					queTemp.UncheckedPush(x_pStorage[i]);
-				});
-			*this = std::move(queTemp);
+		if(uOffsetBegin != uOffsetEnd){
+			if(uOffsetEnd == x_uEnd){
+				const auto uDeltaSize = X_Distance(uOffsetBegin, uOffsetEnd);
+				Pop(uDeltaSize);
+			} else if(x_uBegin == uOffsetBegin){
+				const auto uDeltaSize = X_Distance(uOffsetBegin, uOffsetEnd);
+				Shift(uDeltaSize);
+			} else if(std::is_nothrow_move_constructible<Element>::value){
+				const auto uDeltaSize = X_Distance(uOffsetBegin, uOffsetEnd);
+				X_IterateForward(uOffsetBegin, uOffsetEnd,
+					[&, this](auto i){
+						Destruct(x_pStorage + i);
+					});
+				X_IterateForward(uOffsetEnd, x_uEnd,
+					[&, this](auto i){
+						Construct(x_pStorage + X_Retreat(i, uDeltaSize), std::move(x_pStorage[i]));
+						Destruct(x_pStorage + i);
+					});
+				x_uEnd = X_Retreat(x_uEnd, uDeltaSize);
+			} else {
+				RingQueue queTemp;
+				const auto uCapacity = GetCapacity();
+				queTemp.Reserve(uCapacity);
+				X_IterateForward(x_uBegin, uOffsetBegin,
+					[&, this](auto i){
+						queTemp.UncheckedPush(x_pStorage[i]);
+					});
+				X_IterateForward(uOffsetEnd, x_uEnd,
+					[&, this](auto i){
+						queTemp.UncheckedPush(x_pStorage[i]);
+					});
+				*this = std::move(queTemp);
+			}
 		}
 
 		return x_pStorage + uOffsetBegin;

@@ -29,11 +29,8 @@ private:
 	union X_Storage {
 		ElementT v;
 		std::exception_ptr ep;
-
-		X_Storage(){
-		}
-		~X_Storage(){
-		}
+		X_Storage() noexcept { }
+		~X_Storage() noexcept { }
 	};
 
 private:
@@ -95,23 +92,27 @@ public:
 		} else if(x_eState == Impl_Optional::State::kExceptionSet){
 			return x_vStorage.ep;
 		} else {
-			return DEBUG_MAKE_EXCEPTION_PTR(Exception, ERROR_NOT_READY, "Optional is not set"_rcs);
+			return DEBUG_MAKE_EXCEPTION_PTR(Exception, ERROR_NOT_READY, "Optional: no element or exception has been set"_rcs);
 		}
 	}
 
 	const ElementT &Get() const {
-		const auto pException = GetException();
-		if(pException){
-			std::rethrow_exception(pException);
+		if(x_eState == Impl_Optional::State::kElementSet){
+			return x_vStorage.v;
+		} else if(x_eState == Impl_Optional::State::kExceptionSet){
+			std::rethrow_exception(x_vStorage.ep);
+		} else {
+			DEBUG_THROW(Exception, ERROR_NOT_READY, "Optional: no element or exception has been set"_rcs);
 		}
-		return x_vStorage.v;
 	}
 	ElementT &Get(){
-		const auto pException = GetException();
-		if(pException){
-			std::rethrow_exception(pException);
+		if(x_eState == Impl_Optional::State::kElementSet){
+			return x_vStorage.v;
+		} else if(x_eState == Impl_Optional::State::kExceptionSet){
+			std::rethrow_exception(x_vStorage.ep);
+		} else {
+			DEBUG_THROW(Exception, ERROR_NOT_READY, "Optional: no element or exception has been set"_rcs);
 		}
-		return x_vStorage.v;
 	}
 
 	Optional &Reset() noexcept {

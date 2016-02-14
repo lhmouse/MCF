@@ -51,9 +51,7 @@ namespace Impl_IntrusivePtr {
 			return *this; // 无操作。
 		}
 		~RefCountBase(){
-			if(x_uRef.Load(kAtomicRelaxed) > 1){
-				Bail(L"析构正在共享的被引用计数管理的对象。");
-			}
+			ASSERT_MSG(x_uRef.Load(kAtomicRelaxed) <= 1, L"析构正在共享的被引用计数管理的对象。");
 		}
 
 	public:

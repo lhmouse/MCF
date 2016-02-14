@@ -22,7 +22,6 @@ private:
 private:
 	Impl_UniqueNtHandle::UniqueNtHandle x_hMutex;
 
-
 public:
 	KernelRecursiveMutex()
 		: x_hMutex(X_CreateMutexHandle(nullptr, kSessionLocal))

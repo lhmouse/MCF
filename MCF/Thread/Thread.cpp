@@ -34,7 +34,16 @@ void Thread::YieldExecution() noexcept {
 }
 
 // 构造函数和析构函数。
-Thread::Thread(bool bSuspended){
+Thread::~Thread(){
+	if(x_pException){
+		std::terminate();
+	}
+}
+
+// 其他非静态成员函数。
+void Thread::X_Initialize(bool bSuspended){
+	ASSERT_MSG(!x_hThread, L"Thread 只能被初始化一次。");
+
 	struct Helper {
 		__MCFCRT_C_STDCALL __MCFCRT_HAS_EH_TOP
 		static DWORD ThreadProc(LPVOID pParam){
@@ -68,11 +77,6 @@ Thread::Thread(bool bSuspended){
 
 	if(!bSuspended){
 		Resume();
-	}
-}
-Thread::~Thread(){
-	if(x_pException){
-		std::terminate();
 	}
 }
 

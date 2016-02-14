@@ -16,6 +16,10 @@
 namespace MCF {
 
 class Thread : NONCOPYABLE, public IntrusiveBase<Thread> {
+private:
+	template<typename ThreadProcT>
+	class X_ConcreteThread;
+
 public:
 	using Handle = void *;
 
@@ -43,11 +47,16 @@ private:
 	Atomic<std::uintptr_t> x_uThreadId;
 	std::exception_ptr x_pException;
 
-public:
-	explicit Thread(bool bSuspended);
-	~Thread(); // 如果有被捕获的异常，调用 std::terminate()。
+private:
+	Thread() noexcept
+		: x_hThread(nullptr), x_uThreadId(0), x_pException()
+	{
+	}
+	~Thread() override; // 如果有被捕获的异常，调用 std::terminate()。
 
 private:
+	void X_Initialize(bool bSuspended);
+
 	virtual void X_ThreadProc() = 0;
 
 public:
@@ -72,30 +81,28 @@ public:
 	void Resume() noexcept;
 };
 
-namespace Impl_Thread {
-	template<typename ThreadProcT>
-	class ConcreteThread : public Thread {
-	private:
-		ThreadProcT x_fnProc;
+template<typename ThreadProcT>
+class Thread::X_ConcreteThread : public Thread {
+private:
+	ThreadProcT x_fnProc;
 
-	public:
-		template<typename T>
-		ConcreteThread(bool bSuspended, T &&fnProc)
-			: Thread(bSuspended)
-			, x_fnProc(std::forward<T>(fnProc))
-		{
-		}
+public:
+	template<typename T>
+	X_ConcreteThread(T &&fnProc, bool bSuspended)
+		: x_fnProc(std::forward<T>(fnProc))
+	{
+		Thread::X_Initialize(bSuspended);
+	}
 
-	private:
-		void X_ThreadProc() override {
-			x_fnProc();
-		}
-	};
-}
+private:
+	void X_ThreadProc() override {
+		x_fnProc();
+	}
+};
 
 template<typename ThreadProcT>
 IntrusivePtr<Thread> Thread::Create(ThreadProcT &&fnProc, bool bSuspended){
-	return IntrusivePtr<Thread>(new Impl_Thread::ConcreteThread<std::decay_t<ThreadProcT>>(bSuspended, std::forward<ThreadProcT>(fnProc)));
+	return MakeIntrusive<X_ConcreteThread<std::decay_t<ThreadProcT>>>(std::forward<ThreadProcT>(fnProc), bSuspended);
 }
 
 }

@@ -6,8 +6,8 @@
 #include "_math_asm.h"
 
 #ifdef _WIN64
-static alignas(16) uint32_t kFloatMask [] = { 0x7FFFFFFF, 0x7FFFFFFF, 0x7FFFFFFF, 0x7FFFFFFF };
-static alignas(16) uint64_t kDoubleMask[] = { 0x7FFFFFFFFFFFFFFF, 0x7FFFFFFFFFFFFFFF };
+static alignas(16) const uint32_t kFloatMask [] = { 0x7FFFFFFF, 0x7FFFFFFF, 0x7FFFFFFF, 0x7FFFFFFF };
+static alignas(16) const uint64_t kDoubleMask[] = { 0x7FFFFFFFFFFFFFFF, 0x7FFFFFFFFFFFFFFF };
 #endif
 
 float fabsf(float x){

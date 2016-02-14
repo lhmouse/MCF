@@ -53,23 +53,38 @@ private:
 	{
 	}
 
+	Atomic<std::size_t> *X_Fork() const noexcept {
+		const auto puRef = x_puRef;
+		if(puRef){
+			puRef->Increment(kAtomicRelaxed);
+		}
+		return puRef;
+	}
+	void X_Dispose() noexcept {
+		const auto puRef = x_puRef;
+		if(puRef){
+			if(puRef->Decrement(kAtomicRelaxed) == 0){
+				Destruct(puRef);
+				::operator delete[](puRef);
+			}
+		}
+#ifndef NDEBUG
+		x_puRef = (Atomic<std::size_t> *)(std::uintptr_t)0xDEADBEEFDEADBEEF;
+#endif
+	}
+
 public:
 	constexpr RefCountingNtmbs(std::nullptr_t = nullptr) noexcept
 		: x_puRef(nullptr), x_pszStr("")
 	{
 	}
 	RefCountingNtmbs(const RefCountingNtmbs &rhs) noexcept
-		: x_puRef(rhs.x_puRef), x_pszStr(rhs.x_pszStr)
+		: x_puRef(rhs.X_Fork()), x_pszStr(rhs.x_pszStr)
 	{
-		if(x_puRef){
-			x_puRef->Increment(kAtomicRelaxed);
-		}
 	}
 	RefCountingNtmbs(RefCountingNtmbs &&rhs) noexcept
-		: x_puRef(rhs.x_puRef), x_pszStr(rhs.x_pszStr)
+		: x_puRef(std::exchange(rhs.x_puRef, nullptr)), x_pszStr(std::exchange(rhs.x_pszStr, ""))
 	{
-		rhs.x_puRef  = nullptr;
-		rhs.x_pszStr = "";
 	}
 	RefCountingNtmbs &operator=(const RefCountingNtmbs &rhs) noexcept {
 		RefCountingNtmbs(rhs).Swap(*this);
@@ -80,10 +95,7 @@ public:
 		return *this;
 	}
 	~RefCountingNtmbs(){
-		if(x_puRef && (x_puRef->Decrement(kAtomicRelaxed) == 0)){
-			Destruct(x_puRef);
-			::operator delete[](x_puRef);
-		}
+		X_Dispose();
 	}
 
 public:

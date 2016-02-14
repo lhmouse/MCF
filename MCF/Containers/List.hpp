@@ -71,7 +71,7 @@ public:
 		auto pNode = rhs.x_pFirst;
 		while(pNode){
 			const auto pNext = pNode->pNext;
-			const auto pElement = reinterpret_cast<const Element *>(&(pNode->unElement));
+			const auto pElement = reinterpret_cast<const Element *>(pNode);
 			Push(*pElement);
 			pNode = pNext;
 		}
@@ -102,7 +102,7 @@ public:
 		auto pNode = x_pLast;
 		while(pNode){
 			const auto pPrev = pNode->pPrev;
-			const auto pElement = reinterpret_cast<Element *>(&(pNode->unElement));
+			const auto pElement = reinterpret_cast<Element *>(pNode);
 			Destruct(pElement);
 			::delete pNode;
 			pNode = pPrev;
@@ -116,7 +116,7 @@ public:
 			auto pNode = x_pFirst;
 			while(pNode){
 				const auto pNext = pNode->pNext;
-				const auto pElement = reinterpret_cast<Element *>(&(pNode->unElement));
+				const auto pElement = reinterpret_cast<Element *>(pNode);
 				*itOutput = std::move(*pElement);
 				++itOutput;
 				pNode = pNext;
@@ -131,34 +131,22 @@ public:
 
 	const Element *GetFirst() const noexcept {
 		const auto pNode = x_pFirst;
-		if(!pNode){
-			return nullptr;
-		}
-		return reinterpret_cast<const Element *>(&(pNode->unElement));
+		return reinterpret_cast<const Element *>(pNode);
 	}
 	Element *GetFirst() noexcept {
 		const auto pNode = x_pFirst;
-		if(!pNode){
-			return nullptr;
-		}
-		return reinterpret_cast<Element *>(&(pNode->unElement));
+		return reinterpret_cast<Element *>(pNode);
 	}
 	const Element *GetConstFirst() const noexcept {
 		return GetFirst();
 	}
 	const Element *GetLast() const noexcept {
 		const auto pNode = x_pLast;
-		if(!pNode){
-			return nullptr;
-		}
-		return reinterpret_cast<const Element *>(&(pNode->unElement));
+		return reinterpret_cast<const Element *>(pNode);
 	}
 	Element *GetLast() noexcept {
 		const auto pNode = x_pLast;
-		if(!pNode){
-			return nullptr;
-		}
-		return reinterpret_cast<Element *>(&(pNode->unElement));
+		return reinterpret_cast<Element *>(pNode);
 	}
 	const Element *GetConstLast() const noexcept {
 		return GetLast();
@@ -168,37 +156,25 @@ public:
 		ASSERT(pPos);
 
 		const auto pPrev = reinterpret_cast<const X_Node *>(pPos)->pPrev;
-		if(!pPrev){
-			return nullptr;
-		}
-		return reinterpret_cast<const Element *>(&(pPrev->unElement));
+		return reinterpret_cast<const Element *>(pPrev);
 	}
 	static Element *GetPrev(Element *pPos) noexcept {
 		ASSERT(pPos);
 
 		const auto pPrev = reinterpret_cast<const X_Node *>(pPos)->pPrev;
-		if(!pPrev){
-			return nullptr;
-		}
-		return reinterpret_cast<Element *>(&(pPrev->unElement));
+		return reinterpret_cast<Element *>(pPrev);
 	}
 	static const Element *GetNext(const Element *pPos) noexcept {
 		ASSERT(pPos);
 
 		const auto pNext = reinterpret_cast<const X_Node *>(pPos)->pNext;
-		if(!pNext){
-			return nullptr;
-		}
-		return reinterpret_cast<const Element *>(&(pNext->unElement));
+		return reinterpret_cast<const Element *>(pNext);
 	}
 	static Element *GetNext(Element *pPos) noexcept {
 		ASSERT(pPos);
 
 		const auto pNext = reinterpret_cast<const X_Node *>(pPos)->pNext;
-		if(!pNext){
-			return nullptr;
-		}
-		return reinterpret_cast<Element *>(&(pNext->unElement));
+		return reinterpret_cast<Element *>(pNext);
 	}
 
 	ConstEnumerator EnumerateFirst() const noexcept {

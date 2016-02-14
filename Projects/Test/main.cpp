@@ -1,13 +1,28 @@
 #include <MCF/StdMCF.hpp>
-#include <MCF/Containers/List.hpp>
-#include <iostream>
+#include <MCF/SmartPointers/PolyIntrusivePtr.hpp>
+#include <cstdio>
 
-template class MCF::List<int>;
+using namespace MCF;
+
+struct foo : PolyIntrusiveBase {
+	foo();
+};
+
+PolyIntrusiveWeakPtr<foo> gp;
+
+foo::foo(){
+	gp = this->Weaken<foo>();
+	std::printf("inside foo::foo(), gp is now %p\n", (void *)gp.Lock().Get());
+	throw 12345; // ok.
+}
 
 extern "C" unsigned MCFCRT_Main(){
-	MCF::List<int> v1, v2;
-	v1 = {0,1,2,3,4,5,6};
-	v2 = v1;
-	v2 = v1;
+	try {
+		auto p = MakeIntrusive<foo>();
+	} catch(int e){
+		std::printf("exception caught: e = %d\n", e);
+	}
+	std::printf("inside main(), gp is now %p\n", (void *)gp.Lock().Get());
+
 	return 0;
 }

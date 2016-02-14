@@ -31,34 +31,44 @@ public:
 private:
 	Element *x_pElement;
 
+private:
+	void X_Dispose() noexcept {
+		const auto pElement = x_pElement;
+		if(pElement){
+			Deleter()(const_cast<std::remove_cv_t<Element> *>(pElement));
+		}
+#ifndef NDEBUG
+		x_pElement = (Element *)(std::uintptr_t)0xDEADBEEFDEADBEEF;
+#endif
+	}
+
 public:
 	constexpr UniquePtr(std::nullptr_t = nullptr) noexcept
 		: x_pElement(nullptr)
 	{
 	}
-	explicit UniquePtr(Element *rhs) noexcept {
-		x_pElement = rhs;
+	explicit UniquePtr(Element *rhs) noexcept
+		: x_pElement(rhs)
+	{
 	}
 	template<typename OtherObjectT, typename OtherDeleterT,
 		std::enable_if_t<
 			std::is_convertible<typename UniquePtr<OtherObjectT, OtherDeleterT>::Element *, Element *>::value &&
 				std::is_convertible<typename UniquePtr<OtherObjectT, OtherDeleterT>::Deleter, Deleter>::value,
 			int> = 0>
-	UniquePtr(UniquePtr<OtherObjectT, OtherDeleterT> &&rhs) noexcept {
-		x_pElement = rhs.x_pElement;
-		rhs.x_pElement = nullptr;
+	UniquePtr(UniquePtr<OtherObjectT, OtherDeleterT> &&rhs) noexcept
+		: x_pElement(rhs.Release())
+	{
 	}
-	UniquePtr(UniquePtr &&rhs) noexcept {
-		x_pElement = rhs.x_pElement;
-		rhs.x_pElement = nullptr;
+	UniquePtr(UniquePtr &&rhs) noexcept
+		: x_pElement(rhs.Release())
+	{
 	}
 	UniquePtr &operator=(UniquePtr &&rhs) noexcept {
 		return Reset(std::move(rhs));
 	}
 	~UniquePtr(){
-		if(x_pElement){
-			Deleter()(const_cast<std::remove_cv_t<Element> *>(x_pElement));
-		}
+		X_Dispose();
 	}
 
 	UniquePtr(const UniquePtr &) = delete;

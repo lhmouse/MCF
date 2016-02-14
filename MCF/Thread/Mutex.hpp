@@ -9,6 +9,7 @@
 #include "../Utilities/Assert.hpp"
 #include "_UniqueLockTemplate.hpp"
 #include "Atomic.hpp"
+#include <type_traits>
 #include <cstddef>
 
 namespace MCF {
@@ -59,6 +60,8 @@ public:
 		return UniqueLock(*this);
 	}
 };
+
+static_assert(std::is_trivially_destructible<Mutex>::value, "Hey!");
 
 namespace Impl_UniqueLockTemplate {
 	template<>

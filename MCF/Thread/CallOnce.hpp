@@ -8,6 +8,7 @@
 #include "Atomic.hpp"
 #include "../Utilities/Defer.hpp"
 #include <utility>
+#include <type_traits>
 #include <cstddef>
 
 namespace MCF {
@@ -47,6 +48,8 @@ namespace Impl_CallOnce {
 }
 
 using OnceFlag = volatile Impl_CallOnce::OnceFlag;
+
+static_assert(std::is_trivially_destructible<OnceFlag>::value, "Hey!");
 
 template<typename FunctionT, typename ...ParamsT>
 bool CallOnce(OnceFlag &vFlag, FunctionT &&vFunction, ParamsT &&...vParams){

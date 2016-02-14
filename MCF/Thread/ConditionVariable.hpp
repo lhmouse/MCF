@@ -9,6 +9,7 @@
 #include "_UniqueLockTemplate.hpp"
 #include "Atomic.hpp"
 #include <cstddef>
+#include <type_traits>
 #include <cstdint>
 
 namespace MCF {
@@ -30,6 +31,8 @@ public:
 	std::size_t Signal(std::size_t uMaxToWakeUp = 1) noexcept;
 	std::size_t Broadcast() noexcept;
 };
+
+static_assert(std::is_trivially_destructible<ConditionVariable>::value, "Hey!");
 
 }
 

@@ -8,6 +8,7 @@
 #include "../Utilities/Noncopyable.hpp"
 #include "Mutex.hpp"
 #include "ConditionVariable.hpp"
+#include <type_traits>
 #include <cstddef>
 #include <cstdint>
 
@@ -32,6 +33,8 @@ public:
 	bool Set() noexcept;
 	bool Reset() noexcept;
 };
+
+static_assert(std::is_trivially_destructible<Event>::value, "Hey!");
 
 }
 

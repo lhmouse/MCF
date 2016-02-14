@@ -64,6 +64,8 @@ public:
 	}
 };
 
+static_assert(std::is_trivially_destructible<ReaderWriterMutex>::value, "Hey!");
+
 namespace Impl_UniqueLockTemplate {
 	template<>
 	inline bool ReaderWriterMutex::UniqueReaderLock::X_DoTry(std::uint64_t u64UntilFastMonoClock) const noexcept {

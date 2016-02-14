@@ -9,7 +9,6 @@
 #include "../Utilities/Assert.hpp"
 #include "_UniqueLockTemplate.hpp"
 #include "Mutex.hpp"
-#include <cstddef>
 
 namespace MCF {
 
@@ -27,9 +26,6 @@ public:
 		: x_vMutex(uSpinCount)
 		, x_uLockingThreadId(0), x_uRecursionCount(0)
 	{
-	}
-	~RecursiveMutex(){
-		ASSERT(x_uLockingThreadId.Load(kAtomicConsume) == 0);
 	}
 
 public:
@@ -68,6 +64,7 @@ public:
 	}
 };
 
+static_assert(std::is_trivially_destructible<RecursiveMutex>::value, "Hey!");
 
 namespace Impl_UniqueLockTemplate {
 	template<>

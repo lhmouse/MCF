@@ -8,6 +8,7 @@
 #include "../Utilities/Noncopyable.hpp"
 #include "Mutex.hpp"
 #include "ConditionVariable.hpp"
+#include <type_traits>
 #include <cstddef>
 #include <cstdint>
 
@@ -30,6 +31,8 @@ public:
 	void Wait() noexcept;
 	std::size_t Post(std::size_t uPostCount = 1) noexcept;
 };
+
+static_assert(std::is_trivially_destructible<Semaphore>::value, "Hey!");
 
 }
 

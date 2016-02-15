@@ -11,15 +11,13 @@
 namespace MCF {
 
 struct ThunkDeleter {
-	constexpr void *operator()() const noexcept {
+	constexpr const void *operator()() const noexcept {
 		return nullptr;
 	}
-	void operator()(void *pThunk) const noexcept;
+	void operator()(const void *pThunk) const noexcept;
 };
 
-using ThunkPtr = UniquePtr<const void, ThunkDeleter>;
-
-extern ThunkPtr CreateThunk(const void *pInit, std::size_t uSize);
+extern UniquePtr<const void, ThunkDeleter> CreateThunk(const void *pInit, std::size_t uSize);
 
 }
 

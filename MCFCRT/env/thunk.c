@@ -59,10 +59,10 @@ static uintptr_t       g_uPageMask            = 0;
 static MCFCRT_AvlRoot  g_avlThunksByThunk     = nullptr;
 static MCFCRT_AvlRoot  g_avlThunksByFreeSize  = nullptr;
 
-void *MCFCRT_AllocateThunk(const void *pInit, size_t uSize){
+const void *MCFCRT_AllocateThunk(const void *pInit, size_t uSize){
 	ASSERT(pInit);
 
-	char *pRet = nullptr;
+	char *pRaw = nullptr;
 
 	AcquireSRWLockExclusive(&g_srwlMutex);
 	{
@@ -139,24 +139,25 @@ void *MCFCRT_AllocateThunk(const void *pInit, size_t uSize){
 		pInfo->uFreeSize = 0;
 		MCFCRT_AvlAttach(&g_avlThunksByFreeSize, &(pInfo->vFreeSizeIndex), &FreeSizeComparatorNodes);
 
-		pRet = pInfo->pThunk;
+		pRaw = pInfo->pThunk;
 
 		// 由于其他 thunk 可能共享了当前内存页，所以不能设置为 PAGE_READWRITE。
 		DWORD dwOldProtect;
-		VirtualProtect(pRet, uThunkSize, PAGE_EXECUTE_READWRITE, &dwOldProtect);
-		memcpy(pRet, pInit, uSize);
-		memset(pRet + uSize, 0xCC, uThunkSize - uSize);
-		VirtualProtect(pRet, uThunkSize, PAGE_EXECUTE_READ, &dwOldProtect);
+		VirtualProtect(pRaw, uThunkSize, PAGE_EXECUTE_READWRITE, &dwOldProtect);
+		memcpy(pRaw, pInit, uSize);
+		memset(pRaw + uSize, 0xCC, uThunkSize - uSize);
+		VirtualProtect(pRaw, uThunkSize, PAGE_EXECUTE_READ, &dwOldProtect);
 	}
 jDone:
 	ReleaseSRWLockExclusive(&g_srwlMutex);
 
-	if(!pRet){
+	if(!pRaw){
 		SetLastError(ERROR_NOT_ENOUGH_MEMORY);
 	}
-	return pRet;
+	return pRaw;
 }
-void MCFCRT_DeallocateThunk(void *pThunk, bool bToPoison){
+void MCFCRT_DeallocateThunk(const void *pThunk, bool bToPoison){
+	char *const pRaw = (char *)pThunk;
 	void *pPageToRelease;
 
 	AcquireSRWLockExclusive(&g_srwlMutex);
@@ -173,9 +174,9 @@ void MCFCRT_DeallocateThunk(void *pThunk, bool bToPoison){
 		if(bToPoison){
 			// 由于其他 thunk 可能共享了当前内存页，所以不能设置为 PAGE_READWRITE。
 			DWORD dwOldProtect;
-			VirtualProtect(pThunk, pInfo->uThunkSize, PAGE_EXECUTE_READWRITE, &dwOldProtect);
-			memset(pThunk, 0xCC, pInfo->uThunkSize);
-			VirtualProtect(pThunk, pInfo->uThunkSize, PAGE_EXECUTE_READ, &dwOldProtect);
+			VirtualProtect(pRaw, pInfo->uThunkSize, PAGE_EXECUTE_READWRITE, &dwOldProtect);
+			memset(pRaw, 0xCC, pInfo->uThunkSize);
+			VirtualProtect(pRaw, pInfo->uThunkSize, PAGE_EXECUTE_READ, &dwOldProtect);
 		}
 
 		MCFCRT_AvlNodeHeader *const pNextThunkIndex = MCFCRT_AvlNext(pThunkIndex);

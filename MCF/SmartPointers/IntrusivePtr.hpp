@@ -55,6 +55,9 @@ namespace Impl_IntrusivePtr {
 		}
 
 	public:
+		bool IsUnique() const volatile noexcept {
+			return GetRef() == 1;
+		}
 		std::size_t GetRef() const volatile noexcept {
 			return x_uRef.Load(kAtomicRelaxed);
 		}
@@ -147,16 +150,16 @@ namespace Impl_IntrusivePtr {
 			}
 
 		public:
-			bool HasOwnerExpired() const noexcept {
+			bool IsOwnerAlive() const noexcept {
 				const Mutex::UniqueLock vLock(x_mtxGuard);
 				const auto pOwner = x_pOwner;
 				if(!pOwner){
-					return true;
+					return false;
 				}
 				if(static_cast<const volatile RefCountBase *>(pOwner)->GetRef() == 0){
-					return true;
+					return false;
 				}
-				return false;
+				return true;
 			}
 			void ClearOwner() noexcept {
 				const Mutex::UniqueLock vLock(x_mtxGuard);
@@ -281,7 +284,6 @@ public:
 
 template<typename ObjectT, class DeleterT>
 class IntrusivePtr {
-	static_assert(sizeof(IntrusiveBase<ObjectT, DeleterT>) > 0, "IntrusiveBase<ObjectT, DeleterT> is not an object type or is an incomplete type.");
 	static_assert(sizeof(dynamic_cast<const volatile IntrusiveBase<ObjectT, DeleterT> *>(DeclVal<ObjectT *>())), "Unable to locate IntrusiveBase for the managed object type.");
 
 	template<typename, class>
@@ -379,8 +381,30 @@ public:
 	constexpr bool IsNonnull() const noexcept {
 		return !!x_pElement;
 	}
-	std::size_t GetRefCount() const noexcept {
-		return static_cast<const volatile Impl_IntrusivePtr::RefCountBase *>(x_pElement)->GetRef();
+	bool IsUnique() const noexcept {
+		const auto pElement = x_pElement;
+		if(!pElement){
+			return false;
+		}
+		return static_cast<const volatile Impl_IntrusivePtr::RefCountBase *>(pElement)->IsUnique();
+	}
+	std::size_t GetRef() const noexcept {
+		const auto pElement = x_pElement;
+		if(!pElement){
+			return false;
+		}
+		return static_cast<const volatile Impl_IntrusivePtr::RefCountBase *>(pElement)->GetRef();
+	}
+	std::size_t GetWeakRef() const noexcept {
+		const auto pElement = x_pElement;
+		if(!pElement){
+			return 0;
+		}
+		const auto pView = pElement->x_pView.Load(kAtomicConsume);
+		if(!pView){
+			return 0;
+		}
+		return pView->GetRef() - 1;
 	}
 	constexpr Element *Get() const noexcept {
 		return x_pElement;
@@ -664,12 +688,19 @@ public:
 	}
 
 public:
-	bool HasExpired() const noexcept {
+	bool IsAlive() const noexcept {
 		const auto pView = x_pView;
 		if(!pView){
 			return true;
 		}
-		return pView->HasOwnerExpired();
+		return pView->IsOwnerAlive();
+	}
+	std::size_t GetWeakRef() const noexcept {
+		const auto pView = x_pView;
+		if(!pView){
+			return 0;
+		}
+		return pView->GetRef() - 1;
 	}
 	template<typename OtherT = ObjectT>
 	IntrusivePtr<OtherT, DeleterT> Lock() const noexcept {

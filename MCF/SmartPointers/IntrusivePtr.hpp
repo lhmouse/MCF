@@ -114,6 +114,64 @@ namespace Impl_IntrusivePtr {
 		void *apPadding[3];
 	};
 
+	template<typename OwnerT, class DeleterT>
+	class WeakViewTemplate final : public RefCountBase  {
+	public:
+		static void *operator new(std::size_t uSize){
+			static_assert(sizeof(WeakViewTemplate) <= sizeof(ViewPoolElement), "Please update the definition ViewPoolElement to make sure it is large enough to hold this WeakViewTemplate.");
+
+			ASSERT(uSize == sizeof(WeakViewTemplate));
+
+			return ViewPoolElement::operator new(uSize);
+		}
+		static void operator delete(void *pRaw) noexcept {
+			if(!pRaw){
+				return;
+			}
+
+			ViewPoolElement::operator delete(pRaw);
+		}
+
+	private:
+		mutable Mutex x_mtxGuard;
+		OwnerT *x_pOwner;
+
+	public:
+		explicit constexpr WeakViewTemplate(OwnerT *pOwner) noexcept
+			: x_mtxGuard(), x_pOwner(pOwner)
+		{
+		}
+
+	public:
+		bool IsOwnerAlive() const noexcept {
+			const Mutex::UniqueLock vLock(x_mtxGuard);
+			const auto pOwner = x_pOwner;
+			if(!pOwner){
+				return false;
+			}
+			if(static_cast<const volatile RefCountBase *>(pOwner)->GetRef() == 0){
+				return false;
+			}
+			return true;
+		}
+		void ClearOwner() noexcept {
+			const Mutex::UniqueLock vLock(x_mtxGuard);
+			x_pOwner = nullptr;
+		}
+
+		template<typename OtherT>
+		IntrusivePtr<OtherT, DeleterT> LockOwner() const noexcept {
+			const Mutex::UniqueLock vLock(x_mtxGuard);
+			const auto pOther = StaticCastOrDynamicCast<OtherT *>(x_pOwner);
+			if(!pOther){
+				return nullptr;
+			}
+			if(!static_cast<const volatile RefCountBase *>(pOther)->TryAddRef()){
+				return nullptr;
+			}
+			return IntrusivePtr<OtherT, DeleterT>(pOther);
+		}
+	};
 	template<class DeleterT>
 	class DeletableBase : public RefCountBase {
 		template<typename, class>
@@ -122,63 +180,7 @@ namespace Impl_IntrusivePtr {
 		friend class IntrusiveWeakPtr;
 
 	private:
-		class X_WeakView final : public RefCountBase  {
-		public:
-			static void *operator new(std::size_t uSize){
-				static_assert(sizeof(X_WeakView) <= sizeof(ViewPoolElement), "Please update the definition ViewPoolElement to make sure it is large enough to hold this X_WeakView.");
-
-				ASSERT(uSize == sizeof(X_WeakView));
-
-				return ViewPoolElement::operator new(uSize);
-			}
-			static void operator delete(void *pRaw) noexcept {
-				if(!pRaw){
-					return;
-				}
-
-				ViewPoolElement::operator delete(pRaw);
-			}
-
-		private:
-			mutable Mutex x_mtxGuard;
-			DeletableBase *x_pOwner;
-
-		public:
-			explicit constexpr X_WeakView(DeletableBase *pOwner) noexcept
-				: x_mtxGuard(), x_pOwner(pOwner)
-			{
-			}
-
-		public:
-			bool IsOwnerAlive() const noexcept {
-				const Mutex::UniqueLock vLock(x_mtxGuard);
-				const auto pOwner = x_pOwner;
-				if(!pOwner){
-					return false;
-				}
-				if(static_cast<const volatile RefCountBase *>(pOwner)->GetRef() == 0){
-					return false;
-				}
-				return true;
-			}
-			void ClearOwner() noexcept {
-				const Mutex::UniqueLock vLock(x_mtxGuard);
-				x_pOwner = nullptr;
-			}
-
-			template<typename OtherT>
-			IntrusivePtr<OtherT, DeleterT> LockOwner() const noexcept {
-				const Mutex::UniqueLock vLock(x_mtxGuard);
-				const auto pOther = StaticCastOrDynamicCast<OtherT *>(x_pOwner);
-				if(!pOther){
-					return nullptr;
-				}
-				if(!static_cast<const volatile RefCountBase *>(pOther)->TryAddRef()){
-					return nullptr;
-				}
-				return IntrusivePtr<OtherT, DeleterT>(pOther);
-			}
-		};
+		using X_WeakView = WeakViewTemplate<DeletableBase, DeleterT>;
 
 	private:
 		mutable Atomic<X_WeakView *> x_pView;

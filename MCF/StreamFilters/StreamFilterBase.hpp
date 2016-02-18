@@ -82,9 +82,7 @@ public:
 	StreamFilterBase &Filter(const StreamBuffer &sbufData){
 		ASSERT(&x_sbufOutput != &sbufData);
 
-		for(auto ce = sbufData.EnumerateFirstChunk(); ce; ++ce){
-			Update(ce.GetData(), ce.GetSize());
-		}
+		sbufData.Iterate([this](auto pbyData, auto uSize){ this->Update(pbyData, uSize); });
 		return *this;
 	}
 	StreamFilterBase &FilterInPlace(StreamBuffer &sbufData){

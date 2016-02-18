@@ -60,8 +60,7 @@ public:
 		const auto vControl = X_Detach();
 		const auto pBlock = vControl.pFirst;
 		if(!pBlock){
-			auto p =  ::operator new(sizeof(Block));
-			return p;
+			return ::operator new(sizeof(Block));
 		}
 		const auto pNext = pBlock->pNext;
 		if(pNext){

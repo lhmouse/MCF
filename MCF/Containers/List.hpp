@@ -342,13 +342,17 @@ public:
 	Element *Emplace(const Element *pPos, ParamsT &&...vParams){
 		List lstNew;
 		lstNew.Push(std::forward<ParamsT>(vParams)...);
-		return Splice(pPos, lstNew);
+		const auto pRet = lstNew.GetFirst();
+		Splice(pPos, lstNew);
+		return pRet;
 	}
 	template<typename ...ParamsT>
 	Element *Insert(const Element *pPos, std::size_t uDeltaSize, const ParamsT &...vParams){
 		List lstNew;
 		lstNew.Append(uDeltaSize, vParams...);
-		return Splice(pPos, lstNew);
+		const auto pRet = lstNew.GetFirst();
+		Splice(pPos, lstNew);
+		return pRet;
 	}
 	template<typename IteratorT, std::enable_if_t<
 		std::is_base_of<std::input_iterator_tag, typename std::iterator_traits<IteratorT>::iterator_category>::value,
@@ -356,7 +360,9 @@ public:
 	Element *Insert(const Element *pPos, IteratorT itBegin, std::common_type_t<IteratorT> itEnd){
 		List lstNew;
 		lstNew.Append(itBegin, itEnd);
-		return Splice(pPos, lstNew);
+		const auto pRet = lstNew.GetFirst();
+		Splice(pPos, lstNew);
+		return pRet;
 	}
 	Element *Insert(const Element *pPos, std::initializer_list<Element> ilElements){
 		return Insert(pPos, ilElements.begin(), ilElements.end());

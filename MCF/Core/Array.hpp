@@ -208,11 +208,11 @@ public:
 		return m_aStorage[uIndex];
 	}
 
-	const Element &operator[](std::size_t uIndex) const {
-		return Get(uIndex);
+	const Element &operator[](std::size_t uIndex) const noexcept {
+		return UncheckedGet(uIndex);
 	}
-	Element &operator[](std::size_t uIndex){
-		return Get(uIndex);
+	Element &operator[](std::size_t uIndex) noexcept {
+		return UncheckedGet(uIndex);
 	}
 
 public:

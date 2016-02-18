@@ -5,134 +5,55 @@
 #ifndef MCF_CORE_STREAM_BUFFER_HPP_
 #define MCF_CORE_STREAM_BUFFER_HPP_
 
+#include "../Containers/List.hpp"
 #include <utility>
 #include <cstddef>
-#include <iterator>
 
 namespace MCF {
 
 namespace Impl_StreamBuffer {
-	struct Chunk;
+	struct Chunk {
+		struct FromBeginning { };
+		struct FromEnd       { };
+
+		static void *operator new(std::size_t uSize);
+		static void operator delete(void *pRaw) noexcept;
+
+		unsigned uBegin;
+		unsigned uEnd;
+		unsigned char abyData[4];
+
+		explicit Chunk(FromBeginning)
+			: uBegin(0), uEnd(uBegin)
+		{
+		}
+		explicit Chunk(FromEnd)
+			: uBegin(sizeof(abyData)), uEnd(uBegin)
+		{
+		}
+	};
 }
 
 class StreamBuffer {
-public:
-	class ConstChunkEnumerator;
-
-	class ChunkEnumerator : public std::iterator<std::forward_iterator_tag, const std::pair<unsigned char *, unsigned char *>> {
-		friend ConstChunkEnumerator;
-
-	private:
-		Impl_StreamBuffer::Chunk *x_pChunk;
-
-	public:
-		explicit ChunkEnumerator(StreamBuffer &rhs) noexcept
-			: x_pChunk(rhs.x_pFirst)
-		{
-		}
-
-	public:
-		unsigned char *GetBegin() const noexcept;
-		unsigned char *GetEnd() const noexcept;
-
-		unsigned char *GetData() const noexcept {
-			return GetBegin();
-		}
-		unsigned GetSize() const noexcept {
-			return static_cast<unsigned>(GetEnd() - GetBegin());
-		}
-
-	public:
-		bool operator==(const ChunkEnumerator &rhs) const noexcept {
-			return x_pChunk == rhs.x_pChunk;
-		}
-		bool operator!=(const ChunkEnumerator &rhs) const noexcept {
-			return !(*this == rhs);
-		}
-
-		ChunkEnumerator &operator++() noexcept;
-		ChunkEnumerator operator++(int) noexcept {
-			auto ceRet = *this;
-			++*this;
-			return ceRet;
-		}
-
-		const std::pair<unsigned char *, unsigned char *> operator*() const noexcept {
-			return std::make_pair(GetBegin(), GetEnd());
-		}
-
-		explicit operator bool() const noexcept {
-			return !!x_pChunk;
-		}
-	};
-
-	class ConstChunkEnumerator : public std::iterator<std::forward_iterator_tag, const std::pair<const unsigned char *, const unsigned char *>> {
-	private:
-		const Impl_StreamBuffer::Chunk *x_pChunk;
-
-	public:
-		explicit ConstChunkEnumerator(const StreamBuffer &rhs) noexcept
-			: x_pChunk(rhs.x_pFirst)
-		{
-		}
-		ConstChunkEnumerator(ChunkEnumerator &rhs) noexcept
-			: x_pChunk(rhs.x_pChunk)
-		{
-		}
-
-	public:
-		const unsigned char *GetBegin() const noexcept;
-		const unsigned char *GetEnd() const noexcept;
-
-		const unsigned char *GetData() const noexcept {
-			return GetBegin();
-		}
-		std::size_t GetSize() const noexcept {
-			return static_cast<std::size_t>(GetEnd() - GetBegin());
-		}
-
-	public:
-		bool operator==(const ConstChunkEnumerator &rhs) const noexcept {
-			return x_pChunk == rhs.x_pChunk;
-		}
-		bool operator!=(const ConstChunkEnumerator &rhs) const noexcept {
-			return !(*this == rhs);
-		}
-
-		ConstChunkEnumerator &operator++() noexcept;
-		ConstChunkEnumerator operator++(int) noexcept {
-			auto ceRet = *this;
-			++*this;
-			return ceRet;
-		}
-
-		const std::pair<const unsigned char *, const unsigned char *> operator*() const noexcept {
-			return std::make_pair(GetBegin(), GetEnd());
-		}
-
-		explicit operator bool() const noexcept {
-			return !!x_pChunk;
-		}
-	};
-
 private:
-	Impl_StreamBuffer::Chunk *x_pFirst;
-	Impl_StreamBuffer::Chunk *x_pLast;
+	List<Impl_StreamBuffer::Chunk> x_lstChunks;
 	std::size_t x_uSize;
 
 public:
 	constexpr StreamBuffer() noexcept
-		: x_pFirst(nullptr), x_pLast(nullptr), x_uSize(0)
+		: x_lstChunks(), x_uSize(0)
 	{
 	}
-
-	StreamBuffer(const void *pData, std::size_t uSize);
-	StreamBuffer(const char *pszData);
-	StreamBuffer(const StreamBuffer &rhs);
-	StreamBuffer(StreamBuffer &&rhs) noexcept;
-	StreamBuffer &operator=(const StreamBuffer &rhs);
-	StreamBuffer &operator=(StreamBuffer &&rhs) noexcept;
-	~StreamBuffer();
+	StreamBuffer(const void *pData, std::size_t uSize)
+		: StreamBuffer()
+	{
+		Put(pData, uSize);
+	}
+	StreamBuffer(unsigned char by, std::size_t uSize)
+		: StreamBuffer()
+	{
+		Put(by, uSize);
+	}
 
 public:
 	bool IsEmpty() const noexcept {
@@ -141,18 +62,15 @@ public:
 	std::size_t GetSize() const noexcept {
 		return x_uSize;
 	}
-
-	// 如果为空返回 -1。
-	int PeekFront() const noexcept;
-	int PeekBack() const noexcept;
-
-	void Clear() noexcept;
-
-	int Peek() const noexcept {
-		return PeekFront();
+	void Clear() noexcept {
+		x_lstChunks.Clear();
+		x_uSize = 0;
 	}
+
+	int Peek() const noexcept; // 如果为空返回 -1。
 	int Get() noexcept;
 	void Put(unsigned char by);
+	int Unpeek() const noexcept;
 	int Unput() noexcept;
 	void Unget(unsigned char by);
 
@@ -160,31 +78,33 @@ public:
 	std::size_t Get(void *pData, std::size_t uSize) noexcept;
 	std::size_t Discard(std::size_t uSize) noexcept;
 	void Put(const void *pData, std::size_t uSize);
-	void Put(const char *pszData);
-
-	ConstChunkEnumerator EnumerateFirstChunk() const noexcept {
-		return ConstChunkEnumerator(*this);
-	}
-	ChunkEnumerator EnumerateFirstChunk() noexcept {
-		return ChunkEnumerator(*this);
-	}
-	ConstChunkEnumerator EnumerateConstFirstChunk() const noexcept {
-		return ConstChunkEnumerator(*this);
-	}
+	void Put(unsigned char by, std::size_t uSize);
 
 	// 拆分成两部分，返回 [0, uSize) 部分，[uSize, -) 部分仍保存于当前对象中。
 	StreamBuffer CutOff(std::size_t uSize);
-	// CutOff() 的逆操作。该函数返回后 src 为空。
+	// CutOff() 的逆操作。该函数返回后 rhs 为空。
 	void Splice(StreamBuffer &rhs) noexcept;
 	void Splice(StreamBuffer &&rhs) noexcept {
 		Splice(rhs);
 	}
 
+	template<typename FuncT>
+	void Iterate(FuncT &&vFunc) const {
+		for(auto pChunk = x_lstChunks.GetFirst(); pChunk; pChunk = x_lstChunks.GetNext(pChunk)){
+			std::forward<FuncT>(vFunc)(pChunk->abyData + pChunk->uBegin, pChunk->uEnd - pChunk->uBegin);
+		}
+	}
+	template<typename FuncT>
+	void Iterate(FuncT &&vFunc){
+		for(auto pChunk = x_lstChunks.GetFirst(); pChunk; pChunk = x_lstChunks.GetNext(pChunk)){
+			std::forward<FuncT>(vFunc)(pChunk->abyData + pChunk->uBegin, pChunk->uEnd - pChunk->uBegin);
+		}
+	}
+
 	void Swap(StreamBuffer &rhs) noexcept {
 		using std::swap;
-		swap(x_pFirst, rhs.x_pFirst);
-		swap(x_pLast,  rhs.x_pLast);
-		swap(x_uSize,  rhs.x_uSize);
+		swap(x_lstChunks, rhs.x_lstChunks);
+		swap(x_uSize,     rhs.x_uSize);
 	}
 
 	friend void swap(StreamBuffer &lhs, StreamBuffer &rhs) noexcept {

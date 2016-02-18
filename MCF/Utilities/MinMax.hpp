@@ -15,33 +15,24 @@ namespace Impl_MinMax {
 	constexpr T ForwardAsLvalueOrPrvalue(T &&t){
 		return std::forward<T>(t);
 	}
-
-	template<typename ComparatorT, typename FirstT>
-	constexpr decltype(auto) MinAsGlvalue(FirstT &&vFirst){
-		return std::forward<FirstT>(vFirst);
-	}
-	template<typename ComparatorT, typename FirstT>
-	constexpr decltype(auto) MaxAsGlvalue(FirstT &&vFirst){
-		return std::forward<FirstT>(vFirst);
-	}
-
-	template<typename ComparatorT, typename FirstT, typename SecondT, typename ...RemainingT>
-	constexpr decltype(auto) MinAsGlvalue(FirstT &&vFirst, SecondT &&vSecond, RemainingT &&...vRemaining){
-		return MinAsGlvalue<ComparatorT>(ComparatorT()(vFirst, vSecond) ? std::forward<FirstT>(vFirst) : std::forward<SecondT>(vSecond), std::forward<RemainingT>(vRemaining)...);
-	}
-	template<typename ComparatorT, typename FirstT, typename SecondT, typename ...RemainingT>
-	constexpr decltype(auto) MaxAsGlvalue(FirstT &&vFirst, SecondT &&vSecond, RemainingT &&...vRemaining){
-		return MaxAsGlvalue<ComparatorT>(ComparatorT()(vSecond, vFirst) ? std::forward<FirstT>(vFirst) : std::forward<SecondT>(vSecond), std::forward<RemainingT>(vRemaining)...);
-	}
 }
 
-template<typename ComparatorT = Less, typename ...ParamsT>
-constexpr decltype(auto) Min(ParamsT &&...vParams){
-	return Impl_MinMax::ForwardAsLvalueOrPrvalue(Impl_MinMax::MinAsGlvalue<ComparatorT>(std::forward<ParamsT>(vParams)...));
+template<typename ComparatorT = Less, typename FirstT>
+constexpr decltype(auto) Min(FirstT &&vFirst){
+	return Impl_MinMax::ForwardAsLvalueOrPrvalue(std::forward<FirstT>(vFirst));
 }
-template<typename ComparatorT = Less, typename ...ParamsT>
-constexpr decltype(auto) Max(ParamsT &&...vParams){
-	return Impl_MinMax::ForwardAsLvalueOrPrvalue(Impl_MinMax::MaxAsGlvalue<ComparatorT>(std::forward<ParamsT>(vParams)...));
+template<typename ComparatorT = Less, typename FirstT>
+constexpr decltype(auto) Max(FirstT &&vFirst){
+	return Impl_MinMax::ForwardAsLvalueOrPrvalue(std::forward<FirstT>(vFirst));
+}
+
+template<typename ComparatorT = Less, typename FirstT, typename SecondT, typename ...RemainingT>
+constexpr decltype(auto) Min(FirstT &&vFirst, SecondT &&vSecond, RemainingT &&...vRemaining){
+	return Impl_MinMax::ForwardAsLvalueOrPrvalue(Min<ComparatorT>(ComparatorT()(vFirst, vSecond) ? std::forward<FirstT>(vFirst) : std::forward<SecondT>(vSecond), std::forward<RemainingT>(vRemaining)...));
+}
+template<typename ComparatorT = Less, typename FirstT, typename SecondT, typename ...RemainingT>
+constexpr decltype(auto) Max(FirstT &&vFirst, SecondT &&vSecond, RemainingT &&...vRemaining){
+	return Impl_MinMax::ForwardAsLvalueOrPrvalue(Max<ComparatorT>(ComparatorT()(vSecond, vFirst) ? std::forward<FirstT>(vFirst) : std::forward<SecondT>(vSecond), std::forward<RemainingT>(vRemaining)...));
 }
 
 }

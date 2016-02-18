@@ -11,6 +11,7 @@
 #include "../Function/Comparators.hpp"
 #include "../Thread/Mutex.hpp"
 #include "../Thread/Atomic.hpp"
+#include "../Core/FixedSizeAllocator.hpp"
 #include "DefaultDeleter.hpp"
 #include "UniquePtr.hpp"
 #include <utility>
@@ -106,30 +107,32 @@ namespace Impl_IntrusivePtr {
 		return StaticCastOrDynamicCastHelper<DstT, SrcT>()(std::forward<SrcT>(vSrc));
 	}
 
-	struct ViewPoolElement final {
-		static void *operator new(std::size_t uSize);
-		static void operator delete(void *pRaw) noexcept;
+	template<std::size_t kSizeT>
+	struct ViewAllocator {
+		static FixedSizeAllocator<kSizeT> s_vAllocator;
 
-		ViewPoolElement *pNext;
-		void *apPadding[3];
+		static void *Allocate(){
+			return s_vAllocator.Allocate();
+		}
+		static void Deallocate(void *pRaw){
+			s_vAllocator.Deallocate(pRaw);
+		}
 	};
+
+	template<std::size_t kSizeT>
+	__attribute__((__init_priority__(101)))
+	FixedSizeAllocator<kSizeT> ViewAllocator<kSizeT>::s_vAllocator;
 
 	template<typename OwnerT, class DeleterT>
 	class WeakViewTemplate final : public RefCountBase  {
 	public:
 		static void *operator new(std::size_t uSize){
-			static_assert(sizeof(WeakViewTemplate) <= sizeof(ViewPoolElement), "Please update the definition ViewPoolElement to make sure it is large enough to hold this WeakViewTemplate.");
-
 			ASSERT(uSize == sizeof(WeakViewTemplate));
-
-			return ViewPoolElement::operator new(uSize);
+			(void)uSize;
+			return ViewAllocator<sizeof(WeakViewTemplate)>::Allocate();
 		}
 		static void operator delete(void *pRaw) noexcept {
-			if(!pRaw){
-				return;
-			}
-
-			ViewPoolElement::operator delete(pRaw);
+			ViewAllocator<sizeof(WeakViewTemplate)>::Deallocate(pRaw);
 		}
 
 	private:
@@ -172,6 +175,7 @@ namespace Impl_IntrusivePtr {
 			return IntrusivePtr<OtherT, DeleterT>(pOther);
 		}
 	};
+
 	template<class DeleterT>
 	class DeletableBase : public RefCountBase {
 		template<typename, class>

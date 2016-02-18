@@ -21,15 +21,14 @@ enum {
 };
 
 typedef struct tagAtExitCallbackBlock {
-	struct tagAtExitCallbackBlock *pNextBlock;
+	struct tagAtExitCallbackBlock *pPrev;
 
 	size_t uSize;
 	AtExitCallback aCallbacks[kAtExitCallbacksPerBlock];
 } AtExitCallbackBlock;
 
-static SRWLOCK               g_srwlAtExitMutex   = SRWLOCK_INIT;
-static AtExitCallbackBlock * g_pAtExitFirst      = nullptr;
-static AtExitCallbackBlock * g_pAtExitLast       = nullptr;
+static SRWLOCK               g_srwlAtExitMutex  = SRWLOCK_INIT;
+static AtExitCallbackBlock * g_pAtExitLast      = nullptr;
 
 static void __MCFCRT_PumpAtEndModule(){
 	// ISO C++
@@ -46,31 +45,21 @@ static void __MCFCRT_PumpAtEndModule(){
 
 		AcquireSRWLockExclusive(&g_srwlAtExitMutex);
 		{
-			pBlock = g_pAtExitFirst;
+			pBlock = g_pAtExitLast;
 			if(!pBlock){
 				ReleaseSRWLockExclusive(&g_srwlAtExitMutex);
-				goto jDone;
+				break;
 			}
-
-			AtExitCallbackBlock *const pNextBlock = pBlock->pNextBlock;
-			g_pAtExitFirst = pNextBlock;
-			if(pNextBlock){
-				// 单向链表。
-			} else {
-				g_pAtExitLast = nullptr;
-			}
+			g_pAtExitLast = pBlock->pPrev;
 		}
 		ReleaseSRWLockExclusive(&g_srwlAtExitMutex);
 
-		const AtExitCallback *pCur = pBlock->aCallbacks, *const pEnd = pBlock->aCallbacks + pBlock->uSize;
-		while(pCur != pEnd){
+		for(size_t i = pBlock->uSize; i != 0; --i){
+			const AtExitCallback *const pCur = pBlock->aCallbacks + i - 1;
 			(*(pCur->pfnProc))(pCur->nContext);
-			++pCur;
 		}
 		free(pBlock);
 	}
-jDone:
-	;
 }
 
 static bool __MCFCRT_StaticObjectsInit(){
@@ -125,36 +114,29 @@ bool MCFCRT_AtEndModule(void (*pfnProc)(intptr_t), intptr_t nContext){
 
 	AcquireSRWLockExclusive(&g_srwlAtExitMutex);
 	{
-		pBlock = g_pAtExitFirst;
+		pBlock = g_pAtExitLast;
 		if(!pBlock || (pBlock->uSize >= kAtExitCallbacksPerBlock)){
-			pBlock = malloc(sizeof(AtExitCallbackBlock));
-			if(!pBlock){
-				ReleaseSRWLockExclusive(&g_srwlAtExitMutex);
-				goto jFailed;
+			ReleaseSRWLockExclusive(&g_srwlAtExitMutex);
+			{
+				pBlock = malloc(sizeof(AtExitCallbackBlock));
+				if(!pBlock){
+					SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+					return false;
+				}
+				pBlock->uSize = 0;
 			}
-			pBlock->pNextBlock = nullptr;
-			pBlock->uSize      = 0;
+			AcquireSRWLockExclusive(&g_srwlAtExitMutex);
 
-			AtExitCallbackBlock *const pLastBlock = g_pAtExitLast;
-			if(pLastBlock){
-				pLastBlock->pNextBlock = pBlock;
-			} else {
-				g_pAtExitFirst = pBlock;
-			}
+			pBlock->pPrev = g_pAtExitLast;
 			g_pAtExitLast = pBlock;
 		}
-
 		AtExitCallback *const pCur = pBlock->aCallbacks + pBlock->uSize;
+		++(pBlock->uSize);
 		pCur->pfnProc  = pfnProc;
 		pCur->nContext = nContext;
-		++(pBlock->uSize);
 	}
 	ReleaseSRWLockExclusive(&g_srwlAtExitMutex);
 	return true;
-
-jFailed:
-	SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-	return false;
 }
 
 // ld 自动添加此符号。

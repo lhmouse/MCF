@@ -39,7 +39,7 @@ __MCFCRT_C_STDCALL
 static BOOL TopCtrlHandler(DWORD dwCtrlType){
 	UNREF_PARAM(dwCtrlType);
 
-	TerminateProcess(GetCurrentProcess(), ERROR_PROCESS_ABORTED);
+	TerminateProcess(GetCurrentProcess(), (DWORD)STATUS_CONTROL_C_EXIT);
 	__builtin_trap();
 }
 

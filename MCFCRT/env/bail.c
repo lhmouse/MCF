@@ -87,14 +87,15 @@ static void DoBail(const wchar_t *pwszDescription){
 
 	const ULONG_PTR aulParams[3] = { (ULONG_PTR)&ustrText, (ULONG_PTR)&ustrCaption, uType };
 	HardErrorResponse eResponse;
-	if(NT_SUCCESS(NtRaiseHardError(STATUS_SERVICE_NOTIFICATION, 4, 3, aulParams, (bCanBeDebugged ? kHardErrorOkCancel : kHardErrorOk), &eResponse))){
+	const NTSTATUS lStatus = NtRaiseHardError(STATUS_SERVICE_NOTIFICATION, 4, 3, aulParams, (bCanBeDebugged ? kHardErrorOkCancel : kHardErrorOk), &eResponse);
+	if(NT_SUCCESS(lStatus)){
 		bShouldGenerateBreakpoint = (eResponse != kHardErrorResponseOk);
 	}
 
 	if(bShouldGenerateBreakpoint){
 		__asm__ __volatile__("int3 \n");
 	}
-	TerminateProcess(GetCurrentProcess(), ERROR_PROCESS_ABORTED);
+	TerminateProcess(GetCurrentProcess(), (DWORD)STATUS_UNSUCCESSFUL);
 	__builtin_unreachable();
 }
 

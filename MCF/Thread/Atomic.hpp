@@ -23,10 +23,15 @@ enum MemoryModel {
 namespace Impl_Atomic {
 	template<typename ElementT>
 	class AtomicCommon {
+		static_assert(std::is_object<ElementT>::value,          "Only object types are supported.");
+		static_assert(std::is_trivial<ElementT>::value,         "This object type is not trivial.");
+		static_assert(sizeof(ElementT)  <= 2 * sizeof(void *),  "The size of this object type is too large.");
+		static_assert(alignof(ElementT) <= 2 * alignof(void *), "The alignment of this object type is too strict.");
+
 	protected:
 		volatile ElementT x_vElement;
 
-	protected:
+	public:
 		explicit constexpr AtomicCommon(ElementT vElement) noexcept
 			: x_vElement(vElement)
 		{
@@ -44,17 +49,21 @@ namespace Impl_Atomic {
 		}
 
 		ElementT Load(MemoryModel eModel) const volatile noexcept {
-			return __atomic_load_n(AddressOf(x_vElement), static_cast<int>(eModel));
+			ElementT vRet;
+			__atomic_load(AddressOf(x_vElement), &vRet, static_cast<int>(eModel));
+			return vRet;
 		}
 		void Store(ElementT vOperand, MemoryModel eModel) volatile noexcept {
-			__atomic_store_n(AddressOf(x_vElement), vOperand, static_cast<int>(eModel));
+			__atomic_store(AddressOf(x_vElement), &vOperand, static_cast<int>(eModel));
 		}
 
 		bool CompareExchange(ElementT &vComparand, ElementT vExchangeWith, MemoryModel eSuccessModel, MemoryModel eFailureModel) volatile noexcept {
-			return __atomic_compare_exchange_n(AddressOf(x_vElement), &vComparand, vExchangeWith, false, static_cast<int>(eSuccessModel), static_cast<int>(eFailureModel));
+			return __atomic_compare_exchange(AddressOf(x_vElement), &vComparand, &vExchangeWith, false, static_cast<int>(eSuccessModel), static_cast<int>(eFailureModel));
 		}
 		ElementT Exchange(ElementT vOperand, MemoryModel eModel) volatile noexcept {
-			return __atomic_exchange_n(AddressOf(x_vElement), vOperand, static_cast<int>(eModel));
+			ElementT vRet;
+			__atomic_exchange(AddressOf(x_vElement), &vOperand, &vRet, static_cast<int>(eModel));
+			return vRet;
 		}
 
 		bool CompareExchange(ElementT &vComparand, ElementT vExchangeWith, MemoryModel eModel) volatile noexcept {
@@ -73,12 +82,9 @@ namespace Impl_Atomic {
 	class AtomicInteger final : public AtomicCommon<ElementT> {
 		static_assert(std::is_integral<ElementT>::value || std::is_enum<ElementT>::value, "!");
 
-	private:
-		using X_Base = AtomicCommon<ElementT>;
-
 	public:
 		explicit constexpr AtomicInteger(ElementT vElement = 0) noexcept
-			: X_Base(vElement)
+			: AtomicCommon<ElementT>(vElement)
 		{
 		}
 
@@ -128,12 +134,9 @@ namespace Impl_Atomic {
 
 	template<>
 	class AtomicInteger<bool> final : public AtomicCommon<bool> {
-	private:
-		using X_Base = AtomicCommon<bool>;
-
 	public:
 		explicit constexpr AtomicInteger(bool bElement = 0) noexcept
-			: X_Base(bElement)
+			: AtomicCommon<bool>(bElement)
 		{
 		}
 
@@ -164,12 +167,9 @@ namespace Impl_Atomic {
 	class AtomicPointerToObject final : public AtomicCommon<ElementT> {
 		static_assert(std::is_pointer<ElementT>::value && std::is_object<std::remove_pointer_t<ElementT>>::value, "!");
 
-	private:
-		using X_Base = AtomicCommon<ElementT>;
-
 	public:
 		explicit constexpr AtomicPointerToObject(ElementT pElement = nullptr) noexcept
-			: X_Base(pElement)
+			: AtomicCommon<ElementT>(pElement)
 		{
 		}
 
@@ -200,19 +200,11 @@ namespace Impl_Atomic {
 	class AtomicPointerToNonObject final : public AtomicCommon<ElementT> {
 		static_assert(std::is_pointer<ElementT>::value && !std::is_object<std::remove_pointer_t<ElementT>>::value, "!");
 
-	private:
-		using X_Base = AtomicCommon<ElementT>;
-
 	public:
 		explicit constexpr AtomicPointerToNonObject(ElementT pElement = nullptr) noexcept
-			: X_Base(pElement)
+			: AtomicCommon<ElementT>(pElement)
 		{
 		}
-	};
-
-	template<typename ElementT>
-	class AtomicError final {
-		static_assert(((void)sizeof(ElementT), false), "Only integer, enumeration and pointer types are supported.");
 	};
 }
 
@@ -224,7 +216,7 @@ using Atomic =
 			std::conditional_t<std::is_object<std::remove_pointer_t<ElementT>>::value,
 				Impl_Atomic::AtomicPointerToObject<ElementT>,
 				Impl_Atomic::AtomicPointerToNonObject<ElementT>>,
-			Impl_Atomic::AtomicError<ElementT>
+			Impl_Atomic::AtomicCommon<ElementT>
 		>>;
 
 inline void AtomicFence(MemoryModel eModel) noexcept {

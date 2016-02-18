@@ -241,6 +241,25 @@ public:
 	friend void swap(Array &lhs, Array &rhs) noexcept(noexcept(lhs.Swap(rhs))) {
 		lhs.Swap(rhs);
 	}
+
+	friend decltype(auto) begin(const Array &rhs) noexcept {
+		return rhs.EnumerateFirst();
+	}
+	friend decltype(auto) begin(Array &rhs) noexcept {
+		return rhs.EnumerateFirst();
+	}
+	friend decltype(auto) cbegin(const Array &rhs) noexcept {
+		return begin(rhs);
+	}
+	friend decltype(auto) end(const Array &rhs) noexcept {
+		return rhs.EnumerateSingular();
+	}
+	friend decltype(auto) end(Array &rhs) noexcept {
+		return rhs.EnumerateSingular();
+	}
+	friend decltype(auto) cend(const Array &rhs) noexcept {
+		return end(rhs);
+	}
 };
 
 template<typename ElementT, std::size_t kSizeT, std::size_t ...kRemainingT>

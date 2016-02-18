@@ -21,7 +21,7 @@ namespace Impl_StreamBuffer {
 
 		unsigned uBegin;
 		unsigned uEnd;
-		unsigned char abyData[4];
+		unsigned char abyData[256];
 
 		explicit Chunk(FromBeginning)
 			: uBegin(0), uEnd(uBegin)

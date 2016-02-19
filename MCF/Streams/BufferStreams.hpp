@@ -138,14 +138,8 @@ class BufferInputStream : public Impl_BufferStreams::BufferStreamBase,
 	public Impl_BufferStreams::BufferInputStreamInterface<BufferInputStream>
 {
 public:
-	constexpr BufferInputStream() noexcept
-		: Impl_BufferStreams::BufferStreamBase()
-	{
-	}
-	explicit BufferInputStream(StreamBuffer vBuffer) noexcept
-		: Impl_BufferStreams::BufferStreamBase(std::move(vBuffer))
-	{
-	}
+	using Impl_BufferStreams::BufferStreamBase::BufferStreamBase;
+
 	~BufferInputStream() override;
 };
 
@@ -153,14 +147,8 @@ class BufferOutputStream : public Impl_BufferStreams::BufferStreamBase,
 	public Impl_BufferStreams::BufferOutputStreamInterface<BufferOutputStream>
 {
 public:
-	constexpr BufferOutputStream() noexcept
-		: Impl_BufferStreams::BufferStreamBase()
-	{
-	}
-	explicit BufferOutputStream(StreamBuffer vBuffer) noexcept
-		: Impl_BufferStreams::BufferStreamBase(std::move(vBuffer))
-	{
-	}
+	using Impl_BufferStreams::BufferStreamBase::BufferStreamBase;
+
 	~BufferOutputStream() override;
 };
 
@@ -168,14 +156,8 @@ class BufferStream : public Impl_BufferStreams::BufferStreamBase,
 	public Impl_BufferStreams::BufferInputStreamInterface<BufferStream>, public Impl_BufferStreams::BufferOutputStreamInterface<BufferStream>
 {
 public:
-	constexpr BufferStream() noexcept
-		: Impl_BufferStreams::BufferStreamBase()
-	{
-	}
-	explicit BufferStream(StreamBuffer vBuffer) noexcept
-		: Impl_BufferStreams::BufferStreamBase(std::move(vBuffer))
-	{
-	}
+	using Impl_BufferStreams::BufferStreamBase::BufferStreamBase;
+
 	~BufferStream() override;
 };
 

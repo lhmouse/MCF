@@ -3,15 +3,17 @@
 // Copyleft 2013 - 2016, LH_Mouse. All wrongs reserved.
 
 #include "../StdMCF.hpp"
-#include "BufferStreamSource.hpp"
-#include "BufferStreamSink.hpp"
+#include "BufferStreams.hpp"
 
 namespace MCF {
 
-BufferStreamSource::~BufferStreamSource(){
+BufferInputStream::~BufferInputStream(){
 }
 
-BufferStreamSink::~BufferStreamSink(){
+BufferOutputStream::~BufferOutputStream(){
+}
+
+BufferStream::~BufferStream(){
 }
 
 }

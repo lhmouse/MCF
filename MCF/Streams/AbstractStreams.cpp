@@ -3,15 +3,14 @@
 // Copyleft 2013 - 2016, LH_Mouse. All wrongs reserved.
 
 #include "../StdMCF.hpp"
-#include "AbstractStreamSource.hpp"
-#include "AbstractStreamSink.hpp"
+#include "AbstractStreams.hpp"
 
 namespace MCF {
 
-AbstractStreamSource::~AbstractStreamSource(){
+AbstractInputStream::~AbstractInputStream(){
 }
 
-AbstractStreamSink::~AbstractStreamSink(){
+AbstractOutputStream::~AbstractOutputStream(){
 }
 
 }

@@ -168,7 +168,6 @@ Impl_UniqueNtHandle::UniqueNtHandle File::X_CreateFileHandle(const WideStringVie
 	return hFile;
 }
 
-// 其他非静态成员函数。
 bool File::IsOpen() const noexcept {
 	return !!x_hFile;
 }

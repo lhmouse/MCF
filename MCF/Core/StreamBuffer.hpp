@@ -72,8 +72,8 @@ public:
 		}
 
 	public:
-		WriteIterator &operator=(unsigned char by){
-			x_psbufOwner->Put(by);
+		WriteIterator &operator=(unsigned char byData){
+			x_psbufOwner->Put(byData);
 			return *this;
 		}
 		WriteIterator &operator*(){
@@ -101,10 +101,10 @@ public:
 	{
 		Put(pData, uSize);
 	}
-	StreamBuffer(unsigned char by, std::size_t uSize)
+	StreamBuffer(unsigned char byData, std::size_t uSize)
 		: StreamBuffer()
 	{
-		Put(by, uSize);
+		Put(byData, uSize);
 	}
 
 public:
@@ -126,16 +126,16 @@ public:
 	int Peek() const noexcept;
 	int Get() noexcept;
 	void Discard() noexcept;
-	void Put(unsigned char by);
+	void Put(unsigned char byData);
 
 	int Unput() noexcept;
-	void Unget(unsigned char by);
+	void Unget(unsigned char byData);
 
 	std::size_t Peek(void *pData, std::size_t uSize) const noexcept;
 	std::size_t Get(void *pData, std::size_t uSize) noexcept;
 	std::size_t Discard(std::size_t uSize) noexcept;
 	void Put(const void *pData, std::size_t uSize);
-	void Put(unsigned char by, std::size_t uSize);
+	void Put(unsigned char byData, std::size_t uSize);
 
 	// 拆分成两部分，返回 [0, uSize) 部分，[uSize, -) 部分仍保存于当前对象中。
 	StreamBuffer CutOff(std::size_t uSize);

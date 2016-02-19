@@ -90,7 +90,6 @@ Impl_UniqueNtHandle::UniqueNtHandle KernelMutex::X_CreateEventHandle(const WideS
 	return hEvent;
 }
 
-// 其他非静态成员函数。
 bool KernelMutex::Try(std::uint64_t u64UntilFastMonoClock) noexcept {
 	::LARGE_INTEGER liTimeout;
 	liTimeout.QuadPart = 0;

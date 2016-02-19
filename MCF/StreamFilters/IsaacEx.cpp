@@ -24,13 +24,11 @@ namespace {
 }
 
 // ========== IsaacExEncoder ==========
-// 构造函数和析构函数。
 IsaacExEncoder::IsaacExEncoder(const void *pKey, std::size_t uKeyLen) noexcept
 	: x_au32KeyHash(GenerateKeyHash(pKey, uKeyLen))
 {
 }
 
-// 其他非静态成员函数。
 void IsaacExEncoder::X_DoInit(){
 	x_vIsaacGenerator.Init(x_au32KeyHash);
 	x_byLastEncoded = 0;
@@ -84,13 +82,11 @@ void IsaacExEncoder::X_DoFinalize(){
 }
 
 // ========== IsaacExDecoder ==========
-// 构造函数和析构函数。
 IsaacExDecoder::IsaacExDecoder(const void *pKey, std::size_t uKeyLen) noexcept
 	: x_au32KeyHash(GenerateKeyHash(pKey, uKeyLen))
 {
 }
 
-// 其他非静态成员函数。
 void IsaacExDecoder::X_DoInit(){
 	x_vIsaacGenerator.Init(x_au32KeyHash);
 	x_byLastEncoded = 0;

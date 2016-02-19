@@ -64,7 +64,6 @@ Impl_UniqueNtHandle::UniqueNtHandle KernelRecursiveMutex::X_CreateMutexHandle(co
 	return hMutex;
 }
 
-// 其他非静态成员函数。
 bool KernelRecursiveMutex::Try(std::uint64_t u64UntilFastMonoClock) noexcept {
 	::LARGE_INTEGER liTimeout;
 	liTimeout.QuadPart = 0;

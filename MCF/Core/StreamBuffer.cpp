@@ -28,7 +28,6 @@ namespace Impl_StreamBuffer {
 	}
 }
 
-// 其他非静态成员函数。
 int StreamBuffer::PeekFront() const noexcept {
 	int nRet = -1;
 	auto pChunk = x_lstChunks.GetFirst();
@@ -66,12 +65,12 @@ int StreamBuffer::Get() noexcept {
 void StreamBuffer::Discard() noexcept {
 	Get();
 }
-void StreamBuffer::Put(unsigned char by){
+void StreamBuffer::Put(unsigned char byData){
 	auto pChunk = x_lstChunks.GetLast();
 	if(!pChunk || (pChunk->uEnd == sizeof(Chunk::abyData))){
 		pChunk = &x_lstChunks.Push(Chunk::FromBeginning());
 	}
-	pChunk->abyData[pChunk->uEnd] = by;
+	pChunk->abyData[pChunk->uEnd] = byData;
 	++(pChunk->uEnd);
 	++x_uSize;
 }
@@ -89,13 +88,13 @@ int StreamBuffer::Unput() noexcept {
 	}
 	return nRet;
 }
-void StreamBuffer::Unget(unsigned char by){
+void StreamBuffer::Unget(unsigned char byData){
 	auto pChunk = x_lstChunks.GetFirst();
 	if(!pChunk || (0 == pChunk->uBegin)){
 		pChunk = &x_lstChunks.Unshift(Chunk::FromEnd());
 	}
 	--(pChunk->uBegin);
-	pChunk->abyData[pChunk->uBegin] = by;
+	pChunk->abyData[pChunk->uBegin] = byData;
 	++x_uSize;
 }
 
@@ -171,7 +170,7 @@ void StreamBuffer::Put(const void *pData, std::size_t uSize){
 	}
 	x_uSize += uBytesCopied;
 }
-void StreamBuffer::Put(unsigned char by, std::size_t uSize){
+void StreamBuffer::Put(unsigned char byData, std::size_t uSize){
 	List<Chunk> lstNewChunks;
 	std::size_t uBytesReserved = 0;
 	auto pChunk = x_lstChunks.GetLast();
@@ -190,7 +189,7 @@ void StreamBuffer::Put(unsigned char by, std::size_t uSize){
 	std::size_t uBytesCopied = 0;
 	while(uBytesCopied < uSize){
 		const auto uBytesToCopy = Min(uSize - uBytesCopied, sizeof(Chunk::abyData) - pChunk->uEnd);
-		FillN(pChunk->abyData + pChunk->uEnd, uBytesToCopy, by);
+		FillN(pChunk->abyData + pChunk->uEnd, uBytesToCopy, byData);
 		pChunk->uEnd += uBytesToCopy;
 
 		uBytesCopied += uBytesToCopy;

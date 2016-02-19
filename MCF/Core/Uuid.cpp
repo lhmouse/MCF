@@ -33,14 +33,12 @@ Uuid Uuid::Generate(){
 	return vRet;
 }
 
-// 构造函数和析构函数。
 Uuid::Uuid(const Array<char, 36> &achHex){
 	if(!Scan(achHex)){
 		DEBUG_THROW(Exception, ERROR_INVALID_PARAMETER, "Invalid UUID string"_rcs);
 	}
 }
 
-// 其他非静态成员函数。
 void Uuid::Print(Array<char, 36> &achHex, bool bUpperCase) const noexcept {
 	auto pbyRead = x_unData.aby.GetData();
 	auto pchWrite = achHex.GetData();

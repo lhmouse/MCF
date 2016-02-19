@@ -90,7 +90,6 @@ Impl_UniqueNtHandle::UniqueNtHandle KernelEvent::X_CreateEventHandle(bool bInitS
 	return hEvent;
 }
 
-// 其他非静态成员函数。
 bool KernelEvent::Wait(std::uint64_t u64UntilFastMonoClock) const noexcept {
 	::LARGE_INTEGER liTimeout;
 	liTimeout.QuadPart = 0;

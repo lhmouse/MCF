@@ -33,14 +33,12 @@ void Thread::YieldExecution() noexcept {
 	::MCFCRT_YieldThread();
 }
 
-// 构造函数和析构函数。
 Thread::~Thread(){
 	if(x_pException){
 		std::terminate();
 	}
 }
 
-// 其他非静态成员函数。
 void Thread::X_Initialize(bool bSuspended){
 	ASSERT_MSG(!x_hThread, L"Thread 只能被初始化一次。");
 

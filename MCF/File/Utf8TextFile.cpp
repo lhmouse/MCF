@@ -13,7 +13,6 @@ namespace {
 }
 
 // ========== Utf8TextFileReader ==========
-// 构造函数和析构函数。
 Utf8TextFileReader::Utf8TextFileReader(File &&vFile)
 	: x_vFile(std::move(vFile))
 	, x_u64Offset(0), x_sbufCache()
@@ -28,7 +27,6 @@ Utf8TextFileReader::Utf8TextFileReader(File &&vFile)
 Utf8TextFileReader::~Utf8TextFileReader(){
 }
 
-// 其他非静态成员函数。
 void Utf8TextFileReader::Reset() noexcept {
 	Utf8TextFileReader().Swap(*this);
 }
@@ -110,7 +108,6 @@ bool Utf8TextFileReader::ReadTillEof(Utf8String &u8sData){
 }
 
 // ========== Utf8TextFileWriter ==========
-// 构造函数和析构函数。
 Utf8TextFileWriter::Utf8TextFileWriter(File &&vFile, std::uint32_t u32Flags)
 	: x_vFile(std::move(vFile)), x_u32Flags(u32Flags)
 	, x_u64Offset(x_vFile.GetSize()), x_u8sLine()
@@ -129,7 +126,6 @@ Utf8TextFileWriter::~Utf8TextFileWriter(){
 	}
 }
 
-// 其他非静态成员函数。
 void Utf8TextFileWriter::Reset() noexcept {
 	Utf8TextFileWriter().Swap(*this);
 }

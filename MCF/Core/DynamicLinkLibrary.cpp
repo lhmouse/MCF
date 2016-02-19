@@ -25,7 +25,6 @@ void DynamicLinkLibrary::X_DllUnloader::operator()(void *hDll) noexcept {
 	}
 }
 
-// 构造函数和析构函数。
 DynamicLinkLibrary::DynamicLinkLibrary(const WideStringView &wsvPath)
 	: DynamicLinkLibrary()
 {
@@ -46,7 +45,6 @@ DynamicLinkLibrary::DynamicLinkLibrary(const WideStringView &wsvPath)
 	x_hDll.Reset(hDll);
 }
 
-// 其他非静态成员函数。
 const void *DynamicLinkLibrary::GetBaseAddress() const noexcept {
 	return x_hDll.Get();
 }

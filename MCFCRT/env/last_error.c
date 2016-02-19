@@ -21,6 +21,10 @@ void MCFCRT_SetWin32LastError(unsigned long ulErrorCode){
 	SetLastError(ulErrorCode);
 }
 
+static inline bool IsLineBreak(wchar_t wc){
+	return (wc == 0) || (wc == L'\n') || (wc == L'\r');
+}
+
 size_t MCFCRT_GetWin32ErrorDescription(const wchar_t **ppwszStr, unsigned long ulErrorCode){
 	static const wchar_t kUnknownErrorCode[]   = L"<未知错误码>";
 	static const wchar_t kUnicodeUnavailable[] = L"<Unicode 错误码描述不可用>";
@@ -38,16 +42,26 @@ size_t MCFCRT_GetWin32ErrorDescription(const wchar_t **ppwszStr, unsigned long u
 		*ppwszStr = kUnicodeUnavailable;
 		return sizeof(kUnicodeUnavailable) / sizeof(wchar_t) - 1;
 	}
-	const wchar_t *const pwcBegin = (const wchar_t *)pEntry->Text, *pwcEnd = pwcBegin + (pEntry->Length - offsetof(MESSAGE_RESOURCE_ENTRY, Text)) / sizeof(wchar_t);
+	const wchar_t *const pwcText = (const wchar_t *)pEntry->Text;
+	const wchar_t *pwcEnd = pwcText + (pEntry->Length - offsetof(MESSAGE_RESOURCE_ENTRY, Text)) / sizeof(wchar_t);
 	for(;;){
-		if(pwcBegin == pwcEnd){
+		if(pwcText == pwcEnd){
 			break;
 		}
-		const wchar_t wcLast = pwcEnd[-1];
-		if((wcLast != 0) && (wcLast != L'\n') && (wcLast != L'\r') && (wcLast != L' ') && (wcLast != L'\t')){
+		if(!IsLineBreak(pwcEnd[-1])){
 			break;
 		}
 		--pwcEnd;
+	}
+	const wchar_t *pwcBegin = pwcEnd;
+	for(;;){
+		if(pwcText == pwcBegin){
+			break;
+		}
+		if(IsLineBreak(pwcBegin[-1])){
+			break;
+		}
+		--pwcBegin;
 	}
 	*ppwszStr = pwcBegin;
 	return (size_t)(pwcEnd - pwcBegin);

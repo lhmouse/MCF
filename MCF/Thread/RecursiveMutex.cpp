@@ -8,7 +8,6 @@
 
 namespace MCF {
 
-// 其他非静态成员函数。
 bool RecursiveMutex::IsLockedByCurrentThread() const noexcept {
 	const auto uThreadId = Thread::GetCurrentId();
 

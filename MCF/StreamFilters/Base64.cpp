@@ -8,12 +8,10 @@
 namespace MCF {
 
 // ========== Base64Encoder ==========
-// 构造函数和析构函数。
 Base64Encoder::Base64Encoder(const char *pchTable) noexcept {
 	std::memcpy(x_abyTable, pchTable, sizeof(x_abyTable));
 }
 
-// 其他非静态成员函数。
 void Base64Encoder::X_DoInit(){
 	x_uState = 0;
 }
@@ -111,7 +109,6 @@ void Base64Encoder::X_DoFinalize(){
 }
 
 // ========== Base64Decoder ==========
-// 构造函数和析构函数。
 Base64Decoder::Base64Decoder(const char *pchTable) noexcept {
 	std::memset(x_aschTable, -1, sizeof(x_aschTable));
 	for(std::size_t i = 0; i < 64; ++i){
@@ -119,7 +116,6 @@ Base64Decoder::Base64Decoder(const char *pchTable) noexcept {
 	}
 }
 
-// 其他非静态成员函数。
 void Base64Decoder::X_DoInit(){
 	x_uState = 0;
 }

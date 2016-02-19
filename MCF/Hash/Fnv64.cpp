@@ -10,13 +10,11 @@ namespace MCF {
 
 // http://www.isthe.com/chongo/tech/comp/fnv/
 
-// 构造函数和析构函数。
 Fnv64::Fnv64() noexcept
 	: x_bInited(false)
 {
 }
 
-// 其他非静态成员函数。
 void Fnv64::Abort() noexcept {
 	x_bInited = false;
 }

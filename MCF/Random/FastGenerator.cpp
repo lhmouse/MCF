@@ -17,7 +17,6 @@ namespace {
 	};
 }
 
-// 其他非静态成员函数。
 void FastGenerator::Init(std::uint32_t u32Seed) noexcept {
 	auto u64Seed = 0x0123456789ABCDEFull | u32Seed;
 	for(unsigned i = 0; i < 8; ++i){

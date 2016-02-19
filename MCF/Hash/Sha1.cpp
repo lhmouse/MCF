@@ -287,13 +287,11 @@ namespace {
 	}
 }
 
-// 构造函数和析构函数。
 Sha1::Sha1() noexcept
 	: x_bInited(false)
 {
 }
 
-// 其他非静态成员函数。
 void Sha1::Abort() noexcept {
 	x_bInited = false;
 }

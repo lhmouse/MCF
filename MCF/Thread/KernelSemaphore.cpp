@@ -68,7 +68,6 @@ Impl_UniqueNtHandle::UniqueNtHandle KernelSemaphore::X_CreateSemaphoreHandle(std
 	return hSemaphore;
 }
 
-// 其他非静态成员函数。
 bool KernelSemaphore::Wait(std::uint64_t u64UntilFastMonoClock) noexcept {
 	::LARGE_INTEGER liTimeout;
 	liTimeout.QuadPart = 0;

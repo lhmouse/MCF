@@ -11,7 +11,6 @@ namespace MCF {
 // http://www.burtleburtle.net/bob/rand/isaacafa.html
 // http://www.burtleburtle.net/bob/c/readable.c
 
-// 其他非静态成员函数。
 void IsaacGenerator::Init(std::uint32_t u32Seed) noexcept {
 	Array<std::uint32_t, 8> au32Seed;
 	Fill(au32Seed.GetBegin(), au32Seed.GetEnd(), u32Seed);

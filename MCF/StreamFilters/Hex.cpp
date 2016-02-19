@@ -8,7 +8,6 @@
 namespace MCF {
 
 // ========== HexEncoder ==========
-// 其他非静态成员函数。
 void HexEncoder::X_DoInit(){
 }
 void HexEncoder::X_DoUpdate(const void *pData, std::size_t uSize){
@@ -26,7 +25,6 @@ void HexEncoder::X_DoFinalize(){
 }
 
 // ========== HexDecoder ==========
-// 其他非静态成员函数。
 void HexDecoder::X_DoInit(){
 	x_nHigh = -1;
 }

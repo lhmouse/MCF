@@ -15,7 +15,6 @@ NTSTATUS NtReleaseKeyedEvent(HANDLE hKeyedEvent, void *pKey, BOOLEAN bAlertable,
 
 namespace MCF {
 
-// 其他非静态成员函数。
 bool Mutex::Try(std::uint64_t u64UntilFastMonoClock) noexcept {
 	if(u64UntilFastMonoClock == 0){
 		auto uOld = x_uControl.Load(kAtomicRelaxed);

@@ -7,7 +7,6 @@
 
 namespace MCF {
 
-// 其他非静态成员函数。
 bool Event::Wait(std::uint64_t u64UntilFastMonoClock) const noexcept {
 	Mutex::UniqueLock vLock(x_mtxGuard);
 	while(!x_bSet){

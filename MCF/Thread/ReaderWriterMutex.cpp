@@ -7,7 +7,6 @@
 
 namespace MCF {
 
-// 其他非静态成员函数。
 bool ReaderWriterMutex::TryAsReader(std::uint64_t u64UntilFastMonoClock) noexcept {
 	if(!x_mtxReaderGuard.Try(u64UntilFastMonoClock)){
 		return false;

@@ -16,7 +16,6 @@ NTSTATUS NtReleaseKeyedEvent(HANDLE hKeyedEvent, void *pKey, BOOLEAN bAlertable,
 
 namespace MCF {
 
-// 其他非静态成员函数。
 bool ConditionVariable::Wait(Impl_UniqueLockTemplate::UniqueLockTemplateBase &vLock, std::uint64_t u64UntilFastMonoClock) noexcept {
 	x_uControl.Increment(kAtomicRelaxed);
 	const auto uCount = vLock.X_UnlockAll();

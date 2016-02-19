@@ -1,22 +1,17 @@
 #include <MCF/StdMCF.hpp>
-#include <MCF/Core/StreamBuffer.hpp>
+#include <MCF/Core/LastError.hpp>
+#include <MCF/Core/String.hpp>
+#include <MCF/Utilities/Bail.hpp>
 #include <cstdio>
+#include <winternl.h>
+#include <ntdef.h>
+#include <ntstatus.h>
 
 using namespace MCF;
 
 extern "C" unsigned MCFCRT_Main(){
-	for(unsigned i = 0; i < 70; ++i){
-		StreamBuffer b2;
-		b2.Put("0123456789abcdefghijklmnopqrstuvexyzABCDEFGHIJKLMNOPQRSTUVWXYZ", 62);
-		auto b1 = b2.CutOff(i);
-
-		char str[256];
-		auto len = b1.Get(str, sizeof(str) - 1);
-		str[len] = 0;
-		std::printf("b1 = %s\n", str);
-		len = b2.Get(str, sizeof(str) - 1);
-		str[len] = 0;
-		std::printf("b2 = %s\n\n", str);
-	}
+	const auto code = ::RtlNtStatusToDosError(STATUS_RECEIVE_PARTIAL);
+	std::printf("code = %lx\n", code);
+	Bail(WideString(GetWin32ErrorDescription(code)).GetStr());
 	return 0;
 }

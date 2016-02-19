@@ -33,13 +33,11 @@ namespace {
 	constexpr auto kCrcTable = GenerateTable(std::make_index_sequence<256>());
 }
 
-// 构造函数和析构函数。
 Crc64::Crc64() noexcept
 	: x_bInited(false)
 {
 }
 
-// 其他非静态成员函数。
 void Crc64::Abort() noexcept {
 	x_bInited = false;
 }

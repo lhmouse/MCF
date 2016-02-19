@@ -16,7 +16,7 @@ public:
 public:
 	virtual int Peek() const = 0;
 	virtual int Get() = 0;
-	virtual void Discard() = 0;
+	virtual bool Discard() = 0;
 
 	virtual std::size_t Peek(void *pData, std::size_t uSize) const = 0;
 	virtual std::size_t Get(void *pData, std::size_t uSize) = 0;
@@ -31,7 +31,6 @@ public:
 	virtual void Put(unsigned char byData) = 0;
 
 	virtual void Put(const void *pData, std::size_t uSize) = 0;
-	virtual void Put(unsigned char byData, std::size_t uSize) = 0;
 };
 
 }

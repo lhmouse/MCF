@@ -125,7 +125,7 @@ public:
 
 	int Peek() const noexcept;
 	int Get() noexcept;
-	void Discard() noexcept;
+	bool Discard() noexcept;
 	void Put(unsigned char byData);
 
 	int Unput() noexcept;

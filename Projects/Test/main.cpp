@@ -1,20 +1,19 @@
 #include <MCF/StdMCF.hpp>
-#include <MCF/Streams/BufferStreams.hpp>
+#include <MCF/Core/String.hpp>
+#include <MCF/Streams/FileStreams.hpp>
+#include <MCF/Streams/StreamIterators.hpp>
 
 using namespace MCF;
 
 extern "C" unsigned MCFCRT_Main(){
-	BufferStream s;
-	char str[64];
-	unsigned len;
+	auto path = WideString(NarrowStringView(__FILE__));
+	auto file = File(path, File::kToRead | File::kDontCreate | File::kSharedRead);
 
-	s.Put("hello ", 6);
-	len = s.Get(str, sizeof(str));
-	std::fwrite(str, len, 1, stdout);
-
-	s.Put("world!", 6);
-	len = s.Get(str, sizeof(str));
-	std::fwrite(str, len, 1, stdout);
+	FileInputStream strm(std::move(file));
+	int c;
+	for(auto it = StreamReadIterator(strm); (c = *it) >= 0; ++it){
+		std::putchar(c);
+	}
 
 	return 0;
 }

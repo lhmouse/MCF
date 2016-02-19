@@ -62,8 +62,8 @@ int StreamBuffer::Get() noexcept {
 	}
 	return nRet;
 }
-void StreamBuffer::Discard() noexcept {
-	Get();
+bool StreamBuffer::Discard() noexcept {
+	return Get() >= 0;
 }
 void StreamBuffer::Put(unsigned char byData){
 	auto pChunk = x_lstChunks.GetLast();

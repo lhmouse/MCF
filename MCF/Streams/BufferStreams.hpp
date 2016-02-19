@@ -43,7 +43,7 @@ namespace Impl_BufferStreams {
 		int X_Get() noexcept {
 			return x_vBuffer.Get();
 		}
-		void X_Discard() noexcept {
+		bool X_Discard() noexcept {
 			return x_vBuffer.Discard();
 		}
 		void X_Put(unsigned char byData){
@@ -61,9 +61,6 @@ namespace Impl_BufferStreams {
 		}
 		void X_Put(const void *pData, std::size_t uSize){
 			x_vBuffer.Put(pData, uSize);
-		}
-		void X_Put(unsigned char byData, std::size_t uSize){
-			x_vBuffer.Put(byData, uSize);
 		}
 
 	public:
@@ -95,7 +92,7 @@ namespace Impl_BufferStreams {
 		int Get() noexcept override {
 			return X_UseMagic().X_Get();
 		}
-		void Discard() noexcept override {
+		bool Discard() noexcept override {
 			return X_UseMagic().X_Discard();
 		}
 
@@ -127,9 +124,6 @@ namespace Impl_BufferStreams {
 
 		void Put(const void *pData, std::size_t uSize) override {
 			X_UseMagic().X_Put(pData, uSize);
-		}
-		void Put(unsigned char byData, std::size_t uSize) override {
-			X_UseMagic().X_Put(byData, uSize);
 		}
 	};
 }

@@ -29,13 +29,25 @@ namespace Impl_StreamBuffer {
 }
 
 // 其他非静态成员函数。
-int StreamBuffer::Peek() const noexcept {
+int StreamBuffer::PeekFront() const noexcept {
 	int nRet = -1;
 	auto pChunk = x_lstChunks.GetFirst();
 	if(pChunk){
 		nRet = pChunk->abyData[pChunk->uBegin];
 	}
 	return nRet;
+}
+int StreamBuffer::PeekBack() const noexcept {
+	int nRet = -1;
+	auto pChunk = x_lstChunks.GetLast();
+	if(pChunk){
+		nRet = pChunk->abyData[pChunk->uEnd - 1];
+	}
+	return nRet;
+}
+
+int StreamBuffer::Peek() const noexcept {
+	return PeekFront();
 }
 int StreamBuffer::Get() noexcept {
 	int nRet = -1;
@@ -51,6 +63,9 @@ int StreamBuffer::Get() noexcept {
 	}
 	return nRet;
 }
+void StreamBuffer::Discard() noexcept {
+	Get();
+}
 void StreamBuffer::Put(unsigned char by){
 	auto pChunk = x_lstChunks.GetLast();
 	if(!pChunk || (pChunk->uEnd == sizeof(Chunk::abyData))){
@@ -59,14 +74,6 @@ void StreamBuffer::Put(unsigned char by){
 	pChunk->abyData[pChunk->uEnd] = by;
 	++(pChunk->uEnd);
 	++x_uSize;
-}
-int StreamBuffer::Unpeek() const noexcept {
-	int nRet = -1;
-	auto pChunk = x_lstChunks.GetLast();
-	if(pChunk){
-		nRet = pChunk->abyData[pChunk->uEnd - 1];
-	}
-	return nRet;
 }
 int StreamBuffer::Unput() noexcept {
 	int nRet = -1;

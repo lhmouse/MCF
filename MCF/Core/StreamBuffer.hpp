@@ -6,6 +6,7 @@
 #define MCF_CORE_STREAM_BUFFER_HPP_
 
 #include "../Containers/List.hpp"
+#include <iterator>
 #include <utility>
 #include <cstddef>
 
@@ -35,6 +36,57 @@ namespace Impl_StreamBuffer {
 }
 
 class StreamBuffer {
+public:
+	class ReadIterator : public std::iterator<std::input_iterator_tag, int> {
+	private:
+		StreamBuffer *x_psbufOwner;
+
+	public:
+		explicit constexpr ReadIterator(StreamBuffer &sbufOwner) noexcept
+			: x_psbufOwner(&sbufOwner)
+		{
+		}
+
+	public:
+		int operator*() const {
+			return x_psbufOwner->Peek();
+		}
+		ReadIterator &operator++(){
+			x_psbufOwner->Discard();
+			return *this;
+		}
+		ReadIterator operator++(int){
+			x_psbufOwner->Discard();
+			return *this;
+		}
+	};
+
+	class WriteIterator : public std::iterator<std::output_iterator_tag, unsigned char> {
+	private:
+		StreamBuffer *x_psbufOwner;
+
+	public:
+		explicit constexpr WriteIterator(StreamBuffer &sbufOwner) noexcept
+			: x_psbufOwner(&sbufOwner)
+		{
+		}
+
+	public:
+		WriteIterator &operator=(unsigned char by){
+			x_psbufOwner->Put(by);
+			return *this;
+		}
+		WriteIterator &operator*(){
+			return *this;
+		}
+		WriteIterator &operator++(){
+			return *this;
+		}
+		WriteIterator &operator++(int){
+			return *this;
+		}
+	};
+
 private:
 	List<Impl_StreamBuffer::Chunk> x_lstChunks;
 	std::size_t x_uSize;
@@ -67,10 +119,15 @@ public:
 		x_uSize = 0;
 	}
 
-	int Peek() const noexcept; // 如果为空返回 -1。
+	 // 如果为空返回 -1。
+	int PeekFront() const noexcept;
+	int PeekBack() const noexcept;
+
+	int Peek() const noexcept;
 	int Get() noexcept;
+	void Discard() noexcept;
 	void Put(unsigned char by);
-	int Unpeek() const noexcept;
+
 	int Unput() noexcept;
 	void Unget(unsigned char by);
 

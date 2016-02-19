@@ -2,12 +2,12 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2013 - 2016, LH_Mouse. All wrongs reserved.
 
-#ifndef MCF_CORE_UTF8_TEXT_FILE_HPP_
-#define MCF_CORE_UTF8_TEXT_FILE_HPP_
+#ifndef MCF_FILE_UTF8_TEXT_FILE_HPP_
+#define MCF_FILE_UTF8_TEXT_FILE_HPP_
 
 #include "../Core/StreamBuffer.hpp"
 #include "../Core/String.hpp"
-#include "../File/File.hpp"
+#include "../Core/File.hpp"
 #include <utility>
 
 namespace MCF {

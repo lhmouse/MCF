@@ -81,55 +81,55 @@ namespace Impl_BufferStreams {
 	template<typename T>
 	class BufferInputStreamInterface : public AbstractInputStream {
 	private:
-		const BufferStreamBase *X_UseMagic() const noexcept {
-			return static_cast<const BufferStreamBase *>(static_cast<const T *>(this));
+		const BufferStreamBase &X_UseMagic() const noexcept {
+			return static_cast<const BufferStreamBase &>(static_cast<const T &>(*this));
 		}
-		BufferStreamBase *X_UseMagic() noexcept {
-			return static_cast<BufferStreamBase *>(static_cast<T *>(this));
+		BufferStreamBase &X_UseMagic() noexcept {
+			return static_cast<BufferStreamBase &>(static_cast<T &>(*this));
 		}
 
 	public:
 		int Peek() const noexcept override {
-			return X_UseMagic()->X_Peek();
+			return X_UseMagic().X_Peek();
 		}
 		int Get() noexcept override {
-			return X_UseMagic()->X_Get();
+			return X_UseMagic().X_Get();
 		}
 		void Discard() noexcept override {
-			return X_UseMagic()->X_Discard();
+			return X_UseMagic().X_Discard();
 		}
 
 		std::size_t Peek(void *pData, std::size_t uSize) const noexcept override {
-			return X_UseMagic()->X_Peek(pData, uSize);
+			return X_UseMagic().X_Peek(pData, uSize);
 		}
 		std::size_t Get(void *pData, std::size_t uSize) noexcept override {
-			return X_UseMagic()->X_Get(pData, uSize);
+			return X_UseMagic().X_Get(pData, uSize);
 		}
 		std::size_t Discard(std::size_t uSize) noexcept override {
-			return X_UseMagic()->X_Discard(uSize);
+			return X_UseMagic().X_Discard(uSize);
 		}
 	};
 
 	template<typename T>
 	class BufferOutputStreamInterface : public AbstractOutputStream {
 	private:
-		const BufferStreamBase *X_UseMagic() const noexcept {
-			return static_cast<const BufferStreamBase *>(static_cast<const T *>(this));
+		const BufferStreamBase &X_UseMagic() const noexcept {
+			return static_cast<const BufferStreamBase &>(static_cast<const T &>(*this));
 		}
-		BufferStreamBase *X_UseMagic() noexcept {
-			return static_cast<BufferStreamBase *>(static_cast<T *>(this));
+		BufferStreamBase &X_UseMagic() noexcept {
+			return static_cast<BufferStreamBase &>(static_cast<T &>(*this));
 		}
 
 	public:
 		void Put(unsigned char byData) override {
-			X_UseMagic()->X_Put(byData);
+			X_UseMagic().X_Put(byData);
 		}
 
 		void Put(const void *pData, std::size_t uSize) override {
-			X_UseMagic()->X_Put(pData, uSize);
+			X_UseMagic().X_Put(pData, uSize);
 		}
 		void Put(unsigned char byData, std::size_t uSize) override {
-			X_UseMagic()->X_Put(byData, uSize);
+			X_UseMagic().X_Put(byData, uSize);
 		}
 	};
 }

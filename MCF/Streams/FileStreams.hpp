@@ -182,6 +182,9 @@ class FileInputStream : public Impl_FileStreams::FileStreamBase,
 public:
 	using Impl_FileStreams::FileStreamBase::FileStreamBase;
 
+	FileInputStream(FileInputStream &&) noexcept = default;
+	FileInputStream &operator=(FileInputStream &&) noexcept = default;
+
 	~FileInputStream() override;
 };
 
@@ -191,6 +194,9 @@ class FileOutputStream : public Impl_FileStreams::FileStreamBase,
 public:
 	using Impl_FileStreams::FileStreamBase::FileStreamBase;
 
+	FileOutputStream(FileOutputStream &&) noexcept = default;
+	FileOutputStream &operator=(FileOutputStream &&) noexcept = default;
+
 	~FileOutputStream() override;
 };
 
@@ -199,6 +205,9 @@ class FileStream : public Impl_FileStreams::FileStreamBase,
 {
 public:
 	using Impl_FileStreams::FileStreamBase::FileStreamBase;
+
+	FileStream(FileStream &&) noexcept = default;
+	FileStream &operator=(FileStream &&) noexcept = default;
 
 	~FileStream() override;
 };

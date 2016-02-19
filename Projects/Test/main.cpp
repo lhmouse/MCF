@@ -8,12 +8,10 @@ using namespace MCF;
 extern "C" unsigned MCFCRT_Main(){
 	auto path = WideString(NarrowStringView(__FILE__));
 	auto file = File(path, File::kToRead | File::kDontCreate | File::kSharedRead);
-
-	FileInputStream strm(std::move(file));
+	auto strm = FileInputStream(std::move(file));
 	int c;
 	for(auto it = StreamReadIterator(strm); (c = *it) >= 0; ++it){
 		std::putchar(c);
 	}
-
 	return 0;
 }

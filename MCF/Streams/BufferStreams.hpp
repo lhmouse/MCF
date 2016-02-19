@@ -134,6 +134,9 @@ class BufferInputStream : public Impl_BufferStreams::BufferStreamBase,
 public:
 	using Impl_BufferStreams::BufferStreamBase::BufferStreamBase;
 
+	BufferInputStream(BufferInputStream &&) noexcept = default;
+	BufferInputStream &operator=(BufferInputStream &&) noexcept = default;
+
 	~BufferInputStream() override;
 };
 
@@ -143,6 +146,9 @@ class BufferOutputStream : public Impl_BufferStreams::BufferStreamBase,
 public:
 	using Impl_BufferStreams::BufferStreamBase::BufferStreamBase;
 
+	BufferOutputStream(BufferOutputStream &&) noexcept = default;
+	BufferOutputStream &operator=(BufferOutputStream &&) noexcept = default;
+
 	~BufferOutputStream() override;
 };
 
@@ -151,6 +157,9 @@ class BufferStream : public Impl_BufferStreams::BufferStreamBase,
 {
 public:
 	using Impl_BufferStreams::BufferStreamBase::BufferStreamBase;
+
+	BufferStream(BufferStream &&) noexcept = default;
+	BufferStream &operator=(BufferStream &&) noexcept = default;
 
 	~BufferStream() override;
 };

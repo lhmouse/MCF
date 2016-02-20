@@ -42,7 +42,7 @@ public:
 		while(uBytesWritten < uSize){
 			const auto uBytesWrittenThisTime = x_vFile.Write(x_u64Offset + uBytesWritten, static_cast<const unsigned char *>(pData) + uBytesWritten, uSize - uBytesWritten);
 			if(uBytesWrittenThisTime == 0){
-				DEBUG_THROW(Exception, ERROR_BROKEN_PIPE, "FileStreamBase: Partial contents written"_rcs);
+				DEBUG_THROW(Exception, ERROR_BROKEN_PIPE, "FileOutputStream: Partial contents written"_rcs);
 			}
 			uBytesWritten += uBytesWrittenThisTime;
 		}

@@ -13,6 +13,10 @@ class AbstractInputStream {
 public:
 	virtual ~AbstractInputStream();
 
+	constexpr AbstractInputStream() noexcept = default;
+	AbstractInputStream(AbstractInputStream &&) noexcept = default;
+	AbstractInputStream& operator=(AbstractInputStream &&) noexcept = default;
+
 public:
 	virtual int Peek() const = 0;
 	virtual int Get() = 0;

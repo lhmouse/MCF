@@ -13,6 +13,10 @@ class AbstractOutputStream {
 public:
 	virtual ~AbstractOutputStream();
 
+	constexpr AbstractOutputStream() noexcept = default;
+	AbstractOutputStream(AbstractOutputStream &&) noexcept = default;
+	AbstractOutputStream& operator=(AbstractOutputStream &&) noexcept = default;
+
 public:
 	virtual void Put(unsigned char byData) = 0;
 

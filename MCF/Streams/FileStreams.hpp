@@ -88,9 +88,13 @@ namespace Impl_FileStreams {
 			return uBytesDiscarded;
 		}
 		void X_Put(const void *pData, std::size_t uSize){
-			const auto uBytesWritten = x_vFile.Write(x_u64OffsetWrite, pData, uSize);
-			if(uBytesWritten < uSize){
-				DEBUG_THROW(Exception, ERROR_HANDLE_DISK_FULL, "FileStreamBase: Partial contents written"_rcs);
+			std::size_t uBytesWritten = 0;
+			while(uBytesWritten < uSize){
+				const auto uBytesWrittenThisTime = x_vFile.Write(x_u64OffsetWrite + uBytesWritten, static_cast<const unsigned char *>(pData) + uBytesWritten, uSize - uBytesWritten);
+				if(uBytesWrittenThisTime == 0){
+					DEBUG_THROW(Exception, ERROR_BROKEN_PIPE, "FileStreamBase: Partial contents written"_rcs);
+				}
+				uBytesWritten += uBytesWrittenThisTime;
 			}
 			x_u64OffsetWrite += uBytesWritten;
 		}

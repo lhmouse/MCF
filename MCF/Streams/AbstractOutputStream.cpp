@@ -3,12 +3,9 @@
 // Copyleft 2013 - 2016, LH_Mouse. All wrongs reserved.
 
 #include "../StdMCF.hpp"
-#include "AbstractStreams.hpp"
+#include "AbstractOutputStream.hpp"
 
 namespace MCF {
-
-AbstractInputStream::~AbstractInputStream(){
-}
 
 AbstractOutputStream::~AbstractOutputStream(){
 }

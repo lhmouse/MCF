@@ -3,14 +3,11 @@
 // Copyleft 2013 - 2016, LH_Mouse. All wrongs reserved.
 
 #include "../StdMCF.hpp"
-#include "AbstractStreamFilters.hpp"
+#include "BufferOutputStream.hpp"
 
 namespace MCF {
 
-AbstractInputStreamFilter::~AbstractInputStreamFilter(){
-}
-
-AbstractOutputStreamFilter::~AbstractOutputStreamFilter(){
+BufferOutputStream::~BufferOutputStream(){
 }
 
 }

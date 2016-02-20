@@ -3,17 +3,11 @@
 // Copyleft 2013 - 2016, LH_Mouse. All wrongs reserved.
 
 #include "../StdMCF.hpp"
-#include "FileStreams.hpp"
+#include "FileOutputStream.hpp"
 
 namespace MCF {
 
-FileInputStream::~FileInputStream(){
-}
-
 FileOutputStream::~FileOutputStream(){
-}
-
-FileStream::~FileStream(){
 }
 
 }

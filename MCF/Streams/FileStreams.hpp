@@ -79,7 +79,7 @@ namespace Impl_FileStreams {
 			const auto u64FileSize = x_vFile.GetSize();
 			if(x_u64OffsetRead < u64FileSize){
 				uBytesDiscarded = uSize;
-				const auto uRemaining = u64FileSize - x_u64OffsetWrite;
+				const auto uRemaining = u64FileSize - x_u64OffsetRead;
 				if(uBytesDiscarded > uRemaining){
 					uBytesDiscarded = static_cast<std::size_t>(uRemaining);
 				}

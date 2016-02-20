@@ -1,18 +1,29 @@
 #include <MCF/StdMCF.hpp>
-#include <MCF/Core/String.hpp>
-#include <MCF/Streams/FileStreams.hpp>
-#include <MCF/Streams/StreamIterators.hpp>
+#include <MCF/Containers/RingQueue.hpp>
 
 using namespace MCF;
 
-extern "C" unsigned MCFCRT_Main(){
-	auto path = WideString(NarrowStringView(__FILE__));
-	auto file = File(path, File::kToRead | File::kDontCreate | File::kSharedRead);
-	auto strm = FileInputStream(std::move(file));
+template class RingQueue<int>;
 
-	std::printf("got      : %c\n", strm.Get());
-	std::printf("discarded: %d\n", (int)strm.Discard(1000));
-	std::printf("got      : %c\n", strm.Get());
+extern "C" unsigned MCFCRT_Main(){
+	RingQueue<int> q;
+	for(int i = 0; i < 10; ++i){
+		q.Push(i);
+	}
+	for(int i = 0; i < 10; ++i){
+		q.Shift();
+	}
+	for(int i = 0; i < 10; ++i){
+		q.Push(i);
+	}
+
+	std::printf("capacity = %zu\n", q.GetCapacity());
+
+	auto leading_seq = q.GetLongestLeadingSequence();
+	std::printf("leading_seq  = %p, %zu\n", (void *)leading_seq.first,  leading_seq.second);
+
+	auto trailing_seq = q.GetLongestTrailingSequence();
+	std::printf("trailing_seq = %zu, %p\n", trailing_seq.first, (void *)trailing_seq.second);
 
 	return 0;
 }

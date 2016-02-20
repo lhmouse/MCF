@@ -336,11 +336,7 @@ public:
 
 	// RingQueue 需求。
 	std::size_t GetSize() const noexcept {
-		if(x_uBegin <= x_uEnd){
-			return x_uEnd - x_uBegin;
-		} else {
-			return x_uEnd + x_uRingCap - x_uBegin;
-		}
+		return X_Distance(x_uBegin, x_uEnd);
 	}
 	std::size_t GetCapacity() const noexcept {
 		return x_uRingCap - 1;
@@ -367,6 +363,36 @@ public:
 		ASSERT(uIndex < GetSize());
 
 		return x_pStorage[X_Advance(x_uBegin, uIndex)];
+	}
+
+	std::pair<const Element *, std::size_t> GetLongestLeadingSequence() const noexcept {
+		if(x_uBegin <= x_uEnd){
+			return std::make_pair(x_pStorage + x_uBegin, x_uEnd - x_uBegin);
+		} else {
+			return std::make_pair(x_pStorage + x_uBegin, x_uRingCap - x_uBegin);
+		}
+	}
+	std::pair<Element *, std::size_t> GetLongestLeadingSequence() noexcept {
+		if(x_uBegin <= x_uEnd){
+			return std::make_pair(x_pStorage + x_uBegin, x_uEnd - x_uBegin);
+		} else {
+			return std::make_pair(x_pStorage + x_uBegin, x_uRingCap - x_uBegin);
+		}
+	}
+
+	std::pair<std::size_t, const Element *> GetLongestTrailingSequence() const noexcept {
+		if(x_uBegin <= x_uEnd){
+			return std::make_pair(x_uEnd - x_uBegin, x_pStorage + x_uEnd);
+		} else {
+			return std::make_pair(x_uEnd, x_pStorage + x_uEnd);
+		}
+	}
+	std::pair<std::size_t, Element *> GetLongestTrailingSequence() noexcept {
+		if(x_uBegin <= x_uEnd){
+			return std::make_pair(x_uEnd - x_uBegin, x_pStorage + x_uEnd);
+		} else {
+			return std::make_pair(x_uEnd, x_pStorage + x_uEnd);
+		}
 	}
 
 	template<typename ...ParamsT>

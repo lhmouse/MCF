@@ -1,17 +1,11 @@
 #include <MCF/StdMCF.hpp>
-#include <MCF/Core/String.hpp>
-#include <MCF/Streams/FileStreams.hpp>
-#include <MCF/Streams/StreamIterators.hpp>
+#include <MCF/Function/BlackHole.hpp>
 
 using namespace MCF;
 
 extern "C" unsigned MCFCRT_Main(){
-	auto path = WideString(NarrowStringView(__FILE__));
-	auto file = File(path, File::kToRead | File::kDontCreate | File::kSharedRead);
-	auto strm = FileInputStream(std::move(file));
-	int c;
-	for(auto it = StreamReadIterator(strm); (c = *it) >= 0; ++it){
-		std::putchar(c);
-	}
+	BlackHole b;
+	b = 1;
+	b = 2;
 	return 0;
 }

@@ -66,11 +66,11 @@ namespace Impl_FileStreams {
 		}
 
 		std::size_t X_Peek(void *pData, std::size_t uSize) const {
-			auto uBytesRead = x_vFile.Read(pData, uSize, x_u64OffsetRead);
+			std::size_t uBytesRead = x_vFile.Read(pData, uSize, x_u64OffsetRead);
 			return uBytesRead;
 		}
 		std::size_t X_Get(void *pData, std::size_t uSize){
-			auto uBytesRead = x_vFile.Read(pData, uSize, x_u64OffsetRead);
+			std::size_t uBytesRead = x_vFile.Read(pData, uSize, x_u64OffsetRead);
 			x_u64OffsetRead += uBytesRead;
 			return uBytesRead;
 		}

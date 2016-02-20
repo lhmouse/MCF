@@ -11,7 +11,6 @@ extern "C" unsigned MCFCRT_Main(){
 	auto strm = FileInputStream(std::move(file));
 
 	std::printf("got      : %c\n", strm.Get());
-	std::printf("got      : %c\n", strm.Get());
 	std::printf("discarded: %d\n", (int)strm.Discard(1000));
 	std::printf("got      : %c\n", strm.Get());
 

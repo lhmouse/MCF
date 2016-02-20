@@ -23,7 +23,7 @@ class FunctionView {
 template<typename RetT, typename ...ParamsT>
 class FunctionView<RetT (ParamsT...)> {
 private:
-	RetT (*x_pfnLambda)(const void *, ParamsT &&...);
+	RetT (*x_pfnLambda)(const void *, Impl_ForwardedParam::ForwardedParam<ParamsT> ...);
 	const void *x_pContext;
 
 public:
@@ -34,10 +34,12 @@ public:
 	template<typename FuncT,
 		std::enable_if_t<
 			!std::is_base_of<FunctionView, std::decay_t<FuncT>>::value &&
-				std::is_convertible<decltype(DeclVal<FuncT>()(DeclVal<Impl_ForwardedParam::ForwardedParam<ParamsT>>()...)), RetT>::value,
+				std::is_convertible<decltype(DeclVal<FuncT>()(DeclVal<ParamsT>()...)), RetT>::value || std::is_void<RetT>::value,
 			int> = 0>
 	FunctionView(const FuncT &vFunc) noexcept
-		: x_pfnLambda([](const void *pContext, ParamsT &&...vParams){ return Invoke(*static_cast<const FuncT *>(pContext), std::forward<ParamsT>(vParams)...);  })
+		: x_pfnLambda([](const void *pContext, Impl_ForwardedParam::ForwardedParam<ParamsT> ...vParams){
+			return Invoke(*static_cast<const FuncT *>(pContext), std::forward<ParamsT>(vParams)...);
+		})
 		, x_pContext(AddressOf(vFunc))
 	{
 	}
@@ -56,7 +58,7 @@ public:
 	void Swap(FunctionView &rhs) noexcept {
 		using std::swap;
 		swap(x_pfnLambda, rhs.x_pfnLambda);
-		swap(x_pContext, rhs.x_pContext);
+		swap(x_pContext,  rhs.x_pContext);
 	}
 
 public:

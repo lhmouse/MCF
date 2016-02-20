@@ -10,12 +10,12 @@
 
 namespace MCF {
 
-class StreamReadIterator : public std::iterator<std::input_iterator_tag, int> {
+class InputStreamIterator : public std::iterator<std::input_iterator_tag, int> {
 private:
 	AbstractInputStream *x_pstrmOwner;
 
 public:
-	explicit constexpr StreamReadIterator(AbstractInputStream &strmOwner) noexcept
+	explicit constexpr InputStreamIterator(AbstractInputStream &strmOwner) noexcept
 		: x_pstrmOwner(&strmOwner)
 	{
 	}
@@ -24,38 +24,38 @@ public:
 	int operator*() const {
 		return x_pstrmOwner->Peek();
 	}
-	StreamReadIterator &operator++(){
+	InputStreamIterator &operator++(){
 		x_pstrmOwner->Discard();
 		return *this;
 	}
-	StreamReadIterator operator++(int){
+	InputStreamIterator operator++(int){
 		x_pstrmOwner->Discard();
 		return *this;
 	}
 };
 
-class StreamWriteIterator : public std::iterator<std::output_iterator_tag, unsigned char> {
+class OutputStreamIterator : public std::iterator<std::output_iterator_tag, unsigned char> {
 private:
 	AbstractOutputStream *x_pstrmOwner;
 
 public:
-	explicit constexpr StreamWriteIterator(AbstractOutputStream &strmOwner) noexcept
+	explicit constexpr OutputStreamIterator(AbstractOutputStream &strmOwner) noexcept
 		: x_pstrmOwner(&strmOwner)
 	{
 	}
 
 public:
-	StreamWriteIterator &operator=(unsigned char byData){
+	OutputStreamIterator &operator=(unsigned char byData){
 		x_pstrmOwner->Put(byData);
 		return *this;
 	}
-	StreamWriteIterator &operator*(){
+	OutputStreamIterator &operator*(){
 		return *this;
 	}
-	StreamWriteIterator &operator++(){
+	OutputStreamIterator &operator++(){
 		return *this;
 	}
-	StreamWriteIterator &operator++(int){
+	OutputStreamIterator &operator++(int){
 		return *this;
 	}
 };

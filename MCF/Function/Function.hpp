@@ -37,7 +37,7 @@ namespace Impl_Function {
 		virtual ~FunctorBase() = default;
 
 	public:
-		virtual RetT Dispatch(Impl_ForwardedParam::ForwardedParam<ParamsT>...vParams) const = 0;
+		virtual RetT Dispatch(Impl_ForwardedParam::ForwardedParam<ParamsT> ...vParams) const = 0;
 		virtual IntrusivePtr<FunctorBase> Fork() const = 0;
 	};
 
@@ -53,7 +53,7 @@ namespace Impl_Function {
 		}
 
 	public:
-		RetT Dispatch(Impl_ForwardedParam::ForwardedParam<ParamsT>...vParams) const override {
+		RetT Dispatch(Impl_ForwardedParam::ForwardedParam<ParamsT> ...vParams) const override {
 			return Invoke(x_vFunc, std::forward<ParamsT>(vParams)...);
 		}
 		IntrusivePtr<FunctorBase<RetT, ParamsT...>> Fork() const override {
@@ -72,7 +72,7 @@ namespace Impl_Function {
 		}
 
 	public:
-		void Dispatch(Impl_ForwardedParam::ForwardedParam<ParamsT>...vParams) const override {
+		void Dispatch(Impl_ForwardedParam::ForwardedParam<ParamsT> ...vParams) const override {
 			Invoke(x_vFunc, std::forward<ParamsT>(vParams)...);
 		}
 		IntrusivePtr<FunctorBase<void, ParamsT...>> Fork() const override {
@@ -99,7 +99,7 @@ public:
 	template<typename FuncT,
 		std::enable_if_t<
 			!std::is_base_of<Function, std::decay_t<FuncT>>::value &&
-				(std::is_convertible<decltype(Invoke(DeclVal<FuncT>(), DeclVal<Impl_ForwardedParam::ForwardedParam<ParamsT>>()...)), RetT>::value || std::is_void<RetT>::value),
+				(std::is_convertible<decltype(Invoke(DeclVal<FuncT>(), DeclVal<ParamsT>()...)), RetT>::value || std::is_void<RetT>::value),
 			int> = 0>
 	Function(FuncT &&vFunc)
 		: x_pFunctor(new Impl_Function::Functor<FuncT, std::remove_cv_t<RetT>, ParamsT...>(std::forward<FuncT>(vFunc)))

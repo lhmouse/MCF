@@ -69,9 +69,9 @@ public:
 	// 1. fnAsyncProc 总是会被执行一次，即使读取或写入操作失败；
 	// 2. 所有的回调函数都可以抛出异常；在这种情况下，异常将在读取或写入操作完成或失败后被重新抛出。
 	// 3. 当且仅当 fnAsyncProc 成功返回且异步操作成功后 fnCompleteCallback 才会被执行。
-	std::size_t Read(void *pBuffer, std::uint32_t u32BytesToRead, std::uint64_t u64Offset,
+	std::size_t Read(void *pBuffer, std::size_t uBytesToRead, std::uint64_t u64Offset,
 		FunctionView<void ()> fnAsyncProc = nullptr, FunctionView<void ()> fnCompleteCallback = nullptr) const;
-	std::size_t Write(std::uint64_t u64Offset, const void *pBuffer, std::uint32_t u32BytesToWrite,
+	std::size_t Write(std::uint64_t u64Offset, const void *pBuffer, std::size_t uBytesToWrite,
 		FunctionView<void ()> fnAsyncProc = nullptr, FunctionView<void ()> fnCompleteCallback = nullptr);
 	void Flush() const;
 

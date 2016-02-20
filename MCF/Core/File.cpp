@@ -226,15 +226,18 @@ void File::Clear(){
 	Resize(0);
 }
 
-std::size_t File::Read(void *pBuffer, std::uint32_t u32BytesToRead, std::uint64_t u64Offset,
+std::size_t File::Read(void *pBuffer, std::size_t uBytesToRead, std::uint64_t u64Offset,
 	FunctionView<void ()> fnAsyncProc, FunctionView<void ()> fnCompleteCallback) const
 {
 	if(!x_hFile){
 		DEBUG_THROW(Exception, ERROR_INVALID_HANDLE, "No file opened"_rcs);
 	}
 
+	if(uBytesToRead > ULONG_MAX){
+		DEBUG_THROW(Exception, ERROR_ARITHMETIC_OVERFLOW, "Block is too large"_rcs);
+	}
 	if(u64Offset >= static_cast<std::uint64_t>(INT64_MAX)){
-		DEBUG_THROW(Exception, ERROR_INVALID_PARAMETER, "File offset is too large"_rcs);
+		DEBUG_THROW(Exception, ERROR_SEEK, "Offset is too large"_rcs);
 	}
 
 	bool bIoPending = true;
@@ -242,7 +245,7 @@ std::size_t File::Read(void *pBuffer, std::uint32_t u32BytesToRead, std::uint64_
 	vIoStatus.Information = 0;
 	::LARGE_INTEGER liOffset;
 	liOffset.QuadPart = static_cast<std::int64_t>(u64Offset);
-	const auto lStatus = ::NtReadFile(x_hFile.Get(), nullptr, &IoApcCallback, &bIoPending, &vIoStatus, pBuffer, u32BytesToRead, &liOffset, nullptr);
+	const auto lStatus = ::NtReadFile(x_hFile.Get(), nullptr, &IoApcCallback, &bIoPending, &vIoStatus, pBuffer, static_cast<ULONG>(uBytesToRead), &liOffset, nullptr);
 	if(fnAsyncProc){
 		fnAsyncProc();
 	}
@@ -260,15 +263,18 @@ std::size_t File::Read(void *pBuffer, std::uint32_t u32BytesToRead, std::uint64_
 	}
 	return vIoStatus.Information;
 }
-std::size_t File::Write(std::uint64_t u64Offset, const void *pBuffer, std::uint32_t u32BytesToWrite,
+std::size_t File::Write(std::uint64_t u64Offset, const void *pBuffer, std::size_t uBytesToWrite,
 	FunctionView<void ()> fnAsyncProc, FunctionView<void ()> fnCompleteCallback)
 {
 	if(!x_hFile){
 		DEBUG_THROW(Exception, ERROR_INVALID_HANDLE, "No file opened"_rcs);
 	}
 
+	if(uBytesToWrite > ULONG_MAX){
+		DEBUG_THROW(Exception, ERROR_ARITHMETIC_OVERFLOW, "Block is too large"_rcs);
+	}
 	if(u64Offset >= static_cast<std::uint64_t>(INT64_MAX)){
-		DEBUG_THROW(Exception, ERROR_INVALID_PARAMETER, "File offset is too large"_rcs);
+		DEBUG_THROW(Exception, ERROR_SEEK, "Offset is too large"_rcs);
 	}
 
 	bool bIoPending = true;
@@ -276,7 +282,7 @@ std::size_t File::Write(std::uint64_t u64Offset, const void *pBuffer, std::uint3
 	vIoStatus.Information = 0;
 	::LARGE_INTEGER liOffset;
 	liOffset.QuadPart = static_cast<std::int64_t>(u64Offset);
-	const auto lStatus = ::NtWriteFile(x_hFile.Get(), nullptr, &IoApcCallback, &bIoPending, &vIoStatus, pBuffer, u32BytesToWrite, &liOffset, nullptr);
+	const auto lStatus = ::NtWriteFile(x_hFile.Get(), nullptr, &IoApcCallback, &bIoPending, &vIoStatus, pBuffer, static_cast<ULONG>(uBytesToWrite), &liOffset, nullptr);
 	if(fnAsyncProc){
 		fnAsyncProc();
 	}

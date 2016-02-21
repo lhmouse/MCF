@@ -148,7 +148,7 @@ void StreamBuffer::Put(const void *pData, std::size_t uSize){
 	std::size_t uBytesReserved = 0;
 	auto pChunk = x_lstChunks.GetLast();
 	if(pChunk){
-		uBytesReserved += pChunk->uEnd - pChunk->uBegin;
+		uBytesReserved += sizeof(Chunk::abyData) - pChunk->uEnd;
 	}
 	while(uBytesReserved < uSize){
 		lstNewChunks.Push(Chunk::FromBeginning());
@@ -175,7 +175,7 @@ void StreamBuffer::Put(unsigned char byData, std::size_t uSize){
 	std::size_t uBytesReserved = 0;
 	auto pChunk = x_lstChunks.GetLast();
 	if(pChunk){
-		uBytesReserved += pChunk->uEnd - pChunk->uBegin;
+		uBytesReserved += sizeof(Chunk::abyData) - pChunk->uEnd;
 	}
 	while(uBytesReserved < uSize){
 		lstNewChunks.Push(Chunk::FromBeginning());

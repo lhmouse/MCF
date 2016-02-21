@@ -32,48 +32,13 @@ public:
 	FileInputStream& operator=(FileInputStream &&) noexcept = default;
 
 public:
-	int Peek() const override {
-		int nRet = -1;
-		unsigned char byData;
-		if(Peek(&byData, 1) >= 1){
-			nRet = byData;
-		}
-		return nRet;
-	}
-	int Get() override {
-		int nRet = -1;
-		unsigned char byData;
-		if(Get(&byData, 1) >= 1){
-			nRet = byData;
-		}
-		return nRet;
-	}
-	bool Discard() override {
-		return Discard(1) >= 1;
-	}
+	int Peek() const override;
+	int Get() override;
+	bool Discard() override;
 
-	std::size_t Peek(void *pData, std::size_t uSize) const override {
-		auto uBytesRead = x_vFile.Read(pData, uSize, x_u64Offset);
-		return uBytesRead;
-	}
-	std::size_t Get(void *pData, std::size_t uSize) override {
-		auto uBytesRead = x_vFile.Read(pData, uSize, x_u64Offset);
-		x_u64Offset += uBytesRead;
-		return uBytesRead;
-	}
-	std::size_t Discard(std::size_t uSize) override {
-		auto uBytesDiscarded = (std::size_t)0;
-		const auto u64FileSize = x_vFile.GetSize();
-		if(x_u64Offset < u64FileSize){
-			uBytesDiscarded = uSize;
-			const auto uRemaining = u64FileSize - x_u64Offset;
-			if(uBytesDiscarded > uRemaining){
-				uBytesDiscarded = (std::size_t)uRemaining;
-			}
-			x_u64Offset += uBytesDiscarded;
-		}
-		return uBytesDiscarded;
-	}
+	std::size_t Peek(void *pData, std::size_t uSize) const override;
+	std::size_t Get(void *pData, std::size_t uSize) override;
+	std::size_t Discard(std::size_t uSize) override;
 
 	const File &GetFile() const noexcept {
 		return x_vFile;

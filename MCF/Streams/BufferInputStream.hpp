@@ -29,25 +29,13 @@ public:
 	BufferInputStream& operator=(BufferInputStream &&) noexcept = default;
 
 public:
-	int Peek() const noexcept override {
-		return x_vBuffer.Peek();
-	}
-	int Get() noexcept override {
-		return x_vBuffer.Get();
-	}
-	bool Discard() noexcept override {
-		return x_vBuffer.Discard();
-	}
+	int Peek() const override;
+	int Get() override;
+	bool Discard() override;
 
-	std::size_t Peek(void *pData, std::size_t uSize) const noexcept override {
-		return x_vBuffer.Peek(pData, uSize);
-	}
-	std::size_t Get(void *pData, std::size_t uSize) noexcept override {
-		return x_vBuffer.Get(pData, uSize);
-	}
-	std::size_t Discard(std::size_t uSize) noexcept override {
-		return x_vBuffer.Discard(uSize);
-	}
+	std::size_t Peek(void *pData, std::size_t uSize) const override;
+	std::size_t Get(void *pData, std::size_t uSize) override;
+	std::size_t Discard(std::size_t uSize) override;
 
 	const StreamBuffer &GetBuffer() const noexcept {
 		return x_vBuffer;

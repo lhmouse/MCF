@@ -7,7 +7,6 @@
 
 #include "AbstractOutputStream.hpp"
 #include "../Core/File.hpp"
-#include "../Core/Exception.hpp"
 
 namespace MCF {
 
@@ -33,21 +32,11 @@ public:
 	FileOutputStream& operator=(FileOutputStream &&) noexcept = default;
 
 public:
-	void Put(unsigned char byData) override {
-		Put(&byData, 1);
-	}
+	void Put(unsigned char byData) override;
 
-	void Put(const void *pData, std::size_t uSize) override {
-		std::size_t uBytesWritten = 0;
-		while(uBytesWritten < uSize){
-			const auto uBytesWrittenThisTime = x_vFile.Write(x_u64Offset + uBytesWritten, static_cast<const unsigned char *>(pData) + uBytesWritten, uSize - uBytesWritten);
-			if(uBytesWrittenThisTime == 0){
-				DEBUG_THROW(Exception, ERROR_BROKEN_PIPE, "FileOutputStream: Partial contents written"_rcs);
-			}
-			uBytesWritten += uBytesWrittenThisTime;
-		}
-		x_u64Offset += uBytesWritten;
-	}
+	void Put(const void *pData, std::size_t uSize) override;
+
+	void Flush() const override;
 
 	const File &GetFile() const noexcept {
 		return x_vFile;

@@ -11,9 +11,9 @@ namespace MCF {
 
 class AbstractOutputStream {
 public:
+	constexpr AbstractOutputStream() noexcept = default;
 	virtual ~AbstractOutputStream();
 
-	constexpr AbstractOutputStream() noexcept = default;
 	AbstractOutputStream(AbstractOutputStream &&) noexcept = default;
 	AbstractOutputStream& operator=(AbstractOutputStream &&) noexcept = default;
 
@@ -21,6 +21,8 @@ public:
 	virtual void Put(unsigned char byData) = 0;
 
 	virtual void Put(const void *pData, std::size_t uSize) = 0;
+
+	virtual void Flush() const = 0;
 };
 
 }

@@ -29,13 +29,11 @@ public:
 	BufferOutputStream& operator=(BufferOutputStream &&) noexcept = default;
 
 public:
-	void Put(unsigned char byData) override {
-		x_vBuffer.Put(byData);
-	}
+	void Put(unsigned char byData) override;
 
-	void Put(const void *pData, std::size_t uSize) override {
-		x_vBuffer.Put(pData, uSize);
-	}
+	void Put(const void *pData, std::size_t uSize) override;
+
+	void Flush() const override;
 
 	const StreamBuffer &GetBuffer() const noexcept {
 		return x_vBuffer;

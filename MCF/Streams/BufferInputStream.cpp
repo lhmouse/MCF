@@ -10,4 +10,24 @@ namespace MCF {
 BufferInputStream::~BufferInputStream(){
 }
 
+int BufferInputStream::Peek() const {
+	return x_vBuffer.Peek();
+}
+int BufferInputStream::Get(){
+	return x_vBuffer.Get();
+}
+bool BufferInputStream::Discard(){
+	return x_vBuffer.Discard();
+}
+
+std::size_t BufferInputStream::Peek(void *pData, std::size_t uSize) const {
+	return x_vBuffer.Peek(pData, uSize);
+}
+std::size_t BufferInputStream::Get(void *pData, std::size_t uSize){
+	return x_vBuffer.Get(pData, uSize);
+}
+std::size_t BufferInputStream::Discard(std::size_t uSize){
+	return x_vBuffer.Discard(uSize);
+}
+
 }

@@ -10,7 +10,7 @@
 
 namespace MCF {
 
-// 按照 ECMA-182 描述的算法，除数为 0xEDB88640。
+// 按照 ECMA-182 描述的算法，除数为 0xC96C5795D7870F42。
 
 class Crc64 {
 private:

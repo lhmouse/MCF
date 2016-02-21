@@ -38,14 +38,15 @@ namespace {
 	void UpdateCrc64(std::uint64_t &u64Reg, const std::uint8_t pbyChunk[8]) noexcept {
 		register auto u64Word = LoadLe(reinterpret_cast<const std::uint64_t *>(pbyChunk)[0]);
 		for(unsigned i = 0; i < sizeof(u64Word); ++i){
-			const auto u64Low = static_cast<std::uint64_t>(u64Word);
+			const unsigned uLow = static_cast<unsigned char>(u64Word);
 			u64Word >>= 8;
-			u64Reg = kCrcTable[(u64Reg ^ u64Low) & 0xFF] ^ (u64Reg >> 8);
+			u64Reg = kCrcTable[(u64Reg ^ uLow) & 0xFF] ^ (u64Reg >> 8);
 		}
 	}
 	void FinalizeCrc64(std::uint64_t &u64Reg, const std::uint8_t pbyChunk[8], unsigned uBytesInChunk) noexcept {
 		for(unsigned i = 0; i < uBytesInChunk; ++i){
-			u64Reg = kCrcTable[(u64Reg ^ pbyChunk[i]) & 0xFF] ^ (u64Reg >> 8);
+			const unsigned uLow = pbyChunk[i];
+			u64Reg = kCrcTable[(u64Reg ^ uLow) & 0xFF] ^ (u64Reg >> 8);
 		}
 		u64Reg = ~u64Reg;
 	}

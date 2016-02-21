@@ -28,11 +28,17 @@ public:
 	OutputStreamIterator &operator*(){
 		return *this;
 	}
+
 	OutputStreamIterator &operator++(){
 		return *this;
 	}
 	OutputStreamIterator &operator++(int){
 		return *this;
+	}
+
+	void operator()(unsigned char byData){
+		*(*this) = byData;
+		++(*this);
 	}
 };
 

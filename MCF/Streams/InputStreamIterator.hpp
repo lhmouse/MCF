@@ -24,6 +24,7 @@ public:
 	int operator*() const {
 		return x_pstrmOwner->Peek();
 	}
+
 	InputStreamIterator &operator++(){
 		x_pstrmOwner->Discard();
 		return *this;
@@ -31,6 +32,12 @@ public:
 	InputStreamIterator operator++(int){
 		x_pstrmOwner->Discard();
 		return *this;
+	}
+
+	int operator()(){
+		const int nRet = *(*this);
+		++(*this);
+		return nRet;
 	}
 };
 

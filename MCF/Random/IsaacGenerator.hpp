@@ -17,7 +17,7 @@ private:
 	std::uint32_t x_u32B;
 	std::uint32_t x_u32C;
 
-	std::uint32_t x_u32Results[256];
+	std::uint32_t x_au32Results[256];
 	std::uint32_t x_u32Read;
 
 public:
@@ -27,9 +27,6 @@ public:
 	explicit IsaacGenerator(const Array<std::uint32_t, 8> &au32Seed) noexcept {
 		Init(au32Seed);
 	}
-
-private:
-	void X_RefreshInternal() noexcept;
 
 public:
 	void Init(std::uint32_t u32Seed = ReadTimestampCounter32()) noexcept;

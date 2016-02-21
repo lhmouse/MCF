@@ -1,19 +1,15 @@
 #include <MCF/StdMCF.hpp>
-#include <MCF/Core/String.hpp>
-#include <MCF/Streams/FileOutputStream.hpp>
-#include <MCF/Streams/BufferingOutputStreamFilter.hpp>
+#include <MCF/Streams/Crc64OutputStream.hpp>
 
 using namespace MCF;
 
 extern "C" unsigned MCFCRT_Main(){
-	auto file = File(L".test.txt"_wsv, File::kToWrite);
-	auto pofs = MakeUnique<BufferingOutputStreamFilter>(MakeUnique<FileOutputStream>(std::move(file)));
+	static constexpr char data[] = "hello world!";
 
-	const auto data = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz\n"_nsv;
-
-	for(unsigned i = 0; i < 100; ++i){
-		pofs->Put(data.GetBegin(), data.GetSize());
-	}
+	Crc64OutputStream strm;
+	strm.Put(data, sizeof(data) - 1);
+	auto val = strm.Finalize();
+	std::printf("val = %016llX\n", (unsigned long long)val);
 
 	return 0;
 }

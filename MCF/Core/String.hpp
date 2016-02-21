@@ -78,11 +78,9 @@ private:
 	}
 
 public:
-	String() noexcept {
-#ifndef NDEBUG
-		std::memset(x_vStorage.vSmall.achData, 0xCC, sizeof(x_vStorage.vSmall.achData));
-#endif
-		X_SetSmallLength(0);
+	constexpr String() noexcept
+		: x_vStorage{{ { static_cast<Char>(0xDEADBEEF) }, static_cast<std::make_signed_t<Char>>(CountOf(x_vStorage.vSmall.achData)) }}
+	{
 	}
 	explicit String(Char ch, std::size_t uCount = 1)
 		: String()

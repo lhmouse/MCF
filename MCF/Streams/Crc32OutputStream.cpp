@@ -31,6 +31,24 @@ namespace {
 	}
 
 	constexpr auto kCrcTable = GenerateTable(std::make_index_sequence<256>());
+
+	void InitializeCrc32(std::uint32_t &u32Reg) noexcept {
+		u32Reg = static_cast<std::uint32_t>(-1);
+	}
+	void UpdateCrc32(std::uint32_t &u32Reg, const std::uint8_t pbyChunk[8]) noexcept {
+		register auto u64Word = LoadLe(reinterpret_cast<const std::uint64_t *>(pbyChunk)[0]);
+		for(unsigned i = 0; i < sizeof(u64Word); ++i){
+			const auto u32Low = static_cast<std::uint32_t>(u64Word);
+			u64Word >>= 8;
+			u32Reg = kCrcTable[(u32Reg ^ u32Low) & 0xFF] ^ (u32Reg >> 8);
+		}
+	}
+	void FinalizeCrc32(std::uint32_t &u32Reg, const std::uint8_t pbyChunk[8], unsigned uBytesInChunk) noexcept {
+		for(unsigned i = 0; i < uBytesInChunk; ++i){
+			u32Reg = kCrcTable[(u32Reg ^ pbyChunk[i]) & 0xFF] ^ (u32Reg >> 8);
+		}
+		u32Reg = ~u32Reg;
+	}
 }
 
 Crc32OutputStream::~Crc32OutputStream(){
@@ -41,50 +59,44 @@ void Crc32OutputStream::Put(unsigned char byData){
 }
 
 void Crc32OutputStream::Put(const void *pData, std::size_t uSize){
-	if(!x_bInited){
-		x_u32Reg = static_cast<std::uint32_t>(-1);
-		x_bInited = true;
+	if(x_nChunkOffset < 0){
+		InitializeCrc32(x_u32Reg);
+		x_nChunkOffset = 0;
 	}
 
-	const auto DoCrc32Byte = [&](unsigned char byData){
-		x_u32Reg = kCrcTable[(x_u32Reg ^ byData) & 0xFF] ^ (x_u32Reg >> 8);
-	};
-
-	register auto pbyRead = static_cast<const unsigned char *>(pData);
-	const auto pbyEnd = pbyRead + uSize;
-
-	if(uSize >= sizeof(std::uintptr_t) * 2){
-		while(((std::uintptr_t)pbyRead & (sizeof(std::uintptr_t) - 1)) != 0){
-			DoCrc32Byte(*pbyRead);
-			++pbyRead;
+	auto pbyRead = static_cast<const unsigned char *>(pData);
+	auto uBytesRemaining = uSize;
+	const auto uChunkAvail = sizeof(x_abyChunk) - static_cast<unsigned>(x_nChunkOffset);
+	if(uBytesRemaining >= uChunkAvail){
+		if(x_nChunkOffset != 0){
+			std::memcpy(x_abyChunk + x_nChunkOffset, pbyRead, uChunkAvail);
+			pbyRead += uChunkAvail;
+			uBytesRemaining -= uChunkAvail;
+			UpdateCrc32(x_u32Reg, x_abyChunk);
+			x_nChunkOffset = 0;
 		}
-		register auto i = (std::size_t)(pbyEnd - pbyRead) / sizeof(std::uintptr_t);
-		while(i != 0){
-			register auto uWord = LoadLe(*(const std::uintptr_t *)pbyRead);
-			pbyRead += sizeof(std::uintptr_t);
-			for(unsigned j = 0; j < sizeof(std::uintptr_t); ++j){
-				DoCrc32Byte(uWord & 0xFF);
-				uWord >>= 8;
-			}
-			--i;
+		while(uBytesRemaining >= sizeof(x_abyChunk)){
+			UpdateCrc32(x_u32Reg, pbyRead);
+			pbyRead += sizeof(x_abyChunk);
+			uBytesRemaining -= (int)sizeof(x_abyChunk);
 		}
 	}
-	while(pbyRead != pbyEnd){
-		DoCrc32Byte(*pbyRead);
-		++pbyRead;
+	if(uBytesRemaining != 0){
+		std::memcpy(x_abyChunk + x_nChunkOffset, pbyRead, uBytesRemaining);
+		x_nChunkOffset += (int)uBytesRemaining;
 	}
 }
 
 void Crc32OutputStream::Flush() const {
 }
 
-void Crc32OutputStream::Abort() noexcept {
-	x_bInited = false;
+void Crc32OutputStream::Reset() noexcept {
+	x_nChunkOffset = -1;
 }
 std::uint32_t Crc32OutputStream::Finalize() noexcept {
-	if(x_bInited){
-		x_bInited = false;
-		x_u32Reg = ~x_u32Reg;
+	if(x_nChunkOffset >= 0){
+		FinalizeCrc32(x_u32Reg, x_abyChunk, static_cast<unsigned>(x_nChunkOffset));
+		x_nChunkOffset = -1;
 	}
 	return x_u32Reg;
 }

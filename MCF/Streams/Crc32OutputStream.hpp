@@ -14,12 +14,13 @@ namespace MCF {
 
 class Crc32OutputStream : public AbstractOutputStream {
 private:
-	bool x_bInited;
+	int x_nChunkOffset;
+	std::uint8_t x_abyChunk[8];
 	std::uint32_t x_u32Reg;
 
 public:
 	constexpr Crc32OutputStream() noexcept
-		: x_bInited(false), x_u32Reg()
+		: x_nChunkOffset(-1), x_abyChunk(), x_u32Reg()
 	{
 	}
 	~Crc32OutputStream() override;
@@ -34,13 +35,14 @@ public:
 
 	void Flush() const override;
 
-	void Abort() noexcept;
+	void Reset() noexcept;
 	std::uint32_t Finalize() noexcept;
 
 	void Swap(Crc32OutputStream &rhs) noexcept {
 		using std::swap;
-		swap(x_bInited, rhs.x_bInited);
-		swap(x_u32Reg,  rhs.x_u32Reg);
+		swap(x_nChunkOffset, rhs.x_nChunkOffset);
+		swap(x_abyChunk,     rhs.x_abyChunk);
+		swap(x_u32Reg,       rhs.x_u32Reg);
 	}
 
 	friend void swap(Crc32OutputStream &lhs, Crc32OutputStream &rhs) noexcept {

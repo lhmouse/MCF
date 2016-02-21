@@ -14,12 +14,13 @@ namespace MCF {
 
 class Crc64OutputStream : public AbstractOutputStream {
 private:
-	bool x_bInited;
+	int x_nChunkOffset;
+	std::uint8_t x_abyChunk[8];
 	std::uint64_t x_u64Reg;
 
 public:
 	constexpr Crc64OutputStream() noexcept
-		: x_bInited(false), x_u64Reg()
+		: x_nChunkOffset(-1), x_abyChunk(), x_u64Reg()
 	{
 	}
 	~Crc64OutputStream() override;
@@ -34,13 +35,14 @@ public:
 
 	void Flush() const override;
 
-	void Abort() noexcept;
+	void Reset() noexcept;
 	std::uint64_t Finalize() noexcept;
 
 	void Swap(Crc64OutputStream &rhs) noexcept {
 		using std::swap;
-		swap(x_bInited, rhs.x_bInited);
-		swap(x_u64Reg,  rhs.x_u64Reg);
+		swap(x_nChunkOffset, rhs.x_nChunkOffset);
+		swap(x_abyChunk,     rhs.x_abyChunk);
+		swap(x_u64Reg,       rhs.x_u64Reg);
 	}
 
 	friend void swap(Crc64OutputStream &lhs, Crc64OutputStream &rhs) noexcept {

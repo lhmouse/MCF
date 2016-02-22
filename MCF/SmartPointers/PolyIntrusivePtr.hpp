@@ -50,32 +50,14 @@ public:
 };
 
 template<typename ObjectT>
-using PolyIntrusivePtrConstVolatile            = IntrusivePtr    <const volatile ObjectT,            DefaultDeleter<PolyIntrusiveBase>>;
+using PolyIntrusivePtr         = IntrusivePtr    <ObjectT, DefaultDeleter<PolyIntrusiveBase>>;
 template<typename ObjectT>
-using PolyIntrusivePtrConst                    = IntrusivePtr    <const          ObjectT,            DefaultDeleter<PolyIntrusiveBase>>;
-template<typename ObjectT>
-using PolyIntrusivePtrVolatile                 = IntrusivePtr    <      volatile ObjectT,            DefaultDeleter<PolyIntrusiveBase>>;
-template<typename ObjectT>
-using PolyIntrusivePtr                         = IntrusivePtr    <               ObjectT,            DefaultDeleter<PolyIntrusiveBase>>;
+using PolyIntrusiveWeakPtr     = IntrusiveWeakPtr<ObjectT, DefaultDeleter<PolyIntrusiveBase>>;
 
 template<typename ObjectT>
-using PolyIntrusiveWeakPtrConstVolatile        = IntrusiveWeakPtr<const volatile ObjectT,            DefaultDeleter<PolyIntrusiveBase>>;
+using PolyIntrusivePtrView     = const PolyIntrusivePtr<ObjectT> &;
 template<typename ObjectT>
-using PolyIntrusiveWeakPtrConst                = IntrusiveWeakPtr<const          ObjectT,            DefaultDeleter<PolyIntrusiveBase>>;
-template<typename ObjectT>
-using PolyIntrusiveWeakPtrVolatile             = IntrusiveWeakPtr<      volatile ObjectT,            DefaultDeleter<PolyIntrusiveBase>>;
-template<typename ObjectT>
-using PolyIntrusiveWeakPtr                     = IntrusiveWeakPtr<               ObjectT,            DefaultDeleter<PolyIntrusiveBase>>;
-
-using PolyIntrusivePtrConstVolatileUnknown     = IntrusivePtr    <const volatile PolyIntrusiveBase,  DefaultDeleter<PolyIntrusiveBase>>;
-using PolyIntrusivePtrConstUnknown             = IntrusivePtr    <const          PolyIntrusiveBase,  DefaultDeleter<PolyIntrusiveBase>>;
-using PolyIntrusivePtrVolatileUnknown          = IntrusivePtr    <      volatile PolyIntrusiveBase,  DefaultDeleter<PolyIntrusiveBase>>;
-using PolyIntrusivePtrUnknown                  = IntrusivePtr    <               PolyIntrusiveBase,  DefaultDeleter<PolyIntrusiveBase>>;
-
-using PolyIntrusiveWeakPtrConstVolatileUnknown = IntrusiveWeakPtr<const volatile PolyIntrusiveBase,  DefaultDeleter<PolyIntrusiveBase>>;
-using PolyIntrusiveWeakPtrConstUnknown         = IntrusiveWeakPtr<const          PolyIntrusiveBase,  DefaultDeleter<PolyIntrusiveBase>>;
-using PolyIntrusiveWeakPtrVolatileUnknown      = IntrusiveWeakPtr<      volatile PolyIntrusiveBase,  DefaultDeleter<PolyIntrusiveBase>>;
-using PolyIntrusiveWeakPtrUnknown              = IntrusiveWeakPtr<               PolyIntrusiveBase,  DefaultDeleter<PolyIntrusiveBase>>;
+using PolyIntrusiveWeakPtrView = const PolyIntrusiveWeakPtr<ObjectT> &;
 
 }
 

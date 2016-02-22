@@ -17,6 +17,9 @@ namespace MCF {
 template<typename ObjectT, class DeleterT = DefaultDeleter<ObjectT>>
 class UniquePtr;
 
+template<typename ObjectT, class DeleterT = DefaultDeleter<ObjectT>>
+using UniquePtrView     = const UniquePtr<ObjectT> &;
+
 template<typename ObjectT, class DeleterT>
 class UniquePtr {
 	template<typename, class>

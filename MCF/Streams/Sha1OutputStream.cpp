@@ -3,22 +3,29 @@
 // Copyleft 2013 - 2016, LH_Mouse. All wrongs reserved.
 
 #include "../StdMCF.hpp"
-#include "Sha1.hpp"
+#include "Sha1OutputStream.hpp"
+#include "../Core/Array.hpp"
 #include "../Utilities/Endian.hpp"
-#include "../Utilities/CountOf.hpp"
-#include "../Utilities/BinaryOperations.hpp"
-
-// https://en.wikipedia.org/wiki/SHA-1
 
 namespace MCF {
 
+// https://en.wikipedia.org/wiki/SHA-1
+
 namespace {
-	void DoSha1Chunk(std::uint32_t (&au32Result)[5], const unsigned char *pbyChunk) noexcept {
+	void InitializeSha1(std::uint32_t (&au32Reg)[5], std::uint64_t &u64BytesTotal) noexcept {
+		au32Reg[0] = 0x67452301u;
+		au32Reg[1] = 0xEFCDAB89u;
+		au32Reg[2] = 0x98BADCFEu;
+		au32Reg[3] = 0x10325476u,
+		au32Reg[4] = 0xC3D2E1F0u;
+		u64BytesTotal = 0;
+	}
+	void UpdateSha1(std::uint32_t (&au32Reg)[5], const std::uint8_t (&abyChunk)[64]) noexcept {
 /*
 		std::uint32_t w[80];
 
 		for(std::size_t i = 0; i < 16; ++i){
-			w[i] = LoadBe(((const std::uint32_t *)pbyChunk)[i]);
+			w[i] = LoadBe(((const std::uint32_t *)abyChunk)[i]);
 		}
 		for(std::size_t i = 16; i < 32; ++i){
 			w[i] = ::_rotl(w[i - 3] ^ w[i - 8] ^ w[i - 14] ^ w[i - 16], 1);
@@ -27,11 +34,11 @@ namespace {
 			w[i] = ::_rotl(w[i - 6] ^ w[i - 16] ^ w[i - 28] ^ w[i - 32], 2);
 		}
 
-		std::uint32_t a = au32Result[0];
-		std::uint32_t b = au32Result[1];
-		std::uint32_t c = au32Result[2];
-		std::uint32_t d = au32Result[3];
-		std::uint32_t e = au32Result[4];
+		std::uint32_t a = au32Reg[0];
+		std::uint32_t b = au32Reg[1];
+		std::uint32_t c = au32Reg[2];
+		std::uint32_t d = au32Reg[3];
+		std::uint32_t e = au32Reg[4];
 
 		for(std::size_t i = 0; i < 80; ++i){
 			std::uint32_t f, k;
@@ -68,17 +75,18 @@ namespace {
 			a = temp;
 		}
 
-		au32Result[0] += a;
-		au32Result[1] += b;
-		au32Result[2] += c;
-		au32Result[3] += d;
-		au32Result[4] += e;
+		au32Reg[0] += a;
+		au32Reg[1] += b;
+		au32Reg[2] += c;
+		au32Reg[3] += d;
+		au32Reg[4] += e;
 */
 
 		alignas(16) std::uint32_t w[80];
 
+		const auto pu32Words = reinterpret_cast<const std::uint32_t *>(abyChunk);
 		for(std::size_t i = 0; i < 16; ++i){
-			w[i] = LoadBe(((const std::uint32_t *)pbyChunk)[i]);
+			w[i] = LoadBe(pu32Words[i]);
 		}
 		for(std::size_t i = 16; i < 32; ++i){
 			w[i] = ::_rotl(w[i - 3] ^ w[i - 8] ^ w[i - 14] ^ w[i - 16], 1);
@@ -89,11 +97,11 @@ namespace {
 		}
 */
 
-		register std::uint32_t a = au32Result[0];
-		register std::uint32_t b = au32Result[1];
-		register std::uint32_t c = au32Result[2];
-		register std::uint32_t d = au32Result[3];
-		register std::uint32_t e = au32Result[4];
+		register std::uint32_t a = au32Reg[0];
+		register std::uint32_t b = au32Reg[1];
+		register std::uint32_t c = au32Reg[2];
+		register std::uint32_t d = au32Reg[3];
+		register std::uint32_t e = au32Reg[4];
 
 		__asm__ __volatile__(
 			"movdqa xmm4, xmmword ptr[%5 + 28 * 4] \n"
@@ -279,79 +287,80 @@ namespace {
 #endif
 		);
 
-		au32Result[0] += a;
-		au32Result[1] += b;
-		au32Result[2] += c;
-		au32Result[3] += d;
-		au32Result[4] += e;
+		au32Reg[0] += a;
+		au32Reg[1] += b;
+		au32Reg[2] += c;
+		au32Reg[3] += d;
+		au32Reg[4] += e;
+	}
+	void FinalizeSha1(std::uint32_t (&au32Reg)[5], std::uint64_t u64BytesTotal, std::uint8_t (&abyChunk)[64], unsigned uBytesInChunk) noexcept {
+		abyChunk[uBytesInChunk] = 0x80;
+		++uBytesInChunk;
+		if(uBytesInChunk > 56){
+			std::memset(abyChunk + uBytesInChunk, 0, 64 - uBytesInChunk);
+			UpdateSha1(au32Reg, abyChunk);
+			uBytesInChunk = 0;
+		}
+		if(uBytesInChunk < 56){
+			std::memset(abyChunk + uBytesInChunk, 0, 56 - uBytesInChunk);
+		}
+		StoreBe(reinterpret_cast<std::uint64_t &>(abyChunk[56]), u64BytesTotal * 8);
+		UpdateSha1(au32Reg, abyChunk);
 	}
 }
 
-Sha1::Sha1() noexcept
-	: x_bInited(false)
-{
+Sha1OutputStream::~Sha1OutputStream(){
 }
 
-void Sha1::Abort() noexcept {
-	x_bInited = false;
+void Sha1OutputStream::Put(unsigned char byData){
+	Put(&byData, 1);
 }
-void Sha1::Update(const void *pData, std::size_t uSize) noexcept {
-	if(!x_bInited){
-		x_auResult[0] = 0x67452301u;
-		x_auResult[1] = 0xEFCDAB89u;
-		x_auResult[2] = 0x98BADCFEu;
-		x_auResult[3] = 0x10325476u,
-		x_auResult[4] = 0xC3D2E1F0u;
 
-		x_uBytesInChunk = 0;
-		x_u64BytesTotal = 0;
-
-		x_bInited = true;
+void Sha1OutputStream::Put(const void *pData, std::size_t uSize){
+	if(x_nChunkOffset < 0){
+		InitializeSha1(x_au32Reg, x_u64BytesTotal);
+		x_nChunkOffset = 0;
 	}
 
 	auto pbyRead = static_cast<const unsigned char *>(pData);
-	std::size_t uBytesRemaining = uSize;
-	const std::size_t uBytesFree = sizeof(x_vChunk.aby) - x_uBytesInChunk;
-	if(uBytesRemaining >= uBytesFree){
-		if(x_uBytesInChunk != 0){
-			std::memcpy(x_vChunk.aby + x_uBytesInChunk, pbyRead, uBytesFree);
-			DoSha1Chunk(x_auResult, x_vChunk.aby);
-			x_uBytesInChunk = 0;
-			pbyRead += uBytesFree;
-			uBytesRemaining -= uBytesFree;
+	auto uBytesRemaining = uSize;
+	const auto uChunkAvail = sizeof(x_abyChunk) - static_cast<unsigned>(x_nChunkOffset);
+	if(uBytesRemaining >= uChunkAvail){
+		if(x_nChunkOffset != 0){
+			std::memcpy(x_abyChunk + x_nChunkOffset, pbyRead, uChunkAvail);
+			pbyRead += uChunkAvail;
+			uBytesRemaining -= uChunkAvail;
+			UpdateSha1(x_au32Reg, x_abyChunk);
+			x_nChunkOffset = 0;
 		}
-		while(uBytesRemaining >= sizeof(x_vChunk.aby)){
-			DoSha1Chunk(x_auResult, pbyRead);
-			pbyRead += sizeof(x_vChunk.aby);
-			uBytesRemaining -= sizeof(x_vChunk.aby);
+		while(uBytesRemaining >= sizeof(x_abyChunk)){
+			UpdateSha1(x_au32Reg, reinterpret_cast<const decltype(x_abyChunk) *>(pbyRead)[0]);
+			pbyRead += sizeof(x_abyChunk);
+			uBytesRemaining -= (int)sizeof(x_abyChunk);
 		}
 	}
 	if(uBytesRemaining != 0){
-		std::memcpy(x_vChunk.aby + x_uBytesInChunk, pbyRead, uBytesRemaining);
-		x_uBytesInChunk += uBytesRemaining;
+		std::memcpy(x_abyChunk + x_nChunkOffset, pbyRead, uBytesRemaining);
+		x_nChunkOffset += (int)uBytesRemaining;
 	}
 	x_u64BytesTotal += uSize;
 }
-Array<unsigned char, 20> Sha1::Finalize() noexcept {
-	if(x_bInited){
-		x_vChunk.aby[x_uBytesInChunk++] = 0x80;
-		if(x_uBytesInChunk > sizeof(x_vChunk.vLast.abyData)){
-			std::memset(x_vChunk.aby + x_uBytesInChunk, 0, sizeof(x_vChunk.aby) - x_uBytesInChunk);
-			DoSha1Chunk(x_auResult, x_vChunk.aby);
-			x_uBytesInChunk = 0;
-		}
-		if(x_uBytesInChunk < sizeof(x_vChunk.vLast.abyData)){
-			std::memset(x_vChunk.aby + x_uBytesInChunk, 0, sizeof(x_vChunk.vLast.abyData) - x_uBytesInChunk);
-		}
-		StoreBe(x_vChunk.vLast.u64Bits, x_u64BytesTotal * 8);
-		DoSha1Chunk(x_auResult, x_vChunk.aby);
 
-		x_bInited = false;
+void Sha1OutputStream::Flush() const {
+}
+
+void Sha1OutputStream::Reset() noexcept {
+	x_nChunkOffset = -1;
+}
+Array<std::uint8_t, 20> Sha1OutputStream::Finalize() noexcept {
+	if(x_nChunkOffset >= 0){
+		FinalizeSha1(x_au32Reg, x_u64BytesTotal, x_abyChunk, static_cast<unsigned>(x_nChunkOffset));
+		x_nChunkOffset = -1;
 	}
-
-	Array<unsigned char, 20> abyRet;
+	Array<std::uint8_t, 20> abyRet;
+	const auto pu32RetWords = reinterpret_cast<std::uint32_t *>(abyRet.GetData());
 	for(unsigned i = 0; i < 5; ++i){
-		StoreBe(reinterpret_cast<std::uint32_t *>(abyRet.GetData())[i], x_auResult[i]);
+		StoreBe(pu32RetWords[i], x_au32Reg[i]);
 	}
 	return abyRet;
 }

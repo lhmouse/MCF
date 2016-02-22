@@ -3,24 +3,31 @@
 // Copyleft 2013 - 2016, LH_Mouse. All wrongs reserved.
 
 #include "../StdMCF.hpp"
-#include "Md5.hpp"
+#include "Md5OutputStream.hpp"
+#include "../Core/Array.hpp"
 #include "../Utilities/Endian.hpp"
-#include "../Utilities/BinaryOperations.hpp"
-
-// https://en.wikipedia.org/wiki/MD5
 
 namespace MCF {
 
+// https://en.wikipedia.org/wiki/MD5
+
 namespace {
-	void DoMd5Chunk(std::uint32_t (&au32Result)[4], const unsigned char *pbyChunk) noexcept {
+	void InitializeMd5(std::uint32_t (&au32Reg)[4], std::uint64_t &u64BytesTotal) noexcept {
+		au32Reg[0] = 0x67452301u;
+		au32Reg[1] = 0xEFCDAB89u;
+		au32Reg[2] = 0x98BADCFEu;
+		au32Reg[3] = 0x10325476u;
+		u64BytesTotal = 0;
+	}
+	void UpdateMd5(std::uint32_t (&au32Reg)[4], const std::uint8_t (&abyChunk)[64]) noexcept {
 /*
-		static const unsigned char RVEC[64] = {
+		static constexpr unsigned char RVEC[64] = {
 			7, 12, 17, 22, 7, 12, 17, 22, 7, 12, 17, 22, 7, 12, 17, 22,
 			5,  9, 14, 20, 5,  9, 14, 20, 5,  9, 14, 20, 5,  9, 14, 20,
 			4, 11, 16, 23, 4, 11, 16, 23, 4, 11, 16, 23, 4, 11, 16, 23,
 			6, 10, 15, 21, 6, 10, 15, 21, 6, 10, 15, 21, 6, 10, 15, 21
 		};
-		static const std::uint32_t KVEC[64] = {
+		static constexpr std::uint32_t KVEC[64] = {
 			0xD76AA478, 0xE8C7B756, 0x242070DB, 0xC1BDCEEE,
 			0xF57C0FAF, 0x4787C62A, 0xA8304613, 0xFD469501,
 			0x698098D8, 0x8B44F7AF, 0xFFFF5BB1, 0x895CD7BE,
@@ -39,12 +46,12 @@ namespace {
 			0xF7537E82, 0xBD3AF235, 0x2AD7D2BB, 0xEB86D391
 		};
 
-		const auto w = (const std::uint32_t *)pbyChunk;
+		const auto w = (const std::uint32_t *)abyChunk;
 
-		std::uint32_t a = au32Result[0];
-		std::uint32_t b = au32Result[1];
-		std::uint32_t c = au32Result[2];
-		std::uint32_t d = au32Result[3];
+		std::uint32_t a = au32Reg[0];
+		std::uint32_t b = au32Reg[1];
+		std::uint32_t c = au32Reg[2];
+		std::uint32_t d = au32Reg[3];
 
 		for(std::size_t i = 0; i < 64; ++i){
 			std::uint32_t f, g;
@@ -80,10 +87,10 @@ namespace {
 			a = temp;
 		}
 
-		au32Result[0] += a;
-		au32Result[1] += b;
-		au32Result[2] += c;
-		au32Result[3] += d;
+		au32Reg[0] += a;
+		au32Reg[1] += b;
+		au32Reg[2] += c;
+		au32Reg[3] += d;
 */
 
 #define R_0     "7"
@@ -218,10 +225,10 @@ namespace {
 #define K_63    "0xEB86D391"
 #define K(i_)   K_ ## i_
 
-		register std::uint32_t a = au32Result[0];
-		register std::uint32_t b = au32Result[1];
-		register std::uint32_t c = au32Result[2];
-		register std::uint32_t d = au32Result[3];
+		register std::uint32_t a = au32Reg[0];
+		register std::uint32_t b = au32Reg[1];
+		register std::uint32_t c = au32Reg[2];
+		register std::uint32_t d = au32Reg[3];
 
 		__asm__ __volatile__(
 
@@ -337,81 +344,83 @@ namespace {
 			STEP_D(63, "%1", "%2", "%3", "%0")
 
 			: "=r"(a), "=r"(b), "=r"(c), "=r"(d)
-			: "r"(pbyChunk), "0"(a), "1"(b), "2"(c), "3"(d)
+			: "r"(abyChunk), "0"(a), "1"(b), "2"(c), "3"(d)
 			: "di"
 		);
 
-		au32Result[0] += a;
-		au32Result[1] += b;
-		au32Result[2] += c;
-		au32Result[3] += d;
+		au32Reg[0] += a;
+		au32Reg[1] += b;
+		au32Reg[2] += c;
+		au32Reg[3] += d;
+	}
+	void FinalizeMd5(std::uint32_t (&au32Reg)[4], std::uint64_t u64BytesTotal, std::uint8_t (&abyChunk)[64], unsigned uBytesInChunk) noexcept {
+		abyChunk[uBytesInChunk] = 0x80;
+		++uBytesInChunk;
+		if(uBytesInChunk > 56){
+			std::memset(abyChunk + uBytesInChunk, 0, 64 - uBytesInChunk);
+			UpdateMd5(au32Reg, abyChunk);
+			uBytesInChunk = 0;
+		}
+		if(uBytesInChunk < 56){
+			std::memset(abyChunk + uBytesInChunk, 0, 56 - uBytesInChunk);
+		}
+		StoreLe(reinterpret_cast<std::uint64_t &>(abyChunk[56]), u64BytesTotal * 8);
+		UpdateMd5(au32Reg, abyChunk);
 	}
 }
 
-Md5::Md5() noexcept
-	: x_bInited(false)
-{
+Md5OutputStream::~Md5OutputStream(){
 }
 
-void Md5::Abort() noexcept {
-	x_bInited = false;
+void Md5OutputStream::Put(unsigned char byData){
+	Put(&byData, 1);
 }
-void Md5::Update(const void *pData, std::size_t uSize) noexcept {
-	if(!x_bInited){
-		x_auResult[0] = 0x67452301u;
-		x_auResult[1] = 0xEFCDAB89u;
-		x_auResult[2] = 0x98BADCFEu;
-		x_auResult[3] = 0x10325476u;
 
-		x_uBytesInChunk = 0;
-		x_u64BytesTotal = 0;
-
-		x_bInited = true;
+void Md5OutputStream::Put(const void *pData, std::size_t uSize){
+	if(x_nChunkOffset < 0){
+		InitializeMd5(x_au32Reg, x_u64BytesTotal);
+		x_nChunkOffset = 0;
 	}
 
 	auto pbyRead = static_cast<const unsigned char *>(pData);
-	std::size_t uBytesRemaining = uSize;
-	const std::size_t uBytesFree = sizeof(x_vChunk.aby) - x_uBytesInChunk;
-	if(uBytesRemaining >= uBytesFree){
-		if(x_uBytesInChunk != 0){
-			std::memcpy(x_vChunk.aby + x_uBytesInChunk, pbyRead, uBytesFree);
-			DoMd5Chunk(x_auResult, x_vChunk.aby);
-			x_uBytesInChunk = 0;
-			pbyRead += uBytesFree;
-			uBytesRemaining -= uBytesFree;
+	auto uBytesRemaining = uSize;
+	const auto uChunkAvail = sizeof(x_abyChunk) - static_cast<unsigned>(x_nChunkOffset);
+	if(uBytesRemaining >= uChunkAvail){
+		if(x_nChunkOffset != 0){
+			std::memcpy(x_abyChunk + x_nChunkOffset, pbyRead, uChunkAvail);
+			pbyRead += uChunkAvail;
+			uBytesRemaining -= uChunkAvail;
+			UpdateMd5(x_au32Reg, x_abyChunk);
+			x_nChunkOffset = 0;
 		}
-		while(uBytesRemaining >= sizeof(x_vChunk.aby)){
-			DoMd5Chunk(x_auResult, pbyRead);
-			pbyRead += sizeof(x_vChunk.aby);
-			uBytesRemaining -= sizeof(x_vChunk.aby);
+		while(uBytesRemaining >= sizeof(x_abyChunk)){
+			UpdateMd5(x_au32Reg, reinterpret_cast<const decltype(x_abyChunk) *>(pbyRead)[0]);
+			pbyRead += sizeof(x_abyChunk);
+			uBytesRemaining -= (int)sizeof(x_abyChunk);
 		}
 	}
 	if(uBytesRemaining != 0){
-		std::memcpy(x_vChunk.aby + x_uBytesInChunk, pbyRead, uBytesRemaining);
-		x_uBytesInChunk += uBytesRemaining;
+		std::memcpy(x_abyChunk + x_nChunkOffset, pbyRead, uBytesRemaining);
+		x_nChunkOffset += (int)uBytesRemaining;
 	}
 	x_u64BytesTotal += uSize;
 }
-Array<unsigned char, 16> Md5::Finalize() noexcept {
-	if(x_bInited){
-		x_vChunk.aby[x_uBytesInChunk++] = 0x80;
-		if(x_uBytesInChunk > sizeof(x_vChunk.vLast.abyData)){
-			std::memset(x_vChunk.aby + x_uBytesInChunk, 0, sizeof(x_vChunk.aby) - x_uBytesInChunk);
-			DoMd5Chunk(x_auResult, x_vChunk.aby);
-			x_uBytesInChunk = 0;
-		}
-		if(x_uBytesInChunk < sizeof(x_vChunk.vLast.abyData)){
-			std::memset(x_vChunk.aby + x_uBytesInChunk, 0, sizeof(x_vChunk.vLast.abyData) - x_uBytesInChunk);
-		}
-		StoreLe(x_vChunk.vLast.u64Bits, x_u64BytesTotal * 8);
-		DoMd5Chunk(x_auResult, x_vChunk.aby);
 
-		x_bInited = false;
+void Md5OutputStream::Flush() const {
+}
+
+void Md5OutputStream::Reset() noexcept {
+	x_nChunkOffset = -1;
+}
+Array<std::uint8_t, 16> Md5OutputStream::Finalize() noexcept {
+	if(x_nChunkOffset >= 0){
+		FinalizeMd5(x_au32Reg, x_u64BytesTotal, x_abyChunk, static_cast<unsigned>(x_nChunkOffset));
+		x_nChunkOffset = -1;
 	}
-
-	Array<unsigned char, 16> abyRet;
+	Array<std::uint8_t, 16> abyRet;
+	const auto pu32RetWords = reinterpret_cast<std::uint32_t *>(abyRet.GetData());
 	for(unsigned i = 0; i < 4; ++i){
-		StoreLe(reinterpret_cast<std::uint32_t *>(abyRet.GetData())[i], x_auResult[i]);
+		StoreLe(pu32RetWords[i], x_au32Reg[i]);
 	}
 	return abyRet;
 }

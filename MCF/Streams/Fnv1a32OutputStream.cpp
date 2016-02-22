@@ -15,8 +15,8 @@ namespace {
 	void InitializeFnv1a32(std::uint32_t &u32Reg) noexcept {
 		u32Reg = 2166136261u;
 	}
-	void UpdateFnv1a32(std::uint32_t &u32Reg, const std::uint8_t pbyChunk[8]) noexcept {
-		register auto u64Word = LoadLe(reinterpret_cast<const std::uint64_t *>(pbyChunk)[0]);
+	void UpdateFnv1a32(std::uint32_t &u32Reg, const std::uint8_t (&abyChunk)[8]) noexcept {
+		register auto u64Word = LoadLe(reinterpret_cast<const std::uint64_t *>(abyChunk)[0]);
 		for(unsigned i = 0; i < sizeof(u64Word); ++i){
 			const unsigned uLow = static_cast<unsigned char>(u64Word);
 			u64Word >>= 8;
@@ -24,9 +24,9 @@ namespace {
 			u32Reg *= 16777619u;
 		}
 	}
-	void FinalizeFnv1a32(std::uint32_t &u32Reg, const std::uint8_t pbyChunk[8], unsigned uBytesInChunk) noexcept {
+	void FinalizeFnv1a32(std::uint32_t &u32Reg, std::uint8_t (&abyChunk)[8], unsigned uBytesInChunk) noexcept {
 		for(unsigned i = 0; i < uBytesInChunk; ++i){
-			const unsigned uLow = pbyChunk[i];
+			const unsigned uLow = abyChunk[i];
 			u32Reg ^= uLow;
 			u32Reg *= 16777619u;
 		}
@@ -58,7 +58,7 @@ void Fnv1a32OutputStream::Put(const void *pData, std::size_t uSize){
 			x_nChunkOffset = 0;
 		}
 		while(uBytesRemaining >= sizeof(x_abyChunk)){
-			UpdateFnv1a32(x_u32Reg, pbyRead);
+			UpdateFnv1a32(x_u32Reg, reinterpret_cast<const decltype(x_abyChunk) *>(pbyRead)[0]);
 			pbyRead += sizeof(x_abyChunk);
 			uBytesRemaining -= (int)sizeof(x_abyChunk);
 		}

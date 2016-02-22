@@ -3,18 +3,28 @@
 // Copyleft 2013 - 2016, LH_Mouse. All wrongs reserved.
 
 #include "../StdMCF.hpp"
-#include "Sha256.hpp"
+#include "Sha256OutputStream.hpp"
+#include "../Core/Array.hpp"
 #include "../Utilities/Endian.hpp"
-#include "../Utilities/CountOf.hpp"
-#include "../Utilities/BinaryOperations.hpp"
+
+namespace MCF {
 
 // https://en.wikipedia.org/wiki/SHA-2
 // http://download.intel.com/embedded/processor/whitepaper/327457.pdf
 
-namespace MCF {
-
 namespace {
-	void DoSha256Chunk(std::uint32_t (&au32Result)[8], const unsigned char *pbyChunk) noexcept {
+	void InitializeSha256(std::uint32_t (&au32Reg)[8], std::uint64_t &u64BytesTotal) noexcept {
+		au32Reg[0] = 0x6A09E667u;
+		au32Reg[1] = 0xBB67AE85u;
+		au32Reg[2] = 0x3C6EF372u;
+		au32Reg[3] = 0xA54FF53Au;
+		au32Reg[4] = 0x510E527Fu;
+		au32Reg[5] = 0x9B05688Cu;
+		au32Reg[6] = 0x1F83D9ABu;
+		au32Reg[7] = 0x5BE0CD19u;
+		u64BytesTotal = 0;
+	}
+	void UpdateSha256(std::uint32_t (&au32Reg)[8], const std::uint8_t (&abyChunk)[64]) noexcept {
 /*
 		static const std::uint32_t KVEC[64] = {
 			0x428A2F98, 0x71374491, 0xB5C0FBCF, 0xE9B5DBA5, 0x3956C25B, 0x59F111F1, 0x923F82A4, 0xAB1C5ED5,
@@ -39,14 +49,14 @@ namespace {
 			w[i] = w[i - 16] + w[i - 7] + s0 + s1;
 		}
 
-		std::uint32_t a = au32Result[0];
-		std::uint32_t b = au32Result[1];
-		std::uint32_t c = au32Result[2];
-		std::uint32_t d = au32Result[3];
-		std::uint32_t e = au32Result[4];
-		std::uint32_t f = au32Result[5];
-		std::uint32_t g = au32Result[6];
-		std::uint32_t h = au32Result[7];
+		std::uint32_t a = au32Reg[0];
+		std::uint32_t b = au32Reg[1];
+		std::uint32_t c = au32Reg[2];
+		std::uint32_t d = au32Reg[3];
+		std::uint32_t e = au32Reg[4];
+		std::uint32_t f = au32Reg[5];
+		std::uint32_t g = au32Reg[6];
+		std::uint32_t h = au32Reg[7];
 
 		for(std::size_t i = 0; i < 64; ++i){
 			//const std::uint32_t S0 = ::_rotr(a, 2) ^ ::_rotr(a, 13) ^ ::_rotr(a, 22);
@@ -70,14 +80,14 @@ namespace {
 			a = t1 + t2;
 		}
 
-		au32Result[0] += a;
-		au32Result[1] += b;
-		au32Result[2] += c;
-		au32Result[3] += d;
-		au32Result[4] += e;
-		au32Result[5] += f;
-		au32Result[6] += g;
-		au32Result[7] += h;
+		au32Reg[0] += a;
+		au32Reg[1] += b;
+		au32Reg[2] += c;
+		au32Reg[3] += d;
+		au32Reg[4] += e;
+		au32Reg[5] += f;
+		au32Reg[6] += g;
+		au32Reg[7] += h;
 */
 
 #define K_0     "0x428A2F98"
@@ -147,8 +157,9 @@ namespace {
 #define K(i_)   K_ ## i_
 
 		alignas(16) std::uint32_t w[64];
+		const auto pu32Words = reinterpret_cast<const std::uint32_t *>(abyChunk);
 		for(std::size_t i = 0; i < 16; ++i){
-			w[i] = LoadBe(((const std::uint32_t *)pbyChunk)[i]);
+			w[i] = LoadBe(pu32Words[i]);
 		}
 /*
 		for(std::size_t i = 16; i < CountOf(w); ++i){
@@ -161,23 +172,23 @@ namespace {
 */
 
 #ifdef _WIN64
-		register std::uint32_t a = au32Result[0];
-		register std::uint32_t b = au32Result[1];
-		register std::uint32_t c = au32Result[2];
-		register std::uint32_t d = au32Result[3];
-		register std::uint32_t e = au32Result[4];
-		register std::uint32_t f = au32Result[5];
-		register std::uint32_t g = au32Result[6];
-		register std::uint32_t h = au32Result[7];
+		register std::uint32_t a = au32Reg[0];
+		register std::uint32_t b = au32Reg[1];
+		register std::uint32_t c = au32Reg[2];
+		register std::uint32_t d = au32Reg[3];
+		register std::uint32_t e = au32Reg[4];
+		register std::uint32_t f = au32Reg[5];
+		register std::uint32_t g = au32Reg[6];
+		register std::uint32_t h = au32Reg[7];
 #else
-		std::uint32_t a = au32Result[0];
-		std::uint32_t b = au32Result[1];
-		std::uint32_t c = au32Result[2];
-		std::uint32_t d = au32Result[3];
-		std::uint32_t e = au32Result[4];
-		std::uint32_t f = au32Result[5];
-		std::uint32_t g = au32Result[6];
-		std::uint32_t h = au32Result[7];
+		std::uint32_t a = au32Reg[0];
+		std::uint32_t b = au32Reg[1];
+		std::uint32_t c = au32Reg[2];
+		std::uint32_t d = au32Reg[3];
+		std::uint32_t e = au32Reg[4];
+		std::uint32_t f = au32Reg[5];
+		std::uint32_t g = au32Reg[6];
+		std::uint32_t h = au32Reg[7];
 #endif
 
 		__asm__ __volatile__(
@@ -898,85 +909,83 @@ namespace {
 
 		);
 
-		au32Result[0] += a;
-		au32Result[1] += b;
-		au32Result[2] += c;
-		au32Result[3] += d;
-		au32Result[4] += e;
-		au32Result[5] += f;
-		au32Result[6] += g;
-		au32Result[7] += h;
+		au32Reg[0] += a;
+		au32Reg[1] += b;
+		au32Reg[2] += c;
+		au32Reg[3] += d;
+		au32Reg[4] += e;
+		au32Reg[5] += f;
+		au32Reg[6] += g;
+		au32Reg[7] += h;
+	}
+	void FinalizeSha256(std::uint32_t (&au32Reg)[8], std::uint64_t u64BytesTotal, std::uint8_t (&abyChunk)[64], unsigned uBytesInChunk) noexcept {
+		abyChunk[uBytesInChunk] = 0x80;
+		++uBytesInChunk;
+		if(uBytesInChunk > 56){
+			std::memset(abyChunk + uBytesInChunk, 0, 64 - uBytesInChunk);
+			UpdateSha256(au32Reg, abyChunk);
+			uBytesInChunk = 0;
+		}
+		if(uBytesInChunk < 56){
+			std::memset(abyChunk + uBytesInChunk, 0, 56 - uBytesInChunk);
+		}
+		StoreBe(reinterpret_cast<std::uint64_t &>(abyChunk[56]), u64BytesTotal * 8);
+		UpdateSha256(au32Reg, abyChunk);
 	}
 }
 
-Sha256::Sha256() noexcept
-	: x_bInited(false)
-{
+Sha256OutputStream::~Sha256OutputStream(){
 }
 
-void Sha256::Abort() noexcept {
-	x_bInited = false;
+void Sha256OutputStream::Put(unsigned char byData){
+	Put(&byData, 1);
 }
-void Sha256::Update(const void *pData, std::size_t uSize) noexcept {
-	if(!x_bInited){
-		x_auResult[0] = 0x6A09E667u;
-		x_auResult[1] = 0xBB67AE85u;
-		x_auResult[2] = 0x3C6EF372u;
-		x_auResult[3] = 0xA54FF53Au;
-		x_auResult[4] = 0x510E527Fu;
-		x_auResult[5] = 0x9B05688Cu;
-		x_auResult[6] = 0x1F83D9ABu;
-		x_auResult[7] = 0x5BE0CD19u;
 
-		x_uBytesInChunk = 0;
-		x_u64BytesTotal = 0;
-
-		x_bInited = true;
+void Sha256OutputStream::Put(const void *pData, std::size_t uSize){
+	if(x_nChunkOffset < 0){
+		InitializeSha256(x_au32Reg, x_u64BytesTotal);
+		x_nChunkOffset = 0;
 	}
 
 	auto pbyRead = static_cast<const unsigned char *>(pData);
-	std::size_t uBytesRemaining = uSize;
-	const std::size_t uBytesFree = sizeof(x_vChunk.aby) - x_uBytesInChunk;
-	if(uBytesRemaining >= uBytesFree){
-		if(x_uBytesInChunk != 0){
-			std::memcpy(x_vChunk.aby + x_uBytesInChunk, pbyRead, uBytesFree);
-			DoSha256Chunk(x_auResult, x_vChunk.aby);
-			x_uBytesInChunk = 0;
-			pbyRead += uBytesFree;
-			uBytesRemaining -= uBytesFree;
+	auto uBytesRemaining = uSize;
+	const auto uChunkAvail = sizeof(x_abyChunk) - static_cast<unsigned>(x_nChunkOffset);
+	if(uBytesRemaining >= uChunkAvail){
+		if(x_nChunkOffset != 0){
+			std::memcpy(x_abyChunk + x_nChunkOffset, pbyRead, uChunkAvail);
+			pbyRead += uChunkAvail;
+			uBytesRemaining -= uChunkAvail;
+			UpdateSha256(x_au32Reg, x_abyChunk);
+			x_nChunkOffset = 0;
 		}
-		while(uBytesRemaining >= sizeof(x_vChunk.aby)){
-			DoSha256Chunk(x_auResult, pbyRead);
-			pbyRead += sizeof(x_vChunk.aby);
-			uBytesRemaining -= sizeof(x_vChunk.aby);
+		while(uBytesRemaining >= sizeof(x_abyChunk)){
+			UpdateSha256(x_au32Reg, reinterpret_cast<const decltype(x_abyChunk) *>(pbyRead)[0]);
+			pbyRead += sizeof(x_abyChunk);
+			uBytesRemaining -= (int)sizeof(x_abyChunk);
 		}
 	}
 	if(uBytesRemaining != 0){
-		std::memcpy(x_vChunk.aby + x_uBytesInChunk, pbyRead, uBytesRemaining);
-		x_uBytesInChunk += uBytesRemaining;
+		std::memcpy(x_abyChunk + x_nChunkOffset, pbyRead, uBytesRemaining);
+		x_nChunkOffset += (int)uBytesRemaining;
 	}
 	x_u64BytesTotal += uSize;
 }
-Array<unsigned char, 32> Sha256::Finalize() noexcept {
-	if(x_bInited){
-		x_vChunk.aby[x_uBytesInChunk++] = 0x80;
-		if(x_uBytesInChunk > sizeof(x_vChunk.vLast.abyData)){
-			std::memset(x_vChunk.aby + x_uBytesInChunk, 0, sizeof(x_vChunk.aby) - x_uBytesInChunk);
-			DoSha256Chunk(x_auResult, x_vChunk.aby);
-			x_uBytesInChunk = 0;
-		}
-		if(x_uBytesInChunk < sizeof(x_vChunk.vLast.abyData)){
-			std::memset(x_vChunk.aby + x_uBytesInChunk, 0, sizeof(x_vChunk.vLast.abyData) - x_uBytesInChunk);
-		}
-		StoreBe(x_vChunk.vLast.u64Bits, x_u64BytesTotal * 8);
-		DoSha256Chunk(x_auResult, x_vChunk.aby);
 
-		x_bInited = false;
+void Sha256OutputStream::Flush() const {
+}
+
+void Sha256OutputStream::Reset() noexcept {
+	x_nChunkOffset = -1;
+}
+Array<std::uint8_t, 32> Sha256OutputStream::Finalize() noexcept {
+	if(x_nChunkOffset >= 0){
+		FinalizeSha256(x_au32Reg, x_u64BytesTotal, x_abyChunk, static_cast<unsigned>(x_nChunkOffset));
+		x_nChunkOffset = -1;
 	}
-
-	Array<unsigned char, 32> abyRet;
+	Array<std::uint8_t, 32> abyRet;
+	const auto pu32RetWords = reinterpret_cast<std::uint32_t *>(abyRet.GetData());
 	for(unsigned i = 0; i < 8; ++i){
-		StoreBe(reinterpret_cast<std::uint32_t *>(abyRet.GetData())[i], x_auResult[i]);
+		StoreBe(pu32RetWords[i], x_au32Reg[i]);
 	}
 	return abyRet;
 }

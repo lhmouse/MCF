@@ -35,17 +35,17 @@ namespace {
 	void InitializeCrc64(std::uint64_t &u64Reg) noexcept {
 		u64Reg = static_cast<std::uint64_t>(-1);
 	}
-	void UpdateCrc64(std::uint64_t &u64Reg, const std::uint8_t pbyChunk[8]) noexcept {
-		register auto u64Word = LoadLe(reinterpret_cast<const std::uint64_t *>(pbyChunk)[0]);
+	void UpdateCrc64(std::uint64_t &u64Reg, const std::uint8_t (&abyChunk)[8]) noexcept {
+		register auto u64Word = LoadLe(reinterpret_cast<const std::uint64_t *>(abyChunk)[0]);
 		for(unsigned i = 0; i < sizeof(u64Word); ++i){
 			const unsigned uLow = static_cast<unsigned char>(u64Word);
 			u64Word >>= 8;
 			u64Reg = kCrcTable[(u64Reg ^ uLow) & 0xFF] ^ (u64Reg >> 8);
 		}
 	}
-	void FinalizeCrc64(std::uint64_t &u64Reg, const std::uint8_t pbyChunk[8], unsigned uBytesInChunk) noexcept {
+	void FinalizeCrc64(std::uint64_t &u64Reg, std::uint8_t (&abyChunk)[8], unsigned uBytesInChunk) noexcept {
 		for(unsigned i = 0; i < uBytesInChunk; ++i){
-			const unsigned uLow = pbyChunk[i];
+			const unsigned uLow = abyChunk[i];
 			u64Reg = kCrcTable[(u64Reg ^ uLow) & 0xFF] ^ (u64Reg >> 8);
 		}
 		u64Reg = ~u64Reg;
@@ -77,7 +77,7 @@ void Crc64OutputStream::Put(const void *pData, std::size_t uSize){
 			x_nChunkOffset = 0;
 		}
 		while(uBytesRemaining >= sizeof(x_abyChunk)){
-			UpdateCrc64(x_u64Reg, pbyRead);
+			UpdateCrc64(x_u64Reg, reinterpret_cast<const decltype(x_abyChunk) *>(pbyRead)[0]);
 			pbyRead += sizeof(x_abyChunk);
 			uBytesRemaining -= (int)sizeof(x_abyChunk);
 		}

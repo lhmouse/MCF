@@ -2,8 +2,8 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2013 - 2016, LH_Mouse. All wrongs reserved.
 
-#ifndef MCF_STREAMS_FNV1A_32_OUTPUT_STREAM_HPP_
-#define MCF_STREAMS_FNV1A_32_OUTPUT_STREAM_HPP_
+#ifndef MCF_STREAMS_FNV1A32_OUTPUT_STREAM_HPP_
+#define MCF_STREAMS_FNV1A32_OUTPUT_STREAM_HPP_
 
 #include "AbstractOutputStream.hpp"
 #include <cstdint>

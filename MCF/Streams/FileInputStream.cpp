@@ -73,11 +73,11 @@ std::size_t FileInputStream::Discard(std::size_t uSize){
 	std::size_t uBytesTotal = 0;
 	const auto u64FileSize = x_vFile.GetSize();
 	if(x_u64Offset < u64FileSize){
-		auto u64BytesDiscarded = u64FileSize - x_u64Offset;
-		if(u64BytesDiscarded > uSize){
-			u64BytesDiscarded = uSize;
+		uBytesTotal = uSize;
+		const auto u64BytesRemaining = u64FileSize - x_u64Offset;
+		if(uBytesTotal > u64BytesRemaining){
+			uBytesTotal = static_cast<std::size_t>(u64BytesRemaining);
 		}
-		uBytesTotal = static_cast<std::size_t>(u64BytesDiscarded);
 	}
 	x_u64Offset += uBytesTotal;
 	return uBytesTotal;

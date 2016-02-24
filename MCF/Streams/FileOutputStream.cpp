@@ -16,15 +16,23 @@ void FileOutputStream::Put(unsigned char byData){
 }
 
 void FileOutputStream::Put(const void *pData, std::size_t uSize){
-	std::size_t uBytesWritten = 0;
-	while(uBytesWritten < uSize){
-		const auto uBytesWrittenThisTime = x_vFile.Write(x_u64Offset + uBytesWritten, static_cast<const unsigned char *>(pData) + uBytesWritten, uSize - uBytesWritten);
-		if(uBytesWrittenThisTime == 0){
+	const auto pbyData = static_cast<const unsigned char *>(pData);
+	std::size_t uBytesTotal = 0;
+	for(;;){
+		auto uBytesToWrite = uSize - uBytesTotal;
+		if(uBytesToWrite == 0){
+			break;
+		}
+		if(uBytesToWrite > UINT32_MAX){
+			uBytesToWrite = UINT32_MAX;
+		}
+		const auto uBytesWritten = x_vFile.Write(x_u64Offset + uBytesTotal, pbyData + uBytesTotal, uBytesToWrite);
+		if(uBytesWritten == 0){
 			DEBUG_THROW(Exception, ERROR_BROKEN_PIPE, "FileOutputStream: Partial contents written"_rcs);
 		}
-		uBytesWritten += uBytesWrittenThisTime;
+		uBytesTotal += uBytesWritten;
 	}
-	x_u64Offset += uBytesWritten;
+	x_u64Offset += uBytesTotal;
 }
 
 void FileOutputStream::Flush() const {

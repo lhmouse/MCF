@@ -31,26 +31,56 @@ bool FileInputStream::Discard(){
 }
 
 std::size_t FileInputStream::Peek(void *pData, std::size_t uSize) const {
-	auto uBytesRead = x_vFile.Read(pData, uSize, x_u64Offset);
-	return uBytesRead;
+	const auto pbyData = static_cast<unsigned char *>(pData);
+	std::size_t uBytesTotal = 0;
+	for(;;){
+		auto uBytesToRead = uSize - uBytesTotal;
+		if(uBytesToRead == 0){
+			break;
+		}
+		if(uBytesToRead > UINT32_MAX){
+			uBytesToRead = UINT32_MAX;
+		}
+		const auto uBytesRead = x_vFile.Read(pbyData + uBytesTotal, uBytesToRead, x_u64Offset + uBytesTotal);
+		if(uBytesRead == 0){
+			break;
+		}
+		uBytesTotal += uBytesRead;
+	}
+	return uBytesTotal;
 }
 std::size_t FileInputStream::Get(void *pData, std::size_t uSize){
-	auto uBytesRead = x_vFile.Read(pData, uSize, x_u64Offset);
-	x_u64Offset += uBytesRead;
-	return uBytesRead;
+	const auto pbyData = static_cast<unsigned char *>(pData);
+	std::size_t uBytesTotal = 0;
+	for(;;){
+		auto uBytesToRead = uSize - uBytesTotal;
+		if(uBytesToRead == 0){
+			break;
+		}
+		if(uBytesToRead > UINT32_MAX){
+			uBytesToRead = UINT32_MAX;
+		}
+		const auto uBytesRead = x_vFile.Read(pbyData + uBytesTotal, uBytesToRead, x_u64Offset + uBytesTotal);
+		if(uBytesRead == 0){
+			break;
+		}
+		uBytesTotal += uBytesRead;
+	}
+	x_u64Offset += uBytesTotal;
+	return uBytesTotal;
 }
 std::size_t FileInputStream::Discard(std::size_t uSize){
-	auto uBytesDiscarded = (std::size_t)0;
+	std::size_t uBytesTotal = 0;
 	const auto u64FileSize = x_vFile.GetSize();
 	if(x_u64Offset < u64FileSize){
-		uBytesDiscarded = uSize;
-		const auto uRemaining = u64FileSize - x_u64Offset;
-		if(uBytesDiscarded > uRemaining){
-			uBytesDiscarded = (std::size_t)uRemaining;
+		auto u64BytesDiscarded = u64FileSize - x_u64Offset;
+		if(u64BytesDiscarded > uSize){
+			u64BytesDiscarded = uSize;
 		}
-		x_u64Offset += uBytesDiscarded;
+		uBytesTotal = static_cast<std::size_t>(u64BytesDiscarded);
 	}
-	return uBytesDiscarded;
+	x_u64Offset += uBytesTotal;
+	return uBytesTotal;
 }
 
 }

@@ -7,7 +7,6 @@
 #include "Exception.hpp"
 #include "String.hpp"
 #include "../Utilities/BinaryOperations.hpp"
-#include "../Utilities/MinMax.hpp"
 #include "../Utilities/Defer.hpp"
 #include "../Thread/Thread.hpp"
 #include <winternl.h>
@@ -233,11 +232,12 @@ std::size_t File::Read(void *pBuffer, std::size_t uBytesToRead, std::uint64_t u6
 		DEBUG_THROW(Exception, ERROR_INVALID_HANDLE, "No file opened"_rcs);
 	}
 
-	if(uBytesToRead > ULONG_MAX){
-		DEBUG_THROW(Exception, ERROR_ARITHMETIC_OVERFLOW, "Block is too large"_rcs);
-	}
 	if(u64Offset >= static_cast<std::uint64_t>(INT64_MAX)){
 		DEBUG_THROW(Exception, ERROR_SEEK, "Offset is too large"_rcs);
+	}
+
+	if(uBytesToRead > ULONG_MAX){
+		uBytesToRead = ULONG_MAX;
 	}
 
 	bool bIoPending = true;
@@ -270,11 +270,12 @@ std::size_t File::Write(std::uint64_t u64Offset, const void *pBuffer, std::size_
 		DEBUG_THROW(Exception, ERROR_INVALID_HANDLE, "No file opened"_rcs);
 	}
 
-	if(uBytesToWrite > ULONG_MAX){
-		DEBUG_THROW(Exception, ERROR_ARITHMETIC_OVERFLOW, "Block is too large"_rcs);
-	}
 	if(u64Offset >= static_cast<std::uint64_t>(INT64_MAX)){
 		DEBUG_THROW(Exception, ERROR_SEEK, "Offset is too large"_rcs);
+	}
+
+	if(uBytesToWrite > ULONG_MAX){
+		uBytesToWrite = ULONG_MAX;
 	}
 
 	bool bIoPending = true;

@@ -8,13 +8,16 @@
 #include "AbstractInputStream.hpp"
 #include "../SmartPointers/UniquePtr.hpp"
 #include "../Core/StreamBuffer.hpp"
+#include "../Containers/Vector.hpp"
 
 namespace MCF {
 
 class BufferingInputStreamFilter : public AbstractInputStream {
 private:
 	UniquePtr<AbstractInputStream> x_pUnderlyingStream;
+
 	mutable StreamBuffer x_vBuffer;
+	mutable Vector<unsigned char> x_vecBackBuffer;
 
 public:
 	explicit BufferingInputStreamFilter(UniquePtr<AbstractInputStream> pUnderlyingStream) noexcept
@@ -49,6 +52,7 @@ public:
 		using std::swap;
 		swap(x_pUnderlyingStream, rhs.x_pUnderlyingStream);
 		swap(x_vBuffer,           rhs.x_vBuffer);
+		swap(x_vecBackBuffer,     rhs.x_vecBackBuffer);
 	}
 
 	friend void swap(BufferingInputStreamFilter &lhs, BufferingInputStreamFilter &rhs) noexcept {

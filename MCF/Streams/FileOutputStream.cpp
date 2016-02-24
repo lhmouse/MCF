@@ -35,8 +35,10 @@ void FileOutputStream::Put(const void *pData, std::size_t uSize){
 	x_u64Offset += uBytesTotal;
 }
 
-void FileOutputStream::Flush() const {
-	x_vFile.Flush();
+void FileOutputStream::Flush(bool bHard) const {
+	if(bHard){
+		x_vFile.HardFlush();
+	}
 }
 
 }

@@ -14,6 +14,7 @@ namespace MCF {
 class BufferingOutputStreamFilter : public AbstractOutputStream {
 private:
 	UniquePtr<AbstractOutputStream> x_pUnderlyingStream;
+
 	mutable StreamBuffer x_vBuffer;
 
 public:

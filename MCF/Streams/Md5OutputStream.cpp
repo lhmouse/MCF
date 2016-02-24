@@ -408,7 +408,7 @@ void Md5OutputStream::Put(const void *pData, std::size_t uSize){
 	x_u64BytesTotal += uSize;
 }
 
-void Md5OutputStream::Flush() const {
+void Md5OutputStream::Flush(bool /* bHard */) const {
 }
 
 void Md5OutputStream::Reset() noexcept {

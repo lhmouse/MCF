@@ -13,6 +13,7 @@ namespace {
 			if(vBuffer.GetSize() < uThreshold){
 				break;
 			}
+
 			unsigned char abyTemp[4096];
 			const auto uBytesToWrite = vBuffer.Peek(abyTemp, sizeof(abyTemp));
 			if(uBytesToWrite == 0){

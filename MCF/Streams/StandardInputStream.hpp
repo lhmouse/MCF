@@ -16,7 +16,7 @@ public:
 	using Handle = void *;
 
 private:
-	void *x_hPipe;
+	Handle x_hPipe;
 
 	mutable StreamBuffer x_vBuffer;
 	mutable Vector<unsigned char> x_vecBackBuffer;

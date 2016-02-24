@@ -14,7 +14,7 @@ public:
 	using Handle = void *;
 
 private:
-	void *x_hPipe;
+	Handle x_hPipe;
 
 public:
 	StandardErrorStream();

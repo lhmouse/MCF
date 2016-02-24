@@ -38,7 +38,7 @@ namespace Impl_KernelObjectBase {
 		HANDLE hDirectory;
 		const auto lStatus = ::NtOpenDirectoryObject(&hDirectory, 0x0F, &vObjectAttributes);
 		if(!NT_SUCCESS(lStatus)){
-			DEBUG_THROW(SystemError, ::RtlNtStatusToDosError(lStatus), "NtOpenDirectoryObject"_rcs);
+			DEBUG_THROW(SystemException, ::RtlNtStatusToDosError(lStatus), "NtOpenDirectoryObject"_rcs);
 		}
 		return Impl_UniqueNtHandle::UniqueNtHandle(hDirectory);
 	}

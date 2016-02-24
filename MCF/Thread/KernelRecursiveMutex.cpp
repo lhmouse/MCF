@@ -28,7 +28,7 @@ Impl_UniqueNtHandle::UniqueNtHandle KernelRecursiveMutex::X_CreateMutexHandle(co
 		InitializeObjectAttributes(&vObjectAttributes, nullptr, 0, nullptr, nullptr);
 	} else {
 		if(uNameSize > USHRT_MAX){
-			DEBUG_THROW(SystemError, ERROR_INVALID_PARAMETER, "The name for a kernel object is too long"_rcs);
+			DEBUG_THROW(SystemException, ERROR_INVALID_PARAMETER, "The name for a kernel object is too long"_rcs);
 		}
 		::UNICODE_STRING ustrObjectName;
 		ustrObjectName.Length        = (USHORT)uNameSize;
@@ -51,12 +51,12 @@ Impl_UniqueNtHandle::UniqueNtHandle KernelRecursiveMutex::X_CreateMutexHandle(co
 	if(u32Flags & kDontCreate){
 		const auto lStatus = ::NtOpenMutant(&hTemp, MUTANT_ALL_ACCESS, &vObjectAttributes);
 		if(!NT_SUCCESS(lStatus)){
-			DEBUG_THROW(SystemError, ::RtlNtStatusToDosError(lStatus), "NtOpenMutant"_rcs);
+			DEBUG_THROW(SystemException, ::RtlNtStatusToDosError(lStatus), "NtOpenMutant"_rcs);
 		}
 	} else {
 		const auto lStatus = ::NtCreateMutant(&hTemp, MUTANT_ALL_ACCESS, &vObjectAttributes, false);
 		if(!NT_SUCCESS(lStatus)){
-			DEBUG_THROW(SystemError, ::RtlNtStatusToDosError(lStatus), "NtCreateMutant"_rcs);
+			DEBUG_THROW(SystemException, ::RtlNtStatusToDosError(lStatus), "NtCreateMutant"_rcs);
 		}
 	}
 	Impl_UniqueNtHandle::UniqueNtHandle hMutex(hTemp);

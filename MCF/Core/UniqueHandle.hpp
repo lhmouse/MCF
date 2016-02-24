@@ -27,7 +27,11 @@ private:
 	Handle x_hObject;
 
 public:
-	explicit constexpr UniqueHandle(Handle rhs = Closer()()) noexcept
+	constexpr UniqueHandle() noexcept
+		: x_hObject(Closer()())
+	{
+	}
+	explicit constexpr UniqueHandle(Handle rhs) noexcept
 		: x_hObject(rhs)
 	{
 	}

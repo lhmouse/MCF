@@ -36,7 +36,7 @@ public:
 
 	void Put(const void *pData, std::size_t uSize) override;
 
-	void Flush() const override;
+	void Flush(bool bHard) const override;
 
 	const File &GetFile() const noexcept {
 		return x_vFile;

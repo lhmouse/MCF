@@ -12,7 +12,7 @@ namespace MCF {
 class AbstractInputStream {
 public:
 	constexpr AbstractInputStream() noexcept = default;
-	virtual ~AbstractInputStream();
+	virtual ~AbstractInputStream() = 0;
 
 	AbstractInputStream(AbstractInputStream &&) noexcept = default;
 	AbstractInputStream& operator=(AbstractInputStream &&) noexcept = default;

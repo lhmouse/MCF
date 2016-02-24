@@ -10,7 +10,7 @@ namespace MCF {
 Exception::~Exception(){
 }
 
-SystemError::~SystemError(){
+SystemException::~SystemException(){
 }
 
 }

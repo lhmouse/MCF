@@ -41,7 +41,7 @@ Impl_UniqueNtHandle::UniqueNtHandle KernelMutex::X_CreateEventHandle(const WideS
 		InitializeObjectAttributes(&vObjectAttributes, nullptr, 0, nullptr, nullptr);
 	} else {
 		if(uNameSize > USHRT_MAX){
-			DEBUG_THROW(SystemError, ERROR_INVALID_PARAMETER, "The name for a kernel object is too long"_rcs);
+			DEBUG_THROW(SystemException, ERROR_INVALID_PARAMETER, "The name for a kernel object is too long"_rcs);
 		}
 		::UNICODE_STRING ustrObjectName;
 		ustrObjectName.Length        = (USHORT)uNameSize;
@@ -65,13 +65,13 @@ Impl_UniqueNtHandle::UniqueNtHandle KernelMutex::X_CreateEventHandle(const WideS
 	if(u32Flags & kDontCreate){
 		const auto lStatus = ::NtOpenEvent(&hTemp, EVENT_ALL_ACCESS, &vObjectAttributes);
 		if(!NT_SUCCESS(lStatus)){
-			DEBUG_THROW(SystemError, ::RtlNtStatusToDosError(lStatus), "NtOpenEvent"_rcs);
+			DEBUG_THROW(SystemException, ::RtlNtStatusToDosError(lStatus), "NtOpenEvent"_rcs);
 		}
 		bNameExists = true;
 	} else {
 		const auto lStatus = ::NtCreateEvent(&hTemp, EVENT_ALL_ACCESS, &vObjectAttributes, SynchronizationEvent, true);
 		if(!NT_SUCCESS(lStatus)){
-			DEBUG_THROW(SystemError, ::RtlNtStatusToDosError(lStatus), "NtCreateEvent"_rcs);
+			DEBUG_THROW(SystemException, ::RtlNtStatusToDosError(lStatus), "NtCreateEvent"_rcs);
 		}
 		bNameExists = lStatus == STATUS_OBJECT_NAME_EXISTS;
 	}
@@ -84,7 +84,7 @@ Impl_UniqueNtHandle::UniqueNtHandle KernelMutex::X_CreateEventHandle(const WideS
 			ASSERT_MSG(false, L"NtQueryEvent() 失败。");
 		}
 		if(vBasicInfo.eEventType != SynchronizationEvent){
-			DEBUG_THROW(SystemError, ::RtlNtStatusToDosError(STATUS_OBJECT_TYPE_MISMATCH), "CreateEventHandle"_rcs);
+			DEBUG_THROW(SystemException, ::RtlNtStatusToDosError(STATUS_OBJECT_TYPE_MISMATCH), "CreateEventHandle"_rcs);
 		}
 	}
 	return hEvent;

@@ -74,6 +74,7 @@ void StreamBuffer::Put(unsigned char byData){
 	++(pChunk->uEnd);
 	++x_uSize;
 }
+
 int StreamBuffer::Unput() noexcept {
 	int nRet = -1;
 	auto pChunk = x_lstChunks.GetLast();

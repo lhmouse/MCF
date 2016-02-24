@@ -487,7 +487,7 @@ void AnsiString::UnifyAppend(String<StringType::kUtf16> &u16sDst, const AnsiStri
 		ULONG ulConvertedSize;
 		const auto lStatus = ::RtlMultiByteToUnicodeN(reinterpret_cast<wchar_t *>(pchWrite), (DWORD)uOutputSizeMax, &ulConvertedSize, svSrc.GetBegin(), (DWORD)uInputSize);
 		if(!NT_SUCCESS(lStatus)){
-			DEBUG_THROW(SystemError, ::RtlNtStatusToDosError(lStatus), "RtlMultiByteToUnicodeN"_rcs);
+			DEBUG_THROW(SystemException, ::RtlNtStatusToDosError(lStatus), "RtlMultiByteToUnicodeN"_rcs);
 		}
 		u16sDst.Pop(uOutputSizeMax / sizeof(wchar_t) - ulConvertedSize / sizeof(wchar_t));
 	} catch(...){
@@ -511,7 +511,7 @@ void AnsiString::DeunifyAppend(AnsiString &strDst, const StringView<StringType::
 		ULONG ulConvertedSize;
 		const auto lStatus = ::RtlUnicodeToMultiByteN(pchWrite, (DWORD)uOutputSizeMax, &ulConvertedSize, reinterpret_cast<const wchar_t *>(u16svSrc.GetBegin()), (DWORD)uInputSize);
 		if(!NT_SUCCESS(lStatus)){
-			DEBUG_THROW(SystemError, ::RtlNtStatusToDosError(lStatus), "RtlUnicodeToMultiByteN"_rcs);
+			DEBUG_THROW(SystemException, ::RtlNtStatusToDosError(lStatus), "RtlUnicodeToMultiByteN"_rcs);
 		}
 		strDst.Pop(uOutputSizeMax / sizeof(char) - ulConvertedSize / sizeof(char));
 	} catch(...){

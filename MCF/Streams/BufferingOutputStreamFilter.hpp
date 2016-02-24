@@ -31,7 +31,7 @@ public:
 
 	void Put(const void *pData, std::size_t uSize) override;
 
-	void Flush() const override;
+	void Flush(bool bHard) const override;
 
 	const UniquePtr<AbstractOutputStream> &GetUnderlyingStream() const noexcept {
 		return x_pUnderlyingStream;

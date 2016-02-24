@@ -32,7 +32,7 @@ Impl_UniqueNtHandle::UniqueNtHandle KernelSemaphore::X_CreateSemaphoreHandle(std
 		InitializeObjectAttributes(&vObjectAttributes, nullptr, 0, nullptr, nullptr);
 	} else {
 		if(uNameSize > USHRT_MAX){
-			DEBUG_THROW(SystemError, ERROR_INVALID_PARAMETER, "The name for a kernel object is too long"_rcs);
+			DEBUG_THROW(SystemException, ERROR_INVALID_PARAMETER, "The name for a kernel object is too long"_rcs);
 		}
 		::UNICODE_STRING ustrObjectName;
 		ustrObjectName.Length        = (USHORT)uNameSize;
@@ -55,12 +55,12 @@ Impl_UniqueNtHandle::UniqueNtHandle KernelSemaphore::X_CreateSemaphoreHandle(std
 	if(u32Flags & kDontCreate){
 		const auto lStatus = ::NtOpenSemaphore(&hTemp, SEMAPHORE_ALL_ACCESS, &vObjectAttributes);
 		if(!NT_SUCCESS(lStatus)){
-			DEBUG_THROW(SystemError, ::RtlNtStatusToDosError(lStatus), "NtOpenSemaphore"_rcs);
+			DEBUG_THROW(SystemException, ::RtlNtStatusToDosError(lStatus), "NtOpenSemaphore"_rcs);
 		}
 	} else {
 		const auto lStatus = ::NtCreateSemaphore(&hTemp, SEMAPHORE_ALL_ACCESS, &vObjectAttributes, static_cast<LONG>(uInitCount), LONG_MAX);
 		if(!NT_SUCCESS(lStatus)){
-			DEBUG_THROW(SystemError, ::RtlNtStatusToDosError(lStatus), "NtCreateSemaphore"_rcs);
+			DEBUG_THROW(SystemException, ::RtlNtStatusToDosError(lStatus), "NtCreateSemaphore"_rcs);
 		}
 	}
 	Impl_UniqueNtHandle::UniqueNtHandle hSemaphore(hTemp);

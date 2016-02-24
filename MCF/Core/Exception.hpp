@@ -45,17 +45,17 @@ public:
 	}
 };
 
-class SystemError : public Exception {
+class SystemException : public Exception {
 public:
-	SystemError(const char *pszFile, unsigned long ulLine, unsigned long ulErrorCode, RefCountingNtmbs rcsFunction) noexcept
+	SystemException(const char *pszFile, unsigned long ulLine, unsigned long ulErrorCode, RefCountingNtmbs rcsFunction) noexcept
 		: Exception(pszFile, ulLine, ulErrorCode, std::move(rcsFunction))
 	{
 	}
-	SystemError(const char *pszFile, unsigned long ulLine, RefCountingNtmbs rcsFunction) noexcept
-		: SystemError(pszFile, ulLine, ::MCFCRT_GetWin32LastError(), std::move(rcsFunction))
+	SystemException(const char *pszFile, unsigned long ulLine, RefCountingNtmbs rcsFunction) noexcept
+		: SystemException(pszFile, ulLine, ::MCFCRT_GetWin32LastError(), std::move(rcsFunction))
 	{
 	}
-	~SystemError() override;
+	~SystemException() override;
 };
 
 }

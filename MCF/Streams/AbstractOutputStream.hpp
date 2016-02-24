@@ -12,7 +12,7 @@ namespace MCF {
 class AbstractOutputStream {
 public:
 	constexpr AbstractOutputStream() noexcept = default;
-	virtual ~AbstractOutputStream();
+	virtual ~AbstractOutputStream() = 0;
 
 	AbstractOutputStream(AbstractOutputStream &&) noexcept = default;
 	AbstractOutputStream& operator=(AbstractOutputStream &&) noexcept = default;
@@ -22,7 +22,7 @@ public:
 
 	virtual void Put(const void *pData, std::size_t uSize) = 0;
 
-	virtual void Flush() const = 0;
+	virtual void Flush(bool bHard) const = 0;
 };
 
 }

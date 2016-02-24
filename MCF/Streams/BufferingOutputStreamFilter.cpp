@@ -38,9 +38,10 @@ void BufferingOutputStreamFilter::Put(const void *pData, std::size_t uSize){
 	FlushBuffer(*x_pUnderlyingStream, x_vBuffer, 4096);
 }
 
-void BufferingOutputStreamFilter::Flush() const {
+void BufferingOutputStreamFilter::Flush(bool bHard) const {
 	FlushBuffer(*x_pUnderlyingStream, x_vBuffer, 0);
-	x_pUnderlyingStream->Flush();
+
+	x_pUnderlyingStream->Flush(bHard);
 }
 
 }

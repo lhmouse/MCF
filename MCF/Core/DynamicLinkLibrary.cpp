@@ -30,7 +30,7 @@ DynamicLinkLibrary::DynamicLinkLibrary(const WideStringView &wsvPath)
 {
 	const auto uSize = wsvPath.GetSize() * sizeof(wchar_t);
 	if(uSize > USHRT_MAX){
-		DEBUG_THROW(SystemError, ERROR_INVALID_PARAMETER, "The path for a library is too long"_rcs);
+		DEBUG_THROW(SystemException, ERROR_INVALID_PARAMETER, "The path for a library is too long"_rcs);
 	}
 	::UNICODE_STRING ustrFileName;
 	ustrFileName.Length             = (USHORT)uSize;
@@ -40,7 +40,7 @@ DynamicLinkLibrary::DynamicLinkLibrary(const WideStringView &wsvPath)
 	HANDLE hDll;
 	const auto lStatus = ::LdrLoadDll(nullptr, 0, &ustrFileName, &hDll);
 	if(!NT_SUCCESS(lStatus)){
-		DEBUG_THROW(SystemError, ::RtlNtStatusToDosError(lStatus), "LdrLoadDll"_rcs);
+		DEBUG_THROW(SystemException, ::RtlNtStatusToDosError(lStatus), "LdrLoadDll"_rcs);
 	}
 	x_hDll.Reset(hDll);
 }
@@ -56,7 +56,7 @@ DynamicLinkLibrary::RawProc DynamicLinkLibrary::RawGetProcAddress(const NarrowSt
 
 	const auto uSize = nsvName.GetSize();
 	if(uSize > USHRT_MAX){
-		DEBUG_THROW(SystemError, ERROR_INVALID_PARAMETER, "The path for a library function is too long"_rcs);
+		DEBUG_THROW(SystemException, ERROR_INVALID_PARAMETER, "The path for a library function is too long"_rcs);
 	}
 	::ANSI_STRING strProcName;
 	strProcName.Length          = (USHORT)uSize;
@@ -66,14 +66,14 @@ DynamicLinkLibrary::RawProc DynamicLinkLibrary::RawGetProcAddress(const NarrowSt
 	::FARPROC pfnProcAddress;
 	const auto lStatus = ::LdrGetProcedureAddress(x_hDll.Get(), &strProcName, 0xFFFF, &pfnProcAddress);
 	if(!NT_SUCCESS(lStatus)){
-		DEBUG_THROW(SystemError, ::RtlNtStatusToDosError(lStatus), "LdrGetProcedureAddress"_rcs);
+		DEBUG_THROW(SystemException, ::RtlNtStatusToDosError(lStatus), "LdrGetProcedureAddress"_rcs);
 	}
 	return pfnProcAddress;
 }
 DynamicLinkLibrary::RawProc DynamicLinkLibrary::RawRequireProcAddress(const NarrowStringView &nsvName){
 	const auto pfnRet = RawGetProcAddress(nsvName);
 	if(!pfnRet){
-		DEBUG_THROW(SystemError, "RawGetProcAddress"_rcs);
+		DEBUG_THROW(SystemException, "RawGetProcAddress"_rcs);
 	}
 	return pfnRet;
 }
@@ -85,20 +85,20 @@ DynamicLinkLibrary::RawProc DynamicLinkLibrary::RawGetProcAddress(unsigned uOrid
 	}
 
 	if(uOridinal > UINT16_MAX){
-		DEBUG_THROW(SystemError, ERROR_INVALID_PARAMETER, "The oridinal for a library function is too large"_rcs);
+		DEBUG_THROW(SystemException, ERROR_INVALID_PARAMETER, "The oridinal for a library function is too large"_rcs);
 	}
 
 	::FARPROC pfnProcAddress;
 	const auto lStatus = ::LdrGetProcedureAddress(x_hDll.Get(), nullptr, (WORD)uOridinal, &pfnProcAddress);
 	if(!NT_SUCCESS(lStatus)){
-		DEBUG_THROW(SystemError, ::RtlNtStatusToDosError(lStatus), "LdrGetProcedureAddress"_rcs);
+		DEBUG_THROW(SystemException, ::RtlNtStatusToDosError(lStatus), "LdrGetProcedureAddress"_rcs);
 	}
 	return pfnProcAddress;
 }
 DynamicLinkLibrary::RawProc DynamicLinkLibrary::RawRequireProcAddress(unsigned uOridinal){
 	const auto pfnRet = RawGetProcAddress(uOridinal);
 	if(!pfnRet){
-		DEBUG_THROW(SystemError, "RawGetProcAddress"_rcs);
+		DEBUG_THROW(SystemException, "RawGetProcAddress"_rcs);
 	}
 	return pfnRet;
 }
@@ -113,7 +113,7 @@ bool DynamicLinkLibrary::OpenNoThrow(const WideStringView &wsvPath){
 	try {
 		Open(wsvPath);
 		return true;
-	} catch(SystemError &e){
+	} catch(SystemException &e){
 		::SetLastError(e.GetCode());
 		return false;
 	}

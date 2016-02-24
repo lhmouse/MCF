@@ -49,8 +49,8 @@ namespace {
 void StandardOutputStream::FlushAll(bool bHard){
 	const auto vLock = g_mtxListMutex.GetLock();
 
-	for(auto pThis = g_pFirst; pThis; pThis = pThis->x_pNext){
-		pThis->Flush(bHard);
+	for(auto pStream = g_pFirst; pStream; pStream = pStream->x_pNext){
+		pStream->StandardOutputStream::Flush(bHard);
 	}
 }
 

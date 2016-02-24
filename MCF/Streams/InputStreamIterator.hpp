@@ -5,7 +5,7 @@
 #ifndef MCF_STREAMS_INPUT_STREAM_ITERATOR_HPP_
 #define MCF_STREAMS_INPUT_STREAM_ITERATOR_HPP_
 
-#include "AbstractStreams.hpp"
+#include "AbstractInputStream.hpp"
 #include <iterator>
 
 namespace MCF {

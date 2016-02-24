@@ -364,7 +364,9 @@ namespace {
 		if(uBytesInChunk < 56){
 			std::memset(abyChunk + uBytesInChunk, 0, 56 - uBytesInChunk);
 		}
-		StoreLe(reinterpret_cast<std::uint64_t &>(abyChunk[56]), u64BytesTotal * 8);
+		std::uint64_t u64BitsTotal;
+		StoreLe(u64BitsTotal, u64BytesTotal * 8);
+		std::memcpy(abyChunk + 56, &u64BitsTotal, 8);
 		UpdateMd5(au32Reg, abyChunk);
 	}
 }

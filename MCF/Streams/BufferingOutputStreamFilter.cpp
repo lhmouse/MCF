@@ -26,7 +26,10 @@ namespace {
 }
 
 BufferingOutputStreamFilter::~BufferingOutputStreamFilter(){
-	FlushBuffer(*x_pUnderlyingStream, x_vBuffer, 0);
+	try {
+		FlushBuffer(*x_pUnderlyingStream, x_vBuffer, 0);
+	} catch(...){
+	}
 }
 
 void BufferingOutputStreamFilter::Put(unsigned char byData){

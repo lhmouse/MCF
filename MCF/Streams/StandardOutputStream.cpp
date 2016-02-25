@@ -95,7 +95,10 @@ StandardOutputStream::~StandardOutputStream(){
 		return;
 	}
 
-	FlushBuffer(x_hPipe, x_vBuffer, 0);
+	try {
+		FlushBuffer(x_hPipe, x_vBuffer, 0);
+	} catch(...){
+	}
 }
 
 void StandardOutputStream::Put(unsigned char byData){

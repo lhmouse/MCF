@@ -10,12 +10,12 @@ static volatile uint64_t g_u64RandSeed = 0;
 uint32_t MCFCRT_GetRandomUint32(){
 	uint64_t u64OldSeed, u64Seed;
 
-	u64OldSeed = __atomic_load_n(&g_u64RandSeed, __ATOMIC_CONSUME);
+	u64OldSeed = __atomic_load_n(&g_u64RandSeed, __ATOMIC_RELAXED);
 	do {
 		u64Seed = u64OldSeed ^ MCFCRT_ReadTimestampCounter64();
 		u64Seed *= 6364136223846793005ull;
 		u64Seed += 1442695040888963407ull;
-	} while(!__atomic_compare_exchange_n(&g_u64RandSeed, &u64OldSeed, u64Seed, false, __ATOMIC_ACQ_REL, __ATOMIC_CONSUME));
+	} while(!__atomic_compare_exchange_n(&g_u64RandSeed, &u64OldSeed, u64Seed, false, __ATOMIC_RELAXED, __ATOMIC_RELAXED));
 
 	return (uint32_t)(u64Seed >> 32);
 }

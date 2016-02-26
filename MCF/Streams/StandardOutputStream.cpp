@@ -133,15 +133,6 @@ namespace {
 	Pipe           g_vPipe  __attribute__((__init_priority__(101)));
 }
 
-void StandardOutputStream::FlushAll(bool bHard){
-	if(g_vPipe.IsNull()){
-		return;
-	}
-	const auto vLock = g_vMutex.GetLock();
-
-	g_vPipe.Flush(bHard);
-}
-
 StandardOutputStream::~StandardOutputStream(){
 }
 

@@ -55,7 +55,7 @@ namespace {
 				}
 
 				if(!bStandardOutputStreamsFlushed){
-					StandardOutputStream::FlushAll(false);
+					StandardOutputStream().Flush(false);
 					bStandardOutputStreamsFlushed = true;
 				}
 

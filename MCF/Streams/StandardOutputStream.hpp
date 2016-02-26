@@ -11,9 +11,6 @@ namespace MCF {
 
 class StandardOutputStream : public AbstractOutputStream {
 public:
-	static void FlushAll(bool bHard);
-
-public:
 	constexpr StandardOutputStream() noexcept = default;
 	~StandardOutputStream() override;
 

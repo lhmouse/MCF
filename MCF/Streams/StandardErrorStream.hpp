@@ -11,13 +11,7 @@ namespace MCF {
 
 class StandardErrorStream : public AbstractOutputStream {
 public:
-	using Handle = void *;
-
-private:
-	Handle x_hPipe;
-
-public:
-	StandardErrorStream();
+	constexpr StandardErrorStream() noexcept = default;
 	~StandardErrorStream() override;
 
 	StandardErrorStream(StandardErrorStream &&) noexcept = default;
@@ -30,13 +24,8 @@ public:
 
 	void Flush(bool bHard) const override;
 
-	Handle GetHandle() const noexcept {
-		return x_hPipe;
-	}
-
-	void Swap(StandardErrorStream &rhs) noexcept {
+	void Swap(StandardErrorStream & /* rhs */) noexcept {
 		using std::swap;
-		swap(x_hPipe,   rhs.x_hPipe);
 	}
 
 	friend void swap(StandardErrorStream &lhs, StandardErrorStream &rhs) noexcept {

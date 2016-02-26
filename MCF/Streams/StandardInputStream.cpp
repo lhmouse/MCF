@@ -4,112 +4,162 @@
 
 #include "../StdMCF.hpp"
 #include "StandardInputStream.hpp"
-#include "StandardOutputStream.hpp"
+#include "../Utilities/Bail.hpp"
+#include "../Utilities/MinMax.hpp"
+#include "../Thread/RecursiveMutex.hpp"
 #include "../Core/Exception.hpp"
+#include "../Core/StreamBuffer.hpp"
+#include "StandardOutputStream.hpp"
 
 namespace MCF {
 
 namespace {
-	HANDLE GetStdInputHandle(){
-		const auto hPipe = ::GetStdHandle(STD_INPUT_HANDLE);
-		if(hPipe == INVALID_HANDLE_VALUE){
-			const auto dwLastError = ::GetLastError();
-			DEBUG_THROW(SystemException, dwLastError, "GetStdHandle"_rcs);
+	class Pipe {
+	private:
+		const HANDLE x_hPipe;
+
+		mutable StreamBuffer x_vBuffer;
+		mutable unsigned char x_abyBackBuffer[4096];
+		mutable std::size_t x_uBackBufferSize;
+
+	public:
+		Pipe()
+			: x_hPipe(
+				[]{
+					const auto hPipe = ::GetStdHandle(STD_INPUT_HANDLE);
+					if(hPipe == INVALID_HANDLE_VALUE){
+						const auto dwLastError = ::GetLastError();
+						BailF(L"无法获取标准输入流的句柄。\n\n错误码：%lu", (unsigned long)dwLastError);
+					}
+					return hPipe;
+				}())
+			, x_uBackBufferSize(0)
+		{
 		}
-		return hPipe;
-	}
+		~Pipe(){
+		}
 
-	void PopulateBuffer(StreamBuffer &vBuffer, Vector<unsigned char> &vecBackBuffer, HANDLE hPipe){
-		bool bStandardOutputStreamsFlushed = false;
+		Pipe(const Pipe &) = delete;
 
-		for(;;){
-			if(!vecBackBuffer.IsEmpty()){
-				vBuffer.Put(vecBackBuffer.GetData(), vecBackBuffer.GetSize());
-				vecBackBuffer.Clear();
-			}
-			if(!vBuffer.IsEmpty()){
-				break;
-			}
+	private:
+		void X_PopulateBuffer() const {
+			bool bStandardOutputStreamsFlushed = false;
 
-			if(!bStandardOutputStreamsFlushed){
-				StandardOutputStream::FlushAll(false);
-				bStandardOutputStreamsFlushed = true;
-			}
+			for(;;){
+				if(x_uBackBufferSize != 0){
+					x_vBuffer.Put(x_abyBackBuffer, x_uBackBufferSize);
+					x_uBackBufferSize = 0;
+				}
+				if(!x_vBuffer.IsEmpty()){
+					break;
+				}
 
-			vecBackBuffer.Resize(4096);
-			try {
+				if(!bStandardOutputStreamsFlushed){
+					StandardOutputStream::FlushAll(false);
+					bStandardOutputStreamsFlushed = true;
+				}
+
 				DWORD dwBytesRead;
-				if(!::ReadFile(hPipe, vecBackBuffer.GetData(), vecBackBuffer.GetSize(), &dwBytesRead, nullptr)){
+				if(!::ReadFile(x_hPipe, x_abyBackBuffer, sizeof(x_abyBackBuffer), &dwBytesRead, nullptr)){
 					const auto dwLastError = ::GetLastError();
 					DEBUG_THROW(SystemException, dwLastError, "ReadFile"_rcs);
 				}
-				vecBackBuffer.Pop(vecBackBuffer.GetSize() - dwBytesRead);
-			} catch(...){
-				vecBackBuffer.Clear();
-				throw;
-			}
-			if(vecBackBuffer.IsEmpty()){
-				break;
+				if(dwBytesRead == 0){
+					break;
+				}
+				x_uBackBufferSize = dwBytesRead;
 			}
 		}
-	}
+
+	public:
+		bool IsNull() const noexcept {
+			return !x_hPipe;
+		}
+
+		int Peek() const {
+			X_PopulateBuffer();
+			return x_vBuffer.Peek();
+		}
+		int Get(){
+			X_PopulateBuffer();
+			return x_vBuffer.Get();
+		}
+		bool Discard(){
+			X_PopulateBuffer();
+			return x_vBuffer.Discard();
+		}
+
+		std::size_t Peek(void *pData, std::size_t uSize) const {
+			X_PopulateBuffer();
+			return x_vBuffer.Peek(pData, uSize);
+		}
+		std::size_t Get(void *pData, std::size_t uSize){
+			X_PopulateBuffer();
+			return x_vBuffer.Get(pData, uSize);
+		}
+		std::size_t Discard(std::size_t uSize){
+			X_PopulateBuffer();
+			return x_vBuffer.Discard(uSize);
+		}
+	};
+
+	static_assert(std::is_trivially_destructible<RecursiveMutex>::value, "Please fix this!");
+
+	RecursiveMutex g_vMutex __attribute__((__init_priority__(101)));
+	Pipe           g_vPipe  __attribute__((__init_priority__(101)));
 }
 
-StandardInputStream::StandardInputStream()
-	: x_hPipe(GetStdInputHandle())
-{
-}
 StandardInputStream::~StandardInputStream(){
 }
 
 int StandardInputStream::Peek() const {
-	if(!x_hPipe){
+	if(g_vPipe.IsNull()){
 		return -1;
 	}
+	const auto vLock = g_vMutex.GetLock();
 
-	PopulateBuffer(x_vBuffer, x_vecBackBuffer, x_hPipe);
-	return x_vBuffer.Peek();
+	return g_vPipe.Peek();
 }
 int StandardInputStream::Get(){
-	if(!x_hPipe){
+	if(g_vPipe.IsNull()){
 		return -1;
 	}
+	const auto vLock = g_vMutex.GetLock();
 
-	PopulateBuffer(x_vBuffer, x_vecBackBuffer, x_hPipe);
-	return x_vBuffer.Get();
+	return g_vPipe.Get();
 }
 bool StandardInputStream::Discard(){
-	if(!x_hPipe){
+	if(g_vPipe.IsNull()){
 		return false;
 	}
+	const auto vLock = g_vMutex.GetLock();
 
-	PopulateBuffer(x_vBuffer, x_vecBackBuffer, x_hPipe);
-	return x_vBuffer.Discard();
+	return g_vPipe.Discard();
 }
 
 std::size_t StandardInputStream::Peek(void *pData, std::size_t uSize) const {
-	if(!x_hPipe){
+	if(g_vPipe.IsNull()){
 		return 0;
 	}
+	const auto vLock = g_vMutex.GetLock();
 
-	PopulateBuffer(x_vBuffer, x_vecBackBuffer, x_hPipe);
-	return x_vBuffer.Get(pData, uSize);
+	return g_vPipe.Peek(pData, uSize);
 }
 std::size_t StandardInputStream::Get(void *pData, std::size_t uSize){
-	if(!x_hPipe){
+	if(g_vPipe.IsNull()){
 		return 0;
 	}
+	const auto vLock = g_vMutex.GetLock();
 
-	PopulateBuffer(x_vBuffer, x_vecBackBuffer, x_hPipe);
-	return x_vBuffer.Peek(pData, uSize);
+	return g_vPipe.Get(pData, uSize);
 }
 std::size_t StandardInputStream::Discard(std::size_t uSize){
-	if(!x_hPipe){
+	if(g_vPipe.IsNull()){
 		return 0;
 	}
+	const auto vLock = g_vMutex.GetLock();
 
-	PopulateBuffer(x_vBuffer, x_vecBackBuffer, x_hPipe);
-	return x_vBuffer.Discard(uSize);
+	return g_vPipe.Discard(uSize);
 }
 
 }

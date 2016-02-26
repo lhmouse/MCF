@@ -6,7 +6,6 @@
 #define MCF_STREAMS_STANDARD_OUTPUT_STREAM_HPP_
 
 #include "AbstractOutputStream.hpp"
-#include "../Core/StreamBuffer.hpp"
 
 namespace MCF {
 
@@ -15,18 +14,7 @@ public:
 	static void FlushAll(bool bHard);
 
 public:
-	using Handle = void *;
-
-private:
-	StandardOutputStream *x_pPrev;
-	StandardOutputStream *x_pNext;
-
-	Handle x_hPipe;
-
-	mutable StreamBuffer x_vBuffer;
-
-public:
-	StandardOutputStream();
+	constexpr StandardOutputStream() noexcept = default;
 	~StandardOutputStream() override;
 
 	StandardOutputStream(StandardOutputStream &&) noexcept = default;
@@ -39,14 +27,8 @@ public:
 
 	void Flush(bool bHard) const override;
 
-	Handle GetHandle() const noexcept {
-		return x_hPipe;
-	}
-
-	void Swap(StandardOutputStream &rhs) noexcept {
+	void Swap(StandardOutputStream & /* rhs */) noexcept {
 		using std::swap;
-		swap(x_hPipe,   rhs.x_hPipe);
-		swap(x_vBuffer, rhs.x_vBuffer);
 	}
 
 	friend void swap(StandardOutputStream &lhs, StandardOutputStream &rhs) noexcept {

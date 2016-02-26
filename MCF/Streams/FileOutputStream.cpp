@@ -5,40 +5,55 @@
 #include "../StdMCF.hpp"
 #include "FileOutputStream.hpp"
 #include "../Core/Exception.hpp"
+#include "../Utilities/MinMax.hpp"
 
 namespace MCF {
+
+namespace {
+	std::size_t WriteAux(File &vFile, std::uint64_t u64Offset, const void *pData, std::size_t uSize){
+		const auto pbyData = static_cast<const unsigned char *>(pData);
+		std::size_t uBytesTotal = 0;
+		for(;;){
+			auto uBytesToWrite = Min(uSize - uBytesTotal, UINT32_MAX);
+			if(uBytesToWrite == 0){
+				break;
+			}
+			const auto uBytesWritten = vFile.Write(u64Offset + uBytesTotal, pbyData + uBytesTotal, uBytesToWrite);
+			if(uBytesWritten == 0){
+				break;
+			}
+			uBytesTotal += uBytesWritten;
+		}
+		return uBytesTotal;
+	}
+	void FlushAux(const File &vFile, bool bHard){
+		if(bHard){
+			vFile.HardFlush();
+		}
+	}
+}
 
 FileOutputStream::~FileOutputStream(){
 }
 
 void FileOutputStream::Put(unsigned char byData){
-	Put(&byData, 1);
+	const auto uBytesWritten = WriteAux(x_vFile, x_u64Offset, &byData, 1);
+	if(uBytesWritten < 1){
+		DEBUG_THROW(Exception, ERROR_BROKEN_PIPE, "FileOutputStream: Partial contents written"_rcs);
+	}
+	x_u64Offset += 1;
 }
 
 void FileOutputStream::Put(const void *pData, std::size_t uSize){
-	const auto pbyData = static_cast<const unsigned char *>(pData);
-	std::size_t uBytesTotal = 0;
-	for(;;){
-		auto uBytesToWrite = uSize - uBytesTotal;
-		if(uBytesToWrite == 0){
-			break;
-		}
-		if(uBytesToWrite > UINT32_MAX){
-			uBytesToWrite = UINT32_MAX;
-		}
-		const auto uBytesWritten = x_vFile.Write(x_u64Offset + uBytesTotal, pbyData + uBytesTotal, uBytesToWrite);
-		if(uBytesWritten == 0){
-			DEBUG_THROW(Exception, ERROR_BROKEN_PIPE, "FileOutputStream: Partial contents written"_rcs);
-		}
-		uBytesTotal += uBytesWritten;
+	const auto uBytesWritten = WriteAux(x_vFile, x_u64Offset, pData, uSize);
+	if(uBytesWritten < uSize){
+		DEBUG_THROW(Exception, ERROR_BROKEN_PIPE, "FileOutputStream: Partial contents written"_rcs);
 	}
-	x_u64Offset += uBytesTotal;
+	x_u64Offset += uBytesWritten;
 }
 
 void FileOutputStream::Flush(bool bHard) const {
-	if(bHard){
-		x_vFile.HardFlush();
-	}
+	FlushAux(x_vFile, bHard);
 }
 
 }

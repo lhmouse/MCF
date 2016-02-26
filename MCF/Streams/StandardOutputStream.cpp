@@ -4,136 +4,140 @@
 
 #include "../StdMCF.hpp"
 #include "StandardOutputStream.hpp"
+#include "../Utilities/Bail.hpp"
+#include "../Utilities/MinMax.hpp"
 #include "../Core/Exception.hpp"
 #include "../Thread/RecursiveMutex.hpp"
+#include "../Core/StreamBuffer.hpp"
 
 namespace MCF {
 
 namespace {
+	class Pipe {
+	private:
+		const HANDLE x_hPipe;
+
+		mutable StreamBuffer x_vBuffer;
+		mutable unsigned char x_abyBackBuffer[4096];
+
+	public:
+		Pipe()
+			: x_hPipe(
+				[]{
+					const auto hPipe = ::GetStdHandle(STD_OUTPUT_HANDLE);
+					if(hPipe == INVALID_HANDLE_VALUE){
+						const auto dwLastError = ::GetLastError();
+						BailF(L"无法获取标准输出流的句柄。\n\n错误码：%lu", (unsigned long)dwLastError);
+					}
+					return hPipe;
+				}())
+		{
+		}
+		~Pipe(){
+			try {
+				Flush(false);
+			} catch(...){
+			}
+		}
+
+		Pipe(const Pipe &) = delete;
+
+	private:
+		void X_FlushBuffer(std::size_t uThreshold){
+			for(;;){
+				if(x_vBuffer.GetSize() < uThreshold){
+					break;
+				}
+
+				auto uBytesToWrite = x_vBuffer.Peek(x_abyBackBuffer, sizeof(x_abyBackBuffer));
+				if(uBytesToWrite == 0){
+					break;
+				}
+				DWORD dwBytesWritten;
+				if(!::WriteFile(x_hPipe, x_abyBackBuffer, uBytesToWrite, &dwBytesWritten, nullptr)){
+					const auto dwLastError = ::GetLastError();
+					DEBUG_THROW(SystemException, dwLastError, "WriteFile"_rcs);
+				}
+				if(dwBytesWritten == 0){
+					break;
+				}
+				x_vBuffer.Discard(dwBytesWritten);
+			}
+		}
+
+	public:
+		bool IsNull() const noexcept {
+			return !x_hPipe;
+		}
+
+		std::size_t Write(const void *pData, std::size_t uSize){
+			x_vBuffer.Put(pData, uSize);
+			X_FlushBuffer(4096);
+			return uSize;
+		}
+		void Flush(bool bHard){
+			X_FlushBuffer(0);
+
+			if(bHard){
+				if(!::FlushFileBuffers(x_hPipe)){
+					const auto dwLastError = ::GetLastError();
+					if((dwLastError != ERROR_INVALID_FUNCTION) && (dwLastError != ERROR_INVALID_HANDLE)){
+						DEBUG_THROW(SystemException, dwLastError, "FlushFileBuffers"_rcs);
+					}
+				}
+			}
+		}
+	};
+
 	static_assert(std::is_trivially_destructible<RecursiveMutex>::value, "Please fix this!");
 
-	RecursiveMutex         g_mtxListMutex;
-	StandardOutputStream * g_pFirst;
-	StandardOutputStream * g_pLast;
-
-	HANDLE GetStdOutputHandle(){
-		const auto hPipe = ::GetStdHandle(STD_OUTPUT_HANDLE);
-		if(hPipe == INVALID_HANDLE_VALUE){
-			const auto dwLastError = ::GetLastError();
-			DEBUG_THROW(SystemException, dwLastError, "GetStdHandle"_rcs);
-		}
-		return hPipe;
-	}
-
-	void FlushBuffer(HANDLE hPipe, StreamBuffer &vBuffer, std::size_t uThreshold){
-		for(;;){
-			if(vBuffer.GetSize() < uThreshold){
-				break;
-			}
-
-			unsigned char abyTemp[4096];
-			const auto uBytesToWrite = vBuffer.Peek(abyTemp, sizeof(abyTemp));
-			if(uBytesToWrite == 0){
-				break;
-			}
-			DWORD dwBytesWritten;
-			if(!::WriteFile(hPipe, abyTemp, static_cast<DWORD>(uBytesToWrite), &dwBytesWritten, nullptr)){
-				const auto dwLastError = ::GetLastError();
-				DEBUG_THROW(SystemException, dwLastError, "WriteFile"_rcs);
-			}
-			vBuffer.Discard(dwBytesWritten);
-		}
-	}
+	RecursiveMutex g_vMutex __attribute__((__init_priority__(101)));
+	Pipe           g_vPipe  __attribute__((__init_priority__(101)));
 }
 
 void StandardOutputStream::FlushAll(bool bHard){
-	const auto vLock = g_mtxListMutex.GetLock();
-
-	for(auto pStream = g_pFirst; pStream; pStream = pStream->x_pNext){
-		pStream->StandardOutputStream::Flush(bHard);
-	}
-}
-
-StandardOutputStream::StandardOutputStream()
-	: x_hPipe(GetStdOutputHandle())
-{
-	{
-		const auto vLock = g_mtxListMutex.GetLock();
-
-		x_pPrev = g_pLast;
-		x_pNext = nullptr;
-
-		if(x_pPrev){
-			x_pPrev->x_pNext = this;
-		} else {
-			g_pFirst = this;
-		}
-//		if(x_pNext){
-//			x_pNext->x_pPrev = this;
-//		} else {
-			g_pLast = this;
-//		}
-	}
-}
-StandardOutputStream::~StandardOutputStream(){
-	{
-		const auto vLock = g_mtxListMutex.GetLock();
-
-		if(x_pPrev){
-			x_pPrev->x_pNext = x_pNext;
-		} else {
-			g_pFirst = x_pNext;
-		}
-		if(x_pNext){
-			x_pNext->x_pPrev = x_pPrev;
-		} else {
-			g_pLast = x_pPrev;
-		}
-	}
-
-	if(!x_hPipe){
+	if(g_vPipe.IsNull()){
 		return;
 	}
+	const auto vLock = g_vMutex.GetLock();
 
-	try {
-		FlushBuffer(x_hPipe, x_vBuffer, 0);
-	} catch(...){
-	}
+	g_vPipe.Flush(bHard);
+}
+
+StandardOutputStream::~StandardOutputStream(){
 }
 
 void StandardOutputStream::Put(unsigned char byData){
-	if(!x_hPipe){
+	if(g_vPipe.IsNull()){
 		return;
 	}
+	const auto vLock = g_vMutex.GetLock();
 
-	x_vBuffer.Put(byData);
-	FlushBuffer(x_hPipe, x_vBuffer, 4096);
+	const auto uBytesWritten = g_vPipe.Write(&byData, 1);
+	if(uBytesWritten < 1){
+		DEBUG_THROW(Exception, ERROR_BROKEN_PIPE, "StandardOutputStream: Partial contents written"_rcs);
+	}
 }
 
 void StandardOutputStream::Put(const void *pData, std::size_t uSize){
-	if(!x_hPipe){
+	if(g_vPipe.IsNull()){
 		return;
 	}
+	const auto vLock = g_vMutex.GetLock();
 
-	x_vBuffer.Put(pData, uSize);
-	FlushBuffer(x_hPipe, x_vBuffer, 4096);
+	const auto uBytesWritten = g_vPipe.Write(pData, uSize);
+	if(uBytesWritten < uSize){
+		DEBUG_THROW(Exception, ERROR_BROKEN_PIPE, "StandardOutputStream: Partial contents written"_rcs);
+	}
 }
 
 void StandardOutputStream::Flush(bool bHard) const {
-	if(!x_hPipe){
+	if(g_vPipe.IsNull()){
 		return;
 	}
+	const auto vLock = g_vMutex.GetLock();
 
-	FlushBuffer(x_hPipe, x_vBuffer, 0);
-
-	if(bHard){
-		if(!::FlushFileBuffers(x_hPipe)){
-			const auto dwLastError = ::GetLastError();
-			if((dwLastError != ERROR_INVALID_FUNCTION) && (dwLastError != ERROR_INVALID_HANDLE)){
-				DEBUG_THROW(SystemException, dwLastError, "FlushFileBuffers"_rcs);
-			}
-		}
-	}
+	g_vPipe.Flush(bHard);
 }
 
 }

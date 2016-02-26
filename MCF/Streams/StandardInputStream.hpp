@@ -6,23 +6,12 @@
 #define MCF_STREAMS_STANDARD_INPUT_STREAM_HPP_
 
 #include "AbstractInputStream.hpp"
-#include "../Core/StreamBuffer.hpp"
-#include "../Containers/Vector.hpp"
 
 namespace MCF {
 
 class StandardInputStream : public AbstractInputStream {
 public:
-	using Handle = void *;
-
-private:
-	Handle x_hPipe;
-
-	mutable StreamBuffer x_vBuffer;
-	mutable Vector<unsigned char> x_vecBackBuffer;
-
-public:
-	StandardInputStream();
+	constexpr StandardInputStream() noexcept = default;
 	~StandardInputStream() override;
 
 	StandardInputStream(StandardInputStream &&) noexcept = default;
@@ -37,15 +26,8 @@ public:
 	std::size_t Get(void *pData, std::size_t uSize) override;
 	std::size_t Discard(std::size_t uSize) override;
 
-	Handle GetHandle() const noexcept {
-		return x_hPipe;
-	}
-
-	void Swap(StandardInputStream &rhs) noexcept {
+	void Swap(StandardInputStream & /* rhs */) noexcept {
 		using std::swap;
-		swap(x_hPipe,         rhs.x_hPipe);
-		swap(x_vBuffer,       rhs.x_vBuffer);
-		swap(x_vecBackBuffer, rhs.x_vecBackBuffer);
 	}
 
 	friend void swap(StandardInputStream &lhs, StandardInputStream &rhs) noexcept {

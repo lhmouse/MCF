@@ -18,15 +18,17 @@ namespace {
 				break;
 			}
 
+			std::size_t uBytesRead;
 			vecBackBuffer.Resize(4096);
 			try {
-				auto uBytesRead = vStream.Peek(vecBackBuffer.GetData(), vecBackBuffer.GetSize());
+				uBytesRead = vStream.Peek(vecBackBuffer.GetData(), vecBackBuffer.GetSize());
 				vecBackBuffer.Pop(vecBackBuffer.GetSize() - uBytesRead);
 			} catch(...){
 				vecBackBuffer.Clear();
 				throw;
 			}
-			if(vecBackBuffer.IsEmpty()){
+
+			if(uBytesRead == 0){
 				break;
 			}
 		}

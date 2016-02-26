@@ -30,10 +30,6 @@ namespace {
 		{
 		}
 		~Pipe(){
-			try {
-				Flush(false);
-			} catch(...){
-			}
 		}
 
 		Pipe(const Pipe &) = delete;

@@ -26,6 +26,9 @@ public:
 	std::size_t Get(void *pData, std::size_t uSize) override;
 	std::size_t Discard(std::size_t uSize) override;
 
+	bool IsEchoing() const noexcept;
+	void SetEchoing(bool bEchoing);
+
 	void Swap(StandardInputStream & /* rhs */) noexcept {
 		using std::swap;
 	}

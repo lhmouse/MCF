@@ -17,6 +17,7 @@ namespace {
 	private:
 		const HANDLE x_hPipe;
 
+		bool x_bBuffered = true;
 		mutable StreamBuffer x_vBuffer;
 		mutable unsigned char x_abyBackBuffer[4096];
 
@@ -48,11 +49,11 @@ namespace {
 				if(x_vBuffer.GetSize() < uThreshold){
 					break;
 				}
-
 				auto uBytesToWrite = x_vBuffer.Peek(x_abyBackBuffer, sizeof(x_abyBackBuffer));
 				if(uBytesToWrite == 0){
 					break;
 				}
+
 				DWORD dwBytesWritten;
 				if(!::WriteFile(x_hPipe, x_abyBackBuffer, uBytesToWrite, &dwBytesWritten, nullptr)){
 					const auto dwLastError = ::GetLastError();
@@ -65,16 +66,53 @@ namespace {
 			}
 		}
 
+		std::size_t X_UnbufferedWrite(const void *pData, std::size_t uSize){
+			const auto pbyData = static_cast<const unsigned char *>(pData);
+			std::size_t uBytesTotal = 0;
+			for(;;){
+				auto uBytesToWrite = Min(uSize - uBytesTotal, UINT32_MAX);
+				if(uBytesToWrite == 0){
+					break;
+				}
+
+				DWORD dwBytesWritten;
+				if(!::WriteFile(x_hPipe, pbyData + uBytesTotal, uBytesToWrite, &dwBytesWritten, nullptr)){
+					const auto dwLastError = ::GetLastError();
+					DEBUG_THROW(SystemException, dwLastError, "WriteFile"_rcs);
+				}
+				if(dwBytesWritten == 0){
+					break;
+				}
+				uBytesTotal += dwBytesWritten;
+			}
+			return uBytesTotal;
+		}
+
 	public:
 		bool IsNull() const noexcept {
 			return !x_hPipe;
 		}
 
+		bool IsBuffered() const noexcept {
+			return x_bBuffered;
+		}
+		void SetBuffered(bool bBuffered){
+			if(!bBuffered){
+				X_FlushBuffer(0);
+			}
+			x_bBuffered = bBuffered;
+		}
+
 		std::size_t Write(const void *pData, std::size_t uSize){
-			x_vBuffer.Put(pData, uSize);
-			X_FlushBuffer(4096);
+			if(x_bBuffered){
+				x_vBuffer.Put(pData, uSize);
+				X_FlushBuffer(4096);
+			} else {
+				X_UnbufferedWrite(pData, uSize);
+			}
 			return uSize;
 		}
+
 		void Flush(bool bHard){
 			X_FlushBuffer(0);
 
@@ -138,6 +176,23 @@ void StandardOutputStream::Flush(bool bHard) const {
 	const auto vLock = g_vMutex.GetLock();
 
 	g_vPipe.Flush(bHard);
+}
+
+bool StandardOutputStream::IsBuffered() const noexcept {
+	if(g_vPipe.IsNull()){
+		return false;
+	}
+	const auto vLock = g_vMutex.GetLock();
+
+	return g_vPipe.IsBuffered();
+}
+void StandardOutputStream::SetBuffered(bool bBuffered){
+	if(g_vPipe.IsNull()){
+		return;
+	}
+	const auto vLock = g_vMutex.GetLock();
+
+	g_vPipe.SetBuffered(bBuffered);
 }
 
 }

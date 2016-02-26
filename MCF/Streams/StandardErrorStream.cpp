@@ -8,6 +8,7 @@
 #include "../Utilities/MinMax.hpp"
 #include "../Core/Exception.hpp"
 #include "../Thread/RecursiveMutex.hpp"
+#include "StandardOutputStream.hpp"
 
 namespace MCF {
 
@@ -34,12 +35,10 @@ namespace {
 
 		Pipe(const Pipe &) = delete;
 
-	public:
-		bool IsNull() const noexcept {
-			return !x_hPipe;
-		}
+	private:
+		std::size_t X_UnbufferedWrite(const void *pData, std::size_t uSize){
+			bool bStandardOutputStreamsFlushed = false;
 
-		std::size_t Write(const void *pData, std::size_t uSize){
 			const auto pbyData = static_cast<const unsigned char *>(pData);
 			std::size_t uBytesTotal = 0;
 			for(;;){
@@ -47,6 +46,12 @@ namespace {
 				if(uBytesToWrite == 0){
 					break;
 				}
+
+				if(!bStandardOutputStreamsFlushed){
+					StandardOutputStream::FlushAll(false);
+					bStandardOutputStreamsFlushed = true;
+				}
+
 				DWORD dwBytesWritten;
 				if(!::WriteFile(x_hPipe, pbyData + uBytesTotal, uBytesToWrite, &dwBytesWritten, nullptr)){
 					const auto dwLastError = ::GetLastError();
@@ -59,6 +64,16 @@ namespace {
 			}
 			return uBytesTotal;
 		}
+
+	public:
+		bool IsNull() const noexcept {
+			return !x_hPipe;
+		}
+
+		std::size_t Write(const void *pData, std::size_t uSize){
+			return X_UnbufferedWrite(pData, uSize);
+		}
+
 		void Flush(bool bHard){
 			if(bHard){
 				if(!::FlushFileBuffers(x_hPipe)){

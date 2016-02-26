@@ -27,6 +27,9 @@ public:
 
 	void Flush(bool bHard) const override;
 
+	bool IsBuffered() const noexcept;
+	void SetBuffered(bool bBuffered);
+
 	void Swap(StandardOutputStream & /* rhs */) noexcept {
 		using std::swap;
 	}

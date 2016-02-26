@@ -18,9 +18,10 @@ namespace {
 	private:
 		const HANDLE x_hPipe;
 
+		bool x_bEchoing = true;
 		mutable StreamBuffer x_vBuffer;
 		mutable unsigned char x_abyBackBuffer[4096];
-		mutable std::size_t x_uBackBufferSize;
+		mutable std::size_t x_uBackBufferSize = 0;
 
 	public:
 		Pipe()
@@ -33,7 +34,6 @@ namespace {
 					}
 					return hPipe;
 				}())
-			, x_uBackBufferSize(0)
 		{
 		}
 		~Pipe(){
@@ -101,6 +101,26 @@ namespace {
 			X_PopulateBuffer();
 			return x_vBuffer.Discard(uSize);
 		}
+
+		bool IsEchoing() const noexcept {
+			return x_bEchoing;
+		}
+		void SetEchoing(bool bEchoing){
+			DWORD dwConsoleMode;
+			if(::GetConsoleMode(x_hPipe, &dwConsoleMode)){
+				constexpr DWORD kEchoingMask = ENABLE_ECHO_INPUT | ENABLE_LINE_INPUT;
+				if(bEchoing){
+					dwConsoleMode |=  kEchoingMask;
+				} else {
+					dwConsoleMode &= ~kEchoingMask;
+				}
+				if(!::SetConsoleMode(x_hPipe, dwConsoleMode)){
+					const auto dwLastError = ::GetLastError();
+					DEBUG_THROW(SystemException, dwLastError, "SetConsoleMode"_rcs);
+				}
+			}
+			x_bEchoing = bEchoing;
+		}
 	};
 
 	static_assert(std::is_trivially_destructible<RecursiveMutex>::value, "Please fix this!");
@@ -160,6 +180,23 @@ std::size_t StandardInputStream::Discard(std::size_t uSize){
 	const auto vLock = g_vMutex.GetLock();
 
 	return g_vPipe.Discard(uSize);
+}
+
+bool StandardInputStream::IsEchoing() const noexcept {
+	if(g_vPipe.IsNull()){
+		return false;
+	}
+	const auto vLock = g_vMutex.GetLock();
+
+	return g_vPipe.IsEchoing();
+}
+void StandardInputStream::SetEchoing(bool bEchoing){
+	if(g_vPipe.IsNull()){
+		return;
+	}
+	const auto vLock = g_vMutex.GetLock();
+
+	g_vPipe.SetEchoing(bEchoing);
 }
 
 }

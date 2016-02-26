@@ -35,7 +35,7 @@ namespace {
 		}
 		~Pipe(){
 			try {
-				Flush(false);
+				X_FlushBuffer(0);
 			} catch(...){
 			}
 		}

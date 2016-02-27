@@ -973,7 +973,7 @@ void Sha256OutputStream::Put(const void *pData, std::size_t uSize){
 	x_u64BytesTotal += uSize;
 }
 
-void Sha256OutputStream::Flush(bool /* bHard */) const {
+void Sha256OutputStream::Flush(bool /* bHard */){
 }
 
 void Sha256OutputStream::Reset() noexcept {

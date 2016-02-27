@@ -9,7 +9,7 @@
 namespace MCF {
 
 namespace {
-	std::size_t ReadAux(const File &vFile, void *pData, std::size_t uSize, std::uint64_t u64Offset){
+	std::size_t RealRead(const File &vFile, void *pData, std::size_t uSize, std::uint64_t u64Offset){
 		const auto pbyData = static_cast<unsigned char *>(pData);
 		std::size_t uBytesTotal = 0;
 		for(;;){
@@ -25,7 +25,7 @@ namespace {
 		}
 		return uBytesTotal;
 	}
-	std::size_t DiscardAux(const File &vFile, std::size_t uSize, std::uint64_t u64Offset){
+	std::size_t RealDiscard(const File &vFile, std::size_t uSize, std::uint64_t u64Offset){
 		std::size_t uBytesTotal = 0;
 		const auto u64FileSize = vFile.GetSize();
 		if(u64Offset < u64FileSize){
@@ -41,7 +41,7 @@ FileInputStream::~FileInputStream(){
 int FileInputStream::Peek() const {
 	int nRet = -1;
 	unsigned char byData;
-	const auto uBytesRead = ReadAux(x_vFile, &byData, 1, x_u64Offset);
+	const auto uBytesRead = RealRead(x_vFile, &byData, 1, x_u64Offset);
 	if(uBytesRead >= 1){
 		nRet = byData;
 	}
@@ -50,7 +50,7 @@ int FileInputStream::Peek() const {
 int FileInputStream::Get(){
 	int nRet = -1;
 	unsigned char byData;
-	const auto uBytesRead = ReadAux(x_vFile, &byData, 1, x_u64Offset);
+	const auto uBytesRead = RealRead(x_vFile, &byData, 1, x_u64Offset);
 	if(uBytesRead >= 1){
 		nRet = byData;
 	}
@@ -58,22 +58,22 @@ int FileInputStream::Get(){
 	return nRet;
 }
 bool FileInputStream::Discard(){
-	const auto uBytesDiscarded = DiscardAux(x_vFile, 1, x_u64Offset);
+	const auto uBytesDiscarded = RealDiscard(x_vFile, 1, x_u64Offset);
 	x_u64Offset += uBytesDiscarded;
 	return uBytesDiscarded >= 1;
 }
 
 std::size_t FileInputStream::Peek(void *pData, std::size_t uSize) const {
-	const auto uBytesRead = ReadAux(x_vFile, pData, uSize, x_u64Offset);
+	const auto uBytesRead = RealRead(x_vFile, pData, uSize, x_u64Offset);
 	return uBytesRead;
 }
 std::size_t FileInputStream::Get(void *pData, std::size_t uSize){
-	const auto uBytesRead = ReadAux(x_vFile, pData, uSize, x_u64Offset);
+	const auto uBytesRead = RealRead(x_vFile, pData, uSize, x_u64Offset);
 	x_u64Offset += uBytesRead;
 	return uBytesRead;
 }
 std::size_t FileInputStream::Discard(std::size_t uSize){
-	const auto uBytesDiscarded = DiscardAux(x_vFile, uSize, x_u64Offset);
+	const auto uBytesDiscarded = RealDiscard(x_vFile, uSize, x_u64Offset);
 	x_u64Offset += uBytesDiscarded;
 	return uBytesDiscarded;
 }

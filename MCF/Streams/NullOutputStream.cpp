@@ -16,7 +16,7 @@ void NullOutputStream::Put(unsigned char /* byData */) noexcept {
 void NullOutputStream::Put(const void * /* pData */, std::size_t /* uSize */) noexcept {
 }
 
-void NullOutputStream::Flush(bool /* bHard */) const noexcept {
+void NullOutputStream::Flush(bool /* bHard */) noexcept {
 }
 
 }

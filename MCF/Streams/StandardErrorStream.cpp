@@ -119,7 +119,7 @@ void StandardErrorStream::Put(const void *pData, std::size_t uSize){
 	}
 }
 
-void StandardErrorStream::Flush(bool bHard) const {
+void StandardErrorStream::Flush(bool bHard){
 	if(g_vPipe.IsNull()){
 		return;
 	}

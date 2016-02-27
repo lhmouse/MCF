@@ -22,7 +22,7 @@ public:
 
 	void Put(const void *pData, std::size_t uSize) noexcept override;
 
-	void Flush(bool bHard) const noexcept override;
+	void Flush(bool bHard) noexcept override;
 
 	void Swap(NullOutputStream & /* rhs */) noexcept {
 		using std::swap;

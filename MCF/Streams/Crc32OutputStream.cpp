@@ -88,7 +88,7 @@ void Crc32OutputStream::Put(const void *pData, std::size_t uSize){
 	}
 }
 
-void Crc32OutputStream::Flush(bool /* bHard */) const {
+void Crc32OutputStream::Flush(bool /* bHard */){
 }
 
 void Crc32OutputStream::Reset() noexcept {

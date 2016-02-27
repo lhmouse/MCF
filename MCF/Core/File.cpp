@@ -300,7 +300,7 @@ std::size_t File::Write(std::uint64_t u64Offset, const void *pBuffer, std::size_
 	}
 	return vIoStatus.Information;
 }
-void File::HardFlush() const {
+void File::HardFlush(){
 	if(!x_hFile){
 		DEBUG_THROW(Exception, ERROR_INVALID_HANDLE, "No file opened"_rcs);
 	}

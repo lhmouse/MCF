@@ -22,7 +22,7 @@ public:
 
 	void Put(const void *pData, std::size_t uSize) override;
 
-	void Flush(bool bHard) const override;
+	void Flush(bool bHard) override;
 
 	bool IsBuffered() const noexcept;
 	void SetBuffered(bool bBuffered);

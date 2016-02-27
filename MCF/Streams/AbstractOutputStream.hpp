@@ -22,7 +22,7 @@ public:
 
 	virtual void Put(const void *pData, std::size_t uSize) = 0;
 
-	virtual void Flush(bool bHard) const = 0;
+	virtual void Flush(bool bHard) = 0;
 };
 
 }

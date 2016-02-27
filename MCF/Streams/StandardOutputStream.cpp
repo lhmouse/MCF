@@ -160,7 +160,7 @@ void StandardOutputStream::Put(const void *pData, std::size_t uSize){
 	}
 }
 
-void StandardOutputStream::Flush(bool bHard) const {
+void StandardOutputStream::Flush(bool bHard){
 	if(g_vPipe.IsNull()){
 		return;
 	}

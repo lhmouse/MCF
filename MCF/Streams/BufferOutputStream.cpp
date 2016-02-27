@@ -18,7 +18,7 @@ void BufferOutputStream::Put(const void *pData, std::size_t uSize){
 	x_vBuffer.Put(pData, uSize);
 }
 
-void BufferOutputStream::Flush(bool /* bHard */) const {
+void BufferOutputStream::Flush(bool /* bHard */){
 }
 
 }

@@ -33,7 +33,7 @@ public:
 
 	void Put(const void *pData, std::size_t uSize) override;
 
-	void Flush(bool bHard) const override;
+	void Flush(bool bHard) override;
 
 	const StreamBuffer &GetBuffer() const noexcept {
 		return x_vBuffer;

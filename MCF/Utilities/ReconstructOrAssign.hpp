@@ -28,8 +28,7 @@ namespace Impl_ReconstructOrAssign {
 
 template<typename ObjectT, typename ...ParamsT>
 inline void ReconstructOrAssign(ObjectT *pObject, ParamsT &&...vParams)
-	noexcept(
-		std::is_nothrow_destructible<ObjectT>::value && std::is_nothrow_constructible<ObjectT, ParamsT &&...>::value)
+	noexcept(std::is_nothrow_destructible<ObjectT>::value && std::is_nothrow_constructible<ObjectT, ParamsT &&...>::value)
 {
 	std::conditional_t<
 		std::is_nothrow_destructible<ObjectT>::value && std::is_nothrow_constructible<ObjectT, ParamsT &&...>::value,

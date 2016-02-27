@@ -42,6 +42,7 @@ public:
 		using std::swap;
 		swap(x_nChunkOffset,  rhs.x_nChunkOffset);
 		swap(x_abyChunk,      rhs.x_abyChunk);
+		swap(x_au32Reg,       rhs.x_au32Reg);
 		swap(x_u64BytesTotal, rhs.x_u64BytesTotal);
 	}
 

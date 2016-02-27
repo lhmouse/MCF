@@ -18,7 +18,7 @@ namespace {
 }
 
 void FastGenerator::Init(std::uint32_t u32Seed) noexcept {
-	auto u64Seed = 0x0123456789ABCDEFull | u32Seed;
+	std::uint64_t u64Seed = 0x0123456789ABCDEFull | u32Seed;
 	for(unsigned i = 0; i < 8; ++i){
 		u64Seed = u64Seed * kMultiplier + kIncrement;
 	}

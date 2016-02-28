@@ -5,23 +5,20 @@
 #ifndef MCF_STREAMS_BUFFERING_INPUT_STREAM_FILTER_HPP_
 #define MCF_STREAMS_BUFFERING_INPUT_STREAM_FILTER_HPP_
 
-#include "AbstractInputStream.hpp"
-#include "../SmartPointers/UniquePtr.hpp"
+#include "AbstractInputStreamFilter.hpp"
 #include "../Core/StreamBuffer.hpp"
 #include "../Containers/Vector.hpp"
 
 namespace MCF {
 
-class BufferingInputStreamFilter : public AbstractInputStream {
+class BufferingInputStreamFilter : public AbstractInputStreamFilter {
 private:
-	UniquePtr<AbstractInputStream> x_pUnderlyingStream;
-
 	mutable StreamBuffer x_vBuffer;
 	mutable Vector<unsigned char> x_vecBackBuffer;
 
 public:
 	explicit BufferingInputStreamFilter(UniquePtr<AbstractInputStream> pUnderlyingStream) noexcept
-		: x_pUnderlyingStream(std::move(pUnderlyingStream))
+		: AbstractInputStreamFilter(std::move(pUnderlyingStream))
 	{
 	}
 	~BufferingInputStreamFilter() override;
@@ -37,16 +34,6 @@ public:
 	std::size_t Peek(void *pData, std::size_t uSize) const override;
 	std::size_t Get(void *pData, std::size_t uSize) override;
 	std::size_t Discard(std::size_t uSize) override;
-
-	const UniquePtr<AbstractInputStream> &GetUnderlyingStream() const noexcept {
-		return x_pUnderlyingStream;
-	}
-	UniquePtr<AbstractInputStream> &GetUnderlyingStream() noexcept {
-		return x_pUnderlyingStream;
-	}
-	void SetUnderlyingStream(UniquePtr<AbstractInputStream> pUnderlyingStream) noexcept {
-		x_pUnderlyingStream = std::move(pUnderlyingStream);
-	}
 
 	void Swap(BufferingInputStreamFilter &rhs) noexcept {
 		using std::swap;

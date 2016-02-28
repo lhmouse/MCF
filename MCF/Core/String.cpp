@@ -281,7 +281,7 @@ namespace {
 	}
 
 	template<class StringT, class FilterT>
-	__attribute__((__flatten__))
+	__attribute__((__flatten__, __optimize__("-funroll-loops")))
 	void Convert(StringT &strWrite, FilterT vFilter){
 		std::size_t uOldSize = strWrite.GetSize();
 		try {

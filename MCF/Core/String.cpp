@@ -83,7 +83,7 @@ namespace {
 				DEBUG_THROW(Exception, ERROR_INVALID_DATA, "Utf8Decoder: Invalid UTF-8 leading byte"_rcs);
 			}
 			if(uBytes == 1){
-				return u32Point & 0xFFu;
+				return u32Point & 0x7Fu;
 			}
 
 			const auto Unrolled = [&]{
@@ -95,16 +95,16 @@ namespace {
 			};
 
 			if(uBytes == 2){
-				u32Point &= 0x3Fu;
+				u32Point &= 0x1Fu;
 
 				Unrolled();
 			} else if(uBytes == 3){
-				u32Point &= 0x1Fu;
+				u32Point &= 0x0Fu;
 
 				Unrolled();
 				Unrolled();
 			} else {
-				u32Point &= 0x0Fu;
+				u32Point &= 0x07u;
 
 				Unrolled();
 				Unrolled();

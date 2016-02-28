@@ -41,7 +41,7 @@ namespace {
 		std::uint32_t operator()(){
 			const auto pchRead = x_pchRead;
 			if(pchRead == x_pchEnd){
-				DEBUG_THROW(Exception, ERROR_HANDLE_EOF, "String is truncated"_rcs);
+				DEBUG_THROW(Exception, ERROR_HANDLE_EOF, "StringSource: String is truncated"_rcs);
 			}
 			x_pchRead = pchRead + 1;
 			return static_cast<std::make_unsigned_t<CharT>>(*pchRead);
@@ -80,7 +80,7 @@ namespace {
 			// 这个值是该码点的总字节数。
 			const unsigned uBytes = kByteCountTable[(u32Point >> 3) & 0x1F];
 			if(uBytes == 0){
-				DEBUG_THROW(Exception, ERROR_INVALID_DATA, "Invalid UTF-8 leading byte"_rcs);
+				DEBUG_THROW(Exception, ERROR_INVALID_DATA, "Utf8Decoder: Invalid UTF-8 leading byte"_rcs);
 			}
 			if(uBytes == 1){
 				return u32Point & 0xFFu;
@@ -89,7 +89,7 @@ namespace {
 			const auto Unrolled = [&]{
 				const auto u32Temp = x_vPrev();
 				if((u32Temp & 0xC0u) != 0x80u){
-					DEBUG_THROW(Exception, ERROR_INVALID_DATA, "Invalid UTF-8 non-leading byte"_rcs);
+					DEBUG_THROW(Exception, ERROR_INVALID_DATA, "Utf8Decoder: Invalid UTF-8 non-leading byte"_rcs);
 				}
 				u32Point = (u32Point << 6) | (u32Temp & 0x3Fu);
 			};
@@ -111,10 +111,10 @@ namespace {
 				Unrolled();
 			}
 			if(u32Point > 0x10FFFFu){
-				DEBUG_THROW(Exception, ERROR_INVALID_DATA, "Invalid UTF-32 code point value"_rcs);
+				DEBUG_THROW(Exception, ERROR_INVALID_DATA, "Utf8Decoder: Invalid UTF-32 code point value"_rcs);
 			}
 			if(!kIsCesu8T && (u32Point - 0xD800u < 0x800u)){
-				DEBUG_THROW(Exception, ERROR_INVALID_DATA, "UTF-32 code point is reserved for UTF-16"_rcs);
+				DEBUG_THROW(Exception, ERROR_INVALID_DATA, "Utf8Decoder: UTF-32 code point is reserved for UTF-16"_rcs);
 			}
 			return u32Point;
 		}
@@ -156,7 +156,7 @@ namespace {
 
 			auto u32Point = x_vPrev();
 			if(u32Point > 0x10FFFFu){
-				DEBUG_THROW(Exception, ERROR_INVALID_DATA, "Invalid UTF-32 code point value"_rcs);
+				DEBUG_THROW(Exception, ERROR_INVALID_DATA, "Utf8Encoder: Invalid UTF-32 code point value"_rcs);
 			}
 			// 这个值是该码点的总字节数。
 			if((u32Point >> 7) == 0){ // u32Point < 0x80u
@@ -217,12 +217,12 @@ namespace {
 			const auto u32Leading = u32Point - 0xD800u;
 			if(u32Leading <= 0x7FFu){
 				if(u32Leading > 0x3FFu){
-					DEBUG_THROW(Exception, ERROR_INVALID_DATA, "Isolated UTF-16 trailing surrogate"_rcs);
+					DEBUG_THROW(Exception, ERROR_INVALID_DATA, "Utf16Decoder: Isolated UTF-16 trailing surrogate"_rcs);
 				}
 				u32Point = x_vPrev() - 0xDC00u;
 				if(u32Point > 0x3FFu){
 					// 后续代理无效。
-					DEBUG_THROW(Exception, ERROR_INVALID_DATA, "Leading surrogate followed by non-trailing-surrogate"_rcs);
+					DEBUG_THROW(Exception, ERROR_INVALID_DATA, "Utf16Decoder: Leading surrogate followed by non-trailing-surrogate"_rcs);
 				}
 				// 将代理对拼成一个码点。
 				u32Point = ((u32Leading << 10) | u32Point) + 0x10000u;
@@ -263,7 +263,7 @@ namespace {
 
 			auto u32Point = x_vPrev();
 			if(u32Point > 0x10FFFFu){
-				DEBUG_THROW(Exception, ERROR_INVALID_DATA, "Invalid UTF-32 code point value"_rcs);
+				DEBUG_THROW(Exception, ERROR_INVALID_DATA, "Utf16Encoder: Invalid UTF-32 code point value"_rcs);
 			}
 			if(u32Point > 0xFFFFu){
 				// 编码成代理对。

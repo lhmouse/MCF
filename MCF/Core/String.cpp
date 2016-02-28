@@ -283,11 +283,10 @@ namespace {
 	template<class StringT, class FilterT>
 	__attribute__((__flatten__))
 	void Convert(StringT &strWrite, FilterT vFilter){
-		std::size_t uSizeIncrement = 0;
+		std::size_t uOldSize = strWrite.GetSize();
 		try {
 			for(;;){
 				const auto vResult = strWrite.ResizeToCapacity();
-				uSizeIncrement += vResult.second;
 				for(std::size_t i = 0; i < vResult.second; ++i){
 					if(!vFilter){
 						strWrite.Pop(vResult.second - i);
@@ -300,7 +299,7 @@ namespace {
 		jDone:
 			;
 		} catch(...){
-			strWrite.Pop(uSizeIncrement);
+			strWrite.Pop(strWrite.GetSize() - uOldSize);
 			throw;
 		}
 	}

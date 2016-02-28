@@ -286,15 +286,13 @@ namespace {
 		std::size_t uOldSize = strWrite.GetSize();
 		try {
 			for(;;){
-				const auto vResult = strWrite.ResizeToCapacity();
-				for(std::size_t i = 0; i < vResult.second; ++i){
+				strWrite.ReserveMore(16);
+				for(std::size_t i = 0; i < 16; ++i){
 					if(!vFilter){
-						strWrite.Pop(vResult.second - i);
 						goto jDone;
 					}
-					vResult.first[i] = static_cast<typename StringT::Char>(vFilter());
+					strWrite.UncheckedPush(static_cast<typename StringT::Char>(vFilter()));
 				}
-				strWrite.ReserveMore(64);
 			}
 		jDone:
 			;

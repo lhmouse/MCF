@@ -7,11 +7,12 @@
 using namespace MCF;
 
 extern "C" unsigned MCFCRT_Main(){
-	Utf8String s1("中文测试字符串\n");
+	Utf8String s1("中文测试字符串");
 	Utf16String s2(s1);
 
 	DWORD dwCharsWritten;
 	::WriteConsoleW(::GetStdHandle(STD_ERROR_HANDLE), s2.GetData(), s2.GetSize(), &dwCharsWritten, nullptr);
+	::WriteConsoleW(::GetStdHandle(STD_ERROR_HANDLE), L"$\n", 2, &dwCharsWritten, nullptr);
 
 	return 0;
 }

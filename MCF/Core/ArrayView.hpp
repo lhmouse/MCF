@@ -41,9 +41,9 @@ public:
 		: x_pBegin(pBegin), x_uSize(uSize)
 	{
 	}
-	template<std::size_t x_uSize>
-	constexpr ArrayView(Element (&rhs)[x_uSize]) noexcept
-		: x_pBegin(rhs), x_uSize(x_uSize)
+	template<std::size_t kSizeT>
+	constexpr ArrayView(Element (&rhs)[kSizeT]) noexcept
+		: x_pBegin(rhs), x_uSize(kSizeT)
 	{
 	}
 
@@ -238,9 +238,9 @@ public:
 		: x_pBegin(pBegin), x_uSize(uSize)
 	{
 	}
-	template<std::size_t x_uSize>
-	constexpr ArrayView(Element (&rhs)[x_uSize]) noexcept
-		: x_pBegin(rhs), x_uSize(x_uSize)
+	template<std::size_t kSizeT>
+	constexpr ArrayView(Element (&rhs)[kSizeT]) noexcept
+		: x_pBegin(rhs), x_uSize(kSizeT)
 	{
 	}
 	constexpr ArrayView(const ArrayView<Element> &rhs) noexcept

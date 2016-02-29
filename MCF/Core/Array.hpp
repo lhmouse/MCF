@@ -28,8 +28,11 @@ namespace Impl_Array {
 }
 
 template<typename ElementT, std::size_t kSizeT, std::size_t ...kRemainingT>
-class Array : public Array<Array<ElementT, kRemainingT...>, kSizeT> {
+class Array {
 	static_assert(kSizeT > 0, "An array shall have a non-zero size.");
+
+public:
+	Array<ElementT, kRemainingT...> a[kSizeT];
 };
 
 template<typename ElementT, std::size_t kSizeT>
@@ -37,7 +40,7 @@ class Array<ElementT, kSizeT> {
 	static_assert(kSizeT > 0, "An array shall have a non-zero size.");
 
 public:
-	ElementT m_aStorage[kSizeT];
+	ElementT a[kSizeT];
 
 public:
 	// 整体仿造容器，唯独没有 Clear()。
@@ -54,7 +57,7 @@ public:
 	template<typename OutputIteratorT>
 	OutputIteratorT Extract(OutputIteratorT itOutput){
 		for(std::size_t i = 0; i < kSizeT; ++i){
-			*itOutput = std::move(m_aStorage[i]);
+			*itOutput = std::move(a[i]);
 			++itOutput;
 		}
 		return itOutput;
@@ -154,34 +157,34 @@ public:
 
 	void Swap(Array &rhs) noexcept(Impl_Array::IsNoexceptSwappableChecker<Element, kSizeT>()()) {
 		using std::swap;
-		swap(m_aStorage, rhs.m_aStorage);
+		swap(a, rhs.a);
 	}
 
 	// Array 需求。
 	const Element *GetData() const noexcept {
-		return m_aStorage;
+		return a;
 	}
 	Element *GetData() noexcept {
-		return m_aStorage;
+		return a;
 	}
 	static constexpr std::size_t GetSize() noexcept {
 		return kSizeT;
 	}
 
 	const Element *GetBegin() const noexcept {
-		return m_aStorage;
+		return a;
 	}
 	Element *GetBegin() noexcept {
-		return m_aStorage;
+		return a;
 	}
 	const Element *GetConstBegin() const noexcept {
 		return GetBegin();
 	}
 	const Element *GetEnd() const noexcept {
-		return m_aStorage + kSizeT;
+		return a + kSizeT;
 	}
 	Element *GetEnd() noexcept {
-		return m_aStorage + kSizeT;
+		return a + kSizeT;
 	}
 	const Element *GetConstEnd() const noexcept {
 		return GetEnd();
@@ -202,12 +205,12 @@ public:
 	const Element &UncheckedGet(std::size_t uIndex) const noexcept {
 		ASSERT(uIndex < kSizeT);
 
-		return m_aStorage[uIndex];
+		return a[uIndex];
 	}
 	Element &UncheckedGet(std::size_t uIndex) noexcept {
 		ASSERT(uIndex < kSizeT);
 
-		return m_aStorage[uIndex];
+		return a[uIndex];
 	}
 
 	const Element &operator[](std::size_t uIndex) const noexcept {

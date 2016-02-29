@@ -286,8 +286,8 @@ namespace {
 		std::size_t uOldSize = strWrite.GetSize();
 		try {
 			for(;;){
-				strWrite.ReserveMore(16);
-				for(std::size_t i = 0; i < 16; ++i){
+				strWrite.ReserveMore(8);
+				for(std::size_t i = 0; i < 8; ++i){
 					if(!vFilter){
 						goto jDone;
 					}

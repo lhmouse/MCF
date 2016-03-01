@@ -154,16 +154,16 @@ namespace Impl_StringView {
 		const auto uFindCount = static_cast<std::size_t>(itToFindEnd - itToFindBegin);
 
 		std::ptrdiff_t *pTable;
-		bool bTableAllocatedFromHeap;
+		bool bTableWasAllocatedFromHeap;
 		const auto uTableSize = uFindCount - 1;
 		if(uTableSize >= 0x10000 / sizeof(std::ptrdiff_t)){
 			pTable = ::new(std::nothrow) std::ptrdiff_t[uTableSize];
-			bTableAllocatedFromHeap = true;
+			bTableWasAllocatedFromHeap = true;
 		} else {
 			pTable = static_cast<std::ptrdiff_t *>(ALLOCA(uTableSize * sizeof(std::ptrdiff_t)));
-			bTableAllocatedFromHeap = false;
+			bTableWasAllocatedFromHeap = false;
 		}
-		DEFER([&]{ if(bTableAllocatedFromHeap){ ::delete[](pTable); }; });
+		DEFER([&]{ if(bTableWasAllocatedFromHeap){ ::delete[](pTable); }; });
 
 		if(pTable){
 			pTable[0] = 0;

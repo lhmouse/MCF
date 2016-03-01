@@ -19,7 +19,7 @@ public:
 		: x_vBuffer()
 	{
 	}
-	explicit BufferInputStream(StreamBuffer vBuffer) noexcept
+	explicit BufferInputStream(StreamBuffer vBuffer = StreamBuffer()) noexcept
 		: x_vBuffer(std::move(vBuffer))
 	{
 	}

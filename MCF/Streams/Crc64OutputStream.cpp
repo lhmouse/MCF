@@ -79,7 +79,7 @@ void Crc64OutputStream::Put(const void *pData, std::size_t uSize){
 		while(uBytesRemaining >= sizeof(x_abyChunk)){
 			UpdateCrc64(x_u64Reg, reinterpret_cast<const decltype(x_abyChunk) *>(pbyRead)[0]);
 			pbyRead += sizeof(x_abyChunk);
-			uBytesRemaining -= (int)sizeof(x_abyChunk);
+			uBytesRemaining -= sizeof(x_abyChunk);
 		}
 	}
 	if(uBytesRemaining != 0){

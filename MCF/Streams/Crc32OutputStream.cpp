@@ -79,7 +79,7 @@ void Crc32OutputStream::Put(const void *pData, std::size_t uSize){
 		while(uBytesRemaining >= sizeof(x_abyChunk)){
 			UpdateCrc32(x_u32Reg, reinterpret_cast<const decltype(x_abyChunk) *>(pbyRead)[0]);
 			pbyRead += sizeof(x_abyChunk);
-			uBytesRemaining -= (int)sizeof(x_abyChunk);
+			uBytesRemaining -= sizeof(x_abyChunk);
 		}
 	}
 	if(uBytesRemaining != 0){

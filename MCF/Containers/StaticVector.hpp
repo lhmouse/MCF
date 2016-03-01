@@ -343,6 +343,24 @@ public:
 	template<typename IteratorT, std::enable_if_t<
 		std::is_base_of<std::input_iterator_tag, typename std::iterator_traits<IteratorT>::iterator_category>::value,
 		int> = 0>
+	void Append(IteratorT itBegin, std::size_t uDeltaSize){
+		ReserveMore(uDeltaSize);
+
+		std::size_t uElementsPushed = 0;
+		try {
+			for(std::size_t i = 0; i < uDeltaSize; ++i){
+				UncheckedPush(*itBegin);
+				++itBegin;
+				++uElementsPushed;
+			}
+		} catch(...){
+			Pop(uElementsPushed);
+			throw;
+		}
+	}
+	template<typename IteratorT, std::enable_if_t<
+		std::is_base_of<std::input_iterator_tag, typename std::iterator_traits<IteratorT>::iterator_category>::value,
+		int> = 0>
 	void Append(IteratorT itBegin, std::common_type_t<IteratorT> itEnd){
 		constexpr bool kHasDeltaSizeHint = std::is_base_of<std::forward_iterator_tag, typename std::iterator_traits<IteratorT>::iterator_category>::value;
 
@@ -376,6 +394,22 @@ public:
 		try {
 			for(std::size_t i = 0; i < uDeltaSize; ++i){
 				UncheckedPush(vParams...);
+				++uElementsPushed;
+			}
+		} catch(...){
+			Pop(uElementsPushed);
+			throw;
+		}
+	}
+	template<typename IteratorT, std::enable_if_t<
+		std::is_base_of<std::input_iterator_tag, typename std::iterator_traits<IteratorT>::iterator_category>::value,
+		int> = 0>
+	void UncheckedAppend(IteratorT itBegin, std::size_t uDeltaSize){
+		std::size_t uElementsPushed = 0;
+		try {
+			for(std::size_t i = 0; i < uDeltaSize; ++i){
+				UncheckedPush(*itBegin);
+				++itBegin;
 				++uElementsPushed;
 			}
 		} catch(...){

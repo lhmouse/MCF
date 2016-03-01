@@ -1,12 +1,29 @@
 #include <MCF/StdMCF.hpp>
-#include <MCF/Core/Array.hpp>
+#include <MCF/Streams/BufferOutputStream.hpp>
+#include <MCF/Streams/TextOutputStreamFilter.hpp>
 
 using namespace MCF;
 
-template class Array<int, 2, 5>;
-
 extern "C" unsigned MCFCRT_Main(){
-	Array<int, 2, 5> a {{ {0,1,2,3,4},{5,6,7,8,9} }};
+	constexpr char src[] = "1\rhello\r\nworld\n234\r";
+
+	auto bufs = MakeIntrusive<BufferOutputStream>();
+
+	auto s = MakeIntrusive<TextOutputStreamFilter>(bufs);
+	s->Put(src, sizeof(src) - 1);
+
+	char str[200];
+	auto len = bufs->GetBuffer().Get(str, sizeof(str));
+	for(std::size_t i = 0; i < len; ++i){
+		std::printf("%02hhX ", str[i]);
+	}
+/*
+	int c;
+	while((c = s->Get()) >= 0){
+		std::printf("%02hhX ", c);
+	}
+*/
+	std::putchar('\n');
 
 	return 0;
 }

@@ -42,8 +42,8 @@ namespace {
 			const auto pbyData = static_cast<const unsigned char *>(pData);
 			std::size_t uBytesTotal = 0;
 			for(;;){
-				auto uBytesToWrite = Min(uSize - uBytesTotal, UINT32_MAX);
-				if(uBytesToWrite == 0){
+				auto dwBytesToWrite = static_cast<DWORD>(Min(uSize - uBytesTotal, UINT32_MAX));
+				if(dwBytesToWrite == 0){
 					break;
 				}
 
@@ -53,7 +53,7 @@ namespace {
 				}
 
 				DWORD dwBytesWritten;
-				if(!::WriteFile(x_hPipe, pbyData + uBytesTotal, uBytesToWrite, &dwBytesWritten, nullptr)){
+				if(!::WriteFile(x_hPipe, pbyData + uBytesTotal, dwBytesToWrite, &dwBytesWritten, nullptr)){
 					const auto dwLastError = ::GetLastError();
 					DEBUG_THROW(SystemException, dwLastError, "WriteFile"_rcs);
 				}

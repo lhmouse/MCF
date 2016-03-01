@@ -4,7 +4,7 @@ set Config=Debug64
 set CXXFlags=-fno-builtin -g -D_GLIBCXX_DEBUG -D_GLIBCXX_DEBUG_PEDANTIC -O0
 if "%1"=="Release" (
 	set Config=Release64
-	set CXXFlags=-DNDEBUG -O3 -flto -ffunction-sections -fdata-sections -Wl,--gc-sections,-s
+	set CXXFlags=-DNDEBUG -O3 -ffunction-sections -fdata-sections -Wl,--gc-sections,-s
 )
 
 set Lib=-lmcf -lmcfcrt -lstdc++ -lmingwex -lmingw32 -lgcc -lgcc_eh -lmcfcrt -lgcc -lmingwex -lmsvcrt -lkernel32 -lntdll -luser32 -lshell32 -ladvapi32

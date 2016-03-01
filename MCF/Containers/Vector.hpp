@@ -446,6 +446,38 @@ public:
 	}
 
 	template<typename ...ParamsT>
+	void UncheckedAppend(std::size_t uDeltaSize, const ParamsT &...vParams){
+		std::size_t uElementsPushed = 0;
+		try {
+			for(std::size_t i = 0; i < uDeltaSize; ++i){
+				UncheckedPush(vParams...);
+				++uElementsPushed;
+			}
+		} catch(...){
+			Pop(uElementsPushed);
+			throw;
+		}
+	}
+	template<typename IteratorT, std::enable_if_t<
+		std::is_base_of<std::input_iterator_tag, typename std::iterator_traits<IteratorT>::iterator_category>::value,
+		int> = 0>
+	void UncheckedAppend(IteratorT itBegin, std::common_type_t<IteratorT> itEnd){
+		std::size_t uElementsPushed = 0;
+		try {
+			for(auto it = itBegin; it != itEnd; ++it){
+				UncheckedPush(*it);
+				++uElementsPushed;
+			}
+		} catch(...){
+			Pop(uElementsPushed);
+			throw;
+		}
+	}
+	void UncheckedAppend(std::initializer_list<Element> ilElements){
+		UncheckedAppend(ilElements.begin(), ilElements.end());
+	}
+
+	template<typename ...ParamsT>
 	Element *Emplace(const Element *pPos, ParamsT &&...vParams){
 		std::size_t uOffset;
 		if(pPos){

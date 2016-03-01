@@ -19,7 +19,6 @@ namespace {
 
 		bool x_bBuffered = true;
 		mutable StreamBuffer x_vBuffer;
-		mutable unsigned char x_abyBackBuffer[4096];
 
 	public:
 		Pipe()
@@ -49,13 +48,14 @@ namespace {
 				if(x_vBuffer.GetSize() < uThreshold){
 					break;
 				}
-				auto uBytesToWrite = x_vBuffer.Peek(x_abyBackBuffer, sizeof(x_abyBackBuffer));
-				if(uBytesToWrite == 0){
+				unsigned char abyBackBuffer[4096];
+				auto dwBytesToWrite = static_cast<DWORD>(x_vBuffer.Peek(abyBackBuffer, sizeof(abyBackBuffer)));
+				if(dwBytesToWrite == 0){
 					break;
 				}
 
 				DWORD dwBytesWritten;
-				if(!::WriteFile(x_hPipe, x_abyBackBuffer, uBytesToWrite, &dwBytesWritten, nullptr)){
+				if(!::WriteFile(x_hPipe, abyBackBuffer, dwBytesToWrite, &dwBytesWritten, nullptr)){
 					const auto dwLastError = ::GetLastError();
 					DEBUG_THROW(SystemException, dwLastError, "WriteFile"_rcs);
 				}
@@ -70,13 +70,13 @@ namespace {
 			const auto pbyData = static_cast<const unsigned char *>(pData);
 			std::size_t uBytesTotal = 0;
 			for(;;){
-				auto uBytesToWrite = Min(uSize - uBytesTotal, UINT32_MAX);
-				if(uBytesToWrite == 0){
+				auto dwBytesToWrite = static_cast<DWORD>(Min(uSize - uBytesTotal, UINT32_MAX));
+				if(dwBytesToWrite == 0){
 					break;
 				}
 
 				DWORD dwBytesWritten;
-				if(!::WriteFile(x_hPipe, pbyData + uBytesTotal, uBytesToWrite, &dwBytesWritten, nullptr)){
+				if(!::WriteFile(x_hPipe, pbyData + uBytesTotal, dwBytesToWrite, &dwBytesWritten, nullptr)){
 					const auto dwLastError = ::GetLastError();
 					DEBUG_THROW(SystemException, dwLastError, "WriteFile"_rcs);
 				}

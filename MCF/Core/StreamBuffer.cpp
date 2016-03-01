@@ -103,7 +103,7 @@ std::size_t StreamBuffer::Peek(void *pData, std::size_t uSize) const noexcept {
 	std::size_t uBytesCopied = 0;
 	auto pChunk = x_lstChunks.GetFirst();
 	while((uBytesCopied < uSize) && pChunk){
-		const auto uBytesToCopy = Min(uSize - uBytesCopied, pChunk->uEnd - pChunk->uBegin);
+		const auto uBytesToCopy = static_cast<unsigned>(Min(uSize - uBytesCopied, pChunk->uEnd - pChunk->uBegin));
 		CopyN(static_cast<unsigned char *>(pData) + uBytesCopied, pChunk->abyData + pChunk->uBegin, uBytesToCopy);
 
 		uBytesCopied += uBytesToCopy;
@@ -115,7 +115,7 @@ std::size_t StreamBuffer::Get(void *pData, std::size_t uSize) noexcept {
 	std::size_t uBytesCopied = 0;
 	auto pChunk = x_lstChunks.GetFirst();
 	while((uBytesCopied < uSize) && pChunk){
-		const auto uBytesToCopy = Min(uSize - uBytesCopied, pChunk->uEnd - pChunk->uBegin);
+		const auto uBytesToCopy = static_cast<unsigned>(Min(uSize - uBytesCopied, pChunk->uEnd - pChunk->uBegin));
 		CopyN(static_cast<unsigned char *>(pData) + uBytesCopied, pChunk->abyData + pChunk->uBegin, uBytesToCopy);
 
 		pChunk->uBegin += uBytesToCopy;
@@ -132,7 +132,7 @@ std::size_t StreamBuffer::Discard(std::size_t uSize) noexcept {
 	std::size_t uBytesDiscarded = 0;
 	auto pChunk = x_lstChunks.GetFirst();
 	while((uBytesDiscarded < uSize) && pChunk){
-		const auto uBytesToDiscard = Min(uSize - uBytesDiscarded, pChunk->uEnd - pChunk->uBegin);
+		const auto uBytesToDiscard = static_cast<unsigned>(Min(uSize - uBytesDiscarded, pChunk->uEnd - pChunk->uBegin));
 
 		pChunk->uBegin += uBytesToDiscard;
 		if(pChunk->uBegin == pChunk->uEnd){
@@ -162,7 +162,7 @@ void StreamBuffer::Put(const void *pData, std::size_t uSize){
 
 	std::size_t uBytesCopied = 0;
 	while(uBytesCopied < uSize){
-		const auto uBytesToCopy = Min(uSize - uBytesCopied, sizeof(Chunk::abyData) - pChunk->uEnd);
+		const auto uBytesToCopy = static_cast<unsigned>(Min(uSize - uBytesCopied, sizeof(Chunk::abyData) - pChunk->uEnd));
 		CopyN(pChunk->abyData + pChunk->uEnd, static_cast<const unsigned char *>(pData) + uBytesCopied, uBytesToCopy);
 		pChunk->uEnd += uBytesToCopy;
 
@@ -189,7 +189,7 @@ void StreamBuffer::Put(unsigned char byData, std::size_t uSize){
 
 	std::size_t uBytesCopied = 0;
 	while(uBytesCopied < uSize){
-		const auto uBytesToCopy = Min(uSize - uBytesCopied, sizeof(Chunk::abyData) - pChunk->uEnd);
+		const auto uBytesToCopy = static_cast<unsigned>(Min(uSize - uBytesCopied, sizeof(Chunk::abyData) - pChunk->uEnd));
 		FillN(pChunk->abyData + pChunk->uEnd, uBytesToCopy, byData);
 		pChunk->uEnd += uBytesToCopy;
 
@@ -203,7 +203,7 @@ StreamBuffer StreamBuffer::CutOff(std::size_t uSize){
 	std::size_t uBytesCut = 0;
 	auto pChunk = x_lstChunks.GetFirst();
 	while((uBytesCut < uSize) && pChunk){
-		const auto uBytesToCut = Min(uSize - uBytesCut, pChunk->uEnd - pChunk->uBegin);
+		const auto uBytesToCut = static_cast<unsigned>(Min(uSize - uBytesCut, pChunk->uEnd - pChunk->uBegin));
 		if(uBytesToCut < pChunk->uEnd - pChunk->uBegin){
 			const auto pOldChunk = pChunk;
 			pChunk = x_lstChunks.Emplace(pChunk, Chunk::FromBeginning());

@@ -7,6 +7,7 @@
 
 #include "_Enumerator.hpp"
 #include "../Utilities/Assert.hpp"
+#include "../Utilities/AlignedStorage.hpp"
 #include "../Utilities/ConstructDestruct.hpp"
 #include "../Core/Exception.hpp"
 #include <utility>
@@ -28,14 +29,7 @@ public:
 	using Enumerator      = Impl_Enumerator::Enumerator      <StaticVector>;
 
 private:
-	union Storage {
-		Element a[kCapacity];
-
-		Storage() noexcept { }
-		~Storage() noexcept { }
-	};
-
-	Storage x_unStorage;
+	AlignedStorage<0, Element> x_vStorage;
 	std::size_t x_uSize;
 
 public:
@@ -97,7 +91,7 @@ public:
 	OutputIteratorT Extract(OutputIteratorT itOutput){
 		try {
 			for(std::size_t i = 0; i < x_uSize; ++i){
-				*itOutput = std::move(x_unStorage[i]);
+				*itOutput = std::move(x_vStorage[i]);
 				++itOutput;
 			}
 		} catch(...){
@@ -220,10 +214,10 @@ public:
 
 	// StaticVector 需求。
 	const Element *GetData() const noexcept {
-		return x_unStorage.a;
+		return x_vStorage.a;
 	}
 	Element *GetData() noexcept {
-		return x_unStorage.a;
+		return x_vStorage.a;
 	}
 	const Element *GetConstData() const noexcept {
 		return GetData();
@@ -236,19 +230,19 @@ public:
 	}
 
 	const Element *GetBegin() const noexcept {
-		return x_unStorage.a;
+		return x_vStorage.a;
 	}
 	Element *GetBegin() noexcept {
-		return x_unStorage.a;
+		return x_vStorage.a;
 	}
 	const Element *GetConstBegin() const noexcept {
 		return GetBegin();
 	}
 	const Element *GetEnd() const noexcept {
-		return x_unStorage.a + x_uSize;
+		return x_vStorage.a + x_uSize;
 	}
 	Element *GetEnd() noexcept {
-		return x_unStorage.a + x_uSize;
+		return x_vStorage.a + x_uSize;
 	}
 	const Element *GetConstEnd() const noexcept {
 		return GetEnd();
@@ -269,12 +263,12 @@ public:
 	const Element &UncheckedGet(std::size_t uIndex) const noexcept {
 		ASSERT(uIndex < x_uSize);
 
-		return x_unStorage.a[uIndex];
+		return x_vStorage.a[uIndex];
 	}
 	Element &UncheckedGet(std::size_t uIndex) noexcept {
 		ASSERT(uIndex < x_uSize);
 
-		return x_unStorage.a[uIndex];
+		return x_vStorage.a[uIndex];
 	}
 
 	template<typename ...ParamsT>
@@ -290,7 +284,7 @@ public:
 	Element *ResizeMore(std::size_t uDeltaSize, const ParamsT &...vParams){
 		const auto uOldSize = x_uSize;
 		Append(uDeltaSize - uOldSize, vParams...);
-		return x_unStorage.a + uOldSize;
+		return x_vStorage.a + uOldSize;
 	}
 
 	void Reserve(std::size_t uNewCapacity){
@@ -316,7 +310,7 @@ public:
 	Element &UncheckedPush(ParamsT &&...vParams) noexcept(std::is_nothrow_constructible<Element, ParamsT &&...>::value) {
 		ASSERT(kCapacity - x_uSize > 0);
 
-		const auto pElement = x_unStorage.a + x_uSize;
+		const auto pElement = x_vStorage.a + x_uSize;
 		DefaultConstruct(pElement, std::forward<ParamsT>(vParams)...);
 		++x_uSize;
 
@@ -326,7 +320,7 @@ public:
 		ASSERT(uCount <= x_uSize);
 
 		for(std::size_t i = 0; i < uCount; ++i){
-			Destruct(x_unStorage.a + x_uSize - 1 - i);
+			Destruct(x_vStorage.a + x_uSize - 1 - i);
 		}
 		x_uSize -= uCount;
 	}
@@ -374,6 +368,38 @@ public:
 	}
 	void Append(std::initializer_list<Element> ilElements){
 		Append(ilElements.begin(), ilElements.end());
+	}
+
+	template<typename ...ParamsT>
+	void UncheckedAppend(std::size_t uDeltaSize, const ParamsT &...vParams){
+		std::size_t uElementsPushed = 0;
+		try {
+			for(std::size_t i = 0; i < uDeltaSize; ++i){
+				UncheckedPush(vParams...);
+				++uElementsPushed;
+			}
+		} catch(...){
+			Pop(uElementsPushed);
+			throw;
+		}
+	}
+	template<typename IteratorT, std::enable_if_t<
+		std::is_base_of<std::input_iterator_tag, typename std::iterator_traits<IteratorT>::iterator_category>::value,
+		int> = 0>
+	void UncheckedAppend(IteratorT itBegin, std::common_type_t<IteratorT> itEnd){
+		std::size_t uElementsPushed = 0;
+		try {
+			for(auto it = itBegin; it != itEnd; ++it){
+				UncheckedPush(*it);
+				++uElementsPushed;
+			}
+		} catch(...){
+			Pop(uElementsPushed);
+			throw;
+		}
+	}
+	void UncheckedAppend(std::initializer_list<Element> ilElements){
+		UncheckedAppend(ilElements.begin(), ilElements.end());
 	}
 
 	const Element &operator[](std::size_t uIndex) const noexcept {

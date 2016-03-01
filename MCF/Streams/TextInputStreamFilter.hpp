@@ -2,8 +2,8 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2013 - 2016, LH_Mouse. All wrongs reserved.
 
-#ifndef MCF_STREAMS_BUFFERING_INPUT_STREAM_FILTER_HPP_
-#define MCF_STREAMS_BUFFERING_INPUT_STREAM_FILTER_HPP_
+#ifndef MCF_STREAMS_TEXT_INPUT_STREAM_FILTER_HPP_
+#define MCF_STREAMS_TEXT_INPUT_STREAM_FILTER_HPP_
 
 #include "AbstractInputStreamFilter.hpp"
 #include "../Core/StreamBuffer.hpp"
@@ -11,20 +11,20 @@
 
 namespace MCF {
 
-class BufferingInputStreamFilter : public AbstractInputStreamFilter {
+class TextInputStreamFilter : public AbstractInputStreamFilter {
 private:
 	mutable StreamBuffer x_vBuffer;
-	mutable Vector<unsigned char> x_vecBackBuffer;
+	mutable Vector<char> x_vecBackBuffer;
 
 public:
-	explicit BufferingInputStreamFilter(IntrusivePtr<AbstractInputStream> pUnderlyingStream) noexcept
+	explicit TextInputStreamFilter(IntrusivePtr<AbstractInputStream> pUnderlyingStream) noexcept
 		: AbstractInputStreamFilter(std::move(pUnderlyingStream))
 	{
 	}
-	~BufferingInputStreamFilter() override;
+	~TextInputStreamFilter() override;
 
-	BufferingInputStreamFilter(BufferingInputStreamFilter &&) noexcept = default;
-	BufferingInputStreamFilter& operator=(BufferingInputStreamFilter &&) noexcept = default;
+	TextInputStreamFilter(TextInputStreamFilter &&) noexcept = default;
+	TextInputStreamFilter& operator=(TextInputStreamFilter &&) noexcept = default;
 
 public:
 	int Peek() const override;
@@ -35,14 +35,14 @@ public:
 	std::size_t Get(void *pData, std::size_t uSize) override;
 	std::size_t Discard(std::size_t uSize) override;
 
-	void Swap(BufferingInputStreamFilter &rhs) noexcept {
+	void Swap(TextInputStreamFilter &rhs) noexcept {
 		using std::swap;
 		swap(x_pUnderlyingStream, rhs.x_pUnderlyingStream);
 		swap(x_vBuffer,           rhs.x_vBuffer);
 		swap(x_vecBackBuffer,     rhs.x_vecBackBuffer);
 	}
 
-	friend void swap(BufferingInputStreamFilter &lhs, BufferingInputStreamFilter &rhs) noexcept {
+	friend void swap(TextInputStreamFilter &lhs, TextInputStreamFilter &rhs) noexcept {
 		lhs.Swap(rhs);
 	}
 };

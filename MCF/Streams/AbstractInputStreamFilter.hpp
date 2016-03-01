@@ -6,16 +6,15 @@
 #define MCF_STREAMS_ABSTRACT_INPUT_STREAM_FILTER_HPP_
 
 #include "AbstractInputStream.hpp"
-#include "../SmartPointers/UniquePtr.hpp"
 
 namespace MCF {
 
 class AbstractInputStreamFilter : public AbstractInputStream {
 protected:
-	UniquePtr<AbstractInputStream> x_pUnderlyingStream;
+	IntrusivePtr<AbstractInputStream> x_pUnderlyingStream;
 
 public:
-	explicit AbstractInputStreamFilter(UniquePtr<AbstractInputStream> pUnderlyingStream) noexcept
+	explicit AbstractInputStreamFilter(IntrusivePtr<AbstractInputStream> pUnderlyingStream) noexcept
 		: x_pUnderlyingStream(std::move(pUnderlyingStream))
 	{
 	}
@@ -33,13 +32,13 @@ public:
 	virtual std::size_t Get(void *pData, std::size_t uSize) = 0;
 	virtual std::size_t Discard(std::size_t uSize) = 0;
 
-	const UniquePtr<AbstractInputStream> &GetUnderlyingStream() const noexcept {
+	const IntrusivePtr<AbstractInputStream> &GetUnderlyingStream() const noexcept {
 		return x_pUnderlyingStream;
 	}
-	UniquePtr<AbstractInputStream> &GetUnderlyingStream() noexcept {
+	IntrusivePtr<AbstractInputStream> &GetUnderlyingStream() noexcept {
 		return x_pUnderlyingStream;
 	}
-	void SetUnderlyingStream(UniquePtr<AbstractInputStream> pUnderlyingStream) noexcept {
+	void SetUnderlyingStream(IntrusivePtr<AbstractInputStream> pUnderlyingStream) noexcept {
 		x_pUnderlyingStream = std::move(pUnderlyingStream);
 	}
 };

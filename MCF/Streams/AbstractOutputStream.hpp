@@ -5,14 +5,15 @@
 #ifndef MCF_STREAMS_ABSTRACT_OUTPUT_STREAM_HPP_
 #define MCF_STREAMS_ABSTRACT_OUTPUT_STREAM_HPP_
 
+#include "../SmartPointers/IntrusivePtr.hpp"
 #include <cstddef>
 
 namespace MCF {
 
-class AbstractOutputStream {
+class AbstractOutputStream : public IntrusiveBase<AbstractOutputStream> {
 public:
 	constexpr AbstractOutputStream() noexcept = default;
-	virtual ~AbstractOutputStream() = 0;
+	~AbstractOutputStream() override = 0;
 
 	AbstractOutputStream(AbstractOutputStream &&) noexcept = default;
 	AbstractOutputStream& operator=(AbstractOutputStream &&) noexcept = default;

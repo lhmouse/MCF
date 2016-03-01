@@ -6,16 +6,15 @@
 #define MCF_STREAMS_ABSTRACT_OUTPUT_STREAM_FILTER_HPP_
 
 #include "AbstractOutputStream.hpp"
-#include "../SmartPointers/UniquePtr.hpp"
 
 namespace MCF {
 
 class AbstractOutputStreamFilter : public AbstractOutputStream {
 protected:
-	UniquePtr<AbstractOutputStream> x_pUnderlyingStream;
+	IntrusivePtr<AbstractOutputStream> x_pUnderlyingStream;
 
 public:
-	explicit AbstractOutputStreamFilter(UniquePtr<AbstractOutputStream> pUnderlyingStream) noexcept
+	explicit AbstractOutputStreamFilter(IntrusivePtr<AbstractOutputStream> pUnderlyingStream) noexcept
 		: x_pUnderlyingStream(std::move(pUnderlyingStream))
 	{
 	}
@@ -31,13 +30,13 @@ public:
 
 	virtual void Flush(bool bHard) = 0;
 
-	const UniquePtr<AbstractOutputStream> &GetUnderlyingStream() const noexcept {
+	const IntrusivePtr<AbstractOutputStream> &GetUnderlyingStream() const noexcept {
 		return x_pUnderlyingStream;
 	}
-	UniquePtr<AbstractOutputStream> &GetUnderlyingStream() noexcept {
+	IntrusivePtr<AbstractOutputStream> &GetUnderlyingStream() noexcept {
 		return x_pUnderlyingStream;
 	}
-	void SetUnderlyingStream(UniquePtr<AbstractOutputStream> pUnderlyingStream) noexcept {
+	void SetUnderlyingStream(IntrusivePtr<AbstractOutputStream> pUnderlyingStream) noexcept {
 		x_pUnderlyingStream = std::move(pUnderlyingStream);
 	}
 };

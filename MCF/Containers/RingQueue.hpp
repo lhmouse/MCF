@@ -544,7 +544,7 @@ public:
 	template<typename IteratorT, std::enable_if_t<
 		std::is_base_of<std::input_iterator_tag, typename std::iterator_traits<IteratorT>::iterator_category>::value,
 		int> = 0>
-	void Prepend(IteratorT itBegin, std::common_type_t<IteratorT> itEnd){
+	void Prepend(std::common_type_t<IteratorT> itBegin, IteratorT itEnd){
 		constexpr bool kHasDeltaSizeHint = std::is_base_of<std::forward_iterator_tag, typename std::iterator_traits<IteratorT>::iterator_category>::value;
 
 		if(kHasDeltaSizeHint){
@@ -571,6 +571,40 @@ public:
 	}
 	void Prepend(std::initializer_list<Element> ilElements){
 		Prepend(ilElements.begin(), ilElements.end());
+	}
+
+	template<typename ...ParamsT>
+	void UncheckedPrepend(std::size_t uDeltaSize, const ParamsT &...vParams){
+		std::size_t uElementsUnshifted = 0;
+		try {
+			for(std::size_t i = 0; i < uDeltaSize; ++i){
+				UncheckedUnshift(vParams...);
+				++uElementsUnshifted;
+			}
+		} catch(...){
+			Shift(uElementsUnshifted);
+			throw;
+		}
+	}
+	template<typename IteratorT, std::enable_if_t<
+		std::is_base_of<std::input_iterator_tag, typename std::iterator_traits<IteratorT>::iterator_category>::value,
+		int> = 0>
+	void UncheckedPrepend(std::common_type_t<IteratorT> itBegin, IteratorT itEnd){
+		std::size_t uElementsUnshifted = 0;
+		try {
+			auto it = itEnd;
+			while(it != itBegin){
+				--it;
+				UncheckedUnshift(*it);
+				++uElementsUnshifted;
+			}
+		} catch(...){
+			Shift(uElementsUnshifted);
+			throw;
+		}
+	}
+	void UncheckedPrepend(std::initializer_list<Element> ilElements){
+		UncheckedPrepend(ilElements.begin(), ilElements.end());
 	}
 
 	template<typename ...ParamsT>
@@ -623,6 +657,40 @@ public:
 	}
 	void Append(std::initializer_list<Element> ilElements){
 		Append(ilElements.begin(), ilElements.end());
+	}
+
+	template<typename ...ParamsT>
+	void UncheckedAppend(std::size_t uDeltaSize, const ParamsT &...vParams){
+		std::size_t uElementsPushed = 0;
+		try {
+			for(std::size_t i = 0; i < uDeltaSize; ++i){
+				UncheckedPush(vParams...);
+				++uElementsPushed;
+			}
+		} catch(...){
+			Pop(uElementsPushed);
+			throw;
+		}
+	}
+	template<typename IteratorT, std::enable_if_t<
+		std::is_base_of<std::input_iterator_tag, typename std::iterator_traits<IteratorT>::iterator_category>::value,
+		int> = 0>
+	void UncheckedAppend(IteratorT itBegin, std::common_type_t<IteratorT> itEnd){
+		std::size_t uElementsPushed = 0;
+		try {
+			auto it = itBegin;
+			while(it != itEnd){
+				UncheckedPush(*it);
+				++it;
+				++uElementsPushed;
+			}
+		} catch(...){
+			Pop(uElementsPushed);
+			throw;
+		}
+	}
+	void UncheckedAppend(std::initializer_list<Element> ilElements){
+		UncheckedAppend(ilElements.begin(), ilElements.end());
 	}
 
 	template<typename ...ParamsT>

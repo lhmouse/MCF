@@ -315,7 +315,7 @@ private:
 	Element *x_pElement;
 
 private:
-	Element *X_Fork() noexcept {
+	Element *X_Fork() const noexcept {
 		const auto pElement = x_pElement;
 		if(pElement){
 			static_cast<const volatile Impl_IntrusivePtr::RefCountBase *>(pElement)->AddRef();

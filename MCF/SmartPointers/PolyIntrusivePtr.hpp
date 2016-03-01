@@ -50,9 +50,9 @@ public:
 };
 
 template<typename ObjectT>
-using PolyIntrusivePtr         = IntrusivePtr    <ObjectT, DefaultDeleter<PolyIntrusiveBase>>;
+using PolyIntrusivePtr         = IntrusivePtr     <ObjectT, DefaultDeleter<PolyIntrusiveBase>>;
 template<typename ObjectT>
-using PolyIntrusiveWeakPtr     = IntrusiveWeakPtr<ObjectT, DefaultDeleter<PolyIntrusiveBase>>;
+using PolyIntrusiveWeakPtr     = IntrusiveWeakPtr <ObjectT, DefaultDeleter<PolyIntrusiveBase>>;
 
 template<typename ObjectT>
 using PolyIntrusivePtrView     = const PolyIntrusivePtr<ObjectT> &;

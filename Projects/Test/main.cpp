@@ -20,13 +20,10 @@ extern "C" unsigned MCFCRT_Main(){
 	int c;
 	NarrowString ln;
 	while((c = text_ifs->Get()) >= 0){
-		if(c == '\t'){
-			c = ' ';
-		}
 		if(c != '\n'){
 			ln.Push(c);
 		} else {
-			stdos.Put("Line: ", 6);
+			stdos.Put("Line:\t", 6);
 			stdos.Put(ln.GetData(), ln.GetSize());
 			stdos.Put("# EOL\n", 6);
 			ln.Clear();

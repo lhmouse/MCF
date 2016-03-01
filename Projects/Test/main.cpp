@@ -1,16 +1,36 @@
 #include <MCF/StdMCF.hpp>
-#include <MCF/Containers/RingQueue.hpp>
+#include <MCF/Core/String.hpp>
+#include <MCF/Streams/FileInputStream.hpp>
+#include <MCF/Streams/BufferingInputStreamFilter.hpp>
+#include <MCF/Streams/TextInputStreamFilter.hpp>
+#include <MCF/Streams/StandardOutputStream.hpp>
 
 using namespace MCF;
 
-template class RingQueue<int>;
-
 extern "C" unsigned MCFCRT_Main(){
-	RingQueue<int> q;
-	int a[] = {1,2,3,4,5};
-	q.Prepend(5, std::end(a));
-	for(auto i : q){
-		std::printf("%d\n", i);
+	auto stdos = StandardOutputStream();
+
+	auto wpath = WideString(NarrowStringView(__FILE__));
+	auto file = File(wpath, File::kToRead);
+
+	auto ifs = MakeIntrusive<FileInputStream>(std::move(file));
+	auto buffered_ifs = MakeIntrusive<BufferingInputStreamFilter>(std::move(ifs));
+	auto text_ifs = MakeIntrusive<TextInputStreamFilter>(std::move(buffered_ifs));
+
+	int c;
+	NarrowString ln;
+	while((c = text_ifs->Get()) >= 0){
+		if(c == '\t'){
+			c = ' ';
+		}
+		if(c != '\n'){
+			ln.Push(c);
+		} else {
+			stdos.Put("Line: ", 6);
+			stdos.Put(ln.GetData(), ln.GetSize());
+			stdos.Put("# EOL\n", 6);
+			ln.Clear();
+		}
 	}
 
 	return 0;

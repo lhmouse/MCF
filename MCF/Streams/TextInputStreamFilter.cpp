@@ -31,12 +31,13 @@ namespace {
 				auto pchLineBegin = vecBackBuffer.GetData();
 				const auto pchEnd = pchLineBegin + vecBackBuffer.GetSize();
 				for(;;){
-					const auto pchLineEnd = static_cast<char *>(std::memchr(pchLineBegin, '\n', static_cast<std::size_t>(pchEnd - pchLineBegin)));
+					auto pchLineEnd = static_cast<char *>(std::memchr(pchLineBegin, '\n', static_cast<std::size_t>(pchEnd - pchLineBegin)));
 					if(!pchLineEnd){
 						break;
 					}
 					if((pchLineEnd != pchLineBegin) && (pchLineEnd[-1] == '\r')){
 						std::memmove(pchLineEnd - 1, pchLineEnd, static_cast<std::size_t>(pchEnd - pchLineEnd));
+						--pchLineEnd;
 						vecBackBuffer.Pop();
 					}
 					pchLineBegin = pchLineEnd + 1;

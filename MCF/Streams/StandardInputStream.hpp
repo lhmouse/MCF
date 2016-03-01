@@ -11,7 +11,7 @@ namespace MCF {
 
 class StandardInputStream : public AbstractInputStream {
 public:
-	constexpr StandardInputStream() noexcept = default;
+	StandardInputStream() noexcept = default;
 	~StandardInputStream() override;
 
 	StandardInputStream(StandardInputStream &&) noexcept = default;

@@ -11,7 +11,7 @@ namespace MCF {
 
 class NullOutputStream : public AbstractOutputStream {
 public:
-	constexpr NullOutputStream() noexcept = default;
+	NullOutputStream() noexcept = default;
 	~NullOutputStream() override;
 
 	NullOutputStream(NullOutputStream &&) noexcept = default;

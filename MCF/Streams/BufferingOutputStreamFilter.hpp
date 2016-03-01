@@ -15,7 +15,7 @@ private:
 	mutable StreamBuffer x_vBuffer;
 
 public:
-	explicit BufferingOutputStreamFilter(IntrusivePtr<AbstractOutputStream> pUnderlyingStream) noexcept
+	explicit BufferingOutputStreamFilter(PolyIntrusivePtr<AbstractOutputStream> pUnderlyingStream) noexcept
 		: AbstractOutputStreamFilter(std::move(pUnderlyingStream))
 	{
 	}

@@ -17,7 +17,7 @@ private:
 	mutable Vector<char> x_vecBackBuffer;
 
 public:
-	explicit TextInputStreamFilter(IntrusivePtr<AbstractInputStream> pUnderlyingStream) noexcept
+	explicit TextInputStreamFilter(PolyIntrusivePtr<AbstractInputStream> pUnderlyingStream) noexcept
 		: AbstractInputStreamFilter(std::move(pUnderlyingStream))
 	{
 	}

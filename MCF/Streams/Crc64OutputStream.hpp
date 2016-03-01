@@ -19,7 +19,7 @@ private:
 	std::uint64_t x_u64Reg;
 
 public:
-	constexpr Crc64OutputStream() noexcept
+	Crc64OutputStream() noexcept
 		: x_nChunkOffset(-1), x_abyChunk(), x_u64Reg()
 	{
 	}

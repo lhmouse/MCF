@@ -15,7 +15,7 @@ private:
 	StreamBuffer x_vBuffer;
 
 public:
-	constexpr BufferInputStream() noexcept
+	BufferInputStream() noexcept
 		: x_vBuffer()
 	{
 	}

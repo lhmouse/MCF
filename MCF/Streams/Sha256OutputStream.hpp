@@ -19,7 +19,7 @@ private:
 	std::uint64_t x_u64BytesTotal;
 
 public:
-	constexpr Sha256OutputStream() noexcept
+	Sha256OutputStream() noexcept
 		: x_nChunkOffset(-1), x_abyChunk(), x_au32Reg(), x_u64BytesTotal()
 	{
 	}

@@ -11,10 +11,10 @@ namespace MCF {
 
 class AbstractInputStreamFilter : public AbstractInputStream {
 protected:
-	IntrusivePtr<AbstractInputStream> x_pUnderlyingStream;
+	PolyIntrusivePtr<AbstractInputStream> x_pUnderlyingStream;
 
 public:
-	explicit AbstractInputStreamFilter(IntrusivePtr<AbstractInputStream> pUnderlyingStream) noexcept
+	explicit AbstractInputStreamFilter(PolyIntrusivePtr<AbstractInputStream> pUnderlyingStream) noexcept
 		: x_pUnderlyingStream(std::move(pUnderlyingStream))
 	{
 	}
@@ -32,13 +32,13 @@ public:
 	virtual std::size_t Get(void *pData, std::size_t uSize) = 0;
 	virtual std::size_t Discard(std::size_t uSize) = 0;
 
-	const IntrusivePtr<AbstractInputStream> &GetUnderlyingStream() const noexcept {
+	const PolyIntrusivePtr<AbstractInputStream> &GetUnderlyingStream() const noexcept {
 		return x_pUnderlyingStream;
 	}
-	IntrusivePtr<AbstractInputStream> &GetUnderlyingStream() noexcept {
+	PolyIntrusivePtr<AbstractInputStream> &GetUnderlyingStream() noexcept {
 		return x_pUnderlyingStream;
 	}
-	void SetUnderlyingStream(IntrusivePtr<AbstractInputStream> pUnderlyingStream) noexcept {
+	void SetUnderlyingStream(PolyIntrusivePtr<AbstractInputStream> pUnderlyingStream) noexcept {
 		x_pUnderlyingStream = std::move(pUnderlyingStream);
 	}
 };

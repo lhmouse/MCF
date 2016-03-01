@@ -11,7 +11,7 @@ namespace MCF {
 
 class ZeroInputStream : public AbstractInputStream {
 public:
-	constexpr ZeroInputStream() noexcept = default;
+	ZeroInputStream() noexcept = default;
 	~ZeroInputStream() override;
 
 	ZeroInputStream(ZeroInputStream &&) noexcept = default;

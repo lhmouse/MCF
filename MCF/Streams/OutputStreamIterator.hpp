@@ -15,7 +15,7 @@ private:
 	AbstractOutputStream *x_pstrmOwner;
 
 public:
-	explicit constexpr OutputStreamIterator(AbstractOutputStream &strmOwner) noexcept
+	explicit OutputStreamIterator(AbstractOutputStream &strmOwner) noexcept
 		: x_pstrmOwner(&strmOwner)
 	{
 	}

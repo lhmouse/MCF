@@ -11,7 +11,7 @@ namespace MCF {
 
 class StandardErrorStream : public AbstractOutputStream {
 public:
-	constexpr StandardErrorStream() noexcept = default;
+	StandardErrorStream() noexcept = default;
 	~StandardErrorStream() override;
 
 	StandardErrorStream(StandardErrorStream &&) noexcept = default;

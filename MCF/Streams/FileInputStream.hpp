@@ -18,7 +18,7 @@ private:
 	std::uint64_t x_u64Offset;
 
 public:
-	constexpr FileInputStream() noexcept
+	FileInputStream() noexcept
 		: x_vFile(), x_u64Offset(0)
 	{
 	}

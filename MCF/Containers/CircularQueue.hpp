@@ -2,8 +2,8 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2013 - 2016, LH_Mouse. All wrongs reserved.
 
-#ifndef MCF_CONTAINERS_RING_QUEUE_HPP_
-#define MCF_CONTAINERS_RING_QUEUE_HPP_
+#ifndef MCF_CONTAINERS_CIRCULAR_QUEUE_HPP_
+#define MCF_CONTAINERS_CIRCULAR_QUEUE_HPP_
 
 #include "_Enumerator.hpp"
 #include "../Utilities/Assert.hpp"
@@ -19,44 +19,44 @@
 namespace MCF {
 
 template<typename ElementT>
-class RingQueue {
+class CircularQueue {
 public:
 	// 容器需求。
 	using Element         = ElementT;
-	using ConstEnumerator = Impl_Enumerator::ConstEnumerator <RingQueue>;
-	using Enumerator      = Impl_Enumerator::Enumerator      <RingQueue>;
+	using ConstEnumerator = Impl_Enumerator::ConstEnumerator <CircularQueue>;
+	using Enumerator      = Impl_Enumerator::Enumerator      <CircularQueue>;
 
 private:
 	Element *x_pStorage;
 	std::size_t x_uBegin;
 	std::size_t x_uEnd;
-	std::size_t x_uRingCap;
+	std::size_t x_uCircularCap;
 
 public:
-	constexpr RingQueue() noexcept
-		: x_pStorage(nullptr), x_uBegin(0), x_uEnd(0), x_uRingCap(1)
+	constexpr CircularQueue() noexcept
+		: x_pStorage(nullptr), x_uBegin(0), x_uEnd(0), x_uCircularCap(1)
 	{
 	}
 	template<typename ...ParamsT>
-	explicit RingQueue(std::size_t uSize, const ParamsT &...vParams)
-		: RingQueue()
+	explicit CircularQueue(std::size_t uSize, const ParamsT &...vParams)
+		: CircularQueue()
 	{
 		Append(uSize, vParams...);
 	}
 	template<typename IteratorT, std::enable_if_t<
 		std::is_base_of<std::input_iterator_tag, typename std::iterator_traits<IteratorT>::iterator_category>::value,
 		int> = 0>
-	RingQueue(IteratorT itBegin, std::common_type_t<IteratorT> itEnd)
-		: RingQueue()
+	CircularQueue(IteratorT itBegin, std::common_type_t<IteratorT> itEnd)
+		: CircularQueue()
 	{
 		Append(itBegin, itEnd);
 	}
-	RingQueue(std::initializer_list<Element> rhs)
-		: RingQueue(rhs.begin(), rhs.end())
+	CircularQueue(std::initializer_list<Element> rhs)
+		: CircularQueue(rhs.begin(), rhs.end())
 	{
 	}
-	RingQueue(const RingQueue &rhs)
-		: RingQueue()
+	CircularQueue(const CircularQueue &rhs)
+		: CircularQueue()
 	{
 		Reserve(rhs.GetSize());
 		rhs.X_IterateForward(rhs.x_uBegin, rhs.x_uEnd,
@@ -64,12 +64,12 @@ public:
 				UncheckedPush(rhs.x_pStorage[i]);
 			});
 	}
-	RingQueue(RingQueue &&rhs) noexcept
-		: RingQueue()
+	CircularQueue(CircularQueue &&rhs) noexcept
+		: CircularQueue()
 	{
 		rhs.Swap(*this);
 	}
-	RingQueue &operator=(const RingQueue &rhs){
+	CircularQueue &operator=(const CircularQueue &rhs){
 		if(std::is_nothrow_copy_constructible<Element>::value || IsEmpty()){
 			Reserve(rhs.GetSize());
 			try {
@@ -82,15 +82,15 @@ public:
 				throw;
 			}
 		} else {
-			RingQueue(rhs).Swap(*this);
+			CircularQueue(rhs).Swap(*this);
 		}
 		return *this;
 	}
-	RingQueue &operator=(RingQueue &&rhs) noexcept {
+	CircularQueue &operator=(CircularQueue &&rhs) noexcept {
 		rhs.Swap(*this);
 		return *this;
 	}
-	~RingQueue(){
+	~CircularQueue(){
 		Clear();
 		::operator delete[](x_pStorage);
 	}
@@ -103,7 +103,7 @@ private:
 				vCallback(i);
 			}
 		} else {
-			for(std::size_t i = uBegin; i != x_uRingCap; ++i){
+			for(std::size_t i = uBegin; i != x_uCircularCap; ++i){
 				vCallback(i);
 			}
 			for(std::size_t i = 0; i != uEnd; ++i){
@@ -121,29 +121,29 @@ private:
 			for(std::size_t i = uEnd; i != 0; --i){
 				vCallback(i - 1);
 			}
-			for(std::size_t i = x_uRingCap; i != uBegin; --i){
+			for(std::size_t i = x_uCircularCap; i != uBegin; --i){
 				vCallback(i - 1);
 			}
 		}
 	}
 
 	std::size_t X_Retreat(std::size_t uIndex, std::size_t uDelta) const noexcept {
-		ASSERT(uIndex < x_uRingCap);
-		ASSERT(uDelta < x_uRingCap);
+		ASSERT(uIndex < x_uCircularCap);
+		ASSERT(uDelta < x_uCircularCap);
 
 		auto uNewIndex = uIndex - uDelta;
 		if(uIndex < uDelta){
-			uNewIndex += x_uRingCap;
+			uNewIndex += x_uCircularCap;
 		}
 		return uNewIndex;
 	}
 	std::size_t X_Advance(std::size_t uIndex, std::size_t uDelta) const noexcept {
-		ASSERT(uIndex < x_uRingCap);
-		ASSERT(uDelta < x_uRingCap);
+		ASSERT(uIndex < x_uCircularCap);
+		ASSERT(uDelta < x_uCircularCap);
 
 		auto uNewIndex = uIndex + uDelta;
-		if(x_uRingCap - uIndex <= uDelta){
-			uNewIndex -= x_uRingCap;
+		if(x_uCircularCap - uIndex <= uDelta){
+			uNewIndex -= x_uCircularCap;
 		}
 		return uNewIndex;
 	}
@@ -326,31 +326,31 @@ public:
 		return EnumerateSingular();
 	}
 
-	void Swap(RingQueue &rhs) noexcept {
+	void Swap(CircularQueue &rhs) noexcept {
 		using std::swap;
 		swap(x_pStorage, rhs.x_pStorage);
 		swap(x_uBegin,   rhs.x_uBegin);
 		swap(x_uEnd,     rhs.x_uEnd);
-		swap(x_uRingCap, rhs.x_uRingCap);
+		swap(x_uCircularCap, rhs.x_uCircularCap);
 	}
 
-	// RingQueue 需求。
+	// CircularQueue 需求。
 	std::size_t GetSize() const noexcept {
 		return X_Distance(x_uBegin, x_uEnd);
 	}
 	std::size_t GetCapacity() const noexcept {
-		return x_uRingCap - 1;
+		return x_uCircularCap - 1;
 	}
 
 	const Element &Get(std::size_t uIndex) const {
 		if(uIndex >= GetSize()){
-			DEBUG_THROW(Exception, ERROR_ACCESS_DENIED, "RingQueue: Subscript out of range"_rcs);
+			DEBUG_THROW(Exception, ERROR_ACCESS_DENIED, "CircularQueue: Subscript out of range"_rcs);
 		}
 		return UncheckedGet(uIndex);
 	}
 	Element &Get(std::size_t uIndex){
 		if(uIndex >= GetSize()){
-			DEBUG_THROW(Exception, ERROR_ACCESS_DENIED, "RingQueue: Subscript out of range"_rcs);
+			DEBUG_THROW(Exception, ERROR_ACCESS_DENIED, "CircularQueue: Subscript out of range"_rcs);
 		}
 		return UncheckedGet(uIndex);
 	}
@@ -369,14 +369,14 @@ public:
 		if(x_uBegin <= x_uEnd){
 			return std::make_pair(x_pStorage + x_uBegin, x_uEnd - x_uBegin);
 		} else {
-			return std::make_pair(x_pStorage + x_uBegin, x_uRingCap - x_uBegin);
+			return std::make_pair(x_pStorage + x_uBegin, x_uCircularCap - x_uBegin);
 		}
 	}
 	std::pair<Element *, std::size_t> GetLongestLeadingSequence() noexcept {
 		if(x_uBegin <= x_uEnd){
 			return std::make_pair(x_pStorage + x_uBegin, x_uEnd - x_uBegin);
 		} else {
-			return std::make_pair(x_pStorage + x_uBegin, x_uRingCap - x_uBegin);
+			return std::make_pair(x_pStorage + x_uBegin, x_uCircularCap - x_uBegin);
 		}
 	}
 
@@ -461,7 +461,7 @@ public:
 		x_pStorage  = pNewStorage;
 		x_uBegin    = 0;
 		x_uEnd      = static_cast<std::size_t>(pWrite - pNewStorage);
-		x_uRingCap  = uElementsToAlloc;
+		x_uCircularCap  = uElementsToAlloc;
 	}
 	void ReserveMore(std::size_t uDeltaCapacity){
 		const auto uOldSize = GetSize();
@@ -791,7 +791,7 @@ public:
 			if(uNewCapacity < uCapacity){
 				uNewCapacity = uCapacity;
 			}
-			RingQueue queTemp;
+			CircularQueue queTemp;
 			queTemp.Reserve(uNewCapacity);
 			X_IterateForward(x_uBegin, uOffset,
 				[&, this](auto i){
@@ -850,7 +850,7 @@ public:
 				if(uNewCapacity < uCapacity){
 					uNewCapacity = uCapacity;
 				}
-				RingQueue queTemp;
+				CircularQueue queTemp;
 				queTemp.Reserve(uNewCapacity);
 				X_IterateForward(x_uBegin, uOffset,
 					[&, this](auto i){
@@ -916,7 +916,7 @@ public:
 					if(uNewCapacity < uCapacity){
 						uNewCapacity = uCapacity;
 					}
-					RingQueue queTemp;
+					CircularQueue queTemp;
 					queTemp.Reserve(uNewCapacity);
 					X_IterateForward(x_uBegin, uOffset,
 						[&, this](auto i){
@@ -932,7 +932,7 @@ public:
 					*this = std::move(queTemp);
 				}
 			} else {
-				RingQueue queTemp;
+				CircularQueue queTemp;
 				const auto uCapacity = GetCapacity();
 				queTemp.Reserve(uCapacity);
 				X_IterateForward(x_uBegin, uOffset,
@@ -989,7 +989,7 @@ public:
 					});
 				x_uEnd = X_Retreat(x_uEnd, uDeltaSize);
 			} else {
-				RingQueue queTemp;
+				CircularQueue queTemp;
 				const auto uCapacity = GetCapacity();
 				queTemp.Reserve(uCapacity);
 				X_IterateForward(x_uBegin, uOffsetBegin,
@@ -1006,7 +1006,7 @@ public:
 
 		return x_pStorage + uOffsetBegin;
 	}
-	Element *Erase(const Element *pPos) noexcept(noexcept(DeclVal<RingQueue &>().Erase(pPos, pPos))) {
+	Element *Erase(const Element *pPos) noexcept(noexcept(DeclVal<CircularQueue &>().Erase(pPos, pPos))) {
 		ASSERT(pPos);
 
 		return Erase(pPos, GetNext(pPos));
@@ -1019,26 +1019,26 @@ public:
 		return UncheckedGet(uIndex);
 	}
 
-	friend void swap(RingQueue &lhs, RingQueue &rhs) noexcept {
+	friend void swap(CircularQueue &lhs, CircularQueue &rhs) noexcept {
 		lhs.Swap(rhs);
 	}
 
-	friend decltype(auto) begin(const RingQueue &rhs) noexcept {
+	friend decltype(auto) begin(const CircularQueue &rhs) noexcept {
 		return rhs.EnumerateFirst();
 	}
-	friend decltype(auto) begin(RingQueue &rhs) noexcept {
+	friend decltype(auto) begin(CircularQueue &rhs) noexcept {
 		return rhs.EnumerateFirst();
 	}
-	friend decltype(auto) cbegin(const RingQueue &rhs) noexcept {
+	friend decltype(auto) cbegin(const CircularQueue &rhs) noexcept {
 		return begin(rhs);
 	}
-	friend decltype(auto) end(const RingQueue &rhs) noexcept {
+	friend decltype(auto) end(const CircularQueue &rhs) noexcept {
 		return rhs.EnumerateSingular();
 	}
-	friend decltype(auto) end(RingQueue &rhs) noexcept {
+	friend decltype(auto) end(CircularQueue &rhs) noexcept {
 		return rhs.EnumerateSingular();
 	}
-	friend decltype(auto) cend(const RingQueue &rhs) noexcept {
+	friend decltype(auto) cend(const CircularQueue &rhs) noexcept {
 		return end(rhs);
 	}
 };

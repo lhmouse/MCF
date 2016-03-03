@@ -15,10 +15,6 @@ private:
 	StreamBuffer x_vBuffer;
 
 public:
-	BufferInputStream() noexcept
-		: x_vBuffer()
-	{
-	}
 	explicit BufferInputStream(StreamBuffer vBuffer = StreamBuffer()) noexcept
 		: x_vBuffer(std::move(vBuffer))
 	{

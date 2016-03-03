@@ -119,31 +119,28 @@ public:
 		return Get();
 	}
 
-	template<typename TestObjectT = ObjectT>
-	constexpr auto operator*() const noexcept
-		-> std::enable_if_t<
-			!std::is_void<TestObjectT>::value && !std::is_array<TestObjectT>::value,
-			Element> &
+	template<typename T = ObjectT>
+	constexpr std::enable_if_t<
+		!std::is_void<T>::value && !std::is_array<T>::value,
+		Element> & operator*() const noexcept
 	{
 		ASSERT(IsNonnull());
 
 		return *Get();
 	}
-	template<typename TestObjectT = ObjectT>
-	constexpr auto operator->() const noexcept
-		-> std::enable_if_t<
-			!std::is_void<TestObjectT>::value && !std::is_array<TestObjectT>::value,
-			Element> *
+	template<typename T = ObjectT>
+	constexpr std::enable_if_t<
+		!std::is_void<T>::value && !std::is_array<T>::value,
+		Element> * operator->() const noexcept
 	{
 		ASSERT(IsNonnull());
 
 		return Get();
 	}
-	template<typename TestObjectT = ObjectT>
-	constexpr auto operator[](std::size_t uIndex) const noexcept
-		-> std::enable_if_t<
-			std::is_array<TestObjectT>::value,
-			Element> &
+	template<typename T = ObjectT>
+	constexpr std::enable_if_t<
+		std::is_array<T>::value,
+		Element> & operator[](std::size_t uIndex) const noexcept
 	{
 		ASSERT(IsNonnull());
 

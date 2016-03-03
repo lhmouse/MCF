@@ -35,17 +35,14 @@ namespace {
 				break;
 			}
 
-			auto pchLineBegin = vecBackBuffer.GetData();
-			const auto pchEnd = pchLineBegin + vecBackBuffer.GetSize();
+			auto pchLineBegin = vecBackBuffer.GetBegin();
 			for(;;){
-				auto pchLineEnd = static_cast<char *>(std::memchr(pchLineBegin, '\n', static_cast<std::size_t>(pchEnd - pchLineBegin)));
+				auto pchLineEnd = static_cast<char *>(std::memchr(pchLineBegin, '\n', static_cast<std::size_t>(vecBackBuffer.GetEnd() - pchLineBegin)));
 				if(!pchLineEnd){
 					break;
 				}
 				if((pchLineEnd != pchLineBegin) && (pchLineEnd[-1] == '\r')){
-					std::memmove(pchLineEnd - 1, pchLineEnd, static_cast<std::size_t>(pchEnd - pchLineEnd));
-					--pchLineEnd;
-					vecBackBuffer.Pop();
+					pchLineEnd = vecBackBuffer.Erase(pchLineEnd - 1);
 				}
 				pchLineBegin = pchLineEnd + 1;
 			}

@@ -9,6 +9,7 @@
 #include "../Thread/RecursiveMutex.hpp"
 #include "../Core/Exception.hpp"
 #include "../Core/StreamBuffer.hpp"
+#include "../Containers/StaticVector.hpp"
 #include "StandardOutputStream.hpp"
 
 namespace MCF {
@@ -20,8 +21,7 @@ namespace {
 
 		bool x_bEchoing = true;
 		mutable StreamBuffer x_vBuffer;
-		mutable unsigned char x_abyBackBuffer[4096];
-		mutable std::size_t x_uBackBufferSize = 0;
+		mutable StaticVector<unsigned char, 4096> x_vecBackBuffer;
 
 	public:
 		Pipe()
@@ -46,9 +46,9 @@ namespace {
 			bool bStandardOutputStreamsFlushed = false;
 
 			for(;;){
-				if(x_uBackBufferSize != 0){
-					x_vBuffer.Put(x_abyBackBuffer, x_uBackBufferSize);
-					x_uBackBufferSize = 0;
+				if(!x_vecBackBuffer.IsEmpty()){
+					x_vBuffer.Put(x_vecBackBuffer.GetData(), x_vecBackBuffer.GetSize());
+					x_vecBackBuffer.Clear();
 				}
 				if(!x_vBuffer.IsEmpty()){
 					break;
@@ -59,16 +59,29 @@ namespace {
 					bStandardOutputStreamsFlushed = true;
 				}
 
-				DWORD dwBytesRead;
-				if(!::ReadFile(x_hPipe, x_abyBackBuffer, sizeof(x_abyBackBuffer), &dwBytesRead, nullptr)){
-					const auto dwLastError = ::GetLastError();
-					DEBUG_THROW(SystemException, dwLastError, "ReadFile"_rcs);
+				std::size_t uBytesRead;
+				x_vecBackBuffer.Resize(4096);
+				try {
+					uBytesRead = X_UnbufferedRead(x_vecBackBuffer.GetData(), x_vecBackBuffer.GetSize());
+					x_vecBackBuffer.Pop(x_vecBackBuffer.GetSize() - uBytesRead);
+				} catch(...){
+					x_vecBackBuffer.Clear();
+					throw;
 				}
-				if(dwBytesRead == 0){
+				if(uBytesRead == 0){
 					break;
 				}
-				x_uBackBufferSize = dwBytesRead;
 			}
+		}
+
+		std::size_t X_UnbufferedRead(void *pData, std::size_t uSize) const {
+			const auto dwBytesToRead = static_cast<DWORD>(Min(uSize, UINT32_MAX));
+			DWORD dwBytesRead;
+			if(!::ReadFile(x_hPipe, pData, dwBytesToRead, &dwBytesRead, nullptr)){
+				const auto dwLastError = ::GetLastError();
+				DEBUG_THROW(SystemException, dwLastError, "ReadFile"_rcs);
+			}
+			return dwBytesRead;
 		}
 
 	public:

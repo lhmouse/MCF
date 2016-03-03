@@ -9,6 +9,7 @@
 #include "../Core/Exception.hpp"
 #include "../Thread/RecursiveMutex.hpp"
 #include "../Core/StreamBuffer.hpp"
+#include "../Containers/StaticVector.hpp"
 
 namespace MCF {
 
@@ -19,6 +20,7 @@ namespace {
 
 		bool x_bBuffered = true;
 		mutable StreamBuffer x_vBuffer;
+		mutable StaticVector<unsigned char, 4096> x_vecBackBuffer;
 
 	public:
 		Pipe()
@@ -45,32 +47,34 @@ namespace {
 	private:
 		void X_FlushBuffer(std::size_t uThreshold){
 			for(;;){
+				if(!x_vecBackBuffer.IsEmpty()){
+					X_UnbufferedWrite(x_vecBackBuffer.GetData(), x_vecBackBuffer.GetSize());
+					x_vecBackBuffer.Clear();
+				}
 				if(x_vBuffer.GetSize() < uThreshold){
 					break;
 				}
-				unsigned char abyBackBuffer[4096];
-				auto dwBytesToWrite = static_cast<DWORD>(x_vBuffer.Peek(abyBackBuffer, sizeof(abyBackBuffer)));
-				if(dwBytesToWrite == 0){
-					break;
-				}
 
-				DWORD dwBytesWritten;
-				if(!::WriteFile(x_hPipe, abyBackBuffer, dwBytesToWrite, &dwBytesWritten, nullptr)){
-					const auto dwLastError = ::GetLastError();
-					DEBUG_THROW(SystemException, dwLastError, "WriteFile"_rcs);
+				std::size_t uBytesToWrite;
+				x_vecBackBuffer.Resize(4096);
+				try {
+					uBytesToWrite = x_vBuffer.Get(x_vecBackBuffer.GetData(), x_vecBackBuffer.GetSize());
+					x_vecBackBuffer.Pop(x_vecBackBuffer.GetSize() - uBytesToWrite);
+				} catch(...){
+					x_vecBackBuffer.Clear();
+					throw;
 				}
-				if(dwBytesWritten == 0){
+				if(uBytesToWrite == 0){
 					break;
 				}
-				x_vBuffer.Discard(dwBytesWritten);
 			}
 		}
 
-		std::size_t X_UnbufferedWrite(const void *pData, std::size_t uSize){
+		void X_UnbufferedWrite(const void *pData, std::size_t uSize) const {
 			const auto pbyData = static_cast<const unsigned char *>(pData);
 			std::size_t uBytesTotal = 0;
 			for(;;){
-				auto dwBytesToWrite = static_cast<DWORD>(Min(uSize - uBytesTotal, UINT32_MAX));
+				const auto dwBytesToWrite = static_cast<DWORD>(Min(uSize - uBytesTotal, UINT32_MAX));
 				if(dwBytesToWrite == 0){
 					break;
 				}
@@ -81,11 +85,10 @@ namespace {
 					DEBUG_THROW(SystemException, dwLastError, "WriteFile"_rcs);
 				}
 				if(dwBytesWritten == 0){
-					break;
+					DEBUG_THROW(Exception, ERROR_BROKEN_PIPE, "StandardOutputStream: Partial contents written"_rcs);
 				}
 				uBytesTotal += dwBytesWritten;
 			}
-			return uBytesTotal;
 		}
 
 	public:
@@ -103,14 +106,13 @@ namespace {
 			x_bBuffered = bBuffered;
 		}
 
-		std::size_t Write(const void *pData, std::size_t uSize){
+		void Write(const void *pData, std::size_t uSize){
 			if(x_bBuffered){
 				x_vBuffer.Put(pData, uSize);
 				X_FlushBuffer(4096);
 			} else {
 				X_UnbufferedWrite(pData, uSize);
 			}
-			return uSize;
 		}
 
 		void Flush(bool bHard){
@@ -142,10 +144,7 @@ void StandardOutputStream::Put(unsigned char byData){
 	}
 	const auto vLock = g_vMutex.GetLock();
 
-	const auto uBytesWritten = g_vPipe.Write(&byData, 1);
-	if(uBytesWritten < 1){
-		DEBUG_THROW(Exception, ERROR_BROKEN_PIPE, "StandardOutputStream: Partial contents written"_rcs);
-	}
+	g_vPipe.Write(&byData, 1);
 }
 
 void StandardOutputStream::Put(const void *pData, std::size_t uSize){
@@ -154,10 +153,7 @@ void StandardOutputStream::Put(const void *pData, std::size_t uSize){
 	}
 	const auto vLock = g_vMutex.GetLock();
 
-	const auto uBytesWritten = g_vPipe.Write(pData, uSize);
-	if(uBytesWritten < uSize){
-		DEBUG_THROW(Exception, ERROR_BROKEN_PIPE, "StandardOutputStream: Partial contents written"_rcs);
-	}
+	g_vPipe.Write(pData, uSize);
 }
 
 void StandardOutputStream::Flush(bool bHard){

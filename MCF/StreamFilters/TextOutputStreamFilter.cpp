@@ -8,51 +8,58 @@
 namespace MCF {
 
 namespace {
-	void FlushBuffer(AbstractOutputStream *pStream, StreamBuffer &vBuffer){
+	void FlushBuffer(AbstractOutputStream *pStream, StreamBuffer &vBuffer, Vector<char> &vecBackBuffer){
 		for(;;){
-			unsigned char abyBackBuffer[4096];
-			const auto uBytesToWrite = vBuffer.Peek(abyBackBuffer, sizeof(abyBackBuffer));
+			if(!vecBackBuffer.IsEmpty()){
+				pStream->Put(vecBackBuffer.GetData(), vecBackBuffer.GetSize());
+				vecBackBuffer.Clear();
+			}
+
+			std::size_t uBytesToWrite;
+			vecBackBuffer.Resize(4096);
+			try {
+				uBytesToWrite = vBuffer.Get(vecBackBuffer.GetData(), vecBackBuffer.GetSize());
+				vecBackBuffer.Pop(vecBackBuffer.GetSize() - uBytesToWrite);
+			} catch(...){
+				vecBackBuffer.Clear();
+				throw;
+			}
 			if(uBytesToWrite == 0){
 				break;
 			}
-			pStream->Put(abyBackBuffer, uBytesToWrite);
-			vBuffer.Discard(uBytesToWrite);
+
+			auto pchLineBegin = vecBackBuffer.GetBegin();
+			for(;;){
+				auto pchLineEnd = static_cast<char *>(std::memchr(pchLineBegin, '\n', static_cast<std::size_t>(vecBackBuffer.GetEnd() - pchLineBegin)));
+				if(!pchLineEnd){
+					break;
+				}
+				pchLineEnd = vecBackBuffer.Emplace(pchLineEnd, '\r') + 1;
+				pchLineBegin = pchLineEnd + 1;
+			}
 		}
 	}
 }
 
 TextOutputStreamFilter::~TextOutputStreamFilter(){
+	try {
+		FlushBuffer(x_pUnderlyingStream.Get(), x_vBuffer, x_vecBackBuffer);
+	} catch(...){
+	}
 }
 
 void TextOutputStreamFilter::Put(unsigned char byData){
-	if(byData != '\n'){
-		x_vBuffer.Put(byData);
-	} else {
-		x_vBuffer.Put("\r\n", 2);
-	}
-	FlushBuffer(x_pUnderlyingStream.Get(), x_vBuffer);
+	x_vBuffer.Put(byData);
+	FlushBuffer(x_pUnderlyingStream.Get(), x_vBuffer, x_vecBackBuffer);
 }
 
 void TextOutputStreamFilter::Put(const void *pData, std::size_t uSize){
-	StreamBuffer vNewBuffer;
-	auto pchLineBegin = static_cast<const char *>(pData);
-	const auto pchEnd = pchLineBegin + uSize;
-	for(;;){
-		const auto pchLineEnd = static_cast<char *>(std::memchr(pchLineBegin, '\n', static_cast<std::size_t>(pchEnd - pchLineBegin)));
-		if(!pchLineEnd){
-			vNewBuffer.Put(pchLineBegin, static_cast<std::size_t>(pchEnd - pchLineBegin));
-			break;
-		}
-		vNewBuffer.Put(pchLineBegin, static_cast<std::size_t>(pchLineEnd - pchLineBegin));
-		vNewBuffer.Put("\r\n", 2);
-		pchLineBegin = pchLineEnd + 1;
-	}
-	x_vBuffer.Splice(vNewBuffer);
-	FlushBuffer(x_pUnderlyingStream.Get(), x_vBuffer);
+	x_vBuffer.Put(pData, uSize);
+	FlushBuffer(x_pUnderlyingStream.Get(), x_vBuffer, x_vecBackBuffer);
 }
 
 void TextOutputStreamFilter::Flush(bool bHard){
-	FlushBuffer(x_pUnderlyingStream.Get(), x_vBuffer);
+	FlushBuffer(x_pUnderlyingStream.Get(), x_vBuffer, x_vecBackBuffer);
 
 	x_pUnderlyingStream->Flush(bHard);
 }

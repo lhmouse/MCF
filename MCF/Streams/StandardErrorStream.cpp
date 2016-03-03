@@ -36,13 +36,13 @@ namespace {
 		Pipe(const Pipe &) = delete;
 
 	private:
-		std::size_t X_UnbufferedWrite(const void *pData, std::size_t uSize){
+		void X_UnbufferedWrite(const void *pData, std::size_t uSize) const {
 			bool bStandardOutputStreamsFlushed = false;
 
 			const auto pbyData = static_cast<const unsigned char *>(pData);
 			std::size_t uBytesTotal = 0;
 			for(;;){
-				auto dwBytesToWrite = static_cast<DWORD>(Min(uSize - uBytesTotal, UINT32_MAX));
+				const auto dwBytesToWrite = static_cast<DWORD>(Min(uSize - uBytesTotal, UINT32_MAX));
 				if(dwBytesToWrite == 0){
 					break;
 				}
@@ -58,11 +58,10 @@ namespace {
 					DEBUG_THROW(SystemException, dwLastError, "WriteFile"_rcs);
 				}
 				if(dwBytesWritten == 0){
-					break;
+					DEBUG_THROW(Exception, ERROR_BROKEN_PIPE, "StandardErrorStream: Partial contents written"_rcs);
 				}
 				uBytesTotal += dwBytesWritten;
 			}
-			return uBytesTotal;
 		}
 
 	public:
@@ -70,7 +69,7 @@ namespace {
 			return !x_hPipe;
 		}
 
-		std::size_t Write(const void *pData, std::size_t uSize){
+		void Write(const void *pData, std::size_t uSize){
 			return X_UnbufferedWrite(pData, uSize);
 		}
 
@@ -101,10 +100,7 @@ void StandardErrorStream::Put(unsigned char byData){
 	}
 	const auto vLock = g_vMutex.GetLock();
 
-	const auto uBytesWritten = g_vPipe.Write(&byData, 1);
-	if(uBytesWritten < 1){
-		DEBUG_THROW(Exception, ERROR_BROKEN_PIPE, "StandardErrorStream: Partial contents written"_rcs);
-	}
+	g_vPipe.Write(&byData, 1);
 }
 
 void StandardErrorStream::Put(const void *pData, std::size_t uSize){
@@ -113,10 +109,7 @@ void StandardErrorStream::Put(const void *pData, std::size_t uSize){
 	}
 	const auto vLock = g_vMutex.GetLock();
 
-	const auto uBytesWritten = g_vPipe.Write(pData, uSize);
-	if(uBytesWritten < uSize){
-		DEBUG_THROW(Exception, ERROR_BROKEN_PIPE, "StandardErrorStream: Partial contents written"_rcs);
-	}
+	g_vPipe.Write(pData, uSize);
 }
 
 void StandardErrorStream::Flush(bool bHard){

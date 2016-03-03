@@ -7,12 +7,14 @@
 
 #include "AbstractOutputStreamFilter.hpp"
 #include "../Core/StreamBuffer.hpp"
+#include "../Containers/Vector.hpp"
 
 namespace MCF {
 
 class BufferingOutputStreamFilter : public AbstractOutputStreamFilter {
 private:
 	mutable StreamBuffer x_vBuffer;
+	mutable Vector<unsigned char> x_vecBackBuffer;
 
 public:
 	explicit BufferingOutputStreamFilter(PolyIntrusivePtr<AbstractOutputStream> pUnderlyingStream) noexcept
@@ -35,6 +37,7 @@ public:
 		using std::swap;
 		swap(x_pUnderlyingStream, rhs.x_pUnderlyingStream);
 		swap(x_vBuffer,           rhs.x_vBuffer);
+		swap(x_vecBackBuffer,     rhs.x_vecBackBuffer);
 	}
 
 	friend void swap(BufferingOutputStreamFilter &lhs, BufferingOutputStreamFilter &rhs) noexcept {

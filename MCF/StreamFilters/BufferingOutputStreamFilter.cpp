@@ -18,7 +18,6 @@ namespace {
 			if(uBytesToWrite == 0){
 				break;
 			}
-
 			pStream->Put(abyBackBuffer, uBytesToWrite);
 			vBuffer.Discard(uBytesToWrite);
 		}

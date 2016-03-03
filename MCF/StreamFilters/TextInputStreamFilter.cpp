@@ -31,11 +31,9 @@ namespace {
 				vecBackBuffer.Clear();
 				throw;
 			}
-
 			if(uBytesRead == 0){
 				break;
 			}
-
 			auto pchLineBegin = vecBackBuffer.GetData();
 			const auto pchEnd = pchLineBegin + vecBackBuffer.GetSize();
 			for(;;){

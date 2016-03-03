@@ -27,7 +27,6 @@ namespace {
 				vecBackBuffer.Clear();
 				throw;
 			}
-
 			if(uBytesRead == 0){
 				break;
 			}

@@ -69,7 +69,7 @@ public:
 	}
 
 	bool CompareExchange(Element &vComparand, Element vExchangeWith, MemoryModel eModel) volatile noexcept {
-		constexpr auto eRealModel = __builtin_constant_p(eModel) ? eModel : kAtomicSeqCst;
+		const auto eRealModel = __builtin_constant_p(eModel) ? eModel : kAtomicSeqCst;
 		if(eRealModel == kAtomicAcqRel){
 			return CompareExchange(vComparand, vExchangeWith, eModel, kAtomicAcquire);
 		} else if(eRealModel == kAtomicRelease){

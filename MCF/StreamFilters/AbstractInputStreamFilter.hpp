@@ -2,10 +2,10 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2013 - 2016, LH_Mouse. All wrongs reserved.
 
-#ifndef MCF_STREAMS_ABSTRACT_INPUT_STREAM_FILTER_HPP_
-#define MCF_STREAMS_ABSTRACT_INPUT_STREAM_FILTER_HPP_
+#ifndef MCF_STREAM_FILTERS_ABSTRACT_INPUT_STREAM_FILTER_HPP_
+#define MCF_STREAM_FILTERS_ABSTRACT_INPUT_STREAM_FILTER_HPP_
 
-#include "AbstractInputStream.hpp"
+#include "../Streams/AbstractInputStream.hpp"
 
 namespace MCF {
 

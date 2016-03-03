@@ -53,6 +53,8 @@ void TextOutputStreamFilter::Put(const void *pData, std::size_t uSize){
 }
 
 void TextOutputStreamFilter::Flush(bool bHard){
+	FlushBuffer(x_pUnderlyingStream.Get(), x_vBuffer);
+
 	x_pUnderlyingStream->Flush(bHard);
 }
 

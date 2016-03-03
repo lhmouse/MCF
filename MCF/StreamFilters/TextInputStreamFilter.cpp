@@ -27,21 +27,6 @@ namespace {
 				}
 				pStream->Discard(uBytesRead);
 				vecBackBuffer.Pop(vecBackBuffer.GetSize() - uBytesRead);
-
-				auto pchLineBegin = vecBackBuffer.GetData();
-				const auto pchEnd = pchLineBegin + vecBackBuffer.GetSize();
-				for(;;){
-					auto pchLineEnd = static_cast<char *>(std::memchr(pchLineBegin, '\n', static_cast<std::size_t>(pchEnd - pchLineBegin)));
-					if(!pchLineEnd){
-						break;
-					}
-					if((pchLineEnd != pchLineBegin) && (pchLineEnd[-1] == '\r')){
-						std::memmove(pchLineEnd - 1, pchLineEnd, static_cast<std::size_t>(pchEnd - pchLineEnd));
-						--pchLineEnd;
-						vecBackBuffer.Pop();
-					}
-					pchLineBegin = pchLineEnd + 1;
-				}
 			} catch(...){
 				vecBackBuffer.Clear();
 				throw;
@@ -49,6 +34,21 @@ namespace {
 
 			if(uBytesRead == 0){
 				break;
+			}
+
+			auto pchLineBegin = vecBackBuffer.GetData();
+			const auto pchEnd = pchLineBegin + vecBackBuffer.GetSize();
+			for(;;){
+				auto pchLineEnd = static_cast<char *>(std::memchr(pchLineBegin, '\n', static_cast<std::size_t>(pchEnd - pchLineBegin)));
+				if(!pchLineEnd){
+					break;
+				}
+				if((pchLineEnd != pchLineBegin) && (pchLineEnd[-1] == '\r')){
+					std::memmove(pchLineEnd - 1, pchLineEnd, static_cast<std::size_t>(pchEnd - pchLineEnd));
+					--pchLineEnd;
+					vecBackBuffer.Pop();
+				}
+				pchLineBegin = pchLineEnd + 1;
 			}
 		}
 	}

@@ -16,7 +16,8 @@ struct DefaultDeleter {
 
 	template<class U,
 		std::enable_if_t<
-			std::is_convertible<std::remove_cv_t<U> *, std::remove_cv_t<T> *>::value,
+			std::is_same<std::remove_cv_t<U>, std::remove_cv_t<T>>::value ||
+				(std::is_convertible<std::remove_cv_t<U> *, std::remove_cv_t<T> *>::value && std::is_polymorphic<T>::value),
 			int> = 0>
 	DefaultDeleter(const DefaultDeleter<U> &rhs) noexcept {
 	}

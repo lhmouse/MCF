@@ -479,8 +479,8 @@ void AnsiString::UnifyAppend(String<StringType::kUtf16> &u16sDst, const AnsiStri
 	if((uOutputSizeMax > ULONG_MAX) || (uOutputSizeMax / sizeof(wchar_t) != svSrc.GetSize())){
 		DEBUG_THROW(Exception, ERROR_NOT_ENOUGH_MEMORY, "The output Unicode string requires more memory than ULONG_MAX bytes"_rcs);
 	}
+	const auto pchWrite = u16sDst.ResizeMore(uOutputSizeMax / sizeof(wchar_t));
 	try {
-		const auto pchWrite = u16sDst.ResizeMore(uOutputSizeMax / sizeof(wchar_t));
 		ULONG ulConvertedSize;
 		const auto lStatus = ::RtlMultiByteToUnicodeN(reinterpret_cast<wchar_t *>(pchWrite), (DWORD)uOutputSizeMax, &ulConvertedSize, svSrc.GetBegin(), (DWORD)uInputSize);
 		if(!NT_SUCCESS(lStatus)){
@@ -503,8 +503,8 @@ void AnsiString::DeunifyAppend(AnsiString &strDst, const StringView<StringType::
 	if((uOutputSizeMax > ULONG_MAX) || (uOutputSizeMax / (2 * sizeof(char)) != u16svSrc.GetSize())){
 		DEBUG_THROW(Exception, ERROR_NOT_ENOUGH_MEMORY, "The output ANSI string requires more memory than ULONG_MAX bytes"_rcs);
 	}
+	const auto pchWrite = strDst.ResizeMore(uOutputSizeMax / sizeof(char));
 	try {
-		const auto pchWrite = strDst.ResizeMore(uOutputSizeMax / sizeof(char));
 		ULONG ulConvertedSize;
 		const auto lStatus = ::RtlUnicodeToMultiByteN(pchWrite, (DWORD)uOutputSizeMax, &ulConvertedSize, reinterpret_cast<const wchar_t *>(u16svSrc.GetBegin()), (DWORD)uInputSize);
 		if(!NT_SUCCESS(lStatus)){

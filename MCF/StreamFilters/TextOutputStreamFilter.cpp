@@ -4,26 +4,33 @@
 
 #include "../StdMCF.hpp"
 #include "TextOutputStreamFilter.hpp"
+#include "../Utilities/CopyMoveFill.hpp"
 
 namespace MCF {
 
 namespace {
+	constexpr std::size_t kStepSize = 1;
+
 	void FlushBuffer(AbstractOutputStream *pStream, StreamBuffer &vBuffer, Vector<char> &vecBackBuffer){
 		for(;;){
 			if(!vecBackBuffer.IsEmpty()){
-				pStream->Put(vecBackBuffer.GetData(), vecBackBuffer.GetSize());
-				vecBackBuffer.Clear();
+				const auto pbyToWriteBegin = vecBackBuffer.GetData();
+				const auto pbyToWriteEnd   = pbyToWriteBegin + vecBackBuffer.GetSize();
+				pStream->Put(pbyToWriteBegin, static_cast<std::size_t>(pbyToWriteEnd - pbyToWriteBegin));
+				vecBackBuffer.Erase(pbyToWriteBegin, pbyToWriteEnd);
 			}
 
 			std::size_t uBytesToWrite;
-			vecBackBuffer.Resize(4096);
+			vecBackBuffer.ReserveMore(kStepSize * 2);
+			const auto pbyStepBuffer = vecBackBuffer.ResizeMore(kStepSize);
 			try {
-				uBytesToWrite = vBuffer.Get(vecBackBuffer.GetData(), vecBackBuffer.GetSize());
-				vecBackBuffer.Pop(vecBackBuffer.GetSize() - uBytesToWrite);
+				uBytesToWrite = vBuffer.Get(pbyStepBuffer, kStepSize);
 			} catch(...){
-				vecBackBuffer.Clear();
+				vecBackBuffer.Pop(kStepSize);
 				throw;
 			}
+			vecBackBuffer.Pop(kStepSize - uBytesToWrite);
+
 			if(uBytesToWrite == 0){
 				break;
 			}
@@ -34,7 +41,9 @@ namespace {
 				if(!pchLineEnd){
 					break;
 				}
-				pchLineEnd = vecBackBuffer.Emplace(pchLineEnd, '\r') + 1;
+				vecBackBuffer.UncheckedPush();
+				CopyBackward(vecBackBuffer.GetEnd(), pchLineEnd, vecBackBuffer.GetEnd() - 1)[-1] = '\r';
+				++pchLineEnd;
 				pchLineBegin = pchLineEnd + 1;
 			}
 		}

@@ -8,25 +8,30 @@
 namespace MCF {
 
 namespace {
+	constexpr std::size_t kStepSize = 4096;
+
 	void FlushBuffer(AbstractOutputStream *pStream, StreamBuffer &vBuffer, Vector<unsigned char> &vecBackBuffer, std::size_t uThreshold){
 		for(;;){
 			if(!vecBackBuffer.IsEmpty()){
-				pStream->Put(vecBackBuffer.GetData(), vecBackBuffer.GetSize());
-				vecBackBuffer.Clear();
+				const auto pbyToWriteBegin = vecBackBuffer.GetData();
+				const auto pbyToWriteEnd   = pbyToWriteBegin + vecBackBuffer.GetSize();
+				pStream->Put(pbyToWriteBegin, static_cast<std::size_t>(pbyToWriteEnd - pbyToWriteBegin));
+				vecBackBuffer.Erase(pbyToWriteBegin, pbyToWriteEnd);
 			}
 			if(vBuffer.GetSize() < uThreshold){
 				break;
 			}
 
 			std::size_t uBytesToWrite;
-			vecBackBuffer.Resize(4096);
+			const auto pbyStepBuffer = vecBackBuffer.ResizeMore(kStepSize);
 			try {
-				uBytesToWrite = vBuffer.Get(vecBackBuffer.GetData(), vecBackBuffer.GetSize());
-				vecBackBuffer.Pop(vecBackBuffer.GetSize() - uBytesToWrite);
+				uBytesToWrite = vBuffer.Get(pbyStepBuffer, kStepSize);
 			} catch(...){
-				vecBackBuffer.Clear();
+				vecBackBuffer.Pop(kStepSize);
 				throw;
 			}
+			vecBackBuffer.Pop(kStepSize - uBytesToWrite);
+
 			if(uBytesToWrite == 0){
 				break;
 			}

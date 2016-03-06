@@ -18,7 +18,7 @@ namespace MCF {
 
 bool ConditionVariable::Wait(Impl_UniqueLockTemplate::UniqueLockTemplateBase &vLock, std::uint64_t u64UntilFastMonoClock) noexcept {
 	x_uControl.Increment(kAtomicRelaxed);
-	const auto uCount = vLock.X_UnlockAll();
+	const auto uCount = vLock.Y_UnlockAll();
 	ASSERT_MSG(uCount != 0, L"你会用条件变量吗？");
 
 	::LARGE_INTEGER liTimeout;
@@ -55,17 +55,17 @@ bool ConditionVariable::Wait(Impl_UniqueLockTemplate::UniqueLockTemplateBase &vL
 			}
 		}
 
-		vLock.X_RelockAll(uCount);
+		vLock.Y_RelockAll(uCount);
 		return false;
 	}
 
-	vLock.X_RelockAll(uCount);
+	vLock.Y_RelockAll(uCount);
 	return true;
 }
 void ConditionVariable::Wait(Impl_UniqueLockTemplate::UniqueLockTemplateBase &vLock) noexcept {
 	x_uControl.Increment(kAtomicRelaxed);
 
-	const auto uCount = vLock.X_UnlockAll();
+	const auto uCount = vLock.Y_UnlockAll();
 	ASSERT_MSG(uCount != 0, L"你会用条件变量吗？");
 
 	const auto lStatus = ::NtWaitForKeyedEvent(nullptr, this, false, nullptr);
@@ -73,7 +73,7 @@ void ConditionVariable::Wait(Impl_UniqueLockTemplate::UniqueLockTemplateBase &vL
 		ASSERT_MSG(false, L"NtWaitForKeyedEvent() 失败。");
 	}
 
-	vLock.X_RelockAll(uCount);
+	vLock.Y_RelockAll(uCount);
 }
 
 std::size_t ConditionVariable::Signal(std::size_t uMaxToWakeUp) noexcept {

@@ -55,7 +55,7 @@ Impl_UniqueNtHandle::UniqueNtHandle KernelEvent::X_CreateEventHandle(bool bInitS
 			ulAttributes = OBJ_OPENIF;
 		}
 
-		hRootDirectory = X_OpenBaseNamedObjectDirectory(u32Flags);
+		hRootDirectory = Y_OpenBaseNamedObjectDirectory(u32Flags);
 
 		InitializeObjectAttributes(&vObjectAttributes, &ustrObjectName, ulAttributes, hRootDirectory.Get(), nullptr);
 	}

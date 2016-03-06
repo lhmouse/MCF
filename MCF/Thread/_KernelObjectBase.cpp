@@ -14,7 +14,7 @@ NTSTATUS NtOpenDirectoryObject(HANDLE *pHandle, ACCESS_MASK dwDesiredAccess, con
 namespace MCF {
 
 namespace Impl_KernelObjectBase {
-	Impl_UniqueNtHandle::UniqueNtHandle KernelObjectBase::X_OpenBaseNamedObjectDirectory(std::uint32_t u32Flags){
+	Impl_UniqueNtHandle::UniqueNtHandle KernelObjectBase::Y_OpenBaseNamedObjectDirectory(std::uint32_t u32Flags){
 		wchar_t awcBuffer[64];
 
 		::UNICODE_STRING ustrName;

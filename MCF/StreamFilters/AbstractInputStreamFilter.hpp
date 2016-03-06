@@ -6,16 +6,17 @@
 #define MCF_STREAM_FILTERS_ABSTRACT_INPUT_STREAM_FILTER_HPP_
 
 #include "../Streams/AbstractInputStream.hpp"
+#include "_BufferedInputStream.hpp"
 
 namespace MCF {
 
 class AbstractInputStreamFilter : public AbstractInputStream {
 protected:
-	PolyIntrusivePtr<AbstractInputStream> x_pUnderlyingStream;
+	Impl_BufferedInputStream::BufferedInputStream y_vBufferedStream;
 
 public:
 	explicit AbstractInputStreamFilter(PolyIntrusivePtr<AbstractInputStream> pUnderlyingStream) noexcept
-		: x_pUnderlyingStream(std::move(pUnderlyingStream))
+		: y_vBufferedStream(std::move(pUnderlyingStream))
 	{
 	}
 	virtual ~AbstractInputStreamFilter() = 0;
@@ -33,10 +34,10 @@ public:
 	virtual std::size_t Discard(std::size_t uSize) = 0;
 
 	const PolyIntrusivePtr<AbstractInputStream> &GetUnderlyingStream() const noexcept {
-		return x_pUnderlyingStream;
+		return y_vBufferedStream.GetUnderlyingStream();
 	}
 	void SetUnderlyingStream(PolyIntrusivePtr<AbstractInputStream> pUnderlyingStream) noexcept {
-		x_pUnderlyingStream = std::move(pUnderlyingStream);
+		y_vBufferedStream.SetUnderlyingStream(std::move(pUnderlyingStream));
 	}
 };
 

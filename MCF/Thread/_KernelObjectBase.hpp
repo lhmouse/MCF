@@ -23,7 +23,7 @@ namespace Impl_KernelObjectBase {
 		};
 
 	protected:
-		static Impl_UniqueNtHandle::UniqueNtHandle X_OpenBaseNamedObjectDirectory(std::uint32_t u32Flags);
+		static Impl_UniqueNtHandle::UniqueNtHandle Y_OpenBaseNamedObjectDirectory(std::uint32_t u32Flags);
 	};
 }
 

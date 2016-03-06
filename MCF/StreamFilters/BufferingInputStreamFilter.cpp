@@ -7,63 +7,27 @@
 
 namespace MCF {
 
-namespace {
-	constexpr std::size_t kStepSize = 4096;
-
-	void PopulateBuffer(StreamBuffer &vBuffer, Vector<unsigned char> &vecBackBuffer, AbstractInputStream *pStream){
-		for(;;){
-			if(!vecBackBuffer.IsEmpty()){
-				vBuffer.Put(vecBackBuffer.GetData(), vecBackBuffer.GetSize());
-				vecBackBuffer.Clear();
-			}
-			if(!vBuffer.IsEmpty()){
-				break;
-			}
-
-			std::size_t uBytesRead;
-			const auto pbyStepBuffer = vecBackBuffer.ResizeMore(kStepSize);
-			try {
-				uBytesRead = pStream->Get(pbyStepBuffer, kStepSize);
-			} catch(...){
-				vecBackBuffer.Pop(kStepSize);
-				throw;
-			}
-			vecBackBuffer.Pop(kStepSize - uBytesRead);
-
-			if(uBytesRead == 0){
-				break;
-			}
-		}
-	}
-}
-
 BufferingInputStreamFilter::~BufferingInputStreamFilter(){
 }
 
 int BufferingInputStreamFilter::Peek() const {
-	PopulateBuffer(x_vBuffer, x_vecBackBuffer, x_pUnderlyingStream.Get());
-	return x_vBuffer.Peek();
+	return y_vBufferedStream.Peek();
 }
 int BufferingInputStreamFilter::Get(){
-	PopulateBuffer(x_vBuffer, x_vecBackBuffer, x_pUnderlyingStream.Get());
-	return x_vBuffer.Get();
+	return y_vBufferedStream.Get();
 }
 bool BufferingInputStreamFilter::Discard(){
-	PopulateBuffer(x_vBuffer, x_vecBackBuffer, x_pUnderlyingStream.Get());
-	return x_vBuffer.Discard();
+	return y_vBufferedStream.Discard();
 }
 
 std::size_t BufferingInputStreamFilter::Peek(void *pData, std::size_t uSize) const {
-	PopulateBuffer(x_vBuffer, x_vecBackBuffer, x_pUnderlyingStream.Get());
-	return x_vBuffer.Peek(pData, uSize);
+	return y_vBufferedStream.Peek(pData, uSize);
 }
 std::size_t BufferingInputStreamFilter::Get(void *pData, std::size_t uSize){
-	PopulateBuffer(x_vBuffer, x_vecBackBuffer, x_pUnderlyingStream.Get());
-	return x_vBuffer.Get(pData, uSize);
+	return y_vBufferedStream.Get(pData, uSize);
 }
 std::size_t BufferingInputStreamFilter::Discard(std::size_t uSize){
-	PopulateBuffer(x_vBuffer, x_vecBackBuffer, x_pUnderlyingStream.Get());
-	return x_vBuffer.Discard(uSize);
+	return y_vBufferedStream.Discard(uSize);
 }
 
 }

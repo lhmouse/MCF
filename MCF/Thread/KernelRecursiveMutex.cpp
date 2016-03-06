@@ -42,7 +42,7 @@ Impl_UniqueNtHandle::UniqueNtHandle KernelRecursiveMutex::X_CreateMutexHandle(co
 			ulAttributes = OBJ_OPENIF;
 		}
 
-		hRootDirectory = X_OpenBaseNamedObjectDirectory(u32Flags);
+		hRootDirectory = Y_OpenBaseNamedObjectDirectory(u32Flags);
 
 		InitializeObjectAttributes(&vObjectAttributes, &ustrObjectName, ulAttributes, hRootDirectory.Get(), nullptr);
 	}

@@ -6,16 +6,10 @@
 #define MCF_STREAM_FILTERS_BUFFERING_INPUT_STREAM_FILTER_HPP_
 
 #include "AbstractInputStreamFilter.hpp"
-#include "../Core/StreamBuffer.hpp"
-#include "../Containers/Vector.hpp"
 
 namespace MCF {
 
 class BufferingInputStreamFilter : public AbstractInputStreamFilter {
-private:
-	mutable StreamBuffer x_vBuffer;
-	mutable Vector<unsigned char> x_vecBackBuffer;
-
 public:
 	explicit BufferingInputStreamFilter(PolyIntrusivePtr<AbstractInputStream> pUnderlyingStream) noexcept
 		: AbstractInputStreamFilter(std::move(pUnderlyingStream))
@@ -37,9 +31,7 @@ public:
 
 	void Swap(BufferingInputStreamFilter &rhs) noexcept {
 		using std::swap;
-		swap(x_pUnderlyingStream, rhs.x_pUnderlyingStream);
-		swap(x_vBuffer,           rhs.x_vBuffer);
-		swap(x_vecBackBuffer,     rhs.x_vecBackBuffer);
+		swap(y_vBufferedStream, rhs.y_vBufferedStream);
 	}
 
 	friend void swap(BufferingInputStreamFilter &lhs, BufferingInputStreamFilter &rhs) noexcept {

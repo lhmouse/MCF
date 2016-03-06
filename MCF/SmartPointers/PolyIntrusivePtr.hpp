@@ -16,36 +16,36 @@ public:
 public:
 	template<typename ObjectT>
 	IntrusivePtr<const volatile ObjectT, DefaultDeleter<PolyIntrusiveBase>> Share() const volatile {
-		return IntrusiveBase<PolyIntrusiveBase>::X_ForkShared<const volatile ObjectT>(this);
+		return IntrusiveBase<PolyIntrusiveBase>::Y_ForkShared<const volatile ObjectT>(this);
 	}
 	template<typename ObjectT>
 	IntrusivePtr<const ObjectT, DefaultDeleter<PolyIntrusiveBase>> Share() const {
-		return IntrusiveBase<PolyIntrusiveBase>::X_ForkShared<const ObjectT>(this);
+		return IntrusiveBase<PolyIntrusiveBase>::Y_ForkShared<const ObjectT>(this);
 	}
 	template<typename ObjectT>
 	IntrusivePtr<volatile ObjectT, DefaultDeleter<PolyIntrusiveBase>> Share() volatile {
-		return IntrusiveBase<PolyIntrusiveBase>::X_ForkShared<volatile ObjectT>(this);
+		return IntrusiveBase<PolyIntrusiveBase>::Y_ForkShared<volatile ObjectT>(this);
 	}
 	template<typename ObjectT>
 	IntrusivePtr<ObjectT, DefaultDeleter<PolyIntrusiveBase>> Share(){
-		return IntrusiveBase<PolyIntrusiveBase>::X_ForkShared<ObjectT>(this);
+		return IntrusiveBase<PolyIntrusiveBase>::Y_ForkShared<ObjectT>(this);
 	}
 
 	template<typename ObjectT>
 	IntrusiveWeakPtr<const volatile ObjectT, DefaultDeleter<PolyIntrusiveBase>> Weaken() const volatile {
-		return IntrusiveBase<PolyIntrusiveBase>::X_ForkWeak<const volatile ObjectT>(this);
+		return IntrusiveBase<PolyIntrusiveBase>::Y_ForkWeak<const volatile ObjectT>(this);
 	}
 	template<typename ObjectT>
 	IntrusiveWeakPtr<const ObjectT, DefaultDeleter<PolyIntrusiveBase>> Weaken() const {
-		return IntrusiveBase<PolyIntrusiveBase>::X_ForkWeak<const ObjectT>(this);
+		return IntrusiveBase<PolyIntrusiveBase>::Y_ForkWeak<const ObjectT>(this);
 	}
 	template<typename ObjectT>
 	IntrusiveWeakPtr<volatile ObjectT, DefaultDeleter<PolyIntrusiveBase>> Weaken() volatile {
-		return IntrusiveBase<PolyIntrusiveBase>::X_ForkWeak<volatile ObjectT>(this);
+		return IntrusiveBase<PolyIntrusiveBase>::Y_ForkWeak<volatile ObjectT>(this);
 	}
 	template<typename ObjectT>
 	IntrusiveWeakPtr<ObjectT, DefaultDeleter<PolyIntrusiveBase>> Weaken(){
-		return IntrusiveBase<PolyIntrusiveBase>::X_ForkWeak<ObjectT>(this);
+		return IntrusiveBase<PolyIntrusiveBase>::Y_ForkWeak<ObjectT>(this);
 	}
 };
 

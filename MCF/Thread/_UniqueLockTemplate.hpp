@@ -19,11 +19,11 @@ namespace Impl_UniqueLockTemplate {
 		friend ConditionVariable;
 
 	protected:
-		std::size_t x_uLockCount;
+		std::size_t y_uLockCount;
 
 	protected:
 		constexpr UniqueLockTemplateBase() noexcept
-			: x_uLockCount(0)
+			: y_uLockCount(0)
 		{
 		}
 
@@ -31,20 +31,20 @@ namespace Impl_UniqueLockTemplate {
 		virtual ~UniqueLockTemplateBase();
 
 	protected:
-		std::size_t X_UnlockAll() noexcept {
-			const auto uOldCount = x_uLockCount;
+		std::size_t Y_UnlockAll() noexcept {
+			const auto uOldCount = y_uLockCount;
 			if(uOldCount != 0){
 				X_DoUnlock();
-				x_uLockCount = 0;
+				y_uLockCount = 0;
 			}
 			return uOldCount;
 		}
-		void X_RelockAll(std::size_t uNewCount) noexcept {
-			ASSERT(x_uLockCount == 0);
+		void Y_RelockAll(std::size_t uNewCount) noexcept {
+			ASSERT(y_uLockCount == 0);
 
 			if(uNewCount != 0){
 				X_DoLock();
-				x_uLockCount = uNewCount;
+				y_uLockCount = uNewCount;
 			}
 		}
 
@@ -55,34 +55,34 @@ namespace Impl_UniqueLockTemplate {
 
 	public:
 		bool IsLocking() const noexcept {
-			return x_uLockCount > 0;
+			return y_uLockCount > 0;
 		}
 		std::size_t GetLockCount() const noexcept {
-			return x_uLockCount;
+			return y_uLockCount;
 		}
 
 		bool Try(std::uint64_t u64MilliSeconds = 0) noexcept {
-			const auto uOldCount = x_uLockCount;
+			const auto uOldCount = y_uLockCount;
 			if(uOldCount == 0){
 				if(!X_DoTry(u64MilliSeconds)){
 					return false;
 				}
 			}
-			x_uLockCount = uOldCount + 1;
+			y_uLockCount = uOldCount + 1;
 			return true;
 		}
 		void Lock() noexcept {
-			const auto uOldCount = x_uLockCount;
+			const auto uOldCount = y_uLockCount;
 			if(uOldCount == 0){
 				X_DoLock();
 			}
-			x_uLockCount = uOldCount + 1;
+			y_uLockCount = uOldCount + 1;
 		}
 		void Unlock() noexcept {
-			ASSERT(x_uLockCount != 0);
+			ASSERT(y_uLockCount != 0);
 
-			const auto uOldCount = x_uLockCount;
-			x_uLockCount = uOldCount - 1;
+			const auto uOldCount = y_uLockCount;
+			y_uLockCount = uOldCount - 1;
 			if(uOldCount == 1){
 				X_DoUnlock();
 			}
@@ -115,12 +115,12 @@ namespace Impl_UniqueLockTemplate {
 		UniqueLockTemplate &operator=(UniqueLockTemplate &&rhs) noexcept {
 			ASSERT(&rhs != this);
 
-			X_UnlockAll();
+			Y_UnlockAll();
 			Swap(rhs);
 			return *this;
 		}
 		virtual ~UniqueLockTemplate(){
-			X_UnlockAll();
+			Y_UnlockAll();
 		}
 
 	private:
@@ -136,14 +136,14 @@ namespace Impl_UniqueLockTemplate {
 		void Merge(UniqueLockTemplate &&rhs) noexcept {
 			ASSERT(x_pOwner == rhs.x_pOwner);
 
-			x_uLockCount += rhs.x_uLockCount;
-			rhs.x_uLockCount = 0;
+			y_uLockCount += rhs.y_uLockCount;
+			rhs.y_uLockCount = 0;
 		}
 
 		void Swap(UniqueLockTemplate &rhs) noexcept {
 			using std::swap;
 			swap(x_pOwner,     rhs.x_pOwner);
-			swap(x_uLockCount, rhs.x_uLockCount);
+			swap(y_uLockCount, rhs.y_uLockCount);
 		}
 
 		friend void swap(UniqueLockTemplate &lhs, UniqueLockTemplate &rhs) noexcept {

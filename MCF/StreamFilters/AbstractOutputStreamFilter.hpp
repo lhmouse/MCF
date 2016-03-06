@@ -6,16 +6,17 @@
 #define MCF_STREAM_FILTERS_ABSTRACT_OUTPUT_STREAM_FILTER_HPP_
 
 #include "../Streams/AbstractOutputStream.hpp"
+#include "_BufferedOutputStream.hpp"
 
 namespace MCF {
 
 class AbstractOutputStreamFilter : public AbstractOutputStream {
 protected:
-	PolyIntrusivePtr<AbstractOutputStream> x_pUnderlyingStream;
+	Impl_BufferedOutputStream::BufferedOutputStream y_vBufferedStream;
 
 public:
 	explicit AbstractOutputStreamFilter(PolyIntrusivePtr<AbstractOutputStream> pUnderlyingStream) noexcept
-		: x_pUnderlyingStream(std::move(pUnderlyingStream))
+		: y_vBufferedStream(std::move(pUnderlyingStream))
 	{
 	}
 	virtual ~AbstractOutputStreamFilter() = 0;
@@ -31,10 +32,10 @@ public:
 	virtual void Flush(bool bHard) = 0;
 
 	const PolyIntrusivePtr<AbstractOutputStream> &GetUnderlyingStream() const noexcept {
-		return x_pUnderlyingStream;
+		return y_vBufferedStream.GetUnderlyingStream();
 	}
 	void SetUnderlyingStream(PolyIntrusivePtr<AbstractOutputStream> pUnderlyingStream) noexcept {
-		x_pUnderlyingStream = std::move(pUnderlyingStream);
+		y_vBufferedStream.SetUnderlyingStream(std::move(pUnderlyingStream));
 	}
 };
 

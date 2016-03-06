@@ -46,7 +46,7 @@ Impl_UniqueNtHandle::UniqueNtHandle KernelSemaphore::X_CreateSemaphoreHandle(std
 			ulAttributes = OBJ_OPENIF;
 		}
 
-		hRootDirectory = X_OpenBaseNamedObjectDirectory(u32Flags);
+		hRootDirectory = Y_OpenBaseNamedObjectDirectory(u32Flags);
 
 		InitializeObjectAttributes(&vObjectAttributes, &ustrObjectName, ulAttributes, hRootDirectory.Get(), nullptr);
 	}

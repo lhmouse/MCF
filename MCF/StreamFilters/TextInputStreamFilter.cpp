@@ -9,7 +9,7 @@
 namespace MCF {
 
 namespace {
-	constexpr std::size_t kStepSize = 4096;
+	constexpr std::size_t kStepSize = 256;
 
 	void PopulateBuffer(StreamBuffer &vBuffer, Vector<char> &vecBackBuffer, AbstractInputStream *pStream){
 		for(;;){

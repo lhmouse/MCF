@@ -84,7 +84,7 @@ void Crc64OutputStream::Put(const void *pData, std::size_t uSize){
 	}
 	if(uBytesRemaining != 0){
 		std::memcpy(x_abyChunk + x_nChunkOffset, pbyRead, uBytesRemaining);
-		x_nChunkOffset += (int)uBytesRemaining;
+		x_nChunkOffset += static_cast<int>(uBytesRemaining);
 	}
 }
 

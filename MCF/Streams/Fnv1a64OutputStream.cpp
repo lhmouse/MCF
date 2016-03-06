@@ -60,12 +60,12 @@ void Fnv1a64OutputStream::Put(const void *pData, std::size_t uSize){
 		while(uBytesRemaining >= sizeof(x_abyChunk)){
 			UpdateFnv1a64(x_u64Reg, reinterpret_cast<const decltype(x_abyChunk) *>(pbyRead)[0]);
 			pbyRead += sizeof(x_abyChunk);
-			uBytesRemaining -= (int)sizeof(x_abyChunk);
+			uBytesRemaining -= sizeof(x_abyChunk);
 		}
 	}
 	if(uBytesRemaining != 0){
 		std::memcpy(x_abyChunk + x_nChunkOffset, pbyRead, uBytesRemaining);
-		x_nChunkOffset += (int)uBytesRemaining;
+		x_nChunkOffset += static_cast<int>(uBytesRemaining);
 	}
 }
 

@@ -9,7 +9,7 @@
 namespace MCF {
 
 namespace {
-	constexpr std::size_t kStepSize = 1;
+	constexpr std::size_t kStepSize = 256;
 
 	void FlushBuffer(AbstractOutputStream *pStream, StreamBuffer &vBuffer, Vector<char> &vecBackBuffer){
 		for(;;){

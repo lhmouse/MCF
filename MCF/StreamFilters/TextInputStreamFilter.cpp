@@ -15,7 +15,7 @@ namespace {
 		for(;;){
 			if(!vecBackBuffer.IsEmpty()){
 				const auto pbyToWriteBegin = vecBackBuffer.GetData();
-				auto pbyToWriteEnd         = pbyToWriteBegin + vecBackBuffer.GetSize();
+				auto pbyToWriteEnd = pbyToWriteBegin + vecBackBuffer.GetSize();
 				if(pbyToWriteEnd[-1] == '\r'){
 					--pbyToWriteEnd;
 				}

@@ -15,7 +15,7 @@ namespace {
 		for(;;){
 			if(!vecBackBuffer.IsEmpty()){
 				const auto pbyToWriteBegin = vecBackBuffer.GetData();
-				const auto pbyToWriteEnd   = pbyToWriteBegin + vecBackBuffer.GetSize();
+				const auto pbyToWriteEnd = pbyToWriteBegin + vecBackBuffer.GetSize();
 				pStream->Put(pbyToWriteBegin, static_cast<std::size_t>(pbyToWriteEnd - pbyToWriteBegin));
 				vecBackBuffer.Erase(pbyToWriteBegin, pbyToWriteEnd);
 			}

@@ -13,10 +13,10 @@ namespace {
 	void FlushBuffer(AbstractOutputStream *pStream, StreamBuffer &vBuffer, Vector<unsigned char> &vecBackBuffer, std::size_t uThreshold){
 		for(;;){
 			if(!vecBackBuffer.IsEmpty()){
-				const auto pbyToWriteBegin = vecBackBuffer.GetData();
-				const auto pbyToWriteEnd   = pbyToWriteBegin + vecBackBuffer.GetSize();
-				pStream->Put(pbyToWriteBegin, static_cast<std::size_t>(pbyToWriteEnd - pbyToWriteBegin));
-				vecBackBuffer.Erase(pbyToWriteBegin, pbyToWriteEnd);
+				auto uBytesToPut = vecBackBuffer.GetSize();
+				pStream->Put(vecBackBuffer.GetData(), uBytesToPut);
+				// CopyBackward(vecBackBuffer.GetEnd() - uBytesToPut, vecBackBuffer.GetBegin() + uBytesToPut, vecBackBuffer.GetEnd());
+				vecBackBuffer.Pop(uBytesToPut);
 			}
 			if(vBuffer.GetSize() < uThreshold){
 				break;

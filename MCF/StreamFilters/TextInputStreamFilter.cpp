@@ -14,13 +14,14 @@ namespace {
 	void PopulateBuffer(StreamBuffer &vBuffer, Vector<char> &vecBackBuffer, AbstractInputStream *pStream){
 		for(;;){
 			if(!vecBackBuffer.IsEmpty()){
-				auto uBytesToPut = vecBackBuffer.GetSize();
-				if(vecBackBuffer[uBytesToPut - 1] == '\r'){
-					--uBytesToPut;
+				if(vecBackBuffer.GetEnd()[-1] == '\r'){
+					vBuffer.Put(vecBackBuffer.GetData(), vecBackBuffer.GetSize() - 1);
+					vecBackBuffer.Clear();
+					vecBackBuffer.UncheckedPush('\r');
+				} else {
+					vBuffer.Put(vecBackBuffer.GetData(), vecBackBuffer.GetSize());
+					vecBackBuffer.Clear();
 				}
-				vBuffer.Put(vecBackBuffer.GetData(), uBytesToPut);
-				CopyBackward(vecBackBuffer.GetEnd() - uBytesToPut, vecBackBuffer.GetBegin() + uBytesToPut, vecBackBuffer.GetEnd());
-				vecBackBuffer.Pop(uBytesToPut);
 			}
 			if(!vBuffer.IsEmpty()){
 				break;

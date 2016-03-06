@@ -14,10 +14,8 @@ namespace {
 	void FlushBuffer(AbstractOutputStream *pStream, StreamBuffer &vBuffer, Vector<char> &vecBackBuffer){
 		for(;;){
 			if(!vecBackBuffer.IsEmpty()){
-				auto uBytesToPut = vecBackBuffer.GetSize();
-				pStream->Put(vecBackBuffer.GetData(), uBytesToPut);
-				// CopyBackward(vecBackBuffer.GetEnd() - uBytesToPut, vecBackBuffer.GetBegin() + uBytesToPut, vecBackBuffer.GetEnd());
-				vecBackBuffer.Pop(uBytesToPut);
+				pStream->Put(vecBackBuffer.GetData(), vecBackBuffer.GetSize());
+				vecBackBuffer.Clear();
 			}
 
 			std::size_t uBytesToWrite;

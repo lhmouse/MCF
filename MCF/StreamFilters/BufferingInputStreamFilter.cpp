@@ -13,10 +13,8 @@ namespace {
 	void PopulateBuffer(StreamBuffer &vBuffer, Vector<unsigned char> &vecBackBuffer, AbstractInputStream *pStream){
 		for(;;){
 			if(!vecBackBuffer.IsEmpty()){
-				auto uBytesToPut = vecBackBuffer.GetSize();
-				vBuffer.Put(vecBackBuffer.GetData(), uBytesToPut);
-				// CopyBackward(vecBackBuffer.GetEnd() - uBytesToPut, vecBackBuffer.GetBegin() + uBytesToPut, vecBackBuffer.GetEnd());
-				vecBackBuffer.Pop(uBytesToPut);
+				vBuffer.Put(vecBackBuffer.GetData(), vecBackBuffer.GetSize());
+				vecBackBuffer.Clear();
 			}
 			if(!vBuffer.IsEmpty()){
 				break;

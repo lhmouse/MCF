@@ -1,31 +1,38 @@
 #include <MCF/StdMCF.hpp>
-#include <MCF/Core/String.hpp>
-#include <MCF/Streams/FileInputStream.hpp>
-#include <MCF/StreamFilters/BufferingInputStreamFilter.hpp>
-#include <MCF/Streams/StandardOutputStream.hpp>
+#include <MCF/Streams/BufferInputStream.hpp>
+#include <MCF/StreamFilters/TextInputStreamFilter.hpp>
+#include <MCF/Streams/BufferOutputStream.hpp>
+#include <MCF/StreamFilters/TextOutputStreamFilter.hpp>
 
 using namespace MCF;
 
 extern "C" unsigned MCFCRT_Main(){
-	auto stdos = StandardOutputStream();
-
-	auto wpath = WideString(NarrowStringView(__FILE__));
-	auto file = File(wpath, File::kToRead);
-
-	auto ifs = MakeIntrusive<FileInputStream>(std::move(file));
-	auto buffered_ifs = MakeIntrusive<BufferingInputStreamFilter>(std::move(ifs));
-
+	constexpr unsigned char str[] = "he\rllo\nwor\r\nld!\n\r";
 	int c;
-	NarrowString ln;
-	while((c = buffered_ifs->Get()) >= 0){
-		if(c != '\n'){
-			ln.Push(c);
-		} else {
-			stdos.Put("Line:\t", 6);
-			stdos.Put(ln.GetData(), ln.GetSize());
-			stdos.Put("# EOL\n", 6);
-			ln.Clear();
+
+	{
+		auto is = MakeIntrusive<BufferInputStream>();
+		auto text_is = MakeIntrusive<TextInputStreamFilter>(is);
+
+		is->GetBuffer().Put(str, sizeof(str) - 1);
+
+		while((c = text_is->Get()) >= 0){
+			std::printf("%02hhX ", c);
 		}
+		std::putchar('\n');
+	}
+
+	{
+		auto os = MakeIntrusive<BufferOutputStream>();
+		auto text_os = MakeIntrusive<TextOutputStreamFilter>(os);
+
+		text_os->Put(str, sizeof(str) - 1);
+		text_os->Flush(false);
+
+		while((c = os->GetBuffer().Get()) >= 0){
+			std::printf("%02hhX ", c);
+		}
+		std::putchar('\n');
 	}
 
 	return 0;

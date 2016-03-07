@@ -26,13 +26,13 @@ void TextOutputStreamFilter::Put(const void *pData, std::size_t uSize){
 		for(;;){
 			auto pchLineEnd = static_cast<const char *>(std::memchr(pchLineBegin, '\n', static_cast<std::size_t>(pchEnd - pchLineBegin)));
 			if(!pchLineEnd){
-				sbufNewPart.Put(pchLineBegin, static_cast<std::size_t>(pchEnd - pchLineBegin));
 				break;
 			}
 			sbufNewPart.Put(pchLineBegin, static_cast<std::size_t>(pchLineEnd - pchLineBegin));
 			sbufNewPart.Put("\r\n", 2);
 			pchLineBegin = pchLineEnd + 1;
 		}
+		sbufNewPart.Put(pchLineBegin, static_cast<std::size_t>(pchEnd - pchLineBegin));
 	}
 	y_vStream.Splice(sbufNewPart);
 }

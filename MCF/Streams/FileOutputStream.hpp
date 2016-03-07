@@ -31,6 +31,10 @@ public:
 	FileOutputStream(FileOutputStream &&) noexcept = default;
 	FileOutputStream& operator=(FileOutputStream &&) noexcept = default;
 
+private:
+	std::size_t X_WriteFromCurrentOffset(const void *pData, std::size_t uSize);
+	void X_Flush(bool bHard);
+
 public:
 	void Put(unsigned char byData) override;
 

@@ -10,12 +10,10 @@ namespace MCF {
 // http://en.wikipedia.org/wiki/Linear_congruential_generator
 // MMIX by Donald Knuth
 
-namespace {
-	enum : std::uint64_t {
-		kMultiplier = 6364136223846793005ull,
-		kIncrement  = 1442695040888963407ull,
-	};
-}
+enum : std::uint64_t {
+	kMultiplier = 6364136223846793005ull,
+	kIncrement  = 1442695040888963407ull,
+};
 
 void FastGenerator::Init(std::uint32_t u32Seed) noexcept {
 	std::uint64_t u64Seed = 0x0123456789ABCDEFull | u32Seed;

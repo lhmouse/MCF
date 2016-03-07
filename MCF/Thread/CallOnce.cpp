@@ -4,19 +4,22 @@
 
 #include "../StdMCF.hpp"
 #include "CallOnce.hpp"
+#include "Mutex.hpp"
 
 namespace MCF {
 
 namespace {
-	::SRWLOCK g_srwLock = SRWLOCK_INIT;
+	Mutex g_mtxOnceGuard;
+
+	static_assert(std::is_trivially_destructible<Mutex>::value, "Please fix this.");
 }
 
 namespace Impl_CallOnce {
 	void LockOnceMutex() noexcept {
-		::AcquireSRWLockExclusive(&g_srwLock);
+		g_mtxOnceGuard.Lock();
 	}
 	void UnlockOnceMutex() noexcept {
-		::ReleaseSRWLockExclusive(&g_srwLock);
+		g_mtxOnceGuard.Unlock();
 	}
 }
 

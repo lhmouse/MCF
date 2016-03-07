@@ -9,35 +9,33 @@
 
 namespace MCF {
 
-namespace {
-	std::size_t RealWrite(File &vFile, std::uint64_t u64Offset, const void *pData, std::size_t uSize){
-		const auto pbyData = static_cast<const unsigned char *>(pData);
-		std::size_t uBytesTotal = 0;
-		for(;;){
-			auto uBytesToWrite = Min(uSize - uBytesTotal, UINT32_MAX);
-			if(uBytesToWrite == 0){
-				break;
-			}
-			const auto uBytesWritten = vFile.Write(u64Offset + uBytesTotal, pbyData + uBytesTotal, uBytesToWrite);
-			if(uBytesWritten == 0){
-				break;
-			}
-			uBytesTotal += uBytesWritten;
-		}
-		return uBytesTotal;
-	}
-	void RealFlush(File &vFile, bool bHard){
-		if(bHard){
-			vFile.HardFlush();
-		}
-	}
-}
-
 FileOutputStream::~FileOutputStream(){
 }
 
+std::size_t FileOutputStream::X_WriteFromCurrentOffset(const void *pData, std::size_t uSize){
+	const auto pbyData = static_cast<const unsigned char *>(pData);
+	std::size_t uBytesTotal = 0;
+	for(;;){
+		auto uBytesToWrite = Min(uSize - uBytesTotal, UINT32_MAX);
+		if(uBytesToWrite == 0){
+			break;
+		}
+		const auto uBytesWritten = x_vFile.Write(x_u64Offset + uBytesTotal, pbyData + uBytesTotal, uBytesToWrite);
+		uBytesTotal += uBytesWritten;
+		if(uBytesWritten < uBytesToWrite){
+			break;
+		}
+	}
+	return uBytesTotal;
+}
+void FileOutputStream::X_Flush(bool bHard){
+	if(bHard){
+		x_vFile.HardFlush();
+	}
+}
+
 void FileOutputStream::Put(unsigned char byData){
-	const auto uBytesWritten = RealWrite(x_vFile, x_u64Offset, &byData, 1);
+	const auto uBytesWritten = X_WriteFromCurrentOffset(&byData, 1);
 	if(uBytesWritten < 1){
 		DEBUG_THROW(Exception, ERROR_BROKEN_PIPE, "FileOutputStream: Partial contents written"_rcs);
 	}
@@ -45,7 +43,7 @@ void FileOutputStream::Put(unsigned char byData){
 }
 
 void FileOutputStream::Put(const void *pData, std::size_t uSize){
-	const auto uBytesWritten = RealWrite(x_vFile, x_u64Offset, pData, uSize);
+	const auto uBytesWritten = X_WriteFromCurrentOffset(pData, uSize);
 	if(uBytesWritten < uSize){
 		DEBUG_THROW(Exception, ERROR_BROKEN_PIPE, "FileOutputStream: Partial contents written"_rcs);
 	}
@@ -53,7 +51,7 @@ void FileOutputStream::Put(const void *pData, std::size_t uSize){
 }
 
 void FileOutputStream::Flush(bool bHard){
-	RealFlush(x_vFile, bHard);
+	X_Flush(bHard);
 }
 
 }

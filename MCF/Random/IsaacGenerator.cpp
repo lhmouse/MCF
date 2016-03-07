@@ -11,27 +11,25 @@ namespace MCF {
 // http://www.burtleburtle.net/bob/rand/isaacafa.html
 // http://www.burtleburtle.net/bob/c/readable.c
 
-namespace {
-	void RefreshInternal(std::uint32_t (&u32Results)[256], std::uint32_t (&u32Internal)[256], std::uint32_t &u32A, std::uint32_t &u32B, std::uint32_t &u32C) noexcept {
-		++u32C;
-		u32B += u32C;
+void IsaacGenerator::X_RefreshInternal() noexcept {
+	++x_u32C;
+	x_u32B += x_u32C;
 
-		for(std::size_t i = 0; i < 256; i += 4){
-			const auto Step = [&](unsigned j, auto fnSpec){
-				const auto x = u32Internal[i + j];
-				fnSpec(u32A);
-				u32A += u32Internal[(i + j + 128) % 256];
-				const auto y = u32Internal[(x >> 2) % 256] + u32A + u32B;
-				u32Internal[i + j] = y;
-				u32B = u32Internal[(y >> 10) % 256] + x;
-				u32Results[i + j] = u32B;
-			};
+	for(std::size_t i = 0; i < 256; i += 4){
+		const auto Step = [&](unsigned j, auto fnSpec){
+			const auto x = x_u32Internal[i + j];
+			fnSpec(x_u32A);
+			x_u32A += x_u32Internal[(i + j + 128) % 256];
+			const auto y = x_u32Internal[(x >> 2) % 256] + x_u32A + x_u32B;
+			x_u32Internal[i + j] = y;
+			x_u32B = x_u32Internal[(y >> 10) % 256] + x;
+			x_au32Results[i + j] = x_u32B;
+		};
 
-			Step(0, [](auto &a){ a ^= (a << 13); });
-			Step(1, [](auto &a){ a ^= (a >>  6); });
-			Step(2, [](auto &a){ a ^= (a <<  2); });
-			Step(3, [](auto &a){ a ^= (a >> 16); });
-		}
+		Step(0, [](auto &a){ a ^= (a << 13); });
+		Step(1, [](auto &a){ a ^= (a >>  6); });
+		Step(2, [](auto &a){ a ^= (a <<  2); });
+		Step(3, [](auto &a){ a ^= (a >> 16); });
 	}
 }
 
@@ -75,14 +73,14 @@ void IsaacGenerator::Init(const Array<std::uint32_t, 8> &au32Seed) noexcept {
 	x_u32A = 0;
 	x_u32B = 0;
 	x_u32C = 0;
-	RefreshInternal(x_au32Results, x_u32Internal, x_u32A, x_u32B, x_u32C);
+	X_RefreshInternal();
 
 	x_uRead = 0;
 }
 
 std::uint32_t IsaacGenerator::Get() noexcept {
 	if(x_uRead == 0){
-		RefreshInternal(x_au32Results, x_u32Internal, x_u32A, x_u32B, x_u32C);
+		X_RefreshInternal();
 	}
 	const auto u32Ret = x_au32Results[x_uRead];
 	x_uRead = (x_uRead + 1) % 256;

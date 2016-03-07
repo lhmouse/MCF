@@ -19,11 +19,11 @@ public:
 	AbstractInputStream& operator=(AbstractInputStream &&) noexcept = default;
 
 public:
-	virtual int Peek() const = 0;
+	virtual int Peek() = 0;
 	virtual int Get() = 0;
 	virtual bool Discard() = 0;
 
-	virtual std::size_t Peek(void *pData, std::size_t uSize) const = 0;
+	virtual std::size_t Peek(void *pData, std::size_t uSize) = 0;
 	virtual std::size_t Get(void *pData, std::size_t uSize) = 0;
 	virtual std::size_t Discard(std::size_t uSize) = 0;
 };

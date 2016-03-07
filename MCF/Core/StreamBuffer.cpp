@@ -45,7 +45,7 @@ int StreamBuffer::PeekBack() const noexcept {
 	return nRet;
 }
 
-int StreamBuffer::Peek() const noexcept {
+int StreamBuffer::Peek() noexcept {
 	return PeekFront();
 }
 int StreamBuffer::Get() noexcept {
@@ -99,7 +99,7 @@ void StreamBuffer::Unget(unsigned char byData){
 	++x_uSize;
 }
 
-std::size_t StreamBuffer::Peek(void *pData, std::size_t uSize) const noexcept {
+std::size_t StreamBuffer::Peek(void *pData, std::size_t uSize) noexcept {
 	std::size_t uBytesCopied = 0;
 	auto pChunk = x_lstChunks.GetFirst();
 	while((uBytesCopied < uSize) && pChunk){

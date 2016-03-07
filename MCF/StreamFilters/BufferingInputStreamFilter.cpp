@@ -10,24 +10,24 @@ namespace MCF {
 BufferingInputStreamFilter::~BufferingInputStreamFilter(){
 }
 
-int BufferingInputStreamFilter::Peek() const {
-	return y_vBufferedStream.Peek();
+int BufferingInputStreamFilter::Peek(){
+	return y_vStream.Peek();
 }
 int BufferingInputStreamFilter::Get(){
-	return y_vBufferedStream.Get();
+	return y_vStream.Get();
 }
 bool BufferingInputStreamFilter::Discard(){
-	return y_vBufferedStream.Discard();
+	return y_vStream.Discard();
 }
 
-std::size_t BufferingInputStreamFilter::Peek(void *pData, std::size_t uSize) const {
-	return y_vBufferedStream.Peek(pData, uSize);
+std::size_t BufferingInputStreamFilter::Peek(void *pData, std::size_t uSize){
+	return y_vStream.Peek(pData, uSize);
 }
 std::size_t BufferingInputStreamFilter::Get(void *pData, std::size_t uSize){
-	return y_vBufferedStream.Get(pData, uSize);
+	return y_vStream.Get(pData, uSize);
 }
 std::size_t BufferingInputStreamFilter::Discard(std::size_t uSize){
-	return y_vBufferedStream.Discard(uSize);
+	return y_vStream.Discard(uSize);
 }
 
 }

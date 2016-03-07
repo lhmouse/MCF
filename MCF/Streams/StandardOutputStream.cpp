@@ -19,8 +19,8 @@ namespace {
 		const HANDLE x_hPipe;
 
 		bool x_bBuffered = true;
-		mutable StreamBuffer x_vBuffer;
-		mutable StaticVector<unsigned char, 4096> x_vecBackBuffer;
+		StreamBuffer x_vBuffer;
+		StaticVector<unsigned char, 4096> x_vecBackBuffer;
 
 	public:
 		Pipe()

@@ -16,8 +16,8 @@ namespace Impl_BufferedInputStream {
 	private:
 		PolyIntrusivePtr<AbstractInputStream> x_pUnderlyingStream;
 
-		mutable StreamBuffer x_vBuffer;
-		mutable Vector<unsigned char> x_vecBackBuffer;
+		StreamBuffer x_vBuffer;
+		Vector<unsigned char> x_vecBackBuffer;
 
 	public:
 		explicit BufferedInputStream(PolyIntrusivePtr<AbstractInputStream> pUnderlyingStream) noexcept
@@ -30,13 +30,15 @@ namespace Impl_BufferedInputStream {
 		BufferedInputStream& operator=(BufferedInputStream &&) noexcept = default;
 
 	public:
-		int Peek() const;
+		int Peek();
 		int Get();
 		bool Discard();
 
-		std::size_t Peek(void *pData, std::size_t uSize) const;
+		std::size_t Peek(void *pData, std::size_t uSize);
 		std::size_t Get(void *pData, std::size_t uSize);
 		std::size_t Discard(std::size_t uSize);
+
+		StreamBuffer CutOff(std::size_t uSize);
 
 		const PolyIntrusivePtr<AbstractInputStream> &GetUnderlyingStream() const noexcept {
 			return x_pUnderlyingStream;

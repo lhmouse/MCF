@@ -10,7 +10,7 @@ namespace MCF {
 NullInputStream::~NullInputStream(){
 }
 
-int NullInputStream::Peek() const noexcept {
+int NullInputStream::Peek() noexcept {
 	return -1;
 }
 int NullInputStream::Get() noexcept {
@@ -20,7 +20,7 @@ bool NullInputStream::Discard() noexcept {
 	return false;
 }
 
-std::size_t NullInputStream::Peek(void * /* pData */, std::size_t /* uSize */) const noexcept {
+std::size_t NullInputStream::Peek(void * /* pData */, std::size_t /* uSize */) noexcept {
 	return 0;
 }
 std::size_t NullInputStream::Get(void * /* pData */, std::size_t /* uSize */) noexcept {

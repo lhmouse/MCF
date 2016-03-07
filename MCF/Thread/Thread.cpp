@@ -15,7 +15,6 @@ void Thread::X_ThreadCloser::operator()(Thread::Handle hThread) const noexcept {
 	::MCFCRT_CloseThread(hThread);
 }
 
-// 静态成员函数。
 std::uintptr_t Thread::GetCurrentId() noexcept {
 	return ::MCFCRT_GetCurrentThreadId();
 }

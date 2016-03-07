@@ -38,7 +38,7 @@ namespace {
 FileInputStream::~FileInputStream(){
 }
 
-int FileInputStream::Peek() const {
+int FileInputStream::Peek(){
 	int nRet = -1;
 	unsigned char byData;
 	const auto uBytesRead = RealRead(x_vFile, &byData, 1, x_u64Offset);
@@ -63,7 +63,7 @@ bool FileInputStream::Discard(){
 	return uBytesDiscarded >= 1;
 }
 
-std::size_t FileInputStream::Peek(void *pData, std::size_t uSize) const {
+std::size_t FileInputStream::Peek(void *pData, std::size_t uSize){
 	const auto uBytesRead = RealRead(x_vFile, pData, uSize, x_u64Offset);
 	return uBytesRead;
 }

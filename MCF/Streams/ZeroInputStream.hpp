@@ -18,11 +18,11 @@ public:
 	ZeroInputStream& operator=(ZeroInputStream &&) noexcept = default;
 
 public:
-	int Peek() const noexcept override;
+	int Peek() noexcept override;
 	int Get() noexcept override;
 	bool Discard() noexcept override;
 
-	std::size_t Peek(void *pData, std::size_t uSize) const noexcept override;
+	std::size_t Peek(void *pData, std::size_t uSize) noexcept override;
 	std::size_t Get(void *pData, std::size_t uSize) noexcept override;
 	std::size_t Discard(std::size_t uSize) noexcept override;
 

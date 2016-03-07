@@ -123,7 +123,7 @@ public:
 	int PeekFront() const noexcept;
 	int PeekBack() const noexcept;
 
-	int Peek() const noexcept;
+	int Peek() noexcept;
 	int Get() noexcept;
 	bool Discard() noexcept;
 	void Put(unsigned char byData);
@@ -131,7 +131,7 @@ public:
 	int Unput() noexcept;
 	void Unget(unsigned char byData);
 
-	std::size_t Peek(void *pData, std::size_t uSize) const noexcept;
+	std::size_t Peek(void *pData, std::size_t uSize) noexcept;
 	std::size_t Get(void *pData, std::size_t uSize) noexcept;
 	std::size_t Discard(std::size_t uSize) noexcept;
 	void Put(const void *pData, std::size_t uSize);

@@ -20,8 +20,8 @@ namespace {
 		const HANDLE x_hPipe;
 
 		bool x_bEchoing = true;
-		mutable StreamBuffer x_vBuffer;
-		mutable StaticVector<unsigned char, 4096> x_vecBackBuffer;
+		StreamBuffer x_vBuffer;
+		StaticVector<unsigned char, 4096> x_vecBackBuffer;
 
 	public:
 		Pipe()
@@ -42,7 +42,7 @@ namespace {
 		Pipe(const Pipe &) = delete;
 
 	private:
-		void X_PopulateBuffer() const {
+		void X_PopulateBuffer(){
 			bool bStandardOutputStreamsFlushed = false;
 
 			for(;;){
@@ -74,7 +74,7 @@ namespace {
 			}
 		}
 
-		std::size_t X_UnbufferedRead(void *pData, std::size_t uSize) const {
+		std::size_t X_UnbufferedRead(void *pData, std::size_t uSize){
 			const auto dwBytesToRead = static_cast<DWORD>(Min(uSize, UINT32_MAX));
 			DWORD dwBytesRead;
 			if(!::ReadFile(x_hPipe, pData, dwBytesToRead, &dwBytesRead, nullptr)){
@@ -89,7 +89,7 @@ namespace {
 			return !x_hPipe;
 		}
 
-		int Peek() const {
+		int Peek(){
 			X_PopulateBuffer();
 			return x_vBuffer.Peek();
 		}
@@ -102,7 +102,7 @@ namespace {
 			return x_vBuffer.Discard();
 		}
 
-		std::size_t Peek(void *pData, std::size_t uSize) const {
+		std::size_t Peek(void *pData, std::size_t uSize){
 			X_PopulateBuffer();
 			return x_vBuffer.Peek(pData, uSize);
 		}
@@ -145,7 +145,7 @@ namespace {
 StandardInputStream::~StandardInputStream(){
 }
 
-int StandardInputStream::Peek() const {
+int StandardInputStream::Peek(){
 	if(g_vPipe.IsNull()){
 		return -1;
 	}
@@ -170,7 +170,7 @@ bool StandardInputStream::Discard(){
 	return g_vPipe.Discard();
 }
 
-std::size_t StandardInputStream::Peek(void *pData, std::size_t uSize) const {
+std::size_t StandardInputStream::Peek(void *pData, std::size_t uSize){
 	if(g_vPipe.IsNull()){
 		return 0;
 	}

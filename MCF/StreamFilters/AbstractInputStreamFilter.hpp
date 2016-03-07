@@ -12,11 +12,11 @@ namespace MCF {
 
 class AbstractInputStreamFilter : public AbstractInputStream {
 protected:
-	Impl_BufferedInputStream::BufferedInputStream y_vBufferedStream;
+	Impl_BufferedInputStream::BufferedInputStream y_vStream;
 
 public:
 	explicit AbstractInputStreamFilter(PolyIntrusivePtr<AbstractInputStream> pUnderlyingStream) noexcept
-		: y_vBufferedStream(std::move(pUnderlyingStream))
+		: y_vStream(std::move(pUnderlyingStream))
 	{
 	}
 	virtual ~AbstractInputStreamFilter() = 0;
@@ -25,19 +25,19 @@ public:
 	AbstractInputStreamFilter& operator=(AbstractInputStreamFilter &&) noexcept = default;
 
 public:
-	virtual int Peek() const = 0;
+	virtual int Peek() = 0;
 	virtual int Get() = 0;
 	virtual bool Discard() = 0;
 
-	virtual std::size_t Peek(void *pData, std::size_t uSize) const = 0;
+	virtual std::size_t Peek(void *pData, std::size_t uSize) = 0;
 	virtual std::size_t Get(void *pData, std::size_t uSize) = 0;
 	virtual std::size_t Discard(std::size_t uSize) = 0;
 
 	const PolyIntrusivePtr<AbstractInputStream> &GetUnderlyingStream() const noexcept {
-		return y_vBufferedStream.GetUnderlyingStream();
+		return y_vStream.GetUnderlyingStream();
 	}
 	void SetUnderlyingStream(PolyIntrusivePtr<AbstractInputStream> pUnderlyingStream) noexcept {
-		y_vBufferedStream.SetUnderlyingStream(std::move(pUnderlyingStream));
+		y_vStream.SetUnderlyingStream(std::move(pUnderlyingStream));
 	}
 };
 

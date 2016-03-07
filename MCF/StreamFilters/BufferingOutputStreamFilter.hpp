@@ -29,7 +29,7 @@ public:
 
 	void Swap(BufferingOutputStreamFilter &rhs) noexcept {
 		using std::swap;
-		swap(y_vBufferedStream, rhs.y_vBufferedStream);
+		swap(y_vStream, rhs.y_vStream);
 	}
 
 	friend void swap(BufferingOutputStreamFilter &lhs, BufferingOutputStreamFilter &rhs) noexcept {

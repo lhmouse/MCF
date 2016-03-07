@@ -16,8 +16,8 @@ namespace Impl_BufferedOutputStream {
 	private:
 		PolyIntrusivePtr<AbstractOutputStream> x_pUnderlyingStream;
 
-		mutable StreamBuffer x_vBuffer;
-		mutable Vector<unsigned char> x_vecBackBuffer;
+		StreamBuffer x_vBuffer;
+		Vector<unsigned char> x_vecBackBuffer;
 
 	public:
 		explicit BufferedOutputStream(PolyIntrusivePtr<AbstractOutputStream> pUnderlyingStream) noexcept
@@ -33,6 +33,8 @@ namespace Impl_BufferedOutputStream {
 		void Put(unsigned char byData);
 
 		void Put(const void *pData, std::size_t uSize);
+
+		void Splice(StreamBuffer &vBuffer);
 
 		void Flush(bool bHard);
 

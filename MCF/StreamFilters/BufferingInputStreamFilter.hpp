@@ -21,17 +21,17 @@ public:
 	BufferingInputStreamFilter& operator=(BufferingInputStreamFilter &&) noexcept = default;
 
 public:
-	int Peek() const override;
+	int Peek() override;
 	int Get() override;
 	bool Discard() override;
 
-	std::size_t Peek(void *pData, std::size_t uSize) const override;
+	std::size_t Peek(void *pData, std::size_t uSize) override;
 	std::size_t Get(void *pData, std::size_t uSize) override;
 	std::size_t Discard(std::size_t uSize) override;
 
 	void Swap(BufferingInputStreamFilter &rhs) noexcept {
 		using std::swap;
-		swap(y_vBufferedStream, rhs.y_vBufferedStream);
+		swap(y_vStream, rhs.y_vStream);
 	}
 
 	friend void swap(BufferingInputStreamFilter &lhs, BufferingInputStreamFilter &rhs) noexcept {

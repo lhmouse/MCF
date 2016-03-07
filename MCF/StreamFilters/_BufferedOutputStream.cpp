@@ -13,7 +13,7 @@ namespace Impl_BufferedOutputStream {
 			 kStepSize = 4096,
 		};
 
-		void FlushBuffer(AbstractOutputStream *pStream, StreamBuffer &vBuffer, Vector<unsigned char> &vecBackBuffer, std::size_t uThreshold){
+		void FlushTempBuffer(AbstractOutputStream *pStream, StreamBuffer &vBuffer, Vector<unsigned char> &vecBackBuffer, std::size_t uThreshold){
 			bool bNoMoreAvail = false;
 			for(;;){
 				if(!vecBackBuffer.IsEmpty()){
@@ -43,23 +43,28 @@ namespace Impl_BufferedOutputStream {
 
 	BufferedOutputStream::~BufferedOutputStream(){
 		try {
-			FlushBuffer(x_pUnderlyingStream.Get(), x_vBuffer, x_vecBackBuffer, 0);
+			FlushTempBuffer(x_pUnderlyingStream.Get(), x_vBuffer, x_vecBackBuffer, 0);
 		} catch(...){
 		}
 	}
 
 	void BufferedOutputStream::Put(unsigned char byData){
 		x_vBuffer.Put(byData);
-		FlushBuffer(x_pUnderlyingStream.Get(), x_vBuffer, x_vecBackBuffer, 4096);
+		FlushTempBuffer(x_pUnderlyingStream.Get(), x_vBuffer, x_vecBackBuffer, kStepSize);
 	}
 
 	void BufferedOutputStream::Put(const void *pData, std::size_t uSize){
 		x_vBuffer.Put(pData, uSize);
-		FlushBuffer(x_pUnderlyingStream.Get(), x_vBuffer, x_vecBackBuffer, 4096);
+		FlushTempBuffer(x_pUnderlyingStream.Get(), x_vBuffer, x_vecBackBuffer, kStepSize);
+	}
+
+	void BufferedOutputStream::Splice(StreamBuffer &vBuffer){
+		x_vBuffer.Splice(vBuffer);
+		FlushTempBuffer(x_pUnderlyingStream.Get(), x_vBuffer, x_vecBackBuffer, kStepSize);
 	}
 
 	void BufferedOutputStream::Flush(bool bHard){
-		FlushBuffer(x_pUnderlyingStream.Get(), x_vBuffer, x_vecBackBuffer, 0);
+		FlushTempBuffer(x_pUnderlyingStream.Get(), x_vBuffer, x_vecBackBuffer, 0);
 
 		x_pUnderlyingStream->Flush(bHard);
 	}

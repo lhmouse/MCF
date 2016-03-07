@@ -18,7 +18,6 @@ namespace {
 	Atomic<std::uint32_t> g_u32AutoInc(0);
 }
 
-// 静态成员函数。
 Uuid Uuid::Generate(){
 	const auto u64Now = GetUtcClock();
 	const auto u32Unique = (g_uPid & 0xFFFF) | ((g_u32AutoInc.Increment(kAtomicRelaxed) << 16) & 0x3FFFFFFFu);

@@ -10,7 +10,7 @@ namespace MCF {
 ZeroInputStream::~ZeroInputStream(){
 }
 
-int ZeroInputStream::Peek() const noexcept {
+int ZeroInputStream::Peek() noexcept {
 	return 0;
 }
 int ZeroInputStream::Get() noexcept {
@@ -20,7 +20,7 @@ bool ZeroInputStream::Discard() noexcept {
 	return true;
 }
 
-std::size_t ZeroInputStream::Peek(void *pData, std::size_t uSize) const noexcept {
+std::size_t ZeroInputStream::Peek(void *pData, std::size_t uSize) noexcept {
 	std::memset(pData, 0, uSize);
 	return uSize;
 }

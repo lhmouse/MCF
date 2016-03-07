@@ -8,71 +8,69 @@
 namespace MCF {
 
 namespace Impl_BufferedInputStream {
-	namespace {
-		enum : std::size_t {
-			 kStepSize = 4096,
-		};
-
-		void PopulateTempBuffer(StreamBuffer &vBuffer, Vector<unsigned char> &vecBackBuffer, AbstractInputStream *pStream, std::size_t uExpected){
-			bool bNoMoreAvail = false;
-			for(;;){
-				if(!vecBackBuffer.IsEmpty()){
-					vBuffer.Put(vecBackBuffer.GetData(), vecBackBuffer.GetSize());
-					vecBackBuffer.Clear();
-				}
-				if(bNoMoreAvail || (vBuffer.GetSize() >= uExpected)){
-					break;
-				}
-
-				std::size_t uBytesRead;
-				const auto pbyStepBuffer = vecBackBuffer.ResizeMore(kStepSize);
-				try {
-					uBytesRead = pStream->Get(pbyStepBuffer, kStepSize);
-				} catch(...){
-					vecBackBuffer.Pop(kStepSize);
-					throw;
-				}
-				vecBackBuffer.Pop(kStepSize - uBytesRead);
-
-				if(uBytesRead < kStepSize){
-					bNoMoreAvail = true;
-				}
-			}
-		}
-	}
+	enum : std::size_t {
+		 kStepSize = 4096,
+	};
 
 	BufferedInputStream::~BufferedInputStream(){
 	}
 
+	void BufferedInputStream::X_PopulateTempBuffer(std::size_t uExpected){
+		bool bNoMoreAvail = false;
+		for(;;){
+			if(!x_vecBackBuffer.IsEmpty()){
+				x_sbufBufferedData.Put(x_vecBackBuffer.GetData(), x_vecBackBuffer.GetSize());
+				x_vecBackBuffer.Clear();
+			}
+			if(bNoMoreAvail || (x_sbufBufferedData.GetSize() >= uExpected)){
+				break;
+			}
+
+			std::size_t uBytesRead;
+			const auto pbyStepBuffer = x_vecBackBuffer.ResizeMore(kStepSize);
+			try {
+				uBytesRead = x_pUnderlyingStream->Get(pbyStepBuffer, kStepSize);
+			} catch(...){
+				x_vecBackBuffer.Pop(kStepSize);
+				throw;
+			}
+			x_vecBackBuffer.Pop(kStepSize - uBytesRead);
+
+			if(uBytesRead < kStepSize){
+				bNoMoreAvail = true;
+			}
+		}
+	}
+
 	int BufferedInputStream::Peek(){
-		PopulateTempBuffer(x_vBuffer, x_vecBackBuffer, x_pUnderlyingStream.Get(), 1);
-		return x_vBuffer.Peek();
+		X_PopulateTempBuffer(1);
+		return x_sbufBufferedData.Peek();
 	}
 	int BufferedInputStream::Get(){
-		PopulateTempBuffer(x_vBuffer, x_vecBackBuffer, x_pUnderlyingStream.Get(), 1);
-		return x_vBuffer.Get();
+		X_PopulateTempBuffer(1);
+		return x_sbufBufferedData.Get();
 	}
 	bool BufferedInputStream::Discard(){
-		PopulateTempBuffer(x_vBuffer, x_vecBackBuffer, x_pUnderlyingStream.Get(), 1);
-		return x_vBuffer.Discard();
+		X_PopulateTempBuffer(1);
+		return x_sbufBufferedData.Discard();
 	}
 
 	std::size_t BufferedInputStream::Peek(void *pData, std::size_t uSize){
-		PopulateTempBuffer(x_vBuffer, x_vecBackBuffer, x_pUnderlyingStream.Get(), uSize);
-		return x_vBuffer.Peek(pData, uSize);
+		X_PopulateTempBuffer(uSize);
+		return x_sbufBufferedData.Peek(pData, uSize);
 	}
 	std::size_t BufferedInputStream::Get(void *pData, std::size_t uSize){
-		PopulateTempBuffer(x_vBuffer, x_vecBackBuffer, x_pUnderlyingStream.Get(), uSize);
-		return x_vBuffer.Get(pData, uSize);
+		X_PopulateTempBuffer(uSize);
+		return x_sbufBufferedData.Get(pData, uSize);
 	}
 	std::size_t BufferedInputStream::Discard(std::size_t uSize){
-		PopulateTempBuffer(x_vBuffer, x_vecBackBuffer, x_pUnderlyingStream.Get(), uSize);
-		return x_vBuffer.Discard(uSize);
+		X_PopulateTempBuffer(uSize);
+		return x_sbufBufferedData.Discard(uSize);
 	}
 
 	StreamBuffer BufferedInputStream::CutOff(std::size_t uSize){
-		PopulateTempBuffer(x_vBuffer, x_vecBackBuffer, x_pUnderlyingStream.Get(), uSize);
-		return x_vBuffer.CutOff(uSize);
+		X_PopulateTempBuffer(uSize);
+		return x_sbufBufferedData.CutOff(uSize);
 	}
 }
 

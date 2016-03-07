@@ -16,7 +16,7 @@ namespace Impl_BufferedOutputStream {
 	private:
 		PolyIntrusivePtr<AbstractOutputStream> x_pUnderlyingStream;
 
-		StreamBuffer x_vBuffer;
+		StreamBuffer x_sbufBufferedData;
 		Vector<unsigned char> x_vecBackBuffer;
 
 	public:
@@ -29,12 +29,15 @@ namespace Impl_BufferedOutputStream {
 		BufferedOutputStream(BufferedOutputStream &&) noexcept = default;
 		BufferedOutputStream& operator=(BufferedOutputStream &&) noexcept = default;
 
+	private:
+		void X_FlushTempBuffer(std::size_t uThreshold);
+
 	public:
 		void Put(unsigned char byData);
 
 		void Put(const void *pData, std::size_t uSize);
 
-		void Splice(StreamBuffer &vBuffer);
+		void Splice(StreamBuffer &sbufData);
 
 		void Flush(bool bHard);
 
@@ -50,7 +53,7 @@ namespace Impl_BufferedOutputStream {
 		void Swap(BufferedOutputStream &rhs) noexcept {
 			using std::swap;
 			swap(x_pUnderlyingStream, rhs.x_pUnderlyingStream);
-			swap(x_vBuffer,           rhs.x_vBuffer);
+			swap(x_sbufBufferedData,  rhs.x_sbufBufferedData);
 			swap(x_vecBackBuffer,     rhs.x_vecBackBuffer);
 		}
 

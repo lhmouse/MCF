@@ -16,7 +16,7 @@ namespace Impl_BufferedInputStream {
 	private:
 		PolyIntrusivePtr<AbstractInputStream> x_pUnderlyingStream;
 
-		StreamBuffer x_vBuffer;
+		StreamBuffer x_sbufBufferedData;
 		Vector<unsigned char> x_vecBackBuffer;
 
 	public:
@@ -28,6 +28,9 @@ namespace Impl_BufferedInputStream {
 
 		BufferedInputStream(BufferedInputStream &&) noexcept = default;
 		BufferedInputStream& operator=(BufferedInputStream &&) noexcept = default;
+
+	private:
+		void X_PopulateTempBuffer(std::size_t uExpected);
 
 	public:
 		int Peek();
@@ -50,7 +53,7 @@ namespace Impl_BufferedInputStream {
 		void Swap(BufferedInputStream &rhs) noexcept {
 			using std::swap;
 			swap(x_pUnderlyingStream, rhs.x_pUnderlyingStream);
-			swap(x_vBuffer,           rhs.x_vBuffer);
+			swap(x_sbufBufferedData,  rhs.x_sbufBufferedData);
 			swap(x_vecBackBuffer,     rhs.x_vecBackBuffer);
 		}
 

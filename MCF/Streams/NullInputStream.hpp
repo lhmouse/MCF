@@ -15,7 +15,7 @@ public:
 	~NullInputStream() override;
 
 	NullInputStream(NullInputStream &&) noexcept = default;
-	NullInputStream& operator=(NullInputStream &&) noexcept = default;
+	NullInputStream &operator=(NullInputStream &&) noexcept = default;
 
 public:
 	int Peek() noexcept override;

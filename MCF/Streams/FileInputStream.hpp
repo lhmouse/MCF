@@ -29,7 +29,7 @@ public:
 	~FileInputStream() override;
 
 	FileInputStream(FileInputStream &&) noexcept = default;
-	FileInputStream& operator=(FileInputStream &&) noexcept = default;
+	FileInputStream &operator=(FileInputStream &&) noexcept = default;
 
 private:
 	std::size_t X_ReadFromCurrentOffset(void *pData, std::size_t uSize);

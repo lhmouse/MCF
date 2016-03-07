@@ -27,7 +27,7 @@ namespace Impl_BufferedInputStream {
 		~BufferedInputStream();
 
 		BufferedInputStream(BufferedInputStream &&) noexcept = default;
-		BufferedInputStream& operator=(BufferedInputStream &&) noexcept = default;
+		BufferedInputStream &operator=(BufferedInputStream &&) noexcept = default;
 
 	private:
 		void X_PopulateTempBuffer(std::size_t uExpected);
@@ -41,7 +41,9 @@ namespace Impl_BufferedInputStream {
 		std::size_t Get(void *pData, std::size_t uSize);
 		std::size_t Discard(std::size_t uSize);
 
-		StreamBuffer CutOff(std::size_t uSize);
+		void UncheckedDiscard() noexcept;
+
+		void UncheckedDiscard(std::size_t uSize) noexcept;
 
 		const PolyIntrusivePtr<AbstractInputStream> &GetUnderlyingStream() const noexcept {
 			return x_pUnderlyingStream;

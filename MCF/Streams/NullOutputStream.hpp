@@ -15,7 +15,7 @@ public:
 	~NullOutputStream() override;
 
 	NullOutputStream(NullOutputStream &&) noexcept = default;
-	NullOutputStream& operator=(NullOutputStream &&) noexcept = default;
+	NullOutputStream &operator=(NullOutputStream &&) noexcept = default;
 
 public:
 	void Put(unsigned char byData) noexcept override;

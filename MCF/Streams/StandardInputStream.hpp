@@ -15,7 +15,7 @@ public:
 	~StandardInputStream() override;
 
 	StandardInputStream(StandardInputStream &&) noexcept = default;
-	StandardInputStream& operator=(StandardInputStream &&) noexcept = default;
+	StandardInputStream &operator=(StandardInputStream &&) noexcept = default;
 
 public:
 	int Peek() override;

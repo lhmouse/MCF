@@ -26,7 +26,7 @@ public:
 	~Crc32OutputStream() override;
 
 	Crc32OutputStream(Crc32OutputStream &&) noexcept = default;
-	Crc32OutputStream& operator=(Crc32OutputStream &&) noexcept = default;
+	Crc32OutputStream &operator=(Crc32OutputStream &&) noexcept = default;
 
 public:
 	void Put(unsigned char byData) override;

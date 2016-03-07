@@ -26,7 +26,7 @@ public:
 	~Sha256OutputStream() override;
 
 	Sha256OutputStream(Sha256OutputStream &&) noexcept = default;
-	Sha256OutputStream& operator=(Sha256OutputStream &&) noexcept = default;
+	Sha256OutputStream &operator=(Sha256OutputStream &&) noexcept = default;
 
 public:
 	void Put(unsigned char byData) override;

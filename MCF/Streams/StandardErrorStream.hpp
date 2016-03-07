@@ -15,7 +15,7 @@ public:
 	~StandardErrorStream() override;
 
 	StandardErrorStream(StandardErrorStream &&) noexcept = default;
-	StandardErrorStream& operator=(StandardErrorStream &&) noexcept = default;
+	StandardErrorStream &operator=(StandardErrorStream &&) noexcept = default;
 
 public:
 	void Put(unsigned char byData) override;

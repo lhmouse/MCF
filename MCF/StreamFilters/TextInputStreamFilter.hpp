@@ -6,13 +6,12 @@
 #define MCF_STREAM_FILTERS_TEXT_INPUT_STREAM_FILTER_HPP_
 
 #include "AbstractInputStreamFilter.hpp"
-#include "../Containers/Vector.hpp"
 
 namespace MCF {
 
 class TextInputStreamFilter : public AbstractInputStreamFilter {
 private:
-	Vector<char> x_vecDecoded;
+	StreamBuffer x_sbufPlain;
 
 public:
 	explicit TextInputStreamFilter(PolyIntrusivePtr<AbstractInputStream> pUnderlyingStream) noexcept
@@ -22,10 +21,10 @@ public:
 	~TextInputStreamFilter() override;
 
 	TextInputStreamFilter(TextInputStreamFilter &&) noexcept = default;
-	TextInputStreamFilter& operator=(TextInputStreamFilter &&) noexcept = default;
+	TextInputStreamFilter &operator=(TextInputStreamFilter &&) noexcept = default;
 
 private:
-	void X_PopulateDecodedBuffer(std::size_t uExpected);
+	void X_PopulatePlainBuffer(std::size_t uExpected);
 
 public:
 	int Peek() override;
@@ -38,8 +37,8 @@ public:
 
 	void Swap(TextInputStreamFilter &rhs) noexcept {
 		using std::swap;
-		swap(y_vStream,    rhs.y_vStream);
-		swap(x_vecDecoded, rhs.x_vecDecoded);
+		swap(y_vStream,   rhs.y_vStream);
+		swap(x_sbufPlain, rhs.x_sbufPlain);
 	}
 
 	friend void swap(TextInputStreamFilter &lhs, TextInputStreamFilter &rhs) noexcept {

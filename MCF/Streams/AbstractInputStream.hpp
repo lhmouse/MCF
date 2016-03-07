@@ -16,7 +16,7 @@ public:
 	~AbstractInputStream() override = 0;
 
 	AbstractInputStream(AbstractInputStream &&) noexcept = default;
-	AbstractInputStream& operator=(AbstractInputStream &&) noexcept = default;
+	AbstractInputStream &operator=(AbstractInputStream &&) noexcept = default;
 
 public:
 	virtual int Peek() = 0;

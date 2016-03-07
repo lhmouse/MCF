@@ -26,7 +26,7 @@ public:
 	~Fnv1a64OutputStream() override;
 
 	Fnv1a64OutputStream(Fnv1a64OutputStream &&) noexcept = default;
-	Fnv1a64OutputStream& operator=(Fnv1a64OutputStream &&) noexcept = default;
+	Fnv1a64OutputStream &operator=(Fnv1a64OutputStream &&) noexcept = default;
 
 public:
 	void Put(unsigned char byData) override;

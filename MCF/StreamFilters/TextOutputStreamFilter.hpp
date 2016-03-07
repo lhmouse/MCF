@@ -10,6 +10,9 @@
 namespace MCF {
 
 class TextOutputStreamFilter : public AbstractOutputStreamFilter {
+private:
+	StreamBuffer x_sbufPlain;
+
 public:
 	explicit TextOutputStreamFilter(PolyIntrusivePtr<AbstractOutputStream> pUnderlyingStream) noexcept
 		: AbstractOutputStreamFilter(std::move(pUnderlyingStream))
@@ -18,7 +21,10 @@ public:
 	~TextOutputStreamFilter() override;
 
 	TextOutputStreamFilter(TextOutputStreamFilter &&) noexcept = default;
-	TextOutputStreamFilter& operator=(TextOutputStreamFilter &&) noexcept = default;
+	TextOutputStreamFilter &operator=(TextOutputStreamFilter &&) noexcept = default;
+
+private:
+	void X_FlushPlainBuffer();
 
 public:
 	void Put(unsigned char byData) override;
@@ -29,7 +35,8 @@ public:
 
 	void Swap(TextOutputStreamFilter &rhs) noexcept {
 		using std::swap;
-		swap(y_vStream,    rhs.y_vStream);
+		swap(y_vStream,   rhs.y_vStream);
+		swap(x_sbufPlain, rhs.x_sbufPlain);
 	}
 
 	friend void swap(TextOutputStreamFilter &lhs, TextOutputStreamFilter &rhs) noexcept {

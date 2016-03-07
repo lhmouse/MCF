@@ -18,7 +18,7 @@ public:
 	~BufferingOutputStreamFilter() override;
 
 	BufferingOutputStreamFilter(BufferingOutputStreamFilter &&) noexcept = default;
-	BufferingOutputStreamFilter& operator=(BufferingOutputStreamFilter &&) noexcept = default;
+	BufferingOutputStreamFilter &operator=(BufferingOutputStreamFilter &&) noexcept = default;
 
 public:
 	void Put(unsigned char byData) override;

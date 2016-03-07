@@ -29,7 +29,7 @@ public:
 	~FileOutputStream() override;
 
 	FileOutputStream(FileOutputStream &&) noexcept = default;
-	FileOutputStream& operator=(FileOutputStream &&) noexcept = default;
+	FileOutputStream &operator=(FileOutputStream &&) noexcept = default;
 
 private:
 	std::size_t X_WriteFromCurrentOffset(const void *pData, std::size_t uSize);

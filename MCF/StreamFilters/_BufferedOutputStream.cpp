@@ -56,11 +56,6 @@ namespace Impl_BufferedOutputStream {
 		X_FlushTempBuffer(kStepSize);
 	}
 
-	void BufferedOutputStream::Splice(StreamBuffer &sbufData){
-		x_sbufBufferedData.Splice(sbufData);
-		X_FlushTempBuffer(kStepSize);
-	}
-
 	void BufferedOutputStream::Flush(bool bHard){
 		X_FlushTempBuffer(0);
 

@@ -26,7 +26,7 @@ public:
 	~Sha1OutputStream() override;
 
 	Sha1OutputStream(Sha1OutputStream &&) noexcept = default;
-	Sha1OutputStream& operator=(Sha1OutputStream &&) noexcept = default;
+	Sha1OutputStream &operator=(Sha1OutputStream &&) noexcept = default;
 
 public:
 	void Put(unsigned char byData) override;

@@ -27,7 +27,7 @@ namespace Impl_BufferedOutputStream {
 		~BufferedOutputStream();
 
 		BufferedOutputStream(BufferedOutputStream &&) noexcept = default;
-		BufferedOutputStream& operator=(BufferedOutputStream &&) noexcept = default;
+		BufferedOutputStream &operator=(BufferedOutputStream &&) noexcept = default;
 
 	private:
 		void X_FlushTempBuffer(std::size_t uThreshold);
@@ -36,8 +36,6 @@ namespace Impl_BufferedOutputStream {
 		void Put(unsigned char byData);
 
 		void Put(const void *pData, std::size_t uSize);
-
-		void Splice(StreamBuffer &sbufData);
 
 		void Flush(bool bHard);
 

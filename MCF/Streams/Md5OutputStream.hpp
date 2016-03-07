@@ -26,7 +26,7 @@ public:
 	~Md5OutputStream() override;
 
 	Md5OutputStream(Md5OutputStream &&) noexcept = default;
-	Md5OutputStream& operator=(Md5OutputStream &&) noexcept = default;
+	Md5OutputStream &operator=(Md5OutputStream &&) noexcept = default;
 
 public:
 	void Put(unsigned char byData) override;

@@ -4,91 +4,67 @@
 
 #include "../StdMCF.hpp"
 #include "TextInputStreamFilter.hpp"
-#include "../Utilities/MinMax.hpp"
 
 namespace MCF {
 
 TextInputStreamFilter::~TextInputStreamFilter(){
 }
 
-void TextInputStreamFilter::X_PopulateDecodedBuffer(std::size_t uExpected){
-	if(x_vecDecoded.GetSize() >= uExpected){
-		return;
-	}
-	x_vecDecoded.Reserve(uExpected);
-
+void TextInputStreamFilter::X_PopulatePlainBuffer(std::size_t uExpected){
 	for(;;){
-		int nCur = y_vStream.Get();
-		if(nCur < 0){
+		if(x_sbufPlain.GetSize() >= uExpected){
 			break;
 		}
-		if(nCur == '\r'){
-			int nNext = y_vStream.Peek();
-			if(nNext < 0){
-				break;
-			}
-			if(nNext == '\n'){
-				y_vStream.Discard();
-				nCur = '\n';
-			}
+
+		unsigned char abyTemp[2];
+		const auto uBytesRead = y_vStream.Peek(abyTemp, 2);
+		if(uBytesRead == 0){
+			break;
 		}
-		x_vecDecoded.UncheckedPush(static_cast<char>(nCur));
+		if(uBytesRead == 1){
+			if(abyTemp[0] != '\r'){
+				x_sbufPlain.Put(abyTemp[0]);
+				y_vStream.UncheckedDiscard();
+			}
+			break;
+		}
+		if((abyTemp[0] == '\r') && (abyTemp[1] == '\n')){
+			x_sbufPlain.Put('\n');
+			y_vStream.UncheckedDiscard(2);
+		} else if(abyTemp[1] == '\r'){
+			x_sbufPlain.Put(abyTemp[0]);
+			y_vStream.UncheckedDiscard();
+		} else {
+			x_sbufPlain.Put(abyTemp, 2);
+			y_vStream.UncheckedDiscard(2);
+		}
 	}
 }
 
 int TextInputStreamFilter::Peek(){
-	X_PopulateDecodedBuffer(1);
-	if(x_vecDecoded.IsEmpty()){
-		return -1;
-	}
-	const int nRet = x_vecDecoded[0];
-	return nRet;
+	X_PopulatePlainBuffer(1);
+	return x_sbufPlain.Peek();
 }
 int TextInputStreamFilter::Get(){
-	X_PopulateDecodedBuffer(1);
-	if(x_vecDecoded.IsEmpty()){
-		return -1;
-	}
-	const int nRet = x_vecDecoded[0];
-	x_vecDecoded.Erase(x_vecDecoded.GetBegin());
-	return nRet;
+	X_PopulatePlainBuffer(1);
+	return x_sbufPlain.Get();
 }
 bool TextInputStreamFilter::Discard(){
-	X_PopulateDecodedBuffer(1);
-	if(x_vecDecoded.IsEmpty()){
-		return false;
-	}
-	x_vecDecoded.Erase(x_vecDecoded.GetBegin());
-	return true;
+	X_PopulatePlainBuffer(1);
+	return x_sbufPlain.Discard();
 }
 
 std::size_t TextInputStreamFilter::Peek(void *pData, std::size_t uSize){
-	X_PopulateDecodedBuffer(uSize);
-	const auto uBytesRead = Min(x_vecDecoded.GetSize(), uSize);
-	if(uBytesRead == 0){
-		return 0;
-	}
-	std::memcpy(pData, x_vecDecoded.GetData(), uBytesRead);
-	return uBytesRead;
+	X_PopulatePlainBuffer(uSize);
+	return x_sbufPlain.Peek(pData, uSize);
 }
 std::size_t TextInputStreamFilter::Get(void *pData, std::size_t uSize){
-	X_PopulateDecodedBuffer(uSize);
-	const auto uBytesRead = Min(x_vecDecoded.GetSize(), uSize);
-	if(uBytesRead == 0){
-		return 0;
-	}
-	std::memcpy(pData, x_vecDecoded.GetData(), uBytesRead);
-	x_vecDecoded.Erase(x_vecDecoded.GetBegin() + uBytesRead);
-	return uBytesRead;
+	X_PopulatePlainBuffer(uSize);
+	return x_sbufPlain.Get(pData, uSize);
 }
 std::size_t TextInputStreamFilter::Discard(std::size_t uSize){
-	X_PopulateDecodedBuffer(uSize);
-	const auto uBytesRead = Min(x_vecDecoded.GetSize(), uSize);
-	if(uBytesRead == 0){
-		return 0;
-	}
-	x_vecDecoded.Erase(x_vecDecoded.GetBegin() + uBytesRead);
-	return uBytesRead;
+	X_PopulatePlainBuffer(uSize);
+	return x_sbufPlain.Discard(uSize);
 }
 
 }

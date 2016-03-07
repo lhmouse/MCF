@@ -15,7 +15,7 @@ public:
 	~StandardOutputStream() override;
 
 	StandardOutputStream(StandardOutputStream &&) noexcept = default;
-	StandardOutputStream& operator=(StandardOutputStream &&) noexcept = default;
+	StandardOutputStream &operator=(StandardOutputStream &&) noexcept = default;
 
 public:
 	void Put(unsigned char byData) override;

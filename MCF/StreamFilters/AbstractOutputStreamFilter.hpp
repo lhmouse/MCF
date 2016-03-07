@@ -22,7 +22,7 @@ public:
 	virtual ~AbstractOutputStreamFilter() = 0;
 
 	AbstractOutputStreamFilter(AbstractOutputStreamFilter &&) noexcept = default;
-	AbstractOutputStreamFilter& operator=(AbstractOutputStreamFilter &&) noexcept = default;
+	AbstractOutputStreamFilter &operator=(AbstractOutputStreamFilter &&) noexcept = default;
 
 public:
 	virtual void Put(unsigned char byData) = 0;

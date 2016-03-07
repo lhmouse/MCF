@@ -22,7 +22,7 @@ public:
 	~BufferOutputStream() override;
 
 	BufferOutputStream(BufferOutputStream &&) noexcept = default;
-	BufferOutputStream& operator=(BufferOutputStream &&) noexcept = default;
+	BufferOutputStream &operator=(BufferOutputStream &&) noexcept = default;
 
 public:
 	void Put(unsigned char byData) override;

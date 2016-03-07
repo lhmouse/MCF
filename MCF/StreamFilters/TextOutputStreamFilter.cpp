@@ -8,36 +8,40 @@
 namespace MCF {
 
 TextOutputStreamFilter::~TextOutputStreamFilter(){
+	try {
+		X_FlushPlainBuffer();
+	} catch(...){
+	}
+}
+
+void TextOutputStreamFilter::X_FlushPlainBuffer(){
+	for(;;){
+		const int nChar = x_sbufPlain.Peek();
+		if(nChar < 0){
+			break;
+		}
+		if(nChar == '\r'){
+			y_vStream.Put("\r\n", 2);
+		} else {
+			y_vStream.Put(static_cast<unsigned char>(nChar));
+		}
+		x_sbufPlain.Discard();
+	}
 }
 
 void TextOutputStreamFilter::Put(unsigned char byData){
-	if(byData != '\n'){
-		y_vStream.Put(byData);
-	} else {
-		y_vStream.Put("\r\n", 2);
-	}
+	x_sbufPlain.Put(byData);
+	X_FlushPlainBuffer();
 }
 
 void TextOutputStreamFilter::Put(const void *pData, std::size_t uSize){
-	StreamBuffer sbufNewPart;
-	{
-		auto pchLineBegin = static_cast<const char *>(pData);
-		const auto pchEnd = pchLineBegin + uSize;
-		for(;;){
-			auto pchLineEnd = static_cast<const char *>(std::memchr(pchLineBegin, '\n', static_cast<std::size_t>(pchEnd - pchLineBegin)));
-			if(!pchLineEnd){
-				break;
-			}
-			sbufNewPart.Put(pchLineBegin, static_cast<std::size_t>(pchLineEnd - pchLineBegin));
-			sbufNewPart.Put("\r\n", 2);
-			pchLineBegin = pchLineEnd + 1;
-		}
-		sbufNewPart.Put(pchLineBegin, static_cast<std::size_t>(pchEnd - pchLineBegin));
-	}
-	y_vStream.Splice(sbufNewPart);
+	x_sbufPlain.Put(pData, uSize);
+	X_FlushPlainBuffer();
 }
 
 void TextOutputStreamFilter::Flush(bool bHard){
+	X_FlushPlainBuffer();
+
 	y_vStream.Flush(bHard);
 }
 

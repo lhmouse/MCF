@@ -18,7 +18,7 @@ public:
 	~BufferingInputStreamFilter() override;
 
 	BufferingInputStreamFilter(BufferingInputStreamFilter &&) noexcept = default;
-	BufferingInputStreamFilter& operator=(BufferingInputStreamFilter &&) noexcept = default;
+	BufferingInputStreamFilter &operator=(BufferingInputStreamFilter &&) noexcept = default;
 
 public:
 	int Peek() override;

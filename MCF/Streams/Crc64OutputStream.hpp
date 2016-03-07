@@ -26,7 +26,7 @@ public:
 	~Crc64OutputStream() override;
 
 	Crc64OutputStream(Crc64OutputStream &&) noexcept = default;
-	Crc64OutputStream& operator=(Crc64OutputStream &&) noexcept = default;
+	Crc64OutputStream &operator=(Crc64OutputStream &&) noexcept = default;
 
 public:
 	void Put(unsigned char byData) override;

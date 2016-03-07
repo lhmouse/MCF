@@ -68,9 +68,16 @@ namespace Impl_BufferedInputStream {
 		return x_sbufBufferedData.Discard(uSize);
 	}
 
-	StreamBuffer BufferedInputStream::CutOff(std::size_t uSize){
-		X_PopulateTempBuffer(uSize);
-		return x_sbufBufferedData.CutOff(uSize);
+	void BufferedInputStream::UncheckedDiscard() noexcept {
+		ASSERT(!x_sbufBufferedData.IsEmpty());
+
+		x_sbufBufferedData.Discard();
+	}
+
+	void BufferedInputStream::UncheckedDiscard(std::size_t uSize) noexcept {
+		ASSERT(x_sbufBufferedData.GetSize() >= uSize);
+
+		x_sbufBufferedData.Discard(uSize);
 	}
 }
 

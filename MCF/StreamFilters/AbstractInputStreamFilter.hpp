@@ -22,7 +22,7 @@ public:
 	virtual ~AbstractInputStreamFilter() = 0;
 
 	AbstractInputStreamFilter(AbstractInputStreamFilter &&) noexcept = default;
-	AbstractInputStreamFilter& operator=(AbstractInputStreamFilter &&) noexcept = default;
+	AbstractInputStreamFilter &operator=(AbstractInputStreamFilter &&) noexcept = default;
 
 public:
 	virtual int Peek() = 0;

@@ -22,7 +22,7 @@ public:
 	~BufferInputStream() override;
 
 	BufferInputStream(BufferInputStream &&) noexcept = default;
-	BufferInputStream& operator=(BufferInputStream &&) noexcept = default;
+	BufferInputStream &operator=(BufferInputStream &&) noexcept = default;
 
 public:
 	int Peek() override;

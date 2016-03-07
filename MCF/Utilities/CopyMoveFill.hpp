@@ -99,7 +99,7 @@ inline OutputIteratorT
 	return itOutputBegin;
 }
 template<typename OutputIteratorT, typename InputIteratorT>
-inline OutputIteratorT
+inline InputIteratorT
 	MoveInto(OutputIteratorT itOutputBegin, std::common_type_t<OutputIteratorT> itOutputEnd,
 		InputIteratorT itInputBegin)
 {

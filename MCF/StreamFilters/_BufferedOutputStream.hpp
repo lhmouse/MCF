@@ -42,11 +42,6 @@ namespace Impl_BufferedOutputStream {
 		const PolyIntrusivePtr<AbstractOutputStream> &GetUnderlyingStream() const noexcept {
 			return x_pUnderlyingStream;
 		}
-		void SetUnderlyingStream(PolyIntrusivePtr<AbstractOutputStream> pUnderlyingStream) noexcept {
-			Flush(false);
-
-			x_pUnderlyingStream = std::move(pUnderlyingStream);
-		}
 
 		void Swap(BufferedOutputStream &rhs) noexcept {
 			using std::swap;

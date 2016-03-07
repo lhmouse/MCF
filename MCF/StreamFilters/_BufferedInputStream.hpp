@@ -36,20 +36,15 @@ namespace Impl_BufferedInputStream {
 		int Peek();
 		int Get();
 		bool Discard();
+		void UncheckedDiscard() noexcept;
 
 		std::size_t Peek(void *pData, std::size_t uSize);
 		std::size_t Get(void *pData, std::size_t uSize);
 		std::size_t Discard(std::size_t uSize);
-
-		void UncheckedDiscard() noexcept;
-
 		void UncheckedDiscard(std::size_t uSize) noexcept;
 
 		const PolyIntrusivePtr<AbstractInputStream> &GetUnderlyingStream() const noexcept {
 			return x_pUnderlyingStream;
-		}
-		void SetUnderlyingStream(PolyIntrusivePtr<AbstractInputStream> pUnderlyingStream) noexcept {
-			x_pUnderlyingStream = std::move(pUnderlyingStream);
 		}
 
 		void Swap(BufferedInputStream &rhs) noexcept {

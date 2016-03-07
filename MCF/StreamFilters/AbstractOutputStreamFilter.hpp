@@ -34,9 +34,6 @@ public:
 	const PolyIntrusivePtr<AbstractOutputStream> &GetUnderlyingStream() const noexcept {
 		return y_vStream.GetUnderlyingStream();
 	}
-	void SetUnderlyingStream(PolyIntrusivePtr<AbstractOutputStream> pUnderlyingStream) noexcept {
-		y_vStream.SetUnderlyingStream(std::move(pUnderlyingStream));
-	}
 };
 
 }

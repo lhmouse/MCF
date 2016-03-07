@@ -54,6 +54,11 @@ namespace Impl_BufferedInputStream {
 		X_PopulateTempBuffer(1);
 		return x_sbufBufferedData.Discard();
 	}
+	void BufferedInputStream::UncheckedDiscard() noexcept {
+		ASSERT(!x_sbufBufferedData.IsEmpty());
+
+		x_sbufBufferedData.Discard();
+	}
 
 	std::size_t BufferedInputStream::Peek(void *pData, std::size_t uSize){
 		X_PopulateTempBuffer(uSize);
@@ -67,13 +72,6 @@ namespace Impl_BufferedInputStream {
 		X_PopulateTempBuffer(uSize);
 		return x_sbufBufferedData.Discard(uSize);
 	}
-
-	void BufferedInputStream::UncheckedDiscard() noexcept {
-		ASSERT(!x_sbufBufferedData.IsEmpty());
-
-		x_sbufBufferedData.Discard();
-	}
-
 	void BufferedInputStream::UncheckedDiscard(std::size_t uSize) noexcept {
 		ASSERT(x_sbufBufferedData.GetSize() >= uSize);
 

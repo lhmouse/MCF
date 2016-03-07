@@ -8,71 +8,36 @@
 namespace MCF {
 
 TextOutputStreamFilter::~TextOutputStreamFilter(){
-	try {
-		X_FlushEncodedBuffer();
-	} catch(...){
-	}
-}
-
-void TextOutputStreamFilter::X_FlushEncodedBuffer(){
-	if(x_vecEncoded.IsEmpty()){
-		return;
-	}
-
-	y_vStream.Put(x_vecEncoded.GetData(), x_vecEncoded.GetSize());
-	x_vecEncoded.Clear();
 }
 
 void TextOutputStreamFilter::Put(unsigned char byData){
-	bool bShouldFlush = false;
-
-	x_vecEncoded.ReserveMore(2);
-
 	if(byData != '\n'){
-		x_vecEncoded.UncheckedPush(static_cast<char>(byData));
+		y_vStream.Put(byData);
 	} else {
-		x_vecEncoded.UncheckedPush('\r');
-		x_vecEncoded.UncheckedPush('\n');
-		bShouldFlush = true;
-	}
-
-	if(bShouldFlush){
-		X_FlushEncodedBuffer();
+		y_vStream.Put("\r\n", 2);
 	}
 }
 
 void TextOutputStreamFilter::Put(const void *pData, std::size_t uSize){
-	bool bShouldFlush = false;
-
-	const auto uSizeToReserve = uSize * 2;
-	if(uSizeToReserve / 2 != uSize){
-		throw std::bad_array_new_length();
-	}
-	x_vecEncoded.ReserveMore(uSizeToReserve);
+	StreamBuffer sbufNewPart;
 
 	auto pchLineBegin = static_cast<const char *>(pData);
 	const auto pchEnd = pchLineBegin + uSize;
 	for(;;){
 		auto pchLineEnd = static_cast<const char *>(std::memchr(pchLineBegin, '\n', static_cast<std::size_t>(pchEnd - pchLineBegin)));
 		if(!pchLineEnd){
-			x_vecEncoded.UncheckedAppend(pchLineBegin, pchEnd);
+			sbufNewPart.Put(pchLineBegin, static_cast<std::size_t>(pchEnd - pchLineBegin));
 			break;
 		}
-		x_vecEncoded.UncheckedAppend(pchLineBegin, pchLineEnd);
-		x_vecEncoded.UncheckedPush('\r');
-		x_vecEncoded.UncheckedPush('\n');
-		bShouldFlush = true;
+		sbufNewPart.Put(pchLineBegin, static_cast<std::size_t>(pchLineEnd - pchLineBegin));
+		sbufNewPart.Put("\r\n", 2);
 		pchLineBegin = pchLineEnd + 1;
 	}
 
-	if(bShouldFlush){
-		X_FlushEncodedBuffer();
-	}
+	y_vStream.Splice(sbufNewPart);
 }
 
 void TextOutputStreamFilter::Flush(bool bHard){
-	X_FlushEncodedBuffer();
-
 	y_vStream.Flush(bHard);
 }
 

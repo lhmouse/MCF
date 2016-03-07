@@ -6,14 +6,10 @@
 #define MCF_STREAM_FILTERS_TEXT_OUTPUT_STREAM_FILTER_HPP_
 
 #include "AbstractOutputStreamFilter.hpp"
-#include "../Containers/Vector.hpp"
 
 namespace MCF {
 
 class TextOutputStreamFilter : public AbstractOutputStreamFilter {
-private:
-	Vector<char> x_vecEncoded;
-
 public:
 	explicit TextOutputStreamFilter(PolyIntrusivePtr<AbstractOutputStream> pUnderlyingStream) noexcept
 		: AbstractOutputStreamFilter(std::move(pUnderlyingStream))
@@ -23,9 +19,6 @@ public:
 
 	TextOutputStreamFilter(TextOutputStreamFilter &&) noexcept = default;
 	TextOutputStreamFilter& operator=(TextOutputStreamFilter &&) noexcept = default;
-
-private:
-	void X_FlushEncodedBuffer();
 
 public:
 	void Put(unsigned char byData) override;
@@ -37,7 +30,6 @@ public:
 	void Swap(TextOutputStreamFilter &rhs) noexcept {
 		using std::swap;
 		swap(y_vStream,    rhs.y_vStream);
-		swap(x_vecEncoded, rhs.x_vecEncoded);
 	}
 
 	friend void swap(TextOutputStreamFilter &lhs, TextOutputStreamFilter &rhs) noexcept {

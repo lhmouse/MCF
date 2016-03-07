@@ -20,7 +20,7 @@ void TextOutputStreamFilter::X_FlushPlainBuffer(){
 		if(nChar < 0){
 			break;
 		}
-		if(nChar == '\r'){
+		if(nChar == '\n'){
 			y_vStream.Put("\r\n", 2);
 		} else {
 			y_vStream.Put(static_cast<unsigned char>(nChar));

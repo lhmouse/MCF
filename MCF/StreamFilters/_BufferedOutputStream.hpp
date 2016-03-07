@@ -36,6 +36,7 @@ namespace Impl_BufferedOutputStream {
 		void Put(unsigned char byData);
 
 		void Put(const void *pData, std::size_t uSize);
+		void Splice(StreamBuffer &sbufData);
 
 		void Flush(bool bHard);
 

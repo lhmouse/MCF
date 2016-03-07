@@ -9,15 +9,18 @@ namespace MCF {
 
 namespace Impl_BufferedOutputStream {
 	namespace {
-		constexpr std::size_t kStepSize = 4096;
+		enum : std::size_t {
+			 kStepSize = 4096,
+		};
 
 		void FlushBuffer(AbstractOutputStream *pStream, StreamBuffer &vBuffer, Vector<unsigned char> &vecBackBuffer, std::size_t uThreshold){
+			bool bNoMoreAvail = false;
 			for(;;){
 				if(!vecBackBuffer.IsEmpty()){
 					pStream->Put(vecBackBuffer.GetData(), vecBackBuffer.GetSize());
 					vecBackBuffer.Clear();
 				}
-				if(vBuffer.GetSize() < uThreshold){
+				if(bNoMoreAvail || (vBuffer.GetSize() < uThreshold)){
 					break;
 				}
 
@@ -31,8 +34,8 @@ namespace Impl_BufferedOutputStream {
 				}
 				vecBackBuffer.Pop(kStepSize - uBytesToWrite);
 
-				if(uBytesToWrite == 0){
-					break;
+				if(uBytesToWrite < kStepSize){
+					bNoMoreAvail = true;
 				}
 			}
 		}

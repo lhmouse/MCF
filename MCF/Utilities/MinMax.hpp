@@ -7,12 +7,13 @@
 
 #include "../Function/Comparators.hpp"
 #include <utility>
+#include <type_traits>
 
 namespace MCF {
 
 namespace Impl_MinMax {
 	template<typename T>
-	constexpr T ForwardAsLvalueOrPrvalue(T &&t){
+	constexpr std::remove_cv_t<T> ForwardAsLvalueOrPrvalue(T &&t) noexcept(std::is_nothrow_move_constructible<std::remove_cv_t<T>>::value) {
 		return std::forward<T>(t);
 	}
 }

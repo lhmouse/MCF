@@ -147,7 +147,7 @@ private:
 		}
 		return uNewIndex;
 	}
-	std::size_t X_Distance(std::size_t uBegin, std::size_t uEnd) const noexcept {
+	std::size_t X_Measure(std::size_t uBegin, std::size_t uEnd) const noexcept {
 		return X_Retreat(uEnd, uBegin);
 	}
 
@@ -156,8 +156,8 @@ private:
 		ASSERT(!IsEmpty());
 		ASSERT(X_Advance(x_uBegin, uPos) <= GetSize());
 
-		const auto uCountBefore = X_Distance(x_uBegin, uPos);
-		const auto uCountAfter = X_Distance(uPos, x_uEnd);
+		const auto uCountBefore = X_Measure(x_uBegin, uPos);
+		const auto uCountAfter = X_Measure(uPos, x_uEnd);
 
 		ReserveMore(uDeltaSize);
 
@@ -328,15 +328,15 @@ public:
 
 	void Swap(CircularQueue &rhs) noexcept {
 		using std::swap;
-		swap(x_pStorage, rhs.x_pStorage);
-		swap(x_uBegin,   rhs.x_uBegin);
-		swap(x_uEnd,     rhs.x_uEnd);
+		swap(x_pStorage,     rhs.x_pStorage);
+		swap(x_uBegin,       rhs.x_uBegin);
+		swap(x_uEnd,         rhs.x_uEnd);
 		swap(x_uCircularCap, rhs.x_uCircularCap);
 	}
 
 	// CircularQueue 需求。
 	std::size_t GetSize() const noexcept {
-		return X_Distance(x_uBegin, x_uEnd);
+		return X_Measure(x_uBegin, x_uEnd);
 	}
 	std::size_t GetCapacity() const noexcept {
 		return x_uCircularCap - 1;
@@ -765,7 +765,7 @@ public:
 			uOffset = x_uEnd;
 		}
 
-		const auto uCountBefore = X_Distance(x_uBegin, uOffset);
+		const auto uCountBefore = X_Measure(x_uBegin, uOffset);
 
 		if(std::is_nothrow_move_constructible<Element>::value){
 			const auto vPrepared = X_PrepareForInsertion(uOffset, 1);
@@ -816,7 +816,7 @@ public:
 			uOffset = x_uEnd;
 		}
 
-		const auto uCountBefore = X_Distance(x_uBegin, uOffset);
+		const auto uCountBefore = X_Measure(x_uBegin, uOffset);
 
 		if(uDeltaSize != 0){
 			if(std::is_nothrow_move_constructible<Element>::value){
@@ -880,7 +880,7 @@ public:
 			uOffset = x_uEnd;
 		}
 
-		const auto uCountBefore = X_Distance(x_uBegin, uOffset);
+		const auto uCountBefore = X_Measure(x_uBegin, uOffset);
 
 		if(itBegin != itEnd){
 			if(std::is_base_of<std::forward_iterator_tag, typename std::iterator_traits<IteratorT>::iterator_category>::value){
@@ -971,13 +971,13 @@ public:
 
 		if(uOffsetBegin != uOffsetEnd){
 			if(uOffsetEnd == x_uEnd){
-				const auto uDeltaSize = X_Distance(uOffsetBegin, uOffsetEnd);
+				const auto uDeltaSize = X_Measure(uOffsetBegin, uOffsetEnd);
 				Pop(uDeltaSize);
 			} else if(x_uBegin == uOffsetBegin){
-				const auto uDeltaSize = X_Distance(uOffsetBegin, uOffsetEnd);
+				const auto uDeltaSize = X_Measure(uOffsetBegin, uOffsetEnd);
 				Shift(uDeltaSize);
 			} else if(std::is_nothrow_move_constructible<Element>::value){
-				const auto uDeltaSize = X_Distance(uOffsetBegin, uOffsetEnd);
+				const auto uDeltaSize = X_Measure(uOffsetBegin, uOffsetEnd);
 				X_IterateForward(uOffsetBegin, uOffsetEnd,
 					[&, this](auto i){
 						Destruct(x_pStorage + i);

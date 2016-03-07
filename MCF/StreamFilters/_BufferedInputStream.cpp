@@ -9,15 +9,18 @@ namespace MCF {
 
 namespace Impl_BufferedInputStream {
 	namespace {
-		constexpr std::size_t kStepSize = 4096;
+		enum : std::size_t {
+			 kStepSize = 4096,
+		};
 
-		void PopulateBuffer(StreamBuffer &vBuffer, Vector<unsigned char> &vecBackBuffer, AbstractInputStream *pStream){
+		void PopulateBuffer(StreamBuffer &vBuffer, Vector<unsigned char> &vecBackBuffer, AbstractInputStream *pStream, std::size_t uThreshold){
+			bool bNoMoreAvail = false;
 			for(;;){
 				if(!vecBackBuffer.IsEmpty()){
 					vBuffer.Put(vecBackBuffer.GetData(), vecBackBuffer.GetSize());
 					vecBackBuffer.Clear();
 				}
-				if(!vBuffer.IsEmpty()){
+				if(bNoMoreAvail || (vBuffer.GetSize() >= uThreshold)){
 					break;
 				}
 
@@ -31,8 +34,8 @@ namespace Impl_BufferedInputStream {
 				}
 				vecBackBuffer.Pop(kStepSize - uBytesRead);
 
-				if(uBytesRead == 0){
-					break;
+				if(uBytesRead < kStepSize){
+					bNoMoreAvail = true;
 				}
 			}
 		}
@@ -42,28 +45,28 @@ namespace Impl_BufferedInputStream {
 	}
 
 	int BufferedInputStream::Peek() const {
-		PopulateBuffer(x_vBuffer, x_vecBackBuffer, x_pUnderlyingStream.Get());
+		PopulateBuffer(x_vBuffer, x_vecBackBuffer, x_pUnderlyingStream.Get(), 1);
 		return x_vBuffer.Peek();
 	}
 	int BufferedInputStream::Get(){
-		PopulateBuffer(x_vBuffer, x_vecBackBuffer, x_pUnderlyingStream.Get());
+		PopulateBuffer(x_vBuffer, x_vecBackBuffer, x_pUnderlyingStream.Get(), 1);
 		return x_vBuffer.Get();
 	}
 	bool BufferedInputStream::Discard(){
-		PopulateBuffer(x_vBuffer, x_vecBackBuffer, x_pUnderlyingStream.Get());
+		PopulateBuffer(x_vBuffer, x_vecBackBuffer, x_pUnderlyingStream.Get(), 1);
 		return x_vBuffer.Discard();
 	}
 
 	std::size_t BufferedInputStream::Peek(void *pData, std::size_t uSize) const {
-		PopulateBuffer(x_vBuffer, x_vecBackBuffer, x_pUnderlyingStream.Get());
+		PopulateBuffer(x_vBuffer, x_vecBackBuffer, x_pUnderlyingStream.Get(), uSize);
 		return x_vBuffer.Peek(pData, uSize);
 	}
 	std::size_t BufferedInputStream::Get(void *pData, std::size_t uSize){
-		PopulateBuffer(x_vBuffer, x_vecBackBuffer, x_pUnderlyingStream.Get());
+		PopulateBuffer(x_vBuffer, x_vecBackBuffer, x_pUnderlyingStream.Get(), uSize);
 		return x_vBuffer.Get(pData, uSize);
 	}
 	std::size_t BufferedInputStream::Discard(std::size_t uSize){
-		PopulateBuffer(x_vBuffer, x_vecBackBuffer, x_pUnderlyingStream.Get());
+		PopulateBuffer(x_vBuffer, x_vecBackBuffer, x_pUnderlyingStream.Get(), uSize);
 		return x_vBuffer.Discard(uSize);
 	}
 }

@@ -20,7 +20,6 @@ void TextOutputStreamFilter::Put(unsigned char byData){
 
 void TextOutputStreamFilter::Put(const void *pData, std::size_t uSize){
 	StreamBuffer sbufNewPart;
-
 	auto pchLineBegin = static_cast<const char *>(pData);
 	const auto pchEnd = pchLineBegin + uSize;
 	for(;;){
@@ -33,7 +32,6 @@ void TextOutputStreamFilter::Put(const void *pData, std::size_t uSize){
 		sbufNewPart.Put("\r\n", 2);
 		pchLineBegin = pchLineEnd + 1;
 	}
-
 	y_vStream.Splice(sbufNewPart);
 }
 

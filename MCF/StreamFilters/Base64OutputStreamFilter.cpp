@@ -9,7 +9,7 @@
 namespace MCF {
 
 namespace {
-	constexpr unsigned char kBase64Table[65] = {
+	constexpr unsigned char kBase64Table[64] = {
 		'A','B','C','D','E','F','G','H',
 		'I','J','K','L','M','N','O','P',
 		'Q','R','S','T','U','V','W','X',
@@ -18,7 +18,6 @@ namespace {
 		'o','p','q','r','s','t','u','v',
 		'w','x','y','z','0','1','2','3',
 		'4','5','6','7','8','9','+','/',
-		'=',
 	};
 }
 
@@ -42,13 +41,13 @@ void Base64OutputStreamFilter::X_FlushPlainBuffer(bool bForceFlushAll){
 		if(uBytesRead == 1){
 			abyResult[0] = kBase64Table[(u32Word >> 26) % 64];
 			abyResult[1] = kBase64Table[(u32Word >> 20) % 64];
-			abyResult[2] = kBase64Table[64];
-			abyResult[3] = kBase64Table[64];
+			abyResult[2] = '=';
+			abyResult[3] = '=';
 		} else  if(uBytesRead == 2){
 			abyResult[0] = kBase64Table[(u32Word >> 26) % 64];
 			abyResult[1] = kBase64Table[(u32Word >> 20) % 64];
 			abyResult[2] = kBase64Table[(u32Word >> 14) % 64];
-			abyResult[3] = kBase64Table[64];
+			abyResult[3] = '=';
 		} else {
 			abyResult[0] = kBase64Table[(u32Word >> 26) % 64];
 			abyResult[1] = kBase64Table[(u32Word >> 20) % 64];

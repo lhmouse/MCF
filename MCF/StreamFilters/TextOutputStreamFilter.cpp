@@ -15,7 +15,6 @@ TextOutputStreamFilter::~TextOutputStreamFilter(){
 }
 
 void TextOutputStreamFilter::X_FlushPlainBuffer(bool bForceFlushAll){
-	bool bShouldFlushStream = bForceFlushAll;
 	for(;;){
 		const int nChar = x_sbufPlain.Peek();
 		if(nChar < 0){
@@ -23,13 +22,13 @@ void TextOutputStreamFilter::X_FlushPlainBuffer(bool bForceFlushAll){
 		}
 		if(nChar == '\n'){
 			y_vStream.BufferedPut("\r\n", 2);
-			bShouldFlushStream = true;
+			bForceFlushAll = true;
 		} else {
 			y_vStream.BufferedPut(static_cast<unsigned char>(nChar));
 		}
 		x_sbufPlain.Discard();
 	}
-	y_vStream.Flush(bShouldFlushStream ? y_vStream.kFlushBufferAll : y_vStream.kFlushBufferAuto);
+	y_vStream.Flush(bForceFlushAll ? y_vStream.kFlushBufferAll : y_vStream.kFlushBufferAuto);
 }
 
 void TextOutputStreamFilter::Put(unsigned char byData){

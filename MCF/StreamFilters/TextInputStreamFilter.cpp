@@ -16,8 +16,8 @@ void TextInputStreamFilter::X_PopulatePlainBuffer(std::size_t uExpected){
 			break;
 		}
 
-		y_vStream.PopulateBuffer(2);
 		unsigned char abyTemp[2];
+		y_vStream.PopulateBuffer(2);
 		const auto uBytesRead = y_vStream.BufferedPeek(abyTemp, 2);
 		if(uBytesRead == 0){
 			break;

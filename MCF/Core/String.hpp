@@ -185,7 +185,8 @@ private:
 		ASSERT(uRemovedBegin <= uRemovedEnd);
 		ASSERT(uFirstOffset + uRemovedBegin <= uThirdOffset);
 
-		if(GetCapacity() < uNewSize){
+		const auto uOldCapacity = GetCapacity();
+		if(uOldCapacity < uNewSize){
 			uCharsToAlloc += (uCharsToAlloc >> 1);
 			uCharsToAlloc = (uCharsToAlloc + 0x0F) & static_cast<std::size_t>(-0x10);
 			if(uCharsToAlloc < uNewSize + 1){
@@ -459,13 +460,16 @@ public:
 		}
 	}
 	void Reserve(std::size_t uNewCapacity){
-		if(uNewCapacity > GetCapacity()){
-			const auto uOldSize = GetSize();
-			X_ChopAndSplice(uOldSize, uOldSize, 0, uNewCapacity);
+		const auto uOldCapacity = GetCapacity();
+		if(uNewCapacity <= uOldCapacity){
+			return;
 		}
+		const auto uOldSize = GetSize();
+		X_ChopAndSplice(uOldSize, uOldSize, 0, uNewCapacity);
 	}
 	void ReserveMore(std::size_t uDeltaCapacity){
-		const auto uNewCapacity = Impl_CheckedSizeArithmetic::Add(uDeltaCapacity, GetSize());
+		const auto uOldSize = GetSize();
+		const auto uNewCapacity = Impl_CheckedSizeArithmetic::Add(uDeltaCapacity, uOldSize);
 		Reserve(uNewCapacity);
 	}
 

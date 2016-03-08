@@ -45,32 +45,32 @@ void Base64InputStreamFilter::X_PopulatePlainBuffer(std::size_t uExpected){
 			break;
 		}
 
-		const auto ChecedRead = [&](unsigned char by){
-			const int nPart = kBase64ReverseTable[by];
-			if(nPart < 0){
+		const auto DecodeOne = [&](unsigned char by){
+			const int nDecoded = kBase64ReverseTable[by];
+			if(nDecoded < 0){
 				DEBUG_THROW(Exception, ERROR_INVALID_PARAMETER, "Invalid Base64 encoded byte"_rcs);
 			}
-			ASSERT(nPart < 64);
-			return static_cast<std::uint_fast32_t>(nPart);
+			ASSERT(nDecoded < 64);
+			return static_cast<std::uint_fast32_t>(nDecoded);
 		};
 
 		unsigned uBytes;
 		std::uint_fast32_t u32Word = 0;
 		if(abyTemp[2] == '='){
 			uBytes = 1;
-			u32Word |= (ChecedRead(abyTemp[0]) << 26);
-			u32Word |= (ChecedRead(abyTemp[1]) << 20);
+			u32Word |= (DecodeOne(abyTemp[0]) << 26);
+			u32Word |= (DecodeOne(abyTemp[1]) << 20);
 		} else if(abyTemp[3] == '='){
 			uBytes = 2;
-			u32Word |= (ChecedRead(abyTemp[0]) << 26);
-			u32Word |= (ChecedRead(abyTemp[1]) << 20);
-			u32Word |= (ChecedRead(abyTemp[2]) << 14);
+			u32Word |= (DecodeOne(abyTemp[0]) << 26);
+			u32Word |= (DecodeOne(abyTemp[1]) << 20);
+			u32Word |= (DecodeOne(abyTemp[2]) << 14);
 		} else {
 			uBytes = 3;
-			u32Word |= (ChecedRead(abyTemp[0]) << 26);
-			u32Word |= (ChecedRead(abyTemp[1]) << 20);
-			u32Word |= (ChecedRead(abyTemp[2]) << 14);
-			u32Word |= (ChecedRead(abyTemp[3]) <<  8);
+			u32Word |= (DecodeOne(abyTemp[0]) << 26);
+			u32Word |= (DecodeOne(abyTemp[1]) << 20);
+			u32Word |= (DecodeOne(abyTemp[2]) << 14);
+			u32Word |= (DecodeOne(abyTemp[3]) <<  8);
 		}
 
 		std::uint32_t u32WordInBigEndian;

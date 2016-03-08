@@ -14,8 +14,8 @@
 namespace MCF {
 
 namespace Impl_CallOnce {
-	extern void OnceMutexLock() noexcept;
-	extern void OnceMutexUnlock() noexcept;
+	extern void GlobalLock() noexcept;
+	extern void GlobalUnlock() noexcept;
 
 	class OnceFlag {
 	public:
@@ -57,8 +57,8 @@ bool CallOnce(OnceFlag &vFlag, FunctionT &&vFunction, ParamsT &&...vParams){
 		return false;
 	}
 
-	Impl_CallOnce::OnceMutexLock();
-	DEFER([&]{ Impl_CallOnce::OnceMutexUnlock(); });
+	Impl_CallOnce::GlobalLock();
+	DEFER([&]{ Impl_CallOnce::GlobalUnlock(); });
 
 	if(vFlag.Load(kAtomicConsume) == OnceFlag::kInitialized){
 		return false;

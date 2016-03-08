@@ -15,10 +15,10 @@ namespace {
 }
 
 namespace Impl_CallOnce {
-	void LockOnceMutex() noexcept {
+	void GlobalLock() noexcept {
 		g_mtxOnceGuard.Lock();
 	}
-	void UnlockOnceMutex() noexcept {
+	void GlobalUnlock() noexcept {
 		g_mtxOnceGuard.Unlock();
 	}
 }

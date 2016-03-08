@@ -46,7 +46,7 @@ void Base64InputStreamFilter::X_PopulatePlainBuffer(std::size_t uExpected){
 		const auto DecodeOne = [&](unsigned char by){
 			const int nDecoded = kBase64ReverseTable[by];
 			if(nDecoded < 0){
-				DEBUG_THROW(Exception, ERROR_INVALID_PARAMETER, "Invalid Base64 encoded byte"_rcs);
+				DEBUG_THROW(Exception, ERROR_INVALID_PARAMETER, "Base64InputStreamFilter: Invalid Base64 encoded byte"_rcs);
 			}
 			ASSERT(nDecoded < 64);
 			return static_cast<std::uint_fast32_t>(nDecoded);

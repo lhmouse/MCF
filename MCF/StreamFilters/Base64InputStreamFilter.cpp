@@ -8,7 +8,10 @@
 
 namespace MCF {
 
-namespace {
+Base64InputStreamFilter::~Base64InputStreamFilter(){
+}
+
+void Base64InputStreamFilter::X_PopulatePlainBuffer(std::size_t uExpected){
 	constexpr signed char kBase64ReverseTable[256] = {
 		-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
 		-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
@@ -27,12 +30,7 @@ namespace {
 		-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
 		-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
 	};
-}
 
-Base64InputStreamFilter::~Base64InputStreamFilter(){
-}
-
-void Base64InputStreamFilter::X_PopulatePlainBuffer(std::size_t uExpected){
 	for(;;){
 		if(x_sbufPlain.GetSize() >= uExpected){
 			break;

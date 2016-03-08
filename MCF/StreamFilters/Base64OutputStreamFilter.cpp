@@ -8,7 +8,14 @@
 
 namespace MCF {
 
-namespace {
+Base64OutputStreamFilter::~Base64OutputStreamFilter(){
+	try {
+		X_FlushPlainBuffer(true);
+	} catch(...){
+	}
+}
+
+void Base64OutputStreamFilter::X_FlushPlainBuffer(bool bForceFlushAll){
 	constexpr unsigned char kBase64Table[64] = {
 		'A','B','C','D','E','F','G','H',
 		'I','J','K','L','M','N','O','P',
@@ -19,16 +26,7 @@ namespace {
 		'w','x','y','z','0','1','2','3',
 		'4','5','6','7','8','9','+','/',
 	};
-}
 
-Base64OutputStreamFilter::~Base64OutputStreamFilter(){
-	try {
-		X_FlushPlainBuffer(true);
-	} catch(...){
-	}
-}
-
-void Base64OutputStreamFilter::X_FlushPlainBuffer(bool bForceFlushAll){
 	for(;;){
 		std::uint32_t u32WordInBigEndian = 0;
 		const auto uBytesRead = x_sbufPlain.Peek(&u32WordInBigEndian, 3);

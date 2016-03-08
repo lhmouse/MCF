@@ -56,7 +56,7 @@ DynamicLinkLibrary::RawProc DynamicLinkLibrary::RawGetProcAddress(const NarrowSt
 
 	const auto uSize = nsvName.GetSize();
 	if(uSize > USHRT_MAX){
-		DEBUG_THROW(SystemException, ERROR_INVALID_PARAMETER, "The path for a library function is too long"_rcs);
+		DEBUG_THROW(SystemException, ERROR_INVALID_PARAMETER, "The name for a procedure is too long"_rcs);
 	}
 	::ANSI_STRING strProcName;
 	strProcName.Length          = (USHORT)uSize;
@@ -73,7 +73,7 @@ DynamicLinkLibrary::RawProc DynamicLinkLibrary::RawGetProcAddress(const NarrowSt
 DynamicLinkLibrary::RawProc DynamicLinkLibrary::RawRequireProcAddress(const NarrowStringView &nsvName){
 	const auto pfnRet = RawGetProcAddress(nsvName);
 	if(!pfnRet){
-		DEBUG_THROW(SystemException, "RawGetProcAddress"_rcs);
+		DEBUG_THROW(Exception, ERROR_PROC_NOT_FOUND, "The specified procedure is not found in this DLL"_rcs);
 	}
 	return pfnRet;
 }
@@ -85,7 +85,7 @@ DynamicLinkLibrary::RawProc DynamicLinkLibrary::RawGetProcAddress(unsigned uOrid
 	}
 
 	if(uOridinal > UINT16_MAX){
-		DEBUG_THROW(SystemException, ERROR_INVALID_PARAMETER, "The oridinal for a library function is too large"_rcs);
+		DEBUG_THROW(SystemException, ERROR_INVALID_PARAMETER, "The oridinal for a procedure is too large"_rcs);
 	}
 
 	::FARPROC pfnProcAddress;
@@ -98,7 +98,7 @@ DynamicLinkLibrary::RawProc DynamicLinkLibrary::RawGetProcAddress(unsigned uOrid
 DynamicLinkLibrary::RawProc DynamicLinkLibrary::RawRequireProcAddress(unsigned uOridinal){
 	const auto pfnRet = RawGetProcAddress(uOridinal);
 	if(!pfnRet){
-		DEBUG_THROW(SystemException, "RawGetProcAddress"_rcs);
+		DEBUG_THROW(Exception, ERROR_PROC_NOT_FOUND, "The specified procedure is not found in this DLL"_rcs);
 	}
 	return pfnRet;
 }

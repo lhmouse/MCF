@@ -29,9 +29,7 @@ void TextOutputStreamFilter::X_FlushPlainBuffer(bool bForceFlushAll){
 		}
 		x_sbufPlain.Discard();
 	}
-	if(bShouldFlushStream){
-		y_vStream.Flush(y_vStream.kFlushBufferAll);
-	}
+	y_vStream.Flush(bShouldFlushStream ? y_vStream.kFlushBufferAll : y_vStream.kFlushBufferAuto);
 }
 
 void TextOutputStreamFilter::Put(unsigned char byData){

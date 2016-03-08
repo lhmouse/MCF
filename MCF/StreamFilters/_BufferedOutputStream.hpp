@@ -51,7 +51,7 @@ namespace Impl_BufferedOutputStream {
 		}
 
 		void Flush(bool bHard){
-			Flush((bHard == false) ? kFlushBufferAuto : kFlushStreamHard);
+			Flush(bHard ? kFlushStreamHard : kFlushBufferAuto);
 		}
 		void Flush(FlushLevel eLevel);
 

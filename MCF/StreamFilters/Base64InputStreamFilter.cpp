@@ -12,7 +12,7 @@ Base64InputStreamFilter::~Base64InputStreamFilter(){
 }
 
 void Base64InputStreamFilter::X_PopulatePlainBuffer(std::size_t uExpected){
-	constexpr signed char kBase64ReverseTable[256] = {
+	static constexpr signed char kBase64ReverseTable[256] = {
 		-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
 		-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
 		-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 62, -1, -1, -1, 63,

@@ -16,7 +16,7 @@ Base64OutputStreamFilter::~Base64OutputStreamFilter(){
 }
 
 void Base64OutputStreamFilter::X_FlushPlainBuffer(bool bForceFlushAll){
-	constexpr unsigned char kBase64Table[64] = {
+	static constexpr unsigned char kBase64Table[64] = {
 		'A','B','C','D','E','F','G','H',
 		'I','J','K','L','M','N','O','P',
 		'Q','R','S','T','U','V','W','X',

@@ -75,9 +75,9 @@ namespace Impl_FlatContainer {
 	private:
 		template<typename ...ParamsT>
 		Element &X_UncheckedPush(ParamsT &&...vParams){
-			ASSERT(GetCapacity() - GetSize() > 0);
+			ASSERT(x_uCapacity - x_uSize > 0);
 
-			const auto pData = GetData();
+			const auto pData = x_pStorage;
 			const auto pElement = pData + x_uSize;
 			DefaultConstruct(pElement, std::forward<ParamsT>(vParams)...);
 			++x_uSize;
@@ -85,9 +85,9 @@ namespace Impl_FlatContainer {
 			return *pElement;
 		}
 		void X_Pop(std::size_t uCount = 1) noexcept {
-			ASSERT(uCount <= GetSize());
+			ASSERT(uCount <= x_uSize);
 
-			const auto pData = GetData();
+			const auto pData = x_pStorage;
 			for(std::size_t i = 0; i < uCount; ++i){
 				Destruct(pData + x_uSize - 1 - i);
 			}
@@ -137,16 +137,16 @@ namespace Impl_FlatContainer {
 		}
 
 		const Element *GetBegin() const noexcept {
-			return GetData();
+			return x_pStorage;
 		}
 		Element *GetBegin() noexcept {
-			return GetData();
+			return x_pStorage;
 		}
 		const Element *GetEnd() const noexcept {
-			return GetData() + GetSize();
+			return x_pStorage + x_uSize;
 		}
 		Element *GetEnd() noexcept {
-			return GetData() + GetSize();
+			return x_pStorage + x_uSize;
 		}
 
 		void Reserve(std::size_t uNewCapacity){
@@ -195,7 +195,7 @@ namespace Impl_FlatContainer {
 			x_uCapacity = uElementsToAlloc;
 		}
 		void ReserveMore(std::size_t uDeltaCapacity){
-			const auto uOldSize = GetSize();
+			const auto uOldSize = x_uSize;
 			const auto uNewCapacity = uOldSize + uDeltaCapacity;
 			if(uNewCapacity < uOldSize){
 				throw std::bad_array_new_length();
@@ -230,12 +230,12 @@ namespace Impl_FlatContainer {
 				}
 				x_uSize += 1;
 			} else {
-				const auto uSize = GetSize();
+				const auto uSize = x_uSize;
 				auto uNewCapacity = uSize + 1;
 				if(uNewCapacity < uSize){
 					throw std::bad_array_new_length();
 				}
-				const auto uCapacity = GetCapacity();
+				const auto uCapacity = x_uCapacity;
 				if(uNewCapacity < uCapacity){
 					uNewCapacity = uCapacity;
 				}
@@ -280,7 +280,7 @@ namespace Impl_FlatContainer {
 					x_uSize -= uDeltaSize;
 				} else {
 					FlatContainer vTemp;
-					const auto uCapacity = GetCapacity();
+					const auto uCapacity = x_uCapacity;
 					vTemp.Reserve(uCapacity);
 					for(std::size_t i = 0; i < uOffsetBegin; ++i){
 						vTemp.X_UncheckedPush(x_pStorage[i]);

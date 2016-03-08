@@ -8,25 +8,28 @@
 namespace MCF {
 
 namespace Impl_BufferedOutputStream {
-	enum : std::size_t {
-		 kStepSize = 4096,
-	};
-
 	BufferedOutputStream::~BufferedOutputStream(){
 		try {
-			X_FlushTempBuffer(0);
+			FlushBuffer(kFlushAll);
 		} catch(...){
 		}
 	}
 
-	void BufferedOutputStream::X_FlushTempBuffer(std::size_t uThreshold){
+	void BufferedOutputStream::FlushBuffer(FlushBufferLevel eLevel){
+		enum : std::size_t {
+			 kStepSize = 4096,
+		};
+
 		bool bNoMoreAvail = false;
 		for(;;){
 			if(!x_vecBackBuffer.IsEmpty()){
 				x_pUnderlyingStream->Put(x_vecBackBuffer.GetData(), x_vecBackBuffer.GetSize());
 				x_vecBackBuffer.Clear();
 			}
-			if(bNoMoreAvail || (x_sbufBufferedData.GetSize() < uThreshold)){
+			if(bNoMoreAvail){
+				break;
+			}
+			if((eLevel < kFlushAll) && (x_sbufBufferedData.GetSize() < kStepSize)){
 				break;
 			}
 
@@ -44,26 +47,10 @@ namespace Impl_BufferedOutputStream {
 				bNoMoreAvail = true;
 			}
 		}
-	}
 
-	void BufferedOutputStream::Put(unsigned char byData){
-		x_sbufBufferedData.Put(byData);
-		X_FlushTempBuffer(kStepSize);
-	}
-
-	void BufferedOutputStream::Put(const void *pData, std::size_t uSize){
-		x_sbufBufferedData.Put(pData, uSize);
-		X_FlushTempBuffer(kStepSize);
-	}
-	void BufferedOutputStream::Splice(StreamBuffer &sbufData){
-		x_sbufBufferedData.Splice(sbufData);
-		X_FlushTempBuffer(kStepSize);
-	}
-
-	void BufferedOutputStream::Flush(bool bHard){
-		X_FlushTempBuffer(0);
-
-		x_pUnderlyingStream->Flush(bHard);
+		if(eLevel >= kFlushStreamSoft){
+			x_pUnderlyingStream->Flush(eLevel >= kFlushStreamHard);
+		}
 	}
 }
 

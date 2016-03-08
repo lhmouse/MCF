@@ -16,6 +16,7 @@ void TextInputStreamFilter::X_PopulatePlainBuffer(std::size_t uExpected){
 			break;
 		}
 
+		y_vStream.PopulateBuffer(2);
 		unsigned char abyTemp[2];
 		const auto uBytesRead = y_vStream.Peek(abyTemp, 2);
 		if(uBytesRead == 0){
@@ -24,19 +25,19 @@ void TextInputStreamFilter::X_PopulatePlainBuffer(std::size_t uExpected){
 		if(uBytesRead == 1){
 			if(abyTemp[0] != '\r'){
 				x_sbufPlain.Put(abyTemp[0]);
-				y_vStream.UncheckedDiscard();
+				y_vStream.Discard();
 			}
 			break;
 		}
 		if((abyTemp[0] == '\r') && (abyTemp[1] == '\n')){
 			x_sbufPlain.Put('\n');
-			y_vStream.UncheckedDiscard(2);
+			y_vStream.Discard(2);
 		} else if(abyTemp[1] == '\r'){
 			x_sbufPlain.Put(abyTemp[0]);
-			y_vStream.UncheckedDiscard();
+			y_vStream.Discard();
 		} else {
 			x_sbufPlain.Put(abyTemp, 2);
-			y_vStream.UncheckedDiscard(2);
+			y_vStream.Discard(2);
 		}
 	}
 }

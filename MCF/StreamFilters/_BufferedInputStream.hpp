@@ -29,19 +29,28 @@ namespace Impl_BufferedInputStream {
 		BufferedInputStream(BufferedInputStream &&) noexcept = default;
 		BufferedInputStream &operator=(BufferedInputStream &&) noexcept = default;
 
-	private:
-		void X_PopulateTempBuffer(std::size_t uExpected);
-
 	public:
-		int Peek();
-		int Get();
-		bool Discard();
-		void UncheckedDiscard() noexcept;
+		void PopulateBuffer(std::size_t uExpected);
 
-		std::size_t Peek(void *pData, std::size_t uSize);
-		std::size_t Get(void *pData, std::size_t uSize);
-		std::size_t Discard(std::size_t uSize);
-		void UncheckedDiscard(std::size_t uSize) noexcept;
+		int Peek() noexcept {
+			return x_sbufBufferedData.Peek();
+		}
+		int Get() noexcept {
+			return x_sbufBufferedData.Get();
+		}
+		bool Discard() noexcept {
+			return x_sbufBufferedData.Discard();
+		}
+
+		std::size_t Peek(void *pData, std::size_t uSize) noexcept {
+			return x_sbufBufferedData.Peek(pData, uSize);
+		}
+		std::size_t Get(void *pData, std::size_t uSize) noexcept {
+			return x_sbufBufferedData.Get(pData, uSize);
+		}
+		std::size_t Discard(std::size_t uSize) noexcept {
+			return x_sbufBufferedData.Discard(uSize);
+		}
 
 		const PolyIntrusivePtr<AbstractInputStream> &GetUnderlyingStream() const noexcept {
 			return x_pUnderlyingStream;

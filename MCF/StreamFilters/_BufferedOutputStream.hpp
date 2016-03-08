@@ -13,6 +13,14 @@ namespace MCF {
 
 namespace Impl_BufferedOutputStream {
 	class BufferedOutputStream {
+	public:
+		enum FlushBufferLevel : unsigned {
+			kFlushStreamAuto = 0,
+			kFlushAll        = 1,
+			kFlushStreamSoft = 2,
+			kFlushStreamHard = 3,
+		};
+
 	private:
 		PolyIntrusivePtr<AbstractOutputStream> x_pUnderlyingStream;
 
@@ -29,16 +37,24 @@ namespace Impl_BufferedOutputStream {
 		BufferedOutputStream(BufferedOutputStream &&) noexcept = default;
 		BufferedOutputStream &operator=(BufferedOutputStream &&) noexcept = default;
 
-	private:
-		void X_FlushTempBuffer(std::size_t uThreshold);
-
 	public:
-		void Put(unsigned char byData);
+		void Put(unsigned char byData){
+			x_sbufBufferedData.Put(byData);
+		}
 
-		void Put(const void *pData, std::size_t uSize);
-		void Splice(StreamBuffer &sbufData);
+		void Put(const void *pData, std::size_t uSize){
+			x_sbufBufferedData.Put(pData, uSize);
+		}
 
-		void Flush(bool bHard);
+		void Splice(StreamBuffer &sbufData){
+			x_sbufBufferedData.Splice(sbufData);
+		}
+
+		void Flush(bool bHard){
+			FlushBuffer(bHard ? kFlushStreamHard : kFlushStreamAuto);
+		}
+
+		void FlushBuffer(FlushBufferLevel eLevel);
 
 		const PolyIntrusivePtr<AbstractOutputStream> &GetUnderlyingStream() const noexcept {
 			return x_pUnderlyingStream;

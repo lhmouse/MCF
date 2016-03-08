@@ -9,12 +9,13 @@ namespace MCF {
 
 TextOutputStreamFilter::~TextOutputStreamFilter(){
 	try {
-		X_FlushPlainBuffer();
+		X_FlushPlainBuffer(true);
 	} catch(...){
 	}
 }
 
-void TextOutputStreamFilter::X_FlushPlainBuffer(){
+void TextOutputStreamFilter::X_FlushPlainBuffer(bool bForceFlushAll){
+	bool bShouldFlushStream = bForceFlushAll;
 	for(;;){
 		const int nChar = x_sbufPlain.Peek();
 		if(nChar < 0){
@@ -22,25 +23,29 @@ void TextOutputStreamFilter::X_FlushPlainBuffer(){
 		}
 		if(nChar == '\n'){
 			y_vStream.Put("\r\n", 2);
+			bShouldFlushStream = true;
 		} else {
 			y_vStream.Put(static_cast<unsigned char>(nChar));
 		}
 		x_sbufPlain.Discard();
 	}
+	if(bShouldFlushStream){
+		y_vStream.FlushBuffer(y_vStream.kFlushAll);
+	}
 }
 
 void TextOutputStreamFilter::Put(unsigned char byData){
 	x_sbufPlain.Put(byData);
-	X_FlushPlainBuffer();
+	X_FlushPlainBuffer(false);
 }
 
 void TextOutputStreamFilter::Put(const void *pData, std::size_t uSize){
 	x_sbufPlain.Put(pData, uSize);
-	X_FlushPlainBuffer();
+	X_FlushPlainBuffer(false);
 }
 
 void TextOutputStreamFilter::Flush(bool bHard){
-	X_FlushPlainBuffer();
+	X_FlushPlainBuffer(true);
 
 	y_vStream.Flush(bHard);
 }

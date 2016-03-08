@@ -24,7 +24,7 @@ public:
 	TextOutputStreamFilter &operator=(TextOutputStreamFilter &&) noexcept = default;
 
 private:
-	void X_FlushPlainBuffer();
+	void X_FlushPlainBuffer(bool bForceFlushAll);
 
 public:
 	void Put(unsigned char byData) override;

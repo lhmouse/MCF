@@ -24,7 +24,7 @@ extern "C" unsigned MCFCRT_Main(){
 
 	for(unsigned i = 0; i < sizeof(strs) / sizeof(strs[0]); ++i){
 		auto is = MakeIntrusive<BufferInputStream>();
-		is.GetBuffer().Put(strs[i], std::strlen(strs[i]));
+		is->GetBuffer().Put(strs[i], std::strlen(strs[i]));
 		auto bs = MakeIntrusive<Base64InputStreamFilter>(is);
 
 		int c;

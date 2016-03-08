@@ -114,7 +114,7 @@ bool DynamicLinkLibrary::OpenNoThrow(const WideStringView &wsvPath){
 		Open(wsvPath);
 		return true;
 	} catch(SystemException &e){
-		::SetLastError(e.GetCode());
+		::SetLastError(e.GetErrorCode());
 		return false;
 	}
 }

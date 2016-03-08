@@ -14,10 +14,10 @@ NTSTATUS RtlFindMessage(void *pBaseAddress, DWORD dwUnknown, DWORD dwLanguageId,
 extern __attribute__((__dllimport__, __stdcall__))
 void *RtlPcToFileHeader(void *pAddress, void **ppBase);
 
-unsigned long MCFCRT_GetWin32LastError(){
+unsigned long MCFCRT_GetLastWin32Error(){
 	return GetLastError();
 }
-void MCFCRT_SetWin32LastError(unsigned long ulErrorCode){
+void MCFCRT_SetLastWin32Error(unsigned long ulErrorCode){
 	SetLastError(ulErrorCode);
 }
 

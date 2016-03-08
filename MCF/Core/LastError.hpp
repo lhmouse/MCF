@@ -10,11 +10,11 @@
 
 namespace MCF {
 
-inline unsigned long GetWin32LastError() noexcept {
-	return ::MCFCRT_GetWin32LastError();
+inline unsigned long GetLastWin32Error() noexcept {
+	return ::MCFCRT_GetLastWin32Error();
 }
-inline void SetWin32LastError(unsigned long ulErrorCode) noexcept {
-	::MCFCRT_SetWin32LastError(ulErrorCode);
+inline void SetLastWin32Error(unsigned long ulErrorCode) noexcept {
+	::MCFCRT_SetLastWin32Error(ulErrorCode);
 }
 
 inline WideStringView GetWin32ErrorDescription(unsigned long ulErrorCode) noexcept {

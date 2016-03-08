@@ -178,7 +178,7 @@ bool File::OpenNoThrow(const WideStringView &wsvPath, std::uint32_t u32Flags){
 		Open(wsvPath, u32Flags);
 		return true;
 	} catch(SystemException &e){
-		::SetLastError(e.GetCode());
+		::SetLastError(e.GetErrorCode());
 		return false;
 	}
 }

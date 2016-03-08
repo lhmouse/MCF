@@ -46,7 +46,7 @@ public:
 	unsigned long GetLine() const noexcept {
 		return x_ulLine;
 	}
-	unsigned long GetCode() const noexcept {
+	unsigned long GetErrorCode() const noexcept {
 		return x_ulErrorCode;
 	}
 	const char *GetErrorMessage() const noexcept {

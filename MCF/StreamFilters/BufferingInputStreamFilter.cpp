@@ -12,28 +12,28 @@ BufferingInputStreamFilter::~BufferingInputStreamFilter(){
 
 int BufferingInputStreamFilter::Peek(){
 	y_vStream.PopulateBuffer(1);
-	return y_vStream.Peek();
+	return y_vStream.BufferedPeek();
 }
 int BufferingInputStreamFilter::Get(){
 	y_vStream.PopulateBuffer(1);
-	return y_vStream.Get();
+	return y_vStream.BufferedGet();
 }
 bool BufferingInputStreamFilter::Discard(){
 	y_vStream.PopulateBuffer(1);
-	return y_vStream.Discard();
+	return y_vStream.BufferedDiscard();
 }
 
 std::size_t BufferingInputStreamFilter::Peek(void *pData, std::size_t uSize){
 	y_vStream.PopulateBuffer(uSize);
-	return y_vStream.Peek(pData, uSize);
+	return y_vStream.BufferedPeek(pData, uSize);
 }
 std::size_t BufferingInputStreamFilter::Get(void *pData, std::size_t uSize){
 	y_vStream.PopulateBuffer(uSize);
-	return y_vStream.Get(pData, uSize);
+	return y_vStream.BufferedGet(pData, uSize);
 }
 std::size_t BufferingInputStreamFilter::Discard(std::size_t uSize){
 	y_vStream.PopulateBuffer(uSize);
-	return y_vStream.Discard(uSize);
+	return y_vStream.BufferedDiscard(uSize);
 }
 
 }

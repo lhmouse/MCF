@@ -19,13 +19,13 @@ namespace Impl_BufferedInputStream {
 		bool bNoMoreAvail = false;
 		for(;;){
 			if(!x_vecBackBuffer.IsEmpty()){
-				x_sbufBufferedData.Put(x_vecBackBuffer.GetData(), x_vecBackBuffer.GetSize());
+				x_sbufFrontBuffer.Put(x_vecBackBuffer.GetData(), x_vecBackBuffer.GetSize());
 				x_vecBackBuffer.Clear();
 			}
 			if(bNoMoreAvail){
 				break;
 			}
-			if(x_sbufBufferedData.GetSize() >= uExpected){
+			if(x_sbufFrontBuffer.GetSize() >= uExpected){
 				break;
 			}
 

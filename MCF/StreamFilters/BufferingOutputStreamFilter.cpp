@@ -11,13 +11,13 @@ BufferingOutputStreamFilter::~BufferingOutputStreamFilter(){
 }
 
 void BufferingOutputStreamFilter::Put(unsigned char byData){
-	y_vStream.Put(byData);
-	y_vStream.FlushBuffer(y_vStream.kFlushStreamAuto);
+	y_vStream.BufferedPut(byData);
+	y_vStream.Flush(y_vStream.kFlushBufferAuto);
 }
 
 void BufferingOutputStreamFilter::Put(const void *pData, std::size_t uSize){
-	y_vStream.Put(pData, uSize);
-	y_vStream.FlushBuffer(y_vStream.kFlushStreamAuto);
+	y_vStream.BufferedPut(pData, uSize);
+	y_vStream.Flush(y_vStream.kFlushBufferAuto);
 }
 
 void BufferingOutputStreamFilter::Flush(bool bHard){

@@ -10,12 +10,12 @@ namespace MCF {
 namespace Impl_BufferedOutputStream {
 	BufferedOutputStream::~BufferedOutputStream(){
 		try {
-			FlushBuffer(kFlushAll);
+			Flush(kFlushBufferAll);
 		} catch(...){
 		}
 	}
 
-	void BufferedOutputStream::FlushBuffer(FlushBufferLevel eLevel){
+	void BufferedOutputStream::Flush(BufferedOutputStream::FlushLevel eLevel){
 		enum : std::size_t {
 			 kStepSize = 4096,
 		};
@@ -29,14 +29,14 @@ namespace Impl_BufferedOutputStream {
 			if(bNoMoreAvail){
 				break;
 			}
-			if((eLevel < kFlushAll) && (x_sbufBufferedData.GetSize() < kStepSize)){
+			if((eLevel < kFlushBufferAll) && (x_sbufFrontBuffer.GetSize() < kStepSize)){
 				break;
 			}
 
 			std::size_t uBytesToWrite;
 			const auto pbyStepBuffer = x_vecBackBuffer.ResizeMore(kStepSize);
 			try {
-				uBytesToWrite = x_sbufBufferedData.Get(pbyStepBuffer, kStepSize);
+				uBytesToWrite = x_sbufFrontBuffer.Get(pbyStepBuffer, kStepSize);
 			} catch(...){
 				x_vecBackBuffer.Pop(kStepSize);
 				throw;

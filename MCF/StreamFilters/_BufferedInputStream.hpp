@@ -16,7 +16,7 @@ namespace Impl_BufferedInputStream {
 	private:
 		PolyIntrusivePtr<AbstractInputStream> x_pUnderlyingStream;
 
-		StreamBuffer x_sbufBufferedData;
+		StreamBuffer x_sbufFrontBuffer;
 		Vector<unsigned char> x_vecBackBuffer;
 
 	public:
@@ -32,24 +32,24 @@ namespace Impl_BufferedInputStream {
 	public:
 		void PopulateBuffer(std::size_t uExpected);
 
-		int Peek() noexcept {
-			return x_sbufBufferedData.Peek();
+		int BufferedPeek() noexcept {
+			return x_sbufFrontBuffer.Peek();
 		}
-		int Get() noexcept {
-			return x_sbufBufferedData.Get();
+		int BufferedGet() noexcept {
+			return x_sbufFrontBuffer.Get();
 		}
-		bool Discard() noexcept {
-			return x_sbufBufferedData.Discard();
+		bool BufferedDiscard() noexcept {
+			return x_sbufFrontBuffer.Discard();
 		}
 
-		std::size_t Peek(void *pData, std::size_t uSize) noexcept {
-			return x_sbufBufferedData.Peek(pData, uSize);
+		std::size_t BufferedPeek(void *pData, std::size_t uSize) noexcept {
+			return x_sbufFrontBuffer.Peek(pData, uSize);
 		}
-		std::size_t Get(void *pData, std::size_t uSize) noexcept {
-			return x_sbufBufferedData.Get(pData, uSize);
+		std::size_t BufferedGet(void *pData, std::size_t uSize) noexcept {
+			return x_sbufFrontBuffer.Get(pData, uSize);
 		}
-		std::size_t Discard(std::size_t uSize) noexcept {
-			return x_sbufBufferedData.Discard(uSize);
+		std::size_t BufferedDiscard(std::size_t uSize) noexcept {
+			return x_sbufFrontBuffer.Discard(uSize);
 		}
 
 		const PolyIntrusivePtr<AbstractInputStream> &GetUnderlyingStream() const noexcept {
@@ -59,7 +59,7 @@ namespace Impl_BufferedInputStream {
 		void Swap(BufferedInputStream &rhs) noexcept {
 			using std::swap;
 			swap(x_pUnderlyingStream, rhs.x_pUnderlyingStream);
-			swap(x_sbufBufferedData,  rhs.x_sbufBufferedData);
+			swap(x_sbufFrontBuffer,   rhs.x_sbufFrontBuffer);
 			swap(x_vecBackBuffer,     rhs.x_vecBackBuffer);
 		}
 

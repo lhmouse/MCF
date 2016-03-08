@@ -22,15 +22,15 @@ void TextOutputStreamFilter::X_FlushPlainBuffer(bool bForceFlushAll){
 			break;
 		}
 		if(nChar == '\n'){
-			y_vStream.Put("\r\n", 2);
+			y_vStream.BufferedPut("\r\n", 2);
 			bShouldFlushStream = true;
 		} else {
-			y_vStream.Put(static_cast<unsigned char>(nChar));
+			y_vStream.BufferedPut(static_cast<unsigned char>(nChar));
 		}
 		x_sbufPlain.Discard();
 	}
 	if(bShouldFlushStream){
-		y_vStream.FlushBuffer(y_vStream.kFlushAll);
+		y_vStream.Flush(y_vStream.kFlushBufferAll);
 	}
 }
 

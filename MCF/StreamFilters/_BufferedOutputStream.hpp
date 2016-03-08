@@ -14,9 +14,9 @@ namespace MCF {
 namespace Impl_BufferedOutputStream {
 	class BufferedOutputStream {
 	public:
-		enum FlushBufferLevel : unsigned {
-			kFlushStreamAuto = 0,
-			kFlushAll        = 1,
+		enum FlushLevel : unsigned {
+			kFlushBufferAuto = 0,
+			kFlushBufferAll  = 1,
 			kFlushStreamSoft = 2,
 			kFlushStreamHard = 3,
 		};
@@ -24,7 +24,7 @@ namespace Impl_BufferedOutputStream {
 	private:
 		PolyIntrusivePtr<AbstractOutputStream> x_pUnderlyingStream;
 
-		StreamBuffer x_sbufBufferedData;
+		StreamBuffer x_sbufFrontBuffer;
 		Vector<unsigned char> x_vecBackBuffer;
 
 	public:
@@ -38,23 +38,22 @@ namespace Impl_BufferedOutputStream {
 		BufferedOutputStream &operator=(BufferedOutputStream &&) noexcept = default;
 
 	public:
-		void Put(unsigned char byData){
-			x_sbufBufferedData.Put(byData);
+		void BufferedPut(unsigned char byData){
+			x_sbufFrontBuffer.Put(byData);
 		}
 
-		void Put(const void *pData, std::size_t uSize){
-			x_sbufBufferedData.Put(pData, uSize);
+		void BufferedPut(const void *pData, std::size_t uSize){
+			x_sbufFrontBuffer.Put(pData, uSize);
 		}
 
-		void Splice(StreamBuffer &sbufData){
-			x_sbufBufferedData.Splice(sbufData);
+		void BufferedSplice(StreamBuffer &sbufData){
+			x_sbufFrontBuffer.Splice(sbufData);
 		}
 
 		void Flush(bool bHard){
-			FlushBuffer(bHard ? kFlushStreamHard : kFlushStreamAuto);
+			Flush((bHard == false) ? kFlushBufferAuto : kFlushStreamHard);
 		}
-
-		void FlushBuffer(FlushBufferLevel eLevel);
+		void Flush(FlushLevel eLevel);
 
 		const PolyIntrusivePtr<AbstractOutputStream> &GetUnderlyingStream() const noexcept {
 			return x_pUnderlyingStream;
@@ -63,7 +62,7 @@ namespace Impl_BufferedOutputStream {
 		void Swap(BufferedOutputStream &rhs) noexcept {
 			using std::swap;
 			swap(x_pUnderlyingStream, rhs.x_pUnderlyingStream);
-			swap(x_sbufBufferedData,  rhs.x_sbufBufferedData);
+			swap(x_sbufFrontBuffer,   rhs.x_sbufFrontBuffer);
 			swap(x_vecBackBuffer,     rhs.x_vecBackBuffer);
 		}
 

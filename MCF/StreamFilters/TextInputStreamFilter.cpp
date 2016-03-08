@@ -18,26 +18,26 @@ void TextInputStreamFilter::X_PopulatePlainBuffer(std::size_t uExpected){
 
 		y_vStream.PopulateBuffer(2);
 		unsigned char abyTemp[2];
-		const auto uBytesRead = y_vStream.Peek(abyTemp, 2);
+		const auto uBytesRead = y_vStream.BufferedPeek(abyTemp, 2);
 		if(uBytesRead == 0){
 			break;
 		}
 		if(uBytesRead == 1){
 			if(abyTemp[0] != '\r'){
 				x_sbufPlain.Put(abyTemp[0]);
-				y_vStream.Discard();
+				y_vStream.BufferedDiscard();
 			}
 			break;
 		}
 		if((abyTemp[0] == '\r') && (abyTemp[1] == '\n')){
 			x_sbufPlain.Put('\n');
-			y_vStream.Discard(2);
+			y_vStream.BufferedDiscard(2);
 		} else if(abyTemp[1] == '\r'){
 			x_sbufPlain.Put(abyTemp[0]);
-			y_vStream.Discard();
+			y_vStream.BufferedDiscard();
 		} else {
 			x_sbufPlain.Put(abyTemp, 2);
-			y_vStream.Discard(2);
+			y_vStream.BufferedDiscard(2);
 		}
 	}
 }

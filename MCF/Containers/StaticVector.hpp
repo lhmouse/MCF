@@ -10,8 +10,8 @@
 #include "../Utilities/AlignedStorage.hpp"
 #include "../Utilities/ConstructDestruct.hpp"
 #include "../Core/Exception.hpp"
+#include "../Core/_CheckedSizeArithmetic.hpp"
 #include <utility>
-#include <new>
 #include <initializer_list>
 #include <type_traits>
 #include <cstddef>
@@ -283,7 +283,7 @@ public:
 	template<typename ...ParamsT>
 	Element *ResizeMore(std::size_t uDeltaSize, const ParamsT &...vParams){
 		const auto uOldSize = x_uSize;
-		Append(uDeltaSize - uOldSize, vParams...);
+		Append(uDeltaSize, vParams...);
 		return reinterpret_cast<Element *>(x_aStorage) + uOldSize;
 	}
 
@@ -293,11 +293,7 @@ public:
 		}
 	}
 	void ReserveMore(std::size_t uDeltaCapacity){
-		const auto uOldSize = x_uSize;
-		const auto uNewCapacity = uOldSize + uDeltaCapacity;
-		if(uNewCapacity < uOldSize){
-			throw std::bad_array_new_length();
-		}
+		const auto uNewCapacity = Impl_CheckedSizeArithmetic::Add(uDeltaCapacity, x_uSize);
 		Reserve(uNewCapacity);
 	}
 

@@ -25,15 +25,6 @@ namespace Impl_CheckedSizeArithmetic {
 		}
 		return uRet;
 	}
-
-	template<std::size_t kLhsT>
-	inline std::size_t Add(std::size_t uRhs){
-		return Add(kLhsT, uRhs);
-	}
-	template<std::size_t kLhsT>
-	inline std::size_t Mul(std::size_t uRhs){
-		return Mul(kLhsT, uRhs);
-	}
 }
 
 }

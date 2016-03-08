@@ -10,8 +10,8 @@
 #include "../Utilities/ConstructDestruct.hpp"
 #include "../Utilities/DeclVal.hpp"
 #include "../Core/Exception.hpp"
+#include "../Core/_CheckedSizeArithmetic.hpp"
 #include <utility>
-#include <new>
 #include <initializer_list>
 #include <type_traits>
 #include <cstddef>
@@ -406,12 +406,7 @@ public:
 	}
 	template<typename ...ParamsT>
 	void ResizeMore(std::size_t uDeltaSize, const ParamsT &...vParams){
-		const auto uOldSize = GetSize();
-		const auto uNewSize = uOldSize + uDeltaSize;
-		if(uNewSize < uOldSize){
-			throw std::bad_array_new_length();
-		}
-		Append(uDeltaSize - uOldSize, vParams...);
+		Append(uDeltaSize, vParams...);
 	}
 
 	void Reserve(std::size_t uNewCapacity){
@@ -420,21 +415,13 @@ public:
 			return;
 		}
 
-		if(uNewCapacity + 1 < uNewCapacity){
-			throw std::bad_array_new_length();
-		}
-
 		auto uElementsToAlloc = uOldCapacity + 1;
 		uElementsToAlloc += uElementsToAlloc >> 1;
 		uElementsToAlloc = (uElementsToAlloc + 0x0F) & (std::size_t)-0x10;
 		if(uElementsToAlloc < uNewCapacity + 1){
 			uElementsToAlloc = uNewCapacity + 1;
 		}
-		const auto uBytesToAlloc = sizeof(Element) * uElementsToAlloc;
-		if(uBytesToAlloc / sizeof(Element) != uElementsToAlloc){
-			throw std::bad_array_new_length();
-		}
-
+		const auto uBytesToAlloc = Impl_CheckedSizeArithmetic::Mul(sizeof(Element), uElementsToAlloc);
 		const auto pNewStorage = static_cast<Element *>(::operator new[](uBytesToAlloc));
 		const auto pOldStorage = x_pStorage;
 		auto pWrite = pNewStorage;
@@ -465,10 +452,7 @@ public:
 	}
 	void ReserveMore(std::size_t uDeltaCapacity){
 		const auto uOldSize = GetSize();
-		const auto uNewCapacity = uOldSize + uDeltaCapacity;
-		if(uNewCapacity < uOldSize){
-			throw std::bad_array_new_length();
-		}
+		const auto uNewCapacity = Impl_CheckedSizeArithmetic::Add(uDeltaCapacity, uOldSize);
 		Reserve(uNewCapacity);
 	}
 
@@ -783,10 +767,7 @@ public:
 			}
 		} else {
 			const auto uSize = GetSize();
-			auto uNewCapacity = uSize + 1;
-			if(uNewCapacity < uSize){
-				throw std::bad_array_new_length();
-			}
+			auto uNewCapacity = Impl_CheckedSizeArithmetic::Add(1, uSize);
 			const auto uCapacity = GetCapacity();
 			if(uNewCapacity < uCapacity){
 				uNewCapacity = uCapacity;
@@ -842,10 +823,7 @@ public:
 				}
 			} else {
 				const auto uSize = GetSize();
-				auto uNewCapacity = uSize + uDeltaSize;
-				if(uNewCapacity < uSize){
-					throw std::bad_array_new_length();
-				}
+				auto uNewCapacity = Impl_CheckedSizeArithmetic::Add(uDeltaSize, uSize);
 				const auto uCapacity = GetCapacity();
 				if(uNewCapacity < uCapacity){
 					uNewCapacity = uCapacity;
@@ -908,10 +886,7 @@ public:
 					}
 				} else {
 					const auto uSize = GetSize();
-					auto uNewCapacity = uSize + uDeltaSize;
-					if(uNewCapacity < uSize){
-						throw std::bad_array_new_length();
-					}
+					auto uNewCapacity = Impl_CheckedSizeArithmetic::Add(uDeltaSize, uSize);
 					const auto uCapacity = GetCapacity();
 					if(uNewCapacity < uCapacity){
 						uNewCapacity = uCapacity;

@@ -9,8 +9,8 @@
 #include "../Utilities/ConstructDestruct.hpp"
 #include "../Utilities/DeclVal.hpp"
 #include "../Core/Exception.hpp"
+#include "../Core/_CheckedSizeArithmetic.hpp"
 #include <utility>
-#include <new>
 #include <type_traits>
 #include <cstddef>
 
@@ -161,11 +161,7 @@ namespace Impl_FlatContainer {
 			if(uElementsToAlloc < uNewCapacity){
 				uElementsToAlloc = uNewCapacity;
 			}
-			const std::size_t uBytesToAlloc = sizeof(Element) * uElementsToAlloc;
-			if(uBytesToAlloc / sizeof(Element) != uElementsToAlloc){
-				throw std::bad_array_new_length();
-			}
-
+			const auto uBytesToAlloc = Impl_CheckedSizeArithmetic::Mul(sizeof(Element), uElementsToAlloc);
 			const auto pNewStorage = static_cast<Element *>(::operator new[](uBytesToAlloc));
 			const auto pOldStorage = x_pStorage;
 			auto pWrite = pNewStorage;
@@ -195,11 +191,7 @@ namespace Impl_FlatContainer {
 			x_uCapacity = uElementsToAlloc;
 		}
 		void ReserveMore(std::size_t uDeltaCapacity){
-			const auto uOldSize = x_uSize;
-			const auto uNewCapacity = uOldSize + uDeltaCapacity;
-			if(uNewCapacity < uOldSize){
-				throw std::bad_array_new_length();
-			}
+			const auto uNewCapacity = Impl_CheckedSizeArithmetic::Add(uDeltaCapacity, x_uSize);
 			Reserve(uNewCapacity);
 		}
 
@@ -230,11 +222,7 @@ namespace Impl_FlatContainer {
 				}
 				x_uSize += 1;
 			} else {
-				const auto uSize = x_uSize;
-				auto uNewCapacity = uSize + 1;
-				if(uNewCapacity < uSize){
-					throw std::bad_array_new_length();
-				}
+				auto uNewCapacity = Impl_CheckedSizeArithmetic::Add(1, x_uSize);
 				const auto uCapacity = x_uCapacity;
 				if(uNewCapacity < uCapacity){
 					uNewCapacity = uCapacity;

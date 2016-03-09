@@ -1,10 +1,13 @@
 #include <MCF/StdMCF.hpp>
-#include <MCF/Core/Exception.hpp>
+#include <MCF/Thread/ThreadLocal.hpp>
 
 using namespace MCF;
 
+template class ThreadLocal<int>;
+template class ThreadLocal<long double>;
+
 extern "C" unsigned MCFCRT_Main(){
-	auto a = (std::puts("hello") >= 0) ? 1 : DEBUG_THROW(Exception, ERROR_INVALID_PARAMETER, ""_rcs);
-	std::printf("a = %d\n", a);
+	ThreadLocal<int> tls;
+	tls.Set(123);
 	return 0;
 }

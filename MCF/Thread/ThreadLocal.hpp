@@ -26,92 +26,88 @@ namespace Impl_ThreadLocal {
 		}
 	};
 
+	using TlsCleanupCallback = void (*)(std::intptr_t);
+
+	template<class ElementT, bool kCanBeStoredAsIntPtr>
+	struct ElementManipulator {
+		static TlsCleanupCallback GetCleanupCallback() noexcept {
+			return [](std::intptr_t nValue){ delete reinterpret_cast<ElementT *>(nValue); };
+		}
+		static bool ExtractValue(ElementT &vDst, std::intptr_t nValue){
+			const auto pSrc = reinterpret_cast<const ElementT *>(nValue);
+			if(!pSrc){
+				return false;
+			}
+			vDst = *pSrc;
+			return true;
+		}
+		static std::intptr_t PackValue(ElementT &&vSrc){
+			return reinterpret_cast<std::intptr_t>(new ElementT(std::move(vSrc)));
+		}
+	};
 	template<class ElementT>
-	class ThreadLocalTrivialSmallEnough : NONCOPYABLE {
-		static_assert(std::is_trivial<ElementT>::value && !std::is_array<ElementT>::value && (sizeof(ElementT) <= sizeof(std::intptr_t)), "!");
-
-	private:
-		const ElementT x_vDefault;
-		UniqueHandle<TlsKeyDeleter> x_pTlsKey;
-
-	public:
-		explicit ThreadLocalTrivialSmallEnough(ElementT vDefault = ElementT())
-			: x_vDefault(std::move(vDefault))
-		{
-			if(!x_pTlsKey.Reset(::MCFCRT_TlsAllocKey(nullptr))){
-				DEBUG_THROW(SystemException, "MCFCRT_TlsAllocKey"_rcs);
-			}
+	struct ElementManipulator<ElementT, true> {
+		static constexpr TlsCleanupCallback GetCleanupCallback() noexcept {
+			return nullptr;
 		}
-
-	public:
-		ElementT Get() const noexcept {
-			bool bHasValue = false;
-			std::intptr_t nValue = 0;
-			if(!::MCFCRT_TlsGet(x_pTlsKey.Get(), &bHasValue, &nValue)){
-				ASSERT_MSG(false, L"MCFCRT_TlsGet() 失败。");
-			}
-			if(bHasValue){
-				ElementT vElement;
-				std::memcpy(&vElement, &nValue, sizeof(vElement));
-				return vElement;
-			}
-			return x_vDefault;
+		static bool ExtractValue(ElementT &vDst, std::intptr_t nValue) noexcept {
+			__builtin_memcpy(&vDst, &nValue, sizeof(vDst));
+			return true;
 		}
-		void Set(const ElementT &vElement){
-			std::intptr_t nValue = 0;
-			std::memcpy(&nValue, &vElement, sizeof(vElement));
-			if(!::MCFCRT_TlsReset(x_pTlsKey.Get(), nValue)){ // noexcept
-				DEBUG_THROW(SystemException, "MCFCRT_TlsReset"_rcs);
-			}
+		static std::intptr_t PackValue(ElementT &&vSrc) noexcept {
+			std::intptr_t nValue;
+			__builtin_memcpy(&nValue, &vSrc, sizeof(vSrc));
+			return nValue;
 		}
 	};
 
 	template<class ElementT>
-	class ThreadLocalGeneric : NONCOPYABLE {
-	private:
-		const ElementT x_vDefault;
-		UniqueHandle<TlsKeyDeleter> x_pTlsKey;
-
-	public:
-		explicit ThreadLocalGeneric(ElementT vDefault = ElementT())
-			: x_vDefault(std::move(vDefault))
-		{
-			if(!x_pTlsKey.Reset(::MCFCRT_TlsAllocKey([](std::intptr_t nValue){ delete reinterpret_cast<ElementT *>(nValue); }))){
-				DEBUG_THROW(SystemException, "MCFCRT_TlsAllocKey"_rcs);
-			}
-		}
-
-	public:
-		const ElementT &Get() const noexcept {
-			bool bHasValue = false;
-			std::intptr_t nValue = 0;
-			if(!::MCFCRT_TlsGet(x_pTlsKey.Get(), &bHasValue, &nValue)){
-				ASSERT_MSG(false, L"MCFCRT_TlsGet() 失败。");
-			}
-			if(bHasValue){
-				const auto pElement = reinterpret_cast<const ElementT *>(nValue);
-				if(pElement){
-					return *pElement;
-				}
-			}
-			return x_vDefault;
-		}
-		void Set(ElementT vElement){
-			const auto pElement = new ElementT(std::move(vElement));
-			if(!::MCFCRT_TlsReset(x_pTlsKey.Get(), reinterpret_cast<std::intptr_t>(pElement))){ // noexcept
-				delete pElement;
-				DEBUG_THROW(SystemException, "MCFCRT_TlsReset"_rcs);
-			}
-		}
-	};
+	using ElementTraits = ElementManipulator<ElementT,
+		std::is_trivial<ElementT>::value && !std::is_array<ElementT>::value && (sizeof(ElementT) <= sizeof(std::intptr_t))>;
 }
 
 template<class ElementT>
-using ThreadLocal =
-	std::conditional_t<std::is_trivial<ElementT>::value && !std::is_array<ElementT>::value && (sizeof(ElementT) <= sizeof(std::intptr_t)),
-		Impl_ThreadLocal::ThreadLocalTrivialSmallEnough<ElementT>,
-		Impl_ThreadLocal::ThreadLocalGeneric<ElementT>
-		>;
+class ThreadLocal : NONCOPYABLE {
+private:
+	const ElementT x_vDefault;
+	UniqueHandle<Impl_ThreadLocal::TlsKeyDeleter> x_pTlsKey;
+
+public:
+	explicit ThreadLocal(ElementT vDefault = ElementT())
+		: x_vDefault(std::move(vDefault))
+	{
+		const auto pfnCleanupCallback = Impl_ThreadLocal::ElementTraits<ElementT>::GetCleanupCallback();
+		if(!x_pTlsKey.Reset(::MCFCRT_TlsAllocKey(pfnCleanupCallback))){
+			DEBUG_THROW(SystemException, ERROR_NOT_ENOUGH_MEMORY, "MCFCRT_TlsAllocKey"_rcs);
+		}
+	}
+
+public:
+	ElementT Get() const {
+		bool bHasValue = false;
+		std::intptr_t nValue = 0;
+		if(!::MCFCRT_TlsGet(x_pTlsKey.Get(), &bHasValue, &nValue)){
+			ASSERT_MSG(false, L"MCFCRT_TlsGet() 失败。");
+		}
+		if(bHasValue){
+			ElementT vElement;
+			if(Impl_ThreadLocal::ElementTraits<ElementT>::ExtractValue(vElement, nValue)){
+				return std::move(vElement);
+			}
+		}
+		return x_vDefault;
+	}
+	void Set(ElementT vElement){
+		const auto pfnCleanupCallback = Impl_ThreadLocal::ElementTraits<ElementT>::GetCleanupCallback();
+		std::intptr_t nValue = Impl_ThreadLocal::ElementTraits<ElementT>::PackValue(std::move(vElement));
+		if(!::MCFCRT_TlsReset(x_pTlsKey.Get(), nValue)){ // noexcept
+			if(pfnCleanupCallback){
+				(*pfnCleanupCallback)(nValue);
+			}
+			DEBUG_THROW(SystemException, ERROR_NOT_ENOUGH_MEMORY, "MCFCRT_TlsReset"_rcs);
+		}
+	}
+};
 
 }
 

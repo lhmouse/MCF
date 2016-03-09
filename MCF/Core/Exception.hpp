@@ -80,6 +80,7 @@ namespace Impl_Exception {
 		}
 	};
 
+	// 这个返回类型允许在三目运算符中调用该函数模板。
 	template<typename ExceptionT, typename ...ParamsT>
 	[[noreturn]] DummyReturnType DebugThrow(const char *pszFile, unsigned long ulLine, ParamsT &&...vParams){
 		throw ExceptionT(pszFile, ulLine, std::forward<ParamsT>(vParams)...);

@@ -137,8 +137,8 @@ public:
 			return nullptr;
 		}
 		ASSERT(dynamic_cast<const X_ActiveElement<std::decay_t<ElementT>> *>(x_pElement.Get()));
-		const auto pElement = static_cast<const X_ActiveElement<std::decay_t<ElementT>> *>(x_pElement.Get());
-		return static_cast<const ElementT *>(pElement->GetAddress());
+		return static_cast<const ElementT *>(
+			static_cast<const X_ActiveElement<std::decay_t<ElementT>> *>(x_pElement.Get())->GetAddress());
 	}
 	template<typename ElementT>
 	ElementT *Get() noexcept {
@@ -146,8 +146,8 @@ public:
 			return nullptr;
 		}
 		ASSERT(dynamic_cast<X_ActiveElement<std::decay_t<ElementT>> *>(x_pElement.Get()));
-		const auto pElement = static_cast<X_ActiveElement<std::decay_t<ElementT>> *>(x_pElement.Get());
-		return static_cast<ElementT *>(pElement->GetAddress());
+		return static_cast<ElementT *>(
+			static_cast<X_ActiveElement<std::decay_t<ElementT>> *>(x_pElement.Get())->GetAddress());
 	}
 	template<typename ElementT, std::enable_if_t<
 		FindFirstType<std::decay_t<ElementT>, ElementsT...>() != (std::size_t)-1,
@@ -167,18 +167,14 @@ public:
 		if(!x_pElement){
 			DEBUG_THROW(Exception, ERROR_ACCESS_DENIED, "Variant: No element has been set"_rcs);
 		}
-		const auto uIndex = x_pElement->GetIndex();
-		const auto pElement = x_pElement->GetAddress();
-		Impl_Variant::Applier<FunctorT, 0, const ElementsT...>()(std::forward<FunctorT>(vFunctor), uIndex, pElement);
+		Impl_Variant::Applier<FunctorT, 0, const ElementsT...>()(std::forward<FunctorT>(vFunctor), x_pElement->GetIndex(), x_pElement->GetAddress());
 	}
 	template<typename FunctorT>
 	void Apply(FunctorT &&vFunctor){
 		if(!x_pElement){
 			DEBUG_THROW(Exception, ERROR_ACCESS_DENIED, "Variant: No element has been set"_rcs);
 		}
-		const auto uIndex = x_pElement->GetIndex();
-		const auto pElement = x_pElement->GetAddress();
-		Impl_Variant::Applier<FunctorT, 0, ElementsT...>()(std::forward<FunctorT>(vFunctor), uIndex, pElement);
+		Impl_Variant::Applier<FunctorT, 0, ElementsT...>()(std::forward<FunctorT>(vFunctor), x_pElement->GetIndex(), x_pElement->GetAddress());
 	}
 
 	void Swap(Variant<ElementsT...> &rhs) noexcept {

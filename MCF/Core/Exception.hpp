@@ -12,6 +12,23 @@
 
 namespace MCF {
 
+namespace Impl_Exception {
+	struct BoolPlaceholder {
+		explicit constexpr operator bool() const noexcept {
+			return false;
+		}
+	};
+
+	template<typename ExceptionT, typename ...ParamsT>
+	[[noreturn]] BoolPlaceholder DebugThrow(const char *pszFile, unsigned long ulLine, ParamsT &&...vParams){
+		throw ExceptionT(pszFile, ulLine, std::forward<ParamsT>(vParams)...);
+	}
+	template<typename ExceptionT, typename ...ParamsT>
+	std::exception_ptr DebugMakeExceptionPtr(const char *pszFile, unsigned long ulLine, ParamsT &&...vParams){
+		return std::make_exception_ptr(ExceptionT(pszFile, ulLine, std::forward<ParamsT>(vParams)...));
+	}
+}
+
 class Exception : public std::exception {
 private:
 	const char *x_pszFile;
@@ -71,23 +88,6 @@ public:
 	SystemException &operator=(const SystemException &) noexcept = default;
 	SystemException &operator=(SystemException &&) noexcept = default;
 };
-
-namespace Impl_Exception {
-	struct BoolPlaceholder {
-		explicit constexpr operator bool() const noexcept {
-			return false;
-		}
-	};
-
-	template<typename ExceptionT, typename ...ParamsT>
-	[[noreturn]] BoolPlaceholder DebugThrow(const char *pszFile, unsigned long ulLine, ParamsT &&...vParams){
-		throw ExceptionT(pszFile, ulLine, std::forward<ParamsT>(vParams)...);
-	}
-	template<typename ExceptionT, typename ...ParamsT>
-	std::exception_ptr DebugMakeExceptionPtr(const char *pszFile, unsigned long ulLine, ParamsT &&...vParams){
-		return std::make_exception_ptr(ExceptionT(pszFile, ulLine, std::forward<ParamsT>(vParams)...));
-	}
-}
 
 }
 

@@ -1,13 +1,10 @@
 #include <MCF/StdMCF.hpp>
-#include <cmath>
+#include <MCF/Core/Exception.hpp>
 
-volatile auto pf1 = (double (*)(double))&std::cos;
-volatile auto pf2 = (double (*)(double))::GetProcAddress(::LoadLibraryA("msvcrt.dll"), "cos");
+using namespace MCF;
 
 extern "C" unsigned MCFCRT_Main(){
-	const auto r = 0x1p110;
-
-	std::printf("val = %f, msvc = %f, const = %f\n", (*pf1)(r), (*pf2)(r), __builtin_cos(r));
-
+	auto a = (std::puts("hello") == 0) ? 1 : DEBUG_THROW(Exception, ERROR_INVALID_PARAMETER, ""_rcs);
+	std::printf("a = %d\n", a);
 	return 0;
 }

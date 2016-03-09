@@ -13,14 +13,15 @@
 namespace MCF {
 
 namespace Impl_Exception {
-	struct BoolPlaceholder {
-		explicit constexpr operator bool() const noexcept {
-			return false;
+	struct DummyReturnType {
+		template<typename T>
+		[[noreturn]] operator T() const noexcept {
+			std::terminate();
 		}
 	};
 
 	template<typename ExceptionT, typename ...ParamsT>
-	[[noreturn]] BoolPlaceholder DebugThrow(const char *pszFile, unsigned long ulLine, ParamsT &&...vParams){
+	[[noreturn]] DummyReturnType DebugThrow(const char *pszFile, unsigned long ulLine, ParamsT &&...vParams){
 		throw ExceptionT(pszFile, ulLine, std::forward<ParamsT>(vParams)...);
 	}
 	template<typename ExceptionT, typename ...ParamsT>

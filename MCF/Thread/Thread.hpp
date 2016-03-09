@@ -52,6 +52,8 @@ private:
 		: x_hThread(nullptr), x_uThreadId(0), x_pException()
 	{
 	}
+
+public:
 	~Thread() override; // 如果有被捕获的异常，调用 std::terminate()。
 
 private:

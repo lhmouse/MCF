@@ -29,11 +29,6 @@ public:
 	}
 	~Exception() override;
 
-	Exception(const Exception &) noexcept = default;
-	Exception(Exception &&) noexcept = default;
-	Exception &operator=(const Exception &) noexcept = default;
-	Exception &operator=(Exception &&) noexcept = default;
-
 public:
 	const char *what() const noexcept override {
 		return x_rcsErrorMessage;
@@ -64,11 +59,6 @@ public:
 	{
 	}
 	~SystemException() override;
-
-	SystemException(const SystemException &) noexcept = default;
-	SystemException(SystemException &&) noexcept = default;
-	SystemException &operator=(const SystemException &) noexcept = default;
-	SystemException &operator=(SystemException &&) noexcept = default;
 };
 
 namespace Impl_Exception {

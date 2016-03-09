@@ -26,7 +26,7 @@ float cosf(float x){
 		"1: \n"
 		__FLT_RET_ST("%1")
 		: __FLT_RET_CONS(ret)
-		: "m"(x), "m"(__MCFCRT_kMath_Pos_1p61_PI)
+		: "m"(x), "m"(__MCFCRT_kMath_Pos_1p61_Pi)
 		: "ax"
 	);
 	return ret;
@@ -52,7 +52,7 @@ double cos(double x){
 		"1: \n"
 		__DBL_RET_ST("%1")
 		: __DBL_RET_CONS(ret)
-		: "m"(x), "m"(__MCFCRT_kMath_Pos_1p61_PI)
+		: "m"(x), "m"(__MCFCRT_kMath_Pos_1p61_Pi)
 		: "ax"
 	);
 	return ret;
@@ -78,7 +78,7 @@ long double cosl(long double x){
 		"1: \n"
 		__LDBL_RET_ST("%1")
 		: __LDBL_RET_CONS(ret)
-		: "m"(x), "m"(__MCFCRT_kMath_Pos_1p61_PI)
+		: "m"(x), "m"(__MCFCRT_kMath_Pos_1p61_Pi)
 		: "ax"
 	);
 	return ret;

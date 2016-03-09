@@ -5,12 +5,12 @@
 #ifndef __MCFCRT_MATH_CONSTANTS_H_
 #define __MCFCRT_MATH_CONSTANTS_H_
 
-extern const double __MCFCRT_kMath_Pos_1_0;
-extern const double __MCFCRT_kMath_Neg_1_0;
+extern const double      __MCFCRT_kMath_Pos_1_0;
+extern const double      __MCFCRT_kMath_Neg_1_0;
 
-extern const double __MCFCRT_kMath_Pos_0_5;
-extern const double __MCFCRT_kMath_Neg_0_5;
+extern const double      __MCFCRT_kMath_Pos_0_5;
+extern const double      __MCFCRT_kMath_Neg_0_5;
 
-extern const double __MCFCRT_kMath_Pos_1p61_PI;
+extern const long double __MCFCRT_kMath_Pos_1p61_Pi;
 
 #endif

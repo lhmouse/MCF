@@ -20,13 +20,18 @@ private:
 
 public:
 	Crc64OutputStream() noexcept
-		: x_nChunkOffset(-1), x_abyChunk(), x_u64Reg()
+		: x_nChunkOffset(-1)
 	{
 	}
 	~Crc64OutputStream() override;
 
 	Crc64OutputStream(Crc64OutputStream &&) noexcept = default;
 	Crc64OutputStream &operator=(Crc64OutputStream &&) noexcept = default;
+
+private:
+	void X_Initialize() noexcept;
+	void X_Update(const std::uint8_t (&abyChunk)[8]) noexcept;
+	void X_Finalize(std::uint8_t (&abyChunk)[8], unsigned uBytesInChunk) noexcept;
 
 public:
 	void Put(unsigned char byData) override;

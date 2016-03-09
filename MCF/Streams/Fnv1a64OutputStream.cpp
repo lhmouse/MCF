@@ -11,29 +11,27 @@
 
 namespace MCF {
 
-namespace {
-	void InitializeFnv1a64(std::uint64_t &u64Reg) noexcept {
-		u64Reg = 14695981039346656037u;
-	}
-	void UpdateFnv1a64(std::uint64_t &u64Reg, const std::uint8_t (&abyChunk)[8]) noexcept {
-		register auto u64Word = LoadLe(reinterpret_cast<const std::uint64_t *>(abyChunk)[0]);
-		for(unsigned i = 0; i < sizeof(u64Word); ++i){
-			const unsigned uLow = static_cast<unsigned char>(u64Word);
-			u64Word >>= 8;
-			u64Reg ^= uLow;
-			u64Reg *= 1099511628211u;
-		}
-	}
-	void FinalizeFnv1a64(std::uint64_t &u64Reg, std::uint8_t (&abyChunk)[8], unsigned uBytesInChunk) noexcept {
-		for(unsigned i = 0; i < uBytesInChunk; ++i){
-			const unsigned uLow = abyChunk[i];
-			u64Reg ^= uLow;
-			u64Reg *= 1099511628211u;
-		}
-	}
+Fnv1a64OutputStream::~Fnv1a64OutputStream(){
 }
 
-Fnv1a64OutputStream::~Fnv1a64OutputStream(){
+void Fnv1a64OutputStream::X_Initialize() noexcept {
+	x_u64Reg = 14695981039346656037u;
+}
+void Fnv1a64OutputStream::X_Update(const std::uint8_t (&abyChunk)[8]) noexcept {
+	register auto u64Word = LoadLe(reinterpret_cast<const std::uint64_t *>(abyChunk)[0]);
+	for(unsigned i = 0; i < sizeof(u64Word); ++i){
+		const unsigned uLow = static_cast<unsigned char>(u64Word);
+		u64Word >>= 8;
+		x_u64Reg ^= uLow;
+		x_u64Reg *= 1099511628211u;
+	}
+}
+void Fnv1a64OutputStream::X_Finalize(std::uint8_t (&abyChunk)[8], unsigned uBytesInChunk) noexcept {
+	for(unsigned i = 0; i < uBytesInChunk; ++i){
+		const unsigned uLow = abyChunk[i];
+		x_u64Reg ^= uLow;
+		x_u64Reg *= 1099511628211u;
+	}
 }
 
 void Fnv1a64OutputStream::Put(unsigned char byData){
@@ -42,7 +40,7 @@ void Fnv1a64OutputStream::Put(unsigned char byData){
 
 void Fnv1a64OutputStream::Put(const void *pData, std::size_t uSize){
 	if(x_nChunkOffset < 0){
-		InitializeFnv1a64(x_u64Reg);
+		X_Initialize();
 		x_nChunkOffset = 0;
 	}
 
@@ -54,11 +52,11 @@ void Fnv1a64OutputStream::Put(const void *pData, std::size_t uSize){
 			std::memcpy(x_abyChunk + x_nChunkOffset, pbyRead, uChunkAvail);
 			pbyRead += uChunkAvail;
 			uBytesRemaining -= uChunkAvail;
-			UpdateFnv1a64(x_u64Reg, x_abyChunk);
+			X_Update(x_abyChunk);
 			x_nChunkOffset = 0;
 		}
 		while(uBytesRemaining >= sizeof(x_abyChunk)){
-			UpdateFnv1a64(x_u64Reg, reinterpret_cast<const decltype(x_abyChunk) *>(pbyRead)[0]);
+			X_Update(reinterpret_cast<const decltype(x_abyChunk) *>(pbyRead)[0]);
 			pbyRead += sizeof(x_abyChunk);
 			uBytesRemaining -= sizeof(x_abyChunk);
 		}
@@ -77,7 +75,7 @@ void Fnv1a64OutputStream::Reset() noexcept {
 }
 std::uint64_t Fnv1a64OutputStream::Finalize() noexcept {
 	if(x_nChunkOffset >= 0){
-		FinalizeFnv1a64(x_u64Reg, x_abyChunk, static_cast<unsigned>(x_nChunkOffset));
+		X_Finalize(x_abyChunk, static_cast<unsigned>(x_nChunkOffset));
 		x_nChunkOffset = -1;
 	}
 	return x_u64Reg;

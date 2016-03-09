@@ -20,13 +20,18 @@ private:
 
 public:
 	Crc32OutputStream() noexcept
-		: x_nChunkOffset(-1), x_abyChunk(), x_u32Reg()
+		: x_nChunkOffset(-1)
 	{
 	}
 	~Crc32OutputStream() override;
 
 	Crc32OutputStream(Crc32OutputStream &&) noexcept = default;
 	Crc32OutputStream &operator=(Crc32OutputStream &&) noexcept = default;
+
+private:
+	void X_Initialize() noexcept;
+	void X_Update(const std::uint8_t (&abyChunk)[8]) noexcept;
+	void X_Finalize(std::uint8_t (&abyChunk)[8], unsigned uBytesInChunk) noexcept;
 
 public:
 	void Put(unsigned char byData) override;

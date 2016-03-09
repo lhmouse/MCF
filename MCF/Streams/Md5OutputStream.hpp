@@ -15,18 +15,23 @@ class Md5OutputStream : public AbstractOutputStream {
 private:
 	int x_nChunkOffset;
 	std::uint8_t x_abyChunk[64];
-	std::uint32_t x_au32Reg[4];
+	Array<std::uint32_t, 4> x_au32Reg;
 	std::uint64_t x_u64BytesTotal;
 
 public:
 	Md5OutputStream() noexcept
-		: x_nChunkOffset(-1), x_abyChunk(), x_au32Reg(), x_u64BytesTotal()
+		: x_nChunkOffset(-1)
 	{
 	}
 	~Md5OutputStream() override;
 
 	Md5OutputStream(Md5OutputStream &&) noexcept = default;
 	Md5OutputStream &operator=(Md5OutputStream &&) noexcept = default;
+
+private:
+	void X_Initialize() noexcept;
+	void X_Update(const std::uint8_t (&abyChunk)[64]) noexcept;
+	void X_Finalize(std::uint8_t (&abyChunk)[64], unsigned uBytesInChunk) noexcept;
 
 public:
 	void Put(unsigned char byData) override;

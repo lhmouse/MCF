@@ -31,28 +31,28 @@ namespace {
 	}
 
 	constexpr auto kCrcTable = GenerateTable(std::make_index_sequence<256>());
-
-	void InitializeCrc32(std::uint32_t &u32Reg) noexcept {
-		u32Reg = static_cast<std::uint32_t>(-1);
-	}
-	void UpdateCrc32(std::uint32_t &u32Reg, const std::uint8_t (&abyChunk)[8]) noexcept {
-		register auto u64Word = LoadLe(reinterpret_cast<const std::uint64_t *>(abyChunk)[0]);
-		for(unsigned i = 0; i < sizeof(u64Word); ++i){
-			const unsigned uLow = static_cast<unsigned char>(u64Word);
-			u64Word >>= 8;
-			u32Reg = kCrcTable[(u32Reg ^ uLow) & 0xFF] ^ (u32Reg >> 8);
-		}
-	}
-	void FinalizeCrc32(std::uint32_t &u32Reg, std::uint8_t (&abyChunk)[8], unsigned uBytesInChunk) noexcept {
-		for(unsigned i = 0; i < uBytesInChunk; ++i){
-			const unsigned uLow = abyChunk[i];
-			u32Reg = kCrcTable[(u32Reg ^ uLow) & 0xFF] ^ (u32Reg >> 8);
-		}
-		u32Reg = ~u32Reg;
-	}
 }
 
 Crc32OutputStream::~Crc32OutputStream(){
+}
+
+void Crc32OutputStream::X_Initialize() noexcept {
+	x_u32Reg = static_cast<std::uint32_t>(-1);
+}
+void Crc32OutputStream::X_Update(const std::uint8_t (&abyChunk)[8]) noexcept {
+	register auto u64Word = LoadLe(reinterpret_cast<const std::uint64_t *>(abyChunk)[0]);
+	for(unsigned i = 0; i < sizeof(u64Word); ++i){
+		const unsigned uLow = static_cast<unsigned char>(u64Word);
+		u64Word >>= 8;
+		x_u32Reg = kCrcTable[(x_u32Reg ^ uLow) & 0xFF] ^ (x_u32Reg >> 8);
+	}
+}
+void Crc32OutputStream::X_Finalize(std::uint8_t (&abyChunk)[8], unsigned uBytesInChunk) noexcept {
+	for(unsigned i = 0; i < uBytesInChunk; ++i){
+		const unsigned uLow = abyChunk[i];
+		x_u32Reg = kCrcTable[(x_u32Reg ^ uLow) & 0xFF] ^ (x_u32Reg >> 8);
+	}
+	x_u32Reg = ~x_u32Reg;
 }
 
 void Crc32OutputStream::Put(unsigned char byData){
@@ -61,7 +61,7 @@ void Crc32OutputStream::Put(unsigned char byData){
 
 void Crc32OutputStream::Put(const void *pData, std::size_t uSize){
 	if(x_nChunkOffset < 0){
-		InitializeCrc32(x_u32Reg);
+		X_Initialize();
 		x_nChunkOffset = 0;
 	}
 
@@ -73,11 +73,11 @@ void Crc32OutputStream::Put(const void *pData, std::size_t uSize){
 			std::memcpy(x_abyChunk + x_nChunkOffset, pbyRead, uChunkAvail);
 			pbyRead += uChunkAvail;
 			uBytesRemaining -= uChunkAvail;
-			UpdateCrc32(x_u32Reg, x_abyChunk);
+			X_Update(x_abyChunk);
 			x_nChunkOffset = 0;
 		}
 		while(uBytesRemaining >= sizeof(x_abyChunk)){
-			UpdateCrc32(x_u32Reg, reinterpret_cast<const decltype(x_abyChunk) *>(pbyRead)[0]);
+			X_Update(reinterpret_cast<const decltype(x_abyChunk) *>(pbyRead)[0]);
 			pbyRead += sizeof(x_abyChunk);
 			uBytesRemaining -= sizeof(x_abyChunk);
 		}
@@ -96,7 +96,7 @@ void Crc32OutputStream::Reset() noexcept {
 }
 std::uint32_t Crc32OutputStream::Finalize() noexcept {
 	if(x_nChunkOffset >= 0){
-		FinalizeCrc32(x_u32Reg, x_abyChunk, static_cast<unsigned>(x_nChunkOffset));
+		X_Finalize(x_abyChunk, static_cast<unsigned>(x_nChunkOffset));
 		x_nChunkOffset = -1;
 	}
 	return x_u32Reg;

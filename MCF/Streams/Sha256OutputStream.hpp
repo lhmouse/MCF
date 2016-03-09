@@ -15,18 +15,23 @@ class Sha256OutputStream : public AbstractOutputStream {
 private:
 	int x_nChunkOffset;
 	std::uint8_t x_abyChunk[64];
-	std::uint32_t x_au32Reg[8];
+	Array<std::uint32_t, 8> x_au32Reg;
 	std::uint64_t x_u64BytesTotal;
 
 public:
 	Sha256OutputStream() noexcept
-		: x_nChunkOffset(-1), x_abyChunk(), x_au32Reg(), x_u64BytesTotal()
+		: x_nChunkOffset(-1)
 	{
 	}
 	~Sha256OutputStream() override;
 
 	Sha256OutputStream(Sha256OutputStream &&) noexcept = default;
 	Sha256OutputStream &operator=(Sha256OutputStream &&) noexcept = default;
+
+private:
+	void X_Initialize() noexcept;
+	void X_Update(const std::uint8_t (&abyChunk)[64]) noexcept;
+	void X_Finalize(std::uint8_t (&abyChunk)[64], unsigned uBytesInChunk) noexcept;
 
 public:
 	void Put(unsigned char byData) override;

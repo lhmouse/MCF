@@ -8,7 +8,6 @@
 #include <exception>
 #include <utility>
 #include "RefCountingNtmbs.hpp"
-#include "../../MCFCRT/env/last_error.h"
 
 namespace MCF {
 
@@ -75,7 +74,11 @@ public:
 namespace Impl_Exception {
 	struct DummyReturnType {
 		template<typename T>
-		[[noreturn]] operator T() const noexcept {
+		[[noreturn]] operator T &() const && noexcept {
+			std::terminate();
+		}
+		template<typename T>
+		[[noreturn]] operator T &&() const && noexcept {
 			std::terminate();
 		}
 	};

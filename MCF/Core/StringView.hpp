@@ -601,10 +601,10 @@ public:
 	}
 
 	bool operator==(const StringView &rhs) noexcept {
-		return (GetSize() != rhs.GetSize()) ? false : (Compare(rhs) == 0);
+		return (GetSize() == rhs.GetSize()) ? (Compare(rhs) == 0) : false;
 	}
 	bool operator!=(const StringView &rhs) noexcept {
-		return (GetSize() != rhs.GetSize()) ? true : (Compare(rhs) != 0);
+		return (GetSize() == rhs.GetSize()) ? (Compare(rhs) != 0) : true;
 	}
 	bool operator<(const StringView &rhs) noexcept {
 		return Compare(rhs) < 0;

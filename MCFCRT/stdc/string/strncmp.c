@@ -14,9 +14,9 @@ int strncmp(const char *s1, const char *s2, size_t n){
 				return 0;	\
 			}	\
 			--cnt;	\
-			const long ch1 = (long)(unsigned char)s1[idx_];	\
-			const long ch2 = (long)(unsigned char)s2[idx_];	\
-			const long delta = ch1 - ch2;	\
+			const int_fast32_t ch1 = (unsigned char)s1[idx_];	\
+			const int_fast32_t ch2 = (unsigned char)s2[idx_];	\
+			const int_fast32_t delta = ch1 - ch2;	\
 			if(delta != 0){	\
 				return (delta >> (sizeof(delta) * __CHAR_BIT__ - 1)) | 1;	\
 			}	\

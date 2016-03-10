@@ -27,7 +27,7 @@ namespace Impl_Function {
 		template<typename FuncT>
 		[[noreturn]]
 		IntrusivePtr<FuncT> operator()(const FuncT & /* vFunc */) const {
-			DEBUG_THROW(Exception, ERROR_ACCESS_DENIED, "Function: Functor is not copy-constructible"_rcs);
+			DEBUG_THROW(Exception, ERROR_ACCESS_DENIED, Rcntws::View(L"Function: 该函数对象不允许复制构造。"));
 		}
 	};
 

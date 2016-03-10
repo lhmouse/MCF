@@ -430,7 +430,7 @@ public:
 
 	const Char &Get(std::size_t uIndex) const {
 		if(uIndex >= GetSize()){
-			DEBUG_THROW(Exception, ERROR_ACCESS_DENIED, "StringView: Subscript out of range"_rcs);
+			DEBUG_THROW(Exception, ERROR_ACCESS_DENIED, Rcntws::View(L"StringView: 下标越界。"));
 		}
 		return UncheckedGet(uIndex);
 	}

@@ -6,8 +6,9 @@
 #define MCF_CORE_EXCEPTION_HPP_
 
 #include <exception>
+#include <typeinfo>
 #include <utility>
-#include "RefCountingNtmbs.hpp"
+#include "Rcnts.hpp"
 
 namespace MCF {
 
@@ -16,22 +17,22 @@ private:
 	const char *x_pszFile;
 	unsigned long x_ulLine;
 	unsigned long x_ulErrorCode;
-	RefCountingNtmbs x_rcsErrorMessage;
+	std::exception_ptr x_pNestedException;
+
+	Rcntws x_rcwsErrorMessage;
 
 public:
-	Exception(const char *pszFile, unsigned long ulLine, unsigned long ulErrorCode, RefCountingNtmbs rcsErrorMessage) noexcept
-		: x_pszFile(pszFile), x_ulLine(ulLine), x_ulErrorCode(ulErrorCode), x_rcsErrorMessage(std::move(rcsErrorMessage))
-	{
-	}
-	Exception(const char *pszFile, unsigned long ulLine, long lErrorCode, RefCountingNtmbs rcsErrorMessage) noexcept
-		: Exception(pszFile, ulLine, static_cast<unsigned long>(lErrorCode), std::move(rcsErrorMessage))
+	Exception(const char *pszFile, unsigned long ulLine, unsigned long ulErrorCode, std::exception_ptr pNestedException,
+		Rcntws rcwsErrorMessage) noexcept
+		: x_pszFile(pszFile), x_ulLine(ulLine), x_ulErrorCode(ulErrorCode), x_pNestedException(std::move(pNestedException))
+		, x_rcwsErrorMessage(std::move(rcwsErrorMessage))
 	{
 	}
 	~Exception() override;
 
 public:
 	const char *what() const noexcept override {
-		return x_rcsErrorMessage;
+		return typeid(*this).name();
 	}
 
 	const char *GetFile() const noexcept {
@@ -43,22 +44,13 @@ public:
 	unsigned long GetErrorCode() const noexcept {
 		return x_ulErrorCode;
 	}
-	const char *GetErrorMessage() const noexcept {
-		return x_rcsErrorMessage;
+	const std::exception_ptr &GetNestedException() const noexcept {
+		return x_pNestedException;
 	}
-};
 
-class SystemException : public Exception {
-public:
-	SystemException(const char *pszFile, unsigned long ulLine, unsigned long ulErrorCode, RefCountingNtmbs rcsFunction) noexcept
-		: Exception(pszFile, ulLine, ulErrorCode, std::move(rcsFunction))
-	{
+	const Rcntws &GetErrorMessage() const noexcept {
+		return x_rcwsErrorMessage;
 	}
-	SystemException(const char *pszFile, unsigned long ulLine, long lErrorCode, RefCountingNtmbs rcsErrorMessage) noexcept
-		: SystemException(pszFile, ulLine, static_cast<unsigned long>(lErrorCode), std::move(rcsErrorMessage))
-	{
-	}
-	~SystemException() override;
 };
 
 namespace Impl_Exception {
@@ -75,21 +67,37 @@ namespace Impl_Exception {
 
 	// 这个返回类型允许在三目运算符中调用该函数模板。
 	template<typename ExceptionT, typename ...ParamsT>
-	[[noreturn]] DummyReturnType DebugThrow(const char *pszFile, unsigned long ulLine, ParamsT &&...vParams){
-		throw ExceptionT(pszFile, ulLine, std::forward<ParamsT>(vParams)...);
+	[[noreturn]] DummyReturnType DebugThrow(const char *pszFile, unsigned long ulLine, unsigned long ulErrorCode, std::exception_ptr pNestedException,
+		ParamsT &&...vParams)
+	{
+		throw ExceptionT(pszFile, ulLine, ulErrorCode, std::move(pNestedException),
+			std::forward<ParamsT>(vParams)...);
 	}
 	template<typename ExceptionT, typename ...ParamsT>
-	std::exception_ptr DebugMakeExceptionPtr(const char *pszFile, unsigned long ulLine, ParamsT &&...vParams){
-		return std::make_exception_ptr(ExceptionT(pszFile, ulLine, std::forward<ParamsT>(vParams)...));
+	std::exception_ptr DebugMakeExceptionPtr(const char *pszFile, unsigned long ulLine, unsigned long ulErrorCode, std::exception_ptr pNestedException,
+		ParamsT &&...vParams)
+	{
+		return std::make_exception_ptr(ExceptionT(pszFile, ulLine, ulErrorCode, std::move(pNestedException),
+			std::forward<ParamsT>(vParams)...));
 	}
 }
 
 }
 
-#define DEBUG_THROW(etype_, ...)	\
-	(::MCF::Impl_Exception::DebugThrow<etype_>(__FILE__, __LINE__, __VA_ARGS__))
+#define DEBUG_THROW(etype_, code_, ...)	\
+	(::MCF::Impl_Exception::DebugThrow<etype_>(__FILE__, __LINE__, (code_), (::std::exception_ptr()),	\
+		__VA_ARGS__))
 
-#define DEBUG_MAKE_EXCEPTION_PTR(etype_, ...)	\
-	(::MCF::Impl_Exception::DebugMakeExceptionPtr<etype_>(__FILE__, __LINE__, __VA_ARGS__))
+#define DEBUG_THROW_NESTED(etype_, code_, ...)	\
+	(::MCF::Impl_Exception::DebugThrow<etype_>(__FILE__, __LINE__, (code_), (::std::current_exception()),	\
+		__VA_ARGS__))
+
+#define DEBUG_MAKE_EXCEPTION_PTR(etype_, code_, ...)	\
+	(::MCF::Impl_Exception::DebugMakeExceptionPtr<etype_>(__FILE__, __LINE__, (code_), (::std::exception_ptr()),	\
+		__VA_ARGS__))
+
+#define DEBUG_MAKE_NESTED_EXCEPTION_PTR(etype_, code_, ...)	\
+	(::MCF::Impl_Exception::DebugMakeExceptionPtr<etype_>(__FILE__, __LINE__, (code_), (::std::current_exception()),	\
+		__VA_ARGS__))
 
 #endif

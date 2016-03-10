@@ -250,13 +250,13 @@ public:
 
 	const Element &Get(std::size_t uIndex) const {
 		if(uIndex >= x_uSize){
-			DEBUG_THROW(Exception, ERROR_ACCESS_DENIED, "StaticVector: Subscript out of range"_rcs);
+			DEBUG_THROW(Exception, ERROR_ACCESS_DENIED, Rcntws::View(L"StaticVector: 下标越界。"));
 		}
 		return UncheckedGet(uIndex);
 	}
 	Element &Get(std::size_t uIndex){
 		if(uIndex >= x_uSize){
-			DEBUG_THROW(Exception, ERROR_ACCESS_DENIED, "StaticVector: Subscript out of range"_rcs);
+			DEBUG_THROW(Exception, ERROR_ACCESS_DENIED, Rcntws::View(L"StaticVector: 下标越界。"));
 		}
 		return UncheckedGet(uIndex);
 	}
@@ -289,7 +289,7 @@ public:
 
 	void Reserve(std::size_t uNewCapacity){
 		if(uNewCapacity > kCapacityT){
-			DEBUG_THROW(Exception, ERROR_OUTOFMEMORY, "StaticVector: Max capacity exceeded"_rcs);
+			DEBUG_THROW(Exception, ERROR_OUTOFMEMORY, Rcntws::View(L"StaticVector: 容量已达到上限。"));
 		}
 	}
 	void ReserveMore(std::size_t uDeltaCapacity){

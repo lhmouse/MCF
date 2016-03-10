@@ -37,7 +37,7 @@ void FileOutputStream::X_Flush(bool bHard){
 void FileOutputStream::Put(unsigned char byData){
 	const auto uBytesWritten = X_WriteFromCurrentOffset(&byData, 1);
 	if(uBytesWritten < 1){
-		DEBUG_THROW(Exception, ERROR_BROKEN_PIPE, "FileOutputStream: Partial contents written"_rcs);
+		DEBUG_THROW(Exception, ERROR_BROKEN_PIPE, Rcntws::View(L"FileOutputStream: 未能成功写入所有数据。"));
 	}
 	x_u64Offset += 1;
 }
@@ -45,7 +45,7 @@ void FileOutputStream::Put(unsigned char byData){
 void FileOutputStream::Put(const void *pData, std::size_t uSize){
 	const auto uBytesWritten = X_WriteFromCurrentOffset(pData, uSize);
 	if(uBytesWritten < uSize){
-		DEBUG_THROW(Exception, ERROR_BROKEN_PIPE, "FileOutputStream: Partial contents written"_rcs);
+		DEBUG_THROW(Exception, ERROR_BROKEN_PIPE, Rcntws::View(L"FileOutputStream: 未能成功写入所有数据。"));
 	}
 	x_u64Offset += uBytesWritten;
 }

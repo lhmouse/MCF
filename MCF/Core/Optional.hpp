@@ -99,7 +99,7 @@ public:
 			const auto p = reinterpret_cast<const std::exception_ptr *>(&x_vStorage);
 			std::rethrow_exception(*p);
 		} else {
-			DEBUG_THROW(Exception, ERROR_NOT_READY, "Optional: no element or exception has been set"_rcs);
+			DEBUG_THROW(Exception, ERROR_NOT_READY, Rcntws::View(L"Optional: 尚未设定元素或异常对象。"));
 		}
 	}
 	ElementT &Get(){
@@ -110,7 +110,7 @@ public:
 			const auto p = reinterpret_cast<const std::exception_ptr *>(&x_vStorage);
 			std::rethrow_exception(*p);
 		} else {
-			DEBUG_THROW(Exception, ERROR_NOT_READY, "Optional: no element or exception has been set"_rcs);
+			DEBUG_THROW(Exception, ERROR_NOT_READY, Rcntws::View(L"Optional: 尚未设定元素或异常对象。"));
 		}
 	}
 

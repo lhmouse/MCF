@@ -41,7 +41,7 @@ namespace {
 		std::uint32_t operator()(){
 			const auto pchRead = x_pchRead;
 			if(pchRead == x_pchEnd){
-				DEBUG_THROW(Exception, ERROR_HANDLE_EOF, "StringSource: String is truncated"_rcs);
+				DEBUG_THROW(Exception, ERROR_HANDLE_EOF, Rcntws::View(L"StringSource: 在字符串结尾处遇到不完整的编码点。"));
 			}
 			x_pchRead = pchRead + 1;
 			return static_cast<std::make_unsigned_t<CharT>>(*pchRead);
@@ -80,7 +80,7 @@ namespace {
 			// 这个值是该码点的总字节数。
 			const unsigned uBytes = kByteCountTable[(u32Point >> 3) & 0x1F];
 			if(uBytes == 0){
-				DEBUG_THROW(Exception, ERROR_INVALID_DATA, "Utf8Decoder: Invalid UTF-8 leading byte"_rcs);
+				DEBUG_THROW(Exception, ERROR_INVALID_DATA, Rcntws::View(L"Utf8Decoder: 编码单元无效（首字节）。"));
 			}
 			if(uBytes == 1){
 				return u32Point & 0x7Fu;
@@ -89,7 +89,7 @@ namespace {
 			const auto Unrolled = [&]{
 				const auto u32Temp = x_vPrev();
 				if((u32Temp & 0xC0u) != 0x80u){
-					DEBUG_THROW(Exception, ERROR_INVALID_DATA, "Utf8Decoder: Invalid UTF-8 non-leading byte"_rcs);
+					DEBUG_THROW(Exception, ERROR_INVALID_DATA, Rcntws::View(L"Utf8Decoder: 编码单元无效（非首字节）。"));
 				}
 				u32Point = (u32Point << 6) | (u32Temp & 0x3Fu);
 			};
@@ -111,10 +111,10 @@ namespace {
 				Unrolled();
 			}
 			if(u32Point > 0x10FFFFu){
-				DEBUG_THROW(Exception, ERROR_INVALID_DATA, "Utf8Decoder: Invalid UTF-32 code point value"_rcs);
+				DEBUG_THROW(Exception, ERROR_INVALID_DATA, Rcntws::View(L"Utf8Decoder: 编码点的值超过规定范围。"));
 			}
 			if(!kIsCesu8T && (u32Point - 0xD800u < 0x800u)){
-				DEBUG_THROW(Exception, ERROR_INVALID_DATA, "Utf8Decoder: UTF-32 code point is reserved for UTF-16"_rcs);
+				DEBUG_THROW(Exception, ERROR_INVALID_DATA, Rcntws::View(L"Utf8Decoder: 编码点的值是为 UTF-16 保留的。"));
 			}
 			return u32Point;
 		}
@@ -156,7 +156,7 @@ namespace {
 
 			auto u32Point = x_vPrev();
 			if(u32Point > 0x10FFFFu){
-				DEBUG_THROW(Exception, ERROR_INVALID_DATA, "Utf8Encoder: Invalid UTF-32 code point value"_rcs);
+				DEBUG_THROW(Exception, ERROR_INVALID_DATA, Rcntws::View(L"Utf8Encoder: 编码点的值超过规定范围。"));
 			}
 			// 这个值是该码点的总字节数。
 			if((u32Point >> 7) == 0){ // u32Point < 0x80u
@@ -217,15 +217,15 @@ namespace {
 			const auto u32Leading = u32Point - 0xD800u;
 			if(u32Leading <= 0x7FFu){
 				if(u32Leading > 0x3FFu){
-					DEBUG_THROW(Exception, ERROR_INVALID_DATA, "Utf16Decoder: Isolated UTF-16 trailing surrogate"_rcs);
+					DEBUG_THROW(Exception, ERROR_INVALID_DATA, Rcntws::View(L"Utf16Decoder: 孤立的后尾代理。"));
 				}
-				u32Point = x_vPrev() - 0xDC00u;
-				if(u32Point > 0x3FFu){
-					// 后续代理无效。
-					DEBUG_THROW(Exception, ERROR_INVALID_DATA, "Utf16Decoder: Leading surrogate followed by non-trailing-surrogate"_rcs);
+				const auto u32Trailing = x_vPrev() - 0xDC00u;
+				// 检测后尾代理。
+				if(u32Trailing > 0x3FFu){
+					DEBUG_THROW(Exception, ERROR_INVALID_DATA, Rcntws::View(L"Utf16Decoder: 在前导代理后遇到不是后尾代理的编码单元。"));
 				}
 				// 将代理对拼成一个码点。
-				u32Point = ((u32Leading << 10) | u32Point) + 0x10000u;
+				u32Point = ((u32Leading << 10) | u32Trailing) + 0x10000u;
 			}
 			return u32Point;
 		}
@@ -263,7 +263,7 @@ namespace {
 
 			auto u32Point = x_vPrev();
 			if(u32Point > 0x10FFFFu){
-				DEBUG_THROW(Exception, ERROR_INVALID_DATA, "Utf16Encoder: Invalid UTF-32 code point value"_rcs);
+				DEBUG_THROW(Exception, ERROR_INVALID_DATA, Rcntws::View(L"Utf16Encoder: 编码点的值超过规定范围。"));
 			}
 			if(u32Point > 0xFFFFu){
 				// 编码成代理对。
@@ -473,18 +473,18 @@ __attribute__((__flatten__))
 void AnsiString::UnifyAppend(String<StringType::kUtf16> &u16sDst, const AnsiStringView &svSrc){
 	const auto uInputSize = svSrc.GetSize() * sizeof(char);
 	if(uInputSize > ULONG_MAX){
-		DEBUG_THROW(Exception, ERROR_NOT_ENOUGH_MEMORY, "The input ANSI string is too long"_rcs);
+		DEBUG_THROW(Exception, ERROR_NOT_ENOUGH_MEMORY, Rcntws::View(L"AnsiString: 输入的 ANSI 字符串太长。"));
 	}
 	const auto uOutputSizeMax = svSrc.GetSize() * sizeof(wchar_t);
 	if((uOutputSizeMax > ULONG_MAX) || (uOutputSizeMax / sizeof(wchar_t) != svSrc.GetSize())){
-		DEBUG_THROW(Exception, ERROR_NOT_ENOUGH_MEMORY, "The output Unicode string requires more memory than ULONG_MAX bytes"_rcs);
+		DEBUG_THROW(Exception, ERROR_NOT_ENOUGH_MEMORY, Rcntws::View(L"AnsiString: 输出的 UTF-16 字符串太长。"));
 	}
 	const auto pchWrite = u16sDst.ResizeMore(uOutputSizeMax / sizeof(wchar_t));
 	try {
 		ULONG ulConvertedSize;
 		const auto lStatus = ::RtlMultiByteToUnicodeN(reinterpret_cast<wchar_t *>(pchWrite), (DWORD)uOutputSizeMax, &ulConvertedSize, svSrc.GetBegin(), (DWORD)uInputSize);
 		if(!NT_SUCCESS(lStatus)){
-			DEBUG_THROW(SystemException, ::RtlNtStatusToDosError(lStatus), "RtlMultiByteToUnicodeN"_rcs);
+			DEBUG_THROW(Exception, ::RtlNtStatusToDosError(lStatus), Rcntws::View(L"AnsiString: RtlMultiByteToUnicodeN() 失败。"));
 		}
 		u16sDst.Pop(uOutputSizeMax / sizeof(wchar_t) - ulConvertedSize / sizeof(wchar_t));
 	} catch(...){
@@ -497,18 +497,18 @@ __attribute__((__flatten__))
 void AnsiString::DeunifyAppend(AnsiString &strDst, const StringView<StringType::kUtf16> &u16svSrc){
 	const auto uInputSize = u16svSrc.GetSize() * sizeof(wchar_t);
 	if((uInputSize > ULONG_MAX) || (uInputSize / sizeof(wchar_t) != u16svSrc.GetSize())){
-		DEBUG_THROW(Exception, ERROR_NOT_ENOUGH_MEMORY, "The input Unicode string is too long"_rcs);
+		DEBUG_THROW(Exception, ERROR_NOT_ENOUGH_MEMORY, Rcntws::View(L"AnsiString: 输入的 UTF-16 字符串太长。"));
 	}
 	const auto uOutputSizeMax = u16svSrc.GetSize() * 2 * sizeof(char);
 	if((uOutputSizeMax > ULONG_MAX) || (uOutputSizeMax / (2 * sizeof(char)) != u16svSrc.GetSize())){
-		DEBUG_THROW(Exception, ERROR_NOT_ENOUGH_MEMORY, "The output ANSI string requires more memory than ULONG_MAX bytes"_rcs);
+		DEBUG_THROW(Exception, ERROR_NOT_ENOUGH_MEMORY, Rcntws::View(L"AnsiString: 输出的 ANSI 字符串太长。"));
 	}
 	const auto pchWrite = strDst.ResizeMore(uOutputSizeMax / sizeof(char));
 	try {
 		ULONG ulConvertedSize;
 		const auto lStatus = ::RtlUnicodeToMultiByteN(pchWrite, (DWORD)uOutputSizeMax, &ulConvertedSize, reinterpret_cast<const wchar_t *>(u16svSrc.GetBegin()), (DWORD)uInputSize);
 		if(!NT_SUCCESS(lStatus)){
-			DEBUG_THROW(SystemException, ::RtlNtStatusToDosError(lStatus), "RtlUnicodeToMultiByteN"_rcs);
+			DEBUG_THROW(Exception, ::RtlNtStatusToDosError(lStatus), Rcntws::View(L"AnsiString: RtlUnicodeToMultiByteN() 失败。"));
 		}
 		strDst.Pop(uOutputSizeMax / sizeof(char) - ulConvertedSize / sizeof(char));
 	} catch(...){

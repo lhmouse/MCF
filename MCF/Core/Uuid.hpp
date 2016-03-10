@@ -52,13 +52,13 @@ public:
 
 	const unsigned char &Get(std::size_t uIndex) const {
 		if(uIndex > GetSize()){
-			DEBUG_THROW(Exception, ERROR_ACCESS_DENIED, "VarChar: Subscript out of range"_rcs);
+			DEBUG_THROW(Exception, ERROR_ACCESS_DENIED, Rcntws::View(L"Uuid: 下标越界。"));
 		}
 		return UncheckedGet(uIndex);
 	}
 	unsigned char &Get(std::size_t uIndex){
 		if(uIndex > GetSize()){
-			DEBUG_THROW(Exception, ERROR_ACCESS_DENIED, "VarChar: Subscript out of range"_rcs);
+			DEBUG_THROW(Exception, ERROR_ACCESS_DENIED, Rcntws::View(L"Uuid: 下标越界。"));
 		}
 		return UncheckedGet(uIndex);
 	}

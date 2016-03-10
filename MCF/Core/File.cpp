@@ -56,7 +56,7 @@ Impl_UniqueNtHandle::UniqueNtHandle File::X_CreateFileHandle(const WideStringVie
 
 	const auto uSize = wsvPath.GetSize() * sizeof(wchar_t);
 	if(uSize > USHRT_MAX){
-		DEBUG_THROW(SystemException, ERROR_INVALID_PARAMETER, "The path for a file is too long"_rcs);
+		DEBUG_THROW(Exception, ERROR_BUFFER_OVERFLOW, Rcntws::View(L"File: 文件名太长。"));
 	}
 	::UNICODE_STRING ustrRawPath;
 	ustrRawPath.Length              = (USHORT)uSize;
@@ -83,7 +83,7 @@ Impl_UniqueNtHandle::UniqueNtHandle File::X_CreateFileHandle(const WideStringVie
 		::RTL_PATH_TYPE ePathType;
 		const auto lPathStatus = ::RtlGetFullPathName_UstrEx(&ustrRawPath, &ustrStaticBuffer, &ustrDynamicBuffer, &pustrFullPath, nullptr, nullptr, &ePathType, nullptr);
 		if(!NT_SUCCESS(lPathStatus)){
-			DEBUG_THROW(SystemException, ::RtlNtStatusToDosError(lPathStatus), "RtlGetFullPathName_UstrEx"_rcs);
+			DEBUG_THROW(Exception, ::RtlNtStatusToDosError(lPathStatus), Rcntws::View(L"File: RtlGetFullPathName_UstrEx() 失败。"));
 		}
 		if((RtlPathTypeDriveAbsolute <= ePathType) && (ePathType <= RtlPathTypeRelative)){
 			::UNICODE_STRING ustrName;
@@ -97,7 +97,7 @@ Impl_UniqueNtHandle::UniqueNtHandle File::X_CreateFileHandle(const WideStringVie
 			HANDLE hTemp;
 			const auto lStatus = ::NtOpenDirectoryObject(&hTemp, 0x0F, &vObjectAttributes);
 			if(!NT_SUCCESS(lStatus)){
-				DEBUG_THROW(SystemException, ::RtlNtStatusToDosError(lStatus), "NtOpenDirectoryObject"_rcs);
+				DEBUG_THROW(Exception, ::RtlNtStatusToDosError(lStatus), Rcntws::View(L"File: NtOpenDirectoryObject() 失败。"));
 			}
 			hRootDirectory.Reset(hTemp);
 		}
@@ -160,7 +160,7 @@ Impl_UniqueNtHandle::UniqueNtHandle File::X_CreateFileHandle(const WideStringVie
 	HANDLE hTemp;
 	const auto lStatus = ::NtCreateFile(&hTemp, dwDesiredAccess, &vObjectAttributes, &vIoStatus, nullptr, FILE_ATTRIBUTE_NORMAL, dwSharedAccess, dwCreateDisposition, dwCreateOptions, nullptr, 0);
 	if(!NT_SUCCESS(lStatus)){
-		DEBUG_THROW(SystemException, ::RtlNtStatusToDosError(lStatus), "NtCreateFile"_rcs);
+		DEBUG_THROW(Exception, ::RtlNtStatusToDosError(lStatus), Rcntws::View(L"File: NtCreateFile() 失败。"));
 	}
 	Impl_UniqueNtHandle::UniqueNtHandle hFile(hTemp);
 
@@ -177,7 +177,7 @@ bool File::OpenNoThrow(const WideStringView &wsvPath, std::uint32_t u32Flags){
 	try {
 		Open(wsvPath, u32Flags);
 		return true;
-	} catch(SystemException &e){
+	} catch(Exception &e){
 		::SetLastError(e.GetErrorCode());
 		return false;
 	}
@@ -199,17 +199,17 @@ std::uint64_t File::GetSize() const {
 	::FILE_STANDARD_INFORMATION vStandardInfo;
 	const auto lStatus = ::NtQueryInformationFile(x_hFile.Get(), &vIoStatus, &vStandardInfo, sizeof(vStandardInfo), FileStandardInformation);
 	if(!NT_SUCCESS(lStatus)){
-		DEBUG_THROW(SystemException, ::RtlNtStatusToDosError(lStatus), "NtQueryInformationFile"_rcs);
+		DEBUG_THROW(Exception, ::RtlNtStatusToDosError(lStatus), Rcntws::View(L"File: NtQueryInformationFile() 失败。"));
 	}
 	return static_cast<std::uint64_t>(vStandardInfo.EndOfFile.QuadPart);
 }
 void File::Resize(std::uint64_t u64NewSize){
 	if(!x_hFile){
-		DEBUG_THROW(Exception, ERROR_INVALID_HANDLE, "No file opened"_rcs);
+		DEBUG_THROW(Exception, ERROR_INVALID_HANDLE, Rcntws::View(L"File: 尚未打开任何文件。"));
 	}
 
 	if(u64NewSize >= static_cast<std::uint64_t>(INT64_MAX)){
-		DEBUG_THROW(Exception, ERROR_INVALID_PARAMETER, "File size is too large"_rcs);
+		DEBUG_THROW(Exception, ERROR_INVALID_PARAMETER, Rcntws::View(L"File: 文件大小过大。"));
 	}
 
 	::IO_STATUS_BLOCK vIoStatus;
@@ -217,7 +217,7 @@ void File::Resize(std::uint64_t u64NewSize){
 	vEofInfo.EndOfFile.QuadPart = static_cast<std::int64_t>(u64NewSize);
 	const auto lStatus = ::NtSetInformationFile(x_hFile.Get(), &vIoStatus, &vEofInfo, sizeof(vEofInfo), FileEndOfFileInformation);
 	if(!NT_SUCCESS(lStatus)){
-		DEBUG_THROW(SystemException, ::RtlNtStatusToDosError(lStatus), "NtSetInformationFile"_rcs);
+		DEBUG_THROW(Exception, ::RtlNtStatusToDosError(lStatus), Rcntws::View(L"File: NtSetInformationFile() 失败。"));
 	}
 }
 void File::Clear(){
@@ -228,11 +228,11 @@ std::size_t File::Read(void *pBuffer, std::size_t uBytesToRead, std::uint64_t u6
 	FunctionView<void ()> fnAsyncProc, FunctionView<void ()> fnCompleteCallback) const
 {
 	if(!x_hFile){
-		DEBUG_THROW(Exception, ERROR_INVALID_HANDLE, "No file opened"_rcs);
+		DEBUG_THROW(Exception, ERROR_INVALID_HANDLE, Rcntws::View(L"File: 尚未打开任何文件。"));
 	}
 
 	if(u64Offset >= static_cast<std::uint64_t>(INT64_MAX)){
-		DEBUG_THROW(Exception, ERROR_SEEK, "Offset is too large"_rcs);
+		DEBUG_THROW(Exception, ERROR_SEEK, Rcntws::View(L"File: 文件偏移量太大。"));
 	}
 
 	if(uBytesToRead > ULONG_MAX){
@@ -250,7 +250,7 @@ std::size_t File::Read(void *pBuffer, std::size_t uBytesToRead, std::uint64_t u6
 	}
 	if(lStatus != STATUS_END_OF_FILE){
 		if(!NT_SUCCESS(lStatus)){
-			DEBUG_THROW(SystemException, ::RtlNtStatusToDosError(lStatus), "NtReadFile"_rcs);
+			DEBUG_THROW(Exception, ::RtlNtStatusToDosError(lStatus), Rcntws::View(L"File: NtReadFile() 失败。"));
 		}
 		do {
 			Thread::AlertableSleep();
@@ -266,11 +266,11 @@ std::size_t File::Write(std::uint64_t u64Offset, const void *pBuffer, std::size_
 	FunctionView<void ()> fnAsyncProc, FunctionView<void ()> fnCompleteCallback)
 {
 	if(!x_hFile){
-		DEBUG_THROW(Exception, ERROR_INVALID_HANDLE, "No file opened"_rcs);
+		DEBUG_THROW(Exception, ERROR_INVALID_HANDLE, Rcntws::View(L"File: 尚未打开任何文件。"));
 	}
 
 	if(u64Offset >= static_cast<std::uint64_t>(INT64_MAX)){
-		DEBUG_THROW(Exception, ERROR_SEEK, "Offset is too large"_rcs);
+		DEBUG_THROW(Exception, ERROR_SEEK, Rcntws::View(L"File: 文件偏移量太大。"));
 	}
 
 	if(uBytesToWrite > ULONG_MAX){
@@ -288,7 +288,7 @@ std::size_t File::Write(std::uint64_t u64Offset, const void *pBuffer, std::size_
 	}
 	{
 		if(!NT_SUCCESS(lStatus)){
-			DEBUG_THROW(SystemException, ::RtlNtStatusToDosError(lStatus), "NtWriteFile"_rcs);
+			DEBUG_THROW(Exception, ::RtlNtStatusToDosError(lStatus), Rcntws::View(L"File: NtWriteFile() 失败。"));
 		}
 		do {
 			Thread::AlertableSleep();
@@ -302,13 +302,13 @@ std::size_t File::Write(std::uint64_t u64Offset, const void *pBuffer, std::size_
 }
 void File::HardFlush(){
 	if(!x_hFile){
-		DEBUG_THROW(Exception, ERROR_INVALID_HANDLE, "No file opened"_rcs);
+		DEBUG_THROW(Exception, ERROR_INVALID_HANDLE, Rcntws::View(L"File: 尚未打开任何文件。"));
 	}
 
 	::IO_STATUS_BLOCK vIoStatus;
 	const auto lStatus = ::NtFlushBuffersFile(x_hFile.Get(), &vIoStatus);
 	if(!NT_SUCCESS(lStatus)){
-		DEBUG_THROW(SystemException, ::RtlNtStatusToDosError(lStatus), "NtFlushBuffersFile"_rcs);
+		DEBUG_THROW(Exception, ::RtlNtStatusToDosError(lStatus), Rcntws::View(L"File: NtFlushBuffersFile() 失败。"));
 	}
 }
 

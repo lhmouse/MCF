@@ -192,13 +192,13 @@ public:
 
 	const Element &Get(std::size_t uIndex) const {
 		if(uIndex >= kSizeT){
-			DEBUG_THROW(Exception, ERROR_ACCESS_DENIED, "Array: Subscript out of range"_rcs);
+			DEBUG_THROW(Exception, ERROR_ACCESS_DENIED, Rcntws::View(L"Array: 下标越界。"));
 		}
 		return UncheckedGet(uIndex);
 	}
 	Element &Get(std::size_t uIndex){
 		if(uIndex >= kSizeT){
-			DEBUG_THROW(Exception, ERROR_ACCESS_DENIED, "Array: Subscript out of range"_rcs);
+			DEBUG_THROW(Exception, ERROR_ACCESS_DENIED, Rcntws::View(L"Array: 下标越界。"));
 		}
 		return UncheckedGet(uIndex);
 	}

@@ -21,7 +21,7 @@ namespace MCF {
 
 Impl_UniqueNtHandle::UniqueNtHandle KernelSemaphore::X_CreateSemaphoreHandle(std::size_t uInitCount, const WideStringView &wsvName, std::uint32_t u32Flags){
 	if(uInitCount >= static_cast<std::size_t>(LONG_MAX)){
-		DEBUG_THROW(Exception, ERROR_INVALID_PARAMETER, "Initial count for a kernel semaphore is too large"_rcs);
+		DEBUG_THROW(Exception, ERROR_INVALID_PARAMETER, Rcntws::View(L"KernelSemaphore: 信号量初始计数太大。"));
 	}
 
 	Impl_UniqueNtHandle::UniqueNtHandle hRootDirectory;
@@ -32,7 +32,7 @@ Impl_UniqueNtHandle::UniqueNtHandle KernelSemaphore::X_CreateSemaphoreHandle(std
 		InitializeObjectAttributes(&vObjectAttributes, nullptr, 0, nullptr, nullptr);
 	} else {
 		if(uNameSize > USHRT_MAX){
-			DEBUG_THROW(SystemException, ERROR_INVALID_PARAMETER, "The name for a kernel object is too long"_rcs);
+			DEBUG_THROW(Exception, ERROR_BUFFER_OVERFLOW, Rcntws::View(L"KernelSemaphore: 内核对象的路径太长。"));
 		}
 		::UNICODE_STRING ustrObjectName;
 		ustrObjectName.Length        = (USHORT)uNameSize;
@@ -55,12 +55,12 @@ Impl_UniqueNtHandle::UniqueNtHandle KernelSemaphore::X_CreateSemaphoreHandle(std
 	if(u32Flags & kDontCreate){
 		const auto lStatus = ::NtOpenSemaphore(&hTemp, SEMAPHORE_ALL_ACCESS, &vObjectAttributes);
 		if(!NT_SUCCESS(lStatus)){
-			DEBUG_THROW(SystemException, ::RtlNtStatusToDosError(lStatus), "NtOpenSemaphore"_rcs);
+			DEBUG_THROW(Exception, ::RtlNtStatusToDosError(lStatus), Rcntws::View(L"KernelSemaphore: NtOpenSemaphore() 失败。"));
 		}
 	} else {
 		const auto lStatus = ::NtCreateSemaphore(&hTemp, SEMAPHORE_ALL_ACCESS, &vObjectAttributes, static_cast<LONG>(uInitCount), LONG_MAX);
 		if(!NT_SUCCESS(lStatus)){
-			DEBUG_THROW(SystemException, ::RtlNtStatusToDosError(lStatus), "NtCreateSemaphore"_rcs);
+			DEBUG_THROW(Exception, ::RtlNtStatusToDosError(lStatus), Rcntws::View(L"KernelSemaphore: NtCreateSemaphore() 失败。"));
 		}
 	}
 	Impl_UniqueNtHandle::UniqueNtHandle hSemaphore(hTemp);

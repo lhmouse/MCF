@@ -165,14 +165,14 @@ public:
 	template<typename FunctorT>
 	void Apply(FunctorT &&vFunctor) const {
 		if(!x_pElement){
-			DEBUG_THROW(Exception, ERROR_ACCESS_DENIED, "Variant: No element has been set"_rcs);
+			DEBUG_THROW(Exception, ERROR_NOT_READY, Rcntws::View(L"Variant: 尚未设定活动元素。"));
 		}
 		Impl_Variant::Applier<FunctorT, 0, const ElementsT...>()(std::forward<FunctorT>(vFunctor), x_pElement->GetIndex(), x_pElement->GetAddress());
 	}
 	template<typename FunctorT>
 	void Apply(FunctorT &&vFunctor){
 		if(!x_pElement){
-			DEBUG_THROW(Exception, ERROR_ACCESS_DENIED, "Variant: No element has been set"_rcs);
+			DEBUG_THROW(Exception, ERROR_NOT_READY, Rcntws::View(L"Variant: 尚未设定活动元素。"));
 		}
 		Impl_Variant::Applier<FunctorT, 0, ElementsT...>()(std::forward<FunctorT>(vFunctor), x_pElement->GetIndex(), x_pElement->GetAddress());
 	}

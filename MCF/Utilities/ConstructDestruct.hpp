@@ -133,6 +133,4 @@ inline void DestructArray(ObjectT *pBegin, std::size_t uCount) noexcept {
 
 }
 
-#define FRIEND_CONSTRUCT_DESTRUCT(type_)    friend class ::MCF::Impl_ConstructDestruct::DirectConstructor<type_>
-
 #endif

@@ -15,7 +15,7 @@
 
 namespace MCF {
 
-class Thread : NONCOPYABLE, public IntrusiveBase<Thread> {
+class Thread : MCF_NONCOPYABLE, public IntrusiveBase<Thread> {
 private:
 	template<typename ThreadProcT>
 	class X_ConcreteThread;

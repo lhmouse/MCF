@@ -12,7 +12,7 @@
 
 namespace MCF {
 
-class RecursiveMutex : NONCOPYABLE {
+class RecursiveMutex : MCF_NONCOPYABLE {
 public:
 	using UniqueLock = Impl_UniqueLockTemplate::UniqueLockTemplate<RecursiveMutex>;
 

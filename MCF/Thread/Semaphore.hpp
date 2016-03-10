@@ -14,7 +14,7 @@
 
 namespace MCF {
 
-class Semaphore : NONCOPYABLE {
+class Semaphore : MCF_NONCOPYABLE {
 private:
 	mutable Mutex x_mtxGuard;
 	mutable ConditionVariable x_cvWaiter;

@@ -68,7 +68,7 @@ namespace Impl_ThreadLocal {
 }
 
 template<class ElementT>
-class ThreadLocal : NONCOPYABLE {
+class ThreadLocal : MCF_NONCOPYABLE {
 private:
 	const ElementT x_vDefault;
 	UniqueHandle<Impl_ThreadLocal::TlsKeyDeleter> x_pTlsKey;

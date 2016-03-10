@@ -15,7 +15,7 @@ namespace MCF {
 class ConditionVariable;
 
 namespace Impl_UniqueLockTemplate {
-	class UniqueLockTemplateBase : NONCOPYABLE {
+	class UniqueLockTemplateBase : MCF_NONCOPYABLE {
 		friend ConditionVariable;
 
 	protected:

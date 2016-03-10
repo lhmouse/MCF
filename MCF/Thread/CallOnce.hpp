@@ -58,7 +58,7 @@ bool CallOnce(OnceFlag &vFlag, FunctionT &&vFunction, ParamsT &&...vParams){
 	}
 
 	Impl_CallOnce::GlobalLock();
-	DEFER([&]{ Impl_CallOnce::GlobalUnlock(); });
+	const auto vGlobalUnlock = Defer([&]{ Impl_CallOnce::GlobalUnlock(); });
 
 	if(vFlag.Load(kAtomicConsume) == OnceFlag::kInitialized){
 		return false;

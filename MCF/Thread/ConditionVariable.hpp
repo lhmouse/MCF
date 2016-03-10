@@ -14,7 +14,7 @@
 
 namespace MCF {
 
-class ConditionVariable : NONCOPYABLE {
+class ConditionVariable : MCF_NONCOPYABLE {
 private:
 	Atomic<std::size_t> x_uControl;
 

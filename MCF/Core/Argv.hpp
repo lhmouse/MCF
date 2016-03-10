@@ -14,7 +14,7 @@
 
 namespace MCF {
 
-class Argv : NONCOPYABLE {
+class Argv : MCF_NONCOPYABLE {
 private:
 	struct X_ArgItemDeleter {
 		constexpr ::MCFCRT_ArgItem *operator()() const noexcept {

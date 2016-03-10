@@ -163,7 +163,7 @@ namespace Impl_StringView {
 			pTable = static_cast<std::ptrdiff_t *>(ALLOCA(uTableSize * sizeof(std::ptrdiff_t)));
 			bTableWasAllocatedFromHeap = false;
 		}
-		DEFER([&]{ if(bTableWasAllocatedFromHeap){ ::delete[](pTable); }; });
+		const auto vFreeTable = Defer([&]{ if(bTableWasAllocatedFromHeap){ ::delete[](pTable); }; });
 
 		if(pTable){
 			pTable[0] = 0;

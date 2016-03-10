@@ -10,7 +10,7 @@
 
 namespace MCF {
 
-class ReaderWriterMutex : NONCOPYABLE {
+class ReaderWriterMutex : MCF_NONCOPYABLE {
 public:
 	using UniqueReaderLock = Impl_UniqueLockTemplate::UniqueLockTemplate<ReaderWriterMutex, 1>;
 	using UniqueWriterLock = Impl_UniqueLockTemplate::UniqueLockTemplate<ReaderWriterMutex, 2>;

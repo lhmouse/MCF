@@ -83,7 +83,7 @@ namespace Impl_Monitor {
 	};
 
 	template<class ObjectT, class MutexT>
-	class MonitorTemplate : NONCOPYABLE {
+	class MonitorTemplate : MCF_NONCOPYABLE {
 	private:
 		mutable MutexT x_vMutex;
 		ObjectT x_vObject;

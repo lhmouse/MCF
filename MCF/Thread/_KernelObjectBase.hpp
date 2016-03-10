@@ -12,7 +12,7 @@
 namespace MCF {
 
 namespace Impl_KernelObjectBase {
-	class KernelObjectBase : NONCOPYABLE {
+	class KernelObjectBase : MCF_NONCOPYABLE {
 	public:
 		enum : std::uint32_t {
 			kSessionLocal  = 0x00000000, // 选择 \Sessions\<SessionId>\BaseNamedObjects 目录。

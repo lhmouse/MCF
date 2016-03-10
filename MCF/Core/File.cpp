@@ -73,7 +73,7 @@ Impl_UniqueNtHandle::UniqueNtHandle File::X_CreateFileHandle(const WideStringVie
 	ustrDynamicBuffer.Length        = 0;
 	ustrDynamicBuffer.MaximumLength = 0;
 	ustrDynamicBuffer.Buffer        = nullptr;
-	DEFER([&]{ ::RtlFreeUnicodeString(&ustrDynamicBuffer); });
+	const auto vFreeDynamicBuffer = Defer([&]{ ::RtlFreeUnicodeString(&ustrDynamicBuffer); });
 
 	::UNICODE_STRING *pustrFullPath;
 	Impl_UniqueNtHandle::UniqueNtHandle hRootDirectory;

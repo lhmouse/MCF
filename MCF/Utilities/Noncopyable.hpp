@@ -8,7 +8,7 @@
 namespace MCF {
 
 namespace Impl_Noncopyable {
-	template<unsigned long long kMagicT>
+	template<unsigned long kMagicT>
 	struct NoncopyableBase {
 		constexpr NoncopyableBase() noexcept = default;
 
@@ -19,6 +19,6 @@ namespace Impl_Noncopyable {
 
 }
 
-#define NONCOPYABLE     private ::MCF::Impl_Noncopyable::NoncopyableBase<__COUNTER__>
+#define MCF_NONCOPYABLE     private ::MCF::Impl_Noncopyable::NoncopyableBase<__COUNTER__>
 
 #endif

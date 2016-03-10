@@ -1,31 +1,16 @@
 #include <MCF/StdMCF.hpp>
-#include <MCF/Thread/Thread.hpp>
-#include <MCF/Thread/ThreadLocal.hpp>
+#include <MCF/Utilities/Defer.hpp>
 
 using namespace MCF;
 
-template class ThreadLocal<int>;
-template class ThreadLocal<long double>;
-
-ThreadLocal<int>         tls_i;
-ThreadLocal<long double> tls_ld;
-
 extern "C" unsigned MCFCRT_Main(){
-	tls_i.Set(12);
-	tls_ld.Set(3.45);
-
-	auto print = []{
-		std::printf("Thread ID = %zu, tls_i = %d, tls_ld = %Lf\n", Thread::GetCurrentId(), tls_i.Get(), tls_ld.Get());
-	};
-
-	auto thread = Thread::Create([&]{
-		tls_i.Set(67);
-		tls_ld.Set(8.9);
-		print();
-	});
-	thread->Wait();
-
-	print();
-
+	try {
+		auto d1 = DeferOnNormalExit([]{ std::puts("deferred on normal exit!"); });
+		auto d2 = DeferOnException([]{ std::puts("deferred on exception!"); });
+		std::puts("normal code!");
+	//	throw 123;
+	} catch(int e){
+		std::printf("exception caught! e = %d\n", e);
+	}
 	return 0;
 }

@@ -14,7 +14,7 @@
 
 namespace MCF {
 
-class Event : NONCOPYABLE {
+class Event : MCF_NONCOPYABLE {
 private:
 	mutable Mutex x_mtxGuard;
 	mutable ConditionVariable x_cvWaiter;

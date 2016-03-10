@@ -18,7 +18,7 @@ namespace MCF {
 
 class ConditionVariable;
 
-class Mutex : NONCOPYABLE {
+class Mutex : MCF_NONCOPYABLE {
 	friend ConditionVariable;
 
 public:

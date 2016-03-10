@@ -6,6 +6,7 @@
 #define MCF_THREAD_THREAD_LOCAL_HPP_
 
 #include "../../MCFCRT/env/thread.h"
+#include "../../MCFCRT/env/last_error.h"
 #include "../Utilities/Noncopyable.hpp"
 #include "../Utilities/Assert.hpp"
 #include "../Core/UniqueHandle.hpp"
@@ -78,7 +79,7 @@ public:
 	{
 		const auto pfnCleanupCallback = Impl_ThreadLocal::ElementTraits<ElementT>::GetCleanupCallback();
 		if(!x_pTlsKey.Reset(::MCFCRT_TlsAllocKey(pfnCleanupCallback))){
-			DEBUG_THROW(SystemException, ERROR_NOT_ENOUGH_MEMORY, "MCFCRT_TlsAllocKey"_rcs);
+			DEBUG_THROW(SystemException, ::MCFCRT_GetLastWin32Error(), "MCFCRT_TlsAllocKey"_rcs);
 		}
 	}
 
@@ -104,7 +105,7 @@ public:
 			if(pfnCleanupCallback){
 				(*pfnCleanupCallback)(nValue);
 			}
-			DEBUG_THROW(SystemException, ERROR_NOT_ENOUGH_MEMORY, "MCFCRT_TlsReset"_rcs);
+			DEBUG_THROW(SystemException, ::MCFCRT_GetLastWin32Error(), "MCFCRT_TlsReset"_rcs);
 		}
 	}
 };

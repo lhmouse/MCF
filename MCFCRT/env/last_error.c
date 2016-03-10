@@ -8,18 +8,18 @@
 #include <ntdef.h>
 #include <winnt.h>
 
-extern __attribute__((__dllimport__, __stdcall__))
-NTSTATUS RtlFindMessage(void *pBaseAddress, DWORD dwUnknown, DWORD dwLanguageId, DWORD dwMessageId, MESSAGE_RESOURCE_ENTRY **ppEntry);
-
-extern __attribute__((__dllimport__, __stdcall__))
-void *RtlPcToFileHeader(void *pAddress, void **ppBase);
-
 unsigned long MCFCRT_GetLastWin32Error(){
 	return GetLastError();
 }
 void MCFCRT_SetLastWin32Error(unsigned long ulErrorCode){
 	SetLastError(ulErrorCode);
 }
+
+extern __attribute__((__dllimport__, __stdcall__))
+NTSTATUS RtlFindMessage(void *pBaseAddress, DWORD dwUnknown, DWORD dwLanguageId, DWORD dwMessageId, MESSAGE_RESOURCE_ENTRY **ppEntry);
+
+extern __attribute__((__dllimport__, __stdcall__))
+void *RtlPcToFileHeader(void *pAddress, void **ppBase);
 
 static inline bool IsLineBreak(wchar_t wc){
 	return (wc == 0) || (wc == L'\n') || (wc == L'\r');

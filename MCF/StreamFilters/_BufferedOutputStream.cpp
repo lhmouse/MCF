@@ -10,7 +10,7 @@ namespace MCF {
 namespace Impl_BufferedOutputStream {
 	BufferedOutputStream::~BufferedOutputStream(){
 		try {
-			Flush(kFlushBufferAll);
+			Flush(kFlushBufferImm);
 		} catch(...){
 		}
 	}
@@ -29,7 +29,7 @@ namespace Impl_BufferedOutputStream {
 			if(bNoMoreAvail){
 				break;
 			}
-			if((eLevel < kFlushBufferAll) && (x_sbufFrontBuffer.GetSize() < kStepSize)){
+			if((eLevel < kFlushBufferImm) && (x_sbufFrontBuffer.GetSize() < kStepSize)){
 				break;
 			}
 

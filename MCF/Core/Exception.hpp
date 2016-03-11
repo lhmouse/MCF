@@ -93,22 +93,19 @@ namespace Impl_Exception {
 	DummyReturnType DebugThrow(
 		const char *pszFile, unsigned long ulLine, const char *pszFunction, std::exception_ptr pNestedException,
 		ParamsT &&...vParams)
-	try {
-		static_assert(sizeof(static_cast<ExceptionContext &>(DeclVal<ExceptionT &>())) > 0, "ExceptionT shall have an accessible and unambiguous base Impl_Exception::ExceptionContext.");
-
-		throw ExceptionT(std::forward<ParamsT>(vParams)...);
-	} catch(ExceptionContext &e){
-		e = ExceptionContext(pszFile, ulLine, pszFunction, std::move(pNestedException));
-		throw;
+	{
+		auto e = ExceptionT(std::forward<ParamsT>(vParams)...);
+		static_cast<ExceptionContext &>(e) = ExceptionContext(pszFile, ulLine, pszFunction, std::move(pNestedException));
+		throw e;
 	}
 	template<typename ExceptionT, typename ...ParamsT>
 	std::exception_ptr DebugMakeExceptionPtr(
 		const char *pszFile, unsigned long ulLine, const char *pszFunction, std::exception_ptr pNestedException,
 		ParamsT &&...vParams)
-	try {
-		DebugThrow(pszFile, ulLine, pszFunction, std::move(pNestedException), std::forward<ParamsT>(vParams)...);
-	} catch(...){
-		return std::current_exception();
+	{
+		auto e = ExceptionT(std::forward<ParamsT>(vParams)...);
+		static_cast<ExceptionContext &>(e) = ExceptionContext(pszFile, ulLine, pszFunction, std::move(pNestedException));
+		return std::make_exception_ptr(std::move(e));
 	}
 }
 

@@ -76,6 +76,7 @@ public:
 };
 
 namespace Impl_Exception {
+	// 使用这个类当返回类型的函数或函数模板允许在三目运算符中被调用。
 	struct DummyReturnType {
 		template<typename T>
 		[[noreturn]] operator T &() const && noexcept {
@@ -87,7 +88,6 @@ namespace Impl_Exception {
 		}
 	};
 
-	// 这个返回类型允许在三目运算符中调用该函数模板。
 	template<typename ExceptionT, typename ...ParamsT>
 	[[noreturn]]
 	DummyReturnType DebugThrow(

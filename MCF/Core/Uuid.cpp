@@ -34,7 +34,7 @@ Uuid Uuid::Generate(){
 
 Uuid::Uuid(const Array<char, 36> &achHex){
 	if(!Scan(achHex)){
-		DEBUG_THROW(Exception, ERROR_INVALID_PARAMETER, Rcntws::View(L"Uuid: 输入的字符串无效。"));
+		MCF_THROW(Exception, ERROR_INVALID_PARAMETER, Rcntws::View(L"Uuid: 输入的字符串无效。"));
 	}
 }
 

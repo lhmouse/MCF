@@ -93,19 +93,19 @@ namespace Impl_Exception {
 
 }
 
-#define DEBUG_THROW(etype_, code_, ...)	\
+#define MCF_THROW(etype_, code_, ...)	\
 	(::MCF::Impl_Exception::DebugThrow<etype_>(__FILE__, __LINE__, (code_), (::std::exception_ptr()),	\
 		__VA_ARGS__))
 
-#define DEBUG_THROW_NESTED(etype_, code_, ...)	\
+#define MCF_THROW_NESTED(etype_, code_, ...)	\
 	(::MCF::Impl_Exception::DebugThrow<etype_>(__FILE__, __LINE__, (code_), (::std::current_exception()),	\
 		__VA_ARGS__))
 
-#define DEBUG_MAKE_EXCEPTION_PTR(etype_, code_, ...)	\
+#define MCF_MAKE_EXCEPTION_PTR(etype_, code_, ...)	\
 	(::MCF::Impl_Exception::DebugMakeExceptionPtr<etype_>(__FILE__, __LINE__, (code_), (::std::exception_ptr()),	\
 		__VA_ARGS__))
 
-#define DEBUG_MAKE_NESTED_EXCEPTION_PTR(etype_, code_, ...)	\
+#define MCF_MAKE_NESTED_EXCEPTION_PTR(etype_, code_, ...)	\
 	(::MCF::Impl_Exception::DebugMakeExceptionPtr<etype_>(__FILE__, __LINE__, (code_), (::std::current_exception()),	\
 		__VA_ARGS__))
 

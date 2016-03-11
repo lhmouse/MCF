@@ -67,7 +67,7 @@ void Thread::X_Initialize(bool bSuspended){
 
 	std::uintptr_t uThreadId = 0;
 	if(!x_hThread.Reset(::MCFCRT_CreateNativeThread(&Helper::ThreadProc, this, true, &uThreadId))){
-		DEBUG_THROW(Exception, ::GetLastError(), Rcntws::View(L"MCFCRT_CreateThread() 失败。"));
+		MCF_THROW(Exception, ::GetLastError(), Rcntws::View(L"MCFCRT_CreateThread() 失败。"));
 	}
 	AddRef();
 	x_uThreadId.Store(uThreadId, kAtomicRelease);

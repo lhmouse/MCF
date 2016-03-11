@@ -40,7 +40,7 @@ public:
 
 	const wchar_t *GetStr(std::size_t uIndex) const {
 		if(uIndex > x_uArgc){ // 传入 x_uArgc 会得到一个空指针。
-			DEBUG_THROW(Exception, ERROR_ACCESS_DENIED, Rcntws::View(L"Argv: 下标越界。"));
+			MCF_THROW(Exception, ERROR_ACCESS_DENIED, Rcntws::View(L"Argv: 下标越界。"));
 		}
 		return UncheckedGetStr(uIndex);
 	}
@@ -52,7 +52,7 @@ public:
 
 	std::size_t GetLen(std::size_t uIndex) const {
 		if(uIndex > x_uArgc){ // 传入 x_uArgc 会得到 0。
-			DEBUG_THROW(Exception, ERROR_ACCESS_DENIED, Rcntws::View(L"Argv: 下标越界。"));
+			MCF_THROW(Exception, ERROR_ACCESS_DENIED, Rcntws::View(L"Argv: 下标越界。"));
 		}
 		return UncheckedGetLen(uIndex);
 	}
@@ -64,7 +64,7 @@ public:
 
 	WideStringView Get(std::size_t uIndex) const {
 		if(uIndex > x_uArgc){
-			DEBUG_THROW(Exception, ERROR_ACCESS_DENIED, Rcntws::View(L"Argv: 下标越界。"));
+			MCF_THROW(Exception, ERROR_ACCESS_DENIED, Rcntws::View(L"Argv: 下标越界。"));
 		}
 		return UncheckedGet(uIndex);
 	}

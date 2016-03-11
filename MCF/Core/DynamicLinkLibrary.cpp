@@ -30,7 +30,7 @@ DynamicLinkLibrary::DynamicLinkLibrary(const WideStringView &wsvPath)
 {
 	const auto uSize = wsvPath.GetSize() * sizeof(wchar_t);
 	if(uSize > USHRT_MAX){
-		DEBUG_THROW(Exception, ERROR_BUFFER_OVERFLOW, Rcntws::View(L"DynamicLinkLibrary: 路径太长。"));
+		MCF_THROW(Exception, ERROR_BUFFER_OVERFLOW, Rcntws::View(L"DynamicLinkLibrary: 路径太长。"));
 	}
 	::UNICODE_STRING ustrFileName;
 	ustrFileName.Length             = (USHORT)uSize;
@@ -40,7 +40,7 @@ DynamicLinkLibrary::DynamicLinkLibrary(const WideStringView &wsvPath)
 	HANDLE hDll;
 	const auto lStatus = ::LdrLoadDll(nullptr, 0, &ustrFileName, &hDll);
 	if(!NT_SUCCESS(lStatus)){
-		DEBUG_THROW(Exception, ::RtlNtStatusToDosError(lStatus), Rcntws::View(L"DynamicLinkLibrary: LdrLoadDll() 失败。"));
+		MCF_THROW(Exception, ::RtlNtStatusToDosError(lStatus), Rcntws::View(L"DynamicLinkLibrary: LdrLoadDll() 失败。"));
 	}
 	x_hDll.Reset(hDll);
 }
@@ -51,12 +51,12 @@ const void *DynamicLinkLibrary::GetBaseAddress() const noexcept {
 
 DynamicLinkLibrary::RawProc DynamicLinkLibrary::RawGetProcAddress(const NarrowStringView &nsvName){
 	if(!x_hDll){
-		DEBUG_THROW(Exception, ERROR_INVALID_HANDLE, Rcntws::View(L"DynamicLinkLibrary: 尚未加载任何动态库。"));
+		MCF_THROW(Exception, ERROR_INVALID_HANDLE, Rcntws::View(L"DynamicLinkLibrary: 尚未加载任何动态库。"));
 	}
 
 	const auto uSize = nsvName.GetSize();
 	if(uSize > USHRT_MAX){
-		DEBUG_THROW(Exception, ERROR_INVALID_PARAMETER, Rcntws::View(L"DynamicLinkLibrary: 导出函数名太长。"));
+		MCF_THROW(Exception, ERROR_INVALID_PARAMETER, Rcntws::View(L"DynamicLinkLibrary: 导出函数名太长。"));
 	}
 	::ANSI_STRING strProcName;
 	strProcName.Length          = (USHORT)uSize;
@@ -66,14 +66,14 @@ DynamicLinkLibrary::RawProc DynamicLinkLibrary::RawGetProcAddress(const NarrowSt
 	::FARPROC pfnProcAddress;
 	const auto lStatus = ::LdrGetProcedureAddress(x_hDll.Get(), &strProcName, 0xFFFF, &pfnProcAddress);
 	if(!NT_SUCCESS(lStatus)){
-		DEBUG_THROW(Exception, ::RtlNtStatusToDosError(lStatus), Rcntws::View(L"DynamicLinkLibrary: LdrGetProcedureAddress() 失败。"));
+		MCF_THROW(Exception, ::RtlNtStatusToDosError(lStatus), Rcntws::View(L"DynamicLinkLibrary: LdrGetProcedureAddress() 失败。"));
 	}
 	return pfnProcAddress;
 }
 DynamicLinkLibrary::RawProc DynamicLinkLibrary::RawRequireProcAddress(const NarrowStringView &nsvName){
 	const auto pfnRet = RawGetProcAddress(nsvName);
 	if(!pfnRet){
-		DEBUG_THROW(Exception, ERROR_PROC_NOT_FOUND, Rcntws::View(L"DynamicLinkLibrary: 指定的导出函数未找到。"));
+		MCF_THROW(Exception, ERROR_PROC_NOT_FOUND, Rcntws::View(L"DynamicLinkLibrary: 指定的导出函数未找到。"));
 	}
 	return pfnRet;
 }
@@ -81,24 +81,24 @@ DynamicLinkLibrary::RawProc DynamicLinkLibrary::RawRequireProcAddress(const Narr
 
 DynamicLinkLibrary::RawProc DynamicLinkLibrary::RawGetProcAddress(unsigned uOrdinal){
 	if(!x_hDll){
-		DEBUG_THROW(Exception, ERROR_INVALID_HANDLE, Rcntws::View(L"DynamicLinkLibrary: 尚未加载任何动态库。"));
+		MCF_THROW(Exception, ERROR_INVALID_HANDLE, Rcntws::View(L"DynamicLinkLibrary: 尚未加载任何动态库。"));
 	}
 
 	if(uOrdinal > UINT16_MAX){
-		DEBUG_THROW(Exception, ERROR_INVALID_PARAMETER, Rcntws::View(L"DynamicLinkLibrary: 导出函数序数无效。"));
+		MCF_THROW(Exception, ERROR_INVALID_PARAMETER, Rcntws::View(L"DynamicLinkLibrary: 导出函数序数无效。"));
 	}
 
 	::FARPROC pfnProcAddress;
 	const auto lStatus = ::LdrGetProcedureAddress(x_hDll.Get(), nullptr, static_cast<WORD>(uOrdinal), &pfnProcAddress);
 	if(!NT_SUCCESS(lStatus)){
-		DEBUG_THROW(Exception, ::RtlNtStatusToDosError(lStatus), Rcntws::View(L"DynamicLinkLibrary: LdrGetProcedureAddress() 失败。"));
+		MCF_THROW(Exception, ::RtlNtStatusToDosError(lStatus), Rcntws::View(L"DynamicLinkLibrary: LdrGetProcedureAddress() 失败。"));
 	}
 	return pfnProcAddress;
 }
 DynamicLinkLibrary::RawProc DynamicLinkLibrary::RawRequireProcAddress(unsigned uOrdinal){
 	const auto pfnRet = RawGetProcAddress(uOrdinal);
 	if(!pfnRet){
-		DEBUG_THROW(Exception, ERROR_PROC_NOT_FOUND, Rcntws::View(L"DynamicLinkLibrary: 指定的导出函数未找到。"));
+		MCF_THROW(Exception, ERROR_PROC_NOT_FOUND, Rcntws::View(L"DynamicLinkLibrary: 指定的导出函数未找到。"));
 	}
 	return pfnRet;
 }

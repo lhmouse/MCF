@@ -46,7 +46,7 @@ void Base64InputStreamFilter::X_PopulatePlainBuffer(std::size_t uExpected){
 		const auto DecodeOne = [&](unsigned char by){
 			const int nDecoded = kBase64ReverseTable[by];
 			if(nDecoded < 0){
-				DEBUG_THROW(Exception, ERROR_INVALID_DATA, Rcntws::View(L"Base64InputStreamFilter: 输入的数据无效。"));
+				MCF_THROW(Exception, ERROR_INVALID_DATA, Rcntws::View(L"Base64InputStreamFilter: 输入的数据无效。"));
 			}
 			ASSERT(nDecoded < 64);
 			return static_cast<std::uint_fast32_t>(nDecoded);

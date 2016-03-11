@@ -13,7 +13,7 @@ Argv::Argv(const wchar_t *pwszCommandLine){
 		pwszCommandLine = ::GetCommandLineW();
 	}
 	if(!x_pArgv.Reset(::MCFCRT_AllocArgv(&x_uArgc, pwszCommandLine))){
-		DEBUG_THROW(Exception, ::GetLastError(), Rcntws::View(L"MCFCRT_AllocArgv() 失败。"));
+		MCF_THROW(Exception, ::GetLastError(), Rcntws::View(L"MCFCRT_AllocArgv() 失败。"));
 	}
 }
 

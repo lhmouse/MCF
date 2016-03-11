@@ -178,7 +178,7 @@ public:
 
 	Element &Get(std::size_t uIndex) const {
 		if(uIndex >= x_uSize){
-			DEBUG_THROW(Exception, ERROR_ACCESS_DENIED, Rcntws::View(L"ArrayView: 下标越界。"));
+			MCF_THROW(Exception, ERROR_ACCESS_DENIED, Rcntws::View(L"ArrayView: 下标越界。"));
 		}
 		return UncheckedGet(uIndex);
 	}
@@ -383,7 +383,7 @@ public:
 
 	Element &Get(std::size_t uIndex) const {
 		if(uIndex >= x_uSize){
-			DEBUG_THROW(Exception, ERROR_ACCESS_DENIED, Rcntws::View(L"ArrayView: 下标越界。"));
+			MCF_THROW(Exception, ERROR_ACCESS_DENIED, Rcntws::View(L"ArrayView: 下标越界。"));
 		}
 		return UncheckedGet(uIndex);
 	}

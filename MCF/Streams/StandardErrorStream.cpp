@@ -54,10 +54,10 @@ namespace {
 
 				DWORD dwBytesWritten;
 				if(!::WriteFile(x_hPipe, pbyData + uBytesTotal, dwBytesToWrite, &dwBytesWritten, nullptr)){
-					DEBUG_THROW(Exception, ::GetLastError(), Rcntws::View(L"StandardErrorStream: WriteFile() 失败。"));
+					MCF_THROW(Exception, ::GetLastError(), Rcntws::View(L"StandardErrorStream: WriteFile() 失败。"));
 				}
 				if(dwBytesWritten == 0){
-					DEBUG_THROW(Exception, ERROR_BROKEN_PIPE, Rcntws::View(L"StandardErrorStream: 未能成功写入所有数据。"));
+					MCF_THROW(Exception, ERROR_BROKEN_PIPE, Rcntws::View(L"StandardErrorStream: 未能成功写入所有数据。"));
 				}
 				uBytesTotal += dwBytesWritten;
 			}
@@ -77,7 +77,7 @@ namespace {
 				if(!::FlushFileBuffers(x_hPipe)){
 					const auto dwLastError = ::GetLastError();
 					if((dwLastError != ERROR_INVALID_FUNCTION) && (dwLastError != ERROR_INVALID_HANDLE)){
-						DEBUG_THROW(Exception, dwLastError, Rcntws::View(L"StandardErrorStream: FlushFileBuffers() 失败。"));
+						MCF_THROW(Exception, dwLastError, Rcntws::View(L"StandardErrorStream: FlushFileBuffers() 失败。"));
 					}
 				}
 			}

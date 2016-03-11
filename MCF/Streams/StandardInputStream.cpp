@@ -78,7 +78,7 @@ namespace {
 			const auto dwBytesToRead = static_cast<DWORD>(Min(uSize, UINT32_MAX));
 			DWORD dwBytesRead;
 			if(!::ReadFile(x_hPipe, pData, dwBytesToRead, &dwBytesRead, nullptr)){
-				DEBUG_THROW(Exception, ::GetLastError(), Rcntws::View(L"StandardInputStream: ReadFile() 失败。"));
+				MCF_THROW(Exception, ::GetLastError(), Rcntws::View(L"StandardInputStream: ReadFile() 失败。"));
 			}
 			return dwBytesRead;
 		}
@@ -127,7 +127,7 @@ namespace {
 					dwConsoleMode &= ~kEchoingMask;
 				}
 				if(!::SetConsoleMode(x_hPipe, dwConsoleMode)){
-					DEBUG_THROW(Exception, ::GetLastError(), Rcntws::View(L"StandardInputStream: SetConsoleMode() 失败。"));
+					MCF_THROW(Exception, ::GetLastError(), Rcntws::View(L"StandardInputStream: SetConsoleMode() 失败。"));
 				}
 			}
 			x_bEchoing = bEchoing;

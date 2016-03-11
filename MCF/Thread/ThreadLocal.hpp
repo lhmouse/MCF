@@ -79,7 +79,7 @@ public:
 	{
 		const auto pfnCleanupCallback = Impl_ThreadLocal::ElementTraits<ElementT>::GetCleanupCallback();
 		if(!x_pTlsKey.Reset(::MCFCRT_TlsAllocKey(pfnCleanupCallback))){
-			DEBUG_THROW(Exception, ::MCFCRT_GetLastWin32Error(), Rcntws::View(L"MCFCRT_TlsAllocKey() 失败。"));
+			MCF_THROW(Exception, ::MCFCRT_GetLastWin32Error(), Rcntws::View(L"MCFCRT_TlsAllocKey() 失败。"));
 		}
 	}
 
@@ -105,7 +105,7 @@ public:
 			if(pfnCleanupCallback){
 				(*pfnCleanupCallback)(nValue);
 			}
-			DEBUG_THROW(Exception, ::MCFCRT_GetLastWin32Error(), Rcntws::View(L"MCFCRT_TlsReset() 失败。"));
+			MCF_THROW(Exception, ::MCFCRT_GetLastWin32Error(), Rcntws::View(L"MCFCRT_TlsReset() 失败。"));
 		}
 	}
 };

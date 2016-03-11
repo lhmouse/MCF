@@ -28,7 +28,7 @@ Impl_UniqueNtHandle::UniqueNtHandle KernelRecursiveMutex::X_CreateMutexHandle(co
 		InitializeObjectAttributes(&vObjectAttributes, nullptr, 0, nullptr, nullptr);
 	} else {
 		if(uNameSize > USHRT_MAX){
-			DEBUG_THROW(Exception, ERROR_BUFFER_OVERFLOW, Rcntws::View(L"KernelRecursiveMutex: 内核对象的路径太长。"));
+			MCF_THROW(Exception, ERROR_BUFFER_OVERFLOW, Rcntws::View(L"KernelRecursiveMutex: 内核对象的路径太长。"));
 		}
 		::UNICODE_STRING ustrObjectName;
 		ustrObjectName.Length        = (USHORT)uNameSize;
@@ -51,12 +51,12 @@ Impl_UniqueNtHandle::UniqueNtHandle KernelRecursiveMutex::X_CreateMutexHandle(co
 	if(u32Flags & kDontCreate){
 		const auto lStatus = ::NtOpenMutant(&hTemp, MUTANT_ALL_ACCESS, &vObjectAttributes);
 		if(!NT_SUCCESS(lStatus)){
-			DEBUG_THROW(Exception, ::RtlNtStatusToDosError(lStatus), Rcntws::View(L"KernelRecursiveMutex: NtOpenMutant() 失败。"));
+			MCF_THROW(Exception, ::RtlNtStatusToDosError(lStatus), Rcntws::View(L"KernelRecursiveMutex: NtOpenMutant() 失败。"));
 		}
 	} else {
 		const auto lStatus = ::NtCreateMutant(&hTemp, MUTANT_ALL_ACCESS, &vObjectAttributes, false);
 		if(!NT_SUCCESS(lStatus)){
-			DEBUG_THROW(Exception, ::RtlNtStatusToDosError(lStatus), Rcntws::View(L"KernelRecursiveMutex: NtCreateMutant() 失败。"));
+			MCF_THROW(Exception, ::RtlNtStatusToDosError(lStatus), Rcntws::View(L"KernelRecursiveMutex: NtCreateMutant() 失败。"));
 		}
 	}
 	Impl_UniqueNtHandle::UniqueNtHandle hMutex(hTemp);

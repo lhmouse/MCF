@@ -41,7 +41,7 @@ Impl_UniqueNtHandle::UniqueNtHandle KernelMutex::X_CreateEventHandle(const WideS
 		InitializeObjectAttributes(&vObjectAttributes, nullptr, 0, nullptr, nullptr);
 	} else {
 		if(uNameSize > USHRT_MAX){
-			DEBUG_THROW(Exception, ERROR_BUFFER_OVERFLOW, Rcntws::View(L"KernelMutex: 内核对象的路径太长。"));
+			MCF_THROW(Exception, ERROR_BUFFER_OVERFLOW, Rcntws::View(L"KernelMutex: 内核对象的路径太长。"));
 		}
 		::UNICODE_STRING ustrObjectName;
 		ustrObjectName.Length        = (USHORT)uNameSize;
@@ -65,13 +65,13 @@ Impl_UniqueNtHandle::UniqueNtHandle KernelMutex::X_CreateEventHandle(const WideS
 	if(u32Flags & kDontCreate){
 		const auto lStatus = ::NtOpenEvent(&hTemp, EVENT_ALL_ACCESS, &vObjectAttributes);
 		if(!NT_SUCCESS(lStatus)){
-			DEBUG_THROW(Exception, ::RtlNtStatusToDosError(lStatus), Rcntws::View(L"KernelMutex: NtOpenEvent() 失败。"));
+			MCF_THROW(Exception, ::RtlNtStatusToDosError(lStatus), Rcntws::View(L"KernelMutex: NtOpenEvent() 失败。"));
 		}
 		bNameExists = true;
 	} else {
 		const auto lStatus = ::NtCreateEvent(&hTemp, EVENT_ALL_ACCESS, &vObjectAttributes, SynchronizationEvent, true);
 		if(!NT_SUCCESS(lStatus)){
-			DEBUG_THROW(Exception, ::RtlNtStatusToDosError(lStatus), Rcntws::View(L"KernelMutex: NtCreateEvent() 失败。"));
+			MCF_THROW(Exception, ::RtlNtStatusToDosError(lStatus), Rcntws::View(L"KernelMutex: NtCreateEvent() 失败。"));
 		}
 		bNameExists = lStatus == STATUS_OBJECT_NAME_EXISTS;
 	}
@@ -84,7 +84,7 @@ Impl_UniqueNtHandle::UniqueNtHandle KernelMutex::X_CreateEventHandle(const WideS
 			ASSERT_MSG(false, L"NtQueryEvent() 失败。");
 		}
 		if(vBasicInfo.eEventType != SynchronizationEvent){
-			DEBUG_THROW(Exception, ERROR_INVALID_HANDLE /* ::RtlNtStatusToDosError(STATUS_OBJECT_TYPE_MISMATCH) */, Rcntws::View(L"KernelMutex: 内核事件类型不匹配。"));
+			MCF_THROW(Exception, ERROR_INVALID_HANDLE /* ::RtlNtStatusToDosError(STATUS_OBJECT_TYPE_MISMATCH) */, Rcntws::View(L"KernelMutex: 内核事件类型不匹配。"));
 		}
 	}
 	return hEvent;

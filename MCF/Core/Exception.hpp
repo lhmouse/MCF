@@ -8,6 +8,7 @@
 #include <exception>
 #include <utility>
 #include "Rcnts.hpp"
+#include "../Utilities/DeclVal.hpp"
 
 namespace MCF {
 
@@ -56,7 +57,9 @@ private:
 	Rcntws x_rcwsErrorMessage;
 
 public:
-	template<typename CodeT>
+	template<typename CodeT, std::enable_if_t<
+		sizeof(static_cast<unsigned long>(DeclVal<const CodeT &>())),
+		int> = 0>
 	Exception(const CodeT &vCode, Rcntws rcwsErrorMessage) noexcept
 		: x_ulErrorCode(static_cast<unsigned long>(vCode)), x_rcwsErrorMessage(std::move(rcwsErrorMessage))
 	{

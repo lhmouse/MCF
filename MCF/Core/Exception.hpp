@@ -94,6 +94,8 @@ namespace Impl_Exception {
 		const char *pszFile, unsigned long ulLine, const char *pszFunction, std::exception_ptr pNestedException,
 		ParamsT &&...vParams)
 	try {
+		static_assert(sizeof(static_cast<ExceptionContext &>(DeclVal<ExceptionT &>())) > 0, "ExceptionT shall have an accessible and unambiguous base Impl_Exception::ExceptionContext.");
+
 		throw ExceptionT(std::forward<ParamsT>(vParams)...);
 	} catch(ExceptionContext &e){
 		e = ExceptionContext(pszFile, ulLine, pszFunction, std::move(pNestedException));

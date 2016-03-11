@@ -7,6 +7,25 @@
 
 namespace MCF {
 
+void Exception::RethrowCurrentNestedExceptionIfExists(){
+	const auto pCurrentException = std::current_exception();
+	if(!pCurrentException){
+		return;
+	}
+
+	std::exception_ptr pNestedException;
+	try {
+		std::rethrow_exception(pCurrentException);
+	} catch(Exception &e){
+		pNestedException = e.GetNestedException();
+	} catch(...){
+		//
+	}
+	if(pNestedException){
+		std::rethrow_exception(pNestedException);
+	}
+}
+
 Exception::~Exception(){
 }
 

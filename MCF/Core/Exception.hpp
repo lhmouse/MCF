@@ -13,6 +13,9 @@
 namespace MCF {
 
 class Exception : public std::exception {
+public:
+	static void RethrowCurrentNestedExceptionIfExists();
+
 private:
 	const char *x_pszFile;
 	unsigned long x_ulLine;
@@ -46,6 +49,12 @@ public:
 	}
 	const std::exception_ptr &GetNestedException() const noexcept {
 		return x_pNestedException;
+	}
+	[[noreturn]] RethrowNestedException() const {
+		if(!x_pNestedException){
+			std::terminate();
+		}
+		std::rethrow_exception(x_pNestedException);
 	}
 
 	const Rcntws &GetErrorMessage() const noexcept {

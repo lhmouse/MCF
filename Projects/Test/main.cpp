@@ -1,17 +1,12 @@
 #include <MCF/StdMCF.hpp>
-#include <MCF/Utilities/Defer.hpp>
-#include <MCF/Core/Exception.hpp>
+#include <cmath>
 
-using namespace MCF;
+volatile auto p_sin = static_cast<double (*)(double)>(&std::sin);
+volatile auto p_cos = static_cast<double (*)(double)>(&std::cos);
 
 extern "C" unsigned MCFCRT_Main(){
-	try {
-		auto d1 = DeferOnNormalExit([]{ std::puts("deferred on normal exit!"); });
-		auto d2 = DeferOnException([]{ std::puts("deferred on exception!"); });
-		std::puts("normal code!");
-		MCF_THROW_NESTED(Exception, ERROR_INVALID_PARAMETER, Rcntws::Copy(L"hello world!"));
-	} catch(std::exception &e){
-		std::printf("exception caught! e = %s\n", e.what());
-	}
+	const double theta = 0x1p63;
+	std::printf("sin(2 * theta) = %f, builtin = %f\n", p_sin(2 * theta), __builtin_sin(2 * theta));
+	std::printf("2 * sin(theta) * cos(theta) = %f, builtin = %f\n", 2 * p_sin(theta) * p_cos(theta), 2 * __builtin_sin(theta) * __builtin_cos(theta));
 	return 0;
 }

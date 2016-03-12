@@ -19,18 +19,21 @@
 */
 
 const MCFCRT_ArgItem *MCFCRT_AllocArgv(size_t *pArgc, const wchar_t *pwszCommandLine){
-	const size_t uPrefixSize = (((wcslen(pwszCommandLine) + 1) * sizeof(wchar_t) - 1) / alignof(MCFCRT_ArgItem) + 1) * alignof(MCFCRT_ArgItem);
+	void *pStorage = nullptr;
 
+	const size_t uCommandLineSize = (wcslen(pwszCommandLine) + 1) * sizeof(wchar_t);
+	const size_t uPrefixSize = ((uCommandLineSize - 1) / alignof(MCFCRT_ArgItem) + 1) * alignof(MCFCRT_ArgItem);
+	if(uPrefixSize < uCommandLineSize){
+		goto jBadAlloc;
+	}
 	size_t uCapacity = 4;
 	const size_t uSizeToAlloc = uPrefixSize + (uCapacity + 2) * sizeof(MCFCRT_ArgItem);
 	if((uSizeToAlloc < uPrefixSize) || (uSizeToAlloc >= (SIZE_MAX >> 2))){
-		SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-		return nullptr;
+		goto jBadAlloc;
 	}
-	void *pStorage = malloc(uSizeToAlloc);
+	pStorage = malloc(uSizeToAlloc);
 	if(!pStorage){
-		SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-		return nullptr;
+		goto jBadAlloc;
 	}
 	MCFCRT_ArgItem *pArgv = (MCFCRT_ArgItem *)((char *)pStorage + uPrefixSize + sizeof(MCFCRT_ArgItem));
 	pArgv[-1].pwszStr = pStorage;

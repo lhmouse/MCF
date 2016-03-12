@@ -64,8 +64,7 @@ public:
 		}
 		const auto pNext = pBlock->pNext;
 		if(pNext){
-			const auto vNewControl = X_Control{ pNext, vControl.pLast };
-			X_Attach(vNewControl);
+			X_Attach(X_Control{ pNext, vControl.pLast });
 		}
 		return pBlock;
 	}
@@ -75,8 +74,7 @@ public:
 		if(!pBlock){
 			return;
 		}
-		const auto vControl = X_Control{ pBlock, pBlock };
-		X_Attach(vControl);
+		X_Attach(X_Control{ pBlock, pBlock });
 	}
 	__attribute__((__flatten__))
 	void Clear() noexcept {

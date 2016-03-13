@@ -7,11 +7,6 @@
 
 namespace MCF {
 
-namespace Impl_Exception {
-	ExceptionContext::~ExceptionContext(){
-	}
-}
-
 Exception::~Exception(){
 }
 

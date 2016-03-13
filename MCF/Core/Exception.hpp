@@ -13,7 +13,7 @@
 namespace MCF {
 
 namespace Impl_Exception {
-	class ExceptionContext : public virtual std::exception {
+	class ExceptionContext {
 	private:
 		const char *x_pszFile;
 		unsigned long x_ulLine;
@@ -29,13 +29,8 @@ namespace Impl_Exception {
 			: x_pszFile(pszFile), x_ulLine(ulLine), x_pszFunction(pszFunction), x_pNestedException(std::move(pNestedException))
 		{
 		}
-		~ExceptionContext() override;
 
 	public:
-		const char *what() const noexcept override {
-			return x_pszFunction;
-		}
-
 		const char *GetFile() const noexcept {
 			return x_pszFile;
 		}
@@ -51,7 +46,7 @@ namespace Impl_Exception {
 	};
 }
 
-class Exception : public Impl_Exception::ExceptionContext {
+class Exception : public virtual std::exception, public Impl_Exception::ExceptionContext {
 private:
 	unsigned long x_ulErrorCode;
 	Rcntws x_rcwsErrorMessage;
@@ -67,6 +62,10 @@ public:
 	~Exception() override;
 
 public:
+	const char *what() const noexcept override {
+		return GetFunction();
+	}
+
 	unsigned long GetErrorCode() const noexcept {
 		return x_ulErrorCode;
 	}

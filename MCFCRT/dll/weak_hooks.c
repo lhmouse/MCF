@@ -3,21 +3,20 @@
 // Copyleft 2013 - 2016, LH_Mouse. All wrongs reserved.
 
 #include "decl.h"
-#include "../ext/unref_param.h"
 
 bool MCFCRT_OnDllProcessAttach(void *hDll, bool bDynamic){
-	UNREF_PARAM(hDll);
-	UNREF_PARAM(bDynamic);
+	(void)hDll;
+	(void)bDynamic;
 
 	return true;
 }
 void MCFCRT_OnDllProcessDetach(void *hDll, bool bDynamic){
-	UNREF_PARAM(hDll);
-	UNREF_PARAM(bDynamic);
+	(void)hDll;
+	(void)bDynamic;
 }
 void MCFCRT_OnDllThreadAttach(void *hDll){
-	UNREF_PARAM(hDll);
+	(void)hDll;
 }
 void MCFCRT_OnDllThreadDetach(void *hDll){
-	UNREF_PARAM(hDll);
+	(void)hDll;
 }

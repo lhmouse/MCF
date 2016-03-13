@@ -10,7 +10,6 @@
 #include "../env/eh_top.h"
 #include "../env/heap.h"
 #include "../env/heap_dbg.h"
-#include "../ext/unref_param.h"
 
 // -static -Wl,-e__MCFCRT_ExeStartup,--disable-runtime-pseudo-reloc,--disable-auto-import
 
@@ -21,7 +20,7 @@ DWORD __MCFCRT_ExeStartup(LPVOID pReserved)
 
 _Noreturn __MCFCRT_C_STDCALL __MCFCRT_HAS_EH_TOP
 DWORD __MCFCRT_ExeStartup(LPVOID pReserved){
-	UNREF_PARAM(pReserved);
+	(void)pReserved;
 
 	DWORD dwExitCode;
 
@@ -37,7 +36,7 @@ DWORD __MCFCRT_ExeStartup(LPVOID pReserved){
 
 __MCFCRT_C_STDCALL
 static BOOL TopCtrlHandler(DWORD dwCtrlType){
-	UNREF_PARAM(dwCtrlType);
+	(void)dwCtrlType;
 
 	TerminateProcess(GetCurrentProcess(), (DWORD)STATUS_CONTROL_C_EXIT);
 	__builtin_trap();
@@ -45,8 +44,8 @@ static BOOL TopCtrlHandler(DWORD dwCtrlType){
 
 __MCFCRT_C_STDCALL __MCFCRT_HAS_EH_TOP
 static void TlsCallback(void *hModule, DWORD dwReason, void *pReserved){
-	UNREF_PARAM(hModule);
-	UNREF_PARAM(pReserved);
+	(void)hModule;
+	(void)pReserved;
 
 	switch(dwReason){
 	case DLL_PROCESS_ATTACH:

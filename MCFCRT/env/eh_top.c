@@ -5,7 +5,6 @@
 #include "../env/eh_top.h"
 #include "../env/mcfwin.h"
 #include "../env/module.h"
-#include "../ext/unref_param.h"
 
 // 参见 gcc/libgcc/unwind-dw2-fde.h 里面的 old_object 的注释。
 struct object {
@@ -14,12 +13,12 @@ struct object {
 
 __attribute__((__weak__))
 void __register_frame_info(const void *p, struct object *o){
-	UNREF_PARAM(p);
-	UNREF_PARAM(o);
+	(void)p;
+	(void)o;
 }
 __attribute__((__weak__))
 void *__deregister_frame_info(const void *p){
-	UNREF_PARAM(p);
+	(void)p;
 
 	return nullptr;
 }
@@ -36,8 +35,8 @@ static struct object eh_obj;
 static void *eh_frame_base;
 
 static bool TraverseModuleSectionsCallback(intptr_t nContext, const char achName[8], void *pBase, size_t uSize){
-	UNREF_PARAM(nContext);
-	UNREF_PARAM(achName);
+	(void)nContext;
+	(void)achName;
 
 	if(((uintptr_t)pBase <= (uintptr_t)eh_begin) && ((uintptr_t)eh_begin < (uintptr_t)pBase + uSize)){
 		*(void **)nContext = pBase;

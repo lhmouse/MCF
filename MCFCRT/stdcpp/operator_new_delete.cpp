@@ -7,7 +7,6 @@
 #include "../env/heap_dbg.h"
 #include "../env/mcfwin.h"
 #include "../env/bail.h"
-#include "../ext/unref_param.h"
 #include <new>
 #include <cstddef>
 
@@ -50,7 +49,7 @@ void *Allocate(std::size_t uSize, bool bIsArray, const void *pRetAddr){
 	}
 	return static_cast<char *>(pRaw) + alignof(std::max_align_t);
 #else
-	UNREF_PARAM(bIsArray);
+	(void)bIsArray;
 	return pRaw;
 #endif
 }
@@ -85,7 +84,7 @@ void *AllocateNoThrow(std::size_t uSize, bool bIsArray, const void *pRetAddr) no
 	}
 	return static_cast<char *>(pRaw) + alignof(std::max_align_t);
 #else
-	UNREF_PARAM(bIsArray);
+	(void)bIsArray;
 	return pRaw;
 #endif
 }
@@ -108,7 +107,7 @@ void Deallocate(void *pBlock, bool bIsArray, const void *pRetAddr) noexcept {
 		}
 	}
 #else
-	UNREF_PARAM(bIsArray);
+	(void)bIsArray;
 	void *const pRaw = pBlock ;
 #endif
 	::__MCFCRT_HeapFree(pRaw, pRetAddr);

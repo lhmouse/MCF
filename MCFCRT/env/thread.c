@@ -11,7 +11,6 @@
 #include "eh_top.h"
 #include "clocks.h"
 #include "../ext/assert.h"
-#include "../ext/unref_param.h"
 #include <stdlib.h>
 #include <winternl.h>
 #include <ntdef.h>

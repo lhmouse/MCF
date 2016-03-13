@@ -7,7 +7,6 @@
 #include "hooks.h"
 #include "mcfwin.h"
 #include "bail.h"
-#include "../ext/unref_param.h"
 #include <stdlib.h>
 #include <string.h>
 #include <limits.h>

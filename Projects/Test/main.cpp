@@ -4,7 +4,7 @@
 template class MCF::Variant<int, double>;
 
 extern "C" unsigned MCFCRT_Main(){
-	auto print_type = [](auto v){ std::printf("type = %s\n", typeid(v).name()); };
+	auto print_type = [](auto v){ return std::printf("type = %s\n", typeid(v).name()); };
 	MCF::Variant<int, double> v;
 	v = 1;
 	v = 2;

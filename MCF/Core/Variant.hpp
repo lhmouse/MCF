@@ -33,16 +33,17 @@ namespace Impl_Variant {
 
 	template<typename FunctorT, std::size_t kIndex, typename FirstT, typename ...RemainingT>
 	struct Applier<FunctorT, kIndex, FirstT, RemainingT...> {
-		decltype(auto) operator()(FunctorT &vFunctor, std::size_t uActiveIndex, void *pElement) const {
+		void operator()(FunctorT &vFunctor, std::size_t uActiveIndex, void *pElement) const {
 			if(uActiveIndex == kIndex){
-				return std::forward<FunctorT>(vFunctor)(*static_cast<FirstT *>(pElement));
+				std::forward<FunctorT>(vFunctor)(*static_cast<FirstT *>(pElement));
+				return;
 			}
-			return Applier<FunctorT, kIndex + 1, RemainingT...>()(vFunctor, uActiveIndex, pElement);
+			Applier<FunctorT, kIndex + 1, RemainingT...>()(vFunctor, uActiveIndex, pElement);
 		}
 	};
 	template<typename FunctorT, std::size_t kIndex>
 	struct Applier<FunctorT, kIndex> {
-		[[noreturn]] decltype(auto) operator()(FunctorT & /* vFunctor */, std::size_t uActiveIndex, void * /* pElement */) const {
+		[[noreturn]] void operator()(FunctorT & /* vFunctor */, std::size_t uActiveIndex, void * /* pElement */) const {
 			BailF(L"未知活动元素类型。\n\n活动元素类型序号：%zu", uActiveIndex);
 		}
 	};
@@ -190,7 +191,7 @@ public:
 	}
 
 	template<typename FunctorT>
-	decltype(auto) Apply(FunctorT &&vFunctor) const {
+	void Apply(FunctorT &&vFunctor) const {
 		if(!x_pElement){
 			MCF_THROW(Exception, ERROR_NOT_READY, Rcntws::View(L"Variant: 尚未设定活动元素。"));
 		}
@@ -198,7 +199,7 @@ public:
 			vFunctor, x_pElement->GetIndex(), x_pElement->GetAddress());
 	}
 	template<typename FunctorT>
-	decltype(auto) Apply(FunctorT &&vFunctor){
+	void Apply(FunctorT &&vFunctor){
 		if(!x_pElement){
 			MCF_THROW(Exception, ERROR_NOT_READY, Rcntws::View(L"Variant: 尚未设定活动元素。"));
 		}

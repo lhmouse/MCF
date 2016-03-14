@@ -5,6 +5,7 @@
 #ifndef MCF_CONTAINERS_ENUMERATOR_HPP_
 #define MCF_CONTAINERS_ENUMERATOR_HPP_
 
+#include "../Utilities/AddressOf.hpp"
 #include "../Utilities/Assert.hpp"
 #include <iterator>
 
@@ -46,7 +47,7 @@ namespace Impl_Enumerator {
 		{
 		}
 		explicit constexpr Enumerator(ContainerT &vContainer, Element *pElement) noexcept
-			: x_pContainer(&vContainer), x_pElement(pElement)
+			: x_pContainer(AddressOf(vContainer)), x_pElement(pElement)
 		{
 		}
 
@@ -60,7 +61,7 @@ namespace Impl_Enumerator {
 			return x_pElement == rhs.x_pElement;
 		}
 		bool operator!=(const Enumerator &rhs) const noexcept {
-			return !(*this == rhs);
+			return x_pElement != rhs.x_pElement;
 		}
 
 		Enumerator &operator++() noexcept {
@@ -124,7 +125,7 @@ namespace Impl_Enumerator {
 		{
 		}
 		explicit constexpr ConstEnumerator(const ContainerT &vContainer, const Element *pElement) noexcept
-			: x_pContainer(&vContainer), x_pElement(pElement)
+			: x_pContainer(AddressOf(vContainer)), x_pElement(pElement)
 		{
 		}
 		constexpr ConstEnumerator(const Enumerator<ContainerT> &rhs) noexcept
@@ -142,7 +143,7 @@ namespace Impl_Enumerator {
 			return x_pElement == rhs.x_pElement;
 		}
 		bool operator!=(const ConstEnumerator &rhs) const noexcept {
-			return !(*this == rhs);
+			return x_pElement != rhs.x_pElement;
 		}
 
 		ConstEnumerator &operator++() noexcept {

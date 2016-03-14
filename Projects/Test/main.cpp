@@ -1,12 +1,13 @@
 #include <MCF/StdMCF.hpp>
-#include <MCF/Core/Argv.hpp>
+#include <MCF/Core/Variant.hpp>
+
+template class MCF::Variant<int, double>;
 
 extern "C" unsigned MCFCRT_Main(){
-	MCF::Argv argv;
-	for(unsigned i = 0; i < argv.GetSize(); ++i){
-		DWORD bytes_written;
-		::WriteConsoleW(::GetStdHandle(STD_OUTPUT_HANDLE), argv.GetStr(i), argv.GetLen(i), &bytes_written, nullptr);
-		::WriteConsoleW(::GetStdHandle(STD_OUTPUT_HANDLE), L"\n", 1, &bytes_written, nullptr);
-	}
+	MCF::Variant<int, double> v;
+	v = 1;
+	v = 2;
+	v = 3.4;
+	v = 5.6;
 	return 0;
 }

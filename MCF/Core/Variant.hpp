@@ -72,7 +72,7 @@ private:
 
 	public:
 		std::size_t GetIndex() const noexcept override {
-			return FindFirstType<std::decay_t<ElementT>, ElementsT...>();
+			return FindFirstType<ElementT, ElementsT...>();
 		}
 		const std::type_info *GetTypeInfo() const noexcept override {
 			return &typeid(ElementT);
@@ -93,13 +93,14 @@ public:
 		: x_pElement()
 	{
 	}
-	template<typename ElementT, std::enable_if_t<
-		!std::is_base_of<Variant, std::decay_t<ElementT>>::value &&
-			(FindFirstType<std::decay_t<ElementT>, ElementsT...>() != (std::size_t)-1),
+	template<typename ParamT, std::enable_if_t<
+		!std::is_base_of<Variant, ParamT>::value &&
+			(FindFirstType<std::decay_t<ParamT>, ElementsT...>() != (std::size_t)-1),
 		int> = 0>
-	Variant(ElementT &&vElement)
-		: x_pElement(MakeUnique<X_ActiveElement<std::decay_t<ElementT>>>(std::forward<ElementT>(vElement)))
+	Variant(ParamT &&vParam)
+		: Variant()
 	{
+		Set(std::forward<ParamT>(vParam));
 	}
 	Variant(const Variant &rhs)
 		: x_pElement(rhs.x_pElement ? rhs.x_pElement->Clone() : nullptr)
@@ -109,12 +110,20 @@ public:
 		: x_pElement(std::move(rhs.x_pElement))
 	{
 	}
+	template<typename ParamT, std::enable_if_t<
+		!std::is_base_of<Variant, ParamT>::value &&
+			(FindFirstType<std::decay_t<ParamT>, ElementsT...>() != (std::size_t)-1),
+		int> = 0>
+	Variant &operator=(ParamT &&vParam){
+		Set(std::forward<ParamT>(vParam));
+		return *this;
+	}
 	Variant &operator=(const Variant &rhs){
-		x_pElement = rhs.x_pElement ? rhs.x_pElement->Clone() : nullptr;
+		Variant(rhs).Swap(*this);
 		return *this;
 	}
 	Variant &operator=(Variant &&rhs) noexcept {
-		x_pElement = std::move(rhs.x_pElement);
+		rhs.Swap(*this);
 		return *this;
 	}
 
@@ -131,35 +140,45 @@ public:
 		}
 		return x_pElement->GetTypeInfo();
 	}
-	template<typename ElementT>
-	const ElementT *Get() const noexcept {
-		if(GetIndex() != FindFirstType<std::decay_t<ElementT>, ElementsT...>()){
+	template<typename ParamT>
+	const ParamT *Get() const noexcept {
+		using Element = std::decay_t<ParamT>;
+		if(GetIndex() != FindFirstType<Element, ElementsT...>()){
 			return nullptr;
 		}
-		ASSERT(dynamic_cast<const X_ActiveElement<std::decay_t<ElementT>> *>(x_pElement.Get()));
-		return static_cast<const ElementT *>(
-			static_cast<const X_ActiveElement<std::decay_t<ElementT>> *>(x_pElement.Get())->GetAddress());
+		ASSERT(dynamic_cast<const X_ActiveElement<Element> *>(x_pElement.Get()));
+		return static_cast<const Element *>(
+			static_cast<const X_ActiveElement<Element> *>(x_pElement.Get())->GetAddress());
 	}
-	template<typename ElementT>
-	ElementT *Get() noexcept {
-		if(GetIndex() != FindFirstType<std::decay_t<ElementT>, ElementsT...>()){
+	template<typename ParamT>
+	ParamT *Get() noexcept {
+		using Element = std::decay_t<ParamT>;
+		if(GetIndex() != FindFirstType<ParamT, ElementsT...>()){
 			return nullptr;
 		}
-		ASSERT(dynamic_cast<X_ActiveElement<std::decay_t<ElementT>> *>(x_pElement.Get()));
-		return static_cast<ElementT *>(
-			static_cast<X_ActiveElement<std::decay_t<ElementT>> *>(x_pElement.Get())->GetAddress());
+		ASSERT(dynamic_cast<X_ActiveElement<Element> *>(x_pElement.Get()));
+		return static_cast<Element *>(
+			static_cast<X_ActiveElement<Element> *>(x_pElement.Get())->GetAddress());
 	}
-	template<typename ElementT, std::enable_if_t<
-		FindFirstType<std::decay_t<ElementT>, ElementsT...>() != (std::size_t)-1,
-		int> = 0>
+	template<typename ElementT>
 	void Set(ElementT vElement){
-		x_pElement = MakeUnique<X_ActiveElement<std::decay_t<ElementT>>>(std::forward<ElementT>(vElement));
+		Emplace<ElementT>(std::move(vElement));
 	}
-	template<typename ElementT, typename ...ParamsT, std::enable_if_t<
-		FindFirstType<std::decay_t<ElementT>, ElementsT...>() != (std::size_t)-1,
-		int> = 0>
+	template<typename ElementT, typename ...ParamsT>
 	void Emplace(ParamsT &&...vParams){
-		x_pElement = MakeUnique<X_ActiveElement<std::decay_t<ElementT>>>(std::forward<ParamsT>(vParams)...);
+		static_assert(FindFirstType<ElementT, ElementsT...>() != (std::size_t)-1, "ElementT is not found in ElementsT.");
+
+		ElementT *pReplaceableElement;
+		if(std::is_nothrow_constructible<ElementT, ParamsT &&...>::value && std::is_nothrow_move_assignable<ElementT>::value){
+			pReplaceableElement = Get<ElementT>();
+		} else {
+			pReplaceableElement = nullptr;
+		}
+		if(pReplaceableElement){
+			*pReplaceableElement = ElementT(std::forward<ParamsT>(vParams)...);
+		} else {
+			x_pElement = MakeUnique<X_ActiveElement<ElementT>>(std::forward<ParamsT>(vParams)...);
+		}
 	}
 
 	template<typename FunctorT>
@@ -167,14 +186,16 @@ public:
 		if(!x_pElement){
 			MCF_THROW(Exception, ERROR_NOT_READY, Rcntws::View(L"Variant: 尚未设定活动元素。"));
 		}
-		Impl_Variant::Applier<FunctorT, 0, const ElementsT...>()(std::forward<FunctorT>(vFunctor), x_pElement->GetIndex(), x_pElement->GetAddress());
+		Impl_Variant::Applier<FunctorT, 0, const ElementsT...>()(
+			std::forward<FunctorT>(vFunctor), x_pElement->GetIndex(), x_pElement->GetAddress());
 	}
 	template<typename FunctorT>
 	void Apply(FunctorT &&vFunctor){
 		if(!x_pElement){
 			MCF_THROW(Exception, ERROR_NOT_READY, Rcntws::View(L"Variant: 尚未设定活动元素。"));
 		}
-		Impl_Variant::Applier<FunctorT, 0, ElementsT...>()(std::forward<FunctorT>(vFunctor), x_pElement->GetIndex(), x_pElement->GetAddress());
+		Impl_Variant::Applier<FunctorT, 0, ElementsT...>()(
+			std::forward<FunctorT>(vFunctor), x_pElement->GetIndex(), x_pElement->GetAddress());
 	}
 
 	void Swap(Variant<ElementsT...> &rhs) noexcept {

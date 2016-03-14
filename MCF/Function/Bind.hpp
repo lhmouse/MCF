@@ -64,7 +64,7 @@ namespace Impl_Bind {
 		std::tuple<ParamsT...> x_tupParams;
 
 	public:
-		explicit BindResult(FuncT vFunc, ParamsT ...vParams)
+		BindResult(FuncT vFunc, ParamsT ...vParams)
 			: x_vFunc(std::move(vFunc)), x_tupParams(std::move(vParams)...)
 		{
 		}
@@ -139,12 +139,12 @@ constexpr Impl_Bind::Placeholder<49> _49;
 constexpr Impl_Bind::Placeholder<50> _50;
 
 template<typename FuncT, typename ...ParamsT>
-auto Bind(FuncT &&vFunc, ParamsT &&...vParams){
-	return Impl_Bind::BindResult<std::decay_t<FuncT>, false, std::decay_t<ParamsT>...>(std::forward<FuncT>(vFunc), std::forward<ParamsT>(vParams)...);
+Impl_Bind::BindResult<std::decay_t<FuncT>, false, std::decay_t<ParamsT>...> Bind(FuncT &&vFunc, ParamsT &&...vParams){
+	return { std::forward<FuncT>(vFunc), std::forward<ParamsT>(vParams)... };
 }
 template<typename FuncT, typename ...ParamsT>
-auto LazyBind(FuncT &&vFunc, ParamsT &&...vParams){
-	return Impl_Bind::BindResult<std::decay_t<FuncT>, true, std::decay_t<ParamsT>...>(std::forward<FuncT>(vFunc), std::forward<ParamsT>(vParams)...);
+Impl_Bind::BindResult<std::decay_t<FuncT>, true, std::decay_t<ParamsT>...> LazyBind(FuncT &&vFunc, ParamsT &&...vParams){
+	return { std::forward<FuncT>(vFunc), std::forward<ParamsT>(vParams)... };
 }
 
 }

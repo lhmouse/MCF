@@ -29,16 +29,16 @@ namespace Impl_Variant {
 
 	template<typename FunctorT, std::size_t kIndex, typename FirstT, typename ...RemainingT>
 	struct Applier {
-		decltype(auto) operator()(FunctorT &&vFunctor, std::size_t uActiveIndex, void *pElement) const {
+		decltype(auto) operator()(FunctorT &vFunctor, std::size_t uActiveIndex, void *pElement) const {
 			if(uActiveIndex == kIndex){
 				return std::forward<FunctorT>(vFunctor)(*static_cast<FirstT *>(pElement));
 			}
-			return Applier<FunctorT, kIndex + 1, RemainingT...>()(std::forward<FunctorT>(vFunctor), uActiveIndex, pElement);
+			return Applier<FunctorT, kIndex + 1, RemainingT...>()(vFunctor, uActiveIndex, pElement);
 		}
 	};
 	template<typename FunctorT, std::size_t kIndex, typename FirstT>
 	struct Applier<FunctorT, kIndex, FirstT> {
-		decltype(auto) operator()(FunctorT &&vFunctor, std::size_t uActiveIndex, void *pElement) const {
+		decltype(auto) operator()(FunctorT &vFunctor, std::size_t uActiveIndex, void *pElement) const {
 			if(uActiveIndex == kIndex){
 				return std::forward<FunctorT>(vFunctor)(*static_cast<FirstT *>(pElement));
 			}
@@ -194,7 +194,7 @@ public:
 			MCF_THROW(Exception, ERROR_NOT_READY, Rcntws::View(L"Variant: 尚未设定活动元素。"));
 		}
 		Impl_Variant::Applier<FunctorT, 0, const ElementsT...>()(
-			std::forward<FunctorT>(vFunctor), x_pElement->GetIndex(), x_pElement->GetAddress());
+			vFunctor, x_pElement->GetIndex(), x_pElement->GetAddress());
 	}
 	template<typename FunctorT>
 	decltype(auto) Apply(FunctorT &&vFunctor){
@@ -202,7 +202,7 @@ public:
 			MCF_THROW(Exception, ERROR_NOT_READY, Rcntws::View(L"Variant: 尚未设定活动元素。"));
 		}
 		Impl_Variant::Applier<FunctorT, 0, ElementsT...>()(
-			std::forward<FunctorT>(vFunctor), x_pElement->GetIndex(), x_pElement->GetAddress());
+			vFunctor, x_pElement->GetIndex(), x_pElement->GetAddress());
 	}
 
 	void Swap(Variant<ElementsT...> &rhs) noexcept {

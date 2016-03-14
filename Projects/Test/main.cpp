@@ -8,9 +8,9 @@ extern "C" unsigned MCFCRT_Main(){
 	MCF::Variant<int, double> v;
 	v = 1;
 	v = 2;
-	v.Apply(print_type);
+	v.Apply(std::move(print_type));
 	v = 3.4;
 	v = 5.6;
-	v.Apply(print_type);
+	v.Apply(std::move(print_type));
 	return 0;
 }

@@ -7,6 +7,7 @@
 
 #include "../Utilities/ParameterPackManipulators.hpp"
 #include "../Utilities/Assert.hpp"
+#include "../Utilities/Bail.hpp"
 #include "../SmartPointers/UniquePtr.hpp"
 #include "Exception.hpp"
 #include <utility>
@@ -27,8 +28,11 @@ namespace Impl_Variant {
 		virtual UniquePtr<ActiveElementBase> Clone() const = 0;
 	};
 
+	template<typename FunctorT, std::size_t kIndex, typename ...ElementsT>
+	struct Applier;
+
 	template<typename FunctorT, std::size_t kIndex, typename FirstT, typename ...RemainingT>
-	struct Applier {
+	struct Applier<FunctorT, kIndex, FirstT, RemainingT...> {
 		decltype(auto) operator()(FunctorT &vFunctor, std::size_t uActiveIndex, void *pElement) const {
 			if(uActiveIndex == kIndex){
 				return std::forward<FunctorT>(vFunctor)(*static_cast<FirstT *>(pElement));
@@ -36,13 +40,10 @@ namespace Impl_Variant {
 			return Applier<FunctorT, kIndex + 1, RemainingT...>()(vFunctor, uActiveIndex, pElement);
 		}
 	};
-	template<typename FunctorT, std::size_t kIndex, typename FirstT>
-	struct Applier<FunctorT, kIndex, FirstT> {
-		decltype(auto) operator()(FunctorT &vFunctor, std::size_t uActiveIndex, void *pElement) const {
-			if(uActiveIndex == kIndex){
-				return std::forward<FunctorT>(vFunctor)(*static_cast<FirstT *>(pElement));
-			}
-			std::terminate();
+	template<typename FunctorT, std::size_t kIndex>
+	struct Applier<FunctorT, kIndex> {
+		[[noreturn]] decltype(auto) operator()(FunctorT & /* vFunctor */, std::size_t uActiveIndex, void * /* pElement */) const {
+			BailF(L"未知活动元素类型。\n\n活动元素类型序号：%zu", uActiveIndex);
 		}
 	};
 }

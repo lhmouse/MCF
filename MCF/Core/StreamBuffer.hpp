@@ -35,17 +35,13 @@ private:
 		{
 		}
 	};
-
-	struct X_ChunkAllocator;
-
-	using X_ChunkList = List<X_Chunk, X_ChunkAllocator>;
-
 	struct X_ChunkAllocator {
-		static FixedSizeAllocator<X_ChunkList::kNodeSize> s_vPool;
-
 		void *operator()(std::size_t uSize);
 		void operator()(void *pBlock) noexcept;
 	};
+	using X_ChunkList = List<X_Chunk, X_ChunkAllocator>;
+
+	static FixedSizeAllocator<X_ChunkList::kNodeSize> xs_vPool;
 
 public:
 	class ReadIterator : public std::iterator<std::input_iterator_tag, int> {

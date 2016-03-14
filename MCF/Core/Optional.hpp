@@ -15,9 +15,6 @@
 
 namespace MCF {
 
-namespace Impl_Optional {
-}
-
 template<typename ElementT>
 class Optional {
 private:

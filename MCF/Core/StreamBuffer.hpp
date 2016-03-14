@@ -6,6 +6,7 @@
 #define MCF_CORE_STREAM_BUFFER_HPP_
 
 #include "../Containers/List.hpp"
+#include "../Containers/Vector.hpp"
 #include <iterator>
 #include <utility>
 #include <cstddef>
@@ -145,17 +146,25 @@ public:
 		Splice(rhs);
 	}
 
+	void Dump(Vector<unsigned char> &vecData) const;
+
 	template<typename FuncT>
-	void Iterate(FuncT &&vFunc) const {
+	bool Iterate(FuncT &&vFunc) const {
 		for(auto pChunk = x_lstChunks.GetFirst(); pChunk; pChunk = x_lstChunks.GetNext(pChunk)){
-			std::forward<FuncT>(vFunc)(pChunk->abyData + pChunk->uBegin, pChunk->uEnd - pChunk->uBegin);
+			if(!std::forward<FuncT>(vFunc)(pChunk->abyData + pChunk->uBegin, pChunk->uEnd - pChunk->uBegin)){
+				return false;
+			}
 		}
+		return true;
 	}
 	template<typename FuncT>
-	void Iterate(FuncT &&vFunc){
+	bool Iterate(FuncT &&vFunc){
 		for(auto pChunk = x_lstChunks.GetFirst(); pChunk; pChunk = x_lstChunks.GetNext(pChunk)){
-			std::forward<FuncT>(vFunc)(pChunk->abyData + pChunk->uBegin, pChunk->uEnd - pChunk->uBegin);
+			if(!std::forward<FuncT>(vFunc)(pChunk->abyData + pChunk->uBegin, pChunk->uEnd - pChunk->uBegin)){
+				return false;
+			}
 		}
+		return true;
 	}
 
 	void Swap(StreamBuffer &rhs) noexcept {

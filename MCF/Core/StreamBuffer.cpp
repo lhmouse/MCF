@@ -228,4 +228,13 @@ void StreamBuffer::Splice(StreamBuffer &rhs) noexcept {
 	rhs.x_uSize = 0;
 }
 
+void StreamBuffer::Dump(Vector<unsigned char> &vecData) const {
+	vecData.ReserveMore(GetSize());
+	Iterate(
+		[&](auto pbyData, auto uSize){
+			vecData.UncheckedAppend(pbyData, pbyData + uSize);
+			return true;
+		});
+}
+
 }

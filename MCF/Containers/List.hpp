@@ -223,7 +223,7 @@ public:
 
 	template<typename ...ParamsT>
 	Element &Unshift(ParamsT &&...vParams){
-		const auto pNode = static_cast<X_Node *>(Allocator()(sizeof(X_Node)));
+		const auto pNode = static_cast<X_Node *>(Allocator()(kNodeSize));
 		const auto pElement = reinterpret_cast<Element *>(&(pNode->vElement));
 		try {
 			DefaultConstruct(pElement, std::forward<ParamsT>(vParams)...);
@@ -264,7 +264,7 @@ public:
 
 	template<typename ...ParamsT>
 	Element &Push(ParamsT &&...vParams){
-		const auto pNode = static_cast<X_Node *>(Allocator()(sizeof(X_Node)));
+		const auto pNode = static_cast<X_Node *>(Allocator()(kNodeSize));
 		const auto pElement = reinterpret_cast<Element *>(&(pNode->vElement));
 		try {
 			DefaultConstruct(pElement, std::forward<ParamsT>(vParams)...);

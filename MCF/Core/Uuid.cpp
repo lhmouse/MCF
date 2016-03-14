@@ -13,9 +13,9 @@
 namespace MCF {
 
 namespace {
-	const unsigned g_uPid(::GetCurrentProcessId());
+	const unsigned g_uPid = ::GetCurrentProcessId();
 
-	Atomic<std::uint32_t> g_u32AutoInc(0);
+	Atomic<std::uint32_t> g_u32AutoInc;
 }
 
 Uuid Uuid::Generate(){

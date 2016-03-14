@@ -16,6 +16,17 @@
 namespace MCF {
 
 namespace Impl_Variant {
+	class ActiveElementBase {
+	public:
+		virtual ~ActiveElementBase();
+
+	public:
+		virtual std::size_t GetIndex() const noexcept = 0;
+		virtual const std::type_info *GetTypeInfo() const noexcept = 0;
+		virtual void *GetAddress() noexcept = 0;
+		virtual UniquePtr<ActiveElementBase> Clone() const = 0;
+	};
+
 	template<typename FunctorT, std::size_t kIndex, typename FirstT, typename ...RemainingT>
 	struct Applier {
 		decltype(auto) operator()(FunctorT &&vFunctor, std::size_t uActiveIndex, void *pElement) const {
@@ -44,20 +55,8 @@ public:
 	};
 
 private:
-	class X_ActiveElementBase {
-	public:
-		virtual ~X_ActiveElementBase(){
-		}
-
-	public:
-		virtual std::size_t GetIndex() const noexcept = 0;
-		virtual const std::type_info *GetTypeInfo() const noexcept = 0;
-		virtual void *GetAddress() noexcept = 0;
-		virtual UniquePtr<X_ActiveElementBase> Clone() const = 0;
-	};
-
 	template<typename ElementT>
-	class X_ActiveElement : public X_ActiveElementBase {
+	class X_ActiveElement final : public Impl_Variant::ActiveElementBase {
 	private:
 		ElementT x_vElement;
 
@@ -80,13 +79,13 @@ private:
 		void *GetAddress() noexcept override {
 			return &reinterpret_cast<char &>(x_vElement);
 		}
-		UniquePtr<X_ActiveElementBase> Clone() const override {
+		UniquePtr<Impl_Variant::ActiveElementBase> Clone() const override {
 			return MakeUnique<X_ActiveElement>(*this);
 		}
 	};
 
 private:
-	UniquePtr<X_ActiveElementBase> x_pElement;
+	UniquePtr<Impl_Variant::ActiveElementBase> x_pElement;
 
 public:
 	constexpr Variant() noexcept

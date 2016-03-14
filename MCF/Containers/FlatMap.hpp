@@ -5,6 +5,7 @@
 #ifndef MCF_CONTAINERS_FLAT_MAP_HPP_
 #define MCF_CONTAINERS_FLAT_MAP_HPP_
 
+#include "DefaultAllocator.hpp"
 #include "_Enumerator.hpp"
 #include "../Function/Comparators.hpp"
 #include "../Utilities/ReconstructOrAssign.hpp"
@@ -16,11 +17,13 @@
 
 namespace MCF {
 
-template<typename KeyT, typename ValueT, typename ComparatorT = Less>
+template<typename KeyT, typename ValueT, typename ComparatorT = Less, class AllocatorT = DefaultAllocator>
 class FlatMap {
 public:
 	// 容器需求。
 	using Element         = std::pair<const KeyT, ValueT>;
+	using Comparator      = ComparatorT;
+	using Allocator       = AllocatorT;
 	using ConstEnumerator = Impl_Enumerator::ConstEnumerator <FlatMap>;
 	using Enumerator      = Impl_Enumerator::Enumerator      <FlatMap>;
 
@@ -79,7 +82,7 @@ private:
 		}
 		static constexpr bool kEnabled = std::is_nothrow_move_constructible<KeyT>::value && std::is_nothrow_move_constructible<ValueT>::value;
 	};
-	Impl_FlatContainer::FlatContainer<Element, X_MoveCaster> x_vStorage;
+	Impl_FlatContainer::FlatContainer<Element, X_MoveCaster, Allocator> x_vStorage;
 
 public:
 	constexpr FlatMap() noexcept

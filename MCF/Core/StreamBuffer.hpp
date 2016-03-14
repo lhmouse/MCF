@@ -13,30 +13,36 @@
 
 namespace MCF {
 
-namespace Impl_StreamBuffer {
-	struct Chunk {
+template<std::size_t>
+class FixedSizeAllocator;
+
+class StreamBuffer {
+private:
+	struct X_Chunk {
 		struct FromBeginning { };
 		struct FromEnd       { };
-
-		static void *operator new(std::size_t uSize);
-		static void operator delete(void *pRaw) noexcept;
 
 		unsigned uBegin;
 		unsigned uEnd;
 		unsigned char abyData[256];
 
-		explicit Chunk(FromBeginning)
+		explicit X_Chunk(FromBeginning)
 			: uBegin(0), uEnd(uBegin)
 		{
 		}
-		explicit Chunk(FromEnd)
+		explicit X_Chunk(FromEnd)
 			: uBegin(sizeof(abyData)), uEnd(uBegin)
 		{
 		}
 	};
-}
 
-class StreamBuffer {
+	struct X_ChunkAllocator {
+		static FixedSizeAllocator<List<X_Chunk, X_ChunkAllocator>::kNodeSize> s_vPool;
+
+		void *operator()(std::size_t uSize);
+		void operator()(void *pBlock) noexcept;
+	};
+
 public:
 	class ReadIterator : public std::iterator<std::input_iterator_tag, int> {
 	private:
@@ -89,7 +95,7 @@ public:
 	};
 
 private:
-	List<Impl_StreamBuffer::Chunk> x_lstChunks;
+	List<X_Chunk, X_ChunkAllocator> x_lstChunks;
 	std::size_t x_uSize;
 
 public:

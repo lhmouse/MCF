@@ -5,6 +5,7 @@
 #ifndef MCF_CONTAINERS_VECTOR_HPP_
 #define MCF_CONTAINERS_VECTOR_HPP_
 
+#include "DefaultAllocator.hpp"
 #include "_Enumerator.hpp"
 #include "../Utilities/Assert.hpp"
 #include "../Utilities/ConstructDestruct.hpp"
@@ -19,11 +20,12 @@
 
 namespace MCF {
 
-template<typename ElementT>
+template<typename ElementT, class AllocatorT = DefaultAllocator>
 class Vector {
 public:
 	// 容器需求。
 	using Element         = ElementT;
+	using Allocator       = AllocatorT;
 	using ConstEnumerator = Impl_Enumerator::ConstEnumerator <Vector>;
 	using Enumerator      = Impl_Enumerator::Enumerator      <Vector>;
 
@@ -90,7 +92,7 @@ public:
 	}
 	~Vector(){
 		Clear();
-		::operator delete[](x_pStorage);
+		Allocator()(x_pStorage);
 	}
 
 private:
@@ -339,7 +341,7 @@ public:
 			uElementsToAlloc = uNewCapacity;
 		}
 		const auto uBytesToAlloc = Impl_CheckedSizeArithmetic::Mul(sizeof(Element), uElementsToAlloc);
-		const auto pNewStorage = static_cast<Element *>(::operator new[](uBytesToAlloc));
+		const auto pNewStorage = static_cast<Element *>(Allocator()(uBytesToAlloc));
 		const auto pOldStorage = x_pStorage;
 		auto pWrite = pNewStorage;
 		try {
@@ -352,13 +354,13 @@ public:
 				--pWrite;
 				Destruct(pWrite);
 			}
-			::operator delete[](pNewStorage);
+			Allocator()(pNewStorage);
 			throw;
 		}
 		for(std::size_t i = x_uSize; i > 0; --i){
 			Destruct(pOldStorage + i - 1);
 		}
-		::operator delete[](pOldStorage);
+		Allocator()(pOldStorage);
 
 		x_pStorage  = pNewStorage;
 		x_uCapacity = uElementsToAlloc;

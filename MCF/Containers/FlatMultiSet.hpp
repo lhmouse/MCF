@@ -5,6 +5,7 @@
 #ifndef MCF_CONTAINERS_FLAT_MULTI_SET_HPP_
 #define MCF_CONTAINERS_FLAT_MULTI_SET_HPP_
 
+#include "DefaultAllocator.hpp"
 #include "_Enumerator.hpp"
 #include "../Function/Comparators.hpp"
 #include "../Utilities/DeclVal.hpp"
@@ -13,11 +14,13 @@
 
 namespace MCF {
 
-template<typename ElementT, typename ComparatorT = Less>
+template<typename ElementT, typename ComparatorT = Less, class AllocatorT = DefaultAllocator>
 class FlatMultiSet {
 public:
 	// 容器需求。
 	using Element         = const ElementT;
+	using Comparator      = ComparatorT;
+	using Allocator       = AllocatorT;
 	using ConstEnumerator = Impl_Enumerator::ConstEnumerator <FlatMultiSet>;
 	using Enumerator      = Impl_Enumerator::Enumerator      <FlatMultiSet>;
 
@@ -76,7 +79,7 @@ private:
 		}
 		static constexpr bool kEnabled = std::is_nothrow_move_constructible<ElementT>::value;
 	};
-	Impl_FlatContainer::FlatContainer<Element, X_MoveCaster> x_vStorage;
+	Impl_FlatContainer::FlatContainer<Element, X_MoveCaster, Allocator> x_vStorage;
 
 public:
 	constexpr FlatMultiSet() noexcept

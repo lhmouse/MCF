@@ -5,24 +5,25 @@
 #ifndef MCF_CONTAINERS_LIST_HPP_
 #define MCF_CONTAINERS_LIST_HPP_
 
+#include "DefaultAllocator.hpp"
 #include "_Enumerator.hpp"
 #include "../Utilities/Assert.hpp"
 #include "../Utilities/AlignedStorage.hpp"
 #include "../Utilities/ConstructDestruct.hpp"
 #include "../Core/Exception.hpp"
 #include <utility>
-#include <new>
 #include <initializer_list>
 #include <type_traits>
 #include <cstddef>
 
 namespace MCF {
 
-template<typename ElementT>
+template<typename ElementT, class AllocatorT = DefaultAllocator>
 class List {
 public:
 	// 容器需求。
 	using Element         = ElementT;
+	using Allocator       = AllocatorT;
 	using ConstEnumerator = Impl_Enumerator::ConstEnumerator <List>;
 	using Enumerator      = Impl_Enumerator::Enumerator      <List>;
 
@@ -31,6 +32,11 @@ private:
 		AlignedStorage<0, Element> vElement;
 		X_Node *pPrev;
 		X_Node *pNext;
+	};
+
+public:
+	enum : std::size_t {
+		kNodeSize = sizeof(X_Node),
 	};
 
 private:
@@ -99,7 +105,7 @@ public:
 			const auto pPrev = pNode->pPrev;
 			const auto pElement = reinterpret_cast<Element *>(pNode);
 			Destruct(pElement);
-			::delete pNode;
+			Allocator()(pNode);
 			pNode = pPrev;
 		}
 		x_pFirst = nullptr;
@@ -217,12 +223,12 @@ public:
 
 	template<typename ...ParamsT>
 	Element &Unshift(ParamsT &&...vParams){
-		const auto pNode = ::new X_Node;
+		const auto pNode = static_cast<X_Node *>(Allocator()(sizeof(X_Node)));
 		const auto pElement = reinterpret_cast<Element *>(&(pNode->vElement));
 		try {
 			DefaultConstruct(pElement, std::forward<ParamsT>(vParams)...);
 		} catch(...){
-			::delete pNode;
+			Allocator()(pNode);
 			throw;
 		}
 		pNode->pPrev = nullptr;
@@ -245,7 +251,7 @@ public:
 			const auto pNext = pNode->pNext;
 			const auto pElement = reinterpret_cast<Element *>(&(pNode->vElement));
 			Destruct(pElement);
-			::delete pNode;
+			Allocator()(pNode);
 			pNode = pNext;
 		}
 		if(pNode){
@@ -258,12 +264,12 @@ public:
 
 	template<typename ...ParamsT>
 	Element &Push(ParamsT &&...vParams){
-		const auto pNode = ::new X_Node;
+		const auto pNode = static_cast<X_Node *>(Allocator()(sizeof(X_Node)));
 		const auto pElement = reinterpret_cast<Element *>(&(pNode->vElement));
 		try {
 			DefaultConstruct(pElement, std::forward<ParamsT>(vParams)...);
 		} catch(...){
-			::delete pNode;
+			Allocator()(pNode);
 			throw;
 		}
 		pNode->pPrev = x_pLast;
@@ -286,7 +292,7 @@ public:
 			const auto pPrev = pNode->pPrev;
 			const auto pElement = reinterpret_cast<Element *>(&(pNode->vElement));
 			Destruct(pElement);
-			::delete pNode;
+			Allocator()(pNode);
 			pNode = pPrev;
 		}
 		if(pNode){

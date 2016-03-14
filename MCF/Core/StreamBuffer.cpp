@@ -10,22 +10,13 @@
 
 namespace MCF {
 
-namespace {
-	using Chunk = Impl_StreamBuffer::Chunk;
+FixedSizeAllocator<List<StreamBuffer::X_Chunk, StreamBuffer::X_ChunkAllocator>::kNodeSize> StreamBuffer::X_ChunkAllocator::s_vPool;
 
-	__attribute__((__init_priority__(101)))
-	FixedSizeAllocator<sizeof(Chunk)> g_vChunkAllocator;
+void *StreamBuffer::X_ChunkAllocator::operator()(std::size_t uSize){
+	return ::operator new(uSize);
 }
-
-namespace Impl_StreamBuffer {
-	void *Chunk::operator new(std::size_t uSize){
-		ASSERT(uSize == sizeof(Chunk));
-		(void)uSize;
-		return g_vChunkAllocator.Allocate();
-	}
-	void Chunk::operator delete(void *pRaw) noexcept {
-		g_vChunkAllocator.Deallocate(pRaw);
-	}
+void StreamBuffer::X_ChunkAllocator::operator()(void *pBlock) noexcept {
+	::operator delete(pBlock);
 }
 
 int StreamBuffer::PeekFront() const noexcept {
@@ -67,8 +58,8 @@ bool StreamBuffer::Discard() noexcept {
 }
 void StreamBuffer::Put(unsigned char byData){
 	auto pChunk = x_lstChunks.GetLast();
-	if(!pChunk || (pChunk->uEnd == sizeof(Chunk::abyData))){
-		pChunk = &x_lstChunks.Push(Chunk::FromBeginning());
+	if(!pChunk || (pChunk->uEnd == sizeof(X_Chunk::abyData))){
+		pChunk = &x_lstChunks.Push(X_Chunk::FromBeginning());
 	}
 	pChunk->abyData[pChunk->uEnd] = byData;
 	++(pChunk->uEnd);
@@ -92,7 +83,7 @@ int StreamBuffer::Unput() noexcept {
 void StreamBuffer::Unget(unsigned char byData){
 	auto pChunk = x_lstChunks.GetFirst();
 	if(!pChunk || (0 == pChunk->uBegin)){
-		pChunk = &x_lstChunks.Unshift(Chunk::FromEnd());
+		pChunk = &x_lstChunks.Unshift(X_Chunk::FromEnd());
 	}
 	--(pChunk->uBegin);
 	pChunk->abyData[pChunk->uBegin] = byData;
@@ -145,15 +136,15 @@ std::size_t StreamBuffer::Discard(std::size_t uSize) noexcept {
 	return uBytesDiscarded;
 }
 void StreamBuffer::Put(const void *pData, std::size_t uSize){
-	List<Chunk> lstNewChunks;
+	List<X_Chunk, X_ChunkAllocator> lstNewChunks;
 	std::size_t uBytesReserved = 0;
 	auto pChunk = x_lstChunks.GetLast();
 	if(pChunk){
-		uBytesReserved += sizeof(Chunk::abyData) - pChunk->uEnd;
+		uBytesReserved += sizeof(X_Chunk::abyData) - pChunk->uEnd;
 	}
 	while(uBytesReserved < uSize){
-		lstNewChunks.Push(Chunk::FromBeginning());
-		uBytesReserved += sizeof(Chunk::abyData);
+		lstNewChunks.Push(X_Chunk::FromBeginning());
+		uBytesReserved += sizeof(X_Chunk::abyData);
 	}
 	x_lstChunks.Splice(nullptr, lstNewChunks);
 	if(!pChunk){
@@ -162,7 +153,7 @@ void StreamBuffer::Put(const void *pData, std::size_t uSize){
 
 	std::size_t uBytesCopied = 0;
 	while(uBytesCopied < uSize){
-		const auto uBytesToCopy = static_cast<unsigned>(Min(uSize - uBytesCopied, sizeof(Chunk::abyData) - pChunk->uEnd));
+		const auto uBytesToCopy = static_cast<unsigned>(Min(uSize - uBytesCopied, sizeof(X_Chunk::abyData) - pChunk->uEnd));
 		CopyN(pChunk->abyData + pChunk->uEnd, static_cast<const unsigned char *>(pData) + uBytesCopied, uBytesToCopy);
 		pChunk->uEnd += uBytesToCopy;
 
@@ -172,15 +163,15 @@ void StreamBuffer::Put(const void *pData, std::size_t uSize){
 	x_uSize += uBytesCopied;
 }
 void StreamBuffer::Put(unsigned char byData, std::size_t uSize){
-	List<Chunk> lstNewChunks;
+	List<X_Chunk, X_ChunkAllocator> lstNewChunks;
 	std::size_t uBytesReserved = 0;
 	auto pChunk = x_lstChunks.GetLast();
 	if(pChunk){
-		uBytesReserved += sizeof(Chunk::abyData) - pChunk->uEnd;
+		uBytesReserved += sizeof(X_Chunk::abyData) - pChunk->uEnd;
 	}
 	while(uBytesReserved < uSize){
-		lstNewChunks.Push(Chunk::FromBeginning());
-		uBytesReserved += sizeof(Chunk::abyData);
+		lstNewChunks.Push(X_Chunk::FromBeginning());
+		uBytesReserved += sizeof(X_Chunk::abyData);
 	}
 	x_lstChunks.Splice(nullptr, lstNewChunks);
 	if(!pChunk){
@@ -189,7 +180,7 @@ void StreamBuffer::Put(unsigned char byData, std::size_t uSize){
 
 	std::size_t uBytesCopied = 0;
 	while(uBytesCopied < uSize){
-		const auto uBytesToCopy = static_cast<unsigned>(Min(uSize - uBytesCopied, sizeof(Chunk::abyData) - pChunk->uEnd));
+		const auto uBytesToCopy = static_cast<unsigned>(Min(uSize - uBytesCopied, sizeof(X_Chunk::abyData) - pChunk->uEnd));
 		FillN(pChunk->abyData + pChunk->uEnd, uBytesToCopy, byData);
 		pChunk->uEnd += uBytesToCopy;
 
@@ -206,7 +197,7 @@ StreamBuffer StreamBuffer::CutOff(std::size_t uSize){
 		const auto uBytesToCut = static_cast<unsigned>(Min(uSize - uBytesCut, pChunk->uEnd - pChunk->uBegin));
 		if(uBytesToCut < pChunk->uEnd - pChunk->uBegin){
 			const auto pOldChunk = pChunk;
-			pChunk = x_lstChunks.Emplace(pChunk, Chunk::FromBeginning());
+			pChunk = x_lstChunks.Emplace(pChunk, X_Chunk::FromBeginning());
 			CopyN(pChunk->abyData + pChunk->uEnd, pOldChunk->abyData + pOldChunk->uBegin, uBytesToCut);
 			pChunk->uEnd += uBytesToCut;
 			pOldChunk->uBegin += uBytesToCut;

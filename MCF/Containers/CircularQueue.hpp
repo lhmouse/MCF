@@ -5,6 +5,7 @@
 #ifndef MCF_CONTAINERS_CIRCULAR_QUEUE_HPP_
 #define MCF_CONTAINERS_CIRCULAR_QUEUE_HPP_
 
+#include "DefaultAllocator.hpp"
 #include "_Enumerator.hpp"
 #include "../Utilities/Assert.hpp"
 #include "../Utilities/ConstructDestruct.hpp"
@@ -18,11 +19,12 @@
 
 namespace MCF {
 
-template<typename ElementT>
+template<typename ElementT, class AllocatorT = DefaultAllocator>
 class CircularQueue {
 public:
 	// 容器需求。
 	using Element         = ElementT;
+	using Allocator       = AllocatorT;
 	using ConstEnumerator = Impl_Enumerator::ConstEnumerator <CircularQueue>;
 	using Enumerator      = Impl_Enumerator::Enumerator      <CircularQueue>;
 
@@ -92,7 +94,7 @@ public:
 	}
 	~CircularQueue(){
 		Clear();
-		::operator delete[](x_pStorage);
+		Allocator()(x_pStorage);
 	}
 
 private:
@@ -422,7 +424,7 @@ public:
 			uElementsToAlloc = uNewCapacity + 1;
 		}
 		const auto uBytesToAlloc = Impl_CheckedSizeArithmetic::Mul(sizeof(Element), uElementsToAlloc);
-		const auto pNewStorage = static_cast<Element *>(::operator new[](uBytesToAlloc));
+		const auto pNewStorage = static_cast<Element *>(Allocator()(uBytesToAlloc));
 		const auto pOldStorage = x_pStorage;
 		auto pWrite = pNewStorage;
 		try {
@@ -436,14 +438,14 @@ public:
 				--pWrite;
 				Destruct(pWrite);
 			}
-			::operator delete[](pNewStorage);
+			Allocator()(pNewStorage);
 			throw;
 		}
 		X_IterateForward(x_uBegin, x_uEnd,
 			[&, this](auto i){
 				Destruct(pOldStorage + i);
 			});
-		::operator delete[](pOldStorage);
+		Allocator()(pOldStorage);
 
 		x_pStorage  = pNewStorage;
 		x_uBegin    = 0;

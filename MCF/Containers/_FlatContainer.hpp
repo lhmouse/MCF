@@ -17,12 +17,13 @@
 namespace MCF {
 
 namespace Impl_FlatContainer {
-	template<typename ElementT, class MoveCasterT>
+	template<typename ElementT, class MoveCasterT, class AllocatorT>
 	class FlatContainer {
 	public:
 		// 容器需求。
 		using Element         = ElementT;
 		using MoveCaster      = MoveCasterT;
+		using Allocator       = AllocatorT;
 
 	private:
 		Element *x_pStorage;
@@ -69,7 +70,7 @@ namespace Impl_FlatContainer {
 		}
 		~FlatContainer(){
 			Clear();
-			::operator delete[](x_pStorage);
+			Allocator()(x_pStorage);
 		}
 
 	private:
@@ -162,7 +163,7 @@ namespace Impl_FlatContainer {
 				uElementsToAlloc = uNewCapacity;
 			}
 			const auto uBytesToAlloc = Impl_CheckedSizeArithmetic::Mul(sizeof(Element), uElementsToAlloc);
-			const auto pNewStorage = static_cast<Element *>(::operator new[](uBytesToAlloc));
+			const auto pNewStorage = static_cast<Element *>(Allocator()(uBytesToAlloc));
 			const auto pOldStorage = x_pStorage;
 			auto pWrite = pNewStorage;
 			try {
@@ -179,13 +180,13 @@ namespace Impl_FlatContainer {
 					--pWrite;
 					Destruct(pWrite);
 				}
-				::operator delete[](pNewStorage);
+				Allocator()(pNewStorage);
 				throw;
 			}
 			for(std::size_t i = x_uSize; i > 0; --i){
 				Destruct(pOldStorage + i - 1);
 			}
-			::operator delete[](pOldStorage);
+			Allocator()(pOldStorage);
 
 			x_pStorage  = pNewStorage;
 			x_uCapacity = uElementsToAlloc;

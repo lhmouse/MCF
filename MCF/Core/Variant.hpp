@@ -18,7 +18,7 @@ namespace MCF {
 namespace Impl_Variant {
 	template<typename FunctorT, std::size_t kIndex, typename FirstT, typename ...RemainingT>
 	struct Applier {
-		void operator()(FunctorT &&vFunctor, std::size_t uActiveIndex, void *pElement) const {
+		decltype(auto) operator()(FunctorT &&vFunctor, std::size_t uActiveIndex, void *pElement) const {
 			if(uActiveIndex == kIndex){
 				return std::forward<FunctorT>(vFunctor)(*static_cast<FirstT *>(pElement));
 			}
@@ -27,11 +27,11 @@ namespace Impl_Variant {
 	};
 	template<typename FunctorT, std::size_t kIndex, typename FirstT>
 	struct Applier<FunctorT, kIndex, FirstT> {
-		void operator()(FunctorT &&vFunctor, std::size_t uActiveIndex, void *pElement) const {
+		decltype(auto) operator()(FunctorT &&vFunctor, std::size_t uActiveIndex, void *pElement) const {
 			if(uActiveIndex == kIndex){
 				return std::forward<FunctorT>(vFunctor)(*static_cast<FirstT *>(pElement));
 			}
-			ASSERT(false);
+			std::terminate();
 		}
 	};
 }
@@ -182,7 +182,7 @@ public:
 	}
 
 	template<typename FunctorT>
-	void Apply(FunctorT &&vFunctor) const {
+	decltype(auto) Apply(FunctorT &&vFunctor) const {
 		if(!x_pElement){
 			MCF_THROW(Exception, ERROR_NOT_READY, Rcntws::View(L"Variant: 尚未设定活动元素。"));
 		}
@@ -190,7 +190,7 @@ public:
 			std::forward<FunctorT>(vFunctor), x_pElement->GetIndex(), x_pElement->GetAddress());
 	}
 	template<typename FunctorT>
-	void Apply(FunctorT &&vFunctor){
+	decltype(auto) Apply(FunctorT &&vFunctor){
 		if(!x_pElement){
 			MCF_THROW(Exception, ERROR_NOT_READY, Rcntws::View(L"Variant: 尚未设定活动元素。"));
 		}

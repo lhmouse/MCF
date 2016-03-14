@@ -10,10 +10,10 @@
 
 namespace MCF {
 
-FixedSizeAllocator<List<StreamBuffer::X_Chunk, StreamBuffer::X_ChunkAllocator>::kNodeSize> StreamBuffer::X_ChunkAllocator::s_vPool;
+FixedSizeAllocator<StreamBuffer::X_ChunkList::kNodeSize> StreamBuffer::X_ChunkAllocator::s_vPool;
 
 void *StreamBuffer::X_ChunkAllocator::operator()(std::size_t uSize){
-	ASSERT(uSize == (List<X_Chunk, X_ChunkAllocator>::kNodeSize));
+	ASSERT(uSize == (X_ChunkList::kNodeSize));
 	(void)uSize;
 	return s_vPool.Allocate();
 }
@@ -138,7 +138,7 @@ std::size_t StreamBuffer::Discard(std::size_t uSize) noexcept {
 	return uBytesDiscarded;
 }
 void StreamBuffer::Put(const void *pData, std::size_t uSize){
-	List<X_Chunk, X_ChunkAllocator> lstNewChunks;
+	X_ChunkList lstNewChunks;
 	std::size_t uBytesReserved = 0;
 	auto pChunk = x_lstChunks.GetLast();
 	if(pChunk){
@@ -165,7 +165,7 @@ void StreamBuffer::Put(const void *pData, std::size_t uSize){
 	x_uSize += uBytesCopied;
 }
 void StreamBuffer::Put(unsigned char byData, std::size_t uSize){
-	List<X_Chunk, X_ChunkAllocator> lstNewChunks;
+	X_ChunkList lstNewChunks;
 	std::size_t uBytesReserved = 0;
 	auto pChunk = x_lstChunks.GetLast();
 	if(pChunk){

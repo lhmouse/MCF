@@ -36,8 +36,12 @@ private:
 		}
 	};
 
+	struct X_ChunkAllocator;
+
+	using X_ChunkList = List<X_Chunk, X_ChunkAllocator>;
+
 	struct X_ChunkAllocator {
-		static FixedSizeAllocator<List<X_Chunk, X_ChunkAllocator>::kNodeSize> s_vPool;
+		static FixedSizeAllocator<X_ChunkList::kNodeSize> s_vPool;
 
 		void *operator()(std::size_t uSize);
 		void operator()(void *pBlock) noexcept;
@@ -95,7 +99,7 @@ public:
 	};
 
 private:
-	List<X_Chunk, X_ChunkAllocator> x_lstChunks;
+	X_ChunkList x_lstChunks;
 	std::size_t x_uSize;
 
 public:

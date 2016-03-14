@@ -11,16 +11,16 @@
 
 namespace MCF {
 
-template<std::size_t kSizeT>
+template<std::size_t kElementSizeT>
 struct FixedSizeAllocator {
 public:
 	enum : std::size_t {
-		kSize = kSizeT,
+		kElementSize = kElementSizeT,
 	};
 
 	union Block {
 		Block *pNext;
-		unsigned char abyData[kSize];
+		unsigned char abyData[kElementSize];
 		std::max_align_t vAlignment;
 	};
 

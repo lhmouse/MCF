@@ -1,8 +1,10 @@
 #include <MCF/StdMCF.hpp>
-#include <MCF/Core/StreamBuffer.hpp>
+#include <MCF/Function/Bind.hpp>
 
 extern "C" unsigned MCFCRT_Main(){
-	MCF::StreamBuffer buffer;
-	buffer.Put('a', 10000000);
+	auto fn = MCF::Bind(std::plus<>(), MCF::_1, 5);
+	int a;
+	std::scanf("%d", &a);
+	std::printf("fn(a) = %d\n", fn(a));
 	return 0;
 }

@@ -11,7 +11,7 @@
 namespace MCF {
 
 void *StreamBuffer::X_ChunkAllocator::operator()(std::size_t uSize){
-	ASSERT(uSize == (X_ChunkList::kNodeSize));
+	ASSERT(uSize == xs_vPool.kElementSize);
 	(void)uSize;
 	return xs_vPool.Allocate();
 }

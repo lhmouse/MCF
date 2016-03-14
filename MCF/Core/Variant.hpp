@@ -102,12 +102,14 @@ public:
 		Set(std::forward<ParamT>(vParam));
 	}
 	Variant(const Variant &rhs)
-		: x_pElement(rhs.x_pElement ? rhs.x_pElement->Clone() : nullptr)
+		: Variant()
 	{
+		Set(rhs);
 	}
 	Variant(Variant &&rhs) noexcept
-		: x_pElement(std::move(rhs.x_pElement))
+		: Variant()
 	{
+		Set(std::move(rhs));
 	}
 	template<typename ParamT, std::enable_if_t<
 		!std::is_base_of<Variant, ParamT>::value &&
@@ -118,11 +120,11 @@ public:
 		return *this;
 	}
 	Variant &operator=(const Variant &rhs){
-		Variant(rhs).Swap(*this);
+		Set(rhs);
 		return *this;
 	}
 	Variant &operator=(Variant &&rhs) noexcept {
-		rhs.Swap(*this);
+		Set(std::move(rhs));
 		return *this;
 	}
 
@@ -159,10 +161,6 @@ public:
 		return static_cast<Element *>(
 			static_cast<X_ActiveElement<Element> *>(x_pElement.Get())->GetAddress());
 	}
-	template<typename ElementT>
-	void Set(ElementT vElement){
-		Emplace<ElementT>(std::move(vElement));
-	}
 	template<typename ElementT, typename ...ParamsT>
 	void Emplace(ParamsT &&...vParams){
 		static_assert(FindFirstType<ElementT, ElementsT...>() != (std::size_t)-1, "ElementT is not found in ElementsT.");
@@ -178,6 +176,16 @@ public:
 		} else {
 			x_pElement = MakeUnique<X_ActiveElement<ElementT>>(std::forward<ParamsT>(vParams)...);
 		}
+	}
+	template<typename ElementT>
+	void Set(ElementT vElement){
+		Emplace<ElementT>(std::move(vElement));
+	}
+	void Set(const Variant &rhs){
+		x_pElement = rhs.x_pElement ? rhs.x_pElement->Clone() : nullptr;
+	}
+	void Set(Variant &&rhs) noexcept {
+		x_pElement = std::move(rhs.x_pElement);
 	}
 
 	template<typename FunctorT>

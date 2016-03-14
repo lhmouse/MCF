@@ -13,10 +13,12 @@ namespace MCF {
 FixedSizeAllocator<List<StreamBuffer::X_Chunk, StreamBuffer::X_ChunkAllocator>::kNodeSize> StreamBuffer::X_ChunkAllocator::s_vPool;
 
 void *StreamBuffer::X_ChunkAllocator::operator()(std::size_t uSize){
-	return ::operator new(uSize);
+	ASSERT(uSize == (List<X_Chunk, X_ChunkAllocator>::kNodeSize));
+	(void)uSize;
+	return s_vPool.Allocate();
 }
 void StreamBuffer::X_ChunkAllocator::operator()(void *pBlock) noexcept {
-	::operator delete(pBlock);
+	return s_vPool.Deallocate(pBlock);
 }
 
 int StreamBuffer::PeekFront() const noexcept {

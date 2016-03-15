@@ -16,7 +16,7 @@ namespace Impl_BufferedOutputStream {
 	public:
 		enum FlushLevel : unsigned {
 			kFlushBufferAuto = 0,
-			kFlushBufferImm  = 1,
+			kFlushBufferNow  = 1,
 			kFlushStreamSoft = 2,
 			kFlushStreamHard = 3,
 		};

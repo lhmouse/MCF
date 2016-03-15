@@ -69,7 +69,7 @@
 Default = Debug
 
 General {
-	CompilerFlags		= -Wall -Wextra -Wsign-conversion -Wsuggest-attribute=noreturn -pipe -mfpmath=sse,387 -msse2 -mno-stack-arg-probe -mno-accumulate-outgoing-args -mpush-args -masm=intel -ffreestanding
+	CompilerFlags		= -Wall -Wextra -Wsign-conversion -Wsuggest-attribute=noreturn -pipe -mfpmath=sse,387 -msse2 -mno-stack-arg-probe -mno-accumulate-outgoing-args -mpush-args -masm=intel
 	LinkerFlags			= -Wall -Wextra -Wsign-conversion -Wsuggest-attribute=noreturn -static
 	ExtraLibs			= -lversion -lshlwapi
 

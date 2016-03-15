@@ -13,7 +13,6 @@
 #include "../Utilities/CountLeadingTrailingZeroes.hpp"
 #include "../Utilities/CopyMoveFill.hpp"
 #include <type_traits>
-#include <cstring>
 #include <cstddef>
 #include <cstdint>
 
@@ -168,7 +167,7 @@ public:
 			::operator delete[](x_vStorage.pchBegin);
 		}
 #ifndef NDEBUG
-		std::memset(&x_vStorage, 0xDD, sizeof(x_vStorage));
+		__builtin_memset(&x_vStorage, 0xDD, sizeof(x_vStorage));
 #endif
 	}
 
@@ -197,10 +196,10 @@ private:
 		}
 
 		if((pchNewBuffer + uFirstOffset != pchOldBuffer) && (uRemovedBegin != 0)){
-			std::memmove(pchNewBuffer + uFirstOffset, pchOldBuffer, uRemovedBegin * sizeof(Char));
+			__builtin_memmove(pchNewBuffer + uFirstOffset, pchOldBuffer, uRemovedBegin * sizeof(Char));
 		}
 		if((pchNewBuffer + uThirdOffset != pchOldBuffer + uRemovedEnd) && (uOldSize != uRemovedEnd)){
-			std::memmove(pchNewBuffer + uThirdOffset, pchOldBuffer + uRemovedEnd, (uOldSize - uRemovedEnd) * sizeof(Char));
+			__builtin_memmove(pchNewBuffer + uThirdOffset, pchOldBuffer + uRemovedEnd, (uOldSize - uRemovedEnd) * sizeof(Char));
 		}
 
 		if(pchNewBuffer != pchOldBuffer){
@@ -552,7 +551,7 @@ public:
 		}
 		x_vStorage = rhs.x_vStorage;
 #ifndef NDEBUG
-		std::memset(rhs.x_vStorage.achData, 0xCD, sizeof(rhs.x_vStorage.achData));
+		__builtin_memset(rhs.x_vStorage.achData, 0xCD, sizeof(rhs.x_vStorage.achData));
 #endif
 		rhs.x_vStorage.schComplLength = 0;
 	}

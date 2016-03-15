@@ -21,11 +21,11 @@ bool ZeroInputStream::Discard() noexcept {
 }
 
 std::size_t ZeroInputStream::Peek(void *pData, std::size_t uSize) noexcept {
-	std::memset(pData, 0, uSize);
+	__builtin_memset(pData, 0, uSize);
 	return uSize;
 }
 std::size_t ZeroInputStream::Get(void *pData, std::size_t uSize) noexcept {
-	std::memset(pData, 0, uSize);
+	__builtin_memset(pData, 0, uSize);
 	return uSize;
 }
 std::size_t ZeroInputStream::Discard(std::size_t uSize) noexcept {

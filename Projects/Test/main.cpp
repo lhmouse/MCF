@@ -5,7 +5,7 @@
 extern "C" unsigned MCFCRT_Main(){
 	constexpr char str[] = "123 is a baka!";
 	MCF::Md5OutputStream s;
-	s.Put(str, sizeof(str) - 1);
+	//s.Put(str, sizeof(str) - 1);
 	const auto val = s.Finalize();
 
 	MCF::NarrowString ln;

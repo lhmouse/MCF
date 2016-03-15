@@ -97,8 +97,12 @@ void Crc64OutputStream::Reset() noexcept {
 std::uint64_t Crc64OutputStream::Finalize() noexcept {
 	if(x_nChunkOffset >= 0){
 		X_Finalize(x_abyChunk, static_cast<unsigned>(x_nChunkOffset));
-		x_nChunkOffset = -1;
+	} else {
+		X_Initialize();
+		X_Finalize(x_abyChunk, 0);
 	}
+	x_nChunkOffset = -1;
+
 	return x_u64Reg;
 }
 

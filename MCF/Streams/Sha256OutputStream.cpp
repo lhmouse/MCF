@@ -974,8 +974,12 @@ void Sha256OutputStream::Reset() noexcept {
 Array<std::uint8_t, 32> Sha256OutputStream::Finalize() noexcept {
 	if(x_nChunkOffset >= 0){
 		X_Finalize(x_abyChunk, static_cast<unsigned>(x_nChunkOffset));
-		x_nChunkOffset = -1;
+	} else {
+		X_Initialize();
+		X_Finalize(x_abyChunk, 0);
 	}
+	x_nChunkOffset = -1;
+
 	Array<std::uint8_t, 32> abyRet;
 	const auto pu32RetWords = reinterpret_cast<std::uint32_t *>(abyRet.GetData());
 	for(unsigned i = 0; i < 8; ++i){

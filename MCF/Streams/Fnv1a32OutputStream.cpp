@@ -76,8 +76,12 @@ void Fnv1a32OutputStream::Reset() noexcept {
 std::uint32_t Fnv1a32OutputStream::Finalize() noexcept {
 	if(x_nChunkOffset >= 0){
 		X_Finalize(x_abyChunk, static_cast<unsigned>(x_nChunkOffset));
-		x_nChunkOffset = -1;
+	} else {
+		X_Initialize();
+		X_Finalize(x_abyChunk, 0);
 	}
+	x_nChunkOffset = -1;
+
 	return x_u32Reg;
 }
 

@@ -9,7 +9,7 @@ namespace MCF {
 
 struct WhiteHole {
 	template<typename ParamT>
-	operator ParamT() const noexcept(ParamT(ParamT())) {
+	constexpr operator ParamT() const noexcept(ParamT(ParamT())) {
 		return ParamT();
 	}
 };

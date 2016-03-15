@@ -70,7 +70,7 @@ void Crc32OutputStream::Put(const void *pData, std::size_t uSize){
 	const auto uChunkAvail = sizeof(x_abyChunk) - static_cast<unsigned>(x_nChunkOffset);
 	if(uBytesRemaining >= uChunkAvail){
 		if(x_nChunkOffset != 0){
-			__builtin_memcpy(x_abyChunk + x_nChunkOffset, pbyRead, uChunkAvail);
+			std::memcpy(x_abyChunk + x_nChunkOffset, pbyRead, uChunkAvail);
 			pbyRead += uChunkAvail;
 			uBytesRemaining -= uChunkAvail;
 			X_Update(x_abyChunk);
@@ -83,7 +83,7 @@ void Crc32OutputStream::Put(const void *pData, std::size_t uSize){
 		}
 	}
 	if(uBytesRemaining != 0){
-		__builtin_memcpy(x_abyChunk + x_nChunkOffset, pbyRead, uBytesRemaining);
+		std::memcpy(x_abyChunk + x_nChunkOffset, pbyRead, uBytesRemaining);
 		x_nChunkOffset += static_cast<int>(uBytesRemaining);
 	}
 }

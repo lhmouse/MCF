@@ -918,16 +918,16 @@ void Sha256OutputStream::X_Finalize(std::uint8_t (&abyChunk)[64], unsigned uByte
 	abyChunk[uBytesInChunk] = 0x80;
 	++uBytesInChunk;
 	if(uBytesInChunk > 56){
-		__builtin_memset(abyChunk + uBytesInChunk, 0, 64 - uBytesInChunk);
+		std::memset(abyChunk + uBytesInChunk, 0, 64 - uBytesInChunk);
 		X_Update(abyChunk);
 		uBytesInChunk = 0;
 	}
 	if(uBytesInChunk < 56){
-		__builtin_memset(abyChunk + uBytesInChunk, 0, 56 - uBytesInChunk);
+		std::memset(abyChunk + uBytesInChunk, 0, 56 - uBytesInChunk);
 	}
 	std::uint64_t u64BitsTotal;
 	StoreBe(u64BitsTotal, x_u64BytesTotal * 8);
-	__builtin_memcpy(abyChunk + 56, &u64BitsTotal, 8);
+	std::memcpy(abyChunk + 56, &u64BitsTotal, 8);
 	X_Update(abyChunk);
 }
 
@@ -946,7 +946,7 @@ void Sha256OutputStream::Put(const void *pData, std::size_t uSize){
 	const auto uChunkAvail = sizeof(x_abyChunk) - static_cast<unsigned>(x_nChunkOffset);
 	if(uBytesRemaining >= uChunkAvail){
 		if(x_nChunkOffset != 0){
-			__builtin_memcpy(x_abyChunk + x_nChunkOffset, pbyRead, uChunkAvail);
+			std::memcpy(x_abyChunk + x_nChunkOffset, pbyRead, uChunkAvail);
 			pbyRead += uChunkAvail;
 			uBytesRemaining -= uChunkAvail;
 			X_Update(x_abyChunk);
@@ -959,7 +959,7 @@ void Sha256OutputStream::Put(const void *pData, std::size_t uSize){
 		}
 	}
 	if(uBytesRemaining != 0){
-		__builtin_memcpy(x_abyChunk + x_nChunkOffset, pbyRead, uBytesRemaining);
+		std::memcpy(x_abyChunk + x_nChunkOffset, pbyRead, uBytesRemaining);
 		x_nChunkOffset += static_cast<int>(uBytesRemaining);
 	}
 	x_u64BytesTotal += uSize;

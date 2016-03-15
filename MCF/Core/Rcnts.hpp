@@ -10,6 +10,7 @@
 #include "../Utilities/ConstructDestruct.hpp"
 #include <type_traits>
 #include <utility>
+#include <cstring>
 #include <cstddef>
 
 namespace MCF {
@@ -61,7 +62,7 @@ public:
 		const auto uSizeToAlloc = Impl_CheckedSizeArithmetic::Add(sizeof(Atomic<std::size_t>) + sizeof(Char), uSizeToCopy);
 		const auto puRef = static_cast<Atomic<std::size_t> *>(::operator new[](uSizeToAlloc));
 		Construct(puRef, 1u);
-		const auto pszStr = static_cast<Char *>(__builtin_memcpy(puRef + 1, pchSrc, uSizeToCopy));
+		const auto pszStr = static_cast<Char *>(std::memcpy(puRef + 1, pchSrc, uSizeToCopy));
 		pszStr[uCount] = Char();
 		return Rcnts(puRef, pszStr);
 	}

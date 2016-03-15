@@ -12,6 +12,7 @@
 #include "../Core/UniqueHandle.hpp"
 #include "../Core/Exception.hpp"
 #include <type_traits>
+#include <cstring>
 #include <cstddef>
 #include <cstdint>
 
@@ -52,12 +53,12 @@ namespace Impl_ThreadLocal {
 			return nullptr;
 		}
 		static bool ExtractValue(ElementT &vDst, std::intptr_t nValue) noexcept {
-			__builtin_memcpy(&vDst, &nValue, sizeof(vDst));
+			std::memcpy(&vDst, &nValue, sizeof(vDst));
 			return true;
 		}
 		static std::intptr_t PackValue(ElementT &&vSrc) noexcept {
 			std::intptr_t nValue;
-			__builtin_memcpy(&nValue, &vSrc, sizeof(vSrc));
+			std::memcpy(&nValue, &vSrc, sizeof(vSrc));
 			return nValue;
 		}
 	};

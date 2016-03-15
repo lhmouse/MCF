@@ -8,6 +8,7 @@
 #include <type_traits>
 #include <utility>
 #include <new>
+#include <cstring>
 
 namespace MCF {
 
@@ -34,7 +35,7 @@ namespace Impl_ConstructDestruct {
 			(void)pStorage;
 
 #ifndef NDEBUG
-			__builtin_memset(pStorage, 0xBB, sizeof(ObjectT));
+			std::memset(pStorage, 0xBB, sizeof(ObjectT));
 #endif
 			::new(pStorage, Tag()) ObjectT(std::forward<ParamsT>(vParams)...);
 		}
@@ -44,7 +45,7 @@ namespace Impl_ConstructDestruct {
 			(void)pStorage;
 
 #ifndef NDEBUG
-			__builtin_memset(pStorage, 0xCC, sizeof(ObjectT));
+			std::memset(pStorage, 0xCC, sizeof(ObjectT));
 #endif
 			::new(pStorage, Tag()) ObjectT;
 		}
@@ -54,7 +55,7 @@ namespace Impl_ConstructDestruct {
 			(void)pStorage;
 
 #ifndef NDEBUG
-			__builtin_memset(pStorage, 0xCC, sizeof(ObjectT));
+			std::memset(pStorage, 0xCC, sizeof(ObjectT));
 #endif
 			::new(pStorage, Tag()) ObjectT(std::forward<ParamsT>(vParams)...);
 		}
@@ -65,7 +66,7 @@ namespace Impl_ConstructDestruct {
 
 			pObject->~ObjectT();
 #ifndef NDEBUG
-			__builtin_memset(pStorage, 0xDD, sizeof(ObjectT));
+			std::memset(pStorage, 0xDD, sizeof(ObjectT));
 #endif
 		}
 	};

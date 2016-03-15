@@ -77,7 +77,7 @@ Impl_UniqueNtHandle::UniqueNtHandle File::X_CreateFileHandle(const WideStringVie
 
 	::UNICODE_STRING *pustrFullPath;
 	Impl_UniqueNtHandle::UniqueNtHandle hRootDirectory;
-	if((ustrRawPath.Length >= sizeof(kDosDevicePath)) && (__builtin_memcmp(ustrRawPath.Buffer, kDosDevicePath, sizeof(kDosDevicePath)) == 0)){
+	if((ustrRawPath.Length >= sizeof(kDosDevicePath)) && (std::memcmp(ustrRawPath.Buffer, kDosDevicePath, sizeof(kDosDevicePath)) == 0)){
 		pustrFullPath = &ustrRawPath;
 	} else {
 		::RTL_PATH_TYPE ePathType;

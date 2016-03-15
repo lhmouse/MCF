@@ -31,7 +31,7 @@ namespace {
 		const auto hFindFile = MCF::UniqueHandle<HANDLE, FindCloser>(::FindFirstFileW((wcsPath + L"*").c_str(), &FindData));
 		if(hFindFile.IsGood()){
 			do {
-				if((__builtin_memcmp(FindData.cFileName, L".", sizeof(L".")) == 0) || (__builtin_memcmp(FindData.cFileName, L"..", sizeof(L"..")) == 0)){
+				if((std::memcmp(FindData.cFileName, L".", sizeof(L".")) == 0) || (std::memcmp(FindData.cFileName, L"..", sizeof(L"..")) == 0)){
 					continue;
 				}
 				if(std::find_if(
@@ -47,7 +47,7 @@ namespace {
 				wvstring wcsName(FindData.cFileName);
 				if((FindData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) == 0){
 					++ulFileCount;
-					__builtin_memcpy(&(ret.mapFiles[std::move(wcsName)]), &FindData.ftLastWriteTime, sizeof(long long));
+					std::memcpy(&(ret.mapFiles[std::move(wcsName)]), &FindData.ftLastWriteTime, sizeof(long long));
 				} else {
 					const wvstring wcsNextPath(wcsPath + wcsName + L'\\');
 					GetTreeRecur(ret.mapSubFolders[std::move(wcsName)], ulTotal, wcsNextPath, Project, wcsPrefix + L"  ", bVerbose);

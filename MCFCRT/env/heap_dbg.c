@@ -127,8 +127,8 @@ unsigned char *__MCFCRT_HeapDbgRegisterBlockInfo(__MCFCRT_HeapDbgBlockInfo *pBlo
 		--ppGuard1;
 
 		void *const pTemp1 = EncodePointer(ppGuard2), *const pTemp2 = EncodePointer(ppGuard1);
-		__builtin_memcpy(ppGuard1, &pTemp1, sizeof(void *));
-		__builtin_memcpy(ppGuard2, &pTemp2, sizeof(void *));
+		memcpy(ppGuard1, &pTemp1, sizeof(void *));
+		memcpy(ppGuard2, &pTemp2, sizeof(void *));
 
 		++ppGuard2;
 	}
@@ -151,8 +151,8 @@ __MCFCRT_HeapDbgBlockInfo *__MCFCRT_HeapDbgValidateBlock(unsigned char **ppRaw, 
 		--ppGuard1;
 
 		void *pTemp1, *pTemp2;
-		__builtin_memcpy(&pTemp1, ppGuard1, sizeof(void *));
-		__builtin_memcpy(&pTemp2, ppGuard2, sizeof(void *));
+		memcpy(&pTemp1, ppGuard1, sizeof(void *));
+		memcpy(&pTemp2, ppGuard2, sizeof(void *));
 		if((DecodePointer(pTemp1) != ppGuard2) || (DecodePointer(pTemp2) != ppGuard1)){
 			MCFCRT_BailF(L"__MCFCRT_HeapDbgValidate() 失败：侦测到堆损坏。\n调用返回地址：%p", pRetAddr);
 		}
@@ -178,8 +178,8 @@ unsigned char *__MCFCRT_HeapDbgAddBlockGuardsBasic(unsigned char *pRaw){
 		--ppGuard1;
 
 		void *const pTemp1 = EncodePointer(ppGuard2), *const pTemp2 = EncodePointer(ppGuard1);
-		__builtin_memcpy(ppGuard1, &pTemp1, sizeof(void *));
-		__builtin_memcpy(ppGuard2, &pTemp2, sizeof(void *));
+		memcpy(ppGuard1, &pTemp1, sizeof(void *));
+		memcpy(ppGuard2, &pTemp2, sizeof(void *));
 
 		++ppGuard2;
 	}
@@ -198,8 +198,8 @@ void __MCFCRT_HeapDbgValidateBlockBasic(unsigned char **ppRaw, unsigned char *pC
 		--ppGuard1;
 
 		void *pTemp1, *pTemp2;
-		__builtin_memcpy(&pTemp1, ppGuard1, sizeof(void *));
-		__builtin_memcpy(&pTemp2, ppGuard2, sizeof(void *));
+		memcpy(&pTemp1, ppGuard1, sizeof(void *));
+		memcpy(&pTemp2, ppGuard2, sizeof(void *));
 		if((DecodePointer(pTemp1) != ppGuard2) || (DecodePointer(pTemp2) != ppGuard1)){
 			MCFCRT_BailF(L"__MCFCRT_HeapDbgValidate() 失败：侦测到堆损坏。\n调用返回地址：%p", pRetAddr);
 		}

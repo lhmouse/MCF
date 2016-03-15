@@ -12,8 +12,17 @@ struct BlackHole {
 	constexpr const BlackHole &operator=(ParamT &&) const noexcept {
 		return *this;
 	}
+	template<typename ParamT>
+	BlackHole &operator=(ParamT &&) noexcept {
+		return *this;
+	}
+
 	template<typename ...ParamsT>
-	constexpr BlackHole &operator()(ParamsT &&...) const noexcept {
+	constexpr const BlackHole &operator()(ParamsT &&...) const noexcept {
+		return *this;
+	}
+	template<typename ...ParamsT>
+	BlackHole &operator()(ParamsT &&...) noexcept {
 		return *this;
 	}
 };

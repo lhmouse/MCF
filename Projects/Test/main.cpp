@@ -1,10 +1,7 @@
 #include <MCF/StdMCF.hpp>
-#include <MCF/Function/Bind.hpp>
+#include <MCF/Function/BlackHole.hpp>
 
 extern "C" unsigned MCFCRT_Main(){
-	auto fn = MCF::Bind(std::plus<>(), MCF::_1, 5);
-	int a;
-	std::scanf("%d", &a);
-	std::printf("fn(a) = %d\n", fn(a));
+	auto a = (MCF::BlackHole() = 1);
 	return 0;
 }

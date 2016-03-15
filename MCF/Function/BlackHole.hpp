@@ -9,7 +9,7 @@ namespace MCF {
 
 struct BlackHole {
 	template<typename ParamT>
-	BlackHole &operator=(ParamT &&) noexcept {
+	constexpr const BlackHole &operator=(ParamT &&) const noexcept {
 		return *this;
 	}
 	template<typename ...ParamsT>

@@ -474,7 +474,7 @@ public:
 	}
 
 	void Resize(std::size_t uNewSize){
-		const std::size_t uOldSize = GetSize();
+		const auto uOldSize = GetSize();
 		if(uNewSize > uOldSize){
 			Reserve(uNewSize);
 			X_SetSize(uNewSize);

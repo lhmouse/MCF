@@ -207,9 +207,9 @@ public:
 	}
 
 	void Swap(StaticVector &rhs) noexcept(std::is_nothrow_move_constructible<Element>::value) {
-		auto vecTemp = std::move_if_noexcept(rhs);
+		auto temp = std::move_if_noexcept(*this);
 		*this = std::move(rhs);
-		rhs = std::move(vecTemp);
+		rhs = std::move(temp);
 	}
 
 	// StaticVector 需求。

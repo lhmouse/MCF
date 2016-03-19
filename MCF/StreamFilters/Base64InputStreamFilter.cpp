@@ -54,21 +54,21 @@ void Base64InputStreamFilter::X_PopulatePlainBuffer(std::size_t uExpected){
 
 		unsigned uBytes;
 		std::uint_fast32_t u32Word = 0;
-		if(abyTemp[2] == '='){
-			uBytes = 1;
-			u32Word |= (DecodeOne(abyTemp[0]) << 26);
-			u32Word |= (DecodeOne(abyTemp[1]) << 20);
-		} else if(abyTemp[3] == '='){
-			uBytes = 2;
-			u32Word |= (DecodeOne(abyTemp[0]) << 26);
-			u32Word |= (DecodeOne(abyTemp[1]) << 20);
-			u32Word |= (DecodeOne(abyTemp[2]) << 14);
-		} else {
+		if(abyTemp[3] != '='){
 			uBytes = 3;
 			u32Word |= (DecodeOne(abyTemp[0]) << 26);
 			u32Word |= (DecodeOne(abyTemp[1]) << 20);
 			u32Word |= (DecodeOne(abyTemp[2]) << 14);
 			u32Word |= (DecodeOne(abyTemp[3]) <<  8);
+		} else if(abyTemp[2] != '='){
+			uBytes = 2;
+			u32Word |= (DecodeOne(abyTemp[0]) << 26);
+			u32Word |= (DecodeOne(abyTemp[1]) << 20);
+			u32Word |= (DecodeOne(abyTemp[2]) << 14);
+		} else {
+			uBytes = 1;
+			u32Word |= (DecodeOne(abyTemp[0]) << 26);
+			u32Word |= (DecodeOne(abyTemp[1]) << 20);
 		}
 
 		std::uint32_t u32WordInBigEndian;

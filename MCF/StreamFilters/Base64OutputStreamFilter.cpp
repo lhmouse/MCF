@@ -36,12 +36,12 @@ void Base64OutputStreamFilter::X_FlushPlainBuffer(bool bForceFlushAll){
 		const std::uint_fast32_t u32Word = LoadBe(u32WordInBigEndian);
 
 		unsigned char abyResult[4];
-		if(uBytesRead == 1){
+		if(uBytesRead == 3){
 			abyResult[0] = kBase64Table[(u32Word >> 26) % 64];
 			abyResult[1] = kBase64Table[(u32Word >> 20) % 64];
-			abyResult[2] = '=';
-			abyResult[3] = '=';
-		} else  if(uBytesRead == 2){
+			abyResult[2] = kBase64Table[(u32Word >> 14) % 64];
+			abyResult[3] = kBase64Table[(u32Word >>  8) % 64];
+		} else if(uBytesRead == 2){
 			abyResult[0] = kBase64Table[(u32Word >> 26) % 64];
 			abyResult[1] = kBase64Table[(u32Word >> 20) % 64];
 			abyResult[2] = kBase64Table[(u32Word >> 14) % 64];
@@ -49,8 +49,8 @@ void Base64OutputStreamFilter::X_FlushPlainBuffer(bool bForceFlushAll){
 		} else {
 			abyResult[0] = kBase64Table[(u32Word >> 26) % 64];
 			abyResult[1] = kBase64Table[(u32Word >> 20) % 64];
-			abyResult[2] = kBase64Table[(u32Word >> 14) % 64];
-			abyResult[3] = kBase64Table[(u32Word >>  8) % 64];
+			abyResult[2] = '=';
+			abyResult[3] = '=';
 		}
 
 		y_vStream.BufferedPut(abyResult, 4);

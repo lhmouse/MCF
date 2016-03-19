@@ -1,19 +1,38 @@
 #include <MCF/StdMCF.hpp>
-#include <MCF/Core/String.hpp>
-#include <MCF/Streams/Md5OutputStream.hpp>
+#include <MCF/Streams/BufferInputStream.hpp>
+#include <MCF/Streams/BufferOutputStream.hpp>
+#include <MCF/StreamFilters/Base64InputStreamFilter.hpp>
+#include <MCF/StreamFilters/Base64OutputStreamFilter.hpp>
+
+using namespace MCF;
 
 extern "C" unsigned MCFCRT_Main(){
-	constexpr char str[] = "123 is a baka!";
-	MCF::Md5OutputStream s;
-	s.Put(str, sizeof(str) - 1);
-	const auto val = s.Finalize();
+	constexpr char strs[][64] = {
+		"aA==",
+		"aGU=",
+		"aGVs",
+		"aGVsbA==",
+		"aGVsbG8=",
+		"aGVsbG8g",
+		"aGVsbG8gdw==",
+		"aGVsbG8gd28=",
+		"aGVsbG8gd29y",
+		"aGVsbG8gd29ybA==",
+		"aGVsbG8gd29ybGQ=",
+		"aGVsbG8gd29ybGQh",
+	};
 
-	MCF::NarrowString ln;
-	for(auto b : val){
-		char temp[8];
-		int tlen = std::sprintf(temp, "%02hhx", b);
-		ln.Append(temp, (unsigned)tlen);
+	for(unsigned i = 0; i < sizeof(strs) / sizeof(strs[0]); ++i){
+		auto is = MakeIntrusive<BufferInputStream>();
+		is->GetBuffer().Put(strs[i], std::strlen(strs[i]));
+		auto bs = MakeIntrusive<Base64InputStreamFilter>(is);
+
+		int c;
+		while((c = bs->Get()) >= 0){
+			std::putchar(c);
+		}
+		std::putchar('\n');
 	}
-	std::printf("str = %s, md5 = %s\n", str, ln.GetStr());
+
 	return 0;
 }

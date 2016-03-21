@@ -46,10 +46,10 @@ namespace Impl_ThreadLocal {
 			return nullptr;
 		}
 		static ElementT *ExtractValue(std::intptr_t &nValue){
-			return &reinterpret_cast<ElementT &>(nValue);
+			return reinterpret_cast<ElementT *>(&nValue);
 		}
 		static std::intptr_t PackValue(ElementT &&vSrc){
-			return reinterpret_cast<std::intptr_t>(vSrc);
+			return reinterpret_cast<std::intptr_t &>(vSrc);
 		}
 	};
 

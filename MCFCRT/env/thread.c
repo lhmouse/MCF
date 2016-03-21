@@ -471,7 +471,7 @@ bool MCFCRT_AlertableSleep(uint64_t u64UntilFastMonoClock){
 	}
 	return true;
 }
-void MCFCRT_AlertableSleepInfinitely(){
+void MCFCRT_AlertableSleepForever(){
 	LARGE_INTEGER liTimeout;
 	liTimeout.QuadPart = INT64_MAX;
 	const NTSTATUS lStatus = NtDelayExecution(true, &liTimeout);
@@ -527,7 +527,7 @@ bool MCFCRT_WaitForThread(void *hThread, MCFCRT_STD uint64_t u64UntilFastMonoClo
 	}
 	return true;
 }
-void MCFCRT_WaitForThreadInfinitely(void *hThread){
+void MCFCRT_WaitForThreadForever(void *hThread){
 	const NTSTATUS lStatus = NtWaitForSingleObject((HANDLE)hThread, false, nullptr);
 	if(!NT_SUCCESS(lStatus)){
 		ASSERT_MSG(false, L"NtWaitForSingleObject() 失败。");

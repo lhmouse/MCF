@@ -26,7 +26,7 @@ bool Thread::AlertableSleep(std::uint64_t u64UntilFastMonoClock) noexcept {
 	return ::MCFCRT_AlertableSleep(u64UntilFastMonoClock);
 }
 void Thread::AlertableSleep() noexcept {
-	::MCFCRT_AlertableSleepInfinitely();
+	::MCFCRT_AlertableSleepForever();
 }
 void Thread::YieldExecution() noexcept {
 	::MCFCRT_YieldThread();
@@ -81,7 +81,7 @@ bool Thread::Wait(std::uint64_t u64UntilFastMonoClock) const noexcept {
 	return ::MCFCRT_WaitForThread(x_hThread.Get(), u64UntilFastMonoClock);
 }
 void Thread::Wait() const noexcept {
-	::MCFCRT_WaitForThreadInfinitely(x_hThread.Get());
+	::MCFCRT_WaitForThreadForever(x_hThread.Get());
 }
 
 bool Thread::IsAlive() const noexcept {

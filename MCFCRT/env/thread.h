@@ -36,7 +36,7 @@ extern MCFCRT_STD uintptr_t MCFCRT_GetCurrentThreadId(void) MCFCRT_NOEXCEPT;
 extern void MCFCRT_Sleep(MCFCRT_STD uint64_t __u64UntilFastMonoClock) MCFCRT_NOEXCEPT;
 // 被 APC 打断返回 true，超时返回 false。
 extern bool MCFCRT_AlertableSleep(MCFCRT_STD uint64_t __u64UntilFastMonoClock) MCFCRT_NOEXCEPT;
-extern void MCFCRT_AlertableSleepInfinitely(void) MCFCRT_NOEXCEPT;
+extern void MCFCRT_AlertableSleepForever(void) MCFCRT_NOEXCEPT;
 extern void MCFCRT_YieldThread(void) MCFCRT_NOEXCEPT;
 
 extern long MCFCRT_SuspendThread(void *__hThread) MCFCRT_NOEXCEPT;
@@ -44,7 +44,7 @@ extern long MCFCRT_ResumeThread(void *__hThread) MCFCRT_NOEXCEPT;
 
 // 线程结束返回 true，超时返回 false。
 extern bool MCFCRT_WaitForThread(void *__hThread, MCFCRT_STD uint64_t __u64UntilFastMonoClock) MCFCRT_NOEXCEPT;
-extern void MCFCRT_WaitForThreadInfinitely(void *__hThread) MCFCRT_NOEXCEPT;
+extern void MCFCRT_WaitForThreadForever(void *__hThread) MCFCRT_NOEXCEPT;
 
 __MCFCRT_EXTERN_C_END
 

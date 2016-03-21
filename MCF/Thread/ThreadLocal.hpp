@@ -30,18 +30,13 @@ namespace Impl_ThreadLocal {
 
 	using TlsCleanupCallback = void (*)(std::intptr_t);
 
-	template<class ElementT, bool kCanBeStoredAsIntPtr>
+	template<class ElementT, bool kCanBeStoredAsIntPtrT>
 	struct ElementManipulator {
 		static TlsCleanupCallback GetCleanupCallback() noexcept {
 			return [](std::intptr_t nValue){ delete reinterpret_cast<ElementT *>(nValue); };
 		}
-		static bool ExtractValue(ElementT &vDst, std::intptr_t nValue){
-			const auto pSrc = reinterpret_cast<const ElementT *>(nValue);
-			if(!pSrc){
-				return false;
-			}
-			vDst = *pSrc;
-			return true;
+		static ElementT *ExtractValue(std::intptr_t &nValue){
+			return reinterpret_cast<ElementT *>(nValue);
 		}
 		static std::intptr_t PackValue(ElementT &&vSrc){
 			return reinterpret_cast<std::intptr_t>(new ElementT(std::move(vSrc)));
@@ -52,14 +47,11 @@ namespace Impl_ThreadLocal {
 		static constexpr TlsCleanupCallback GetCleanupCallback() noexcept {
 			return nullptr;
 		}
-		static bool ExtractValue(ElementT &vDst, std::intptr_t nValue) noexcept {
-			std::memcpy(&vDst, &nValue, sizeof(vDst));
-			return true;
+		static ElementT *ExtractValue(std::intptr_t &nValue){
+			return &reinterpret_cast<ElementT &>(nValue);
 		}
-		static std::intptr_t PackValue(ElementT &&vSrc) noexcept {
-			std::intptr_t nValue;
-			std::memcpy(&nValue, &vSrc, sizeof(vSrc));
-			return nValue;
+		static std::intptr_t PackValue(ElementT &&vSrc){
+			return reinterpret_cast<std::intptr_t>(vSrc);
 		}
 	};
 
@@ -71,13 +63,10 @@ namespace Impl_ThreadLocal {
 template<class ElementT>
 class ThreadLocal : MCF_NONCOPYABLE {
 private:
-	const ElementT x_vDefault;
 	UniqueHandle<Impl_ThreadLocal::TlsKeyDeleter> x_pTlsKey;
 
 public:
-	explicit ThreadLocal(ElementT vDefault = ElementT())
-		: x_vDefault(std::move(vDefault))
-	{
+	explicit ThreadLocal(){
 		const auto pfnCleanupCallback = Impl_ThreadLocal::ElementTraits<ElementT>::GetCleanupCallback();
 		if(!x_pTlsKey.Reset(::_MCFCRT_TlsAllocKey(pfnCleanupCallback))){
 			MCF_THROW(Exception, ::_MCFCRT_GetLastWin32Error(), Rcntws::View(L"_MCFCRT_TlsAllocKey() 失败。"));
@@ -85,29 +74,24 @@ public:
 	}
 
 public:
-	ElementT Get() const {
-		bool bHasValue = false;
-		std::intptr_t nValue = 0;
-		if(!::_MCFCRT_TlsGet(x_pTlsKey.Get(), &bHasValue, &nValue)){
+	ElementT *Get() const noexcept {
+		std::intptr_t *pnValue;
+		if(!::_MCFCRT_TlsGet(x_pTlsKey.Get(), &pnValue)){
 			ASSERT_MSG(false, L"_MCFCRT_TlsGet() 失败。");
 		}
-		if(bHasValue){
-			ElementT vElement;
-			if(Impl_ThreadLocal::ElementTraits<ElementT>::ExtractValue(vElement, nValue)){
-				return std::move(vElement);
-			}
-		}
-		return x_vDefault;
+		return Impl_ThreadLocal::ElementTraits<ElementT>::ExtractValue(*pnValue);
 	}
 	void Set(ElementT vElement){
-		const auto pfnCleanupCallback = Impl_ThreadLocal::ElementTraits<ElementT>::GetCleanupCallback();
-		std::intptr_t nValue = Impl_ThreadLocal::ElementTraits<ElementT>::PackValue(std::move(vElement));
-		if(!::_MCFCRT_TlsReset(x_pTlsKey.Get(), nValue)){ // noexcept
-			if(pfnCleanupCallback){
-				(*pfnCleanupCallback)(nValue);
-			}
-			MCF_THROW(Exception, ::_MCFCRT_GetLastWin32Error(), Rcntws::View(L"_MCFCRT_TlsReset() 失败。"));
+		std::intptr_t *pnValue;
+		if(!::_MCFCRT_TlsRequire(x_pTlsKey.Get(), &pnValue, reinterpret_cast<std::intptr_t>(static_cast<ElementT *>(nullptr)))){
+			MCF_THROW(Exception, ::_MCFCRT_GetLastWin32Error(), Rcntws::View(L"_MCFCRT_TlsRequire() 失败。"));
 		}
+		const auto nNewValue = Impl_ThreadLocal::ElementTraits<ElementT>::PackValue(std::move(vElement));
+		const auto pfnCleanupCallback = Impl_ThreadLocal::ElementTraits<ElementT>::GetCleanupCallback();
+		if(pfnCleanupCallback){
+			(*pfnCleanupCallback)(*pnValue);
+		}
+		*pnValue = nNewValue;
 	}
 };
 

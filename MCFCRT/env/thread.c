@@ -216,65 +216,40 @@ void (*_MCFCRT_TlsGetCallback(void *pTlsKey))(intptr_t){
 	SetLastError(ERROR_SUCCESS);
 	return pKey->pfnCallback;
 }
-bool _MCFCRT_TlsGet(void *pTlsKey, bool *restrict pbHasValue, intptr_t *restrict pnValue){
+bool _MCFCRT_TlsGet(void *pTlsKey, intptr_t **restrict ppnValue){
 	TlsKey *const pKey = pTlsKey;
 	if(!pKey){
 		SetLastError(ERROR_INVALID_PARAMETER);
 		return false;
 	}
 
-	*pbHasValue = false;
+	*ppnValue = nullptr;
 
-	ThreadMap *const pMap = TlsGetValue(g_dwTlsIndex);
+	ThreadMap *pMap = TlsGetValue(g_dwTlsIndex);
 	if(!pMap){
 		return true;
 	}
 
 	AcquireSRWLockExclusive(&(pMap->srwLock));
 	{
-		TlsObject *const pObject = (TlsObject *)_MCFCRT_AvlFind(
-			&(pMap->pavlObjects), (intptr_t)pKey, &ObjectComparatorNodeKey);
-		if(pObject){
-			*pbHasValue = true;
-			*pnValue = pObject->nValue;
+		TlsObject *pObject = (TlsObject *)_MCFCRT_AvlFind(&(pMap->pavlObjects), (intptr_t)pKey, &ObjectComparatorNodeKey);
+		if(!pObject){
+			return true;
 		}
+		*ppnValue = &(pObject->nValue);
 	}
 	ReleaseSRWLockExclusive(&(pMap->srwLock));
 
 	return true;
 }
-bool _MCFCRT_TlsReset(void *pTlsKey, intptr_t nNewValue){
+bool _MCFCRT_TlsRequire(void *pTlsKey, intptr_t **restrict ppnValue, _MCFCRT_STD intptr_t nInitValue){
 	TlsKey *const pKey = pTlsKey;
 	if(!pKey){
 		SetLastError(ERROR_INVALID_PARAMETER);
 		return false;
 	}
 
-	bool bHasOldValue;
-	intptr_t nOldValue;
-	if(!_MCFCRT_TlsExchange(pTlsKey, &bHasOldValue, &nOldValue, nNewValue)){
-		if(pKey->pfnCallback){
-			const DWORD dwErrorCode = GetLastError();
-			(*pKey->pfnCallback)(nNewValue);
-			SetLastError(dwErrorCode);
-		}
-		return false;
-	}
-	if(bHasOldValue){
-		if(pKey->pfnCallback){
-			(*pKey->pfnCallback)(nOldValue);
-		}
-	}
-	return true;
-}
-bool _MCFCRT_TlsExchange(void *pTlsKey, bool *restrict pbHasOldValue, intptr_t *restrict pnOldValue, intptr_t nNewValue){
-	TlsKey *const pKey = pTlsKey;
-	if(!pKey){
-		SetLastError(ERROR_INVALID_PARAMETER);
-		return false;
-	}
-
-	*pbHasOldValue = false;
+	*ppnValue = nullptr;
 
 	ThreadMap *pMap = TlsGetValue(g_dwTlsIndex);
 	if(!pMap){
@@ -292,28 +267,34 @@ bool _MCFCRT_TlsExchange(void *pTlsKey, bool *restrict pbHasOldValue, intptr_t *
 
 	AcquireSRWLockExclusive(&(pMap->srwLock));
 	{
-		TlsObject *const pObject = (TlsObject *)_MCFCRT_AvlFind(
-			&(pMap->pavlObjects), (intptr_t)pKey, &ObjectComparatorNodeKey);
-		if(pObject){
-			*pbHasOldValue = true;
-			*pnOldValue = pObject->nValue;
-			pObject->nValue = nNewValue;
-		}
-	}
-	ReleaseSRWLockExclusive(&(pMap->srwLock));
-
-	if(!*pbHasOldValue){
-		TlsObject *const pObject = malloc(sizeof(TlsObject));
+		TlsObject *pObject = (TlsObject *)_MCFCRT_AvlFind(&(pMap->pavlObjects), (intptr_t)pKey, &ObjectComparatorNodeKey);
 		if(!pObject){
-			SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-			return false;
-		}
-		pObject->nValue = nNewValue;
-		pObject->pMap = pMap;
-		pObject->pKey = pKey;
+			ReleaseSRWLockExclusive(&(pMap->srwLock));
+			{
+				pObject = malloc(sizeof(TlsObject));
+				if(!pObject){
+					SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+					return false;
+				}
+				pObject->nValue = nInitValue;
+				pObject->pMap = pMap;
+				pObject->pKey = pKey;
 
-		AcquireSRWLockExclusive(&(pMap->srwLock));
-		{
+				AcquireSRWLockExclusive(&(pKey->srwLock));
+				{
+					TlsObject *const pPrev = pKey->pLastByKey;
+					pKey->pLastByKey = pObject;
+
+					pObject->pPrevByKey = pPrev;
+					pObject->pNextByKey = nullptr;
+					if(pPrev){
+						pPrev->pNextByKey = pObject;
+					}
+				}
+				ReleaseSRWLockExclusive(&(pKey->srwLock));
+			}
+			AcquireSRWLockExclusive(&(pMap->srwLock));
+
 			TlsObject *const pPrev = pMap->pLastByThread;
 			pMap->pLastByThread = pObject;
 
@@ -324,21 +305,9 @@ bool _MCFCRT_TlsExchange(void *pTlsKey, bool *restrict pbHasOldValue, intptr_t *
 			}
 			_MCFCRT_AvlAttach(&(pMap->pavlObjects), (_MCFCRT_AvlNodeHeader *)pObject, &ObjectComparatorNodes);
 		}
-		ReleaseSRWLockExclusive(&(pMap->srwLock));
-
-		AcquireSRWLockExclusive(&(pKey->srwLock));
-		{
-			TlsObject *const pPrev = pKey->pLastByKey;
-			pKey->pLastByKey = pObject;
-
-			pObject->pPrevByKey = pPrev;
-			pObject->pNextByKey = nullptr;
-			if(pPrev){
-				pPrev->pNextByKey = pObject;
-			}
-		}
-		ReleaseSRWLockExclusive(&(pKey->srwLock));
+		*ppnValue = &(pObject->nValue);
 	}
+	ReleaseSRWLockExclusive(&(pMap->srwLock));
 
 	return true;
 }
@@ -348,12 +317,14 @@ int _MCFCRT_AtEndThread(void (*pfnProc)(intptr_t), intptr_t nContext){
 	if(!pKey){
 		return -1;
 	}
-	if(!_MCFCRT_TlsReset(pKey, nContext)){
+	intptr_t *pnValue;
+	if(!_MCFCRT_TlsRequire(pKey, &pnValue, nContext)){
 		const DWORD dwLastError = GetLastError();
 		_MCFCRT_TlsFreeKey(pKey);
 		SetLastError(dwLastError);
 		return -1;
 	}
+	ASSERT(*pnValue == nContext);
 	return 0;
 }
 

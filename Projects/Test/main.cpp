@@ -1,41 +1,26 @@
 #include <MCF/StdMCF.hpp>
-#include <MCF/Streams/StandardOutputStream.hpp>
-#include <MCF/Streams/BufferInputStream.hpp>
-#include <MCF/Streams/BufferOutputStream.hpp>
-#include <MCF/StreamFilters/Base64InputStreamFilter.hpp>
-#include <MCF/StreamFilters/Base64OutputStreamFilter.hpp>
+#include <MCF/Thread/ThreadLocal.hpp>
 
-using namespace MCF;
+template class MCF::ThreadLocal<int>;
+template class MCF::ThreadLocal<long double>;
+template class MCF::ThreadLocal<std::string>;
 
 extern "C" unsigned _MCFCRT_Main(){
-	StandardOutputStream os;
+	MCF::ThreadLocal<int>         ti;
+	MCF::ThreadLocal<long double> tf;
+	MCF::ThreadLocal<std::string> ts;
 
-	constexpr char strs[][64] = {
-		"aA==",
-		"aGU=",
-		"aGVs",
-		"aGVsbA==",
-		"aGVsbG8=",
-		"aGVsbG8g",
-		"aGVsbG8gdw==",
-		"aGVsbG8gd28=",
-		"aGVsbG8gd29y",
-		"aGVsbG8gd29ybA==",
-		"aGVsbG8gd29ybGQ=",
-		"aGVsbG8gd29ybGQh",
-	};
+	ti.Set(12345);
+	ti.Set(23456);
+	ti.Set(34567);
 
-	for(unsigned i = 0; i < sizeof(strs) / sizeof(strs[0]); ++i){
-		auto is = MakeIntrusive<BufferInputStream>();
-		is->GetBuffer().Put(strs[i], std::strlen(strs[i]));
-		auto bs = MakeIntrusive<Base64InputStreamFilter>(is);
+	tf.Set(1.234);
+	tf.Set(23.45);
+	tf.Set(345.6);
 
-		int c;
-		while((c = bs->Get()) >= 0){
-			os.Put(c);
-		}
-		os.Put('\n');
-	}
+	ts.Set("abc");
+	ts.Set("def");
+	ts.Set("ghi");
 
 	return 0;
 }

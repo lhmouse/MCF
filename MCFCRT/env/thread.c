@@ -54,7 +54,7 @@ static int ObjectComparatorNodes(const _MCFCRT_AvlNodeHeader *pObj1, const _MCFC
 
 typedef struct tagThreadMap {
 	SRWLOCK srwLock;
-	_MCFCRT_AvlRoot pavlObjects;
+	_MCFCRT_AvlRoot avlObjects;
 	struct tagTlsObject *pLastByThread;
 } ThreadMap;
 
@@ -232,7 +232,7 @@ bool _MCFCRT_TlsGet(void *pTlsKey, intptr_t **restrict ppnValue){
 
 	AcquireSRWLockExclusive(&(pMap->srwLock));
 	{
-		TlsObject *pObject = (TlsObject *)_MCFCRT_AvlFind(&(pMap->pavlObjects), (intptr_t)pKey, &ObjectComparatorNodeKey);
+		TlsObject *pObject = (TlsObject *)_MCFCRT_AvlFind(&(pMap->avlObjects), (intptr_t)pKey, &ObjectComparatorNodeKey);
 		if(!pObject){
 			return true;
 		}
@@ -259,7 +259,7 @@ bool _MCFCRT_TlsRequire(void *pTlsKey, intptr_t **restrict ppnValue, _MCFCRT_STD
 			return false;
 		}
 		InitializeSRWLock(&(pMap->srwLock));
-		pMap->pavlObjects   = nullptr;
+		pMap->avlObjects   = nullptr;
 		pMap->pLastByThread = nullptr;
 
 		TlsSetValue(g_dwTlsIndex, pMap);
@@ -267,7 +267,7 @@ bool _MCFCRT_TlsRequire(void *pTlsKey, intptr_t **restrict ppnValue, _MCFCRT_STD
 
 	AcquireSRWLockExclusive(&(pMap->srwLock));
 	{
-		TlsObject *pObject = (TlsObject *)_MCFCRT_AvlFind(&(pMap->pavlObjects), (intptr_t)pKey, &ObjectComparatorNodeKey);
+		TlsObject *pObject = (TlsObject *)_MCFCRT_AvlFind(&(pMap->avlObjects), (intptr_t)pKey, &ObjectComparatorNodeKey);
 		if(!pObject){
 			ReleaseSRWLockExclusive(&(pMap->srwLock));
 			{
@@ -303,7 +303,7 @@ bool _MCFCRT_TlsRequire(void *pTlsKey, intptr_t **restrict ppnValue, _MCFCRT_STD
 			if(pPrev){
 				pPrev->pNextByThread = pObject;
 			}
-			_MCFCRT_AvlAttach(&(pMap->pavlObjects), (_MCFCRT_AvlNodeHeader *)pObject, &ObjectComparatorNodes);
+			_MCFCRT_AvlAttach(&(pMap->avlObjects), (_MCFCRT_AvlNodeHeader *)pObject, &ObjectComparatorNodes);
 		}
 		*ppnValue = &(pObject->nValue);
 	}

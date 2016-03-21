@@ -182,11 +182,7 @@ bool File::OpenNoThrow(const WideStringView &wsvPath, std::uint32_t u32Flags){
 		return false;
 	}
 }
-void File::Close(){
-	if(!x_hFile){
-		return;
-	}
-
+void File::Close() noexcept {
 	File().Swap(*this);
 }
 

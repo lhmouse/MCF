@@ -28,11 +28,9 @@ namespace Impl_ThreadLocal {
 		}
 	};
 
-	using TlsCleanupCallback = void (*)(std::intptr_t);
-
 	template<class ElementT, bool kCanBeStoredAsIntPtrT>
 	struct ElementManipulator {
-		static TlsCleanupCallback GetCleanupCallback() noexcept {
+		static ::_MCFCRT_TlsCallback GetCleanupCallback() noexcept {
 			return [](std::intptr_t nValue){ delete reinterpret_cast<ElementT *>(nValue); };
 		}
 		static ElementT *ExtractValue(std::intptr_t &nValue){
@@ -44,7 +42,7 @@ namespace Impl_ThreadLocal {
 	};
 	template<class ElementT>
 	struct ElementManipulator<ElementT, true> {
-		static constexpr TlsCleanupCallback GetCleanupCallback() noexcept {
+		static constexpr ::_MCFCRT_TlsCallback GetCleanupCallback() noexcept {
 			return nullptr;
 		}
 		static ElementT *ExtractValue(std::intptr_t &nValue){

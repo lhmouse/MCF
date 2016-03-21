@@ -51,7 +51,7 @@ public:
 	using Char = CharT;
 
 private:
-	static const CharT xs_kEmpty[1];
+	static const CharT xs_achEmpty[1];
 
 public:
 	static Rcnts Copy(const Char *pszSrc){
@@ -103,7 +103,7 @@ private:
 
 public:
 	constexpr Rcnts() noexcept
-		: Rcnts(nullptr, xs_kEmpty)
+		: Rcnts(nullptr, xs_achEmpty)
 	{
 	}
 	Rcnts(const Rcnts &rhs) noexcept
@@ -111,7 +111,7 @@ public:
 	{
 	}
 	Rcnts(Rcnts &&rhs) noexcept
-		: x_puRef(std::exchange(rhs.x_puRef, nullptr)), x_pszStr(std::exchange(rhs.x_pszStr, xs_kEmpty))
+		: x_puRef(std::exchange(rhs.x_puRef, nullptr)), x_pszStr(std::exchange(rhs.x_pszStr, xs_achEmpty))
 	{
 	}
 	Rcnts &operator=(const Rcnts &rhs) noexcept {
@@ -234,7 +234,7 @@ public:
 };
 
 template<typename CharT>
-const CharT Rcnts<CharT>::xs_kEmpty[1] = { };
+const CharT Rcnts<CharT>::xs_achEmpty[1] = { };
 
 extern template class Rcnts<char>;
 extern template class Rcnts<wchar_t>;

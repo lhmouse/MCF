@@ -30,7 +30,7 @@ static int DtorComparatorNodes(const _MCFCRT_AvlNodeHeader *pObj1, const _MCFCRT
 
 static SRWLOCK          g_srwDtorMapLock = SRWLOCK_INIT;
 static KeyDtorNode *    g_pDtorHead      = nullptr;
-static _MCFCRT_AvlRoot   g_avlDtorRoot    = nullptr;
+static _MCFCRT_AvlRoot  g_avlDtorRoot    = nullptr;
 
 bool __MCFCRT_MinGWHacksInit(){
 	return true;

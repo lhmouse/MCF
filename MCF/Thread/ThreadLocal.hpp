@@ -49,7 +49,9 @@ namespace Impl_ThreadLocal {
 			return reinterpret_cast<ElementT *>(&nValue);
 		}
 		static std::intptr_t PackValue(ElementT &&vSrc){
-			return reinterpret_cast<std::intptr_t &>(vSrc);
+			std::intptr_t nRet;
+			std::memcpy(&nRet, AddressOf(vSrc), sizeof(vSrc));
+			return nRet;
 		}
 	};
 

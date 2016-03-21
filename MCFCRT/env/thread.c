@@ -217,13 +217,13 @@ void (*_MCFCRT_TlsGetCallback(void *pTlsKey))(intptr_t){
 	return pKey->pfnCallback;
 }
 bool _MCFCRT_TlsGet(void *pTlsKey, intptr_t **restrict ppnValue){
+	*ppnValue = nullptr;
+
 	TlsKey *const pKey = pTlsKey;
 	if(!pKey){
 		SetLastError(ERROR_INVALID_PARAMETER);
 		return false;
 	}
-
-	*ppnValue = nullptr;
 
 	ThreadMap *pMap = TlsGetValue(g_dwTlsIndex);
 	if(!pMap){
@@ -243,13 +243,13 @@ bool _MCFCRT_TlsGet(void *pTlsKey, intptr_t **restrict ppnValue){
 	return true;
 }
 bool _MCFCRT_TlsRequire(void *pTlsKey, intptr_t **restrict ppnValue, _MCFCRT_STD intptr_t nInitValue){
+	*ppnValue = nullptr;
+
 	TlsKey *const pKey = pTlsKey;
 	if(!pKey){
 		SetLastError(ERROR_INVALID_PARAMETER);
 		return false;
 	}
-
-	*ppnValue = nullptr;
 
 	ThreadMap *pMap = TlsGetValue(g_dwTlsIndex);
 	if(!pMap){

@@ -15,7 +15,7 @@ _Noreturn void __wrap_abort(){
 		longjmp(*__MCFCRT_abort_hook_jmpbuf, ERROR_PROCESS_ABORTED);
 	}
 
-	MCFCRT_Bail(L"应用程序调用了 abort()。");
+	_MCFCRT_Bail(L"应用程序调用了 abort()。");
 }
 
 _Noreturn

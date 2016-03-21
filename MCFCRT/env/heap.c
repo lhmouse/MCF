@@ -102,7 +102,7 @@ unsigned char *__MCFCRT_HeapAlloc(size_t uSize, const void *pRetAddr){
 }
 unsigned char *__MCFCRT_HeapRealloc(void *pBlock, size_t uSize, const void *pRetAddr){
 	if(!pBlock){
-		MCFCRT_Bail(L"__MCFCRT_HeapRealloc() 失败：传入了一个空指针。\n\n");
+		_MCFCRT_Bail(L"__MCFCRT_HeapRealloc() 失败：传入了一个空指针。\n\n");
 	}
 
 #if __MCFCRT_REQUIRE_HEAPDBG_LEVEL(1)
@@ -187,7 +187,7 @@ unsigned char *__MCFCRT_HeapRealloc(void *pBlock, size_t uSize, const void *pRet
 }
 void __MCFCRT_HeapFree(void *pBlock, const void *pRetAddr){
 	if(!pBlock){
-		MCFCRT_Bail(L"__MCFCRT_HeapFree() 失败：传入了一个空指针。\n\n");
+		_MCFCRT_Bail(L"__MCFCRT_HeapFree() 失败：传入了一个空指针。\n\n");
 	}
 
 #if __MCFCRT_REQUIRE_HEAPDBG_LEVEL(1)

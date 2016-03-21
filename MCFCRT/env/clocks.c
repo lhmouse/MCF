@@ -16,7 +16,7 @@ static uint64_t GetTimeZoneOffsetInMillisecondsOnce(){
 
 		DYNAMIC_TIME_ZONE_INFORMATION vInfo;
 		if(GetDynamicTimeZoneInformation(&vInfo) == TIME_ZONE_ID_INVALID){
-			MCFCRT_Bail(L"GetDynamicTimeZoneInformation() 失败。");
+			_MCFCRT_Bail(L"GetDynamicTimeZoneInformation() 失败。");
 		}
 		*pInited = (uint64_t)(vInfo.Bias * -60000ll);
 
@@ -34,7 +34,7 @@ static double QueryPerformanceFrequencyReciprocalOnce(){
 
 		LARGE_INTEGER liFreq;
 		if(!QueryPerformanceFrequency(&liFreq)){
-			MCFCRT_Bail(L"QueryPerformanceFrequency() 失败。");
+			_MCFCRT_Bail(L"QueryPerformanceFrequency() 失败。");
 		}
 		*pInited = 1000.0 / (double)liFreq.QuadPart;
 
@@ -43,7 +43,7 @@ static double QueryPerformanceFrequencyReciprocalOnce(){
 	return *pInited;
 }
 
-uint64_t MCFCRT_GetUtcClock(){
+uint64_t _MCFCRT_GetUtcClock(){
 	union {
 		FILETIME ft;
 		LARGE_INTEGER li;
@@ -52,24 +52,24 @@ uint64_t MCFCRT_GetUtcClock(){
 	// 0x019DB1DED53E8000 = 从 1601-01-01 到 1970-01-01 经历的时间纳秒数。
 	return (uint64_t)(unUtc.li.QuadPart - 0x019DB1DED53E8000ll) / 10000;;
 }
-uint64_t MCFCRT_GetLocalClock(){
-	return MCFCRT_GetLocalClockFromUtc(MCFCRT_GetUtcClock());
+uint64_t _MCFCRT_GetLocalClock(){
+	return _MCFCRT_GetLocalClockFromUtc(_MCFCRT_GetUtcClock());
 }
 
-uint64_t MCFCRT_GetUtcClockFromLocal(uint64_t u64LocalClock){
+uint64_t _MCFCRT_GetUtcClockFromLocal(uint64_t u64LocalClock){
 	return u64LocalClock - GetTimeZoneOffsetInMillisecondsOnce();
 }
-uint64_t MCFCRT_GetLocalClockFromUtc(uint64_t u64UtcClock){
+uint64_t _MCFCRT_GetLocalClockFromUtc(uint64_t u64UtcClock){
 	return u64UtcClock + GetTimeZoneOffsetInMillisecondsOnce();
 }
 
-uint64_t MCFCRT_GetFastMonoClock(){
+uint64_t _MCFCRT_GetFastMonoClock(){
 	return GetTickCount64();
 }
-double MCFCRT_GetHiResMonoClock(){
+double _MCFCRT_GetHiResMonoClock(){
 	LARGE_INTEGER liCounter;
 	if(!QueryPerformanceCounter(&liCounter)){
-		MCFCRT_Bail(L"QueryPerformanceCounter() 失败。");
+		_MCFCRT_Bail(L"QueryPerformanceCounter() 失败。");
 	}
 	return (double)liCounter.QuadPart * QueryPerformanceFrequencyReciprocalOnce();
 }

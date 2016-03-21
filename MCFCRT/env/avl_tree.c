@@ -5,25 +5,25 @@
 #include "avl_tree.h"
 #include "../ext/assert.h"
 
-static inline size_t GetHeight(const MCFCRT_AvlNodeHeader *pWhere){
+static inline size_t GetHeight(const _MCFCRT_AvlNodeHeader *pWhere){
 	return pWhere ? pWhere->__uHeight : 0;
 }
 static inline size_t Max(size_t lhs, size_t rhs){
 	return (lhs > rhs) ? lhs : rhs;
 }
-static void UpdateRecur(MCFCRT_AvlNodeHeader *pWhere){
+static void UpdateRecur(_MCFCRT_AvlNodeHeader *pWhere){
 	ASSERT(pWhere);
 
-	MCFCRT_AvlNodeHeader *pNode = pWhere;
+	_MCFCRT_AvlNodeHeader *pNode = pWhere;
 	size_t uLeftHeight = GetHeight(pWhere->__pLeft);
 	size_t uRightHeight = GetHeight(pWhere->__pRight);
 	for(;;){
 		const size_t uOldHeight = pNode->__uHeight;
 
-		MCFCRT_AvlNodeHeader *const pParent = pNode->__pParent;
-		MCFCRT_AvlNodeHeader **const ppRefl = pNode->__ppRefl;
-		MCFCRT_AvlNodeHeader *const pLeft   = pNode->__pLeft;
-		MCFCRT_AvlNodeHeader *const pRight  = pNode->__pRight;
+		_MCFCRT_AvlNodeHeader *const pParent = pNode->__pParent;
+		_MCFCRT_AvlNodeHeader **const ppRefl = pNode->__ppRefl;
+		_MCFCRT_AvlNodeHeader *const pLeft   = pNode->__pLeft;
+		_MCFCRT_AvlNodeHeader *const pRight  = pNode->__pRight;
 
 		if(uLeftHeight > uRightHeight){
 			ASSERT(uLeftHeight - uRightHeight <= 2);
@@ -33,8 +33,8 @@ static void UpdateRecur(MCFCRT_AvlNodeHeader *pWhere){
 			} else {
 				ASSERT(pLeft);
 
-				MCFCRT_AvlNodeHeader *const pLL = pLeft->__pLeft;
-				MCFCRT_AvlNodeHeader *const pLR = pLeft->__pRight;
+				_MCFCRT_AvlNodeHeader *const pLL = pLeft->__pLeft;
+				_MCFCRT_AvlNodeHeader *const pLR = pLeft->__pRight;
 
 				const size_t uLLHeight = GetHeight(pLL);
 				const size_t uLRHeight = GetHeight(pLR);
@@ -84,8 +84,8 @@ static void UpdateRecur(MCFCRT_AvlNodeHeader *pWhere){
 					|     lrl    lrr     |                             |
 					\*-------------------+----------------------------*/
 
-					MCFCRT_AvlNodeHeader *const pLRL = pLR->__pLeft;
-					MCFCRT_AvlNodeHeader *const pLRR = pLR->__pRight;
+					_MCFCRT_AvlNodeHeader *const pLRL = pLR->__pLeft;
+					_MCFCRT_AvlNodeHeader *const pLRR = pLR->__pRight;
 
 					size_t uLRLHeight = 0;
 					if(pLRL){
@@ -130,8 +130,8 @@ static void UpdateRecur(MCFCRT_AvlNodeHeader *pWhere){
 				ASSERT(pRight);
 				ASSERT(GetHeight(pRight) - GetHeight(pNode->__pLeft) == 2);
 
-				MCFCRT_AvlNodeHeader *const pRR = pRight->__pRight;
-				MCFCRT_AvlNodeHeader *const pRL = pRight->__pLeft;
+				_MCFCRT_AvlNodeHeader *const pRR = pRight->__pRight;
+				_MCFCRT_AvlNodeHeader *const pRL = pRight->__pLeft;
 
 				const size_t uRRHeight = GetHeight(pRR);
 				const size_t uRLHeight = GetHeight(pRL);
@@ -161,8 +161,8 @@ static void UpdateRecur(MCFCRT_AvlNodeHeader *pWhere){
 				} else {
 					ASSERT(pRL);
 
-					MCFCRT_AvlNodeHeader *const pRLR = pRL->__pRight;
-					MCFCRT_AvlNodeHeader *const pRLL = pRL->__pLeft;
+					_MCFCRT_AvlNodeHeader *const pRLR = pRL->__pRight;
+					_MCFCRT_AvlNodeHeader *const pRLL = pRL->__pLeft;
 
 					size_t uRLRHeight = 0;
 					if(pRLR){
@@ -219,8 +219,8 @@ static void UpdateRecur(MCFCRT_AvlNodeHeader *pWhere){
 	}
 }
 
-void MCFCRT_AvlInternalAttach(MCFCRT_AvlNodeHeader *pNode,
-	MCFCRT_AvlNodeHeader *pParent, MCFCRT_AvlNodeHeader **ppRefl)
+void _MCFCRT_AvlInternalAttach(_MCFCRT_AvlNodeHeader *pNode,
+	_MCFCRT_AvlNodeHeader *pParent, _MCFCRT_AvlNodeHeader **ppRefl)
 {
 	ASSERT(*ppRefl == nullptr);
 
@@ -237,7 +237,7 @@ void MCFCRT_AvlInternalAttach(MCFCRT_AvlNodeHeader *pNode,
 		pNode->__pNext = nullptr;
 	} else {
 		if(ppRefl == &(pParent->__pLeft)){
-			MCFCRT_AvlNodeHeader *const pPrev = pParent->__pPrev;
+			_MCFCRT_AvlNodeHeader *const pPrev = pParent->__pPrev;
 			pNode->__pPrev = pPrev;
 			pNode->__pNext = pParent;
 			pParent->__pPrev = pNode;
@@ -245,7 +245,7 @@ void MCFCRT_AvlInternalAttach(MCFCRT_AvlNodeHeader *pNode,
 				pPrev->__pNext = pNode;
 			}
 		} else {
-			MCFCRT_AvlNodeHeader *const pNext = pParent->__pNext;
+			_MCFCRT_AvlNodeHeader *const pNext = pParent->__pNext;
 			pNode->__pPrev = pParent;
 			pNode->__pNext = pNext;
 			if(pNext){
@@ -259,13 +259,13 @@ void MCFCRT_AvlInternalAttach(MCFCRT_AvlNodeHeader *pNode,
 	}
 }
 
-void MCFCRT_AvlInternalDetach(const MCFCRT_AvlNodeHeader *pNode){
-	MCFCRT_AvlNodeHeader *const pParent = pNode->__pParent;
-	MCFCRT_AvlNodeHeader **const ppRefl = pNode->__ppRefl;
-	MCFCRT_AvlNodeHeader *const pLeft = pNode->__pLeft;
-	MCFCRT_AvlNodeHeader *const pRight = pNode->__pRight;
-	MCFCRT_AvlNodeHeader *const pPrev = pNode->__pPrev;
-	MCFCRT_AvlNodeHeader *const pNext = pNode->__pNext;
+void _MCFCRT_AvlInternalDetach(const _MCFCRT_AvlNodeHeader *pNode){
+	_MCFCRT_AvlNodeHeader *const pParent = pNode->__pParent;
+	_MCFCRT_AvlNodeHeader **const ppRefl = pNode->__ppRefl;
+	_MCFCRT_AvlNodeHeader *const pLeft = pNode->__pLeft;
+	_MCFCRT_AvlNodeHeader *const pRight = pNode->__pRight;
+	_MCFCRT_AvlNodeHeader *const pPrev = pNode->__pPrev;
+	_MCFCRT_AvlNodeHeader *const pNext = pNode->__pNext;
 
 	if(!pLeft){
 		/*-----------+------*\
@@ -320,9 +320,9 @@ void MCFCRT_AvlInternalDetach(const MCFCRT_AvlNodeHeader *pNode){
 			|      prevl                |                           |
 			\*--------------------------+---------------------------*/
 
-			MCFCRT_AvlNodeHeader *const pPrevParent = pPrev->__pParent;
-			MCFCRT_AvlNodeHeader **const ppPrevRefl = pPrev->__ppRefl;
-			MCFCRT_AvlNodeHeader *const pPrevLeft = pPrev->__pLeft;
+			_MCFCRT_AvlNodeHeader *const pPrevParent = pPrev->__pParent;
+			_MCFCRT_AvlNodeHeader **const ppPrevRefl = pPrev->__ppRefl;
+			_MCFCRT_AvlNodeHeader *const pPrevLeft = pPrev->__pLeft;
 
 			ASSERT(pPrevParent && (pPrevParent != pNode));
 

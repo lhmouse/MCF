@@ -10,12 +10,12 @@
 namespace MCF {
 
 void ThunkDeleter::operator()(const void *pThunk) const noexcept {
-	::MCFCRT_DeallocateThunk(pThunk, true);
+	::_MCFCRT_DeallocateThunk(pThunk, true);
 }
 
 UniquePtr<const void, ThunkDeleter> CreateThunk(const void *pInit, std::size_t uSize){
 	UniquePtr<const void, ThunkDeleter> pThunk;
-	if(!pThunk.Reset(::MCFCRT_AllocateThunk(pInit, uSize))){
+	if(!pThunk.Reset(::_MCFCRT_AllocateThunk(pInit, uSize))){
 		throw std::bad_alloc();
 	}
 	return pThunk;

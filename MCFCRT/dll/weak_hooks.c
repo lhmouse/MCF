@@ -4,19 +4,19 @@
 
 #include "decl.h"
 
-bool MCFCRT_OnDllProcessAttach(void *hDll, bool bDynamic){
+bool _MCFCRT_OnDllProcessAttach(void *hDll, bool bDynamic){
 	(void)hDll;
 	(void)bDynamic;
 
 	return true;
 }
-void MCFCRT_OnDllProcessDetach(void *hDll, bool bDynamic){
+void _MCFCRT_OnDllProcessDetach(void *hDll, bool bDynamic){
 	(void)hDll;
 	(void)bDynamic;
 }
-void MCFCRT_OnDllThreadAttach(void *hDll){
+void _MCFCRT_OnDllThreadAttach(void *hDll){
 	(void)hDll;
 }
-void MCFCRT_OnDllThreadDetach(void *hDll){
+void _MCFCRT_OnDllThreadDetach(void *hDll){
 	(void)hDll;
 }

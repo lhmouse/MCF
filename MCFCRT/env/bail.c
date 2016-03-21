@@ -49,13 +49,13 @@ static void DoBail(const wchar_t *pwszDescription){
 	bool bShouldGenerateBreakpoint = bCanBeDebugged;
 
 	wchar_t awcBuffer[1024 + 256];
-	wchar_t *pwcWrite = MCFCRT_wcpcpy(awcBuffer, L"应用程序异常终止，请联系作者寻求协助。");
+	wchar_t *pwcWrite = _MCFCRT_wcpcpy(awcBuffer, L"应用程序异常终止，请联系作者寻求协助。");
 	if(pwszDescription){
-		pwcWrite = MCFCRT_wcpcpy(pwcWrite, L"\n\n错误描述：\n");
+		pwcWrite = _MCFCRT_wcpcpy(pwcWrite, L"\n\n错误描述：\n");
 		wchar_t *const pwcEnd = awcBuffer + sizeof(awcBuffer) / sizeof(wchar_t) - 64; // 后面还有一些内容，保留一些字符。
-		pwcWrite = MCFCRT_wcppcpy(pwcWrite, pwcEnd, pwszDescription);
+		pwcWrite = _MCFCRT_wcppcpy(pwcWrite, pwcEnd, pwszDescription);
 	}
-	pwcWrite = MCFCRT_wcpcpy(pwcWrite, bCanBeDebugged ? L"\n\n单击“确定”终止应用程序，单击“取消”调试应用程序。\n" : L"\n\n单击“确定”终止应用程序。\n");
+	pwcWrite = _MCFCRT_wcpcpy(pwcWrite, bCanBeDebugged ? L"\n\n单击“确定”终止应用程序，单击“取消”调试应用程序。\n" : L"\n\n单击“确定”终止应用程序。\n");
 
 	const HANDLE hStdErr = GetStdHandle(STD_ERROR_HANDLE);
 	if(hStdErr != INVALID_HANDLE_VALUE){
@@ -100,12 +100,12 @@ static void DoBail(const wchar_t *pwszDescription){
 }
 
 _Noreturn
-void MCFCRT_Bail(const wchar_t *pwszDescription){
+void _MCFCRT_Bail(const wchar_t *pwszDescription){
 	DoBail(pwszDescription);
 }
 
 _Noreturn
-void MCFCRT_BailV(const wchar_t *pwszFormat, va_list pArgs){
+void _MCFCRT_BailV(const wchar_t *pwszFormat, va_list pArgs){
 	wchar_t awcBuffer[1024];
 	vswprintf(awcBuffer, sizeof(awcBuffer) / sizeof(wchar_t), pwszFormat, pArgs);
 	DoBail(awcBuffer);

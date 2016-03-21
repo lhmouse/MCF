@@ -10,31 +10,31 @@
 namespace MCF {
 
 inline std::uint32_t ReadTimestampCounter32() noexcept {
-	return ::MCFCRT_ReadTimestampCounter32();
+	return ::_MCFCRT_ReadTimestampCounter32();
 }
 inline std::uint64_t ReadTimestampCounter64() noexcept {
-	return ::MCFCRT_ReadTimestampCounter64();
+	return ::_MCFCRT_ReadTimestampCounter64();
 }
 
 inline std::uint64_t GetUtcClock() noexcept {
-	return ::MCFCRT_GetUtcClock();
+	return ::_MCFCRT_GetUtcClock();
 }
 inline std::uint64_t GetLocalClock() noexcept {
-	return ::MCFCRT_GetLocalClock();
+	return ::_MCFCRT_GetLocalClock();
 }
 
 inline std::uint64_t GetUtcClockFromLocal(std::uint64_t u64LocalClock) noexcept {
-	return ::MCFCRT_GetUtcClockFromLocal(u64LocalClock);
+	return ::_MCFCRT_GetUtcClockFromLocal(u64LocalClock);
 }
 inline std::uint64_t GetLocalClockFromUtc(std::uint64_t u64UtcClock) noexcept {
-	return ::MCFCRT_GetLocalClockFromUtc(u64UtcClock);
+	return ::_MCFCRT_GetLocalClockFromUtc(u64UtcClock);
 }
 
 inline std::uint64_t GetFastMonoClock() noexcept {
-	return ::MCFCRT_GetFastMonoClock();
+	return ::_MCFCRT_GetFastMonoClock();
 }
 inline double GetHiResMonoClock() noexcept {
-	return ::MCFCRT_GetHiResMonoClock();
+	return ::_MCFCRT_GetHiResMonoClock();
 }
 
 }

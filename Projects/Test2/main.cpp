@@ -6,7 +6,7 @@ using namespace MCF;
 
 constexpr char INIT[0x200000] = { };
 
-extern "C" unsigned int MCFCRT_Main() noexcept {
+extern "C" unsigned int _MCFCRT_Main() noexcept {
 	IsaacGenerator rng(100);
 	std::vector<ThunkPtr> v;
 	try {

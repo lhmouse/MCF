@@ -9,16 +9,16 @@
 
 __MCFCRT_EXTERN_C_BEGIN
 
-static inline MCFCRT_STD uint32_t MCFCRT_ReadTimestampCounter32() MCFCRT_NOEXCEPT {
-	MCFCRT_STD uint32_t __u32Ret;
+static inline _MCFCRT_STD uint32_t _MCFCRT_ReadTimestampCounter32() _MCFCRT_NOEXCEPT {
+	_MCFCRT_STD uint32_t __u32Ret;
 	__asm__ __volatile__(
 		"rdtsc \n"
 		: "=a"(__u32Ret) : : "dx"
 		);
 	return __u32Ret;
 }
-static inline MCFCRT_STD uint64_t MCFCRT_ReadTimestampCounter64() MCFCRT_NOEXCEPT {
-	MCFCRT_STD uint64_t __u64Ret;
+static inline _MCFCRT_STD uint64_t _MCFCRT_ReadTimestampCounter64() _MCFCRT_NOEXCEPT {
+	_MCFCRT_STD uint64_t __u64Ret;
 	__asm__ __volatile__(
 		"rdtsc \n"
 #ifdef _WIN64
@@ -32,14 +32,14 @@ static inline MCFCRT_STD uint64_t MCFCRT_ReadTimestampCounter64() MCFCRT_NOEXCEP
 	return __u64Ret;
 }
 
-extern MCFCRT_STD uint64_t MCFCRT_GetUtcClock() MCFCRT_NOEXCEPT;
-extern MCFCRT_STD uint64_t MCFCRT_GetLocalClock() MCFCRT_NOEXCEPT;
+extern _MCFCRT_STD uint64_t _MCFCRT_GetUtcClock() _MCFCRT_NOEXCEPT;
+extern _MCFCRT_STD uint64_t _MCFCRT_GetLocalClock() _MCFCRT_NOEXCEPT;
 
-extern MCFCRT_STD uint64_t MCFCRT_GetUtcClockFromLocal(MCFCRT_STD uint64_t __u64LocalClock) MCFCRT_NOEXCEPT;
-extern MCFCRT_STD uint64_t MCFCRT_GetLocalClockFromUtc(MCFCRT_STD uint64_t __u64UtcClock) MCFCRT_NOEXCEPT;
+extern _MCFCRT_STD uint64_t _MCFCRT_GetUtcClockFromLocal(_MCFCRT_STD uint64_t __u64LocalClock) _MCFCRT_NOEXCEPT;
+extern _MCFCRT_STD uint64_t _MCFCRT_GetLocalClockFromUtc(_MCFCRT_STD uint64_t __u64UtcClock) _MCFCRT_NOEXCEPT;
 
-extern MCFCRT_STD uint64_t MCFCRT_GetFastMonoClock() MCFCRT_NOEXCEPT;
-extern double MCFCRT_GetHiResMonoClock() MCFCRT_NOEXCEPT;
+extern _MCFCRT_STD uint64_t _MCFCRT_GetFastMonoClock() _MCFCRT_NOEXCEPT;
+extern double _MCFCRT_GetHiResMonoClock() _MCFCRT_NOEXCEPT;
 
 __MCFCRT_EXTERN_C_END
 

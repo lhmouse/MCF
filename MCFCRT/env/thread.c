@@ -30,7 +30,7 @@ extern __attribute__((__dllimport__, __stdcall__))
 NTSTATUS NtResumeThread(HANDLE hThread, LONG *plPrevCount);
 
 typedef struct tagTlsObject {
-	MCFCRT_AvlNodeHeader vHeader;
+	_MCFCRT_AvlNodeHeader vHeader;
 
 	intptr_t nValue;
 
@@ -43,41 +43,41 @@ typedef struct tagTlsObject {
 	struct tagTlsObject *pNextByKey;
 } TlsObject;
 
-static int ObjectComparatorNodeKey(const MCFCRT_AvlNodeHeader *pObj1, intptr_t nKey2){
+static int ObjectComparatorNodeKey(const _MCFCRT_AvlNodeHeader *pObj1, intptr_t nKey2){
 	const uintptr_t uKey1 = (uintptr_t)(((const TlsObject *)pObj1)->pKey);
 	const uintptr_t uKey2 = (uintptr_t)(void *)nKey2;
 	return (uKey1 < uKey2) ? -1 : ((uKey1 > uKey2) ? 1 : 0);
 }
-static int ObjectComparatorNodes(const MCFCRT_AvlNodeHeader *pObj1, const MCFCRT_AvlNodeHeader *pObj2){
+static int ObjectComparatorNodes(const _MCFCRT_AvlNodeHeader *pObj1, const _MCFCRT_AvlNodeHeader *pObj2){
 	return ObjectComparatorNodeKey(pObj1, (intptr_t)(void *)(((const TlsObject *)pObj2)->pKey));
 }
 
 typedef struct tagThreadMap {
 	SRWLOCK srwLock;
-	MCFCRT_AvlRoot pavlObjects;
+	_MCFCRT_AvlRoot pavlObjects;
 	struct tagTlsObject *pLastByThread;
 } ThreadMap;
 
 typedef struct tagTlsKey {
-	MCFCRT_AvlNodeHeader vHeader;
+	_MCFCRT_AvlNodeHeader vHeader;
 
 	SRWLOCK srwLock;
 	void (*pfnCallback)(intptr_t);
 	struct tagTlsObject *pLastByKey;
 } TlsKey;
 
-static int KeyComparatorNodeKey(const MCFCRT_AvlNodeHeader *pObj1, intptr_t nKey2){
+static int KeyComparatorNodeKey(const _MCFCRT_AvlNodeHeader *pObj1, intptr_t nKey2){
 	const uintptr_t uKey1 = (uintptr_t)(void *)pObj1;
 	const uintptr_t uKey2 = (uintptr_t)(void *)nKey2;
 	return (uKey1 < uKey2) ? -1 : ((uKey1 > uKey2) ? 1 : 0);
 }
-static int KeyComparatorNodes(const MCFCRT_AvlNodeHeader *pObj1, const MCFCRT_AvlNodeHeader *pObj2){
+static int KeyComparatorNodes(const _MCFCRT_AvlNodeHeader *pObj1, const _MCFCRT_AvlNodeHeader *pObj2){
 	return KeyComparatorNodeKey(pObj1, (intptr_t)(void *)pObj2);
 }
 
 static SRWLOCK          g_csKeyMutex  = SRWLOCK_INIT;
 static DWORD            g_dwTlsIndex  = TLS_OUT_OF_INDEXES;
-static MCFCRT_AvlRoot   g_avlKeys     = nullptr;
+static _MCFCRT_AvlRoot   g_avlKeys     = nullptr;
 
 bool __MCFCRT_ThreadEnvInit(){
 	g_dwTlsIndex = TlsAlloc();
@@ -88,20 +88,20 @@ bool __MCFCRT_ThreadEnvInit(){
 }
 void __MCFCRT_ThreadEnvUninit(){
 	if(g_avlKeys){
-		MCFCRT_AvlNodeHeader *const pRoot = g_avlKeys;
+		_MCFCRT_AvlNodeHeader *const pRoot = g_avlKeys;
 		g_avlKeys = nullptr;
 
 		TlsKey *pKey;
-		MCFCRT_AvlNodeHeader *pCur = MCFCRT_AvlPrev(pRoot);
+		_MCFCRT_AvlNodeHeader *pCur = _MCFCRT_AvlPrev(pRoot);
 		while(pCur){
 			pKey = (TlsKey *)pCur;
-			pCur = MCFCRT_AvlPrev(pCur);
+			pCur = _MCFCRT_AvlPrev(pCur);
 			free(pKey);
 		}
-		pCur = MCFCRT_AvlNext(pRoot);
+		pCur = _MCFCRT_AvlNext(pRoot);
 		while(pCur){
 			pKey = (TlsKey *)pCur;
-			pCur = MCFCRT_AvlNext(pCur);
+			pCur = _MCFCRT_AvlNext(pCur);
 			free(pKey);
 		}
 		pKey = (TlsKey *)pRoot;
@@ -142,7 +142,7 @@ void __MCFCRT_TlsThreadCleanup(){
 	__MCFCRT_RunEmutlsDtors();
 }
 
-void *MCFCRT_TlsAllocKey(void (*pfnCallback)(intptr_t)){
+void *_MCFCRT_TlsAllocKey(void (*pfnCallback)(intptr_t)){
 	TlsKey *const pKey = malloc(sizeof(TlsKey));
 	if(!pKey){
 		SetLastError(ERROR_NOT_ENOUGH_MEMORY);
@@ -154,13 +154,13 @@ void *MCFCRT_TlsAllocKey(void (*pfnCallback)(intptr_t)){
 
 	AcquireSRWLockExclusive(&g_csKeyMutex);
 	{
-		MCFCRT_AvlAttach(&g_avlKeys, (MCFCRT_AvlNodeHeader *)pKey, &KeyComparatorNodes);
+		_MCFCRT_AvlAttach(&g_avlKeys, (_MCFCRT_AvlNodeHeader *)pKey, &KeyComparatorNodes);
 	}
 	ReleaseSRWLockExclusive(&g_csKeyMutex);
 
 	return pKey;
 }
-bool MCFCRT_TlsFreeKey(void *pTlsKey){
+bool _MCFCRT_TlsFreeKey(void *pTlsKey){
 	TlsKey *const pKey = pTlsKey;
 	if(!pKey){
 		SetLastError(ERROR_INVALID_PARAMETER);
@@ -169,7 +169,7 @@ bool MCFCRT_TlsFreeKey(void *pTlsKey){
 
 	AcquireSRWLockExclusive(&g_csKeyMutex);
 	{
-		MCFCRT_AvlDetach((MCFCRT_AvlNodeHeader *)pKey);
+		_MCFCRT_AvlDetach((_MCFCRT_AvlNodeHeader *)pKey);
 	}
 	ReleaseSRWLockExclusive(&g_csKeyMutex);
 
@@ -207,7 +207,7 @@ bool MCFCRT_TlsFreeKey(void *pTlsKey){
 	return true;
 }
 
-void (*MCFCRT_TlsGetCallback(void *pTlsKey))(intptr_t){
+void (*_MCFCRT_TlsGetCallback(void *pTlsKey))(intptr_t){
 	TlsKey *const pKey = pTlsKey;
 	if(!pKey){
 		SetLastError(ERROR_INVALID_PARAMETER);
@@ -216,7 +216,7 @@ void (*MCFCRT_TlsGetCallback(void *pTlsKey))(intptr_t){
 	SetLastError(ERROR_SUCCESS);
 	return pKey->pfnCallback;
 }
-bool MCFCRT_TlsGet(void *pTlsKey, bool *restrict pbHasValue, intptr_t *restrict pnValue){
+bool _MCFCRT_TlsGet(void *pTlsKey, bool *restrict pbHasValue, intptr_t *restrict pnValue){
 	TlsKey *const pKey = pTlsKey;
 	if(!pKey){
 		SetLastError(ERROR_INVALID_PARAMETER);
@@ -232,7 +232,7 @@ bool MCFCRT_TlsGet(void *pTlsKey, bool *restrict pbHasValue, intptr_t *restrict 
 
 	AcquireSRWLockExclusive(&(pMap->srwLock));
 	{
-		TlsObject *const pObject = (TlsObject *)MCFCRT_AvlFind(
+		TlsObject *const pObject = (TlsObject *)_MCFCRT_AvlFind(
 			&(pMap->pavlObjects), (intptr_t)pKey, &ObjectComparatorNodeKey);
 		if(pObject){
 			*pbHasValue = true;
@@ -243,7 +243,7 @@ bool MCFCRT_TlsGet(void *pTlsKey, bool *restrict pbHasValue, intptr_t *restrict 
 
 	return true;
 }
-bool MCFCRT_TlsReset(void *pTlsKey, intptr_t nNewValue){
+bool _MCFCRT_TlsReset(void *pTlsKey, intptr_t nNewValue){
 	TlsKey *const pKey = pTlsKey;
 	if(!pKey){
 		SetLastError(ERROR_INVALID_PARAMETER);
@@ -252,7 +252,7 @@ bool MCFCRT_TlsReset(void *pTlsKey, intptr_t nNewValue){
 
 	bool bHasOldValue;
 	intptr_t nOldValue;
-	if(!MCFCRT_TlsExchange(pTlsKey, &bHasOldValue, &nOldValue, nNewValue)){
+	if(!_MCFCRT_TlsExchange(pTlsKey, &bHasOldValue, &nOldValue, nNewValue)){
 		if(pKey->pfnCallback){
 			const DWORD dwErrorCode = GetLastError();
 			(*pKey->pfnCallback)(nNewValue);
@@ -267,7 +267,7 @@ bool MCFCRT_TlsReset(void *pTlsKey, intptr_t nNewValue){
 	}
 	return true;
 }
-bool MCFCRT_TlsExchange(void *pTlsKey, bool *restrict pbHasOldValue, intptr_t *restrict pnOldValue, intptr_t nNewValue){
+bool _MCFCRT_TlsExchange(void *pTlsKey, bool *restrict pbHasOldValue, intptr_t *restrict pnOldValue, intptr_t nNewValue){
 	TlsKey *const pKey = pTlsKey;
 	if(!pKey){
 		SetLastError(ERROR_INVALID_PARAMETER);
@@ -292,7 +292,7 @@ bool MCFCRT_TlsExchange(void *pTlsKey, bool *restrict pbHasOldValue, intptr_t *r
 
 	AcquireSRWLockExclusive(&(pMap->srwLock));
 	{
-		TlsObject *const pObject = (TlsObject *)MCFCRT_AvlFind(
+		TlsObject *const pObject = (TlsObject *)_MCFCRT_AvlFind(
 			&(pMap->pavlObjects), (intptr_t)pKey, &ObjectComparatorNodeKey);
 		if(pObject){
 			*pbHasOldValue = true;
@@ -322,7 +322,7 @@ bool MCFCRT_TlsExchange(void *pTlsKey, bool *restrict pbHasOldValue, intptr_t *r
 			if(pPrev){
 				pPrev->pNextByThread = pObject;
 			}
-			MCFCRT_AvlAttach(&(pMap->pavlObjects), (MCFCRT_AvlNodeHeader *)pObject, &ObjectComparatorNodes);
+			_MCFCRT_AvlAttach(&(pMap->pavlObjects), (_MCFCRT_AvlNodeHeader *)pObject, &ObjectComparatorNodes);
 		}
 		ReleaseSRWLockExclusive(&(pMap->srwLock));
 
@@ -343,14 +343,14 @@ bool MCFCRT_TlsExchange(void *pTlsKey, bool *restrict pbHasOldValue, intptr_t *r
 	return true;
 }
 
-int MCFCRT_AtEndThread(void (*pfnProc)(intptr_t), intptr_t nContext){
-	void *const pKey = MCFCRT_TlsAllocKey(pfnProc);
+int _MCFCRT_AtEndThread(void (*pfnProc)(intptr_t), intptr_t nContext){
+	void *const pKey = _MCFCRT_TlsAllocKey(pfnProc);
 	if(!pKey){
 		return -1;
 	}
-	if(!MCFCRT_TlsReset(pKey, nContext)){
+	if(!_MCFCRT_TlsReset(pKey, nContext)){
 		const DWORD dwLastError = GetLastError();
-		MCFCRT_TlsFreeKey(pKey);
+		_MCFCRT_TlsFreeKey(pKey);
 		SetLastError(dwLastError);
 		return -1;
 	}
@@ -370,7 +370,7 @@ static NTSTATUS ReallyCreateNativeThread(HANDLE *phThread, DWORD (*__attribute__
 	return lStatus;
 }
 
-void *MCFCRT_CreateNativeThread(unsigned long (*__attribute__((__stdcall__)) pfnThreadProc)(void *), void *pParam, bool bSuspended, uintptr_t *restrict puThreadId){
+void *_MCFCRT_CreateNativeThread(unsigned long (*__attribute__((__stdcall__)) pfnThreadProc)(void *), void *pParam, bool bSuspended, uintptr_t *restrict puThreadId){
 	HANDLE hThread;
 	const NTSTATUS lStatus = ReallyCreateNativeThread(&hThread, pfnThreadProc, pParam, bSuspended, puThreadId);
 	if(!NT_SUCCESS(lStatus)){
@@ -401,7 +401,7 @@ DWORD CRTThreadProc(LPVOID pParam){
 	return dwExitCode;
 }
 
-void *MCFCRT_CreateThread(unsigned (*pfnThreadProc)(intptr_t), intptr_t nParam, bool bSuspended, uintptr_t *restrict puThreadId){
+void *_MCFCRT_CreateThread(unsigned (*pfnThreadProc)(intptr_t), intptr_t nParam, bool bSuspended, uintptr_t *restrict puThreadId){
 	ThreadInitParams *const pInitParams = malloc(sizeof(ThreadInitParams));
 	if(!pInitParams){
 		return nullptr;
@@ -418,20 +418,20 @@ void *MCFCRT_CreateThread(unsigned (*pfnThreadProc)(intptr_t), intptr_t nParam, 
 	}
 	return (void *)hThread;
 }
-void MCFCRT_CloseThread(void *hThread){
+void _MCFCRT_CloseThread(void *hThread){
 	const NTSTATUS lStatus = NtClose((HANDLE)hThread);
 	if(!NT_SUCCESS(lStatus)){
 		ASSERT_MSG(false, L"NtClose() 失败。");
 	}
 }
 
-uintptr_t MCFCRT_GetCurrentThreadId(){
+uintptr_t _MCFCRT_GetCurrentThreadId(){
 	return GetCurrentThreadId();
 }
 
-void MCFCRT_Sleep(uint64_t u64UntilFastMonoClock){
+void _MCFCRT_Sleep(uint64_t u64UntilFastMonoClock){
 	LARGE_INTEGER liTimeout;
-	const uint64_t u64Now = MCFCRT_GetFastMonoClock();
+	const uint64_t u64Now = _MCFCRT_GetFastMonoClock();
 	if(u64Now >= u64UntilFastMonoClock){
 		liTimeout.QuadPart = 0;
 	} else {
@@ -448,9 +448,9 @@ void MCFCRT_Sleep(uint64_t u64UntilFastMonoClock){
 		ASSERT_MSG(false, L"NtDelayExecution() 失败。");
 	}
 }
-bool MCFCRT_AlertableSleep(uint64_t u64UntilFastMonoClock){
+bool _MCFCRT_AlertableSleep(uint64_t u64UntilFastMonoClock){
 	LARGE_INTEGER liTimeout;
-	const uint64_t u64Now = MCFCRT_GetFastMonoClock();
+	const uint64_t u64Now = _MCFCRT_GetFastMonoClock();
 	if(u64Now >= u64UntilFastMonoClock){
 		liTimeout.QuadPart = 0;
 	} else {
@@ -471,7 +471,7 @@ bool MCFCRT_AlertableSleep(uint64_t u64UntilFastMonoClock){
 	}
 	return true;
 }
-void MCFCRT_AlertableSleepForever(){
+void _MCFCRT_AlertableSleepForever(){
 	LARGE_INTEGER liTimeout;
 	liTimeout.QuadPart = INT64_MAX;
 	const NTSTATUS lStatus = NtDelayExecution(true, &liTimeout);
@@ -479,14 +479,14 @@ void MCFCRT_AlertableSleepForever(){
 		ASSERT_MSG(false, L"NtDelayExecution() 失败。");
 	}
 }
-void MCFCRT_YieldThread(){
+void _MCFCRT_YieldThread(){
 	const NTSTATUS lStatus = NtYieldExecution();
 	if(!NT_SUCCESS(lStatus)){
 		ASSERT_MSG(false, L"NtYieldExecution() 失败。");
 	}
 }
 
-long MCFCRT_SuspendThread(void *hThread){
+long _MCFCRT_SuspendThread(void *hThread){
 	LONG lPrevCount;
 	const NTSTATUS lStatus = NtSuspendThread((HANDLE)hThread, &lPrevCount);
 	if(!NT_SUCCESS(lStatus)){
@@ -494,7 +494,7 @@ long MCFCRT_SuspendThread(void *hThread){
 	}
 	return lPrevCount;
 }
-long MCFCRT_ResumeThread(void *hThread){
+long _MCFCRT_ResumeThread(void *hThread){
 	LONG lPrevCount;
 	const NTSTATUS lStatus = NtResumeThread((HANDLE)hThread, &lPrevCount);
 	if(!NT_SUCCESS(lStatus)){
@@ -503,11 +503,11 @@ long MCFCRT_ResumeThread(void *hThread){
 	return lPrevCount;
 }
 
-bool MCFCRT_WaitForThread(void *hThread, MCFCRT_STD uint64_t u64UntilFastMonoClock){
+bool _MCFCRT_WaitForThread(void *hThread, _MCFCRT_STD uint64_t u64UntilFastMonoClock){
 	LARGE_INTEGER liTimeout;
 	liTimeout.QuadPart = 0;
 	if(u64UntilFastMonoClock != 0){
-		const uint64_t u64Now = MCFCRT_GetFastMonoClock();
+		const uint64_t u64Now = _MCFCRT_GetFastMonoClock();
 		if(u64Now < u64UntilFastMonoClock){
 			const uint64_t u64DeltaMillisec = u64UntilFastMonoClock - u64Now;
 			const int64_t n64Delta100Nanosec = (int64_t)(u64DeltaMillisec * 10000);
@@ -527,7 +527,7 @@ bool MCFCRT_WaitForThread(void *hThread, MCFCRT_STD uint64_t u64UntilFastMonoClo
 	}
 	return true;
 }
-void MCFCRT_WaitForThreadForever(void *hThread){
+void _MCFCRT_WaitForThreadForever(void *hThread){
 	const NTSTATUS lStatus = NtWaitForSingleObject((HANDLE)hThread, false, nullptr);
 	if(!NT_SUCCESS(lStatus)){
 		ASSERT_MSG(false, L"NtWaitForSingleObject() 失败。");

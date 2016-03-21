@@ -7,7 +7,7 @@
 #include "Localization.hpp"
 #include <MCF/Core/Argv.hpp>
 
-extern "C" unsigned MCFCRT_Main() noexcept {
+extern "C" unsigned _MCFCRT_Main() noexcept {
 	using namespace MCFBuild;
 
 	try {

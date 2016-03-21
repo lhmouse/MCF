@@ -101,9 +101,9 @@ void Deallocate(void *pBlock, bool bIsArray, const void *pRetAddr) noexcept {
 		if(uTest != uMagic){
 			const auto pwcSuffix = bIsArray ? L"[]" : L"";
 			if(uTest == uOtherMagic){
-				MCFCRT_BailF(L"试图使用 operator delete%ls() 释放不是由 operator new%ls() 分配的内存。\n调用返回地址：%p", pwcSuffix, pwcSuffix, pRetAddr);
+				_MCFCRT_BailF(L"试图使用 operator delete%ls() 释放不是由 operator new%ls() 分配的内存。\n调用返回地址：%p", pwcSuffix, pwcSuffix, pRetAddr);
 			}
-			MCFCRT_BailF(L"在 operator delete%ls() 中侦测到堆损坏。\n调用返回地址：%p", pwcSuffix, pRetAddr);
+			_MCFCRT_BailF(L"在 operator delete%ls() 中侦测到堆损坏。\n调用返回地址：%p", pwcSuffix, pRetAddr);
 		}
 	}
 #else

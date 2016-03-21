@@ -12,24 +12,24 @@
 namespace MCF {
 
 void Thread::X_ThreadCloser::operator()(Thread::Handle hThread) const noexcept {
-	::MCFCRT_CloseThread(hThread);
+	::_MCFCRT_CloseThread(hThread);
 }
 
 std::uintptr_t Thread::GetCurrentId() noexcept {
-	return ::MCFCRT_GetCurrentThreadId();
+	return ::_MCFCRT_GetCurrentThreadId();
 }
 
 void Thread::Sleep(std::uint64_t u64UntilFastMonoClock) noexcept {
-	::MCFCRT_Sleep(u64UntilFastMonoClock);
+	::_MCFCRT_Sleep(u64UntilFastMonoClock);
 }
 bool Thread::AlertableSleep(std::uint64_t u64UntilFastMonoClock) noexcept {
-	return ::MCFCRT_AlertableSleep(u64UntilFastMonoClock);
+	return ::_MCFCRT_AlertableSleep(u64UntilFastMonoClock);
 }
 void Thread::AlertableSleep() noexcept {
-	::MCFCRT_AlertableSleepForever();
+	::_MCFCRT_AlertableSleepForever();
 }
 void Thread::YieldExecution() noexcept {
-	::MCFCRT_YieldThread();
+	::_MCFCRT_YieldThread();
 }
 
 Thread::~Thread(){
@@ -66,8 +66,8 @@ void Thread::X_Initialize(bool bSuspended){
 	};
 
 	std::uintptr_t uThreadId = 0;
-	if(!x_hThread.Reset(::MCFCRT_CreateNativeThread(&Helper::ThreadProc, this, true, &uThreadId))){
-		MCF_THROW(Exception, ::GetLastError(), Rcntws::View(L"MCFCRT_CreateThread() 失败。"));
+	if(!x_hThread.Reset(::_MCFCRT_CreateNativeThread(&Helper::ThreadProc, this, true, &uThreadId))){
+		MCF_THROW(Exception, ::GetLastError(), Rcntws::View(L"_MCFCRT_CreateThread() 失败。"));
 	}
 	AddRef();
 	x_uThreadId.Store(uThreadId, kAtomicRelease);
@@ -78,10 +78,10 @@ void Thread::X_Initialize(bool bSuspended){
 }
 
 bool Thread::Wait(std::uint64_t u64UntilFastMonoClock) const noexcept {
-	return ::MCFCRT_WaitForThread(x_hThread.Get(), u64UntilFastMonoClock);
+	return ::_MCFCRT_WaitForThread(x_hThread.Get(), u64UntilFastMonoClock);
 }
 void Thread::Wait() const noexcept {
-	::MCFCRT_WaitForThreadForever(x_hThread.Get());
+	::_MCFCRT_WaitForThreadForever(x_hThread.Get());
 }
 
 bool Thread::IsAlive() const noexcept {
@@ -92,10 +92,10 @@ std::uintptr_t Thread::GetId() const noexcept {
 }
 
 void Thread::Suspend() noexcept {
-	::MCFCRT_SuspendThread(x_hThread.Get());
+	::_MCFCRT_SuspendThread(x_hThread.Get());
 }
 void Thread::Resume() noexcept {
-	::MCFCRT_ResumeThread(x_hThread.Get());
+	::_MCFCRT_ResumeThread(x_hThread.Get());
 }
 
 }

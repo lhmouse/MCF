@@ -9,8 +9,8 @@
 
 __MCFCRT_EXTERN_C_BEGIN
 
-extern wchar_t *MCFCRT_wcpcpy(wchar_t *restrict __dst, const wchar_t *restrict __src) MCFCRT_NOEXCEPT;
-extern wchar_t *MCFCRT_wcppcpy(wchar_t *restrict __dst, wchar_t *restrict __end, const wchar_t *restrict __src) MCFCRT_NOEXCEPT;
+extern wchar_t *_MCFCRT_wcpcpy(wchar_t *restrict __dst, const wchar_t *restrict __src) _MCFCRT_NOEXCEPT;
+extern wchar_t *_MCFCRT_wcppcpy(wchar_t *restrict __dst, wchar_t *restrict __end, const wchar_t *restrict __src) _MCFCRT_NOEXCEPT;
 
 __MCFCRT_EXTERN_C_END
 

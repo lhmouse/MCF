@@ -9,8 +9,8 @@
 
 __MCFCRT_EXTERN_C_BEGIN
 
-extern const void *MCFCRT_AllocateThunk(const void *__pInit, MCFCRT_STD size_t __uSize) MCFCRT_NOEXCEPT;
-extern void MCFCRT_DeallocateThunk(const void *__pThunk, bool __bToPoisvn) MCFCRT_NOEXCEPT;
+extern const void *_MCFCRT_AllocateThunk(const void *__pInit, _MCFCRT_STD size_t __uSize) _MCFCRT_NOEXCEPT;
+extern void _MCFCRT_DeallocateThunk(const void *__pThunk, bool __bToPoisvn) _MCFCRT_NOEXCEPT;
 
 __MCFCRT_EXTERN_C_END
 

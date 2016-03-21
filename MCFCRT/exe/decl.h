@@ -9,7 +9,7 @@
 
 __MCFCRT_EXTERN_C_BEGIN
 
-extern unsigned MCFCRT_Main(void) MCFCRT_NOEXCEPT;
+extern unsigned _MCFCRT_Main(void) _MCFCRT_NOEXCEPT;
 
 __MCFCRT_EXTERN_C_END
 

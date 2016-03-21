@@ -11,7 +11,7 @@
 #	define MASK     0x01010101ul
 #endif
 
-char *MCFCRT_stpcpy(char *restrict dst, const char *restrict src){
+char *_MCFCRT_stpcpy(char *restrict dst, const char *restrict src){
 	register const char *rp = src;
 	register char *wp = dst;
 
@@ -58,12 +58,12 @@ char *MCFCRT_stpcpy(char *restrict dst, const char *restrict src){
 		wp += 8 * sizeof(uintptr_t);
 	}
 }
-char *MCFCRT_stppcpy(char *restrict dst, char *restrict end, const char *restrict src){
+char *_MCFCRT_stppcpy(char *restrict dst, char *restrict end, const char *restrict src){
 	register const char *rp = src;
 	register char *wp = dst;
 
 	if(wp == end){
-		MCFCRT_Bail(L"目的缓冲区至少应为一个字符大小以容纳字符串结束符。");
+		_MCFCRT_Bail(L"目的缓冲区至少应为一个字符大小以容纳字符串结束符。");
 	}
 
 	// 如果 rp 是对齐到字的，就不用考虑越界的问题。

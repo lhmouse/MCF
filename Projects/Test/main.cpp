@@ -7,7 +7,7 @@
 
 using namespace MCF;
 
-extern "C" unsigned MCFCRT_Main(){
+extern "C" unsigned _MCFCRT_Main(){
 	StandardOutputStream os;
 
 	constexpr char strs[][64] = {

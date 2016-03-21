@@ -26,7 +26,7 @@ DWORD __MCFCRT_ExeStartup(LPVOID pReserved){
 
 	__MCFCRT_EH_TOP_BEGIN
 	{
-		dwExitCode = MCFCRT_Main();
+		dwExitCode = _MCFCRT_Main();
 	}
 	__MCFCRT_EH_TOP_END
 
@@ -50,22 +50,22 @@ static void TlsCallback(void *hModule, DWORD dwReason, void *pReserved){
 	switch(dwReason){
 	case DLL_PROCESS_ATTACH:
 		if(!SetConsoleCtrlHandler(&TopCtrlHandler, true)){
-			MCFCRT_BailF(L"MCFCRT Ctrl 处理程序注册失败。\n\n错误代码：%lu", GetLastError());
+			_MCFCRT_BailF(L"MCFCRT Ctrl 处理程序注册失败。\n\n错误代码：%lu", GetLastError());
 		}
 		if(!__MCFCRT_HeapInit()){
-			MCFCRT_BailF(L"MCFCRT 堆初始化失败。\n\n错误代码：%lu", GetLastError());
+			_MCFCRT_BailF(L"MCFCRT 堆初始化失败。\n\n错误代码：%lu", GetLastError());
 		}
 		if(!__MCFCRT_HeapDbgInit()){
-			MCFCRT_BailF(L"MCFCRT 堆调试器初始化失败。\n\n错误代码：%lu", GetLastError());
+			_MCFCRT_BailF(L"MCFCRT 堆调试器初始化失败。\n\n错误代码：%lu", GetLastError());
 		}
 		if(!__MCFCRT_RegisterFrameInfo()){
-			MCFCRT_BailF(L"MCFCRT 异常处理程序初始化失败。\n\n错误代码：%lu", GetLastError());
+			_MCFCRT_BailF(L"MCFCRT 异常处理程序初始化失败。\n\n错误代码：%lu", GetLastError());
 		}
 
 		__MCFCRT_EH_TOP_BEGIN
 		{
 			if(!__MCFCRT_BeginModule()){
-				MCFCRT_BailF(L"MCFCRT 初始化失败。\n\n错误代码：%lu", GetLastError());
+				_MCFCRT_BailF(L"MCFCRT 初始化失败。\n\n错误代码：%lu", GetLastError());
 			}
 		}
 		__MCFCRT_EH_TOP_END

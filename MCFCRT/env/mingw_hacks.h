@@ -9,10 +9,10 @@
 
 __MCFCRT_EXTERN_C_BEGIN
 
-extern bool __MCFCRT_MinGWHacksInit(void) MCFCRT_NOEXCEPT;
-extern void __MCFCRT_MinGWHacksUninit(void) MCFCRT_NOEXCEPT;
+extern bool __MCFCRT_MinGWHacksInit(void) _MCFCRT_NOEXCEPT;
+extern void __MCFCRT_MinGWHacksUninit(void) _MCFCRT_NOEXCEPT;
 
-extern void __MCFCRT_RunEmutlsDtors(void) MCFCRT_NOEXCEPT;
+extern void __MCFCRT_RunEmutlsDtors(void) _MCFCRT_NOEXCEPT;
 
 __MCFCRT_EXTERN_C_END
 

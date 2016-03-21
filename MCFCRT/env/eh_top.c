@@ -47,7 +47,7 @@ static bool TraverseModuleSectionsCallback(intptr_t nContext, const char achName
 
 bool __MCFCRT_RegisterFrameInfo(){
 	void *pBase = nullptr;
-	MCFCRT_TraverseModuleSections(&TraverseModuleSectionsCallback, (intptr_t)&pBase);
+	_MCFCRT_TraverseModuleSections(&TraverseModuleSectionsCallback, (intptr_t)&pBase);
 	if(!pBase){
 		return false;
 	}

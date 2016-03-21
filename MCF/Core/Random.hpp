@@ -11,13 +11,13 @@
 namespace MCF {
 
 inline std::uint32_t GetRandomUint32() noexcept {
-	return ::MCFCRT_GetRandomUint32();
+	return ::_MCFCRT_GetRandomUint32();
 }
 inline std::uint64_t GetRandomUint64() noexcept {
-	return ::MCFCRT_GetRandomUint64();
+	return ::_MCFCRT_GetRandomUint64();
 }
 inline double GetRandomDouble() noexcept {
-	return ::MCFCRT_GetRandomDouble();
+	return ::_MCFCRT_GetRandomDouble();
 }
 
 }

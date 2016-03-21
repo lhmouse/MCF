@@ -10,10 +10,10 @@
 __MCFCRT_EXTERN_C_BEGIN
 
 // heap.c
-extern void (*__MCFCRT_OnHeapAlloc)(void *__pNewBlock, MCFCRT_STD size_t __uSize, const void *__pRetAddr) MCFCRT_NOEXCEPT;
-extern void (*__MCFCRT_OnHeapRealloc)(void *__pNewBlock, void *__pBlock, MCFCRT_STD size_t __uSize, const void *__pRetAddr) MCFCRT_NOEXCEPT;
-extern void (*__MCFCRT_OnHeapFree)(void *__pBlock, const void *__pRetAddr) MCFCRT_NOEXCEPT;
-extern bool (*__MCFCRT_OnHeapBadAlloc)(const void *__pRetAddr) MCFCRT_NOEXCEPT;
+extern void (*__MCFCRT_OnHeapAlloc)(void *__pNewBlock, _MCFCRT_STD size_t __uSize, const void *__pRetAddr) _MCFCRT_NOEXCEPT;
+extern void (*__MCFCRT_OnHeapRealloc)(void *__pNewBlock, void *__pBlock, _MCFCRT_STD size_t __uSize, const void *__pRetAddr) _MCFCRT_NOEXCEPT;
+extern void (*__MCFCRT_OnHeapFree)(void *__pBlock, const void *__pRetAddr) _MCFCRT_NOEXCEPT;
+extern bool (*__MCFCRT_OnHeapBadAlloc)(const void *__pRetAddr) _MCFCRT_NOEXCEPT;
 
 #ifdef __cplusplus
 #	include <cxxabi.h>

@@ -31,36 +31,36 @@
 
 __MCFCRT_EXTERN_C_BEGIN
 
-extern bool __MCFCRT_HeapDbgInit(void) MCFCRT_NOEXCEPT;
-extern void __MCFCRT_HeapDbgUninit(void) MCFCRT_NOEXCEPT;
+extern bool __MCFCRT_HeapDbgInit(void) _MCFCRT_NOEXCEPT;
+extern void __MCFCRT_HeapDbgUninit(void) _MCFCRT_NOEXCEPT;
 
 #if __MCFCRT_REQUIRE_HEAPDBG_LEVEL(2)
 
-extern MCFCRT_STD size_t __MCFCRT_HeapDbgGetRawSize(MCFCRT_STD size_t __uContentSize) MCFCRT_NOEXCEPT;
+extern _MCFCRT_STD size_t __MCFCRT_HeapDbgGetRawSize(_MCFCRT_STD size_t __uContentSize) _MCFCRT_NOEXCEPT;
 
 #	if __MCFCRT_REQUIRE_HEAPDBG_LEVEL(3)
 
 typedef struct __MCFCRT_tagHeapDbgBlockInfo {
-	MCFCRT_AvlNodeHeader __vHeader;
+	_MCFCRT_AvlNodeHeader __vHeader;
 
 	void *__pContents;
-	MCFCRT_STD size_t __uSize;
+	_MCFCRT_STD size_t __uSize;
 	const void *__pRetAddr;
 } __MCFCRT_HeapDbgBlockInfo;
 
 // 失败返回空指针。
-extern __MCFCRT_HeapDbgBlockInfo *__MCFCRT_HeapDbgAllocateBlockInfo() MCFCRT_NOEXCEPT;
-extern void __MCFCRT_HeapDbgDeallocateBlockInfo(__MCFCRT_HeapDbgBlockInfo *__pBlockInfo) MCFCRT_NOEXCEPT;
+extern __MCFCRT_HeapDbgBlockInfo *__MCFCRT_HeapDbgAllocateBlockInfo() _MCFCRT_NOEXCEPT;
+extern void __MCFCRT_HeapDbgDeallocateBlockInfo(__MCFCRT_HeapDbgBlockInfo *__pBlockInfo) _MCFCRT_NOEXCEPT;
 
 // 返回 __pContents，后续的 __MCFCRT_HeapDbgValidateBlock() 使用这个返回值。
-extern unsigned char *__MCFCRT_HeapDbgRegisterBlockInfo(__MCFCRT_HeapDbgBlockInfo *__pBlockInfo, unsigned char *__pRaw, MCFCRT_STD size_t __uContentSize, const void *__pRetAddr) MCFCRT_NOEXCEPT;
-extern __MCFCRT_HeapDbgBlockInfo *__MCFCRT_HeapDbgValidateBlock(unsigned char **__ppRaw, unsigned char *__pContents, const void *__pRetAddr) MCFCRT_NOEXCEPT;
-extern void __MCFCRT_HeapDbgUnregisterBlockInfo(__MCFCRT_HeapDbgBlockInfo *__pBlockInfo) MCFCRT_NOEXCEPT;
+extern unsigned char *__MCFCRT_HeapDbgRegisterBlockInfo(__MCFCRT_HeapDbgBlockInfo *__pBlockInfo, unsigned char *__pRaw, _MCFCRT_STD size_t __uContentSize, const void *__pRetAddr) _MCFCRT_NOEXCEPT;
+extern __MCFCRT_HeapDbgBlockInfo *__MCFCRT_HeapDbgValidateBlock(unsigned char **__ppRaw, unsigned char *__pContents, const void *__pRetAddr) _MCFCRT_NOEXCEPT;
+extern void __MCFCRT_HeapDbgUnregisterBlockInfo(__MCFCRT_HeapDbgBlockInfo *__pBlockInfo) _MCFCRT_NOEXCEPT;
 
 #	else
 
-extern unsigned char *__MCFCRT_HeapDbgAddBlockGuardsBasic(unsigned char *__pRaw) MCFCRT_NOEXCEPT;
-extern void __MCFCRT_HeapDbgValidateBlockBasic(unsigned char **__ppRaw, unsigned char *__pContents, const void *__pRetAddr) MCFCRT_NOEXCEPT;
+extern unsigned char *__MCFCRT_HeapDbgAddBlockGuardsBasic(unsigned char *__pRaw) _MCFCRT_NOEXCEPT;
+extern void __MCFCRT_HeapDbgValidateBlockBasic(unsigned char **__ppRaw, unsigned char *__pContents, const void *__pRetAddr) _MCFCRT_NOEXCEPT;
 
 #	endif
 

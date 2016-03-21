@@ -41,11 +41,11 @@
 #endif
 
 #ifdef __cplusplus
-#   define MCFCRT_STD                   ::std::
-#   define MCFCRT_NOEXCEPT              noexcept
+#   define _MCFCRT_STD                  ::std::
+#   define _MCFCRT_NOEXCEPT             noexcept
 #else
-#   define MCFCRT_STD
-#   define MCFCRT_NOEXCEPT
+#   define _MCFCRT_STD
+#   define _MCFCRT_NOEXCEPT
 #endif
 
 #endif

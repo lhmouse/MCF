@@ -109,7 +109,7 @@ void __MCFCRT_EndModule(){
 	__MCFCRT_ThreadEnvUninit();
 }
 
-bool MCFCRT_AtEndModule(void (*pfnProc)(intptr_t), intptr_t nContext){
+bool _MCFCRT_AtEndModule(void (*pfnProc)(intptr_t), intptr_t nContext){
 	AtExitCallbackBlock *pBlock;
 
 	AcquireSRWLockExclusive(&g_srwlAtExitMutex);
@@ -142,10 +142,10 @@ bool MCFCRT_AtEndModule(void (*pfnProc)(intptr_t), intptr_t nContext){
 // ld 自动添加此符号。
 extern IMAGE_DOS_HEADER __image_base__ __asm__("__image_base__");
 
-void *MCFCRT_GetModuleBase(){
+void *_MCFCRT_GetModuleBase(){
 	return &__image_base__;
 }
-bool MCFCRT_TraverseModuleSections(bool (*pfnCallback)(intptr_t, const char [8], void *, size_t), intptr_t nContext){
+bool _MCFCRT_TraverseModuleSections(bool (*pfnCallback)(intptr_t, const char [8], void *, size_t), intptr_t nContext){
 	if(__image_base__.e_magic != IMAGE_DOS_SIGNATURE){
 		SetLastError(ERROR_BAD_FORMAT);
 		return false;

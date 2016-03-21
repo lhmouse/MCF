@@ -24,7 +24,7 @@ namespace Impl_ThreadLocal {
 			return nullptr;
 		}
 		void operator()(void *pKey) const noexcept {
-			::MCFCRT_TlsFreeKey(pKey);
+			::_MCFCRT_TlsFreeKey(pKey);
 		}
 	};
 
@@ -79,8 +79,8 @@ public:
 		: x_vDefault(std::move(vDefault))
 	{
 		const auto pfnCleanupCallback = Impl_ThreadLocal::ElementTraits<ElementT>::GetCleanupCallback();
-		if(!x_pTlsKey.Reset(::MCFCRT_TlsAllocKey(pfnCleanupCallback))){
-			MCF_THROW(Exception, ::MCFCRT_GetLastWin32Error(), Rcntws::View(L"MCFCRT_TlsAllocKey() 失败。"));
+		if(!x_pTlsKey.Reset(::_MCFCRT_TlsAllocKey(pfnCleanupCallback))){
+			MCF_THROW(Exception, ::_MCFCRT_GetLastWin32Error(), Rcntws::View(L"_MCFCRT_TlsAllocKey() 失败。"));
 		}
 	}
 
@@ -88,8 +88,8 @@ public:
 	ElementT Get() const {
 		bool bHasValue = false;
 		std::intptr_t nValue = 0;
-		if(!::MCFCRT_TlsGet(x_pTlsKey.Get(), &bHasValue, &nValue)){
-			ASSERT_MSG(false, L"MCFCRT_TlsGet() 失败。");
+		if(!::_MCFCRT_TlsGet(x_pTlsKey.Get(), &bHasValue, &nValue)){
+			ASSERT_MSG(false, L"_MCFCRT_TlsGet() 失败。");
 		}
 		if(bHasValue){
 			ElementT vElement;
@@ -102,11 +102,11 @@ public:
 	void Set(ElementT vElement){
 		const auto pfnCleanupCallback = Impl_ThreadLocal::ElementTraits<ElementT>::GetCleanupCallback();
 		std::intptr_t nValue = Impl_ThreadLocal::ElementTraits<ElementT>::PackValue(std::move(vElement));
-		if(!::MCFCRT_TlsReset(x_pTlsKey.Get(), nValue)){ // noexcept
+		if(!::_MCFCRT_TlsReset(x_pTlsKey.Get(), nValue)){ // noexcept
 			if(pfnCleanupCallback){
 				(*pfnCleanupCallback)(nValue);
 			}
-			MCF_THROW(Exception, ::MCFCRT_GetLastWin32Error(), Rcntws::View(L"MCFCRT_TlsReset() 失败。"));
+			MCF_THROW(Exception, ::_MCFCRT_GetLastWin32Error(), Rcntws::View(L"_MCFCRT_TlsReset() 失败。"));
 		}
 	}
 };

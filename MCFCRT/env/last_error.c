@@ -8,10 +8,10 @@
 #include <ntdef.h>
 #include <winnt.h>
 
-unsigned long MCFCRT_GetLastWin32Error(){
+unsigned long _MCFCRT_GetLastWin32Error(){
 	return GetLastError();
 }
-void MCFCRT_SetLastWin32Error(unsigned long ulErrorCode){
+void _MCFCRT_SetLastWin32Error(unsigned long ulErrorCode){
 	SetLastError(ulErrorCode);
 }
 
@@ -25,7 +25,7 @@ static inline bool IsLineBreak(wchar_t wc){
 	return (wc == 0) || (wc == L'\n') || (wc == L'\r');
 }
 
-size_t MCFCRT_GetWin32ErrorDescription(const wchar_t **ppwszStr, unsigned long ulErrorCode){
+size_t _MCFCRT_GetWin32ErrorDescription(const wchar_t **ppwszStr, unsigned long ulErrorCode){
 	static const wchar_t kUnknownErrorCode[]   = L"<未知错误码>";
 	static const wchar_t kUnicodeUnavailable[] = L"<Unicode 错误码描述不可用>";
 

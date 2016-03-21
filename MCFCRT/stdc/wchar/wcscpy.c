@@ -6,6 +6,6 @@
 #include "../../ext/wcpcpy.h"
 
 wchar_t *wcscpy(wchar_t *s1, const wchar_t *s2){
-	MCFCRT_wcpcpy(s1, s2);
+	_MCFCRT_wcpcpy(s1, s2);
 	return s1;
 }

@@ -12,8 +12,8 @@
 
 __MCFCRT_EXTERN_C_BEGIN
 
-extern bool __MCFCRT_RegisterFrameInfo(void) MCFCRT_NOEXCEPT;
-extern void __MCFCRT_UnregisterFrameInfo(void) MCFCRT_NOEXCEPT;
+extern bool __MCFCRT_RegisterFrameInfo(void) _MCFCRT_NOEXCEPT;
+extern void __MCFCRT_UnregisterFrameInfo(void) _MCFCRT_NOEXCEPT;
 
 __MCFCRT_EXTERN_C_END
 

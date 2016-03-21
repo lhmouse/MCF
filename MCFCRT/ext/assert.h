@@ -9,8 +9,8 @@
 #include "../env/bail.h"
 
 static inline __attribute__((__noreturn__))
-void __MCFCRT_OnAssertFail(const wchar_t *__pwszExpression, const char *__pszFile, unsigned long __ulLine, const wchar_t *__pwszMessage) MCFCRT_NOEXCEPT {
-	MCFCRT_BailF(L"调试断言失败。\n\n表达式：%ls\n文件　：%hs\n行号　：%lu\n描述　：%ls", __pwszExpression, __pszFile, __ulLine, __pwszMessage);
+void __MCFCRT_OnAssertFail(const wchar_t *__pwszExpression, const char *__pszFile, unsigned long __ulLine, const wchar_t *__pwszMessage) _MCFCRT_NOEXCEPT {
+	_MCFCRT_BailF(L"调试断言失败。\n\n表达式：%ls\n文件　：%hs\n行号　：%lu\n描述　：%ls", __pwszExpression, __pszFile, __ulLine, __pwszMessage);
 }
 
 #define ASSERT(__expr_)                 (__MCFCRT_ASSERT_MSG(#__expr_, (__expr_), L""))

@@ -1,26 +1,9 @@
 #include <MCF/StdMCF.hpp>
-#include <MCF/Thread/ThreadLocal.hpp>
-
-template class MCF::ThreadLocal<int>;
-template class MCF::ThreadLocal<long double>;
-template class MCF::ThreadLocal<std::string>;
+#include <MCF/Function/Function.hpp>
 
 extern "C" unsigned _MCFCRT_Main(){
-	MCF::ThreadLocal<int>         ti;
-	MCF::ThreadLocal<long double> tf;
-	MCF::ThreadLocal<std::string> ts;
-
-	ti.Set(12345);
-	ti.Set(23456);
-	ti.Set(34567);
-
-	tf.Set(1.234);
-	tf.Set(23.45);
-	tf.Set(345.6);
-
-	ts.Set("abc");
-	ts.Set("def");
-	ts.Set("ghi");
-
+	MCF::Function<void (int)> fn;
+	fn = [](int a){ std::printf("a = %d\n", a); };
+	fn(123);
 	return 0;
 }

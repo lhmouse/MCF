@@ -31,6 +31,21 @@ namespace Impl_Function {
 		}
 	};
 
+	template<bool kIsVoidT>
+	struct DiscardedValueExpressionChecker {
+		template<typename FuncT, typename ...ParamsT>
+		decltype(auto) operator()(FuncT &&vFunc, ParamsT &&...vParams){
+			return Invoke(std::forward<FuncT>(vFunc), std::forward<ParamsT>(vParams)...);
+		}
+	};
+	template<>
+	struct DiscardedValueExpressionChecker<true> {
+		template<typename FuncT, typename ...ParamsT>
+		void operator()(FuncT &&vFunc, ParamsT &&...vParams){
+			Invoke(std::forward<FuncT>(vFunc), std::forward<ParamsT>(vParams)...);
+		}
+	};
+
 	template<typename RetT, typename ...ParamsT>
 	class FunctorBase : public IntrusiveBase<FunctorBase<RetT, ParamsT...>> {
 	public:
@@ -54,28 +69,9 @@ namespace Impl_Function {
 
 	public:
 		RetT Dispatch(Impl_ForwardedParam::ForwardedParam<ParamsT> ...vParams) const override {
-			return Invoke(x_vFunc, std::forward<ParamsT>(vParams)...);
+			return DiscardedValueExpressionChecker<std::is_void<RetT>::value>()(x_vFunc, std::forward<ParamsT>(vParams)...);
 		}
 		IntrusivePtr<FunctorBase<RetT, ParamsT...>> Fork() const override {
-			return std::conditional_t<std::is_copy_constructible<FuncT>::value, FunctorCopier, DummyFunctorCopier>()(*this);
-		}
-	};
-	template<typename FuncT, typename ...ParamsT>
-	class Functor<FuncT, void, ParamsT...> : public FunctorBase<void, ParamsT...> {
-	private:
-		const std::remove_reference_t<FuncT> x_vFunc;
-
-	public:
-		explicit Functor(FuncT &&vFunc)
-			: x_vFunc(std::forward<FuncT>(vFunc))
-		{
-		}
-
-	public:
-		void Dispatch(Impl_ForwardedParam::ForwardedParam<ParamsT> ...vParams) const override {
-			Invoke(x_vFunc, std::forward<ParamsT>(vParams)...);
-		}
-		IntrusivePtr<FunctorBase<void, ParamsT...>> Fork() const override {
 			return std::conditional_t<std::is_copy_constructible<FuncT>::value, FunctorCopier, DummyFunctorCopier>()(*this);
 		}
 	};

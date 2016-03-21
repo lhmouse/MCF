@@ -86,8 +86,10 @@ namespace {
 
 	static_assert(std::is_trivially_destructible<RecursiveMutex>::value, "Please fix this!");
 
-	RecursiveMutex g_vMutex __attribute__((__init_priority__(102)));
-	Pipe           g_vPipe  __attribute__((__init_priority__(102)));
+	__attribute__((__init_priority__(101)))
+	RecursiveMutex g_vMutex;
+	__attribute__((__init_priority__(103)))
+	Pipe           g_vPipe;
 }
 
 StandardErrorStream::~StandardErrorStream(){

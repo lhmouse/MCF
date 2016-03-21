@@ -1,4 +1,5 @@
 #include <MCF/StdMCF.hpp>
+#include <MCF/Streams/StandardOutputStream.hpp>
 #include <MCF/Streams/BufferInputStream.hpp>
 #include <MCF/Streams/BufferOutputStream.hpp>
 #include <MCF/StreamFilters/Base64InputStreamFilter.hpp>
@@ -7,6 +8,8 @@
 using namespace MCF;
 
 extern "C" unsigned MCFCRT_Main(){
+	StandardOutputStream os;
+
 	constexpr char strs[][64] = {
 		"aA==",
 		"aGU=",
@@ -29,9 +32,9 @@ extern "C" unsigned MCFCRT_Main(){
 
 		int c;
 		while((c = bs->Get()) >= 0){
-			std::putchar(c);
+			os.Put(c);
 		}
-		std::putchar('\n');
+		os.Put('\n');
 	}
 
 	return 0;

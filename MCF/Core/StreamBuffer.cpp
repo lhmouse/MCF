@@ -19,6 +19,7 @@ void StreamBuffer::X_ChunkAllocator::operator()(void *pBlock) noexcept {
 	return xs_vPool.Deallocate(pBlock);
 }
 
+__attribute__((__init_priority__(101)))
 FixedSizeAllocator<StreamBuffer::X_ChunkList::kNodeSize> StreamBuffer::xs_vPool;
 
 int StreamBuffer::PeekFront() const noexcept {

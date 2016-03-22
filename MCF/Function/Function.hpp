@@ -59,11 +59,11 @@ namespace Impl_Function {
 	template<typename FuncT, typename RetT, typename ...ParamsT>
 	class Functor : public FunctorBase<RetT, ParamsT...> {
 	private:
-		const std::remove_reference_t<FuncT> x_vFunc;
+		const FuncT x_vFunc;
 
 	public:
-		explicit Functor(FuncT &&vFunc)
-			: x_vFunc(std::forward<FuncT>(vFunc))
+		explicit Functor(FuncT vFunc)
+			: x_vFunc(std::move(vFunc))
 		{
 		}
 
@@ -77,9 +77,9 @@ namespace Impl_Function {
 	};
 }
 
-template<typename FuncT>
+template<typename PrototypeT>
 class Function {
-	static_assert((sizeof(FuncT), false), "Class template Function instantiated with non-function template type parameter.");
+	static_assert((sizeof(PrototypeT), false), "Class template Function instantiated with non-function template type parameter.");
 };
 
 template<typename RetT, typename ...ParamsT>
@@ -98,7 +98,7 @@ public:
 				(std::is_convertible<decltype(Invoke(DeclVal<FuncT>(), DeclVal<ParamsT>()...)), RetT>::value || std::is_void<RetT>::value),
 			int> = 0>
 	Function(FuncT &&vFunc)
-		: x_pFunctor(new Impl_Function::Functor<FuncT, std::remove_cv_t<RetT>, ParamsT...>(std::forward<FuncT>(vFunc)))
+		: x_pFunctor(new Impl_Function::Functor<std::decay_t<FuncT>, std::remove_cv_t<RetT>, ParamsT...>(std::forward<FuncT>(vFunc)))
 	{
 	}
 

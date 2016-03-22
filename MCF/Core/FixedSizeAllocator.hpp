@@ -18,17 +18,18 @@ public:
 		kElementSize = kElementSizeT,
 	};
 
-	union Block {
-		Block *pNext;
+private:
+	union X_Block {
+		X_Block *pNext;
 		unsigned char abyData[kElementSize];
 		std::max_align_t vAlignment;
 	};
+	struct alignas(2 * alignof(void *)) X_Control {
+		X_Block *pFirst;
+		X_Block *pLast;
+	};
 
 private:
-	struct alignas(2 * alignof(void *)) X_Control {
-		Block *pFirst;
-		Block *pLast;
-	};
 	Atomic<X_Control> x_vControl;
 
 public:
@@ -58,32 +59,32 @@ public:
 	__attribute__((__flatten__))
 	void *Allocate(){
 		const auto vControl = X_Detach();
-		const auto pBlock = vControl.pFirst;
-		if(!pBlock){
-			return ::operator new(sizeof(Block));
+		const auto pX_Block = vControl.pFirst;
+		if(!pX_Block){
+			return ::operator new(sizeof(X_Block));
 		}
-		const auto pNext = pBlock->pNext;
+		const auto pNext = pX_Block->pNext;
 		if(pNext){
 			X_Attach(X_Control{ pNext, vControl.pLast });
 		}
-		return pBlock;
+		return pX_Block;
 	}
 	__attribute__((__flatten__))
 	void Deallocate(void *pRaw) noexcept {
-		const auto pBlock = static_cast<Block *>(pRaw);
-		if(!pBlock){
+		const auto pX_Block = static_cast<X_Block *>(pRaw);
+		if(!pX_Block){
 			return;
 		}
-		X_Attach(X_Control{ pBlock, pBlock });
+		X_Attach(X_Control{ pX_Block, pX_Block });
 	}
 	__attribute__((__flatten__))
 	void Clear() noexcept {
 		const auto vControl = X_Detach();
-		auto pBlock = vControl.pFirst;
-		while(pBlock){
-			const auto pNext = pBlock->pNext;
-			::operator delete(pBlock);
-			pBlock = pNext;
+		auto pX_Block = vControl.pFirst;
+		while(pX_Block){
+			const auto pNext = pX_Block->pNext;
+			::operator delete(pX_Block);
+			pX_Block = pNext;
 		}
 	}
 	__attribute__((__flatten__))

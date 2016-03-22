@@ -197,6 +197,14 @@ public:
 	{
 		return SubFetch(1, eModel);
 	}
+
+public:
+	explicit operator const volatile Element &() const volatile noexcept {
+		return Get();
+	}
+	explicit operator volatile Element &() volatile noexcept {
+		return Get();
+	}
 };
 
 inline void AtomicFence(MemoryModel eModel) noexcept {

@@ -20,18 +20,18 @@ namespace Impl_Function {
 	struct FunctorCopier {
 		template<typename FuncT>
 		IntrusivePtr<FuncT> operator()(const FuncT &vFunc) const {
-			return IntrusivePtr<FuncT>(new auto(vFunc));
+			return MakeIntrusive<FuncT>(vFunc);
 		}
 	};
 	struct DummyFunctorCopier {
 		template<typename FuncT>
 		[[noreturn]]
 		IntrusivePtr<FuncT> operator()(const FuncT & /* vFunc */) const {
-			MCF_THROW(Exception, ERROR_ACCESS_DENIED, Rcntws::View(L"Function: 该函数对象不允许复制构造。"));
+			MCF_THROW(Exception, ERROR_CALL_NOT_IMPLEMENTED, Rcntws::View(L"Function: 该函数对象不允许复制构造。"));
 		}
 	};
 
-	template<bool kIsVoidT>
+	template<bool kReturnsVoidT>
 	struct DiscardedValueExpressionChecker {
 		template<typename FuncT, typename ...ParamsT>
 		decltype(auto) operator()(FuncT &&vFunc, ParamsT &&...vParams){
@@ -140,25 +140,6 @@ public:
 		ASSERT(x_pFunctor);
 
 		return x_pFunctor->Dispatch(std::forward<ParamsT>(vParams)...); // 值形参当作右值引用传递。
-	}
-
-	bool operator==(const Function &rhs) const noexcept {
-		return x_pFunctor == rhs.x_pFunctor;
-	}
-	bool operator!=(const Function &rhs) const noexcept {
-		return x_pFunctor != rhs.x_pFunctor;
-	}
-	bool operator<(const Function &rhs) const noexcept {
-		return x_pFunctor < rhs.x_pFunctor;
-	}
-	bool operator>(const Function &rhs) const noexcept {
-		return x_pFunctor > rhs.x_pFunctor;
-	}
-	bool operator<=(const Function &rhs) const noexcept {
-		return x_pFunctor <= rhs.x_pFunctor;
-	}
-	bool operator>=(const Function &rhs) const noexcept {
-		return x_pFunctor >= rhs.x_pFunctor;
 	}
 
 	friend void swap(Function &lhs, Function &rhs) noexcept {

@@ -103,8 +103,8 @@ public:
 	}
 
 public:
-	bool IsNonnull() const noexcept {
-		return x_pFunctor.IsNonnull();
+	bool IsNull() const noexcept {
+		return x_pFunctor.IsNull();
 	}
 	std::size_t GetRefCount() const noexcept {
 		return x_pFunctor.GetRefCount();
@@ -134,10 +134,10 @@ public:
 
 public:
 	explicit operator bool() const noexcept {
-		return !!x_pFunctor;
+		return !IsNull();
 	}
 	std::remove_cv_t<RetT> operator()(ParamsT ...vParams) const {
-		ASSERT(x_pFunctor);
+		ASSERT(!IsNull());
 
 		return x_pFunctor->Dispatch(std::forward<ParamsT>(vParams)...); // 值形参当作右值引用传递。
 	}

@@ -78,8 +78,8 @@ public:
 	UniquePtr &operator=(const UniquePtr &) = delete;
 
 public:
-	constexpr bool IsNonnull() const noexcept {
-		return !!x_pElement;
+	constexpr bool IsNull() const noexcept {
+		return !x_pElement;
 	}
 	constexpr Element *Get() const noexcept {
 		return x_pElement;
@@ -113,7 +113,7 @@ public:
 
 public:
 	explicit constexpr operator bool() const noexcept {
-		return IsNonnull();
+		return !IsNull();
 	}
 	explicit constexpr operator Element *() const noexcept {
 		return Get();
@@ -124,7 +124,7 @@ public:
 		!std::is_void<T>::value && !std::is_array<T>::value,
 		Element> & operator*() const noexcept
 	{
-		ASSERT(IsNonnull());
+		ASSERT(!IsNull());
 
 		return *Get();
 	}
@@ -133,7 +133,7 @@ public:
 		!std::is_void<T>::value && !std::is_array<T>::value,
 		Element> * operator->() const noexcept
 	{
-		ASSERT(IsNonnull());
+		ASSERT(!IsNull());
 
 		return Get();
 	}
@@ -142,7 +142,7 @@ public:
 		std::is_array<T>::value,
 		Element> & operator[](std::size_t uIndex) const noexcept
 	{
-		ASSERT(IsNonnull());
+		ASSERT(!IsNull());
 
 		return Get()[uIndex];
 	}

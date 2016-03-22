@@ -54,8 +54,8 @@ public:
 	UniqueHandle &operator=(const UniqueHandle &) = delete;
 
 public:
-	constexpr bool IsNonnull() const noexcept {
-		return x_hObject != Closer()();
+	constexpr bool IsNull() const noexcept {
+		return x_hObject == Closer()();
 	}
 	constexpr Handle Get() const noexcept {
 		return x_hObject;
@@ -80,7 +80,7 @@ public:
 
 public:
 	explicit constexpr operator bool() const noexcept {
-		return IsNonnull();
+		return !IsNull();
 	}
 	explicit constexpr operator Handle() const noexcept {
 		return Get();

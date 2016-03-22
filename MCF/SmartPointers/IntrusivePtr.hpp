@@ -389,8 +389,8 @@ public:
 	}
 
 public:
-	constexpr bool IsNonnull() const noexcept {
-		return !!x_pElement;
+	constexpr bool IsNull() const noexcept {
+		return !x_pElement;
 	}
 	bool IsUnique() const noexcept {
 		const auto pElement = x_pElement;
@@ -463,19 +463,19 @@ public:
 
 public:
 	explicit constexpr operator bool() const noexcept {
-		return IsNonnull();
+		return !IsNull();
 	}
 	explicit constexpr operator Element *() const noexcept {
 		return Get();
 	}
 
 	constexpr Element &operator*() const noexcept {
-		ASSERT(IsNonnull());
+		ASSERT(!IsNull());
 
 		return *Get();
 	}
 	constexpr Element *operator->() const noexcept {
-		ASSERT(IsNonnull());
+		ASSERT(!IsNull());
 
 		return Get();
 	}

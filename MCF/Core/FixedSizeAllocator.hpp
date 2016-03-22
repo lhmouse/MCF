@@ -59,32 +59,32 @@ public:
 	__attribute__((__flatten__))
 	void *Allocate(){
 		const auto vControl = X_Detach();
-		const auto pX_Block = vControl.pFirst;
-		if(!pX_Block){
+		const auto pBlock = vControl.pFirst;
+		if(!pBlock){
 			return ::operator new(sizeof(X_Block));
 		}
-		const auto pNext = pX_Block->pNext;
+		const auto pNext = pBlock->pNext;
 		if(pNext){
 			X_Attach(X_Control{ pNext, vControl.pLast });
 		}
-		return pX_Block;
+		return pBlock;
 	}
 	__attribute__((__flatten__))
 	void Deallocate(void *pRaw) noexcept {
-		const auto pX_Block = static_cast<X_Block *>(pRaw);
-		if(!pX_Block){
+		const auto pBlock = static_cast<X_Block *>(pRaw);
+		if(!pBlock){
 			return;
 		}
-		X_Attach(X_Control{ pX_Block, pX_Block });
+		X_Attach(X_Control{ pBlock, pBlock });
 	}
 	__attribute__((__flatten__))
 	void Clear() noexcept {
 		const auto vControl = X_Detach();
-		auto pX_Block = vControl.pFirst;
-		while(pX_Block){
-			const auto pNext = pX_Block->pNext;
-			::operator delete(pX_Block);
-			pX_Block = pNext;
+		auto pBlock = vControl.pFirst;
+		while(pBlock){
+			const auto pNext = pBlock->pNext;
+			::operator delete(pBlock);
+			pBlock = pNext;
 		}
 	}
 	__attribute__((__flatten__))

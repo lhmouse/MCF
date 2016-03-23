@@ -25,7 +25,7 @@ extern _MCFCRT_TlsCallback _MCFCRT_TlsGetCallback(void *__pTlsKey) _MCFCRT_NOEXC
 extern bool _MCFCRT_TlsGet(void *__pTlsKey, _MCFCRT_STD intptr_t **restrict __ppnValue) _MCFCRT_NOEXCEPT;
 extern bool _MCFCRT_TlsRequire(void *__pTlsKey, _MCFCRT_STD intptr_t **restrict __ppnValue, _MCFCRT_STD intptr_t __nInitValue) _MCFCRT_NOEXCEPT;
 
-extern int _MCFCRT_AtEndThread(void (*__pfnProc)(_MCFCRT_STD intptr_t), _MCFCRT_STD intptr_t __nContext);
+extern int _MCFCRT_AtThreadExit(_MCFCRT_TlsCallback __pfnProc, _MCFCRT_STD intptr_t __nContext);
 
 typedef unsigned long (*__attribute__((__stdcall__)) _MCFCRT_NativeThreadProc)(void *);
 typedef unsigned (*_MCFCRT_ThreadProc)(_MCFCRT_STD intptr_t);

@@ -207,7 +207,7 @@ bool _MCFCRT_TlsFreeKey(void *pTlsKey){
 	return true;
 }
 
-void (*_MCFCRT_TlsGetCallback(void *pTlsKey))(intptr_t){
+_MCFCRT_TlsCallback _MCFCRT_TlsGetCallback(void *pTlsKey){
 	TlsKey *const pKey = pTlsKey;
 	if(!pKey){
 		SetLastError(ERROR_INVALID_PARAMETER);
@@ -259,7 +259,7 @@ bool _MCFCRT_TlsRequire(void *pTlsKey, intptr_t **restrict ppnValue, _MCFCRT_STD
 			return false;
 		}
 		InitializeSRWLock(&(pMap->srwLock));
-		pMap->avlObjects   = nullptr;
+		pMap->avlObjects    = nullptr;
 		pMap->pLastByThread = nullptr;
 
 		TlsSetValue(g_dwTlsIndex, pMap);
@@ -277,8 +277,8 @@ bool _MCFCRT_TlsRequire(void *pTlsKey, intptr_t **restrict ppnValue, _MCFCRT_STD
 					return false;
 				}
 				pObject->nValue = nInitValue;
-				pObject->pMap = pMap;
-				pObject->pKey = pKey;
+				pObject->pMap   = pMap;
+				pObject->pKey   = pKey;
 
 				AcquireSRWLockExclusive(&(pKey->srwLock));
 				{
@@ -312,7 +312,7 @@ bool _MCFCRT_TlsRequire(void *pTlsKey, intptr_t **restrict ppnValue, _MCFCRT_STD
 	return true;
 }
 
-int _MCFCRT_AtEndThread(void (*pfnProc)(intptr_t), intptr_t nContext){
+int _MCFCRT_AtThreadExit(_MCFCRT_TlsCallback pfnProc, _MCFCRT_STD intptr_t nContext){
 	void *const pKey = _MCFCRT_TlsAllocKey(pfnProc);
 	if(!pKey){
 		return -1;

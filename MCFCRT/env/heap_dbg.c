@@ -7,14 +7,13 @@
 #include "../ext/stpcpy.h"
 #include "bail.h"
 #include "mcfwin.h"
-#include <stdio.h>
 
 #define GUARD_BAND_SIZE     0x20u
 
 #if __MCFCRT_REQUIRE_HEAPDBG_LEVEL(3)
 
 static HANDLE          g_hMapAllocator = nullptr;
-static _MCFCRT_AvlRoot  g_avlBlocks     = nullptr;
+static _MCFCRT_AvlRoot g_avlBlocks     = nullptr;
 
 static int BlockInfoComparatorNodeKey(const _MCFCRT_AvlNodeHeader *pInfo1, intptr_t nKey2){
 	const uintptr_t uKey1 = (uintptr_t)(((const __MCFCRT_HeapDbgBlockInfo *)pInfo1)->__pContents);
@@ -23,6 +22,14 @@ static int BlockInfoComparatorNodeKey(const _MCFCRT_AvlNodeHeader *pInfo1, intpt
 }
 static int BlockInfoComparatorNodes(const _MCFCRT_AvlNodeHeader *pInfo1, const _MCFCRT_AvlNodeHeader *pInfo2){
 	return BlockInfoComparatorNodeKey(pInfo1, (intptr_t)(((const __MCFCRT_HeapDbgBlockInfo *)pInfo2)->__pContents));
+}
+
+static inline char *PrintUintPtrAsHex(char *pchBuffer, uintptr_t uValue, unsigned uDigits){
+	char *pchWrite = pchBuffer;
+	for(unsigned i = uDigits; i > 0; --i){
+		*(pchWrite++) = "0123456789ABCDEF"[(uValue >> (i - 1) * 4) & 0x0F];
+	}
+	return pchWrite;
 }
 
 #endif
@@ -55,18 +62,20 @@ void __MCFCRT_HeapDbgUninit(){
 			const unsigned char *pbyDump = pBlockInfo->__pContents;
 
 			char achTemp[1024];
-			char *pchWrite = achTemp + sprintf(achTemp,
-				"Memory leak: address = %p, size = %p, return address = %p, leading bytes =",
-				(void *)pbyDump, (void *)pBlockInfo->__uSize, (void *)pBlockInfo->__pRetAddr);
+			char *pchWrite = achTemp;
+			pchWrite = _MCFCRT_stpcpy(pchWrite, "Memory leak: address = ");
+			pchWrite = PrintUintPtrAsHex(pchWrite, (uintptr_t)pbyDump, sizeof(pbyDump) * 2);
+			pchWrite = _MCFCRT_stpcpy(pchWrite, ", size = ");
+			pchWrite = PrintUintPtrAsHex(pchWrite, (uintptr_t)pBlockInfo->__uSize, sizeof(pBlockInfo->__uSize) * 2);
+			pchWrite = _MCFCRT_stpcpy(pchWrite, ", return address = ");
+			pchWrite = PrintUintPtrAsHex(pchWrite, (uintptr_t)pBlockInfo->__pRetAddr, sizeof(pBlockInfo->__pRetAddr) * 2);
+			pchWrite = _MCFCRT_stpcpy(pchWrite, ", leading bytes =");
 			for(size_t i = 0; i < 16; ++i){
 				*(pchWrite++) = ' ';
 				if(IsBadReadPtr(pbyDump, 1)){
-					*(pchWrite++) = '?';
-					*(pchWrite++) = '?';
+					pchWrite = _MCFCRT_stpcpy(pchWrite, "??");
 				} else {
-					static const char kHexTable[16] = "0123456789ABCDEF";
-					*(pchWrite++) = kHexTable[(*pbyDump) >> 4];
-					*(pchWrite++) = kHexTable[(*pbyDump) & 0x0F];
+					pchWrite = PrintUintPtrAsHex(pchWrite, (uintptr_t)*pbyDump, 2);
 				}
 				++pbyDump;
 			}

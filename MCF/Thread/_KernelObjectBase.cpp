@@ -15,7 +15,7 @@ namespace MCF {
 
 namespace Impl_KernelObjectBase {
 	Impl_UniqueNtHandle::UniqueNtHandle KernelObjectBase::Y_OpenBaseNamedObjectDirectory(std::uint32_t u32Flags){
-		wchar_t awcBuffer[64];
+		wchar_t awcNameBuffer[64];
 
 		::UNICODE_STRING ustrName;
 		if(u32Flags & kGlobal){
@@ -25,11 +25,11 @@ namespace Impl_KernelObjectBase {
 			ustrName.MaximumLength = (USHORT)(sizeof(kBaseNameObjects));
 			ustrName.Buffer        = (PWSTR)kBaseNameObjects;
 		} else {
-			const auto uLen = (unsigned)swprintf(awcBuffer, sizeof(awcBuffer) / sizeof(wchar_t), L"\\Sessions\\%lu\\BaseNamedObjects", (unsigned long)::WTSGetActiveConsoleSessionId());
+			const auto uLen = (unsigned)swprintf(awcNameBuffer, sizeof(awcNameBuffer) / sizeof(wchar_t), L"\\Sessions\\%lu\\BaseNamedObjects", (unsigned long)::WTSGetActiveConsoleSessionId());
 
 			ustrName.Length        = (USHORT)(uLen * sizeof(wchar_t));
 			ustrName.MaximumLength = (USHORT)(uLen * sizeof(wchar_t) + sizeof(wchar_t));
-			ustrName.Buffer        = awcBuffer;
+			ustrName.Buffer        = awcNameBuffer;
 		}
 
 		::OBJECT_ATTRIBUTES vObjectAttributes;

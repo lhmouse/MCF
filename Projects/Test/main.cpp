@@ -1,7 +1,9 @@
 #include <MCF/StdMCF.hpp>
-#include <MCFCRT/env/thread.h>
+#include <MCF/Function/Function.hpp>
 
 extern "C" unsigned _MCFCRT_Main(){
-	::_MCFCRT_AtThreadExit([](int n){ std::printf("n = %d\n", n); }, 12345);
+	MCF::Function<void (int)> fn;
+	fn = [](int a){ std::printf("a = %d\n", a); };
+	fn(123);
 	return 0;
 }

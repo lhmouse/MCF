@@ -11,9 +11,11 @@
 #include <climits>
 
 #include <utility>
-#include <iterator>
 #include <type_traits>
 #include <initializer_list>
+
+#include <c++/bits/stl_iterator_base_types.h>
+#include <c++/bits/stl_iterator_base_funcs.h>
 
 #include "../MCFCRT/env/mcfwin.h"
 #include "../MCFCRT/ext/include.h"

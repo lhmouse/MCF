@@ -12,8 +12,10 @@
 #include "../Utilities/Defer.hpp"
 #include "../Function/Comparators.hpp"
 #include "Exception.hpp"
+#include <c++/bits/stl_iterator.h>
+#include <c++/bits/stl_iterator_base_types.h>
+#include <c++/bits/stl_iterator_base_funcs.h>
 #include <utility>
-#include <iterator>
 #include <type_traits>
 #include <initializer_list>
 #include <cstddef>

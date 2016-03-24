@@ -61,18 +61,8 @@ static void DoBail(const wchar_t *pwszDescription){
 	if(hStdErr != INVALID_HANDLE_VALUE){
 		DWORD dwMode;
 		if(GetConsoleMode(hStdErr, &dwMode)){
-			const wchar_t *pwcRead = awcBuffer;
-			for(;;){
-				const DWORD dwCharsToWrite = (DWORD)(pwcWrite - pwcRead);
-				if(dwCharsToWrite == 0){
-					break;
-				}
-				DWORD dwCharsWritten;
-				if(!WriteConsoleW(hStdErr, pwcRead, dwCharsToWrite, &dwCharsWritten, nullptr)){
-					break;
-				}
-				pwcRead += dwCharsWritten;
-			}
+			DWORD dwCharsWritten;
+			WriteConsoleW(hStdErr, awcBuffer, (DWORD)(pwcWrite - awcBuffer), &dwCharsWritten, nullptr);
 		}
 	}
 	*(pwcWrite--) = 0;

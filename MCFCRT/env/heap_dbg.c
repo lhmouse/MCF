@@ -5,10 +5,26 @@
 #include "heap_dbg.h"
 #include "heap.h"
 #include "../ext/stpcpy.h"
+#include "../ext/wcpcpy.h"
 #include "bail.h"
 #include "mcfwin.h"
 
 #define GUARD_BAND_SIZE     0x20u
+
+static inline char *PrintUintPtrAsHex(char *pchBuffer, uintptr_t uValue, unsigned uDigits){
+	char *pchWrite = pchBuffer;
+	for(unsigned i = uDigits; i > 0; --i){
+		*(pchWrite++) = "0123456789ABCDEF"[(uValue >> (i - 1) * 4) & 0x0F];
+	}
+	return pchWrite;
+}
+static inline wchar_t *PrintUintPtrAsHexW(wchar_t *pwchBuffer, uintptr_t uValue, unsigned uDigits){
+	wchar_t *pwchWrite = pwchBuffer;
+	for(unsigned i = uDigits; i > 0; --i){
+		*(pwchWrite++) = L"0123456789ABCDEF"[(uValue >> (i - 1) * 4) & 0x0F];
+	}
+	return pwchWrite;
+}
 
 #if __MCFCRT_REQUIRE_HEAPDBG_LEVEL(3)
 
@@ -22,14 +38,6 @@ static int BlockInfoComparatorNodeKey(const _MCFCRT_AvlNodeHeader *pInfo1, intpt
 }
 static int BlockInfoComparatorNodes(const _MCFCRT_AvlNodeHeader *pInfo1, const _MCFCRT_AvlNodeHeader *pInfo2){
 	return BlockInfoComparatorNodeKey(pInfo1, (intptr_t)(((const __MCFCRT_HeapDbgBlockInfo *)pInfo2)->__pContents));
-}
-
-static inline char *PrintUintPtrAsHex(char *pchBuffer, uintptr_t uValue, unsigned uDigits){
-	char *pchWrite = pchBuffer;
-	for(unsigned i = uDigits; i > 0; --i){
-		*(pchWrite++) = "0123456789ABCDEF"[(uValue >> (i - 1) * 4) & 0x0F];
-	}
-	return pchWrite;
 }
 
 #endif
@@ -150,7 +158,11 @@ __MCFCRT_HeapDbgBlockInfo *__MCFCRT_HeapDbgValidateBlock(unsigned char **ppRaw, 
 
 	__MCFCRT_HeapDbgBlockInfo *const pBlockInfo = (__MCFCRT_HeapDbgBlockInfo *)_MCFCRT_AvlFind(&g_avlBlocks, (intptr_t)pContents, &BlockInfoComparatorNodeKey);
 	if(!pBlockInfo){
-		_MCFCRT_BailF(L"__MCFCRT_HeapDbgValidate() 失败：传入的指针无效。\n调用返回地址：%p", pRetAddr);
+		wchar_t awchTemp[256];
+		wchar_t *pwcWrite = awchTemp;
+		pwcWrite = _MCFCRT_wcpcpy(pwcWrite, L"__MCFCRT_HeapDbgValidate() 失败：传入的指针无效。\n调用返回地址：");
+		pwcWrite = PrintUintPtrAsHexW(pwcWrite, (uintptr_t)pRetAddr, sizeof(pRetAddr) * 2);
+		_MCFCRT_Bail(awchTemp);
 	}
 	const size_t uSize = pBlockInfo->__uSize;
 
@@ -163,7 +175,11 @@ __MCFCRT_HeapDbgBlockInfo *__MCFCRT_HeapDbgValidateBlock(unsigned char **ppRaw, 
 		memcpy(&pTemp1, ppGuard1, sizeof(void *));
 		memcpy(&pTemp2, ppGuard2, sizeof(void *));
 		if((DecodePointer(pTemp1) != ppGuard2) || (DecodePointer(pTemp2) != ppGuard1)){
-			_MCFCRT_BailF(L"__MCFCRT_HeapDbgValidate() 失败：侦测到堆损坏。\n调用返回地址：%p", pRetAddr);
+			wchar_t awchTemp[256];
+			wchar_t *pwcWrite = awchTemp;
+			pwcWrite = _MCFCRT_wcpcpy(pwcWrite, L"__MCFCRT_HeapDbgValidate() 失败：侦测到堆损坏。\n调用返回地址：");
+			pwcWrite = PrintUintPtrAsHexW(pwcWrite, (uintptr_t)pRetAddr, sizeof(pRetAddr) * 2);
+			_MCFCRT_Bail(awchTemp);
 		}
 
 		++ppGuard2;
@@ -210,7 +226,10 @@ void __MCFCRT_HeapDbgValidateBlockBasic(unsigned char **ppRaw, unsigned char *pC
 		memcpy(&pTemp1, ppGuard1, sizeof(void *));
 		memcpy(&pTemp2, ppGuard2, sizeof(void *));
 		if((DecodePointer(pTemp1) != ppGuard2) || (DecodePointer(pTemp2) != ppGuard1)){
-			_MCFCRT_BailF(L"__MCFCRT_HeapDbgValidate() 失败：侦测到堆损坏。\n调用返回地址：%p", pRetAddr);
+			wchar_t awchTemp[256];
+			wchar_t *pwcWrite = awchTemp;
+			pwcWrite = _MCFCRT_wcpcpy(pwcWrite, L"__MCFCRT_HeapDbgValidate() 失败：侦测到堆损坏。\n调用返回地址：");
+			pwcWrite = PrintUintPtrAsHexW(pwcWrite, (uintptr_t)pRetAddr, sizeof(pRetAddr) * 2);
 		}
 
 		++ppGuard2;

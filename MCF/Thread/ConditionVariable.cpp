@@ -19,7 +19,7 @@ namespace MCF {
 bool ConditionVariable::Wait(Impl_UniqueLockTemplate::UniqueLockTemplateBase &vLock, std::uint64_t u64UntilFastMonoClock) noexcept {
 	x_uControl.Increment(kAtomicRelaxed);
 	const auto uCount = vLock.Y_UnlockAll();
-	ASSERT_MSG(uCount != 0, L"你会用条件变量吗？");
+	MCF_ASSERT_MSG(uCount != 0, L"你会用条件变量吗？");
 
 	::LARGE_INTEGER liTimeout;
 	liTimeout.QuadPart = 0;
@@ -37,7 +37,7 @@ bool ConditionVariable::Wait(Impl_UniqueLockTemplate::UniqueLockTemplateBase &vL
 	}
 	const auto lStatus = ::NtWaitForKeyedEvent(nullptr, this, false, &liTimeout);
 	if(!NT_SUCCESS(lStatus)){
-		ASSERT_MSG(false, L"NtWaitForKeyedEvent() 失败。");
+		MCF_ASSERT_MSG(false, L"NtWaitForKeyedEvent() 失败。");
 	}
 	if(lStatus == STATUS_TIMEOUT){
 		auto uOld = x_uControl.Load(kAtomicRelaxed);
@@ -46,7 +46,7 @@ bool ConditionVariable::Wait(Impl_UniqueLockTemplate::UniqueLockTemplateBase &vL
 		if(uNew == 0){
 			const auto lStatus = ::NtWaitForKeyedEvent(nullptr, this, false, nullptr);
 			if(!NT_SUCCESS(lStatus)){
-				ASSERT_MSG(false, L"NtWaitForKeyedEvent() 失败。");
+				MCF_ASSERT_MSG(false, L"NtWaitForKeyedEvent() 失败。");
 			}
 		} else {
 			--uNew;
@@ -66,11 +66,11 @@ void ConditionVariable::Wait(Impl_UniqueLockTemplate::UniqueLockTemplateBase &vL
 	x_uControl.Increment(kAtomicRelaxed);
 
 	const auto uCount = vLock.Y_UnlockAll();
-	ASSERT_MSG(uCount != 0, L"你会用条件变量吗？");
+	MCF_ASSERT_MSG(uCount != 0, L"你会用条件变量吗？");
 
 	const auto lStatus = ::NtWaitForKeyedEvent(nullptr, this, false, nullptr);
 	if(!NT_SUCCESS(lStatus)){
-		ASSERT_MSG(false, L"NtWaitForKeyedEvent() 失败。");
+		MCF_ASSERT_MSG(false, L"NtWaitForKeyedEvent() 失败。");
 	}
 
 	vLock.Y_RelockAll(uCount);
@@ -92,7 +92,7 @@ jCasFailure:
 	for(std::size_t i = 0; i < uThreadsToWakeUp; ++i){
 		const auto lStatus = ::NtWaitForKeyedEvent(nullptr, this, false, nullptr);
 		if(!NT_SUCCESS(lStatus)){
-			ASSERT_MSG(false, L"NtWaitForKeyedEvent() 失败。");
+			MCF_ASSERT_MSG(false, L"NtWaitForKeyedEvent() 失败。");
 		}
 	}
 	return uThreadsToWakeUp;
@@ -106,7 +106,7 @@ std::size_t ConditionVariable::Broadcast() noexcept {
 	for(std::size_t i = 0; i < uThreadsToWakeUp; ++i){
 		const auto lStatus = ::NtWaitForKeyedEvent(nullptr, this, false, nullptr);
 		if(!NT_SUCCESS(lStatus)){
-			ASSERT_MSG(false, L"NtWaitForKeyedEvent() 失败。");
+			MCF_ASSERT_MSG(false, L"NtWaitForKeyedEvent() 失败。");
 		}
 	}
 	return uThreadsToWakeUp;

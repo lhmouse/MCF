@@ -154,25 +154,25 @@ public:
 	}
 
 	static const Element *GetPrev(const Element *pPos) noexcept {
-		ASSERT(pPos);
+		MCF_ASSERT(pPos);
 
 		const auto pPrev = reinterpret_cast<const X_Node *>(pPos)->pPrev;
 		return reinterpret_cast<const Element *>(pPrev);
 	}
 	static Element *GetPrev(Element *pPos) noexcept {
-		ASSERT(pPos);
+		MCF_ASSERT(pPos);
 
 		const auto pPrev = reinterpret_cast<const X_Node *>(pPos)->pPrev;
 		return reinterpret_cast<Element *>(pPrev);
 	}
 	static const Element *GetNext(const Element *pPos) noexcept {
-		ASSERT(pPos);
+		MCF_ASSERT(pPos);
 
 		const auto pNext = reinterpret_cast<const X_Node *>(pPos)->pNext;
 		return reinterpret_cast<const Element *>(pNext);
 	}
 	static Element *GetNext(Element *pPos) noexcept {
-		ASSERT(pPos);
+		MCF_ASSERT(pPos);
 
 		const auto pNext = reinterpret_cast<const X_Node *>(pPos)->pNext;
 		return reinterpret_cast<Element *>(pNext);
@@ -244,7 +244,7 @@ public:
 		return *pElement;
 	}
 	void Shift(std::size_t uCount = 1) noexcept {
-		ASSERT(uCount <= CountElements());
+		MCF_ASSERT(uCount <= CountElements());
 
 		auto pNode = x_pFirst;
 		for(std::size_t i = 0; i < uCount; ++i){
@@ -285,7 +285,7 @@ public:
 		return *pElement;
 	}
 	void Pop(std::size_t uCount = 1) noexcept {
-		ASSERT(uCount <= CountElements());
+		MCF_ASSERT(uCount <= CountElements());
 
 		auto pNode = x_pLast;
 		for(std::size_t i = 0; i < uCount; ++i){
@@ -392,7 +392,7 @@ public:
 		if(pBeginNode == pEndNode){
 			return const_cast<Element *>(pInsert);
 		}
-		ASSERT(pBeginNode);
+		MCF_ASSERT(pBeginNode);
 
 		const auto pNodeBeforeBegin = pBeginNode->pPrev;
 		const auto pNodeBeforeEnd = pEndNode ? pEndNode->pPrev : lstSrc.x_pLast;

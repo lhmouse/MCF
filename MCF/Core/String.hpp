@@ -180,10 +180,10 @@ private:
 		const auto uNewSize = uThirdOffset + (uOldSize - uRemovedEnd);
 		auto uCharsToAlloc = uNewSize + 1;
 
-		ASSERT(uRemovedBegin <= uOldSize);
-		ASSERT(uRemovedEnd <= uOldSize);
-		ASSERT(uRemovedBegin <= uRemovedEnd);
-		ASSERT(uFirstOffset + uRemovedBegin <= uThirdOffset);
+		MCF_ASSERT(uRemovedBegin <= uOldSize);
+		MCF_ASSERT(uRemovedEnd <= uOldSize);
+		MCF_ASSERT(uRemovedBegin <= uRemovedEnd);
+		MCF_ASSERT(uFirstOffset + uRemovedBegin <= uThirdOffset);
 
 		const auto uOldCapacity = GetCapacity();
 		if(uOldCapacity < uNewSize){
@@ -218,7 +218,7 @@ private:
 		return pchNewBuffer + uFirstOffset + uRemovedBegin;
 	}
 	void X_SetSize(std::size_t uNewSize) noexcept {
-		ASSERT(uNewSize <= GetCapacity());
+		MCF_ASSERT(uNewSize <= GetCapacity());
 
 		if(x_vStorage.schComplLength >= 0){
 			X_SetSmallLength(uNewSize);
@@ -434,12 +434,12 @@ public:
 		return UncheckedGet(uIndex);
 	}
 	const Char &UncheckedGet(std::size_t uIndex) const noexcept {
-		ASSERT(uIndex <= GetSize());
+		MCF_ASSERT(uIndex <= GetSize());
 
 		return GetStr()[uIndex];
 	}
 	Char &UncheckedGet(std::size_t uIndex) noexcept {
-		ASSERT(uIndex <= GetSize());
+		MCF_ASSERT(uIndex <= GetSize());
 
 		return GetStr()[uIndex];
 	}
@@ -498,7 +498,7 @@ public:
 	}
 	void ShrinkAsZeroTerminated() noexcept {
 		const auto uSzLen = View(GetStr()).GetSize();
-		ASSERT(uSzLen <= GetSize());
+		MCF_ASSERT(uSzLen <= GetSize());
 		X_SetSize(uSzLen);
 	}
 
@@ -545,7 +545,7 @@ public:
 		}
 	}
 	void Assign(String &&rhs) noexcept {
-		ASSERT(this != &rhs);
+		MCF_ASSERT(this != &rhs);
 
 		if(x_vStorage.schComplLength < 0){
 			::operator delete[](x_vStorage.pchBegin);
@@ -561,7 +561,7 @@ public:
 		Append(ch, 1);
 	}
 	void UncheckedPush(Char ch) noexcept {
-		ASSERT(GetSize() < GetCapacity());
+		MCF_ASSERT(GetSize() < GetCapacity());
 
 		if(x_vStorage.schComplLength >= 0){
 			x_vStorage.achData[X_GetSmallLength()] = ch;
@@ -573,7 +573,7 @@ public:
 	}
 	void Pop(std::size_t uCount = 1) noexcept {
 		const auto uOldSize = GetSize();
-		ASSERT(uOldSize >= uCount);
+		MCF_ASSERT(uOldSize >= uCount);
 		X_SetSize(uOldSize - uCount);
 	}
 

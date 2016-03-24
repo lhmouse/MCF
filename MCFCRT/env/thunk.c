@@ -23,12 +23,12 @@ typedef struct tagThunkInfo {
 } ThunkInfo;
 
 static inline ThunkInfo *GetInfoFromThunkIndex(const _MCFCRT_AvlNodeHeader *pThunkIndex){
-	ASSERT(pThunkIndex);
+	_MCFCRT_ASSERT(pThunkIndex);
 
 	return (ThunkInfo *)((char *)pThunkIndex - offsetof(ThunkInfo, vThunkIndex));
 }
 static inline ThunkInfo *GetInfoFromFreeSizeIndex(const _MCFCRT_AvlNodeHeader *pFreeSizeIndex){
-	ASSERT(pFreeSizeIndex);
+	_MCFCRT_ASSERT(pFreeSizeIndex);
 
 	return (ThunkInfo *)((char *)pFreeSizeIndex - offsetof(ThunkInfo, vFreeSizeIndex));
 }
@@ -60,7 +60,7 @@ static _MCFCRT_AvlRoot  g_avlThunksByThunk     = nullptr;
 static _MCFCRT_AvlRoot  g_avlThunksByFreeSize  = nullptr;
 
 const void *_MCFCRT_AllocateThunk(const void *pInit, size_t uSize){
-	ASSERT(pInit);
+	_MCFCRT_ASSERT(pInit);
 
 	char *pRaw = nullptr;
 
@@ -106,7 +106,7 @@ const void *_MCFCRT_AllocateThunk(const void *pInit, size_t uSize){
 			pFreeSizeIndex = &(pInfo->vFreeSizeIndex);
 			bNeedsCleanup = true;
 		}
-		ASSERT(pInfo->uFreeSize >= uThunkSize);
+		_MCFCRT_ASSERT(pInfo->uFreeSize >= uThunkSize);
 
 		const size_t uRemaining = pInfo->uFreeSize - uThunkSize;
 		if(uRemaining >= 0x20){

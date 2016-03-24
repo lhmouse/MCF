@@ -29,7 +29,7 @@ std::size_t Semaphore::Post(std::size_t uPostCount) noexcept {
 	const auto uOldCount = x_uCount;
 	const auto uNewCount = uOldCount + uPostCount;
 	if(uNewCount < uOldCount){
-		ASSERT_MSG(false, L"算术运算结果超出可表示范围。");
+		MCF_ASSERT_MSG(false, L"算术运算结果超出可表示范围。");
 	}
 	x_uCount = uNewCount;
 	x_cvWaiter.Signal(uPostCount);

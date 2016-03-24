@@ -36,7 +36,7 @@ void RecursiveMutex::Lock() noexcept {
 	++x_uRecursionCount;
 }
 void RecursiveMutex::Unlock() noexcept {
-	ASSERT_MSG(IsLockedByCurrentThread(), L"试图使用当前不持有递归互斥体的线程释放递归互斥体。");
+	MCF_ASSERT_MSG(IsLockedByCurrentThread(), L"试图使用当前不持有递归互斥体的线程释放递归互斥体。");
 
 	--x_uRecursionCount;
 	if(x_uRecursionCount == 0){

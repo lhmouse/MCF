@@ -6,23 +6,21 @@
 #define __MCFCRT_EXT_ASSERT_H_
 
 #include "../env/_crtdef.h"
-#include "../env/bail.h"
 
-static inline __attribute__((__noreturn__))
-void __MCFCRT_OnAssertFail(const wchar_t *__pwszExpression, const char *__pszFile, unsigned long __ulLine, const wchar_t *__pwszMessage) _MCFCRT_NOEXCEPT {
-	_MCFCRT_BailF(L"调试断言失败。\n\n表达式：%ls\n文件　：%hs\n行号　：%lu\n描述　：%ls", __pwszExpression, __pszFile, __ulLine, __pwszMessage);
-}
+__MCFCRT_EXTERN_C_BEGIN
 
-#define ASSERT(__expr_)                 (__MCFCRT_ASSERT_MSG(#__expr_, (__expr_), L""))
-#define ASSERT_MSG(__expr_, __msg_)     (__MCFCRT_ASSERT_MSG(#__expr_, (__expr_), (__msg_)))
+extern __attribute__((__noreturn__))
+int __MCFCRT_OnAssertionFailure(const wchar_t *__pwszExpression, const char *__pszFile, unsigned long __ulLine, const wchar_t *__pwszMessage) _MCFCRT_NOEXCEPT;
+
+__MCFCRT_EXTERN_C_END
+
+#define _MCFCRT_ASSERT(__expr_)              __MCFCRT_ASSERT_IMPL(#__expr_, __expr_, L"")
+#define _MCFCRT_ASSERT_MSG(__expr_, __msg_)  __MCFCRT_ASSERT_IMPL(#__expr_, __expr_, __msg_)
 
 #endif
 
-// 这部分每次 #include 都可能会变。
-#undef __MCFCRT_ASSERT_MSG
-
 #ifdef NDEBUG
-#	define __MCFCRT_ASSERT_MSG(__plain_, __expr_, __msg_)  ((void)(__typeof__((void)(__expr_), 1))0)
+#	define __MCFCRT_ASSERT_IMPL(__plain_, __expr_, __msg_)  ((void)(sizeof(__expr_) + sizeof(__msg_)))
 #else
-#	define __MCFCRT_ASSERT_MSG(__plain_, __expr_, __msg_)  ((void)(!(__expr_) && (__MCFCRT_OnAssertFail(L ## __plain_, __FILE__, __LINE__, (__msg_)), 1)))
+#	define __MCFCRT_ASSERT_IMPL(__plain_, __expr_, __msg_)  ((void)(!(__expr_) && __MCFCRT_OnAssertionFailure(L ## __plain_, __FILE__, __LINE__, (__msg_))))
 #endif

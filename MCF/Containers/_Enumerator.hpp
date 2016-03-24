@@ -65,7 +65,7 @@ namespace Impl_Enumerator {
 		}
 
 		Enumerator &operator++() noexcept {
-			ASSERT(x_pContainer);
+			MCF_ASSERT(x_pContainer);
 
 			if(x_pElement){
 				x_pElement = x_pContainer->GetNext(x_pElement);
@@ -75,7 +75,7 @@ namespace Impl_Enumerator {
 			return *this;
 		}
 		Enumerator &operator--() noexcept {
-			ASSERT(x_pContainer);
+			MCF_ASSERT(x_pContainer);
 
 			if(x_pElement){
 				x_pElement = x_pContainer->GetPrev(x_pElement);
@@ -97,7 +97,7 @@ namespace Impl_Enumerator {
 		}
 
 		Element &operator*() const noexcept {
-			ASSERT(x_pElement);
+			MCF_ASSERT(x_pElement);
 
 			return *x_pElement;
 		}
@@ -147,7 +147,7 @@ namespace Impl_Enumerator {
 		}
 
 		ConstEnumerator &operator++() noexcept {
-			ASSERT(x_pContainer);
+			MCF_ASSERT(x_pContainer);
 
 			if(x_pElement){
 				x_pElement = x_pContainer->GetNext(x_pElement);
@@ -157,7 +157,7 @@ namespace Impl_Enumerator {
 			return *this;
 		}
 		ConstEnumerator &operator--() noexcept {
-			ASSERT(x_pContainer);
+			MCF_ASSERT(x_pContainer);
 
 			if(x_pElement){
 				x_pElement = x_pContainer->GetPrev(x_pElement);
@@ -179,7 +179,7 @@ namespace Impl_Enumerator {
 		}
 
 		const Element &operator*() const noexcept {
-			ASSERT(x_pElement);
+			MCF_ASSERT(x_pElement);
 
 			return *x_pElement;
 		}

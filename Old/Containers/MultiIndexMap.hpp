@@ -588,22 +588,22 @@ private:
 		}
 
 		RealElementT &operator*() const noexcept {
-			ASSERT_MSG(x_pNode, L"游标指向链表两端或者为空。");
+			_MCFCRT_ASSERT_MSG(x_pNode, L"游标指向链表两端或者为空。");
 			return x_pNode->Get();
 		}
 		RealElementT *operator->() const noexcept {
-			ASSERT_MSG(x_pNode, L"游标指向链表两端或者为空。");
+			_MCFCRT_ASSERT_MSG(x_pNode, L"游标指向链表两端或者为空。");
 			return std::addressof(x_pNode->Get());
 		}
 
 		CursorT &operator++() noexcept {
-			ASSERT_MSG(x_pNode, L"空游标不能移动。");
+			_MCFCRT_ASSERT_MSG(x_pNode, L"空游标不能移动。");
 
 			x_pNode = x_pNode->template GetNext<kIndexT>();
 			return static_cast<CursorT &>(*this);
 		}
 		CursorT &operator--() noexcept {
-			ASSERT_MSG(x_pNode, L"空游标不能移动。");
+			_MCFCRT_ASSERT_MSG(x_pNode, L"空游标不能移动。");
 
 			x_pNode = x_pNode->template GetPrev<kIndexT>();
 			return static_cast<CursorT &>(*this);
@@ -841,7 +841,7 @@ private:
 			)));
 			const auto pIndexNode = &static_cast<IndexNode &>(*pNode);
 			const auto pExistentIndexNode = std::get<kIndex>(x_vIndices).Attach(pHintIndexNode, pIndexNode);
-			ASSERT(!pExistentIndexNode);
+			_MCFCRT_ASSERT(!pExistentIndexNode);
 
 			pHintIndexNode = pIndexNode;
 			pSourceIndexNode = pSourceIndexNode->GetPrev();
@@ -970,7 +970,7 @@ public:
 			pHintIndexNode = static_cast<IndexNode *>(pExistentIndexNode->GetNext());
 			Erase(static_cast<Node &>(static_cast<IndexNode &>(*pExistentIndexNode)));
 			pExistentIndexNode = std::get<kIndexT>(x_vIndices).Attach(pHintIndexNode, pIndexNode);
-			ASSERT(!pExistentIndexNode);
+			_MCFCRT_ASSERT(!pExistentIndexNode);
 		}
 		return true;
 	}

@@ -43,7 +43,7 @@ namespace Impl_Variant {
 	template<typename FunctorT, std::size_t kIndex>
 	struct Applier<FunctorT, kIndex> {
 		[[noreturn]] void operator()(FunctorT & /* vFunctor */, std::size_t uActiveIndex, void * /* pElement */) const {
-			ASSERT(false);
+			MCF_ASSERT(false);
 			std::terminate();
 		}
 	};
@@ -149,7 +149,7 @@ public:
 		if(GetIndex() != FindFirstType<Element, ElementsT...>()){
 			return nullptr;
 		}
-		ASSERT(dynamic_cast<const X_ActiveElement<Element> *>(x_pElement.Get()));
+		MCF_ASSERT(dynamic_cast<const X_ActiveElement<Element> *>(x_pElement.Get()));
 		return static_cast<const Element *>(
 			static_cast<const X_ActiveElement<Element> *>(x_pElement.Get())->GetAddress());
 	}
@@ -159,7 +159,7 @@ public:
 		if(GetIndex() != FindFirstType<ParamT, ElementsT...>()){
 			return nullptr;
 		}
-		ASSERT(dynamic_cast<X_ActiveElement<Element> *>(x_pElement.Get()));
+		MCF_ASSERT(dynamic_cast<X_ActiveElement<Element> *>(x_pElement.Get()));
 		return static_cast<Element *>(
 			static_cast<X_ActiveElement<Element> *>(x_pElement.Get())->GetAddress());
 	}

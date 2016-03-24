@@ -65,7 +65,7 @@ bool Mutex::Try(std::uint64_t u64UntilFastMonoClock) noexcept {
 			}
 			const auto lStatus = ::NtWaitForKeyedEvent(nullptr, this, false, &liTimeout);
 			if(!NT_SUCCESS(lStatus)){
-				ASSERT_MSG(false, L"NtWaitForKeyedEvent() 失败。");
+				MCF_ASSERT_MSG(false, L"NtWaitForKeyedEvent() 失败。");
 			}
 			if(lStatus == STATUS_TIMEOUT){
 				auto uOld = x_uControl.Load(kAtomicRelaxed);
@@ -74,7 +74,7 @@ bool Mutex::Try(std::uint64_t u64UntilFastMonoClock) noexcept {
 				if(uNew >> 1 == 0){
 					const auto lStatus = ::NtWaitForKeyedEvent(nullptr, this, false, nullptr);
 					if(!NT_SUCCESS(lStatus)){
-						ASSERT_MSG(false, L"NtWaitForKeyedEvent() 失败。");
+						MCF_ASSERT_MSG(false, L"NtWaitForKeyedEvent() 失败。");
 					}
 				} else {
 					uNew -= 2;
@@ -115,7 +115,7 @@ void Mutex::Lock() noexcept {
 			}
 			const auto lStatus = ::NtWaitForKeyedEvent(nullptr, this, false, nullptr);
 			if(!NT_SUCCESS(lStatus)){
-				ASSERT_MSG(false, L"NtWaitForKeyedEvent() 失败。");
+				MCF_ASSERT_MSG(false, L"NtWaitForKeyedEvent() 失败。");
 			}
 
 			uSpinnedCount = 0;
@@ -126,7 +126,7 @@ void Mutex::Lock() noexcept {
 void Mutex::Unlock() noexcept {
 	auto uOld = x_uControl.Load(kAtomicRelaxed);
 jCasFailure:
-	ASSERT_MSG(uOld & 1, L"互斥锁没有被任何线程锁定。");
+	MCF_ASSERT_MSG(uOld & 1, L"互斥锁没有被任何线程锁定。");
 	auto uNew = (uOld >> 1) << 1;
 	if(uNew == 0){
 		if(!x_uControl.CompareExchange(uOld, uNew, kAtomicSeqCst, kAtomicRelaxed)){
@@ -139,7 +139,7 @@ jCasFailure:
 		}
 		const auto lStatus = ::NtReleaseKeyedEvent(nullptr, this, false, nullptr);
 		if(!NT_SUCCESS(lStatus)){
-			ASSERT_MSG(false, L"NtReleaseKeyedEvent() 失败。");
+			MCF_ASSERT_MSG(false, L"NtReleaseKeyedEvent() 失败。");
 		}
 	}
 }

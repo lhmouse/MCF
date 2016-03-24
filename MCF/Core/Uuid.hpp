@@ -63,12 +63,12 @@ public:
 		return UncheckedGet(uIndex);
 	}
 	const unsigned char &UncheckedGet(std::size_t uIndex) const noexcept {
-		ASSERT(uIndex <= GetSize());
+		MCF_ASSERT(uIndex <= GetSize());
 
 		return x_unData.aby.UncheckedGet(uIndex);
 	}
 	unsigned char &UncheckedGet(std::size_t uIndex) noexcept {
-		ASSERT(uIndex <= GetSize());
+		MCF_ASSERT(uIndex <= GetSize());
 
 		return x_unData.aby.UncheckedGet(uIndex);
 	}

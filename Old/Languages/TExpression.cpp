@@ -131,7 +131,7 @@ namespace {
 				break;
 
 			default:
-				ASSERT(false);
+				_MCFCRT_ASSERT(false);
 			}
 		}
 		if(eState == kStUcsCode){
@@ -214,7 +214,7 @@ std::pair<TExpression::ErrorType, const wchar_t *> TExpression::Parse(const Wide
 	} eState = kStDelimiter;
 
 	const auto PushNode = [&]{
-		ASSERT(!vecNodeStack.IsEmpty());
+		_MCFCRT_ASSERT(!vecNodeStack.IsEmpty());
 
 		auto &lstChildren = vecNodeStack.GetBack()->x_lstChildren;
 		auto &vNewNode = lstChildren.Push()->Get();
@@ -222,14 +222,14 @@ std::pair<TExpression::ErrorType, const wchar_t *> TExpression::Parse(const Wide
 		vecNodeStack.Push(&vNewNode.second);
 	};
 	const auto PushUnnamedNode = [&]{
-		ASSERT(!vecNodeStack.IsEmpty());
+		_MCFCRT_ASSERT(!vecNodeStack.IsEmpty());
 
 		auto &lstChildren = vecNodeStack.GetBack()->x_lstChildren;
 		auto &vNewNode = lstChildren.Push()->Get();
 		vecNodeStack.Push(&vNewNode.second);
 	};
 	const auto PopNode = [&]{
-		ASSERT(vecNodeStack.GetSize() > 1);
+		_MCFCRT_ASSERT(vecNodeStack.GetSize() > 1);
 
 		vecNodeStack.Pop();
 	};
@@ -499,7 +499,7 @@ WideString TExpression::Export(const WideStringView &wsvIndent) const {
 		wsRet += L'\n';
 	}
 
-	ASSERT(wsIndent.IsEmpty());
+	_MCFCRT_ASSERT(wsIndent.IsEmpty());
 
 	return wsRet;
 }

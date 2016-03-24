@@ -97,9 +97,9 @@ public:
 
 private:
 	void X_PrepareForInsertion(std::size_t uPos, std::size_t uDeltaSize){
-		ASSERT(std::is_nothrow_move_constructible<Element>::value);
-		ASSERT(!IsEmpty());
-		ASSERT(uPos <= x_uSize);
+		MCF_ASSERT(std::is_nothrow_move_constructible<Element>::value);
+		MCF_ASSERT(!IsEmpty());
+		MCF_ASSERT(uPos <= x_uSize);
 
 		ReserveMore(uDeltaSize);
 		for(std::size_t i = x_uSize; i > uPos; --i){
@@ -108,10 +108,10 @@ private:
 		}
 	}
 	void X_UndoPreparation(std::size_t uPos, std::size_t uDeltaSize) noexcept {
-		ASSERT(std::is_nothrow_move_constructible<Element>::value);
-		ASSERT(!IsEmpty());
-		ASSERT(uPos <= x_uSize);
-		ASSERT(uDeltaSize <= x_uSize - uPos);
+		MCF_ASSERT(std::is_nothrow_move_constructible<Element>::value);
+		MCF_ASSERT(!IsEmpty());
+		MCF_ASSERT(uPos <= x_uSize);
+		MCF_ASSERT(uDeltaSize <= x_uSize - uPos);
 
 		for(std::size_t i = uPos; i < x_uSize; ++i){
 			Construct(x_pStorage + i, std::move(x_pStorage[i + uDeltaSize]));
@@ -174,7 +174,7 @@ public:
 	}
 
 	const Element *GetPrev(const Element *pPos) const noexcept {
-		ASSERT(pPos);
+		MCF_ASSERT(pPos);
 
 		const auto pBegin = GetBegin();
 		auto uOffset = static_cast<std::size_t>(pPos - pBegin);
@@ -185,7 +185,7 @@ public:
 		return pBegin + uOffset;
 	}
 	Element *GetPrev(Element *pPos) noexcept {
-		ASSERT(pPos);
+		MCF_ASSERT(pPos);
 
 		const auto pBegin = GetBegin();
 		auto uOffset = static_cast<std::size_t>(pPos - pBegin);
@@ -196,7 +196,7 @@ public:
 		return pBegin + uOffset;
 	}
 	const Element *GetNext(const Element *pPos) const noexcept {
-		ASSERT(pPos);
+		MCF_ASSERT(pPos);
 
 		const auto pBegin = GetBegin();
 		auto uOffset = static_cast<std::size_t>(pPos - pBegin);
@@ -207,7 +207,7 @@ public:
 		return pBegin + uOffset;
 	}
 	Element *GetNext(Element *pPos) noexcept {
-		ASSERT(pPos);
+		MCF_ASSERT(pPos);
 
 		const auto pBegin = GetBegin();
 		auto uOffset = static_cast<std::size_t>(pPos - pBegin);
@@ -302,12 +302,12 @@ public:
 		return UncheckedGet(uIndex);
 	}
 	const Element &UncheckedGet(std::size_t uIndex) const noexcept {
-		ASSERT(uIndex < x_uSize);
+		MCF_ASSERT(uIndex < x_uSize);
 
 		return x_pStorage[uIndex];
 	}
 	Element &UncheckedGet(std::size_t uIndex) noexcept {
-		ASSERT(uIndex < x_uSize);
+		MCF_ASSERT(uIndex < x_uSize);
 
 		return x_pStorage[uIndex];
 	}
@@ -377,7 +377,7 @@ public:
 	}
 	template<typename ...ParamsT>
 	Element &UncheckedPush(ParamsT &&...vParams) noexcept(std::is_nothrow_constructible<Element, ParamsT &&...>::value) {
-		ASSERT(x_uCapacity - x_uSize > 0);
+		MCF_ASSERT(x_uCapacity - x_uSize > 0);
 
 		const auto pElement = x_pStorage + x_uSize;
 		DefaultConstruct(pElement, std::forward<ParamsT>(vParams)...);
@@ -386,7 +386,7 @@ public:
 		return *pElement;
 	}
 	void Pop(std::size_t uCount = 1) noexcept {
-		ASSERT(uCount <= x_uSize);
+		MCF_ASSERT(uCount <= x_uSize);
 
 		for(std::size_t i = 0; i < uCount; ++i){
 			Destruct(x_pStorage + x_uSize - 1 - i);
@@ -712,7 +712,7 @@ public:
 		return x_pStorage + uOffsetBegin;
 	}
 	Element *Erase(const Element *pPos) noexcept(noexcept(DeclVal<Vector &>().Erase(pPos, pPos))) {
-		ASSERT(pPos);
+		MCF_ASSERT(pPos);
 
 		return Erase(pPos, pPos + 1);
 	}

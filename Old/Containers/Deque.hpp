@@ -90,7 +90,7 @@ private:
 		ElementT *UncheckedPush(ParamsT &&...vParams)
 			noexcept(std::is_nothrow_constructible<ElementT, ParamsT &&...>::value)
 		{
-			ASSERT(GetPushableSize() > 0);
+			_MCFCRT_ASSERT(GetPushableSize() > 0);
 
 			const auto pRet = x_pEnd;
 			DefaultConstruct(pRet, std::forward<ParamsT>(vParams)...);
@@ -98,7 +98,7 @@ private:
 			return pRet;
 		}
 		void UncheckedPop() noexcept {
-			ASSERT(GetSize() > 0);
+			_MCFCRT_ASSERT(GetSize() > 0);
 
 			--x_pEnd;
 			Destruct(x_pEnd);
@@ -108,7 +108,7 @@ private:
 		ElementT *UncheckedUnshift(ParamsT &&...vParams)
 			noexcept(std::is_nothrow_constructible<ElementT, ParamsT &&...>::value)
 		{
-			ASSERT(GetUnshiftableSize() > 0);
+			_MCFCRT_ASSERT(GetUnshiftableSize() > 0);
 
 			const auto pRet = x_pBegin - 1;
 			DefaultConstruct(pRet, std::forward<ParamsT>(vParams)...);
@@ -116,7 +116,7 @@ private:
 			return pRet;
 		}
 		void UncheckedShift() noexcept {
-			ASSERT(GetSize() > 0);
+			_MCFCRT_ASSERT(GetSize() > 0);
 
 			Destruct(x_pBegin);
 			++x_pBegin;
@@ -152,16 +152,16 @@ private:
 		}
 
 		RealElementT &operator*() const noexcept {
-			ASSERT_MSG(x_pElement, L"游标指向队列两端或者为空。");
+			_MCFCRT_ASSERT_MSG(x_pElement, L"游标指向队列两端或者为空。");
 			return *x_pElement;
 		}
 		RealElementT *operator->() const noexcept {
-			ASSERT_MSG(x_pElement, L"游标指向队列两端或者为空。");
+			_MCFCRT_ASSERT_MSG(x_pElement, L"游标指向队列两端或者为空。");
 			return x_pElement;
 		}
 
 		CursorT &operator++() noexcept {
-			ASSERT_MSG(x_pNode, L"空游标不能移动。");
+			_MCFCRT_ASSERT_MSG(x_pNode, L"空游标不能移动。");
 
 			if(x_pElement != (x_pNode->Get().GetEnd() - 1)){
 				++x_pElement;
@@ -172,7 +172,7 @@ private:
 			return static_cast<CursorT &>(*this);
 		}
 		CursorT &operator--() noexcept {
-			ASSERT_MSG(x_pNode, L"空游标不能移动。");
+			_MCFCRT_ASSERT_MSG(x_pNode, L"空游标不能移动。");
 
 			if(x_pElement != x_pNode->Get().GetBegin()){
 				--x_pElement;
@@ -288,7 +288,7 @@ public:
 		if(!pFirstNode){
 			return ConstCursor();
 		}
-		ASSERT(pFirstNode->Get().GetSize() > 0);
+		_MCFCRT_ASSERT(pFirstNode->Get().GetSize() > 0);
 		return ConstCursor(pFirstNode->Get().GetBegin(), pFirstNode);
 	}
 	Cursor GetFirstCursor() noexcept {
@@ -296,7 +296,7 @@ public:
 		if(!pFirstNode){
 			return Cursor();
 		}
-		ASSERT(pFirstNode->Get().GetSize() > 0);
+		_MCFCRT_ASSERT(pFirstNode->Get().GetSize() > 0);
 		return Cursor(pFirstNode->Get().GetBegin(), pFirstNode);
 	}
 	ConstCursor GetLastCursor() const noexcept {
@@ -304,7 +304,7 @@ public:
 		if(!pLastNode){
 			return ConstCursor();
 		}
-		ASSERT(pLastNode->Get().GetSize() > 0);
+		_MCFCRT_ASSERT(pLastNode->Get().GetSize() > 0);
 		return ConstCursor(pLastNode->Get().GetEnd() - 1, pLastNode);
 	}
 	Cursor GetLastCursor() noexcept {
@@ -312,28 +312,28 @@ public:
 		if(!pLastNode){
 			return Cursor();
 		}
-		ASSERT(pLastNode->Get().GetSize() > 0);
+		_MCFCRT_ASSERT(pLastNode->Get().GetSize() > 0);
 		return Cursor(pLastNode->Get().GetEnd() - 1, pLastNode);
 	}
 
 	const ElementT &GetFront() const noexcept {
 		const auto pFirstNode = x_lstChunks.GetFirst();
-		ASSERT(pFirstNode && (pFirstNode->Get().GetSize() > 0));
+		_MCFCRT_ASSERT(pFirstNode && (pFirstNode->Get().GetSize() > 0));
 		return pFirstNode->Get().GetBegin()[0];
 	}
 	ElementT &GetFront() noexcept {
 		const auto pFirstNode = x_lstChunks.GetFirst();
-		ASSERT(pFirstNode && (pFirstNode->Get().GetSize() > 0));
+		_MCFCRT_ASSERT(pFirstNode && (pFirstNode->Get().GetSize() > 0));
 		return pFirstNode->Get().GetBegin()[0];
 	}
 	const ElementT &GetBack() const noexcept {
 		const auto pLastNode = x_lstChunks.GetLast();
-		ASSERT(pLastNode && (pLastNode->Get().GetSize() > 0));
+		_MCFCRT_ASSERT(pLastNode && (pLastNode->Get().GetSize() > 0));
 		return pLastNode->Get().GetEnd()[-1];
 	}
 	ElementT &GetBack() noexcept {
 		const auto pLastNode = x_lstChunks.GetLast();
-		ASSERT(pLastNode && (pLastNode->Get().GetSize() > 0));
+		_MCFCRT_ASSERT(pLastNode && (pLastNode->Get().GetSize() > 0));
 		return pLastNode->Get().GetEnd()[-1];
 	}
 
@@ -346,11 +346,11 @@ public:
 
 	void Splice(Deque &clsSource) noexcept {
 		x_lstChunks.Splice(nullptr, clsSource.x_lstChunks);
-		ASSERT(clsSource.IsEmpty());
+		_MCFCRT_ASSERT(clsSource.IsEmpty());
 	}
 	void Splice(Deque &&clsSource) noexcept {
 		x_lstChunks.Splice(nullptr, std::move(clsSource.x_lstChunks));
-		ASSERT(clsSource.IsEmpty());
+		_MCFCRT_ASSERT(clsSource.IsEmpty());
 	}
 
 	template<typename ...ParamsT>
@@ -368,7 +368,7 @@ public:
 	}
 	void Pop() noexcept {
 		const auto pLastNode = x_lstChunks.GetLast();
-		ASSERT(pLastNode && (pLastNode->Get().GetSize() > 0));
+		_MCFCRT_ASSERT(pLastNode && (pLastNode->Get().GetSize() > 0));
 		pLastNode->Get().UncheckedPop();
 		if(pLastNode->Get().GetSize() == 0){
 			x_lstChunks.Pop();
@@ -390,7 +390,7 @@ public:
 	}
 	void Shift() noexcept {
 		const auto pFirstNode = x_lstChunks.GetFirst();
-		ASSERT(pFirstNode && (pFirstNode->Get().GetSize() > 0));
+		_MCFCRT_ASSERT(pFirstNode && (pFirstNode->Get().GetSize() > 0));
 		pFirstNode->Get().UncheckedShift();
 		if(pFirstNode->Get().GetSize() == 0){
 			x_lstChunks.Shift();

@@ -57,7 +57,7 @@ namespace Impl_IntrusivePtr {
 			return *this; // 无操作。
 		}
 		~RefCountBase(){
-			ASSERT_MSG(x_uRef.Load(kAtomicRelaxed) <= 1, L"析构正在共享的被引用计数管理的对象。");
+			MCF_ASSERT_MSG(x_uRef.Load(kAtomicRelaxed) <= 1, L"析构正在共享的被引用计数管理的对象。");
 		}
 
 	public:
@@ -68,7 +68,7 @@ namespace Impl_IntrusivePtr {
 			return x_uRef.Load(kAtomicRelaxed);
 		}
 		bool TryAddRef() const volatile noexcept {
-			ASSERT((std::ptrdiff_t)x_uRef.Load(kAtomicRelaxed) >= 0);
+			MCF_ASSERT((std::ptrdiff_t)x_uRef.Load(kAtomicRelaxed) >= 0);
 
 			auto uOldRef = x_uRef.Load(kAtomicRelaxed);
 			for(;;){
@@ -81,12 +81,12 @@ namespace Impl_IntrusivePtr {
 			}
 		}
 		void AddRef() const volatile noexcept {
-			ASSERT((std::ptrdiff_t)x_uRef.Load(kAtomicRelaxed) > 0);
+			MCF_ASSERT((std::ptrdiff_t)x_uRef.Load(kAtomicRelaxed) > 0);
 
 			x_uRef.Increment(kAtomicRelaxed);
 		}
 		bool DropRef() const volatile noexcept {
-			ASSERT((std::ptrdiff_t)x_uRef.Load(kAtomicRelaxed) > 0);
+			MCF_ASSERT((std::ptrdiff_t)x_uRef.Load(kAtomicRelaxed) > 0);
 
 			return x_uRef.Decrement(kAtomicRelaxed) == 0;
 		}
@@ -132,7 +132,7 @@ namespace Impl_IntrusivePtr {
 	class WeakViewTemplate final : public RefCountBase  {
 	public:
 		static void *operator new(std::size_t uSize){
-			ASSERT(uSize == sizeof(WeakViewTemplate));
+			MCF_ASSERT(uSize == sizeof(WeakViewTemplate));
 			(void)uSize;
 			return ViewAllocator<sizeof(WeakViewTemplate)>::Allocate();
 		}
@@ -470,12 +470,12 @@ public:
 	}
 
 	constexpr Element &operator*() const noexcept {
-		ASSERT(!IsNull());
+		MCF_ASSERT(!IsNull());
 
 		return *Get();
 	}
 	constexpr Element *operator->() const noexcept {
-		ASSERT(!IsNull());
+		MCF_ASSERT(!IsNull());
 
 		return Get();
 	}

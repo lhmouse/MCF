@@ -66,7 +66,7 @@ public:
 		return !!x_pfnLambda;
 	}
 	RetT operator()(ParamsT ...vParams) const {
-		ASSERT(x_pfnLambda);
+		MCF_ASSERT(x_pfnLambda);
 
 		return (*x_pfnLambda)(x_pContext, std::forward<ParamsT>(vParams)...); // 值形参当作右值引用传递。
 	}

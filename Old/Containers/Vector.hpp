@@ -92,19 +92,19 @@ public:
 	}
 
 	const ElementT &GetFront() const noexcept {
-		ASSERT(!IsEmpty());
+		_MCFCRT_ASSERT(!IsEmpty());
 		return x_pBegin[0];
 	}
 	ElementT &GetFront() noexcept {
-		ASSERT(!IsEmpty());
+		_MCFCRT_ASSERT(!IsEmpty());
 		return x_pBegin[0];
 	}
 	const ElementT &GetBack() const noexcept {
-		ASSERT(!IsEmpty());
+		_MCFCRT_ASSERT(!IsEmpty());
 		return x_pEnd[-1];
 	}
 	ElementT &GetBack() noexcept {
-		ASSERT(!IsEmpty());
+		_MCFCRT_ASSERT(!IsEmpty());
 		return x_pEnd[-1];
 	}
 
@@ -205,12 +205,12 @@ public:
 	}
 
 	const ElementT &GetAt(std::size_t uIndex) const noexcept {
-		ASSERT_MSG(uIndex < GetSize(), L"索引越界。");
+		_MCFCRT_ASSERT_MSG(uIndex < GetSize(), L"索引越界。");
 
 		return x_pBegin[uIndex];
 	}
 	ElementT &GetAt(std::size_t uIndex) noexcept {
-		ASSERT_MSG(uIndex < GetSize(), L"索引越界。");
+		_MCFCRT_ASSERT_MSG(uIndex < GetSize(), L"索引越界。");
 
 		return x_pBegin[uIndex];
 	}
@@ -219,7 +219,7 @@ public:
 	ElementT *UncheckedPush(ParamsT &&...vParams)
 		noexcept(std::is_nothrow_constructible<ElementT, ParamsT &&...>::value)
 	{
-		ASSERT_MSG(GetSize() < GetCapacity(), L"容器已满。");
+		_MCFCRT_ASSERT_MSG(GetSize() < GetCapacity(), L"容器已满。");
 
 		DefaultConstruct(x_pEnd, std::forward<ParamsT>(vParams)...);
 		return x_pEnd++;
@@ -230,7 +230,7 @@ public:
 		return UncheckedPush(std::forward<ParamsT>(vParams)...);
 	}
 	void Pop() noexcept {
-		ASSERT(!IsEmpty());
+		_MCFCRT_ASSERT(!IsEmpty());
 
 		Destruct(--x_pEnd);
 	}

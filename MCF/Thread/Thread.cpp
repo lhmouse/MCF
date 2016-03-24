@@ -39,7 +39,7 @@ Thread::~Thread(){
 }
 
 void Thread::X_Initialize(bool bSuspended){
-	ASSERT_MSG(!x_hThread, L"Thread 只能被初始化一次。");
+	MCF_ASSERT_MSG(!x_hThread, L"Thread 只能被初始化一次。");
 
 	struct Helper {
 		__MCFCRT_C_STDCALL __MCFCRT_HAS_EH_TOP

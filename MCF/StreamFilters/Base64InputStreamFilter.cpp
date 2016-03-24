@@ -48,7 +48,7 @@ void Base64InputStreamFilter::X_PopulatePlainBuffer(std::size_t uExpected){
 			if(nDecoded < 0){
 				MCF_THROW(Exception, ERROR_INVALID_DATA, Rcntws::View(L"Base64InputStreamFilter: 输入的数据无效。"));
 			}
-			ASSERT(nDecoded < 64);
+			MCF_ASSERT(nDecoded < 64);
 			return static_cast<std::uint_fast32_t>(nDecoded);
 		};
 

@@ -76,7 +76,7 @@ namespace Impl_FlatContainer {
 	private:
 		template<typename ...ParamsT>
 		Element &X_UncheckedPush(ParamsT &&...vParams){
-			ASSERT(x_uCapacity - x_uSize > 0);
+			MCF_ASSERT(x_uCapacity - x_uSize > 0);
 
 			const auto pData = x_pStorage;
 			const auto pElement = pData + x_uSize;
@@ -86,7 +86,7 @@ namespace Impl_FlatContainer {
 			return *pElement;
 		}
 		void X_Pop(std::size_t uCount = 1) noexcept {
-			ASSERT(uCount <= x_uSize);
+			MCF_ASSERT(uCount <= x_uSize);
 
 			const auto pData = x_pStorage;
 			for(std::size_t i = 0; i < uCount; ++i){
@@ -284,7 +284,7 @@ namespace Impl_FlatContainer {
 			return x_pStorage + uOffsetBegin;
 		}
 		Element *Erase(const Element *pPos) noexcept(noexcept(DeclVal<FlatContainer &>().Erase(pPos, pPos))) {
-			ASSERT(pPos);
+			MCF_ASSERT(pPos);
 
 			return Erase(pPos, pPos + 1);
 		}

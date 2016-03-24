@@ -208,7 +208,7 @@ std::pair<MNotation::ErrorType, const wchar_t *> MNotation::Parse(const WideStri
 
 	ErrorType eError;
 	const auto PushPackage = [&]{
-		ASSERT(!vecPackageStack.IsEmpty());
+		_MCFCRT_ASSERT(!vecPackageStack.IsEmpty());
 
 		MNotationNode *ppkgSource = nullptr;
 		if(pwcValueBegin){
@@ -251,7 +251,7 @@ std::pair<MNotation::ErrorType, const wchar_t *> MNotation::Parse(const WideStri
 		return true;
 	};
 	const auto AcceptValue = [&]{
-		ASSERT(!vecPackageStack.IsEmpty());
+		_MCFCRT_ASSERT(!vecPackageStack.IsEmpty());
 
 		const auto vResult = vecPackageStack.GetEnd()[-1]->Insert(Unescape(WideStringView(pwcNameBegin, pwcNameEnd)));
 		if(!vResult.second){
@@ -620,7 +620,7 @@ WideString MNotation::Export(const WideStringView &wsvIndent) const {
 		wsRet += L'\n';
 	}
 
-	ASSERT(wsIndent.IsEmpty());
+	_MCFCRT_ASSERT(wsIndent.IsEmpty());
 
 	return wsRet;
 }

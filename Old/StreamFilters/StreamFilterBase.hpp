@@ -80,7 +80,7 @@ public:
 	}
 
 	StreamFilterBase &Filter(const StreamBuffer &sbufData){
-		ASSERT(&x_sbufOutput != &sbufData);
+		_MCFCRT_ASSERT(&x_sbufOutput != &sbufData);
 
 		sbufData.Iterate([this](auto pbyData, auto uSize){ this->Update(pbyData, uSize); });
 		return *this;

@@ -124,7 +124,7 @@ public:
 		!std::is_void<T>::value && !std::is_array<T>::value,
 		Element> & operator*() const noexcept
 	{
-		ASSERT(!IsNull());
+		MCF_ASSERT(!IsNull());
 
 		return *Get();
 	}
@@ -133,7 +133,7 @@ public:
 		!std::is_void<T>::value && !std::is_array<T>::value,
 		Element> * operator->() const noexcept
 	{
-		ASSERT(!IsNull());
+		MCF_ASSERT(!IsNull());
 
 		return Get();
 	}
@@ -142,7 +142,7 @@ public:
 		std::is_array<T>::value,
 		Element> & operator[](std::size_t uIndex) const noexcept
 	{
-		ASSERT(!IsNull());
+		MCF_ASSERT(!IsNull());
 
 		return Get()[uIndex];
 	}

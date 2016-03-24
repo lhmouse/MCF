@@ -77,7 +77,7 @@ public:
 	ElementT *Get() const noexcept {
 		std::intptr_t *pnValue;
 		if(!::_MCFCRT_TlsGet(x_pTlsKey.Get(), &pnValue)){
-			ASSERT_MSG(false, L"_MCFCRT_TlsGet() 失败。");
+			MCF_ASSERT_MSG(false, L"_MCFCRT_TlsGet() 失败。");
 		}
 		return Impl_ThreadLocal::ElementTraits<ElementT>::ExtractValue(*pnValue);
 	}

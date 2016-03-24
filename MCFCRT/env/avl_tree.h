@@ -90,7 +90,7 @@ static inline void _MCFCRT_AvlAttachWithHint(_MCFCRT_AvlRoot *__ppRoot,
 		if((*__pfnComparator)(__pNode, __pHint) < 0){
 			_MCFCRT_AvlNodeHeader *const __pPrev = __pHint->__pPrev;
 			if(!__pPrev){
-				ASSERT(!__pHint->__pLeft);
+				_MCFCRT_ASSERT(!__pHint->__pLeft);
 
 				__pParent = __pMutableHint;
 				__ppRefl = &(__pMutableHint->__pLeft);
@@ -98,12 +98,12 @@ static inline void _MCFCRT_AvlAttachWithHint(_MCFCRT_AvlRoot *__ppRoot,
 				// 条件：  node        <   hint
 				//         hint->prev  <=  node
 				if(__pPrev->__uHeight < __pHint->__uHeight){
-					ASSERT(!__pPrev->__pRight);
+					_MCFCRT_ASSERT(!__pPrev->__pRight);
 
 					__pParent = __pPrev;
 					__ppRefl = &(__pPrev->__pRight);
 				} else {
-					ASSERT(!__pHint->__pLeft);
+					_MCFCRT_ASSERT(!__pHint->__pLeft);
 
 					__pParent = __pMutableHint;
 					__ppRefl = &(__pMutableHint->__pLeft);
@@ -112,7 +112,7 @@ static inline void _MCFCRT_AvlAttachWithHint(_MCFCRT_AvlRoot *__ppRoot,
 		} else {
 			_MCFCRT_AvlNodeHeader *const __pNext = __pHint->__pNext;
 			if(!__pNext){
-				ASSERT(!__pHint->__pRight);
+				_MCFCRT_ASSERT(!__pHint->__pRight);
 
 				__pParent = __pMutableHint;
 				__ppRefl = &(__pMutableHint->__pRight);
@@ -120,12 +120,12 @@ static inline void _MCFCRT_AvlAttachWithHint(_MCFCRT_AvlRoot *__ppRoot,
 				// 条件：  hint  <=  node
 				//         node  <   hint->next
 				if(__pHint->__uHeight < __pNext->__uHeight){
-					ASSERT(!__pHint->__pRight);
+					_MCFCRT_ASSERT(!__pHint->__pRight);
 
 					__pParent = __pMutableHint;
 					__ppRefl = &(__pMutableHint->__pRight);
 				} else {
-					ASSERT(!__pNext->__pLeft);
+					_MCFCRT_ASSERT(!__pNext->__pLeft);
 
 					__pParent = __pNext;
 					__ppRefl = &(__pNext->__pLeft);

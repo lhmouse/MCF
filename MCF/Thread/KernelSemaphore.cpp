@@ -85,25 +85,25 @@ bool KernelSemaphore::Wait(std::uint64_t u64UntilFastMonoClock) noexcept {
 	}
 	const auto lStatus = ::NtWaitForSingleObject(x_hSemaphore.Get(), false, &liTimeout);
 	if(!NT_SUCCESS(lStatus)){
-		ASSERT_MSG(false, L"NtWaitForSingleObject() 失败。");
+		MCF_ASSERT_MSG(false, L"NtWaitForSingleObject() 失败。");
 	}
 	return lStatus != STATUS_TIMEOUT;
 }
 void KernelSemaphore::Wait() noexcept {
 	const auto lStatus = ::NtWaitForSingleObject(x_hSemaphore.Get(), false, nullptr);
 	if(!NT_SUCCESS(lStatus)){
-		ASSERT_MSG(false, L"NtWaitForSingleObject() 失败。");
+		MCF_ASSERT_MSG(false, L"NtWaitForSingleObject() 失败。");
 	}
 }
 std::size_t KernelSemaphore::Post(std::size_t uPostCount) noexcept {
 	if(uPostCount >= static_cast<std::size_t>(LONG_MAX)){
-		ASSERT_MSG(false, L"信号量自增数量超过上限。");
+		MCF_ASSERT_MSG(false, L"信号量自增数量超过上限。");
 	}
 
 	LONG lPrevCount;
 	const auto lStatus = ::NtReleaseSemaphore(x_hSemaphore.Get(), static_cast<long>(uPostCount), &lPrevCount);
 	if(!NT_SUCCESS(lStatus)){
-		ASSERT_MSG(false, L"NtReleaseSemaphore() 失败。");
+		MCF_ASSERT_MSG(false, L"NtReleaseSemaphore() 失败。");
 	}
 	return static_cast<std::size_t>(lPrevCount);
 }

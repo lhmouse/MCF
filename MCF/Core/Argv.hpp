@@ -45,7 +45,7 @@ public:
 		return UncheckedGetStr(uIndex);
 	}
 	const wchar_t *UncheckedGetStr(std::size_t uIndex) const noexcept {
-		ASSERT(uIndex <= x_uArgc);
+		MCF_ASSERT(uIndex <= x_uArgc);
 
 		return x_pArgv[uIndex].pwszStr;
 	}
@@ -57,7 +57,7 @@ public:
 		return UncheckedGetLen(uIndex);
 	}
 	std::size_t UncheckedGetLen(std::size_t uIndex) const noexcept {
-		ASSERT(uIndex <= x_uArgc);
+		MCF_ASSERT(uIndex <= x_uArgc);
 
 		return x_pArgv[uIndex].uLen;
 	}
@@ -69,7 +69,7 @@ public:
 		return UncheckedGet(uIndex);
 	}
 	WideStringView UncheckedGet(std::size_t uIndex) const noexcept {
-		ASSERT(uIndex <= x_uArgc);
+		MCF_ASSERT(uIndex <= x_uArgc);
 
 		return WideStringView(x_pArgv[uIndex].pwszStr, x_pArgv[uIndex].uLen);
 	}

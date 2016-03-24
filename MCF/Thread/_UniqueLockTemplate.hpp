@@ -40,7 +40,7 @@ namespace Impl_UniqueLockTemplate {
 			return uOldCount;
 		}
 		void Y_RelockAll(std::size_t uNewCount) noexcept {
-			ASSERT(y_uLockCount == 0);
+			MCF_ASSERT(y_uLockCount == 0);
 
 			if(uNewCount != 0){
 				X_DoLock();
@@ -79,7 +79,7 @@ namespace Impl_UniqueLockTemplate {
 			y_uLockCount = uOldCount + 1;
 		}
 		void Unlock() noexcept {
-			ASSERT(y_uLockCount != 0);
+			MCF_ASSERT(y_uLockCount != 0);
 
 			const auto uOldCount = y_uLockCount;
 			y_uLockCount = uOldCount - 1;
@@ -113,7 +113,7 @@ namespace Impl_UniqueLockTemplate {
 			Swap(rhs);
 		}
 		UniqueLockTemplate &operator=(UniqueLockTemplate &&rhs) noexcept {
-			ASSERT(&rhs != this);
+			MCF_ASSERT(&rhs != this);
 
 			Y_UnlockAll();
 			Swap(rhs);
@@ -134,7 +134,7 @@ namespace Impl_UniqueLockTemplate {
 		}
 
 		void Merge(UniqueLockTemplate &&rhs) noexcept {
-			ASSERT(x_pOwner == rhs.x_pOwner);
+			MCF_ASSERT(x_pOwner == rhs.x_pOwner);
 
 			y_uLockCount += rhs.y_uLockCount;
 			rhs.y_uLockCount = 0;

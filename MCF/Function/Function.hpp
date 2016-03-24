@@ -137,7 +137,7 @@ public:
 		return !IsNull();
 	}
 	std::remove_cv_t<RetT> operator()(ParamsT ...vParams) const {
-		ASSERT(!IsNull());
+		MCF_ASSERT(!IsNull());
 
 		return x_pFunctor->Dispatch(std::forward<ParamsT>(vParams)...); // 值形参当作右值引用传递。
 	}

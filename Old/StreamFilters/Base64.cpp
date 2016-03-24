@@ -37,7 +37,7 @@ void Base64Encoder::X_DoUpdate(const void *pData, std::size_t uSize){
 			break;
 
 		default:
-			ASSERT(false);
+			_MCFCRT_ASSERT(false);
 		}
 
 		register auto i = (std::size_t)(pbyEnd - pbyRead) / 3;
@@ -77,7 +77,7 @@ void Base64Encoder::X_DoUpdate(const void *pData, std::size_t uSize){
 			break;
 
 		default:
-			ASSERT(false);
+			_MCFCRT_ASSERT(false);
 		}
 	}
 }
@@ -104,7 +104,7 @@ void Base64Encoder::X_DoFinalize(){
 		break;
 
 	default:
-		ASSERT(false);
+		_MCFCRT_ASSERT(false);
 	}
 }
 
@@ -152,7 +152,7 @@ void Base64Decoder::X_DoUpdate(const void *pData, std::size_t uSize){
 			break;
 
 		default:
-			ASSERT(false);
+			_MCFCRT_ASSERT(false);
 		}
 	}
 }

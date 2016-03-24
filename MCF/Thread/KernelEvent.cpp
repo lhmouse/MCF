@@ -81,7 +81,7 @@ Impl_UniqueNtHandle::UniqueNtHandle KernelEvent::X_CreateEventHandle(bool bInitS
 		EVENT_BASIC_INFORMATION vBasicInfo;
 		const auto lStatus = ::NtQueryEvent(hEvent.Get(), EventBasicInformation, &vBasicInfo, sizeof(vBasicInfo), nullptr);
 		if(!NT_SUCCESS(lStatus)){
-			ASSERT_MSG(false, L"NtQueryEvent() 失败。");
+			MCF_ASSERT_MSG(false, L"NtQueryEvent() 失败。");
 		}
 		if(vBasicInfo.eEventType != NotificationEvent){
 			MCF_THROW(Exception, ERROR_INVALID_HANDLE /* ::RtlNtStatusToDosError(STATUS_OBJECT_TYPE_MISMATCH) */, Rcntws::View(L"KernelEvent: 内核事件类型不匹配。"));
@@ -107,21 +107,21 @@ bool KernelEvent::Wait(std::uint64_t u64UntilFastMonoClock) const noexcept {
 	}
 	const auto lStatus = ::NtWaitForSingleObject(x_hEvent.Get(), false, &liTimeout);
 	if(!NT_SUCCESS(lStatus)){
-		ASSERT_MSG(false, L"NtWaitForSingleObject() 失败。");
+		MCF_ASSERT_MSG(false, L"NtWaitForSingleObject() 失败。");
 	}
 	return lStatus != STATUS_TIMEOUT;
 }
 void KernelEvent::Wait() const noexcept {
 	const auto lStatus = ::NtWaitForSingleObject(x_hEvent.Get(), false, nullptr);
 	if(!NT_SUCCESS(lStatus)){
-		ASSERT_MSG(false, L"NtWaitForSingleObject() 失败。");
+		MCF_ASSERT_MSG(false, L"NtWaitForSingleObject() 失败。");
 	}
 }
 bool KernelEvent::IsSet() const noexcept {
 	EVENT_BASIC_INFORMATION vBasicInfo;
 	const auto lStatus = ::NtQueryEvent(x_hEvent.Get(), EventBasicInformation, &vBasicInfo, sizeof(vBasicInfo), nullptr);
 	if(!NT_SUCCESS(lStatus)){
-		ASSERT_MSG(false, L"NtQueryEvent() 失败。");
+		MCF_ASSERT_MSG(false, L"NtQueryEvent() 失败。");
 	}
 	return vBasicInfo.lState;
 }
@@ -129,7 +129,7 @@ bool KernelEvent::Set() noexcept {
 	LONG lPrevState;
 	const auto lStatus = ::NtSetEvent(x_hEvent.Get(), &lPrevState);
 	if(!NT_SUCCESS(lStatus)){
-		ASSERT_MSG(false, L"NtSetEvent() 失败。");
+		MCF_ASSERT_MSG(false, L"NtSetEvent() 失败。");
 	}
 	return lPrevState;
 }
@@ -137,7 +137,7 @@ bool KernelEvent::Reset() noexcept {
 	LONG lPrevState;
 	const auto lStatus = ::NtResetEvent(x_hEvent.Get(), &lPrevState);
 	if(!NT_SUCCESS(lStatus)){
-		ASSERT_MSG(false, L"NtResetEvent() 失败。");
+		MCF_ASSERT_MSG(false, L"NtResetEvent() 失败。");
 	}
 	return lPrevState;
 }

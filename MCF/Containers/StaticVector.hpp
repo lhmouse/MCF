@@ -134,7 +134,7 @@ public:
 	}
 
 	const Element *GetPrev(const Element *pPos) const noexcept {
-		ASSERT(pPos);
+		MCF_ASSERT(pPos);
 
 		const auto pBegin = GetBegin();
 		auto uOffset = static_cast<std::size_t>(pPos - pBegin);
@@ -145,7 +145,7 @@ public:
 		return pBegin + uOffset;
 	}
 	Element *GetPrev(Element *pPos) noexcept {
-		ASSERT(pPos);
+		MCF_ASSERT(pPos);
 
 		const auto pBegin = GetBegin();
 		auto uOffset = static_cast<std::size_t>(pPos - pBegin);
@@ -156,7 +156,7 @@ public:
 		return pBegin + uOffset;
 	}
 	const Element *GetNext(const Element *pPos) const noexcept {
-		ASSERT(pPos);
+		MCF_ASSERT(pPos);
 
 		const auto pBegin = GetBegin();
 		auto uOffset = static_cast<std::size_t>(pPos - pBegin);
@@ -167,7 +167,7 @@ public:
 		return pBegin + uOffset;
 	}
 	Element *GetNext(Element *pPos) noexcept {
-		ASSERT(pPos);
+		MCF_ASSERT(pPos);
 
 		const auto pBegin = GetBegin();
 		auto uOffset = static_cast<std::size_t>(pPos - pBegin);
@@ -261,12 +261,12 @@ public:
 		return UncheckedGet(uIndex);
 	}
 	const Element &UncheckedGet(std::size_t uIndex) const noexcept {
-		ASSERT(uIndex < x_uSize);
+		MCF_ASSERT(uIndex < x_uSize);
 
 		return reinterpret_cast<const Element *>(x_aStorage)[uIndex];
 	}
 	Element &UncheckedGet(std::size_t uIndex) noexcept {
-		ASSERT(uIndex < x_uSize);
+		MCF_ASSERT(uIndex < x_uSize);
 
 		return reinterpret_cast<Element *>(x_aStorage)[uIndex];
 	}
@@ -304,7 +304,7 @@ public:
 	}
 	template<typename ...ParamsT>
 	Element &UncheckedPush(ParamsT &&...vParams) noexcept(std::is_nothrow_constructible<Element, ParamsT &&...>::value) {
-		ASSERT(kCapacityT - x_uSize > 0);
+		MCF_ASSERT(kCapacityT - x_uSize > 0);
 
 		const auto pElement = reinterpret_cast<Element *>(x_aStorage) + x_uSize;
 		DefaultConstruct(pElement, std::forward<ParamsT>(vParams)...);
@@ -313,7 +313,7 @@ public:
 		return *pElement;
 	}
 	void Pop(std::size_t uCount = 1) noexcept {
-		ASSERT(uCount <= x_uSize);
+		MCF_ASSERT(uCount <= x_uSize);
 
 		for(std::size_t i = 0; i < uCount; ++i){
 			Destruct(reinterpret_cast<Element *>(x_aStorage) + x_uSize - 1 - i);

@@ -90,22 +90,22 @@ private:
 		}
 
 		RealElementT &operator*() const noexcept {
-			ASSERT_MSG(x_pNode, L"游标指向链表两端或者为空。");
+			_MCFCRT_ASSERT_MSG(x_pNode, L"游标指向链表两端或者为空。");
 			return x_pNode->Get();
 		}
 		RealElementT *operator->() const noexcept {
-			ASSERT_MSG(x_pNode, L"游标指向链表两端或者为空。");
+			_MCFCRT_ASSERT_MSG(x_pNode, L"游标指向链表两端或者为空。");
 			return std::addressof(x_pNode->Get());
 		}
 
 		CursorT &operator++() noexcept {
-			ASSERT_MSG(x_pNode, L"空游标不能移动。");
+			_MCFCRT_ASSERT_MSG(x_pNode, L"空游标不能移动。");
 
 			x_pNode = x_pNode->GetNext();
 			return static_cast<CursorT &>(*this);
 		}
 		CursorT &operator--() noexcept {
-			ASSERT_MSG(x_pNode, L"空游标不能移动。");
+			_MCFCRT_ASSERT_MSG(x_pNode, L"空游标不能移动。");
 
 			x_pNode = x_pNode->GetPrev();
 			return static_cast<CursorT &>(*this);
@@ -262,19 +262,19 @@ public:
 	}
 
 	const ElementT &GetFront() const noexcept {
-		ASSERT(!IsEmpty());
+		_MCFCRT_ASSERT(!IsEmpty());
 		return x_pFirst->Get();
 	}
 	ElementT &GetFront() noexcept {
-		ASSERT(!IsEmpty());
+		_MCFCRT_ASSERT(!IsEmpty());
 		return x_pFirst->Get();
 	}
 	const ElementT &GetBack() const noexcept {
-		ASSERT(!IsEmpty());
+		_MCFCRT_ASSERT(!IsEmpty());
 		return x_pLast->Get();
 	}
 	ElementT &GetBack() noexcept {
-		ASSERT(!IsEmpty());
+		_MCFCRT_ASSERT(!IsEmpty());
 		return x_pLast->Get();
 	}
 
@@ -327,11 +327,11 @@ public:
 
 	Node *Splice(Node *pPos, List &lstSource) noexcept {
 		const auto pRet = Splice(pPos, lstSource, lstSource.x_pFirst, nullptr);
-		ASSERT(lstSource.IsEmpty());
+		_MCFCRT_ASSERT(lstSource.IsEmpty());
 		return pRet;
 	}
 	Node *Splice(Node *pPos, List &lstSource, Node *pSingle) noexcept {
-		ASSERT(pSingle);
+		_MCFCRT_ASSERT(pSingle);
 		return Splice(pPos, lstSource, pSingle, pSingle->x_pNext);
 	}
 	Node *Splice(Node *pPos, List &lstSource, Node *pBegin, Node *pEnd) noexcept {
@@ -340,7 +340,7 @@ public:
 			auto p = pBegin;
 			while(p != pEnd){
 				if(p == pPos){
-					ASSERT_MSG(false, L"不能将链表的某个区间拼接到该区间内部。");
+					_MCFCRT_ASSERT_MSG(false, L"不能将链表的某个区间拼接到该区间内部。");
 				}
 				p = p->GetNext();
 			}

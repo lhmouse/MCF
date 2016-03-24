@@ -48,11 +48,10 @@ namespace Impl_KernelObjectBase {
 			pwcEnd = PrintNumberAsDec(pwcEnd, ::WTSGetActiveConsoleSessionId());
 			pwcEnd = Copy(pwcEnd, kBaseNameObjects.GetBegin(), kBaseNameObjects.GetEnd());
 		}
-		const auto ushLengthInBytes = (unsigned short)((char *)pwcEnd - (char *)pwcBegin);
 
 		::UNICODE_STRING ustrName;
-		ustrName.Length        = ushLengthInBytes;
-		ustrName.MaximumLength = ushLengthInBytes;
+		ustrName.Length        = (unsigned short)((char *)pwcEnd - (char *)pwcBegin);
+		ustrName.MaximumLength = ustrName.Length;
 		ustrName.Buffer        = pwcBegin;
 
 		::OBJECT_ATTRIBUTES vObjectAttributes;

@@ -68,12 +68,17 @@ static void DoBail(const wchar_t *pwszDescription){
 	*(pwcWrite--) = 0;
 
 	UNICODE_STRING ustrText;
-	UNICODE_STRING ustrCaption;
-	UINT uType;
+	ustrText.Length        = (unsigned short)((char *)pwcWrite - (char *)awcBuffer);
+	ustrText.MaximumLength = ustrText.MaximumLength;
+	ustrText.Buffer        = awcBuffer;
 
-	RtlInitUnicodeString(&ustrText, awcBuffer);
-	RtlInitUnicodeString(&ustrCaption, L"MCF CRT 错误");
-	uType = (bCanBeDebugged ? MB_OKCANCEL : MB_OK) | MB_ICONERROR;
+	static const wchar_t kCaption[] = L"MCF CRT 错误";
+	UNICODE_STRING ustrCaption;
+	ustrCaption.Length        = sizeof(kCaption) - sizeof(wchar_t);
+	ustrCaption.MaximumLength = ustrCaption.MaximumLength;
+	ustrCaption.Buffer        = (wchar_t *)kCaption;
+
+	UINT uType = (bCanBeDebugged ? MB_OKCANCEL : MB_OK) | MB_ICONERROR;
 
 	const ULONG_PTR aulParams[3] = { (ULONG_PTR)&ustrText, (ULONG_PTR)&ustrCaption, uType };
 	HardErrorResponse eResponse;

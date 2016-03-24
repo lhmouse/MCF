@@ -5,6 +5,8 @@
 #include "../StdMCF.hpp"
 #include "_KernelObjectBase.hpp"
 #include "../Core/Exception.hpp"
+#include "../Core/StringView.hpp"
+#include "../Utilities/CopyMoveFill.hpp"
 #include <winternl.h>
 #include <ntdef.h>
 
@@ -13,24 +15,45 @@ NTSTATUS NtOpenDirectoryObject(HANDLE *pHandle, ACCESS_MASK dwDesiredAccess, con
 
 namespace MCF {
 
+namespace {
+	inline wchar_t *PrintNumberAsDec(wchar_t *pwcBuffer, unsigned long ulValue) noexcept {
+		int nOffset = 0;
+		do {
+			pwcBuffer[nOffset++] = L"0123456789"[ulValue % 10];
+			ulValue /= 10;
+		} while(ulValue != 0);
+
+		for(int i = 0, j = nOffset - 1; i < j; ++i, --j){
+			std::swap(pwcBuffer[i], pwcBuffer[j]);
+		}
+		return pwcBuffer + nOffset;
+	}
+}
+
 namespace Impl_KernelObjectBase {
 	Impl_UniqueNtHandle::UniqueNtHandle KernelObjectBase::Y_OpenBaseNamedObjectDirectory(std::uint32_t u32Flags){
-		wchar_t awcNameBuffer[64];
+		static const auto kSessionPathPrefix = L"\\Sessions\\"_wsv;
+		static const auto kBaseNameObjects   = L"\\BaseNamedObjects"_wsv;
+
+		wchar_t awcNameBuffer[128];
+		wchar_t *pwcBegin, *pwcEnd;
+		if(u32Flags & kGlobal){
+			pwcBegin = (wchar_t *)kBaseNameObjects.GetBegin();
+			pwcEnd   = (wchar_t *)kBaseNameObjects.GetEnd();
+		} else {
+			pwcBegin = awcNameBuffer;
+			pwcEnd   = awcNameBuffer;
+
+			pwcEnd = Copy(pwcEnd, kSessionPathPrefix.GetBegin(), kSessionPathPrefix.GetEnd());
+			pwcEnd = PrintNumberAsDec(pwcEnd, ::WTSGetActiveConsoleSessionId());
+			pwcEnd = Copy(pwcEnd, kBaseNameObjects.GetBegin(), kBaseNameObjects.GetEnd());
+		}
+		const auto ushLengthInBytes = (unsigned short)((char *)pwcEnd - (char *)pwcBegin);
 
 		::UNICODE_STRING ustrName;
-		if(u32Flags & kGlobal){
-			static constexpr wchar_t kBaseNameObjects[] = L"\\BaseNamedObjects";
-
-			ustrName.Length        = (USHORT)(sizeof(kBaseNameObjects) - sizeof(wchar_t));
-			ustrName.MaximumLength = (USHORT)(sizeof(kBaseNameObjects));
-			ustrName.Buffer        = (PWSTR)kBaseNameObjects;
-		} else {
-			const auto uLen = (unsigned)swprintf(awcNameBuffer, sizeof(awcNameBuffer) / sizeof(wchar_t), L"\\Sessions\\%lu\\BaseNamedObjects", (unsigned long)::WTSGetActiveConsoleSessionId());
-
-			ustrName.Length        = (USHORT)(uLen * sizeof(wchar_t));
-			ustrName.MaximumLength = (USHORT)(uLen * sizeof(wchar_t) + sizeof(wchar_t));
-			ustrName.Buffer        = awcNameBuffer;
-		}
+		ustrName.Length        = ushLengthInBytes;
+		ustrName.MaximumLength = ushLengthInBytes;
+		ustrName.Buffer        = pwcBegin;
 
 		::OBJECT_ATTRIBUTES vObjectAttributes;
 		InitializeObjectAttributes(&vObjectAttributes, &ustrName, 0, nullptr, nullptr);

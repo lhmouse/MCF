@@ -1,9 +1,9 @@
 #include <MCF/StdMCF.hpp>
-#include <MCF/Function/Function.hpp>
+#include <MCF/Thread/KernelMutex.hpp>
+
+using namespace MCF;
 
 extern "C" unsigned _MCFCRT_Main(){
-	MCF::Function<void (int)> fn;
-	fn = [](int a){ std::printf("a = %d\n", a); };
-	fn(123);
+	KernelMutex m(L"this_is_a_very_loooooooooooooooong_name"_wsv, 0);
 	return 0;
 }

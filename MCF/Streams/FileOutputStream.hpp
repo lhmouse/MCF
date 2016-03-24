@@ -22,7 +22,7 @@ public:
 		: x_vFile(), x_u64Offset(0)
 	{
 	}
-	explicit FileOutputStream(File vFile, std::uint64_t u64Offset = 0) noexcept
+	explicit FileOutputStream(File &&vFile, std::uint64_t u64Offset = 0) noexcept
 		: x_vFile(std::move(vFile)), x_u64Offset(u64Offset)
 	{
 	}
@@ -48,7 +48,7 @@ public:
 	File &GetFile() noexcept {
 		return x_vFile;
 	}
-	void SetFile(File vFile, std::uint64_t u64Offset = 0) noexcept {
+	void SetFile(File &&vFile, std::uint64_t u64Offset = 0) noexcept {
 		x_vFile     = std::move(vFile);
 		x_u64Offset = u64Offset;
 	}

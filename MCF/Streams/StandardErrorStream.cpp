@@ -23,8 +23,7 @@ namespace {
 				[]{
 					const auto hPipe = ::GetStdHandle(STD_ERROR_HANDLE);
 					if(hPipe == INVALID_HANDLE_VALUE){
-						const auto dwLastError = ::GetLastError();
-						BailF(L"无法获取标准错误流的句柄。\n\n错误码：%lu", (unsigned long)dwLastError);
+						MCF_THROW(Exception, ::GetLastError(), Rcntws::View(L"无法获取标准错误流的句柄。"));
 					}
 					return hPipe;
 				}())

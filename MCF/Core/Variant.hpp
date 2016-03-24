@@ -7,7 +7,6 @@
 
 #include "../Utilities/ParameterPackManipulators.hpp"
 #include "../Utilities/Assert.hpp"
-#include "../Utilities/Bail.hpp"
 #include "../SmartPointers/UniquePtr.hpp"
 #include "Exception.hpp"
 #include <utility>
@@ -44,7 +43,8 @@ namespace Impl_Variant {
 	template<typename FunctorT, std::size_t kIndex>
 	struct Applier<FunctorT, kIndex> {
 		[[noreturn]] void operator()(FunctorT & /* vFunctor */, std::size_t uActiveIndex, void * /* pElement */) const {
-			BailF(L"未知活动元素类型。\n\n活动元素类型序号：%zu", uActiveIndex);
+			ASSERT(false);
+			std::terminate();
 		}
 	};
 }

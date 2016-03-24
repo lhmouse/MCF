@@ -230,6 +230,7 @@ void __MCFCRT_HeapDbgValidateBlockBasic(unsigned char **ppRaw, unsigned char *pC
 			wchar_t *pwcWrite = awchTemp;
 			pwcWrite = _MCFCRT_wcpcpy(pwcWrite, L"__MCFCRT_HeapDbgValidate() 失败：侦测到堆损坏。\n调用返回地址：");
 			pwcWrite = PrintUintPtrAsHexW(pwcWrite, (uintptr_t)pRetAddr, sizeof(pRetAddr) * 2);
+			_MCFCRT_Bail(awchTemp);
 		}
 
 		++ppGuard2;

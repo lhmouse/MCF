@@ -25,7 +25,7 @@ void Thread::X_AbstractControlBlock::SpawnThread(bool bSuspended){
 	struct Helper {
 		__MCFCRT_C_STDCALL __MCFCRT_HAS_EH_TOP
 		static DWORD ThreadProc(LPVOID pParam){
-			const auto pThis = static_cast<X_AbstractControlBlock *>(pParam);
+			const auto pThis = IntrusivePtr<X_AbstractControlBlock>(static_cast<X_AbstractControlBlock *>(pParam));
 
 			__MCFCRT_EH_TOP_BEGIN
 			{
@@ -35,7 +35,6 @@ void Thread::X_AbstractControlBlock::SpawnThread(bool bSuspended){
 			}
 			__MCFCRT_EH_TOP_END
 
-			pThis->DropRef();
 			return 0;
 		}
 	};

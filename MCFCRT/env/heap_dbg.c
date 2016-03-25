@@ -83,7 +83,7 @@ void __MCFCRT_HeapDbgUninit(){
 					if(IsBadReadPtr(pbyDump, 1)){
 						pchWrite = _MCFCRT_stpcpy(pchWrite, "??");
 					} else {
-						pchWrite = PrintUintPtrAsHex(pchWrite, (uintptr_t)*pbyDump, 2);
+						pchWrite = PrintUintPtrAsHex(pchWrite, *pbyDump, 2);
 					}
 					++pbyDump;
 				}

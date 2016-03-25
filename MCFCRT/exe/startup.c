@@ -4,12 +4,14 @@
 
 #include "decl.h"
 #include "../env/mcfwin.h"
-#include "../env/bail.h"
 #include "../env/module.h"
 #include "../env/thread.h"
 #include "../env/eh_top.h"
 #include "../env/heap.h"
 #include "../env/heap_dbg.h"
+#include "../ext/wcpcpy.h"
+#include "../ext/itow.h"
+#include "../env/bail.h"
 
 // -static -Wl,-e__MCFCRT_ExeStartup,--disable-runtime-pseudo-reloc,--disable-auto-import
 
@@ -47,25 +49,48 @@ static void TlsCallback(void *hModule, DWORD dwReason, void *pReserved){
 	(void)hModule;
 	(void)pReserved;
 
+	wchar_t awcBuffer[256];
+	wchar_t *pwcWrite;
+
 	switch(dwReason){
 	case DLL_PROCESS_ATTACH:
 		if(!SetConsoleCtrlHandler(&TopCtrlHandler, true)){
-			_MCFCRT_BailF(L"MCFCRT Ctrl 处理程序注册失败。\n\n错误代码：%lu", GetLastError());
+			const DWORD dwErrorCode = GetLastError();
+			pwcWrite = _MCFCRT_wcpcpy(awcBuffer, L"MCFCRT Ctrl 处理程序注册失败。\n\n错误代码：");
+			pwcWrite = _MCFCRT_itow_u(pwcWrite, dwErrorCode);
+			*pwcWrite = 0;
+			_MCFCRT_Bail(awcBuffer);
 		}
 		if(!__MCFCRT_HeapInit()){
-			_MCFCRT_BailF(L"MCFCRT 堆初始化失败。\n\n错误代码：%lu", GetLastError());
+			const DWORD dwErrorCode = GetLastError();
+			pwcWrite = _MCFCRT_wcpcpy(awcBuffer, L"MCFCRT 堆初始化失败。\n\n错误代码：");
+			pwcWrite = _MCFCRT_itow_u(pwcWrite, dwErrorCode);
+			*pwcWrite = 0;
+			_MCFCRT_Bail(awcBuffer);
 		}
 		if(!__MCFCRT_HeapDbgInit()){
-			_MCFCRT_BailF(L"MCFCRT 堆调试器初始化失败。\n\n错误代码：%lu", GetLastError());
+			const DWORD dwErrorCode = GetLastError();
+			pwcWrite = _MCFCRT_wcpcpy(awcBuffer, L"MCFCRT 堆调试器初始化失败。\n\n错误代码：");
+			pwcWrite = _MCFCRT_itow_u(pwcWrite, dwErrorCode);
+			*pwcWrite = 0;
+			_MCFCRT_Bail(awcBuffer);
 		}
 		if(!__MCFCRT_RegisterFrameInfo()){
-			_MCFCRT_BailF(L"MCFCRT 异常处理程序初始化失败。\n\n错误代码：%lu", GetLastError());
+			const DWORD dwErrorCode = GetLastError();
+			pwcWrite = _MCFCRT_wcpcpy(awcBuffer, L"MCFCRT 异常处理程序初始化失败。\n\n错误代码：");
+			pwcWrite = _MCFCRT_itow_u(pwcWrite, dwErrorCode);
+			*pwcWrite = 0;
+			_MCFCRT_Bail(awcBuffer);
 		}
 
 		__MCFCRT_EH_TOP_BEGIN
 		{
 			if(!__MCFCRT_BeginModule()){
-				_MCFCRT_BailF(L"MCFCRT 初始化失败。\n\n错误代码：%lu", GetLastError());
+				const DWORD dwErrorCode = GetLastError();
+				pwcWrite = _MCFCRT_wcpcpy(awcBuffer, L"MCFCRT 初始化失败。\n\n错误代码：");
+				pwcWrite = _MCFCRT_itow_u(pwcWrite, dwErrorCode);
+				*pwcWrite = 0;
+				_MCFCRT_Bail(awcBuffer);
 			}
 		}
 		__MCFCRT_EH_TOP_END
@@ -74,6 +99,7 @@ static void TlsCallback(void *hModule, DWORD dwReason, void *pReserved){
 	case DLL_THREAD_ATTACH:
 		__MCFCRT_EH_TOP_BEGIN
 		{
+			//
 		}
 		__MCFCRT_EH_TOP_END
 		break;

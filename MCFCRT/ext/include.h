@@ -11,5 +11,7 @@
 #include "stpcpy.h"
 #include "wcpcpy.h"
 #include "alloca.h"
+#include "itoa.h"
+#include "itow.h"
 
 #endif

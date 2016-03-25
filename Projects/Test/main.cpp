@@ -1,9 +1,7 @@
 #include <MCF/StdMCF.hpp>
-#include <MCF/Thread/KernelMutex.hpp>
-
-using namespace MCF;
+#include <MCF/Utilities/Assert.hpp>
 
 extern "C" unsigned _MCFCRT_Main(){
-	KernelMutex m(L"this_is_a_very_loooooooooooooooong_name"_wsv, 0);
+	MCF_ASSERT_MSG(false, L"aa");
 	return 0;
 }

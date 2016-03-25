@@ -40,7 +40,7 @@ __attribute__((__dllimport__, __stdcall__))
 NTSTATUS NtRaiseHardError(NTSTATUS stError, DWORD dwUnknown, DWORD dwParamCount, const ULONG_PTR *pulParams, HardErrorResponseOption eOption, HardErrorResponse *peResponse);
 
 _Noreturn
-static void DoBail(const wchar_t *pwszDescription){
+void _MCFCRT_Bail(const wchar_t *pwszDescription){
 #ifdef NDEBUG
 	const bool bCanBeDebugged = IsDebuggerPresent();
 #else
@@ -48,14 +48,17 @@ static void DoBail(const wchar_t *pwszDescription){
 #endif
 	bool bShouldGenerateBreakpoint = bCanBeDebugged;
 
-	wchar_t awcBuffer[1024 + 256];
+	wchar_t awcBuffer[1024];
 	wchar_t *pwcWrite = _MCFCRT_wcpcpy(awcBuffer, L"应用程序异常终止，请联系作者寻求协助。");
 	if(pwszDescription){
 		pwcWrite = _MCFCRT_wcpcpy(pwcWrite, L"\n\n错误描述：\n");
-		wchar_t *const pwcEnd = awcBuffer + sizeof(awcBuffer) / sizeof(wchar_t) - 64; // 后面还有一些内容，保留一些字符。
-		pwcWrite = _MCFCRT_wcppcpy(pwcWrite, pwcEnd, pwszDescription);
+		pwcWrite = _MCFCRT_wcppcpy(pwcWrite, awcBuffer + 896, pwszDescription); // 后面还有一些内容，保留一些字符。
 	}
-	pwcWrite = _MCFCRT_wcpcpy(pwcWrite, bCanBeDebugged ? L"\n\n单击“确定”终止应用程序，单击“取消”调试应用程序。\n" : L"\n\n单击“确定”终止应用程序。\n");
+	pwcWrite = _MCFCRT_wcpcpy(pwcWrite, L"\n\n单击“确定”终止应用程序");
+	if(bCanBeDebugged){
+		pwcWrite = _MCFCRT_wcpcpy(pwcWrite, L"，单击“取消”调试应用程序");
+	}
+	pwcWrite = _MCFCRT_wcpcpy(pwcWrite, L"。\n");
 
 	const HANDLE hStdErr = GetStdHandle(STD_ERROR_HANDLE);
 	if(hStdErr != INVALID_HANDLE_VALUE){
@@ -69,20 +72,20 @@ static void DoBail(const wchar_t *pwszDescription){
 
 	UNICODE_STRING ustrText;
 	ustrText.Length        = (unsigned short)((char *)pwcWrite - (char *)awcBuffer);
-	ustrText.MaximumLength = ustrText.MaximumLength;
+	ustrText.MaximumLength = ustrText.Length;
 	ustrText.Buffer        = awcBuffer;
 
 	static const wchar_t kCaption[] = L"MCF CRT 错误";
 	UNICODE_STRING ustrCaption;
 	ustrCaption.Length        = sizeof(kCaption) - sizeof(wchar_t);
-	ustrCaption.MaximumLength = ustrCaption.MaximumLength;
+	ustrCaption.MaximumLength = ustrCaption.Length;
 	ustrCaption.Buffer        = (wchar_t *)kCaption;
 
 	UINT uType = (bCanBeDebugged ? MB_OKCANCEL : MB_OK) | MB_ICONERROR;
 
 	const ULONG_PTR aulParams[3] = { (ULONG_PTR)&ustrText, (ULONG_PTR)&ustrCaption, uType };
 	HardErrorResponse eResponse;
-	const NTSTATUS lStatus = NtRaiseHardError(STATUS_SERVICE_NOTIFICATION, 4, 3, aulParams, (bCanBeDebugged ? kHardErrorOkCancel : kHardErrorOk), &eResponse);
+	const NTSTATUS lStatus = NtRaiseHardError(0x50000018, 4, 3, aulParams, (bCanBeDebugged ? kHardErrorOkCancel : kHardErrorOk), &eResponse);
 	if(NT_SUCCESS(lStatus)){
 		bShouldGenerateBreakpoint = (eResponse != kHardErrorResponseOk);
 	}
@@ -92,16 +95,4 @@ static void DoBail(const wchar_t *pwszDescription){
 	}
 	TerminateProcess(GetCurrentProcess(), (DWORD)STATUS_UNSUCCESSFUL);
 	__builtin_unreachable();
-}
-
-_Noreturn
-void _MCFCRT_Bail(const wchar_t *pwszDescription){
-	DoBail(pwszDescription);
-}
-
-_Noreturn
-void _MCFCRT_BailV(const wchar_t *pwszFormat, va_list pArgs){
-	wchar_t awcBuffer[1024];
-	vswprintf(awcBuffer, sizeof(awcBuffer) / sizeof(wchar_t), pwszFormat, pArgs);
-	DoBail(awcBuffer);
 }

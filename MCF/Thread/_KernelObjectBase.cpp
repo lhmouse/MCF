@@ -4,9 +4,9 @@
 
 #include "../StdMCF.hpp"
 #include "_KernelObjectBase.hpp"
+#include "../../MCFCRT/ext/wcpcpy.h"
+#include "../../MCFCRT/ext/itow.h"
 #include "../Core/Exception.hpp"
-#include "../Core/StringView.hpp"
-#include "../Utilities/CopyMoveFill.hpp"
 #include <winternl.h>
 #include <ntdef.h>
 
@@ -15,38 +15,23 @@ NTSTATUS NtOpenDirectoryObject(HANDLE *pHandle, ACCESS_MASK dwDesiredAccess, con
 
 namespace MCF {
 
-namespace {
-	inline wchar_t *PrintNumberAsDec(wchar_t *pwcBuffer, unsigned long ulValue) noexcept {
-		int nOffset = 0;
-		do {
-			pwcBuffer[nOffset++] = L"0123456789"[ulValue % 10];
-			ulValue /= 10;
-		} while(ulValue != 0);
-
-		for(int i = 0, j = nOffset - 1; i < j; ++i, --j){
-			std::swap(pwcBuffer[i], pwcBuffer[j]);
-		}
-		return pwcBuffer + nOffset;
-	}
-}
-
 namespace Impl_KernelObjectBase {
 	Impl_UniqueNtHandle::UniqueNtHandle KernelObjectBase::Y_OpenBaseNamedObjectDirectory(std::uint32_t u32Flags){
-		static const auto kSessionPathPrefix = L"\\Sessions\\"_wsv;
-		static const auto kBaseNameObjects   = L"\\BaseNamedObjects"_wsv;
+		static constexpr wchar_t kSessionPathPrefix[] = L"\\Sessions\\";
+		static constexpr wchar_t kBaseNameObjects[]   = L"\\BaseNamedObjects";
 
 		wchar_t awcNameBuffer[128];
 		wchar_t *pwcBegin, *pwcEnd;
 		if(u32Flags & kGlobal){
-			pwcBegin = (wchar_t *)kBaseNameObjects.GetBegin();
-			pwcEnd   = (wchar_t *)kBaseNameObjects.GetEnd();
+			pwcBegin = (wchar_t *)kBaseNameObjects;
+			pwcEnd   = pwcBegin;
 		} else {
 			pwcBegin = awcNameBuffer;
-			pwcEnd   = awcNameBuffer;
+			pwcEnd   = pwcBegin;
 
-			pwcEnd = Copy(pwcEnd, kSessionPathPrefix.GetBegin(), kSessionPathPrefix.GetEnd());
-			pwcEnd = PrintNumberAsDec(pwcEnd, ::WTSGetActiveConsoleSessionId());
-			pwcEnd = Copy(pwcEnd, kBaseNameObjects.GetBegin(), kBaseNameObjects.GetEnd());
+			pwcEnd = ::_MCFCRT_wcpcpy(pwcEnd, kSessionPathPrefix);
+			pwcEnd = ::_MCFCRT_itow_u(pwcEnd, ::WTSGetActiveConsoleSessionId());
+			pwcEnd = ::_MCFCRT_wcpcpy(pwcEnd, kBaseNameObjects);
 		}
 
 		::UNICODE_STRING ustrName;

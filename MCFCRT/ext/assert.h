@@ -10,17 +10,22 @@
 __MCFCRT_EXTERN_C_BEGIN
 
 extern __attribute__((__noreturn__))
-int __MCFCRT_OnAssertionFailure(const wchar_t *__pwszExpression, const char *__pszFile, unsigned long __ulLine, const wchar_t *__pwszMessage) _MCFCRT_NOEXCEPT;
+int __MCFCRT_OnAssertionFailure(const wchar_t *__pwszExpression, const wchar_t *__pwszFile, unsigned long __ulLine, const wchar_t *__pwszMessage) _MCFCRT_NOEXCEPT;
 
 __MCFCRT_EXTERN_C_END
 
-#define _MCFCRT_ASSERT(__expr_)              __MCFCRT_ASSERT_IMPL(#__expr_, __expr_, L"")
-#define _MCFCRT_ASSERT_MSG(__expr_, __msg_)  __MCFCRT_ASSERT_IMPL(#__expr_, __expr_, __msg_)
+#define __MCFCRT_ASSERT_WIDEN_X(__s_)           L ## __s_
+#define __MCFCRT_ASSERT_WIDEN(__s_)             __MCFCRT_ASSERT_WIDEN_X(__s_)
 
 #endif
 
+#undef _MCFCRT_ASSERT
+#undef _MCFCRT_ASSERT_MSG
+
 #ifdef NDEBUG
-#	define __MCFCRT_ASSERT_IMPL(__plain_, __expr_, __msg_)  ((void)(sizeof(__expr_) + sizeof(__msg_)))
+#	define _MCFCRT_ASSERT(__expr_)              ((void)(sizeof(__expr_)))
+#	define _MCFCRT_ASSERT_MSG(__expr_, __msg_)  ((void)(sizeof(__expr_) && sizeof(__msg_)))
 #else
-#	define __MCFCRT_ASSERT_IMPL(__plain_, __expr_, __msg_)  ((void)(!(__expr_) && __MCFCRT_OnAssertionFailure(L ## __plain_, __FILE__, __LINE__, (__msg_))))
+#	define _MCFCRT_ASSERT(__expr_)              ((void)(!(__expr_) && __MCFCRT_OnAssertionFailure(__MCFCRT_ASSERT_WIDEN(#__expr_), __MCFCRT_ASSERT_WIDEN(__FILE__), __LINE__, L"")))
+#	define _MCFCRT_ASSERT_MSG(__expr_, __msg_)  ((void)(!(__expr_) && __MCFCRT_OnAssertionFailure(__MCFCRT_ASSERT_WIDEN(#__expr_), __MCFCRT_ASSERT_WIDEN(__FILE__), __LINE__, (__msg_))))
 #endif

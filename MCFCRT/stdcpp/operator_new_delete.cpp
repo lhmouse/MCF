@@ -6,6 +6,8 @@
 #include "../env/heap.h"
 #include "../env/heap_dbg.h"
 #include "../env/mcfwin.h"
+#include "../ext/wcpcpy.h"
+#include "../ext/itow.h"
 #include "../env/bail.h"
 #include <new>
 #include <cstddef>
@@ -99,11 +101,29 @@ void Deallocate(void *pBlock, bool bIsArray, const void *pRetAddr) noexcept {
 	for(std::size_t i = 0; i < alignof(std::max_align_t) / sizeof(std::uintptr_t); ++i){
 		const auto uTest = static_cast<std::uintptr_t *>(pRaw)[i];
 		if(uTest != uMagic){
-			const auto pwcSuffix = bIsArray ? L"[]" : L"";
+			wchar_t awcBuffer[1024];
+			wchar_t *pwcWrite;
 			if(uTest == uOtherMagic){
-				_MCFCRT_BailF(L"试图使用 operator delete%ls() 释放不是由 operator new%ls() 分配的内存。\n调用返回地址：%p", pwcSuffix, pwcSuffix, pRetAddr);
+				pwcWrite = _MCFCRT_wcpcpy(awcBuffer, L"试图使用 operator delete");
+				if(bIsArray){
+					pwcWrite = _MCFCRT_wcpcpy(pwcWrite, L"[]");
+				}
+				pwcWrite = _MCFCRT_wcpcpy(pwcWrite, L"() 释放由 operator new");
+				if(!bIsArray){
+					pwcWrite = _MCFCRT_wcpcpy(pwcWrite, L"[]");
+				}
+				pwcWrite = _MCFCRT_wcpcpy(pwcWrite, L"() 分配的内存。\n\n返回地址：");
+				pwcWrite = _MCFCRT_itow0X(pwcWrite, (std::uintptr_t)pRetAddr, sizeof(pRetAddr) * 2);
+			} else {
+				pwcWrite = _MCFCRT_wcpcpy(awcBuffer, L"在 operator delete");
+				if(bIsArray){
+					pwcWrite = _MCFCRT_wcpcpy(pwcWrite, L"[]");
+				}
+				pwcWrite = _MCFCRT_wcpcpy(pwcWrite, L"() 中侦测到堆损坏。\n\n返回地址：");
+				pwcWrite = _MCFCRT_itow0X(pwcWrite, (std::uintptr_t)pRetAddr, sizeof(pRetAddr) * 2);
 			}
-			_MCFCRT_BailF(L"在 operator delete%ls() 中侦测到堆损坏。\n调用返回地址：%p", pwcSuffix, pRetAddr);
+			*pwcWrite = 0;
+			_MCFCRT_Bail(awcBuffer);
 		}
 	}
 #else

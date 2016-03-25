@@ -121,8 +121,10 @@ public:
 		Thread(std::forward<ProcT>(fnProc), bSuspended).Swap(*this);
 	}
 	void Join() noexcept {
-		Wait();
-		x_pControlBlock = nullptr;
+		if(x_pControlBlock){
+			Wait();
+			x_pControlBlock = nullptr;
+		}
 	}
 
 	bool Wait(std::uint64_t u64UntilFastMonoClock) const noexcept;

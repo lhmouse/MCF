@@ -521,6 +521,7 @@ public:
 		return EnumerateEqualRange(vComparand);
 	}
 
+public:
 	friend void swap(FlatMap &lhs, FlatMap &rhs) noexcept {
 		lhs.Swap(rhs);
 	}

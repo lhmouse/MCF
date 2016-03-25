@@ -51,6 +51,7 @@ public:
 		swap(x_u64BytesTotal, rhs.x_u64BytesTotal);
 	}
 
+public:
 	friend void swap(Md5OutputStream &lhs, Md5OutputStream &rhs) noexcept {
 		lhs.Swap(rhs);
 	}

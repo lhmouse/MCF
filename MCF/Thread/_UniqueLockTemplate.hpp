@@ -146,6 +146,7 @@ namespace Impl_UniqueLockTemplate {
 			swap(y_uLockCount, rhs.y_uLockCount);
 		}
 
+	public:
 		friend void swap(UniqueLockTemplate &lhs, UniqueLockTemplate &rhs) noexcept {
 			lhs.Swap(rhs);
 		}

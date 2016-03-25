@@ -28,6 +28,7 @@ public:
 		using std::swap;
 	}
 
+public:
 	friend void swap(StandardErrorStream &lhs, StandardErrorStream &rhs) noexcept {
 		lhs.Swap(rhs);
 	}

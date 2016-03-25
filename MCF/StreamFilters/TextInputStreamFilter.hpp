@@ -41,6 +41,7 @@ public:
 		swap(x_sbufPlain, rhs.x_sbufPlain);
 	}
 
+public:
 	friend void swap(TextInputStreamFilter &lhs, TextInputStreamFilter &rhs) noexcept {
 		lhs.Swap(rhs);
 	}

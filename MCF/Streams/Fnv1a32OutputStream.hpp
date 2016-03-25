@@ -50,6 +50,7 @@ public:
 		swap(x_u32Reg,       rhs.x_u32Reg);
 	}
 
+public:
 	friend void swap(Fnv1a32OutputStream &lhs, Fnv1a32OutputStream &rhs) noexcept {
 		lhs.Swap(rhs);
 	}

@@ -32,6 +32,7 @@ public:
 		swap(y_vStream, rhs.y_vStream);
 	}
 
+public:
 	friend void swap(BufferingOutputStreamFilter &lhs, BufferingOutputStreamFilter &rhs) noexcept {
 		lhs.Swap(rhs);
 	}

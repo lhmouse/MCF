@@ -34,6 +34,7 @@ public:
 		swap(y_vStream, rhs.y_vStream);
 	}
 
+public:
 	friend void swap(BufferingInputStreamFilter &lhs, BufferingInputStreamFilter &rhs) noexcept {
 		lhs.Swap(rhs);
 	}

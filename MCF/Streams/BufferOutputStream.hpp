@@ -46,6 +46,7 @@ public:
 		swap(x_vBuffer, rhs.x_vBuffer);
 	}
 
+public:
 	friend void swap(BufferOutputStream &lhs, BufferOutputStream &rhs) noexcept {
 		lhs.Swap(rhs);
 	}

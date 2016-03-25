@@ -432,6 +432,7 @@ public:
 		UncheckedAppend(ilElements.begin(), ilElements.end());
 	}
 
+public:
 	const Element &operator[](std::size_t uIndex) const noexcept {
 		return UncheckedGet(uIndex);
 	}

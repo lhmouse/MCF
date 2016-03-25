@@ -51,6 +51,7 @@ public:
 		swap(x_u64BytesTotal, rhs.x_u64BytesTotal);
 	}
 
+public:
 	friend void swap(Sha1OutputStream &lhs, Sha1OutputStream &rhs) noexcept {
 		lhs.Swap(rhs);
 	}

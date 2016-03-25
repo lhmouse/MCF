@@ -50,6 +50,7 @@ public:
 		swap(x_u64Reg,       rhs.x_u64Reg);
 	}
 
+public:
 	friend void swap(Crc64OutputStream &lhs, Crc64OutputStream &rhs) noexcept {
 		lhs.Swap(rhs);
 	}

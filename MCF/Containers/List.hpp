@@ -451,6 +451,7 @@ public:
 		}
 	}
 
+public:
 	friend void swap(List &lhs, List &rhs) noexcept {
 		lhs.Swap(rhs);
 	}

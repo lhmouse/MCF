@@ -41,6 +41,7 @@ public:
 		swap(x_sbufPlain, rhs.x_sbufPlain);
 	}
 
+public:
 	friend void swap(Base64InputStreamFilter &lhs, Base64InputStreamFilter &rhs) noexcept {
 		lhs.Swap(rhs);
 	}

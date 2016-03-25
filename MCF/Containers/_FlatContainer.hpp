@@ -289,6 +289,7 @@ namespace Impl_FlatContainer {
 			return Erase(pPos, pPos + 1);
 		}
 
+	public:
 		friend void swap(FlatContainer &lhs, FlatContainer &rhs) noexcept {
 			lhs.Swap(rhs);
 		}

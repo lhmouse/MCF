@@ -179,6 +179,7 @@ public:
 		swap(x_uSize,     rhs.x_uSize);
 	}
 
+public:
 	friend void swap(StreamBuffer &lhs, StreamBuffer &rhs) noexcept {
 		lhs.Swap(rhs);
 	}

@@ -8,11 +8,46 @@
 #include "../../MCFCRT/env/eh_top.h"
 #include "../../MCFCRT/env/fenv.h"
 #include "../Core/Exception.hpp"
+#include "../Utilities/Assert.hpp"
 
 namespace MCF {
 
-void Thread::X_ThreadCloser::operator()(Thread::Handle hThread) const noexcept {
+void Thread::X_ThreadCloser::operator()(Handle hThread) const noexcept {
 	::_MCFCRT_CloseThread(hThread);
+}
+
+Thread::X_AbstractControlBlock::~X_AbstractControlBlock(){
+}
+
+void Thread::X_AbstractControlBlock::SpawnThread(bool bSuspended){
+	MCF_ASSERT(!x_hThread);
+
+	struct Helper {
+		__MCFCRT_C_STDCALL __MCFCRT_HAS_EH_TOP
+		static DWORD ThreadProc(LPVOID pParam){
+			const auto pThis = static_cast<X_AbstractControlBlock *>(pParam);
+
+			__MCFCRT_EH_TOP_BEGIN
+			{
+				__MCFCRT_FEnvInit();
+
+				pThis->X_ThreadProc();
+			}
+			__MCFCRT_EH_TOP_END
+
+			pThis->DropRef();
+			return 0;
+		}
+	};
+
+	if(!x_hThread.Reset(::_MCFCRT_CreateNativeThread(&Helper::ThreadProc, this, true, &x_uTid))){
+		MCF_THROW(Exception, ::GetLastError(), Rcntws::View(L"_MCFCRT_CreateThread() 失败。"));
+	}
+	AddRef();
+
+	if(!bSuspended){
+		::_MCFCRT_ResumeThread(x_hThread.Get());
+	}
 }
 
 std::uintptr_t Thread::GetCurrentId() noexcept {
@@ -32,70 +67,26 @@ void Thread::YieldExecution() noexcept {
 	::_MCFCRT_YieldThread();
 }
 
-Thread::~Thread(){
-	if(x_pException){
-		std::terminate();
-	}
-}
-
-void Thread::X_Initialize(bool bSuspended){
-	MCF_ASSERT_MSG(!x_hThread, L"Thread 只能被初始化一次。");
-
-	struct Helper {
-		__MCFCRT_C_STDCALL __MCFCRT_HAS_EH_TOP
-		static DWORD ThreadProc(LPVOID pParam){
-			const auto pThis = static_cast<Thread *>(pParam);
-
-			__MCFCRT_EH_TOP_BEGIN
-			{
-				__MCFCRT_FEnvInit();
-
-				try {
-					pThis->X_ThreadProc();
-				} catch(...){
-					pThis->x_pException = std::current_exception();
-				}
-			}
-			__MCFCRT_EH_TOP_END
-
-			pThis->x_uThreadId.Store(0, kAtomicRelease);
-			pThis->DropRef();
-
-			return 0;
-		}
-	};
-
-	std::uintptr_t uThreadId = 0;
-	if(!x_hThread.Reset(::_MCFCRT_CreateNativeThread(&Helper::ThreadProc, this, true, &uThreadId))){
-		MCF_THROW(Exception, ::GetLastError(), Rcntws::View(L"_MCFCRT_CreateThread() 失败。"));
-	}
-	AddRef();
-	x_uThreadId.Store(uThreadId, kAtomicRelease);
-
-	if(!bSuspended){
-		Resume();
-	}
-}
-
 bool Thread::Wait(std::uint64_t u64UntilFastMonoClock) const noexcept {
-	return ::_MCFCRT_WaitForThread(x_hThread.Get(), u64UntilFastMonoClock);
+	MCF_ASSERT(x_pControlBlock);
+
+	return ::_MCFCRT_WaitForThread(x_pControlBlock->GetHandle(), u64UntilFastMonoClock);
 }
 void Thread::Wait() const noexcept {
-	::_MCFCRT_WaitForThreadForever(x_hThread.Get());
-}
+	MCF_ASSERT(x_pControlBlock);
 
-bool Thread::IsAlive() const noexcept {
-	return GetId() != 0;
-}
-std::uintptr_t Thread::GetId() const noexcept {
-	return x_uThreadId.Load(kAtomicRelaxed);
+	::_MCFCRT_WaitForThreadForever(x_pControlBlock->GetHandle());
 }
 
 void Thread::Suspend() noexcept {
-	::_MCFCRT_SuspendThread(x_hThread.Get());
+	MCF_ASSERT(x_pControlBlock);
+
+	::_MCFCRT_SuspendThread(x_pControlBlock->GetHandle());
 }
 void Thread::Resume() noexcept {
-	::_MCFCRT_ResumeThread(x_hThread.Get());
+	MCF_ASSERT(x_pControlBlock);
+
+	::_MCFCRT_ResumeThread(x_pControlBlock->GetHandle());
 }
 
 }

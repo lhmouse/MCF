@@ -996,6 +996,7 @@ public:
 		return UncheckedGet(uIndex);
 	}
 
+public:
 	friend void swap(CircularQueue &lhs, CircularQueue &rhs) noexcept {
 		lhs.Swap(rhs);
 	}

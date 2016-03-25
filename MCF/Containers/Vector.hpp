@@ -717,6 +717,7 @@ public:
 		return Erase(pPos, pPos + 1);
 	}
 
+public:
 	const Element &operator[](std::size_t uIndex) const noexcept {
 		return UncheckedGet(uIndex);
 	}

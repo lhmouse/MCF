@@ -5,21 +5,15 @@
 #ifndef MCF_THREAD_THREAD_HPP_
 #define MCF_THREAD_THREAD_HPP_
 
-#include "../Utilities/Noncopyable.hpp"
 #include "../SmartPointers/IntrusivePtr.hpp"
 #include "../Core/UniqueHandle.hpp"
-#include "Atomic.hpp"
 #include <exception>
 #include <type_traits>
 #include <cstddef>
 
 namespace MCF {
 
-class Thread : MCF_NONCOPYABLE, public IntrusiveBase<Thread> {
-private:
-	template<typename ThreadProcT>
-	class X_ConcreteThread;
-
+class Thread {
 public:
 	using Handle = void *;
 
@@ -31,10 +25,48 @@ private:
 		void operator()(Handle hThread) const noexcept;
 	};
 
-public:
-	template<typename ThreadProcT>
-	static IntrusivePtr<Thread> Create(ThreadProcT &&fnProc, bool bSuspended = false);
+	class X_AbstractControlBlock : public IntrusiveBase<X_AbstractControlBlock> {
+	private:
+		UniqueHandle<X_ThreadCloser> x_hThread;
+		std::uintptr_t x_uTid;
 
+	public:
+		virtual ~X_AbstractControlBlock();
+
+	private:
+		virtual void X_ThreadProc() = 0;
+
+	public:
+		void SpawnThread(bool bSuspended);
+
+		Handle GetHandle() const noexcept {
+			return x_hThread.Get();
+		}
+		std::uintptr_t GetTid() const noexcept {
+			return x_uTid;
+		}
+	};
+
+	template<typename ProcT>
+	class X_ControlBlock : public X_AbstractControlBlock {
+	private:
+		ProcT x_fnProc;
+
+	public:
+		explicit X_ControlBlock(ProcT fnProc)
+			: x_fnProc(std::move(fnProc))
+		{
+		}
+		~X_ControlBlock() override {
+		}
+
+	private:
+		void X_ThreadProc() override {
+			x_fnProc();
+		}
+	};
+
+public:
 	static std::uintptr_t GetCurrentId() noexcept;
 
 	static void Sleep(std::uint64_t u64UntilFastMonoClock) noexcept;
@@ -43,69 +75,76 @@ public:
 	static void YieldExecution() noexcept;
 
 private:
-	UniqueHandle<X_ThreadCloser> x_hThread;
-	Atomic<std::uintptr_t> x_uThreadId;
-	std::exception_ptr x_pException;
+	IntrusivePtr<X_AbstractControlBlock> x_pControlBlock;
 
-private:
-	Thread() noexcept
-		: x_hThread(nullptr), x_uThreadId(0), x_pException()
+public:
+	constexpr Thread() noexcept
+		: x_pControlBlock(nullptr)
 	{
+	}
+	template<typename ProcT>
+	Thread(ProcT &&fnProc, bool bSuspended)
+		: Thread()
+	{
+		auto pControlBlock = MakeIntrusive<X_ControlBlock<std::decay_t<ProcT>>>(std::forward<ProcT>(fnProc));
+		pControlBlock->SpawnThread(bSuspended);
+		x_pControlBlock = std::move(pControlBlock);
+	}
+	Thread(Thread &&rhs) noexcept
+		: Thread()
+	{
+		rhs.Swap(*this);
+	}
+	Thread &operator=(Thread &&rhs) noexcept {
+		Thread(std::move(rhs)).Swap(*this);
+		return *this;
+	}
+	~Thread(){
+		if(!IsNull()){
+			std::terminate();
+		}
 	}
 
 public:
-	~Thread() override; // 如果有被捕获的异常，调用 std::terminate()。
-
-private:
-	void X_Initialize(bool bSuspended);
-
-	virtual void X_ThreadProc() = 0;
-
-public:
+	bool IsNull() const noexcept {
+		return !x_pControlBlock;
+	}
 	Handle GetHandle() const noexcept {
-		return x_hThread.Get();
+		return x_pControlBlock ? x_pControlBlock->GetHandle() : nullptr;
+	}
+	std::uintptr_t GetTid() const noexcept {
+		return x_pControlBlock ? x_pControlBlock->GetTid() : 0;
+	}
+
+	template<typename ProcT>
+	void Create(ProcT &&fnProc, bool bSuspended){
+		Thread(std::forward<ProcT>(fnProc), bSuspended).Swap(*this);
+	}
+	void Join() noexcept {
+		Wait();
+		x_pControlBlock = nullptr;
 	}
 
 	bool Wait(std::uint64_t u64UntilFastMonoClock) const noexcept;
 	void Wait() const noexcept;
 
-	const std::exception_ptr &GetException() const noexcept {
-		return x_pException;
-	}
-	void ClearException() noexcept {
-		x_pException = std::exception_ptr();
-	}
-
-	bool IsAlive() const noexcept;
-	std::uintptr_t GetId() const noexcept;
-
 	void Suspend() noexcept;
 	void Resume() noexcept;
-};
 
-template<typename ThreadProcT>
-class Thread::X_ConcreteThread : public Thread {
-private:
-	ThreadProcT x_fnProc;
+	void Swap(Thread &rhs) noexcept {
+		using std::swap;
+		swap(x_pControlBlock, rhs.x_pControlBlock);
+	}
 
 public:
-	template<typename T>
-	X_ConcreteThread(T &&fnProc, bool bSuspended)
-		: x_fnProc(std::forward<T>(fnProc))
-	{
-		Thread::X_Initialize(bSuspended);
+	explicit operator bool() const noexcept {
+		return !IsNull();
 	}
 
-private:
-	void X_ThreadProc() override {
-		x_fnProc();
+	friend void swap(Thread &lhs, Thread &rhs) noexcept {
+		lhs.Swap(rhs);
 	}
 };
-
-template<typename ThreadProcT>
-IntrusivePtr<Thread> Thread::Create(ThreadProcT &&fnProc, bool bSuspended){
-	return MakeIntrusive<X_ConcreteThread<std::decay_t<ThreadProcT>>>(std::forward<ThreadProcT>(fnProc), bSuspended);
-}
 
 }
 

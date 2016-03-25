@@ -36,9 +36,8 @@ public:
 	{
 	}
 	UniqueHandle(UniqueHandle &&rhs) noexcept
-		: x_hObject(rhs.x_hObject)
+		: x_hObject(rhs.Release())
 	{
-		rhs.x_hObject = Closer()();
 	}
 	UniqueHandle &operator=(UniqueHandle &&rhs) noexcept {
 		return Reset(std::move(rhs));

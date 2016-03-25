@@ -53,7 +53,7 @@ template<typename ...ElementsT>
 class Variant {
 public:
 	enum : std::size_t {
-		kEmpty = (std::size_t)-1
+		kEmpty = (std::size_t)-1,
 	};
 
 private:
@@ -210,6 +210,11 @@ public:
 	void Swap(Variant<ElementsT...> &rhs) noexcept {
 		using std::swap;
 		swap(x_pElement, rhs.x_pElement);
+	}
+
+public:
+	explicit operator bool() const noexcept {
+		return GetIndex() != kEmpty;
 	}
 
 	friend void swap(Variant &lhs, Variant &rhs) noexcept {

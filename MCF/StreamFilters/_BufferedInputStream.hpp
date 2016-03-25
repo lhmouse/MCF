@@ -63,6 +63,7 @@ namespace Impl_BufferedInputStream {
 			swap(x_vecBackBuffer,     rhs.x_vecBackBuffer);
 		}
 
+	public:
 		friend void swap(BufferedInputStream &lhs, BufferedInputStream &rhs) noexcept {
 			lhs.Swap(rhs);
 		}

@@ -504,6 +504,7 @@ public:
 		return EnumerateEqualRange(vComparand);
 	}
 
+public:
 	friend void swap(FlatMultiMap &lhs, FlatMultiMap &rhs) noexcept {
 		lhs.Swap(rhs);
 	}

@@ -31,6 +31,7 @@ public:
 		using std::swap;
 	}
 
+public:
 	friend void swap(StandardOutputStream &lhs, StandardOutputStream &rhs) noexcept {
 		lhs.Swap(rhs);
 	}

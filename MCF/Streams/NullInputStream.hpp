@@ -30,6 +30,7 @@ public:
 		using std::swap;
 	}
 
+public:
 	friend void swap(NullInputStream &lhs, NullInputStream &rhs) noexcept {
 		lhs.Swap(rhs);
 	}

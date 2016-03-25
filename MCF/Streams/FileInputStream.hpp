@@ -68,6 +68,7 @@ public:
 		swap(x_u64Offset, rhs.x_u64Offset);
 	}
 
+public:
 	friend void swap(FileInputStream &lhs, FileInputStream &rhs) noexcept {
 		lhs.Swap(rhs);
 	}

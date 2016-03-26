@@ -16,6 +16,9 @@
 namespace MCF {
 
 class ConditionVariable : MCF_NONCOPYABLE {
+public:
+	using UniqueLockTemplateBase = Impl_UniqueLockTemplate::UniqueLockTemplateBase;
+
 private:
 	::_MCFCRT_ConditionVariable x_vConditionVariable;
 
@@ -26,30 +29,30 @@ public:
 	}
 
 public:
-	bool Wait(Impl_UniqueLockTemplate::UniqueLockTemplateBase &vLock, std::uint64_t u64UntilFastMonoClock) noexcept {
+	bool Wait(UniqueLockTemplateBase &vLock, std::uint64_t u64UntilFastMonoClock) noexcept {
 		return ::_MCFCRT_WaitForConditionVariable(&x_vConditionVariable,
 			[](std::intptr_t nContext){
-				const auto pLock = reinterpret_cast<Impl_UniqueLockTemplate::UniqueLockTemplateBase *>(nContext);
+				const auto pLock = reinterpret_cast<UniqueLockTemplateBase *>(nContext);
 				const auto uLockCount = pLock->Y_UnlockAll();
 				MCF_ASSERT(uLockCount != 0);
 				return static_cast<std::intptr_t>(uLockCount);
 			},
 			[](std::intptr_t nContext, std::intptr_t nUnocked){
-				const auto pLock = reinterpret_cast<Impl_UniqueLockTemplate::UniqueLockTemplateBase *>(nContext);
+				const auto pLock = reinterpret_cast<UniqueLockTemplateBase *>(nContext);
 				pLock->Y_RelockAll(static_cast<std::uintptr_t>(nUnocked));
 			},
 			reinterpret_cast<std::intptr_t>(&vLock), u64UntilFastMonoClock);
 	}
-	void Wait(Impl_UniqueLockTemplate::UniqueLockTemplateBase &vLock) noexcept {
+	void Wait(UniqueLockTemplateBase &vLock) noexcept {
 		::_MCFCRT_WaitForConditionVariableForever(&x_vConditionVariable,
 			[](std::intptr_t nContext){
-				const auto pLock = reinterpret_cast<Impl_UniqueLockTemplate::UniqueLockTemplateBase *>(nContext);
+				const auto pLock = reinterpret_cast<UniqueLockTemplateBase *>(nContext);
 				const auto uLockCount = pLock->Y_UnlockAll();
 				MCF_ASSERT(uLockCount != 0);
 				return static_cast<std::intptr_t>(uLockCount);
 			},
 			[](std::intptr_t nContext, std::intptr_t nUnocked){
-				const auto pLock = reinterpret_cast<Impl_UniqueLockTemplate::UniqueLockTemplateBase *>(nContext);
+				const auto pLock = reinterpret_cast<UniqueLockTemplateBase *>(nContext);
 				pLock->Y_RelockAll(static_cast<std::uintptr_t>(nUnocked));
 			},
 			reinterpret_cast<std::intptr_t>(&vLock));

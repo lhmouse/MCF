@@ -4,9 +4,14 @@
 
 #include "mingw_hacks.h"
 #include "mcfwin.h"
+#include "mutex.h"
 #include "thread.h"
 #include "avl_tree.h"
 #include <stdlib.h>
+
+enum {
+	kMutexSpinCount = 100,
+};
 
 typedef struct tagKeyDtorNode {
 	_MCFCRT_AvlNodeHeader vHeader;
@@ -28,7 +33,7 @@ static int DtorComparatorNodes(const _MCFCRT_AvlNodeHeader *pObj1, const _MCFCRT
 	return DtorComparatorNodeKey(pObj1, (intptr_t)(uintptr_t)((const KeyDtorNode *)pObj2)->ulKey);
 }
 
-static SRWLOCK          g_srwDtorMapLock = SRWLOCK_INIT;
+static _MCFCRT_Mutex    g_vDtorMapMutex  = 0;
 static KeyDtorNode *    g_pDtorHead      = nullptr;
 static _MCFCRT_AvlRoot  g_avlDtorRoot    = nullptr;
 
@@ -51,7 +56,7 @@ void __MCFCRT_MinGWHacksUninit(){
 }
 
 void __MCFCRT_RunEmutlsDtors(){
-	AcquireSRWLockExclusive(&g_srwDtorMapLock);
+	_MCFCRT_LockMutex(&g_vDtorMapMutex, kMutexSpinCount);
 	{
 		for(const KeyDtorNode *pCur = g_pDtorHead; pCur; pCur = pCur->pNext){
 			const LPVOID pMem = TlsGetValue(pCur->ulKey);
@@ -61,7 +66,7 @@ void __MCFCRT_RunEmutlsDtors(){
 			}
 		}
 	}
-	ReleaseSRWLockExclusive(&g_srwDtorMapLock);
+	_MCFCRT_UnlockMutex(&g_vDtorMapMutex);
 }
 
 int __mingwthr_key_dtor(unsigned long ulKey, void (*pfnDtor)(void *)){
@@ -74,7 +79,7 @@ int __mingwthr_key_dtor(unsigned long ulKey, void (*pfnDtor)(void *)){
 		pNode->pfnDtor = pfnDtor;
 		pNode->pPrev   = nullptr;
 
-		AcquireSRWLockExclusive(&g_srwDtorMapLock);
+		_MCFCRT_LockMutex(&g_vDtorMapMutex, kMutexSpinCount);
 		{
 			pNode->pNext = g_pDtorHead;
 			if(g_pDtorHead){
@@ -84,13 +89,13 @@ int __mingwthr_key_dtor(unsigned long ulKey, void (*pfnDtor)(void *)){
 
 			_MCFCRT_AvlAttach(&g_avlDtorRoot, (_MCFCRT_AvlNodeHeader *)pNode, &DtorComparatorNodes);
 		}
-		ReleaseSRWLockExclusive(&g_srwDtorMapLock);
+		_MCFCRT_UnlockMutex(&g_vDtorMapMutex);
 	}
 	return 0;
 }
 
 int __mingwthr_remove_key_dtor(unsigned long ulKey){
-	AcquireSRWLockExclusive(&g_srwDtorMapLock);
+	_MCFCRT_LockMutex(&g_vDtorMapMutex, kMutexSpinCount);
 	{
 		KeyDtorNode *pNode = (KeyDtorNode *)_MCFCRT_AvlFind(&g_avlDtorRoot, (intptr_t)ulKey, &DtorComparatorNodeKey);
 		if(pNode){
@@ -109,7 +114,7 @@ int __mingwthr_remove_key_dtor(unsigned long ulKey){
 			free(pNode);
 		}
 	}
-	ReleaseSRWLockExclusive(&g_srwDtorMapLock);
+	_MCFCRT_UnlockMutex(&g_vDtorMapMutex);
 	return 0;
 }
 

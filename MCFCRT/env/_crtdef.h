@@ -9,12 +9,14 @@
 #   include <cstddef>
 #   include <cstdint>
 #   include <climits>
+#   include <cassert>
 #else
 #   include <stddef.h>
 #   include <stdint.h>
 #   include <limits.h>
 #   include <stdbool.h>
 #   include <stdalign.h>
+#   include <assert.h>
 #endif
 
 #ifdef __cplusplus

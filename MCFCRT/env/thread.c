@@ -6,6 +6,7 @@
 #include "mcfwin.h"
 #include "fenv.h"
 #include "avl_tree.h"
+#include "mutex.h"
 #include "bail.h"
 #include "mingw_hacks.h"
 #include "eh_top.h"
@@ -28,6 +29,10 @@ extern __attribute__((__dllimport__, __stdcall__))
 NTSTATUS NtSuspendThread(HANDLE hThread, LONG *plPrevCount);
 extern __attribute__((__dllimport__, __stdcall__))
 NTSTATUS NtResumeThread(HANDLE hThread, LONG *plPrevCount);
+
+enum {
+	kMutexSpinCount = 100,
+};
 
 typedef struct tagTlsObject {
 	_MCFCRT_AvlNodeHeader vHeader;
@@ -53,7 +58,7 @@ static int ObjectComparatorNodes(const _MCFCRT_AvlNodeHeader *pObj1, const _MCFC
 }
 
 typedef struct tagThreadMap {
-	SRWLOCK srwLock;
+	_MCFCRT_Mutex vMutex;
 	_MCFCRT_AvlRoot avlObjects;
 	struct tagTlsObject *pLastByThread;
 } ThreadMap;
@@ -61,8 +66,8 @@ typedef struct tagThreadMap {
 typedef struct tagTlsKey {
 	_MCFCRT_AvlNodeHeader vHeader;
 
-	SRWLOCK srwLock;
-	void (*pfnCallback)(intptr_t);
+	_MCFCRT_Mutex vMutex;
+	_MCFCRT_TlsCallback pfnCallback;
 	struct tagTlsObject *pLastByKey;
 } TlsKey;
 
@@ -75,9 +80,9 @@ static int KeyComparatorNodes(const _MCFCRT_AvlNodeHeader *pObj1, const _MCFCRT_
 	return KeyComparatorNodeKey(pObj1, (intptr_t)(void *)pObj2);
 }
 
-static SRWLOCK          g_csKeyMutex  = SRWLOCK_INIT;
-static DWORD            g_dwTlsIndex  = TLS_OUT_OF_INDEXES;
-static _MCFCRT_AvlRoot  g_avlKeys     = nullptr;
+static _MCFCRT_Mutex    g_vKeyMapMutex  = 0;
+static DWORD            g_dwTlsIndex    = TLS_OUT_OF_INDEXES;
+static _MCFCRT_AvlRoot  g_avlKeyMap     = nullptr;
 
 bool __MCFCRT_ThreadEnvInit(){
 	g_dwTlsIndex = TlsAlloc();
@@ -87,9 +92,9 @@ bool __MCFCRT_ThreadEnvInit(){
 	return true;
 }
 void __MCFCRT_ThreadEnvUninit(){
-	if(g_avlKeys){
-		_MCFCRT_AvlNodeHeader *const pRoot = g_avlKeys;
-		g_avlKeys = nullptr;
+	if(g_avlKeyMap){
+		_MCFCRT_AvlNodeHeader *const pRoot = g_avlKeyMap;
+		g_avlKeyMap = nullptr;
 
 		TlsKey *pKey;
 		_MCFCRT_AvlNodeHeader *pCur = _MCFCRT_AvlPrev(pRoot);
@@ -119,16 +124,16 @@ void __MCFCRT_TlsThreadCleanup(){
 		while(pObject){
 			TlsKey *const pKey = pObject->pKey;
 
-			AcquireSRWLockExclusive(&(pKey->srwLock));
+			_MCFCRT_LockMutex(&(pKey->vMutex), kMutexSpinCount);
 			{
 				if(pKey->pLastByKey == pObject){
 					pKey->pLastByKey = pObject->pPrevByKey;
 				}
 			}
-			ReleaseSRWLockExclusive(&(pKey->srwLock));
+			_MCFCRT_UnlockMutex(&(pKey->vMutex));
 
 			if(pKey->pfnCallback){
-				(*pKey->pfnCallback)(pObject->nValue);
+				(*pKey->pfnCallback)(&(pObject->nValue));
 			}
 
 			TlsObject *const pTemp = pObject->pPrevByThread;
@@ -142,21 +147,21 @@ void __MCFCRT_TlsThreadCleanup(){
 	__MCFCRT_RunEmutlsDtors();
 }
 
-void *_MCFCRT_TlsAllocKey(void (*pfnCallback)(intptr_t)){
+void *_MCFCRT_TlsAllocKey(_MCFCRT_TlsCallback pfnCallback){
 	TlsKey *const pKey = malloc(sizeof(TlsKey));
 	if(!pKey){
 		SetLastError(ERROR_NOT_ENOUGH_MEMORY);
 		return nullptr;
 	}
-	InitializeSRWLock(&(pKey->srwLock));
+	pKey->vMutex      = 0;
 	pKey->pfnCallback = pfnCallback;
 	pKey->pLastByKey  = nullptr;
 
-	AcquireSRWLockExclusive(&g_csKeyMutex);
+	_MCFCRT_LockMutex(&g_vKeyMapMutex, kMutexSpinCount);
 	{
-		_MCFCRT_AvlAttach(&g_avlKeys, (_MCFCRT_AvlNodeHeader *)pKey, &KeyComparatorNodes);
+		_MCFCRT_AvlAttach(&g_avlKeyMap, (_MCFCRT_AvlNodeHeader *)pKey, &KeyComparatorNodes);
 	}
-	ReleaseSRWLockExclusive(&g_csKeyMutex);
+	_MCFCRT_UnlockMutex(&g_vKeyMapMutex);
 
 	return pKey;
 }
@@ -167,17 +172,17 @@ bool _MCFCRT_TlsFreeKey(void *pTlsKey){
 		return false;
 	}
 
-	AcquireSRWLockExclusive(&g_csKeyMutex);
+	_MCFCRT_LockMutex(&g_vKeyMapMutex, kMutexSpinCount);
 	{
 		_MCFCRT_AvlDetach((_MCFCRT_AvlNodeHeader *)pKey);
 	}
-	ReleaseSRWLockExclusive(&g_csKeyMutex);
+	_MCFCRT_UnlockMutex(&g_vKeyMapMutex);
 
 	TlsObject *pObject = pKey->pLastByKey;
 	while(pObject){
 		ThreadMap *const pMap = pObject->pMap;
 
-		AcquireSRWLockExclusive(&(pMap->srwLock));
+		_MCFCRT_LockMutex(&(pMap->vMutex), kMutexSpinCount);
 		{
 			TlsObject *const pPrev = pObject->pPrevByThread;
 			TlsObject *const pNext = pObject->pNextByThread;
@@ -192,10 +197,10 @@ bool _MCFCRT_TlsFreeKey(void *pTlsKey){
 				pMap->pLastByThread = pObject->pPrevByThread;
 			}
 		}
-		ReleaseSRWLockExclusive(&(pMap->srwLock));
+		_MCFCRT_UnlockMutex(&(pMap->vMutex));
 
 		if(pKey->pfnCallback){
-			(*pKey->pfnCallback)(pObject->nValue);
+			(*pKey->pfnCallback)(&(pObject->nValue));
 		}
 
 		TlsObject *const pTemp = pObject->pPrevByKey;
@@ -230,7 +235,7 @@ bool _MCFCRT_TlsGet(void *pTlsKey, intptr_t **restrict ppnValue){
 		return true;
 	}
 
-	AcquireSRWLockExclusive(&(pMap->srwLock));
+	_MCFCRT_LockMutex(&(pMap->vMutex), kMutexSpinCount);
 	{
 		TlsObject *pObject = (TlsObject *)_MCFCRT_AvlFind(&(pMap->avlObjects), (intptr_t)pKey, &ObjectComparatorNodeKey);
 		if(!pObject){
@@ -238,7 +243,7 @@ bool _MCFCRT_TlsGet(void *pTlsKey, intptr_t **restrict ppnValue){
 		}
 		*ppnValue = &(pObject->nValue);
 	}
-	ReleaseSRWLockExclusive(&(pMap->srwLock));
+	_MCFCRT_UnlockMutex(&(pMap->vMutex));
 
 	return true;
 }
@@ -258,18 +263,18 @@ bool _MCFCRT_TlsRequire(void *pTlsKey, intptr_t **restrict ppnValue, _MCFCRT_STD
 			SetLastError(ERROR_NOT_ENOUGH_MEMORY);
 			return false;
 		}
-		InitializeSRWLock(&(pMap->srwLock));
+		pMap->vMutex        = 0;
 		pMap->avlObjects    = nullptr;
 		pMap->pLastByThread = nullptr;
 
 		TlsSetValue(g_dwTlsIndex, pMap);
 	}
 
-	AcquireSRWLockExclusive(&(pMap->srwLock));
+	_MCFCRT_LockMutex(&(pMap->vMutex), kMutexSpinCount);
 	{
 		TlsObject *pObject = (TlsObject *)_MCFCRT_AvlFind(&(pMap->avlObjects), (intptr_t)pKey, &ObjectComparatorNodeKey);
 		if(!pObject){
-			ReleaseSRWLockExclusive(&(pMap->srwLock));
+			_MCFCRT_UnlockMutex(&(pMap->vMutex));
 			{
 				pObject = malloc(sizeof(TlsObject));
 				if(!pObject){
@@ -280,7 +285,7 @@ bool _MCFCRT_TlsRequire(void *pTlsKey, intptr_t **restrict ppnValue, _MCFCRT_STD
 				pObject->pMap   = pMap;
 				pObject->pKey   = pKey;
 
-				AcquireSRWLockExclusive(&(pKey->srwLock));
+				_MCFCRT_LockMutex(&(pKey->vMutex), kMutexSpinCount);
 				{
 					TlsObject *const pPrev = pKey->pLastByKey;
 					pKey->pLastByKey = pObject;
@@ -291,9 +296,9 @@ bool _MCFCRT_TlsRequire(void *pTlsKey, intptr_t **restrict ppnValue, _MCFCRT_STD
 						pPrev->pNextByKey = pObject;
 					}
 				}
-				ReleaseSRWLockExclusive(&(pKey->srwLock));
+				_MCFCRT_UnlockMutex(&(pKey->vMutex));
 			}
-			AcquireSRWLockExclusive(&(pMap->srwLock));
+			_MCFCRT_LockMutex(&(pMap->vMutex), kMutexSpinCount);
 
 			TlsObject *const pPrev = pMap->pLastByThread;
 			pMap->pLastByThread = pObject;
@@ -307,7 +312,7 @@ bool _MCFCRT_TlsRequire(void *pTlsKey, intptr_t **restrict ppnValue, _MCFCRT_STD
 		}
 		*ppnValue = &(pObject->nValue);
 	}
-	ReleaseSRWLockExclusive(&(pMap->srwLock));
+	_MCFCRT_UnlockMutex(&(pMap->vMutex));
 
 	return true;
 }

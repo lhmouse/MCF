@@ -5,9 +5,14 @@
 #include "thunk.h"
 #include "mcfwin.h"
 #include "avl_tree.h"
+#include "mutex.h"
 #include "bail.h"
 #include "../ext/assert.h"
 #include <stdlib.h>
+
+enum {
+	kMutexSpinCount = 1000,
+};
 
 typedef struct tagThunkInfo {
 	// 内存是以 64KiB 的粒度分配的，每一块称为一个 chunk。
@@ -53,18 +58,18 @@ static int FreeSizeComparatorNodes(const _MCFCRT_AvlNodeHeader *pIndex1, const _
 	return FreeSizeComparatorNodeKey(pIndex1, (intptr_t)GetInfoFromFreeSizeIndex(pIndex2)->uFreeSize);
 }
 
-static SRWLOCK         g_srwlMutex            = SRWLOCK_INIT;
+static _MCFCRT_Mutex   g_vThunkMutex          = 0;
 static uintptr_t       g_uPageMask            = 0;
 
-static _MCFCRT_AvlRoot  g_avlThunksByThunk     = nullptr;
-static _MCFCRT_AvlRoot  g_avlThunksByFreeSize  = nullptr;
+static _MCFCRT_AvlRoot  g_avlThunksByThunk    = nullptr;
+static _MCFCRT_AvlRoot  g_avlThunksByFreeSize = nullptr;
 
 const void *_MCFCRT_AllocateThunk(const void *pInit, size_t uSize){
 	_MCFCRT_ASSERT(pInit);
 
 	char *pRaw = nullptr;
 
-	AcquireSRWLockExclusive(&g_srwlMutex);
+	_MCFCRT_LockMutex(&g_vThunkMutex, kMutexSpinCount);
 	{
 		if(g_uPageMask == 0){
 			SYSTEM_INFO vSystemInfo;
@@ -149,7 +154,7 @@ const void *_MCFCRT_AllocateThunk(const void *pInit, size_t uSize){
 		VirtualProtect(pRaw, uThunkSize, PAGE_EXECUTE_READ, &dwOldProtect);
 	}
 jDone:
-	ReleaseSRWLockExclusive(&g_srwlMutex);
+	_MCFCRT_UnlockMutex(&g_vThunkMutex);
 
 	if(!pRaw){
 		SetLastError(ERROR_NOT_ENOUGH_MEMORY);
@@ -160,7 +165,7 @@ void _MCFCRT_DeallocateThunk(const void *pThunk, bool bToPoison){
 	char *const pRaw = (char *)pThunk;
 	void *pPageToRelease;
 
-	AcquireSRWLockExclusive(&g_srwlMutex);
+	_MCFCRT_LockMutex(&g_vThunkMutex, kMutexSpinCount);
 	{
 		_MCFCRT_AvlNodeHeader *pThunkIndex = _MCFCRT_AvlFind(&g_avlThunksByThunk, (intptr_t)pThunk, &ThunkComparatorNodeKey);
 		ThunkInfo *pInfo;
@@ -222,7 +227,7 @@ void _MCFCRT_DeallocateThunk(const void *pThunk, bool bToPoison){
 			_MCFCRT_AvlAttach(&g_avlThunksByFreeSize, &(pInfo->vFreeSizeIndex), &FreeSizeComparatorNodes);
 		}
 	}
-	ReleaseSRWLockExclusive(&g_srwlMutex);
+	_MCFCRT_UnlockMutex(&g_vThunkMutex);
 
 	if(pPageToRelease){
 		VirtualFree(pPageToRelease, 0, MEM_RELEASE);

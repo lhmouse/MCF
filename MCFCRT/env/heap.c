@@ -5,6 +5,7 @@
 #include "heap.h"
 #include "heap_dbg.h"
 #include "hooks.h"
+#include "mutex.h"
 #include "mcfwin.h"
 #include "bail.h"
 #include <stdlib.h>
@@ -18,20 +19,13 @@ void (*__MCFCRT_OnHeapRealloc)(void *, void *, size_t, const void *)   = nullptr
 void (*__MCFCRT_OnHeapFree)(void *__pBlock, const void *)              = nullptr;
 bool (*__MCFCRT_OnHeapBadAlloc)(const void *)                          = nullptr;
 
-static CRITICAL_SECTION g_csHeapMutex;
+static _MCFCRT_Mutex g_vHeapMutex = 0;
+
+enum {
+	kMutexSpinCount = 4000,
+};
 
 bool __MCFCRT_HeapInit(){
-	if(!InitializeCriticalSectionEx(&g_csHeapMutex, 0x1000u,
-#if __MCFCRT_REQUIRE_HEAPDBG_LEVEL(4)
-		0
-#else
-		CRITICAL_SECTION_NO_DEBUG_INFO
-#endif
-		))
-	{
-		return false;
-	}
-
 	// 启用 FLH，但是忽略任何错误。
 	ULONG ulMagic = 2;
 	HeapSetInformation(GetProcessHeap(), HeapCompatibilityInformation, &ulMagic, sizeof(ulMagic));
@@ -39,7 +33,6 @@ bool __MCFCRT_HeapInit(){
 	return true;
 }
 void __MCFCRT_HeapUninit(){
-	DeleteCriticalSection(&g_csHeapMutex);
 }
 
 unsigned char *__MCFCRT_HeapAlloc(size_t uSize, const void *pRetAddr){
@@ -60,7 +53,7 @@ unsigned char *__MCFCRT_HeapAlloc(size_t uSize, const void *pRetAddr){
 	for(;;){
 		unsigned char *pRet = nullptr;
 
-		EnterCriticalSection(&g_csHeapMutex);
+		_MCFCRT_LockMutex(&g_vHeapMutex, kMutexSpinCount);
 		{
 			unsigned char *const pRaw = __MCFCRT_ReallyAlloc(uRawSize);
 			if(pRaw){
@@ -85,7 +78,7 @@ unsigned char *__MCFCRT_HeapAlloc(size_t uSize, const void *pRetAddr){
 #if __MCFCRT_REQUIRE_HEAPDBG_LEVEL(3)
 	jFailed:
 #endif
-		LeaveCriticalSection(&g_csHeapMutex);
+		_MCFCRT_UnlockMutex(&g_vHeapMutex);
 
 		if(pRet){
 			if(__MCFCRT_OnHeapAlloc){
@@ -127,7 +120,7 @@ unsigned char *__MCFCRT_HeapRealloc(void *pBlock, size_t uSize, const void *pRet
 	size_t uOriginalSize;
 #		endif
 #	endif
-	EnterCriticalSection(&g_csHeapMutex);
+	_MCFCRT_LockMutex(&g_vHeapMutex, kMutexSpinCount);
 	{
 #	if __MCFCRT_REQUIRE_HEAPDBG_LEVEL(3)
 		pBlockInfo = __MCFCRT_HeapDbgValidateBlock(&pRawOriginal, pBlock, pRetAddr);
@@ -142,7 +135,7 @@ unsigned char *__MCFCRT_HeapRealloc(void *pBlock, size_t uSize, const void *pRet
 		__MCFCRT_HeapDbgValidateBlockBasic(&pRawOriginal, pBlock, pRetAddr);
 #	endif
 	}
-	LeaveCriticalSection(&g_csHeapMutex);
+	_MCFCRT_UnlockMutex(&g_vHeapMutex);
 #else
 	pRawOriginal = pBlock;
 #endif
@@ -150,7 +143,7 @@ unsigned char *__MCFCRT_HeapRealloc(void *pBlock, size_t uSize, const void *pRet
 	for(;;){
 		unsigned char *pRet = nullptr;
 
-		EnterCriticalSection(&g_csHeapMutex);
+		_MCFCRT_LockMutex(&g_vHeapMutex, kMutexSpinCount);
 		{
 			unsigned char *const pRaw = __MCFCRT_ReallyRealloc(pRawOriginal, uRawSize);
 			if(pRaw){
@@ -170,7 +163,7 @@ unsigned char *__MCFCRT_HeapRealloc(void *pBlock, size_t uSize, const void *pRet
 #endif
 			}
 		}
-		LeaveCriticalSection(&g_csHeapMutex);
+		_MCFCRT_UnlockMutex(&g_vHeapMutex);
 
 		if(pRet){
 			if(__MCFCRT_OnHeapRealloc){
@@ -194,7 +187,7 @@ void __MCFCRT_HeapFree(void *pBlock, const void *pRetAddr){
 	SetLastError(0xDEADBEEF);
 #endif
 
-	EnterCriticalSection(&g_csHeapMutex);
+	_MCFCRT_LockMutex(&g_vHeapMutex, kMutexSpinCount);
 	{
 		unsigned char *pRaw;
 #if __MCFCRT_REQUIRE_HEAPDBG_LEVEL(3)
@@ -213,7 +206,7 @@ void __MCFCRT_HeapFree(void *pBlock, const void *pRetAddr){
 #endif
 		__MCFCRT_ReallyFree(pRaw);
 	}
-	LeaveCriticalSection(&g_csHeapMutex);
+	_MCFCRT_UnlockMutex(&g_vHeapMutex);
 
 	if(__MCFCRT_OnHeapFree){
 		(*__MCFCRT_OnHeapFree)(pBlock, pRetAddr);

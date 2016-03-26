@@ -31,7 +31,7 @@ namespace Impl_ThreadLocal {
 	template<class ElementT, bool kCanBeStoredAsIntPtrT>
 	struct ElementManipulator {
 		static ::_MCFCRT_TlsCallback GetCleanupCallback() noexcept {
-			return [](std::intptr_t nValue){ delete reinterpret_cast<ElementT *>(nValue); };
+			return [](std::intptr_t *pnValue){ delete ExtractValue(*pnValue); };
 		}
 		static ElementT *ExtractValue(std::intptr_t &nValue){
 			return reinterpret_cast<ElementT *>(nValue);
@@ -89,7 +89,7 @@ public:
 		const auto nNewValue = Impl_ThreadLocal::ElementTraits<ElementT>::PackValue(std::move(vElement));
 		const auto pfnCleanupCallback = Impl_ThreadLocal::ElementTraits<ElementT>::GetCleanupCallback();
 		if(pfnCleanupCallback){
-			(*pfnCleanupCallback)(*pnValue);
+			(*pfnCleanupCallback)(pnValue);
 		}
 		*pnValue = nNewValue;
 	}

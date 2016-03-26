@@ -4,12 +4,17 @@
 
 #include "module.h"
 #include "mcfwin.h"
+#include "mutex.h"
 #include "mingw_hacks.h"
 #include "fenv.h"
 #include "thread.h"
 #include "static_ctors.h"
 #include "../ext/expect.h"
 #include <stdlib.h>
+
+enum {
+	kMutexSpinCount = 100,
+};
 
 typedef struct tagAtExitCallback {
 	void (*pfnProc)(intptr_t);
@@ -27,8 +32,8 @@ typedef struct tagAtExitCallbackBlock {
 	AtExitCallback aCallbacks[kAtExitCallbacksPerBlock];
 } AtExitCallbackBlock;
 
-static SRWLOCK               g_srwlAtExitMutex  = SRWLOCK_INIT;
-static AtExitCallbackBlock * g_pAtExitLast      = nullptr;
+static _MCFCRT_Mutex           g_vAtExitMutex   = 0;
+static AtExitCallbackBlock *   g_pAtExitLast    = nullptr;
 
 static void __MCFCRT_PumpAtEndModule(){
 	// ISO C++
@@ -43,16 +48,16 @@ static void __MCFCRT_PumpAtEndModule(){
 	for(;;){
 		AtExitCallbackBlock *pBlock;
 
-		AcquireSRWLockExclusive(&g_srwlAtExitMutex);
+		_MCFCRT_LockMutex(&g_vAtExitMutex, kMutexSpinCount);
 		{
 			pBlock = g_pAtExitLast;
 			if(!pBlock){
-				ReleaseSRWLockExclusive(&g_srwlAtExitMutex);
+				_MCFCRT_UnlockMutex(&g_vAtExitMutex);
 				break;
 			}
 			g_pAtExitLast = pBlock->pPrev;
 		}
-		ReleaseSRWLockExclusive(&g_srwlAtExitMutex);
+		_MCFCRT_UnlockMutex(&g_vAtExitMutex);
 
 		for(size_t i = pBlock->uSize; i != 0; --i){
 			const AtExitCallback *const pCur = pBlock->aCallbacks + i - 1;
@@ -112,11 +117,11 @@ void __MCFCRT_EndModule(){
 bool _MCFCRT_AtEndModule(void (*pfnProc)(intptr_t), intptr_t nContext){
 	AtExitCallbackBlock *pBlock;
 
-	AcquireSRWLockExclusive(&g_srwlAtExitMutex);
+	_MCFCRT_LockMutex(&g_vAtExitMutex, kMutexSpinCount);
 	{
 		pBlock = g_pAtExitLast;
 		if(!pBlock || (pBlock->uSize >= kAtExitCallbacksPerBlock)){
-			ReleaseSRWLockExclusive(&g_srwlAtExitMutex);
+			_MCFCRT_UnlockMutex(&g_vAtExitMutex);
 			{
 				pBlock = malloc(sizeof(AtExitCallbackBlock));
 				if(!pBlock){
@@ -125,7 +130,7 @@ bool _MCFCRT_AtEndModule(void (*pfnProc)(intptr_t), intptr_t nContext){
 				}
 				pBlock->uSize = 0;
 			}
-			AcquireSRWLockExclusive(&g_srwlAtExitMutex);
+			_MCFCRT_LockMutex(&g_vAtExitMutex, kMutexSpinCount);
 
 			pBlock->pPrev = g_pAtExitLast;
 			g_pAtExitLast = pBlock;
@@ -135,7 +140,7 @@ bool _MCFCRT_AtEndModule(void (*pfnProc)(intptr_t), intptr_t nContext){
 		pCur->pfnProc  = pfnProc;
 		pCur->nContext = nContext;
 	}
-	ReleaseSRWLockExclusive(&g_srwlAtExitMutex);
+	_MCFCRT_UnlockMutex(&g_vAtExitMutex);
 	return true;
 }
 

@@ -14,7 +14,7 @@ extern void __MCFCRT_ThreadEnvUninit(void) _MCFCRT_NOEXCEPT;
 
 extern void __MCFCRT_TlsThreadCleanup() _MCFCRT_NOEXCEPT;
 
-typedef void (*_MCFCRT_TlsCallback)(_MCFCRT_STD intptr_t);
+typedef void (*_MCFCRT_TlsCallback)(_MCFCRT_STD intptr_t *__pnValue);
 
 // 失败返回 nullptr。__pfnCallback 在该 TLS 被注销或线程退出的时候被调用。
 extern void *_MCFCRT_TlsAllocKey(_MCFCRT_TlsCallback __pfnCallback) _MCFCRT_NOEXCEPT;
@@ -27,8 +27,8 @@ extern bool _MCFCRT_TlsRequire(void *__pTlsKey, _MCFCRT_STD intptr_t **restrict 
 
 extern int _MCFCRT_AtThreadExit(_MCFCRT_TlsCallback __pfnProc, _MCFCRT_STD intptr_t __nContext);
 
-typedef unsigned long (*__attribute__((__stdcall__)) _MCFCRT_NativeThreadProc)(void *);
-typedef unsigned (*_MCFCRT_ThreadProc)(_MCFCRT_STD intptr_t);
+typedef unsigned long (*__attribute__((__stdcall__)) _MCFCRT_NativeThreadProc)(void *__pParam);
+typedef unsigned (*_MCFCRT_ThreadProc)(_MCFCRT_STD intptr_t __nParam);
 
 extern void *_MCFCRT_CreateNativeThread(_MCFCRT_NativeThreadProc __pfnThreadProc, void *__pParam, bool __bSuspended, _MCFCRT_STD uintptr_t *restrict __puThreadId) _MCFCRT_NOEXCEPT;
 extern void *_MCFCRT_CreateThread(_MCFCRT_ThreadProc __pfnThreadProc, _MCFCRT_STD intptr_t __nParam, bool __bSuspended, _MCFCRT_STD uintptr_t *restrict __puThreadId) _MCFCRT_NOEXCEPT;

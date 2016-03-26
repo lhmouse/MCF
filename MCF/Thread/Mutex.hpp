@@ -5,6 +5,7 @@
 #ifndef MCF_THREAD_MUTEX_HPP_
 #define MCF_THREAD_MUTEX_HPP_
 
+#include "../../MCFCRT/env/mutex.h"
 #include "../Utilities/Noncopyable.hpp"
 #include "../Utilities/Assert.hpp"
 #include "_UniqueLockTemplate.hpp"
@@ -30,12 +31,12 @@ public:
 	using UniqueLock = Impl_UniqueLockTemplate::UniqueLockTemplate<Mutex>;
 
 private:
+	::_MCFCRT_Mutex x_vMutex;
 	Atomic<std::size_t> x_uSpinCount;
-	Atomic<std::size_t> x_uControl;
 
 public:
 	explicit constexpr Mutex(std::size_t uSpinCount = kDefaultSpinCount) noexcept
-		: x_uSpinCount(uSpinCount), x_uControl(0)
+		: x_vMutex(0), x_uSpinCount(uSpinCount)
 	{
 	}
 
@@ -47,9 +48,15 @@ public:
 		x_uSpinCount.Store(uSpinCount, kAtomicRelaxed);
 	}
 
-	bool Try(std::uint64_t u64UntilFastMonoClock = 0) noexcept;
-	void Lock() noexcept;
-	void Unlock() noexcept;
+	bool Try(std::uint64_t u64UntilFastMonoClock = 0) noexcept {
+		return ::_MCFCRT_TryMutex(&x_vMutex, GetSpinCount(), u64UntilFastMonoClock);
+	}
+	void Lock() noexcept {
+		::_MCFCRT_LockMutex(&x_vMutex, GetSpinCount());
+	}
+	void Unlock() noexcept {
+		::_MCFCRT_UnlockMutex(&x_vMutex);
+	}
 
 	UniqueLock TryGetLock(std::uint64_t u64UntilFastMonoClock = 0) noexcept {
 		UniqueLock vLock(*this, false);

@@ -2,16 +2,37 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2013 - 2016, LH_Mouse. All wrongs reserved.
 
+#include "mutex.h"
+#include "clocks.h"
+#include "../ext/assert.h"
+#include <winternl.h>
+#include <ntstatus.h>
+
+extern __attribute__((__dllimport__, __stdcall__))
+NTSTATUS NtWaitForKeyedEvent(HANDLE hKeyedEvent, void *pKey, BOOLEAN bAlertable, const LARGE_INTEGER *pliTimeout);
+extern __attribute__((__dllimport__, __stdcall__))
+NTSTATUS NtReleaseKeyedEvent(HANDLE hKeyedEvent, void *pKey, BOOLEAN bAlertable, const LARGE_INTEGER *pliTimeout);
+
+bool _MCFCRT_TryMutex(_MCFCRT_Mutex *pMutex, size_t uMaxSpinCount, uint64_t u64UntilFastMonoClock){
+	//
+}
+void _MCFCRT_LockMutex(_MCFCRT_Mutex *pMutex, size_t uMaxSpinCount){
+	//
+}
+void _MCFCRT_UnlockMutex(_MCFCRT_Mutex *pMutex){
+	//
+}
+
+/*
+// 这个文件是 MCF 的一部分。
+// 有关具体授权说明，请参阅 MCFLicense.txt。
+// Copyleft 2013 - 2016, LH_Mouse. All wrongs reserved.
+
 #include "../StdMCF.hpp"
 #include "Mutex.hpp"
 #include "../Core/Clocks.hpp"
 #include <winternl.h>
 #include <ntstatus.h>
-
-extern "C" __attribute__((__dllimport__, __stdcall__))
-NTSTATUS NtWaitForKeyedEvent(HANDLE hKeyedEvent, void *pKey, BOOLEAN bAlertable, const LARGE_INTEGER *pliTimeout) noexcept;
-extern "C" __attribute__((__dllimport__, __stdcall__))
-NTSTATUS NtReleaseKeyedEvent(HANDLE hKeyedEvent, void *pKey, BOOLEAN bAlertable, const LARGE_INTEGER *pliTimeout) noexcept;
 
 namespace MCF {
 
@@ -145,3 +166,5 @@ jCasFailure:
 }
 
 }
+
+*/

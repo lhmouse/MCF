@@ -7,8 +7,8 @@
 
 #include "../Utilities/Assert.hpp"
 #include "../Utilities/AddressOf.hpp"
-#include "../Utilities/Invoke.hpp"
 #include "../Utilities/DeclVal.hpp"
+#include "_MagicalInvoker.hpp"
 #include "_ForwardedParam.hpp"
 #include <type_traits>
 #include <utility>
@@ -34,12 +34,10 @@ public:
 	template<typename FuncT,
 		std::enable_if_t<
 			!std::is_base_of<FunctionView, std::decay_t<FuncT>>::value &&
-				std::is_convertible<decltype(DeclVal<FuncT>()(DeclVal<ParamsT>()...)), RetT>::value || std::is_void<RetT>::value,
+				(std::is_convertible<decltype(DeclVal<FuncT>()(DeclVal<ParamsT>()...)), RetT>::value || std::is_void<RetT>::value),
 			int> = 0>
 	FunctionView(const FuncT &vFunc) noexcept
-		: x_pfnLambda([](const void *pContext, Impl_ForwardedParam::ForwardedParam<ParamsT> ...vParams){
-			return Invoke(*static_cast<const FuncT *>(pContext), std::forward<ParamsT>(vParams)...);
-		})
+		: x_pfnLambda([](auto pContext, auto ...vParams){ return Impl_MagicalInvoker::MagicalInvoker<RetT>()(static_cast<const FuncT *>(pContext)[0], std::forward<ParamsT>(vParams)...); })
 		, x_pContext(AddressOf(vFunc))
 	{
 	}

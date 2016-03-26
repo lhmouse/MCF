@@ -8,8 +8,8 @@
 #include "../Core/Exception.hpp"
 #include "../SmartPointers/IntrusivePtr.hpp"
 #include "../Utilities/Assert.hpp"
-#include "../Utilities/Invoke.hpp"
 #include "../Utilities/DeclVal.hpp"
+#include "_MagicalInvoker.hpp"
 #include "_ForwardedParam.hpp"
 #include <type_traits>
 #include <utility>
@@ -28,21 +28,6 @@ namespace Impl_Function {
 		[[noreturn]]
 		IntrusivePtr<FuncT> operator()(const FuncT & /* vFunc */) const {
 			MCF_THROW(Exception, ERROR_CALL_NOT_IMPLEMENTED, Rcntws::View(L"Function: 该函数对象不允许复制构造。"));
-		}
-	};
-
-	template<bool kReturnsVoidT>
-	struct DiscardedValueExpressionChecker {
-		template<typename FuncT, typename ...ParamsT>
-		decltype(auto) operator()(FuncT &&vFunc, ParamsT &&...vParams){
-			return Invoke(std::forward<FuncT>(vFunc), std::forward<ParamsT>(vParams)...);
-		}
-	};
-	template<>
-	struct DiscardedValueExpressionChecker<true> {
-		template<typename FuncT, typename ...ParamsT>
-		void operator()(FuncT &&vFunc, ParamsT &&...vParams){
-			Invoke(std::forward<FuncT>(vFunc), std::forward<ParamsT>(vParams)...);
 		}
 	};
 
@@ -69,7 +54,7 @@ namespace Impl_Function {
 
 	public:
 		RetT Dispatch(Impl_ForwardedParam::ForwardedParam<ParamsT> ...vParams) const override {
-			return DiscardedValueExpressionChecker<std::is_void<RetT>::value>()(x_vFunc, std::forward<ParamsT>(vParams)...);
+			return Impl_MagicalInvoker::MagicalInvoker<RetT>()(x_vFunc, std::forward<ParamsT>(vParams)...);
 		}
 		IntrusivePtr<FunctorBase<RetT, ParamsT...>> Fork() const override {
 			return std::conditional_t<std::is_copy_constructible<FuncT>::value, FunctorCopier, DummyFunctorCopier>()(*this);

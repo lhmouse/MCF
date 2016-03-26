@@ -110,8 +110,8 @@ bool _MCFCRT_TryMutex(_MCFCRT_Mutex *pMutex, size_t uMaxSpinCount, uint64_t u64U
 			return true;
 		}
 
-		// 如果有正在等待互斥体的线程少于或等于一个，尝试一定次数的自旋。
-		if(uWaitingThreads <= 1){
+		// 如果没有正在内核态等待互斥体的线程，尝试一定次数的自旋。
+		if(uWaitingThreads == 0){
 			for(size_t i = 0; _MCFCRT_EXPECT(i < uMaxSpinCount); ++i){
 				__builtin_ia32_pause();
 
@@ -154,8 +154,8 @@ void _MCFCRT_LockMutex(_MCFCRT_Mutex *pMutex, size_t uMaxSpinCount){
 			return;
 		}
 
-		// 如果有正在等待互斥体的线程少于或等于一个，尝试一定次数的自旋。
-		if(uWaitingThreads <= 1){
+		// 如果没有正在内核态等待互斥体的线程，尝试一定次数的自旋。
+		if(uWaitingThreads == 0){
 			for(size_t i = 0; _MCFCRT_EXPECT(i < uMaxSpinCount); ++i){
 				__builtin_ia32_pause();
 

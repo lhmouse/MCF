@@ -51,7 +51,7 @@ static inline void SignalConditionVariable(_MCFCRT_ConditionVariable *pCondition
 bool _MCFCRT_WaitForConditionVariable(_MCFCRT_ConditionVariable *pConditionVariable,
 	_MCFCRT_ConditionVariableUnlockCallback pfnUnlockCallback, _MCFCRT_ConditionVariableRelockCallback pfnRelockCallback, intptr_t nContext, uint64_t u64UntilFastMonoClock)
 {
-	bool bSignaled = true;
+	bool bSignaled = false;
 	const intptr_t nLocked = (*pfnUnlockCallback)(nContext);
 
 	if(u64UntilFastMonoClock != 0){
@@ -68,8 +68,8 @@ bool _MCFCRT_WaitForConditionVariable(_MCFCRT_ConditionVariable *pConditionVaria
 				liTimeout.QuadPart = -n64Delta100Nanosec;
 			}
 		}
-		if(!WaitForConditionVariable(pConditionVariable, &liTimeout)){
-			bSignaled = false;
+		if(WaitForConditionVariable(pConditionVariable, &liTimeout)){
+			bSignaled = true;
 		}
 	}
 

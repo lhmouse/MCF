@@ -7,6 +7,7 @@
 
 #include "../../MCFCRT/env/condition_variable.h"
 #include "../Utilities/Noncopyable.hpp"
+#include "../Utilities/Assert.hpp"
 #include "_UniqueLockTemplate.hpp"
 #include <cstddef>
 #include <type_traits>
@@ -29,7 +30,9 @@ public:
 		return ::_MCFCRT_WaitForConditionVariable(&x_vConditionVariable,
 			[](std::intptr_t nContext){
 				const auto pLock = reinterpret_cast<Impl_UniqueLockTemplate::UniqueLockTemplateBase *>(nContext);
-				return static_cast<std::intptr_t>(pLock->Y_UnlockAll());
+				const auto uLockCount = pLock->Y_UnlockAll();
+				MCF_ASSERT(uLockCount != 0);
+				return static_cast<std::intptr_t>(uLockCount);
 			},
 			[](std::intptr_t nContext, std::intptr_t nUnocked){
 				const auto pLock = reinterpret_cast<Impl_UniqueLockTemplate::UniqueLockTemplateBase *>(nContext);
@@ -41,7 +44,9 @@ public:
 		::_MCFCRT_WaitForConditionVariableForever(&x_vConditionVariable,
 			[](std::intptr_t nContext){
 				const auto pLock = reinterpret_cast<Impl_UniqueLockTemplate::UniqueLockTemplateBase *>(nContext);
-				return static_cast<std::intptr_t>(pLock->Y_UnlockAll());
+				const auto uLockCount = pLock->Y_UnlockAll();
+				MCF_ASSERT(uLockCount != 0);
+				return static_cast<std::intptr_t>(uLockCount);
 			},
 			[](std::intptr_t nContext, std::intptr_t nUnocked){
 				const auto pLock = reinterpret_cast<Impl_UniqueLockTemplate::UniqueLockTemplateBase *>(nContext);

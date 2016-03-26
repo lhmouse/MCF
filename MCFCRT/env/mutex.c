@@ -15,15 +15,6 @@ NTSTATUS NtWaitForKeyedEvent(HANDLE hKeyedEvent, void *pKey, BOOLEAN bAlertable,
 extern __attribute__((__dllimport__, __stdcall__))
 NTSTATUS NtReleaseKeyedEvent(HANDLE hKeyedEvent, void *pKey, BOOLEAN bAlertable, const LARGE_INTEGER *pliTimeout);
 
-static inline bool TrySubtract(uintptr_t *puRet, uintptr_t uOp1, uintptr_t uOp2){
-	if(uOp1 < uOp2){
-		*puRet = uOp1;
-		return false;
-	}
-	*puRet = uOp1 - uOp2;
-	return true;
-}
-
 #define FLAG_LOCKED     ((uintptr_t)1)
 #define FLAG_RESERVED   ((uintptr_t)2)
 #define FLAG_BIT_COUNT  2
@@ -37,20 +28,16 @@ static inline size_t TryMutexAndGetWaitingThreadCount(_MCFCRT_Mutex *pMutex){
 	do {
 		uNew = uOld | FLAG_LOCKED;
 		if(uNew == uOld){
-			// 已被其他线程锁定。
-			return uOld >> FLAG_BIT_COUNT;
+			goto jDontMissIt;
 		}
 	} while(!__atomic_compare_exchange_n(pMutex, &uOld, uNew, false, __ATOMIC_SEQ_CST, __ATOMIC_RELAXED));
-
 	return MUTEX_LOCKED;
+
+jDontMissIt:
+	// 已被其他线程锁定。
+	return uOld >> FLAG_BIT_COUNT;
 }
 static inline bool WaitForMutex(_MCFCRT_Mutex *pMutex, const LARGE_INTEGER *pliTimeout){
-	bool bSignalOne;
-	uintptr_t uOld, uNew;
-//	uOld = __atomic_load_n(pMutex, __ATOMIC_RELAXED);
-//	do {
-//		uNew = uOld + (1 << FLAG_BIT_COUNT);
-//	} while(!__atomic_compare_exchange_n(pMutex, &uOld, uNew, false, __ATOMIC_RELAXED, __ATOMIC_RELAXED));
 	__atomic_fetch_add(pMutex, (1 << FLAG_BIT_COUNT), __ATOMIC_RELAXED);
 
 	NTSTATUS lStatus = NtWaitForKeyedEvent(nullptr, (void *)pMutex, false, pliTimeout);
@@ -58,29 +45,38 @@ static inline bool WaitForMutex(_MCFCRT_Mutex *pMutex, const LARGE_INTEGER *pliT
 		_MCFCRT_ASSERT_MSG(false, L"NtWaitForKeyedEvent() 失败。");
 	}
 	if(lStatus == STATUS_TIMEOUT){
+		uintptr_t uOld, uNew;
 		uOld = __atomic_load_n(pMutex, __ATOMIC_RELAXED);
 		do {
-			bSignalOne = TrySubtract(&uNew, uOld, (1 << FLAG_BIT_COUNT));
-			if(!bSignalOne){
-				lStatus = NtWaitForKeyedEvent(nullptr, (void *)pMutex, false, nullptr);
-				if(!NT_SUCCESS(lStatus)){
-					_MCFCRT_ASSERT_MSG(false, L"NtWaitForKeyedEvent() 失败。");
-				}
-				return false;
+			if(uOld < (1 << FLAG_BIT_COUNT)){
+				goto jDontMissIt;
 			}
+			uNew = uOld - (1 << FLAG_BIT_COUNT);
 		} while(!__atomic_compare_exchange_n(pMutex, &uOld, uNew, false, __ATOMIC_RELAXED, __ATOMIC_RELAXED));
-
 		return false;
+
+	jDontMissIt:
+		lStatus = NtWaitForKeyedEvent(nullptr, (void *)pMutex, false, nullptr);
+		if(!NT_SUCCESS(lStatus)){
+			_MCFCRT_ASSERT_MSG(false, L"NtWaitForKeyedEvent() 失败。");
+		}
 	}
 	return true;
 }
 static inline void UnlockMutex(_MCFCRT_Mutex *pMutex){
 	bool bSignalOne;
+
 	uintptr_t uOld, uNew;
 	uOld = __atomic_load_n(pMutex, __ATOMIC_RELAXED);
 	do {
 		_MCFCRT_ASSERT_MSG(uOld & FLAG_LOCKED, L"互斥锁没有被任何线程锁定。");
-		bSignalOne = TrySubtract(&uNew, uOld & ~FLAG_LOCKED, (1 << FLAG_BIT_COUNT));
+		if(uOld < (1 << FLAG_BIT_COUNT)){
+			uNew = uOld & ~FLAG_LOCKED;
+			bSignalOne = false;
+		} else {
+			uNew = (uOld & ~FLAG_LOCKED) - (1 << FLAG_BIT_COUNT);
+			bSignalOne = true;
+		}
 	} while(!__atomic_compare_exchange_n(pMutex, &uOld, uNew, false, __ATOMIC_SEQ_CST, __ATOMIC_RELAXED));
 
 	if(bSignalOne){
@@ -97,6 +93,7 @@ bool _MCFCRT_TryMutex(_MCFCRT_Mutex *pMutex, size_t uMaxSpinCount, uint64_t u64U
 	if(_MCFCRT_EXPECT(uWaitingThreads == MUTEX_LOCKED)){
 		return true;
 	}
+
 	if(u64UntilFastMonoClock == 0){
 		return false;
 	}

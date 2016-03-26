@@ -106,7 +106,7 @@ bool _MCFCRT_TryMutex(_MCFCRT_Mutex *pMutex, size_t uMaxSpinCount, uint64_t u64U
 
 	for(;;){
 		uWaitingThreads = TryMutexAndGetWaitingThreadCount(pMutex);
-		if(_MCFCRT_EXPECT(uWaitingThreads == MUTEX_LOCKED)){
+		if(_MCFCRT_EXPECT_NOT(uWaitingThreads == MUTEX_LOCKED)){
 			return true;
 		}
 
@@ -116,7 +116,7 @@ bool _MCFCRT_TryMutex(_MCFCRT_Mutex *pMutex, size_t uMaxSpinCount, uint64_t u64U
 				__builtin_ia32_pause();
 
 				uWaitingThreads = TryMutexAndGetWaitingThreadCount(pMutex);
-				if(_MCFCRT_EXPECT(uWaitingThreads == MUTEX_LOCKED)){
+				if(_MCFCRT_EXPECT_NOT(uWaitingThreads == MUTEX_LOCKED)){
 					return true;
 				}
 			}
@@ -150,7 +150,7 @@ void _MCFCRT_LockMutex(_MCFCRT_Mutex *pMutex, size_t uMaxSpinCount){
 
 	for(;;){
 		uWaitingThreads = TryMutexAndGetWaitingThreadCount(pMutex);
-		if(_MCFCRT_EXPECT(uWaitingThreads == MUTEX_LOCKED)){
+		if(_MCFCRT_EXPECT_NOT(uWaitingThreads == MUTEX_LOCKED)){
 			return;
 		}
 
@@ -160,7 +160,7 @@ void _MCFCRT_LockMutex(_MCFCRT_Mutex *pMutex, size_t uMaxSpinCount){
 				__builtin_ia32_pause();
 
 				uWaitingThreads = TryMutexAndGetWaitingThreadCount(pMutex);
-				if(_MCFCRT_EXPECT(uWaitingThreads == MUTEX_LOCKED)){
+				if(_MCFCRT_EXPECT_NOT(uWaitingThreads == MUTEX_LOCKED)){
 					return;
 				}
 			}

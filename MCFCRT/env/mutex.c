@@ -46,8 +46,8 @@ static inline size_t TryMutexAndGetWaitingThreadCount(_MCFCRT_Mutex *pMutex){
 	return MUTEX_LOCKED;
 }
 static inline bool WaitForMutex(_MCFCRT_Mutex *pMutex, const LARGE_INTEGER *pliTimeout){
-	uintptr_t uOld, uNew;
 	bool bSignalOne;
+	uintptr_t uOld, uNew;
 //	uOld = __atomic_load_n(pMutex, __ATOMIC_RELAXED);
 //	do {
 //		uNew = uOld;
@@ -77,13 +77,12 @@ static inline bool WaitForMutex(_MCFCRT_Mutex *pMutex, const LARGE_INTEGER *pliT
 	return true;
 }
 static inline void UnlockMutex(_MCFCRT_Mutex *pMutex){
+	bool bSignalOne;
 	uintptr_t uOld, uNew;
 	uOld = __atomic_load_n(pMutex, __ATOMIC_RELAXED);
-	bool bSignalOne;
 	do {
 		_MCFCRT_ASSERT_MSG(uOld & FLAG_LOCKED, L"互斥锁没有被任何线程锁定。");
-		bSignalOne = TrySubtract(&uNew, uOld, (1 << FLAG_BIT_COUNT));
-		uNew &= ~FLAG_LOCKED;
+		bSignalOne = TrySubtract(&uNew, uOld & ~FLAG_LOCKED, (1 << FLAG_BIT_COUNT));
 	} while(!__atomic_compare_exchange_n(pMutex, &uOld, uNew, false, __ATOMIC_SEQ_CST, __ATOMIC_RELAXED));
 
 	if(bSignalOne){

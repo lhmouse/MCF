@@ -35,8 +35,7 @@ static inline size_t TryMutexAndGetWaitingThreadCount(_MCFCRT_Mutex *pMutex){
 	uintptr_t uOld, uNew;
 	uOld = __atomic_load_n(pMutex, __ATOMIC_RELAXED);
 	do {
-		uNew = uOld;
-		uNew |= FLAG_LOCKED;
+		uNew = uOld | FLAG_LOCKED;
 		if(uNew == uOld){
 			// 已被其他线程锁定。
 			return uOld >> FLAG_BIT_COUNT;
@@ -50,8 +49,7 @@ static inline bool WaitForMutex(_MCFCRT_Mutex *pMutex, const LARGE_INTEGER *pliT
 	uintptr_t uOld, uNew;
 //	uOld = __atomic_load_n(pMutex, __ATOMIC_RELAXED);
 //	do {
-//		uNew = uOld;
-//		uNew += (1 << FLAG_BIT_COUNT);
+//		uNew = uOld + (1 << FLAG_BIT_COUNT);
 //	} while(!__atomic_compare_exchange_n(pMutex, &uOld, uNew, false, __ATOMIC_RELAXED, __ATOMIC_RELAXED));
 	__atomic_fetch_add(pMutex, (1 << FLAG_BIT_COUNT), __ATOMIC_RELAXED);
 

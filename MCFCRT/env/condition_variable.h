@@ -11,8 +11,8 @@ __MCFCRT_EXTERN_C_BEGIN
 
 typedef volatile _MCFCRT_STD uintptr_t _MCFCRT_ConditionVariable;
 
-static_assert(sizeof(_MCFCRT_ConditionVariable) >= 4,  "Oops.");
-static_assert(alignof(_MCFCRT_ConditionVariable) >= 4, "Oops.");
+static_assert(sizeof (_MCFCRT_ConditionVariable) >= 4, "Oops!");
+static_assert(alignof(_MCFCRT_ConditionVariable) >= 4, "Oops!");
 
 typedef _MCFCRT_STD intptr_t (*_MCFCRT_ConditionVariableUnlockCallback)(_MCFCRT_STD intptr_t __nContext);
 typedef void (*_MCFCRT_ConditionVariableRelockCallback)(_MCFCRT_STD intptr_t __nContext, _MCFCRT_STD intptr_t __nUnlocked);

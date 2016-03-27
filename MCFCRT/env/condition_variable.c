@@ -92,16 +92,13 @@ size_t _MCFCRT_SignalConditionVariable(_MCFCRT_ConditionVariable *pConditionVari
 
 	uintptr_t uOld, uNew;
 	uOld = __atomic_load_n(pConditionVariable, __ATOMIC_RELAXED);
-	for(;;){
+	do {
 		uCount = uOld;
 		if(uCount > uMaxCountToWakeUp){
 			uCount = uMaxCountToWakeUp;
 		}
 		uNew = uOld - uCount;
-		if(__atomic_compare_exchange_n(pConditionVariable, &uOld, uNew, false, __ATOMIC_RELAXED, __ATOMIC_RELAXED)){
-			break;
-		}
-	}
+	} while(!__atomic_compare_exchange_n(pConditionVariable, &uOld, uNew, false, __ATOMIC_RELAXED, __ATOMIC_RELAXED));
 
 	SignalConditionVariable(pConditionVariable, uCount);
 	return uCount;

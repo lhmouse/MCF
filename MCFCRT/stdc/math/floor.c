@@ -19,9 +19,9 @@ float floorf(float x){
 		"fldcw word ptr[%1] \n"
 		"frndint \n"
 		"mov word ptr[%1], ax \n"
-		__FLT_RET_ST("%2")
+		__MCFCRT_FLT_RET_ST("%2")
 		"fldcw word ptr[%1] \n"
-		: __FLT_RET_CONS(ret), "=m"(temp)
+		: __MCFCRT_FLT_RET_CONS(ret), "=m"(temp)
 		: "m"(x)
 		: "ax", "cx"
 	);
@@ -42,9 +42,9 @@ double floor(double x){
 		"fldcw word ptr[%1] \n"
 		"frndint \n"
 		"mov word ptr[%1], ax \n"
-		__DBL_RET_ST("%2")
+		__MCFCRT_DBL_RET_ST("%2")
 		"fldcw word ptr[%1] \n"
-		: __DBL_RET_CONS(ret), "=m"(temp)
+		: __MCFCRT_DBL_RET_CONS(ret), "=m"(temp)
 		: "m"(x)
 		: "ax", "cx"
 	);
@@ -65,9 +65,9 @@ long double floorl(long double x){
 		"fldcw word ptr[%1] \n"
 		"frndint \n"
 		"mov word ptr[%1], ax \n"
-		__LDBL_RET_ST("%2")
+		__MCFCRT_LDBL_RET_ST("%2")
 		"fldcw word ptr[%1] \n"
-		: __LDBL_RET_CONS(ret), "=m"(temp)
+		: __MCFCRT_LDBL_RET_CONS(ret), "=m"(temp)
 		: "m"(x)
 		: "ax", "cx"
 	);

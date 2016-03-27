@@ -12,8 +12,8 @@ float scalblnf(float x, long n){
 		"fld dword ptr[%1] \n"
 		"fscale \n"
 		"fstp st(1) \n"
-		__FLT_RET_ST("%1")
-		: __FLT_RET_CONS(ret)
+		__MCFCRT_FLT_RET_ST("%1")
+		: __MCFCRT_FLT_RET_CONS(ret)
 		: "m"(x), "m"(n)
 	);
 	return ret;
@@ -26,8 +26,8 @@ double scalbln(double x, long n){
 		"fld qword ptr[%1] \n"
 		"fscale \n"
 		"fstp st(1) \n"
-		__DBL_RET_ST("%1")
-		: __DBL_RET_CONS(ret)
+		__MCFCRT_DBL_RET_ST("%1")
+		: __MCFCRT_DBL_RET_CONS(ret)
 		: "m"(x), "m"(n)
 	);
 	return ret;
@@ -40,8 +40,8 @@ long double scalblnl(long double x, long n){
 		"fld tbyte ptr[%1] \n"
 		"fscale \n"
 		"fstp st(1) \n"
-		__LDBL_RET_ST("%1")
-		: __LDBL_RET_CONS(ret)
+		__MCFCRT_LDBL_RET_ST("%1")
+		: __MCFCRT_LDBL_RET_CONS(ret)
 		: "m"(x), "m"(n)
 	);
 	return ret;

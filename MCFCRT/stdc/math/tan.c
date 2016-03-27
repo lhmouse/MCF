@@ -25,8 +25,8 @@ float tanf(float x){
 		"	fptan \n"
 		"1: \n"
 		"fstp st \n"
-		__FLT_RET_ST("%1")
-		: __FLT_RET_CONS(ret)
+		__MCFCRT_FLT_RET_ST("%1")
+		: __MCFCRT_FLT_RET_CONS(ret)
 		: "m"(x), "m"(__MCFCRT_kMath_Pos_1p61_Pi)
 		: "ax"
 	);
@@ -52,8 +52,8 @@ double tan(double x){
 		"	fptan \n"
 		"1: \n"
 		"fstp st \n"
-		__DBL_RET_ST("%1")
-		: __DBL_RET_CONS(ret)
+		__MCFCRT_DBL_RET_ST("%1")
+		: __MCFCRT_DBL_RET_CONS(ret)
 		: "m"(x), "m"(__MCFCRT_kMath_Pos_1p61_Pi)
 		: "ax"
 	);
@@ -79,8 +79,8 @@ long double tanl(long double x){
 		"	fptan \n"
 		"1: \n"
 		"fstp st \n"
-		__LDBL_RET_ST("%1")
-		: __LDBL_RET_CONS(ret)
+		__MCFCRT_LDBL_RET_ST("%1")
+		: __MCFCRT_LDBL_RET_CONS(ret)
 		: "m"(x), "m"(__MCFCRT_kMath_Pos_1p61_Pi)
 		: "ax"
 	);

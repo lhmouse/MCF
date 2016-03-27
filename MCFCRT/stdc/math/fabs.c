@@ -23,7 +23,7 @@ float fabsf(float x){
 		"mov dword ptr[%1], eax \n"
 		"fld dword ptr[%1] \n"
 #endif
-		: __FLT_RET_CONS(ret)
+		: __MCFCRT_FLT_RET_CONS(ret)
 #ifdef _WIN64
 		: "Yz"(x), "m"(kFloatMask)
 #else
@@ -46,7 +46,7 @@ double fabs(double x){
 		"mov dword ptr[%1 + 4], eax \n"
 		"fld qword ptr[%1] \n"
 #endif
-		: __DBL_RET_CONS(ret)
+		: __MCFCRT_DBL_RET_CONS(ret)
 #ifdef _WIN64
 		: "Yz"(x), "m"(kDoubleMask)
 #else
@@ -71,7 +71,7 @@ long double fabsl(long double x){
 		"mov word ptr[%1 + 8], dx \n"
 		"fld tbyte ptr[%1] \n"
 #endif
-		: __LDBL_RET_CONS(ret)
+		: __MCFCRT_LDBL_RET_CONS(ret)
 		: "m"(x)
 		: "dx"
 	);

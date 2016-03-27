@@ -29,8 +29,8 @@ float log1pf(float x){
 		"faddp st(1), st \n"
 		"fyl2x \n"
 		"2: \n"
-		__FLT_RET_ST("%1")
-		: __FLT_RET_CONS(ret)
+		__MCFCRT_FLT_RET_ST("%1")
+		: __MCFCRT_FLT_RET_CONS(ret)
 		: "m"(x), "m"(kNegThreshould), "m"(kPosThreshould)
 		: "ax"
 	);
@@ -57,8 +57,8 @@ double log1p(double x){
 		"faddp st(1), st \n"
 		"fyl2x \n"
 		"2: \n"
-		__DBL_RET_ST("%1")
-		: __DBL_RET_CONS(ret)
+		__MCFCRT_DBL_RET_ST("%1")
+		: __MCFCRT_DBL_RET_CONS(ret)
 		: "m"(x), "m"(kNegThreshould), "m"(kPosThreshould)
 		: "ax"
 	);
@@ -85,8 +85,8 @@ long double log1pl(long double x){
 		"faddp st(1), st \n"
 		"fyl2x \n"
 		"2: \n"
-		__LDBL_RET_ST("%1")
-		: __LDBL_RET_CONS(ret)
+		__MCFCRT_LDBL_RET_ST("%1")
+		: __MCFCRT_LDBL_RET_CONS(ret)
 		: "m"(x), "m"(kNegThreshould), "m"(kPosThreshould)
 		: "ax"
 	);

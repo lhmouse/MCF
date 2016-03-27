@@ -15,8 +15,8 @@ float asinf(float x){
 		"fsubrp st(1), st \n"
 		"fsqrt \n"
 		"fpatan \n"
-		__FLT_RET_ST("%1")
-		: __FLT_RET_CONS(ret)
+		__MCFCRT_FLT_RET_ST("%1")
+		: __MCFCRT_FLT_RET_CONS(ret)
 		: "m"(x)
 	);
 	return ret;
@@ -32,8 +32,8 @@ double asin(double x){
 		"fsubrp st(1), st \n"
 		"fsqrt \n"
 		"fpatan \n"
-		__DBL_RET_ST("%1")
-		: __DBL_RET_CONS(ret)
+		__MCFCRT_DBL_RET_ST("%1")
+		: __MCFCRT_DBL_RET_CONS(ret)
 		: "m"(x)
 	);
 	return ret;
@@ -49,8 +49,8 @@ long double asinl(long double x){
 		"fsubrp st(1), st \n"
 		"fsqrt \n"
 		"fpatan \n"
-		__LDBL_RET_ST("%1")
-		: __LDBL_RET_CONS(ret)
+		__MCFCRT_LDBL_RET_ST("%1")
+		: __MCFCRT_LDBL_RET_CONS(ret)
 		: "m"(x)
 	);
 	return ret;

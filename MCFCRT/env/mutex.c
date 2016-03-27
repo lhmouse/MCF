@@ -3,7 +3,7 @@
 // Copyleft 2013 - 2016, LH_Mouse. All wrongs reserved.
 
 #include "mutex.h"
-#include "clocks.h"
+#include "_nt_timeout.h"
 #include "../ext/assert.h"
 #include "../ext/expect.h"
 #include <winternl.h>
@@ -13,6 +13,33 @@ extern __attribute__((__dllimport__, __stdcall__))
 NTSTATUS NtWaitForKeyedEvent(HANDLE hKeyedEvent, void *pKey, BOOLEAN bAlertable, const LARGE_INTEGER *pliTimeout);
 extern __attribute__((__dllimport__, __stdcall__))
 NTSTATUS NtReleaseKeyedEvent(HANDLE hKeyedEvent, void *pKey, BOOLEAN bAlertable, const LARGE_INTEGER *pliTimeout);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 #define FLAG_LOCKED     ((uintptr_t)1)
 #define FLAG_RESERVED   ((uintptr_t)2)
@@ -117,18 +144,7 @@ bool _MCFCRT_TryMutex(_MCFCRT_Mutex *pMutex, size_t uMaxSpinCount, uint64_t u64U
 
 		// 陷入内核同步。
 		LARGE_INTEGER liTimeout;
-		const uint64_t u64Now = _MCFCRT_GetFastMonoClock();
-		if(u64Now >= u64UntilFastMonoClock){
-			liTimeout.QuadPart = 0;
-		} else {
-			const uint64_t u64DeltaMillisec = u64UntilFastMonoClock - u64Now;
-			const int64_t n64Delta100Nanosec = (int64_t)(u64DeltaMillisec * 10000);
-			if((uint64_t)(n64Delta100Nanosec / 10000) != u64DeltaMillisec){
-				liTimeout.QuadPart = INT64_MIN;
-			} else {
-				liTimeout.QuadPart = -n64Delta100Nanosec;
-			}
-		}
+		__MCF_CRT_InitializeNtTimeout(&liTimeout, u64UntilFastMonoClock);
 		if(!WaitForMutex(pMutex, &liTimeout)){
 			return false;
 		}

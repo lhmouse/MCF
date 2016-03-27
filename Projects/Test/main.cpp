@@ -6,7 +6,7 @@
 #include <MCF/Thread/Thread.hpp>
 
 extern "C" unsigned _MCFCRT_Main(){
-#if 0
+#if 1
 	volatile unsigned val = 0;
 	MCF::Mutex m(100);
 	MCF::Array<MCF::Thread, 100> threads;

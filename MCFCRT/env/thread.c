@@ -10,7 +10,7 @@
 #include "bail.h"
 #include "mingw_hacks.h"
 #include "eh_top.h"
-#include "clocks.h"
+#include "_nt_timeout.h"
 #include "../ext/assert.h"
 #include <stdlib.h>
 #include <winternl.h>
@@ -407,18 +407,7 @@ uintptr_t _MCFCRT_GetCurrentThreadId(){
 
 void _MCFCRT_Sleep(uint64_t u64UntilFastMonoClock){
 	LARGE_INTEGER liTimeout;
-	const uint64_t u64Now = _MCFCRT_GetFastMonoClock();
-	if(u64Now >= u64UntilFastMonoClock){
-		liTimeout.QuadPart = 0;
-	} else {
-		const uint64_t u64DeltaMillisec = u64UntilFastMonoClock - u64Now;
-		const int64_t n64Delta100Nanosec = (int64_t)(u64DeltaMillisec * 10000);
-		if((uint64_t)(n64Delta100Nanosec / 10000) != u64DeltaMillisec){
-			liTimeout.QuadPart = INT64_MIN;
-		} else {
-			liTimeout.QuadPart = -n64Delta100Nanosec;
-		}
-	}
+	__MCF_CRT_InitializeNtTimeout(&liTimeout, u64UntilFastMonoClock);
 	const NTSTATUS lStatus = NtDelayExecution(false, &liTimeout);
 	if(!NT_SUCCESS(lStatus)){
 		_MCFCRT_ASSERT_MSG(false, L"NtDelayExecution() 失败。");
@@ -426,18 +415,7 @@ void _MCFCRT_Sleep(uint64_t u64UntilFastMonoClock){
 }
 bool _MCFCRT_AlertableSleep(uint64_t u64UntilFastMonoClock){
 	LARGE_INTEGER liTimeout;
-	const uint64_t u64Now = _MCFCRT_GetFastMonoClock();
-	if(u64Now >= u64UntilFastMonoClock){
-		liTimeout.QuadPart = 0;
-	} else {
-		const uint64_t u64DeltaMillisec = u64UntilFastMonoClock - u64Now;
-		const int64_t n64Delta100Nanosec = (int64_t)(u64DeltaMillisec * 10000);
-		if((uint64_t)(n64Delta100Nanosec / 10000) != u64DeltaMillisec){
-			liTimeout.QuadPart = INT64_MIN;
-		} else {
-			liTimeout.QuadPart = -n64Delta100Nanosec;
-		}
-	}
+	__MCF_CRT_InitializeNtTimeout(&liTimeout, u64UntilFastMonoClock);
 	const NTSTATUS lStatus = NtDelayExecution(true, &liTimeout);
 	if(!NT_SUCCESS(lStatus)){
 		_MCFCRT_ASSERT_MSG(false, L"NtDelayExecution() 失败。");
@@ -481,19 +459,7 @@ long _MCFCRT_ResumeThread(void *hThread){
 
 bool _MCFCRT_WaitForThread(void *hThread, _MCFCRT_STD uint64_t u64UntilFastMonoClock){
 	LARGE_INTEGER liTimeout;
-	liTimeout.QuadPart = 0;
-	if(u64UntilFastMonoClock != 0){
-		const uint64_t u64Now = _MCFCRT_GetFastMonoClock();
-		if(u64Now < u64UntilFastMonoClock){
-			const uint64_t u64DeltaMillisec = u64UntilFastMonoClock - u64Now;
-			const int64_t n64Delta100Nanosec = (int64_t)(u64DeltaMillisec * 10000);
-			if((uint64_t)(n64Delta100Nanosec / 10000) != u64DeltaMillisec){
-				liTimeout.QuadPart = INT64_MIN;
-			} else {
-				liTimeout.QuadPart = -n64Delta100Nanosec;
-			}
-		}
-	}
+	__MCF_CRT_InitializeNtTimeout(&liTimeout, u64UntilFastMonoClock);
 	const NTSTATUS lStatus = NtWaitForSingleObject((HANDLE)hThread, false, &liTimeout);
 	if(!NT_SUCCESS(lStatus)){
 		_MCFCRT_ASSERT_MSG(false, L"NtWaitForSingleObject() 失败。");

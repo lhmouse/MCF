@@ -18,7 +18,6 @@
 #include <c++/bits/stl_iterator_base_funcs.h>
 
 #include "../MCFCRT/env/mcfwin.h"
-#include "../MCFCRT/ext/include.h"
 
 #undef NULL
 #define NULL    nullptr

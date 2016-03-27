@@ -9,6 +9,7 @@
 
 __MCFCRT_EXTERN_C_BEGIN
 
+// 初始化为零即可。
 typedef volatile _MCFCRT_STD uintptr_t _MCFCRT_Mutex;
 
 static_assert(sizeof (_MCFCRT_Mutex) >= 4, "Oops!");

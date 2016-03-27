@@ -6,7 +6,6 @@
 #include "clocks.h"
 #include "../ext/assert.h"
 #include "../ext/expect.h"
-#include <limits.h>
 #include <winternl.h>
 #include <ntstatus.h>
 

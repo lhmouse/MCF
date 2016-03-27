@@ -18,7 +18,7 @@ public:
 
 private:
 	Mutex x_vMutex;
-	Atomic<std::size_t> x_uLockingThreadId;
+	Atomic<std::uintptr_t> x_uLockingThreadId;
 	std::size_t x_uRecursionCount;
 
 public:
@@ -36,6 +36,9 @@ public:
 		x_vMutex.SetSpinCount(uSpinCount);
 	}
 
+	std::uintptr_t GetLockingThreadId() const noexcept {
+		return x_uLockingThreadId.Load(kAtomicRelaxed);
+	}
 	bool IsLockedByCurrentThread() const noexcept;
 
 	bool Try(std::uint64_t u64UntilFastMonoClock) noexcept;

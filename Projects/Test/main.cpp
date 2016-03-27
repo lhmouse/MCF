@@ -2,9 +2,11 @@
 #include <MCF/Core/Array.hpp>
 #include <MCF/Core/Clocks.hpp>
 #include <MCF/Thread/Mutex.hpp>
+#include <MCF/Thread/ConditionVariable.hpp>
 #include <MCF/Thread/Thread.hpp>
 
 extern "C" unsigned _MCFCRT_Main(){
+#if 0
 	volatile unsigned val = 0;
 	MCF::Mutex m(100);
 	MCF::Array<MCF::Thread, 100> threads;
@@ -14,7 +16,7 @@ extern "C" unsigned _MCFCRT_Main(){
 		for(auto &t : threads){
 			t.Create(
 				[&]{
-					for(unsigned i = 0; i < 10000; ++i){
+					for(unsigned i = 0; i < 100000; ++i){
 						auto l = m.GetLock();
 						val = val + 1;
 					}
@@ -27,5 +29,37 @@ extern "C" unsigned _MCFCRT_Main(){
 	}
 
 	std::printf("val = %u\n", val);
+#else
+	MCF::Mutex m;
+	MCF::ConditionVariable cv;
+	MCF::Array<MCF::Thread, 6> threads;
+
+	for(auto &t : threads){
+		t.Create(
+			[&]{
+				auto l = m.GetLock();
+				std::printf("thread %lu waiting.\n", ::GetCurrentThreadId());
+				::Sleep(500);
+
+				cv.Wait(l);
+				std::printf("thread %lu signaled.\n", ::GetCurrentThreadId());
+				::Sleep(500);
+			},
+			false);
+	}
+
+	for(;;){
+		::Sleep(900);
+		auto cnt = cv.Broadcast();
+		if(cnt == 0){
+			break;
+		}
+		std::printf("signaled %zu threads!\n", cnt);
+	}
+
+	for(auto &t : threads){
+		t.Join();
+	}
+#endif
 	return 0;
 }

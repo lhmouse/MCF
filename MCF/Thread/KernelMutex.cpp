@@ -5,7 +5,7 @@
 #include "../StdMCF.hpp"
 #include "KernelMutex.hpp"
 #include "../Core/Exception.hpp"
-#include "../Core/Clocks.hpp"
+#include "../../MCFCRT/env/_nt_timeout.h"
 #include <winternl.h>
 #include <ntdef.h>
 #include <ntstatus.h>
@@ -92,19 +92,7 @@ Impl_UniqueNtHandle::UniqueNtHandle KernelMutex::X_CreateEventHandle(const WideS
 
 bool KernelMutex::Try(std::uint64_t u64UntilFastMonoClock) noexcept {
 	::LARGE_INTEGER liTimeout;
-	liTimeout.QuadPart = 0;
-	if(u64UntilFastMonoClock != 0){
-		const auto u64Now = GetFastMonoClock();
-		if(u64Now < u64UntilFastMonoClock){
-			const auto u64DeltaMillisec = u64UntilFastMonoClock - u64Now;
-			const auto n64Delta100Nanosec = static_cast<std::int64_t>(u64DeltaMillisec * 10000);
-			if(static_cast<std::uint64_t>(n64Delta100Nanosec / 10000) != u64DeltaMillisec){
-				liTimeout.QuadPart = INT64_MIN;
-			} else {
-				liTimeout.QuadPart = -n64Delta100Nanosec;
-			}
-		}
-	}
+	::__MCF_CRT_InitializeNtTimeout(&liTimeout, u64UntilFastMonoClock);
 	const auto lStatus = ::NtWaitForSingleObject(x_hEvent.Get(), false, &liTimeout);
 	if(!NT_SUCCESS(lStatus)){
 		MCF_ASSERT_MSG(false, L"NtWaitForSingleObject() 失败。");

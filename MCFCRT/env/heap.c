@@ -10,7 +10,6 @@
 #include "bail.h"
 #include <stdlib.h>
 #include <string.h>
-#include <limits.h>
 #include <errno.h>
 
 // hooks.h

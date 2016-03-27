@@ -9,6 +9,7 @@
 
 __MCFCRT_EXTERN_C_BEGIN
 
+// 初始化为零即可。
 typedef volatile _MCFCRT_STD uintptr_t _MCFCRT_ConditionVariable;
 
 static_assert(sizeof (_MCFCRT_ConditionVariable) >= 4, "Oops!");

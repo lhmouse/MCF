@@ -14,10 +14,10 @@ NTSTATUS NtWaitForKeyedEvent(HANDLE hKeyedEvent, void *pKey, BOOLEAN bAlertable,
 extern __attribute__((__dllimport__, __stdcall__))
 NTSTATUS NtReleaseKeyedEvent(HANDLE hKeyedEvent, void *pKey, BOOLEAN bAlertable, const LARGE_INTEGER *pliTimeout);
 
-static void AtomicAdd(volatile uintptr_t *puValue, uintptr_t uDelta){
+static inline void AtomicAddRelaxed(volatile uintptr_t *puValue, uintptr_t uDelta){
 	__atomic_add_fetch(puValue, uDelta, __ATOMIC_RELAXED);
 }
-static uintptr_t AtomicSaturatedSub(volatile uintptr_t *puValue, uintptr_t uMaxDelta){
+static inline uintptr_t AtomicSaturatedSubRelaxed(volatile uintptr_t *puValue, uintptr_t uMaxDelta){
 	uintptr_t uOld, uNew, uDelta;
 	uOld = __atomic_load_n(puValue, __ATOMIC_RELAXED);
 	do {
@@ -31,19 +31,19 @@ static uintptr_t AtomicSaturatedSub(volatile uintptr_t *puValue, uintptr_t uMaxD
 	} while(_MCFCRT_EXPECT(!__atomic_compare_exchange_n(puValue, &uOld, uNew, false, __ATOMIC_RELAXED, __ATOMIC_RELAXED)));
 	return uDelta;
 }
-static uintptr_t AtomicExchange(volatile uintptr_t *puValue, uintptr_t uNewValue){
+static inline uintptr_t AtomicExchangeRelaxed(volatile uintptr_t *puValue, uintptr_t uNewValue){
 	return __atomic_exchange_n(puValue, uNewValue, __ATOMIC_RELAXED);
 }
 
 static inline bool WaitForConditionVariable(_MCFCRT_ConditionVariable *pConditionVariable, const LARGE_INTEGER *pliTimeout){
-	AtomicAdd(pConditionVariable, 1);
+	AtomicAddRelaxed(pConditionVariable, 1);
 
 	NTSTATUS lStatus = NtWaitForKeyedEvent(nullptr, (void *)pConditionVariable, false, pliTimeout);
 	if(!NT_SUCCESS(lStatus)){
 		_MCFCRT_ASSERT_MSG(false, L"NtWaitForKeyedEvent() 失败。");
 	}
 	if(lStatus == STATUS_TIMEOUT){
-		const uintptr_t uDecrement = AtomicSaturatedSub(pConditionVariable, 1);
+		const uintptr_t uDecrement = AtomicSaturatedSubRelaxed(pConditionVariable, 1);
 		if(uDecrement != 0){
 			return false;
 		}
@@ -92,12 +92,12 @@ void _MCFCRT_WaitForConditionVariableForever(_MCFCRT_ConditionVariable *pConditi
 	(*pfnRelockCallback)(nContext, nLocked);
 }
 size_t _MCFCRT_SignalConditionVariable(_MCFCRT_ConditionVariable *pConditionVariable, size_t uMaxCountToWakeUp){
-	const uintptr_t uCount = AtomicSaturatedSub(pConditionVariable, uMaxCountToWakeUp);
+	const uintptr_t uCount = AtomicSaturatedSubRelaxed(pConditionVariable, uMaxCountToWakeUp);
 	SignalConditionVariable(pConditionVariable, uCount);
 	return uCount;
 }
 size_t _MCFCRT_BroadcastConditionVariable(_MCFCRT_ConditionVariable *pConditionVariable){
-	const uintptr_t uCount = AtomicExchange(pConditionVariable, 0);
+	const uintptr_t uCount = AtomicExchangeRelaxed(pConditionVariable, 0);
 	SignalConditionVariable(pConditionVariable, uCount);
 	return uCount;
 }

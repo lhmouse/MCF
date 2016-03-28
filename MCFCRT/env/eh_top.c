@@ -34,9 +34,8 @@ static const char eh_begin[0] = { };
 static struct object eh_obj;
 static void *eh_frame_base;
 
-static bool TraverseModuleSectionsCallback(intptr_t nContext, const char achName[8], void *pBase, size_t uSize){
-	(void)nContext;
-	(void)achName;
+static bool TraverseModuleSectionsCallback(intptr_t nContext, const char *pchName, void *pBase, size_t uSize){
+	(void)pchName;
 
 	if(((uintptr_t)pBase <= (uintptr_t)eh_begin) && ((uintptr_t)eh_begin < (uintptr_t)pBase + uSize)){
 		*(void **)nContext = pBase;

@@ -17,7 +17,7 @@ enum {
 };
 
 typedef struct tagAtExitCallback {
-	void (*pfnProc)(intptr_t);
+	_MCFCRT_AtEndModuleCallback pfnProc;
 	intptr_t nContext;
 } AtExitCallback;
 
@@ -48,16 +48,16 @@ static void __MCFCRT_PumpAtEndModule(){
 	for(;;){
 		AtExitCallbackBlock *pBlock;
 
-		_MCFCRT_LockMutex(&g_vAtExitMutex, kMutexSpinCount);
+		_MCFCRT_WaitForMutexForever(&g_vAtExitMutex, kMutexSpinCount);
 		{
 			pBlock = g_pAtExitLast;
 			if(!pBlock){
-				_MCFCRT_UnlockMutex(&g_vAtExitMutex);
+				_MCFCRT_SignalMutex(&g_vAtExitMutex);
 				break;
 			}
 			g_pAtExitLast = pBlock->pPrev;
 		}
-		_MCFCRT_UnlockMutex(&g_vAtExitMutex);
+		_MCFCRT_SignalMutex(&g_vAtExitMutex);
 
 		for(size_t i = pBlock->uSize; i != 0; --i){
 			const AtExitCallback *const pCur = pBlock->aCallbacks + i - 1;
@@ -114,14 +114,14 @@ void __MCFCRT_EndModule(){
 	__MCFCRT_ThreadEnvUninit();
 }
 
-bool _MCFCRT_AtEndModule(void (*pfnProc)(intptr_t), intptr_t nContext){
+bool _MCFCRT_AtEndModule(_MCFCRT_AtEndModuleCallback pfnProc, intptr_t nContext){
 	AtExitCallbackBlock *pBlock;
 
-	_MCFCRT_LockMutex(&g_vAtExitMutex, kMutexSpinCount);
+	_MCFCRT_WaitForMutexForever(&g_vAtExitMutex, kMutexSpinCount);
 	{
 		pBlock = g_pAtExitLast;
 		if(!pBlock || (pBlock->uSize >= kAtExitCallbacksPerBlock)){
-			_MCFCRT_UnlockMutex(&g_vAtExitMutex);
+			_MCFCRT_SignalMutex(&g_vAtExitMutex);
 			{
 				pBlock = malloc(sizeof(AtExitCallbackBlock));
 				if(!pBlock){
@@ -130,7 +130,7 @@ bool _MCFCRT_AtEndModule(void (*pfnProc)(intptr_t), intptr_t nContext){
 				}
 				pBlock->uSize = 0;
 			}
-			_MCFCRT_LockMutex(&g_vAtExitMutex, kMutexSpinCount);
+			_MCFCRT_WaitForMutexForever(&g_vAtExitMutex, kMutexSpinCount);
 
 			pBlock->pPrev = g_pAtExitLast;
 			g_pAtExitLast = pBlock;
@@ -140,7 +140,7 @@ bool _MCFCRT_AtEndModule(void (*pfnProc)(intptr_t), intptr_t nContext){
 		pCur->pfnProc  = pfnProc;
 		pCur->nContext = nContext;
 	}
-	_MCFCRT_UnlockMutex(&g_vAtExitMutex);
+	_MCFCRT_SignalMutex(&g_vAtExitMutex);
 	return true;
 }
 
@@ -150,7 +150,8 @@ extern IMAGE_DOS_HEADER __image_base__ __asm__("__image_base__");
 void *_MCFCRT_GetModuleBase(){
 	return &__image_base__;
 }
-bool _MCFCRT_TraverseModuleSections(bool (*pfnCallback)(intptr_t, const char [8], void *, size_t), intptr_t nContext){
+
+bool _MCFCRT_TraverseModuleSections(_MCFCRT_TraverseModuleSectionsCallback pfnCallback, intptr_t nContext){
 	if(__image_base__.e_magic != IMAGE_DOS_SIGNATURE){
 		SetLastError(ERROR_BAD_FORMAT);
 		return false;

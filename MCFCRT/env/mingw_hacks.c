@@ -56,7 +56,7 @@ void __MCFCRT_MinGWHacksUninit(){
 }
 
 void __MCFCRT_RunEmutlsDtors(){
-	_MCFCRT_LockMutex(&g_vDtorMapMutex, kMutexSpinCount);
+	_MCFCRT_WaitForMutexForever(&g_vDtorMapMutex, kMutexSpinCount);
 	{
 		for(const KeyDtorNode *pCur = g_pDtorHead; pCur; pCur = pCur->pNext){
 			const LPVOID pMem = TlsGetValue(pCur->ulKey);
@@ -66,7 +66,7 @@ void __MCFCRT_RunEmutlsDtors(){
 			}
 		}
 	}
-	_MCFCRT_UnlockMutex(&g_vDtorMapMutex);
+	_MCFCRT_SignalMutex(&g_vDtorMapMutex);
 }
 
 int __mingwthr_key_dtor(unsigned long ulKey, void (*pfnDtor)(void *)){
@@ -79,7 +79,7 @@ int __mingwthr_key_dtor(unsigned long ulKey, void (*pfnDtor)(void *)){
 		pNode->pfnDtor = pfnDtor;
 		pNode->pPrev   = nullptr;
 
-		_MCFCRT_LockMutex(&g_vDtorMapMutex, kMutexSpinCount);
+		_MCFCRT_WaitForMutexForever(&g_vDtorMapMutex, kMutexSpinCount);
 		{
 			pNode->pNext = g_pDtorHead;
 			if(g_pDtorHead){
@@ -89,13 +89,13 @@ int __mingwthr_key_dtor(unsigned long ulKey, void (*pfnDtor)(void *)){
 
 			_MCFCRT_AvlAttach(&g_avlDtorRoot, (_MCFCRT_AvlNodeHeader *)pNode, &DtorComparatorNodes);
 		}
-		_MCFCRT_UnlockMutex(&g_vDtorMapMutex);
+		_MCFCRT_SignalMutex(&g_vDtorMapMutex);
 	}
 	return 0;
 }
 
 int __mingwthr_remove_key_dtor(unsigned long ulKey){
-	_MCFCRT_LockMutex(&g_vDtorMapMutex, kMutexSpinCount);
+	_MCFCRT_WaitForMutexForever(&g_vDtorMapMutex, kMutexSpinCount);
 	{
 		KeyDtorNode *pNode = (KeyDtorNode *)_MCFCRT_AvlFind(&g_avlDtorRoot, (intptr_t)ulKey, &DtorComparatorNodeKey);
 		if(pNode){
@@ -114,7 +114,7 @@ int __mingwthr_remove_key_dtor(unsigned long ulKey){
 			free(pNode);
 		}
 	}
-	_MCFCRT_UnlockMutex(&g_vDtorMapMutex);
+	_MCFCRT_SignalMutex(&g_vDtorMapMutex);
 	return 0;
 }
 

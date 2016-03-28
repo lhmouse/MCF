@@ -69,7 +69,7 @@ const void *_MCFCRT_AllocateThunk(const void *pInit, size_t uSize){
 
 	char *pRaw = nullptr;
 
-	_MCFCRT_LockMutex(&g_vThunkMutex, kMutexSpinCount);
+	_MCFCRT_WaitForMutexForever(&g_vThunkMutex, kMutexSpinCount);
 	{
 		if(g_uPageMask == 0){
 			SYSTEM_INFO vSystemInfo;
@@ -154,7 +154,7 @@ const void *_MCFCRT_AllocateThunk(const void *pInit, size_t uSize){
 		VirtualProtect(pRaw, uThunkSize, PAGE_EXECUTE_READ, &dwOldProtect);
 	}
 jDone:
-	_MCFCRT_UnlockMutex(&g_vThunkMutex);
+	_MCFCRT_SignalMutex(&g_vThunkMutex);
 
 	if(!pRaw){
 		SetLastError(ERROR_NOT_ENOUGH_MEMORY);
@@ -165,7 +165,7 @@ void _MCFCRT_DeallocateThunk(const void *pThunk, bool bToPoison){
 	char *const pRaw = (char *)pThunk;
 	void *pPageToRelease;
 
-	_MCFCRT_LockMutex(&g_vThunkMutex, kMutexSpinCount);
+	_MCFCRT_WaitForMutexForever(&g_vThunkMutex, kMutexSpinCount);
 	{
 		_MCFCRT_AvlNodeHeader *pThunkIndex = _MCFCRT_AvlFind(&g_avlThunksByThunk, (intptr_t)pThunk, &ThunkComparatorNodeKey);
 		ThunkInfo *pInfo;
@@ -227,7 +227,7 @@ void _MCFCRT_DeallocateThunk(const void *pThunk, bool bToPoison){
 			_MCFCRT_AvlAttach(&g_avlThunksByFreeSize, &(pInfo->vFreeSizeIndex), &FreeSizeComparatorNodes);
 		}
 	}
-	_MCFCRT_UnlockMutex(&g_vThunkMutex);
+	_MCFCRT_SignalMutex(&g_vThunkMutex);
 
 	if(pPageToRelease){
 		VirtualFree(pPageToRelease, 0, MEM_RELEASE);

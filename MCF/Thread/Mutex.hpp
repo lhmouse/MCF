@@ -49,13 +49,13 @@ public:
 	}
 
 	bool Try(std::uint64_t u64UntilFastMonoClock = 0) noexcept {
-		return ::_MCFCRT_TryMutex(&x_vMutex, GetSpinCount(), u64UntilFastMonoClock);
+		return ::_MCFCRT_WaitForMutex(&x_vMutex, GetSpinCount(), u64UntilFastMonoClock);
 	}
 	void Lock() noexcept {
-		::_MCFCRT_LockMutex(&x_vMutex, GetSpinCount());
+		::_MCFCRT_WaitForMutexForever(&x_vMutex, GetSpinCount());
 	}
 	void Unlock() noexcept {
-		::_MCFCRT_UnlockMutex(&x_vMutex);
+		::_MCFCRT_SignalMutex(&x_vMutex);
 	}
 
 	UniqueLock TryGetLock(std::uint64_t u64UntilFastMonoClock = 0) noexcept {

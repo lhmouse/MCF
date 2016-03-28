@@ -124,13 +124,13 @@ void __MCFCRT_TlsThreadCleanup(){
 		while(pObject){
 			TlsKey *const pKey = pObject->pKey;
 
-			_MCFCRT_LockMutex(&(pKey->vMutex), kMutexSpinCount);
+			_MCFCRT_WaitForMutexForever(&(pKey->vMutex), kMutexSpinCount);
 			{
 				if(pKey->pLastByKey == pObject){
 					pKey->pLastByKey = pObject->pPrevByKey;
 				}
 			}
-			_MCFCRT_UnlockMutex(&(pKey->vMutex));
+			_MCFCRT_SignalMutex(&(pKey->vMutex));
 
 			if(pKey->pfnCallback){
 				(*pKey->pfnCallback)(&(pObject->nValue));
@@ -157,11 +157,11 @@ void *_MCFCRT_TlsAllocKey(_MCFCRT_TlsCallback pfnCallback){
 	pKey->pfnCallback = pfnCallback;
 	pKey->pLastByKey  = nullptr;
 
-	_MCFCRT_LockMutex(&g_vKeyMapMutex, kMutexSpinCount);
+	_MCFCRT_WaitForMutexForever(&g_vKeyMapMutex, kMutexSpinCount);
 	{
 		_MCFCRT_AvlAttach(&g_avlKeyMap, (_MCFCRT_AvlNodeHeader *)pKey, &KeyComparatorNodes);
 	}
-	_MCFCRT_UnlockMutex(&g_vKeyMapMutex);
+	_MCFCRT_SignalMutex(&g_vKeyMapMutex);
 
 	return pKey;
 }
@@ -172,17 +172,17 @@ bool _MCFCRT_TlsFreeKey(void *pTlsKey){
 		return false;
 	}
 
-	_MCFCRT_LockMutex(&g_vKeyMapMutex, kMutexSpinCount);
+	_MCFCRT_WaitForMutexForever(&g_vKeyMapMutex, kMutexSpinCount);
 	{
 		_MCFCRT_AvlDetach((_MCFCRT_AvlNodeHeader *)pKey);
 	}
-	_MCFCRT_UnlockMutex(&g_vKeyMapMutex);
+	_MCFCRT_SignalMutex(&g_vKeyMapMutex);
 
 	TlsObject *pObject = pKey->pLastByKey;
 	while(pObject){
 		ThreadMap *const pMap = pObject->pMap;
 
-		_MCFCRT_LockMutex(&(pMap->vMutex), kMutexSpinCount);
+		_MCFCRT_WaitForMutexForever(&(pMap->vMutex), kMutexSpinCount);
 		{
 			TlsObject *const pPrev = pObject->pPrevByThread;
 			TlsObject *const pNext = pObject->pNextByThread;
@@ -197,7 +197,7 @@ bool _MCFCRT_TlsFreeKey(void *pTlsKey){
 				pMap->pLastByThread = pObject->pPrevByThread;
 			}
 		}
-		_MCFCRT_UnlockMutex(&(pMap->vMutex));
+		_MCFCRT_SignalMutex(&(pMap->vMutex));
 
 		if(pKey->pfnCallback){
 			(*pKey->pfnCallback)(&(pObject->nValue));
@@ -235,7 +235,7 @@ bool _MCFCRT_TlsGet(void *pTlsKey, intptr_t **restrict ppnValue){
 		return true;
 	}
 
-	_MCFCRT_LockMutex(&(pMap->vMutex), kMutexSpinCount);
+	_MCFCRT_WaitForMutexForever(&(pMap->vMutex), kMutexSpinCount);
 	{
 		TlsObject *pObject = (TlsObject *)_MCFCRT_AvlFind(&(pMap->avlObjects), (intptr_t)pKey, &ObjectComparatorNodeKey);
 		if(!pObject){
@@ -243,7 +243,7 @@ bool _MCFCRT_TlsGet(void *pTlsKey, intptr_t **restrict ppnValue){
 		}
 		*ppnValue = &(pObject->nValue);
 	}
-	_MCFCRT_UnlockMutex(&(pMap->vMutex));
+	_MCFCRT_SignalMutex(&(pMap->vMutex));
 
 	return true;
 }
@@ -270,11 +270,11 @@ bool _MCFCRT_TlsRequire(void *pTlsKey, intptr_t **restrict ppnValue, _MCFCRT_STD
 		TlsSetValue(g_dwTlsIndex, pMap);
 	}
 
-	_MCFCRT_LockMutex(&(pMap->vMutex), kMutexSpinCount);
+	_MCFCRT_WaitForMutexForever(&(pMap->vMutex), kMutexSpinCount);
 	{
 		TlsObject *pObject = (TlsObject *)_MCFCRT_AvlFind(&(pMap->avlObjects), (intptr_t)pKey, &ObjectComparatorNodeKey);
 		if(!pObject){
-			_MCFCRT_UnlockMutex(&(pMap->vMutex));
+			_MCFCRT_SignalMutex(&(pMap->vMutex));
 			{
 				pObject = malloc(sizeof(TlsObject));
 				if(!pObject){
@@ -285,7 +285,7 @@ bool _MCFCRT_TlsRequire(void *pTlsKey, intptr_t **restrict ppnValue, _MCFCRT_STD
 				pObject->pMap   = pMap;
 				pObject->pKey   = pKey;
 
-				_MCFCRT_LockMutex(&(pKey->vMutex), kMutexSpinCount);
+				_MCFCRT_WaitForMutexForever(&(pKey->vMutex), kMutexSpinCount);
 				{
 					TlsObject *const pPrev = pKey->pLastByKey;
 					pKey->pLastByKey = pObject;
@@ -296,9 +296,9 @@ bool _MCFCRT_TlsRequire(void *pTlsKey, intptr_t **restrict ppnValue, _MCFCRT_STD
 						pPrev->pNextByKey = pObject;
 					}
 				}
-				_MCFCRT_UnlockMutex(&(pKey->vMutex));
+				_MCFCRT_SignalMutex(&(pKey->vMutex));
 			}
-			_MCFCRT_LockMutex(&(pMap->vMutex), kMutexSpinCount);
+			_MCFCRT_WaitForMutexForever(&(pMap->vMutex), kMutexSpinCount);
 
 			TlsObject *const pPrev = pMap->pLastByThread;
 			pMap->pLastByThread = pObject;
@@ -312,7 +312,7 @@ bool _MCFCRT_TlsRequire(void *pTlsKey, intptr_t **restrict ppnValue, _MCFCRT_STD
 		}
 		*ppnValue = &(pObject->nValue);
 	}
-	_MCFCRT_UnlockMutex(&(pMap->vMutex));
+	_MCFCRT_SignalMutex(&(pMap->vMutex));
 
 	return true;
 }

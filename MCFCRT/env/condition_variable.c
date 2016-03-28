@@ -18,17 +18,16 @@ static inline void AtomicAddRelaxed(volatile uintptr_t *puValue, uintptr_t uDelt
 	__atomic_add_fetch(puValue, uDelta, __ATOMIC_RELAXED);
 }
 static inline uintptr_t AtomicSaturatedSubRelaxed(volatile uintptr_t *puValue, uintptr_t uMaxDelta){
-	uintptr_t uOld, uNew, uDelta;
+	uintptr_t uOld, uDelta, uNew;
 	uOld = __atomic_load_n(puValue, __ATOMIC_RELAXED);
 	do {
 		if(uOld < uMaxDelta){
-			uNew = 0;
 			uDelta = uOld;
 		} else {
-			uNew = uOld - uMaxDelta;
 			uDelta = uMaxDelta;
 		}
-	} while(_MCFCRT_EXPECT(!__atomic_compare_exchange_n(puValue, &uOld, uNew, false, __ATOMIC_RELAXED, __ATOMIC_RELAXED)));
+		uNew = uOld - uDelta;
+	} while(_MCFCRT_EXPECT_NOT(!__atomic_compare_exchange_n(puValue, &uOld, uNew, false, __ATOMIC_RELAXED, __ATOMIC_RELAXED)));
 	return uDelta;
 }
 static inline uintptr_t AtomicExchangeRelaxed(volatile uintptr_t *puValue, uintptr_t uNewValue){
@@ -66,15 +65,14 @@ static inline void SignalConditionVariable(_MCFCRT_ConditionVariable *pCondition
 bool _MCFCRT_WaitForConditionVariable(_MCFCRT_ConditionVariable *pConditionVariable,
 	_MCFCRT_ConditionVariableUnlockCallback pfnUnlockCallback, _MCFCRT_ConditionVariableRelockCallback pfnRelockCallback, intptr_t nContext, uint64_t u64UntilFastMonoClock)
 {
-	bool bSignaled = false;
+	bool bSignaled;
 	const intptr_t nLocked = (*pfnUnlockCallback)(nContext);
 	{
+		bSignaled = false;
 		if(_MCFCRT_EXPECT_NOT(u64UntilFastMonoClock != 0)){
 			LARGE_INTEGER liTimeout;
 			__MCF_CRT_InitializeNtTimeout(&liTimeout, u64UntilFastMonoClock);
-			if(WaitForConditionVariable(pConditionVariable, &liTimeout)){
-				bSignaled = true;
-			}
+			bSignaled = WaitForConditionVariable(pConditionVariable, &liTimeout);
 		}
 	}
 	(*pfnRelockCallback)(nContext, nLocked);
@@ -83,11 +81,11 @@ bool _MCFCRT_WaitForConditionVariable(_MCFCRT_ConditionVariable *pConditionVaria
 void _MCFCRT_WaitForConditionVariableForever(_MCFCRT_ConditionVariable *pConditionVariable,
 	_MCFCRT_ConditionVariableUnlockCallback pfnUnlockCallback, _MCFCRT_ConditionVariableRelockCallback pfnRelockCallback, intptr_t nContext)
 {
+	bool bSignaled;
 	const intptr_t nLocked = (*pfnUnlockCallback)(nContext);
 	{
-		if(!WaitForConditionVariable(pConditionVariable, nullptr)){
-			_MCFCRT_ASSERT(false);
-		}
+		bSignaled = WaitForConditionVariable(pConditionVariable, nullptr);
+		_MCFCRT_ASSERT(bSignaled);
 	}
 	(*pfnRelockCallback)(nContext, nLocked);
 }

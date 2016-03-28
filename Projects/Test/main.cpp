@@ -41,7 +41,7 @@ extern "C" unsigned _MCFCRT_Main(){
 				std::printf("thread %lu waiting.\n", ::GetCurrentThreadId());
 				::Sleep(500);
 
-				cv.Wait(l);
+				cv.Wait(l, 100000000);
 				std::printf("thread %lu signaled.\n", ::GetCurrentThreadId());
 				::Sleep(500);
 			},
@@ -50,7 +50,7 @@ extern "C" unsigned _MCFCRT_Main(){
 
 	for(;;){
 		::Sleep(900);
-		auto cnt = cv.Broadcast();
+		auto cnt = cv.Signal(2);
 		if(cnt == 0){
 			break;
 		}

@@ -28,23 +28,23 @@ bool _MCFCRT_WaitForConditionVariable(_MCFCRT_ConditionVariable *pConditionVaria
 	NTSTATUS lStatus = NtWaitForKeyedEvent(nullptr, (void *)pConditionVariable, false, &liTimeout);
 	_MCFCRT_ASSERT_MSG(NT_SUCCESS(lStatus), L"NtWaitForKeyedEvent() 失败。");
 	if(lStatus == STATUS_TIMEOUT){
-		bool bReleased;
+		size_t uCountDecreased;
 		{
 			uintptr_t uOld, uNew;
 			uOld = __atomic_load_n(pConditionVariable, __ATOMIC_RELAXED);
 			do {
 				if(uOld == 0){
-					bReleased = false;
+					uCountDecreased = 0;
 				} else {
-					bReleased = true;
+					uCountDecreased = 1;
 				}
-				if(bReleased){
+				if(uCountDecreased == 0){
 					break;
 				}
-				uNew = uOld - 1;
+				uNew = uOld - uCountDecreased;
 			} while(_MCFCRT_EXPECT_NOT(!__atomic_compare_exchange_n(pConditionVariable, &uOld, uNew, false, __ATOMIC_RELAXED, __ATOMIC_RELAXED)));
 		}
-		if(bReleased){
+		if(uCountDecreased != 0){
 			(*pfnRelockCallback)(nContext, nLocked);
 			return false;
 		}

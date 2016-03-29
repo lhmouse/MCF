@@ -30,13 +30,9 @@ static inline uintptr_t AtomicSaturatedSubRelaxed(volatile uintptr_t *puValue, u
 	} while(_MCFCRT_EXPECT_NOT(!__atomic_compare_exchange_n(puValue, &uOld, uNew, false, __ATOMIC_RELAXED, __ATOMIC_RELAXED)));
 	return uDelta;
 }
-static inline uintptr_t AtomicExchangeRelaxed(volatile uintptr_t *puValue, uintptr_t uNewValue){
-	return __atomic_exchange_n(puValue, uNewValue, __ATOMIC_RELAXED);
-}
 
 static inline bool WaitForConditionVariable(_MCFCRT_ConditionVariable *pConditionVariable, const LARGE_INTEGER *pliTimeout){
 	AtomicAddRelaxed(pConditionVariable, 1);
-
 	NTSTATUS lStatus = NtWaitForKeyedEvent(nullptr, (void *)pConditionVariable, false, pliTimeout);
 	if(!NT_SUCCESS(lStatus)){
 		_MCFCRT_ASSERT_MSG(false, L"NtWaitForKeyedEvent() 失败。");
@@ -53,13 +49,15 @@ static inline bool WaitForConditionVariable(_MCFCRT_ConditionVariable *pConditio
 	}
 	return true;
 }
-static inline void SignalConditionVariable(_MCFCRT_ConditionVariable *pConditionVariable, size_t uCount){
-	for(size_t i = 0; _MCFCRT_EXPECT(i < uCount); ++i){
+static inline size_t SignalConditionVariable(_MCFCRT_ConditionVariable *pConditionVariable, size_t uMaxCountToSignal){
+	const size_t uCountSignaled = AtomicSaturatedSubRelaxed(pConditionVariable, uMaxCountToSignal);
+	for(size_t i = 0; _MCFCRT_EXPECT_NOT(i < uCountSignaled); ++i){
 		NTSTATUS lStatus = NtReleaseKeyedEvent(nullptr, (void *)pConditionVariable, false, nullptr);
 		if(!NT_SUCCESS(lStatus)){
 			_MCFCRT_ASSERT_MSG(false, L"NtReleaseKeyedEvent() 失败。");
 		}
 	}
+	return uCountSignaled;
 }
 
 bool _MCFCRT_WaitForConditionVariable(_MCFCRT_ConditionVariable *pConditionVariable,
@@ -91,12 +89,8 @@ void _MCFCRT_WaitForConditionVariableForever(_MCFCRT_ConditionVariable *pConditi
 	(*pfnRelockCallback)(nContext, nLocked);
 }
 size_t _MCFCRT_SignalConditionVariable(_MCFCRT_ConditionVariable *pConditionVariable, size_t uMaxCountToWakeUp){
-	const uintptr_t uCount = AtomicSaturatedSubRelaxed(pConditionVariable, uMaxCountToWakeUp);
-	SignalConditionVariable(pConditionVariable, uCount);
-	return uCount;
+	return SignalConditionVariable(pConditionVariable, uMaxCountToWakeUp);
 }
 size_t _MCFCRT_BroadcastConditionVariable(_MCFCRT_ConditionVariable *pConditionVariable){
-	const uintptr_t uCount = AtomicExchangeRelaxed(pConditionVariable, 0);
-	SignalConditionVariable(pConditionVariable, uCount);
-	return uCount;
+	return SignalConditionVariable(pConditionVariable, SIZE_MAX);
 }

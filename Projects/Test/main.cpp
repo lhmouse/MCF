@@ -6,7 +6,7 @@
 #include <MCF/Thread/Thread.hpp>
 
 extern "C" unsigned _MCFCRT_Main(){
-#if 1
+#if 0
 	volatile unsigned val = 0;
 	MCF::Mutex m(100);
 	MCF::Array<MCF::Thread, 100> threads;
@@ -50,7 +50,7 @@ extern "C" unsigned _MCFCRT_Main(){
 
 	for(;;){
 		::Sleep(900);
-		auto cnt = cv.Signal(2);
+		auto cnt = cv.Broadcast();
 		if(cnt == 0){
 			break;
 		}

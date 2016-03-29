@@ -50,7 +50,7 @@ extern "C" unsigned _MCFCRT_Main(){
 
 	for(;;){
 		::Sleep(900);
-		auto cnt = cv.Signal(10);
+		auto cnt = cv.Broadcast();
 		if(cnt == 0){
 			break;
 		}

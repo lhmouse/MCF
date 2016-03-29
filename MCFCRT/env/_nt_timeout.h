@@ -18,12 +18,11 @@ static inline void __MCF_CRT_InitializeNtTimeout(LARGE_INTEGER *__pliTimeout, _M
 		return;
 	}
 	const _MCFCRT_STD uint64_t __u64DeltaMs = __u64UntilFastMonoClock - __u64Now;
-	const _MCFCRT_STD uint64_t __u64Test = __u64DeltaMs * 10000u;
-	if((__u64Test > INT64_MAX) || ((__u64Test / 10000u) != __u64DeltaMs)){
+	if(__u64DeltaMs > INT64_MAX / 10000u){
 		__pliTimeout->QuadPart = INT64_MAX; // 永不超时。
 		return;
 	}
-	__pliTimeout->QuadPart = -(_MCFCRT_STD int64_t)__u64Test; // 用负数表示相对时间。
+	__pliTimeout->QuadPart = -(_MCFCRT_STD int64_t)(__u64DeltaMs * 10000u); // 用负数表示相对时间。
 }
 
 __MCFCRT_EXTERN_C_END

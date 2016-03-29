@@ -12,9 +12,6 @@ __MCFCRT_EXTERN_C_BEGIN
 // 初始化为零即可。
 typedef volatile _MCFCRT_STD uintptr_t _MCFCRT_Mutex;
 
-static_assert(sizeof (_MCFCRT_Mutex) >= 4, "Oops!");
-static_assert(alignof(_MCFCRT_Mutex) >= 4, "Oops!");
-
 extern bool _MCFCRT_WaitForMutex(_MCFCRT_Mutex *__pMutex, _MCFCRT_STD size_t __uMaxSpinCount, _MCFCRT_STD uint64_t __u64UntilFastMonoClock) _MCFCRT_NOEXCEPT;
 extern void _MCFCRT_WaitForMutexForever(_MCFCRT_Mutex *__pMutex, _MCFCRT_STD size_t __uMaxSpinCount) _MCFCRT_NOEXCEPT;
 extern void _MCFCRT_SignalMutex(_MCFCRT_Mutex *__pMutex) _MCFCRT_NOEXCEPT;

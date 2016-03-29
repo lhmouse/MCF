@@ -38,13 +38,10 @@ bool _MCFCRT_WaitForConditionVariable(_MCFCRT_ConditionVariable *pConditionVaria
 				} else {
 					uCountDecreased = 1;
 				}
-				if(uCountDecreased == 0){
-					break;
-				}
 				uNew = uOld - uCountDecreased;
-			} while(_MCFCRT_EXPECT_NOT(!__atomic_compare_exchange_n(pConditionVariable, &uOld, uNew, false, __ATOMIC_RELAXED, __ATOMIC_RELAXED)));
+			} while(_MCFCRT_EXPECT(uNew != uOld) && _MCFCRT_EXPECT_NOT(!__atomic_compare_exchange_n(pConditionVariable, &uOld, uNew, false, __ATOMIC_RELAXED, __ATOMIC_RELAXED)));
 		}
-		if(uCountDecreased != 0){
+		if(_MCFCRT_EXPECT_NOT(uCountDecreased != 0)){
 			(*pfnRelockCallback)(nContext, nLocked);
 			return false;
 		}
@@ -74,13 +71,10 @@ size_t _MCFCRT_SignalConditionVariable(_MCFCRT_ConditionVariable *pConditionVari
 			} else {
 				uCountSignaled = uMaxCountToSignal;
 			}
-			if(uCountSignaled == 0){
-				break;
-			}
 			uNew = uOld - uCountSignaled;
-		} while(_MCFCRT_EXPECT_NOT(!__atomic_compare_exchange_n(pConditionVariable, &uOld, uNew, false, __ATOMIC_RELAXED, __ATOMIC_RELAXED)));
+		} while(_MCFCRT_EXPECT(uNew != uOld) && _MCFCRT_EXPECT_NOT(!__atomic_compare_exchange_n(pConditionVariable, &uOld, uNew, false, __ATOMIC_RELAXED, __ATOMIC_RELAXED)));
 	}
-	for(size_t i = 0; _MCFCRT_EXPECT(i < uCountSignaled); ++i){
+	for(size_t i = 0; i < uCountSignaled; ++i){
 		NTSTATUS lStatus = NtReleaseKeyedEvent(nullptr, (void *)pConditionVariable, false, nullptr);
 		_MCFCRT_ASSERT_MSG(NT_SUCCESS(lStatus), L"NtReleaseKeyedEvent() 失败。");
 	}
@@ -91,7 +85,7 @@ size_t _MCFCRT_BroadcastConditionVariable(_MCFCRT_ConditionVariable *pConditionV
 	{
 		uCountSignaled = __atomic_exchange_n(pConditionVariable, 0, __ATOMIC_RELAXED);
 	}
-	for(size_t i = 0; _MCFCRT_EXPECT(i < uCountSignaled); ++i){
+	for(size_t i = 0; i < uCountSignaled; ++i){
 		NTSTATUS lStatus = NtReleaseKeyedEvent(nullptr, (void *)pConditionVariable, false, nullptr);
 		_MCFCRT_ASSERT_MSG(NT_SUCCESS(lStatus), L"NtReleaseKeyedEvent() 失败。");
 	}

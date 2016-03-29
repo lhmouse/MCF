@@ -151,7 +151,7 @@ static inline void UnlockMutex(_MCFCRT_Mutex *pMutex){
 	}
 */
 bool _MCFCRT_WaitForMutex(_MCFCRT_Mutex *pMutex, size_t uMaxSpinCount, uint64_t u64UntilFastMonoClock){
-	if(TryMutexOneShot(pMutex)){
+	if(_MCFCRT_EXPECT(TryMutexOneShot(pMutex))){
 		return true;
 	}
 
@@ -165,7 +165,7 @@ bool _MCFCRT_WaitForMutex(_MCFCRT_Mutex *pMutex, size_t uMaxSpinCount, uint64_t 
 	return bLocked;
 }
 void _MCFCRT_WaitForMutexForever(_MCFCRT_Mutex *pMutex, size_t uMaxSpinCount){
-	if(TryMutexOneShot(pMutex)){
+	if(_MCFCRT_EXPECT(TryMutexOneShot(pMutex))){
 		return;
 	}
 

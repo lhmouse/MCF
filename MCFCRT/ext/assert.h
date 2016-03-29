@@ -23,8 +23,8 @@ __MCFCRT_EXTERN_C_END
 #undef _MCFCRT_ASSERT_MSG
 
 #ifdef NDEBUG
-#	define _MCFCRT_ASSERT(__expr_)              ((void)(sizeof(__expr_)))
-#	define _MCFCRT_ASSERT_MSG(__expr_, __msg_)  ((void)(sizeof(__expr_) && sizeof(__msg_)))
+#	define _MCFCRT_ASSERT(__expr_)              ((void)(sizeof(!(__expr_))))
+#	define _MCFCRT_ASSERT_MSG(__expr_, __msg_)  ((void)(sizeof(!(__expr_))))
 #else
 #	define _MCFCRT_ASSERT(__expr_)              ((void)(!(__expr_) && __MCFCRT_OnAssertionFailure(__MCFCRT_ASSERT_WIDEN(#__expr_), __MCFCRT_ASSERT_WIDEN(__FILE__), __LINE__, L"")))
 #	define _MCFCRT_ASSERT_MSG(__expr_, __msg_)  ((void)(!(__expr_) && __MCFCRT_OnAssertionFailure(__MCFCRT_ASSERT_WIDEN(#__expr_), __MCFCRT_ASSERT_WIDEN(__FILE__), __LINE__, (__msg_))))

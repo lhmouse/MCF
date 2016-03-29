@@ -9,20 +9,13 @@
 #include "_make_constant.h"
 
 #ifdef __cplusplus
-#	include <memory>
-#	define __MCFCRT_ADDRESS_OF(__lval_)	\
-	(&(unsigned char &)(__lval_))
+#	define __MCFCRT_ADDRESS_OF(__lval_)     (const_cast<char *>(reinterpret_cast<const volatile char (&)[1]>(__lval_)))
 #else
-#	define __MCFCRT_ADDRESS_OF(__lval_)	\
-	((unsigned char *)&(__lval_))
+#	define __MCFCRT_ADDRESS_OF(__lval_)     ((char *)&(__lval_))
 #endif
 
-#define OFFSET_OF(__s_, __m_)	\
-	(__MCFCRT_MAKE_CONSTANT((_MCFCRT_STD size_t)(	\
-		__MCFCRT_ADDRESS_OF(((__s_ *)(unsigned char *)1)->__m_) - (unsigned char *)1)))
-
+#define _MCFCRT_OFFSET_OF(__s_, __m_)       (__MCFCRT_MAKE_CONSTANT((_MCFCRT_STD size_t)(__MCFCRT_ADDRESS_OF(((__s_ *)(char *)1)->__m_) - (char *)1)))
 // 成员指针转换成聚合指针。
-#define DOWN_CAST(__s_, __m_, __p_)	\
-	((__s_ *)((unsigned char *)(__p_) - OFFSET_OF(__s_, __m_)))
+#define _MCFCRT_DOWN_CAST(__s_, __m_, __p_) ((__s_ *)((char *)(__p_) - _MCFCRT_OFFSET_OF(__s_, __m_)))
 
 #endif

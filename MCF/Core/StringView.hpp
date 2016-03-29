@@ -162,7 +162,7 @@ namespace Impl_StringView {
 			pTable = ::new(std::nothrow) std::ptrdiff_t[uTableSize];
 			bTableWasAllocatedFromHeap = true;
 		} else {
-			pTable = static_cast<std::ptrdiff_t *>(ALLOCA(uTableSize * sizeof(std::ptrdiff_t)));
+			pTable = static_cast<std::ptrdiff_t *>(_MCFCRT_ALLOCA(uTableSize * sizeof(std::ptrdiff_t)));
 			bTableWasAllocatedFromHeap = false;
 		}
 		const auto vFreeTable = Defer([&]{ if(bTableWasAllocatedFromHeap){ ::delete[](pTable); }; });

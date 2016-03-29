@@ -156,8 +156,9 @@ bool _MCFCRT_WaitForMutex(_MCFCRT_Mutex *pMutex, size_t uMaxSpinCount, uint64_t 
 	}
 
 	bool bLocked;
-	bLocked = false;
-	if(_MCFCRT_EXPECT_NOT(u64UntilFastMonoClock != 0)){
+	if(_MCFCRT_EXPECT(u64UntilFastMonoClock == 0)){
+		bLocked = false;
+	} else {
 		LARGE_INTEGER liTimeout;
 		__MCF_CRT_InitializeNtTimeout(&liTimeout, u64UntilFastMonoClock);
 		bLocked = WaitForMutex(pMutex, &liTimeout);

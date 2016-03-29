@@ -68,8 +68,9 @@ bool _MCFCRT_WaitForConditionVariable(_MCFCRT_ConditionVariable *pConditionVaria
 	bool bSignaled;
 	const intptr_t nLocked = (*pfnUnlockCallback)(nContext);
 	{
-		bSignaled = false;
-		if(_MCFCRT_EXPECT_NOT(u64UntilFastMonoClock != 0)){
+		if(_MCFCRT_EXPECT(u64UntilFastMonoClock == 0)){
+			bSignaled = false;
+		} else {
 			LARGE_INTEGER liTimeout;
 			__MCF_CRT_InitializeNtTimeout(&liTimeout, u64UntilFastMonoClock);
 			bSignaled = WaitForConditionVariable(pConditionVariable, &liTimeout);

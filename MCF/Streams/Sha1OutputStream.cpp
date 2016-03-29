@@ -342,7 +342,8 @@ void Sha1OutputStream::Put(const void *pData, std::size_t uSize){
 	x_u64BytesTotal += uSize;
 }
 
-void Sha1OutputStream::Flush(bool /* bHard */){
+void Sha1OutputStream::Flush(bool bHard){
+	(void)bHard;
 }
 
 void Sha1OutputStream::Reset() noexcept {

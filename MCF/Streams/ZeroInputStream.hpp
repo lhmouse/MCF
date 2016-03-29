@@ -26,8 +26,9 @@ public:
 	std::size_t Get(void *pData, std::size_t uSize) noexcept override;
 	std::size_t Discard(std::size_t uSize) noexcept override;
 
-	void Swap(ZeroInputStream & /* rhs */) noexcept {
+	void Swap(ZeroInputStream &rhs) noexcept {
 		using std::swap;
+		(void)rhs;
 	}
 
 public:

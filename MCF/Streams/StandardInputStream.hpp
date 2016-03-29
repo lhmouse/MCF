@@ -29,8 +29,9 @@ public:
 	bool IsEchoing() const noexcept;
 	void SetEchoing(bool bEchoing);
 
-	void Swap(StandardInputStream & /* rhs */) noexcept {
+	void Swap(StandardInputStream &rhs) noexcept {
 		using std::swap;
+		(void)rhs;
 	}
 
 public:

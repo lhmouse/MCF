@@ -42,7 +42,11 @@ namespace Impl_Variant {
 	};
 	template<typename FunctorT, std::size_t kIndex>
 	struct Applier<FunctorT, kIndex> {
-		[[noreturn]] void operator()(FunctorT & /* vFunctor */, std::size_t uActiveIndex, void * /* pElement */) const {
+		[[noreturn]] void operator()(FunctorT &vFunctor, std::size_t uActiveIndex, void *pElement) const {
+			(void)vFunctor;
+			(void)uActiveIndex;
+			(void)pElement;
+
 			MCF_ASSERT(false);
 			std::terminate();
 		}

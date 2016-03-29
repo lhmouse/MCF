@@ -24,8 +24,9 @@ public:
 
 	void Flush(bool bHard) override;
 
-	void Swap(StandardErrorStream & /* rhs */) noexcept {
+	void Swap(StandardErrorStream &rhs) noexcept {
 		using std::swap;
+		(void)rhs;
 	}
 
 public:

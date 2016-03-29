@@ -26,7 +26,8 @@ namespace Impl_Function {
 	struct DummyFunctorCopier {
 		template<typename FuncT>
 		[[noreturn]]
-		IntrusivePtr<FuncT> operator()(const FuncT & /* vFunc */) const {
+		IntrusivePtr<FuncT> operator()(const FuncT &vFunc) const {
+			(void)vFunc;
 			MCF_THROW(Exception, ERROR_CALL_NOT_IMPLEMENTED, Rcntws::View(L"Function: 该函数对象不允许复制构造。"));
 		}
 	};

@@ -8,7 +8,7 @@
 
 // 参见 gcc/libgcc/unwind-dw2-fde.h 里面的 old_object 的注释。
 struct object {
-	void *impl[8 /* 6 */];
+	void *impl[8];
 };
 
 __attribute__((__weak__))

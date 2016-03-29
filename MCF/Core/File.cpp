@@ -45,7 +45,10 @@ namespace MCF {
 
 namespace {
 	__attribute__((__stdcall__, __force_align_arg_pointer__, __aligned__(16)))
-	void IoApcCallback(void *pContext, ::IO_STATUS_BLOCK * /* pIoStatus */, ULONG /* ulReserved */) noexcept {
+	void IoApcCallback(void *pContext, ::IO_STATUS_BLOCK *pIoStatus, ULONG ulReserved) noexcept {
+		(void)pIoStatus;
+		(void)ulReserved;
+
 		const auto pbIoPending = static_cast<bool *>(pContext);
 		*pbIoPending = false;
 	}

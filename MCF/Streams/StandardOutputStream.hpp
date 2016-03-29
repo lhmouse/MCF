@@ -27,8 +27,9 @@ public:
 	bool IsBuffered() const noexcept;
 	void SetBuffered(bool bBuffered);
 
-	void Swap(StandardOutputStream & /* rhs */) noexcept {
+	void Swap(StandardOutputStream &rhs) noexcept {
 		using std::swap;
+		(void)rhs;
 	}
 
 public:

@@ -67,7 +67,8 @@ void Fnv1a64OutputStream::Put(const void *pData, std::size_t uSize){
 	}
 }
 
-void Fnv1a64OutputStream::Flush(bool /* bHard */){
+void Fnv1a64OutputStream::Flush(bool bHard){
+	(void)bHard;
 }
 
 void Fnv1a64OutputStream::Reset() noexcept {

@@ -68,23 +68,17 @@ bool KernelRecursiveMutex::Try(std::uint64_t u64UntilFastMonoClock) noexcept {
 	::LARGE_INTEGER liTimeout;
 	::__MCF_CRT_InitializeNtTimeout(&liTimeout, u64UntilFastMonoClock);
 	const auto lStatus = ::NtWaitForSingleObject(x_hMutex.Get(), false, &liTimeout);
-	if(!NT_SUCCESS(lStatus)){
-		MCF_ASSERT_MSG(false, L"NtWaitForSingleObject() 失败。");
-	}
+	MCF_ASSERT_MSG(NT_SUCCESS(lStatus), L"NtWaitForSingleObject() 失败。");
 	return lStatus != STATUS_TIMEOUT;
 }
 void KernelRecursiveMutex::Lock() noexcept {
 	const auto lStatus = ::NtWaitForSingleObject(x_hMutex.Get(), false, nullptr);
-	if(!NT_SUCCESS(lStatus)){
-		MCF_ASSERT_MSG(false, L"NtWaitForSingleObject() 失败。");
-	}
+	MCF_ASSERT_MSG(NT_SUCCESS(lStatus), L"NtWaitForSingleObject() 失败。");
 }
 void KernelRecursiveMutex::Unlock() noexcept {
 	LONG lPrevCount;
 	const auto lStatus = ::NtReleaseMutant(x_hMutex.Get(), &lPrevCount);
-	if(!NT_SUCCESS(lStatus)){
-		MCF_ASSERT_MSG(false, L"NtReleaseMutant() 失败。");
-	}
+	MCF_ASSERT_MSG(NT_SUCCESS(lStatus), L"NtReleaseMutant() 失败。");
 	MCF_ASSERT_MSG(lPrevCount <= 0, L"互斥锁没有被任何线程锁定。");
 }
 

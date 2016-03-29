@@ -80,9 +80,7 @@ Impl_UniqueNtHandle::UniqueNtHandle KernelMutex::X_CreateEventHandle(const WideS
 	if(bNameExists){
 		EVENT_BASIC_INFORMATION vBasicInfo;
 		const auto lStatus = ::NtQueryEvent(hEvent.Get(), EventBasicInformation, &vBasicInfo, sizeof(vBasicInfo), nullptr);
-		if(!NT_SUCCESS(lStatus)){
-			MCF_ASSERT_MSG(false, L"NtQueryEvent() 失败。");
-		}
+		MCF_ASSERT_MSG(NT_SUCCESS(lStatus), L"NtQueryEvent() 失败。");
 		if(vBasicInfo.eEventType != SynchronizationEvent){
 			MCF_THROW(Exception, ERROR_INVALID_HANDLE /* ::RtlNtStatusToDosError(STATUS_OBJECT_TYPE_MISMATCH) */, Rcntws::View(L"KernelMutex: 内核事件类型不匹配。"));
 		}
@@ -94,23 +92,17 @@ bool KernelMutex::Try(std::uint64_t u64UntilFastMonoClock) noexcept {
 	::LARGE_INTEGER liTimeout;
 	::__MCF_CRT_InitializeNtTimeout(&liTimeout, u64UntilFastMonoClock);
 	const auto lStatus = ::NtWaitForSingleObject(x_hEvent.Get(), false, &liTimeout);
-	if(!NT_SUCCESS(lStatus)){
-		MCF_ASSERT_MSG(false, L"NtWaitForSingleObject() 失败。");
-	}
+	MCF_ASSERT_MSG(NT_SUCCESS(lStatus), L"NtWaitForSingleObject() 失败。");
 	return lStatus != STATUS_TIMEOUT;
 }
 void KernelMutex::Lock() noexcept {
 	const auto lStatus = ::NtWaitForSingleObject(x_hEvent.Get(), false, nullptr);
-	if(!NT_SUCCESS(lStatus)){
-		MCF_ASSERT_MSG(false, L"NtWaitForSingleObject() 失败。");
-	}
+	MCF_ASSERT_MSG(NT_SUCCESS(lStatus), L"NtWaitForSingleObject() 失败。");
 }
 void KernelMutex::Unlock() noexcept {
 	LONG lPrevState;
 	const auto lStatus = ::NtSetEvent(x_hEvent.Get(), &lPrevState);
-	if(!NT_SUCCESS(lStatus)){
-		MCF_ASSERT_MSG(false, L"NtSetEvent() 失败。");
-	}
+	MCF_ASSERT_MSG(NT_SUCCESS(lStatus), L"NtSetEvent() 失败。");
 	MCF_ASSERT_MSG(lPrevState == 0, L"互斥锁没有被任何线程锁定。");
 }
 

@@ -396,9 +396,7 @@ void *_MCFCRT_CreateThread(unsigned (*pfnThreadProc)(intptr_t), intptr_t nParam,
 }
 void _MCFCRT_CloseThread(void *hThread){
 	const NTSTATUS lStatus = NtClose((HANDLE)hThread);
-	if(!NT_SUCCESS(lStatus)){
-		_MCFCRT_ASSERT_MSG(false, L"NtClose() 失败。");
-	}
+	_MCFCRT_ASSERT_MSG(NT_SUCCESS(lStatus), L"NtClose() 失败。");
 }
 
 uintptr_t _MCFCRT_GetCurrentThreadId(){
@@ -409,17 +407,13 @@ void _MCFCRT_Sleep(uint64_t u64UntilFastMonoClock){
 	LARGE_INTEGER liTimeout;
 	__MCF_CRT_InitializeNtTimeout(&liTimeout, u64UntilFastMonoClock);
 	const NTSTATUS lStatus = NtDelayExecution(false, &liTimeout);
-	if(!NT_SUCCESS(lStatus)){
-		_MCFCRT_ASSERT_MSG(false, L"NtDelayExecution() 失败。");
-	}
+	_MCFCRT_ASSERT_MSG(NT_SUCCESS(lStatus), L"NtDelayExecution() 失败。");
 }
 bool _MCFCRT_AlertableSleep(uint64_t u64UntilFastMonoClock){
 	LARGE_INTEGER liTimeout;
 	__MCF_CRT_InitializeNtTimeout(&liTimeout, u64UntilFastMonoClock);
 	const NTSTATUS lStatus = NtDelayExecution(true, &liTimeout);
-	if(!NT_SUCCESS(lStatus)){
-		_MCFCRT_ASSERT_MSG(false, L"NtDelayExecution() 失败。");
-	}
+	_MCFCRT_ASSERT_MSG(NT_SUCCESS(lStatus), L"NtDelayExecution() 失败。");
 	if(lStatus == STATUS_TIMEOUT){
 		return false;
 	}
@@ -429,31 +423,23 @@ void _MCFCRT_AlertableSleepForever(){
 	LARGE_INTEGER liTimeout;
 	liTimeout.QuadPart = INT64_MAX;
 	const NTSTATUS lStatus = NtDelayExecution(true, &liTimeout);
-	if(!NT_SUCCESS(lStatus)){
-		_MCFCRT_ASSERT_MSG(false, L"NtDelayExecution() 失败。");
-	}
+	_MCFCRT_ASSERT_MSG(NT_SUCCESS(lStatus), L"NtDelayExecution() 失败。");
 }
 void _MCFCRT_YieldThread(){
 	const NTSTATUS lStatus = NtYieldExecution();
-	if(!NT_SUCCESS(lStatus)){
-		_MCFCRT_ASSERT_MSG(false, L"NtYieldExecution() 失败。");
-	}
+	_MCFCRT_ASSERT_MSG(NT_SUCCESS(lStatus), L"NtYieldExecution() 失败。");
 }
 
 long _MCFCRT_SuspendThread(void *hThread){
 	LONG lPrevCount;
 	const NTSTATUS lStatus = NtSuspendThread((HANDLE)hThread, &lPrevCount);
-	if(!NT_SUCCESS(lStatus)){
-		_MCFCRT_ASSERT_MSG(false, L"NtSuspendThread() 失败。");
-	}
+	_MCFCRT_ASSERT_MSG(NT_SUCCESS(lStatus), L"NtSuspendThread() 失败。");
 	return lPrevCount;
 }
 long _MCFCRT_ResumeThread(void *hThread){
 	LONG lPrevCount;
 	const NTSTATUS lStatus = NtResumeThread((HANDLE)hThread, &lPrevCount);
-	if(!NT_SUCCESS(lStatus)){
-		_MCFCRT_ASSERT_MSG(false, L"NtResumeThread() 失败。");
-	}
+	_MCFCRT_ASSERT_MSG(NT_SUCCESS(lStatus), L"NtResumeThread() 失败。");
 	return lPrevCount;
 }
 
@@ -461,9 +447,7 @@ bool _MCFCRT_WaitForThread(void *hThread, _MCFCRT_STD uint64_t u64UntilFastMonoC
 	LARGE_INTEGER liTimeout;
 	__MCF_CRT_InitializeNtTimeout(&liTimeout, u64UntilFastMonoClock);
 	const NTSTATUS lStatus = NtWaitForSingleObject((HANDLE)hThread, false, &liTimeout);
-	if(!NT_SUCCESS(lStatus)){
-		_MCFCRT_ASSERT_MSG(false, L"NtWaitForSingleObject() 失败。");
-	}
+	_MCFCRT_ASSERT_MSG(NT_SUCCESS(lStatus), L"NtWaitForSingleObject() 失败。");
 	if(lStatus == STATUS_TIMEOUT){
 		return false;
 	}
@@ -471,7 +455,5 @@ bool _MCFCRT_WaitForThread(void *hThread, _MCFCRT_STD uint64_t u64UntilFastMonoC
 }
 void _MCFCRT_WaitForThreadForever(void *hThread){
 	const NTSTATUS lStatus = NtWaitForSingleObject((HANDLE)hThread, false, nullptr);
-	if(!NT_SUCCESS(lStatus)){
-		_MCFCRT_ASSERT_MSG(false, L"NtWaitForSingleObject() 失败。");
-	}
+	_MCFCRT_ASSERT_MSG(NT_SUCCESS(lStatus), L"NtWaitForSingleObject() 失败。");
 }

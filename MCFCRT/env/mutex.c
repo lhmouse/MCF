@@ -25,7 +25,7 @@ static inline bool atomic_bit_test_and_set_acquire(volatile uintptr_t *p, unsign
 		"jc %l[return_true] \n"
 		:
 		: "d"(p), "c"(b)
-		:
+		: "memory"
 		: return_true
 	);
 	return false;
@@ -42,7 +42,7 @@ static inline bool atomic_bit_test_and_clear_release(volatile uintptr_t *p, unsi
 		"jc %l[return_true] \n"
 		:
 		: "d"(p), "c"(b)
-		:
+		: "memory"
 		: return_true
 	);
 	return false;

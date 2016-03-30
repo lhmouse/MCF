@@ -50,7 +50,7 @@ bool _MCFCRT_WaitForConditionVariable(_MCFCRT_ConditionVariable *pConditionVaria
 	__MCF_CRT_InitializeNtTimeout(&liTimeout, u64UntilFastMonoClock);
 	NTSTATUS lStatus = NtWaitForKeyedEvent(nullptr, (void *)pConditionVariable, false, &liTimeout);
 	_MCFCRT_ASSERT_MSG(NT_SUCCESS(lStatus), L"NtWaitForKeyedEvent() 失败。");
-	if(lStatus == STATUS_TIMEOUT){
+	if(_MCFCRT_EXPECT(lStatus == STATUS_TIMEOUT)){
 		const size_t uCountDecreased = atomic_saturated_sub_relaxed(pConditionVariable, 1);
 		if(uCountDecreased != 0){
 			(*pfnRelockCallback)(nContext, nLocked);

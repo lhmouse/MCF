@@ -33,7 +33,6 @@ static inline uintptr_t atomic_saturated_sub_relaxed(volatile uintptr_t *p, uint
 	} while(_MCFCRT_EXPECT_NOT(!__atomic_compare_exchange_n(p, &old, new, false, __ATOMIC_RELAXED, __ATOMIC_RELAXED)));
 	return delta;
 }
-
 static inline uintptr_t atomic_exchange_relaxed(volatile uintptr_t *p, uintptr_t u){
 	return __atomic_exchange_n(p, u, __ATOMIC_RELAXED);
 }

@@ -15,57 +15,56 @@ NTSTATUS NtWaitForKeyedEvent(HANDLE hKeyedEvent, void *pKey, BOOLEAN bAlertable,
 extern __attribute__((__dllimport__, __stdcall__))
 NTSTATUS NtReleaseKeyedEvent(HANDLE hKeyedEvent, void *pKey, BOOLEAN bAlertable, const LARGE_INTEGER *pliTimeout);
 
-static inline bool atomic_bit_test_and_set_acquire(volatile uintptr_t *p, unsigned bit){
-	bool cf;
-	__asm__ volatile (
-		"xor eax, eax \n"
-#ifdef _WIN64
-		"lock bts qword ptr[rdx], rcx \n"
-#else
-		"lock bts dword ptr[edx], ecx\n"
-#endif
-		"setc %0 \n"
-		: "=a"(cf)
-		: "d"(p), "c"(bit)
-	);
-	return cf;
+static inline uintptr_t AtomicLoadConsume(volatile uintptr_t *p){
+	return __atomic_load_n(p, __ATOMIC_CONSUME);
 }
-static inline bool atomic_bit_test_and_clear_release(volatile uintptr_t *p, unsigned bit){
-	bool cf;
-	__asm__ volatile (
-		"xor eax, eax \n"
-#ifdef _WIN64
-		"lock btr qword ptr[rdx], rcx \n"
-#else
-		"lock btr dword ptr[edx], ecx\n"
-#endif
-		"setc %0 \n"
-		: "=a"(cf)
-		: "d"(p), "c"(bit)
-	);
-	return cf;
+static inline bool AtomicCompareExchangeAcqRel(volatile uintptr_t *p, uintptr_t *cmp, uintptr_t xchg){
+	return __atomic_compare_exchange_n(p, cmp, xchg, false, __ATOMIC_ACQ_REL, __ATOMIC_CONSUME);
 }
 
-#define FL_LOCKED               ((uintptr_t)0x0001)
-#define FL_WAIT_WANTED          ((uintptr_t)0x0002)
-#define FL_RESERVED_2           ((uintptr_t)0x0004)
-#define FL_RESERVED_3           ((uintptr_t)0x0008)
+#define FLAG_LOCKED             ((uintptr_t)0x0001)
+#define FLAG_URGENT             ((uintptr_t)0x0002)
+#define FLAGS_RESERVED          ((size_t)4)
 
-#define FLAG_BIT_COUNT          ((size_t)4)
+#define GET_THREAD_COUNT(v_)    ((size_t)(uintptr_t)(v_) >> FLAG_COUNT)
+#define MAKE_THREAD_COUNT(v_)   ((uintptr_t)(size_t)(v_) << FLAG_COUNT)
 
-#define GET_THREAD_COUNT(c_)    ((size_t)(uintptr_t)(c_) >> FLAG_BIT_COUNT)
-#define MAKE_THREAD_COUNT(c_)   ((uintptr_t)(size_t)(c_) << FLAG_BIT_COUNT)
+static inline bool RealWaitForMutex(_MCFCRT_Mutex *pMutex, size_t uMaxSpinCount, bool bMayTimeOut, uint64_t u64UntilFastMonoClock){
+	//
+}
+static inline void RealSignalMutex(_MCFCRT_Mutex *pMutex){
+	bool bSignalOne;
+	{
+		uintptr_t uOld, uNew;
+		uOld = AtomicLoadConsume(pMutex);
+		do {
+			_MCFCRT_ASSERT_MSG(uOld & FLAG_LOCKED, L"互斥体没有被任何线程锁定。");
+			_MCFCRT_ASSERT(!(uOld & FLAG_URGENT));
+
+			if(GET_THREAD_COUNT(uOld) == 0){
+				bSignalOne = false;
+				uNew = uOld - FLAG_LOCKED + FLAG_URGENT - MAKE_THREAD_COUNT(1);
+			} else {
+				bSignalOne = true;
+				uNew = uOld - FLAG_LOCKED;
+			}
+		} while(_MCFCRT_EXPECT_NOT(!AtomicCompareExchangeAcqRel(pValue, &uOld, uNew)));
+	}
+	if(bSignalOne){
+		NTSTATUS lStatus = NtReleaseKeyedEvent(nullptr, (void *)pMutex, false, nullptr);
+		_MCFCRT_ASSERT_MSG(NT_SUCCESS(lStatus), L"NtReleaseKeyedEvent() 失败。");
+		_MCFCRT_ASSERT(lStatus != STATUS_TIMEOUT);
+	}
+}
 
 bool _MCFCRT_WaitForMutex(_MCFCRT_Mutex *pMutex, size_t uMaxSpinCount, uint64_t u64UntilFastMonoClock){
-	while(atomic_bit_test_and_set_acquire(pMutex, 0) == true){
-		Sleep(1);
-	}
-	return true;
+	const bool bLocked = RealWaitForMutex(pMutex, uMaxSpinCount, false, UINT64_MAX);
+	return bLocked;
 }
 void _MCFCRT_WaitForMutexForever(_MCFCRT_Mutex *pMutex, size_t uMaxSpinCount){
-	// TODO
-	_MCFCRT_WaitForMutex(pMutex, uMaxSpinCount, UINT64_MAX);
+	const bool bLocked = RealWaitForMutex(pMutex, uMaxSpinCount, false, UINT64_MAX);
+	_MCFCRT_ASSERT(bLocked);
 }
 void _MCFCRT_SignalMutex(_MCFCRT_Mutex *pMutex){
-	atomic_bit_test_and_clear_release(pMutex, 0);
+	RealSignalMutex(pMutex);
 }

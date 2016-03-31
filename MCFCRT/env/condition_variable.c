@@ -33,9 +33,6 @@ static inline uintptr_t atomic_saturated_sub_relaxed(volatile uintptr_t *p, uint
 	} while(_MCFCRT_EXPECT_NOT(!__atomic_compare_exchange_n(p, &old, new, false, __ATOMIC_RELAXED, __ATOMIC_RELAXED)));
 	return delta;
 }
-static inline uintptr_t atomic_exchange_relaxed(volatile uintptr_t *p, uintptr_t u){
-	return __atomic_exchange_n(p, u, __ATOMIC_RELAXED);
-}
 
 bool _MCFCRT_WaitForConditionVariable(_MCFCRT_ConditionVariable *pConditionVariable,
 	_MCFCRT_ConditionVariableUnlockCallback pfnUnlockCallback, _MCFCRT_ConditionVariableRelockCallback pfnRelockCallback, intptr_t nContext, uint64_t u64UntilFastMonoClock)
@@ -80,7 +77,7 @@ size_t _MCFCRT_SignalConditionVariable(_MCFCRT_ConditionVariable *pConditionVari
 	return uCountSignaled;
 }
 size_t _MCFCRT_BroadcastConditionVariable(_MCFCRT_ConditionVariable *pConditionVariable){
-	const size_t uCountSignaled = atomic_exchange_relaxed(pConditionVariable, 0);
+	const size_t uCountSignaled = atomic_saturated_sub_relaxed(pConditionVariable, SIZE_MAX);
 	for(size_t i = 0; i < uCountSignaled; ++i){
 		NTSTATUS lStatus = NtReleaseKeyedEvent(nullptr, (void *)pConditionVariable, false, nullptr);
 		_MCFCRT_ASSERT_MSG(NT_SUCCESS(lStatus), L"NtReleaseKeyedEvent() 失败。");

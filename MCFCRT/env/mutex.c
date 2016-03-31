@@ -40,7 +40,6 @@ static inline bool RealWaitForMutex(_MCFCRT_Mutex *pMutex, size_t uMaxSpinCount,
 		{
 			size_t uSpinnedCount = 0;
 			do {
-				__builtin_ia32_pause();
 				uintptr_t uOld, uNew;
 				uOld = __atomic_load_n(pMutex, __ATOMIC_CONSUME);
 				if(GET_THREAD_COUNT(uOld) == 0){
@@ -55,7 +54,8 @@ static inline bool RealWaitForMutex(_MCFCRT_Mutex *pMutex, size_t uMaxSpinCount,
 				if(uOld & FLAG_URGENT){
 					break;
 				}
-			} while(_MCFCRT_EXPECT_NOT(uSpinnedCount++ < uMaxSpinCount));
+				__builtin_ia32_pause();
+			} while(_MCFCRT_EXPECT(uSpinnedCount++ < uMaxSpinCount));
 		}
 		if(bMayTimeOut){
 			LARGE_INTEGER liTimeout;

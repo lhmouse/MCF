@@ -57,6 +57,7 @@ static inline bool RealWaitForConditionVariable(_MCFCRT_ConditionVariable *pCond
 		lStatus = NtWaitForKeyedEvent(nullptr, (void *)pConditionVariable, false, nullptr);
 		_MCFCRT_ASSERT_MSG(NT_SUCCESS(lStatus), L"NtWaitForKeyedEvent() 失败。");
 	}
+	_MCFCRT_ASSERT(lStatus != STATUS_TIMEOUT);
 	(*pfnRelockCallback)(nContext, nLocked);
 	return true;
 }
@@ -65,6 +66,7 @@ static inline size_t RealSignalConditionVariable(_MCFCRT_ConditionVariable *pCon
 	for(size_t i = 0; i < uCountSignaled; ++i){
 		NTSTATUS lStatus = NtReleaseKeyedEvent(nullptr, (void *)pConditionVariable, false, nullptr);
 		_MCFCRT_ASSERT_MSG(NT_SUCCESS(lStatus), L"NtReleaseKeyedEvent() 失败。");
+		_MCFCRT_ASSERT(lStatus != STATUS_TIMEOUT);
 	}
 	return uCountSignaled;
 }

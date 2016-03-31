@@ -21,10 +21,10 @@ static inline uintptr_t atomic_saturated_sub_relaxed(volatile uintptr_t *p, uint
 	uintptr_t delta, old, new;
 	old = __atomic_load_n(p, __ATOMIC_RELAXED);
 	do {
-		if(old < max){
-			delta = old;
-		} else {
+		if(max < old){
 			delta = max;
+		} else {
+			delta = old;
 		}
 		if(_MCFCRT_EXPECT_NOT(delta == 0)){
 			break;

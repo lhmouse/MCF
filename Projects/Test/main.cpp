@@ -6,7 +6,7 @@
 #include <MCF/Thread/Thread.hpp>
 
 extern "C" unsigned _MCFCRT_Main(){
-#if 1
+#if 0
 	auto t1 = MCF::GetHiResMonoClock();
 
 	volatile unsigned val = 0;

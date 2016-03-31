@@ -48,11 +48,11 @@ void _MCFCRT_Bail(const wchar_t *pwszDescription){
 #endif
 	bool bShouldGenerateBreakpoint = bCanBeDebugged;
 
-	wchar_t awcBuffer[1024];
+	wchar_t awcBuffer[1024 + 256];
 	wchar_t *pwcWrite = _MCFCRT_wcpcpy(awcBuffer, L"应用程序异常终止，请联系作者寻求协助。");
 	if(pwszDescription){
 		pwcWrite = _MCFCRT_wcpcpy(pwcWrite, L"\n\n错误描述：\n");
-		pwcWrite = _MCFCRT_wcppcpy(pwcWrite, awcBuffer + 896, pwszDescription); // 后面还有一些内容，保留一些字符。
+		pwcWrite = _MCFCRT_wcppcpy(pwcWrite, awcBuffer + 1024 + 128, pwszDescription); // 后面还有一些内容，保留一些字符。
 	}
 	pwcWrite = _MCFCRT_wcpcpy(pwcWrite, L"\n\n单击“确定”终止应用程序");
 	if(bCanBeDebugged){

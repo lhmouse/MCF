@@ -20,7 +20,7 @@ static inline bool atomic_bit_test_and_set_acquire(volatile uintptr_t *p, unsign
 	__asm__ volatile(
 		"xor eax, eax \n"
 #ifdef _WIN64
-		"lock bts qword ptr[rdx], ecx \n"
+		"lock bts qword ptr[rdx], rcx \n"
 #else
 		"lock bts dword ptr[edx], ecx\n"
 #endif
@@ -35,7 +35,7 @@ static inline bool atomic_bit_test_and_clear_release(volatile uintptr_t *p, unsi
 	__asm__ volatile(
 		"xor eax, eax \n"
 #ifdef _WIN64
-		"lock btr qword ptr[rdx], ecx \n"
+		"lock btr qword ptr[rdx], rcx \n"
 #else
 		"lock btr dword ptr[edx], ecx\n"
 #endif

@@ -14,37 +14,38 @@ NTSTATUS NtWaitForKeyedEvent(HANDLE hKeyedEvent, void *pKey, BOOLEAN bAlertable,
 extern __attribute__((__dllimport__, __stdcall__))
 NTSTATUS NtReleaseKeyedEvent(HANDLE hKeyedEvent, void *pKey, BOOLEAN bAlertable, const LARGE_INTEGER *pliTimeout);
 
-static inline void atomic_increment_relaxed(volatile uintptr_t *p){
-	__atomic_fetch_add(p, 1, __ATOMIC_RELAXED);
+static inline void AtomicAddRelaxed(volatile uintptr_t *pValue, uintptr_t uAddend){
+	__atomic_fetch_add(pValue, uAddend, __ATOMIC_RELAXED);
 }
-static inline uintptr_t atomic_saturated_sub_relaxed(volatile uintptr_t *p, uintptr_t max){
-	uintptr_t delta, old, new;
-	old = __atomic_load_n(p, __ATOMIC_RELAXED);
-	do {
-		if(max < old){
-			delta = max;
-		} else {
-			delta = old;
-		}
-		if(_MCFCRT_EXPECT_NOT(delta == 0)){
-			break;
-		}
-		new = old - delta;
-	} while(_MCFCRT_EXPECT_NOT(!__atomic_compare_exchange_n(p, &old, new, false, __ATOMIC_RELAXED, __ATOMIC_RELAXED)));
-	return delta;
+static inline uintptr_t AtomicSaturatedSubRelaxed(volatile uintptr_t *pValue, uintptr_t uSubtrahend){
+	uintptr_t uOld, uNew;
+	{
+		uOld = __atomic_load_n(pValue, __ATOMIC_RELAXED);
+		do {
+			if(uOld <= uSubtrahend){
+				uNew = 0;
+			} else {
+				uNew = uOld - uSubtrahend;
+			}
+			if(uNew == uOld){
+				break;
+			}
+		} while(_MCFCRT_EXPECT_NOT(!__atomic_compare_exchange_n(pValue, &uOld, uNew, false, __ATOMIC_RELAXED, __ATOMIC_RELAXED)));
+	}
+	return uOld - uNew;
 }
 
 static inline bool RealWaitForConditionVariable(_MCFCRT_ConditionVariable *pConditionVariable, bool bMayTimeOut, uint64_t u64UntilFastMonoClock){
 	if(bMayTimeOut && _MCFCRT_EXPECT(u64UntilFastMonoClock == 0)){
 		return false;
 	}
-	atomic_increment_relaxed(pConditionVariable);
+	AtomicAddRelaxed(pConditionVariable, 1);
 	LARGE_INTEGER liTimeout;
 	__MCF_CRT_InitializeNtTimeout(&liTimeout, u64UntilFastMonoClock);
 	NTSTATUS lStatus = NtWaitForKeyedEvent(nullptr, (void *)pConditionVariable, false, &liTimeout);
 	_MCFCRT_ASSERT_MSG(NT_SUCCESS(lStatus), L"NtWaitForKeyedEvent() 失败。");
 	if(bMayTimeOut && _MCFCRT_EXPECT(lStatus == STATUS_TIMEOUT)){
-		const size_t uCountDecreased = atomic_saturated_sub_relaxed(pConditionVariable, 1);
+		const size_t uCountDecreased = AtomicSaturatedSubRelaxed(pConditionVariable, 1);
 		if(uCountDecreased != 0){
 			return false;
 		}
@@ -55,7 +56,7 @@ static inline bool RealWaitForConditionVariable(_MCFCRT_ConditionVariable *pCond
 	return true;
 }
 static inline size_t RealSignalConditionVariable(_MCFCRT_ConditionVariable *pConditionVariable, size_t uMaxCountToSignal){
-	const size_t uCountSignaled = atomic_saturated_sub_relaxed(pConditionVariable, uMaxCountToSignal);
+	const size_t uCountSignaled = AtomicSaturatedSubRelaxed(pConditionVariable, uMaxCountToSignal);
 	for(size_t i = 0; i < uCountSignaled; ++i){
 		NTSTATUS lStatus = NtReleaseKeyedEvent(nullptr, (void *)pConditionVariable, false, nullptr);
 		_MCFCRT_ASSERT_MSG(NT_SUCCESS(lStatus), L"NtReleaseKeyedEvent() 失败。");

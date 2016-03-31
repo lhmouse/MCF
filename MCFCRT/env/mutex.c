@@ -15,7 +15,7 @@ NTSTATUS NtWaitForKeyedEvent(HANDLE hKeyedEvent, void *pKey, BOOLEAN bAlertable,
 extern __attribute__((__dllimport__, __stdcall__))
 NTSTATUS NtReleaseKeyedEvent(HANDLE hKeyedEvent, void *pKey, BOOLEAN bAlertable, const LARGE_INTEGER *pliTimeout);
 
-static inline bool atomic_bit_test_and_set_seq_cst(volatile uintptr_t *p, unsigned bit){
+static inline bool atomic_bit_test_and_set_acquire(volatile uintptr_t *p, unsigned bit){
 	bool cf;
 	__asm__ __volatile__(
 		"xor eax, eax \n"
@@ -30,7 +30,7 @@ static inline bool atomic_bit_test_and_set_seq_cst(volatile uintptr_t *p, unsign
 	);
 	return cf;
 }
-static inline bool atomic_bit_test_and_reset_seq_cst(volatile uintptr_t *p, unsigned bit){
+static inline bool atomic_bit_test_and_clear_release(volatile uintptr_t *p, unsigned bit){
 	bool cf;
 	__asm__ __volatile__(
 		"xor eax, eax \n"
@@ -57,7 +57,7 @@ static inline bool atomic_bit_test_and_reset_seq_cst(volatile uintptr_t *p, unsi
 #define MAKE_THREAD_COUNT(c_)   ((uintptr_t)(size_t)(c_) << FLAG_BIT_COUNT)
 
 bool _MCFCRT_WaitForMutex(_MCFCRT_Mutex *pMutex, size_t uMaxSpinCount, uint64_t u64UntilFastMonoClock){
-	while(atomic_bit_test_and_set_seq_cst(pMutex, 0) == true){
+	while(atomic_bit_test_and_set_acquire(pMutex, 0) == true){
 		Sleep(1);
 	}
 	return true;
@@ -67,5 +67,5 @@ void _MCFCRT_WaitForMutexForever(_MCFCRT_Mutex *pMutex, size_t uMaxSpinCount){
 	_MCFCRT_WaitForMutex(pMutex, uMaxSpinCount, UINT64_MAX);
 }
 void _MCFCRT_SignalMutex(_MCFCRT_Mutex *pMutex){
-	atomic_bit_test_and_reset_seq_cst(pMutex, 0);
+	atomic_bit_test_and_clear_release(pMutex, 0);
 }

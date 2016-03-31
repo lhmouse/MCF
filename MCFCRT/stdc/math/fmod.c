@@ -7,7 +7,7 @@
 
 float fmodf(float x, float y){
 	register float ret;
-	__asm__ volatile(
+	__asm__ volatile (
 		"fld dword ptr[%2] \n"
 		"fld dword ptr[%1] \n"
 		"1: \n"
@@ -26,7 +26,7 @@ float fmodf(float x, float y){
 
 double fmod(double x, double y){
 	register double ret;
-	__asm__ volatile(
+	__asm__ volatile (
 		"fld qword ptr[%2] \n"
 		"fld qword ptr[%1] \n"
 		"1: \n"
@@ -45,7 +45,7 @@ double fmod(double x, double y){
 
 long double fmodl(long double x, long double y){
 	register long double ret;
-	__asm__ volatile(
+	__asm__ volatile (
 		"fld tbyte ptr[%2] \n"
 		"fld tbyte ptr[%1] \n"
 		"1: \n"

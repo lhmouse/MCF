@@ -7,7 +7,7 @@
 
 void *memmove(void *dst, const void *src, size_t cb){
 	uintptr_t unused;
-	__asm__ volatile(
+	__asm__ volatile (
 		"cmp " __RSI ", " __RDI " \n"
 		"jbe 5f \n"
 		"	cmp %2, 64 \n"

@@ -7,7 +7,7 @@
 
 float scalblnf(float x, long n){
 	register float ret;
-	__asm__ volatile(
+	__asm__ volatile (
 		"fild dword ptr[%2] \n"
 		"fld dword ptr[%1] \n"
 		"fscale \n"
@@ -21,7 +21,7 @@ float scalblnf(float x, long n){
 
 double scalbln(double x, long n){
 	register double ret;
-	__asm__ volatile(
+	__asm__ volatile (
 		"fild dword ptr[%2] \n"
 		"fld qword ptr[%1] \n"
 		"fscale \n"
@@ -35,7 +35,7 @@ double scalbln(double x, long n){
 
 long double scalblnl(long double x, long n){
 	register long double ret;
-	__asm__ volatile(
+	__asm__ volatile (
 		"fild dword ptr[%2] \n"
 		"fld tbyte ptr[%1] \n"
 		"fscale \n"

@@ -7,7 +7,7 @@
 
 float acosf(float x){
 	register float ret;
-	__asm__ volatile(
+	__asm__ volatile (
 		"fld dword ptr[%1] \n"
 		"fld st \n"
 		"fmul st, st \n"
@@ -25,7 +25,7 @@ float acosf(float x){
 
 double acos(double x){
 	register double ret;
-	__asm__ volatile(
+	__asm__ volatile (
 		"fld qword ptr[%1] \n"
 		"fld st \n"
 		"fmul st, st \n"
@@ -43,7 +43,7 @@ double acos(double x){
 
 long double acosl(long double x){
 	register long double ret;
-	__asm__ volatile(
+	__asm__ volatile (
 		"fld tbyte ptr[%1] \n"
 		"fld st \n"
 		"fmul st, st \n"

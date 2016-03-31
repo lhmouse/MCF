@@ -8,7 +8,7 @@
 float fmaxf(float x, float y){
 	register float ret;
 	uintptr_t unused;
-	__asm__ volatile(
+	__asm__ volatile (
 #ifdef _WIN64
 		"movss xmm0, dword ptr[%3] \n"
 		"movss xmm1, xmm0 \n"
@@ -39,7 +39,7 @@ float fmaxf(float x, float y){
 double fmax(double x, double y){
 	register double ret;
 	uintptr_t unused;
-	__asm__ volatile(
+	__asm__ volatile (
 #ifdef _WIN64
 		"movsd xmm0, qword ptr[%3] \n"
 		"movsd xmm1, xmm0 \n"
@@ -70,7 +70,7 @@ double fmax(double x, double y){
 long double fmaxl(long double x, long double y){
 	register long double ret;
 	uintptr_t unused;
-	__asm__ volatile(
+	__asm__ volatile (
 		"fld tbyte ptr[%4] \n"
 		"fld tbyte ptr[%3] \n"
 		"fcompp \n"

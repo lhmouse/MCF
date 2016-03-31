@@ -25,10 +25,12 @@ NTSTATUS NtReleaseKeyedEvent(HANDLE hKeyedEvent, void *pKey, BOOLEAN bAlertable,
 static inline bool RealWaitForMutex(_MCFCRT_Mutex *pMutex, size_t uMaxSpinCount, bool bMayTimeOut, uint64_t u64UntilFastMonoClock){
 	{
 		uintptr_t uOld, uNew;
-		uOld = 0;
-		uNew = uOld + FLAG_LOCKED;
-		if(_MCFCRT_EXPECT(__atomic_compare_exchange_n(pMutex, &uOld, uNew, false, __ATOMIC_ACQ_REL, __ATOMIC_CONSUME))){
-			return true;
+		uOld = __atomic_load_n(pMutex, __ATOMIC_CONSUME);
+		if(_MCFCRT_EXPECT(!(uOld & FLAG_LOCKED))){
+			uNew = (uOld & ~FLAG_URGENT) + FLAG_LOCKED;
+			if(_MCFCRT_EXPECT(__atomic_compare_exchange_n(pMutex, &uOld, uNew, false, __ATOMIC_ACQ_REL, __ATOMIC_RELAXED))){
+				return true;
+			}
 		}
 	}
 	if(bMayTimeOut && _MCFCRT_EXPECT(u64UntilFastMonoClock == 0)){
@@ -45,9 +47,9 @@ static inline bool RealWaitForMutex(_MCFCRT_Mutex *pMutex, size_t uMaxSpinCount,
 				if(GET_THREAD_COUNT(uOld) == 0){
 					break;
 				}
-				if(!(uOld & FLAG_LOCKED)){
+				if(_MCFCRT_EXPECT_NOT(!(uOld & FLAG_LOCKED))){
 					uNew = (uOld & ~FLAG_URGENT) + FLAG_LOCKED - MAKE_THREAD_COUNT(1);
-					if(_MCFCRT_EXPECT_NOT(__atomic_compare_exchange_n(pMutex, &uOld, uNew, false, __ATOMIC_ACQ_REL, __ATOMIC_RELAXED))){
+					if(_MCFCRT_EXPECT(__atomic_compare_exchange_n(pMutex, &uOld, uNew, false, __ATOMIC_ACQ_REL, __ATOMIC_RELAXED))){
 						return true;
 					}
 				}

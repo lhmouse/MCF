@@ -14,55 +14,60 @@ NTSTATUS NtWaitForKeyedEvent(HANDLE hKeyedEvent, void *pKey, BOOLEAN bAlertable,
 extern __attribute__((__dllimport__, __stdcall__))
 NTSTATUS NtReleaseKeyedEvent(HANDLE hKeyedEvent, void *pKey, BOOLEAN bAlertable, const LARGE_INTEGER *pliTimeout);
 
-static inline void AtomicAddRelaxed(volatile uintptr_t *pValue, uintptr_t uAddend){
-	__atomic_fetch_add(pValue, uAddend, __ATOMIC_RELAXED);
-}
-static inline uintptr_t AtomicSaturatedSubRelaxed(volatile uintptr_t *pValue, uintptr_t uSubtrahend){
-	uintptr_t uOld, uNew;
-	{
-		uOld = __atomic_load_n(pValue, __ATOMIC_RELAXED);
-		do {
-			if(uOld <= uSubtrahend){
-				uNew = 0;
-			} else {
-				uNew = uOld - uSubtrahend;
-			}
-			if(uNew == uOld){
-				break;
-			}
-		} while(_MCFCRT_EXPECT_NOT(!__atomic_compare_exchange_n(pValue, &uOld, uNew, false, __ATOMIC_RELAXED, __ATOMIC_RELAXED)));
-	}
-	return uOld - uNew;
-}
-
 static inline bool RealWaitForConditionVariable(_MCFCRT_ConditionVariable *pConditionVariable, bool bMayTimeOut, uint64_t u64UntilFastMonoClock){
 	if(bMayTimeOut && _MCFCRT_EXPECT(u64UntilFastMonoClock == 0)){
 		return false;
 	}
-	AtomicAddRelaxed(pConditionVariable, 1);
-	LARGE_INTEGER liTimeout;
-	__MCF_CRT_InitializeNtTimeout(&liTimeout, u64UntilFastMonoClock);
-	NTSTATUS lStatus = NtWaitForKeyedEvent(nullptr, (void *)pConditionVariable, false, &liTimeout);
-	_MCFCRT_ASSERT_MSG(NT_SUCCESS(lStatus), L"NtWaitForKeyedEvent() 失败。");
-	if(bMayTimeOut && _MCFCRT_EXPECT(lStatus == STATUS_TIMEOUT)){
-		const size_t uCountDecreased = AtomicSaturatedSubRelaxed(pConditionVariable, 1);
-		if(uCountDecreased != 0){
-			return false;
+	__atomic_fetch_add(pConditionVariable, 1, __ATOMIC_RELAXED);
+	if(bMayTimeOut){
+		LARGE_INTEGER liTimeout;
+		__MCF_CRT_InitializeNtTimeout(&liTimeout, u64UntilFastMonoClock);
+		NTSTATUS lStatus = NtWaitForKeyedEvent(nullptr, (void *)pConditionVariable, false, &liTimeout);
+		_MCFCRT_ASSERT_MSG(NT_SUCCESS(lStatus), L"NtWaitForKeyedEvent() 失败。");
+		if(_MCFCRT_EXPECT(lStatus == STATUS_TIMEOUT)){
+			uintptr_t uCountDropped;
+			{
+				uintptr_t uOld, uNew;
+				uOld = __atomic_load_n(pConditionVariable, __ATOMIC_RELAXED);
+				do {
+					uCountDropped = (uOld > 1) ? 1 : uOld;
+					if(uCountDropped == 0){
+						break;
+					}
+					uNew = uOld - uCountDropped;
+				} while(_MCFCRT_EXPECT_NOT(!__atomic_compare_exchange_n(pConditionVariable, &uOld, uNew, false, __ATOMIC_RELAXED, __ATOMIC_RELAXED)));
+			}
+			if(uCountDropped != 0){
+				return false;
+			}
+			lStatus = NtWaitForKeyedEvent(nullptr, (void *)pConditionVariable, false, nullptr);
+			_MCFCRT_ASSERT_MSG(NT_SUCCESS(lStatus), L"NtWaitForKeyedEvent() 失败。");
 		}
-		lStatus = NtWaitForKeyedEvent(nullptr, (void *)pConditionVariable, false, nullptr);
+	} else {
+		NTSTATUS lStatus = NtWaitForKeyedEvent(nullptr, (void *)pConditionVariable, false, nullptr);
 		_MCFCRT_ASSERT_MSG(NT_SUCCESS(lStatus), L"NtWaitForKeyedEvent() 失败。");
 	}
-	_MCFCRT_ASSERT(lStatus != STATUS_TIMEOUT);
 	return true;
 }
 static inline size_t RealSignalConditionVariable(_MCFCRT_ConditionVariable *pConditionVariable, size_t uMaxCountToSignal){
-	const size_t uCountSignaled = AtomicSaturatedSubRelaxed(pConditionVariable, uMaxCountToSignal);
-	for(size_t i = 0; i < uCountSignaled; ++i){
+	uintptr_t uCountDropped;
+	{
+		uintptr_t uOld, uNew;
+		uOld = __atomic_load_n(pConditionVariable, __ATOMIC_RELAXED);
+		do {
+			uCountDropped = (uOld > uMaxCountToSignal) ? uMaxCountToSignal : uOld;
+			if(uCountDropped == 0){
+				break;
+			}
+			uNew = uOld - uCountDropped;
+		} while(_MCFCRT_EXPECT_NOT(!__atomic_compare_exchange_n(pConditionVariable, &uOld, uNew, false, __ATOMIC_RELAXED, __ATOMIC_RELAXED)));
+	}
+	for(size_t i = 0; i < uCountDropped; ++i){
 		NTSTATUS lStatus = NtReleaseKeyedEvent(nullptr, (void *)pConditionVariable, false, nullptr);
 		_MCFCRT_ASSERT_MSG(NT_SUCCESS(lStatus), L"NtReleaseKeyedEvent() 失败。");
 		_MCFCRT_ASSERT(lStatus != STATUS_TIMEOUT);
 	}
-	return uCountSignaled;
+	return uCountDropped;
 }
 
 bool _MCFCRT_WaitForConditionVariable(_MCFCRT_ConditionVariable *pConditionVariable,

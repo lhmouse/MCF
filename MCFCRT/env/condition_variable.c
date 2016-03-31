@@ -42,6 +42,7 @@ static inline bool RealWaitForConditionVariable(_MCFCRT_ConditionVariable *pCond
 			}
 			lStatus = NtWaitForKeyedEvent(nullptr, (void *)pConditionVariable, false, nullptr);
 			_MCFCRT_ASSERT_MSG(NT_SUCCESS(lStatus), L"NtWaitForKeyedEvent() 失败。");
+			return true;
 		}
 	} else {
 		NTSTATUS lStatus = NtWaitForKeyedEvent(nullptr, (void *)pConditionVariable, false, nullptr);

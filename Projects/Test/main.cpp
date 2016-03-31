@@ -6,7 +6,9 @@
 #include <MCF/Thread/Thread.hpp>
 
 extern "C" unsigned _MCFCRT_Main(){
-#if 0
+#if 1
+	auto t1 = MCF::GetHiResMonoClock();
+
 	volatile unsigned val = 0;
 	MCF::Mutex m(100);
 	MCF::Array<MCF::Thread, 100> threads;
@@ -28,7 +30,8 @@ extern "C" unsigned _MCFCRT_Main(){
 		t.Join();
 	}
 
-	std::printf("val = %u\n", val);
+	auto t2 = MCF::GetHiResMonoClock();
+	std::printf("val = %u, delta_t = %f\n", val, t2 - t1);
 #else
 	MCF::Mutex m;
 	MCF::ConditionVariable cv;

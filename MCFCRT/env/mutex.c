@@ -3,7 +3,7 @@
 // Copyleft 2013 - 2016, LH_Mouse. All wrongs reserved.
 
 #include "mutex.h"
-#include "clocks.h"
+#include "_nt_timeout.h"
 #include "../ext/assert.h"
 #include "../ext/expect.h"
 #include <limits.h>
@@ -15,157 +15,57 @@ NTSTATUS NtWaitForKeyedEvent(HANDLE hKeyedEvent, void *pKey, BOOLEAN bAlertable,
 extern __attribute__((__dllimport__, __stdcall__))
 NTSTATUS NtReleaseKeyedEvent(HANDLE hKeyedEvent, void *pKey, BOOLEAN bAlertable, const LARGE_INTEGER *pliTimeout);
 
-#define FLAG_LOCKED     ((uintptr_t)1)
-#define FLAG_RESERVED   ((uintptr_t)2)
-#define FLAG_BIT_COUNT  2
-
-#define MUTEX_LOCKED    ((size_t)-1)
-
-// 若锁定互斥体成功，返回 MUTEX_LOCKED；否则返回当前等待互斥体的线程数。
-static inline size_t WaitForMutexAndGetWaitingThreadCount(_MCFCRT_Mutex *pMutex){
-	uintptr_t uOld, uNew;
-	uOld = __atomic_load_n(pMutex, __ATOMIC_RELAXED);
-	do {
-		uNew = uOld | FLAG_LOCKED;
-		if(uNew == uOld){
-			goto jDontMissIt;
-		}
-	} while(!__atomic_compare_exchange_n(pMutex, &uOld, uNew, false, __ATOMIC_SEQ_CST, __ATOMIC_RELAXED));
-	return MUTEX_LOCKED;
-
-jDontMissIt:
-	// 已被其他线程锁定。
-	return uOld >> FLAG_BIT_COUNT;
+static inline bool atomic_bit_test_and_set_seq_cst(volatile uintptr_t *p, unsigned bit){
+	bool cf;
+	__asm__ __volatile__(
+		"xor eax, eax \n"
+#ifdef _WIN64
+		"lock bts qword ptr[rdx], ecx \n"
+#else
+		"lock bts dword ptr[edx], ecx\n"
+#endif
+		"setc %0 \n"
+		: "=a"(cf)
+		: "d"(p), "c"(bit)
+	);
+	return cf;
 }
-static inline bool WaitForMutex(_MCFCRT_Mutex *pMutex, const LARGE_INTEGER *pliTimeout){
-	__atomic_fetch_add(pMutex, (1 << FLAG_BIT_COUNT), __ATOMIC_RELAXED);
+static inline bool atomic_bit_test_and_reset_seq_cst(volatile uintptr_t *p, unsigned bit){
+	bool cf;
+	__asm__ __volatile__(
+		"xor eax, eax \n"
+#ifdef _WIN64
+		"lock btr qword ptr[rdx], ecx \n"
+#else
+		"lock btr dword ptr[edx], ecx\n"
+#endif
+		"setc %0 \n"
+		: "=a"(cf)
+		: "d"(p), "c"(bit)
+	);
+	return cf;
+}
 
-	NTSTATUS lStatus = NtWaitForKeyedEvent(nullptr, (void *)pMutex, false, pliTimeout);
-	if(!NT_SUCCESS(lStatus)){
-		_MCFCRT_ASSERT_MSG(false, L"NtWaitForKeyedEvent() 失败。");
-	}
-	if(lStatus == STATUS_TIMEOUT){
-		uintptr_t uOld, uNew;
-		uOld = __atomic_load_n(pMutex, __ATOMIC_RELAXED);
-		do {
-			if(uOld < (1 << FLAG_BIT_COUNT)){
-				goto jDontMissIt;
-			}
-			uNew = uOld - (1 << FLAG_BIT_COUNT);
-		} while(!__atomic_compare_exchange_n(pMutex, &uOld, uNew, false, __ATOMIC_RELAXED, __ATOMIC_RELAXED));
-		return false;
+#define FL_LOCKED               ((uintptr_t)0x0001)
+#define FL_WAIT_WANTED          ((uintptr_t)0x0002)
+#define FL_RESERVED_2           ((uintptr_t)0x0004)
+#define FL_RESERVED_3           ((uintptr_t)0x0008)
 
-	jDontMissIt:
-		lStatus = NtWaitForKeyedEvent(nullptr, (void *)pMutex, false, nullptr);
-		if(!NT_SUCCESS(lStatus)){
-			_MCFCRT_ASSERT_MSG(false, L"NtWaitForKeyedEvent() 失败。");
-		}
+#define FLAG_BIT_COUNT          ((size_t)4)
+
+#define GET_THREAD_COUNT(c_)    ((size_t)(uintptr_t)(c_) >> FLAG_BIT_COUNT)
+#define MAKE_THREAD_COUNT(c_)   ((uintptr_t)(size_t)(c_) << FLAG_BIT_COUNT)
+
+bool _MCFCRT_WaitForMutex(_MCFCRT_Mutex *pMutex, size_t uMaxSpinCount, uint64_t u64UntilFastMonoClock){
+	while(atomic_bit_test_and_set_seq_cst(pMutex, 0) == true){
+		Sleep(1);
 	}
 	return true;
 }
-static inline void SignalMutex(_MCFCRT_Mutex *pMutex){
-	bool bSignalOne;
-
-	uintptr_t uOld, uNew;
-	uOld = __atomic_load_n(pMutex, __ATOMIC_RELAXED);
-	do {
-		_MCFCRT_ASSERT_MSG(uOld & FLAG_LOCKED, L"互斥锁没有被任何线程锁定。");
-		if(uOld < (1 << FLAG_BIT_COUNT)){
-			uNew = uOld & ~FLAG_LOCKED;
-			bSignalOne = false;
-		} else {
-			uNew = (uOld & ~FLAG_LOCKED) - (1 << FLAG_BIT_COUNT);
-			bSignalOne = true;
-		}
-	} while(!__atomic_compare_exchange_n(pMutex, &uOld, uNew, false, __ATOMIC_SEQ_CST, __ATOMIC_RELAXED));
-
-	if(bSignalOne){
-		NTSTATUS lStatus = NtReleaseKeyedEvent(nullptr, (void *)pMutex, false, nullptr);
-		if(!NT_SUCCESS(lStatus)){
-			_MCFCRT_ASSERT_MSG(false, L"NtReleaseKeyedEvent() 失败。");
-		}
-	}
-}
-
-bool _MCFCRT_WaitForMutex(_MCFCRT_Mutex *pMutex, size_t uMaxSpinCount, uint64_t u64UntilFastMonoClock){
-	// 尝试是否可以立即锁定互斥体。
-	size_t uWaitingThreads = WaitForMutexAndGetWaitingThreadCount(pMutex);
-	if(_MCFCRT_EXPECT(uWaitingThreads == MUTEX_LOCKED)){
-		return true;
-	}
-
-	if(u64UntilFastMonoClock == 0){
-		return false;
-	}
-
-	for(;;){
-		uWaitingThreads = WaitForMutexAndGetWaitingThreadCount(pMutex);
-		if(_MCFCRT_EXPECT_NOT(uWaitingThreads == MUTEX_LOCKED)){
-			return true;
-		}
-
-		// 如果没有正在内核态等待互斥体的线程，尝试一定次数的自旋。
-		if(uWaitingThreads == 0){
-			for(size_t i = 0; _MCFCRT_EXPECT(i < uMaxSpinCount); ++i){
-				__builtin_ia32_pause();
-
-				uWaitingThreads = WaitForMutexAndGetWaitingThreadCount(pMutex);
-				if(_MCFCRT_EXPECT_NOT(uWaitingThreads == MUTEX_LOCKED)){
-					return true;
-				}
-			}
-		}
-
-		// 陷入内核同步。
-		LARGE_INTEGER liTimeout;
-		const uint64_t u64Now = _MCFCRT_GetFastMonoClock();
-		if(u64Now >= u64UntilFastMonoClock){
-			liTimeout.QuadPart = 0;
-		} else {
-			const uint64_t u64DeltaMillisec = u64UntilFastMonoClock - u64Now;
-			const int64_t n64Delta100Nanosec = (int64_t)(u64DeltaMillisec * 10000);
-			if((uint64_t)(n64Delta100Nanosec / 10000) != u64DeltaMillisec){
-				liTimeout.QuadPart = INT64_MIN;
-			} else {
-				liTimeout.QuadPart = -n64Delta100Nanosec;
-			}
-		}
-		if(!WaitForMutex(pMutex, &liTimeout)){
-			return false;
-		}
-	}
-}
 void _MCFCRT_WaitForMutexForever(_MCFCRT_Mutex *pMutex, size_t uMaxSpinCount){
-	// 尝试是否可以立即锁定互斥体。
-	size_t uWaitingThreads = WaitForMutexAndGetWaitingThreadCount(pMutex);
-	if(_MCFCRT_EXPECT(uWaitingThreads == MUTEX_LOCKED)){
-		return;
-	}
-
-	for(;;){
-		uWaitingThreads = WaitForMutexAndGetWaitingThreadCount(pMutex);
-		if(_MCFCRT_EXPECT_NOT(uWaitingThreads == MUTEX_LOCKED)){
-			return;
-		}
-
-		// 如果没有正在内核态等待互斥体的线程，尝试一定次数的自旋。
-		if(uWaitingThreads == 0){
-			for(size_t i = 0; _MCFCRT_EXPECT(i < uMaxSpinCount); ++i){
-				__builtin_ia32_pause();
-
-				uWaitingThreads = WaitForMutexAndGetWaitingThreadCount(pMutex);
-				if(_MCFCRT_EXPECT_NOT(uWaitingThreads == MUTEX_LOCKED)){
-					return;
-				}
-			}
-		}
-
-		// 陷入内核同步。
-		if(!WaitForMutex(pMutex, nullptr)){
-			_MCFCRT_ASSERT(false);
-		}
-	}
+	// TODO
+	_MCFCRT_WaitForMutex(pMutex, uMaxSpinCount, UINT64_MAX);
 }
 void _MCFCRT_SignalMutex(_MCFCRT_Mutex *pMutex){
-	SignalMutex(pMutex);
+	atomic_bit_test_and_reset_seq_cst(pMutex, 0);
 }

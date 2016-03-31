@@ -7,7 +7,7 @@
 
 float asinf(float x){
 	register float ret;
-	__asm__ volatile(
+	__asm__ volatile (
 		"fld dword ptr[%1] \n"
 		"fld st \n"
 		"fmul st, st \n"
@@ -24,7 +24,7 @@ float asinf(float x){
 
 double asin(double x){
 	register double ret;
-	__asm__ volatile(
+	__asm__ volatile (
 		"fld qword ptr[%1] \n"
 		"fld st \n"
 		"fmul st, st \n"
@@ -41,7 +41,7 @@ double asin(double x){
 
 long double asinl(long double x){
 	register long double ret;
-	__asm__ volatile(
+	__asm__ volatile (
 		"fld tbyte ptr[%1] \n"
 		"fld st \n"
 		"fmul st, st \n"

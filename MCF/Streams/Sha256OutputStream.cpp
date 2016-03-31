@@ -187,7 +187,7 @@ void Sha256OutputStream::X_Update(const std::uint8_t (&abyChunk)[64]) noexcept {
 	std::uint32_t h = x_au32Reg[7];
 #endif
 
-	__asm__ volatile(
+	__asm__ volatile (
 		"movdqa xmm1, xmmword ptr[%8 + 12 * 4] \n"
 		"movdqa xmm2, xmmword ptr[%8 + 8 * 4] \n"
 		"movdqa xmm3, xmmword ptr[%8 + 4 * 4] \n"

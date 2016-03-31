@@ -7,7 +7,7 @@
 
 float logbf(float x){
 	register float ret;
-	__asm__ volatile(
+	__asm__ volatile (
 		"fld dword ptr[%1] \n"
 		"fxtract \n"
 		"fstp st \n"
@@ -20,7 +20,7 @@ float logbf(float x){
 
 double logb(double x){
 	register double ret;
-	__asm__ volatile(
+	__asm__ volatile (
 		"fld qword ptr[%1] \n"
 		"fxtract \n"
 		"fstp st \n"
@@ -33,7 +33,7 @@ double logb(double x){
 
 long double logbl(long double x){
 	register long double ret;
-	__asm__ volatile(
+	__asm__ volatile (
 		"fld tbyte ptr[%1] \n"
 		"fxtract \n"
 		"fstp st \n"

@@ -8,7 +8,7 @@
 
 float cosf(float x){
 	register float ret;
-	__asm__ volatile(
+	__asm__ volatile (
 		"fld dword ptr[%1] \n"
 		"fcos \n"
 		"fstsw ax \n"
@@ -34,7 +34,7 @@ float cosf(float x){
 
 double cos(double x){
 	register double ret;
-	__asm__ volatile(
+	__asm__ volatile (
 		"fld qword ptr[%1] \n"
 		"fcos \n"
 		"fstsw ax \n"
@@ -60,7 +60,7 @@ double cos(double x){
 
 long double cosl(long double x){
 	register long double ret;
-	__asm__ volatile(
+	__asm__ volatile (
 		"fld tbyte ptr[%1] \n"
 		"fcos \n"
 		"fstsw ax \n"

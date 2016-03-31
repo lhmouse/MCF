@@ -7,7 +7,7 @@
 
 float expf(float x){
 	register float ret;
-	__asm__ volatile(
+	__asm__ volatile (
 		"fldl2e \n"
 		"fmul dword ptr[%1] \n"
 		"fld st \n"
@@ -30,7 +30,7 @@ float expf(float x){
 
 double exp(double x){
 	register double ret;
-	__asm__ volatile(
+	__asm__ volatile (
 		"fldl2e \n"
 		"fmul qword ptr[%1] \n"
 		"fld st \n"
@@ -53,7 +53,7 @@ double exp(double x){
 
 long double expl(long double x){
 	register long double ret;
-	__asm__ volatile(
+	__asm__ volatile (
 		"fld tbyte ptr[%1] \n"
 		"fldl2e \n"
 		"fmulp st(1), st \n"

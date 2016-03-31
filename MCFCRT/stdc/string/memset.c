@@ -9,7 +9,7 @@ __attribute__((__force_align_arg_pointer__))
 void *memset(void *dst, int ch, size_t cb){
 	uintptr_t unused;
 	alignas(16) char xmmreg[16];
-	__asm__ volatile(
+	__asm__ volatile (
 		"movzx eax, al \n"
 		"mov ecx, eax \n"
 		"shl ecx, 8 \n"

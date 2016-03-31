@@ -12,7 +12,7 @@ static alignas(16) const uint64_t kDoubleMask[] = { 0x7FFFFFFFFFFFFFFF, 0x7FFFFF
 
 float fabsf(float x){
 	register float ret;
-	__asm__ volatile(
+	__asm__ volatile (
 #ifdef _WIN64
 		"movaps xmm1, xmmword ptr[%2] \n"
 		"andps xmm0, xmm1 \n"
@@ -35,7 +35,7 @@ float fabsf(float x){
 
 double fabs(double x){
 	register double ret;
-	__asm__ volatile(
+	__asm__ volatile (
 #ifdef _WIN64
 		"movapd xmm1, xmmword ptr[%2] \n"
 		"andpd xmm0, xmm1 \n"
@@ -58,7 +58,7 @@ double fabs(double x){
 
 long double fabsl(long double x){
 	register long double ret;
-	__asm__ volatile(
+	__asm__ volatile (
 #ifdef _WIN64
 		"movzx edx, word ptr[%1 + 8] \n"
 		"shl edx, 17 \n"

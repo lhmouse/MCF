@@ -7,7 +7,7 @@
 
 wchar_t *wmemset(wchar_t *dst, wchar_t ch, size_t cnt){
 	uintptr_t unused;
-	__asm__ __volatile__(
+	__asm__ volatile(
 		"mov " __RCX ", %5 \n"
 		"cmp " __RCX ", 8 \n"
 		"jb 1f  \n"

@@ -11,7 +11,7 @@ __MCFCRT_EXTERN_C_BEGIN
 
 static inline _MCFCRT_STD uint32_t _MCFCRT_ReadTimestampCounter32() _MCFCRT_NOEXCEPT {
 	_MCFCRT_STD uint32_t __u32Ret;
-	__asm__ __volatile__(
+	__asm__ volatile(
 		"rdtsc \n"
 		: "=a"(__u32Ret) : : "dx"
 		);
@@ -19,7 +19,7 @@ static inline _MCFCRT_STD uint32_t _MCFCRT_ReadTimestampCounter32() _MCFCRT_NOEX
 }
 static inline _MCFCRT_STD uint64_t _MCFCRT_ReadTimestampCounter64() _MCFCRT_NOEXCEPT {
 	_MCFCRT_STD uint64_t __u64Ret;
-	__asm__ __volatile__(
+	__asm__ volatile(
 		"rdtsc \n"
 #ifdef _WIN64
 		"shl rdx, 32 \n"

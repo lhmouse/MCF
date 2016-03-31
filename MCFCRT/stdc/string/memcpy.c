@@ -7,7 +7,7 @@
 
 void *memcpy(void *restrict dst, const void *restrict src, size_t cb){
 	uintptr_t unused;
-	__asm__ __volatile__(
+	__asm__ volatile(
 		"cmp %2, 64 \n"
 		"jb 1f \n"
 		"	mov " __RCX ", " __RDI " \n"

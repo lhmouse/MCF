@@ -8,7 +8,7 @@
 
 float frexpf(float x, int *exp){
 	register float ret;
-	__asm__ __volatile__(
+	__asm__ volatile(
 		"fld dword ptr[%1] \n"
 		"ftst \n"
 		"fstsw ax \n"
@@ -34,7 +34,7 @@ float frexpf(float x, int *exp){
 
 double frexp(double x, int *exp){
 	register double ret;
-	__asm__ __volatile__(
+	__asm__ volatile(
 		"fld qword ptr[%1] \n"
 		"ftst \n"
 		"fstsw ax \n"
@@ -60,7 +60,7 @@ double frexp(double x, int *exp){
 
 long double frexpl(long double x, int *exp){
 	register long double ret;
-	__asm__ __volatile__(
+	__asm__ volatile(
 		"fld tbyte ptr[%1] \n"
 		"ftst \n"
 		"fstsw ax \n"

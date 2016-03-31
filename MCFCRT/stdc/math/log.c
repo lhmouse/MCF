@@ -7,7 +7,7 @@
 
 float logf(float x){
 	register float ret;
-	__asm__ __volatile__(
+	__asm__ volatile(
 		"fldln2 \n"
 		"fld dword ptr[%1] \n"
 		"fyl2x \n"
@@ -20,7 +20,7 @@ float logf(float x){
 
 double log(double x){
 	register double ret;
-	__asm__ __volatile__(
+	__asm__ volatile(
 		"fldln2 \n"
 		"fld qword ptr[%1] \n"
 		"fyl2x \n"
@@ -33,7 +33,7 @@ double log(double x){
 
 long double logl(long double x){
 	register long double ret;
-	__asm__ __volatile__(
+	__asm__ volatile(
 		"fldln2 \n"
 		"fld tbyte ptr[%1] \n"
 		"fyl2x \n"

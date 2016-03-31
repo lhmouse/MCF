@@ -229,7 +229,7 @@ void Md5OutputStream::X_Update(const std::uint8_t (&abyChunk)[64]) noexcept {
 	register std::uint32_t c = x_au32Reg[2];
 	register std::uint32_t d = x_au32Reg[3];
 
-	__asm__ __volatile__(
+	__asm__ volatile(
 
 #define STEP_A(i_, ra_, rb_, rc_, rd_)	\
 		"add " ra_ ", dword ptr[%4 + (" #i_ ") * 4] \n"	\

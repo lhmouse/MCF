@@ -8,7 +8,7 @@
 
 float sinf(float x){
 	register float ret;
-	__asm__ __volatile__(
+	__asm__ volatile(
 		"fld dword ptr[%1] \n"
 		"fsin \n"
 		"fstsw ax \n"
@@ -34,7 +34,7 @@ float sinf(float x){
 
 double sin(double x){
 	register double ret;
-	__asm__ __volatile__(
+	__asm__ volatile(
 		"fld qword ptr[%1] \n"
 		"fsin \n"
 		"fstsw ax \n"
@@ -60,7 +60,7 @@ double sin(double x){
 
 long double sinl(long double x){
 	register long double ret;
-	__asm__ __volatile__(
+	__asm__ volatile(
 		"fld tbyte ptr[%1] \n"
 		"fsin \n"
 		"fstsw ax \n"

@@ -7,7 +7,7 @@
 
 float atanf(float x){
 	register float ret;
-	__asm__ __volatile__(
+	__asm__ volatile(
 		"fld dword ptr[%1] \n"
 		"fld1 \n"
 		"fpatan \n"
@@ -20,7 +20,7 @@ float atanf(float x){
 
 double atan(double x){
 	register double ret;
-	__asm__ __volatile__(
+	__asm__ volatile(
 		"fld qword ptr[%1] \n"
 		"fld1 \n"
 		"fpatan \n"
@@ -33,7 +33,7 @@ double atan(double x){
 
 long double atanl(long double x){
 	register long double ret;
-	__asm__ __volatile__(
+	__asm__ volatile(
 		"fld tbyte ptr[%1] \n"
 		"fld1 \n"
 		"fpatan \n"

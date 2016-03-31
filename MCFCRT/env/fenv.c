@@ -28,7 +28,7 @@ static const uint16_t kFpuControlWord   = (ROUNDING << 10) | (PRECISION << 8) | 
 static const uint32_t kMxcsRegister     = (ROUNDING << 13) |                    (EXCEPT_MASK << 7);
 
 void __MCFCRT_FEnvInit(){
-	__asm__ __volatile__(
+	__asm__ volatile(
 		"fldcw word ptr[%0] \n"
 		"ldmxcsr dword ptr[%1] \n"
 		:

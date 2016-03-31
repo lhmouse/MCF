@@ -91,7 +91,7 @@ void _MCFCRT_Bail(const wchar_t *pwszDescription){
 	}
 
 	if(bShouldGenerateBreakpoint){
-		__asm__ __volatile__("int3 \n");
+		__asm__ volatile("int3 \n");
 	}
 	TerminateProcess(GetCurrentProcess(), (DWORD)STATUS_UNSUCCESSFUL);
 	__builtin_unreachable();

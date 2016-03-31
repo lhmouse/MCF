@@ -20,11 +20,11 @@ __MCFCRT_EXTERN_C_END
 #if defined(__SEH__) // SEH
 
 #	define __MCFCRT_EH_TOP_BEGIN	\
-	__asm__ __volatile__(	\
+	__asm__ volatile(	\
 		"60000: \n"	\
 	);
 #	define __MCFCRT_EH_TOP_END	\
-	__asm__ __volatile__(	\
+	__asm__ volatile(	\
 		"60001: \n"	\
 		"	.seh_handler __C_specific_handler, @except \n"	\
 		"	.seh_handlerdata \n"	\

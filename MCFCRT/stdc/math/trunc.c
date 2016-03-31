@@ -8,7 +8,7 @@
 float truncf(float x){
 	register float ret;
 	uint64_t temp[2];
-	__asm__ __volatile__(
+	__asm__ volatile(
 		"fstcw word ptr[%1] \n"
 		"fld dword ptr[%2] \n"
 		"movzx eax, word ptr[%1] \n"
@@ -30,7 +30,7 @@ float truncf(float x){
 double trunc(double x){
 	register double ret;
 	uint64_t temp[2];
-	__asm__ __volatile__(
+	__asm__ volatile(
 		"fstcw word ptr[%1] \n"
 		"fld qword ptr[%2] \n"
 		"movzx eax, word ptr[%1] \n"
@@ -52,7 +52,7 @@ double trunc(double x){
 long double truncl(long double x){
 	register long double ret;
 	uint64_t temp[2];
-	__asm__ __volatile__(
+	__asm__ volatile(
 		"fstcw word ptr[%1] \n"
 		"fld tbyte ptr[%2] \n"
 		"movzx eax, word ptr[%1] \n"

@@ -8,7 +8,7 @@
 
 float tanf(float x){
 	register float ret;
-	__asm__ __volatile__(
+	__asm__ volatile(
 		"fld dword ptr[%1] \n"
 		"fptan \n"
 		"fstsw ax \n"
@@ -35,7 +35,7 @@ float tanf(float x){
 
 double tan(double x){
 	register double ret;
-	__asm__ __volatile__(
+	__asm__ volatile(
 		"fld qword ptr[%1] \n"
 		"fptan \n"
 		"fstsw ax \n"
@@ -62,7 +62,7 @@ double tan(double x){
 
 long double tanl(long double x){
 	register long double ret;
-	__asm__ __volatile__(
+	__asm__ volatile(
 		"fld tbyte ptr[%1] \n"
 		"fptan \n"
 		"fstsw ax \n"

@@ -7,7 +7,7 @@
 
 float fdimf(float x, float y){
 	register float ret;
-	__asm__ __volatile__(
+	__asm__ volatile(
 #ifdef _WIN64
 		"movss xmm0, dword ptr[%1] \n"
 		"subss xmm0, dword ptr[%2] \n"
@@ -36,7 +36,7 @@ float fdimf(float x, float y){
 
 double fdim(double x, double y){
 	register double ret;
-	__asm__ __volatile__(
+	__asm__ volatile(
 #ifdef _WIN64
 		"movsd xmm0, qword ptr[%1] \n"
 		"subsd xmm0, qword ptr[%2] \n"
@@ -66,7 +66,7 @@ double fdim(double x, double y){
 
 long double fdiml(long double x, long double y){
 	register long double ret;
-	__asm__ __volatile__(
+	__asm__ volatile(
 		"fld tbyte ptr[%1] \n"
 		"fld tbyte ptr[%2] \n"
 		"fsubp st(1), st \n"

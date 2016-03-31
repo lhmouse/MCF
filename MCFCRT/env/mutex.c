@@ -17,7 +17,7 @@ NTSTATUS NtReleaseKeyedEvent(HANDLE hKeyedEvent, void *pKey, BOOLEAN bAlertable,
 
 static inline bool atomic_bit_test_and_set_acquire(volatile uintptr_t *p, unsigned bit){
 	bool cf;
-	__asm__ __volatile__(
+	__asm__ volatile(
 		"xor eax, eax \n"
 #ifdef _WIN64
 		"lock bts qword ptr[rdx], ecx \n"
@@ -32,7 +32,7 @@ static inline bool atomic_bit_test_and_set_acquire(volatile uintptr_t *p, unsign
 }
 static inline bool atomic_bit_test_and_clear_release(volatile uintptr_t *p, unsigned bit){
 	bool cf;
-	__asm__ __volatile__(
+	__asm__ volatile(
 		"xor eax, eax \n"
 #ifdef _WIN64
 		"lock btr qword ptr[rdx], ecx \n"

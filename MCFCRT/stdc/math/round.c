@@ -9,7 +9,7 @@
 float roundf(float x){
 	register float ret;
 	uint64_t temp[2];
-	__asm__ __volatile__(
+	__asm__ volatile(
 		"fstcw word ptr[%1] \n"
 #ifdef _WIN64
 		"movsx rdx, dword ptr[%2] \n"
@@ -44,7 +44,7 @@ float roundf(float x){
 double round(double x){
 	register double ret;
 	uint64_t temp[2];
-	__asm__ __volatile__(
+	__asm__ volatile(
 		"fstcw word ptr[%1] \n"
 #ifdef _WIN64
 		"movsx rdx, dword ptr[%2 + 4] \n"
@@ -79,7 +79,7 @@ double round(double x){
 long double roundl(long double x){
 	register long double ret;
 	uint64_t temp[2];
-	__asm__ __volatile__(
+	__asm__ volatile(
 		"fstcw word ptr[%1] \n"
 #ifdef _WIN64
 		"movsx rdx, word ptr[%2 + 8] \n"

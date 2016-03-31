@@ -11,7 +11,7 @@ static const double kNegThreshould = -0.292892; // > -(1 - sqrt(2) / 2)
 
 float log1pf(float x){
 	register float ret;
-	__asm__ __volatile__(
+	__asm__ volatile(
 		"fldln2 \n"
 		"fld dword ptr[%1] \n"
 		"fcom qword ptr[%2] \n"
@@ -39,7 +39,7 @@ float log1pf(float x){
 
 double log1p(double x){
 	register double ret;
-	__asm__ __volatile__(
+	__asm__ volatile(
 		"fldln2 \n"
 		"fld qword ptr[%1] \n"
 		"fcom qword ptr[%2] \n"
@@ -67,7 +67,7 @@ double log1p(double x){
 
 long double log1pl(long double x){
 	register long double ret;
-	__asm__ __volatile__(
+	__asm__ volatile(
 		"fldln2 \n"
 		"fld tbyte ptr[%1] \n"
 		"fcom qword ptr[%2] \n"

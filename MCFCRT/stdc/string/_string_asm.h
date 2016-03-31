@@ -7,29 +7,25 @@
 
 #include "../../env/_crtdef.h"
 
-#if defined(__x86_64__)
+#ifdef _WIN64
 
-#	define __RAX    "rax"
-#	define __RCX    "rcx"
-#	define __RDX    "rdx"
-#	define __RBX    "rbx"
-#	define __RBP    "rbp"
-#	define __RSI    "rsi"
-#	define __RDI    "rdi"
-
-#elif defined(__i386__)
-
-#	define __RAX    "eax"
-#	define __RCX    "ecx"
-#	define __RDX    "edx"
-#	define __RBX    "ebx"
-#	define __RBP    "ebp"
-#	define __RSI    "esi"
-#	define __RDI    "edi"
+#	define __MCFCRT_RAX     "rax"
+#	define __MCFCRT_RCX     "rcx"
+#	define __MCFCRT_RDX     "rdx"
+#	define __MCFCRT_RBX     "rbx"
+#	define __MCFCRT_RBP     "rbp"
+#	define __MCFCRT_RSI     "rsi"
+#	define __MCFCRT_RDI     "rdi"
 
 #else
 
-#	error Oops, this platform is not supported.
+#	define __MCFCRT_RAX     "eax"
+#	define __MCFCRT_RCX     "ecx"
+#	define __MCFCRT_RDX     "edx"
+#	define __MCFCRT_RBX     "ebx"
+#	define __MCFCRT_RBP     "ebp"
+#	define __MCFCRT_RSI     "esi"
+#	define __MCFCRT_RDI     "edi"
 
 #endif
 

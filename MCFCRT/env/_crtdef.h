@@ -5,6 +5,10 @@
 #ifndef __MCFCRT_ENV_CRTDEF_H_
 #define __MCFCRT_ENV_CRTDEF_H_
 
+#if !defined(__amd64__) && !defined(__i386__)
+#	error Unsupported processor architecture.
+#endif
+
 #ifdef __cplusplus
 #	include <cstddef>
 #	include <cstdint>

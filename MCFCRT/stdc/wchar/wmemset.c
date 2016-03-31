@@ -8,15 +8,15 @@
 wchar_t *wmemset(wchar_t *dst, wchar_t ch, size_t cnt){
 	uintptr_t unused;
 	__asm__ volatile (
-		"mov " __RCX ", %5 \n"
-		"cmp " __RCX ", 8 \n"
+		"mov " __MCFCRT_RCX ", %5 \n"
+		"cmp " __MCFCRT_RCX ", 8 \n"
 		"jb 1f  \n"
-		"test " __RDI ", 1 \n"
+		"test " __MCFCRT_RDI ", 1 \n"
 		"jz 4f \n"
-		"	mov byte ptr[" __RDI "], al \n"
+		"	mov byte ptr[" __MCFCRT_RDI "], al \n"
 		"	xchg al, ah \n"
-		"	mov byte ptr[" __RDI " + %5 * 2 - 1], al \n"
-		"	inc " __RDI " \n"
+		"	mov byte ptr[" __MCFCRT_RDI " + %5 * 2 - 1], al \n"
+		"	inc " __MCFCRT_RDI " \n"
 		"	dec %5 \n"
 		"4: \n"
 #ifdef _WIN64
@@ -35,14 +35,14 @@ wchar_t *wmemset(wchar_t *dst, wchar_t ch, size_t cnt){
 #endif
 		"	jnz 3b \n"
 		"2: \n"
-		"movzx " __RCX ", ax \n"
-		"shl " __RCX ", 16 \n"
-		"or " __RAX ", " __RCX " \n"
+		"movzx " __MCFCRT_RCX ", ax \n"
+		"shl " __MCFCRT_RCX ", 16 \n"
+		"or " __MCFCRT_RAX ", " __MCFCRT_RCX " \n"
 #ifdef _WIN64
 		"shl rcx, 32 \n"
 		"or rax, rcx \n"
 #endif
-		"mov " __RCX ", %5 \n"
+		"mov " __MCFCRT_RCX ", %5 \n"
 #ifdef _WIN64
 		"shr rcx, 2 \n"
 		"rep stosq \n"

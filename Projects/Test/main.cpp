@@ -6,7 +6,7 @@
 #include <MCF/Thread/Thread.hpp>
 
 extern "C" unsigned _MCFCRT_Main(){
-#if 1
+#if 0
 	auto t1 = MCF::GetHiResMonoClock();
 
 	volatile unsigned val = 0;
@@ -44,7 +44,7 @@ extern "C" unsigned _MCFCRT_Main(){
 				std::printf("thread %lu waiting.\n", ::GetCurrentThreadId());
 				::Sleep(500);
 
-				cv.Wait(l, 100000000);
+				cv.Wait(l);
 				std::printf("thread %lu signaled.\n", ::GetCurrentThreadId());
 				::Sleep(500);
 			},

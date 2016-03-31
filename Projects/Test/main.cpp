@@ -12,7 +12,7 @@ extern "C" unsigned _MCFCRT_Main(){
 
 	volatile unsigned val = 0;
 	MCF::Mutex m(100);
-	MCF::Array<MCF::Thread, 100> threads;
+/*	MCF::Array<MCF::Thread, 100> threads;
 
 	{
 		auto l = m.GetLock();
@@ -20,7 +20,7 @@ extern "C" unsigned _MCFCRT_Main(){
 			t.Create(
 				[&]{
 					for(unsigned i = 0; i < 100000; ++i){
-						auto l = m.GetLock();
+						auto l = m.TryGetLock(1);
 						val = val + 1;
 					}
 				},
@@ -30,6 +30,12 @@ extern "C" unsigned _MCFCRT_Main(){
 	for(auto &t : threads){
 		t.Join();
 	}
+*/
+	MCF::Thread t([&]{ auto l = m.GetLock(); Sleep(5000); std::puts("exit!"); }, false);
+	std::puts("wait!");
+	auto l = m.TryGetLock(MCF::GetFastMonoClock() + 2000);
+	std::puts("done!");
+	t.Join();
 
 	auto t2 = MCF::GetHiResMonoClock();
 	std::printf("val = %u, delta_t = %f\n", val, t2 - t1);

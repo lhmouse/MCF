@@ -65,19 +65,19 @@ static inline bool RealWaitForMutex(_MCFCRT_Mutex *pMutex, size_t uMaxSpinCount,
 			NTSTATUS lStatus = NtWaitForKeyedEvent(nullptr, (void *)pMutex, false, &liTimeout);
 			_MCFCRT_ASSERT_MSG(NT_SUCCESS(lStatus), L"NtWaitForKeyedEvent() 失败。");
 			if(_MCFCRT_EXPECT(lStatus == STATUS_TIMEOUT)){
-				uintptr_t uCountDropped;
+				bool bDecremented;
 				{
 					uintptr_t uOld, uNew;
 					uOld = __atomic_load_n(pMutex, __ATOMIC_RELAXED);
 					do {
-						uCountDropped = (GET_THREAD_COUNT(uOld) > 1) ? 1 : 0;
-						if(uCountDropped == 0){
+						bDecremented = (GET_THREAD_COUNT(uOld) != 0);
+						if(!bDecremented){
 							break;
 						}
-						uNew = uOld - MAKE_THREAD_COUNT(uCountDropped);
+						uNew = uOld - MAKE_THREAD_COUNT(1);
 					} while(_MCFCRT_EXPECT_NOT(!__atomic_compare_exchange_n(pMutex, &uOld, uNew, false, __ATOMIC_RELAXED, __ATOMIC_RELAXED)));
 				}
-				if(uCountDropped != 0){
+				if(bDecremented){
 					return false;
 				}
 				lStatus = NtWaitForKeyedEvent(nullptr, (void *)pMutex, false, nullptr);

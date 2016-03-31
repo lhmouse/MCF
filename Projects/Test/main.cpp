@@ -1,9 +1,10 @@
 #include <MCF/StdMCF.hpp>
 #include <MCF/Core/Array.hpp>
 #include <MCF/Core/Clocks.hpp>
+#include <MCF/Thread/Thread.hpp>
 #include <MCF/Thread/Mutex.hpp>
 #include <MCF/Thread/ConditionVariable.hpp>
-#include <MCF/Thread/Thread.hpp>
+#include <MCF/Thread/Atomic.hpp>
 
 extern "C" unsigned _MCFCRT_Main(){
 #if 0
@@ -33,6 +34,7 @@ extern "C" unsigned _MCFCRT_Main(){
 	auto t2 = MCF::GetHiResMonoClock();
 	std::printf("val = %u, delta_t = %f\n", val, t2 - t1);
 #else
+	MCF::Atomic<unsigned> tcnt(0);
 	MCF::Mutex m;
 	MCF::ConditionVariable cv;
 	MCF::Array<MCF::Thread, 6> threads;
@@ -47,16 +49,16 @@ extern "C" unsigned _MCFCRT_Main(){
 				cv.Wait(l);
 				std::printf("thread %lu signaled.\n", ::GetCurrentThreadId());
 				::Sleep(500);
+
+				tcnt.Decrement(MCF::kAtomicRelaxed);
 			},
 			false);
+		tcnt.Increment(MCF::kAtomicRelaxed);
 	}
 
-	for(;;){
+	while(tcnt.Load(MCF::kAtomicRelaxed)){
 		::Sleep(900);
-		auto cnt = cv.Broadcast();
-		if(cnt == 0){
-			break;
-		}
+		const auto cnt = cv.Broadcast();
 		std::printf("signaled %zu threads!\n", cnt);
 	}
 

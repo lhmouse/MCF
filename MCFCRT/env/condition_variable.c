@@ -34,11 +34,12 @@ static inline uintptr_t atomic_saturated_sub_relaxed(volatile uintptr_t *p, uint
 	return delta;
 }
 
-bool _MCFCRT_WaitForConditionVariable(_MCFCRT_ConditionVariable *pConditionVariable,
-	_MCFCRT_ConditionVariableUnlockCallback pfnUnlockCallback, _MCFCRT_ConditionVariableRelockCallback pfnRelockCallback, intptr_t nContext, uint64_t u64UntilFastMonoClock)
+static inline bool RealWaitForConditionVariable(_MCFCRT_ConditionVariable *pConditionVariable,
+	_MCFCRT_ConditionVariableUnlockCallback pfnUnlockCallback, _MCFCRT_ConditionVariableRelockCallback pfnRelockCallback, intptr_t nContext,
+	bool bMayTimeOut, uint64_t u64UntilFastMonoClock)
 {
 	const intptr_t nLocked = (*pfnUnlockCallback)(nContext);
-	if(_MCFCRT_EXPECT(u64UntilFastMonoClock == 0)){
+	if(bMayTimeOut && _MCFCRT_EXPECT(u64UntilFastMonoClock == 0)){
 		(*pfnRelockCallback)(nContext, nLocked);
 		return false;
 	}
@@ -47,7 +48,7 @@ bool _MCFCRT_WaitForConditionVariable(_MCFCRT_ConditionVariable *pConditionVaria
 	__MCF_CRT_InitializeNtTimeout(&liTimeout, u64UntilFastMonoClock);
 	NTSTATUS lStatus = NtWaitForKeyedEvent(nullptr, (void *)pConditionVariable, false, &liTimeout);
 	_MCFCRT_ASSERT_MSG(NT_SUCCESS(lStatus), L"NtWaitForKeyedEvent() 失败。");
-	if(_MCFCRT_EXPECT(lStatus == STATUS_TIMEOUT)){
+	if(bMayTimeOut && _MCFCRT_EXPECT(lStatus == STATUS_TIMEOUT)){
 		const size_t uCountDecreased = atomic_saturated_sub_relaxed(pConditionVariable, 1);
 		if(uCountDecreased != 0){
 			(*pfnRelockCallback)(nContext, nLocked);
@@ -59,16 +60,7 @@ bool _MCFCRT_WaitForConditionVariable(_MCFCRT_ConditionVariable *pConditionVaria
 	(*pfnRelockCallback)(nContext, nLocked);
 	return true;
 }
-void _MCFCRT_WaitForConditionVariableForever(_MCFCRT_ConditionVariable *pConditionVariable,
-	_MCFCRT_ConditionVariableUnlockCallback pfnUnlockCallback, _MCFCRT_ConditionVariableRelockCallback pfnRelockCallback, intptr_t nContext)
-{
-	const intptr_t nLocked = (*pfnUnlockCallback)(nContext);
-	atomic_increment_relaxed(pConditionVariable);
-	NTSTATUS lStatus = NtWaitForKeyedEvent(nullptr, (void *)pConditionVariable, false, nullptr);
-	_MCFCRT_ASSERT_MSG(NT_SUCCESS(lStatus), L"NtWaitForKeyedEvent() 失败。");
-	(*pfnRelockCallback)(nContext, nLocked);
-}
-size_t _MCFCRT_SignalConditionVariable(_MCFCRT_ConditionVariable *pConditionVariable, size_t uMaxCountToSignal){
+static inline size_t RealSignalConditionVariable(_MCFCRT_ConditionVariable *pConditionVariable, size_t uMaxCountToSignal){
 	const size_t uCountSignaled = atomic_saturated_sub_relaxed(pConditionVariable, uMaxCountToSignal);
 	for(size_t i = 0; i < uCountSignaled; ++i){
 		NTSTATUS lStatus = NtReleaseKeyedEvent(nullptr, (void *)pConditionVariable, false, nullptr);
@@ -76,11 +68,20 @@ size_t _MCFCRT_SignalConditionVariable(_MCFCRT_ConditionVariable *pConditionVari
 	}
 	return uCountSignaled;
 }
+
+bool _MCFCRT_WaitForConditionVariable(_MCFCRT_ConditionVariable *pConditionVariable,
+	_MCFCRT_ConditionVariableUnlockCallback pfnUnlockCallback, _MCFCRT_ConditionVariableRelockCallback pfnRelockCallback, intptr_t nContext, uint64_t u64UntilFastMonoClock)
+{
+	return RealWaitForConditionVariable(pConditionVariable, pfnUnlockCallback, pfnRelockCallback, nContext, true, u64UntilFastMonoClock);
+}
+void _MCFCRT_WaitForConditionVariableForever(_MCFCRT_ConditionVariable *pConditionVariable,
+	_MCFCRT_ConditionVariableUnlockCallback pfnUnlockCallback, _MCFCRT_ConditionVariableRelockCallback pfnRelockCallback, intptr_t nContext)
+{
+	RealWaitForConditionVariable(pConditionVariable, pfnUnlockCallback, pfnRelockCallback, nContext, false, UINT64_MAX);
+}
+size_t _MCFCRT_SignalConditionVariable(_MCFCRT_ConditionVariable *pConditionVariable, size_t uMaxCountToSignal){
+	return RealSignalConditionVariable(pConditionVariable, uMaxCountToSignal);
+}
 size_t _MCFCRT_BroadcastConditionVariable(_MCFCRT_ConditionVariable *pConditionVariable){
-	const size_t uCountSignaled = atomic_saturated_sub_relaxed(pConditionVariable, SIZE_MAX);
-	for(size_t i = 0; i < uCountSignaled; ++i){
-		NTSTATUS lStatus = NtReleaseKeyedEvent(nullptr, (void *)pConditionVariable, false, nullptr);
-		_MCFCRT_ASSERT_MSG(NT_SUCCESS(lStatus), L"NtReleaseKeyedEvent() 失败。");
-	}
-	return uCountSignaled;
+	return RealSignalConditionVariable(pConditionVariable, SIZE_MAX);
 }

@@ -20,7 +20,7 @@ extern "C" unsigned _MCFCRT_Main(){
 			t.Create(
 				[&]{
 					for(unsigned i = 0; i < 100000; ++i){
-						auto l = m.TryGetLock(UINT64_MAX);
+						auto l = m.GetLock();
 						val = val + 1;
 					}
 				},

@@ -14,18 +14,24 @@ extern void __MCFCRT_ThreadEnvUninit(void) _MCFCRT_NOEXCEPT;
 
 extern void __MCFCRT_TlsThreadCleanup() _MCFCRT_NOEXCEPT;
 
-typedef void (*_MCFCRT_TlsCallback)(_MCFCRT_STD intptr_t *__pnValue);
+typedef unsigned long (*_MCFCRT_TlsConstructor)(void *__pStorage); // 成功应当返回 0，否则返回值当成错误码。
+typedef void (*_MCFCRT_TlsDestructor)(void *__pStorage);
 
-// 失败返回 nullptr。__pfnCallback 在该 TLS 被注销或线程退出的时候被调用。
-extern void *_MCFCRT_TlsAllocKey(_MCFCRT_TlsCallback __pfnCallback) _MCFCRT_NOEXCEPT;
+// 失败返回 nullptr。
+extern void *_MCFCRT_TlsAllocKey(_MCFCRT_STD size_t __uSize, _MCFCRT_TlsConstructor __pfnConstructor, _MCFCRT_TlsDestructor __pfnDestructor) _MCFCRT_NOEXCEPT;
 extern bool _MCFCRT_TlsFreeKey(void *__pTlsKey) _MCFCRT_NOEXCEPT;
-extern _MCFCRT_TlsCallback _MCFCRT_TlsGetCallback(void *__pTlsKey) _MCFCRT_NOEXCEPT;
-// 下面两个函数都不触发回调。__ppnValue 返回一个指向当前 TLS 对象的指针。
-// 如果未设定过任何值，_MCFCRT_TlsGet() 返回一个空指针，_MCFCRT_TlsRequire() 创建一个对象并返回指向它的指针。
-extern bool _MCFCRT_TlsGet(void *__pTlsKey, _MCFCRT_STD intptr_t **restrict __ppnValue) _MCFCRT_NOEXCEPT;
-extern bool _MCFCRT_TlsRequire(void *__pTlsKey, _MCFCRT_STD intptr_t **restrict __ppnValue, _MCFCRT_STD intptr_t __nInitValue) _MCFCRT_NOEXCEPT;
 
-extern int _MCFCRT_AtThreadExit(_MCFCRT_TlsCallback __pfnProc, _MCFCRT_STD intptr_t __nContext);
+extern _MCFCRT_STD size_t _MCFCRT_TlsGetSize(void *__pTlsKey) _MCFCRT_NOEXCEPT;
+extern _MCFCRT_TlsConstructor _MCFCRT_TlsGetConstructor(void *__pTlsKey) _MCFCRT_NOEXCEPT;
+extern _MCFCRT_TlsDestructor _MCFCRT_TlsGetDestructor(void *__pTlsKey) _MCFCRT_NOEXCEPT;
+
+// 下面两个函数都不触发回调。__ppStorage 返回一个指向当前 TLS 对象的指针。
+// 如果未设定过任何值，_MCFCRT_TlsGet() 返回一个空指针，_MCFCRT_TlsRequire() 创建一个对象并返回指向它的指针。
+// 如果未设定过任何值，_MCFCRT_TlsGet() 返回一个空指针，_MCFCRT_TlsRequire() 创建一个对象并返回指向它的指针。
+extern bool _MCFCRT_TlsGet(void *__pTlsKey, void **restrict __ppStorage) _MCFCRT_NOEXCEPT;
+extern bool _MCFCRT_TlsRequire(void *__pTlsKey, void **restrict __ppStorage) _MCFCRT_NOEXCEPT;
+
+extern int _MCFCRT_AtThreadExit(_MCFCRT_TlsDestructor __pfnProc, _MCFCRT_STD intptr_t __nContext);
 
 typedef unsigned long (*__attribute__((__stdcall__)) _MCFCRT_NativeThreadProc)(void *__pParam);
 typedef unsigned (*_MCFCRT_ThreadProc)(_MCFCRT_STD intptr_t __nParam);

@@ -37,8 +37,6 @@ enum {
 typedef struct tagTlsObject {
 	_MCFCRT_AvlNodeHeader vHeader;
 
-	intptr_t nValue;
-
 	struct tagThreadMap *pMap;
 	struct tagTlsObject *pPrevByThread;
 	struct tagTlsObject *pNextByThread;
@@ -46,6 +44,8 @@ typedef struct tagTlsObject {
 	struct tagTlsKey *pKey;
 	struct tagTlsObject *pPrevByKey;
 	struct tagTlsObject *pNextByKey;
+
+	alignas(max_align_t) unsigned char abyStorage[];
 } TlsObject;
 
 static int ObjectComparatorNodeKey(const _MCFCRT_AvlNodeHeader *pObj1, intptr_t nKey2){
@@ -67,7 +67,11 @@ typedef struct tagTlsKey {
 	_MCFCRT_AvlNodeHeader vHeader;
 
 	_MCFCRT_Mutex vMutex;
-	_MCFCRT_TlsCallback pfnCallback;
+
+	size_t uSize;
+	_MCFCRT_TlsConstructor pfnConstructor;
+	_MCFCRT_TlsDestructor pfnDestructor;
+
 	struct tagTlsObject *pLastByKey;
 } TlsKey;
 
@@ -132,8 +136,8 @@ void __MCFCRT_TlsThreadCleanup(){
 			}
 			_MCFCRT_SignalMutex(&(pKey->vMutex));
 
-			if(pKey->pfnCallback){
-				(*pKey->pfnCallback)(&(pObject->nValue));
+			if(pKey->pfnDestructor){
+				(*pKey->pfnDestructor)(pObject->abyStorage);
 			}
 
 			TlsObject *const pTemp = pObject->pPrevByThread;
@@ -147,15 +151,17 @@ void __MCFCRT_TlsThreadCleanup(){
 	__MCFCRT_RunEmutlsDtors();
 }
 
-void *_MCFCRT_TlsAllocKey(_MCFCRT_TlsCallback pfnCallback){
+void *_MCFCRT_TlsAllocKey(size_t uSize, _MCFCRT_TlsConstructor pfnConstructor, _MCFCRT_TlsDestructor pfnDestructor){
 	TlsKey *const pKey = malloc(sizeof(TlsKey));
 	if(!pKey){
 		SetLastError(ERROR_NOT_ENOUGH_MEMORY);
 		return nullptr;
 	}
-	pKey->vMutex      = 0;
-	pKey->pfnCallback = pfnCallback;
-	pKey->pLastByKey  = nullptr;
+	pKey->vMutex         = 0;
+	pKey->uSize          = uSize;
+	pKey->pfnConstructor = pfnConstructor;
+	pKey->pfnDestructor  = pfnDestructor;
+	pKey->pLastByKey     = nullptr;
 
 	_MCFCRT_WaitForMutexForever(&g_vKeyMapMutex, kMutexSpinCount);
 	{
@@ -199,8 +205,8 @@ bool _MCFCRT_TlsFreeKey(void *pTlsKey){
 		}
 		_MCFCRT_SignalMutex(&(pMap->vMutex));
 
-		if(pKey->pfnCallback){
-			(*pKey->pfnCallback)(&(pObject->nValue));
+		if(pKey->pfnDestructor){
+			(*pKey->pfnDestructor)(pObject->abyStorage);
 		}
 
 		TlsObject *const pTemp = pObject->pPrevByKey;
@@ -212,18 +218,35 @@ bool _MCFCRT_TlsFreeKey(void *pTlsKey){
 	return true;
 }
 
-_MCFCRT_TlsCallback _MCFCRT_TlsGetCallback(void *pTlsKey){
+size_t _MCFCRT_TlsGetSize(void *pTlsKey){
 	TlsKey *const pKey = pTlsKey;
 	if(!pKey){
 		SetLastError(ERROR_INVALID_PARAMETER);
-		return nullptr;
+		return false;
 	}
 	SetLastError(ERROR_SUCCESS);
-	return pKey->pfnCallback;
+	return pKey->uSize;
 }
-bool _MCFCRT_TlsGet(void *pTlsKey, intptr_t **restrict ppnValue){
-	*ppnValue = nullptr;
+_MCFCRT_TlsConstructor _MCFCRT_TlsGetConstructor(void *pTlsKey){
+	TlsKey *const pKey = pTlsKey;
+	if(!pKey){
+		SetLastError(ERROR_INVALID_PARAMETER);
+		return false;
+	}
+	SetLastError(ERROR_SUCCESS);
+	return pKey->pfnConstructor;
+}
+_MCFCRT_TlsDestructor _MCFCRT_TlsGetDestructor(void *pTlsKey){
+	TlsKey *const pKey = pTlsKey;
+	if(!pKey){
+		SetLastError(ERROR_INVALID_PARAMETER);
+		return false;
+	}
+	SetLastError(ERROR_SUCCESS);
+	return pKey->pfnDestructor;
+}
 
+bool _MCFCRT_TlsGet(void *pTlsKey, void **restrict ppStorage){
 	TlsKey *const pKey = pTlsKey;
 	if(!pKey){
 		SetLastError(ERROR_INVALID_PARAMETER);
@@ -232,6 +255,7 @@ bool _MCFCRT_TlsGet(void *pTlsKey, intptr_t **restrict ppnValue){
 
 	ThreadMap *pMap = TlsGetValue(g_dwTlsIndex);
 	if(!pMap){
+		*ppStorage = nullptr;
 		return true;
 	}
 
@@ -239,17 +263,16 @@ bool _MCFCRT_TlsGet(void *pTlsKey, intptr_t **restrict ppnValue){
 	{
 		TlsObject *pObject = (TlsObject *)_MCFCRT_AvlFind(&(pMap->avlObjects), (intptr_t)pKey, &ObjectComparatorNodeKey);
 		if(!pObject){
-			return true;
+			*ppStorage = nullptr;
+		} else {
+			*ppStorage = pObject->abyStorage;
 		}
-		*ppnValue = &(pObject->nValue);
 	}
 	_MCFCRT_SignalMutex(&(pMap->vMutex));
 
 	return true;
 }
-bool _MCFCRT_TlsRequire(void *pTlsKey, intptr_t **restrict ppnValue, _MCFCRT_STD intptr_t nInitValue){
-	*ppnValue = nullptr;
-
+bool _MCFCRT_TlsRequire(void *pTlsKey, void **restrict ppStorage){
 	TlsKey *const pKey = pTlsKey;
 	if(!pKey){
 		SetLastError(ERROR_INVALID_PARAMETER);
@@ -276,14 +299,26 @@ bool _MCFCRT_TlsRequire(void *pTlsKey, intptr_t **restrict ppnValue, _MCFCRT_STD
 		if(!pObject){
 			_MCFCRT_SignalMutex(&(pMap->vMutex));
 			{
-				pObject = malloc(sizeof(TlsObject));
+				const size_t uSizeToAlloc = sizeof(TlsObject) + pKey->uSize;
+				if(uSizeToAlloc < sizeof(TlsObject)){
+					SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+					return false;
+				}
+				pObject = malloc(uSizeToAlloc);
 				if(!pObject){
 					SetLastError(ERROR_NOT_ENOUGH_MEMORY);
 					return false;
 				}
-				pObject->nValue = nInitValue;
-				pObject->pMap   = pMap;
-				pObject->pKey   = pKey;
+				pObject->pMap = pMap;
+				pObject->pKey = pKey;
+				if(pKey->pfnConstructor){
+					const DWORD dwErrorCode = (*pKey->pfnConstructor)(pObject->abyStorage);
+					if(dwErrorCode != 0){
+						free(pObject);
+						SetLastError(dwErrorCode);
+						return false;
+					}
+				}
 
 				_MCFCRT_WaitForMutexForever(&(pKey->vMutex), kMutexSpinCount);
 				{
@@ -310,26 +345,26 @@ bool _MCFCRT_TlsRequire(void *pTlsKey, intptr_t **restrict ppnValue, _MCFCRT_STD
 			}
 			_MCFCRT_AvlAttach(&(pMap->avlObjects), (_MCFCRT_AvlNodeHeader *)pObject, &ObjectComparatorNodes);
 		}
-		*ppnValue = &(pObject->nValue);
+		*ppStorage = pObject->abyStorage;
 	}
 	_MCFCRT_SignalMutex(&(pMap->vMutex));
 
 	return true;
 }
 
-int _MCFCRT_AtThreadExit(_MCFCRT_TlsCallback pfnProc, _MCFCRT_STD intptr_t nContext){
-	void *const pKey = _MCFCRT_TlsAllocKey(pfnProc);
+int _MCFCRT_AtThreadExit(_MCFCRT_TlsDestructor pfnProc, intptr_t nContext){
+	void *const pKey = _MCFCRT_TlsAllocKey(sizeof(nContext), nullptr, pfnProc);
 	if(!pKey){
 		return -1;
 	}
-	intptr_t *pnValue;
-	if(!_MCFCRT_TlsRequire(pKey, &pnValue, nContext)){
+	void *pStorage;
+	if(!_MCFCRT_TlsRequire(pKey, &pStorage)){
 		const DWORD dwLastError = GetLastError();
 		_MCFCRT_TlsFreeKey(pKey);
 		SetLastError(dwLastError);
 		return -1;
 	}
-	_MCFCRT_ASSERT(*pnValue == nContext);
+	memcpy(pStorage, &nContext, sizeof(nContext));
 	return 0;
 }
 
@@ -443,7 +478,7 @@ long _MCFCRT_ResumeThread(void *hThread){
 	return lPrevCount;
 }
 
-bool _MCFCRT_WaitForThread(void *hThread, _MCFCRT_STD uint64_t u64UntilFastMonoClock){
+bool _MCFCRT_WaitForThread(void *hThread, uint64_t u64UntilFastMonoClock){
 	LARGE_INTEGER liTimeout;
 	__MCF_CRT_InitializeNtTimeout(&liTimeout, u64UntilFastMonoClock);
 	const NTSTATUS lStatus = NtWaitForSingleObject((HANDLE)hThread, false, &liTimeout);

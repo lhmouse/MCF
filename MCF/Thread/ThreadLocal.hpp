@@ -7,12 +7,11 @@
 
 #include "../../MCFCRT/env/thread.h"
 #include "../../MCFCRT/env/last_error.h"
-#include "../Utilities/Noncopyable.hpp"
 #include "../Utilities/Assert.hpp"
+#include "../Utilities/ConstructDestruct.hpp"
 #include "../Core/UniqueHandle.hpp"
 #include "../Core/Exception.hpp"
 #include <type_traits>
-#include <cstring>
 #include <cstddef>
 #include <cstdint>
 
@@ -27,70 +26,70 @@ namespace Impl_ThreadLocal {
 			::_MCFCRT_TlsFreeKey(pKey);
 		}
 	};
-
-	template<class ElementT, bool kCanBeStoredAsIntPtrT>
-	struct ElementManipulator {
-		static ::_MCFCRT_TlsCallback GetCleanupCallback() noexcept {
-			return [](std::intptr_t *pnValue){ delete ExtractValue(*pnValue); };
-		}
-		static ElementT *ExtractValue(std::intptr_t &nValue){
-			return reinterpret_cast<ElementT *>(nValue);
-		}
-		static std::intptr_t PackValue(ElementT &&vSrc){
-			return reinterpret_cast<std::intptr_t>(new ElementT(std::move(vSrc)));
-		}
-	};
-	template<class ElementT>
-	struct ElementManipulator<ElementT, true> {
-		static constexpr ::_MCFCRT_TlsCallback GetCleanupCallback() noexcept {
-			return nullptr;
-		}
-		static ElementT *ExtractValue(std::intptr_t &nValue){
-			return reinterpret_cast<ElementT *>(&nValue);
-		}
-		static std::intptr_t PackValue(ElementT &&vSrc){
-			std::intptr_t nRet;
-			std::memcpy(&nRet, AddressOf(vSrc), sizeof(vSrc));
-			return nRet;
-		}
-	};
-
-	template<class ElementT>
-	using ElementTraits = ElementManipulator<ElementT,
-		std::is_trivial<ElementT>::value && !std::is_array<ElementT>::value && (sizeof(ElementT) <= sizeof(std::intptr_t))>;
 }
 
 template<class ElementT>
-class ThreadLocal : MCF_NONCOPYABLE {
+class ThreadLocal {
+	static_assert(std::is_nothrow_default_constructible<ElementT>::value, "The default constructor of ElementT shall not throw exceptions.");
+	static_assert(alignof(ElementT) <= alignof(std::max_align_t),         "ElementT is over-aligned.");
+
 private:
 	UniqueHandle<Impl_ThreadLocal::TlsKeyDeleter> x_pTlsKey;
 
 public:
 	explicit ThreadLocal(){
-		const auto pfnCleanupCallback = Impl_ThreadLocal::ElementTraits<ElementT>::GetCleanupCallback();
-		if(!x_pTlsKey.Reset(::_MCFCRT_TlsAllocKey(pfnCleanupCallback))){
+		if(!x_pTlsKey.Reset(::_MCFCRT_TlsAllocKey(sizeof(ElementT),
+			[](void *p){ Construct(static_cast<ElementT *>(p)); return static_cast<unsigned long>(0); },
+			[](void *p){ Destruct (static_cast<ElementT *>(p)); })))
+		{
 			MCF_THROW(Exception, ::_MCFCRT_GetLastWin32Error(), Rcntws::View(L"_MCFCRT_TlsAllocKey() 失败。"));
 		}
 	}
 
 public:
-	ElementT *Get() const noexcept {
-		std::intptr_t *pnValue;
-		const bool bResult = ::_MCFCRT_TlsGet(x_pTlsKey.Get(), &pnValue);
+	const ElementT *Get() const noexcept {
+		void *pStorage;
+		const bool bResult = ::_MCFCRT_TlsGet(x_pTlsKey.Get(), &pStorage);
 		MCF_ASSERT_MSG(bResult, L"_MCFCRT_TlsGet() 失败。");
-		return Impl_ThreadLocal::ElementTraits<ElementT>::ExtractValue(*pnValue);
+		return static_cast<const ElementT *>(pStorage);
 	}
-	void Set(ElementT vElement){
-		std::intptr_t *pnValue;
-		if(!::_MCFCRT_TlsRequire(x_pTlsKey.Get(), &pnValue, reinterpret_cast<std::intptr_t>(static_cast<ElementT *>(nullptr)))){
+	ElementT *Get() noexcept {
+		void *pStorage;
+		const bool bResult = ::_MCFCRT_TlsGet(x_pTlsKey.Get(), &pStorage);
+		MCF_ASSERT_MSG(bResult, L"_MCFCRT_TlsGet() 失败。");
+		return static_cast<ElementT *>(pStorage);
+	}
+
+	const ElementT *Open() const {
+		void *pStorage;
+		const bool bResult = ::_MCFCRT_TlsRequire(x_pTlsKey.Get(), &pStorage);
+		if(!bResult){
 			MCF_THROW(Exception, ::_MCFCRT_GetLastWin32Error(), Rcntws::View(L"_MCFCRT_TlsRequire() 失败。"));
 		}
-		const auto nNewValue = Impl_ThreadLocal::ElementTraits<ElementT>::PackValue(std::move(vElement));
-		const auto pfnCleanupCallback = Impl_ThreadLocal::ElementTraits<ElementT>::GetCleanupCallback();
-		if(pfnCleanupCallback){
-			(*pfnCleanupCallback)(pnValue);
+		return static_cast<const ElementT *>(pStorage);
+	}
+	ElementT *Open(){
+		void *pStorage;
+		const bool bResult = ::_MCFCRT_TlsRequire(x_pTlsKey.Get(), &pStorage);
+		if(!bResult){
+			MCF_THROW(Exception, ::_MCFCRT_GetLastWin32Error(), Rcntws::View(L"_MCFCRT_TlsRequire() 失败。"));
 		}
-		*pnValue = nNewValue;
+		return static_cast<ElementT *>(pStorage);
+	}
+
+	template<typename ParamT>
+	void Set(ParamT &&vParam){
+		Open()[0] = std::forward<ParamT>(vParam);
+	}
+
+	void Swap(ThreadLocal &rhs) noexcept {
+		using std::swap;
+		swap(x_pTlsKey, rhs.x_pTlsKey);
+	}
+
+public:
+	friend void swap(ThreadLocal &lhs, ThreadLocal &rhs) noexcept {
+		lhs.Swap(rhs);
 	}
 };
 

@@ -247,6 +247,8 @@ _MCFCRT_TlsDestructor _MCFCRT_TlsGetDestructor(void *pTlsKey){
 }
 
 bool _MCFCRT_TlsGet(void *pTlsKey, void **restrict ppStorage){
+	*ppStorage = nullptr;
+
 	TlsKey *const pKey = pTlsKey;
 	if(!pKey){
 		SetLastError(ERROR_INVALID_PARAMETER);
@@ -255,16 +257,13 @@ bool _MCFCRT_TlsGet(void *pTlsKey, void **restrict ppStorage){
 
 	ThreadMap *pMap = TlsGetValue(g_dwTlsIndex);
 	if(!pMap){
-		*ppStorage = nullptr;
 		return true;
 	}
 
 	_MCFCRT_WaitForMutexForever(&(pMap->vMutex), kMutexSpinCount);
 	{
 		TlsObject *pObject = (TlsObject *)_MCFCRT_AvlFind(&(pMap->avlObjects), (intptr_t)pKey, &ObjectComparatorNodeKey);
-		if(!pObject){
-			*ppStorage = nullptr;
-		} else {
+		if(pObject){
 			*ppStorage = pObject->abyStorage;
 		}
 	}
@@ -273,6 +272,8 @@ bool _MCFCRT_TlsGet(void *pTlsKey, void **restrict ppStorage){
 	return true;
 }
 bool _MCFCRT_TlsRequire(void *pTlsKey, void **restrict ppStorage){
+	*ppStorage = nullptr;
+
 	TlsKey *const pKey = pTlsKey;
 	if(!pKey){
 		SetLastError(ERROR_INVALID_PARAMETER);

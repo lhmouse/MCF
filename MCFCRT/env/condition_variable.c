@@ -57,7 +57,7 @@ static inline size_t RealSignalConditionVariable(_MCFCRT_ConditionVariable *pCon
 		uintptr_t uOld, uNew;
 		uOld = __atomic_load_n(pConditionVariable, __ATOMIC_RELAXED);
 		do {
-			uCountDropped = (uOld > uMaxCountToSignal) ? uMaxCountToSignal : uOld;
+			uCountDropped = (uOld <= uMaxCountToSignal) ? uOld : uMaxCountToSignal;
 			if(uCountDropped == 0){
 				break;
 			}

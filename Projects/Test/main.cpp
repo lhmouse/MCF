@@ -19,9 +19,11 @@ extern "C" unsigned _MCFCRT_Main(){
 		for(auto &t : threads){
 			t.Create(
 				[&]{
-					for(unsigned i = 0; i < 100000; ++i){
+					for(unsigned i = 0; i < 1000; ++i){
 						auto l = m.GetLock();
-						val = val + 1;
+						for(unsigned j = 0; j < 10000; ++j){
+							val = val + 1;
+						}
 					}
 				},
 				false);

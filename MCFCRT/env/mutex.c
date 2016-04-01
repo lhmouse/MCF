@@ -52,17 +52,17 @@ static inline bool RealWaitForMutex(_MCFCRT_Mutex *pMutex, size_t uMaxSpinCount,
 				}
 				if(_MCFCRT_EXPECT_NOT(!(uOld & FLAG_LOCKED))){
 					uNew = (uOld & ~FLAG_URGENT) + FLAG_LOCKED - MAKE_THREAD_COUNT(1);
-					if(_MCFCRT_EXPECT(__atomic_compare_exchange_n(pMutex, &uOld, uNew, false, __ATOMIC_ACQ_REL, __ATOMIC_RELAXED))){
-						return true;
+					if(_MCFCRT_EXPECT_NOT(!__atomic_compare_exchange_n(pMutex, &uOld, uNew, false, __ATOMIC_ACQ_REL, __ATOMIC_RELAXED))){
+						goto jReload;
 					}
-					goto jReload;
+					return true;
 				}
 				if(_MCFCRT_EXPECT_NOT(uOld & FLAG_URGENT)){
 					uNew = (uOld & ~FLAG_URGENT);
-					if(_MCFCRT_EXPECT(__atomic_compare_exchange_n(pMutex, &uOld, uNew, false, __ATOMIC_RELAXED, __ATOMIC_RELAXED))){
-						break;
+					if(_MCFCRT_EXPECT_NOT(!__atomic_compare_exchange_n(pMutex, &uOld, uNew, false, __ATOMIC_RELAXED, __ATOMIC_RELAXED))){
+						goto jReload;
 					}
-					goto jReload;
+					break;
 				}
 			} while(_MCFCRT_EXPECT(uSpinnedCount++ < uMaxSpinCount));
 		}

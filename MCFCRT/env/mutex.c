@@ -55,7 +55,7 @@ static inline bool RealWaitForMutex(_MCFCRT_Mutex *pMutex, size_t uMaxSpinCount,
 					}
 					goto jReload;
 				}
-				if(uOld & FLAG_URGENT){
+				if(_MCFCRT_EXPECT_NOT(uOld & FLAG_URGENT)){
 					uNew = (uOld & ~FLAG_URGENT);
 					if(_MCFCRT_EXPECT(__atomic_compare_exchange_n(pMutex, &uOld, uNew, false, __ATOMIC_RELAXED, __ATOMIC_RELAXED))){
 						break;

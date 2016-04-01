@@ -44,7 +44,7 @@ static inline bool RealWaitForMutex(_MCFCRT_Mutex *pMutex, size_t uMaxSpinCount,
 			do {
 				uintptr_t uOld, uNew;
 				uOld = __atomic_load_n(pMutex, __ATOMIC_CONSUME);
-			jReloaded:
+			jReload:
 				if(GET_THREAD_COUNT(uOld) == 0){
 					break;
 				}
@@ -53,10 +53,14 @@ static inline bool RealWaitForMutex(_MCFCRT_Mutex *pMutex, size_t uMaxSpinCount,
 					if(_MCFCRT_EXPECT(__atomic_compare_exchange_n(pMutex, &uOld, uNew, false, __ATOMIC_ACQ_REL, __ATOMIC_RELAXED))){
 						return true;
 					}
-					goto jReloaded;
+					goto jReload;
 				}
 				if(uOld & FLAG_URGENT){
-					break;
+					uNew = (uOld & ~FLAG_URGENT);
+					if(_MCFCRT_EXPECT(__atomic_compare_exchange_n(pMutex, &uOld, uNew, false, __ATOMIC_RELAXED, __ATOMIC_RELAXED))){
+						break;
+					}
+					goto jReload;
 				}
 				__builtin_ia32_pause();
 			} while(_MCFCRT_EXPECT(uSpinnedCount++ < uMaxSpinCount));

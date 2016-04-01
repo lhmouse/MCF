@@ -44,6 +44,7 @@ static inline bool RealWaitForMutex(_MCFCRT_Mutex *pMutex, size_t uMaxSpinCount,
 			do {
 				uintptr_t uOld, uNew;
 				uOld = __atomic_load_n(pMutex, __ATOMIC_CONSUME);
+			jReloaded:
 				if(GET_THREAD_COUNT(uOld) == 0){
 					break;
 				}
@@ -52,6 +53,7 @@ static inline bool RealWaitForMutex(_MCFCRT_Mutex *pMutex, size_t uMaxSpinCount,
 					if(_MCFCRT_EXPECT(__atomic_compare_exchange_n(pMutex, &uOld, uNew, false, __ATOMIC_ACQ_REL, __ATOMIC_RELAXED))){
 						return true;
 					}
+					goto jReloaded;
 				}
 				if(uOld & FLAG_URGENT){
 					break;
@@ -82,11 +84,13 @@ static inline bool RealWaitForMutex(_MCFCRT_Mutex *pMutex, size_t uMaxSpinCount,
 				}
 				lStatus = NtWaitForKeyedEvent(nullptr, (void *)pMutex, false, nullptr);
 				_MCFCRT_ASSERT_MSG(NT_SUCCESS(lStatus), L"NtWaitForKeyedEvent() 失败。");
+				_MCFCRT_ASSERT(lStatus != STATUS_TIMEOUT);
 				return false;
 			}
 		} else {
 			NTSTATUS lStatus = NtWaitForKeyedEvent(nullptr, (void *)pMutex, false, nullptr);
 			_MCFCRT_ASSERT_MSG(NT_SUCCESS(lStatus), L"NtWaitForKeyedEvent() 失败。");
+			_MCFCRT_ASSERT(lStatus != STATUS_TIMEOUT);
 		}
 	}
 }

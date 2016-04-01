@@ -27,7 +27,6 @@ extern _MCFCRT_TlsDestructor _MCFCRT_TlsGetDestructor(void *__pTlsKey) _MCFCRT_N
 
 // 下面两个函数都不触发回调。__ppStorage 返回一个指向当前 TLS 对象的指针。
 // 如果未设定过任何值，_MCFCRT_TlsGet() 返回一个空指针，_MCFCRT_TlsRequire() 创建一个对象并返回指向它的指针。
-// 如果未设定过任何值，_MCFCRT_TlsGet() 返回一个空指针，_MCFCRT_TlsRequire() 创建一个对象并返回指向它的指针。
 extern bool _MCFCRT_TlsGet(void *__pTlsKey, void **restrict __ppStorage) _MCFCRT_NOEXCEPT;
 extern bool _MCFCRT_TlsRequire(void *__pTlsKey, void **restrict __ppStorage) _MCFCRT_NOEXCEPT;
 

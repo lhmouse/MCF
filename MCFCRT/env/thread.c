@@ -137,7 +137,7 @@ void __MCFCRT_TlsThreadCleanup(){
 			_MCFCRT_SignalMutex(&(pKey->vMutex));
 
 			if(pKey->pfnDestructor){
-				(*pKey->pfnDestructor)(pObject->abyStorage);
+				(*(pKey->pfnDestructor))(pObject->abyStorage);
 			}
 
 			TlsObject *const pTemp = pObject->pPrevByThread;
@@ -206,7 +206,7 @@ bool _MCFCRT_TlsFreeKey(void *pTlsKey){
 		_MCFCRT_SignalMutex(&(pMap->vMutex));
 
 		if(pKey->pfnDestructor){
-			(*pKey->pfnDestructor)(pObject->abyStorage);
+			(*(pKey->pfnDestructor))(pObject->abyStorage);
 		}
 
 		TlsObject *const pTemp = pObject->pPrevByKey;
@@ -320,7 +320,7 @@ bool _MCFCRT_TlsRequire(void *pTlsKey, void **restrict ppStorage){
 		pObject->pMap = pMap;
 		pObject->pKey = pKey;
 		if(pKey->pfnConstructor){
-			const DWORD dwErrorCode = (*pKey->pfnConstructor)(pObject->abyStorage);
+			const DWORD dwErrorCode = (*(pKey->pfnConstructor))(pObject->abyStorage);
 			if(dwErrorCode != 0){
 				free(pObject);
 				SetLastError(dwErrorCode);

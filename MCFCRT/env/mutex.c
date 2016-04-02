@@ -122,7 +122,7 @@ static inline void RealSignalMutex(_MCFCRT_Mutex *pMutex){
 			uNew = uOld - FLAG_LOCKED + (bSignalOne ? (FLAG_URGENT - MAKE_THREAD_COUNT(1)) : 0);
 		} while(_MCFCRT_EXPECT_NOT(!__atomic_compare_exchange_n(pMutex, &uOld, uNew, false, __ATOMIC_ACQ_REL, __ATOMIC_CONSUME)));
 	}
-	if(_MCFCRT_EXPECT(bSignalOne)){
+	if(bSignalOne){
 		NTSTATUS lStatus = NtReleaseKeyedEvent(nullptr, (void *)pMutex, false, nullptr);
 		_MCFCRT_ASSERT_MSG(NT_SUCCESS(lStatus), L"NtReleaseKeyedEvent() 失败。");
 		_MCFCRT_ASSERT(lStatus != STATUS_TIMEOUT);

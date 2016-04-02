@@ -13,7 +13,7 @@ __MCFCRT_EXTERN_C_BEGIN
 extern bool __MCFCRT_BeginModule(void);
 extern void __MCFCRT_EndModule(void);
 
-typedef void (*_MCFCRT_AtEndModuleCallback)(_MCFCRT_STD intptr_t);
+typedef void (*_MCFCRT_AtEndModuleCallback)(_MCFCRT_STD intptr_t __nContext);
 
 extern bool _MCFCRT_AtEndModule(_MCFCRT_AtEndModuleCallback __pfnProc, _MCFCRT_STD intptr_t __nContext) _MCFCRT_NOEXCEPT;
 

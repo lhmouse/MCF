@@ -30,7 +30,9 @@ extern _MCFCRT_TlsDestructor _MCFCRT_TlsGetDestructor(void *__pTlsKey) _MCFCRT_N
 extern bool _MCFCRT_TlsGet(void *__pTlsKey, void **restrict __ppStorage) _MCFCRT_NOEXCEPT;
 extern bool _MCFCRT_TlsRequire(void *__pTlsKey, void **restrict __ppStorage) _MCFCRT_NOEXCEPT;
 
-extern int _MCFCRT_AtThreadExit(_MCFCRT_TlsDestructor __pfnProc, _MCFCRT_STD intptr_t __nContext);
+typedef void (*_MCFCRT_AtThreadExitCallback)(_MCFCRT_STD intptr_t __nContext);
+
+extern int _MCFCRT_AtThreadExit(_MCFCRT_AtThreadExitCallback __pfnProc, _MCFCRT_STD intptr_t __nContext) _MCFCRT_NOEXCEPT;
 
 typedef unsigned long (*__attribute__((__stdcall__)) _MCFCRT_NativeThreadProc)(void *__pParam);
 typedef unsigned (*_MCFCRT_ThreadProc)(_MCFCRT_STD intptr_t __nParam);

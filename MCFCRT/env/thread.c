@@ -247,8 +247,6 @@ _MCFCRT_TlsDestructor _MCFCRT_TlsGetDestructor(void *pTlsKey){
 }
 
 bool _MCFCRT_TlsGet(void *pTlsKey, void **restrict ppStorage){
-	*ppStorage = nullptr;
-
 	TlsKey *const pKey = pTlsKey;
 	if(!pKey){
 		SetLastError(ERROR_INVALID_PARAMETER);
@@ -257,18 +255,24 @@ bool _MCFCRT_TlsGet(void *pTlsKey, void **restrict ppStorage){
 
 	ThreadMap *pMap = TlsGetValue(g_dwTlsIndex);
 	if(!pMap){
+		*ppStorage = nullptr;
 		return true;
 	}
 
+	TlsObject *pObject;
+
 	_MCFCRT_WaitForMutexForever(&(pMap->vMutex), kMutexSpinCount);
 	{
-		TlsObject *pObject = (TlsObject *)_MCFCRT_AvlFind(&(pMap->avlObjects), (intptr_t)pKey, &ObjectComparatorNodeKey);
-		if(pObject){
-			*ppStorage = pObject->abyStorage;
-		}
+		pObject = (TlsObject *)_MCFCRT_AvlFind(&(pMap->avlObjects), (intptr_t)pKey, &ObjectComparatorNodeKey);
 	}
 	_MCFCRT_SignalMutex(&(pMap->vMutex));
 
+	if(!pObject){
+		*ppStorage = nullptr;
+		return true;
+	}
+
+	*ppStorage = pObject->abyStorage;
 	return true;
 }
 bool _MCFCRT_TlsRequire(void *pTlsKey, void **restrict ppStorage){
@@ -294,48 +298,51 @@ bool _MCFCRT_TlsRequire(void *pTlsKey, void **restrict ppStorage){
 		TlsSetValue(g_dwTlsIndex, pMap);
 	}
 
+	TlsObject *pObject;
+
 	_MCFCRT_WaitForMutexForever(&(pMap->vMutex), kMutexSpinCount);
 	{
-		TlsObject *pObject = (TlsObject *)_MCFCRT_AvlFind(&(pMap->avlObjects), (intptr_t)pKey, &ObjectComparatorNodeKey);
+		pObject = (TlsObject *)_MCFCRT_AvlFind(&(pMap->avlObjects), (intptr_t)pKey, &ObjectComparatorNodeKey);
+	}
+	_MCFCRT_SignalMutex(&(pMap->vMutex));
+
+	if(!pObject){
+		const size_t uSizeToAlloc = sizeof(TlsObject) + pKey->uSize;
+		if(uSizeToAlloc < sizeof(TlsObject)){
+			SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+			return false;
+		}
+		pObject = malloc(uSizeToAlloc);
 		if(!pObject){
-			_MCFCRT_SignalMutex(&(pMap->vMutex));
-			{
-				const size_t uSizeToAlloc = sizeof(TlsObject) + pKey->uSize;
-				if(uSizeToAlloc < sizeof(TlsObject)){
-					SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-					return false;
-				}
-				pObject = malloc(uSizeToAlloc);
-				if(!pObject){
-					SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-					return false;
-				}
-				pObject->pMap = pMap;
-				pObject->pKey = pKey;
-				if(pKey->pfnConstructor){
-					const DWORD dwErrorCode = (*pKey->pfnConstructor)(pObject->abyStorage);
-					if(dwErrorCode != 0){
-						free(pObject);
-						SetLastError(dwErrorCode);
-						return false;
-					}
-				}
-
-				_MCFCRT_WaitForMutexForever(&(pKey->vMutex), kMutexSpinCount);
-				{
-					TlsObject *const pPrev = pKey->pLastByKey;
-					pKey->pLastByKey = pObject;
-
-					pObject->pPrevByKey = pPrev;
-					pObject->pNextByKey = nullptr;
-					if(pPrev){
-						pPrev->pNextByKey = pObject;
-					}
-				}
-				_MCFCRT_SignalMutex(&(pKey->vMutex));
+			SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+			return false;
+		}
+		pObject->pMap = pMap;
+		pObject->pKey = pKey;
+		if(pKey->pfnConstructor){
+			const DWORD dwErrorCode = (*pKey->pfnConstructor)(pObject->abyStorage);
+			if(dwErrorCode != 0){
+				free(pObject);
+				SetLastError(dwErrorCode);
+				return false;
 			}
-			_MCFCRT_WaitForMutexForever(&(pMap->vMutex), kMutexSpinCount);
+		}
 
+		_MCFCRT_WaitForMutexForever(&(pKey->vMutex), kMutexSpinCount);
+		{
+			TlsObject *const pPrev = pKey->pLastByKey;
+			pKey->pLastByKey = pObject;
+
+			pObject->pPrevByKey = pPrev;
+			pObject->pNextByKey = nullptr;
+			if(pPrev){
+				pPrev->pNextByKey = pObject;
+			}
+		}
+		_MCFCRT_SignalMutex(&(pKey->vMutex));
+
+		_MCFCRT_WaitForMutexForever(&(pMap->vMutex), kMutexSpinCount);
+		{
 			TlsObject *const pPrev = pMap->pLastByThread;
 			pMap->pLastByThread = pObject;
 
@@ -346,15 +353,27 @@ bool _MCFCRT_TlsRequire(void *pTlsKey, void **restrict ppStorage){
 			}
 			_MCFCRT_AvlAttach(&(pMap->avlObjects), (_MCFCRT_AvlNodeHeader *)pObject, &ObjectComparatorNodes);
 		}
-		*ppStorage = pObject->abyStorage;
+		_MCFCRT_SignalMutex(&(pMap->vMutex));
 	}
-	_MCFCRT_SignalMutex(&(pMap->vMutex));
 
+	*ppStorage = pObject->abyStorage;
 	return true;
 }
 
-int _MCFCRT_AtThreadExit(_MCFCRT_TlsDestructor pfnProc, intptr_t nContext){
-	void *const pKey = _MCFCRT_TlsAllocKey(sizeof(nContext), nullptr, pfnProc);
+typedef struct tagAtThreadExitParams {
+	_MCFCRT_AtThreadExitCallback pfnProc;
+	intptr_t nContext;
+} AtThreadExitParams;
+
+static void CRTAtExitThreadProc(void *pStorage){
+	const __auto_type pfnProc  = ((AtThreadExitParams *)pStorage)->pfnProc;
+	const __auto_type nContext = ((AtThreadExitParams *)pStorage)->nContext;
+
+	(*pfnProc)(nContext);
+}
+
+int _MCFCRT_AtThreadExit(_MCFCRT_AtThreadExitCallback pfnProc, intptr_t nContext){
+	void *const pKey = _MCFCRT_TlsAllocKey(sizeof(AtThreadExitParams), nullptr, &CRTAtExitThreadProc);
 	if(!pKey){
 		return -1;
 	}
@@ -365,7 +384,9 @@ int _MCFCRT_AtThreadExit(_MCFCRT_TlsDestructor pfnProc, intptr_t nContext){
 		SetLastError(dwLastError);
 		return -1;
 	}
-	memcpy(pStorage, &nContext, sizeof(nContext));
+	AtThreadExitParams *const pParams = pStorage;
+	pParams->pfnProc  = pfnProc;
+	pParams->nContext = nContext;
 	return 0;
 }
 
@@ -377,12 +398,12 @@ static NTSTATUS ReallyCreateNativeThread(HANDLE *phThread, DWORD (*__attribute__
 		return lStatus;
 	}
 	if(puThreadId){
-		*puThreadId = (uintptr_t)(vClientId.UniqueThread);
+		*puThreadId = (uintptr_t)vClientId.UniqueThread;
 	}
 	return lStatus;
 }
 
-void *_MCFCRT_CreateNativeThread(unsigned long (*__attribute__((__stdcall__)) pfnThreadProc)(void *), void *pParam, bool bSuspended, uintptr_t *restrict puThreadId){
+void *_MCFCRT_CreateNativeThread(_MCFCRT_NativeThreadProc pfnThreadProc, void *pParam, bool bSuspended, uintptr_t *restrict puThreadId){
 	HANDLE hThread;
 	const NTSTATUS lStatus = ReallyCreateNativeThread(&hThread, pfnThreadProc, pParam, bSuspended, puThreadId);
 	if(!NT_SUCCESS(lStatus)){
@@ -393,7 +414,7 @@ void *_MCFCRT_CreateNativeThread(unsigned long (*__attribute__((__stdcall__)) pf
 }
 
 typedef struct tagThreadInitParams {
-	unsigned (*pfnProc)(intptr_t);
+	_MCFCRT_ThreadProc pfnProc;
 	intptr_t nParam;
 } ThreadInitParams;
 
@@ -402,18 +423,18 @@ DWORD CRTThreadProc(LPVOID pParam){
 	DWORD dwExitCode;
 	__MCFCRT_EH_TOP_BEGIN
 	{
-		const ThreadInitParams vInitParams = *(ThreadInitParams *)pParam;
+		const __auto_type pfnProc = ((ThreadInitParams *)pParam)->pfnProc;
+		const __auto_type nParam  = ((ThreadInitParams *)pParam)->nParam;
 		free(pParam);
 
 		__MCFCRT_FEnvInit();
-
-		dwExitCode = (*vInitParams.pfnProc)(vInitParams.nParam);
+		dwExitCode = (*pfnProc)(nParam);
 	}
 	__MCFCRT_EH_TOP_END
 	return dwExitCode;
 }
 
-void *_MCFCRT_CreateThread(unsigned (*pfnThreadProc)(intptr_t), intptr_t nParam, bool bSuspended, uintptr_t *restrict puThreadId){
+void *_MCFCRT_CreateThread(_MCFCRT_ThreadProc pfnThreadProc, intptr_t nParam, bool bSuspended, uintptr_t *restrict puThreadId){
 	ThreadInitParams *const pInitParams = malloc(sizeof(ThreadInitParams));
 	if(!pInitParams){
 		return nullptr;

@@ -1,27 +1,21 @@
 #include <MCF/StdMCF.hpp>
-#include <MCF/Core/String.hpp>
+#include <MCF/Thread/Thread.hpp>
 #include <MCF/Thread/ThreadLocal.hpp>
-
-template class MCF::ThreadLocal<int>;
-template class MCF::ThreadLocal<long double>;
-template class MCF::ThreadLocal<MCF::AnsiString>;
+#include <cstdio>
 
 extern "C" unsigned _MCFCRT_Main(){
-	MCF::ThreadLocal<int>             ti;
-	MCF::ThreadLocal<long double>     tf;
-	MCF::ThreadLocal<MCF::AnsiString> ts;
+	auto l = [](std::intptr_t s){ std::printf("at thread exit: s = %s\n", (const char *)s); };
+	::_MCFCRT_AtThreadExit(l, (std::intptr_t)"abc");
+	::_MCFCRT_AtThreadExit(l, (std::intptr_t)"defg");
+	::_MCFCRT_AtThreadExit(l, (std::intptr_t)"hijkl");
 
-	ti.Set(12345);
-	ti.Set(23456);
-	ti.Set(34567);
-
-	tf.Set(1.234);
-	tf.Set(23.45);
-	tf.Set(345.6);
-
-	ts.Set("abc");
-	ts.Set("def");
-	ts.Set("ghi");
+	MCF::Thread t(
+		[&]{
+			std::printf("in thread: %zu\n", MCF::Thread::GetCurrentId());
+			::_MCFCRT_AtThreadExit(l, (std::intptr_t)"xyz");
+		},
+		false);
+	t.Join();
 
 	return 0;
 }

@@ -4,7 +4,7 @@
 
 #include "itoa.h"
 
-static inline char *RealItoaU(char *pchBuffer, uintptr_t uValue, unsigned uMinDigits, const char *pchTable, unsigned uRadix){
+static inline char *ReallyItoaU(char *pchBuffer, uintptr_t uValue, unsigned uMinDigits, const char *pchTable, unsigned uRadix){
 	unsigned uDigitsOutput = 0;
 	do {
 		const char chDigit = pchTable[uValue % uRadix];
@@ -44,11 +44,11 @@ char *_MCFCRT_itoa0d(char *pchBuffer, intptr_t nValue, unsigned uMinDigits){
 	return _MCFCRT_itoa0u(pchBuffer, (uintptr_t)nValue, uMinDigits);
 }
 char *_MCFCRT_itoa0u(char *pchBuffer, uintptr_t uValue, unsigned uMinDigits){
-	return RealItoaU(pchBuffer, uValue, uMinDigits, "0123456789", 10);
+	return ReallyItoaU(pchBuffer, uValue, uMinDigits, "0123456789", 10);
 }
 char *_MCFCRT_itoa0x(char *pchBuffer, uintptr_t uValue, unsigned uMinDigits){
-	return RealItoaU(pchBuffer, uValue, uMinDigits, "0123456789abcdef", 16);
+	return ReallyItoaU(pchBuffer, uValue, uMinDigits, "0123456789abcdef", 16);
 }
 char *_MCFCRT_itoa0X(char *pchBuffer, uintptr_t uValue, unsigned uMinDigits){
-	return RealItoaU(pchBuffer, uValue, uMinDigits, "0123456789ABCDEF", 16);
+	return ReallyItoaU(pchBuffer, uValue, uMinDigits, "0123456789ABCDEF", 16);
 }

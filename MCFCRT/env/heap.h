@@ -12,11 +12,6 @@ __MCFCRT_EXTERN_C_BEGIN
 extern bool __MCFCRT_HeapInit(void) _MCFCRT_NOEXCEPT;
 extern void __MCFCRT_HeapUninit(void) _MCFCRT_NOEXCEPT;
 
-extern void *__MCFCRT_ReallyAlloc(_MCFCRT_STD size_t __uSize) _MCFCRT_NOEXCEPT;
-extern void *__MCFCRT_ReallyRealloc(void *__pBlock, _MCFCRT_STD size_t __uSize) _MCFCRT_NOEXCEPT;
-extern void __MCFCRT_ReallyFree(void *__pBlock) _MCFCRT_NOEXCEPT;
-extern _MCFCRT_STD size_t __MCFCRT_ReallyGetUsableSize(void *__pBlock) _MCFCRT_NOEXCEPT;
-
 extern unsigned char *__MCFCRT_HeapAlloc(_MCFCRT_STD size_t __uSize, const void *__pRetAddr) _MCFCRT_NOEXCEPT;
 extern unsigned char *__MCFCRT_HeapRealloc(void *__pBlock /* not null */, _MCFCRT_STD size_t __uSize, const void *__pRetAddr) _MCFCRT_NOEXCEPT;
 extern void __MCFCRT_HeapFree(void *__pBlock /* not null */, const void *__pRetAddr) _MCFCRT_NOEXCEPT;

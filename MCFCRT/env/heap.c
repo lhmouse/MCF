@@ -54,12 +54,12 @@ unsigned char *__MCFCRT_HeapAlloc(size_t uSize, const void *pRetAddr){
 
 		_MCFCRT_WaitForMutexForever(&g_vHeapMutex, kMutexSpinCount);
 		{
-			unsigned char *const pRaw = __MCFCRT_ReallyAlloc(uRawSize);
+			unsigned char *const pRaw = HeapAlloc(GetProcessHeap(), 0, uRawSize);
 			if(pRaw){
 #if __MCFCRT_REQUIRE_HEAPDBG_LEVEL(3)
 				__MCFCRT_HeapDbgBlockInfo *const pBlockInfo = __MCFCRT_HeapDbgAllocateBlockInfo();
 				if(!pBlockInfo){
-					__MCFCRT_ReallyFree(pRaw);
+					HeapFree(GetProcessHeap(), 0, pRaw);
 					goto jFailed;
 				}
 				pRet = __MCFCRT_HeapDbgRegisterBlockInfo(pBlockInfo, pRaw, uSize, pRetAddr);
@@ -127,7 +127,7 @@ unsigned char *__MCFCRT_HeapRealloc(void *pBlock, size_t uSize, const void *pRet
 		if(pBlockInfo){
 			uOriginalSize = pBlockInfo->__uSize;
 		} else {
-			uOriginalSize = __MCFCRT_ReallyGetUsableSize(pRawOriginal);
+			uOriginalSize = HeapSize(GetProcessHeap(), 0, pRawOriginal);
 		}
 #		endif
 #	else
@@ -144,7 +144,7 @@ unsigned char *__MCFCRT_HeapRealloc(void *pBlock, size_t uSize, const void *pRet
 
 		_MCFCRT_WaitForMutexForever(&g_vHeapMutex, kMutexSpinCount);
 		{
-			unsigned char *const pRaw = __MCFCRT_ReallyRealloc(pRawOriginal, uRawSize);
+			unsigned char *const pRaw = HeapReAlloc(GetProcessHeap(), 0, pRawOriginal, uRawSize);
 			if(pRaw){
 #if __MCFCRT_REQUIRE_HEAPDBG_LEVEL(3)
 				__MCFCRT_HeapDbgUnregisterBlockInfo(pBlockInfo);
@@ -201,49 +201,13 @@ void __MCFCRT_HeapFree(void *pBlock, const void *pRetAddr){
 #endif
 
 #if __MCFCRT_REQUIRE_HEAPDBG_LEVEL(4)
-		memset(pRaw, 0xFE, __MCFCRT_ReallyGetUsableSize(pRaw));
+		memset(pRaw, 0xFE, HeapSize(GetProcessHeap(), 0, pRaw));
 #endif
-		__MCFCRT_ReallyFree(pRaw);
+		HeapFree(GetProcessHeap(), 0, pRaw);
 	}
 	_MCFCRT_SignalMutex(&g_vHeapMutex);
 
 	if(__MCFCRT_OnHeapFree){
 		(*__MCFCRT_OnHeapFree)(pBlock, pRetAddr);
 	}
-}
-
-#define USE_DLMALLOC    1
-
-#if USE_DLMALLOC
-#	define USE_DL_PREFIX
-#	include "../../External/dlmalloc/malloc.h"
-#endif
-
-void *__MCFCRT_ReallyAlloc(size_t uSize){
-#if USE_DLMALLOC
-	return dlmalloc(uSize);
-#else
-	return HeapAlloc(GetProcessHeap(), 0, uSize);
-#endif
-}
-void *__MCFCRT_ReallyRealloc(void *pBlock, size_t uSize){
-#if USE_DLMALLOC
-	return dlrealloc(pBlock, uSize);
-#else
-	return HeapReAlloc(GetProcessHeap(), 0, pBlock, uSize);
-#endif
-}
-void __MCFCRT_ReallyFree(void *pBlock){
-#if USE_DLMALLOC
-	dlfree(pBlock);
-#else
-	HeapFree(GetProcessHeap(), 0, pBlock);
-#endif
-}
-size_t __MCFCRT_ReallyGetUsableSize(void *pBlock){
-#if USE_DLMALLOC
-	return dlmalloc_usable_size(pBlock);
-#else
-	return HeapSize(GetProcessHeap(), 0, pBlock);
-#endif
 }

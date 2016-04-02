@@ -4,7 +4,7 @@
 
 #include "itow.h"
 
-static inline wchar_t *RealItowU(wchar_t *pwcBuffer, uintptr_t uValue, unsigned uMinDigits, const wchar_t *pwcTable, unsigned uRadix){
+static inline wchar_t *ReallyItowU(wchar_t *pwcBuffer, uintptr_t uValue, unsigned uMinDigits, const wchar_t *pwcTable, unsigned uRadix){
 	unsigned uDigitsOutput = 0;
 	do {
 		const wchar_t wcDigit = pwcTable[uValue % uRadix];
@@ -44,11 +44,11 @@ wchar_t *_MCFCRT_itow0d(wchar_t *pwcBuffer, intptr_t nValue, unsigned uMinDigits
 	return _MCFCRT_itow0u(pwcBuffer, (uintptr_t)nValue, uMinDigits);
 }
 wchar_t *_MCFCRT_itow0u(wchar_t *pwcBuffer, uintptr_t uValue, unsigned uMinDigits){
-	return RealItowU(pwcBuffer, uValue, uMinDigits, L"0123456789", 10);
+	return ReallyItowU(pwcBuffer, uValue, uMinDigits, L"0123456789", 10);
 }
 wchar_t *_MCFCRT_itow0x(wchar_t *pwcBuffer, uintptr_t uValue, unsigned uMinDigits){
-	return RealItowU(pwcBuffer, uValue, uMinDigits, L"0123456789abcdef", 16);
+	return ReallyItowU(pwcBuffer, uValue, uMinDigits, L"0123456789abcdef", 16);
 }
 wchar_t *_MCFCRT_itow0X(wchar_t *pwcBuffer, uintptr_t uValue, unsigned uMinDigits){
-	return RealItowU(pwcBuffer, uValue, uMinDigits, L"0123456789ABCDEF", 16);
+	return ReallyItowU(pwcBuffer, uValue, uMinDigits, L"0123456789ABCDEF", 16);
 }

@@ -3,7 +3,6 @@
 // Copyleft 2013 - 2016, LH_Mouse. All wrongs reserved.
 
 #include "heap_dbg.h"
-#include "heap.h"
 #include "../ext/stpcpy.h"
 #include "../ext/wcpcpy.h"
 #include "../ext/itoa.h"
@@ -175,7 +174,7 @@ void __MCFCRT_HeapDbgUnregisterBlockInfo(__MCFCRT_HeapDbgBlockInfo *pBlockInfo){
 
 unsigned char *__MCFCRT_HeapDbgAddBlockGuardsBasic(unsigned char *pRaw){
 	unsigned char *const pContents = pRaw + GUARD_BAND_SIZE;
-	const size_t uSize = __MCFCRT_ReallyGetUsableSize(pRaw) - GUARD_BAND_SIZE * 2;
+	const size_t uSize = HeapSize(GetProcessHeap(), 0, pRaw) - GUARD_BAND_SIZE * 2;
 
 	void **ppGuard1 = (void **)pContents;
 	void **ppGuard2 = (void **)(pContents + uSize);
@@ -195,7 +194,7 @@ void __MCFCRT_HeapDbgValidateBlockBasic(unsigned char **ppRaw, unsigned char *pC
 	unsigned char *const pRaw = pContents - GUARD_BAND_SIZE;
 	*ppRaw = pRaw;
 
-	const size_t uSize = __MCFCRT_ReallyGetUsableSize(pRaw) - GUARD_BAND_SIZE * 2;
+	const size_t uSize = HeapSize(GetProcessHeap(), 0, pRaw) - GUARD_BAND_SIZE * 2;
 
 	void *const *ppGuard1 = (void *const *)pContents;
 	void *const *ppGuard2 = (void *const *)(pContents + uSize);

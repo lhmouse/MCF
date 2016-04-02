@@ -22,7 +22,7 @@ NTSTATUS NtReleaseKeyedEvent(HANDLE hKeyedEvent, void *pKey, BOOLEAN bAlertable,
 #define GET_THREAD_COUNT(v_)    ((size_t)(uintptr_t)(v_) >> FLAGS_RESERVED)
 #define MAKE_THREAD_COUNT(v_)   ((uintptr_t)(size_t)(v_) << FLAGS_RESERVED)
 
-static inline bool RealWaitForMutex(_MCFCRT_Mutex *pMutex, size_t uMaxSpinCount, bool bMayTimeOut, uint64_t u64UntilFastMonoClock){
+static inline bool ReallyWaitForMutex(_MCFCRT_Mutex *pMutex, size_t uMaxSpinCount, bool bMayTimeOut, uint64_t u64UntilFastMonoClock){
 	{
 		uintptr_t uOld, uNew;
 		uOld = __atomic_load_n(pMutex, __ATOMIC_CONSUME);
@@ -109,7 +109,7 @@ static inline bool RealWaitForMutex(_MCFCRT_Mutex *pMutex, size_t uMaxSpinCount,
 	}
 }
 
-static inline void RealSignalMutex(_MCFCRT_Mutex *pMutex){
+static inline void ReallySignalMutex(_MCFCRT_Mutex *pMutex){
 	bool bSignalOne;
 	{
 		uintptr_t uOld, uNew;
@@ -134,13 +134,13 @@ static inline void RealSignalMutex(_MCFCRT_Mutex *pMutex){
 }
 
 bool _MCFCRT_WaitForMutex(_MCFCRT_Mutex *pMutex, size_t uMaxSpinCount, uint64_t u64UntilFastMonoClock){
-	const bool bLocked = RealWaitForMutex(pMutex, uMaxSpinCount, true, u64UntilFastMonoClock);
+	const bool bLocked = ReallyWaitForMutex(pMutex, uMaxSpinCount, true, u64UntilFastMonoClock);
 	return bLocked;
 }
 void _MCFCRT_WaitForMutexForever(_MCFCRT_Mutex *pMutex, size_t uMaxSpinCount){
-	const bool bLocked = RealWaitForMutex(pMutex, uMaxSpinCount, false, UINT64_MAX);
+	const bool bLocked = ReallyWaitForMutex(pMutex, uMaxSpinCount, false, UINT64_MAX);
 	_MCFCRT_ASSERT(bLocked);
 }
 void _MCFCRT_SignalMutex(_MCFCRT_Mutex *pMutex){
-	RealSignalMutex(pMutex);
+	ReallySignalMutex(pMutex);
 }

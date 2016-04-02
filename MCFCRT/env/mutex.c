@@ -119,7 +119,11 @@ static inline void RealSignalMutex(_MCFCRT_Mutex *pMutex){
 			_MCFCRT_ASSERT(!(uOld & FLAG_URGENT));
 
 			bSignalOne = (GET_THREAD_COUNT(uOld) != 0);
-			uNew = uOld - FLAG_LOCKED + (bSignalOne ? (FLAG_URGENT - MAKE_THREAD_COUNT(1)) : 0);
+			uNew = uOld - FLAG_LOCKED;
+			if(bSignalOne){
+				uNew += FLAG_URGENT;
+				uNew -= MAKE_THREAD_COUNT(1);
+			}
 		} while(_MCFCRT_EXPECT_NOT(!__atomic_compare_exchange_n(pMutex, &uOld, uNew, false, __ATOMIC_ACQ_REL, __ATOMIC_CONSUME)));
 	}
 	if(bSignalOne){

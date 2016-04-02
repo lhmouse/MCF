@@ -42,28 +42,37 @@ static inline bool RealWaitForMutex(_MCFCRT_Mutex *pMutex, size_t uMaxSpinCount,
 		{
 			size_t uSpinnedCount = 0;
 			do {
-				__builtin_ia32_pause();
-
-				uintptr_t uOld, uNew;
-				uOld = __atomic_load_n(pMutex, __ATOMIC_CONSUME);
-			jReload:
-				if(GET_THREAD_COUNT(uOld) == 0){
-					break;
+				enum {
+					kKeepSpinning,
+					kTrap,
+					kReturnLocked,
+				} eResult;
+				{
+					uintptr_t uOld, uNew;
+					uOld = __atomic_load_n(pMutex, __ATOMIC_CONSUME);
+					do {
+						if(GET_THREAD_COUNT(uOld) == 0){
+							eResult = kTrap;
+							break;
+						} else if(!(uOld & FLAG_LOCKED)){
+							eResult = kReturnLocked;
+							uNew = (uOld & ~FLAG_URGENT) + FLAG_LOCKED - MAKE_THREAD_COUNT(1);
+						} else if(uOld & FLAG_URGENT){
+							eResult = kTrap;
+							uNew = (uOld & ~FLAG_URGENT);
+						} else {
+							eResult = kKeepSpinning;
+							break;
+						}
+					} while(_MCFCRT_EXPECT_NOT(!__atomic_compare_exchange_n(pMutex, &uOld, uNew, false, __ATOMIC_ACQ_REL, __ATOMIC_RELAXED)));
 				}
-				if(_MCFCRT_EXPECT_NOT(!(uOld & FLAG_LOCKED))){
-					uNew = (uOld & ~FLAG_URGENT) + FLAG_LOCKED - MAKE_THREAD_COUNT(1);
-					if(_MCFCRT_EXPECT_NOT(!__atomic_compare_exchange_n(pMutex, &uOld, uNew, false, __ATOMIC_ACQ_REL, __ATOMIC_RELAXED))){
-						goto jReload;
-					}
+				if(eResult == kReturnLocked){
 					return true;
 				}
-				if(_MCFCRT_EXPECT_NOT(uOld & FLAG_URGENT)){
-					uNew = (uOld & ~FLAG_URGENT);
-					if(_MCFCRT_EXPECT_NOT(!__atomic_compare_exchange_n(pMutex, &uOld, uNew, false, __ATOMIC_RELAXED, __ATOMIC_RELAXED))){
-						goto jReload;
-					}
+				if(eResult == kTrap){
 					break;
 				}
+				__builtin_ia32_pause();
 			} while(_MCFCRT_EXPECT(uSpinnedCount++ < uMaxSpinCount));
 		}
 		if(bMayTimeOut){

@@ -37,12 +37,12 @@ static inline bool RealWaitForConditionVariable(_MCFCRT_ConditionVariable *pCond
 					uNew = uOld - 1;
 				} while(_MCFCRT_EXPECT_NOT(!__atomic_compare_exchange_n(pConditionVariable, &uOld, uNew, false, __ATOMIC_RELAXED, __ATOMIC_RELAXED)));
 			}
-			if(_MCFCRT_EXPECT(!bDecremented)){
-				lStatus = NtWaitForKeyedEvent(nullptr, (void *)pConditionVariable, false, nullptr);
-				_MCFCRT_ASSERT_MSG(NT_SUCCESS(lStatus), L"NtWaitForKeyedEvent() 失败。");
-				_MCFCRT_ASSERT(lStatus != STATUS_TIMEOUT);
+			if(bDecremented){
+				return false;
 			}
-			return true;
+			lStatus = NtWaitForKeyedEvent(nullptr, (void *)pConditionVariable, false, nullptr);
+			_MCFCRT_ASSERT_MSG(NT_SUCCESS(lStatus), L"NtWaitForKeyedEvent() 失败。");
+			_MCFCRT_ASSERT(lStatus != STATUS_TIMEOUT);
 		}
 	} else {
 		NTSTATUS lStatus = NtWaitForKeyedEvent(nullptr, (void *)pConditionVariable, false, nullptr);

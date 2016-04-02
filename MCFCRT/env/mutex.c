@@ -28,7 +28,7 @@ static inline bool ReallyWaitForMutex(_MCFCRT_Mutex *pMutex, size_t uMaxSpinCoun
 		uOld = __atomic_load_n(pMutex, __ATOMIC_CONSUME);
 		if(_MCFCRT_EXPECT(!(uOld & FLAG_LOCKED))){
 			uNew = (uOld & ~FLAG_URGENT) + FLAG_LOCKED;
-			if(_MCFCRT_EXPECT(__atomic_compare_exchange_n(pMutex, &uOld, uNew, false, __ATOMIC_ACQ_REL, __ATOMIC_RELAXED))){
+			if(_MCFCRT_EXPECT(__atomic_compare_exchange_n(pMutex, &uOld, uNew, false, __ATOMIC_ACQ_REL, __ATOMIC_CONSUME))){
 				return true;
 			}
 		}
@@ -64,7 +64,7 @@ static inline bool ReallyWaitForMutex(_MCFCRT_Mutex *pMutex, size_t uMaxSpinCoun
 							eResult = kKeepSpinning;
 							break;
 						}
-					} while(_MCFCRT_EXPECT_NOT(!__atomic_compare_exchange_n(pMutex, &uOld, uNew, false, __ATOMIC_ACQ_REL, __ATOMIC_RELAXED)));
+					} while(_MCFCRT_EXPECT_NOT(!__atomic_compare_exchange_n(pMutex, &uOld, uNew, false, __ATOMIC_ACQ_REL, __ATOMIC_CONSUME)));
 				}
 				if(eResult == kReturnLocked){
 					return true;

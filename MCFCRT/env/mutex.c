@@ -15,6 +15,9 @@ NTSTATUS NtWaitForKeyedEvent(HANDLE hKeyedEvent, void *pKey, BOOLEAN bAlertable,
 extern __attribute__((__dllimport__, __stdcall__))
 NTSTATUS NtReleaseKeyedEvent(HANDLE hKeyedEvent, void *pKey, BOOLEAN bAlertable, const LARGE_INTEGER *pliTimeout);
 
+extern __attribute__((__dllimport__, __stdcall__))
+NTSTATUS NtDelayExecution(BOOLEAN bAlertable, const LARGE_INTEGER *pInterval);
+
 #define FLAG_LOCKED             ((uintptr_t)0x0001)
 #define FLAG_URGENT             ((uintptr_t)0x0002)
 #define FLAGS_RESERVED          ((size_t)4)
@@ -105,8 +108,15 @@ static inline bool RealWaitForMutex(_MCFCRT_Mutex *pMutex, size_t uMaxSpinCount,
 			_MCFCRT_ASSERT_MSG(NT_SUCCESS(lStatus), L"NtWaitForKeyedEvent() 失败。");
 			_MCFCRT_ASSERT(lStatus != STATUS_TIMEOUT);
 		}
+		{
+			LARGE_INTEGER liTimeout;
+			liTimeout.QuadPart= -1;
+			NTSTATUS lStatus = NtDelayExecution(false, &liTimeout);
+			_MCFCRT_ASSERT_MSG(NT_SUCCESS(lStatus), L"NtDelayExecution() 失败。");
+		}
 	}
 }
+
 static inline void RealSignalMutex(_MCFCRT_Mutex *pMutex){
 	bool bSignalOne;
 	{

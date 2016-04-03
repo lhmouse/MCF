@@ -390,25 +390,17 @@ int _MCFCRT_AtThreadExit(_MCFCRT_AtThreadExitCallback pfnProc, intptr_t nContext
 	return 0;
 }
 
-static NTSTATUS ReallyCreateNativeThread(HANDLE *phThread, DWORD (*__attribute__((__stdcall__)) pfnThreadProc)(LPVOID), LPVOID pParam, bool bSuspended, uintptr_t *restrict puThreadId){
-	ULONG ulStackReserved = 0, ulStackCommitted = 0;
-	CLIENT_ID vClientId;
-	const NTSTATUS lStatus = RtlCreateUserThread(GetCurrentProcess(), nullptr, bSuspended, 0, &ulStackReserved, &ulStackCommitted, pfnThreadProc, pParam, phThread, &vClientId);
-	if(!NT_SUCCESS(lStatus)){
-		return lStatus;
-	}
-	if(puThreadId){
-		*puThreadId = (uintptr_t)vClientId.UniqueThread;
-	}
-	return lStatus;
-}
-
 void *_MCFCRT_CreateNativeThread(_MCFCRT_NativeThreadProc pfnThreadProc, void *pParam, bool bSuspended, uintptr_t *restrict puThreadId){
 	HANDLE hThread;
-	const NTSTATUS lStatus = ReallyCreateNativeThread(&hThread, pfnThreadProc, pParam, bSuspended, puThreadId);
+	CLIENT_ID vClientId;
+	ULONG ulStackReserved = 0, ulStackCommitted = 0;
+	const NTSTATUS lStatus = RtlCreateUserThread(GetCurrentProcess(), nullptr, bSuspended, 0, &ulStackReserved, &ulStackCommitted, pfnThreadProc, pParam, &hThread, &vClientId);
 	if(!NT_SUCCESS(lStatus)){
 		SetLastError(RtlNtStatusToDosError(lStatus));
 		return nullptr;
+	}
+	if(puThreadId){
+		*puThreadId = (uintptr_t)vClientId.UniqueThread;
 	}
 	return (void *)hThread;
 }
@@ -419,7 +411,7 @@ typedef struct tagThreadInitParams {
 } ThreadInitParams;
 
 static __MCFCRT_C_STDCALL __MCFCRT_HAS_EH_TOP
-DWORD WrappedThreadProc(LPVOID pParam){
+DWORD ThreadProc(LPVOID pParam){
 	DWORD dwExitCode;
 	__MCFCRT_EH_TOP_BEGIN
 	{
@@ -442,11 +434,11 @@ void *_MCFCRT_CreateThread(_MCFCRT_ThreadProc pfnThreadProc, intptr_t nParam, bo
 	pInitParams->pfnProc = pfnThreadProc;
 	pInitParams->nParam  = nParam;
 
-	HANDLE hThread;
-	const NTSTATUS lStatus = ReallyCreateNativeThread(&hThread, &WrappedThreadProc, pInitParams, bSuspended, puThreadId);
-	if(!NT_SUCCESS(lStatus)){
+	void *const hThread = _MCFCRT_CreateNativeThread(&ThreadProc, pInitParams, bSuspended, puThreadId);
+	if(!hThread){
+		const DWORD dwLastError = GetLastError();
 		free(pInitParams);
-		SetLastError(RtlNtStatusToDosError(lStatus));
+		SetLastError(dwLastError);
 		return nullptr;
 	}
 	return (void *)hThread;

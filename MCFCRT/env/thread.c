@@ -419,7 +419,7 @@ typedef struct tagThreadInitParams {
 } ThreadInitParams;
 
 static __MCFCRT_C_STDCALL __MCFCRT_HAS_EH_TOP
-DWORD CRTThreadProc(LPVOID pParam){
+DWORD WrappedThreadProc(LPVOID pParam){
 	DWORD dwExitCode;
 	__MCFCRT_EH_TOP_BEGIN
 	{
@@ -443,7 +443,7 @@ void *_MCFCRT_CreateThread(_MCFCRT_ThreadProc pfnThreadProc, intptr_t nParam, bo
 	pInitParams->nParam  = nParam;
 
 	HANDLE hThread;
-	const NTSTATUS lStatus = ReallyCreateNativeThread(&hThread, &CRTThreadProc, pInitParams, bSuspended, puThreadId);
+	const NTSTATUS lStatus = ReallyCreateNativeThread(&hThread, &WrappedThreadProc, pInitParams, bSuspended, puThreadId);
 	if(!NT_SUCCESS(lStatus)){
 		free(pInitParams);
 		SetLastError(RtlNtStatusToDosError(lStatus));

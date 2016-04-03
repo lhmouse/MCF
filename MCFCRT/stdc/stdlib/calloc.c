@@ -5,8 +5,6 @@
 #include "../../env/_crtdef.h"
 #include "../../env/heap.h"
 
-extern void *memset(void *s, int c, size_t n);
-
 __attribute__((__noinline__))
 void *__wrap_calloc(size_t nmemb, size_t cnt){
 	size_t cb = 0;
@@ -18,7 +16,7 @@ void *__wrap_calloc(size_t nmemb, size_t cnt){
 	}
 	void *const ret = __MCFCRT_HeapAlloc(cb, __builtin_return_address(0));
 	if(ret){
-		memset(ret, 0, cb);
+		__builtin_memset(ret, 0, cb);
 	}
 	return ret;
 }

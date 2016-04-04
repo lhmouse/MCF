@@ -622,7 +622,10 @@ public:
 		if(pchBegin != pchEnd){
 			--pchEnd;
 			while(pchBegin < pchEnd){
-				std::iter_swap(pchBegin++, pchEnd--);
+				using std::swap;
+				swap(*pchBegin, *pchEnd);
+				++pchBegin;
+				--pchEnd;
 			}
 		}
 	}

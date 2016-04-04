@@ -16,7 +16,7 @@ extern __attribute__((__dllimport__, __stdcall__))
 NTSTATUS NtReleaseKeyedEvent(HANDLE hKeyedEvent, void *pKey, BOOLEAN bAlertable, const LARGE_INTEGER *pliTimeout);
 
 #define FLAG_LOCKED             ((uintptr_t)0x0001)
-#define FLAG_URGENT             ((uintptr_t)0x0002)
+#define FLAG_SPIN_TOKEN         ((uintptr_t)0x0002)
 #define FLAGS_RESERVED          ((size_t)4)
 
 #define GET_THREAD_COUNT(v_)    ((size_t)(uintptr_t)(v_) >> FLAGS_RESERVED)
@@ -27,7 +27,7 @@ static inline bool ReallyWaitForMutex(_MCFCRT_Mutex *pMutex, size_t uMaxSpinCoun
 		uintptr_t uOld, uNew;
 		uOld = __atomic_load_n(pMutex, __ATOMIC_CONSUME);
 		if(_MCFCRT_EXPECT(!(uOld & FLAG_LOCKED))){
-			uNew = (uOld & ~FLAG_URGENT) + FLAG_LOCKED;
+			uNew = uOld | FLAG_LOCKED;
 			if(_MCFCRT_EXPECT(__atomic_compare_exchange_n(pMutex, &uOld, uNew, false, __ATOMIC_ACQ_REL, __ATOMIC_CONSUME))){
 				return true;
 			}
@@ -38,42 +38,56 @@ static inline bool ReallyWaitForMutex(_MCFCRT_Mutex *pMutex, size_t uMaxSpinCoun
 	}
 
 	for(;;){
-		__atomic_fetch_add(pMutex, MAKE_THREAD_COUNT(1), __ATOMIC_RELAXED);
+		if(uMaxSpinCount != 0){
+			bool bCanSpin;
+			{
+				uintptr_t uOld, uNew;
+				uOld = __atomic_load_n(pMutex, __ATOMIC_RELAXED);
+				do {
+					bCanSpin = !(uOld & FLAG_SPIN_TOKEN);
+					if(!bCanSpin){
+						break;
+					}
+					uNew = uOld | FLAG_SPIN_TOKEN;
+				} while(_MCFCRT_EXPECT_NOT(!__atomic_compare_exchange_n(pMutex, &uOld, uNew, false, __ATOMIC_RELAXED, __ATOMIC_RELAXED)));
+			}
+			if(bCanSpin){
+				for(size_t i = 0; i < uMaxSpinCount; ++i){
+					bool bTaken;
+					{
+						uintptr_t uOld, uNew;
+						uOld = __atomic_load_n(pMutex, __ATOMIC_CONSUME);
+						do {
+							bTaken = !(uOld & FLAG_LOCKED);
+							if(!bTaken){
+								break;
+							}
+							uNew = uOld | FLAG_LOCKED;
+						} while(_MCFCRT_EXPECT_NOT(!__atomic_compare_exchange_n(pMutex, &uOld, uNew, false, __ATOMIC_ACQ_REL, __ATOMIC_CONSUME)));
+					}
+					if(bTaken){
+						return true;
+					}
+					__builtin_ia32_pause();
+				}
+			}
+		}
+
+		bool bTaken;
 		{
-			size_t uSpinnedCount = 0;
+			uintptr_t uOld, uNew;
+			uOld = __atomic_load_n(pMutex, __ATOMIC_CONSUME);
 			do {
-				enum {
-					kKeepSpinning,
-					kTrap,
-					kReturnLocked,
-				} eResult;
-				{
-					uintptr_t uOld, uNew;
-					uOld = __atomic_load_n(pMutex, __ATOMIC_CONSUME);
-					do {
-						if(GET_THREAD_COUNT(uOld) == 0){
-							eResult = kTrap;
-							break;
-						} else if(!(uOld & FLAG_LOCKED)){
-							eResult = kReturnLocked;
-							uNew = (uOld & ~FLAG_URGENT) + FLAG_LOCKED - MAKE_THREAD_COUNT(1);
-						} else if(uOld & FLAG_URGENT){
-							eResult = kTrap;
-							uNew = (uOld & ~FLAG_URGENT);
-						} else {
-							eResult = kKeepSpinning;
-							break;
-						}
-					} while(_MCFCRT_EXPECT_NOT(!__atomic_compare_exchange_n(pMutex, &uOld, uNew, false, __ATOMIC_ACQ_REL, __ATOMIC_CONSUME)));
+				bTaken = !(uOld & FLAG_LOCKED);
+				if(!bTaken){
+					uNew = uOld + MAKE_THREAD_COUNT(1);
+				} else {
+					uNew = uOld | FLAG_LOCKED;
 				}
-				if(eResult == kReturnLocked){
-					return true;
-				}
-				if(eResult == kTrap){
-					break;
-				}
-				__builtin_ia32_pause();
-			} while(_MCFCRT_EXPECT(uSpinnedCount++ < uMaxSpinCount));
+			} while(_MCFCRT_EXPECT_NOT(!__atomic_compare_exchange_n(pMutex, &uOld, uNew, false, __ATOMIC_ACQ_REL, __ATOMIC_CONSUME)));
+		}
+		if(bTaken){
+			return true;
 		}
 		if(bMayTimeOut){
 			LARGE_INTEGER liTimeout;
@@ -116,12 +130,10 @@ static inline void ReallySignalMutex(_MCFCRT_Mutex *pMutex){
 		uOld = __atomic_load_n(pMutex, __ATOMIC_CONSUME);
 		do {
 			_MCFCRT_ASSERT_MSG(uOld & FLAG_LOCKED, L"互斥体没有被任何线程锁定。");
-			_MCFCRT_ASSERT(!(uOld & FLAG_URGENT));
 
 			bSignalOne = (GET_THREAD_COUNT(uOld) != 0);
-			uNew = uOld - FLAG_LOCKED;
+			uNew = uOld & ~(FLAG_LOCKED | FLAG_SPIN_TOKEN);
 			if(bSignalOne){
-				uNew += FLAG_URGENT;
 				uNew -= MAKE_THREAD_COUNT(1);
 			}
 		} while(_MCFCRT_EXPECT_NOT(!__atomic_compare_exchange_n(pMutex, &uOld, uNew, false, __ATOMIC_ACQ_REL, __ATOMIC_CONSUME)));

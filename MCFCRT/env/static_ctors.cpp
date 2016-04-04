@@ -5,6 +5,7 @@
 #include "static_ctors.h"
 #include "mcfwin.h"
 #include <cstdint>
+#include <cstdlib>
 #include <csetjmp>
 
 extern "C" {
@@ -19,22 +20,31 @@ extern std::jmp_buf *__MCFCRT_pjbufAbortHook;
 bool __MCFCRT_CallStaticCtors() noexcept {
 	// 如果在 DLL 的静态构造函数抛出异常，我们不终止进程，而是返回 false。
 	// 这将导致 DllMain() 返回 FALSE，而不会终止当前进程。
+
 	int nResult;
-	std::jmp_buf vJmpBuf;
-	const auto pOldJmpBuf = ::__MCFCRT_pjbufAbortHook;
-	::__MCFCRT_pjbufAbortHook = &vJmpBuf;
-	if((nResult = setjmp(vJmpBuf)) == 0){
-		const auto ppfnBegin = __CTOR_LIST__ + 1;
-		auto ppfnCur = ppfnBegin;
-		while(*ppfnCur){
-			++ppfnCur;
-		}
-		while(ppfnCur != ppfnBegin){
-			--ppfnCur;
-			(*ppfnCur)();
+	std::jmp_buf jbufHook;
+
+	const auto pjbufOldHook = ::__MCFCRT_pjbufAbortHook;
+	::__MCFCRT_pjbufAbortHook = &jbufHook;
+	{
+		if((nResult = setjmp(jbufHook)) == 0){
+			try {
+				const auto ppfnBegin = __CTOR_LIST__ + 1;
+				auto ppfnCur = ppfnBegin;
+				while(*ppfnCur){
+					++ppfnCur;
+				}
+				while(ppfnCur != ppfnBegin){
+					--ppfnCur;
+					(*ppfnCur)();
+				}
+			} catch(...){
+				std::abort();
+			}
 		}
 	}
-	::__MCFCRT_pjbufAbortHook = pOldJmpBuf;
+	::__MCFCRT_pjbufAbortHook = pjbufOldHook;
+
 	::SetLastError((DWORD)nResult);
 	return nResult == 0;
 }

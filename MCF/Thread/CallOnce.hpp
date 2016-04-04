@@ -6,73 +6,42 @@
 #define MCF_THREAD_CALL_ONCE_HPP_
 
 #include "Atomic.hpp"
-#include "../Utilities/Defer.hpp"
+#include "Mutex.hpp"
 #include <utility>
-#include <type_traits>
-#include <cstddef>
 
 namespace MCF {
 
-namespace Impl_CallOnce {
-	extern void GlobalLock() noexcept;
-	extern void GlobalUnlock() noexcept;
+class OnceFlag {
+private:
+	Atomic<bool> x_bInitialized;
+	Mutex x_mtxGuard;
 
-	class OnceFlag {
-	public:
-		enum State {
-			kUninitialized = 0,
-			kInitializing  = 1,
-			kInitialized   = 2,
-		};
-
-	private:
-		Atomic<State> x_eState;
-
-	public:
-		constexpr OnceFlag() noexcept
-			: x_eState(kUninitialized)
-		{
-		}
-
-		OnceFlag(const OnceFlag &) = delete;
-		OnceFlag &operator=(const OnceFlag &) = delete;
-
-	public:
-		State Load(MemoryModel eModel) const volatile noexcept {
-			return x_eState.Load(eModel);
-		}
-		void Store(State eState, MemoryModel eModel) volatile noexcept {
-			x_eState.Store(eState, eModel);
-		}
-	};
-}
-
-using OnceFlag = volatile Impl_CallOnce::OnceFlag;
-
-static_assert(std::is_trivially_destructible<OnceFlag>::value, "Hey!");
-
-template<typename FunctionT, typename ...ParamsT>
-bool CallOnce(OnceFlag &vFlag, FunctionT &&vFunction, ParamsT &&...vParams){
-	if(vFlag.Load(kAtomicConsume) == OnceFlag::kInitialized){
-		return false;
+public:
+	constexpr OnceFlag() noexcept
+		: x_bInitialized(false), x_mtxGuard()
+	{
 	}
 
-	Impl_CallOnce::GlobalLock();
-	const auto vGlobalUnlock = Defer([&]{ Impl_CallOnce::GlobalUnlock(); });
-
-	if(vFlag.Load(kAtomicConsume) == OnceFlag::kInitialized){
-		return false;
+public:
+	template<typename FuncT, typename ...ParamsT>
+	bool Call(FuncT &&vFunc, ParamsT &&...vParams){
+		if(x_bInitialized.Load(kAtomicRelaxed)){
+			return false;
+		}
+		const auto vLock = x_mtxGuard.GetLock();
+		if(x_bInitialized.Load(kAtomicRelaxed)){
+			return false;
+		}
+		std::forward<FuncT>(vFunc)(std::forward<ParamsT>(vParams)...);
+		AtomicFence(kAtomicRelease);
+		x_bInitialized.Store(true, kAtomicRelaxed);
+		return true;
 	}
+};
 
-	vFlag.Store(OnceFlag::kInitializing, kAtomicRelease);
-	try {
-		std::forward<FunctionT>(vFunction)(std::forward<ParamsT>(vParams)...);
-	} catch(...){
-		vFlag.Store(OnceFlag::kUninitialized, kAtomicRelease);
-		throw;
-	}
-	vFlag.Store(OnceFlag::kInitialized, kAtomicRelease);
-	return true;
+template<typename FuncT, typename ...ParamsT>
+bool CallOnce(OnceFlag &vFlag, FuncT &&vFunc, ParamsT &&...vParams){
+	return vFlag.Call(std::forward<FuncT>(vFunc), std::forward<ParamsT>(vParams)...);
 }
 
 }

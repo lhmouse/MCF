@@ -37,7 +37,7 @@ enum {
 typedef struct tagTlsObject {
 	_MCFCRT_AvlNodeHeader vHeader;
 
-	struct tagThreadMap *pMap;
+	struct tagTlsThread *pThread;
 	struct tagTlsObject *pPrevByThread;
 	struct tagTlsObject *pNextByThread;
 
@@ -57,21 +57,25 @@ static int ObjectComparatorNodes(const _MCFCRT_AvlNodeHeader *pObj1, const _MCFC
 	return ObjectComparatorNodeKey(pObj1, (intptr_t)(void *)(((const TlsObject *)pObj2)->pKey));
 }
 
-typedef struct tagThreadMap {
+typedef struct tagTlsThread {
 	_MCFCRT_Mutex vMutex;
+
 	_MCFCRT_AvlRoot avlObjects;
+
+	struct tagTlsObject *pFirstByThread;
 	struct tagTlsObject *pLastByThread;
-} ThreadMap;
+} TlsThread;
 
 typedef struct tagTlsKey {
 	_MCFCRT_AvlNodeHeader vHeader;
-
-	_MCFCRT_Mutex vMutex;
 
 	size_t uSize;
 	_MCFCRT_TlsConstructor pfnConstructor;
 	_MCFCRT_TlsDestructor pfnDestructor;
 
+	_MCFCRT_Mutex vMutex;
+
+	struct tagTlsObject *pFirstByKey;
 	struct tagTlsObject *pLastByKey;
 } TlsKey;
 
@@ -122,16 +126,25 @@ void __MCFCRT_ThreadEnvUninit(){
 }
 
 void __MCFCRT_TlsThreadCleanup(){
-	ThreadMap *const pMap = TlsGetValue(g_dwTlsIndex);
-	if(pMap){
-		TlsObject *pObject = pMap->pLastByThread;
+	TlsThread *const pThread = TlsGetValue(g_dwTlsIndex);
+	if(pThread){
+		TlsObject *pObject = pThread->pLastByThread;
 		while(pObject){
 			TlsKey *const pKey = pObject->pKey;
 
 			_MCFCRT_WaitForMutexForever(&(pKey->vMutex), kMutexSpinCount);
 			{
-				if(pKey->pLastByKey == pObject){
-					pKey->pLastByKey = pObject->pPrevByKey;
+				TlsObject *const pPrev = pObject->pPrevByKey;
+				TlsObject *const pNext = pObject->pNextByKey;
+				if(pPrev){
+					pPrev->pNextByKey = pNext;
+				} else {
+					pKey->pFirstByKey = pNext;
+				}
+				if(pNext){
+					pNext->pPrevByKey = pPrev;
+				} else {
+					pKey->pLastByKey = pPrev;
 				}
 			}
 			_MCFCRT_SignalMutex(&(pKey->vMutex));
@@ -140,11 +153,11 @@ void __MCFCRT_TlsThreadCleanup(){
 				(*(pKey->pfnDestructor))(pObject->abyStorage);
 			}
 
-			TlsObject *const pTemp = pObject->pPrevByThread;
+			TlsObject *const pPrevByThread = pObject->pPrevByThread;
 			free(pObject);
-			pObject = pTemp;
+			pObject = pPrevByThread;
 		}
-		free(pMap);
+		free(pThread);
 		TlsSetValue(g_dwTlsIndex, nullptr);
 	}
 
@@ -157,10 +170,11 @@ void *_MCFCRT_TlsAllocKey(size_t uSize, _MCFCRT_TlsConstructor pfnConstructor, _
 		SetLastError(ERROR_NOT_ENOUGH_MEMORY);
 		return nullptr;
 	}
-	pKey->vMutex         = 0;
 	pKey->uSize          = uSize;
 	pKey->pfnConstructor = pfnConstructor;
 	pKey->pfnDestructor  = pfnDestructor;
+	pKey->vMutex         = 0;
+	pKey->pFirstByKey    = nullptr;
 	pKey->pLastByKey     = nullptr;
 
 	_MCFCRT_WaitForMutexForever(&g_vKeyMapMutex, kMutexSpinCount);
@@ -186,32 +200,32 @@ bool _MCFCRT_TlsFreeKey(void *pTlsKey){
 
 	TlsObject *pObject = pKey->pLastByKey;
 	while(pObject){
-		ThreadMap *const pMap = pObject->pMap;
+		TlsThread *const pThread = pObject->pThread;
 
-		_MCFCRT_WaitForMutexForever(&(pMap->vMutex), kMutexSpinCount);
+		_MCFCRT_WaitForMutexForever(&(pThread->vMutex), kMutexSpinCount);
 		{
 			TlsObject *const pPrev = pObject->pPrevByThread;
 			TlsObject *const pNext = pObject->pNextByThread;
 			if(pPrev){
 				pPrev->pNextByThread = pNext;
+			} else {
+				pThread->pFirstByThread = pNext;
 			}
 			if(pNext){
 				pNext->pPrevByThread = pPrev;
-			}
-
-			if(pMap->pLastByThread == pObject){
-				pMap->pLastByThread = pObject->pPrevByThread;
+			} else {
+				pThread->pLastByThread = pPrev;
 			}
 		}
-		_MCFCRT_SignalMutex(&(pMap->vMutex));
+		_MCFCRT_SignalMutex(&(pThread->vMutex));
 
 		if(pKey->pfnDestructor){
 			(*(pKey->pfnDestructor))(pObject->abyStorage);
 		}
 
-		TlsObject *const pTemp = pObject->pPrevByKey;
+		TlsObject *const pPrevByKey = pObject->pPrevByKey;
 		free(pObject);
-		pObject = pTemp;
+		pObject = pPrevByKey;
 	}
 	free(pKey);
 
@@ -253,19 +267,19 @@ bool _MCFCRT_TlsGet(void *pTlsKey, void **restrict ppStorage){
 		return false;
 	}
 
-	ThreadMap *pMap = TlsGetValue(g_dwTlsIndex);
-	if(!pMap){
+	TlsThread *pThread = TlsGetValue(g_dwTlsIndex);
+	if(!pThread){
 		*ppStorage = nullptr;
 		return true;
 	}
 
 	TlsObject *pObject;
 
-	_MCFCRT_WaitForMutexForever(&(pMap->vMutex), kMutexSpinCount);
+	_MCFCRT_WaitForMutexForever(&(pThread->vMutex), kMutexSpinCount);
 	{
-		pObject = (TlsObject *)_MCFCRT_AvlFind(&(pMap->avlObjects), (intptr_t)pKey, &ObjectComparatorNodeKey);
+		pObject = (TlsObject *)_MCFCRT_AvlFind(&(pThread->avlObjects), (intptr_t)pKey, &ObjectComparatorNodeKey);
 	}
-	_MCFCRT_SignalMutex(&(pMap->vMutex));
+	_MCFCRT_SignalMutex(&(pThread->vMutex));
 
 	if(!pObject){
 		*ppStorage = nullptr;
@@ -284,27 +298,27 @@ bool _MCFCRT_TlsRequire(void *pTlsKey, void **restrict ppStorage){
 		return false;
 	}
 
-	ThreadMap *pMap = TlsGetValue(g_dwTlsIndex);
-	if(!pMap){
-		pMap = malloc(sizeof(ThreadMap));
-		if(!pMap){
+	TlsThread *pThread = TlsGetValue(g_dwTlsIndex);
+	if(!pThread){
+		pThread = malloc(sizeof(TlsThread));
+		if(!pThread){
 			SetLastError(ERROR_NOT_ENOUGH_MEMORY);
 			return false;
 		}
-		pMap->vMutex        = 0;
-		pMap->avlObjects    = nullptr;
-		pMap->pLastByThread = nullptr;
+		pThread->vMutex        = 0;
+		pThread->avlObjects    = nullptr;
+		pThread->pLastByThread = nullptr;
 
-		TlsSetValue(g_dwTlsIndex, pMap);
+		TlsSetValue(g_dwTlsIndex, pThread);
 	}
 
 	TlsObject *pObject;
 
-	_MCFCRT_WaitForMutexForever(&(pMap->vMutex), kMutexSpinCount);
+	_MCFCRT_WaitForMutexForever(&(pThread->vMutex), kMutexSpinCount);
 	{
-		pObject = (TlsObject *)_MCFCRT_AvlFind(&(pMap->avlObjects), (intptr_t)pKey, &ObjectComparatorNodeKey);
+		pObject = (TlsObject *)_MCFCRT_AvlFind(&(pThread->avlObjects), (intptr_t)pKey, &ObjectComparatorNodeKey);
 	}
-	_MCFCRT_SignalMutex(&(pMap->vMutex));
+	_MCFCRT_SignalMutex(&(pThread->vMutex));
 
 	if(!pObject){
 		const size_t uSizeToAlloc = sizeof(TlsObject) + pKey->uSize;
@@ -317,7 +331,7 @@ bool _MCFCRT_TlsRequire(void *pTlsKey, void **restrict ppStorage){
 			SetLastError(ERROR_NOT_ENOUGH_MEMORY);
 			return false;
 		}
-		pObject->pMap = pMap;
+		pObject->pThread = pThread;
 		pObject->pKey = pKey;
 		if(pKey->pfnConstructor){
 			const DWORD dwErrorCode = (*(pKey->pfnConstructor))(pObject->abyStorage);
@@ -341,19 +355,19 @@ bool _MCFCRT_TlsRequire(void *pTlsKey, void **restrict ppStorage){
 		}
 		_MCFCRT_SignalMutex(&(pKey->vMutex));
 
-		_MCFCRT_WaitForMutexForever(&(pMap->vMutex), kMutexSpinCount);
+		_MCFCRT_WaitForMutexForever(&(pThread->vMutex), kMutexSpinCount);
 		{
-			TlsObject *const pPrev = pMap->pLastByThread;
-			pMap->pLastByThread = pObject;
+			TlsObject *const pPrev = pThread->pLastByThread;
+			pThread->pLastByThread = pObject;
 
 			pObject->pPrevByThread = pPrev;
 			pObject->pNextByThread = nullptr;
 			if(pPrev){
 				pPrev->pNextByThread = pObject;
 			}
-			_MCFCRT_AvlAttach(&(pMap->avlObjects), (_MCFCRT_AvlNodeHeader *)pObject, &ObjectComparatorNodes);
+			_MCFCRT_AvlAttach(&(pThread->avlObjects), (_MCFCRT_AvlNodeHeader *)pObject, &ObjectComparatorNodes);
 		}
-		_MCFCRT_SignalMutex(&(pMap->vMutex));
+		_MCFCRT_SignalMutex(&(pThread->vMutex));
 	}
 
 	*ppStorage = pObject->abyStorage;

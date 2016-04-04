@@ -53,29 +53,38 @@ static void TlsCallback(void *hModule, DWORD dwReason, void *pReserved){
 	wchar_t *pwcWrite;
 
 	switch(dwReason){
+		bool bSucceeded;
+
 	case DLL_PROCESS_ATTACH:
-		if(!SetConsoleCtrlHandler(&TopCtrlHandler, true)){
+		bSucceeded = SetConsoleCtrlHandler(&TopCtrlHandler, true);
+		if(!bSucceeded){
 			const DWORD dwErrorCode = GetLastError();
 			pwcWrite = _MCFCRT_wcpcpy(awcBuffer, L"MCFCRT Ctrl 处理程序注册失败。\n\n错误代码：");
 			pwcWrite = _MCFCRT_itow_u(pwcWrite, dwErrorCode);
 			*pwcWrite = 0;
 			_MCFCRT_Bail(awcBuffer);
 		}
-		if(!__MCFCRT_HeapInit()){
+
+		bSucceeded = __MCFCRT_HeapInit();
+		if(!bSucceeded){
 			const DWORD dwErrorCode = GetLastError();
 			pwcWrite = _MCFCRT_wcpcpy(awcBuffer, L"MCFCRT 堆初始化失败。\n\n错误代码：");
 			pwcWrite = _MCFCRT_itow_u(pwcWrite, dwErrorCode);
 			*pwcWrite = 0;
 			_MCFCRT_Bail(awcBuffer);
 		}
-		if(!__MCFCRT_HeapDbgInit()){
+
+		bSucceeded = __MCFCRT_HeapDbgInit();
+		if(!bSucceeded){
 			const DWORD dwErrorCode = GetLastError();
 			pwcWrite = _MCFCRT_wcpcpy(awcBuffer, L"MCFCRT 堆调试器初始化失败。\n\n错误代码：");
 			pwcWrite = _MCFCRT_itow_u(pwcWrite, dwErrorCode);
 			*pwcWrite = 0;
 			_MCFCRT_Bail(awcBuffer);
 		}
-		if(!__MCFCRT_RegisterFrameInfo()){
+
+		bSucceeded = __MCFCRT_RegisterFrameInfo();
+		if(!bSucceeded){
 			const DWORD dwErrorCode = GetLastError();
 			pwcWrite = _MCFCRT_wcpcpy(awcBuffer, L"MCFCRT 异常处理程序初始化失败。\n\n错误代码：");
 			pwcWrite = _MCFCRT_itow_u(pwcWrite, dwErrorCode);
@@ -85,15 +94,16 @@ static void TlsCallback(void *hModule, DWORD dwReason, void *pReserved){
 
 		__MCFCRT_EH_TOP_BEGIN
 		{
-			if(!__MCFCRT_BeginModule()){
-				const DWORD dwErrorCode = GetLastError();
-				pwcWrite = _MCFCRT_wcpcpy(awcBuffer, L"MCFCRT 初始化失败。\n\n错误代码：");
-				pwcWrite = _MCFCRT_itow_u(pwcWrite, dwErrorCode);
-				*pwcWrite = 0;
-				_MCFCRT_Bail(awcBuffer);
-			}
+			bSucceeded = __MCFCRT_BeginModule();
 		}
 		__MCFCRT_EH_TOP_END
+		if(!bSucceeded){
+			const DWORD dwErrorCode = GetLastError();
+			pwcWrite = _MCFCRT_wcpcpy(awcBuffer, L"MCFCRT 初始化失败。\n\n错误代码：");
+			pwcWrite = _MCFCRT_itow_u(pwcWrite, dwErrorCode);
+			*pwcWrite = 0;
+			_MCFCRT_Bail(awcBuffer);
+		}
 		break;
 
 	case DLL_THREAD_ATTACH:
@@ -120,9 +130,13 @@ static void TlsCallback(void *hModule, DWORD dwReason, void *pReserved){
 		__MCFCRT_EH_TOP_END
 
 		__MCFCRT_UnregisterFrameInfo();
+
 		__MCFCRT_HeapDbgUninit();
+
 		__MCFCRT_HeapUninit();
-		SetConsoleCtrlHandler(&TopCtrlHandler, false);
+
+		bSucceeded = SetConsoleCtrlHandler(&TopCtrlHandler, false);
+		_MCFCRT_ASSERT(bSucceeded);
 		break;
 	}
 }

@@ -18,54 +18,67 @@ __MCFCRT_C_STDCALL __MCFCRT_HAS_EH_TOP
 BOOL __MCFCRT_DllStartup(HINSTANCE hDll, DWORD dwReason, LPVOID pReserved)
 	__asm__("__MCFCRT_DllStartup");
 
-enum {
-	kFlagHeap,
-	kFlagHeapDbg,
-	kFlagFrameInfo,
-	kFlagCrtModule,
-
-	kFlagCount
-};
-
-static bool g_abFlags[kFlagCount] = { 0 };
-
-#define DO_INIT(ret_, fl_, fn_)	\
-	if(ret_){	\
-		if(!g_abFlags[fl_]){	\
-			const bool succ = (fn_)();	\
-			if(succ){	\
-				g_abFlags[fl_] = true;	\
-			} else {	\
-				(ret_) = false;	\
-			}	\
-		}	\
-	}
-
-#define DO_UNINIT(fl_, fn_)	\
-	if(g_abFlags[fl_]){	\
-		g_abFlags[fl_] = false;	\
-		(fn_)();	\
-	}
+static bool g_bInitialized = false;
 
 __MCFCRT_C_STDCALL __MCFCRT_HAS_EH_TOP
 BOOL __MCFCRT_DllStartup(HINSTANCE hDll, DWORD dwReason, LPVOID pReserved){
-	BOOL bRet = true;
+	BOOL bRet = TRUE;
 
 	switch(dwReason){
+		bool bSucceeded;
+
 	case DLL_PROCESS_ATTACH:
-		DO_INIT(bRet, kFlagHeap,      __MCFCRT_HeapInit);
-		DO_INIT(bRet, kFlagHeapDbg,   __MCFCRT_HeapDbgInit);
-		DO_INIT(bRet, kFlagFrameInfo, __MCFCRT_RegisterFrameInfo);
+		_MCFCRT_ASSERT(!g_bInitialized);
+
+		bSucceeded = __MCFCRT_HeapInit();
+		if(!bSucceeded){
+			bRet = FALSE;
+			break;
+		}
+
+		bSucceeded = __MCFCRT_HeapDbgInit();
+		if(!bSucceeded){
+			__MCFCRT_HeapUninit();
+			bRet = false;
+			break;
+		}
+
+		bSucceeded = __MCFCRT_RegisterFrameInfo();
+		if(!bSucceeded){
+			__MCFCRT_HeapDbgUninit();
+			__MCFCRT_HeapUninit();
+			bRet = false;
+			break;
+		}
 
 		__MCFCRT_EH_TOP_BEGIN
 		{
-			DO_INIT(bRet, kFlagCrtModule, __MCFCRT_BeginModule);
-
-			if(bRet){
-				bRet = _MCFCRT_OnDllProcessAttach(hDll, !pReserved);
-			}
+			bSucceeded = __MCFCRT_BeginModule();
 		}
 		__MCFCRT_EH_TOP_END
+		if(!bSucceeded){
+			__MCFCRT_UnregisterFrameInfo();
+			__MCFCRT_HeapDbgUninit();
+			__MCFCRT_HeapUninit();
+			bRet = false;
+			break;
+		}
+
+		__MCFCRT_EH_TOP_BEGIN
+		{
+			bSucceeded = _MCFCRT_OnDllProcessAttach(hDll, !pReserved);
+		}
+		__MCFCRT_EH_TOP_END
+		if(!bSucceeded){
+			__MCFCRT_EndModule();
+			__MCFCRT_UnregisterFrameInfo();
+			__MCFCRT_HeapDbgUninit();
+			__MCFCRT_HeapUninit();
+			bRet = false;
+			break;
+		}
+
+		g_bInitialized = true;
 		break;
 
 	case DLL_THREAD_ATTACH:
@@ -87,17 +100,30 @@ BOOL __MCFCRT_DllStartup(HINSTANCE hDll, DWORD dwReason, LPVOID pReserved){
 		break;
 
 	case DLL_PROCESS_DETACH:
+		if(!g_bInitialized){
+			break;
+		}
+		g_bInitialized = false;
+
 		__MCFCRT_EH_TOP_BEGIN
 		{
 			_MCFCRT_OnDllProcessDetach(hDll, !pReserved);
-
-			DO_UNINIT(kFlagCrtModule, __MCFCRT_EndModule);
 		}
 		__MCFCRT_EH_TOP_END
 
-		DO_UNINIT(kFlagFrameInfo, __MCFCRT_UnregisterFrameInfo);
-		DO_UNINIT(kFlagHeapDbg,   __MCFCRT_HeapDbgUninit);
-		DO_UNINIT(kFlagHeap,      __MCFCRT_HeapUninit);
+		__MCFCRT_EH_TOP_BEGIN
+		{
+			__MCFCRT_EndModule();
+		}
+		__MCFCRT_EH_TOP_END
+
+		__MCFCRT_UnregisterFrameInfo();
+
+		__MCFCRT_HeapDbgUninit();
+
+		__MCFCRT_HeapUninit();
+
+		g_bInitialized = false;
 		break;
 	}
 

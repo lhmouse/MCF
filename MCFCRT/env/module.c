@@ -84,29 +84,23 @@ static void __MCFCRT_StaticObjectsUninit(){
 bool __MCFCRT_BeginModule(){
 	__MCFCRT_FEnvInit();
 
-	DWORD dwLastError;
 	if(!__MCFCRT_ThreadEnvInit()){
-//		dwLastError = GetLastError();
-		goto jFailed0;
+		return false;
 	}
 	if(!__MCFCRT_MinGWHacksInit()){
-		dwLastError = GetLastError();
-		goto jFailed1;
+		const DWORD dwLastError = GetLastError();
+		__MCFCRT_ThreadEnvUninit();
+		SetLastError(dwLastError);
+		return false;
 	}
 	if(!__MCFCRT_StaticObjectsInit()){
-		dwLastError = GetLastError();
-		goto jFailed2;
+		const DWORD dwLastError = GetLastError();
+		__MCFCRT_MinGWHacksUninit();
+		__MCFCRT_ThreadEnvUninit();
+		SetLastError(dwLastError);
+		return false;
 	}
 	return true;
-
-//	__MCFCRT_StaticObjectsUninit();
-jFailed2:
-	__MCFCRT_MinGWHacksUninit();
-jFailed1:
-	__MCFCRT_ThreadEnvUninit();
-	SetLastError(dwLastError);
-jFailed0:
-	return false;
 }
 void __MCFCRT_EndModule(){
 	__MCFCRT_StaticObjectsUninit();
@@ -135,10 +129,9 @@ bool _MCFCRT_AtEndModule(_MCFCRT_AtEndModuleCallback pfnProc, intptr_t nContext)
 			pBlock->pPrev = g_pAtExitLast;
 			g_pAtExitLast = pBlock;
 		}
-		AtExitCallback *const pCur = pBlock->aCallbacks + pBlock->uSize;
+		pBlock->aCallbacks[pBlock->uSize].pfnProc  = pfnProc;
+		pBlock->aCallbacks[pBlock->uSize].nContext = nContext;
 		++(pBlock->uSize);
-		pCur->pfnProc  = pfnProc;
-		pCur->nContext = nContext;
 	}
 	_MCFCRT_SignalMutex(&g_vAtExitMutex);
 	return true;

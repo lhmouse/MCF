@@ -7,17 +7,12 @@
 #include "../../env/last_error.h"
 #include <setjmp.h>
 
-jmp_buf *__MCFCRT_abort_hook_jmpbuf = nullptr;
+jmp_buf *__MCFCRT_pjbufAbortHook = nullptr;
 
-__attribute__((__used__))
-_Noreturn void __wrap_abort(){
-	if(__MCFCRT_abort_hook_jmpbuf){
-		longjmp(*__MCFCRT_abort_hook_jmpbuf, ERROR_PROCESS_ABORTED);
+_Noreturn void abort(){
+	if(__MCFCRT_pjbufAbortHook){
+		longjmp(*__MCFCRT_pjbufAbortHook, ERROR_PROCESS_ABORTED);
 	}
 
 	_MCFCRT_Bail(L"应用程序调用了 abort()。");
 }
-
-_Noreturn
-__attribute__((__alias__("__wrap_abort")))
-void abort(void);

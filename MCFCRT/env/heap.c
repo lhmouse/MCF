@@ -13,10 +13,10 @@
 #include <errno.h>
 
 // hooks.h
-void (*__MCFCRT_OnHeapAlloc)(void *, size_t , const void *)            = nullptr;
-void (*__MCFCRT_OnHeapRealloc)(void *, void *, size_t, const void *)   = nullptr;
-void (*__MCFCRT_OnHeapFree)(void *__pBlock, const void *)              = nullptr;
-bool (*__MCFCRT_OnHeapBadAlloc)(const void *)                          = nullptr;
+_MCFCRT_HeapAllocCallback    _MCFCRT_pfnOnHeapAlloc     = nullptr;
+_MCFCRT_HeapReallocCallback  _MCFCRT_pfnOnHeapRealloc   = nullptr;
+_MCFCRT_HeapFreeCallback     _MCFCRT_pfnOnHeapFree      = nullptr;
+_MCFCRT_HeapBadAllocCallback _MCFCRT_pfnOnHeapBadAlloc  = nullptr;
 
 static _MCFCRT_Mutex g_vHeapMutex = 0;
 
@@ -80,13 +80,13 @@ unsigned char *__MCFCRT_HeapAlloc(size_t uSize, const void *pRetAddr){
 		_MCFCRT_SignalMutex(&g_vHeapMutex);
 
 		if(pRet){
-			if(__MCFCRT_OnHeapAlloc){
-				(*__MCFCRT_OnHeapAlloc)(pRet, uSize, pRetAddr);
+			if(_MCFCRT_pfnOnHeapAlloc){
+				(*_MCFCRT_pfnOnHeapAlloc)(pRet, uSize, pRetAddr);
 			}
 			return pRet;
 		}
 
-		if(!(__MCFCRT_OnHeapBadAlloc && (*__MCFCRT_OnHeapBadAlloc)(pRetAddr))){
+		if(!(_MCFCRT_pfnOnHeapBadAlloc && (*_MCFCRT_pfnOnHeapBadAlloc)(pRetAddr))){
 			SetLastError(ERROR_NOT_ENOUGH_MEMORY);
 			return nullptr;
 		}
@@ -165,13 +165,13 @@ unsigned char *__MCFCRT_HeapRealloc(void *pBlock, size_t uSize, const void *pRet
 		_MCFCRT_SignalMutex(&g_vHeapMutex);
 
 		if(pRet){
-			if(__MCFCRT_OnHeapRealloc){
-				(*__MCFCRT_OnHeapRealloc)(pRet, pBlock, uSize, pRetAddr);
+			if(_MCFCRT_pfnOnHeapRealloc){
+				(*_MCFCRT_pfnOnHeapRealloc)(pRet, pBlock, uSize, pRetAddr);
 			}
 			return pRet;
 		}
 
-		if(!(__MCFCRT_OnHeapBadAlloc && (*__MCFCRT_OnHeapBadAlloc)(pRetAddr))){
+		if(!(_MCFCRT_pfnOnHeapBadAlloc && (*_MCFCRT_pfnOnHeapBadAlloc)(pRetAddr))){
 			SetLastError(ERROR_NOT_ENOUGH_MEMORY);
 			return nullptr;
 		}
@@ -207,7 +207,7 @@ void __MCFCRT_HeapFree(void *pBlock, const void *pRetAddr){
 	}
 	_MCFCRT_SignalMutex(&g_vHeapMutex);
 
-	if(__MCFCRT_OnHeapFree){
-		(*__MCFCRT_OnHeapFree)(pBlock, pRetAddr);
+	if(_MCFCRT_pfnOnHeapFree){
+		(*_MCFCRT_pfnOnHeapFree)(pBlock, pRetAddr);
 	}
 }

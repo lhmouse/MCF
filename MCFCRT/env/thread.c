@@ -372,22 +372,22 @@ static void CRTAtExitThreadProc(void *pStorage){
 	(*pfnProc)(nContext);
 }
 
-int _MCFCRT_AtThreadExit(_MCFCRT_AtThreadExitCallback pfnProc, intptr_t nContext){
+bool _MCFCRT_AtThreadExit(_MCFCRT_AtThreadExitCallback pfnProc, intptr_t nContext){
 	void *const pKey = _MCFCRT_TlsAllocKey(sizeof(AtThreadExitParams), nullptr, &CRTAtExitThreadProc);
 	if(!pKey){
-		return -1;
+		return false;
 	}
 	void *pStorage;
 	if(!_MCFCRT_TlsRequire(pKey, &pStorage)){
 		const DWORD dwLastError = GetLastError();
 		_MCFCRT_TlsFreeKey(pKey);
 		SetLastError(dwLastError);
-		return -1;
+		return false;
 	}
 	AtThreadExitParams *const pParams = pStorage;
 	pParams->pfnProc  = pfnProc;
 	pParams->nContext = nContext;
-	return 0;
+	return true;
 }
 
 void *_MCFCRT_CreateNativeThread(_MCFCRT_NativeThreadProc pfnThreadProc, void *pParam, bool bSuspended, uintptr_t *restrict puThreadId){

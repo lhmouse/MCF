@@ -6,13 +6,13 @@
 #include "../../env/heap.h"
 
 __attribute__((__noinline__))
-void *__wrap_calloc(size_t nmemb, size_t cnt){
+void *calloc(size_t nmemb, size_t cnt){
 	size_t cb = 0;
 	if((nmemb > 0) && (cnt > 0)){
-		cb = nmemb * cnt;
-		if(((nmemb | cnt) & (size_t)-0x10000) && (cb / cnt != nmemb)){
+		if(((nmemb | cnt) & (size_t)-0x10000) && (cnt > SIZE_MAX / nmemb)){
 			return nullptr;
 		}
+		cb = nmemb * cnt;
 	}
 	void *const ret = __MCFCRT_HeapAlloc(cb, __builtin_return_address(0));
 	if(ret){
@@ -20,6 +20,3 @@ void *__wrap_calloc(size_t nmemb, size_t cnt){
 	}
 	return ret;
 }
-
-__attribute__((__alias__("__wrap_calloc")))
-void *calloc(size_t nmemb, size_t cnt);

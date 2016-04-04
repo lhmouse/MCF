@@ -10,18 +10,15 @@
 __MCFCRT_EXTERN_C_BEGIN
 
 // heap.c
-extern void (*__MCFCRT_OnHeapAlloc)(void *__pNewBlock, _MCFCRT_STD size_t __uSize, const void *__pRetAddr) _MCFCRT_NOEXCEPT;
-extern void (*__MCFCRT_OnHeapRealloc)(void *__pNewBlock, void *__pBlock, _MCFCRT_STD size_t __uSize, const void *__pRetAddr) _MCFCRT_NOEXCEPT;
-extern void (*__MCFCRT_OnHeapFree)(void *__pBlock, const void *__pRetAddr) _MCFCRT_NOEXCEPT;
-extern bool (*__MCFCRT_OnHeapBadAlloc)(const void *__pRetAddr) _MCFCRT_NOEXCEPT;
+typedef void (*_MCFCRT_HeapAllocCallback)(void *__pNewBlock, _MCFCRT_STD size_t __uSize, const void *__pRetAddr);
+typedef void (*_MCFCRT_HeapReallocCallback)(void *__pNewBlock, void *__pBlock, _MCFCRT_STD size_t __uSize, const void *__pRetAddr);
+typedef void (*_MCFCRT_HeapFreeCallback)(void *__pBlock, const void *__pRetAddr);
+typedef bool (*_MCFCRT_HeapBadAllocCallback)(const void *__pRetAddr);
 
-#ifdef __cplusplus
-#	include <cxxabi.h>
-
-// cxa_throw.cpp
-extern void (*__MCFCRT_OnException)(void *__pException, const std::type_info &__tiType, const void *__pRetAddr);
-
-#endif // __cplusplus
+extern _MCFCRT_HeapAllocCallback    _MCFCRT_pfnOnHeapAlloc;
+extern _MCFCRT_HeapReallocCallback  _MCFCRT_pfnOnHeapRealloc;
+extern _MCFCRT_HeapFreeCallback     _MCFCRT_pfnOnHeapFree;
+extern _MCFCRT_HeapBadAllocCallback _MCFCRT_pfnOnHeapBadAlloc;
 
 __MCFCRT_EXTERN_C_END
 

@@ -16,7 +16,7 @@ namespace {
 
 #if __MCFCRT_REQUIRE_HEAPDBG_LEVEL(2)
 
-std::uintptr_t GetMagic(void *pRaw, bool bIsArray){
+inline std::uintptr_t GetMagic(void *pRaw, bool bIsArray){
 	const auto uEncoded = reinterpret_cast<std::uintptr_t>(::EncodePointer(pRaw));
 	const auto uMask = static_cast<std::uintptr_t>(bIsArray ? 0xDEADBEEFDEADBEEF : 0xBEEFDEADBEEFDEAD);
 	return uEncoded ^ uMask;

@@ -157,10 +157,6 @@ __attribute__((__noinline__))
 void operator delete(void *p, std::size_t) noexcept {
 	Deallocate(p, false, __builtin_return_address(0));
 }
-__attribute__((__noinline__))
-void operator delete(void *p, std::size_t, const std::nothrow_t &) noexcept {
-	Deallocate(p, false, __builtin_return_address(0));
-}
 
 __attribute__((__noinline__))
 void *operator new[](std::size_t cb){
@@ -180,9 +176,5 @@ void operator delete[](void *p, std::size_t) noexcept {
 }
 __attribute__((__noinline__))
 void operator delete[](void *p, const std::nothrow_t &) noexcept {
-	Deallocate(p, true, __builtin_return_address(0));
-}
-__attribute__((__noinline__))
-void operator delete[](void *p, std::size_t, const std::nothrow_t &) noexcept {
 	Deallocate(p, true, __builtin_return_address(0));
 }

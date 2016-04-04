@@ -35,12 +35,10 @@ typedef enum tagHardErrorResponse {
 	kHardErrorResponseYes,
 } HardErrorResponse;
 
-extern
-__attribute__((__dllimport__, __stdcall__))
+extern __attribute__((__dllimport__, __stdcall__))
 NTSTATUS NtRaiseHardError(NTSTATUS stError, DWORD dwUnknown, DWORD dwParamCount, const ULONG_PTR *pulParams, HardErrorResponseOption eOption, HardErrorResponse *peResponse);
 
-_Noreturn
-void _MCFCRT_Bail(const wchar_t *pwszDescription){
+_Noreturn void _MCFCRT_Bail(const wchar_t *pwszDescription){
 #ifdef NDEBUG
 	const bool bCanBeDebugged = IsDebuggerPresent();
 #else

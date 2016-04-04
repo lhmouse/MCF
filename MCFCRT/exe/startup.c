@@ -7,7 +7,6 @@
 #include "../env/module.h"
 #include "../env/thread.h"
 #include "../env/eh_top.h"
-#include "../env/gnu_cxx.h"
 #include "../env/heap.h"
 #include "../env/heap_dbg.h"
 #include "../ext/wcpcpy.h"
@@ -76,16 +75,9 @@ static void TlsCallback(void *hModule, DWORD dwReason, void *pReserved){
 			*pwcWrite = 0;
 			_MCFCRT_Bail(awcBuffer);
 		}
-		if(!__MCFCRT_GnuCxxInit()){
-			const DWORD dwErrorCode = GetLastError();
-			pwcWrite = _MCFCRT_wcpcpy(awcBuffer, L"MCFCRT GNU C++ 运行时初始化失败。\n\n错误代码：");
-			pwcWrite = _MCFCRT_itow_u(pwcWrite, dwErrorCode);
-			*pwcWrite = 0;
-			_MCFCRT_Bail(awcBuffer);
-		}
 		if(!__MCFCRT_RegisterFrameInfo()){
 			const DWORD dwErrorCode = GetLastError();
-			pwcWrite = _MCFCRT_wcpcpy(awcBuffer, L"MCFCRT C++ 异常处理帧信息注册失败。\n\n错误代码：");
+			pwcWrite = _MCFCRT_wcpcpy(awcBuffer, L"MCFCRT 异常处理程序初始化失败。\n\n错误代码：");
 			pwcWrite = _MCFCRT_itow_u(pwcWrite, dwErrorCode);
 			*pwcWrite = 0;
 			_MCFCRT_Bail(awcBuffer);
@@ -128,7 +120,6 @@ static void TlsCallback(void *hModule, DWORD dwReason, void *pReserved){
 		__MCFCRT_EH_TOP_END
 
 		__MCFCRT_UnregisterFrameInfo();
-		__MCFCRT_GnuCxxUninit();
 		__MCFCRT_HeapDbgUninit();
 		__MCFCRT_HeapUninit();
 		SetConsoleCtrlHandler(&TopCtrlHandler, false);

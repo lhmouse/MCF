@@ -16,7 +16,7 @@ namespace {
 
 #if __MCFCRT_REQUIRE_HEAPDBG_LEVEL(2)
 
-inline std::uintptr_t GetMagic(void *pRaw, bool bIsArray) noexcept {
+std::uintptr_t GetMagic(void *pRaw, bool bIsArray){
 	const auto uEncoded = reinterpret_cast<std::uintptr_t>(::EncodePointer(pRaw));
 	const auto uMask = static_cast<std::uintptr_t>(bIsArray ? 0xDEADBEEFDEADBEEF : 0xBEEFDEADBEEFDEAD);
 	return uEncoded ^ uMask;
@@ -157,6 +157,10 @@ __attribute__((__noinline__))
 void operator delete(void *p, std::size_t) noexcept {
 	Deallocate(p, false, __builtin_return_address(0));
 }
+__attribute__((__noinline__))
+void operator delete(void *p, std::size_t, const std::nothrow_t &) noexcept {
+	Deallocate(p, false, __builtin_return_address(0));
+}
 
 __attribute__((__noinline__))
 void *operator new[](std::size_t cb){
@@ -176,5 +180,9 @@ void operator delete[](void *p, std::size_t) noexcept {
 }
 __attribute__((__noinline__))
 void operator delete[](void *p, const std::nothrow_t &) noexcept {
+	Deallocate(p, true, __builtin_return_address(0));
+}
+__attribute__((__noinline__))
+void operator delete[](void *p, std::size_t, const std::nothrow_t &) noexcept {
 	Deallocate(p, true, __builtin_return_address(0));
 }

@@ -8,7 +8,6 @@
 #include "../env/module.h"
 #include "../env/thread.h"
 #include "../env/eh_top.h"
-#include "../env/gnu_cxx.h"
 #include "../env/heap.h"
 #include "../env/heap_dbg.h"
 
@@ -22,7 +21,6 @@ BOOL __MCFCRT_DllStartup(HINSTANCE hDll, DWORD dwReason, LPVOID pReserved)
 enum {
 	kFlagHeap,
 	kFlagHeapDbg,
-	kFlagGnuCxx,
 	kFlagFrameInfo,
 	kFlagCrtModule,
 
@@ -57,7 +55,6 @@ BOOL __MCFCRT_DllStartup(HINSTANCE hDll, DWORD dwReason, LPVOID pReserved){
 	case DLL_PROCESS_ATTACH:
 		DO_INIT(bRet, kFlagHeap,      __MCFCRT_HeapInit);
 		DO_INIT(bRet, kFlagHeapDbg,   __MCFCRT_HeapDbgInit);
-		DO_INIT(bRet, kFlagGnuCxx,    __MCFCRT_GnuCxxInit);
 		DO_INIT(bRet, kFlagFrameInfo, __MCFCRT_RegisterFrameInfo);
 
 		__MCFCRT_EH_TOP_BEGIN
@@ -99,7 +96,6 @@ BOOL __MCFCRT_DllStartup(HINSTANCE hDll, DWORD dwReason, LPVOID pReserved){
 		__MCFCRT_EH_TOP_END
 
 		DO_UNINIT(kFlagFrameInfo, __MCFCRT_UnregisterFrameInfo);
-		DO_UNINIT(kFlagGnuCxx,    __MCFCRT_GnuCxxUninit);
 		DO_UNINIT(kFlagHeapDbg,   __MCFCRT_HeapDbgUninit);
 		DO_UNINIT(kFlagHeap,      __MCFCRT_HeapUninit);
 		break;

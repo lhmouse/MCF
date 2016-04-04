@@ -7,10 +7,9 @@
 
 __attribute__((__noinline__))
 void __wrap_free(void *p){
-	if(!p){
-		return;
+	if(p){
+		__MCFCRT_HeapFree(p, __builtin_return_address(0));
 	}
-	__MCFCRT_HeapFree(p, __builtin_return_address(0));
 }
 
 __attribute__((__alias__("__wrap_free")))

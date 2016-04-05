@@ -344,9 +344,9 @@ bool _MCFCRT_TlsRequire(void *pTlsKey, void **restrict ppStorage){
 		}
 
 		pObject->pfnDestructor = pKey->pfnDestructor;
-		pObject->nContext      = pKey->nContext;
+		pObject->nContext = pKey->nContext;
 
-		pObject->pThread       = pThread;
+		pObject->pThread = pThread;
 
 		_MCFCRT_WaitForMutexForever(&(pThread->vMutex), kMutexSpinCount);
 		{
@@ -370,7 +370,7 @@ bool _MCFCRT_TlsRequire(void *pTlsKey, void **restrict ppStorage){
 		}
 		_MCFCRT_SignalMutex(&(pThread->vMutex));
 
-		pObject->pKey          = pKey;
+		pObject->pKey = pKey;
 
 		_MCFCRT_WaitForMutexForever(&(pKey->vMutex), kMutexSpinCount);
 		{
@@ -421,9 +421,9 @@ bool _MCFCRT_AtThreadExit(_MCFCRT_AtThreadExitCallback pfnProc, intptr_t nContex
 
 	memcpy(pObject->abyStorage, &pfnProc, sizeof(pfnProc));
 	pObject->pfnDestructor = &CRTAtExitThreadProc;
-	pObject->nContext      = nContext;
+	pObject->nContext = nContext;
 
-	pObject->pThread       = pThread;
+	pObject->pThread = pThread;
 
 	_MCFCRT_WaitForMutexForever(&(pThread->vMutex), kMutexSpinCount);
 	{
@@ -445,7 +445,7 @@ bool _MCFCRT_AtThreadExit(_MCFCRT_AtThreadExitCallback pfnProc, intptr_t nContex
 	}
 	_MCFCRT_SignalMutex(&(pThread->vMutex));
 
-	pObject->pKey          = nullptr;
+	pObject->pKey = nullptr;
 
 	return true;
 }

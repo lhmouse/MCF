@@ -80,15 +80,19 @@ typedef struct tagTlsKey {
 static DWORD g_dwTlsIndex = TLS_OUT_OF_INDEXES;
 
 bool __MCFCRT_ThreadEnvInit(){
-	g_dwTlsIndex = TlsAlloc();
-	if(g_dwTlsIndex == TLS_OUT_OF_INDEXES){
+	const DWORD dwTlsIndex = TlsAlloc();
+	if(dwTlsIndex == TLS_OUT_OF_INDEXES){
 		return false;
 	}
+
+	g_dwTlsIndex = dwTlsIndex;
 	return true;
 }
 void __MCFCRT_ThreadEnvUninit(){
-	TlsFree(g_dwTlsIndex);
+	const DWORD dwTlsIndex = g_dwTlsIndex;
 	g_dwTlsIndex = TLS_OUT_OF_INDEXES;
+
+	TlsFree(dwTlsIndex);
 }
 
 void __MCFCRT_TlsThreadCleanup(){

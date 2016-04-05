@@ -45,13 +45,19 @@ bool __MCFCRT_HeapDbgInit(){
 }
 void __MCFCRT_HeapDbgUninit(){
 #if __MCFCRT_REQUIRE_HEAPDBG_LEVEL(3)
-	if(g_avlBlocks){
+	const HANDLE hAllocator = g_hMapAllocator;
+	g_hMapAllocator = nullptr;
+
+	const _MCFCRT_AvlRoot avlBlocks = g_avlBlocks;
+	g_avlBlocks = nullptr;
+
+	if(avlBlocks){
 		const HANDLE hStdErr = GetStdHandle(STD_ERROR_HANDLE);
 		if(hStdErr == INVALID_HANDLE_VALUE){
 			_MCFCRT_Bail(L"__MCFCRT_HeapDbgUninit() 失败：侦测到内存泄漏。无法打开标准错误流，没有生成内存泄漏信息。");
 		}
 		if(hStdErr){
-			const __MCFCRT_HeapDbgBlockInfo *pBlockInfo = (const __MCFCRT_HeapDbgBlockInfo *)_MCFCRT_AvlFront(&g_avlBlocks);
+			const __MCFCRT_HeapDbgBlockInfo *pBlockInfo = (const __MCFCRT_HeapDbgBlockInfo *)_MCFCRT_AvlFront(&avlBlocks);
 			do {
 				const unsigned char *pbyDump = pBlockInfo->__pContents;
 
@@ -84,10 +90,7 @@ void __MCFCRT_HeapDbgUninit(){
 
 		_MCFCRT_Bail(L"__MCFCRT_HeapDbgUninit() 失败：侦测到内存泄漏。内存泄漏的详细信息已经输出至标准错误流中。");
 	}
-
-	g_avlBlocks = nullptr;
-	HeapDestroy(g_hMapAllocator);
-	g_hMapAllocator = nullptr;
+	HeapDestroy(hAllocator);
 #endif
 }
 

@@ -16,7 +16,7 @@ extern __attribute__((__dllimport__, __stdcall__))
 NTSTATUS NtReleaseKeyedEvent(HANDLE hKeyedEvent, void *pKey, BOOLEAN bAlertable, const LARGE_INTEGER *pliTimeout);
 
 #define FLAG_LOCKED             ((uintptr_t)0x0001)
-#define FLAG_SPIN_TOKEN         ((uintptr_t)0x0002)
+#define FLAG_SPIN_TOKENS        ((uintptr_t)0x000C)
 #define FLAGS_RESERVED          ((size_t)4)
 
 #define GET_THREAD_COUNT(v_)    ((size_t)(uintptr_t)(v_) >> FLAGS_RESERVED)
@@ -46,11 +46,11 @@ static inline bool ReallyWaitForMutex(_MCFCRT_Mutex *pMutex, size_t uMaxSpinCoun
 				do {
 					bTaken = !(uOld & FLAG_LOCKED);
 					if(!bTaken){
-						bCanSpin = !(uOld & FLAG_SPIN_TOKEN);
+						bCanSpin = ((uOld & FLAG_SPIN_TOKENS) < FLAG_SPIN_TOKENS);
 						if(!bCanSpin){
 							break;
 						}
-						uNew = uOld + FLAG_SPIN_TOKEN; // uOld | FLAG_SPIN_TOKEN;
+						uNew = uOld + (FLAG_SPIN_TOKENS & -FLAG_SPIN_TOKENS);
 					} else {
 						uNew = uOld + FLAG_LOCKED; // uOld | FLAG_LOCKED;
 					}
@@ -140,7 +140,7 @@ static inline void ReallySignalMutex(_MCFCRT_Mutex *pMutex){
 			_MCFCRT_ASSERT_MSG(uOld & FLAG_LOCKED, L"互斥体没有被任何线程锁定。");
 
 			bSignalOne = (GET_THREAD_COUNT(uOld) != 0);
-			uNew = uOld & ~(FLAG_LOCKED | FLAG_SPIN_TOKEN);
+			uNew = uOld & ~(FLAG_LOCKED | FLAG_SPIN_TOKENS);
 			if(bSignalOne){
 				uNew -= MAKE_THREAD_COUNT(1);
 			}

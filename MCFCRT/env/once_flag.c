@@ -2,11 +2,10 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2013 - 2016, LH_Mouse. All wrongs reserved.
 
-#include "mutex.h"
+#include "once_flag.h"
 #include "_nt_timeout.h"
 #include "../ext/assert.h"
 #include "../ext/expect.h"
-#include <limits.h>
 #include <winternl.h>
 #include <ntstatus.h>
 
@@ -16,17 +15,20 @@ extern __attribute__((__dllimport__, __stdcall__))
 NTSTATUS NtReleaseKeyedEvent(HANDLE hKeyedEvent, void *pKey, BOOLEAN bAlertable, const LARGE_INTEGER *pliTimeout);
 
 #define MASK_LOCKED             ((uintptr_t) 0x0001)
-#define MASK_THREADS_SPINNING   ((uintptr_t) 0x000C)
+#define MASK_FINISHED           ((uintptr_t) 0x0002)
 #define MASK_THREADS_TRAPPED    ((uintptr_t)~0x000F)
 
-static inline bool ReallyWaitForMutex(volatile uintptr_t *puControl, size_t uMaxSpinCount, bool bMayTimeOut, uint64_t u64UntilFastMonoClock){
+static _MCFCRT_OnceResult RealWaitForOnceFlag(volatile uintptr_t *puControl, bool bMayTimeOut, uint64_t u64UntilFastMonoClock){
 	{
 		uintptr_t uOld, uNew;
 		uOld = __atomic_load_n(puControl, __ATOMIC_CONSUME);
+		if(_MCFCRT_EXPECT(uOld & MASK_FINISHED)){
+			return _MCFCRT_kOnceResultFinished;
+		}
 		if(_MCFCRT_EXPECT(!(uOld & MASK_LOCKED))){
 			uNew = uOld | MASK_LOCKED;
 			if(_MCFCRT_EXPECT(__atomic_compare_exchange_n(puControl, &uOld, uNew, false, __ATOMIC_ACQ_REL, __ATOMIC_CONSUME))){
-				return true;
+				return _MCFCRT_kOnceResultUninitialized;
 			}
 		}
 	}
@@ -35,54 +37,15 @@ static inline bool ReallyWaitForMutex(volatile uintptr_t *puControl, size_t uMax
 	}
 
 	for(;;){
-		if(uMaxSpinCount != 0){
-			bool bTaken, bCanSpin;
-			{
-				uintptr_t uOld, uNew;
-				uOld = __atomic_load_n(puControl, __ATOMIC_CONSUME);
-				do {
-					bTaken = !(uOld & MASK_LOCKED);
-					if(!bTaken){
-						bCanSpin = ((uOld & MASK_THREADS_SPINNING) < MASK_THREADS_SPINNING);
-						if(!bCanSpin){
-							break;
-						}
-						uNew = uOld + (MASK_THREADS_SPINNING & -MASK_THREADS_SPINNING);
-					} else {
-						uNew = uOld + MASK_LOCKED; // uOld | MASK_LOCKED;
-					}
-				} while(_MCFCRT_EXPECT_NOT(!__atomic_compare_exchange_n(puControl, &uOld, uNew, false, __ATOMIC_ACQ_REL, __ATOMIC_CONSUME)));
-			}
-			if(_MCFCRT_EXPECT(bTaken)){
-				return true;
-			}
-			if(bCanSpin){
-				for(size_t i = 0; i < uMaxSpinCount; ++i){
-					bool bTaken;
-					{
-						uintptr_t uOld, uNew;
-						uOld = __atomic_load_n(puControl, __ATOMIC_CONSUME);
-						do {
-							bTaken = !(uOld & MASK_LOCKED);
-							if(!bTaken){
-								break;
-							}
-							uNew = uOld + MASK_LOCKED; // uOld | MASK_LOCKED;
-						} while(_MCFCRT_EXPECT_NOT(!__atomic_compare_exchange_n(puControl, &uOld, uNew, false, __ATOMIC_ACQ_REL, __ATOMIC_CONSUME)));
-					}
-					if(_MCFCRT_EXPECT_NOT(bTaken)){
-						return true;
-					}
-					__builtin_ia32_pause();
-				}
-			}
-		}
-
-		bool bTaken;
+		bool bFinished, bTaken;
 		{
 			uintptr_t uOld, uNew;
 			uOld = __atomic_load_n(puControl, __ATOMIC_CONSUME);
 			do {
+				bFinished = !!(uOld & MASK_FINISHED);
+				if(bFinished){
+					break;
+				}
 				bTaken = !(uOld & MASK_LOCKED);
 				if(!bTaken){
 					uNew = uOld + (MASK_THREADS_TRAPPED & -MASK_THREADS_TRAPPED);
@@ -91,8 +54,11 @@ static inline bool ReallyWaitForMutex(volatile uintptr_t *puControl, size_t uMax
 				}
 			} while(_MCFCRT_EXPECT_NOT(!__atomic_compare_exchange_n(puControl, &uOld, uNew, false, __ATOMIC_ACQ_REL, __ATOMIC_CONSUME)));
 		}
+		if(_MCFCRT_EXPECT(bFinished)){
+			return _MCFCRT_kOnceResultFinished;
+		}
 		if(_MCFCRT_EXPECT(bTaken)){
-			return true;
+			return _MCFCRT_kOnceResultUninitialized;
 		}
 		if(bMayTimeOut){
 			LARGE_INTEGER liTimeout;
@@ -113,12 +79,12 @@ static inline bool ReallyWaitForMutex(volatile uintptr_t *puControl, size_t uMax
 					} while(_MCFCRT_EXPECT_NOT(!__atomic_compare_exchange_n(puControl, &uOld, uNew, false, __ATOMIC_ACQ_REL, __ATOMIC_CONSUME)));
 				}
 				if(bDecremented){
-					return false;
+					return _MCFCRT_kOnceResultTimedOut;
 				}
 				lStatus = NtWaitForKeyedEvent(nullptr, (void *)puControl, false, nullptr);
 				_MCFCRT_ASSERT_MSG(NT_SUCCESS(lStatus), L"NtWaitForKeyedEvent() 失败。");
 				_MCFCRT_ASSERT(lStatus != STATUS_TIMEOUT);
-				return false;
+				return _MCFCRT_kOnceResultTimedOut;
 			}
 		} else {
 			NTSTATUS lStatus = NtWaitForKeyedEvent(nullptr, (void *)puControl, false, nullptr);
@@ -126,19 +92,24 @@ static inline bool ReallyWaitForMutex(volatile uintptr_t *puControl, size_t uMax
 			_MCFCRT_ASSERT(lStatus != STATUS_TIMEOUT);
 		}
 	}
+	return _MCFCRT_kOnceResultUninitialized;
 }
-static inline void ReallySignalMutex(volatile uintptr_t *puControl){
+static void RealSetAndSignalOnceFlag(volatile uintptr_t *puControl, bool bFinished){
 	bool bSignalOne;
 	{
 		uintptr_t uOld, uNew;
 		uOld = __atomic_load_n(puControl, __ATOMIC_CONSUME);
 		do {
-			_MCFCRT_ASSERT_MSG(uOld & MASK_LOCKED, L"互斥体没有被任何线程锁定。");
+			_MCFCRT_ASSERT_MSG(uOld & MASK_LOCKED,      L"一次性初始化标志没有被任何线程锁定。");
+			_MCFCRT_ASSERT_MSG(!(uOld & MASK_FINISHED), L"一次性初始化标志已被使用。");
 
-			uNew = uOld & ~(MASK_LOCKED | MASK_THREADS_SPINNING);
+			uNew = uOld & ~MASK_LOCKED;
 			bSignalOne = (uOld & MASK_THREADS_TRAPPED) > 0;
 			if(bSignalOne){
 				uNew -= (MASK_THREADS_TRAPPED & -MASK_THREADS_TRAPPED);
+			}
+			if(bFinished){
+				uNew |= MASK_FINISHED;
 			}
 		} while(_MCFCRT_EXPECT_NOT(!__atomic_compare_exchange_n(puControl, &uOld, uNew, false, __ATOMIC_ACQ_REL, __ATOMIC_CONSUME)));
 	}
@@ -149,14 +120,15 @@ static inline void ReallySignalMutex(volatile uintptr_t *puControl){
 	}
 }
 
-bool _MCFCRT_WaitForMutex(_MCFCRT_Mutex *pMutex, size_t uMaxSpinCount, uint64_t u64UntilFastMonoClock){
-	const bool bLocked = ReallyWaitForMutex((volatile uintptr_t *)pMutex, uMaxSpinCount, true, u64UntilFastMonoClock);
-	return bLocked;
+_MCFCRT_OnceResult _MCFCRT_WaitForOnceFlag(_MCFCRT_OnceFlag *pOnceFlag, _MCFCRT_STD uint64_t u64UntilFastMonoClock){
+	return RealWaitForOnceFlag((volatile uintptr_t *)pOnceFlag, true, u64UntilFastMonoClock);
 }
-void _MCFCRT_WaitForMutexForever(_MCFCRT_Mutex *pMutex, size_t uMaxSpinCount){
-	const bool bLocked = ReallyWaitForMutex((volatile uintptr_t *)pMutex, uMaxSpinCount, false, UINT64_MAX);
-	_MCFCRT_ASSERT(bLocked);
+_MCFCRT_OnceResult _MCFCRT_WaitForOnceFlagForever(_MCFCRT_OnceFlag *pOnceFlag){
+	return RealWaitForOnceFlag((volatile uintptr_t *)pOnceFlag, false, UINT64_MAX);
 }
-void _MCFCRT_SignalMutex(_MCFCRT_Mutex *pMutex){
-	ReallySignalMutex((volatile uintptr_t *)pMutex);
+void _MCFCRT_SignalOnceFlagAsFinished(_MCFCRT_OnceFlag *pOnceFlag){
+	RealSetAndSignalOnceFlag((volatile uintptr_t *)pOnceFlag, true);
+}
+void _MCFCRT_SignalOnceFlagAsAborted(_MCFCRT_OnceFlag *pOnceFlag){
+	RealSetAndSignalOnceFlag((volatile uintptr_t *)pOnceFlag, false);
 }

@@ -1,13 +1,16 @@
 #include <MCF/StdMCF.hpp>
-#include <MCF/Thread/ThreadLocal.hpp>
+#include <MCF/Thread/OnceFlag.hpp>
+#include <cstdio>
 
-template class MCF::ThreadLocal<int>;
-template class MCF::ThreadLocal<long double>;
+MCF::OnceFlag fl;
 
 extern "C" unsigned _MCFCRT_Main(){
-	auto l = [](std::intptr_t n){ __builtin_printf("at thread exit: %d\n", (int)n); };
-	::_MCFCRT_AtThreadExit(l, 1);
-	::_MCFCRT_AtThreadExit(l, 2);
-	::_MCFCRT_AtThreadExit(l, 3);
+	try {
+		fl.CallOnce([]{ std::puts("this should fail!"); throw 12345; });
+	} catch(int e){
+		std::printf("exception caught: e = %d\n", e);
+	}
+	fl.CallOnce([]{ std::puts("this should succeed!"); });
+	fl.CallOnce([]{ std::puts("this should not happen!"); });
 	return 0;
 }

@@ -1,11 +1,13 @@
 #include <MCF/StdMCF.hpp>
-#include <cstdio>
+#include <MCF/Thread/ThreadLocal.hpp>
+
+template class MCF::ThreadLocal<int>;
+template class MCF::ThreadLocal<long double>;
 
 extern "C" unsigned _MCFCRT_Main(){
-	try {
-		throw 12345;
-	} catch(int e){
-		std::printf("e = %d\n", e);
-	}
+	auto l = [](std::intptr_t n){ __builtin_printf("at thread exit: %d\n", (int)n); };
+	::_MCFCRT_AtThreadExit(l, 1);
+	::_MCFCRT_AtThreadExit(l, 2);
+	::_MCFCRT_AtThreadExit(l, 3);
 	return 0;
 }

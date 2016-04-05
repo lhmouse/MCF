@@ -39,8 +39,9 @@ private:
 public:
 	explicit ThreadLocal(){
 		if(!x_pTlsKey.Reset(::_MCFCRT_TlsAllocKey(sizeof(ElementT),
-			[](void *p){ Construct(static_cast<ElementT *>(p)); return static_cast<unsigned long>(0); },
-			[](void *p){ Destruct (static_cast<ElementT *>(p)); })))
+			[](std::intptr_t, void *p){ Construct(static_cast<ElementT *>(p)); return static_cast<unsigned long>(0); },
+			[](std::intptr_t, void *p){ Destruct (static_cast<ElementT *>(p)); },
+			0)))
 		{
 			MCF_THROW(Exception, ::_MCFCRT_GetLastWin32Error(), Rcntws::View(L"_MCFCRT_TlsAllocKey() 失败。"));
 		}

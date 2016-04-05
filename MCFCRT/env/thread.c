@@ -70,6 +70,7 @@ typedef struct tagTlsKey {
 	size_t uSize;
 	_MCFCRT_TlsConstructor pfnConstructor;
 	_MCFCRT_TlsDestructor pfnDestructor;
+	intptr_t nContext;
 
 	_MCFCRT_Mutex vMutex;
 
@@ -120,7 +121,7 @@ void __MCFCRT_TlsThreadCleanup(){
 			_MCFCRT_SignalMutex(&(pKey->vMutex));
 
 			if(pKey->pfnDestructor){
-				(*(pKey->pfnDestructor))(pObject->abyStorage);
+				(*(pKey->pfnDestructor))(pKey->nContext, pObject->abyStorage);
 			}
 
 			TlsObject *const pPrevByThread = pObject->pPrevByThread;
@@ -134,7 +135,7 @@ void __MCFCRT_TlsThreadCleanup(){
 	__MCFCRT_RunEmutlsDtors();
 }
 
-void *_MCFCRT_TlsAllocKey(size_t uSize, _MCFCRT_TlsConstructor pfnConstructor, _MCFCRT_TlsDestructor pfnDestructor){
+void *_MCFCRT_TlsAllocKey(size_t uSize, _MCFCRT_TlsConstructor pfnConstructor, _MCFCRT_TlsDestructor pfnDestructor, intptr_t nContext){
 	TlsKey *const pKey = malloc(sizeof(TlsKey));
 	if(!pKey){
 		SetLastError(ERROR_NOT_ENOUGH_MEMORY);
@@ -143,6 +144,7 @@ void *_MCFCRT_TlsAllocKey(size_t uSize, _MCFCRT_TlsConstructor pfnConstructor, _
 	pKey->uSize          = uSize;
 	pKey->pfnConstructor = pfnConstructor;
 	pKey->pfnDestructor  = pfnDestructor;
+	pKey->nContext       = nContext;
 	pKey->vMutex         = _MCFCRT_MUTEX_INITIALIZER;
 	pKey->pFirstByKey    = nullptr;
 	pKey->pLastByKey     = nullptr;
@@ -178,7 +180,7 @@ bool _MCFCRT_TlsFreeKey(void *pTlsKey){
 		_MCFCRT_SignalMutex(&(pThread->vMutex));
 
 		if(pKey->pfnDestructor){
-			(*(pKey->pfnDestructor))(pObject->abyStorage);
+			(*(pKey->pfnDestructor))(pKey->nContext, pObject->abyStorage);
 		}
 
 		TlsObject *const pPrevByKey = pObject->pPrevByKey;
@@ -216,6 +218,15 @@ _MCFCRT_TlsDestructor _MCFCRT_TlsGetDestructor(void *pTlsKey){
 	}
 	SetLastError(ERROR_SUCCESS);
 	return pKey->pfnDestructor;
+}
+intptr_t _MCFCRT_TlsGetContext(void *pTlsKey){
+	TlsKey *const pKey = pTlsKey;
+	if(!pKey){
+		SetLastError(ERROR_INVALID_PARAMETER);
+		return false;
+	}
+	SetLastError(ERROR_SUCCESS);
+	return pKey->nContext;
 }
 
 bool _MCFCRT_TlsGet(void *pTlsKey, void **restrict ppStorage){
@@ -292,7 +303,7 @@ bool _MCFCRT_TlsRequire(void *pTlsKey, void **restrict ppStorage){
 		pObject->pThread = pThread;
 		pObject->pKey = pKey;
 		if(pKey->pfnConstructor){
-			const DWORD dwErrorCode = (*(pKey->pfnConstructor))(pObject->abyStorage);
+			const DWORD dwErrorCode = (*(pKey->pfnConstructor))(pKey->nContext, pObject->abyStorage);
 			if(dwErrorCode != 0){
 				free(pObject);
 				SetLastError(dwErrorCode);
@@ -332,20 +343,13 @@ bool _MCFCRT_TlsRequire(void *pTlsKey, void **restrict ppStorage){
 	return true;
 }
 
-typedef struct tagAtThreadExitParams {
-	_MCFCRT_AtThreadExitCallback pfnProc;
-	intptr_t nContext;
-} AtThreadExitParams;
-
-static void CRTAtExitThreadProc(void *pStorage){
-	const __auto_type pfnProc  = ((AtThreadExitParams *)pStorage)->pfnProc;
-	const __auto_type nContext = ((AtThreadExitParams *)pStorage)->nContext;
-
+static void CRTAtExitThreadProc(intptr_t nContext, void *pStorage){
+	const _MCFCRT_AtThreadExitCallback pfnProc = *(_MCFCRT_AtThreadExitCallback *)pStorage;
 	(*pfnProc)(nContext);
 }
 
 bool _MCFCRT_AtThreadExit(_MCFCRT_AtThreadExitCallback pfnProc, intptr_t nContext){
-	void *const pKey = _MCFCRT_TlsAllocKey(sizeof(AtThreadExitParams), nullptr, &CRTAtExitThreadProc);
+	void *const pKey = _MCFCRT_TlsAllocKey(sizeof(_MCFCRT_AtThreadExitCallback), nullptr, &CRTAtExitThreadProc, nContext);
 	if(!pKey){
 		return false;
 	}
@@ -356,9 +360,7 @@ bool _MCFCRT_AtThreadExit(_MCFCRT_AtThreadExitCallback pfnProc, intptr_t nContex
 		SetLastError(dwLastError);
 		return false;
 	}
-	AtThreadExitParams *const pParams = pStorage;
-	pParams->pfnProc  = pfnProc;
-	pParams->nContext = nContext;
+	*(_MCFCRT_AtThreadExitCallback *)pStorage = pfnProc;
 	return true;
 }
 

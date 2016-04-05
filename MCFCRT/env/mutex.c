@@ -16,7 +16,7 @@ extern __attribute__((__dllimport__, __stdcall__))
 NTSTATUS NtReleaseKeyedEvent(HANDLE hKeyedEvent, void *pKey, BOOLEAN bAlertable, const LARGE_INTEGER *pliTimeout);
 
 #define MASK_LOCKED             ((uintptr_t) 0x0001)
-#define MASK_SPIN_TOKENS        ((uintptr_t) 0x000C)
+#define MASK_THREADS_SPINNING   ((uintptr_t) 0x000C)
 #define MASK_THREADS_TRAPPED    ((uintptr_t)~0x000F)
 
 static inline bool ReallyWaitForMutex(_MCFCRT_Mutex *pMutex, size_t uMaxSpinCount, bool bMayTimeOut, uint64_t u64UntilFastMonoClock){
@@ -43,11 +43,11 @@ static inline bool ReallyWaitForMutex(_MCFCRT_Mutex *pMutex, size_t uMaxSpinCoun
 				do {
 					bTaken = !(uOld & MASK_LOCKED);
 					if(!bTaken){
-						bCanSpin = ((uOld & MASK_SPIN_TOKENS) < MASK_SPIN_TOKENS);
+						bCanSpin = ((uOld & MASK_THREADS_SPINNING) < MASK_THREADS_SPINNING);
 						if(!bCanSpin){
 							break;
 						}
-						uNew = uOld + (MASK_SPIN_TOKENS & -MASK_SPIN_TOKENS);
+						uNew = uOld + (MASK_THREADS_SPINNING & -MASK_THREADS_SPINNING);
 					} else {
 						uNew = uOld + MASK_LOCKED; // uOld | MASK_LOCKED;
 					}
@@ -137,7 +137,7 @@ static inline void ReallySignalMutex(_MCFCRT_Mutex *pMutex){
 			_MCFCRT_ASSERT_MSG(uOld & MASK_LOCKED, L"互斥体没有被任何线程锁定。");
 
 			bSignalOne = (uOld & MASK_THREADS_TRAPPED) > 0;
-			uNew = uOld & ~(MASK_LOCKED | MASK_SPIN_TOKENS);
+			uNew = uOld & ~(MASK_LOCKED | MASK_THREADS_SPINNING);
 			if(bSignalOne){
 				uNew -= (MASK_THREADS_TRAPPED & -MASK_THREADS_TRAPPED);
 			}

@@ -12,13 +12,13 @@ struct object {
 };
 
 __attribute__((__weak__))
-void __register_frame_info(const void *p, struct object *o){
-	(void)p;
-	(void)o;
+void __register_frame_info(const void *base, struct object *obj){
+	(void)base;
+	(void)obj;
 }
 __attribute__((__weak__))
-void *__deregister_frame_info(const void *p){
-	(void)p;
+void *__deregister_frame_info(const void *base){
+	(void)base;
 
 	return nullptr;
 }

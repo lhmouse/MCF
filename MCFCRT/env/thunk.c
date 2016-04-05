@@ -67,7 +67,7 @@ static _MCFCRT_AvlRoot  g_avlThunksByFreeSize = nullptr;
 const void *_MCFCRT_AllocateThunk(const void *pInit, size_t uSize){
 	_MCFCRT_ASSERT(pInit);
 
-	char *pRaw = nullptr;
+	char *pRaw;
 
 	_MCFCRT_WaitForMutexForever(&g_vThunkMutex, kMutexSpinCount);
 	{
@@ -80,7 +80,7 @@ const void *_MCFCRT_AllocateThunk(const void *pInit, size_t uSize){
 		size_t uThunkSize = uSize + 8;
 		uThunkSize = (uThunkSize + 0x0F) & (size_t)-0x10;
 		if(uThunkSize < uSize){
-			goto jDone;
+			goto jBadAlloc;
 		}
 
 		_MCFCRT_AvlNodeHeader *pFreeSizeIndex = _MCFCRT_AvlGetLowerBound(&g_avlThunksByFreeSize, (intptr_t)uThunkSize, &FreeSizeComparatorNodeKey);
@@ -93,13 +93,13 @@ const void *_MCFCRT_AllocateThunk(const void *pInit, size_t uSize){
 			// 如果没有足够大的 thunk，我们先分配一个新的 chunk。
 			pInfo = malloc(sizeof(ThunkInfo));
 			if(!pInfo){
-				goto jDone;
+				goto jBadAlloc;
 			}
 			pInfo->uChunkSize = (uThunkSize + 0xFFFF) & (size_t)-0x10000;
 			pInfo->pChunk = VirtualAlloc(0, pInfo->uChunkSize, MEM_COMMIT | MEM_RESERVE, PAGE_READONLY);
 			if(!pInfo->pChunk){
 				free(pInfo);
-				goto jDone;
+				goto jBadAlloc;
 			}
 			pInfo->pThunk = pInfo->pChunk;
 			pInfo->uThunkSize = pInfo->uChunkSize;
@@ -124,7 +124,7 @@ const void *_MCFCRT_AllocateThunk(const void *pInit, size_t uSize){
 					VirtualFree(pInfo->pChunk, 0, MEM_RELEASE);
 					free(pInfo);
 				}
-				goto jDone;
+				goto jBadAlloc;
 			}
 			pSpare->pChunk     = pInfo->pChunk;
 			pSpare->uChunkSize = pInfo->uChunkSize;
@@ -153,13 +153,15 @@ const void *_MCFCRT_AllocateThunk(const void *pInit, size_t uSize){
 		memset(pRaw + uSize, 0xCC, uThunkSize - uSize);
 		VirtualProtect(pRaw, uThunkSize, PAGE_EXECUTE_READ, &dwOldProtect);
 	}
-jDone:
 	_MCFCRT_SignalMutex(&g_vThunkMutex);
 
-	if(!pRaw){
-		SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-	}
 	return pRaw;
+
+jBadAlloc:
+	_MCFCRT_SignalMutex(&g_vThunkMutex);
+
+	SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+	return nullptr;
 }
 void _MCFCRT_DeallocateThunk(const void *pThunk, bool bToPoison){
 	char *const pRaw = (char *)pThunk;

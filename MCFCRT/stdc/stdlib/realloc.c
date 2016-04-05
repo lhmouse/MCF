@@ -6,9 +6,12 @@
 #include "../../env/heap.h"
 
 __attribute__((__noinline__))
-void *realloc(void *p, size_t cb){
+void *__wrap_realloc(void *p, size_t cb){
 	if(!p){
 		return __MCFCRT_HeapAlloc(cb, __builtin_return_address(0));
 	}
 	return __MCFCRT_HeapRealloc(p, cb, __builtin_return_address(0));
 }
+
+__attribute__((__alias__("__wrap_realloc")))
+void *realloc(void *p, size_t cb);

@@ -6,7 +6,7 @@
 #include "../../env/heap.h"
 
 __attribute__((__noinline__))
-void *calloc(size_t nmemb, size_t cnt){
+void *__wrap_calloc(size_t nmemb, size_t cnt){
 	size_t cb = 0;
 	if((nmemb > 0) && (cnt > 0)){
 		if(((nmemb | cnt) & (size_t)-0x10000) && (cnt > SIZE_MAX / nmemb)){
@@ -20,3 +20,6 @@ void *calloc(size_t nmemb, size_t cnt){
 	}
 	return ret;
 }
+
+__attribute__((__alias__("__wrap_calloc")))
+void *calloc(size_t nmemb, size_t cnt);

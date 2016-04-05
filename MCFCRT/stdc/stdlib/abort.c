@@ -9,10 +9,13 @@
 
 jmp_buf *__MCFCRT_pjbufAbortHook = nullptr;
 
-_Noreturn void abort(){
+_Noreturn void __wrap_abort(){
 	if(__MCFCRT_pjbufAbortHook){
 		longjmp(*__MCFCRT_pjbufAbortHook, ERROR_PROCESS_ABORTED);
 	}
 
 	_MCFCRT_Bail(L"应用程序调用了 abort()。");
 }
+
+__attribute__((__alias__("__wrap_abort")))
+_Noreturn void abort();

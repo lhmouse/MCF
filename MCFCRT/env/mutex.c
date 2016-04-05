@@ -73,7 +73,7 @@ static inline bool ReallyWaitForMutex(_MCFCRT_Mutex *pMutex, size_t uMaxSpinCoun
 							uNew = uOld + FLAG_LOCKED; // uOld | FLAG_LOCKED;
 						} while(_MCFCRT_EXPECT_NOT(!__atomic_compare_exchange_n(pMutex, &uOld, uNew, false, __ATOMIC_ACQ_REL, __ATOMIC_CONSUME)));
 					}
-					if(_MCFCRT_EXPECT(bTaken)){
+					if(_MCFCRT_EXPECT_NOT(bTaken)){
 						return true;
 					}
 					__builtin_ia32_pause();

@@ -36,7 +36,7 @@ private:
 
 public:
 	explicit constexpr Mutex(std::size_t uSpinCount = kDefaultSpinCount) noexcept
-		: x_vMutex(0), x_uSpinCount(uSpinCount)
+		: x_vMutex(_MCFCRT_MUTEX_INITIALIZER), x_uSpinCount(uSpinCount)
 	{
 	}
 

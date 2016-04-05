@@ -14,7 +14,8 @@ extern void __MCFCRT_ThreadEnvUninit(void) _MCFCRT_NOEXCEPT;
 
 extern void __MCFCRT_TlsThreadCleanup() _MCFCRT_NOEXCEPT;
 
-typedef unsigned long (*_MCFCRT_TlsConstructor)(void *__pStorage); // 成功应当返回 0，否则返回值当成错误码。
+// 成功应当返回 0，否则返回值当成错误码。
+typedef unsigned long (*_MCFCRT_TlsConstructor)(void *__pStorage);
 typedef void (*_MCFCRT_TlsDestructor)(void *__pStorage);
 
 // 失败返回 nullptr。

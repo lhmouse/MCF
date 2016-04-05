@@ -33,7 +33,7 @@ static int DtorComparatorNodes(const _MCFCRT_AvlNodeHeader *pObj1, const _MCFCRT
 	return DtorComparatorNodeKey(pObj1, (intptr_t)(uintptr_t)((const KeyDtorNode *)pObj2)->ulKey);
 }
 
-static _MCFCRT_Mutex    g_vDtorMapMutex  = 0;
+static _MCFCRT_Mutex    g_vDtorMapMutex  = { 0 };
 static KeyDtorNode *    g_pDtorHead      = nullptr;
 static _MCFCRT_AvlRoot  g_avlDtorRoot    = nullptr;
 

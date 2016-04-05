@@ -32,7 +32,7 @@ typedef struct tagAtExitCallbackBlock {
 	AtExitCallback aCallbacks[kAtExitCallbacksPerBlock];
 } AtExitCallbackBlock;
 
-static _MCFCRT_Mutex           g_vAtExitMutex   = 0;
+static _MCFCRT_Mutex           g_vAtExitMutex   = { 0 };
 static AtExitCallbackBlock *   g_pAtExitLast    = nullptr;
 
 static void __MCFCRT_PumpAtEndModule(){

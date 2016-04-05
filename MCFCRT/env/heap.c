@@ -18,7 +18,7 @@ volatile _MCFCRT_HeapReallocCallback  _MCFCRT_pfnOnHeapRealloc   = nullptr;
 volatile _MCFCRT_HeapFreeCallback     _MCFCRT_pfnOnHeapFree      = nullptr;
 volatile _MCFCRT_HeapBadAllocCallback _MCFCRT_pfnOnHeapBadAlloc  = nullptr;
 
-static _MCFCRT_Mutex g_vHeapMutex = 0;
+static _MCFCRT_Mutex g_vHeapMutex = { 0 };
 
 enum {
 	kMutexSpinCount = 4000,

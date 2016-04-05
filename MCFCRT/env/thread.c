@@ -143,7 +143,7 @@ void *_MCFCRT_TlsAllocKey(size_t uSize, _MCFCRT_TlsConstructor pfnConstructor, _
 	pKey->uSize          = uSize;
 	pKey->pfnConstructor = pfnConstructor;
 	pKey->pfnDestructor  = pfnDestructor;
-	pKey->vMutex         = 0;
+	pKey->vMutex         = _MCFCRT_MUTEX_INITIALIZER;
 	pKey->pFirstByKey    = nullptr;
 	pKey->pLastByKey     = nullptr;
 
@@ -263,7 +263,7 @@ bool _MCFCRT_TlsRequire(void *pTlsKey, void **restrict ppStorage){
 			SetLastError(ERROR_NOT_ENOUGH_MEMORY);
 			return false;
 		}
-		pThread->vMutex        = 0;
+		pThread->vMutex        = _MCFCRT_MUTEX_INITIALIZER;
 		pThread->avlObjects    = nullptr;
 		pThread->pLastByThread = nullptr;
 

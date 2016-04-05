@@ -30,6 +30,8 @@ const volatile __auto_type __MCFCRT_deregister_frame_info = &__deregister_frame_
 
 __extension__ __attribute__((__section__(".eh_fram$@@@"), __used__))
 static const char eh_begin[0] = { };
+__extension__ __attribute__((__section__(".eh_fram$___"), __used__))
+static const char eh_end[16]  = { };
 
 static struct object eh_obj;
 static void *eh_frame_base;

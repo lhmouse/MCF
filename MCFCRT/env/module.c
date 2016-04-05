@@ -47,18 +47,19 @@ static void __MCFCRT_PumpAtEndModule(){
 
 	for(;;){
 		AtExitCallbackBlock *pBlock;
-
-		_MCFCRT_WaitForMutexForever(&g_vAtExitMutex, kMutexSpinCount);
 		{
-			pBlock = g_pAtExitLast;
-			if(!pBlock){
-				_MCFCRT_SignalMutex(&g_vAtExitMutex);
-				break;
+			_MCFCRT_WaitForMutexForever(&g_vAtExitMutex, kMutexSpinCount);
+			{
+				pBlock = g_pAtExitLast;
+				if(pBlock){
+					g_pAtExitLast = pBlock->pPrev;
+				}
 			}
-			g_pAtExitLast = pBlock->pPrev;
+			_MCFCRT_SignalMutex(&g_vAtExitMutex);
 		}
-		_MCFCRT_SignalMutex(&g_vAtExitMutex);
-
+		if(!pBlock){
+			break;
+		}
 		for(size_t i = pBlock->uSize; i != 0; --i){
 			const AtExitCallback *const pCur = pBlock->aCallbacks + i - 1;
 			(*(pCur->pfnProc))(pCur->nContext);

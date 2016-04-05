@@ -15,9 +15,9 @@ typedef struct _MCFCRT_tagConditionVariable {
 } volatile _MCFCRT_ConditionVariable;
 
 #ifdef __cplusplus
-#	define _MCFCRT_CONDITION_VARIABLE_INITIALIZER   { 0 }
+#	define _MCFCRT_CONDITION_VARIABLE_INITIALIZER   (        _MCFCRT_tagConditionVariable { 0 })
 #else
-#	define _MCFCRT_CONDITION_VARIABLE_INITIALIZER   ((_MCFCRT_Mutex){ 0 })
+#	define _MCFCRT_CONDITION_VARIABLE_INITIALIZER   ((struct _MCFCRT_tagConditionVariable){ 0 })
 #endif
 
 typedef _MCFCRT_STD intptr_t (*_MCFCRT_ConditionVariableUnlockCallback)(_MCFCRT_STD intptr_t __nContext);

@@ -45,21 +45,21 @@ static bool TraverseModuleSectionsCallback(intptr_t context, const char *name, v
 }
 
 bool __MCFCRT_RegisterFrameInfo(){
-	void *pBase = nullptr;
-	_MCFCRT_TraverseModuleSections(&TraverseModuleSectionsCallback, (intptr_t)&pBase);
-	if(!pBase){
+	void *base = nullptr;
+	_MCFCRT_TraverseModuleSections(&TraverseModuleSectionsCallback, (intptr_t)&base);
+	if(!base){
 		return false;
 	}
 
-	(*__MCFCRT_register_frame_info)(pBase, &eh_obj);
-	eh_frame_base = pBase;
+	(*__MCFCRT_register_frame_info)(base, &eh_obj);
+	eh_frame_base = base;
 	return true;
 }
 void __MCFCRT_UnregisterFrameInfo(){
-	void *const pBase = eh_frame_base;
+	void *const base = eh_frame_base;
 	eh_frame_base = nullptr;
 
-	if(pBase){
-		(*__MCFCRT_deregister_frame_info)(pBase);
+	if(base){
+		(*__MCFCRT_deregister_frame_info)(base);
 	}
 }

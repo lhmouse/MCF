@@ -28,7 +28,7 @@ const volatile __auto_type __MCFCRT_register_frame_info   = &__register_frame_in
 __attribute__((__section__(".MCFCRT"), __shared__))
 const volatile __auto_type __MCFCRT_deregister_frame_info = &__deregister_frame_info;
 
-__extension__ __attribute__((__section__(".eh_frame$@@@"), __used__))
+__extension__ __attribute__((__section__(".eh_frame"), __used__))
 static const char eh_begin[0] = { };
 
 static struct object eh_obj;

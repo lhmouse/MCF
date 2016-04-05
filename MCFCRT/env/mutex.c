@@ -39,17 +39,25 @@ static inline bool ReallyWaitForMutex(_MCFCRT_Mutex *pMutex, size_t uMaxSpinCoun
 
 	for(;;){
 		if(uMaxSpinCount != 0){
-			bool bCanSpin;
+			bool bTaken, bCanSpin;
 			{
 				uintptr_t uOld, uNew;
 				uOld = __atomic_load_n(pMutex, __ATOMIC_RELAXED);
 				do {
-					bCanSpin = !(uOld & FLAG_SPIN_TOKEN);
-					if(!bCanSpin){
-						break;
+					bTaken = !(uOld & FLAG_LOCKED);
+					if(!bTaken){
+						bCanSpin = !(uOld & FLAG_SPIN_TOKEN);
+						if(!bCanSpin){
+							break;
+						}
+						uNew = uOld + FLAG_SPIN_TOKEN; // uOld | FLAG_SPIN_TOKEN;
+					} else {
+						uNew = uOld + FLAG_LOCKED; // uOld | FLAG_LOCKED;
 					}
-					uNew = uOld | FLAG_SPIN_TOKEN;
 				} while(_MCFCRT_EXPECT_NOT(!__atomic_compare_exchange_n(pMutex, &uOld, uNew, false, __ATOMIC_RELAXED, __ATOMIC_RELAXED)));
+			}
+			if(_MCFCRT_EXPECT(bTaken)){
+				return true;
 			}
 			if(bCanSpin){
 				for(size_t i = 0; i < uMaxSpinCount; ++i){
@@ -62,10 +70,10 @@ static inline bool ReallyWaitForMutex(_MCFCRT_Mutex *pMutex, size_t uMaxSpinCoun
 							if(!bTaken){
 								break;
 							}
-							uNew = uOld | FLAG_LOCKED;
+							uNew = uOld + FLAG_LOCKED; // uOld | FLAG_LOCKED;
 						} while(_MCFCRT_EXPECT_NOT(!__atomic_compare_exchange_n(pMutex, &uOld, uNew, false, __ATOMIC_ACQ_REL, __ATOMIC_CONSUME)));
 					}
-					if(bTaken){
+					if(_MCFCRT_EXPECT(bTaken)){
 						return true;
 					}
 					__builtin_ia32_pause();
@@ -82,11 +90,11 @@ static inline bool ReallyWaitForMutex(_MCFCRT_Mutex *pMutex, size_t uMaxSpinCoun
 				if(!bTaken){
 					uNew = uOld + MAKE_THREAD_COUNT(1);
 				} else {
-					uNew = uOld | FLAG_LOCKED;
+					uNew = uOld + FLAG_LOCKED; // uOld | FLAG_LOCKED;
 				}
 			} while(_MCFCRT_EXPECT_NOT(!__atomic_compare_exchange_n(pMutex, &uOld, uNew, false, __ATOMIC_ACQ_REL, __ATOMIC_CONSUME)));
 		}
-		if(bTaken){
+		if(_MCFCRT_EXPECT(bTaken)){
 			return true;
 		}
 		if(bMayTimeOut){

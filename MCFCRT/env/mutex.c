@@ -106,14 +106,14 @@ static inline bool ReallyWaitForMutex(_MCFCRT_Mutex *pMutex, size_t uMaxSpinCoun
 				bool bDecremented;
 				{
 					uintptr_t uOld, uNew;
-					uOld = __atomic_load_n(pMutex, __ATOMIC_RELAXED);
+					uOld = __atomic_load_n(pMutex, __ATOMIC_CONSUME);
 					do {
 						bDecremented = (GET_THREAD_COUNT(uOld) != 0);
 						if(!bDecremented){
 							break;
 						}
 						uNew = uOld - MAKE_THREAD_COUNT(1);
-					} while(_MCFCRT_EXPECT_NOT(!__atomic_compare_exchange_n(pMutex, &uOld, uNew, false, __ATOMIC_RELAXED, __ATOMIC_RELAXED)));
+					} while(_MCFCRT_EXPECT_NOT(!__atomic_compare_exchange_n(pMutex, &uOld, uNew, false, __ATOMIC_ACQ_REL, __ATOMIC_CONSUME)));
 				}
 				if(bDecremented){
 					return false;

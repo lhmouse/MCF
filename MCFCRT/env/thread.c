@@ -67,8 +67,6 @@ typedef struct tagTlsThread {
 } TlsThread;
 
 typedef struct tagTlsKey {
-	_MCFCRT_AvlNodeHeader vHeader;
-
 	size_t uSize;
 	_MCFCRT_TlsConstructor pfnConstructor;
 	_MCFCRT_TlsDestructor pfnDestructor;
@@ -79,18 +77,7 @@ typedef struct tagTlsKey {
 	struct tagTlsObject *pLastByKey;
 } TlsKey;
 
-static int KeyComparatorNodeKey(const _MCFCRT_AvlNodeHeader *pObj1, intptr_t nKey2){
-	const uintptr_t uKey1 = (uintptr_t)(void *)pObj1;
-	const uintptr_t uKey2 = (uintptr_t)(void *)nKey2;
-	return (uKey1 < uKey2) ? -1 : ((uKey1 > uKey2) ? 1 : 0);
-}
-static int KeyComparatorNodes(const _MCFCRT_AvlNodeHeader *pObj1, const _MCFCRT_AvlNodeHeader *pObj2){
-	return KeyComparatorNodeKey(pObj1, (intptr_t)(void *)pObj2);
-}
-
-static _MCFCRT_Mutex    g_vKeyMapMutex  = 0;
-static DWORD            g_dwTlsIndex    = TLS_OUT_OF_INDEXES;
-static _MCFCRT_AvlRoot  g_avlKeyMap     = nullptr;
+static DWORD g_dwTlsIndex = TLS_OUT_OF_INDEXES;
 
 bool __MCFCRT_ThreadEnvInit(){
 	g_dwTlsIndex = TlsAlloc();
@@ -100,27 +87,6 @@ bool __MCFCRT_ThreadEnvInit(){
 	return true;
 }
 void __MCFCRT_ThreadEnvUninit(){
-	if(g_avlKeyMap){
-		_MCFCRT_AvlNodeHeader *const pRoot = g_avlKeyMap;
-		g_avlKeyMap = nullptr;
-
-		TlsKey *pKey;
-		_MCFCRT_AvlNodeHeader *pCur = _MCFCRT_AvlPrev(pRoot);
-		while(pCur){
-			pKey = (TlsKey *)pCur;
-			pCur = _MCFCRT_AvlPrev(pCur);
-			free(pKey);
-		}
-		pCur = _MCFCRT_AvlNext(pRoot);
-		while(pCur){
-			pKey = (TlsKey *)pCur;
-			pCur = _MCFCRT_AvlNext(pCur);
-			free(pKey);
-		}
-		pKey = (TlsKey *)pRoot;
-		free(pKey);
-	}
-
 	TlsFree(g_dwTlsIndex);
 	g_dwTlsIndex = TLS_OUT_OF_INDEXES;
 }
@@ -177,12 +143,6 @@ void *_MCFCRT_TlsAllocKey(size_t uSize, _MCFCRT_TlsConstructor pfnConstructor, _
 	pKey->pFirstByKey    = nullptr;
 	pKey->pLastByKey     = nullptr;
 
-	_MCFCRT_WaitForMutexForever(&g_vKeyMapMutex, kMutexSpinCount);
-	{
-		_MCFCRT_AvlAttach(&g_avlKeyMap, (_MCFCRT_AvlNodeHeader *)pKey, &KeyComparatorNodes);
-	}
-	_MCFCRT_SignalMutex(&g_vKeyMapMutex);
-
 	return pKey;
 }
 bool _MCFCRT_TlsFreeKey(void *pTlsKey){
@@ -191,12 +151,6 @@ bool _MCFCRT_TlsFreeKey(void *pTlsKey){
 		SetLastError(ERROR_INVALID_PARAMETER);
 		return false;
 	}
-
-	_MCFCRT_WaitForMutexForever(&g_vKeyMapMutex, kMutexSpinCount);
-	{
-		_MCFCRT_AvlDetach((_MCFCRT_AvlNodeHeader *)pKey);
-	}
-	_MCFCRT_SignalMutex(&g_vKeyMapMutex);
 
 	TlsObject *pObject = pKey->pLastByKey;
 	while(pObject){

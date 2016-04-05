@@ -15,19 +15,16 @@ NTSTATUS NtWaitForKeyedEvent(HANDLE hKeyedEvent, void *pKey, BOOLEAN bAlertable,
 extern __attribute__((__dllimport__, __stdcall__))
 NTSTATUS NtReleaseKeyedEvent(HANDLE hKeyedEvent, void *pKey, BOOLEAN bAlertable, const LARGE_INTEGER *pliTimeout);
 
-#define FLAG_LOCKED             ((uintptr_t)0x0001)
-#define FLAG_SPIN_TOKENS        ((uintptr_t)0x000C)
-#define FLAGS_RESERVED          ((size_t)4)
-
-#define GET_THREAD_COUNT(v_)    ((size_t)(uintptr_t)(v_) >> FLAGS_RESERVED)
-#define MAKE_THREAD_COUNT(v_)   ((uintptr_t)(size_t)(v_) << FLAGS_RESERVED)
+#define MASK_LOCKED             ((uintptr_t) 0x0001)
+#define MASK_SPIN_TOKENS        ((uintptr_t) 0x000C)
+#define MASK_THREADS_TRAPPED    ((uintptr_t)~0x000F)
 
 static inline bool ReallyWaitForMutex(_MCFCRT_Mutex *pMutex, size_t uMaxSpinCount, bool bMayTimeOut, uint64_t u64UntilFastMonoClock){
 	{
 		uintptr_t uOld, uNew;
 		uOld = __atomic_load_n(pMutex, __ATOMIC_CONSUME);
-		if(_MCFCRT_EXPECT(!(uOld & FLAG_LOCKED))){
-			uNew = uOld | FLAG_LOCKED;
+		if(_MCFCRT_EXPECT(!(uOld & MASK_LOCKED))){
+			uNew = uOld | MASK_LOCKED;
 			if(_MCFCRT_EXPECT(__atomic_compare_exchange_n(pMutex, &uOld, uNew, false, __ATOMIC_ACQ_REL, __ATOMIC_CONSUME))){
 				return true;
 			}
@@ -44,15 +41,15 @@ static inline bool ReallyWaitForMutex(_MCFCRT_Mutex *pMutex, size_t uMaxSpinCoun
 				uintptr_t uOld, uNew;
 				uOld = __atomic_load_n(pMutex, __ATOMIC_CONSUME);
 				do {
-					bTaken = !(uOld & FLAG_LOCKED);
+					bTaken = !(uOld & MASK_LOCKED);
 					if(!bTaken){
-						bCanSpin = ((uOld & FLAG_SPIN_TOKENS) < FLAG_SPIN_TOKENS);
+						bCanSpin = ((uOld & MASK_SPIN_TOKENS) < MASK_SPIN_TOKENS);
 						if(!bCanSpin){
 							break;
 						}
-						uNew = uOld + (FLAG_SPIN_TOKENS & -FLAG_SPIN_TOKENS);
+						uNew = uOld + (MASK_SPIN_TOKENS & -MASK_SPIN_TOKENS);
 					} else {
-						uNew = uOld + FLAG_LOCKED; // uOld | FLAG_LOCKED;
+						uNew = uOld + MASK_LOCKED; // uOld | MASK_LOCKED;
 					}
 				} while(_MCFCRT_EXPECT_NOT(!__atomic_compare_exchange_n(pMutex, &uOld, uNew, false, __ATOMIC_ACQ_REL, __ATOMIC_CONSUME)));
 			}
@@ -66,11 +63,11 @@ static inline bool ReallyWaitForMutex(_MCFCRT_Mutex *pMutex, size_t uMaxSpinCoun
 						uintptr_t uOld, uNew;
 						uOld = __atomic_load_n(pMutex, __ATOMIC_CONSUME);
 						do {
-							bTaken = !(uOld & FLAG_LOCKED);
+							bTaken = !(uOld & MASK_LOCKED);
 							if(!bTaken){
 								break;
 							}
-							uNew = uOld + FLAG_LOCKED; // uOld | FLAG_LOCKED;
+							uNew = uOld + MASK_LOCKED; // uOld | MASK_LOCKED;
 						} while(_MCFCRT_EXPECT_NOT(!__atomic_compare_exchange_n(pMutex, &uOld, uNew, false, __ATOMIC_ACQ_REL, __ATOMIC_CONSUME)));
 					}
 					if(_MCFCRT_EXPECT_NOT(bTaken)){
@@ -86,11 +83,11 @@ static inline bool ReallyWaitForMutex(_MCFCRT_Mutex *pMutex, size_t uMaxSpinCoun
 			uintptr_t uOld, uNew;
 			uOld = __atomic_load_n(pMutex, __ATOMIC_CONSUME);
 			do {
-				bTaken = !(uOld & FLAG_LOCKED);
+				bTaken = !(uOld & MASK_LOCKED);
 				if(!bTaken){
-					uNew = uOld + MAKE_THREAD_COUNT(1);
+					uNew = uOld + (MASK_THREADS_TRAPPED & -MASK_THREADS_TRAPPED);
 				} else {
-					uNew = uOld + FLAG_LOCKED; // uOld | FLAG_LOCKED;
+					uNew = uOld + MASK_LOCKED; // uOld | MASK_LOCKED;
 				}
 			} while(_MCFCRT_EXPECT_NOT(!__atomic_compare_exchange_n(pMutex, &uOld, uNew, false, __ATOMIC_ACQ_REL, __ATOMIC_CONSUME)));
 		}
@@ -108,11 +105,11 @@ static inline bool ReallyWaitForMutex(_MCFCRT_Mutex *pMutex, size_t uMaxSpinCoun
 					uintptr_t uOld, uNew;
 					uOld = __atomic_load_n(pMutex, __ATOMIC_CONSUME);
 					do {
-						bDecremented = (GET_THREAD_COUNT(uOld) != 0);
+						bDecremented = (uOld & MASK_THREADS_TRAPPED) > 0;
 						if(!bDecremented){
 							break;
 						}
-						uNew = uOld - MAKE_THREAD_COUNT(1);
+						uNew = uOld - (MASK_THREADS_TRAPPED & -MASK_THREADS_TRAPPED);
 					} while(_MCFCRT_EXPECT_NOT(!__atomic_compare_exchange_n(pMutex, &uOld, uNew, false, __ATOMIC_ACQ_REL, __ATOMIC_CONSUME)));
 				}
 				if(bDecremented){
@@ -137,12 +134,12 @@ static inline void ReallySignalMutex(_MCFCRT_Mutex *pMutex){
 		uintptr_t uOld, uNew;
 		uOld = __atomic_load_n(pMutex, __ATOMIC_CONSUME);
 		do {
-			_MCFCRT_ASSERT_MSG(uOld & FLAG_LOCKED, L"互斥体没有被任何线程锁定。");
+			_MCFCRT_ASSERT_MSG(uOld & MASK_LOCKED, L"互斥体没有被任何线程锁定。");
 
-			bSignalOne = (GET_THREAD_COUNT(uOld) != 0);
-			uNew = uOld & ~(FLAG_LOCKED | FLAG_SPIN_TOKENS);
+			bSignalOne = (uOld & MASK_THREADS_TRAPPED) > 0;
+			uNew = uOld & ~(MASK_LOCKED | MASK_SPIN_TOKENS);
 			if(bSignalOne){
-				uNew -= MAKE_THREAD_COUNT(1);
+				uNew -= (MASK_THREADS_TRAPPED & -MASK_THREADS_TRAPPED);
 			}
 		} while(_MCFCRT_EXPECT_NOT(!__atomic_compare_exchange_n(pMutex, &uOld, uNew, false, __ATOMIC_ACQ_REL, __ATOMIC_CONSUME)));
 	}

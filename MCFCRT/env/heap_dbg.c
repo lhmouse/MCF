@@ -14,13 +14,13 @@
 
 #if __MCFCRT_REQUIRE_HEAPDBG_LEVEL(3)
 
-static int BlockInfoComparatorNodeKey(const _MCFCRT_AvlNodeHeader *pInfo1, intptr_t nKey2){
-	const uintptr_t uKey1 = (uintptr_t)(((const __MCFCRT_HeapDbgBlockInfo *)pInfo1)->__pContents);
+static inline int BlockInfoComparatorNodeKey(const _MCFCRT_AvlNodeHeader *pInfo1, intptr_t nKey2){
+	const uintptr_t uKey1 = (uintptr_t)(((const __MCFCRT_HeapDbgBlockInfo *)pInfo1)->__pAddress);
 	const uintptr_t uKey2 = (uintptr_t)(void *)nKey2;
 	return (uKey1 < uKey2) ? -1 : ((uKey1 > uKey2) ? 1 : 0);
 }
-static int BlockInfoComparatorNodes(const _MCFCRT_AvlNodeHeader *pInfo1, const _MCFCRT_AvlNodeHeader *pInfo2){
-	return BlockInfoComparatorNodeKey(pInfo1, (intptr_t)(((const __MCFCRT_HeapDbgBlockInfo *)pInfo2)->__pContents));
+static inline int BlockInfoComparatorNodes(const _MCFCRT_AvlNodeHeader *pInfo1, const _MCFCRT_AvlNodeHeader *pInfo2){
+	return BlockInfoComparatorNodeKey(pInfo1, (intptr_t)(((const __MCFCRT_HeapDbgBlockInfo *)pInfo2)->__pAddress));
 }
 
 static void DumpMemoryLeaks(_MCFCRT_AvlRoot avlBlocks){
@@ -39,14 +39,14 @@ static void DumpMemoryLeaks(_MCFCRT_AvlRoot avlBlocks){
 		char achTemp[1024];
 		char *pchWrite = achTemp;
 		pchWrite = _MCFCRT_stpcpy(pchWrite, "Memory leak: address = ");
-		pchWrite = _MCFCRT_itoa0X(pchWrite, (uintptr_t)pInfo->__pContents, sizeof(pInfo->__pContents) * 2);
+		pchWrite = _MCFCRT_itoa0X(pchWrite, (uintptr_t)pInfo->__pAddress, sizeof(pInfo->__pAddress) * 2);
 		pchWrite = _MCFCRT_stpcpy(pchWrite, ", size = ");
 		pchWrite = _MCFCRT_itoa0X(pchWrite, (uintptr_t)pInfo->__uSize, sizeof(pInfo->__uSize) * 2);
 		pchWrite = _MCFCRT_stpcpy(pchWrite, ", return address = ");
 		pchWrite = _MCFCRT_itoa0X(pchWrite, (uintptr_t)pInfo->__pRetAddr, sizeof(pInfo->__pRetAddr) * 2);
 		pchWrite = _MCFCRT_stpcpy(pchWrite, ", leading bytes =");
 		for(size_t i = 0; i < 16; ++i){
-			const unsigned char *const p = (const unsigned char *)pInfo->__pContents + i;
+			const unsigned char *const p = (const unsigned char *)pInfo->__pAddress + i;
 			*(pchWrite++) = ' ';
 			if(IsBadReadPtr(p, 1)){
 				pchWrite = _MCFCRT_stpcpy(pchWrite, "??");
@@ -111,16 +111,16 @@ void __MCFCRT_HeapDbgDeallocateBlockInfo(__MCFCRT_HeapDbgBlockInfo *pInfo){
 }
 
 unsigned char *__MCFCRT_HeapDbgRegisterBlockInfo(__MCFCRT_HeapDbgBlockInfo *pInfo, unsigned char *pRaw, _MCFCRT_STD size_t uContentSize, const void *pRetAddr){
-	unsigned char *const pContents = pRaw + GUARD_BAND_SIZE;
+	unsigned char *const pAddress = pRaw + GUARD_BAND_SIZE;
 	const size_t uSize = uContentSize;
 
-	pInfo->__pContents = pContents;
+	pInfo->__pAddress = pAddress;
 	pInfo->__uSize     = uContentSize;
 	pInfo->__pRetAddr  = pRetAddr;
 	_MCFCRT_AvlAttach(&g_avlBlocks, (_MCFCRT_AvlNodeHeader *)pInfo, &BlockInfoComparatorNodes);
 
-	void **ppGuard1 = (void **)pContents;
-	void **ppGuard2 = (void **)(pContents + uSize);
+	void **ppGuard1 = (void **)pAddress;
+	void **ppGuard2 = (void **)(pAddress + uSize);
 	for(size_t i = 0; i < GUARD_BAND_SIZE; i += sizeof(void *)){
 		--ppGuard1;
 
@@ -131,13 +131,13 @@ unsigned char *__MCFCRT_HeapDbgRegisterBlockInfo(__MCFCRT_HeapDbgBlockInfo *pInf
 		++ppGuard2;
 	}
 
-	return pContents;
+	return pAddress;
 }
-__MCFCRT_HeapDbgBlockInfo *__MCFCRT_HeapDbgValidateBlock(unsigned char **ppRaw, unsigned char *pContents, const void *pRetAddr){
-	unsigned char *const pRaw = pContents - GUARD_BAND_SIZE;
+__MCFCRT_HeapDbgBlockInfo *__MCFCRT_HeapDbgValidateBlock(unsigned char **ppRaw, unsigned char *pAddress, const void *pRetAddr){
+	unsigned char *const pRaw = pAddress - GUARD_BAND_SIZE;
 	*ppRaw = pRaw;
 
-	__MCFCRT_HeapDbgBlockInfo *const pInfo = (__MCFCRT_HeapDbgBlockInfo *)_MCFCRT_AvlFind(&g_avlBlocks, (intptr_t)pContents, &BlockInfoComparatorNodeKey);
+	__MCFCRT_HeapDbgBlockInfo *const pInfo = (__MCFCRT_HeapDbgBlockInfo *)_MCFCRT_AvlFind(&g_avlBlocks, (intptr_t)pAddress, &BlockInfoComparatorNodeKey);
 	if(!pInfo){
 		wchar_t awchTemp[256];
 		wchar_t *pwcWrite = awchTemp;
@@ -148,8 +148,8 @@ __MCFCRT_HeapDbgBlockInfo *__MCFCRT_HeapDbgValidateBlock(unsigned char **ppRaw, 
 	}
 	const size_t uSize = pInfo->__uSize;
 
-	void *const *ppGuard1 = (void *const *)pContents;
-	void *const *ppGuard2 = (void *const *)(pContents + uSize);
+	void *const *ppGuard1 = (void *const *)pAddress;
+	void *const *ppGuard2 = (void *const *)(pAddress + uSize);
 	for(size_t i = 0; i < GUARD_BAND_SIZE; i += sizeof(void *)){
 		--ppGuard1;
 
@@ -177,11 +177,11 @@ void __MCFCRT_HeapDbgUnregisterBlockInfo(__MCFCRT_HeapDbgBlockInfo *pInfo){
 #	else
 
 unsigned char *__MCFCRT_HeapDbgAddBlockGuardsBasic(unsigned char *pRaw){
-	unsigned char *const pContents = pRaw + GUARD_BAND_SIZE;
+	unsigned char *const pAddress = pRaw + GUARD_BAND_SIZE;
 	const size_t uSize = HeapSize(GetProcessHeap(), 0, pRaw) - GUARD_BAND_SIZE * 2;
 
-	void **ppGuard1 = (void **)pContents;
-	void **ppGuard2 = (void **)(pContents + uSize);
+	void **ppGuard1 = (void **)pAddress;
+	void **ppGuard2 = (void **)(pAddress + uSize);
 	for(size_t i = 0; i < GUARD_BAND_SIZE; i += sizeof(void *)){
 		--ppGuard1;
 
@@ -192,16 +192,16 @@ unsigned char *__MCFCRT_HeapDbgAddBlockGuardsBasic(unsigned char *pRaw){
 		++ppGuard2;
 	}
 
-	return pContents;
+	return pAddress;
 }
-void __MCFCRT_HeapDbgValidateBlockBasic(unsigned char **ppRaw, unsigned char *pContents, const void *pRetAddr){
-	unsigned char *const pRaw = pContents - GUARD_BAND_SIZE;
+void __MCFCRT_HeapDbgValidateBlockBasic(unsigned char **ppRaw, unsigned char *pAddress, const void *pRetAddr){
+	unsigned char *const pRaw = pAddress - GUARD_BAND_SIZE;
 	*ppRaw = pRaw;
 
 	const size_t uSize = HeapSize(GetProcessHeap(), 0, pRaw) - GUARD_BAND_SIZE * 2;
 
-	void *const *ppGuard1 = (void *const *)pContents;
-	void *const *ppGuard2 = (void *const *)(pContents + uSize);
+	void *const *ppGuard1 = (void *const *)pAddress;
+	void *const *ppGuard2 = (void *const *)(pAddress + uSize);
 	for(size_t i = 0; i < GUARD_BAND_SIZE; i += sizeof(void *)){
 		--ppGuard1;
 

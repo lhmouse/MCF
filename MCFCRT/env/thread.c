@@ -35,7 +35,7 @@ enum {
 };
 
 typedef struct tagTlsObject {
-	_MCFCRT_AvlNodeHeader vHeader;
+	_MCFCRT_AvlNodeHeader avlhNodeByKey;
 
 	_MCFCRT_TlsDestructor pfnDestructor;
 	intptr_t nContext;
@@ -51,12 +51,12 @@ typedef struct tagTlsObject {
 	alignas(max_align_t) unsigned char abyStorage[];
 } TlsObject;
 
-static int ObjectComparatorNodeKey(const _MCFCRT_AvlNodeHeader *pObj1, intptr_t nKey2){
+static inline int ObjectComparatorNodeKey(const _MCFCRT_AvlNodeHeader *pObj1, intptr_t nKey2){
 	const uintptr_t uKey1 = (uintptr_t)(((const TlsObject *)pObj1)->pKey);
 	const uintptr_t uKey2 = (uintptr_t)(void *)nKey2;
 	return (uKey1 < uKey2) ? -1 : ((uKey1 > uKey2) ? 1 : 0);
 }
-static int ObjectComparatorNodes(const _MCFCRT_AvlNodeHeader *pObj1, const _MCFCRT_AvlNodeHeader *pObj2){
+static inline int ObjectComparatorNodes(const _MCFCRT_AvlNodeHeader *pObj1, const _MCFCRT_AvlNodeHeader *pObj2){
 	return ObjectComparatorNodeKey(pObj1, (intptr_t)(void *)(((const TlsObject *)pObj2)->pKey));
 }
 

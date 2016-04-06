@@ -19,11 +19,12 @@ NTSTATUS NtReleaseKeyedEvent(HANDLE hKeyedEvent, void *pKey, BOOLEAN bAlertable,
 #define THREAD_TRAPPED_MAX      ((uintptr_t)((uintptr_t)-1 & MASK_THREADS_TRAPPED))
 #define THREAD_TRAPPED_ONE      ((uintptr_t)(MASK_THREADS_TRAPPED & -MASK_THREADS_TRAPPED))
 
-static inline bool ReallyWaitForConditionVariable(volatile uintptr_t *puControl, bool bMayTimeOut, uint64_t u64UntilFastMonoClock){
-	if(bMayTimeOut && _MCFCRT_EXPECT(u64UntilFastMonoClock == 0)){
-		return false;
-	}
+static inline bool ReallyWaitForConditionVariable(volatile uintptr_t *puControl,
+	_MCFCRT_ConditionVariableUnlockCallback pfnUnlockCallback, _MCFCRT_ConditionVariableRelockCallback pfnRelockCallback, intptr_t nContext,
+	bool bMayTimeOut, uint64_t u64UntilFastMonoClock)
+{
 	__atomic_fetch_add(puControl, THREAD_TRAPPED_ONE, __ATOMIC_RELAXED);
+	const intptr_t nLocked = (*pfnUnlockCallback)(nContext);
 	if(bMayTimeOut){
 		LARGE_INTEGER liTimeout;
 		__MCF_CRT_InitializeNtTimeout(&liTimeout, u64UntilFastMonoClock);
@@ -44,11 +45,13 @@ static inline bool ReallyWaitForConditionVariable(volatile uintptr_t *puControl,
 				} while(_MCFCRT_EXPECT_NOT(!__atomic_compare_exchange_n(puControl, &uOld, uNew, false, __ATOMIC_RELAXED, __ATOMIC_RELAXED)));
 			}
 			if(bDecremented){
+				(*pfnRelockCallback)(nContext, nLocked);
 				return false;
 			}
 			lStatus = NtWaitForKeyedEvent(nullptr, (void *)puControl, false, nullptr);
 			_MCFCRT_ASSERT_MSG(NT_SUCCESS(lStatus), L"NtWaitForKeyedEvent() 失败。");
 			_MCFCRT_ASSERT(lStatus != STATUS_TIMEOUT);
+			(*pfnRelockCallback)(nContext, nLocked);
 			return true;
 		}
 	} else {
@@ -56,6 +59,7 @@ static inline bool ReallyWaitForConditionVariable(volatile uintptr_t *puControl,
 		_MCFCRT_ASSERT_MSG(NT_SUCCESS(lStatus), L"NtWaitForKeyedEvent() 失败。");
 		_MCFCRT_ASSERT(lStatus != STATUS_TIMEOUT);
 	}
+	(*pfnRelockCallback)(nContext, nLocked);
 	return true;
 }
 static inline size_t ReallySignalConditionVariable(volatile uintptr_t *puControl, size_t uMaxCountToSignal){
@@ -83,24 +87,18 @@ static inline size_t ReallySignalConditionVariable(volatile uintptr_t *puControl
 bool _MCFCRT_WaitForConditionVariable(_MCFCRT_ConditionVariable *pConditionVariable,
 	_MCFCRT_ConditionVariableUnlockCallback pfnUnlockCallback, _MCFCRT_ConditionVariableRelockCallback pfnRelockCallback, intptr_t nContext, uint64_t u64UntilFastMonoClock)
 {
-	const intptr_t nLocked = (*pfnUnlockCallback)(nContext);
-	const bool bSignaled = ReallyWaitForConditionVariable((volatile uintptr_t *)pConditionVariable, true, u64UntilFastMonoClock);
-	(*pfnRelockCallback)(nContext, nLocked);
+	const bool bSignaled = ReallyWaitForConditionVariable((volatile uintptr_t *)pConditionVariable, pfnUnlockCallback, pfnRelockCallback, nContext, true, u64UntilFastMonoClock);
 	return bSignaled;
 }
 void _MCFCRT_WaitForConditionVariableForever(_MCFCRT_ConditionVariable *pConditionVariable,
 	_MCFCRT_ConditionVariableUnlockCallback pfnUnlockCallback, _MCFCRT_ConditionVariableRelockCallback pfnRelockCallback, intptr_t nContext)
 {
-	const intptr_t nLocked = (*pfnUnlockCallback)(nContext);
-	const bool bSignaled = ReallyWaitForConditionVariable((volatile uintptr_t *)pConditionVariable, false, UINT64_MAX);
-	(*pfnRelockCallback)(nContext, nLocked);
+	const bool bSignaled = ReallyWaitForConditionVariable((volatile uintptr_t *)pConditionVariable, pfnUnlockCallback, pfnRelockCallback, nContext, false, UINT64_MAX);
 	_MCFCRT_ASSERT(bSignaled);
 }
 size_t _MCFCRT_SignalConditionVariable(_MCFCRT_ConditionVariable *pConditionVariable, size_t uMaxCountToSignal){
-	const size_t uCountSignaled = ReallySignalConditionVariable((volatile uintptr_t *)pConditionVariable, uMaxCountToSignal);
-	return uCountSignaled;
+	return ReallySignalConditionVariable((volatile uintptr_t *)pConditionVariable, uMaxCountToSignal);
 }
 size_t _MCFCRT_BroadcastConditionVariable(_MCFCRT_ConditionVariable *pConditionVariable){
-	const size_t uCountSignaled = ReallySignalConditionVariable((volatile uintptr_t *)pConditionVariable, SIZE_MAX);
-	return uCountSignaled;
+	return ReallySignalConditionVariable((volatile uintptr_t *)pConditionVariable, SIZE_MAX);
 }

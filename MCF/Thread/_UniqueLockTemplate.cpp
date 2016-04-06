@@ -8,7 +8,7 @@
 namespace MCF {
 
 namespace Impl_UniqueLockTemplate {
-	UniqueLockTemplateBase::~UniqueLockTemplateBase(){
+	UniqueLockBase::~UniqueLockBase(){
 	}
 }
 

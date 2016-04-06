@@ -15,20 +15,20 @@ namespace MCF {
 class ConditionVariable;
 
 namespace Impl_UniqueLockTemplate {
-	class UniqueLockTemplateBase : MCF_NONCOPYABLE {
+	class UniqueLockBase : MCF_NONCOPYABLE {
 		friend ConditionVariable;
 
 	protected:
 		std::size_t y_uLockCount;
 
 	protected:
-		constexpr UniqueLockTemplateBase() noexcept
+		constexpr UniqueLockBase() noexcept
 			: y_uLockCount(0)
 		{
 		}
 
 	public:
-		virtual ~UniqueLockTemplateBase();
+		virtual ~UniqueLockBase();
 
 	protected:
 		std::size_t Y_UnlockAll() noexcept {
@@ -95,7 +95,7 @@ namespace Impl_UniqueLockTemplate {
 	};
 
 	template<class MutexT, int kLockType = 0>
-	class UniqueLockTemplate final : public UniqueLockTemplateBase {
+	class UniqueLockTemplate final : public UniqueLockBase {
 	private:
 		MutexT *x_pOwner;
 

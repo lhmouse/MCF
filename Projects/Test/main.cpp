@@ -5,25 +5,30 @@
 #include <MCF/Thread/Mutex.hpp>
 #include <MCF/Thread/ConditionVariable.hpp>
 #include <MCF/Thread/Atomic.hpp>
+#include <MCF/Thread/OnceFlag.hpp>
 #include <cstdio>
 
+MCF::OnceFlag fl;
+
 extern "C" unsigned _MCFCRT_Main(){
-#if 0
-	auto t1 = MCF::GetHiResMonoClock();
-
-	volatile unsigned val = 0;
+	MCF::Atomic<bool> b;
 	MCF::Mutex m(100);
-	MCF::Array<MCF::Thread, 4> threads;
-
+	MCF::Array<MCF::Thread, 100> threads;
 	{
 		auto l = m.GetLock();
 		for(auto &t : threads){
 			t.Create(
 				[&]{
-					for(unsigned i = 0; i < 10000000; ++i){
-						auto l = m.GetLock();
-						val = val + 1;
+					try {
+						fl.CallOnce([&]{ auto r = m.GetLock(); /*std::puts("this should fail!");*/ throw 12345; });
+					} catch(int e){
+						{ auto r = m.GetLock(); /*std::printf("exception caught: e = %d\n", e);*/ }
 					}
+
+					fl.CallOnce([&]{ auto r = m.GetLock(); std::puts("this should succeed!"); b.Store(true, MCF::kAtomicRelaxed); });
+					MCF_ASSERT(b.Load(MCF::kAtomicRelaxed));
+
+					fl.CallOnce([&]{ auto r = m.GetLock(); std::puts("this should not happen!"); });
 				},
 				false);
 		}
@@ -32,40 +37,5 @@ extern "C" unsigned _MCFCRT_Main(){
 		t.Join();
 	}
 
-	auto t2 = MCF::GetHiResMonoClock();
-	std::printf("val = %u, delta_t = %f\n", val, t2 - t1);
-#else
-	MCF::Atomic<unsigned> tcnt(0);
-	MCF::Mutex m;
-	MCF::ConditionVariable cv;
-	MCF::Array<MCF::Thread, 6> threads;
-
-	for(auto &t : threads){
-		t.Create(
-			[&]{
-				auto l = m.GetLock();
-				std::printf("thread %lu waiting.\n", ::GetCurrentThreadId());
-				::Sleep(500);
-
-				cv.Wait(l, UINT64_MAX);
-				std::printf("thread %lu signaled.\n", ::GetCurrentThreadId());
-				::Sleep(500);
-
-				tcnt.Decrement(MCF::kAtomicRelaxed);
-			},
-			false);
-		tcnt.Increment(MCF::kAtomicRelaxed);
-	}
-
-	while(tcnt.Load(MCF::kAtomicRelaxed)){
-		::Sleep(900);
-		const auto cnt = cv.Broadcast();
-		std::printf("signaled %zu threads!\n", cnt);
-	}
-
-	for(auto &t : threads){
-		t.Join();
-	}
-#endif
 	return 0;
 }

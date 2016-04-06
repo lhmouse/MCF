@@ -34,7 +34,7 @@ public:
 	template<typename FuncT>
 	OnceResult CallOnce(FuncT &&vFunc, std::uint64_t u64UntilFastMonoClock){
 		const auto eResult = ::_MCFCRT_WaitForOnceFlag(&x_vFlag, u64UntilFastMonoClock);
-		if(eResult == ::_MCFCRT_kOnceResultUninitialized){
+		if(eResult == ::_MCFCRT_kOnceResultInitial){
 			try {
 				std::forward<FuncT>(vFunc)();
 			} catch(...){
@@ -49,7 +49,7 @@ public:
 	OnceResult CallOnce(FuncT &&vFunc){
 		const auto eResult = ::_MCFCRT_WaitForOnceFlagForever(&x_vFlag);
 		MCF_ASSERT(eResult != ::_MCFCRT_kOnceResultTimedOut);
-		if(eResult == ::_MCFCRT_kOnceResultUninitialized){
+		if(eResult == ::_MCFCRT_kOnceResultInitial){
 			try {
 				std::forward<FuncT>(vFunc)();
 			} catch(...){

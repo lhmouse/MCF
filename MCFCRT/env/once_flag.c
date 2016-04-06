@@ -94,8 +94,8 @@ static _MCFCRT_OnceResult RealWaitForOnceFlag(volatile uintptr_t *puControl, boo
 	}
 	return _MCFCRT_kOnceResultUninitialized;
 }
-static void RealSetAndSignalOnceFlag(volatile uintptr_t *puControl, bool bFinished){
-	bool bSignalOne;
+static void RealSetAndSignalOnceFlag(volatile uintptr_t *puControl, bool bFinished, size_t uMaxCountToSignal){
+	uintptr_t uCountToSignal;
 	{
 		uintptr_t uOld, uNew;
 		uOld = __atomic_load_n(puControl, __ATOMIC_CONSUME);
@@ -104,16 +104,15 @@ static void RealSetAndSignalOnceFlag(volatile uintptr_t *puControl, bool bFinish
 			_MCFCRT_ASSERT_MSG(!(uOld & MASK_FINISHED), L"一次性初始化标志已被使用。");
 
 			uNew = uOld & ~MASK_LOCKED;
-			bSignalOne = (uOld & MASK_THREADS_TRAPPED) > 0;
-			if(bSignalOne){
-				uNew -= (MASK_THREADS_TRAPPED & -MASK_THREADS_TRAPPED);
-			}
 			if(bFinished){
 				uNew |= MASK_FINISHED;
 			}
+			const size_t uThreadsTrapped = (uOld & MASK_THREADS_TRAPPED) / (MASK_THREADS_TRAPPED & -MASK_THREADS_TRAPPED);
+			uCountToSignal = (uThreadsTrapped <= uMaxCountToSignal) ? uThreadsTrapped : uMaxCountToSignal;
+			uNew -= uCountToSignal * (MASK_THREADS_TRAPPED & -MASK_THREADS_TRAPPED);
 		} while(_MCFCRT_EXPECT_NOT(!__atomic_compare_exchange_n(puControl, &uOld, uNew, false, __ATOMIC_ACQ_REL, __ATOMIC_CONSUME)));
 	}
-	if(bSignalOne){
+	for(size_t i = 0; i < uCountToSignal; ++i){
 		NTSTATUS lStatus = NtReleaseKeyedEvent(nullptr, (void *)puControl, false, nullptr);
 		_MCFCRT_ASSERT_MSG(NT_SUCCESS(lStatus), L"NtReleaseKeyedEvent() 失败。");
 		_MCFCRT_ASSERT(lStatus != STATUS_TIMEOUT);
@@ -127,8 +126,8 @@ _MCFCRT_OnceResult _MCFCRT_WaitForOnceFlagForever(_MCFCRT_OnceFlag *pOnceFlag){
 	return RealWaitForOnceFlag((volatile uintptr_t *)pOnceFlag, false, UINT64_MAX);
 }
 void _MCFCRT_SignalOnceFlagAsFinished(_MCFCRT_OnceFlag *pOnceFlag){
-	RealSetAndSignalOnceFlag((volatile uintptr_t *)pOnceFlag, true);
+	RealSetAndSignalOnceFlag((volatile uintptr_t *)pOnceFlag, true, SIZE_MAX);
 }
 void _MCFCRT_SignalOnceFlagAsAborted(_MCFCRT_OnceFlag *pOnceFlag){
-	RealSetAndSignalOnceFlag((volatile uintptr_t *)pOnceFlag, false);
+	RealSetAndSignalOnceFlag((volatile uintptr_t *)pOnceFlag, false, 1);
 }

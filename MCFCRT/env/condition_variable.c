@@ -53,24 +53,24 @@ static inline bool ReallyWaitForConditionVariable(volatile uintptr_t *puControl,
 	return true;
 }
 static inline size_t ReallySignalConditionVariable(volatile uintptr_t *puControl, size_t uMaxCountToSignal){
-	uintptr_t uCountDropped;
+	uintptr_t uCountToSignal;
 	{
 		uintptr_t uOld, uNew;
 		uOld = __atomic_load_n(puControl, __ATOMIC_RELAXED);
 		do {
-			uCountDropped = (uOld <= uMaxCountToSignal) ? uOld : uMaxCountToSignal;
-			if(uCountDropped == 0){
+			uCountToSignal = (uOld <= uMaxCountToSignal) ? uOld : uMaxCountToSignal;
+			if(uCountToSignal == 0){
 				break;
 			}
-			uNew = uOld - uCountDropped;
+			uNew = uOld - uCountToSignal;
 		} while(_MCFCRT_EXPECT_NOT(!__atomic_compare_exchange_n(puControl, &uOld, uNew, false, __ATOMIC_RELAXED, __ATOMIC_RELAXED)));
 	}
-	for(size_t i = 0; i < uCountDropped; ++i){
+	for(size_t i = 0; i < uCountToSignal; ++i){
 		NTSTATUS lStatus = NtReleaseKeyedEvent(nullptr, (void *)puControl, false, nullptr);
 		_MCFCRT_ASSERT_MSG(NT_SUCCESS(lStatus), L"NtReleaseKeyedEvent() 失败。");
 		_MCFCRT_ASSERT(lStatus != STATUS_TIMEOUT);
 	}
-	return uCountDropped;
+	return uCountToSignal;
 }
 
 bool _MCFCRT_WaitForConditionVariable(_MCFCRT_ConditionVariable *pConditionVariable,

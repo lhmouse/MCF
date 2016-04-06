@@ -45,22 +45,20 @@ static inline bool ReallyWaitForConditionVariable(volatile uintptr_t *puControl,
 				} while(_MCFCRT_EXPECT_NOT(!__atomic_compare_exchange_n(puControl, &uOld, uNew, false, __ATOMIC_RELAXED, __ATOMIC_RELAXED)));
 			}
 			if(bDecremented){
-				(*pfnRelockCallback)(nContext, nLocked);
-				return false;
+				return (*pfnRelockCallback)(nContext, nLocked), false;
 			}
 			lStatus = NtWaitForKeyedEvent(nullptr, (void *)puControl, false, nullptr);
 			_MCFCRT_ASSERT_MSG(NT_SUCCESS(lStatus), L"NtWaitForKeyedEvent() 失败。");
 			_MCFCRT_ASSERT(lStatus != STATUS_TIMEOUT);
 			(*pfnRelockCallback)(nContext, nLocked);
-			return true;
+			return (*pfnRelockCallback)(nContext, nLocked), true;
 		}
 	} else {
 		NTSTATUS lStatus = NtWaitForKeyedEvent(nullptr, (void *)puControl, false, nullptr);
 		_MCFCRT_ASSERT_MSG(NT_SUCCESS(lStatus), L"NtWaitForKeyedEvent() 失败。");
 		_MCFCRT_ASSERT(lStatus != STATUS_TIMEOUT);
 	}
-	(*pfnRelockCallback)(nContext, nLocked);
-	return true;
+	return (*pfnRelockCallback)(nContext, nLocked), true;
 }
 static inline size_t ReallySignalConditionVariable(volatile uintptr_t *puControl, size_t uMaxCountToSignal){
 	uintptr_t uCountToSignal;

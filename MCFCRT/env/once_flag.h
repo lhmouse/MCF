@@ -21,9 +21,9 @@ typedef struct _MCFCRT_tagOnceFlag {
 #endif
 
 typedef enum _MCFCRT_tagOnceResult {
-	_MCFCRT_kOnceResultTimedOut      = 1,
-	_MCFCRT_kOnceResultUninitialized = 2,
-	_MCFCRT_kOnceResultFinished      = 3,
+	_MCFCRT_kOnceResultTimedOut = 1,
+	_MCFCRT_kOnceResultInitial  = 2,
+	_MCFCRT_kOnceResultFinished = 3,
 } _MCFCRT_OnceResult;
 
 extern _MCFCRT_OnceResult _MCFCRT_WaitForOnceFlag(_MCFCRT_OnceFlag *__pOnceFlag, _MCFCRT_STD uint64_t __u64UntilFastMonoClock) _MCFCRT_NOEXCEPT;

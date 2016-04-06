@@ -31,7 +31,7 @@ static _MCFCRT_OnceResult RealWaitForOnceFlag(volatile uintptr_t *puControl, boo
 		if(_MCFCRT_EXPECT(!(uOld & MASK_LOCKED))){
 			uNew = uOld | MASK_LOCKED;
 			if(_MCFCRT_EXPECT(__atomic_compare_exchange_n(puControl, &uOld, uNew, false, __ATOMIC_ACQ_REL, __ATOMIC_CONSUME))){
-				return _MCFCRT_kOnceResultUninitialized;
+				return _MCFCRT_kOnceResultInitial;
 			}
 		}
 	}
@@ -61,7 +61,7 @@ static _MCFCRT_OnceResult RealWaitForOnceFlag(volatile uintptr_t *puControl, boo
 			return _MCFCRT_kOnceResultFinished;
 		}
 		if(_MCFCRT_EXPECT(bTaken)){
-			return _MCFCRT_kOnceResultUninitialized;
+			return _MCFCRT_kOnceResultInitial;
 		}
 		if(bMayTimeOut){
 			LARGE_INTEGER liTimeout;
@@ -95,7 +95,7 @@ static _MCFCRT_OnceResult RealWaitForOnceFlag(volatile uintptr_t *puControl, boo
 			_MCFCRT_ASSERT(lStatus != STATUS_TIMEOUT);
 		}
 	}
-	return _MCFCRT_kOnceResultUninitialized;
+	return _MCFCRT_kOnceResultInitial;
 }
 static void RealSetAndSignalOnceFlag(volatile uintptr_t *puControl, bool bFinished, size_t uMaxCountToSignal){
 	uintptr_t uCountToSignal;

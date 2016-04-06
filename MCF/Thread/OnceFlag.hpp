@@ -17,7 +17,7 @@ class OnceFlag : MCF_NONCOPYABLE {
 public:
 	enum OnceResult {
 		kTimedOut     = ::_MCFCRT_kOnceResultTimedOut,
-		kInitialized  = ::_MCFCRT_kOnceResultUninitialized, // 这两个反义词放在一起是不是看起来很奇怪？
+		kInitialized  = ::_MCFCRT_kOnceResultInitial,
 		kFinished     = ::_MCFCRT_kOnceResultFinished,
 	};
 

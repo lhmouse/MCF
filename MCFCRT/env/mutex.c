@@ -15,6 +15,9 @@ NTSTATUS NtWaitForKeyedEvent(HANDLE hKeyedEvent, void *pKey, BOOLEAN bAlertable,
 extern __attribute__((__dllimport__, __stdcall__))
 NTSTATUS NtReleaseKeyedEvent(HANDLE hKeyedEvent, void *pKey, BOOLEAN bAlertable, const LARGE_INTEGER *pliTimeout);
 
+extern __attribute__((__dllimport__, __stdcall__))
+NTSTATUS NtDelayExecution(BOOLEAN bAlertable, const LARGE_INTEGER *pInterval);
+
 #define MASK_LOCKED             ((uintptr_t) 0x0001)
 #define MASK_THREADS_SPINNING   ((uintptr_t) 0x000C)
 #define MASK_THREADS_TRAPPED    ((uintptr_t)~0x000F)
@@ -80,7 +83,11 @@ static inline bool ReallyWaitForMutex(volatile uintptr_t *puControl, size_t uMax
 					if(_MCFCRT_EXPECT_NOT(bTaken)){
 						return true;
 					}
-					__builtin_ia32_pause();
+
+					LARGE_INTEGER liTimeout;
+					liTimeout.QuadPart = -1;
+					NTSTATUS lStatus = NtDelayExecution(false, &liTimeout);
+					_MCFCRT_ASSERT_MSG(NT_SUCCESS(lStatus), L"NtDelayExecution() 失败。");
 				}
 			}
 		}

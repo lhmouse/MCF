@@ -18,8 +18,8 @@ NTSTATUS NtReleaseKeyedEvent(HANDLE hKeyedEvent, void *pKey, BOOLEAN bAlertable,
 #define MASK_FINISHED           ((uintptr_t) 0x0002)
 #define MASK_THREADS_TRAPPED    ((uintptr_t)~0x000F)
 
-#define THREAD_TRAPPED_MAX      ((uintptr_t)((uintptr_t)-1 & MASK_THREADS_TRAPPED))
 #define THREAD_TRAPPED_ONE      ((uintptr_t)(MASK_THREADS_TRAPPED & -MASK_THREADS_TRAPPED))
+#define THREAD_TRAPPED_MAX      ((uintptr_t)((uintptr_t)-1 & MASK_THREADS_TRAPPED) / THREAD_TRAPPED_ONE)
 
 static _MCFCRT_OnceResult RealWaitForOnceFlag(volatile uintptr_t *puControl, bool bMayTimeOut, uint64_t u64UntilFastMonoClock){
 	{
@@ -74,7 +74,8 @@ static _MCFCRT_OnceResult RealWaitForOnceFlag(volatile uintptr_t *puControl, boo
 					uintptr_t uOld, uNew;
 					uOld = __atomic_load_n(puControl, __ATOMIC_CONSUME);
 					do {
-						bDecremented = (uOld & MASK_THREADS_TRAPPED) > 0;
+						const size_t uThreadsTrapped = (uOld & MASK_THREADS_TRAPPED) / THREAD_TRAPPED_ONE;
+						bDecremented = (uThreadsTrapped > 0);
 						if(!bDecremented){
 							break;
 						}

@@ -204,6 +204,8 @@ bool _MCFCRT_TlsFreeKey(void *pTlsKey){
 			if(pThread){
 				_MCFCRT_WaitForMutexForever(&(pThread->vMutex), kMutexSpinCount);
 				{
+					_MCFCRT_AvlDetach((_MCFCRT_AvlNodeHeader *)pObject);
+
 					TlsObject *const pPrev = pObject->pPrevByThread;
 					TlsObject *const pNext = pObject->pNextByThread;
 					if(pPrev){

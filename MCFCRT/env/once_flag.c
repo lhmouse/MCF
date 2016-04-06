@@ -18,6 +18,9 @@ NTSTATUS NtReleaseKeyedEvent(HANDLE hKeyedEvent, void *pKey, BOOLEAN bAlertable,
 #define MASK_FINISHED           ((uintptr_t) 0x0002)
 #define MASK_THREADS_TRAPPED    ((uintptr_t)~0x000F)
 
+#define THREAD_TRAPPED_MAX      ((uintptr_t)((uintptr_t)-1 & MASK_THREADS_TRAPPED))
+#define THREAD_TRAPPED_ONE      ((uintptr_t)(MASK_THREADS_TRAPPED & -MASK_THREADS_TRAPPED))
+
 static _MCFCRT_OnceResult RealWaitForOnceFlag(volatile uintptr_t *puControl, bool bMayTimeOut, uint64_t u64UntilFastMonoClock){
 	{
 		uintptr_t uOld, uNew;
@@ -48,7 +51,7 @@ static _MCFCRT_OnceResult RealWaitForOnceFlag(volatile uintptr_t *puControl, boo
 				}
 				bTaken = !(uOld & MASK_LOCKED);
 				if(!bTaken){
-					uNew = uOld + (MASK_THREADS_TRAPPED & -MASK_THREADS_TRAPPED);
+					uNew = uOld + THREAD_TRAPPED_ONE;
 				} else {
 					uNew = uOld + MASK_LOCKED; // uOld | MASK_LOCKED;
 				}
@@ -75,7 +78,7 @@ static _MCFCRT_OnceResult RealWaitForOnceFlag(volatile uintptr_t *puControl, boo
 						if(!bDecremented){
 							break;
 						}
-						uNew = uOld - (MASK_THREADS_TRAPPED & -MASK_THREADS_TRAPPED);
+						uNew = uOld - THREAD_TRAPPED_ONE;
 					} while(_MCFCRT_EXPECT_NOT(!__atomic_compare_exchange_n(puControl, &uOld, uNew, false, __ATOMIC_ACQ_REL, __ATOMIC_CONSUME)));
 				}
 				if(bDecremented){
@@ -107,9 +110,9 @@ static void RealSetAndSignalOnceFlag(volatile uintptr_t *puControl, bool bFinish
 			if(bFinished){
 				uNew |= MASK_FINISHED;
 			}
-			const size_t uThreadsTrapped = (uOld & MASK_THREADS_TRAPPED) / (MASK_THREADS_TRAPPED & -MASK_THREADS_TRAPPED);
+			const size_t uThreadsTrapped = (uOld & MASK_THREADS_TRAPPED) / THREAD_TRAPPED_ONE;
 			uCountToSignal = (uThreadsTrapped <= uMaxCountToSignal) ? uThreadsTrapped : uMaxCountToSignal;
-			uNew -= uCountToSignal * (MASK_THREADS_TRAPPED & -MASK_THREADS_TRAPPED);
+			uNew -= uCountToSignal * THREAD_TRAPPED_ONE;
 		} while(_MCFCRT_EXPECT_NOT(!__atomic_compare_exchange_n(puControl, &uOld, uNew, false, __ATOMIC_ACQ_REL, __ATOMIC_CONSUME)));
 	}
 	for(size_t i = 0; i < uCountToSignal; ++i){

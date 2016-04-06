@@ -14,11 +14,16 @@ NTSTATUS NtWaitForKeyedEvent(HANDLE hKeyedEvent, void *pKey, BOOLEAN bAlertable,
 extern __attribute__((__dllimport__, __stdcall__))
 NTSTATUS NtReleaseKeyedEvent(HANDLE hKeyedEvent, void *pKey, BOOLEAN bAlertable, const LARGE_INTEGER *pliTimeout);
 
+#define MASK_THREADS_TRAPPED    ((uintptr_t)~0x0000)
+
+#define THREAD_TRAPPED_MAX      ((uintptr_t)((uintptr_t)-1 & MASK_THREADS_TRAPPED))
+#define THREAD_TRAPPED_ONE      ((uintptr_t)(MASK_THREADS_TRAPPED & -MASK_THREADS_TRAPPED))
+
 static inline bool ReallyWaitForConditionVariable(volatile uintptr_t *puControl, bool bMayTimeOut, uint64_t u64UntilFastMonoClock){
 	if(bMayTimeOut && _MCFCRT_EXPECT(u64UntilFastMonoClock == 0)){
 		return false;
 	}
-	__atomic_fetch_add(puControl, 1, __ATOMIC_RELAXED);
+	__atomic_fetch_add(puControl, THREAD_TRAPPED_ONE, __ATOMIC_RELAXED);
 	if(bMayTimeOut){
 		LARGE_INTEGER liTimeout;
 		__MCF_CRT_InitializeNtTimeout(&liTimeout, u64UntilFastMonoClock);
@@ -30,11 +35,12 @@ static inline bool ReallyWaitForConditionVariable(volatile uintptr_t *puControl,
 				uintptr_t uOld, uNew;
 				uOld = __atomic_load_n(puControl, __ATOMIC_RELAXED);
 				do {
-					bDecremented = (uOld != 0);
+					const size_t uThreadsTrapped = (uOld & MASK_THREADS_TRAPPED) / THREAD_TRAPPED_ONE;
+					bDecremented = (uThreadsTrapped > 0);
 					if(!bDecremented){
 						break;
 					}
-					uNew = uOld - 1;
+					uNew = uOld - THREAD_TRAPPED_ONE;
 				} while(_MCFCRT_EXPECT_NOT(!__atomic_compare_exchange_n(puControl, &uOld, uNew, false, __ATOMIC_RELAXED, __ATOMIC_RELAXED)));
 			}
 			if(bDecremented){
@@ -58,11 +64,12 @@ static inline size_t ReallySignalConditionVariable(volatile uintptr_t *puControl
 		uintptr_t uOld, uNew;
 		uOld = __atomic_load_n(puControl, __ATOMIC_RELAXED);
 		do {
-			uCountToSignal = (uOld <= uMaxCountToSignal) ? uOld : uMaxCountToSignal;
+			const size_t uThreadsTrapped = (uOld & MASK_THREADS_TRAPPED) / THREAD_TRAPPED_ONE;
+			uCountToSignal = (uThreadsTrapped <= uMaxCountToSignal) ? uThreadsTrapped : uMaxCountToSignal;
 			if(uCountToSignal == 0){
 				break;
 			}
-			uNew = uOld - uCountToSignal;
+			uNew = uOld - uCountToSignal * THREAD_TRAPPED_ONE;
 		} while(_MCFCRT_EXPECT_NOT(!__atomic_compare_exchange_n(puControl, &uOld, uNew, false, __ATOMIC_RELAXED, __ATOMIC_RELAXED)));
 	}
 	for(size_t i = 0; i < uCountToSignal; ++i){

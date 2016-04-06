@@ -13,14 +13,14 @@ extern "C" unsigned _MCFCRT_Main(){
 
 	volatile unsigned val = 0;
 	MCF::Mutex m(100);
-	MCF::Array<MCF::Thread, 100> threads;
+	MCF::Array<MCF::Thread, 4> threads;
 
 	{
 		auto l = m.GetLock();
 		for(auto &t : threads){
 			t.Create(
 				[&]{
-					for(unsigned i = 0; i < 100000; ++i){
+					for(unsigned i = 0; i < 10000000; ++i){
 						auto l = m.GetLock();
 						val = val + 1;
 					}

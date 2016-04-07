@@ -68,6 +68,11 @@ static inline bool ReallyWaitForMutex(volatile uintptr_t *puControl, size_t uMax
 			}
 			if(bSpinnable){
 				for(size_t i = 0; i < uMaxSpinCount; ++i){
+					LARGE_INTEGER liTimeout;
+					liTimeout.QuadPart = -1;
+					NTSTATUS lStatus = NtDelayExecution(false, &liTimeout);
+					_MCFCRT_ASSERT_MSG(NT_SUCCESS(lStatus), L"NtDelayExecution() 失败。");
+
 					bool bTaken;
 					{
 						uintptr_t uOld, uNew;
@@ -83,11 +88,6 @@ static inline bool ReallyWaitForMutex(volatile uintptr_t *puControl, size_t uMax
 					if(_MCFCRT_EXPECT_NOT(bTaken)){
 						return true;
 					}
-
-					LARGE_INTEGER liTimeout;
-					liTimeout.QuadPart = -1;
-					NTSTATUS lStatus = NtDelayExecution(false, &liTimeout);
-					_MCFCRT_ASSERT_MSG(NT_SUCCESS(lStatus), L"NtDelayExecution() 失败。");
 				}
 			}
 		}

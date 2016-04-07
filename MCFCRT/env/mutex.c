@@ -23,10 +23,10 @@ NTSTATUS NtDelayExecution(BOOLEAN bAlertable, const LARGE_INTEGER *pInterval);
 #define MASK_THREADS_TRAPPED    ((uintptr_t)~0x000F)
 
 #define THREAD_SPINNING_ONE     ((uintptr_t)(MASK_THREADS_SPINNING & -MASK_THREADS_SPINNING))
-#define THREAD_SPINNING_MAX     ((uintptr_t)((uintptr_t)-1 & MASK_THREADS_SPINNING / THREAD_SPINNING_ONE))
+#define THREAD_SPINNING_MAX     ((uintptr_t)(MASK_THREADS_SPINNING / THREAD_SPINNING_ONE))
 
 #define THREAD_TRAPPED_ONE      ((uintptr_t)(MASK_THREADS_TRAPPED & -MASK_THREADS_TRAPPED))
-#define THREAD_TRAPPED_MAX      ((uintptr_t)((uintptr_t)-1 & MASK_THREADS_TRAPPED) / THREAD_TRAPPED_ONE)
+#define THREAD_TRAPPED_MAX      ((uintptr_t)(MASK_THREADS_TRAPPED / THREAD_TRAPPED_ONE))
 
 static inline bool ReallyWaitForMutex(volatile uintptr_t *puControl, size_t uMaxSpinCount, bool bMayTimeOut, uint64_t u64UntilFastMonoClock){
 	{

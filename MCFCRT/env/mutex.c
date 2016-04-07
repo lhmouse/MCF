@@ -85,7 +85,7 @@ static inline bool ReallyWaitForMutex(volatile uintptr_t *puControl, size_t uMax
 					}
 
 					LARGE_INTEGER liTimeout;
-					liTimeout.QuadPart = -16;
+					liTimeout.QuadPart = -1;
 					NTSTATUS lStatus = NtDelayExecution(false, &liTimeout);
 					_MCFCRT_ASSERT_MSG(NT_SUCCESS(lStatus), L"NtDelayExecution() 失败。");
 				}

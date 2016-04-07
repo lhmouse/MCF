@@ -45,7 +45,8 @@ static inline bool ReallyWaitForMutex(volatile uintptr_t *puControl, size_t uMax
 
 	for(;;){
 		if(uMaxSpinCount != 0){
-			bool bTaken, bCanSpin;
+			bool bTaken;
+			unsigned uThreadsSpinnable;
 			{
 				uintptr_t uOld, uNew;
 				uOld = __atomic_load_n(puControl, __ATOMIC_CONSUME);
@@ -53,8 +54,8 @@ static inline bool ReallyWaitForMutex(volatile uintptr_t *puControl, size_t uMax
 					bTaken = !(uOld & MASK_LOCKED);
 					if(!bTaken){
 						const size_t uThreadsSpinning = (uOld & MASK_THREADS_SPINNING) / THREAD_SPINNING_ONE;
-						bCanSpin = (uThreadsSpinning < THREAD_SPINNING_MAX);
-						if(!bCanSpin){
+						uThreadsSpinnable = (THREAD_SPINNING_MAX - uThreadsSpinning);
+						if(uThreadsSpinnable == 0){
 							break;
 						}
 						uNew = uOld + THREAD_SPINNING_ONE;
@@ -66,7 +67,12 @@ static inline bool ReallyWaitForMutex(volatile uintptr_t *puControl, size_t uMax
 			if(_MCFCRT_EXPECT(bTaken)){
 				return true;
 			}
-			if(bCanSpin){
+			if(uThreadsSpinnable != 0){
+				LARGE_INTEGER liTimeout;
+				liTimeout.QuadPart = -(int64_t)((THREAD_SPINNING_MAX - uThreadsSpinnable + 1) * 16);
+				NTSTATUS lStatus = NtDelayExecution(false, &liTimeout);
+				_MCFCRT_ASSERT_MSG(NT_SUCCESS(lStatus), L"NtDelayExecution() 失败。");
+
 				for(size_t i = 0; i < uMaxSpinCount; ++i){
 					bool bTaken;
 					{
@@ -83,11 +89,7 @@ static inline bool ReallyWaitForMutex(volatile uintptr_t *puControl, size_t uMax
 					if(_MCFCRT_EXPECT_NOT(bTaken)){
 						return true;
 					}
-
-					LARGE_INTEGER liTimeout;
-					liTimeout.QuadPart = -1;
-					NTSTATUS lStatus = NtDelayExecution(false, &liTimeout);
-					_MCFCRT_ASSERT_MSG(NT_SUCCESS(lStatus), L"NtDelayExecution() 失败。");
+					__builtin_ia32_pause();
 				}
 			}
 		}

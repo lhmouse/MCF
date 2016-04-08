@@ -40,7 +40,7 @@ static void *eh_frame_base;
 static bool TraverseModuleSectionsCallback(intptr_t context, const char *name, void *base, size_t size){
 	(void)name;
 
-	if(((uintptr_t)base <= (uintptr_t)eh_begin) && ((uintptr_t)eh_begin < (uintptr_t)base + size)){
+	if(((char *)base <= eh_begin) && (eh_begin < (char *)base + size)){
 		*(void **)context = base;
 		return false;
 	}

@@ -474,8 +474,8 @@ typedef struct tagThreadInitParams {
 
 static __MCFCRT_C_STDCALL __MCFCRT_HAS_EH_TOP
 DWORD CrtThreadProc(LPVOID pParam){
-	const __auto_type pfnProc = ((ThreadInitParams *)pParam)->pfnProc;
-	const __auto_type nParam  = ((ThreadInitParams *)pParam)->nParam;
+	const _MCFCRT_ThreadProc pfnProc = ((ThreadInitParams *)pParam)->pfnProc;
+	const intptr_t           nParam  = ((ThreadInitParams *)pParam)->nParam;
 	free(pParam);
 
 	DWORD dwExitCode;

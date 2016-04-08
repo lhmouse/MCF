@@ -23,10 +23,13 @@ void *__deregister_frame_info(const void *base){
 	return nullptr;
 }
 
+typedef void (*__MCFCRT_RegisterFrameInfoProc)(const void *base, struct object *obj);
+typedef void *(*__MCFCRT_DeregisterFrameInfoProc)(const void *base);
+
 __attribute__((__section__(".MCFCRT"), __shared__))
-const volatile __auto_type __MCFCRT_register_frame_info   = &__register_frame_info;
+const volatile __MCFCRT_RegisterFrameInfoProc   __MCFCRT_pfnRegisterFrameInfoProc   = &__register_frame_info;
 __attribute__((__section__(".MCFCRT"), __shared__))
-const volatile __auto_type __MCFCRT_deregister_frame_info = &__deregister_frame_info;
+const volatile __MCFCRT_DeregisterFrameInfoProc __MCFCRT_pfnDeregisterFrameInfoProc = &__deregister_frame_info;
 
 __extension__ __attribute__((__section__(".eh_frame"), __used__))
 static const char eh_begin[0] = { };
@@ -51,7 +54,7 @@ bool __MCFCRT_RegisterFrameInfo(){
 		return false;
 	}
 
-	(*__MCFCRT_register_frame_info)(base, &eh_obj);
+	(*__MCFCRT_pfnRegisterFrameInfoProc)(base, &eh_obj);
 	eh_frame_base = base;
 	return true;
 }
@@ -60,6 +63,6 @@ void __MCFCRT_UnregisterFrameInfo(){
 	eh_frame_base = nullptr;
 
 	if(base){
-		(*__MCFCRT_deregister_frame_info)(base);
+		(*__MCFCRT_pfnDeregisterFrameInfoProc)(base);
 	}
 }

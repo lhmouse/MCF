@@ -399,7 +399,7 @@ bool _MCFCRT_TlsRequire(void *pTlsKey, void **restrict ppStorage){
 	return true;
 }
 
-static void CRTAtExitThreadProc(intptr_t nContext, void *pStorage){
+static void CrtAtExitThreadProc(intptr_t nContext, void *pStorage){
 	const _MCFCRT_AtThreadExitCallback pfnProc = *(_MCFCRT_AtThreadExitCallback *)pStorage;
 	(*pfnProc)(nContext);
 }
@@ -422,7 +422,7 @@ bool _MCFCRT_AtThreadExit(_MCFCRT_AtThreadExitCallback pfnProc, intptr_t nContex
 #endif
 
 	memcpy(pObject->abyStorage, &pfnProc, sizeof(pfnProc));
-	pObject->pfnDestructor = &CRTAtExitThreadProc;
+	pObject->pfnDestructor = &CrtAtExitThreadProc;
 	pObject->nContext = nContext;
 
 	pObject->pThread = pThread;
@@ -473,7 +473,7 @@ typedef struct tagThreadInitParams {
 } ThreadInitParams;
 
 static __MCFCRT_C_STDCALL __MCFCRT_HAS_EH_TOP
-DWORD ThreadProc(LPVOID pParam){
+DWORD CrtThreadProc(LPVOID pParam){
 	const __auto_type pfnProc = ((ThreadInitParams *)pParam)->pfnProc;
 	const __auto_type nParam  = ((ThreadInitParams *)pParam)->nParam;
 	free(pParam);
@@ -499,7 +499,7 @@ void *_MCFCRT_CreateThread(_MCFCRT_ThreadProc pfnThreadProc, intptr_t nParam, bo
 	pInitParams->pfnProc = pfnThreadProc;
 	pInitParams->nParam  = nParam;
 
-	void *const hThread = _MCFCRT_CreateNativeThread(&ThreadProc, pInitParams, bSuspended, puThreadId);
+	void *const hThread = _MCFCRT_CreateNativeThread(&CrtThreadProc, pInitParams, bSuspended, puThreadId);
 	if(!hThread){
 		const DWORD dwLastError = GetLastError();
 		free(pInitParams);

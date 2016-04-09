@@ -139,45 +139,40 @@ bool _MCFCRT_AtEndModule(_MCFCRT_AtEndModuleCallback pfnProc, intptr_t nContext)
 }
 
 // ld 自动添加此符号。
-extern IMAGE_DOS_HEADER __image_base__ __asm__("__image_base__");
+extern const IMAGE_DOS_HEADER __image_base__ __asm__("__image_base__");
 
 void *_MCFCRT_GetModuleBase(){
-	return &__image_base__;
+	return (void *)&__image_base__;
 }
 
-bool _MCFCRT_TraverseModuleSections(_MCFCRT_TraverseModuleSectionsCallback pfnCallback, intptr_t nContext){
+bool _MCFCRT_EnumerateFirstModuleSection(_MCFCRT_ModuleSectionInfo *pInfo){
 	if(__image_base__.e_magic != IMAGE_DOS_SIGNATURE){
 		SetLastError(ERROR_BAD_FORMAT);
 		return false;
 	}
-	const PIMAGE_NT_HEADERS32 pNtHeaders = (PIMAGE_NT_HEADERS32)((char *)&__image_base__ + __image_base__.e_lfanew);
+	const IMAGE_NT_HEADERS *const pNtHeaders = (const IMAGE_NT_HEADERS *)((const char *)&__image_base__ + __image_base__.e_lfanew);
 	if(pNtHeaders->Signature != IMAGE_NT_SIGNATURE){
 		SetLastError(ERROR_BAD_FORMAT);
 		return false;
 	}
+	pInfo->__pInternalTable = (const IMAGE_SECTION_HEADER *)((const char *)&(pNtHeaders->OptionalHeader) + pNtHeaders->FileHeader.SizeOfOptionalHeader);
+	pInfo->__uInternalSize  = pNtHeaders->FileHeader.NumberOfSections;
+	pInfo->__uNextIndex     = 0;
 
-	const size_t uSectionCount            = pNtHeaders->FileHeader.NumberOfSections;
-	const PIMAGE_SECTION_HEADER pSections = (PIMAGE_SECTION_HEADER)((char *)&(pNtHeaders->OptionalHeader) + pNtHeaders->FileHeader.SizeOfOptionalHeader);
-
-	size_t uSectionIndex = 0;
-	for(;;){
-		if(uSectionIndex >= uSectionCount){
-			SetLastError(ERROR_NO_MORE_ITEMS);
-			break;
-		}
-
-		const char *const pchName  =             (const char *)pSections[uSectionIndex].Name;
-		const size_t uRawSize      =                           pSections[uSectionIndex].SizeOfRawData;
-		void *const pBase          = (char *)&__image_base__ + pSections[uSectionIndex].VirtualAddress;
-		const size_t uSize         =                           pSections[uSectionIndex].Misc.VirtualSize;
-
-		const bool bContinue = (*pfnCallback)(nContext, pchName, uRawSize, pBase, uSize);
-		if(!bContinue){
-			SetLastError(ERROR_SUCCESS);
-			break;
-		}
-
-		++uSectionIndex;
+	return _MCFCRT_EnumerateNextModuleSection(pInfo);
+}
+bool _MCFCRT_EnumerateNextModuleSection(_MCFCRT_ModuleSectionInfo *pInfo){
+	const size_t uIndex = pInfo->__uNextIndex;
+	if(uIndex >= pInfo->__uInternalSize){
+		SetLastError(ERROR_NO_MORE_ITEMS);
+		return false;
 	}
+	pInfo->__uNextIndex = uIndex + 1;
+
+	const IMAGE_SECTION_HEADER *const pHeader = (const IMAGE_SECTION_HEADER *)pInfo->__pInternalTable + uIndex;
+	memcpy(pInfo->__achName, pHeader->Name, 8);
+	pInfo->__uRawSize = pHeader->SizeOfRawData;
+	pInfo->__pBase    = (char *)&__image_base__ + pHeader->VirtualAddress;
+	pInfo->__uSize    = pHeader->Misc.VirtualSize;
 	return true;
 }

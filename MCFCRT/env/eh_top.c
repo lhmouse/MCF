@@ -37,27 +37,28 @@ static const char g_aEhBegin[0] = { };
 static void *   g_pEhBase;
 static EhObject g_vEhObject;
 
-static bool CrtFindEhFrameCallback(intptr_t nContext, const char *pchName, size_t uRawSize, void *pBase, size_t uSize){
-	(void)pchName;
-	(void)uRawSize;
-
-	if(((char *)pBase <= g_aEhBegin) && (g_aEhBegin < (char *)pBase + uSize)){
-		*(void **)nContext = pBase;
-		return false; // 终止遍历。
-	}
-	return true;
-}
-
 bool __MCFCRT_RegisterFrameInfo(){
-	void *pEhBase = nullptr;
-	const bool bResult = _MCFCRT_TraverseModuleSections(&CrtFindEhFrameCallback, (intptr_t)&pEhBase);
-	if(!bResult){
+	_MCFCRT_ModuleSectionInfo vSectionInfo;
+	if(!_MCFCRT_EnumerateFirstModuleSection(&vSectionInfo)){
 		return false;
+	}
+
+	void *pEhBase = nullptr;
+	{
+		do {
+			char *const pchBegin = vSectionInfo.__pBase;
+			char *const pchEnd   = pchBegin + vSectionInfo.__uSize;
+			if((pchBegin <= g_aEhBegin) && (g_aEhBegin < pchEnd)){
+				pEhBase = pchBegin;
+				break;
+			}
+		} while(_MCFCRT_EnumerateNextModuleSection(&vSectionInfo));
 	}
 	if(!pEhBase){
 		SetLastError(ERROR_BAD_FORMAT);
 		return false;
 	}
+
 	(*__MCFCRT_pfnRegisterFrameInfoProc)(pEhBase, &g_vEhObject);
 	g_pEhBase = pEhBase;
 	return true;

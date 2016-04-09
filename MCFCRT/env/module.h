@@ -19,12 +19,19 @@ extern bool _MCFCRT_AtEndModule(_MCFCRT_AtEndModuleCallback __pfnProc, _MCFCRT_S
 
 extern void *_MCFCRT_GetModuleBase(void) _MCFCRT_NOEXCEPT;
 
-// __pchName 指向 8 个字节固定长度的名称。
-// 返回 true 则继续遍历，否则终止遍历。
-typedef bool (*_MCFCRT_TraverseModuleSectionsCallback)(_MCFCRT_STD intptr_t __nContext, const char *__pchName, _MCFCRT_STD size_t __uRawSize, void *__pBase, _MCFCRT_STD size_t __uSize);
+typedef struct _MCFCRT_tagModuleSectionInfo {
+	const void *__pInternalTable;
+	_MCFCRT_STD size_t __uInternalSize;
+	_MCFCRT_STD size_t __uNextIndex;
 
-// 只要完成了至少一次遍历就会返回 true。
-extern bool _MCFCRT_TraverseModuleSections(_MCFCRT_TraverseModuleSectionsCallback __pfnCallback, _MCFCRT_STD intptr_t __nContext) _MCFCRT_NOEXCEPT;
+	char __achName[8];
+	_MCFCRT_STD size_t __uRawSize;
+	void *__pBase;
+	_MCFCRT_STD size_t __uSize;
+} _MCFCRT_ModuleSectionInfo;
+
+extern bool _MCFCRT_EnumerateFirstModuleSection(_MCFCRT_ModuleSectionInfo *__pInfo) _MCFCRT_NOEXCEPT;
+extern bool _MCFCRT_EnumerateNextModuleSection(_MCFCRT_ModuleSectionInfo *__pInfo) _MCFCRT_NOEXCEPT;
 
 __MCFCRT_EXTERN_C_END
 

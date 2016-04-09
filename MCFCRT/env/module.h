@@ -26,9 +26,9 @@ typedef struct _MCFCRT_tagModuleSectionInfo {
 	_MCFCRT_STD size_t __uSize;
 
 	struct {
-		const void *__pSectionTable;
-		_MCFCRT_STD size_t __uSectionCount;
-		_MCFCRT_STD size_t __uNextIndex;
+		const void *__pTable;
+		_MCFCRT_STD size_t __uCount;
+		_MCFCRT_STD size_t __uNext;
 		void *__pReserved0;
 		void *__pReserved1;
 		void *__pReserved2;

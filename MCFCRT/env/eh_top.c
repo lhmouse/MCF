@@ -7,24 +7,24 @@
 #include "../env/module.h"
 
 // 参见 gcc/libgcc/unwind-dw2-fde.h 里面的 old_object 的注释。
-struct object {
-	void *impl[8];
-};
+typedef struct tagEhObject {
+	void *a[8];
+} EhObject;
 
 __attribute__((__weak__))
-void __register_frame_info(const void *base, struct object *obj){
-	(void)base;
-	(void)obj;
+void __register_frame_info(void *pBase, EhObject *pObject){
+	(void)pBase;
+	(void)pObject;
 }
 __attribute__((__weak__))
-void *__deregister_frame_info(const void *base){
-	(void)base;
+void *__deregister_frame_info(void *pBase){
+	(void)pBase;
 
 	return nullptr;
 }
 
-typedef void (*__MCFCRT_RegisterFrameInfoProc)(const void *base, struct object *obj);
-typedef void *(*__MCFCRT_DeregisterFrameInfoProc)(const void *base);
+typedef void (*__MCFCRT_RegisterFrameInfoProc)(void *pBase, EhObject *pObject);
+typedef void *(*__MCFCRT_DeregisterFrameInfoProc)(void *pBase);
 
 __attribute__((__section__(".MCFCRT"), __shared__))
 const volatile __MCFCRT_RegisterFrameInfoProc   __MCFCRT_pfnRegisterFrameInfoProc   = &__register_frame_info;
@@ -32,37 +32,41 @@ __attribute__((__section__(".MCFCRT"), __shared__))
 const volatile __MCFCRT_DeregisterFrameInfoProc __MCFCRT_pfnDeregisterFrameInfoProc = &__deregister_frame_info;
 
 __extension__ __attribute__((__section__(".eh_frame"), __used__))
-static const char eh_begin[0] = { };
+static const char g_aEhBegin[0] = { };
 
-static struct object eh_obj;
-static void *eh_frame_base;
+static void *   g_pEhBase;
+static EhObject g_vEhObject;
 
-static bool TraverseModuleSectionsCallback(intptr_t context, const char *name, void *base, size_t size){
-	(void)name;
+static bool CrtFindEhFrameCallback(intptr_t nContext, const char *pchName, size_t uRawSize, void *pBase, size_t uSize){
+	(void)pchName;
+	(void)uRawSize;
 
-	if(((char *)base <= eh_begin) && (eh_begin < (char *)base + size)){
-		*(void **)context = base;
-		return false;
+	if(((char *)pBase <= g_aEhBegin) && (g_aEhBegin < (char *)pBase + uSize)){
+		*(void **)nContext = pBase;
+		return false; // 终止遍历。
 	}
 	return true;
 }
 
 bool __MCFCRT_RegisterFrameInfo(){
-	void *base = nullptr;
-	_MCFCRT_TraverseModuleSections(&TraverseModuleSectionsCallback, (intptr_t)&base);
-	if(!base){
+	void *pEhBase = nullptr;
+	const bool bResult = _MCFCRT_TraverseModuleSections(&CrtFindEhFrameCallback, (intptr_t)&pEhBase);
+	if(!bResult){
 		return false;
 	}
-
-	(*__MCFCRT_pfnRegisterFrameInfoProc)(base, &eh_obj);
-	eh_frame_base = base;
+	if(!pEhBase){
+		SetLastError(ERROR_BAD_FORMAT);
+		return false;
+	}
+	(*__MCFCRT_pfnRegisterFrameInfoProc)(pEhBase, &g_vEhObject);
+	g_pEhBase = pEhBase;
 	return true;
 }
 void __MCFCRT_UnregisterFrameInfo(){
-	void *const base = eh_frame_base;
-	eh_frame_base = nullptr;
+	void *const pEhBase = g_pEhBase;
+	g_pEhBase = nullptr;
 
-	if(base){
-		(*__MCFCRT_pfnDeregisterFrameInfoProc)(base);
+	if(pEhBase){
+		(*__MCFCRT_pfnDeregisterFrameInfoProc)(pEhBase);
 	}
 }

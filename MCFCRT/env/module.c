@@ -156,13 +156,28 @@ bool _MCFCRT_TraverseModuleSections(_MCFCRT_TraverseModuleSectionsCallback pfnCa
 		return false;
 	}
 
+	const size_t uSectionCount            = pNtHeaders->FileHeader.NumberOfSections;
 	const PIMAGE_SECTION_HEADER pSections = (PIMAGE_SECTION_HEADER)((char *)&(pNtHeaders->OptionalHeader) + pNtHeaders->FileHeader.SizeOfOptionalHeader);
-	const size_t uSectionCount = pNtHeaders->FileHeader.NumberOfSections;
-	for(size_t i = 0; i < uSectionCount; ++i){
-		if(!(*pfnCallback)(nContext, (const char *)pSections[i].Name, (char *)&__image_base__ + pSections[i].VirtualAddress, pSections[i].Misc.VirtualSize)){
-			SetLastError(ERROR_SUCCESS);
-			return false;
+
+	size_t uSectionIndex = 0;
+	for(;;){
+		if(uSectionIndex >= uSectionCount){
+			SetLastError(ERROR_NO_MORE_ITEMS);
+			break;
 		}
+
+		const char *const pchName  =             (const char *)pSections[uSectionIndex].Name;
+		const size_t uRawSize      =                           pSections[uSectionIndex].SizeOfRawData;
+		void *const pBase          = (char *)&__image_base__ + pSections[uSectionIndex].VirtualAddress;
+		const size_t uSize         =                           pSections[uSectionIndex].Misc.VirtualSize;
+
+		const bool bContinue = (*pfnCallback)(nContext, pchName, uRawSize, pBase, uSize);
+		if(!bContinue){
+			SetLastError(ERROR_SUCCESS);
+			break;
+		}
+
+		++uSectionIndex;
 	}
 	return true;
 }

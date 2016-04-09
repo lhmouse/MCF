@@ -20,14 +20,19 @@ extern bool _MCFCRT_AtEndModule(_MCFCRT_AtEndModuleCallback __pfnProc, _MCFCRT_S
 extern void *_MCFCRT_GetModuleBase(void) _MCFCRT_NOEXCEPT;
 
 typedef struct _MCFCRT_tagModuleSectionInfo {
-	const void *__pInternalTable;
-	_MCFCRT_STD size_t __uInternalSize;
-	_MCFCRT_STD size_t __uNextIndex;
-
 	char __achName[8];
 	_MCFCRT_STD size_t __uRawSize;
 	void *__pBase;
 	_MCFCRT_STD size_t __uSize;
+
+	struct {
+		const void *__pSectionTable;
+		_MCFCRT_STD size_t __uSectionCount;
+		_MCFCRT_STD size_t __uNextIndex;
+		void *__pReserved0;
+		void *__pReserved1;
+		void *__pReserved2;
+	} __vImpl;
 } _MCFCRT_ModuleSectionInfo;
 
 extern bool _MCFCRT_EnumerateFirstModuleSection(_MCFCRT_ModuleSectionInfo *__pInfo) _MCFCRT_NOEXCEPT;

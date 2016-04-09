@@ -155,24 +155,26 @@ bool _MCFCRT_EnumerateFirstModuleSection(_MCFCRT_ModuleSectionInfo *pInfo){
 		SetLastError(ERROR_BAD_FORMAT);
 		return false;
 	}
-	pInfo->__pInternalTable = (const IMAGE_SECTION_HEADER *)((const char *)&(pNtHeaders->OptionalHeader) + pNtHeaders->FileHeader.SizeOfOptionalHeader);
-	pInfo->__uInternalSize  = pNtHeaders->FileHeader.NumberOfSections;
-	pInfo->__uNextIndex     = 0;
+
+	pInfo->__vImpl.__pSectionTable = (const char *)&pNtHeaders->OptionalHeader + pNtHeaders->FileHeader.SizeOfOptionalHeader;
+	pInfo->__vImpl.__uSectionCount = pNtHeaders->FileHeader.NumberOfSections;
+	pInfo->__vImpl.__uNextIndex    = 0;
 
 	return _MCFCRT_EnumerateNextModuleSection(pInfo);
 }
 bool _MCFCRT_EnumerateNextModuleSection(_MCFCRT_ModuleSectionInfo *pInfo){
-	const size_t uIndex = pInfo->__uNextIndex;
-	if(uIndex >= pInfo->__uInternalSize){
+	const size_t uIndex = pInfo->__vImpl.__uNextIndex;
+	if(uIndex >= pInfo->__vImpl.__uSectionCount){
 		SetLastError(ERROR_NO_MORE_ITEMS);
 		return false;
 	}
-	pInfo->__uNextIndex = uIndex + 1;
+	pInfo->__vImpl.__uNextIndex = uIndex + 1;
 
-	const IMAGE_SECTION_HEADER *const pHeader = (const IMAGE_SECTION_HEADER *)pInfo->__pInternalTable + uIndex;
+	const IMAGE_SECTION_HEADER *const pHeader = (const IMAGE_SECTION_HEADER *)pInfo->__vImpl.__pSectionTable + uIndex;
 	memcpy(pInfo->__achName, pHeader->Name, 8);
 	pInfo->__uRawSize = pHeader->SizeOfRawData;
 	pInfo->__pBase    = (char *)&__image_base__ + pHeader->VirtualAddress;
 	pInfo->__uSize    = pHeader->Misc.VirtualSize;
+
 	return true;
 }

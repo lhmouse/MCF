@@ -83,6 +83,7 @@ static inline bool ReallyWaitForMutex(volatile uintptr_t *puControl, size_t uMax
 					if(_MCFCRT_EXPECT_NOT(bTaken)){
 						return true;
 					}
+					__builtin_ia32_pause();
 				}
 			}
 		}

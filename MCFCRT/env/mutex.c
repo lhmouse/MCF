@@ -31,10 +31,10 @@ NTSTATUS NtDelayExecution(BOOLEAN bAlertable, const LARGE_INTEGER *pInterval);
 static inline bool ReallyWaitForMutex(volatile uintptr_t *puControl, size_t uMaxSpinCount, bool bMayTimeOut, uint64_t u64UntilFastMonoClock){
 	{
 		uintptr_t uOld, uNew;
-		uOld = __atomic_load_n(puControl, __ATOMIC_CONSUME);
+		uOld = __atomic_load_n(puControl, __ATOMIC_ACQUIRE);
 		if(_MCFCRT_EXPECT(!(uOld & MASK_LOCKED))){
 			uNew = uOld | MASK_LOCKED;
-			if(_MCFCRT_EXPECT(__atomic_compare_exchange_n(puControl, &uOld, uNew, false, __ATOMIC_ACQ_REL, __ATOMIC_CONSUME))){
+			if(_MCFCRT_EXPECT(__atomic_compare_exchange_n(puControl, &uOld, uNew, false, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE))){
 				return true;
 			}
 		}
@@ -48,7 +48,7 @@ static inline bool ReallyWaitForMutex(volatile uintptr_t *puControl, size_t uMax
 			bool bTaken, bSpinnable;
 			{
 				uintptr_t uOld, uNew;
-				uOld = __atomic_load_n(puControl, __ATOMIC_CONSUME);
+				uOld = __atomic_load_n(puControl, __ATOMIC_ACQUIRE);
 				do {
 					bTaken = !(uOld & MASK_LOCKED);
 					if(!bTaken){
@@ -61,29 +61,24 @@ static inline bool ReallyWaitForMutex(volatile uintptr_t *puControl, size_t uMax
 					} else {
 						uNew = uOld + MASK_LOCKED; // uOld | MASK_LOCKED;
 					}
-				} while(_MCFCRT_EXPECT_NOT(!__atomic_compare_exchange_n(puControl, &uOld, uNew, false, __ATOMIC_ACQ_REL, __ATOMIC_CONSUME)));
+				} while(_MCFCRT_EXPECT_NOT(!__atomic_compare_exchange_n(puControl, &uOld, uNew, false, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE)));
 			}
 			if(_MCFCRT_EXPECT(bTaken)){
 				return true;
 			}
 			if(bSpinnable){
 				for(size_t i = 0; i < uMaxSpinCount; ++i){
-					LARGE_INTEGER liTimeout;
-					liTimeout.QuadPart = -1;
-					NTSTATUS lStatus = NtDelayExecution(false, &liTimeout);
-					_MCFCRT_ASSERT_MSG(NT_SUCCESS(lStatus), L"NtDelayExecution() 失败。");
-
 					bool bTaken;
 					{
 						uintptr_t uOld, uNew;
-						uOld = __atomic_load_n(puControl, __ATOMIC_CONSUME);
+						uOld = __atomic_load_n(puControl, __ATOMIC_ACQUIRE);
 						do {
 							bTaken = !(uOld & MASK_LOCKED);
 							if(!bTaken){
 								break;
 							}
 							uNew = uOld + MASK_LOCKED; // uOld | MASK_LOCKED;
-						} while(_MCFCRT_EXPECT_NOT(!__atomic_compare_exchange_n(puControl, &uOld, uNew, false, __ATOMIC_ACQ_REL, __ATOMIC_CONSUME)));
+						} while(_MCFCRT_EXPECT_NOT(!__atomic_compare_exchange_n(puControl, &uOld, uNew, false, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE)));
 					}
 					if(_MCFCRT_EXPECT_NOT(bTaken)){
 						return true;
@@ -95,7 +90,7 @@ static inline bool ReallyWaitForMutex(volatile uintptr_t *puControl, size_t uMax
 		bool bTaken;
 		{
 			uintptr_t uOld, uNew;
-			uOld = __atomic_load_n(puControl, __ATOMIC_CONSUME);
+			uOld = __atomic_load_n(puControl, __ATOMIC_ACQUIRE);
 			do {
 				bTaken = !(uOld & MASK_LOCKED);
 				if(!bTaken){
@@ -103,7 +98,7 @@ static inline bool ReallyWaitForMutex(volatile uintptr_t *puControl, size_t uMax
 				} else {
 					uNew = uOld + MASK_LOCKED; // uOld | MASK_LOCKED;
 				}
-			} while(_MCFCRT_EXPECT_NOT(!__atomic_compare_exchange_n(puControl, &uOld, uNew, false, __ATOMIC_ACQ_REL, __ATOMIC_CONSUME)));
+			} while(_MCFCRT_EXPECT_NOT(!__atomic_compare_exchange_n(puControl, &uOld, uNew, false, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE)));
 		}
 		if(_MCFCRT_EXPECT(bTaken)){
 			return true;
@@ -117,7 +112,7 @@ static inline bool ReallyWaitForMutex(volatile uintptr_t *puControl, size_t uMax
 				bool bDecremented;
 				{
 					uintptr_t uOld, uNew;
-					uOld = __atomic_load_n(puControl, __ATOMIC_CONSUME);
+					uOld = __atomic_load_n(puControl, __ATOMIC_ACQUIRE);
 					do {
 						const size_t uThreadsTrapped = (uOld & MASK_THREADS_TRAPPED) / THREAD_TRAPPED_ONE;
 						bDecremented = (uThreadsTrapped > 0);
@@ -125,7 +120,7 @@ static inline bool ReallyWaitForMutex(volatile uintptr_t *puControl, size_t uMax
 							break;
 						}
 						uNew = uOld - THREAD_TRAPPED_ONE;
-					} while(_MCFCRT_EXPECT_NOT(!__atomic_compare_exchange_n(puControl, &uOld, uNew, false, __ATOMIC_ACQ_REL, __ATOMIC_CONSUME)));
+					} while(_MCFCRT_EXPECT_NOT(!__atomic_compare_exchange_n(puControl, &uOld, uNew, false, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE)));
 				}
 				if(bDecremented){
 					return false;
@@ -146,7 +141,7 @@ static inline void ReallySignalMutex(volatile uintptr_t *puControl){
 	bool bSignalOne;
 	{
 		uintptr_t uOld, uNew;
-		uOld = __atomic_load_n(puControl, __ATOMIC_CONSUME);
+		uOld = __atomic_load_n(puControl, __ATOMIC_ACQUIRE);
 		do {
 			_MCFCRT_ASSERT_MSG(uOld & MASK_LOCKED, L"互斥体没有被任何线程锁定。");
 
@@ -155,7 +150,7 @@ static inline void ReallySignalMutex(volatile uintptr_t *puControl){
 			if(bSignalOne){
 				uNew -= THREAD_TRAPPED_ONE;
 			}
-		} while(_MCFCRT_EXPECT_NOT(!__atomic_compare_exchange_n(puControl, &uOld, uNew, false, __ATOMIC_ACQ_REL, __ATOMIC_CONSUME)));
+		} while(_MCFCRT_EXPECT_NOT(!__atomic_compare_exchange_n(puControl, &uOld, uNew, false, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE)));
 	}
 	if(bSignalOne){
 		NTSTATUS lStatus = NtReleaseKeyedEvent(nullptr, (void *)puControl, false, nullptr);

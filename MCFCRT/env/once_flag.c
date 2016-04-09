@@ -24,13 +24,13 @@ NTSTATUS NtReleaseKeyedEvent(HANDLE hKeyedEvent, void *pKey, BOOLEAN bAlertable,
 static _MCFCRT_OnceResult RealWaitForOnceFlag(volatile uintptr_t *puControl, bool bMayTimeOut, uint64_t u64UntilFastMonoClock){
 	{
 		uintptr_t uOld, uNew;
-		uOld = __atomic_load_n(puControl, __ATOMIC_CONSUME);
+		uOld = __atomic_load_n(puControl, __ATOMIC_ACQUIRE);
 		if(_MCFCRT_EXPECT(uOld & MASK_FINISHED)){
 			return _MCFCRT_kOnceResultFinished;
 		}
 		if(_MCFCRT_EXPECT(!(uOld & MASK_LOCKED))){
 			uNew = uOld | MASK_LOCKED;
-			if(_MCFCRT_EXPECT(__atomic_compare_exchange_n(puControl, &uOld, uNew, false, __ATOMIC_ACQ_REL, __ATOMIC_CONSUME))){
+			if(_MCFCRT_EXPECT(__atomic_compare_exchange_n(puControl, &uOld, uNew, false, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE))){
 				return _MCFCRT_kOnceResultInitial;
 			}
 		}
@@ -43,7 +43,7 @@ static _MCFCRT_OnceResult RealWaitForOnceFlag(volatile uintptr_t *puControl, boo
 		bool bFinished, bTaken;
 		{
 			uintptr_t uOld, uNew;
-			uOld = __atomic_load_n(puControl, __ATOMIC_CONSUME);
+			uOld = __atomic_load_n(puControl, __ATOMIC_ACQUIRE);
 			do {
 				bFinished = !!(uOld & MASK_FINISHED);
 				if(bFinished){
@@ -55,7 +55,7 @@ static _MCFCRT_OnceResult RealWaitForOnceFlag(volatile uintptr_t *puControl, boo
 				} else {
 					uNew = uOld + MASK_LOCKED; // uOld | MASK_LOCKED;
 				}
-			} while(_MCFCRT_EXPECT_NOT(!__atomic_compare_exchange_n(puControl, &uOld, uNew, false, __ATOMIC_ACQ_REL, __ATOMIC_CONSUME)));
+			} while(_MCFCRT_EXPECT_NOT(!__atomic_compare_exchange_n(puControl, &uOld, uNew, false, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE)));
 		}
 		if(_MCFCRT_EXPECT(bFinished)){
 			return _MCFCRT_kOnceResultFinished;
@@ -72,7 +72,7 @@ static _MCFCRT_OnceResult RealWaitForOnceFlag(volatile uintptr_t *puControl, boo
 				bool bDecremented;
 				{
 					uintptr_t uOld, uNew;
-					uOld = __atomic_load_n(puControl, __ATOMIC_CONSUME);
+					uOld = __atomic_load_n(puControl, __ATOMIC_ACQUIRE);
 					do {
 						const size_t uThreadsTrapped = (uOld & MASK_THREADS_TRAPPED) / THREAD_TRAPPED_ONE;
 						bDecremented = (uThreadsTrapped > 0);
@@ -80,7 +80,7 @@ static _MCFCRT_OnceResult RealWaitForOnceFlag(volatile uintptr_t *puControl, boo
 							break;
 						}
 						uNew = uOld - THREAD_TRAPPED_ONE;
-					} while(_MCFCRT_EXPECT_NOT(!__atomic_compare_exchange_n(puControl, &uOld, uNew, false, __ATOMIC_ACQ_REL, __ATOMIC_CONSUME)));
+					} while(_MCFCRT_EXPECT_NOT(!__atomic_compare_exchange_n(puControl, &uOld, uNew, false, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE)));
 				}
 				if(bDecremented){
 					return _MCFCRT_kOnceResultTimedOut;
@@ -102,7 +102,7 @@ static void RealSetAndSignalOnceFlag(volatile uintptr_t *puControl, bool bFinish
 	uintptr_t uCountToSignal;
 	{
 		uintptr_t uOld, uNew;
-		uOld = __atomic_load_n(puControl, __ATOMIC_CONSUME);
+		uOld = __atomic_load_n(puControl, __ATOMIC_ACQUIRE);
 		do {
 			_MCFCRT_ASSERT_MSG(uOld & MASK_LOCKED,      L"一次性初始化标志没有被任何线程锁定。");
 			_MCFCRT_ASSERT_MSG(!(uOld & MASK_FINISHED), L"一次性初始化标志已被使用。");
@@ -114,7 +114,7 @@ static void RealSetAndSignalOnceFlag(volatile uintptr_t *puControl, bool bFinish
 			const size_t uThreadsTrapped = (uOld & MASK_THREADS_TRAPPED) / THREAD_TRAPPED_ONE;
 			uCountToSignal = (uThreadsTrapped <= uMaxCountToSignal) ? uThreadsTrapped : uMaxCountToSignal;
 			uNew -= uCountToSignal * THREAD_TRAPPED_ONE;
-		} while(_MCFCRT_EXPECT_NOT(!__atomic_compare_exchange_n(puControl, &uOld, uNew, false, __ATOMIC_ACQ_REL, __ATOMIC_CONSUME)));
+		} while(_MCFCRT_EXPECT_NOT(!__atomic_compare_exchange_n(puControl, &uOld, uNew, false, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE)));
 	}
 	for(size_t i = 0; i < uCountToSignal; ++i){
 		NTSTATUS lStatus = NtReleaseKeyedEvent(nullptr, (void *)puControl, false, nullptr);

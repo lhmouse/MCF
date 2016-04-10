@@ -26,6 +26,17 @@ public:
 private:
 	Handle x_hObject;
 
+private:
+	void X_Dispose() noexcept {
+		const auto hObject = x_hObject;
+		if(hObject){
+			Closer()(hObject);
+		}
+#ifndef NDEBUG
+		__builtin_memset(&x_hObject, 0xEF, sizeof(x_hObject));
+#endif
+	}
+
 public:
 	constexpr UniqueHandle() noexcept
 		: x_hObject(Closer()())
@@ -43,10 +54,7 @@ public:
 		return Reset(std::move(rhs));
 	}
 	~UniqueHandle(){
-		const auto hObject = x_hObject;
-		if(hObject != Closer()()){
-			Closer()(hObject);
-		}
+		X_Dispose();
 	}
 
 	UniqueHandle(const UniqueHandle &) = delete;

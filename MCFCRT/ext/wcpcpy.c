@@ -3,6 +3,7 @@
 // Copyleft 2013 - 2016, LH_Mouse. All wrongs reserved.
 
 #include "../env/_crtdef.h"
+#include "../ext/assert.h"
 
 #ifdef _WIN64
 #	define MASK     0x0001000100010001ull
@@ -69,6 +70,8 @@ wchar_t *_MCFCRT_wcpcpy(wchar_t *restrict dst, const wchar_t *restrict src){
 wchar_t *_MCFCRT_wcppcpy(wchar_t *restrict dst, wchar_t *restrict end, const wchar_t *restrict src){
 	register const wchar_t *rp = src;
 	register wchar_t *wp = dst;
+
+	_MCFCRT_ASSERT_MSG(wp < end, L"目的缓冲区至少应为一个字符大小以容纳字符串结束符。");
 
 	if(((uintptr_t)rp & 1) != 0){
 		for(;;){

@@ -3,7 +3,7 @@
 // Copyleft 2013 - 2016, LH_Mouse. All wrongs reserved.
 
 #include "../env/_crtdef.h"
-#include "../env/bail.h"
+#include "../ext/assert.h"
 
 #ifdef _WIN64
 #	define MASK     0x0101010101010101ull
@@ -62,9 +62,7 @@ char *_MCFCRT_stppcpy(char *restrict dst, char *restrict end, const char *restri
 	register const char *rp = src;
 	register char *wp = dst;
 
-	if(wp == end){
-		_MCFCRT_Bail(L"目的缓冲区至少应为一个字符大小以容纳字符串结束符。");
-	}
+	_MCFCRT_ASSERT_MSG(wp < end, L"目的缓冲区至少应为一个字符大小以容纳字符串结束符。");
 
 	// 如果 rp 是对齐到字的，就不用考虑越界的问题。
 	// 因为内存按页分配的，也自然对齐到页，并且也对齐到字。

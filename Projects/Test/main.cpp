@@ -1,35 +1,22 @@
 #include <MCF/StdMCF.hpp>
-#include <MCF/Core/Clocks.hpp>
-#include <MCF/Thread/Mutex.hpp>
-#include <MCF/Core/Array.hpp>
-#include <MCF/Thread/Thread.hpp>
+#include <cstdlib>
 #include <cstdio>
 
-extern "C" unsigned _MCFCRT_Main(){
-	auto t1 = MCF::GetHiResMonoClock();
+struct foo {
+	const int k;
 
-	volatile unsigned val = 0;
-	MCF::Mutex m(100);
-	MCF::Array<MCF::Thread, 100> threads;
-
+	explicit foo(int i)
+		: k(i)
 	{
-		auto l = m.GetLock();
-		for(auto &t : threads){
-			t.Create(
-				[&]{
-					for(unsigned i = 0; i < 100000; ++i){
-						auto l = m.GetLock();
-						val = val + 1;
-					}
-				},
-				false);
-		}
-	}
-	for(auto &t : threads){
-		t.Join();
-	}
+		std::printf("ctor of %d\n", k);
 
-	auto t2 = MCF::GetHiResMonoClock();
-	std::printf("val = %u, delta_t = %f\n", val, t2 - t1);
+		std::atexit([]{ std::printf("atexit!\n"); });
+	}
+	~foo(){
+		std::printf("dtor of %d\n", k);
+	}
+} f1(1), f2(2);
+
+extern "C" unsigned _MCFCRT_Main(){
 	return 0;
 }

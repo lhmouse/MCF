@@ -4,16 +4,13 @@
 
 #include "static_ctors.h"
 #include "mcfwin.h"
+#include <exception>
 #include <cstdint>
-#include <cstdlib>
 #include <csetjmp>
 
 extern "C" {
 
-using CallbackProc = void (*)();
-
-extern const CallbackProc __CTOR_LIST__[];
-extern const CallbackProc __DTOR_LIST__[];
+extern void __main();
 
 extern std::jmp_buf *__MCFCRT_pjbufAbortHook;
 
@@ -29,17 +26,9 @@ bool __MCFCRT_CallStaticCtors() noexcept {
 	{
 		if((nResult = setjmp(jbufHook)) == 0){
 			try {
-				const auto ppfnBegin = __CTOR_LIST__ + 1;
-				auto ppfnCur = ppfnBegin;
-				while(*ppfnCur){
-					++ppfnCur;
-				}
-				while(ppfnCur != ppfnBegin){
-					--ppfnCur;
-					(*ppfnCur)();
-				}
+				::__main();
 			} catch(...){
-				std::abort();
+				std::terminate();
 			}
 		}
 	}
@@ -49,11 +38,6 @@ bool __MCFCRT_CallStaticCtors() noexcept {
 	return nResult == 0;
 }
 void __MCFCRT_CallStaticDtors() noexcept {
-	auto ppfnCur = __DTOR_LIST__ + 1;
-	while(*ppfnCur){
-		(*ppfnCur)();
-		++ppfnCur;
-	}
 }
 
 }

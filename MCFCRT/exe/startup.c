@@ -78,6 +78,14 @@ static BOOL CrtTerminalCtrlHandler(DWORD dwCtrlType){
 		_MCFCRT_OnCtrlEvent(bIsSigInt);
 		return true;
 	}
+
+	const HANDLE hStdErr = GetStdHandle(STD_ERROR_HANDLE);
+	_MCFCRT_ASSERT(hStdErr != INVALID_HANDLE_VALUE);
+	if(hStdErr){
+		static const char kKilled[] = "Killed: _MCFCRT_OnCtrlEvent() is undefined.\n";
+		DWORD dwBytesWritten;
+		WriteFile(hStdErr, kKilled, sizeof(kKilled) - 1, &dwBytesWritten, nullptr);
+	}
 	TerminateProcess(GetCurrentProcess(), (DWORD)STATUS_CONTROL_C_EXIT);
 	__builtin_trap();
 }

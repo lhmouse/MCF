@@ -14,10 +14,10 @@ typedef struct tagEhObject {
 extern __attribute__((__weak__))
 void __register_frame_info(const void *pBase, EhObject *pObject);
 extern __attribute__((__weak__))
-void *__deregister_frame_info(const void *pBase);
+EhObject *__deregister_frame_info(const void *pBase);
 
 typedef void (*__MCFCRT_RegisterFrameInfoProc)(const void *pBase, EhObject *pObject);
-typedef void *(*__MCFCRT_DeregisterFrameInfoProc)(const void *pBase);
+typedef EhObject *(*__MCFCRT_DeregisterFrameInfoProc)(const void *pBase);
 
 __attribute__((__section__(".MCFCRT"), __shared__))
 const volatile __MCFCRT_RegisterFrameInfoProc   __MCFCRT_pfnRegisterFrameInfoProc   = &__register_frame_info;

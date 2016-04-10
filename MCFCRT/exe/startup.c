@@ -90,7 +90,8 @@ static BOOL CrtTerminalCtrlHandler(DWORD dwCtrlType){
 	__builtin_trap();
 }
 
-_Noreturn static void BailWithErrorCode(const wchar_t *pwszMessage, DWORD dwErrorCode){
+_Noreturn __attribute__((__noinline__))
+static void BailWithErrorCode(const wchar_t *pwszMessage, DWORD dwErrorCode){
 	wchar_t awcBuffer[512];
 	wchar_t *pwcWrite;
 	pwcWrite = _MCFCRT_wcppcpy(awcBuffer, awcBuffer + 448, pwszMessage);

@@ -62,7 +62,7 @@ bool __MCFCRT_RegisterFrameInfo(){
 		}
 		g_pEhBase = pEhBase;
 
-		(*__MCFCRT_pfnRegisterFrameInfoProc)(pEhBase,  &g_vEhObject);
+		(*__MCFCRT_pfnRegisterFrameInfoProc)(pEhBase, &g_vEhObject);
 	}
 	return true;
 }

@@ -1,22 +1,13 @@
 #include <MCF/StdMCF.hpp>
-#include <cstdlib>
-#include <cstdio>
+#include <MCF/Core/Clocks.hpp>
+#include <MCF/Thread/Thread.hpp>
 
-struct foo {
-	const int k;
-
-	explicit foo(int i)
-		: k(i)
-	{
-		std::printf("ctor of %d\n", k);
-
-		std::atexit([]{ std::printf("atexit!\n"); });
-	}
-	~foo(){
-		std::printf("dtor of %d\n", k);
-	}
-} f1(1), f2(2);
+extern "C" void _MCFCRT_OnCtrlEvent(bool bIsSigInt){
+	std::printf("Ctrl event: bIsSigInt = %d\n", bIsSigInt);
+}
 
 extern "C" unsigned _MCFCRT_Main(){
+	std::printf("Waiting...\n");
+	MCF::Thread::Sleep(MCF::GetFastMonoClock() + 5000);
 	return 0;
 }

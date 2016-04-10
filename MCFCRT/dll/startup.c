@@ -13,6 +13,57 @@
 
 // -static -Wl,-e__MCFCRT_DllStartup,--disable-runtime-pseudo-reloc,--disable-auto-import
 
+static bool OnDllProcessAttach(HINSTANCE hDll, bool bDynamic){
+	if(!__MCFCRT_HeapInit()){
+		return false;
+	}
+	if(!__MCFCRT_HeapDbgInit()){
+		__MCFCRT_HeapUninit();
+		return false;
+	}
+	if(!__MCFCRT_RegisterFrameInfo()){
+		__MCFCRT_HeapDbgUninit();
+		__MCFCRT_HeapUninit();
+		return false;
+	}
+	if(!__MCFCRT_BeginModule()){
+		__MCFCRT_UnregisterFrameInfo();
+		__MCFCRT_HeapDbgUninit();
+		__MCFCRT_HeapUninit();
+		return false;
+	}
+	if(_MCFCRT_OnDllProcessAttach){
+		if(!_MCFCRT_OnDllProcessAttach(hDll, bDynamic)){
+			__MCFCRT_EndModule();
+			__MCFCRT_UnregisterFrameInfo();
+			__MCFCRT_HeapDbgUninit();
+			__MCFCRT_HeapUninit();
+			return false;
+		}
+	}
+	return true;
+}
+static void OnDllThreadAttach(HINSTANCE hDll){
+	if(_MCFCRT_OnDllThreadAttach){
+		_MCFCRT_OnDllThreadAttach(hDll);
+	}
+}
+static void OnDllThreadDetach(HINSTANCE hDll){
+	if(_MCFCRT_OnDllThreadDetach){
+		_MCFCRT_OnDllThreadDetach(hDll);
+	}
+	__MCFCRT_TlsThreadCleanup();
+}
+static void OnDllProcessDetach(HINSTANCE hDll, bool bDynamic){
+	if(_MCFCRT_OnDllProcessDetach){
+		_MCFCRT_OnDllProcessDetach(hDll, bDynamic);
+	}
+	__MCFCRT_EndModule();
+	__MCFCRT_UnregisterFrameInfo();
+	__MCFCRT_HeapDbgUninit();
+	__MCFCRT_HeapUninit();
+}
+
 // __MCFCRT_DllStartup 模块入口点。
 __MCFCRT_C_STDCALL __MCFCRT_HAS_EH_TOP
 BOOL __MCFCRT_DllStartup(HINSTANCE hDll, DWORD dwReason, LPVOID pReserved)
@@ -22,110 +73,40 @@ static bool g_bInitialized = false;
 
 __MCFCRT_C_STDCALL __MCFCRT_HAS_EH_TOP
 BOOL __MCFCRT_DllStartup(HINSTANCE hDll, DWORD dwReason, LPVOID pReserved){
-	BOOL bRet = TRUE;
+	bool bRet = true;
 
-	switch(dwReason){
-		bool bSucceeded;
+	__MCFCRT_EH_TOP_BEGIN
+	{
+		switch(dwReason){
+		case DLL_PROCESS_ATTACH:
+			if(g_bInitialized){
+				break;
+			}
+			bRet = OnDllProcessAttach(hDll, !pReserved);
+			if(!bRet){
+				break;
+			}
+			g_bInitialized = true;
+			break;
 
-	case DLL_PROCESS_ATTACH:
-		_MCFCRT_ASSERT(!g_bInitialized);
+		case DLL_THREAD_ATTACH:
+			OnDllThreadAttach(hDll);
+			break;
 
-		bSucceeded = __MCFCRT_HeapInit();
-		if(!bSucceeded){
-			bRet = FALSE;
+		case DLL_THREAD_DETACH:
+			OnDllThreadDetach(hDll);
+			break;
+
+		case DLL_PROCESS_DETACH:
+			if(!g_bInitialized){
+				break;
+			}
+			g_bInitialized = false;
+			OnDllProcessDetach(hDll, !pReserved);
 			break;
 		}
-
-		bSucceeded = __MCFCRT_HeapDbgInit();
-		if(!bSucceeded){
-			__MCFCRT_HeapUninit();
-			bRet = false;
-			break;
-		}
-
-		bSucceeded = __MCFCRT_RegisterFrameInfo();
-		if(!bSucceeded){
-			__MCFCRT_HeapDbgUninit();
-			__MCFCRT_HeapUninit();
-			bRet = false;
-			break;
-		}
-
-		__MCFCRT_EH_TOP_BEGIN
-		{
-			bSucceeded = __MCFCRT_BeginModule();
-		}
-		__MCFCRT_EH_TOP_END
-		if(!bSucceeded){
-			__MCFCRT_UnregisterFrameInfo();
-			__MCFCRT_HeapDbgUninit();
-			__MCFCRT_HeapUninit();
-			bRet = false;
-			break;
-		}
-
-		__MCFCRT_EH_TOP_BEGIN
-		{
-			bSucceeded = _MCFCRT_OnDllProcessAttach(hDll, !pReserved);
-		}
-		__MCFCRT_EH_TOP_END
-		if(!bSucceeded){
-			__MCFCRT_EndModule();
-			__MCFCRT_UnregisterFrameInfo();
-			__MCFCRT_HeapDbgUninit();
-			__MCFCRT_HeapUninit();
-			bRet = false;
-			break;
-		}
-
-		g_bInitialized = true;
-		break;
-
-	case DLL_THREAD_ATTACH:
-		__MCFCRT_EH_TOP_BEGIN
-		{
-			_MCFCRT_OnDllThreadAttach(hDll);
-		}
-		__MCFCRT_EH_TOP_END
-		break;
-
-	case DLL_THREAD_DETACH:
-		__MCFCRT_EH_TOP_BEGIN
-		{
-			_MCFCRT_OnDllThreadDetach(hDll);
-
-			__MCFCRT_TlsThreadCleanup();
-		}
-		__MCFCRT_EH_TOP_END
-		break;
-
-	case DLL_PROCESS_DETACH:
-		if(!g_bInitialized){
-			break;
-		}
-		g_bInitialized = false;
-
-		__MCFCRT_EH_TOP_BEGIN
-		{
-			_MCFCRT_OnDllProcessDetach(hDll, !pReserved);
-		}
-		__MCFCRT_EH_TOP_END
-
-		__MCFCRT_EH_TOP_BEGIN
-		{
-			__MCFCRT_EndModule();
-		}
-		__MCFCRT_EH_TOP_END
-
-		__MCFCRT_UnregisterFrameInfo();
-
-		__MCFCRT_HeapDbgUninit();
-
-		__MCFCRT_HeapUninit();
-
-		g_bInitialized = false;
-		break;
 	}
+	__MCFCRT_EH_TOP_END
 
 	return bRet;
 }

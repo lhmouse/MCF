@@ -11,20 +11,13 @@ typedef struct tagEhObject {
 	void *a[8];
 } EhObject;
 
-__attribute__((__weak__))
-void __register_frame_info(void *pBase, EhObject *pObject){
-	(void)pBase;
-	(void)pObject;
-}
-__attribute__((__weak__))
-void *__deregister_frame_info(void *pBase){
-	(void)pBase;
+extern __attribute__((__weak__))
+void __register_frame_info(const void *pBase, EhObject *pObject);
+extern __attribute__((__weak__))
+void *__deregister_frame_info(const void *pBase);
 
-	return nullptr;
-}
-
-typedef void (*__MCFCRT_RegisterFrameInfoProc)(void *pBase, EhObject *pObject);
-typedef void *(*__MCFCRT_DeregisterFrameInfoProc)(void *pBase);
+typedef void (*__MCFCRT_RegisterFrameInfoProc)(const void *pBase, EhObject *pObject);
+typedef void *(*__MCFCRT_DeregisterFrameInfoProc)(const void *pBase);
 
 __attribute__((__section__(".MCFCRT"), __shared__))
 const volatile __MCFCRT_RegisterFrameInfoProc   __MCFCRT_pfnRegisterFrameInfoProc   = &__register_frame_info;
@@ -34,13 +27,10 @@ const volatile __MCFCRT_DeregisterFrameInfoProc __MCFCRT_pfnDeregisterFrameInfoP
 __extension__ __attribute__((__section__(".eh_frame"), __used__))
 static const char g_aEhBegin[0] = { };
 
-static void *   g_pEhBase;
-static EhObject g_vEhObject;
-
-bool __MCFCRT_RegisterFrameInfo(){
+static const void *FindEhBase(){
 	_MCFCRT_ModuleSectionInfo vSectionInfo;
 	if(!_MCFCRT_EnumerateFirstModuleSection(&vSectionInfo)){
-		return false;
+		return nullptr;
 	}
 
 	void *pEhBase = nullptr;
@@ -56,18 +46,29 @@ bool __MCFCRT_RegisterFrameInfo(){
 	}
 	if(!pEhBase){
 		SetLastError(ERROR_BAD_FORMAT);
-		return false;
+		return nullptr;
 	}
+	return pEhBase;
+}
 
-	(*__MCFCRT_pfnRegisterFrameInfoProc)(pEhBase, &g_vEhObject);
-	g_pEhBase = pEhBase;
+static const void * g_pEhBase;
+static EhObject     g_vEhObject;
+
+bool __MCFCRT_RegisterFrameInfo(){
+	if(__MCFCRT_pfnRegisterFrameInfoProc){
+		const void *const pEhBase = FindEhBase();
+		if(!pEhBase){
+			return false;
+		}
+		g_pEhBase = pEhBase;
+
+		(*__MCFCRT_pfnRegisterFrameInfoProc)(pEhBase,  &g_vEhObject);
+	}
 	return true;
 }
 void __MCFCRT_UnregisterFrameInfo(){
-	void *const pEhBase = g_pEhBase;
-	g_pEhBase = nullptr;
-
-	if(pEhBase){
+	if(__MCFCRT_pfnDeregisterFrameInfoProc){
+		const void *const pEhBase = g_pEhBase;
 		(*__MCFCRT_pfnDeregisterFrameInfoProc)(pEhBase);
 	}
 }

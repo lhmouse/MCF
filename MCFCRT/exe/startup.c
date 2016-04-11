@@ -20,22 +20,6 @@ _Noreturn __MCFCRT_C_STDCALL __MCFCRT_HAS_EH_TOP
 DWORD __MCFCRT_ExeStartup(LPVOID pUnknown)
 	__asm__("__MCFCRT_ExeStartup");
 
-_Noreturn __MCFCRT_C_STDCALL __MCFCRT_HAS_EH_TOP
-DWORD __MCFCRT_ExeStartup(LPVOID pUnknown){
-	(void)pUnknown;
-
-	DWORD dwExitCode;
-
-	__MCFCRT_EH_TOP_BEGIN
-	{
-		dwExitCode = _MCFCRT_Main();
-	}
-	__MCFCRT_EH_TOP_END
-
-	ExitProcess(dwExitCode);
-	__builtin_trap();
-}
-
 __MCFCRT_C_STDCALL
 static BOOL CrtTerminalCtrlHandler(DWORD dwCtrlType){
 	if(_MCFCRT_OnCtrlEvent){
@@ -166,19 +150,20 @@ static void CrtTlsCallback(LPVOID hInstance, DWORD dwReason, LPVOID pReserved){
 }
 
 // 线程局部存储（TLS）目录，用于执行 TLS 的析构函数。
-__extension__ __attribute__((__section__(".tls$@@@"), __used__))
+__extension__ __attribute__((__section__(".tls$@@@")))
 static const char tls_start[0] = { };
-__extension__ __attribute__((__section__(".tls$___"), __used__))
+__extension__ __attribute__((__section__(".tls$___")))
 static const char tls_end[0]   = { };
 
-__attribute__((__section__(".CRT$@@@"), __used__))
+__attribute__((__section__(".CRT$@@@")))
 static const PIMAGE_TLS_CALLBACK callback_start = &CrtTlsCallback;
-__attribute__((__section__(".CRT$___"), __used__))
+__attribute__((__section__(".CRT$___")))
 static const PIMAGE_TLS_CALLBACK callback_end   = nullptr;
 
+__attribute__((__section__(".data"),))
 DWORD _tls_index;
 
-__attribute__((__section__(".rdata"), __used__))
+__attribute__((__section__(".rdata")))
 const IMAGE_TLS_DIRECTORY _tls_used = {
 	.StartAddressOfRawData = (UINT_PTR)&tls_start,
 	.EndAddressOfRawData   = (UINT_PTR)&tls_end,
@@ -187,3 +172,27 @@ const IMAGE_TLS_DIRECTORY _tls_used = {
 	.SizeOfZeroFill        = 0,
 	.Characteristics       = 0,
 };
+
+_Noreturn __MCFCRT_C_STDCALL __MCFCRT_HAS_EH_TOP
+DWORD __MCFCRT_ExeStartup(LPVOID pUnknown){
+	(void)pUnknown;
+
+	// 引用这些符号，防止被链接器优化掉。
+	{
+		const void *volatile pUnused;
+		pUnused = &_tls_index;
+		pUnused = &_tls_used;
+		(void)pUnused;
+	}
+
+	DWORD dwExitCode;
+
+	__MCFCRT_EH_TOP_BEGIN
+	{
+		dwExitCode = _MCFCRT_Main();
+	}
+	__MCFCRT_EH_TOP_END
+
+	ExitProcess(dwExitCode);
+	__builtin_trap();
+}

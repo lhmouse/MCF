@@ -140,6 +140,8 @@ static void CrtTlsCallback(LPVOID hInstance, DWORD dwReason, LPVOID pReserved){
 			}
 			g_bInitialized = false;
 			OnDllProcessDetach();
+			bRet = SetConsoleCtrlHandler(&CrtTerminalCtrlHandler, false);
+			_MCFCRT_ASSERT(bRet);
 			break;
 		}
 	}

@@ -36,41 +36,6 @@ DWORD __MCFCRT_ExeStartup(LPVOID pUnknown){
 	__builtin_trap();
 }
 
-static bool OnDllProcessAttach(){
-	if(!__MCFCRT_HeapInit()){
-		return false;
-	}
-	if(!__MCFCRT_HeapDbgInit()){
-		__MCFCRT_HeapUninit();
-		return false;
-	}
-	if(!__MCFCRT_RegisterFrameInfo()){
-		__MCFCRT_HeapDbgUninit();
-		__MCFCRT_HeapUninit();
-		return false;
-	}
-	if(!__MCFCRT_BeginModule()){
-		__MCFCRT_UnregisterFrameInfo();
-		__MCFCRT_HeapDbgUninit();
-		__MCFCRT_HeapUninit();
-		return false;
-	}
-	return true;
-}
-static void OnDllThreadAttach(){
-}
-static void OnDllThreadDetach(){
-	__MCFCRT_TlsThreadCleanup();
-}
-static void OnDllProcessDetach(){
-	__MCFCRT_EndModule();
-	__MCFCRT_UnregisterFrameInfo();
-	__MCFCRT_HeapDbgUninit();
-	__MCFCRT_HeapUninit();
-}
-
-static bool g_bInitialized = false;
-
 __MCFCRT_C_STDCALL
 static BOOL CrtTerminalCtrlHandler(DWORD dwCtrlType){
 	if(_MCFCRT_OnCtrlEvent){
@@ -90,6 +55,66 @@ static BOOL CrtTerminalCtrlHandler(DWORD dwCtrlType){
 	__builtin_trap();
 }
 
+static inline bool __MCFCRT_InstallCtrlHandler(){
+	const bool bRet = SetConsoleCtrlHandler(&CrtTerminalCtrlHandler, true);
+	return bRet;
+}
+static inline void __MCFCRT_UninstallCtrlHandler(){
+	const bool bRet = SetConsoleCtrlHandler(&CrtTerminalCtrlHandler, false);
+	_MCFCRT_ASSERT(bRet);
+}
+
+static bool OnDllProcessAttach(){
+	if(!__MCFCRT_HeapInit()){
+		return false;
+	}
+	if(!__MCFCRT_HeapDbgInit()){
+		const DWORD dwErrorCode = GetLastError();
+		__MCFCRT_HeapUninit();
+		SetLastError(dwErrorCode);
+		return false;
+	}
+	if(!__MCFCRT_RegisterFrameInfo()){
+		const DWORD dwErrorCode = GetLastError();
+		__MCFCRT_HeapDbgUninit();
+		__MCFCRT_HeapUninit();
+		SetLastError(dwErrorCode);
+		return false;
+	}
+	if(!__MCFCRT_BeginModule()){
+		const DWORD dwErrorCode = GetLastError();
+		__MCFCRT_UnregisterFrameInfo();
+		__MCFCRT_HeapDbgUninit();
+		__MCFCRT_HeapUninit();
+		SetLastError(dwErrorCode);
+		return false;
+	}
+	if(!__MCFCRT_InstallCtrlHandler()){
+		const DWORD dwErrorCode = GetLastError();
+		__MCFCRT_EndModule();
+		__MCFCRT_UnregisterFrameInfo();
+		__MCFCRT_HeapDbgUninit();
+		__MCFCRT_HeapUninit();
+		SetLastError(dwErrorCode);
+		return false;
+	}
+	return true;
+}
+static void OnDllThreadAttach(){
+}
+static void OnDllThreadDetach(){
+	__MCFCRT_TlsThreadCleanup();
+}
+static void OnDllProcessDetach(){
+	__MCFCRT_UninstallCtrlHandler();
+	__MCFCRT_EndModule();
+	__MCFCRT_UnregisterFrameInfo();
+	__MCFCRT_HeapDbgUninit();
+	__MCFCRT_HeapUninit();
+}
+
+static bool g_bInitialized = false;
+
 _Noreturn __attribute__((__noinline__))
 static void BailWithErrorCode(const wchar_t *pwszMessage, DWORD dwErrorCode){
 	wchar_t awcBuffer[512];
@@ -106,8 +131,6 @@ static void CrtTlsCallback(LPVOID hInstance, DWORD dwReason, LPVOID pReserved){
 	(void)hInstance;
 	(void)pReserved;
 
-	bool bRet = true;
-
 	__MCFCRT_EH_TOP_BEGIN
 	{
 		switch(dwReason){
@@ -115,11 +138,7 @@ static void CrtTlsCallback(LPVOID hInstance, DWORD dwReason, LPVOID pReserved){
 			if(g_bInitialized){
 				break;
 			}
-			bRet = SetConsoleCtrlHandler(&CrtTerminalCtrlHandler, true);
-			if(!bRet){
-				BailWithErrorCode(L"MCFCRT Ctrl 事件处理程序注册失败。", GetLastError());
-			}
-			bRet = OnDllProcessAttach();
+			const bool bRet = OnDllProcessAttach();
 			if(!bRet){
 				BailWithErrorCode(L"MCFCRT 初始化失败。", GetLastError());
 			}
@@ -140,8 +159,6 @@ static void CrtTlsCallback(LPVOID hInstance, DWORD dwReason, LPVOID pReserved){
 			}
 			g_bInitialized = false;
 			OnDllProcessDetach();
-			bRet = SetConsoleCtrlHandler(&CrtTerminalCtrlHandler, false);
-			_MCFCRT_ASSERT(bRet);
 			break;
 		}
 	}

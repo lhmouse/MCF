@@ -179,10 +179,10 @@ DWORD __MCFCRT_ExeStartup(LPVOID pUnknown){
 
 	// 引用这些符号，防止被链接器优化掉。
 	{
+		__attribute__((__unused__))
 		const void *volatile pUnused;
 		pUnused = &_tls_index;
 		pUnused = &_tls_used;
-		(void)pUnused;
 	}
 
 	DWORD dwExitCode;

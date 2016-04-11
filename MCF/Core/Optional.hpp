@@ -169,7 +169,7 @@ public:
 
 public:
 	explicit operator bool() const noexcept {
-		return IsElementSet();
+		return IsSet();
 	}
 };
 

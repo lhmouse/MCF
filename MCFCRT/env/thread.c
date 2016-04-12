@@ -30,10 +30,6 @@ NTSTATUS NtSuspendThread(HANDLE hThread, LONG *plPrevCount);
 extern __attribute__((__dllimport__, __stdcall__))
 NTSTATUS NtResumeThread(HANDLE hThread, LONG *plPrevCount);
 
-enum {
-	kMutexSpinCount = 100,
-};
-
 typedef struct tagTlsObject {
 	_MCFCRT_AvlNodeHeader avlhNodeByKey;
 
@@ -132,13 +128,13 @@ void __MCFCRT_TlsThreadCleanup(){
 		return;
 	}
 
-	_MCFCRT_WaitForMutexForever(&(pThread->vMutex), kMutexSpinCount);
+	_MCFCRT_WaitForMutexForever(&(pThread->vMutex), _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT);
 	{
 		TlsObject *pObject = pThread->pLastByThread;
 		while(pObject){
 			TlsKey *const pKey = pObject->pKey;
 			if(pKey){
-				_MCFCRT_WaitForMutexForever(&(pKey->vMutex), kMutexSpinCount);
+				_MCFCRT_WaitForMutexForever(&(pKey->vMutex), _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT);
 				{
 					TlsObject *const pPrev = pObject->pPrevByKey;
 					TlsObject *const pNext = pObject->pNextByKey;
@@ -196,13 +192,13 @@ bool _MCFCRT_TlsFreeKey(void *pTlsKey){
 		return false;
 	}
 
-	_MCFCRT_WaitForMutexForever(&(pKey->vMutex), kMutexSpinCount);
+	_MCFCRT_WaitForMutexForever(&(pKey->vMutex), _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT);
 	{
 		TlsObject *pObject = pKey->pLastByKey;
 		while(pObject){
 			TlsThread *const pThread = pObject->pThread;
 			if(pThread){
-				_MCFCRT_WaitForMutexForever(&(pThread->vMutex), kMutexSpinCount);
+				_MCFCRT_WaitForMutexForever(&(pThread->vMutex), _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT);
 				{
 					_MCFCRT_AvlDetach((_MCFCRT_AvlNodeHeader *)pObject);
 
@@ -288,7 +284,7 @@ bool _MCFCRT_TlsGet(void *pTlsKey, void **restrict ppStorage){
 
 	TlsObject *pObject;
 
-	_MCFCRT_WaitForMutexForever(&(pThread->vMutex), kMutexSpinCount);
+	_MCFCRT_WaitForMutexForever(&(pThread->vMutex), _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT);
 	{
 		pObject = (TlsObject *)_MCFCRT_AvlFind(&(pThread->avlObjects), (intptr_t)pKey, &ObjectComparatorNodeKey);
 	}
@@ -318,7 +314,7 @@ bool _MCFCRT_TlsRequire(void *pTlsKey, void **restrict ppStorage){
 
 	TlsObject *pObject;
 
-	_MCFCRT_WaitForMutexForever(&(pThread->vMutex), kMutexSpinCount);
+	_MCFCRT_WaitForMutexForever(&(pThread->vMutex), _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT);
 	{
 		pObject = (TlsObject *)_MCFCRT_AvlFind(&(pThread->avlObjects), (intptr_t)pKey, &ObjectComparatorNodeKey);
 	}
@@ -350,7 +346,7 @@ bool _MCFCRT_TlsRequire(void *pTlsKey, void **restrict ppStorage){
 
 		pObject->pThread = pThread;
 
-		_MCFCRT_WaitForMutexForever(&(pThread->vMutex), kMutexSpinCount);
+		_MCFCRT_WaitForMutexForever(&(pThread->vMutex), _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT);
 		{
 			_MCFCRT_AvlAttach(&(pThread->avlObjects), (_MCFCRT_AvlNodeHeader *)pObject, &ObjectComparatorNodes);
 
@@ -374,7 +370,7 @@ bool _MCFCRT_TlsRequire(void *pTlsKey, void **restrict ppStorage){
 
 		pObject->pKey = pKey;
 
-		_MCFCRT_WaitForMutexForever(&(pKey->vMutex), kMutexSpinCount);
+		_MCFCRT_WaitForMutexForever(&(pKey->vMutex), _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT);
 		{
 			TlsObject *const pPrev = pKey->pLastByKey;
 			TlsObject *const pNext = nullptr;
@@ -427,7 +423,7 @@ bool _MCFCRT_AtThreadExit(_MCFCRT_AtThreadExitCallback pfnProc, intptr_t nContex
 
 	pObject->pThread = pThread;
 
-	_MCFCRT_WaitForMutexForever(&(pThread->vMutex), kMutexSpinCount);
+	_MCFCRT_WaitForMutexForever(&(pThread->vMutex), _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT);
 	{
 		TlsObject *const pPrev = pThread->pLastByThread;
 		TlsObject *const pNext = nullptr;

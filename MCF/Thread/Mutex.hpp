@@ -24,7 +24,7 @@ class Mutex : MCF_NONCOPYABLE {
 
 public:
 	enum : std::size_t {
-		kDefaultSpinCount = 0x40,
+		kSuggestedSpinCount = _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT,
 	};
 
 public:
@@ -35,7 +35,7 @@ private:
 	Atomic<std::size_t> x_uSpinCount;
 
 public:
-	explicit constexpr Mutex(std::size_t uSpinCount = kDefaultSpinCount) noexcept
+	explicit constexpr Mutex(std::size_t uSpinCount = kSuggestedSpinCount) noexcept
 		: x_vMutex(_MCFCRT_MUTEX_INITIALIZER), x_uSpinCount(uSpinCount)
 	{
 	}

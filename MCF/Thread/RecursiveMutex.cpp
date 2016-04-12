@@ -23,8 +23,8 @@ bool RecursiveMutex::Try(std::uint64_t u64UntilFastMonoClock) noexcept {
 		}
 		x_uLockingThreadId.Store(uThreadId, kAtomicRelaxed);
 	}
-	++x_uRecursionCount;
-	MCF_ASSERT_MSG(x_uRecursionCount != 0, L"递归互斥体的递归计数器超过上限。");
+	const auto uNewCount = ++x_uRecursionCount;
+	MCF_ASSERT(uNewCount != 0);
 	return true;
 }
 void RecursiveMutex::Lock() noexcept {
@@ -34,14 +34,14 @@ void RecursiveMutex::Lock() noexcept {
 		x_vMutex.Lock();
 		x_uLockingThreadId.Store(uThreadId, kAtomicRelaxed);
 	}
-	++x_uRecursionCount;
-	MCF_ASSERT_MSG(x_uRecursionCount != 0, L"递归互斥体的递归计数器超过上限。");
+	const auto uNewCount = ++x_uRecursionCount;
+	MCF_ASSERT(uNewCount != 0);
 }
 void RecursiveMutex::Unlock() noexcept {
 	MCF_ASSERT_MSG(IsLockedByCurrentThread(), L"试图使用当前不持有递归互斥体的线程释放递归互斥体。");
 
-	--x_uRecursionCount;
-	if(x_uRecursionCount == 0){
+	const auto uNewCount = ++x_uRecursionCount;
+	if(uNewCount == 0){
 		x_uLockingThreadId.Store(0, kAtomicRelaxed);
 		x_vMutex.Unlock();
 	}

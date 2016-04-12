@@ -10,15 +10,17 @@
 __MCFCRT_EXTERN_C_BEGIN
 
 // 初始化为 { 0 } 即可。
-typedef struct _MCFCRT_tagMutex {
+typedef struct __MCFCRT_tagMutex {
 	_MCFCRT_STD uintptr_t __u;
-} volatile _MCFCRT_Mutex;
+} _MCFCRT_Mutex;
 
 #ifdef __cplusplus
-#	define _MCFCRT_MUTEX_INITIALIZER    (        _MCFCRT_tagMutex { 0 })
+#	define _MCFCRT_MUTEX_INITIALIZER    (        __MCFCRT_tagMutex { 0 })
 #else
-#	define _MCFCRT_MUTEX_INITIALIZER    ((struct _MCFCRT_tagMutex){ 0 })
+#	define _MCFCRT_MUTEX_INITIALIZER    ((struct __MCFCRT_tagMutex){ 0 })
 #endif
+
+#define _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT   100
 
 extern bool _MCFCRT_WaitForMutex(_MCFCRT_Mutex *__pMutex, _MCFCRT_STD size_t __uMaxSpinCount, _MCFCRT_STD uint64_t __u64UntilFastMonoClock) _MCFCRT_NOEXCEPT;
 extern void _MCFCRT_WaitForMutexForever(_MCFCRT_Mutex *__pMutex, _MCFCRT_STD size_t __uMaxSpinCount) _MCFCRT_NOEXCEPT;

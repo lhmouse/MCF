@@ -20,9 +20,7 @@ volatile _MCFCRT_HeapBadAllocCallback _MCFCRT_pfnOnHeapBadAlloc  = nullptr;
 
 static _MCFCRT_Mutex g_vHeapMutex = { 0 };
 
-enum {
-	kMutexSpinCount = 4000,
-};
+#define HEAP_MUTEX_SPIN_COUNT     ((unsigned)4000)
 
 bool __MCFCRT_HeapInit(){
 	// 启用 FLH，但是忽略任何错误。
@@ -52,7 +50,7 @@ unsigned char *__MCFCRT_HeapAlloc(size_t uSize, const void *pRetAddr){
 	for(;;){
 		unsigned char *pRet = nullptr;
 
-		_MCFCRT_WaitForMutexForever(&g_vHeapMutex, kMutexSpinCount);
+		_MCFCRT_WaitForMutexForever(&g_vHeapMutex, HEAP_MUTEX_SPIN_COUNT);
 		{
 			unsigned char *const pRaw = HeapAlloc(GetProcessHeap(), 0, uRawSize);
 			if(pRaw){
@@ -119,7 +117,7 @@ unsigned char *__MCFCRT_HeapRealloc(void *pBlock, size_t uSize, const void *pRet
 	size_t uOriginalSize;
 #		endif
 #	endif
-	_MCFCRT_WaitForMutexForever(&g_vHeapMutex, kMutexSpinCount);
+	_MCFCRT_WaitForMutexForever(&g_vHeapMutex, HEAP_MUTEX_SPIN_COUNT);
 	{
 #	if __MCFCRT_REQUIRE_HEAPDBG_LEVEL(3)
 		pBlockInfo = __MCFCRT_HeapDbgValidateBlock(&pRawOriginal, pBlock, pRetAddr);
@@ -142,7 +140,7 @@ unsigned char *__MCFCRT_HeapRealloc(void *pBlock, size_t uSize, const void *pRet
 	for(;;){
 		unsigned char *pRet = nullptr;
 
-		_MCFCRT_WaitForMutexForever(&g_vHeapMutex, kMutexSpinCount);
+		_MCFCRT_WaitForMutexForever(&g_vHeapMutex, HEAP_MUTEX_SPIN_COUNT);
 		{
 			unsigned char *const pRaw = HeapReAlloc(GetProcessHeap(), 0, pRawOriginal, uRawSize);
 			if(pRaw){
@@ -186,7 +184,7 @@ void __MCFCRT_HeapFree(void *pBlock, const void *pRetAddr){
 	SetLastError(0xDEADBEEF);
 #endif
 
-	_MCFCRT_WaitForMutexForever(&g_vHeapMutex, kMutexSpinCount);
+	_MCFCRT_WaitForMutexForever(&g_vHeapMutex, HEAP_MUTEX_SPIN_COUNT);
 	{
 		unsigned char *pRaw;
 #if __MCFCRT_REQUIRE_HEAPDBG_LEVEL(3)

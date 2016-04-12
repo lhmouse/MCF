@@ -24,7 +24,7 @@ private:
 	Atomic<std::size_t> x_uReaders;
 
 public:
-	explicit constexpr ReaderWriterMutex(std::size_t uSpinCount = Mutex::kDefaultSpinCount) noexcept
+	explicit constexpr ReaderWriterMutex(std::size_t uSpinCount = Mutex::kSuggestedSpinCount) noexcept
 		: x_mtxReaderGuard(uSpinCount), x_mtxExclusive(0), x_uReaders(0)
 	{
 	}

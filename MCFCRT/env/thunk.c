@@ -10,10 +10,6 @@
 #include "../ext/assert.h"
 #include <stdlib.h>
 
-enum {
-	kMutexSpinCount = 1000,
-};
-
 typedef struct tagThunkInfo {
 	// 内存是以 64KiB 的粒度分配的，每一块称为一个 chunk。
 	void *pChunk;
@@ -69,7 +65,7 @@ const void *_MCFCRT_AllocateThunk(const void *pInit, size_t uSize){
 
 	char *pRaw;
 
-	_MCFCRT_WaitForMutexForever(&g_vThunkMutex, kMutexSpinCount);
+	_MCFCRT_WaitForMutexForever(&g_vThunkMutex, _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT);
 	{
 		if(g_uPageMask == 0){
 			SYSTEM_INFO vSystemInfo;
@@ -167,7 +163,7 @@ void _MCFCRT_DeallocateThunk(const void *pThunk, bool bToPoison){
 	char *const pRaw = (char *)pThunk;
 	void *pPageToRelease;
 
-	_MCFCRT_WaitForMutexForever(&g_vThunkMutex, kMutexSpinCount);
+	_MCFCRT_WaitForMutexForever(&g_vThunkMutex, _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT);
 	{
 		_MCFCRT_AvlNodeHeader *pThunkIndex = _MCFCRT_AvlFind(&g_avlThunksByThunk, (intptr_t)pThunk, &ThunkComparatorNodeKey);
 		ThunkInfo *pInfo;

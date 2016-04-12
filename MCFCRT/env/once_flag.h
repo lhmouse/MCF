@@ -10,17 +10,17 @@
 __MCFCRT_EXTERN_C_BEGIN
 
 // 初始化为 { 0 } 即可。
-typedef struct _MCFCRT_tagOnceFlag {
+typedef struct __MCFCRT_tagOnceFlag {
 	_MCFCRT_STD uintptr_t __u;
-} volatile _MCFCRT_OnceFlag;
+} _MCFCRT_OnceFlag;
 
 #ifdef __cplusplus
-#	define _MCFCRT_ONCE_FLAG_INITIALIZER    (        _MCFCRT_tagOnceFlag { 0 })
+#	define _MCFCRT_ONCE_FLAG_INITIALIZER    (        __MCFCRT_tagOnceFlag { 0 })
 #else
-#	define _MCFCRT_ONCE_FLAG_INITIALIZER    ((struct _MCFCRT_tagOnceFlag){ 0 })
+#	define _MCFCRT_ONCE_FLAG_INITIALIZER    ((struct __MCFCRT_tagOnceFlag){ 0 })
 #endif
 
-typedef enum _MCFCRT_tagOnceResult {
+typedef enum __MCFCRT_tagOnceResult {
 	_MCFCRT_kOnceResultTimedOut = 1,
 	_MCFCRT_kOnceResultInitial  = 2,
 	_MCFCRT_kOnceResultFinished = 3,

@@ -12,10 +12,6 @@
 #include "../ext/expect.h"
 #include <stdlib.h>
 
-enum {
-	kMutexSpinCount = 100,
-};
-
 typedef struct tagAtExitCallback {
 	_MCFCRT_AtEndModuleCallback pfnProc;
 	intptr_t nContext;
@@ -48,7 +44,7 @@ static void __MCFCRT_PumpAtEndModule(){
 	for(;;){
 		AtExitCallbackBlock *pBlock;
 		{
-			_MCFCRT_WaitForMutexForever(&g_vAtExitMutex, kMutexSpinCount);
+			_MCFCRT_WaitForMutexForever(&g_vAtExitMutex, _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT);
 			{
 				pBlock = g_pAtExitLast;
 				if(pBlock){
@@ -112,7 +108,7 @@ void __MCFCRT_EndModule(){
 bool _MCFCRT_AtEndModule(_MCFCRT_AtEndModuleCallback pfnProc, intptr_t nContext){
 	AtExitCallbackBlock *pBlock;
 
-	_MCFCRT_WaitForMutexForever(&g_vAtExitMutex, kMutexSpinCount);
+	_MCFCRT_WaitForMutexForever(&g_vAtExitMutex, _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT);
 	{
 		pBlock = g_pAtExitLast;
 		if(!pBlock || (pBlock->uSize >= kAtExitCallbacksPerBlock)){
@@ -125,7 +121,7 @@ bool _MCFCRT_AtEndModule(_MCFCRT_AtEndModuleCallback pfnProc, intptr_t nContext)
 				}
 				pBlock->uSize = 0;
 			}
-			_MCFCRT_WaitForMutexForever(&g_vAtExitMutex, kMutexSpinCount);
+			_MCFCRT_WaitForMutexForever(&g_vAtExitMutex, _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT);
 
 			pBlock->pPrev = g_pAtExitLast;
 			g_pAtExitLast = pBlock;

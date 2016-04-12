@@ -10,14 +10,14 @@
 
 __MCFCRT_EXTERN_C_BEGIN
 
-typedef struct _MCFCRT_tagAvlNodeHeader {
-	struct _MCFCRT_tagAvlNodeHeader *__pParent;
-	struct _MCFCRT_tagAvlNodeHeader **__ppRefl;
-	struct _MCFCRT_tagAvlNodeHeader *__pLeft;
-	struct _MCFCRT_tagAvlNodeHeader *__pRight;
+typedef struct __MCFCRT_tagAvlNodeHeader {
+	struct __MCFCRT_tagAvlNodeHeader *__pParent;
+	struct __MCFCRT_tagAvlNodeHeader **__ppRefl;
+	struct __MCFCRT_tagAvlNodeHeader *__pLeft;
+	struct __MCFCRT_tagAvlNodeHeader *__pRight;
 	_MCFCRT_STD size_t __uHeight;
-	struct _MCFCRT_tagAvlNodeHeader *__pPrev;
-	struct _MCFCRT_tagAvlNodeHeader *__pNext;
+	struct __MCFCRT_tagAvlNodeHeader *__pPrev;
+	struct __MCFCRT_tagAvlNodeHeader *__pNext;
 } _MCFCRT_AvlNodeHeader, *_MCFCRT_AvlRoot;
 
 static inline _MCFCRT_AvlNodeHeader *_MCFCRT_AvlPrev(const _MCFCRT_AvlNodeHeader *__pNode) _MCFCRT_NOEXCEPT {

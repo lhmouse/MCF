@@ -52,7 +52,7 @@ static void OnDllThreadDetach(HINSTANCE hDll){
 	if(_MCFCRT_OnDllThreadDetach){
 		_MCFCRT_OnDllThreadDetach(hDll);
 	}
-	__MCFCRT_TlsThreadCleanup();
+	__MCFCRT_TlsCleanup();
 }
 static void OnDllProcessDetach(HINSTANCE hDll, bool bDynamic){
 	if(_MCFCRT_OnDllProcessDetach){

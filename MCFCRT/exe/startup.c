@@ -87,7 +87,7 @@ static bool OnDllProcessAttach(){
 static void OnDllThreadAttach(){
 }
 static void OnDllThreadDetach(){
-	__MCFCRT_TlsThreadCleanup();
+	__MCFCRT_TlsCleanup();
 }
 static void OnDllProcessDetach(){
 	__MCFCRT_UninstallCtrlHandler();

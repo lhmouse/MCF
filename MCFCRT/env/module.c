@@ -39,7 +39,7 @@ static void __MCFCRT_PumpAtEndModule(){
 	// with thread storage duration within that thread are sequenced
 	// before the initiation of the destructors of any object with
 	// static storage duration. (...)
-	__MCFCRT_TlsThreadCleanup();
+	__MCFCRT_TlsCleanup();
 
 	for(;;){
 		AtExitCallbackBlock *pBlock;

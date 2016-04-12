@@ -101,7 +101,7 @@ void __MCFCRT_ThreadEnvUninit(){
 	TlsFree(dwTlsIndex);
 }
 
-void __MCFCRT_TlsThreadCleanup(){
+void __MCFCRT_TlsCleanup(){
 	TlsThread *const pThread = GetTlsForCurrentThread();
 	if(!pThread){
 		__MCFCRT_RunEmutlsDtors();

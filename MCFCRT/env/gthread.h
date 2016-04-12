@@ -24,7 +24,6 @@ _MCFCRT_CONSTEXPR int __gthread_active_p(void) _MCFCRT_NOEXCEPT {
 // Thread local storage
 //-----------------------------------------------------------------------------
 #include "thread_env.h"
-#include "thread.h"
 
 extern unsigned long __MCFCRT_GthreadTlsCostructor(_MCFCRT_STD intptr_t __nContext, void *__pStorage) _MCFCRT_NOEXCEPT;
 extern void __MCFCRT_GthreadTlsDestructor(_MCFCRT_STD intptr_t __nContext, void *__pStorage) _MCFCRT_NOEXCEPT;

@@ -24,7 +24,7 @@ private:
 
 public:
 	constexpr ConditionVariable() noexcept
-		: x_vConditionVariable(_MCFCRT_CONDITION_VARIABLE_INITIALIZER)
+		: x_vConditionVariable{ 0 }
 	{
 	}
 

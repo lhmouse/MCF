@@ -75,7 +75,7 @@ static TlsThread *RequireTlsForCurrentThread(){
 			SetLastError(ERROR_NOT_ENOUGH_MEMORY);
 			return nullptr;
 		}
-		pThread->vMutex         = _MCFCRT_MUTEX_INITIALIZER;
+		_MCFCRT_InitializeMutex(&(pThread->vMutex));
 		pThread->avlObjects     = nullptr;
 		pThread->pFirstByThread = nullptr;
 		pThread->pLastByThread  = nullptr;
@@ -159,7 +159,7 @@ void *_MCFCRT_TlsAllocKey(size_t uSize, _MCFCRT_TlsConstructor pfnConstructor, _
 	pKey->pfnConstructor = pfnConstructor;
 	pKey->pfnDestructor  = pfnDestructor;
 	pKey->nContext       = nContext;
-	pKey->vMutex         = _MCFCRT_MUTEX_INITIALIZER;
+	_MCFCRT_InitializeMutex(&(pKey->vMutex));
 	pKey->pFirstByKey    = nullptr;
 	pKey->pLastByKey     = nullptr;
 

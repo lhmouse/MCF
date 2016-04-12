@@ -71,7 +71,7 @@ static inline int __gthread_setspecific(__gthread_key_t __key, const void *__val
 
 typedef _MCFCRT_OnceFlag __gthread_once_t;
 
-#define __GTHREAD_ONCE_INIT    _MCFCRT_ONCE_FLAG_INITIALIZER
+#define __GTHREAD_ONCE_INIT    { 0 }
 
 static inline void __gthread_once(__gthread_once_t *__flag, void (*__func)(void)) _MCFCRT_NOEXCEPT {
 	const _MCFCRT_OnceResult __result = _MCFCRT_WaitForOnceFlagForever(__flag);
@@ -90,11 +90,11 @@ static inline void __gthread_once(__gthread_once_t *__flag, void (*__func)(void)
 
 typedef _MCFCRT_Mutex __gthread_mutex_t;
 
-#define __GTHREAD_MUTEX_INIT            _MCFCRT_MUTEX_INITIALIZER
+#define __GTHREAD_MUTEX_INIT            { 0 }
 #define __GTHREAD_MUTEX_INIT_FUNCTION   __gthread_mutex_init_function
 
 static inline void __gthread_mutex_init_function(__gthread_mutex_t *__mutex) _MCFCRT_NOEXCEPT {
-	*__mutex = _MCFCRT_MUTEX_INITIALIZER;
+	_MCFCRT_InitializeMutex(__mutex);
 }
 static inline int __gthread_mutex_destroy(__gthread_mutex_t *__mutex) _MCFCRT_NOEXCEPT {
 	(void)__mutex;
@@ -126,7 +126,7 @@ typedef struct {
 	_MCFCRT_Mutex __mutex;
 } __gthread_recursive_mutex_t;
 
-#define __GTHREAD_RECURSIVE_MUTEX_INIT            { 0, 0, _MCFCRT_MUTEX_INITIALIZER }
+#define __GTHREAD_RECURSIVE_MUTEX_INIT            { 0, 0, { 0 } }
 #define __GTHREAD_RECURSIVE_MUTEX_INIT_FUNCTION   __gthread_recursive_mutex_init_function
 
 static inline void __gthread_recursive_mutex_init_function(__gthread_recursive_mutex_t *__recur_mutex) _MCFCRT_NOEXCEPT {
@@ -219,11 +219,11 @@ static inline void __MCFCRT_GthreadRelockCallbackRecursiveMutex(_MCFCRT_STD intp
 
 typedef _MCFCRT_ConditionVariable __gthread_cond_t;
 
-#define __GTHREAD_COND_INIT             _MCFCRT_CONDITION_VARIABLE_INITIALIZER
+#define __GTHREAD_COND_INIT             { 0 }
 #define __GTHREAD_COND_INIT_FUNCTION    __gthread_cond_init_function
 
 static inline void __gthread_cond_init_function(__gthread_cond_t *__cond) _MCFCRT_NOEXCEPT {
-	*__cond = _MCFCRT_CONDITION_VARIABLE_INITIALIZER;
+	_MCFCRT_InitializeConditionVariable(__cond);
 }
 static inline int __gthread_cond_destroy(__gthread_cond_t *__cond) _MCFCRT_NOEXCEPT {
 	(void)__cond;

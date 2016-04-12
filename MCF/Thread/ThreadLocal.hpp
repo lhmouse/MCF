@@ -36,8 +36,8 @@ class ThreadLocal {
 
 private:
 	struct X_TlsContainer {
-		bool bConstructed;
 		AlignedStorage<0, ElementT> vStorage;
+		bool bConstructed;
 	};
 
 private:

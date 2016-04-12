@@ -5,7 +5,7 @@
 #include "decl.h"
 #include "../env/mcfwin.h"
 #include "../env/module.h"
-#include "../env/thread.h"
+#include "../env/thread_env.h"
 #include "../env/eh_top.h"
 #include "../env/heap.h"
 #include "../env/heap_dbg.h"

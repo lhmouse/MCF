@@ -160,7 +160,7 @@ static const PIMAGE_TLS_CALLBACK callback_start = &CrtTlsCallback;
 __attribute__((__section__(".CRT$___")))
 static const PIMAGE_TLS_CALLBACK callback_end   = nullptr;
 
-__attribute__((__section__(".data"),))
+__attribute__((__section__(".data")))
 DWORD _tls_index;
 
 __attribute__((__section__(".rdata")))

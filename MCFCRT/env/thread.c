@@ -89,10 +89,6 @@ void _MCFCRT_CloseThread(void *hThread){
 	_MCFCRT_ASSERT_MSG(NT_SUCCESS(lStatus), L"NtClose() 失败。");
 }
 
-uintptr_t _MCFCRT_GetCurrentThreadId(){
-	return GetCurrentThreadId();
-}
-
 void _MCFCRT_Sleep(uint64_t u64UntilFastMonoClock){
 	LARGE_INTEGER liTimeout;
 	__MCF_CRT_InitializeNtTimeout(&liTimeout, u64UntilFastMonoClock);
@@ -147,3 +143,8 @@ void _MCFCRT_WaitForThreadForever(void *hThread){
 	const NTSTATUS lStatus = NtWaitForSingleObject((HANDLE)hThread, false, nullptr);
 	_MCFCRT_ASSERT_MSG(NT_SUCCESS(lStatus), L"NtWaitForSingleObject() 失败。");
 }
+
+// 移动到 thread_env.c 中。
+/*uintptr_t _MCFCRT_GetCurrentThreadId(){
+	return GetCurrentThreadId();
+}*/

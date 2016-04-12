@@ -91,12 +91,12 @@ bool _MCFCRT_WaitForConditionVariable(_MCFCRT_ConditionVariable *pConditionVaria
 void _MCFCRT_WaitForConditionVariableForever(_MCFCRT_ConditionVariable *pConditionVariable,
 	_MCFCRT_ConditionVariableUnlockCallback pfnUnlockCallback, _MCFCRT_ConditionVariableRelockCallback pfnRelockCallback, intptr_t nContext)
 {
-	const bool bSignaled = ReallyWaitForConditionVariable((volatile uintptr_t *)pConditionVariable, pfnUnlockCallback, pfnRelockCallback, nContext, false, UINT64_MAX);
+	const bool bSignaled = ReallyWaitForConditionVariable(&(pConditionVariable->__u), pfnUnlockCallback, pfnRelockCallback, nContext, false, UINT64_MAX);
 	_MCFCRT_ASSERT(bSignaled);
 }
 size_t _MCFCRT_SignalConditionVariable(_MCFCRT_ConditionVariable *pConditionVariable, size_t uMaxCountToSignal){
-	return ReallySignalConditionVariable((volatile uintptr_t *)pConditionVariable, uMaxCountToSignal);
+	return ReallySignalConditionVariable(&(pConditionVariable->__u), uMaxCountToSignal);
 }
 size_t _MCFCRT_BroadcastConditionVariable(_MCFCRT_ConditionVariable *pConditionVariable){
-	return ReallySignalConditionVariable((volatile uintptr_t *)pConditionVariable, SIZE_MAX);
+	return ReallySignalConditionVariable(&(pConditionVariable->__u), SIZE_MAX);
 }

@@ -4,7 +4,6 @@
 
 #include "decl.h"
 #include "../env/mcfwin.h"
-#include "../env/bail.h"
 #include "../env/module.h"
 #include "../env/thread_env.h"
 #include "../env/eh_top.h"

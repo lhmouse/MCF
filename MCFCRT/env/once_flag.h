@@ -14,11 +14,7 @@ typedef struct __MCFCRT_tagOnceFlag {
 	volatile _MCFCRT_STD uintptr_t __u;
 } _MCFCRT_OnceFlag;
 
-#ifdef __cplusplus
-#	define _MCFCRT_ONCE_FLAG_INITIALIZER    (        __MCFCRT_tagOnceFlag { 0 })
-#else
-#	define _MCFCRT_ONCE_FLAG_INITIALIZER    ((struct __MCFCRT_tagOnceFlag){ 0 })
-#endif
+#define _MCFCRT_ONCE_FLAG_INITIALIZER    (__extension__ (struct __MCFCRT_tagOnceFlag){ 0 })
 
 typedef enum __MCFCRT_tagOnceResult {
 	_MCFCRT_kOnceResultTimedOut = 1,

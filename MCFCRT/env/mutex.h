@@ -14,11 +14,7 @@ typedef struct __MCFCRT_tagMutex {
 	volatile _MCFCRT_STD uintptr_t __u;
 } _MCFCRT_Mutex;
 
-#ifdef __cplusplus
-#	define _MCFCRT_MUTEX_INITIALIZER    (        __MCFCRT_tagMutex { 0 })
-#else
-#	define _MCFCRT_MUTEX_INITIALIZER    ((struct __MCFCRT_tagMutex){ 0 })
-#endif
+#define _MCFCRT_MUTEX_INITIALIZER    (__extension__ (struct __MCFCRT_tagMutex){ 0 })
 
 #define _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT   100
 

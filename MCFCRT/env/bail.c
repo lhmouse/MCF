@@ -36,7 +36,7 @@ typedef enum tagHardErrorResponse {
 } HardErrorResponse;
 
 extern __attribute__((__dllimport__, __stdcall__))
-NTSTATUS NtRaiseHardError(NTSTATUS stError, DWORD dwUnknown, DWORD dwParamCount, const ULONG_PTR *pulParams, HardErrorResponseOption eOption, HardErrorResponse *peResponse);
+NTSTATUS NtRaiseHardError(NTSTATUS lStatus, DWORD dwUnknown, DWORD dwParamCount, const ULONG_PTR *pulParams, HardErrorResponseOption eOption, HardErrorResponse *peResponse);
 
 _Noreturn void _MCFCRT_Bail(const wchar_t *pwszDescription){
 #ifdef NDEBUG

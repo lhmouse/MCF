@@ -56,7 +56,7 @@ public:
 	static void DeunifyAppend(String &strDst, const StringView<StringType::kUtf32> &u32svSrc);
 
 private:
-	__extension__ union X_Storage {
+	__extension__ union {
 		struct {
 			Char achData[31];
 			std::make_signed_t<Char> schComplLength;

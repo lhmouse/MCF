@@ -20,31 +20,31 @@ public:
 
 private:
 	union {
-		Array<std::uint8_t, 16> aby;
-		Array<std::uint16_t, 8> au16;
-		Array<std::uint32_t, 4> au32;
-		Array<std::uint64_t, 2> au64;
-	} x_unData;
+		Array<std::uint8_t, 16> x_aby;
+		Array<std::uint16_t, 8> x_au16;
+		Array<std::uint32_t, 4> x_au32;
+		Array<std::uint64_t, 2> x_au64;
+	};
 
 public:
 	// 填零。
 	constexpr Uuid() noexcept
-		: x_unData()
+		: x_aby()
 	{
 	}
 	// 填指定字节。
 	explicit Uuid(const Array<unsigned char, 16> &abyData) noexcept {
-		BCopy(x_unData, abyData);
+		BCopy(x_aby, abyData);
 	}
 	// 根据字符串创建。字符串无效抛出异常。
 	explicit Uuid(const Array<char, 36> &achHex);
 
 public:
 	const unsigned char *GetData() const noexcept {
-		return x_unData.aby.GetData();
+		return x_aby.GetData();
 	}
 	unsigned char *GetData() noexcept {
-		return x_unData.aby.GetData();
+		return x_aby.GetData();
 	}
 	static constexpr std::size_t GetSize() noexcept {
 		return 16;
@@ -65,12 +65,12 @@ public:
 	const unsigned char &UncheckedGet(std::size_t uIndex) const noexcept {
 		MCF_ASSERT(uIndex <= GetSize());
 
-		return x_unData.aby.UncheckedGet(uIndex);
+		return x_aby.UncheckedGet(uIndex);
 	}
 	unsigned char &UncheckedGet(std::size_t uIndex) noexcept {
 		MCF_ASSERT(uIndex <= GetSize());
 
-		return x_unData.aby.UncheckedGet(uIndex);
+		return x_aby.UncheckedGet(uIndex);
 	}
 
 	int Compare(const Uuid &rhs) const noexcept {
@@ -78,7 +78,7 @@ public:
 	}
 
 	void Swap(Uuid &rhs) noexcept {
-		BSwap(x_unData, rhs.x_unData);
+		BSwap(x_aby, rhs.x_aby);
 	}
 
 	void Print(Array<char, 36> &achHex, bool bUpperCase = true) const noexcept;

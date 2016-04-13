@@ -23,12 +23,12 @@ Uuid Uuid::Generate(){
 	const auto u32Unique = (g_uPid & 0xFFFF) | ((g_u32AutoInc.Increment(kAtomicRelaxed) << 16) & 0x3FFFFFFFu);
 
 	Uuid vRet;
-	StoreBe(vRet.x_unData.au32[0], (std::uint32_t)(u64Now >> 12));
-	StoreBe(vRet.x_unData.au16[2], (std::uint16_t)((u64Now << 4) | (u32Unique >> 26)));
-	StoreBe(vRet.x_unData.au16[3], (std::uint16_t)((u32Unique >> 14) & 0x0FFFu)); // 版本 = 0
-	StoreBe(vRet.x_unData.au16[4], (std::uint16_t)(0xC000u | (u32Unique & 0x3FFFu))); // 变种 = 3
-	StoreBe(vRet.x_unData.au16[5], (std::uint16_t)GetRandomUint32());
-	StoreBe(vRet.x_unData.au32[3], (std::uint32_t)GetRandomUint32());
+	StoreBe(vRet.x_au32[0], (std::uint32_t)(u64Now >> 12));
+	StoreBe(vRet.x_au16[2], (std::uint16_t)((u64Now << 4) | (u32Unique >> 26)));
+	StoreBe(vRet.x_au16[3], (std::uint16_t)((u32Unique >> 14) & 0x0FFFu)); // 版本 = 0
+	StoreBe(vRet.x_au16[4], (std::uint16_t)(0xC000u | (u32Unique & 0x3FFFu))); // 变种 = 3
+	StoreBe(vRet.x_au16[5], (std::uint16_t)GetRandomUint32());
+	StoreBe(vRet.x_au32[3], (std::uint32_t)GetRandomUint32());
 	return vRet;
 }
 
@@ -39,7 +39,7 @@ Uuid::Uuid(const Array<char, 36> &achHex){
 }
 
 void Uuid::Print(Array<char, 36> &achHex, bool bUpperCase) const noexcept {
-	auto pbyRead = x_unData.aby.GetData();
+	auto pbyRead = x_aby.GetData();
 	auto pchWrite = achHex.GetData();
 
 #define PRINT(count_)	\
@@ -111,7 +111,7 @@ bool Uuid::Scan(const Array<char, 36> &achHex) noexcept {
 	SCAN(2) if(*(pchRead++) != '-'){ return false; }
 	SCAN(6)
 
-	BCopy(x_unData, abyTemp);
+	BCopy(x_aby, abyTemp);
 	return true;
 }
 

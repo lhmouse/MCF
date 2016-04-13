@@ -42,10 +42,10 @@ public:
 
 public:
 	std::size_t GetSpinCount() const noexcept {
-		return x_uSpinCount.Load(kAtomicRelaxed);
+		return x_uSpinCount.Load(kAtomicConsume);
 	}
 	void SetSpinCount(std::size_t uSpinCount) noexcept {
-		x_uSpinCount.Store(uSpinCount, kAtomicRelaxed);
+		x_uSpinCount.Store(uSpinCount, kAtomicRelease);
 	}
 
 	bool Try(std::uint64_t u64UntilFastMonoClock = 0) noexcept {

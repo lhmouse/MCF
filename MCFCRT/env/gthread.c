@@ -4,7 +4,7 @@
 
 #include "gthread.h"
 
-unsigned long __MCFCRT_GthreadTlsCostructor(intptr_t nContext, void *pStorage){
+unsigned long __MCFCRT_GthreadTlsConstructor(intptr_t nContext, void *pStorage){
 	(void)nContext;
 
 	*(void **)pStorage = nullptr;

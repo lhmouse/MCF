@@ -44,8 +44,7 @@ _Noreturn void _MCFCRT_Bail(const wchar_t *pwszDescription){
 	bool bBailed;
 	bBailed = __atomic_load_n(&g_bBailed, __ATOMIC_RELAXED);
 	if(!bBailed){
-		bool bOld = bBailed;
-		__atomic_compare_exchange_n(&g_bBailed, &bOld, true, false, __ATOMIC_RELAXED, __ATOMIC_RELAXED);
+		__atomic_compare_exchange_n(&g_bBailed, &bBailed, true, false, __ATOMIC_RELAXED, __ATOMIC_RELAXED);
 	}
 	if(bBailed){
 		TerminateThread(GetCurrentThread(), (DWORD)STATUS_UNSUCCESSFUL);

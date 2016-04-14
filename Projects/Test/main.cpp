@@ -10,7 +10,7 @@ extern "C" unsigned _MCFCRT_Main(){
 	::__gthread_mutex_init_function(&m);
 
 	volatile unsigned val = 0;
-	MCF::Array<MCF::Thread, 100> threads;
+	MCF::Array<MCF::Thread, 4> threads;
 
 	auto t1 = MCF::GetHiResMonoClock();
 	{

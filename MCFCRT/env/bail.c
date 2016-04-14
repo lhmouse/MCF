@@ -41,11 +41,7 @@ NTSTATUS NtRaiseHardError(NTSTATUS lStatus, DWORD dwUnknown, DWORD dwParamCount,
 static volatile bool g_bBailed = false;
 
 _Noreturn void _MCFCRT_Bail(const wchar_t *pwszDescription){
-	bool bBailed;
-	bBailed = __atomic_load_n(&g_bBailed, __ATOMIC_RELAXED);
-	if(!bBailed){
-		__atomic_compare_exchange_n(&g_bBailed, &bBailed, true, false, __ATOMIC_RELAXED, __ATOMIC_RELAXED);
-	}
+	const bool bBailed = __atomic_exchange_n(&g_bBailed, true, __ATOMIC_RELAXED);
 	if(bBailed){
 		TerminateThread(GetCurrentThread(), (DWORD)STATUS_UNSUCCESSFUL);
 		__builtin_unreachable();

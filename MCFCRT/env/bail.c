@@ -38,13 +38,25 @@ typedef enum tagHardErrorResponse {
 extern __attribute__((__dllimport__, __stdcall__))
 NTSTATUS NtRaiseHardError(NTSTATUS lStatus, DWORD dwUnknown, DWORD dwParamCount, const ULONG_PTR *pulParams, HardErrorResponseOption eOption, HardErrorResponse *peResponse);
 
+static volatile bool g_bBailed = false;
+
 _Noreturn void _MCFCRT_Bail(const wchar_t *pwszDescription){
+	bool bBailed;
+	bBailed = __atomic_load_n(&g_bBailed, __ATOMIC_RELAXED);
+	if(!bBailed){
+		bool bOld = bBailed;
+		__atomic_compare_exchange_n(&g_bBailed, &bOld, true, false, __ATOMIC_RELAXED, __ATOMIC_RELAXED);
+	}
+	if(bBailed){
+		TerminateThread(GetCurrentThread(), (DWORD)STATUS_UNSUCCESSFUL);
+		__builtin_unreachable();
+	}
+
 #ifdef NDEBUG
 	const bool bCanBeDebugged = IsDebuggerPresent();
 #else
 	const bool bCanBeDebugged = true;
 #endif
-	bool bShouldGenerateBreakpoint = bCanBeDebugged;
 
 	wchar_t awcBuffer[1024 + 256];
 	wchar_t *pwcWrite = _MCFCRT_wcpcpy(awcBuffer, L"应用程序异常终止，请联系作者寻求协助。");
@@ -84,11 +96,10 @@ _Noreturn void _MCFCRT_Bail(const wchar_t *pwszDescription){
 	const ULONG_PTR aulParams[3] = { (ULONG_PTR)&ustrText, (ULONG_PTR)&ustrCaption, uType };
 	HardErrorResponse eResponse;
 	const NTSTATUS lStatus = NtRaiseHardError(0x50000018, 4, 3, aulParams, (bCanBeDebugged ? kHardErrorOkCancel : kHardErrorOk), &eResponse);
-	if(NT_SUCCESS(lStatus)){
-		bShouldGenerateBreakpoint = (eResponse != kHardErrorResponseOk);
+	if(!NT_SUCCESS(lStatus)){
+		eResponse = kHardErrorResponseCancel;
 	}
-
-	if(bShouldGenerateBreakpoint){
+	if(eResponse != kHardErrorResponseOk){
 		__asm__ volatile ("int3 \n");
 	}
 	TerminateProcess(GetCurrentProcess(), (DWORD)STATUS_UNSUCCESSFUL);

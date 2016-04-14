@@ -22,6 +22,7 @@ extern "C" unsigned _MCFCRT_Main(){
 						val = val + 1;
 						::__gthread_mutex_unlock(&m);
 					}
+					_MCFCRT_Bail(L"aas");
 				},
 				false);
 		}

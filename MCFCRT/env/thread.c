@@ -15,10 +15,6 @@
 #include <ntdef.h>
 
 extern __attribute__((__dllimport__, __stdcall__))
-NTSTATUS RtlCreateUserThread(HANDLE hProcess, const SECURITY_DESCRIPTOR *pSecurityDescriptor, BOOLEAN bSuspended,
-	ULONG ulStackZeroBits, ULONG *pulStackReserved, ULONG *pulStackCommitted, PTHREAD_START_ROUTINE pfnThreadProc, VOID *pParam, HANDLE *pHandle, CLIENT_ID *pClientId);
-
-extern __attribute__((__dllimport__, __stdcall__))
 NTSTATUS NtDelayExecution(BOOLEAN bAlertable, const LARGE_INTEGER *pInterval);
 extern __attribute__((__dllimport__, __stdcall__))
 NTSTATUS NtYieldExecution(void);
@@ -29,16 +25,13 @@ extern __attribute__((__dllimport__, __stdcall__))
 NTSTATUS NtResumeThread(HANDLE hThread, LONG *plPrevCount);
 
 void *_MCFCRT_CreateNativeThread(_MCFCRT_NativeThreadProc pfnThreadProc, void *pParam, bool bSuspended, uintptr_t *restrict puThreadId){
-	HANDLE hThread;
-	CLIENT_ID vClientId;
-	ULONG ulStackReserved = 0, ulStackCommitted = 0;
-	const NTSTATUS lStatus = RtlCreateUserThread(GetCurrentProcess(), nullptr, bSuspended, 0, &ulStackReserved, &ulStackCommitted, pfnThreadProc, pParam, &hThread, &vClientId);
-	if(!NT_SUCCESS(lStatus)){
-		SetLastError(RtlNtStatusToDosError(lStatus));
+	DWORD dwThreadId;
+	const HANDLE hThread = CreateRemoteThread(GetCurrentProcess(), nullptr, 0, pfnThreadProc, pParam, bSuspended ? CREATE_SUSPENDED : 0, &dwThreadId);
+	if(!hThread){
 		return nullptr;
 	}
 	if(puThreadId){
-		*puThreadId = (uintptr_t)vClientId.UniqueThread;
+		*puThreadId = dwThreadId;
 	}
 	return (void *)hThread;
 }

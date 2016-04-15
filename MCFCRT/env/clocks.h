@@ -10,26 +10,10 @@
 __MCFCRT_EXTERN_C_BEGIN
 
 static inline _MCFCRT_STD uint32_t _MCFCRT_ReadTimestampCounter32() _MCFCRT_NOEXCEPT {
-	_MCFCRT_STD uint32_t __u32Ret;
-	__asm__ volatile (
-		"rdtsc \n"
-		: "=a"(__u32Ret) : : "dx"
-		);
-	return __u32Ret;
+	return (_MCFCRT_STD uint32_t)__builtin_ia32_rdtsc();
 }
 static inline _MCFCRT_STD uint64_t _MCFCRT_ReadTimestampCounter64() _MCFCRT_NOEXCEPT {
-	_MCFCRT_STD uint64_t __u64Ret;
-	__asm__ volatile (
-		"rdtsc \n"
-#ifdef _WIN64
-		"shl rdx, 32 \n"
-		"or rax, rdx \n"
-		: "=a"(__u64Ret) : : "dx"
-#else
-		: "=A"(__u64Ret) : :
-#endif
-		);
-	return __u64Ret;
+	return __builtin_ia32_rdtsc();
 }
 
 extern _MCFCRT_STD uint64_t _MCFCRT_GetUtcClock() _MCFCRT_NOEXCEPT;

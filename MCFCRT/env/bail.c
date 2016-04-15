@@ -95,7 +95,7 @@ _Noreturn void _MCFCRT_Bail(const wchar_t *pwszDescription){
 		eResponse = kHardErrorResponseCancel;
 	}
 	if(eResponse != kHardErrorResponseOk){
-		__asm__ volatile ("int3 \n");
+		__debugbreak();
 	}
 	TerminateProcess(GetCurrentProcess(), (DWORD)STATUS_UNSUCCESSFUL);
 	__builtin_unreachable();

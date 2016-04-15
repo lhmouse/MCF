@@ -5,8 +5,6 @@
 #include "thread.h"
 #include "mcfwin.h"
 #include "fenv.h"
-#include "avl_tree.h"
-#include "mutex.h"
 #include "eh_top.h"
 #include "_nt_timeout.h"
 #include "../ext/assert.h"

@@ -21,11 +21,13 @@ typedef enum tagHardErrorResponseOption {
 	kHardErrorYesNo,
 	kHardErrorYesNoCancel,
 	kHardErrorShutdownSystem,
+	kHardErrorTrayNotify,
+	kHardErrorCancelTryAgainContinue,
 } HardErrorResponseOption;
 
 typedef enum tagHardErrorResponse {
-	kHardErrorResponseUnknown0,
-	kHardErrorResponseUnknown1,
+	kHardErrorResponseReturnToCaller,
+	kHardErrorResponseNotHandled,
 	kHardErrorResponseAbort,
 	kHardErrorResponseCancel,
 	kHardErrorResponseIgnore,
@@ -90,7 +92,7 @@ _Noreturn void _MCFCRT_Bail(const wchar_t *pwszDescription){
 
 	const ULONG_PTR aulParams[3] = { (ULONG_PTR)&ustrText, (ULONG_PTR)&ustrCaption, uType };
 	HardErrorResponse eResponse;
-	const NTSTATUS lStatus = NtRaiseHardError(0x50000018, 4, 3, aulParams, (bCanBeDebugged ? kHardErrorOkCancel : kHardErrorOk), &eResponse);
+	const NTSTATUS lStatus = NtRaiseHardError(STATUS_SERVICE_NOTIFICATION, 4, 3, aulParams, kHardErrorOk, &eResponse);
 	if(!NT_SUCCESS(lStatus)){
 		eResponse = kHardErrorResponseCancel;
 	}

@@ -26,7 +26,7 @@ private:
 
 public:
 	constexpr OnceFlag() noexcept
-		: x_vFlag(_MCFCRT_ONCE_FLAG_INITIALIZER)
+		: x_vFlag{ 0 }
 	{
 	}
 

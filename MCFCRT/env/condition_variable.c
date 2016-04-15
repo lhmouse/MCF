@@ -50,7 +50,6 @@ static inline bool ReallyWaitForConditionVariable(volatile uintptr_t *puControl,
 			lStatus = NtWaitForKeyedEvent(nullptr, (void *)puControl, false, nullptr);
 			_MCFCRT_ASSERT_MSG(NT_SUCCESS(lStatus), L"NtWaitForKeyedEvent() 失败。");
 			_MCFCRT_ASSERT(lStatus != STATUS_TIMEOUT);
-			(*pfnRelockCallback)(nContext, nUnlocked);
 			return (*pfnRelockCallback)(nContext, nUnlocked), true;
 		}
 	} else {

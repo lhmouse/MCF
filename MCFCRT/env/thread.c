@@ -137,7 +137,6 @@ void _MCFCRT_WaitForThreadForever(void *hThread){
 	_MCFCRT_ASSERT_MSG(NT_SUCCESS(lStatus), L"NtWaitForSingleObject() 失败。");
 }
 
-// 移动到 thread_env.c 中。
-/*uintptr_t _MCFCRT_GetCurrentThreadId(){
+uintptr_t _MCFCRT_GetCurrentThreadId(){
 	return GetCurrentThreadId();
-}*/
+}

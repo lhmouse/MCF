@@ -427,7 +427,3 @@ bool _MCFCRT_AtThreadExit(_MCFCRT_AtThreadExitCallback pfnProc, intptr_t nContex
 
 	return true;
 }
-
-uintptr_t _MCFCRT_GetCurrentThreadId(){
-	return GetCurrentThreadId();
-}

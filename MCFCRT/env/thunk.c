@@ -54,8 +54,8 @@ static int FreeSizeComparatorNodes(const _MCFCRT_AvlNodeHeader *pIndex1, const _
 	return FreeSizeComparatorNodeKey(pIndex1, (intptr_t)GetInfoFromFreeSizeIndex(pIndex2)->uFreeSize);
 }
 
-static _MCFCRT_Mutex   g_vThunkMutex          = { 0 };
-static uintptr_t       g_uPageMask            = 0;
+static _MCFCRT_Mutex    g_vThunkMutex         = { 0 };
+static uintptr_t        g_uPageMask           = 0;
 
 static _MCFCRT_AvlRoot  g_avlThunksByThunk    = nullptr;
 static _MCFCRT_AvlRoot  g_avlThunksByFreeSize = nullptr;

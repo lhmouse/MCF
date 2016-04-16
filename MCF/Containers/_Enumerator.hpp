@@ -7,9 +7,7 @@
 
 #include "../Utilities/AddressOf.hpp"
 #include "../Utilities/Assert.hpp"
-#include <c++/bits/stl_iterator_base_types.h>
-#include <c++/bits/stl_iterator_base_funcs.h>
-#include <c++/bits/stl_iterator.h>
+#include <iterator>
 
 namespace MCF {
 

@@ -6,7 +6,7 @@
 #define MCF_STREAMS_OUTPUT_STREAM_ITERATOR_HPP_
 
 #include "AbstractOutputStream.hpp"
-#include <c++/bits/stl_iterator_base_types.h>
+#include <iterator>
 
 namespace MCF {
 

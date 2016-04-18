@@ -35,7 +35,7 @@ extern void __MCFCRT_GthreadTlsDestructor(_MCFCRT_STD intptr_t __nContext, void 
 typedef void * __gthread_key_t;
 
 static inline int __gthread_key_create(__gthread_key_t *__key_ret, void (*__destructor)(void *)) _MCFCRT_NOEXCEPT {
-	void *const __key = _MCFCRT_TlsAllocKey(sizeof(void *), &__MCFCRT_GthreadTlsConstructor, &__MCFCRT_GthreadTlsDestructor, (_MCFCRT_STD intptr_t)__destructor);
+	const __gthread_key_t __key = _MCFCRT_TlsAllocKey(sizeof(void *), &__MCFCRT_GthreadTlsConstructor, &__MCFCRT_GthreadTlsDestructor, (_MCFCRT_STD intptr_t)__destructor);
 	if(!__key){
 		return ENOMEM;
 	}
@@ -55,6 +55,9 @@ static inline void *__gthread_getspecific(__gthread_key_t __key) _MCFCRT_NOEXCEP
 	if(!__success){
 		return nullptr;
 	}
+	if(!__storage){
+		return nullptr;
+	}
 	return *(void **)__storage;
 }
 static inline int __gthread_setspecific(__gthread_key_t __key, const void *__value) _MCFCRT_NOEXCEPT {
@@ -63,6 +66,7 @@ static inline int __gthread_setspecific(__gthread_key_t __key, const void *__val
 	if(!__success){
 		return ENOMEM;
 	}
+	_MCFCRT_ASSERT(__storage);
 	*(void **)__storage = (void *)__value;
 	return 0;
 }

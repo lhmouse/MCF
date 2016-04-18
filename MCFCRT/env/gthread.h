@@ -7,6 +7,10 @@
 
 // 专门为 GCC 定制的兼容层。
 
+#include "_crtdef.h"
+
+_MCFCRT_EXTERN_C_BEGIN
+
 #ifdef __GTHREADS
 #	error __GTHREADS is already defined. (Thread model confliction detected?)
 #endif
@@ -249,5 +253,7 @@ static inline int __gthread_cond_broadcast(__gthread_cond_t *__cond) _MCFCRT_NOE
 	_MCFCRT_BroadcastConditionVariable(__cond);
 	return 0;
 }
+
+_MCFCRT_EXTERN_C_END
 
 #endif

@@ -8,7 +8,7 @@
 #include "_crtdef.h"
 #include "../ext/assert.h"
 
-__MCFCRT_EXTERN_C_BEGIN
+_MCFCRT_EXTERN_C_BEGIN
 
 typedef struct __MCFCRT_tagAvlNodeHeader {
 	struct __MCFCRT_tagAvlNodeHeader *__pParent;
@@ -251,6 +251,6 @@ static inline void _MCFCRT_AvlGetEqualRange(_MCFCRT_AvlNodeHeader **__ppLower, _
 	}
 }
 
-__MCFCRT_EXTERN_C_END
+_MCFCRT_EXTERN_C_END
 
 #endif

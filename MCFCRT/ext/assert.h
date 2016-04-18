@@ -7,12 +7,12 @@
 
 #include "../env/_crtdef.h"
 
-__MCFCRT_EXTERN_C_BEGIN
+_MCFCRT_EXTERN_C_BEGIN
 
 extern __attribute__((__noreturn__))
 int __MCFCRT_OnAssertionFailure(const wchar_t *__pwszExpression, const wchar_t *__pwszFile, unsigned long __ulLine, const wchar_t *__pwszMessage) _MCFCRT_NOEXCEPT;
 
-__MCFCRT_EXTERN_C_END
+_MCFCRT_EXTERN_C_END
 
 #define __MCFCRT_ASSERT_WIDEN_X(__s_)           L ## __s_
 #define __MCFCRT_ASSERT_WIDEN(__s_)             __MCFCRT_ASSERT_WIDEN_X(__s_)

@@ -7,7 +7,7 @@
 
 #include "_crtdef.h"
 
-__MCFCRT_EXTERN_C_BEGIN
+_MCFCRT_EXTERN_C_BEGIN
 
 // heap.c
 typedef void (*_MCFCRT_HeapAllocCallback)(void *__pNewBlock, _MCFCRT_STD size_t __uSize, const void *__pRetAddr);
@@ -20,6 +20,6 @@ extern volatile _MCFCRT_HeapReallocCallback  _MCFCRT_pfnOnHeapRealloc;
 extern volatile _MCFCRT_HeapFreeCallback     _MCFCRT_pfnOnHeapFree;
 extern volatile _MCFCRT_HeapBadAllocCallback _MCFCRT_pfnOnHeapBadAlloc;
 
-__MCFCRT_EXTERN_C_END
+_MCFCRT_EXTERN_C_END
 
 #endif

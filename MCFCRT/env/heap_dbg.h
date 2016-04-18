@@ -29,7 +29,7 @@
 
 #include "avl_tree.h"
 
-__MCFCRT_EXTERN_C_BEGIN
+_MCFCRT_EXTERN_C_BEGIN
 
 extern bool __MCFCRT_HeapDbgInit(void) _MCFCRT_NOEXCEPT;
 extern void __MCFCRT_HeapDbgUninit(void) _MCFCRT_NOEXCEPT;
@@ -66,6 +66,6 @@ extern void __MCFCRT_HeapDbgValidateBlockBasic(unsigned char **__ppRaw, unsigned
 
 #endif
 
-__MCFCRT_EXTERN_C_END
+_MCFCRT_EXTERN_C_END
 
 #endif

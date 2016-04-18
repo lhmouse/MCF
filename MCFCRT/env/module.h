@@ -7,7 +7,7 @@
 
 #include "_crtdef.h"
 
-__MCFCRT_EXTERN_C_BEGIN
+_MCFCRT_EXTERN_C_BEGIN
 
 // __MCFCRT_BeginModule() 在所有 CRT 功能都初始化成功后返回 true。
 extern bool __MCFCRT_BeginModule(void);
@@ -38,6 +38,6 @@ typedef struct _MCFCRT_tagModuleSectionInfo {
 extern bool _MCFCRT_EnumerateFirstModuleSection(_MCFCRT_ModuleSectionInfo *__pInfo) _MCFCRT_NOEXCEPT;
 extern bool _MCFCRT_EnumerateNextModuleSection(_MCFCRT_ModuleSectionInfo *__pInfo) _MCFCRT_NOEXCEPT;
 
-__MCFCRT_EXTERN_C_END
+_MCFCRT_EXTERN_C_END
 
 #endif

@@ -7,7 +7,7 @@
 
 #include "../env/_crtdef.h"
 
-__MCFCRT_EXTERN_C_BEGIN
+_MCFCRT_EXTERN_C_BEGIN
 
 extern char *_MCFCRT_itoa_d(char *__pchBuffer, _MCFCRT_STD  intptr_t  __nValue) _MCFCRT_NOEXCEPT;
 extern char *_MCFCRT_itoa_u(char *__pchBuffer, _MCFCRT_STD uintptr_t  __uValue) _MCFCRT_NOEXCEPT;
@@ -18,6 +18,6 @@ extern char *_MCFCRT_itoa0u(char *__pchBuffer, _MCFCRT_STD uintptr_t  __uValue, 
 extern char *_MCFCRT_itoa0x(char *__pchBuffer, _MCFCRT_STD uintptr_t  __uValue, unsigned __uMinDigits) _MCFCRT_NOEXCEPT;
 extern char *_MCFCRT_itoa0X(char *__pchBuffer, _MCFCRT_STD uintptr_t  __uValue, unsigned __uMinDigits) _MCFCRT_NOEXCEPT;
 
-__MCFCRT_EXTERN_C_END
+_MCFCRT_EXTERN_C_END
 
 #endif

@@ -10,12 +10,12 @@
 #define __MCFCRT_HAS_EH_TOP	\
 	__attribute__((__section__(".text$")))
 
-__MCFCRT_EXTERN_C_BEGIN
+_MCFCRT_EXTERN_C_BEGIN
 
 extern bool __MCFCRT_RegisterFrameInfo(void) _MCFCRT_NOEXCEPT;
 extern void __MCFCRT_UnregisterFrameInfo(void) _MCFCRT_NOEXCEPT;
 
-__MCFCRT_EXTERN_C_END
+_MCFCRT_EXTERN_C_END
 
 #if defined(__SEH__) // SEH
 

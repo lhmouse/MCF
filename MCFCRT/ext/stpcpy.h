@@ -7,11 +7,11 @@
 
 #include "../env/_crtdef.h"
 
-__MCFCRT_EXTERN_C_BEGIN
+_MCFCRT_EXTERN_C_BEGIN
 
 extern char *_MCFCRT_stpcpy(char *restrict __dst, const char *restrict __src) _MCFCRT_NOEXCEPT;
 extern char *_MCFCRT_stppcpy(char *restrict __dst, char *restrict __end, const char *restrict __src) _MCFCRT_NOEXCEPT;
 
-__MCFCRT_EXTERN_C_END
+_MCFCRT_EXTERN_C_END
 
 #endif

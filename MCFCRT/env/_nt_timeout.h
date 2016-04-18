@@ -9,7 +9,7 @@
 #include "mcfwin.h"
 #include "clocks.h"
 
-__MCFCRT_EXTERN_C_BEGIN
+_MCFCRT_EXTERN_C_BEGIN
 
 static inline void __MCF_CRT_InitializeNtTimeout(LARGE_INTEGER *__pliTimeout, _MCFCRT_STD uint64_t __u64UntilFastMonoClock) _MCFCRT_NOEXCEPT {
 	const _MCFCRT_STD uint64_t __u64Now = _MCFCRT_GetFastMonoClock();
@@ -25,6 +25,6 @@ static inline void __MCF_CRT_InitializeNtTimeout(LARGE_INTEGER *__pliTimeout, _M
 	__pliTimeout->QuadPart = -(_MCFCRT_STD int64_t)(__u64DeltaMs * 10000u); // 用负数表示相对时间。
 }
 
-__MCFCRT_EXTERN_C_END
+_MCFCRT_EXTERN_C_END
 
 #endif

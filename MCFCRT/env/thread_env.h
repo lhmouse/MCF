@@ -7,7 +7,7 @@
 
 #include "_crtdef.h"
 
-__MCFCRT_EXTERN_C_BEGIN
+_MCFCRT_EXTERN_C_BEGIN
 
 extern bool __MCFCRT_ThreadEnvInit(void) _MCFCRT_NOEXCEPT;
 extern void __MCFCRT_ThreadEnvUninit(void) _MCFCRT_NOEXCEPT;
@@ -36,6 +36,6 @@ typedef void (*_MCFCRT_AtThreadExitCallback)(_MCFCRT_STD intptr_t __nContext);
 
 extern bool _MCFCRT_AtThreadExit(_MCFCRT_AtThreadExitCallback __pfnProc, _MCFCRT_STD intptr_t __nContext) _MCFCRT_NOEXCEPT;
 
-__MCFCRT_EXTERN_C_END
+_MCFCRT_EXTERN_C_END
 
 #endif

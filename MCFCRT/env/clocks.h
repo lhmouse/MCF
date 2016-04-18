@@ -7,7 +7,7 @@
 
 #include "_crtdef.h"
 
-__MCFCRT_EXTERN_C_BEGIN
+_MCFCRT_EXTERN_C_BEGIN
 
 static inline _MCFCRT_STD uint32_t _MCFCRT_ReadTimestampCounter32() _MCFCRT_NOEXCEPT {
 	return (_MCFCRT_STD uint32_t)__builtin_ia32_rdtsc();
@@ -25,6 +25,6 @@ extern _MCFCRT_STD uint64_t _MCFCRT_GetLocalClockFromUtc(_MCFCRT_STD uint64_t __
 extern _MCFCRT_STD uint64_t _MCFCRT_GetFastMonoClock() _MCFCRT_NOEXCEPT;
 extern double _MCFCRT_GetHiResMonoClock() _MCFCRT_NOEXCEPT;
 
-__MCFCRT_EXTERN_C_END
+_MCFCRT_EXTERN_C_END
 
 #endif

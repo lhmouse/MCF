@@ -6,7 +6,6 @@
 #include "Thread.hpp"
 #include "../../MCFCRT/env/thread.h"
 #include "../../MCFCRT/env/eh_top.h"
-#include "../../MCFCRT/env/fenv.h"
 #include "../Core/Exception.hpp"
 #include "../Utilities/Assert.hpp"
 
@@ -29,8 +28,6 @@ void Thread::X_AbstractControlBlock::SpawnThread(bool bSuspended){
 
 			__MCFCRT_EH_TOP_BEGIN
 			{
-				__MCFCRT_FEnvInit();
-
 				pThis->X_ThreadProc();
 			}
 			__MCFCRT_EH_TOP_END

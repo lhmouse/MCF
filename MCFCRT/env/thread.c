@@ -4,7 +4,6 @@
 
 #include "thread.h"
 #include "mcfwin.h"
-#include "fenv.h"
 #include "eh_top.h"
 #include "_nt_timeout.h"
 #include "../ext/assert.h"
@@ -49,8 +48,6 @@ DWORD CrtThreadProc(LPVOID pParam){
 
 	__MCFCRT_EH_TOP_BEGIN
 	{
-		__MCFCRT_FEnvInit();
-
 		dwExitCode = (*pfnProc)(nParam);
 	}
 	__MCFCRT_EH_TOP_END

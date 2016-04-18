@@ -3,6 +3,7 @@
 // Copyleft 2013 - 2016, LH_Mouse. All wrongs reserved.
 
 #include "decl.h"
+#include "../env/fenv.h"
 #include "../env/mcfwin.h"
 #include "../env/module.h"
 #include "../env/thread_env.h"
@@ -13,6 +14,8 @@
 // -static -Wl,-e__MCFCRT_DllStartup,--disable-runtime-pseudo-reloc,--disable-auto-import
 
 static bool OnDllProcessAttach(HINSTANCE hDll, bool bDynamic){
+	__MCFCRT_FenvInit();
+
 	if(!__MCFCRT_HeapInit()){
 		return false;
 	}
@@ -43,6 +46,8 @@ static bool OnDllProcessAttach(HINSTANCE hDll, bool bDynamic){
 	return true;
 }
 static void OnDllThreadAttach(HINSTANCE hDll){
+	__MCFCRT_FenvInit();
+
 	if(_MCFCRT_OnDllThreadAttach){
 		_MCFCRT_OnDllThreadAttach(hDll);
 	}

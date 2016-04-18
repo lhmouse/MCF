@@ -73,14 +73,15 @@ typedef _MCFCRT_OnceFlag __gthread_once_t;
 
 #define __GTHREAD_ONCE_INIT    { 0 }
 
-static inline void __gthread_once(__gthread_once_t *__flag, void (*__func)(void)) _MCFCRT_NOEXCEPT {
+static inline int __gthread_once(__gthread_once_t *__flag, void (*__func)(void)) _MCFCRT_NOEXCEPT {
 	const _MCFCRT_OnceResult __result = _MCFCRT_WaitForOnceFlagForever(__flag);
 	if(_MCFCRT_EXPECT(__result == _MCFCRT_kOnceResultFinished)){
-		return;
+		return 0;
 	}
 	_MCFCRT_ASSERT(__result == _MCFCRT_kOnceResultInitial);
 	(*__func)();
 	_MCFCRT_SignalOnceFlagAsFinished(__flag);
+	return 0;
 }
 
 //-----------------------------------------------------------------------------

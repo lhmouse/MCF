@@ -30,6 +30,7 @@ typedef struct tagAtExitCallbackBlock {
 static _MCFCRT_Mutex           g_vAtExitMutex   = { 0 };
 static AtExitCallbackBlock *   g_pAtExitLast    = nullptr;
 
+__attribute__((__noinline__))
 static void __MCFCRT_PumpAtEndModule(){
 	// ISO C++
 	// 3.6.3 Termination [basic.start.term]

@@ -34,8 +34,11 @@ bool __MCFCRT_CallStaticCtors() noexcept {
 	}
 	::__MCFCRT_pjbufAbortHook = pjbufOldHook;
 
-	::SetLastError((DWORD)nResult);
-	return nResult == 0;
+	if(nResult != 0){
+		::SetLastError((DWORD)nResult);
+		return false;
+	}
+	return true;
 }
 void __MCFCRT_CallStaticDtors() noexcept {
 }

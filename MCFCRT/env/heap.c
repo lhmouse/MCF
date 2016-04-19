@@ -32,7 +32,7 @@ bool __MCFCRT_HeapInit(){
 void __MCFCRT_HeapUninit(){
 }
 
-unsigned char *__MCFCRT_HeapAlloc(size_t uSize, const void *pRetAddr){
+unsigned char *__MCFCRT_HeapAlloc(size_t uSize, bool bFillsWithZero, const void *pRetAddr){
 #if __MCFCRT_REQUIRE_HEAPDBG_LEVEL(1)
 	SetLastError(0xDEADBEEF);
 #endif
@@ -52,7 +52,7 @@ unsigned char *__MCFCRT_HeapAlloc(size_t uSize, const void *pRetAddr){
 
 		_MCFCRT_WaitForMutexForever(&g_vHeapMutex, HEAP_MUTEX_SPIN_COUNT);
 		{
-			unsigned char *const pRaw = HeapAlloc(GetProcessHeap(), 0, uRawSize);
+			unsigned char *const pRaw = HeapAlloc(GetProcessHeap(), bFillsWithZero ? HEAP_ZERO_MEMORY : 0, uRawSize);
 			if(pRaw){
 #if __MCFCRT_REQUIRE_HEAPDBG_LEVEL(3)
 				__MCFCRT_HeapDbgBlockInfo *const pBlockInfo = __MCFCRT_HeapDbgAllocateBlockInfo();
@@ -90,7 +90,7 @@ unsigned char *__MCFCRT_HeapAlloc(size_t uSize, const void *pRetAddr){
 		}
 	}
 }
-unsigned char *__MCFCRT_HeapRealloc(void *pBlock, size_t uSize, const void *pRetAddr){
+unsigned char *__MCFCRT_HeapRealloc(void *pBlock, size_t uSize, bool bFillsWithZero, const void *pRetAddr){
 	if(!pBlock){
 		_MCFCRT_Bail(L"__MCFCRT_HeapRealloc() 失败：传入了一个空指针。\n\n");
 	}
@@ -142,7 +142,7 @@ unsigned char *__MCFCRT_HeapRealloc(void *pBlock, size_t uSize, const void *pRet
 
 		_MCFCRT_WaitForMutexForever(&g_vHeapMutex, HEAP_MUTEX_SPIN_COUNT);
 		{
-			unsigned char *const pRaw = HeapReAlloc(GetProcessHeap(), 0, pRawOriginal, uRawSize);
+			unsigned char *const pRaw = HeapReAlloc(GetProcessHeap(), bFillsWithZero ? HEAP_ZERO_MEMORY : 0, pRawOriginal, uRawSize);
 			if(pRaw){
 #if __MCFCRT_REQUIRE_HEAPDBG_LEVEL(3)
 				__MCFCRT_HeapDbgUnregisterBlockInfo(pBlockInfo);

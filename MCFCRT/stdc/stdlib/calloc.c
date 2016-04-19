@@ -14,11 +14,7 @@ void *__wrap_calloc(size_t nmemb, size_t cnt){
 		}
 		cb = nmemb * cnt;
 	}
-	void *const ret = __MCFCRT_HeapAlloc(cb, __builtin_return_address(0));
-	if(ret){
-		__builtin_memset(ret, 0, cb);
-	}
-	return ret;
+	return __MCFCRT_HeapAlloc(cb, true, __builtin_return_address(0));
 }
 
 __attribute__((__alias__("__wrap_calloc")))

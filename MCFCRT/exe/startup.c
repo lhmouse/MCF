@@ -5,6 +5,7 @@
 #include "decl.h"
 #include "../env/mcfwin.h"
 #include "../env/module.h"
+#include "../env/fenv.h"
 #include "../env/thread_env.h"
 #include "../env/eh_top.h"
 #include "../env/heap.h"
@@ -48,43 +49,38 @@ static inline void __MCFCRT_UninstallCtrlHandler(){
 	_MCFCRT_ASSERT(bRet);
 }
 
-static bool OnDllProcessAttach(){
+_Noreturn __attribute__((__noinline__))
+static void BailWithErrorCode(const wchar_t *pwszMessage, DWORD dwErrorCode){
+	wchar_t awcBuffer[512];
+	wchar_t *pwcWrite;
+	pwcWrite = _MCFCRT_wcppcpy(awcBuffer, awcBuffer + 448, pwszMessage);
+	pwcWrite = _MCFCRT_wcpcpy(pwcWrite, L"\n\n错误代码：");
+	pwcWrite = _MCFCRT_itow_u(pwcWrite, dwErrorCode);
+	*pwcWrite = 0;
+	_MCFCRT_Bail(awcBuffer);
+}
+
+static void OnDllProcessAttach(){
+	__MCFCRT_FEnvInit();
+
 	if(!__MCFCRT_HeapInit()){
-		return false;
+		BailWithErrorCode(L"MCFCRT 堆内存初始化失败。", GetLastError());
 	}
 	if(!__MCFCRT_HeapDbgInit()){
-		const DWORD dwErrorCode = GetLastError();
-		__MCFCRT_HeapUninit();
-		SetLastError(dwErrorCode);
-		return false;
+		BailWithErrorCode(L"MCFCRT 堆内存调试器初始化失败。", GetLastError());
 	}
 	if(!__MCFCRT_RegisterFrameInfo()){
-		const DWORD dwErrorCode = GetLastError();
-		__MCFCRT_HeapDbgUninit();
-		__MCFCRT_HeapUninit();
-		SetLastError(dwErrorCode);
-		return false;
+		BailWithErrorCode(L"MCFCRT 异常栈帧信息注册失败。", GetLastError());
 	}
 	if(!__MCFCRT_BeginModule()){
-		const DWORD dwErrorCode = GetLastError();
-		__MCFCRT_UnregisterFrameInfo();
-		__MCFCRT_HeapDbgUninit();
-		__MCFCRT_HeapUninit();
-		SetLastError(dwErrorCode);
-		return false;
+		BailWithErrorCode(L"MCFCRT 模块初始化失败。", GetLastError());
 	}
 	if(!__MCFCRT_InstallCtrlHandler()){
-		const DWORD dwErrorCode = GetLastError();
-		__MCFCRT_EndModule();
-		__MCFCRT_UnregisterFrameInfo();
-		__MCFCRT_HeapDbgUninit();
-		__MCFCRT_HeapUninit();
-		SetLastError(dwErrorCode);
-		return false;
+		BailWithErrorCode(L"MCFCRT Ctrl 响应函数注册失败。", GetLastError());
 	}
-	return true;
 }
 static void OnDllThreadAttach(){
+	__MCFCRT_FEnvInit();
 }
 static void OnDllThreadDetach(){
 	__MCFCRT_TlsCleanup();
@@ -99,17 +95,6 @@ static void OnDllProcessDetach(){
 
 static bool g_bInitialized = false;
 
-_Noreturn __attribute__((__noinline__))
-static void BailWithErrorCode(const wchar_t *pwszMessage, DWORD dwErrorCode){
-	wchar_t awcBuffer[512];
-	wchar_t *pwcWrite;
-	pwcWrite = _MCFCRT_wcppcpy(awcBuffer, awcBuffer + 448, pwszMessage);
-	pwcWrite = _MCFCRT_wcpcpy(pwcWrite, L"\n\n错误代码：");
-	pwcWrite = _MCFCRT_itow_u(pwcWrite, dwErrorCode);
-	*pwcWrite = 0;
-	_MCFCRT_Bail(awcBuffer);
-}
-
 __MCFCRT_C_STDCALL __MCFCRT_HAS_EH_TOP
 static void CrtTlsCallback(LPVOID hInstance, DWORD dwReason, LPVOID pReserved){
 	(void)hInstance;
@@ -122,10 +107,7 @@ static void CrtTlsCallback(LPVOID hInstance, DWORD dwReason, LPVOID pReserved){
 			if(g_bInitialized){
 				break;
 			}
-			const bool bRet = OnDllProcessAttach();
-			if(!bRet){
-				BailWithErrorCode(L"MCFCRT 初始化失败。", GetLastError());
-			}
+			OnDllProcessAttach();
 			g_bInitialized = true;
 			break;
 

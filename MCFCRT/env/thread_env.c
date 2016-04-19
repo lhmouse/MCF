@@ -6,7 +6,6 @@
 #include "mcfwin.h"
 #include "avl_tree.h"
 #include "mutex.h"
-#include "mingw_hacks.h"
 #include "../ext/assert.h"
 #include <stdlib.h>
 
@@ -104,7 +103,6 @@ void __MCFCRT_ThreadEnvUninit(){
 void __MCFCRT_TlsCleanup(){
 	TlsThread *const pThread = GetTlsForCurrentThread();
 	if(!pThread){
-		__MCFCRT_RunEmutlsDtors();
 		return;
 	}
 
@@ -145,8 +143,6 @@ void __MCFCRT_TlsCleanup(){
 
 	TlsSetValue(g_dwTlsIndex, nullptr);
 	free(pThread);
-
-	__MCFCRT_RunEmutlsDtors();
 }
 
 void *_MCFCRT_TlsAllocKey(size_t uSize, _MCFCRT_TlsConstructor pfnConstructor, _MCFCRT_TlsDestructor pfnDestructor, intptr_t nContext){

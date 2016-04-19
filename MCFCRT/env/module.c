@@ -5,7 +5,6 @@
 #include "module.h"
 #include "mcfwin.h"
 #include "mutex.h"
-#include "mingw_hacks.h"
 #include "fenv.h"
 #include "thread_env.h"
 #include "static_ctors.h"
@@ -64,35 +63,13 @@ static void __MCFCRT_PumpAtEndModule(){
 	}
 }
 
-static bool __MCFCRT_StaticObjectsInit(){
-	if(!__MCFCRT_CallStaticCtors()){
-		const DWORD dwError = GetLastError();
-		__MCFCRT_PumpAtEndModule();
-		SetLastError(dwError);
-		return false;
-	}
-	return true;
-}
-static void __MCFCRT_StaticObjectsUninit(){
-	__MCFCRT_PumpAtEndModule();
-	__MCFCRT_CallStaticDtors();
-}
-
 bool __MCFCRT_BeginModule(){
-	__MCFCRT_FEnvInit();
-
 	if(!__MCFCRT_ThreadEnvInit()){
 		return false;
 	}
-	if(!__MCFCRT_MinGWHacksInit()){
+	if(!__MCFCRT_CallStaticCtors()){
 		const DWORD dwLastError = GetLastError();
-		__MCFCRT_ThreadEnvUninit();
-		SetLastError(dwLastError);
-		return false;
-	}
-	if(!__MCFCRT_StaticObjectsInit()){
-		const DWORD dwLastError = GetLastError();
-		__MCFCRT_MinGWHacksUninit();
+		__MCFCRT_PumpAtEndModule();
 		__MCFCRT_ThreadEnvUninit();
 		SetLastError(dwLastError);
 		return false;
@@ -100,8 +77,8 @@ bool __MCFCRT_BeginModule(){
 	return true;
 }
 void __MCFCRT_EndModule(){
-	__MCFCRT_StaticObjectsUninit();
-	__MCFCRT_MinGWHacksUninit();
+	__MCFCRT_PumpAtEndModule();
+	__MCFCRT_CallStaticDtors();
 	__MCFCRT_ThreadEnvUninit();
 }
 

@@ -12,7 +12,7 @@ _MCFCRT_EXTERN_C_BEGIN
 // 初始化为 { 0 } 即可。
 typedef struct __MCFCRT_tagConditionVariable {
 	volatile _MCFCRT_STD uintptr_t __u;
-} _MCFCRT_ConditionVariable;
+} volatile _MCFCRT_ConditionVariable;
 
 typedef _MCFCRT_STD intptr_t (*_MCFCRT_ConditionVariableUnlockCallback)(_MCFCRT_STD intptr_t __nContext);
 typedef void (*_MCFCRT_ConditionVariableRelockCallback)(_MCFCRT_STD intptr_t __nContext, _MCFCRT_STD intptr_t __nUnlocked);

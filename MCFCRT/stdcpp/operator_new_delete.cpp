@@ -36,21 +36,13 @@ void *Allocate(std::size_t uSize, bool bIsArray, const void *pRetAddr){
 	const auto uSizeToAlloc = uSize;
 #endif
 	void *pRaw = ::__MCFCRT_HeapAlloc(uSizeToAlloc, pRetAddr);
-	if(!pRaw){
-		try {
-			do {
-				const auto pfnHandler = std::get_new_handler();
-				if(!pfnHandler){
-					return nullptr;
-				}
-				(*pfnHandler)();
-				pRaw = ::__MCFCRT_HeapAlloc(uSizeToAlloc, pRetAddr);
-			} while(!pRaw);
-		} catch(std::bad_alloc &){
-			throw;
-		} catch(...){
-			std::terminate();
+	while(!pRaw){
+		const auto pfnHandler = std::get_new_handler();
+		if(!pfnHandler){
+			throw std::bad_alloc();
 		}
+		(*pfnHandler)();
+		pRaw = ::__MCFCRT_HeapAlloc(uSizeToAlloc, pRetAddr);
 	}
 #if __MCFCRT_REQUIRE_HEAPDBG_LEVEL(2)
 	const auto uMagic = GetMagic(pRaw, bIsArray);
@@ -85,8 +77,6 @@ void *AllocateNoThrow(std::size_t uSize, bool bIsArray, const void *pRetAddr) no
 			} while(!pRaw);
 		} catch(std::bad_alloc &){
 			return nullptr;
-		} catch(...){
-			std::terminate();
 		}
 	}
 #if __MCFCRT_REQUIRE_HEAPDBG_LEVEL(2)

@@ -3,7 +3,6 @@
 // Copyleft 2013 - 2016, LH_Mouse. All wrongs reserved.
 
 #include "decl.h"
-#include "../env/fenv.h"
 #include "../env/mcfwin.h"
 #include "../env/module.h"
 #include "../env/thread_env.h"
@@ -50,8 +49,6 @@ static inline void __MCFCRT_UninstallCtrlHandler(){
 }
 
 static bool OnDllProcessAttach(){
-	__MCFCRT_FenvInit();
-
 	if(!__MCFCRT_HeapInit()){
 		return false;
 	}
@@ -88,9 +85,6 @@ static bool OnDllProcessAttach(){
 	return true;
 }
 static void OnDllThreadAttach(){
-	__MCFCRT_FenvInit();
-
-	//
 }
 static void OnDllThreadDetach(){
 	__MCFCRT_TlsCleanup();

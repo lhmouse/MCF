@@ -6,6 +6,7 @@
 #include "mcfwin.h"
 #include "mutex.h"
 #include "mingw_hacks.h"
+#include "fenv.h"
 #include "thread_env.h"
 #include "static_ctors.h"
 #include "../ext/expect.h"
@@ -78,6 +79,8 @@ static void __MCFCRT_StaticObjectsUninit(){
 }
 
 bool __MCFCRT_BeginModule(){
+	__MCFCRT_FEnvInit();
+
 	if(!__MCFCRT_ThreadEnvInit()){
 		return false;
 	}

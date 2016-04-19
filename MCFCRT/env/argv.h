@@ -10,8 +10,8 @@
 _MCFCRT_EXTERN_C_BEGIN
 
 typedef struct _MCFCRT_tagArgItem {
-	const wchar_t *__pwszStr;
-	_MCFCRT_STD size_t __uLen;
+	const wchar_t *pwszStr;
+	_MCFCRT_STD size_t uLen;
 } _MCFCRT_ArgItem;
 
 extern const _MCFCRT_ArgItem *_MCFCRT_AllocArgv(_MCFCRT_STD size_t *__pArgc, const wchar_t *__pwszCommandLine) _MCFCRT_NOEXCEPT;

@@ -9,7 +9,7 @@
 
 _MCFCRT_EXTERN_C_BEGIN
 
-extern void __MCFCRT_FenvInit(void) _MCFCRT_NOEXCEPT;
+extern void __MCFCRT_FEnvInit(void) _MCFCRT_NOEXCEPT;
 
 _MCFCRT_EXTERN_C_END
 

@@ -7,10 +7,6 @@
 
 // 专门为 GCC 定制的兼容层。
 
-#include "_crtdef.h"
-
-_MCFCRT_EXTERN_C_BEGIN
-
 #ifdef __GTHREADS
 #	error __GTHREADS is already defined. (Thread model confliction detected?)
 #endif
@@ -35,7 +31,7 @@ extern void __MCFCRT_GthreadTlsDestructor(_MCFCRT_STD intptr_t __nContext, void 
 typedef void * __gthread_key_t;
 
 static inline int __gthread_key_create(__gthread_key_t *__key_ret, void (*__destructor)(void *)) _MCFCRT_NOEXCEPT {
-	const __gthread_key_t __key = _MCFCRT_TlsAllocKey(sizeof(void *), &__MCFCRT_GthreadTlsConstructor, &__MCFCRT_GthreadTlsDestructor, (_MCFCRT_STD intptr_t)__destructor);
+	void *const __key = _MCFCRT_TlsAllocKey(sizeof(void *), &__MCFCRT_GthreadTlsConstructor, &__MCFCRT_GthreadTlsDestructor, (_MCFCRT_STD intptr_t)__destructor);
 	if(!__key){
 		return ENOMEM;
 	}
@@ -55,9 +51,6 @@ static inline void *__gthread_getspecific(__gthread_key_t __key) _MCFCRT_NOEXCEP
 	if(!__success){
 		return nullptr;
 	}
-	if(!__storage){
-		return nullptr;
-	}
 	return *(void **)__storage;
 }
 static inline int __gthread_setspecific(__gthread_key_t __key, const void *__value) _MCFCRT_NOEXCEPT {
@@ -66,7 +59,6 @@ static inline int __gthread_setspecific(__gthread_key_t __key, const void *__val
 	if(!__success){
 		return ENOMEM;
 	}
-	_MCFCRT_ASSERT(__storage);
 	*(void **)__storage = (void *)__value;
 	return 0;
 }
@@ -81,15 +73,14 @@ typedef _MCFCRT_OnceFlag __gthread_once_t;
 
 #define __GTHREAD_ONCE_INIT    { 0 }
 
-static inline int __gthread_once(__gthread_once_t *__flag, void (*__func)(void)) _MCFCRT_NOEXCEPT {
+static inline void __gthread_once(__gthread_once_t *__flag, void (*__func)(void)) _MCFCRT_NOEXCEPT {
 	const _MCFCRT_OnceResult __result = _MCFCRT_WaitForOnceFlagForever(__flag);
 	if(_MCFCRT_EXPECT(__result == _MCFCRT_kOnceResultFinished)){
-		return 0;
+		return;
 	}
 	_MCFCRT_ASSERT(__result == _MCFCRT_kOnceResultInitial);
 	(*__func)();
 	_MCFCRT_SignalOnceFlagAsFinished(__flag);
-	return 0;
 }
 
 //-----------------------------------------------------------------------------
@@ -179,7 +170,6 @@ static inline int __gthread_recursive_mutex_lock(__gthread_recursive_mutex_t *__
 	return 0;
 }
 static inline int __gthread_recursive_mutex_unlock(__gthread_recursive_mutex_t *__recur_mutex) _MCFCRT_NOEXCEPT {
-	_MCFCRT_ASSERT(_MCFCRT_GetCurrentThreadId() == __atomic_load_n(&(__recur_mutex->__owner), __ATOMIC_RELAXED));
 	const _MCFCRT_STD size_t __new_count = --__recur_mutex->__count;
 	if(_MCFCRT_EXPECT_NOT(__new_count == 0)){
 		__atomic_store_n(&(__recur_mutex->__owner), 0, __ATOMIC_RELAXED);
@@ -258,7 +248,5 @@ static inline int __gthread_cond_broadcast(__gthread_cond_t *__cond) _MCFCRT_NOE
 	_MCFCRT_BroadcastConditionVariable(__cond);
 	return 0;
 }
-
-_MCFCRT_EXTERN_C_END
 
 #endif

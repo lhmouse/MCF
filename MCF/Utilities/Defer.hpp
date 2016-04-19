@@ -28,20 +28,24 @@ namespace Impl_Defer {
 		}
 	};
 /*
+	inline std::size_t GetUncaughtExceptionCount() noexcept {
+		return static_cast<std::size_t>(std::uncaught_exceptions()); // FIXME: 需要 c++1z 的支持。
+	}
+
 	template<typename LvalueRefOrPrvalueT>
 	class DeferredCallbackOnNormalExit {
 	private:
-		int x_nOldExceptionCount;
+		std::size_t x_uOldExceptionCount;
 		LvalueRefOrPrvalueT x_fnCallback;
 
 	public:
 		explicit DeferredCallbackOnNormalExit(LvalueRefOrPrvalueT &&fnCallback)
-			: x_nOldExceptionCount(std::uncaught_exceptions())
+			: x_uOldExceptionCount(GetUncaughtExceptionCount())
 			, x_fnCallback(std::forward<LvalueRefOrPrvalueT>(fnCallback))
 		{
 		}
 		~DeferredCallbackOnNormalExit() noexcept(false) {
-			if(std::uncaught_exceptions() <= x_nOldExceptionCount){
+			if(GetUncaughtExceptionCount() <= x_uOldExceptionCount){
 				x_fnCallback();
 			}
 		}
@@ -50,17 +54,17 @@ namespace Impl_Defer {
 	template<typename LvalueRefOrPrvalueT>
 	class DeferredCallbackOnException {
 	private:
-		int x_nOldExceptionCount;
+		std::size_t x_uOldExceptionCount;
 		LvalueRefOrPrvalueT x_fnCallback;
 
 	public:
 		explicit DeferredCallbackOnException(LvalueRefOrPrvalueT &&fnCallback)
-			: x_nOldExceptionCount(std::uncaught_exceptions())
+			: x_uOldExceptionCount(GetUncaughtExceptionCount())
 			, x_fnCallback(std::forward<LvalueRefOrPrvalueT>(fnCallback))
 		{
 		}
 		~DeferredCallbackOnException() noexcept(false) {
-			if(std::uncaught_exceptions() > x_nOldExceptionCount){
+			if(GetUncaughtExceptionCount() > x_uOldExceptionCount){
 				x_fnCallback();
 			}
 		}

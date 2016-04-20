@@ -195,39 +195,11 @@ static inline int __gthread_recursive_mutex_unlock(__gthread_recursive_mutex_t *
 
 #include "condition_variable.h"
 
-static inline _MCFCRT_STD intptr_t __MCFCRT_GthreadUnlockCallbackMutex(_MCFCRT_STD intptr_t __context) _MCFCRT_NOEXCEPT {
-	__gthread_mutex_t *const __mutex = (__gthread_mutex_t *)__context;
+extern _MCFCRT_STD intptr_t __MCFCRT_GthreadUnlockCallbackMutex(_MCFCRT_STD intptr_t __context) _MCFCRT_NOEXCEPT;
+extern void __MCFCRT_GthreadRelockCallbackMutex(_MCFCRT_STD intptr_t __context, _MCFCRT_STD intptr_t __unlocked) _MCFCRT_NOEXCEPT;
 
-	__gthread_mutex_unlock(__mutex);
-	return 1;
-}
-static inline void __MCFCRT_GthreadRelockCallbackMutex(_MCFCRT_STD intptr_t __context, _MCFCRT_STD intptr_t __unlocked) _MCFCRT_NOEXCEPT {
-	__gthread_mutex_t *const __mutex = (__gthread_mutex_t *)__context;
-
-	_MCFCRT_ASSERT((_MCFCRT_STD size_t)__unlocked == 1);
-	__gthread_mutex_lock(__mutex);
-}
-
-static inline _MCFCRT_STD intptr_t __MCFCRT_GthreadUnlockCallbackRecursiveMutex(_MCFCRT_STD intptr_t __context) _MCFCRT_NOEXCEPT {
-	__gthread_recursive_mutex_t *const __recur_mutex = (__gthread_recursive_mutex_t *)__context;
-
-	const _MCFCRT_STD size_t __old_count = __recur_mutex->__count;
-	__recur_mutex->__count = 0;
-	__atomic_store_n(&(__recur_mutex->__owner), 0, __ATOMIC_RELAXED);
-
-	__gthread_mutex_unlock(&(__recur_mutex->__mutex));
-	return (_MCFCRT_STD intptr_t)__old_count;
-}
-static inline void __MCFCRT_GthreadRelockCallbackRecursiveMutex(_MCFCRT_STD intptr_t __context, _MCFCRT_STD intptr_t __unlocked) _MCFCRT_NOEXCEPT {
-	__gthread_recursive_mutex_t *const __recur_mutex = (__gthread_recursive_mutex_t *)__context;
-
-	_MCFCRT_ASSERT((_MCFCRT_STD size_t)__unlocked >= 1);
-	__gthread_mutex_lock(&(__recur_mutex->__mutex));
-
-	const _MCFCRT_STD uintptr_t __self = _MCFCRT_GetCurrentThreadId();
-	__atomic_store_n(&(__recur_mutex->__owner), __self, __ATOMIC_RELAXED);
-	__recur_mutex->__count = (_MCFCRT_STD size_t)__unlocked;
-}
+extern _MCFCRT_STD intptr_t __MCFCRT_GthreadUnlockCallbackRecursiveMutex(_MCFCRT_STD intptr_t __context) _MCFCRT_NOEXCEPT;
+extern void __MCFCRT_GthreadRelockCallbackRecursiveMutex(_MCFCRT_STD intptr_t __context, _MCFCRT_STD intptr_t __unlocked) _MCFCRT_NOEXCEPT;
 
 typedef _MCFCRT_ConditionVariable __gthread_cond_t;
 

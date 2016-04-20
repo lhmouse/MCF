@@ -14,9 +14,9 @@ int wcsncmp(const wchar_t *s1, const wchar_t *s2, size_t n){
 				return 0;	\
 			}	\
 			--cnt;	\
-			const long ch1 = (long)(uint16_t)s1[idx_];	\
-			const long ch2 = (long)(uint16_t)s2[idx_];	\
-			const long delta = ch1 - ch2;	\
+			const int_fast32_t ch1 = (int_fast32_t)(uint16_t)s1[idx_];	\
+			const int_fast32_t ch2 = (int_fast32_t)(uint16_t)s2[idx_];	\
+			const int_fast32_t delta = ch1 - ch2;	\
 			if(delta != 0){	\
 				return (delta >> (sizeof(delta) * __CHAR_BIT__ - 1)) | 1;	\
 			}	\

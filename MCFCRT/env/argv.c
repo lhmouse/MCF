@@ -72,7 +72,7 @@ const _MCFCRT_ArgItem *_MCFCRT_AllocArgv(size_t *pArgc, const wchar_t *pwszComma
 					if(!pNewStorage){
 						goto jBadAlloc;
 					}
-					_MCFCRT_ArgItem *pArgv = (_MCFCRT_ArgItem *)((char *)pNewStorage + uPrefixSize + sizeof(_MCFCRT_ArgItem));
+					pArgv = (_MCFCRT_ArgItem *)((char *)pNewStorage + uPrefixSize + sizeof(_MCFCRT_ArgItem));
 					pArgv[-1].pwszStr = pNewStorage;
 					pArgv[-1].uLen = uCapacity;
 

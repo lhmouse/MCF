@@ -65,7 +65,6 @@ static inline bool ReallyWaitForMutex(volatile uintptr_t *puControl, size_t uMax
 			}
 			if(bSpinnable){
 				for(size_t i = 0; i < uMaxSpinCount; ++i){
-					bool bTaken;
 					{
 						uintptr_t uOld, uNew;
 						uOld = __atomic_load_n(puControl, __ATOMIC_ACQUIRE);

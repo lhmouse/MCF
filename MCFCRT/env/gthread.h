@@ -7,6 +7,10 @@
 
 // 专门为 GCC 定制的兼容层。
 
+#include "_crtdef.h"
+
+_MCFCRT_EXTERN_C_BEGIN
+
 #ifdef __GTHREADS
 #	error __GTHREADS is already defined. (Thread model confliction detected?)
 #endif
@@ -31,7 +35,7 @@ extern void __MCFCRT_GthreadTlsDestructor(_MCFCRT_STD intptr_t __nContext, void 
 typedef void * __gthread_key_t;
 
 static inline int __gthread_key_create(__gthread_key_t *__key_ret, void (*__destructor)(void *)) _MCFCRT_NOEXCEPT {
-	void *const __key = _MCFCRT_TlsAllocKey(sizeof(void *), &__MCFCRT_GthreadTlsConstructor, &__MCFCRT_GthreadTlsDestructor, (_MCFCRT_STD intptr_t)__destructor);
+	const __gthread_key_t __key = _MCFCRT_TlsAllocKey(sizeof(void *), &__MCFCRT_GthreadTlsConstructor, &__MCFCRT_GthreadTlsDestructor, (_MCFCRT_STD intptr_t)__destructor);
 	if(!__key){
 		return ENOMEM;
 	}
@@ -51,6 +55,9 @@ static inline void *__gthread_getspecific(__gthread_key_t __key) _MCFCRT_NOEXCEP
 	if(!__success){
 		return nullptr;
 	}
+	if(!__storage){
+		return nullptr;
+	}
 	return *(void **)__storage;
 }
 static inline int __gthread_setspecific(__gthread_key_t __key, const void *__value) _MCFCRT_NOEXCEPT {
@@ -59,6 +66,7 @@ static inline int __gthread_setspecific(__gthread_key_t __key, const void *__val
 	if(!__success){
 		return ENOMEM;
 	}
+	_MCFCRT_ASSERT(__storage);
 	*(void **)__storage = (void *)__value;
 	return 0;
 }
@@ -73,14 +81,15 @@ typedef _MCFCRT_OnceFlag __gthread_once_t;
 
 #define __GTHREAD_ONCE_INIT    { 0 }
 
-static inline void __gthread_once(__gthread_once_t *__flag, void (*__func)(void)) _MCFCRT_NOEXCEPT {
+static inline int __gthread_once(__gthread_once_t *__flag, void (*__func)(void)) _MCFCRT_NOEXCEPT {
 	const _MCFCRT_OnceResult __result = _MCFCRT_WaitForOnceFlagForever(__flag);
 	if(_MCFCRT_EXPECT(__result == _MCFCRT_kOnceResultFinished)){
-		return;
+		return 0;
 	}
 	_MCFCRT_ASSERT(__result == _MCFCRT_kOnceResultInitial);
 	(*__func)();
 	_MCFCRT_SignalOnceFlagAsFinished(__flag);
+	return 0;
 }
 
 //-----------------------------------------------------------------------------
@@ -134,7 +143,7 @@ typedef struct {
 static inline void __gthread_recursive_mutex_init_function(__gthread_recursive_mutex_t *__recur_mutex) _MCFCRT_NOEXCEPT {
 	__recur_mutex->__owner = 0;
 	__recur_mutex->__count = 0;
-	__gthread_mutex_init_function(&(__recur_mutex->__mutex)); // 该函数保证 release 语义，因此上面就不需要原子操作了。
+	__gthread_mutex_init_function(&(__recur_mutex->__mutex)); // 这里是 release 语义，因此上面就不需要原子操作了。
 }
 static inline int __gthread_recursive_mutex_destroy(__gthread_recursive_mutex_t *__recur_mutex) _MCFCRT_NOEXCEPT {
 	__gthread_mutex_destroy(&(__recur_mutex->__mutex));
@@ -170,6 +179,7 @@ static inline int __gthread_recursive_mutex_lock(__gthread_recursive_mutex_t *__
 	return 0;
 }
 static inline int __gthread_recursive_mutex_unlock(__gthread_recursive_mutex_t *__recur_mutex) _MCFCRT_NOEXCEPT {
+	_MCFCRT_ASSERT(_MCFCRT_GetCurrentThreadId() == __atomic_load_n(&(__recur_mutex->__owner), __ATOMIC_RELAXED));
 	const _MCFCRT_STD size_t __new_count = --__recur_mutex->__count;
 	if(_MCFCRT_EXPECT_NOT(__new_count == 0)){
 		__atomic_store_n(&(__recur_mutex->__owner), 0, __ATOMIC_RELAXED);
@@ -188,14 +198,14 @@ static inline int __gthread_recursive_mutex_unlock(__gthread_recursive_mutex_t *
 static inline _MCFCRT_STD intptr_t __MCFCRT_GthreadUnlockCallbackMutex(_MCFCRT_STD intptr_t __context) _MCFCRT_NOEXCEPT {
 	__gthread_mutex_t *const __mutex = (__gthread_mutex_t *)__context;
 
-	__gthread_mutex_lock(__mutex);
+	__gthread_mutex_unlock(__mutex);
 	return 1;
 }
 static inline void __MCFCRT_GthreadRelockCallbackMutex(_MCFCRT_STD intptr_t __context, _MCFCRT_STD intptr_t __unlocked) _MCFCRT_NOEXCEPT {
 	__gthread_mutex_t *const __mutex = (__gthread_mutex_t *)__context;
 
 	_MCFCRT_ASSERT((_MCFCRT_STD size_t)__unlocked == 1);
-	__gthread_mutex_unlock(__mutex);
+	__gthread_mutex_lock(__mutex);
 }
 
 static inline _MCFCRT_STD intptr_t __MCFCRT_GthreadUnlockCallbackRecursiveMutex(_MCFCRT_STD intptr_t __context) _MCFCRT_NOEXCEPT {
@@ -205,14 +215,14 @@ static inline _MCFCRT_STD intptr_t __MCFCRT_GthreadUnlockCallbackRecursiveMutex(
 	__recur_mutex->__count = 0;
 	__atomic_store_n(&(__recur_mutex->__owner), 0, __ATOMIC_RELAXED);
 
-	__gthread_mutex_lock(&(__recur_mutex->__mutex));
+	__gthread_mutex_unlock(&(__recur_mutex->__mutex));
 	return (_MCFCRT_STD intptr_t)__old_count;
 }
 static inline void __MCFCRT_GthreadRelockCallbackRecursiveMutex(_MCFCRT_STD intptr_t __context, _MCFCRT_STD intptr_t __unlocked) _MCFCRT_NOEXCEPT {
 	__gthread_recursive_mutex_t *const __recur_mutex = (__gthread_recursive_mutex_t *)__context;
 
 	_MCFCRT_ASSERT((_MCFCRT_STD size_t)__unlocked >= 1);
-	__gthread_mutex_unlock(&(__recur_mutex->__mutex));
+	__gthread_mutex_lock(&(__recur_mutex->__mutex));
 
 	const _MCFCRT_STD uintptr_t __self = _MCFCRT_GetCurrentThreadId();
 	__atomic_store_n(&(__recur_mutex->__owner), __self, __ATOMIC_RELAXED);
@@ -248,5 +258,7 @@ static inline int __gthread_cond_broadcast(__gthread_cond_t *__cond) _MCFCRT_NOE
 	_MCFCRT_BroadcastConditionVariable(__cond);
 	return 0;
 }
+
+_MCFCRT_EXTERN_C_END
 
 #endif

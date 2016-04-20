@@ -4,6 +4,15 @@
 
 #include "../../env/_crtdef.h"
 
+static inline uintptr_t WordwiseSwap(uintptr_t val){
+	uintptr_t ret = val;
+	ret = ((ret >> 16) & 0x0000FFFF) | ((ret << 16) & 0xFFFF0000);
+#ifdef _WIN64
+	ret = ((ret >> 32) & 0x00000000FFFFFFFF) | ((ret << 32) & 0xFFFFFFFF00000000);
+#endif
+	return ret;
+}
+
 int wmemcmp(const wchar_t *p1, const wchar_t *p2, size_t cnt){
 	const uint16_t *rp1 = (const uint16_t *)p1;
 	const uint16_t *rp2 = (const uint16_t *)p2;
@@ -12,28 +21,6 @@ int wmemcmp(const wchar_t *p1, const wchar_t *p2, size_t cnt){
 	++wcnt;
 	for(;;){
 
-#define COMPARE_LOWORD_AND_SHIFT	\
-		{	\
-			const long delta = (long)(uint16_t)wrd1 - (long)(uint16_t)wrd2;	\
-			if(delta != 0){	\
-				return (delta >> (sizeof(delta) * __CHAR_BIT__ - 1)) | 1;	\
-			}	\
-			wrd1 >>= 16;	\
-			wrd2 >>= 16;	\
-		}
-
-#ifdef _WIN64
-#	define COMPARE_UINTPTR	\
-		COMPARE_LOWORD_AND_SHIFT	\
-		COMPARE_LOWORD_AND_SHIFT	\
-		COMPARE_LOWORD_AND_SHIFT	\
-		COMPARE_LOWORD_AND_SHIFT
-#else
-#	define COMPARE_UINTPTR	\
-		COMPARE_LOWORD_AND_SHIFT	\
-		COMPARE_LOWORD_AND_SHIFT
-#endif
-
 #define UNROLLED(idx_)	\
 		{	\
 			if(--wcnt == 0){	\
@@ -41,10 +28,10 @@ int wmemcmp(const wchar_t *p1, const wchar_t *p2, size_t cnt){
 				rp2 += (idx_) * (sizeof(uintptr_t) / sizeof(wchar_t));	\
 				break;	\
 			}	\
-			register uintptr_t wrd1 = ((const uintptr_t *)rp1)[idx_];	\
-			register uintptr_t wrd2 = ((const uintptr_t *)rp2)[idx_];	\
+			const uintptr_t wrd1 = ((const uintptr_t *)rp1)[idx_];	\
+			const uintptr_t wrd2 = ((const uintptr_t *)rp2)[idx_];	\
 			if(wrd1 != wrd2){	\
-				COMPARE_UINTPTR	\
+				return (WordwiseSwap(wrd1) > WordwiseSwap(wrd2)) ? 1 : -1;	\
 			}	\
 		}
 

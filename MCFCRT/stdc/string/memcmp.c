@@ -4,11 +4,15 @@
 
 #include "../../env/_crtdef.h"
 
+static inline uintptr_t BytewiseSwap(uintptr_t val){
+	uintptr_t ret = val;
+	ret = ((ret >>  8) & 0x00FF00FF) | ((ret <<  8) & 0xFF00FF00);
+	ret = ((ret >> 16) & 0x0000FFFF) | ((ret << 16) & 0xFFFF0000);
 #ifdef _WIN64
-#	define BSWAP_PTR(val)   __builtin_bswap64(val)
-#else
-#	define BSWAP_PTR(val)   __builtin_bswap32(val)
+	ret = ((ret >> 32) & 0x00000000FFFFFFFF) | ((ret << 32) & 0xFFFFFFFF00000000);
 #endif
+	return ret;
+}
 
 int memcmp(const void *p1, const void *p2, size_t cb){
 	const unsigned char *rp1 = (const unsigned char *)p1;
@@ -28,7 +32,7 @@ int memcmp(const void *p1, const void *p2, size_t cb){
 			const uintptr_t wrd1 = ((const uintptr_t *)rp1)[idx_];	\
 			const uintptr_t wrd2 = ((const uintptr_t *)rp2)[idx_];	\
 			if(wrd1 != wrd2){	\
-				return (BSWAP_PTR(wrd1) > BSWAP_PTR(wrd2)) ? 1 : -1;	\
+				return (BytewiseSwap(wrd1) > BytewiseSwap(wrd2)) ? 1 : -1;	\
 			}	\
 		}
 

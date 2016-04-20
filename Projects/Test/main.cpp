@@ -1,37 +1,13 @@
 #include <MCF/StdMCF.hpp>
-//#include <MCFCRT/env/gthread.h>
-#include <MCF/Core/Array.hpp>
-#include <MCF/Thread/Thread.hpp>
-#include <MCF/Core/Clocks.hpp>
+#include <cwchar>
 #include <cstdio>
 
 extern "C" unsigned _MCFCRT_Main(){
-	::__gthread_mutex_t m;
-	::__gthread_mutex_init_function(&m);
+	static constexpr wchar_t s1[] = L"01234567";
+	static constexpr wchar_t s2[] = L"0123765_";
 
-	volatile unsigned val = 0;
-	MCF::Array<MCF::Thread, 4> threads;
+	volatile auto p = &::wmemcmp;
+	std::printf("result = %d\n", (*p)(s1, s2, _countof(s1)));
 
-	auto t1 = MCF::GetHiResMonoClock();
-	{
-		for(auto &t : threads){
-			t.Create(
-				[&]{
-					for(unsigned i = 0; i < 10000; ++i){
-						::__gthread_mutex_lock(&m);
-						val = val + 1;
-						::__gthread_mutex_unlock(&m);
-					}
-				},
-				false);
-		}
-	}
-	for(auto &t : threads){
-		t.Join();
-	}
-	auto t2 = MCF::GetHiResMonoClock();
-	std::printf("val = %u, delta_t = %f\n", val, t2 - t1);
-
-	::__gthread_mutex_destroy(&m);
 	return 0;
 }

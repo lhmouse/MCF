@@ -16,15 +16,12 @@
 namespace MCF {
 
 class Thread {
-public:
-	using Handle = void *;
-
 private:
 	struct X_ThreadCloser {
-		constexpr Handle operator()() const noexcept {
+		constexpr ::_MCFCRT_ThreadHandle operator()() const noexcept {
 			return nullptr;
 		}
-		void operator()(Handle hThread) const noexcept {
+		void operator()(::_MCFCRT_ThreadHandle hThread) const noexcept {
 			::_MCFCRT_CloseThread(hThread);
 		}
 	};
@@ -43,7 +40,7 @@ private:
 	public:
 		void SpawnThread(bool bSuspended);
 
-		Handle GetHandle() const noexcept {
+		::_MCFCRT_ThreadHandle GetHandle() const noexcept {
 			return x_hThread.Get();
 		}
 		std::uintptr_t GetTid() const noexcept {
@@ -69,6 +66,9 @@ private:
 			x_fnProc();
 		}
 	};
+
+public:
+	using Handle = ::_MCFCRT_ThreadHandle;
 
 public:
 	static std::uintptr_t GetCurrentId() noexcept {

@@ -20,14 +20,6 @@
 namespace MCF {
 
 namespace Impl_ThreadLocal {
-	struct TlsKeyDeleter {
-		constexpr void *operator()() const noexcept {
-			return nullptr;
-		}
-		void operator()(void *pKey) const noexcept {
-			::_MCFCRT_TlsFreeKey(pKey);
-		}
-	};
 }
 
 template<typename ElementT>
@@ -35,14 +27,23 @@ class ThreadLocal {
 	static_assert(alignof(ElementT) <= alignof(std::max_align_t), "ElementT is over-aligned.");
 
 private:
+	struct X_TlsKeyDeleter {
+		constexpr ::_MCFCRT_TlsKeyHandle operator()() const noexcept {
+			return nullptr;
+		}
+		void operator()(::_MCFCRT_TlsKeyHandle hTlsKey) const noexcept {
+			::_MCFCRT_TlsFreeKey(hTlsKey);
+		}
+	};
+
 	struct X_TlsContainer {
 		AlignedStorage<0, ElementT> vStorage;
 		bool bConstructed;
 	};
 
 private:
-	static UniqueHandle<Impl_ThreadLocal::TlsKeyDeleter> X_AllocateTlsKey(){
-		auto pTemp = ::_MCFCRT_TlsAllocKey(sizeof(X_TlsContainer),
+	static UniqueHandle<X_TlsKeyDeleter> X_AllocateTlsKey(){
+		auto hTemp = ::_MCFCRT_TlsAllocKey(sizeof(X_TlsContainer),
 			[](std::intptr_t, void *pStorage) noexcept -> unsigned long {
 				const auto pContainer = static_cast<X_TlsContainer *>(pStorage);
 				pContainer->bConstructed = false;
@@ -56,27 +57,27 @@ private:
 				Destruct(reinterpret_cast<ElementT *>(&(pContainer->vStorage)));
 			},
 			0);
-		if(!pTemp){
+		if(!hTemp){
 			MCF_THROW(Exception, ::_MCFCRT_GetLastWin32Error(), Rcntws::View(L"_MCFCRT_TlsAllocKey() 失败。"));
 		}
-		UniqueHandle<Impl_ThreadLocal::TlsKeyDeleter> pKey(pTemp);
+		UniqueHandle<X_TlsKeyDeleter> hTlsKey(hTemp);
 
-		return pKey;
+		return hTlsKey;
 	}
 
 private:
-	UniqueHandle<Impl_ThreadLocal::TlsKeyDeleter> x_pTlsKey;
+	UniqueHandle<X_TlsKeyDeleter> x_hTlsKey;
 
 public:
 	explicit ThreadLocal()
-		: x_pTlsKey(X_AllocateTlsKey())
+		: x_hTlsKey(X_AllocateTlsKey())
 	{
 	}
 
 public:
 	const ElementT *Get() const noexcept {
 		void *pStorage;
-		const bool bResult = ::_MCFCRT_TlsGet(x_pTlsKey.Get(), &pStorage);
+		const bool bResult = ::_MCFCRT_TlsGet(x_hTlsKey.Get(), &pStorage);
 		MCF_ASSERT_MSG(bResult, L"_MCFCRT_TlsGet() 失败。");
 		const auto pContainer = static_cast<const X_TlsContainer *>(pStorage);
 		if(!pContainer){
@@ -91,7 +92,7 @@ public:
 	}
 	ElementT *Get() noexcept {
 		void *pStorage;
-		const bool bResult = ::_MCFCRT_TlsGet(x_pTlsKey.Get(), &pStorage);
+		const bool bResult = ::_MCFCRT_TlsGet(x_hTlsKey.Get(), &pStorage);
 		MCF_ASSERT_MSG(bResult, L"_MCFCRT_TlsGet() 失败。");
 		const auto pContainer = static_cast<X_TlsContainer *>(pStorage);
 		if(!pContainer){
@@ -107,7 +108,7 @@ public:
 
 	const ElementT *Open() const {
 		void *pStorage;
-		const bool bResult = ::_MCFCRT_TlsRequire(x_pTlsKey.Get(), &pStorage);
+		const bool bResult = ::_MCFCRT_TlsRequire(x_hTlsKey.Get(), &pStorage);
 		if(!bResult){
 			MCF_THROW(Exception, ::_MCFCRT_GetLastWin32Error(), Rcntws::View(L"_MCFCRT_TlsRequire() 失败。"));
 		}
@@ -123,7 +124,7 @@ public:
 	}
 	ElementT *Open(){
 		void *pStorage;
-		const bool bResult = ::_MCFCRT_TlsRequire(x_pTlsKey.Get(), &pStorage);
+		const bool bResult = ::_MCFCRT_TlsRequire(x_hTlsKey.Get(), &pStorage);
 		if(!bResult){
 			MCF_THROW(Exception, ::_MCFCRT_GetLastWin32Error(), Rcntws::View(L"_MCFCRT_TlsRequire() 失败。"));
 		}
@@ -141,7 +142,7 @@ public:
 	template<typename ...ParamsT>
 	void Set(ParamsT &&...vParams){
 		void *pStorage;
-		const bool bResult = ::_MCFCRT_TlsRequire(x_pTlsKey.Get(), &pStorage);
+		const bool bResult = ::_MCFCRT_TlsRequire(x_hTlsKey.Get(), &pStorage);
 		if(!bResult){
 			MCF_THROW(Exception, ::_MCFCRT_GetLastWin32Error(), Rcntws::View(L"_MCFCRT_TlsRequire() 失败。"));
 		}
@@ -159,7 +160,7 @@ public:
 
 	void Swap(ThreadLocal &rhs) noexcept {
 		using std::swap;
-		swap(x_pTlsKey, rhs.x_pTlsKey);
+		swap(x_hTlsKey, rhs.x_hTlsKey);
 	}
 
 public:

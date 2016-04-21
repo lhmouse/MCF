@@ -21,7 +21,7 @@ NTSTATUS NtSuspendThread(HANDLE hThread, LONG *plPrevCount);
 extern __attribute__((__dllimport__, __stdcall__))
 NTSTATUS NtResumeThread(HANDLE hThread, LONG *plPrevCount);
 
-void *_MCFCRT_CreateNativeThread(_MCFCRT_NativeThreadProc pfnThreadProc, void *pParam, bool bSuspended, uintptr_t *restrict puThreadId){
+_MCFCRT_ThreadHandle _MCFCRT_CreateNativeThread(_MCFCRT_NativeThreadProc pfnThreadProc, void *pParam, bool bSuspended, uintptr_t *restrict puThreadId){
 	DWORD dwThreadId;
 	const HANDLE hThread = CreateRemoteThread(GetCurrentProcess(), nullptr, 0, pfnThreadProc, pParam, bSuspended ? CREATE_SUSPENDED : 0, &dwThreadId);
 	if(!hThread){
@@ -30,7 +30,7 @@ void *_MCFCRT_CreateNativeThread(_MCFCRT_NativeThreadProc pfnThreadProc, void *p
 	if(puThreadId){
 		*puThreadId = dwThreadId;
 	}
-	return (void *)hThread;
+	return (_MCFCRT_ThreadHandle)hThread;
 }
 
 typedef struct tagThreadInitParams {
@@ -55,7 +55,7 @@ DWORD CrtThreadProc(LPVOID pParam){
 	return dwExitCode;
 }
 
-void *_MCFCRT_CreateThread(_MCFCRT_ThreadProc pfnThreadProc, intptr_t nParam, bool bSuspended, uintptr_t *restrict puThreadId){
+_MCFCRT_ThreadHandle _MCFCRT_CreateThread(_MCFCRT_ThreadProc pfnThreadProc, intptr_t nParam, bool bSuspended, uintptr_t *restrict puThreadId){
 	ThreadInitParams *const pInitParams = malloc(sizeof(ThreadInitParams));
 	if(!pInitParams){
 		return nullptr;
@@ -63,16 +63,16 @@ void *_MCFCRT_CreateThread(_MCFCRT_ThreadProc pfnThreadProc, intptr_t nParam, bo
 	pInitParams->pfnProc = pfnThreadProc;
 	pInitParams->nParam  = nParam;
 
-	void *const hThread = _MCFCRT_CreateNativeThread(&CrtThreadProc, pInitParams, bSuspended, puThreadId);
+	const _MCFCRT_ThreadHandle hThread = _MCFCRT_CreateNativeThread(&CrtThreadProc, pInitParams, bSuspended, puThreadId);
 	if(!hThread){
 		const DWORD dwLastError = GetLastError();
 		free(pInitParams);
 		SetLastError(dwLastError);
 		return nullptr;
 	}
-	return (void *)hThread;
+	return hThread;
 }
-void _MCFCRT_CloseThread(void *hThread){
+void _MCFCRT_CloseThread(_MCFCRT_ThreadHandle hThread){
 	const NTSTATUS lStatus = NtClose((HANDLE)hThread);
 	_MCFCRT_ASSERT_MSG(NT_SUCCESS(lStatus), L"NtClose() 失败。");
 }
@@ -104,20 +104,20 @@ void _MCFCRT_YieldThread(){
 	_MCFCRT_ASSERT_MSG(NT_SUCCESS(lStatus), L"NtYieldExecution() 失败。");
 }
 
-long _MCFCRT_SuspendThread(void *hThread){
+long _MCFCRT_SuspendThread(_MCFCRT_ThreadHandle hThread){
 	LONG lPrevCount;
 	const NTSTATUS lStatus = NtSuspendThread((HANDLE)hThread, &lPrevCount);
 	_MCFCRT_ASSERT_MSG(NT_SUCCESS(lStatus), L"NtSuspendThread() 失败。");
 	return lPrevCount;
 }
-long _MCFCRT_ResumeThread(void *hThread){
+long _MCFCRT_ResumeThread(_MCFCRT_ThreadHandle hThread){
 	LONG lPrevCount;
 	const NTSTATUS lStatus = NtResumeThread((HANDLE)hThread, &lPrevCount);
 	_MCFCRT_ASSERT_MSG(NT_SUCCESS(lStatus), L"NtResumeThread() 失败。");
 	return lPrevCount;
 }
 
-bool _MCFCRT_WaitForThread(void *hThread, uint64_t u64UntilFastMonoClock){
+bool _MCFCRT_WaitForThread(_MCFCRT_ThreadHandle hThread, uint64_t u64UntilFastMonoClock){
 	LARGE_INTEGER liTimeout;
 	__MCF_CRT_InitializeNtTimeout(&liTimeout, u64UntilFastMonoClock);
 	const NTSTATUS lStatus = NtWaitForSingleObject((HANDLE)hThread, false, &liTimeout);
@@ -127,7 +127,7 @@ bool _MCFCRT_WaitForThread(void *hThread, uint64_t u64UntilFastMonoClock){
 	}
 	return true;
 }
-void _MCFCRT_WaitForThreadForever(void *hThread){
+void _MCFCRT_WaitForThreadForever(_MCFCRT_ThreadHandle hThread){
 	const NTSTATUS lStatus = NtWaitForSingleObject((HANDLE)hThread, false, nullptr);
 	_MCFCRT_ASSERT_MSG(NT_SUCCESS(lStatus), L"NtWaitForSingleObject() 失败。");
 }

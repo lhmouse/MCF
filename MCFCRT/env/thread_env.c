@@ -26,13 +26,23 @@ typedef struct tagTlsObject {
 	alignas(max_align_t) unsigned char abyStorage[];
 } TlsObject;
 
+static inline int CompareTlsKeys(const struct tagTlsKey *pKey1, const struct tagTlsKey *pKey2){
+	const uintptr_t u1 = (uintptr_t)pKey1, u2 = (uintptr_t)pKey2;
+	if(u1 < u2){
+		return -1;
+	} else if(u1 > u2){
+		return 1;
+	}
+	return 0;
+}
+
 static inline int ObjectComparatorNodeKey(const _MCFCRT_AvlNodeHeader *pObj1, intptr_t nKey2){
-	const uintptr_t uKey1 = (uintptr_t)(((const TlsObject *)pObj1)->pKey);
-	const uintptr_t uKey2 = (uintptr_t)(void *)nKey2;
-	return (uKey1 < uKey2) ? -1 : ((uKey1 > uKey2) ? 1 : 0);
+	return CompareTlsKeys(((const TlsObject *)pObj1)->pKey,
+                          (struct tagTlsKey *)nKey2);
 }
 static inline int ObjectComparatorNodes(const _MCFCRT_AvlNodeHeader *pObj1, const _MCFCRT_AvlNodeHeader *pObj2){
-	return ObjectComparatorNodeKey(pObj1, (intptr_t)(void *)(((const TlsObject *)pObj2)->pKey));
+	return CompareTlsKeys(((const TlsObject *)pObj1)->pKey,
+	                      ((const TlsObject *)pObj2)->pKey);
 }
 
 typedef struct tagTlsKey {
@@ -145,7 +155,7 @@ void __MCFCRT_TlsCleanup(){
 	free(pThread);
 }
 
-void *_MCFCRT_TlsAllocKey(size_t uSize, _MCFCRT_TlsConstructor pfnConstructor, _MCFCRT_TlsDestructor pfnDestructor, intptr_t nContext){
+_MCFCRT_TlsKeyHandle _MCFCRT_TlsAllocKey(size_t uSize, _MCFCRT_TlsConstructor pfnConstructor, _MCFCRT_TlsDestructor pfnDestructor, intptr_t nContext){
 	TlsKey *const pKey = malloc(sizeof(TlsKey));
 	if(!pKey){
 		SetLastError(ERROR_NOT_ENOUGH_MEMORY);
@@ -159,10 +169,10 @@ void *_MCFCRT_TlsAllocKey(size_t uSize, _MCFCRT_TlsConstructor pfnConstructor, _
 	pKey->pFirstByKey    = nullptr;
 	pKey->pLastByKey     = nullptr;
 
-	return pKey;
+	return (_MCFCRT_TlsKeyHandle)pKey;
 }
-bool _MCFCRT_TlsFreeKey(void *pTlsKey){
-	TlsKey *const pKey = pTlsKey;
+bool _MCFCRT_TlsFreeKey(_MCFCRT_TlsKeyHandle hTlsKey){
+	TlsKey *const pKey = (TlsKey *)hTlsKey;
 	if(!pKey){
 		SetLastError(ERROR_INVALID_PARAMETER);
 		return false;
@@ -209,8 +219,8 @@ bool _MCFCRT_TlsFreeKey(void *pTlsKey){
 	return true;
 }
 
-size_t _MCFCRT_TlsGetSize(void *pTlsKey){
-	TlsKey *const pKey = pTlsKey;
+size_t _MCFCRT_TlsGetSize(_MCFCRT_TlsKeyHandle hTlsKey){
+	TlsKey *const pKey = (TlsKey *)hTlsKey;
 	if(!pKey){
 		SetLastError(ERROR_INVALID_PARAMETER);
 		return false;
@@ -218,8 +228,8 @@ size_t _MCFCRT_TlsGetSize(void *pTlsKey){
 	SetLastError(ERROR_SUCCESS);
 	return pKey->uSize;
 }
-_MCFCRT_TlsConstructor _MCFCRT_TlsGetConstructor(void *pTlsKey){
-	TlsKey *const pKey = pTlsKey;
+_MCFCRT_TlsConstructor _MCFCRT_TlsGetConstructor(_MCFCRT_TlsKeyHandle hTlsKey){
+	TlsKey *const pKey = (TlsKey *)hTlsKey;
 	if(!pKey){
 		SetLastError(ERROR_INVALID_PARAMETER);
 		return false;
@@ -227,8 +237,8 @@ _MCFCRT_TlsConstructor _MCFCRT_TlsGetConstructor(void *pTlsKey){
 	SetLastError(ERROR_SUCCESS);
 	return pKey->pfnConstructor;
 }
-_MCFCRT_TlsDestructor _MCFCRT_TlsGetDestructor(void *pTlsKey){
-	TlsKey *const pKey = pTlsKey;
+_MCFCRT_TlsDestructor _MCFCRT_TlsGetDestructor(_MCFCRT_TlsKeyHandle hTlsKey){
+	TlsKey *const pKey = (TlsKey *)hTlsKey;
 	if(!pKey){
 		SetLastError(ERROR_INVALID_PARAMETER);
 		return false;
@@ -236,8 +246,8 @@ _MCFCRT_TlsDestructor _MCFCRT_TlsGetDestructor(void *pTlsKey){
 	SetLastError(ERROR_SUCCESS);
 	return pKey->pfnDestructor;
 }
-intptr_t _MCFCRT_TlsGetContext(void *pTlsKey){
-	TlsKey *const pKey = pTlsKey;
+intptr_t _MCFCRT_TlsGetContext(_MCFCRT_TlsKeyHandle hTlsKey){
+	TlsKey *const pKey = (TlsKey *)hTlsKey;
 	if(!pKey){
 		SetLastError(ERROR_INVALID_PARAMETER);
 		return false;
@@ -246,8 +256,8 @@ intptr_t _MCFCRT_TlsGetContext(void *pTlsKey){
 	return pKey->nContext;
 }
 
-bool _MCFCRT_TlsGet(void *pTlsKey, void **restrict ppStorage){
-	TlsKey *const pKey = pTlsKey;
+bool _MCFCRT_TlsGet(_MCFCRT_TlsKeyHandle hTlsKey, void **restrict ppStorage){
+	TlsKey *const pKey = (TlsKey *)hTlsKey;
 	if(!pKey){
 		SetLastError(ERROR_INVALID_PARAMETER);
 		return false;
@@ -274,10 +284,10 @@ bool _MCFCRT_TlsGet(void *pTlsKey, void **restrict ppStorage){
 	*ppStorage = pObject->abyStorage;
 	return true;
 }
-bool _MCFCRT_TlsRequire(void *pTlsKey, void **restrict ppStorage){
+bool _MCFCRT_TlsRequire(_MCFCRT_TlsKeyHandle hTlsKey, void **restrict ppStorage){
 	*ppStorage = nullptr;
 
-	TlsKey *const pKey = pTlsKey;
+	TlsKey *const pKey = (TlsKey *)hTlsKey;
 	if(!pKey){
 		SetLastError(ERROR_INVALID_PARAMETER);
 		return false;

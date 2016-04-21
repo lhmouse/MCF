@@ -19,6 +19,10 @@ namespace Impl_ReconstructOrAssign {
 		}
 	};
 	struct ToAssign {
+		template<typename ObjectT, typename ParamT>
+		void operator()(ObjectT *pObject, ParamT &&vParam) const {
+			*pObject = std::forward<ParamT>(vParam);
+		}
 		template<typename ObjectT, typename ...ParamsT>
 		void operator()(ObjectT *pObject, ParamsT &&...vParams) const {
 			*pObject = ObjectT(std::forward<ParamsT>(vParams)...);

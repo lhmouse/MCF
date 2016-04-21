@@ -12,7 +12,7 @@ _MCFCRT_EXTERN_C_BEGIN
 // 初始化为 { 0 } 即可。
 typedef struct __MCFCRT_tagMutex {
 	volatile _MCFCRT_STD uintptr_t __u;
-} volatile _MCFCRT_Mutex;
+} _MCFCRT_Mutex;
 
 #define _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT   100
 

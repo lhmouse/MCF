@@ -14,9 +14,10 @@ NTSTATUS NtWaitForKeyedEvent(HANDLE hKeyedEvent, void *pKey, BOOLEAN bAlertable,
 extern __attribute__((__dllimport__, __stdcall__))
 NTSTATUS NtReleaseKeyedEvent(HANDLE hKeyedEvent, void *pKey, BOOLEAN bAlertable, const LARGE_INTEGER *pliTimeout);
 
-#define MASK_LOCKED             ((uintptr_t) 0x0001)
-#define MASK_FINISHED           ((uintptr_t) 0x0002)
-#define MASK_THREADS_TRAPPED    ((uintptr_t)~0x000F)
+// 第一个字节保留给 Itanium ABI 用于标记是否已初始化。
+#define MASK_LOCKED             ((uintptr_t) 0x0100)
+#define MASK_FINISHED           ((uintptr_t) 0x0001)
+#define MASK_THREADS_TRAPPED    ((uintptr_t)~0x01FF)
 
 #define THREAD_TRAPPED_ONE      ((uintptr_t)(MASK_THREADS_TRAPPED & -MASK_THREADS_TRAPPED))
 #define THREAD_TRAPPED_MAX      ((uintptr_t)(MASK_THREADS_TRAPPED / THREAD_TRAPPED_ONE))

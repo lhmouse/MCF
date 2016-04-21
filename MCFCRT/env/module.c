@@ -31,7 +31,7 @@ static _MCFCRT_Mutex           g_vAtExitMutex   = { 0 };
 static AtExitCallbackBlock *   g_pAtExitLast    = nullptr;
 
 __attribute__((__noinline__))
-static void __MCFCRT_PumpAtEndModule(){
+static void PumpAtEndModule(){
 	// ISO C++
 	// 3.6.3 Termination [basic.start.term]
 	// 1 Destructors (12.4) for initialized objects (...)
@@ -70,7 +70,7 @@ bool __MCFCRT_BeginModule(){
 	}
 	if(!__MCFCRT_CallStaticCtors()){
 		const DWORD dwLastError = GetLastError();
-		__MCFCRT_PumpAtEndModule();
+		PumpAtEndModule();
 		__MCFCRT_ThreadEnvUninit();
 		SetLastError(dwLastError);
 		return false;
@@ -78,7 +78,7 @@ bool __MCFCRT_BeginModule(){
 	return true;
 }
 void __MCFCRT_EndModule(){
-	__MCFCRT_PumpAtEndModule();
+	PumpAtEndModule();
 	__MCFCRT_CallStaticDtors();
 	__MCFCRT_ThreadEnvUninit();
 }

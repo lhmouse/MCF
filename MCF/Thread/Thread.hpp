@@ -5,6 +5,8 @@
 #ifndef MCF_THREAD_THREAD_HPP_
 #define MCF_THREAD_THREAD_HPP_
 
+#include "../../MCFCRT/env/thread.h"
+#include "../Utilities/Assert.hpp"
 #include "../SmartPointers/IntrusivePtr.hpp"
 #include "../Core/UniqueHandle.hpp"
 #include <exception>
@@ -22,7 +24,9 @@ private:
 		constexpr Handle operator()() const noexcept {
 			return nullptr;
 		}
-		void operator()(Handle hThread) const noexcept;
+		void operator()(Handle hThread) const noexcept {
+			::_MCFCRT_CloseThread(hThread);
+		}
 	};
 
 	class X_AbstractControlBlock : public IntrusiveBase<X_AbstractControlBlock> {
@@ -67,12 +71,22 @@ private:
 	};
 
 public:
-	static std::uintptr_t GetCurrentId() noexcept;
+	static std::uintptr_t GetCurrentId() noexcept {
+		return ::_MCFCRT_GetCurrentThreadId();
+	}
 
-	static void Sleep(std::uint64_t u64UntilFastMonoClock) noexcept;
-	static bool AlertableSleep(std::uint64_t u64UntilFastMonoClock) noexcept;
-	static void AlertableSleep() noexcept;
-	static void YieldExecution() noexcept;
+	static void Sleep(std::uint64_t u64UntilFastMonoClock) noexcept {
+		::_MCFCRT_Sleep(u64UntilFastMonoClock);
+	}
+	static bool AlertableSleep(std::uint64_t u64UntilFastMonoClock) noexcept {
+		return ::_MCFCRT_AlertableSleep(u64UntilFastMonoClock);
+	}
+	static void AlertableSleep() noexcept {
+		::_MCFCRT_AlertableSleepForever();
+	}
+	static void YieldExecution() noexcept {
+		::_MCFCRT_YieldThread();
+	}
 
 private:
 	IntrusivePtr<X_AbstractControlBlock> x_pControlBlock;
@@ -127,11 +141,27 @@ public:
 		}
 	}
 
-	bool Wait(std::uint64_t u64UntilFastMonoClock) const noexcept;
-	void Wait() const noexcept;
+	bool Wait(std::uint64_t u64UntilFastMonoClock) const noexcept {
+		MCF_ASSERT(x_pControlBlock);
 
-	void Suspend() noexcept;
-	void Resume() noexcept;
+		return ::_MCFCRT_WaitForThread(x_pControlBlock->GetHandle(), u64UntilFastMonoClock);
+	}
+	void Wait() const noexcept {
+		MCF_ASSERT(x_pControlBlock);
+
+		::_MCFCRT_WaitForThreadForever(x_pControlBlock->GetHandle());
+	}
+
+	void Suspend() noexcept {
+		MCF_ASSERT(x_pControlBlock);
+
+		::_MCFCRT_SuspendThread(x_pControlBlock->GetHandle());
+	}
+	void Resume() noexcept {
+		MCF_ASSERT(x_pControlBlock);
+
+		::_MCFCRT_ResumeThread(x_pControlBlock->GetHandle());
+	}
 
 	void Swap(Thread &rhs) noexcept {
 		using std::swap;

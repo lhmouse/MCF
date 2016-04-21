@@ -5,7 +5,7 @@
 #ifndef MCF_THREAD_THREAD_LOCAL_HPP_
 #define MCF_THREAD_THREAD_LOCAL_HPP_
 
-#include "../../MCFCRT/env/thread.h"
+#include "../../MCFCRT/env/thread_env.h"
 #include "../../MCFCRT/env/last_error.h"
 #include "../Utilities/Assert.hpp"
 #include "../Utilities/AlignedStorage.hpp"

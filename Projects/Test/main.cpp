@@ -2,20 +2,17 @@
 #include <cstdio>
 
 struct foo {
-	const char *const ctx;
-
-	explicit foo(const char *s)
-		: ctx(s)
-	{
-		std::printf("ctor: %s\n", ctx);
+	explicit foo(const char *s){
+		std::printf("ctor: this = %p, str = %s\n", (void *)this, s);
 	}
 	~foo(){
-		std::printf("dtor: %s\n", ctx);
+		std::printf("dtor: this = %p\n", (void *)this);
 	}
 };
 
 extern "C" unsigned _MCFCRT_Main(){
 	static foo f1("static");
-	std::printf("f1 = %p\n", (void *)&f1);
+	thread_local foo f2("thread_local");
+	std::printf("f1 = %p, f2 = %p\n", (void *)&f1, (void *)&f2);
 	return 0;
 }

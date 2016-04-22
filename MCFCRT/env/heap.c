@@ -68,7 +68,9 @@ unsigned char *__MCFCRT_HeapAlloc(size_t uSize, bool bFillsWithZero, const void 
 #endif
 
 #if __MCFCRT_REQUIRE_HEAPDBG_LEVEL(4)
-				memset(pRet, 0xCD, uSize);
+				if(!bFillsWithZero){
+					memset(pRet, 0xCD, uSize);
+				}
 #endif
 			}
 		}
@@ -154,7 +156,7 @@ unsigned char *__MCFCRT_HeapRealloc(void *pBlock, size_t uSize, bool bFillsWithZ
 #endif
 
 #if __MCFCRT_REQUIRE_HEAPDBG_LEVEL(4)
-				if(uOriginalSize < uSize){
+				if(!bFillsWithZero && (uOriginalSize < uSize)){
 					memset(pRet + uOriginalSize, 0xCD, uSize - uOriginalSize);
 				}
 #endif

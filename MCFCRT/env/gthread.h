@@ -127,7 +127,7 @@ static inline int __gthread_mutex_unlock(__gthread_mutex_t *__mutex) _MCFCRT_NOE
 //-----------------------------------------------------------------------------
 // Recursive mutex
 //-----------------------------------------------------------------------------
-typedef struct {
+typedef struct __MCFCRT_tagGthreadRecursiveMutex {
 	volatile _MCFCRT_STD uintptr_t __owner;
 	_MCFCRT_STD size_t __count;
 	_MCFCRT_Mutex __mutex;

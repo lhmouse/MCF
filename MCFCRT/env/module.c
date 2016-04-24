@@ -7,7 +7,6 @@
 #include "mutex.h"
 #include "fenv.h"
 #include "thread_env.h"
-#include "static_ctors.h"
 #include "../ext/expect.h"
 #include <stdlib.h>
 
@@ -64,22 +63,43 @@ static void PumpAtEndModule(){
 	}
 }
 
+typedef void (*StaticConstructorDestructorProc)(void);
+
+extern const StaticConstructorDestructorProc __CTOR_LIST__[];
+extern const StaticConstructorDestructorProc __DTOR_LIST__[];
+
+void CallStaticConstructors(){
+	const StaticConstructorDestructorProc *const pfnBegin = __CTOR_LIST__ + 1;
+
+	const StaticConstructorDestructorProc *pfnCurrent = pfnBegin;
+	while(*pfnCurrent){
+		++pfnCurrent;
+	}
+	while(pfnCurrent != pfnBegin){
+		--pfnCurrent;
+		(*pfnCurrent)();
+	}
+}
+void CallStaticDestructors(){
+	const StaticConstructorDestructorProc *const pfnBegin = __DTOR_LIST__ + 1;
+
+	const StaticConstructorDestructorProc *pfnCurrent = pfnBegin;
+	while(*pfnCurrent){
+		(*pfnCurrent)();
+		++pfnCurrent;
+	}
+}
+
 bool __MCFCRT_BeginModule(){
 	if(!__MCFCRT_ThreadEnvInit()){
 		return false;
 	}
-	if(!__MCFCRT_CallStaticCtors()){
-		const DWORD dwLastError = GetLastError();
-		PumpAtEndModule();
-		__MCFCRT_ThreadEnvUninit();
-		SetLastError(dwLastError);
-		return false;
-	}
+	CallStaticConstructors();
 	return true;
 }
 void __MCFCRT_EndModule(){
 	PumpAtEndModule();
-	__MCFCRT_CallStaticDtors();
+	CallStaticDestructors();
 	__MCFCRT_ThreadEnvUninit();
 }
 

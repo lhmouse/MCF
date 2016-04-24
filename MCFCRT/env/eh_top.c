@@ -62,9 +62,8 @@ bool __MCFCRT_RegisterFrameInfo(){
 		if(!pBase){
 			return false;
 		}
-		g_pBase = pBase;
-
 		(*pfnRegisterFrameInfoProc)(pBase, &g_vObject);
+		g_pBase = pBase;
 	}
 	return true;
 }
@@ -72,7 +71,7 @@ void __MCFCRT_UnregisterFrameInfo(){
 	const __MCFCRT_DeregisterFrameInfoProc pfnDeregisterFrameInfoProc = __MCFCRT_pfnDeregisterFrameInfoProc;
 	if(pfnDeregisterFrameInfoProc){
 		const void *const pBase = g_pBase;
-
+		g_pBase = nullptr;
 		(*pfnDeregisterFrameInfoProc)(pBase);
 	}
 }

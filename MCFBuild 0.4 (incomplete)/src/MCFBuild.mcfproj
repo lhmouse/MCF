@@ -14,8 +14,8 @@ Libs		= -lmcflite -lstdc++ -lmingwex -lmingw32 -lgcc -lgcc_eh -lmcflite -lmsvcrt
 		LDFlags		= $LDFlags -O0 -g
 	}
 	Release {
-		CPPFlags	= $CPPFlags -O3 -ffunction-sections -fdata-sections -DNDEBUG
-		LDFlags		= $LDFlags -O3 -Wl,--gc-sections,-s
+		CPPFlags	= $CPPFlags -O3 -flto -ffunction-sections -fdata-sections -DNDEBUG
+		LDFlags		= $LDFlags -O3 -flto -Wl,--gc-sections,-s
 	}
 }
 

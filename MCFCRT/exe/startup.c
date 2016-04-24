@@ -142,10 +142,10 @@ static const PIMAGE_TLS_CALLBACK callback_start = &CrtTlsCallback;
 __attribute__((__section__(".CRT$___")))
 static const PIMAGE_TLS_CALLBACK callback_end   = nullptr;
 
-__attribute__((__section__(".data")))
+__attribute__((__section__(".data"), __used__))
 DWORD _tls_index;
 
-__attribute__((__section__(".rdata")))
+__attribute__((__section__(".rdata"), __used__))
 const IMAGE_TLS_DIRECTORY _tls_used = {
 	.StartAddressOfRawData = (UINT_PTR)&tls_start,
 	.EndAddressOfRawData   = (UINT_PTR)&tls_end,
@@ -158,14 +158,6 @@ const IMAGE_TLS_DIRECTORY _tls_used = {
 _Noreturn __MCFCRT_C_STDCALL __MCFCRT_HAS_EH_TOP
 DWORD __MCFCRT_ExeStartup(LPVOID pUnknown){
 	(void)pUnknown;
-
-	// 引用这些符号，防止被链接器优化掉。
-	{
-		__attribute__((__unused__))
-		const void *volatile pUnused;
-		pUnused = &_tls_index;
-		pUnused = &_tls_used;
-	}
 
 	DWORD dwExitCode;
 

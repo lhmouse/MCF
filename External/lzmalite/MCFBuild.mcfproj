@@ -27,5 +27,5 @@ Debug = General {
 }
 
 Release = General {
-	CompilerFlags		=> -DNDEBUG -O3 -ffunction-sections -fdata-sections
+	CompilerFlags		=> -DNDEBUG -O3 -flto -ffunction-sections -fdata-sections
 }

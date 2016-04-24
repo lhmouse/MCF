@@ -5,40 +5,8 @@
 #include "bail.h"
 #include "mcfwin.h"
 #include "../ext/wcpcpy.h"
-#include <stdarg.h>
-#include <wchar.h>
-
 #include <ntdef.h>
 #include <ntstatus.h>
-#include <winternl.h>
-
-// ntdll.dll
-typedef enum tagHardErrorResponseOption {
-	kHardErrorAbortRetryIgnore,
-	kHardErrorOk,
-	kHardErrorOkCancel,
-	kHardErrorRetryCancel,
-	kHardErrorYesNo,
-	kHardErrorYesNoCancel,
-	kHardErrorShutdownSystem,
-	kHardErrorTrayNotify,
-	kHardErrorCancelTryAgainContinue,
-} HardErrorResponseOption;
-
-typedef enum tagHardErrorResponse {
-	kHardErrorResponseReturnToCaller,
-	kHardErrorResponseNotHandled,
-	kHardErrorResponseAbort,
-	kHardErrorResponseCancel,
-	kHardErrorResponseIgnore,
-	kHardErrorResponseNo,
-	kHardErrorResponseOk,
-	kHardErrorResponseRetry,
-	kHardErrorResponseYes,
-} HardErrorResponse;
-
-extern __attribute__((__dllimport__, __stdcall__))
-NTSTATUS NtRaiseHardError(NTSTATUS lStatus, DWORD dwUnknown, DWORD dwParamCount, const ULONG_PTR *pulParams, HardErrorResponseOption eOption, HardErrorResponse *peResponse);
 
 static volatile bool g_bBailed = false;
 
@@ -77,26 +45,8 @@ _Noreturn void _MCFCRT_Bail(const wchar_t *pwszDescription){
 	}
 	*(pwcWrite--) = 0;
 
-	UNICODE_STRING ustrText;
-	ustrText.Length        = (unsigned short)((char *)pwcWrite - (char *)awcBuffer);
-	ustrText.MaximumLength = ustrText.Length;
-	ustrText.Buffer        = awcBuffer;
-
-	static const wchar_t kCaption[] = L"MCF CRT 错误";
-	UNICODE_STRING ustrCaption;
-	ustrCaption.Length        = sizeof(kCaption) - sizeof(wchar_t);
-	ustrCaption.MaximumLength = ustrCaption.Length;
-	ustrCaption.Buffer        = (wchar_t *)kCaption;
-
-	UINT uType = (bCanBeDebugged ? MB_OKCANCEL : MB_OK) | MB_ICONERROR;
-
-	const ULONG_PTR aulParams[3] = { (ULONG_PTR)&ustrText, (ULONG_PTR)&ustrCaption, uType };
-	HardErrorResponse eResponse;
-	const NTSTATUS lStatus = NtRaiseHardError(STATUS_SERVICE_NOTIFICATION, 4, 3, aulParams, kHardErrorOk, &eResponse);
-	if(!NT_SUCCESS(lStatus)){
-		eResponse = kHardErrorResponseCancel;
-	}
-	if(eResponse != kHardErrorResponseOk){
+	const int nResponse = MessageBoxW(nullptr, awcBuffer, L"MCF CRT 错误", (bCanBeDebugged ? MB_OKCANCEL : MB_OK) | MB_ICONERROR | MB_SERVICE_NOTIFICATION);
+	if(nResponse != IDOK){
 		__debugbreak();
 	}
 	TerminateProcess(GetCurrentProcess(), (DWORD)STATUS_UNSUCCESSFUL);

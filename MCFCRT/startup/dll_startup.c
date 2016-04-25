@@ -2,7 +2,7 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2013 - 2016, LH_Mouse. All wrongs reserved.
 
-#include "decl.h"
+#include "dll_decl.h"
 #include "../env/mcfwin.h"
 #include "../env/module.h"
 #include "../env/fenv.h"
@@ -23,13 +23,13 @@ static bool OnDllProcessAttach(HINSTANCE hDll, bool bDynamic){
 		__MCFCRT_HeapUninit();
 		return false;
 	}
-	if(!__MCFCRT_RegisterFrameInfo()){
+	if(!__MCFCRT_EhTopInit()){
 		__MCFCRT_HeapDbgUninit();
 		__MCFCRT_HeapUninit();
 		return false;
 	}
 	if(!__MCFCRT_BeginModule()){
-		__MCFCRT_UnregisterFrameInfo();
+		__MCFCRT_EhTopUninit();
 		__MCFCRT_HeapDbgUninit();
 		__MCFCRT_HeapUninit();
 		return false;
@@ -37,7 +37,7 @@ static bool OnDllProcessAttach(HINSTANCE hDll, bool bDynamic){
 	if(_MCFCRT_OnDllProcessAttach){
 		if(!_MCFCRT_OnDllProcessAttach(hDll, bDynamic)){
 			__MCFCRT_EndModule();
-			__MCFCRT_UnregisterFrameInfo();
+			__MCFCRT_EhTopUninit();
 			__MCFCRT_HeapDbgUninit();
 			__MCFCRT_HeapUninit();
 			return false;
@@ -63,7 +63,7 @@ static void OnDllProcessDetach(HINSTANCE hDll, bool bDynamic){
 		_MCFCRT_OnDllProcessDetach(hDll, bDynamic);
 	}
 	__MCFCRT_EndModule();
-	__MCFCRT_UnregisterFrameInfo();
+	__MCFCRT_EhTopUninit();
 	__MCFCRT_HeapDbgUninit();
 	__MCFCRT_HeapUninit();
 }
@@ -114,3 +114,6 @@ BOOL __MCFCRT_DllStartup(HINSTANCE hDll, DWORD dwReason, LPVOID pReserved){
 
 	return bRet;
 }
+
+__attribute__((__used__))
+int __MCFCRT_do_not_link_exe_startup_code_and_dll_startup_code_together = 1;

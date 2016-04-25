@@ -2,7 +2,7 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2013 - 2016, LH_Mouse. All wrongs reserved.
 
-#include "decl.h"
+#include "exe_decl.h"
 #include "../env/mcfwin.h"
 #include "../env/module.h"
 #include "../env/fenv.h"
@@ -60,7 +60,7 @@ static void BailWithErrorCode(const wchar_t *pwszMessage, DWORD dwErrorCode){
 	_MCFCRT_Bail(awcBuffer);
 }
 
-static void OnDllProcessAttach(){
+static void OnExeProcessAttach(){
 	__MCFCRT_FEnvInit();
 
 	if(!__MCFCRT_HeapInit()){
@@ -69,8 +69,8 @@ static void OnDllProcessAttach(){
 	if(!__MCFCRT_HeapDbgInit()){
 		BailWithErrorCode(L"MCFCRT 堆内存调试器初始化失败。", GetLastError());
 	}
-	if(!__MCFCRT_RegisterFrameInfo()){
-		BailWithErrorCode(L"MCFCRT 异常栈帧信息注册失败。", GetLastError());
+	if(!__MCFCRT_EhTopInit()){
+		BailWithErrorCode(L"MCFCRT 异常处理程序初始化失败。", GetLastError());
 	}
 	if(!__MCFCRT_BeginModule()){
 		BailWithErrorCode(L"MCFCRT 模块初始化失败。", GetLastError());
@@ -79,16 +79,16 @@ static void OnDllProcessAttach(){
 		BailWithErrorCode(L"MCFCRT Ctrl 响应函数注册失败。", GetLastError());
 	}
 }
-static void OnDllThreadAttach(){
+static void OnExeThreadAttach(){
 	__MCFCRT_FEnvInit();
 }
-static void OnDllThreadDetach(){
+static void OnExeThreadDetach(){
 	__MCFCRT_TlsCleanup();
 }
-static void OnDllProcessDetach(){
+static void OnExeProcessDetach(){
 	__MCFCRT_UninstallCtrlHandler();
 	__MCFCRT_EndModule();
-	__MCFCRT_UnregisterFrameInfo();
+	__MCFCRT_EhTopUninit();
 	__MCFCRT_HeapDbgUninit();
 	__MCFCRT_HeapUninit();
 }
@@ -107,16 +107,16 @@ static void CrtTlsCallback(LPVOID hInstance, DWORD dwReason, LPVOID pReserved){
 			if(g_bInitialized){
 				break;
 			}
-			OnDllProcessAttach();
+			OnExeProcessAttach();
 			g_bInitialized = true;
 			break;
 
 		case DLL_THREAD_ATTACH:
-			OnDllThreadAttach();
+			OnExeThreadAttach();
 			break;
 
 		case DLL_THREAD_DETACH:
-			OnDllThreadDetach();
+			OnExeThreadDetach();
 			break;
 
 		case DLL_PROCESS_DETACH:
@@ -124,14 +124,15 @@ static void CrtTlsCallback(LPVOID hInstance, DWORD dwReason, LPVOID pReserved){
 				break;
 			}
 			g_bInitialized = false;
-			OnDllProcessDetach();
+			OnExeProcessDetach();
 			break;
 		}
 	}
 	__MCFCRT_EH_TOP_END
 }
 
-// 线程局部存储（TLS）目录，用于执行 TLS 的析构函数。
+extern const IMAGE_TLS_DIRECTORY _tls_used;
+
 __extension__ __attribute__((__section__(".tls$@@@")))
 static const char tls_start[0] = { };
 __extension__ __attribute__((__section__(".tls$___")))
@@ -142,18 +143,12 @@ static const PIMAGE_TLS_CALLBACK callback_start = &CrtTlsCallback;
 __attribute__((__section__(".CRT$___")))
 static const PIMAGE_TLS_CALLBACK callback_end   = nullptr;
 
-__attribute__((__section__(".data"), __used__))
-DWORD _tls_index;
+__attribute__((__section__(".data")))
+DWORD tls_index = 0xDEADBEEF;
 
-__attribute__((__section__(".rdata"), __used__))
-const IMAGE_TLS_DIRECTORY _tls_used = {
-	.StartAddressOfRawData = (UINT_PTR)&tls_start,
-	.EndAddressOfRawData   = (UINT_PTR)&tls_end,
-	.AddressOfIndex        = (UINT_PTR)&_tls_index,
-	.AddressOfCallBacks    = (UINT_PTR)&callback_start,
-	.SizeOfZeroFill        = 0,
-	.Characteristics       = 0,
-};
+// 如果没有 dllexport 而在编译链接时开启了 lto 则 TLS 目录就不会被正确链接。
+__attribute__((__dllexport__, __section__(".rdata")))
+const IMAGE_TLS_DIRECTORY _tls_used = { (UINT_PTR)&tls_start, (UINT_PTR)&tls_end, (UINT_PTR)&tls_index, (UINT_PTR)&callback_start, 0, 0 };
 
 _Noreturn __MCFCRT_C_STDCALL __MCFCRT_HAS_EH_TOP
 DWORD __MCFCRT_ExeStartup(LPVOID pUnknown){
@@ -170,3 +165,6 @@ DWORD __MCFCRT_ExeStartup(LPVOID pUnknown){
 	ExitProcess(dwExitCode);
 	__builtin_trap();
 }
+
+__attribute__((__used__))
+int __MCFCRT_do_not_link_exe_startup_code_and_dll_startup_code_together = 1;

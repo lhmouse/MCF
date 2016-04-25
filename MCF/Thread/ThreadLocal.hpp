@@ -41,22 +41,20 @@ private:
 		bool bConstructed;
 	};
 
+	static void X_ContainerDestructor(std::intptr_t nContext, void *pStorage) noexcept {
+		(void)nContext;
+
+		const auto pContainer = static_cast<X_TlsContainer *>(pStorage);
+		if(!pContainer->bConstructed){
+			return;
+		}
+		const auto pElement = reinterpret_cast<ElementT *>(&(pContainer->vStorage));
+		Destruct(pElement);
+	}
+
 private:
 	static UniqueHandle<X_TlsKeyDeleter> X_AllocateTlsKey(){
-		auto hTemp = ::_MCFCRT_TlsAllocKey(sizeof(X_TlsContainer),
-			[](std::intptr_t, void *pStorage) noexcept -> unsigned long {
-				const auto pContainer = static_cast<X_TlsContainer *>(pStorage);
-				pContainer->bConstructed = false;
-				return 0;
-			},
-			[](std::intptr_t, void *pStorage) noexcept -> void {
-				const auto pContainer = static_cast<X_TlsContainer *>(pStorage);
-				if(!pContainer->bConstructed){
-					return;
-				}
-				Destruct(reinterpret_cast<ElementT *>(&(pContainer->vStorage)));
-			},
-			0);
+		auto hTemp = ::_MCFCRT_TlsAllocKey(sizeof(X_TlsContainer), nullptr, &X_ContainerDestructor, 0);
 		if(!hTemp){
 			MCF_THROW(Exception, ::_MCFCRT_GetLastWin32Error(), Rcntws::View(L"_MCFCRT_TlsAllocKey() 失败。"));
 		}
@@ -117,7 +115,7 @@ public:
 
 		const auto pElement = reinterpret_cast<ElementT *>(&(pContainer->vStorage));
 		if(!pContainer->bConstructed){
-			Construct(pElement);
+			DefaultConstruct(pElement);
 			pContainer->bConstructed = true;
 		}
 		return pElement;
@@ -133,7 +131,7 @@ public:
 
 		const auto pElement = reinterpret_cast<ElementT *>(&(pContainer->vStorage));
 		if(!pContainer->bConstructed){
-			Construct(pElement);
+			DefaultConstruct(pElement);
 			pContainer->bConstructed = true;
 		}
 		return pElement;
@@ -151,7 +149,7 @@ public:
 
 		const auto pElement = reinterpret_cast<ElementT *>(&(pContainer->vStorage));
 		if(!pContainer->bConstructed){
-			Construct(pElement, std::forward<ParamsT>(vParams)...);
+			DefaultConstruct(pElement, std::forward<ParamsT>(vParams)...);
 			pContainer->bConstructed = true;
 		} else {
 			ReconstructOrAssign(pElement, std::forward<ParamsT>(vParams)...);

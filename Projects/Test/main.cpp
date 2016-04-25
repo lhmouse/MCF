@@ -1,5 +1,8 @@
 #include <MCF/StdMCF.hpp>
+#include <MCF/Thread/ThreadLocal.hpp>
 #include <cstdio>
+
+template class MCF::ThreadLocal<int>;
 
 extern "C" unsigned _MCFCRT_Main(){
 	try {

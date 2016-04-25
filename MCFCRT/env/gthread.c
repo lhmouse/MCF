@@ -4,12 +4,6 @@
 
 #include "gthread.h"
 
-unsigned long __MCFCRT_GthreadTlsConstructor(intptr_t nContext, void *pStorage){
-	(void)nContext;
-
-	*(void **)pStorage = nullptr;
-	return 0;
-}
 void __MCFCRT_GthreadTlsDestructor(intptr_t nContext, void *pStorage){
 	void (*const pfnDestructor)(void *) = (void (*)(void *))nContext;
 

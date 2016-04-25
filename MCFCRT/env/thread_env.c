@@ -318,6 +318,7 @@ bool _MCFCRT_TlsRequire(_MCFCRT_TlsKeyHandle hTlsKey, void **restrict ppStorage)
 			return false;
 		}
 
+		memset(pObject->abyStorage, 0, pKey->uSize);
 		if(pKey->pfnConstructor){
 			const DWORD dwErrorCode = (*(pKey->pfnConstructor))(pKey->nContext, pObject->abyStorage);
 			if(dwErrorCode != 0){

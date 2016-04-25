@@ -35,7 +35,7 @@ extern _MCFCRT_STD intptr_t _MCFCRT_TlsGetContext(_MCFCRT_TlsKeyHandle __hTlsKey
 // 如果未设定过任何值，*__ppStorage 返回一个空指针。
 extern bool _MCFCRT_TlsGet(_MCFCRT_TlsKeyHandle __hTlsKey, void **restrict __ppStorage) _MCFCRT_NOEXCEPT;
 // 如果该线程局部存储设定过值，*__ppStorage 返回指向它的指针。
-// 否则，该线程局部存储的内存被分配，然后 _MCFCRT_TlsAllocKey() 中指定的构造函数被调用用于初始化该存储。
+// 否则，该线程局部存储的内存被分配并清零，然后 _MCFCRT_TlsAllocKey() 中指定的构造函数被调用用于初始化该存储。
 // 若构造函数返回 0，*__ppStorage 返回指向它的指针；否则，已分配的内存被立即释放，然后该函数返回 false，GetLastError() 返回构造函数返回的值。
 extern bool _MCFCRT_TlsRequire(_MCFCRT_TlsKeyHandle __hTlsKey, void **restrict __ppStorage) _MCFCRT_NOEXCEPT;
 

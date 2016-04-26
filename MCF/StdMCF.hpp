@@ -6,6 +6,7 @@
 #define MCF_STD_MCF_HPP_
 
 #include "../MCFCRT/env/_crtdef.h"
+#include "../MCFCRT/env/gthread.h"
 #include "../MCFCRT/env/mcfwin.h"
 
 #include <utility>

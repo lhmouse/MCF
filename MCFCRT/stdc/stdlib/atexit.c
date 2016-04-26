@@ -5,9 +5,15 @@
 #include "../../env/_crtdef.h"
 #include "../../env/module.h"
 
-int __wrap_atexit(void (*func)(void)){
-	// Windows 上 x86 __cdecl 和 x64 都约定调用者清栈，因此可以直接转换函数指针。
-	if(!_MCFCRT_AtEndModule((void (*)(intptr_t))func, 0)){
+typedef void (*__MCFCRT_AtExitProc)(void);
+
+static void CrtAtEndModuleProc(intptr_t nContext){
+	const __MCFCRT_AtExitProc pfnProc = (__MCFCRT_AtExitProc)nContext;
+	(*pfnProc)();
+}
+
+int __wrap_atexit(__MCFCRT_AtExitProc func){
+	if(!_MCFCRT_AtEndModule(&CrtAtEndModuleProc, (intptr_t)func)){
 		return -1;
 	}
 	return 0;

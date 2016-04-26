@@ -382,7 +382,7 @@ bool _MCFCRT_TlsRequire(_MCFCRT_TlsKeyHandle hTlsKey, void **restrict ppStorage)
 	return true;
 }
 
-static void CrtAtExitThreadProc(intptr_t nContext, void *pStorage){
+static void CrtAtThreadExitProc(intptr_t nContext, void *pStorage){
 	const _MCFCRT_AtThreadExitCallback pfnProc = *(_MCFCRT_AtThreadExitCallback *)pStorage;
 	(*pfnProc)(nContext);
 }
@@ -405,7 +405,7 @@ bool _MCFCRT_AtThreadExit(_MCFCRT_AtThreadExitCallback pfnProc, intptr_t nContex
 #endif
 
 	memcpy(pObject->abyStorage, &pfnProc, sizeof(pfnProc));
-	pObject->pfnDestructor = &CrtAtExitThreadProc;
+	pObject->pfnDestructor = &CrtAtThreadExitProc;
 	pObject->nContext = nContext;
 
 	pObject->pThread = pThread;

@@ -31,15 +31,6 @@ static AtExitCallbackBlock *   g_pAtExitLast    = nullptr;
 
 __attribute__((__noinline__))
 static void PumpAtEndModule(){
-	// ISO C++
-	// 3.6.3 Termination [basic.start.term]
-	// 1 Destructors (12.4) for initialized objects (...)
-	// The completions of the destructors for all initialized objects
-	// with thread storage duration within that thread are sequenced
-	// before the initiation of the destructors of any object with
-	// static storage duration. (...)
-	__MCFCRT_TlsCleanup();
-
 	for(;;){
 		AtExitCallbackBlock *pBlock;
 		{

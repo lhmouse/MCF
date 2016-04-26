@@ -86,6 +86,8 @@ static void OnExeThreadDetach(){
 	__MCFCRT_TlsCleanup();
 }
 static void OnExeProcessDetach(){
+	__MCFCRT_TlsCleanup();
+
 	__MCFCRT_UninstallCtrlHandler();
 	__MCFCRT_EndModule();
 	__MCFCRT_EhTopUninit();

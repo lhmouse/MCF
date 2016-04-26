@@ -9,7 +9,6 @@
 
 _MCFCRT_EXTERN_C_BEGIN
 
-// __MCFCRT_BeginModule() 在所有 CRT 功能都初始化成功后返回 true。
 extern bool __MCFCRT_BeginModule(void);
 extern void __MCFCRT_EndModule(void);
 

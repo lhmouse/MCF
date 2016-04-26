@@ -10,10 +10,10 @@
 _MCFCRT_EXTERN_C_BEGIN
 
 // heap.c
-typedef void (*_MCFCRT_HeapAllocCallback)(void *__pNewBlock, _MCFCRT_STD size_t __uSize, const void *__pRetAddr);
-typedef void (*_MCFCRT_HeapReallocCallback)(void *__pNewBlock, void *__pBlock, _MCFCRT_STD size_t __uSize, const void *__pRetAddr);
-typedef void (*_MCFCRT_HeapFreeCallback)(void *__pBlock, const void *__pRetAddr);
-typedef bool (*_MCFCRT_HeapBadAllocCallback)(const void *__pRetAddr);
+typedef void (*_MCFCRT_HeapAllocCallback    )(void *__pNewBlock, _MCFCRT_STD size_t __uSize, const void *__pRetAddr);
+typedef void (*_MCFCRT_HeapReallocCallback  )(void *__pNewBlock, void *__pBlock, _MCFCRT_STD size_t __uSize, const void *__pRetAddr);
+typedef void (*_MCFCRT_HeapFreeCallback     )(void *__pBlock, const void *__pRetAddr);
+typedef bool (*_MCFCRT_HeapBadAllocCallback )(const void *__pRetAddr);
 
 extern volatile _MCFCRT_HeapAllocCallback    _MCFCRT_pfnOnHeapAlloc;
 extern volatile _MCFCRT_HeapReallocCallback  _MCFCRT_pfnOnHeapRealloc;

@@ -9,7 +9,7 @@
 
 _MCFCRT_EXTERN_C_BEGIN
 
-typedef unsigned long (*__attribute__((__stdcall__)) _MCFCRT_NativeThreadProc)(void *__pParam);
+typedef unsigned long (*__stdcall _MCFCRT_NativeThreadProc)(void *__pParam);
 typedef unsigned (*_MCFCRT_ThreadProc)(_MCFCRT_STD intptr_t __nParam);
 
 typedef struct __MCFCRT_tagThreadHandle {

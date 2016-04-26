@@ -9,7 +9,7 @@
 
 _MCFCRT_EXTERN_C_BEGIN
 
-typedef struct _MCFCRT_tagArgItem {
+typedef struct __MCFCRT_tagArgItem {
 	const wchar_t *pwszStr;
 	_MCFCRT_STD size_t uLen;
 } _MCFCRT_ArgItem;

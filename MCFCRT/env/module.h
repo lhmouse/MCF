@@ -18,7 +18,7 @@ extern bool _MCFCRT_AtEndModule(_MCFCRT_AtEndModuleCallback __pfnProc, _MCFCRT_S
 
 extern void *_MCFCRT_GetModuleBase(void) _MCFCRT_NOEXCEPT;
 
-typedef struct _MCFCRT_tagModuleSectionInfo {
+typedef struct __MCFCRT_tagModuleSectionInfo {
 	char __achName[8];
 	_MCFCRT_STD size_t __uRawSize;
 	void *__pBase;

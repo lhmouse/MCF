@@ -1,6 +1,5 @@
 #include <MCF/StdMCF.hpp>
 #include <MCF/Thread/ThreadLocal.hpp>
-#include <cstring>
 #include <cstdio>
 #include <mcfgthread/gthread.h>
 

@@ -3,7 +3,6 @@
 // Copyleft 2013 - 2016, LH_Mouse. All wrongs reserved.
 
 #include "../../env/_crtdef.h"
-#include <string.h>
 
 wchar_t *wmemmove(wchar_t *dst, const wchar_t *src, size_t cnt){
 	return memmove(dst, src, cnt * sizeof(wchar_t));

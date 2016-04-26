@@ -5,10 +5,8 @@
 #ifndef MCF_STD_MCF_HPP_
 #define MCF_STD_MCF_HPP_
 
-#include <cstddef>
-#include <cstdint>
-#include <climits>
-#include <cstring>
+#include "../MCFCRT/env/_crtdef.h"
+#include "../MCFCRT/env/mcfwin.h"
 
 #include <utility>
 #include <type_traits>
@@ -16,8 +14,6 @@
 #include <tuple>
 #include <exception>
 #include <iterator>
-
-#include "../MCFCRT/env/mcfwin.h"
 
 #undef NULL
 #define NULL    nullptr

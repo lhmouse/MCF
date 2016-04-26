@@ -9,7 +9,6 @@
 #include "mcfwin.h"
 #include "bail.h"
 #include <stdlib.h>
-#include <string.h>
 #include <errno.h>
 
 // hooks.h

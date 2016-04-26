@@ -3,7 +3,6 @@
 // Copyleft 2013 - 2016, LH_Mouse. All wrongs reserved.
 
 #include "../../env/_crtdef.h"
-#include <string.h>
 
 wchar_t *wmemcpy(wchar_t *restrict dst, const wchar_t *restrict src, size_t cnt){
 	return memcpy(dst, src, cnt * sizeof(wchar_t));

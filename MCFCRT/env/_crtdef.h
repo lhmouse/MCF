@@ -9,7 +9,9 @@
 #	error This processor architecture is not supported.
 #endif
 
-#if defined(__cplusplus) && __cplusplus < 201402l
+#pragma GCC poison __thread thread_local
+
+#if defined(__cplusplus) && (__cplusplus < 201402l)
 #	error This compiler does not support C++14.
 #endif
 
@@ -18,6 +20,7 @@
 #	include <cstddef>
 #	include <cstdint>
 #	include <climits>
+#	include <cstring>
 #	include <cassert>
 #	define _MCFCRT_EXTERN_C_BEGIN       extern "C" {
 #	define _MCFCRT_EXTERN_C_END         }
@@ -31,6 +34,7 @@
 #	include <stddef.h>
 #	include <stdint.h>
 #	include <limits.h>
+#	include <string.h>
 #	include <assert.h>
 #	define _MCFCRT_EXTERN_C_BEGIN       //
 #	define _MCFCRT_EXTERN_C_END         //

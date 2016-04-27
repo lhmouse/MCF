@@ -34,6 +34,7 @@ static struct object g_vEhObject;
 bool RegisterFrameInfo(){
 	const RegisterFrameInfoProc pfnRegisterFrameInfo = __MCFCRT_pfnRegisterFrameInfoProc;
 	if(!pfnRegisterFrameInfo){
+		// 不需要进行任何操作。
 		return true;
 	}
 
@@ -60,6 +61,7 @@ bool RegisterFrameInfo(){
 void DeregisterFrameInfo(){
 	const DeregisterFrameInfoProc pfnDeregisterFrameInfo = __MCFCRT_pfnDeregisterFrameInfoProc;
 	if(!pfnDeregisterFrameInfo){
+		// 不需要进行任何操作。
 		return;
 	}
 

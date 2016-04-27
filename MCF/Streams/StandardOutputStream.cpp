@@ -4,6 +4,7 @@
 
 #include "../StdMCF.hpp"
 #include "StandardOutputStream.hpp"
+#include "../Utilities/Noncopyable.hpp"
 #include "../Utilities/Bail.hpp"
 #include "../Utilities/MinMax.hpp"
 #include "../Core/Exception.hpp"
@@ -14,7 +15,7 @@
 namespace MCF {
 
 namespace {
-	class Pipe {
+	class Pipe : MCF_NONCOPYABLE {
 	private:
 		const HANDLE x_hPipe;
 
@@ -40,8 +41,6 @@ namespace {
 			} catch(...){
 			}
 		}
-
-		Pipe(const Pipe &) = delete;
 
 	private:
 		void X_FlushBuffer(std::size_t uThreshold){

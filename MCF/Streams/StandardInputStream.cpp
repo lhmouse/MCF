@@ -4,6 +4,7 @@
 
 #include "../StdMCF.hpp"
 #include "StandardInputStream.hpp"
+#include "../Utilities/Noncopyable.hpp"
 #include "../Utilities/Bail.hpp"
 #include "../Utilities/MinMax.hpp"
 #include "../Thread/RecursiveMutex.hpp"
@@ -15,7 +16,7 @@
 namespace MCF {
 
 namespace {
-	class Pipe {
+	class Pipe : MCF_NONCOPYABLE {
 	private:
 		const HANDLE x_hPipe;
 
@@ -37,8 +38,6 @@ namespace {
 		}
 		~Pipe(){
 		}
-
-		Pipe(const Pipe &) = delete;
 
 	private:
 		void X_PopulateBuffer(){

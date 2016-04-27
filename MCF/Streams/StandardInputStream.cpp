@@ -7,7 +7,7 @@
 #include "../Utilities/Noncopyable.hpp"
 #include "../Utilities/Bail.hpp"
 #include "../Utilities/MinMax.hpp"
-#include "../Thread/RecursiveMutex.hpp"
+#include "../Thread/Mutex.hpp"
 #include "../Core/Exception.hpp"
 #include "../Core/StreamBuffer.hpp"
 #include "../Containers/StaticVector.hpp"
@@ -18,6 +18,15 @@ namespace MCF {
 namespace {
 	class Pipe : MCF_NONCOPYABLE {
 	private:
+		static HANDLE X_GetStdInputHandle(){
+			const auto hPipe = ::GetStdHandle(STD_INPUT_HANDLE);
+			if(hPipe == INVALID_HANDLE_VALUE){
+				MCF_THROW(Exception, ::GetLastError(), Rcntws::View(L"无法获取标准输入流的句柄。"));
+			}
+			return hPipe;
+		}
+
+	private:
 		const HANDLE x_hPipe;
 
 		bool x_bEchoing = true;
@@ -26,14 +35,7 @@ namespace {
 
 	public:
 		Pipe()
-			: x_hPipe(
-				[]{
-					const auto hPipe = ::GetStdHandle(STD_INPUT_HANDLE);
-					if(hPipe == INVALID_HANDLE_VALUE){
-						MCF_THROW(Exception, ::GetLastError(), Rcntws::View(L"无法获取标准输入流的句柄。"));
-					}
-					return hPipe;
-				}())
+			: x_hPipe(X_GetStdInputHandle())
 		{
 		}
 		~Pipe(){
@@ -132,12 +134,12 @@ namespace {
 		}
 	};
 
-	static_assert(std::is_trivially_destructible<RecursiveMutex>::value, "Please fix this!");
+	static_assert(std::is_trivially_destructible<Mutex>::value, "Please fix this!");
 
 	__attribute__((__init_priority__(101)))
-	RecursiveMutex g_vMutex;
+	Mutex g_vMutex;
 	__attribute__((__init_priority__(103)))
-	Pipe           g_vPipe;
+	Pipe  g_vPipe;
 }
 
 StandardInputStream::~StandardInputStream(){

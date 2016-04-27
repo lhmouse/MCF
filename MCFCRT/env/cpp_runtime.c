@@ -33,38 +33,43 @@ static struct object g_vEhObject;
 
 bool RegisterFrameInfo(){
 	const RegisterFrameInfoProc pfnRegisterFrameInfo = __MCFCRT_pfnRegisterFrameInfoProc;
-	if(pfnRegisterFrameInfo){
-		const void *pEhFrameBase = nullptr;
-		_MCFCRT_ModuleSectionInfo vSection;
-		for(bool bHasSection = _MCFCRT_EnumerateFirstModuleSection(&vSection); bHasSection; bHasSection = _MCFCRT_EnumerateNextModuleSection(&vSection)){
-			const char *const pchBegin = vSection.__pBase;
-			const char *const pchEnd   = pchBegin + vSection.__uSize;
-			if((pchBegin <= g_aEhFrameProbe) && (g_aEhFrameProbe < pchEnd)){
-				pEhFrameBase = pchBegin;
-				break;
-			}
-		}
-		if(!pEhFrameBase){
-			SetLastError(ERROR_BAD_FORMAT);
-			return false;
-		}
-
-		(*pfnRegisterFrameInfo)(pEhFrameBase, &g_vEhObject);
-		g_pEhFrameBase = pEhFrameBase;
+	if(!pfnRegisterFrameInfo){
+		return true;
 	}
+
+	const void *pEhFrameBase = nullptr;
+	_MCFCRT_ModuleSectionInfo vSection;
+	for(bool bHasSection = _MCFCRT_EnumerateFirstModuleSection(&vSection); bHasSection; bHasSection = _MCFCRT_EnumerateNextModuleSection(&vSection)){
+		const char *const pchBegin = vSection.__pBase;
+		const char *const pchEnd   = pchBegin + vSection.__uSize;
+		if((pchBegin <= g_aEhFrameProbe) && (g_aEhFrameProbe < pchEnd)){
+			pEhFrameBase = pchBegin;
+			break;
+		}
+	}
+	if(!pEhFrameBase){
+		SetLastError(ERROR_BAD_FORMAT);
+		return false;
+	}
+
+	(*pfnRegisterFrameInfo)(pEhFrameBase, &g_vEhObject);
+	g_pEhFrameBase = pEhFrameBase;
+
 	return true;
 }
 void DeregisterFrameInfo(){
 	const DeregisterFrameInfoProc pfnDeregisterFrameInfo = __MCFCRT_pfnDeregisterFrameInfoProc;
-	if(pfnDeregisterFrameInfo){
-		const void *const pEhFrameBase = g_pEhFrameBase;
-		if(!pEhFrameBase){
-			return;
-		}
-
-		g_pEhFrameBase = nullptr;
-		(*pfnDeregisterFrameInfo)(pEhFrameBase);
+	if(!pfnDeregisterFrameInfo){
+		return;
 	}
+
+	const void *const pEhFrameBase = g_pEhFrameBase;
+	if(!pEhFrameBase){
+		return;
+	}
+
+	g_pEhFrameBase = nullptr;
+	(*pfnDeregisterFrameInfo)(pEhFrameBase);
 }
 
 bool __MCFCRT_CppRuntimeInit(){

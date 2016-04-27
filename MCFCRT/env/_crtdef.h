@@ -31,6 +31,7 @@
 #	define nullptr                      ((void *)0)
 #	include <stdbool.h>
 #	include <stdalign.h>
+#	include <uchar.h>
 #	include <stddef.h>
 #	include <stdint.h>
 #	include <limits.h>

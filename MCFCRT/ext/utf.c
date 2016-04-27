@@ -5,8 +5,8 @@
 #include "utf.h"
 
 char32_t _MCFCRT_DecodeUtf8 (const char **ppchRead){
-	const char *pchRead = *ppchRead;
-	uint_fast32_t u32CodePoint = (uint_fast32_t)*(pchRead++);
+	register const char *pchRead = *ppchRead;
+	register uint_fast32_t u32CodePoint = (uint_fast32_t)*(pchRead++);
 	if(u32CodePoint < 0x80){ // 7 位
 		//
 	} else if((u32CodePoint & 0xE0) == 0xC0){ // 11 位
@@ -29,8 +29,8 @@ char32_t _MCFCRT_DecodeUtf8 (const char **ppchRead){
 	return (char32_t)u32CodePoint;
 }
 char32_t _MCFCRT_DecodeUtf16(const char16_t **ppc16Read){
-	const char16_t *pc16Read = *ppc16Read;
-	uint_fast32_t u32CodePoint = (uint_fast32_t)*(pc16Read++);
+	register const char16_t *pc16Read = *ppc16Read;
+	register uint_fast32_t u32CodePoint = (uint_fast32_t)*(pc16Read++);
 	if((u32CodePoint < 0xD800) || (0xDC00 <= u32CodePoint)){ // 1 码点
 		//
 	} else { // 2 码点
@@ -44,8 +44,8 @@ char32_t _MCFCRT_DecodeUtf16(const char16_t **ppc16Read){
 }
 
 void _MCFCRT_EncodeUtf8 (char **ppchWrite, char32_t c32CodePoint){
-	char *pchWrite = *ppchWrite;
-	uint_fast32_t u32CodePoint = (uint_fast32_t)c32CodePoint;
+	register char *pchWrite = *ppchWrite;
+	register uint_fast32_t u32CodePoint = (uint_fast32_t)c32CodePoint;
 	if(u32CodePoint < 0x80){ // 7 位
 		*(pchWrite++) = (char)(((u32CodePoint      ) & 0xFF)       );
 	} else if(u32CodePoint < 0x800){ // 11 位 = 5 + 6
@@ -64,8 +64,8 @@ void _MCFCRT_EncodeUtf8 (char **ppchWrite, char32_t c32CodePoint){
 	*ppchWrite = pchWrite;
 }
 void _MCFCRT_EncodeUtf16(char16_t **ppc16Write, char32_t c32CodePoint){
-	char16_t *pc16Write = *ppc16Write;
-	uint_fast32_t u32CodePoint = (uint_fast32_t)c32CodePoint;
+	register char16_t *pc16Write = *ppc16Write;
+	register uint_fast32_t u32CodePoint = (uint_fast32_t)c32CodePoint;
 	if(u32CodePoint < 0x10000){ // 1 码点
 		*(pc16Write++) = (char16_t)(((u32CodePoint      ) & 0xFFFF)       );
 	} else { // 2 码点

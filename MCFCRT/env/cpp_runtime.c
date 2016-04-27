@@ -17,13 +17,13 @@ void __register_frame_info(const void *, struct object *);
 extern __attribute__((__weak__))
 void *__deregister_frame_info(const void *);
 
-typedef void (*__MCFCRT_RegisterFrameInfoProc)(const void *, struct object *);
-typedef void *(*__MCFCRT_DeregisterFrameInfoProc)(const void *);
+typedef void (*RegisterFrameInfoProc)(const void *, struct object *);
+typedef void *(*DeregisterFrameInfoProc)(const void *);
 
 __attribute__((__section__(".MCFCRT"), __shared__))
-const volatile __MCFCRT_RegisterFrameInfoProc   __MCFCRT_pfnRegisterFrameInfoProc   = &__register_frame_info;
+const volatile RegisterFrameInfoProc   __MCFCRT_pfnRegisterFrameInfoProc   = &__register_frame_info;
 __attribute__((__section__(".MCFCRT"), __shared__))
-const volatile __MCFCRT_DeregisterFrameInfoProc __MCFCRT_pfnDeregisterFrameInfoProc = &__deregister_frame_info;
+const volatile DeregisterFrameInfoProc __MCFCRT_pfnDeregisterFrameInfoProc = &__deregister_frame_info;
 
 __extension__ __attribute__((__section__(".eh_frame"), __used__))
 static const char    g_aEhFrameProbe[0] = { };
@@ -32,7 +32,7 @@ static const void *  g_pEhFrameBase;
 static struct object g_vEhObject;
 
 bool RegisterFrameInfo(){
-	const __MCFCRT_RegisterFrameInfoProc pfnRegisterFrameInfo = __MCFCRT_pfnRegisterFrameInfoProc;
+	const RegisterFrameInfoProc pfnRegisterFrameInfo = __MCFCRT_pfnRegisterFrameInfoProc;
 	if(pfnRegisterFrameInfo){
 		const void *pEhFrameBase = nullptr;
 		_MCFCRT_ModuleSectionInfo vSection;
@@ -55,7 +55,7 @@ bool RegisterFrameInfo(){
 	return true;
 }
 void DeregisterFrameInfo(){
-	const __MCFCRT_DeregisterFrameInfoProc pfnDeregisterFrameInfo = __MCFCRT_pfnDeregisterFrameInfoProc;
+	const DeregisterFrameInfoProc pfnDeregisterFrameInfo = __MCFCRT_pfnDeregisterFrameInfoProc;
 	if(pfnDeregisterFrameInfo){
 		const void *const pEhFrameBase = g_pEhFrameBase;
 		if(!pEhFrameBase){

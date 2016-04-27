@@ -7,13 +7,6 @@
 
 #include "_crtdef.h"
 
-_MCFCRT_EXTERN_C_BEGIN
-
-extern bool __MCFCRT_EhTopInit(void) _MCFCRT_NOEXCEPT;
-extern void __MCFCRT_EhTopUninit(void) _MCFCRT_NOEXCEPT;
-
-_MCFCRT_EXTERN_C_END
-
 #define __MCFCRT_HAS_EH_TOP	\
 	__attribute__((__section__(".text$")))
 

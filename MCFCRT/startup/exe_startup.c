@@ -10,6 +10,7 @@
 #include "../env/eh_top.h"
 #include "../env/heap.h"
 #include "../env/heap_dbg.h"
+#include "../env/cpp_runtime.h"
 #include "../ext/wcpcpy.h"
 #include "../ext/itow.h"
 #include "../env/bail.h"
@@ -69,8 +70,8 @@ static void OnExeProcessAttach(){
 	if(!__MCFCRT_HeapDbgInit()){
 		BailWithErrorCode(L"MCFCRT 堆内存调试器初始化失败。", GetLastError());
 	}
-	if(!__MCFCRT_EhTopInit()){
-		BailWithErrorCode(L"MCFCRT 异常处理程序初始化失败。", GetLastError());
+	if(!__MCFCRT_CppRuntimeInit()){
+		BailWithErrorCode(L"MCFCRT C++ 运行时初始化失败。", GetLastError());
 	}
 	if(!__MCFCRT_BeginModule()){
 		BailWithErrorCode(L"MCFCRT 模块初始化失败。", GetLastError());
@@ -90,7 +91,7 @@ static void OnExeProcessDetach(){
 
 	__MCFCRT_UninstallCtrlHandler();
 	__MCFCRT_EndModule();
-	__MCFCRT_EhTopUninit();
+	__MCFCRT_CppRuntimeUninit();
 	__MCFCRT_HeapDbgUninit();
 	__MCFCRT_HeapUninit();
 }

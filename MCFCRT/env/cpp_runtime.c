@@ -2,9 +2,9 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2013 - 2016, LH_Mouse. All wrongs reserved.
 
-#include "../env/eh_top.h"
-#include "../env/mcfwin.h"
-#include "../env/module.h"
+#include "cpp_runtime.h"
+#include "mcfwin.h"
+#include "module.h"
 
 // 参见 gcc/libgcc/unwind-dw2-fde.h 里面的 old_object 的注释。
 // 6 个指针大小应该足够，我们在这里保留到 8 个。
@@ -55,7 +55,7 @@ static const void *FindEhFrameBase(){
 static const void *  g_pBase;
 static struct object g_vObject;
 
-bool __MCFCRT_EhTopInit(){
+bool __MCFCRT_CppRuntimeInit(){
 	const __MCFCRT_EhTopInitProc pfnRegisterFrameInfoProc = __MCFCRT_pfnRegisterFrameInfoProc;
 	if(pfnRegisterFrameInfoProc){
 		const void *const pBase = FindEhFrameBase();
@@ -67,7 +67,7 @@ bool __MCFCRT_EhTopInit(){
 	}
 	return true;
 }
-void __MCFCRT_EhTopUninit(){
+void __MCFCRT_CppRuntimeUninit(){
 	const __MCFCRT_DeregisterFrameInfoProc pfnDeregisterFrameInfoProc = __MCFCRT_pfnDeregisterFrameInfoProc;
 	if(pfnDeregisterFrameInfoProc){
 		const void *const pBase = g_pBase;

@@ -10,6 +10,7 @@
 #include "../env/eh_top.h"
 #include "../env/heap.h"
 #include "../env/heap_dbg.h"
+#include "../env/cpp_runtime.h"
 
 // -static -Wl,-e__MCFCRT_DllStartup,--disable-runtime-pseudo-reloc,--disable-auto-import
 
@@ -23,13 +24,13 @@ static bool OnDllProcessAttach(HINSTANCE hDll, bool bDynamic){
 		__MCFCRT_HeapUninit();
 		return false;
 	}
-	if(!__MCFCRT_EhTopInit()){
+	if(!__MCFCRT_CppRuntimeInit()){
 		__MCFCRT_HeapDbgUninit();
 		__MCFCRT_HeapUninit();
 		return false;
 	}
 	if(!__MCFCRT_BeginModule()){
-		__MCFCRT_EhTopUninit();
+		__MCFCRT_CppRuntimeUninit();
 		__MCFCRT_HeapDbgUninit();
 		__MCFCRT_HeapUninit();
 		return false;
@@ -37,7 +38,7 @@ static bool OnDllProcessAttach(HINSTANCE hDll, bool bDynamic){
 	if(_MCFCRT_OnDllProcessAttach){
 		if(!_MCFCRT_OnDllProcessAttach(hDll, bDynamic)){
 			__MCFCRT_EndModule();
-			__MCFCRT_EhTopUninit();
+			__MCFCRT_CppRuntimeUninit();
 			__MCFCRT_HeapDbgUninit();
 			__MCFCRT_HeapUninit();
 			return false;
@@ -66,7 +67,7 @@ static void OnDllProcessDetach(HINSTANCE hDll, bool bDynamic){
 	}
 
 	__MCFCRT_EndModule();
-	__MCFCRT_EhTopUninit();
+	__MCFCRT_CppRuntimeUninit();
 	__MCFCRT_HeapDbgUninit();
 	__MCFCRT_HeapUninit();
 }

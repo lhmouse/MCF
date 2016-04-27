@@ -6,29 +6,31 @@
 
 char32_t _MCFCRT_DecodeUtf8 (const char **ppchRead){
 	uint_fast32_t u32CodePoint = (uint_fast32_t)*((*ppchRead)++);
-	if(u32CodePoint >= 0x80){
-		if((u32CodePoint & 0xE0) == 0xC0){ // 11 位
-			u32CodePoint &= 0x1F;
-			u32CodePoint <<= 6;
-			u32CodePoint |= ((uint_fast32_t)*((*ppchRead)++) & 0x3F      );
-		} else if((u32CodePoint & 0xF0) == 0xE0){ // 16 位
-			u32CodePoint &= 0x0F;
-			u32CodePoint <<= 12;
-			u32CodePoint |= ((uint_fast32_t)*((*ppchRead)++) & 0x3F) <<  6;
-			u32CodePoint |= ((uint_fast32_t)*((*ppchRead)++) & 0x3F)      ;
-		} else { // 21 位
-			u32CodePoint &= 0x0F;
-			u32CodePoint <<= 18;
-			u32CodePoint |= ((uint_fast32_t)*((*ppchRead)++) & 0x3F) << 12;
-			u32CodePoint |= ((uint_fast32_t)*((*ppchRead)++) & 0x3F) <<  6;
-			u32CodePoint |= ((uint_fast32_t)*((*ppchRead)++) & 0x3F)      ;
-		}
+	if(u32CodePoint < 0x80){ // 7 位
+		//
+	} else if((u32CodePoint & 0xE0) == 0xC0){ // 11 位
+		u32CodePoint &= 0x1F;
+		u32CodePoint <<= 6;
+		u32CodePoint |= ((uint_fast32_t)*((*ppchRead)++) & 0x3F      );
+	} else if((u32CodePoint & 0xF0) == 0xE0){ // 16 位
+		u32CodePoint &= 0x0F;
+		u32CodePoint <<= 12;
+		u32CodePoint |= ((uint_fast32_t)*((*ppchRead)++) & 0x3F) <<  6;
+		u32CodePoint |= ((uint_fast32_t)*((*ppchRead)++) & 0x3F)      ;
+	} else { // 21 位
+		u32CodePoint &= 0x0F;
+		u32CodePoint <<= 18;
+		u32CodePoint |= ((uint_fast32_t)*((*ppchRead)++) & 0x3F) << 12;
+		u32CodePoint |= ((uint_fast32_t)*((*ppchRead)++) & 0x3F) <<  6;
+		u32CodePoint |= ((uint_fast32_t)*((*ppchRead)++) & 0x3F)      ;
 	}
 	return (char32_t)u32CodePoint;
 }
 char32_t _MCFCRT_DecodeUtf16(const char16_t **ppc16Read){
 	uint_fast32_t u32CodePoint = (uint_fast32_t)*((*ppc16Read)++);
-	if((0xD800 <= u32CodePoint) && (u32CodePoint < 0xDC00)){ // 2 码点
+	if((u32CodePoint < 0xD800) || (0xDC00 <= u32CodePoint)){ // 1 码点
+		//
+	} else { // 2 码点
 		u32CodePoint &= 0x3FF;
 		u32CodePoint <<= 10;
 		u32CodePoint |= ((uint_fast32_t)*((*ppc16Read)++) & 0x3FF);

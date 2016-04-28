@@ -112,14 +112,19 @@ public:
 	}
 };
 
+class Mutex;
+class RecursiveMutex;
+class KernelMutex;
+class KernelRecursiveMutex;
+
 template<class ObjectT>
-using Monitor                = MonitorTemplate<ObjectT, class Mutex>;
+using Monitor                = MonitorTemplate<ObjectT, Mutex>;
 template<class ObjectT>
-using RecursiveMonitor       = MonitorTemplate<ObjectT, class RecursiveMutex>;
+using RecursiveMonitor       = MonitorTemplate<ObjectT, RecursiveMutex>;
 template<class ObjectT>
-using KernelMonitor          = MonitorTemplate<ObjectT, class KernelMutex>;
+using KernelMonitor          = MonitorTemplate<ObjectT, KernelMutex>;
 template<class ObjectT>
-using KernelRecursiveMonitor = MonitorTemplate<ObjectT, class KernelRecursiveMutex>;
+using KernelRecursiveMonitor = MonitorTemplate<ObjectT, KernelRecursiveMutex>;
 
 }
 

@@ -136,21 +136,20 @@ static void CrtTlsCallback(LPVOID hInstance, DWORD dwReason, LPVOID pReserved){
 
 extern const IMAGE_TLS_DIRECTORY _tls_used;
 
-__extension__ __attribute__((__section__(".tls$@@@")))
+__extension__ __attribute__((__section__(".tls$@@@"), __used__))
 static const char tls_start[0] = { };
-__extension__ __attribute__((__section__(".tls$___")))
+__extension__ __attribute__((__section__(".tls$___"), __used__))
 static const char tls_end[0]   = { };
 
-__attribute__((__section__(".CRT$@@@")))
+__attribute__((__section__(".CRT$@@@"), __used__))
 static const PIMAGE_TLS_CALLBACK callback_start = &CrtTlsCallback;
-__attribute__((__section__(".CRT$___")))
+__attribute__((__section__(".CRT$___"), __used__))
 static const PIMAGE_TLS_CALLBACK callback_end   = nullptr;
 
-__attribute__((__section__(".data")))
-DWORD tls_index = 0xDEADBEEF;
+__attribute__((__section__(".data"), __used__))
+static DWORD tls_index = 0xDEADBEEF;
 
-// 如果没有 dllexport 而在编译链接时开启了 lto 则 TLS 目录就不会被正确链接。
-__attribute__((__dllexport__, __section__(".rdata")))
+__attribute__((__section__(".rdata"), __used__))
 const IMAGE_TLS_DIRECTORY _tls_used = { (UINT_PTR)&tls_start, (UINT_PTR)&tls_end, (UINT_PTR)&tls_index, (UINT_PTR)&callback_start, 0, 0 };
 
 _Noreturn __MCFCRT_C_STDCALL __MCFCRT_HAS_EH_TOP

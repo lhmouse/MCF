@@ -8,6 +8,7 @@
 #include "../../MCFCRT/env/_nt_timeout.h"
 #include <winternl.h>
 #include <ntdef.h>
+#include <ntstatus.h>
 
 extern "C" __attribute__((__dllimport__, __stdcall__))
 NTSTATUS NtOpenSemaphore(HANDLE *pHandle, ACCESS_MASK dwDesiredAccess, const OBJECT_ATTRIBUTES *pObjectAttributes) noexcept;

@@ -43,7 +43,7 @@ char32_t _MCFCRT_DecodeUtf16(const char16_t **ppc16Read){
 	return (char32_t)u32CodePoint;
 }
 
-void _MCFCRT_EncodeUtf8 (char **ppchWrite, char32_t c32CodePoint){
+void _MCFCRT_EncodeUtf8(char **ppchWrite, char32_t c32CodePoint){
 	register char *pchWrite = *ppchWrite;
 	register uint_fast32_t u32CodePoint = (uint_fast32_t)c32CodePoint;
 	if(u32CodePoint < 0x80){ // 7 位
@@ -74,4 +74,15 @@ void _MCFCRT_EncodeUtf16(char16_t **ppc16Write, char32_t c32CodePoint){
 		*(pc16Write++) = (char16_t)((((u32CodePoint)      ) & 0x03FF) | 0xDC00);
 	}
 	*ppc16Write = pc16Write;
+}
+
+char32_t _MCFCRT_EncodeUtf8FromUtf16(char **ppchWrite, const char16_t **ppc16Read){
+	const char32_t c32CodePoint = _MCFCRT_DecodeUtf16(ppc16Read);
+	_MCFCRT_EncodeUtf8(ppchWrite, c32CodePoint);
+	return c32CodePoint;
+}
+char32_t _MCFCRT_EncodeUtf16FromUtf8(char16_t **ppc16Write, const char **ppchRead){
+	const char32_t c32CodePoint = _MCFCRT_DecodeUtf8(ppchRead);
+	_MCFCRT_EncodeUtf16(ppc16Write, c32CodePoint);
+	return c32CodePoint;
 }

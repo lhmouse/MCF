@@ -19,6 +19,9 @@ extern char32_t _MCFCRT_DecodeUtf16(const char16_t **__ppc16Read) _MCFCRT_NOEXCE
 extern void _MCFCRT_EncodeUtf8 (char     **__ppchWrite , char32_t __c32CodePoint) _MCFCRT_NOEXCEPT;
 extern void _MCFCRT_EncodeUtf16(char16_t **__ppc16Write, char32_t __c32CodePoint) _MCFCRT_NOEXCEPT;
 
+extern char32_t _MCFCRT_EncodeUtf8FromUtf16(char     **__ppchWrite , const char16_t **__ppc16Read) _MCFCRT_NOEXCEPT;
+extern char32_t _MCFCRT_EncodeUtf16FromUtf8(char16_t **__ppc16Write, const char     **__ppchRead ) _MCFCRT_NOEXCEPT;
+
 _MCFCRT_EXTERN_C_END
 
 #endif

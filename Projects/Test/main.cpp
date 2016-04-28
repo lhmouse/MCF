@@ -56,5 +56,21 @@ extern "C" unsigned _MCFCRT_Main(){
 	} while(c);
 	std::printf("utf32 -> utf16, len = %td, cmp = %d\n", w16 - dst16, std::memcmp(src16, dst16, sizeof(src16)));
 
+	std::memset(dst8, -1, sizeof(dst8));
+	w8 = dst8;
+	r16 = src16;
+	do {
+		c = ::_MCFCRT_EncodeUtf8FromUtf16(&w8, &r16);
+	} while(c);
+	std::printf("utf16 -> utf8 , len = %td, cmp = %d\n", w8 - dst8, std::memcmp(src8, dst8, sizeof(src8)));
+
+	std::memset(dst16, -1, sizeof(dst16));
+	w16 = dst16;
+	r8 = src8;
+	do {
+		c = ::_MCFCRT_EncodeUtf16FromUtf8(&w16, &r8);
+	} while(c);
+	std::printf("utf8  -> utf16, len = %td, cmp = %d\n", w16 - dst16, std::memcmp(src16, dst16, sizeof(src16)));
+
 	return 0;
 }

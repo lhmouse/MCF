@@ -1,6 +1,7 @@
 #include <MCF/StdMCF.hpp>
 #include <MCFCRT/ext/utf.h>
 #include <cstdio>
+#include <MCF/Thread/Monitor.hpp>
 
 extern "C" unsigned _MCFCRT_Main(){
 	constexpr char     src8 [] = u8"abcΑΒΒ喵喵𤭢";

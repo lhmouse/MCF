@@ -11,10 +11,6 @@
 
 namespace MCF {
 
-class Mutex;
-class RecursiveMutex;
-class KernelMutex;
-
 template<class ObjectT, class MutexT>
 class MonitorTemplate;
 
@@ -70,54 +66,60 @@ namespace Impl_Monitor {
 		friend MonitorTemplate<ObjectT, MutexT>;
 
 	private:
-		MonitorLock(typename MutexT::UniqueLock &&vLock, ObjectT &vObject) noexcept
-			: MutexT::UniqueLock(std::move(vLock)), ViewT(vObject)
+		MonitorLock(MutexT &vMutex, ObjectT &vObject) noexcept
+			: MutexT::UniqueLock(vMutex), ViewT(vObject)
 		{
 		}
-
-		MonitorLock(MonitorLock &&rhs) noexcept = default;
 
 		MonitorLock(const MonitorLock &) = delete;
-		MonitorLock &operator=(const MonitorLock &) = delete;
-		MonitorLock &operator=(MonitorLock &&) noexcept = delete;
-	};
-
-	template<class ObjectT, class MutexT>
-	class MonitorTemplate : MCF_NONCOPYABLE {
-	private:
-		mutable MutexT x_vMutex;
-		ObjectT x_vObject;
-
-	public:
-		template<typename ...ParamsT>
-		explicit MonitorTemplate(ParamsT &&...vParams)
-			: x_vObject(std::forward<ParamsT>(vParams)...)
-		{
-		}
-
-	public:
-		Impl_Monitor::MonitorLock<const ObjectT, MutexT, MonitorViewAsReference<const ObjectT>> operator*() const noexcept {
-			return Impl_Monitor::MonitorLock<const ObjectT, MutexT, MonitorViewAsReference<const ObjectT>>(x_vMutex.GetLock(), x_vObject);
-		}
-		Impl_Monitor::MonitorLock<ObjectT, MutexT, MonitorViewAsReference<ObjectT>> operator*() noexcept {
-			return Impl_Monitor::MonitorLock<ObjectT, MutexT, MonitorViewAsReference<ObjectT>>(x_vMutex.GetLock(), x_vObject);
-		}
-
-		Impl_Monitor::MonitorLock<const ObjectT, MutexT, MonitorViewAsPointer<const ObjectT>> operator->() const noexcept {
-			return Impl_Monitor::MonitorLock<const ObjectT, MutexT, MonitorViewAsPointer<const ObjectT>>(x_vMutex.GetLock(), x_vObject);
-		}
-		Impl_Monitor::MonitorLock<ObjectT, MutexT, MonitorViewAsPointer<ObjectT>> operator->() noexcept {
-			return Impl_Monitor::MonitorLock<ObjectT, MutexT, MonitorViewAsPointer<ObjectT>>(x_vMutex.GetLock(), x_vObject);
-		}
+		MonitorLock(MonitorLock &&rhs) noexcept = default;
 	};
 }
 
+template<class ObjectT, class MutexT>
+class MonitorTemplate : MCF_NONCOPYABLE {
+public:
+	template<class ViewObjectT>
+	using LockedReference = Impl_Monitor::MonitorLock<ViewObjectT, MutexT, Impl_Monitor::MonitorViewAsReference<ViewObjectT>>;
+
+	template<class ViewObjectT>
+	using LockedPointer   = Impl_Monitor::MonitorLock<ViewObjectT, MutexT, Impl_Monitor::MonitorViewAsPointer<ViewObjectT>>;
+
+private:
+	mutable MutexT x_vMutex;
+	ObjectT x_vObject;
+
+public:
+	template<typename ...ParamsT>
+	explicit MonitorTemplate(ParamsT &&...vParams)
+		: x_vObject(std::forward<ParamsT>(vParams)...)
+	{
+	}
+
+public:
+	LockedReference<const ObjectT> operator*() const & noexcept {
+		return LockedReference<const ObjectT>(x_vMutex.GetLock(), x_vObject);
+	}
+	LockedReference<ObjectT> operator*() & noexcept {
+		return LockedReference<ObjectT>(x_vMutex.GetLock(), x_vObject);
+	}
+
+	LockedPointer<const ObjectT> operator->() const & noexcept {
+		return LockedPointer<const ObjectT>(x_vMutex.GetLock(), x_vObject);
+	}
+	LockedPointer<ObjectT> operator->() & noexcept {
+		return LockedPointer<ObjectT>(x_vMutex.GetLock(), x_vObject);
+	}
+};
+
 template<class ObjectT>
-using Monitor          = Impl_Monitor::MonitorTemplate<ObjectT, Mutex>;
+using Monitor                = MonitorTemplate<ObjectT, class Mutex>;
 template<class ObjectT>
-using RecursiveMonitor = Impl_Monitor::MonitorTemplate<ObjectT, RecursiveMutex>;
+using RecursiveMonitor       = MonitorTemplate<ObjectT, class RecursiveMutex>;
 template<class ObjectT>
-using KernelMonitor    = Impl_Monitor::MonitorTemplate<ObjectT, KernelMutex>;
+using KernelMonitor          = MonitorTemplate<ObjectT, class KernelMutex>;
+template<class ObjectT>
+using KernelRecursiveMonitor = MonitorTemplate<ObjectT, class KernelRecursiveMutex>;
 
 }
 

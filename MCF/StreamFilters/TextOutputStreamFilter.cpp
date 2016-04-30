@@ -35,12 +35,10 @@ void TextOutputStreamFilter::Put(unsigned char byData){
 	x_sbufPlain.Put(byData);
 	X_FlushPlainBuffer(false);
 }
-
 void TextOutputStreamFilter::Put(const void *pData, std::size_t uSize){
 	x_sbufPlain.Put(pData, uSize);
 	X_FlushPlainBuffer(false);
 }
-
 void TextOutputStreamFilter::Flush(bool bHard){
 	X_FlushPlainBuffer(true);
 

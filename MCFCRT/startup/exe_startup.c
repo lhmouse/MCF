@@ -4,6 +4,7 @@
 
 #include "exe_decl.h"
 #include "../env/mcfwin.h"
+#include "../env/standard_streams.h"
 #include "../env/module.h"
 #include "../env/fenv.h"
 #include "../env/thread_env.h"
@@ -30,22 +31,22 @@ static BOOL CrtTerminalCtrlHandler(DWORD dwCtrlType){
 		return true;
 	}
 
-	const HANDLE hStdErr = GetStdHandle(STD_ERROR_HANDLE);
-	_MCFCRT_ASSERT(hStdErr != INVALID_HANDLE_VALUE);
-	if(hStdErr){
+	const HANDLE hStandardError = GetStdHandle(STD_ERROR_HANDLE);
+	_MCFCRT_ASSERT(hStandardError != INVALID_HANDLE_VALUE);
+	if(hStandardError){
 		static const char kKilled[] = "Killed: _MCFCRT_OnCtrlEvent() is undefined.\n";
 		DWORD dwBytesWritten;
-		WriteFile(hStdErr, kKilled, sizeof(kKilled) - 1, &dwBytesWritten, nullptr);
+		WriteFile(hStandardError, kKilled, sizeof(kKilled) - 1, &dwBytesWritten, nullptr);
 	}
 	TerminateProcess(GetCurrentProcess(), (DWORD)STATUS_CONTROL_C_EXIT);
 	__builtin_trap();
 }
 
-static inline bool __MCFCRT_InstallCtrlHandler(){
+static inline bool __MCFCRT_InstallCtrlHandler(void){
 	const bool bRet = SetConsoleCtrlHandler(&CrtTerminalCtrlHandler, true);
 	return bRet;
 }
-static inline void __MCFCRT_UninstallCtrlHandler(){
+static inline void __MCFCRT_UninstallCtrlHandler(void){
 	const bool bRet = SetConsoleCtrlHandler(&CrtTerminalCtrlHandler, false);
 	_MCFCRT_ASSERT(bRet);
 }
@@ -61,9 +62,12 @@ static void BailWithErrorCode(const wchar_t *pwszMessage, DWORD dwErrorCode){
 	_MCFCRT_Bail(awcBuffer);
 }
 
-static void OnExeProcessAttach(){
+static void OnExeProcessAttach(void){
 	__MCFCRT_FEnvInit();
 
+	if(!__MCFCRT_StandardStreamsInit()){
+		BailWithErrorCode(L"MCFCRT 标准输入输出流初始化失败。", GetLastError());
+	}
 	if(!__MCFCRT_HeapInit()){
 		BailWithErrorCode(L"MCFCRT 堆内存初始化失败。", GetLastError());
 	}
@@ -73,27 +77,28 @@ static void OnExeProcessAttach(){
 	if(!__MCFCRT_CppRuntimeInit()){
 		BailWithErrorCode(L"MCFCRT C++ 运行时初始化失败。", GetLastError());
 	}
-	if(!__MCFCRT_BeginModule()){
+	if(!__MCFCRT_ModuleInit()){
 		BailWithErrorCode(L"MCFCRT 模块初始化失败。", GetLastError());
 	}
 	if(!__MCFCRT_InstallCtrlHandler()){
 		BailWithErrorCode(L"MCFCRT Ctrl 响应函数注册失败。", GetLastError());
 	}
 }
-static void OnExeThreadAttach(){
+static void OnExeThreadAttach(void){
 	__MCFCRT_FEnvInit();
 }
-static void OnExeThreadDetach(){
+static void OnExeThreadDetach(void){
 	__MCFCRT_TlsCleanup();
 }
-static void OnExeProcessDetach(){
+static void OnExeProcessDetach(void){
 	__MCFCRT_TlsCleanup();
 
 	__MCFCRT_UninstallCtrlHandler();
-	__MCFCRT_EndModule();
+	__MCFCRT_ModuleUninit();
 	__MCFCRT_CppRuntimeUninit();
 	__MCFCRT_HeapDbgUninit();
 	__MCFCRT_HeapUninit();
+	__MCFCRT_StandardStreamsUninit();
 }
 
 static bool g_bInitialized = false;

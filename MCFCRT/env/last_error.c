@@ -8,7 +8,7 @@
 #include <ntdef.h>
 #include <winnt.h>
 
-unsigned long _MCFCRT_GetLastWin32Error(){
+unsigned long _MCFCRT_GetLastWin32Error(void){
 	return GetLastError();
 }
 void _MCFCRT_SetLastWin32Error(unsigned long ulErrorCode){

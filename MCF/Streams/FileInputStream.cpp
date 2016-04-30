@@ -60,7 +60,6 @@ bool FileInputStream::Discard(){
 	x_u64Offset += uBytesDiscarded;
 	return uBytesDiscarded >= 1;
 }
-
 std::size_t FileInputStream::Peek(void *pData, std::size_t uSize){
 	const auto uBytesRead = X_ReadFromCurrentOffset(pData, uSize);
 	return uBytesRead;

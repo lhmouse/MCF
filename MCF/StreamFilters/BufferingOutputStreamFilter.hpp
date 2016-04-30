@@ -22,9 +22,7 @@ public:
 
 public:
 	void Put(unsigned char byData) override;
-
 	void Put(const void *pData, std::size_t uSize) override;
-
 	void Flush(bool bHard) override;
 
 	void Swap(BufferingOutputStreamFilter &rhs) noexcept {

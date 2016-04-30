@@ -19,10 +19,11 @@ public:
 
 public:
 	void Put(unsigned char byData) override;
-
 	void Put(const void *pData, std::size_t uSize) override;
-
 	void Flush(bool bHard) override;
+
+	void PutText(wchar_t wcData);
+	void PutText(const wchar_t *pwcData, std::size_t uSize, bool bAppendNewLine);
 
 	void Swap(StandardErrorStream &rhs) noexcept {
 		using std::swap;

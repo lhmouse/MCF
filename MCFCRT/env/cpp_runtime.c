@@ -6,10 +6,10 @@
 #include "mcfwin.h"
 #include "module.h"
 
-bool SupportLibraryInit(){
+bool SupportLibraryInit(void){
 	return true;
 }
-void SupportLibraryUninit(){
+void SupportLibraryUninit(void){
 }
 
 // 参见 gcc/libgcc/unwind-dw2-fde.h 里面的 old_object 的注释。
@@ -37,7 +37,7 @@ static const char    g_aEhFrameProbe[0] = { };
 static const void *  g_pEhFrameBase;
 static struct object g_vEhObject;
 
-bool RegisterFrameInfo(){
+bool RegisterFrameInfo(void){
 	const RegisterFrameInfoProc pfnRegisterFrameInfo = __MCFCRT_pfnRegisterFrameInfoProc;
 	if(!pfnRegisterFrameInfo){
 		// 不需要进行任何操作。
@@ -64,7 +64,7 @@ bool RegisterFrameInfo(){
 
 	return true;
 }
-void DeregisterFrameInfo(){
+void DeregisterFrameInfo(void){
 	const DeregisterFrameInfoProc pfnDeregisterFrameInfo = __MCFCRT_pfnDeregisterFrameInfoProc;
 	if(!pfnDeregisterFrameInfo){
 		// 不需要进行任何操作。
@@ -80,7 +80,7 @@ void DeregisterFrameInfo(){
 	(*pfnDeregisterFrameInfo)(pEhFrameBase);
 }
 
-bool __MCFCRT_CppRuntimeInit(){
+bool __MCFCRT_CppRuntimeInit(void){
 	if(!SupportLibraryInit()){
 		return false;
 	}
@@ -90,7 +90,7 @@ bool __MCFCRT_CppRuntimeInit(){
 	}
 	return true;
 }
-void __MCFCRT_CppRuntimeUninit(){
+void __MCFCRT_CppRuntimeUninit(void){
 	DeregisterFrameInfo();
 	SupportLibraryUninit();
 }

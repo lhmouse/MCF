@@ -9,12 +9,12 @@
 
 _MCFCRT_EXTERN_C_BEGIN
 
-extern bool __MCFCRT_BeginModule(void);
-extern void __MCFCRT_EndModule(void);
+extern bool __MCFCRT_ModuleInit(void) _MCFCRT_NOEXCEPT;
+extern void __MCFCRT_ModuleUninit(void) _MCFCRT_NOEXCEPT;
 
-typedef void (*_MCFCRT_AtEndModuleCallback)(_MCFCRT_STD intptr_t __nContext);
+typedef void (*_MCFCRT_AtModuleExitCallback)(_MCFCRT_STD intptr_t __nContext);
 
-extern bool _MCFCRT_AtEndModule(_MCFCRT_AtEndModuleCallback __pfnProc, _MCFCRT_STD intptr_t __nContext) _MCFCRT_NOEXCEPT;
+extern bool _MCFCRT_AtModuleExit(_MCFCRT_AtModuleExitCallback __pfnProc, _MCFCRT_STD intptr_t __nContext) _MCFCRT_NOEXCEPT;
 
 extern void *_MCFCRT_GetModuleBase(void) _MCFCRT_NOEXCEPT;
 

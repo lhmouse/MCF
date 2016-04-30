@@ -11,7 +11,7 @@
 #include <stdlib.h>
 
 typedef struct tagAtExitCallback {
-	_MCFCRT_AtEndModuleCallback pfnProc;
+	_MCFCRT_AtModuleExitCallback pfnProc;
 	intptr_t nContext;
 } AtExitCallback;
 
@@ -30,7 +30,7 @@ static _MCFCRT_Mutex           g_vAtExitMutex   = { 0 };
 static AtExitCallbackBlock *   g_pAtExitLast    = nullptr;
 
 __attribute__((__noinline__))
-static void PumpAtEndModule(){
+static void PumpAtModuleExit(void){
 	for(;;){
 		AtExitCallbackBlock *pBlock;
 		{
@@ -59,7 +59,7 @@ typedef void (*StaticConstructorDestructorProc)(void);
 extern const StaticConstructorDestructorProc __CTOR_LIST__[];
 extern const StaticConstructorDestructorProc __DTOR_LIST__[];
 
-void CallStaticConstructors(){
+void CallStaticConstructors(void){
 	const StaticConstructorDestructorProc *const pfnBegin = __CTOR_LIST__ + 1;
 
 	const StaticConstructorDestructorProc *pfnCurrent = pfnBegin;
@@ -71,7 +71,7 @@ void CallStaticConstructors(){
 		(*pfnCurrent)();
 	}
 }
-void CallStaticDestructors(){
+void CallStaticDestructors(void){
 	const StaticConstructorDestructorProc *const pfnBegin = __DTOR_LIST__ + 1;
 
 	const StaticConstructorDestructorProc *pfnCurrent = pfnBegin;
@@ -81,20 +81,20 @@ void CallStaticDestructors(){
 	}
 }
 
-bool __MCFCRT_BeginModule(){
+bool __MCFCRT_ModuleInit(void){
 	if(!__MCFCRT_ThreadEnvInit()){
 		return false;
 	}
 	CallStaticConstructors();
 	return true;
 }
-void __MCFCRT_EndModule(){
-	PumpAtEndModule();
+void __MCFCRT_ModuleUninit(void){
+	PumpAtModuleExit();
 	CallStaticDestructors();
 	__MCFCRT_ThreadEnvUninit();
 }
 
-bool _MCFCRT_AtEndModule(_MCFCRT_AtEndModuleCallback pfnProc, intptr_t nContext){
+bool _MCFCRT_AtModuleExit(_MCFCRT_AtModuleExitCallback pfnProc, intptr_t nContext){
 	AtExitCallbackBlock *pBlock;
 
 	_MCFCRT_WaitForMutexForever(&g_vAtExitMutex, _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT);
@@ -126,7 +126,7 @@ bool _MCFCRT_AtEndModule(_MCFCRT_AtEndModuleCallback pfnProc, intptr_t nContext)
 // ld 自动添加此符号。
 extern const IMAGE_DOS_HEADER __image_base__ __asm__("__image_base__");
 
-void *_MCFCRT_GetModuleBase(){
+void *_MCFCRT_GetModuleBase(void){
 	return (void *)&__image_base__;
 }
 

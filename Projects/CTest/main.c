@@ -1,7 +1,7 @@
 #include <MCFCRT/exe/exe_decl.h>
 #include <stdio.h>
 
-unsigned int _MCFCRT_Main(){
+unsigned int _MCFCRT_Main(void){
 	puts("meow!");
 	return 0;
 }

@@ -19,7 +19,6 @@ int BufferInputStream::Get(){
 bool BufferInputStream::Discard(){
 	return x_vBuffer.Discard();
 }
-
 std::size_t BufferInputStream::Peek(void *pData, std::size_t uSize){
 	return x_vBuffer.Peek(pData, uSize);
 }

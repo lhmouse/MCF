@@ -311,7 +311,6 @@ void Sha1OutputStream::X_Finalize(std::uint8_t (&abyChunk)[64], unsigned uBytesI
 void Sha1OutputStream::Put(unsigned char byData){
 	Put(&byData, 1);
 }
-
 void Sha1OutputStream::Put(const void *pData, std::size_t uSize){
 	if(x_nChunkOffset < 0){
 		X_Initialize();
@@ -341,7 +340,6 @@ void Sha1OutputStream::Put(const void *pData, std::size_t uSize){
 	}
 	x_u64BytesTotal += uSize;
 }
-
 void Sha1OutputStream::Flush(bool bHard){
 	(void)bHard;
 }

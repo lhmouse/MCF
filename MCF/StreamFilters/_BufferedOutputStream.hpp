@@ -41,15 +41,12 @@ namespace Impl_BufferedOutputStream {
 		void BufferedPut(unsigned char byData){
 			x_sbufFrontBuffer.Put(byData);
 		}
-
 		void BufferedPut(const void *pData, std::size_t uSize){
 			x_sbufFrontBuffer.Put(pData, uSize);
 		}
-
 		void BufferedSplice(StreamBuffer &sbufData){
 			x_sbufFrontBuffer.Splice(sbufData);
 		}
-
 		void Flush(bool bHard){
 			Flush(bHard ? kFlushStreamHard : kFlushBufferAuto);
 		}

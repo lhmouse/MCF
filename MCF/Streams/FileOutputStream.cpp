@@ -41,7 +41,6 @@ void FileOutputStream::Put(unsigned char byData){
 	}
 	x_u64Offset += 1;
 }
-
 void FileOutputStream::Put(const void *pData, std::size_t uSize){
 	const auto uBytesWritten = X_WriteFromCurrentOffset(pData, uSize);
 	if(uBytesWritten < uSize){
@@ -49,7 +48,6 @@ void FileOutputStream::Put(const void *pData, std::size_t uSize){
 	}
 	x_u64Offset += uBytesWritten;
 }
-
 void FileOutputStream::Flush(bool bHard){
 	X_Flush(bHard);
 }

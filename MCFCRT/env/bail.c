@@ -3,8 +3,9 @@
 // Copyleft 2013 - 2016, LH_Mouse. All wrongs reserved.
 
 #include "bail.h"
-#include "mcfwin.h"
+#include "standard_streams.h"
 #include "../ext/wcpcpy.h"
+#include "mcfwin.h"
 #include <ntdef.h>
 #include <ntstatus.h>
 
@@ -35,6 +36,32 @@ typedef enum tagHardErrorResponse {
 extern __attribute__((__dllimport__, __stdcall__))
 NTSTATUS NtRaiseHardError(NTSTATUS lStatus, DWORD dwUnknown, DWORD dwParamCount, const ULONG_PTR *pulParams, HardErrorResponseOption eOption, HardErrorResponse *peResponse);
 
+HardErrorResponse ShowServiceMessageBox(const wchar_t *pwszText, size_t uLength, unsigned uType){
+	size_t uTextSizeInBytes = uLength * sizeof(wchar_t);
+	const unsigned kMaxSizeInBytes = USHRT_MAX & -sizeof(wchar_t);
+	if(uTextSizeInBytes > kMaxSizeInBytes){
+		uTextSizeInBytes = kMaxSizeInBytes;
+	}
+	UNICODE_STRING ustrText;
+	ustrText.Length        = (unsigned short)uTextSizeInBytes;
+	ustrText.MaximumLength = ustrText.Length;
+	ustrText.Buffer        = (wchar_t *)pwszText;
+
+	static const wchar_t kCaption[] = L"MCF CRT";
+	UNICODE_STRING ustrCaption;
+	ustrCaption.Length        = sizeof(kCaption) - sizeof(wchar_t);
+	ustrCaption.MaximumLength = ustrCaption.Length;
+	ustrCaption.Buffer        = (wchar_t *)kCaption;
+
+	const ULONG_PTR aulParams[3] = { (ULONG_PTR)&ustrText, (ULONG_PTR)&ustrCaption, uType };
+	HardErrorResponse eResponse;
+	const NTSTATUS lStatus = NtRaiseHardError(0x50000018, 4, 3, aulParams, kHardErrorOk, &eResponse);
+	if(!NT_SUCCESS(lStatus)){
+		eResponse = kHardErrorResponseCancel;
+	}
+	return eResponse;
+}
+
 static volatile bool g_bBailed = false;
 
 _Noreturn void _MCFCRT_Bail(const wchar_t *pwszDescription){
@@ -61,36 +88,11 @@ _Noreturn void _MCFCRT_Bail(const wchar_t *pwszDescription){
 		pwcWrite = _MCFCRT_wcpcpy(pwcWrite, L"，单击“取消”调试应用程序");
 	}
 	pwcWrite = _MCFCRT_wcpcpy(pwcWrite, L"。\n");
+	// *pwcWrite = 0;
 
-	const HANDLE hStdErr = GetStdHandle(STD_ERROR_HANDLE);
-	if(hStdErr != INVALID_HANDLE_VALUE){
-		DWORD dwMode;
-		if(GetConsoleMode(hStdErr, &dwMode)){
-			DWORD dwCharsWritten;
-			WriteConsoleW(hStdErr, awcBuffer, (DWORD)(pwcWrite - awcBuffer), &dwCharsWritten, nullptr);
-		}
-	}
-	*(pwcWrite--) = 0;
+	_MCFCRT_WriteStandardErrorAsText(awcBuffer, (size_t)(pwcWrite - awcBuffer), true);
 
-	UNICODE_STRING ustrText;
-	ustrText.Length        = (unsigned short)((char *)pwcWrite - (char *)awcBuffer);
-	ustrText.MaximumLength = ustrText.Length;
-	ustrText.Buffer        = awcBuffer;
-
-	static const wchar_t kCaption[] = L"MCF CRT 错误";
-	UNICODE_STRING ustrCaption;
-	ustrCaption.Length        = sizeof(kCaption) - sizeof(wchar_t);
-	ustrCaption.MaximumLength = ustrCaption.Length;
-	ustrCaption.Buffer        = (wchar_t *)kCaption;
-
-	UINT uType = (bCanBeDebugged ? MB_OKCANCEL : MB_OK) | MB_ICONERROR;
-
-	const ULONG_PTR aulParams[3] = { (ULONG_PTR)&ustrText, (ULONG_PTR)&ustrCaption, uType };
-	HardErrorResponse eResponse;
-	const NTSTATUS lStatus = NtRaiseHardError(0x50000018, 4, 3, aulParams, kHardErrorOk, &eResponse);
-	if(!NT_SUCCESS(lStatus)){
-		eResponse = kHardErrorResponseCancel;
-	}
+	const HardErrorResponse eResponse = ShowServiceMessageBox(awcBuffer, (size_t)(pwcWrite - awcBuffer), (bCanBeDebugged ? MB_OKCANCEL : MB_OK) | MB_ICONERROR);
 	if(eResponse != kHardErrorResponseOk){
 		__debugbreak();
 	}

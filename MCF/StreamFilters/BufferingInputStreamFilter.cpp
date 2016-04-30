@@ -22,7 +22,6 @@ bool BufferingInputStreamFilter::Discard(){
 	y_vStream.PopulateBuffer(1);
 	return y_vStream.BufferedDiscard();
 }
-
 std::size_t BufferingInputStreamFilter::Peek(void *pData, std::size_t uSize){
 	y_vStream.PopulateBuffer(uSize);
 	return y_vStream.BufferedPeek(pData, uSize);

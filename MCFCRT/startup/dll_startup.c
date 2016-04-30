@@ -4,6 +4,7 @@
 
 #include "dll_decl.h"
 #include "../env/mcfwin.h"
+#include "../env/standard_streams.h"
 #include "../env/module.h"
 #include "../env/fenv.h"
 #include "../env/thread_env.h"
@@ -17,30 +18,38 @@
 static bool OnDllProcessAttach(HINSTANCE hDll, bool bDynamic){
 	__MCFCRT_FEnvInit();
 
+	if(!__MCFCRT_StandardStreamsInit()){
+		return false;
+	}
 	if(!__MCFCRT_HeapInit()){
+		__MCFCRT_StandardStreamsUninit();
 		return false;
 	}
 	if(!__MCFCRT_HeapDbgInit()){
 		__MCFCRT_HeapUninit();
+		__MCFCRT_StandardStreamsUninit();
 		return false;
 	}
 	if(!__MCFCRT_CppRuntimeInit()){
 		__MCFCRT_HeapDbgUninit();
 		__MCFCRT_HeapUninit();
+		__MCFCRT_StandardStreamsUninit();
 		return false;
 	}
-	if(!__MCFCRT_BeginModule()){
+	if(!__MCFCRT_ModuleInit()){
 		__MCFCRT_CppRuntimeUninit();
 		__MCFCRT_HeapDbgUninit();
 		__MCFCRT_HeapUninit();
+		__MCFCRT_StandardStreamsUninit();
 		return false;
 	}
 	if(_MCFCRT_OnDllProcessAttach){
 		if(!_MCFCRT_OnDllProcessAttach(hDll, bDynamic)){
-			__MCFCRT_EndModule();
+			__MCFCRT_ModuleUninit();
 			__MCFCRT_CppRuntimeUninit();
 			__MCFCRT_HeapDbgUninit();
 			__MCFCRT_HeapUninit();
+			__MCFCRT_StandardStreamsUninit();
 			return false;
 		}
 	}
@@ -66,10 +75,11 @@ static void OnDllProcessDetach(HINSTANCE hDll, bool bDynamic){
 		_MCFCRT_OnDllProcessDetach(hDll, bDynamic);
 	}
 
-	__MCFCRT_EndModule();
+	__MCFCRT_ModuleUninit();
 	__MCFCRT_CppRuntimeUninit();
 	__MCFCRT_HeapDbgUninit();
 	__MCFCRT_HeapUninit();
+	__MCFCRT_StandardStreamsUninit();
 }
 
 // __MCFCRT_DllStartup 模块入口点。

@@ -56,7 +56,7 @@ private:
 	static UniqueHandle<X_TlsKeyDeleter> X_AllocateTlsKey(){
 		auto hTemp = ::_MCFCRT_TlsAllocKey(sizeof(X_TlsContainer), nullptr, &X_ContainerDestructor, 0);
 		if(!hTemp){
-			MCF_THROW(Exception, ::_MCFCRT_GetLastWin32Error(), Rcntws::View(L"_MCFCRT_TlsAllocKey() 失败。"));
+			MCF_THROW(Exception, ::_MCFCRT_GetLastWin32Error(), Rcntws::View(L"ThreadLocal: _MCFCRT_TlsAllocKey() 失败。"));
 		}
 		UniqueHandle<X_TlsKeyDeleter> hTlsKey(hTemp);
 
@@ -93,7 +93,7 @@ public:
 		void *pStorage;
 		const bool bResult = ::_MCFCRT_TlsRequire(x_hTlsKey.Get(), &pStorage);
 		if(!bResult){
-			MCF_THROW(Exception, ::_MCFCRT_GetLastWin32Error(), Rcntws::View(L"_MCFCRT_TlsRequire() 失败。"));
+			MCF_THROW(Exception, ::_MCFCRT_GetLastWin32Error(), Rcntws::View(L"ThreadLocal: _MCFCRT_TlsRequire() 失败。"));
 		}
 		const auto pContainer = static_cast<X_TlsContainer *>(pStorage);
 		MCF_ASSERT(pContainer);

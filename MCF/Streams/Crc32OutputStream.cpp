@@ -58,7 +58,6 @@ void Crc32OutputStream::X_Finalize(std::uint8_t (&abyChunk)[8], unsigned uBytesI
 void Crc32OutputStream::Put(unsigned char byData){
 	Put(&byData, 1);
 }
-
 void Crc32OutputStream::Put(const void *pData, std::size_t uSize){
 	if(x_nChunkOffset < 0){
 		X_Initialize();
@@ -87,7 +86,6 @@ void Crc32OutputStream::Put(const void *pData, std::size_t uSize){
 		x_nChunkOffset += static_cast<int>(uBytesRemaining);
 	}
 }
-
 void Crc32OutputStream::Flush(bool bHard){
 	(void)bHard;
 }

@@ -93,13 +93,13 @@ bool _MCFCRT_AlertableSleep(uint64_t u64UntilFastMonoClock){
 	}
 	return true;
 }
-void _MCFCRT_AlertableSleepForever(){
+void _MCFCRT_AlertableSleepForever(void){
 	LARGE_INTEGER liTimeout;
 	liTimeout.QuadPart = INT64_MAX;
 	const NTSTATUS lStatus = NtDelayExecution(true, &liTimeout);
 	_MCFCRT_ASSERT_MSG(NT_SUCCESS(lStatus), L"NtDelayExecution() 失败。");
 }
-void _MCFCRT_YieldThread(){
+void _MCFCRT_YieldThread(void){
 	const NTSTATUS lStatus = NtYieldExecution();
 	_MCFCRT_ASSERT_MSG(NT_SUCCESS(lStatus), L"NtYieldExecution() 失败。");
 }
@@ -132,6 +132,6 @@ void _MCFCRT_WaitForThreadForever(_MCFCRT_ThreadHandle hThread){
 	_MCFCRT_ASSERT_MSG(NT_SUCCESS(lStatus), L"NtWaitForSingleObject() 失败。");
 }
 
-uintptr_t _MCFCRT_GetCurrentThreadId(){
+uintptr_t _MCFCRT_GetCurrentThreadId(void){
 	return GetCurrentThreadId();
 }

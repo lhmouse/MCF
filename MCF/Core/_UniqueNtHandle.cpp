@@ -11,7 +11,7 @@ namespace MCF {
 namespace Impl_UniqueNtHandle {
 	void NtHandleCloser::operator()(Handle hObject) const noexcept {
 		const auto lStatus = ::NtClose(hObject);
-		MCF_ASSERT_MSG(NT_SUCCESS(lStatus), L"::NtClose() 失败。");
+		MCF_ASSERT_MSG(NT_SUCCESS(lStatus), L"NtClose() 失败。");
 	}
 }
 

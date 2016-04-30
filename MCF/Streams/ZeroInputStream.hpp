@@ -21,7 +21,6 @@ public:
 	int Peek() noexcept override;
 	int Get() noexcept override;
 	bool Discard() noexcept override;
-
 	std::size_t Peek(void *pData, std::size_t uSize) noexcept override;
 	std::size_t Get(void *pData, std::size_t uSize) noexcept override;
 	std::size_t Discard(std::size_t uSize) noexcept override;

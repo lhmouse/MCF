@@ -3,11 +3,10 @@
 // Copyleft 2013 - 2016, LH_Mouse. All wrongs reserved.
 
 #include "heap_dbg.h"
-#include "../ext/stpcpy.h"
 #include "../ext/wcpcpy.h"
-#include "../ext/itoa.h"
 #include "../ext/itow.h"
 #include "bail.h"
+#include "standard_streams.h"
 #include "mcfwin.h"
 
 #define GUARD_BAND_SIZE     0x20u
@@ -28,36 +27,30 @@ static void DumpMemoryLeaks(_MCFCRT_AvlRoot avlBlocks){
 		return;
 	}
 
-	const HANDLE hStdErr = GetStdHandle(STD_ERROR_HANDLE);
-	if((hStdErr == INVALID_HANDLE_VALUE) || (hStdErr == nullptr)){
-		_MCFCRT_Bail(L"__MCFCRT_HeapDbgUninit() 失败：侦测到内存泄漏。无法打开标准错误流，没有生成内存泄漏信息。");
-	}
-
 	for(const __MCFCRT_HeapDbgBlockInfo *pInfo = (const __MCFCRT_HeapDbgBlockInfo *)_MCFCRT_AvlFront(&avlBlocks);
 		pInfo; pInfo = (const __MCFCRT_HeapDbgBlockInfo *)_MCFCRT_AvlNext((const _MCFCRT_AvlNodeHeader *)pInfo))
 	{
-		char achTemp[1024];
-		char *pchWrite = achTemp;
-		pchWrite = _MCFCRT_stpcpy(pchWrite, "Memory leak: address = ");
-		pchWrite = _MCFCRT_itoa0X(pchWrite, (uintptr_t)pInfo->__pAddress, sizeof(pInfo->__pAddress) * 2);
-		pchWrite = _MCFCRT_stpcpy(pchWrite, ", size = ");
-		pchWrite = _MCFCRT_itoa0X(pchWrite, (uintptr_t)pInfo->__uSize, sizeof(pInfo->__uSize) * 2);
-		pchWrite = _MCFCRT_stpcpy(pchWrite, ", return address = ");
-		pchWrite = _MCFCRT_itoa0X(pchWrite, (uintptr_t)pInfo->__pRetAddr, sizeof(pInfo->__pRetAddr) * 2);
-		pchWrite = _MCFCRT_stpcpy(pchWrite, ", leading bytes =");
+		wchar_t awcBuffer[1024];
+		wchar_t *pwcWrite = awcBuffer;
+		pwcWrite = _MCFCRT_wcpcpy(pwcWrite, L"内存块泄漏：首字节地址 = ");
+		pwcWrite = _MCFCRT_itow0X(pwcWrite, (uintptr_t)pInfo->__pAddress, sizeof(pInfo->__pAddress) * 2);
+		pwcWrite = _MCFCRT_wcpcpy(pwcWrite, L"，大小 = ");
+		pwcWrite = _MCFCRT_itow0X(pwcWrite, (uintptr_t)pInfo->__uSize, sizeof(pInfo->__uSize) * 2);
+		pwcWrite = _MCFCRT_wcpcpy(pwcWrite, L"，返回地址 = ");
+		pwcWrite = _MCFCRT_itow0X(pwcWrite, (uintptr_t)pInfo->__pRetAddr, sizeof(pInfo->__pRetAddr) * 2);
+		pwcWrite = _MCFCRT_wcpcpy(pwcWrite, L"，首字节 =");
 		for(size_t i = 0; i < 16; ++i){
 			const unsigned char *const p = (const unsigned char *)pInfo->__pAddress + i;
-			*(pchWrite++) = ' ';
+			*(pwcWrite++) = ' ';
 			if(IsBadReadPtr(p, 1)){
-				pchWrite = _MCFCRT_stpcpy(pchWrite, "??");
+				pwcWrite = _MCFCRT_wcpcpy(pwcWrite, L"??");
 			} else {
-				pchWrite = _MCFCRT_itoa0X(pchWrite, *p, 2);
+				pwcWrite = _MCFCRT_itow0X(pwcWrite, *p, 2);
 			}
 		}
-		*(pchWrite++) = '\n';
+		// *pwcWrite = 0;
 
-		DWORD dwBytesWritten;
-		WriteFile(hStdErr, achTemp, (DWORD)(pchWrite - achTemp), &dwBytesWritten, nullptr);
+		_MCFCRT_WriteStandardErrorAsText(awcBuffer, (size_t)(pwcWrite - awcBuffer), true);
 	}
 	_MCFCRT_Bail(L"__MCFCRT_HeapDbgUninit() 失败：侦测到内存泄漏。内存泄漏的详细信息已经输出至标准错误流中。");
 }
@@ -67,7 +60,7 @@ static _MCFCRT_AvlRoot g_avlBlocks     = nullptr;
 
 #endif
 
-bool __MCFCRT_HeapDbgInit(){
+bool __MCFCRT_HeapDbgInit(void){
 #if __MCFCRT_REQUIRE_HEAPDBG_LEVEL(3)
 	const HANDLE hAllocator = HeapCreate(0, 0, 0);
 	if(!hAllocator){
@@ -82,7 +75,7 @@ bool __MCFCRT_HeapDbgInit(){
 #endif
 	return true;
 }
-void __MCFCRT_HeapDbgUninit(){
+void __MCFCRT_HeapDbgUninit(void){
 #if __MCFCRT_REQUIRE_HEAPDBG_LEVEL(3)
 	const HANDLE hAllocator = g_hMapAllocator;
 	g_hMapAllocator = nullptr;
@@ -103,7 +96,7 @@ size_t __MCFCRT_HeapDbgGetRawSize(size_t uContentSize){
 
 #	if __MCFCRT_REQUIRE_HEAPDBG_LEVEL(3)
 
-__MCFCRT_HeapDbgBlockInfo *__MCFCRT_HeapDbgAllocateBlockInfo(){
+__MCFCRT_HeapDbgBlockInfo *__MCFCRT_HeapDbgAllocateBlockInfo(void){
 	return HeapAlloc(g_hMapAllocator, 0, sizeof(__MCFCRT_HeapDbgBlockInfo));
 }
 void __MCFCRT_HeapDbgDeallocateBlockInfo(__MCFCRT_HeapDbgBlockInfo *pInfo){

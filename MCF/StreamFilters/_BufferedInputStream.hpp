@@ -31,7 +31,6 @@ namespace Impl_BufferedInputStream {
 
 	public:
 		void PopulateBuffer(std::size_t uExpected);
-
 		int BufferedPeek() noexcept {
 			return x_sbufFrontBuffer.Peek();
 		}
@@ -41,7 +40,6 @@ namespace Impl_BufferedInputStream {
 		bool BufferedDiscard() noexcept {
 			return x_sbufFrontBuffer.Discard();
 		}
-
 		std::size_t BufferedPeek(void *pData, std::size_t uSize) noexcept {
 			return x_sbufFrontBuffer.Peek(pData, uSize);
 		}

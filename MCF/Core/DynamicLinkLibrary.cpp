@@ -20,7 +20,7 @@ namespace MCF {
 
 void DynamicLinkLibrary::X_DllUnloader::operator()(void *hDll) noexcept {
 	const auto lStatus = ::LdrUnloadDll(hDll);
-	MCF_ASSERT_MSG(NT_SUCCESS(lStatus), L"::LdrUnloadDll() 失败。");
+	MCF_ASSERT_MSG(NT_SUCCESS(lStatus), L"LdrUnloadDll() 失败。");
 }
 
 DynamicLinkLibrary::DynamicLinkLibrary(const WideStringView &wsvPath)

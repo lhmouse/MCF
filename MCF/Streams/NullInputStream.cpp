@@ -19,7 +19,6 @@ int NullInputStream::Get() noexcept {
 bool NullInputStream::Discard() noexcept {
 	return false;
 }
-
 std::size_t NullInputStream::Peek(void *pData, std::size_t uSize) noexcept {
 	(void)pData;
 	(void)uSize;

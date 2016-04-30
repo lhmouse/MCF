@@ -37,7 +37,6 @@ void Fnv1a64OutputStream::X_Finalize(std::uint8_t (&abyChunk)[8], unsigned uByte
 void Fnv1a64OutputStream::Put(unsigned char byData){
 	Put(&byData, 1);
 }
-
 void Fnv1a64OutputStream::Put(const void *pData, std::size_t uSize){
 	if(x_nChunkOffset < 0){
 		X_Initialize();
@@ -66,7 +65,6 @@ void Fnv1a64OutputStream::Put(const void *pData, std::size_t uSize){
 		x_nChunkOffset += static_cast<int>(uBytesRemaining);
 	}
 }
-
 void Fnv1a64OutputStream::Flush(bool bHard){
 	(void)bHard;
 }

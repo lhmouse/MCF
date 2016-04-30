@@ -21,13 +21,19 @@ public:
 	int Peek() override;
 	int Get() override;
 	bool Discard() override;
-
 	std::size_t Peek(void *pData, std::size_t uSize) override;
 	std::size_t Get(void *pData, std::size_t uSize) override;
 	std::size_t Discard(std::size_t uSize) override;
 
+	long PeekText();
+	long GetText();
+	bool DiscardText();
+	std::size_t PeekText(wchar_t *pwcData, std::size_t uSize, bool bSingleLine);
+	std::size_t GetText(wchar_t *pwcData, std::size_t uSize, bool bSingleLine);
+	std::size_t DiscardText(std::size_t uSize, bool bSingleLine);
+
 	bool IsEchoing() const noexcept;
-	void SetEchoing(bool bEchoing);
+	bool SetEchoing(bool bEchoing) noexcept;
 
 	void Swap(StandardInputStream &rhs) noexcept {
 		using std::swap;

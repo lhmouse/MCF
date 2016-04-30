@@ -7,7 +7,7 @@
 
 static volatile uint64_t g_u64RandSeed = 0;
 
-uint32_t _MCFCRT_GetRandomUint32(){
+uint32_t _MCFCRT_GetRandomUint32(void){
 	uint64_t u64OldSeed, u64Seed;
 
 	u64OldSeed = __atomic_load_n(&g_u64RandSeed, __ATOMIC_RELAXED);
@@ -19,9 +19,9 @@ uint32_t _MCFCRT_GetRandomUint32(){
 
 	return (uint32_t)(u64Seed >> 32);
 }
-uint64_t _MCFCRT_GetRandomUint64(){
+uint64_t _MCFCRT_GetRandomUint64(void){
 	return ((uint64_t)_MCFCRT_GetRandomUint32() << 32) | _MCFCRT_GetRandomUint32();
 }
-double _MCFCRT_GetRandomDouble(){
+double _MCFCRT_GetRandomDouble(void){
 	return (double)((int64_t)_MCFCRT_GetRandomUint64() & 0x7FFFFFFFFFFFFFFFll) / 0x1p63;
 }

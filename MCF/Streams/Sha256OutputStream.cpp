@@ -934,7 +934,6 @@ void Sha256OutputStream::X_Finalize(std::uint8_t (&abyChunk)[64], unsigned uByte
 void Sha256OutputStream::Put(unsigned char byData){
 	Put(&byData, 1);
 }
-
 void Sha256OutputStream::Put(const void *pData, std::size_t uSize){
 	if(x_nChunkOffset < 0){
 		X_Initialize();
@@ -964,7 +963,6 @@ void Sha256OutputStream::Put(const void *pData, std::size_t uSize){
 	}
 	x_u64BytesTotal += uSize;
 }
-
 void Sha256OutputStream::Flush(bool bHard){
 	(void)bHard;
 }

@@ -30,7 +30,6 @@ public:
 	int Peek() override;
 	int Get() override;
 	bool Discard() override;
-
 	std::size_t Peek(void *pData, std::size_t uSize) override;
 	std::size_t Get(void *pData, std::size_t uSize) override;
 	std::size_t Discard(std::size_t uSize) override;

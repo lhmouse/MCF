@@ -90,7 +90,6 @@ bool Base64InputStreamFilter::Discard(){
 	X_PopulatePlainBuffer(1);
 	return x_sbufPlain.Discard();
 }
-
 std::size_t Base64InputStreamFilter::Peek(void *pData, std::size_t uSize){
 	X_PopulatePlainBuffer(uSize);
 	return x_sbufPlain.Peek(pData, uSize);

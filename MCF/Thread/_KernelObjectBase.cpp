@@ -45,7 +45,7 @@ namespace Impl_KernelObjectBase {
 		HANDLE hDirectory;
 		const auto lStatus = ::NtOpenDirectoryObject(&hDirectory, 0x0F, &vObjectAttributes);
 		if(!NT_SUCCESS(lStatus)){
-			MCF_THROW(Exception, ::RtlNtStatusToDosError(lStatus), Rcntws::View(L"NtOpenDirectoryObject() 失败。"));
+			MCF_THROW(Exception, ::RtlNtStatusToDosError(lStatus), Rcntws::View(L"KernelObjectBase:: NtOpenDirectoryObject() 失败。"));
 		}
 		return Impl_UniqueNtHandle::UniqueNtHandle(hDirectory);
 	}

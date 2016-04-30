@@ -37,9 +37,7 @@ private:
 
 public:
 	void Put(unsigned char byData) override;
-
 	void Put(const void *pData, std::size_t uSize) override;
-
 	void Flush(bool bHard) override;
 
 	const File &GetFile() const noexcept {

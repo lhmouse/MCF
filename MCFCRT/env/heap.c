@@ -21,14 +21,14 @@ static _MCFCRT_Mutex g_vHeapMutex = { 0 };
 
 #define HEAP_MUTEX_SPIN_COUNT     ((unsigned)4000)
 
-bool __MCFCRT_HeapInit(){
+bool __MCFCRT_HeapInit(void){
 	// 启用 FLH，但是忽略任何错误。
 	ULONG ulMagic = 2;
 	HeapSetInformation(GetProcessHeap(), HeapCompatibilityInformation, &ulMagic, sizeof(ulMagic));
 
 	return true;
 }
-void __MCFCRT_HeapUninit(){
+void __MCFCRT_HeapUninit(void){
 }
 
 unsigned char *__MCFCRT_HeapAlloc(size_t uSize, bool bFillsWithZero, const void *pRetAddr){

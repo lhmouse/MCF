@@ -54,7 +54,6 @@ bool TextInputStreamFilter::Discard(){
 	X_PopulatePlainBuffer(1);
 	return x_sbufPlain.Discard();
 }
-
 std::size_t TextInputStreamFilter::Peek(void *pData, std::size_t uSize){
 	X_PopulatePlainBuffer(uSize);
 	return x_sbufPlain.Peek(pData, uSize);

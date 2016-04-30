@@ -13,12 +13,10 @@ NullOutputStream::~NullOutputStream(){
 void NullOutputStream::Put(unsigned char byData) noexcept {
 	(void)byData;
 }
-
 void NullOutputStream::Put(const void *pData, std::size_t uSize) noexcept {
 	(void)pData;
 	(void)uSize;
 }
-
 void NullOutputStream::Flush(bool bHard) noexcept {
 	(void)bHard;
 }

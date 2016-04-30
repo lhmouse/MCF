@@ -6,7 +6,7 @@
 #include "mcfwin.h"
 #include "bail.h"
 
-static uint64_t GetTimeZoneOffsetInMillisecondsOnce(){
+static uint64_t GetTimeZoneOffsetInMillisecondsOnce(void){
 	static uint64_t *volatile s_pu64Inited;
 	static uint64_t           s_u64Value;
 
@@ -24,7 +24,7 @@ static uint64_t GetTimeZoneOffsetInMillisecondsOnce(){
 	}
 	return *pInited;
 }
-static double QueryPerformanceFrequencyReciprocalOnce(){
+static double QueryPerformanceFrequencyReciprocalOnce(void){
 	static double *volatile s_plfInited;
 	static double           s_ulfValue;
 
@@ -43,7 +43,7 @@ static double QueryPerformanceFrequencyReciprocalOnce(){
 	return *pInited;
 }
 
-uint64_t _MCFCRT_GetUtcClock(){
+uint64_t _MCFCRT_GetUtcClock(void){
 	union {
 		FILETIME ft;
 		LARGE_INTEGER li;
@@ -52,7 +52,7 @@ uint64_t _MCFCRT_GetUtcClock(){
 	// 0x019DB1DED53E8000 = 从 1601-01-01 到 1970-01-01 经历的时间纳秒数。
 	return (uint64_t)(unUtc.li.QuadPart - 0x019DB1DED53E8000ll) / 10000;;
 }
-uint64_t _MCFCRT_GetLocalClock(){
+uint64_t _MCFCRT_GetLocalClock(void){
 	return _MCFCRT_GetLocalClockFromUtc(_MCFCRT_GetUtcClock());
 }
 
@@ -63,10 +63,10 @@ uint64_t _MCFCRT_GetLocalClockFromUtc(uint64_t u64UtcClock){
 	return u64UtcClock + GetTimeZoneOffsetInMillisecondsOnce();
 }
 
-uint64_t _MCFCRT_GetFastMonoClock(){
+uint64_t _MCFCRT_GetFastMonoClock(void){
 	return GetTickCount64();
 }
-double _MCFCRT_GetHiResMonoClock(){
+double _MCFCRT_GetHiResMonoClock(void){
 	LARGE_INTEGER liCounter;
 	if(!QueryPerformanceCounter(&liCounter)){
 		_MCFCRT_Bail(L"QueryPerformanceCounter() 失败。");

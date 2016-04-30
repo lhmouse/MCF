@@ -19,9 +19,7 @@ public:
 
 public:
 	void Put(unsigned char byData) noexcept override;
-
 	void Put(const void *pData, std::size_t uSize) noexcept override;
-
 	void Flush(bool bHard) noexcept override;
 
 	void Swap(NullOutputStream &rhs) noexcept {

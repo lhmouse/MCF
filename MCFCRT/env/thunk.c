@@ -43,7 +43,7 @@ static int ThunkComparatorNodes(const _MCFCRT_AvlNodeHeader *pIndex1, const _MCF
 	return ThunkComparatorNodeKey(pIndex1, (intptr_t)(GetInfoFromThunkIndex(pIndex2)->pThunk));
 }
 
-_Static_assert(sizeof(size_t) <= sizeof(uintptr_t), "This platform is not supported.");
+static_assert(sizeof(size_t) <= sizeof(uintptr_t), "This platform is not supported.");
 
 static int FreeSizeComparatorNodeKey(const _MCFCRT_AvlNodeHeader *pIndex1, intptr_t nKey2){
 	const uintptr_t uKey1 = GetInfoFromFreeSizeIndex(pIndex1)->uFreeSize;

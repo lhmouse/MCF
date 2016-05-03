@@ -33,27 +33,33 @@ bool StandardInputStream::Discard(){
 	return true;
 }
 std::size_t StandardInputStream::Peek(void *pData, std::size_t uSize){
-	const auto nResult = ::_MCFCRT_PeekStandardInputAsBinary(pData, uSize);
-	if(nResult < 0){
-		MCF_THROW(Exception, ::GetLastError(), Rcntws::View(L"StandardInputStream: _MCFCRT_PeekStandardInputAsBinary() 失败。"));
+	const auto uRead = ::_MCFCRT_PeekStandardInputAsBinary(pData, uSize);
+	if(uRead == 0){
+		const auto dwErrorCode = ::GetLastError();
+		if((dwErrorCode != ERROR_SUCCESS) && (dwErrorCode != ERROR_HANDLE_EOF)){
+			MCF_THROW(Exception, dwErrorCode, Rcntws::View(L"StandardInputStream: _MCFCRT_PeekStandardInputAsBinary() 失败。"));
+		}
 	}
-	const auto uRead = static_cast<std::size_t>(nResult);
 	return uRead;
 }
 std::size_t StandardInputStream::Get(void *pData, std::size_t uSize){
-	const auto nResult = ::_MCFCRT_ReadStandardInputAsBinary(pData, uSize);
-	if(nResult < 0){
-		MCF_THROW(Exception, ::GetLastError(), Rcntws::View(L"StandardInputStream: _MCFCRT_ReadStandardInputAsBinary() 失败。"));
+	const auto uRead = ::_MCFCRT_ReadStandardInputAsBinary(pData, uSize);
+	if(uRead == 0){
+		const auto dwErrorCode = ::GetLastError();
+		if((dwErrorCode != ERROR_SUCCESS) && (dwErrorCode != ERROR_HANDLE_EOF)){
+			MCF_THROW(Exception, dwErrorCode, Rcntws::View(L"StandardInputStream: _MCFCRT_ReadStandardInputAsBinary() 失败。"));
+		}
 	}
-	const auto uRead = static_cast<std::size_t>(nResult);
 	return uRead;
 }
 std::size_t StandardInputStream::Discard(std::size_t uSize){
-	const auto nResult = ::_MCFCRT_DiscardStandardInputAsBinary(uSize);
-	if(nResult < 0){
-		MCF_THROW(Exception, ::GetLastError(), Rcntws::View(L"StandardInputStream: _MCFCRT_DiscardStandardInputAsBinary() 失败。"));
+	const auto uRead = ::_MCFCRT_DiscardStandardInputAsBinary(uSize);
+	if(uRead == 0){
+		const auto dwErrorCode = ::GetLastError();
+		if((dwErrorCode != ERROR_SUCCESS) && (dwErrorCode != ERROR_HANDLE_EOF)){
+			MCF_THROW(Exception, dwErrorCode, Rcntws::View(L"StandardInputStream: _MCFCRT_DiscardStandardInputAsBinary() 失败。"));
+		}
 	}
-	const auto uRead = static_cast<std::size_t>(nResult);
 	return uRead;
 }
 
@@ -78,27 +84,33 @@ bool StandardInputStream::DiscardText(){
 	return true;
 }
 std::size_t StandardInputStream::PeekText(wchar_t *pwcData, std::size_t uSize, bool bSingleLine){
-	const auto nResult = ::_MCFCRT_PeekStandardInputAsText(pwcData, uSize, bSingleLine);
-	if(nResult < 0){
-		MCF_THROW(Exception, ::GetLastError(), Rcntws::View(L"StandardInputStream: _MCFCRT_PeekStandardInputAsText() 失败。"));
+	const auto uRead = ::_MCFCRT_PeekStandardInputAsText(pwcData, uSize, bSingleLine);
+	if(uRead == 0){
+		const auto dwErrorCode = ::GetLastError();
+		if((dwErrorCode != ERROR_SUCCESS) && (dwErrorCode != ERROR_HANDLE_EOF)){
+			MCF_THROW(Exception, dwErrorCode, Rcntws::View(L"StandardInputStream: _MCFCRT_PeekStandardInputAsText() 失败。"));
+		}
 	}
-	const auto uRead = static_cast<std::size_t>(nResult);
 	return uRead;
 }
 std::size_t StandardInputStream::GetText(wchar_t *pwcData, std::size_t uSize, bool bSingleLine){
-	const auto nResult = ::_MCFCRT_ReadStandardInputAsText(pwcData, uSize, bSingleLine);
-	if(nResult < 0){
-		MCF_THROW(Exception, ::GetLastError(), Rcntws::View(L"StandardInputStream: _MCFCRT_ReadStandardInputAsText() 失败。"));
+	const auto uRead = ::_MCFCRT_ReadStandardInputAsText(pwcData, uSize, bSingleLine);
+	if(uRead == 0){
+		const auto dwErrorCode = ::GetLastError();
+		if((dwErrorCode != ERROR_SUCCESS) && (dwErrorCode != ERROR_HANDLE_EOF)){
+			MCF_THROW(Exception, dwErrorCode, Rcntws::View(L"StandardInputStream: _MCFCRT_ReadStandardInputAsText() 失败。"));
+		}
 	}
-	const auto uRead = static_cast<std::size_t>(nResult);
 	return uRead;
 }
 std::size_t StandardInputStream::DiscardText(std::size_t uSize, bool bSingleLine){
-	const auto nResult = ::_MCFCRT_DiscardStandardInputAsText(uSize, bSingleLine);
-	if(nResult < 0){
-		MCF_THROW(Exception, ::GetLastError(), Rcntws::View(L"StandardInputStream: _MCFCRT_DiscardStandardInputAsText() 失败。"));
+	const auto uRead = ::_MCFCRT_DiscardStandardInputAsText(uSize, bSingleLine);
+	if(uRead == 0){
+		const auto dwErrorCode = ::GetLastError();
+		if((dwErrorCode != ERROR_SUCCESS) && (dwErrorCode != ERROR_HANDLE_EOF)){
+			MCF_THROW(Exception, dwErrorCode, Rcntws::View(L"StandardInputStream: _MCFCRT_DiscardStandardInputAsText() 失败。"));
+		}
 	}
-	const auto uRead = static_cast<std::size_t>(nResult);
 	return uRead;
 }
 

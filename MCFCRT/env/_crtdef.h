@@ -29,9 +29,9 @@
 #	define _MCFCRT_CONSTEXPR            constexpr
 #else
 #	define nullptr                      ((void *)0)
-#	include <stdbool.h>
-#	include <stdalign.h>
-#	include <uchar.h>
+#	include <stdbool.h>                 // bool, true, false
+#	include <stdalign.h>                // alignof, alignas
+#	include <uchar.h>                   // char16_t, char32_t
 #	include <stddef.h>
 #	include <stdint.h>
 #	include <limits.h>

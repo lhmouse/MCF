@@ -125,7 +125,6 @@ static inline bool ReallyWaitForMutex(volatile uintptr_t *puControl, size_t uMax
 				lStatus = NtWaitForKeyedEvent(nullptr, (void *)puControl, false, nullptr);
 				_MCFCRT_ASSERT_MSG(NT_SUCCESS(lStatus), L"NtWaitForKeyedEvent() 失败。");
 				_MCFCRT_ASSERT(lStatus != STATUS_TIMEOUT);
-				return false;
 			}
 		} else {
 			NTSTATUS lStatus = NtWaitForKeyedEvent(nullptr, (void *)puControl, false, nullptr);

@@ -16,13 +16,13 @@ extern void __MCFCRT_StandardStreamsUninit(void) _MCFCRT_NOEXCEPT;
 // 对于返回 int 或 long 的函数，失败返回 -1；对于返回 size_t 的函数，失败返回 0（如果读取到流结尾，GetLastError() 返回 ERROR_HANDLE_EOF）。
 // 操作文本的函数保证不会返回不完整的码点。
 
-// 二进制标准输入流。
+// 标准输入流二进制输入。
 extern int _MCFCRT_PeekStandardInputByte(void) _MCFCRT_NOEXCEPT;
 extern int _MCFCRT_ReadStandardInputByte(void) _MCFCRT_NOEXCEPT;
 extern _MCFCRT_STD size_t _MCFCRT_PeekStandardInputBinary(void *__pBuffer, _MCFCRT_STD size_t __uSize) _MCFCRT_NOEXCEPT;
 extern _MCFCRT_STD size_t _MCFCRT_ReadStandardInputBinary(void *__pBuffer, _MCFCRT_STD size_t __uSize) _MCFCRT_NOEXCEPT;
 extern _MCFCRT_STD size_t _MCFCRT_DiscardStandardInputBinary(_MCFCRT_STD size_t __uSize) _MCFCRT_NOEXCEPT;
-// 文本标准输入流。
+// 标准输入流文本输入。
 extern long _MCFCRT_PeekStandardInputChar32(void) _MCFCRT_NOEXCEPT;
 extern long _MCFCRT_ReadStandardInputChar32(void) _MCFCRT_NOEXCEPT;
 extern _MCFCRT_STD size_t _MCFCRT_PeekStandardInputString(wchar_t *__pwcString, _MCFCRT_STD size_t __uLength, bool __bSingleLine) _MCFCRT_NOEXCEPT;
@@ -32,10 +32,10 @@ extern _MCFCRT_STD size_t _MCFCRT_DiscardStandardInputString(_MCFCRT_STD size_t 
 extern bool _MCFCRT_IsStandardInputEchoing(void) _MCFCRT_NOEXCEPT;
 extern bool _MCFCRT_SetStandardInputEchoing(bool __bEchoing) _MCFCRT_NOEXCEPT;
 
-// 二进制标准输出流。
+// 标准输出流二进制输出。
 extern bool _MCFCRT_WriteStandardOutputByte(unsigned char __byData) _MCFCRT_NOEXCEPT;
 extern _MCFCRT_STD size_t _MCFCRT_WriteStandardOutputBinary(const void *__pBuffer, _MCFCRT_STD size_t __uSize) _MCFCRT_NOEXCEPT;
-// 文本标准输出流。
+// 标准输出流文本输出。
 extern _MCFCRT_STD size_t _MCFCRT_WriteStandardOutputChar32(char32_t __c32CodePoint) _MCFCRT_NOEXCEPT;
 extern _MCFCRT_STD size_t _MCFCRT_WriteStandardOutputString(const wchar_t *__pwcString, _MCFCRT_STD size_t __uLength, bool __bAppendNewLine) _MCFCRT_NOEXCEPT;
 extern bool _MCFCRT_IsStandardOutputBuffered(void) _MCFCRT_NOEXCEPT;
@@ -43,10 +43,10 @@ extern bool _MCFCRT_SetStandardOutputBuffered(bool __bBuffered) _MCFCRT_NOEXCEPT
 // 标准输出流控制。
 extern bool _MCFCRT_FlushStandardOutput(bool __bHard) _MCFCRT_NOEXCEPT;
 
-// 二进制标准错误流。
+// 标准错误流二进制输出。
 extern bool _MCFCRT_WriteStandardErrorByte(unsigned char __byData) _MCFCRT_NOEXCEPT;
 extern _MCFCRT_STD size_t _MCFCRT_WriteStandardErrorBinary(const void *__pBuffer, _MCFCRT_STD size_t __uSize) _MCFCRT_NOEXCEPT;
-// 文本标准错误流。
+// 标准错误流文本输出。
 extern _MCFCRT_STD size_t _MCFCRT_WriteStandardErrorChar32(char32_t __c32CodePoint) _MCFCRT_NOEXCEPT;
 extern _MCFCRT_STD size_t _MCFCRT_WriteStandardErrorString(const wchar_t *__pwcString, _MCFCRT_STD size_t __uLength, bool __bAppendNewLine) _MCFCRT_NOEXCEPT;
 

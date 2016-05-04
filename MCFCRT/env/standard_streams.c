@@ -7,19 +7,20 @@
 #include "../ext/utf.h"
 #include "mutex.h"
 #include "mcfwin.h"
-/*
+
 typedef struct tagStream {
+	_MCFCRT_Mutex vMutex;
+
 	HANDLE hFile;
 	bool bConsole;
 
-	_MCFCRT_Mutex vMutex;
-	bool bShutdown;
+	bool bThrottled;
 	unsigned uBufferBegin;
 	unsigned uBufferEnd;
 	unsigned char alignas(16) abyBuffer[4096];
 } Stream;
 
-static void OpenStream(Stream *pStream, DWORD dwSlot){
+static void Reset(Stream *pStream, DWORD dwSlot){
 	const HANDLE hFile = GetStdHandle(dwSlot);
 	_MCFCRT_ASSERT(hFile != INVALID_HANDLE_VALUE);
 
@@ -32,13 +33,13 @@ static void OpenStream(Stream *pStream, DWORD dwSlot){
 	pStream->hFile        = hFile;
 	pStream->bConsole     = bConsole;
 
-	pStream->bShutdown    = false;
+	pStream->bThrottled   = false;
 	pStream->uBufferBegin = 0;
 	pStream->uBufferEnd   = 0;
 }
-static void ShutdownStream(Stream *pStream){
+static void Throttle(Stream *pStream){
 //FlushFileBuffers
-	pStream->bShutdown = true;
+	pStream->bThrottled = true;
 }
 
 static Stream g_vStdIn  = { 0 };
@@ -46,37 +47,49 @@ static Stream g_vStdOut = { 0 };
 static Stream g_vStdErr = { 0 };
 
 bool __MCFCRT_StandardStreamsInit(void){
-	OpenStream(&g_vStdOut, STD_OUTPUT_HANDLE);
-	OpenStream(&g_vStdErr, STD_ERROR_HANDLE );
-	OpenStream(&g_vStdIn , STD_INPUT_HANDLE );
+	Reset(&g_vStdOut, STD_OUTPUT_HANDLE);
+	Reset(&g_vStdErr, STD_ERROR_HANDLE );
+	Reset(&g_vStdIn , STD_INPUT_HANDLE );
 	return true;
 }
 void __MCFCRT_StandardStreamsUninit(void){
-	ShutdownStream(&g_vStdIn );
-	ShutdownStream(&g_vStdErr);
-	ShutdownStream(&g_vStdOut);
+	Throttle(&g_vStdIn );
+	Throttle(&g_vStdErr);
+	Throttle(&g_vStdOut);
 }
-
-size_t _MCFCRT_PeekStandardInputString(wchar_t *pwcString, size_t uLength, bool bSingleLine){
+/*
+int _MCFCRT_PeekStandardInputByte(void){
+}
+int _MCFCRT_ReadStandardInputByte(void){
 }
 size_t _MCFCRT_PeekStandardInputBinary(void *pBuffer, size_t uSize){
 }
-size_t _MCFCRT_ReadStandardInputString(wchar_t *pwcString, size_t uLength, bool bSingleLine){
-}
 size_t _MCFCRT_ReadStandardInputBinary(void *pBuffer, size_t uSize){
 }
-size_t _MCFCRT_DiscardStandardInputString(size_t uLength, bool bSingleLine){
-}
 size_t _MCFCRT_DiscardStandardInputBinary(size_t uSize){
+}
+long _MCFCRT_PeekStandardInputChar32(void){
+}
+long _MCFCRT_ReadStandardInputChar32(void){
+}
+size_t _MCFCRT_PeekStandardInputString(wchar_t *pwcString, size_t uLength, bool bSingleLine){
+}
+size_t _MCFCRT_ReadStandardInputString(wchar_t *pwcString, size_t uLength, bool bSingleLine){
+}
+size_t _MCFCRT_DiscardStandardInputString(size_t uLength, bool bSingleLine){
 }
 bool _MCFCRT_IsStandardInputEchoing(void){
 }
 bool _MCFCRT_SetStandardInputEchoing(bool bEchoing){
 }
 
-size_t _MCFCRT_WriteStandardOutputString(const wchar_t *pwcString, size_t uLength, bool bAppendNewLine){
+bool _MCFCRT_WriteStandardOutputByte(unsigned char byData){
 }
 size_t _MCFCRT_WriteStandardOutputBinary(const void *pBuffer, size_t uSize){
+}
+size_t _MCFCRT_WriteStandardOutputChar32(char32_t c32CodePoint){
+}
+size_t _MCFCRT_WriteStandardOutputString(const wchar_t *pwcString, size_t uLength, bool bAppendNewLine){
 }
 bool _MCFCRT_IsStandardOutputBuffered(void){
 }
@@ -85,7 +98,11 @@ bool _MCFCRT_SetStandardOutputBuffered(bool bBuffered){
 bool _MCFCRT_FlushStandardOutput(bool bHard){
 }
 
-size_t _MCFCRT_WriteStandardErrorString(const wchar_t *pwcString, size_t uLength, bool bAppendNewLine){
+bool _MCFCRT_WriteStandardErrorByte(unsigned char byData){
 }
 size_t _MCFCRT_WriteStandardErrorBinary(const void *pBuffer, size_t uSize){
+}
+size_t _MCFCRT_WriteStandardErrorChar32(char32_t c32CodePoint){
+}
+size_t _MCFCRT_WriteStandardErrorString(const wchar_t *pwcString, size_t uLength, bool bAppendNewLine){
 }*/

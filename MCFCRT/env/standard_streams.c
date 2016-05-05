@@ -7,7 +7,7 @@
 #include "../ext/utf.h"
 #include "mutex.h"
 #include "mcfwin.h"
-
+/*
 typedef struct tagStream {
 	_MCFCRT_Mutex vMutex;
 
@@ -18,8 +18,10 @@ typedef struct tagStream {
 	unsigned uBufferBegin;
 	unsigned uBufferEnd;
 	unsigned char alignas(16) abyBuffer[4096];
+	unsigned char abySafetyBumper[4];
 } Stream;
 
+// 通用。
 static void Reset(Stream *pStream, DWORD dwSlot){
 	const HANDLE hFile = GetStdHandle(dwSlot);
 	_MCFCRT_ASSERT(hFile != INVALID_HANDLE_VALUE);
@@ -38,26 +40,48 @@ static void Reset(Stream *pStream, DWORD dwSlot){
 	pStream->uBufferEnd   = 0;
 }
 static void Throttle(Stream *pStream){
-//FlushFileBuffers
+	Flush(pStream);
+
 	pStream->bThrottled = true;
+}
+
+// 输入。
+static void Populate(Stream *pStream){
+}
+
+// 输出。
+static void Compact(Stream *pStream){
+}
+static bool Flush(Stream *pStream){
 }
 
 static Stream g_vStdIn  = { 0 };
 static Stream g_vStdOut = { 0 };
 static Stream g_vStdErr = { 0 };
 
+static void LockedReset(Stream *pStream, DWORD dwSlot){
+	_MCFCRT_WaitForMutexForever(&(pStream->vMutex), _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT);
+	Reset(pStream, dwSlot);
+	_MCFCRT_SignalMutex(&(pStream->vMutex));
+}
+static void LockedThrottle(Stream *pStream){
+	_MCFCRT_WaitForMutexForever(&(pStream->vMutex), _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT);
+	Throttle(pStream);
+	_MCFCRT_SignalMutex(&(pStream->vMutex));
+}
+
 bool __MCFCRT_StandardStreamsInit(void){
-	Reset(&g_vStdOut, STD_OUTPUT_HANDLE);
-	Reset(&g_vStdErr, STD_ERROR_HANDLE );
-	Reset(&g_vStdIn , STD_INPUT_HANDLE );
+	LockedReset(&g_vStdOut, STD_OUTPUT_HANDLE);
+	LockedReset(&g_vStdErr, STD_ERROR_HANDLE );
+	LockedReset(&g_vStdIn , STD_INPUT_HANDLE );
 	return true;
 }
 void __MCFCRT_StandardStreamsUninit(void){
-	Throttle(&g_vStdIn );
-	Throttle(&g_vStdErr);
-	Throttle(&g_vStdOut);
+	LockedThrottle(&g_vStdIn );
+	LockedThrottle(&g_vStdErr);
+	LockedThrottle(&g_vStdOut);
 }
-/*
+
 int _MCFCRT_PeekStandardInputByte(void){
 }
 int _MCFCRT_ReadStandardInputByte(void){

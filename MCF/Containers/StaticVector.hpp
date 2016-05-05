@@ -75,7 +75,7 @@ public:
 		Append(std::make_move_iterator(rhs.GetBegin()), std::make_move_iterator(rhs.GetEnd()));
 		return *this;
 	}
-	~StaticVector(){
+	~StaticVector(void){
 		Clear();
 	}
 

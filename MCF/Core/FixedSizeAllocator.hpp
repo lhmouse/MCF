@@ -37,7 +37,7 @@ public:
 		: x_vControl(X_Control{ nullptr, nullptr })
 	{
 	}
-	~FixedSizeAllocator(){
+	~FixedSizeAllocator(void){
 		Clear();
 	}
 
@@ -57,7 +57,7 @@ private:
 
 public:
 	__attribute__((__flatten__))
-	void *Allocate(){
+	void *Allocate(void){
 		const auto vControl = X_Detach();
 		const auto pBlock = vControl.pFirst;
 		if(!pBlock){

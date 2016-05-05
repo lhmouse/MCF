@@ -7,7 +7,7 @@
 
 namespace MCF {
 
-NullOutputStream::~NullOutputStream(){
+NullOutputStream::~NullOutputStream(void){
 }
 
 void NullOutputStream::Put(unsigned char byData) noexcept {

@@ -7,7 +7,7 @@
 
 namespace MCF {
 
-PolyIntrusiveBase::~PolyIntrusiveBase(){
+PolyIntrusiveBase::~PolyIntrusiveBase(void){
 }
 
 }

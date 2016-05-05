@@ -8,7 +8,7 @@
 namespace MCF {
 
 namespace Impl_BufferedOutputStream {
-	BufferedOutputStream::~BufferedOutputStream(){
+	BufferedOutputStream::~BufferedOutputStream(void){
 		try {
 			Flush(kFlushBufferNow);
 		} catch(...){

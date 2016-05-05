@@ -8,7 +8,7 @@
 
 namespace MCF {
 
-Base64InputStreamFilter::~Base64InputStreamFilter(){
+Base64InputStreamFilter::~Base64InputStreamFilter(void){
 }
 
 void Base64InputStreamFilter::X_PopulatePlainBuffer(std::size_t uExpected){
@@ -78,15 +78,15 @@ void Base64InputStreamFilter::X_PopulatePlainBuffer(std::size_t uExpected){
 	}
 }
 
-int Base64InputStreamFilter::Peek(){
+int Base64InputStreamFilter::Peek(void){
 	X_PopulatePlainBuffer(1);
 	return x_sbufPlain.Peek();
 }
-int Base64InputStreamFilter::Get(){
+int Base64InputStreamFilter::Get(void){
 	X_PopulatePlainBuffer(1);
 	return x_sbufPlain.Get();
 }
-bool Base64InputStreamFilter::Discard(){
+bool Base64InputStreamFilter::Discard(void){
 	X_PopulatePlainBuffer(1);
 	return x_sbufPlain.Discard();
 }

@@ -7,7 +7,7 @@
 
 namespace MCF {
 
-BufferingOutputStreamFilter::~BufferingOutputStreamFilter(){
+BufferingOutputStreamFilter::~BufferingOutputStreamFilter(void){
 }
 
 void BufferingOutputStreamFilter::Put(unsigned char byData){

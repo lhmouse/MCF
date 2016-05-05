@@ -7,7 +7,7 @@
 
 namespace MCF {
 
-Exception::~Exception(){
+Exception::~Exception(void){
 }
 
 }

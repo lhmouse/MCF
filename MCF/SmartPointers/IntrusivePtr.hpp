@@ -56,7 +56,7 @@ namespace Impl_IntrusivePtr {
 		RefCountBase &operator=(const RefCountBase &) noexcept {
 			return *this; // 无操作。
 		}
-		~RefCountBase(){
+		~RefCountBase(void){
 			MCF_ASSERT_MSG(x_uRef.Load(kAtomicRelaxed) <= 1, L"析构正在共享的被引用计数管理的对象。");
 		}
 
@@ -116,7 +116,7 @@ namespace Impl_IntrusivePtr {
 	struct ViewAllocator {
 		static FixedSizeAllocator<kSizeT> s_vAllocator;
 
-		static void *Allocate(){
+		static void *Allocate(void){
 			return s_vAllocator.Allocate();
 		}
 		static void Deallocate(void *pRaw){
@@ -206,7 +206,7 @@ namespace Impl_IntrusivePtr {
 		DeletableBase &operator=(const DeletableBase &) noexcept {
 			return *this;
 		}
-		virtual ~DeletableBase(){
+		virtual ~DeletableBase(void){
 			const auto pView = x_pView.Load(kAtomicConsume);
 			if(pView){
 				if(static_cast<const volatile RefCountBase *>(pView)->DropRef()){
@@ -288,7 +288,7 @@ public:
 		return Y_ForkWeak<volatile OtherT>(this);
 	}
 	template<typename OtherT = ObjectT>
-	IntrusiveWeakPtr<OtherT, DeleterT> Weaken(){
+	IntrusiveWeakPtr<OtherT, DeleterT> Weaken(void){
 		return Y_ForkWeak<OtherT>(this);
 	}
 };
@@ -384,7 +384,7 @@ public:
 	IntrusivePtr &operator=(IntrusivePtr &&rhs) noexcept {
 		return Reset(std::move(rhs));
 	}
-	~IntrusivePtr(){
+	~IntrusivePtr(void){
 		X_Dispose();
 	}
 
@@ -694,7 +694,7 @@ public:
 	IntrusiveWeakPtr &operator=(IntrusiveWeakPtr &&rhs) noexcept {
 		return Reset(std::move(rhs));
 	}
-	~IntrusiveWeakPtr(){
+	~IntrusiveWeakPtr(void){
 		X_Dispose();
 	}
 

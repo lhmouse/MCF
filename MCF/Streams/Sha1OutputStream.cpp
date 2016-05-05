@@ -11,7 +11,7 @@ namespace MCF {
 
 // https://en.wikipedia.org/wiki/SHA-1
 
-Sha1OutputStream::~Sha1OutputStream(){
+Sha1OutputStream::~Sha1OutputStream(void){
 }
 
 void Sha1OutputStream::X_Initialize() noexcept {

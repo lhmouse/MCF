@@ -8,7 +8,7 @@
 
 namespace MCF {
 
-FileInputStream::~FileInputStream(){
+FileInputStream::~FileInputStream(void){
 }
 
 std::size_t FileInputStream::X_ReadFromCurrentOffset(void *pData, std::size_t uSize){
@@ -36,7 +36,7 @@ std::size_t FileInputStream::X_DiscardFromCurrentOffset(std::size_t uSize){
 	return uBytesTotal;
 }
 
-int FileInputStream::Peek(){
+int FileInputStream::Peek(void){
 	int nRet = -1;
 	unsigned char byData;
 	const auto uBytesRead = X_ReadFromCurrentOffset(&byData, 1);
@@ -45,7 +45,7 @@ int FileInputStream::Peek(){
 	}
 	return nRet;
 }
-int FileInputStream::Get(){
+int FileInputStream::Get(void){
 	int nRet = -1;
 	unsigned char byData;
 	const auto uBytesRead = X_ReadFromCurrentOffset(&byData, 1);
@@ -55,7 +55,7 @@ int FileInputStream::Get(){
 	x_u64Offset += uBytesRead;
 	return nRet;
 }
-bool FileInputStream::Discard(){
+bool FileInputStream::Discard(void){
 	const auto uBytesDiscarded = X_DiscardFromCurrentOffset(1);
 	x_u64Offset += uBytesDiscarded;
 	return uBytesDiscarded >= 1;

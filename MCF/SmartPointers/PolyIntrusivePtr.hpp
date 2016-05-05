@@ -27,7 +27,7 @@ public:
 		return IntrusiveBase<PolyIntrusiveBase>::Y_ForkShared<volatile ObjectT>(this);
 	}
 	template<typename ObjectT>
-	IntrusivePtr<ObjectT, DefaultDeleter<PolyIntrusiveBase>> Share(){
+	IntrusivePtr<ObjectT, DefaultDeleter<PolyIntrusiveBase>> Share(void){
 		return IntrusiveBase<PolyIntrusiveBase>::Y_ForkShared<ObjectT>(this);
 	}
 
@@ -44,7 +44,7 @@ public:
 		return IntrusiveBase<PolyIntrusiveBase>::Y_ForkWeak<volatile ObjectT>(this);
 	}
 	template<typename ObjectT>
-	IntrusiveWeakPtr<ObjectT, DefaultDeleter<PolyIntrusiveBase>> Weaken(){
+	IntrusiveWeakPtr<ObjectT, DefaultDeleter<PolyIntrusiveBase>> Weaken(void){
 		return IntrusiveBase<PolyIntrusiveBase>::Y_ForkWeak<ObjectT>(this);
 	}
 };

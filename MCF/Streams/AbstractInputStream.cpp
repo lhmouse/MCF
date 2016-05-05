@@ -7,7 +7,7 @@
 
 namespace MCF {
 
-AbstractInputStream::~AbstractInputStream(){
+AbstractInputStream::~AbstractInputStream(void){
 }
 
 }

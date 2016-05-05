@@ -122,7 +122,7 @@ public:
 		rhs.Swap(*this);
 		return *this;
 	}
-	~Rcnts(){
+	~Rcnts(void){
 		X_Dispose();
 	}
 

@@ -119,7 +119,7 @@ namespace Impl_UniqueLockTemplate {
 			Swap(rhs);
 			return *this;
 		}
-		virtual ~UniqueLockTemplate(){
+		virtual ~UniqueLockTemplate(void){
 			Y_UnlockAll();
 		}
 

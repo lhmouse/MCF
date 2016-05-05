@@ -64,13 +64,13 @@ typedef struct tagTlsThread {
 
 static DWORD g_dwTlsIndex = TLS_OUT_OF_INDEXES;
 
-static TlsThread *GetTlsForCurrentThread(){
+static TlsThread *GetTlsForCurrentThread(void){
 	_MCFCRT_ASSERT(g_dwTlsIndex != TLS_OUT_OF_INDEXES);
 
 	TlsThread *pThread = TlsGetValue(g_dwTlsIndex);
 	return pThread;
 }
-static TlsThread *RequireTlsForCurrentThread(){
+static TlsThread *RequireTlsForCurrentThread(void){
 	_MCFCRT_ASSERT(g_dwTlsIndex != TLS_OUT_OF_INDEXES);
 
 	TlsThread *pThread = TlsGetValue(g_dwTlsIndex);
@@ -89,7 +89,7 @@ static TlsThread *RequireTlsForCurrentThread(){
 	return pThread;
 }
 
-bool __MCFCRT_ThreadEnvInit(){
+bool __MCFCRT_ThreadEnvInit(void){
 	const DWORD dwTlsIndex = TlsAlloc();
 	if(dwTlsIndex == TLS_OUT_OF_INDEXES){
 		return false;
@@ -98,14 +98,14 @@ bool __MCFCRT_ThreadEnvInit(){
 	g_dwTlsIndex = dwTlsIndex;
 	return true;
 }
-void __MCFCRT_ThreadEnvUninit(){
+void __MCFCRT_ThreadEnvUninit(void){
 	const DWORD dwTlsIndex = g_dwTlsIndex;
 	g_dwTlsIndex = TLS_OUT_OF_INDEXES;
 
 	TlsFree(dwTlsIndex);
 }
 
-void __MCFCRT_TlsCleanup(){
+void __MCFCRT_TlsCleanup(void){
 	TlsThread *const pThread = GetTlsForCurrentThread();
 	if(!pThread){
 		return;

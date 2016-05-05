@@ -11,4 +11,4 @@ _Noreturn void __wrap_abort(void){
 }
 
 __attribute__((__alias__("__wrap_abort")))
-_Noreturn void abort();
+_Noreturn void abort(void);

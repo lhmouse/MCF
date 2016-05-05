@@ -49,7 +49,7 @@ typedef struct __MCFCRT_tagHeapDbgBlockInfo {
 } __MCFCRT_HeapDbgBlockInfo;
 
 // 失败返回空指针。
-extern __MCFCRT_HeapDbgBlockInfo *__MCFCRT_HeapDbgAllocateBlockInfo() _MCFCRT_NOEXCEPT;
+extern __MCFCRT_HeapDbgBlockInfo *__MCFCRT_HeapDbgAllocateBlockInfo(void) _MCFCRT_NOEXCEPT;
 extern void __MCFCRT_HeapDbgDeallocateBlockInfo(__MCFCRT_HeapDbgBlockInfo *__pBlockInfo) _MCFCRT_NOEXCEPT;
 
 // 返回 __pAddress，后续的 __MCFCRT_HeapDbgValidateBlock() 使用这个返回值。

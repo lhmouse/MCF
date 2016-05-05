@@ -53,7 +53,7 @@ public:
 	UniqueHandle &operator=(UniqueHandle &&rhs) noexcept {
 		return Reset(std::move(rhs));
 	}
-	~UniqueHandle(){
+	~UniqueHandle(void){
 		X_Dispose();
 	}
 

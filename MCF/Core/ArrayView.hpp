@@ -52,7 +52,7 @@ public:
 	constexpr bool IsEmpty() const noexcept {
 		return x_uSize == 0;
 	}
-	void Clear(){
+	void Clear(void){
 		x_uSize = 0;
 	}
 	template<typename OutputIteratorT>
@@ -257,7 +257,7 @@ public:
 	constexpr bool IsEmpty() const noexcept {
 		return x_uSize == 0;
 	}
-	void Clear(){
+	void Clear(void){
 		x_uSize = 0;
 	}
 	template<typename OutputIteratorT>

@@ -68,7 +68,7 @@ namespace Impl_FlatContainer {
 			rhs.Swap(*this);
 			return *this;
 		}
-		~FlatContainer(){
+		~FlatContainer(void){
 			Clear();
 			Allocator()(x_pStorage);
 		}

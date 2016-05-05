@@ -33,7 +33,7 @@ namespace {
 	constexpr auto kCrcTable = GenerateTable(std::make_index_sequence<256>());
 }
 
-Crc32OutputStream::~Crc32OutputStream(){
+Crc32OutputStream::~Crc32OutputStream(void){
 }
 
 void Crc32OutputStream::X_Initialize() noexcept {

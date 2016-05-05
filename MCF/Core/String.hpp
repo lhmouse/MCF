@@ -946,27 +946,27 @@ using AnsiString   = String<StringType::kAnsi>;
 
 // 字面量运算符。
 template<typename CharT, CharT ...kCharsT>
-extern inline const auto &operator""_ns(){
+extern inline const auto &operator""_ns(void){
 	static const NarrowString s_nsRet{ kCharsT... };
 	return s_nsRet;
 }
 template<typename CharT, CharT ...kCharsT>
-extern inline const auto &operator""_ws(){
+extern inline const auto &operator""_ws(void){
 	static const WideString s_wsRet{ kCharsT... };
 	return s_wsRet;
 }
 template<typename CharT, CharT ...kCharsT>
-extern inline const auto &operator""_u8s(){
+extern inline const auto &operator""_u8s(void){
 	static const Utf8String s_u8sRet{ kCharsT... };
 	return s_u8sRet;
 }
 template<typename CharT, CharT ...kCharsT>
-extern inline const auto &operator""_u16s(){
+extern inline const auto &operator""_u16s(void){
 	static const Utf16String s_u16sRet{ kCharsT... };
 	return s_u16sRet;
 }
 template<typename CharT, CharT ...kCharsT>
-extern inline const auto &operator""_u32s(){
+extern inline const auto &operator""_u32s(void){
 	static const Utf32String s_u32sRet{ kCharsT... };
 	return s_u32sRet;
 }

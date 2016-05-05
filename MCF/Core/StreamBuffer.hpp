@@ -58,7 +58,7 @@ public:
 		int operator*() const {
 			return x_psbufOwner->Peek();
 		}
-		ReadIterator &operator++(){
+		ReadIterator &operator++(void){
 			x_psbufOwner->Discard();
 			return *this;
 		}
@@ -83,10 +83,10 @@ public:
 			x_psbufOwner->Put(byData);
 			return *this;
 		}
-		WriteIterator &operator*(){
+		WriteIterator &operator*(void){
 			return *this;
 		}
-		WriteIterator &operator++(){
+		WriteIterator &operator++(void){
 			return *this;
 		}
 		WriteIterator &operator++(int){

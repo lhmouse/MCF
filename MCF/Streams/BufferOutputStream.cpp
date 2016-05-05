@@ -7,7 +7,7 @@
 
 namespace MCF {
 
-BufferOutputStream::~BufferOutputStream(){
+BufferOutputStream::~BufferOutputStream(void){
 }
 
 void BufferOutputStream::Put(unsigned char byData){

@@ -9,7 +9,7 @@
 
 namespace MCF {
 
-StandardOutputStream::~StandardOutputStream(){
+StandardOutputStream::~StandardOutputStream(void){
 }
 
 void StandardOutputStream::Put(unsigned char byData){

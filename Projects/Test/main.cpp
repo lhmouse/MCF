@@ -1,9 +1,10 @@
 #include <MCF/StdMCF.hpp>
+#include <MCFCRT/startup/exe_decl.h>
 #include <MCF/Streams/StandardInputStream.hpp>
 #include <MCF/Streams/StandardOutputStream.hpp>
 #include <MCF/Streams/StandardErrorStream.hpp>
 
-extern "C" unsigned _MCFCRT_Main(){
+extern "C" unsigned _MCFCRT_Main(void) noexcept {
 	MCF::StandardInputStream  in;
 	MCF::StandardOutputStream out;
 	MCF::StandardErrorStream  err;

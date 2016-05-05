@@ -25,11 +25,11 @@ public:
 		x_pstrmOwner->Put(byData);
 		return *this;
 	}
-	OutputStreamIterator &operator*(){
+	OutputStreamIterator &operator*(void){
 		return *this;
 	}
 
-	OutputStreamIterator &operator++(){
+	OutputStreamIterator &operator++(void){
 		return *this;
 	}
 	OutputStreamIterator &operator++(int){

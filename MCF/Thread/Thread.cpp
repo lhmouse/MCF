@@ -9,7 +9,7 @@
 
 namespace MCF {
 
-Thread::X_AbstractControlBlock::~X_AbstractControlBlock(){
+Thread::X_AbstractControlBlock::~X_AbstractControlBlock(void){
 }
 
 void Thread::X_AbstractControlBlock::SpawnThread(bool bSuspended){

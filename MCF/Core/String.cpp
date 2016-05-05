@@ -38,7 +38,7 @@ namespace {
 			return x_pchRead != x_pchEnd;
 		}
 		__attribute__((__flatten__))
-		std::uint32_t operator()(){
+		std::uint32_t operator()(void){
 			const auto pchRead = x_pchRead;
 			if(pchRead == x_pchEnd){
 				MCF_THROW(Exception, ERROR_HANDLE_EOF, Rcntws::View(L"StringSource: 在字符串结尾处遇到不完整的编码点。"));
@@ -70,7 +70,7 @@ namespace {
 			return !!x_vPrev;
 		}
 		__attribute__((__flatten__))
-		std::uint32_t operator()(){
+		std::uint32_t operator()(void){
 			static constexpr unsigned char kByteCountTable[32] = {
 				1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
 				0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 2, 3, 3, 4, 0,
@@ -147,7 +147,7 @@ namespace {
 			return x_u32Pending || !!x_vPrev;
 		}
 		__attribute__((__flatten__))
-		std::uint32_t operator()(){
+		std::uint32_t operator()(void){
 			if(x_u32Pending){
 				const auto u32Ret = x_u32Pending & 0xFFu;
 				x_u32Pending >>= 8;
@@ -211,7 +211,7 @@ namespace {
 			return !!x_vPrev;
 		}
 		__attribute__((__flatten__))
-		std::uint32_t operator()(){
+		std::uint32_t operator()(void){
 			auto u32Point = x_vPrev();
 			// 检测前导代理。
 			const auto u32Leading = u32Point - 0xD800u;
@@ -254,7 +254,7 @@ namespace {
 			return x_u32Pending || !!x_vPrev;
 		}
 		__attribute__((__flatten__))
-		std::uint32_t operator()(){
+		std::uint32_t operator()(void){
 			if(x_u32Pending){
 				const auto u32Ret = x_u32Pending;
 				x_u32Pending >>= 16;

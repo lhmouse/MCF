@@ -9,16 +9,16 @@
 
 namespace MCF {
 
-StandardInputStream::~StandardInputStream(){
+StandardInputStream::~StandardInputStream(void){
 }
 
-int StandardInputStream::Peek(){
+int StandardInputStream::Peek(void){
 	return ::_MCFCRT_PeekStandardInputByte();
 }
-int StandardInputStream::Get(){
+int StandardInputStream::Get(void){
 	return ::_MCFCRT_ReadStandardInputByte();
 }
-bool StandardInputStream::Discard(){
+bool StandardInputStream::Discard(void){
 	return ::_MCFCRT_ReadStandardInputByte() >= 0;
 }
 std::size_t StandardInputStream::Peek(void *pData, std::size_t uSize){
@@ -52,13 +52,13 @@ std::size_t StandardInputStream::Discard(std::size_t uSize){
 	return uRead;
 }
 
-long StandardInputStream::PeekChar32(){
+long StandardInputStream::PeekChar32(void){
 	return ::_MCFCRT_PeekStandardInputChar32();
 }
-long StandardInputStream::GetChar32(){
+long StandardInputStream::GetChar32(void){
 	return ::_MCFCRT_ReadStandardInputChar32();
 }
-bool StandardInputStream::DiscardChar32(){
+bool StandardInputStream::DiscardChar32(void){
 	return ::_MCFCRT_ReadStandardInputChar32() >= 0;
 }
 std::size_t StandardInputStream::PeekString(wchar_t *pwcData, std::size_t uSize, bool bSingleLine){

@@ -8,7 +8,7 @@
 namespace MCF {
 
 namespace Impl_Variant {
-	ActiveElementBase::~ActiveElementBase(){
+	ActiveElementBase::~ActiveElementBase(void){
 	}
 }
 

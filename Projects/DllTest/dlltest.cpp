@@ -14,7 +14,7 @@ DWORD __stdcall thread_proc(void *) noexcept {
 	std::printf("in thread_proc() - dlltest(123, 456) = %d\n", ::dlltest(123, 456));
 }
 
-int main(){
+int main(void){
 #if DYNAMIC_LOAD
 	HMODULE dll = ::LoadLibraryW(L".dll-Debug32.dll");
 	if(!dll){

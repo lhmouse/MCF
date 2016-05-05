@@ -53,7 +53,7 @@ private:
 	}
 
 private:
-	static UniqueHandle<X_TlsKeyDeleter> X_AllocateTlsKey(){
+	static UniqueHandle<X_TlsKeyDeleter> X_AllocateTlsKey(void){
 		auto hTemp = ::_MCFCRT_TlsAllocKey(sizeof(X_TlsContainer), nullptr, &X_ContainerDestructor, 0);
 		if(!hTemp){
 			MCF_THROW(Exception, ::_MCFCRT_GetLastWin32Error(), Rcntws::View(L"ThreadLocal: _MCFCRT_TlsAllocKey() 失败。"));

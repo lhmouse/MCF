@@ -33,7 +33,7 @@ namespace {
 	constexpr auto kCrcTable = GenerateTable(std::make_index_sequence<256>());
 }
 
-Crc64OutputStream::~Crc64OutputStream(){
+Crc64OutputStream::~Crc64OutputStream(void){
 }
 
 void Crc64OutputStream::X_Initialize() noexcept {

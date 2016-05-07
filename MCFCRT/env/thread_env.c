@@ -38,7 +38,7 @@ static inline int CompareTlsKeys(const struct tagTlsKey *pKey1, const struct tag
 
 static inline int ObjectComparatorNodeKey(const _MCFCRT_AvlNodeHeader *pObj1, intptr_t nKey2){
 	return CompareTlsKeys(((const TlsObject *)pObj1)->pKey,
-                          (struct tagTlsKey *)nKey2);
+	                      (struct tagTlsKey *)nKey2);
 }
 static inline int ObjectComparatorNodes(const _MCFCRT_AvlNodeHeader *pObj1, const _MCFCRT_AvlNodeHeader *pObj2){
 	return CompareTlsKeys(((const TlsObject *)pObj1)->pKey,

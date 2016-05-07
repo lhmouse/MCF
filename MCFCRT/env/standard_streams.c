@@ -69,64 +69,91 @@ static void LockedThrottle(Stream *pStream){
 	Throttle(pStream);
 	_MCFCRT_SignalMutex(&(pStream->vMutex));
 }
-
+*/
 bool __MCFCRT_StandardStreamsInit(void){
-	LockedReset(&g_vStdOut, STD_OUTPUT_HANDLE);
-	LockedReset(&g_vStdErr, STD_ERROR_HANDLE );
-	LockedReset(&g_vStdIn , STD_INPUT_HANDLE );
 	return true;
 }
 void __MCFCRT_StandardStreamsUninit(void){
-	LockedThrottle(&g_vStdIn );
-	LockedThrottle(&g_vStdErr);
-	LockedThrottle(&g_vStdOut);
 }
 
 int _MCFCRT_PeekStandardInputByte(void){
+	SetLastError(ERROR_HANDLE_EOF);
+	return -1;
 }
 int _MCFCRT_ReadStandardInputByte(void){
+	SetLastError(ERROR_HANDLE_EOF);
+	return -1;
 }
 size_t _MCFCRT_PeekStandardInputBinary(void *pBuffer, size_t uSize){
+	SetLastError(ERROR_HANDLE_EOF);
+	return 0;
 }
 size_t _MCFCRT_ReadStandardInputBinary(void *pBuffer, size_t uSize){
+	SetLastError(ERROR_HANDLE_EOF);
+	return 0;
 }
 size_t _MCFCRT_DiscardStandardInputBinary(size_t uSize){
+	SetLastError(ERROR_HANDLE_EOF);
+	return 0;
 }
 long _MCFCRT_PeekStandardInputChar32(void){
+	SetLastError(ERROR_HANDLE_EOF);
+	return -1;
 }
 long _MCFCRT_ReadStandardInputChar32(void){
+	SetLastError(ERROR_HANDLE_EOF);
+	return -1;
 }
 size_t _MCFCRT_PeekStandardInputString(wchar_t *pwcString, size_t uLength, bool bSingleLine){
+	SetLastError(ERROR_HANDLE_EOF);
+	return 0;
 }
 size_t _MCFCRT_ReadStandardInputString(wchar_t *pwcString, size_t uLength, bool bSingleLine){
+	SetLastError(ERROR_HANDLE_EOF);
+	return 0;
 }
 size_t _MCFCRT_DiscardStandardInputString(size_t uLength, bool bSingleLine){
+	SetLastError(ERROR_HANDLE_EOF);
+	return 0;
 }
 bool _MCFCRT_IsStandardInputEchoing(void){
+	return true;
 }
 bool _MCFCRT_SetStandardInputEchoing(bool bEchoing){
+	return true;
 }
 
 bool _MCFCRT_WriteStandardOutputByte(unsigned char byData){
+	return true;
 }
 size_t _MCFCRT_WriteStandardOutputBinary(const void *pBuffer, size_t uSize){
+	return uSize;
 }
-size_t _MCFCRT_WriteStandardOutputChar32(char32_t c32CodePoint){
+bool _MCFCRT_WriteStandardOutputChar32(char32_t c32CodePoint){
+	return true;
 }
 size_t _MCFCRT_WriteStandardOutputString(const wchar_t *pwcString, size_t uLength, bool bAppendNewLine){
+	return uLength + bAppendNewLine;
 }
 bool _MCFCRT_IsStandardOutputBuffered(void){
+	return true;
 }
 bool _MCFCRT_SetStandardOutputBuffered(bool bBuffered){
+	return true;
 }
 bool _MCFCRT_FlushStandardOutput(bool bHard){
+	return true;
 }
 
 bool _MCFCRT_WriteStandardErrorByte(unsigned char byData){
+	return true;
 }
 size_t _MCFCRT_WriteStandardErrorBinary(const void *pBuffer, size_t uSize){
+	return uSize;
 }
-size_t _MCFCRT_WriteStandardErrorChar32(char32_t c32CodePoint){
+bool _MCFCRT_WriteStandardErrorChar32(char32_t c32CodePoint){
+	return true;
 }
 size_t _MCFCRT_WriteStandardErrorString(const wchar_t *pwcString, size_t uLength, bool bAppendNewLine){
-}*/
+	return uLength + bAppendNewLine;
+}

@@ -42,7 +42,7 @@ size_t _MCFCRT_GetWin32ErrorDescription(const wchar_t **ppwszStr, unsigned long 
 		*ppwszStr = kUnicodeUnavailable;
 		return sizeof(kUnicodeUnavailable) / sizeof(wchar_t) - 1;
 	}
-	const wchar_t *const pwcText = (const wchar_t *)pEntry->Text;
+	const wchar_t *const pwcText = (void *)pEntry->Text;
 	const wchar_t *pwcEnd = pwcText + (pEntry->Length - offsetof(MESSAGE_RESOURCE_ENTRY, Text)) / sizeof(wchar_t);
 	for(;;){
 		if(pwcText == pwcEnd){

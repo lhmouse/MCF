@@ -15,15 +15,13 @@ typedef struct tagAtExitCallback {
 	intptr_t nContext;
 } AtExitCallback;
 
-enum {
-	kAtExitCallbacksPerBlock = 64,
-};
+#define CALLBACKS_PER_BLOCK   64u
 
 typedef struct tagAtExitCallbackBlock {
 	struct tagAtExitCallbackBlock *pPrev;
 
 	size_t uSize;
-	AtExitCallback aCallbacks[kAtExitCallbacksPerBlock];
+	AtExitCallback aCallbacks[CALLBACKS_PER_BLOCK];
 } AtExitCallbackBlock;
 
 static _MCFCRT_Mutex           g_vAtExitMutex   = { 0 };
@@ -47,8 +45,10 @@ static void PumpAtModuleExit(void){
 			break;
 		}
 		for(size_t i = pBlock->uSize; i != 0; --i){
-			const AtExitCallback *const pCur = pBlock->aCallbacks + i - 1;
-			(*(pCur->pfnProc))(pCur->nContext);
+			const AtExitCallback *const pCallback = pBlock->aCallbacks + i - 1;
+			const _MCFCRT_AtModuleExitCallback pfnProc = pCallback->pfnProc;
+			const intptr_t nContext = pCallback->nContext;
+			(*pfnProc)(nContext);
 		}
 		free(pBlock);
 	}
@@ -95,12 +95,10 @@ void __MCFCRT_ModuleUninit(void){
 }
 
 bool _MCFCRT_AtModuleExit(_MCFCRT_AtModuleExitCallback pfnProc, intptr_t nContext){
-	AtExitCallbackBlock *pBlock;
-
 	_MCFCRT_WaitForMutexForever(&g_vAtExitMutex, _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT);
 	{
-		pBlock = g_pAtExitLast;
-		if(!pBlock || (pBlock->uSize >= kAtExitCallbacksPerBlock)){
+		AtExitCallbackBlock *pBlock = g_pAtExitLast;
+		if(!pBlock || (pBlock->uSize >= CALLBACKS_PER_BLOCK)){
 			_MCFCRT_SignalMutex(&g_vAtExitMutex);
 			{
 				pBlock = malloc(sizeof(AtExitCallbackBlock));
@@ -115,9 +113,8 @@ bool _MCFCRT_AtModuleExit(_MCFCRT_AtModuleExitCallback pfnProc, intptr_t nContex
 			pBlock->pPrev = g_pAtExitLast;
 			g_pAtExitLast = pBlock;
 		}
-		AtExitCallback *const pCallback = pBlock->aCallbacks + ((pBlock->uSize)++);
-		pCallback->pfnProc  = pfnProc;
-		pCallback->nContext = nContext;
+		const AtExitCallback vSource = { pfnProc, nContext };
+		pBlock->aCallbacks[(pBlock->uSize)++] = vSource;
 	}
 	_MCFCRT_SignalMutex(&g_vAtExitMutex);
 	return true;

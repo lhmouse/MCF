@@ -291,8 +291,22 @@ bool _MCFCRT_TlsRequire(_MCFCRT_TlsKeyHandle hTlsKey, void **restrict ppStorage)
 	return true;
 }
 
-static void CrtAtExitThreadDestructor(intptr_t nContext, void *pStorage){
-	const _MCFCRT_AtThreadExitCallback pfnProc = *(_MCFCRT_AtThreadExitCallback *)pStorage;
+typedef struct tagAtExitCallback {
+	_MCFCRT_AtThreadExitCallback pfnProc;
+	intptr_t nContext;
+} AtExitCallback;
+
+static unsigned long CrtAtExitThreadConstructor(intptr_t nSource, void *pStorage){
+	AtExitCallback *const pCallback = pStorage;
+	memcpy(pCallback, (const AtExitCallback *)nSource, sizeof(AtExitCallback));
+	return 0;
+}
+static void CrtAtExitThreadDestructor(intptr_t nSource, void *pStorage){
+	(void)nSource;
+
+	const AtExitCallback *const pCallback = pStorage;
+	const _MCFCRT_AtThreadExitCallback pfnProc = pCallback->pfnProc;
+	const intptr_t nContext = pCallback->nContext;
 	(*pfnProc)(nContext);
 }
 
@@ -301,11 +315,10 @@ bool _MCFCRT_AtThreadExit(_MCFCRT_AtThreadExitCallback pfnProc, intptr_t nContex
 	if(!pThread){
 		return false;
 	}
-	TlsObject *const pObject = RequireTlsObject(pThread, nullptr, sizeof(pfnProc), nullptr, &CrtAtExitThreadDestructor, nContext);
+	const AtExitCallback vSource = { pfnProc, nContext };
+	TlsObject *const pObject = RequireTlsObject(pThread, nullptr, sizeof(AtExitCallback), &CrtAtExitThreadConstructor, &CrtAtExitThreadDestructor, (intptr_t)&vSource);
 	if(!pObject){
 		return false;
 	}
-	void *const pStorage = pObject->abyStorage;
-	memcpy(pStorage, &pfnProc, sizeof(pfnProc));
 	return true;
 }

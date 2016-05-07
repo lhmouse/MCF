@@ -19,9 +19,6 @@
 
 namespace MCF {
 
-namespace Impl_ThreadLocal {
-}
-
 template<typename ElementT>
 class ThreadLocal {
 	static_assert(alignof(ElementT) <= alignof(std::max_align_t), "ElementT is over-aligned.");

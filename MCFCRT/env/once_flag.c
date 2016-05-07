@@ -15,12 +15,21 @@ extern __attribute__((__dllimport__, __stdcall__))
 NTSTATUS NtReleaseKeyedEvent(HANDLE hKeyedEvent, void *pKey, BOOLEAN bAlertable, const LARGE_INTEGER *pliTimeout);
 
 // 第一个字节保留给 Itanium ABI 用于标记是否已初始化。
-#define MASK_LOCKED             ((uintptr_t) 0x0100)
-#define MASK_FINISHED           ((uintptr_t) 0x0001)
-#define MASK_THREADS_TRAPPED    ((uintptr_t)~0x01FF)
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+#	define BSUSR(v_)            ((uintptr_t)((uintptr_t)(v_) << CHAR_BIT))
+#	define BSFB(v_)             ((uintptr_t)((uintptr_t)(v_)            ))
+#else
+#	define BSUSR(v_)            ((uintptr_t)((uintptr_t)(v_)                                        ))
+#	define BSFB(v_)             ((uintptr_t)((uintptr_t)(v_) << ((sizeof(uintptr_t) - 1) * CHAR_BIT)))
+#endif
+
+#define MASK_LOCKED             ((uintptr_t) BSUSR(0x01)              )
+#define MASK_FINISHED           ((uintptr_t)                BSFB(0x01))
+#define MASK_THREADS_TRAPPED    ((uintptr_t)~BSUSR(0x01) & ~BSFB(0xFF))
 
 #define THREAD_TRAPPED_ONE      ((uintptr_t)(MASK_THREADS_TRAPPED & -MASK_THREADS_TRAPPED))
 #define THREAD_TRAPPED_MAX      ((uintptr_t)(MASK_THREADS_TRAPPED / THREAD_TRAPPED_ONE))
+
 
 static _MCFCRT_OnceResult RealWaitForOnceFlag(volatile uintptr_t *puControl, bool bMayTimeOut, uint64_t u64UntilFastMonoClock){
 	{

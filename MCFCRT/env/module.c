@@ -113,8 +113,9 @@ bool _MCFCRT_AtModuleExit(_MCFCRT_AtModuleExitCallback pfnProc, intptr_t nContex
 			pBlock->pPrev = g_pAtExitLast;
 			g_pAtExitLast = pBlock;
 		}
-		const AtExitCallback vSource = { pfnProc, nContext };
-		pBlock->aCallbacks[(pBlock->uSize)++] = vSource;
+		AtExitCallback *const pCallback = pBlock->aCallbacks + ((pBlock->uSize)++);
+		pCallback->pfnProc = pfnProc;
+		pCallback->nContext = nContext;
 	}
 	_MCFCRT_SignalMutex(&g_vAtExitMutex);
 	return true;

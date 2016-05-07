@@ -296,18 +296,30 @@ typedef struct tagAtExitCallback {
 	intptr_t nContext;
 } AtExitCallback;
 
-static unsigned long CrtAtExitThreadConstructor(intptr_t nSource, void *pStorage){
-	AtExitCallback *const pCallback = pStorage;
-	memcpy(pCallback, (const AtExitCallback *)nSource, sizeof(AtExitCallback));
+#define CALLBACKS_PER_BLOCK   2
+
+typedef struct tagAtExitCallbackBlock {
+	size_t uSize;
+	AtExitCallback aCallbacks[CALLBACKS_PER_BLOCK];
+} AtExitCallbackBlock;
+
+static unsigned long CrtAtExitThreadConstructor(intptr_t nUnused, void *pStorage){
+	(void)nUnused;
+
+	AtExitCallbackBlock *const pBlock = pStorage;
+	pBlock->uSize = 0;
 	return 0;
 }
-static void CrtAtExitThreadDestructor(intptr_t nSource, void *pStorage){
-	(void)nSource;
+static void CrtAtExitThreadDestructor(intptr_t nUnused, void *pStorage){
+	(void)nUnused;
 
-	const AtExitCallback *const pCallback = pStorage;
-	const _MCFCRT_AtThreadExitCallback pfnProc = pCallback->pfnProc;
-	const intptr_t nContext = pCallback->nContext;
-	(*pfnProc)(nContext);
+	AtExitCallbackBlock *const pBlock = pStorage;
+	for(size_t i = pBlock->uSize; i != 0; --i){
+		const AtExitCallback *const pCallback = pBlock->aCallbacks + i - 1;
+		const _MCFCRT_AtThreadExitCallback pfnProc = pCallback->pfnProc;
+		const intptr_t nContext = pCallback->nContext;
+		(*pfnProc)(nContext);
+	}
 }
 
 bool _MCFCRT_AtThreadExit(_MCFCRT_AtThreadExitCallback pfnProc, intptr_t nContext){
@@ -315,10 +327,20 @@ bool _MCFCRT_AtThreadExit(_MCFCRT_AtThreadExitCallback pfnProc, intptr_t nContex
 	if(!pThread){
 		return false;
 	}
-	const AtExitCallback vSource = { pfnProc, nContext };
-	TlsObject *const pObject = RequireTlsObject(pThread, nullptr, sizeof(AtExitCallback), &CrtAtExitThreadConstructor, &CrtAtExitThreadDestructor, (intptr_t)&vSource);
-	if(!pObject){
-		return false;
+	AtExitCallbackBlock *pBlock = nullptr;
+	TlsObject *pObject = pThread->pLastByThread;
+	if(pObject && (pObject->pfnDestructor == &CrtAtExitThreadDestructor)){
+		pBlock = (void *)pObject->abyStorage;
 	}
+	if(!pBlock || (pBlock->uSize >= CALLBACKS_PER_BLOCK)){
+		pObject = RequireTlsObject(pThread, nullptr, sizeof(AtExitCallbackBlock), &CrtAtExitThreadConstructor, &CrtAtExitThreadDestructor, 0);
+		if(!pObject){
+			return false;
+		}
+		pBlock = (void *)pObject->abyStorage;
+	}
+	AtExitCallback *const pCallback = pBlock->aCallbacks + ((pBlock->uSize)++);
+	pCallback->pfnProc = pfnProc;
+	pCallback->nContext = nContext;
 	return true;
 }

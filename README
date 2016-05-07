@@ -9,37 +9,17 @@ MCF 遵循“无尘设计”的原则。
 MCF is a clean room design of C++.
 That is, the goal of MCF is to destruct the C and C++ standard libraries as well as the CRT, then rebuild a subset of them, effectively removing mistaken features such as locales, iostreams, threads and thread_local, etc.
 
-IRC channel:
-===================
-https://webchat.freenode.net/?channels=mcfproj
-
-*** USE SVN PLEASE ***
-===================
-To those who wanna join MCF:
-
-我们欢迎加入者，但是这里我想强调一点，** 这里不欢迎 git 用户。**
-We give our warm welcome to those who aspire to join in the development of MCF.
-But here I have to emphasize it again: ** Git users are NOT welcomed here. **
-
-有人会问，既然不准用 git 你为什么把这些东西放在 github 上呢？
-If someone asks: "Why did you put your stuff on github rather than somewhere else such as Google Code?"
-
-因为 github 真是太他妈的好用了，但是显然这和 git 没什么关系。
-I will answer: "Because github is the f*cking best free project hosting engine among those I have ever seen.
-However that is NOT and will NEVER be the evidence of git's ease to use because github is NOT git."
-
-Git is GAAAAAAAARBAGE. Git SUCKs.
-
-lh_mouse
-2013-10-11
-
-WHY GIT SUCKS
+GIT SUCKS
 ===================
 @FrankHB recommended this article https://gist.github.com/incompl/3819571 that I'd like to share with you.
 Because that is exactly what I want to say and I am simply too busy to write one.
 
 lh_mouse
 2015-12-07
+
+IRC channel:
+===================
+https://webchat.freenode.net/?channels=mcfproj
 
 编译说明
 ===================

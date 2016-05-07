@@ -1,34 +1,15 @@
 简介
 Introduction
 ===================
-MCF 是一个基于 C++14 的 Windows 框架。 
+MCF 是一个基于 C++14 的 Windows 框架。
 MCF is a C++14 framework for Windows application development.
 
-IRC channel:
-===================
-https://webchat.freenode.net/?channels=mcfproj
+MCF 遵循“无尘设计”的原则。
+其设计目标是将 C 和 C++ 的标准库连带 CRT 全部丢弃，然后重新设计，以期移除任何杂质和智障功能，包括区域和语言设置、标准输入输出流、线程和 thread_local 等。
+MCF is a clean room design of C++.
+That is, the goal of MCF is to destruct the C and C++ standard libraries as well as the CRT, then rebuild a subset of them, effectively removing mistaken features such as locales, iostreams, threads and thread_local, etc.
 
-*** USE SVN PLEASE ***
-===================
-To those who wanna join MCF:
-
-我们欢迎加入者，但是这里我想强调一点，** 这里不欢迎 git 用户。**
-We give our warm welcome to those who aspire to join in the development of MCF.
-But here I have to emphasize it again: ** Git users are NOT welcomed here. **
-
-有人会问，既然不准用 git 你为什么把这些东西放在 github 上呢？
-If someone asks: "Why did you put your stuff on github rather than somewhere else such as Google Code?"
-
-因为 github 真是太他妈的好用了，但是显然这和 git 没什么关系。
-I will answer: "Because github is the f*cking best free project hosting engine among those I have ever seen.
-However that is NOT and will NEVER be the evidence of git's ease to use because github is NOT git."
-
-Git is GAAAAAAAARBAGE. Git SUCKs.
-
-lh_mouse
-2013-10-11
-
-WHY GIT SUCKS
+GIT SUCKS
 ===================
 @FrankHB recommended this article https://gist.github.com/incompl/3819571 that I'd like to share with you.
 Because that is exactly what I want to say and I am simply too busy to write one.
@@ -36,10 +17,17 @@ Because that is exactly what I want to say and I am simply too busy to write one
 lh_mouse
 2015-12-07
 
+IRC channel:
+===================
+https://webchat.freenode.net/?channels=mcfproj
+
 编译说明
 ===================
-编译器请使用 i686-w64-mingw32-gcc 或 x86_64-w64-mingw32-gcc，线程模型选 Win32。
+编译器请使用 i686-w64-mingw32-gcc 或 x86_64-w64-mingw32-gcc，线程模型请选择 win32 或 mcf。
 *** 使用 POSIX 线程模型的工具链会出现各种奇怪的问题，特别是链接错误。 ***
+
+构建 mcf 线程模型的工具链的脚本在这里：
+https://github.com/lhmouse/MINGW-packages/tree/mcfgthread/mingw-w64-gcc-git
 
 请使用 MCFBuild 构建，在 MCFBuild 目录下有二进制可执行文件。
 

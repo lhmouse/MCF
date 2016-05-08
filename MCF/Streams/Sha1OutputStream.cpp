@@ -95,11 +95,11 @@ void Sha1OutputStream::X_Update(const std::uint8_t (&abyChunk)[64]) noexcept {
 	}
 */
 
-	register std::uint32_t a = x_au32Reg[0];
-	register std::uint32_t b = x_au32Reg[1];
-	register std::uint32_t c = x_au32Reg[2];
-	register std::uint32_t d = x_au32Reg[3];
-	register std::uint32_t e = x_au32Reg[4];
+	auto a = x_au32Reg[0];
+	auto b = x_au32Reg[1];
+	auto c = x_au32Reg[2];
+	auto d = x_au32Reg[3];
+	auto e = x_au32Reg[4];
 
 	__asm__ volatile (
 		"movdqa xmm4, xmmword ptr[%5 + 28 * 4] \n"

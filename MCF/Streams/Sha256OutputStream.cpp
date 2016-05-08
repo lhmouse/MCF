@@ -167,25 +167,14 @@ void Sha256OutputStream::X_Update(const std::uint8_t (&abyChunk)[64]) noexcept {
 	}
 */
 
-#ifdef _WIN64
-	register std::uint32_t a = x_au32Reg[0];
-	register std::uint32_t b = x_au32Reg[1];
-	register std::uint32_t c = x_au32Reg[2];
-	register std::uint32_t d = x_au32Reg[3];
-	register std::uint32_t e = x_au32Reg[4];
-	register std::uint32_t f = x_au32Reg[5];
-	register std::uint32_t g = x_au32Reg[6];
-	register std::uint32_t h = x_au32Reg[7];
-#else
-	std::uint32_t a = x_au32Reg[0];
-	std::uint32_t b = x_au32Reg[1];
-	std::uint32_t c = x_au32Reg[2];
-	std::uint32_t d = x_au32Reg[3];
-	std::uint32_t e = x_au32Reg[4];
-	std::uint32_t f = x_au32Reg[5];
-	std::uint32_t g = x_au32Reg[6];
-	std::uint32_t h = x_au32Reg[7];
-#endif
+	auto a = x_au32Reg[0];
+	auto b = x_au32Reg[1];
+	auto c = x_au32Reg[2];
+	auto d = x_au32Reg[3];
+	auto e = x_au32Reg[4];
+	auto f = x_au32Reg[5];
+	auto g = x_au32Reg[6];
+	auto h = x_au32Reg[7];
 
 	__asm__ volatile (
 		"movdqa xmm1, xmmword ptr[%8 + 12 * 4] \n"

@@ -5,19 +5,17 @@
 #include "../../env/_crtdef.h"
 #include "../../env/module.h"
 
-typedef void (*__MCFCRT_AtExitProc)(void);
-
 static void CrtAtModuleExitProc(intptr_t nContext){
-	const __MCFCRT_AtExitProc pfnProc = (__MCFCRT_AtExitProc)nContext;
+	void (*const pfnProc)(void) = (void (*)(void))nContext;
 	(*pfnProc)();
 }
 
-int __wrap_atexit(__MCFCRT_AtExitProc func){
+int atexit(void (*func)(void)){
 	if(!_MCFCRT_AtModuleExit(&CrtAtModuleExitProc, (intptr_t)func)){
 		return -1;
 	}
 	return 0;
 }
 
-__attribute__((__alias__("__wrap_atexit")))
-int atexit(void (*func)(void));
+__attribute__((__alias__("atexit")))
+int __wrap_atexit(void (*func)(void));

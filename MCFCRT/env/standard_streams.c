@@ -8,9 +8,9 @@
 #include "mutex.h"
 #include "mcfwin.h"
 /*
-typedef struct tagStream {
-	_MCFCRT_Mutex vMutex;
+_MCFCRT_Mutex vMutex;
 
+typedef struct tagStream {
 	HANDLE hFile;
 	bool bConsole;
 

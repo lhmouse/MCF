@@ -27,6 +27,16 @@ typedef struct tagAtExitCallbackBlock {
 static _MCFCRT_Mutex           g_vAtExitMutex   = { 0 };
 static AtExitCallbackBlock *   g_pAtExitLast    = nullptr;
 
+static void CrtAtModuleExitDestructor(void *pStorage){
+	AtExitCallbackBlock *const pBlock = pStorage;
+	for(size_t i = pBlock->uSize; i != 0; --i){
+		const AtExitCallback *const pCallback = pBlock->aCallbacks + i - 1;
+		const _MCFCRT_AtThreadExitCallback pfnProc = pCallback->pfnProc;
+		const intptr_t nContext = pCallback->nContext;
+		(*pfnProc)(nContext);
+	}
+}
+
 __attribute__((__noinline__))
 static void PumpAtModuleExit(void){
 	for(;;){
@@ -36,7 +46,8 @@ static void PumpAtModuleExit(void){
 			{
 				pBlock = g_pAtExitLast;
 				if(pBlock){
-					g_pAtExitLast = pBlock->pPrev;
+					AtExitCallbackBlock *const pPrev = pBlock->pPrev;
+					g_pAtExitLast = pPrev;
 				}
 			}
 			_MCFCRT_SignalMutex(&g_vAtExitMutex);
@@ -44,12 +55,8 @@ static void PumpAtModuleExit(void){
 		if(!pBlock){
 			break;
 		}
-		for(size_t i = pBlock->uSize; i != 0; --i){
-			const AtExitCallback *const pCallback = pBlock->aCallbacks + i - 1;
-			const _MCFCRT_AtModuleExitCallback pfnProc = pCallback->pfnProc;
-			const intptr_t nContext = pCallback->nContext;
-			(*pfnProc)(nContext);
-		}
+
+		CrtAtModuleExitDestructor(pBlock);
 		free(pBlock);
 	}
 }

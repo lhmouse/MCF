@@ -197,16 +197,27 @@ void __MCFCRT_TlsCleanup(void){
 		return;
 	}
 
-	TlsObject *pObject = pThread->pLastByThread;
-	while(pObject){
+	for(;;){
+		TlsObject *pObject;
+		{
+			pObject = pThread->pLastByThread;
+			if(pObject){
+				TlsObject *const pPrev = pObject->pPrevByThread;
+				if(pPrev){
+					pPrev->pNextByThread = nullptr;
+				}
+				pThread->pLastByThread = pPrev;
+			}
+		}
+		if(!pObject){
+			break;
+		}
+
 		const _MCFCRT_TlsDestructor pfnDestructor = pObject->pfnDestructor;
 		if(pfnDestructor){
 			(*pfnDestructor)(pObject->nContext, pObject->abyStorage);
 		}
-
-		TlsObject *const pPrevByThread = pObject->pPrevByThread;
 		free(pObject);
-		pObject = pPrevByThread;
 	}
 
 	const bool bSucceeded = TlsSetValue(g_dwTlsIndex, nullptr);
@@ -307,14 +318,14 @@ typedef struct tagAtExitCallbackBlock {
 	AtExitCallback aCallbacks[CALLBACKS_PER_BLOCK];
 } AtExitCallbackBlock;
 
-static unsigned long CrtAtExitThreadConstructor(intptr_t nUnused, void *pStorage){
+static unsigned long CrtAtThreadExitConstructor(intptr_t nUnused, void *pStorage){
 	(void)nUnused;
 
 	AtExitCallbackBlock *const pBlock = pStorage;
 	pBlock->uSize = 0;
 	return 0;
 }
-static void CrtAtExitThreadDestructor(intptr_t nUnused, void *pStorage){
+static void CrtAtThreadExitDestructor(intptr_t nUnused, void *pStorage){
 	(void)nUnused;
 
 	AtExitCallbackBlock *const pBlock = pStorage;
@@ -333,11 +344,11 @@ bool _MCFCRT_AtThreadExit(_MCFCRT_AtThreadExitCallback pfnProc, intptr_t nContex
 	}
 	AtExitCallbackBlock *pBlock = nullptr;
 	TlsObject *pObject = pThread->pLastByThread;
-	if(pObject && (pObject->pfnDestructor == &CrtAtExitThreadDestructor)){
+	if(pObject && (pObject->pfnDestructor == &CrtAtThreadExitDestructor)){
 		pBlock = (void *)pObject->abyStorage;
 	}
 	if(!pBlock || (pBlock->uSize >= CALLBACKS_PER_BLOCK)){
-		pObject = RequireTlsObject(pThread, nullptr, sizeof(AtExitCallbackBlock), &CrtAtExitThreadConstructor, &CrtAtExitThreadDestructor, 0);
+		pObject = RequireTlsObject(pThread, nullptr, sizeof(AtExitCallbackBlock), &CrtAtThreadExitConstructor, &CrtAtThreadExitDestructor, 0);
 		if(!pObject){
 			return false;
 		}

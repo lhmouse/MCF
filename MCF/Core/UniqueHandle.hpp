@@ -93,7 +93,6 @@ public:
 		return Get();
 	}
 
-
 	template<class CloserRhsT>
 	constexpr bool operator==(const UniqueHandle<CloserRhsT> &rhs) const noexcept {
 		return Equal()(x_hObject, rhs.x_hObject);

@@ -12,10 +12,7 @@ template class MCF::IntrusivePtr<foo>;
 template class MCF::IntrusiveWeakPtr<foo>;
 
 extern "C" unsigned _MCFCRT_Main() noexcept {
-	char buff[10];
-	auto w = buff;
-	w = ::_MCFCRT_stppcpy(w, std::end(buff), "hello ");
-	w = ::_MCFCRT_stppcpy(w, std::end(buff), "world!");
-	std::puts(buff);
+	MCF::IntrusivePtr<foo> p(new foo);
+	p->ReserveWeak();
 	return 0;
 }

@@ -232,7 +232,7 @@ namespace Impl_IntrusivePtr {
 		}
 
 	public:
-		void ReserveView() const volatile {
+		void ReserveWeak() const volatile {
 			X_RequireView();
 		}
 	};

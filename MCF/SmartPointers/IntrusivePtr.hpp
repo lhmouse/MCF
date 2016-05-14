@@ -218,18 +218,22 @@ namespace Impl_IntrusivePtr {
 		}
 
 	private:
-		X_WeakView *X_CreateView() const volatile {
+		X_WeakView *X_RequireView() const volatile {
 			auto pView = x_pView.Load(kAtomicConsume);
 			if(!pView){
 				const auto pNewView = new X_WeakView(const_cast<DeletableBase *>(this));
-				if(x_pView.CompareExchange(pView, pNewView, kAtomicAcqRel, kAtomicConsume)){
+				if(x_pView.CompareExchange(pView, pNewView, kAtomicRelease, kAtomicConsume)){
 					pView = pNewView;
 				} else {
 					delete pNewView;
 				}
 			}
-			pView->AddRef();
 			return pView;
+		}
+
+	public:
+		void ReserveView() const volatile {
+			X_RequireView();
 		}
 	};
 }
@@ -617,9 +621,11 @@ private:
 		if(!pElement){
 			return nullptr;
 		}
-		return Impl_IntrusivePtr::StaticCastOrDynamicCast<const volatile Impl_IntrusivePtr::DeletableBase<DeleterT> *>(pElement)->X_CreateView();
+		const auto pView = Impl_IntrusivePtr::StaticCastOrDynamicCast<const volatile Impl_IntrusivePtr::DeletableBase<DeleterT> *>(pElement)->X_RequireView();
+		pView->AddRef();
+		return pView;
 	}
-	typename Impl_IntrusivePtr::DeletableBase<DeleterT>::X_WeakView *X_Fork() noexcept {
+	typename Impl_IntrusivePtr::DeletableBase<DeleterT>::X_WeakView *X_Fork() const noexcept {
 		const auto pView = x_pView;
 		if(pView){
 			static_cast<const volatile Impl_IntrusivePtr::RefCountBase *>(pView)->AddRef();

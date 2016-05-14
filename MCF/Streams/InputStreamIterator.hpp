@@ -25,7 +25,7 @@ public:
 		return x_pstrmOwner->Peek();
 	}
 
-	InputStreamIterator &operator++(void){
+	InputStreamIterator &operator++(){
 		x_pstrmOwner->Discard();
 		return *this;
 	}
@@ -34,7 +34,7 @@ public:
 		return *this;
 	}
 
-	int operator()(void){
+	int operator()(){
 		const int nRet = *(*this);
 		++(*this);
 		return nRet;

@@ -113,7 +113,7 @@ public:
 		Thread(std::move(rhs)).Swap(*this);
 		return *this;
 	}
-	~Thread(void){
+	~Thread(){
 		if(!IsNull()){
 			std::terminate();
 		}

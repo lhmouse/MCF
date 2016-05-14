@@ -7,7 +7,7 @@
 
 namespace MCF {
 
-TextInputStreamFilter::~TextInputStreamFilter(void){
+TextInputStreamFilter::~TextInputStreamFilter(){
 }
 
 void TextInputStreamFilter::X_PopulatePlainBuffer(std::size_t uExpected){
@@ -42,15 +42,15 @@ void TextInputStreamFilter::X_PopulatePlainBuffer(std::size_t uExpected){
 	}
 }
 
-int TextInputStreamFilter::Peek(void){
+int TextInputStreamFilter::Peek(){
 	X_PopulatePlainBuffer(1);
 	return x_sbufPlain.Peek();
 }
-int TextInputStreamFilter::Get(void){
+int TextInputStreamFilter::Get(){
 	X_PopulatePlainBuffer(1);
 	return x_sbufPlain.Get();
 }
-bool TextInputStreamFilter::Discard(void){
+bool TextInputStreamFilter::Discard(){
 	X_PopulatePlainBuffer(1);
 	return x_sbufPlain.Discard();
 }

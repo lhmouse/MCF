@@ -92,7 +92,7 @@ public:
 		rhs.Swap(*this);
 		return *this;
 	}
-	~CircularQueue(void){
+	~CircularQueue(){
 		Clear();
 		Allocator()(x_pStorage);
 	}

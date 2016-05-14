@@ -7,7 +7,7 @@
 
 namespace MCF {
 
-NullInputStream::~NullInputStream(void){
+NullInputStream::~NullInputStream(){
 }
 
 int NullInputStream::Peek() noexcept {

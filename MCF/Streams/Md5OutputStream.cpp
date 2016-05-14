@@ -11,7 +11,7 @@ namespace MCF {
 
 // https://en.wikipedia.org/wiki/MD5
 
-Md5OutputStream::~Md5OutputStream(void){
+Md5OutputStream::~Md5OutputStream(){
 }
 
 void Md5OutputStream::X_Initialize() noexcept {

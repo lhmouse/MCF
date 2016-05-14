@@ -11,7 +11,7 @@
 
 namespace MCF {
 
-Fnv1a64OutputStream::~Fnv1a64OutputStream(void){
+Fnv1a64OutputStream::~Fnv1a64OutputStream(){
 }
 
 void Fnv1a64OutputStream::X_Initialize() noexcept {

@@ -9,7 +9,7 @@
 
 namespace MCF {
 
-StandardErrorStream::~StandardErrorStream(void){
+StandardErrorStream::~StandardErrorStream(){
 }
 
 void StandardErrorStream::Put(unsigned char byData){

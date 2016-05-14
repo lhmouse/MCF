@@ -9,7 +9,7 @@
 
 namespace MCF {
 
-FileOutputStream::~FileOutputStream(void){
+FileOutputStream::~FileOutputStream(){
 }
 
 std::size_t FileOutputStream::X_WriteFromCurrentOffset(const void *pData, std::size_t uSize){

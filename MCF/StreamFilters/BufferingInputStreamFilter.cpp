@@ -7,18 +7,18 @@
 
 namespace MCF {
 
-BufferingInputStreamFilter::~BufferingInputStreamFilter(void){
+BufferingInputStreamFilter::~BufferingInputStreamFilter(){
 }
 
-int BufferingInputStreamFilter::Peek(void){
+int BufferingInputStreamFilter::Peek(){
 	y_vStream.PopulateBuffer(1);
 	return y_vStream.BufferedPeek();
 }
-int BufferingInputStreamFilter::Get(void){
+int BufferingInputStreamFilter::Get(){
 	y_vStream.PopulateBuffer(1);
 	return y_vStream.BufferedGet();
 }
-bool BufferingInputStreamFilter::Discard(void){
+bool BufferingInputStreamFilter::Discard(){
 	y_vStream.PopulateBuffer(1);
 	return y_vStream.BufferedDiscard();
 }

@@ -107,7 +107,7 @@ public:
 	}
 
 	// 后置条件：GetRefCount() <= 1
-	void Fork(void){
+	void Fork(){
 		if(x_pFunctor.GetRefCount() > 1){
 			x_pFunctor = x_pFunctor->Fork();
 		}

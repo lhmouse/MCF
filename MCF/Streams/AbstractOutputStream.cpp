@@ -7,7 +7,7 @@
 
 namespace MCF {
 
-AbstractOutputStream::~AbstractOutputStream(void){
+AbstractOutputStream::~AbstractOutputStream(){
 }
 
 }

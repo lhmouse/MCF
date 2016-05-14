@@ -90,7 +90,7 @@ public:
 		rhs.Swap(*this);
 		return *this;
 	}
-	~Vector(void){
+	~Vector(){
 		Clear();
 		Allocator()(x_pStorage);
 	}

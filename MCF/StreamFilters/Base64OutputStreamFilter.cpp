@@ -8,7 +8,7 @@
 
 namespace MCF {
 
-Base64OutputStreamFilter::~Base64OutputStreamFilter(void){
+Base64OutputStreamFilter::~Base64OutputStreamFilter(){
 	try {
 		X_FlushPlainBuffer(true);
 	} catch(...){

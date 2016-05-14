@@ -7,7 +7,7 @@
 
 namespace MCF {
 
-TextOutputStreamFilter::~TextOutputStreamFilter(void){
+TextOutputStreamFilter::~TextOutputStreamFilter(){
 	try {
 		X_FlushPlainBuffer(true);
 	} catch(...){

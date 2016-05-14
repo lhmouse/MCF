@@ -70,7 +70,7 @@ public:
 	UniquePtr &operator=(UniquePtr &&rhs) noexcept {
 		return Reset(std::move(rhs));
 	}
-	~UniquePtr(void){
+	~UniquePtr(){
 		X_Dispose();
 	}
 

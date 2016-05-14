@@ -219,7 +219,7 @@ void File::Resize(std::uint64_t u64NewSize){
 		MCF_THROW(Exception, ::RtlNtStatusToDosError(lStatus), Rcntws::View(L"File: NtSetInformationFile() 失败。"));
 	}
 }
-void File::Clear(void){
+void File::Clear(){
 	Resize(0);
 }
 
@@ -299,7 +299,7 @@ std::size_t File::Write(std::uint64_t u64Offset, const void *pBuffer, std::size_
 	}
 	return vIoStatus.Information;
 }
-void File::HardFlush(void){
+void File::HardFlush(){
 	if(!x_hFile){
 		MCF_THROW(Exception, ERROR_INVALID_HANDLE, Rcntws::View(L"File: 尚未打开任何文件。"));
 	}

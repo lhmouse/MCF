@@ -8,7 +8,7 @@
 namespace MCF {
 
 namespace Impl_BufferedInputStream {
-	BufferedInputStream::~BufferedInputStream(void){
+	BufferedInputStream::~BufferedInputStream(){
 	}
 
 	void BufferedInputStream::PopulateBuffer(std::size_t uExpected){

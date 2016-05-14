@@ -12,7 +12,7 @@ namespace MCF {
 // https://en.wikipedia.org/wiki/SHA-2
 // http://download.intel.com/embedded/processor/whitepaper/327457.pdf
 
-Sha256OutputStream::~Sha256OutputStream(void){
+Sha256OutputStream::~Sha256OutputStream(){
 }
 
 void Sha256OutputStream::X_Initialize() noexcept {

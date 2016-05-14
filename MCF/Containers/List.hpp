@@ -90,7 +90,7 @@ public:
 		rhs.Swap(*this);
 		return *this;
 	}
-	~List(void){
+	~List(){
 		Clear();
 	}
 

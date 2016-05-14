@@ -62,7 +62,7 @@ public:
 		Reset(std::move(rhs));
 		return *this;
 	}
-	~Optional(void){
+	~Optional(){
 		Reset();
 	}
 
@@ -99,7 +99,7 @@ public:
 			MCF_THROW(Exception, ERROR_NOT_READY, Rcntws::View(L"Optional: 尚未设定元素或异常对象。"));
 		}
 	}
-	ElementT &Get(void){
+	ElementT &Get(){
 		if(x_eState == xkElementSet){
 			const auto p = reinterpret_cast<ElementT *>(&x_vStorage);
 			return *p;

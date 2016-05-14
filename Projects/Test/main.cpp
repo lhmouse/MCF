@@ -13,7 +13,7 @@ void f(std::intptr_t n){
 	}
 }
 
-extern "C" unsigned _MCFCRT_Main(void) noexcept {
+extern "C" unsigned _MCFCRT_Main() noexcept {
 	for(int i = 0; i < 100; ++i){
 		::_MCFCRT_AtThreadExit(f, i);
 	}

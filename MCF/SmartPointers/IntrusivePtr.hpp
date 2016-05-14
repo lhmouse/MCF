@@ -607,6 +607,9 @@ class IntrusiveWeakPtr {
 	template<typename, class>
 	friend class WeakIntrusivePtr;
 
+private:
+	using X_WeakView = typename Impl_IntrusivePtr::DeletableBase<DeleterT>::X_WeakView;
+
 public:
 	using Element = ObjectT;
 	using Deleter = DeleterT;
@@ -617,7 +620,7 @@ public:
 	static const IntrusiveWeakPtr kNull;
 
 private:
-	static typename Impl_IntrusivePtr::DeletableBase<DeleterT>::X_WeakView *X_CreateViewFromElement(const volatile Element *pElement){
+	static X_WeakView *X_CreateViewFromElement(const volatile Element *pElement){
 		if(!pElement){
 			return nullptr;
 		}
@@ -625,14 +628,14 @@ private:
 		pView->AddRef();
 		return pView;
 	}
-	typename Impl_IntrusivePtr::DeletableBase<DeleterT>::X_WeakView *X_Fork() const noexcept {
+	X_WeakView *X_Fork() const noexcept {
 		const auto pView = x_pView;
 		if(pView){
 			static_cast<const volatile Impl_IntrusivePtr::RefCountBase *>(pView)->AddRef();
 		}
 		return pView;
 	}
-	typename Impl_IntrusivePtr::DeletableBase<DeleterT>::X_WeakView *X_Release() noexcept {
+	X_WeakView *X_Release() noexcept {
 		return std::exchange(x_pView, nullptr);
 	}
 	void X_Dispose() noexcept {
@@ -643,12 +646,12 @@ private:
 			}
 		}
 #ifndef NDEBUG
-		x_pView = (typename Impl_IntrusivePtr::DeletableBase<DeleterT>::X_WeakView *)(std::uintptr_t)0xDEADBEEFDEADBEEF;
+		x_pView = (X_WeakView *)(std::uintptr_t)0xDEADBEEFDEADBEEF;
 #endif
 	}
 
 private:
-	typename Impl_IntrusivePtr::DeletableBase<DeleterT>::X_WeakView *x_pView;
+	X_WeakView *x_pView;
 
 public:
 	constexpr IntrusiveWeakPtr(std::nullptr_t = nullptr) noexcept

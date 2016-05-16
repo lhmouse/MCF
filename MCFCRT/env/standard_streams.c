@@ -7,9 +7,24 @@
 #include "../ext/utf.h"
 #include "mutex.h"
 #include "mcfwin.h"
-/*
-_MCFCRT_Mutex vMutex;
 
+typedef struct tagBufferChunk {
+	struct tagBufferChunk *pPrev;
+	struct tagBufferChunk *pNext;
+
+	int nBegin;
+	int nEnd;
+	unsigned char abyRedZone1[16];
+	unsigned char abyData[4096];
+	unsigned char abyRedZone2[16];
+} BufferChunk;
+
+static _MCFCRT_Mutex vStdInMutex  = { 0 };
+static _MCFCRT_Mutex vStdOutMutex = { 0 };
+static _MCFCRT_Mutex vStdErrMutex = { 0 };
+
+
+/*
 typedef struct tagStream {
 	HANDLE hFile;
 	bool bConsole;

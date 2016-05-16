@@ -5,14 +5,14 @@
 #include <MCF/Streams/StandardOutputStream.hpp>
 #include <MCF/Streams/StandardErrorStream.hpp>
 
-struct foo : MCF::IntrusiveBase<foo> {
-};
-template class MCF::IntrusiveBase<foo>;
-template class MCF::IntrusivePtr<foo>;
-template class MCF::IntrusiveWeakPtr<foo>;
+#include <MCF/Core/String.hpp>
+#include <MCF/Utilities/Invoke.hpp>
 
 extern "C" unsigned _MCFCRT_Main() noexcept {
-	MCF::IntrusivePtr<foo> p(new foo);
-	p->ReserveWeak();
+	MCF::NarrowString s;
+	void (MCF::NarrowString::*p)(const char *) = &MCF::NarrowString::Append;
+	MCF::Invoke(p, s, "hello ");
+	MCF::Invoke(p, s, "world!");
+	std::printf("s = %s\n", s.GetStr());
 	return 0;
 }

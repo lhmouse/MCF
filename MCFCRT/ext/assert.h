@@ -10,22 +10,28 @@
 _MCFCRT_EXTERN_C_BEGIN
 
 extern __attribute__((__noreturn__))
-int __MCFCRT_OnAssertionFailure(const wchar_t *__pwszExpression, const wchar_t *__pwszFile, unsigned long __ulLine, const wchar_t *__pwszMessage) _MCFCRT_NOEXCEPT;
+void __MCFCRT_OnAssertionFailure(const wchar_t *__pwszExpression, const wchar_t *__pwszFile, unsigned long __ulLine, const wchar_t *__pwszMessage) _MCFCRT_NOEXCEPT;
 
 _MCFCRT_EXTERN_C_END
 
 #define __MCFCRT_ASSERT_WIDEN_X(__s_)           L ## __s_
 #define __MCFCRT_ASSERT_WIDEN(__s_)             __MCFCRT_ASSERT_WIDEN_X(__s_)
 
+#define _MCFCRT_ASSERT(__expr_)                 ((void)(!(__expr_) &&	\
+	                                                (__MCFCRT_ON_ASSERTION_FAILURE(__MCFCRT_ASSERT_WIDEN(#__expr_),	\
+		                                                __MCFCRT_ASSERT_WIDEN(__FILE__), __LINE__, (L"")), 1)	\
+	                                                ))
+#define _MCFCRT_ASSERT_MSG(__expr_, __msg_)     ((void)(!(__expr_) &&	\
+	                                                (__MCFCRT_ON_ASSERTION_FAILURE(__MCFCRT_ASSERT_WIDEN(#__expr_),	\
+		                                                __MCFCRT_ASSERT_WIDEN(__FILE__), __LINE__, (__msg_)), 1)	\
+	                                                ))
+
 #endif
 
-#undef _MCFCRT_ASSERT
-#undef _MCFCRT_ASSERT_MSG
+#undef __MCFCRT_ON_ASSERTION_FAILURE
 
 #ifdef NDEBUG
-#	define _MCFCRT_ASSERT(__expr_)              ((void)(sizeof(!(__expr_))))
-#	define _MCFCRT_ASSERT_MSG(__expr_, __msg_)  ((void)(sizeof(!(__expr_))))
+#	define __MCFCRT_ON_ASSERTION_FAILURE(...)   (__builtin_unreachable())
 #else
-#	define _MCFCRT_ASSERT(__expr_)              ((void)(!(__expr_) && __MCFCRT_OnAssertionFailure(__MCFCRT_ASSERT_WIDEN(#__expr_), __MCFCRT_ASSERT_WIDEN(__FILE__), __LINE__, L"")))
-#	define _MCFCRT_ASSERT_MSG(__expr_, __msg_)  ((void)(!(__expr_) && __MCFCRT_OnAssertionFailure(__MCFCRT_ASSERT_WIDEN(#__expr_), __MCFCRT_ASSERT_WIDEN(__FILE__), __LINE__, (__msg_))))
+#	define __MCFCRT_ON_ASSERTION_FAILURE(...)   (__MCFCRT_OnAssertionFailure(__VA_ARGS__))
 #endif

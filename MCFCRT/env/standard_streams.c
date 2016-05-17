@@ -7,24 +7,53 @@
 #include "../ext/utf.h"
 #include "mutex.h"
 #include "mcfwin.h"
-
-typedef struct tagBufferChunk {
-	struct tagBufferChunk *pPrev;
-	struct tagBufferChunk *pNext;
-
-	int nBegin;
-	int nEnd;
-	unsigned char abyRedZone1[16];
-	unsigned char abyData[4096];
-	unsigned char abyRedZone2[16];
-} BufferChunk;
-
-static _MCFCRT_Mutex vStdInMutex  = { 0 };
-static _MCFCRT_Mutex vStdOutMutex = { 0 };
-static _MCFCRT_Mutex vStdErrMutex = { 0 };
-
-
 /*
+typedef struct tagChunkHeader {
+	size_t uOffset;
+	size_t uSize;
+	unsigned char abyRedZone[16];
+	unsigned char abyData[];
+} ChunkHeader;
+
+typedef struct tagStream {
+	HANDLE hFile;
+	bool bInteractive;
+
+	bool bThrottled;
+	ChunkHeader *pBuffedData;
+} Stream;
+
+static void Reset(Stream *pStream, DWORD dwSlot){
+	HANDLE hFile = GetStdHandle(dwSlot);
+	_MCFCRT_ASSERT(hFile != INVALID_HANDLE_VALUE);
+
+	bool bInteractive = false;
+	DWORD dwMode;
+	if(GetConsoleMode(hFile, &dwMode)){
+		bInteractive = true;
+	}
+
+	pStream->hFile        = hFile;
+	pStream->bInteractive = bInteractive;
+
+	pStream->bThrottled   = false;
+	pStream->uBufferBegin = 0;
+	pStream->uBufferEnd   = 0;
+}
+
+
+static _MCFCRT_Mutex g_vStdInMutex  = { 0 };
+static Stream        g_vStdInStream;
+
+static _MCFCRT_Mutex g_vStdOutMutex = { 0 };
+static Stream        g_vStdOutStream;
+
+static _MCFCRT_Mutex g_vStdErrMutex = { 0 };
+static Stream        g_vStdErrStream;
+
+
+
+
 typedef struct tagStream {
 	HANDLE hFile;
 	bool bConsole;

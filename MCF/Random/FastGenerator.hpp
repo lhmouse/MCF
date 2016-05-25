@@ -14,12 +14,12 @@ private:
 	std::uint_fast64_t x_u64Seed;
 
 public:
-	explicit FastGenerator(std::uint32_t u32Seed = ReadTimestampCounter32()) noexcept {
+	explicit FastGenerator(std::uint32_t u32Seed = ReadTimeStampCounter32()) noexcept {
 		Init(u32Seed);
 	}
 
 public:
-	void Init(std::uint32_t u32Seed = ReadTimestampCounter32()) noexcept;
+	void Init(std::uint32_t u32Seed = ReadTimeStampCounter32()) noexcept;
 
 	std::uint32_t Get() noexcept;
 

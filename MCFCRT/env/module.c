@@ -19,7 +19,6 @@ typedef struct tagAtExitCallback {
 
 typedef struct tagAtExitCallbackBlock {
 	struct tagAtExitCallbackBlock *pPrev;
-
 	size_t uSize;
 	AtExitCallback aCallbacks[CALLBACKS_PER_BLOCK];
 } AtExitCallbackBlock;

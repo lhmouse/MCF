@@ -10,20 +10,24 @@
 
 static volatile uintptr_t g_uKeyCounter = 0;
 
-typedef struct tagTlsObject {
+typedef struct tagTlsObject TlsObject;
+typedef struct tagTlsThread TlsThread;
+typedef struct tagTlsKey    TlsKey;
+
+struct tagTlsObject {
 	_MCFCRT_AvlNodeHeader avlhNodeByKey;
-	struct tagTlsKey *pKey;
+	TlsKey *pKey;
 	uintptr_t uCounter;
 
 	_MCFCRT_TlsDestructor pfnDestructor;
 	intptr_t nContext;
 
-	struct tagTlsThread *pThread;
-	struct tagTlsObject *pPrevByThread;
-	struct tagTlsObject *pNextByThread;
+	TlsThread *pThread;
+	TlsObject *pPrevByThread;
+	TlsObject *pNextByThread;
 
 	alignas(max_align_t) unsigned char abyStorage[];
-} TlsObject;
+};
 
 static inline int CompareTlsKeys(const struct tagTlsKey *pKey1, const struct tagTlsKey *pKey2){
 	const uintptr_t u1 = (uintptr_t)pKey1, u2 = (uintptr_t)pKey2;
@@ -44,11 +48,11 @@ static inline int ObjectComparatorNodes(const _MCFCRT_AvlNodeHeader *pObj1, cons
 	                      ((const TlsObject *)pObj2)->pKey);
 }
 
-typedef struct tagTlsThread {
+struct tagTlsThread {
 	_MCFCRT_AvlRoot avlObjects;
-	struct tagTlsObject *pFirstByThread;
-	struct tagTlsObject *pLastByThread;
-} TlsThread;
+	TlsObject *pFirstByThread;
+	TlsObject *pLastByThread;
+};
 
 static DWORD g_dwTlsIndex = TLS_OUT_OF_INDEXES;
 
@@ -79,16 +83,16 @@ static TlsThread *RequireTlsForCurrentThread(void){
 	return pThread;
 }
 
-typedef struct tagTlsKey {
+struct tagTlsKey {
 	uintptr_t uCounter;
 
 	size_t uSize;
 	_MCFCRT_TlsConstructor pfnConstructor;
 	_MCFCRT_TlsDestructor pfnDestructor;
 	intptr_t nContext;
-} TlsKey;
+};
 
-TlsObject *GetTlsObject(TlsThread *pThread, TlsKey *pKey){
+static TlsObject *GetTlsObject(TlsThread *pThread, TlsKey *pKey){
 	_MCFCRT_ASSERT(pThread);
 
 	if(!pKey){
@@ -118,7 +122,7 @@ TlsObject *GetTlsObject(TlsThread *pThread, TlsKey *pKey){
 	}
 	return pObject;
 }
-TlsObject *RequireTlsObject(TlsThread *pThread, TlsKey *pKey, size_t uSize, _MCFCRT_TlsConstructor pfnConstructor, _MCFCRT_TlsDestructor pfnDestructor, intptr_t nContext){
+static TlsObject *RequireTlsObject(TlsThread *pThread, TlsKey *pKey, size_t uSize, _MCFCRT_TlsConstructor pfnConstructor, _MCFCRT_TlsDestructor pfnDestructor, intptr_t nContext){
 	TlsObject *pObject = GetTlsObject(pThread, pKey);
 	if(!pObject){
 		const size_t uSizeToAlloc = sizeof(TlsObject) + uSize;

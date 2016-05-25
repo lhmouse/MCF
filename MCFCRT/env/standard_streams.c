@@ -7,117 +7,112 @@
 #include "../ext/utf.h"
 #include "mutex.h"
 #include "mcfwin.h"
-/*
-typedef struct tagChunkHeader {
-	size_t uOffset;
-	size_t uSize;
-	unsigned char abyRedZone[16];
-	unsigned char abyData[];
-} ChunkHeader;
+#include <stdlib.h>
 
-typedef struct tagStream {
-	HANDLE hFile;
-	bool bInteractive;
-
-	bool bThrottled;
-	ChunkHeader *pBuffedData;
-} Stream;
-
-static void Reset(Stream *pStream, DWORD dwSlot){
-	HANDLE hFile = GetStdHandle(dwSlot);
-	_MCFCRT_ASSERT(hFile != INVALID_HANDLE_VALUE);
-
-	bool bInteractive = false;
-	DWORD dwMode;
-	if(GetConsoleMode(hFile, &dwMode)){
-		bInteractive = true;
-	}
-
-	pStream->hFile        = hFile;
-	pStream->bInteractive = bInteractive;
-
-	pStream->bThrottled   = false;
-	pStream->uBufferBegin = 0;
-	pStream->uBufferEnd   = 0;
-}
-
-
-static _MCFCRT_Mutex g_vStdInMutex  = { 0 };
-static Stream        g_vStdInStream;
-
-static _MCFCRT_Mutex g_vStdOutMutex = { 0 };
-static Stream        g_vStdOutStream;
-
-static _MCFCRT_Mutex g_vStdErrMutex = { 0 };
-static Stream        g_vStdErrStream;
-
-
-
-
-typedef struct tagStream {
+typedef struct tagStreamControl {
 	HANDLE hFile;
 	bool bConsole;
-
 	bool bThrottled;
-	unsigned uBufferBegin;
-	unsigned uBufferEnd;
-	unsigned char alignas(16) abyBuffer[4096];
-	unsigned char abySafetyBumper[4];
-} Stream;
 
-// 通用。
-static void Reset(Stream *pStream, DWORD dwSlot){
-	const HANDLE hFile = GetStdHandle(dwSlot);
-	_MCFCRT_ASSERT(hFile != INVALID_HANDLE_VALUE);
+	unsigned char *pbyBuffer;
+	size_t uCapacity;
+	size_t uBegin;
+	size_t uEnd;
+} StreamControl;
 
-	bool bConsole = false;
-	DWORD dwMode;
-	if(GetConsoleMode(hFile, &dwMode)){
-		bConsole = true;
+static bool ReserveBuffer(StreamControl *pStream, size_t uMinSizeReserved){
+	if(pStream->uCapacity - pStream->uEnd >= uMinSizeReserved){
+		return true;
 	}
 
-	pStream->hFile        = hFile;
-	pStream->bConsole     = bConsole;
+	const size_t uSize = pStream->uEnd - pStream->uBegin;
+	if(pStream->uCapacity - uSize >= uMinSizeReserved){
+		memmove(pStream->pbyBuffer, pStream->pbyBuffer + pStream->uBegin, uSize);
+		pStream->uBegin = 0;
+		pStream->uEnd   = uSize;
+		return true;
+	}
 
-	pStream->bThrottled   = false;
-	pStream->uBufferBegin = 0;
-	pStream->uBufferEnd   = 0;
+	const size_t uMinCapacity = uSize + uMinSizeReserved;
+	if(uMinCapacity < uSize){
+		SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+		return false;
+	}
+	size_t uNewCapacity = uMinCapacity;
+	uNewCapacity += (uNewCapacity >> 1);
+	uNewCapacity = (uNewCapacity + 0x0F) & (size_t)-0x10;
+	if(uNewCapacity < uMinCapacity){
+		uNewCapacity = uMinCapacity;
+	}
+	unsigned char *const pbyNewBuffer = malloc(uNewCapacity);
+	if(!pbyNewBuffer){
+		SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+		return false;
+	}
+	memmove(pbyNewBuffer, pStream->pbyBuffer + pStream->uBegin, uSize);
+	free(pStream->pbyBuffer);
+	pStream->pbyBuffer = pbyNewBuffer;
+	pStream->uCapacity = uNewCapacity;
+	pStream->uBegin    = 0;
+	pStream->uEnd      = uSize;
+	return true;
 }
-static void Throttle(Stream *pStream){
-	Flush(pStream);
+static bool PopulateInputBuffer(StreamControl *pStream){
+}
+static bool FlushOutputBuffer(StreamControl *pStream){
+}
+
+static void ResetStream(StreamControl *pStream, DWORD dwSlot){
+	HANDLE hFile = GetStdHandle(dwSlot);
+	if(hFile == INVALID_HANDLE_VALUE){
+		hFile = nullptr;
+	}
+
+	bool bConsole = false;
+	if(hFile){
+		DWORD dwMode;
+		if(GetConsoleMode(hFile, &dwMode)){
+			bConsole = true;
+		}
+	}
+
+	pStream->hFile      = hFile;
+	pStream->bConsole   = bConsole;
+	pStream->bThrottled = false;
+}
+static void ThrottleStream(StreamControl *pStream, DWORD dwSlot){
+	if(dwSlot != STD_INPUT_HANDLE){
+		FlushOutputBuffer(pStream);
+	}
 
 	pStream->bThrottled = true;
+
+	free(pStream->pbyBuffer);
+	pStream->pbyBuffer = nullptr;
+	pStream->uCapacity = 0;
+	pStream->uBegin    = 0;
+	pStream->uEnd      = 0;
 }
 
-// 输入。
-static void Populate(Stream *pStream){
-}
+static _MCFCRT_Mutex g_vStdInMutex   = { 0 };
+static StreamControl g_vStdInStream  = { 0 };
 
-// 输出。
-static void Compact(Stream *pStream){
-}
-static bool Flush(Stream *pStream){
-}
+static _MCFCRT_Mutex g_vStdOutMutex  = { 0 };
+static StreamControl g_vStdOutStream = { 0 };
 
-static Stream g_vStdIn  = { 0 };
-static Stream g_vStdOut = { 0 };
-static Stream g_vStdErr = { 0 };
+static _MCFCRT_Mutex g_vStdErrMutex  = { 0 };
+static StreamControl g_vStdErrStream = { 0 };
 
-static void LockedReset(Stream *pStream, DWORD dwSlot){
-	_MCFCRT_WaitForMutexForever(&(pStream->vMutex), _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT);
-	Reset(pStream, dwSlot);
-	_MCFCRT_SignalMutex(&(pStream->vMutex));
-}
-static void LockedThrottle(Stream *pStream){
-	_MCFCRT_WaitForMutexForever(&(pStream->vMutex), _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT);
-	Throttle(pStream);
-	_MCFCRT_SignalMutex(&(pStream->vMutex));
-}
-*/
 bool __MCFCRT_StandardStreamsInit(void){
+	ResetStream(&g_vStdOutStream, STD_OUTPUT_HANDLE);
+	ResetStream(&g_vStdErrStream, STD_ERROR_HANDLE);
+	ResetStream(&g_vStdInStream,  STD_INPUT_HANDLE);
 	return true;
 }
 void __MCFCRT_StandardStreamsUninit(void){
+	ThrottleStream(&g_vStdInStream,  STD_INPUT_HANDLE);
+	ThrottleStream(&g_vStdErrStream, STD_ERROR_HANDLE);
+	ThrottleStream(&g_vStdOutStream, STD_OUTPUT_HANDLE);
 }
 
 int _MCFCRT_PeekStandardInputByte(void){
@@ -170,13 +165,13 @@ bool _MCFCRT_SetStandardInputEchoing(bool bEchoing){
 bool _MCFCRT_WriteStandardOutputByte(unsigned char byData){
 	return true;
 }
-size_t _MCFCRT_WriteStandardOutputBinary(const void *pBuffer, size_t uSize){
+bool _MCFCRT_WriteStandardOutputBinary(const void *pBuffer, size_t uSize){
 	return uSize;
 }
 bool _MCFCRT_WriteStandardOutputChar32(char32_t c32CodePoint){
 	return true;
 }
-size_t _MCFCRT_WriteStandardOutputString(const wchar_t *pwcString, size_t uLength, bool bAppendNewLine){
+bool _MCFCRT_WriteStandardOutputString(const wchar_t *pwcString, size_t uLength, bool bAppendNewLine){
 	return uLength + bAppendNewLine;
 }
 bool _MCFCRT_IsStandardOutputBuffered(void){
@@ -192,12 +187,12 @@ bool _MCFCRT_FlushStandardOutput(bool bHard){
 bool _MCFCRT_WriteStandardErrorByte(unsigned char byData){
 	return true;
 }
-size_t _MCFCRT_WriteStandardErrorBinary(const void *pBuffer, size_t uSize){
+bool _MCFCRT_WriteStandardErrorBinary(const void *pBuffer, size_t uSize){
 	return uSize;
 }
 bool _MCFCRT_WriteStandardErrorChar32(char32_t c32CodePoint){
 	return true;
 }
-size_t _MCFCRT_WriteStandardErrorString(const wchar_t *pwcString, size_t uLength, bool bAppendNewLine){
+bool _MCFCRT_WriteStandardErrorString(const wchar_t *pwcString, size_t uLength, bool bAppendNewLine){
 	return uLength + bAppendNewLine;
 }

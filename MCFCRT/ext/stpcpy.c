@@ -58,7 +58,7 @@ char *_MCFCRT_stpcpy(char *restrict dst, const char *restrict src){
 		wp += 8 * sizeof(uintptr_t);
 	}
 }
-char *_MCFCRT_stppcpy(char *restrict dst, char *restrict end, const char *restrict src){
+char *_MCFCRT_stppcpy(char *dst, char *end, const char *restrict src){
 	register const char *rp = src;
 	register char *wp = dst;
 

@@ -7,8 +7,7 @@
 
 #include "../env/_crtdef.h"
 
-static inline
-__attribute__((__returns_nonnull__))
+static inline __attribute__((__returns_nonnull__))
 void *__MCFCRT_ProbeStack(void *__pAllocated, _MCFCRT_STD size_t __uBytes) _MCFCRT_NOEXCEPT {
 	const _MCFCRT_STD size_t __kPageSize = 0x1000, __kMinToProbe = 0x200;
 	const _MCFCRT_STD size_t __uPages = (__uBytes + __kPageSize - __kMinToProbe) / __kPageSize;

@@ -243,15 +243,9 @@ _MCFCRT_TlsKeyHandle _MCFCRT_TlsAllocKey(size_t uSize, _MCFCRT_TlsConstructor pf
 
 	return (_MCFCRT_TlsKeyHandle)pKey;
 }
-bool _MCFCRT_TlsFreeKey(_MCFCRT_TlsKeyHandle hTlsKey){
+void _MCFCRT_TlsFreeKey(_MCFCRT_TlsKeyHandle hTlsKey){
 	TlsKey *const pKey = (TlsKey *)hTlsKey;
-	if(!pKey){
-		SetLastError(ERROR_INVALID_PARAMETER);
-		return false;
-	}
-
 	free(pKey);
-	return true;
 }
 
 size_t _MCFCRT_TlsGetSize(_MCFCRT_TlsKeyHandle hTlsKey){

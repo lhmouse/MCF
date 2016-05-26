@@ -45,10 +45,7 @@ static inline int __gthread_key_create(__gthread_key_t *__key_ret, void (*__dest
 	return 0;
 }
 static inline int __gthread_key_delete(__gthread_key_t __key) _MCFCRT_NOEXCEPT {
-	const bool __success = _MCFCRT_TlsFreeKey(__key);
-	if(!__success){
-		return EPERM;
-	}
+	_MCFCRT_TlsFreeKey(__key);
 	return 0;
 }
 static inline void *__gthread_getspecific(__gthread_key_t __key) _MCFCRT_NOEXCEPT {

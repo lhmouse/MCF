@@ -10,10 +10,10 @@
 
 namespace MCF {
 
-class ReaderWriterMutex : MCF_NONCOPYABLE {
+class ReadersWriterMutex : MCF_NONCOPYABLE {
 public:
-	using UniqueReaderLock = Impl_UniqueLockTemplate::UniqueLockTemplate<ReaderWriterMutex, 1>;
-	using UniqueWriterLock = Impl_UniqueLockTemplate::UniqueLockTemplate<ReaderWriterMutex, 2>;
+	using UniqueReaderLock = Impl_UniqueLockTemplate::UniqueLockTemplate<ReadersWriterMutex, 1>;
+	using UniqueWriterLock = Impl_UniqueLockTemplate::UniqueLockTemplate<ReadersWriterMutex, 2>;
 
 	using SharedLock    = UniqueReaderLock;
 	using ExclusiveLock = UniqueWriterLock;
@@ -24,7 +24,7 @@ private:
 	Atomic<std::size_t> x_uReaders;
 
 public:
-	explicit constexpr ReaderWriterMutex(std::size_t uSpinCount = Mutex::kSuggestedSpinCount) noexcept
+	explicit constexpr ReadersWriterMutex(std::size_t uSpinCount = Mutex::kSuggestedSpinCount) noexcept
 		: x_mtxReaderGuard(uSpinCount), x_mtxExclusive(0), x_uReaders(0)
 	{
 	}
@@ -64,32 +64,32 @@ public:
 	}
 };
 
-static_assert(std::is_trivially_destructible<ReaderWriterMutex>::value, "Hey!");
+static_assert(std::is_trivially_destructible<ReadersWriterMutex>::value, "Hey!");
 
 namespace Impl_UniqueLockTemplate {
 	template<>
-	inline bool ReaderWriterMutex::UniqueReaderLock::X_DoTry(std::uint64_t u64UntilFastMonoClock) const noexcept {
+	inline bool ReadersWriterMutex::UniqueReaderLock::X_DoTry(std::uint64_t u64UntilFastMonoClock) const noexcept {
 		return x_pOwner->TryAsReader(u64UntilFastMonoClock);
 	}
 	template<>
-	inline void ReaderWriterMutex::UniqueReaderLock::X_DoLock() const noexcept {
+	inline void ReadersWriterMutex::UniqueReaderLock::X_DoLock() const noexcept {
 		x_pOwner->LockAsReader();
 	}
 	template<>
-	inline void ReaderWriterMutex::UniqueReaderLock::X_DoUnlock() const noexcept {
+	inline void ReadersWriterMutex::UniqueReaderLock::X_DoUnlock() const noexcept {
 		x_pOwner->UnlockAsReader();
 	}
 
 	template<>
-	inline bool ReaderWriterMutex::UniqueWriterLock::X_DoTry(std::uint64_t u64UntilFastMonoClock) const noexcept {
+	inline bool ReadersWriterMutex::UniqueWriterLock::X_DoTry(std::uint64_t u64UntilFastMonoClock) const noexcept {
 		return x_pOwner->TryAsWriter(u64UntilFastMonoClock);
 	}
 	template<>
-	inline void ReaderWriterMutex::UniqueWriterLock::X_DoLock() const noexcept {
+	inline void ReadersWriterMutex::UniqueWriterLock::X_DoLock() const noexcept {
 		x_pOwner->LockAsWriter();
 	}
 	template<>
-	inline void ReaderWriterMutex::UniqueWriterLock::X_DoUnlock() const noexcept {
+	inline void ReadersWriterMutex::UniqueWriterLock::X_DoUnlock() const noexcept {
 		x_pOwner->UnlockAsWriter();
 	}
 }

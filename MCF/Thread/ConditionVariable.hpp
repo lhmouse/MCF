@@ -8,7 +8,7 @@
 #include "../../MCFCRT/env/condition_variable.h"
 #include "../Utilities/Noncopyable.hpp"
 #include "../Utilities/Assert.hpp"
-#include "_UniqueLockTemplate.hpp"
+#include "UniqueLockBase.hpp"
 #include <cstddef>
 #include <type_traits>
 #include <cstdint>
@@ -16,9 +16,6 @@
 namespace MCF {
 
 class ConditionVariable : MCF_NONCOPYABLE {
-public:
-	using UniqueLockBase = Impl_UniqueLockTemplate::UniqueLockBase;
-
 private:
 	::_MCFCRT_ConditionVariable x_vConditionVariable;
 

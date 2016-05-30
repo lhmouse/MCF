@@ -7,7 +7,6 @@
 
 #include "../Utilities/Noncopyable.hpp"
 #include "../Utilities/Assert.hpp"
-#include <utility>
 #include <cstddef>
 
 namespace MCF {

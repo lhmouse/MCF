@@ -16,9 +16,9 @@ namespace MCF {
 class OnceFlag : MCF_NONCOPYABLE {
 public:
 	enum OnceResult {
-		kTimedOut     = ::_MCFCRT_kOnceResultTimedOut,
-		kInitialized  = ::_MCFCRT_kOnceResultInitial,
-		kFinished     = ::_MCFCRT_kOnceResultFinished,
+		kTimedOut  = ::_MCFCRT_kOnceResultTimedOut,
+		kInitial   = ::_MCFCRT_kOnceResultInitial,
+		kFinished  = ::_MCFCRT_kOnceResultFinished,
 	};
 
 private:

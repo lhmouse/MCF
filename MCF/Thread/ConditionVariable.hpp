@@ -17,6 +17,10 @@ namespace MCF {
 
 class ConditionVariable : MCF_NONCOPYABLE {
 private:
+	static std::intptr_t X_UnlockCallback(std::intptr_t nContext) noexcept;
+	static void X_RelockCallback(std::intptr_t nContext, std::intptr_t nUnlocked) noexcept;
+
+private:
 	::_MCFCRT_ConditionVariable x_vConditionVariable;
 
 public:
@@ -27,32 +31,10 @@ public:
 
 public:
 	bool Wait(UniqueLockBase &vLock, std::uint64_t u64UntilFastMonoClock) noexcept {
-		return ::_MCFCRT_WaitForConditionVariable(&x_vConditionVariable,
-			[](std::intptr_t nContext){
-				const auto pLock = reinterpret_cast<UniqueLockBase *>(nContext);
-				const auto uLockCount = pLock->Y_UnlockAll();
-				MCF_ASSERT(uLockCount != 0);
-				return static_cast<std::intptr_t>(uLockCount);
-			},
-			[](std::intptr_t nContext, std::intptr_t nUnocked){
-				const auto pLock = reinterpret_cast<UniqueLockBase *>(nContext);
-				pLock->Y_RelockAll(static_cast<std::uintptr_t>(nUnocked));
-			},
-			reinterpret_cast<std::intptr_t>(&vLock), u64UntilFastMonoClock);
+		return ::_MCFCRT_WaitForConditionVariable(&x_vConditionVariable, &X_UnlockCallback, &X_RelockCallback, reinterpret_cast<std::intptr_t>(&vLock), u64UntilFastMonoClock);
 	}
 	void Wait(UniqueLockBase &vLock) noexcept {
-		::_MCFCRT_WaitForConditionVariableForever(&x_vConditionVariable,
-			[](std::intptr_t nContext){
-				const auto pLock = reinterpret_cast<UniqueLockBase *>(nContext);
-				const auto uLockCount = pLock->Y_UnlockAll();
-				MCF_ASSERT(uLockCount != 0);
-				return static_cast<std::intptr_t>(uLockCount);
-			},
-			[](std::intptr_t nContext, std::intptr_t nUnocked){
-				const auto pLock = reinterpret_cast<UniqueLockBase *>(nContext);
-				pLock->Y_RelockAll(static_cast<std::uintptr_t>(nUnocked));
-			},
-			reinterpret_cast<std::intptr_t>(&vLock));
+		::_MCFCRT_WaitForConditionVariableForever(&x_vConditionVariable, &X_UnlockCallback, &X_RelockCallback, reinterpret_cast<std::intptr_t>(&vLock));
 	}
 
 	std::size_t Signal(std::size_t uMaxCountToWakeUp = 1) noexcept {

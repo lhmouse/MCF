@@ -9,14 +9,14 @@
 
 _MCFCRT_EXTERN_C_BEGIN
 
-extern char *_MCFCRT_itoa_d(char *__pchBuffer, _MCFCRT_STD  intptr_t  __nValue) _MCFCRT_NOEXCEPT;
-extern char *_MCFCRT_itoa_u(char *__pchBuffer, _MCFCRT_STD uintptr_t  __uValue) _MCFCRT_NOEXCEPT;
-extern char *_MCFCRT_itoa_x(char *__pchBuffer, _MCFCRT_STD uintptr_t  __uValue) _MCFCRT_NOEXCEPT;
-extern char *_MCFCRT_itoa_X(char *__pchBuffer, _MCFCRT_STD uintptr_t  __uValue) _MCFCRT_NOEXCEPT;
-extern char *_MCFCRT_itoa0d(char *__pchBuffer, _MCFCRT_STD  intptr_t  __nValue, unsigned __uMinDigits) _MCFCRT_NOEXCEPT;
-extern char *_MCFCRT_itoa0u(char *__pchBuffer, _MCFCRT_STD uintptr_t  __uValue, unsigned __uMinDigits) _MCFCRT_NOEXCEPT;
-extern char *_MCFCRT_itoa0x(char *__pchBuffer, _MCFCRT_STD uintptr_t  __uValue, unsigned __uMinDigits) _MCFCRT_NOEXCEPT;
-extern char *_MCFCRT_itoa0X(char *__pchBuffer, _MCFCRT_STD uintptr_t  __uValue, unsigned __uMinDigits) _MCFCRT_NOEXCEPT;
+extern char *_MCFCRT_itoa_d(char *__pchBuffer, _MCFCRT_STD  intptr_t __nValue) _MCFCRT_NOEXCEPT;
+extern char *_MCFCRT_itoa_u(char *__pchBuffer, _MCFCRT_STD uintptr_t __uValue) _MCFCRT_NOEXCEPT;
+extern char *_MCFCRT_itoa_x(char *__pchBuffer, _MCFCRT_STD uintptr_t __uValue) _MCFCRT_NOEXCEPT;
+extern char *_MCFCRT_itoa_X(char *__pchBuffer, _MCFCRT_STD uintptr_t __uValue) _MCFCRT_NOEXCEPT;
+extern char *_MCFCRT_itoa0d(char *__pchBuffer, _MCFCRT_STD  intptr_t __nValue, unsigned __uMinDigits) _MCFCRT_NOEXCEPT;
+extern char *_MCFCRT_itoa0u(char *__pchBuffer, _MCFCRT_STD uintptr_t __uValue, unsigned __uMinDigits) _MCFCRT_NOEXCEPT;
+extern char *_MCFCRT_itoa0x(char *__pchBuffer, _MCFCRT_STD uintptr_t __uValue, unsigned __uMinDigits) _MCFCRT_NOEXCEPT;
+extern char *_MCFCRT_itoa0X(char *__pchBuffer, _MCFCRT_STD uintptr_t __uValue, unsigned __uMinDigits) _MCFCRT_NOEXCEPT;
 
 _MCFCRT_EXTERN_C_END
 

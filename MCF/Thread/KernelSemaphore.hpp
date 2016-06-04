@@ -13,6 +13,9 @@
 namespace MCF {
 
 class KernelSemaphore : public Impl_KernelObjectBase::KernelObjectBase {
+public:
+	using Handle = Impl_UniqueNtHandle::Handle;
+
 private:
 	static Impl_UniqueNtHandle::UniqueNtHandle X_CreateSemaphoreHandle(std::size_t uInitCount, const WideStringView &wsvName, std::uint32_t u32Flags);
 
@@ -30,7 +33,7 @@ public:
 	}
 
 public:
-	void *GetHandle() const noexcept {
+	Handle GetHandle() const noexcept {
 		return x_hSemaphore.Get();
 	}
 

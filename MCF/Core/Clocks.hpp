@@ -9,11 +9,11 @@
 
 namespace MCF {
 
-inline std::uint32_t ReadTimestampCounter32() noexcept {
-	return ::_MCFCRT_ReadTimestampCounter32();
+inline std::uint32_t ReadTimeStampCounter32() noexcept {
+	return ::_MCFCRT_ReadTimeStampCounter32();
 }
-inline std::uint64_t ReadTimestampCounter64() noexcept {
-	return ::_MCFCRT_ReadTimestampCounter64();
+inline std::uint64_t ReadTimeStampCounter64() noexcept {
+	return ::_MCFCRT_ReadTimeStampCounter64();
 }
 
 inline std::uint64_t GetUtcClock() noexcept {

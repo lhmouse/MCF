@@ -28,7 +28,7 @@ NTSTATUS NtReleaseKeyedEvent(HANDLE hKeyedEvent, void *pKey, BOOLEAN bAlertable,
 static inline bool ReallyWaitForMutex(volatile uintptr_t *puControl, size_t uMaxSpinCount, bool bMayTimeOut, uint64_t u64UntilFastMonoClock){
 	{
 		uintptr_t uOld, uNew;
-		uOld = __atomic_load_n(puControl, __ATOMIC_ACQUIRE);
+		uOld = __atomic_load_n(puControl, __ATOMIC_RELAXED);
 		if(_MCFCRT_EXPECT(!(uOld & MASK_LOCKED))){
 			uNew = uOld | MASK_LOCKED;
 			if(_MCFCRT_EXPECT(__atomic_compare_exchange_n(puControl, &uOld, uNew, false, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE))){
@@ -45,7 +45,7 @@ static inline bool ReallyWaitForMutex(volatile uintptr_t *puControl, size_t uMax
 			bool bTaken, bSpinnable;
 			{
 				uintptr_t uOld, uNew;
-				uOld = __atomic_load_n(puControl, __ATOMIC_ACQUIRE);
+				uOld = __atomic_load_n(puControl, __ATOMIC_RELAXED);
 				do {
 					bTaken = !(uOld & MASK_LOCKED);
 					if(!bTaken){
@@ -67,7 +67,7 @@ static inline bool ReallyWaitForMutex(volatile uintptr_t *puControl, size_t uMax
 				for(size_t i = 0; i < uMaxSpinCount; ++i){
 					{
 						uintptr_t uOld, uNew;
-						uOld = __atomic_load_n(puControl, __ATOMIC_ACQUIRE);
+						uOld = __atomic_load_n(puControl, __ATOMIC_RELAXED);
 						do {
 							bTaken = !(uOld & MASK_LOCKED);
 							if(!bTaken){
@@ -87,7 +87,7 @@ static inline bool ReallyWaitForMutex(volatile uintptr_t *puControl, size_t uMax
 		bool bTaken;
 		{
 			uintptr_t uOld, uNew;
-			uOld = __atomic_load_n(puControl, __ATOMIC_ACQUIRE);
+			uOld = __atomic_load_n(puControl, __ATOMIC_RELAXED);
 			do {
 				bTaken = !(uOld & MASK_LOCKED);
 				if(!bTaken){
@@ -109,7 +109,7 @@ static inline bool ReallyWaitForMutex(volatile uintptr_t *puControl, size_t uMax
 				bool bDecremented;
 				{
 					uintptr_t uOld, uNew;
-					uOld = __atomic_load_n(puControl, __ATOMIC_ACQUIRE);
+					uOld = __atomic_load_n(puControl, __ATOMIC_RELAXED);
 					do {
 						const size_t uThreadsTrapped = (uOld & MASK_THREADS_TRAPPED) / THREAD_TRAPPED_ONE;
 						bDecremented = (uThreadsTrapped > 0);
@@ -125,7 +125,6 @@ static inline bool ReallyWaitForMutex(volatile uintptr_t *puControl, size_t uMax
 				lStatus = NtWaitForKeyedEvent(nullptr, (void *)puControl, false, nullptr);
 				_MCFCRT_ASSERT_MSG(NT_SUCCESS(lStatus), L"NtWaitForKeyedEvent() 失败。");
 				_MCFCRT_ASSERT(lStatus != STATUS_TIMEOUT);
-				return false;
 			}
 		} else {
 			NTSTATUS lStatus = NtWaitForKeyedEvent(nullptr, (void *)puControl, false, nullptr);
@@ -138,7 +137,7 @@ static inline void ReallySignalMutex(volatile uintptr_t *puControl){
 	bool bSignalOne;
 	{
 		uintptr_t uOld, uNew;
-		uOld = __atomic_load_n(puControl, __ATOMIC_ACQUIRE);
+		uOld = __atomic_load_n(puControl, __ATOMIC_RELAXED);
 		do {
 			_MCFCRT_ASSERT_MSG(uOld & MASK_LOCKED, L"互斥体没有被任何线程锁定。");
 

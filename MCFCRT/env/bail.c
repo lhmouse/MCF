@@ -90,7 +90,7 @@ _Noreturn void _MCFCRT_Bail(const wchar_t *pwszDescription){
 	pwcWrite = _MCFCRT_wcpcpy(pwcWrite, L"。\n");
 	// *pwcWrite = 0;
 
-	_MCFCRT_WriteStandardErrorAsText(awcBuffer, (size_t)(pwcWrite - awcBuffer), true);
+	_MCFCRT_WriteStandardErrorString(awcBuffer, (size_t)(pwcWrite - awcBuffer), true);
 
 	const HardErrorResponse eResponse = ShowServiceMessageBox(awcBuffer, (size_t)(pwcWrite - awcBuffer), (bCanBeDebugged ? MB_OKCANCEL : MB_OK) | MB_ICONERROR);
 	if(eResponse != kHardErrorResponseOk){

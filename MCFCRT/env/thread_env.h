@@ -12,7 +12,7 @@ _MCFCRT_EXTERN_C_BEGIN
 extern bool __MCFCRT_ThreadEnvInit(void) _MCFCRT_NOEXCEPT;
 extern void __MCFCRT_ThreadEnvUninit(void) _MCFCRT_NOEXCEPT;
 
-extern void __MCFCRT_TlsCleanup() _MCFCRT_NOEXCEPT;
+extern void __MCFCRT_TlsCleanup(void) _MCFCRT_NOEXCEPT;
 
 // 成功应当返回 0，否则参见 _MCFCRT_TlsRequire() 上面的注释。
 typedef unsigned long (*_MCFCRT_TlsConstructor)(_MCFCRT_STD intptr_t __nContext, void *__pStorage);
@@ -24,7 +24,7 @@ typedef struct __MCFCRT_tagTlsKeyHandle {
 
 // 失败返回 nullptr。
 extern _MCFCRT_TlsKeyHandle _MCFCRT_TlsAllocKey(_MCFCRT_STD size_t __uSize, _MCFCRT_TlsConstructor __pfnConstructor, _MCFCRT_TlsDestructor __pfnDestructor, _MCFCRT_STD intptr_t __nContext) _MCFCRT_NOEXCEPT;
-extern bool _MCFCRT_TlsFreeKey(_MCFCRT_TlsKeyHandle __hTlsKey) _MCFCRT_NOEXCEPT;
+extern void _MCFCRT_TlsFreeKey(_MCFCRT_TlsKeyHandle __hTlsKey) _MCFCRT_NOEXCEPT;
 
 extern _MCFCRT_STD size_t _MCFCRT_TlsGetSize(_MCFCRT_TlsKeyHandle __hTlsKey) _MCFCRT_NOEXCEPT;
 extern _MCFCRT_TlsConstructor _MCFCRT_TlsGetConstructor(_MCFCRT_TlsKeyHandle __hTlsKey) _MCFCRT_NOEXCEPT;

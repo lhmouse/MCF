@@ -13,16 +13,15 @@ StandardOutputStream::~StandardOutputStream(){
 }
 
 void StandardOutputStream::Put(unsigned char byData){
-	Put(&byData, 1);
+	const auto bSucceeded = ::_MCFCRT_WriteStandardOutputByte(byData);
+	if(!bSucceeded){
+		MCF_THROW(Exception, ::GetLastError(), Rcntws::View(L"StandardOutputStream: _MCFCRT_WriteStandardOutputByte() 失败。"));
+	}
 }
 void StandardOutputStream::Put(const void *pData, std::size_t uSize){
-	const auto nResult = ::_MCFCRT_WriteStandardOutputAsBinary(pData, uSize);
-	if(nResult < 0){
-		MCF_THROW(Exception, ::GetLastError(), Rcntws::View(L"StandardOutputStream: _MCFCRT_WriteStandardOutputAsBinary() 失败。"));
-	}
-	const auto uWritten = static_cast<std::size_t>(nResult);
-	if(uWritten < uSize){
-		MCF_THROW(Exception, ERROR_BROKEN_PIPE, Rcntws::View(L"StandardOutputStream: 未能成功写入所有数据。"));
+	const auto bSucceeded = ::_MCFCRT_WriteStandardOutputBinary(pData, uSize);
+	if(!bSucceeded){
+		MCF_THROW(Exception, ::GetLastError(), Rcntws::View(L"StandardOutputStream: _MCFCRT_WriteStandardOutputBinary() 失败。"));
 	}
 }
 void StandardOutputStream::Flush(bool bHard){
@@ -31,17 +30,16 @@ void StandardOutputStream::Flush(bool bHard){
 	}
 }
 
-void StandardOutputStream::PutText(wchar_t wcData){
-	PutText(&wcData, 1, false);
-}
-void StandardOutputStream::PutText(const wchar_t *pwcData, std::size_t uSize, bool bAppendNewLine){
-	const auto nResult = ::_MCFCRT_WriteStandardOutputAsText(pwcData, uSize, bAppendNewLine);
-	if(nResult < 0){
-		MCF_THROW(Exception, ::GetLastError(), Rcntws::View(L"StandardOutputStream: _MCFCRT_WriteStandardOutputAsBinary() 失败。"));
+void StandardOutputStream::PutChar32(char32_t c32Data){
+	const auto bSucceeded = ::_MCFCRT_WriteStandardOutputChar32(c32Data);
+	if(!bSucceeded){
+		MCF_THROW(Exception, ::GetLastError(), Rcntws::View(L"StandardOutputStream: _MCFCRT_WriteStandardOutputChar32() 失败。"));
 	}
-	const auto uWritten = static_cast<std::size_t>(nResult);
-	if(uWritten < uSize){
-		MCF_THROW(Exception, ERROR_BROKEN_PIPE, Rcntws::View(L"StandardOutputStream: 未能成功写入所有数据。"));
+}
+void StandardOutputStream::PutString(const wchar_t *pwcData, std::size_t uSize, bool bAppendNewLine){
+	const auto bSucceeded = ::_MCFCRT_WriteStandardOutputString(pwcData, uSize, bAppendNewLine);
+	if(!bSucceeded){
+		MCF_THROW(Exception, ::GetLastError(), Rcntws::View(L"StandardOutputStream: _MCFCRT_WriteStandardOutputString() 失败。"));
 	}
 }
 

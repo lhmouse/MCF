@@ -12,7 +12,7 @@ namespace MCF {
 template<typename DstT>
 struct StaticCaster {
 	template<typename SrcT>
-	DstT operator()(SrcT &&vSrc) const {
+	constexpr DstT operator()(SrcT &&vSrc) const noexcept {
 		return static_cast<DstT>(std::forward<SrcT>(vSrc));
 	}
 };
@@ -28,15 +28,15 @@ struct DynamicCaster {
 template<typename DstT>
 struct ConstCaster {
 	template<typename SrcT>
-	DstT operator()(SrcT &&vSrc) const {
-		return Const_cast<DstT>(std::forward<SrcT>(vSrc));
+	constexpr DstT operator()(SrcT &&vSrc) const noexcept {
+		return const_cast<DstT>(std::forward<SrcT>(vSrc));
 	}
 };
 
 template<typename DstT>
 struct ReinterpretCaster {
 	template<typename SrcT>
-	DstT operator()(SrcT &&vSrc) const {
+	DstT operator()(SrcT &&vSrc) const noexcept {
 		return reinterpret_cast<DstT>(std::forward<SrcT>(vSrc));
 	}
 };
@@ -44,7 +44,7 @@ struct ReinterpretCaster {
 template<typename DstT>
 struct CCaster {
 	template<typename SrcT>
-	DstT operator()(SrcT &&vSrc) const {
+	constexpr DstT operator()(SrcT &&vSrc) const noexcept {
 		return DstT(std::forward<SrcT>(vSrc));
 	}
 };

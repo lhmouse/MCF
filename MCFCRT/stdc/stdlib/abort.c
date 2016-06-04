@@ -6,9 +6,9 @@
 #include "../../env/bail.h"
 #include "../../env/last_error.h"
 
-_Noreturn void __wrap_abort(void){
+_Noreturn void abort(void){
 	_MCFCRT_Bail(L"应用程序调用了 abort()。");
 }
 
-__attribute__((__alias__("__wrap_abort")))
-_Noreturn void abort();
+__attribute__((__alias__("abort")))
+void __wrap_abort(void);

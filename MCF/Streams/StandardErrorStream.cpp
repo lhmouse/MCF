@@ -13,33 +13,31 @@ StandardErrorStream::~StandardErrorStream(){
 }
 
 void StandardErrorStream::Put(unsigned char byData){
-	Put(&byData, 1);
+	const auto bSucceeded = ::_MCFCRT_WriteStandardErrorByte(byData);
+	if(!bSucceeded){
+		MCF_THROW(Exception, ::GetLastError(), Rcntws::View(L"StandardErrorStream: _MCFCRT_WriteStandardErrorByte() 失败。"));
+	}
 }
 void StandardErrorStream::Put(const void *pData, std::size_t uSize){
-	const auto nResult = ::_MCFCRT_WriteStandardErrorAsBinary(pData, uSize);
-	if(nResult < 0){
-		MCF_THROW(Exception, ::GetLastError(), Rcntws::View(L"StandardErrorStream: _MCFCRT_WriteStandardErrorAsBinary() 失败。"));
-	}
-	const auto uWritten = static_cast<std::size_t>(nResult);
-	if(uWritten < uSize){
-		MCF_THROW(Exception, ERROR_BROKEN_PIPE, Rcntws::View(L"StandardErrorStream: 未能成功写入所有数据。"));
+	const auto bSucceeded = ::_MCFCRT_WriteStandardErrorBinary(pData, uSize);
+	if(!bSucceeded){
+		MCF_THROW(Exception, ::GetLastError(), Rcntws::View(L"StandardErrorStream: _MCFCRT_WriteStandardErrorBinary() 失败。"));
 	}
 }
 void StandardErrorStream::Flush(bool bHard){
 	(void)bHard;
 }
 
-void StandardErrorStream::PutText(wchar_t wcData){
-	PutText(&wcData, 1, false);
-}
-void StandardErrorStream::PutText(const wchar_t *pwcData, std::size_t uSize, bool bAppendNewLine){
-	const auto nResult = ::_MCFCRT_WriteStandardErrorAsText(pwcData, uSize, bAppendNewLine);
-	if(nResult < 0){
-		MCF_THROW(Exception, ::GetLastError(), Rcntws::View(L"StandardErrorStream: _MCFCRT_WriteStandardErrorAsBinary() 失败。"));
+void StandardErrorStream::PutChar32(char32_t c32Data){
+	const auto bSucceeded = ::_MCFCRT_WriteStandardErrorChar32(c32Data);
+	if(!bSucceeded){
+		MCF_THROW(Exception, ::GetLastError(), Rcntws::View(L"StandardErrorStream: _MCFCRT_WriteStandardErrorChar32() 失败。"));
 	}
-	const auto uWritten = static_cast<std::size_t>(nResult);
-	if(uWritten < uSize){
-		MCF_THROW(Exception, ERROR_BROKEN_PIPE, Rcntws::View(L"StandardErrorStream: 未能成功写入所有数据。"));
+}
+void StandardErrorStream::PutString(const wchar_t *pwcData, std::size_t uSize, bool bAppendNewLine){
+	const auto bSucceeded = ::_MCFCRT_WriteStandardErrorString(pwcData, uSize, bAppendNewLine);
+	if(!bSucceeded){
+		MCF_THROW(Exception, ::GetLastError(), Rcntws::View(L"StandardErrorStream: _MCFCRT_WriteStandardErrorString() 失败。"));
 	}
 }
 

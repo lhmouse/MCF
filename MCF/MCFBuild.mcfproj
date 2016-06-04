@@ -1,9 +1,9 @@
 Default = Debug
 
 General {
-	CompilerFlags		= -Wall -Wextra -pedantic -pedantic-errors -Wconversion -Wsign-conversion -Wsuggest-attribute=noreturn -Wundef -Wshadow -pipe -mfpmath=both -march=nocona -mno-stack-arg-probe -mno-accumulate-outgoing-args -mpush-args -masm=intel
+	CompilerFlags		= -Wall -Wextra -pedantic -pedantic-errors -Wconversion -Wsign-conversion -Wsuggest-attribute=noreturn -Wundef -Wshadow -Wstrict-aliasing=2 -Wstrict-overflow=5 -pipe -mfpmath=both -march=nocona -mno-stack-arg-probe -mno-accumulate-outgoing-args -mpush-args -masm=intel
 
-	CFlags				= -std=c11
+	CFlags				= -std=c11 -Wstrict-prototypes
 	CPPFlags			= -std=c++14 -Wzero-as-null-pointer-constant -Wnoexcept -Woverloaded-virtual -fnothrow-opt
 
 	IgnoredFiles		= .Built* *.h *.hpp *.mcfproj

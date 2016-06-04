@@ -224,10 +224,10 @@ void Md5OutputStream::X_Update(const std::uint8_t (&abyChunk)[64]) noexcept {
 #define K_63    "0xEB86D391"
 #define K(i_)   K_ ## i_
 
-	register std::uint32_t a = x_au32Reg[0];
-	register std::uint32_t b = x_au32Reg[1];
-	register std::uint32_t c = x_au32Reg[2];
-	register std::uint32_t d = x_au32Reg[3];
+	auto a = x_au32Reg[0];
+	auto b = x_au32Reg[1];
+	auto c = x_au32Reg[2];
+	auto d = x_au32Reg[3];
 
 	__asm__ volatile (
 

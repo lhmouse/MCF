@@ -14,40 +14,42 @@ namespace Impl_Invoke {
 	template<bool>
 	struct ReflexivityChecker {
 		template<typename FuncT, typename ObjectT, typename ...ParamsT>
-		constexpr decltype(auto) operator()(FuncT pFunc, ObjectT &&vObject, ParamsT &&...vParams) const {
+		static constexpr decltype(auto) DoIt(FuncT pFunc, ObjectT &vObject, ParamsT &...vParams){
 			return ((*std::forward<ObjectT>(vObject)).*pFunc)(std::forward<ParamsT>(vParams)...);
 		}
 	};
 	template<>
 	struct ReflexivityChecker<true> {
 		template<typename FuncT, typename ObjectT, typename ...ParamsT>
-		constexpr decltype(auto) operator()(FuncT pFunc, ObjectT &&vObject, ParamsT &&...vParams) const {
+		static constexpr decltype(auto) DoIt(FuncT pFunc, ObjectT &vObject, ParamsT &...vParams){
 			return (std::forward<ObjectT>(vObject).*pFunc)(std::forward<ParamsT>(vParams)...);
 		}
 	};
 
-	template<typename C, typename M>
-	constexpr C GetClassFromPointerToMember(M C::*) noexcept;
-
 	template<bool>
 	struct MemberFunctionPointerChecker {
 		template<typename FuncT, typename ...ParamsT>
-		constexpr decltype(auto) operator()(FuncT &&vFunc, ParamsT &&...vParams) const {
+		static constexpr decltype(auto) DoIt(FuncT &vFunc, ParamsT &...vParams){
 			return std::forward<FuncT>(vFunc)(std::forward<ParamsT>(vParams)...);
 		}
 	};
 	template<>
 	struct MemberFunctionPointerChecker<true> {
+		template<typename C, typename M>
+		static constexpr C GetClassFromPointerToMember(M C::*) noexcept;
+
 		template<typename FuncT, typename ObjectT, typename ...ParamsT>
-		constexpr decltype(auto) operator()(FuncT pFunc, ObjectT &&vObject, ParamsT &&...vParams) const {
-			return ReflexivityChecker<std::is_base_of<decltype(GetClassFromPointerToMember(pFunc)), std::decay_t<ObjectT>>::value>()(pFunc, std::forward<ObjectT>(vObject), std::forward<ParamsT>(vParams)...);
+		static constexpr decltype(auto) DoIt(FuncT pFunc, ObjectT &vObject, ParamsT &...vParams){
+			using Next = ReflexivityChecker<std::is_base_of<decltype(GetClassFromPointerToMember(pFunc)), std::decay_t<ObjectT>>::value>;
+			return Next::template DoIt<FuncT, ObjectT, ParamsT...>(pFunc, vObject, vParams...);
 		}
 	};
 }
 
 template<typename FuncT, typename ...ParamsT>
 constexpr decltype(auto) Invoke(FuncT &&vFunc, ParamsT &&...vParams){
-	return Impl_Invoke::MemberFunctionPointerChecker<std::is_member_pointer<std::decay_t<FuncT>>::value>()(std::forward<FuncT>(vFunc), std::forward<ParamsT>(vParams)...);
+	using Next = Impl_Invoke::MemberFunctionPointerChecker<std::is_member_pointer<std::decay_t<FuncT>>::value>;
+	return Next::template DoIt<FuncT, ParamsT...>(vFunc, vParams...);
 }
 
 }

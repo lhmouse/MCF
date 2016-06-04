@@ -3,16 +3,16 @@
 #include <MCF/Streams/StandardOutputStream.hpp>
 #include <MCF/Streams/StandardErrorStream.hpp>
 
-extern "C" unsigned _MCFCRT_Main(){
+extern "C" unsigned _MCFCRT_Main(void) noexcept {
 	MCF::StandardInputStream  in;
 	MCF::StandardOutputStream out;
 	MCF::StandardErrorStream  err;
 
-	out.PutText(L"标准输出 1", 6, true);
-	err.PutText(L"标准错误 1", 6, true);
+	out.PutString(L"标准输出 1", 6, true);
+	err.PutString(L"标准错误 1", 6, true);
 	wchar_t str[10];
-	auto len = in.GetText(str, 10, true);
-	out.PutText(str, len, true);
+	auto len = in.GetString(str, 10, true);
+	out.PutString(str, len, true);
 
 	return 0;
 }

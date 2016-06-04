@@ -16,6 +16,8 @@ namespace MCF {
 
 class KernelMutex : public Impl_KernelObjectBase::KernelObjectBase {
 public:
+	using Handle = Impl_UniqueNtHandle::Handle;
+
 	using UniqueLock = Impl_UniqueLockTemplate::UniqueLockTemplate<KernelMutex>;
 
 private:
@@ -35,7 +37,7 @@ public:
 	}
 
 public:
-	void *GetHandle() const noexcept {
+	Handle GetHandle() const noexcept {
 		return x_hEvent.Get();
 	}
 

@@ -4,7 +4,7 @@
 
 #include "argv.h"
 #include "mcfwin.h"
-#include <stdlib.h>
+#include "heap.h"
 #include <wchar.h>
 
 /*
@@ -31,7 +31,7 @@ const _MCFCRT_ArgItem *_MCFCRT_AllocArgv(size_t *pArgc, const wchar_t *pwszComma
 	if((uSizeToAlloc < uPrefixSize) || (uSizeToAlloc >= (SIZE_MAX >> 2))){
 		goto jBadAlloc;
 	}
-	pStorage = malloc(uSizeToAlloc);
+	pStorage = _MCFCRT_malloc(uSizeToAlloc);
 	if(!pStorage){
 		goto jBadAlloc;
 	}
@@ -68,7 +68,7 @@ const _MCFCRT_ArgItem *_MCFCRT_AllocArgv(size_t *pArgc, const wchar_t *pwszComma
 					if((uNewSizeToAlloc <= uSizeToAlloc) || (uNewSizeToAlloc >= (SIZE_MAX >> 2))){
 						goto jBadAlloc;
 					}
-					void *pNewStorage = realloc(pStorage, uNewSizeToAlloc);
+					void *pNewStorage = _MCFCRT_realloc(pStorage, uNewSizeToAlloc);
 					if(!pNewStorage){
 						goto jBadAlloc;
 					}
@@ -158,7 +158,7 @@ const _MCFCRT_ArgItem *_MCFCRT_AllocArgv(size_t *pArgc, const wchar_t *pwszComma
 	return pArgv;
 
 jBadAlloc:
-	free(pStorage);
+	_MCFCRT_free(pStorage);
 	SetLastError(ERROR_NOT_ENOUGH_MEMORY);
 	return nullptr;
 }
@@ -168,6 +168,6 @@ const _MCFCRT_ArgItem *_MCFCRT_AllocArgvFromCommandLine(size_t *pArgc){
 }
 void _MCFCRT_FreeArgv(const _MCFCRT_ArgItem *pArgItems){
 	if(pArgItems){
-		free((void *)(pArgItems[-1].pwszStr));
+		_MCFCRT_free((void *)(pArgItems[-1].pwszStr));
 	}
 }

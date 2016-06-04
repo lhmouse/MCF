@@ -3,13 +3,11 @@
 // Copyleft 2013 - 2016, LH_Mouse. All wrongs reserved.
 
 #include "../StdMCF.hpp"
-#include "_UniqueLockTemplate.hpp"
+#include "UniqueLockBase.hpp"
 
 namespace MCF {
 
-namespace Impl_UniqueLockTemplate {
-	UniqueLockBase::~UniqueLockBase(){
-	}
+UniqueLockBase::~UniqueLockBase(){
 }
 
 }

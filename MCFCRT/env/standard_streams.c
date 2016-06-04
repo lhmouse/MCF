@@ -7,6 +7,7 @@
 #include "../ext/utf.h"
 #include "mutex.h"
 #include "mcfwin.h"
+#include "heap.h"
 
 bool __MCFCRT_StandardStreamsInit(void){
 	return true;
@@ -14,35 +15,84 @@ bool __MCFCRT_StandardStreamsInit(void){
 void __MCFCRT_StandardStreamsUninit(void){
 }
 
-ptrdiff_t _MCFCRT_PeekStandardInputAsText(wchar_t *pwcString, size_t uLength, bool bSingleLine){
+int _MCFCRT_PeekStandardInputByte(void){
+	SetLastError(ERROR_HANDLE_EOF);
+	return -1;
 }
-ptrdiff_t _MCFCRT_PeekStandardInputAsBinary(void *pBuffer, size_t uSize){
+int _MCFCRT_ReadStandardInputByte(void){
+	SetLastError(ERROR_HANDLE_EOF);
+	return -1;
 }
-ptrdiff_t _MCFCRT_ReadStandardInputAsText(wchar_t *pwcString, size_t uLength, bool bSingleLine){
+size_t _MCFCRT_PeekStandardInputBinary(void *pBuffer, size_t uSize){
+	SetLastError(ERROR_HANDLE_EOF);
+	return 0;
 }
-ptrdiff_t _MCFCRT_ReadStandardInputAsBinary(void *pBuffer, size_t uSize){
+size_t _MCFCRT_ReadStandardInputBinary(void *pBuffer, size_t uSize){
+	SetLastError(ERROR_HANDLE_EOF);
+	return 0;
 }
-ptrdiff_t _MCFCRT_DiscardStandardInputAsText(size_t uLength, bool bSingleLine){
+size_t _MCFCRT_DiscardStandardInputBinary(size_t uSize){
+	SetLastError(ERROR_HANDLE_EOF);
+	return 0;
 }
-ptrdiff_t _MCFCRT_DiscardStandardInputAsBinary(size_t uSize){
+long _MCFCRT_PeekStandardInputChar32(void){
+	SetLastError(ERROR_HANDLE_EOF);
+	return -1;
+}
+long _MCFCRT_ReadStandardInputChar32(void){
+	SetLastError(ERROR_HANDLE_EOF);
+	return -1;
+}
+size_t _MCFCRT_PeekStandardInputString(wchar_t *pwcString, size_t uLength, bool bSingleLine){
+	SetLastError(ERROR_HANDLE_EOF);
+	return 0;
+}
+size_t _MCFCRT_ReadStandardInputString(wchar_t *pwcString, size_t uLength, bool bSingleLine){
+	SetLastError(ERROR_HANDLE_EOF);
+	return 0;
+}
+size_t _MCFCRT_DiscardStandardInputString(size_t uLength, bool bSingleLine){
+	SetLastError(ERROR_HANDLE_EOF);
+	return 0;
 }
 bool _MCFCRT_IsStandardInputEchoing(void){
+	return true;
 }
 bool _MCFCRT_SetStandardInputEchoing(bool bEchoing){
+	return true;
 }
 
-ptrdiff_t _MCFCRT_WriteStandardOutputAsText(const wchar_t *pwcString, size_t uLength, bool bAppendNewLine){
+bool _MCFCRT_WriteStandardOutputByte(unsigned char byData){
+	return true;
 }
-ptrdiff_t _MCFCRT_WriteStandardOutputAsBinary(const void *pBuffer, size_t uSize){
+bool _MCFCRT_WriteStandardOutputBinary(const void *pBuffer, size_t uSize){
+	return true;
+}
+bool _MCFCRT_WriteStandardOutputChar32(char32_t c32CodePoint){
+	return true;
+}
+bool _MCFCRT_WriteStandardOutputString(const wchar_t *pwcString, size_t uLength, bool bAppendNewLine){
+	return uLength + bAppendNewLine;
 }
 bool _MCFCRT_IsStandardOutputBuffered(void){
+	return true;
 }
 bool _MCFCRT_SetStandardOutputBuffered(bool bBuffered){
+	return true;
 }
 bool _MCFCRT_FlushStandardOutput(bool bHard){
+	return true;
 }
 
-ptrdiff_t _MCFCRT_WriteStandardErrorAsText(const wchar_t *pwcString, size_t uLength, bool bAppendNewLine){
+bool _MCFCRT_WriteStandardErrorByte(unsigned char byData){
+	return true;
 }
-ptrdiff_t _MCFCRT_WriteStandardErrorAsBinary(const void *pBuffer, size_t uSize){
+bool _MCFCRT_WriteStandardErrorBinary(const void *pBuffer, size_t uSize){
+	return true;
+}
+bool _MCFCRT_WriteStandardErrorChar32(char32_t c32CodePoint){
+	return true;
+}
+bool _MCFCRT_WriteStandardErrorString(const wchar_t *pwcString, size_t uLength, bool bAppendNewLine){
+	return true;
 }

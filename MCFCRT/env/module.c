@@ -7,27 +7,34 @@
 #include "mutex.h"
 #include "fenv.h"
 #include "thread_env.h"
+#include "heap.h"
 #include "../ext/expect.h"
-#include <stdlib.h>
 
 typedef struct tagAtExitCallback {
 	_MCFCRT_AtModuleExitCallback pfnProc;
 	intptr_t nContext;
 } AtExitCallback;
 
-enum {
-	kAtExitCallbacksPerBlock = 64,
-};
+#define CALLBACKS_PER_BLOCK   64u
 
 typedef struct tagAtExitCallbackBlock {
 	struct tagAtExitCallbackBlock *pPrev;
-
 	size_t uSize;
-	AtExitCallback aCallbacks[kAtExitCallbacksPerBlock];
+	AtExitCallback aCallbacks[CALLBACKS_PER_BLOCK];
 } AtExitCallbackBlock;
 
 static _MCFCRT_Mutex           g_vAtExitMutex   = { 0 };
 static AtExitCallbackBlock *   g_pAtExitLast    = nullptr;
+
+static void CrtAtModuleExitDestructor(void *pStorage){
+	AtExitCallbackBlock *const pBlock = pStorage;
+	for(size_t i = pBlock->uSize; i != 0; --i){
+		const AtExitCallback *const pCallback = pBlock->aCallbacks + i - 1;
+		const _MCFCRT_AtThreadExitCallback pfnProc = pCallback->pfnProc;
+		const intptr_t nContext = pCallback->nContext;
+		(*pfnProc)(nContext);
+	}
+}
 
 __attribute__((__noinline__))
 static void PumpAtModuleExit(void){
@@ -38,7 +45,8 @@ static void PumpAtModuleExit(void){
 			{
 				pBlock = g_pAtExitLast;
 				if(pBlock){
-					g_pAtExitLast = pBlock->pPrev;
+					AtExitCallbackBlock *const pPrev = pBlock->pPrev;
+					g_pAtExitLast = pPrev;
 				}
 			}
 			_MCFCRT_SignalMutex(&g_vAtExitMutex);
@@ -46,11 +54,9 @@ static void PumpAtModuleExit(void){
 		if(!pBlock){
 			break;
 		}
-		for(size_t i = pBlock->uSize; i != 0; --i){
-			const AtExitCallback *const pCur = pBlock->aCallbacks + i - 1;
-			(*(pCur->pfnProc))(pCur->nContext);
-		}
-		free(pBlock);
+
+		CrtAtModuleExitDestructor(pBlock);
+		_MCFCRT_free(pBlock);
 	}
 }
 
@@ -95,15 +101,13 @@ void __MCFCRT_ModuleUninit(void){
 }
 
 bool _MCFCRT_AtModuleExit(_MCFCRT_AtModuleExitCallback pfnProc, intptr_t nContext){
-	AtExitCallbackBlock *pBlock;
-
 	_MCFCRT_WaitForMutexForever(&g_vAtExitMutex, _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT);
 	{
-		pBlock = g_pAtExitLast;
-		if(!pBlock || (pBlock->uSize >= kAtExitCallbacksPerBlock)){
+		AtExitCallbackBlock *pBlock = g_pAtExitLast;
+		if(!pBlock || (pBlock->uSize >= CALLBACKS_PER_BLOCK)){
 			_MCFCRT_SignalMutex(&g_vAtExitMutex);
 			{
-				pBlock = malloc(sizeof(AtExitCallbackBlock));
+				pBlock = _MCFCRT_malloc(sizeof(AtExitCallbackBlock));
 				if(!pBlock){
 					SetLastError(ERROR_NOT_ENOUGH_MEMORY);
 					return false;
@@ -116,7 +120,7 @@ bool _MCFCRT_AtModuleExit(_MCFCRT_AtModuleExitCallback pfnProc, intptr_t nContex
 			g_pAtExitLast = pBlock;
 		}
 		AtExitCallback *const pCallback = pBlock->aCallbacks + ((pBlock->uSize)++);
-		pCallback->pfnProc  = pfnProc;
+		pCallback->pfnProc = pfnProc;
 		pCallback->nContext = nContext;
 	}
 	_MCFCRT_SignalMutex(&g_vAtExitMutex);

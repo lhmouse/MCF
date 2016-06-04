@@ -67,7 +67,7 @@ wchar_t *_MCFCRT_wcpcpy(wchar_t *restrict dst, const wchar_t *restrict src){
 		wp += 8 * sizeof(uintptr_t) / sizeof(wchar_t);
 	}
 }
-wchar_t *_MCFCRT_wcppcpy(wchar_t *restrict dst, wchar_t *restrict end, const wchar_t *restrict src){
+wchar_t *_MCFCRT_wcppcpy(wchar_t *dst, wchar_t *end, const wchar_t *restrict src){
 	register const wchar_t *rp = src;
 	register wchar_t *wp = dst;
 

@@ -22,8 +22,8 @@ public:
 	void Put(const void *pData, std::size_t uSize) override;
 	void Flush(bool bHard) override;
 
-	void PutText(wchar_t wcData);
-	void PutText(const wchar_t *pwcData, std::size_t uSize, bool bAppendNewLine);
+	void PutChar32(char32_t c32Data);
+	void PutString(const wchar_t *pwcData, std::size_t uSize, bool bAppendNewLine);
 
 	bool IsBuffered() const noexcept;
 	bool SetBuffered(bool bBuffered) noexcept;

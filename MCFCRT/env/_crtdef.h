@@ -9,7 +9,7 @@
 #	error This processor architecture is not supported.
 #endif
 
-#pragma GCC poison __thread thread_local
+#pragma GCC poison __thread _Thread_local thread_local
 
 #if defined(__cplusplus) && (__cplusplus < 201402l)
 #	error This compiler does not support C++14.
@@ -29,9 +29,9 @@
 #	define _MCFCRT_CONSTEXPR            constexpr
 #else
 #	define nullptr                      ((void *)0)
-#	include <stdbool.h>
-#	include <stdalign.h>
-#	include <uchar.h>
+#	include <stdbool.h>                 // bool, true, false
+#	include <stdalign.h>                // alignof, alignas
+#	include <uchar.h>                   // char16_t, char32_t
 #	include <stddef.h>
 #	include <stdint.h>
 #	include <limits.h>

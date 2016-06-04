@@ -5,26 +5,29 @@
 #include "thread_env.h"
 #include "mcfwin.h"
 #include "avl_tree.h"
-#include "mutex.h"
+#include "heap.h"
 #include "../ext/assert.h"
-#include <stdlib.h>
 
-typedef struct tagTlsObject {
+static volatile uintptr_t g_uKeyCounter = 0;
+
+typedef struct tagTlsObject TlsObject;
+typedef struct tagTlsThread TlsThread;
+typedef struct tagTlsKey    TlsKey;
+
+struct tagTlsObject {
 	_MCFCRT_AvlNodeHeader avlhNodeByKey;
+	TlsKey *pKey;
+	uintptr_t uCounter;
 
 	_MCFCRT_TlsDestructor pfnDestructor;
 	intptr_t nContext;
 
-	struct tagTlsThread *pThread;
-	struct tagTlsObject *pPrevByThread;
-	struct tagTlsObject *pNextByThread;
-
-	struct tagTlsKey *pKey;
-	struct tagTlsObject *pPrevByKey;
-	struct tagTlsObject *pNextByKey;
+	TlsThread *pThread;
+	TlsObject *pPrevByThread;
+	TlsObject *pNextByThread;
 
 	alignas(max_align_t) unsigned char abyStorage[];
-} TlsObject;
+};
 
 static inline int CompareTlsKeys(const struct tagTlsKey *pKey1, const struct tagTlsKey *pKey2){
 	const uintptr_t u1 = (uintptr_t)pKey1, u2 = (uintptr_t)pKey2;
@@ -45,53 +48,134 @@ static inline int ObjectComparatorNodes(const _MCFCRT_AvlNodeHeader *pObj1, cons
 	                      ((const TlsObject *)pObj2)->pKey);
 }
 
-typedef struct tagTlsKey {
-	size_t uSize;
-	_MCFCRT_TlsConstructor pfnConstructor;
-	_MCFCRT_TlsDestructor pfnDestructor;
-	intptr_t nContext;
-
-	_MCFCRT_Mutex vMutex;
-
-	struct tagTlsObject *pFirstByKey;
-	struct tagTlsObject *pLastByKey;
-} TlsKey;
-
-typedef struct tagTlsThread {
-	_MCFCRT_Mutex vMutex;
-
+struct tagTlsThread {
 	_MCFCRT_AvlRoot avlObjects;
-
-	struct tagTlsObject *pFirstByThread;
-	struct tagTlsObject *pLastByThread;
-} TlsThread;
+	TlsObject *pFirstByThread;
+	TlsObject *pLastByThread;
+};
 
 static DWORD g_dwTlsIndex = TLS_OUT_OF_INDEXES;
 
 static TlsThread *GetTlsForCurrentThread(void){
 	_MCFCRT_ASSERT(g_dwTlsIndex != TLS_OUT_OF_INDEXES);
 
-	TlsThread *pThread = TlsGetValue(g_dwTlsIndex);
+	TlsThread *const pThread = TlsGetValue(g_dwTlsIndex);
 	return pThread;
 }
 static TlsThread *RequireTlsForCurrentThread(void){
-	_MCFCRT_ASSERT(g_dwTlsIndex != TLS_OUT_OF_INDEXES);
-
-	TlsThread *pThread = TlsGetValue(g_dwTlsIndex);
+	TlsThread *pThread = GetTlsForCurrentThread();
 	if(!pThread){
-		pThread = malloc(sizeof(TlsThread));
+		pThread = _MCFCRT_malloc(sizeof(TlsThread));
 		if(!pThread){
-			SetLastError(ERROR_NOT_ENOUGH_MEMORY);
 			return nullptr;
 		}
-		_MCFCRT_InitializeMutex(&(pThread->vMutex));
 		pThread->avlObjects     = nullptr;
 		pThread->pFirstByThread = nullptr;
 		pThread->pLastByThread  = nullptr;
 
-		TlsSetValue(g_dwTlsIndex, pThread);
+		if(!TlsSetValue(g_dwTlsIndex, pThread)){
+			const DWORD dwErrorCode = GetLastError();
+			_MCFCRT_free(pThread);
+			SetLastError(dwErrorCode);
+			return nullptr;
+		}
 	}
 	return pThread;
+}
+
+struct tagTlsKey {
+	uintptr_t uCounter;
+
+	size_t uSize;
+	_MCFCRT_TlsConstructor pfnConstructor;
+	_MCFCRT_TlsDestructor pfnDestructor;
+	intptr_t nContext;
+};
+
+static TlsObject *GetTlsObject(TlsThread *pThread, TlsKey *pKey){
+	_MCFCRT_ASSERT(pThread);
+
+	if(!pKey){
+		return nullptr;
+	}
+
+	TlsObject *const pObject = (TlsObject *)_MCFCRT_AvlFind(&(pThread->avlObjects), (intptr_t)pKey, &ObjectComparatorNodeKey);
+	if(pObject && (pObject->uCounter != pKey->uCounter)){
+		const _MCFCRT_TlsDestructor pfnDestructor = pObject->pfnDestructor;
+		if(pfnDestructor){
+			(*pfnDestructor)(pObject->nContext, pObject->abyStorage);
+		}
+
+		TlsObject *const pPrev = pObject->pPrevByThread;
+		TlsObject *const pNext = pObject->pNextByThread;
+		if(pPrev){
+			pPrev->pNextByThread = pNext;
+		}
+		if(pNext){
+			pNext->pPrevByThread = pPrev;
+		}
+
+		_MCFCRT_AvlDetach((_MCFCRT_AvlNodeHeader *)pObject);
+
+		_MCFCRT_free(pObject);
+		return nullptr;
+	}
+	return pObject;
+}
+static TlsObject *RequireTlsObject(TlsThread *pThread, TlsKey *pKey, size_t uSize, _MCFCRT_TlsConstructor pfnConstructor, _MCFCRT_TlsDestructor pfnDestructor, intptr_t nContext){
+	TlsObject *pObject = GetTlsObject(pThread, pKey);
+	if(!pObject){
+		const size_t uSizeToAlloc = sizeof(TlsObject) + uSize;
+		if(uSizeToAlloc < sizeof(TlsObject)){
+			SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+			return nullptr;
+		}
+		pObject = _MCFCRT_malloc(uSizeToAlloc);
+		if(!pObject){
+			SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+			return nullptr;
+		}
+#ifndef NDEBUG
+		memset(pObject, 0xAA, sizeof(TlsObject));
+#endif
+		memset(pObject->abyStorage, 0, uSize);
+
+		if(pfnConstructor){
+			const DWORD dwErrorCode = (*pfnConstructor)(nContext, pObject->abyStorage);
+			if(dwErrorCode != 0){
+				_MCFCRT_free(pObject);
+				SetLastError(dwErrorCode);
+				return nullptr;
+			}
+		}
+
+		pObject->pfnDestructor = pfnDestructor;
+		pObject->nContext      = nContext;
+
+		TlsObject *const pPrev = pThread->pLastByThread;
+		TlsObject *const pNext = nullptr;
+		if(pPrev){
+			pPrev->pNextByThread = pObject;
+		} else {
+			pThread->pFirstByThread = pObject;
+		}
+		if(pNext){
+			pNext->pPrevByThread = pObject;
+		} else {
+			pThread->pLastByThread = pObject;
+		}
+		pObject->pThread = pThread;
+		pObject->pPrevByThread = pPrev;
+		pObject->pNextByThread = pNext;
+
+		if(pKey){
+			pObject->pKey = pKey;
+			pObject->uCounter = pKey->uCounter;
+
+			_MCFCRT_AvlAttach(&(pThread->avlObjects), (_MCFCRT_AvlNodeHeader *)pObject, &ObjectComparatorNodes);
+		}
+	}
+	return pObject;
 }
 
 bool __MCFCRT_ThreadEnvInit(void){
@@ -107,7 +191,8 @@ void __MCFCRT_ThreadEnvUninit(void){
 	const DWORD dwTlsIndex = g_dwTlsIndex;
 	g_dwTlsIndex = TLS_OUT_OF_INDEXES;
 
-	TlsFree(dwTlsIndex);
+	const bool bSucceeded = TlsFree(dwTlsIndex);
+	_MCFCRT_ASSERT(bSucceeded);
 }
 
 void __MCFCRT_TlsCleanup(void){
@@ -116,147 +201,73 @@ void __MCFCRT_TlsCleanup(void){
 		return;
 	}
 
-	_MCFCRT_WaitForMutexForever(&(pThread->vMutex), _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT);
-	{
-		TlsObject *pObject = pThread->pLastByThread;
-		while(pObject){
-			TlsKey *const pKey = pObject->pKey;
-			if(pKey){
-				_MCFCRT_WaitForMutexForever(&(pKey->vMutex), _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT);
-				{
-					TlsObject *const pPrev = pObject->pPrevByKey;
-					TlsObject *const pNext = pObject->pNextByKey;
-					if(pPrev){
-						pPrev->pNextByKey = pNext;
-					} else {
-						pKey->pFirstByKey = pNext;
-					}
-					if(pNext){
-						pNext->pPrevByKey = pPrev;
-					} else {
-						pKey->pLastByKey = pPrev;
-					}
+	for(;;){
+		TlsObject *pObject;
+		{
+			pObject = pThread->pLastByThread;
+			if(pObject){
+				TlsObject *const pPrev = pObject->pPrevByThread;
+				if(pPrev){
+					pPrev->pNextByThread = nullptr;
 				}
-				_MCFCRT_SignalMutex(&(pKey->vMutex));
+				pThread->pLastByThread = pPrev;
 			}
-
-			if(pObject->pfnDestructor){
-				(*(pObject->pfnDestructor))(pObject->nContext, pObject->abyStorage);
-			}
-
-			TlsObject *const pPrevByThread = pObject->pPrevByThread;
-			free(pObject);
-			pObject = pPrevByThread;
 		}
-	}
-	_MCFCRT_SignalMutex(&(pThread->vMutex));
+		if(!pObject){
+			break;
+		}
 
-	TlsSetValue(g_dwTlsIndex, nullptr);
-	free(pThread);
+		const _MCFCRT_TlsDestructor pfnDestructor = pObject->pfnDestructor;
+		if(pfnDestructor){
+			(*pfnDestructor)(pObject->nContext, pObject->abyStorage);
+		}
+		_MCFCRT_free(pObject);
+	}
+
+	const bool bSucceeded = TlsSetValue(g_dwTlsIndex, nullptr);
+	_MCFCRT_ASSERT(bSucceeded);
+	_MCFCRT_free(pThread);
 }
 
 _MCFCRT_TlsKeyHandle _MCFCRT_TlsAllocKey(size_t uSize, _MCFCRT_TlsConstructor pfnConstructor, _MCFCRT_TlsDestructor pfnDestructor, intptr_t nContext){
-	TlsKey *const pKey = malloc(sizeof(TlsKey));
+	TlsKey *const pKey = _MCFCRT_malloc(sizeof(TlsKey));
 	if(!pKey){
 		SetLastError(ERROR_NOT_ENOUGH_MEMORY);
 		return nullptr;
 	}
+	pKey->uCounter       = __atomic_add_fetch(&g_uKeyCounter, 1, __ATOMIC_RELAXED);
 	pKey->uSize          = uSize;
 	pKey->pfnConstructor = pfnConstructor;
 	pKey->pfnDestructor  = pfnDestructor;
 	pKey->nContext       = nContext;
-	_MCFCRT_InitializeMutex(&(pKey->vMutex));
-	pKey->pFirstByKey    = nullptr;
-	pKey->pLastByKey     = nullptr;
 
 	return (_MCFCRT_TlsKeyHandle)pKey;
 }
-bool _MCFCRT_TlsFreeKey(_MCFCRT_TlsKeyHandle hTlsKey){
+void _MCFCRT_TlsFreeKey(_MCFCRT_TlsKeyHandle hTlsKey){
 	TlsKey *const pKey = (TlsKey *)hTlsKey;
-	if(!pKey){
-		SetLastError(ERROR_INVALID_PARAMETER);
-		return false;
-	}
-
-	_MCFCRT_WaitForMutexForever(&(pKey->vMutex), _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT);
-	{
-		TlsObject *pObject = pKey->pLastByKey;
-		while(pObject){
-			TlsThread *const pThread = pObject->pThread;
-			if(pThread){
-				_MCFCRT_WaitForMutexForever(&(pThread->vMutex), _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT);
-				{
-					_MCFCRT_AvlDetach((_MCFCRT_AvlNodeHeader *)pObject);
-
-					TlsObject *const pPrev = pObject->pPrevByThread;
-					TlsObject *const pNext = pObject->pNextByThread;
-					if(pPrev){
-						pPrev->pNextByThread = pNext;
-					} else {
-						pThread->pFirstByThread = pNext;
-					}
-					if(pNext){
-						pNext->pPrevByThread = pPrev;
-					} else {
-						pThread->pLastByThread = pPrev;
-					}
-				}
-				_MCFCRT_SignalMutex(&(pThread->vMutex));
-			}
-
-			if(pObject->pfnDestructor){
-				(*(pObject->pfnDestructor))(pObject->nContext, pObject->abyStorage);
-			}
-
-			TlsObject *const pPrevByKey = pObject->pPrevByKey;
-			free(pObject);
-			pObject = pPrevByKey;
-		}
-	}
-	_MCFCRT_SignalMutex(&(pKey->vMutex));
-
-	free(pKey);
-	return true;
+	_MCFCRT_free(pKey);
 }
 
 size_t _MCFCRT_TlsGetSize(_MCFCRT_TlsKeyHandle hTlsKey){
 	TlsKey *const pKey = (TlsKey *)hTlsKey;
-	if(!pKey){
-		SetLastError(ERROR_INVALID_PARAMETER);
-		return false;
-	}
-	SetLastError(ERROR_SUCCESS);
 	return pKey->uSize;
 }
 _MCFCRT_TlsConstructor _MCFCRT_TlsGetConstructor(_MCFCRT_TlsKeyHandle hTlsKey){
 	TlsKey *const pKey = (TlsKey *)hTlsKey;
-	if(!pKey){
-		SetLastError(ERROR_INVALID_PARAMETER);
-		return false;
-	}
-	SetLastError(ERROR_SUCCESS);
 	return pKey->pfnConstructor;
 }
 _MCFCRT_TlsDestructor _MCFCRT_TlsGetDestructor(_MCFCRT_TlsKeyHandle hTlsKey){
 	TlsKey *const pKey = (TlsKey *)hTlsKey;
-	if(!pKey){
-		SetLastError(ERROR_INVALID_PARAMETER);
-		return false;
-	}
-	SetLastError(ERROR_SUCCESS);
 	return pKey->pfnDestructor;
 }
 intptr_t _MCFCRT_TlsGetContext(_MCFCRT_TlsKeyHandle hTlsKey){
 	TlsKey *const pKey = (TlsKey *)hTlsKey;
-	if(!pKey){
-		SetLastError(ERROR_INVALID_PARAMETER);
-		return false;
-	}
-	SetLastError(ERROR_SUCCESS);
 	return pKey->nContext;
 }
 
 bool _MCFCRT_TlsGet(_MCFCRT_TlsKeyHandle hTlsKey, void **restrict ppStorage){
+	*ppStorage = nullptr;
+
 	TlsKey *const pKey = (TlsKey *)hTlsKey;
 	if(!pKey){
 		SetLastError(ERROR_INVALID_PARAMETER);
@@ -264,23 +275,12 @@ bool _MCFCRT_TlsGet(_MCFCRT_TlsKeyHandle hTlsKey, void **restrict ppStorage){
 	}
 	TlsThread *const pThread = GetTlsForCurrentThread();
 	if(!pThread){
-		*ppStorage = nullptr;
 		return true;
 	}
-
-	TlsObject *pObject;
-
-	_MCFCRT_WaitForMutexForever(&(pThread->vMutex), _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT);
-	{
-		pObject = (TlsObject *)_MCFCRT_AvlFind(&(pThread->avlObjects), (intptr_t)pKey, &ObjectComparatorNodeKey);
-	}
-	_MCFCRT_SignalMutex(&(pThread->vMutex));
-
+	TlsObject *const pObject = GetTlsObject(pThread, pKey);
 	if(!pObject){
-		*ppStorage = nullptr;
 		return true;
 	}
-
 	*ppStorage = pObject->abyStorage;
 	return true;
 }
@@ -294,143 +294,66 @@ bool _MCFCRT_TlsRequire(_MCFCRT_TlsKeyHandle hTlsKey, void **restrict ppStorage)
 	}
 	TlsThread *const pThread = RequireTlsForCurrentThread();
 	if(!pThread){
-		SetLastError(ERROR_NOT_ENOUGH_MEMORY);
 		return false;
 	}
-
-	TlsObject *pObject;
-
-	_MCFCRT_WaitForMutexForever(&(pThread->vMutex), _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT);
-	{
-		pObject = (TlsObject *)_MCFCRT_AvlFind(&(pThread->avlObjects), (intptr_t)pKey, &ObjectComparatorNodeKey);
-	}
-	_MCFCRT_SignalMutex(&(pThread->vMutex));
-
+	TlsObject *const pObject = RequireTlsObject(pThread, pKey, pKey->uSize, pKey->pfnConstructor, pKey->pfnDestructor, pKey->nContext);
 	if(!pObject){
-		const size_t uSizeToAlloc = sizeof(TlsObject) + pKey->uSize;
-		if(uSizeToAlloc < sizeof(TlsObject)){
-			SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-			return false;
-		}
-		pObject = malloc(uSizeToAlloc);
-		if(!pObject){
-			SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-			return false;
-		}
-
-		memset(pObject->abyStorage, 0, pKey->uSize);
-		if(pKey->pfnConstructor){
-			const DWORD dwErrorCode = (*(pKey->pfnConstructor))(pKey->nContext, pObject->abyStorage);
-			if(dwErrorCode != 0){
-				free(pObject);
-				SetLastError(dwErrorCode);
-				return false;
-			}
-		}
-
-		pObject->pfnDestructor = pKey->pfnDestructor;
-		pObject->nContext = pKey->nContext;
-
-		pObject->pThread = pThread;
-
-		_MCFCRT_WaitForMutexForever(&(pThread->vMutex), _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT);
-		{
-			_MCFCRT_AvlAttach(&(pThread->avlObjects), (_MCFCRT_AvlNodeHeader *)pObject, &ObjectComparatorNodes);
-
-			TlsObject *const pPrev = pThread->pLastByThread;
-			TlsObject *const pNext = nullptr;
-			if(pPrev){
-				pPrev->pNextByThread = pObject;
-			} else {
-				pThread->pFirstByThread = pObject;
-			}
-			if(pNext){
-				pNext->pPrevByThread = pObject;
-			} else {
-				pThread->pLastByThread = pObject;
-			}
-
-			pObject->pPrevByThread = pPrev;
-			pObject->pNextByThread = pNext;
-		}
-		_MCFCRT_SignalMutex(&(pThread->vMutex));
-
-		pObject->pKey = pKey;
-
-		_MCFCRT_WaitForMutexForever(&(pKey->vMutex), _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT);
-		{
-			TlsObject *const pPrev = pKey->pLastByKey;
-			TlsObject *const pNext = nullptr;
-			if(pPrev){
-				pPrev->pNextByKey = pObject;
-			} else {
-				pKey->pFirstByKey = pObject;
-			}
-			if(pNext){
-				pNext->pPrevByKey = pObject;
-			} else {
-				pKey->pLastByKey = pObject;
-			}
-
-			pObject->pPrevByKey = pPrev;
-			pObject->pNextByKey = pNext;
-		}
-		_MCFCRT_SignalMutex(&(pKey->vMutex));
+		return false;
 	}
-
 	*ppStorage = pObject->abyStorage;
 	return true;
 }
 
-static void CrtAtThreadExitProc(intptr_t nContext, void *pStorage){
-	const _MCFCRT_AtThreadExitCallback pfnProc = *(_MCFCRT_AtThreadExitCallback *)pStorage;
-	(*pfnProc)(nContext);
+typedef struct tagAtExitCallback {
+	_MCFCRT_AtThreadExitCallback pfnProc;
+	intptr_t nContext;
+} AtExitCallback;
+
+#define CALLBACKS_PER_BLOCK   64u
+
+typedef struct tagAtExitCallbackBlock {
+	size_t uSize;
+	AtExitCallback aCallbacks[CALLBACKS_PER_BLOCK];
+} AtExitCallbackBlock;
+
+static unsigned long CrtAtThreadExitConstructor(intptr_t nUnused, void *pStorage){
+	(void)nUnused;
+
+	AtExitCallbackBlock *const pBlock = pStorage;
+	pBlock->uSize = 0;
+	return 0;
+}
+static void CrtAtThreadExitDestructor(intptr_t nUnused, void *pStorage){
+	(void)nUnused;
+
+	AtExitCallbackBlock *const pBlock = pStorage;
+	for(size_t i = pBlock->uSize; i != 0; --i){
+		const AtExitCallback *const pCallback = pBlock->aCallbacks + i - 1;
+		const _MCFCRT_AtThreadExitCallback pfnProc = pCallback->pfnProc;
+		const intptr_t nContext = pCallback->nContext;
+		(*pfnProc)(nContext);
+	}
 }
 
 bool _MCFCRT_AtThreadExit(_MCFCRT_AtThreadExitCallback pfnProc, intptr_t nContext){
 	TlsThread *const pThread = RequireTlsForCurrentThread();
 	if(!pThread){
-		SetLastError(ERROR_NOT_ENOUGH_MEMORY);
 		return false;
 	}
-
-	const size_t uSizeToAlloc = sizeof(TlsObject) + sizeof(pfnProc);
-	TlsObject *const pObject = malloc(uSizeToAlloc);
-	if(!pObject){
-		SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-		return false;
+	AtExitCallbackBlock *pBlock = nullptr;
+	TlsObject *pObject = pThread->pLastByThread;
+	if(pObject && (pObject->pfnDestructor == &CrtAtThreadExitDestructor)){
+		pBlock = (void *)pObject->abyStorage;
 	}
-#ifndef NDEBUG
-	memset(pObject, 0xAA, uSizeToAlloc);
-#endif
-
-	memcpy(pObject->abyStorage, &pfnProc, sizeof(pfnProc));
-	pObject->pfnDestructor = &CrtAtThreadExitProc;
-	pObject->nContext = nContext;
-
-	pObject->pThread = pThread;
-
-	_MCFCRT_WaitForMutexForever(&(pThread->vMutex), _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT);
-	{
-		TlsObject *const pPrev = pThread->pLastByThread;
-		TlsObject *const pNext = nullptr;
-		if(pPrev){
-			pPrev->pNextByThread = pObject;
-		} else {
-			pThread->pFirstByThread = pObject;
+	if(!pBlock || (pBlock->uSize >= CALLBACKS_PER_BLOCK)){
+		pObject = RequireTlsObject(pThread, nullptr, sizeof(AtExitCallbackBlock), &CrtAtThreadExitConstructor, &CrtAtThreadExitDestructor, 0);
+		if(!pObject){
+			return false;
 		}
-		if(pNext){
-			pNext->pPrevByThread = pObject;
-		} else {
-			pThread->pLastByThread = pObject;
-		}
-
-		pObject->pPrevByThread = pPrev;
-		pObject->pNextByThread = pNext;
+		pBlock = (void *)pObject->abyStorage;
 	}
-	_MCFCRT_SignalMutex(&(pThread->vMutex));
-
-	pObject->pKey = nullptr;
-
+	AtExitCallback *const pCallback = pBlock->aCallbacks + ((pBlock->uSize)++);
+	pCallback->pfnProc = pfnProc;
+	pCallback->nContext = nContext;
 	return true;
 }

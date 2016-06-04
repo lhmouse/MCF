@@ -73,7 +73,7 @@ General {
 	LinkerFlags			= -Wall -Wextra -Wsign-conversion -Wsuggest-attribute=noreturn -static
 	ExtraLibs			= -lversion -lshlwapi
 
-	CFlags				= $CompilerFlags$ -c -std=c11
+	CFlags				= $CompilerFlags$ -c -std=c11 -Wstrict-prototypes
 	CPPFlags			= $CompilerFlags$ -c -std=c++14
 
 	Ignored				= .* *.a *.bak *.cmd *.exe *.h *.hpp *.mcfproj *.o

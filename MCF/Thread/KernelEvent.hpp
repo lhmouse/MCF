@@ -13,6 +13,9 @@
 namespace MCF {
 
 class KernelEvent : public Impl_KernelObjectBase::KernelObjectBase {
+public:
+	using Handle = Impl_UniqueNtHandle::Handle;
+
 private:
 	static Impl_UniqueNtHandle::UniqueNtHandle X_CreateEventHandle(bool bInitSet, const WideStringView &wsvName, std::uint32_t u32Flags);
 
@@ -30,7 +33,7 @@ public:
 	}
 
 public:
-	void *GetHandle() const noexcept {
+	Handle GetHandle() const noexcept {
 		return x_hEvent.Get();
 	}
 

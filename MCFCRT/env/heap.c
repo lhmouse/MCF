@@ -8,7 +8,6 @@
 #include "mutex.h"
 #include "mcfwin.h"
 #include "bail.h"
-#include <stdlib.h>
 #include <errno.h>
 
 // hooks.h
@@ -92,10 +91,6 @@ unsigned char *__MCFCRT_HeapAlloc(size_t uSize, bool bFillsWithZero, const void 
 	}
 }
 unsigned char *__MCFCRT_HeapRealloc(void *pBlock, size_t uSize, bool bFillsWithZero, const void *pRetAddr){
-	if(!pBlock){
-		_MCFCRT_Bail(L"__MCFCRT_HeapRealloc() 失败：传入了一个空指针。\n\n");
-	}
-
 #if __MCFCRT_REQUIRE_HEAPDBG_LEVEL(1)
 	SetLastError(0xDEADBEEF);
 #endif
@@ -177,10 +172,6 @@ unsigned char *__MCFCRT_HeapRealloc(void *pBlock, size_t uSize, bool bFillsWithZ
 	}
 }
 void __MCFCRT_HeapFree(void *pBlock, const void *pRetAddr){
-	if(!pBlock){
-		_MCFCRT_Bail(L"__MCFCRT_HeapFree() 失败：传入了一个空指针。\n\n");
-	}
-
 #if __MCFCRT_REQUIRE_HEAPDBG_LEVEL(1)
 	SetLastError(0xDEADBEEF);
 #endif

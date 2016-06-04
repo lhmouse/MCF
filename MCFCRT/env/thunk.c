@@ -7,8 +7,8 @@
 #include "avl_tree.h"
 #include "mutex.h"
 #include "bail.h"
+#include "heap.h"
 #include "../ext/assert.h"
-#include <stdlib.h>
 
 typedef struct tagThunkInfo {
 	// 内存是以 64KiB 的粒度分配的，每一块称为一个 chunk。
@@ -87,14 +87,14 @@ const void *_MCFCRT_AllocateThunk(const void *pInit, size_t uSize){
 			bNeedsCleanup = false;
 		} else {
 			// 如果没有足够大的 thunk，我们先分配一个新的 chunk。
-			pInfo = malloc(sizeof(ThunkInfo));
+			pInfo = _MCFCRT_malloc(sizeof(ThunkInfo));
 			if(!pInfo){
 				goto jBadAlloc;
 			}
 			pInfo->uChunkSize = (uThunkSize + 0xFFFF) & (size_t)-0x10000;
 			pInfo->pChunk = VirtualAlloc(0, pInfo->uChunkSize, MEM_COMMIT | MEM_RESERVE, PAGE_READONLY);
 			if(!pInfo->pChunk){
-				free(pInfo);
+				_MCFCRT_free(pInfo);
 				goto jBadAlloc;
 			}
 			pInfo->pThunk = pInfo->pChunk;
@@ -112,13 +112,13 @@ const void *_MCFCRT_AllocateThunk(const void *pInit, size_t uSize){
 		const size_t uRemaining = pInfo->uFreeSize - uThunkSize;
 		if(uRemaining >= 0x20){
 			// 如果剩下的空间还很大，保存成一个新的空闲 thunk。
-			ThunkInfo *const pSpare = malloc(sizeof(ThunkInfo));
+			ThunkInfo *const pSpare = _MCFCRT_malloc(sizeof(ThunkInfo));
 			if(!pSpare){
 				if(bNeedsCleanup){
 					_MCFCRT_AvlDetach(&(pInfo->vThunkIndex));
 					_MCFCRT_AvlDetach(&(pInfo->vFreeSizeIndex));
 					VirtualFree(pInfo->pChunk, 0, MEM_RELEASE);
-					free(pInfo);
+					_MCFCRT_free(pInfo);
 				}
 				goto jBadAlloc;
 			}
@@ -191,7 +191,7 @@ void _MCFCRT_DeallocateThunk(const void *pThunk, bool bToPoison){
 
 				_MCFCRT_AvlDetach(&(pNextInfo->vThunkIndex));
 				_MCFCRT_AvlDetach(&(pNextInfo->vFreeSizeIndex));
-				free(pNextInfo);
+				_MCFCRT_free(pNextInfo);
 			}
 		}
 
@@ -204,7 +204,7 @@ void _MCFCRT_DeallocateThunk(const void *pThunk, bool bToPoison){
 
 				_MCFCRT_AvlDetach(&(pInfo->vThunkIndex));
 				_MCFCRT_AvlDetach(&(pInfo->vFreeSizeIndex));
-				free(pInfo);
+				_MCFCRT_free(pInfo);
 
 				pThunkIndex = pPrevThunkIndex;
 				pInfo = pPrevInfo;
@@ -216,7 +216,7 @@ void _MCFCRT_DeallocateThunk(const void *pThunk, bool bToPoison){
 
 			_MCFCRT_AvlDetach(&(pInfo->vThunkIndex));
 			_MCFCRT_AvlDetach(&(pInfo->vFreeSizeIndex));
-			free(pInfo);
+			_MCFCRT_free(pInfo);
 		} else {
 			pPageToRelease = nullptr;
 

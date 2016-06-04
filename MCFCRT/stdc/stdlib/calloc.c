@@ -6,16 +6,9 @@
 #include "../../env/heap.h"
 
 __attribute__((__noinline__))
-void *calloc(size_t nmemb, size_t cnt){
-	size_t cb = 0;
-	if((nmemb > 0) && (cnt > 0)){
-		if(((nmemb | cnt) & (size_t)-0x10000) && (cnt > SIZE_MAX / nmemb)){
-			return nullptr;
-		}
-		cb = nmemb * cnt;
-	}
-	return __MCFCRT_HeapAlloc(cb, true, __builtin_return_address(0));
+void *calloc(size_t nmemb, size_t size){
+	return _MCFCRT_calloc(nmemb, size);
 }
 
 __attribute__((__alias__("calloc")))
-void *__wrap_calloc(size_t nmemb, size_t cnt);
+void *__wrap_calloc(size_t nmemb, size_t size);

@@ -50,7 +50,7 @@ uint64_t _MCFCRT_GetUtcClock(void){
 	} unUtc;
 	GetSystemTimeAsFileTime(&unUtc.ft);
 	// 0x019DB1DED53E8000 = 从 1601-01-01 到 1970-01-01 经历的时间纳秒数。
-	return (uint64_t)(unUtc.li.QuadPart - 0x019DB1DED53E8000ll) / 10000;;
+	return (uint64_t)(((double)unUtc.li.QuadPart - 0x019DB1DED53E8000ll) / 10000.0);
 }
 uint64_t _MCFCRT_GetLocalClock(void){
 	return _MCFCRT_GetLocalClockFromUtc(_MCFCRT_GetUtcClock());

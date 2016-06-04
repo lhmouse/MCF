@@ -7,7 +7,7 @@
 
 __attribute__((__noinline__))
 void *malloc(size_t cb){
-	return __MCFCRT_HeapAlloc(cb, false, __builtin_return_address(0));
+	return _MCFCRT_malloc(cb);
 }
 
 __attribute__((__alias__("malloc")))

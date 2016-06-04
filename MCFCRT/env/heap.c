@@ -8,7 +8,6 @@
 #include "mutex.h"
 #include "mcfwin.h"
 #include "bail.h"
-#include <stdlib.h>
 #include <errno.h>
 
 // hooks.h

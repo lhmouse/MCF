@@ -7,10 +7,7 @@
 
 __attribute__((__noinline__))
 void *realloc(void *p, size_t cb){
-	if(!p){
-		return __MCFCRT_HeapAlloc(cb, false, __builtin_return_address(0));
-	}
-	return __MCFCRT_HeapRealloc(p, cb, false, __builtin_return_address(0));
+	return _MCFCRT_realloc(p, cb);
 }
 
 __attribute__((__alias__("realloc")))

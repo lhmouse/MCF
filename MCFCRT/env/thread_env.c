@@ -5,8 +5,8 @@
 #include "thread_env.h"
 #include "mcfwin.h"
 #include "avl_tree.h"
+#include "heap.h"
 #include "../ext/assert.h"
-#include <stdlib.h>
 
 static volatile uintptr_t g_uKeyCounter = 0;
 
@@ -65,7 +65,7 @@ static TlsThread *GetTlsForCurrentThread(void){
 static TlsThread *RequireTlsForCurrentThread(void){
 	TlsThread *pThread = GetTlsForCurrentThread();
 	if(!pThread){
-		pThread = malloc(sizeof(TlsThread));
+		pThread = _MCFCRT_malloc(sizeof(TlsThread));
 		if(!pThread){
 			return nullptr;
 		}
@@ -75,7 +75,7 @@ static TlsThread *RequireTlsForCurrentThread(void){
 
 		if(!TlsSetValue(g_dwTlsIndex, pThread)){
 			const DWORD dwErrorCode = GetLastError();
-			free(pThread);
+			_MCFCRT_free(pThread);
 			SetLastError(dwErrorCode);
 			return nullptr;
 		}
@@ -117,7 +117,7 @@ static TlsObject *GetTlsObject(TlsThread *pThread, TlsKey *pKey){
 
 		_MCFCRT_AvlDetach((_MCFCRT_AvlNodeHeader *)pObject);
 
-		free(pObject);
+		_MCFCRT_free(pObject);
 		return nullptr;
 	}
 	return pObject;
@@ -130,7 +130,7 @@ static TlsObject *RequireTlsObject(TlsThread *pThread, TlsKey *pKey, size_t uSiz
 			SetLastError(ERROR_NOT_ENOUGH_MEMORY);
 			return nullptr;
 		}
-		pObject = malloc(uSizeToAlloc);
+		pObject = _MCFCRT_malloc(uSizeToAlloc);
 		if(!pObject){
 			SetLastError(ERROR_NOT_ENOUGH_MEMORY);
 			return nullptr;
@@ -143,7 +143,7 @@ static TlsObject *RequireTlsObject(TlsThread *pThread, TlsKey *pKey, size_t uSiz
 		if(pfnConstructor){
 			const DWORD dwErrorCode = (*pfnConstructor)(nContext, pObject->abyStorage);
 			if(dwErrorCode != 0){
-				free(pObject);
+				_MCFCRT_free(pObject);
 				SetLastError(dwErrorCode);
 				return nullptr;
 			}
@@ -221,16 +221,16 @@ void __MCFCRT_TlsCleanup(void){
 		if(pfnDestructor){
 			(*pfnDestructor)(pObject->nContext, pObject->abyStorage);
 		}
-		free(pObject);
+		_MCFCRT_free(pObject);
 	}
 
 	const bool bSucceeded = TlsSetValue(g_dwTlsIndex, nullptr);
 	_MCFCRT_ASSERT(bSucceeded);
-	free(pThread);
+	_MCFCRT_free(pThread);
 }
 
 _MCFCRT_TlsKeyHandle _MCFCRT_TlsAllocKey(size_t uSize, _MCFCRT_TlsConstructor pfnConstructor, _MCFCRT_TlsDestructor pfnDestructor, intptr_t nContext){
-	TlsKey *const pKey = malloc(sizeof(TlsKey));
+	TlsKey *const pKey = _MCFCRT_malloc(sizeof(TlsKey));
 	if(!pKey){
 		SetLastError(ERROR_NOT_ENOUGH_MEMORY);
 		return nullptr;
@@ -245,7 +245,7 @@ _MCFCRT_TlsKeyHandle _MCFCRT_TlsAllocKey(size_t uSize, _MCFCRT_TlsConstructor pf
 }
 void _MCFCRT_TlsFreeKey(_MCFCRT_TlsKeyHandle hTlsKey){
 	TlsKey *const pKey = (TlsKey *)hTlsKey;
-	free(pKey);
+	_MCFCRT_free(pKey);
 }
 
 size_t _MCFCRT_TlsGetSize(_MCFCRT_TlsKeyHandle hTlsKey){

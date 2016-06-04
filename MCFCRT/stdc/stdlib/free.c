@@ -7,10 +7,7 @@
 
 __attribute__((__noinline__))
 void free(void *p){
-	if(!p){
-		return;
-	}
-	__MCFCRT_HeapFree(p, __builtin_return_address(0));
+	_MCFCRT_free(p);
 }
 
 __attribute__((__alias__("free")))

@@ -7,8 +7,8 @@
 #include "mutex.h"
 #include "fenv.h"
 #include "thread_env.h"
+#include "heap.h"
 #include "../ext/expect.h"
-#include <stdlib.h>
 
 typedef struct tagAtExitCallback {
 	_MCFCRT_AtModuleExitCallback pfnProc;
@@ -56,7 +56,7 @@ static void PumpAtModuleExit(void){
 		}
 
 		CrtAtModuleExitDestructor(pBlock);
-		free(pBlock);
+		_MCFCRT_free(pBlock);
 	}
 }
 
@@ -107,7 +107,7 @@ bool _MCFCRT_AtModuleExit(_MCFCRT_AtModuleExitCallback pfnProc, intptr_t nContex
 		if(!pBlock || (pBlock->uSize >= CALLBACKS_PER_BLOCK)){
 			_MCFCRT_SignalMutex(&g_vAtExitMutex);
 			{
-				pBlock = malloc(sizeof(AtExitCallbackBlock));
+				pBlock = _MCFCRT_malloc(sizeof(AtExitCallbackBlock));
 				if(!pBlock){
 					SetLastError(ERROR_NOT_ENOUGH_MEMORY);
 					return false;

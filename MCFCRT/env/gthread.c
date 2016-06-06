@@ -179,7 +179,9 @@ bool __MCFCRT_GthreadJoin(_MCFCRT_STD uintptr_t tid, void **restrict exit_code_r
 			do {
 				__gthread_cond_wait(&(ctrl->termination), &g_ctrlmap_mutex);
 			} while(ctrl->state != kStateJoined);
-			*exit_code_ret = ctrl->exit_code;
+			if(exit_code_ret){
+				*exit_code_ret = ctrl->exit_code;
+			}
 			joined = true;
 			_MCFCRT_AvlDetach((_MCFCRT_AvlNodeHeader *)ctrl);
 			_MCFCRT_CloseThread(ctrl->handle);
@@ -187,7 +189,9 @@ bool __MCFCRT_GthreadJoin(_MCFCRT_STD uintptr_t tid, void **restrict exit_code_r
 			break;
 		case kStateZombie:
 			ctrl->state = kStateJoined;
-			*exit_code_ret = ctrl->exit_code;
+			if(exit_code_ret){
+				*exit_code_ret = ctrl->exit_code;
+			}
 			joined = true;
 			_MCFCRT_AvlDetach((_MCFCRT_AvlNodeHeader *)ctrl);
 			_MCFCRT_CloseThread(ctrl->handle);

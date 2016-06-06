@@ -241,12 +241,18 @@ static inline int __gthread_create(__gthread_t *__tid_ret, void *(*__proc)(void 
 	return 0;
 }
 static inline int __gthread_join(__gthread_t __tid, void **restrict __exit_code_ret) _MCFCRT_NOEXCEPT {
+	if(__tid == _MCFCRT_GetCurrentThreadId()){
+		return EDEADLK;
+	}
 	if(!__MCFCRT_GthreadJoin(__tid, __exit_code_ret)){
 		return ESRCH;
 	}
 	return 0;
 }
 static inline int __gthread_detach(__gthread_t __tid) _MCFCRT_NOEXCEPT {
+	if(__tid == _MCFCRT_GetCurrentThreadId()){
+		return EDEADLK;
+	}
 	if(!__MCFCRT_GthreadDetach(__tid)){
 		return ESRCH;
 	}

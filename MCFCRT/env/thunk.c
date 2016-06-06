@@ -35,9 +35,9 @@ static inline ThunkInfo *GetInfoFromFreeSizeIndex(const _MCFCRT_AvlNodeHeader *p
 }
 
 static int ThunkComparatorNodeKey(const _MCFCRT_AvlNodeHeader *pIndex1, intptr_t nKey2){
-	const uintptr_t uKey1 = (uintptr_t)(GetInfoFromThunkIndex(pIndex1)->pThunk);
-	const uintptr_t uKey2 = (uintptr_t)(void *)nKey2;
-	return (uKey1 < uKey2) ? -1 : ((uKey1 > uKey2) ? 1 : 0);
+	const uintptr_t u1 = (uintptr_t)(GetInfoFromThunkIndex(pIndex1)->pThunk);
+	const uintptr_t u2 = (uintptr_t)(void *)nKey2;
+	return (u1 < u2) ? -1 : ((u1 > u2) ? 1 : 0);
 }
 static int ThunkComparatorNodes(const _MCFCRT_AvlNodeHeader *pIndex1, const _MCFCRT_AvlNodeHeader *pIndex2){
 	return ThunkComparatorNodeKey(pIndex1, (intptr_t)(GetInfoFromThunkIndex(pIndex2)->pThunk));
@@ -46,9 +46,9 @@ static int ThunkComparatorNodes(const _MCFCRT_AvlNodeHeader *pIndex1, const _MCF
 static_assert(sizeof(size_t) <= sizeof(uintptr_t), "This platform is not supported.");
 
 static int FreeSizeComparatorNodeKey(const _MCFCRT_AvlNodeHeader *pIndex1, intptr_t nKey2){
-	const uintptr_t uKey1 = GetInfoFromFreeSizeIndex(pIndex1)->uFreeSize;
-	const uintptr_t uKey2 = (uintptr_t)nKey2;
-	return (uKey1 < uKey2) ? -1 : ((uKey1 > uKey2) ? 1 : 0);
+	const uintptr_t u1 = GetInfoFromFreeSizeIndex(pIndex1)->uFreeSize;
+	const uintptr_t u2 = (uintptr_t)nKey2;
+	return (u1 < u2) ? -1 : ((u1 > u2) ? 1 : 0);
 }
 static int FreeSizeComparatorNodes(const _MCFCRT_AvlNodeHeader *pIndex1, const _MCFCRT_AvlNodeHeader *pIndex2){
 	return FreeSizeComparatorNodeKey(pIndex1, (intptr_t)GetInfoFromFreeSizeIndex(pIndex2)->uFreeSize);

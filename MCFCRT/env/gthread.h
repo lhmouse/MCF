@@ -221,6 +221,62 @@ static inline int __gthread_cond_broadcast(__gthread_cond_t *__cond) _MCFCRT_NOE
 	return 0;
 }
 
+//-----------------------------------------------------------------------------
+// Thread
+//-----------------------------------------------------------------------------
+///#define __GTHREADS_CXX0X 1
+
+typedef _MCFCRT_STD uintptr_t __gthread_t;
+
+extern _MCFCRT_STD uintptr_t __MCFCRT_GthreadCreateJoinable(void *(*__proc)(void *), void *__param) _MCFCRT_NOEXCEPT;
+extern bool __MCFCRT_GthreadJoin(_MCFCRT_STD uintptr_t __tid, void **restrict __exit_code_ret) _MCFCRT_NOEXCEPT;
+extern bool __MCFCRT_GthreadDetach(_MCFCRT_STD uintptr_t __tid) _MCFCRT_NOEXCEPT;
+
+static inline int __gthread_create(__gthread_t *__tid_ret, void *(*__proc)(void *), void *__param) _MCFCRT_NOEXCEPT {
+	const __gthread_t __tid = __MCFCRT_GthreadCreateJoinable(__proc, __param);
+	if(__tid == 0){
+		return EAGAIN;
+	}
+	*__tid_ret = __tid;
+	return 0;
+}
+static inline int __gthread_join(__gthread_t __tid, void **restrict __exit_code_ret) _MCFCRT_NOEXCEPT {
+	if(!__MCFCRT_GthreadJoin(__tid, __exit_code_ret)){
+		return ESRCH;
+	}
+	return 0;
+}
+static inline int __gthread_detach(__gthread_t __tid) _MCFCRT_NOEXCEPT {
+	if(!__MCFCRT_GthreadDetach(__tid)){
+		return ESRCH;
+	}
+	return 0;
+}
+
+_MCFCRT_CONSTEXPR int __gthread_equal(__gthread_t __tid1, __gthread_t __tid2) _MCFCRT_NOEXCEPT {
+	return __tid1 == __tid2;
+}
+static inline __gthread_t __gthread_self(void) _MCFCRT_NOEXCEPT {
+	return _MCFCRT_GetCurrentThreadId();
+}
+static inline int __gthread_yield(void) _MCFCRT_NOEXCEPT {
+	_MCFCRT_YieldThread();
+	return 0;
+}
+
+/*
+     __gthread_time_t
+
+
+     int __gthread_mutex_timedlock (__gthread_mutex_t *m,
+                                    const __gthread_time_t *abs_timeout);
+     int __gthread_recursive_mutex_timedlock (__gthread_recursive_mutex_t *m,
+                                          const __gthread_time_t *abs_time);
+
+     int __gthread_cond_timedwait (__gthread_cond_t *cond,
+                                   __gthread_mutex_t *mutex,
+                                   const __gthread_time_t *abs_timeout);
+*/
 _MCFCRT_EXTERN_C_END
 
 #endif

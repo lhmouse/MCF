@@ -29,23 +29,13 @@ struct tagTlsObject {
 	alignas(max_align_t) unsigned char abyStorage[];
 };
 
-static inline int CompareTlsKeys(const struct tagTlsKey *pKey1, const struct tagTlsKey *pKey2){
-	const uintptr_t u1 = (uintptr_t)pKey1, u2 = (uintptr_t)pKey2;
-	if(u1 < u2){
-		return -1;
-	} else if(u1 > u2){
-		return 1;
-	}
-	return 0;
-}
-
 static inline int ObjectComparatorNodeKey(const _MCFCRT_AvlNodeHeader *pObj1, intptr_t nKey2){
-	return CompareTlsKeys(((const TlsObject *)pObj1)->pKey,
-	                      (struct tagTlsKey *)nKey2);
+	const uintptr_t u1 = (uintptr_t)(((const TlsObject *)pObj1)->pKey);
+	const uintptr_t u2 = (uintptr_t)(void *)nKey2;
+	return (u1 < u2) ? -1 : ((u1 > u2) ? 1 : 0);
 }
 static inline int ObjectComparatorNodes(const _MCFCRT_AvlNodeHeader *pObj1, const _MCFCRT_AvlNodeHeader *pObj2){
-	return CompareTlsKeys(((const TlsObject *)pObj1)->pKey,
-	                      ((const TlsObject *)pObj2)->pKey);
+	return ObjectComparatorNodeKey(pObj1, (intptr_t)(((const TlsObject *)pObj2)->pKey));
 }
 
 struct tagTlsThread {

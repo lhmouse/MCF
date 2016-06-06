@@ -4,47 +4,47 @@
 
 #include "gthread.h"
 
-void __MCFCRT_GthreadTlsDestructor(intptr_t nContext, void *pStorage){
-	void (*const pfnDestructor)(void *) = (void (*)(void *))nContext;
+void __MCFCRT_GthreadTlsDestructor(intptr_t context, void *storage){
+	void (*const destructor)(void *) = (void (*)(void *))context;
 
-	void *const pData = *(void **)pStorage;
-	if(!pData){
+	void *const value = *(void **)storage;
+	if(!value){
 		return;
 	}
-	(*pfnDestructor)(pData);
+	(*destructor)(value);
 }
 
-intptr_t __MCFCRT_GthreadUnlockCallbackMutex(intptr_t __context){
-	__gthread_mutex_t *const __mutex = (__gthread_mutex_t *)__context;
+intptr_t __MCFCRT_GthreadUnlockCallbackMutex(intptr_t context){
+	__gthread_mutex_t *const mutex = (__gthread_mutex_t *)context;
 
-	__gthread_mutex_unlock(__mutex);
+	__gthread_mutex_unlock(mutex);
 	return 1;
 }
-void __MCFCRT_GthreadRelockCallbackMutex(intptr_t __context, intptr_t __unlocked){
-	__gthread_mutex_t *const __mutex = (__gthread_mutex_t *)__context;
+void __MCFCRT_GthreadRelockCallbackMutex(intptr_t context, intptr_t unlocked){
+	__gthread_mutex_t *const mutex = (__gthread_mutex_t *)context;
 
-	_MCFCRT_ASSERT((size_t)__unlocked == 1);
-	__gthread_mutex_lock(__mutex);
+	_MCFCRT_ASSERT((size_t)unlocked == 1);
+	__gthread_mutex_lock(mutex);
 }
 
-intptr_t __MCFCRT_GthreadUnlockCallbackRecursiveMutex(intptr_t __context){
-	__gthread_recursive_mutex_t *const __recur_mutex = (__gthread_recursive_mutex_t *)__context;
-	_MCFCRT_ASSERT(_MCFCRT_GetCurrentThreadId() == __atomic_load_n(&(__recur_mutex->__owner), __ATOMIC_RELAXED));
+intptr_t __MCFCRT_GthreadUnlockCallbackRecursiveMutex(intptr_t context){
+	__gthread_recursive_mutex_t *const recur_mutex = (__gthread_recursive_mutex_t *)context;
+	_MCFCRT_ASSERT(_MCFCRT_GetCurrentThreadId() == __atomic_load_n(&(recur_mutex->__owner), __ATOMIC_RELAXED));
 
-	const size_t __old_count = __recur_mutex->__count;
-	__recur_mutex->__count = 0;
-	__atomic_store_n(&(__recur_mutex->__owner), 0, __ATOMIC_RELAXED);
+	const size_t __old_count = recur_mutex->__count;
+	recur_mutex->__count = 0;
+	__atomic_store_n(&(recur_mutex->__owner), 0, __ATOMIC_RELAXED);
 
-	__gthread_mutex_unlock(&(__recur_mutex->__mutex));
+	__gthread_mutex_unlock(&(recur_mutex->__mutex));
 	return (intptr_t)__old_count;
 }
-void __MCFCRT_GthreadRelockCallbackRecursiveMutex(intptr_t __context, intptr_t __unlocked){
-	__gthread_recursive_mutex_t *const __recur_mutex = (__gthread_recursive_mutex_t *)__context;
+void __MCFCRT_GthreadRelockCallbackRecursiveMutex(intptr_t context, intptr_t unlocked){
+	__gthread_recursive_mutex_t *const recur_mutex = (__gthread_recursive_mutex_t *)context;
 
-	_MCFCRT_ASSERT((size_t)__unlocked >= 1);
-	__gthread_mutex_lock(&(__recur_mutex->__mutex));
+	_MCFCRT_ASSERT((size_t)unlocked >= 1);
+	__gthread_mutex_lock(&(recur_mutex->__mutex));
 
 	const uintptr_t __self = _MCFCRT_GetCurrentThreadId();
-	__atomic_store_n(&(__recur_mutex->__owner), __self, __ATOMIC_RELAXED);
-	__recur_mutex->__count = (size_t)__unlocked;
+	__atomic_store_n(&(recur_mutex->__owner), __self, __ATOMIC_RELAXED);
+	recur_mutex->__count = (size_t)unlocked;
 }

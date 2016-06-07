@@ -285,7 +285,7 @@ static inline _MCFCRT_STD uint64_t __MCFCRT_GthreadTranslateTimeout(const __gthr
 	}
 	const _MCFCRT_STD uint64_t __mono_now_ms = _MCFCRT_GetFastMonoClock();
 	const _MCFCRT_STD uint64_t __complement_ms = (1ull << 48) - 1 - __mono_now_ms;
-	if(__delta_ms >= __complement_ms){
+	if(__delta_ms >= (double)__complement_ms){
 		return (_MCFCRT_STD uint64_t)-1;
 	}
 	return __mono_now_ms + (_MCFCRT_STD uint64_t)__delta_ms;

@@ -79,13 +79,13 @@ typedef struct tagThreadControl {
 	_MCFCRT_ThreadHandle handle;
 } ThreadControl;
 
-static inline int ThreadControlComparatorNodeKey(const _MCFCRT_AvlNodeHeader *pObj1, intptr_t nKey2){
-	const uintptr_t u1 = (uintptr_t)(((const ThreadControl *)pObj1)->tid);
-	const uintptr_t u2 = (uintptr_t)(void *)nKey2;
+static inline int ThreadControlComparatorNodeKey(const _MCFCRT_AvlNodeHeader *lhs, intptr_t rhs){
+	const uintptr_t u1 = (uintptr_t)(((const ThreadControl *)lhs)->tid);
+	const uintptr_t u2 = (uintptr_t)(void *)rhs;
 	return (u1 < u2) ? -1 : ((u1 > u2) ? 1 : 0);
 }
-static inline int ThreadControlComparatorNodes(const _MCFCRT_AvlNodeHeader *pObj1, const _MCFCRT_AvlNodeHeader *pObj2){
-	return ThreadControlComparatorNodeKey(pObj1, (intptr_t)(((const ThreadControl *)pObj2)->tid));
+static inline int ThreadControlComparatorNodes(const _MCFCRT_AvlNodeHeader *lhs, const _MCFCRT_AvlNodeHeader *pObj2){
+	return ThreadControlComparatorNodeKey(lhs, (intptr_t)(((const ThreadControl *)pObj2)->tid));
 }
 
 __MCFCRT_C_STDCALL __MCFCRT_HAS_EH_TOP

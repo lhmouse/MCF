@@ -132,7 +132,7 @@ static void RealSetAndSignalOnceFlag(volatile uintptr_t *puControl, bool bFinish
 	}
 }
 
-_MCFCRT_OnceResult _MCFCRT_WaitForOnceFlag(_MCFCRT_OnceFlag *pOnceFlag, _MCFCRT_STD uint64_t u64UntilFastMonoClock){
+_MCFCRT_OnceResult _MCFCRT_WaitForOnceFlag(_MCFCRT_OnceFlag *pOnceFlag, uint64_t u64UntilFastMonoClock){
 	return RealWaitForOnceFlag(&(pOnceFlag->__u), true, u64UntilFastMonoClock);
 }
 _MCFCRT_OnceResult _MCFCRT_WaitForOnceFlagForever(_MCFCRT_OnceFlag *pOnceFlag){

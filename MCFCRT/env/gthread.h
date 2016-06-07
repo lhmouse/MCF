@@ -16,6 +16,7 @@
 #include "once_flag.h"
 #include "mutex.h"
 #include "condition_variable.h"
+#include "clocks.h"
 
 #ifdef __GTHREADS
 #	error __GTHREADS is already defined. (Thread model confliction detected?)
@@ -126,7 +127,7 @@ static inline int __gthread_mutex_unlock(__gthread_mutex_t *__mutex) _MCFCRT_NOE
 typedef struct __MCFCRT_tagGthreadRecursiveMutex {
 	volatile _MCFCRT_STD uintptr_t __owner;
 	_MCFCRT_STD size_t __count;
-	_MCFCRT_Mutex __mutex;
+	__gthread_mutex_t __mutex;
 } __gthread_recursive_mutex_t;
 
 #define __GTHREAD_RECURSIVE_MUTEX_INIT            { 0, 0, { 0 } }
@@ -224,7 +225,7 @@ static inline int __gthread_cond_broadcast(__gthread_cond_t *__cond) _MCFCRT_NOE
 //-----------------------------------------------------------------------------
 // Thread
 //-----------------------------------------------------------------------------
-///#define __GTHREADS_CXX0X 1
+#define __GTHREADS_CXX0X 1
 
 typedef _MCFCRT_STD uintptr_t __gthread_t;
 
@@ -270,19 +271,59 @@ static inline int __gthread_yield(void) _MCFCRT_NOEXCEPT {
 	return 0;
 }
 
-/*
-     __gthread_time_t
+typedef struct __MCFCRT_tagGthreadTime {
+	_MCFCRT_STD int64_t __seconds;
+	long __nanoseconds;
+} __gthread_time_t;
 
+static inline _MCFCRT_STD uint64_t __MCFCRT_GthreadTranslateTimeout(const __gthread_time_t *__utc_timeout) _MCFCRT_NOEXCEPT {
+	const double __utc_timeout_ms = (double)__utc_timeout->__seconds * 1.0e3 + (double)__utc_timeout->__nanoseconds / 1.0e6;
+	const double __utc_now_ms = (double)_MCFCRT_GetUtcClock();
+	const double __delta_ms = __utc_timeout_ms - __utc_now_ms;
+	if(__delta_ms <= 0){
+		return 0;
+	}
+	const _MCFCRT_STD uint64_t __mono_now_ms = _MCFCRT_GetFastMonoClock();
+	const _MCFCRT_STD uint64_t __complement_ms = (1ull << 48) - 1 - __mono_now_ms;
+	if(__delta_ms >= __complement_ms){
+		return (_MCFCRT_STD uint64_t)-1;
+	}
+	return __mono_now_ms + (_MCFCRT_STD uint64_t)__delta_ms;
+}
 
-     int __gthread_mutex_timedlock (__gthread_mutex_t *m,
-                                    const __gthread_time_t *abs_timeout);
-     int __gthread_recursive_mutex_timedlock (__gthread_recursive_mutex_t *m,
-                                          const __gthread_time_t *abs_time);
+static inline int __gthread_mutex_timedlock(__gthread_mutex_t *__mutex, const __gthread_time_t *__timeout) _MCFCRT_NOEXCEPT {
+	const _MCFCRT_STD uint64_t __mono_timeout_ms = __MCFCRT_GthreadTranslateTimeout(__timeout);
+	if(!_MCFCRT_WaitForMutex(__mutex, _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT, __mono_timeout_ms)){
+		return ETIMEDOUT;
+	}
+	return 0;
+}
+static inline int __gthread_recursive_mutex_timedlock(__gthread_recursive_mutex_t *__recur_mutex, const __gthread_time_t *__timeout) _MCFCRT_NOEXCEPT {
+	const _MCFCRT_STD uintptr_t __self = _MCFCRT_GetCurrentThreadId();
+	const _MCFCRT_STD uintptr_t __old_owner = __atomic_load_n(&(__recur_mutex->__owner), __ATOMIC_RELAXED);
+	if(_MCFCRT_EXPECT_NOT(__old_owner != __self)){
+		if(__old_owner != 0){
+			return EBUSY;
+		}
+		const int __error = __gthread_mutex_timedlock(&(__recur_mutex->__mutex), __timeout);
+		if(__error != 0){
+			return __error;
+		}
+		__atomic_store_n(&(__recur_mutex->__owner), __self, __ATOMIC_RELAXED);
+	}
+	const _MCFCRT_STD size_t __new_count = ++__recur_mutex->__count;
+	_MCFCRT_ASSERT(__new_count != 0);
+	return 0;
+}
 
-     int __gthread_cond_timedwait (__gthread_cond_t *cond,
-                                   __gthread_mutex_t *mutex,
-                                   const __gthread_time_t *abs_timeout);
-*/
+static inline int __gthread_cond_timedwait(__gthread_cond_t *__cond, __gthread_mutex_t *__mutex, const __gthread_time_t *__timeout) _MCFCRT_NOEXCEPT {
+	const _MCFCRT_STD uint64_t __mono_timeout_ms = __MCFCRT_GthreadTranslateTimeout(__timeout);
+	if(!_MCFCRT_WaitForConditionVariable(__cond, &__MCFCRT_GthreadUnlockCallbackMutex, &__MCFCRT_GthreadRelockCallbackMutex, (_MCFCRT_STD intptr_t)__mutex, __mono_timeout_ms)){
+		return ETIMEDOUT;
+	}
+	return 0;
+}
+
 _MCFCRT_EXTERN_C_END
 
 #endif

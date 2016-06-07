@@ -170,8 +170,7 @@ namespace Impl_StringView {
 
 			if(uFindCount > 2){
 				std::ptrdiff_t nPos = 1, nCand = 0;
-				do {
-				jTryFallback:
+				for(;;){
 					if(itToFindBegin[nPos] == itToFindBegin[nCand]){
 						++nCand;
 						if(itToFindBegin[nPos + 1] == itToFindBegin[nCand]){
@@ -183,10 +182,13 @@ namespace Impl_StringView {
 						pTable[nPos] = 0;
 					} else {
 						nCand = pTable[nCand - 1];
-						goto jTryFallback;
+						continue;
 					}
 					++nPos;
-				} while(static_cast<std::size_t>(nPos) < uFindCount - 1);
+					if(static_cast<std::size_t>(nPos) >= uFindCount - 1){
+						break;
+					}
+				}
 			}
 		}
 

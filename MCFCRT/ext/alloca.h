@@ -7,21 +7,14 @@
 
 #include "../env/_crtdef.h"
 
-static inline __attribute__((__returns_nonnull__))
-void *__MCFCRT_ProbeStack(void *__pAllocated, _MCFCRT_STD size_t __uBytes) _MCFCRT_NOEXCEPT {
-	const _MCFCRT_STD size_t __kPageSize = 0x1000, __kMinToProbe = 0x200;
-	const _MCFCRT_STD size_t __uPages = (__uBytes + __kPageSize - __kMinToProbe) / __kPageSize;
-	for(_MCFCRT_STD size_t __i = __uPages; __i != 0; --__i){
-		*(volatile _MCFCRT_STD uintptr_t *)((char *)__pAllocated + (__i - 1) * __kPageSize);
-	}
-	return __pAllocated;
-}
-
-#define _MCFCRT_ALLOCA(__cb_)	\
-	(__extension__ ({	\
-		const _MCFCRT_STD size_t __uBytes_ = (__cb_);	\
-		void *const __pAllocated_ = __builtin_alloca(__uBytes_);	\
-		__MCFCRT_ProbeStack(__pAllocated_, __uBytes_);	\
+#define _MCFCRT_ALLOCA(__size_)	\
+	(__extension__({	\
+		const _MCFCRT_STD size_t __size = __size_;	\
+		void *const __ptr = __builtin_alloca(__size);	\
+		for(_MCFCRT_STD size_t __offset = 0xFF0; __offset < __size; __offset += 0x1000){	\
+			((volatile int *)__ptr)[__size - __offset] = 0;	\
+		}	\
+		__ptr;	\
 	}))
 
 #endif

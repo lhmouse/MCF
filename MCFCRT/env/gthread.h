@@ -33,7 +33,7 @@ _MCFCRT_CONSTEXPR int __gthread_active_p(void) _MCFCRT_NOEXCEPT {
 //-----------------------------------------------------------------------------
 // Thread local storage
 //-----------------------------------------------------------------------------
-extern void __MCFCRT_GthreadTlsDestructor(_MCFCRT_STD intptr_t __nContext, void *__pStorage) _MCFCRT_NOEXCEPT;
+extern void __MCFCRT_GthreadTlsDestructor(_MCFCRT_STD intptr_t __context, void *__storage) _MCFCRT_NOEXCEPT;
 
 typedef _MCFCRT_TlsKeyHandle __gthread_key_t;
 

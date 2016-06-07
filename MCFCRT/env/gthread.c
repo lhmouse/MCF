@@ -36,12 +36,12 @@ intptr_t __MCFCRT_GthreadUnlockCallbackRecursiveMutex(intptr_t context){
 	__gthread_recursive_mutex_t *const recur_mutex = (__gthread_recursive_mutex_t *)context;
 	_MCFCRT_ASSERT(_MCFCRT_GetCurrentThreadId() == __atomic_load_n(&(recur_mutex->__owner), __ATOMIC_RELAXED));
 
-	const size_t __old_count = recur_mutex->__count;
+	const size_t old_count = recur_mutex->__count;
 	recur_mutex->__count = 0;
 	__atomic_store_n(&(recur_mutex->__owner), 0, __ATOMIC_RELAXED);
 
 	__gthread_mutex_unlock(&(recur_mutex->__mutex));
-	return (intptr_t)__old_count;
+	return (intptr_t)old_count;
 }
 void __MCFCRT_GthreadRelockCallbackRecursiveMutex(intptr_t context, intptr_t unlocked){
 	__gthread_recursive_mutex_t *const recur_mutex = (__gthread_recursive_mutex_t *)context;
@@ -49,8 +49,8 @@ void __MCFCRT_GthreadRelockCallbackRecursiveMutex(intptr_t context, intptr_t unl
 	_MCFCRT_ASSERT((size_t)unlocked >= 1);
 	__gthread_mutex_lock(&(recur_mutex->__mutex));
 
-	const uintptr_t __self = _MCFCRT_GetCurrentThreadId();
-	__atomic_store_n(&(recur_mutex->__owner), __self, __ATOMIC_RELAXED);
+	const uintptr_t self = _MCFCRT_GetCurrentThreadId();
+	__atomic_store_n(&(recur_mutex->__owner), self, __ATOMIC_RELAXED);
 	recur_mutex->__count = (size_t)unlocked;
 }
 
@@ -184,6 +184,7 @@ bool __MCFCRT_GthreadJoin(uintptr_t tid, void **restrict exit_code_ret){
 			}
 			joined = true;
 			_MCFCRT_AvlDetach((_MCFCRT_AvlNodeHeader *)ctrl);
+			_MCFCRT_WaitForThreadForever(ctrl->handle);
 			_MCFCRT_CloseThread(ctrl->handle);
 			_MCFCRT_free(ctrl);
 			break;
@@ -194,6 +195,7 @@ bool __MCFCRT_GthreadJoin(uintptr_t tid, void **restrict exit_code_ret){
 			}
 			joined = true;
 			_MCFCRT_AvlDetach((_MCFCRT_AvlNodeHeader *)ctrl);
+			_MCFCRT_WaitForThreadForever(ctrl->handle);
 			_MCFCRT_CloseThread(ctrl->handle);
 			_MCFCRT_free(ctrl);
 			break;

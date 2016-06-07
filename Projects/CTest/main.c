@@ -13,9 +13,9 @@ unsigned int _MCFCRT_Main(void){
 	__gthread_t tid;
 	__gthread_create(&tid, &thread_proc, (void *)0x12345);
 	printf("main - 1: tid = %u\n", (unsigned)tid);
-	_MCFCRT_Sleep(_MCFCRT_GetFastMonoClock() + 2000);
 	void *ret;
 	__gthread_join(tid, &ret);
+	_MCFCRT_Sleep(_MCFCRT_GetFastMonoClock() + 2000);
 	printf("main - 2: ret = %p\n", ret);
 	return 0;
 }

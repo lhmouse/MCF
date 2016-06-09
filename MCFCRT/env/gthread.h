@@ -169,7 +169,13 @@ static inline int __gthread_recursive_mutex_lock(__gthread_recursive_mutex_t *__
 	return 0;
 }
 static inline int __gthread_recursive_mutex_unlock(__gthread_recursive_mutex_t *__recur_mutex) _MCFCRT_NOEXCEPT {
-	_MCFCRT_ASSERT(_MCFCRT_GetCurrentThreadId() == __atomic_load_n(&(__recur_mutex->__owner), __ATOMIC_RELAXED));
+#ifndef NDEBUG
+	const _MCFCRT_STD uintptr_t __self = _MCFCRT_GetCurrentThreadId();
+	const _MCFCRT_STD uintptr_t __old_owner = __atomic_load_n(&(__recur_mutex->__owner), __ATOMIC_RELAXED);
+	if(__self != __old_owner){
+		_MCFCRT_ASSERT(false);
+	}
+#endif
 	const _MCFCRT_STD size_t __new_count = --__recur_mutex->__count;
 	if(_MCFCRT_EXPECT_NOT(__new_count == 0)){
 		__atomic_store_n(&(__recur_mutex->__owner), 0, __ATOMIC_RELAXED);

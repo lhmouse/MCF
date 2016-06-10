@@ -112,32 +112,20 @@ namespace Impl_IntrusivePtr {
 		return StaticCastOrDynamicCastHelper<DstT, SrcT>()(std::forward<SrcT>(vSrc));
 	}
 
-	template<std::size_t kSizeT>
-	struct ViewAllocator {
-		static FixedSizeAllocator<kSizeT> s_vAllocator;
-
-		static void *Allocate(){
-			return s_vAllocator.Allocate();
-		}
-		static void Deallocate(void *pRaw){
-			s_vAllocator.Deallocate(pRaw);
-		}
-	};
-
-	template<std::size_t kSizeT>
-	__attribute__((__init_priority__(101)))
-	FixedSizeAllocator<kSizeT> ViewAllocator<kSizeT>::s_vAllocator;
+	extern FixedSizeAllocator<16> g_vViewAllocator;
 
 	template<typename OwnerT, class DeleterT>
 	class WeakViewTemplate final : public RefCountBase  {
 	public:
 		static void *operator new(std::size_t uSize){
+			static_assert(sizeof(WeakViewTemplate) <= g_vViewAllocator.kElementSize, "Fix the declaration of g_vViewAllocator!");
+
 			MCF_ASSERT(uSize == sizeof(WeakViewTemplate));
 			(void)uSize;
-			return ViewAllocator<sizeof(WeakViewTemplate)>::Allocate();
+			return g_vViewAllocator.Allocate();
 		}
 		static void operator delete(void *pRaw) noexcept {
-			ViewAllocator<sizeof(WeakViewTemplate)>::Deallocate(pRaw);
+			g_vViewAllocator.Deallocate(pRaw);
 		}
 
 	private:

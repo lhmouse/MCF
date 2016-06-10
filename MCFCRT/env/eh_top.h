@@ -22,7 +22,7 @@
 		"	.seh_handler __C_specific_handler, @except \n"	\
 		"	.seh_handlerdata \n"	\
 		"	.long 1 \n"	\
-		"	.rva 60000b, 60001b + 1, _gnu_exception_handler, 60001b + 1 \n"	\
+		"	.rva 60000b, 60001b + 1, _gnu_exception_handler, 60001b \n"	\
 		"	.section .text$ \n"	\
 	);
 

@@ -22,7 +22,7 @@ extern "C" unsigned _MCFCRT_Main(void) noexcept {
 	t1 = _MCFCRT_GetHiResMonoClock();
 	_MCFCRT_WaitForConditionVariable(&c, &__MCFCRT_GthreadUnlockCallbackMutex, &__MCFCRT_GthreadRelockCallbackMutex, (_MCFCRT_STD intptr_t)&m, _MCFCRT_GetFastMonoClock() + 1000);
 	t2 = _MCFCRT_GetHiResMonoClock();
-	__builtin_printf("dt = %f\n", t2 - t1);
+	std::printf("dt = %f\n", t2 - t1);
 
 	return 0;
 }

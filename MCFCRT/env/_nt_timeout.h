@@ -22,7 +22,7 @@ static inline void __MCF_CRT_InitializeNtTimeout(LARGE_INTEGER *__pliTimeout, _M
 		__pliTimeout->QuadPart = INT64_MAX; // 永不超时。
 		return;
 	}
-	__pliTimeout->QuadPart = -(_MCFCRT_STD int64_t)(__u64DeltaMs * 10000u); // 用负数表示相对时间。
+	__pliTimeout->QuadPart = -(_MCFCRT_STD int64_t)(__u64DeltaMs * 10000u + 9999u); // 用负数表示相对时间。
 }
 
 _MCFCRT_EXTERN_C_END

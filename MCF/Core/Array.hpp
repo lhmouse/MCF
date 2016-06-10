@@ -28,11 +28,8 @@ namespace Impl_Array {
 }
 
 template<typename ElementT, std::size_t kSizeT, std::size_t ...kRemainingT>
-class Array {
+class Array : public Array<Array<ElementT, kRemainingT...>, kSizeT> {
 	static_assert(kSizeT > 0, "An array shall have a non-zero size.");
-
-public:
-	Array<ElementT, kRemainingT...> a[kSizeT];
 };
 
 template<typename ElementT, std::size_t kSizeT>

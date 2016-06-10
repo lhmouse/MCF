@@ -1,13 +1,8 @@
-#include <MCFCRT/ext/alloca.h>
+#include <mcfgthread/gthread.h>
 
-unsigned int _MCFCRT_Main(void){
-	__debugbreak();
-	_MCFCRT_ALLOCA(100);
-	__debugbreak();
-	_MCFCRT_ALLOCA(1000);
-	__debugbreak();
-	_MCFCRT_ALLOCA(10000);
-	__debugbreak();
-	_MCFCRT_ALLOCA(100000);
+__gthread_recursive_mutex_t m;
+
+unsigned _MCFCRT_Main(void){
+	__gthread_recursive_mutex_unlock(&m);
 	return 0;
 }

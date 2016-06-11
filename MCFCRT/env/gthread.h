@@ -274,15 +274,15 @@ typedef struct __MCFCRT_tagGthreadTime {
 } __gthread_time_t;
 
 static inline _MCFCRT_STD uint64_t __MCFCRT_GthreadTranslateTimeout(const __gthread_time_t *__utc_timeout) _MCFCRT_NOEXCEPT {
-	const double __utc_timeout_ms = (double)__utc_timeout->__seconds * 1.0e3 + (double)__utc_timeout->__nanoseconds / 1.0e6;
-	const double __utc_now_ms = (double)_MCFCRT_GetUtcClock();
-	const double __delta_ms = __utc_timeout_ms - __utc_now_ms;
+	const long double __utc_timeout_ms = (long double)__utc_timeout->__seconds * 1.0e3l + (long double)__utc_timeout->__nanoseconds / 1.0e6l;
+	const long double __utc_now_ms = (long double)_MCFCRT_GetUtcClock();
+	const long double __delta_ms = __utc_timeout_ms - __utc_now_ms;
 	if(__delta_ms <= 0){
 		return 0;
 	}
 	const _MCFCRT_STD uint64_t __mono_now_ms = _MCFCRT_GetFastMonoClock();
 	const _MCFCRT_STD uint64_t __complement_ms = (1ull << 48) - 1 - __mono_now_ms;
-	if(__delta_ms >= (double)__complement_ms){
+	if(__delta_ms >= (long double)__complement_ms){
 		return (_MCFCRT_STD uint64_t)-1;
 	}
 	return __mono_now_ms + (_MCFCRT_STD uint64_t)__delta_ms;

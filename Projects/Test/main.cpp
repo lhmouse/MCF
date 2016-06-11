@@ -1,18 +1,13 @@
 #include <MCF/StdMCF.hpp>
-#include <MCF/Streams/StandardInputStream.hpp>
-#include <MCF/Streams/StandardOutputStream.hpp>
-#include <MCF/Streams/StandardErrorStream.hpp>
+#include <MCFCRT/ext/div64.h>
+#include <cstdio>
+
+constexpr std::uint64_t a = 987654321987;
+constexpr std::uint32_t b = 65432178;
 
 extern "C" unsigned _MCFCRT_Main(void) noexcept {
-	MCF::StandardInputStream  in;
-	MCF::StandardOutputStream out;
-	MCF::StandardErrorStream  err;
-
-	out.PutString(L"标准输出 1", 6, true);
-	err.PutString(L"标准错误 1", 6, true);
-	wchar_t str[10];
-	auto len = in.GetString(str, 10, true);
-	out.PutString(str, len, true);
-
+	std::uint32_t quo, rem;
+	quo = _MCFCRT_udivrem64(&rem, a, b);
+	std::printf("quo = %llu, rem = %llu\n", (unsigned long long)quo, (unsigned long long)rem);
 	return 0;
 }

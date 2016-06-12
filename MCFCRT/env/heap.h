@@ -47,6 +47,9 @@ static inline void *_MCFCRT_calloc(_MCFCRT_STD size_t __uCount, _MCFCRT_STD size
 }
 __attribute__((__always_inline__))
 static inline void _MCFCRT_free(void *__pBlock) _MCFCRT_NOEXCEPT {
+	if(!__pBlock){
+		return;
+	}
 	__MCFCRT_HeapFree(__pBlock,
 		__builtin_return_address(0));
 }

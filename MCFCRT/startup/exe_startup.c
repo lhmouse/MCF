@@ -106,6 +106,7 @@ static volatile bool g_bTlsActive = false;
 static bool g_bInitialized = false;
 
 __MCFCRT_C_STDCALL __MCFCRT_HAS_EH_TOP
+	__attribute__((__noinline__))
 void __MCFCRT_ExeTlsCallback(LPVOID hInstance, DWORD dwReason, LPVOID pReserved){
 	(void)hInstance;
 	(void)pReserved;

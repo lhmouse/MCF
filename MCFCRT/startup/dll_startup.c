@@ -90,6 +90,7 @@ BOOL __MCFCRT_DllStartup(HINSTANCE hDll, DWORD dwReason, LPVOID pReserved)
 static bool g_bInitialized = false;
 
 __MCFCRT_C_STDCALL __MCFCRT_HAS_EH_TOP
+	__attribute__((__noinline__))
 BOOL __MCFCRT_DllStartup(HINSTANCE hDll, DWORD dwReason, LPVOID pReserved){
 	bool bRet = true;
 

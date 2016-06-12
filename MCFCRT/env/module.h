@@ -16,6 +16,7 @@ typedef void (*_MCFCRT_AtModuleExitCallback)(_MCFCRT_STD intptr_t __nContext);
 
 extern bool _MCFCRT_AtModuleExit(_MCFCRT_AtModuleExitCallback __pfnProc, _MCFCRT_STD intptr_t __nContext) _MCFCRT_NOEXCEPT;
 
+__attribute__((__const__))
 extern void *_MCFCRT_GetModuleBase(void) _MCFCRT_NOEXCEPT;
 
 typedef struct __MCFCRT_tagModuleSectionInfo {

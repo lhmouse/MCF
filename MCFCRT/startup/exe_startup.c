@@ -104,7 +104,7 @@ static void OnExeProcessDetach(void){
 static bool g_bInitialized = false;
 
 __MCFCRT_C_STDCALL __MCFCRT_HAS_EH_TOP
-static void CrtTlsCallback(LPVOID hInstance, DWORD dwReason, LPVOID pReserved){
+void __MCFCRT_ExeTlsCallback(LPVOID hInstance, DWORD dwReason, LPVOID pReserved){
 	(void)hInstance;
 	(void)pReserved;
 
@@ -147,7 +147,7 @@ __extension__ __attribute__((__section__(".tls$___")))
 static const char tls_end[0]   = { };
 
 __attribute__((__section__(".CRT$@@@")))
-static const PIMAGE_TLS_CALLBACK callback_begin = &CrtTlsCallback;
+static const PIMAGE_TLS_CALLBACK callback_begin = &__MCFCRT_ExeTlsCallback;
 __attribute__((__section__(".CRT$___"), __used__))
 static const PIMAGE_TLS_CALLBACK callback_end   = nullptr;
 
@@ -160,6 +160,8 @@ const IMAGE_TLS_DIRECTORY _tls_used = { (UINT_PTR)&tls_begin, (UINT_PTR)&tls_end
 _Noreturn __MCFCRT_C_STDCALL __MCFCRT_HAS_EH_TOP
 DWORD __MCFCRT_ExeStartup(LPVOID pUnknown){
 	(void)pUnknown;
+
+	__MCFCRT_ExeTlsCallback(_MCFCRT_GetModuleBase(), DLL_PROCESS_ATTACH, nullptr);
 
 	DWORD dwExitCode;
 

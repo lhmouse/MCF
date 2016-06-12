@@ -101,12 +101,16 @@ static void OnExeProcessDetach(void){
 	__MCFCRT_StandardStreamsUninit();
 }
 
+static volatile bool g_bTlsActive = false;
+
 static bool g_bInitialized = false;
 
 __MCFCRT_C_STDCALL __MCFCRT_HAS_EH_TOP
 void __MCFCRT_ExeTlsCallback(LPVOID hInstance, DWORD dwReason, LPVOID pReserved){
 	(void)hInstance;
 	(void)pReserved;
+
+	__atomic_store_n(&g_bTlsActive, true, __ATOMIC_RELEASE);
 
 	__MCFCRT_EH_TOP_BEGIN
 	{
@@ -161,7 +165,9 @@ _Noreturn __MCFCRT_C_STDCALL __MCFCRT_HAS_EH_TOP
 DWORD __MCFCRT_ExeStartup(LPVOID pUnknown){
 	(void)pUnknown;
 
-	__MCFCRT_ExeTlsCallback(_MCFCRT_GetModuleBase(), DLL_PROCESS_ATTACH, nullptr);
+	if(__atomic_load_n(&g_bTlsActive, __ATOMIC_ACQUIRE) == false){
+		__MCFCRT_ExeTlsCallback(_MCFCRT_GetModuleBase(), DLL_PROCESS_ATTACH, nullptr);
+	}
 
 	DWORD dwExitCode;
 

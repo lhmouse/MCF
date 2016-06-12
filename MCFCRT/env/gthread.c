@@ -89,7 +89,7 @@ static inline int ThreadControlComparatorNodes(const _MCFCRT_AvlNodeHeader *lhs,
 }
 
 __MCFCRT_C_STDCALL __MCFCRT_HAS_EH_TOP
-unsigned long GthreadProc(void *ctrl_ptr){
+static unsigned long GthreadProc(void *ctrl_ptr){
 	ThreadControl *const ctrl = ctrl_ptr;
 	_MCFCRT_ASSERT(ctrl);
 

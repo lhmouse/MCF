@@ -19,7 +19,7 @@ static inline void __MCF_CRT_InitializeNtTimeout(LARGE_INTEGER *__pliTimeout, _M
 		return;
 	}
 	const _MCFCRT_STD uint64_t __u64DeltaMs = __u64UntilFastMonoClock - __u64Now;
-	if(__u64DeltaMs > INT64_MAX / 10000u){
+	if(__u64DeltaMs > INT64_MAX / 10000u - 1u){
 		// 永不超时。
 		__pliTimeout->QuadPart = INT64_MAX;
 		return;

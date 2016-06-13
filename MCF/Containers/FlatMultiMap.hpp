@@ -99,7 +99,7 @@ public:
 			Reserve(uDeltaSize);
 		}
 		for(auto it = itBegin; it != itEnd; ++it){
-			AddWithHint(nullptr, *it);
+			AddWithHint(GetEnd(), *it);
 		}
 	}
 	// 如果键有序，则效率最大化；并且是稳定的。

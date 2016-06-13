@@ -105,7 +105,7 @@ public:
 			const auto pPrev = pNode->pPrev;
 			const auto pElement = reinterpret_cast<Element *>(pNode);
 			Destruct(pElement);
-			Allocator()(pNode);
+			Allocator()(const_cast<void *>(static_cast<const void *>(pNode)));
 			pNode = pPrev;
 		}
 		x_pFirst = nullptr;
@@ -228,7 +228,7 @@ public:
 		try {
 			DefaultConstruct(pElement, std::forward<ParamsT>(vParams)...);
 		} catch(...){
-			Allocator()(pNode);
+			Allocator()(const_cast<void *>(static_cast<const void *>(pNode)));
 			throw;
 		}
 		pNode->pPrev = nullptr;
@@ -251,7 +251,7 @@ public:
 			const auto pNext = pNode->pNext;
 			const auto pElement = reinterpret_cast<Element *>(pNode);
 			Destruct(pElement);
-			Allocator()(pNode);
+			Allocator()(const_cast<void *>(static_cast<const void *>(pNode)));
 			pNode = pNext;
 		}
 		if(pNode){
@@ -269,7 +269,7 @@ public:
 		try {
 			DefaultConstruct(pElement, std::forward<ParamsT>(vParams)...);
 		} catch(...){
-			Allocator()(pNode);
+			Allocator()(const_cast<void *>(static_cast<const void *>(pNode)));
 			throw;
 		}
 		pNode->pPrev = x_pLast;
@@ -292,7 +292,7 @@ public:
 			const auto pPrev = pNode->pPrev;
 			const auto pElement = reinterpret_cast<Element *>(pNode);
 			Destruct(pElement);
-			Allocator()(pNode);
+			Allocator()(const_cast<void *>(static_cast<const void *>(pNode)));
 			pNode = pPrev;
 		}
 		if(pNode){

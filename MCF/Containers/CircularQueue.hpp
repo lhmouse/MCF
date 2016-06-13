@@ -438,14 +438,14 @@ public:
 				--pWrite;
 				Destruct(pWrite);
 			}
-			Allocator()(pNewStorage);
+			Allocator()(const_cast<void *>(static_cast<const void *>(pNewStorage)));
 			throw;
 		}
 		X_IterateForward(x_uBegin, x_uEnd,
 			[&, this](auto i){
 				Destruct(pOldStorage + i);
 			});
-		Allocator()(pOldStorage);
+		Allocator()(const_cast<void *>(static_cast<const void *>(pOldStorage)));
 
 		x_pStorage  = pNewStorage;
 		x_uBegin    = 0;

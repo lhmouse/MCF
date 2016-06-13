@@ -2,25 +2,19 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2013 - 2016, LH_Mouse. All wrongs reserved.
 
-#include "dll_decl.h"
+#include "generic.h"
+#include "exe.h"
+#include "dll.h"
 #include "../env/mcfwin.h"
 #include "../env/standard_streams.h"
 #include "../env/module.h"
 #include "../env/fenv.h"
 #include "../env/thread_env.h"
-#include "../env/eh_top.h"
 #include "../env/heap.h"
 #include "../env/heap_dbg.h"
 #include "../env/cpp_runtime.h"
 
-// -static -Wl,-e__MCFCRT_DllStartup,--disable-runtime-pseudo-reloc,--disable-auto-import
-
-// __MCFCRT_DllStartup 模块入口点。
-__MCFCRT_C_STDCALL
-BOOL __MCFCRT_DllStartup(HINSTANCE hDll, DWORD dwReason, LPVOID pReserved)
-	__asm__("__MCFCRT_DllStartup");
-
-static bool OnDllProcessAttach(HINSTANCE hDll, bool bDynamic){
+static bool OnDllProcessAttach(HINSTANCE hInstance, bool bDynamic){
 	__MCFCRT_FEnvInit();
 
 	if(!__MCFCRT_StandardStreamsInit()){
@@ -49,7 +43,7 @@ static bool OnDllProcessAttach(HINSTANCE hDll, bool bDynamic){
 		return false;
 	}
 	if(_MCFCRT_OnDllProcessAttach){
-		if(!_MCFCRT_OnDllProcessAttach(hDll, bDynamic)){
+		if(!_MCFCRT_OnDllProcessAttach(hInstance, bDynamic)){
 			__MCFCRT_ModuleUninit();
 			__MCFCRT_CppRuntimeUninit();
 			__MCFCRT_HeapDbgUninit();
@@ -60,24 +54,24 @@ static bool OnDllProcessAttach(HINSTANCE hDll, bool bDynamic){
 	}
 	return true;
 }
-static void OnDllThreadAttach(HINSTANCE hDll){
+static void OnDllThreadAttach(HINSTANCE hInstance){
 	__MCFCRT_FEnvInit();
 
 	if(_MCFCRT_OnDllThreadAttach){
-		_MCFCRT_OnDllThreadAttach(hDll);
+		_MCFCRT_OnDllThreadAttach(hInstance);
 	}
 }
-static void OnDllThreadDetach(HINSTANCE hDll){
+static void OnDllThreadDetach(HINSTANCE hInstance){
 	if(_MCFCRT_OnDllThreadDetach){
-		_MCFCRT_OnDllThreadDetach(hDll);
+		_MCFCRT_OnDllThreadDetach(hInstance);
 	}
 	__MCFCRT_TlsCleanup();
 }
-static void OnDllProcessDetach(HINSTANCE hDll, bool bDynamic){
+static void OnDllProcessDetach(HINSTANCE hInstance, bool bDynamic){
 	__MCFCRT_TlsCleanup();
 
 	if(_MCFCRT_OnDllProcessDetach){
-		_MCFCRT_OnDllProcessDetach(hDll, bDynamic);
+		_MCFCRT_OnDllProcessDetach(hInstance, bDynamic);
 	}
 
 	__MCFCRT_ModuleUninit();
@@ -89,46 +83,40 @@ static void OnDllProcessDetach(HINSTANCE hDll, bool bDynamic){
 
 static bool g_bInitialized = false;
 
-__MCFCRT_C_STDCALL __MCFCRT_HAS_EH_TOP
-	__attribute__((__noinline__))
-BOOL __MCFCRT_DllStartup(HINSTANCE hDll, DWORD dwReason, LPVOID pReserved){
-	bool bRet = true;
+bool __MCFCRT_TlsCallbackGeneric(void *pInstance, unsigned uReason, bool bDynamic){
+	bool bRet = false;
 
-	__MCFCRT_EH_TOP_BEGIN
-	{
-		switch(dwReason){
-		case DLL_PROCESS_ATTACH:
-			if(g_bInitialized){
-				break;
-			}
-			bRet = OnDllProcessAttach(hDll, !pReserved);
-			if(!bRet){
-				break;
-			}
-			g_bInitialized = true;
-			break;
-
-		case DLL_THREAD_ATTACH:
-			OnDllThreadAttach(hDll);
-			break;
-
-		case DLL_THREAD_DETACH:
-			OnDllThreadDetach(hDll);
-			break;
-
-		case DLL_PROCESS_DETACH:
-			if(!g_bInitialized){
-				break;
-			}
-			g_bInitialized = false;
-			OnDllProcessDetach(hDll, !pReserved);
+	switch(uReason){
+	case DLL_PROCESS_ATTACH:
+		if(g_bInitialized){
 			break;
 		}
+		if(!OnDllProcessAttach((HINSTANCE)pInstance, bDynamic)){
+			break;
+		}
+		g_bInitialized = true;
+		bRet = true;
+		break;
+
+	case DLL_THREAD_ATTACH:
+		OnDllThreadAttach((HINSTANCE)pInstance);
+		bRet = true;
+		break;
+
+	case DLL_THREAD_DETACH:
+		OnDllThreadDetach((HINSTANCE)pInstance);
+		bRet = true;
+		break;
+
+	case DLL_PROCESS_DETACH:
+		if(!g_bInitialized){
+			break;
+		}
+		g_bInitialized = false;
+		OnDllProcessDetach((HINSTANCE)pInstance, bDynamic);
+		bRet = true;
+		break;
 	}
-	__MCFCRT_EH_TOP_END
 
 	return bRet;
 }
-
-__attribute__((__used__))
-int __MCFCRT_do_not_link_exe_startup_code_and_dll_startup_code_together = 1;

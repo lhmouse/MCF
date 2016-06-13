@@ -8,22 +8,22 @@
 #include "_crtdef.h"
 
 #define __MCFCRT_HAS_EH_TOP	\
-	__attribute__((__section__(".text$")))
+	__attribute__((__section__(".text$__MCFCRT")))
 
 #if defined(__SEH__) // SEH
 
 #	define __MCFCRT_EH_TOP_BEGIN	\
 	__asm__ volatile (	\
-		"60000: \n"	\
-	);
-#	define __MCFCRT_EH_TOP_END	\
-	__asm__ volatile (	\
-		"60001: \n"	\
+		"53933: \n"	\
 		"	.seh_handler __C_specific_handler, @except \n"	\
 		"	.seh_handlerdata \n"	\
 		"	.long 1 \n"	\
-		"	.rva 60000b, 60001b + 1, _gnu_exception_handler, 60001b \n"	\
-		"	.section .text$ \n"	\
+		"	.rva 53933b, 53933f + 1, _gnu_exception_handler, 53933f \n"	\
+		"	.section .text$__MCFCRT \n"	\
+	);
+#	define __MCFCRT_EH_TOP_END	\
+	__asm__ volatile (	\
+		"53933: \n"	\
 	);
 
 #else // DWARF, SJLJ

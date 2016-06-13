@@ -19,7 +19,11 @@
 // -static -Wl,-e__MCFCRT_ExeStartup,--disable-runtime-pseudo-reloc,--disable-auto-import
 
 // __MCFCRT_ExeStartup 模块入口点。
-_Noreturn __MCFCRT_C_STDCALL __MCFCRT_HAS_EH_TOP
+__MCFCRT_C_STDCALL
+void __MCFCRT_ExeTlsCallback(LPVOID hInstance, DWORD dwReason, LPVOID pReserved)
+	__asm__("__MCFCRT_ExeTlsCallback");
+
+_Noreturn __MCFCRT_C_STDCALL
 DWORD __MCFCRT_ExeStartup(LPVOID pUnknown)
 	__asm__("__MCFCRT_ExeStartup");
 
@@ -166,6 +170,7 @@ _Noreturn __MCFCRT_C_STDCALL __MCFCRT_HAS_EH_TOP
 DWORD __MCFCRT_ExeStartup(LPVOID pUnknown){
 	(void)pUnknown;
 
+	// 如果 EXE 只链接了 KERNEL32.DLL 和 NTDLL.DLL 那么 TLS 回调就收不到 DLL_PROCESS_ATTACH 通知。这里需要处理这种情况。
 	if(__atomic_load_n(&g_bTlsActive, __ATOMIC_ACQUIRE) == false){
 		__MCFCRT_ExeTlsCallback(_MCFCRT_GetModuleBase(), DLL_PROCESS_ATTACH, nullptr);
 	}

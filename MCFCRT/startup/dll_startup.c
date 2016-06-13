@@ -15,6 +15,11 @@
 
 // -static -Wl,-e__MCFCRT_DllStartup,--disable-runtime-pseudo-reloc,--disable-auto-import
 
+// __MCFCRT_DllStartup 模块入口点。
+__MCFCRT_C_STDCALL
+BOOL __MCFCRT_DllStartup(HINSTANCE hDll, DWORD dwReason, LPVOID pReserved)
+	__asm__("__MCFCRT_DllStartup");
+
 static bool OnDllProcessAttach(HINSTANCE hDll, bool bDynamic){
 	__MCFCRT_FEnvInit();
 
@@ -81,11 +86,6 @@ static void OnDllProcessDetach(HINSTANCE hDll, bool bDynamic){
 	__MCFCRT_HeapUninit();
 	__MCFCRT_StandardStreamsUninit();
 }
-
-// __MCFCRT_DllStartup 模块入口点。
-__MCFCRT_C_STDCALL __MCFCRT_HAS_EH_TOP
-BOOL __MCFCRT_DllStartup(HINSTANCE hDll, DWORD dwReason, LPVOID pReserved)
-	__asm__("__MCFCRT_DllStartup");
 
 static bool g_bInitialized = false;
 

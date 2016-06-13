@@ -10,10 +10,10 @@
 #include <winternl.h>
 #include <ntstatus.h>
 
-extern __attribute__((__dllimport__, __stdcall__))
-NTSTATUS NtWaitForKeyedEvent(HANDLE hKeyedEvent, void *pKey, BOOLEAN bAlertable, const LARGE_INTEGER *pliTimeout);
-extern __attribute__((__dllimport__, __stdcall__))
-NTSTATUS NtReleaseKeyedEvent(HANDLE hKeyedEvent, void *pKey, BOOLEAN bAlertable, const LARGE_INTEGER *pliTimeout);
+__attribute__((__dllimport__, __stdcall__))
+extern NTSTATUS NtWaitForKeyedEvent(HANDLE hKeyedEvent, void *pKey, BOOLEAN bAlertable, const LARGE_INTEGER *pliTimeout);
+__attribute__((__dllimport__, __stdcall__))
+extern NTSTATUS NtReleaseKeyedEvent(HANDLE hKeyedEvent, void *pKey, BOOLEAN bAlertable, const LARGE_INTEGER *pliTimeout);
 
 #define MASK_LOCKED             ((uintptr_t) 0x0001)
 #define MASK_THREADS_SPINNING   ((uintptr_t) 0x000C)

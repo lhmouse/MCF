@@ -9,8 +9,8 @@
 
 _MCFCRT_EXTERN_C_BEGIN
 
-extern __attribute__((__noreturn__))
-void __MCFCRT_OnAssertionFailure(const wchar_t *__pwszExpression, const wchar_t *__pwszFile, unsigned long __ulLine, const wchar_t *__pwszMessage) _MCFCRT_NOEXCEPT;
+__attribute__((__noreturn__))
+extern void __MCFCRT_OnAssertionFailure(const wchar_t *__pwszExpression, const wchar_t *__pwszFile, unsigned long __ulLine, const wchar_t *__pwszMessage) _MCFCRT_NOEXCEPT;
 
 _MCFCRT_EXTERN_C_END
 

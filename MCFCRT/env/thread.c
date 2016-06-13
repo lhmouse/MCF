@@ -11,15 +11,15 @@
 #include <winternl.h>
 #include <ntdef.h>
 
-extern __attribute__((__dllimport__, __stdcall__))
-NTSTATUS NtDelayExecution(BOOLEAN bAlertable, const LARGE_INTEGER *pInterval);
-extern __attribute__((__dllimport__, __stdcall__))
-NTSTATUS NtYieldExecution(void);
+__attribute__((__dllimport__, __stdcall__))
+extern NTSTATUS NtDelayExecution(BOOLEAN bAlertable, const LARGE_INTEGER *pInterval);
+__attribute__((__dllimport__, __stdcall__))
+extern NTSTATUS NtYieldExecution(void);
 
-extern __attribute__((__dllimport__, __stdcall__))
-NTSTATUS NtSuspendThread(HANDLE hThread, LONG *plPrevCount);
-extern __attribute__((__dllimport__, __stdcall__))
-NTSTATUS NtResumeThread(HANDLE hThread, LONG *plPrevCount);
+__attribute__((__dllimport__, __stdcall__))
+extern NTSTATUS NtSuspendThread(HANDLE hThread, LONG *plPrevCount);
+__attribute__((__dllimport__, __stdcall__))
+extern NTSTATUS NtResumeThread(HANDLE hThread, LONG *plPrevCount);
 
 _MCFCRT_ThreadHandle _MCFCRT_CreateNativeThread(_MCFCRT_NativeThreadProc pfnThreadProc, void *pParam, bool bSuspended, uintptr_t *restrict puThreadId){
 	DWORD dwThreadId;

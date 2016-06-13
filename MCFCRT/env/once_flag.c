@@ -9,10 +9,10 @@
 #include <winternl.h>
 #include <ntstatus.h>
 
-extern __attribute__((__dllimport__, __stdcall__))
-NTSTATUS NtWaitForKeyedEvent(HANDLE hKeyedEvent, void *pKey, BOOLEAN bAlertable, const LARGE_INTEGER *pliTimeout);
-extern __attribute__((__dllimport__, __stdcall__))
-NTSTATUS NtReleaseKeyedEvent(HANDLE hKeyedEvent, void *pKey, BOOLEAN bAlertable, const LARGE_INTEGER *pliTimeout);
+__attribute__((__dllimport__, __stdcall__))
+extern NTSTATUS NtWaitForKeyedEvent(HANDLE hKeyedEvent, void *pKey, BOOLEAN bAlertable, const LARGE_INTEGER *pliTimeout);
+__attribute__((__dllimport__, __stdcall__))
+extern NTSTATUS NtReleaseKeyedEvent(HANDLE hKeyedEvent, void *pKey, BOOLEAN bAlertable, const LARGE_INTEGER *pliTimeout);
 
 // 第一个字节保留给 Itanium ABI 用于标记是否已初始化。
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__

@@ -18,10 +18,10 @@ struct object {
 	void *impl[8];
 };
 
-extern __attribute__((__weak__))
-void __register_frame_info(const void *, struct object *);
-extern __attribute__((__weak__))
-void *__deregister_frame_info(const void *);
+__attribute__((__weak__))
+extern void __register_frame_info(const void *, struct object *);
+__attribute__((__weak__))
+extern void *__deregister_frame_info(const void *);
 
 typedef void (*RegisterFrameInfoProc)(const void *, struct object *);
 typedef void *(*DeregisterFrameInfoProc)(const void *);

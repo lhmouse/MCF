@@ -89,7 +89,7 @@ static const PIMAGE_TLS_CALLBACK callback_end   = nullptr;
 __attribute__((__section__(".data")))
 static DWORD tls_index = 0xDEADBEEF;
 
-__attribute__((__section__(".rdata"), __dllexport__))
+__attribute__((__section__(".rdata"), __used__))
 const IMAGE_TLS_DIRECTORY _tls_used = { (UINT_PTR)&tls_begin, (UINT_PTR)&tls_end, (UINT_PTR)&tls_index, (UINT_PTR)&callback_begin, 0, 0 };
 
 _Noreturn __MCFCRT_C_STDCALL __MCFCRT_HAS_EH_TOP __attribute__((__noinline__))

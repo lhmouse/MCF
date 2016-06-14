@@ -24,7 +24,7 @@
 #	define __MCFCRT_EH_TOP_END	\
 	__asm__ volatile (	\
 		"	nop \n"	\
-		"	.align 16 \n"	\
+		"	.balign 16 \n"	\
 		"53933: \n"	\
 	);
 

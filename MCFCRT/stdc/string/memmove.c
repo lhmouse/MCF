@@ -77,7 +77,7 @@ void *memmove(void *dst, const void *src, size_t cb){
 #endif
 		"	rep movsb \n"
 		"	jmp 6f \n"
-		"	.align 16 \n"
+		"	.balign 16 \n"
 		"5: \n"
 		"je 6f \n"
 		"std \n"

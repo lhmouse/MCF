@@ -25,7 +25,7 @@
 	__asm__ volatile (	\
 		"	nop \n"	\
 		"53933: \n"	\
-		"	.align 4 \n"	\
+		"	.align 16 \n"	\
 	);
 
 #else // DWARF, SJLJ

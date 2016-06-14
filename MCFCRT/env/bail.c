@@ -34,7 +34,7 @@ typedef enum tagHardErrorResponse {
 } HardErrorResponse;
 
 __attribute__((__dllimport__, __stdcall__))
-extern NTSTATUS NtRaiseHardError(NTSTATUS lStatus, DWORD dwUnknown, DWORD dwParamCount, const ULONG_PTR *pulParams, HardErrorResponseOption eOption, HardErrorResponse *peResponse);
+extern NTSTATUS NtRaiseHardError(NTSTATUS lStatus, DWORD dwParamCount, DWORD dwUnknown, const ULONG_PTR *pulParams, HardErrorResponseOption eOption, HardErrorResponse *peResponse);
 
 HardErrorResponse ShowServiceMessageBox(const wchar_t *pwszText, size_t uLength, unsigned uType){
 	size_t uTextSizeInBytes = uLength * sizeof(wchar_t);
@@ -53,9 +53,9 @@ HardErrorResponse ShowServiceMessageBox(const wchar_t *pwszText, size_t uLength,
 	ustrCaption.MaximumLength = ustrCaption.Length;
 	ustrCaption.Buffer        = (wchar_t *)kCaption;
 
-	const ULONG_PTR aulParams[] = { (ULONG_PTR)&ustrText, (ULONG_PTR)&ustrCaption, uType };
+	const ULONG_PTR aulParams[] = { (ULONG_PTR)&ustrText, (ULONG_PTR)&ustrCaption, uType, (ULONG_PTR)-1 };
 	HardErrorResponse eResponse;
-	const NTSTATUS lStatus = NtRaiseHardError(0x50000018, 4, sizeof(aulParams) / sizeof(aulParams[0]), aulParams, kHardErrorOk, &eResponse);
+	const NTSTATUS lStatus = NtRaiseHardError(0x50000018, sizeof(aulParams) / sizeof(aulParams[0]), 3, aulParams, kHardErrorOk, &eResponse);
 	if(!NT_SUCCESS(lStatus)){
 		eResponse = kHardErrorResponseCancel;
 	}

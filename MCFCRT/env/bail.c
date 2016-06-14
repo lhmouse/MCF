@@ -53,9 +53,9 @@ HardErrorResponse ShowServiceMessageBox(const wchar_t *pwszText, size_t uLength,
 	ustrCaption.MaximumLength = ustrCaption.Length;
 	ustrCaption.Buffer        = (wchar_t *)kCaption;
 
-	const ULONG_PTR aulParams[3] = { (ULONG_PTR)&ustrText, (ULONG_PTR)&ustrCaption, uType };
+	const ULONG_PTR aulParams[] = { (ULONG_PTR)&ustrText, (ULONG_PTR)&ustrCaption, uType };
 	HardErrorResponse eResponse;
-	const NTSTATUS lStatus = NtRaiseHardError(0x50000018, 4, 3, aulParams, kHardErrorOk, &eResponse);
+	const NTSTATUS lStatus = NtRaiseHardError(0x50000018, 4, sizeof(aulParams) / sizeof(aulParams[0]), aulParams, kHardErrorOk, &eResponse);
 	if(!NT_SUCCESS(lStatus)){
 		eResponse = kHardErrorResponseCancel;
 	}
@@ -77,11 +77,11 @@ _Noreturn void _MCFCRT_Bail(const wchar_t *pwszDescription){
 	const bool bCanBeDebugged = true;
 #endif
 
-	wchar_t awcBuffer[1024 + 256];
+	wchar_t awcBuffer[1024 + 128];
 	wchar_t *pwcWrite = _MCFCRT_wcpcpy(awcBuffer, L"应用程序异常终止，请联系作者寻求协助。");
 	if(pwszDescription){
 		pwcWrite = _MCFCRT_wcpcpy(pwcWrite, L"\n\n错误描述：\n");
-		pwcWrite = _MCFCRT_wcppcpy(pwcWrite, awcBuffer + 1024 + 128, pwszDescription); // 后面还有一些内容，保留一些字符。
+		pwcWrite = _MCFCRT_wcppcpy(pwcWrite, awcBuffer + 1024, pwszDescription); // 后面还有一些内容，保留一些字符。
 	}
 	pwcWrite = _MCFCRT_wcpcpy(pwcWrite, L"\n\n单击“确定”终止应用程序");
 	if(bCanBeDebugged){
@@ -89,10 +89,11 @@ _Noreturn void _MCFCRT_Bail(const wchar_t *pwszDescription){
 	}
 	pwcWrite = _MCFCRT_wcpcpy(pwcWrite, L"。\n");
 	// *pwcWrite = 0;
+	const size_t uLength = (size_t)(pwcWrite - awcBuffer);
 
-	_MCFCRT_WriteStandardErrorString(awcBuffer, (size_t)(pwcWrite - awcBuffer), true);
+	_MCFCRT_WriteStandardErrorString(awcBuffer, uLength, true);
 
-	const HardErrorResponse eResponse = ShowServiceMessageBox(awcBuffer, (size_t)(pwcWrite - awcBuffer), (bCanBeDebugged ? MB_OKCANCEL : MB_OK) | MB_ICONERROR);
+	const HardErrorResponse eResponse = ShowServiceMessageBox(awcBuffer, uLength, (bCanBeDebugged ? MB_OKCANCEL : MB_OK) | MB_ICONERROR);
 	if(eResponse != kHardErrorResponseOk){
 		__debugbreak();
 	}

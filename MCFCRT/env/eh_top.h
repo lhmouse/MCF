@@ -18,12 +18,14 @@
 		"	.seh_handler __C_specific_handler, @except \n"	\
 		"	.seh_handlerdata \n"	\
 		"	.long 1 \n"	\
-		"	.rva 53933b, 53933f + 1, _gnu_exception_handler, 53933f \n"	\
+		"	.rva 53933b, 53933f, _gnu_exception_handler, 53933f \n"	\
 		"	.section .text$__MCFCRT \n"	\
 	);
 #	define __MCFCRT_EH_TOP_END	\
 	__asm__ volatile (	\
+		"	nop \n"	\
 		"53933: \n"	\
+		"	.align 4 \n"	\
 	);
 
 #else // DWARF, SJLJ

@@ -260,6 +260,7 @@ static inline int __gthread_detach(__gthread_t __tid) _MCFCRT_NOEXCEPT {
 _MCFCRT_CONSTEXPR int __gthread_equal(__gthread_t __tid1, __gthread_t __tid2) _MCFCRT_NOEXCEPT {
 	return __tid1 == __tid2;
 }
+__attribute__((__const__))
 static inline __gthread_t __gthread_self(void) _MCFCRT_NOEXCEPT {
 	return _MCFCRT_GetCurrentThreadId();
 }
@@ -273,7 +274,8 @@ typedef struct __MCFCRT_tagGthreadTime {
 	long __nanoseconds;
 } __gthread_time_t;
 
-static inline _MCFCRT_STD uint64_t __MCFCRT_GthreadTranslateTimeout(const __gthread_time_t *__utc_timeout) _MCFCRT_NOEXCEPT {
+__attribute__((__pure__))
+static inline _MCFCRT_STD uint64_t __MCFCRT_GthreadTranslateTimeout(const __gthread_time_t *restrict __utc_timeout) _MCFCRT_NOEXCEPT {
 	const long double __utc_timeout_ms = (long double)__utc_timeout->__seconds * 1.0e3l + (long double)__utc_timeout->__nanoseconds / 1.0e6l;
 	const long double __utc_now_ms = (long double)_MCFCRT_GetUtcClock();
 	const long double __delta_ms = __utc_timeout_ms - __utc_now_ms;
@@ -288,14 +290,14 @@ static inline _MCFCRT_STD uint64_t __MCFCRT_GthreadTranslateTimeout(const __gthr
 	return __mono_now_ms + (_MCFCRT_STD uint64_t)__delta_ms;
 }
 
-static inline int __gthread_mutex_timedlock(__gthread_mutex_t *__mutex, const __gthread_time_t *__timeout) _MCFCRT_NOEXCEPT {
+static inline int __gthread_mutex_timedlock(__gthread_mutex_t *restrict __mutex, const __gthread_time_t *restrict __timeout) _MCFCRT_NOEXCEPT {
 	const _MCFCRT_STD uint64_t __mono_timeout_ms = __MCFCRT_GthreadTranslateTimeout(__timeout);
 	if(!_MCFCRT_WaitForMutex(__mutex, _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT, __mono_timeout_ms)){
 		return ETIMEDOUT;
 	}
 	return 0;
 }
-static inline int __gthread_recursive_mutex_timedlock(__gthread_recursive_mutex_t *__recur_mutex, const __gthread_time_t *__timeout) _MCFCRT_NOEXCEPT {
+static inline int __gthread_recursive_mutex_timedlock(__gthread_recursive_mutex_t *restrict __recur_mutex, const __gthread_time_t *restrict __timeout) _MCFCRT_NOEXCEPT {
 	const _MCFCRT_STD uintptr_t __self = _MCFCRT_GetCurrentThreadId();
 	const _MCFCRT_STD uintptr_t __old_owner = __atomic_load_n(&(__recur_mutex->__owner), __ATOMIC_RELAXED);
 	if(_MCFCRT_EXPECT_NOT(__old_owner != __self)){
@@ -310,7 +312,7 @@ static inline int __gthread_recursive_mutex_timedlock(__gthread_recursive_mutex_
 	return 0;
 }
 
-static inline int __gthread_cond_timedwait(__gthread_cond_t *__cond, __gthread_mutex_t *__mutex, const __gthread_time_t *__timeout) _MCFCRT_NOEXCEPT {
+static inline int __gthread_cond_timedwait(__gthread_cond_t *restrict __cond, __gthread_mutex_t *restrict __mutex, const __gthread_time_t *restrict __timeout) _MCFCRT_NOEXCEPT {
 	const _MCFCRT_STD uint64_t __mono_timeout_ms = __MCFCRT_GthreadTranslateTimeout(__timeout);
 	if(!_MCFCRT_WaitForConditionVariable(__cond, &__MCFCRT_GthreadUnlockCallbackMutex, &__MCFCRT_GthreadRelockCallbackMutex, (_MCFCRT_STD intptr_t)__mutex, __mono_timeout_ms)){
 		return ETIMEDOUT;

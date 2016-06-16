@@ -6,10 +6,10 @@
 #include "mcfwin.h"
 #include "module.h"
 
-bool SupportLibraryInit(void){
+static bool SupportLibraryInit(void){
 	return true;
 }
-void SupportLibraryUninit(void){
+static void SupportLibraryUninit(void){
 }
 
 // 参见 gcc/libgcc/unwind-dw2-fde.h 里面的 old_object 的注释。
@@ -23,61 +23,42 @@ extern void __register_frame_info(const void *, struct object *);
 __attribute__((__weak__))
 extern void *__deregister_frame_info(const void *);
 
-typedef void (*RegisterFrameInfoProc)(const void *, struct object *);
-typedef void *(*DeregisterFrameInfoProc)(const void *);
-
-__attribute__((__section__(".MCFCRT"), __shared__))
-const volatile RegisterFrameInfoProc   __MCFCRT_pfnRegisterFrameInfoProc   = &__register_frame_info;
-__attribute__((__section__(".MCFCRT"), __shared__))
-const volatile DeregisterFrameInfoProc __MCFCRT_pfnDeregisterFrameInfoProc = &__deregister_frame_info;
-
 __extension__ __attribute__((__section__(".eh_frame"), __used__))
-static const char    g_aEhFrameProbe[0] = { };
+static const char    g_probe[0] = { };
 
-static const void *  g_pEhFrameBase;
-static struct object g_vEhObject;
+static const void *  g_eh_base;
+static struct object g_eh_object;
 
 bool RegisterFrameInfo(void){
-	const RegisterFrameInfoProc pfnRegisterFrameInfo = __MCFCRT_pfnRegisterFrameInfoProc;
-	if(!pfnRegisterFrameInfo){
-		// 不需要进行任何操作。
-		return true;
-	}
-
-	const void *pEhFrameBase = nullptr;
-	_MCFCRT_ModuleSectionInfo vSection;
-	for(bool bHasSection = _MCFCRT_EnumerateFirstModuleSection(&vSection); bHasSection; bHasSection = _MCFCRT_EnumerateNextModuleSection(&vSection)){
-		const char *const pchBegin = vSection.__pBase;
-		const char *const pchEnd   = pchBegin + vSection.__uSize;
-		if((pchBegin <= g_aEhFrameProbe) && (g_aEhFrameProbe < pchEnd)){
-			pEhFrameBase = pchBegin;
-			break;
+	if(__register_frame_info){
+		const void *base = nullptr;
+		_MCFCRT_ModuleSectionInfo section;
+		for(bool valid = _MCFCRT_EnumerateFirstModuleSection(&section); valid; valid = _MCFCRT_EnumerateNextModuleSection(&section)){
+			const char *const begin = section.__pBase;
+			const char *const end   = begin + section.__uSize;
+			if((begin <= g_probe) && (g_probe < end)){
+				base = begin;
+				break;
+			}
 		}
+		if(!base){
+			SetLastError(ERROR_BAD_FORMAT);
+			return false;
+		}
+		__register_frame_info(base, &g_eh_object);
+		g_eh_base = base;
 	}
-	if(!pEhFrameBase){
-		SetLastError(ERROR_BAD_FORMAT);
-		return false;
-	}
-
-	(*pfnRegisterFrameInfo)(pEhFrameBase, &g_vEhObject);
-	g_pEhFrameBase = pEhFrameBase;
-
 	return true;
 }
 void DeregisterFrameInfo(void){
-	const DeregisterFrameInfoProc pfnDeregisterFrameInfo = __MCFCRT_pfnDeregisterFrameInfoProc;
-	if(!pfnDeregisterFrameInfo){
-		// 不需要进行任何操作。
-		return;
+	if(__deregister_frame_info){
+		const void *const base = g_eh_base;
+		if(!base){
+			return;
+		}
+		g_eh_base = nullptr;
+		__deregister_frame_info(base);
 	}
-
-	const void *const pEhFrameBase = g_pEhFrameBase;
-	if(!pEhFrameBase){
-		return;
-	}
-
-	g_pEhFrameBase = nullptr;
-	(*pfnDeregisterFrameInfo)(pEhFrameBase);
 }
 
 bool __MCFCRT_CppRuntimeInit(void){

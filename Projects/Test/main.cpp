@@ -3,6 +3,5 @@
 #include <cstdio>
 
 extern "C" unsigned _MCFCRT_Main(void) noexcept {
-	_MCFCRT_Bail(L"aaa");
 	return 0;
 }

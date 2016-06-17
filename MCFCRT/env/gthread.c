@@ -54,7 +54,7 @@ void __MCFCRT_GthreadRelockCallbackRecursiveMutex(intptr_t context, intptr_t unl
 	recur_mutex->__count = (size_t)unlocked;
 }
 
-static __gthread_mutex_t g_ctrlmap_mutex = { 0 };
+static _MCFCRT_Mutex     g_ctrlmap_mutex = { 0 };
 static _MCFCRT_AvlRoot   g_ctrlmap       = nullptr;
 
 typedef enum tagThreadState {
@@ -73,7 +73,7 @@ typedef struct tagThreadControl {
 
 	ThreadState state;
 	void *exit_code;
-	__gthread_cond_t termination;
+	_MCFCRT_ConditionVariable termination;
 
 	uintptr_t tid;
 	_MCFCRT_ThreadHandle handle;
@@ -86,6 +86,19 @@ static inline int ThreadControlComparatorNodeKey(const _MCFCRT_AvlNodeHeader *lh
 }
 static inline int ThreadControlComparatorNodes(const _MCFCRT_AvlNodeHeader *lhs, const _MCFCRT_AvlNodeHeader *pObj2){
 	return ThreadControlComparatorNodeKey(lhs, (intptr_t)(((const ThreadControl *)pObj2)->tid));
+}
+
+static intptr_t UnlockCallbackNative(intptr_t context){
+	_MCFCRT_Mutex *const mutex = (_MCFCRT_Mutex *)context;
+
+	_MCFCRT_SignalMutex(mutex);
+	return 1;
+}
+static void RelockCallbackNative(intptr_t context, intptr_t unlocked){
+	_MCFCRT_Mutex *const mutex = (_MCFCRT_Mutex *)context;
+
+	_MCFCRT_ASSERT((size_t)unlocked == 1);
+	_MCFCRT_WaitForMutexForever(mutex, _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT);
 }
 
 __MCFCRT_C_STDCALL __MCFCRT_HAS_EH_TOP
@@ -104,7 +117,7 @@ static unsigned long GthreadProc(void *ctrl_ptr){
 	}
 	__MCFCRT_EH_TOP_END
 
-	__gthread_mutex_lock(&g_ctrlmap_mutex);
+	_MCFCRT_WaitForMutexForever(&g_ctrlmap_mutex, _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT);
 	{
 		switch(ctrl->state){
 		case kStateJoinable:
@@ -116,7 +129,7 @@ static unsigned long GthreadProc(void *ctrl_ptr){
 		case kStateJoining:
 			ctrl->state = kStateJoined;
 			ctrl->exit_code = exit_code;
-			__gthread_cond_broadcast(&(ctrl->termination));
+			_MCFCRT_BroadcastConditionVariable(&(ctrl->termination));
 			break;
 		case kStateJoined:
 			_MCFCRT_ASSERT(false);
@@ -130,7 +143,7 @@ static unsigned long GthreadProc(void *ctrl_ptr){
 			_MCFCRT_ASSERT(false);
 		}
 	}
-	__gthread_mutex_unlock(&g_ctrlmap_mutex);
+	_MCFCRT_SignalMutex(&g_ctrlmap_mutex);
 
 	return 0;
 }
@@ -144,7 +157,7 @@ uintptr_t __MCFCRT_GthreadCreateJoinable(void *(*proc)(void *), void *param){
 	ctrl->param     = param;
 	ctrl->state     = kStateJoinable;
 	ctrl->exit_code = (void *)0xDEADBEEF;
-	__gthread_cond_init_function(&(ctrl->termination));
+	_MCFCRT_InitializeConditionVariable(&(ctrl->termination));
 
 	uintptr_t tid;
 	const _MCFCRT_ThreadHandle handle = _MCFCRT_CreateNativeThread(&GthreadProc, ctrl, true, &tid);
@@ -155,11 +168,11 @@ uintptr_t __MCFCRT_GthreadCreateJoinable(void *(*proc)(void *), void *param){
 	ctrl->tid    = tid;
 	ctrl->handle = handle;
 
-	__gthread_mutex_lock(&g_ctrlmap_mutex);
+	_MCFCRT_WaitForMutexForever(&g_ctrlmap_mutex, _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT);
 	{
 		_MCFCRT_AvlAttach(&g_ctrlmap, (_MCFCRT_AvlNodeHeader *)ctrl, &ThreadControlComparatorNodes);
 	}
-	__gthread_mutex_unlock(&g_ctrlmap_mutex);
+	_MCFCRT_SignalMutex(&g_ctrlmap_mutex);
 
 	_MCFCRT_ResumeThread(handle);
 	return tid;
@@ -167,7 +180,7 @@ uintptr_t __MCFCRT_GthreadCreateJoinable(void *(*proc)(void *), void *param){
 bool __MCFCRT_GthreadJoin(uintptr_t tid, void **restrict exit_code_ret){
 	bool joined = false;
 
-	__gthread_mutex_lock(&g_ctrlmap_mutex);
+	_MCFCRT_WaitForMutexForever(&g_ctrlmap_mutex, _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT);
 	{
 		ThreadControl *const ctrl = (ThreadControl *)_MCFCRT_AvlFind(&g_ctrlmap, (intptr_t)tid, &ThreadControlComparatorNodeKey);
 		if(!ctrl){
@@ -177,7 +190,7 @@ bool __MCFCRT_GthreadJoin(uintptr_t tid, void **restrict exit_code_ret){
 		case kStateJoinable:
 			ctrl->state = kStateJoining;
 			do {
-				__gthread_cond_wait(&(ctrl->termination), &g_ctrlmap_mutex);
+				_MCFCRT_WaitForConditionVariableForever(&(ctrl->termination), &UnlockCallbackNative, &RelockCallbackNative, (intptr_t)&g_ctrlmap_mutex);
 			} while(ctrl->state != kStateJoined);
 			joined = true;
 			_MCFCRT_AvlDetach((_MCFCRT_AvlNodeHeader *)ctrl);
@@ -208,14 +221,14 @@ bool __MCFCRT_GthreadJoin(uintptr_t tid, void **restrict exit_code_ret){
 		}
 	}
 done:
-	__gthread_mutex_unlock(&g_ctrlmap_mutex);
+	_MCFCRT_SignalMutex(&g_ctrlmap_mutex);
 
 	return joined;
 }
 bool __MCFCRT_GthreadDetach(uintptr_t tid){
 	bool detached = false;
 
-	__gthread_mutex_lock(&g_ctrlmap_mutex);
+	_MCFCRT_WaitForMutexForever(&g_ctrlmap_mutex, _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT);
 	{
 		ThreadControl *const ctrl = (ThreadControl *)_MCFCRT_AvlFind(&g_ctrlmap, (intptr_t)tid, &ThreadControlComparatorNodeKey);
 		if(!ctrl){
@@ -242,7 +255,7 @@ bool __MCFCRT_GthreadDetach(uintptr_t tid){
 		}
 	}
 done:
-	__gthread_mutex_unlock(&g_ctrlmap_mutex);
+	_MCFCRT_SignalMutex(&g_ctrlmap_mutex);
 
 	return detached;
 }

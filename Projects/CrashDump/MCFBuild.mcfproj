@@ -105,6 +105,6 @@ Debug = General {
 }
 
 Release = General {
-	CompilerFlags		=> -DNDEBUG -O3 -flto -ffunction-sections -fdata-sections
-	LinkerFlags			=> -O3 -flto -Wl,--gc-sections,-s
+	CompilerFlags		=> -DNDEBUG -O3 -ffunction-sections -fdata-sections
+	LinkerFlags			=> -O3 -Wl,--gc-sections,-s
 }

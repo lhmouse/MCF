@@ -13,7 +13,7 @@
 
 #if defined(__SEH__) // SEH
 
-__MCFCRT_C_STDCALL
+__MCFCRT_C_STDCALL __attribute__((__used__))
 extern long __MCFCRT_TopSehHandler(EXCEPTION_POINTERS *__pContext) _MCFCRT_NOEXCEPT
 	__asm__("__MCFCRT_TopSehHandler");
 

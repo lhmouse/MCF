@@ -7,6 +7,7 @@
 #include "avl_tree.h"
 #include "heap.h"
 #include "_eh_top.h"
+#include "_eh_top.h"
 
 void __MCFCRT_GthreadTlsDestructor(intptr_t context, void *storage){
 	void (*const destructor)(void *) = (void (*)(void *))context;

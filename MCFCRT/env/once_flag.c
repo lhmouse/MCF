@@ -97,7 +97,6 @@ static _MCFCRT_OnceResult RealWaitForOnceFlag(volatile uintptr_t *puControl, boo
 				liTimeout.QuadPart = 0;
 				lStatus = NtWaitForKeyedEvent(nullptr, (void *)puControl, false, &liTimeout);
 				_MCFCRT_ASSERT_MSG(NT_SUCCESS(lStatus), L"NtWaitForKeyedEvent() 失败。");
-				_MCFCRT_ASSERT(lStatus != STATUS_TIMEOUT);
 			}
 		} else {
 			NTSTATUS lStatus = NtWaitForKeyedEvent(nullptr, (void *)puControl, false, nullptr);

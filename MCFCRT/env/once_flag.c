@@ -77,7 +77,7 @@ static _MCFCRT_OnceResult RealWaitForOnceFlag(volatile uintptr_t *puControl, boo
 			__MCF_CRT_InitializeNtTimeout(&liTimeout, u64UntilFastMonoClock);
 			NTSTATUS lStatus = NtWaitForKeyedEvent(nullptr, (void *)puControl, false, &liTimeout);
 			_MCFCRT_ASSERT_MSG(NT_SUCCESS(lStatus), L"NtWaitForKeyedEvent() 失败。");
-			if(_MCFCRT_EXPECT(lStatus == STATUS_TIMEOUT)){
+			while(_MCFCRT_EXPECT(lStatus == STATUS_TIMEOUT)){
 				bool bDecremented;
 				{
 					uintptr_t uOld, uNew;
@@ -94,10 +94,10 @@ static _MCFCRT_OnceResult RealWaitForOnceFlag(volatile uintptr_t *puControl, boo
 				if(bDecremented){
 					return _MCFCRT_kOnceResultTimedOut;
 				}
-				lStatus = NtWaitForKeyedEvent(nullptr, (void *)puControl, false, nullptr);
+				liTimeout.QuadPart = 0;
+				lStatus = NtWaitForKeyedEvent(nullptr, (void *)puControl, false, &liTimeout);
 				_MCFCRT_ASSERT_MSG(NT_SUCCESS(lStatus), L"NtWaitForKeyedEvent() 失败。");
 				_MCFCRT_ASSERT(lStatus != STATUS_TIMEOUT);
-				return _MCFCRT_kOnceResultTimedOut;
 			}
 		} else {
 			NTSTATUS lStatus = NtWaitForKeyedEvent(nullptr, (void *)puControl, false, nullptr);
@@ -105,7 +105,6 @@ static _MCFCRT_OnceResult RealWaitForOnceFlag(volatile uintptr_t *puControl, boo
 			_MCFCRT_ASSERT(lStatus != STATUS_TIMEOUT);
 		}
 	}
-	return _MCFCRT_kOnceResultInitial;
 }
 static void RealSetAndSignalOnceFlag(volatile uintptr_t *puControl, bool bFinished, size_t uMaxCountToSignal){
 	uintptr_t uCountToSignal;

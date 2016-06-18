@@ -30,7 +30,7 @@ static inline bool ReallyWaitForConditionVariable(volatile uintptr_t *puControl,
 		__MCF_CRT_InitializeNtTimeout(&liTimeout, u64UntilFastMonoClock);
 		NTSTATUS lStatus = NtWaitForKeyedEvent(nullptr, (void *)puControl, false, &liTimeout);
 		_MCFCRT_ASSERT_MSG(NT_SUCCESS(lStatus), L"NtWaitForKeyedEvent() 失败。");
-		if(_MCFCRT_EXPECT(lStatus == STATUS_TIMEOUT)){
+		while(_MCFCRT_EXPECT(lStatus == STATUS_TIMEOUT)){
 			bool bDecremented;
 			{
 				uintptr_t uOld, uNew;
@@ -45,19 +45,20 @@ static inline bool ReallyWaitForConditionVariable(volatile uintptr_t *puControl,
 				} while(_MCFCRT_EXPECT_NOT(!__atomic_compare_exchange_n(puControl, &uOld, uNew, false, __ATOMIC_RELAXED, __ATOMIC_RELAXED)));
 			}
 			if(bDecremented){
-				return (*pfnRelockCallback)(nContext, nUnlocked), false;
+				(*pfnRelockCallback)(nContext, nUnlocked);
+				return false;
 			}
-			lStatus = NtWaitForKeyedEvent(nullptr, (void *)puControl, false, nullptr);
+			liTimeout.QuadPart = 0;
+			lStatus = NtWaitForKeyedEvent(nullptr, (void *)puControl, false, &liTimeout);
 			_MCFCRT_ASSERT_MSG(NT_SUCCESS(lStatus), L"NtWaitForKeyedEvent() 失败。");
-			_MCFCRT_ASSERT(lStatus != STATUS_TIMEOUT);
-			return (*pfnRelockCallback)(nContext, nUnlocked), true;
 		}
 	} else {
 		NTSTATUS lStatus = NtWaitForKeyedEvent(nullptr, (void *)puControl, false, nullptr);
 		_MCFCRT_ASSERT_MSG(NT_SUCCESS(lStatus), L"NtWaitForKeyedEvent() 失败。");
 		_MCFCRT_ASSERT(lStatus != STATUS_TIMEOUT);
 	}
-	return (*pfnRelockCallback)(nContext, nUnlocked), true;
+	(*pfnRelockCallback)(nContext, nUnlocked);
+	return true;
 }
 static inline size_t ReallySignalConditionVariable(volatile uintptr_t *puControl, size_t uMaxCountToSignal){
 	uintptr_t uCountToSignal;

@@ -5,7 +5,6 @@
 #include "thread.h"
 #include "mcfwin.h"
 #include "heap.h"
-#include "eh_top.h"
 #include "_nt_timeout.h"
 #include "../ext/assert.h"
 #include <winternl.h>
@@ -31,46 +30,6 @@ _MCFCRT_ThreadHandle _MCFCRT_CreateNativeThread(_MCFCRT_NativeThreadProc pfnThre
 		*puThreadId = dwThreadId;
 	}
 	return (_MCFCRT_ThreadHandle)hThread;
-}
-
-typedef struct tagThreadInitParams {
-	_MCFCRT_ThreadProc pfnProc;
-	intptr_t nParam;
-} ThreadInitParams;
-
-static __MCFCRT_C_STDCALL __MCFCRT_HAS_EH_TOP
-DWORD CrtThreadProc(LPVOID pParam){
-	const _MCFCRT_ThreadProc pfnProc = ((ThreadInitParams *)pParam)->pfnProc;
-	const intptr_t           nParam  = ((ThreadInitParams *)pParam)->nParam;
-	_MCFCRT_free(pParam);
-
-	DWORD dwExitCode;
-
-	__MCFCRT_EH_TOP_BEGIN
-	{
-		dwExitCode = (*pfnProc)(nParam);
-	}
-	__MCFCRT_EH_TOP_END
-
-	return dwExitCode;
-}
-
-_MCFCRT_ThreadHandle _MCFCRT_CreateThread(_MCFCRT_ThreadProc pfnThreadProc, intptr_t nParam, bool bSuspended, uintptr_t *restrict puThreadId){
-	ThreadInitParams *const pInitParams = _MCFCRT_malloc(sizeof(ThreadInitParams));
-	if(!pInitParams){
-		return nullptr;
-	}
-	pInitParams->pfnProc = pfnThreadProc;
-	pInitParams->nParam  = nParam;
-
-	const _MCFCRT_ThreadHandle hThread = _MCFCRT_CreateNativeThread(&CrtThreadProc, pInitParams, bSuspended, puThreadId);
-	if(!hThread){
-		const DWORD dwLastError = GetLastError();
-		_MCFCRT_free(pInitParams);
-		SetLastError(dwLastError);
-		return nullptr;
-	}
-	return hThread;
 }
 void _MCFCRT_CloseThread(_MCFCRT_ThreadHandle hThread){
 	const NTSTATUS lStatus = NtClose((HANDLE)hThread);

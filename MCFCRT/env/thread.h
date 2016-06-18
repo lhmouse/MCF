@@ -17,7 +17,7 @@ typedef struct __MCFCRT_tagThreadHandle {
 } *_MCFCRT_ThreadHandle;
 
 extern _MCFCRT_ThreadHandle _MCFCRT_CreateNativeThread(_MCFCRT_NativeThreadProc __pfnThreadProc, void *__pParam, bool __bSuspended, _MCFCRT_STD uintptr_t *restrict __puThreadId) _MCFCRT_NOEXCEPT;
-extern _MCFCRT_ThreadHandle _MCFCRT_CreateThread(_MCFCRT_ThreadProc __pfnThreadProc, _MCFCRT_STD intptr_t __nParam, bool __bSuspended, _MCFCRT_STD uintptr_t *restrict __puThreadId) _MCFCRT_NOEXCEPT;
+// extern _MCFCRT_ThreadHandle _MCFCRT_CreateThread(_MCFCRT_ThreadProc __pfnThreadProc, _MCFCRT_STD intptr_t __nParam, bool __bSuspended, _MCFCRT_STD uintptr_t *restrict __puThreadId) _MCFCRT_NOEXCEPT;
 extern void _MCFCRT_CloseThread(_MCFCRT_ThreadHandle __hThread) _MCFCRT_NOEXCEPT;
 
 extern void _MCFCRT_Sleep(_MCFCRT_STD uint64_t __u64UntilFastMonoClock) _MCFCRT_NOEXCEPT;

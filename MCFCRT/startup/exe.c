@@ -5,7 +5,7 @@
 #include "exe.h"
 #include "generic.h"
 #include "../env/mcfwin.h"
-#include "../env/eh_top.h"
+#include "../env/_eh_top.h"
 #include "../env/standard_streams.h"
 #include "../ext/wcpcpy.h"
 #include "../ext/itow.h"

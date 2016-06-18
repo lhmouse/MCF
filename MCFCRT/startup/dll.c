@@ -5,7 +5,7 @@
 #include "dll.h"
 #include "generic.h"
 #include "../env/mcfwin.h"
-#include "../env/eh_top.h"
+#include "../env/_eh_top.h"
 
 // -static -Wl,-e__MCFCRT_DllStartup,--disable-runtime-pseudo-reloc,--disable-auto-import
 

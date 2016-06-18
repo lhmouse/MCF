@@ -6,8 +6,6 @@
 #include "gthread.h"
 #include "avl_tree.h"
 #include "heap.h"
-#include "mutex.h"
-#include "condition_variable.h"
 #include "eh_top.h"
 
 void __MCFCRT_GthreadTlsDestructor(intptr_t context, void *storage){

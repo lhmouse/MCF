@@ -198,8 +198,34 @@ __MCFCRT_C11THREAD_INLINE_OR_EXTERN int thrd_equal(thrd_t __tid1, thrd_t __tid2)
 	return __tid1 == __tid2;
 }
 
-__MCFCRT_C11THREAD_INLINE_OR_EXTERN int thrd_sleep(const struct timespec *__duration, struct timespec *__remaining) _MCFCRT_NOEXCEPT
-	__asm__("__MCFCRT_" "thrd_sleep");
+__MCFCRT_C11THREAD_INLINE_OR_EXTERN int thrd_sleep(const struct timespec *__duration, struct timespec *__remaining) _MCFCRT_NOEXCEPT {
+	const long double __delta_ms = (long double)__duration->tv_sec * 1.0e3l + (long double)__duration->tv_nsec / 1.0e6l;
+	const _MCFCRT_STD uint64_t __mono_begin_ms = _MCFCRT_GetFastMonoClock();
+	const _MCFCRT_STD uint64_t __complement_ms = (1ull << 48) - 1 - __mono_begin_ms;
+	_MCFCRT_STD uint64_t __mono_timeout_ms;
+	if(__delta_ms >= (long double)__complement_ms){
+		__mono_timeout_ms = (_MCFCRT_STD uint64_t)-1;
+	} else {
+		__mono_timeout_ms = __mono_begin_ms + (_MCFCRT_STD uint64_t)__delta_ms;
+	}
+	_MCFCRT_Sleep(__mono_timeout_ms);
+
+	if(__remaining){
+		const _MCFCRT_STD uint64_t __mono_end_ms = _MCFCRT_GetFastMonoClock();
+		const long double __slept_ms = (long double)__mono_end_ms - (long double)__mono_begin_ms;
+		const long double __remaining_s = (__delta_ms - __slept_ms) / 1.0e3l;
+
+		long long __sec = 0;
+		long __nsec = 0;
+		if(__remaining_s > 0){
+			__sec = (long long)__remaining_s;
+			__nsec = (long)((__remaining_s - __sec) * 1.0e9l);
+		}
+		__remaining->tv_sec  = (time_t)__sec;
+		__remaining->tv_nsec = __nsec;
+	}
+	return thrd_success;
+}
 __MCFCRT_C11THREAD_INLINE_OR_EXTERN void thrd_yield(void) _MCFCRT_NOEXCEPT {
 	_MCFCRT_YieldThread();
 }

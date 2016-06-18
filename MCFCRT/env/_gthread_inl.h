@@ -80,8 +80,7 @@ __MCFCRT_GTHREAD_INLINE_OR_EXTERN int __gthread_mutex_destroy(__gthread_mutex_t 
 }
 
 __MCFCRT_GTHREAD_INLINE_OR_EXTERN int __gthread_mutex_trylock(__gthread_mutex_t *__mutex) _MCFCRT_NOEXCEPT {
-	const bool __success = _MCFCRT_WaitForMutex(__mutex, _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT, 0);
-	if(_MCFCRT_EXPECT_NOT(!__success)){
+	if(_MCFCRT_EXPECT_NOT(!_MCFCRT_WaitForMutex(__mutex, _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT, 0))){
 		return EBUSY;
 	}
 	return 0;
@@ -185,7 +184,7 @@ extern bool __MCFCRT_GthreadJoin(_MCFCRT_STD uintptr_t __tid, void **restrict __
 extern bool __MCFCRT_GthreadDetach(_MCFCRT_STD uintptr_t __tid) _MCFCRT_NOEXCEPT;
 
 __MCFCRT_GTHREAD_INLINE_OR_EXTERN int __gthread_create(__gthread_t *__tid_ret, void *(*__proc)(void *), void *__param) _MCFCRT_NOEXCEPT {
-	const __gthread_t __tid = __MCFCRT_GthreadCreateJoinable(__proc, __param);
+	const _MCFCRT_STD uintptr_t __tid = __MCFCRT_GthreadCreateJoinable(__proc, __param);
 	if(__tid == 0){
 		return EAGAIN;
 	}

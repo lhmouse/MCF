@@ -9,8 +9,6 @@
 #	error This processor architecture is not supported.
 #endif
 
-#pragma GCC poison __thread _Thread_local thread_local
-
 #if defined(__cplusplus) && (__cplusplus < 201402l)
 #	error This compiler does not support C++14.
 #endif

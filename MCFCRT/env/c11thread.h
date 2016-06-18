@@ -5,8 +5,6 @@
 #ifndef __MCFCRT_ENV_C11THREAD_H_
 #define __MCFCRT_ENV_C11THREAD_H_
 
-#ifndef __STDC_NO_THREADS__
-
 // Compatibility layer for the ISO/IEC C11 standard.
 
 #include "_crtdef.h"
@@ -152,7 +150,5 @@ _MCFCRT_EXTERN_C_END
 #	define __MCFCRT_C11THREAD_INLINE_OR_EXTERN     __attribute__((__gnu_inline__)) extern inline
 #endif
 #include "_c11thread_inl.h"
-
-#endif // __STDC_NO_THREADS__
 
 #endif

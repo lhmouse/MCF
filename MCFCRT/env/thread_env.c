@@ -265,10 +265,12 @@ bool _MCFCRT_TlsGet(_MCFCRT_TlsKeyHandle hTlsKey, void **restrict ppStorage){
 	}
 	TlsThread *const pThread = GetTlsForCurrentThread();
 	if(!pThread){
+		*ppStorage = nullptr;
 		return true;
 	}
 	TlsObject *const pObject = GetTlsObject(pThread, pKey);
 	if(!pObject){
+		*ppStorage = nullptr;
 		return true;
 	}
 	*ppStorage = pObject->abyStorage;

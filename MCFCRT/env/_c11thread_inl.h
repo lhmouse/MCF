@@ -164,10 +164,10 @@ extern bool __MCFCRT_C11threadDetach(_MCFCRT_STD uintptr_t __tid) _MCFCRT_NOEXCE
 __MCFCRT_C11THREAD_INLINE_OR_EXTERN int thrd_create(thrd_t *__tid_ret, thrd_start_t __proc, void *__param) _MCFCRT_NOEXCEPT {
 	const _MCFCRT_STD uintptr_t __tid = __MCFCRT_C11threadCreateJoinable(__proc, __param);
 	if(__tid == 0){
-		return thrd_nomem; // XXX: We should have returned `EAGAIN` as POSIX has specified but there isn't `thrd_again` in ISO C.
+		return thrd_nomem; // XXX: We should have returned `EAGAIN` as what POSIX has specified but there isn't `thrd_again` in ISO C.
 	}
 	*__tid_ret = __tid;
-	return 0;
+	return thrd_success;
 }
 __MCFCRT_C11THREAD_INLINE_OR_EXTERN void thrd_exit(int __exit_code) _MCFCRT_NOEXCEPT {
 	__MCFCRT_C11threadExit(__exit_code);
@@ -224,7 +224,7 @@ __MCFCRT_C11THREAD_INLINE_OR_EXTERN int thrd_sleep(const struct timespec *__dura
 		__remaining->tv_sec  = (time_t)__sec;
 		__remaining->tv_nsec = __nsec;
 	}
-	return thrd_success;
+	return 0; // On Windows we don't support interruptable sleep.
 }
 __MCFCRT_C11THREAD_INLINE_OR_EXTERN void thrd_yield(void) _MCFCRT_NOEXCEPT {
 	_MCFCRT_YieldThread();

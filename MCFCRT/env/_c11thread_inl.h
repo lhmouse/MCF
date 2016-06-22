@@ -49,7 +49,7 @@ __MCFCRT_C11THREAD_INLINE_OR_EXTERN _MCFCRT_STD uint64_t __MCFCRT_C11threadTrans
 	if(__delta_ms >= (long double)__complement_ms){
 		return (_MCFCRT_STD uint64_t)-1;
 	}
-	return __mono_now_ms + (_MCFCRT_STD uint64_t)__delta_ms;
+	return __mono_now_ms + (_MCFCRT_STD uint64_t)(__delta_ms + 0.999999l);
 }
 
 __MCFCRT_C11THREAD_INLINE_OR_EXTERN int cnd_timedwait(cnd_t *restrict __cond_c, mtx_t *restrict __mutex_c, const struct timespec *restrict __timeout) _MCFCRT_NOEXCEPT {

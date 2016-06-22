@@ -233,7 +233,7 @@ __MCFCRT_GTHREAD_INLINE_OR_EXTERN _MCFCRT_STD uint64_t __MCFCRT_GthreadTranslate
 	if(__delta_ms >= (long double)__complement_ms){
 		return (_MCFCRT_STD uint64_t)-1;
 	}
-	return __mono_now_ms + (_MCFCRT_STD uint64_t)__delta_ms;
+	return __mono_now_ms + (_MCFCRT_STD uint64_t)(__delta_ms + 0.999999l);
 }
 
 __MCFCRT_GTHREAD_INLINE_OR_EXTERN int __gthread_mutex_timedlock(__gthread_mutex_t *restrict __mutex, const __gthread_time_t *restrict __timeout) _MCFCRT_NOEXCEPT {

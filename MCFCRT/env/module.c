@@ -65,7 +65,7 @@ typedef void (*StaticConstructorDestructorProc)(void);
 extern const StaticConstructorDestructorProc __CTOR_LIST__[];
 extern const StaticConstructorDestructorProc __DTOR_LIST__[];
 
-void CallStaticConstructors(void){
+static void CallStaticConstructors(void){
 	const StaticConstructorDestructorProc *const pfnBegin = __CTOR_LIST__ + 1;
 
 	const StaticConstructorDestructorProc *pfnCurrent = pfnBegin;
@@ -77,7 +77,7 @@ void CallStaticConstructors(void){
 		(*pfnCurrent)();
 	}
 }
-void CallStaticDestructors(void){
+static void CallStaticDestructors(void){
 	const StaticConstructorDestructorProc *const pfnBegin = __DTOR_LIST__ + 1;
 
 	const StaticConstructorDestructorProc *pfnCurrent = pfnBegin;

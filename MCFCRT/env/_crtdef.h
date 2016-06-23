@@ -48,4 +48,6 @@
 #define __MCFCRT_C_STDCALL              __attribute__((__stdcall__))  __MCFCRT_C_CALLBACK_DECL
 #define __MCFCRT_C_FASTCALL             __attribute__((__fastcall__)) __MCFCRT_C_CALLBACK_DECL
 
+#define __MCFCRT_RENAMED_PREFIXED(__ret_, __name_, __decl_)   __ret_ __name_ __decl_ __asm__("__MCFCRT_" #__name_)
+
 #endif

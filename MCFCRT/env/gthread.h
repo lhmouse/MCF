@@ -5,7 +5,7 @@
 #ifndef __MCFCRT_ENV_GTHREAD_H_
 #define __MCFCRT_ENV_GTHREAD_H_
 
-// 专门为 GCC 定制的兼容层。
+// Compatibility layer for libgcc and other GCC libraries.
 
 #include "_crtdef.h"
 #include "thread_env.h"
@@ -32,14 +32,10 @@ _MCFCRT_CONSTEXPR int __gthread_active_p(void) _MCFCRT_NOEXCEPT {
 //-----------------------------------------------------------------------------
 typedef _MCFCRT_TlsKeyHandle __gthread_key_t;
 
-extern int __gthread_key_create(__gthread_key_t *__key_ret, void (*__destructor)(void *)) _MCFCRT_NOEXCEPT
-	__asm__("__MCFCRT_" "__gthread_key_create");
-extern int __gthread_key_delete(__gthread_key_t __key) _MCFCRT_NOEXCEPT
-	__asm__("__MCFCRT_" "__gthread_key_delete");
-extern void *__gthread_getspecific(__gthread_key_t __key) _MCFCRT_NOEXCEPT
-	__asm__("__MCFCRT_" "__gthread_getspecific");
-extern int __gthread_setspecific(__gthread_key_t __key, const void *__value) _MCFCRT_NOEXCEPT
-	__asm__("__MCFCRT_" "__gthread_setspecific");
+extern __MCFCRT_RENAMED_PREFIXED(int, __gthread_key_create, (__gthread_key_t *__key_ret, void (*__destructor)(void *)) _MCFCRT_NOEXCEPT);
+extern __MCFCRT_RENAMED_PREFIXED(int, __gthread_key_delete, (__gthread_key_t __key) _MCFCRT_NOEXCEPT);
+extern __MCFCRT_RENAMED_PREFIXED(void *, __gthread_getspecific, (__gthread_key_t __key) _MCFCRT_NOEXCEPT);
+extern __MCFCRT_RENAMED_PREFIXED(int, __gthread_setspecific, (__gthread_key_t __key, const void *__value) _MCFCRT_NOEXCEPT);
 
 //-----------------------------------------------------------------------------
 // Once
@@ -48,8 +44,7 @@ typedef _MCFCRT_OnceFlag __gthread_once_t;
 
 #define __GTHREAD_ONCE_INIT    { 0 }
 
-extern int __gthread_once(__gthread_once_t *__flag, void (*__func)(void)) _MCFCRT_NOEXCEPT
-	__asm__("__MCFCRT_" "__gthread_once");
+extern __MCFCRT_RENAMED_PREFIXED(int, __gthread_once, (__gthread_once_t *__flag, void (*__func)(void)) _MCFCRT_NOEXCEPT);
 
 //-----------------------------------------------------------------------------
 // Mutex
@@ -59,17 +54,12 @@ typedef _MCFCRT_Mutex __gthread_mutex_t;
 #define __GTHREAD_MUTEX_INIT            { 0 }
 #define __GTHREAD_MUTEX_INIT_FUNCTION   __gthread_mutex_init_function
 
-extern void __gthread_mutex_init_function(__gthread_mutex_t *__mutex) _MCFCRT_NOEXCEPT
-	__asm__("__MCFCRT_" "__gthread_mutex_init_function");
-extern int __gthread_mutex_destroy(__gthread_mutex_t *__mutex) _MCFCRT_NOEXCEPT
-	__asm__("__MCFCRT_" "__gthread_mutex_destroy");
+extern __MCFCRT_RENAMED_PREFIXED(void, __gthread_mutex_init_function, (__gthread_mutex_t *__mutex) _MCFCRT_NOEXCEPT);
+extern __MCFCRT_RENAMED_PREFIXED(int, __gthread_mutex_destroy, (__gthread_mutex_t *__mutex) _MCFCRT_NOEXCEPT);
 
-extern int __gthread_mutex_trylock(__gthread_mutex_t *__mutex) _MCFCRT_NOEXCEPT
-	__asm__("__MCFCRT_" "__gthread_mutex_trylock");
-extern int __gthread_mutex_lock(__gthread_mutex_t *__mutex) _MCFCRT_NOEXCEPT
-	__asm__("__MCFCRT_" "__gthread_mutex_lock");
-extern int __gthread_mutex_unlock(__gthread_mutex_t *__mutex) _MCFCRT_NOEXCEPT
-	__asm__("__MCFCRT_" "__gthread_mutex_unlock");
+extern __MCFCRT_RENAMED_PREFIXED(int, __gthread_mutex_trylock, (__gthread_mutex_t *__mutex) _MCFCRT_NOEXCEPT);
+extern __MCFCRT_RENAMED_PREFIXED(int, __gthread_mutex_lock, (__gthread_mutex_t *__mutex) _MCFCRT_NOEXCEPT);
+extern __MCFCRT_RENAMED_PREFIXED(int, __gthread_mutex_unlock, (__gthread_mutex_t *__mutex) _MCFCRT_NOEXCEPT);
 
 //-----------------------------------------------------------------------------
 // Recursive mutex
@@ -83,17 +73,12 @@ typedef struct __MCFCRT_tagGthreadRecursiveMutex {
 #define __GTHREAD_RECURSIVE_MUTEX_INIT            { 0, 0, { 0 } }
 #define __GTHREAD_RECURSIVE_MUTEX_INIT_FUNCTION   __gthread_recursive_mutex_init_function
 
-extern void __gthread_recursive_mutex_init_function(__gthread_recursive_mutex_t *__recur_mutex) _MCFCRT_NOEXCEPT
-	__asm__("__MCFCRT_" "__gthread_recursive_mutex_init_function");
-extern int __gthread_recursive_mutex_destroy(__gthread_recursive_mutex_t *__recur_mutex) _MCFCRT_NOEXCEPT
-	__asm__("__MCFCRT_" "__gthread_recursive_mutex_destroy");
+extern __MCFCRT_RENAMED_PREFIXED(void, __gthread_recursive_mutex_init_function, (__gthread_recursive_mutex_t *__recur_mutex) _MCFCRT_NOEXCEPT);
+extern __MCFCRT_RENAMED_PREFIXED(int, __gthread_recursive_mutex_destroy, (__gthread_recursive_mutex_t *__recur_mutex) _MCFCRT_NOEXCEPT);
 
-extern int __gthread_recursive_mutex_trylock(__gthread_recursive_mutex_t *__recur_mutex) _MCFCRT_NOEXCEPT
-	__asm__("__MCFCRT_" "__gthread_recursive_mutex_trylock");
-extern int __gthread_recursive_mutex_lock(__gthread_recursive_mutex_t *__recur_mutex) _MCFCRT_NOEXCEPT
-	__asm__("__MCFCRT_" "__gthread_recursive_mutex_lock");
-extern int __gthread_recursive_mutex_unlock(__gthread_recursive_mutex_t *__recur_mutex) _MCFCRT_NOEXCEPT
-	__asm__("__MCFCRT_" "__gthread_recursive_mutex_unlock");
+extern __MCFCRT_RENAMED_PREFIXED(int, __gthread_recursive_mutex_trylock, (__gthread_recursive_mutex_t *__recur_mutex) _MCFCRT_NOEXCEPT);
+extern __MCFCRT_RENAMED_PREFIXED(int, __gthread_recursive_mutex_lock, (__gthread_recursive_mutex_t *__recur_mutex) _MCFCRT_NOEXCEPT);
+extern __MCFCRT_RENAMED_PREFIXED(int, __gthread_recursive_mutex_unlock, (__gthread_recursive_mutex_t *__recur_mutex) _MCFCRT_NOEXCEPT);
 
 //-----------------------------------------------------------------------------
 // Condition variable
@@ -105,19 +90,13 @@ typedef _MCFCRT_ConditionVariable __gthread_cond_t;
 #define __GTHREAD_COND_INIT             { 0 }
 #define __GTHREAD_COND_INIT_FUNCTION    __gthread_cond_init_function
 
-extern void __gthread_cond_init_function(__gthread_cond_t *__cond) _MCFCRT_NOEXCEPT
-	__asm__("__MCFCRT_" "__gthread_cond_init_function");
-extern int __gthread_cond_destroy(__gthread_cond_t *__cond) _MCFCRT_NOEXCEPT
-	__asm__("__MCFCRT_" "__gthread_cond_destroy");
+extern __MCFCRT_RENAMED_PREFIXED(void, __gthread_cond_init_function, (__gthread_cond_t *__cond) _MCFCRT_NOEXCEPT);
+extern __MCFCRT_RENAMED_PREFIXED(int, __gthread_cond_destroy, (__gthread_cond_t *__cond) _MCFCRT_NOEXCEPT);
 
-extern int __gthread_cond_wait(__gthread_cond_t *__cond, __gthread_mutex_t *__mutex) _MCFCRT_NOEXCEPT
-	__asm__("__MCFCRT_" "__gthread_cond_wait");
-extern int __gthread_cond_wait_recursive(__gthread_cond_t *__cond, __gthread_recursive_mutex_t *__recur_mutex) _MCFCRT_NOEXCEPT
-	__asm__("__MCFCRT_" "__gthread_cond_wait_recursive");
-extern int __gthread_cond_signal(__gthread_cond_t *__cond) _MCFCRT_NOEXCEPT
-	__asm__("__MCFCRT_" "__gthread_cond_signal");
-extern int __gthread_cond_broadcast(__gthread_cond_t *__cond) _MCFCRT_NOEXCEPT
-	__asm__("__MCFCRT_" "__gthread_cond_broadcast");
+extern __MCFCRT_RENAMED_PREFIXED(int, __gthread_cond_wait, (__gthread_cond_t *__cond, __gthread_mutex_t *__mutex) _MCFCRT_NOEXCEPT);
+extern __MCFCRT_RENAMED_PREFIXED(int, __gthread_cond_wait_recursive, (__gthread_cond_t *__cond, __gthread_recursive_mutex_t *__recur_mutex) _MCFCRT_NOEXCEPT);
+extern __MCFCRT_RENAMED_PREFIXED(int, __gthread_cond_signal, (__gthread_cond_t *__cond) _MCFCRT_NOEXCEPT);
+extern __MCFCRT_RENAMED_PREFIXED(int, __gthread_cond_broadcast, (__gthread_cond_t *__cond) _MCFCRT_NOEXCEPT);
 
 //-----------------------------------------------------------------------------
 // Thread
@@ -126,33 +105,24 @@ extern int __gthread_cond_broadcast(__gthread_cond_t *__cond) _MCFCRT_NOEXCEPT
 
 typedef _MCFCRT_STD uintptr_t __gthread_t;
 
-extern int __gthread_create(__gthread_t *__tid_ret, void *(*__proc)(void *), void *__param) _MCFCRT_NOEXCEPT
-	__asm__("__MCFCRT_" "__gthread_create");
-extern int __gthread_join(__gthread_t __tid, void **restrict __exit_code_ret) _MCFCRT_NOEXCEPT
-	__asm__("__MCFCRT_" "__gthread_join");
-extern int __gthread_detach(__gthread_t __tid) _MCFCRT_NOEXCEPT
-	__asm__("__MCFCRT_" "__gthread_detach");
+extern __MCFCRT_RENAMED_PREFIXED(int, __gthread_create, (__gthread_t *__tid_ret, void *(*__proc)(void *), void *__param) _MCFCRT_NOEXCEPT);
+extern __MCFCRT_RENAMED_PREFIXED(int, __gthread_join, (__gthread_t __tid, void **restrict __exit_code_ret) _MCFCRT_NOEXCEPT);
+extern __MCFCRT_RENAMED_PREFIXED(int, __gthread_detach, (__gthread_t __tid) _MCFCRT_NOEXCEPT);
 
-extern int __gthread_equal(__gthread_t __tid1, __gthread_t __tid2) _MCFCRT_NOEXCEPT
-	__asm__("__MCFCRT_" "__gthread_equal");
+extern __MCFCRT_RENAMED_PREFIXED(int, __gthread_equal, (__gthread_t __tid1, __gthread_t __tid2) _MCFCRT_NOEXCEPT);
 __attribute__((__const__))
-extern __gthread_t __gthread_self(void) _MCFCRT_NOEXCEPT
-	__asm__("__MCFCRT_" "__gthread_self");
-extern int __gthread_yield(void) _MCFCRT_NOEXCEPT
-	__asm__("__MCFCRT_" "__gthread_yield");
+extern __MCFCRT_RENAMED_PREFIXED(__gthread_t, __gthread_self, (void) _MCFCRT_NOEXCEPT);
+extern __MCFCRT_RENAMED_PREFIXED(int, __gthread_yield, (void) _MCFCRT_NOEXCEPT);
 
 typedef struct __MCFCRT_tagGthreadTime {
 	_MCFCRT_STD int64_t __seconds;
 	long __nanoseconds;
 } __gthread_time_t;
 
-extern int __gthread_mutex_timedlock(__gthread_mutex_t *restrict __mutex, const __gthread_time_t *restrict __timeout) _MCFCRT_NOEXCEPT
-	__asm__("__MCFCRT_" "__gthread_mutex_timedlock");
-extern int __gthread_recursive_mutex_timedlock(__gthread_recursive_mutex_t *restrict __recur_mutex, const __gthread_time_t *restrict __timeout) _MCFCRT_NOEXCEPT
-	__asm__("__MCFCRT_" "__gthread_recursive_mutex_timedlock");
+extern __MCFCRT_RENAMED_PREFIXED(int, __gthread_mutex_timedlock, (__gthread_mutex_t *restrict __mutex, const __gthread_time_t *restrict __timeout) _MCFCRT_NOEXCEPT);
+extern __MCFCRT_RENAMED_PREFIXED(int, __gthread_recursive_mutex_timedlock, (__gthread_recursive_mutex_t *restrict __recur_mutex, const __gthread_time_t *restrict __timeout) _MCFCRT_NOEXCEPT);
 
-extern int __gthread_cond_timedwait(__gthread_cond_t *restrict __cond, __gthread_mutex_t *restrict __mutex, const __gthread_time_t *restrict __timeout) _MCFCRT_NOEXCEPT
-	__asm__("__MCFCRT_" "__gthread_cond_timedwait");
+extern __MCFCRT_RENAMED_PREFIXED(int, __gthread_cond_timedwait, (__gthread_cond_t *restrict __cond, __gthread_mutex_t *restrict __mutex, const __gthread_time_t *restrict __timeout) _MCFCRT_NOEXCEPT);
 
 _MCFCRT_EXTERN_C_END
 

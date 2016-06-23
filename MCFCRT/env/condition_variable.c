@@ -23,7 +23,14 @@ static inline bool ReallyWaitForConditionVariable(volatile uintptr_t *puControl,
 	_MCFCRT_ConditionVariableUnlockCallback pfnUnlockCallback, _MCFCRT_ConditionVariableRelockCallback pfnRelockCallback, intptr_t nContext,
 	bool bMayTimeOut, uint64_t u64UntilFastMonoClock)
 {
-	__atomic_fetch_add(puControl, THREAD_TRAPPED_ONE, __ATOMIC_RELAXED);
+	{
+//		uintptr_t uOld, uNew;
+//		uOld = __atomic_load_n(puControl, __ATOMIC_RELAXED);
+//		do {
+//			uNew = uOld + THREAD_TRAPPED_ONE;
+//		} while(_MCFCRT_EXPECT_NOT(!__atomic_compare_exchange_n(puControl, &uOld, uNew, false, __ATOMIC_RELAXED, __ATOMIC_RELAXED)));
+		__atomic_fetch_add(puControl, THREAD_TRAPPED_ONE, __ATOMIC_RELAXED);
+	}
 	const intptr_t nUnlocked = (*pfnUnlockCallback)(nContext);
 	if(bMayTimeOut){
 		LARGE_INTEGER liTimeout;

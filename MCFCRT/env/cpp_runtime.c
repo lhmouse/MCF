@@ -29,7 +29,7 @@ static const char    g_probe[0] = { };
 static const void *  g_eh_base;
 static struct object g_eh_object;
 
-bool RegisterFrameInfo(void){
+static bool RegisterFrameInfo(void){
 	if(__register_frame_info){
 		const void *base = nullptr;
 		_MCFCRT_ModuleSectionInfo section;
@@ -50,7 +50,7 @@ bool RegisterFrameInfo(void){
 	}
 	return true;
 }
-void DeregisterFrameInfo(void){
+static void DeregisterFrameInfo(void){
 	if(__deregister_frame_info){
 		const void *const base = g_eh_base;
 		if(!base){

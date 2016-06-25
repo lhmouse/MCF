@@ -45,7 +45,7 @@ static _MCFCRT_OnceResult RealWaitForOnceFlag(volatile uintptr_t *puControl, boo
 		}
 	}
 	if(bMayTimeOut && _MCFCRT_EXPECT(u64UntilFastMonoClock == 0)){
-		return false;
+		return _MCFCRT_kOnceResultTimedOut;
 	}
 
 	for(;;){

@@ -92,7 +92,7 @@ static inline size_t ReallySignalConditionVariable(volatile uintptr_t *puControl
 bool _MCFCRT_WaitForConditionVariable(_MCFCRT_ConditionVariable *pConditionVariable,
 	_MCFCRT_ConditionVariableUnlockCallback pfnUnlockCallback, _MCFCRT_ConditionVariableRelockCallback pfnRelockCallback, intptr_t nContext, uint64_t u64UntilFastMonoClock)
 {
-	const bool bSignaled = ReallyWaitForConditionVariable((volatile uintptr_t *)pConditionVariable, pfnUnlockCallback, pfnRelockCallback, nContext, true, u64UntilFastMonoClock);
+	const bool bSignaled = ReallyWaitForConditionVariable(&(pConditionVariable->__u), pfnUnlockCallback, pfnRelockCallback, nContext, true, u64UntilFastMonoClock);
 	return bSignaled;
 }
 void _MCFCRT_WaitForConditionVariableForever(_MCFCRT_ConditionVariable *pConditionVariable,

@@ -244,7 +244,9 @@ public:
 		return *pElement;
 	}
 	void Shift(std::size_t uCount = 1) noexcept {
+#ifndef NDEBUG
 		MCF_ASSERT(uCount <= CountElements());
+#endif
 
 		auto pNode = x_pFirst;
 		for(std::size_t i = 0; i < uCount; ++i){
@@ -285,7 +287,9 @@ public:
 		return *pElement;
 	}
 	void Pop(std::size_t uCount = 1) noexcept {
+#ifndef NDEBUG
 		MCF_ASSERT(uCount <= CountElements());
+#endif
 
 		auto pNode = x_pLast;
 		for(std::size_t i = 0; i < uCount; ++i){

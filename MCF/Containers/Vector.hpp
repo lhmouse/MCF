@@ -386,7 +386,9 @@ public:
 		return *pElement;
 	}
 	void Pop(std::size_t uCount = 1) noexcept {
-		MCF_ASSERT(uCount <= x_uSize);
+#ifndef NDEBUG
+		MCF_ASSERT(uCount <= GetSize());
+#endif
 
 		for(std::size_t i = 0; i < uCount; ++i){
 			Destruct(x_pStorage + x_uSize - 1 - i);

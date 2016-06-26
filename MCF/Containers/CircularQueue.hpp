@@ -475,7 +475,9 @@ public:
 		return *pElem;
 	}
 	void Shift(std::size_t uCount = 1) noexcept {
+#ifndef NDEBUG
 		MCF_ASSERT(uCount <= GetSize());
+#endif
 
 		const auto uNewBegin = X_Advance(x_uBegin, uCount);
 		X_IterateForward(x_uBegin, uNewBegin,
@@ -502,7 +504,9 @@ public:
 		return *pElem;
 	}
 	void Pop(std::size_t uCount = 1) noexcept {
+#ifndef NDEBUG
 		MCF_ASSERT(uCount <= GetSize());
+#endif
 
 		const auto uNewEnd = X_Retreat(x_uEnd, uCount);
 		X_IterateBackward(uNewEnd, x_uEnd,

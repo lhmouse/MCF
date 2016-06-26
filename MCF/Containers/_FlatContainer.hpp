@@ -86,7 +86,9 @@ namespace Impl_FlatContainer {
 			return *pElement;
 		}
 		void X_Pop(std::size_t uCount = 1) noexcept {
-			MCF_ASSERT(uCount <= x_uSize);
+#ifndef NDEBUG
+			MCF_ASSERT(uCount <= GetSize());
+#endif
 
 			const auto pData = x_pStorage;
 			for(std::size_t i = 0; i < uCount; ++i){

@@ -8,14 +8,18 @@
 #include "_crtdef.h"
 #include "mcfwin.h"
 
+_MCFCRT_EXTERN_C_BEGIN
+
+__MCFCRT_C_STDCALL
+extern long __MCFCRT_TopSehHandler(EXCEPTION_POINTERS *__pContext) _MCFCRT_NOEXCEPT
+	__asm__("__MCFCRT_TopSehHandler");
+
+_MCFCRT_EXTERN_C_END
+
 #define __MCFCRT_HAS_EH_TOP	\
 	__attribute__((__section__(".text$__MCFCRT")))
 
 #if defined(__SEH__) // SEH
-
-__MCFCRT_C_STDCALL __attribute__((__used__))
-extern long __MCFCRT_TopSehHandler(EXCEPTION_POINTERS *__pContext) _MCFCRT_NOEXCEPT
-	__asm__("__MCFCRT_TopSehHandler");
 
 #	define __MCFCRT_EH_TOP_BEGIN	\
 	__asm__ volatile (	\

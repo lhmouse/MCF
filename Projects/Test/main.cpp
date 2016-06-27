@@ -1,7 +1,11 @@
 #include <MCF/StdMCF.hpp>
 #include <MCFCRT/env/bail.h>
-#include <cstdio>
 
 extern "C" unsigned _MCFCRT_Main(void){
-	throw 12345;
+	try {
+		throw 12345;
+	} catch(int e){
+		__builtin_printf("exception caught: e = %d\n", e);
+	}
+	return 0;
 }

@@ -12,7 +12,7 @@ _MCFCRT_EXTERN_C_BEGIN
 
 __MCFCRT_C_STDCALL
 extern long __MCFCRT_TopSehHandler(EXCEPTION_POINTERS *__pContext) _MCFCRT_NOEXCEPT
-	__asm__("__MCFCRT_TopSehHandler");
+	__asm__("@__MCFCRT_TopSehHandler");
 
 _MCFCRT_EXTERN_C_END
 
@@ -27,7 +27,7 @@ _MCFCRT_EXTERN_C_END
 		"	.seh_handler __C_specific_handler, @except \n"	\
 		"	.seh_handlerdata \n"	\
 		"	.long 1 \n"	\
-		"	.rva 53933b, 53933f, __MCFCRT_TopSehHandler, 53933f \n"	\
+		"	.rva 53933b, 53933f, @__MCFCRT_TopSehHandler, 53933f \n"	\
 		"	.section .text$__MCFCRT \n"	\
 	);
 #	define __MCFCRT_EH_TOP_END	\

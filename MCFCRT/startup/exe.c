@@ -12,12 +12,12 @@
 #include "../env/bail.h"
 #include "../env/module.h"
 
-// -static -Wl,-e__MCFCRT_ExeStartup,--disable-runtime-pseudo-reloc,--disable-auto-import
+// -static -Wl,-e@__MCFCRT_ExeStartup,--disable-runtime-pseudo-reloc,--disable-auto-import
 
 // __MCFCRT_ExeStartup 模块入口点。
 _Noreturn __MCFCRT_C_STDCALL
 DWORD __MCFCRT_ExeStartup(LPVOID pUnknown)
-	__asm__("__MCFCRT_ExeStartup");
+	__asm__("@__MCFCRT_ExeStartup");
 
 __attribute__((__used__))
 int __MCFCRT_do_not_link_exe_startup_code_and_dll_startup_code_together = 0;

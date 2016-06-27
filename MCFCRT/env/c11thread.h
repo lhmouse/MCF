@@ -79,45 +79,70 @@ enum {
 };
 
 // 7.26.2 Initialization functions
-extern __MCFCRT_RENAMED_PREFIXED(void, call_once, (once_flag *__once_c, void (*__func)(void)) _MCFCRT_NOEXCEPT);
+extern void __MCFCRT_call_once(once_flag *__once_c, void (*__func)(void)) _MCFCRT_NOEXCEPT;
+#define call_once __MCFCRT_call_once
 
 // 7.26.3 Condition variable functions
-extern __MCFCRT_RENAMED_PREFIXED(int, cnd_init, (cnd_t *__cond_c) _MCFCRT_NOEXCEPT);
-extern __MCFCRT_RENAMED_PREFIXED(void, cnd_destroy, (cnd_t *__cond_c) _MCFCRT_NOEXCEPT);
+extern int __MCFCRT_cnd_init(cnd_t *__cond_c) _MCFCRT_NOEXCEPT;
+#define cnd_init __MCFCRT_cnd_init
+extern void __MCFCRT_cnd_destroy(cnd_t *__cond_c) _MCFCRT_NOEXCEPT;
+#define cnd_destroy __MCFCRT_cnd_destroy
 
-extern __MCFCRT_RENAMED_PREFIXED(int, cnd_timedwait, (cnd_t *restrict __cond_c, mtx_t *restrict __mutex_c, const struct timespec *restrict __timeout) _MCFCRT_NOEXCEPT);
-extern __MCFCRT_RENAMED_PREFIXED(int, cnd_wait, (cnd_t *restrict __cond_c, mtx_t *restrict __mutex_c) _MCFCRT_NOEXCEPT);
-extern __MCFCRT_RENAMED_PREFIXED(int, cnd_signal, (cnd_t *__cond_c) _MCFCRT_NOEXCEPT);
-extern __MCFCRT_RENAMED_PREFIXED(int, cnd_broadcast, (cnd_t *__cond_c) _MCFCRT_NOEXCEPT);
+extern int __MCFCRT_cnd_timedwait(cnd_t *restrict __cond_c, mtx_t *restrict __mutex_c, const struct timespec *restrict __timeout) _MCFCRT_NOEXCEPT;
+#define cnd_timedwait __MCFCRT_cnd_timedwait
+extern int __MCFCRT_cnd_wait(cnd_t *restrict __cond_c, mtx_t *restrict __mutex_c) _MCFCRT_NOEXCEPT;
+#define cnd_wait __MCFCRT_cnd_wait
+extern int __MCFCRT_cnd_signal(cnd_t *__cond_c) _MCFCRT_NOEXCEPT;
+#define cnd_signal __MCFCRT_cnd_signal
+extern int __MCFCRT_cnd_broadcast(cnd_t *__cond_c) _MCFCRT_NOEXCEPT;
+#define cnd_broadcast __MCFCRT_cnd_broadcast
 
 // 7.26.4 Mutex functions
-extern __MCFCRT_RENAMED_PREFIXED(int, mtx_init, (mtx_t *__mutex_c, int __mask) _MCFCRT_NOEXCEPT);
-extern __MCFCRT_RENAMED_PREFIXED(void, mtx_destroy, (mtx_t *__mutex_c) _MCFCRT_NOEXCEPT);
+extern int __MCFCRT_mtx_init(mtx_t *__mutex_c, int __mask) _MCFCRT_NOEXCEPT;
+#define mtx_init __MCFCRT_mtx_init
+extern void __MCFCRT_mtx_destroy(mtx_t *__mutex_c) _MCFCRT_NOEXCEPT;
+#define mtx_destroy __MCFCRT_mtx_destroy
 
-extern __MCFCRT_RENAMED_PREFIXED(int, mtx_lock, (mtx_t *__mutex_c) _MCFCRT_NOEXCEPT);
-extern __MCFCRT_RENAMED_PREFIXED(int, mtx_timedlock, (mtx_t *restrict __mutex_c, const struct timespec *restrict __timeout) _MCFCRT_NOEXCEPT);
-extern __MCFCRT_RENAMED_PREFIXED(int, mtx_trylock, (mtx_t *__mutex_c) _MCFCRT_NOEXCEPT);
-extern __MCFCRT_RENAMED_PREFIXED(int, mtx_unlock, (mtx_t *__mutex_c) _MCFCRT_NOEXCEPT);
+extern int __MCFCRT_mtx_lock(mtx_t *__mutex_c) _MCFCRT_NOEXCEPT;
+#define mtx_lock __MCFCRT_mtx_lock
+extern int __MCFCRT_mtx_timedlock(mtx_t *restrict __mutex_c, const struct timespec *restrict __timeout) _MCFCRT_NOEXCEPT;
+#define mtx_timedlock __MCFCRT_mtx_timedlock
+extern int __MCFCRT_mtx_trylock(mtx_t *__mutex_c) _MCFCRT_NOEXCEPT;
+#define mtx_trylock __MCFCRT_mtx_trylock
+extern int __MCFCRT_mtx_unlock(mtx_t *__mutex_c) _MCFCRT_NOEXCEPT;
+#define mtx_unlock __MCFCRT_mtx_unlock
 
 // 7.26.5 Thread functions
-extern __MCFCRT_RENAMED_PREFIXED(int, thrd_create, (thrd_t *__tid_ret, thrd_start_t __proc, void *__param) _MCFCRT_NOEXCEPT);
+extern int __MCFCRT_thrd_create(thrd_t *__tid_ret, thrd_start_t __proc, void *__param) _MCFCRT_NOEXCEPT;
+#define thrd_create __MCFCRT_thrd_create
 __attribute__((__noreturn__))
-extern __MCFCRT_RENAMED_PREFIXED(void, thrd_exit, (int __exit_code) _MCFCRT_NOEXCEPT);
-extern __MCFCRT_RENAMED_PREFIXED(int, thrd_join, (thrd_t __tid, int *__exit_code_ret) _MCFCRT_NOEXCEPT);
-extern __MCFCRT_RENAMED_PREFIXED(int, thrd_detach, (thrd_t __tid) _MCFCRT_NOEXCEPT);
+extern void __MCFCRT_thrd_exit(int __exit_code) _MCFCRT_NOEXCEPT;
+#define thrd_exit __MCFCRT_thrd_exit
+extern int __MCFCRT_thrd_join(thrd_t __tid, int *__exit_code_ret) _MCFCRT_NOEXCEPT;
+#define thrd_join __MCFCRT_thrd_join
+extern int __MCFCRT_thrd_detach(thrd_t __tid) _MCFCRT_NOEXCEPT;
+#define thrd_detach __MCFCRT_thrd_detach
 
 __attribute__((__const__))
-extern __MCFCRT_RENAMED_PREFIXED(thrd_t, thrd_current, (void) _MCFCRT_NOEXCEPT);
-extern __MCFCRT_RENAMED_PREFIXED(int, thrd_equal, (thrd_t __tid1, thrd_t __tid2) _MCFCRT_NOEXCEPT);
+extern thrd_t __MCFCRT_thrd_current(void) _MCFCRT_NOEXCEPT;
+#define thrd_current __MCFCRT_thrd_current
+extern int __MCFCRT_thrd_equal(thrd_t __tid1, thrd_t __tid2) _MCFCRT_NOEXCEPT;
+#define thrd_equal __MCFCRT_thrd_equal
 
-extern __MCFCRT_RENAMED_PREFIXED(int, thrd_sleep, (const struct timespec *__duration, struct timespec *__remaining) _MCFCRT_NOEXCEPT);
-extern __MCFCRT_RENAMED_PREFIXED(void, thrd_yield, (void) _MCFCRT_NOEXCEPT);
+extern int __MCFCRT_thrd_sleep(const struct timespec *__duration, struct timespec *__remaining) _MCFCRT_NOEXCEPT;
+#define thrd_sleep __MCFCRT_thrd_sleep
+extern void __MCFCRT_thrd_yield(void) _MCFCRT_NOEXCEPT;
+#define thrd_yield __MCFCRT_thrd_yield
 
 // 7.26.6 Thread-specific storage functions
-extern __MCFCRT_RENAMED_PREFIXED(int, tss_create, (tss_t *__key_ret, tss_dtor_t __destructor) _MCFCRT_NOEXCEPT);
-extern __MCFCRT_RENAMED_PREFIXED(void, tss_delete, (tss_t __key) _MCFCRT_NOEXCEPT);
-extern __MCFCRT_RENAMED_PREFIXED(void *, tss_get, (tss_t __key) _MCFCRT_NOEXCEPT);
-extern __MCFCRT_RENAMED_PREFIXED(int, tss_set, (tss_t __key, void *__value) _MCFCRT_NOEXCEPT);
+extern int __MCFCRT_tss_create(tss_t *__key_ret, tss_dtor_t __destructor) _MCFCRT_NOEXCEPT;
+#define tss_create __MCFCRT_tss_create
+extern void __MCFCRT_tss_delete(tss_t __key) _MCFCRT_NOEXCEPT;
+#define tss_delete __MCFCRT_tss_delete
+extern void *__MCFCRT_tss_get(tss_t __key) _MCFCRT_NOEXCEPT;
+#define tss_get __MCFCRT_tss_get
+extern int __MCFCRT_tss_set(tss_t __key, void *__value) _MCFCRT_NOEXCEPT;
+#define tss_set __MCFCRT_tss_set
 
 _MCFCRT_EXTERN_C_END
 

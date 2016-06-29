@@ -8,7 +8,7 @@ __MCFCRT_C_STDCALL
 long __MCFCRT_TopSehHandler(EXCEPTION_POINTERS *pContext){
 	const DWORD dwCode = pContext->ExceptionRecord->ExceptionCode;
 	const DWORD dwFlags = pContext->ExceptionRecord->ExceptionFlags;
-	if((dwCode & 0x20FFFFFFul) == 0x20474343){ // ('GCC' | (1 << 29))
+	if((dwCode & 0x20FFFFFFul) == 0x20474343ul){ // ('GCC' | (1 << 29))
 		if((dwFlags & EXCEPTION_NONCONTINUABLE) == 0){
 			return EXCEPTION_CONTINUE_EXECUTION;
 		}

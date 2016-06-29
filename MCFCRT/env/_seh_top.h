@@ -10,39 +10,37 @@
 
 _MCFCRT_EXTERN_C_BEGIN
 
-__MCFCRT_C_STDCALL
-extern long __MCFCRT_TopSehHandler(EXCEPTION_POINTERS *__pContext) _MCFCRT_NOEXCEPT
-	__asm__("@__MCFCRT_TopSehHandler");
+__MCFCRT_C_CDECL
+extern EXCEPTION_DISPOSITION __MCFCRT_SehTopDispatcher(EXCEPTION_RECORD *__pRecord, void *__pEstablisherFrame, CONTEXT *__pContext, void *__pDispatcherContext) _MCFCRT_NOEXCEPT;
 
 _MCFCRT_EXTERN_C_END
 
-#define __MCFCRT_HAS_SEH_TOP         __attribute__((__section__(".text$__MCFCRT")))
-
 #ifdef _WIN64
 
-#define __MCFCRT_SEH_TOP_BEGIN      __asm__ volatile (	\
-	                                    "53933: \n"	\
-	                                    "	.seh_handler __C_specific_handler, @except \n"	\
-	                                    "	.seh_handlerdata \n"	\
-	                                    "	.long 1 \n"	\
-	                                    "	.rva 53933b, 53933f, @__MCFCRT_TopSehHandler, 53933f \n"	\
-	                                    "	.section .text$__MCFCRT \n"	\
-                                    );
-#define __MCFCRT_SEH_TOP_END        __asm__ volatile (	\
-	                                    "	nop \n"	\
-	                                    "	.balign 16 \n"	\
-	                                    "53933: \n"	\
-	                                    "	.balign 1 \n"	\
-                                    );
+#	define __MCFCRT_SEH_TOP_BEGIN       __asm__ volatile (	\
+		                                    ".seh_handler __MCFCRT_SehTopDispatcher, @except \n"	\
+	                                    );
+#	define __MCFCRT_SEH_TOP_END         __asm__ volatile (	\
+		                                    " "	\
+	                                    );
 
 #else
 
-#define __MCFCRT_SEH_TOP_BEGIN      __asm__ volatile (	\
-	                                    "	 \n"	\
-                                    );
-#define __MCFCRT_SEH_TOP_END        __asm__ volatile (	\
-	                                    "	 \n"	\
-                                    );
+#	define __MCFCRT_SEH_TOP_BEGIN       __asm__ volatile (	\
+		                                    "	mov eax, dword ptr fs:[0] \n"	\
+		                                    "	push offset ___MCFCRT_SehTopDispatcher \n"	\
+		                                    "	push eax \n"	\
+		                                    "	mov dword ptr fs:[0], esp \n"	\
+		                                    : :	\
+		                                    : "eax", "esp"	\
+	                                    );
+#	define __MCFCRT_SEH_TOP_END         __asm__ volatile (	\
+		                                    "	pop eax \n"	\
+		                                    "	add esp, 4 \n"	\
+		                                    "	mov dword ptr fs:[0], eax \n"	\
+		                                    : :	\
+		                                    : "eax", "esp"	\
+	                                    );
 
 #endif
 

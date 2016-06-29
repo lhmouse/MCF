@@ -5,7 +5,7 @@
 #include "exe.h"
 #include "generic.h"
 #include "../env/mcfwin.h"
-#include "../env/_eh_top.h"
+#include "../env/_seh_top.h"
 #include "../env/standard_streams.h"
 #include "../ext/wcpcpy.h"
 #include "../ext/itow.h"
@@ -51,20 +51,20 @@ static BOOL CrtCtrlHandler(DWORD dwCtrlType){
 // 如果 EXE 只链接了 KERNEL32.DLL 和 NTDLL.DLL 那么 TLS 回调就收不到 DLL_PROCESS_ATTACH 通知。这里需要处理这种情况。
 static bool g_bTlsCallbackActiveUponInit = false;
 
-__MCFCRT_C_STDCALL __MCFCRT_HAS_EH_TOP __attribute__((__noinline__))
+__MCFCRT_C_STDCALL __MCFCRT_HAS_SEH_TOP __attribute__((__noinline__))
 static void ExeTlsCallback(LPVOID pInstance, DWORD dwReason, LPVOID pReserved){
 	(void)pInstance;
 	(void)pReserved;
 
 	g_bTlsCallbackActiveUponInit = true;
 
-	__MCFCRT_EH_TOP_BEGIN
+	__MCFCRT_SEH_TOP_BEGIN
 	{
 		if(!__MCFCRT_TlsCallbackGeneric((void *)pInstance, (unsigned)dwReason, !pReserved)){
 			BailWithErrorCode(L"MCFCRT 初始化失败。", GetLastError());
 		}
 	}
-	__MCFCRT_EH_TOP_END
+	__MCFCRT_SEH_TOP_END
 
 	// 忽略错误。
 	if(dwReason == DLL_PROCESS_ATTACH){
@@ -92,13 +92,13 @@ static DWORD tls_index = 0xDEADBEEF;
 __attribute__((__section__(".rdata"), __used__))
 const IMAGE_TLS_DIRECTORY _tls_used = { (UINT_PTR)&tls_begin, (UINT_PTR)&tls_end, (UINT_PTR)&tls_index, (UINT_PTR)&callback_begin, 0, 0 };
 
-_Noreturn __MCFCRT_C_STDCALL __MCFCRT_HAS_EH_TOP __attribute__((__noinline__))
+_Noreturn __MCFCRT_C_STDCALL __MCFCRT_HAS_SEH_TOP __attribute__((__noinline__))
 DWORD __MCFCRT_ExeStartup(LPVOID pUnknown){
 	(void)pUnknown;
 
 	DWORD dwExitCode;
 
-	__MCFCRT_EH_TOP_BEGIN
+	__MCFCRT_SEH_TOP_BEGIN
 	{
 		if(!g_bTlsCallbackActiveUponInit){
 			ExeTlsCallback(_MCFCRT_GetModuleBase(), DLL_PROCESS_ATTACH, false);
@@ -106,7 +106,7 @@ DWORD __MCFCRT_ExeStartup(LPVOID pUnknown){
 
 		dwExitCode = _MCFCRT_Main();
 	}
-	__MCFCRT_EH_TOP_END
+	__MCFCRT_SEH_TOP_END
 
 	ExitProcess(dwExitCode);
 	__builtin_trap();

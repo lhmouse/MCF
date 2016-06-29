@@ -5,7 +5,7 @@
 #include "dll.h"
 #include "generic.h"
 #include "../env/mcfwin.h"
-#include "../env/_eh_top.h"
+#include "../env/_seh_top.h"
 
 // -static -Wl,-e@__MCFCRT_DllStartup,--disable-runtime-pseudo-reloc,--disable-auto-import
 
@@ -17,15 +17,15 @@ BOOL __MCFCRT_DllStartup(HINSTANCE hDll, DWORD dwReason, LPVOID pReserved)
 __attribute__((__used__))
 int __MCFCRT_do_not_link_exe_startup_code_and_dll_startup_code_together = 0;
 
-__MCFCRT_C_STDCALL __MCFCRT_HAS_EH_TOP __attribute__((__noinline__))
+__MCFCRT_C_STDCALL __MCFCRT_HAS_SEH_TOP __attribute__((__noinline__))
 BOOL __MCFCRT_DllStartup(HINSTANCE hDll, DWORD dwReason, LPVOID pReserved){
 	BOOL bRet;
 
-	__MCFCRT_EH_TOP_BEGIN
+	__MCFCRT_SEH_TOP_BEGIN
 	{
 		bRet = __MCFCRT_TlsCallbackGeneric((void *)hDll, (unsigned)dwReason, !pReserved);
 	}
-	__MCFCRT_EH_TOP_END
+	__MCFCRT_SEH_TOP_END
 
 	return bRet;
 }

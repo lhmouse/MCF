@@ -2,7 +2,7 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2013 - 2016, LH_Mouse. All wrongs reserved.
 
-#include "_eh_top.h"
+#include "_seh_top.h"
 
 __MCFCRT_C_STDCALL
 long __MCFCRT_TopSehHandler(EXCEPTION_POINTERS *pContext){

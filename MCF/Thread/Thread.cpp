@@ -4,7 +4,7 @@
 
 #include "../StdMCF.hpp"
 #include "Thread.hpp"
-#include "../../MCFCRT/env/_eh_top.h"
+#include "../../MCFCRT/env/_seh_top.h"
 #include "../Core/Exception.hpp"
 
 namespace MCF {
@@ -16,15 +16,15 @@ void Thread::X_AbstractControlBlock::SpawnThread(bool bSuspended){
 	MCF_ASSERT(!x_hThread);
 
 	struct Helper {
-		__MCFCRT_C_STDCALL __MCFCRT_HAS_EH_TOP
+		__MCFCRT_C_STDCALL __MCFCRT_HAS_SEH_TOP
 		static DWORD ThreadProc(LPVOID pParam){
 			const auto pThis = IntrusivePtr<X_AbstractControlBlock>(static_cast<X_AbstractControlBlock *>(pParam));
 
-			__MCFCRT_EH_TOP_BEGIN
+			__MCFCRT_SEH_TOP_BEGIN
 			{
 				pThis->X_ThreadProc();
 			}
-			__MCFCRT_EH_TOP_END
+			__MCFCRT_SEH_TOP_END
 
 			return 0;
 		}

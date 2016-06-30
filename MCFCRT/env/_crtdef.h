@@ -26,6 +26,7 @@
 #include <limits.h>
 #include <stdbool.h>
 #include <stdalign.h>
+#include <uchar.h>
 #include <assert.h>
 
 #ifdef __cplusplus

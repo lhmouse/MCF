@@ -35,9 +35,8 @@ _MCFCRT_EXTERN_C_END
 		                                    : "eax", "esp"	\
 	                                    );
 #	define __MCFCRT_SEH_TOP_END         __asm__ volatile (	\
+		                                    "	pop dword ptr fs:[0] \n"	\
 		                                    "	pop eax \n"	\
-		                                    "	add esp, 4 \n"	\
-		                                    "	mov dword ptr fs:[0], eax \n"	\
 		                                    : :	\
 		                                    : "eax", "esp"	\
 	                                    );

@@ -101,7 +101,7 @@ static void RelockCallbackNative(intptr_t context, intptr_t unlocked){
 	_MCFCRT_WaitForMutexForever(mutex, _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT);
 }
 
-__MCFCRT_C_STDCALL __MCFCRT_HAS_SEH_TOP
+__MCFCRT_C_STDCALL
 static unsigned long GthreadProc(void *ctrl_ptr){
 	ThreadControl *const ctrl = ctrl_ptr;
 	_MCFCRT_ASSERT(ctrl);

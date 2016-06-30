@@ -16,7 +16,7 @@ void Thread::X_AbstractControlBlock::SpawnThread(bool bSuspended){
 	MCF_ASSERT(!x_hThread);
 
 	struct Helper {
-		__MCFCRT_C_STDCALL __MCFCRT_HAS_SEH_TOP
+		__MCFCRT_C_STDCALL
 		static DWORD ThreadProc(LPVOID pParam){
 			const auto pThis = IntrusivePtr<X_AbstractControlBlock>(static_cast<X_AbstractControlBlock *>(pParam));
 

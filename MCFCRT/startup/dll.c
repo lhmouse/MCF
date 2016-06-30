@@ -17,7 +17,7 @@ BOOL __MCFCRT_DllStartup(HINSTANCE hDll, DWORD dwReason, LPVOID pReserved)
 __attribute__((__used__))
 int __MCFCRT_do_not_link_exe_startup_code_and_dll_startup_code_together = 0;
 
-__MCFCRT_C_STDCALL __MCFCRT_HAS_SEH_TOP __attribute__((__noinline__))
+__MCFCRT_C_STDCALL __attribute__((__noinline__))
 BOOL __MCFCRT_DllStartup(HINSTANCE hDll, DWORD dwReason, LPVOID pReserved){
 	BOOL bRet;
 

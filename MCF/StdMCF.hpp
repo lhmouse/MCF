@@ -9,7 +9,11 @@
 #include "../MCFCRT/env/gthread.h"
 #include "../MCFCRT/env/mcfwin.h"
 
-#include <utility>
+#include <cstddef>
+#include <cstdint>
+#include <climits>
+#include <cstring>
+
 #include <type_traits>
 #include <initializer_list>
 #include <tuple>

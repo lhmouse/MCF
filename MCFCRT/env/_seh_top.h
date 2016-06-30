@@ -7,6 +7,7 @@
 
 #include "_crtdef.h"
 #include "mcfwin.h"
+#include <winnt.h>
 
 _MCFCRT_EXTERN_C_BEGIN
 

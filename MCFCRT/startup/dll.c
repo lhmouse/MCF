@@ -19,13 +19,5 @@ int __MCFCRT_do_not_link_exe_startup_code_and_dll_startup_code_together = 0;
 
 __MCFCRT_C_STDCALL __attribute__((__noinline__))
 BOOL __MCFCRT_DllStartup(HINSTANCE hDll, DWORD dwReason, LPVOID pReserved){
-	BOOL bRet;
-
-	__MCFCRT_SEH_TOP_BEGIN
-	{
-		bRet = __MCFCRT_TlsCallbackGeneric((void *)hDll, (unsigned)dwReason, !pReserved);
-	}
-	__MCFCRT_SEH_TOP_END
-
-	return bRet;
+	return __MCFCRT_TlsCallbackGeneric((void *)hDll, (unsigned)dwReason, !pReserved);
 }

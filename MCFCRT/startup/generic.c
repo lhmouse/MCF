@@ -6,6 +6,7 @@
 #include "exe.h"
 #include "dll.h"
 #include "../env/mcfwin.h"
+#include "../env/_seh_top.h"
 #include "../env/standard_streams.h"
 #include "../env/module.h"
 #include "../env/fenv.h"
@@ -86,37 +87,41 @@ static bool g_bInitialized = false;
 bool __MCFCRT_TlsCallbackGeneric(void *pInstance, unsigned uReason, bool bDynamic){
 	bool bRet = false;
 
-	switch(uReason){
-	case DLL_PROCESS_ATTACH:
-		if(g_bInitialized){
+	__MCFCRT_SEH_TOP_BEGIN
+	{
+		switch(uReason){
+		case DLL_PROCESS_ATTACH:
+			if(g_bInitialized){
+				break;
+			}
+			if(!OnDllProcessAttach((HINSTANCE)pInstance, bDynamic)){
+				break;
+			}
+			g_bInitialized = true;
+			bRet = true;
+			break;
+
+		case DLL_THREAD_ATTACH:
+			OnDllThreadAttach((HINSTANCE)pInstance);
+			bRet = true;
+			break;
+
+		case DLL_THREAD_DETACH:
+			OnDllThreadDetach((HINSTANCE)pInstance);
+			bRet = true;
+			break;
+
+		case DLL_PROCESS_DETACH:
+			if(!g_bInitialized){
+				break;
+			}
+			g_bInitialized = false;
+			OnDllProcessDetach((HINSTANCE)pInstance, bDynamic);
+			bRet = true;
 			break;
 		}
-		if(!OnDllProcessAttach((HINSTANCE)pInstance, bDynamic)){
-			break;
-		}
-		g_bInitialized = true;
-		bRet = true;
-		break;
-
-	case DLL_THREAD_ATTACH:
-		OnDllThreadAttach((HINSTANCE)pInstance);
-		bRet = true;
-		break;
-
-	case DLL_THREAD_DETACH:
-		OnDllThreadDetach((HINSTANCE)pInstance);
-		bRet = true;
-		break;
-
-	case DLL_PROCESS_DETACH:
-		if(!g_bInitialized){
-			break;
-		}
-		g_bInitialized = false;
-		OnDllProcessDetach((HINSTANCE)pInstance, bDynamic);
-		bRet = true;
-		break;
 	}
+	__MCFCRT_SEH_TOP_END
 
 	return bRet;
 }

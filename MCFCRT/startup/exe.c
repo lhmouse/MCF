@@ -49,22 +49,18 @@ static BOOL CrtCtrlHandler(DWORD dwCtrlType){
 }
 
 // 如果 EXE 只链接了 KERNEL32.DLL 和 NTDLL.DLL 那么 TLS 回调就收不到 DLL_PROCESS_ATTACH 通知。这里需要处理这种情况。
-static bool g_bTlsCallbackActiveUponInit = false;
+static bool g_bTlsCallbackActive = false;
 
 __MCFCRT_C_STDCALL __attribute__((__noinline__))
 static void ExeTlsCallback(LPVOID pInstance, DWORD dwReason, LPVOID pReserved){
 	(void)pInstance;
 	(void)pReserved;
 
-	g_bTlsCallbackActiveUponInit = true;
+	g_bTlsCallbackActive = true;
 
-	__MCFCRT_SEH_TOP_BEGIN
-	{
-		if(!__MCFCRT_TlsCallbackGeneric((void *)pInstance, (unsigned)dwReason, !pReserved)){
-			BailWithErrorCode(L"MCFCRT 初始化失败。", GetLastError());
-		}
+	if(!__MCFCRT_TlsCallbackGeneric((void *)pInstance, (unsigned)dwReason, !pReserved)){
+		BailWithErrorCode(L"MCFCRT 初始化失败。", GetLastError());
 	}
-	__MCFCRT_SEH_TOP_END
 
 	// 忽略错误。
 	if(dwReason == DLL_PROCESS_ATTACH){
@@ -96,14 +92,14 @@ _Noreturn __MCFCRT_C_STDCALL __attribute__((__noinline__))
 DWORD __MCFCRT_ExeStartup(LPVOID pUnknown){
 	(void)pUnknown;
 
+	if(!g_bTlsCallbackActive){
+		ExeTlsCallback(_MCFCRT_GetModuleBase(), DLL_PROCESS_ATTACH, false);
+	}
+
 	DWORD dwExitCode;
 
 	__MCFCRT_SEH_TOP_BEGIN
 	{
-		if(!g_bTlsCallbackActiveUponInit){
-			ExeTlsCallback(_MCFCRT_GetModuleBase(), DLL_PROCESS_ATTACH, false);
-		}
-
 		dwExitCode = _MCFCRT_Main();
 	}
 	__MCFCRT_SEH_TOP_END

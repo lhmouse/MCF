@@ -32,13 +32,13 @@ _MCFCRT_EXTERN_C_END
 	                                        "mov dword ptr[%1], %0 \n"	\
 	                                        "mov dword ptr[%1 + 4], offset ___MCFCRT_SehTopDispatcher \n"	\
 	                                        "mov dword ptr fs:[0], %1 \n"	\
-	                                        : "=r"(__seh_unused) : "r"(__seh_node));	\
+	                                        : "=&r"(__seh_unused) : "r"(__seh_node));	\
 	                                      {
 #	define __MCFCRT_SEH_TOP_END           }	\
 	                                      __asm__ volatile (	\
 	                                        "mov %0, dword ptr[%1] \n"	\
 	                                        "mov dword ptr fs:[0], %0 \n"	\
-	                                        : "=r"(__seh_unused) : "r"(__seh_node));	\
+	                                        : "=&r"(__seh_unused) : "r"(__seh_node));	\
 	                                    }
 
 #endif

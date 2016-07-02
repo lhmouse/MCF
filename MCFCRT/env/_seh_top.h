@@ -25,20 +25,20 @@ _MCFCRT_EXTERN_C_END
 
 #else
 
-#	define __MCFCRT_SEH_TOP_BEGIN       { void *__seh_node[2];	\
+#	define __MCFCRT_SEH_TOP_BEGIN       { void *__seh_unused;	\
+	                                      void *__seh_node[2];	\
 	                                      __asm__ volatile (	\
-	                                        "mov eax, dword ptr fs:[0] \n"	\
-	                                        "mov dword ptr[%0], eax \n"	\
-	                                        "mov dword ptr[%0 + 4], offset ___MCFCRT_SehTopDispatcher \n"	\
-	                                        "mov dword ptr fs:[0], %0 \n"	\
-	                                        : : "r"(__seh_node) : "ax");	\
+	                                        "mov %0, dword ptr fs:[0] \n"	\
+	                                        "mov dword ptr[%1], %0 \n"	\
+	                                        "mov dword ptr[%1 + 4], offset ___MCFCRT_SehTopDispatcher \n"	\
+	                                        "mov dword ptr fs:[0], %1 \n"	\
+	                                        : "=r"(__seh_unused) : "r"(__seh_node));	\
 	                                      {
 #	define __MCFCRT_SEH_TOP_END           }	\
 	                                      __asm__ volatile (	\
-	                                        "mov eax, dword ptr[%0] \n"	\
-	                                        "mov dword ptr fs:[0], eax \n"	\
-	                                        : : "r"(__seh_node) : "ax"	\
-	                                      );	\
+	                                        "mov %0, dword ptr[%1] \n"	\
+	                                        "mov dword ptr fs:[0], %0 \n"	\
+	                                        : "=r"(__seh_unused) : "r"(__seh_node));	\
 	                                    }
 
 #endif

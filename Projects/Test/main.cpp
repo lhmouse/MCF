@@ -1,22 +1,10 @@
 #include <MCF/StdMCF.hpp>
-#include <MCFCRT/env/bail.h>
 
-struct foo {
-	foo(){
-		__builtin_puts("constructed!");
-	}
-	~foo(){
-		__builtin_puts("destructed!");
-	}
-};
+char a[4096] = { };
+char b[4096] = { };
+void *(*p)(void *, const void *, std::size_t) = &std::memcpy;
 
 extern "C" unsigned _MCFCRT_Main(void){
-	try {
-		foo f;
-		throw 12345;
-	} catch(int e){
-		__builtin_printf("exception caught: e = %d\n", e);
-	}
-		throw 12345;
+	(*p)(a, b, sizeof(a));
 	return 0;
 }

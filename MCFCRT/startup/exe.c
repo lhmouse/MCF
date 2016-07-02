@@ -70,23 +70,21 @@ static void ExeTlsCallback(LPVOID pInstance, DWORD dwReason, LPVOID pReserved){
 	}
 }
 
-extern const IMAGE_TLS_DIRECTORY _tls_used;
-
 __extension__ __attribute__((__section__(".tls$AAA")))
-static const char tls_begin[0] = { };
+const max_align_t _tls_start[0] = { };
 __extension__ __attribute__((__section__(".tls$ZZZ")))
-static const char tls_end[0]   = { };
+const max_align_t _tls_end[0]   = { };
 
-__attribute__((__section__(".CRT$AAA")))
-static const PIMAGE_TLS_CALLBACK callback_begin = &ExeTlsCallback;
+__attribute__((__section__(".CRT$AAA"), __used__))
+const PIMAGE_TLS_CALLBACK __xl_a = &ExeTlsCallback;
 __attribute__((__section__(".CRT$ZZZ"), __used__))
-static const PIMAGE_TLS_CALLBACK callback_end   = nullptr;
+const PIMAGE_TLS_CALLBACK __xl_z = nullptr;
 
-__attribute__((__section__(".data")))
-static DWORD tls_index = 0xDEADBEEF;
+__attribute__((__used__))
+DWORD _tls_index = 0xDEADBEEF;
 
-__attribute__((__section__(".rdata"), __used__))
-const IMAGE_TLS_DIRECTORY _tls_used = { (UINT_PTR)&tls_begin, (UINT_PTR)&tls_end, (UINT_PTR)&tls_index, (UINT_PTR)&callback_begin, 0, 0 };
+__attribute__((__used__))
+const IMAGE_TLS_DIRECTORY _tls_used = { (UINT_PTR)&_tls_start, (UINT_PTR)&_tls_end, (UINT_PTR)&_tls_index, (UINT_PTR)&__xl_a, 0, 0 };
 
 _Noreturn __MCFCRT_C_STDCALL __attribute__((__noinline__))
 DWORD __MCFCRT_ExeStartup(LPVOID pUnknown){

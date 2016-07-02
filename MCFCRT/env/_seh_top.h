@@ -28,16 +28,16 @@ _MCFCRT_EXTERN_C_END
 #	define __MCFCRT_SEH_TOP_BEGIN       { void *__seh_node[2];	\
 	                                      __asm__ volatile (	\
 	                                        "mov eax, dword ptr fs:[0] \n"	\
-	                                        "mov dword ptr[ecx], eax \n"	\
-	                                        "mov dword ptr[ecx + 4], offset ___MCFCRT_SehTopDispatcher \n"	\
-	                                        "mov dword ptr fs:[0], ecx \n"	\
-	                                        : : "c"(__seh_node) : "ax");	\
+	                                        "mov dword ptr[%0], eax \n"	\
+	                                        "mov dword ptr[%0 + 4], offset ___MCFCRT_SehTopDispatcher \n"	\
+	                                        "mov dword ptr fs:[0], %0 \n"	\
+	                                        : : "r"(__seh_node) : "ax");	\
 	                                      {
 #	define __MCFCRT_SEH_TOP_END           }	\
 	                                      __asm__ volatile (	\
-	                                        "mov eax, dword ptr[ecx] \n"	\
+	                                        "mov eax, dword ptr[%0] \n"	\
 	                                        "mov dword ptr fs:[0], eax \n"	\
-	                                        : : "c"(__seh_node) : "ax"	\
+	                                        : : "r"(__seh_node) : "ax"	\
 	                                      );	\
 	                                    }
 

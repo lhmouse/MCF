@@ -7,7 +7,6 @@
 
 #include "_crtdef.h"
 #include "mcfwin.h"
-#include <winnt.h>
 
 _MCFCRT_EXTERN_C_BEGIN
 
@@ -18,29 +17,29 @@ _MCFCRT_EXTERN_C_END
 
 #ifdef _WIN64
 
-#	define __MCFCRT_SEH_TOP_BEGIN       __asm__ volatile (	\
-		                                    ".seh_handler __MCFCRT_SehTopDispatcher, @except \n"	\
-	                                    );
-#	define __MCFCRT_SEH_TOP_END         __asm__ volatile (	\
-		                                    " "	\
-	                                    );
+#	define __MCFCRT_SEH_TOP_BEGIN       { __asm__ volatile (	\
+	                                        ".seh_handler __MCFCRT_SehTopDispatcher, @except \n");	\
+	                                      {
+#	define __MCFCRT_SEH_TOP_END           }	\
+	                                    }
 
 #else
 
-#	define __MCFCRT_SEH_TOP_BEGIN       __asm__ volatile (	\
-		                                    "	mov eax, dword ptr fs:[0] \n"	\
-		                                    "	push offset ___MCFCRT_SehTopDispatcher \n"	\
-		                                    "	push eax \n"	\
-		                                    "	mov dword ptr fs:[0], esp \n"	\
-		                                    : :	\
-		                                    : "eax", "esp"	\
-	                                    );
-#	define __MCFCRT_SEH_TOP_END         __asm__ volatile (	\
-		                                    "	pop dword ptr fs:[0] \n"	\
-		                                    "	pop eax \n"	\
-		                                    : :	\
-		                                    : "eax", "esp"	\
-	                                    );
+#	define __MCFCRT_SEH_TOP_BEGIN       { void *__seh_node[2];	\
+	                                      __asm__ volatile (	\
+	                                        "mov eax, dword ptr fs:[0] \n"	\
+	                                        "mov dword ptr[ecx], eax \n"	\
+	                                        "mov dword ptr[ecx + 4], offset ___MCFCRT_SehTopDispatcher \n"	\
+	                                        "mov dword ptr fs:[0], ecx \n"	\
+	                                        : : "c"(__seh_node) : "ax");	\
+	                                      {
+#	define __MCFCRT_SEH_TOP_END           }	\
+	                                      __asm__ volatile (	\
+	                                        "mov eax, dword ptr[ecx] \n"	\
+	                                        "mov dword ptr fs:[0], eax \n"	\
+	                                        : : "c"(__seh_node) : "ax"	\
+	                                      );	\
+	                                    }
 
 #endif
 

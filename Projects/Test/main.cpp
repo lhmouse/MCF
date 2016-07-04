@@ -1,11 +1,18 @@
 #include <MCF/StdMCF.hpp>
-#include <MCFCRT/env/module.h>
-#include <MCFCRT/env/thread_env.h>
+#include <MCF/Streams/StandardInputStream.hpp>
+#include <MCF/Streams/StandardOutputStream.hpp>
+#include <MCF/Streams/StandardErrorStream.hpp>
 
-extern "C" unsigned _MCFCRT_Main(void){
-	for(int i = 0; i < 10; ++i){
-		::_MCFCRT_AtThreadExit([](auto n){ __builtin_printf("at_thread_exit_proc(%d)\n", (int)n); }, i);
-		::_MCFCRT_AtModuleExit([](auto n){ __builtin_printf("at_module_exit_proc(%d)\n", (int)n); }, i);
-	}
+extern "C" unsigned _MCFCRT_Main(void) noexcept {
+	MCF::StandardInputStream  in;
+	MCF::StandardOutputStream out;
+	MCF::StandardErrorStream  err;
+
+	out.PutString(L"标准输出 1", 6, true);
+	err.PutString(L"标准错误 1", 6, true);
+	wchar_t str[10];
+	auto len = in.GetString(str, 10, true);
+	out.PutString(str, len, true);
+
 	return 0;
 }

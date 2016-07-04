@@ -9,6 +9,10 @@
 
 _MCFCRT_EXTERN_C_BEGIN
 
+#ifndef __MCFCRT_INLINE_OR_EXTERN
+#	define __MCFCRT_INLINE_OR_EXTERN     __attribute__((__gnu_inline__)) extern inline
+#endif
+
 // 初始化为 { 0 } 即可。
 typedef struct __MCFCRT_tagOnceFlag {
 	volatile _MCFCRT_STD uintptr_t __u;
@@ -20,7 +24,7 @@ typedef enum __MCFCRT_tagOnceResult {
 	_MCFCRT_kOnceResultFinished = 3,
 } _MCFCRT_OnceResult;
 
-static inline void _MCFCRT_InitializeOnceFlag(_MCFCRT_OnceFlag *__pOnceFlag) _MCFCRT_NOEXCEPT {
+__MCFCRT_INLINE_OR_EXTERN void _MCFCRT_InitializeOnceFlag(_MCFCRT_OnceFlag *__pOnceFlag) _MCFCRT_NOEXCEPT {
 	__atomic_store_n(&(__pOnceFlag->__u), 0, __ATOMIC_RELEASE);
 }
 

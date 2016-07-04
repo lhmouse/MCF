@@ -2,6 +2,7 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2013 - 2016, LH_Mouse. All wrongs reserved.
 
+#define __MCFCRT_INLINE_OR_EXTERN     extern inline
 #include "module.h"
 #include "mcfwin.h"
 #include "mutex.h"

@@ -9,6 +9,10 @@
 
 _MCFCRT_EXTERN_C_BEGIN
 
+#ifndef __MCFCRT_INLINE_OR_EXTERN
+#	define __MCFCRT_INLINE_OR_EXTERN     __attribute__((__gnu_inline__)) extern inline
+#endif
+
 // 初始化为 { 0 } 即可。
 typedef struct __MCFCRT_tagMutex {
 	volatile _MCFCRT_STD uintptr_t __u;
@@ -16,7 +20,7 @@ typedef struct __MCFCRT_tagMutex {
 
 #define _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT   100
 
-static inline void _MCFCRT_InitializeMutex(_MCFCRT_Mutex *__pMutex) _MCFCRT_NOEXCEPT {
+__MCFCRT_INLINE_OR_EXTERN void _MCFCRT_InitializeMutex(_MCFCRT_Mutex *__pMutex) _MCFCRT_NOEXCEPT {
 	__atomic_store_n(&(__pMutex->__u), 0, __ATOMIC_RELEASE);
 }
 

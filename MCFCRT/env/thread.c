@@ -11,7 +11,7 @@
 #include <ntdef.h>
 
 __attribute__((__dllimport__, __stdcall__))
-extern NTSTATUS NtDelayExecution(BOOLEAN bAlertable, const LARGE_INTEGER *pInterval);
+extern NTSTATUS NtDelayExecution(BOOLEAN bAlertable, const LARGE_INTEGER *pliTimeout);
 __attribute__((__dllimport__, __stdcall__))
 extern NTSTATUS NtYieldExecution(void);
 

@@ -12,13 +12,13 @@
 
 	struct Storage {
 		wchar_t cmdline[];  // 动态确定。
-		_MCFCRT_ArgItem stub;   // pwszStr 指向 cmdline，uLen 是后面的 argv 的元素容量。
+		_MCFCRT_ArgItem stub;   // __pwszStr 指向 cmdline，__uLen 是后面的 argv 的元素容量。
 		_MCFCRT_ArgItem argv[]; // _MCFCRT_AllocArgv 返回的指针指向这里。
-		_MCFCRT_ArgItem nil;    // pwszStr 为 nullptr，uLen 为 0。
+		_MCFCRT_ArgItem nil;    // __pwszStr 为 nullptr，__uLen 为 0。
 	};
 */
 
-const _MCFCRT_ArgItem *_MCFCRT_AllocArgv(size_t *pArgc, const wchar_t *pwszCommandLine){
+const _MCFCRT_ArgItem *_MCFCRT_AllocArgv(size_t *puArgc, const wchar_t *pwszCommandLine){
 	void *pStorage = nullptr;
 
 	const size_t uCommandLineSize = (wcslen(pwszCommandLine) + 1) * sizeof(wchar_t);
@@ -36,13 +36,13 @@ const _MCFCRT_ArgItem *_MCFCRT_AllocArgv(size_t *pArgc, const wchar_t *pwszComma
 		goto jBadAlloc;
 	}
 	_MCFCRT_ArgItem *pArgv = (_MCFCRT_ArgItem *)((char *)pStorage + uPrefixSize + sizeof(_MCFCRT_ArgItem));
-	pArgv[-1].pwszStr = pStorage;
-	pArgv[-1].uLen = uCapacity;
+	pArgv[-1].__pwszStr = pStorage;
+	pArgv[-1].__uLen = uCapacity;
 
 	const wchar_t *pwcRead = pwszCommandLine;
 	wchar_t *pwcWrite = pStorage;
 	size_t uArgc = 0;
-	*pArgc = 0;
+	*puArgc = 0;
 
 	enum {
 		ST_DELIM,
@@ -73,15 +73,15 @@ const _MCFCRT_ArgItem *_MCFCRT_AllocArgv(size_t *pArgc, const wchar_t *pwszComma
 						goto jBadAlloc;
 					}
 					pArgv = (_MCFCRT_ArgItem *)((char *)pNewStorage + uPrefixSize + sizeof(_MCFCRT_ArgItem));
-					pArgv[-1].pwszStr = pNewStorage;
-					pArgv[-1].uLen = uCapacity;
+					pArgv[-1].__pwszStr = pNewStorage;
+					pArgv[-1].__uLen = uCapacity;
 
 					pwcWrite = (wchar_t *)pNewStorage + (pwcWrite - (wchar_t *)pStorage);
 
 					pStorage = pNewStorage;
 				}
 				++uArgc;
-				pArgv[uArgc - 1].pwszStr = pwcWrite;
+				pArgv[uArgc - 1].__pwszStr = pwcWrite;
 
 				if(wc == L'\"'){
 					eState = ST_QUOTE_OPEN;
@@ -94,7 +94,7 @@ const _MCFCRT_ArgItem *_MCFCRT_AllocArgv(size_t *pArgc, const wchar_t *pwszComma
 
 		case ST_IN_ARG:
 			if((wc == L' ') || (wc == L'\t')){
-				pArgv[uArgc - 1].uLen = (size_t)(pwcWrite - pArgv[uArgc - 1].pwszStr);
+				pArgv[uArgc - 1].__uLen = (size_t)(pwcWrite - pArgv[uArgc - 1].__pwszStr);
 				*(pwcWrite++) = 0;
 				eState = ST_DELIM;
 			} else if(wc == L'\"'){
@@ -125,7 +125,7 @@ const _MCFCRT_ArgItem *_MCFCRT_AllocArgv(size_t *pArgc, const wchar_t *pwszComma
 
 		case ST_QUOTE_CLOSED:
 			if((wc == L' ') || (wc == L'\t')){
-				pArgv[uArgc - 1].uLen = (size_t)(pwcWrite - pArgv[uArgc - 1].pwszStr);
+				pArgv[uArgc - 1].__uLen = (size_t)(pwcWrite - pArgv[uArgc - 1].__pwszStr);
 				*(pwcWrite++) = 0;
 				eState = ST_DELIM;
 			} else if(wc == L'\"'){
@@ -146,15 +146,15 @@ const _MCFCRT_ArgItem *_MCFCRT_AllocArgv(size_t *pArgc, const wchar_t *pwszComma
 	case ST_QUOTE_OPEN:
 	case ST_IN_QUOTE:
 	case ST_QUOTE_CLOSED:
-		pArgv[uArgc - 1].uLen = (size_t)(pwcWrite - pArgv[uArgc - 1].pwszStr);
+		pArgv[uArgc - 1].__uLen = (size_t)(pwcWrite - pArgv[uArgc - 1].__pwszStr);
 		*(pwcWrite++) = 0;
 		break;
 	}
 
-	pArgv[uArgc].pwszStr = nullptr;
-	pArgv[uArgc].uLen = 0;
+	pArgv[uArgc].__pwszStr = nullptr;
+	pArgv[uArgc].__uLen = 0;
 
-	*pArgc = uArgc;
+	*puArgc = uArgc;
 	return pArgv;
 
 jBadAlloc:
@@ -163,11 +163,11 @@ jBadAlloc:
 	return nullptr;
 }
 
-const _MCFCRT_ArgItem *_MCFCRT_AllocArgvFromCommandLine(size_t *pArgc){
-	return _MCFCRT_AllocArgv(pArgc, GetCommandLineW());
+const _MCFCRT_ArgItem *_MCFCRT_AllocArgvFromCommandLine(size_t *puArgc){
+	return _MCFCRT_AllocArgv(puArgc, GetCommandLineW());
 }
 void _MCFCRT_FreeArgv(const _MCFCRT_ArgItem *pArgItems){
 	if(pArgItems){
-		_MCFCRT_free((void *)(pArgItems[-1].pwszStr));
+		_MCFCRT_free((void *)(pArgItems[-1].__pwszStr));
 	}
 }

@@ -79,10 +79,13 @@ typedef struct tagThreadControl {
 static inline int ThreadControlComparatorNodeKey(const _MCFCRT_AvlNodeHeader *lhs, intptr_t rhs){
 	const uintptr_t u1 = (uintptr_t)(((const ThreadControl *)lhs)->tid);
 	const uintptr_t u2 = (uintptr_t)rhs;
-	return (u1 < u2) ? -1 : ((u1 > u2) ? 1 : 0);
+	if(u1 != u2){
+		return (u1 < u2) ? -1 : 1;
+	}
+	return 0;
 }
-static inline int ThreadControlComparatorNodes(const _MCFCRT_AvlNodeHeader *lhs, const _MCFCRT_AvlNodeHeader *pObj2){
-	return ThreadControlComparatorNodeKey(lhs, (intptr_t)(((const ThreadControl *)pObj2)->tid));
+static inline int ThreadControlComparatorNodes(const _MCFCRT_AvlNodeHeader *lhs, const _MCFCRT_AvlNodeHeader *rhs){
+	return ThreadControlComparatorNodeKey(lhs, (intptr_t)(((const ThreadControl *)rhs)->tid));
 }
 
 static intptr_t UnlockCallbackNative(intptr_t context){

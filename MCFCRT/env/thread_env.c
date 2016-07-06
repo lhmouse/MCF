@@ -14,10 +14,14 @@ typedef struct tagTlsObject TlsObject;
 typedef struct tagTlsThread TlsThread;
 typedef struct tagTlsKey    TlsKey;
 
-struct tagTlsObject {
-	_MCFCRT_AvlNodeHeader avlhNodeByKey;
+typedef struct tagTlsObjectKey {
 	TlsKey *pKey;
 	uintptr_t uCounter;
+} TlsObjectKey;
+
+struct tagTlsObject {
+	_MCFCRT_AvlNodeHeader avlhNodeByKey;
+	TlsObjectKey vObjectKey;
 
 	_MCFCRT_TlsDestructor pfnDestructor;
 	intptr_t nContext;
@@ -29,13 +33,19 @@ struct tagTlsObject {
 	alignas(max_align_t) unsigned char abyStorage[];
 };
 
-static inline int ObjectComparatorNodeKey(const _MCFCRT_AvlNodeHeader *pObj1, intptr_t nKey2){
-	const uintptr_t u1 = (uintptr_t)(((const TlsObject *)pObj1)->pKey);
-	const uintptr_t u2 = (uintptr_t)(void *)nKey2;
-	return (u1 < u2) ? -1 : ((u1 > u2) ? 1 : 0);
+static inline int TlsObjectComparatorNodeKey(const _MCFCRT_AvlNodeHeader *pObj1, intptr_t nKey2){
+	const TlsObjectKey *const pIndex1 = &((const TlsObject *)pObj1)->vObjectKey;
+	const TlsObjectKey *const pIndex2 = (const TlsObjectKey *)nKey2;
+	if(pIndex1->pKey != pIndex2->pKey){
+		return (pIndex1->pKey < pIndex2->pKey) ? -1 : 1;
+	}
+	if(pIndex1->uCounter != pIndex2->uCounter){
+		return (pIndex1->uCounter < pIndex2->uCounter) ? -1 : 1;
+	}
+	return 0;
 }
-static inline int ObjectComparatorNodes(const _MCFCRT_AvlNodeHeader *pObj1, const _MCFCRT_AvlNodeHeader *pObj2){
-	return ObjectComparatorNodeKey(pObj1, (intptr_t)(((const TlsObject *)pObj2)->pKey));
+static inline int TlsObjectComparatorNodes(const _MCFCRT_AvlNodeHeader *pObj1, const _MCFCRT_AvlNodeHeader *pObj2){
+	return TlsObjectComparatorNodeKey(pObj1, (intptr_t)&((const TlsObject *)pObj2)->vObjectKey);
 }
 
 struct tagTlsThread {
@@ -89,27 +99,8 @@ static TlsObject *GetTlsObject(TlsThread *pThread, TlsKey *pKey){
 		return nullptr;
 	}
 
-	TlsObject *const pObject = (TlsObject *)_MCFCRT_AvlFind(&(pThread->avlObjects), (intptr_t)pKey, &ObjectComparatorNodeKey);
-	if(pObject && (pObject->uCounter != pKey->uCounter)){
-		const _MCFCRT_TlsDestructor pfnDestructor = pObject->pfnDestructor;
-		if(pfnDestructor){
-			(*pfnDestructor)(pObject->nContext, pObject->abyStorage);
-		}
-
-		TlsObject *const pPrev = pObject->pPrevByThread;
-		TlsObject *const pNext = pObject->pNextByThread;
-		if(pPrev){
-			pPrev->pNextByThread = pNext;
-		}
-		if(pNext){
-			pNext->pPrevByThread = pPrev;
-		}
-
-		_MCFCRT_AvlDetach((_MCFCRT_AvlNodeHeader *)pObject);
-
-		_MCFCRT_free(pObject);
-		return nullptr;
-	}
+	const TlsObjectKey vObjectKey = { pKey, pKey->uCounter };
+	TlsObject *const pObject = (TlsObject *)_MCFCRT_AvlFind(&(pThread->avlObjects), (intptr_t)&vObjectKey, &TlsObjectComparatorNodeKey);
 	return pObject;
 }
 static TlsObject *RequireTlsObject(TlsThread *pThread, TlsKey *pKey, size_t uSize, _MCFCRT_TlsConstructor pfnConstructor, _MCFCRT_TlsDestructor pfnDestructor, intptr_t nContext){
@@ -159,10 +150,9 @@ static TlsObject *RequireTlsObject(TlsThread *pThread, TlsKey *pKey, size_t uSiz
 		pObject->pNextByThread = pNext;
 
 		if(pKey){
-			pObject->pKey = pKey;
-			pObject->uCounter = pKey->uCounter;
-
-			_MCFCRT_AvlAttach(&(pThread->avlObjects), (_MCFCRT_AvlNodeHeader *)pObject, &ObjectComparatorNodes);
+			pObject->vObjectKey.pKey     = pKey;
+			pObject->vObjectKey.uCounter = pKey->uCounter;
+			_MCFCRT_AvlAttach(&(pThread->avlObjects), (_MCFCRT_AvlNodeHeader *)pObject, &TlsObjectComparatorNodes);
 		}
 	}
 	return pObject;

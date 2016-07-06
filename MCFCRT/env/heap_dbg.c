@@ -16,7 +16,10 @@
 static inline int BlockInfoComparatorNodeKey(const _MCFCRT_AvlNodeHeader *pInfo1, intptr_t nKey2){
 	const uintptr_t u1 = (uintptr_t)(((const __MCFCRT_HeapDbgBlockInfo *)pInfo1)->__pAddress);
 	const uintptr_t u2 = (uintptr_t)(void *)nKey2;
-	return (u1 < u2) ? -1 : ((u1 > u2) ? 1 : 0);
+	if(u1 != u2){
+		return (u1 < u2) ? -1 : 1;
+	}
+	return 0;
 }
 static inline int BlockInfoComparatorNodes(const _MCFCRT_AvlNodeHeader *pInfo1, const _MCFCRT_AvlNodeHeader *pInfo2){
 	return BlockInfoComparatorNodeKey(pInfo1, (intptr_t)(((const __MCFCRT_HeapDbgBlockInfo *)pInfo2)->__pAddress));

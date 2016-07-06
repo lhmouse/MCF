@@ -5,6 +5,7 @@
 #ifndef MCF_CONTAINERS_DEFAULT_ALLOCATOR_HPP_
 #define MCF_CONTAINERS_DEFAULT_ALLOCATOR_HPP_
 
+#include <new>
 #include <cstddef>
 
 namespace MCF {
@@ -12,6 +13,9 @@ namespace MCF {
 struct DefaultAllocator {
 	void *operator()(std::size_t uSize){
 		return ::operator new(uSize);
+	}
+	void *operator()(const std::nothrow_t &, std::size_t uSize) noexcept {
+		return ::operator new(uSize, std::nothrow);
 	}
 	void operator()(void *pBlock) noexcept {
 		::operator delete(pBlock);

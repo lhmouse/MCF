@@ -38,13 +38,13 @@ void _MCFCRT_CloseThread(_MCFCRT_ThreadHandle hThread){
 
 void _MCFCRT_Sleep(uint64_t u64UntilFastMonoClock){
 	LARGE_INTEGER liTimeout;
-	__MCF_CRT_InitializeNtTimeout(&liTimeout, u64UntilFastMonoClock);
+	__MCFCRT_InitializeNtTimeout(&liTimeout, u64UntilFastMonoClock);
 	const NTSTATUS lStatus = NtDelayExecution(false, &liTimeout);
 	_MCFCRT_ASSERT_MSG(NT_SUCCESS(lStatus), L"NtDelayExecution() 失败。");
 }
 bool _MCFCRT_AlertableSleep(uint64_t u64UntilFastMonoClock){
 	LARGE_INTEGER liTimeout;
-	__MCF_CRT_InitializeNtTimeout(&liTimeout, u64UntilFastMonoClock);
+	__MCFCRT_InitializeNtTimeout(&liTimeout, u64UntilFastMonoClock);
 	const NTSTATUS lStatus = NtDelayExecution(true, &liTimeout);
 	_MCFCRT_ASSERT_MSG(NT_SUCCESS(lStatus), L"NtDelayExecution() 失败。");
 	if(lStatus == STATUS_TIMEOUT){
@@ -78,7 +78,7 @@ long _MCFCRT_ResumeThread(_MCFCRT_ThreadHandle hThread){
 
 bool _MCFCRT_WaitForThread(_MCFCRT_ThreadHandle hThread, uint64_t u64UntilFastMonoClock){
 	LARGE_INTEGER liTimeout;
-	__MCF_CRT_InitializeNtTimeout(&liTimeout, u64UntilFastMonoClock);
+	__MCFCRT_InitializeNtTimeout(&liTimeout, u64UntilFastMonoClock);
 	const NTSTATUS lStatus = NtWaitForSingleObject((HANDLE)hThread, false, &liTimeout);
 	_MCFCRT_ASSERT_MSG(NT_SUCCESS(lStatus), L"NtWaitForSingleObject() 失败。");
 	if(lStatus == STATUS_TIMEOUT){

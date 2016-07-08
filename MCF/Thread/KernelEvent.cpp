@@ -90,7 +90,7 @@ Impl_UniqueNtHandle::UniqueNtHandle KernelEvent::X_CreateEventHandle(bool bInitS
 
 bool KernelEvent::Wait(std::uint64_t u64UntilFastMonoClock) const noexcept {
 	::LARGE_INTEGER liTimeout;
-	::__MCF_CRT_InitializeNtTimeout(&liTimeout, u64UntilFastMonoClock);
+	::__MCFCRT_InitializeNtTimeout(&liTimeout, u64UntilFastMonoClock);
 	const auto lStatus = ::NtWaitForSingleObject(x_hEvent.Get(), false, &liTimeout);
 	MCF_ASSERT_MSG(NT_SUCCESS(lStatus), L"NtWaitForSingleObject() 失败。");
 	return lStatus != STATUS_TIMEOUT;

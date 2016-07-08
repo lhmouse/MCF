@@ -34,7 +34,7 @@ static inline bool ReallyWaitForConditionVariable(volatile uintptr_t *puControl,
 	const intptr_t nUnlocked = (*pfnUnlockCallback)(nContext);
 	if(bMayTimeOut){
 		LARGE_INTEGER liTimeout;
-		__MCF_CRT_InitializeNtTimeout(&liTimeout, u64UntilFastMonoClock);
+		__MCFCRT_InitializeNtTimeout(&liTimeout, u64UntilFastMonoClock);
 		NTSTATUS lStatus = NtWaitForKeyedEvent(nullptr, (void *)puControl, false, &liTimeout);
 		_MCFCRT_ASSERT_MSG(NT_SUCCESS(lStatus), L"NtWaitForKeyedEvent() 失败。");
 		while(_MCFCRT_EXPECT(lStatus == STATUS_TIMEOUT)){

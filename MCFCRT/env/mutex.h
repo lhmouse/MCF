@@ -7,11 +7,11 @@
 
 #include "_crtdef.h"
 
-_MCFCRT_EXTERN_C_BEGIN
-
-#ifndef __MCFCRT_INLINE_OR_EXTERN
-#	define __MCFCRT_INLINE_OR_EXTERN     __attribute__((__gnu_inline__)) extern inline
+#ifndef __MCFCRT_MUTEX_INLINE_OR_EXTERN
+#	define __MCFCRT_MUTEX_INLINE_OR_EXTERN     __attribute__((__gnu_inline__)) extern inline
 #endif
+
+_MCFCRT_EXTERN_C_BEGIN
 
 // 初始化为 { 0 } 即可。
 typedef struct __MCFCRT_tagMutex {
@@ -20,7 +20,7 @@ typedef struct __MCFCRT_tagMutex {
 
 #define _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT   100
 
-__MCFCRT_INLINE_OR_EXTERN void _MCFCRT_InitializeMutex(_MCFCRT_Mutex *__pMutex) _MCFCRT_NOEXCEPT {
+__MCFCRT_MUTEX_INLINE_OR_EXTERN void _MCFCRT_InitializeMutex(_MCFCRT_Mutex *__pMutex) _MCFCRT_NOEXCEPT {
 	__atomic_store_n(&(__pMutex->__u), 0, __ATOMIC_RELEASE);
 }
 

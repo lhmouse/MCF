@@ -9,9 +9,13 @@
 #include "mcfwin.h"
 #include "clocks.h"
 
+#ifndef __MCFCRT_NT_TIMEOUT_INLINE_OR_EXTERN
+#	define __MCFCRT_NT_TIMEOUT_INLINE_OR_EXTERN     __attribute__((__gnu_inline__)) extern inline
+#endif
+
 _MCFCRT_EXTERN_C_BEGIN
 
-static inline void __MCFCRT_InitializeNtTimeout(LARGE_INTEGER *__pliTimeout, _MCFCRT_STD uint64_t __u64UntilFastMonoClock) _MCFCRT_NOEXCEPT {
+__MCFCRT_NT_TIMEOUT_INLINE_OR_EXTERN void __MCFCRT_InitializeNtTimeout(LARGE_INTEGER *__pliTimeout, _MCFCRT_STD uint64_t __u64UntilFastMonoClock) _MCFCRT_NOEXCEPT {
 	const _MCFCRT_STD uint64_t __u64Now = _MCFCRT_GetFastMonoClock();
 	if(__u64UntilFastMonoClock < __u64Now){
 		// 立即超时。

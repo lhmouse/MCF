@@ -13,6 +13,27 @@ _MCFCRT_EXTERN_C_BEGIN
 __MCFCRT_C_CDECL
 extern EXCEPTION_DISPOSITION __MCFCRT_SehTopDispatcher(EXCEPTION_RECORD *__pRecord, void *__pEstablisherFrame, CONTEXT *__pContext, void *__pDispatcherContext) _MCFCRT_NOEXCEPT;
 
+__attribute__((__unused__, __always_inline__))
+static inline void __MCFCRT_SehTopInstaller_x86(void *__seh_node) _MCFCRT_NOEXCEPT {
+	void *__seh_unused;
+	__asm__ volatile (
+		"mov %0, dword ptr fs:[0] \n"
+		"mov dword ptr[%1], %0 \n"
+		"mov dword ptr[%1 + 4], offset ___MCFCRT_SehTopDispatcher \n"
+		"mov dword ptr fs:[0], %1 \n"
+		: "=&r"(__seh_unused) : "r"(__seh_node)
+	);
+}
+__attribute__((__unused__, __always_inline__))
+static inline void __MCFCRT_SehTopUninstaller_x86(void *__seh_node) _MCFCRT_NOEXCEPT {
+	void *__seh_unused;
+	__asm__ volatile (
+		"mov %0, dword ptr[%1] \n"
+		"mov dword ptr fs:[0], %0 \n"
+		: "=&r"(__seh_unused) : "r"(__seh_node)
+	);
+}
+
 _MCFCRT_EXTERN_C_END
 
 #ifdef _WIN64
@@ -25,20 +46,11 @@ _MCFCRT_EXTERN_C_END
 
 #else
 
-#	define __MCFCRT_SEH_TOP_BEGIN       { void *__seh_unused;	\
-	                                      void *__seh_node[2];	\
-	                                      __asm__ volatile (	\
-	                                        "mov %0, dword ptr fs:[0] \n"	\
-	                                        "mov dword ptr[%1], %0 \n"	\
-	                                        "mov dword ptr[%1 + 4], offset ___MCFCRT_SehTopDispatcher \n"	\
-	                                        "mov dword ptr fs:[0], %1 \n"	\
-	                                        : "=&r"(__seh_unused) : "r"(__seh_node));	\
+#	define __MCFCRT_SEH_TOP_BEGIN       { void *__MCFCRT_seh_node[2]	\
+	                                        __attribute__((__cleanup__(__MCFCRT_SehTopUninstaller_x86)));	\
+	                                      __MCFCRT_SehTopInstaller_x86(&__MCFCRT_seh_node);	\
 	                                      {
 #	define __MCFCRT_SEH_TOP_END           }	\
-	                                      __asm__ volatile (	\
-	                                        "mov %0, dword ptr[%1] \n"	\
-	                                        "mov dword ptr fs:[0], %0 \n"	\
-	                                        : "=&r"(__seh_unused) : "r"(__seh_node));	\
 	                                    }
 
 #endif

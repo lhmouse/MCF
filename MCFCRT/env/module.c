@@ -2,7 +2,7 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2013 - 2016, LH_Mouse. All wrongs reserved.
 
-#define __MCFCRT_INLINE_OR_EXTERN     extern inline
+#define __MCFCRT_MODULE_INLINE_OR_EXTERN     extern inline
 #include "module.h"
 #include "mcfwin.h"
 #include "mutex.h"
@@ -128,19 +128,13 @@ bool _MCFCRT_AtModuleExit(_MCFCRT_AtModuleExitCallback pfnProc, intptr_t nContex
 	return true;
 }
 
-// ld 自动添加此符号。
-extern const IMAGE_DOS_HEADER __image_base__ __asm__("__image_base__");
-
-void *_MCFCRT_GetModuleBase(void){
-	return (void *)&__image_base__;
-}
-
 bool _MCFCRT_EnumerateFirstModuleSection(_MCFCRT_ModuleSectionInfo *pInfo){
-	if(__image_base__.e_magic != IMAGE_DOS_SIGNATURE){
+	const IMAGE_DOS_HEADER *const pImageBase = _MCFCRT_GetModuleBase();
+	if(pImageBase->e_magic != IMAGE_DOS_SIGNATURE){
 		SetLastError(ERROR_BAD_FORMAT);
 		return false;
 	}
-	const IMAGE_NT_HEADERS *const pNtHeaders = (const IMAGE_NT_HEADERS *)((const char *)&__image_base__ + __image_base__.e_lfanew);
+	const IMAGE_NT_HEADERS *const pNtHeaders = (const IMAGE_NT_HEADERS *)((char *)pImageBase + pImageBase->e_lfanew);
 	if(pNtHeaders->Signature != IMAGE_NT_SIGNATURE){
 		SetLastError(ERROR_BAD_FORMAT);
 		return false;
@@ -160,10 +154,11 @@ bool _MCFCRT_EnumerateNextModuleSection(_MCFCRT_ModuleSectionInfo *pInfo){
 	}
 	pInfo->__vImpl.__uNext = uIndex + 1;
 
+	const IMAGE_DOS_HEADER *const pImageBase = _MCFCRT_GetModuleBase();
 	const IMAGE_SECTION_HEADER *const pHeader = (const IMAGE_SECTION_HEADER *)pInfo->__vImpl.__pTable + uIndex;
 	memcpy(pInfo->__achName, pHeader->Name, 8);
 	pInfo->__uRawSize = pHeader->SizeOfRawData;
-	pInfo->__pBase    = (char *)&__image_base__ + pHeader->VirtualAddress;
+	pInfo->__pBase    = (char *)pImageBase + pHeader->VirtualAddress;
 	pInfo->__uSize    = pHeader->Misc.VirtualSize;
 
 	return true;

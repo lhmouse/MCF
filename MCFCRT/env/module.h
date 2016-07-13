@@ -7,6 +7,10 @@
 
 #include "_crtdef.h"
 
+#ifndef __MCFCRT_MODULE_INLINE_OR_EXTERN
+#	define __MCFCRT_MODULE_INLINE_OR_EXTERN     __attribute__((__gnu_inline__)) extern inline
+#endif
+
 _MCFCRT_EXTERN_C_BEGIN
 
 extern bool __MCFCRT_ModuleInit(void) _MCFCRT_NOEXCEPT;
@@ -16,8 +20,13 @@ typedef void (*_MCFCRT_AtModuleExitCallback)(_MCFCRT_STD intptr_t __nContext);
 
 extern bool _MCFCRT_AtModuleExit(_MCFCRT_AtModuleExitCallback __pfnProc, _MCFCRT_STD intptr_t __nContext) _MCFCRT_NOEXCEPT;
 
-__attribute__((__const__))
-extern void *_MCFCRT_GetModuleBase(void) _MCFCRT_NOEXCEPT;
+// ld 自动添加此符号。
+extern const char __MCFCRT_ImageBase[]
+	__asm__("__image_base__");
+
+__MCFCRT_MODULE_INLINE_OR_EXTERN void *_MCFCRT_GetModuleBase(void) _MCFCRT_NOEXCEPT {
+	return (void *)__MCFCRT_ImageBase;
+}
 
 typedef struct __MCFCRT_tagModuleSectionInfo {
 	char __achName[8];

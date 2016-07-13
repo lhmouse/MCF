@@ -4,24 +4,24 @@
 
 #include "fenv.h"
 
-#define RND_NEAREST     0               // 四舍六入五凑双。
-#define RND_DOWN        1               // 向负无穷舍入。
-#define RND_UP          2               // 向正无穷舍入。
-#define RND_ZERO        3               // 向零（截断）舍入。
+#define RND_NEAREST     0ul             // 四舍六入五凑双。
+#define RND_DOWN        1ul             // 向负无穷舍入。
+#define RND_UP          2ul             // 向正无穷舍入。
+#define RND_ZERO        3ul             // 向零（截断）舍入。
 
-#define PRCS_SINGLE     0               // 24 位。
-#define PRCS_DOUBLE     2               // 53 位。
-#define PRCS_EXTENDED   3               // 64 位。
+#define PRCS_SINGLE     0ul             // 24 位。
+#define PRCS_DOUBLE     2ul             // 53 位。
+#define PRCS_EXTENDED   3ul             // 64 位。
 
-#define EXCEPT_PM       (1 << 5)        // 精度损失异常。
-#define EXCEPT_UM       (1 << 4)        // 下溢异常。
-#define EXCEPT_OM       (1 << 3)        // 上溢异常。
-#define EXCEPT_ZM       (1 << 2)        // 除以零异常。
-#define EXCEPT_DM       (1 << 1)        // 非规格化数异常。
-#define EXCEPT_IM       (1 << 0)        // 无效操作异常。
+#define EXCEPT_PM       (1ul << 5)       // 精度损失异常。
+#define EXCEPT_UM       (1ul << 4)       // 下溢异常。
+#define EXCEPT_OM       (1ul << 3)       // 上溢异常。
+#define EXCEPT_ZM       (1ul << 2)       // 除以零异常。
+#define EXCEPT_DM       (1ul << 1)       // 非规格化数异常。
+#define EXCEPT_IM       (1ul << 0)       // 无效操作异常。
 
-#define ROUNDING        RND_ZERO
-#define PRECISION       PRCS_EXTENDED
+#define ROUNDING        (RND_ZERO)
+#define PRECISION       (PRCS_EXTENDED)
 #define EXCEPT_MASK     (EXCEPT_PM | EXCEPT_DM)
 
 static const uint16_t kFpuControlWord   = (ROUNDING << 10) | (PRECISION << 8) | (EXCEPT_MASK);

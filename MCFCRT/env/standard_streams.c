@@ -7,7 +7,7 @@
 #include "../ext/utf.h"
 #include "mutex.h"
 #include "mcfwin.h"
-#include "heap.h"
+#include "contiguous_buffer.h"
 
 bool __MCFCRT_StandardStreamsInit(void){
 	return true;

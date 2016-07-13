@@ -38,7 +38,6 @@ unsigned char *__MCFCRT_HeapAlloc(size_t uSize, bool bFillsWithZero, const void 
 #if __MCFCRT_REQUIRE_HEAPDBG_LEVEL(2)
 	const size_t uRawSize = __MCFCRT_HeapDbgGetRawSize(uSize);
 	if(uRawSize < uSize){
-		SetLastError(ERROR_NOT_ENOUGH_MEMORY);
 		return nullptr;
 	}
 #else
@@ -85,7 +84,6 @@ unsigned char *__MCFCRT_HeapAlloc(size_t uSize, bool bFillsWithZero, const void 
 		}
 
 		if(!(_MCFCRT_pfnOnHeapBadAlloc && (*_MCFCRT_pfnOnHeapBadAlloc)(pRetAddr))){
-			SetLastError(ERROR_NOT_ENOUGH_MEMORY);
 			return nullptr;
 		}
 	}
@@ -98,7 +96,6 @@ unsigned char *__MCFCRT_HeapRealloc(void *pBlock, size_t uSize, bool bFillsWithZ
 #if __MCFCRT_REQUIRE_HEAPDBG_LEVEL(2)
 	const size_t uRawSize = __MCFCRT_HeapDbgGetRawSize(uSize);
 	if(uRawSize < uSize){
-		SetLastError(ERROR_NOT_ENOUGH_MEMORY);
 		return nullptr;
 	}
 #else
@@ -166,7 +163,6 @@ unsigned char *__MCFCRT_HeapRealloc(void *pBlock, size_t uSize, bool bFillsWithZ
 		}
 
 		if(!(_MCFCRT_pfnOnHeapBadAlloc && (*_MCFCRT_pfnOnHeapBadAlloc)(pRetAddr))){
-			SetLastError(ERROR_NOT_ENOUGH_MEMORY);
 			return nullptr;
 		}
 	}

@@ -24,9 +24,9 @@ extern NTSTATUS NtReleaseKeyedEvent(HANDLE hKeyedEvent, void *pKey, BOOLEAN bAle
 #	define BSFB(v_)             ((uintptr_t)((uintptr_t)(v_) << ((sizeof(uintptr_t) - 1) * CHAR_BIT)))
 #endif
 
-#define MASK_LOCKED             ((uintptr_t) BSUSR(0x01)              )
-#define MASK_FINISHED           ((uintptr_t)                BSFB(0x01))
-#define MASK_THREADS_TRAPPED    ((uintptr_t)~BSUSR(0x01) & ~BSFB(0xFF))
+#define MASK_LOCKED             ((uintptr_t)( BSUSR(0x01)              ))
+#define MASK_FINISHED           ((uintptr_t)(                BSFB(0x01)))
+#define MASK_THREADS_TRAPPED    ((uintptr_t)(~BSUSR(0x01) & ~BSFB(0xFF)))
 
 #define THREAD_TRAPPED_ONE      ((uintptr_t)(MASK_THREADS_TRAPPED & -MASK_THREADS_TRAPPED))
 #define THREAD_TRAPPED_MAX      ((uintptr_t)(MASK_THREADS_TRAPPED / THREAD_TRAPPED_ONE))

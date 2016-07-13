@@ -7,14 +7,12 @@
 
 #include "../Containers/List.hpp"
 #include "../Containers/Vector.hpp"
+#include "FixedSizeAllocator.hpp"
 #include <iterator>
 #include <utility>
 #include <cstddef>
 
 namespace MCF {
-
-template<std::size_t>
-class FixedSizeAllocator;
 
 class StreamBuffer {
 private:

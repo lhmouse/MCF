@@ -124,7 +124,7 @@ public:
 		x_uSize = 0;
 	}
 
-	 // 如果为空返回 -1。
+	// 如果为空返回 -1。
 	int PeekFront() const noexcept;
 	int PeekBack() const noexcept;
 

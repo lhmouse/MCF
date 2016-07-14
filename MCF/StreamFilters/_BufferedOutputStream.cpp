@@ -17,7 +17,7 @@ namespace Impl_BufferedOutputStream {
 
 	void BufferedOutputStream::Flush(BufferedOutputStream::FlushLevel eLevel){
 		enum : std::size_t {
-			 kStepSize = 4096,
+			kStepSize = 4096,
 		};
 
 		bool bNoMoreAvail = false;

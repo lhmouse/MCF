@@ -167,7 +167,7 @@ uintptr_t __MCFCRT_GthreadCreateJoinable(void *(*proc)(void *), void *param){
 	uintptr_t tid;
 	const _MCFCRT_ThreadHandle handle = _MCFCRT_CreateNativeThread(&GthreadProc, ctrl, true, &tid);
 	if(!handle){
-		 _MCFCRT_free(ctrl);
+		_MCFCRT_free(ctrl);
 		return 0;
 	}
 	ctrl->tid    = tid;

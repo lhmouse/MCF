@@ -13,7 +13,7 @@ namespace Impl_BufferedInputStream {
 
 	void BufferedInputStream::PopulateBuffer(std::size_t uExpected){
 		enum : std::size_t {
-			 kStepSize = 4096,
+			kStepSize = 4096,
 		};
 
 		bool bNoMoreAvail = false;

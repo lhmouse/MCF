@@ -31,10 +31,10 @@ intptr_t __MCFCRT_C11threadUnlockCallback(intptr_t context){
 		mutex_c->__count = 0;
 		__atomic_store_n(&(mutex_c->__owner), 0, __ATOMIC_RELAXED);
 
-		_MCFCRT_SignalMutex(mutex_c->__mutex);
+		_MCFCRT_SignalMutex(&(mutex_c->__mutex));
 		return (intptr_t)old_count;
 	} else {
-		_MCFCRT_SignalMutex(mutex_c->__mutex);
+		_MCFCRT_SignalMutex(&(mutex_c->__mutex));
 		return 1;
 	}
 }
@@ -43,14 +43,14 @@ void __MCFCRT_C11threadRelockCallback(intptr_t context, intptr_t unlocked){
 
 	if(mutex_c->__mask & mtx_recursive){
 		_MCFCRT_ASSERT((size_t)unlocked >= 1);
-		_MCFCRT_WaitForMutexForever(mutex_c->__mutex, _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT);
+		_MCFCRT_WaitForMutexForever(&(mutex_c->__mutex), _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT);
 
 		const uintptr_t self = _MCFCRT_GetCurrentThreadId();
 		__atomic_store_n(&(mutex_c->__owner), self, __ATOMIC_RELAXED);
 		mutex_c->__count = (size_t)unlocked;
 	} else {
 		_MCFCRT_ASSERT((size_t)unlocked == 1);
-		_MCFCRT_WaitForMutexForever(mutex_c->__mutex, _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT);
+		_MCFCRT_WaitForMutexForever(&(mutex_c->__mutex), _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT);
 	}
 }
 

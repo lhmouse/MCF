@@ -37,7 +37,7 @@ typedef int (*thrd_start_t)(void *);
 typedef struct __MCFCRT_tagC11threadConditionVariable {
 	union {
 		_MCFCRT_STD uintptr_t __details[4]; // Placeholder for implementation-specific details.
-		_MCFCRT_ConditionVariable __cond[1];
+		_MCFCRT_ConditionVariable __cond;
 	};
 } cnd_t;
 
@@ -48,7 +48,7 @@ typedef struct __MCFCRT_tagC11threadMutex {
 	size_t __count;
 	union {
 		_MCFCRT_STD uintptr_t __details[4]; // Placeholder for implementation-specific details.
-		_MCFCRT_Mutex __mutex[1];
+		_MCFCRT_Mutex __mutex;
 	};
 } mtx_t;
 
@@ -61,7 +61,7 @@ typedef void (*tss_dtor_t)(void *);
 typedef union __MCFCRT_tagC11threadOnceFlag {
 	_MCFCRT_STD uint64_t __details[1]; // Placeholder for implementation-specific details.
 	unsigned char __disposed;
-	_MCFCRT_OnceFlag __once[1];
+	_MCFCRT_OnceFlag __once;
 } once_flag;
 
 // Enumeration constants

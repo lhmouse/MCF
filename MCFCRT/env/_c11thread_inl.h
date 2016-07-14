@@ -16,13 +16,13 @@ _MCFCRT_EXTERN_C_BEGIN
 
 // 7.26.2 Initialization functions
 __MCFCRT_C11THREAD_INLINE_OR_EXTERN void __MCFCRT_call_once(once_flag *__once_c, void (*__func)(void)) _MCFCRT_NOEXCEPT {
-	const _MCFCRT_OnceResult __result = _MCFCRT_WaitForOnceFlagForever(__once_c->__once);
+	const _MCFCRT_OnceResult __result = _MCFCRT_WaitForOnceFlagForever(&(__once_c->__once));
 	if(_MCFCRT_EXPECT(__result == _MCFCRT_kOnceResultFinished)){
 		return;
 	}
 	_MCFCRT_ASSERT(__result == _MCFCRT_kOnceResultInitial);
 	(*__func)();
-	_MCFCRT_SignalOnceFlagAsFinished(__once_c->__once);
+	_MCFCRT_SignalOnceFlagAsFinished(&(__once_c->__once));
 }
 
 // 7.26.3 Condition variable functions
@@ -30,7 +30,7 @@ extern _MCFCRT_STD intptr_t __MCFCRT_C11threadUnlockCallback(_MCFCRT_STD intptr_
 extern void __MCFCRT_C11threadRelockCallback(_MCFCRT_STD intptr_t __context, _MCFCRT_STD intptr_t __unlocked) _MCFCRT_NOEXCEPT;
 
 __MCFCRT_C11THREAD_INLINE_OR_EXTERN int __MCFCRT_cnd_init(cnd_t *__cond_c) _MCFCRT_NOEXCEPT {
-	_MCFCRT_InitializeConditionVariable(__cond_c->__cond);
+	_MCFCRT_InitializeConditionVariable(&(__cond_c->__cond));
 	return thrd_success;
 }
 __MCFCRT_C11THREAD_INLINE_OR_EXTERN void __MCFCRT_cnd_destroy(cnd_t *__cond_c) _MCFCRT_NOEXCEPT {
@@ -54,22 +54,22 @@ __MCFCRT_C11THREAD_INLINE_OR_EXTERN _MCFCRT_STD uint64_t __MCFCRT_C11threadTrans
 
 __MCFCRT_C11THREAD_INLINE_OR_EXTERN int __MCFCRT_cnd_timedwait(cnd_t *restrict __cond_c, mtx_t *restrict __mutex_c, const struct timespec *restrict __timeout) _MCFCRT_NOEXCEPT {
 	const _MCFCRT_STD uint64_t __mono_timeout_ms = __MCFCRT_C11threadTranslateTimeout(__timeout);
-	if(!_MCFCRT_WaitForConditionVariable(__cond_c->__cond, &__MCFCRT_C11threadUnlockCallback, &__MCFCRT_C11threadRelockCallback, (_MCFCRT_STD intptr_t)__mutex_c, __mono_timeout_ms)){
+	if(!_MCFCRT_WaitForConditionVariable(&(__cond_c->__cond), &__MCFCRT_C11threadUnlockCallback, &__MCFCRT_C11threadRelockCallback, (_MCFCRT_STD intptr_t)__mutex_c, __mono_timeout_ms)){
 		return thrd_timedout;
 	}
 	return thrd_success;
 }
 
 __MCFCRT_C11THREAD_INLINE_OR_EXTERN int __MCFCRT_cnd_wait(cnd_t *restrict __cond_c, mtx_t *restrict __mutex_c) _MCFCRT_NOEXCEPT {
-	_MCFCRT_WaitForConditionVariableForever(__cond_c->__cond, &__MCFCRT_C11threadUnlockCallback, &__MCFCRT_C11threadRelockCallback, (_MCFCRT_STD intptr_t)__mutex_c);
+	_MCFCRT_WaitForConditionVariableForever(&(__cond_c->__cond), &__MCFCRT_C11threadUnlockCallback, &__MCFCRT_C11threadRelockCallback, (_MCFCRT_STD intptr_t)__mutex_c);
 	return thrd_success;
 }
 __MCFCRT_C11THREAD_INLINE_OR_EXTERN int __MCFCRT_cnd_signal(cnd_t *__cond_c) _MCFCRT_NOEXCEPT {
-	_MCFCRT_SignalConditionVariable(__cond_c->__cond, 1);
+	_MCFCRT_SignalConditionVariable(&(__cond_c->__cond), 1);
 	return thrd_success;
 }
 __MCFCRT_C11THREAD_INLINE_OR_EXTERN int __MCFCRT_cnd_broadcast(cnd_t *__cond_c) _MCFCRT_NOEXCEPT {
-	_MCFCRT_BroadcastConditionVariable(__cond_c->__cond);
+	_MCFCRT_BroadcastConditionVariable(&(__cond_c->__cond));
 	return thrd_success;
 }
 
@@ -78,7 +78,7 @@ __MCFCRT_C11THREAD_INLINE_OR_EXTERN int __MCFCRT_mtx_init(mtx_t *__mutex_c, int 
 	__mutex_c->__mask  = __mask;
 	__mutex_c->__owner = 0;
 	__mutex_c->__count = 0;
-	_MCFCRT_InitializeMutex(__mutex_c->__mutex);
+	_MCFCRT_InitializeMutex(&(__mutex_c->__mutex));
 	return thrd_success;
 }
 __MCFCRT_C11THREAD_INLINE_OR_EXTERN void __MCFCRT_mtx_destroy(mtx_t *__mutex_c) _MCFCRT_NOEXCEPT {
@@ -90,13 +90,13 @@ __MCFCRT_C11THREAD_INLINE_OR_EXTERN int __MCFCRT_mtx_lock(mtx_t *__mutex_c) _MCF
 		const _MCFCRT_STD uintptr_t __self = _MCFCRT_GetCurrentThreadId();
 		const _MCFCRT_STD uintptr_t __old_owner = __atomic_load_n(&(__mutex_c->__owner), __ATOMIC_RELAXED);
 		if(_MCFCRT_EXPECT_NOT(__old_owner != __self)){
-			_MCFCRT_WaitForMutexForever(__mutex_c->__mutex, _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT);
+			_MCFCRT_WaitForMutexForever(&(__mutex_c->__mutex), _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT);
 			__atomic_store_n(&(__mutex_c->__owner), __self, __ATOMIC_RELAXED);
 		}
 		const _MCFCRT_STD size_t __new_count = ++__mutex_c->__count;
 		_MCFCRT_ASSERT(__new_count != 0);
 	} else {
-		_MCFCRT_WaitForMutexForever(__mutex_c->__mutex, _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT);
+		_MCFCRT_WaitForMutexForever(&(__mutex_c->__mutex), _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT);
 	}
 	return thrd_success;
 }
@@ -106,7 +106,7 @@ __MCFCRT_C11THREAD_INLINE_OR_EXTERN int __MCFCRT_mtx_timedlock(mtx_t *restrict _
 		const _MCFCRT_STD uintptr_t __old_owner = __atomic_load_n(&(__mutex_c->__owner), __ATOMIC_RELAXED);
 		if(_MCFCRT_EXPECT_NOT(__old_owner != __self)){
 			const _MCFCRT_STD uint64_t __mono_timeout_ms = __MCFCRT_C11threadTranslateTimeout(__timeout);
-			if(!_MCFCRT_WaitForMutex(__mutex_c->__mutex, _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT, __mono_timeout_ms)){
+			if(!_MCFCRT_WaitForMutex(&(__mutex_c->__mutex), _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT, __mono_timeout_ms)){
 				return thrd_timedout;
 			}
 			__atomic_store_n(&(__mutex_c->__owner), __self, __ATOMIC_RELAXED);
@@ -115,7 +115,7 @@ __MCFCRT_C11THREAD_INLINE_OR_EXTERN int __MCFCRT_mtx_timedlock(mtx_t *restrict _
 		_MCFCRT_ASSERT(__new_count != 0);
 	} else {
 		const _MCFCRT_STD uint64_t __mono_timeout_ms = __MCFCRT_C11threadTranslateTimeout(__timeout);
-		if(!_MCFCRT_WaitForMutex(__mutex_c->__mutex, _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT, __mono_timeout_ms)){
+		if(!_MCFCRT_WaitForMutex(&(__mutex_c->__mutex), _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT, __mono_timeout_ms)){
 			return thrd_timedout;
 		}
 	}
@@ -126,7 +126,7 @@ __MCFCRT_C11THREAD_INLINE_OR_EXTERN int __MCFCRT_mtx_trylock(mtx_t *__mutex_c) _
 		const _MCFCRT_STD uintptr_t __self = _MCFCRT_GetCurrentThreadId();
 		const _MCFCRT_STD uintptr_t __old_owner = __atomic_load_n(&(__mutex_c->__owner), __ATOMIC_RELAXED);
 		if(_MCFCRT_EXPECT_NOT(__old_owner != __self)){
-			if(_MCFCRT_EXPECT_NOT(!_MCFCRT_WaitForMutex(__mutex_c->__mutex, _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT, 0))){
+			if(_MCFCRT_EXPECT_NOT(!_MCFCRT_WaitForMutex(&(__mutex_c->__mutex), _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT, 0))){
 				return thrd_busy;
 			}
 			__atomic_store_n(&(__mutex_c->__owner), __self, __ATOMIC_RELAXED);
@@ -134,7 +134,7 @@ __MCFCRT_C11THREAD_INLINE_OR_EXTERN int __MCFCRT_mtx_trylock(mtx_t *__mutex_c) _
 		const _MCFCRT_STD size_t __new_count = ++__mutex_c->__count;
 		_MCFCRT_ASSERT(__new_count != 0);
 	} else {
-		if(_MCFCRT_EXPECT_NOT(!_MCFCRT_WaitForMutex(__mutex_c->__mutex, _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT, 0))){
+		if(_MCFCRT_EXPECT_NOT(!_MCFCRT_WaitForMutex(&(__mutex_c->__mutex), _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT, 0))){
 			return thrd_busy;
 		}
 	}
@@ -146,10 +146,10 @@ __MCFCRT_C11THREAD_INLINE_OR_EXTERN int __MCFCRT_mtx_unlock(mtx_t *__mutex_c) _M
 		const _MCFCRT_STD size_t __new_count = --__mutex_c->__count;
 		if(_MCFCRT_EXPECT_NOT(__new_count == 0)){
 			__atomic_store_n(&(__mutex_c->__owner), 0, __ATOMIC_RELAXED);
-			_MCFCRT_SignalMutex(__mutex_c->__mutex);
+			_MCFCRT_SignalMutex(&(__mutex_c->__mutex));
 		}
 	} else {
-		_MCFCRT_SignalMutex(__mutex_c->__mutex);
+		_MCFCRT_SignalMutex(&(__mutex_c->__mutex));
 	}
 	return thrd_success;
 }

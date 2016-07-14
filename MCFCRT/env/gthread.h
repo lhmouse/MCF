@@ -80,7 +80,7 @@ typedef struct __MCFCRT_tagGthreadRecursiveMutex {
 	__gthread_mutex_t __mutex;
 } __gthread_recursive_mutex_t;
 
-#define __GTHREAD_RECURSIVE_MUTEX_INIT            { 0, 0, { 0 } }
+#define __GTHREAD_RECURSIVE_MUTEX_INIT            { 0, 0, __GTHREAD_MUTEX_INIT }
 #define __GTHREAD_RECURSIVE_MUTEX_INIT_FUNCTION   __gthread_recursive_mutex_init_function
 
 extern void __MCFCRT_gthread_recursive_mutex_init_function(__gthread_recursive_mutex_t *__recur_mutex) _MCFCRT_NOEXCEPT;

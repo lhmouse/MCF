@@ -24,6 +24,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <limits.h>
+#include <string.h>
 #include <stdbool.h>
 #include <stdalign.h>
 #include <uchar.h>

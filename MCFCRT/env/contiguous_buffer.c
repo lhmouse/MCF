@@ -4,6 +4,23 @@
 
 #include "contiguous_buffer.h"
 #include "heap.h"
+#include "../ext/assert.h"
+
+void _MCFCRT_ContiguousBufferPeek(const _MCFCRT_ContiguousBuffer *restrict pBuffer, void **restrict ppData, size_t *restrict puSize){
+	char *const pchDataBegin = pBuffer->__pDataBegin;
+	char *const pchDataEnd   = pBuffer->__pDataEnd;
+
+	*ppData = pchDataBegin;
+	*puSize = (size_t)(pchDataEnd - pchDataBegin);
+}
+void _MCFCRT_ContiguousBufferDiscard(_MCFCRT_ContiguousBuffer *restrict pBuffer, size_t uSizeToDiscard){
+	char *const pchDataBegin = pBuffer->__pDataBegin;
+	char *const pchDataEnd   = pBuffer->__pDataEnd;
+
+	_MCFCRT_ASSERT(uSizeToDiscard <= (size_t)(pchDataEnd - pchDataBegin));
+
+	pBuffer->__pDataBegin = pchDataBegin + uSizeToDiscard;
+}
 
 bool _MCFCRT_ContiguousBufferReserve(_MCFCRT_ContiguousBuffer *restrict pBuffer, void **restrict ppData, size_t *restrict puSizeReserved, size_t uSizeToReserve){
 	char *pchStorageBegin = pBuffer->__pStorageBegin;
@@ -59,6 +76,15 @@ bool _MCFCRT_ContiguousBufferReserve(_MCFCRT_ContiguousBuffer *restrict pBuffer,
 	*puSizeReserved = (size_t)(pchStorageEnd - pchDataEnd);
 	return true;
 }
+void _MCFCRT_ContiguousBufferAdopt(_MCFCRT_ContiguousBuffer *restrict pBuffer, size_t uSizeToAdopt){
+	char *const pchDataEnd    = pBuffer->__pDataEnd;
+	char *const pchStorageEnd = pBuffer->__pStorageEnd;
+
+	_MCFCRT_ASSERT(uSizeToAdopt <= (size_t)(pchStorageEnd - pchDataEnd));
+
+	pBuffer->__pDataEnd = pchDataEnd + uSizeToAdopt;
+}
+
 void _MCFCRT_ContiguousBufferRecycle(_MCFCRT_ContiguousBuffer *restrict pBuffer){
 	char *const pchStorageBegin = pBuffer->__pStorageBegin;
 

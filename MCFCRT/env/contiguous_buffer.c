@@ -4,7 +4,6 @@
 
 #include "contiguous_buffer.h"
 #include "heap.h"
-#include "mcfwin.h"
 #include "../ext/assert.h"
 
 void _MCFCRT_ContiguousBufferPeek(const _MCFCRT_ContiguousBuffer *restrict pBuffer, void **restrict ppData, size_t *restrict puSize){
@@ -35,7 +34,6 @@ bool _MCFCRT_ContiguousBufferReserve(_MCFCRT_ContiguousBuffer *restrict pBuffer,
 		const size_t uOldSize = (size_t)(pchDataEnd - pchDataBegin);
 		const size_t uMinNewCapacity = uOldSize + uSizeToReserve;
 		if(uMinNewCapacity < uOldSize){
-			SetLastError(ERROR_NOT_ENOUGH_MEMORY);
 			return false;
 		}
 		const size_t uOldCapacity = (size_t)(pchStorageEnd - pchStorageBegin);
@@ -56,7 +54,6 @@ bool _MCFCRT_ContiguousBufferReserve(_MCFCRT_ContiguousBuffer *restrict pBuffer,
 			}
 			char *const pchNewStorage = _MCFCRT_malloc(uNewCapacity);
 			if(!pchNewStorage){
-				SetLastError(ERROR_NOT_ENOUGH_MEMORY);
 				return false;
 			}
 			memcpy(pchNewStorage, pchDataBegin, uOldSize);

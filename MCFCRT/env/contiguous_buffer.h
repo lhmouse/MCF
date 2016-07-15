@@ -25,16 +25,16 @@ static inline void _MCFCRT_ContiguousBufferPeek(const _MCFCRT_ContiguousBuffer *
 	*__puSize = (_MCFCRT_STD size_t)(__pchDataEnd - __pchDataBegin);
 }
 static inline void _MCFCRT_ContiguousBufferDiscard(_MCFCRT_ContiguousBuffer *restrict __pBuffer, _MCFCRT_STD size_t __uSizeToDiscard) _MCFCRT_NOEXCEPT {
-	char *const __pchDataBegin = __pBuffer->__pDataBegin;
-	char *const __pchDataEnd   = __pBuffer->__pDataEnd;
+	char *const __pchDataBegin = (char *)__pBuffer->__pDataBegin;
+	char *const __pchDataEnd   = (char *)__pBuffer->__pDataEnd;
 
 	_MCFCRT_ASSERT(__uSizeToDiscard <= (_MCFCRT_STD size_t)(__pchDataEnd - __pchDataBegin));
 
 	__pBuffer->__pDataBegin = __pchDataBegin + __uSizeToDiscard;
 }
 static inline void _MCFCRT_ContiguousBufferAdopt(_MCFCRT_ContiguousBuffer *restrict __pBuffer, _MCFCRT_STD size_t __uSizeToAdopt) _MCFCRT_NOEXCEPT {
-	char *const __pchDataEnd    = __pBuffer->__pDataEnd;
-	char *const __pchStorageEnd = __pBuffer->__pStorageEnd;
+	char *const __pchDataEnd    = (char *)__pBuffer->__pDataEnd;
+	char *const __pchStorageEnd = (char *)__pBuffer->__pStorageEnd;
 
 	_MCFCRT_ASSERT(__uSizeToAdopt <= (_MCFCRT_STD size_t)(__pchStorageEnd - __pchDataEnd));
 

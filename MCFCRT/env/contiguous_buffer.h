@@ -17,11 +17,11 @@ typedef struct __MCFCRT_tagContiguousBuffer {
 	void *__pStorageEnd;
 } _MCFCRT_ContiguousBuffer;
 
-static inline void _MCFCRT_ContiguousBufferPeek(const _MCFCRT_ContiguousBuffer *restrict __pBuffer, void **restrict __ppData, _MCFCRT_STD size_t *restrict __puSize) _MCFCRT_NOEXCEPT;
-static inline void _MCFCRT_ContiguousBufferDiscard(_MCFCRT_ContiguousBuffer *restrict __pBuffer, _MCFCRT_STD size_t __uSizeToDiscard) _MCFCRT_NOEXCEPT;
+static void _MCFCRT_ContiguousBufferPeek(const _MCFCRT_ContiguousBuffer *restrict __pBuffer, void **restrict __ppData, _MCFCRT_STD size_t *restrict __puSize) _MCFCRT_NOEXCEPT;
+static void _MCFCRT_ContiguousBufferDiscard(_MCFCRT_ContiguousBuffer *restrict __pBuffer, _MCFCRT_STD size_t __uSizeToDiscard) _MCFCRT_NOEXCEPT;
 
 extern bool _MCFCRT_ContiguousBufferReserve(_MCFCRT_ContiguousBuffer *restrict __pBuffer, void **restrict __ppData, _MCFCRT_STD size_t *restrict __puSizeReserved, _MCFCRT_STD size_t __uSizeToReserve) _MCFCRT_NOEXCEPT;
-static inline void _MCFCRT_ContiguousBufferAdopt(_MCFCRT_ContiguousBuffer *restrict __pBuffer, _MCFCRT_STD size_t __uSizeToAdopt) _MCFCRT_NOEXCEPT;
+static void _MCFCRT_ContiguousBufferAdopt(_MCFCRT_ContiguousBuffer *restrict __pBuffer, _MCFCRT_STD size_t __uSizeToAdopt) _MCFCRT_NOEXCEPT;
 
 extern void _MCFCRT_ContiguousBufferRecycle(_MCFCRT_ContiguousBuffer *restrict __pBuffer) _MCFCRT_NOEXCEPT;
 

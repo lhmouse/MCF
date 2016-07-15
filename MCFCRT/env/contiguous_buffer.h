@@ -32,6 +32,8 @@ static inline void _MCFCRT_ContiguousBufferDiscard(_MCFCRT_ContiguousBuffer *res
 
 	__pBuffer->__pDataBegin = __pchDataBegin + __uSizeToDiscard;
 }
+
+extern bool _MCFCRT_ContiguousBufferReserve(_MCFCRT_ContiguousBuffer *restrict __pBuffer, void **restrict __ppData, _MCFCRT_STD size_t *restrict __puSizeReserved, _MCFCRT_STD size_t __uSizeToReserve) _MCFCRT_NOEXCEPT;
 static inline void _MCFCRT_ContiguousBufferAdopt(_MCFCRT_ContiguousBuffer *restrict __pBuffer, _MCFCRT_STD size_t __uSizeToAdopt) _MCFCRT_NOEXCEPT {
 	char *const __pchDataEnd    = (char *)__pBuffer->__pDataEnd;
 	char *const __pchStorageEnd = (char *)__pBuffer->__pStorageEnd;
@@ -41,7 +43,6 @@ static inline void _MCFCRT_ContiguousBufferAdopt(_MCFCRT_ContiguousBuffer *restr
 	__pBuffer->__pDataEnd = __pchDataEnd + __uSizeToAdopt;
 }
 
-extern bool _MCFCRT_ContiguousBufferReserve(_MCFCRT_ContiguousBuffer *restrict __pBuffer, void **restrict __ppData, _MCFCRT_STD size_t *restrict __puSizeReserved, _MCFCRT_STD size_t __uSizeToReserve) _MCFCRT_NOEXCEPT;
 extern void _MCFCRT_ContiguousBufferRecycle(_MCFCRT_ContiguousBuffer *restrict __pBuffer) _MCFCRT_NOEXCEPT;
 
 _MCFCRT_EXTERN_C_END

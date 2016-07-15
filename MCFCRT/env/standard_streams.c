@@ -6,13 +6,42 @@
 #include "../ext/assert.h"
 #include "../ext/utf.h"
 #include "mutex.h"
-#include "mcfwin.h"
 #include "contiguous_buffer.h"
+#include "mcfwin.h"
 
+typedef struct tagStreamControl {
+	_MCFCRT_Mutex vMutex;
+	HANDLE hPipe;
+	bool bConsole;
+	bool bBuffering;
+	_MCFCRT_ContiguousBuffer vBuffer;
+} StreamControl;
+
+static StreamControl g_scStdIn, g_scStdOut, g_scStdErr;
+/*
+static void FlushStream(StreamControl *pControl){
+}
+
+static void InitializeStream(StreamControl *pControl, DWORD dwSlot){
+	//
+}
+static void UninitializeStream(StreamControl *pControl){
+	FlushStream(pControl);
+
+	pControl->bBuffering = false;
+	_MCFCRT_ContiguousBufferRecycle(&(pControl->vBuffer));
+}
+*/
 bool __MCFCRT_StandardStreamsInit(void){
+//	InitializeStream(&g_scStdErr, STD_ERROR_HANDLE);
+//	InitializeStream(&g_scStdOut, STD_OUTPUT_HANDLE);
+//	InitializeStream(&g_scStdIn, STD_INPUT_HANDLE);
 	return true;
 }
 void __MCFCRT_StandardStreamsUninit(void){
+//	UninitializeStream(&g_scStdIn);
+//	UninitializeStream(&g_scStdOut);
+//	UninitializeStream(&g_scStdErr);
 }
 
 int _MCFCRT_PeekStandardInputByte(void){

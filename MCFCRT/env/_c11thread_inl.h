@@ -155,14 +155,18 @@ __MCFCRT_C11THREAD_INLINE_OR_EXTERN int __MCFCRT_mtx_unlock(mtx_t *__mutex_c) _M
 }
 
 // 7.26.5 Thread functions
-extern _MCFCRT_STD uintptr_t __MCFCRT_C11threadCreateJoinable(int (*__proc)(void *), void *__param) _MCFCRT_NOEXCEPT;
-__attribute__((__noreturn__))
-extern void __MCFCRT_C11threadExit(int __exit_code) _MCFCRT_NOEXCEPT;
-extern bool __MCFCRT_C11threadJoin(_MCFCRT_STD uintptr_t __tid, int *restrict __exit_code_ret) _MCFCRT_NOEXCEPT;
-extern bool __MCFCRT_C11threadDetach(_MCFCRT_STD uintptr_t __tid) _MCFCRT_NOEXCEPT;
+typedef struct __MCFCRT_tagC11threadControlBlock {
+	int (*__proc)(void *);
+	void *__param;
+	int __exit_code;
+} __MCFCRT_C11threadControlBlock;
+
+extern void __MCFCRT_C11threadMopWrapper(void *__params) _MCFCRT_NOEXCEPT;
+extern void __MCFCRT_C11threadMopExitModifier(void *__params, _MCFCRT_STD intptr_t __context) _MCFCRT_NOEXCEPT;
 
 __MCFCRT_C11THREAD_INLINE_OR_EXTERN int __MCFCRT_thrd_create(thrd_t *__tid_ret, thrd_start_t __proc, void *__param) _MCFCRT_NOEXCEPT {
-	const _MCFCRT_STD uintptr_t __tid = __MCFCRT_C11threadCreateJoinable(__proc, __param);
+	__MCFCRT_C11threadControlBlock __control = { __proc, __param, (int)0xDEADBEEF };
+	const _MCFCRT_STD uintptr_t __tid = __MCFCRT_MopthreadCreate(&__MCFCRT_C11threadMopWrapper, &__control, sizeof(__control));
 	if(__tid == 0){
 		return thrd_nomem; // XXX: We should have returned `EAGAIN` as what POSIX has specified but there isn't `thrd_again` in ISO C.
 	}
@@ -170,14 +174,22 @@ __MCFCRT_C11THREAD_INLINE_OR_EXTERN int __MCFCRT_thrd_create(thrd_t *__tid_ret, 
 	return thrd_success;
 }
 __MCFCRT_C11THREAD_INLINE_OR_EXTERN void __MCFCRT_thrd_exit(int __exit_code) _MCFCRT_NOEXCEPT {
-	__MCFCRT_C11threadExit(__exit_code);
+	__MCFCRT_MopthreadExit(&__MCFCRT_C11threadMopExitModifier, __exit_code);
 }
 __MCFCRT_C11THREAD_INLINE_OR_EXTERN int __MCFCRT_thrd_join(thrd_t __tid, int *__exit_code_ret) _MCFCRT_NOEXCEPT {
 	if(__tid == _MCFCRT_GetCurrentThreadId()){
 		return thrd_error; // XXX: EDEADLK
 	}
-	if(!__MCFCRT_C11threadJoin(__tid, __exit_code_ret)){
-		return thrd_error; // XXX: ESRCH
+	if(__exit_code_ret){
+		__MCFCRT_C11threadControlBlock __control;
+		if(!__MCFCRT_MopthreadJoin(__tid, &__control)){
+			return thrd_error; // XXX: ESRCH
+		}
+		*__exit_code_ret = __control.__exit_code;
+	} else {
+		if(!__MCFCRT_MopthreadJoin(__tid, nullptr)){
+			return thrd_error; // XXX: ESRCH
+		}
 	}
 	return thrd_success;
 }
@@ -185,7 +197,7 @@ __MCFCRT_C11THREAD_INLINE_OR_EXTERN int __MCFCRT_thrd_detach(thrd_t __tid) _MCFC
 	if(__tid == _MCFCRT_GetCurrentThreadId()){
 		return thrd_error; // XXX: EDEADLK
 	}
-	if(!__MCFCRT_C11threadDetach(__tid)){
+	if(!__MCFCRT_MopthreadDetach(__tid)){
 		return thrd_error; // XXX: ESRCH
 	}
 	return thrd_success;

@@ -179,12 +179,17 @@ __MCFCRT_GTHREAD_INLINE_OR_EXTERN int __MCFCRT_gthread_cond_broadcast(__gthread_
 //-----------------------------------------------------------------------------
 // Thread
 //-----------------------------------------------------------------------------
-extern _MCFCRT_STD uintptr_t __MCFCRT_GthreadCreateJoinable(void *(*__proc)(void *), void *__param) _MCFCRT_NOEXCEPT;
-extern bool __MCFCRT_GthreadJoin(_MCFCRT_STD uintptr_t __tid, void **restrict __exit_code_ret) _MCFCRT_NOEXCEPT;
-extern bool __MCFCRT_GthreadDetach(_MCFCRT_STD uintptr_t __tid) _MCFCRT_NOEXCEPT;
+typedef struct __MCFCRT_tagGthreadControlBlock {
+	void *(*__proc)(void *);
+	void *__param;
+	void *__exit_code;
+} __MCFCRT_GthreadControlBlock;
+
+extern void __MCFCRT_GthreadMopWrapper(void *__mop_params) _MCFCRT_NOEXCEPT;
 
 __MCFCRT_GTHREAD_INLINE_OR_EXTERN int __MCFCRT_gthread_create(__gthread_t *__tid_ret, void *(*__proc)(void *), void *__param) _MCFCRT_NOEXCEPT {
-	const _MCFCRT_STD uintptr_t __tid = __MCFCRT_GthreadCreateJoinable(__proc, __param);
+	__MCFCRT_GthreadControlBlock __control = { __proc, __param, (void *)0xDEADBEEF };
+	const _MCFCRT_STD uintptr_t __tid = __MCFCRT_MopthreadCreate(&__MCFCRT_GthreadMopWrapper, &__control, sizeof(__control));
 	if(__tid == 0){
 		return EAGAIN;
 	}
@@ -195,8 +200,16 @@ __MCFCRT_GTHREAD_INLINE_OR_EXTERN int __MCFCRT_gthread_join(__gthread_t __tid, v
 	if(__tid == _MCFCRT_GetCurrentThreadId()){
 		return EDEADLK;
 	}
-	if(!__MCFCRT_GthreadJoin(__tid, __exit_code_ret)){
-		return ESRCH;
+	if(__exit_code_ret){
+		__MCFCRT_GthreadControlBlock __control;
+		if(!__MCFCRT_MopthreadJoin(__tid, &__control)){
+			return ESRCH;
+		}
+		*__exit_code_ret = __control.__exit_code;
+	} else {
+		if(!__MCFCRT_MopthreadJoin(__tid, nullptr)){
+			return ESRCH;
+		}
 	}
 	return 0;
 }
@@ -204,7 +217,7 @@ __MCFCRT_GTHREAD_INLINE_OR_EXTERN int __MCFCRT_gthread_detach(__gthread_t __tid)
 	if(__tid == _MCFCRT_GetCurrentThreadId()){
 		return EDEADLK;
 	}
-	if(!__MCFCRT_GthreadDetach(__tid)){
+	if(!__MCFCRT_MopthreadDetach(__tid)){
 		return ESRCH;
 	}
 	return 0;

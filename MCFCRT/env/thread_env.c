@@ -130,6 +130,7 @@ static unsigned long MopthreadProcNative(void *pParam){
 	}
 	__MCFCRT_SEH_TOP_END
 
+	_MCFCRT_WaitForMutexForever(&g_vControlMutex, _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT);
 	SignalMutexAndExitThread(&g_vControlMutex, pControl, nullptr, 0);
 }
 

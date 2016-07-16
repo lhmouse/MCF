@@ -3,9 +3,9 @@
 // Copyleft 2013 - 2016, LH_Mouse. All wrongs reserved.
 
 #include "bail.h"
-#include "standard_streams.h"
-#include "../ext/wcpcpy.h"
 #include "mcfwin.h"
+#include "../ext/wcpcpy.h"
+#include "standard_streams.h"
 #include <ntdef.h>
 #include <ntstatus.h>
 

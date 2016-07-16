@@ -4,7 +4,6 @@
 
 #include "thread.h"
 #include "mcfwin.h"
-#include "heap.h"
 #include "_nt_timeout.h"
 #include "../ext/assert.h"
 #include <winternl.h>

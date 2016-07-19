@@ -18,7 +18,7 @@ typedef struct __MCFCRT_tagMutex {
 	volatile _MCFCRT_STD uintptr_t __u;
 } _MCFCRT_Mutex;
 
-#define _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT   100
+#define _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT   100u
 
 __MCFCRT_MUTEX_INLINE_OR_EXTERN void _MCFCRT_InitializeMutex(_MCFCRT_Mutex *__pMutex) _MCFCRT_NOEXCEPT {
 	__atomic_store_n(&(__pMutex->__u), 0, __ATOMIC_RELEASE);

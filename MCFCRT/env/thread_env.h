@@ -15,6 +15,7 @@ extern void __MCFCRT_ThreadEnvUninit(void) _MCFCRT_NOEXCEPT;
 // mopthread = the mother of pthread
 // 线程的参数将指向由 __pParams 和 __uSizeOfParams 定义的内存块的副本。
 extern _MCFCRT_STD uintptr_t __MCFCRT_MopthreadCreate(void (*__pfnProc)(void *), const void *__pParams, _MCFCRT_STD size_t __uSizeOfParams) _MCFCRT_NOEXCEPT;
+extern _MCFCRT_STD uintptr_t __MCFCRT_MopthreadCreateDetached(void (*__pfnProc)(void *), const void *__pParams, _MCFCRT_STD size_t __uSizeOfParams) _MCFCRT_NOEXCEPT;
 __attribute__((__noreturn__))
 extern void __MCFCRT_MopthreadExit(void (*__pfnModifier)(void *, _MCFCRT_STD intptr_t), _MCFCRT_STD intptr_t __nContext) _MCFCRT_NOEXCEPT;
 extern bool __MCFCRT_MopthreadJoin(_MCFCRT_STD uintptr_t __uTid, void *__pParams) _MCFCRT_NOEXCEPT;
@@ -44,6 +45,7 @@ extern _MCFCRT_STD intptr_t _MCFCRT_TlsGetContext(_MCFCRT_TlsKeyHandle __hTlsKey
 extern bool _MCFCRT_TlsGet(_MCFCRT_TlsKeyHandle __hTlsKey, void **restrict __ppStorage) _MCFCRT_NOEXCEPT;
 // 如果该线程局部存储设定过值，*__ppStorage 返回指向它的指针。
 // 否则，该线程局部存储的内存被分配并清零，然后 _MCFCRT_TlsAllocKey() 中指定的构造函数被调用用于初始化该存储。
+// 如果存储分配失败，该函数返回 false，GetLastError() 返回 ERROR_NOT_ENOUGH_MEMORY。
 // 若构造函数返回 0，*__ppStorage 返回指向它的指针；否则，已分配的内存被立即释放，然后该函数返回 false，GetLastError() 返回构造函数返回的值。
 extern bool _MCFCRT_TlsRequire(_MCFCRT_TlsKeyHandle __hTlsKey, void **restrict __ppStorage) _MCFCRT_NOEXCEPT;
 

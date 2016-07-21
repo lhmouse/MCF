@@ -134,7 +134,7 @@ static unsigned long MopthreadProcNative(void *pParam){
 	SignalMutexAndExitThread(&g_vControlMutex, pControl, nullptr, 0);
 }
 
-uintptr_t __MCFCRT_MopthreadCreate(void (*pfnProc)(void *), const void *pParams, size_t uSizeOfParams){
+static inline uintptr_t ReallyCreateMopthread(void (*pfnProc)(void *), const void *pParams, size_t uSizeOfParams, bool bJoinable){
 	const size_t uSizeToAlloc = sizeof(MopthreadControl) + uSizeOfParams;
 	if(uSizeToAlloc < sizeof(MopthreadControl)){
 		return 0;
@@ -150,11 +150,15 @@ uintptr_t __MCFCRT_MopthreadCreate(void (*pfnProc)(void *), const void *pParams,
 	} else {
 		memset(pControl->abyParams, 0, uSizeOfParams);
 	}
-	pControl->eState = kStateJoinable;
+	if(bJoinable){
+		pControl->eState = kStateJoinable;
+	} else {
+		pControl->eState = kStateDetached;
+	}
 	_MCFCRT_InitializeConditionVariable(&(pControl->vTermination));
 
 	uintptr_t uTid;
-	const _MCFCRT_ThreadHandle hThread = _MCFCRT_CreateNativeThread(&MopthreadProcNative, pControl, true, &uTid);
+	const _MCFCRT_ThreadHandle hThread = _MCFCRT_CreateNativeThread(&MopthreadProcNative, pControl, bJoinable, &uTid);
 	if(!hThread){
 		_MCFCRT_free(pControl);
 		return 0;
@@ -162,14 +166,23 @@ uintptr_t __MCFCRT_MopthreadCreate(void (*pfnProc)(void *), const void *pParams,
 	pControl->uTid    = uTid;
 	pControl->hThread = hThread;
 
-	_MCFCRT_WaitForMutexForever(&g_vControlMutex, _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT);
-	{
-		_MCFCRT_AvlAttach(&g_avlControls, (_MCFCRT_AvlNodeHeader *)pControl, &MopthreadControlComparatorNodes);
-	}
-	_MCFCRT_SignalMutex(&g_vControlMutex);
+	if(bJoinable){
+		_MCFCRT_WaitForMutexForever(&g_vControlMutex, _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT);
+		{
+			_MCFCRT_AvlAttach(&g_avlControls, (_MCFCRT_AvlNodeHeader *)pControl, &MopthreadControlComparatorNodes);
+		}
+		_MCFCRT_SignalMutex(&g_vControlMutex);
 
-	_MCFCRT_ResumeThread(hThread);
+		_MCFCRT_ResumeThread(hThread);
+	}
 	return uTid;
+}
+
+uintptr_t __MCFCRT_MopthreadCreate(void (*pfnProc)(void *), const void *pParams, size_t uSizeOfParams){
+	return ReallyCreateMopthread(pfnProc, pParams, uSizeOfParams, true);
+}
+uintptr_t __MCFCRT_MopthreadCreateDetached(void (*pfnProc)(void *), const void *pParams, size_t uSizeOfParams){
+	return ReallyCreateMopthread(pfnProc, pParams, uSizeOfParams, false);
 }
 void __MCFCRT_MopthreadExit(void (*pfnModifier)(void *, intptr_t), intptr_t nContext){
 	const uintptr_t uTid = _MCFCRT_GetCurrentThreadId();

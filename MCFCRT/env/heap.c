@@ -10,12 +10,6 @@
 #include "bail.h"
 #include <errno.h>
 
-// hooks.h
-volatile _MCFCRT_HeapAllocCallback    _MCFCRT_pfnOnHeapAlloc     = nullptr;
-volatile _MCFCRT_HeapReallocCallback  _MCFCRT_pfnOnHeapRealloc   = nullptr;
-volatile _MCFCRT_HeapFreeCallback     _MCFCRT_pfnOnHeapFree      = nullptr;
-volatile _MCFCRT_HeapBadAllocCallback _MCFCRT_pfnOnHeapBadAlloc  = nullptr;
-
 static _MCFCRT_Mutex g_vHeapMutex = { 0 };
 
 #define HEAP_MUTEX_SPIN_COUNT     ((unsigned)4000)

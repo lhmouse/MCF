@@ -185,7 +185,7 @@ typedef struct __MCFCRT_tagGthreadControlBlock {
 	void *__exit_code;
 } __MCFCRT_GthreadControlBlock;
 
-extern void __MCFCRT_GthreadMopWrapper(void *__mop_params) _MCFCRT_NOEXCEPT;
+extern void __MCFCRT_GthreadMopWrapper(void *__params) _MCFCRT_NOEXCEPT;
 
 __MCFCRT_GTHREAD_INLINE_OR_EXTERN int __MCFCRT_gthread_create(__gthread_t *__tid_ret, void *(*__proc)(void *), void *__param) _MCFCRT_NOEXCEPT {
 	__MCFCRT_GthreadControlBlock __control = { __proc, __param, (void *)0xDEADBEEF };

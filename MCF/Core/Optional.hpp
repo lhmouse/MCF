@@ -84,7 +84,7 @@ public:
 			const auto p = reinterpret_cast<const std::exception_ptr *>(&x_vStorage);
 			return *p;
 		} else {
-			return MCF_MAKE_EXCEPTION_PTR(Exception, ERROR_NOT_READY, "Optional: no element or exception has been set"_rcs);
+			return MCF_MAKE_EXCEPTION_PTR(Exception, ERROR_NOT_READY, Rcntws::View(L"Optional: 尚未设定元素或异常对象。"));
 		}
 	}
 

@@ -188,7 +188,8 @@ __MCFCRT_C11THREAD_INLINE_OR_EXTERN int __MCFCRT_thrd_join(thrd_t __tid, int *__
 		}
 		*__exit_code_ret = __control.__exit_code;
 	} else {
-		if(!__MCFCRT_MopthreadJoin(__tid, nullptr)){
+		const __MCFCRT_MopthreadErrorCode __error = __MCFCRT_MopthreadJoin(__tid, nullptr);
+		if(__error != __MCFCRT_kMopthreadSuccess){
 			return thrd_error; // XXX: ESRCH
 		}
 	}

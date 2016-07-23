@@ -13,13 +13,25 @@ extern bool __MCFCRT_ThreadEnvInit(void) _MCFCRT_NOEXCEPT;
 extern void __MCFCRT_ThreadEnvUninit(void) _MCFCRT_NOEXCEPT;
 
 // mopthread = the mother of pthread
+typedef enum __MCFCRT_tagMopthreadErrorCode {
+	__MCFCRT_kMopthreadSuccess      = 0,
+	__MCFCRT_kMopthreadSeeLastError = 1,
+	__MCFCRT_kMopthreadNotFound     = 2,
+} __MCFCRT_MopthreadErrorCode;
+
 // 线程的参数将指向由 __pParams 和 __uSizeOfParams 定义的内存块的副本。
 extern _MCFCRT_STD uintptr_t __MCFCRT_MopthreadCreate(void (*__pfnProc)(void *), const void *__pParams, _MCFCRT_STD size_t __uSizeOfParams) _MCFCRT_NOEXCEPT;
 extern _MCFCRT_STD uintptr_t __MCFCRT_MopthreadCreateDetached(void (*__pfnProc)(void *), const void *__pParams, _MCFCRT_STD size_t __uSizeOfParams) _MCFCRT_NOEXCEPT;
 __attribute__((__noreturn__))
 extern void __MCFCRT_MopthreadExit(void (*__pfnModifier)(void *, _MCFCRT_STD intptr_t), _MCFCRT_STD intptr_t __nContext) _MCFCRT_NOEXCEPT;
-extern bool __MCFCRT_MopthreadJoin(_MCFCRT_STD uintptr_t __uTid, void *__pParams) _MCFCRT_NOEXCEPT;
-extern bool __MCFCRT_MopthreadDetach(_MCFCRT_STD uintptr_t __uTid) _MCFCRT_NOEXCEPT;
+extern __MCFCRT_MopthreadErrorCode __MCFCRT_MopthreadJoin(_MCFCRT_STD uintptr_t __uTid, void *__pParams) _MCFCRT_NOEXCEPT;
+extern __MCFCRT_MopthreadErrorCode __MCFCRT_MopthreadDetach(_MCFCRT_STD uintptr_t __uTid) _MCFCRT_NOEXCEPT;
+
+#define __MCFCRT_MOPTHREAD_PRIORITY_MIN  -2
+#define __MCFCRT_MOPTHREAD_PRIORITY_MAX   2
+
+extern __MCFCRT_MopthreadErrorCode __MCFCRT_MopthreadGetPriority(int *__pnPriority, _MCFCRT_STD uintptr_t __uTid) _MCFCRT_NOEXCEPT;
+extern __MCFCRT_MopthreadErrorCode __MCFCRT_MopthreadSetPriority(_MCFCRT_STD uintptr_t __uTid, int __nPriority) _MCFCRT_NOEXCEPT;
 
 extern void __MCFCRT_TlsCleanup(void) _MCFCRT_NOEXCEPT;
 

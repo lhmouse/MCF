@@ -202,7 +202,8 @@ __MCFCRT_GTHREAD_INLINE_OR_EXTERN int __MCFCRT_gthread_join(__gthread_t __tid, v
 	}
 	if(__exit_code_ret){
 		__MCFCRT_GthreadControlBlock __control;
-		if(!__MCFCRT_MopthreadJoin(__tid, &__control)){
+		const __MCFCRT_MopthreadErrorCode __error = __MCFCRT_MopthreadJoin(__tid, &__control);
+		if(__error != __MCFCRT_kMopthreadSuccess){
 			return ESRCH;
 		}
 		*__exit_code_ret = __control.__exit_code;
@@ -217,7 +218,8 @@ __MCFCRT_GTHREAD_INLINE_OR_EXTERN int __MCFCRT_gthread_detach(__gthread_t __tid)
 	if(__tid == _MCFCRT_GetCurrentThreadId()){
 		return EDEADLK;
 	}
-	if(!__MCFCRT_MopthreadDetach(__tid)){
+	const __MCFCRT_MopthreadErrorCode __error = __MCFCRT_MopthreadDetach(__tid);
+	if(__error != __MCFCRT_kMopthreadSuccess){
 		return ESRCH;
 	}
 	return 0;

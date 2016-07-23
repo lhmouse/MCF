@@ -191,20 +191,22 @@ void __MCFCRT_MopthreadExit(void (*pfnModifier)(void *, intptr_t), intptr_t nCon
 	MopthreadControl *const pControl = (MopthreadControl *)_MCFCRT_AvlFind(&g_avlControls, (intptr_t)uTid, &MopthreadControlComparatorNodeKey);
 	SignalMutexAndExitThread(&g_vControlMutex, pControl, pfnModifier, nContext);
 }
-bool __MCFCRT_MopthreadJoin(uintptr_t uTid, void *restrict pParams){
-	bool bJoined = false;
+__MCFCRT_MopthreadErrorCode __MCFCRT_MopthreadJoin(uintptr_t uTid, void *restrict pParams){
+	__MCFCRT_MopthreadErrorCode eError;
 
 	_MCFCRT_WaitForMutexForever(&g_vControlMutex, _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT);
 	{
 		MopthreadControl *const pControl = (MopthreadControl *)_MCFCRT_AvlFind(&g_avlControls, (intptr_t)uTid, &MopthreadControlComparatorNodeKey);
-		if(pControl){
+		if(!pControl){
+			eError = __MCFCRT_kMopthreadNotFound;
+		} else {
 			switch(pControl->eState){
 			case kStateJoinable:
 				pControl->eState = kStateJoining;
 				do {
 					_MCFCRT_WaitForConditionVariableForever(&(pControl->vTermination), &UnlockCallbackNative, &RelockCallbackNative, (intptr_t)&g_vControlMutex);
 				} while(pControl->eState != kStateJoined);
-				bJoined = true;
+				eError = __MCFCRT_kMopthreadSuccess;
 				_MCFCRT_AvlDetach((_MCFCRT_AvlNodeHeader *)pControl);
 				_MCFCRT_WaitForThreadForever(pControl->hThread);
 				if(pParams){
@@ -215,7 +217,7 @@ bool __MCFCRT_MopthreadJoin(uintptr_t uTid, void *restrict pParams){
 				break;
 			case kStateZombie:
 				pControl->eState = kStateJoined;
-				bJoined = true;
+				eError = __MCFCRT_kMopthreadSuccess;
 				_MCFCRT_AvlDetach((_MCFCRT_AvlNodeHeader *)pControl);
 				_MCFCRT_WaitForThreadForever(pControl->hThread);
 				if(pParams){
@@ -227,6 +229,7 @@ bool __MCFCRT_MopthreadJoin(uintptr_t uTid, void *restrict pParams){
 			case kStateJoining:
 			case kStateJoined:
 			case kStateDetached:
+				eError = __MCFCRT_kMopthreadNotFound;
 				break;
 			default:
 				_MCFCRT_ASSERT(false);
@@ -235,23 +238,25 @@ bool __MCFCRT_MopthreadJoin(uintptr_t uTid, void *restrict pParams){
 	}
 	_MCFCRT_SignalMutex(&g_vControlMutex);
 
-	return bJoined;
+	return eError;
 }
-bool __MCFCRT_MopthreadDetach(uintptr_t uTid){
-	bool bDetached = false;
+__MCFCRT_MopthreadErrorCode __MCFCRT_MopthreadDetach(uintptr_t uTid){
+	__MCFCRT_MopthreadErrorCode eError;
 
 	_MCFCRT_WaitForMutexForever(&g_vControlMutex, _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT);
 	{
 		MopthreadControl *const pControl = (MopthreadControl *)_MCFCRT_AvlFind(&g_avlControls, (intptr_t)uTid, &MopthreadControlComparatorNodeKey);
-		if(pControl){
+		if(!pControl){
+			eError = __MCFCRT_kMopthreadNotFound;
+		} else {
 			switch(pControl->eState){
 			case kStateJoinable:
 				pControl->eState = kStateDetached;
-				bDetached = true;
+				eError = __MCFCRT_kMopthreadSuccess;
 				break;
 			case kStateZombie:
 				pControl->eState = kStateJoined;
-				bDetached = true;
+				eError = __MCFCRT_kMopthreadSuccess;
 				_MCFCRT_AvlDetach((_MCFCRT_AvlNodeHeader *)pControl);
 				_MCFCRT_CloseThread(pControl->hThread);
 				_MCFCRT_free(pControl);
@@ -259,6 +264,7 @@ bool __MCFCRT_MopthreadDetach(uintptr_t uTid){
 			case kStateJoining:
 			case kStateJoined:
 			case kStateDetached:
+				eError = __MCFCRT_kMopthreadNotFound;
 				break;
 			default:
 				_MCFCRT_ASSERT(false);
@@ -267,7 +273,84 @@ bool __MCFCRT_MopthreadDetach(uintptr_t uTid){
 	}
 	_MCFCRT_SignalMutex(&g_vControlMutex);
 
-	return bDetached;
+	return eError;
+}
+
+static inline void MopthreadGlobalLock(HANDLE *phThread, uintptr_t uTid){
+	if(uTid == _MCFCRT_GetCurrentThreadId()){
+		*phThread = GetCurrentThread();
+	} else {
+		_MCFCRT_WaitForMutexForever(&g_vControlMutex, _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT);
+		MopthreadControl *const pControl = (MopthreadControl *)_MCFCRT_AvlFind(&g_avlControls, (intptr_t)uTid, &MopthreadControlComparatorNodeKey);
+		if(!pControl){
+			*phThread = nullptr;
+		} else {
+			*phThread = pControl->hThread;
+		}
+	}
+}
+static inline void MopthreadGlobalUnlock(uintptr_t uTid){
+	if(uTid == _MCFCRT_GetCurrentThreadId()){
+		//
+	} else {
+		_MCFCRT_SignalMutex(&g_vControlMutex);
+	}
+}
+
+__MCFCRT_MopthreadErrorCode __MCFCRT_MopthreadGetPriority(int *pnPriority, uintptr_t uTid){
+	__MCFCRT_MopthreadErrorCode eError;
+
+	HANDLE hThread;
+	MopthreadGlobalLock(&hThread, uTid);
+	{
+		if(!hThread){
+			eError = __MCFCRT_kMopthreadNotFound;
+		} else {
+			int nPriority = GetThreadPriority(hThread);
+			if(nPriority == THREAD_PRIORITY_ERROR_RETURN){
+				eError = __MCFCRT_kMopthreadSeeLastError;
+			} else {
+				if(nPriority < __MCFCRT_MOPTHREAD_PRIORITY_MIN){
+					nPriority = __MCFCRT_MOPTHREAD_PRIORITY_MIN;
+				}
+				if(nPriority > __MCFCRT_MOPTHREAD_PRIORITY_MAX){
+					nPriority = __MCFCRT_MOPTHREAD_PRIORITY_MAX;
+				}
+				*pnPriority = nPriority;
+				eError = __MCFCRT_kMopthreadSuccess;
+			}
+		}
+	}
+	MopthreadGlobalUnlock(uTid);
+
+	return eError;
+}
+__MCFCRT_MopthreadErrorCode __MCFCRT_MopthreadSetPriority(uintptr_t uTid, int nPriority){
+	__MCFCRT_MopthreadErrorCode eError;
+
+	HANDLE hThread;
+	MopthreadGlobalLock(&hThread, uTid);
+	{
+		if(!hThread){
+			eError = __MCFCRT_kMopthreadNotFound;
+		} else {
+			if(nPriority < __MCFCRT_MOPTHREAD_PRIORITY_MIN){
+				nPriority = __MCFCRT_MOPTHREAD_PRIORITY_MIN;
+			}
+			if(nPriority > __MCFCRT_MOPTHREAD_PRIORITY_MAX){
+				nPriority = __MCFCRT_MOPTHREAD_PRIORITY_MAX;
+			}
+			const bool bSucceeded = SetThreadPriority(hThread, nPriority);
+			if(!bSucceeded){
+				eError = __MCFCRT_kMopthreadSeeLastError;
+			} else {
+				eError = __MCFCRT_kMopthreadSuccess;
+			}
+		}
+	}
+	MopthreadGlobalUnlock(uTid);
+
+	return eError;
 }
 
 typedef struct tagTlsObject TlsObject;

@@ -3,12 +3,12 @@
 // Copyleft 2013 - 2016, LH_Mouse. All wrongs reserved.
 
 #include "thunk.h"
-#include "mcfwin.h"
-#include "avl_tree.h"
-#include "mutex.h"
-#include "bail.h"
-#include "heap.h"
-#include "../ext/assert.h"
+#include "../env/mcfwin.h"
+#include "../env/avl_tree.h"
+#include "../env/mutex.h"
+#include "../env/bail.h"
+#include "../env/heap.h"
+#include "assert.h"
 
 typedef struct tagThunkInfo {
 	// 内存是以 64KiB 的粒度分配的，每一块称为一个 chunk。

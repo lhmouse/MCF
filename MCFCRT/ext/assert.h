@@ -18,13 +18,13 @@ _MCFCRT_EXTERN_C_END
 #define __MCFCRT_ASSERT_WIDEN(__s_)             __MCFCRT_ASSERT_WIDEN_X(__s_)
 
 #define _MCFCRT_ASSERT(__expr_)                 ((void)(((__expr_) ? true : false) ||	\
-	                                              (__MCFCRT_ON_ASSERTION_FAILURE(__MCFCRT_ASSERT_WIDEN(#__expr_),	\
-	                                                __MCFCRT_ASSERT_WIDEN(__FILE__), __LINE__, (L"")), 1)	\
-	                                              ))
+                                                  (__MCFCRT_ON_ASSERTION_FAILURE(__MCFCRT_ASSERT_WIDEN(#__expr_),	\
+                                                    __MCFCRT_ASSERT_WIDEN(__FILE__), __LINE__, (L"")), 1)	\
+                                                  ))
 #define _MCFCRT_ASSERT_MSG(__expr_, __msg_)     ((void)(((__expr_) ? true : false) ||	\
-	                                              (__MCFCRT_ON_ASSERTION_FAILURE(__MCFCRT_ASSERT_WIDEN(#__expr_),	\
-	                                                __MCFCRT_ASSERT_WIDEN(__FILE__), __LINE__, (__msg_)), 1)	\
-	                                              ))
+                                                  (__MCFCRT_ON_ASSERTION_FAILURE(__MCFCRT_ASSERT_WIDEN(#__expr_),	\
+                                                    __MCFCRT_ASSERT_WIDEN(__FILE__), __LINE__, (__msg_)), 1)	\
+                                                  ))
 
 #endif
 

@@ -55,7 +55,7 @@ bool __MCFCRT_TlsCallbackGeneric(void *pInstance, unsigned uReason, bool bDynami
 			if(_MCFCRT_OnDllProcessAttach){
 				bRet = _MCFCRT_OnDllProcessAttach(pInstance, bDynamic);
 				if(!bRet){
-					goto jCleanup_06;
+					goto jCleanup_99;
 				}
 			}
 			g_bInitialized = true;
@@ -83,7 +83,7 @@ bool __MCFCRT_TlsCallbackGeneric(void *pInstance, unsigned uReason, bool bDynami
 			if(_MCFCRT_OnDllProcessDetach){
 				_MCFCRT_OnDllProcessDetach(pInstance, bDynamic);
 			}
-		jCleanup_06:
+		jCleanup_99:
 			__MCFCRT_TlsCleanup();
 			__MCFCRT_ThreadEnvUninit();
 		jCleanup_05:

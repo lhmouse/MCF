@@ -67,5 +67,5 @@ void __MCFCRT_C11threadMopWrapper(void *params){
 void __MCFCRT_C11threadMopExitModifier(void *params, intptr_t context){
 	__MCFCRT_C11threadControlBlock *const control = params;
 
-	control->__exit_code = context;
+	control->__exit_code = (int)context;
 }

@@ -7,7 +7,6 @@
 #include "mcfwin.h"
 #include "mutex.h"
 #include "fenv.h"
-#include "thread_env.h"
 #include "heap.h"
 #include "../ext/expect.h"
 
@@ -31,7 +30,7 @@ static void CrtAtModuleExitDestructor(void *pStorage){
 	AtExitCallbackBlock *const pBlock = pStorage;
 	for(size_t i = pBlock->uSize; i != 0; --i){
 		const AtExitCallback *const pCallback = pBlock->aCallbacks + i - 1;
-		const _MCFCRT_AtThreadExitCallback pfnProc = pCallback->pfnProc;
+		const _MCFCRT_AtModuleExitCallback pfnProc = pCallback->pfnProc;
 		const intptr_t nContext = pCallback->nContext;
 		(*pfnProc)(nContext);
 	}
@@ -89,16 +88,12 @@ static void CallStaticDestructors(void){
 }
 
 bool __MCFCRT_ModuleInit(void){
-	if(!__MCFCRT_ThreadEnvInit()){
-		return false;
-	}
 	CallStaticConstructors();
 	return true;
 }
 void __MCFCRT_ModuleUninit(void){
 	PumpAtModuleExit();
 	CallStaticDestructors();
-	__MCFCRT_ThreadEnvUninit();
 }
 
 bool _MCFCRT_AtModuleExit(_MCFCRT_AtModuleExitCallback pfnProc, intptr_t nContext){

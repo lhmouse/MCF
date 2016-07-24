@@ -9,6 +9,7 @@
 #include "../env/_seh_top.h"
 #include "../env/standard_streams.h"
 #include "../env/module.h"
+#include "../env/thread_env.h"
 #include "../env/fenv.h"
 #include "../env/thread_env.h"
 #include "../env/heap.h"
@@ -43,8 +44,17 @@ static bool OnDllProcessAttach(HINSTANCE hInstance, bool bDynamic){
 		__MCFCRT_StandardStreamsUninit();
 		return false;
 	}
+	if(!__MCFCRT_ThreadEnvInit()){
+		__MCFCRT_ModuleUninit();
+		__MCFCRT_CppRuntimeUninit();
+		__MCFCRT_HeapDbgUninit();
+		__MCFCRT_HeapUninit();
+		__MCFCRT_StandardStreamsUninit();
+		return false;
+	}
 	if(_MCFCRT_OnDllProcessAttach){
 		if(!_MCFCRT_OnDllProcessAttach(hInstance, bDynamic)){
+			__MCFCRT_ThreadEnvUninit();
 			__MCFCRT_ModuleUninit();
 			__MCFCRT_CppRuntimeUninit();
 			__MCFCRT_HeapDbgUninit();
@@ -75,6 +85,7 @@ static void OnDllProcessDetach(HINSTANCE hInstance, bool bDynamic){
 		_MCFCRT_OnDllProcessDetach(hInstance, bDynamic);
 	}
 
+	__MCFCRT_ThreadEnvUninit();
 	__MCFCRT_ModuleUninit();
 	__MCFCRT_CppRuntimeUninit();
 	__MCFCRT_HeapDbgUninit();

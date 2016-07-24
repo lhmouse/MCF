@@ -30,54 +30,32 @@ bool __MCFCRT_TlsCallbackGeneric(void *pInstance, unsigned uReason, bool bDynami
 			__MCFCRT_FEnvInit();
 			bRet = __MCFCRT_StandardStreamsInit();
 			if(!bRet){
-				break;
+				goto jCleanup_00;
 			}
 			bRet = __MCFCRT_HeapInit();
 			if(!bRet){
-				__MCFCRT_StandardStreamsUninit();
-				break;
+				goto jCleanup_01;
 			}
 			bRet = __MCFCRT_HeapDbgInit();
 			if(!bRet){
-				__MCFCRT_HeapUninit();
-				__MCFCRT_StandardStreamsUninit();
-				break;
+				goto jCleanup_02;
 			}
 			bRet = __MCFCRT_CppRuntimeInit();
 			if(!bRet){
-				__MCFCRT_HeapDbgUninit();
-				__MCFCRT_HeapUninit();
-				__MCFCRT_StandardStreamsUninit();
-				break;
+				goto jCleanup_03;
 			}
 			bRet = __MCFCRT_ModuleInit();
 			if(!bRet){
-				__MCFCRT_CppRuntimeUninit();
-				__MCFCRT_HeapDbgUninit();
-				__MCFCRT_HeapUninit();
-				__MCFCRT_StandardStreamsUninit();
-				break;
+				goto jCleanup_04;
 			}
 			bRet = __MCFCRT_ThreadEnvInit();
 			if(!bRet){
-				__MCFCRT_ModuleUninit();
-				__MCFCRT_CppRuntimeUninit();
-				__MCFCRT_HeapDbgUninit();
-				__MCFCRT_HeapUninit();
-				__MCFCRT_StandardStreamsUninit();
-				break;
+				goto jCleanup_05;
 			}
 			if(_MCFCRT_OnDllProcessAttach){
 				bRet = _MCFCRT_OnDllProcessAttach(pInstance, bDynamic);
 				if(!bRet){
-					__MCFCRT_TlsCleanup();
-					__MCFCRT_ThreadEnvUninit();
-					__MCFCRT_ModuleUninit();
-					__MCFCRT_CppRuntimeUninit();
-					__MCFCRT_HeapDbgUninit();
-					__MCFCRT_HeapUninit();
-					__MCFCRT_StandardStreamsUninit();
-					break;
+					goto jCleanup_06;
 				}
 			}
 			g_bInitialized = true;
@@ -105,13 +83,20 @@ bool __MCFCRT_TlsCallbackGeneric(void *pInstance, unsigned uReason, bool bDynami
 			if(_MCFCRT_OnDllProcessDetach){
 				_MCFCRT_OnDllProcessDetach(pInstance, bDynamic);
 			}
+		jCleanup_06:
 			__MCFCRT_TlsCleanup();
 			__MCFCRT_ThreadEnvUninit();
+		jCleanup_05:
 			__MCFCRT_ModuleUninit();
+		jCleanup_04:
 			__MCFCRT_CppRuntimeUninit();
+		jCleanup_03:
 			__MCFCRT_HeapDbgUninit();
+		jCleanup_02:
 			__MCFCRT_HeapUninit();
+		jCleanup_01:
 			__MCFCRT_StandardStreamsUninit();
+		jCleanup_00:
 			break;
 		}
 	}

@@ -5,10 +5,9 @@
 #ifndef __MCFCRT_ENV_GTHREAD_H_
 #define __MCFCRT_ENV_GTHREAD_H_
 
-// 专门为 GCC 定制的兼容层。
+// Compatibility layer for GCC.
 
 #include "_crtdef.h"
-#include "thread_env.h"
 #include "thread.h"
 #include "once_flag.h"
 #include "mutex.h"

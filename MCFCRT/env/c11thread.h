@@ -8,7 +8,6 @@
 // Compatibility layer for the ISO/IEC C11 standard.
 
 #include "_crtdef.h"
-#include "thread_env.h"
 #include "thread.h"
 #include "once_flag.h"
 #include "mutex.h"

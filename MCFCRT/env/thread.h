@@ -9,6 +9,9 @@
 
 _MCFCRT_EXTERN_C_BEGIN
 
+extern bool __MCFCRT_ThreadEnvInit(void) _MCFCRT_NOEXCEPT;
+extern void __MCFCRT_ThreadEnvUninit(void) _MCFCRT_NOEXCEPT;
+
 typedef unsigned long (__attribute__((__stdcall__)) *_MCFCRT_NativeThreadProc)(void *__pParam);
 
 typedef struct __MCFCRT_tagThreadHandle {
@@ -19,7 +22,7 @@ extern _MCFCRT_ThreadHandle _MCFCRT_CreateNativeThread(_MCFCRT_NativeThreadProc 
 extern void _MCFCRT_CloseThread(_MCFCRT_ThreadHandle __hThread) _MCFCRT_NOEXCEPT;
 
 extern void _MCFCRT_Sleep(_MCFCRT_STD uint64_t __u64UntilFastMonoClock) _MCFCRT_NOEXCEPT;
-// 被 APC 打断返回 true，超时返回 false。
+// _MCFCRT_AlertableSleep() returns true if the current thread has been woken up by APC and false if the current thread has timed out.
 extern bool _MCFCRT_AlertableSleep(_MCFCRT_STD uint64_t __u64UntilFastMonoClock) _MCFCRT_NOEXCEPT;
 extern void _MCFCRT_AlertableSleepForever(void) _MCFCRT_NOEXCEPT;
 extern void _MCFCRT_YieldThread(void) _MCFCRT_NOEXCEPT;
@@ -27,15 +30,12 @@ extern void _MCFCRT_YieldThread(void) _MCFCRT_NOEXCEPT;
 extern long _MCFCRT_SuspendThread(_MCFCRT_ThreadHandle __hThread) _MCFCRT_NOEXCEPT;
 extern long _MCFCRT_ResumeThread(_MCFCRT_ThreadHandle __hThread) _MCFCRT_NOEXCEPT;
 
-// 线程结束返回 true，超时返回 false。
+// _MCFCRT_WaitForThread() returns true if the other thread has terminated and false if the current thread has timed out.
 extern bool _MCFCRT_WaitForThread(_MCFCRT_ThreadHandle __hThread, _MCFCRT_STD uint64_t __u64UntilFastMonoClock) _MCFCRT_NOEXCEPT;
 extern void _MCFCRT_WaitForThreadForever(_MCFCRT_ThreadHandle __hThread) _MCFCRT_NOEXCEPT;
 
 __attribute__((__const__))
 extern _MCFCRT_STD uintptr_t _MCFCRT_GetCurrentThreadId(void) _MCFCRT_NOEXCEPT;
-
-extern bool __MCFCRT_ThreadEnvInit(void) _MCFCRT_NOEXCEPT;
-extern void __MCFCRT_ThreadEnvUninit(void) _MCFCRT_NOEXCEPT;
 
 // mopthread = the mother of pthread
 typedef enum __MCFCRT_tagMopthreadErrorCode {
@@ -44,7 +44,7 @@ typedef enum __MCFCRT_tagMopthreadErrorCode {
 	__MCFCRT_kMopthreadNotFound     = 2,
 } __MCFCRT_MopthreadErrorCode;
 
-// 线程的参数将指向由 __pParams 和 __uSizeOfParams 定义的内存块的副本。
+// The parameter of the thread procedure will point to a copy of the memory block that __pParams and __uSize define.
 extern _MCFCRT_STD uintptr_t __MCFCRT_MopthreadCreate(void (*__pfnProc)(void *), const void *__pParams, _MCFCRT_STD size_t __uSizeOfParams) _MCFCRT_NOEXCEPT;
 extern _MCFCRT_STD uintptr_t __MCFCRT_MopthreadCreateDetached(void (*__pfnProc)(void *), const void *__pParams, _MCFCRT_STD size_t __uSizeOfParams) _MCFCRT_NOEXCEPT;
 __attribute__((__noreturn__))
@@ -60,7 +60,7 @@ extern __MCFCRT_MopthreadErrorCode __MCFCRT_MopthreadSetPriority(_MCFCRT_STD uin
 
 extern void __MCFCRT_TlsCleanup(void) _MCFCRT_NOEXCEPT;
 
-// 成功应当返回 0，否则参见 _MCFCRT_TlsRequire() 上面的注释。
+// The constructor shall return 0 upon success. Otherwise, see comments above _MCFCRT_TlsRequire().
 typedef unsigned long (*_MCFCRT_TlsConstructor)(_MCFCRT_STD intptr_t __nContext, void *__pStorage);
 typedef void (*_MCFCRT_TlsDestructor)(_MCFCRT_STD intptr_t __nContext, void *__pStorage);
 
@@ -68,7 +68,7 @@ typedef struct __MCFCRT_tagTlsKeyHandle {
 	int __n;
 } *_MCFCRT_TlsKeyHandle;
 
-// 失败返回 nullptr。
+// _MCFCRT_TlsAllocKey() returns `nullptr` upon failure.
 extern _MCFCRT_TlsKeyHandle _MCFCRT_TlsAllocKey(_MCFCRT_STD size_t __uSize, _MCFCRT_TlsConstructor __pfnConstructor, _MCFCRT_TlsDestructor __pfnDestructor, _MCFCRT_STD intptr_t __nContext) _MCFCRT_NOEXCEPT;
 extern void _MCFCRT_TlsFreeKey(_MCFCRT_TlsKeyHandle __hTlsKey) _MCFCRT_NOEXCEPT;
 
@@ -77,13 +77,13 @@ extern _MCFCRT_TlsConstructor _MCFCRT_TlsGetConstructor(_MCFCRT_TlsKeyHandle __h
 extern _MCFCRT_TlsDestructor _MCFCRT_TlsGetDestructor(_MCFCRT_TlsKeyHandle __hTlsKey) _MCFCRT_NOEXCEPT;
 extern _MCFCRT_STD intptr_t _MCFCRT_TlsGetContext(_MCFCRT_TlsKeyHandle __hTlsKey) _MCFCRT_NOEXCEPT;
 
-// 如果 __hTlsKey 有效，该函数永远不失败。
-// 如果未设定过任何值，*__ppStorage 返回一个空指针。
+// _MCFCRT_TlsGet() never fails, provided __hTlsKey is a valid key.
+// If the storage for the current thread has not been initialized, a null pointer is returned into *__ppStorage.
 extern bool _MCFCRT_TlsGet(_MCFCRT_TlsKeyHandle __hTlsKey, void **restrict __ppStorage) _MCFCRT_NOEXCEPT;
-// 如果该线程局部存储设定过值，*__ppStorage 返回指向它的指针。
-// 否则，该线程局部存储的内存被分配并清零，然后 _MCFCRT_TlsAllocKey() 中指定的构造函数被调用用于初始化该存储。
-// 如果存储分配失败，该函数返回 false，GetLastError() 返回 ERROR_NOT_ENOUGH_MEMORY。
-// 若构造函数返回 0，*__ppStorage 返回指向它的指针；否则，已分配的内存被立即释放，然后该函数返回 false，GetLastError() 返回构造函数返回的值。
+// _MCFCRT_TlsRequire() is identical to _MCFCRT_TlsGet() if the storage for the current thread has already been initialized.
+// If it is not, the storage is allocated and zeroed, then the constructor is called, and if the constructor returns 0, a pointer to the initialized storage is returned into *__ppStorage.
+// If memory allocation fails, `false` is returned when GetLastError() returns ERROR_NOT_ENOUGH_MEMORY.
+// If the constructor returns a non-zero value, the storage is deallocated immediately and `false` is returned when GetLastError() returns that non-zero value.
 extern bool _MCFCRT_TlsRequire(_MCFCRT_TlsKeyHandle __hTlsKey, void **restrict __ppStorage) _MCFCRT_NOEXCEPT;
 
 typedef void (*_MCFCRT_AtThreadExitCallback)(_MCFCRT_STD intptr_t __nContext);

@@ -24,86 +24,7 @@ extern NTSTATUS NtSuspendThread(HANDLE hThread, LONG *plPrevCount);
 __attribute__((__dllimport__, __stdcall__))
 extern NTSTATUS NtResumeThread(HANDLE hThread, LONG *plPrevCount);
 
-_MCFCRT_ThreadHandle _MCFCRT_CreateNativeThread(_MCFCRT_NativeThreadProc pfnThreadProc, void *pParam, bool bSuspended, uintptr_t *restrict puThreadId){
-	DWORD dwThreadId;
-	const HANDLE hThread = CreateRemoteThread(GetCurrentProcess(), nullptr, 0, pfnThreadProc, pParam, bSuspended ? CREATE_SUSPENDED : 0, &dwThreadId);
-	if(!hThread){
-		return nullptr;
-	}
-	if(puThreadId){
-		*puThreadId = dwThreadId;
-	}
-	return (_MCFCRT_ThreadHandle)hThread;
-}
-void _MCFCRT_CloseThread(_MCFCRT_ThreadHandle hThread){
-	const NTSTATUS lStatus = NtClose((HANDLE)hThread);
-	_MCFCRT_ASSERT_MSG(NT_SUCCESS(lStatus), L"NtClose() 失败。");
-}
-
-void _MCFCRT_Sleep(uint64_t u64UntilFastMonoClock){
-	LARGE_INTEGER liTimeout;
-	__MCFCRT_InitializeNtTimeout(&liTimeout, u64UntilFastMonoClock);
-	const NTSTATUS lStatus = NtDelayExecution(false, &liTimeout);
-	_MCFCRT_ASSERT_MSG(NT_SUCCESS(lStatus), L"NtDelayExecution() 失败。");
-}
-bool _MCFCRT_AlertableSleep(uint64_t u64UntilFastMonoClock){
-	LARGE_INTEGER liTimeout;
-	__MCFCRT_InitializeNtTimeout(&liTimeout, u64UntilFastMonoClock);
-	const NTSTATUS lStatus = NtDelayExecution(true, &liTimeout);
-	_MCFCRT_ASSERT_MSG(NT_SUCCESS(lStatus), L"NtDelayExecution() 失败。");
-	if(lStatus == STATUS_TIMEOUT){
-		return false;
-	}
-	return true;
-}
-void _MCFCRT_AlertableSleepForever(void){
-	LARGE_INTEGER liTimeout;
-	liTimeout.QuadPart = INT64_MAX;
-	const NTSTATUS lStatus = NtDelayExecution(true, &liTimeout);
-	_MCFCRT_ASSERT_MSG(NT_SUCCESS(lStatus), L"NtDelayExecution() 失败。");
-}
-void _MCFCRT_YieldThread(void){
-	const NTSTATUS lStatus = NtYieldExecution();
-	_MCFCRT_ASSERT_MSG(NT_SUCCESS(lStatus), L"NtYieldExecution() 失败。");
-}
-
-long _MCFCRT_SuspendThread(_MCFCRT_ThreadHandle hThread){
-	LONG lPrevCount;
-	const NTSTATUS lStatus = NtSuspendThread((HANDLE)hThread, &lPrevCount);
-	_MCFCRT_ASSERT_MSG(NT_SUCCESS(lStatus), L"NtSuspendThread() 失败。");
-	return lPrevCount;
-}
-long _MCFCRT_ResumeThread(_MCFCRT_ThreadHandle hThread){
-	LONG lPrevCount;
-	const NTSTATUS lStatus = NtResumeThread((HANDLE)hThread, &lPrevCount);
-	_MCFCRT_ASSERT_MSG(NT_SUCCESS(lStatus), L"NtResumeThread() 失败。");
-	return lPrevCount;
-}
-
-bool _MCFCRT_WaitForThread(_MCFCRT_ThreadHandle hThread, uint64_t u64UntilFastMonoClock){
-	LARGE_INTEGER liTimeout;
-	__MCFCRT_InitializeNtTimeout(&liTimeout, u64UntilFastMonoClock);
-	const NTSTATUS lStatus = NtWaitForSingleObject((HANDLE)hThread, false, &liTimeout);
-	_MCFCRT_ASSERT_MSG(NT_SUCCESS(lStatus), L"NtWaitForSingleObject() 失败。");
-	if(lStatus == STATUS_TIMEOUT){
-		return false;
-	}
-	return true;
-}
-void _MCFCRT_WaitForThreadForever(_MCFCRT_ThreadHandle hThread){
-	const NTSTATUS lStatus = NtWaitForSingleObject((HANDLE)hThread, false, nullptr);
-	_MCFCRT_ASSERT_MSG(NT_SUCCESS(lStatus), L"NtWaitForSingleObject() 失败。");
-}
-
-uintptr_t _MCFCRT_GetCurrentThreadId(void){
-	return GetCurrentThreadId();
-}
-
-static _MCFCRT_Mutex      g_vControlMutex = { 0 };
-static _MCFCRT_AvlRoot    g_avlControls   = nullptr;
-
-static DWORD              g_dwTlsIndex    = TLS_OUT_OF_INDEXES;
-static volatile uintptr_t g_uKeyCounter   = 0;
+static DWORD g_dwTlsIndex = TLS_OUT_OF_INDEXES;
 
 bool __MCFCRT_ThreadEnvInit(void){
 	const DWORD dwTlsIndex = TlsAlloc();
@@ -121,6 +42,85 @@ void __MCFCRT_ThreadEnvUninit(void){
 	const bool bSucceeded = TlsFree(dwTlsIndex);
 	_MCFCRT_ASSERT(bSucceeded);
 }
+
+_MCFCRT_ThreadHandle _MCFCRT_CreateNativeThread(_MCFCRT_NativeThreadProc pfnThreadProc, void *pParam, bool bSuspended, uintptr_t *restrict puThreadId){
+	DWORD dwThreadId;
+	const HANDLE hThread = CreateRemoteThread(GetCurrentProcess(), nullptr, 0, pfnThreadProc, pParam, bSuspended ? CREATE_SUSPENDED : 0, &dwThreadId);
+	if(!hThread){
+		return nullptr;
+	}
+	if(puThreadId){
+		*puThreadId = dwThreadId;
+	}
+	return (_MCFCRT_ThreadHandle)hThread;
+}
+void _MCFCRT_CloseThread(_MCFCRT_ThreadHandle hThread){
+	const NTSTATUS lStatus = NtClose((HANDLE)hThread);
+	_MCFCRT_ASSERT_MSG(NT_SUCCESS(lStatus), L"NtClose() failed.");
+}
+
+void _MCFCRT_Sleep(uint64_t u64UntilFastMonoClock){
+	LARGE_INTEGER liTimeout;
+	__MCFCRT_InitializeNtTimeout(&liTimeout, u64UntilFastMonoClock);
+	const NTSTATUS lStatus = NtDelayExecution(false, &liTimeout);
+	_MCFCRT_ASSERT_MSG(NT_SUCCESS(lStatus), L"NtDelayExecution() failed.");
+}
+bool _MCFCRT_AlertableSleep(uint64_t u64UntilFastMonoClock){
+	LARGE_INTEGER liTimeout;
+	__MCFCRT_InitializeNtTimeout(&liTimeout, u64UntilFastMonoClock);
+	const NTSTATUS lStatus = NtDelayExecution(true, &liTimeout);
+	_MCFCRT_ASSERT_MSG(NT_SUCCESS(lStatus), L"NtDelayExecution() failed.");
+	if(lStatus == STATUS_TIMEOUT){
+		return false;
+	}
+	return true;
+}
+void _MCFCRT_AlertableSleepForever(void){
+	LARGE_INTEGER liTimeout;
+	liTimeout.QuadPart = INT64_MAX;
+	const NTSTATUS lStatus = NtDelayExecution(true, &liTimeout);
+	_MCFCRT_ASSERT_MSG(NT_SUCCESS(lStatus), L"NtDelayExecution() failed.");
+}
+void _MCFCRT_YieldThread(void){
+	const NTSTATUS lStatus = NtYieldExecution();
+	_MCFCRT_ASSERT_MSG(NT_SUCCESS(lStatus), L"NtYieldExecution() failed.");
+}
+
+long _MCFCRT_SuspendThread(_MCFCRT_ThreadHandle hThread){
+	LONG lPrevCount;
+	const NTSTATUS lStatus = NtSuspendThread((HANDLE)hThread, &lPrevCount);
+	_MCFCRT_ASSERT_MSG(NT_SUCCESS(lStatus), L"NtSuspendThread() failed.");
+	return lPrevCount;
+}
+long _MCFCRT_ResumeThread(_MCFCRT_ThreadHandle hThread){
+	LONG lPrevCount;
+	const NTSTATUS lStatus = NtResumeThread((HANDLE)hThread, &lPrevCount);
+	_MCFCRT_ASSERT_MSG(NT_SUCCESS(lStatus), L"NtResumeThread() failed.");
+	return lPrevCount;
+}
+
+bool _MCFCRT_WaitForThread(_MCFCRT_ThreadHandle hThread, uint64_t u64UntilFastMonoClock){
+	LARGE_INTEGER liTimeout;
+	__MCFCRT_InitializeNtTimeout(&liTimeout, u64UntilFastMonoClock);
+	const NTSTATUS lStatus = NtWaitForSingleObject((HANDLE)hThread, false, &liTimeout);
+	_MCFCRT_ASSERT_MSG(NT_SUCCESS(lStatus), L"NtWaitForSingleObject() failed.");
+	if(lStatus == STATUS_TIMEOUT){
+		return false;
+	}
+	return true;
+}
+void _MCFCRT_WaitForThreadForever(_MCFCRT_ThreadHandle hThread){
+	const NTSTATUS lStatus = NtWaitForSingleObject((HANDLE)hThread, false, nullptr);
+	_MCFCRT_ASSERT_MSG(NT_SUCCESS(lStatus), L"NtWaitForSingleObject() failed.");
+}
+
+uintptr_t _MCFCRT_GetCurrentThreadId(void){
+	return GetCurrentThreadId();
+}
+
+static _MCFCRT_Mutex   g_vMopthreadMutex      = { 0 };
+static _MCFCRT_AvlRoot g_avlMopthreadControls = nullptr;
+static volatile size_t g_uTlsKeyCounter       = 0;
 
 typedef enum tagMopthreadState {
 	kStateJoinable,
@@ -217,8 +217,8 @@ static unsigned long MopthreadProcNative(void *pParam){
 	}
 	__MCFCRT_SEH_TOP_END
 
-	_MCFCRT_WaitForMutexForever(&g_vControlMutex, _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT);
-	SignalMutexAndExitThread(&g_vControlMutex, pControl, nullptr, 0);
+	_MCFCRT_WaitForMutexForever(&g_vMopthreadMutex, _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT);
+	SignalMutexAndExitThread(&g_vMopthreadMutex, pControl, nullptr, 0);
 }
 
 static inline uintptr_t ReallyCreateMopthread(void (*pfnProc)(void *), const void *pParams, size_t uSizeOfParams, bool bJoinable){
@@ -254,11 +254,11 @@ static inline uintptr_t ReallyCreateMopthread(void (*pfnProc)(void *), const voi
 	pControl->hThread = hThread;
 
 	if(bJoinable){
-		_MCFCRT_WaitForMutexForever(&g_vControlMutex, _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT);
+		_MCFCRT_WaitForMutexForever(&g_vMopthreadMutex, _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT);
 		{
-			_MCFCRT_AvlAttach(&g_avlControls, (_MCFCRT_AvlNodeHeader *)pControl, &MopthreadControlComparatorNodes);
+			_MCFCRT_AvlAttach(&g_avlMopthreadControls, (_MCFCRT_AvlNodeHeader *)pControl, &MopthreadControlComparatorNodes);
 		}
-		_MCFCRT_SignalMutex(&g_vControlMutex);
+		_MCFCRT_SignalMutex(&g_vMopthreadMutex);
 
 		_MCFCRT_ResumeThread(hThread);
 	}
@@ -274,16 +274,16 @@ uintptr_t __MCFCRT_MopthreadCreateDetached(void (*pfnProc)(void *), const void *
 void __MCFCRT_MopthreadExit(void (*pfnModifier)(void *, intptr_t), intptr_t nContext){
 	const uintptr_t uTid = _MCFCRT_GetCurrentThreadId();
 
-	_MCFCRT_WaitForMutexForever(&g_vControlMutex, _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT);
-	MopthreadControl *const pControl = (MopthreadControl *)_MCFCRT_AvlFind(&g_avlControls, (intptr_t)uTid, &MopthreadControlComparatorNodeKey);
-	SignalMutexAndExitThread(&g_vControlMutex, pControl, pfnModifier, nContext);
+	_MCFCRT_WaitForMutexForever(&g_vMopthreadMutex, _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT);
+	MopthreadControl *const pControl = (MopthreadControl *)_MCFCRT_AvlFind(&g_avlMopthreadControls, (intptr_t)uTid, &MopthreadControlComparatorNodeKey);
+	SignalMutexAndExitThread(&g_vMopthreadMutex, pControl, pfnModifier, nContext);
 }
 __MCFCRT_MopthreadErrorCode __MCFCRT_MopthreadJoin(uintptr_t uTid, void *restrict pParams){
 	__MCFCRT_MopthreadErrorCode eError;
 
-	_MCFCRT_WaitForMutexForever(&g_vControlMutex, _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT);
+	_MCFCRT_WaitForMutexForever(&g_vMopthreadMutex, _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT);
 	{
-		MopthreadControl *const pControl = (MopthreadControl *)_MCFCRT_AvlFind(&g_avlControls, (intptr_t)uTid, &MopthreadControlComparatorNodeKey);
+		MopthreadControl *const pControl = (MopthreadControl *)_MCFCRT_AvlFind(&g_avlMopthreadControls, (intptr_t)uTid, &MopthreadControlComparatorNodeKey);
 		if(!pControl){
 			eError = __MCFCRT_kMopthreadNotFound;
 		} else {
@@ -291,7 +291,7 @@ __MCFCRT_MopthreadErrorCode __MCFCRT_MopthreadJoin(uintptr_t uTid, void *restric
 			case kStateJoinable:
 				pControl->eState = kStateJoining;
 				do {
-					_MCFCRT_WaitForConditionVariableForever(&(pControl->vTermination), &UnlockCallbackNative, &RelockCallbackNative, (intptr_t)&g_vControlMutex);
+					_MCFCRT_WaitForConditionVariableForever(&(pControl->vTermination), &UnlockCallbackNative, &RelockCallbackNative, (intptr_t)&g_vMopthreadMutex);
 				} while(pControl->eState != kStateJoined);
 				eError = __MCFCRT_kMopthreadSuccess;
 				_MCFCRT_AvlDetach((_MCFCRT_AvlNodeHeader *)pControl);
@@ -323,16 +323,16 @@ __MCFCRT_MopthreadErrorCode __MCFCRT_MopthreadJoin(uintptr_t uTid, void *restric
 			}
 		}
 	}
-	_MCFCRT_SignalMutex(&g_vControlMutex);
+	_MCFCRT_SignalMutex(&g_vMopthreadMutex);
 
 	return eError;
 }
 __MCFCRT_MopthreadErrorCode __MCFCRT_MopthreadDetach(uintptr_t uTid){
 	__MCFCRT_MopthreadErrorCode eError;
 
-	_MCFCRT_WaitForMutexForever(&g_vControlMutex, _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT);
+	_MCFCRT_WaitForMutexForever(&g_vMopthreadMutex, _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT);
 	{
-		MopthreadControl *const pControl = (MopthreadControl *)_MCFCRT_AvlFind(&g_avlControls, (intptr_t)uTid, &MopthreadControlComparatorNodeKey);
+		MopthreadControl *const pControl = (MopthreadControl *)_MCFCRT_AvlFind(&g_avlMopthreadControls, (intptr_t)uTid, &MopthreadControlComparatorNodeKey);
 		if(!pControl){
 			eError = __MCFCRT_kMopthreadNotFound;
 		} else {
@@ -358,7 +358,7 @@ __MCFCRT_MopthreadErrorCode __MCFCRT_MopthreadDetach(uintptr_t uTid){
 			}
 		}
 	}
-	_MCFCRT_SignalMutex(&g_vControlMutex);
+	_MCFCRT_SignalMutex(&g_vMopthreadMutex);
 
 	return eError;
 }
@@ -367,8 +367,8 @@ static inline void MopthreadGlobalLock(HANDLE *phThread, uintptr_t uTid){
 	if(uTid == _MCFCRT_GetCurrentThreadId()){
 		*phThread = GetCurrentThread();
 	} else {
-		_MCFCRT_WaitForMutexForever(&g_vControlMutex, _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT);
-		MopthreadControl *const pControl = (MopthreadControl *)_MCFCRT_AvlFind(&g_avlControls, (intptr_t)uTid, &MopthreadControlComparatorNodeKey);
+		_MCFCRT_WaitForMutexForever(&g_vMopthreadMutex, _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT);
+		MopthreadControl *const pControl = (MopthreadControl *)_MCFCRT_AvlFind(&g_avlMopthreadControls, (intptr_t)uTid, &MopthreadControlComparatorNodeKey);
 		if(!pControl){
 			*phThread = nullptr;
 		} else {
@@ -380,7 +380,7 @@ static inline void MopthreadGlobalUnlock(uintptr_t uTid){
 	if(uTid == _MCFCRT_GetCurrentThreadId()){
 		//
 	} else {
-		_MCFCRT_SignalMutex(&g_vControlMutex);
+		_MCFCRT_SignalMutex(&g_vMopthreadMutex);
 	}
 }
 
@@ -626,7 +626,7 @@ _MCFCRT_TlsKeyHandle _MCFCRT_TlsAllocKey(size_t uSize, _MCFCRT_TlsConstructor pf
 		SetLastError(ERROR_NOT_ENOUGH_MEMORY);
 		return nullptr;
 	}
-	pKey->uCounter       = __atomic_add_fetch(&g_uKeyCounter, 1, __ATOMIC_RELAXED);
+	pKey->uCounter       = __atomic_add_fetch(&g_uTlsKeyCounter, 1, __ATOMIC_RELAXED);
 	pKey->uSize          = uSize;
 	pKey->pfnConstructor = pfnConstructor;
 	pKey->pfnDestructor  = pfnDestructor;

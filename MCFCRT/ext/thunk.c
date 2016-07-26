@@ -158,7 +158,7 @@ jBadAlloc:
 	return nullptr;
 }
 void _MCFCRT_DeallocateThunk(const void *pThunk, bool bToPoison){
-	char *const pbyRaw = (char *)pThunk;
+	unsigned char *const pbyRaw = (void *)pThunk;
 	void *pPageToRelease;
 
 	_MCFCRT_WaitForMutexForever(&g_vThunkMutex, _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT);

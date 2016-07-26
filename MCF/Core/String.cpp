@@ -8,10 +8,14 @@
 #include <winternl.h>
 #include <ntstatus.h>
 
-extern "C" __attribute__((__dllimport__, __stdcall__))
-NTSTATUS RtlMultiByteToUnicodeN(wchar_t *pwcBuffer, ULONG ulBufferSize, ULONG *pulBytesMax, const char *pchMultiByteString, ULONG ulMultiByteStringSize) noexcept;
-extern "C" __attribute__((__dllimport__, __stdcall__))
-NTSTATUS RtlUnicodeToMultiByteN(char *pchBuffer, ULONG ulBufferSize, ULONG *pulBytesMax, const wchar_t *pwcUnicodeString, ULONG ulUnicodeStringSize) noexcept;
+extern "C" {
+
+__attribute__((__dllimport__, __stdcall__))
+extern NTSTATUS RtlMultiByteToUnicodeN(wchar_t *pwcBuffer, ULONG ulBufferSize, ULONG *pulBytesMax, const char *pchMultiByteString, ULONG ulMultiByteStringSize) noexcept;
+__attribute__((__dllimport__, __stdcall__))
+extern NTSTATUS RtlUnicodeToMultiByteN(char *pchBuffer, ULONG ulBufferSize, ULONG *pulBytesMax, const wchar_t *pwcUnicodeString, ULONG ulUnicodeStringSize) noexcept;
+
+}
 
 namespace MCF {
 

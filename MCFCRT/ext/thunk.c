@@ -61,8 +61,6 @@ static int FreeSizeComparatorNodes(const _MCFCRT_AvlNodeHeader *pIndex1, const _
 }
 
 static _MCFCRT_Mutex    g_vThunkMutex         = { 0 };
-static uintptr_t        g_uPageMask           = 0;
-
 static _MCFCRT_AvlRoot  g_avlThunksByThunk    = nullptr;
 static _MCFCRT_AvlRoot  g_avlThunksByFreeSize = nullptr;
 
@@ -73,12 +71,6 @@ const void *_MCFCRT_AllocateThunk(const void *pInit, size_t uSize){
 
 	_MCFCRT_WaitForMutexForever(&g_vThunkMutex, _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT);
 	{
-		if(g_uPageMask == 0){
-			SYSTEM_INFO vSystemInfo;
-			GetSystemInfo(&vSystemInfo);
-			g_uPageMask = vSystemInfo.dwPageSize - 1;
-		}
-
 		size_t uThunkSize = uSize + 8;
 		uThunkSize = (uThunkSize + 0x0F) & (size_t)-0x10;
 		if(uThunkSize < uSize){

@@ -4,7 +4,7 @@
 
 #include "../../env/_crtdef.h"
 
-static inline uintptr_t BytewiseSwap(uintptr_t val){
+static inline uintptr_t SwapBytewise(uintptr_t val){
 	uintptr_t ret = val;
 	ret = ((ret >>  8) & 0x00FF00FF) | ((ret <<  8) & 0xFF00FF00);
 	ret = ((ret >> 16) & 0x0000FFFF) | ((ret << 16) & 0xFFFF0000);
@@ -32,7 +32,7 @@ int memcmp(const void *p1, const void *p2, size_t cb){
 			const uintptr_t wrd1 = ((const uintptr_t *)rp1)[idx_];	\
 			const uintptr_t wrd2 = ((const uintptr_t *)rp2)[idx_];	\
 			if(wrd1 != wrd2){	\
-				return (BytewiseSwap(wrd1) > BytewiseSwap(wrd2)) ? 1 : -1;	\
+				return (SwapBytewise(wrd1) > SwapBytewise(wrd2)) ? 1 : -1;	\
 			}	\
 		}
 

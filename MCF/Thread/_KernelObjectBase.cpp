@@ -10,8 +10,12 @@
 #include <winternl.h>
 #include <ntdef.h>
 
-extern "C" __attribute__((__dllimport__, __stdcall__))
-NTSTATUS NtOpenDirectoryObject(HANDLE *pHandle, ACCESS_MASK dwDesiredAccess, const OBJECT_ATTRIBUTES *pObjectAttributes) noexcept;
+extern "C" {
+
+__attribute__((__dllimport__, __stdcall__))
+extern NTSTATUS NtOpenDirectoryObject(HANDLE *pHandle, ACCESS_MASK dwDesiredAccess, const OBJECT_ATTRIBUTES *pObjectAttributes) noexcept;
+
+}
 
 namespace MCF {
 

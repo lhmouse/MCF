@@ -26,6 +26,9 @@ extern NTSTATUS NtResumeThread(HANDLE hThread, LONG *plPrevCount);
 
 static DWORD g_dwTlsIndex = TLS_OUT_OF_INDEXES;
 
+static _MCFCRT_Mutex   g_vMopthreadMutex      = { 0 };
+static _MCFCRT_AvlRoot g_avlMopthreadControls = nullptr;
+
 bool __MCFCRT_ThreadEnvInit(void){
 	const DWORD dwTlsIndex = TlsAlloc();
 	if(dwTlsIndex == TLS_OUT_OF_INDEXES){
@@ -117,10 +120,6 @@ void _MCFCRT_WaitForThreadForever(_MCFCRT_ThreadHandle hThread){
 uintptr_t _MCFCRT_GetCurrentThreadId(void){
 	return GetCurrentThreadId();
 }
-
-static _MCFCRT_Mutex   g_vMopthreadMutex      = { 0 };
-static _MCFCRT_AvlRoot g_avlMopthreadControls = nullptr;
-static volatile size_t g_uTlsKeyCounter       = 0;
 
 typedef enum tagMopthreadState {
 	kStateJoinable,
@@ -621,17 +620,18 @@ void __MCFCRT_TlsCleanup(void){
 }
 
 _MCFCRT_TlsKeyHandle _MCFCRT_TlsAllocKey(size_t uSize, _MCFCRT_TlsConstructor pfnConstructor, _MCFCRT_TlsDestructor pfnDestructor, intptr_t nContext){
+	static volatile size_t s_uTlsKeyCounter = 0;
+
 	TlsKey *const pKey = _MCFCRT_malloc(sizeof(TlsKey));
 	if(!pKey){
 		SetLastError(ERROR_NOT_ENOUGH_MEMORY);
 		return nullptr;
 	}
-	pKey->uCounter       = __atomic_add_fetch(&g_uTlsKeyCounter, 1, __ATOMIC_RELAXED);
+	pKey->uCounter       = __atomic_add_fetch(&s_uTlsKeyCounter, 1, __ATOMIC_RELAXED);
 	pKey->uSize          = uSize;
 	pKey->pfnConstructor = pfnConstructor;
 	pKey->pfnDestructor  = pfnDestructor;
 	pKey->nContext       = nContext;
-
 	return (_MCFCRT_TlsKeyHandle)pKey;
 }
 void _MCFCRT_TlsFreeKey(_MCFCRT_TlsKeyHandle hTlsKey){

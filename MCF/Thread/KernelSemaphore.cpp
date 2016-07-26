@@ -10,13 +10,17 @@
 #include <ntdef.h>
 #include <ntstatus.h>
 
-extern "C" __attribute__((__dllimport__, __stdcall__))
-NTSTATUS NtOpenSemaphore(HANDLE *pHandle, ACCESS_MASK dwDesiredAccess, const OBJECT_ATTRIBUTES *pObjectAttributes) noexcept;
-extern "C" __attribute__((__dllimport__, __stdcall__))
-NTSTATUS NtCreateSemaphore(HANDLE *pHandle, ACCESS_MASK dwDesiredAccess, const OBJECT_ATTRIBUTES *pObjectAttributes, LONG lInitialCount, LONG lMaximumCount) noexcept;
+extern "C" {
 
-extern "C" __attribute__((__dllimport__, __stdcall__))
-NTSTATUS NtReleaseSemaphore(HANDLE hSemaphore, LONG lReleaseCount, LONG *plPrevCount) noexcept;
+__attribute__((__dllimport__, __stdcall__))
+extern NTSTATUS NtOpenSemaphore(HANDLE *pHandle, ACCESS_MASK dwDesiredAccess, const OBJECT_ATTRIBUTES *pObjectAttributes) noexcept;
+__attribute__((__dllimport__, __stdcall__))
+extern NTSTATUS NtCreateSemaphore(HANDLE *pHandle, ACCESS_MASK dwDesiredAccess, const OBJECT_ATTRIBUTES *pObjectAttributes, LONG lInitialCount, LONG lMaximumCount) noexcept;
+
+__attribute__((__dllimport__, __stdcall__))
+extern NTSTATUS NtReleaseSemaphore(HANDLE hSemaphore, LONG lReleaseCount, LONG *plPrevCount) noexcept;
+
+}
 
 namespace MCF {
 

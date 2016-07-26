@@ -4,7 +4,7 @@
 
 #include "../../env/_crtdef.h"
 
-static inline uintptr_t WordwiseSwap(uintptr_t val){
+static inline uintptr_t SwapWordwise(uintptr_t val){
 	uintptr_t ret = val;
 	ret = ((ret >> 16) & 0x0000FFFF) | ((ret << 16) & 0xFFFF0000);
 #ifdef _WIN64
@@ -31,7 +31,7 @@ int wmemcmp(const wchar_t *p1, const wchar_t *p2, size_t cnt){
 			const uintptr_t wrd1 = ((const uintptr_t *)rp1)[idx_];	\
 			const uintptr_t wrd2 = ((const uintptr_t *)rp2)[idx_];	\
 			if(wrd1 != wrd2){	\
-				return (WordwiseSwap(wrd1) > WordwiseSwap(wrd2)) ? 1 : -1;	\
+				return (SwapWordwise(wrd1) > SwapWordwise(wrd2)) ? 1 : -1;	\
 			}	\
 		}
 

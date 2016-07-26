@@ -10,10 +10,12 @@
 #include <ntdef.h>
 #include <ntstatus.h>
 
-extern "C" __attribute__((__dllimport__, __stdcall__))
-NTSTATUS NtOpenEvent(HANDLE *pHandle, ACCESS_MASK dwDesiredAccess, const OBJECT_ATTRIBUTES *pObjectAttributes) noexcept;
-extern "C" __attribute__((__dllimport__, __stdcall__))
-NTSTATUS NtCreateEvent(HANDLE *pHandle, ACCESS_MASK dwDesiredAccess, const OBJECT_ATTRIBUTES *pObjectAttributes, EVENT_TYPE eEventType, BOOLEAN bInitialState) noexcept;
+extern "C" {
+
+__attribute__((__dllimport__, __stdcall__))
+extern NTSTATUS NtOpenEvent(HANDLE *pHandle, ACCESS_MASK dwDesiredAccess, const OBJECT_ATTRIBUTES *pObjectAttributes) noexcept;
+__attribute__((__dllimport__, __stdcall__))
+extern NTSTATUS NtCreateEvent(HANDLE *pHandle, ACCESS_MASK dwDesiredAccess, const OBJECT_ATTRIBUTES *pObjectAttributes, EVENT_TYPE eEventType, BOOLEAN bInitialState) noexcept;
 
 typedef enum tagEventInformationClass {
 	EventBasicInformation,
@@ -24,12 +26,14 @@ typedef struct tagEVENT_BASIC_INFORMATION {
 	LONG lState;
 } EVENT_BASIC_INFORMATION;
 
-extern "C" __attribute__((__dllimport__, __stdcall__))
-NTSTATUS NtQueryEvent(HANDLE hEvent, EVENT_INFORMATION_CLASS eInfoClass, void *pInfo, DWORD dwInfoSize, DWORD *pdwInfoSizeRet) noexcept;
-extern "C" __attribute__((__dllimport__, __stdcall__))
-NTSTATUS NtSetEvent(HANDLE hEvent, LONG *plPrevState) noexcept;
-extern "C" __attribute__((__dllimport__, __stdcall__))
-NTSTATUS NtResetEvent(HANDLE hEvent, LONG *plPrevState) noexcept;
+__attribute__((__dllimport__, __stdcall__))
+extern NTSTATUS NtQueryEvent(HANDLE hEvent, EVENT_INFORMATION_CLASS eInfoClass, void *pInfo, DWORD dwInfoSize, DWORD *pdwInfoSizeRet) noexcept;
+__attribute__((__dllimport__, __stdcall__))
+extern NTSTATUS NtSetEvent(HANDLE hEvent, LONG *plPrevState) noexcept;
+__attribute__((__dllimport__, __stdcall__))
+extern NTSTATUS NtResetEvent(HANDLE hEvent, LONG *plPrevState) noexcept;
+
+}
 
 namespace MCF {
 

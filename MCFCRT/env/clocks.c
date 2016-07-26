@@ -7,37 +7,33 @@
 #include "bail.h"
 
 static uint64_t GetTimeZoneOffsetInMillisecondsOnce(void){
-	static uint64_t *volatile s_pu64Inited;
-	static uint64_t           s_u64Value;
+	static uint64_t s_u64Value, *volatile s_pu64Inited;
 
 	uint64_t *pInited = __atomic_load_n(&s_pu64Inited, __ATOMIC_CONSUME);
 	if(!pInited){
-		pInited = &s_u64Value;
-
 		DYNAMIC_TIME_ZONE_INFORMATION vInfo;
 		if(GetDynamicTimeZoneInformation(&vInfo) == TIME_ZONE_ID_INVALID){
 			_MCFCRT_Bail(L"GetDynamicTimeZoneInformation() 失败。");
 		}
-		*pInited = (uint64_t)(vInfo.Bias * -60000ll);
+		const uint64_t u64Value = (uint64_t)(vInfo.Bias * -60000ll);
 
+		pInited = __builtin_memcpy(&s_u64Value, &u64Value, sizeof(u64Value));
 		__atomic_store_n(&s_pu64Inited, pInited, __ATOMIC_RELEASE);
 	}
 	return *pInited;
 }
 static double QueryPerformanceFrequencyReciprocalOnce(void){
-	static double *volatile s_plfInited;
-	static double           s_ulfValue;
+	static double s_lfValue, *volatile s_plfInited;
 
 	double *pInited = __atomic_load_n(&s_plfInited, __ATOMIC_CONSUME);
 	if(!pInited){
-		pInited = &s_ulfValue;
-
 		LARGE_INTEGER liFreq;
 		if(!QueryPerformanceFrequency(&liFreq)){
 			_MCFCRT_Bail(L"QueryPerformanceFrequency() 失败。");
 		}
-		*pInited = 1000.0 / (double)liFreq.QuadPart;
+		const double lfValue = 1000.0 / (double)liFreq.QuadPart;
 
+		pInited = __builtin_memcpy(&s_lfValue, &lfValue, sizeof(lfValue));
 		__atomic_store_n(&s_plfInited, pInited, __ATOMIC_RELEASE);
 	}
 	return *pInited;

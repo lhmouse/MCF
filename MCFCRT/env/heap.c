@@ -8,11 +8,10 @@
 #include "mutex.h"
 #include "mcfwin.h"
 #include "bail.h"
-#include <errno.h>
 
 static _MCFCRT_Mutex g_vHeapMutex = { 0 };
 
-#define HEAP_MUTEX_SPIN_COUNT     ((unsigned)4000)
+#define HEAP_MUTEX_SPIN_COUNT     4000u
 
 bool __MCFCRT_HeapInit(void){
 	// 启用 FLH，但是忽略任何错误。
@@ -24,7 +23,7 @@ bool __MCFCRT_HeapInit(void){
 void __MCFCRT_HeapUninit(void){
 }
 
-unsigned char *__MCFCRT_HeapAlloc(size_t uSize, bool bFillsWithZero, const void *pRetAddr){
+unsigned char *__MCFCRT_HeapAlloc(size_t uSize, bool bFillsWithZero, const void *pbyRetAddr){
 #if __MCFCRT_REQUIRE_HEAPDBG_LEVEL(1)
 	SetLastError(0xDEADBEEF);
 #endif
@@ -39,50 +38,49 @@ unsigned char *__MCFCRT_HeapAlloc(size_t uSize, bool bFillsWithZero, const void 
 #endif
 
 	for(;;){
-		unsigned char *pRet = nullptr;
+		unsigned char *pbyRet = nullptr;
 
 		_MCFCRT_WaitForMutexForever(&g_vHeapMutex, HEAP_MUTEX_SPIN_COUNT);
 		{
-			unsigned char *const pRaw = HeapAlloc(GetProcessHeap(), bFillsWithZero ? HEAP_ZERO_MEMORY : 0, uRawSize);
-			if(pRaw){
+			unsigned char *const pbyRaw = HeapAlloc(GetProcessHeap(), bFillsWithZero ? HEAP_ZERO_MEMORY : 0, uRawSize);
+			if(pbyRaw){
 #if __MCFCRT_REQUIRE_HEAPDBG_LEVEL(3)
 				__MCFCRT_HeapDbgBlockInfo *const pBlockInfo = __MCFCRT_HeapDbgAllocateBlockInfo();
 				if(!pBlockInfo){
-					HeapFree(GetProcessHeap(), 0, pRaw);
+					HeapFree(GetProcessHeap(), 0, pbyRaw);
 					goto jFailed;
 				}
-				pRet = __MCFCRT_HeapDbgRegisterBlockInfo(pBlockInfo, pRaw, uSize, pRetAddr);
+				pbyRet = __MCFCRT_HeapDbgRegisterBlockInfo(pBlockInfo, pbyRaw, uSize, pbyRetAddr);
 #elif __MCFCRT_REQUIRE_HEAPDBG_LEVEL(2)
-				pRet = __MCFCRT_HeapDbgAddBlockGuardsBasic(pRaw);
+				pbyRet = __MCFCRT_HeapDbgAddBlockGuardsBasic(pbyRaw);
 #else
-				pRet = pRaw;
+				pbyRet = pbyRaw;
 #endif
 
 #if __MCFCRT_REQUIRE_HEAPDBG_LEVEL(4)
 				if(!bFillsWithZero){
-					memset(pRet, 0xCD, uSize);
+					memset(pbyRet, 0xCD, uSize);
 				}
 #endif
 			}
 		}
-#if __MCFCRT_REQUIRE_HEAPDBG_LEVEL(3)
-	jFailed:
-#endif
+	jFailed: __attribute__((__unused__))
+		;
 		_MCFCRT_SignalMutex(&g_vHeapMutex);
 
-		if(pRet){
+		if(pbyRet){
 			if(_MCFCRT_pfnOnHeapAlloc){
-				(*_MCFCRT_pfnOnHeapAlloc)(pRet, uSize, pRetAddr);
+				(*_MCFCRT_pfnOnHeapAlloc)(pbyRet, uSize, pbyRetAddr);
 			}
-			return pRet;
+			return pbyRet;
 		}
 
-		if(!(_MCFCRT_pfnOnHeapBadAlloc && (*_MCFCRT_pfnOnHeapBadAlloc)(pRetAddr))){
+		if(!(_MCFCRT_pfnOnHeapBadAlloc && (*_MCFCRT_pfnOnHeapBadAlloc)(pbyRetAddr))){
 			return nullptr;
 		}
 	}
 }
-unsigned char *__MCFCRT_HeapRealloc(void *pBlock, size_t uSize, bool bFillsWithZero, const void *pRetAddr){
+unsigned char *__MCFCRT_HeapRealloc(void *pBlock, size_t uSize, bool bFillsWithZero, const void *pbyRetAddr){
 #if __MCFCRT_REQUIRE_HEAPDBG_LEVEL(1)
 	SetLastError(0xDEADBEEF);
 #endif
@@ -96,7 +94,7 @@ unsigned char *__MCFCRT_HeapRealloc(void *pBlock, size_t uSize, bool bFillsWithZ
 	const size_t uRawSize = uSize;
 #endif
 
-	unsigned char *pRawOriginal;
+	unsigned char *pbyRawOriginal;
 #if __MCFCRT_REQUIRE_HEAPDBG_LEVEL(2)
 #	if __MCFCRT_REQUIRE_HEAPDBG_LEVEL(3)
 	__MCFCRT_HeapDbgBlockInfo *pBlockInfo;
@@ -107,87 +105,87 @@ unsigned char *__MCFCRT_HeapRealloc(void *pBlock, size_t uSize, bool bFillsWithZ
 	_MCFCRT_WaitForMutexForever(&g_vHeapMutex, HEAP_MUTEX_SPIN_COUNT);
 	{
 #	if __MCFCRT_REQUIRE_HEAPDBG_LEVEL(3)
-		pBlockInfo = __MCFCRT_HeapDbgValidateBlock(&pRawOriginal, pBlock, pRetAddr);
+		pBlockInfo = __MCFCRT_HeapDbgValidateBlock(&pbyRawOriginal, pBlock, pbyRetAddr);
 #		if __MCFCRT_REQUIRE_HEAPDBG_LEVEL(4)
 		if(pBlockInfo){
 			uOriginalSize = pBlockInfo->__uSize;
 		} else {
-			uOriginalSize = HeapSize(GetProcessHeap(), 0, pRawOriginal);
+			uOriginalSize = HeapSize(GetProcessHeap(), 0, pbyRawOriginal);
 		}
 #		endif
 #	else
-		__MCFCRT_HeapDbgValidateBlockBasic(&pRawOriginal, pBlock, pRetAddr);
+		__MCFCRT_HeapDbgValidateBlockBasic(&pbyRawOriginal, pBlock, pbyRetAddr);
 #	endif
 	}
 	_MCFCRT_SignalMutex(&g_vHeapMutex);
 #else
-	pRawOriginal = pBlock;
+	pbyRawOriginal = pBlock;
 #endif
 
 	for(;;){
-		unsigned char *pRet = nullptr;
+		unsigned char *pbyRet = nullptr;
 
 		_MCFCRT_WaitForMutexForever(&g_vHeapMutex, HEAP_MUTEX_SPIN_COUNT);
 		{
-			unsigned char *const pRaw = HeapReAlloc(GetProcessHeap(), bFillsWithZero ? HEAP_ZERO_MEMORY : 0, pRawOriginal, uRawSize);
-			if(pRaw){
+			unsigned char *const pbyRaw = HeapReAlloc(GetProcessHeap(), bFillsWithZero ? HEAP_ZERO_MEMORY : 0, pbyRawOriginal, uRawSize);
+			if(pbyRaw){
 #if __MCFCRT_REQUIRE_HEAPDBG_LEVEL(3)
 				__MCFCRT_HeapDbgUnregisterBlockInfo(pBlockInfo);
-				pRet = __MCFCRT_HeapDbgRegisterBlockInfo(pBlockInfo, pRaw, uSize, pRetAddr);
+				pbyRet = __MCFCRT_HeapDbgRegisterBlockInfo(pBlockInfo, pbyRaw, uSize, pbyRetAddr);
 #elif __MCFCRT_REQUIRE_HEAPDBG_LEVEL(2)
-				pRet = __MCFCRT_HeapDbgAddBlockGuardsBasic(pRaw);
+				pbyRet = __MCFCRT_HeapDbgAddBlockGuardsBasic(pbyRaw);
 #else
-				pRet = pRaw;
+				pbyRet = pbyRaw;
 #endif
 
 #if __MCFCRT_REQUIRE_HEAPDBG_LEVEL(4)
 				if(!bFillsWithZero && (uOriginalSize < uSize)){
-					memset(pRet + uOriginalSize, 0xCD, uSize - uOriginalSize);
+					memset(pbyRet + uOriginalSize, 0xCD, uSize - uOriginalSize);
 				}
 #endif
 			}
 		}
 		_MCFCRT_SignalMutex(&g_vHeapMutex);
 
-		if(pRet){
+		if(pbyRet){
 			if(_MCFCRT_pfnOnHeapRealloc){
-				(*_MCFCRT_pfnOnHeapRealloc)(pRet, pBlock, uSize, pRetAddr);
+				(*_MCFCRT_pfnOnHeapRealloc)(pbyRet, pBlock, uSize, pbyRetAddr);
 			}
-			return pRet;
+			return pbyRet;
 		}
 
-		if(!(_MCFCRT_pfnOnHeapBadAlloc && (*_MCFCRT_pfnOnHeapBadAlloc)(pRetAddr))){
+		if(!(_MCFCRT_pfnOnHeapBadAlloc && (*_MCFCRT_pfnOnHeapBadAlloc)(pbyRetAddr))){
 			return nullptr;
 		}
 	}
 }
-void __MCFCRT_HeapFree(void *pBlock, const void *pRetAddr){
+void __MCFCRT_HeapFree(void *pBlock, const void *pbyRetAddr){
 #if __MCFCRT_REQUIRE_HEAPDBG_LEVEL(1)
 	SetLastError(0xDEADBEEF);
 #endif
 
 	_MCFCRT_WaitForMutexForever(&g_vHeapMutex, HEAP_MUTEX_SPIN_COUNT);
 	{
-		unsigned char *pRaw;
+		unsigned char *pbyRaw;
 #if __MCFCRT_REQUIRE_HEAPDBG_LEVEL(3)
-		__MCFCRT_HeapDbgBlockInfo *const pBlockInfo = __MCFCRT_HeapDbgValidateBlock(&pRaw, pBlock, pRetAddr);
+		__MCFCRT_HeapDbgBlockInfo *const pBlockInfo = __MCFCRT_HeapDbgValidateBlock(&pbyRaw, pBlock, pbyRetAddr);
 
 		__MCFCRT_HeapDbgUnregisterBlockInfo(pBlockInfo);
 		__MCFCRT_HeapDbgDeallocateBlockInfo(pBlockInfo);
 #elif __MCFCRT_REQUIRE_HEAPDBG_LEVEL(2)
-		__MCFCRT_HeapDbgValidateBlockBasic(&pRaw, pBlock, pRetAddr);
+		__MCFCRT_HeapDbgValidateBlockBasic(&pbyRaw, pBlock, pbyRetAddr);
 #else
-		pRaw = pBlock;
+		pbyRaw = pBlock;
 #endif
 
 #if __MCFCRT_REQUIRE_HEAPDBG_LEVEL(4)
-		memset(pRaw, 0xFE, HeapSize(GetProcessHeap(), 0, pRaw));
+		memset(pbyRaw, 0xFE, HeapSize(GetProcessHeap(), 0, pbyRaw));
 #endif
-		HeapFree(GetProcessHeap(), 0, pRaw);
+		HeapFree(GetProcessHeap(), 0, pbyRaw);
 	}
 	_MCFCRT_SignalMutex(&g_vHeapMutex);
 
 	if(_MCFCRT_pfnOnHeapFree){
-		(*_MCFCRT_pfnOnHeapFree)(pBlock, pRetAddr);
+		(*_MCFCRT_pfnOnHeapFree)(pBlock, pbyRetAddr);
 	}
 }

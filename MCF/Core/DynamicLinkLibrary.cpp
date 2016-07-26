@@ -9,12 +9,16 @@
 #include <ntdef.h>
 #include <ntstatus.h>
 
-extern "C" __attribute__((__dllimport__, __stdcall__))
-NTSTATUS LdrLoadDll(PCWSTR pwszPathToSearch, DWORD dwFlags, const ::UNICODE_STRING *pFileName, HANDLE *pHandle) noexcept;
-extern "C" __attribute__((__dllimport__, __stdcall__))
-NTSTATUS LdrUnloadDll(HANDLE hDll) noexcept;
-extern "C" __attribute__((__dllimport__, __stdcall__))
-NTSTATUS LdrGetProcedureAddress(HANDLE hDll, const ANSI_STRING *pProcName, WORD wOrdinal, FARPROC *ppfnProcAddress) noexcept;
+extern "C" {
+
+__attribute__((__dllimport__, __stdcall__))
+extern NTSTATUS LdrLoadDll(PCWSTR pwszPathToSearch, DWORD dwFlags, const ::UNICODE_STRING *pFileName, HANDLE *pHandle) noexcept;
+__attribute__((__dllimport__, __stdcall__))
+extern NTSTATUS LdrUnloadDll(HANDLE hDll) noexcept;
+__attribute__((__dllimport__, __stdcall__))
+extern NTSTATUS LdrGetProcedureAddress(HANDLE hDll, const ANSI_STRING *pProcName, WORD wOrdinal, FARPROC *ppfnProcAddress) noexcept;
+
+}
 
 namespace MCF {
 

@@ -13,8 +13,10 @@
 #include <ntdef.h>
 #include <ntstatus.h>
 
-extern "C" __attribute__((__dllimport__, __stdcall__))
-NTSTATUS NtOpenDirectoryObject(HANDLE *pHandle, ACCESS_MASK dwDesiredAccess, const OBJECT_ATTRIBUTES *pObjectAttributes) noexcept;
+extern "C" {
+
+__attribute__((__dllimport__, __stdcall__))
+extern NTSTATUS NtOpenDirectoryObject(HANDLE *pHandle, ACCESS_MASK dwDesiredAccess, const OBJECT_ATTRIBUTES *pObjectAttributes) noexcept;
 
 typedef enum tagRTL_PATH_TYPE {
 	RtlPathTypeUnknown,
@@ -27,19 +29,21 @@ typedef enum tagRTL_PATH_TYPE {
 	RtlPathTypeRootLocalDevice,
 } RTL_PATH_TYPE;
 
-extern "C" __attribute__((__dllimport__, __stdcall__))
-NTSTATUS RtlGetFullPathName_UstrEx(const UNICODE_STRING *pFileName, UNICODE_STRING *pStaticBuffer, UNICODE_STRING *pDynamicBuffer,
+__attribute__((__dllimport__, __stdcall__))
+extern NTSTATUS RtlGetFullPathName_UstrEx(const UNICODE_STRING *pFileName, UNICODE_STRING *pStaticBuffer, UNICODE_STRING *pDynamicBuffer,
 	UNICODE_STRING **ppWhichBufferIsUsed, SIZE_T *puPrefixChars, BOOLEAN *pbValid, RTL_PATH_TYPE *pePathType, SIZE_T *puBytesRequired);
 
-extern "C" __attribute__((__dllimport__, __stdcall__))
-NTSTATUS NtReadFile(HANDLE hFile, HANDLE hEvent, PIO_APC_ROUTINE pfnApcRoutine, void *pApcContext, IO_STATUS_BLOCK *pIoStatus,
+__attribute__((__dllimport__, __stdcall__))
+extern NTSTATUS NtReadFile(HANDLE hFile, HANDLE hEvent, PIO_APC_ROUTINE pfnApcRoutine, void *pApcContext, IO_STATUS_BLOCK *pIoStatus,
 	void *pBuffer, ULONG ulLength, LARGE_INTEGER *pliOffset, ULONG *pulKey) noexcept;
-extern "C" __attribute__((__dllimport__, __stdcall__))
-NTSTATUS NtWriteFile(HANDLE hFile, HANDLE hEvent, PIO_APC_ROUTINE pfnApcRoutine, void *pApcContext, IO_STATUS_BLOCK *pIoStatus,
+__attribute__((__dllimport__, __stdcall__))
+extern NTSTATUS NtWriteFile(HANDLE hFile, HANDLE hEvent, PIO_APC_ROUTINE pfnApcRoutine, void *pApcContext, IO_STATUS_BLOCK *pIoStatus,
 	const void *pBuffer, ULONG ulLength, LARGE_INTEGER *pliOffset, ULONG *pulKey) noexcept;
 
-extern "C" __attribute__((__dllimport__, __stdcall__))
-NTSTATUS NtFlushBuffersFile(HANDLE hFile, IO_STATUS_BLOCK *pIoStatus) noexcept;
+__attribute__((__dllimport__, __stdcall__))
+extern NTSTATUS NtFlushBuffersFile(HANDLE hFile, IO_STATUS_BLOCK *pIoStatus) noexcept;
+
+}
 
 namespace MCF {
 

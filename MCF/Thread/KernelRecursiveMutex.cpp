@@ -10,13 +10,17 @@
 #include <ntdef.h>
 #include <ntstatus.h>
 
-extern "C" __attribute__((__dllimport__, __stdcall__))
-NTSTATUS NtOpenMutant(HANDLE *pHandle, ACCESS_MASK dwDesiredAccess, const OBJECT_ATTRIBUTES *pObjectAttributes) noexcept;
-extern "C" __attribute__((__dllimport__, __stdcall__))
-NTSTATUS NtCreateMutant(HANDLE *pHandle, ACCESS_MASK dwDesiredAccess, const OBJECT_ATTRIBUTES *pObjectAttributes, BOOLEAN bInitialOwner) noexcept;
+extern "C" {
 
-extern "C" __attribute__((__dllimport__, __stdcall__))
-NTSTATUS NtReleaseMutant(HANDLE hMutant, LONG *plPrevCount) noexcept;
+__attribute__((__dllimport__, __stdcall__))
+extern NTSTATUS NtOpenMutant(HANDLE *pHandle, ACCESS_MASK dwDesiredAccess, const OBJECT_ATTRIBUTES *pObjectAttributes) noexcept;
+__attribute__((__dllimport__, __stdcall__))
+extern NTSTATUS NtCreateMutant(HANDLE *pHandle, ACCESS_MASK dwDesiredAccess, const OBJECT_ATTRIBUTES *pObjectAttributes, BOOLEAN bInitialOwner) noexcept;
+
+__attribute__((__dllimport__, __stdcall__))
+extern NTSTATUS NtReleaseMutant(HANDLE hMutant, LONG *plPrevCount) noexcept;
+
+}
 
 namespace MCF {
 

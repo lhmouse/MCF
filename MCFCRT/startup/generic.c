@@ -5,8 +5,9 @@
 #include "generic.h"
 #include "exe.h"
 #include "dll.h"
-#include "../env/mcfwin.h"
 #include "../env/_seh_top.h"
+#include "../env/_crt_process.h"
+#include "../env/mcfwin.h"
 #include "../env/standard_streams.h"
 #include "../env/module.h"
 #include "../env/thread.h"
@@ -28,29 +29,33 @@ bool __MCFCRT_TlsCallbackGeneric(void *pInstance, unsigned uReason, bool bDynami
 				break;
 			}
 			__MCFCRT_FEnvInit();
-			bRet = __MCFCRT_StandardStreamsInit();
+			bRet = __MCFCRT_ProcessInit();
 			if(!bRet){
 				goto jCleanup_00;
 			}
-			bRet = __MCFCRT_HeapInit();
+			bRet = __MCFCRT_StandardStreamsInit();
 			if(!bRet){
 				goto jCleanup_01;
 			}
-			bRet = __MCFCRT_HeapDbgInit();
+			bRet = __MCFCRT_HeapInit();
 			if(!bRet){
 				goto jCleanup_02;
 			}
-			bRet = __MCFCRT_CppRuntimeInit();
+			bRet = __MCFCRT_HeapDbgInit();
 			if(!bRet){
 				goto jCleanup_03;
 			}
-			bRet = __MCFCRT_ModuleInit();
+			bRet = __MCFCRT_CppRuntimeInit();
 			if(!bRet){
 				goto jCleanup_04;
 			}
-			bRet = __MCFCRT_ThreadEnvInit();
+			bRet = __MCFCRT_ModuleInit();
 			if(!bRet){
 				goto jCleanup_05;
+			}
+			bRet = __MCFCRT_ThreadEnvInit();
+			if(!bRet){
+				goto jCleanup_06;
 			}
 			if(_MCFCRT_OnDllProcessAttach){
 				bRet = _MCFCRT_OnDllProcessAttach(pInstance, bDynamic);
@@ -86,16 +91,18 @@ bool __MCFCRT_TlsCallbackGeneric(void *pInstance, unsigned uReason, bool bDynami
 		jCleanup_99:
 			__MCFCRT_TlsCleanup();
 			__MCFCRT_ThreadEnvUninit();
-		jCleanup_05:
+		jCleanup_06:
 			__MCFCRT_ModuleUninit();
-		jCleanup_04:
+		jCleanup_05:
 			__MCFCRT_CppRuntimeUninit();
-		jCleanup_03:
+		jCleanup_04:
 			__MCFCRT_HeapDbgUninit();
-		jCleanup_02:
+		jCleanup_03:
 			__MCFCRT_HeapUninit();
-		jCleanup_01:
+		jCleanup_02:
 			__MCFCRT_StandardStreamsUninit();
+		jCleanup_01:
+			__MCFCRT_ModuleUninit();
 		jCleanup_00:
 			break;
 		}

@@ -67,7 +67,7 @@ static _MCFCRT_AvlRoot  g_avlThunksByFreeSize = nullptr;
 const void *_MCFCRT_AllocateThunk(const void *pInit, size_t uSize){
 	_MCFCRT_ASSERT(pInit);
 
-	char *pRaw;
+	unsigned char *pbyRaw;
 
 	_MCFCRT_WaitForMutexForever(&g_vThunkMutex, _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT);
 	{
@@ -95,9 +95,9 @@ const void *_MCFCRT_AllocateThunk(const void *pInit, size_t uSize){
 				_MCFCRT_free(pInfo);
 				goto jBadAlloc;
 			}
-			pInfo->pThunk = pInfo->pChunk;
+			pInfo->pThunk     = pInfo->pChunk;
 			pInfo->uThunkSize = pInfo->uChunkSize;
-			pInfo->uFreeSize = pInfo->uChunkSize;
+			pInfo->uFreeSize  = pInfo->uChunkSize;
 
 			_MCFCRT_AvlAttach(&g_avlThunksByThunk, &(pInfo->vThunkIndex), &ThunkComparatorNodes);
 			_MCFCRT_AvlAttach(&g_avlThunksByFreeSize, &(pInfo->vFreeSizeIndex), &FreeSizeComparatorNodes);
@@ -122,7 +122,7 @@ const void *_MCFCRT_AllocateThunk(const void *pInit, size_t uSize){
 			}
 			pSpare->pChunk     = pInfo->pChunk;
 			pSpare->uChunkSize = pInfo->uChunkSize;
-			pSpare->pThunk     = (char *)pInfo->pThunk + uThunkSize;
+			pSpare->pThunk     = (unsigned char *)pInfo->pThunk + uThunkSize;
 			pSpare->uThunkSize = uRemaining;
 			pSpare->uFreeSize  = uRemaining;
 
@@ -138,18 +138,18 @@ const void *_MCFCRT_AllocateThunk(const void *pInit, size_t uSize){
 		pInfo->uFreeSize = 0;
 		_MCFCRT_AvlAttach(&g_avlThunksByFreeSize, &(pInfo->vFreeSizeIndex), &FreeSizeComparatorNodes);
 
-		pRaw = pInfo->pThunk;
+		pbyRaw = pInfo->pThunk;
 
 		// 由于其他 thunk 可能共享了当前内存页，所以不能设置为 PAGE_READWRITE。
 		DWORD dwOldProtect;
-		VirtualProtect(pRaw, uThunkSize, PAGE_EXECUTE_READWRITE, &dwOldProtect);
-		memcpy(pRaw, pInit, uSize);
-		memset(pRaw + uSize, 0xCC, uThunkSize - uSize);
-		VirtualProtect(pRaw, uThunkSize, PAGE_EXECUTE_READ, &dwOldProtect);
+		VirtualProtect(pbyRaw, uThunkSize, PAGE_EXECUTE_READWRITE, &dwOldProtect);
+		memcpy(pbyRaw, pInit, uSize);
+		memset(pbyRaw + uSize, 0xCC, uThunkSize - uSize);
+		VirtualProtect(pbyRaw, uThunkSize, PAGE_EXECUTE_READ, &dwOldProtect);
 	}
 	_MCFCRT_SignalMutex(&g_vThunkMutex);
 
-	return pRaw;
+	return pbyRaw;
 
 jBadAlloc:
 	_MCFCRT_SignalMutex(&g_vThunkMutex);
@@ -158,7 +158,7 @@ jBadAlloc:
 	return nullptr;
 }
 void _MCFCRT_DeallocateThunk(const void *pThunk, bool bToPoison){
-	char *const pRaw = (char *)pThunk;
+	char *const pbyRaw = (char *)pThunk;
 	void *pPageToRelease;
 
 	_MCFCRT_WaitForMutexForever(&g_vThunkMutex, _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT);
@@ -175,9 +175,9 @@ void _MCFCRT_DeallocateThunk(const void *pThunk, bool bToPoison){
 		if(bToPoison){
 			// 由于其他 thunk 可能共享了当前内存页，所以不能设置为 PAGE_READWRITE。
 			DWORD dwOldProtect;
-			VirtualProtect(pRaw, pInfo->uThunkSize, PAGE_EXECUTE_READWRITE, &dwOldProtect);
-			memset(pRaw, 0xCC, pInfo->uThunkSize);
-			VirtualProtect(pRaw, pInfo->uThunkSize, PAGE_EXECUTE_READ, &dwOldProtect);
+			VirtualProtect(pbyRaw, pInfo->uThunkSize, PAGE_EXECUTE_READWRITE, &dwOldProtect);
+			memset(pbyRaw, 0xCC, pInfo->uThunkSize);
+			VirtualProtect(pbyRaw, pInfo->uThunkSize, PAGE_EXECUTE_READ, &dwOldProtect);
 		}
 
 		_MCFCRT_AvlNodeHeader *const pNextThunkIndex = _MCFCRT_AvlNext(pThunkIndex);

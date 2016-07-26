@@ -24,7 +24,6 @@ extern NTSTATUS NtMapViewOfSection(HANDLE hSection, HANDLE hProcess, void **ppBa
 __attribute__((__dllimport__, __stdcall__))
 extern NTSTATUS NtUnmapViewOfSection(HANDLE hProcess, void *pBaseAddress);
 
-
 bool __MCFCRT_ProcessInit(void){
 	return true;
 }

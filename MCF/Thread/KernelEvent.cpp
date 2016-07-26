@@ -73,7 +73,7 @@ Impl_UniqueNtHandle::UniqueNtHandle KernelEvent::X_CreateEventHandle(bool bInitS
 		if(!NT_SUCCESS(lStatus)){
 			MCF_THROW(Exception, ::RtlNtStatusToDosError(lStatus), Rcntws::View(L"KernelEvent: NtCreateEvent() 失败。"));
 		}
-		bNameExists = lStatus == STATUS_OBJECT_NAME_EXISTS;
+		bNameExists = (lStatus == STATUS_OBJECT_NAME_EXISTS);
 	}
 	Impl_UniqueNtHandle::UniqueNtHandle hEvent(hTemp);
 

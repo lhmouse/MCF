@@ -73,7 +73,7 @@ Impl_UniqueNtHandle::UniqueNtHandle KernelMutex::X_CreateEventHandle(const WideS
 		if(!NT_SUCCESS(lStatus)){
 			MCF_THROW(Exception, ::RtlNtStatusToDosError(lStatus), Rcntws::View(L"KernelMutex: NtCreateEvent() 失败。"));
 		}
-		bNameExists = lStatus == STATUS_OBJECT_NAME_EXISTS;
+		bNameExists = (lStatus == STATUS_OBJECT_NAME_EXISTS);
 	}
 	Impl_UniqueNtHandle::UniqueNtHandle hEvent(hTemp);
 

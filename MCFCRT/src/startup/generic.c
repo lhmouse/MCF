@@ -14,6 +14,9 @@
 #include "../env/heap_dbg.h"
 
 static bool RealTlsCallback(void *pInstance, unsigned uReason, bool bDynamic){
+	(void)pInstance;
+	(void)bDynamic;
+
 	static bool s_bInitialized = false;
 
 	bool bRet = true;

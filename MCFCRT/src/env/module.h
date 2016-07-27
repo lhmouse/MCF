@@ -28,25 +28,6 @@ __MCFCRT_MODULE_INLINE_OR_EXTERN void *_MCFCRT_GetModuleBase(void) _MCFCRT_NOEXC
 	return (void *)__MCFCRT_ImageBase;
 }
 
-typedef struct __MCFCRT_tagModuleSectionInfo {
-	char __achName[8];
-	_MCFCRT_STD size_t __uRawSize;
-	void *__pBase;
-	_MCFCRT_STD size_t __uSize;
-
-	struct {
-		const void *__pTable;
-		_MCFCRT_STD size_t __uCount;
-		_MCFCRT_STD size_t __uNext;
-		void *__pReserved0;
-		void *__pReserved1;
-		void *__pReserved2;
-	} __vImpl;
-} _MCFCRT_ModuleSectionInfo;
-
-extern bool _MCFCRT_EnumerateFirstModuleSection(_MCFCRT_ModuleSectionInfo *__pInfo) _MCFCRT_NOEXCEPT;
-extern bool _MCFCRT_EnumerateNextModuleSection(_MCFCRT_ModuleSectionInfo *__pInfo) _MCFCRT_NOEXCEPT;
-
 _MCFCRT_EXTERN_C_END
 
 #endif

@@ -6,9 +6,7 @@
 #include "module.h"
 #include "mcfwin.h"
 #include "mutex.h"
-#include "fenv.h"
 #include "heap.h"
-#include "../ext/expect.h"
 
 typedef struct tagAtExitCallback {
 	_MCFCRT_AtModuleExitCallback pfnProc;
@@ -23,8 +21,8 @@ typedef struct tagAtExitCallbackBlock {
 	AtExitCallback aCallbacks[CALLBACKS_PER_BLOCK];
 } AtExitCallbackBlock;
 
-static _MCFCRT_Mutex           g_vAtExitMutex   = { 0 };
-static AtExitCallbackBlock *   g_pAtExitLast    = nullptr;
+static _MCFCRT_Mutex         g_vAtExitMutex = { 0 };
+static AtExitCallbackBlock * g_pAtExitLast  = nullptr;
 
 static void CrtAtModuleExitDestructor(void *pStorage){
 	AtExitCallbackBlock *const pBlock = pStorage;
@@ -120,41 +118,5 @@ bool _MCFCRT_AtModuleExit(_MCFCRT_AtModuleExitCallback pfnProc, intptr_t nContex
 		pCallback->nContext = nContext;
 	}
 	_MCFCRT_SignalMutex(&g_vAtExitMutex);
-	return true;
-}
-
-bool _MCFCRT_EnumerateFirstModuleSection(_MCFCRT_ModuleSectionInfo *pInfo){
-	const IMAGE_DOS_HEADER *const pImageBase = _MCFCRT_GetModuleBase();
-	if(pImageBase->e_magic != IMAGE_DOS_SIGNATURE){
-		SetLastError(ERROR_BAD_FORMAT);
-		return false;
-	}
-	const IMAGE_NT_HEADERS *const pNtHeaders = (const IMAGE_NT_HEADERS *)((char *)pImageBase + pImageBase->e_lfanew);
-	if(pNtHeaders->Signature != IMAGE_NT_SIGNATURE){
-		SetLastError(ERROR_BAD_FORMAT);
-		return false;
-	}
-
-	pInfo->__vImpl.__pTable = (const char *)&pNtHeaders->OptionalHeader + pNtHeaders->FileHeader.SizeOfOptionalHeader;
-	pInfo->__vImpl.__uCount = pNtHeaders->FileHeader.NumberOfSections;
-	pInfo->__vImpl.__uNext  = 0;
-
-	return _MCFCRT_EnumerateNextModuleSection(pInfo);
-}
-bool _MCFCRT_EnumerateNextModuleSection(_MCFCRT_ModuleSectionInfo *pInfo){
-	const size_t uIndex = pInfo->__vImpl.__uNext;
-	if(uIndex >= pInfo->__vImpl.__uCount){
-		SetLastError(ERROR_NO_MORE_ITEMS);
-		return false;
-	}
-	pInfo->__vImpl.__uNext = uIndex + 1;
-
-	const IMAGE_DOS_HEADER *const pImageBase = _MCFCRT_GetModuleBase();
-	const IMAGE_SECTION_HEADER *const pHeader = (const IMAGE_SECTION_HEADER *)pInfo->__vImpl.__pTable + uIndex;
-	memcpy(pInfo->__achName, pHeader->Name, 8);
-	pInfo->__uRawSize = pHeader->SizeOfRawData;
-	pInfo->__pBase    = (char *)pImageBase + pHeader->VirtualAddress;
-	pInfo->__uSize    = pHeader->Misc.VirtualSize;
-
 	return true;
 }

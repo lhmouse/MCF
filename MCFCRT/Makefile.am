@@ -166,7 +166,7 @@ bin_PROGRAMS =	\
 
 MCFCRT_9_dll_SOURCES =	\
 	${mcfcrt_sources}	\
-	src/startup/_cpp_runtime.c	\
+	src/startup/_frame_info.c	\
 	src/startup/dll.c
 
 MCFCRT_9_dll_DEPENDENCIES =	\
@@ -188,7 +188,7 @@ lib_LIBRARIES =	\
 	libMCFCRT.a
 
 libMCFCRT_pre_a_SOURCES =	\
-	src/startup/_cpp_runtime.c	\
+	src/startup/_frame_info.c	\
 	src/startup/dll.c	\
 	src/startup/exe.c
 

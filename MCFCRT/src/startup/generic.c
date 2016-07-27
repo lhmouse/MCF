@@ -3,7 +3,7 @@
 // Copyleft 2013 - 2016, LH_Mouse. All wrongs reserved.
 
 #include "generic.h"
-#include "_cpp_runtime.h"
+#include "_frame_info.h"
 #include "../env/_seh_top.h"
 #include "../env/mcfwin.h"
 #include "../env/standard_streams.h"
@@ -40,7 +40,7 @@ static bool RealTlsCallback(void *pInstance, unsigned uReason, bool bDynamic){
 		if(!bRet){
 			goto jCleanup_03;
 		}
-		bRet = __MCFCRT_CppRuntimeInit();
+		bRet = __MCFCRT_FrameInfoInit();
 		if(!bRet){
 			goto jCleanup_04;
 		}
@@ -75,7 +75,7 @@ static bool RealTlsCallback(void *pInstance, unsigned uReason, bool bDynamic){
 	jCleanup_06:
 		__MCFCRT_ModuleUninit();
 	jCleanup_05:
-		__MCFCRT_CppRuntimeUninit();
+		__MCFCRT_FrameInfoUninit();
 	jCleanup_04:
 		__MCFCRT_HeapDbgUninit();
 	jCleanup_03:

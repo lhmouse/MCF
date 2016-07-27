@@ -2,15 +2,9 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2013 - 2016, LH_Mouse. All wrongs reserved.
 
-#include "_cpp_runtime.h"
+#include "_frame_info.h"
 #include "../env/mcfwin.h"
 #include "../env/module.h"
-
-static bool SupportLibraryInit(void){
-	return true;
-}
-static void SupportLibraryUninit(void){
-}
 
 // 参见 gcc/libgcc/unwind-dw2-fde.h 里面的 old_object 的注释。
 // 6 个指针大小应该足够，我们在这里保留到 8 个。
@@ -61,17 +55,12 @@ static void DeregisterFrameInfo(void){
 	}
 }
 
-bool __MCFCRT_CppRuntimeInit(void){
-	if(!SupportLibraryInit()){
-		return false;
-	}
+bool __MCFCRT_FrameInfoInit(void){
 	if(!RegisterFrameInfo()){
-		SupportLibraryUninit();
 		return false;
 	}
 	return true;
 }
-void __MCFCRT_CppRuntimeUninit(void){
+void __MCFCRT_FrameInfoUninit(void){
 	DeregisterFrameInfo();
-	SupportLibraryUninit();
 }

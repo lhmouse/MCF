@@ -2,10 +2,10 @@
 
 set -e
 
-prefix="$(pwd)/Release/mingw32"
+prefix="$(pwd)/.release/mingw32"
 mkdir -p "$prefix"
 
-builddir="$(pwd)/build_i686_release"
+builddir="$(pwd)/.build_i686_release"
 mkdir -p "$builddir"
 
 build=i686-w64-mingw32

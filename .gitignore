@@ -34,7 +34,3 @@ Makefile.in
 m4
 missing
 stamp-h1
-
-build-*
-
-!/release/**

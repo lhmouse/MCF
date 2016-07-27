@@ -69,10 +69,6 @@ pkginclude_ext_HEADERS =	\
 	src/ext/utf.h	\
 	src/ext/wcpcpy.h
 
-mcfcrt_pre_sources =	\
-	src/startup/dll.c	\
-	src/startup/exe.c
-
 mcfcrt_sources =	\
 	src/startup/generic.c	\
 	src/ext/assert.c	\
@@ -168,34 +164,35 @@ mcfcrt_sources =	\
 	src/stdc/wchar/wmemset.c
 
 bin_PROGRAMS =	\
-	mcfcrt-9.dll
+	MCFCRT-9.dll
 
-mcfcrt_9_dll_SOURCES =	\
+MCFCRT_9_dll_SOURCES =	\
 	src/startup/dll.c	\
 	${mcfcrt_sources}
 
-mcfcrt_9_dll_LDFLAGS =	\
+MCFCRT_9_dll_LDFLAGS =	\
 	-shared -static -nostdlib	\
 	-Wl,-e@__MCFCRT_DllStartup,-subsystem,windows,--disable-runtime-pseudo-reloc,--disable-auto-import	\
-	-Wl,--disable-stdcall-fixup,--enable-auto-image-base,--export-all-symbols,--out-implib,libmcfcrt.dll.a
+	-Wl,--disable-stdcall-fixup,--enable-auto-image-base,--export-all-symbols,--out-implib,libMCFCRT.dll.a
 ##	-Wl,--whole-archive,-lsupc++,-lgcc,-lgcc_eh,--no-whole-archive
 
-mcfcrt_9_dll_LDADD =	\
+MCFCRT_9_dll_LDADD =	\
 	-lmingwex -lmsvcrt -lkernel32 -lntdll
 
 lib_LIBRARIES =	\
-	libmcfcrt-pre.a	\
-	libmcfcrt.dll.a	\
-	libmcfcrt.a
+	libMCFCRT-pre.a	\
+	libMCFCRT.dll.a	\
+	libMCFCRT.a
 
-libmcfcrt_pre_a_SOURCES =	\
-	${mcfcrt_pre_sources}
+libMCFCRT_pre_a_SOURCES =	\
+	src/startup/dll.c	\
+	src/startup/exe.c
 
-libmcfcrt.dll.a: mcfcrt-9.dll
+libMCFCRT.dll.a: MCFCRT-9.dll
 
-##libmcfcrt_a_SOURCES =	\
+##libMCFCRT_a_SOURCES =	\
 ##	${mcfcrt_sources}
 
 ## Due to Windows limitation we can't link this library statically.
-libmcfcrt.a: mcfcrt-9.dll
-	cp -p libmcfcrt.dll.a '$@'
+libMCFCRT.a: MCFCRT-9.dll
+	cp -p libMCFCRT.dll.a '$@'

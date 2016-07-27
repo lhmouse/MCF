@@ -9,13 +9,13 @@ AM_CXXFLAGS = -std=c++14 -Wzero-as-null-pointer-constant -Wnoexcept -Woverloaded
 ## I think you GNU people should just STFU and stop confusing the linker.
 EXEEXT =
 
-pkginclude_startupdir = $(pkgincludedir)/startup
+pkginclude_startupdir = ${pkgincludedir}/startup
 pkginclude_startup_HEADERS =	\
 	src/startup/generic.h	\
 	src/startup/dll.h	\
 	src/startup/exe.h
 
-pkginclude_envdir = $(pkgincludedir)/env
+pkginclude_envdir = ${pkgincludedir}/env
 pkginclude_env_HEADERS =	\
 	src/ext/alloca.h	\
 	src/ext/assert.h	\
@@ -52,7 +52,7 @@ pkginclude_env_HEADERS =	\
 	src/env/standard_streams.h	\
 	src/env/thread.h
 
-pkginclude_extdir = $(pkgincludedir)/ext
+pkginclude_extdir = ${pkgincludedir}/ext
 pkginclude_ext_HEADERS =	\
 	src/ext/alloca.h	\
 	src/ext/assert.h	\

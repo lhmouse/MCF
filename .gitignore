@@ -34,3 +34,6 @@ Makefile.in
 m4
 missing
 stamp-h1
+
+/debug/
+/release/

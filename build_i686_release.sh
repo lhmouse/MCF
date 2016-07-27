@@ -2,7 +2,7 @@
 
 set -e
 
-prefix="$(pwd)/.release/mingw32"
+prefix="$(pwd)/release/mingw32"
 mkdir -p "$prefix"
 
 export CPPFLAGS="-I$prefix/include -DNDEBUG"

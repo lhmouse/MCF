@@ -2,9 +2,9 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2013 - 2016, LH_Mouse. All wrongs reserved.
 
-#include "cpp_runtime.h"
-#include "mcfwin.h"
-#include "module.h"
+#include "_cpp_runtime.h"
+#include "../env/mcfwin.h"
+#include "../env/module.h"
 
 static bool SupportLibraryInit(void){
 	return true;

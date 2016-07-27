@@ -5,6 +5,7 @@
 #include "generic.h"
 #include "exe.h"
 #include "dll.h"
+#include "_cpp_runtime.h"
 #include "../env/_seh_top.h"
 #include "../env/mcfwin.h"
 #include "../env/standard_streams.h"
@@ -13,7 +14,6 @@
 #include "../env/fenv.h"
 #include "../env/heap.h"
 #include "../env/heap_dbg.h"
-#include "../env/cpp_runtime.h"
 
 static bool g_bInitialized = false;
 

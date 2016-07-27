@@ -39,7 +39,6 @@ pkginclude_env_HEADERS =	\
 	src/env/c11thread.h	\
 	src/env/clocks.h	\
 	src/env/condition_variable.h	\
-	src/env/cpp_runtime.h	\
 	src/env/fenv.h	\
 	src/env/gthread.h	\
 	src/env/heap.h	\
@@ -87,7 +86,6 @@ mcfcrt_sources =	\
 	src/env/c11thread.c	\
 	src/env/clocks.c	\
 	src/env/condition_variable.c	\
-	src/env/cpp_runtime.c	\
 	src/env/fenv.c	\
 	src/env/gthread.c	\
 	src/env/heap.c	\
@@ -163,11 +161,16 @@ mcfcrt_sources =	\
 	src/stdc/wchar/wmemmove.c	\
 	src/stdc/wchar/wmemset.c
 
+mcfcrt_pre_sources =	\
+	src/startup/_cpp_runtime.c	\
+	src/startup/dll.c	\
+	src/startup/exe.c
+
 bin_PROGRAMS =	\
 	MCFCRT-9.dll
 
 MCFCRT_9_dll_SOURCES =	\
-	src/startup/dll.c	\
+	${mcfcrt_pre_sources}	\
 	${mcfcrt_sources}
 
 MCFCRT_9_dll_DEPENDENCIES =	\
@@ -176,7 +179,7 @@ MCFCRT_9_dll_DEPENDENCIES =	\
 MCFCRT_9_dll_LDFLAGS =	\
 	-shared -static -nostdlib	\
 	-Wl,-e@__MCFCRT_DllStartup,-subsystem,windows,--disable-runtime-pseudo-reloc,--disable-auto-import	\
-	-Wl,--export-all-symbols,--exclude-symbols,@__MCFCRT_DllStartup	\
+	-Wl,--export-all-symbols,--exclude-symbols,@__MCFCRT_DllStartup,--exclude-symbols,@__MCFCRT_ExeStartup	\
 	-Wl,--disable-stdcall-fixup,--enable-auto-image-base,--out-implib,libMCFCRT.dll.a,--exclude-libs,libMCF-pre.a
 ##	-Wl,--whole-archive,-lsupc++,-lgcc,-lgcc_eh,--no-whole-archive
 
@@ -189,8 +192,7 @@ lib_LIBRARIES =	\
 	libMCFCRT.a
 
 libMCFCRT_pre_a_SOURCES =	\
-	src/startup/dll.c	\
-	src/startup/exe.c
+	${mcfcrt_pre_sources}
 
 libMCFCRT.dll.a: MCFCRT-9.dll
 

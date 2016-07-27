@@ -5,11 +5,11 @@
 #ifndef MCF_THREAD_MUTEX_HPP_
 #define MCF_THREAD_MUTEX_HPP_
 
-#include "../../MCFCRT/env/mutex.h"
-#include "../Utilities/Noncopyable.hpp"
-#include "../Utilities/Assert.hpp"
+#include "../Core/Noncopyable.hpp"
+#include "../Core/Assert.hpp"
+#include "../Core/Atomic.hpp"
 #include "_UniqueLockTemplate.hpp"
-#include "Atomic.hpp"
+#include <MCFCRT/env/mutex.h>
 #include <type_traits>
 #include <cstddef>
 

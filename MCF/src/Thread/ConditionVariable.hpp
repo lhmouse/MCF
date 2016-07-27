@@ -5,9 +5,9 @@
 #ifndef MCF_THREAD_CONDITION_VARIABLE_HPP_
 #define MCF_THREAD_CONDITION_VARIABLE_HPP_
 
-#include "../../MCFCRT/env/condition_variable.h"
-#include "../Utilities/Noncopyable.hpp"
-#include "../Utilities/Assert.hpp"
+#include <MCFCRT/env/condition_variable.h>
+#include "../Core/Noncopyable.hpp"
+#include "../Core/Assert.hpp"
 #include "UniqueLockBase.hpp"
 #include <cstddef>
 #include <type_traits>

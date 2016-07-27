@@ -5,8 +5,8 @@
 #ifndef MCF_THREAD_RECURSIVE_MUTEX_HPP_
 #define MCF_THREAD_RECURSIVE_MUTEX_HPP_
 
-#include "../Utilities/Noncopyable.hpp"
-#include "../Utilities/Assert.hpp"
+#include "../Core/Noncopyable.hpp"
+#include "../Core/Assert.hpp"
 #include "_UniqueLockTemplate.hpp"
 #include "Mutex.hpp"
 

@@ -3,9 +3,9 @@
 // Copyleft 2013 - 2016, LH_Mouse. All wrongs reserved.
 
 #include "../StdMCF.hpp"
-#include "KernelMutex.hpp"
+#include "KernelEvent.hpp"
 #include "../Core/Exception.hpp"
-#include "../../MCFCRT/env/_nt_timeout.h"
+#include <MCFCRT/env/_nt_timeout.h>
 #include <winternl.h>
 #include <ntdef.h>
 #include <ntstatus.h>
@@ -37,7 +37,7 @@ extern NTSTATUS NtResetEvent(HANDLE hEvent, LONG *plPrevState) noexcept;
 
 namespace MCF {
 
-Impl_UniqueNtHandle::UniqueNtHandle KernelMutex::X_CreateEventHandle(const WideStringView &wsvName, std::uint32_t u32Flags){
+Impl_UniqueNtHandle::UniqueNtHandle KernelEvent::X_CreateEventHandle(bool bInitSet, const WideStringView &wsvName, std::uint32_t u32Flags){
 	Impl_UniqueNtHandle::UniqueNtHandle hRootDirectory;
 	::OBJECT_ATTRIBUTES vObjectAttributes;
 	const auto uNameSize = wsvName.GetSize() * sizeof(wchar_t);
@@ -45,7 +45,7 @@ Impl_UniqueNtHandle::UniqueNtHandle KernelMutex::X_CreateEventHandle(const WideS
 		InitializeObjectAttributes(&vObjectAttributes, nullptr, 0, nullptr, nullptr);
 	} else {
 		if(uNameSize > USHRT_MAX){
-			MCF_THROW(Exception, ERROR_BUFFER_OVERFLOW, Rcntws::View(L"KernelMutex: 内核对象的路径太长。"));
+			MCF_THROW(Exception, ERROR_BUFFER_OVERFLOW, Rcntws::View(L"KernelEvent: 内核对象的路径太长。"));
 		}
 		::UNICODE_STRING ustrObjectName;
 		ustrObjectName.Length        = (USHORT)uNameSize;
@@ -69,13 +69,13 @@ Impl_UniqueNtHandle::UniqueNtHandle KernelMutex::X_CreateEventHandle(const WideS
 	if(u32Flags & kDontCreate){
 		const auto lStatus = ::NtOpenEvent(&hTemp, EVENT_ALL_ACCESS, &vObjectAttributes);
 		if(!NT_SUCCESS(lStatus)){
-			MCF_THROW(Exception, ::RtlNtStatusToDosError(lStatus), Rcntws::View(L"KernelMutex: NtOpenEvent() 失败。"));
+			MCF_THROW(Exception, ::RtlNtStatusToDosError(lStatus), Rcntws::View(L"KernelEvent: NtOpenEvent() 失败。"));
 		}
-		bNameExists = true;
+		bNameExists = false;
 	} else {
-		const auto lStatus = ::NtCreateEvent(&hTemp, EVENT_ALL_ACCESS, &vObjectAttributes, SynchronizationEvent, true);
+		const auto lStatus = ::NtCreateEvent(&hTemp, EVENT_ALL_ACCESS, &vObjectAttributes, NotificationEvent, bInitSet);
 		if(!NT_SUCCESS(lStatus)){
-			MCF_THROW(Exception, ::RtlNtStatusToDosError(lStatus), Rcntws::View(L"KernelMutex: NtCreateEvent() 失败。"));
+			MCF_THROW(Exception, ::RtlNtStatusToDosError(lStatus), Rcntws::View(L"KernelEvent: NtCreateEvent() 失败。"));
 		}
 		bNameExists = (lStatus == STATUS_OBJECT_NAME_EXISTS);
 	}
@@ -85,29 +85,41 @@ Impl_UniqueNtHandle::UniqueNtHandle KernelMutex::X_CreateEventHandle(const WideS
 		EVENT_BASIC_INFORMATION vBasicInfo;
 		const auto lStatus = ::NtQueryEvent(hEvent.Get(), EventBasicInformation, &vBasicInfo, sizeof(vBasicInfo), nullptr);
 		MCF_ASSERT_MSG(NT_SUCCESS(lStatus), L"NtQueryEvent() 失败。");
-		if(vBasicInfo.eEventType != SynchronizationEvent){
-			MCF_THROW(Exception, ERROR_INVALID_HANDLE /* ::RtlNtStatusToDosError(STATUS_OBJECT_TYPE_MISMATCH) */, Rcntws::View(L"KernelMutex: 内核事件类型不匹配。"));
+		if(vBasicInfo.eEventType != NotificationEvent){
+			MCF_THROW(Exception, ERROR_INVALID_HANDLE /* ::RtlNtStatusToDosError(STATUS_OBJECT_TYPE_MISMATCH) */, Rcntws::View(L"KernelEvent: 内核事件类型不匹配。"));
 		}
 	}
 	return hEvent;
 }
 
-bool KernelMutex::Try(std::uint64_t u64UntilFastMonoClock) noexcept {
+bool KernelEvent::Wait(std::uint64_t u64UntilFastMonoClock) const noexcept {
 	::LARGE_INTEGER liTimeout;
 	::__MCFCRT_InitializeNtTimeout(&liTimeout, u64UntilFastMonoClock);
 	const auto lStatus = ::NtWaitForSingleObject(x_hEvent.Get(), false, &liTimeout);
 	MCF_ASSERT_MSG(NT_SUCCESS(lStatus), L"NtWaitForSingleObject() 失败。");
 	return lStatus != STATUS_TIMEOUT;
 }
-void KernelMutex::Lock() noexcept {
+void KernelEvent::Wait() const noexcept {
 	const auto lStatus = ::NtWaitForSingleObject(x_hEvent.Get(), false, nullptr);
 	MCF_ASSERT_MSG(NT_SUCCESS(lStatus), L"NtWaitForSingleObject() 失败。");
 }
-void KernelMutex::Unlock() noexcept {
+bool KernelEvent::IsSet() const noexcept {
+	EVENT_BASIC_INFORMATION vBasicInfo;
+	const auto lStatus = ::NtQueryEvent(x_hEvent.Get(), EventBasicInformation, &vBasicInfo, sizeof(vBasicInfo), nullptr);
+	MCF_ASSERT_MSG(NT_SUCCESS(lStatus), L"NtQueryEvent() 失败。");
+	return vBasicInfo.lState;
+}
+bool KernelEvent::Set() noexcept {
 	LONG lPrevState;
 	const auto lStatus = ::NtSetEvent(x_hEvent.Get(), &lPrevState);
 	MCF_ASSERT_MSG(NT_SUCCESS(lStatus), L"NtSetEvent() 失败。");
-	MCF_ASSERT_MSG(lPrevState == 0, L"互斥锁没有被任何线程锁定。");
+	return lPrevState;
+}
+bool KernelEvent::Reset() noexcept {
+	LONG lPrevState;
+	const auto lStatus = ::NtResetEvent(x_hEvent.Get(), &lPrevState);
+	MCF_ASSERT_MSG(NT_SUCCESS(lStatus), L"NtResetEvent() 失败。");
+	return lPrevState;
 }
 
 }

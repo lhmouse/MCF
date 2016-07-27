@@ -33,6 +33,8 @@ pkginclude_env_HEADERS =	\
 	src/env/_c11thread_inl.h	\
 	src/env/_crtdef.h	\
 	src/env/_gthread_inl.h	\
+	src/env/_nt_timeout.h	\
+	src/env/_seh_top.h	\
 	src/env/argv.h	\
 	src/env/avl_tree.h	\
 	src/env/bail.h	\

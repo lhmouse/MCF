@@ -6,8 +6,7 @@
 #define MCF_THREAD_KERNEL_EVENT_HPP_
 
 #include "../Core/StringView.hpp"
-#include "_KernelObjectBase.hpp"
-#include <cstddef>
+#include "../Core/_KernelObjectBase.hpp"
 #include <cstdint>
 
 namespace MCF {

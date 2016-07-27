@@ -5,8 +5,8 @@
 #ifndef MCF_SMART_POINTERS_UNIQUE_PTR_HPP_
 #define MCF_SMART_POINTERS_UNIQUE_PTR_HPP_
 
-#include "../Utilities/Assert.hpp"
-#include "../Function/Comparators.hpp"
+#include "../Core/Assert.hpp"
+#include "../Core/Comparators.hpp"
 #include "DefaultDeleter.hpp"
 #include <utility>
 #include <type_traits>

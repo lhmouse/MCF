@@ -5,14 +5,14 @@
 #ifndef MCF_THREAD_THREAD_LOCAL_HPP_
 #define MCF_THREAD_THREAD_LOCAL_HPP_
 
-#include "../../MCFCRT/env/thread.h"
-#include "../../MCFCRT/env/last_error.h"
-#include "../Utilities/Assert.hpp"
-#include "../Utilities/AlignedStorage.hpp"
-#include "../Utilities/ConstructDestruct.hpp"
-#include "../Utilities/ReconstructOrAssign.hpp"
+#include <MCFCRT/env/thread.h>
+#include <MCFCRT/env/last_error.h>
+#include "../Core/Assert.hpp"
 #include "../Core/UniqueHandle.hpp"
 #include "../Core/Exception.hpp"
+#include "../Core/AlignedStorage.hpp"
+#include "../Core/ConstructDestruct.hpp"
+#include "../Core/ReconstructOrAssign.hpp"
 #include <type_traits>
 #include <cstddef>
 #include <cstdint>
@@ -45,7 +45,7 @@ private:
 		if(!pContainer->bConstructed){
 			return;
 		}
-		const auto pElement = reinterpret_cast<ElementT *>(&(pContainer->vStorage));
+		const auto pElement = static_cast<ElementT *>(static_cast<void *>(&(pContainer->vStorage)));
 		Destruct(pElement);
 	}
 
@@ -82,7 +82,7 @@ public:
 		if(!pContainer->bConstructed){
 			return nullptr;
 		}
-		const auto pElement = reinterpret_cast<ElementT *>(&(pContainer->vStorage));
+		const auto pElement = static_cast<ElementT *>(static_cast<void *>(&(pContainer->vStorage)));
 		return pElement;
 	}
 	template<typename ...ParamsT>
@@ -95,7 +95,7 @@ public:
 		const auto pContainer = static_cast<X_TlsContainer *>(pStorage);
 		MCF_ASSERT(pContainer);
 
-		const auto pElement = reinterpret_cast<ElementT *>(&(pContainer->vStorage));
+		const auto pElement = static_cast<ElementT *>(static_cast<void *>(&(pContainer->vStorage)));
 		if(!pContainer->bConstructed){
 			DefaultConstruct(pElement, std::forward<ParamsT>(vParams)...);
 			pContainer->bConstructed = true;

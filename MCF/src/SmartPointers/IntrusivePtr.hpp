@@ -5,13 +5,13 @@
 #ifndef MCF_SMART_POINTERS_INTRUSIVE_PTR_HPP_
 #define MCF_SMART_POINTERS_INTRUSIVE_PTR_HPP_
 
-#include "../Utilities/Assert.hpp"
-#include "../Utilities/Bail.hpp"
-#include "../Utilities/DeclVal.hpp"
-#include "../Function/Comparators.hpp"
-#include "../Thread/Mutex.hpp"
-#include "../Thread/Atomic.hpp"
+#include "../Core/Assert.hpp"
+#include "../Core/Bail.hpp"
+#include "../Core/DeclVal.hpp"
+#include "../Core/Comparators.hpp"
 #include "../Core/FixedSizeAllocator.hpp"
+#include "../Core/Atomic.hpp"
+#include "../Thread/Mutex.hpp"
 #include "DefaultDeleter.hpp"
 #include "UniquePtr.hpp"
 #include <utility>

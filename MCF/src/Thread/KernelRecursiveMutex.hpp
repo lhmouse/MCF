@@ -6,7 +6,7 @@
 #define MCF_THREAD_KERNEL_RECURSIVE_MUTEX_HPP_
 
 #include "../Core/StringView.hpp"
-#include "_KernelObjectBase.hpp"
+#include "../Core/_KernelObjectBase.hpp"
 #include "_UniqueLockTemplate.hpp"
 #include <cstdint>
 

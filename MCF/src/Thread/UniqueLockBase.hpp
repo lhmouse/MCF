@@ -5,8 +5,8 @@
 #ifndef MCF_THREAD_UNIQUE_LOCK_BASE_HPP_
 #define MCF_THREAD_UNIQUE_LOCK_BASE_HPP_
 
-#include "../Utilities/Noncopyable.hpp"
-#include "../Utilities/Assert.hpp"
+#include "../Core/Noncopyable.hpp"
+#include "../Core/Assert.hpp"
 #include <cstddef>
 
 namespace MCF {

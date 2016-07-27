@@ -6,7 +6,7 @@
 #define MCF_THREAD_READER_WRITER_MUTEX_HPP_
 
 #include "Mutex.hpp"
-#include "Atomic.hpp"
+#include "../Core/Atomic.hpp"
 
 namespace MCF {
 

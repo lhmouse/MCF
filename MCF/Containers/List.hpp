@@ -72,7 +72,7 @@ public:
 		auto pNode = rhs.x_pFirst;
 		while(pNode){
 			const auto pNext = pNode->pNext;
-			const auto pElement = reinterpret_cast<const Element *>(pNode);
+			const auto pElement = static_cast<const Element *>(static_cast<const void *>(pNode));
 			Push(*pElement);
 			pNode = pNext;
 		}
@@ -103,7 +103,7 @@ public:
 		auto pNode = x_pLast;
 		while(pNode){
 			const auto pPrev = pNode->pPrev;
-			const auto pElement = reinterpret_cast<Element *>(pNode);
+			const auto pElement = static_cast<Element *>(static_cast<void *>(pNode));
 			Destruct(pElement);
 			Allocator()(const_cast<void *>(static_cast<const void *>(pNode)));
 			pNode = pPrev;
@@ -117,7 +117,7 @@ public:
 			auto pNode = x_pFirst;
 			while(pNode){
 				const auto pNext = pNode->pNext;
-				const auto pElement = reinterpret_cast<Element *>(pNode);
+				const auto pElement = static_cast<Element *>(static_cast<void *>(pNode));
 				*itOutput = std::move(*pElement);
 				++itOutput;
 				pNode = pNext;
@@ -132,22 +132,22 @@ public:
 
 	const Element *GetFirst() const noexcept {
 		const auto pNode = x_pFirst;
-		return reinterpret_cast<const Element *>(pNode);
+		return static_cast<const Element *>(static_cast<const void *>(pNode));
 	}
 	Element *GetFirst() noexcept {
 		const auto pNode = x_pFirst;
-		return reinterpret_cast<Element *>(pNode);
+		return static_cast<Element *>(static_cast<void *>(pNode));
 	}
 	const Element *GetConstFirst() const noexcept {
 		return GetFirst();
 	}
 	const Element *GetLast() const noexcept {
 		const auto pNode = x_pLast;
-		return reinterpret_cast<const Element *>(pNode);
+		return static_cast<const Element *>(static_cast<const void *>(pNode));
 	}
 	Element *GetLast() noexcept {
 		const auto pNode = x_pLast;
-		return reinterpret_cast<Element *>(pNode);
+		return static_cast<Element *>(static_cast<void *>(pNode));
 	}
 	const Element *GetConstLast() const noexcept {
 		return GetLast();
@@ -224,7 +224,7 @@ public:
 	template<typename ...ParamsT>
 	Element &Unshift(ParamsT &&...vParams){
 		const auto pNode = static_cast<X_Node *>(Allocator()(kNodeSize));
-		const auto pElement = reinterpret_cast<Element *>(pNode);
+		const auto pElement = static_cast<Element *>(static_cast<void *>(pNode));
 		try {
 			DefaultConstruct(pElement, std::forward<ParamsT>(vParams)...);
 		} catch(...){
@@ -251,7 +251,7 @@ public:
 		auto pNode = x_pFirst;
 		for(std::size_t i = 0; i < uCount; ++i){
 			const auto pNext = pNode->pNext;
-			const auto pElement = reinterpret_cast<Element *>(pNode);
+			const auto pElement = static_cast<Element *>(static_cast<void *>(pNode));
 			Destruct(pElement);
 			Allocator()(const_cast<void *>(static_cast<const void *>(pNode)));
 			pNode = pNext;
@@ -267,7 +267,7 @@ public:
 	template<typename ...ParamsT>
 	Element &Push(ParamsT &&...vParams){
 		const auto pNode = static_cast<X_Node *>(Allocator()(kNodeSize));
-		const auto pElement = reinterpret_cast<Element *>(pNode);
+		const auto pElement = static_cast<Element *>(static_cast<void *>(pNode));
 		try {
 			DefaultConstruct(pElement, std::forward<ParamsT>(vParams)...);
 		} catch(...){
@@ -294,7 +294,7 @@ public:
 		auto pNode = x_pLast;
 		for(std::size_t i = 0; i < uCount; ++i){
 			const auto pPrev = pNode->pPrev;
-			const auto pElement = reinterpret_cast<Element *>(pNode);
+			const auto pElement = static_cast<Element *>(static_cast<void *>(pNode));
 			Destruct(pElement);
 			Allocator()(const_cast<void *>(static_cast<const void *>(pNode)));
 			pNode = pPrev;

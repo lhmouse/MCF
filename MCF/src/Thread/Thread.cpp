@@ -4,7 +4,7 @@
 
 #include "../StdMCF.hpp"
 #include "Thread.hpp"
-#include "../../MCFCRT/env/_seh_top.h"
+#include <MCFCRT/env/_seh_top.h>
 #include "../Core/Exception.hpp"
 
 namespace MCF {
@@ -41,3 +41,5 @@ void Thread::X_AbstractControlBlock::SpawnThread(bool bSuspended){
 }
 
 }
+#include "ThreadLocal.hpp"
+template class MCF::ThreadLocal<int>;

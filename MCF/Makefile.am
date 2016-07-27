@@ -16,6 +16,7 @@ pkginclude_Core_HEADERS =	\
 	src/Core/_ForwardedParam.hpp	\
 	src/Core/_MagicalInvoker.hpp	\
 	src/Core/_UniqueNtHandle.hpp	\
+	src/Core/_KernelObjectBase.hpp	\
 	src/Core/AddressOf.hpp	\
 	src/Core/AlignedStorage.hpp	\
 	src/Core/Array.hpp	\
@@ -48,14 +49,35 @@ pkginclude_Core_HEADERS =	\
 	src/Core/Optional.hpp	\
 	src/Core/Random.hpp	\
 	src/Core/Rcnts.hpp	\
+	src/Core/ReconstructOrAssign.hpp	\
 	src/Core/RefWrapper.hpp	\
 	src/Core/String.hpp	\
 	src/Core/StringView.hpp	\
 	src/Core/UniqueHandle.hpp	\
 	src/Core/Uuid.hpp	\
-	src/Core/WhiteHole.hpp
+	src/Core/WhiteHole.hpp	\
+	src/Thread/_UniqueLockTemplate.hpp	\
+	src/Thread/ConditionVariable.hpp	\
+	src/Thread/Event.hpp	\
+	src/Thread/KernelEvent.hpp	\
+	src/Thread/KernelMutex.hpp	\
+	src/Thread/KernelRecursiveMutex.hpp	\
+	src/Thread/KernelSemaphore.hpp	\
+	src/Thread/Mutex.hpp	\
+	src/Thread/OnceFlag.hpp	\
+	src/Thread/ReadersWriterMutex.hpp	\
+	src/Thread/RecursiveMutex.hpp	\
+	src/Thread/Semaphore.hpp	\
+	src/Thread/Thread.hpp	\
+	src/Thread/ThreadLocal.hpp	\
+	src/Thread/UniqueLockBase.hpp	\
+	src/SmartPointers/DefaultDeleter.hpp	\
+	src/SmartPointers/IntrusivePtr.hpp	\
+	src/SmartPointers/PolyIntrusivePtr.hpp	\
+	src/SmartPointers/UniquePtr.hpp
 
 mcf_sources =	\
+	src/Core/_KernelObjectBase.cpp	\
 	src/Core/_UniqueNtHandle.cpp	\
 	src/Core/DynamicLinkLibrary.cpp	\
 	src/Core/Exception.cpp	\
@@ -63,7 +85,20 @@ mcf_sources =	\
 	src/Core/Rcnts.cpp	\
 	src/Core/String.cpp	\
 	src/Core/StringView.cpp	\
-	src/Core/Uuid.cpp
+	src/Core/Uuid.cpp	\
+	src/Thread/ConditionVariable.cpp	\
+	src/Thread/Event.cpp	\
+	src/Thread/KernelEvent.cpp	\
+	src/Thread/KernelMutex.cpp	\
+	src/Thread/KernelRecursiveMutex.cpp	\
+	src/Thread/KernelSemaphore.cpp	\
+	src/Thread/ReadersWriterMutex.cpp	\
+	src/Thread/RecursiveMutex.cpp	\
+	src/Thread/Semaphore.cpp	\
+	src/Thread/Thread.cpp	\
+	src/Thread/UniqueLockBase.cpp	\
+	src/SmartPointers/IntrusivePtr.cpp	\
+	src/SmartPointers/PolyIntrusivePtr.cpp
 
 bin_PROGRAMS =	\
 	MCF-1.dll

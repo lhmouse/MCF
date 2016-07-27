@@ -6,7 +6,7 @@
 #define MCF_THREAD_UNIQUE_LOCK_TEMPLATE_HPP_
 
 #include "UniqueLockBase.hpp"
-#include "../Utilities/Assert.hpp"
+#include "../Core/Assert.hpp"
 #include <utility>
 
 namespace MCF {

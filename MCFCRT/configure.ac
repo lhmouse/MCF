@@ -1,0 +1,12 @@
+AC_INIT([mcfcrt], [0.1], [lh_mouse@126.com])
+AC_CONFIG_SRCDIR([src])
+AC_CONFIG_HEADERS([config.h])
+AC_CONFIG_MACRO_DIR([m4])
+
+AC_PROG_CC
+AC_PROG_RANLIB
+
+AM_INIT_AUTOMAKE
+
+AC_CONFIG_FILES([Makefile])
+AC_OUTPUT

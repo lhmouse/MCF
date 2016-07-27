@@ -217,5 +217,10 @@ bool _MCFCRT_WriteStandardErrorChar32(char32_t c32CodePoint){
 	return true;
 }
 bool _MCFCRT_WriteStandardErrorString(const wchar_t *pwcString, size_t uLength, bool bAppendNewLine){
+	HANDLE h = GetStdHandle(STD_ERROR_HANDLE);
+	if(h){
+		DWORD written;
+		WriteConsoleW(h, pwcString, uLength, &written, nullptr);
+	}
 	return true;
 }

@@ -4,7 +4,6 @@
 
 #include "../../env/_crtdef.h"
 #include "../../env/bail.h"
-#include "../../env/last_error.h"
 
 _Noreturn void abort(void){
 	_MCFCRT_Bail(L"应用程序调用了 abort()。");

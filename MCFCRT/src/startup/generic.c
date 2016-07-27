@@ -3,8 +3,6 @@
 // Copyleft 2013 - 2016, LH_Mouse. All wrongs reserved.
 
 #include "generic.h"
-#include "exe.h"
-#include "dll.h"
 #include "_cpp_runtime.h"
 #include "../env/_seh_top.h"
 #include "../env/mcfwin.h"
@@ -15,90 +13,85 @@
 #include "../env/heap.h"
 #include "../env/heap_dbg.h"
 
-static bool g_bInitialized = false;
+static bool RealTlsCallback(void *pInstance, unsigned uReason, bool bDynamic){
+	static bool s_bInitialized = false;
+
+	bool bRet = true;
+
+	switch(uReason){
+	case DLL_PROCESS_ATTACH:
+		if(s_bInitialized){
+			break;
+		}
+
+		__MCFCRT_FEnvInit();
+		bRet = __MCFCRT_StandardStreamsInit();
+		if(!bRet){
+			goto jCleanup_01;
+		}
+		bRet = __MCFCRT_HeapInit();
+		if(!bRet){
+			goto jCleanup_02;
+		}
+		bRet = __MCFCRT_HeapDbgInit();
+		if(!bRet){
+			goto jCleanup_03;
+		}
+		bRet = __MCFCRT_CppRuntimeInit();
+		if(!bRet){
+			goto jCleanup_04;
+		}
+		bRet = __MCFCRT_ModuleInit();
+		if(!bRet){
+			goto jCleanup_05;
+		}
+		bRet = __MCFCRT_ThreadEnvInit();
+		if(!bRet){
+			goto jCleanup_06;
+		}
+
+		s_bInitialized = true;
+		break;
+
+	case DLL_THREAD_ATTACH:
+		__MCFCRT_FEnvInit();
+		break;
+
+	case DLL_THREAD_DETACH:
+		__MCFCRT_TlsCleanup();
+		break;
+
+	case DLL_PROCESS_DETACH:
+		if(!s_bInitialized){
+			break;
+		}
+		s_bInitialized = false;
+
+		__MCFCRT_TlsCleanup();
+		__MCFCRT_ThreadEnvUninit();
+	jCleanup_06:
+		__MCFCRT_ModuleUninit();
+	jCleanup_05:
+		__MCFCRT_CppRuntimeUninit();
+	jCleanup_04:
+		__MCFCRT_HeapDbgUninit();
+	jCleanup_03:
+		__MCFCRT_HeapUninit();
+	jCleanup_02:
+		__MCFCRT_StandardStreamsUninit();
+	jCleanup_01:
+		break;
+	}
+
+	return bRet;
+}
 
 bool __MCFCRT_TlsCallbackGeneric(void *pInstance, unsigned uReason, bool bDynamic){
-	bool bRet = true;
+	bool bRet;
 
 	__MCFCRT_SEH_TOP_BEGIN
 	{
-		switch(uReason){
-		case DLL_PROCESS_ATTACH:
-			if(g_bInitialized){
-				break;
-			}
-			__MCFCRT_FEnvInit();
-			bRet = __MCFCRT_StandardStreamsInit();
-			if(!bRet){
-				goto jCleanup_01;
-			}
-			bRet = __MCFCRT_HeapInit();
-			if(!bRet){
-				goto jCleanup_02;
-			}
-			bRet = __MCFCRT_HeapDbgInit();
-			if(!bRet){
-				goto jCleanup_03;
-			}
-			bRet = __MCFCRT_CppRuntimeInit();
-			if(!bRet){
-				goto jCleanup_04;
-			}
-			bRet = __MCFCRT_ModuleInit();
-			if(!bRet){
-				goto jCleanup_05;
-			}
-			bRet = __MCFCRT_ThreadEnvInit();
-			if(!bRet){
-				goto jCleanup_06;
-			}
-			if(_MCFCRT_OnDllProcessAttach){
-				bRet = _MCFCRT_OnDllProcessAttach(pInstance, bDynamic);
-				if(!bRet){
-					goto jCleanup_99;
-				}
-			}
-			g_bInitialized = true;
-			break;
-
-		case DLL_THREAD_ATTACH:
-			__MCFCRT_FEnvInit();
-			if(_MCFCRT_OnDllThreadAttach){
-				_MCFCRT_OnDllThreadAttach(pInstance);
-			}
-			break;
-
-		case DLL_THREAD_DETACH:
-			if(_MCFCRT_OnDllThreadDetach){
-				_MCFCRT_OnDllThreadDetach(pInstance);
-			}
-			__MCFCRT_TlsCleanup();
-			break;
-
-		case DLL_PROCESS_DETACH:
-			if(!g_bInitialized){
-				break;
-			}
-			g_bInitialized = false;
-			if(_MCFCRT_OnDllProcessDetach){
-				_MCFCRT_OnDllProcessDetach(pInstance, bDynamic);
-			}
-		jCleanup_99:
-			__MCFCRT_TlsCleanup();
-			__MCFCRT_ThreadEnvUninit();
-		jCleanup_06:
-			__MCFCRT_ModuleUninit();
-		jCleanup_05:
-			__MCFCRT_CppRuntimeUninit();
-		jCleanup_04:
-			__MCFCRT_HeapDbgUninit();
-		jCleanup_03:
-			__MCFCRT_HeapUninit();
-		jCleanup_02:
-			__MCFCRT_StandardStreamsUninit();
-		jCleanup_01:
-			break;
-		}
+		bRet = RealTlsCallback(pInstance, uReason, bDynamic);
 	}
 	__MCFCRT_SEH_TOP_END
 

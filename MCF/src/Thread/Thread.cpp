@@ -41,5 +41,3 @@ void Thread::X_AbstractControlBlock::SpawnThread(bool bSuspended){
 }
 
 }
-#include "ThreadLocal.hpp"
-template class MCF::ThreadLocal<int>;

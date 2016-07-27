@@ -176,11 +176,12 @@ MCFCRT_9_dll_LDFLAGS =	\
 	-shared -static -nostdlib	\
 	-Wl,-e@__MCFCRT_DllStartup,-subsystem,windows,--disable-runtime-pseudo-reloc,--disable-auto-import	\
 	-Wl,--export-all-symbols,--exclude-symbols,@__MCFCRT_DllStartup	\
-	-Wl,--disable-stdcall-fixup,--enable-auto-image-base,--out-implib,libMCFCRT.dll.a,--exclude-libs,libMCF-pre.a
+	-Wl,--disable-stdcall-fixup,--enable-auto-image-base,--out-implib,libMCFCRT.dll.a,--exclude-libs,libMCF-pre.a	\
+	-Wl,--whole-archive,-lsupc++,-lgcc,-lgcc_eh,--no-whole-archive
 ##	-Wl,--whole-archive,-lsupc++,-lgcc,-lgcc_eh,--no-whole-archive
 
 MCFCRT_9_dll_LDADD =	\
-	-lmingwex -lmsvcrt -lkernel32 -lntdll
+	-lsupc++ -lgcc -lgcc_eh -lmingwex -lmsvcrt -lkernel32 -lntdll
 
 lib_LIBRARIES =	\
 	libMCFCRT-pre.a	\

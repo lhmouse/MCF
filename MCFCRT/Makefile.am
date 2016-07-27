@@ -161,17 +161,13 @@ mcfcrt_sources =	\
 	src/stdc/wchar/wmemmove.c	\
 	src/stdc/wchar/wmemset.c
 
-mcfcrt_pre_sources =	\
-	src/startup/_cpp_runtime.c	\
-	src/startup/dll.c	\
-	src/startup/exe.c
-
 bin_PROGRAMS =	\
 	MCFCRT-9.dll
 
 MCFCRT_9_dll_SOURCES =	\
-	${mcfcrt_pre_sources}	\
-	${mcfcrt_sources}
+	${mcfcrt_sources}	\
+	src/startup/_cpp_runtime.c	\
+	src/startup/dll.c
 
 MCFCRT_9_dll_DEPENDENCIES =	\
 	libMCFCRT-pre.a
@@ -179,7 +175,7 @@ MCFCRT_9_dll_DEPENDENCIES =	\
 MCFCRT_9_dll_LDFLAGS =	\
 	-shared -static -nostdlib	\
 	-Wl,-e@__MCFCRT_DllStartup,-subsystem,windows,--disable-runtime-pseudo-reloc,--disable-auto-import	\
-	-Wl,--export-all-symbols,--exclude-symbols,@__MCFCRT_DllStartup:@__MCFCRT_ExeStartup	\
+	-Wl,--export-all-symbols,--exclude-symbols,@__MCFCRT_DllStartup	\
 	-Wl,--disable-stdcall-fixup,--enable-auto-image-base,--out-implib,libMCFCRT.dll.a,--exclude-libs,libMCF-pre.a
 ##	-Wl,--whole-archive,-lsupc++,-lgcc,-lgcc_eh,--no-whole-archive
 
@@ -192,7 +188,9 @@ lib_LIBRARIES =	\
 	libMCFCRT.a
 
 libMCFCRT_pre_a_SOURCES =	\
-	${mcfcrt_pre_sources}
+	src/startup/_cpp_runtime.c	\
+	src/startup/dll.c	\
+	src/startup/exe.c
 
 libMCFCRT.dll.a: MCFCRT-9.dll
 

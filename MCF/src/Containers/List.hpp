@@ -5,11 +5,11 @@
 #ifndef MCF_CONTAINERS_LIST_HPP_
 #define MCF_CONTAINERS_LIST_HPP_
 
-#include "DefaultAllocator.hpp"
-#include "_Enumerator.hpp"
-#include "../Utilities/Assert.hpp"
-#include "../Utilities/AlignedStorage.hpp"
-#include "../Utilities/ConstructDestruct.hpp"
+#include "../Core/_Enumerator.hpp"
+#include "../Core/DefaultAllocator.hpp"
+#include "../Core/Assert.hpp"
+#include "../Core/AlignedStorage.hpp"
+#include "../Core/ConstructDestruct.hpp"
 #include "../Core/Exception.hpp"
 #include <utility>
 #include <initializer_list>

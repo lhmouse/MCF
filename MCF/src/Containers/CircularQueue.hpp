@@ -5,11 +5,11 @@
 #ifndef MCF_CONTAINERS_CIRCULAR_QUEUE_HPP_
 #define MCF_CONTAINERS_CIRCULAR_QUEUE_HPP_
 
-#include "DefaultAllocator.hpp"
-#include "_Enumerator.hpp"
-#include "../Utilities/Assert.hpp"
-#include "../Utilities/ConstructDestruct.hpp"
-#include "../Utilities/DeclVal.hpp"
+#include "../Core/_Enumerator.hpp"
+#include "../Core/DefaultAllocator.hpp"
+#include "../Core/Assert.hpp"
+#include "../Core/ConstructDestruct.hpp"
+#include "../Core/DeclVal.hpp"
 #include "../Core/Exception.hpp"
 #include "../Core/_CheckedSizeArithmetic.hpp"
 #include <utility>

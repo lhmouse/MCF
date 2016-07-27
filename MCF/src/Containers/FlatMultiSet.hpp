@@ -2,30 +2,27 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2013 - 2016, LH_Mouse. All wrongs reserved.
 
-#ifndef MCF_CONTAINERS_FLAT_MAP_HPP_
-#define MCF_CONTAINERS_FLAT_MAP_HPP_
+#ifndef MCF_CONTAINERS_FLAT_MULTI_SET_HPP_
+#define MCF_CONTAINERS_FLAT_MULTI_SET_HPP_
 
-#include "DefaultAllocator.hpp"
-#include "_Enumerator.hpp"
-#include "../Function/Comparators.hpp"
-#include "../Utilities/ReconstructOrAssign.hpp"
-#include "../Utilities/AddressOf.hpp"
-#include "../Utilities/DeclVal.hpp"
+#include "../Core/_Enumerator.hpp"
+#include "../Core/DefaultAllocator.hpp"
+#include "../Core/Comparators.hpp"
+#include "../Core/DeclVal.hpp"
 #include "_FlatContainer.hpp"
 #include <utility>
-#include <tuple>
 
 namespace MCF {
 
-template<typename KeyT, typename ValueT, typename ComparatorT = Less, class AllocatorT = DefaultAllocator>
-class FlatMap {
+template<typename ElementT, typename ComparatorT = Less, class AllocatorT = DefaultAllocator>
+class FlatMultiSet {
 public:
 	// 容器需求。
-	using Element         = std::pair<const KeyT, ValueT>;
+	using Element         = const ElementT;
 	using Comparator      = ComparatorT;
 	using Allocator       = AllocatorT;
-	using ConstEnumerator = Impl_Enumerator::ConstEnumerator <FlatMap>;
-	using Enumerator      = Impl_Enumerator::Enumerator      <FlatMap>;
+	using ConstEnumerator = Impl_Enumerator::ConstEnumerator <FlatMultiSet>;
+	using Enumerator      = Impl_Enumerator::Enumerator      <FlatMultiSet>;
 
 private:
 	template<typename CvElementT, typename ComparandT>
@@ -33,7 +30,7 @@ private:
 		auto pLower = pBegin, pUpper = pEnd;
 		while(pLower != pUpper){
 			const auto pMiddle = pLower + (pUpper - pLower) / 2;
-			if(ComparatorT()(pMiddle->first, vComparand)){
+			if(ComparatorT()(*pMiddle, vComparand)){
 				pLower = pMiddle + 1;
 			} else {
 				pUpper = pMiddle;
@@ -46,7 +43,7 @@ private:
 		auto pLower = pBegin, pUpper = pEnd;
 		while(pLower != pUpper){
 			const auto pMiddle = pLower + (pUpper - pLower) / 2;
-			if(!ComparatorT()(vComparand, pMiddle->first)){
+			if(!ComparatorT()(vComparand, *pMiddle)){
 				pLower = pMiddle + 1;
 			} else {
 				pUpper = pMiddle;
@@ -59,9 +56,9 @@ private:
 		auto pLower = pBegin, pUpper = pEnd;
 		while(pLower != pUpper){
 			const auto pMiddle = pLower + (pUpper - pLower) / 2;
-			if(ComparatorT()(pMiddle->first, vComparand)){
+			if(ComparatorT()(*pMiddle, vComparand)){
 				pLower = pMiddle + 1;
-			} else if(ComparatorT()(vComparand, pMiddle->first)){
+			} else if(ComparatorT()(vComparand, *pMiddle)){
 				pUpper = pMiddle;
 			} else {
 				return pMiddle;
@@ -72,20 +69,20 @@ private:
 	template<typename CvElementT, typename ComparandT>
 	static std::pair<CvElementT *, CvElementT *> X_GetEqualRange(CvElementT *pBegin, CvElementT *pEnd, const ComparandT &vComparand){
 		const auto pMiddle = X_GetMatch(pBegin, pEnd, vComparand);
-		return std::make_pair(pMiddle, pMiddle);
+		return std::make_pair(X_GetLowerBound(pBegin, pMiddle, vComparand), X_GetUpperBound(pMiddle, pEnd, vComparand));
 	}
 
 private:
 	struct X_MoveCaster {
-		std::pair<KeyT &&, ValueT &&> operator()(Element &rhs) const noexcept {
-			return std::pair<KeyT &&, ValueT &&>(static_cast<KeyT &&>(const_cast<KeyT &>(rhs.first)), static_cast<ValueT &&>(rhs.second));
+		ElementT &&operator()(Element &rhs) const noexcept {
+			return static_cast<ElementT &&>(const_cast<ElementT &>(rhs));
 		}
-		static constexpr bool kEnabled = std::is_nothrow_move_constructible<KeyT>::value && std::is_nothrow_move_constructible<ValueT>::value;
+		static constexpr bool kEnabled = std::is_nothrow_move_constructible<ElementT>::value;
 	};
 	Impl_FlatContainer::FlatContainer<Element, X_MoveCaster, Allocator> x_vStorage;
 
 public:
-	constexpr FlatMap() noexcept
+	constexpr FlatMultiSet() noexcept
 		: x_vStorage()
 	{
 	}
@@ -93,8 +90,8 @@ public:
 	template<typename IteratorT, std::enable_if_t<
 		std::is_base_of<std::input_iterator_tag, typename std::iterator_traits<IteratorT>::iterator_category>::value,
 		int> = 0>
-	FlatMap(IteratorT itBegin, std::common_type_t<IteratorT> itEnd)
-		: FlatMap()
+	FlatMultiSet(IteratorT itBegin, std::common_type_t<IteratorT> itEnd)
+		: FlatMultiSet()
 	{
 		if(std::is_base_of<std::forward_iterator_tag, typename std::iterator_traits<IteratorT>::iterator_category>::value){
 			const auto uDeltaSize = static_cast<std::size_t>(std::distance(itBegin, itEnd));
@@ -105,23 +102,23 @@ public:
 		}
 	}
 	// 如果键有序，则效率最大化；并且是稳定的。
-	FlatMap(std::initializer_list<Element> rhs)
-		: FlatMap(rhs.begin(), rhs.end())
+	FlatMultiSet(std::initializer_list<Element> rhs)
+		: FlatMultiSet(rhs.begin(), rhs.end())
 	{
 	}
-	FlatMap(const FlatMap &rhs)
+	FlatMultiSet(const FlatMultiSet &rhs)
 		: x_vStorage(rhs.x_vStorage)
 	{
 	}
-	FlatMap(FlatMap &&rhs) noexcept
+	FlatMultiSet(FlatMultiSet &&rhs) noexcept
 		: x_vStorage(std::move(rhs.x_vStorage))
 	{
 	}
-	FlatMap &operator=(const FlatMap &rhs){
-		FlatMap(rhs).Swap(*this);
+	FlatMultiSet &operator=(const FlatMultiSet &rhs){
+		FlatMultiSet(rhs).Swap(*this);
 		return *this;
 	}
-	FlatMap &operator=(FlatMap &&rhs) noexcept {
+	FlatMultiSet &operator=(FlatMultiSet &&rhs) noexcept {
 		rhs.Swap(*this);
 		return *this;
 	}
@@ -243,12 +240,12 @@ public:
 		return EnumerateSingular();
 	}
 
-	void Swap(FlatMap &rhs) noexcept {
+	void Swap(FlatMultiSet &rhs) noexcept {
 		using std::swap;
 		swap(x_vStorage, rhs.x_vStorage);
 	}
 
-	// FlatMap 需求。
+	// FlatMultiSet 需求。
 	const Element *GetData() const noexcept {
 		return x_vStorage.GetData();
 	}
@@ -286,13 +283,13 @@ public:
 
 	const Element &Get(std::size_t uIndex) const {
 		if(uIndex >= GetSize()){
-			MCF_THROW(Exception, ERROR_ACCESS_DENIED, Rcntws::View(L"FlatMap: 下标越界。"));
+			MCF_THROW(Exception, ERROR_ACCESS_DENIED, Rcntws::View(L"FlatMultiSet: 下标越界。"));
 		}
 		return UncheckedGet(uIndex);
 	}
 	Element &Get(std::size_t uIndex){
 		if(uIndex >= GetSize()){
-			MCF_THROW(Exception, ERROR_ACCESS_DENIED, Rcntws::View(L"FlatMap: 下标越界。"));
+			MCF_THROW(Exception, ERROR_ACCESS_DENIED, Rcntws::View(L"FlatMultiSet: 下标越界。"));
 		}
 		return UncheckedGet(uIndex);
 	}
@@ -314,49 +311,25 @@ public:
 		x_vStorage.ReserveMore(uDeltaCapacity);
 	}
 
-	template<typename ComparandT, typename ...ValueParamsT>
-	std::pair<Element *, bool> Add(ComparandT &&vComparand, ValueParamsT &&...vValueParams){
-		return AddWithHint(nullptr, std::forward<ComparandT>(vComparand), std::forward<ValueParamsT>(vValueParams)...);
+	template<typename ComparandT>
+	std::pair<Element *, bool> Add(ComparandT &&vComparand){
+		return AddWithHint(nullptr, std::forward<ComparandT>(vComparand));
 	}
-	template<typename ComparandT, typename ...ValueParamsT>
-	std::pair<Element *, bool> AddWithHint(const Element *pHint, ComparandT &&vComparand, ValueParamsT &&...vValueParams){
+	template<typename ComparandT>
+	std::pair<Element *, bool> AddWithHint(const Element *pHint, ComparandT &&vComparand){
 		if(!pHint){
 			pHint = GetEnd();
-			if((pHint == GetBegin()) || !ComparatorT()(vComparand, pHint[-1].first)){
+			if((pHint == GetBegin()) || !ComparatorT()(vComparand, pHint[-1])){
 				goto jUseHint;
 			}
 		} else {
-			if(((pHint == GetBegin()) || !ComparatorT()(vComparand, pHint[-1].first)) && ((pHint == GetEnd()) || ComparatorT()(vComparand, pHint[0].first))){
+			if(((pHint == GetBegin()) || !ComparatorT()(vComparand, pHint[-1])) && ((pHint == GetEnd()) || ComparatorT()(vComparand, pHint[0]))){
 				goto jUseHint;
 			}
 		}
 		pHint = X_GetUpperBound(x_vStorage.GetBegin(), x_vStorage.GetEnd(), vComparand);
 	jUseHint:
-		if((pHint != GetBegin()) && !ComparatorT()(pHint[-1].first, vComparand)){
-			return std::make_pair(const_cast<Element *>(pHint), false);
-		}
-		return std::make_pair(x_vStorage.Emplace(pHint, std::piecewise_construct,
-			std::forward_as_tuple(std::forward<ComparandT>(vComparand)), std::forward_as_tuple(std::forward<ValueParamsT>(vValueParams)...)), true);
-	}
-	template<typename FirstT, typename SecondT>
-	std::pair<Element *, bool> AddWithHint(const Element *pHint, const std::pair<FirstT, SecondT> &vPair){
-		return AddWithHint(pHint, vPair.first, vPair.second);
-	}
-	template<typename FirstT, typename SecondT>
-	std::pair<Element *, bool> AddWithHint(const Element *pHint, std::pair<FirstT, SecondT> &&vPair){
-		return AddWithHint(pHint, std::move(vPair.first), std::move(vPair.second));
-	}
-	template<typename ComparandT, typename ...ValueParamsT>
-	std::pair<Element *, bool> Replace(ComparandT &&vComparand, ValueParamsT &&...vValueParams){
-		return ReplaceWithHint(nullptr, std::forward<ComparandT>(vComparand), std::forward<ValueParamsT>(vValueParams)...);
-	}
-	template<typename ComparandT, typename ...ValueParamsT>
-	std::pair<Element *, bool> ReplaceWithHint(const Element *pHint, ComparandT &&vComparand, ValueParamsT &&...vValueParams){
-		const auto vResult = AddWithHint(pHint, std::forward<ComparandT>(vComparand), std::forward<ValueParamsT>(vValueParams)...);
-		if(!vResult.second){
-			ReconstructOrAssign(AddressOf(vResult.first->second), std::forward<ValueParamsT>(vValueParams)...);
-		}
-		return vResult;
+		return std::make_pair(x_vStorage.Emplace(pHint, std::forward<ComparandT>(vComparand)), true);
 	}
 	template<typename ComparandT>
 	bool Remove(const ComparandT &vComparand){
@@ -368,9 +341,13 @@ public:
 		return true;
 	}
 
-	template<typename ComparandT, typename ...ValueParamsT>
-	Element *Emplace(const Element *pPos, ComparandT &&vComparand, ValueParamsT &&...vValueParams){
-		return AddWithHint(pPos, std::forward<ComparandT>(vComparand), std::forward<ValueParamsT>(vValueParams)...).first;
+	template<typename ComparandT>
+	Element *Emplace(const Element *pPos, ComparandT &&vComparand){
+		return AddWithHint(pPos, std::forward<ComparandT>(vComparand)).first;
+	}
+	template<typename ComparandT, typename ...RemainingT>
+	Element *Emplace(const Element *pPos, ComparandT &&vComparand, RemainingT &&...vRemaining){
+		return AddWithHint(pPos, Element(std::forward<ComparandT>(vComparand), std::forward<RemainingT>(vRemaining)...)).first;
 	}
 	Element *Erase(const Element *pBegin, const Element *pEnd) noexcept(noexcept(DeclVal<decltype((x_vStorage))>().Erase(pBegin, pEnd))) {
 		return x_vStorage.Erase(pBegin, pEnd);
@@ -522,26 +499,30 @@ public:
 	}
 
 public:
-	friend void swap(FlatMap &lhs, FlatMap &rhs) noexcept {
+	operator ArrayView<const Element>() const noexcept {
+		return ArrayView<const Element>(GetData(), GetSize());
+	}
+
+	friend void swap(FlatMultiSet &lhs, FlatMultiSet &rhs) noexcept {
 		lhs.Swap(rhs);
 	}
 
-	friend decltype(auto) begin(const FlatMap &rhs) noexcept {
+	friend decltype(auto) begin(const FlatMultiSet &rhs) noexcept {
 		return rhs.EnumerateFirst();
 	}
-	friend decltype(auto) begin(FlatMap &rhs) noexcept {
+	friend decltype(auto) begin(FlatMultiSet &rhs) noexcept {
 		return rhs.EnumerateFirst();
 	}
-	friend decltype(auto) cbegin(const FlatMap &rhs) noexcept {
+	friend decltype(auto) cbegin(const FlatMultiSet &rhs) noexcept {
 		return begin(rhs);
 	}
-	friend decltype(auto) end(const FlatMap &rhs) noexcept {
+	friend decltype(auto) end(const FlatMultiSet &rhs) noexcept {
 		return rhs.EnumerateSingular();
 	}
-	friend decltype(auto) end(FlatMap &rhs) noexcept {
+	friend decltype(auto) end(FlatMultiSet &rhs) noexcept {
 		return rhs.EnumerateSingular();
 	}
-	friend decltype(auto) cend(const FlatMap &rhs) noexcept {
+	friend decltype(auto) cend(const FlatMultiSet &rhs) noexcept {
 		return end(rhs);
 	}
 };

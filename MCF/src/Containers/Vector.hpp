@@ -5,14 +5,14 @@
 #ifndef MCF_CONTAINERS_VECTOR_HPP_
 #define MCF_CONTAINERS_VECTOR_HPP_
 
-#include "DefaultAllocator.hpp"
-#include "_Enumerator.hpp"
-#include "../Utilities/Assert.hpp"
-#include "../Utilities/ConstructDestruct.hpp"
-#include "../Utilities/DeclVal.hpp"
+#include "../Core/_CheckedSizeArithmetic.hpp"
+#include "../Core/_Enumerator.hpp"
+#include "../Core/DefaultAllocator.hpp"
+#include "../Core/Assert.hpp"
+#include "../Core/DeclVal.hpp"
+#include "../Core/ConstructDestruct.hpp"
 #include "../Core/Exception.hpp"
 #include "../Core/ArrayView.hpp"
-#include "../Core/_CheckedSizeArithmetic.hpp"
 #include <utility>
 #include <initializer_list>
 #include <type_traits>

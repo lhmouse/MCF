@@ -74,7 +74,16 @@ pkginclude_Core_HEADERS =	\
 	src/SmartPointers/DefaultDeleter.hpp	\
 	src/SmartPointers/IntrusivePtr.hpp	\
 	src/SmartPointers/PolyIntrusivePtr.hpp	\
-	src/SmartPointers/UniquePtr.hpp
+	src/SmartPointers/UniquePtr.hpp	\
+	src/Containers/_FlatContainer.hpp	\
+	src/Containers/CircularQueue.hpp	\
+	src/Containers/FlatMap.hpp	\
+	src/Containers/FlatMultiMap.hpp	\
+	src/Containers/FlatMultiSet.hpp	\
+	src/Containers/FlatSet.hpp	\
+	src/Containers/List.hpp	\
+	src/Containers/StaticVector.hpp	\
+	src/Containers/Vector.hpp
 
 mcf_sources =	\
 	src/Core/_KernelObjectBase.cpp	\

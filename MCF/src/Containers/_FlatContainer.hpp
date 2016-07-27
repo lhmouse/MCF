@@ -5,11 +5,11 @@
 #ifndef MCF_CONTAINERS_FLAT_CONTAINER_HPP_
 #define MCF_CONTAINERS_FLAT_CONTAINER_HPP_
 
-#include "../Utilities/Assert.hpp"
-#include "../Utilities/ConstructDestruct.hpp"
-#include "../Utilities/DeclVal.hpp"
-#include "../Core/Exception.hpp"
 #include "../Core/_CheckedSizeArithmetic.hpp"
+#include "../Core/Assert.hpp"
+#include "../Core/ConstructDestruct.hpp"
+#include "../Core/DeclVal.hpp"
+#include "../Core/Exception.hpp"
 #include <utility>
 #include <type_traits>
 #include <cstddef>

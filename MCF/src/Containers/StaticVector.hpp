@@ -5,12 +5,13 @@
 #ifndef MCF_CONTAINERS_STATIC_VECTOR_HPP_
 #define MCF_CONTAINERS_STATIC_VECTOR_HPP_
 
-#include "_Enumerator.hpp"
-#include "../Utilities/Assert.hpp"
-#include "../Utilities/AlignedStorage.hpp"
-#include "../Utilities/ConstructDestruct.hpp"
-#include "../Core/Exception.hpp"
 #include "../Core/_CheckedSizeArithmetic.hpp"
+#include "../Core/_Enumerator.hpp"
+#include "../Core/Assert.hpp"
+#include "../Core/AlignedStorage.hpp"
+#include "../Core/ConstructDestruct.hpp"
+#include "../Core/Exception.hpp"
+#include "../Core/ArrayView.hpp"
 #include <utility>
 #include <initializer_list>
 #include <type_traits>
@@ -440,6 +441,13 @@ public:
 	}
 	Element &operator[](std::size_t uIndex) noexcept {
 		return UncheckedGet(uIndex);
+	}
+
+	operator ArrayView<const Element>() const noexcept {
+		return ArrayView<const Element>(GetData(), GetSize());
+	}
+	operator ArrayView<Element>() noexcept {
+		return ArrayView<Element>(GetData(), GetSize());
 	}
 
 	friend void swap(StaticVector &lhs, StaticVector &rhs) noexcept(noexcept(lhs.Swap(rhs))) {

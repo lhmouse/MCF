@@ -170,10 +170,14 @@ MCFCRT_9_dll_SOURCES =	\
 	src/startup/dll.c	\
 	${mcfcrt_sources}
 
+MCFCRT_9_dll_DEPENDENCIES =	\
+	libMCFCRT-pre.a
+
 MCFCRT_9_dll_LDFLAGS =	\
 	-shared -static -nostdlib	\
 	-Wl,-e@__MCFCRT_DllStartup,-subsystem,windows,--disable-runtime-pseudo-reloc,--disable-auto-import	\
-	-Wl,--disable-stdcall-fixup,--enable-auto-image-base,--export-all-symbols,--out-implib,libMCFCRT.dll.a
+	-Wl,--export-all-symbols,--exclude-symbols,@__MCFCRT_DllStartup	\
+	-Wl,--disable-stdcall-fixup,--enable-auto-image-base,--out-implib,libMCFCRT.dll.a,--exclude-libs,libMCF-pre.a
 ##	-Wl,--whole-archive,-lsupc++,-lgcc,-lgcc_eh,--no-whole-archive
 
 MCFCRT_9_dll_LDADD =	\
@@ -195,4 +199,4 @@ libMCFCRT.dll.a: MCFCRT-9.dll
 
 ## Due to Windows limitation we can't link this library statically.
 libMCFCRT.a: MCFCRT-9.dll
-	cp -p libMCFCRT.dll.a '$@'
+	cp -p libMCFCRT.dll.a $@

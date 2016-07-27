@@ -7,6 +7,9 @@
 *.a
 *.log
 *.gch
+*.save*
+*.exe
+*.dll
 
 .dirstamp
 .libs
@@ -32,9 +35,6 @@ m4
 missing
 stamp-h1
 
-*.deb
-description-pak
+build-*
 
-lib
-bin
-sbin
+!/release/**

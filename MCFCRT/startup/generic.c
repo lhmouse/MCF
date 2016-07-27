@@ -6,7 +6,6 @@
 #include "exe.h"
 #include "dll.h"
 #include "../env/_seh_top.h"
-#include "../env/_crt_process.h"
 #include "../env/mcfwin.h"
 #include "../env/standard_streams.h"
 #include "../env/module.h"
@@ -29,10 +28,6 @@ bool __MCFCRT_TlsCallbackGeneric(void *pInstance, unsigned uReason, bool bDynami
 				break;
 			}
 			__MCFCRT_FEnvInit();
-			bRet = __MCFCRT_ProcessInit();
-			if(!bRet){
-				goto jCleanup_00;
-			}
 			bRet = __MCFCRT_StandardStreamsInit();
 			if(!bRet){
 				goto jCleanup_01;
@@ -102,8 +97,6 @@ bool __MCFCRT_TlsCallbackGeneric(void *pInstance, unsigned uReason, bool bDynami
 		jCleanup_02:
 			__MCFCRT_StandardStreamsUninit();
 		jCleanup_01:
-			__MCFCRT_ModuleUninit();
-		jCleanup_00:
 			break;
 		}
 	}

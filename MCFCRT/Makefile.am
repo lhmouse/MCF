@@ -175,13 +175,11 @@ MCFCRT_9_dll_DEPENDENCIES =	\
 MCFCRT_9_dll_LDFLAGS =	\
 	-shared -static -nostdlib	\
 	-Wl,-e@__MCFCRT_DllStartup,-subsystem,windows,--disable-runtime-pseudo-reloc,--disable-auto-import	\
-	-Wl,--export-all-symbols,--exclude-symbols,@__MCFCRT_DllStartup	\
-	-Wl,--disable-stdcall-fixup,--enable-auto-image-base,--out-implib,libMCFCRT.dll.a,--exclude-libs,libMCF-pre.a	\
-	-Wl,--whole-archive,-lsupc++,-lgcc,-lgcc_eh,--no-whole-archive
-##	-Wl,--whole-archive,-lsupc++,-lgcc,-lgcc_eh,--no-whole-archive
+	-Wl,--export-all-symbols,--exclude-symbols,@__MCFCRT_DllStartup,--exclude-libs,ALL,--exclude-libs,libMCF-pre.a	\
+	-Wl,--disable-stdcall-fixup,--enable-auto-image-base,--out-implib,libMCFCRT.dll.a
 
 MCFCRT_9_dll_LDADD =	\
-	-lsupc++ -lgcc -lgcc_eh -lmingwex -lmsvcrt -lkernel32 -lntdll
+	-lkernel32 -lntdll
 
 lib_LIBRARIES =	\
 	libMCFCRT-pre.a	\
@@ -200,4 +198,4 @@ libMCFCRT.dll.a: MCFCRT-9.dll
 
 ## Due to Windows limitation we can't link this library statically.
 libMCFCRT.a: MCFCRT-9.dll
-	cp -p libMCFCRT.dll.a $@
+	cp --no-preserve=timestamps libMCFCRT.dll.a $@

@@ -19,5 +19,5 @@ build=x86_64-w64-mingw32
   CFLAGS='-O0 -g'	\
   LDFLAGS='-O0'	\
   ../MCFCRT/configure --build="$build" --host="$build" --prefix="$prefix" &&
-  make -j4 &&
+  make -j7 &&
   make install)

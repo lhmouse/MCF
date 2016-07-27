@@ -19,5 +19,5 @@ build=i686-w64-mingw32
   CFLAGS='-O3 -ffunction-sections -fdata-sections'	\
   LDFLAGS='-Wl,-s,--gc-sections'	\
   ../MCFCRT/configure --build="$build" --host="$build" --prefix="$prefix" &&
-  make -j4 &&
+  make -j7 &&
   make install)

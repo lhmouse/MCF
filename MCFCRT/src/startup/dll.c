@@ -11,7 +11,7 @@
 
 // __MCFCRT_DllStartup 模块入口点。
 __MCFCRT_C_STDCALL
-BOOL __MCFCRT_DllStartup(HINSTANCE hDll, DWORD dwReason, LPVOID pReserved)
+extern BOOL __MCFCRT_DllStartup(HINSTANCE hDll, DWORD dwReason, LPVOID pReserved)
 	__asm__("@__MCFCRT_DllStartup");
 
 __MCFCRT_C_STDCALL __attribute__((__noinline__))

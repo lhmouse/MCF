@@ -2,10 +2,10 @@
 
 set -e
 
-prefix="$(pwd)/debug/mingw64"
+prefix="$(pwd)/Release/mingw64"
 mkdir -p "$prefix"
 
-builddir="$(pwd)/build_x86_64_debug"
+builddir="$(pwd)/build_x86_64_release"
 mkdir -p "$builddir"
 
 build=x86_64-w64-mingw32
@@ -15,7 +15,7 @@ build=x86_64-w64-mingw32
   autoreconf -i)
 
 (cd "$builddir" &&
-  CPPFLAGS='-DNDEBUG'	\
+  CPPFLAGS='-DNrelease'	\
   CFLAGS='-O3 -ffunction-sections -fdata-sections'	\
   LDFLAGS='-Wl,-s,--gc-sections'	\
   ../MCFCRT/configure --build="$build" --host="$build" --prefix="$prefix" &&

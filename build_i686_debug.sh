@@ -2,7 +2,7 @@
 
 set -e
 
-prefix="$(pwd)/debug/mingw32"
+prefix="$(pwd)/Debug/mingw32"
 mkdir -p "$prefix"
 
 builddir="$(pwd)/build_i686_debug"

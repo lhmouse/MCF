@@ -14,8 +14,8 @@
 // -Wl,-e@__MCFCRT_ExeStartup
 
 // __MCFCRT_ExeStartup 模块入口点。
-_Noreturn __MCFCRT_C_STDCALL
-DWORD __MCFCRT_ExeStartup(LPVOID pUnknown)
+__MCFCRT_C_STDCALL
+extern DWORD __MCFCRT_ExeStartup(LPVOID pUnknown)
 	__asm__("@__MCFCRT_ExeStartup");
 
 __MCFCRT_C_STDCALL
@@ -38,7 +38,7 @@ static void RemoveConsoleControlHandler(intptr_t nContext){
 	SetConsoleCtrlHandler(&CrtCtrlHandler, false);
 }
 
-_Noreturn __MCFCRT_C_STDCALL __attribute__((__noinline__))
+__MCFCRT_C_STDCALL __attribute__((__noinline__, __noreturn__))
 DWORD __MCFCRT_ExeStartup(LPVOID pUnknown){
 	(void)pUnknown;
 

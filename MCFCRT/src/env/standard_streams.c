@@ -220,7 +220,7 @@ bool _MCFCRT_WriteStandardErrorString(const wchar_t *pwcString, size_t uLength, 
 	HANDLE h = GetStdHandle(STD_ERROR_HANDLE);
 	if(h){
 		DWORD written;
-		WriteConsoleW(h, pwcString, uLength, &written, nullptr);
+		WriteConsoleW(h, pwcString, (DWORD)uLength, &written, nullptr);
 	}
 	return true;
 }

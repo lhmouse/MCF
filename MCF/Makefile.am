@@ -83,7 +83,9 @@ pkginclude_Core_HEADERS =	\
 	src/Containers/FlatSet.hpp	\
 	src/Containers/List.hpp	\
 	src/Containers/StaticVector.hpp	\
-	src/Containers/Vector.hpp
+	src/Containers/Vector.hpp	\
+	src/Random/FastGenerator.hpp	\
+	src/Random/IsaacGenerator.hpp
 
 mcf_sources =	\
 	src/Core/_KernelObjectBase.cpp	\
@@ -107,7 +109,9 @@ mcf_sources =	\
 	src/Thread/Thread.cpp	\
 	src/Thread/UniqueLockBase.cpp	\
 	src/SmartPointers/IntrusivePtr.cpp	\
-	src/SmartPointers/PolyIntrusivePtr.cpp
+	src/SmartPointers/PolyIntrusivePtr.cpp	\
+	src/Random/FastGenerator.cpp	\
+	src/Random/IsaacGenerator.cpp
 
 bin_PROGRAMS =	\
 	MCF-1.dll

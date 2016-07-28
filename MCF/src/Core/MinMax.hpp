@@ -2,10 +2,10 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2013 - 2016, LH_Mouse. All wrongs reserved.
 
-#ifndef MCF_UTILITIES_MIN_MAX_HPP_
-#define MCF_UTILITIES_MIN_MAX_HPP_
+#ifndef MCF_CORE_MIN_MAX_HPP_
+#define MCF_CORE_MIN_MAX_HPP_
 
-#include "../Function/Comparators.hpp"
+#include "Comparators.hpp"
 #include <utility>
 #include <type_traits>
 

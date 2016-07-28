@@ -37,12 +37,12 @@ private:
 private:
 	void X_Dispose() noexcept {
 		const auto pElement = x_pElement;
-		if(pElement){
-			Deleter()(const_cast<std::remove_cv_t<Element> *>(pElement));
-		}
 #ifndef NDEBUG
 		x_pElement = (Element *)(std::uintptr_t)0xDEADBEEFDEADBEEF;
 #endif
+		if(pElement){
+			Deleter()(const_cast<std::remove_cv_t<Element> *>(pElement));
+		}
 	}
 
 public:
@@ -60,11 +60,11 @@ public:
 				std::is_convertible<typename UniquePtr<OtherObjectT, OtherDeleterT>::Deleter, Deleter>::value,
 			int> = 0>
 	UniquePtr(UniquePtr<OtherObjectT, OtherDeleterT> &&rhs) noexcept
-		: x_pElement(rhs.Release())
+		: UniquePtr(rhs.Release())
 	{
 	}
 	UniquePtr(UniquePtr &&rhs) noexcept
-		: x_pElement(rhs.Release())
+		: UniquePtr(rhs.Release())
 	{
 	}
 	UniquePtr &operator=(UniquePtr &&rhs) noexcept {

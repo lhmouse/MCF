@@ -6,8 +6,7 @@
 #define MCF_CORE_STREAM_BUFFER_HPP_
 
 #include "../Containers/List.hpp"
-#include "../Containers/Vector.hpp"
-#include "FixedSizeAllocator.hpp"
+#include "../Core/FixedSizeAllocator.hpp"
 #include <iterator>
 #include <utility>
 #include <cstddef>
@@ -149,8 +148,6 @@ public:
 	void Splice(StreamBuffer &&rhs) noexcept {
 		Splice(rhs);
 	}
-
-	void Dump(Vector<unsigned char> &vecData) const;
 
 	template<typename FuncT>
 	bool Iterate(FuncT &&vFunc) const {

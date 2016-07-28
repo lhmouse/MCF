@@ -32,6 +32,7 @@ pkginclude_Core_HEADERS =	\
 	src/Core/Clone.hpp	\
 	src/Core/Comparators.hpp	\
 	src/Core/ConstructDestruct.hpp	\
+	src/Core/CountLeadingTrailingZeroes.hpp	\
 	src/Core/CopyMoveFill.hpp	\
 	src/Core/CountOf.hpp	\
 	src/Core/DeclVal.hpp	\
@@ -41,18 +42,22 @@ pkginclude_Core_HEADERS =	\
 	src/Core/Exception.hpp	\
 	src/Core/File.hpp	\
 	src/Core/FixedSizeAllocator.hpp	\
+	src/Core/Function.hpp	\
 	src/Core/FunctionView.hpp	\
 	src/Core/Invoke.hpp	\
 	src/Core/LastError.hpp	\
 	src/Core/Matrix.hpp	\
+	src/Core/MinMax.hpp	\
 	src/Core/Noncopyable.hpp	\
 	src/Core/Optional.hpp	\
+	src/Core/ParameterPackManipulators.hpp	\
 	src/Core/Random.hpp	\
 	src/Core/Rcnts.hpp	\
 	src/Core/ReconstructOrAssign.hpp	\
 	src/Core/RefWrapper.hpp	\
 	src/Core/String.hpp	\
 	src/Core/StringView.hpp	\
+	src/Core/TupleManipulators.hpp	\
 	src/Core/UniqueHandle.hpp	\
 	src/Core/Uuid.hpp	\
 	src/Core/WhiteHole.hpp	\
@@ -85,7 +90,10 @@ pkginclude_Core_HEADERS =	\
 	src/Containers/StaticVector.hpp	\
 	src/Containers/Vector.hpp	\
 	src/Random/FastGenerator.hpp	\
-	src/Random/IsaacGenerator.hpp
+	src/Random/IsaacGenerator.hpp	\
+	src/Utilities/Argv.cpp	\
+	src/Utilities/Thunk.cpp	\
+	src/Utilities/Variant.cpp
 
 mcf_sources =	\
 	src/Core/_KernelObjectBase.cpp	\
@@ -111,7 +119,10 @@ mcf_sources =	\
 	src/SmartPointers/IntrusivePtr.cpp	\
 	src/SmartPointers/PolyIntrusivePtr.cpp	\
 	src/Random/FastGenerator.cpp	\
-	src/Random/IsaacGenerator.cpp
+	src/Random/IsaacGenerator.cpp	\
+	src/Utilities/Argv.cpp	\
+	src/Utilities/Thunk.cpp	\
+	src/Utilities/Variant.cpp
 
 bin_PROGRAMS =	\
 	MCF-1.dll

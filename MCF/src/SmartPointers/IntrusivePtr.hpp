@@ -68,7 +68,7 @@ namespace Impl_IntrusivePtr {
 			return x_uRef.Load(kAtomicRelaxed);
 		}
 		bool TryAddRef() const volatile noexcept {
-			MCF_ASSERT((std::ptrdiff_t)x_uRef.Load(kAtomicRelaxed) >= 0);
+			MCF_ASSERT(static_cast<std::ptrdiff_t>(x_uRef.Load(kAtomicRelaxed)) >= 0);
 
 			auto uOldRef = x_uRef.Load(kAtomicRelaxed);
 			for(;;){
@@ -81,12 +81,12 @@ namespace Impl_IntrusivePtr {
 			}
 		}
 		void AddRef() const volatile noexcept {
-			MCF_ASSERT((std::ptrdiff_t)x_uRef.Load(kAtomicRelaxed) > 0);
+			MCF_ASSERT(static_cast<std::ptrdiff_t>(x_uRef.Load(kAtomicRelaxed)) > 0);
 
 			x_uRef.Increment(kAtomicRelaxed);
 		}
 		bool DropRef() const volatile noexcept {
-			MCF_ASSERT((std::ptrdiff_t)x_uRef.Load(kAtomicRelaxed) > 0);
+			MCF_ASSERT(static_cast<std::ptrdiff_t>(x_uRef.Load(kAtomicRelaxed)) > 0);
 
 			return x_uRef.Decrement(kAtomicRelaxed) == 0;
 		}
@@ -119,9 +119,8 @@ namespace Impl_IntrusivePtr {
 	public:
 		static void *operator new(std::size_t uSize){
 			static_assert(sizeof(WeakViewTemplate) <= g_vViewAllocator.kElementSize, "Fix the declaration of g_vViewAllocator!");
-
 			MCF_ASSERT(uSize == sizeof(WeakViewTemplate));
-			(void)uSize;
+
 			return g_vViewAllocator.Allocate();
 		}
 		static void operator delete(void *pRaw) noexcept {
@@ -316,14 +315,14 @@ private:
 	}
 	void X_Dispose() noexcept {
 		const auto pElement = x_pElement;
+#ifndef NDEBUG
+		x_pElement = (Element *)(std::uintptr_t)0xDEADBEEFDEADBEEF;
+#endif
 		if(pElement){
 			if(static_cast<const volatile Impl_IntrusivePtr::RefCountBase *>(pElement)->DropRef()){
 				Deleter()(const_cast<std::remove_cv_t<Element> *>(pElement));
 			}
 		}
-#ifndef NDEBUG
-		x_pElement = (Element *)(std::uintptr_t)0xDEADBEEFDEADBEEF;
-#endif
 	}
 
 public:
@@ -341,7 +340,7 @@ public:
 				std::is_convertible<typename UniquePtr<OtherObjectT, OtherDeleterT>::Deleter, Deleter>::value,
 			int> = 0>
 	IntrusivePtr(UniquePtr<OtherObjectT, OtherDeleterT> &&rhs) noexcept
-		: x_pElement(rhs.Release())
+		: IntrusivePtr(rhs.Release())
 	{
 	}
 	template<typename OtherObjectT, typename OtherDeleterT,
@@ -350,7 +349,7 @@ public:
 				std::is_convertible<typename IntrusivePtr<OtherObjectT, OtherDeleterT>::Deleter, Deleter>::value,
 			int> = 0>
 	IntrusivePtr(const IntrusivePtr<OtherObjectT, OtherDeleterT> &rhs) noexcept
-		: x_pElement(rhs.X_Fork())
+		: IntrusivePtr(rhs.X_Fork())
 	{
 	}
 	template<typename OtherObjectT, typename OtherDeleterT,
@@ -359,15 +358,15 @@ public:
 				std::is_convertible<typename IntrusivePtr<OtherObjectT, OtherDeleterT>::Deleter, Deleter>::value,
 			int> = 0>
 	IntrusivePtr(IntrusivePtr<OtherObjectT, OtherDeleterT> &&rhs) noexcept
-		: x_pElement(rhs.Release())
+		: IntrusivePtr(rhs.Release())
 	{
 	}
 	IntrusivePtr(const IntrusivePtr &rhs) noexcept
-		: x_pElement(rhs.X_Fork())
+		: IntrusivePtr(rhs.X_Fork())
 	{
 	}
 	IntrusivePtr(IntrusivePtr &&rhs) noexcept
-		: x_pElement(rhs.Release())
+		: IntrusivePtr(rhs.Release())
 	{
 	}
 	IntrusivePtr &operator=(const IntrusivePtr &rhs) noexcept {
@@ -596,6 +595,7 @@ class IntrusiveWeakPtr {
 	friend class WeakIntrusivePtr;
 
 private:
+	struct X_AdoptionTag { };
 	using X_WeakView = typename Impl_IntrusivePtr::DeletableBase<DeleterT>::X_WeakView;
 
 public:
@@ -628,18 +628,24 @@ private:
 	}
 	void X_Dispose() noexcept {
 		const auto pView = x_pView;
+#ifndef NDEBUG
+		x_pView = (X_WeakView *)(std::uintptr_t)0xDEADBEEFDEADBEEF;
+#endif
 		if(pView){
 			if(static_cast<const volatile Impl_IntrusivePtr::RefCountBase *>(pView)->DropRef()){
 				delete pView;
 			}
 		}
-#ifndef NDEBUG
-		x_pView = (X_WeakView *)(std::uintptr_t)0xDEADBEEFDEADBEEF;
-#endif
 	}
 
 private:
 	X_WeakView *x_pView;
+
+private:
+	constexpr IntrusiveWeakPtr(const X_AdoptionTag &, X_WeakView *pView) noexcept
+		: x_pView(pView)
+	{
+	}
 
 public:
 	constexpr IntrusiveWeakPtr(std::nullptr_t = nullptr) noexcept
@@ -647,7 +653,7 @@ public:
 	{
 	}
 	explicit IntrusiveWeakPtr(Element *rhs)
-		: x_pView(X_CreateViewFromElement(rhs))
+		: IntrusiveWeakPtr(X_AdoptionTag(), X_CreateViewFromElement(rhs))
 	{
 	}
 	template<typename OtherObjectT, typename OtherDeleterT,
@@ -656,7 +662,7 @@ public:
 				std::is_convertible<typename IntrusivePtr<OtherObjectT, OtherDeleterT>::Deleter, Deleter>::value,
 			int> = 0>
 	IntrusiveWeakPtr(const IntrusivePtr<OtherObjectT, OtherDeleterT> &rhs)
-		: x_pView(X_CreateViewFromElement(rhs.Get()))
+		: IntrusiveWeakPtr(X_AdoptionTag(), X_CreateViewFromElement(rhs.Get()))
 	{
 	}
 	template<typename OtherObjectT, typename OtherDeleterT,
@@ -665,7 +671,7 @@ public:
 				std::is_convertible<typename IntrusiveWeakPtr<OtherObjectT, OtherDeleterT>::Deleter, Deleter>::value,
 			int> = 0>
 	IntrusiveWeakPtr(const IntrusiveWeakPtr<OtherObjectT, OtherDeleterT> &rhs) noexcept
-		: x_pView(rhs.X_Fork())
+		: IntrusiveWeakPtr(X_AdoptionTag(), rhs.X_Fork())
 	{
 	}
 	template<typename OtherObjectT, typename OtherDeleterT,
@@ -674,15 +680,15 @@ public:
 				std::is_convertible<typename IntrusiveWeakPtr<OtherObjectT, OtherDeleterT>::Deleter, Deleter>::value,
 			int> = 0>
 	IntrusiveWeakPtr(IntrusiveWeakPtr<OtherObjectT, OtherDeleterT> &&rhs) noexcept
-		: x_pView(rhs.X_Release())
+		: IntrusiveWeakPtr(X_AdoptionTag(), rhs.X_Release())
 	{
 	}
 	IntrusiveWeakPtr(const IntrusiveWeakPtr &rhs) noexcept
-		: x_pView(rhs.X_Fork())
+		: IntrusiveWeakPtr(X_AdoptionTag(), rhs.X_Fork())
 	{
 	}
 	IntrusiveWeakPtr(IntrusiveWeakPtr &&rhs) noexcept
-		: x_pView(rhs.X_Release())
+		: IntrusiveWeakPtr(X_AdoptionTag(), rhs.X_Release())
 	{
 	}
 	IntrusiveWeakPtr &operator=(const IntrusiveWeakPtr &rhs) noexcept {

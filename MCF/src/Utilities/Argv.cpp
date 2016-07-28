@@ -4,7 +4,7 @@
 
 #include "../StdMCF.hpp"
 #include "Argv.hpp"
-#include "Exception.hpp"
+#include "../Core/Exception.hpp"
 
 namespace MCF {
 

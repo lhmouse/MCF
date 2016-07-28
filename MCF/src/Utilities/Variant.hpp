@@ -2,13 +2,13 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2013 - 2016, LH_Mouse. All wrongs reserved.
 
-#ifndef MCF_CORE_VARIANT_HPP_
-#define MCF_CORE_VARIANT_HPP_
+#ifndef MCF_UTILITIES_VARIANT_HPP_
+#define MCF_UTILITIES_VARIANT_HPP_
 
-#include "ParameterPackManipulators.hpp"
-#include "Assert.hpp"
+#include "../Core/ParameterPackManipulators.hpp"
+#include "../Core/Assert.hpp"
+#include "../Core/Exception.hpp"
 #include "../SmartPointers/UniquePtr.hpp"
-#include "Exception.hpp"
 #include <utility>
 #include <typeinfo>
 #include <cstddef>

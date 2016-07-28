@@ -4,9 +4,8 @@
 
 #include "../StdMCF.hpp"
 #include "StreamBuffer.hpp"
-#include "MinMax.hpp"
-#include "CopyMoveFill.hpp"
-#include "FixedSizeAllocator.hpp"
+#include "../Core/MinMax.hpp"
+#include "../Core/CopyMoveFill.hpp"
 
 namespace MCF {
 
@@ -220,15 +219,6 @@ void StreamBuffer::Splice(StreamBuffer &rhs) noexcept {
 	x_lstChunks.Splice(nullptr, rhs.x_lstChunks);
 	x_uSize += rhs.x_uSize;
 	rhs.x_uSize = 0;
-}
-
-void StreamBuffer::Dump(Vector<unsigned char> &vecData) const {
-	vecData.ReserveMore(GetSize());
-	Iterate(
-		[&](auto pbyData, auto uSize){
-			vecData.UncheckedAppend(pbyData, pbyData + uSize);
-			return true;
-		});
 }
 
 }

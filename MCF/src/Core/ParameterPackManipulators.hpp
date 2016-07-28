@@ -2,8 +2,8 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2013 - 2016, LH_Mouse. All wrongs reserved.
 
-#ifndef MCF_UTILITIES_PARAMETER_PACK_MANIPULATORS_HPP_
-#define MCF_UTILITIES_PARAMETER_PACK_MANIPULATORS_HPP_
+#ifndef MCF_CORE_PARAMETER_PACK_MANIPULATORS_HPP_
+#define MCF_CORE_PARAMETER_PACK_MANIPULATORS_HPP_
 
 #include <type_traits>
 #include <cstddef>

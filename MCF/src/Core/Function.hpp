@@ -165,10 +165,14 @@ public:
 
 public:
 	bool IsNull() const noexcept {
-		return x_pFunctor == nullptr;
+		return !x_pFunctor;
 	}
 	std::size_t GetRefCount() const noexcept {
-		return x_pFunctor->GetRef();
+		const auto pFunctor = x_pFunctor;
+		if(!pFunctor){
+			return 0;
+		}
+		return pFunctor->GetRef();
 	}
 
 	Function &Reset(std::nullptr_t = nullptr) noexcept {
@@ -192,8 +196,10 @@ public:
 	// 后置条件：GetRefCount() <= 1
 	void Fork(){
 		const auto pFunctor = x_pFunctor;
-		if(pFunctor && (pFunctor->GetRef() > 1)){
-			Function(X_AdoptionTag(), pFunctor->VirtualNew()).Swap(*this);
+		if(!pFunctor){
+			if(pFunctor->GetRef() > 1){
+				Function(X_AdoptionTag(), pFunctor->VirtualNew()).Swap(*this);
+			}
 		}
 	}
 

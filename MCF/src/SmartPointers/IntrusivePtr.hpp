@@ -393,7 +393,7 @@ public:
 	std::size_t GetRef() const noexcept {
 		const auto pElement = x_pElement;
 		if(!pElement){
-			return false;
+			return 0;
 		}
 		return static_cast<const volatile Impl_IntrusivePtr::RefCountBase *>(pElement)->GetRef();
 	}

@@ -9,6 +9,3 @@ __attribute__((__noinline__))
 void free(void *p){
 	_MCFCRT_free(p);
 }
-
-__attribute__((__alias__("free")))
-void __wrap_free(void *p);

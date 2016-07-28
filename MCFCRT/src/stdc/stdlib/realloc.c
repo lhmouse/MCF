@@ -9,6 +9,3 @@ __attribute__((__noinline__))
 void *realloc(void *p, size_t cb){
 	return _MCFCRT_realloc(p, cb);
 }
-
-__attribute__((__alias__("realloc")))
-void *__wrap_realloc(void *p, size_t cb);

@@ -9,6 +9,3 @@ __attribute__((__noinline__))
 void *calloc(size_t nmemb, size_t size){
 	return _MCFCRT_calloc(nmemb, size);
 }
-
-__attribute__((__alias__("calloc")))
-void *__wrap_calloc(size_t nmemb, size_t size);

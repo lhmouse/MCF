@@ -16,6 +16,3 @@ int atexit(void (*func)(void)){
 	}
 	return 0;
 }
-
-__attribute__((__alias__("atexit")))
-int __wrap_atexit(void (*func)(void));

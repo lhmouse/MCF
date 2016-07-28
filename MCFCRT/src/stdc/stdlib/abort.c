@@ -8,6 +8,3 @@
 _Noreturn void abort(void){
 	_MCFCRT_Bail(L"应用程序调用了 abort()。");
 }
-
-__attribute__((__alias__("abort")))
-void __wrap_abort(void);

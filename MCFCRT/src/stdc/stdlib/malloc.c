@@ -9,6 +9,3 @@ __attribute__((__noinline__))
 void *malloc(size_t cb){
 	return _MCFCRT_malloc(cb);
 }
-
-__attribute__((__alias__("malloc")))
-void *__wrap_malloc(size_t cb);

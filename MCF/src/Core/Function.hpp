@@ -40,6 +40,13 @@ namespace Impl_Function {
 			: x_uRef(1)
 		{
 		}
+		constexpr RefCountedFunctorBase(const RefCountedFunctorBase &) noexcept
+			: RefCountedFunctorBase()
+		{
+		}
+		RefCountedFunctorBase &operator=(const RefCountedFunctorBase &) noexcept {
+			return *this;
+		}
 		virtual ~RefCountedFunctorBase(){
 		}
 

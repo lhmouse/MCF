@@ -12,6 +12,7 @@
 #include <utility>
 #include <cstring>
 #include <cstddef>
+#include <cstdint>
 
 namespace MCF {
 

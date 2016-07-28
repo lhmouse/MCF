@@ -5,10 +5,11 @@
 #ifndef MCF_CORE_EXCEPTION_HPP_
 #define MCF_CORE_EXCEPTION_HPP_
 
-#include <exception>
-#include <utility>
 #include "Rcnts.hpp"
 #include "DeclVal.hpp"
+#include <MCFCRT/env/last_error.h>
+#include <exception>
+#include <utility>
 
 namespace MCF {
 

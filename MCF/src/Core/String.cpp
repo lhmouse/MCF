@@ -2,7 +2,6 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2013 - 2016, LH_Mouse. All wrongs reserved.
 
-#include "../StdMCF.hpp"
 #include "String.hpp"
 #include "Exception.hpp"
 #include <winternl.h>

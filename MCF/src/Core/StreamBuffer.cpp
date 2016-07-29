@@ -6,6 +6,10 @@
 #include "MinMax.hpp"
 #include "CopyMoveFill.hpp"
 
+#include "../Containers/List.hpp"
+
+template class MCF::List<int>;
+
 /*
 #include "precompiled.hpp"
 #include "stream_buffer.hpp"

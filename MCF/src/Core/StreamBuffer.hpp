@@ -5,107 +5,194 @@
 #ifndef MCF_CORE_STREAM_BUFFER_HPP_
 #define MCF_CORE_STREAM_BUFFER_HPP_
 
+#include "_Enumerator.hpp"
 #include <iterator>
 #include <utility>
 #include <cstddef>
 
 namespace MCF {
-
 /*
+class StreamBuffer {
+public:
+	class ReadIterator;
+	class WriteIterator;
+
+	class ChunkEnumerator;
+	class ConstChunkEnumerator;
+
+public:
+	struct Chunk {
+		unsigned uBegin;
+		unsigned uEnd;
+		unsigned char abyData[256];
+	};
+
+	using Element = Chunk;
+
+private:
+	Chunk *x_pFirst;
+	Chunk *x_pLast;
+	std::size_t x_uSize;
+
+public:
+	constexpr StreamBuffer() noexcept
+		: x_pFirst(nullptr), x_pLast(nullptr), x_uSize(0)
+	{
+	}
+	StreamBuffer(unsigned char byData, std::size_t uSize)
+		: StreamBuffer()
+	{
+		Put(byData, uSize);
+	}
+	StreamBuffer(const void *pData, std::size_t uSize)
+		: StreamBuffer()
+	{
+		Put(pData, uSize);
+	}
+	StreamBuffer(const StreamBuffer &rhs);
+	StreamBuffer(StreamBuffer &&rhs) noexcept
+		: StreamBuffer()
+	{
+		Swap(rhs);
+	}
+	StreamBuffer &operator=(const StreamBuffer &rhs){
+		StreamBuffer(rhs).Swap(*this);
+		return *this;
+	}
+	StreamBuffer &operator=(StreamBuffer &&rhs) noexcept {
+		rhs.Swap(*this);
+		return *this;
+	}
+	~StreamBuffer();
+
+public:
+	constexpr const Element *GetFirst() const noexcept {
+		return x_pFirst;
+	}
+
+
+	//   const Element * GetFirst (               ) const noexcept;
+	//         Element * GetFirst (               )       noexcept;
+	//   const Element * GetLast  (               ) const noexcept;
+	//         Element * GetLast  (               )       noexcept;
+	//   const Element * GetPrev  (const Element *) const noexcept;
+	//         Element * GetNext  (      Element *)       noexcept;
+	//   const Element * GetPrev  (const Element *) const noexcept;
+	//         Element * GetNext  (      Element *)       noexcept;
+
+	constexpr bool IsEmpty() const noexcept {
+		return x_uSize == 0;
+	}
+	constexpr std::size_t GetSize() const noexcept {
+		return x_uSize;
+	}
+};
+
+class StreamBuffer::ReadIterator : public std::iterator<std::input_iterator_tag, int> {
+private:
+	StreamBuffer *x_psbufOwner;
+
+public:
+	explicit constexpr ReadIterator(StreamBuffer &sbufOwner) noexcept
+		: x_psbufOwner(&sbufOwner)
+	{
+	}
+
+public:
+	int operator*() const {
+		return x_psbufOwner->Peek();
+	}
+	ReadIterator &operator++(){
+		x_psbufOwner->Discard();
+		return *this;
+	}
+	ReadIterator operator++(int){
+		x_psbufOwner->Discard();
+		return *this;
+	}
+};
+class StreamBuffer::WriteIterator : public std::iterator<std::output_iterator_tag, unsigned char> {
+private:
+	StreamBuffer *x_psbufOwner;
+
+public:
+	explicit constexpr WriteIterator(StreamBuffer &sbufOwner) noexcept
+		: x_psbufOwner(&sbufOwner)
+	{
+	}
+
+public:
+	WriteIterator &operator=(unsigned char byData){
+		x_psbufOwner->Put(byData);
+		return *this;
+	}
+	WriteIterator &operator*(){
+		return *this;
+	}
+	WriteIterator &operator++(){
+		return *this;
+	}
+	WriteIterator &operator++(int){
+		return *this;
+	}
+};
+
+class StreamBuffer::ConstChunkEnumerator : public std::iterator<std::bidirectional_iterator_tag, int> {
+private:
+	const StreamBuffer *x_psbufOwner;
+
+public:
+	explicit constexpr ReadIterator(StreamBuffer &sbufOwner) noexcept
+		: x_psbufOwner(&sbufOwner)
+	{
+	}
+
+public:
+	int operator*() const {
+		return x_psbufOwner->Peek();
+	}
+	ReadIterator &operator++(){
+		x_psbufOwner->Discard();
+		return *this;
+	}
+	ReadIterator operator++(int){
+		x_psbufOwner->Discard();
+		return *this;
+	}
+};
+class StreamBuffer::ChunkEnumerator : public std::iterator<std::bidirectional_iterator_tag, int> {
+	friend ConstChunkEnumerator;
+
+private:
+	StreamBuffer *x_psbufOwner;
+
+public:
+	explicit constexpr ReadIterator(StreamBuffer &sbufOwner) noexcept
+		: x_psbufOwner(&sbufOwner)
+	{
+	}
+
+public:
+	int operator*() const {
+		return x_psbufOwner->Peek();
+	}
+	ReadIterator &operator++(){
+		x_psbufOwner->Discard();
+		return *this;
+	}
+	ReadIterator operator++(int){
+		x_psbufOwner->Discard();
+		return *this;
+	}
+};
+
+
+
 class StreamBuffer {
 private:
 	struct Chunk;
 
 public:
-	class ConstChunkEnumerator;
-
-	class ChunkEnumerator {
-		friend ConstChunkEnumerator;
-
-	private:
-		Chunk *m_chunk;
-
-	public:
-		explicit ChunkEnumerator(StreamBuffer &rhs) NOEXCEPT
-			: m_chunk(rhs.m_first)
-		{
-		}
-
-	public:
-		unsigned char *begin() const NOEXCEPT;
-		unsigned char *end() const NOEXCEPT;
-
-		unsigned char *data() const NOEXCEPT {
-			return begin();
-		}
-		unsigned size() const NOEXCEPT {
-			return static_cast<unsigned>(end() - begin());
-		}
-
-	public:
-#ifdef POSEIDON_CXX11
-		explicit operator bool() const noexcept {
-			return !!m_chunk;
-		}
-#else
-		typedef bool (StreamBuffer::*DummyBool_)() const;
-		operator DummyBool_() const NOEXCEPT {
-			return !!m_chunk ? &StreamBuffer::empty : 0;
-		}
-#endif
-
-		ChunkEnumerator &operator++() NOEXCEPT;
-		ChunkEnumerator operator++(int) NOEXCEPT {
-			AUTO(ret, *this);
-			++*this;
-			return ret;
-		}
-	};
-
-	class ConstChunkEnumerator {
-	private:
-		const Chunk *m_chunk;
-
-	public:
-		explicit ConstChunkEnumerator(const StreamBuffer &rhs) NOEXCEPT
-			: m_chunk(rhs.m_first)
-		{
-		}
-		ConstChunkEnumerator(ChunkEnumerator &rhs) NOEXCEPT
-			: m_chunk(rhs.m_chunk)
-		{
-		}
-
-	public:
-		const unsigned char *begin() const NOEXCEPT;
-		const unsigned char *end() const NOEXCEPT;
-
-		const unsigned char *data() const NOEXCEPT {
-			return begin();
-		}
-		std::size_t size() const NOEXCEPT {
-			return static_cast<std::size_t>(end() - begin());
-		}
-
-	public:
-#ifdef POSEIDON_CXX11
-		explicit operator bool() const noexcept {
-			return !!m_chunk;
-		}
-#else
-		typedef bool (StreamBuffer::*DummyBool_)() const;
-		operator DummyBool_() const NOEXCEPT {
-			return !!m_chunk ? &StreamBuffer::empty : 0;
-		}
-#endif
-
-		ConstChunkEnumerator &operator++() NOEXCEPT;
-		ConstChunkEnumerator operator++(int) NOEXCEPT {
-			AUTO(ret, *this);
-			++*this;
-			return ret;
-		}
-	};
 
 	class ReadIterator : public std::iterator<std::input_iterator_tag, int> {
 	private:

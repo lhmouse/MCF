@@ -36,6 +36,7 @@ pkginclude_Core_HEADERS =	\
 	src/Core/CopyMoveFill.hpp	\
 	src/Core/CountOf.hpp	\
 	src/Core/DeclVal.hpp	\
+	src/Core/DefaultAllocator.hpp	\
 	src/Core/Defer.hpp	\
 	src/Core/DynamicLinkLibrary.hpp	\
 	src/Core/Endian.hpp	\
@@ -61,7 +62,10 @@ pkginclude_Core_HEADERS =	\
 	src/Core/TupleManipulators.hpp	\
 	src/Core/UniqueHandle.hpp	\
 	src/Core/Uuid.hpp	\
-	src/Core/WhiteHole.hpp	\
+	src/Core/WhiteHole.hpp
+
+pkginclude_Threaddir = ${pkgincludedir}/Thread
+pkginclude_Thread_HEADERS =	\
 	src/Thread/_UniqueLockTemplate.hpp	\
 	src/Thread/ConditionVariable.hpp	\
 	src/Thread/Event.hpp	\
@@ -76,11 +80,17 @@ pkginclude_Core_HEADERS =	\
 	src/Thread/Semaphore.hpp	\
 	src/Thread/Thread.hpp	\
 	src/Thread/ThreadLocal.hpp	\
-	src/Thread/UniqueLockBase.hpp	\
+	src/Thread/UniqueLockBase.hpp
+
+pkginclude_SmartPointersdir = ${pkgincludedir}/SmartPointers
+pkginclude_SmartPointers_HEADERS =	\
 	src/SmartPointers/DefaultDeleter.hpp	\
 	src/SmartPointers/IntrusivePtr.hpp	\
 	src/SmartPointers/PolyIntrusivePtr.hpp	\
-	src/SmartPointers/UniquePtr.hpp	\
+	src/SmartPointers/UniquePtr.hpp
+
+pkginclude_Containersdir = ${pkgincludedir}/Containers
+pkginclude_Containers_HEADERS =	\
 	src/Containers/_FlatContainer.hpp	\
 	src/Containers/CircularQueue.hpp	\
 	src/Containers/FlatMap.hpp	\
@@ -89,9 +99,15 @@ pkginclude_Core_HEADERS =	\
 	src/Containers/FlatSet.hpp	\
 	src/Containers/List.hpp	\
 	src/Containers/StaticVector.hpp	\
-	src/Containers/Vector.hpp	\
+	src/Containers/Vector.hpp
+
+pkginclude_Randomdir = ${pkgincludedir}/Random
+pkginclude_Random_HEADERS =	\
 	src/Random/FastGenerator.hpp	\
-	src/Random/IsaacGenerator.hpp	\
+	src/Random/IsaacGenerator.hpp
+
+pkginclude_Utilitiesdir = ${pkgincludedir}/Utilities
+pkginclude_Utilities_HEADERS =	\
 	src/Utilities/Argv.cpp	\
 	src/Utilities/Thunk.cpp	\
 	src/Utilities/Variant.cpp

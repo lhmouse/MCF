@@ -55,6 +55,7 @@ pkginclude_Core_HEADERS =	\
 	src/Core/Rcnts.hpp	\
 	src/Core/ReconstructOrAssign.hpp	\
 	src/Core/RefWrapper.hpp	\
+	src/Core/StreamBuffer.hpp	\
 	src/Core/String.hpp	\
 	src/Core/StringView.hpp	\
 	src/Core/TupleManipulators.hpp	\
@@ -102,6 +103,7 @@ mcf_sources =	\
 	src/Core/Exception.cpp	\
 	src/Core/File.cpp	\
 	src/Core/Rcnts.cpp	\
+	src/Core/StreamBuffer.cpp	\
 	src/Core/String.cpp	\
 	src/Core/StringView.cpp	\
 	src/Core/Uuid.cpp	\

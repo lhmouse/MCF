@@ -9,6 +9,7 @@
 #include "Random.hpp"
 #include "Endian.hpp"
 #include "Atomic.hpp"
+#include <MCFCRT/env/mcfwin.h>
 
 namespace MCF {
 

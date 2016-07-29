@@ -17,6 +17,7 @@
 #include <utility>
 #include <type_traits>
 #include <cstddef>
+#include <cstdint>
 
 namespace MCF {
 

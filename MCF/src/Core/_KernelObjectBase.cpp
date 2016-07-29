@@ -4,9 +4,10 @@
 
 #include "../StdMCF.hpp"
 #include "_KernelObjectBase.hpp"
+#include "Exception.hpp"
+#include <MCFCRT/env/mcfwin.h>
 #include <MCFCRT/ext/wcpcpy.h>
 #include <MCFCRT/ext/itow.h>
-#include "Exception.hpp"
 #include <winternl.h>
 #include <ntdef.h>
 

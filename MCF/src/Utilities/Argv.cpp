@@ -5,6 +5,7 @@
 #include "../StdMCF.hpp"
 #include "Argv.hpp"
 #include "../Core/Exception.hpp"
+#include <MCFCRT/env/mcfwin.h>
 
 namespace MCF {
 

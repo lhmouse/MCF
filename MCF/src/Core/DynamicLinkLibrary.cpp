@@ -5,6 +5,7 @@
 #include "../StdMCF.hpp"
 #include "DynamicLinkLibrary.hpp"
 #include "Exception.hpp"
+#include <MCFCRT/env/mcfwin.h>
 #include <winternl.h>
 #include <ntdef.h>
 #include <ntstatus.h>

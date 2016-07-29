@@ -8,6 +8,7 @@
 #include "String.hpp"
 #include "BinaryOperations.hpp"
 #include "Defer.hpp"
+#include <MCFCRT/env/mcfwin.h>
 #include <winternl.h>
 #include <ntdef.h>
 #include <ntstatus.h>

@@ -6,6 +6,7 @@
 #define MCF_CORE_CLOCKS_HPP_
 
 #include <MCFCRT/env/clocks.h>
+#include <cstdint>
 
 namespace MCF {
 

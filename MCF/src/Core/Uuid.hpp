@@ -6,7 +6,7 @@
 #define MCF_CORE_UUID_HPP_
 
 #include "Array.hpp"
-#include "../Core/Exception.hpp"
+#include "Exception.hpp"
 #include "Assert.hpp"
 #include "BinaryOperations.hpp"
 #include <cstddef>

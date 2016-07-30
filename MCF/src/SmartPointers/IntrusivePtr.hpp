@@ -113,13 +113,17 @@ namespace Impl_IntrusivePtr {
 		return StaticCastOrDynamicCastHelper<DstT, SrcT>()(std::forward<SrcT>(vSrc));
 	}
 
-	extern FixedSizeAllocator<16> g_vViewAllocator;
+	enum : std::size_t {
+		kWeakViewSize = sizeof(void *) * 4,
+	};
+
+	extern FixedSizeAllocator<kWeakViewSize> g_vViewAllocator;
 
 	template<typename OwnerT, class DeleterT>
 	class WeakViewTemplate final : public RefCountBase  {
 	public:
 		static void *operator new(std::size_t uSize){
-			static_assert(sizeof(WeakViewTemplate) <= g_vViewAllocator.kElementSize, "Fix the declaration of g_vViewAllocator!");
+			static_assert(sizeof(WeakViewTemplate) <= g_vViewAllocator.kElementSize, "Please fix the declaration of g_vViewAllocator!");
 			MCF_ASSERT(uSize == sizeof(WeakViewTemplate));
 
 			return g_vViewAllocator.Allocate();

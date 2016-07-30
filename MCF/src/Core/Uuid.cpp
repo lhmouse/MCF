@@ -12,15 +12,19 @@
 
 namespace MCF {
 
-namespace {
-	const unsigned g_uPid = ::GetCurrentProcessId();
-
-	Atomic<std::uint32_t> g_u32AutoInc;
-}
-
 Uuid Uuid::Generate(){
+	static Atomic<std::uint32_t> s_u32Pid;
+	static Atomic<std::uint32_t> s_u32AutoInc;
+
+	auto u32Pid = s_u32Pid.Load(kAtomicConsume);
+	if(u32Pid == 0){
+		u32Pid = ::GetCurrentProcessId();
+		s_u32Pid.Store(u32Pid, kAtomicRelease);
+	}
+	auto u32AutoInc = s_u32AutoInc.Increment(kAtomicRelaxed) << 16;
+
 	const auto u64Now = GetUtcClock();
-	const auto u32Unique = (g_uPid & 0xFFFF) | ((g_u32AutoInc.Increment(kAtomicRelaxed) << 16) & 0x3FFFFFFFu);
+	const auto u32Unique = (u32Pid & 0xFFFFu) | (u32AutoInc & 0x3FFFFFFFu);
 
 	Uuid vRet;
 	StoreBe(vRet.x_au32[0], (std::uint32_t)(u64Now >> 12));

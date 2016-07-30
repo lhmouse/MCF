@@ -155,7 +155,7 @@ MCF_1_dll_LDFLAGS =	\
 	-Wl,--disable-stdcall-fixup,--enable-auto-image-base,--out-implib,libMCF.dll.a
 
 MCF_1_dll_LDADD =	\
-	-lMCFCRT-pre -lsupc++ -lgcc -lgcc_eh -lmingwex -lMCFCRT -lmsvcrt -lkernel32 -lntdll
+	-lMCFCRT-pre-dll -lsupc++ -lgcc -lgcc_eh -lmingwex -lMCFCRT -lmsvcrt -lkernel32 -lntdll
 
 lib_LIBRARIES =	\
 	libMCF.dll.a	\

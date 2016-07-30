@@ -166,15 +166,15 @@ long _MCFCRT_ReadStandardInputChar32(void){
 	SetLastError(ERROR_HANDLE_EOF);
 	return -1;
 }
-size_t _MCFCRT_PeekStandardInputString(wchar_t *pwcString, size_t uLength, bool bSingleLine){
+size_t _MCFCRT_PeekStandardInputText(wchar_t *pwcText, size_t uLength, bool bSingleLine){
 	SetLastError(ERROR_HANDLE_EOF);
 	return 0;
 }
-size_t _MCFCRT_ReadStandardInputString(wchar_t *pwcString, size_t uLength, bool bSingleLine){
+size_t _MCFCRT_ReadStandardInputText(wchar_t *pwcText, size_t uLength, bool bSingleLine){
 	SetLastError(ERROR_HANDLE_EOF);
 	return 0;
 }
-size_t _MCFCRT_DiscardStandardInputString(size_t uLength, bool bSingleLine){
+size_t _MCFCRT_DiscardStandardInputText(size_t uLength, bool bSingleLine){
 	SetLastError(ERROR_HANDLE_EOF);
 	return 0;
 }
@@ -194,7 +194,7 @@ bool _MCFCRT_WriteStandardOutputBinary(const void *pBuffer, size_t uSize){
 bool _MCFCRT_WriteStandardOutputChar32(char32_t c32CodePoint){
 	return true;
 }
-bool _MCFCRT_WriteStandardOutputString(const wchar_t *pwcString, size_t uLength, bool bAppendNewLine){
+bool _MCFCRT_WriteStandardOutputText(const wchar_t *pwcText, size_t uLength, bool bAppendNewLine){
 	return uLength + bAppendNewLine;
 }
 bool _MCFCRT_IsStandardOutputBuffered(void){
@@ -216,11 +216,14 @@ bool _MCFCRT_WriteStandardErrorBinary(const void *pBuffer, size_t uSize){
 bool _MCFCRT_WriteStandardErrorChar32(char32_t c32CodePoint){
 	return true;
 }
-bool _MCFCRT_WriteStandardErrorString(const wchar_t *pwcString, size_t uLength, bool bAppendNewLine){
+bool _MCFCRT_WriteStandardErrorText(const wchar_t *pwcText, size_t uLength, bool bAppendNewLine){
 	HANDLE h = GetStdHandle(STD_ERROR_HANDLE);
 	if(h){
 		DWORD written;
-		WriteConsoleW(h, pwcString, (DWORD)uLength, &written, nullptr);
+		WriteConsoleW(h, pwcText, (DWORD)uLength, &written, nullptr);
+		if(bAppendNewLine){
+			WriteConsoleW(h, L"\r\n", 2, &written, nullptr);
+		}
 	}
 	return true;
 }

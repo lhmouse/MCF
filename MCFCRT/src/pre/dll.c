@@ -3,41 +3,42 @@
 // Copyleft 2013 - 2016, LH_Mouse. All wrongs reserved.
 
 #include "dll.h"
-#include "generic.h"
 #include "../env/mcfwin.h"
 #include "../env/_seh_top.h"
+#include "module.h"
 
 // -Wl,-e@__MCFCRT_DllStartup
-
-// __MCFCRT_DllStartup 模块入口点。
 __MCFCRT_C_STDCALL
 extern BOOL __MCFCRT_DllStartup(HINSTANCE hDll, DWORD dwReason, LPVOID pReserved)
 	__asm__("@__MCFCRT_DllStartup");
 
-__MCFCRT_C_STDCALL __attribute__((__noinline__))
-BOOL __MCFCRT_DllStartup(HINSTANCE hDll, DWORD dwReason, LPVOID pReserved){
-	bool bRet = true;
+static bool RealStartup(void *pInstance, unsigned uReason, bool bDynamic){
+	(void)pInstance;
+	(void)bDynamic;
 
-	void *   const pInstance = (void *)hDll;
-	unsigned const uReason   = dwReason;
-	bool     const bDynamic  = !pReserved;
+	static bool s_bInitialized = false;
+
+	bool bRet = true;
 
 	switch(uReason){
 	case DLL_PROCESS_ATTACH:
-		bRet = __MCFCRT_TlsCallbackGeneric(pInstance, uReason, bDynamic);
+		if(s_bInitialized){
+			break;
+		}
+		bRet = __MCFCRT_ModuleInit();
 		if(!bRet){
-			goto jCleanup_01;
+			goto jCleanup03;
 		}
 		if(_MCFCRT_OnDllProcessAttach){
 			bRet = _MCFCRT_OnDllProcessAttach(pInstance, bDynamic);
 			if(!bRet){
-				goto jCleanup_99;
+				goto jCleanup99;
 			}
 		}
+		s_bInitialized = true;
 		break;
 
 	case DLL_THREAD_ATTACH:
-		__MCFCRT_TlsCallbackGeneric(pInstance, uReason, bDynamic);
 		if(_MCFCRT_OnDllThreadAttach){
 			_MCFCRT_OnDllThreadAttach(pInstance);
 		}
@@ -47,18 +48,34 @@ BOOL __MCFCRT_DllStartup(HINSTANCE hDll, DWORD dwReason, LPVOID pReserved){
 		if(_MCFCRT_OnDllThreadDetach){
 			_MCFCRT_OnDllThreadDetach(pInstance);
 		}
-		__MCFCRT_TlsCallbackGeneric(pInstance, uReason, bDynamic);
 		break;
 
 	case DLL_PROCESS_DETACH:
+		if(!s_bInitialized){
+			break;
+		}
+		s_bInitialized = false;
 		if(_MCFCRT_OnDllProcessDetach){
 			_MCFCRT_OnDllProcessDetach(pInstance, bDynamic);
 		}
-	jCleanup_99:
-		__MCFCRT_TlsCallbackGeneric(pInstance, uReason, bDynamic);
-	jCleanup_01:
+	jCleanup99:
+		__MCFCRT_ModuleUninit();
+	jCleanup03:
 		break;
 	}
+
+	return bRet;
+}
+
+__MCFCRT_C_STDCALL
+BOOL __MCFCRT_DllStartup(HINSTANCE hDll, DWORD dwReason, LPVOID pReserved){
+	bool bRet;
+
+	__MCFCRT_SEH_TOP_BEGIN
+	{
+		bRet = RealStartup((void *)hDll, (unsigned)dwReason, !pReserved);
+	}
+	__MCFCRT_SEH_TOP_END
 
 	return bRet;
 }

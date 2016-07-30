@@ -53,7 +53,7 @@ static void DumpMemoryLeaks(_MCFCRT_AvlRoot avlBlocks){
 		}
 		// *pwcWrite = 0;
 
-		_MCFCRT_WriteStandardErrorString(awcBuffer, (size_t)(pwcWrite - awcBuffer), true);
+		_MCFCRT_WriteStandardErrorText(awcBuffer, (size_t)(pwcWrite - awcBuffer), true);
 	}
 	_MCFCRT_Bail(L"__MCFCRT_HeapDbgUninit() 失败：侦测到内存泄漏。内存泄漏的详细信息已经输出至标准错误流中。");
 }

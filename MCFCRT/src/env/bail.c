@@ -61,11 +61,11 @@ _Noreturn void _MCFCRT_Bail(const wchar_t *pwszDescription){
 	if(bCanBeDebugged){
 		pwcWrite = _MCFCRT_wcpcpy(pwcWrite, L"，单击“取消”调试应用程序");
 	}
-	pwcWrite = _MCFCRT_wcpcpy(pwcWrite, L"。\n");
+	pwcWrite = _MCFCRT_wcpcpy(pwcWrite, L"。");
 	// *pwcWrite = 0;
 	const size_t uLength = (size_t)(pwcWrite - awcBuffer);
 
-	_MCFCRT_WriteStandardErrorString(awcBuffer, uLength, true);
+	_MCFCRT_WriteStandardErrorText(awcBuffer, uLength, true);
 
 	size_t uTextSizeInBytes = uLength * sizeof(wchar_t);
 	const unsigned kMaxSizeInBytes = USHRT_MAX & -sizeof(wchar_t);

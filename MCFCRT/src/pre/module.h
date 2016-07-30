@@ -2,10 +2,10 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2013 - 2016, LH_Mouse. All wrongs reserved.
 
-#ifndef __MCFCRT_ENV_MODULE_H_
-#define __MCFCRT_ENV_MODULE_H_
+#ifndef __MCFCRT_STARTUP_MODULE_H_
+#define __MCFCRT_STARTUP_MODULE_H_
 
-#include "_crtdef.h"
+#include "../env/_crtdef.h"
 
 #ifndef __MCFCRT_MODULE_INLINE_OR_EXTERN
 #	define __MCFCRT_MODULE_INLINE_OR_EXTERN     __attribute__((__gnu_inline__)) extern inline

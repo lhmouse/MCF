@@ -25,9 +25,9 @@ extern _MCFCRT_STD size_t _MCFCRT_DiscardStandardInputBinary(_MCFCRT_STD size_t 
 // 标准输入流文本输入。
 extern long _MCFCRT_PeekStandardInputChar32(void) _MCFCRT_NOEXCEPT;
 extern long _MCFCRT_ReadStandardInputChar32(void) _MCFCRT_NOEXCEPT;
-extern _MCFCRT_STD size_t _MCFCRT_PeekStandardInputString(wchar_t *__pwcString, _MCFCRT_STD size_t __uLength, bool __bSingleLine) _MCFCRT_NOEXCEPT;
-extern _MCFCRT_STD size_t _MCFCRT_ReadStandardInputString(wchar_t *__pwcString, _MCFCRT_STD size_t __uLength, bool __bSingleLine) _MCFCRT_NOEXCEPT;
-extern _MCFCRT_STD size_t _MCFCRT_DiscardStandardInputString(_MCFCRT_STD size_t __uLength, bool __bSingleLine) _MCFCRT_NOEXCEPT;
+extern _MCFCRT_STD size_t _MCFCRT_PeekStandardInputText(wchar_t *__pwcText, _MCFCRT_STD size_t __uLength, bool __bSingleLine) _MCFCRT_NOEXCEPT;
+extern _MCFCRT_STD size_t _MCFCRT_ReadStandardInputText(wchar_t *__pwcText, _MCFCRT_STD size_t __uLength, bool __bSingleLine) _MCFCRT_NOEXCEPT;
+extern _MCFCRT_STD size_t _MCFCRT_DiscardStandardInputText(_MCFCRT_STD size_t __uLength, bool __bSingleLine) _MCFCRT_NOEXCEPT;
 // 标准输入流控制。
 extern bool _MCFCRT_IsStandardInputEchoing(void) _MCFCRT_NOEXCEPT;
 extern bool _MCFCRT_SetStandardInputEchoing(bool __bEchoing) _MCFCRT_NOEXCEPT;
@@ -37,7 +37,7 @@ extern bool _MCFCRT_WriteStandardOutputByte(unsigned char __byData) _MCFCRT_NOEX
 extern bool _MCFCRT_WriteStandardOutputBinary(const void *__pBuffer, _MCFCRT_STD size_t __uSize) _MCFCRT_NOEXCEPT;
 // 标准输出流文本输出。
 extern bool _MCFCRT_WriteStandardOutputChar32(char32_t __c32CodePoint) _MCFCRT_NOEXCEPT;
-extern bool _MCFCRT_WriteStandardOutputString(const wchar_t *__pwcString, _MCFCRT_STD size_t __uLength, bool __bAppendNewLine) _MCFCRT_NOEXCEPT;
+extern bool _MCFCRT_WriteStandardOutputText(const wchar_t *__pwcText, _MCFCRT_STD size_t __uLength, bool __bAppendNewLine) _MCFCRT_NOEXCEPT;
 extern bool _MCFCRT_IsStandardOutputBuffered(void) _MCFCRT_NOEXCEPT;
 extern bool _MCFCRT_SetStandardOutputBuffered(bool __bBuffered) _MCFCRT_NOEXCEPT;
 // 标准输出流控制。
@@ -48,7 +48,7 @@ extern bool _MCFCRT_WriteStandardErrorByte(unsigned char __byData) _MCFCRT_NOEXC
 extern bool _MCFCRT_WriteStandardErrorBinary(const void *__pBuffer, _MCFCRT_STD size_t __uSize) _MCFCRT_NOEXCEPT;
 // 标准错误流文本输出。
 extern bool _MCFCRT_WriteStandardErrorChar32(char32_t __c32CodePoint) _MCFCRT_NOEXCEPT;
-extern bool _MCFCRT_WriteStandardErrorString(const wchar_t *__pwcString, _MCFCRT_STD size_t __uLength, bool __bAppendNewLine) _MCFCRT_NOEXCEPT;
+extern bool _MCFCRT_WriteStandardErrorText(const wchar_t *__pwcText, _MCFCRT_STD size_t __uLength, bool __bAppendNewLine) _MCFCRT_NOEXCEPT;
 
 _MCFCRT_EXTERN_C_END
 

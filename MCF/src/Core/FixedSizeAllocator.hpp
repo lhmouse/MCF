@@ -61,33 +61,33 @@ public:
 	void *Allocate(){
 		const auto vControl = X_Detach();
 		const auto pBlock = vControl.pFirst;
-		if(!pBlock){
-			return BackingAllocator()(sizeof(X_Block));
+		if(pBlock){
+			const auto pNext = pBlock->pNext;
+			if(pNext){
+				X_Attach(X_Control{ pNext, vControl.pLast });
+			}
+			return pBlock;
 		}
-		const auto pNext = pBlock->pNext;
-		if(pNext){
-			X_Attach(X_Control{ pNext, vControl.pLast });
-		}
-		return pBlock;
+		return BackingAllocator()(sizeof(X_Block));
 	}
 	void *AllocateNoThrow() noexcept {
 		const auto vControl = X_Detach();
 		const auto pBlock = vControl.pFirst;
-		if(!pBlock){
-			return BackingAllocator()(std::nothrow, sizeof(X_Block));
+		if(pBlock){
+			const auto pNext = pBlock->pNext;
+			if(pNext){
+				X_Attach(X_Control{ pNext, vControl.pLast });
+			}
+			return pBlock;
 		}
-		const auto pNext = pBlock->pNext;
-		if(pNext){
-			X_Attach(X_Control{ pNext, vControl.pLast });
-		}
-		return pBlock;
+		return BackingAllocator()(std::nothrow, sizeof(X_Block));
 	}
 	void Deallocate(void *pRaw) noexcept {
 		const auto pBlock = static_cast<X_Block *>(pRaw);
-		if(!pBlock){
+		if(pBlock){
+			X_Attach(X_Control{ pBlock, pBlock });
 			return;
 		}
-		X_Attach(X_Control{ pBlock, pBlock });
 	}
 
 	void Recycle() noexcept {
@@ -101,10 +101,12 @@ public:
 	}
 	void Adopt(FixedSizeAllocator &rhs) noexcept {
 		const auto vControl = rhs.X_Detach();
-		if(!vControl.pFirst){
-			return;
+		if(vControl.pFirst){
+			X_Attach(vControl);
 		}
-		X_Attach(vControl);
+	}
+	void Adopt(FixedSizeAllocator &&rhs) noexcept {
+		Adopt(rhs);
 	}
 };
 

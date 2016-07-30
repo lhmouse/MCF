@@ -3,11 +3,12 @@
 // Copyleft 2013 - 2016, LH_Mouse. All wrongs reserved.
 
 #include "IntrusivePtr.hpp"
+#include "../Core/FixedSizeAllocator.hpp"
 
 namespace MCF {
 
 namespace Impl_IntrusivePtr {
-	FixedSizeAllocator<16> g_vViewAllocator;
+	FixedSizeAllocator<kWeakViewSize> g_vViewAllocator;
 }
 
 }

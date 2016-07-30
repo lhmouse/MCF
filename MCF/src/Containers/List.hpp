@@ -269,23 +269,23 @@ public:
 
 	template<typename ...ParamsT>
 	Element &Unshift(ParamsT &&...vParams){
-		const auto pNode = static_cast<X_Node *>(Allocator()(kNodeSize));
-		const auto pElement = X_GetElementFromNode(pNode);
+		const auto pNewFirst = static_cast<X_Node *>(Allocator()(kNodeSize));
+		const auto pElement = X_GetElementFromNode(pNewFirst);
 		try {
 			DefaultConstruct(pElement, std::forward<ParamsT>(vParams)...);
 		} catch(...){
-			Allocator()(const_cast<void *>(static_cast<const void *>(pNode)));
+			Allocator()(const_cast<void *>(static_cast<const void *>(pNewFirst)));
 			throw;
 		}
-		pNode->pPrev = nullptr;
-		pNode->pNext = x_pFirst;
+		pNewFirst->pPrev = nullptr;
+		pNewFirst->pNext = x_pFirst;
 
 		if(x_pFirst){
-			x_pFirst->pPrev = pNode;
+			x_pFirst->pPrev = pNewFirst;
 		} else {
-			x_pLast = pNode;
+			x_pLast = pNewFirst;
 		}
-		x_pFirst = pNode;
+		x_pFirst = pNewFirst;
 
 		return *pElement;
 	}
@@ -294,41 +294,41 @@ public:
 		MCF_ASSERT(uCount <= CountElements());
 #endif
 
-		auto pNode = x_pFirst;
+		auto pNewFirst = x_pFirst;
 		for(std::size_t i = 0; i < uCount; ++i){
-			const auto pNext = pNode->pNext;
-			const auto pElement = X_GetElementFromNode(pNode);
+			const auto pNext = pNewFirst->pNext;
+			const auto pElement = X_GetElementFromNode(pNewFirst);
 			Destruct(pElement);
-			Allocator()(const_cast<void *>(static_cast<const void *>(pNode)));
-			pNode = pNext;
+			Allocator()(const_cast<void *>(static_cast<const void *>(pNewFirst)));
+			pNewFirst = pNext;
 		}
-		if(pNode){
-			pNode->pPrev = nullptr;
+		if(pNewFirst){
+			pNewFirst->pPrev = nullptr;
 		} else {
 			x_pLast = nullptr;
 		}
-		x_pFirst = pNode;
+		x_pFirst = pNewFirst;
 	}
 
 	template<typename ...ParamsT>
 	Element &Push(ParamsT &&...vParams){
-		const auto pNode = static_cast<X_Node *>(Allocator()(kNodeSize));
-		const auto pElement = X_GetElementFromNode(pNode);
+		const auto pNewLast = static_cast<X_Node *>(Allocator()(kNodeSize));
+		const auto pElement = X_GetElementFromNode(pNewLast);
 		try {
 			DefaultConstruct(pElement, std::forward<ParamsT>(vParams)...);
 		} catch(...){
-			Allocator()(const_cast<void *>(static_cast<const void *>(pNode)));
+			Allocator()(const_cast<void *>(static_cast<const void *>(pNewLast)));
 			throw;
 		}
-		pNode->pPrev = x_pLast;
-		pNode->pNext = nullptr;
+		pNewLast->pPrev = x_pLast;
+		pNewLast->pNext = nullptr;
 
 		if(x_pLast){
-			x_pLast->pNext = pNode;
+			x_pLast->pNext = pNewLast;
 		} else {
-			x_pFirst = pNode;
+			x_pFirst = pNewLast;
 		}
-		x_pLast = pNode;
+		x_pLast = pNewLast;
 
 		return *pElement;
 	}
@@ -337,20 +337,20 @@ public:
 		MCF_ASSERT(uCount <= CountElements());
 #endif
 
-		auto pNode = x_pLast;
+		auto pNewLast = x_pLast;
 		for(std::size_t i = 0; i < uCount; ++i){
-			const auto pPrev = pNode->pPrev;
-			const auto pElement = X_GetElementFromNode(pNode);
+			const auto pPrev = pNewLast->pPrev;
+			const auto pElement = X_GetElementFromNode(pNewLast);
 			Destruct(pElement);
-			Allocator()(const_cast<void *>(static_cast<const void *>(pNode)));
-			pNode = pPrev;
+			Allocator()(const_cast<void *>(static_cast<const void *>(pNewLast)));
+			pNewLast = pPrev;
 		}
-		if(pNode){
-			pNode->pNext = nullptr;
+		if(pNewLast){
+			pNewLast->pNext = nullptr;
 		} else {
 			x_pFirst = nullptr;
 		}
-		x_pLast = pNode;
+		x_pLast = pNewLast;
 	}
 
 	template<typename ...ParamsT>
@@ -435,6 +435,8 @@ public:
 		return Splice(pInsert, lstSrc, pPos, lstSrc.GetNext(pPos));
 	}
 	Element *Splice(const Element *pInsert, List &lstSrc, const Element *pBegin, const Element *pEnd) noexcept {
+		MCF_ASSERT(&lstSrc != this);
+
 		const auto pInsertNode = X_GetNodeFromElement(const_cast<Element *>(pInsert));
 		const auto pBeginNode  = X_GetNodeFromElement(const_cast<Element *>(pBegin ));
 		const auto pEndNode    = X_GetNodeFromElement(const_cast<Element *>(pEnd   ));

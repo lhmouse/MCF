@@ -50,7 +50,7 @@ extern NTSTATUS NtDelayExecution(BOOLEAN bAlertable, const LARGE_INTEGER *pliTim
 namespace MCF {
 
 namespace {
-	__attribute__((__stdcall__, __force_align_arg_pointer__, __aligned__(16)))
+	__MCFCRT_C_STDCALL __attribute__((__aligned__(16)))
 	void IoApcCallback(void *pContext, ::IO_STATUS_BLOCK *pIoStatus, ULONG ulReserved) noexcept {
 		(void)pIoStatus;
 		(void)ulReserved;

@@ -9,11 +9,11 @@ AM_CXXFLAGS = -std=c++14 -Wzero-as-null-pointer-constant -Wnoexcept -Woverloaded
 ## I think you GNU people should just STFU and stop confusing the linker.
 EXEEXT =
 
-pkginclude_startupdir = ${pkgincludedir}/startup
-pkginclude_startup_HEADERS =	\
-	src/startup/generic.h	\
-	src/startup/dll.h	\
-	src/startup/exe.h
+pkginclude_predir = ${pkgincludedir}/pre
+pkginclude_pre_HEADERS =	\
+	src/pre/dll.h	\
+	src/pre/exe.h	\
+	src/pre/module.h
 
 pkginclude_envdir = ${pkgincludedir}/env
 pkginclude_env_HEADERS =	\
@@ -32,6 +32,7 @@ pkginclude_env_HEADERS =	\
 	src/ext/wcpcpy.h	\
 	src/env/_c11thread_inl.h	\
 	src/env/_crtdef.h	\
+	src/env/_fpu.h	\
 	src/env/_gthread_inl.h	\
 	src/env/_nt_timeout.h	\
 	src/env/_seh_top.h	\
@@ -41,18 +42,17 @@ pkginclude_env_HEADERS =	\
 	src/env/c11thread.h	\
 	src/env/clocks.h	\
 	src/env/condition_variable.h	\
-	src/env/fenv.h	\
 	src/env/gthread.h	\
 	src/env/heap.h	\
 	src/env/heap_dbg.h	\
 	src/env/hooks.h	\
 	src/env/last_error.h	\
 	src/env/mcfwin.h	\
-	src/env/module.h	\
 	src/env/mutex.h	\
 	src/env/once_flag.h	\
 	src/env/standard_streams.h	\
-	src/env/thread.h
+	src/env/thread.h	\
+	src/env/crt_module.h
 
 pkginclude_extdir = ${pkgincludedir}/ext
 pkginclude_ext_HEADERS =	\
@@ -70,8 +70,11 @@ pkginclude_ext_HEADERS =	\
 	src/ext/utf.h	\
 	src/ext/wcpcpy.h
 
+mcfcrt_pre_sources =	\
+	src/pre/module.c	\
+	src/pre/atexit.c
+
 mcfcrt_sources =	\
-	src/startup/generic.c	\
 	src/ext/assert.c	\
 	src/ext/itoa.c	\
 	src/ext/itow.c	\
@@ -80,6 +83,7 @@ mcfcrt_sources =	\
 	src/ext/thunk.c	\
 	src/ext/utf.c	\
 	src/ext/wcpcpy.c	\
+	src/env/_fpu.c	\
 	src/env/_nt_timeout.c	\
 	src/env/_seh_top.c	\
 	src/env/argv.c	\
@@ -88,17 +92,16 @@ mcfcrt_sources =	\
 	src/env/c11thread.c	\
 	src/env/clocks.c	\
 	src/env/condition_variable.c	\
-	src/env/fenv.c	\
 	src/env/gthread.c	\
 	src/env/heap.c	\
 	src/env/heap_dbg.c	\
 	src/env/hooks.c	\
 	src/env/last_error.c	\
-	src/env/module.c	\
 	src/env/mutex.c	\
 	src/env/once_flag.c	\
 	src/env/standard_streams.c	\
 	src/env/thread.c	\
+	src/env/crt_module.c	\
 	src/stdc/math/acos.c	\
 	src/stdc/math/asin.c	\
 	src/stdc/math/atan.c	\
@@ -139,7 +142,6 @@ mcfcrt_sources =	\
 	src/stdc/math/_constants.c	\
 	src/stdc/stdlib/abort.c	\
 	src/stdc/stdlib/abs.c	\
-	src/stdc/stdlib/atexit.c	\
 	src/stdc/stdlib/calloc.c	\
 	src/stdc/stdlib/free.c	\
 	src/stdc/stdlib/malloc.c	\
@@ -167,31 +169,32 @@ bin_PROGRAMS =	\
 	MCFCRT-9.dll
 
 MCFCRT_9_dll_SOURCES =	\
-	${mcfcrt_sources}	\
-	src/startup/_frame_info.c	\
-	src/startup/dll.c
-
-MCFCRT_9_dll_DEPENDENCIES =	\
-	libMCFCRT-pre.a
+	src/dll_startup.c	\
+	${mcfcrt_pre_sources}	\
+	${mcfcrt_sources}
 
 MCFCRT_9_dll_LDFLAGS =	\
 	-shared -static -nostdlib	\
 	-Wl,-e@__MCFCRT_DllStartup,-subsystem,windows,--disable-runtime-pseudo-reloc,--disable-auto-import	\
-	-Wl,--export-all-symbols,--exclude-symbols,@__MCFCRT_DllStartup,--exclude-libs,ALL,--exclude-libs,libMCF-pre.a	\
+	-Wl,--export-all-symbols,--exclude-symbols,@__MCFCRT_DllStartup,--exclude-libs,ALL,--exclude-libs,libMCF-pre-dll.a	\
 	-Wl,--disable-stdcall-fixup,--enable-auto-image-base,--out-implib,libMCFCRT.dll.a
 
 MCFCRT_9_dll_LDADD =	\
 	-lkernel32 -lntdll
 
 lib_LIBRARIES =	\
-	libMCFCRT-pre.a	\
+	libMCFCRT-pre-exe.a	\
+	libMCFCRT-pre-dll.a	\
 	libMCFCRT.dll.a	\
 	libMCFCRT.a
 
-libMCFCRT_pre_a_SOURCES =	\
-	src/startup/_frame_info.c	\
-	src/startup/dll.c	\
-	src/startup/exe.c
+libMCFCRT_pre_exe_a_SOURCES =	\
+	src/pre/exe.c	\
+	${mcfcrt_pre_sources}
+
+libMCFCRT_pre_dll_a_SOURCES =	\
+	src/pre/dll.c	\
+	${mcfcrt_pre_sources}
 
 libMCFCRT.dll.a: MCFCRT-9.dll
 

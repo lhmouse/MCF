@@ -10,7 +10,7 @@
 namespace MCF {
 
 namespace Impl_StreamBuffer {
-	constexpr unsigned kChunkSize = 13;
+	constexpr unsigned kChunkSize = 256;
 
 	struct Chunk {
 		static void *operator new(std::size_t uSize);

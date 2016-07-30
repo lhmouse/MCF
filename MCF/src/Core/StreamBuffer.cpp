@@ -461,17 +461,16 @@ StreamBuffer StreamBuffer::CutOff(std::size_t uOffsetEnd){
 	if(pCutBegin != pCutEnd){
 		MCF_ASSERT(pCutBegin);
 
-		const auto pBeforeEnd = pCutEnd ? pCutEnd->pPrev : x_pLast;
-
-		x_pFirst = pCutEnd;
-		(pCutEnd ? pCutEnd->pPrev : x_pLast) = nullptr;
-		x_uSize -= uBytesCut;
+		const auto pBeforeEnd = std::exchange(pCutEnd ? pCutEnd->pPrev : x_pLast, nullptr);
 
 		vHead.x_pFirst = pCutBegin;
-		// pCutBegin->pPrev = nullptr;
 		vHead.x_pLast = pBeforeEnd;
+		x_pFirst = pCutEnd;
+		// pCutBegin->pPrev = nullptr;
 		pBeforeEnd->pNext = nullptr;
+
 		vHead.x_uSize = uBytesCut;
+		x_uSize -= uBytesCut;
 	}
 	return vHead;
 }
@@ -481,18 +480,15 @@ void StreamBuffer::Splice(StreamBuffer &rhs) noexcept {
 	const auto pSpFirst = rhs.x_pFirst;
 	if(pSpFirst){
 		const auto pSpLast = rhs.x_pLast;
-		const auto pLast   = x_pLast;
-		if(pLast){
-			pLast->pNext = pSpFirst;
-		} else {
-			x_pFirst = pSpFirst;
-		}
+		const auto pLast = x_pLast;
+		(pLast ? pLast->pNext : x_pFirst) = pSpFirst;
 		pSpFirst->pPrev = pLast;
 		x_pLast = pSpLast;
-		x_uSize += rhs.x_uSize;
 
 		rhs.x_pFirst = nullptr;
 		rhs.x_pLast  = nullptr;
+
+		x_uSize += rhs.x_uSize;
 		rhs.x_uSize  = 0;
 	}
 }

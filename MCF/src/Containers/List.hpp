@@ -434,16 +434,13 @@ public:
 		if(pBeginNode != pEndNode){
 			MCF_ASSERT(pBeginNode);
 
-			const auto pNodeBeforeInsert = pInsertNode ? pInsertNode->pPrev : x_pLast;
 			const auto pNodeBeforeBegin = pBeginNode->pPrev;
-			const auto pNodeBeforeEnd = pEndNode ? pEndNode->pPrev : lstSrc.x_pLast;
-
-			(pNodeBeforeBegin ? pNodeBeforeBegin->pNext: lstSrc.x_pFirst) = pEndNode;
-			(pEndNode ? pEndNode->pPrev : lstSrc.x_pLast) = pNodeBeforeBegin;
+			const auto pNodeBeforeEnd = std::exchange(pEndNode ? pEndNode->pPrev : lstSrc.x_pLast, pNodeBeforeBegin);
+			const auto pNodeBeforeInsert = std::exchange(pInsertNode ? pInsertNode->pPrev : x_pLast, pNodeBeforeEnd);
 
 			(pNodeBeforeInsert ? pNodeBeforeInsert->pNext : x_pFirst) = pBeginNode;
+			(pNodeBeforeBegin ? pNodeBeforeBegin->pNext: lstSrc.x_pFirst) = pEndNode;
 			pBeginNode->pPrev = pNodeBeforeInsert;
-			(pInsertNode ? pInsertNode->pPrev : x_pLast) = pNodeBeforeEnd;
 			pNodeBeforeEnd->pNext = pInsertNode;
 		}
 		return const_cast<Element *>(pInsert);

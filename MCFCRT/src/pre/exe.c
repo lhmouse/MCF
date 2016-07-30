@@ -34,7 +34,7 @@ static BOOL CrtCtrlHandler(DWORD dwCtrlType){
 
 static void CrtModuleUninitCascading(intptr_t nContext);
 
-static bool RealTlsCallback(void *pInstance, unsigned uReason, bool bDynamic){
+static void RealTlsCallback(void *pInstance, unsigned uReason, bool bDynamic){
 	(void)pInstance;
 	(void)bDynamic;
 
@@ -77,22 +77,18 @@ static bool RealTlsCallback(void *pInstance, unsigned uReason, bool bDynamic){
 		break;
 	}
 
-	return bRet;
+	if(!bRet){
+		_MCFCRT_Bail(L"MCFCRT 初始化失败。");
+	}
 }
 
 __MCFCRT_C_STDCALL
 static void CrtExeTlsCallback(LPVOID pInstance, DWORD dwReason, LPVOID pReserved){
-	bool bRet;
-
 	__MCFCRT_SEH_TOP_BEGIN
 	{
-		bRet = RealTlsCallback(pInstance, (unsigned)dwReason, !pReserved);
+		RealTlsCallback(pInstance, (unsigned)dwReason, !pReserved);
 	}
 	__MCFCRT_SEH_TOP_END
-
-	if(!bRet){
-		_MCFCRT_Bail(L"MCFCRT 初始化失败。");
-	}
 }
 
 extern const IMAGE_TLS_DIRECTORY _tls_used;

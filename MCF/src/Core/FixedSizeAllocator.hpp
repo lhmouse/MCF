@@ -57,8 +57,7 @@ private:
 		return x_vControl.Exchange(X_Control{ nullptr, nullptr }, kAtomicRelaxed);
 	}
 
-public:
-	void *Allocate(){
+	X_Block *X_PooledAllocate() noexcept {
 		const auto vControl = X_Detach();
 		const auto pBlock = vControl.pFirst;
 		if(pBlock){
@@ -66,28 +65,43 @@ public:
 			if(pNext){
 				X_Attach(X_Control{ pNext, vControl.pLast });
 			}
-			return pBlock;
 		}
-		return BackingAllocator()(sizeof(X_Block));
+		return pBlock;
+	}
+	void X_PooledDeallocate(X_Block *pBlock) noexcept {
+		X_Attach(X_Control{ pBlock, pBlock });
+	}
+
+public:
+	__attribute__((__malloc__))
+	void *Allocate(){
+		auto pBlock = X_PooledAllocate();
+		if(!pBlock){
+			pBlock = static_cast<X_Block *>(BackingAllocator()(sizeof(X_Block)));
+		}
+#ifndef NDEBUG
+		__builtin_memset(pBlock, 0xD7, sizeof(X_Block));
+#endif
+		return pBlock;
 	}
 	void *AllocateNoThrow() noexcept {
-		const auto vControl = X_Detach();
-		const auto pBlock = vControl.pFirst;
-		if(pBlock){
-			const auto pNext = pBlock->pNext;
-			if(pNext){
-				X_Attach(X_Control{ pNext, vControl.pLast });
+		auto pBlock = X_PooledAllocate();
+		if(!pBlock){
+			pBlock = static_cast<X_Block *>(BackingAllocator()(std::nothrow, sizeof(X_Block)));
+			if(!pBlock){
+				return nullptr;
 			}
-			return pBlock;
 		}
-		return BackingAllocator()(std::nothrow, sizeof(X_Block));
+#ifndef NDEBUG
+		__builtin_memset(pBlock, 0xD7, sizeof(X_Block));
+#endif
+		return pBlock;
 	}
 	void Deallocate(void *pRaw) noexcept {
-		const auto pBlock = static_cast<X_Block *>(pRaw);
-		if(pBlock){
-			X_Attach(X_Control{ pBlock, pBlock });
+		if(!pRaw){
 			return;
 		}
+		X_PooledDeallocate(static_cast<X_Block *>(pRaw));
 	}
 
 	void Recycle() noexcept {

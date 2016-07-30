@@ -11,14 +11,18 @@
 
 namespace MCF {
 
+namespace Impl_StreamBuffer {
+	struct Chunk;
+}
+
 class StreamBuffer {
 public:
 	class ReadIterator;
 	class WriteIterator;
 
 private:
-	void *x_pFirst;
-	void *x_pLast;
+	Impl_StreamBuffer::Chunk *x_pFirst;
+	Impl_StreamBuffer::Chunk *x_pLast;
 	std::size_t x_uSize;
 
 public:

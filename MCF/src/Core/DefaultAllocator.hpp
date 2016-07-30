@@ -11,9 +11,11 @@
 namespace MCF {
 
 struct DefaultAllocator {
+	__attribute__((__malloc__))
 	void *operator()(std::size_t uSize){
 		return ::operator new(uSize);
 	}
+	__attribute__((__malloc__))
 	void *operator()(const std::nothrow_t &, std::size_t uSize) noexcept {
 		return ::operator new(uSize, std::nothrow);
 	}

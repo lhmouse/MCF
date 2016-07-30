@@ -280,11 +280,8 @@ public:
 		pNewFirst->pPrev = nullptr;
 		pNewFirst->pNext = x_pFirst;
 
-		if(x_pFirst){
-			x_pFirst->pPrev = pNewFirst;
-		} else {
-			x_pLast = pNewFirst;
-		}
+		const auto pOldFirst = x_pFirst;
+		(pOldFirst ? pOldFirst->pPrev : x_pLast) = pNewFirst;
 		x_pFirst = pNewFirst;
 
 		return *pElement;
@@ -302,11 +299,7 @@ public:
 			Allocator()(const_cast<void *>(static_cast<const void *>(pNewFirst)));
 			pNewFirst = pNext;
 		}
-		if(pNewFirst){
-			pNewFirst->pPrev = nullptr;
-		} else {
-			x_pLast = nullptr;
-		}
+		(pNewFirst ? pNewFirst->pPrev : x_pLast) = nullptr;
 		x_pFirst = pNewFirst;
 	}
 
@@ -323,11 +316,8 @@ public:
 		pNewLast->pPrev = x_pLast;
 		pNewLast->pNext = nullptr;
 
-		if(x_pLast){
-			x_pLast->pNext = pNewLast;
-		} else {
-			x_pFirst = pNewLast;
-		}
+		const auto pOldLast = x_pLast;
+		(pOldLast ? pOldLast->pNext : x_pFirst) = pNewLast;
 		x_pLast = pNewLast;
 
 		return *pElement;
@@ -345,11 +335,7 @@ public:
 			Allocator()(const_cast<void *>(static_cast<const void *>(pNewLast)));
 			pNewLast = pPrev;
 		}
-		if(pNewLast){
-			pNewLast->pNext = nullptr;
-		} else {
-			x_pFirst = nullptr;
-		}
+		(pNewLast ? pNewLast->pNext : x_pFirst) = nullptr;
 		x_pLast = pNewLast;
 	}
 
@@ -374,7 +360,9 @@ public:
 	template<typename ...ParamsT>
 	void Append(std::size_t uDeltaSize, const ParamsT &...vParams){
 		List lstNew;
-		lstNew.Append(uDeltaSize, vParams...);
+		for(std::size_t i = 0; i < uDeltaSize; ++i){
+			lstNew.Push(vParams...);
+		}
 		Splice(nullptr, lstNew);
 	}
 	template<typename IteratorT, std::enable_if_t<
@@ -382,7 +370,9 @@ public:
 		int> = 0>
 	void Append(IteratorT itBegin, std::common_type_t<IteratorT> itEnd){
 		List lstNew;
-		lstNew.Append(itBegin, itEnd);
+		for(auto it = itBegin; it != itEnd; ++it){
+			lstNew.Push(*it);
+		}
 		Splice(nullptr, lstNew);
 	}
 	void Append(std::initializer_list<Element> ilElements){
@@ -437,45 +427,25 @@ public:
 	Element *Splice(const Element *pInsert, List &lstSrc, const Element *pBegin, const Element *pEnd) noexcept {
 		MCF_ASSERT(&lstSrc != this);
 
-		const auto pInsertNode = X_GetNodeFromElement(const_cast<Element *>(pInsert));
-		const auto pBeginNode  = X_GetNodeFromElement(const_cast<Element *>(pBegin ));
-		const auto pEndNode    = X_GetNodeFromElement(const_cast<Element *>(pEnd   ));
+		const auto pInsertNode = pInsert ? X_GetNodeFromElement(const_cast<Element *>(pInsert)) : nullptr;
+		const auto pBeginNode  = pBegin  ? X_GetNodeFromElement(const_cast<Element *>(pBegin )) : nullptr;
+		const auto pEndNode    = pEnd    ? X_GetNodeFromElement(const_cast<Element *>(pEnd   )) : nullptr;
 
-		if(pBeginNode == pEndNode){
-			return const_cast<Element *>(pInsert);
-		}
-		MCF_ASSERT(pBeginNode);
+		if(pBeginNode != pEndNode){
+			MCF_ASSERT(pBeginNode);
 
-		const auto pNodeBeforeBegin = pBeginNode->pPrev;
-		const auto pNodeBeforeEnd = pEndNode ? pEndNode->pPrev : lstSrc.x_pLast;
+			const auto pNodeBeforeInsert = pInsertNode ? pInsertNode->pPrev : x_pLast;
+			const auto pNodeBeforeBegin = pBeginNode->pPrev;
+			const auto pNodeBeforeEnd = pEndNode ? pEndNode->pPrev : lstSrc.x_pLast;
 
-		if(pNodeBeforeBegin){
-			pNodeBeforeBegin->pNext = pEndNode;
-		} else {
-			lstSrc.x_pFirst = pEndNode;
-		}
-		if(pEndNode){
-			pEndNode->pPrev = pNodeBeforeBegin;
-		} else {
-			lstSrc.x_pLast = pNodeBeforeBegin;
-		}
+			(pNodeBeforeBegin ? pNodeBeforeBegin->pNext: lstSrc.x_pFirst) = pEndNode;
+			(pEndNode ? pEndNode->pPrev : lstSrc.x_pLast) = pNodeBeforeBegin;
 
-		X_Node *pNodeBeforeInsert;
-		if(pInsertNode){
-			pNodeBeforeInsert = pInsertNode->pPrev;
-			pInsertNode->pPrev = pNodeBeforeEnd;
-		} else {
-			pNodeBeforeInsert = x_pLast;
-			x_pLast = pNodeBeforeEnd;
+			(pNodeBeforeInsert ? pNodeBeforeInsert->pNext : x_pFirst) = pBeginNode;
+			pBeginNode->pPrev = pNodeBeforeInsert;
+			(pInsertNode ? pInsertNode->pPrev : x_pLast) = pNodeBeforeEnd;
+			pNodeBeforeEnd->pNext = pInsertNode;
 		}
-		if(pNodeBeforeInsert){
-			pNodeBeforeInsert->pNext = pBeginNode;
-		} else {
-			x_pFirst = pBeginNode;
-		}
-		pBeginNode->pPrev = pNodeBeforeInsert;
-		pNodeBeforeEnd->pNext = pInsertNode;
-
 		return const_cast<Element *>(pInsert);
 	}
 

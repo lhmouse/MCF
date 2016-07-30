@@ -15,6 +15,7 @@
 .libs
 .deps
 aclocal.m4
+ar-lib
 autom4te.cache
 compile
 config.guess

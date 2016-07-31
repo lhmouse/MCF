@@ -487,7 +487,7 @@ void StreamBuffer::Splice(StreamBuffer &rhs) noexcept {
 		rhs.x_pLast  = nullptr;
 
 		x_uSize += rhs.x_uSize;
-		rhs.x_uSize  = 0;
+		rhs.x_uSize = 0;
 	}
 }
 

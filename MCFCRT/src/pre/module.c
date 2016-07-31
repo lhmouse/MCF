@@ -68,18 +68,18 @@ typedef struct tagModuleSectionInfo {
 		const void *pTable;
 		_MCFCRT_STD size_t uCount;
 		_MCFCRT_STD size_t uNext;
-	} __vImpl;
+	};
 } ModuleSectionInfo;
 
 static bool EnumerateNextModuleSection(ModuleSectionInfo *pInfo){
-	const size_t uIndex = pInfo->__vImpl.uNext;
-	if(uIndex >= pInfo->__vImpl.uCount){
+	const size_t uIndex = pInfo->uNext;
+	if(uIndex >= pInfo->uCount){
 		return false;
 	}
-	pInfo->__vImpl.uNext = uIndex + 1;
+	pInfo->uNext = uIndex + 1;
 
 	const IMAGE_DOS_HEADER *const pImageBase = _MCFCRT_GetModuleBase();
-	const IMAGE_SECTION_HEADER *const pHeader = (const IMAGE_SECTION_HEADER *)pInfo->__vImpl.pTable + uIndex;
+	const IMAGE_SECTION_HEADER *const pHeader = (const IMAGE_SECTION_HEADER *)pInfo->pTable + uIndex;
 	memcpy(pInfo->achName, pHeader->Name, 8);
 	pInfo->uRawSize = pHeader->SizeOfRawData;
 	pInfo->pBase    = (char *)pImageBase + pHeader->VirtualAddress;
@@ -97,9 +97,9 @@ static bool EnumerateFirstModuleSection(ModuleSectionInfo *pInfo){
 		return false;
 	}
 
-	pInfo->__vImpl.pTable = (const char *)&pNtHeaders->OptionalHeader + pNtHeaders->FileHeader.SizeOfOptionalHeader;
-	pInfo->__vImpl.uCount = pNtHeaders->FileHeader.NumberOfSections;
-	pInfo->__vImpl.uNext  = 0;
+	pInfo->pTable = (const char *)&pNtHeaders->OptionalHeader + pNtHeaders->FileHeader.SizeOfOptionalHeader;
+	pInfo->uCount = pNtHeaders->FileHeader.NumberOfSections;
+	pInfo->uNext  = 0;
 
 	return EnumerateNextModuleSection(pInfo);
 }

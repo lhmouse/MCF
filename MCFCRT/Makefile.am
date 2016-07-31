@@ -25,13 +25,13 @@ __pch.h: ${srcdir}/src/env/_crtdef.h
 	echo "#include \"$<\"" > $@
 
 __pch.h.gch: __pch.h
-	${CC} -x c-header @DEFS@ ${AM_CPPFLAGS} ${CPPFLAGS} $$(echo ${AM_CFLAGS} | sed 's/-include __pch.h//') ${CFLAGS} $< -o $@
+	${CC} -x c-header @DEFS@ ${AM_CPPFLAGS} ${CPPFLAGS} $$(echo "" "${AM_CFLAGS}" | sed "s/-include __pch\\.h//") ${CFLAGS} $< -o $@
 
 __pch.hpp: ${srcdir}/src/env/_crtdef.hpp
 	echo "#include \"$<\"" > $@
 
 __pch.hpp.gch: __pch.hpp
-	${CXX} -x c++-header @DEFS@ ${AM_CPPFLAGS} ${CPPFLAGS} $$(echo ${AM_CXXFLAGS} | sed 's/-include __pch.hpp//') ${CXXFLAGS} $< -o $@
+	${CXX} -x c++-header @DEFS@ ${AM_CPPFLAGS} ${CPPFLAGS} $$(echo "" "${AM_CXXFLAGS}" | sed "s/-include __pch\\.hpp//") ${CXXFLAGS} $< -o $@
 
 pkginclude_predir = ${pkgincludedir}/pre
 pkginclude_pre_HEADERS =	\

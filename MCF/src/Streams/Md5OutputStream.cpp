@@ -4,7 +4,7 @@
 
 #include "Md5OutputStream.hpp"
 #include "../Core/Array.hpp"
-#include "../Utilities/Endian.hpp"
+#include "../Core/Endian.hpp"
 
 namespace MCF {
 

@@ -3,7 +3,7 @@
 // Copyleft 2013 - 2016, LH_Mouse. All wrongs reserved.
 
 #include "StandardErrorStream.hpp"
-#include "../../MCFCRT/env/standard_streams.h"
+#include <MCFCRT/env/standard_streams.h>
 #include "../Core/Exception.hpp"
 
 namespace MCF {
@@ -33,10 +33,10 @@ void StandardErrorStream::PutChar32(char32_t c32Data){
 		MCF_THROW(Exception, ::GetLastError(), Rcntws::View(L"StandardErrorStream: _MCFCRT_WriteStandardErrorChar32() 失败。"));
 	}
 }
-void StandardErrorStream::PutString(const wchar_t *pwcData, std::size_t uSize, bool bAppendNewLine){
-	const auto bSucceeded = ::_MCFCRT_WriteStandardErrorString(pwcData, uSize, bAppendNewLine);
+void StandardErrorStream::PutText(const wchar_t *pwcData, std::size_t uSize, bool bAppendNewLine){
+	const auto bSucceeded = ::_MCFCRT_WriteStandardErrorText(pwcData, uSize, bAppendNewLine);
 	if(!bSucceeded){
-		MCF_THROW(Exception, ::GetLastError(), Rcntws::View(L"StandardErrorStream: _MCFCRT_WriteStandardErrorString() 失败。"));
+		MCF_THROW(Exception, ::GetLastError(), Rcntws::View(L"StandardErrorStream: _MCFCRT_WriteStandardErrorText() 失败。"));
 	}
 }
 

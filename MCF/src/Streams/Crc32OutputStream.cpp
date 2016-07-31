@@ -4,7 +4,7 @@
 
 #include "Crc32OutputStream.hpp"
 #include "../Core/Array.hpp"
-#include "../Utilities/Endian.hpp"
+#include "../Core/Endian.hpp"
 
 // http://www.relisoft.com/science/CrcOptim.html
 // 1. 原文提供的是正序（权较大位向权较小位方向）的 CRC 计算，而这里使用的是反序（权较小位向权较大位方向）。

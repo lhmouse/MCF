@@ -23,7 +23,7 @@ public:
 	void Flush(bool bHard) override;
 
 	void PutChar32(char32_t c32Data);
-	void PutString(const wchar_t *pwcData, std::size_t uSize, bool bAppendNewLine);
+	void PutText(const wchar_t *pwcData, std::size_t uSize, bool bAppendNewLine);
 
 	void Swap(StandardErrorStream &rhs) noexcept {
 		using std::swap;

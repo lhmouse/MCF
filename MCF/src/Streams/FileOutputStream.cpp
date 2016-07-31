@@ -4,7 +4,7 @@
 
 #include "FileOutputStream.hpp"
 #include "../Core/Exception.hpp"
-#include "../Utilities/MinMax.hpp"
+#include "../Core/MinMax.hpp"
 
 namespace MCF {
 

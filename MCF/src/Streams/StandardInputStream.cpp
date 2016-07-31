@@ -3,7 +3,7 @@
 // Copyleft 2013 - 2016, LH_Mouse. All wrongs reserved.
 
 #include "StandardInputStream.hpp"
-#include "../../MCFCRT/env/standard_streams.h"
+#include <MCFCRT/env/standard_streams.h>
 #include "../Core/Exception.hpp"
 
 namespace MCF {
@@ -60,32 +60,32 @@ long StandardInputStream::GetChar32(){
 bool StandardInputStream::DiscardChar32(){
 	return ::_MCFCRT_ReadStandardInputChar32() >= 0;
 }
-std::size_t StandardInputStream::PeekString(wchar_t *pwcData, std::size_t uSize, bool bSingleLine){
-	const auto uRead = ::_MCFCRT_PeekStandardInputString(pwcData, uSize, bSingleLine);
+std::size_t StandardInputStream::PeekText(wchar_t *pwcData, std::size_t uSize, bool bSingleLine){
+	const auto uRead = ::_MCFCRT_PeekStandardInputText(pwcData, uSize, bSingleLine);
 	if(uRead == 0){
 		const auto dwErrorCode = ::GetLastError();
 		if((dwErrorCode != ERROR_SUCCESS) && (dwErrorCode != ERROR_HANDLE_EOF)){
-			MCF_THROW(Exception, dwErrorCode, Rcntws::View(L"StandardInputStream: _MCFCRT_PeekStandardInputString() 失败。"));
+			MCF_THROW(Exception, dwErrorCode, Rcntws::View(L"StandardInputStream: _MCFCRT_PeekStandardInputText() 失败。"));
 		}
 	}
 	return uRead;
 }
-std::size_t StandardInputStream::GetString(wchar_t *pwcData, std::size_t uSize, bool bSingleLine){
-	const auto uRead = ::_MCFCRT_ReadStandardInputString(pwcData, uSize, bSingleLine);
+std::size_t StandardInputStream::GetText(wchar_t *pwcData, std::size_t uSize, bool bSingleLine){
+	const auto uRead = ::_MCFCRT_ReadStandardInputText(pwcData, uSize, bSingleLine);
 	if(uRead == 0){
 		const auto dwErrorCode = ::GetLastError();
 		if((dwErrorCode != ERROR_SUCCESS) && (dwErrorCode != ERROR_HANDLE_EOF)){
-			MCF_THROW(Exception, dwErrorCode, Rcntws::View(L"StandardInputStream: _MCFCRT_ReadStandardInputString() 失败。"));
+			MCF_THROW(Exception, dwErrorCode, Rcntws::View(L"StandardInputStream: _MCFCRT_ReadStandardInputText() 失败。"));
 		}
 	}
 	return uRead;
 }
-std::size_t StandardInputStream::DiscardString(std::size_t uSize, bool bSingleLine){
-	const auto uRead = ::_MCFCRT_DiscardStandardInputString(uSize, bSingleLine);
+std::size_t StandardInputStream::DiscardText(std::size_t uSize, bool bSingleLine){
+	const auto uRead = ::_MCFCRT_DiscardStandardInputText(uSize, bSingleLine);
 	if(uRead == 0){
 		const auto dwErrorCode = ::GetLastError();
 		if((dwErrorCode != ERROR_SUCCESS) && (dwErrorCode != ERROR_HANDLE_EOF)){
-			MCF_THROW(Exception, dwErrorCode, Rcntws::View(L"StandardInputStream: _MCFCRT_DiscardStandardInputString() 失败。"));
+			MCF_THROW(Exception, dwErrorCode, Rcntws::View(L"StandardInputStream: _MCFCRT_DiscardStandardInputText() 失败。"));
 		}
 	}
 	return uRead;

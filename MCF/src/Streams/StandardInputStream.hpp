@@ -28,9 +28,9 @@ public:
 	long PeekChar32();
 	long GetChar32();
 	bool DiscardChar32();
-	std::size_t PeekString(wchar_t *pwcData, std::size_t uSize, bool bSingleLine);
-	std::size_t GetString(wchar_t *pwcData, std::size_t uSize, bool bSingleLine);
-	std::size_t DiscardString(std::size_t uSize, bool bSingleLine);
+	std::size_t PeekText(wchar_t *pwcData, std::size_t uSize, bool bSingleLine);
+	std::size_t GetText(wchar_t *pwcData, std::size_t uSize, bool bSingleLine);
+	std::size_t DiscardText(std::size_t uSize, bool bSingleLine);
 
 	bool IsEchoing() const noexcept;
 	bool SetEchoing(bool bEchoing) noexcept;

@@ -3,7 +3,7 @@
 // Copyleft 2013 - 2016, LH_Mouse. All wrongs reserved.
 
 #include "FileInputStream.hpp"
-#include "../Utilities/MinMax.hpp"
+#include "../Core/MinMax.hpp"
 
 namespace MCF {
 

@@ -125,6 +125,43 @@ pkginclude_Utilities_HEADERS =	\
 	src/Utilities/Thunk.cpp	\
 	src/Utilities/Variant.cpp
 
+pkginclude_Streamsdir = ${pkgincludedir}/Streams
+pkginclude_Streams_HEADERS =	\
+	src/Streams/AbstractInputStream.hpp	\
+	src/Streams/AbstractOutputStream.hpp	\
+	src/Streams/BufferInputStream.hpp	\
+	src/Streams/BufferOutputStream.hpp	\
+	src/Streams/Crc32OutputStream.hpp	\
+	src/Streams/Crc64OutputStream.hpp	\
+	src/Streams/FileInputStream.hpp	\
+	src/Streams/FileOutputStream.hpp	\
+	src/Streams/Fnv1a32OutputStream.hpp	\
+	src/Streams/Fnv1a64OutputStream.hpp	\
+	src/Streams/InputStreamIterator.hpp	\
+	src/Streams/Md5OutputStream.hpp	\
+	src/Streams/NullInputStream.hpp	\
+	src/Streams/NullOutputStream.hpp	\
+	src/Streams/OutputStreamIterator.hpp	\
+	src/Streams/Sha1OutputStream.hpp	\
+	src/Streams/Sha256OutputStream.hpp	\
+	src/Streams/StandardErrorStream.hpp	\
+	src/Streams/StandardInputStream.hpp	\
+	src/Streams/StandardOutputStream.hpp	\
+	src/Streams/ZeroInputStream.hpp
+
+pkginclude_StreamFiltersdir = ${pkgincludedir}/StreamFilters
+pkginclude_StreamFilters_HEADERS =	\
+	src/StreamFilters/_BufferedInputStream.hpp	\
+	src/StreamFilters/_BufferedOutputStream.hpp	\
+	src/StreamFilters/AbstractInputStreamFilter.hpp	\
+	src/StreamFilters/AbstractOutputStreamFilter.hpp	\
+	src/StreamFilters/Base64InputStreamFilter.hpp	\
+	src/StreamFilters/Base64OutputStreamFilter.hpp	\
+	src/StreamFilters/BufferingInputStreamFilter.hpp	\
+	src/StreamFilters/BufferingOutputStreamFilter.hpp	\
+	src/StreamFilters/TextInputStreamFilter.hpp	\
+	src/StreamFilters/TextOutputStreamFilter.hpp
+
 mcf_sources =	\
 	src/Core/_KernelObjectBase.cpp	\
 	src/Core/_UniqueNtHandle.cpp	\
@@ -153,7 +190,36 @@ mcf_sources =	\
 	src/Random/IsaacGenerator.cpp	\
 	src/Utilities/Argv.cpp	\
 	src/Utilities/Thunk.cpp	\
-	src/Utilities/Variant.cpp
+	src/Utilities/Variant.cpp	\
+	src/Streams/AbstractInputStream.cpp	\
+	src/Streams/AbstractOutputStream.cpp	\
+	src/Streams/BufferInputStream.cpp	\
+	src/Streams/BufferOutputStream.cpp	\
+	src/Streams/Crc32OutputStream.cpp	\
+	src/Streams/Crc64OutputStream.cpp	\
+	src/Streams/FileInputStream.cpp	\
+	src/Streams/FileOutputStream.cpp	\
+	src/Streams/Fnv1a32OutputStream.cpp	\
+	src/Streams/Fnv1a64OutputStream.cpp	\
+	src/Streams/Md5OutputStream.cpp	\
+	src/Streams/NullInputStream.cpp	\
+	src/Streams/NullOutputStream.cpp	\
+	src/Streams/Sha1OutputStream.cpp	\
+	src/Streams/Sha256OutputStream.cpp	\
+	src/Streams/StandardErrorStream.cpp	\
+	src/Streams/StandardInputStream.cpp	\
+	src/Streams/StandardOutputStream.cpp	\
+	src/Streams/ZeroInputStream.cpp	\
+	src/StreamFilters/_BufferedInputStream.cpp	\
+	src/StreamFilters/_BufferedOutputStream.cpp	\
+	src/StreamFilters/AbstractInputStreamFilter.cpp	\
+	src/StreamFilters/AbstractOutputStreamFilter.cpp	\
+	src/StreamFilters/Base64InputStreamFilter.cpp	\
+	src/StreamFilters/Base64OutputStreamFilter.cpp	\
+	src/StreamFilters/BufferingInputStreamFilter.cpp	\
+	src/StreamFilters/BufferingOutputStreamFilter.cpp	\
+	src/StreamFilters/TextInputStreamFilter.cpp	\
+	src/StreamFilters/TextOutputStreamFilter.cpp
 
 bin_PROGRAMS =	\
 	MCF-1.dll

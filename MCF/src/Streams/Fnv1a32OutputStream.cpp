@@ -2,41 +2,41 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2013 - 2016, LH_Mouse. All wrongs reserved.
 
-#include "Fnv1a64OutputStream.hpp"
+#include "Fnv1a32OutputStream.hpp"
 #include "../Core/Array.hpp"
-#include "../Utilities/Endian.hpp"
+#include "../Core/Endian.hpp"
 
 // http://www.isthe.com/chongo/tech/comp/fnv/
 
 namespace MCF {
 
-Fnv1a64OutputStream::~Fnv1a64OutputStream(){
+Fnv1a32OutputStream::~Fnv1a32OutputStream(){
 }
 
-void Fnv1a64OutputStream::X_Initialize() noexcept {
-	x_u64Reg = 14695981039346656037u;
+void Fnv1a32OutputStream::X_Initialize() noexcept {
+	x_u32Reg = 2166136261u;
 }
-void Fnv1a64OutputStream::X_Update(const std::uint8_t (&abyChunk)[8]) noexcept {
+void Fnv1a32OutputStream::X_Update(const std::uint8_t (&abyChunk)[8]) noexcept {
 	register auto u64Word = LoadLe(reinterpret_cast<const std::uint64_t *>(abyChunk)[0]);
 	for(unsigned i = 0; i < sizeof(u64Word); ++i){
 		const unsigned uLow = static_cast<unsigned char>(u64Word);
 		u64Word >>= 8;
-		x_u64Reg ^= uLow;
-		x_u64Reg *= 1099511628211u;
+		x_u32Reg ^= uLow;
+		x_u32Reg *= 16777619u;
 	}
 }
-void Fnv1a64OutputStream::X_Finalize(std::uint8_t (&abyChunk)[8], unsigned uBytesInChunk) noexcept {
+void Fnv1a32OutputStream::X_Finalize(std::uint8_t (&abyChunk)[8], unsigned uBytesInChunk) noexcept {
 	for(unsigned i = 0; i < uBytesInChunk; ++i){
 		const unsigned uLow = abyChunk[i];
-		x_u64Reg ^= uLow;
-		x_u64Reg *= 1099511628211u;
+		x_u32Reg ^= uLow;
+		x_u32Reg *= 16777619u;
 	}
 }
 
-void Fnv1a64OutputStream::Put(unsigned char byData){
+void Fnv1a32OutputStream::Put(unsigned char byData){
 	Put(&byData, 1);
 }
-void Fnv1a64OutputStream::Put(const void *pData, std::size_t uSize){
+void Fnv1a32OutputStream::Put(const void *pData, std::size_t uSize){
 	if(x_nChunkOffset < 0){
 		X_Initialize();
 		x_nChunkOffset = 0;
@@ -64,14 +64,14 @@ void Fnv1a64OutputStream::Put(const void *pData, std::size_t uSize){
 		x_nChunkOffset += static_cast<int>(uBytesRemaining);
 	}
 }
-void Fnv1a64OutputStream::Flush(bool bHard){
+void Fnv1a32OutputStream::Flush(bool bHard){
 	(void)bHard;
 }
 
-void Fnv1a64OutputStream::Reset() noexcept {
+void Fnv1a32OutputStream::Reset() noexcept {
 	x_nChunkOffset = -1;
 }
-std::uint64_t Fnv1a64OutputStream::Finalize() noexcept {
+std::uint32_t Fnv1a32OutputStream::Finalize() noexcept {
 	if(x_nChunkOffset >= 0){
 		X_Finalize(x_abyChunk, static_cast<unsigned>(x_nChunkOffset));
 	} else {
@@ -80,7 +80,7 @@ std::uint64_t Fnv1a64OutputStream::Finalize() noexcept {
 	}
 	x_nChunkOffset = -1;
 
-	return x_u64Reg;
+	return x_u32Reg;
 }
 
 }

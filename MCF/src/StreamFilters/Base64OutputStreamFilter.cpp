@@ -3,7 +3,7 @@
 // Copyleft 2013 - 2016, LH_Mouse. All wrongs reserved.
 
 #include "Base64OutputStreamFilter.hpp"
-#include "../Utilities/Endian.hpp"
+#include "../Core/Endian.hpp"
 
 namespace MCF {
 

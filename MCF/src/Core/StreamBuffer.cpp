@@ -9,9 +9,9 @@
 
 namespace MCF {
 
-namespace Impl_StreamBuffer {
-	constexpr unsigned kChunkSize = 256;
+constexpr unsigned kChunkSize = 256;
 
+namespace Impl_StreamBuffer {
 	struct Chunk {
 		static void *operator new(std::size_t uSize);
 		static void operator delete(void *pRaw) noexcept;
@@ -37,8 +37,6 @@ namespace Impl_StreamBuffer {
 		g_vChunkAllocator.Deallocate(pRaw);
 	}
 }
-
-using namespace Impl_StreamBuffer;
 
 StreamBuffer::StreamBuffer(const StreamBuffer &rhs)
 	: StreamBuffer()
@@ -119,7 +117,7 @@ bool StreamBuffer::Discard() noexcept {
 void StreamBuffer::Put(unsigned char byData){
 	auto *restrict pChunk = x_pLast;
 	if(!pChunk || (pChunk->uEnd == kChunkSize)){
-		const auto pNext = new Chunk;
+		const auto pNext = new Impl_StreamBuffer::Chunk;
 
 		if(pChunk){
 			pChunk->pNext = pNext;
@@ -168,7 +166,7 @@ int StreamBuffer::Unput() noexcept {
 void StreamBuffer::Unget(unsigned char byData){
 	auto *restrict pChunk = x_pFirst;
 	if(!pChunk || (pChunk->uBegin == 0)){
-		const auto pPrev = new Chunk;
+		const auto pPrev = new Impl_StreamBuffer::Chunk;
 
 		if(pChunk){
 			pChunk->pPrev = pPrev;
@@ -275,7 +273,7 @@ std::size_t StreamBuffer::Discard(std::size_t uSize) noexcept {
 	return uBytesDiscarded;
 }
 void StreamBuffer::Put(unsigned char byData, std::size_t uSize){
-	Chunk *pSpFirst = nullptr, *pSpLast = nullptr;
+	Impl_StreamBuffer::Chunk *pSpFirst = nullptr, *pSpLast = nullptr;
 	std::size_t uCapacityAvail = 0;
 
 	const auto pLast = x_pLast;
@@ -283,7 +281,7 @@ void StreamBuffer::Put(unsigned char byData, std::size_t uSize){
 		uCapacityAvail += kChunkSize - pLast->uEnd;
 	}
 	if(uCapacityAvail < uSize){
-		pSpFirst = new Chunk;
+		pSpFirst = new Impl_StreamBuffer::Chunk;
 		pSpLast = pSpFirst;
 
 		pSpFirst->pPrev  = pLast;
@@ -296,7 +294,7 @@ void StreamBuffer::Put(unsigned char byData, std::size_t uSize){
 		try {
 			while(uCapacityAvail < uSize){
 				const auto pChunk = pSpLast;
-				const auto pNext = new Chunk;
+				const auto pNext = new Impl_StreamBuffer::Chunk;
 
 				pSpLast->pNext = pNext;
 				pSpLast = pNext;
@@ -349,7 +347,7 @@ void StreamBuffer::Put(unsigned char byData, std::size_t uSize){
 	}
 }
 void StreamBuffer::Put(const void *pData, std::size_t uSize){
-	Chunk *pSpFirst = nullptr, *pSpLast = nullptr;
+	Impl_StreamBuffer::Chunk *pSpFirst = nullptr, *pSpLast = nullptr;
 	std::size_t uCapacityAvail = 0;
 
 	const auto pLast = x_pLast;
@@ -357,7 +355,7 @@ void StreamBuffer::Put(const void *pData, std::size_t uSize){
 		uCapacityAvail += kChunkSize - pLast->uEnd;
 	}
 	if(uCapacityAvail < uSize){
-		pSpFirst = new Chunk;
+		pSpFirst = new Impl_StreamBuffer::Chunk;
 		pSpLast = pSpFirst;
 
 		pSpFirst->pPrev  = pLast;
@@ -370,7 +368,7 @@ void StreamBuffer::Put(const void *pData, std::size_t uSize){
 		try {
 			while(uCapacityAvail < uSize){
 				const auto pChunk = pSpLast;
-				const auto pNext = new Chunk;
+				const auto pNext = new Impl_StreamBuffer::Chunk;
 
 				pSpLast->pNext = pNext;
 				pSpLast = pNext;
@@ -434,7 +432,7 @@ StreamBuffer StreamBuffer::CutOff(std::size_t uOffsetEnd){
 		const auto uBytesRemaining = uOffsetEnd - uBytesCut;
 		auto uBytesToCut = pCutEnd->uEnd - pCutEnd->uBegin;
 		if(uBytesToCut > uBytesRemaining){
-			const auto pSplit = new Chunk;
+			const auto pSplit = new Impl_StreamBuffer::Chunk;
 			const auto pNext = pCutEnd->pNext;
 			const auto uBytesLeft = static_cast<unsigned>(uBytesToCut - uBytesRemaining);
 

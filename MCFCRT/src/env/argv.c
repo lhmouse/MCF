@@ -35,7 +35,7 @@ const _MCFCRT_ArgItem *_MCFCRT_AllocArgv(size_t *puArgc, const wchar_t *pwszComm
 	if(!pStorage){
 		goto jBadAlloc;
 	}
-	_MCFCRT_ArgItem *pArgv = (_MCFCRT_ArgItem *)((char *)pStorage + uPrefixSize + sizeof(_MCFCRT_ArgItem));
+	_MCFCRT_ArgItem *pArgv = (void *)((char *)pStorage + uPrefixSize + sizeof(_MCFCRT_ArgItem));
 	pArgv[-1].__pwszStr = pStorage;
 	pArgv[-1].__uLen = uCapacity;
 
@@ -72,7 +72,7 @@ const _MCFCRT_ArgItem *_MCFCRT_AllocArgv(size_t *puArgc, const wchar_t *pwszComm
 					if(!pNewStorage){
 						goto jBadAlloc;
 					}
-					pArgv = (_MCFCRT_ArgItem *)((char *)pNewStorage + uPrefixSize + sizeof(_MCFCRT_ArgItem));
+					pArgv = (void *)((char *)pNewStorage + uPrefixSize + sizeof(_MCFCRT_ArgItem));
 					pArgv[-1].__pwszStr = pNewStorage;
 					pArgv[-1].__uLen = uCapacity;
 

@@ -24,7 +24,7 @@
 #define PRECISION       (PRCS_EXTENDED)
 #define EXCEPT_MASK     (EXCEPT_PM | EXCEPT_DM)
 
-static const uint16_t kFpCsr = (ROUNDING << 10) | (PRECISION << 8) | (EXCEPT_MASK);
+static const uint16_t kFpCsr = (ROUNDING << 10) | (PRECISION << 8) | (EXCEPT_MASK << 0);
 static const uint32_t kMxCsr = (ROUNDING << 13) |                    (EXCEPT_MASK << 7);
 
 void __MCFCRT_FpuInitialize(void){

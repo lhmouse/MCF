@@ -60,14 +60,14 @@ static void PumpAtModuleExit(void){
 
 typedef struct tagModuleSectionInfo {
 	char achName[8];
-	_MCFCRT_STD size_t uRawSize;
+	size_t uRawSize;
 	void *pBase;
-	_MCFCRT_STD size_t uSize;
+	size_t uSize;
 
 	struct {
 		const void *pTable;
-		_MCFCRT_STD size_t uCount;
-		_MCFCRT_STD size_t uNext;
+		size_t uCount;
+		size_t uNext;
 	};
 } ModuleSectionInfo;
 

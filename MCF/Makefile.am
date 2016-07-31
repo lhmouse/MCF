@@ -3,11 +3,35 @@ AUTOMAKE_OPTIONS = no-exeext foreign subdir-objects
 AM_CPPFLAGS = -Wall -Wextra -pedantic -pedantic-errors -Werror -Wno-error=unused-parameter	\
 	-Wwrite-strings -Wconversion -Wsign-conversion -Wsuggest-attribute=noreturn -Wundef -Wshadow -Wstrict-aliasing=2 -Wstrict-overflow=5	\
 	-pipe -mfpmath=both -march=nocona -mno-stack-arg-probe -mno-accumulate-outgoing-args -mpush-args -masm=intel
-AM_CFLAGS = -std=c11 -Wstrict-prototypes
-AM_CXXFLAGS = -std=c++14 -Wzero-as-null-pointer-constant -Wnoexcept -Woverloaded-virtual -fnothrow-opt
+AM_CFLAGS = -include __pch.h -std=c11 -Wstrict-prototypes
+AM_CXXFLAGS = -include __pch.hpp -std=c++14 -Wzero-as-null-pointer-constant -Wnoexcept -Woverloaded-virtual -fnothrow-opt
 
 ## I think you GNU people should just STFU and stop confusing the linker.
 EXEEXT =
+
+BUILT_SOURCES = \
+	__pch.h	\
+	__pch.h.gch	\
+	__pch.hpp	\
+	__pch.hpp.gch
+
+CLEANFILES = \
+	__pch.h	\
+	__pch.h.gch	\
+	__pch.hpp	\
+	__pch.hpp.gch
+
+__pch.h: ${srcdir}/src/env/_crtdef.h
+	echo "#include \"$<\"" > $@
+
+__pch.h.gch: __pch.h
+	${CC} -x c-header @DEFS@ ${AM_CPPFLAGS} ${CPPFLAGS} $$(echo ${AM_CFLAGS} | sed 's/-include __pch.h//') ${CFLAGS} $< -o $@
+
+__pch.hpp: ${srcdir}/src/env/_crtdef.hpp
+	echo "#include \"$<\"" > $@
+
+__pch.hpp.gch: __pch.hpp
+	${CXX} -x c++-header @DEFS@ ${AM_CPPFLAGS} ${CPPFLAGS} $$(echo ${AM_CXXFLAGS} | sed 's/-include __pch.hpp//') ${CXXFLAGS} $< -o $@
 
 pkginclude_Coredir = ${pkgincludedir}/Core
 pkginclude_Core_HEADERS =	\

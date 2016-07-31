@@ -51,7 +51,7 @@ static void RealTlsCallback(void *pInstance, unsigned uReason, bool bDynamic){
 		if(!bRet){
 			goto jCleanup03;
 		}
-		bRet = _MCFCRT_AtCrtModuleExit(&CrtModuleUninitCascading, bDynamic);
+		bRet = _MCFCRT_AtCrtModuleExit(&CrtModuleUninitCascading, 0);
 		if(!bRet){
 			goto jCleanup99;
 		}
@@ -110,11 +110,11 @@ __attribute__((__section__(".rdata"), __used__))
 const IMAGE_TLS_DIRECTORY _tls_used = { (UINT_PTR)&tls_begin, (UINT_PTR)&tls_end, (UINT_PTR)&tls_index, (UINT_PTR)&callback_begin, 0, 0 };
 
 static void CrtModuleUninitCascading(intptr_t nContext){
-	const bool bDynamic = nContext;
+	(void)nContext;
 
 	__MCFCRT_SEH_TOP_BEGIN
 	{
-		RealTlsCallback(_MCFCRT_GetModuleBase(), DLL_PROCESS_DETACH, bDynamic);
+		RealTlsCallback(_MCFCRT_GetModuleBase(), DLL_PROCESS_DETACH, nullptr);
 	}
 	__MCFCRT_SEH_TOP_END
 }

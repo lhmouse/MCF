@@ -95,7 +95,7 @@ DWORD __MCFCRT_ExeStartup(LPVOID pUnknown){
 	__MCFCRT_SEH_TOP_BEGIN
 	{
 		if(!RealStartup(DLL_PROCESS_ATTACH)){
-			_MCFCRT_Bail(L"MCFCRT 初始化失败。");
+			_MCFCRT_Bail(L"MCFCRT 卸载函数注册失败。");
 		}
 
 		dwExitCode = _MCFCRT_Main();

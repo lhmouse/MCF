@@ -22,8 +22,7 @@ typedef struct tagAtExitCallbackBlock {
 } AtExitCallbackBlock;
 
 static _MCFCRT_Mutex         g_vAtExitMutex = { 0 };
-static AtExitCallbackBlock   g_vAtExitFirst = { 0 };
-static AtExitCallbackBlock * g_pAtExitLast  = &g_vAtExitFirst;
+static AtExitCallbackBlock * g_pAtExitLast  = nullptr;
 
 static void CrtAtModuleExitDestructor(void *pStorage){
 	AtExitCallbackBlock *const pBlock = pStorage;
@@ -50,11 +49,11 @@ static void PumpAtModuleExit(void){
 			}
 			_MCFCRT_SignalMutex(&g_vAtExitMutex);
 		}
-		CrtAtModuleExitDestructor(pBlock);
-		if(pBlock == &g_vAtExitFirst){
-			pBlock->uSize = 0;
+		if(!pBlock){
 			break;
 		}
+
+		CrtAtModuleExitDestructor(pBlock);
 		_MCFCRT_free(pBlock);
 	}
 }
@@ -193,7 +192,7 @@ bool _MCFCRT_AtModuleExit(_MCFCRT_AtModuleExitCallback pfnProc, intptr_t nContex
 	_MCFCRT_WaitForMutexForever(&g_vAtExitMutex, _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT);
 	{
 		AtExitCallbackBlock *pBlock = g_pAtExitLast;
-		if(pBlock->uSize >= CALLBACKS_PER_BLOCK){
+		if(!pBlock || (pBlock->uSize >= CALLBACKS_PER_BLOCK)){
 			_MCFCRT_SignalMutex(&g_vAtExitMutex);
 			{
 				pBlock = _MCFCRT_malloc(sizeof(AtExitCallbackBlock));

@@ -17,6 +17,8 @@ __MCFCRT_C_STDCALL
 extern DWORD __MCFCRT_ExeStartup(LPVOID pUnknown)
 	__asm__("@__MCFCRT_ExeStartup");
 
+static void AtCrtModuleExitProc(intptr_t nContext);
+
 __MCFCRT_C_STDCALL
 static BOOL CrtCtrlHandler(DWORD dwCtrlType){
 	if(_MCFCRT_OnCtrlEvent){
@@ -32,31 +34,28 @@ static BOOL CrtCtrlHandler(DWORD dwCtrlType){
 	__builtin_trap();
 }
 
-static void CrtModuleUninitCascading(intptr_t nContext);
-
-static void RealTlsCallback(void *pInstance, unsigned uReason, bool bDynamic){
-	(void)pInstance;
-	(void)bDynamic;
-
+static bool RealStartup(unsigned uReason){
 	static bool s_bInitialized = false;
 
 	bool bRet = true;
 
 	switch(uReason){
 	case DLL_PROCESS_ATTACH:
-		if(s_bInitialized){
-			break;
+		if(!s_bInitialized){
+			bRet = __MCFCRT_ModuleInit();
+			if(!bRet){
+				goto jCleanup03;
+			}
+			bRet = SetConsoleCtrlHandler(&CrtCtrlHandler, true);
+			if(!bRet){
+				goto jCleanup98;
+			}
+			bRet = _MCFCRT_AtCrtModuleExit(&AtCrtModuleExitProc, DLL_PROCESS_DETACH);
+			if(!bRet){
+				goto jCleanup99;
+			}
+			s_bInitialized = true;
 		}
-		bRet = __MCFCRT_ModuleInit();
-		if(!bRet){
-			goto jCleanup03;
-		}
-		bRet = _MCFCRT_AtCrtModuleExit(&CrtModuleUninitCascading, 0);
-		if(!bRet){
-			goto jCleanup99;
-		}
-		SetConsoleCtrlHandler(&CrtCtrlHandler, true); // 忽略错误。
-		s_bInitialized = true;
 		break;
 
 	case DLL_THREAD_ATTACH:
@@ -66,57 +65,23 @@ static void RealTlsCallback(void *pInstance, unsigned uReason, bool bDynamic){
 		break;
 
 	case DLL_PROCESS_DETACH:
-		if(!s_bInitialized){
-			break;
-		}
-		s_bInitialized = false;
-		SetConsoleCtrlHandler(&CrtCtrlHandler, false); // 忽略错误。
+		if(s_bInitialized){
+			s_bInitialized = false;
 	jCleanup99:
-		__MCFCRT_ModuleUninit();
+			SetConsoleCtrlHandler(&CrtCtrlHandler, false);
+	jCleanup98:
+			__MCFCRT_ModuleUninit();
 	jCleanup03:
+			;
+		}
 		break;
 	}
 
-	if(!bRet){
-		_MCFCRT_Bail(L"MCFCRT 初始化失败。");
-	}
+	return bRet;
 }
 
-__MCFCRT_C_STDCALL
-static void CrtExeTlsCallback(LPVOID pInstance, DWORD dwReason, LPVOID pReserved){
-	__MCFCRT_SEH_TOP_BEGIN
-	{
-		RealTlsCallback(pInstance, (unsigned)dwReason, !pReserved);
-	}
-	__MCFCRT_SEH_TOP_END
-}
-
-extern const IMAGE_TLS_DIRECTORY _tls_used;
-
-__extension__ __attribute__((__section__(".tls$AAA")))
-static const char tls_begin[0] = { };
-__extension__ __attribute__((__section__(".tls$ZZZ")))
-static const char tls_end[0]   = { };
-
-__attribute__((__section__(".CRT$AAA")))
-static const PIMAGE_TLS_CALLBACK callback_begin = &CrtExeTlsCallback;
-__attribute__((__section__(".CRT$ZZZ"), __used__))
-static const PIMAGE_TLS_CALLBACK callback_end   = nullptr;
-
-__attribute__((__section__(".data")))
-static DWORD tls_index = 0xDEADBEEF;
-
-__attribute__((__section__(".rdata"), __used__))
-const IMAGE_TLS_DIRECTORY _tls_used = { (UINT_PTR)&tls_begin, (UINT_PTR)&tls_end, (UINT_PTR)&tls_index, (UINT_PTR)&callback_begin, 0, 0 };
-
-static void CrtModuleUninitCascading(intptr_t nContext){
-	(void)nContext;
-
-	__MCFCRT_SEH_TOP_BEGIN
-	{
-		RealTlsCallback(_MCFCRT_GetModuleBase(), DLL_PROCESS_DETACH, nullptr);
-	}
-	__MCFCRT_SEH_TOP_END
+static void AtCrtModuleExitProc(intptr_t nContext){
+	RealStartup((unsigned)nContext);
 }
 
 __MCFCRT_C_STDCALL __attribute__((__noreturn__))
@@ -127,8 +92,9 @@ DWORD __MCFCRT_ExeStartup(LPVOID pUnknown){
 
 	__MCFCRT_SEH_TOP_BEGIN
 	{
-		// 如果 EXE 只链接了 KERNEL32.DLL 和 NTDLL.DLL 那么 TLS 回调就收不到 DLL_PROCESS_ATTACH 通知。这里需要处理这种情况。
-		RealTlsCallback(_MCFCRT_GetModuleBase(), DLL_PROCESS_ATTACH, false);
+		if(!RealStartup(DLL_PROCESS_ATTACH)){
+			_MCFCRT_Bail(L"MCFCRT 卸载函数注册失败。");
+		}
 
 		dwExitCode = _MCFCRT_Main();
 	}

@@ -22,20 +22,19 @@ static bool RealStartup(void *pInstance, unsigned uReason, bool bDynamic){
 
 	switch(uReason){
 	case DLL_PROCESS_ATTACH:
-		if(s_bInitialized){
-			break;
-		}
-		bRet = __MCFCRT_ModuleInit();
-		if(!bRet){
-			goto jCleanup03;
-		}
-		if(_MCFCRT_OnDllProcessAttach){
-			bRet = _MCFCRT_OnDllProcessAttach(pInstance, bDynamic);
+		if(!s_bInitialized){
+			bRet = __MCFCRT_ModuleInit();
 			if(!bRet){
-				goto jCleanup99;
+				goto jCleanup03;
 			}
+			if(_MCFCRT_OnDllProcessAttach){
+				bRet = _MCFCRT_OnDllProcessAttach(pInstance, bDynamic);
+				if(!bRet){
+					goto jCleanup99;
+				}
+			}
+			s_bInitialized = true;
 		}
-		s_bInitialized = true;
 		break;
 
 	case DLL_THREAD_ATTACH:
@@ -51,16 +50,16 @@ static bool RealStartup(void *pInstance, unsigned uReason, bool bDynamic){
 		break;
 
 	case DLL_PROCESS_DETACH:
-		if(!s_bInitialized){
-			break;
-		}
-		s_bInitialized = false;
-		if(_MCFCRT_OnDllProcessDetach){
-			_MCFCRT_OnDllProcessDetach(pInstance, bDynamic);
-		}
+		if(s_bInitialized){
+			s_bInitialized = false;
+			if(_MCFCRT_OnDllProcessDetach){
+				_MCFCRT_OnDllProcessDetach(pInstance, bDynamic);
+			}
 	jCleanup99:
-		__MCFCRT_ModuleUninit();
+			__MCFCRT_ModuleUninit();
 	jCleanup03:
+			;
+		}
 		break;
 	}
 

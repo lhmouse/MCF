@@ -50,7 +50,7 @@ static bool RealStartup(unsigned uReason){
 			if(!bRet){
 				goto jCleanup98;
 			}
-			bRet = _MCFCRT_AtCrtModuleExit(&AtCrtModuleExitProc, DLL_PROCESS_DETACH);
+			bRet = _MCFCRT_AtCrtModuleExit(&AtCrtModuleExitProc, 0);
 			if(!bRet){
 				goto jCleanup99;
 			}
@@ -81,7 +81,9 @@ static bool RealStartup(unsigned uReason){
 }
 
 static void AtCrtModuleExitProc(intptr_t nContext){
-	RealStartup((unsigned)nContext);
+	(void)nContext;
+
+	RealStartup(DLL_PROCESS_DETACH);
 }
 
 __MCFCRT_C_STDCALL __attribute__((__noreturn__))

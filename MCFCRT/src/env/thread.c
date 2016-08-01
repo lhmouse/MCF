@@ -592,20 +592,16 @@ void __MCFCRT_TlsCleanup(void){
 	}
 
 	for(;;){
-		TlsObject *pObject;
-		{
-			pObject = pThread->pLastByThread;
-			if(pObject){
-				TlsObject *const pPrev = pObject->pPrevByThread;
-				if(pPrev){
-					pPrev->pNextByThread = nullptr;
-				}
-				pThread->pLastByThread = pPrev;
-			}
-		}
+		TlsObject *const pObject = pThread->pLastByThread;
 		if(!pObject){
 			break;
 		}
+
+		TlsObject *const pPrev = pObject->pPrevByThread;
+		if(pPrev){
+			pPrev->pNextByThread = nullptr;
+		}
+		pThread->pLastByThread = pPrev;
 
 		const _MCFCRT_TlsDestructor pfnDestructor = pObject->pfnDestructor;
 		if(pfnDestructor){

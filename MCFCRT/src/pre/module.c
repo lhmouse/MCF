@@ -21,8 +21,11 @@ typedef struct tagAtExitCallbackBlock {
 	AtExitCallback aCallbacks[CALLBACKS_PER_BLOCK];
 } AtExitCallbackBlock;
 
-static _MCFCRT_Mutex         g_vAtExitMutex = { 0 };
-static AtExitCallbackBlock * g_pAtExitLast  = nullptr;
+static _MCFCRT_Mutex         g_vAtExitMutex      = { 0 };
+static AtExitCallbackBlock * g_pAtExitLast       = nullptr;
+
+static volatile bool         g_bAtExitSpareInUse = false;
+static AtExitCallbackBlock   g_vAtExitSpare;
 
 static void CrtAtModuleExitDestructor(void *pStorage){
 	AtExitCallbackBlock *const pBlock = pStorage;
@@ -36,26 +39,28 @@ static void CrtAtModuleExitDestructor(void *pStorage){
 
 __attribute__((__noinline__))
 static void PumpAtModuleExit(void){
+	_MCFCRT_WaitForMutexForever(&g_vAtExitMutex, _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT);
 	for(;;){
-		AtExitCallbackBlock *pBlock;
-		{
-			_MCFCRT_WaitForMutexForever(&g_vAtExitMutex, _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT);
-			{
-				pBlock = g_pAtExitLast;
-				if(pBlock){
-					AtExitCallbackBlock *const pPrev = pBlock->pPrev;
-					g_pAtExitLast = pPrev;
-				}
-			}
-			_MCFCRT_SignalMutex(&g_vAtExitMutex);
-		}
+		AtExitCallbackBlock *const pBlock = g_pAtExitLast;
 		if(!pBlock){
 			break;
 		}
 
-		CrtAtModuleExitDestructor(pBlock);
-		_MCFCRT_free(pBlock);
+		AtExitCallbackBlock *const pPrev = pBlock->pPrev;
+		g_pAtExitLast = pPrev;
+
+		_MCFCRT_SignalMutex(&g_vAtExitMutex);
+		{
+			CrtAtModuleExitDestructor(pBlock);
+			if(pBlock == &g_vAtExitSpare){
+				__atomic_store_n(&g_bAtExitSpareInUse, false, __ATOMIC_RELEASE);
+			} else {
+				_MCFCRT_free(pBlock);
+			}
+		}
+		_MCFCRT_WaitForMutexForever(&g_vAtExitMutex, _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT);
 	}
+	_MCFCRT_SignalMutex(&g_vAtExitMutex);
 }
 
 typedef struct tagModuleSectionInfo {
@@ -193,18 +198,21 @@ bool _MCFCRT_AtModuleExit(_MCFCRT_AtModuleExitCallback pfnProc, intptr_t nContex
 	{
 		AtExitCallbackBlock *pBlock = g_pAtExitLast;
 		if(!pBlock || (pBlock->uSize >= CALLBACKS_PER_BLOCK)){
-			_MCFCRT_SignalMutex(&g_vAtExitMutex);
-			{
-				pBlock = _MCFCRT_malloc(sizeof(AtExitCallbackBlock));
-				if(!pBlock){
-					SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-					return false;
+			if((__atomic_load_n(&g_bAtExitSpareInUse, __ATOMIC_ACQUIRE) == false) && (__atomic_exchange_n(&g_bAtExitSpareInUse, true, __ATOMIC_ACQ_REL) == false)){
+				pBlock = &g_vAtExitSpare;
+			} else {
+				_MCFCRT_SignalMutex(&g_vAtExitMutex);
+				{
+					pBlock = _MCFCRT_malloc(sizeof(AtExitCallbackBlock));
+					if(!pBlock){
+						SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+						return false;
+					}
 				}
-				pBlock->uSize = 0;
+				_MCFCRT_WaitForMutexForever(&g_vAtExitMutex, _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT);
 			}
-			_MCFCRT_WaitForMutexForever(&g_vAtExitMutex, _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT);
-
 			pBlock->pPrev = g_pAtExitLast;
+			pBlock->uSize = 0;
 			g_pAtExitLast = pBlock;
 		}
 		AtExitCallback *const pCallback = pBlock->aCallbacks + ((pBlock->uSize)++);

@@ -13,9 +13,6 @@ extern BOOL __MCFCRT_DllStartup(HINSTANCE hDll, DWORD dwReason, LPVOID pReserved
 	__asm__("@__MCFCRT_DllStartup");
 
 static bool RealStartup(void *pInstance, unsigned uReason, bool bDynamic){
-	(void)pInstance;
-	(void)bDynamic;
-
 	static bool s_bInitialized = false;
 
 	bool bRet = true;

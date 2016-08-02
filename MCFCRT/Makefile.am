@@ -96,7 +96,7 @@ pkginclude_ext_HEADERS =	\
 
 mcfcrt_pre_sources =	\
 	src/pre/module.c	\
-	src/pre/atexit.c
+	src/pre/exit.c
 
 mcfcrt_sources =	\
 	src/ext/assert.c	\

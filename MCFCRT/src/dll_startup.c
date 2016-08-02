@@ -10,6 +10,7 @@
 #include "env/heap_dbg.h"
 #include "pre/module.h"
 #include "env/thread.h"
+#include "env/crt_module.h"
 
 __MCFCRT_C_STDCALL
 extern BOOL __MCFCRT_DllStartup(HINSTANCE hDll, DWORD dwReason, LPVOID pReserved)
@@ -66,6 +67,7 @@ static bool RealStartup(void *pInstance, unsigned uReason, bool bDynamic){
 			__MCFCRT_ThreadEnvUninit();
 	jCleanup04:
 			__MCFCRT_ModuleUninit();
+			__MCFCRT_DiscardCrtModuleQuickExitCallbacks();
 	jCleanup03:
 			__MCFCRT_HeapDbgUninit();
 	jCleanup02:

@@ -26,13 +26,6 @@ static AtExitCallbackBlock * g_pAtExitLast       = nullptr;
 static volatile bool         g_bAtExitSpareInUse = false;
 static AtExitCallbackBlock   g_vAtExitSpare;
 
-static void CrtAtModuleExitDestructor(void *pStorage){
-	AtExitCallbackBlock *const pBlock = pStorage;
-	for(size_t i = pBlock->uSize; i != 0; --i){
-		(*(pBlock->aCallbacks[i - 1].pfnProc))(pBlock->aCallbacks[i - 1].nContext);
-	}
-}
-
 __attribute__((__noinline__))
 static void PumpAtModuleExit(void){
 	_MCFCRT_WaitForMutexForever(&g_vAtExitMutex, _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT);
@@ -47,7 +40,9 @@ static void PumpAtModuleExit(void){
 
 		_MCFCRT_SignalMutex(&g_vAtExitMutex);
 		{
-			CrtAtModuleExitDestructor(pBlock);
+			for(size_t i = pBlock->uSize; i != 0; --i){
+				(*(pBlock->aCallbacks[i - 1].pfnProc))(pBlock->aCallbacks[i - 1].nContext);
+			}
 			if(pBlock == &g_vAtExitSpare){
 				__atomic_store_n(&g_bAtExitSpareInUse, false, __ATOMIC_RELEASE);
 			} else {

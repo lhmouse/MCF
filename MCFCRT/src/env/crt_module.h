@@ -5,7 +5,7 @@
 #ifndef __MCFCRT_ENV_CRT_MODULE_H_
 #define __MCFCRT_ENV_CRT_MODULE_H_
 
-#include "../env/_crtdef.h"
+#include "_crtdef.h"
 
 _MCFCRT_EXTERN_C_BEGIN
 

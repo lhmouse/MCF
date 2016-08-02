@@ -96,7 +96,8 @@ pkginclude_ext_HEADERS =	\
 
 mcfcrt_pre_sources =	\
 	src/pre/module.c	\
-	src/pre/exit.c
+	src/pre/atexit.c	\
+	src/pre/at_quick_exit.c
 
 mcfcrt_sources =	\
 	src/ext/assert.c	\
@@ -187,7 +188,10 @@ mcfcrt_sources =	\
 	src/stdc/wchar/wmemcmp.c	\
 	src/stdc/wchar/wmemcpy.c	\
 	src/stdc/wchar/wmemmove.c	\
-	src/stdc/wchar/wmemset.c
+	src/stdc/wchar/wmemset.c	\
+	src/stdc/stdlib/_Exit.c	\
+	src/stdc/stdlib/quick_exit.c	\
+	src/stdc/stdlib/exit.c
 
 bin_PROGRAMS =	\
 	MCFCRT-9.dll

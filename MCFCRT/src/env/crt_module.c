@@ -9,22 +9,27 @@ bool _MCFCRT_AtCrtModuleExit(_MCFCRT_AtModuleExitCallback pfnProc, intptr_t nCon
 	return _MCFCRT_AtModuleExit(pfnProc, nContext);
 }
 
-typedef enum tagExitType {
-	kExitNone   = 0,
-	kExitNormal = 1,
-	kExitQuick  = 2,
-} ExitType;
+static volatile _MCFCRT_ExitType g_eExitType = 0;
 
-static volatile ExitType g_eExitType = kExitNone;
-
-bool __MCFCRT_IsQuickExitInProgress(void){
-	return __atomic_load_n(&g_eExitType, __ATOMIC_RELAXED) == kExitQuick;
+_MCFCRT_ExitType __MCFCRT_GetExitType(void){
+	return __atomic_load_n(&g_eExitType, __ATOMIC_RELAXED);
 }
-bool __MCFCRT_ExitProcess(int nExitCode, bool bIsQuick){
-	if(!((__atomic_load_n(&g_eExitType, __ATOMIC_RELAXED) == kExitNone) && (__atomic_exchange_n(&g_eExitType, !bIsQuick ? kExitNormal : kExitQuick, __ATOMIC_RELAXED) == kExitNone))){
-		TerminateThread(GetCurrentThread(), (DWORD)nExitCode);
-		__builtin_trap();
+
+__attribute__((__noreturn__))
+void _MCFCRT_ExitProcess(unsigned uExitCode, _MCFCRT_ExitType eExitType){
+	if((eExitType != _MCFCRT_kExitTypeImmediate) && (eExitType != _MCFCRT_kExitTypeQuick)){
+		eExitType = _MCFCRT_kExitTypeNormal;
 	}
-	ExitProcess((DWORD)nExitCode);
-	__builtin_trap();
+
+	if(__atomic_exchange_n(&g_eExitType, eExitType, __ATOMIC_RELAXED) != 0){
+		TerminateThread(GetCurrentThread(), uExitCode);
+		__builtin_unreachable();
+	}
+
+	if(eExitType == _MCFCRT_kExitTypeImmediate){
+		TerminateProcess(GetCurrentProcess(), uExitCode);
+	} else {
+		ExitProcess(uExitCode);
+	}
+	__builtin_unreachable();
 }

@@ -90,7 +90,7 @@ __MCFCRT_C_STDCALL __attribute__((__noreturn__))
 DWORD __MCFCRT_ExeStartup(LPVOID pUnknown){
 	(void)pUnknown;
 
-	DWORD dwExitCode;
+	unsigned uExitCode;
 
 	__MCFCRT_SEH_TOP_BEGIN
 	{
@@ -98,10 +98,9 @@ DWORD __MCFCRT_ExeStartup(LPVOID pUnknown){
 			_MCFCRT_Bail(L"MCFCRT 初始化失败。");
 		}
 
-		dwExitCode = _MCFCRT_Main();
+		uExitCode = _MCFCRT_Main();
 	}
 	__MCFCRT_SEH_TOP_END
 
-	ExitProcess(dwExitCode);
-	__builtin_trap();
+	_MCFCRT_ExitProcess(uExitCode, _MCFCRT_kExitTypeNormal);
 }

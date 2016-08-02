@@ -202,7 +202,7 @@ static void SignalMutexAndExitThread(_MCFCRT_Mutex *restrict pMutex, MopthreadCo
 	_MCFCRT_SignalMutex(pMutex);
 
 	ExitThread(0);
-	__builtin_trap();
+	__builtin_unreachable();
 }
 
 __MCFCRT_C_STDCALL __attribute__((__noreturn__))
@@ -270,6 +270,7 @@ uintptr_t __MCFCRT_MopthreadCreate(void (*pfnProc)(void *), const void *pParams,
 uintptr_t __MCFCRT_MopthreadCreateDetached(void (*pfnProc)(void *), const void *pParams, size_t uSizeOfParams){
 	return ReallyCreateMopthread(pfnProc, pParams, uSizeOfParams, false);
 }
+__attribute__((__noreturn__))
 void __MCFCRT_MopthreadExit(void (*pfnModifier)(void *, intptr_t), intptr_t nContext){
 	const uintptr_t uTid = _MCFCRT_GetCurrentThreadId();
 

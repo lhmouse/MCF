@@ -8,17 +8,16 @@
 #include "../env/mutex.h"
 #include "../env/heap.h"
 
-typedef struct tagAtExitCallback {
-	_MCFCRT_AtModuleExitCallback pfnProc;
-	intptr_t nContext;
-} AtExitCallback;
-
 #define CALLBACKS_PER_BLOCK   64u
 
 typedef struct tagAtExitCallbackBlock {
 	struct tagAtExitCallbackBlock *pPrev;
+
 	size_t uSize;
-	AtExitCallback aCallbacks[CALLBACKS_PER_BLOCK];
+	struct {
+		_MCFCRT_AtModuleExitCallback pfnProc;
+		intptr_t nContext;
+	} aCallbacks[CALLBACKS_PER_BLOCK];
 } AtExitCallbackBlock;
 
 static _MCFCRT_Mutex         g_vAtExitMutex      = { 0 };
@@ -30,10 +29,7 @@ static AtExitCallbackBlock   g_vAtExitSpare;
 static void CrtAtModuleExitDestructor(void *pStorage){
 	AtExitCallbackBlock *const pBlock = pStorage;
 	for(size_t i = pBlock->uSize; i != 0; --i){
-		const AtExitCallback *const pCallback = pBlock->aCallbacks + i - 1;
-		const _MCFCRT_AtModuleExitCallback pfnProc = pCallback->pfnProc;
-		const intptr_t nContext = pCallback->nContext;
-		(*pfnProc)(nContext);
+		(*(pBlock->aCallbacks[i - 1].pfnProc))(pBlock->aCallbacks[i - 1].nContext);
 	}
 }
 
@@ -69,11 +65,9 @@ typedef struct tagModuleSectionInfo {
 	void *pBase;
 	size_t uSize;
 
-	struct {
-		const void *pTable;
-		size_t uCount;
-		size_t uNext;
-	};
+	const void *pTable;
+	size_t uCount;
+	size_t uNext;
 } ModuleSectionInfo;
 
 static bool EnumerateNextModuleSection(ModuleSectionInfo *pInfo){
@@ -215,9 +209,9 @@ bool _MCFCRT_AtModuleExit(_MCFCRT_AtModuleExitCallback pfnProc, intptr_t nContex
 			pBlock->uSize = 0;
 			g_pAtExitLast = pBlock;
 		}
-		AtExitCallback *const pCallback = pBlock->aCallbacks + ((pBlock->uSize)++);
-		pCallback->pfnProc = pfnProc;
-		pCallback->nContext = nContext;
+		const size_t uIndex = (pBlock->uSize)++;
+		pBlock->aCallbacks[uIndex].pfnProc = pfnProc;
+		pBlock->aCallbacks[uIndex].nContext = nContext;
 	}
 	_MCFCRT_SignalMutex(&g_vAtExitMutex);
 	return true;

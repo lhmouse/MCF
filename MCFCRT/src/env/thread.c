@@ -440,6 +440,16 @@ __MCFCRT_MopthreadErrorCode __MCFCRT_MopthreadSetPriority(uintptr_t uTid, int nP
 	return eError;
 }
 
+#define CALLBACKS_PER_BLOCK   64u
+
+typedef struct tagAtExitCallbackBlock {
+	size_t uSize;
+	struct {
+		_MCFCRT_AtThreadExitCallback pfnProc;
+		intptr_t nContext;
+	} aCallbacks[CALLBACKS_PER_BLOCK];
+} AtExitCallbackBlock;
+
 typedef struct tagTlsObject TlsObject;
 typedef struct tagTlsThread TlsThread;
 typedef struct tagTlsKey    TlsKey;
@@ -698,18 +708,6 @@ bool _MCFCRT_TlsRequire(_MCFCRT_TlsKeyHandle hTlsKey, void **restrict ppStorage)
 	return true;
 }
 
-typedef struct tagAtExitCallback {
-	_MCFCRT_AtThreadExitCallback pfnProc;
-	intptr_t nContext;
-} AtExitCallback;
-
-#define CALLBACKS_PER_BLOCK   64u
-
-typedef struct tagAtExitCallbackBlock {
-	size_t uSize;
-	AtExitCallback aCallbacks[CALLBACKS_PER_BLOCK];
-} AtExitCallbackBlock;
-
 static unsigned long CrtAtThreadExitConstructor(intptr_t nUnused, void *pStorage){
 	(void)nUnused;
 
@@ -722,10 +720,7 @@ static void CrtAtThreadExitDestructor(intptr_t nUnused, void *pStorage){
 
 	AtExitCallbackBlock *const pBlock = pStorage;
 	for(size_t i = pBlock->uSize; i != 0; --i){
-		const AtExitCallback *const pCallback = pBlock->aCallbacks + i - 1;
-		const _MCFCRT_AtThreadExitCallback pfnProc = pCallback->pfnProc;
-		const intptr_t nContext = pCallback->nContext;
-		(*pfnProc)(nContext);
+		(*(pBlock->aCallbacks[i - 1].pfnProc))(pBlock->aCallbacks[i - 1].nContext);
 	}
 }
 
@@ -746,8 +741,8 @@ bool _MCFCRT_AtThreadExit(_MCFCRT_AtThreadExitCallback pfnProc, intptr_t nContex
 		}
 		pBlock = (void *)pObject->abyStorage;
 	}
-	AtExitCallback *const pCallback = pBlock->aCallbacks + ((pBlock->uSize)++);
-	pCallback->pfnProc = pfnProc;
-	pCallback->nContext = nContext;
+	const size_t uIndex = (pBlock->uSize)++;
+	pBlock->aCallbacks[uIndex].pfnProc = pfnProc;
+	pBlock->aCallbacks[uIndex].nContext = nContext;
 	return true;
 }

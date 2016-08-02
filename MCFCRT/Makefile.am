@@ -96,8 +96,7 @@ pkginclude_ext_HEADERS =	\
 
 mcfcrt_pre_sources =	\
 	src/pre/module.c	\
-	src/pre/atexit.c	\
-	src/pre/at_quick_exit.c
+	src/pre/atexit.c
 
 mcfcrt_sources =	\
 	src/ext/assert.c	\
@@ -190,7 +189,6 @@ mcfcrt_sources =	\
 	src/stdc/wchar/wmemmove.c	\
 	src/stdc/wchar/wmemset.c	\
 	src/stdc/stdlib/_Exit.c	\
-	src/stdc/stdlib/quick_exit.c	\
 	src/stdc/stdlib/exit.c
 
 bin_PROGRAMS =	\

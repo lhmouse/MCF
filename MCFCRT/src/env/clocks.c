@@ -11,13 +11,14 @@ static uint64_t GetTimeZoneOffsetInMillisecondsOnce(void){
 
 	uint64_t *pInited = __atomic_load_n(&s_pu64Inited, __ATOMIC_CONSUME);
 	if(!pInited){
-		DYNAMIC_TIME_ZONE_INFORMATION vInfo;
-		if(GetDynamicTimeZoneInformation(&vInfo) == TIME_ZONE_ID_INVALID){
-			_MCFCRT_Bail(L"GetDynamicTimeZoneInformation() 失败。");
-		}
-		const uint64_t u64Value = (uint64_t)(vInfo.Bias * -60000ll);
+		pInited = &s_u64Value;
 
-		pInited = __builtin_memcpy(&s_u64Value, &u64Value, sizeof(u64Value));
+		TIME_ZONE_INFORMATION vTzInfo;
+		if(GetTimeZoneInformation(&vTzInfo) == TIME_ZONE_ID_INVALID){
+			_MCFCRT_Bail(L"GetTimeZoneInformation() 失败。");
+		}
+		*pInited = (uint64_t)(vTzInfo.Bias * -60000ll);
+
 		__atomic_store_n(&s_pu64Inited, pInited, __ATOMIC_RELEASE);
 	}
 	return *pInited;

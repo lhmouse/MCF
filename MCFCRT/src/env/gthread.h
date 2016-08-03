@@ -14,6 +14,8 @@
 #include "condition_variable.h"
 #include "clocks.h"
 
+#include <time.h> // struct timespec
+
 #ifdef __GTHREADS
 #	error __GTHREADS is already defined. (Thread model confliction detected?)
 #endif
@@ -140,10 +142,7 @@ extern __gthread_t __MCFCRT_gthread_self(void) _MCFCRT_NOEXCEPT;
 extern int __MCFCRT_gthread_yield(void) _MCFCRT_NOEXCEPT;
 #define __gthread_yield __MCFCRT_gthread_yield
 
-typedef struct __MCFCRT_tagGthreadTime {
-	_MCFCRT_STD int64_t __seconds;
-	long __nanoseconds;
-} __gthread_time_t;
+typedef struct timespec __gthread_time_t;
 
 extern int __MCFCRT_gthread_mutex_timedlock(__gthread_mutex_t *restrict __mutex, const __gthread_time_t *restrict __timeout) _MCFCRT_NOEXCEPT;
 #define __gthread_mutex_timedlock __MCFCRT_gthread_mutex_timedlock

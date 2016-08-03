@@ -238,7 +238,7 @@ __MCFCRT_GTHREAD_INLINE_OR_EXTERN int __MCFCRT_gthread_yield(void) _MCFCRT_NOEXC
 }
 
 __MCFCRT_GTHREAD_INLINE_OR_EXTERN _MCFCRT_STD uint64_t __MCFCRT_GthreadTranslateTimeout(const __gthread_time_t *restrict __utc_timeout) _MCFCRT_NOEXCEPT {
-	const long double __utc_timeout_ms = (long double)__utc_timeout->__seconds * 1.0e3l + (long double)__utc_timeout->__nanoseconds / 1.0e6l;
+	const long double __utc_timeout_ms = (long double)__utc_timeout->tv_sec * 1.0e3l + (long double)__utc_timeout->tv_nsec / 1.0e6l;
 	const long double __utc_now_ms = (long double)_MCFCRT_GetUtcClock();
 	const long double __delta_ms = __utc_timeout_ms - __utc_now_ms;
 	if(__delta_ms <= 0){

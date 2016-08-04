@@ -13,13 +13,12 @@
 namespace MCF {
 
 Uuid Uuid::Generate(){
-	static Atomic<std::uint32_t> s_u32Pid;
-	static Atomic<std::uint32_t> s_u32AutoInc;
+	static Atomic<std::uint32_t> s_u32Pid, s_u32AutoInc;
 
-	auto u32Pid = s_u32Pid.Load(kAtomicConsume);
+	auto u32Pid = s_u32Pid.Load(kAtomicRelaxed);
 	if(u32Pid == 0){
 		u32Pid = ::GetCurrentProcessId();
-		s_u32Pid.Store(u32Pid, kAtomicRelease);
+		s_u32Pid.Store(u32Pid, kAtomicRelaxed);
 	}
 	auto u32AutoInc = s_u32AutoInc.Increment(kAtomicRelaxed) << 16;
 

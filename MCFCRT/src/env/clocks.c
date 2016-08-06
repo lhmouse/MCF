@@ -60,13 +60,19 @@ uint64_t _MCFCRT_GetLocalClockFromUtc(uint64_t u64UtcClock){
 	return u64UtcClock + GetTimeZoneOffsetInMillisecondsOnce();
 }
 
+#ifdef NDEBUG
+#	define DEBUG_MONO_CLOCK_OFFSET   0ull
+#else
+#	define DEBUG_MONO_CLOCK_OFFSET   0x100000000ull
+#endif
+
 uint64_t _MCFCRT_GetFastMonoClock(void){
-	return GetTickCount64();
+	return GetTickCount64() + DEBUG_MONO_CLOCK_OFFSET;
 }
 double _MCFCRT_GetHiResMonoClock(void){
 	LARGE_INTEGER liCounter;
 	if(!QueryPerformanceCounter(&liCounter)){
-		_MCFCRT_Bail(L"QueryPerformanceCounter() 失败。");
+		_MCFCRT_Bail(L"QueryPerformanceCounter() failed.");
 	}
-	return (double)liCounter.QuadPart * QueryPerformanceFrequencyReciprocalOnce();
+	return ((double)liCounter.QuadPart + (double)(DEBUG_MONO_CLOCK_OFFSET * 2)) * QueryPerformanceFrequencyReciprocalOnce();
 }

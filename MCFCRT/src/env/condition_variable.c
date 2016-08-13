@@ -20,6 +20,7 @@ extern NTSTATUS NtReleaseKeyedEvent(HANDLE hKeyedEvent, void *pKey, BOOLEAN bAle
 #define THREAD_TRAPPED_ONE      ((uintptr_t)(MASK_THREADS_TRAPPED & -MASK_THREADS_TRAPPED))
 #define THREAD_TRAPPED_MAX      ((uintptr_t)(MASK_THREADS_TRAPPED / THREAD_TRAPPED_ONE))
 
+__attribute__((__always_inline__))
 static inline bool ReallyWaitForConditionVariable(volatile uintptr_t *puControl,
 	_MCFCRT_ConditionVariableUnlockCallback pfnUnlockCallback, _MCFCRT_ConditionVariableRelockCallback pfnRelockCallback, intptr_t nContext,
 	bool bMayTimeOut, uint64_t u64UntilFastMonoClock)
@@ -68,6 +69,7 @@ static inline bool ReallyWaitForConditionVariable(volatile uintptr_t *puControl,
 	(*pfnRelockCallback)(nContext, nUnlocked);
 	return true;
 }
+__attribute__((__always_inline__))
 static inline size_t ReallySignalConditionVariable(volatile uintptr_t *puControl, size_t uMaxCountToSignal){
 	uintptr_t uCountToSignal;
 	{

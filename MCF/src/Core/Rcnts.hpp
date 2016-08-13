@@ -85,15 +85,15 @@ private:
 	}
 	void X_Dispose() noexcept {
 		const auto puRef = x_puRef;
+#ifndef NDEBUG
+		x_puRef = (Atomic<std::size_t> *)(std::uintptr_t)0xDEADBEEFDEADBEEF;
+#endif
 		if(puRef){
 			if(puRef->Decrement(kAtomicRelaxed) == 0){
 				Destruct(puRef);
 				::operator delete[](puRef);
 			}
 		}
-#ifndef NDEBUG
-		x_puRef = (Atomic<std::size_t> *)(std::uintptr_t)0xDEADBEEFDEADBEEF;
-#endif
 	}
 
 private:

@@ -24,7 +24,9 @@ void StandardErrorStream::Put(const void *pData, std::size_t uSize){
 	}
 }
 void StandardErrorStream::Flush(bool bHard){
-	(void)bHard;
+	if(!::_MCFCRT_FlushStandardError(bHard)){
+		MCF_THROW(Exception, ::GetLastError(), Rcntws::View(L"StandardErrorStream: _MCFCRT_FlushStandardError() 失败。"));
+	}
 }
 
 void StandardErrorStream::PutChar32(char32_t c32Data){

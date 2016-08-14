@@ -26,7 +26,7 @@ public:
 	void PutText(const wchar_t *pwcData, std::size_t uSize, bool bAppendNewLine);
 
 	bool IsBuffered() const noexcept;
-	bool SetBuffered(bool bBuffered) noexcept;
+	void SetBuffered(bool bBuffered) noexcept;
 
 	void Swap(StandardOutputStream &rhs) noexcept {
 		using std::swap;

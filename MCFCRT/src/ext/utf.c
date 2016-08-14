@@ -88,3 +88,15 @@ char32_t _MCFCRT_EncodeUtf16FromUtf8(char16_t **ppc16Write, const char **ppchRea
 	_MCFCRT_EncodeUtf16(ppc16Write, c32CodePoint);
 	return c32CodePoint;
 }
+
+_MCFCRT_Utf16SurrogateType _MCFCRT_GetUtf16SurrogateType(char16_t c16CodeUnit){
+	if(c16CodeUnit < 0xD800){
+		return _MCFCRT_kUtf16SurrogateNo;
+	} else if(c16CodeUnit < 0xDC00){
+		return _MCFCRT_kUtf16SurrogateLeading;
+	} else if(c16CodeUnit < 0xE000){
+		return _MCFCRT_kUtf16SurrogateTrailing;
+	} else {
+		return _MCFCRT_kUtf16SurrogateNo;
+	}
+}

@@ -45,8 +45,8 @@ void StandardOutputStream::PutText(const wchar_t *pwcData, std::size_t uSize, bo
 bool StandardOutputStream::IsBuffered() const noexcept {
 	return ::_MCFCRT_IsStandardOutputBuffered();
 }
-bool StandardOutputStream::SetBuffered(bool bBuffered) noexcept {
-	return ::_MCFCRT_SetStandardOutputBuffered(bBuffered);
+void StandardOutputStream::SetBuffered(bool bBuffered) noexcept {
+	::_MCFCRT_SetStandardOutputBuffered(bBuffered);
 }
 
 }

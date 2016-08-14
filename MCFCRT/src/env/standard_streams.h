@@ -39,7 +39,7 @@ extern bool _MCFCRT_WriteStandardOutputBinary(const void *restrict __pData, _MCF
 extern bool _MCFCRT_WriteStandardOutputChar32(char32_t __c32CodePoint) _MCFCRT_NOEXCEPT;
 extern bool _MCFCRT_WriteStandardOutputText(const wchar_t *restrict __pwcText, _MCFCRT_STD size_t __uLength, bool __bAppendNewLine) _MCFCRT_NOEXCEPT;
 extern bool _MCFCRT_IsStandardOutputBuffered(void) _MCFCRT_NOEXCEPT;
-extern bool _MCFCRT_SetStandardOutputBuffered(bool __bBuffered) _MCFCRT_NOEXCEPT;
+extern void _MCFCRT_SetStandardOutputBuffered(bool __bBuffered) _MCFCRT_NOEXCEPT;
 // 标准输出流控制。
 extern bool _MCFCRT_FlushStandardOutput(bool __bHard) _MCFCRT_NOEXCEPT;
 

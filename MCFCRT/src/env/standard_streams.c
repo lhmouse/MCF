@@ -23,10 +23,11 @@ static_assert(alignof(wchar_t) == alignof(char16_t), "What?");
 #endif
 
 typedef struct tagStream {
-	_MCFCRT_Mutex vMutex;
-
 	HANDLE hPipe;
 	bool bConsole;
+
+	_MCFCRT_Mutex vMutex;
+
 	bool bEchoing;
 	bool bBuffered;
 
@@ -71,6 +72,13 @@ static inline bool IsConsole(const Stream *restrict pStream){
 	return pStream->bConsole;
 }
 
+static inline void Lock(Stream *restrict pStream){
+	_MCFCRT_WaitForMutexForever(&(pStream->vMutex), _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT);
+}
+static inline void Unlock(Stream *restrict pStream){
+	_MCFCRT_SignalMutex(&(pStream->vMutex));
+}
+
 static inline bool IsEchoing(const Stream *restrict pStream){
 	return pStream->bEchoing;
 }
@@ -96,13 +104,6 @@ static inline bool IsBuffered(const Stream *restrict pStream){
 }
 static inline void SetBuffered(Stream *restrict pStream, bool bBuffered){
 	pStream->bBuffered = bBuffered;
-}
-
-static inline void Lock(Stream *restrict pStream){
-	_MCFCRT_WaitForMutexForever(&(pStream->vMutex), _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT);
-}
-static inline void Unlock(Stream *restrict pStream){
-	_MCFCRT_SignalMutex(&(pStream->vMutex));
 }
 
 static inline void *GetData(const Stream *restrict pStream){

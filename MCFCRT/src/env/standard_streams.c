@@ -485,6 +485,7 @@ size_t _MCFCRT_PeekStandardInputBinary(void *restrict pData, size_t uSize){
 						break;
 					}
 					if((size_t)(pc16ReadNext - pc16ReadBegin) > uCharsAvail){
+						dwErrorCode = ERROR_HANDLE_EOF;
 						break;
 					}
 					const size_t uBytesDecoded = (size_t)(pchDecodedEnd - achDecoded);
@@ -569,6 +570,7 @@ size_t _MCFCRT_ReadStandardInputBinary(void *restrict pData, size_t uSize){
 						break;
 					}
 					if((size_t)(pc16ReadNext - pc16ReadBegin) > uCharsAvail){
+						dwErrorCode = ERROR_HANDLE_EOF;
 						break;
 					}
 					const size_t uBytesDecoded = (size_t)(pchDecodedEnd - achDecoded);
@@ -654,6 +656,7 @@ size_t _MCFCRT_DiscardStandardInputBinary(size_t uSize){
 						break;
 					}
 					if((size_t)(pc16ReadNext - pc16ReadBegin) > uCharsAvail){
+						dwErrorCode = ERROR_HANDLE_EOF;
 						break;
 					}
 					const size_t uBytesDecoded = (size_t)(pchDecodedEnd - achDecoded);
@@ -709,7 +712,6 @@ long _MCFCRT_PeekStandardInputChar32(void){
 			if(IsConsole(&g_vStdIn)){
 				size_t uCharsAvail = GetUtf16Size(&g_vStdIn);
 				if(uCharsAvail == 0){
-			jRetryConsole:
 					dwErrorCode = Populate(&g_vStdIn, STDIN_POPULATION_DELTA);
 					if(dwErrorCode != 0){
 						goto jDone;
@@ -724,7 +726,8 @@ long _MCFCRT_PeekStandardInputChar32(void){
 				const char16_t *pc16Read = pc16ReadBegin;
 				const char32_t c32CodePoint = _MCFCRT_DecodeUtf16(&pc16Read);
 				if((size_t)(pc16Read - pc16ReadBegin) > uCharsAvail){
-					goto jRetryConsole;
+					dwErrorCode = ERROR_HANDLE_EOF;
+					goto jDone;
 				}
 				if(IsEof(c32CodePoint)){
 					SetBuffered(&g_vStdIn, false);
@@ -736,7 +739,6 @@ long _MCFCRT_PeekStandardInputChar32(void){
 			} else {
 				size_t uBytesAvail = GetUtf8Size(&g_vStdIn);
 				if(uBytesAvail == 0){
-			jRetryNonconsole:
 					dwErrorCode = Populate(&g_vStdIn, STDIN_POPULATION_DELTA);
 					if(dwErrorCode != 0){
 						goto jDone;
@@ -751,7 +753,8 @@ long _MCFCRT_PeekStandardInputChar32(void){
 				const char *pchRead = pchReadBegin;
 				const char32_t c32CodePoint = _MCFCRT_DecodeUtf8(&pchRead);
 				if((size_t)(pchRead - pchReadBegin) > uBytesAvail){
-					goto jRetryNonconsole;
+					dwErrorCode = ERROR_HANDLE_EOF;
+					goto jDone;
 				}
 				lRead = (long)c32CodePoint;
 			}
@@ -777,7 +780,6 @@ long _MCFCRT_ReadStandardInputChar32(void){
 			if(IsConsole(&g_vStdIn)){
 				size_t uCharsAvail = GetUtf16Size(&g_vStdIn);
 				if(uCharsAvail == 0){
-			jRetryConsole:
 					dwErrorCode = Populate(&g_vStdIn, STDIN_POPULATION_DELTA);
 					if(dwErrorCode != 0){
 						goto jDone;
@@ -792,7 +794,8 @@ long _MCFCRT_ReadStandardInputChar32(void){
 				const char16_t *pc16Read = pc16ReadBegin;
 				const char32_t c32CodePoint = _MCFCRT_DecodeUtf16(&pc16Read);
 				if((size_t)(pc16Read - pc16ReadBegin) > uCharsAvail){
-					goto jRetryConsole;
+					dwErrorCode = ERROR_HANDLE_EOF;
+					goto jDone;
 				}
 				if(IsEof(c32CodePoint)){
 					SetBuffered(&g_vStdIn, false);
@@ -805,7 +808,6 @@ long _MCFCRT_ReadStandardInputChar32(void){
 			} else {
 				size_t uBytesAvail = GetUtf8Size(&g_vStdIn);
 				if(uBytesAvail == 0){
-			jRetryNonconsole:
 					dwErrorCode = Populate(&g_vStdIn, STDIN_POPULATION_DELTA);
 					if(dwErrorCode != 0){
 						goto jDone;
@@ -820,7 +822,8 @@ long _MCFCRT_ReadStandardInputChar32(void){
 				const char *pchRead = pchReadBegin;
 				const char32_t c32CodePoint = _MCFCRT_DecodeUtf8(&pchRead);
 				if((size_t)(pchRead - pchReadBegin) > uBytesAvail){
-					goto jRetryNonconsole;
+					dwErrorCode = ERROR_HANDLE_EOF;
+					goto jDone;
 				}
 				lRead = (long)c32CodePoint;
 				Discard(&g_vStdIn, (size_t)(pchRead - pchReadBegin));
@@ -897,6 +900,7 @@ size_t _MCFCRT_PeekStandardInputText(wchar_t *restrict pwcText, size_t uLength, 
 					const char *pchReadNext = pchRead;
 					const char32_t c32CodePoint = _MCFCRT_EncodeUtf16FromUtf8(&pc16EncodedEnd, &pchReadNext);
 					if((size_t)(pchReadNext - pchReadBegin) > uBytesAvail){
+						dwErrorCode = ERROR_HANDLE_EOF;
 						break;
 					}
 					const size_t uCharsEncoded = (size_t)(pc16EncodedEnd - ac16Encoded);
@@ -986,6 +990,7 @@ size_t _MCFCRT_ReadStandardInputText(wchar_t *restrict pwcText, size_t uLength, 
 					const char *pchReadNext = pchRead;
 					const char32_t c32CodePoint = _MCFCRT_EncodeUtf16FromUtf8(&pc16EncodedEnd, &pchReadNext);
 					if((size_t)(pchReadNext - pchReadBegin) > uBytesAvail){
+						dwErrorCode = ERROR_HANDLE_EOF;
 						break;
 					}
 					const size_t uCharsEncoded = (size_t)(pc16EncodedEnd - ac16Encoded);
@@ -1073,6 +1078,7 @@ size_t _MCFCRT_DiscardStandardInputText(size_t uLength, bool bSingleLine){
 					const char *pchReadNext = pchRead;
 					const char32_t c32CodePoint = _MCFCRT_EncodeUtf16FromUtf8(&pc16EncodedEnd, &pchReadNext);
 					if((size_t)(pchReadNext - pchReadBegin) > uBytesAvail){
+						dwErrorCode = ERROR_HANDLE_EOF;
 						break;
 					}
 					const size_t uCharsEncoded = (size_t)(pc16EncodedEnd - ac16Encoded);

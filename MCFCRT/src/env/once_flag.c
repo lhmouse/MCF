@@ -32,7 +32,7 @@ extern NTSTATUS NtReleaseKeyedEvent(HANDLE hKeyedEvent, void *pKey, BOOLEAN bAle
 #define THREAD_TRAPPED_MAX      ((uintptr_t)(MASK_THREADS_TRAPPED / THREAD_TRAPPED_ONE))
 
 __attribute__((__always_inline__))
-static inline _MCFCRT_OnceResult RealWaitForOnceFlag(volatile uintptr_t *puControl, bool bMayTimeOut, uint64_t u64UntilFastMonoClock){
+static inline _MCFCRT_OnceResult ReallyTryOnceFlag(volatile uintptr_t *puControl){
 	{
 		uintptr_t uOld, uNew;
 		uOld = __atomic_load_n(puControl, __ATOMIC_RELAXED);
@@ -46,10 +46,10 @@ static inline _MCFCRT_OnceResult RealWaitForOnceFlag(volatile uintptr_t *puContr
 			}
 		}
 	}
-	if(bMayTimeOut && _MCFCRT_EXPECT(u64UntilFastMonoClock == 0)){
-		return _MCFCRT_kOnceResultTimedOut;
-	}
-
+	return _MCFCRT_kOnceResultTimedOut;
+}
+__attribute__((__always_inline__))
+static inline _MCFCRT_OnceResult RealWaitForOnceFlag(volatile uintptr_t *puControl, bool bMayTimeOut, uint64_t u64UntilFastMonoClock){
 	for(;;){
 		bool bFinished, bTaken;
 		{
@@ -134,10 +134,19 @@ static inline void RealSetAndSignalOnceFlag(volatile uintptr_t *puControl, bool 
 }
 
 _MCFCRT_OnceResult _MCFCRT_WaitForOnceFlag(_MCFCRT_OnceFlag *pOnceFlag, uint64_t u64UntilFastMonoClock){
-	return RealWaitForOnceFlag(&(pOnceFlag->__u), true, u64UntilFastMonoClock);
+	_MCFCRT_OnceResult eResult = ReallyTryOnceFlag(&(pOnceFlag->__u));
+	if((eResult == _MCFCRT_kOnceResultTimedOut) && _MCFCRT_EXPECT_NOT(u64UntilFastMonoClock != 0)){
+		eResult = RealWaitForOnceFlag(&(pOnceFlag->__u), true, u64UntilFastMonoClock);
+	}
+	return eResult;
 }
 _MCFCRT_OnceResult _MCFCRT_WaitForOnceFlagForever(_MCFCRT_OnceFlag *pOnceFlag){
-	return RealWaitForOnceFlag(&(pOnceFlag->__u), false, UINT64_MAX);
+	_MCFCRT_OnceResult eResult = ReallyTryOnceFlag(&(pOnceFlag->__u));
+	if(eResult == _MCFCRT_kOnceResultTimedOut){
+		eResult = RealWaitForOnceFlag(&(pOnceFlag->__u), false, UINT64_MAX);
+	}
+	_MCFCRT_ASSERT(eResult != _MCFCRT_kOnceResultTimedOut);
+	return eResult;
 }
 void _MCFCRT_SignalOnceFlagAsFinished(_MCFCRT_OnceFlag *pOnceFlag){
 	RealSetAndSignalOnceFlag(&(pOnceFlag->__u), true, SIZE_MAX);

@@ -9,6 +9,10 @@
 namespace MCF {
 
 StandardOutputStream::~StandardOutputStream(){
+	try {
+		Flush(false);
+	} catch(...){
+	}
 }
 
 void StandardOutputStream::Put(unsigned char byData){

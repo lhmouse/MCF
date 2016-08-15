@@ -157,6 +157,8 @@ pkginclude_StreamFilters_HEADERS =	\
 	src/StreamFilters/AbstractOutputStreamFilter.hpp	\
 	src/StreamFilters/Base64InputStreamFilter.hpp	\
 	src/StreamFilters/Base64OutputStreamFilter.hpp	\
+	src/StreamFilters/HexInputStreamFilter.hpp	\
+	src/StreamFilters/HexOutputStreamFilter.hpp	\
 	src/StreamFilters/BufferingInputStreamFilter.hpp	\
 	src/StreamFilters/BufferingOutputStreamFilter.hpp	\
 	src/StreamFilters/TextInputStreamFilter.hpp	\
@@ -216,6 +218,8 @@ mcf_sources =	\
 	src/StreamFilters/AbstractOutputStreamFilter.cpp	\
 	src/StreamFilters/Base64InputStreamFilter.cpp	\
 	src/StreamFilters/Base64OutputStreamFilter.cpp	\
+	src/StreamFilters/HexInputStreamFilter.cpp	\
+	src/StreamFilters/HexOutputStreamFilter.cpp	\
 	src/StreamFilters/BufferingInputStreamFilter.cpp	\
 	src/StreamFilters/BufferingOutputStreamFilter.cpp	\
 	src/StreamFilters/TextInputStreamFilter.cpp	\

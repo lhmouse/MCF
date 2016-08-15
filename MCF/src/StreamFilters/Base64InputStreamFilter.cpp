@@ -69,7 +69,6 @@ void Base64InputStreamFilter::X_PopulatePlainBuffer(std::size_t uExpected){
 			u32Word |= (DecodeOne(abyTemp[0]) << 26);
 			u32Word |= (DecodeOne(abyTemp[1]) << 20);
 		}
-
 		std::uint32_t u32WordInBigEndian;
 		StoreBe(u32WordInBigEndian, u32Word);
 		x_sbufPlain.Put(&u32WordInBigEndian, uBytes);

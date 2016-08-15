@@ -51,10 +51,10 @@ void Base64OutputStreamFilter::X_FlushPlainBuffer(bool bForceFlushAll){
 			abyResult[2] = '=';
 			abyResult[3] = '=';
 		}
-
 		y_vStream.BufferedPut(abyResult, 4);
 		x_sbufPlain.Discard(3);
 	}
+
 	y_vStream.Flush(bForceFlushAll ? y_vStream.kFlushBufferNow : y_vStream.kFlushBufferAuto);
 }
 

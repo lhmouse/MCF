@@ -6,37 +6,37 @@
 
 char32_t _MCFCRT_DecodeUtf8 (const char **ppchRead){
 	register const char *pchRead = *ppchRead;
-	register uint_fast32_t u32Temp = (uint_fast32_t)*(pchRead++);
-	if(u32Temp < 0x80){ // 7 位
-		//
-	} else if((u32Temp & 0xE0) == 0xC0){ // 11 位
+	register uint_fast32_t u32Temp = (uint8_t)*(pchRead++);
+	if(u32Temp < 0xC0){ // 7 位（将孤立的尾部字节当作单字节字符）
+		u32Temp &= 0x7F;
+	} else if(u32Temp < 0xE0){ // 11 位
 		u32Temp &= 0x1F;
 		u32Temp <<= 6;
-		u32Temp |= ((uint_fast32_t)*(pchRead++) & 0x3F)      ;
-	} else if((u32Temp & 0xF0) == 0xE0){ // 16 位
+		u32Temp |= ((uint8_t)*(pchRead++) & 0x3F)      ;
+	} else if(u32Temp < 0xF0){ // 16 位
 		u32Temp &= 0x0F;
 		u32Temp <<= 12;
-		u32Temp |= ((uint_fast32_t)*(pchRead++) & 0x3F) <<  6;
-		u32Temp |= ((uint_fast32_t)*(pchRead++) & 0x3F)      ;
+		u32Temp |= ((uint8_t)*(pchRead++) & 0x3F) <<  6;
+		u32Temp |= ((uint8_t)*(pchRead++) & 0x3F)      ;
 	} else { // 21 位
-		u32Temp &= 0x0F;
+		u32Temp &= 0x07;
 		u32Temp <<= 18;
-		u32Temp |= ((uint_fast32_t)*(pchRead++) & 0x3F) << 12;
-		u32Temp |= ((uint_fast32_t)*(pchRead++) & 0x3F) <<  6;
-		u32Temp |= ((uint_fast32_t)*(pchRead++) & 0x3F)      ;
+		u32Temp |= ((uint8_t)*(pchRead++) & 0x3F) << 12;
+		u32Temp |= ((uint8_t)*(pchRead++) & 0x3F) <<  6;
+		u32Temp |= ((uint8_t)*(pchRead++) & 0x3F)      ;
 	}
 	*ppchRead = pchRead;
 	return (char32_t)u32Temp;
 }
 char32_t _MCFCRT_DecodeUtf16(const char16_t **ppc16Read){
 	register const char16_t *pc16Read = *ppc16Read;
-	register uint_fast32_t u32Temp = (uint_fast32_t)*(pc16Read++);
+	register uint_fast32_t u32Temp = (uint16_t)*(pc16Read++);
 	if((u32Temp < 0xD800) || (0xDC00 <= u32Temp)){ // 1 编码单元
 		//
 	} else { // 2 编码单元
 		u32Temp &= 0x3FF;
 		u32Temp <<= 10;
-		u32Temp |= ((uint_fast32_t)*(pc16Read++) & 0x3FF);
+		u32Temp |= ((uint16_t)*(pc16Read++) & 0x3FF);
 		u32Temp += 0x10000;
 	}
 	*ppc16Read = pc16Read;
@@ -45,7 +45,7 @@ char32_t _MCFCRT_DecodeUtf16(const char16_t **ppc16Read){
 
 char32_t _MCFCRT_EncodeUtf8(char **ppchWrite, char32_t c32CodePoint){
 	register char *pchWrite = *ppchWrite;
-	register uint_fast32_t u32Temp = (uint_fast32_t)c32CodePoint;
+	register uint_fast32_t u32Temp = (uint32_t)c32CodePoint;
 	if(u32Temp < 0x80){ // 7 位
 		*(pchWrite++) = (char)(((u32Temp      )       )       );
 	} else if(u32Temp < 0x800){ // 11 位 = 5 + 6
@@ -66,7 +66,7 @@ char32_t _MCFCRT_EncodeUtf8(char **ppchWrite, char32_t c32CodePoint){
 }
 char32_t _MCFCRT_EncodeUtf16(char16_t **ppc16Write, char32_t c32CodePoint){
 	register char16_t *pc16Write = *ppc16Write;
-	register uint_fast32_t u32Temp = (uint_fast32_t)c32CodePoint;
+	register uint_fast32_t u32Temp = (uint32_t)c32CodePoint;
 	if(u32Temp < 0x10000){ // 1 编码单元
 		*(pc16Write++) = (char16_t)(((u32Temp        )         )         );
 	} else { // 2 编码单元
@@ -89,14 +89,32 @@ char32_t _MCFCRT_EncodeUtf16FromUtf8(char16_t **ppc16Write, const char **ppchRea
 	return c32CodePoint;
 }
 
-_MCFCRT_Utf16SurrogateType _MCFCRT_GetUtf16SurrogateType(char16_t c16CodeUnit){
-	if(c16CodeUnit < 0xD800){
-		return _MCFCRT_kUtf16SurrogateNo;
-	} else if(c16CodeUnit < 0xDC00){
-		return _MCFCRT_kUtf16SurrogateLeading;
-	} else if(c16CodeUnit < 0xE000){
-		return _MCFCRT_kUtf16SurrogateTrailing;
+_MCFCRT_Utf8CodeUnitType _MCFCRT_GetUtf8CodeUnitType(char chCodeUnit){
+	register uint_fast32_t u32Temp = (uint8_t)chCodeUnit;
+	if(u32Temp < 0x80){
+		return _MCFCRT_kUtf8Ascii;
+	} else if(u32Temp < 0xC0){
+		return _MCFCRT_kUtf8Trailing;
+	} else if(u32Temp < 0xE0){
+		return _MCFCRT_kUtf8LeadingTwo;
+	} else if(u32Temp < 0xF0){
+		return _MCFCRT_kUtf8LeadingThree;
+	} else if(u32Temp < 0xF8){
+		return _MCFCRT_kUtf8LeadingFour;
 	} else {
-		return _MCFCRT_kUtf16SurrogateNo;
+		return _MCFCRT_kUtf8Reserved;
+	}
+}
+
+_MCFCRT_Utf16CodeUnitType _MCFCRT_GetUtf16CodeUnitType(char16_t c16CodeUnit){
+	register uint_fast32_t u32Temp = (uint16_t)c16CodeUnit;
+	if(u32Temp < 0xD800){
+		return _MCFCRT_kUtf16Normal;
+	} else if(u32Temp < 0xDC00){
+		return _MCFCRT_kUtf16LeadingSurrogate;
+	} else if(u32Temp < 0xE000){
+		return _MCFCRT_kUtf16TrailingSurrogate;
+	} else {
+		return _MCFCRT_kUtf16Normal;
 	}
 }

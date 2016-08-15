@@ -22,13 +22,26 @@ extern char32_t _MCFCRT_EncodeUtf16(char16_t **__ppc16Write, char32_t __c32CodeP
 extern char32_t _MCFCRT_EncodeUtf8FromUtf16(char     **__ppchWrite , const char16_t **__ppc16Read) _MCFCRT_NOEXCEPT;
 extern char32_t _MCFCRT_EncodeUtf16FromUtf8(char16_t **__ppc16Write, const char     **__ppchRead ) _MCFCRT_NOEXCEPT;
 
-typedef enum __MCFCRT_tagUtf16SurrogateType {
-	_MCFCRT_kUtf16SurrogateNo       = 0,
-	_MCFCRT_kUtf16SurrogateLeading  = 1,
-	_MCFCRT_kUtf16SurrogateTrailing = 2,
-} _MCFCRT_Utf16SurrogateType;
+typedef enum __MCFCRT_tagUtf8CodeUnitType {
+	_MCFCRT_kUtf8Trailing     = 0,
+	_MCFCRT_kUtf8Ascii        = 1,
+	_MCFCRT_kUtf8LeadingTwo   = 2,
+	_MCFCRT_kUtf8LeadingThree = 3,
+	_MCFCRT_kUtf8LeadingFour  = 4,
+	_MCFCRT_kUtf8Reserved     = 5,
+} _MCFCRT_Utf8CodeUnitType;
 
-extern _MCFCRT_Utf16SurrogateType _MCFCRT_GetUtf16SurrogateType(char16_t __c16CodeUnit) _MCFCRT_NOEXCEPT;
+__attribute__((__const__))
+extern _MCFCRT_Utf8CodeUnitType _MCFCRT_GetUtf8CodeUnitType(char __chCodeUnit) _MCFCRT_NOEXCEPT;
+
+typedef enum __MCFCRT_tagUtf16CodeUnitType {
+	_MCFCRT_kUtf16Normal            = 0,
+	_MCFCRT_kUtf16LeadingSurrogate  = 1,
+	_MCFCRT_kUtf16TrailingSurrogate = 2,
+} _MCFCRT_Utf16CodeUnitType;
+
+__attribute__((__const__))
+extern _MCFCRT_Utf16CodeUnitType _MCFCRT_GetUtf16CodeUnitType(char16_t __c16CodeUnit) _MCFCRT_NOEXCEPT;
 
 _MCFCRT_EXTERN_C_END
 

@@ -10,9 +10,8 @@
 static_assert(sizeof (wchar_t) == sizeof (char16_t), "What?");
 static_assert(alignof(wchar_t) == alignof(char16_t), "What?");
 
-#define SAFETY_BUMPER_SIZE       4u
-#define STDIN_POPULATION_DELTA   0x1000u
-#define STDOUT_FLUSH_THRESHOLD   0x1000u
+#define STDIN_POPULATION_INCREMENT   0x1000u
+#define STDOUT_FLUSH_THRESHOLD       0x1000u
 
 // _MCFCRT_ASSERT() 会操作标准输入输出流，所以可能会死锁。
 #ifdef NDEBUG
@@ -162,10 +161,7 @@ static inline DWORD ReserveMore(Stream *restrict pStream, size_t uSize){
 			if(uNewCapacity < uMinNewCapacity){
 				uNewCapacity = uMinNewCapacity;
 			}
-			if(uNewCapacity > SIZE_MAX - SAFETY_BUMPER_SIZE){
-				return ERROR_NOT_ENOUGH_MEMORY;
-			}
-			char *const pchNewStorage = HeapAlloc(GetProcessHeap(), 0, uNewCapacity + SAFETY_BUMPER_SIZE);
+			char *const pchNewStorage = HeapAlloc(GetProcessHeap(), 0, uNewCapacity);
 			if(!pchNewStorage){
 				return ERROR_NOT_ENOUGH_MEMORY;
 			}
@@ -173,7 +169,6 @@ static inline DWORD ReserveMore(Stream *restrict pStream, size_t uSize){
 				memcpy(pchNewStorage, pchDataBegin, uOldSize);
 				HeapFree(GetProcessHeap(), 0, pchStorageBegin);
 			}
-			memset(pchNewStorage + uNewCapacity, 0, SAFETY_BUMPER_SIZE);
 
 			pchStorageBegin = pchNewStorage;
 			pchDataBegin    = pchNewStorage;
@@ -196,34 +191,21 @@ static inline void Adopt(Stream *restrict pStream, size_t uSize) _MCFCRT_NOEXCEP
 	pStream->pDataEnd = pchDataEnd + uSize;
 }
 
-static inline size_t GetUtf8Size(const Stream *restrict pStream){
-	const char *const pchData = GetData(pStream);
-	size_t uCharsAvail = GetSize(pStream);
-	for(unsigned i = 0; i <4; ++i){
-		if((uCharsAvail > 0) && (_MCFCRT_GetUtf8CodeUnitType(pchData[uCharsAvail - 1]) == _MCFCRT_kUtf8Trailing)){
-			--uCharsAvail;
-		} else {
+static inline DWORD Populate(Stream *restrict pStream, size_t uThreshold, size_t uIncrement){
+	if(!IsBuffered(pStream)){
+		DestroyBuffer(pStream);
+		return ERROR_HANDLE_EOF;
+	}
+
+	DWORD dwErrorCode = 0;
+	for(;;){
+		const size_t uBytesAvail = GetSize(pStream);
+		if(uBytesAvail >= uThreshold){
 			break;
 		}
-	}
-	return uCharsAvail;
-}
-static inline size_t GetUtf16Size(const Stream *restrict pStream){
-	const wchar_t *const pwcData = GetData(pStream);
-	size_t uCharsAvail = GetSize(pStream) / sizeof(char16_t);
-	if((uCharsAvail > 0) && (_MCFCRT_GetUtf16CodeUnitType(pwcData[uCharsAvail - 1]) == _MCFCRT_kUtf16LeadingSurrogate)){
-		--uCharsAvail;
-	}
-	return uCharsAvail;
-}
-static inline DWORD Populate(Stream *restrict pStream, size_t uDelta){
-	DWORD dwErrorCode = 0;
-	if(!IsBuffered(pStream)){
-		dwErrorCode = ERROR_HANDLE_EOF;
-	} else {
-		dwErrorCode = ReserveMore(pStream, uDelta);
+		dwErrorCode = ReserveMore(pStream, uIncrement);
 		if(dwErrorCode != 0){
-			goto jDone;
+			break;
 		}
 		size_t uBytesToRead = GetReservedSize(pStream);
 		if(uBytesToRead > UINT32_MAX){
@@ -232,61 +214,94 @@ static inline DWORD Populate(Stream *restrict pStream, size_t uDelta){
 		if(IsConsole(pStream)){
 			const DWORD dwCharsToRead = (DWORD)(uBytesToRead / sizeof(wchar_t));
 			if(dwCharsToRead == 0){
-				goto jDone;
+				dwErrorCode = ERROR_HANDLE_EOF;
+				break;
 			}
 			DWORD dwCharsRead;
-			if(!ReadConsoleW(GetHandle(pStream), GetData(pStream), dwCharsToRead, &dwCharsRead, nullptr) && (dwCharsRead == 0)){
-				dwErrorCode = GetLastError();
+			if(!ReadConsoleW(GetHandle(pStream), GetData(pStream), dwCharsToRead, &dwCharsRead, nullptr)){
+				if(dwCharsRead == 0){
+					dwErrorCode = GetLastError();
+				}
+			} else {
+				if(dwCharsRead == 0){
+					dwErrorCode = ERROR_HANDLE_EOF;
+				}
 			}
 			Adopt(pStream, dwCharsRead * sizeof(wchar_t));
 		} else {
 			const DWORD dwBytesToRead = (DWORD)uBytesToRead;
 			if(dwBytesToRead == 0){
-				goto jDone;
+				dwErrorCode = ERROR_HANDLE_EOF;
+				break;
 			}
 			DWORD dwBytesRead;
-			if(!ReadFile(GetHandle(pStream), GetData(pStream), dwBytesToRead, &dwBytesRead, nullptr) && (dwBytesRead == 0)){
-				dwErrorCode = GetLastError();
+			if(!ReadFile(GetHandle(pStream), GetData(pStream), dwBytesToRead, &dwBytesRead, nullptr)){
+				if(dwBytesRead == 0){
+					dwErrorCode = GetLastError();
+				}
+			} else {
+				if(dwBytesRead == 0){
+					dwErrorCode = ERROR_HANDLE_EOF;
+				}
 			}
 			Adopt(pStream, dwBytesRead);
 		}
+		if(dwErrorCode != 0){
+			break;
+		}
 	}
-jDone:
 	return dwErrorCode;
 }
 static inline DWORD Flush(Stream *restrict pStream, size_t uThreshold){
 	DWORD dwErrorCode = 0;
 	for(;;){
-		size_t uBytesToWrite = GetSize(pStream);
-		if(uBytesToWrite < uThreshold){
-			goto jDone;
+		const size_t uBytesAvail = GetSize(pStream);
+		if(uBytesAvail < uThreshold){
+			break;
 		}
+		size_t uBytesToWrite = uBytesAvail;
 		if(uBytesToWrite > UINT32_MAX){
 			uBytesToWrite = UINT32_MAX;
 		}
 		if(IsConsole(pStream)){
 			const DWORD dwCharsToWrite = (DWORD)(uBytesToWrite / sizeof(wchar_t));
 			if(dwCharsToWrite == 0){
-				goto jDone;
+				// dwErrorCode = 0;
+				break;
 			}
 			DWORD dwCharsWritten;
-			if(!WriteConsoleW(GetHandle(pStream), GetData(pStream), dwCharsToWrite, &dwCharsWritten, nullptr) && (dwCharsWritten == 0)){
-				dwErrorCode = GetLastError();
+			if(!WriteConsoleW(GetHandle(pStream), GetData(pStream), dwCharsToWrite, &dwCharsWritten, nullptr)){
+				if(dwCharsWritten == 0){
+					dwErrorCode = GetLastError();
+				}
+			} else {
+				if(dwCharsWritten == 0){
+					dwErrorCode = ERROR_BROKEN_PIPE;
+				}
 			}
 			Discard(pStream, dwCharsWritten * sizeof(wchar_t));
 		} else {
 			const DWORD dwBytesToWrite = (DWORD)uBytesToWrite;
 			if(dwBytesToWrite == 0){
-				goto jDone;
+				// dwErrorCode = 0;
+				break;
 			}
-			DWORD dwCharsWritten;
-			if(!WriteFile(GetHandle(pStream), GetData(pStream), dwBytesToWrite, &dwCharsWritten, nullptr) && (dwCharsWritten == 0)){
-				dwErrorCode = GetLastError();
+			DWORD dwBytesWritten;
+			if(!WriteFile(GetHandle(pStream), GetData(pStream), dwBytesToWrite, &dwBytesWritten, nullptr)){
+				if(dwBytesWritten == 0){
+					dwErrorCode = GetLastError();
+				}
+			} else {
+				if(dwBytesWritten == 0){
+					dwErrorCode = ERROR_BROKEN_PIPE;
+				}
 			}
-			Discard(pStream, dwCharsWritten);
+			Discard(pStream, dwBytesWritten);
+		}
+		if(dwErrorCode != 0){
+			break;
 		}
 	}
-jDone:
 	return dwErrorCode;
 }
 static inline DWORD FlushSystemBuffers(Stream *restrict pStream){
@@ -307,6 +322,9 @@ static inline bool IsEof(char32_t c32CodePoint){
 		return true;
 	}
 	return false;
+}
+static inline size_t MinSize(size_t uOp1, size_t uOp2){
+	return (uOp1 < uOp2) ? uOp1 : uOp2;
 }
 
 static Stream g_vStdIn, g_vStdOut, g_vStdErr;
@@ -335,40 +353,35 @@ int _MCFCRT_PeekStandardInputByte(void){
 		Lock(&g_vStdIn);
 		{
 			if(IsConsole(&g_vStdIn)){
-				size_t uCharsAvail = GetUtf16Size(&g_vStdIn);
-				if(uCharsAvail == 0){
-					dwErrorCode = Populate(&g_vStdIn, STDIN_POPULATION_DELTA);
-					if(dwErrorCode != 0){
-						goto jDone;
-					}
-					uCharsAvail = GetUtf16Size(&g_vStdIn);
-					if(uCharsAvail == 0){
-						dwErrorCode = ERROR_HANDLE_EOF;
-						goto jDone;
-					}
+				size_t uPopulationThreshold = 1;
+			jRepopulateConsole:
+				dwErrorCode = Populate(&g_vStdIn, uPopulationThreshold * sizeof(char16_t), STDIN_POPULATION_INCREMENT);
+				if(dwErrorCode != 0){
+					goto jDone;
 				}
 				const char16_t *const pc16ReadBegin = GetData(&g_vStdIn);
 				const char16_t *pc16Read = pc16ReadBegin;
-				const char32_t c32CodePoint = _MCFCRT_DecodeUtf16(&pc16Read);
+				char32_t c32CodePoint = _MCFCRT_DecodeUtf16(&pc16Read, pc16ReadBegin + GetSize(&g_vStdIn));
+				if(!_MCFCRT_UTF_SUCCESS(c32CodePoint)){
+					if(c32CodePoint == _MCFCRT_UTF_PARTIAL_DATA){
+						++uPopulationThreshold;
+						goto jRepopulateConsole;
+					}
+					c32CodePoint = 0xFFFD;
+					++pc16Read;
+				}
 				if(IsEof(c32CodePoint)){
 					SetBuffered(&g_vStdIn, false);
-					DestroyBuffer(&g_vStdIn);
 					dwErrorCode = ERROR_HANDLE_EOF;
 					goto jDone;
 				}
 				nRead = (int)(c32CodePoint & 0x00FF);
 			} else {
-				size_t uBytesAvail = GetSize(&g_vStdIn);
-				if(uBytesAvail == 0){
-					dwErrorCode = Populate(&g_vStdIn, STDIN_POPULATION_DELTA);
-					if(dwErrorCode != 0){
-						goto jDone;
-					}
-					uBytesAvail = GetSize(&g_vStdIn);
-					if(uBytesAvail == 0){
-						dwErrorCode = ERROR_HANDLE_EOF;
-						goto jDone;
-					}
+				size_t uPopulationThreshold = 1;
+//			jRepopulateNonconsole:
+				dwErrorCode = Populate(&g_vStdIn, uPopulationThreshold, STDIN_POPULATION_INCREMENT);
+				if(dwErrorCode != 0){
+					goto jDone;
 				}
 				const unsigned char *const pbyReadBegin = GetData(&g_vStdIn);
 				const unsigned char *pbyRead = pbyReadBegin;
@@ -394,41 +407,36 @@ int _MCFCRT_ReadStandardInputByte(void){
 		Lock(&g_vStdIn);
 		{
 			if(IsConsole(&g_vStdIn)){
-				size_t uCharsAvail = GetUtf16Size(&g_vStdIn);
-				if(uCharsAvail == 0){
-					dwErrorCode = Populate(&g_vStdIn, STDIN_POPULATION_DELTA);
-					if(dwErrorCode != 0){
-						goto jDone;
-					}
-					uCharsAvail = GetUtf16Size(&g_vStdIn);
-					if(uCharsAvail == 0){
-						dwErrorCode = ERROR_HANDLE_EOF;
-						goto jDone;
-					}
+				size_t uPopulationThreshold = 1;
+			jRepopulateConsole:
+				dwErrorCode = Populate(&g_vStdIn, uPopulationThreshold * sizeof(char16_t), STDIN_POPULATION_INCREMENT);
+				if(dwErrorCode != 0){
+					goto jDone;
 				}
 				const char16_t *const pc16ReadBegin = GetData(&g_vStdIn);
 				const char16_t *pc16Read = pc16ReadBegin;
-				const char32_t c32CodePoint = _MCFCRT_DecodeUtf16(&pc16Read);
+				char32_t c32CodePoint = _MCFCRT_DecodeUtf16(&pc16Read, pc16ReadBegin + GetSize(&g_vStdIn));
+				if(!_MCFCRT_UTF_SUCCESS(c32CodePoint)){
+					if(c32CodePoint == _MCFCRT_UTF_PARTIAL_DATA){
+						++uPopulationThreshold;
+						goto jRepopulateConsole;
+					}
+					c32CodePoint = 0xFFFD;
+					++pc16Read;
+				}
 				if(IsEof(c32CodePoint)){
 					SetBuffered(&g_vStdIn, false);
-					DestroyBuffer(&g_vStdIn);
 					dwErrorCode = ERROR_HANDLE_EOF;
 					goto jDone;
 				}
 				nRead = (int)(c32CodePoint & 0x00FF);
 				Discard(&g_vStdIn, (size_t)((const char *)pc16Read - (const char *)pc16ReadBegin));
 			} else {
-				size_t uBytesAvail = GetSize(&g_vStdIn);
-				if(uBytesAvail == 0){
-					dwErrorCode = Populate(&g_vStdIn, STDIN_POPULATION_DELTA);
-					if(dwErrorCode != 0){
-						goto jDone;
-					}
-					uBytesAvail = GetSize(&g_vStdIn);
-					if(uBytesAvail == 0){
-						dwErrorCode = ERROR_HANDLE_EOF;
-						goto jDone;
-					}
+				size_t uPopulationThreshold = 1;
+//			jRepopulateNonconsole:
+				dwErrorCode = Populate(&g_vStdIn, uPopulationThreshold, STDIN_POPULATION_INCREMENT);
+				if(dwErrorCode != 0){
+					goto jDone;
 				}
 				const unsigned char *const pbyReadBegin = GetData(&g_vStdIn);
 				const unsigned char *pbyRead = pbyReadBegin;
@@ -455,70 +463,56 @@ size_t _MCFCRT_PeekStandardInputBinary(void *restrict pData, size_t uSize){
 		Lock(&g_vStdIn);
 		{
 			if(IsConsole(&g_vStdIn)){
-				size_t uCharsAvail = GetUtf16Size(&g_vStdIn);
-				if(uCharsAvail == 0){
-					dwErrorCode = Populate(&g_vStdIn, STDIN_POPULATION_DELTA);
-					if(dwErrorCode != 0){
-						goto jDone;
-					}
-					uCharsAvail = GetUtf16Size(&g_vStdIn);
-					if(uCharsAvail == 0){
-						dwErrorCode = ERROR_HANDLE_EOF;
-						goto jDone;
-					}
+				size_t uPopulationThreshold = 1;
+			jRepopulateConsole:
+				dwErrorCode = Populate(&g_vStdIn, uPopulationThreshold * sizeof(char16_t), STDIN_POPULATION_INCREMENT);
+				if(dwErrorCode != 0){
+					goto jDone;
 				}
 				char *const pchWriteBegin = pData;
-				const char16_t *const pc16ReadBegin = GetData(&g_vStdIn);
-				const char16_t *pc16Read = pc16ReadBegin;
 				for(;;){
-					char achDecoded[4];
-					char *pchDecodedEnd = achDecoded;
-					const char16_t *pc16ReadNext = pc16Read;
-					const char32_t c32CodePoint = _MCFCRT_EncodeUtf8FromUtf16(&pchDecodedEnd, &pc16ReadNext);
+					const char16_t *const pc16ReadBegin = GetData(&g_vStdIn);
+					const char16_t *pc16Read = pc16ReadBegin;
+					char32_t c32CodePoint = _MCFCRT_DecodeUtf16(&pc16Read, pc16ReadBegin + GetSize(&g_vStdIn) / sizeof(char16_t));
+					if(!_MCFCRT_UTF_SUCCESS(c32CodePoint)){
+						if(c32CodePoint == _MCFCRT_UTF_PARTIAL_DATA){
+							if(uBytesCopied == 0){
+								break;
+							}
+							++uPopulationThreshold;
+							goto jRepopulateConsole;
+						}
+						c32CodePoint = 0xFFFD;
+						++pc16Read;
+					}
 					if(IsEof(c32CodePoint)){
 						SetBuffered(&g_vStdIn, false);
-						if(pc16Read == pc16ReadBegin){
-							DestroyBuffer(&g_vStdIn);
-							dwErrorCode = ERROR_HANDLE_EOF;
-							goto jDone;
+						if(uBytesCopied == 0){
+							break;
 						}
-						break;
-					}
-					if((size_t)(pc16ReadNext - pc16ReadBegin) > uCharsAvail){
 						dwErrorCode = ERROR_HANDLE_EOF;
+						goto jDone;
+					}
+					char *pchWrite = pchWriteBegin + uBytesCopied;
+					c32CodePoint = _MCFCRT_EncodeUtf8(&pchWrite, pchWriteBegin + uSize, c32CodePoint);
+					if(!_MCFCRT_UTF_SUCCESS(c32CodePoint)){
+						SS_ASSERT(c32CodePoint == _MCFCRT_UTF_BUFFER_TOO_SMALL);
 						break;
 					}
-					const size_t uBytesDecoded = (size_t)(pchDecodedEnd - achDecoded);
-					if(uBytesDecoded > uSize - uBytesCopied){
-						break;
-					}
-					memcpy(pchWriteBegin + uBytesCopied, achDecoded, uBytesDecoded);
-					uBytesCopied += uBytesDecoded;
-					pc16Read = pc16ReadNext;
+					uBytesCopied = (size_t)(pchWrite - pchWriteBegin);
 				}
 			} else {
-				size_t uBytesAvail = GetSize(&g_vStdIn);
-				if(uBytesAvail == 0){
-					dwErrorCode = Populate(&g_vStdIn, STDIN_POPULATION_DELTA);
-					if(dwErrorCode != 0){
-						goto jDone;
-					}
-					uBytesAvail = GetSize(&g_vStdIn);
-					if(uBytesAvail == 0){
-						dwErrorCode = ERROR_HANDLE_EOF;
-						goto jDone;
-					}
+				size_t uPopulationThreshold = 1;
+//			jRepopulateNonconsole:
+				dwErrorCode = Populate(&g_vStdIn, uPopulationThreshold, STDIN_POPULATION_INCREMENT);
+				if(dwErrorCode != 0){
+					goto jDone;
 				}
-				unsigned char *const pbyWriteBegin = pData;
 				const unsigned char *const pbyReadBegin = GetData(&g_vStdIn);
 				const unsigned char *pbyRead = pbyReadBegin;
-				size_t uBytesToCopy = uSize;
-				if(uBytesToCopy > uBytesAvail){
-					uBytesToCopy = uBytesAvail;
-				}
-				memcpy(pbyWriteBegin + uBytesCopied, pbyRead, uBytesToCopy);
-				uBytesCopied += uBytesToCopy;
-				pbyRead += uBytesToCopy;
+				uBytesCopied = MinSize(uSize, GetSize(&g_vStdIn));
+				memcpy(pData, pbyRead, uBytesCopied);
+				pbyRead += uBytesCopied;
 			}
 		}
 	jDone:
@@ -540,72 +534,58 @@ size_t _MCFCRT_ReadStandardInputBinary(void *restrict pData, size_t uSize){
 		Lock(&g_vStdIn);
 		{
 			if(IsConsole(&g_vStdIn)){
-				size_t uCharsAvail = GetUtf16Size(&g_vStdIn);
-				if(uCharsAvail == 0){
-					dwErrorCode = Populate(&g_vStdIn, STDIN_POPULATION_DELTA);
-					if(dwErrorCode != 0){
-						goto jDone;
-					}
-					uCharsAvail = GetUtf16Size(&g_vStdIn);
-					if(uCharsAvail == 0){
-						dwErrorCode = ERROR_HANDLE_EOF;
-						goto jDone;
-					}
+				size_t uPopulationThreshold = 1;
+			jRepopulateConsole:
+				dwErrorCode = Populate(&g_vStdIn, uPopulationThreshold * sizeof(char16_t), STDIN_POPULATION_INCREMENT);
+				if(dwErrorCode != 0){
+					goto jDone;
 				}
 				char *const pchWriteBegin = pData;
-				const char16_t *const pc16ReadBegin = GetData(&g_vStdIn);
-				const char16_t *pc16Read = pc16ReadBegin;
 				for(;;){
-					char achDecoded[4];
-					char *pchDecodedEnd = achDecoded;
-					const char16_t *pc16ReadNext = pc16Read;
-					const char32_t c32CodePoint = _MCFCRT_EncodeUtf8FromUtf16(&pchDecodedEnd, &pc16ReadNext);
+					const char16_t *const pc16ReadBegin = GetData(&g_vStdIn);
+					const char16_t *pc16Read = pc16ReadBegin;
+					char32_t c32CodePoint = _MCFCRT_DecodeUtf16(&pc16Read, pc16ReadBegin + GetSize(&g_vStdIn) / sizeof(char16_t));
+					if(!_MCFCRT_UTF_SUCCESS(c32CodePoint)){
+						if(c32CodePoint == _MCFCRT_UTF_PARTIAL_DATA){
+							if(uBytesCopied == 0){
+								break;
+							}
+							++uPopulationThreshold;
+							goto jRepopulateConsole;
+						}
+						c32CodePoint = 0xFFFD;
+						++pc16Read;
+					}
 					if(IsEof(c32CodePoint)){
 						SetBuffered(&g_vStdIn, false);
-						if(pc16Read == pc16ReadBegin){
-							DestroyBuffer(&g_vStdIn);
-							dwErrorCode = ERROR_HANDLE_EOF;
-							goto jDone;
+						if(uBytesCopied == 0){
+							break;
 						}
-						break;
-					}
-					if((size_t)(pc16ReadNext - pc16ReadBegin) > uCharsAvail){
 						dwErrorCode = ERROR_HANDLE_EOF;
+						goto jDone;
+					}
+					char *pchWrite = pchWriteBegin + uBytesCopied;
+					c32CodePoint = _MCFCRT_EncodeUtf8(&pchWrite, pchWriteBegin + uSize, c32CodePoint);
+					if(!_MCFCRT_UTF_SUCCESS(c32CodePoint)){
+						SS_ASSERT(c32CodePoint == _MCFCRT_UTF_BUFFER_TOO_SMALL);
 						break;
 					}
-					const size_t uBytesDecoded = (size_t)(pchDecodedEnd - achDecoded);
-					if(uBytesDecoded > uSize - uBytesCopied){
-						break;
-					}
-					memcpy(pchWriteBegin + uBytesCopied, achDecoded, uBytesDecoded);
-					uBytesCopied += uBytesDecoded;
-					pc16Read = pc16ReadNext;
+					uBytesCopied = (size_t)(pchWrite - pchWriteBegin);
+					Discard(&g_vStdIn, (size_t)((const char *)pc16Read - (const char *)pc16ReadBegin));
 				}
-				Discard(&g_vStdIn, (size_t)((const char *)pc16Read - (const char *)pc16ReadBegin));
 			} else {
-				size_t uBytesAvail = GetSize(&g_vStdIn);
-				if(uBytesAvail == 0){
-					dwErrorCode = Populate(&g_vStdIn, STDIN_POPULATION_DELTA);
-					if(dwErrorCode != 0){
-						goto jDone;
-					}
-					uBytesAvail = GetSize(&g_vStdIn);
-					if(uBytesAvail == 0){
-						dwErrorCode = ERROR_HANDLE_EOF;
-						goto jDone;
-					}
+				size_t uPopulationThreshold = 1;
+//			jRepopulateNonconsole:
+				dwErrorCode = Populate(&g_vStdIn, uPopulationThreshold, STDIN_POPULATION_INCREMENT);
+				if(dwErrorCode != 0){
+					goto jDone;
 				}
-				unsigned char *const pbyWriteBegin = pData;
 				const unsigned char *const pbyReadBegin = GetData(&g_vStdIn);
 				const unsigned char *pbyRead = pbyReadBegin;
-				size_t uBytesToCopy = uSize;
-				if(uBytesToCopy > uBytesAvail){
-					uBytesToCopy = uBytesAvail;
-				}
-				memcpy(pbyWriteBegin + uBytesCopied, pbyRead, uBytesToCopy);
-				uBytesCopied += uBytesToCopy;
-				pbyRead += uBytesToCopy;
-				Discard(&g_vStdIn, (size_t)(pbyRead - pbyReadBegin));
+				uBytesCopied = MinSize(uSize, GetSize(&g_vStdIn));
+				memcpy(pData, pbyRead, uBytesCopied);
+				pbyRead += uBytesCopied;
+				Discard(&g_vStdIn, uBytesCopied);
 			}
 		}
 	jDone:
@@ -627,68 +607,53 @@ size_t _MCFCRT_DiscardStandardInputBinary(size_t uSize){
 		Lock(&g_vStdIn);
 		{
 			if(IsConsole(&g_vStdIn)){
-				size_t uCharsAvail = GetUtf16Size(&g_vStdIn);
-				if(uCharsAvail == 0){
-					dwErrorCode = Populate(&g_vStdIn, STDIN_POPULATION_DELTA);
-					if(dwErrorCode != 0){
-						goto jDone;
-					}
-					uCharsAvail = GetUtf16Size(&g_vStdIn);
-					if(uCharsAvail == 0){
-						dwErrorCode = ERROR_HANDLE_EOF;
-						goto jDone;
-					}
+				size_t uPopulationThreshold = 1;
+			jRepopulateConsole:
+				dwErrorCode = Populate(&g_vStdIn, uPopulationThreshold * sizeof(char16_t), STDIN_POPULATION_INCREMENT);
+				if(dwErrorCode != 0){
+					goto jDone;
 				}
-				const char16_t *const pc16ReadBegin = GetData(&g_vStdIn);
-				const char16_t *pc16Read = pc16ReadBegin;
 				for(;;){
-					char achDecoded[4];
-					char *pchDecodedEnd = achDecoded;
-					const char16_t *pc16ReadNext = pc16Read;
-					const char32_t c32CodePoint = _MCFCRT_EncodeUtf8FromUtf16(&pchDecodedEnd, &pc16ReadNext);
+					const char16_t *const pc16ReadBegin = GetData(&g_vStdIn);
+					const char16_t *pc16Read = pc16ReadBegin;
+					char32_t c32CodePoint = _MCFCRT_DecodeUtf16(&pc16Read, pc16ReadBegin + GetSize(&g_vStdIn) / sizeof(char16_t));
+					if(!_MCFCRT_UTF_SUCCESS(c32CodePoint)){
+						if(c32CodePoint == _MCFCRT_UTF_PARTIAL_DATA){
+							if(uBytesCopied == 0){
+								break;
+							}
+							++uPopulationThreshold;
+							goto jRepopulateConsole;
+						}
+						c32CodePoint = 0xFFFD;
+						++pc16Read;
+					}
 					if(IsEof(c32CodePoint)){
 						SetBuffered(&g_vStdIn, false);
-						if(pc16Read == pc16ReadBegin){
-							DestroyBuffer(&g_vStdIn);
-							dwErrorCode = ERROR_HANDLE_EOF;
-							goto jDone;
+						if(uBytesCopied == 0){
+							break;
 						}
-						break;
-					}
-					if((size_t)(pc16ReadNext - pc16ReadBegin) > uCharsAvail){
 						dwErrorCode = ERROR_HANDLE_EOF;
-						break;
+						goto jDone;
 					}
-					const size_t uBytesDecoded = (size_t)(pchDecodedEnd - achDecoded);
-					if(uBytesDecoded > uSize - uBytesCopied){
-						break;
-					}
-					uBytesCopied += uBytesDecoded;
-					pc16Read = pc16ReadNext;
+					char achDummy[4];
+					char *pchWrite = achDummy;
+					c32CodePoint = _MCFCRT_EncodeUtf8(&pchWrite, achDummy + MinSize(uSize - uBytesCopied, 4), c32CodePoint);
+					uBytesCopied = (size_t)(pchWrite - achDummy);
+					Discard(&g_vStdIn, (size_t)((const char *)pc16Read - (const char *)pc16ReadBegin));
 				}
-				Discard(&g_vStdIn, (size_t)((const char *)pc16Read - (const char *)pc16ReadBegin));
 			} else {
-				size_t uBytesAvail = GetSize(&g_vStdIn);
-				if(uBytesAvail == 0){
-					dwErrorCode = Populate(&g_vStdIn, STDIN_POPULATION_DELTA);
-					if(dwErrorCode != 0){
-						goto jDone;
-					}
-					uBytesAvail = GetSize(&g_vStdIn);
-					if(uBytesAvail == 0){
-						dwErrorCode = ERROR_HANDLE_EOF;
-						goto jDone;
-					}
+				size_t uPopulationThreshold = 1;
+//			jRepopulateNonconsole:
+				dwErrorCode = Populate(&g_vStdIn, uPopulationThreshold, STDIN_POPULATION_INCREMENT);
+				if(dwErrorCode != 0){
+					goto jDone;
 				}
 				const unsigned char *const pbyReadBegin = GetData(&g_vStdIn);
 				const unsigned char *pbyRead = pbyReadBegin;
-				size_t uBytesToCopy = uSize;
-				if(uBytesToCopy > uBytesAvail){
-					uBytesToCopy = uBytesAvail;
-				}
-				uBytesCopied += uBytesToCopy;
-				pbyRead += uBytesToCopy;
-				Discard(&g_vStdIn, (size_t)(pbyRead - pbyReadBegin));
+				uBytesCopied = MinSize(uSize, GetSize(&g_vStdIn));
+				pbyRead += uBytesCopied;
+				Discard(&g_vStdIn, uBytesCopied);
 			}
 		}
 	jDone:
@@ -710,51 +675,46 @@ long _MCFCRT_PeekStandardInputChar32(void){
 		Lock(&g_vStdIn);
 		{
 			if(IsConsole(&g_vStdIn)){
-				size_t uCharsAvail = GetUtf16Size(&g_vStdIn);
-				if(uCharsAvail == 0){
-					dwErrorCode = Populate(&g_vStdIn, STDIN_POPULATION_DELTA);
-					if(dwErrorCode != 0){
-						goto jDone;
-					}
-					uCharsAvail = GetUtf16Size(&g_vStdIn);
-					if(uCharsAvail == 0){
-						dwErrorCode = ERROR_HANDLE_EOF;
-						goto jDone;
-					}
+				size_t uPopulationThreshold = 1;
+			jRepopulateConsole:
+				dwErrorCode = Populate(&g_vStdIn, uPopulationThreshold * sizeof(char16_t), STDIN_POPULATION_INCREMENT);
+				if(dwErrorCode != 0){
+					goto jDone;
 				}
 				const char16_t *const pc16ReadBegin = GetData(&g_vStdIn);
 				const char16_t *pc16Read = pc16ReadBegin;
-				const char32_t c32CodePoint = _MCFCRT_DecodeUtf16(&pc16Read);
-				if((size_t)(pc16Read - pc16ReadBegin) > uCharsAvail){
-					dwErrorCode = ERROR_HANDLE_EOF;
-					goto jDone;
+				char32_t c32CodePoint = _MCFCRT_DecodeUtf16(&pc16Read, pc16ReadBegin + GetSize(&g_vStdIn));
+				if(!_MCFCRT_UTF_SUCCESS(c32CodePoint)){
+					if(c32CodePoint == _MCFCRT_UTF_PARTIAL_DATA){
+						++uPopulationThreshold;
+						goto jRepopulateConsole;
+					}
+					c32CodePoint = 0xFFFD;
+					++pc16Read;
 				}
 				if(IsEof(c32CodePoint)){
 					SetBuffered(&g_vStdIn, false);
-					DestroyBuffer(&g_vStdIn);
 					dwErrorCode = ERROR_HANDLE_EOF;
 					goto jDone;
 				}
 				lRead = (long)c32CodePoint;
 			} else {
-				size_t uBytesAvail = GetUtf8Size(&g_vStdIn);
-				if(uBytesAvail == 0){
-					dwErrorCode = Populate(&g_vStdIn, STDIN_POPULATION_DELTA);
-					if(dwErrorCode != 0){
-						goto jDone;
-					}
-					uBytesAvail = GetUtf8Size(&g_vStdIn);
-					if(uBytesAvail == 0){
-						dwErrorCode = ERROR_HANDLE_EOF;
-						goto jDone;
-					}
+				size_t uPopulationThreshold = 1;
+			jRepopulateNonconsole:
+				dwErrorCode = Populate(&g_vStdIn, uPopulationThreshold, STDIN_POPULATION_INCREMENT);
+				if(dwErrorCode != 0){
+					goto jDone;
 				}
 				const char *const pchReadBegin = GetData(&g_vStdIn);
 				const char *pchRead = pchReadBegin;
-				const char32_t c32CodePoint = _MCFCRT_DecodeUtf8(&pchRead);
-				if((size_t)(pchRead - pchReadBegin) > uBytesAvail){
-					dwErrorCode = ERROR_HANDLE_EOF;
-					goto jDone;
+				char32_t c32CodePoint = _MCFCRT_DecodeUtf8(&pchRead, pchReadBegin + GetSize(&g_vStdIn));
+				if(!_MCFCRT_UTF_SUCCESS(c32CodePoint)){
+					if(c32CodePoint == _MCFCRT_UTF_PARTIAL_DATA){
+						++uPopulationThreshold;
+						goto jRepopulateNonconsole;
+					}
+					c32CodePoint = 0xFFFD;
+					++pchRead;
 				}
 				lRead = (long)c32CodePoint;
 			}
@@ -778,52 +738,47 @@ long _MCFCRT_ReadStandardInputChar32(void){
 		Lock(&g_vStdIn);
 		{
 			if(IsConsole(&g_vStdIn)){
-				size_t uCharsAvail = GetUtf16Size(&g_vStdIn);
-				if(uCharsAvail == 0){
-					dwErrorCode = Populate(&g_vStdIn, STDIN_POPULATION_DELTA);
-					if(dwErrorCode != 0){
-						goto jDone;
-					}
-					uCharsAvail = GetUtf16Size(&g_vStdIn);
-					if(uCharsAvail == 0){
-						dwErrorCode = ERROR_HANDLE_EOF;
-						goto jDone;
-					}
+				size_t uPopulationThreshold = 1;
+			jRepopulateConsole:
+				dwErrorCode = Populate(&g_vStdIn, uPopulationThreshold * sizeof(char16_t), STDIN_POPULATION_INCREMENT);
+				if(dwErrorCode != 0){
+					goto jDone;
 				}
 				const char16_t *const pc16ReadBegin = GetData(&g_vStdIn);
 				const char16_t *pc16Read = pc16ReadBegin;
-				const char32_t c32CodePoint = _MCFCRT_DecodeUtf16(&pc16Read);
-				if((size_t)(pc16Read - pc16ReadBegin) > uCharsAvail){
-					dwErrorCode = ERROR_HANDLE_EOF;
-					goto jDone;
+				char32_t c32CodePoint = _MCFCRT_DecodeUtf16(&pc16Read, pc16ReadBegin + GetSize(&g_vStdIn));
+				if(!_MCFCRT_UTF_SUCCESS(c32CodePoint)){
+					if(c32CodePoint == _MCFCRT_UTF_PARTIAL_DATA){
+						++uPopulationThreshold;
+						goto jRepopulateConsole;
+					}
+					c32CodePoint = 0xFFFD;
+					++pc16Read;
 				}
 				if(IsEof(c32CodePoint)){
 					SetBuffered(&g_vStdIn, false);
-					DestroyBuffer(&g_vStdIn);
 					dwErrorCode = ERROR_HANDLE_EOF;
 					goto jDone;
 				}
 				lRead = (long)c32CodePoint;
 				Discard(&g_vStdIn, (size_t)((const char *)pc16Read - (const char *)pc16ReadBegin));
 			} else {
-				size_t uBytesAvail = GetUtf8Size(&g_vStdIn);
-				if(uBytesAvail == 0){
-					dwErrorCode = Populate(&g_vStdIn, STDIN_POPULATION_DELTA);
-					if(dwErrorCode != 0){
-						goto jDone;
-					}
-					uBytesAvail = GetUtf8Size(&g_vStdIn);
-					if(uBytesAvail == 0){
-						dwErrorCode = ERROR_HANDLE_EOF;
-						goto jDone;
-					}
+				size_t uPopulationThreshold = 1;
+			jRepopulateNonconsole:
+				dwErrorCode = Populate(&g_vStdIn, uPopulationThreshold, STDIN_POPULATION_INCREMENT);
+				if(dwErrorCode != 0){
+					goto jDone;
 				}
 				const char *const pchReadBegin = GetData(&g_vStdIn);
 				const char *pchRead = pchReadBegin;
-				const char32_t c32CodePoint = _MCFCRT_DecodeUtf8(&pchRead);
-				if((size_t)(pchRead - pchReadBegin) > uBytesAvail){
-					dwErrorCode = ERROR_HANDLE_EOF;
-					goto jDone;
+				char32_t c32CodePoint = _MCFCRT_DecodeUtf8(&pchRead, pchReadBegin + GetSize(&g_vStdIn));
+				if(!_MCFCRT_UTF_SUCCESS(c32CodePoint)){
+					if(c32CodePoint == _MCFCRT_UTF_PARTIAL_DATA){
+						++uPopulationThreshold;
+						goto jRepopulateNonconsole;
+					}
+					c32CodePoint = 0xFFFD;
+					++pchRead;
 				}
 				lRead = (long)c32CodePoint;
 				Discard(&g_vStdIn, (size_t)(pchRead - pchReadBegin));
@@ -848,72 +803,79 @@ size_t _MCFCRT_PeekStandardInputText(wchar_t *restrict pwcText, size_t uLength, 
 		Lock(&g_vStdIn);
 		{
 			if(IsConsole(&g_vStdIn)){
-				size_t uCharsAvail = GetUtf16Size(&g_vStdIn);
-				if(uCharsAvail == 0){
-					dwErrorCode = Populate(&g_vStdIn, STDIN_POPULATION_DELTA);
-					if(dwErrorCode != 0){
-						goto jDone;
-					}
-					uCharsAvail = GetUtf16Size(&g_vStdIn);
-					if(uCharsAvail == 0){
-						dwErrorCode = ERROR_HANDLE_EOF;
-						goto jDone;
-					}
+				size_t uPopulationThreshold = 1;
+			jRepopulateConsole:
+				dwErrorCode = Populate(&g_vStdIn, uPopulationThreshold * sizeof(char16_t), STDIN_POPULATION_INCREMENT);
+				if(dwErrorCode != 0){
+					goto jDone;
 				}
 				char16_t *const pc16WriteBegin = (void *)pwcText;
-				const char16_t *const pc16ReadBegin = GetData(&g_vStdIn);
-				const char16_t *pc16Read = pc16ReadBegin;
-				size_t uCharsToCopy = uCharsAvail;
-				if(uCharsToCopy > uLength){
-					uCharsToCopy = uLength;
-				}
-				if(bSingleLine){
-					for(size_t i = 0; i < uCharsToCopy; ++i){
-						if(pc16Read[i] == u'\n'){
-							uCharsToCopy = i + 1;
-							break;
-						}
-					}
-				}
-				memcpy(pc16WriteBegin + uCharsCopied, pc16Read, uCharsToCopy * sizeof(char16_t));
-				uCharsCopied += uCharsToCopy;
-				pc16Read += uCharsToCopy;
-			} else {
-				size_t uBytesAvail = GetUtf8Size(&g_vStdIn);
-				if(uBytesAvail == 0){
-					dwErrorCode = Populate(&g_vStdIn, STDIN_POPULATION_DELTA);
-					if(dwErrorCode != 0){
-						goto jDone;
-					}
-					uBytesAvail = GetSize(&g_vStdIn);
-					if(uBytesAvail == 0){
-						dwErrorCode = ERROR_HANDLE_EOF;
-						goto jDone;
-					}
-				}
-				char16_t *const pc16WriteBegin = (void *)pwcText;
-				const char *const pchReadBegin = GetData(&g_vStdIn);
-				const char *pchRead = pchReadBegin;
 				for(;;){
-					char16_t ac16Encoded[2];
-					char16_t *pc16EncodedEnd = ac16Encoded;
-					const char *pchReadNext = pchRead;
-					const char32_t c32CodePoint = _MCFCRT_EncodeUtf16FromUtf8(&pc16EncodedEnd, &pchReadNext);
-					if((size_t)(pchReadNext - pchReadBegin) > uBytesAvail){
-						dwErrorCode = ERROR_HANDLE_EOF;
-						break;
+					const char16_t *const pc16ReadBegin = GetData(&g_vStdIn);
+					const char16_t *pc16Read = pc16ReadBegin;
+					char32_t c32CodePoint = _MCFCRT_DecodeUtf16(&pc16Read, pc16ReadBegin + GetSize(&g_vStdIn) / sizeof(char16_t));
+					if(!_MCFCRT_UTF_SUCCESS(c32CodePoint)){
+						if(c32CodePoint == _MCFCRT_UTF_PARTIAL_DATA){
+							if(uCharsCopied == 0){
+								break;
+							}
+							++uPopulationThreshold;
+							goto jRepopulateConsole;
+						}
+						c32CodePoint = 0xFFFD;
+						++pc16Read;
 					}
-					const size_t uCharsEncoded = (size_t)(pc16EncodedEnd - ac16Encoded);
-					if(uCharsEncoded > uLength - uCharsCopied){
-						break;
-					}
-					memcpy(pc16WriteBegin + uCharsCopied, ac16Encoded, uCharsEncoded * sizeof(char16_t));
-					uCharsCopied += uCharsEncoded;
-					pchRead = pchReadNext;
-					if(bSingleLine){
-						if(c32CodePoint == U'\n'){
+					if(IsEof(c32CodePoint)){
+						SetBuffered(&g_vStdIn, false);
+						if(uCharsCopied == 0){
 							break;
 						}
+						dwErrorCode = ERROR_HANDLE_EOF;
+						goto jDone;
+					}
+					char16_t *pc16Write = pc16WriteBegin + uCharsCopied;
+					c32CodePoint = _MCFCRT_EncodeUtf16(&pc16Write, pc16WriteBegin + uLength, c32CodePoint);
+					if(!_MCFCRT_UTF_SUCCESS(c32CodePoint)){
+						SS_ASSERT(c32CodePoint == _MCFCRT_UTF_BUFFER_TOO_SMALL);
+						break;
+					}
+					uCharsCopied = (size_t)(pc16Write - pc16WriteBegin);
+					if(bSingleLine && (c32CodePoint == U'\n')){
+						break;
+					}
+				}
+			} else {
+				size_t uPopulationThreshold = 1;
+			jRepopulateNonconsole:
+				dwErrorCode = Populate(&g_vStdIn, uPopulationThreshold, STDIN_POPULATION_INCREMENT);
+				if(dwErrorCode != 0){
+					goto jDone;
+				}
+				char16_t *const pc16WriteBegin = (void *)pwcText;
+				for(;;){
+					const char *const pchReadBegin = GetData(&g_vStdIn);
+					const char *pchRead = pchReadBegin;
+					char32_t c32CodePoint = _MCFCRT_DecodeUtf8(&pchRead, pchReadBegin + GetSize(&g_vStdIn));
+					if(!_MCFCRT_UTF_SUCCESS(c32CodePoint)){
+						if(c32CodePoint == _MCFCRT_UTF_PARTIAL_DATA){
+							if(uCharsCopied == 0){
+								break;
+							}
+							++uPopulationThreshold;
+							goto jRepopulateNonconsole;
+						}
+						c32CodePoint = 0xFFFD;
+						++pchRead;
+					}
+					char16_t *pc16Write = pc16WriteBegin + uCharsCopied;
+					c32CodePoint = _MCFCRT_EncodeUtf16(&pc16Write, pc16WriteBegin + uLength, c32CodePoint);
+					if(!_MCFCRT_UTF_SUCCESS(c32CodePoint)){
+						SS_ASSERT(c32CodePoint == _MCFCRT_UTF_BUFFER_TOO_SMALL);
+						break;
+					}
+					uCharsCopied = (size_t)(pc16Write - pc16WriteBegin);
+					if(bSingleLine && (c32CodePoint == U'\n')){
+						break;
 					}
 				}
 			}
@@ -937,76 +899,83 @@ size_t _MCFCRT_ReadStandardInputText(wchar_t *restrict pwcText, size_t uLength, 
 		Lock(&g_vStdIn);
 		{
 			if(IsConsole(&g_vStdIn)){
-				size_t uCharsAvail = GetUtf16Size(&g_vStdIn);
-				if(uCharsAvail == 0){
-					dwErrorCode = Populate(&g_vStdIn, STDIN_POPULATION_DELTA);
-					if(dwErrorCode != 0){
-						goto jDone;
-					}
-					uCharsAvail = GetUtf16Size(&g_vStdIn);
-					if(uCharsAvail == 0){
-						dwErrorCode = ERROR_HANDLE_EOF;
-						goto jDone;
-					}
+				size_t uPopulationThreshold = 1;
+			jRepopulateConsole:
+				dwErrorCode = Populate(&g_vStdIn, uPopulationThreshold * sizeof(char16_t), STDIN_POPULATION_INCREMENT);
+				if(dwErrorCode != 0){
+					goto jDone;
 				}
 				char16_t *const pc16WriteBegin = (void *)pwcText;
-				const char16_t *const pc16ReadBegin = GetData(&g_vStdIn);
-				const char16_t *pc16Read = pc16ReadBegin;
-				size_t uCharsToCopy = uCharsAvail;
-				if(uCharsToCopy > uLength){
-					uCharsToCopy = uLength;
-				}
-				if(bSingleLine){
-					for(size_t i = 0; i < uCharsToCopy; ++i){
-						if(pc16Read[i] == u'\n'){
-							uCharsToCopy = i + 1;
-							break;
-						}
-					}
-				}
-				memcpy(pc16WriteBegin + uCharsCopied, pc16Read, uCharsToCopy * sizeof(char16_t));
-				uCharsCopied += uCharsToCopy;
-				pc16Read += uCharsToCopy;
-				Discard(&g_vStdIn, (size_t)((const char *)pc16Read - (const char *)pc16ReadBegin));
-			} else {
-				size_t uBytesAvail = GetUtf8Size(&g_vStdIn);
-				if(uBytesAvail == 0){
-					dwErrorCode = Populate(&g_vStdIn, STDIN_POPULATION_DELTA);
-					if(dwErrorCode != 0){
-						goto jDone;
-					}
-					uBytesAvail = GetSize(&g_vStdIn);
-					if(uBytesAvail == 0){
-						dwErrorCode = ERROR_HANDLE_EOF;
-						goto jDone;
-					}
-				}
-				char16_t *const pc16WriteBegin = (void *)pwcText;
-				const char *const pchReadBegin = GetData(&g_vStdIn);
-				const char *pchRead = pchReadBegin;
 				for(;;){
-					char16_t ac16Encoded[2];
-					char16_t *pc16EncodedEnd = ac16Encoded;
-					const char *pchReadNext = pchRead;
-					const char32_t c32CodePoint = _MCFCRT_EncodeUtf16FromUtf8(&pc16EncodedEnd, &pchReadNext);
-					if((size_t)(pchReadNext - pchReadBegin) > uBytesAvail){
-						dwErrorCode = ERROR_HANDLE_EOF;
-						break;
+					const char16_t *const pc16ReadBegin = GetData(&g_vStdIn);
+					const char16_t *pc16Read = pc16ReadBegin;
+					char32_t c32CodePoint = _MCFCRT_DecodeUtf16(&pc16Read, pc16ReadBegin + GetSize(&g_vStdIn) / sizeof(char16_t));
+					if(!_MCFCRT_UTF_SUCCESS(c32CodePoint)){
+						if(c32CodePoint == _MCFCRT_UTF_PARTIAL_DATA){
+							if(uCharsCopied == 0){
+								break;
+							}
+							++uPopulationThreshold;
+							goto jRepopulateConsole;
+						}
+						c32CodePoint = 0xFFFD;
+						++pc16Read;
 					}
-					const size_t uCharsEncoded = (size_t)(pc16EncodedEnd - ac16Encoded);
-					if(uCharsEncoded > uLength - uCharsCopied){
-						break;
-					}
-					memcpy(pc16WriteBegin + uCharsCopied, ac16Encoded, uCharsEncoded * sizeof(char16_t));
-					uCharsCopied += uCharsEncoded;
-					pchRead = pchReadNext;
-					if(bSingleLine){
-						if(c32CodePoint == U'\n'){
+					if(IsEof(c32CodePoint)){
+						SetBuffered(&g_vStdIn, false);
+						if(uCharsCopied == 0){
 							break;
 						}
+						dwErrorCode = ERROR_HANDLE_EOF;
+						goto jDone;
+					}
+					char16_t *pc16Write = pc16WriteBegin + uCharsCopied;
+					c32CodePoint = _MCFCRT_EncodeUtf16(&pc16Write, pc16WriteBegin + uLength, c32CodePoint);
+					if(!_MCFCRT_UTF_SUCCESS(c32CodePoint)){
+						SS_ASSERT(c32CodePoint == _MCFCRT_UTF_BUFFER_TOO_SMALL);
+						break;
+					}
+					uCharsCopied = (size_t)(pc16Write - pc16WriteBegin);
+					if(bSingleLine && (c32CodePoint == U'\n')){
+						break;
+					}
+					Discard(&g_vStdIn, (size_t)((const char *)pc16Read - (const char *)pc16ReadBegin));
+				}
+			} else {
+				size_t uPopulationThreshold = 1;
+			jRepopulateNonconsole:
+				dwErrorCode = Populate(&g_vStdIn, uPopulationThreshold, STDIN_POPULATION_INCREMENT);
+				if(dwErrorCode != 0){
+					goto jDone;
+				}
+				char16_t *const pc16WriteBegin = (void *)pwcText;
+				for(;;){
+					const char *const pchReadBegin = GetData(&g_vStdIn);
+					const char *pchRead = pchReadBegin;
+					char32_t c32CodePoint = _MCFCRT_DecodeUtf8(&pchRead, pchReadBegin + GetSize(&g_vStdIn));
+					if(!_MCFCRT_UTF_SUCCESS(c32CodePoint)){
+						if(c32CodePoint == _MCFCRT_UTF_PARTIAL_DATA){
+							if(uCharsCopied == 0){
+								break;
+							}
+							++uPopulationThreshold;
+							goto jRepopulateNonconsole;
+						}
+						c32CodePoint = 0xFFFD;
+						++pchRead;
+					}
+					char16_t *pc16Write = pc16WriteBegin + uCharsCopied;
+					c32CodePoint = _MCFCRT_EncodeUtf16(&pc16Write, pc16WriteBegin + uLength, c32CodePoint);
+					if(!_MCFCRT_UTF_SUCCESS(c32CodePoint)){
+						SS_ASSERT(c32CodePoint == _MCFCRT_UTF_BUFFER_TOO_SMALL);
+						break;
+					}
+					uCharsCopied = (size_t)(pc16Write - pc16WriteBegin);
+					Discard(&g_vStdIn, (size_t)(pchRead - pchReadBegin));
+					if(bSingleLine && (c32CodePoint == U'\n')){
+						break;
 					}
 				}
-				Discard(&g_vStdIn, (size_t)(pchRead - pchReadBegin));
 			}
 		}
 	jDone:
@@ -1028,72 +997,83 @@ size_t _MCFCRT_DiscardStandardInputText(size_t uLength, bool bSingleLine){
 		Lock(&g_vStdIn);
 		{
 			if(IsConsole(&g_vStdIn)){
-				size_t uCharsAvail = GetUtf16Size(&g_vStdIn);
-				if(uCharsAvail == 0){
-					dwErrorCode = Populate(&g_vStdIn, STDIN_POPULATION_DELTA);
-					if(dwErrorCode != 0){
-						goto jDone;
-					}
-					uCharsAvail = GetUtf16Size(&g_vStdIn);
-					if(uCharsAvail == 0){
-						dwErrorCode = ERROR_HANDLE_EOF;
-						goto jDone;
-					}
+				size_t uPopulationThreshold = 1;
+			jRepopulateConsole:
+				dwErrorCode = Populate(&g_vStdIn, uPopulationThreshold * sizeof(char16_t), STDIN_POPULATION_INCREMENT);
+				if(dwErrorCode != 0){
+					goto jDone;
 				}
-				const char16_t *const pc16ReadBegin = GetData(&g_vStdIn);
-				const char16_t *pc16Read = pc16ReadBegin;
-				size_t uCharsToCopy = uCharsAvail;
-				if(uCharsToCopy > uLength){
-					uCharsToCopy = uLength;
-				}
-				if(bSingleLine){
-					for(size_t i = 0; i < uCharsToCopy; ++i){
-						if(pc16Read[i] == u'\n'){
-							uCharsToCopy = i + 1;
-							break;
-						}
-					}
-				}
-				uCharsCopied += uCharsToCopy;
-				pc16Read += uCharsToCopy;
-				Discard(&g_vStdIn, (size_t)((const char *)pc16Read - (const char *)pc16ReadBegin));
-			} else {
-				size_t uBytesAvail = GetUtf8Size(&g_vStdIn);
-				if(uBytesAvail == 0){
-					dwErrorCode = Populate(&g_vStdIn, STDIN_POPULATION_DELTA);
-					if(dwErrorCode != 0){
-						goto jDone;
-					}
-					uBytesAvail = GetSize(&g_vStdIn);
-					if(uBytesAvail == 0){
-						dwErrorCode = ERROR_HANDLE_EOF;
-						goto jDone;
-					}
-				}
-				const char *const pchReadBegin = GetData(&g_vStdIn);
-				const char *pchRead = pchReadBegin;
 				for(;;){
-					char16_t ac16Encoded[2];
-					char16_t *pc16EncodedEnd = ac16Encoded;
-					const char *pchReadNext = pchRead;
-					const char32_t c32CodePoint = _MCFCRT_EncodeUtf16FromUtf8(&pc16EncodedEnd, &pchReadNext);
-					if((size_t)(pchReadNext - pchReadBegin) > uBytesAvail){
-						dwErrorCode = ERROR_HANDLE_EOF;
-						break;
+					const char16_t *const pc16ReadBegin = GetData(&g_vStdIn);
+					const char16_t *pc16Read = pc16ReadBegin;
+					char32_t c32CodePoint = _MCFCRT_DecodeUtf16(&pc16Read, pc16ReadBegin + GetSize(&g_vStdIn) / sizeof(char16_t));
+					if(!_MCFCRT_UTF_SUCCESS(c32CodePoint)){
+						if(c32CodePoint == _MCFCRT_UTF_PARTIAL_DATA){
+							if(uCharsCopied == 0){
+								break;
+							}
+							++uPopulationThreshold;
+							goto jRepopulateConsole;
+						}
+						c32CodePoint = 0xFFFD;
+						++pc16Read;
 					}
-					const size_t uCharsEncoded = (size_t)(pc16EncodedEnd - ac16Encoded);
-					if(uCharsEncoded > uLength - uCharsCopied){
-						break;
-					}
-					uCharsCopied += uCharsEncoded;
-					pchRead = pchReadNext;
-					if(bSingleLine){
-						if(c32CodePoint == U'\n'){
+					if(IsEof(c32CodePoint)){
+						SetBuffered(&g_vStdIn, false);
+						if(uCharsCopied == 0){
 							break;
 						}
+						dwErrorCode = ERROR_HANDLE_EOF;
+						goto jDone;
+					}
+					char16_t ac16Dummy[2];
+					char16_t *pc16Write = ac16Dummy;
+					c32CodePoint = _MCFCRT_UncheckedEncodeUtf16(&pc16Write, c32CodePoint);
+					if(!_MCFCRT_UTF_SUCCESS(c32CodePoint)){
+						SS_ASSERT(c32CodePoint == _MCFCRT_UTF_BUFFER_TOO_SMALL);
+						break;
+					}
+					uCharsCopied = (size_t)(pc16Write - ac16Dummy);
+					Discard(&g_vStdIn, (size_t)((const char *)pc16Read - (const char *)pc16ReadBegin));
+					if(bSingleLine && (c32CodePoint == U'\n')){
+						break;
 					}
 				}
-				Discard(&g_vStdIn, (size_t)(pchRead - pchReadBegin));
+			} else {
+				size_t uPopulationThreshold = 1;
+			jRepopulateNonconsole:
+				dwErrorCode = Populate(&g_vStdIn, uPopulationThreshold, STDIN_POPULATION_INCREMENT);
+				if(dwErrorCode != 0){
+					goto jDone;
+				}
+				for(;;){
+					const char *const pchReadBegin = GetData(&g_vStdIn);
+					const char *pchRead = pchReadBegin;
+					char32_t c32CodePoint = _MCFCRT_DecodeUtf8(&pchRead, pchReadBegin + GetSize(&g_vStdIn));
+					if(!_MCFCRT_UTF_SUCCESS(c32CodePoint)){
+						if(c32CodePoint == _MCFCRT_UTF_PARTIAL_DATA){
+							if(uCharsCopied == 0){
+								break;
+							}
+							++uPopulationThreshold;
+							goto jRepopulateNonconsole;
+						}
+						c32CodePoint = 0xFFFD;
+						++pchRead;
+					}
+					char16_t ac16Dummy[2];
+					char16_t *pc16Write = ac16Dummy;
+					c32CodePoint = _MCFCRT_EncodeUtf16(&pc16Write, ac16Dummy + MinSize(uLength - uCharsCopied, 2), c32CodePoint);
+					if(!_MCFCRT_UTF_SUCCESS(c32CodePoint)){
+						SS_ASSERT(c32CodePoint == _MCFCRT_UTF_BUFFER_TOO_SMALL);
+						break;
+					}
+					uCharsCopied = (size_t)(pc16Write - ac16Dummy);
+					Discard(&g_vStdIn, (size_t)(pchRead - pchReadBegin));
+					if(bSingleLine && (c32CodePoint == U'\n')){
+						break;
+					}
+				}
 			}
 		}
 	jDone:
@@ -1206,7 +1186,7 @@ bool _MCFCRT_WriteStandardOutputBinary(const void *restrict pData, size_t uSize)
 				const char *pchRead = pData;
 				const char *const pchReadEnd = pchRead + uSize;
 				while(pchRead < pchReadEnd){
-					_MCFCRT_EncodeUtf16FromUtf8(&pc16Write, &pchRead);
+					_MCFCRT_UncheckedEncodeUtf16FromUtf8(&pc16Write, &pchRead);
 				}
 				Adopt(&g_vStdOut, (size_t)((char *)pc16Write - (char *)pc16WriteBegin));
 				bSuccess = true;
@@ -1252,7 +1232,7 @@ bool _MCFCRT_WriteStandardOutputChar32(char32_t c32CodePoint){
 				}
 				char16_t *const pc16WriteBegin = GetReservedData(&g_vStdOut);
 				char16_t *pc16Write = pc16WriteBegin;
-				_MCFCRT_EncodeUtf16(&pc16Write, c32CodePoint);
+				_MCFCRT_UncheckedEncodeUtf16(&pc16Write, c32CodePoint);
 				Adopt(&g_vStdOut, (size_t)((char *)pc16Write - (char *)pc16WriteBegin));
 				bSuccess = true;
 			} else {
@@ -1263,7 +1243,7 @@ bool _MCFCRT_WriteStandardOutputChar32(char32_t c32CodePoint){
 				}
 				char *const pchWriteBegin = GetReservedData(&g_vStdOut);
 				char *pchWrite = pchWriteBegin;
-				_MCFCRT_EncodeUtf8(&pchWrite, c32CodePoint);
+				_MCFCRT_UncheckedEncodeUtf8(&pchWrite, c32CodePoint);
 				Adopt(&g_vStdOut, (size_t)(pchWrite - pchWriteBegin));
 				bSuccess = true;
 			}
@@ -1318,7 +1298,7 @@ bool _MCFCRT_WriteStandardOutputText(const wchar_t *restrict pwcText, size_t uLe
 				const char16_t *pc16Read = (const void *)pwcText;
 				const char16_t *const pc16ReadEnd = pc16Read + uLength;
 				while(pc16Read < pc16ReadEnd){
-					_MCFCRT_EncodeUtf8FromUtf16(&pchWrite, &pc16Read);
+					_MCFCRT_UncheckedEncodeUtf8FromUtf16(&pchWrite, &pc16Read);
 				}
 				if(bAppendNewLine){
 					*(pchWrite++) = '\n';
@@ -1464,7 +1444,7 @@ bool _MCFCRT_WriteStandardErrorBinary(const void *restrict pData, size_t uSize){
 				const char *pchRead = pData;
 				const char *const pchReadEnd = pchRead + uSize;
 				while(pchRead < pchReadEnd){
-					_MCFCRT_EncodeUtf16FromUtf8(&pc16Write, &pchRead);
+					_MCFCRT_UncheckedEncodeUtf16FromUtf8(&pc16Write, &pchRead);
 				}
 				Adopt(&g_vStdErr, (size_t)((char *)pc16Write - (char *)pc16WriteBegin));
 				bSuccess = true;
@@ -1510,7 +1490,7 @@ bool _MCFCRT_WriteStandardErrorChar32(char32_t c32CodePoint){
 				}
 				char16_t *const pc16WriteBegin = GetReservedData(&g_vStdErr);
 				char16_t *pc16Write = pc16WriteBegin;
-				_MCFCRT_EncodeUtf16(&pc16Write, c32CodePoint);
+				_MCFCRT_UncheckedEncodeUtf16(&pc16Write, c32CodePoint);
 				Adopt(&g_vStdErr, (size_t)((char *)pc16Write - (char *)pc16WriteBegin));
 				bSuccess = true;
 			} else {
@@ -1521,7 +1501,7 @@ bool _MCFCRT_WriteStandardErrorChar32(char32_t c32CodePoint){
 				}
 				char *const pchWriteBegin = GetReservedData(&g_vStdErr);
 				char *pchWrite = pchWriteBegin;
-				_MCFCRT_EncodeUtf8(&pchWrite, c32CodePoint);
+				_MCFCRT_UncheckedEncodeUtf8(&pchWrite, c32CodePoint);
 				Adopt(&g_vStdErr, (size_t)(pchWrite - pchWriteBegin));
 				bSuccess = true;
 			}
@@ -1576,7 +1556,7 @@ bool _MCFCRT_WriteStandardErrorText(const wchar_t *restrict pwcText, size_t uLen
 				const char16_t *pc16Read = (const void *)pwcText;
 				const char16_t *const pc16ReadEnd = pc16Read + uLength;
 				while(pc16Read < pc16ReadEnd){
-					_MCFCRT_EncodeUtf8FromUtf16(&pchWrite, &pc16Read);
+					_MCFCRT_UncheckedEncodeUtf8FromUtf16(&pchWrite, &pc16Read);
 				}
 				if(bAppendNewLine){
 					*(pchWrite++) = '\n';

@@ -307,7 +307,7 @@ static inline DWORD Flush(Stream *restrict pStream, size_t uThreshold){
 static inline DWORD FlushSystemBuffers(Stream *restrict pStream){
 	DWORD dwErrorCode = 0;
 	if(!IsConsole(pStream)){
-		if(!FlushSystemBuffers(GetHandle(pStream))){
+		if(!FlushFileBuffers(GetHandle(pStream))){
 			return GetLastError();
 		}
 	}
@@ -457,6 +457,7 @@ int _MCFCRT_ReadStandardInputByte(void){
 size_t _MCFCRT_PeekStandardInputBinary(void *restrict pData, size_t uSize){
 	_MCFCRT_FlushStandardOutput(false);
 
+	char *const pchWriteBegin = pData;
 	size_t uBytesCopied = 0;
 	DWORD dwErrorCode = 0;
 	if(GetHandle(&g_vStdIn)){
@@ -469,7 +470,6 @@ size_t _MCFCRT_PeekStandardInputBinary(void *restrict pData, size_t uSize){
 				if(dwErrorCode != 0){
 					goto jDone;
 				}
-				char *const pchWriteBegin = pData;
 				for(;;){
 					const char16_t *const pc16ReadBegin = GetData(&g_vStdIn);
 					const char16_t *pc16Read = pc16ReadBegin;
@@ -528,6 +528,7 @@ size_t _MCFCRT_PeekStandardInputBinary(void *restrict pData, size_t uSize){
 size_t _MCFCRT_ReadStandardInputBinary(void *restrict pData, size_t uSize){
 	_MCFCRT_FlushStandardOutput(false);
 
+	char *const pchWriteBegin = pData;
 	size_t uBytesCopied = 0;
 	DWORD dwErrorCode = 0;
 	if(GetHandle(&g_vStdIn)){
@@ -540,7 +541,6 @@ size_t _MCFCRT_ReadStandardInputBinary(void *restrict pData, size_t uSize){
 				if(dwErrorCode != 0){
 					goto jDone;
 				}
-				char *const pchWriteBegin = pData;
 				for(;;){
 					const char16_t *const pc16ReadBegin = GetData(&g_vStdIn);
 					const char16_t *pc16Read = pc16ReadBegin;
@@ -797,6 +797,7 @@ long _MCFCRT_ReadStandardInputChar32(void){
 size_t _MCFCRT_PeekStandardInputText(wchar_t *restrict pwcText, size_t uLength, bool bSingleLine){
 	_MCFCRT_FlushStandardOutput(false);
 
+	char16_t *const pc16WriteBegin = (void *)pwcText;
 	size_t uCharsCopied = 0;
 	DWORD dwErrorCode = 0;
 	if(GetHandle(&g_vStdIn)){
@@ -809,7 +810,6 @@ size_t _MCFCRT_PeekStandardInputText(wchar_t *restrict pwcText, size_t uLength, 
 				if(dwErrorCode != 0){
 					goto jDone;
 				}
-				char16_t *const pc16WriteBegin = (void *)pwcText;
 				for(;;){
 					const char16_t *const pc16ReadBegin = GetData(&g_vStdIn);
 					const char16_t *pc16Read = pc16ReadBegin;
@@ -851,7 +851,6 @@ size_t _MCFCRT_PeekStandardInputText(wchar_t *restrict pwcText, size_t uLength, 
 				if(dwErrorCode != 0){
 					goto jDone;
 				}
-				char16_t *const pc16WriteBegin = (void *)pwcText;
 				for(;;){
 					const char *const pchReadBegin = GetData(&g_vStdIn);
 					const char *pchRead = pchReadBegin;
@@ -894,6 +893,7 @@ size_t _MCFCRT_ReadStandardInputText(wchar_t *restrict pwcText, size_t uLength, 
 	_MCFCRT_FlushStandardOutput(false);
 
 	size_t uCharsCopied = 0;
+	char16_t *const pc16WriteBegin = (void *)pwcText;
 	DWORD dwErrorCode = 0;
 	if(GetHandle(&g_vStdIn)){
 		Lock(&g_vStdIn);
@@ -905,7 +905,6 @@ size_t _MCFCRT_ReadStandardInputText(wchar_t *restrict pwcText, size_t uLength, 
 				if(dwErrorCode != 0){
 					goto jDone;
 				}
-				char16_t *const pc16WriteBegin = (void *)pwcText;
 				for(;;){
 					const char16_t *const pc16ReadBegin = GetData(&g_vStdIn);
 					const char16_t *pc16Read = pc16ReadBegin;
@@ -948,7 +947,6 @@ size_t _MCFCRT_ReadStandardInputText(wchar_t *restrict pwcText, size_t uLength, 
 				if(dwErrorCode != 0){
 					goto jDone;
 				}
-				char16_t *const pc16WriteBegin = (void *)pwcText;
 				for(;;){
 					const char *const pchReadBegin = GetData(&g_vStdIn);
 					const char *pchRead = pchReadBegin;

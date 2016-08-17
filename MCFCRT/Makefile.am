@@ -97,7 +97,8 @@ pkginclude_ext_HEADERS =	\
 mcfcrt_pre_sources =	\
 	src/pre/module.c	\
 	src/pre/atexit.c	\
-	src/pre/at_quick_exit.c
+	src/pre/at_quick_exit.c	\
+	src/pre/libsupcxx_freeres.cpp
 
 mcfcrt_sources =	\
 	src/ext/assert.c	\

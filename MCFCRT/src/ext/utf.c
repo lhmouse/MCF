@@ -133,9 +133,6 @@ char32_t _MCFCRT_DecodeUtf16(const char16_t **ppc16Read, const char16_t *pc16Rea
 char32_t _MCFCRT_EncodeUtf8(char **ppchWrite, char *pchWriteEnd, char32_t c32CodePoint){
 	register char *pchWrite = *ppchWrite;
 	register uint_fast32_t u32Temp = (uint32_t)c32CodePoint;
-	if(u32Temp >= 0x110000){
-		return _MCFCRT_UTF_INVALID_INPUT;
-	}
 	if(u32Temp < 0x80){ // 7 位
 		if(pchWriteEnd - pchWrite < 1){
 			return _MCFCRT_UTF_BUFFER_TOO_SMALL;
@@ -154,7 +151,7 @@ char32_t _MCFCRT_EncodeUtf8(char **ppchWrite, char *pchWriteEnd, char32_t c32Cod
 		*(pchWrite++) = (char)(((u32Temp >> 12) & 0x0F) | 0xE0);
 		*(pchWrite++) = (char)(((u32Temp >>  6) & 0x3F) | 0x80);
 		*(pchWrite++) = (char)(((u32Temp      ) & 0x3F) | 0x80);
-	} else { // 21 位 = 3 + 6 + 6 + 6
+	} else if(u32Temp < 0x110000){ // 21 位 = 3 + 6 + 6 + 6
 		if(pchWriteEnd - pchWrite < 4){
 			return _MCFCRT_UTF_BUFFER_TOO_SMALL;
 		}
@@ -162,6 +159,8 @@ char32_t _MCFCRT_EncodeUtf8(char **ppchWrite, char *pchWriteEnd, char32_t c32Cod
 		*(pchWrite++) = (char)(((u32Temp >> 12) & 0x3F) | 0x80);
 		*(pchWrite++) = (char)(((u32Temp >>  6) & 0x3F) | 0x80);
 		*(pchWrite++) = (char)(((u32Temp      ) & 0x3F) | 0x80);
+	} else {
+		return _MCFCRT_UTF_INVALID_INPUT;
 	}
 	*ppchWrite = pchWrite;
 	return c32CodePoint;
@@ -169,21 +168,20 @@ char32_t _MCFCRT_EncodeUtf8(char **ppchWrite, char *pchWriteEnd, char32_t c32Cod
 char32_t _MCFCRT_EncodeUtf16(char16_t **ppc16Write, char16_t *pc16WriteEnd, char32_t c32CodePoint){
 	register char16_t *pc16Write = *ppc16Write;
 	register uint_fast32_t u32Temp = (uint32_t)c32CodePoint;
-	if(u32Temp >= 0x110000){
-		return _MCFCRT_UTF_INVALID_INPUT;
-	}
 	if(u32Temp < 0x10000){ // 1 编码单元
 		if(pc16WriteEnd - pc16Write < 1){
 			return _MCFCRT_UTF_BUFFER_TOO_SMALL;
 		}
 		*(pc16Write++) = (char16_t)u32Temp;
-	} else { // 2 编码单元
+	} else if(u32Temp < 0x110000){ // 2 编码单元
 		if(pc16WriteEnd - pc16Write < 2){
 			return _MCFCRT_UTF_BUFFER_TOO_SMALL;
 		}
 		u32Temp -= 0x10000;
 		*(pc16Write++) = (char16_t)((((u32Temp) >> 10) & 0x03FF) | 0xD800);
 		*(pc16Write++) = (char16_t)((((u32Temp)      ) & 0x03FF) | 0xDC00);
+	} else {
+		return _MCFCRT_UTF_INVALID_INPUT;
 	}
 	*ppc16Write = pc16Write;
 	return c32CodePoint;

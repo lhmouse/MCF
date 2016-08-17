@@ -1027,10 +1027,6 @@ size_t _MCFCRT_DiscardStandardInputText(size_t uLength, bool bSingleLine){
 					char16_t ac16Dummy[2];
 					char16_t *pc16Write = ac16Dummy;
 					c32CodePoint = _MCFCRT_UncheckedEncodeUtf16(&pc16Write, c32CodePoint);
-					if(!_MCFCRT_UTF_SUCCESS(c32CodePoint)){
-						SS_ASSERT(c32CodePoint == _MCFCRT_UTF_BUFFER_TOO_SMALL);
-						break;
-					}
 					uCharsCopied = (size_t)(pc16Write - ac16Dummy);
 					Discard(&g_vStdIn, (size_t)((const char *)pc16Read - (const char *)pc16ReadBegin));
 					if(bSingleLine && (c32CodePoint == U'\n')){
@@ -1184,7 +1180,12 @@ bool _MCFCRT_WriteStandardOutputBinary(const void *restrict pData, size_t uSize)
 				const char *pchRead = pData;
 				const char *const pchReadEnd = pchRead + uSize;
 				while(pchRead < pchReadEnd){
-					_MCFCRT_UncheckedEncodeUtf16FromUtf8(&pc16Write, &pchRead);
+					char32_t c32CodePoint = _MCFCRT_DecodeUtf8(&pchRead, pchRead + uSize);
+					if(!_MCFCRT_UTF_SUCCESS(c32CodePoint)){
+						c32CodePoint = 0xFFFD;
+						++pchRead;
+					}
+					_MCFCRT_UncheckedEncodeUtf16(&pc16Write, c32CodePoint);
 				}
 				Adopt(&g_vStdOut, (size_t)((char *)pc16Write - (char *)pc16WriteBegin));
 				bSuccess = true;
@@ -1274,8 +1275,16 @@ bool _MCFCRT_WriteStandardOutputText(const wchar_t *restrict pwcText, size_t uLe
 				}
 				char16_t *const pc16WriteBegin = GetReservedData(&g_vStdOut);
 				char16_t *pc16Write = pc16WriteBegin;
-				memcpy(pc16Write, pwcText, uLength * sizeof(char16_t));
-				pc16Write += uLength;
+				const char16_t *pc16Read = (const void *)pwcText;
+				const char16_t *const pc16ReadEnd = pc16Read + uLength;
+				while(pc16Read < pc16ReadEnd){
+					char32_t c32CodePoint = _MCFCRT_DecodeUtf16(&pc16Read, pc16Read + uLength);
+					if(!_MCFCRT_UTF_SUCCESS(c32CodePoint)){
+						c32CodePoint = 0xFFFD;
+						++pc16Read;
+					}
+					_MCFCRT_UncheckedEncodeUtf16(&pc16Write, c32CodePoint);
+				}
 				if(bAppendNewLine){
 					*(pc16Write++) = u'\n';
 				}
@@ -1296,7 +1305,12 @@ bool _MCFCRT_WriteStandardOutputText(const wchar_t *restrict pwcText, size_t uLe
 				const char16_t *pc16Read = (const void *)pwcText;
 				const char16_t *const pc16ReadEnd = pc16Read + uLength;
 				while(pc16Read < pc16ReadEnd){
-					_MCFCRT_UncheckedEncodeUtf8FromUtf16(&pchWrite, &pc16Read);
+					char32_t c32CodePoint = _MCFCRT_DecodeUtf16(&pc16Read, pc16Read + uLength);
+					if(!_MCFCRT_UTF_SUCCESS(c32CodePoint)){
+						c32CodePoint = 0xFFFD;
+						++pc16Read;
+					}
+					_MCFCRT_UncheckedEncodeUtf8(&pchWrite, c32CodePoint);
 				}
 				if(bAppendNewLine){
 					*(pchWrite++) = '\n';
@@ -1442,7 +1456,12 @@ bool _MCFCRT_WriteStandardErrorBinary(const void *restrict pData, size_t uSize){
 				const char *pchRead = pData;
 				const char *const pchReadEnd = pchRead + uSize;
 				while(pchRead < pchReadEnd){
-					_MCFCRT_UncheckedEncodeUtf16FromUtf8(&pc16Write, &pchRead);
+					char32_t c32CodePoint = _MCFCRT_DecodeUtf8(&pchRead, pchRead + uSize);
+					if(!_MCFCRT_UTF_SUCCESS(c32CodePoint)){
+						c32CodePoint = 0xFFFD;
+						++pchRead;
+					}
+					_MCFCRT_UncheckedEncodeUtf16(&pc16Write, c32CodePoint);
 				}
 				Adopt(&g_vStdErr, (size_t)((char *)pc16Write - (char *)pc16WriteBegin));
 				bSuccess = true;
@@ -1532,8 +1551,16 @@ bool _MCFCRT_WriteStandardErrorText(const wchar_t *restrict pwcText, size_t uLen
 				}
 				char16_t *const pc16WriteBegin = GetReservedData(&g_vStdErr);
 				char16_t *pc16Write = pc16WriteBegin;
-				memcpy(pc16Write, pwcText, uLength * sizeof(char16_t));
-				pc16Write += uLength;
+				const char16_t *pc16Read = (const void *)pwcText;
+				const char16_t *const pc16ReadEnd = pc16Read + uLength;
+				while(pc16Read < pc16ReadEnd){
+					char32_t c32CodePoint = _MCFCRT_DecodeUtf16(&pc16Read, pc16Read + uLength);
+					if(!_MCFCRT_UTF_SUCCESS(c32CodePoint)){
+						c32CodePoint = 0xFFFD;
+						++pc16Read;
+					}
+					_MCFCRT_UncheckedEncodeUtf16(&pc16Write, c32CodePoint);
+				}
 				if(bAppendNewLine){
 					*(pc16Write++) = u'\n';
 				}
@@ -1554,7 +1581,12 @@ bool _MCFCRT_WriteStandardErrorText(const wchar_t *restrict pwcText, size_t uLen
 				const char16_t *pc16Read = (const void *)pwcText;
 				const char16_t *const pc16ReadEnd = pc16Read + uLength;
 				while(pc16Read < pc16ReadEnd){
-					_MCFCRT_UncheckedEncodeUtf8FromUtf16(&pchWrite, &pc16Read);
+					char32_t c32CodePoint = _MCFCRT_DecodeUtf16(&pc16Read, pc16Read + uLength);
+					if(!_MCFCRT_UTF_SUCCESS(c32CodePoint)){
+						c32CodePoint = 0xFFFD;
+						++pc16Read;
+					}
+					_MCFCRT_UncheckedEncodeUtf8(&pchWrite, c32CodePoint);
 				}
 				if(bAppendNewLine){
 					*(pchWrite++) = '\n';

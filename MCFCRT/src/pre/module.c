@@ -149,6 +149,8 @@ typedef void (*StaticConstructorDestructorProc)(void);
 extern const StaticConstructorDestructorProc __CTOR_LIST__[];
 extern const StaticConstructorDestructorProc __DTOR_LIST__[];
 
+extern void __MCFCRT_libsupcxx_freeres(void);
+
 static void CallStaticConstructors(void){
 	const StaticConstructorDestructorProc *const pfnBegin = __CTOR_LIST__ + 1;
 
@@ -180,6 +182,7 @@ void __MCFCRT_ModuleUninit(void){
 	PumpAtModuleExit();
 	CallStaticDestructors();
 	DeregisterFrameInfo();
+	__MCFCRT_libsupcxx_freeres();
 }
 
 bool _MCFCRT_AtModuleExit(_MCFCRT_AtModuleExitCallback pfnProc, intptr_t nContext){

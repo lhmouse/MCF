@@ -34,10 +34,10 @@ extern NTSTATUS RtlGetFullPathName_UstrEx(const UNICODE_STRING *pFileName, UNICO
 
 __attribute__((__dllimport__, __stdcall__))
 extern NTSTATUS NtReadFile(HANDLE hFile, HANDLE hEvent, PIO_APC_ROUTINE pfnApcRoutine, void *pApcContext, IO_STATUS_BLOCK *pIoStatus,
-	void *pBuffer, ULONG ulLength, LARGE_INTEGER *pliOffset, ULONG *pulKey) noexcept;
+	void *pBuffer, ULONG ulLength, const LARGE_INTEGER *pliOffset, const ULONG *pulKey) noexcept;
 __attribute__((__dllimport__, __stdcall__))
 extern NTSTATUS NtWriteFile(HANDLE hFile, HANDLE hEvent, PIO_APC_ROUTINE pfnApcRoutine, void *pApcContext, IO_STATUS_BLOCK *pIoStatus,
-	const void *pBuffer, ULONG ulLength, LARGE_INTEGER *pliOffset, ULONG *pulKey) noexcept;
+	const void *pBuffer, ULONG ulLength, const LARGE_INTEGER *pliOffset, const ULONG *pulKey) noexcept;
 
 __attribute__((__dllimport__, __stdcall__))
 extern NTSTATUS NtFlushBuffersFile(HANDLE hFile, IO_STATUS_BLOCK *pIoStatus) noexcept;
@@ -230,7 +230,7 @@ void File::Clear(){
 }
 
 std::size_t File::Read(void *pBuffer, std::size_t uBytesToRead, std::uint64_t u64Offset,
-	FunctionView<void ()> fnAsyncProc, FunctionView<void ()> fnCompleteCallback) const
+	FunctionView<void ()> fnAsyncProc, FunctionView<void ()> fnCompletionCallback) const
 {
 	if(!x_hFile){
 		MCF_THROW(Exception, ERROR_INVALID_HANDLE, Rcntws::View(L"File: 尚未打开任何文件。"));
@@ -240,13 +240,12 @@ std::size_t File::Read(void *pBuffer, std::size_t uBytesToRead, std::uint64_t u6
 		MCF_THROW(Exception, ERROR_SEEK, Rcntws::View(L"File: 文件偏移量太大。"));
 	}
 
-	if(uBytesToRead > ULONG_MAX){
-		uBytesToRead = ULONG_MAX;
-	}
-
 	bool bIoPending = true;
 	::IO_STATUS_BLOCK vIoStatus;
 	vIoStatus.Information = 0;
+	if(uBytesToRead > ULONG_MAX){
+		uBytesToRead = ULONG_MAX;
+	}
 	::LARGE_INTEGER liOffset;
 	liOffset.QuadPart = static_cast<std::int64_t>(u64Offset);
 	auto lStatus = ::NtReadFile(x_hFile.Get(), nullptr, &IoApcCallback, &bIoPending, &vIoStatus, pBuffer, static_cast<ULONG>(uBytesToRead), &liOffset, nullptr);
@@ -263,13 +262,13 @@ std::size_t File::Read(void *pBuffer, std::size_t uBytesToRead, std::uint64_t u6
 		} while(bIoPending);
 	}
 
-	if(fnCompleteCallback){
-		fnCompleteCallback();
+	if(fnCompletionCallback){
+		fnCompletionCallback();
 	}
 	return vIoStatus.Information;
 }
 std::size_t File::Write(std::uint64_t u64Offset, const void *pBuffer, std::size_t uBytesToWrite,
-	FunctionView<void ()> fnAsyncProc, FunctionView<void ()> fnCompleteCallback)
+	FunctionView<void ()> fnAsyncProc, FunctionView<void ()> fnCompletionCallback)
 {
 	if(!x_hFile){
 		MCF_THROW(Exception, ERROR_INVALID_HANDLE, Rcntws::View(L"File: 尚未打开任何文件。"));
@@ -279,13 +278,12 @@ std::size_t File::Write(std::uint64_t u64Offset, const void *pBuffer, std::size_
 		MCF_THROW(Exception, ERROR_SEEK, Rcntws::View(L"File: 文件偏移量太大。"));
 	}
 
-	if(uBytesToWrite > ULONG_MAX){
-		uBytesToWrite = ULONG_MAX;
-	}
-
 	bool bIoPending = true;
 	::IO_STATUS_BLOCK vIoStatus;
 	vIoStatus.Information = 0;
+	if(uBytesToWrite > ULONG_MAX){
+		uBytesToWrite = ULONG_MAX;
+	}
 	::LARGE_INTEGER liOffset;
 	liOffset.QuadPart = static_cast<std::int64_t>(u64Offset);
 	auto lStatus = ::NtWriteFile(x_hFile.Get(), nullptr, &IoApcCallback, &bIoPending, &vIoStatus, pBuffer, static_cast<ULONG>(uBytesToWrite), &liOffset, nullptr);
@@ -302,8 +300,8 @@ std::size_t File::Write(std::uint64_t u64Offset, const void *pBuffer, std::size_
 		} while(bIoPending);
 	}
 
-	if(fnCompleteCallback){
-		fnCompleteCallback();
+	if(fnCompletionCallback){
+		fnCompletionCallback();
 	}
 	return vIoStatus.Information;
 }

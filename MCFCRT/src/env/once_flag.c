@@ -17,11 +17,11 @@ extern NTSTATUS NtReleaseKeyedEvent(HANDLE hKeyedEvent, void *pKey, BOOLEAN bAle
 
 // 第一个字节保留给 Itanium ABI 用于标记是否已初始化。
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
-#	define BSUSR(v_)            ((uintptr_t)((uintptr_t)(v_) << CHAR_BIT))
-#	define BSFB(v_)             ((uintptr_t)((uintptr_t)(v_)            ))
+#   define BSUSR(v_)            ((uintptr_t)((uintptr_t)(v_) << CHAR_BIT))
+#   define BSFB(v_)             ((uintptr_t)((uintptr_t)(v_)            ))
 #else
-#	define BSUSR(v_)            ((uintptr_t)((uintptr_t)(v_)                                        ))
-#	define BSFB(v_)             ((uintptr_t)((uintptr_t)(v_) << ((sizeof(uintptr_t) - 1) * CHAR_BIT)))
+#   define BSUSR(v_)            ((uintptr_t)((uintptr_t)(v_)                                        ))
+#   define BSFB(v_)             ((uintptr_t)((uintptr_t)(v_) << ((sizeof(uintptr_t) - 1) * CHAR_BIT)))
 #endif
 
 #define MASK_LOCKED             ((uintptr_t)( BSUSR(0x01)              ))

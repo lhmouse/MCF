@@ -1,7 +1,7 @@
 #!/bin/sh
 
-CPPFLAGS+=" -Wall -Wextra -pedantic -pedantic-errors -Werror -Wno-error=unused-parameter
-	-Wwrite-strings -Wconversion -Wsign-conversion -Wsuggest-attribute=noreturn -Wundef -Wshadow -Wstrict-aliasing=2 -Wstrict-overflow=5
+CPPFLAGS+=" -Wall -Wextra -pedantic -pedantic-errors -Werror -Wno-error=unused-parameter	\
+	-Wwrite-strings -Wconversion -Wsign-conversion -Wsuggest-attribute=noreturn -Wundef -Wshadow -Wstrict-aliasing=2 -Wstrict-overflow=5	\
 	-pipe -mfpmath=both -march=nocona -mno-stack-arg-probe -mno-accumulate-outgoing-args -mpush-args -masm=intel
 	-I../../debug/mingw32/include"
 CXXFLAGS+=" -std=c++14 -Wzero-as-null-pointer-constant -Wnoexcept -Woverloaded-virtual -fnothrow-opt"

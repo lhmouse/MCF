@@ -22,6 +22,9 @@ __pch.hpp: ${srcdir}/src/StdMCF.hpp
 __pch.hpp.gch: __pch.hpp
 	${CXX} -x c++-header @DEFS@ ${AM_CPPFLAGS} ${CPPFLAGS} $$(echo "" "${AM_CXXFLAGS}" | sed "s/-include __pch\\.hpp//") ${CXXFLAGS} $< -o $@
 
+pkginclude_HEADERS =	\
+	src/StdMCF.hpp
+
 pkginclude_Coredir = ${pkgincludedir}/Core
 pkginclude_Core_HEADERS =	\
 	src/Core/_CheckedSizeArithmetic.hpp	\

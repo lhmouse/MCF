@@ -45,7 +45,7 @@ namespace Impl_IntrusivePtr {
 			: x_uRef(1)
 		{
 		}
-		RefCountBase(const RefCountBase &) noexcept
+		constexpr RefCountBase(const RefCountBase &) noexcept
 			: RefCountBase() // 默认构造。
 		{
 		}
@@ -53,7 +53,9 @@ namespace Impl_IntrusivePtr {
 			return *this; // 无操作。
 		}
 		~RefCountBase(){
-			MCF_ASSERT_MSG(x_uRef.Load(kAtomicRelaxed) <= 1, L"析构正在共享的被引用计数管理的对象。");
+			if(GetRef() > 1){
+				Bail(L"析构正在共享的被引用计数管理的对象。");
+			}
 		}
 
 	public:
@@ -67,14 +69,12 @@ namespace Impl_IntrusivePtr {
 			MCF_ASSERT(static_cast<std::ptrdiff_t>(x_uRef.Load(kAtomicRelaxed)) >= 0);
 
 			auto uOldRef = x_uRef.Load(kAtomicRelaxed);
-			for(;;){
+			do {
 				if(uOldRef == 0){
 					return false;
 				}
-				if(x_uRef.CompareExchange(uOldRef, uOldRef + 1, kAtomicRelaxed)){
-					return true;
-				}
-			}
+			} while(!x_uRef.CompareExchange(uOldRef, uOldRef + 1, kAtomicRelaxed));
+			return true;
 		}
 		void AddRef() const volatile noexcept {
 			MCF_ASSERT(static_cast<std::ptrdiff_t>(x_uRef.Load(kAtomicRelaxed)) > 0);
@@ -90,22 +90,20 @@ namespace Impl_IntrusivePtr {
 
 	template<typename DstT, typename SrcT, typename = DstT>
 	struct StaticCastOrDynamicCastHelper {
-		DstT operator()(SrcT &&vSrc) const {
+		DstT operator()(SrcT &vSrc) const {
 			return dynamic_cast<DstT>(std::forward<SrcT>(vSrc));
 		}
 	};
 	template<typename DstT, typename SrcT>
-	struct StaticCastOrDynamicCastHelper<DstT, SrcT,
-		decltype(static_cast<DstT>(DeclVal<SrcT>()))>
-	{
-		constexpr DstT operator()(SrcT &&vSrc) const noexcept {
+	struct StaticCastOrDynamicCastHelper<DstT, SrcT, decltype(static_cast<DstT>(DeclVal<SrcT>()))> {
+		constexpr DstT operator()(SrcT &vSrc) const noexcept {
 			return static_cast<DstT>(std::forward<SrcT>(vSrc));
 		}
 	};
 
 	template<typename DstT, typename SrcT>
-	DstT StaticCastOrDynamicCast(SrcT &&vSrc){
-		return StaticCastOrDynamicCastHelper<DstT, SrcT>()(std::forward<SrcT>(vSrc));
+	constexpr DstT StaticCastOrDynamicCast(SrcT &&vSrc){
+		return StaticCastOrDynamicCastHelper<DstT, SrcT>()(vSrc);
 	}
 
 	enum : std::size_t {
@@ -291,7 +289,7 @@ class IntrusivePtr {
 	template<typename, class>
 	friend class IntrusivePtr;
 	template<typename, class>
-	friend class WeakIntrusivePtr;
+	friend class IntrusiveWeakPtr;
 
 public:
 	using Element = ObjectT;
@@ -443,7 +441,7 @@ public:
 		return *this;
 	}
 	IntrusivePtr &Reset(IntrusivePtr &&rhs) noexcept {
-		rhs.Swap(*this);
+		IntrusivePtr(std::move(rhs)).Swap(*this);
 		return *this;
 	}
 
@@ -592,7 +590,7 @@ class IntrusiveWeakPtr {
 	template<typename, class>
 	friend class IntrusivePtr;
 	template<typename, class>
-	friend class WeakIntrusivePtr;
+	friend class IntrusiveWeakPtr;
 
 private:
 	struct X_AdoptionTag { };
@@ -606,6 +604,9 @@ public:
 
 public:
 	static const IntrusiveWeakPtr kNull;
+
+private:
+	X_WeakView *x_pView;
 
 private:
 	static X_WeakView *X_CreateViewFromElement(const volatile Element *pElement){
@@ -637,9 +638,6 @@ private:
 			}
 		}
 	}
-
-private:
-	X_WeakView *x_pView;
 
 private:
 	constexpr IntrusiveWeakPtr(const X_AdoptionTag &, X_WeakView *pView) noexcept
@@ -705,7 +703,7 @@ public:
 	bool IsAlive() const noexcept {
 		const auto pView = x_pView;
 		if(!pView){
-			return true;
+			return false;
 		}
 		return pView->IsOwnerAlive();
 	}
@@ -753,7 +751,7 @@ public:
 		return *this;
 	}
 	IntrusiveWeakPtr &Reset(IntrusiveWeakPtr &&rhs) noexcept {
-		rhs.Swap(*this);
+		IntrusiveWeakPtr(std::move(rhs)).Swap(*this);
 		return *this;
 	}
 

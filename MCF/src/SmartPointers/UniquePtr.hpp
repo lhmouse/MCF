@@ -100,7 +100,7 @@ public:
 		return *this;
 	}
 	UniquePtr &Reset(UniquePtr &&rhs) noexcept {
-		rhs.Swap(*this);
+		UniquePtr(std::move(rhs)).Swap(*this);
 		return *this;
 	}
 

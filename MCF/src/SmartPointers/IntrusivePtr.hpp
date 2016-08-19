@@ -29,11 +29,6 @@ class IntrusivePtr;
 template<typename ObjectT, class DeleterT = DefaultDeleter<ObjectT>>
 class IntrusiveWeakPtr;
 
-template<typename ObjectT, class DeleterT = DefaultDeleter<ObjectT>>
-using IntrusivePtrView     = const IntrusivePtr<ObjectT> &;
-template<typename ObjectT, class DeleterT = DefaultDeleter<ObjectT>>
-using IntrusiveWeakPtrView = const IntrusiveWeakPtr<ObjectT> &;
-
 namespace Impl_IntrusivePtr {
 	template<class DeleterT>
 	class DeletableBase;

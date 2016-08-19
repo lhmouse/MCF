@@ -59,9 +59,9 @@ namespace Impl_UniqueLockTemplate {
 		}
 
 		void Swap(UniqueLockTemplate &rhs) noexcept {
+			UniqueLockBase::Y_Swap(rhs);
 			using std::swap;
-			swap(x_pOwner,     rhs.x_pOwner);
-			swap(y_uLockCount, rhs.y_uLockCount);
+			swap(x_pOwner, rhs.x_pOwner);
 		}
 
 	public:

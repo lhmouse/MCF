@@ -24,6 +24,12 @@ public:
 	AbstractInputStreamFilter(AbstractInputStreamFilter &&) noexcept = default;
 	AbstractInputStreamFilter &operator=(AbstractInputStreamFilter &&) noexcept = default;
 
+protected:
+	void Y_Swap(AbstractInputStreamFilter &rhs) noexcept {
+		using std::swap;
+		swap(y_vStream, rhs.y_vStream);
+	}
+
 public:
 	virtual int Peek() = 0;
 	virtual int Get() = 0;

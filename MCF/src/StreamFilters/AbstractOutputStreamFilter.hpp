@@ -24,6 +24,12 @@ public:
 	AbstractOutputStreamFilter(AbstractOutputStreamFilter &&) noexcept = default;
 	AbstractOutputStreamFilter &operator=(AbstractOutputStreamFilter &&) noexcept = default;
 
+protected:
+	void Y_Swap(AbstractOutputStreamFilter &rhs) noexcept {
+		using std::swap;
+		swap(y_vStream, rhs.y_vStream);
+	}
+
 public:
 	virtual void Put(unsigned char byData) = 0;
 	virtual void Put(const void *pData, std::size_t uSize) = 0;

@@ -26,8 +26,8 @@ public:
 	void Flush(bool bHard) override;
 
 	void Swap(BufferingOutputStreamFilter &rhs) noexcept {
+		AbstractOutputStreamFilter::Y_Swap(rhs);
 		using std::swap;
-		swap(y_vStream, rhs.y_vStream);
 	}
 
 public:

@@ -47,6 +47,11 @@ protected:
 		}
 	}
 
+	void Y_Swap(UniqueLockBase &rhs) noexcept {
+		using std::swap;
+		swap(y_uLockCount, rhs.y_uLockCount);
+	}
+
 private:
 	virtual bool X_DoTry(std::uint64_t u64MilliSeconds) const noexcept = 0;
 	virtual void X_DoLock() const noexcept = 0;

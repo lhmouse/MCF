@@ -32,8 +32,8 @@ public:
 	void Flush(bool bHard) override;
 
 	void Swap(TextOutputStreamFilter &rhs) noexcept {
+		AbstractOutputStreamFilter::Y_Swap(rhs);
 		using std::swap;
-		swap(y_vStream,   rhs.y_vStream);
 		swap(x_sbufPlain, rhs.x_sbufPlain);
 	}
 

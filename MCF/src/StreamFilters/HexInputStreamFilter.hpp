@@ -35,8 +35,8 @@ public:
 	std::size_t Discard(std::size_t uSize) override;
 
 	void Swap(HexInputStreamFilter &rhs) noexcept {
+		AbstractInputStreamFilter::Y_Swap(rhs);
 		using std::swap;
-		swap(y_vStream,   rhs.y_vStream);
 		swap(x_sbufPlain, rhs.x_sbufPlain);
 	}
 

@@ -8,7 +8,7 @@
 namespace MCF {
 
 template<typename T>
-constexpr T &&DeclVal() noexcept;
+T &&DeclVal() noexcept;
 
 }
 

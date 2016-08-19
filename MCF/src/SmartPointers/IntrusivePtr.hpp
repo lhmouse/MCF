@@ -34,9 +34,6 @@ namespace Impl_IntrusivePtr {
 	class DeletableBase;
 
 	class RefCountBase {
-		template<class DeleterT>
-		friend class DeletableBase;
-
 	private:
 		mutable Atomic<std::size_t> x_uRef;
 
@@ -168,12 +165,7 @@ namespace Impl_IntrusivePtr {
 
 	template<class DeleterT>
 	class DeletableBase : public RefCountBase {
-		template<typename, class>
-		friend class IntrusivePtr;
-		template<typename, class>
-		friend class IntrusiveWeakPtr;
-
-	private:
+	public: // private:
 		using X_WeakView = WeakViewTemplate<DeletableBase, DeleterT>;
 
 	private:
@@ -202,7 +194,7 @@ namespace Impl_IntrusivePtr {
 			}
 		}
 
-	private:
+	public: // private:
 		X_WeakView *X_RequireView() const volatile {
 			auto pView = x_pView.Load(kAtomicConsume);
 			if(!pView){

@@ -17,7 +17,8 @@ int StringInputStream::Peek(){
 	if(uOffset >= uSizeAvail){
 		return -1;
 	}
-	return x_vString.UncheckedGet(uOffset);
+	const int nRet = static_cast<unsigned char>(x_vString.UncheckedGet(uOffset));
+	return nRet;
 }
 int StringInputStream::Get(){
 	const auto uOffset = x_uOffset;
@@ -25,8 +26,9 @@ int StringInputStream::Get(){
 	if(uOffset >= uSizeAvail){
 		return -1;
 	}
+	const int nRet = static_cast<unsigned char>(x_vString.UncheckedGet(uOffset));
 	x_uOffset = uOffset + 1;
-	return x_vString.UncheckedGet(uOffset);
+	return nRet;
 }
 bool StringInputStream::Discard(){
 	const auto uOffset = x_uOffset;

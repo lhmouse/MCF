@@ -7,7 +7,7 @@ extern "C" unsigned _MCFCRT_Main(void) noexcept {
 	using namespace MCF;
 
 	const auto err = MakeIntrusive<StandardErrorStream>();
-	const auto input = MakeIntrusive<StringInputStream>("hello world!\n"_ns);
+	const auto input = MakeIntrusive<StringInputStream>("\xaa\x41\xbb\x61\xcc\xdd\n"_ns);
 	const auto output = MakeIntrusive<StringOutputStream>();
 
 	int c;

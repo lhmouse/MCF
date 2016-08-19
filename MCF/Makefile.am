@@ -150,7 +150,9 @@ pkginclude_Streams_HEADERS =	\
 	src/Streams/StandardErrorStream.hpp	\
 	src/Streams/StandardInputStream.hpp	\
 	src/Streams/StandardOutputStream.hpp	\
-	src/Streams/ZeroInputStream.hpp
+	src/Streams/ZeroInputStream.hpp	\
+	src/Streams/StringInputStream.hpp	\
+	src/Streams/StringOutputStream.hpp
 
 pkginclude_StreamFiltersdir = ${pkgincludedir}/StreamFilters
 pkginclude_StreamFilters_HEADERS =	\
@@ -215,6 +217,8 @@ mcf_sources =	\
 	src/Streams/StandardInputStream.cpp	\
 	src/Streams/StandardOutputStream.cpp	\
 	src/Streams/ZeroInputStream.cpp	\
+	src/Streams/StringInputStream.cpp	\
+	src/Streams/StringOutputStream.cpp	\
 	src/StreamFilters/_BufferedInputStream.cpp	\
 	src/StreamFilters/_BufferedOutputStream.cpp	\
 	src/StreamFilters/AbstractInputStreamFilter.cpp	\

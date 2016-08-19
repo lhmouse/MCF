@@ -1,8 +1,6 @@
-#include <mcfgthread/gthread.h>
+#include <MCFCRT/env/standard_streams.h>
 
 unsigned _MCFCRT_Main(void){
-	__gthread_recursive_mutex_t m = { 0 };
-	__gthread_recursive_mutex_lock(&m);
-	__gthread_recursive_mutex_unlock(&m);
+	_MCFCRT_WriteStandardOutputText(L"hello world!", 12, true);
 	return 0;
 }

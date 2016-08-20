@@ -16,17 +16,17 @@ namespace MCF {
 
 namespace {
 	template<unsigned kRoundT, std::uint32_t kRegT>
-	struct ElementGenerator {
-		static constexpr std::uint32_t kValue = ElementGenerator<kRoundT + 1, (kRegT >> 1) ^ ((kRegT & 1) ? 0xEDB88320 : 0)>::kValue;
+	struct Generator {
+		static constexpr std::uint32_t kValue = Generator<kRoundT + 1, (kRegT >> 1) ^ ((kRegT & 1) ? 0xEDB88320 : 0)>::kValue;
 	};
 	template<std::uint32_t kRegT>
-	struct ElementGenerator<8, kRegT> {
+	struct Generator<8, kRegT> {
 		static constexpr std::uint32_t kValue = kRegT;
 	};
 
 	template<std::size_t ...kIndices>
 	constexpr Array<std::uint32_t, sizeof...(kIndices)> GenerateTable(std::index_sequence<kIndices...>) noexcept {
-		return { ElementGenerator<0, kIndices>::kValue... };
+		return { Generator<0, kIndices>::kValue... };
 	}
 
 	constexpr auto kCrcTable = GenerateTable(std::make_index_sequence<256>());

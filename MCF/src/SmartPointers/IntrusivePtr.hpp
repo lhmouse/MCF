@@ -87,20 +87,20 @@ namespace Impl_IntrusivePtr {
 
 	template<typename DstT, typename SrcT, typename = DstT>
 	struct StaticCastOrDynamicCastHelper {
-		DstT operator()(SrcT &vSrc) const {
+		static DstT DoIt(SrcT &vSrc){
 			return dynamic_cast<DstT>(std::forward<SrcT>(vSrc));
 		}
 	};
 	template<typename DstT, typename SrcT>
 	struct StaticCastOrDynamicCastHelper<DstT, SrcT, decltype(static_cast<DstT>(DeclVal<SrcT>()))> {
-		constexpr DstT operator()(SrcT &vSrc) const noexcept {
+		static constexpr DstT DoIt(SrcT &vSrc) noexcept {
 			return static_cast<DstT>(std::forward<SrcT>(vSrc));
 		}
 	};
 
 	template<typename DstT, typename SrcT>
 	constexpr DstT StaticCastOrDynamicCast(SrcT &&vSrc){
-		return StaticCastOrDynamicCastHelper<DstT, SrcT>()(vSrc);
+		return StaticCastOrDynamicCastHelper<DstT, SrcT>::DoIt(vSrc);
 	}
 
 	enum : std::size_t {

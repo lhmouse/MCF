@@ -8,67 +8,62 @@
 #include "_CheckedSizeArithmetic.hpp"
 #include "Atomic.hpp"
 #include "ConstructDestruct.hpp"
-#include <type_traits>
-#include <utility>
 #include <cstring>
 #include <cstddef>
 #include <cstdint>
 
 namespace MCF {
 
-namespace Impl_Rcnts {
-	template<typename CharT>
-	std::size_t StrLen(const CharT *s) noexcept {
-		const auto b = s;
-		for(;;){
-			if(*s == CharT()){
-				return static_cast<std::size_t>(s - b);
-			}
-			++s;
-		}
-	}
-
-	template<typename CharT>
-	int StrCmp(const CharT *s1, const CharT *s2) noexcept {
-		for(;;){
-			const auto c1 = static_cast<std::int_fast32_t>(static_cast<std::make_unsigned_t<CharT>>(*s1));
-			const auto c2 = static_cast<std::int_fast32_t>(static_cast<std::make_unsigned_t<CharT>>(*s2));
-			const auto d = c1 - c2;
-			if(d != 0){
-				return (d >> (sizeof(d) * __CHAR_BIT__ - 1)) | 1;
-			}
-			if(c1 == 0){
-				return 0;
-			}
-			++s1;
-			++s2;
-		}
-	}
-}
-
 template<typename CharT>
 class Rcnts {
+private:
+	struct X_AdoptionTag { };
+
 public:
 	using Char = CharT;
 
 private:
-	static const CharT xs_achEmpty[1];
+	static constexpr CharT xkNull = { };
+
+private:
+	static std::size_t X_Len(const Char *s) noexcept {
+		std::size_t i = 0;
+		while(s[i] != Char()){
+			++i;
+		}
+		return i;
+	}
+	static int X_Cmp(const Char *s1, const Char *s2) noexcept {
+		std::size_t i = 0;
+		for(;;){
+			const auto c1 = static_cast<std::int32_t>(static_cast<std::make_unsigned_t<Char>>(s1[i]));
+			const auto c2 = static_cast<std::int32_t>(static_cast<std::make_unsigned_t<Char>>(s2[i]));
+			const auto d = c1 - c2;
+			if(d != 0){
+				return static_cast<int>(d >> 31) | 1;
+			}
+			if(c1 == 0){
+				return 0;
+			}
+			++i;
+		}
+	}
 
 public:
-	static Rcnts Copy(const Char *pszSrc){
-		return Copy(pszSrc, Impl_Rcnts::StrLen(pszSrc));
+	static Rcnts Copy(const Char *pszBegin){
+		return Copy(pszBegin, X_Len(pszBegin));
 	}
-	static Rcnts Copy(const Char *pchSrc, std::size_t uCount){
-		const auto uSizeToCopy = Impl_CheckedSizeArithmetic::Mul(sizeof(Char), uCount);
-		const auto uSizeToAlloc = Impl_CheckedSizeArithmetic::Add(sizeof(Atomic<std::size_t>) + sizeof(Char), uSizeToCopy);
+	static Rcnts Copy(const Char *pchBegin, std::size_t uLength){
+		const auto uSizeToCopy = Impl_CheckedSizeArithmetic::Mul(sizeof(Char), uLength);
+		const auto uSizeToAlloc = sizeof(Atomic<std::size_t>) + uSizeToCopy + sizeof(Char);
 		const auto puRef = static_cast<Atomic<std::size_t> *>(::operator new[](uSizeToAlloc));
 		Construct(puRef, 1u);
-		const auto pszStr = static_cast<Char *>(std::memcpy(puRef + 1, pchSrc, uSizeToCopy));
-		pszStr[uCount] = Char();
-		return Rcnts(puRef, pszStr);
+		const auto pszStr = static_cast<Char *>(std::memcpy(puRef + 1, pchBegin, uSizeToCopy));
+		pszStr[uLength] = Char();
+		return Rcnts(X_AdoptionTag(), puRef, pszStr);
 	}
-	static Rcnts View(const Char *pszSrc) noexcept {
-		return Rcnts(nullptr, pszSrc);
+	static Rcnts View(const Char *pszBegin) noexcept {
+		return Rcnts(X_AdoptionTag(), nullptr, pszBegin);
 	}
 
 private:
@@ -76,7 +71,7 @@ private:
 	const Char *x_pszStr;
 
 private:
-	Atomic<std::size_t> *X_ForkRef() const noexcept {
+	Atomic<std::size_t> *X_Fork() const noexcept {
 		const auto puRef = x_puRef;
 		if(puRef){
 			puRef->Increment(kAtomicRelaxed);
@@ -87,6 +82,7 @@ private:
 		const auto puRef = x_puRef;
 #ifndef NDEBUG
 		x_puRef = (Atomic<std::size_t> *)(std::uintptr_t)0xDEADBEEFDEADBEEF;
+		x_pszStr = (const Char *)(std::uintptr_t)0xDEADBEEFDEADBEEF;
 #endif
 		if(puRef){
 			if(puRef->Decrement(kAtomicRelaxed) == 0){
@@ -97,22 +93,22 @@ private:
 	}
 
 private:
-	constexpr Rcnts(Atomic<std::size_t> *puRef, const Char *pszStr) noexcept
+	constexpr Rcnts(const X_AdoptionTag &, Atomic<std::size_t> *puRef, const Char *pszStr) noexcept
 		: x_puRef(puRef), x_pszStr(pszStr)
 	{
 	}
 
 public:
 	constexpr Rcnts() noexcept
-		: Rcnts(nullptr, xs_achEmpty)
+		: Rcnts(X_AdoptionTag(), nullptr, &xkNull)
 	{
 	}
 	Rcnts(const Rcnts &rhs) noexcept
-		: x_puRef(rhs.X_ForkRef()), x_pszStr(rhs.x_pszStr)
+		: Rcnts(X_AdoptionTag(), rhs.X_Fork(), rhs.x_pszStr)
 	{
 	}
 	Rcnts(Rcnts &&rhs) noexcept
-		: x_puRef(std::exchange(rhs.x_puRef, nullptr)), x_pszStr(std::exchange(rhs.x_pszStr, xs_achEmpty))
+		: Rcnts(X_AdoptionTag(), std::exchange(rhs.x_puRef, nullptr), std::exchange(rhs.x_pszStr, &xkNull))
 	{
 	}
 	Rcnts &operator=(const Rcnts &rhs) noexcept {
@@ -120,7 +116,7 @@ public:
 		return *this;
 	}
 	Rcnts &operator=(Rcnts &&rhs) noexcept {
-		rhs.Swap(*this);
+		Rcnts(std::move(rhs)).Swap(*this);
 		return *this;
 	}
 	~Rcnts(){
@@ -129,7 +125,7 @@ public:
 
 public:
 	bool IsEmpty() const noexcept {
-		return x_pszStr[0] == 0;
+		return x_pszStr[0] == Char();
 	}
 	const Char *GetStr() const noexcept {
 		return x_pszStr;
@@ -138,21 +134,24 @@ public:
 		Rcnts().Swap(*this);
 	}
 
-	void AssignCopy(const Char *pszSrc){
-		*this = Copy(pszSrc);
+	Rcnts &AssignCopy(const Char *pszBegin){
+		Copy(pszBegin).Swap(*this);
+		return *this;
 	}
-	void AssignCopy(const Char *pchSrc, std::size_t uCount){
-		*this = Copy(pchSrc, uCount);
+	Rcnts &AssignCopy(const Char *pchBegin, std::size_t uLength){
+		Copy(pchBegin, uLength).Swap(*this);
+		return *this;
 	}
-	void AssignView(const Char *pszSrc) noexcept {
-		*this = View(pszSrc);
+	Rcnts &AssignView(const Char *pszBegin) noexcept {
+		View(pszBegin).Swap(*this);
+		return *this;
 	}
 
 	int Compare(const Char *rhs) const noexcept {
-		return Impl_Rcnts::StrCmp(GetStr(), rhs);
+		return X_Cmp(GetStr(), rhs);
 	}
 	int Compare(const Rcnts &rhs) const noexcept {
-		return Compare(rhs.GetStr());
+		return X_Cmp(GetStr(), rhs.GetStr());
 	}
 
 	void Swap(Rcnts &rhs) noexcept {
@@ -169,64 +168,64 @@ public:
 		return GetStr();
 	}
 
-	bool operator==(const Char *rhs) const noexcept {
-		return Compare(rhs) == 0;
-	}
 	bool operator==(const Rcnts &rhs) const noexcept {
-		return Compare(rhs) == 0;
+		return X_Cmp(GetStr(), rhs.GetStr()) == 0;
+	}
+	bool operator==(const Char *rhs) const noexcept {
+		return X_Cmp(GetStr(), rhs) == 0;
 	}
 	friend bool operator==(const Char *lhs, const Rcnts &rhs) noexcept {
-		return -rhs.Compare(rhs) == 0;
+		return X_Cmp(lhs, rhs.GetStr()) == 0;
 	}
 
-	bool operator!=(const Char *rhs) const noexcept {
-		return Compare(rhs) != 0;
-	}
 	bool operator!=(const Rcnts &rhs) const noexcept {
-		return Compare(rhs) != 0;
+		return X_Cmp(GetStr(), rhs.GetStr()) != 0;
+	}
+	bool operator!=(const Char *rhs) const noexcept {
+		return X_Cmp(GetStr(), rhs) != 0;
 	}
 	friend bool operator!=(const Char *lhs, const Rcnts &rhs) noexcept {
-		return -rhs.Compare(rhs) != 0;
+		return X_Cmp(lhs, rhs.GetStr()) != 0;
 	}
 
-	bool operator<(const Char *rhs) const noexcept {
-		return Compare(rhs) < 0;
-	}
 	bool operator<(const Rcnts &rhs) const noexcept {
-		return Compare(rhs) < 0;
+		return X_Cmp(GetStr(), rhs.GetStr()) < 0;
+	}
+	bool operator<(const Char *rhs) const noexcept {
+		return X_Cmp(GetStr(), rhs) < 0;
 	}
 	friend bool operator<(const Char *lhs, const Rcnts &rhs) noexcept {
-		return -rhs.Compare(rhs) < 0;
+		return X_Cmp(lhs, rhs.GetStr()) < 0;
 	}
 
-	bool operator>(const Char *rhs) const noexcept {
-		return Compare(rhs) > 0;
-	}
 	bool operator>(const Rcnts &rhs) const noexcept {
-		return Compare(rhs) > 0;
+		return X_Cmp(GetStr(), rhs.GetStr()) > 0;
+	}
+	bool operator>(const Char *rhs) const noexcept {
+		return X_Cmp(GetStr(), rhs) > 0;
 	}
 	friend bool operator>(const Char *lhs, const Rcnts &rhs) noexcept {
-		return -rhs.Compare(rhs) > 0;
+		return X_Cmp(lhs, rhs.GetStr()) > 0;
 	}
 
-	bool operator<=(const Char *rhs) const noexcept {
-		return Compare(rhs) <= 0;
-	}
 	bool operator<=(const Rcnts &rhs) const noexcept {
-		return Compare(rhs) <= 0;
+		return X_Cmp(GetStr(), rhs.GetStr()) <= 0;
+	}
+	bool operator<=(const Char *rhs) const noexcept {
+		return X_Cmp(GetStr(), rhs) <= 0;
 	}
 	friend bool operator<=(const Char *lhs, const Rcnts &rhs) noexcept {
-		return -rhs.Compare(rhs) <= 0;
+		return X_Cmp(lhs, rhs.GetStr()) <= 0;
 	}
 
-	bool operator>=(const Char *rhs) const noexcept {
-		return Compare(rhs) >= 0;
-	}
 	bool operator>=(const Rcnts &rhs) const noexcept {
-		return Compare(rhs) >= 0;
+		return X_Cmp(GetStr(), rhs.GetStr()) >= 0;
+	}
+	bool operator>=(const Char *rhs) const noexcept {
+		return X_Cmp(GetStr(), rhs) >= 0;
 	}
 	friend bool operator>=(const Char *lhs, const Rcnts &rhs) noexcept {
-		return -rhs.Compare(rhs) >= 0;
+		return X_Cmp(lhs, rhs.GetStr()) >= 0;
 	}
 
 	friend void swap(Rcnts &lhs, Rcnts &rhs) noexcept {
@@ -235,7 +234,7 @@ public:
 };
 
 template<typename CharT>
-const CharT Rcnts<CharT>::xs_achEmpty[1] = { };
+const CharT Rcnts<CharT>::xkNull;
 
 extern template class Rcnts<char>;
 extern template class Rcnts<wchar_t>;

@@ -603,10 +603,16 @@ public:
 	}
 
 	bool operator==(const StringView &rhs) noexcept {
-		return (GetSize() == rhs.GetSize()) ? (Compare(rhs) == 0) : false;
+		if(GetSize() != rhs.GetSize()){
+			return false;
+		}
+		return Compare(rhs) == 0;
 	}
 	bool operator!=(const StringView &rhs) noexcept {
-		return (GetSize() == rhs.GetSize()) ? (Compare(rhs) != 0) : true;
+		if(GetSize() != rhs.GetSize()){
+			return true;
+		}
+		return Compare(rhs) != 0;
 	}
 	bool operator<(const StringView &rhs) noexcept {
 		return Compare(rhs) < 0;

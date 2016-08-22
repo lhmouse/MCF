@@ -71,6 +71,9 @@ char32_t _MCFCRT_DecodeUtf8(const char **ppchRead, const char *pchReadEnd){
 			return _MCFCRT_UTF_INVALID_INPUT;
 		}
 		u32Temp |= (u32Next & 0x3F);
+		if(u32Temp - 0xD800u < 0x800u){
+			return _MCFCRT_UTF_INVALID_INPUT;
+		}
 	} else if(u32Temp < 0xF8){ // 21 位
 		if(pchReadEnd - pchRead < 3){
 			return _MCFCRT_UTF_PARTIAL_DATA;
@@ -92,6 +95,9 @@ char32_t _MCFCRT_DecodeUtf8(const char **ppchRead, const char *pchReadEnd){
 			return _MCFCRT_UTF_INVALID_INPUT;
 		}
 		u32Temp |= (u32Next & 0x3F);
+		if(u32Temp - 0xD800u < 0x800u){
+			return _MCFCRT_UTF_INVALID_INPUT;
+		}
 		if(u32Temp >= 0x110000){
 			return _MCFCRT_UTF_INVALID_INPUT;
 		}
@@ -144,6 +150,8 @@ char32_t _MCFCRT_EncodeUtf8(char **ppchWrite, char *pchWriteEnd, char32_t c32Cod
 		}
 		*(pchWrite++) = (char)(((u32Temp >>  6) & 0x1F) | 0xC0);
 		*(pchWrite++) = (char)(((u32Temp      ) & 0x3F) | 0x80);
+	} else if(u32Temp - 0xD800u < 0x800u){
+		return _MCFCRT_UTF_INVALID_INPUT;
 	} else if(u32Temp < 0x10000){ // 16 位 = 4 + 6 + 6
 		if(pchWriteEnd - pchWrite < 3){
 			return _MCFCRT_UTF_BUFFER_TOO_SMALL;
@@ -168,7 +176,9 @@ char32_t _MCFCRT_EncodeUtf8(char **ppchWrite, char *pchWriteEnd, char32_t c32Cod
 char32_t _MCFCRT_EncodeUtf16(char16_t **ppc16Write, char16_t *pc16WriteEnd, char32_t c32CodePoint){
 	register char16_t *pc16Write = *ppc16Write;
 	register uint_fast32_t u32Temp = (uint32_t)c32CodePoint;
-	if(u32Temp < 0x10000){ // 1 编码单元
+	if(u32Temp - 0xD800u < 0x800u){
+		return _MCFCRT_UTF_INVALID_INPUT;
+	} else if(u32Temp < 0x10000){ // 1 编码单元
 		if(pc16WriteEnd - pc16Write < 1){
 			return _MCFCRT_UTF_BUFFER_TOO_SMALL;
 		}

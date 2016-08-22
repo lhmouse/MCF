@@ -1,6 +1,6 @@
 #!/bin/sh
 
-CPPFLAGS+=" -Wall -Wextra -pedantic -pedantic-errors -Werror -Wno-error=unused-parameter	\
+CPPFLAGS+=" -O0 -g -Wall -Wextra -pedantic -pedantic-errors -Werror -Wno-error=unused-parameter	\
 	-Wwrite-strings -Wconversion -Wsign-conversion -Wsuggest-attribute=noreturn -Wundef -Wshadow -Wstrict-aliasing=2 -Wstrict-overflow=5	\
 	-pipe -mfpmath=both -march=nocona -mno-stack-arg-probe -mno-accumulate-outgoing-args -mpush-args -masm=intel
 	-I../../debug/mingw32/include"

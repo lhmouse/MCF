@@ -37,67 +37,43 @@ struct StringEncodingTrait;
 template<>
 struct StringEncodingTrait<StringType::kNarrow> {
 	using Char = char;
-	enum {
-		kPrefersConversionViaUtf16 = 0,
-		kPrefersConversionViaUtf32 = 0,
-	};
+	static constexpr int kConversionPreference = 0;
 };
 template<>
 struct StringEncodingTrait<StringType::kWide> {
 	using Char = wchar_t;
-	enum {
-		kPrefersConversionViaUtf16 = 1,
-		kPrefersConversionViaUtf32 = 0,
-	};
+	static constexpr int kConversionPreference = -1; // UTF-16
 };
 
 template<>
 struct StringEncodingTrait<StringType::kUtf8> {
 	using Char = char;
-	enum {
-		kPrefersConversionViaUtf16 = 0,
-		kPrefersConversionViaUtf32 = 0,
-	};
+	static constexpr int kConversionPreference = 0;
 };
 template<>
 struct StringEncodingTrait<StringType::kUtf16> {
 	using Char = char16_t;
-	enum {
-		kPrefersConversionViaUtf16 = 1,
-		kPrefersConversionViaUtf32 = 0,
-	};
+	static constexpr int kConversionPreference = -1; // UTF-16
 };
 template<>
 struct StringEncodingTrait<StringType::kUtf32> {
 	using Char = char32_t;
-	enum {
-		kPrefersConversionViaUtf16 = 0,
-		kPrefersConversionViaUtf32 = 1,
-	};
+	static constexpr int kConversionPreference = 1; // UTF-32
 };
 template<>
 struct StringEncodingTrait<StringType::kCesu8> {
 	using Char = char;
-	enum {
-		kPrefersConversionViaUtf16 = 0,
-		kPrefersConversionViaUtf32 = 0,
-	};
+	static constexpr int kConversionPreference = 0;
 };
 template<>
 struct StringEncodingTrait<StringType::kAnsi> {
 	using Char = char;
-	enum {
-		kPrefersConversionViaUtf16 = 1,
-		kPrefersConversionViaUtf32 = 0,
-	};
+	static constexpr int kConversionPreference = -1; // UTF-16
 };
 template<>
 struct StringEncodingTrait<StringType::kModifiedUtf8> {
 	using Char = char;
-	enum {
-		kPrefersConversionViaUtf16 = 0,
-		kPrefersConversionViaUtf32 = 0,
-	};
+	static constexpr int kConversionPreference = 0;
 };
 
 namespace Impl_StringView {

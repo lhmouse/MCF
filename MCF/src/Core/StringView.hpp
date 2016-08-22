@@ -21,13 +21,14 @@
 namespace MCF {
 
 enum class StringType {
-	kNarrow,
-	kWide,
-	kUtf8,
-	kUtf16,
-	kUtf32,
-	kCesu8,
-	kAnsi,
+	kNarrow        = 0,
+	kWide          = 1,
+	kUtf8          = 2,
+	kUtf16         = 3,
+	kUtf32         = 4,
+	kCesu8         = 5,
+	kAnsi          = 6,
+	kModifiedUtf8  = 7,
 };
 
 template<StringType>
@@ -36,7 +37,6 @@ struct StringEncodingTrait;
 template<>
 struct StringEncodingTrait<StringType::kNarrow> {
 	using Char = char;
-
 	enum {
 		kPrefersConversionViaUtf16 = 0,
 		kPrefersConversionViaUtf32 = 0,
@@ -45,7 +45,6 @@ struct StringEncodingTrait<StringType::kNarrow> {
 template<>
 struct StringEncodingTrait<StringType::kWide> {
 	using Char = wchar_t;
-
 	enum {
 		kPrefersConversionViaUtf16 = 1,
 		kPrefersConversionViaUtf32 = 0,
@@ -55,7 +54,6 @@ struct StringEncodingTrait<StringType::kWide> {
 template<>
 struct StringEncodingTrait<StringType::kUtf8> {
 	using Char = char;
-
 	enum {
 		kPrefersConversionViaUtf16 = 0,
 		kPrefersConversionViaUtf32 = 0,
@@ -64,7 +62,6 @@ struct StringEncodingTrait<StringType::kUtf8> {
 template<>
 struct StringEncodingTrait<StringType::kUtf16> {
 	using Char = char16_t;
-
 	enum {
 		kPrefersConversionViaUtf16 = 1,
 		kPrefersConversionViaUtf32 = 0,
@@ -73,7 +70,6 @@ struct StringEncodingTrait<StringType::kUtf16> {
 template<>
 struct StringEncodingTrait<StringType::kUtf32> {
 	using Char = char32_t;
-
 	enum {
 		kPrefersConversionViaUtf16 = 0,
 		kPrefersConversionViaUtf32 = 1,
@@ -82,7 +78,6 @@ struct StringEncodingTrait<StringType::kUtf32> {
 template<>
 struct StringEncodingTrait<StringType::kCesu8> {
 	using Char = char;
-
 	enum {
 		kPrefersConversionViaUtf16 = 0,
 		kPrefersConversionViaUtf32 = 0,
@@ -91,9 +86,16 @@ struct StringEncodingTrait<StringType::kCesu8> {
 template<>
 struct StringEncodingTrait<StringType::kAnsi> {
 	using Char = char;
-
 	enum {
 		kPrefersConversionViaUtf16 = 1,
+		kPrefersConversionViaUtf32 = 0,
+	};
+};
+template<>
+struct StringEncodingTrait<StringType::kModifiedUtf8> {
+	using Char = char;
+	enum {
+		kPrefersConversionViaUtf16 = 0,
 		kPrefersConversionViaUtf32 = 0,
 	};
 };
@@ -652,14 +654,16 @@ extern template class StringView<StringType::kUtf16>;
 extern template class StringView<StringType::kUtf32>;
 extern template class StringView<StringType::kCesu8>;
 extern template class StringView<StringType::kAnsi>;
+extern template class StringView<StringType::kModifiedUtf8>;
 
-using NarrowStringView = StringView<StringType::kNarrow>;
-using WideStringView   = StringView<StringType::kWide>;
-using Utf8StringView   = StringView<StringType::kUtf8>;
-using Utf16StringView  = StringView<StringType::kUtf16>;
-using Utf32StringView  = StringView<StringType::kUtf32>;
-using Cesu8StringView  = StringView<StringType::kCesu8>;
-using AnsiStringView   = StringView<StringType::kAnsi>;
+using NarrowStringView       = StringView<StringType::kNarrow>;
+using WideStringView         = StringView<StringType::kWide>;
+using Utf8StringView         = StringView<StringType::kUtf8>;
+using Utf16StringView        = StringView<StringType::kUtf16>;
+using Utf32StringView        = StringView<StringType::kUtf32>;
+using Cesu8StringView        = StringView<StringType::kCesu8>;
+using AnsiStringView         = StringView<StringType::kAnsi>;
+using ModifiedUtf8StringView = StringView<StringType::kModifiedUtf8>;
 
 // 字面量运算符。
 // 注意 StringView 并不是所谓“零结尾的字符串”。

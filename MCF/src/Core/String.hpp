@@ -934,14 +934,16 @@ extern template class String<StringType::kUtf16>;
 extern template class String<StringType::kUtf32>;
 extern template class String<StringType::kCesu8>;
 extern template class String<StringType::kAnsi>;
+extern template class String<StringType::kModifiedUtf8>;
 
-using NarrowString = String<StringType::kNarrow>;
-using WideString   = String<StringType::kWide>;
-using Utf8String   = String<StringType::kUtf8>;
-using Utf16String  = String<StringType::kUtf16>;
-using Utf32String  = String<StringType::kUtf32>;
-using Cesu8String  = String<StringType::kCesu8>;
-using AnsiString   = String<StringType::kAnsi>;
+using NarrowString       = String<StringType::kNarrow>;
+using WideString         = String<StringType::kWide>;
+using Utf8String         = String<StringType::kUtf8>;
+using Utf16String        = String<StringType::kUtf16>;
+using Utf32String        = String<StringType::kUtf32>;
+using Cesu8String        = String<StringType::kCesu8>;
+using AnsiString         = String<StringType::kAnsi>;
+using ModifiedUtf8String = String<StringType::kModifiedUtf8>;
 
 // 字面量运算符。
 template<typename CharT, CharT ...kCharsT>

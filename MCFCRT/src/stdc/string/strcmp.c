@@ -9,13 +9,13 @@ int strcmp(const char *s1, const char *s2){
 
 #define UNROLLED(idx_)	\
 		{	\
-			const int_fast32_t ch1 = (unsigned char)s1[idx_];	\
-			const int_fast32_t ch2 = (unsigned char)s2[idx_];	\
-			const int_fast32_t delta = ch1 - ch2;	\
+			const int32_t c1 = (unsigned char)s1[idx_];	\
+			const int32_t c2 = (unsigned char)s2[idx_];	\
+			const int32_t delta = c1 - c2;	\
 			if(delta != 0){	\
-				return (delta >> (sizeof(delta) * __CHAR_BIT__ - 1)) | 1;	\
+				return (delta >> 31) | 1;	\
 			}	\
-			if(ch1 == 0){	\
+			if(c1 == 0){	\
 				return 0;	\
 			}	\
 		}

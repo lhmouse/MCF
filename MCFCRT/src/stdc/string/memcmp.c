@@ -15,8 +15,8 @@ static inline uintptr_t SwapBytewise(uintptr_t val){
 }
 
 int memcmp(const void *p1, const void *p2, size_t cb){
-	const unsigned char *rp1 = (const unsigned char *)p1;
-	const unsigned char *rp2 = (const unsigned char *)p2;
+	const unsigned char *rp1 = p1;
+	const unsigned char *rp2 = p2;
 
 	size_t wcnt = cb / sizeof(uintptr_t);
 	++wcnt;

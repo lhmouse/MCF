@@ -11,7 +11,7 @@
 #endif
 
 void *memchr(const void *s, int ch, size_t cb){
-	register const unsigned char *rp = (const unsigned char *)s;
+	register const unsigned char *rp = s;
 	const unsigned char *const end = rp + cb;
 
 	if(cb >= sizeof(uintptr_t) * 2){

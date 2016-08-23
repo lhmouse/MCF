@@ -37,11 +37,35 @@ public:
 		return m_aStorage.UncheckedGet(uRow);
 	}
 
+public:
 	const Array<Element, kColumns> &operator[](std::size_t uRow) const noexcept {
 		return m_aStorage[uRow];
 	}
 	Array<Element, kColumns> &operator[](std::size_t uRow) noexcept {
 		return m_aStorage[uRow];
+	}
+
+	Matrix operator+() const {
+		Matrix ret;
+#pragma GCC ivdep
+		for(std::size_t r = 0; r < kRows; ++r){
+#pragma GCC ivdep
+			for(std::size_t c = 0; c < kColumns; ++c){
+				ret.m_aStorage[r][c] = +(m_aStorage[r][c]);
+			}
+		}
+		return ret;
+	}
+	Matrix operator-() const {
+		Matrix ret;
+#pragma GCC ivdep
+		for(std::size_t r = 0; r < kRows; ++r){
+#pragma GCC ivdep
+			for(std::size_t c = 0; c < kColumns; ++c){
+				ret.m_aStorage[r][c] = -(m_aStorage[r][c]);
+			}
+		}
+		return ret;
 	}
 
 	Matrix &operator+=(const Matrix &rhs){
@@ -108,31 +132,8 @@ public:
 		return ret;
 	}
 
-	Matrix operator+() const {
-		Matrix ret;
-#pragma GCC ivdep
-		for(std::size_t r = 0; r < kRows; ++r){
-#pragma GCC ivdep
-			for(std::size_t c = 0; c < kColumns; ++c){
-				ret.m_aStorage[r][c] = +(m_aStorage[r][c]);
-			}
-		}
-		return ret;
-	}
-	Matrix operator-() const {
-		Matrix ret;
-#pragma GCC ivdep
-		for(std::size_t r = 0; r < kRows; ++r){
-#pragma GCC ivdep
-			for(std::size_t c = 0; c < kColumns; ++c){
-				ret.m_aStorage[r][c] = -(m_aStorage[r][c]);
-			}
-		}
-		return ret;
-	}
-
 	template<std::size_t kOtherColumnsT>
-	friend Matrix<ElementT, kRowsT, kOtherColumnsT> operator*(const Matrix &lhs, const Matrix<ElementT, kColumnsT, kOtherColumnsT> &rhs){
+	Matrix<ElementT, kRowsT, kOtherColumnsT> operator*(const Matrix<ElementT, kColumnsT, kOtherColumnsT> &rhs){
 		auto ret = Matrix<ElementT, kRowsT, kOtherColumnsT>();
 #pragma GCC ivdep
 		for(std::size_t r = 0; r < kRowsT; ++r){
@@ -140,7 +141,7 @@ public:
 			for(std::size_t c = 0; c < kOtherColumnsT; ++c){
 #pragma GCC ivdep
 				for(std::size_t i = 0; i < kColumnsT; ++i){
-					ret[r][c] += lhs[r][i] * rhs[i][c];
+					ret[r][c] += m_aStorage[r][i] * rhs[i][c];
 				}
 			}
 		}

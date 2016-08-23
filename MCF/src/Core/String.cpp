@@ -6,6 +6,7 @@
 #include "Exception.hpp"
 #include <winternl.h>
 #include <ntstatus.h>
+#include <MCFCRT/ext/utf.h>
 
 extern "C" {
 
@@ -293,8 +294,8 @@ namespace {
 		std::size_t uOldSize = strWrite.GetSize();
 		try {
 			for(;;){
-				strWrite.ReserveMore(8);
-				for(std::size_t i = 0; i < 8; ++i){
+				strWrite.ReserveMore(16);
+				for(auto i = strWrite.GetSize(); i != strWrite.GetCapacity(); ++i){
 					if(!vFilter){
 						goto jDone;
 					}
@@ -375,14 +376,36 @@ void WideString::DeunifyAppend(WideString &strDst, const Utf32StringView &u32svS
 template<>
 __attribute__((__flatten__))
 void Utf8String::UnifyAppend(Utf16String &u16sDst, const Utf8StringView &svSrc){
-	u16sDst.ReserveMore(svSrc.GetSize());
-	Convert(u16sDst, MakeUtf16Encoder(MakeUtf8Decoder(MakeStringSource(svSrc))));
+	const auto uOldSize = u16sDst.GetSize();
+	const auto pc16WriteBegin = u16sDst.ResizeMore(svSrc.GetSize());
+	try {
+		auto pc16Write = pc16WriteBegin + uOldSize;
+		auto pchRead = svSrc.GetBegin();
+		while(pchRead != svSrc.GetEnd()){
+			::_MCFCRT_UncheckedEncodeUtf16FromUtf8(&pc16Write, &pchRead);
+		}
+		u16sDst.Pop(static_cast<std::size_t>(pc16Write - pc16WriteBegin));
+	} catch(...){
+		u16sDst.Pop(u16sDst.GetSize() - uOldSize);
+		throw;
+	}
 }
 template<>
 __attribute__((__flatten__))
 void Utf8String::DeunifyAppend(Utf8String &strDst, const Utf16StringView &u16svSrc){
-	strDst.ReserveMore(u16svSrc.GetSize() * 3);
-	Convert(strDst, MakeUtf8Encoder(MakeUtf16Decoder(MakeStringSource(u16svSrc))));
+	const auto uOldSize = strDst.GetSize();
+	const auto pc16WriteBegin = strDst.ResizeMore(u16svSrc.GetSize() * 3);
+	try {
+		auto pc16Write = pc16WriteBegin + uOldSize;
+		auto pchRead = u16svSrc.GetBegin();
+		while(pchRead != u16svSrc.GetEnd()){
+			::_MCFCRT_UncheckedEncodeUtf8FromUtf16(&pc16Write, &pchRead);
+		}
+		strDst.Pop(static_cast<std::size_t>(pc16Write - pc16WriteBegin));
+	} catch(...){
+		strDst.Pop(strDst.GetSize() - uOldSize);
+		throw;
+	}
 }
 
 template<>

@@ -31,7 +31,7 @@ _MCFCRT_EXTERN_C_BEGIN
 	}
 
 __MCFCRT_UTF_INLINE_OR_EXTERN char32_t _MCFCRT_DecodeUtf8(const char **__ppchRead, const char *__pchReadEnd,
-	bool __bIgnoreEncodingErrors) _MCFCRT_NOEXCEPT
+	bool __bPermissive) _MCFCRT_NOEXCEPT
 {
 	const char *__pchRead = *__ppchRead;
 	if(__pchRead == __pchReadEnd){
@@ -43,14 +43,14 @@ __MCFCRT_UTF_INLINE_OR_EXTERN char32_t _MCFCRT_DecodeUtf8(const char **__ppchRea
 	{	\
 		const _MCFCRT_STD uint_fast32_t __u32Next = (_MCFCRT_STD uint8_t)*(__pchRead++);	\
 		if((__u32Next < 0x80) || (0xC0 <= __u32Next)){	\
-			__MCFCRT_HANDLE_INVALID_INPUT(__bIgnoreEncodingErrors, __u32CodePoint, __jDone)	\
+			__MCFCRT_HANDLE_INVALID_INPUT(__bPermissive, __u32CodePoint, __jDone)	\
 		}	\
 		__u32CodePoint |= (__u32Next & 0x3F) << (__bits_);	\
 	}
 	if(__u32Unit < 0x80){
 		__u32CodePoint = __u32Unit;
 	} else if(__u32Unit < 0xC0){
-		__MCFCRT_HANDLE_INVALID_INPUT(__bIgnoreEncodingErrors, __u32CodePoint, __jDone)
+		__MCFCRT_HANDLE_INVALID_INPUT(__bPermissive, __u32CodePoint, __jDone)
 	} else if(__u32Unit < 0xE0){
 		if(__pchReadEnd - __pchRead < 1){
 			return _MCFCRT_UTF_PARTIAL_DATA;
@@ -58,7 +58,7 @@ __MCFCRT_UTF_INLINE_OR_EXTERN char32_t _MCFCRT_DecodeUtf8(const char **__ppchRea
 		__u32CodePoint = (__u32Unit & 0x1F) << 6;
 		__MCFCRT_DECODE_ONE(0)
 		if(__u32CodePoint < 0x80){
-			__MCFCRT_HANDLE_INVALID_INPUT(__bIgnoreEncodingErrors, __u32CodePoint, __jDone)
+			__MCFCRT_HANDLE_INVALID_INPUT(__bPermissive, __u32CodePoint, __jDone)
 		}
 	} else if(__u32Unit < 0xF0){
 		if(__pchReadEnd - __pchRead < 2){
@@ -68,10 +68,10 @@ __MCFCRT_UTF_INLINE_OR_EXTERN char32_t _MCFCRT_DecodeUtf8(const char **__ppchRea
 		__MCFCRT_DECODE_ONE(6)
 		__MCFCRT_DECODE_ONE(0)
 		if(__u32CodePoint < 0x800){
-			__MCFCRT_HANDLE_INVALID_INPUT(__bIgnoreEncodingErrors, __u32CodePoint, __jDone)
+			__MCFCRT_HANDLE_INVALID_INPUT(__bPermissive, __u32CodePoint, __jDone)
 		}
 		if(__u32CodePoint - 0xD800 < 0x800){
-			__MCFCRT_HANDLE_INVALID_INPUT(__bIgnoreEncodingErrors, __u32CodePoint, __jDone)
+			__MCFCRT_HANDLE_INVALID_INPUT(__bPermissive, __u32CodePoint, __jDone)
 		}
 	} else if(__u32Unit < 0xF8){
 		if(__pchReadEnd - __pchRead < 3){
@@ -82,13 +82,13 @@ __MCFCRT_UTF_INLINE_OR_EXTERN char32_t _MCFCRT_DecodeUtf8(const char **__ppchRea
 		__MCFCRT_DECODE_ONE(6)
 		__MCFCRT_DECODE_ONE(0)
 		if(__u32CodePoint < 0x10000){
-			__MCFCRT_HANDLE_INVALID_INPUT(__bIgnoreEncodingErrors, __u32CodePoint, __jDone)
+			__MCFCRT_HANDLE_INVALID_INPUT(__bPermissive, __u32CodePoint, __jDone)
 		}
 		if(__u32CodePoint >= 0x110000){
-			__MCFCRT_HANDLE_INVALID_INPUT(__bIgnoreEncodingErrors, __u32CodePoint, __jDone)
+			__MCFCRT_HANDLE_INVALID_INPUT(__bPermissive, __u32CodePoint, __jDone)
 		}
 	} else {
-		__MCFCRT_HANDLE_INVALID_INPUT(__bIgnoreEncodingErrors, __u32CodePoint, __jDone)
+		__MCFCRT_HANDLE_INVALID_INPUT(__bPermissive, __u32CodePoint, __jDone)
 	}
 #undef __MCFCRT_DECODE_ONE
 __jDone:
@@ -96,7 +96,7 @@ __jDone:
 	return (char32_t)__u32CodePoint;
 }
 __MCFCRT_UTF_INLINE_OR_EXTERN char32_t _MCFCRT_DecodeUtf16(const char16_t **__ppc16Read, const char16_t *__pc16ReadEnd,
-	bool __bIgnoreEncodingErrors) _MCFCRT_NOEXCEPT
+	bool __bPermissive) _MCFCRT_NOEXCEPT
 {
 	const char16_t *__pc16Read = *__ppc16Read;
 	if(__pc16Read == __pc16ReadEnd){
@@ -108,7 +108,7 @@ __MCFCRT_UTF_INLINE_OR_EXTERN char32_t _MCFCRT_DecodeUtf16(const char16_t **__pp
 	{	\
 		const _MCFCRT_STD uint_fast32_t __u32Next = (_MCFCRT_STD uint16_t)*(__pc16Read++);	\
 		if((__u32Next < 0xDC00) || (0xE000 <= __u32Next)){	\
-			__MCFCRT_HANDLE_INVALID_INPUT(__bIgnoreEncodingErrors, __u32CodePoint, __jDone)	\
+			__MCFCRT_HANDLE_INVALID_INPUT(__bPermissive, __u32CodePoint, __jDone)	\
 		}	\
 		__u32CodePoint |= (__u32Next & 0x3FF) << (__bits_);	\
 	}
@@ -122,7 +122,7 @@ __MCFCRT_UTF_INLINE_OR_EXTERN char32_t _MCFCRT_DecodeUtf16(const char16_t **__pp
 		__MCFCRT_DECODE_ONE(0)
 		__u32CodePoint += 0x10000;
 	} else if(__u32Unit < 0xE000){
-		__MCFCRT_HANDLE_INVALID_INPUT(__bIgnoreEncodingErrors, __u32CodePoint, __jDone)
+		__MCFCRT_HANDLE_INVALID_INPUT(__bPermissive, __u32CodePoint, __jDone)
 	} else {
 		__u32CodePoint = __u32Unit;
 	}
@@ -133,7 +133,7 @@ __jDone:
 }
 
 __MCFCRT_UTF_INLINE_OR_EXTERN char32_t _MCFCRT_EncodeUtf8(char **__ppchWrite, char *__pchWriteEnd, char32_t __c32Char,
-	bool __bIgnoreEncodingErrors, bool __bEncodeNullAsTwoBytes) _MCFCRT_NOEXCEPT
+	bool __bPermissive, bool __bEncodeNullAsTwoBytes) _MCFCRT_NOEXCEPT
 {
 	char *__pchWrite = *__ppchWrite;
 	_MCFCRT_STD uint_fast32_t __u32CodePoint = __c32Char;
@@ -150,7 +150,7 @@ __MCFCRT_UTF_INLINE_OR_EXTERN char32_t _MCFCRT_EncodeUtf8(char **__ppchWrite, ch
 		*(__pchWrite++) = (char)(((__u32CodePoint      ) & 0x3F) | 0x80);
 	} else if(__u32CodePoint < 0x10000){
 		if(__u32CodePoint - 0xD800 < 0x800){
-			__MCFCRT_HANDLE_INVALID_INPUT(__bIgnoreEncodingErrors, __u32CodePoint, __jReplace)
+			__MCFCRT_HANDLE_INVALID_INPUT(__bPermissive, __u32CodePoint, __jReplace)
 		}
 __jReplace:
 		if(__pchWriteEnd - __pchWrite < 3){
@@ -168,19 +168,19 @@ __jReplace:
 		*(__pchWrite++) = (char)(((__u32CodePoint >>  6) & 0x3F) | 0x80);
 		*(__pchWrite++) = (char)(((__u32CodePoint      ) & 0x3F) | 0x80);
 	} else {
-		__MCFCRT_HANDLE_INVALID_INPUT(__bIgnoreEncodingErrors, __u32CodePoint, __jReplace)
+		__MCFCRT_HANDLE_INVALID_INPUT(__bPermissive, __u32CodePoint, __jReplace)
 	}
 	*__ppchWrite = __pchWrite;
 	return __u32CodePoint;
 }
 __MCFCRT_UTF_INLINE_OR_EXTERN char32_t _MCFCRT_EncodeUtf16(char16_t **__ppc16Write, char16_t *__pc16WriteEnd, char32_t __c32Char,
-	bool __bIgnoreEncodingErrors) _MCFCRT_NOEXCEPT
+	bool __bPermissive) _MCFCRT_NOEXCEPT
 {
 	char16_t *__pc16Write = *__ppc16Write;
 	_MCFCRT_STD uint_fast32_t __u32CodePoint = __c32Char;
 	if(__u32CodePoint < 0x10000){
 		if(__u32CodePoint - 0xD800 < 0x800){
-			__MCFCRT_HANDLE_INVALID_INPUT(__bIgnoreEncodingErrors, __u32CodePoint, __jReplace)
+			__MCFCRT_HANDLE_INVALID_INPUT(__bPermissive, __u32CodePoint, __jReplace)
 		}
 __jReplace:
 		if(__pc16WriteEnd - __pc16Write < 1){
@@ -194,14 +194,14 @@ __jReplace:
 		*(__pc16Write++) = (char16_t)((((__u32CodePoint - 0x10000) >> 10) & 0x03FF) | 0xD800);
 		*(__pc16Write++) = (char16_t)((((__u32CodePoint          )      ) & 0x03FF) | 0xDC00);
 	} else {
-		__MCFCRT_HANDLE_INVALID_INPUT(__bIgnoreEncodingErrors, __u32CodePoint, __jReplace)
+		__MCFCRT_HANDLE_INVALID_INPUT(__bPermissive, __u32CodePoint, __jReplace)
 	}
 	*__ppc16Write = __pc16Write;
 	return __u32CodePoint;
 }
 
 __MCFCRT_UTF_INLINE_OR_EXTERN char32_t _MCFCRT_UncheckedEncodeUtf8(char **__ppchWrite, char32_t __c32Char,
-	bool __bIgnoreEncodingErrors, bool __bEncodeNullAsTwoBytes) _MCFCRT_NOEXCEPT
+	bool __bPermissive, bool __bEncodeNullAsTwoBytes) _MCFCRT_NOEXCEPT
 {
 	char *__pchWrite = *__ppchWrite;
 	_MCFCRT_STD uint_fast32_t __u32CodePoint = __c32Char;
@@ -212,7 +212,7 @@ __MCFCRT_UTF_INLINE_OR_EXTERN char32_t _MCFCRT_UncheckedEncodeUtf8(char **__ppch
 		*(__pchWrite++) = (char)(((__u32CodePoint      ) & 0x3F) | 0x80);
 	} else if(__u32CodePoint < 0x10000){
 		if(__u32CodePoint - 0xD800 < 0x800){
-			__MCFCRT_HANDLE_INVALID_INPUT(__bIgnoreEncodingErrors, __u32CodePoint, __jReplace)
+			__MCFCRT_HANDLE_INVALID_INPUT(__bPermissive, __u32CodePoint, __jReplace)
 		}
 __jReplace:
 		*(__pchWrite++) = (char)(((__u32CodePoint >> 12) & 0x0F) | 0xE0);
@@ -224,19 +224,19 @@ __jReplace:
 		*(__pchWrite++) = (char)(((__u32CodePoint >>  6) & 0x3F) | 0x80);
 		*(__pchWrite++) = (char)(((__u32CodePoint      ) & 0x3F) | 0x80);
 	} else {
-		__MCFCRT_HANDLE_INVALID_INPUT(__bIgnoreEncodingErrors, __u32CodePoint, __jReplace)
+		__MCFCRT_HANDLE_INVALID_INPUT(__bPermissive, __u32CodePoint, __jReplace)
 	}
 	*__ppchWrite = __pchWrite;
 	return __u32CodePoint;
 }
 __MCFCRT_UTF_INLINE_OR_EXTERN char32_t _MCFCRT_UncheckedEncodeUtf16(char16_t **__ppc16Write, char32_t __c32Char,
-	bool __bIgnoreEncodingErrors) _MCFCRT_NOEXCEPT
+	bool __bPermissive) _MCFCRT_NOEXCEPT
 {
 	char16_t *__pc16Write = *__ppc16Write;
 	_MCFCRT_STD uint_fast32_t __u32CodePoint = __c32Char;
 	if(__u32CodePoint < 0x10000){
 		if(__u32CodePoint - 0xD800 < 0x800){
-			__MCFCRT_HANDLE_INVALID_INPUT(__bIgnoreEncodingErrors, __u32CodePoint, __jReplace)
+			__MCFCRT_HANDLE_INVALID_INPUT(__bPermissive, __u32CodePoint, __jReplace)
 		}
 __jReplace:
 		*(__pc16Write++) = (char16_t)__u32CodePoint;
@@ -244,7 +244,7 @@ __jReplace:
 		*(__pc16Write++) = (char16_t)((((__u32CodePoint - 0x10000) >> 10) & 0x03FF) | 0xD800);
 		*(__pc16Write++) = (char16_t)((((__u32CodePoint          )      ) & 0x03FF) | 0xDC00);
 	} else {
-		__MCFCRT_HANDLE_INVALID_INPUT(__bIgnoreEncodingErrors, __u32CodePoint, __jReplace)
+		__MCFCRT_HANDLE_INVALID_INPUT(__bPermissive, __u32CodePoint, __jReplace)
 	}
 	*__ppc16Write = __pc16Write;
 	return __u32CodePoint;

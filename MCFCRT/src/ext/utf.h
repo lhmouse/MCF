@@ -110,7 +110,7 @@ __MCFCRT_UTF_INLINE_OR_EXTERN char32_t _MCFCRT_DecodeUtf8(const char **__ppchRea
 		__u32CodePoint = (__u32Unit & 0x0F) << 12;
 		__MCFCRT_DECODE_ONE(6)
 		__MCFCRT_DECODE_ONE(0)
-		if(__u32CodePoint - 0xD800u < 0x800u){
+		if(__u32CodePoint - 0xD800 < 0x800){
 			__MCFCRT_HANDLE_INVALID_INPUT
 		}
 	} else if(__u32Unit < 0xF8){
@@ -121,7 +121,7 @@ __MCFCRT_UTF_INLINE_OR_EXTERN char32_t _MCFCRT_DecodeUtf8(const char **__ppchRea
 		__MCFCRT_DECODE_ONE(12)
 		__MCFCRT_DECODE_ONE(6)
 		__MCFCRT_DECODE_ONE(0)
-		if(__u32CodePoint - 0xD800u < 0x800u){
+		if(__u32CodePoint - 0xD800 < 0x800){
 			__MCFCRT_HANDLE_INVALID_INPUT
 		}
 		if(__u32CodePoint >= 0x110000){
@@ -202,7 +202,7 @@ __MCFCRT_UTF_INLINE_OR_EXTERN char32_t _MCFCRT_EncodeUtf8(char **__ppchWrite, ch
 		*(__pchWrite++) = (char)(((__u32CodePoint >>  6) & 0x1F) | 0xC0);
 		*(__pchWrite++) = (char)(((__u32CodePoint      ) & 0x3F) | 0x80);
 	} else if(__u32CodePoint < 0x10000){
-		if(__u32CodePoint - 0xD800u < 0x800u){
+		if(__u32CodePoint - 0xD800 < 0x800){
 			__MCFCRT_HANDLE_INVALID_INPUT
 		}
 __jReplace:
@@ -241,7 +241,7 @@ __MCFCRT_UTF_INLINE_OR_EXTERN char32_t _MCFCRT_EncodeUtf16(char16_t **__ppc16Wri
 		goto __jReplace;	\
 	}
 	if(__u32CodePoint < 0x10000){
-		if(__u32CodePoint - 0xD800u < 0x800u){
+		if(__u32CodePoint - 0xD800 < 0x800){
 			__MCFCRT_HANDLE_INVALID_INPUT
 		}
 __jReplace:
@@ -282,7 +282,7 @@ __MCFCRT_UTF_INLINE_OR_EXTERN char32_t _MCFCRT_UncheckedEncodeUtf8(char **__ppch
 		*(__pchWrite++) = (char)(((__u32CodePoint >>  6) & 0x1F) | 0xC0);
 		*(__pchWrite++) = (char)(((__u32CodePoint      ) & 0x3F) | 0x80);
 	} else if(__u32CodePoint < 0x10000){
-		if(__u32CodePoint - 0xD800u < 0x800u){
+		if(__u32CodePoint - 0xD800 < 0x800){
 			__MCFCRT_HANDLE_INVALID_INPUT
 		}
 __jReplace:
@@ -315,7 +315,7 @@ __MCFCRT_UTF_INLINE_OR_EXTERN char32_t _MCFCRT_UncheckedEncodeUtf16(char16_t **_
 		goto __jReplace;	\
 	}
 	if(__u32CodePoint < 0x10000){
-		if(__u32CodePoint - 0xD800u < 0x800u){
+		if(__u32CodePoint - 0xD800 < 0x800){
 			__MCFCRT_HANDLE_INVALID_INPUT
 		}
 __jReplace:

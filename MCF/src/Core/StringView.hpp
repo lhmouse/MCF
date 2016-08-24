@@ -21,29 +21,18 @@
 namespace MCF {
 
 enum class StringType {
-	kNarrow        = 0,
-	kWide          = 1,
-	kUtf8          = 2,
-	kUtf16         = 3,
-	kUtf32         = 4,
-	kCesu8         = 5,
-	kAnsi          = 6,
-	kModifiedUtf8  = 7,
+	kUtf8          =  0,
+	kUtf16         =  1,
+	kUtf32         =  2,
+	kCesu8         =  3,
+	kAnsi          =  4,
+	kModifiedUtf8  =  5,
+	kNarrow        = 98,
+	kWide          = 99,
 };
 
 template<StringType>
 struct StringEncodingTrait;
-
-template<>
-struct StringEncodingTrait<StringType::kNarrow> {
-	using Char = char;
-	static constexpr int kConversionPreference = 0;
-};
-template<>
-struct StringEncodingTrait<StringType::kWide> {
-	using Char = wchar_t;
-	static constexpr int kConversionPreference = -1; // UTF-16
-};
 
 template<>
 struct StringEncodingTrait<StringType::kUtf8> {
@@ -74,6 +63,16 @@ template<>
 struct StringEncodingTrait<StringType::kModifiedUtf8> {
 	using Char = char;
 	static constexpr int kConversionPreference = 0;
+};
+template<>
+struct StringEncodingTrait<StringType::kNarrow> {
+	using Char = char;
+	static constexpr int kConversionPreference = 0;
+};
+template<>
+struct StringEncodingTrait<StringType::kWide> {
+	using Char = wchar_t;
+	static constexpr int kConversionPreference = -1; // UTF-16
 };
 
 namespace Impl_StringView {
@@ -623,37 +622,27 @@ public:
 	}
 };
 
-extern template class StringView<StringType::kNarrow>;
-extern template class StringView<StringType::kWide>;
 extern template class StringView<StringType::kUtf8>;
 extern template class StringView<StringType::kUtf16>;
 extern template class StringView<StringType::kUtf32>;
 extern template class StringView<StringType::kCesu8>;
 extern template class StringView<StringType::kAnsi>;
 extern template class StringView<StringType::kModifiedUtf8>;
+extern template class StringView<StringType::kNarrow>;
+extern template class StringView<StringType::kWide>;
 
-using NarrowStringView       = StringView<StringType::kNarrow>;
-using WideStringView         = StringView<StringType::kWide>;
 using Utf8StringView         = StringView<StringType::kUtf8>;
 using Utf16StringView        = StringView<StringType::kUtf16>;
 using Utf32StringView        = StringView<StringType::kUtf32>;
 using Cesu8StringView        = StringView<StringType::kCesu8>;
 using AnsiStringView         = StringView<StringType::kAnsi>;
 using ModifiedUtf8StringView = StringView<StringType::kModifiedUtf8>;
+using NarrowStringView       = StringView<StringType::kNarrow>;
+using WideStringView         = StringView<StringType::kWide>;
 
 // 字面量运算符。
 // 注意 StringView 并不是所谓“零结尾的字符串”。
 // 这些运算符经过特意设计防止这种用法。
-template<typename CharT, CharT ...kCharsT>
-extern inline auto operator""_nsv() noexcept {
-	static constexpr char s_achData[] = { kCharsT..., '$' };
-	return NarrowStringView(s_achData, sizeof...(kCharsT));
-}
-template<typename CharT, CharT ...kCharsT>
-extern inline auto operator""_wsv() noexcept {
-	static constexpr wchar_t s_awcData[] = { kCharsT..., '$' };
-	return WideStringView(s_awcData, sizeof...(kCharsT));
-}
 template<typename CharT, CharT ...kCharsT>
 extern inline auto operator""_u8sv() noexcept {
 	static constexpr char s_au8cData[] = { kCharsT..., '$' };
@@ -668,6 +657,16 @@ template<typename CharT, CharT ...kCharsT>
 extern inline auto operator""_u32sv() noexcept {
 	static constexpr char32_t s_au32cData[] = { kCharsT..., '$' };
 	return Utf32StringView(s_au32cData, sizeof...(kCharsT));
+}
+template<typename CharT, CharT ...kCharsT>
+extern inline auto operator""_nsv() noexcept {
+	static constexpr char s_achData[] = { kCharsT..., '$' };
+	return NarrowStringView(s_achData, sizeof...(kCharsT));
+}
+template<typename CharT, CharT ...kCharsT>
+extern inline auto operator""_wsv() noexcept {
+	static constexpr wchar_t s_awcData[] = { kCharsT..., '$' };
+	return WideStringView(s_awcData, sizeof...(kCharsT));
 }
 
 }

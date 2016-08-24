@@ -8,13 +8,16 @@ extern "C" unsigned _MCFCRT_Main(void) noexcept {
 		t.Append("abcdefg αβγδεζη 一二三四五六七𤭢𤭢𤭢𤭢𤭢𤭢𤭢");
 	}
 	MCF::Utf8String ss = t;
-	MCF::Utf32String sd;
+	MCF::Utf32String s1;
+	MCF::Utf16String s2;
 	const auto t1 = MCF::GetHiResMonoClock();
-	for(unsigned i = 0; i < 20000; ++i){
-		sd.Clear();
-		sd = ss;
+	for(unsigned i = 0; i < 10000; ++i){
+		s1.Clear();
+		s1 = ss;
+		s2.Clear();
+		s2 = s1;
 		ss.Clear();
-		ss = sd;
+		ss = s2;
 	}
 	const auto t2 = MCF::GetHiResMonoClock();
 	std::printf("t2 - t1 = %f, d = %d\n", t2 - t1, ss.Compare(t));

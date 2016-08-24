@@ -925,35 +925,25 @@ namespace Impl_String {
 	};
 }
 
-extern template class String<StringType::kNarrow>;
-extern template class String<StringType::kWide>;
 extern template class String<StringType::kUtf8>;
 extern template class String<StringType::kUtf16>;
 extern template class String<StringType::kUtf32>;
 extern template class String<StringType::kCesu8>;
 extern template class String<StringType::kAnsi>;
 extern template class String<StringType::kModifiedUtf8>;
+extern template class String<StringType::kNarrow>;
+extern template class String<StringType::kWide>;
 
-using NarrowString       = String<StringType::kNarrow>;
-using WideString         = String<StringType::kWide>;
 using Utf8String         = String<StringType::kUtf8>;
 using Utf16String        = String<StringType::kUtf16>;
 using Utf32String        = String<StringType::kUtf32>;
 using Cesu8String        = String<StringType::kCesu8>;
 using AnsiString         = String<StringType::kAnsi>;
 using ModifiedUtf8String = String<StringType::kModifiedUtf8>;
+using NarrowString       = String<StringType::kNarrow>;
+using WideString         = String<StringType::kWide>;
 
 // 字面量运算符。
-template<typename CharT, CharT ...kCharsT>
-extern inline const auto &operator""_ns(){
-	static const NarrowString s_nsRet{ kCharsT... };
-	return s_nsRet;
-}
-template<typename CharT, CharT ...kCharsT>
-extern inline const auto &operator""_ws(){
-	static const WideString s_wsRet{ kCharsT... };
-	return s_wsRet;
-}
 template<typename CharT, CharT ...kCharsT>
 extern inline const auto &operator""_u8s(){
 	static const Utf8String s_u8sRet{ kCharsT... };
@@ -968,6 +958,16 @@ template<typename CharT, CharT ...kCharsT>
 extern inline const auto &operator""_u32s(){
 	static const Utf32String s_u32sRet{ kCharsT... };
 	return s_u32sRet;
+}
+template<typename CharT, CharT ...kCharsT>
+extern inline const auto &operator""_ns(){
+	static const NarrowString s_nsRet{ kCharsT... };
+	return s_nsRet;
+}
+template<typename CharT, CharT ...kCharsT>
+extern inline const auto &operator""_ws(){
+	static const WideString s_wsRet{ kCharsT... };
+	return s_wsRet;
 }
 
 }

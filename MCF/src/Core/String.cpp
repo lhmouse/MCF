@@ -32,93 +32,23 @@ template class String<StringType::kModifiedUtf8>;
 template<>
 __attribute__((__flatten__))
 void NarrowString::UnifyAppend(Utf16String &u16sDst, const NarrowStringView &svSrc){
-	const auto pc16WriteBegin = u16sDst.ResizeMore(svSrc.GetSize());
-	try {
-		auto pc16Write = pc16WriteBegin;
-		auto pchRead = svSrc.GetBegin();
-		const auto pchReadEnd = svSrc.GetEnd();
-		while(pchRead < pchReadEnd){
-			auto c32CodePoint = ::_MCFCRT_DecodeUtf8(&pchRead, pchReadEnd, false);
-			if(!_MCFCRT_UTF_SUCCESS(c32CodePoint)){
-				MCF_THROW(Exception, ERROR_INVALID_DATA, Rcntws::View(L"NarrowString: _MCFCRT_DecodeUtf8() 失败。"));
-			}
-			c32CodePoint = ::_MCFCRT_UncheckedEncodeUtf16(&pc16Write, c32CodePoint, true);
-			if(!_MCFCRT_UTF_SUCCESS(c32CodePoint)){
-				MCF_THROW(Exception, ERROR_INVALID_DATA, Rcntws::View(L"NarrowString: _MCFCRT_UncheckedEncodeUtf16() 失败。"));
-			}
-		}
-		u16sDst.Pop(static_cast<std::size_t>(u16sDst.GetEnd() - pc16Write));
-	} catch(...){
-		u16sDst.Pop(static_cast<std::size_t>(u16sDst.GetEnd() - pc16WriteBegin));
-		throw;
-	}
+//
 }
 template<>
 __attribute__((__flatten__))
 void NarrowString::DeunifyAppend(NarrowString &strDst, const Utf16StringView &u16svSrc){
-	const auto pchWriteBegin = strDst.ResizeMore(Impl_CheckedSizeArithmetic::Mul(3, u16svSrc.GetSize()));
-	try {
-		auto pchWrite = pchWriteBegin;
-		auto pc16Read = u16svSrc.GetBegin();
-		const auto pc16ReadEnd = u16svSrc.GetEnd();
-		while(pc16Read < pc16ReadEnd){
-			auto c32CodePoint = ::_MCFCRT_DecodeUtf16(&pc16Read, pc16ReadEnd, false);
-			if(!_MCFCRT_UTF_SUCCESS(c32CodePoint)){
-				MCF_THROW(Exception, ERROR_INVALID_DATA, Rcntws::View(L"NarrowString: _MCFCRT_DecodeUtf16() 失败。"));
-			}
-			c32CodePoint = ::_MCFCRT_UncheckedEncodeUtf8(&pchWrite, c32CodePoint, true, false);
-			if(!_MCFCRT_UTF_SUCCESS(c32CodePoint)){
-				MCF_THROW(Exception, ERROR_INVALID_DATA, Rcntws::View(L"NarrowString: _MCFCRT_UncheckedEncodeUtf8() 失败。"));
-			}
-		}
-		strDst.Pop(static_cast<std::size_t>(strDst.GetEnd() - pchWrite));
-	} catch(...){
-		strDst.Pop(static_cast<std::size_t>(strDst.GetEnd() - pchWriteBegin));
-		throw;
-	}
+//
 }
 
 template<>
 __attribute__((__flatten__))
 void NarrowString::UnifyAppend(Utf32String &u32sDst, const NarrowStringView &svSrc){
-	const auto pc32WriteBegin = u32sDst.ResizeMore(svSrc.GetSize());
-	try {
-		auto pc32Write = pc32WriteBegin;
-		auto pchRead = svSrc.GetBegin();
-		const auto pchReadEnd = svSrc.GetEnd();
-		while(pchRead < pchReadEnd){
-			auto c32CodePoint = ::_MCFCRT_DecodeUtf8(&pchRead, pchReadEnd, false);
-			if(!_MCFCRT_UTF_SUCCESS(c32CodePoint)){
-				MCF_THROW(Exception, ERROR_INVALID_DATA, Rcntws::View(L"NarrowString: _MCFCRT_DecodeUtf8() 失败。"));
-			}
-			*(pc32Write++) = c32CodePoint;
-		}
-		u32sDst.Pop(static_cast<std::size_t>(u32sDst.GetEnd() - pc32Write));
-	} catch(...){
-		u32sDst.Pop(static_cast<std::size_t>(u32sDst.GetEnd() - pc32WriteBegin));
-		throw;
-	}
+//
 }
 template<>
 __attribute__((__flatten__))
 void NarrowString::DeunifyAppend(NarrowString &strDst, const Utf32StringView &u32svSrc){
-	const auto pchWriteBegin = strDst.ResizeMore(Impl_CheckedSizeArithmetic::Mul(4, u32svSrc.GetSize()));
-	try {
-		auto pchWrite = pchWriteBegin;
-		auto pc32Read = u32svSrc.GetBegin();
-		const auto pc32ReadEnd = u32svSrc.GetEnd();
-		while(pc32Read < pc32ReadEnd){
-			auto c32CodePoint = *(pc32Read++);
-			c32CodePoint = ::_MCFCRT_UncheckedEncodeUtf8(&pchWrite, c32CodePoint, true, false);
-			if(!_MCFCRT_UTF_SUCCESS(c32CodePoint)){
-				MCF_THROW(Exception, ERROR_INVALID_DATA, Rcntws::View(L"NarrowString: _MCFCRT_EncodeUtf8() 失败。"));
-			}
-		}
-		strDst.Pop(static_cast<std::size_t>(strDst.GetEnd() - pchWrite));
-	} catch(...){
-		strDst.Pop(static_cast<std::size_t>(strDst.GetEnd() - pchWriteBegin));
-		throw;
-	}
+//
 }
 
 // UTF-16
@@ -220,7 +150,7 @@ void Utf8String::UnifyAppend(Utf32String &u32sDst, const Utf8StringView &svSrc){
 template<>
 __attribute__((__flatten__))
 void Utf8String::DeunifyAppend(Utf8String &strDst, const Utf32StringView &u32svSrc){
-	const auto pchWriteBegin = strDst.ResizeMore(Impl_CheckedSizeArithmetic::Mul(4, u32svSrc.GetSize()));
+	const auto pchWriteBegin = strDst.ResizeMore(Impl_CheckedSizeArithmetic::Mul(3, u32svSrc.GetSize()));
 	try {
 		auto pchWrite = pchWriteBegin;
 		auto pc32Read = u32svSrc.GetBegin();
@@ -229,7 +159,7 @@ void Utf8String::DeunifyAppend(Utf8String &strDst, const Utf32StringView &u32svS
 			auto c32CodePoint = *(pc32Read++);
 			c32CodePoint = ::_MCFCRT_UncheckedEncodeUtf8(&pchWrite, c32CodePoint, true, false);
 			if(!_MCFCRT_UTF_SUCCESS(c32CodePoint)){
-				MCF_THROW(Exception, ERROR_INVALID_DATA, Rcntws::View(L"Utf8String: _MCFCRT_EncodeUtf8() 失败。"));
+				MCF_THROW(Exception, ERROR_INVALID_DATA, Rcntws::View(L"Utf8String: _MCFCRT_UncheckedEncodeUtf8() 失败。"));
 			}
 		}
 		strDst.Pop(static_cast<std::size_t>(strDst.GetEnd() - pchWrite));

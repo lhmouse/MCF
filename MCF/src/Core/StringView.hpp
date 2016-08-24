@@ -26,7 +26,6 @@ enum class StringType {
 	kUtf32         =  2,
 	kCesu8         =  3,
 	kAnsi          =  4,
-	kModifiedUtf8  =  5,
 	kNarrow        = 98,
 	kWide          = 99,
 };
@@ -58,11 +57,6 @@ template<>
 struct StringEncodingTrait<StringType::kAnsi> {
 	using Char = char;
 	static constexpr int kConversionPreference = -1; // UTF-16
-};
-template<>
-struct StringEncodingTrait<StringType::kModifiedUtf8> {
-	using Char = char;
-	static constexpr int kConversionPreference = 0;
 };
 template<>
 struct StringEncodingTrait<StringType::kNarrow> {
@@ -627,7 +621,6 @@ extern template class StringView<StringType::kUtf16>;
 extern template class StringView<StringType::kUtf32>;
 extern template class StringView<StringType::kCesu8>;
 extern template class StringView<StringType::kAnsi>;
-extern template class StringView<StringType::kModifiedUtf8>;
 extern template class StringView<StringType::kNarrow>;
 extern template class StringView<StringType::kWide>;
 
@@ -636,7 +629,6 @@ using Utf16StringView        = StringView<StringType::kUtf16>;
 using Utf32StringView        = StringView<StringType::kUtf32>;
 using Cesu8StringView        = StringView<StringType::kCesu8>;
 using AnsiStringView         = StringView<StringType::kAnsi>;
-using ModifiedUtf8StringView = StringView<StringType::kModifiedUtf8>;
 using NarrowStringView       = StringView<StringType::kNarrow>;
 using WideStringView         = StringView<StringType::kWide>;
 

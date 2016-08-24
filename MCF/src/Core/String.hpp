@@ -930,7 +930,6 @@ extern template class String<StringType::kUtf16>;
 extern template class String<StringType::kUtf32>;
 extern template class String<StringType::kCesu8>;
 extern template class String<StringType::kAnsi>;
-extern template class String<StringType::kModifiedUtf8>;
 extern template class String<StringType::kNarrow>;
 extern template class String<StringType::kWide>;
 
@@ -939,7 +938,6 @@ using Utf16String        = String<StringType::kUtf16>;
 using Utf32String        = String<StringType::kUtf32>;
 using Cesu8String        = String<StringType::kCesu8>;
 using AnsiString         = String<StringType::kAnsi>;
-using ModifiedUtf8String = String<StringType::kModifiedUtf8>;
 using NarrowString       = String<StringType::kNarrow>;
 using WideString         = String<StringType::kWide>;
 

@@ -55,7 +55,7 @@ __MCFCRT_UTF_INLINE_OR_EXTERN char32_t _MCFCRT_DecodeUtf8(const char **__ppchRea
 		}
 		__u32CodePoint = (__u32Unit & 0x1F) << 6;
 		__MCFCRT_DECODE_ONE(0)
-		if(__u32CodePoint < 0x80){
+		if((__u32CodePoint < 0x80) && !((__u32CodePoint == 0) && __bPermissive)){
 			__MCFCRT_HANDLE_INVALID_INPUT(__bPermissive, __u32CodePoint, __jDone)
 		}
 	} else if(__u32Unit < 0xF0){

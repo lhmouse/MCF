@@ -39,30 +39,31 @@ __MCFCRT_UTF_INLINE_OR_EXTERN char32_t _MCFCRT_DecodeUtf8(const char **__ppchRea
 #define __MCFCRT_DECODE_ONE(__reg_, __bits_)	\
 	{	\
 		const _MCFCRT_STD uint_fast32_t __u32NextUnit_ = (_MCFCRT_STD uint8_t)*(__pchRead++);	\
-		if(__u32NextUnit_ - 0x80 >= 0x40){	\
+		const _MCFCRT_STD uint_fast32_t __u32Test_ = __u32NextUnit_ - 0x80;	\
+		if(__u32Test_ >= 0x40){	\
 			__MCFCRT_HANDLE_INVALID_INPUT(__bPermissive, (__reg_), __jDone)	\
 		}	\
-		(__reg_) += (__u32NextUnit_ & 0x3F) << (__bits_);	\
+		(__reg_) += __u32Test_ << (__bits_);	\
 	}
-	_MCFCRT_STD uint_fast32_t __u32CodePoint;
+	_MCFCRT_STD uint_fast32_t __u32CodePoint, __u32Test;
 	if(__u32Unit < 0x80){
 		__u32CodePoint = __u32Unit;
-	} else if(__u32Unit < 0xC0){
+	} else if((__u32Test = __u32Unit - 0x80) < 0x40){
 		__MCFCRT_HANDLE_INVALID_INPUT(__bPermissive, __u32CodePoint, __jDone)
-	} else if(__u32Unit < 0xE0){
+	} else if((__u32Test = __u32Unit - 0xC0) < 0x20){
 		if(__pchReadEnd - __pchRead < 1){
 			return _MCFCRT_UTF_PARTIAL_DATA;
 		}
-		__u32CodePoint = (__u32Unit & 0x1F) << 6;
+		__u32CodePoint = __u32Test << 6;
 		__MCFCRT_DECODE_ONE(__u32CodePoint, 0)
 		if(__u32CodePoint < 0x80){
 			__MCFCRT_HANDLE_INVALID_INPUT(__bPermissive, __u32CodePoint, __jDone)
 		}
-	} else if(__u32Unit < 0xF0){
+	} else if((__u32Test = __u32Unit - 0xE0) < 0x10){
 		if(__pchReadEnd - __pchRead < 2){
 			return _MCFCRT_UTF_PARTIAL_DATA;
 		}
-		__u32CodePoint = (__u32Unit & 0x0F) << 12;
+		__u32CodePoint = __u32Test << 12;
 		__MCFCRT_DECODE_ONE(__u32CodePoint, 6)
 		__MCFCRT_DECODE_ONE(__u32CodePoint, 0)
 		if(__u32CodePoint < 0x800){
@@ -71,11 +72,11 @@ __MCFCRT_UTF_INLINE_OR_EXTERN char32_t _MCFCRT_DecodeUtf8(const char **__ppchRea
 		if(__u32CodePoint - 0xD800 < 0x800){
 			__MCFCRT_HANDLE_INVALID_INPUT(__bPermissive, __u32CodePoint, __jDone)
 		}
-	} else if(__u32Unit < 0xF8){
+	} else if((__u32Test = __u32Unit - 0xF0) < 0x08){
 		if(__pchReadEnd - __pchRead < 3){
 			return _MCFCRT_UTF_PARTIAL_DATA;
 		}
-		__u32CodePoint = (__u32Unit & 0x07) << 18;
+		__u32CodePoint = __u32Test << 18;
 		__MCFCRT_DECODE_ONE(__u32CodePoint, 12)
 		__MCFCRT_DECODE_ONE(__u32CodePoint,  6)
 		__MCFCRT_DECODE_ONE(__u32CodePoint,  0)
@@ -99,23 +100,21 @@ __MCFCRT_UTF_INLINE_OR_EXTERN char32_t _MCFCRT_DecodeUtf16(const char16_t **__pp
 		return _MCFCRT_UTF_PARTIAL_DATA;
 	}
 	const _MCFCRT_STD uint_fast32_t __u32Unit = (_MCFCRT_STD uint16_t)*(__pc16Read++);
-	_MCFCRT_STD uint_fast32_t __u32CodePoint;
+	_MCFCRT_STD uint_fast32_t __u32CodePoint, __u32Test;
 	if(__u32Unit < 0xD800){
 		__u32CodePoint = __u32Unit;
-	} else if(__u32Unit < 0xDC00){
+	} else if((__u32Test = __u32Unit - 0xD800) < 0x400){
 		if(__pc16ReadEnd - __pc16Read < 1){
 			return _MCFCRT_UTF_PARTIAL_DATA;
 		}
-		const _MCFCRT_STD uint_fast32_t __u32LeadingSurrogate = __u32Unit;
-		__u32CodePoint = (_MCFCRT_STD uint16_t)*(__pc16Read++);
-		if(__u32CodePoint - 0xDC00 >= 0x400){
+		__u32CodePoint = __u32Test << 10;
+		_MCFCRT_STD uint_fast32_t __u32NextUnit = (_MCFCRT_STD uint16_t)*(__pc16Read++);
+		if((__u32Test = __u32NextUnit - 0xDC00) >= 0x400){
 			__MCFCRT_HANDLE_INVALID_INPUT(__bPermissive, __u32CodePoint, __jDone)
 		}
-		const _MCFCRT_STD uint_fast32_t __u32TrailingSurrogate = __u32CodePoint;
-		__u32CodePoint  = (__u32LeadingSurrogate  & 0x3FF) << 10;
-		__u32CodePoint += (__u32TrailingSurrogate & 0x3FF);
+		__u32CodePoint += __u32Test;
 		__u32CodePoint += 0x10000;
-	} else if(__u32Unit < 0xE000){
+	} else if((__u32Test = __u32Unit - 0xDC00) < 0x400){
 		__MCFCRT_HANDLE_INVALID_INPUT(__bPermissive, __u32CodePoint, __jDone)
 	} else {
 		__u32CodePoint = __u32Unit;
@@ -130,59 +129,58 @@ __MCFCRT_UTF_INLINE_OR_EXTERN char32_t _MCFCRT_DecodeCesu8(const char **__ppchRe
 		return _MCFCRT_UTF_PARTIAL_DATA;
 	}
 	const _MCFCRT_STD uint_fast32_t __u32Unit = (_MCFCRT_STD uint8_t)*(__pchRead++);
-	_MCFCRT_STD uint_fast32_t __u32CodePoint;
 #define __MCFCRT_DECODE_ONE(__reg_, __bits_)	\
 	{	\
 		const _MCFCRT_STD uint_fast32_t __u32NextUnit_ = (_MCFCRT_STD uint8_t)*(__pchRead++);	\
-		if(__u32NextUnit_ - 0x80 >= 0x40){	\
+		const _MCFCRT_STD uint_fast32_t __u32Test_ = __u32NextUnit_ - 0x80;	\
+		if(__u32Test_ >= 0x40){	\
 			__MCFCRT_HANDLE_INVALID_INPUT(__bPermissive, (__reg_), __jDone)	\
 		}	\
-		(__reg_) += (__u32NextUnit_ & 0x3F) << (__bits_);	\
+		(__reg_) += __u32Test_ << (__bits_);	\
 	}
+	_MCFCRT_STD uint_fast32_t __u32CodePoint, __u32Test;
 	if(__u32Unit < 0x80){
 		__u32CodePoint = __u32Unit;
-	} else if(__u32Unit < 0xC0){
+	} else if((__u32Test = __u32Unit - 0x80) < 0x40){
 		__MCFCRT_HANDLE_INVALID_INPUT(__bPermissive, __u32CodePoint, __jDone)
-	} else if(__u32Unit < 0xE0){
+	} else if((__u32Test = __u32Unit - 0xC0) < 0x20){
 		if(__pchReadEnd - __pchRead < 1){
 			return _MCFCRT_UTF_PARTIAL_DATA;
 		}
-		__u32CodePoint = (__u32Unit & 0x1F) << 6;
+		__u32CodePoint = __u32Test << 6;
 		__MCFCRT_DECODE_ONE(__u32CodePoint, 0)
 		if(__u32CodePoint < 0x80){
 			__MCFCRT_HANDLE_INVALID_INPUT(__bPermissive, __u32CodePoint, __jDone)
 		}
-	} else if(__u32Unit < 0xF0){
+	} else if((__u32Test = __u32Unit - 0xE0) < 0x10){
 		if(__pchReadEnd - __pchRead < 2){
 			return _MCFCRT_UTF_PARTIAL_DATA;
 		}
-		__u32CodePoint = (__u32Unit & 0x0F) << 12;
+		__u32CodePoint = __u32Test << 12;
 		__MCFCRT_DECODE_ONE(__u32CodePoint, 6)
 		__MCFCRT_DECODE_ONE(__u32CodePoint, 0)
 		if(__u32CodePoint < 0x800){
 			__MCFCRT_HANDLE_INVALID_INPUT(__bPermissive, __u32CodePoint, __jDone)
 		}
-		if(__u32CodePoint - 0xD800 < 0x800){
-			if(__u32CodePoint - 0xD800 >= 0x400){
+		if((__u32Test = __u32CodePoint - 0xD800) < 0x800){
+			if(__u32Test >= 0x400){
 				__MCFCRT_HANDLE_INVALID_INPUT(__bPermissive, __u32CodePoint, __jDone)
 			}
 			if(__pchReadEnd - __pchRead < 3){
 				return _MCFCRT_UTF_PARTIAL_DATA;
 			}
-			const _MCFCRT_STD uint_fast32_t __u32LeadingSurrogate = __u32CodePoint;
-			__u32CodePoint = (_MCFCRT_STD uint8_t)*(__pchRead++);
-			if(__u32CodePoint - 0xE0 >= 0x10){
+			__u32CodePoint = __u32Test << 10;
+			_MCFCRT_STD uint_fast32_t __u32NextUnit = (_MCFCRT_STD uint8_t)*(__pchRead++);
+			if((__u32Test = __u32NextUnit - 0xE0) >= 0x10){
 				__MCFCRT_HANDLE_INVALID_INPUT(__bPermissive, __u32CodePoint, __jDone)
 			}
-			__u32CodePoint = (__u32Unit & 0x0F) << 12;
-			__MCFCRT_DECODE_ONE(__u32CodePoint, 6)
-			__MCFCRT_DECODE_ONE(__u32CodePoint, 0)
-			if(__u32CodePoint - 0xDC00 >= 0x400){
+			__u32NextUnit = __u32Test << 12;
+			__MCFCRT_DECODE_ONE(__u32NextUnit, 6)
+			__MCFCRT_DECODE_ONE(__u32NextUnit, 0)
+			if((__u32Test = __u32NextUnit - 0xDC00) >= 0x400){
 				__MCFCRT_HANDLE_INVALID_INPUT(__bPermissive, __u32CodePoint, __jDone)
 			}
-			const _MCFCRT_STD uint_fast32_t __u32TrailingSurrogate = __u32CodePoint;
-			__u32CodePoint  = (__u32LeadingSurrogate  & 0x3FF) << 10;
-			__u32CodePoint += (__u32TrailingSurrogate & 0x3FF);
+			__u32CodePoint += __u32Test;
 			__u32CodePoint += 0x10000;
 		}
 	} else {

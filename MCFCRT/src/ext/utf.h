@@ -57,6 +57,9 @@ __MCFCRT_UTF_INLINE_OR_EXTERN char32_t _MCFCRT_DecodeUtf8(const char **__ppchRea
 		}
 		__u32CodePoint = (__u32Unit & 0x1F) << 6;
 		__MCFCRT_DECODE_ONE(0)
+		if(__u32CodePoint < 0x80){
+			__MCFCRT_HANDLE_INVALID_INPUT(__bIgnoreEncodingErrors, __u32CodePoint, __jDone)
+		}
 	} else if(__u32Unit < 0xF0){
 		if(__pchReadEnd - __pchRead < 2){
 			return _MCFCRT_UTF_PARTIAL_DATA;
@@ -64,6 +67,9 @@ __MCFCRT_UTF_INLINE_OR_EXTERN char32_t _MCFCRT_DecodeUtf8(const char **__ppchRea
 		__u32CodePoint = (__u32Unit & 0x0F) << 12;
 		__MCFCRT_DECODE_ONE(6)
 		__MCFCRT_DECODE_ONE(0)
+		if(__u32CodePoint < 0x800){
+			__MCFCRT_HANDLE_INVALID_INPUT(__bIgnoreEncodingErrors, __u32CodePoint, __jDone)
+		}
 		if(__u32CodePoint - 0xD800 < 0x800){
 			__MCFCRT_HANDLE_INVALID_INPUT(__bIgnoreEncodingErrors, __u32CodePoint, __jDone)
 		}
@@ -75,7 +81,7 @@ __MCFCRT_UTF_INLINE_OR_EXTERN char32_t _MCFCRT_DecodeUtf8(const char **__ppchRea
 		__MCFCRT_DECODE_ONE(12)
 		__MCFCRT_DECODE_ONE(6)
 		__MCFCRT_DECODE_ONE(0)
-		if(__u32CodePoint - 0xD800 < 0x800){
+		if(__u32CodePoint < 0x10000){
 			__MCFCRT_HANDLE_INVALID_INPUT(__bIgnoreEncodingErrors, __u32CodePoint, __jDone)
 		}
 		if(__u32CodePoint >= 0x110000){

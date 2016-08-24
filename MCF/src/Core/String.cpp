@@ -38,7 +38,7 @@ void NarrowString::UnifyAppend(Utf16String &u16sDst, const NarrowStringView &svS
 		auto pchRead = svSrc.GetBegin();
 		const auto pchReadEnd = svSrc.GetEnd();
 		while(pchRead < pchReadEnd){
-			auto c32CodePoint = ::_MCFCRT_DecodeUtf8(&pchRead, pchReadEnd, false, false);
+			auto c32CodePoint = ::_MCFCRT_DecodeUtf8(&pchRead, pchReadEnd, false);
 			if(!_MCFCRT_UTF_SUCCESS(c32CodePoint)){
 				MCF_THROW(Exception, ERROR_INVALID_DATA, Rcntws::View(L"NarrowString: _MCFCRT_DecodeUtf8() 失败。"));
 			}
@@ -66,7 +66,7 @@ void NarrowString::DeunifyAppend(NarrowString &strDst, const Utf16StringView &u1
 			if(!_MCFCRT_UTF_SUCCESS(c32CodePoint)){
 				MCF_THROW(Exception, ERROR_INVALID_DATA, Rcntws::View(L"NarrowString: _MCFCRT_DecodeUtf16() 失败。"));
 			}
-			c32CodePoint = ::_MCFCRT_UncheckedEncodeUtf8(&pchWrite, c32CodePoint, true, false, false);
+			c32CodePoint = ::_MCFCRT_UncheckedEncodeUtf8(&pchWrite, c32CodePoint, true, false);
 			if(!_MCFCRT_UTF_SUCCESS(c32CodePoint)){
 				MCF_THROW(Exception, ERROR_INVALID_DATA, Rcntws::View(L"NarrowString: _MCFCRT_UncheckedEncodeUtf8() 失败。"));
 			}
@@ -87,7 +87,7 @@ void NarrowString::UnifyAppend(Utf32String &u32sDst, const NarrowStringView &svS
 		auto pchRead = svSrc.GetBegin();
 		const auto pchReadEnd = svSrc.GetEnd();
 		while(pchRead < pchReadEnd){
-			auto c32CodePoint = ::_MCFCRT_DecodeUtf8(&pchRead, pchReadEnd, false, false);
+			auto c32CodePoint = ::_MCFCRT_DecodeUtf8(&pchRead, pchReadEnd, false);
 			if(!_MCFCRT_UTF_SUCCESS(c32CodePoint)){
 				MCF_THROW(Exception, ERROR_INVALID_DATA, Rcntws::View(L"NarrowString: _MCFCRT_DecodeUtf8() 失败。"));
 			}
@@ -109,7 +109,7 @@ void NarrowString::DeunifyAppend(NarrowString &strDst, const Utf32StringView &u3
 		const auto pc32ReadEnd = u32svSrc.GetEnd();
 		while(pc32Read < pc32ReadEnd){
 			auto c32CodePoint = *(pc32Read++);
-			c32CodePoint = ::_MCFCRT_UncheckedEncodeUtf8(&pchWrite, c32CodePoint, true, false, false);
+			c32CodePoint = ::_MCFCRT_UncheckedEncodeUtf8(&pchWrite, c32CodePoint, true, false);
 			if(!_MCFCRT_UTF_SUCCESS(c32CodePoint)){
 				MCF_THROW(Exception, ERROR_INVALID_DATA, Rcntws::View(L"NarrowString: _MCFCRT_EncodeUtf8() 失败。"));
 			}
@@ -156,7 +156,7 @@ void Utf8String::UnifyAppend(Utf16String &u16sDst, const Utf8StringView &svSrc){
 		auto pchRead = svSrc.GetBegin();
 		const auto pchReadEnd = svSrc.GetEnd();
 		while(pchRead < pchReadEnd){
-			auto c32CodePoint = ::_MCFCRT_DecodeUtf8(&pchRead, pchReadEnd, false, false);
+			auto c32CodePoint = ::_MCFCRT_DecodeUtf8(&pchRead, pchReadEnd, false);
 			if(!_MCFCRT_UTF_SUCCESS(c32CodePoint)){
 				MCF_THROW(Exception, ERROR_INVALID_DATA, Rcntws::View(L"Utf8String: _MCFCRT_DecodeUtf8() 失败。"));
 			}
@@ -184,7 +184,7 @@ void Utf8String::DeunifyAppend(Utf8String &strDst, const Utf16StringView &u16svS
 			if(!_MCFCRT_UTF_SUCCESS(c32CodePoint)){
 				MCF_THROW(Exception, ERROR_INVALID_DATA, Rcntws::View(L"Utf8String: _MCFCRT_DecodeUtf16() 失败。"));
 			}
-			c32CodePoint = ::_MCFCRT_UncheckedEncodeUtf8(&pchWrite, c32CodePoint, true, false, false);
+			c32CodePoint = ::_MCFCRT_UncheckedEncodeUtf8(&pchWrite, c32CodePoint, true, false);
 			if(!_MCFCRT_UTF_SUCCESS(c32CodePoint)){
 				MCF_THROW(Exception, ERROR_INVALID_DATA, Rcntws::View(L"Utf8String: _MCFCRT_UncheckedEncodeUtf8() 失败。"));
 			}
@@ -205,7 +205,7 @@ void Utf8String::UnifyAppend(Utf32String &u32sDst, const Utf8StringView &svSrc){
 		auto pchRead = svSrc.GetBegin();
 		const auto pchReadEnd = svSrc.GetEnd();
 		while(pchRead < pchReadEnd){
-			auto c32CodePoint = ::_MCFCRT_DecodeUtf8(&pchRead, pchReadEnd, false, false);
+			auto c32CodePoint = ::_MCFCRT_DecodeUtf8(&pchRead, pchReadEnd, false);
 			if(!_MCFCRT_UTF_SUCCESS(c32CodePoint)){
 				MCF_THROW(Exception, ERROR_INVALID_DATA, Rcntws::View(L"Utf8String: _MCFCRT_DecodeUtf8() 失败。"));
 			}
@@ -227,7 +227,7 @@ void Utf8String::DeunifyAppend(Utf8String &strDst, const Utf32StringView &u32svS
 		const auto pc32ReadEnd = u32svSrc.GetEnd();
 		while(pc32Read < pc32ReadEnd){
 			auto c32CodePoint = *(pc32Read++);
-			c32CodePoint = ::_MCFCRT_UncheckedEncodeUtf8(&pchWrite, c32CodePoint, true, false, false);
+			c32CodePoint = ::_MCFCRT_UncheckedEncodeUtf8(&pchWrite, c32CodePoint, true, false);
 			if(!_MCFCRT_UTF_SUCCESS(c32CodePoint)){
 				MCF_THROW(Exception, ERROR_INVALID_DATA, Rcntws::View(L"Utf8String: _MCFCRT_EncodeUtf8() 失败。"));
 			}

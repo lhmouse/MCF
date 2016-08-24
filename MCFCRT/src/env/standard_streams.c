@@ -485,7 +485,7 @@ size_t _MCFCRT_PeekStandardInputBinary(void *restrict pData, size_t uSize){
 						goto jDone;
 					}
 					char *pchWrite = pchWriteBegin + uBytesCopied;
-					c32CodePoint = _MCFCRT_EncodeUtf8(&pchWrite, pchWriteBegin + uSize, c32CodePoint, true, false, false);
+					c32CodePoint = _MCFCRT_EncodeUtf8(&pchWrite, pchWriteBegin + uSize, c32CodePoint, true, false);
 					if(!_MCFCRT_UTF_SUCCESS(c32CodePoint)){
 						SS_ASSERT(c32CodePoint == _MCFCRT_UTF_BUFFER_TOO_SMALL);
 						break;
@@ -553,7 +553,7 @@ size_t _MCFCRT_ReadStandardInputBinary(void *restrict pData, size_t uSize){
 						goto jDone;
 					}
 					char *pchWrite = pchWriteBegin + uBytesCopied;
-					c32CodePoint = _MCFCRT_EncodeUtf8(&pchWrite, pchWriteBegin + uSize, c32CodePoint, true, false, false);
+					c32CodePoint = _MCFCRT_EncodeUtf8(&pchWrite, pchWriteBegin + uSize, c32CodePoint, true, false);
 					if(!_MCFCRT_UTF_SUCCESS(c32CodePoint)){
 						SS_ASSERT(c32CodePoint == _MCFCRT_UTF_BUFFER_TOO_SMALL);
 						break;
@@ -623,7 +623,7 @@ size_t _MCFCRT_DiscardStandardInputBinary(size_t uSize){
 					}
 					char achDummy[4];
 					char *pchWrite = achDummy;
-					c32CodePoint = _MCFCRT_EncodeUtf8(&pchWrite, achDummy + MinSize(uSize - uBytesCopied, 4), c32CodePoint, true, false, false);
+					c32CodePoint = _MCFCRT_EncodeUtf8(&pchWrite, achDummy + MinSize(uSize - uBytesCopied, 4), c32CodePoint, true, false);
 					uBytesCopied = (size_t)(pchWrite - achDummy);
 					Discard(&g_vStdIn, (size_t)((const char *)pc16Read - (const char *)pc16ReadBegin));
 				}
@@ -689,7 +689,7 @@ long _MCFCRT_PeekStandardInputChar32(void){
 				}
 				const char *const pchReadBegin = GetData(&g_vStdIn);
 				const char *pchRead = pchReadBegin;
-				char32_t c32CodePoint = _MCFCRT_DecodeUtf8(&pchRead, pchReadBegin + GetSize(&g_vStdIn), true, false);
+				char32_t c32CodePoint = _MCFCRT_DecodeUtf8(&pchRead, pchReadBegin + GetSize(&g_vStdIn), true);
 				if(!_MCFCRT_UTF_SUCCESS(c32CodePoint)){
 					SS_ASSERT(c32CodePoint == _MCFCRT_UTF_PARTIAL_DATA);
 					++uPopulationThreshold;
@@ -747,7 +747,7 @@ long _MCFCRT_ReadStandardInputChar32(void){
 				}
 				const char *const pchReadBegin = GetData(&g_vStdIn);
 				const char *pchRead = pchReadBegin;
-				char32_t c32CodePoint = _MCFCRT_DecodeUtf8(&pchRead, pchReadBegin + GetSize(&g_vStdIn), true, false);
+				char32_t c32CodePoint = _MCFCRT_DecodeUtf8(&pchRead, pchReadBegin + GetSize(&g_vStdIn), true);
 				if(!_MCFCRT_UTF_SUCCESS(c32CodePoint)){
 					SS_ASSERT(c32CodePoint == _MCFCRT_UTF_PARTIAL_DATA);
 					++uPopulationThreshold;
@@ -823,7 +823,7 @@ size_t _MCFCRT_PeekStandardInputText(wchar_t *restrict pwcText, size_t uLength, 
 				for(;;){
 					const char *const pchReadBegin = GetData(&g_vStdIn);
 					const char *pchRead = pchReadBegin;
-					char32_t c32CodePoint = _MCFCRT_DecodeUtf8(&pchRead, pchReadBegin + GetSize(&g_vStdIn), true, false);
+					char32_t c32CodePoint = _MCFCRT_DecodeUtf8(&pchRead, pchReadBegin + GetSize(&g_vStdIn), true);
 					if(!_MCFCRT_UTF_SUCCESS(c32CodePoint)){
 						SS_ASSERT(c32CodePoint == _MCFCRT_UTF_PARTIAL_DATA);
 						if(uCharsCopied != 0){
@@ -912,7 +912,7 @@ size_t _MCFCRT_ReadStandardInputText(wchar_t *restrict pwcText, size_t uLength, 
 				for(;;){
 					const char *const pchReadBegin = GetData(&g_vStdIn);
 					const char *pchRead = pchReadBegin;
-					char32_t c32CodePoint = _MCFCRT_DecodeUtf8(&pchRead, pchReadBegin + GetSize(&g_vStdIn), true, false);
+					char32_t c32CodePoint = _MCFCRT_DecodeUtf8(&pchRead, pchReadBegin + GetSize(&g_vStdIn), true);
 					if(!_MCFCRT_UTF_SUCCESS(c32CodePoint)){
 						SS_ASSERT(c32CodePoint == _MCFCRT_UTF_PARTIAL_DATA);
 						if(uCharsCopied != 0){
@@ -998,7 +998,7 @@ size_t _MCFCRT_DiscardStandardInputText(size_t uLength, bool bSingleLine){
 				for(;;){
 					const char *const pchReadBegin = GetData(&g_vStdIn);
 					const char *pchRead = pchReadBegin;
-					char32_t c32CodePoint = _MCFCRT_DecodeUtf8(&pchRead, pchReadBegin + GetSize(&g_vStdIn), true, false);
+					char32_t c32CodePoint = _MCFCRT_DecodeUtf8(&pchRead, pchReadBegin + GetSize(&g_vStdIn), true);
 					if(!_MCFCRT_UTF_SUCCESS(c32CodePoint)){
 						SS_ASSERT(c32CodePoint == _MCFCRT_UTF_PARTIAL_DATA);
 						if(uCharsCopied != 0){
@@ -1132,7 +1132,7 @@ bool _MCFCRT_WriteStandardOutputBinary(const void *restrict pData, size_t uSize)
 				const char *pchRead = pData;
 				const char *const pchReadEnd = pchRead + uSize;
 				while(pchRead < pchReadEnd){
-					char32_t c32CodePoint = _MCFCRT_DecodeUtf8(&pchRead, pchReadEnd, true, false);
+					char32_t c32CodePoint = _MCFCRT_DecodeUtf8(&pchRead, pchReadEnd, true);
 					if(!_MCFCRT_UTF_SUCCESS(c32CodePoint)){
 						SS_ASSERT(c32CodePoint == _MCFCRT_UTF_PARTIAL_DATA);
 						c32CodePoint = 0xFFFD;
@@ -1195,7 +1195,7 @@ bool _MCFCRT_WriteStandardOutputChar32(char32_t c32CodePoint){
 				}
 				char *const pchWriteBegin = GetReservedData(&g_vStdOut);
 				char *pchWrite = pchWriteBegin;
-				_MCFCRT_UncheckedEncodeUtf8(&pchWrite, c32CodePoint, true, false, false);
+				_MCFCRT_UncheckedEncodeUtf8(&pchWrite, c32CodePoint, true, false);
 				Adopt(&g_vStdOut, (size_t)(pchWrite - pchWriteBegin));
 				bSuccess = true;
 			}
@@ -1265,7 +1265,7 @@ bool _MCFCRT_WriteStandardOutputText(const wchar_t *restrict pwcText, size_t uLe
 						c32CodePoint = 0xFFFD;
 						pc16Read = pc16ReadEnd;
 					}
-					_MCFCRT_UncheckedEncodeUtf8(&pchWrite, c32CodePoint, true, false, false);
+					_MCFCRT_UncheckedEncodeUtf8(&pchWrite, c32CodePoint, true, false);
 				}
 				if(bAppendNewLine){
 					*(pchWrite++) = '\n';
@@ -1411,7 +1411,7 @@ bool _MCFCRT_WriteStandardErrorBinary(const void *restrict pData, size_t uSize){
 				const char *pchRead = pData;
 				const char *const pchReadEnd = pchRead + uSize;
 				while(pchRead < pchReadEnd){
-					char32_t c32CodePoint = _MCFCRT_DecodeUtf8(&pchRead, pchReadEnd, true, false);
+					char32_t c32CodePoint = _MCFCRT_DecodeUtf8(&pchRead, pchReadEnd, true);
 					if(!_MCFCRT_UTF_SUCCESS(c32CodePoint)){
 						SS_ASSERT(c32CodePoint == _MCFCRT_UTF_PARTIAL_DATA);
 						c32CodePoint = 0xFFFD;
@@ -1474,7 +1474,7 @@ bool _MCFCRT_WriteStandardErrorChar32(char32_t c32CodePoint){
 				}
 				char *const pchWriteBegin = GetReservedData(&g_vStdErr);
 				char *pchWrite = pchWriteBegin;
-				_MCFCRT_UncheckedEncodeUtf8(&pchWrite, c32CodePoint, true, false, false);
+				_MCFCRT_UncheckedEncodeUtf8(&pchWrite, c32CodePoint, true, false);
 				Adopt(&g_vStdErr, (size_t)(pchWrite - pchWriteBegin));
 				bSuccess = true;
 			}
@@ -1544,7 +1544,7 @@ bool _MCFCRT_WriteStandardErrorText(const wchar_t *restrict pwcText, size_t uLen
 						c32CodePoint = 0xFFFD;
 						pc16Read = pc16ReadEnd;
 					}
-					_MCFCRT_UncheckedEncodeUtf8(&pchWrite, c32CodePoint, true, false, false);
+					_MCFCRT_UncheckedEncodeUtf8(&pchWrite, c32CodePoint, true, false);
 				}
 				if(bAppendNewLine){
 					*(pchWrite++) = '\n';

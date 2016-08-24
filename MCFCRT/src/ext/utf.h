@@ -106,12 +106,14 @@ __MCFCRT_UTF_INLINE_OR_EXTERN char32_t _MCFCRT_DecodeUtf16(const char16_t **__pp
 		if(__pc16ReadEnd - __pc16Read < 1){
 			return _MCFCRT_UTF_PARTIAL_DATA;
 		}
-		__u32CodePoint = (__u32Unit & 0x3FF) << 10;
-		_MCFCRT_STD uint_fast32_t __u32Next = (_MCFCRT_STD uint16_t)*(__pc16Read++);
-		if(__u32Next - 0xDC00 >= 0x400){
+		const _MCFCRT_STD uint_fast32_t __u32LeadingSurrogate = __u32Unit;
+		__u32CodePoint = (_MCFCRT_STD uint16_t)*(__pc16Read++);
+		if(__u32CodePoint - 0xDC00 >= 0x400){
 			__MCFCRT_HANDLE_INVALID_INPUT(__bPermissive, __u32CodePoint, __jDone)
 		}
-		__u32CodePoint += (__u32Next & 0x3FF);
+		const _MCFCRT_STD uint_fast32_t __u32TrailingSurrogate = __u32CodePoint;
+		__u32CodePoint  = (__u32LeadingSurrogate  & 0x3FF) << 10;
+		__u32CodePoint += (__u32TrailingSurrogate & 0x3FF);
 		__u32CodePoint += 0x10000;
 	} else if(__u32Unit < 0xE000){
 		__MCFCRT_HANDLE_INVALID_INPUT(__bPermissive, __u32CodePoint, __jDone)
@@ -164,21 +166,23 @@ __MCFCRT_UTF_INLINE_OR_EXTERN char32_t _MCFCRT_DecodeCesu8(const char **__ppchRe
 			if(__u32CodePoint - 0xD800 >= 0x400){
 				__MCFCRT_HANDLE_INVALID_INPUT(__bPermissive, __u32CodePoint, __jDone)
 			}
-			__u32CodePoint = (__u32CodePoint & 0x3FF) << 10;
 			if(__pchReadEnd - __pchRead < 3){
 				return _MCFCRT_UTF_PARTIAL_DATA;
 			}
-			_MCFCRT_STD uint_fast32_t __u32Next = (_MCFCRT_STD uint8_t)*(__pchRead++);
-			if(__u32Next - 0xE0 >= 0x10){
+			const _MCFCRT_STD uint_fast32_t __u32LeadingSurrogate = __u32CodePoint;
+			__u32CodePoint = (_MCFCRT_STD uint8_t)*(__pchRead++);
+			if(__u32CodePoint - 0xE0 >= 0x10){
 				__MCFCRT_HANDLE_INVALID_INPUT(__bPermissive, __u32CodePoint, __jDone)
 			}
-			__u32Next = (__u32Unit & 0x0F) << 12;
-			__MCFCRT_DECODE_ONE(__u32Next, 6)
-			__MCFCRT_DECODE_ONE(__u32Next, 0)
-			if(__u32Next - 0xDC00 >= 0x400){
+			__u32CodePoint = (__u32Unit & 0x0F) << 12;
+			__MCFCRT_DECODE_ONE(__u32CodePoint, 6)
+			__MCFCRT_DECODE_ONE(__u32CodePoint, 0)
+			if(__u32CodePoint - 0xDC00 >= 0x400){
 				__MCFCRT_HANDLE_INVALID_INPUT(__bPermissive, __u32CodePoint, __jDone)
 			}
-			__u32CodePoint += (__u32Next & 0x3FF);
+			const _MCFCRT_STD uint_fast32_t __u32TrailingSurrogate = __u32CodePoint;
+			__u32CodePoint  = (__u32LeadingSurrogate  & 0x3FF) << 10;
+			__u32CodePoint += (__u32TrailingSurrogate & 0x3FF);
 			__u32CodePoint += 0x10000;
 		}
 	} else {

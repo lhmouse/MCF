@@ -30,9 +30,7 @@ _MCFCRT_EXTERN_C_BEGIN
 		goto __goto_label_;	\
 	}
 
-__MCFCRT_UTF_INLINE_OR_EXTERN char32_t _MCFCRT_DecodeUtf8(const char **__ppchRead, const char *__pchReadEnd,
-	bool __bPermissive) _MCFCRT_NOEXCEPT
-{
+__MCFCRT_UTF_INLINE_OR_EXTERN char32_t _MCFCRT_DecodeUtf8(const char **__ppchRead, const char *__pchReadEnd, bool __bPermissive) _MCFCRT_NOEXCEPT {
 	const char *__pchRead = *__ppchRead;
 	if(__pchRead == __pchReadEnd){
 		return _MCFCRT_UTF_PARTIAL_DATA;
@@ -95,9 +93,7 @@ __jDone:
 	*__ppchRead = __pchRead;
 	return (char32_t)__u32CodePoint;
 }
-__MCFCRT_UTF_INLINE_OR_EXTERN char32_t _MCFCRT_DecodeUtf16(const char16_t **__ppc16Read, const char16_t *__pc16ReadEnd,
-	bool __bPermissive) _MCFCRT_NOEXCEPT
-{
+__MCFCRT_UTF_INLINE_OR_EXTERN char32_t _MCFCRT_DecodeUtf16(const char16_t **__ppc16Read, const char16_t *__pc16ReadEnd, bool __bPermissive) _MCFCRT_NOEXCEPT {
 	const char16_t *__pc16Read = *__ppc16Read;
 	if(__pc16Read == __pc16ReadEnd){
 		return _MCFCRT_UTF_PARTIAL_DATA;
@@ -132,12 +128,10 @@ __jDone:
 	return (char32_t)__u32CodePoint;
 }
 
-__MCFCRT_UTF_INLINE_OR_EXTERN char32_t _MCFCRT_EncodeUtf8(char **__ppchWrite, char *__pchWriteEnd, char32_t __c32Char,
-	bool __bPermissive, bool __bEncodeNullAsTwoBytes) _MCFCRT_NOEXCEPT
-{
+__MCFCRT_UTF_INLINE_OR_EXTERN char32_t _MCFCRT_EncodeUtf8(char **__ppchWrite, char *__pchWriteEnd, char32_t __c32Char, bool __bPermissive) _MCFCRT_NOEXCEPT {
 	char *__pchWrite = *__ppchWrite;
 	_MCFCRT_STD uint_fast32_t __u32CodePoint = __c32Char;
-	if((__u32CodePoint < 0x80) && !(__bEncodeNullAsTwoBytes && (__u32CodePoint == 0))){
+	if(__u32CodePoint < 0x80){
 		if(__pchWriteEnd - __pchWrite < 1){
 			return _MCFCRT_UTF_BUFFER_TOO_SMALL;
 		}
@@ -173,9 +167,7 @@ __jReplace:
 	*__ppchWrite = __pchWrite;
 	return __u32CodePoint;
 }
-__MCFCRT_UTF_INLINE_OR_EXTERN char32_t _MCFCRT_EncodeUtf16(char16_t **__ppc16Write, char16_t *__pc16WriteEnd, char32_t __c32Char,
-	bool __bPermissive) _MCFCRT_NOEXCEPT
-{
+__MCFCRT_UTF_INLINE_OR_EXTERN char32_t _MCFCRT_EncodeUtf16(char16_t **__ppc16Write, char16_t *__pc16WriteEnd, char32_t __c32Char, bool __bPermissive) _MCFCRT_NOEXCEPT {
 	char16_t *__pc16Write = *__ppc16Write;
 	_MCFCRT_STD uint_fast32_t __u32CodePoint = __c32Char;
 	if(__u32CodePoint < 0x10000){
@@ -200,12 +192,10 @@ __jReplace:
 	return __u32CodePoint;
 }
 
-__MCFCRT_UTF_INLINE_OR_EXTERN char32_t _MCFCRT_UncheckedEncodeUtf8(char **__ppchWrite, char32_t __c32Char,
-	bool __bPermissive, bool __bEncodeNullAsTwoBytes) _MCFCRT_NOEXCEPT
-{
+__MCFCRT_UTF_INLINE_OR_EXTERN char32_t _MCFCRT_UncheckedEncodeUtf8(char **__ppchWrite, char32_t __c32Char, bool __bPermissive) _MCFCRT_NOEXCEPT {
 	char *__pchWrite = *__ppchWrite;
 	_MCFCRT_STD uint_fast32_t __u32CodePoint = __c32Char;
-	if((__u32CodePoint < 0x80) && !(__bEncodeNullAsTwoBytes && (__u32CodePoint == 0))){
+	if(__u32CodePoint < 0x80){
 		*(__pchWrite++) = (char)__u32CodePoint;
 	} else if(__u32CodePoint < 0x800){
 		*(__pchWrite++) = (char)(((__u32CodePoint >>  6) & 0x1F) | 0xC0);
@@ -229,9 +219,7 @@ __jReplace:
 	*__ppchWrite = __pchWrite;
 	return __u32CodePoint;
 }
-__MCFCRT_UTF_INLINE_OR_EXTERN char32_t _MCFCRT_UncheckedEncodeUtf16(char16_t **__ppc16Write, char32_t __c32Char,
-	bool __bPermissive) _MCFCRT_NOEXCEPT
-{
+__MCFCRT_UTF_INLINE_OR_EXTERN char32_t _MCFCRT_UncheckedEncodeUtf16(char16_t **__ppc16Write, char32_t __c32Char, bool __bPermissive) _MCFCRT_NOEXCEPT {
 	char16_t *__pc16Write = *__ppc16Write;
 	_MCFCRT_STD uint_fast32_t __u32CodePoint = __c32Char;
 	if(__u32CodePoint < 0x10000){

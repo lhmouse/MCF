@@ -204,7 +204,7 @@ __MCFCRT_UTF_INLINE_OR_EXTERN char32_t _MCFCRT_EncodeUtf8(char **__ppchWrite, ch
 		if(__pchWriteEnd - __pchWrite < 2){
 			return _MCFCRT_UTF_BUFFER_TOO_SMALL;
 		}
-		*(__pchWrite++) = (char)(((__u32CodePoint >>  6) & 0x1F) + 0xC0);
+		*(__pchWrite++) = (char)(((__u32CodePoint >>  6)       ) + 0xC0);
 		*(__pchWrite++) = (char)(((__u32CodePoint      ) & 0x3F) + 0x80);
 	} else if(__u32CodePoint < 0x10000){
 		if(__u32CodePoint - 0xD800 < 0x800){
@@ -214,14 +214,14 @@ __jReplace: __attribute__((__cold__));
 		if(__pchWriteEnd - __pchWrite < 3){
 			return _MCFCRT_UTF_BUFFER_TOO_SMALL;
 		}
-		*(__pchWrite++) = (char)(((__u32CodePoint >> 12) & 0x0F) + 0xE0);
+		*(__pchWrite++) = (char)(((__u32CodePoint >> 12)       ) + 0xE0);
 		*(__pchWrite++) = (char)(((__u32CodePoint >>  6) & 0x3F) + 0x80);
 		*(__pchWrite++) = (char)(((__u32CodePoint      ) & 0x3F) + 0x80);
 	} else if(__u32CodePoint < 0x110000){
 		if(__pchWriteEnd - __pchWrite < 4){
 			return _MCFCRT_UTF_BUFFER_TOO_SMALL;
 		}
-		*(__pchWrite++) = (char)(((__u32CodePoint >> 18) & 0x07) + 0xF0);
+		*(__pchWrite++) = (char)(((__u32CodePoint >> 18)       ) + 0xF0);
 		*(__pchWrite++) = (char)(((__u32CodePoint >> 12) & 0x3F) + 0x80);
 		*(__pchWrite++) = (char)(((__u32CodePoint >>  6) & 0x3F) + 0x80);
 		*(__pchWrite++) = (char)(((__u32CodePoint      ) & 0x3F) + 0x80);
@@ -247,7 +247,7 @@ __jReplace: __attribute__((__cold__));
 		if(__pc16WriteEnd - __pc16Write < 2){
 			return _MCFCRT_UTF_BUFFER_TOO_SMALL;
 		}
-		const _MCFCRT_STD uint_fast32_t __u32LeadingSurrogate  = (((__u32CodePoint - 0x10000) >> 10) & 0x03FF) + 0xD800;
+		const _MCFCRT_STD uint_fast32_t __u32LeadingSurrogate  = (((__u32CodePoint - 0x10000) >> 10)         ) + 0xD800;
 		const _MCFCRT_STD uint_fast32_t __u32TrailingSurrogate = (((__u32CodePoint          )      ) & 0x03FF) + 0xDC00;
 		*(__pc16Write++) = (char16_t)__u32LeadingSurrogate;
 		*(__pc16Write++) = (char16_t)__u32TrailingSurrogate;
@@ -269,7 +269,7 @@ __MCFCRT_UTF_INLINE_OR_EXTERN char32_t _MCFCRT_EncodeCesu8(char **__ppchWrite, c
 		if(__pchWriteEnd - __pchWrite < 2){
 			return _MCFCRT_UTF_BUFFER_TOO_SMALL;
 		}
-		*(__pchWrite++) = (char)(((__u32CodePoint >>  6) & 0x1F) + 0xC0);
+		*(__pchWrite++) = (char)(((__u32CodePoint >>  6)       ) + 0xC0);
 		*(__pchWrite++) = (char)(((__u32CodePoint      ) & 0x3F) + 0x80);
 	} else if(__u32CodePoint < 0x10000){
 		if(__u32CodePoint - 0xD800 < 0x800){
@@ -279,7 +279,7 @@ __jReplace: __attribute__((__cold__));
 		if(__pchWriteEnd - __pchWrite < 3){
 			return _MCFCRT_UTF_BUFFER_TOO_SMALL;
 		}
-		*(__pchWrite++) = (char)(((__u32CodePoint >> 12) & 0x0F) + 0xE0);
+		*(__pchWrite++) = (char)(((__u32CodePoint >> 12)       ) + 0xE0);
 		*(__pchWrite++) = (char)(((__u32CodePoint >>  6) & 0x3F) + 0x80);
 		*(__pchWrite++) = (char)(((__u32CodePoint      ) & 0x3F) + 0x80);
 	} else if(__u32CodePoint < 0x110000){
@@ -288,10 +288,10 @@ __jReplace: __attribute__((__cold__));
 		}
 		const _MCFCRT_STD uint_fast32_t __u32LeadingSurrogate  = (((__u32CodePoint - 0x10000) >> 10) & 0x03FF) + 0xD800;
 		const _MCFCRT_STD uint_fast32_t __u32TrailingSurrogate = (((__u32CodePoint          )      ) & 0x03FF) + 0xDC00;
-		*(__pchWrite++) = (char)(((__u32LeadingSurrogate  >> 12) & 0x0F) + 0xE0);
+		*(__pchWrite++) = (char)(((__u32LeadingSurrogate  >> 12)       ) + 0xE0);
 		*(__pchWrite++) = (char)(((__u32LeadingSurrogate  >>  6) & 0x3F) + 0x80);
 		*(__pchWrite++) = (char)(((__u32LeadingSurrogate       ) & 0x3F) + 0x80);
-		*(__pchWrite++) = (char)(((__u32TrailingSurrogate >> 12) & 0x0F) + 0xE0);
+		*(__pchWrite++) = (char)(((__u32TrailingSurrogate >> 12)       ) + 0xE0);
 		*(__pchWrite++) = (char)(((__u32TrailingSurrogate >>  6) & 0x3F) + 0x80);
 		*(__pchWrite++) = (char)(((__u32TrailingSurrogate      ) & 0x3F) + 0x80);
 	} else {
@@ -307,18 +307,18 @@ __MCFCRT_UTF_INLINE_OR_EXTERN char32_t _MCFCRT_UncheckedEncodeUtf8(char **__ppch
 	if(__u32CodePoint < 0x80){
 		*(__pchWrite++) = (char)__u32CodePoint;
 	} else if(__u32CodePoint < 0x800){
-		*(__pchWrite++) = (char)(((__u32CodePoint >>  6) & 0x1F) + 0xC0);
+		*(__pchWrite++) = (char)(((__u32CodePoint >>  6)       ) + 0xC0);
 		*(__pchWrite++) = (char)(((__u32CodePoint      ) & 0x3F) + 0x80);
 	} else if(__u32CodePoint < 0x10000){
 		if(__u32CodePoint - 0xD800 < 0x800){
 			__MCFCRT_HANDLE_INVALID_INPUT(__bPermissive, __u32CodePoint, __jReplace)
 		}
 __jReplace: __attribute__((__cold__));
-		*(__pchWrite++) = (char)(((__u32CodePoint >> 12) & 0x0F) + 0xE0);
+		*(__pchWrite++) = (char)(((__u32CodePoint >> 12)       ) + 0xE0);
 		*(__pchWrite++) = (char)(((__u32CodePoint >>  6) & 0x3F) + 0x80);
 		*(__pchWrite++) = (char)(((__u32CodePoint      ) & 0x3F) + 0x80);
 	} else if(__u32CodePoint < 0x110000){
-		*(__pchWrite++) = (char)(((__u32CodePoint >> 18) & 0x07) + 0xF0);
+		*(__pchWrite++) = (char)(((__u32CodePoint >> 18)       ) + 0xF0);
 		*(__pchWrite++) = (char)(((__u32CodePoint >> 12) & 0x3F) + 0x80);
 		*(__pchWrite++) = (char)(((__u32CodePoint >>  6) & 0x3F) + 0x80);
 		*(__pchWrite++) = (char)(((__u32CodePoint      ) & 0x3F) + 0x80);
@@ -354,23 +354,23 @@ __MCFCRT_UTF_INLINE_OR_EXTERN char32_t _MCFCRT_UncheckedEncodeCesu8(char **__ppc
 	if(__u32CodePoint < 0x80){
 		*(__pchWrite++) = (char)__u32CodePoint;
 	} else if(__u32CodePoint < 0x800){
-		*(__pchWrite++) = (char)(((__u32CodePoint >>  6) & 0x1F) + 0xC0);
+		*(__pchWrite++) = (char)(((__u32CodePoint >>  6)       ) + 0xC0);
 		*(__pchWrite++) = (char)(((__u32CodePoint      ) & 0x3F) + 0x80);
 	} else if(__u32CodePoint < 0x10000){
 		if(__u32CodePoint - 0xD800 < 0x800){
 			__MCFCRT_HANDLE_INVALID_INPUT(__bPermissive, __u32CodePoint, __jReplace)
 		}
 __jReplace: __attribute__((__cold__));
-		*(__pchWrite++) = (char)(((__u32CodePoint >> 12) & 0x0F) + 0xE0);
+		*(__pchWrite++) = (char)(((__u32CodePoint >> 12)       ) + 0xE0);
 		*(__pchWrite++) = (char)(((__u32CodePoint >>  6) & 0x3F) + 0x80);
 		*(__pchWrite++) = (char)(((__u32CodePoint      ) & 0x3F) + 0x80);
 	} else if(__u32CodePoint < 0x110000){
 		const _MCFCRT_STD uint_fast32_t __u32LeadingSurrogate  = (((__u32CodePoint - 0x10000) >> 10) & 0x03FF) + 0xD800;
 		const _MCFCRT_STD uint_fast32_t __u32TrailingSurrogate = (((__u32CodePoint          )      ) & 0x03FF) + 0xDC00;
-		*(__pchWrite++) = (char)(((__u32LeadingSurrogate  >> 12) & 0x0F) + 0xE0);
+		*(__pchWrite++) = (char)(((__u32LeadingSurrogate  >> 12)       ) + 0xE0);
 		*(__pchWrite++) = (char)(((__u32LeadingSurrogate  >>  6) & 0x3F) + 0x80);
 		*(__pchWrite++) = (char)(((__u32LeadingSurrogate       ) & 0x3F) + 0x80);
-		*(__pchWrite++) = (char)(((__u32TrailingSurrogate >> 12) & 0x0F) + 0xE0);
+		*(__pchWrite++) = (char)(((__u32TrailingSurrogate >> 12)       ) + 0xE0);
 		*(__pchWrite++) = (char)(((__u32TrailingSurrogate >>  6) & 0x3F) + 0x80);
 		*(__pchWrite++) = (char)(((__u32TrailingSurrogate      ) & 0x3F) + 0x80);
 	} else {

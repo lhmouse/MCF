@@ -15,14 +15,18 @@ _MCFCRT_EXTERN_C_BEGIN
 
 // 这些函数并不对字符串结束符进行特殊处理（字符串结束符被当作普通字符）。
 
-#define _MCFCRT_UTF_SUCCESS(__c_)     ((_MCFCRT_STD int32_t)(__c_) >= 0)
+#define _MCFCRT_UTF_SUCCESS(__c_)        ((_MCFCRT_STD int32_t)(__c_) >= 0)
 
-#define _MCFCRT_UTF_INVALID_INPUT     ((char32_t)-1)  // 输入字符串不是合法的 UTF 序列。
-#define _MCFCRT_UTF_PARTIAL_DATA      ((char32_t)-2)  // 输入的最后一个码点不完整。
-#define _MCFCRT_UTF_BUFFER_TOO_SMALL  ((char32_t)-3)  // 输出缓冲区太小。
+#define _MCFCRT_UTF_INVALID_INPUT        ((char32_t)-1)  // 输入字符串不是合法的 UTF 序列。
+#define _MCFCRT_UTF_PARTIAL_DATA         ((char32_t)-2)  // 输入的最后一个码点不完整。
+#define _MCFCRT_UTF_BUFFER_TOO_SMALL     ((char32_t)-3)  // 输出缓冲区太小。
+
+#define __MCFCRT_UTF_CAT_(__x_, __y_)    __x_ ## __y_
+#define __MCFCRT_UTF_CAT(__x_, __y_)     __MCFCRT_UTF_CAT_(__x_, __y_)
 
 #define __MCFCRT_HANDLE_INVALID_INPUT(__permissive_, __code_point_, __goto_label_)	\
 	{	\
+	__MCFCRT_UTF_CAT(__MCFCRT_jCold, __LINE__): __attribute__((__cold__, __unused__));	\
 		if(!(__permissive_)){	\
 			return _MCFCRT_UTF_INVALID_INPUT;	\
 		}	\
@@ -90,7 +94,7 @@ __MCFCRT_UTF_INLINE_OR_EXTERN char32_t _MCFCRT_DecodeUtf8(const char **__ppchRea
 		__MCFCRT_HANDLE_INVALID_INPUT(__bPermissive, __u32CodePoint, __jDone)
 	}
 #undef __MCFCRT_DECODE_ONE
-__jDone: __attribute__((__cold__));
+__jDone:
 	*__ppchRead = __pchRead;
 	return (char32_t)__u32CodePoint;
 }
@@ -119,7 +123,7 @@ __MCFCRT_UTF_INLINE_OR_EXTERN char32_t _MCFCRT_DecodeUtf16(const char16_t **__pp
 	} else {
 		__u32CodePoint = __u32Unit;
 	}
-__jDone: __attribute__((__cold__));
+__jDone:
 	*__ppc16Read = __pc16Read;
 	return (char32_t)__u32CodePoint;
 }
@@ -187,7 +191,7 @@ __MCFCRT_UTF_INLINE_OR_EXTERN char32_t _MCFCRT_DecodeCesu8(const char **__ppchRe
 		__MCFCRT_HANDLE_INVALID_INPUT(__bPermissive, __u32CodePoint, __jDone)
 	}
 #undef __MCFCRT_DECODE_ONE
-__jDone: __attribute__((__cold__));
+__jDone:
 	*__ppchRead = __pchRead;
 	return (char32_t)__u32CodePoint;
 }
@@ -210,7 +214,7 @@ __MCFCRT_UTF_INLINE_OR_EXTERN char32_t _MCFCRT_EncodeUtf8(char **__ppchWrite, ch
 		if(__u32CodePoint - 0xD800 < 0x800){
 			__MCFCRT_HANDLE_INVALID_INPUT(__bPermissive, __u32CodePoint, __jReplace)
 		}
-__jReplace: __attribute__((__cold__));
+__jReplace:
 		if(__pchWriteEnd - __pchWrite < 3){
 			return _MCFCRT_UTF_BUFFER_TOO_SMALL;
 		}
@@ -238,7 +242,7 @@ __MCFCRT_UTF_INLINE_OR_EXTERN char32_t _MCFCRT_EncodeUtf16(char16_t **__ppc16Wri
 		if(__u32CodePoint - 0xD800 < 0x800){
 			__MCFCRT_HANDLE_INVALID_INPUT(__bPermissive, __u32CodePoint, __jReplace)
 		}
-__jReplace: __attribute__((__cold__));
+__jReplace:
 		if(__pc16WriteEnd - __pc16Write < 1){
 			return _MCFCRT_UTF_BUFFER_TOO_SMALL;
 		}
@@ -275,7 +279,7 @@ __MCFCRT_UTF_INLINE_OR_EXTERN char32_t _MCFCRT_EncodeCesu8(char **__ppchWrite, c
 		if(__u32CodePoint - 0xD800 < 0x800){
 			__MCFCRT_HANDLE_INVALID_INPUT(__bPermissive, __u32CodePoint,__jReplace)
 		}
-__jReplace: __attribute__((__cold__));
+__jReplace:
 		if(__pchWriteEnd - __pchWrite < 3){
 			return _MCFCRT_UTF_BUFFER_TOO_SMALL;
 		}
@@ -313,7 +317,7 @@ __MCFCRT_UTF_INLINE_OR_EXTERN char32_t _MCFCRT_UncheckedEncodeUtf8(char **__ppch
 		if(__u32CodePoint - 0xD800 < 0x800){
 			__MCFCRT_HANDLE_INVALID_INPUT(__bPermissive, __u32CodePoint, __jReplace)
 		}
-__jReplace: __attribute__((__cold__));
+__jReplace:
 		*(__pchWrite++) = (char)(((__u32CodePoint      ) >> 12) + 0xE0);
 		*(__pchWrite++) = (char)(((__u32CodePoint << 20) >> 26) + 0x80);
 		*(__pchWrite++) = (char)(((__u32CodePoint << 26) >> 26) + 0x80);
@@ -335,7 +339,7 @@ __MCFCRT_UTF_INLINE_OR_EXTERN char32_t _MCFCRT_UncheckedEncodeUtf16(char16_t **_
 		if(__u32CodePoint - 0xD800 < 0x800){
 			__MCFCRT_HANDLE_INVALID_INPUT(__bPermissive, __u32CodePoint, __jReplace)
 		}
-__jReplace: __attribute__((__cold__));
+__jReplace:
 		*(__pc16Write++) = (char16_t)__u32CodePoint;
 	} else if(__u32CodePoint < 0x110000){
 		const _MCFCRT_STD uint_fast32_t __u32LeadingSurrogate  = (((__u32CodePoint - 0x10000)      ) >> 10) + 0xD800;
@@ -360,7 +364,7 @@ __MCFCRT_UTF_INLINE_OR_EXTERN char32_t _MCFCRT_UncheckedEncodeCesu8(char **__ppc
 		if(__u32CodePoint - 0xD800 < 0x800){
 			__MCFCRT_HANDLE_INVALID_INPUT(__bPermissive, __u32CodePoint, __jReplace)
 		}
-__jReplace: __attribute__((__cold__));
+__jReplace:
 		*(__pchWrite++) = (char)(((__u32CodePoint      ) >> 12) + 0xE0);
 		*(__pchWrite++) = (char)(((__u32CodePoint << 20) >> 26) + 0x80);
 		*(__pchWrite++) = (char)(((__u32CodePoint << 26) >> 26) + 0x80);

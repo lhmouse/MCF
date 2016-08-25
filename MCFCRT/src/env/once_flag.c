@@ -51,7 +51,7 @@ static inline _MCFCRT_OnceResult ReallyTryOnceFlag(volatile uintptr_t *puControl
 __attribute__((__always_inline__))
 static inline _MCFCRT_OnceResult RealWaitForOnceFlag(volatile uintptr_t *puControl, bool bMayTimeOut, uint64_t u64UntilFastMonoClock){
 	for(;;){
-		bool bFinished, bTaken;
+		bool bFinished, bTaken = false;
 		{
 			uintptr_t uOld, uNew;
 			uOld = __atomic_load_n(puControl, __ATOMIC_RELAXED);

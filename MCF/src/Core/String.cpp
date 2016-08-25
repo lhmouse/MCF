@@ -125,12 +125,48 @@ void Utf8String::DeunifyAppend(Utf8String &u8sDst, const Utf32StringView &u32svS
 template<>
 __attribute__((__flatten__))
 void Utf16String::UnifyAppend(Utf16String &u16sDst, const Utf16StringView &u16svSrc){
-	u16sDst.Append(u16svSrc.GetBegin(), u16svSrc.GetSize());
+	const auto pc16WriteBegin = u16sDst.ResizeMore(u16svSrc.GetSize());
+	try {
+		auto pc16Write = pc16WriteBegin;
+		auto pc16Read = u16svSrc.GetBegin();
+		const auto pc16ReadEnd = u16svSrc.GetEnd();
+		while(pc16Read < pc16ReadEnd){
+			auto c32CodePoint = ::_MCFCRT_DecodeUtf16(&pc16Read, pc16ReadEnd, false);
+			if(!_MCFCRT_UTF_SUCCESS(c32CodePoint)){
+				MCF_THROW(Exception, ERROR_INVALID_DATA, Rcntws::View(L"Utf16String: _MCFCRT_DecodeUtf16() 失败。"));
+			}
+			c32CodePoint = ::_MCFCRT_UncheckedEncodeUtf16(&pc16Write, c32CodePoint, true);
+			MCF_ASSERT(_MCFCRT_UTF_SUCCESS(c32CodePoint));
+		}
+		u16sDst.Pop(static_cast<std::size_t>(u16sDst.GetEnd() - pc16Write));
+	} catch(...){
+		u16sDst.Pop(static_cast<std::size_t>(u16sDst.GetEnd() - pc16WriteBegin));
+		throw;
+	}
 }
 template<>
 __attribute__((__flatten__))
 void Utf16String::DeunifyAppend(Utf16String &u16sDst, const Utf16StringView &u16svSrc){
-	u16sDst.Append(u16svSrc.GetBegin(), u16svSrc.GetSize());
+	const auto pc16WriteBegin = u16sDst.ResizeMore(u16svSrc.GetSize());
+	try {
+		auto pc16Write = pc16WriteBegin;
+		auto pc16Read = u16svSrc.GetBegin();
+		const auto pc16ReadEnd = u16svSrc.GetEnd();
+		while(pc16Read < pc16ReadEnd){
+			auto c32CodePoint = ::_MCFCRT_DecodeUtf16(&pc16Read, pc16ReadEnd, false);
+			if(!_MCFCRT_UTF_SUCCESS(c32CodePoint)){
+				MCF_THROW(Exception, ERROR_INVALID_DATA, Rcntws::View(L"Utf8String: _MCFCRT_DecodeUtf16() 失败。"));
+			}
+			c32CodePoint = ::_MCFCRT_UncheckedEncodeUtf16(&pc16Write, c32CodePoint, true);
+			if(!_MCFCRT_UTF_SUCCESS(c32CodePoint)){
+				MCF_THROW(Exception, ERROR_INVALID_DATA, Rcntws::View(L"Utf16String: _MCFCRT_UncheckedEncodeUtf16() 失败。"));
+			}
+		}
+		u16sDst.Pop(static_cast<std::size_t>(u16sDst.GetEnd() - pc16Write));
+	} catch(...){
+		u16sDst.Pop(static_cast<std::size_t>(u16sDst.GetEnd() - pc16WriteBegin));
+		throw;
+	}
 }
 
 template<>
@@ -231,12 +267,48 @@ void Utf32String::DeunifyAppend(Utf32String &u32sDst, const Utf16StringView &u16
 template<>
 __attribute__((__flatten__))
 void Utf32String::UnifyAppend(Utf32String &u32sDst, const Utf32StringView &u32svSrc){
-	u32sDst.Append(u32svSrc.GetBegin(), u32svSrc.GetSize());
+	const auto pc32WriteBegin = u32sDst.ResizeMore(u32svSrc.GetSize());
+	try {
+		auto pc32Write = pc32WriteBegin;
+		auto pc32Read = u32svSrc.GetBegin();
+		const auto pc32ReadEnd = u32svSrc.GetEnd();
+		while(pc32Read < pc32ReadEnd){
+			auto c32CodePoint = ::_MCFCRT_DecodeUtf32(&pc32Read, pc32ReadEnd, false);
+			if(!_MCFCRT_UTF_SUCCESS(c32CodePoint)){
+				MCF_THROW(Exception, ERROR_INVALID_DATA, Rcntws::View(L"Utf8String: _MCFCRT_DecodeUtf32() 失败。"));
+			}
+			c32CodePoint = ::_MCFCRT_UncheckedEncodeUtf32(&pc32Write, c32CodePoint, true);
+			if(!_MCFCRT_UTF_SUCCESS(c32CodePoint)){
+				MCF_THROW(Exception, ERROR_INVALID_DATA, Rcntws::View(L"Utf32String: _MCFCRT_UncheckedEncodeUtf32() 失败。"));
+			}
+		}
+		u32sDst.Pop(static_cast<std::size_t>(u32sDst.GetEnd() - pc32Write));
+	} catch(...){
+		u32sDst.Pop(static_cast<std::size_t>(u32sDst.GetEnd() - pc32WriteBegin));
+		throw;
+	}
 }
 template<>
 __attribute__((__flatten__))
 void Utf32String::DeunifyAppend(Utf32String &u32sDst, const Utf32StringView &u32svSrc){
-	u32sDst.Append(u32svSrc.GetBegin(), u32svSrc.GetSize());
+	const auto pc32WriteBegin = u32sDst.ResizeMore(u32svSrc.GetSize());
+	try {
+		auto pc32Write = pc32WriteBegin;
+		auto pc32Read = u32svSrc.GetBegin();
+		const auto pc32ReadEnd = u32svSrc.GetEnd();
+		while(pc32Read < pc32ReadEnd){
+			auto c32CodePoint = ::_MCFCRT_DecodeUtf32(&pc32Read, pc32ReadEnd, false);
+			if(!_MCFCRT_UTF_SUCCESS(c32CodePoint)){
+				MCF_THROW(Exception, ERROR_INVALID_DATA, Rcntws::View(L"Utf32String: _MCFCRT_DecodeUtf32() 失败。"));
+			}
+			c32CodePoint = ::_MCFCRT_UncheckedEncodeUtf32(&pc32Write, c32CodePoint, true);
+			MCF_ASSERT(_MCFCRT_UTF_SUCCESS(c32CodePoint));
+		}
+		u32sDst.Pop(static_cast<std::size_t>(u32sDst.GetEnd() - pc32Write));
+	} catch(...){
+		u32sDst.Pop(static_cast<std::size_t>(u32sDst.GetEnd() - pc32WriteBegin));
+		throw;
+	}
 }
 
 // CESU-8

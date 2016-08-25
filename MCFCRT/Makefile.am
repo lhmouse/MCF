@@ -41,19 +41,6 @@ pkginclude_pre_HEADERS =	\
 
 pkginclude_envdir = ${pkgincludedir}/env
 pkginclude_env_HEADERS =	\
-	src/ext/alloca.h	\
-	src/ext/assert.h	\
-	src/ext/div64.h	\
-	src/ext/expect.h	\
-	src/ext/itoa.h	\
-	src/ext/itow.h	\
-	src/ext/mul64.h	\
-	src/ext/offset_of.h	\
-	src/ext/random.h	\
-	src/ext/stpcpy.h	\
-	src/ext/thunk.h	\
-	src/ext/utf.h	\
-	src/ext/wcpcpy.h	\
 	src/env/_c11thread_inl.h	\
 	src/env/_crtdef.h	\
 	src/env/_fpu.h	\
@@ -92,7 +79,8 @@ pkginclude_ext_HEADERS =	\
 	src/ext/stpcpy.h	\
 	src/ext/thunk.h	\
 	src/ext/utf.h	\
-	src/ext/wcpcpy.h
+	src/ext/wcpcpy.h	\
+	src/ext/pp.h
 
 mcfcrt_pre_sources =	\
 	src/pre/module.c	\

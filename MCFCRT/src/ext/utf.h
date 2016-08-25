@@ -6,6 +6,7 @@
 #define __MCFCRT_EXT_UTF_H_
 
 #include "../env/_crtdef.h"
+#include "pp.h"
 
 #ifndef __MCFCRT_UTF_INLINE_OR_EXTERN
 #	define __MCFCRT_UTF_INLINE_OR_EXTERN     __attribute__((__gnu_inline__)) extern inline
@@ -21,12 +22,9 @@ _MCFCRT_EXTERN_C_BEGIN
 #define _MCFCRT_UTF_PARTIAL_DATA         ((char32_t)-2)  // 输入的最后一个码点不完整。
 #define _MCFCRT_UTF_BUFFER_TOO_SMALL     ((char32_t)-3)  // 输出缓冲区太小。
 
-#define __MCFCRT_UTF_CAT_(__x_, __y_)    __x_ ## __y_
-#define __MCFCRT_UTF_CAT(__x_, __y_)     __MCFCRT_UTF_CAT_(__x_, __y_)
-
 #define __MCFCRT_HANDLE_INVALID_INPUT(__permissive_, __code_point_, __goto_label_)	\
 	{	\
-	__MCFCRT_UTF_CAT(__MCFCRT_jCold, __LINE__): __attribute__((__cold__, __unused__));	\
+	_MCFCRT_PP_CAT2(__MCFCRT_jCold, __LINE__): __attribute__((__cold__, __unused__));	\
 		if(!(__permissive_)){	\
 			return _MCFCRT_UTF_INVALID_INPUT;	\
 		}	\

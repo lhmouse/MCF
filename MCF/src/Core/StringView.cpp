@@ -11,6 +11,7 @@ template class StringView<StringType::kUtf16>;
 template class StringView<StringType::kUtf32>;
 template class StringView<StringType::kCesu8>;
 template class StringView<StringType::kAnsi>;
+template class StringView<StringType::kModifiedUtf8>;
 template class StringView<StringType::kNarrow>;
 template class StringView<StringType::kWide>;
 

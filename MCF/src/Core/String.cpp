@@ -24,6 +24,7 @@ template class String<StringType::kUtf16>;
 template class String<StringType::kUtf32>;
 template class String<StringType::kCesu8>;
 template class String<StringType::kAnsi>;
+template class String<StringType::kModifiedUtf8>;
 template class String<StringType::kNarrow>;
 template class String<StringType::kWide>;
 
@@ -42,9 +43,7 @@ void Utf8String::UnifyAppend(Utf16String &u16sDst, const Utf8StringView &u8svSrc
 				MCF_THROW(Exception, ERROR_INVALID_DATA, Rcntws::View(L"Utf8String: _MCFCRT_DecodeUtf8() 失败。"));
 			}
 			c32CodePoint = ::_MCFCRT_UncheckedEncodeUtf16(&pc16Write, c32CodePoint, true);
-			if(!_MCFCRT_UTF_SUCCESS(c32CodePoint)){
-				MCF_THROW(Exception, ERROR_INVALID_DATA, Rcntws::View(L"Utf8String: _MCFCRT_UncheckedEncodeUtf16() 失败。"));
-			}
+			MCF_ASSERT(_MCFCRT_UTF_SUCCESS(c32CodePoint));
 		}
 		u16sDst.Pop(static_cast<std::size_t>(u16sDst.GetEnd() - pc16Write));
 	} catch(...){
@@ -66,9 +65,7 @@ void Utf8String::DeunifyAppend(Utf8String &u8sDst, const Utf16StringView &u16svS
 				MCF_THROW(Exception, ERROR_INVALID_DATA, Rcntws::View(L"Utf8String: _MCFCRT_DecodeUtf16() 失败。"));
 			}
 			c32CodePoint = ::_MCFCRT_UncheckedEncodeUtf8(&pchWrite, c32CodePoint, true);
-			if(!_MCFCRT_UTF_SUCCESS(c32CodePoint)){
-				MCF_THROW(Exception, ERROR_INVALID_DATA, Rcntws::View(L"Utf8String: _MCFCRT_UncheckedEncodeUtf8() 失败。"));
-			}
+			MCF_ASSERT(_MCFCRT_UTF_SUCCESS(c32CodePoint));
 		}
 		u8sDst.Pop(static_cast<std::size_t>(u8sDst.GetEnd() - pchWrite));
 	} catch(...){
@@ -108,7 +105,7 @@ void Utf8String::DeunifyAppend(Utf8String &u8sDst, const Utf32StringView &u32svS
 		const auto pc32ReadEnd = u32svSrc.GetEnd();
 		while(pc32Read < pc32ReadEnd){
 			auto c32CodePoint = *(pc32Read++);
-			c32CodePoint = ::_MCFCRT_UncheckedEncodeUtf8(&pchWrite, c32CodePoint, true);
+			c32CodePoint = ::_MCFCRT_UncheckedEncodeUtf8(&pchWrite, c32CodePoint, false);
 			if(!_MCFCRT_UTF_SUCCESS(c32CodePoint)){
 				MCF_THROW(Exception, ERROR_INVALID_DATA, Rcntws::View(L"Utf8String: _MCFCRT_UncheckedEncodeUtf8() 失败。"));
 			}
@@ -163,7 +160,7 @@ void Utf16String::DeunifyAppend(Utf16String &u16sDst, const Utf32StringView &u32
 		const auto pc32ReadEnd = u32svSrc.GetEnd();
 		while(pc32Read < pc32ReadEnd){
 			auto c32CodePoint = *(pc32Read++);
-			c32CodePoint = ::_MCFCRT_UncheckedEncodeUtf16(&pc16Write, c32CodePoint, true);
+			c32CodePoint = ::_MCFCRT_UncheckedEncodeUtf16(&pc16Write, c32CodePoint, false);
 			if(!_MCFCRT_UTF_SUCCESS(c32CodePoint)){
 				MCF_THROW(Exception, ERROR_INVALID_DATA, Rcntws::View(L"Utf16String: _MCFCRT_UncheckedEncodeUtf16() 失败。"));
 			}
@@ -186,7 +183,7 @@ void Utf32String::UnifyAppend(Utf16String &u16sDst, const Utf32StringView &u32sv
 		const auto pc32ReadEnd = u32svSrc.GetEnd();
 		while(pc32Read < pc32ReadEnd){
 			auto c32CodePoint = *(pc32Read++);
-			c32CodePoint = ::_MCFCRT_UncheckedEncodeUtf16(&pc16Write, c32CodePoint, true);
+			c32CodePoint = ::_MCFCRT_UncheckedEncodeUtf16(&pc16Write, c32CodePoint, false);
 			if(!_MCFCRT_UTF_SUCCESS(c32CodePoint)){
 				MCF_THROW(Exception, ERROR_INVALID_DATA, Rcntws::View(L"Utf32String: _MCFCRT_UncheckedEncodeUtf16() 失败。"));
 			}
@@ -230,7 +227,7 @@ void Utf32String::DeunifyAppend(Utf32String &u32sDst, const Utf32StringView &u32
 	u32sDst.Append(u32svSrc.GetBegin(), u32svSrc.GetSize());
 }
 
-// CESU-8`
+// CESU-8
 template<>
 __attribute__((__flatten__))
 void Cesu8String::UnifyAppend(Utf16String &u16sDst, const Cesu8StringView &u8svSrc){
@@ -245,9 +242,7 @@ void Cesu8String::UnifyAppend(Utf16String &u16sDst, const Cesu8StringView &u8svS
 				MCF_THROW(Exception, ERROR_INVALID_DATA, Rcntws::View(L"Cesu8String: _MCFCRT_DecodeCesu8() 失败。"));
 			}
 			c32CodePoint = ::_MCFCRT_UncheckedEncodeUtf16(&pc16Write, c32CodePoint, true);
-			if(!_MCFCRT_UTF_SUCCESS(c32CodePoint)){
-				MCF_THROW(Exception, ERROR_INVALID_DATA, Rcntws::View(L"Cesu8String: _MCFCRT_UncheckedEncodeUtf16() 失败。"));
-			}
+			MCF_ASSERT(_MCFCRT_UTF_SUCCESS(c32CodePoint));
 		}
 		u16sDst.Pop(static_cast<std::size_t>(u16sDst.GetEnd() - pc16Write));
 	} catch(...){
@@ -269,9 +264,7 @@ void Cesu8String::DeunifyAppend(Cesu8String &u8sDst, const Utf16StringView &u16s
 				MCF_THROW(Exception, ERROR_INVALID_DATA, Rcntws::View(L"Cesu8String: _MCFCRT_DecodeUtf16() 失败。"));
 			}
 			c32CodePoint = ::_MCFCRT_UncheckedEncodeCesu8(&pchWrite, c32CodePoint, true);
-			if(!_MCFCRT_UTF_SUCCESS(c32CodePoint)){
-				MCF_THROW(Exception, ERROR_INVALID_DATA, Rcntws::View(L"Cesu8String: _MCFCRT_UncheckedEncodeCesu8() 失败。"));
-			}
+			MCF_ASSERT(_MCFCRT_UTF_SUCCESS(c32CodePoint));
 		}
 		u8sDst.Pop(static_cast<std::size_t>(u8sDst.GetEnd() - pchWrite));
 	} catch(...){
@@ -311,7 +304,7 @@ void Cesu8String::DeunifyAppend(Cesu8String &u8sDst, const Utf32StringView &u32s
 		const auto pc32ReadEnd = u32svSrc.GetEnd();
 		while(pc32Read < pc32ReadEnd){
 			auto c32CodePoint = *(pc32Read++);
-			c32CodePoint = ::_MCFCRT_UncheckedEncodeCesu8(&pchWrite, c32CodePoint, true);
+			c32CodePoint = ::_MCFCRT_UncheckedEncodeCesu8(&pchWrite, c32CodePoint, false);
 			if(!_MCFCRT_UTF_SUCCESS(c32CodePoint)){
 				MCF_THROW(Exception, ERROR_INVALID_DATA, Rcntws::View(L"Cesu8String: _MCFCRT_UncheckedEncodeCesu8() 失败。"));
 			}
@@ -388,6 +381,121 @@ void AnsiString::DeunifyAppend(AnsiString &asDst, const Utf32StringView &u32svSr
 	Utf16String u16sTemp;
 	Utf16String::DeunifyAppend(u16sTemp, u32svSrc);
 	DeunifyAppend(asDst, u16sTemp);
+}
+
+// Modified UTF-8
+template<>
+__attribute__((__flatten__))
+void ModifiedUtf8String::UnifyAppend(Utf16String &u16sDst, const ModifiedUtf8StringView &u8svSrc){
+	const auto pc16WriteBegin = u16sDst.ResizeMore(u8svSrc.GetSize());
+	try {
+		auto pc16Write = pc16WriteBegin;
+		auto pchRead = u8svSrc.GetBegin();
+		const auto pchReadEnd = u8svSrc.GetEnd();
+		while(pchRead < pchReadEnd){
+			const unsigned uFirst = static_cast<unsigned char>(*pchRead);
+			if(uFirst == 0x00){
+				MCF_THROW(Exception, ERROR_INVALID_DATA, Rcntws::View(L"ModifiedUtf8String: 输入的字符串不合法。"));
+			} else if((uFirst == 0xC0) && (pchReadEnd - pchRead >= 1) && (static_cast<unsigned char>(pchRead[1]) == 0x80)){
+				pchRead += 2;
+				*(pc16Write++) = 0;
+			} else {
+				auto c32CodePoint = ::_MCFCRT_DecodeCesu8(&pchRead, pchReadEnd, false);
+				if(!_MCFCRT_UTF_SUCCESS(c32CodePoint)){
+					MCF_THROW(Exception, ERROR_INVALID_DATA, Rcntws::View(L"ModifiedUtf8String: _MCFCRT_DecodeCesu8() 失败。"));
+				}
+				c32CodePoint = ::_MCFCRT_UncheckedEncodeUtf16(&pc16Write, c32CodePoint, true);
+				MCF_ASSERT(_MCFCRT_UTF_SUCCESS(c32CodePoint));
+			}
+		}
+		u16sDst.Pop(static_cast<std::size_t>(u16sDst.GetEnd() - pc16Write));
+	} catch(...){
+		u16sDst.Pop(static_cast<std::size_t>(u16sDst.GetEnd() - pc16WriteBegin));
+		throw;
+	}
+}
+template<>
+__attribute__((__flatten__))
+void ModifiedUtf8String::DeunifyAppend(ModifiedUtf8String &u8sDst, const Utf16StringView &u16svSrc){
+	const auto pchWriteBegin = u8sDst.ResizeMore(Impl_CheckedSizeArithmetic::Mul(3, u16svSrc.GetSize()));
+	try {
+		auto pchWrite = pchWriteBegin;
+		auto pc16Read = u16svSrc.GetBegin();
+		const auto pc16ReadEnd = u16svSrc.GetEnd();
+		while(pc16Read < pc16ReadEnd){
+			auto c32CodePoint = ::_MCFCRT_DecodeUtf16(&pc16Read, pc16ReadEnd, false);
+			if(!_MCFCRT_UTF_SUCCESS(c32CodePoint)){
+				MCF_THROW(Exception, ERROR_INVALID_DATA, Rcntws::View(L"ModifiedUtf8String: _MCFCRT_DecodeUtf16() 失败。"));
+			}
+			if(c32CodePoint == 0){
+				*(pchWrite++) = (char)0xC0;
+				*(pchWrite++) = (char)0x80;
+			} else {
+				c32CodePoint = ::_MCFCRT_UncheckedEncodeCesu8(&pchWrite, c32CodePoint, true);
+				MCF_ASSERT(_MCFCRT_UTF_SUCCESS(c32CodePoint));
+			}
+		}
+		u8sDst.Pop(static_cast<std::size_t>(u8sDst.GetEnd() - pchWrite));
+	} catch(...){
+		u8sDst.Pop(static_cast<std::size_t>(u8sDst.GetEnd() - pchWriteBegin));
+		throw;
+	}
+}
+
+template<>
+__attribute__((__flatten__))
+void ModifiedUtf8String::UnifyAppend(Utf32String &u32sDst, const ModifiedUtf8StringView &u8svSrc){
+	const auto pc32WriteBegin = u32sDst.ResizeMore(u8svSrc.GetSize());
+	try {
+		auto pc32Write = pc32WriteBegin;
+		auto pchRead = u8svSrc.GetBegin();
+		const auto pchReadEnd = u8svSrc.GetEnd();
+		while(pchRead < pchReadEnd){
+			const unsigned uFirst = static_cast<unsigned char>(*pchRead);
+			if(uFirst == 0x00){
+				MCF_THROW(Exception, ERROR_INVALID_DATA, Rcntws::View(L"ModifiedUtf8String: 输入的字符串不合法。"));
+			} else if((uFirst == 0xC0) && (pchReadEnd - pchRead >= 1) && (static_cast<unsigned char>(pchRead[1]) == 0x80)){
+				pchRead += 2;
+				*(pc32Write++) = 0;
+			} else {
+				auto c32CodePoint = ::_MCFCRT_DecodeCesu8(&pchRead, pchReadEnd, false);
+				if(!_MCFCRT_UTF_SUCCESS(c32CodePoint)){
+					MCF_THROW(Exception, ERROR_INVALID_DATA, Rcntws::View(L"ModifiedUtf8String: _MCFCRT_DecodeCesu8() 失败。"));
+				}
+				*(pc32Write++) = c32CodePoint;
+			}
+		}
+		u32sDst.Pop(static_cast<std::size_t>(u32sDst.GetEnd() - pc32Write));
+	} catch(...){
+		u32sDst.Pop(static_cast<std::size_t>(u32sDst.GetEnd() - pc32WriteBegin));
+		throw;
+	}
+}
+template<>
+__attribute__((__flatten__))
+void ModifiedUtf8String::DeunifyAppend(ModifiedUtf8String &u8sDst, const Utf32StringView &u32svSrc){
+	const auto pchWriteBegin = u8sDst.ResizeMore(Impl_CheckedSizeArithmetic::Mul(6, u32svSrc.GetSize()));
+	try {
+		auto pchWrite = pchWriteBegin;
+		auto pc32Read = u32svSrc.GetBegin();
+		const auto pc32ReadEnd = u32svSrc.GetEnd();
+		while(pc32Read < pc32ReadEnd){
+			auto c32CodePoint = *(pc32Read++);
+			if(c32CodePoint == 0){
+				*(pchWrite++) = (char)0xC0;
+				*(pchWrite++) = (char)0x80;
+			} else {
+				c32CodePoint = ::_MCFCRT_UncheckedEncodeCesu8(&pchWrite, c32CodePoint, false);
+				if(!_MCFCRT_UTF_SUCCESS(c32CodePoint)){
+					MCF_THROW(Exception, ERROR_INVALID_DATA, Rcntws::View(L"ModifiedUtf8String: _MCFCRT_UncheckedEncodeCesu8() 失败。"));
+				}
+			}
+		}
+		u8sDst.Pop(static_cast<std::size_t>(u8sDst.GetEnd() - pchWrite));
+	} catch(...){
+		u8sDst.Pop(static_cast<std::size_t>(u8sDst.GetEnd() - pchWriteBegin));
+		throw;
+	}
 }
 
 // UTF-8

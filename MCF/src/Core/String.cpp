@@ -396,7 +396,8 @@ void ModifiedUtf8String::UnifyAppend(Utf16String &u16sDst, const ModifiedUtf8Str
 			const unsigned uFirst = static_cast<unsigned char>(*pchRead);
 			if(uFirst == 0x00){
 				MCF_THROW(Exception, ERROR_INVALID_DATA, Rcntws::View(L"ModifiedUtf8String: 输入的字符串不合法。"));
-			} else if((uFirst == 0xC0) && (pchReadEnd - pchRead >= 1) && (static_cast<unsigned char>(pchRead[1]) == 0x80)){
+			}
+			if((uFirst == 0xC0) && (pchReadEnd - pchRead >= 1) && (static_cast<unsigned char>(pchRead[1]) == 0x80)){
 				pchRead += 2;
 				*(pc16Write++) = 0;
 			} else {
@@ -454,7 +455,8 @@ void ModifiedUtf8String::UnifyAppend(Utf32String &u32sDst, const ModifiedUtf8Str
 			const unsigned uFirst = static_cast<unsigned char>(*pchRead);
 			if(uFirst == 0x00){
 				MCF_THROW(Exception, ERROR_INVALID_DATA, Rcntws::View(L"ModifiedUtf8String: 输入的字符串不合法。"));
-			} else if((uFirst == 0xC0) && (pchReadEnd - pchRead >= 1) && (static_cast<unsigned char>(pchRead[1]) == 0x80)){
+			}
+			if((uFirst == 0xC0) && (pchReadEnd - pchRead >= 1) && (static_cast<unsigned char>(pchRead[1]) == 0x80)){
 				pchRead += 2;
 				*(pc32Write++) = 0;
 			} else {

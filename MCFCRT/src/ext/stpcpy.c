@@ -3,127 +3,103 @@
 // Copyleft 2013 - 2016, LH_Mouse. All wrongs reserved.
 
 #include "stpcpy.h"
-#include "../ext/assert.h"
-
-#ifdef _WIN64
-#	define MASK     0x0101010101010101ull
-#else
-#	define MASK     0x01010101ul
-#endif
+#include "expect.h"
+#include "assert.h"
 
 char *_MCFCRT_stpcpy(char *restrict dst, const char *restrict src){
-	register const char *rp = src;
 	register char *wp = dst;
-
+	register const char *rp = src;
 	// 如果 rp 是对齐到字的，就不用考虑越界的问题。
 	// 因为内存按页分配的，也自然对齐到页，并且也对齐到字。
 	// 每个字内的字节的权限必然一致。
 	while(((uintptr_t)rp & (sizeof(uintptr_t) - 1)) != 0){
-		if((*wp = *(rp++)) == 0){
+		if((*wp = *rp) == 0){
 			return wp;
 		}
 		++wp;
+		++rp;
 	}
-
 	for(;;){
-
-#define UNROLLED(idx_)	\
-		{	\
-			register uintptr_t wrd = ((const uintptr_t *)rp)[(idx_)];	\
-			if(((wrd - MASK) & ~wrd & (MASK << 7)) != 0){	\
-				wp += (idx_) * sizeof(uintptr_t);	\
-				for(size_t i = 0; i < sizeof(uintptr_t) - 1; ++i){	\
-					if((*wp = (char)(unsigned char)(wrd & 0xFF)) == 0){	\
-						return wp;	\
-					}	\
-					++wp;	\
-					wrd >>= 8;	\
-				}	\
-				*wp = 0;	\
-				return wp;	\
-			}	\
-			((uintptr_t *)wp)[(idx_)] = wrd;	\
-		}
-
-		UNROLLED(0)
-		UNROLLED(1)
-		UNROLLED(2)
-		UNROLLED(3)
-		UNROLLED(4)
-		UNROLLED(5)
-		UNROLLED(6)
-		UNROLLED(7)
-
-		rp += 8 * sizeof(uintptr_t);
-		wp += 8 * sizeof(uintptr_t);
-	}
-}
-char *_MCFCRT_stppcpy(char *dst, char *end, const char *restrict src){
-	register const char *rp = src;
-	register char *wp = dst;
-
-	_MCFCRT_ASSERT_MSG(wp < end, L"目的缓冲区至少应为一个字符大小以容纳字符串结束符。");
-
-	// 如果 rp 是对齐到字的，就不用考虑越界的问题。
-	// 因为内存按页分配的，也自然对齐到页，并且也对齐到字。
-	// 每个字内的字节的权限必然一致。
-	while(((uintptr_t)rp & (sizeof(uintptr_t) - 1)) != 0){
-		if(wp >= end - 1){
+		uintptr_t w = *(const uintptr_t *)rp;
+#ifdef _WIN64
+		w = (w - 0x0101010101010101u) & ~w;
+		if(_MCFCRT_EXPECT_NOT((w & 0x8080808080808080u) != 0))
+#else
+		w = (w - 0x01010101u) & ~w;
+		if(_MCFCRT_EXPECT_NOT((w & 0x80808080u) != 0))
+#endif
+		{
+			for(unsigned i = 0; i < sizeof(uintptr_t) - 1; ++i){
+				if((*wp = *rp) == 0){
+					return wp;
+				}
+				++wp;
+				++rp;
+			}
 			*wp = 0;
 			return wp;
 		}
-		if((*wp = *(rp++)) == 0){
+		w = *(const uintptr_t *)rp;
+		*(uintptr_t *)wp = w;
+		wp += sizeof(uintptr_t);
+		rp += sizeof(uintptr_t);
+	}
+}
+char *_MCFCRT_stppcpy(char *dst, char *end, const char *restrict src){
+	register char *wp = dst;
+	register const char *rp = src;
+	// 如果 rp 是对齐到字的，就不用考虑越界的问题。
+	// 因为内存按页分配的，也自然对齐到页，并且也对齐到字。
+	// 每个字内的字节的权限必然一致。
+	while(((uintptr_t)rp & (sizeof(uintptr_t) - 1)) != 0){
+		if(wp == end - 1){
+			*wp = 0;
+			return wp;
+		}
+		if((*wp = *rp) == 0){
 			return wp;
 		}
 		++wp;
+		++rp;
 	}
-
 	for(;;){
-
-#define UNROLLED_P(idx_)	\
-		{	\
-			register uintptr_t wrd = ((const uintptr_t *)rp)[(idx_)];	\
-			if((size_t)(end - 1 - wp) < ((idx_) + 1) * sizeof(uintptr_t)){	\
-				wp += (idx_) * sizeof(uintptr_t);	\
-				for(size_t i = 0; i < sizeof(uintptr_t) - 1; ++i){	\
-					if(wp >= end - 1){	\
-						*wp = 0;	\
-						return wp;	\
-					}	\
-					if((*wp = (char)(unsigned char)(wrd & 0xFF)) == 0){	\
-						return wp;	\
-					}	\
-					++wp;	\
-					wrd >>= 8;	\
-				}	\
-				*wp = 0;	\
-				return wp;	\
-			}	\
-			if(((wrd - MASK) & ~wrd & (MASK << 7)) != 0){	\
-				wp += (idx_) * sizeof(uintptr_t);	\
-				for(size_t i = 0; i < sizeof(uintptr_t) - 1; ++i){	\
-					if((*wp = (char)(unsigned char)(wrd & 0xFF)) == 0){	\
-						return wp;	\
-					}	\
-					++wp;	\
-					wrd >>= 8;	\
-				}	\
-				*wp = 0;	\
-				return wp;	\
-			}	\
-			((uintptr_t *)wp)[(idx_)] = wrd;	\
+		uintptr_t w = *(const uintptr_t *)rp;
+#ifdef _WIN64
+		w = (w - 0x0101010101010101u) & ~w;
+		if(((w & 0x8080808080808080u) != 0))
+#else
+		w = (w - 0x01010101u) & ~w;
+		if(((w & 0x80808080u) != 0))
+#endif
+		{
+			for(unsigned i = 0; i < sizeof(uintptr_t) - 1; ++i){
+				if(wp == end - 1){
+					*wp = 0;
+					return wp;
+				}
+				if((*wp = *rp) == 0){
+					return wp;
+				}
+				++wp;
+				++rp;
+			}
+			*wp = 0;
+			return wp;
 		}
-
-		UNROLLED_P(0)
-		UNROLLED_P(1)
-		UNROLLED_P(2)
-		UNROLLED_P(3)
-		UNROLLED_P(4)
-		UNROLLED_P(5)
-		UNROLLED_P(6)
-		UNROLLED_P(7)
-
-		rp += 8 * sizeof(uintptr_t);
-		wp += 8 * sizeof(uintptr_t);
+		const unsigned cap = (unsigned)(end - 1 - wp);
+		if(cap >= sizeof(uintptr_t)){
+			w = *(const uintptr_t *)rp;
+			*(uintptr_t *)wp = w;
+		} else {
+			for(unsigned i = 0; i < cap; ++i){
+				*wp = *rp;
+				++wp;
+				++rp;
+			}
+			*wp = 0;
+			return wp;
+		}
+		wp += sizeof(uintptr_t);
+		rp += sizeof(uintptr_t);
 	}
 }

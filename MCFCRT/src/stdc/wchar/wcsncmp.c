@@ -5,36 +5,23 @@
 #include "../../env/_crtdef.h"
 
 int wcsncmp(const wchar_t *s1, const wchar_t *s2, size_t n){
-	size_t cnt = n;
+	register const wchar_t *rp1 = s1, *rp2 = s2;
+	size_t i = n;
 	for(;;){
-
-#define UNROLLED(idx_)	\
-		{	\
-			if(cnt == 0){	\
-				return 0;	\
-			}	\
-			--cnt;	\
-			const int_fast32_t ch1 = (int_fast32_t)(uint16_t)s1[idx_];	\
-			const int_fast32_t ch2 = (int_fast32_t)(uint16_t)s2[idx_];	\
-			const int_fast32_t delta = ch1 - ch2;	\
-			if(delta != 0){	\
-				return (delta >> (sizeof(delta) * __CHAR_BIT__ - 1)) | 1;	\
-			}	\
-			if(ch1 == 0){	\
-				return 0;	\
-			}	\
+		if(i == 0){
+			return 0;
 		}
-
-		UNROLLED(0)
-		UNROLLED(1)
-		UNROLLED(2)
-		UNROLLED(3)
-		UNROLLED(4)
-		UNROLLED(5)
-		UNROLLED(6)
-		UNROLLED(7)
-
-		s1 += 8;
-		s2 += 8;
+		const int32_t c1 = (uint16_t)*rp1++;
+		const int32_t c2 = (uint16_t)*rp2++;
+		const int32_t d = c1 - c2;
+		if(d != 0){
+			return (d >> 31) | 1;
+		}
+		if(c1 == 0){
+			return 0;
+		}
+		++rp1;
+		++rp2;
+		--i;
 	}
 }

@@ -3,44 +3,39 @@
 // Copyleft 2013 - 2016, LH_Mouse. All wrongs reserved.
 
 #include "../../env/_crtdef.h"
-#include "../../ext/expect.h"
 
-size_t wcslen(const wchar_t *s){
+wchar_t *wcschr(const wchar_t *s, wchar_t c){
 	register const wchar_t *rp = s;
 	// 如果 rp 是对齐到字的，就不用考虑越界的问题。
 	// 因为内存按页分配的，也自然对齐到页，并且也对齐到字。
 	// 每个字内的字节的权限必然一致。
 	while(((uintptr_t)rp & (sizeof(uintptr_t) - 1)) != 0){
 		const wchar_t rc = *rp;
+		if(rc == c){
+			return (wchar_t *)rp;
+		}
 		if(rc == 0){
-			return (size_t)(rp - s);
+			return nullptr;
 		}
 		++rp;
 	}
 	for(;;){
 		uintptr_t w = *(const uintptr_t *)rp;
-#ifdef _WIN64
-		w = (w - 0x0001000100010001u) & ~w;
-		if(_MCFCRT_EXPECT_NOT((w & 0x8000800080008000u) != 0))
-#else
-		w = (w - 0x00010001u) & ~w;
-		if(_MCFCRT_EXPECT_NOT((w & 0x80008000u) != 0))
-#endif
-		{
-			for(unsigned i = 0; i < sizeof(uintptr_t) / 2 - 1; ++i){
+		for(unsigned i = 0; i < sizeof(uintptr_t) / 2; ++i){
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
-				const bool rc = w & 0x8000;
-				w >>= 16;
+			const wchar_t rc = (wchar_t)w;
+			w >>= 16;
 #else
-				const bool rc = (w >> sizeof(uintptr_t) * 8 - 16) & 0x8000;
-				w <<= 16;
+			const wchar_t rc = (wchar_t)(w >> sizeof(uintptr_t) * 8 - 16);
+			w <<= 16;
 #endif
-				if(rc){
-					return (size_t)(rp - s) + i;
-				}
+			if(rc == c){
+				return (wchar_t *)rp;
 			}
-			return (size_t)(rp - s) + sizeof(uintptr_t) / 2 - 1;
+			if(rc == 0){
+				return nullptr;
+			}
+			++rp;
 		}
-		rp += sizeof(uintptr_t) / 2;
 	}
 }

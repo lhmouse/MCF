@@ -165,10 +165,12 @@ mcfcrt_sources =	\
 	src/stdc/string/memcpy.c	\
 	src/stdc/string/memmove.c	\
 	src/stdc/string/memset.c	\
+	src/stdc/string/strchr.c	\
 	src/stdc/string/strcmp.c	\
 	src/stdc/string/strcpy.c	\
 	src/stdc/string/strlen.c	\
 	src/stdc/string/strncmp.c	\
+	src/stdc/wchar/wcschr.c	\
 	src/stdc/wchar/wcscmp.c	\
 	src/stdc/wchar/wcscpy.c	\
 	src/stdc/wchar/wcslen.c	\

@@ -5,31 +5,18 @@
 #include "../../env/_crtdef.h"
 
 int wcscmp(const wchar_t *s1, const wchar_t *s2){
+	register const wchar_t *rp1 = s1, *rp2 = s2;
 	for(;;){
-
-#define UNROLLED(idx_)	\
-		{	\
-			const long ch1 = (long)(uint16_t)s1[idx_];	\
-			const long ch2 = (long)(uint16_t)s2[idx_];	\
-			const long delta = ch1 - ch2;	\
-			if(delta != 0){	\
-				return (delta >> (sizeof(delta) * __CHAR_BIT__ - 1)) | 1;	\
-			}	\
-			if(ch1 == 0){	\
-				return 0;	\
-			}	\
+		const int32_t c1 = (uint16_t)*rp1++;
+		const int32_t c2 = (uint16_t)*rp2++;
+		const int32_t d = c1 - c2;
+		if(d != 0){
+			return (d >> 31) | 1;
 		}
-
-		UNROLLED(0)
-		UNROLLED(1)
-		UNROLLED(2)
-		UNROLLED(3)
-		UNROLLED(4)
-		UNROLLED(5)
-		UNROLLED(6)
-		UNROLLED(7)
-
-		s1 += 8;
-		s2 += 8;
+		if(c1 == 0){
+			return 0;
+		}
+		++rp1;
+		++rp2;
 	}
 }

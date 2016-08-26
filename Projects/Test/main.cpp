@@ -15,15 +15,10 @@ extern "C" unsigned _MCFCRT_Main(void) noexcept {
 	MCF::ModifiedUtf8String s4;
 	const auto t1 = MCF::GetHiResMonoClock();
 	for(unsigned i = 0; i < 10000; ++i){
-		s1.Clear();
 		s1 = ss;
-		s2.Clear();
 		s2 = s1;
-		s3.Clear();
 		s3 = s2;
-		s4.Clear();
 		s4 = s3;
-		ss.Clear();
 		ss = s4;
 	}
 	const auto t2 = MCF::GetHiResMonoClock();

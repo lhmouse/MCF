@@ -530,9 +530,14 @@ public:
 	}
 	template<StringType kOtherTypeT>
 	void Assign(const StringView<kOtherTypeT> &rhs){
-		String strTemp;
-		strTemp.Append(rhs);
-		Assign(std::move(strTemp));
+		const auto uOldSize = GetSize();
+		Append(rhs);
+		if(uOldSize != 0){
+			const auto pchData = GetData();
+			const auto uNewSize = GetSize();
+			Copy(pchData, pchData + uOldSize, pchData + uNewSize);
+			Pop(uOldSize);
+		}
 	}
 	template<StringType kOtherTypeT>
 	void Assign(const String<kOtherTypeT> &rhs){

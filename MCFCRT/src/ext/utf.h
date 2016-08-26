@@ -42,8 +42,8 @@ __MCFCRT_UTF_INLINE_OR_EXTERN char32_t _MCFCRT_DecodeUtf8(const char **__ppchRea
 #define __MCFCRT_DECODE_ONE(__reg_, __bits_)	\
 	{	\
 		const _MCFCRT_STD uint_fast32_t __u32NextUnit_ = (_MCFCRT_STD uint8_t)*(__pchRead++);	\
-		const _MCFCRT_STD uint_fast32_t __u32Test_ = __u32NextUnit_ - 0x80;	\
-		if(__u32Test_ >= 0x40){	\
+		_MCFCRT_STD uint_fast32_t __u32Test_;	\
+		if((__u32Test_ = __u32NextUnit_ - 0x80) >= 0x40){	\
 			__MCFCRT_HANDLE_INVALID_INPUT(__bPermissive, (__reg_), __jDone)	\
 		}	\
 		(__reg_) += __u32Test_ << (__bits_);	\
@@ -154,8 +154,8 @@ __MCFCRT_UTF_INLINE_OR_EXTERN char32_t _MCFCRT_DecodeCesu8(const char **__ppchRe
 #define __MCFCRT_DECODE_ONE(__reg_, __bits_)	\
 	{	\
 		const _MCFCRT_STD uint_fast32_t __u32NextUnit_ = (_MCFCRT_STD uint8_t)*(__pchRead++);	\
-		const _MCFCRT_STD uint_fast32_t __u32Test_ = __u32NextUnit_ - 0x80;	\
-		if(__u32Test_ >= 0x40){	\
+		_MCFCRT_STD uint_fast32_t __u32Test_;	\
+		if((__u32Test_ = __u32NextUnit_ - 0x80) >= 0x40){	\
 			__MCFCRT_HANDLE_INVALID_INPUT(__bPermissive, (__reg_), __jDone)	\
 		}	\
 		(__reg_) += __u32Test_ << (__bits_);	\

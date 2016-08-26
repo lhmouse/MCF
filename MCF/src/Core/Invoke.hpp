@@ -36,7 +36,7 @@ namespace Impl_Invoke {
 	template<>
 	struct MemberFunctionPointerChecker<true> {
 		template<typename C, typename M>
-		static constexpr C GetClassFromPointerToMember(M C::*) noexcept;
+		static C GetClassFromPointerToMember(M C::*) noexcept;
 
 		template<typename FuncT, typename ObjectT, typename ...ParamsT>
 		static constexpr decltype(auto) DoIt(FuncT pFunc, ObjectT &vObject, ParamsT &...vParams){

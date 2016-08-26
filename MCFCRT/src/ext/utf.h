@@ -132,8 +132,8 @@ __MCFCRT_UTF_INLINE_OR_EXTERN char32_t _MCFCRT_DecodeUtf32(const char32_t **__pp
 		return _MCFCRT_UTF_PARTIAL_DATA;
 	}
 	const _MCFCRT_STD uint_fast32_t __u32Unit = (_MCFCRT_STD uint32_t)*(__pc32Read++);
-	_MCFCRT_STD uint_fast32_t __u32CodePoint, __u32Test;
-	if((__u32Test = __u32Unit - 0xD800) < 0x800){
+	_MCFCRT_STD uint_fast32_t __u32CodePoint;
+	if(__u32Unit - 0xD800 < 0x800){
 		__MCFCRT_HANDLE_INVALID_INPUT(__bPermissive, __u32CodePoint, __jDone)
 	} else if(__u32Unit < 0x110000){
 		__u32CodePoint = __u32Unit;

@@ -4,6 +4,7 @@
 
 #include "../../env/_crtdef.h"
 #include "../../ext/expect.h"
+#include "../string/_endian.h"
 
 size_t wcslen(const wchar_t *s){
 	register const wchar_t *rp = s;
@@ -24,20 +25,15 @@ size_t wcslen(const wchar_t *s){
 		t += t << i * 8;
 	}
 	for(;;){
-		uintptr_t w = *(const uintptr_t *)rp;
+		uintptr_t w = __MCFCRT_LOAD_UINTPTR_LE(*(const uintptr_t *)rp);
 		w = (w - m) & ~w;
 		if(_MCFCRT_EXPECT_NOT((w & t) != 0)){
 			for(unsigned i = 0; i < sizeof(uintptr_t) / 2; ++i){
-#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
 				const bool rc = w & 0x8000;
-				w >>= 16;
-#else
-				const bool rc = (w >> (sizeof(uintptr_t) * 8 - 16)) & 0x8000;
-				w <<= 16;
-#endif
 				if(rc){
 					return (size_t)(rp - s) + i;
 				}
+				w >>= 16;
 			}
 			__builtin_trap();
 		}

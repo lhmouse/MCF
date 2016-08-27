@@ -4,7 +4,7 @@
 
 #include "../../env/_crtdef.h"
 #include "../../env/bail.h"
-#include "_math_asm.h"
+#include "_asm.h"
 
 #define UNROLLED	\
 		if(++i == 32){	\

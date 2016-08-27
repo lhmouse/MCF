@@ -3,7 +3,7 @@
 // Copyleft 2013 - 2016, LH_Mouse. All wrongs reserved.
 
 #include "../../env/_crtdef.h"
-#include "_string_asm.h"
+#include "_asm.h"
 
 void *memmove(void *dst, const void *src, size_t cb){
 	uintptr_t unused;

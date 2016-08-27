@@ -2,8 +2,8 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2013 - 2016, LH_Mouse. All wrongs reserved.
 
-#ifndef __MCFCRT_MATH_MATH_ASM_H_
-#define __MCFCRT_MATH_MATH_ASM_H_
+#ifndef __MCFCRT_MATH_ASM_H_
+#define __MCFCRT_MATH_ASM_H_
 
 #include "../../env/_crtdef.h"
 

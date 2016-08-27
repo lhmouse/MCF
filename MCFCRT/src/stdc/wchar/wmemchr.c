@@ -4,6 +4,7 @@
 
 #include "../../env/_crtdef.h"
 #include "../../ext/expect.h"
+#include "../string/_endian.h"
 
 wchar_t *wmemchr(const wchar_t *s, wchar_t c, size_t n){
 	register const wchar_t *rp = s;
@@ -30,20 +31,15 @@ wchar_t *wmemchr(const wchar_t *s, wchar_t c, size_t n){
 		t += t << i * 8;
 	}
 	while((size_t)(rend - rp) >= sizeof(uintptr_t)){
-		uintptr_t w = *(const uintptr_t *)rp - z;
+		uintptr_t w = __MCFCRT_LOAD_UINTPTR_LE(*(const uintptr_t *)rp) - z;
 		w = (w - m) & ~w;
 		if(_MCFCRT_EXPECT_NOT((w & t) != 0)){
 			for(unsigned i = 0; i < sizeof(uintptr_t) / 2; ++i){
-#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
 				const bool rc = w & 0x8000;
-				w >>= 16;
-#else
-				const bool rc = (w >> (sizeof(uintptr_t) * 8 - 16)) & 0x8000;
-				w <<= 16;
-#endif
 				if(rc){
 					return (wchar_t *)rp + i;
 				}
+				w >>= 16;
 			}
 			__builtin_trap();
 		}

@@ -3,6 +3,7 @@
 // Copyleft 2013 - 2016, LH_Mouse. All wrongs reserved.
 
 #include "../../env/_crtdef.h"
+#include "_endian.h"
 
 char *strchr(const char *s, int c){
 	register const char *rp = s;
@@ -20,22 +21,17 @@ char *strchr(const char *s, int c){
 		++rp;
 	}
 	for(;;){
-		uintptr_t w = *(const uintptr_t *)rp;
+		uintptr_t w = __MCFCRT_LOAD_UINTPTR_LE(*(const uintptr_t *)rp);
 		for(unsigned i = 0; i < sizeof(uintptr_t); ++i){
-#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
 			const char rc = (char)w;
-			w >>= 8;
-#else
-			const char rc = (char)(w >> (sizeof(uintptr_t) * 8 - 8));
-			w <<= 8;
-#endif
 			if(rc == (char)c){
-				return (char *)rp;
+				return (char *)rp + i;
 			}
 			if(rc == 0){
 				return nullptr;
 			}
-			++rp;
+			w >>= 8;
 		}
+		rp += sizeof(uintptr_t);
 	}
 }

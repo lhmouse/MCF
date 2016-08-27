@@ -3,6 +3,7 @@
 // Copyleft 2013 - 2016, LH_Mouse. All wrongs reserved.
 
 #include "../../env/_crtdef.h"
+#include "../string/_endian.h"
 
 wchar_t *wcschr(const wchar_t *s, wchar_t c){
 	register const wchar_t *rp = s;
@@ -20,22 +21,17 @@ wchar_t *wcschr(const wchar_t *s, wchar_t c){
 		++rp;
 	}
 	for(;;){
-		uintptr_t w = *(const uintptr_t *)rp;
+		uintptr_t w = __MCFCRT_LOAD_UINTPTR_LE(*(const uintptr_t *)rp);
 		for(unsigned i = 0; i < sizeof(uintptr_t) / 2; ++i){
-#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
 			const wchar_t rc = (wchar_t)w;
-			w >>= 16;
-#else
-			const wchar_t rc = (wchar_t)(w >> (sizeof(uintptr_t) * 8 - 16));
-			w <<= 16;
-#endif
 			if(rc == c){
-				return (wchar_t *)rp;
+				return (wchar_t *)rp + i;
 			}
 			if(rc == 0){
 				return nullptr;
 			}
-			++rp;
+			w >>= 16;
 		}
+		rp += sizeof(uintptr_t) / 2;
 	}
 }

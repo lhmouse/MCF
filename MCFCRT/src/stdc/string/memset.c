@@ -3,7 +3,7 @@
 // Copyleft 2013 - 2016, LH_Mouse. All wrongs reserved.
 
 #include "../../env/_crtdef.h"
-#include "_string_asm.h"
+#include "_asm.h"
 
 __attribute__((__force_align_arg_pointer__))
 void *memset(void *dst, int ch, size_t cb){

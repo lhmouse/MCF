@@ -4,6 +4,7 @@
 
 #include "../../env/_crtdef.h"
 #include "../../ext/expect.h"
+#include "../string/_endian.h"
 
 int wmemcmp(const wchar_t *s1, const wchar_t *s2, size_t n){
 	register const wchar_t *rp1 = s1;
@@ -26,25 +27,18 @@ int wmemcmp(const wchar_t *s1, const wchar_t *s2, size_t n){
 		++rp2;
 	}
 	while((size_t)(rend - rp1) >= sizeof(uintptr_t)){
-		uintptr_t w1 = *(const uintptr_t *)rp1;
-		uintptr_t w2 = *(const uintptr_t *)rp2;
+		uintptr_t w1 = __MCFCRT_LOAD_UINTPTR_LE(*(const uintptr_t *)rp1);
+		uintptr_t w2 = __MCFCRT_LOAD_UINTPTR_LE(*(const uintptr_t *)rp2);
 		if(_MCFCRT_EXPECT_NOT(w1 != w2)){
 			for(unsigned i = 0; i < sizeof(uintptr_t); ++i){
-#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
 				const int32_t rc1 = w1 & 0xFFFF;
 				const int32_t rc2 = w2 & 0xFFFF;
-				w1 >>= 16;
-				w2 >>= 16;
-#else
-				const int32_t rc1 = (w1 >> (sizeof(uintptr_t) * 8 - 16)) & 0xFFFF;
-				const int32_t rc2 = (w2 >> (sizeof(uintptr_t) * 8 - 16)) & 0xFFFF;
-				w1 <<= 16;
-				w2 <<= 16;
-#endif
 				const int32_t d = rc1 - rc2;
 				if(d != 0){
 					return (d >> 31) | 1;
 				}
+				w1 >>= 16;
+				w2 >>= 16;
 			}
 			__builtin_trap();
 		}

@@ -3,7 +3,7 @@
 // Copyleft 2013 - 2016, LH_Mouse. All wrongs reserved.
 
 #include "../../env/_crtdef.h"
-#include "_math_asm.h"
+#include "_asm.h"
 
 float fminf(float x, float y){
 	register float ret;

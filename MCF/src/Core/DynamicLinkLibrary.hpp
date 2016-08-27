@@ -35,36 +35,36 @@ public:
 public:
 	bool IsOpen() const noexcept;
 	void Open(const WideStringView &wsvPath);
-	bool OpenNoThrow(const WideStringView &wsvPath);
+	bool OpenNothrow(const WideStringView &wsvPath);
 	void Close() noexcept;
 
 	const void *GetBaseAddress() const noexcept;
 
-	RawProc RawGetProcAddress(const NarrowStringView &nsvName);
-	RawProc RawRequireProcAddress(const NarrowStringView &nsvName);
-	RawProc RawGetProcAddress(unsigned uOrdinal);
-	RawProc RawRequireProcAddress(unsigned uOrdinal);
+	RawProc RawGetProcAddress(const NarrowStringView &nsvName) const;
+	RawProc RawRequireProcAddress(const NarrowStringView &nsvName) const;
+	RawProc RawGetProcAddress(unsigned uOrdinal) const;
+	RawProc RawRequireProcAddress(unsigned uOrdinal) const;
 
 	template<typename FunctionPointerT>
-	FunctionPointerT GetProcAddress(const NarrowStringView &nsvName){
+	FunctionPointerT GetProcAddress(const NarrowStringView &nsvName) const {
 		static_assert(std::is_pointer<FunctionPointerT>::value, "FunctionPointerT shall be a pointer type");
 
 		return reinterpret_cast<FunctionPointerT>(RawGetProcAddress(nsvName));
 	}
 	template<typename FunctionPointerT>
-	FunctionPointerT RequireProcAddress(const NarrowStringView &nsvName){
+	FunctionPointerT RequireProcAddress(const NarrowStringView &nsvName) const {
 		static_assert(std::is_pointer<FunctionPointerT>::value, "FunctionPointerT shall be a pointer type");
 
 		return reinterpret_cast<FunctionPointerT>(RawRequireProcAddress(nsvName));
 	}
 	template<typename FunctionPointerT>
-	FunctionPointerT GetProcAddress(unsigned uOrdinal){
+	FunctionPointerT GetProcAddress(unsigned uOrdinal) const {
 		static_assert(std::is_pointer<FunctionPointerT>::value, "FunctionPointerT shall be a pointer type");
 
 		return reinterpret_cast<FunctionPointerT>(RawGetProcAddress(uOrdinal));
 	}
 	template<typename FunctionPointerT>
-	FunctionPointerT RequireProcAddress(unsigned uOrdinal){
+	FunctionPointerT RequireProcAddress(unsigned uOrdinal) const {
 		static_assert(std::is_pointer<FunctionPointerT>::value, "FunctionPointerT shall be a pointer type");
 
 		return reinterpret_cast<FunctionPointerT>(RawRequireProcAddress(uOrdinal));

@@ -182,7 +182,7 @@ bool File::IsOpen() const noexcept {
 void File::Open(const WideStringView &wsvPath, std::uint32_t u32Flags){
 	File(wsvPath, u32Flags).Swap(*this);
 }
-bool File::OpenNoThrow(const WideStringView &wsvPath, std::uint32_t u32Flags){
+bool File::OpenNothrow(const WideStringView &wsvPath, std::uint32_t u32Flags){
 	try {
 		Open(wsvPath, u32Flags);
 		return true;

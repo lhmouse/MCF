@@ -51,7 +51,7 @@ const void *DynamicLinkLibrary::GetBaseAddress() const noexcept {
 	return x_hDll.Get();
 }
 
-DynamicLinkLibrary::RawProc DynamicLinkLibrary::RawGetProcAddress(const NarrowStringView &nsvName){
+DynamicLinkLibrary::RawProc DynamicLinkLibrary::RawGetProcAddress(const NarrowStringView &nsvName) const {
 	if(!x_hDll){
 		MCF_THROW(Exception, ERROR_INVALID_HANDLE, Rcntws::View(L"DynamicLinkLibrary: 尚未加载任何动态库。"));
 	}
@@ -72,7 +72,7 @@ DynamicLinkLibrary::RawProc DynamicLinkLibrary::RawGetProcAddress(const NarrowSt
 	}
 	return pfnProcAddress;
 }
-DynamicLinkLibrary::RawProc DynamicLinkLibrary::RawRequireProcAddress(const NarrowStringView &nsvName){
+DynamicLinkLibrary::RawProc DynamicLinkLibrary::RawRequireProcAddress(const NarrowStringView &nsvName) const {
 	const auto pfnRet = RawGetProcAddress(nsvName);
 	if(!pfnRet){
 		MCF_THROW(Exception, ERROR_PROC_NOT_FOUND, Rcntws::View(L"DynamicLinkLibrary: 指定的导出函数未找到。"));
@@ -81,7 +81,7 @@ DynamicLinkLibrary::RawProc DynamicLinkLibrary::RawRequireProcAddress(const Narr
 }
 
 
-DynamicLinkLibrary::RawProc DynamicLinkLibrary::RawGetProcAddress(unsigned uOrdinal){
+DynamicLinkLibrary::RawProc DynamicLinkLibrary::RawGetProcAddress(unsigned uOrdinal) const {
 	if(!x_hDll){
 		MCF_THROW(Exception, ERROR_INVALID_HANDLE, Rcntws::View(L"DynamicLinkLibrary: 尚未加载任何动态库。"));
 	}
@@ -97,7 +97,7 @@ DynamicLinkLibrary::RawProc DynamicLinkLibrary::RawGetProcAddress(unsigned uOrdi
 	}
 	return pfnProcAddress;
 }
-DynamicLinkLibrary::RawProc DynamicLinkLibrary::RawRequireProcAddress(unsigned uOrdinal){
+DynamicLinkLibrary::RawProc DynamicLinkLibrary::RawRequireProcAddress(unsigned uOrdinal) const {
 	const auto pfnRet = RawGetProcAddress(uOrdinal);
 	if(!pfnRet){
 		MCF_THROW(Exception, ERROR_PROC_NOT_FOUND, Rcntws::View(L"DynamicLinkLibrary: 指定的导出函数未找到。"));
@@ -111,7 +111,7 @@ bool DynamicLinkLibrary::IsOpen() const noexcept {
 void DynamicLinkLibrary::Open(const WideStringView &wsvPath){
 	DynamicLinkLibrary(wsvPath).Swap(*this);
 }
-bool DynamicLinkLibrary::OpenNoThrow(const WideStringView &wsvPath){
+bool DynamicLinkLibrary::OpenNothrow(const WideStringView &wsvPath){
 	try {
 		Open(wsvPath);
 		return true;

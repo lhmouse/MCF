@@ -1,27 +1,33 @@
 #include <MCF/StdMCF.hpp>
-#include <MCF/Core/String.hpp>
 #include <MCF/Core/Clocks.hpp>
+#include <MCF/Core/DynamicLinkLibrary.hpp>
+#include <MCF/Core/String.hpp>
 
 extern "C" unsigned _MCFCRT_Main(void) noexcept {
-	constexpr char z[] = "abcdefg\x00αβγδεζη\x00一二三四五六七𤭢𤭢𤭢𤭢𤭢𤭢𤭢";
-	MCF::Utf8String t;
-	for(unsigned i = 0; i < 1000; ++i){
-		t.Append(z, sizeof(z));
-	}
-	MCF::Utf8String ss = t;
-	MCF::Utf32String s1;
-	MCF::Utf16String s2;
-	MCF::Cesu8String s3;
-	MCF::ModifiedUtf8String s4;
-	const auto t1 = MCF::GetHiResMonoClock();
-	for(unsigned i = 0; i < 10000; ++i){
-		s1 = ss;
-		s2 = s1;
-		s3 = s2;
-		s4 = s3;
-		ss = s4;
-	}
-	const auto t2 = MCF::GetHiResMonoClock();
-	std::printf("t2 - t1 = %f, d = %d\n", t2 - t1, ss.Compare(t));
+	using namespace MCF;
+
+	const auto fname = "memchr"_nsv;
+
+	NarrowString s;
+	s.Append('a', 0x100000);
+	s.Append('b');
+
+	const auto test = [&](WideStringView name){
+		const DynamicLinkLibrary dll(name);
+		const auto pf = dll.RequireProcAddress<void * (*)(const void *, int, std::size_t)>(fname);
+		void *p;
+		const auto t1 = GetHiResMonoClock();
+		for(unsigned i = 0; i < 10000; ++i){
+			p = (*pf)(s.GetData(), 'b', s.GetSize());
+		}
+		const auto t2 = GetHiResMonoClock();
+		std::printf("%-10s.%s : t2 - t1 = %f, p = %p\n", AnsiString(name).GetStr(), AnsiString(fname).GetStr(), t2 - t1, p);
+	};
+
+	test("NTDLL"_wsv);
+	test("MSVCRT"_wsv);
+	test("MSVCR100"_wsv);
+	test("MCFCRT-9"_wsv);
+
 	return 0;
 }

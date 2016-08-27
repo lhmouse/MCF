@@ -84,7 +84,7 @@ public:
 #endif
 		return pBlock;
 	}
-	void *AllocateNoThrow() noexcept {
+	void *AllocateNothrow() noexcept {
 		auto pBlock = X_PooledAllocate();
 		if(!pBlock){
 			pBlock = static_cast<X_Block *>(BackingAllocator()(std::nothrow, sizeof(X_Block)));

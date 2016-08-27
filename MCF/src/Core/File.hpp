@@ -59,7 +59,7 @@ public:
 
 	bool IsOpen() const noexcept;
 	void Open(const WideStringView &wsvPath, std::uint32_t u32Flags);
-	bool OpenNoThrow(const WideStringView &wsvPath, std::uint32_t u32Flags);
+	bool OpenNothrow(const WideStringView &wsvPath, std::uint32_t u32Flags);
 	void Close() noexcept;
 
 	std::uint64_t GetSize() const;

@@ -4,6 +4,8 @@
 
 #include "../../env/_crtdef.h"
 
-wchar_t *wmemcpy(wchar_t *restrict dst, const wchar_t *restrict src, size_t cnt){
-	return memcpy(dst, src, cnt * sizeof(wchar_t));
+extern void *memcpy(void *restrict s1, const void *restrict s2, size_t n);
+
+wchar_t *wmemcpy(wchar_t *restrict s1, const wchar_t *restrict s2, size_t n){
+	return memcpy(s1, s2, sizeof(wchar_t) * n);
 }

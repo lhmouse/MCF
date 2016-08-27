@@ -1,170 +1,194 @@
 // 这个文件是 MCF 的一部分。
 // 有关具体授权说明，请参阅 MCFLicense.txt。
-// Copyleft 2013 - 2016, LH_Mouse. All wrongs reserved.
+// Copyleft 2013 - 2032, LH_Mouse. All wrongs reserved.
 
 #include "../../env/_crtdef.h"
-#include "_asm.h"
 
-void *memmove(void *dst, const void *src, size_t cb){
-	uintptr_t unused;
+__attribute__((__always_inline__))
+static inline void copy_fwd_sse2(void *restrict s1, const void *restrict s2, size_t cxm){
+	register char *wp = s1;
+	char *const wend = wp + cxm * 16;
+	register const char *rp = s2;
+#define SSE2_STEP(si_, li_, r_)	\
+	{	\
+		__asm__ volatile (	\
+			li_ " " r_ ", xmmword ptr[%1] \n"	\
+			si_ " xmmword ptr[%0], " r_ " \n"	\
+			: : "r"(wp), "r"(rp)	\
+			: r_	\
+		);	\
+		wp += 16;	\
+		rp += 16;	\
+	}
+#define SSE2_FULL(si_, li_)	\
+	{	\
+		switch(cxm % 8){	\
+			do { __builtin_prefetch(rp + 256);	\
+		default: SSE2_STEP(si_, li_, "xmm0")	\
+		case 7:  SSE2_STEP(si_, li_, "xmm1")	\
+		case 6:  SSE2_STEP(si_, li_, "xmm2")	\
+		case 5:  SSE2_STEP(si_, li_, "xmm3")	\
+		case 4:  SSE2_STEP(si_, li_, "xmm0")	\
+		case 3:  SSE2_STEP(si_, li_, "xmm1")	\
+		case 2:  SSE2_STEP(si_, li_, "xmm2")	\
+		case 1:  SSE2_STEP(si_, li_, "xmm3")	\
+			} while(wp != wend);	\
+		}	\
+	}
+	if(cxm < 0x1000){
+		if(((uintptr_t)rp & 15) != 0){
+			SSE2_FULL("movdqa", "movdqu")
+		} else {
+			SSE2_FULL("movdqa", "movdqa")
+		}
+	} else {
+		if(((uintptr_t)rp & 15) != 0){
+			SSE2_FULL("movntdq", "movdqu")
+		} else {
+			SSE2_FULL("movntdq", "movntdqa")
+		}
+	}
+#undef SSE2_STEP
+#undef SSE2_FULL
+}
+__attribute__((__always_inline__))
+static inline void copy_fwd_g(void *s1, const void *s2, size_t cb){
+	uintptr_t z;
 	__asm__ volatile (
-		"cmp " __MCFCRT_RSI ", " __MCFCRT_RDI " \n"
-		"jbe 5f \n"
-		"	cmp %2, 64 \n"
-		"	jb 1f \n"
-		"		mov " __MCFCRT_RCX ", " __MCFCRT_RDI " \n"
-		"		neg " __MCFCRT_RCX " \n"
-		"		and " __MCFCRT_RCX ", 0x0F \n"
-		"		sub %2, " __MCFCRT_RCX " \n"
-		"		rep movsb \n"
-		"		mov " __MCFCRT_RCX ", %2 \n"
-		"		shr " __MCFCRT_RCX ", 4 \n"
-		"		and %2, 0x0F \n"
-		"		cmp " __MCFCRT_RCX ", 64 * 1024 * 16 \n" // 16 MiB
-		"		jb 4f \n"
-		"			test " __MCFCRT_RSI ", 0x0F \n"
-		"			jnz 3f \n"
-		"				2: \n"
-		"				prefetchnta byte ptr[" __MCFCRT_RSI " + 256] \n"
-		"				movdqa xmm0, xmmword ptr[" __MCFCRT_RSI "] \n"
-		"				movntdq xmmword ptr[" __MCFCRT_RDI "], xmm0 \n"
-		"				add " __MCFCRT_RSI ", 16 \n"
-		"				dec " __MCFCRT_RCX " \n"
-		"				lea " __MCFCRT_RDI ", dword ptr[" __MCFCRT_RDI " + 16] \n"
-		"				jnz 2b \n"
-		"				jmp 1f \n"
-		"			3: \n"
-		"			prefetchnta byte ptr[" __MCFCRT_RSI " + 256] \n"
-		"			movdqu xmm0, xmmword ptr[" __MCFCRT_RSI "] \n"
-		"			movntdq xmmword ptr[" __MCFCRT_RDI "], xmm0 \n"
-		"			add " __MCFCRT_RSI ", 16 \n"
-		"			dec " __MCFCRT_RCX " \n"
-		"			lea " __MCFCRT_RDI ", dword ptr[" __MCFCRT_RDI " + 16] \n"
-		"			jnz 3b \n"
-		"			jmp 1f \n"
-		"		4: \n"
-		"		test " __MCFCRT_RSI ", 0x0F \n"
-		"		jnz 3f \n"
-		"			2: \n"
-		"			prefetchnta byte ptr[" __MCFCRT_RSI " + 256] \n"
-		"			movdqa xmm0, xmmword ptr[" __MCFCRT_RSI "] \n"
-		"			movdqa xmmword ptr[" __MCFCRT_RDI "], xmm0 \n"
-		"			add " __MCFCRT_RSI ", 16 \n"
-		"			dec " __MCFCRT_RCX " \n"
-		"			lea " __MCFCRT_RDI ", dword ptr[" __MCFCRT_RDI " + 16] \n"
-		"			jnz 2b \n"
-		"			jmp 1f \n"
-		"		3: \n"
-		"		prefetchnta byte ptr[" __MCFCRT_RSI " + 256] \n"
-		"		movdqu xmm0, xmmword ptr[" __MCFCRT_RSI "] \n"
-		"		movdqa xmmword ptr[" __MCFCRT_RDI "], xmm0 \n"
-		"		add " __MCFCRT_RSI ", 16 \n"
-		"		dec " __MCFCRT_RCX " \n"
-		"		lea " __MCFCRT_RDI ", dword ptr[" __MCFCRT_RDI " + 16] \n"
-		"		jnz 3b \n"
-		"	1: \n"
-		"	mov " __MCFCRT_RCX ", %2 \n"
 #ifdef _WIN64
-		"	shr rcx, 3 \n"
-		"	rep movsq \n"
-		"	mov rcx, %2 \n"
-		"	and rcx, 7 \n"
-#else
-		"	shr ecx, 2 \n"
-		"	rep movsd \n"
-		"	mov ecx, %2 \n"
-		"	and ecx, 3 \n"
-#endif
-		"	rep movsb \n"
-		"	jmp 6f \n"
-		"	.balign 16 \n"
-		"5: \n"
-		"je 6f \n"
-		"std \n"
-		"cmp %2, 64 \n"
-		"lea " __MCFCRT_RSI ", dword ptr[" __MCFCRT_RSI " + %2] \n"
-		"lea " __MCFCRT_RDI ", dword ptr[" __MCFCRT_RDI " + %2] \n"
-		"jb 1f \n"
-		"	lea " __MCFCRT_RSI ", dword ptr[" __MCFCRT_RSI " - 1] \n"
-		"	mov " __MCFCRT_RCX ", " __MCFCRT_RDI " \n"
-		"	and " __MCFCRT_RCX ", 0x0F \n"
-		"	lea " __MCFCRT_RDI ", dword ptr[" __MCFCRT_RDI " - 1] \n"
-		"	sub %2, " __MCFCRT_RCX " \n"
-		"	rep movsb \n"
-		"	lea " __MCFCRT_RSI ", dword ptr[" __MCFCRT_RSI " + 1] \n"
-		"	mov " __MCFCRT_RCX ", %2 \n"
-		"	shr " __MCFCRT_RCX ", 4 \n"
-		"	lea " __MCFCRT_RDI ", dword ptr[" __MCFCRT_RDI " + 1] \n"
-		"	and %2, 0x0F \n"
-		"	cmp " __MCFCRT_RCX ", 64 * 1024 * 16 \n" // 16 MiB
-		"	jb 4f \n"
-		"		test " __MCFCRT_RSI ", 0x0F \n"
-		"		jnz 3f \n"
-		"			2: \n"
-		"			prefetchnta byte ptr[" __MCFCRT_RSI " - 16 + 256] \n"
-		"			movdqa xmm0, xmmword ptr[" __MCFCRT_RSI " - 16] \n"
-		"			movntdq xmmword ptr[" __MCFCRT_RDI " - 16], xmm0 \n"
-		"			sub " __MCFCRT_RSI ", 16 \n"
-		"			dec " __MCFCRT_RCX " \n"
-		"			lea " __MCFCRT_RDI ", dword ptr[" __MCFCRT_RDI " - 16] \n"
-		"			jnz 2b \n"
-		"			jmp 1f \n"
-		"		3: \n"
-		"		prefetchnta byte ptr[" __MCFCRT_RSI " - 16 + 256] \n"
-		"		movdqu xmm0, xmmword ptr[" __MCFCRT_RSI " - 16] \n"
-		"		movntdq xmmword ptr[" __MCFCRT_RDI " - 16], xmm0 \n"
-		"		sub " __MCFCRT_RSI ", 16 \n"
-		"		dec " __MCFCRT_RCX " \n"
-		"		lea " __MCFCRT_RDI ", dword ptr[" __MCFCRT_RDI " - 16] \n"
-		"		jnz 3b \n"
-		"		jmp 1f \n"
-		"	4: \n"
-		"	test " __MCFCRT_RSI ", 0x0F \n"
-		"	jnz 3f \n"
-		"		2: \n"
-		"		prefetchnta byte ptr[" __MCFCRT_RSI " - 16 + 256] \n"
-		"		movdqa xmm0, xmmword ptr[" __MCFCRT_RSI " - 16] \n"
-		"		movdqa xmmword ptr[" __MCFCRT_RDI " - 16], xmm0 \n"
-		"		sub " __MCFCRT_RSI ", 16 \n"
-		"		dec " __MCFCRT_RCX " \n"
-		"		lea " __MCFCRT_RDI ", dword ptr[" __MCFCRT_RDI " - 16] \n"
-		"		jnz 2b \n"
-		"		jmp 1f \n"
-		"	3: \n"
-		"	prefetchnta byte ptr[" __MCFCRT_RSI " - 16 + 256] \n"
-		"	movdqu xmm0, xmmword ptr[" __MCFCRT_RSI " - 16] \n"
-		"	movdqa xmmword ptr[" __MCFCRT_RDI " - 16], xmm0 \n"
-		"	sub " __MCFCRT_RSI ", 16 \n"
-		"	dec " __MCFCRT_RCX " \n"
-		"	lea " __MCFCRT_RDI ", dword ptr[" __MCFCRT_RDI " - 16] \n"
-		"	jnz 3b \n"
-		"1: \n"
-		"mov " __MCFCRT_RCX ", %2 \n"
-#ifdef _WIN64
-		"lea rsi, dword ptr[rsi - 8] \n"
 		"shr rcx, 3 \n"
-		"lea rdi, dword ptr[rdi - 8] \n"
 		"rep movsq \n"
-		"lea rsi, dword ptr[rsi + 7] \n"
-		"mov rcx, %2 \n"
+		"mov rcx, rax \n"
 		"and rcx, 7 \n"
-		"lea rdi, dword ptr[" __MCFCRT_RDI " + 7] \n"
 #else
-		"lea esi, dword ptr[esi - 4] \n"
 		"shr ecx, 2 \n"
-		"lea edi, dword ptr[edi - 4] \n"
 		"rep movsd \n"
-		"lea esi, dword ptr[esi + 3] \n"
-		"mov ecx, %2 \n"
+		"mov ecx, eax \n"
 		"and ecx, 3 \n"
-		"lea edi, dword ptr[edi + 3] \n"
+#endif
+		"rep movsb \n"
+		: "=D"(z), "=S"(z), "=c"(z), "=a"(z)
+		: "D"(s1), "S"(s2), "c"(cb), "a"(cb)
+	);
+}
+
+__attribute__((__always_inline__))
+static inline void copy_bkwd_sse2(void *s1, const void *s2, size_t cxm){
+	char *const wbegin = s1;
+	register char *wp = wbegin + cxm * 16;
+	register const char *rp = (const char *)s2 + cxm * 16;
+#define SSE2_STEP(si_, li_, r_)	\
+	{	\
+		wp -= 16;	\
+		rp -= 16;	\
+		__asm__ volatile (	\
+			li_ " " r_ ", xmmword ptr[%1] \n"	\
+			si_ " xmmword ptr[%0], " r_ " \n"	\
+			: : "r"(wp), "r"(rp)	\
+			: r_	\
+		);	\
+	}
+#define SSE2_FULL(si_, li_)	\
+	{	\
+		switch(cxm % 8){	\
+			do { __builtin_prefetch(rp - 256);	\
+		default: SSE2_STEP(si_, li_, "xmm0")	\
+		case 7:  SSE2_STEP(si_, li_, "xmm1")	\
+		case 6:  SSE2_STEP(si_, li_, "xmm2")	\
+		case 5:  SSE2_STEP(si_, li_, "xmm3")	\
+		case 4:  SSE2_STEP(si_, li_, "xmm0")	\
+		case 3:  SSE2_STEP(si_, li_, "xmm1")	\
+		case 2:  SSE2_STEP(si_, li_, "xmm2")	\
+		case 1:  SSE2_STEP(si_, li_, "xmm3")	\
+			} while(wbegin != wp);	\
+		}	\
+	}
+	if(cxm < 0x1000){
+		if(((uintptr_t)rp & 15) != 0){
+			SSE2_FULL("movdqa", "movdqu")
+		} else {
+			SSE2_FULL("movdqa", "movdqa")
+		}
+	} else {
+		if(((uintptr_t)rp & 15) != 0){
+			SSE2_FULL("movntdq", "movdqu")
+		} else {
+			SSE2_FULL("movntdq", "movntdqa")
+		}
+	}
+#undef SSE2_STEP
+#undef SSE2_FULL
+}
+__attribute__((__always_inline__))
+static inline void copy_bkwd_g(void *s1, const void *s2, size_t cb){
+	uintptr_t z;
+	__asm__ volatile (
+		"std \n"
+#ifdef _WIN64
+		"sub rdi, 8 \n"
+		"sub rsi, 8 \n"
+		"shr rcx, 3 \n"
+		"rep movsq \n"
+		"add rdi, 7 \n"
+		"add rsi, 7 \n"
+		"mov rcx, rax \n"
+		"and rcx, 7 \n"
+#else
+		"sub edi, 4 \n"
+		"sub esi, 4 \n"
+		"shr ecx, 2 \n"
+		"rep movsd \n"
+		"add edi, 3 \n"
+		"add esi, 3 \n"
+		"mov ecx, eax \n"
+		"and ecx, 3 \n"
 #endif
 		"rep movsb \n"
 		"cld \n"
-		"6: \n"
-		: "=D"(unused), "=S"(unused), "=r"(unused)
-		: "0"(dst), "1"(src), "2"(cb)
-		: "cx", "xmm0"
+		: "=D"(z), "=S"(z), "=c"(z), "=a"(z)
+		: "D"(s1), "S"(s2), "c"(cb), "a"(cb)
 	);
-	return dst;
+}
+
+void *memmove(void *s1, const void *s2, size_t n){
+	if(s1 < s2){
+		register char *wp = s1;
+		char *const wend = wp + n;
+		register const char *rp = s2;
+		while(((uintptr_t)wp & 15) != 0){
+			if(wp == wend){
+				return s1;
+			}
+			*(wp++) = *(rp++);
+		}
+		size_t cnt;
+		if((cnt = (size_t)(wend - wp) / 16) != 0){
+			copy_fwd_sse2(wp, rp, cnt);
+			wp += cnt * 16;
+			rp += cnt * 16;
+		}
+		if((cnt = (size_t)(wend - wp)) != 0){
+			copy_fwd_g(wp, rp, cnt);
+		}
+	} else {
+		char *const wbegin = s1;
+		register char *wp = wbegin + n;
+		register const char *rp = (const char *)s2 + n;
+		while(((uintptr_t)wp & 15) != 0){
+			if(wbegin == wp){
+				return s1;
+			}
+			*(--wp) = *(--rp);
+		}
+		size_t cnt;
+		if((cnt = (size_t)(wp - wbegin) / 16) != 0){
+			wp -= cnt * 16;
+			rp -= cnt * 16;
+			copy_bkwd_sse2(wp, rp, cnt);
+		}
+		if((cnt = (size_t)(wp - wbegin)) != 0){
+			copy_bkwd_g(wp, rp, cnt);
+		}
+	}
+	return s1;
 }

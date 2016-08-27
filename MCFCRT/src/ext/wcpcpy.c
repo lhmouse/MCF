@@ -12,7 +12,7 @@ wchar_t *_MCFCRT_wcpcpy(wchar_t *restrict dst, const wchar_t *restrict src){
 	// 如果 rp 是对齐到字的，就不用考虑越界的问题。
 	// 因为内存按页分配的，也自然对齐到页，并且也对齐到字。
 	// 每个字内的字节的权限必然一致。
-	while(((uintptr_t)rp & (sizeof(uintptr_t) - 1)) != 0){
+	while(((uintptr_t)rp & (sizeof(uintptr_t) - 1) & (size_t)-2) != 0){
 		if((*wp = *rp) == 0){
 			return wp;
 		}
@@ -51,7 +51,7 @@ wchar_t *_MCFCRT_wcppcpy(wchar_t *dst, wchar_t *end, const wchar_t *restrict src
 	// 如果 rp 是对齐到字的，就不用考虑越界的问题。
 	// 因为内存按页分配的，也自然对齐到页，并且也对齐到字。
 	// 每个字内的字节的权限必然一致。
-	while(((uintptr_t)rp & (sizeof(uintptr_t) - 1)) != 0){
+	while(((uintptr_t)rp & (sizeof(uintptr_t) - 1) & (size_t)-2) != 0){
 		if(wp == end - 1){
 			*wp = 0;
 			return wp;

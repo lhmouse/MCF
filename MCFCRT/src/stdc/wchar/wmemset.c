@@ -3,62 +3,46 @@
 // Copyleft 2013 - 2016, LH_Mouse. All wrongs reserved.
 
 #include "../../env/_crtdef.h"
-#include "../string/_asm.h"
 
-wchar_t *wmemset(wchar_t *dst, wchar_t ch, size_t cnt){
-	uintptr_t unused;
+static inline void fill_fwd_g(wchar_t *s, wchar_t c, size_t cw){
+	uintptr_t z;
 	__asm__ volatile (
-		"mov " __MCFCRT_RCX ", %5 \n"
-		"cmp " __MCFCRT_RCX ", 8 \n"
-		"jb 1f  \n"
-		"test " __MCFCRT_RDI ", 1 \n"
-		"jz 4f \n"
-		"	mov byte ptr[" __MCFCRT_RDI "], al \n"
-		"	xchg al, ah \n"
-		"	mov byte ptr[" __MCFCRT_RDI " + %5 * 2 - 1], al \n"
-		"	inc " __MCFCRT_RDI " \n"
-		"	dec %5 \n"
-		"4: \n"
+		"movzx edx, ax \n"
+		"shl eax, 16 \n"
+		"add eax, edx \n"
 #ifdef _WIN64
-		"test rdi, 7 \n"
-#else
-		"test edi, 3 \n"
-#endif
-		"jz 2f \n"
-		"	3: \n"
-		"	stosw \n"
-		"	dec %5 \n"
-#ifdef _WIN64
-		"	test rdi, 7 \n"
-#else
-		"	test edi, 3 \n"
-#endif
-		"	jnz 3b \n"
-		"2: \n"
-		"movzx " __MCFCRT_RCX ", ax \n"
-		"shl " __MCFCRT_RCX ", 16 \n"
-		"or " __MCFCRT_RAX ", " __MCFCRT_RCX " \n"
-#ifdef _WIN64
-		"shl rcx, 32 \n"
-		"or rax, rcx \n"
-#endif
-		"mov " __MCFCRT_RCX ", %5 \n"
-#ifdef _WIN64
+		"mov edx, eax \n"
+		"shl rax, 32 \n"
+		"add rax, rdx \n"
 		"shr rcx, 2 \n"
 		"rep stosq \n"
-		"mov rcx, %5 \n"
+		"mov rcx, rsi \n"
 		"and rcx, 3 \n"
 #else
 		"shr ecx, 1 \n"
 		"rep stosd \n"
-		"mov ecx, %5 \n"
+		"mov ecx, esi \n"
 		"and ecx, 1 \n"
 #endif
-		"1: \n"
 		"rep stosw \n"
-		: "=D"(unused), "=a"(unused), "=r"(unused)
-		: "0"(dst), "1"(ch), "2"(cnt)
-		: "cx"
+		: "=D"(z), "=a"(z), "=c"(z), "=S"(z)
+		: "D"(s), "a"(c), "c"(cw), "S"(cw)
+		: "dx"
 	);
-	return dst;
+}
+
+wchar_t *wmemset(wchar_t *s, wchar_t c, size_t n){
+	register wchar_t *wp = s;
+	wchar_t *const wend = wp + n;
+	while(((uintptr_t)wp & (sizeof(uintptr_t) - 1) & (size_t)-2) != 0){
+		if(wp == wend){
+			return s;
+		}
+		*(wp++) = c;
+	}
+	size_t cnt;
+	if((cnt = (size_t)(wend - wp)) != 0){
+		fill_fwd_g(wp, c, cnt);
+	}
+	return s;
 }

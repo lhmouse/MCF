@@ -5,7 +5,7 @@
 #include "../../env/_crtdef.h"
 #include "../../ext/wcpcpy.h"
 
-wchar_t *wcscpy(wchar_t *s1, const wchar_t *s2){
+wchar_t *wcscpy(wchar_t *restrict s1, const wchar_t *restrict s2){
 	_MCFCRT_wcpcpy(s1, s2);
 	return s1;
 }

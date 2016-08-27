@@ -5,7 +5,7 @@
 #include "../../env/_crtdef.h"
 #include "../../ext/stpcpy.h"
 
-char *strcpy(char *s1, const char *s2){
+char *strcpy(char *restrict s1, const char *restrict s2){
 	_MCFCRT_stpcpy(s1, s2);
 	return s1;
 }

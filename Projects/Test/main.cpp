@@ -6,22 +6,24 @@
 extern "C" unsigned _MCFCRT_Main(void) noexcept {
 	using namespace MCF;
 
-	const auto fname = "memchr"_nsv;
+	NarrowString s1, s2;
+	s1.Append('a', 0x100000);
+	s1.Append(1);
+	s2.Append('a', 0x100000);
+	s2.Append(-1);
 
-	NarrowString s;
-	s.Append('a', 0x100000);
-	s.Append('b');
+	const auto fname = "strcmp"_nsv;
 
 	const auto test = [&](WideStringView name){
 		const DynamicLinkLibrary dll(name);
-		const auto pf = dll.RequireProcAddress<void * (*)(const void *, int, std::size_t)>(fname);
-		void *p;
+		const auto pf = dll.RequireProcAddress<int (*)(const void *, const void *)>(fname);
+		std::intptr_t r;
 		const auto t1 = GetHiResMonoClock();
 		for(unsigned i = 0; i < 10000; ++i){
-			p = (*pf)(s.GetData(), 'b', s.GetSize());
+			r = (*pf)(s1.GetStr(), s2.GetStr());
 		}
 		const auto t2 = GetHiResMonoClock();
-		std::printf("%-10s.%s : t2 - t1 = %f, p = %p\n", AnsiString(name).GetStr(), AnsiString(fname).GetStr(), t2 - t1, p);
+		std::printf("%-10s.%s : t2 - t1 = %f, r = %td\n", AnsiString(name).GetStr(), AnsiString(fname).GetStr(), t2 - t1, r);
 	};
 
 	test("NTDLL"_wsv);

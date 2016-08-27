@@ -25,28 +25,43 @@ int wcscmp(const wchar_t *s1, const wchar_t *s2){
 		++rp1;
 		++rp2;
 	}
-	for(;;){
-		for(unsigned ur = 0; ur < 8; ++ur){
-			uintptr_t w1 = __MCFCRT_LOAD_UINTPTR_LE(*(const uintptr_t *)rp1);
-			uintptr_t w2 = __MCFCRT_LOAD_UINTPTR_LE(*(const uintptr_t *)rp2);
-			if(_MCFCRT_EXPECT_NOT(w1 != w2)){
-				for(unsigned i = 0; i < sizeof(uintptr_t); ++i){
-					const int32_t rc1 = w1 & 0xFFFF;
-					const int32_t rc2 = w2 & 0xFFFF;
-					const int32_t d = rc1 - rc2;
-					if(d != 0){
-						return (d >> 31) | 1;
+	if(((uintptr_t)rp2 & (sizeof(uintptr_t) - 1)) == 0){
+		for(;;){
+			for(unsigned ur = 0; ur < 8; ++ur){
+				uintptr_t w1 = __MCFCRT_LOAD_UINTPTR_LE(*(const uintptr_t *)rp1);
+				uintptr_t w2 = __MCFCRT_LOAD_UINTPTR_LE(*(const uintptr_t *)rp2);
+				if(_MCFCRT_EXPECT_NOT(w1 != w2)){
+					for(unsigned i = 0; i < sizeof(uintptr_t); ++i){
+						const int32_t rc1 = w1 & 0xFFFF;
+						const int32_t rc2 = w2 & 0xFFFF;
+						const int32_t d = rc1 - rc2;
+						if(d != 0){
+							return (d >> 31) | 1;
+						}
+						if(rc1 == 0){
+							return 0;
+						}
+						w1 >>= 16;
+						w2 >>= 16;
 					}
-					if(rc1 == 0){
-						return 0;
-					}
-					w1 >>= 16;
-					w2 >>= 16;
+					__builtin_trap();
 				}
-				__builtin_trap();
+				rp1 += sizeof(uintptr_t) / 2;
+				rp2 += sizeof(uintptr_t) / 2;
 			}
-			rp1 += sizeof(uintptr_t) / 2;
-			rp2 += sizeof(uintptr_t) / 2;
 		}
+	}
+	for(;;){
+		const int32_t rc1 = *rp1 & 0xFFFF;
+		const int32_t rc2 = *rp2 & 0xFFFF;
+		const int32_t d = rc1 - rc2;
+		if(d != 0){
+			return (d >> 31) | 1;
+		}
+		if(rc1 == 0){
+			return 0;
+		}
+		++rp1;
+		++rp2;
 	}
 }

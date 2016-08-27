@@ -17,29 +17,29 @@ size_t strlen(const char *s){
 		}
 		++rp;
 	}
+	uintptr_t m = 0x01;
+	uintptr_t t = 0x80;
+	for(unsigned i = 1; i < sizeof(m); i <<= 1){
+		m += m << i * 8;
+		t += t << i * 8;
+	}
 	for(;;){
 		uintptr_t w = *(const uintptr_t *)rp;
-#ifdef _WIN64
-		w = (w - 0x0101010101010101u) & ~w;
-		if(_MCFCRT_EXPECT_NOT((w & 0x8080808080808080u) != 0))
-#else
-		w = (w - 0x01010101u) & ~w;
-		if(_MCFCRT_EXPECT_NOT((w & 0x80808080u) != 0))
-#endif
-		{
-			for(unsigned i = 0; i < sizeof(uintptr_t) - 1; ++i){
+		w = (w - m) & ~w;
+		if(_MCFCRT_EXPECT_NOT((w & t) != 0)){
+			for(unsigned i = 0; i < sizeof(uintptr_t); ++i){
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
 				const bool rc = w & 0x80;
 				w >>= 8;
 #else
-				const bool rc = (w >> sizeof(uintptr_t) * 8 - 8) & 0x80;
+				const bool rc = (w >> (sizeof(uintptr_t) * 8 - 8)) & 0x80;
 				w <<= 8;
 #endif
 				if(rc){
 					return (size_t)(rp - s) + i;
 				}
 			}
-			return (size_t)(rp - s) + sizeof(uintptr_t) - 1;
+			__builtin_trap();
 		}
 		rp += sizeof(uintptr_t);
 	}

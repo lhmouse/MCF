@@ -11,13 +11,13 @@ int wcsncmp(const wchar_t *s1, const wchar_t *s2, size_t n){
 		if(i == 0){
 			return 0;
 		}
-		const int32_t c1 = (uint16_t)*rp1++;
-		const int32_t c2 = (uint16_t)*rp2++;
-		const int32_t d = c1 - c2;
+		const int32_t rc1 = *rp1 & 0xFFFF;
+		const int32_t rc2 = *rp2 & 0xFFFF;
+		const int32_t d = rc1 - rc2;
 		if(d != 0){
 			return (d >> 31) | 1;
 		}
-		if(c1 == 0){
+		if(rc1 == 0){
 			return 0;
 		}
 		++rp1;

@@ -26,7 +26,7 @@ wchar_t *wcschr(const wchar_t *s, wchar_t c){
 			const wchar_t rc = (wchar_t)w;
 			w >>= 16;
 #else
-			const wchar_t rc = (wchar_t)(w >> sizeof(uintptr_t) * 8 - 16);
+			const wchar_t rc = (wchar_t)(w >> (sizeof(uintptr_t) * 8 - 16));
 			w <<= 16;
 #endif
 			if(rc == c){

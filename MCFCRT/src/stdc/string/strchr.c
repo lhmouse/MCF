@@ -26,7 +26,7 @@ char *strchr(const char *s, int c){
 			const char rc = (char)w;
 			w >>= 8;
 #else
-			const char rc = (char)(w >> sizeof(uintptr_t) * 8 - 8);
+			const char rc = (char)(w >> (sizeof(uintptr_t) * 8 - 8));
 			w <<= 8;
 #endif
 			if(rc == (char)c){

@@ -3,68 +3,60 @@
 // Copyleft 2013 - 2016, LH_Mouse. All wrongs reserved.
 
 #include "../../env/_crtdef.h"
+#include "../../ext/expect.h"
 
-#ifdef _WIN64
-#	define MASK     0x0101010101010101u
-#else
-#	define MASK     0x01010101u
-#endif
-
-void *memchr(const void *s, int ch, size_t cb){
-	register const unsigned char *rp = s;
-	const unsigned char *const end = rp + cb;
-
-	if(cb >= sizeof(uintptr_t) * 2){
-		while(((uintptr_t)rp & (sizeof(uintptr_t) - 1)) != 0){
-			if(*rp == (unsigned char)ch){
-				return (void *)rp;
-			}
-			++rp;
+void *memchr(const void *s, int c, size_t n){
+	register const char *rp = s;
+	const char *const rend = rp + n;
+	// 如果 rp 是对齐到字的，就不用考虑越界的问题。
+	// 因为内存按页分配的，也自然对齐到页，并且也对齐到字。
+	// 每个字内的字节的权限必然一致。
+	while(((uintptr_t)rp & (sizeof(uintptr_t) - 1)) != 0){
+		if(rp == rend){
+			return nullptr;
 		}
-
-		register uintptr_t full = (unsigned char)ch;
-		for(size_t i = 1; i < sizeof(full); i <<= 1){
-			full |= (full << (i * 8));
-		}
-
-		const unsigned char *const wend = (const unsigned char *)((uintptr_t)end & ~(sizeof(uintptr_t) - 1));
-		for(;;){
-
-#define UNROLLED	\
-			{	\
-				register uintptr_t wrd = (*(const uintptr_t *)rp) ^ full;	\
-				wrd = (wrd - MASK) & ~wrd;	\
-				if((wrd & (MASK << 7)) != 0){	\
-					for(size_t i = 0; i < sizeof(uintptr_t) - 1; ++i){	\
-						if((wrd & 0x80) != 0){	\
-							return (void *)(rp + i);	\
-						}	\
-						wrd >>= 8;	\
-					}	\
-					return (void *)(rp + sizeof(uintptr_t) - 1);	\
-				}	\
-				rp += sizeof(uintptr_t);	\
-				if(rp == wend){	\
-					break;	\
-				}	\
-			}
-
-			UNROLLED
-			UNROLLED
-			UNROLLED
-			UNROLLED
-			UNROLLED
-			UNROLLED
-			UNROLLED
-			UNROLLED
-		}
-	}
-
-	while(rp != end){
-		if(*rp == (unsigned char)ch){
-			return (void *)rp;
+		const char rc = *rp;
+		if(rc == (char)c){
+			return (char *)rp;
 		}
 		++rp;
 	}
-	return nullptr;
+	uintptr_t z = c & 0xFF;
+	uintptr_t m = 0x01;
+	uintptr_t t = 0x80;
+	for(unsigned i = 1; i < sizeof(m); i <<= 1){
+		z += z << i * 8;
+		m += m << i * 8;
+		t += t << i * 8;
+	}
+	while((size_t)(rend - rp) >= sizeof(uintptr_t)){
+		uintptr_t w = *(const uintptr_t *)rp - z;
+		w = (w - m) & ~w;
+		if(_MCFCRT_EXPECT_NOT((w & t) != 0)){
+			for(unsigned i = 0; i < sizeof(uintptr_t); ++i){
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+				const bool rc = w & 0x80;
+				w >>= 8;
+#else
+				const bool rc = (w >> (sizeof(uintptr_t) * 8 - 8)) & 0x80;
+				w <<= 8;
+#endif
+				if(rc){
+					return (char *)rp + i;
+				}
+			}
+			__builtin_trap();
+		}
+		rp += sizeof(uintptr_t);
+	}
+	for(;;){
+		if(rp == rend){
+			return nullptr;
+		}
+		const char rc = *rp;
+		if(rc == (char)c){
+			return (char *)rp;
+		}
+		++rp;
+	}
 }

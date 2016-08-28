@@ -38,6 +38,9 @@ int wmemcmp(const wchar_t *s1, const wchar_t *s2, size_t n){
 				const int32_t tzne = __builtin_ctz(mask);
 				xt = _mm_packs_epi16(_mm_cmplt_epi16(xw01, xw02), _mm_cmplt_epi16(xw11, xw12));
 				mask = (unsigned)_mm_movemask_epi8(xt);
+				if(mask == 0){
+					return 1;
+				}
 				const int32_t tzlt = __builtin_ctz(mask);
 				const int32_t d = tzlt - tzne - 1;
 				return (d >> 31) | 1;

@@ -36,6 +36,9 @@ int strcmp(const char *s1, const char *s2){
 				const int32_t tzne = __builtin_ctz(mask);
 				xt = _mm_cmplt_epi8(xw1, xw2);
 				mask = (unsigned)_mm_movemask_epi8(xt);
+				if(mask == 0){
+					return 1;
+				}
 				const int32_t tzlt = __builtin_ctz(mask);
 				const int32_t d = tzlt - tzne - 1;
 				return (d >> 31) | 1;

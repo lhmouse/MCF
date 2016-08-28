@@ -4,7 +4,7 @@
 
 #include "../../env/_crtdef.h"
 #include "../../ext/expect.h"
-#include "_endian.h"
+#include <emmintrin.h>
 
 void *memchr(const void *s, int c, size_t n){
 	register const char *rp = s;
@@ -12,7 +12,7 @@ void *memchr(const void *s, int c, size_t n){
 	// 如果 rp 是对齐到字的，就不用考虑越界的问题。
 	// 因为内存按页分配的，也自然对齐到页，并且也对齐到字。
 	// 每个字内的字节的权限必然一致。
-	while(((uintptr_t)rp & (sizeof(uintptr_t) - 1)) != 0){
+	while(((uintptr_t)rp & 15) != 0){
 		if(rp == rend){
 			return nullptr;
 		}
@@ -22,28 +22,17 @@ void *memchr(const void *s, int c, size_t n){
 		}
 		++rp;
 	}
-	uintptr_t z = c & 0xFF;
-	uintptr_t m = 0x01;
-	uintptr_t t = 0x80;
-	for(unsigned i = 1; i < sizeof(m); i <<= 1){
-		z += z << i * 8;
-		m += m << i * 8;
-		t += t << i * 8;
-	}
-	while((size_t)(rend - rp) >= sizeof(uintptr_t)){
-		uintptr_t w = __MCFCRT_LOAD_UINTPTR_LE(*(const uintptr_t *)rp) - z;
-		w = (w - m) & ~w;
-		if(_MCFCRT_EXPECT_NOT((w & t) != 0)){
-			for(unsigned i = 0; i < sizeof(uintptr_t); ++i){
-				const bool rc = w & 0x80;
-				if(rc){
-					return (char *)rp + i;
-				}
-				w >>= 8;
+	if((size_t)(rend - rp) >= 64){
+		const __m128i xc = _mm_set1_epi8((char)c);
+		do {
+			const __m128i xw = _mm_load_si128((const __m128i *)rp);
+			__m128i xt = _mm_cmpeq_epi8(xw, xc);
+			unsigned mask = (unsigned)_mm_movemask_epi8(xt);
+			if(_MCFCRT_EXPECT_NOT(mask != 0)){
+				return (char *)rp + __builtin_ctz(mask);
 			}
-			__builtin_trap();
-		}
-		rp += sizeof(uintptr_t);
+			rp += 16;
+		} while((size_t)(rend - rp) >= 16);
 	}
 	for(;;){
 		if(rp == rend){

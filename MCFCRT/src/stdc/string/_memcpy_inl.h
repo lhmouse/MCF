@@ -2,8 +2,8 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2013 - 2016, LH_Mouse. All wrongs reserved.
 
-#ifndef __MCFCRT_STRING_MEMCPYSET_INL_H_
-#define __MCFCRT_STRING_MEMCPYSET_INL_H_
+#ifndef __MCFCRT_STRING_MEMCPY_INL_H_
+#define __MCFCRT_STRING_MEMCPY_INL_H_
 
 #include "../../env/_crtdef.h"
 #include <emmintrin.h>

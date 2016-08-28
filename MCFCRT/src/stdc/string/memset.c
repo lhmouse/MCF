@@ -3,49 +3,28 @@
 // Copyleft 2013 - 2016, LH_Mouse. All wrongs reserved.
 
 #include "../../env/_crtdef.h"
-
-static inline void fill_fwd_g(void *s, int c, size_t cb){
-	uintptr_t z;
-	__asm__ volatile (
-		"movzx edx, al \n"
-		"shl eax, 8 \n"
-		"add eax, edx \n"
-		"movzx edx, ax \n"
-		"shl eax, 16 \n"
-		"add eax, edx \n"
-#ifdef _WIN64
-		"mov edx, eax \n"
-		"shl rax, 32 \n"
-		"add rax, rdx \n"
-		"shr rcx, 3 \n"
-		"rep stosq \n"
-		"mov rcx, rsi \n"
-		"and rcx, 7 \n"
-#else
-		"shr ecx, 2 \n"
-		"rep stosd \n"
-		"mov ecx, esi \n"
-		"and ecx, 3 \n"
-#endif
-		"rep stosb \n"
-		: "=D"(z), "=a"(z), "=c"(z), "=S"(z)
-		: "D"(s), "a"(c), "c"(cb), "S"(cb)
-		: "dx"
-	);
-}
+#include <intrin.h>
 
 void *memset(void *s, int c, size_t n){
 	register char *wp = s;
 	char *const wend = wp + n;
-	while(((uintptr_t)wp & (sizeof(uintptr_t) - 1)) != 0){
-		if(wp == wend){
-			return s;
-		}
-		*(wp++) = (char)c;
-	}
-	size_t cnt;
-	if((cnt = (size_t)(wend - wp)) != 0){
-		fill_fwd_g(wp, c, cnt);
-	}
+#ifdef _WIN64
+	size_t nq = (size_t)(wend - wp) / 8;
+	uint64_t q = (uint8_t)c;
+	q += (q <<  8);
+	q += (q << 16);
+	q += (q << 32);
+	__stosq((void *)wp, q, nq);
+	wp += nq * 8;
+#else
+	size_t nd = (size_t)(wend - wp) / 4;
+	uint32_t d = (uint8_t)c;
+	d += (d <<  8);
+	d += (d << 16);
+	__stosd((void *)wp, d, nd);
+	wp += nd * 4;
+#endif
+	size_t nb = (size_t)(wend - wp);
+	__stosb((void *)wp, (uint8_t)c, nb);
 	return s;
 }

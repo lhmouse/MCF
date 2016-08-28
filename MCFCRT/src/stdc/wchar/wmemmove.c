@@ -2,7 +2,7 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2013 - 2016, LH_Mouse. All wrongs reserved.
 
-#include "../string/_memcpyset_inl.h"
+#include "../string/_memcpy_inl.h"
 
 wchar_t *wmemmove(wchar_t *restrict s1, const wchar_t *restrict s2, size_t n){
 	if(s1 < s2){

@@ -22,47 +22,33 @@ char *_MCFCRT_stpcpy(char *restrict dst, const char *restrict src){
 		++rp;
 		++wp;
 	}
-	const __m128i xz = _mm_setzero_si128();
-	if(((uintptr_t)wp & 15) != 0){
-		for(;;){
-			const __m128i xw = _mm_load_si128((const __m128i *)rp);
-			__m128i xt = _mm_cmpeq_epi8(xw, xz);
-			unsigned mask = (unsigned)_mm_movemask_epi8(xt);
-			if(_MCFCRT_EXPECT_NOT(mask != 0)){
-				while((mask & 1) == 0){
-					const char rc = *rp;
-					*wp = rc;
-					++rp;
-					++wp;
-					mask >>= 1;
-				}
-				*wp = 0;
-				return wp;
-			}
-			_mm_storeu_si128((__m128i *)wp, xw);
-			rp += 16;
-			wp += 16;
-		}
+#define SSE2_CPY(save_, load_)	\
+	{	\
+		const __m128i xz = _mm_setzero_si128();	\
+		for(;;){	\
+			const __m128i xw = (load_)((const __m128i *)rp);	\
+			__m128i xt = _mm_cmpeq_epi8(xw, xz);	\
+			unsigned mask = (unsigned)_mm_movemask_epi8(xt);	\
+			if(_MCFCRT_EXPECT_NOT(mask != 0)){	\
+				while((mask & 1) == 0){	\
+					const char rc = *rp;	\
+					*wp = rc;	\
+					++rp;	\
+					++wp;	\
+					mask >>= 1;	\
+				}	\
+				*wp = 0;	\
+				return wp;	\
+			}	\
+			(save_)((__m128i *)wp, xw);	\
+			rp += 16;	\
+			wp += 16;	\
+		}	\
+	}
+	if(((uintptr_t)wp & 15) == 0){
+		SSE2_CPY(_mm_store_si128, _mm_load_si128)
 	} else {
-		for(;;){
-			const __m128i xw = _mm_load_si128((const __m128i *)rp);
-			__m128i xt = _mm_cmpeq_epi8(xw, xz);
-			unsigned mask = (unsigned)_mm_movemask_epi8(xt);
-			if(_MCFCRT_EXPECT_NOT(mask != 0)){
-				while((mask & 1) == 0){
-					const char rc = *rp;
-					*wp = rc;
-					++rp;
-					++wp;
-					mask >>= 1;
-				}
-				*wp = 0;
-				return wp;
-			}
-			_mm_store_si128((__m128i *)wp, xw);
-			rp += 16;
-			wp += 16;
-		}
+		SSE2_CPY(_mm_storeu_si128, _mm_load_si128)
 	}
 }
 char *_MCFCRT_stppcpy(char *dst, char *end, const char *restrict src){
@@ -86,46 +72,51 @@ char *_MCFCRT_stppcpy(char *dst, char *end, const char *restrict src){
 		++rp;
 		++wp;
 	}
-	const __m128i xz = _mm_setzero_si128();
-	if(((uintptr_t)wp & 15) != 0){
-		for(;;){
-			const __m128i xw = _mm_load_si128((const __m128i *)rp);
-			__m128i xt = _mm_cmpeq_epi8(xw, xz);
-			unsigned mask = (unsigned)_mm_movemask_epi8(xt);
-			if(_MCFCRT_EXPECT_NOT((mask != 0) || ((size_t)(wend - wp) < 16))){
-				while(((mask & 1) == 0) && (wp != wend)){
-					const char rc = *rp;
-					*wp = rc;
-					++rp;
-					++wp;
-					mask >>= 1;
-				}
-				*wp = 0;
-				return wp;
-			}
-			_mm_storeu_si128((__m128i *)wp, xw);
-			rp += 16;
-			wp += 16;
+	if((size_t)(wend - wp) >= 64){
+#define SSE2_PCPY(save_, load_)	\
+		{	\
+			const __m128i xz = _mm_setzero_si128();	\
+			do {	\
+				const __m128i xw = (load_)((const __m128i *)rp);	\
+				__m128i xt = _mm_cmpeq_epi8(xw, xz);	\
+				unsigned mask = (unsigned)_mm_movemask_epi8(xt);	\
+				if(_MCFCRT_EXPECT_NOT(mask != 0)){	\
+					while((mask & 1) == 0){	\
+						if(wp == wend){	\
+							*wp = 0;	\
+							return wp;	\
+						}	\
+						const char rc = *rp;	\
+						*wp = rc;	\
+						++rp;	\
+						++wp;	\
+						mask >>= 1;	\
+					}	\
+					*wp = 0;	\
+					return wp;	\
+				}	\
+				(save_)((__m128i *)wp, xw);	\
+				rp += 16;	\
+				wp += 16;	\
+			} while((size_t)(wend - wp) >= 16);	\
 		}
-	} else {
-		for(;;){
-			const __m128i xw = _mm_load_si128((const __m128i *)rp);
-			__m128i xt = _mm_cmpeq_epi8(xw, xz);
-			unsigned mask = (unsigned)_mm_movemask_epi8(xt);
-			if(_MCFCRT_EXPECT_NOT((mask != 0) || ((size_t)(wend - wp) < 16))){
-				while(((mask & 1) == 0) && (wp != wend)){
-					const char rc = *rp;
-					*wp = rc;
-					++rp;
-					++wp;
-					mask >>= 1;
-				}
-				*wp = 0;
-				return wp;
-			}
-			_mm_store_si128((__m128i *)wp, xw);
-			rp += 16;
-			wp += 16;
+		if(((uintptr_t)wp & 15) == 0){
+			SSE2_PCPY(_mm_store_si128, _mm_load_si128)
+		} else {
+			SSE2_PCPY(_mm_storeu_si128, _mm_load_si128)
 		}
+	}
+	for(;;){
+		if(wp == wend){
+			*wp = 0;
+			return wp;
+		}
+		const char rc = *rp;
+		*wp = rc;
+		if(rc == 0){
+			return wp;
+		}
+		++rp;
+		++wp;
 	}
 }

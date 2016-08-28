@@ -7,20 +7,20 @@ extern "C" unsigned _MCFCRT_Main(void) noexcept {
 	using namespace MCF;
 
 	NarrowString s1, s2;
-	s1.Append('a', 0x1000002);
-	s1.Append('z');
-	s2.Append('a', 0x1000002);
-	s2.Append('a');
+	s1.Append('b', 0x1000005);
+	s1.Append('a');
+	s2.Append('b', 0x1000002);
+	s2.Append('b');
 
 	const auto test = [&](WideStringView name){
-		const auto fname = "strcmp"_nsv;
+		const auto fname = "strcpy"_nsv;
 		try {
 			const DynamicLinkLibrary dll(name);
-			const auto pf = dll.RequireProcAddress<int (*)(const char *, const char *)>(fname);
+			const auto pf = dll.RequireProcAddress<char * (*)(char *, const char *)>(fname);
 			std::intptr_t r;
 			const auto t1 = GetHiResMonoClock();
 			for(unsigned i = 0; i < 100; ++i){
-				r = (std::intptr_t)(*pf)(s1.GetStr(), s2.GetStr());
+				r = (std::intptr_t)(*pf)(s1.GetStr() + 1, s2.GetStr());
 			}
 			const auto t2 = GetHiResMonoClock();
 			std::printf("%-10s.%s : t2 - t1 = %f, r = %td\n", AnsiString(name).GetStr(), AnsiString(fname).GetStr(), t2 - t1, r);

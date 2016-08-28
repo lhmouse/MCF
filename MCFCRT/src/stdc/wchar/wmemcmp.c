@@ -36,7 +36,9 @@ int wmemcmp(const wchar_t *s1, const wchar_t *s2, size_t n){
 			unsigned mask = (uint16_t)~_mm_movemask_epi8(xt);
 			if(_MCFCRT_EXPECT_NOT(mask != 0)){
 				const int32_t tzne = __builtin_ctz(mask);
-				xt = _mm_packs_epi16(_mm_cmplt_epi16(xw01, xw02), _mm_cmplt_epi16(xw11, xw12));
+				const __m128i shift = _mm_set1_epi16(-0x8000);
+				xt = _mm_packs_epi16(_mm_cmplt_epi16(_mm_add_epi16(xw01, shift), _mm_add_epi16(xw02, shift)),
+				                     _mm_cmplt_epi16(_mm_add_epi16(xw11, shift), _mm_add_epi16(xw12, shift)));
 				mask = (unsigned)_mm_movemask_epi8(xt);
 				if(mask == 0){
 					return 1;

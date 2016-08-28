@@ -6,17 +6,17 @@
 extern "C" unsigned _MCFCRT_Main(void) noexcept {
 	using namespace MCF;
 
-	WideString s1, s2;
+	NarrowString s1, s2;
 	s1.Append('a', 0x1000002);
-	s1.Append('b');
+	s1.Append('\x80');
 	s2.Append('a', 0x1000002);
-	s2.Append('b');
+	s2.Append('a');
 
 	const auto test = [&](WideStringView name){
-		const auto fname = "wcscmp"_nsv;
+		const auto fname = "strcmp"_nsv;
 		try {
 			const DynamicLinkLibrary dll(name);
-			const auto pf = dll.RequireProcAddress<int (*)(const wchar_t *, const wchar_t *)>(fname);
+			const auto pf = dll.RequireProcAddress<int (*)(const char *, const char *)>(fname);
 			std::intptr_t r;
 			const auto t1 = GetHiResMonoClock();
 			for(unsigned i = 0; i < 100; ++i){

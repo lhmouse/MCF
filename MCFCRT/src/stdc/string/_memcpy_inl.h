@@ -46,16 +46,16 @@ static inline void __MCFCRT_CopyForward(void *__s1, const void *__s2, _MCFCRT_ST
 			}	\
 		}
 		if(__t < 0x1000){
-			if(((_MCFCRT_STD uintptr_t)__rp & 15) != 0){
-				__MCFCRT_SSE2_FULL(_mm_store_si128, _mm_loadu_si128)
-			} else {
+			if(((_MCFCRT_STD uintptr_t)__rp & 15) == 0){
 				__MCFCRT_SSE2_FULL(_mm_store_si128, _mm_load_si128)
+			} else {
+				__MCFCRT_SSE2_FULL(_mm_store_si128, _mm_loadu_si128)
 			}
 		} else {
-			if(((_MCFCRT_STD uintptr_t)__rp & 15) != 0){
-				__MCFCRT_SSE2_FULL(_mm_stream_si128, _mm_loadu_si128)
-			} else {
+			if(((_MCFCRT_STD uintptr_t)__rp & 15) == 0){
 				__MCFCRT_SSE2_FULL(_mm_stream_si128, _mm_load_si128)
+			} else {
+				__MCFCRT_SSE2_FULL(_mm_stream_si128, _mm_loadu_si128)
 			}
 		}
 #undef __MCFCRT_SSE2_STEP
@@ -101,16 +101,16 @@ static inline void __MCFCRT_CopyBackward(void *__s1, const void *__s2, _MCFCRT_S
 			}	\
 		}
 		if(__t < 0x1000){
-			if(((_MCFCRT_STD uintptr_t)__rp & 15) != 0){
-				__MCFCRT_SSE2_FULL(_mm_store_si128, _mm_loadu_si128)
-			} else {
+			if(((_MCFCRT_STD uintptr_t)__rp & 15) == 0){
 				__MCFCRT_SSE2_FULL(_mm_store_si128, _mm_load_si128)
+			} else {
+				__MCFCRT_SSE2_FULL(_mm_store_si128, _mm_loadu_si128)
 			}
 		} else {
-			if(((_MCFCRT_STD uintptr_t)__rp & 15) != 0){
-				__MCFCRT_SSE2_FULL(_mm_stream_si128, _mm_loadu_si128)
-			} else {
+			if(((_MCFCRT_STD uintptr_t)__rp & 15) == 0){
 				__MCFCRT_SSE2_FULL(_mm_stream_si128, _mm_load_si128)
+			} else {
+				__MCFCRT_SSE2_FULL(_mm_stream_si128, _mm_loadu_si128)
 			}
 		}
 #undef __MCFCRT_SSE2_STEP

@@ -9,18 +9,18 @@ extern "C" unsigned _MCFCRT_Main(void) noexcept {
 	WideString s1, s2;
 	s1.Append('a', 0x1000002);
 	s1.Append('b');
-	s2.Append('c', 0x1000002);
-	s2.Append('d');
+	s2.Append('a', 0x1000002);
+	s2.Append('b');
 
 	const auto test = [&](WideStringView name){
-		const auto fname = "wmemset"_nsv;
+		const auto fname = "wcsncmp"_nsv;
 		try {
 			const DynamicLinkLibrary dll(name);
-			const auto pf = dll.RequireProcAddress<wchar_t * (*)(wchar_t *, wchar_t, std::size_t)>(fname);
+			const auto pf = dll.RequireProcAddress<int (*)(const wchar_t *, const wchar_t *, std::size_t)>(fname);
 			std::intptr_t r;
 			const auto t1 = GetHiResMonoClock();
-			for(unsigned i = 0; i < 1000; ++i){
-				r = (std::intptr_t)(*pf)(s1.GetStr(), 'b', s1.GetSize());
+			for(unsigned i = 0; i < 100; ++i){
+				r = (std::intptr_t)(*pf)(s1.GetStr(), s2.GetStr(), s1.GetSize());
 			}
 			const auto t2 = GetHiResMonoClock();
 			std::printf("%-10s.%s : t2 - t1 = %f, r = %td\n", AnsiString(name).GetStr(), AnsiString(fname).GetStr(), t2 - t1, r);

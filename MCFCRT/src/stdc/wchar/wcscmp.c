@@ -29,18 +29,11 @@ int wcscmp(const wchar_t *s1, const wchar_t *s2){
 		const __m128i xz = _mm_setzero_si128();	\
 		for(;;){	\
 			if((care_about_page_boundaries_) && (((uintptr_t)rp2 & 0xFFF) > 0xFF0)){	\
-				for(unsigned i = 0; i < 16; ++i){	\
-					const int32_t rc1 = (uint16_t)*rp1;	\
-					const int32_t rc2 = (uint16_t)*rp2;	\
-					const int32_t d = rc1 - rc2;	\
-					if(d != 0){	\
-						return (d >> 31) | 1;	\
-					}	\
-					if(rc1 == 0){	\
-						return 0;	\
-					}	\
-					++rp1;	\
-					++rp2;	\
+				const __m128i xw2 = (load2_)((const __m128i *)((uintptr_t)rp2 & (uintptr_t)-0x10));	\
+				__m128i xt = _mm_cmpeq_epi8(xw2, xz);	\
+				unsigned mask = (unsigned)_mm_movemask_epi8(xt);	\
+				if(mask != 0){	\
+					break;	\
 				}	\
 			}	\
 			const __m128i xw01 = (load1_)((const __m128i *)rp1);	\
@@ -75,5 +68,18 @@ int wcscmp(const wchar_t *s1, const wchar_t *s2){
 		SSE2_CMP(_mm_load_si128, _mm_load_si128, false)
 	} else {
 		SSE2_CMP(_mm_load_si128, _mm_loadu_si128, true)
+	}
+	for(;;){
+		const int32_t rc1 = (uint16_t)*rp1;
+		const int32_t rc2 = (uint16_t)*rp2;
+		const int32_t d = rc1 - rc2;
+		if(d != 0){
+			return (d >> 31) | 1;
+		}
+		if(rc1 == 0){
+			return 0;
+		}
+		++rp1;
+		++rp2;
 	}
 }

@@ -25,9 +25,9 @@ extern "C" unsigned _MCFCRT_Main(void) noexcept {
 	constexpr std::size_t kStringSize = 0xF000;
 	const UniquePtr<void, PageDeleter> p1(::VirtualAlloc(nullptr, kStringSize, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE));
 	const UniquePtr<void, PageDeleter> p2(::VirtualAlloc(nullptr, kStringSize, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE));
-	const auto s1  = (char *)p1.Get() + 1;
+	const auto s1  = (char *)p1.Get() + 6;
 	const auto s1e = (char *)p1.Get() + kStringSize;
-	const auto s2  = (char *)p2.Get() + 6;
+	const auto s2  = (char *)p2.Get() + 1;
 	const auto s2e = (char *)p2.Get() + kStringSize;
 
 	std::memset(s1, 'a', (std::size_t)(s1e - s1));

@@ -3,7 +3,6 @@
 // Copyleft 2013 - 2016, LH_Mouse. All wrongs reserved.
 
 #include "../../env/_crtdef.h"
-#include "../../ext/expect.h"
 #include <emmintrin.h>
 
 void *memchr(const void *s, int c, size_t n){
@@ -28,7 +27,7 @@ void *memchr(const void *s, int c, size_t n){
 			const __m128i xw = _mm_load_si128((const __m128i *)rp);
 			__m128i xt = _mm_cmpeq_epi8(xw, xc);
 			unsigned mask = (unsigned)_mm_movemask_epi8(xt);
-			if(_MCFCRT_EXPECT_NOT(mask != 0)){
+			if(mask != 0){
 				return (char *)rp + __builtin_ctz(mask);
 			}
 			rp += 16;

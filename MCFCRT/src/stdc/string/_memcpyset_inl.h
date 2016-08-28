@@ -2,8 +2,8 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2013 - 2016, LH_Mouse. All wrongs reserved.
 
-#ifndef __MCFCRT_STRING_MEMCPY_INL_H_
-#define __MCFCRT_STRING_MEMCPY_INL_H_
+#ifndef __MCFCRT_STRING_MEMCPYSET_INL_H_
+#define __MCFCRT_STRING_MEMCPYSET_INL_H_
 
 #include "../../env/_crtdef.h"
 #include <emmintrin.h>
@@ -61,27 +61,10 @@ static inline void __MCFCRT_CopyForward(void *__s1, const void *__s2, _MCFCRT_ST
 #undef __MCFCRT_SSE2_STEP
 #undef __MCFCRT_SSE2_FULL
 	}
-	if((__t = (_MCFCRT_STD size_t)(__wend - __wp)) != 0){
-		_MCFCRT_STD uintptr_t __z;
-		__asm__ volatile (
-#ifdef _WIN64
-			"shr rcx, 3 \n"
-			"rep movsq \n"
-			"mov rcx, rax \n"
-			"and rcx, 7 \n"
-#else
-			"shr ecx, 2 \n"
-			"rep movsd \n"
-			"mov ecx, eax \n"
-			"and ecx, 3 \n"
-#endif
-			"rep movsb \n"
-			: "=D"(__z), "=S"(__z), "=c"(__z), "=a"(__z)
-			: "D"(__wp), "S"(__rp), "c"(__t), "a"(__t)
-		);
+	while(__wp != __wend){
+		*(volatile char *)(__wp++) = *(__rp++);
 	}
 }
-
 __attribute__((__always_inline__))
 static inline void __MCFCRT_CopyBackward(void *__s1, const void *__s2, _MCFCRT_STD size_t __bytes) _MCFCRT_NOEXCEPT {
 	char *const __wbegin = __s1;
@@ -133,34 +116,8 @@ static inline void __MCFCRT_CopyBackward(void *__s1, const void *__s2, _MCFCRT_S
 #undef __MCFCRT_SSE2_STEP
 #undef __MCFCRT_SSE2_FULL
 	}
-	if((__t = (_MCFCRT_STD size_t)(__wp - __wbegin)) != 0){
-		_MCFCRT_STD uintptr_t __z;
-		__asm__ volatile (
-			"std \n"
-#ifdef _WIN64
-			"sub rdi, 8 \n"
-			"sub rsi, 8 \n"
-			"shr rcx, 3 \n"
-			"rep movsq \n"
-			"add rdi, 7 \n"
-			"add rsi, 7 \n"
-			"mov rcx, rax \n"
-			"and rcx, 7 \n"
-#else
-			"sub edi, 4 \n"
-			"sub esi, 4 \n"
-			"shr ecx, 2 \n"
-			"rep movsd \n"
-			"add edi, 3 \n"
-			"add esi, 3 \n"
-			"mov ecx, eax \n"
-			"and ecx, 3 \n"
-#endif
-			"rep movsb \n"
-			"cld \n"
-			: "=D"(__z), "=S"(__z), "=c"(__z), "=a"(__z)
-			: "D"(__wp), "S"(__rp), "c"(__t), "a"(__t)
-		);
+	while(__wbegin != __wp){
+		*(volatile char *)(--__wp) = *(--__rp);
 	}
 }
 

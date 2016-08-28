@@ -9,20 +9,21 @@ extern "C" unsigned _MCFCRT_Main(void) noexcept {
 	NarrowString s1, s2;
 	s1.Append('a', 0x1000002);
 	s1.Append('v');
-	s2.Append('a', 0x1000002);
+	s2.Append('b', 0x1000002);
 	s2.Append('c');
 
 	const auto test = [&](WideStringView name){
-		const auto fname = "memcpy"_nsv;
+		const auto fname = "strcpy"_nsv;
 		try {
 			const DynamicLinkLibrary dll(name);
-			const auto pf = dll.RequireProcAddress<void * (*)(void *, const void *, std::size_t)>(fname);
+			const auto pf = dll.RequireProcAddress<char * (*)(char *, const char *)>(fname);
 			std::intptr_t r;
 			const auto t1 = GetHiResMonoClock();
 			for(unsigned i = 0; i < 1000; ++i){
-				r = (std::intptr_t)(*pf)(s1.GetStr(), s2.GetStr(), s1.GetSize());
+				r = (std::intptr_t)(*pf)(s1.GetStr(), s2.GetStr());
 			}
 			const auto t2 = GetHiResMonoClock();
+			assert(s1 == s2);
 			std::printf("%-10s.%s : t2 - t1 = %f, r = %td\n", AnsiString(name).GetStr(), AnsiString(fname).GetStr(), t2 - t1, r);
 		} catch(Exception &e){
 			std::printf("%-10s.%s : error %lu\n", AnsiString(name).GetStr(), AnsiString(fname).GetStr(), e.GetErrorCode());

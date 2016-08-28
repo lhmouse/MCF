@@ -2,7 +2,7 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2013 - 2032, LH_Mouse. All wrongs reserved.
 
-#include "_memcpy_inl.h"
+#include "_memcpyset_inl.h"
 
 void *memmove(void *s1, const void *s2, size_t n){
 	if(s1 < s2){

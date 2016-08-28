@@ -65,7 +65,7 @@ int wcsncmp(const wchar_t *s1, const wchar_t *s2, size_t n){
 		if(((uintptr_t)rp2 & 31) == 0){
 			SSE2_CMP(_mm_load_si128, _mm_load_si128)
 		} else {
-			SSE2_CMP(_mm_load_si128, _mm_loadu_si128)
+//			SSE2_CMP(_mm_load_si128, _mm_loadu_si128)
 		}
 	}
 	for(;;){

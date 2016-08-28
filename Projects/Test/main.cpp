@@ -13,10 +13,10 @@ extern "C" unsigned _MCFCRT_Main(void) noexcept {
 	s2.Append('b');
 
 	const auto test = [&](WideStringView name){
-		const auto fname = "strcpy"_nsv;
+		const auto fname = "strcmp"_nsv;
 		try {
 			const DynamicLinkLibrary dll(name);
-			const auto pf = dll.RequireProcAddress<char * (*)(char *, const char *)>(fname);
+			const auto pf = dll.RequireProcAddress<int (*)(const char *, const char *)>(fname);
 			std::intptr_t r;
 			const auto t1 = GetHiResMonoClock();
 			for(unsigned i = 0; i < 100; ++i){

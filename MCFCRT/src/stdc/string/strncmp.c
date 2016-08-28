@@ -38,7 +38,8 @@ int strncmp(const char *s1, const char *s2, size_t n){
 				if(care_about_page_boundaries_){	\
 					xmid = (uint8_t)(xmid + 1);	\
 					if(_MCFCRT_EXPECT_NOT(xmid == 0)){	\
-						const __m128i xw2 = (load2_)((const __m128i *)((uintptr_t)rp2 & (uintptr_t)-0x10));	\
+						char *const arp2 = (char *)((uintptr_t)rp2 & (uintptr_t)-0x10);	\
+						const __m128i xw2 = (load2_)((const __m128i *)arp2);	\
 						__m128i xt = _mm_cmpeq_epi8(xw2, xz);	\
 						unsigned mask = (unsigned)_mm_movemask_epi8(xt);	\
 						if(_MCFCRT_EXPECT_NOT(mask != 0)){	\

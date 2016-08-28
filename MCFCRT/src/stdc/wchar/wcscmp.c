@@ -33,8 +33,9 @@ int wcscmp(const wchar_t *s1, const wchar_t *s2){
 			if(care_about_page_boundaries_){	\
 				xmid = (uint8_t)(xmid + 2);	\
 				if(_MCFCRT_EXPECT_NOT(xmid == 0)){	\
-					const __m128i xw20 = (load2_)((const __m128i *)((uintptr_t)rp2 & (uintptr_t)-0x20));	\
-					const __m128i xw21 = (load2_)((const __m128i *)((uintptr_t)rp2 & (uintptr_t)-0x20) + 1);	\
+					char *const arp2 = (char *)((uintptr_t)rp2 & (uintptr_t)-0x20);	\
+					const __m128i xw20 = (load2_)((const __m128i *)arp2);	\
+					const __m128i xw21 = (load2_)((const __m128i *)arp2 + 1);	\
 					__m128i xt = _mm_packs_epi16(_mm_cmpeq_epi16(xw20, xz), _mm_cmpeq_epi16(xw21, xz));	\
 					unsigned mask = (unsigned)_mm_movemask_epi8(xt);	\
 					if(_MCFCRT_EXPECT_NOT(mask != 0)){	\

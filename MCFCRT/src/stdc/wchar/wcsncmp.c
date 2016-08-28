@@ -3,6 +3,7 @@
 // Copyleft 2013 - 2016, LH_Mouse. All wrongs reserved.
 
 #include "../../env/_crtdef.h"
+#include "../../ext/expect.h"
 #include <emmintrin.h>
 
 int wcsncmp(const wchar_t *s1, const wchar_t *s2, size_t n){
@@ -32,26 +33,31 @@ int wcsncmp(const wchar_t *s1, const wchar_t *s2, size_t n){
 #define SSE2_CMP(load1_, load2_, care_about_page_boundaries_)	\
 		{	\
 			const __m128i xz = _mm_setzero_si128();	\
+			uint8_t xmid = ((uintptr_t)rp2 >> 4) & 0xFE;	\
 			do {	\
-				if((care_about_page_boundaries_) && (((uintptr_t)rp2 & 0xFFF) > 0xFF0)){	\
-					const __m128i xw2 = (load2_)((const __m128i *)((uintptr_t)rp2 & (uintptr_t)-0x10));	\
-					__m128i xt = _mm_cmpeq_epi8(xw2, xz);	\
-					unsigned mask = (unsigned)_mm_movemask_epi8(xt);	\
-					if(mask != 0){	\
-						break;	\
+				if(care_about_page_boundaries_){	\
+					xmid = (uint8_t)(xmid + 2);	\
+					if(_MCFCRT_EXPECT_NOT(xmid == 0)){	\
+						const __m128i xw20 = (load2_)((const __m128i *)((uintptr_t)rp2 & (uintptr_t)-0x20));	\
+						const __m128i xw21 = (load2_)((const __m128i *)((uintptr_t)rp2 & (uintptr_t)-0x20) + 1);	\
+						__m128i xt = _mm_packs_epi16(_mm_cmpeq_epi16(xw20, xz), _mm_cmpeq_epi16(xw21, xz));	\
+						unsigned mask = (unsigned)_mm_movemask_epi8(xt);	\
+						if(_MCFCRT_EXPECT_NOT(mask != 0)){	\
+							break;	\
+						}	\
 					}	\
 				}	\
-				const __m128i xw01 = (load1_)((const __m128i *)rp1);	\
-				const __m128i xw02 = (load2_)((const __m128i *)rp2);	\
+				const __m128i xw10 = (load1_)((const __m128i *)rp1);	\
+				const __m128i xw20 = (load2_)((const __m128i *)rp2);	\
 				const __m128i xw11 = (load1_)((const __m128i *)rp1 + 1);	\
-				const __m128i xw12 = (load2_)((const __m128i *)rp2 + 1);	\
-				__m128i xt = _mm_packs_epi16(_mm_cmpeq_epi16(xw01, xw02), _mm_cmpeq_epi16(xw11, xw12));	\
+				const __m128i xw21 = (load2_)((const __m128i *)rp2 + 1);	\
+				__m128i xt = _mm_packs_epi16(_mm_cmpeq_epi16(xw10, xw20), _mm_cmpeq_epi16(xw11, xw21));	\
 				unsigned mask = (uint16_t)~_mm_movemask_epi8(xt);	\
-				if(mask != 0){	\
+				if(_MCFCRT_EXPECT_NOT(mask != 0)){	\
 					const int32_t tzne = __builtin_ctz(mask);	\
 					const __m128i shift = _mm_set1_epi16(-0x8000);	\
-					xt = _mm_packs_epi16(_mm_cmpgt_epi16(_mm_add_epi16(xw01, shift), _mm_add_epi16(xw02, shift)),	\
-					                     _mm_cmpgt_epi16(_mm_add_epi16(xw11, shift), _mm_add_epi16(xw12, shift)));	\
+					xt = _mm_packs_epi16(_mm_cmpgt_epi16(_mm_add_epi16(xw10, shift), _mm_add_epi16(xw20, shift)),	\
+					                     _mm_cmpgt_epi16(_mm_add_epi16(xw11, shift), _mm_add_epi16(xw21, shift)));	\
 					mask = (unsigned)_mm_movemask_epi8(xt);	\
 					if(mask == 0){	\
 						return -1;	\
@@ -60,9 +66,9 @@ int wcsncmp(const wchar_t *s1, const wchar_t *s2, size_t n){
 					const int32_t d = tzne - tzgt;	\
 					return (d >> 31) | 1;	\
 				}	\
-				xt = _mm_packs_epi16(_mm_cmpeq_epi16(xw01, xz), _mm_cmpeq_epi16(xw11, xz));	\
+				xt = _mm_packs_epi16(_mm_cmpeq_epi16(xw10, xz), _mm_cmpeq_epi16(xw11, xz));	\
 				mask = (unsigned)_mm_movemask_epi8(xt);	\
-				if(mask != 0){	\
+				if(_MCFCRT_EXPECT_NOT(mask != 0)){	\
 					return 0;	\
 				}	\
 				rp1 += 16;	\

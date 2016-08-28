@@ -3,6 +3,7 @@
 // Copyleft 2013 - 2016, LH_Mouse. All wrongs reserved.
 
 #include "../../env/_crtdef.h"
+#include "../../ext/expect.h"
 #include <emmintrin.h>
 
 int strncmp(const char *s1, const char *s2, size_t n){
@@ -32,20 +33,24 @@ int strncmp(const char *s1, const char *s2, size_t n){
 #define SSE2_CMP(load1_, load2_, care_about_page_boundaries_)	\
 		{	\
 			const __m128i xz = _mm_setzero_si128();	\
+			uint8_t xmid = ((uintptr_t)rp2 >> 4) & 0xFF;	\
 			do {	\
-				if((care_about_page_boundaries_) && (((uintptr_t)rp2 & 0xFFF) > 0xFF0)){	\
-					const __m128i xw2 = (load2_)((const __m128i *)((uintptr_t)rp2 & (uintptr_t)-0x10));	\
-					__m128i xt = _mm_cmpeq_epi8(xw2, xz);	\
-					unsigned mask = (unsigned)_mm_movemask_epi8(xt);	\
-					if(mask != 0){	\
-						break;	\
+				if(care_about_page_boundaries_){	\
+					xmid = (uint8_t)(xmid + 1);	\
+					if(_MCFCRT_EXPECT_NOT(xmid == 0)){	\
+						const __m128i xw2 = (load2_)((const __m128i *)((uintptr_t)rp2 & (uintptr_t)-0x10));	\
+						__m128i xt = _mm_cmpeq_epi8(xw2, xz);	\
+						unsigned mask = (unsigned)_mm_movemask_epi8(xt);	\
+						if(_MCFCRT_EXPECT_NOT(mask != 0)){	\
+							break;	\
+						}	\
 					}	\
 				}	\
 				const __m128i xw1 = (load1_)((const __m128i *)rp1);	\
 				const __m128i xw2 = (load2_)((const __m128i *)rp2);	\
 				__m128i xt = _mm_cmpeq_epi8(xw1, xw2);	\
 				unsigned mask = (uint16_t)~_mm_movemask_epi8(xt);	\
-				if(mask != 0){	\
+				if(_MCFCRT_EXPECT_NOT(mask != 0)){	\
 					const int32_t tzne = __builtin_ctz(mask);	\
 					const __m128i shift = _mm_set1_epi8(-0x80);	\
 					xt = _mm_cmpgt_epi8(_mm_add_epi8(xw1, shift),	\
@@ -60,7 +65,7 @@ int strncmp(const char *s1, const char *s2, size_t n){
 				}	\
 				xt = _mm_cmpeq_epi8(xw1, xz);	\
 				mask = (unsigned)_mm_movemask_epi8(xt);	\
-				if(mask != 0){	\
+				if(_MCFCRT_EXPECT_NOT(mask != 0)){	\
 					return 0;	\
 				}	\
 				rp1 += 16;	\

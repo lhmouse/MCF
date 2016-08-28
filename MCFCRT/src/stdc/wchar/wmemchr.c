@@ -3,6 +3,7 @@
 // Copyleft 2013 - 2016, LH_Mouse. All wrongs reserved.
 
 #include "../../env/_crtdef.h"
+#include "../../ext/expect.h"
 #include <emmintrin.h>
 
 wchar_t *wmemchr(const wchar_t *s, wchar_t c, size_t n){
@@ -28,7 +29,7 @@ wchar_t *wmemchr(const wchar_t *s, wchar_t c, size_t n){
 			const __m128i xw1 = _mm_load_si128((const __m128i *)rp + 1);
 			__m128i xt = _mm_packs_epi16(_mm_cmpeq_epi16(xw0, xc), _mm_cmpeq_epi16(xw1, xc));
 			unsigned mask = (unsigned)_mm_movemask_epi8(xt);
-			if(mask != 0){
+			if(_MCFCRT_EXPECT_NOT(mask != 0)){
 				return (wchar_t *)rp + __builtin_ctz(mask);
 			}
 			rp += 16;

@@ -25,25 +25,25 @@ extern "C" unsigned _MCFCRT_Main(void) noexcept {
 	constexpr std::size_t kStringSize = 0xF000;
 	const UniquePtr<void, PageDeleter> p1(::VirtualAlloc(nullptr, kStringSize, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE));
 	const UniquePtr<void, PageDeleter> p2(::VirtualAlloc(nullptr, kStringSize, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE));
-	const auto s1  = (char *)p1.Get() + 1;
-	const auto s1e = (char *)p1.Get() + kStringSize;
-	const auto s2  = (char *)p2.Get() + 6;
-	const auto s2e = (char *)p2.Get() + kStringSize;
+	const auto s1  = (wchar_t *)((char *)p1.Get() + 2);
+	const auto s1e = (wchar_t *)((char *)p1.Get() + kStringSize);
+	const auto s2  = (wchar_t *)((char *)p2.Get() + 18);
+	const auto s2e = (wchar_t *)((char *)p2.Get() + kStringSize);
 
-	std::memset(s1, 'a', (std::size_t)(s1e - s1));
+	std::wmemset(s1, 'a', (std::size_t)(s1e - s1));
 	s1e[-1] = 0;
-	std::memset(s2, 'a', (std::size_t)(s2e - s2));
+	std::wmemset(s2, 'a', (std::size_t)(s2e - s2));
 	s2e[-1] = 0;
 
 	const auto test = [&](WideStringView name){
-		const auto fname = "strcmp"_nsv;
+		const auto fname = "wcsncmp"_nsv;
 		try {
 			const DynamicLinkLibrary dll(name);
-			const auto pf = dll.RequireProcAddress<int (*)(const char *, const char *)>(fname);
+			const auto pf = dll.RequireProcAddress<int (*)(const wchar_t *, const wchar_t *, std::size_t)>(fname);
 			std::intptr_t r;
 			const auto t1 = GetHiResMonoClock();
 			for(unsigned i = 0; i < 100000; ++i){
-				r = (std::intptr_t)(*pf)(s1, s2);
+				r = (std::intptr_t)(*pf)(s1, s2, 0xFFFFFFF);
 			}
 			const auto t2 = GetHiResMonoClock();
 			std::printf("%-10s.%s : t2 - t1 = %f, r = %td\n", AnsiString(name).GetStr(), AnsiString(fname).GetStr(), t2 - t1, r);

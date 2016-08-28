@@ -3,6 +3,7 @@
 // Copyleft 2013 - 2016, LH_Mouse. All wrongs reserved.
 
 #include "../../env/_crtdef.h"
+#include "../../ext/expect.h"
 #include <emmintrin.h>
 
 int memcmp(const void *s1, const void *s2, size_t n){
@@ -33,7 +34,7 @@ int memcmp(const void *s1, const void *s2, size_t n){
 				const __m128i xw2 = (load2_)((const __m128i *)rp2);	\
 				__m128i xt = _mm_cmpeq_epi8(xw1, xw2);	\
 				unsigned mask = (uint16_t)~_mm_movemask_epi8(xt);	\
-				if(mask != 0){	\
+				if(_MCFCRT_EXPECT_NOT(mask != 0)){	\
 					const int32_t tzne = __builtin_ctz(mask);	\
 					const __m128i shift = _mm_set1_epi8(-0x80);	\
 					xt = _mm_cmpgt_epi8(_mm_add_epi8(xw1, shift),	\

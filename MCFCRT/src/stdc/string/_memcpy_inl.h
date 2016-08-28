@@ -6,6 +6,7 @@
 #define __MCFCRT_STRING_MEMCPY_INL_H_
 
 #include "../../env/_crtdef.h"
+#include "../../ext/expect.h"
 #include <emmintrin.h>
 
 _MCFCRT_EXTERN_C_BEGIN
@@ -45,7 +46,7 @@ static inline void __MCFCRT_CopyForward(void *__s1, const void *__s2, _MCFCRT_ST
 				} while(__wp != __xmmwend);	\
 			}	\
 		}
-		if(__t < 0x1000){
+		if(_MCFCRT_EXPECT(__t < 0x1000)){
 			if(((_MCFCRT_STD uintptr_t)__rp & 15) == 0){
 				__MCFCRT_SSE2_FULL(_mm_store_si128, _mm_load_si128)
 			} else {
@@ -100,7 +101,7 @@ static inline void __MCFCRT_CopyBackward(void *__s1, const void *__s2, _MCFCRT_S
 				} while(__xmmbegin != __wp);	\
 			}	\
 		}
-		if(__t < 0x1000){
+		if(_MCFCRT_EXPECT(__t < 0x1000)){
 			if(((_MCFCRT_STD uintptr_t)__rp & 15) == 0){
 				__MCFCRT_SSE2_FULL(_mm_store_si128, _mm_load_si128)
 			} else {

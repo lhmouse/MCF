@@ -3,6 +3,7 @@
 // Copyleft 2013 - 2016, LH_Mouse. All wrongs reserved.
 
 #include "../../env/_crtdef.h"
+#include "../../ext/expect.h"
 #include <emmintrin.h>
 
 char *strchr(const char *s, int c){
@@ -26,12 +27,12 @@ char *strchr(const char *s, int c){
 		const __m128i xw = _mm_load_si128((const __m128i *)rp);
 		__m128i xt = _mm_cmpeq_epi8(xw, xc);
 		unsigned mask = (unsigned)_mm_movemask_epi8(xt);
-		if(mask != 0){
+		if(_MCFCRT_EXPECT_NOT(mask != 0)){
 			return (char *)rp + __builtin_ctz(mask);
 		}
 		xt = _mm_cmpeq_epi8(xw, xz);
 		mask = (unsigned)_mm_movemask_epi8(xt);
-		if(mask != 0){
+		if(_MCFCRT_EXPECT_NOT(mask != 0)){
 			return nullptr;
 		}
 		rp += 16;

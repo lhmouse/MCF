@@ -8,7 +8,7 @@ extern "C" unsigned _MCFCRT_Main(void) noexcept {
 
 	NarrowString s1, s2;
 	s1.Append('a', 0x1000002);
-	s1.Append('\x80');
+	s1.Append('z');
 	s2.Append('a', 0x1000002);
 	s2.Append('a');
 

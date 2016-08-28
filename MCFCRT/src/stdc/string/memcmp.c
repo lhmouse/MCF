@@ -35,14 +35,14 @@ int memcmp(const void *s1, const void *s2, size_t n){
 			if(_MCFCRT_EXPECT_NOT(mask != 0)){
 				const int32_t tzne = __builtin_ctz(mask);
 				const __m128i shift = _mm_set1_epi8(-0x80);
-				xt = _mm_cmplt_epi8(_mm_add_epi8(xw1, shift),
+				xt = _mm_cmpgt_epi8(_mm_add_epi8(xw1, shift),
 				                    _mm_add_epi8(xw2, shift));
 				mask = (unsigned)_mm_movemask_epi8(xt);
 				if(mask == 0){
-					return 1;
+					return -1;
 				}
-				const int32_t tzlt = __builtin_ctz(mask);
-				const int32_t d = tzlt - tzne - 1;
+				const int32_t tzgt = __builtin_ctz(mask);
+				const int32_t d = tzne - tzgt;
 				return (d >> 31) | 1;
 			}
 			rp1 += 16;

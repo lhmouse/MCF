@@ -20,7 +20,7 @@ extern "C" unsigned _MCFCRT_Main(void) noexcept {
 			std::intptr_t r;
 			const auto t1 = GetHiResMonoClock();
 			for(unsigned i = 0; i < 100; ++i){
-				r = (std::intptr_t)(*pf)(s1.GetStr() + 1, s2.GetStr());
+				r = (std::intptr_t)(*pf)(s1.GetStr(), s2.GetStr() + 1);
 			}
 			const auto t2 = GetHiResMonoClock();
 			std::printf("%-10s.%s : t2 - t1 = %f, r = %td\n", AnsiString(name).GetStr(), AnsiString(fname).GetStr(), t2 - t1, r);

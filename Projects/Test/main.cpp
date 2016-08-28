@@ -13,14 +13,14 @@ extern "C" unsigned _MCFCRT_Main(void) noexcept {
 	s2.Append('c');
 
 	const auto test = [&](WideStringView name){
-		const auto fname = "wcschr"_nsv;
+		const auto fname = "wcslen"_nsv;
 		try {
 			const DynamicLinkLibrary dll(name);
-			const auto pf = dll.RequireProcAddress<wchar_t * (*)(const wchar_t *, wchar_t)>(fname);
+			const auto pf = dll.RequireProcAddress<std::size_t (*)(const wchar_t *)>(fname);
 			std::intptr_t r;
 			const auto t1 = GetHiResMonoClock();
 			for(unsigned i = 0; i < 1000; ++i){
-				r = (*pf)(s1.GetStr(), 'v') - s1.GetStr();
+				r = (std::intptr_t)(*pf)(s1.GetStr());
 			}
 			const auto t2 = GetHiResMonoClock();
 			std::printf("%-10s.%s : t2 - t1 = %f, r = %td\n", AnsiString(name).GetStr(), AnsiString(fname).GetStr(), t2 - t1, r);

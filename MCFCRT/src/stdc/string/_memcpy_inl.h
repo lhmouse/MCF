@@ -6,6 +6,7 @@
 #define __MCFCRT_STRING_MEMCPY_INL_H_
 
 #include "../../env/_crtdef.h"
+#include <emmintrin.h>
 
 _MCFCRT_EXTERN_C_BEGIN
 
@@ -23,43 +24,38 @@ static inline void __MCFCRT_CopyForward(void *__s1, const void *__s2, _MCFCRT_ST
 	_MCFCRT_STD size_t __t;
 	if((__t = (_MCFCRT_STD size_t)(__wend - __wp) / 16) != 0){
 		char *const __xmmwend = __wp + __t * 16;
-#define __MCFCRT_SSE2_STEP(__si_, __li_, __r_)	\
+#define __MCFCRT_SSE2_STEP(__si_, __li_)	\
 		{	\
-			__asm__ volatile (	\
-				__li_ " " __r_ ", xmmword ptr[%1] \n"	\
-				__si_ " xmmword ptr[%0], " __r_ " \n"	\
-				: : "r"(__wp), "r"(__rp)	\
-				: __r_	\
-			);	\
+			(__si_)((__m128i *)__wp, (__li_)((const __m128i *)__rp));	\
 			__wp += 16;	\
 			__rp += 16;	\
 		}
 #define __MCFCRT_SSE2_FULL(__si_, __li_)	\
 		{	\
 			switch(__t % 8){	\
-				do { __builtin_prefetch(__rp + 256);	\
-			default: __MCFCRT_SSE2_STEP(__si_, __li_, "xmm0")	\
-			case 7:  __MCFCRT_SSE2_STEP(__si_, __li_, "xmm1")	\
-			case 6:  __MCFCRT_SSE2_STEP(__si_, __li_, "xmm2")	\
-			case 5:  __MCFCRT_SSE2_STEP(__si_, __li_, "xmm3")	\
-			case 4:  __MCFCRT_SSE2_STEP(__si_, __li_, "xmm0")	\
-			case 3:  __MCFCRT_SSE2_STEP(__si_, __li_, "xmm1")	\
-			case 2:  __MCFCRT_SSE2_STEP(__si_, __li_, "xmm2")	\
-			case 1:  __MCFCRT_SSE2_STEP(__si_, __li_, "xmm3")	\
+				do { _mm_prefetch(__rp + 256, _MM_HINT_NTA);	\
+			default: __MCFCRT_SSE2_STEP(__si_, __li_)	\
+			case 7:  __MCFCRT_SSE2_STEP(__si_, __li_)	\
+			case 6:  __MCFCRT_SSE2_STEP(__si_, __li_)	\
+			case 5:  __MCFCRT_SSE2_STEP(__si_, __li_)	\
+			case 4:  __MCFCRT_SSE2_STEP(__si_, __li_)	\
+			case 3:  __MCFCRT_SSE2_STEP(__si_, __li_)	\
+			case 2:  __MCFCRT_SSE2_STEP(__si_, __li_)	\
+			case 1:  __MCFCRT_SSE2_STEP(__si_, __li_)	\
 				} while(__wp != __xmmwend);	\
 			}	\
 		}
 		if(__t < 0x1000){
 			if(((_MCFCRT_STD uintptr_t)__rp & 15) != 0){
-				__MCFCRT_SSE2_FULL("movdqa", "movdqu")
+				__MCFCRT_SSE2_FULL(_mm_store_si128, _mm_loadu_si128)
 			} else {
-				__MCFCRT_SSE2_FULL("movdqa", "movdqa")
+				__MCFCRT_SSE2_FULL(_mm_store_si128, _mm_load_si128)
 			}
 		} else {
 			if(((_MCFCRT_STD uintptr_t)__rp & 15) != 0){
-				__MCFCRT_SSE2_FULL("movntdq", "movdqu")
+				__MCFCRT_SSE2_FULL(_mm_stream_si128, _mm_loadu_si128)
 			} else {
-				__MCFCRT_SSE2_FULL("movntdq", "movntdqa")
+				__MCFCRT_SSE2_FULL(_mm_stream_si128, _mm_load_si128)
 			}
 		}
 #undef __MCFCRT_SSE2_STEP
@@ -100,43 +96,38 @@ static inline void __MCFCRT_CopyBackward(void *__s1, const void *__s2, _MCFCRT_S
 	_MCFCRT_STD size_t __t;
 	if((__t = (_MCFCRT_STD size_t)(__wp - __wbegin) / 16) != 0){
 		char *const __xmmbegin = __wp - __t * 16;
-#define __MCFCRT_SSE2_STEP(__si_, __li_, __r_)	\
+#define __MCFCRT_SSE2_STEP(__si_, __li_)	\
 		{	\
 			__wp -= 16;	\
 			__rp -= 16;	\
-			__asm__ volatile (	\
-				__li_ " " __r_ ", xmmword ptr[%1] \n"	\
-				__si_ " xmmword ptr[%0], " __r_ " \n"	\
-				: : "r"(__wp), "r"(__rp)	\
-				: __r_	\
-			);	\
+			(__si_)((__m128i *)__wp, (__li_)((const __m128i *)__rp));	\
 		}
 #define __MCFCRT_SSE2_FULL(__si_, __li_)	\
 		{	\
 			switch(__t % 8){	\
-				do { __builtin_prefetch(__rp + 256);	\
-			default: __MCFCRT_SSE2_STEP(__si_, __li_, "xmm0")	\
-			case 7:  __MCFCRT_SSE2_STEP(__si_, __li_, "xmm1")	\
-			case 6:  __MCFCRT_SSE2_STEP(__si_, __li_, "xmm2")	\
-			case 5:  __MCFCRT_SSE2_STEP(__si_, __li_, "xmm3")	\
-			case 4:  __MCFCRT_SSE2_STEP(__si_, __li_, "xmm0")	\
-			case 3:  __MCFCRT_SSE2_STEP(__si_, __li_, "xmm1")	\
-			case 2:  __MCFCRT_SSE2_STEP(__si_, __li_, "xmm2")	\
-			case 1:  __MCFCRT_SSE2_STEP(__si_, __li_, "xmm3")	\
+				do { _mm_prefetch(__rp - 256, _MM_HINT_NTA);	\
+			default: __MCFCRT_SSE2_STEP(__si_, __li_)	\
+			case 7:  __MCFCRT_SSE2_STEP(__si_, __li_)	\
+			case 6:  __MCFCRT_SSE2_STEP(__si_, __li_)	\
+			case 5:  __MCFCRT_SSE2_STEP(__si_, __li_)	\
+			case 4:  __MCFCRT_SSE2_STEP(__si_, __li_)	\
+			case 3:  __MCFCRT_SSE2_STEP(__si_, __li_)	\
+			case 2:  __MCFCRT_SSE2_STEP(__si_, __li_)	\
+			case 1:  __MCFCRT_SSE2_STEP(__si_, __li_)	\
 				} while(__xmmbegin != __wp);	\
 			}	\
 		}
 		if(__t < 0x1000){
 			if(((_MCFCRT_STD uintptr_t)__rp & 15) != 0){
-				__MCFCRT_SSE2_FULL("movdqa", "movdqu")
+				__MCFCRT_SSE2_FULL(_mm_store_si128, _mm_loadu_si128)
 			} else {
-				__MCFCRT_SSE2_FULL("movdqa", "movdqa")
+				__MCFCRT_SSE2_FULL(_mm_store_si128, _mm_load_si128)
 			}
 		} else {
 			if(((_MCFCRT_STD uintptr_t)__rp & 15) != 0){
-				__MCFCRT_SSE2_FULL("movntdq", "movdqu")
+				__MCFCRT_SSE2_FULL(_mm_stream_si128, _mm_loadu_si128)
 			} else {
-				__MCFCRT_SSE2_FULL("movntdq", "movntdqa")
+				__MCFCRT_SSE2_FULL(_mm_stream_si128, _mm_load_si128)
 			}
 		}
 #undef __MCFCRT_SSE2_STEP

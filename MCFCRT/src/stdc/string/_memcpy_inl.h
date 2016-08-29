@@ -13,9 +13,9 @@
 _MCFCRT_EXTERN_C_BEGIN
 
 __attribute__((__always_inline__))
-static inline void __MCFCRT_CopyForward(void *__s1, const void *__s2, _MCFCRT_STD size_t __bytes) _MCFCRT_NOEXCEPT {
+static inline void __MCFCRT_CopyForward(void *__s1, const void *__s2, _MCFCRT_STD size_t __n) _MCFCRT_NOEXCEPT {
 	register char *__wp = __s1;
-	char *const __wend = __wp + __bytes;
+	char *const __wend = __wp + __n;
 	register const char *__rp = __s2;
 	while(((_MCFCRT_STD uintptr_t)__wp & 15) != 0){
 		if(__wp == __wend){
@@ -25,7 +25,6 @@ static inline void __MCFCRT_CopyForward(void *__s1, const void *__s2, _MCFCRT_ST
 	}
 	_MCFCRT_STD size_t __t;
 	if((__t = (_MCFCRT_STD size_t)(__wend - __wp) / 16) != 0){
-		char *const __xmmwend = __wp + __t * 16;
 #define __MCFCRT_SSE2_STEP(__si_, __li_)	\
 		{	\
 			(__si_)((__m128i *)__wp, (__li_)((const __m128i *)__rp));	\
@@ -45,7 +44,7 @@ static inline void __MCFCRT_CopyForward(void *__s1, const void *__s2, _MCFCRT_ST
 			case 3:  __MCFCRT_SSE2_STEP(__si_, __li_)	\
 			case 2:  __MCFCRT_SSE2_STEP(__si_, __li_)	\
 			case 1:  __MCFCRT_SSE2_STEP(__si_, __li_)	\
-				} while(__wp != __xmmwend);	\
+				} while((size_t)(__wend - __wp) >= 16);	\
 			}	\
 		}
 		if(_MCFCRT_EXPECT(__t < 0x1000)){
@@ -67,10 +66,10 @@ static inline void __MCFCRT_CopyForward(void *__s1, const void *__s2, _MCFCRT_ST
 	__movsb((unsigned char *)__wp, (const unsigned char *)__rp, (size_t)(__wend - __wp));
 }
 __attribute__((__always_inline__))
-static inline void __MCFCRT_CopyBackward(void *__s1, const void *__s2, _MCFCRT_STD size_t __bytes) _MCFCRT_NOEXCEPT {
+static inline void __MCFCRT_CopyBackward(void *__s1, const void *__s2, _MCFCRT_STD size_t __n) _MCFCRT_NOEXCEPT {
 	char *const __wbegin = __s1;
-	register char *__wp = __wbegin + __bytes;
-	register const char *__rp = (const char *)__s2 + __bytes;
+	register char *__wp = __wbegin + __n;
+	register const char *__rp = (const char *)__s2 + __n;
 	while(((_MCFCRT_STD uintptr_t)__wp & 15) != 0){
 		if(__wbegin == __wp){
 			return;
@@ -79,7 +78,6 @@ static inline void __MCFCRT_CopyBackward(void *__s1, const void *__s2, _MCFCRT_S
 	}
 	_MCFCRT_STD size_t __t;
 	if((__t = (_MCFCRT_STD size_t)(__wp - __wbegin) / 16) != 0){
-		char *const __xmmbegin = __wp - __t * 16;
 #define __MCFCRT_SSE2_STEP(__si_, __li_)	\
 		{	\
 			__wp -= 16;	\
@@ -99,7 +97,7 @@ static inline void __MCFCRT_CopyBackward(void *__s1, const void *__s2, _MCFCRT_S
 			case 3:  __MCFCRT_SSE2_STEP(__si_, __li_)	\
 			case 2:  __MCFCRT_SSE2_STEP(__si_, __li_)	\
 			case 1:  __MCFCRT_SSE2_STEP(__si_, __li_)	\
-				} while(__xmmbegin != __wp);	\
+				} while((size_t)(__wp - __wbegin) >= 16);	\
 			}	\
 		}
 		if(_MCFCRT_EXPECT(__t < 0x1000)){

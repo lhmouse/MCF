@@ -14,13 +14,17 @@ char *_MCFCRT_stpcpy(char *restrict dst, const char *restrict src){
 	// 因为内存按页分配的，也自然对齐到页，并且也对齐到字。
 	// 每个字内的字节的权限必然一致。
 	while(((uintptr_t)rp & 15) != 0){
-		const char rc = *rp;
-		*wp = rc;
-		if(rc == 0){
-			return wp;
+#define CPY_GEN()	\
+		{	\
+			const char rc = *rp;	\
+			*wp = rc;	\
+			if(rc == 0){	\
+				return wp;	\
+			}	\
+			++rp;	\
+			++wp;	\
 		}
-		++rp;
-		++wp;
+		CPY_GEN()
 	}
 #define SSE2_CPY(save_, load_)	\
 	{	\
@@ -30,13 +34,9 @@ char *_MCFCRT_stpcpy(char *restrict dst, const char *restrict src){
 			__m128i xt = _mm_cmpeq_epi8(xw, xz);	\
 			unsigned mask = (unsigned)_mm_movemask_epi8(xt);	\
 			if(_MCFCRT_EXPECT_NOT(mask != 0)){	\
-				while((mask & 1) == 0){	\
-					const char rc = *rp;	\
-					*wp = rc;	\
-					++rp;	\
-					++wp;	\
-					mask >>= 1;	\
-				}	\
+				const unsigned tz = (unsigned)__builtin_ctz(mask);	\
+				__movsb((void *)wp, (const void *)rp, tz);	\
+				wp += tz;	\
 				*wp = 0;	\
 				return wp;	\
 			}	\
@@ -60,20 +60,24 @@ char *_MCFCRT_stppcpy(char *dst, char *end, const char *restrict src){
 	// 因为内存按页分配的，也自然对齐到页，并且也对齐到字。
 	// 每个字内的字节的权限必然一致。
 	while(((uintptr_t)rp & 15) != 0){
-		if(wp == wend){
-			*wp = 0;
-			return wp;
+#define PCPY_GEN()	\
+		{	\
+			if(wp == wend){	\
+				*wp = 0;	\
+				return wp;	\
+			}	\
+			const char rc = *rp;	\
+			*wp = rc;	\
+			if(rc == 0){	\
+				return wp;	\
+			}	\
+			++rp;	\
+			++wp;	\
 		}
-		const char rc = *rp;
-		*wp = rc;
-		if(rc == 0){
-			return wp;
-		}
-		++rp;
-		++wp;
+		PCPY_GEN()
 	}
 	if((size_t)(wend - wp) >= 64){
-#define SSE2_PCPY(save_, load_)	\
+#define PCPY_SSE2(save_, load_)	\
 		{	\
 			const __m128i xz = _mm_setzero_si128();	\
 			do {	\
@@ -81,17 +85,9 @@ char *_MCFCRT_stppcpy(char *dst, char *end, const char *restrict src){
 				__m128i xt = _mm_cmpeq_epi8(xw, xz);	\
 				unsigned mask = (unsigned)_mm_movemask_epi8(xt);	\
 				if(_MCFCRT_EXPECT_NOT(mask != 0)){	\
-					while((mask & 1) == 0){	\
-						if(wp == wend){	\
-							*wp = 0;	\
-							return wp;	\
-						}	\
-						const char rc = *rp;	\
-						*wp = rc;	\
-						++rp;	\
-						++wp;	\
-						mask >>= 1;	\
-					}	\
+					const unsigned tz = (unsigned)__builtin_ctz(mask);	\
+					__movsb((void *)wp, (const void *)rp, tz);	\
+					wp += tz;	\
 					*wp = 0;	\
 					return wp;	\
 				}	\
@@ -101,22 +97,12 @@ char *_MCFCRT_stppcpy(char *dst, char *end, const char *restrict src){
 			} while((size_t)(wend - wp) >= 16);	\
 		}
 		if(((uintptr_t)wp & 15) == 0){
-			SSE2_PCPY(_mm_store_si128, _mm_load_si128)
+			PCPY_SSE2(_mm_store_si128, _mm_load_si128)
 		} else {
-			SSE2_PCPY(_mm_storeu_si128, _mm_load_si128)
+			PCPY_SSE2(_mm_storeu_si128, _mm_load_si128)
 		}
 	}
 	for(;;){
-		if(wp == wend){
-			*wp = 0;
-			return wp;
-		}
-		const char rc = *rp;
-		*wp = rc;
-		if(rc == 0){
-			return wp;
-		}
-		++rp;
-		++wp;
+		PCPY_GEN()
 	}
 }

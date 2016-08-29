@@ -14,20 +14,24 @@ int wmemcmp(const wchar_t *s1, const wchar_t *s2, size_t n){
 	// 因为内存按页分配的，也自然对齐到页，并且也对齐到字。
 	// 每个字内的字节的权限必然一致。
 	while(((uintptr_t)rp1 & 31) != 0){
-		if(rp1 == rend1){
-			return 0;
+#define CMP_GEN()	\
+		{	\
+			if(rp1 == rend1){	\
+				return 0;	\
+			}	\
+			const int32_t rc1 = (uint16_t)*rp1;	\
+			const int32_t rc2 = (uint16_t)*rp2;	\
+			const int32_t d = rc1 - rc2;	\
+			if(d != 0){	\
+				return (d >> 31) | 1;	\
+			}	\
+			++rp1;	\
+			++rp2;	\
 		}
-		const int32_t rc1 = (uint16_t)*rp1;
-		const int32_t rc2 = (uint16_t)*rp2;
-		const int32_t d = rc1 - rc2;
-		if(d != 0){
-			return (d >> 31) | 1;
-		}
-		++rp1;
-		++rp2;
+		CMP_GEN()
 	}
 	if((size_t)(rend1 - rp1) >= 64){
-#define SSE2_CMP(load1_, load2_)	\
+#define CMP_SSE2(load1_, load2_)	\
 		{	\
 			do {	\
 				const __m128i xw10 = (load1_)((const __m128i *)rp1);	\
@@ -54,22 +58,12 @@ int wmemcmp(const wchar_t *s1, const wchar_t *s2, size_t n){
 			} while((size_t)(rend1 - rp1) >= 16);	\
 		}
 		if(((uintptr_t)rp2 & 31) == 0){
-			SSE2_CMP(_mm_load_si128, _mm_load_si128)
+			CMP_SSE2(_mm_load_si128, _mm_load_si128)
 		} else {
-			SSE2_CMP(_mm_load_si128, _mm_loadu_si128)
+			CMP_SSE2(_mm_load_si128, _mm_loadu_si128)
 		}
 	}
 	for(;;){
-		if(rp1 == rend1){
-			return 0;
-		}
-		const int32_t rc1 = (uint16_t)*rp1;
-		const int32_t rc2 = (uint16_t)*rp2;
-		const int32_t d = rc1 - rc2;
-		if(d != 0){
-			return (d >> 31) | 1;
-		}
-		++rp1;
-		++rp2;
+		CMP_GEN()
 	}
 }

@@ -36,7 +36,7 @@ extern "C" unsigned _MCFCRT_Main(void) noexcept {
 	s2e[-1] = 0;
 
 	const auto test = [&](WideStringView name){
-		const auto fname = "wcsncmp"_nsv;
+		const auto fname = "wcscmp"_nsv;
 		try {
 			const DynamicLinkLibrary dll(name);
 			const auto pf = dll.RequireProcAddress<int (*)(const wchar_t *, const wchar_t *, std::size_t)>(fname);

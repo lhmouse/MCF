@@ -2,12 +2,20 @@
 // 有关具体授权说明，请参阅 MCFLicense.txt。
 // Copyleft 2013 - 2016, LH_Mouse. All wrongs reserved.
 
-#ifndef MCF_CORE_CASTERS_HPP_
-#define MCF_CORE_CASTERS_HPP_
+#ifndef MCF_CORE_CONVERTERS_HPP_
+#define MCF_CORE_CONVERTERS_HPP_
 
 #include <utility>
 
 namespace MCF {
+
+template<typename DstT>
+struct ImplicitConverter {
+	template<typename SrcT>
+	constexpr DstT operator()(SrcT &&vSrc) const noexcept {
+		return std::forward<SrcT>(vSrc);
+	}
+};
 
 template<typename DstT>
 struct StaticCaster {

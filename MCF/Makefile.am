@@ -43,7 +43,7 @@ pkginclude_Core_HEADERS =	\
 	src/Core/BinaryOperations.hpp	\
 	src/Core/Bind.hpp	\
 	src/Core/BlackHole.hpp	\
-	src/Core/Casters.hpp	\
+	src/Core/Converters.hpp	\
 	src/Core/Clocks.hpp	\
 	src/Core/Clone.hpp	\
 	src/Core/Comparators.hpp	\

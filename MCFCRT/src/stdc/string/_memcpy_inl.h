@@ -35,7 +35,8 @@ static inline void __MCFCRT_CopyForward(void *__s1, const void *__s2, _MCFCRT_ST
 		{	\
 			switch(__t % 8){	\
 				do {	\
-					_mm_prefetch(__rp + 512, _MM_HINT_NTA);	\
+					_mm_prefetch(__rp + 256, _MM_HINT_NTA);	\
+					_mm_prefetch(__rp + 320, _MM_HINT_NTA);	\
 			default: __MCFCRT_SSE2_STEP(__si_, __li_)	\
 			case 7:  __MCFCRT_SSE2_STEP(__si_, __li_)	\
 			case 6:  __MCFCRT_SSE2_STEP(__si_, __li_)	\
@@ -89,7 +90,8 @@ static inline void __MCFCRT_CopyBackward(void *__s1, const void *__s2, _MCFCRT_S
 		{	\
 			switch(__t % 8){	\
 				do {	\
-					_mm_prefetch(__rp - 512, _MM_HINT_NTA);	\
+					_mm_prefetch(__rp - 320, _MM_HINT_NTA);	\
+					_mm_prefetch(__rp - 256, _MM_HINT_NTA);	\
 			default: __MCFCRT_SSE2_STEP(__si_, __li_)	\
 			case 7:  __MCFCRT_SSE2_STEP(__si_, __li_)	\
 			case 6:  __MCFCRT_SSE2_STEP(__si_, __li_)	\

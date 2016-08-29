@@ -44,7 +44,7 @@ static inline void __MCFCRT_CopyForward(void *__s1, const void *__s2, _MCFCRT_ST
 			case 3:  __MCFCRT_SSE2_STEP(__si_, __li_)	\
 			case 2:  __MCFCRT_SSE2_STEP(__si_, __li_)	\
 			case 1:  __MCFCRT_SSE2_STEP(__si_, __li_)	\
-				} while((size_t)(__wend - __wp) >= 16);	\
+				} while((size_t)(__wend - __wp) >= 128);	\
 			}	\
 		}
 		if(_MCFCRT_EXPECT(__t < 0x1000)){
@@ -98,7 +98,7 @@ static inline void __MCFCRT_CopyBackward(void *__s1, const void *__s2, _MCFCRT_S
 			case 3:  __MCFCRT_SSE2_STEP(__si_, __li_)	\
 			case 2:  __MCFCRT_SSE2_STEP(__si_, __li_)	\
 			case 1:  __MCFCRT_SSE2_STEP(__si_, __li_)	\
-				} while((size_t)(__wp - __wbegin) >= 16);	\
+				} while((size_t)(__wp - __wbegin) >= 128);	\
 			}	\
 		}
 		if(_MCFCRT_EXPECT(__t < 0x1000)){

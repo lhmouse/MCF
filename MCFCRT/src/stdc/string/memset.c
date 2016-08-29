@@ -3,7 +3,6 @@
 // Copyleft 2013 - 2016, LH_Mouse. All wrongs reserved.
 
 #include "../../env/_crtdef.h"
-#include "../../ext/expect.h"
 #include <intrin.h>
 
 void *memset(void *s, int c, size_t n){

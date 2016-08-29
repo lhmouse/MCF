@@ -54,7 +54,7 @@ int wmemcmp(const wchar_t *s1, const wchar_t *s2, size_t n){
 				rp2 += 16;	\
 			} while((size_t)(rend1 - rp1) >= 16);	\
 		}
-		if(((uintptr_t)rp2 & 30) == 0){
+		if(((uintptr_t)rp2 & 15) == 0){
 			CMP_SSE2(_mm_load_si128, _mm_load_si128)
 		} else {
 			CMP_SSE2(_mm_load_si128, _mm_loadu_si128)

@@ -72,7 +72,7 @@ int wcscmp(const wchar_t *s1, const wchar_t *s2){
 			rp2 += 16;	\
 		}	\
 	}
-	if(((uintptr_t)rp2 & 30) == 0){
+	if(((uintptr_t)rp2 & 15) == 0){
 		CMP_SSE2(_mm_load_si128, _mm_load_si128, false)
 	} else {
 		CMP_SSE2(_mm_load_si128, _mm_loadu_si128, true)

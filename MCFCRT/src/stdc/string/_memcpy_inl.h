@@ -21,7 +21,7 @@ static inline void __MCFCRT_CopyForward(void *__s1, const void *__s2, _MCFCRT_ST
 		if(__wp == __wend){
 			return;
 		}
-		*(__wp++) = *(__rp++);
+		*(volatile char *)(__wp++) = *(__rp++);
 	}
 	_MCFCRT_STD size_t __t;
 	if((__t = (_MCFCRT_STD size_t)(__wend - __wp) / 16) != 0){
@@ -75,7 +75,7 @@ static inline void __MCFCRT_CopyBackward(void *__s1, const void *__s2, _MCFCRT_S
 		if(__wbegin == __wp){
 			return;
 		}
-		*(--__wp) = *(--__rp);
+		*(volatile char *)(--__wp) = *(--__rp);
 	}
 	_MCFCRT_STD size_t __t;
 	if((__t = (_MCFCRT_STD size_t)(__wp - __wbegin) / 16) != 0){

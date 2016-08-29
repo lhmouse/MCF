@@ -12,7 +12,7 @@ wchar_t *wmemchr(const wchar_t *s, wchar_t c, size_t n){
 	// 如果 rp 是对齐到字的，就不用考虑越界的问题。
 	// 因为内存按页分配的，也自然对齐到页，并且也对齐到字。
 	// 每个字内的字节的权限必然一致。
-	while(((uintptr_t)rp & 31) != 0){
+	while(((uintptr_t)rp & 30) != 0){
 		if(rp == rend){
 			return nullptr;
 		}

@@ -59,6 +59,7 @@ static inline void __MCFCRT_CopyForward(void *__s1, const void *__s2, _MCFCRT_ST
 			} else {
 				__MCFCRT_SSE2_FULL(_mm_stream_si128, _mm_loadu_si128)
 			}
+			_mm_sfence();
 		}
 #undef __MCFCRT_SSE2_STEP
 #undef __MCFCRT_SSE2_FULL
@@ -112,6 +113,7 @@ static inline void __MCFCRT_CopyBackward(void *__s1, const void *__s2, _MCFCRT_S
 			} else {
 				__MCFCRT_SSE2_FULL(_mm_stream_si128, _mm_loadu_si128)
 			}
+			_mm_sfence();
 		}
 #undef __MCFCRT_SSE2_STEP
 #undef __MCFCRT_SSE2_FULL

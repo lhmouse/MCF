@@ -58,10 +58,7 @@ int wcscmp(const wchar_t *s1, const wchar_t *s2){
 				const __m128i shift = _mm_set1_epi16(-0x8000);	\
 				xt = _mm_packs_epi16(_mm_cmpgt_epi16(_mm_add_epi16(xw10, shift), _mm_add_epi16(xw20, shift)),	\
 				                     _mm_cmpgt_epi16(_mm_add_epi16(xw11, shift), _mm_add_epi16(xw21, shift)));	\
-				mask = (unsigned)_mm_movemask_epi8(xt);	\
-				if(mask == 0){	\
-					return -1;	\
-				}	\
+				mask = (unsigned)_mm_movemask_epi8(xt) | 0x80000000;	\
 				const int32_t tzgt = __builtin_ctz(mask);	\
 				const int32_t d = tzne - tzgt;	\
 				return (d >> 31) | 1;	\

@@ -55,10 +55,7 @@ int strcmp(const char *s1, const char *s2){
 				const __m128i shift = _mm_set1_epi8(-0x80);	\
 				xt = _mm_cmpgt_epi8(_mm_add_epi8(xw1, shift),	\
 				                    _mm_add_epi8(xw2, shift));	\
-				mask = (unsigned)_mm_movemask_epi8(xt);	\
-				if(mask == 0){	\
-					return -1;	\
-				}	\
+				mask = (unsigned)_mm_movemask_epi8(xt) | 0x80000000;	\
 				const int32_t tzgt = __builtin_ctz(mask);	\
 				const int32_t d = tzne - tzgt;	\
 				return (d >> 31) | 1;	\

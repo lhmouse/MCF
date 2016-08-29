@@ -7,6 +7,7 @@
 
 #include "../../env/_crtdef.h"
 #include "../../ext/expect.h"
+#include <intrin.h>
 #include <emmintrin.h>
 
 _MCFCRT_EXTERN_C_BEGIN
@@ -62,9 +63,7 @@ static inline void __MCFCRT_CopyForward(void *__s1, const void *__s2, _MCFCRT_ST
 #undef __MCFCRT_SSE2_STEP
 #undef __MCFCRT_SSE2_FULL
 	}
-	while(__wp != __wend){
-		*(volatile char *)(__wp++) = *(__rp++);
-	}
+	__movsb((unsigned char *)__wp, (const unsigned char *)__rp, (size_t)(__wend - __wp));
 }
 __attribute__((__always_inline__))
 static inline void __MCFCRT_CopyBackward(void *__s1, const void *__s2, _MCFCRT_STD size_t __bytes) _MCFCRT_NOEXCEPT {

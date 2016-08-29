@@ -39,13 +39,13 @@ int wmemcmp(const wchar_t *s1, const wchar_t *s2, size_t n){
 				const __m128i xw11 = (load1_)((const __m128i *)rp1 + 1);	\
 				const __m128i xw21 = (load2_)((const __m128i *)rp2 + 1);	\
 				__m128i xt = _mm_packs_epi16(_mm_cmpeq_epi16(xw10, xw20), _mm_cmpeq_epi16(xw11, xw21));	\
-				unsigned mask = (uint16_t)~_mm_movemask_epi8(xt);	\
+				uint32_t mask = (uint16_t)~_mm_movemask_epi8(xt);	\
 				if(_MCFCRT_EXPECT_NOT(mask != 0)){	\
 					const int32_t tzne = __builtin_ctz(mask);	\
 					const __m128i shift = _mm_set1_epi16(-0x8000);	\
 					xt = _mm_packs_epi16(_mm_cmpgt_epi16(_mm_add_epi16(xw10, shift), _mm_add_epi16(xw20, shift)),	\
 					                     _mm_cmpgt_epi16(_mm_add_epi16(xw11, shift), _mm_add_epi16(xw21, shift)));	\
-					mask = (unsigned)_mm_movemask_epi8(xt) | 0x80000000;	\
+					mask = (uint32_t)_mm_movemask_epi8(xt) | 0x80000000;	\
 					const int32_t tzgt = __builtin_ctz(mask);	\
 					const int32_t d = tzne - tzgt;	\
 					return (d >> 31) | 1;	\

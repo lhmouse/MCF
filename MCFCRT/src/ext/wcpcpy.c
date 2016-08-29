@@ -34,7 +34,7 @@ wchar_t *_MCFCRT_wcpcpy(wchar_t *restrict dst, const wchar_t *restrict src){
 			const __m128i xw0 = (load_)((const __m128i *)rp);	\
 			const __m128i xw1 = (load_)((const __m128i *)rp + 1);	\
 			__m128i xt = _mm_packs_epi16(_mm_cmpeq_epi16(xw0, xz), _mm_cmpeq_epi16(xw1, xz));	\
-			unsigned mask = (unsigned)_mm_movemask_epi8(xt);	\
+			uint32_t mask = (uint32_t)_mm_movemask_epi8(xt);	\
 			if(_MCFCRT_EXPECT_NOT(mask != 0)){	\
 				const unsigned tz = (unsigned)__builtin_ctz(mask);	\
 				__movsw((void *)wp, (const void *)rp, tz);	\
@@ -87,7 +87,7 @@ wchar_t *_MCFCRT_wcppcpy(wchar_t *dst, wchar_t *end, const wchar_t *restrict src
 				const __m128i xw0 = (load_)((const __m128i *)rp);	\
 				const __m128i xw1 = (load_)((const __m128i *)rp + 1);	\
 				__m128i xt = _mm_packs_epi16(_mm_cmpeq_epi16(xw0, xz), _mm_cmpeq_epi16(xw1, xz));	\
-				unsigned mask = (unsigned)_mm_movemask_epi8(xt);	\
+				uint32_t mask = (uint32_t)_mm_movemask_epi8(xt);	\
 				if(_MCFCRT_EXPECT_NOT(mask != 0)){	\
 					const unsigned tz = (unsigned)__builtin_ctz(mask);	\
 					__movsw((void *)wp, (const void *)rp, tz);	\

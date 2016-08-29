@@ -5,7 +5,7 @@
 #include "../../env/_crtdef.h"
 
 int abs(int i){
-	register const unsigned mask = (unsigned)(i >> (sizeof(int) * __CHAR_BIT__ - 1));
+	register const uint32_t mask = (uint32_t)(i >> (sizeof(int) * __CHAR_BIT__ - 1));
 	return (int)(((unsigned)i ^ mask) - mask);
 }
 

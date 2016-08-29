@@ -45,7 +45,7 @@ int strncmp(const char *s1, const char *s2, size_t n){
 						char *const arp2 = (char *)((uintptr_t)rp2 & (uintptr_t)-0x10);	\
 						const __m128i xw2 = _mm_load_si128((const __m128i *)arp2);	\
 						__m128i xt = _mm_cmpeq_epi8(xw2, xz);	\
-						unsigned mask = (unsigned)_mm_movemask_epi8(xt);	\
+						uint32_t mask = (uint32_t)_mm_movemask_epi8(xt);	\
 						if(_MCFCRT_EXPECT_NOT(mask != 0)){	\
 							break;	\
 						}	\
@@ -54,19 +54,19 @@ int strncmp(const char *s1, const char *s2, size_t n){
 				const __m128i xw1 = (load1_)((const __m128i *)rp1);	\
 				const __m128i xw2 = (load2_)((const __m128i *)rp2);	\
 				__m128i xt = _mm_cmpeq_epi8(xw1, xw2);	\
-				unsigned mask = (uint16_t)~_mm_movemask_epi8(xt);	\
+				uint32_t mask = (uint16_t)~_mm_movemask_epi8(xt);	\
 				if(_MCFCRT_EXPECT_NOT(mask != 0)){	\
 					const int32_t tzne = __builtin_ctz(mask);	\
 					const __m128i shift = _mm_set1_epi8(-0x80);	\
 					xt = _mm_cmpgt_epi8(_mm_add_epi8(xw1, shift),	\
 					                    _mm_add_epi8(xw2, shift));	\
-					mask = (unsigned)_mm_movemask_epi8(xt) | 0x80000000;	\
+					mask = (uint32_t)_mm_movemask_epi8(xt) | 0x80000000;	\
 					const int32_t tzgt = __builtin_ctz(mask);	\
 					const int32_t d = tzne - tzgt;	\
 					return (d >> 31) | 1;	\
 				}	\
 				xt = _mm_cmpeq_epi8(xw1, xz);	\
-				mask = (unsigned)_mm_movemask_epi8(xt);	\
+				mask = (uint32_t)_mm_movemask_epi8(xt);	\
 				if(_MCFCRT_EXPECT_NOT(mask != 0)){	\
 					return 0;	\
 				}	\

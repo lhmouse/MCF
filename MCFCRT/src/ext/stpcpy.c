@@ -33,7 +33,7 @@ char *_MCFCRT_stpcpy(char *restrict dst, const char *restrict src){
 		for(;;){	\
 			const __m128i xw = (load_)((const __m128i *)rp);	\
 			__m128i xt = _mm_cmpeq_epi8(xw, xz);	\
-			unsigned mask = (unsigned)_mm_movemask_epi8(xt);	\
+			uint32_t mask = (uint32_t)_mm_movemask_epi8(xt);	\
 			if(_MCFCRT_EXPECT_NOT(mask != 0)){	\
 				const unsigned tz = (unsigned)__builtin_ctz(mask);	\
 				__movsb((void *)wp, (const void *)rp, tz);	\
@@ -84,7 +84,7 @@ char *_MCFCRT_stppcpy(char *dst, char *end, const char *restrict src){
 			do {	\
 				const __m128i xw = (load_)((const __m128i *)rp);	\
 				__m128i xt = _mm_cmpeq_epi8(xw, xz);	\
-				unsigned mask = (unsigned)_mm_movemask_epi8(xt);	\
+				uint32_t mask = (uint32_t)_mm_movemask_epi8(xt);	\
 				if(_MCFCRT_EXPECT_NOT(mask != 0)){	\
 					const unsigned tz = (unsigned)__builtin_ctz(mask);	\
 					__movsb((void *)wp, (const void *)rp, tz);	\

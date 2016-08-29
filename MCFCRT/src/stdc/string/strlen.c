@@ -22,7 +22,7 @@ size_t strlen(const char *s){
 	for(;;){
 		const __m128i xw = _mm_load_si128((const __m128i *)rp);
 		__m128i xt = _mm_cmpeq_epi8(xw, xz);
-		unsigned mask = (unsigned)_mm_movemask_epi8(xt);
+		uint32_t mask = (uint32_t)_mm_movemask_epi8(xt);
 		if(_MCFCRT_EXPECT_NOT(mask != 0)){
 			return (size_t)(rp - s + __builtin_ctz(mask));
 		}

@@ -4,15 +4,6 @@
 #include <MCF/Core/DynamicLinkLibrary.hpp>
 #include <MCF/Core/String.hpp>
 
-struct PageDeleter {
-	constexpr void *operator()() const noexcept {
-		return nullptr;
-	}
-	void operator()(void *p) const noexcept {
-		::VirtualFree(p, 0, MEM_RELEASE);
-	}
-};
-
 extern "C" unsigned _MCFCRT_Main(void) noexcept {
 	using namespace MCF;
 
@@ -22,6 +13,14 @@ extern "C" unsigned _MCFCRT_Main(void) noexcept {
 //	s2.Append('b', 0x1000002);
 //	s2.Append('b');
 
+	struct PageDeleter {
+		constexpr void *operator()() const noexcept {
+			return nullptr;
+		}
+		void operator()(void *p) const noexcept {
+			::VirtualFree(p, 0, MEM_RELEASE);
+		}
+	};
 	constexpr std::size_t kStringSize = 0xF000;
 	const UniquePtr<void, PageDeleter> p1(::VirtualAlloc(nullptr, kStringSize, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE));
 	const UniquePtr<void, PageDeleter> p2(::VirtualAlloc(nullptr, kStringSize, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE));
@@ -36,7 +35,7 @@ extern "C" unsigned _MCFCRT_Main(void) noexcept {
 	s2e[-1] = 0;
 
 	const auto test = [&](WideStringView name){
-		const auto fname = "wcscmp"_nsv;
+		const auto fname = "wcsncmp"_nsv;
 		try {
 			const DynamicLinkLibrary dll(name);
 			const auto pf = dll.RequireProcAddress<int (*)(const wchar_t *, const wchar_t *, std::size_t)>(fname);

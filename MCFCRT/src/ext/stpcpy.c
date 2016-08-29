@@ -5,6 +5,7 @@
 #include "stpcpy.h"
 #include "expect.h"
 #include "assert.h"
+#include <intrin.h>
 #include <emmintrin.h>
 
 char *_MCFCRT_stpcpy(char *restrict dst, const char *restrict src){

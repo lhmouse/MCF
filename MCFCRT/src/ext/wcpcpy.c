@@ -5,6 +5,7 @@
 #include "wcpcpy.h"
 #include "expect.h"
 #include "assert.h"
+#include <intrin.h>
 #include <emmintrin.h>
 
 wchar_t *_MCFCRT_wcpcpy(wchar_t *restrict dst, const wchar_t *restrict src){

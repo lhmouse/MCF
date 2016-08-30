@@ -62,7 +62,6 @@ _Noreturn void _MCFCRT_Bail(const wchar_t *pwszDescription){
 		pwcWrite = _MCFCRT_wcpcpy(pwcWrite, L"，单击“取消”调试应用程序");
 	}
 	pwcWrite = _MCFCRT_wcpcpy(pwcWrite, L"。");
-	// *pwcWrite = 0;
 	const size_t uLength = (size_t)(pwcWrite - awcBuffer);
 
 	_MCFCRT_WriteStandardErrorText(awcBuffer, uLength, true);

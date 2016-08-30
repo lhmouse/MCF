@@ -18,6 +18,5 @@ void __MCFCRT_OnAssertionFailure(const wchar_t *pwszExpression, const wchar_t *p
 	pwcWrite = _MCFCRT_itow_u(pwcWrite, ulLine);
 	pwcWrite = _MCFCRT_wcpcpy(pwcWrite, L"\n描述　：");
 	pwcWrite = _MCFCRT_wcppcpy(pwcWrite, awcBuffer + 1024, pwszMessage);
-	*pwcWrite = 0;
 	_MCFCRT_Bail(awcBuffer);
 }

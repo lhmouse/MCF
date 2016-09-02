@@ -28,8 +28,7 @@ namespace Impl_ParameterPackManipulators {
 	template<typename ToFindT, std::ptrdiff_t kIndexT, int kIncrementT, std::ptrdiff_t kCountOfTypesT, typename ...TypesT>
 	struct TypeFinder {
 		static constexpr auto kIndex = std::is_same<ToFindT, typename Expander<kIndexT, TypesT...>::Type>::value
-			? kIndexT
-			: TypeFinder<ToFindT, kIndexT + kIncrementT, kIncrementT, kCountOfTypesT, TypesT...>::kIndex;
+			? kIndexT : TypeFinder<ToFindT, kIndexT + kIncrementT, kIncrementT, kCountOfTypesT, TypesT...>::kIndex;
 	};
 	template<typename ToFindT, int kIncrementT, std::ptrdiff_t kCountOfTypesT, typename ...TypesT>
 	struct TypeFinder<ToFindT, -1, kIncrementT, kCountOfTypesT, TypesT...> {

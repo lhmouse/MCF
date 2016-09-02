@@ -6,7 +6,6 @@
 #define MCF_CORE_TUPLE_MANIPULATORS_HPP_
 
 #include <tuple>
-#include <utility>
 #include <type_traits>
 #include <initializer_list>
 
@@ -16,17 +15,17 @@ namespace Impl_TupleManipulators {
 	template<typename FunctionT, typename TupleT, std::size_t ...kIndicesT>
 	constexpr void Absorb(FunctionT &vFunction, TupleT &vTuple, std::index_sequence<kIndicesT...>){
 		(void)std::initializer_list<int>{
-			((void)std::forward<FunctionT>(vFunction)(
-				std::forward<std::tuple_element_t<kIndicesT, TupleT> &&>(
-				                         std::get<kIndicesT>(vTuple))), 1)...
+			((void)static_cast<FunctionT &&>(vFunction)(
+				static_cast<std::tuple_element_t<kIndicesT, TupleT> &&>(
+				                        std::get<kIndicesT>(vTuple))), 1)...
 		};
 	}
 	template<typename FunctionT, typename TupleT, std::size_t ...kIndicesT>
 	constexpr void ReverseAbsorb(FunctionT &vFunction, TupleT &vTuple, std::index_sequence<kIndicesT...>){
 		(void)std::initializer_list<int>{
-			((void)std::forward<FunctionT>(vFunction)(
-				std::forward<std::tuple_element_t<sizeof...(kIndicesT) - 1 - kIndicesT, TupleT> &&>(
-				                         std::get<sizeof...(kIndicesT) - 1 - kIndicesT>(vTuple))), 1)...
+			((void)static_cast<FunctionT &&>(vFunction)(
+				static_cast<std::tuple_element_t<sizeof...(kIndicesT) - 1 - kIndicesT, TupleT> &&>(
+				                        std::get<sizeof...(kIndicesT) - 1 - kIndicesT>(vTuple))), 1)...
 		};
 	}
 }
@@ -46,15 +45,15 @@ constexpr void ReverseAbsorbTuple(FunctionT &&vFunction, std::tuple<ElementsT...
 namespace Impl_TupleManipulators {
 	template<typename FunctionT, typename TupleT, std::size_t ...kIndicesT>
 	constexpr decltype(auto) Squeeze(FunctionT &vFunction, TupleT &vTuple, std::index_sequence<kIndicesT...>){
-		return std::forward<FunctionT>(vFunction)(
-			std::forward<std::tuple_element_t<kIndicesT, TupleT> &&>(
-			                         std::get<kIndicesT>(vTuple))...);
+		return static_cast<FunctionT &&>(vFunction)(
+			static_cast<std::tuple_element_t<kIndicesT, TupleT> &&>(
+			                        std::get<kIndicesT>(vTuple))...);
 	}
 	template<typename FunctionT, typename TupleT, std::size_t ...kIndicesT>
 	constexpr decltype(auto) ReverseSqueeze(FunctionT &vFunction, TupleT &vTuple, std::index_sequence<kIndicesT...>){
-		return std::forward<FunctionT>(vFunction)(
-			std::forward<std::tuple_element_t<sizeof...(kIndicesT) - 1 - kIndicesT, TupleT> &&>(
-			                         std::get<sizeof...(kIndicesT) - 1 - kIndicesT>(vTuple))...);
+		return static_cast<FunctionT &&>(vFunction)(
+			static_cast<std::tuple_element_t<sizeof...(kIndicesT) - 1 - kIndicesT, TupleT> &&>(
+			                        std::get<sizeof...(kIndicesT) - 1 - kIndicesT>(vTuple))...);
 	}
 }
 

@@ -41,22 +41,22 @@ public:
 
 private:
 	static const Element *X_GetElementFromNode(const X_Node *pNode) noexcept {
-		MCF_ASSERT(pNode);
+		MCF_DEBUG_CHECK(pNode);
 
 		return reinterpret_cast<const Element *>(reinterpret_cast<const char *>(pNode) + __builtin_offsetof(X_Node, vElement));
 	}
 	static Element *X_GetElementFromNode(X_Node *pNode) noexcept {
-		MCF_ASSERT(pNode);
+		MCF_DEBUG_CHECK(pNode);
 
 		return reinterpret_cast<Element *>(reinterpret_cast<char *>(pNode) + __builtin_offsetof(X_Node, vElement));
 	}
 	static const X_Node *X_GetNodeFromElement(const Element *pElement) noexcept {
-		MCF_ASSERT(pElement);
+		MCF_DEBUG_CHECK(pElement);
 
 		return reinterpret_cast<const X_Node *>(reinterpret_cast<const char *>(pElement) - __builtin_offsetof(X_Node, vElement));
 	}
 	static X_Node *X_GetNodeFromElement(Element *pElement) noexcept {
-		MCF_ASSERT(pElement);
+		MCF_DEBUG_CHECK(pElement);
 
 		return reinterpret_cast<X_Node *>(reinterpret_cast<char *>(pElement) - __builtin_offsetof(X_Node, vElement));
 	}
@@ -188,7 +188,7 @@ public:
 	}
 
 	static const Element *GetPrev(const Element *pPos) noexcept {
-		MCF_ASSERT(pPos);
+		MCF_DEBUG_CHECK(pPos);
 
 		const auto pPrev = X_GetNodeFromElement(pPos)->pPrev;
 		if(!pPrev){
@@ -197,7 +197,7 @@ public:
 		return X_GetElementFromNode(pPrev);
 	}
 	static Element *GetPrev(Element *pPos) noexcept {
-		MCF_ASSERT(pPos);
+		MCF_DEBUG_CHECK(pPos);
 
 		const auto pPrev = X_GetNodeFromElement(pPos)->pPrev;
 		if(!pPrev){
@@ -206,7 +206,7 @@ public:
 		return X_GetElementFromNode(pPrev);
 	}
 	static const Element *GetNext(const Element *pPos) noexcept {
-		MCF_ASSERT(pPos);
+		MCF_DEBUG_CHECK(pPos);
 
 		const auto pNext = X_GetNodeFromElement(pPos)->pNext;
 		if(!pNext){
@@ -215,7 +215,7 @@ public:
 		return X_GetElementFromNode(pNext);
 	}
 	static Element *GetNext(Element *pPos) noexcept {
-		MCF_ASSERT(pPos);
+		MCF_DEBUG_CHECK(pPos);
 
 		const auto pNext = X_GetNodeFromElement(pPos)->pNext;
 		if(!pNext){
@@ -287,9 +287,7 @@ public:
 		return *pElement;
 	}
 	void Shift(std::size_t uCount = 1) noexcept {
-#ifndef NDEBUG
-		MCF_ASSERT(uCount <= CountElements());
-#endif
+		MCF_DEBUG_CHECK(uCount <= CountElements());
 
 		auto pNewFirst = x_pFirst;
 		for(std::size_t i = 0; i < uCount; ++i){
@@ -323,9 +321,7 @@ public:
 		return *pElement;
 	}
 	void Pop(std::size_t uCount = 1) noexcept {
-#ifndef NDEBUG
-		MCF_ASSERT(uCount <= CountElements());
-#endif
+		MCF_DEBUG_CHECK(uCount <= CountElements());
 
 		auto pNewLast = x_pLast;
 		for(std::size_t i = 0; i < uCount; ++i){
@@ -425,14 +421,14 @@ public:
 		return Splice(pInsert, lstSrc, pPos, lstSrc.GetNext(pPos));
 	}
 	Element *Splice(const Element *pInsert, List &lstSrc, const Element *pBegin, const Element *pEnd) noexcept {
-		MCF_ASSERT(&lstSrc != this);
+		MCF_DEBUG_CHECK(&lstSrc != this);
 
 		const auto pInsertNode = pInsert ? X_GetNodeFromElement(const_cast<Element *>(pInsert)) : nullptr;
 		const auto pBeginNode  = pBegin  ? X_GetNodeFromElement(const_cast<Element *>(pBegin )) : nullptr;
 		const auto pEndNode    = pEnd    ? X_GetNodeFromElement(const_cast<Element *>(pEnd   )) : nullptr;
 
 		if(pBeginNode != pEndNode){
-			MCF_ASSERT(pBeginNode);
+			MCF_DEBUG_CHECK(pBeginNode);
 
 			const auto pNodeBeforeBegin = pBeginNode->pPrev;
 			const auto pNodeBeforeEnd = std::exchange(pEndNode ? pEndNode->pPrev : lstSrc.x_pLast, pNodeBeforeBegin);

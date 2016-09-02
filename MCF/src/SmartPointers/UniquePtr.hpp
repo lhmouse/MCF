@@ -36,7 +36,7 @@ private:
 	void X_Dispose() noexcept {
 		const auto pElement = x_pElement;
 #ifndef NDEBUG
-		x_pElement = (Element *)(std::uintptr_t)0xDEADBEEFDEADBEEF;
+		__builtin_memset(&x_pElement, 0xEF, sizeof(x_pElement));
 #endif
 		if(pElement){
 			Deleter()(const_cast<std::remove_cv_t<Element> *>(pElement));

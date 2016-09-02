@@ -306,7 +306,7 @@ private:
 	void X_Dispose() noexcept {
 		const auto pElement = x_pElement;
 #ifndef NDEBUG
-		x_pElement = (Element *)(std::uintptr_t)0xDEADBEEFDEADBEEF;
+		__builtin_memset(&x_pElement, 0xEF, sizeof(x_pElement));
 #endif
 		if(pElement){
 			if(static_cast<const volatile Impl_IntrusivePtr::RefCountBase *>(pElement)->DropRef()){
@@ -622,7 +622,7 @@ private:
 	void X_Dispose() noexcept {
 		const auto pView = x_pView;
 #ifndef NDEBUG
-		x_pView = (X_WeakView *)(std::uintptr_t)0xDEADBEEFDEADBEEF;
+		__builtin_memset(&x_pView, 0xEF, sizeof(x_pView));
 #endif
 		if(pView){
 			if(static_cast<const volatile Impl_IntrusivePtr::RefCountBase *>(pView)->DropRef()){

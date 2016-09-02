@@ -81,8 +81,8 @@ private:
 	void X_Dispose() noexcept {
 		const auto puRef = x_puRef;
 #ifndef NDEBUG
-		x_puRef = (Atomic<std::size_t> *)(std::uintptr_t)0xDEADBEEFDEADBEEF;
-		x_pszStr = (const Char *)(std::uintptr_t)0xDEADBEEFDEADBEEF;
+		__builtin_memset(&x_puRef, 0xAA, sizeof(x_puRef));
+		__builtin_memset(&x_pszStr, 0xBB, sizeof(x_pszStr));
 #endif
 		if(puRef){
 			if(puRef->Decrement(kAtomicRelaxed) == 0){

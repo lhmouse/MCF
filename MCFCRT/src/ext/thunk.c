@@ -157,7 +157,7 @@ jBadAlloc:
 	SetLastError(ERROR_NOT_ENOUGH_MEMORY);
 	return nullptr;
 }
-void _MCFCRT_DeallocateThunk(const void *pThunk, bool bToPoison){
+void _MCFCRT_DeallocateThunk(const void *pThunk, bool bPoison){
 	unsigned char *const pbyRaw = (void *)pThunk;
 	void *pPageToRelease;
 
@@ -170,9 +170,9 @@ void _MCFCRT_DeallocateThunk(const void *pThunk, bool bToPoison){
 		}
 
 #ifndef NDEBUG
-		bToPoison = true;
+		bPoison = true;
 #endif
-		if(bToPoison){
+		if(bPoison){
 			// 由于其他 thunk 可能共享了当前内存页，所以不能设置为 PAGE_READWRITE。
 			DWORD dwOldProtect;
 			VirtualProtect(pbyRaw, pInfo->uThunkSize, PAGE_EXECUTE_READWRITE, &dwOldProtect);

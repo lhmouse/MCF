@@ -123,7 +123,7 @@ private:
 	void X_Dispose() noexcept {
 		const auto pFunctor = x_pFunctor;
 #ifndef NDEBUG
-		x_pFunctor = (X_Functor *)(std::uintptr_t)0xDEADBEEFDEADBEEF;
+		__builtin_memset(&x_pFunctor, 0xEA, sizeof(x_pFunctor));
 #endif
 		if(pFunctor){
 			if(pFunctor->DropRef()){

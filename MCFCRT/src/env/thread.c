@@ -555,7 +555,7 @@ static TlsObject *RequireTlsObject(TlsThread *pThread, TlsKey *pKey, size_t uSiz
 			return nullptr;
 		}
 #ifndef NDEBUG
-		memset(pObject, 0xAA, sizeof(TlsObject));
+		memset(pObject, 0xAA, sizeof(*pObject));
 #endif
 		memset(pObject->abyStorage, 0, uSize);
 
@@ -665,7 +665,7 @@ intptr_t _MCFCRT_TlsGetContext(_MCFCRT_TlsKeyHandle hTlsKey){
 
 bool _MCFCRT_TlsGet(_MCFCRT_TlsKeyHandle hTlsKey, void **restrict ppStorage){
 #ifndef NDEBUG
-	*ppStorage = (void *)0xDEADBEEF;
+	__builtin_memset(ppStorage, 0xBB, sizeof(*ppStorage));
 #endif
 
 	TlsKey *const pKey = (TlsKey *)hTlsKey;
@@ -688,7 +688,7 @@ bool _MCFCRT_TlsGet(_MCFCRT_TlsKeyHandle hTlsKey, void **restrict ppStorage){
 }
 bool _MCFCRT_TlsRequire(_MCFCRT_TlsKeyHandle hTlsKey, void **restrict ppStorage){
 #ifndef NDEBUG
-	*ppStorage = (void *)0xDEADBEEF;
+	__builtin_memset(ppStorage, 0xBB, sizeof(*ppStorage));
 #endif
 
 	TlsKey *const pKey = (TlsKey *)hTlsKey;

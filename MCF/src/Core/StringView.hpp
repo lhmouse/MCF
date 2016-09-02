@@ -82,7 +82,7 @@ namespace Impl_StringView {
 
 	template<typename CharT>
 	const CharT *StrEndOf(const CharT *pszBegin) noexcept {
-		MCF_ASSERT(pszBegin);
+		MCF_DEBUG_CHECK(pszBegin);
 
 		auto pchEnd = pszBegin;
 		while(*pchEnd != CharT()){
@@ -93,8 +93,8 @@ namespace Impl_StringView {
 
 	template<typename CharT, typename IteratorT>
 	std::size_t StrChrRep(IteratorT itBegin, std::common_type_t<IteratorT> itEnd, CharT chToFind, std::size_t uFindCount) noexcept {
-		MCF_ASSERT(uFindCount != 0);
-		MCF_ASSERT(static_cast<std::size_t>(itEnd - itBegin) >= uFindCount);
+		MCF_DEBUG_CHECK(uFindCount != 0);
+		MCF_DEBUG_CHECK(static_cast<std::size_t>(itEnd - itBegin) >= uFindCount);
 
 		auto itCur = itBegin;
 		for(;;){
@@ -125,8 +125,8 @@ namespace Impl_StringView {
 
 	template<typename IteratorT, typename ToFindIteratorT>
 	std::size_t StrStr(IteratorT itBegin, std::common_type_t<IteratorT> itEnd, ToFindIteratorT itToFindBegin, std::common_type_t<ToFindIteratorT> itToFindEnd) noexcept {
-		MCF_ASSERT(itToFindEnd != itToFindBegin);
-		MCF_ASSERT(static_cast<std::size_t>(itEnd - itBegin) >= static_cast<std::size_t>(itToFindEnd - itToFindBegin));
+		MCF_DEBUG_CHECK(itToFindEnd != itToFindBegin);
+		MCF_DEBUG_CHECK(static_cast<std::size_t>(itEnd - itBegin) >= static_cast<std::size_t>(itToFindEnd - itToFindBegin));
 
 		const auto uFindCount = static_cast<std::size_t>(itToFindEnd - itToFindBegin);
 
@@ -236,7 +236,7 @@ private:
 		if(nOffset < 0){
 			uRet += uLength + 1;
 		}
-		MCF_ASSERT(uRet <= uLength);
+		MCF_DEBUG_CHECK(uRet <= uLength);
 		return uRet;
 	}
 
@@ -414,7 +414,7 @@ public:
 		return UncheckedGet(uIndex);
 	}
 	const Char &UncheckedGet(std::size_t uIndex) const noexcept {
-		MCF_ASSERT(uIndex < GetSize());
+		MCF_DEBUG_CHECK(uIndex < GetSize());
 
 		return GetBegin()[uIndex];
 	}

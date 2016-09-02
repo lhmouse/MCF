@@ -41,7 +41,7 @@ void IsaacGenerator::Init(const Array<std::uint32_t, 8> &au32Seed) noexcept {
 	std::uint32_t au32Temp[8];
 	FillN(au32Temp, 8, 0x9E3779B9u);
 
-	const auto Mix = [&](){
+	const auto Mix = [&]{
 		au32Temp[0] ^= (au32Temp[1] << 11); au32Temp[3] += au32Temp[0]; au32Temp[1] += au32Temp[2];
 		au32Temp[1] ^= (au32Temp[2] >>  2); au32Temp[4] += au32Temp[1]; au32Temp[2] += au32Temp[3];
 		au32Temp[2] ^= (au32Temp[3] <<  8); au32Temp[5] += au32Temp[2]; au32Temp[3] += au32Temp[4];

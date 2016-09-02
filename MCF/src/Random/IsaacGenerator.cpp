@@ -16,13 +16,13 @@ void IsaacGenerator::X_RefreshInternal() noexcept {
 
 	for(std::size_t i = 0; i < 256; i += 4){
 		const auto Step = [&](unsigned j, auto fnSpec){
-			const auto x = x_u32Internal[i + j];
+			const auto x = x_au32Internal[i + j];
 			fnSpec(x_u32A);
-			x_u32A += x_u32Internal[(i + j + 128) % 256];
-			const auto y = x_u32Internal[(x >> 2) % 256] + x_u32A + x_u32B;
-			x_u32Internal[i + j] = y;
-			x_u32B = x_u32Internal[(y >> 10) % 256] + x;
-			x_au32Results[i + j] = x_u32B;
+			x_u32A += x_au32Internal[(i + j + 128) % 256];
+			const auto y = x_au32Internal[(x >> 2) % 256] + x_u32A + x_u32B;
+			x_au32Internal[i + j] = y;
+			x_u32B = x_au32Internal[(y >> 10) % 256] + x;
+			x_au32Result[i + j] = x_u32B;
 		};
 
 		Step(0, [](auto &a){ a ^= (a << 13); });
@@ -60,14 +60,14 @@ void IsaacGenerator::Init(const Array<std::uint32_t, 8> &au32Seed) noexcept {
 			au32Temp[j] += au32Seed[j];
 		}
 		Mix();
-		CopyN(x_u32Internal + i, au32Temp, 8);
+		CopyN(x_au32Internal + i, au32Temp, 8);
 	}
 	for(std::size_t i = 0; i < 256; i += 8){
 		for(std::size_t j = 0; j < 8; ++j){
-			au32Temp[j] += x_u32Internal[i + j];
+			au32Temp[j] += x_au32Internal[i + j];
 		}
 		Mix();
-		CopyN(x_u32Internal + i, au32Temp, 8);
+		CopyN(x_au32Internal + i, au32Temp, 8);
 	}
 	x_u32A = 0;
 	x_u32B = 0;
@@ -81,7 +81,7 @@ std::uint32_t IsaacGenerator::Get() noexcept {
 	if(x_uRead == 0){
 		X_RefreshInternal();
 	}
-	const auto u32Ret = x_au32Results[x_uRead];
+	const auto u32Ret = x_au32Result[x_uRead];
 	x_uRead = (x_uRead + 1) % 256;
 	return u32Ret;
 }

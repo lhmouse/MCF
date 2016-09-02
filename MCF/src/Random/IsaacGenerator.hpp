@@ -12,12 +12,12 @@ namespace MCF {
 
 class IsaacGenerator {
 private:
-	std::uint32_t x_u32Internal[256];
+	std::uint32_t x_au32Internal[256];
 	std::uint32_t x_u32A;
 	std::uint32_t x_u32B;
 	std::uint32_t x_u32C;
 
-	std::uint32_t x_au32Results[256];
+	std::uint32_t x_au32Result[256];
 	unsigned x_uRead;
 
 public:

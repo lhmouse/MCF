@@ -23,7 +23,7 @@ bool __MCFCRT_HeapInit(void){
 void __MCFCRT_HeapUninit(void){
 }
 
-unsigned char *__MCFCRT_HeapAlloc(size_t uSize, bool bFillsWithZero, const void *pbyRetAddr){
+void *__MCFCRT_HeapAlloc(size_t uSize, bool bFillsWithZero, const void *pbyRetAddr){
 #if __MCFCRT_REQUIRE_HEAPDBG_LEVEL(1)
 	SetLastError(0xDEADBEEF);
 #endif
@@ -80,7 +80,7 @@ unsigned char *__MCFCRT_HeapAlloc(size_t uSize, bool bFillsWithZero, const void 
 		}
 	}
 }
-unsigned char *__MCFCRT_HeapRealloc(void *pBlock, size_t uSize, bool bFillsWithZero, const void *pbyRetAddr){
+void *__MCFCRT_HeapRealloc(void *pBlock, size_t uSize, bool bFillsWithZero, const void *pbyRetAddr){
 #if __MCFCRT_REQUIRE_HEAPDBG_LEVEL(1)
 	SetLastError(0xDEADBEEF);
 #endif

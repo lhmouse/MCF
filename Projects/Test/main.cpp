@@ -17,6 +17,7 @@ extern "C" unsigned _MCFCRT_Main(void) noexcept {
 	MCF::PolyIntrusivePtr<MyClass> pmy = MCF::MakeIntrusive<MyClass>();
 	MCF::PolyIntrusivePtr<Base1>   pb1 = pmy;
 	MCF::PolyIntrusivePtr<Base1>   pb2 = pmy;
+	auto pmy2 = MCF::StaticPointerCast<MyClass>(pb1);
 
 	std::printf("use_count = %zu\n", pmy.GetRef());
 

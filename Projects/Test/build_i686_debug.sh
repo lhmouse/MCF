@@ -5,7 +5,7 @@ CPPFLAGS+=" -Og -g -Wall -Wextra -pedantic -pedantic-errors -Werror -Wno-error=u
 	-pipe -mfpmath=both -march=native -mno-stack-arg-probe -mno-accumulate-outgoing-args -mpush-args -masm=intel
 	-I../../debug/mingw32/include"
 CXXFLAGS+=" -Og -g -std=c++14 -Wzero-as-null-pointer-constant -Wnoexcept -Woverloaded-virtual -fnothrow-opt"
-LDFLAGS+=" -Og -g -static -nostdlib -L../../debug/mingw32/lib -lmcf -lsupc++ -lmingwex -lgcc -lgcc_eh -lmcfcrt-pre-exe -lmcfcrt -lmsvcrt -lkernel32 -lntdll -Wl,-e@__MCFCRT_ExeStartup"
+LDFLAGS+=" -Og -g -nostdlib -L../../debug/mingw32/lib -lmcf -lsupc++ -lmingwex -lgcc -lgcc_eh -lmcfcrt-pre-exe -lmcfcrt -lmsvcrt -lkernel32 -lntdll -Wl,-e@__MCFCRT_ExeStartup"
 
 cp -fp ../../debug/mingw32/bin/*.dll ./
 

@@ -1,25 +1,24 @@
 #include <MCF/StdMCF.hpp>
-#include <MCF/Core/TupleManipulators.hpp>
+#include <MCF/SmartPointers/PolyIntrusivePtr.hpp>
 #include <cstdio>
 
-void foo(int &){
-	std::puts("foo(int &)");
-}
-void foo(int &&){
-	std::puts("foo(int &&)");
-}
+struct Common : MCF::PolyIntrusiveBase<Common> {
+};
+
+struct Base1 : MCF::PolyIntrusiveBase<Base1>, virtual Common {
+};
+struct Base2 : MCF::PolyIntrusiveBase<Base2>, virtual Common {
+};
+
+struct MyClass : MCF::PolyIntrusiveBase<MyClass>, Base1, Base2 {
+};
 
 extern "C" unsigned _MCFCRT_Main(void) noexcept {
-	int n1 = 1, n2 = 2, n3 = 3;
+	MCF::PolyIntrusivePtr<MyClass> pmy = MCF::MakeIntrusive<MyClass>();
+	MCF::PolyIntrusivePtr<Base1>   pb1 = pmy;
+	MCF::PolyIntrusivePtr<Base1>   pb2 = pmy;
 
-	std::puts(">> testing lvalues!");
-	MCF::AbsorbTuple([](auto &&a){ foo(static_cast<decltype(a) &&>(a)); }, std::tie(n1, n2, n3));
-
-	std::puts(">> testing xvalues!");
-	MCF::AbsorbTuple([](auto &&a){ foo(static_cast<decltype(a) &&>(a)); }, std::forward_as_tuple(std::move(n1), std::move(n2), std::move(n3)));
-
-	std::puts(">> testing prvalues!");
-	MCF::AbsorbTuple([](auto &&a){ foo(static_cast<decltype(a) &&>(a)); }, std::make_tuple(1, 2, 3));
+	std::printf("use_count = %zu\n", pmy.GetRef());
 
 	return 0;
 }

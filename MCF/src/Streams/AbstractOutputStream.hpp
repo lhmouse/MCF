@@ -10,7 +10,7 @@
 
 namespace MCF {
 
-class AbstractOutputStream : public PolyIntrusiveBase {
+class AbstractOutputStream : public PolyIntrusiveBase<AbstractOutputStream> {
 public:
 	AbstractOutputStream() noexcept = default;
 	~AbstractOutputStream() override = 0;

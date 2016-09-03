@@ -6,7 +6,12 @@
 
 namespace MCF {
 
-PolyIntrusiveBase::~PolyIntrusiveBase(){
+namespace Impl_PolyIntrusivePtr {
+	Deletable::~Deletable(){
+	}
+
+	Unknown::~Unknown(){
+	}
 }
 
 }

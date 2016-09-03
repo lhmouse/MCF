@@ -142,7 +142,7 @@ __MCFCRT_C11THREAD_INLINE_OR_EXTERN int __MCFCRT_mtx_trylock(mtx_t *__mutex_c) _
 }
 __MCFCRT_C11THREAD_INLINE_OR_EXTERN int __MCFCRT_mtx_unlock(mtx_t *__mutex_c) _MCFCRT_NOEXCEPT {
 	if(__mutex_c->__mask & mtx_recursive){
-		_MCFCRT_ASSERT(_MCFCRT_GetCurrentThreadId() == __atomic_load_n(&(__mutex_c->__owner), __ATOMIC_RELAXED));
+		_MCFCRT_DEBUG_CHECK(_MCFCRT_GetCurrentThreadId() == __atomic_load_n(&(__mutex_c->__owner), __ATOMIC_RELAXED));
 		const _MCFCRT_STD size_t __new_count = --__mutex_c->__count;
 		if(_MCFCRT_EXPECT_NOT(__new_count == 0)){
 			__atomic_store_n(&(__mutex_c->__owner), 0, __ATOMIC_RELAXED);

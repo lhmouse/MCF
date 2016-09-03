@@ -133,7 +133,7 @@ __MCFCRT_GTHREAD_INLINE_OR_EXTERN int __MCFCRT_gthread_recursive_mutex_lock(__gt
 	return 0;
 }
 __MCFCRT_GTHREAD_INLINE_OR_EXTERN int __MCFCRT_gthread_recursive_mutex_unlock(__gthread_recursive_mutex_t *__recur_mutex) _MCFCRT_NOEXCEPT {
-	_MCFCRT_ASSERT(_MCFCRT_GetCurrentThreadId() == __atomic_load_n(&(__recur_mutex->__owner), __ATOMIC_RELAXED));
+	_MCFCRT_DEBUG_CHECK(_MCFCRT_GetCurrentThreadId() == __atomic_load_n(&(__recur_mutex->__owner), __ATOMIC_RELAXED));
 	const _MCFCRT_STD size_t __new_count = --__recur_mutex->__count;
 	if(_MCFCRT_EXPECT_NOT(__new_count == 0)){
 		__atomic_store_n(&(__recur_mutex->__owner), 0, __ATOMIC_RELAXED);

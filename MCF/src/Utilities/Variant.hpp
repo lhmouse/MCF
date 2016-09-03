@@ -47,7 +47,7 @@ namespace Impl_Variant {
 			(void)uActiveIndex;
 			(void)pElement;
 
-			MCF_ASSERT(false);
+			MCF_DEBUG_CHECK(false);
 			std::terminate();
 		}
 	};
@@ -153,9 +153,8 @@ public:
 		if(GetIndex() != FindFirstType<Element, ElementsT...>()){
 			return nullptr;
 		}
-		MCF_ASSERT(dynamic_cast<const X_ActiveElement<Element> *>(x_pElement.Get()));
-		return static_cast<const Element *>(
-			static_cast<const X_ActiveElement<Element> *>(x_pElement.Get())->GetAddress());
+		MCF_DEBUG_CHECK(dynamic_cast<const X_ActiveElement<Element> *>(x_pElement.Get()));
+		return static_cast<const Element *>(static_cast<const X_ActiveElement<Element> *>(x_pElement.Get())->GetAddress());
 	}
 	template<typename ParamT>
 	ParamT *Get() noexcept {
@@ -163,9 +162,8 @@ public:
 		if(GetIndex() != FindFirstType<ParamT, ElementsT...>()){
 			return nullptr;
 		}
-		MCF_ASSERT(dynamic_cast<X_ActiveElement<Element> *>(x_pElement.Get()));
-		return static_cast<Element *>(
-			static_cast<X_ActiveElement<Element> *>(x_pElement.Get())->GetAddress());
+		MCF_DEBUG_CHECK(dynamic_cast<X_ActiveElement<Element> *>(x_pElement.Get()));
+		return static_cast<Element *>(static_cast<X_ActiveElement<Element> *>(x_pElement.Get())->GetAddress());
 	}
 	template<typename ElementT, typename ...ParamsT>
 	void Emplace(ParamsT &&...vParams){

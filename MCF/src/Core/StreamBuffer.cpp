@@ -457,7 +457,7 @@ StreamBuffer StreamBuffer::CutOff(std::size_t uOffsetEnd){
 
 	StreamBuffer vHead;
 	if(pCutBegin != pCutEnd){
-		MCF_ASSERT(pCutBegin);
+		MCF_DEBUG_CHECK(pCutBegin);
 
 		const auto pBeforeEnd = std::exchange(pCutEnd ? pCutEnd->pPrev : x_pLast, nullptr);
 
@@ -473,7 +473,7 @@ StreamBuffer StreamBuffer::CutOff(std::size_t uOffsetEnd){
 	return vHead;
 }
 void StreamBuffer::Splice(StreamBuffer &rhs) noexcept {
-	MCF_ASSERT(&rhs != this);
+	MCF_DEBUG_CHECK(&rhs != this);
 
 	const auto pSpFirst = rhs.x_pFirst;
 	if(pSpFirst){

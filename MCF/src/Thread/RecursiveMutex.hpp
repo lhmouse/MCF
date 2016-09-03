@@ -52,7 +52,7 @@ public:
 		return UncheckedGetRecursionCount();
 	}
 	std::size_t UncheckedGetRecursionCount() const noexcept {
-		MCF_ASSERT(IsLockedByCurrentThread());
+		MCF_DEBUG_CHECK(IsLockedByCurrentThread());
 
 		return x_uRecursionCount;
 	}

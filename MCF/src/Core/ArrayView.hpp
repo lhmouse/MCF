@@ -84,7 +84,7 @@ public:
 	}
 
 	const Element *GetPrev(const Element *pPos) const noexcept {
-		MCF_ASSERT(pPos);
+		MCF_DEBUG_CHECK(pPos);
 
 		const auto pBegin = GetBegin();
 		auto uOffset = static_cast<std::size_t>(pPos - pBegin);
@@ -95,7 +95,7 @@ public:
 		return pBegin + uOffset;
 	}
 	Element *GetPrev(Element *pPos) noexcept {
-		MCF_ASSERT(pPos);
+		MCF_DEBUG_CHECK(pPos);
 
 		const auto pBegin = GetBegin();
 		auto uOffset = static_cast<std::size_t>(pPos - pBegin);
@@ -106,7 +106,7 @@ public:
 		return pBegin + uOffset;
 	}
 	const Element *GetNext(const Element *pPos) const noexcept {
-		MCF_ASSERT(pPos);
+		MCF_DEBUG_CHECK(pPos);
 
 		const auto pBegin = GetBegin();
 		auto uOffset = static_cast<std::size_t>(pPos - pBegin);
@@ -117,7 +117,7 @@ public:
 		return pBegin + uOffset;
 	}
 	Element *GetNext(Element *pPos) noexcept {
-		MCF_ASSERT(pPos);
+		MCF_DEBUG_CHECK(pPos);
 
 		const auto pBegin = GetBegin();
 		auto uOffset = static_cast<std::size_t>(pPos - pBegin);
@@ -183,7 +183,7 @@ public:
 		return UncheckedGet(uIndex);
 	}
 	Element &UncheckedGet(std::size_t uIndex) const noexcept {
-		MCF_ASSERT(uIndex < x_uSize);
+		MCF_DEBUG_CHECK(uIndex < x_uSize);
 
 		return x_pBegin[uIndex];
 	}
@@ -289,7 +289,7 @@ public:
 	}
 
 	const Element *GetPrev(const Element *pPos) const noexcept {
-		MCF_ASSERT(pPos);
+		MCF_DEBUG_CHECK(pPos);
 
 		const auto pBegin = GetBegin();
 		auto uOffset = static_cast<std::size_t>(pPos - pBegin);
@@ -300,7 +300,7 @@ public:
 		return pBegin + uOffset;
 	}
 	Element *GetPrev(Element *pPos) noexcept {
-		MCF_ASSERT(pPos);
+		MCF_DEBUG_CHECK(pPos);
 
 		const auto pBegin = GetBegin();
 		auto uOffset = static_cast<std::size_t>(pPos - pBegin);
@@ -311,7 +311,7 @@ public:
 		return pBegin + uOffset;
 	}
 	const Element *GetNext(const Element *pPos) const noexcept {
-		MCF_ASSERT(pPos);
+		MCF_DEBUG_CHECK(pPos);
 
 		const auto pBegin = GetBegin();
 		auto uOffset = static_cast<std::size_t>(pPos - pBegin);
@@ -322,7 +322,7 @@ public:
 		return pBegin + uOffset;
 	}
 	Element *GetNext(Element *pPos) noexcept {
-		MCF_ASSERT(pPos);
+		MCF_DEBUG_CHECK(pPos);
 
 		const auto pBegin = GetBegin();
 		auto uOffset = static_cast<std::size_t>(pPos - pBegin);
@@ -388,7 +388,7 @@ public:
 		return UncheckedGet(uIndex);
 	}
 	Element &UncheckedGet(std::size_t uIndex) const noexcept {
-		MCF_ASSERT(uIndex < x_uSize);
+		MCF_DEBUG_CHECK(uIndex < x_uSize);
 
 		return x_pBegin[uIndex];
 	}

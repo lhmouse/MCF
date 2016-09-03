@@ -27,7 +27,7 @@ std::size_t Semaphore::Post(std::size_t uPostCount) noexcept {
 	Mutex::UniqueLock vLock(x_mtxGuard);
 	const auto uOldCount = x_uCount;
 	const auto uNewCount = uOldCount + uPostCount;
-	MCF_ASSERT_MSG(uNewCount >= uOldCount, L"算术运算结果超出可表示范围。");
+	MCF_DEBUG_CHECK_MSG(uNewCount >= uOldCount, L"算术运算结果超出可表示范围。");
 	x_uCount = uNewCount;
 	x_cvWaiter.Signal(uPostCount);
 	return uOldCount;

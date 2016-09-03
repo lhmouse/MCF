@@ -63,7 +63,7 @@ namespace Impl_IntrusivePtr {
 			return x_uRef.Load(kAtomicRelaxed);
 		}
 		bool TryAddRef() const volatile noexcept {
-			MCF_ASSERT(static_cast<std::ptrdiff_t>(x_uRef.Load(kAtomicRelaxed)) >= 0);
+			MCF_DEBUG_CHECK(static_cast<std::ptrdiff_t>(x_uRef.Load(kAtomicRelaxed)) >= 0);
 
 			auto uOldRef = x_uRef.Load(kAtomicRelaxed);
 			do {
@@ -74,12 +74,12 @@ namespace Impl_IntrusivePtr {
 			return true;
 		}
 		void AddRef() const volatile noexcept {
-			MCF_ASSERT(static_cast<std::ptrdiff_t>(x_uRef.Load(kAtomicRelaxed)) > 0);
+			MCF_DEBUG_CHECK(static_cast<std::ptrdiff_t>(x_uRef.Load(kAtomicRelaxed)) > 0);
 
 			x_uRef.Increment(kAtomicRelaxed);
 		}
 		bool DropRef() const volatile noexcept {
-			MCF_ASSERT(static_cast<std::ptrdiff_t>(x_uRef.Load(kAtomicRelaxed)) > 0);
+			MCF_DEBUG_CHECK(static_cast<std::ptrdiff_t>(x_uRef.Load(kAtomicRelaxed)) > 0);
 
 			return x_uRef.Decrement(kAtomicRelaxed) == 0;
 		}
@@ -114,7 +114,7 @@ namespace Impl_IntrusivePtr {
 	public:
 		static void *operator new(std::size_t uSize){
 			static_assert(sizeof(WeakViewTemplate) <= g_vViewAllocator.kElementSize, "Please fix the declaration of g_vViewAllocator!");
-			MCF_ASSERT(uSize == sizeof(WeakViewTemplate));
+			MCF_DEBUG_CHECK(uSize == sizeof(WeakViewTemplate));
 
 			return g_vViewAllocator.Allocate();
 		}
@@ -451,12 +451,12 @@ public:
 	}
 
 	constexpr Element &operator*() const noexcept {
-		MCF_ASSERT(!IsNull());
+		MCF_DEBUG_CHECK(!IsNull());
 
 		return *Get();
 	}
 	constexpr Element *operator->() const noexcept {
-		MCF_ASSERT(!IsNull());
+		MCF_DEBUG_CHECK(!IsNull());
 
 		return Get();
 	}

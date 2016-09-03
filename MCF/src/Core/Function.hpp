@@ -61,12 +61,12 @@ namespace Impl_Function {
 			return x_uRef.Load(kAtomicRelaxed);
 		}
 		void AddRef() const volatile noexcept {
-			MCF_ASSERT(static_cast<std::ptrdiff_t>(x_uRef.Load(kAtomicRelaxed)) > 0);
+			MCF_DEBUG_CHECK(static_cast<std::ptrdiff_t>(x_uRef.Load(kAtomicRelaxed)) > 0);
 
 			x_uRef.Increment(kAtomicRelaxed);
 		}
 		bool DropRef() const volatile noexcept {
-			MCF_ASSERT(static_cast<std::ptrdiff_t>(x_uRef.Load(kAtomicRelaxed)) > 0);
+			MCF_DEBUG_CHECK(static_cast<std::ptrdiff_t>(x_uRef.Load(kAtomicRelaxed)) > 0);
 
 			return x_uRef.Decrement(kAtomicRelaxed) == 0;
 		}
@@ -220,7 +220,7 @@ public:
 		return !IsNull();
 	}
 	std::remove_cv_t<RetT> operator()(ParamsT ...vParams) const {
-		MCF_ASSERT(!IsNull());
+		MCF_DEBUG_CHECK(!IsNull());
 
 		return x_pFunctor->Dispatch(std::forward<ParamsT>(vParams)...); // 值形参当作右值引用传递。
 	}

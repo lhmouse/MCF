@@ -9,7 +9,6 @@
 #include "Assert.hpp"
 #include "CountOf.hpp"
 #include "Defer.hpp"
-#include "Comparators.hpp"
 #include "Exception.hpp"
 #include <MCFCRT/ext/alloca.h>
 #include <iterator>
@@ -568,7 +567,7 @@ public:
 	}
 
 	bool DoesOverlapWith(const StringView &rhs) const noexcept {
-		return Less()(x_pchBegin, rhs.x_pchEnd) && Less()(rhs.x_pchBegin, x_pchEnd);
+		return (x_pchBegin < rhs.x_pchEnd) && (rhs.x_pchBegin < x_pchEnd);
 	}
 
 public:

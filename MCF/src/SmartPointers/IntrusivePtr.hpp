@@ -8,7 +8,6 @@
 #include "../Core/Assert.hpp"
 #include "../Core/Bail.hpp"
 #include "../Core/DeclVal.hpp"
-#include "../Core/Comparators.hpp"
 #include "../Core/FixedSizeAllocator.hpp"
 #include "../Core/Atomic.hpp"
 #include "../Thread/Mutex.hpp"
@@ -463,80 +462,80 @@ public:
 
 	template<typename OtherObjectT, class OtherDeleterT>
 	constexpr bool operator==(const IntrusivePtr<OtherObjectT, OtherDeleterT> &rhs) const noexcept {
-		return Equal()(x_pElement, rhs.x_pElement);
+		return x_pElement == rhs.x_pElement;
 	}
 	template<typename OtherObjectT>
 	constexpr bool operator==(OtherObjectT *rhs) const noexcept {
-		return Equal()(x_pElement, rhs);
+		return x_pElement == rhs;
 	}
 	template<typename OtherObjectT>
 	friend constexpr bool operator==(OtherObjectT *lhs, const IntrusivePtr &rhs) noexcept {
-		return Equal()(lhs, rhs.x_pElement);
+		return lhs == rhs.x_pElement;
 	}
 
 	template<typename OtherObjectT, class OtherDeleterT>
 	constexpr bool operator!=(const IntrusivePtr<OtherObjectT, OtherDeleterT> &rhs) const noexcept {
-		return Unequal()(x_pElement, rhs.x_pElement);
+		return x_pElement != rhs.x_pElement;
 	}
 	template<typename OtherObjectT>
 	constexpr bool operator!=(OtherObjectT *rhs) const noexcept {
-		return Unequal()(x_pElement, rhs);
+		return x_pElement != rhs;
 	}
 	template<typename OtherObjectT>
 	friend constexpr bool operator!=(OtherObjectT *lhs, const IntrusivePtr &rhs) noexcept {
-		return Unequal()(lhs, rhs.x_pElement);
+		return lhs != rhs.x_pElement;
 	}
 
 	template<typename OtherObjectT, class OtherDeleterT>
 	constexpr bool operator<(const IntrusivePtr<OtherObjectT, OtherDeleterT> &rhs) const noexcept {
-		return Less()(x_pElement, rhs.x_pElement);
+		return x_pElement < rhs.x_pElement;
 	}
 	template<typename OtherObjectT>
 	constexpr bool operator<(OtherObjectT *rhs) const noexcept {
-		return Less()(x_pElement, rhs);
+		return x_pElement < rhs;
 	}
 	template<typename OtherObjectT>
 	friend constexpr bool operator<(OtherObjectT *lhs, const IntrusivePtr &rhs) noexcept {
-		return Less()(lhs, rhs.x_pElement);
+		return lhs < rhs.x_pElement;
 	}
 
 	template<typename OtherObjectT, class OtherDeleterT>
 	constexpr bool operator>(const IntrusivePtr<OtherObjectT, OtherDeleterT> &rhs) const noexcept {
-		return Greater()(x_pElement, rhs.x_pElement);
+		return x_pElement > rhs.x_pElement;
 	}
 	template<typename OtherObjectT>
 	constexpr bool operator>(OtherObjectT *rhs) const noexcept {
-		return Greater()(x_pElement, rhs);
+		return x_pElement > rhs;
 	}
 	template<typename OtherObjectT>
 	friend constexpr bool operator>(OtherObjectT *lhs, const IntrusivePtr &rhs) noexcept {
-		return Greater()(lhs, rhs.x_pElement);
+		return lhs > rhs.x_pElement;
 	}
 
 	template<typename OtherObjectT, class OtherDeleterT>
 	constexpr bool operator<=(const IntrusivePtr<OtherObjectT, OtherDeleterT> &rhs) const noexcept {
-		return LessEqual()(x_pElement, rhs.x_pElement);
+		return x_pElement <= rhs.x_pElement;
 	}
 	template<typename OtherObjectT>
 	constexpr bool operator<=(OtherObjectT *rhs) const noexcept {
-		return LessEqual()(x_pElement, rhs);
+		return x_pElement <= rhs;
 	}
 	template<typename OtherObjectT>
 	friend constexpr bool operator<=(OtherObjectT *lhs, const IntrusivePtr &rhs) noexcept {
-		return LessEqual()(lhs, rhs.x_pElement);
+		return lhs <= rhs.x_pElement;
 	}
 
 	template<typename OtherObjectT, class OtherDeleterT>
 	constexpr bool operator>=(const IntrusivePtr<OtherObjectT, OtherDeleterT> &rhs) const noexcept {
-		return GreaterEqual()(x_pElement, rhs.x_pElement);
+		return x_pElement >= rhs.x_pElement;
 	}
 	template<typename OtherObjectT>
 	constexpr bool operator>=(OtherObjectT *rhs) const noexcept {
-		return GreaterEqual()(x_pElement, rhs);
+		return x_pElement >= rhs;
 	}
 	template<typename OtherObjectT>
 	friend constexpr bool operator>=(OtherObjectT *lhs, const IntrusivePtr &rhs) noexcept {
-		return GreaterEqual()(lhs, rhs.x_pElement);
+		return lhs >= rhs.x_pElement;
 	}
 
 	friend void swap(IntrusivePtr &lhs, IntrusivePtr &rhs) noexcept {
@@ -755,27 +754,27 @@ public:
 public:
 	template<typename OtherObjectT, class OtherDeleterT>
 	bool operator==(const IntrusiveWeakPtr<OtherObjectT, OtherDeleterT> &rhs) const noexcept {
-		return Equal()(x_pView, rhs.x_pView);
+		return x_pView == rhs.x_pView;
 	}
 	template<typename OtherObjectT, class OtherDeleterT>
 	bool operator!=(const IntrusiveWeakPtr<OtherObjectT, OtherDeleterT> &rhs) const noexcept {
-		return Unequal()(x_pView, rhs.x_pView);
+		return x_pView != rhs.x_pView;
 	}
 	template<typename OtherObjectT, class OtherDeleterT>
 	bool operator<(const IntrusiveWeakPtr<OtherObjectT, OtherDeleterT> &rhs) const noexcept {
-		return Less()(x_pView, rhs.x_pView);
+		return x_pView < rhs.x_pView;
 	}
 	template<typename OtherObjectT, class OtherDeleterT>
 	bool operator>(const IntrusiveWeakPtr<OtherObjectT, OtherDeleterT> &rhs) const noexcept {
-		return Greater()(x_pView, rhs.x_pView);
+		return x_pView > rhs.x_pView;
 	}
 	template<typename OtherObjectT, class OtherDeleterT>
 	bool operator<=(const IntrusiveWeakPtr<OtherObjectT, OtherDeleterT> &rhs) const noexcept {
-		return LessEqual()(x_pView, rhs.x_pView);
+		return x_pView <= rhs.x_pView;
 	}
 	template<typename OtherObjectT, class OtherDeleterT>
 	bool operator>=(const IntrusiveWeakPtr<OtherObjectT, OtherDeleterT> &rhs) const noexcept {
-		return GreaterEqual()(x_pView, rhs.x_pView);
+		return x_pView >= rhs.x_pView;
 	}
 
 	friend void swap(IntrusiveWeakPtr &lhs, IntrusiveWeakPtr &rhs) noexcept {

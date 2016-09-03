@@ -6,7 +6,6 @@
 #define MCF_SMART_POINTERS_UNIQUE_PTR_HPP_
 
 #include "../Core/Assert.hpp"
-#include "../Core/Comparators.hpp"
 #include "DefaultDeleter.hpp"
 #include <utility>
 #include <type_traits>
@@ -147,80 +146,80 @@ public:
 
 	template<typename OtherObjectT, class OtherDeleterT>
 	constexpr bool operator==(const UniquePtr<OtherObjectT, OtherDeleterT> &rhs) const noexcept {
-		return Equal()(x_pElement, rhs.x_pElement);
+		return x_pElement == rhs.x_pElement;
 	}
 	template<typename OtherObjectT>
 	constexpr bool operator==(OtherObjectT *rhs) const noexcept {
-		return Equal()(x_pElement, rhs);
+		return x_pElement == rhs;
 	}
 	template<typename OtherObjectT>
 	friend constexpr bool operator==(OtherObjectT *lhs, const UniquePtr &rhs) noexcept {
-		return Equal()(lhs, rhs.x_pElement);
+		return lhs == rhs.x_pElement;
 	}
 
 	template<typename OtherObjectT, class OtherDeleterT>
 	constexpr bool operator!=(const UniquePtr<OtherObjectT, OtherDeleterT> &rhs) const noexcept {
-		return Unequal()(x_pElement, rhs.x_pElement);
+		return x_pElement != rhs.x_pElement;
 	}
 	template<typename OtherObjectT>
 	constexpr bool operator!=(OtherObjectT *rhs) const noexcept {
-		return Unequal()(x_pElement, rhs);
+		return x_pElement != rhs;
 	}
 	template<typename OtherObjectT>
 	friend constexpr bool operator!=(OtherObjectT *lhs, const UniquePtr &rhs) noexcept {
-		return Unequal()(lhs, rhs.x_pElement);
+		return lhs != rhs.x_pElement;
 	}
 
 	template<typename OtherObjectT, class OtherDeleterT>
 	constexpr bool operator<(const UniquePtr<OtherObjectT, OtherDeleterT> &rhs) const noexcept {
-		return Less()(x_pElement, rhs.x_pElement);
+		return x_pElement < rhs.x_pElement;
 	}
 	template<typename OtherObjectT>
 	constexpr bool operator<(OtherObjectT *rhs) const noexcept {
-		return Less()(x_pElement, rhs);
+		return x_pElement < rhs;
 	}
 	template<typename OtherObjectT>
 	friend constexpr bool operator<(OtherObjectT *lhs, const UniquePtr &rhs) noexcept {
-		return Less()(lhs, rhs.x_pElement);
+		return lhs < rhs.x_pElement;
 	}
 
 	template<typename OtherObjectT, class OtherDeleterT>
 	constexpr bool operator>(const UniquePtr<OtherObjectT, OtherDeleterT> &rhs) const noexcept {
-		return Greater()(x_pElement, rhs.x_pElement);
+		return x_pElement > rhs.x_pElement;
 	}
 	template<typename OtherObjectT>
 	constexpr bool operator>(OtherObjectT *rhs) const noexcept {
-		return Greater()(x_pElement, rhs);
+		return x_pElement > rhs;
 	}
 	template<typename OtherObjectT>
 	friend constexpr bool operator>(OtherObjectT *lhs, const UniquePtr &rhs) noexcept {
-		return Greater()(lhs, rhs.x_pElement);
+		return lhs > rhs.x_pElement;
 	}
 
 	template<typename OtherObjectT, class OtherDeleterT>
 	constexpr bool operator<=(const UniquePtr<OtherObjectT, OtherDeleterT> &rhs) const noexcept {
-		return LessEqual()(x_pElement, rhs.x_pElement);
+		return x_pElement <= rhs.x_pElement;
 	}
 	template<typename OtherObjectT>
 	constexpr bool operator<=(OtherObjectT *rhs) const noexcept {
-		return LessEqual()(x_pElement, rhs);
+		return x_pElement <= rhs;
 	}
 	template<typename OtherObjectT>
 	friend constexpr bool operator<=(OtherObjectT *lhs, const UniquePtr &rhs) noexcept {
-		return LessEqual()(lhs, rhs.x_pElement);
+		return lhs <= rhs.x_pElement;
 	}
 
 	template<typename OtherObjectT, class OtherDeleterT>
 	constexpr bool operator>=(const UniquePtr<OtherObjectT, OtherDeleterT> &rhs) const noexcept {
-		return GreaterEqual()(x_pElement, rhs.x_pElement);
+		return x_pElement >= rhs.x_pElement;
 	}
 	template<typename OtherObjectT>
 	constexpr bool operator>=(OtherObjectT *rhs) const noexcept {
-		return GreaterEqual()(x_pElement, rhs);
+		return x_pElement >= rhs;
 	}
 	template<typename OtherObjectT>
 	friend constexpr bool operator>=(OtherObjectT *lhs, const UniquePtr &rhs) noexcept {
-		return GreaterEqual()(lhs, rhs.x_pElement);
+		return lhs >= rhs.x_pElement;
 	}
 
 	friend void swap(UniquePtr &lhs, UniquePtr &rhs) noexcept {

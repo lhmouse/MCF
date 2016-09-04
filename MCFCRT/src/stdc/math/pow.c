@@ -6,16 +6,6 @@
 #include "../../env/bail.h"
 #include "_asm.h"
 
-#define UNROLLED	\
-		if(++i == 32){	\
-			break;	\
-		}	\
-		ret *= ret;	\
-		mask >>= 1;	\
-		if((y & mask) != 0){	\
-			ret *= x;	\
-		}
-
 // postive pow float unsigned
 static float ppowfu(float x, unsigned y){
 	if(y == 0){
@@ -24,15 +14,12 @@ static float ppowfu(float x, unsigned y){
 	register float ret = x;
 	unsigned i = (unsigned)__builtin_clz(y);
 	unsigned mask = 0x80000000u >> i;
-	for(;;){
-		UNROLLED
-		UNROLLED
-		UNROLLED
-		UNROLLED
-		UNROLLED
-		UNROLLED
-		UNROLLED
-		UNROLLED
+	while(++i < 32){
+		ret *= ret;
+		mask >>= 1;
+		if((y & mask) != 0){
+			ret *= x;
+		}
 	}
 	return ret;
 }
@@ -43,15 +30,12 @@ static double ppowdu(double x, unsigned y){
 	register double ret = x;
 	unsigned i = (unsigned)__builtin_clz(y);
 	unsigned mask = 0x80000000u >> i;
-	for(;;){
-		UNROLLED
-		UNROLLED
-		UNROLLED
-		UNROLLED
-		UNROLLED
-		UNROLLED
-		UNROLLED
-		UNROLLED
+	while(++i < 32){
+		ret *= ret;
+		mask >>= 1;
+		if((y & mask) != 0){
+			ret *= x;
+		}
 	}
 	return ret;
 }
@@ -62,24 +46,15 @@ static long double ppowlu(long double x, unsigned y){
 	register long double ret = x;
 	unsigned i = (unsigned)__builtin_clz(y);
 	unsigned mask = 0x80000000u >> i;
-	for(;;){
-		UNROLLED
-		UNROLLED
-		UNROLLED
-		UNROLLED
-		UNROLLED
-		UNROLLED
-		UNROLLED
-		UNROLLED
+	while(++i < 32){
+		ret *= ret;
+		mask >>= 1;
+		if((y & mask) != 0){
+			ret *= x;
+		}
 	}
 	return ret;
 }
-
-#define PPOWU(t_, x_, y_)	\
-	_Generic((t_)0,	\
-		float:   ppowfu,	\
-		double:  ppowdu,	\
-		default: ppowlu)(x_, y_)
 
 // postive pow float float
 static float ppowf(float x, float y){
@@ -157,6 +132,12 @@ static long double ppowl(long double x, long double y){
 		float:   ppowf,	\
 		double:  ppowd,	\
 		default: ppowl)(x_, y_)
+
+#define PPOWU(t_, x_, y_)	\
+	_Generic((t_)0,	\
+		float:   ppowfu,	\
+		double:  ppowdu,	\
+		default: ppowlu)(x_, y_)
 
 #define POW_IMPL(t_)	\
 	if(y == 0){	\

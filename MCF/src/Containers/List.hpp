@@ -31,7 +31,7 @@ private:
 	struct X_Node {
 		X_Node *pPrev;
 		X_Node *pNext;
-		AlignedStorage<0, Element> vElement;
+		AlignedStorage<1, Element> vElement;
 	};
 
 public:

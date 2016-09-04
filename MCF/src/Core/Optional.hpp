@@ -25,7 +25,7 @@ private:
 	};
 
 private:
-	AlignedStorage<0, ElementT, std::exception_ptr> x_vStorage;
+	AlignedStorage<1, ElementT, std::exception_ptr> x_vStorage;
 	X_State x_eState;
 
 public:

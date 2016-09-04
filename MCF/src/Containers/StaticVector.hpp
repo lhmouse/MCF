@@ -30,7 +30,7 @@ public:
 	using Enumerator      = Impl_Enumerator::Enumerator      <StaticVector>;
 
 private:
-	AlignedStorage<0, Element> x_aStorage[kCapacityT];
+	AlignedStorage<1, Element> x_aStorage[kCapacityT];
 	std::size_t x_uSize;
 
 public:

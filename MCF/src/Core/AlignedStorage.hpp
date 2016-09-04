@@ -25,9 +25,18 @@ namespace Impl_AlignedStorage {
 	};
 }
 
-template<std::size_t kMinSizeT, typename ...ElementsT>
+template<std::size_t kElementCountT, typename ...ElementsT>
 struct AlignedStorage {
-	alignas(Impl_AlignedStorage::MaxHelper<alignof(ElementsT)...>::kValue) char a[Impl_AlignedStorage::MaxHelper<kMinSizeT, sizeof(ElementsT)...>::kValue];
+	enum : std::size_t {
+		kElementCount     = kElementCountT,
+		kElementSize      = Impl_AlignedStorage::MaxHelper<kMinSizeT, sizeof(ElementsT)...>::kValue,
+		kElementAlignment = Impl_AlignedStorage::MaxHelper<kMinSizeT, alignof(ElementsT)...>::kValue,
+	};
+
+	static_assert(kElementCount > 0, "kElementCount must be greater than zero.");
+	static_assert(kElementCount <= (std::size_t)-1 / kElementSize, "kElementCount is too large.");
+
+	alignas(kElementAlignment) char a[kElementSize * kElementCount];
 };
 
 }

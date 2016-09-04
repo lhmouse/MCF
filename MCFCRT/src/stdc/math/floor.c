@@ -7,7 +7,7 @@
 
 float floorf(float x){
 	register float ret;
-	uint64_t temp[2];
+	uint16_t fcw;
 	__asm__ volatile (
 		"fstcw word ptr[%1] \n"
 		"fld dword ptr[%2] \n"
@@ -21,7 +21,7 @@ float floorf(float x){
 		"mov word ptr[%1], ax \n"
 		__MCFCRT_FLT_RET_ST("%2")
 		"fldcw word ptr[%1] \n"
-		: __MCFCRT_FLT_RET_CONS(ret), "=m"(temp)
+		: __MCFCRT_FLT_RET_CONS(ret), "=m"(fcw)
 		: "m"(x)
 		: "ax", "cx"
 	);
@@ -30,7 +30,7 @@ float floorf(float x){
 
 double floor(double x){
 	register double ret;
-	uint64_t temp[2];
+	uint16_t fcw;
 	__asm__ volatile (
 		"fstcw word ptr[%1] \n"
 		"fld qword ptr[%2] \n"
@@ -44,7 +44,7 @@ double floor(double x){
 		"mov word ptr[%1], ax \n"
 		__MCFCRT_DBL_RET_ST("%2")
 		"fldcw word ptr[%1] \n"
-		: __MCFCRT_DBL_RET_CONS(ret), "=m"(temp)
+		: __MCFCRT_DBL_RET_CONS(ret), "=m"(fcw)
 		: "m"(x)
 		: "ax", "cx"
 	);
@@ -53,7 +53,7 @@ double floor(double x){
 
 long double floorl(long double x){
 	register long double ret;
-	uint64_t temp[2];
+	uint16_t fcw;
 	__asm__ volatile (
 		"fstcw word ptr[%1] \n"
 		"fld tbyte ptr[%2] \n"
@@ -67,7 +67,7 @@ long double floorl(long double x){
 		"mov word ptr[%1], ax \n"
 		__MCFCRT_LDBL_RET_ST("%2")
 		"fldcw word ptr[%1] \n"
-		: __MCFCRT_LDBL_RET_CONS(ret), "=m"(temp)
+		: __MCFCRT_LDBL_RET_CONS(ret), "=m"(fcw)
 		: "m"(x)
 		: "ax", "cx"
 	);

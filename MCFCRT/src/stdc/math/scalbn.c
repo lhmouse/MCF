@@ -3,19 +3,46 @@
 // Copyleft 2013 - 2016, LH_Mouse. All wrongs reserved.
 
 #include "../../env/_crtdef.h"
-
-extern float scalblnf(float x, long n);
-extern double scalbln(double x, long n);
-extern long double scalblnl(long double x, long n);
+#include "_asm.h"
 
 float scalbnf(float x, int n){
-	return scalblnf(x, n);
+	register float ret;
+	__asm__ volatile (
+		"fild dword ptr[%2] \n"
+		"fld dword ptr[%1] \n"
+		"fscale \n"
+		"fstp st(1) \n"
+		__MCFCRT_FLT_RET_ST("%1")
+		: __MCFCRT_FLT_RET_CONS(ret)
+		: "m"(x), "m"(n)
+	);
+	return ret;
 }
 
 double scalbn(double x, int n){
-	return scalbln(x, n);
+	register double ret;
+	__asm__ volatile (
+		"fild dword ptr[%2] \n"
+		"fld qword ptr[%1] \n"
+		"fscale \n"
+		"fstp st(1) \n"
+		__MCFCRT_DBL_RET_ST("%1")
+		: __MCFCRT_DBL_RET_CONS(ret)
+		: "m"(x), "m"(n)
+	);
+	return ret;
 }
 
 long double scalbnl(long double x, int n){
-	return scalblnl(x, n);
+	register long double ret;
+	__asm__ volatile (
+		"fild dword ptr[%2] \n"
+		"fld tbyte ptr[%1] \n"
+		"fscale \n"
+		"fstp st(1) \n"
+		__MCFCRT_LDBL_RET_ST("%1")
+		: __MCFCRT_LDBL_RET_CONS(ret)
+		: "m"(x), "m"(n)
+	);
+	return ret;
 }

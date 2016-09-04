@@ -5,9 +5,6 @@
 #ifndef __MCFCRT_EXT_MAKE_CONSTANT_H_
 #define __MCFCRT_EXT_MAKE_CONSTANT_H_
 
-#include "../env/_crtdef.h"
-
-#define __MCFCRT_MAKE_CONSTANT(__expr_)	\
-	(__builtin_constant_p(__expr_) ? (__expr_) : (__expr_))
+#define __MCFCRT_MAKE_CONSTANT(__expr_)     (__builtin_constant_p(__expr_) ? (__expr_) : (__expr_))
 
 #endif

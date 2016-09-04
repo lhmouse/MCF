@@ -3,9 +3,10 @@
 // Copyleft 2013 - 2016, LH_Mouse. All wrongs reserved.
 
 #include "exe.h"
-#include "../env/mcfwin.h"
 #include "../env/_seh_top.h"
+#include "../env/_fpu.h"
 #include "module.h"
+#include "../env/mcfwin.h"
 #include "../env/crt_module.h"
 #include "../env/standard_streams.h"
 #include "../ext/wcpcpy.h"
@@ -36,6 +37,8 @@ static bool RealStartup(unsigned uReason){
 	static bool s_bInitialized = false;
 
 	bool bRet = true;
+
+	__MCFCRT_FpuInitialize();
 
 	switch(uReason){
 	case DLL_PROCESS_ATTACH:

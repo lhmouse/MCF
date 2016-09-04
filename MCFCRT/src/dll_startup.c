@@ -24,10 +24,11 @@ static bool RealStartup(void *pInstance, unsigned uReason, bool bDynamic){
 
 	bool bRet = true;
 
+	__MCFCRT_FpuInitialize();
+
 	switch(uReason){
 	case DLL_PROCESS_ATTACH:
 		if(!s_bInitialized){
-			__MCFCRT_FpuInitialize();
 			bRet = __MCFCRT_StandardStreamsInit();
 			if(!bRet){
 				goto jCleanup00;
@@ -53,7 +54,6 @@ static bool RealStartup(void *pInstance, unsigned uReason, bool bDynamic){
 		break;
 
 	case DLL_THREAD_ATTACH:
-		__MCFCRT_FpuInitialize();
 		break;
 
 	case DLL_THREAD_DETACH:

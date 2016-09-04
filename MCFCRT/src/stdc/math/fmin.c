@@ -3,95 +3,19 @@
 // Copyleft 2013 - 2016, LH_Mouse. All wrongs reserved.
 
 #include "../../env/_crtdef.h"
-#include "_asm.h"
+
+extern float fdimf(float x, float y);
+extern double fdim(double x, double y);
+extern long double fdiml(long double x, long double y);
 
 float fminf(float x, float y){
-	register float ret;
-	uintptr_t unused;
-	__asm__ volatile (
-#ifdef _WIN64
-		"movss xmm0, dword ptr[%4] \n"
-		"movss xmm1, xmm0 \n"
-		"movss xmm2, dword ptr[%3] \n"
-		"cmpss xmm1, xmm2, 6 \n"
-		"xorps xmm0, xmm2 \n"
-		"andps xmm0, xmm1 \n"
-		"xorps xmm0, xmm2 \n"
-#else
-		"fld dword ptr[%4] \n"
-		"fcomp dword ptr[%3] \n"
-		"fstsw ax \n"
-		"and ah, 0x41 \n"
-		"neg ah \n"
-		"sbb eax, eax \n"
-		"xor %4, %3 \n"
-		"and %4, eax \n"
-		"xor %4, %3 \n"
-		"fld dword ptr[%4] \n"
-#endif
-		: "=r"(unused), "=r"(unused), __MCFCRT_FLT_RET_CONS(ret)
-		: "0"(&x), "1"(&y)
-		: "ax"
-	);
-	return ret;
+	return x - fdimf(x, y);
 }
 
 double fmin(double x, double y){
-	register double ret;
-	uintptr_t unused;
-	__asm__ volatile (
-#ifdef _WIN64
-		"movsd xmm0, qword ptr[%4] \n"
-		"movsd xmm1, xmm0 \n"
-		"movsd xmm2, qword ptr[%3] \n"
-		"cmpsd xmm1, xmm2, 6 \n"
-		"xorpd xmm0, xmm2 \n"
-		"andpd xmm0, xmm1 \n"
-		"xorpd xmm0, xmm2 \n"
-#else
-		"fld qword ptr[%4] \n"
-		"fcomp qword ptr[%3] \n"
-		"fstsw ax \n"
-		"and ah, 0x41 \n"
-		"neg ah \n"
-		"sbb eax, eax \n"
-		"xor %4, %3 \n"
-		"and %4, eax \n"
-		"xor %4, %3 \n"
-		"fld qword ptr[%4] \n"
-#endif
-		: "=r"(unused), "=r"(unused), __MCFCRT_DBL_RET_CONS(ret)
-		: "0"(&x), "1"(&y)
-		: "ax"
-	);
-	return ret;
+	return x - fdim(x, y);
 }
 
 long double fminl(long double x, long double y){
-	register long double ret;
-	uintptr_t unused;
-	__asm__ volatile (
-		"fld tbyte ptr[%3] \n"
-		"fld tbyte ptr[%4] \n"
-		"fcompp \n"
-		"fstsw ax \n"
-		"and ah, 0x41 \n"
-		"neg ah \n"
-#ifdef _WIN64
-		"sbb rax, rax \n"
-		"xor %4, %3 \n"
-		"and %4, rax \n"
-		"xor %4, %3 \n"
-#else
-		"sbb eax, eax \n"
-		"xor %4, %3 \n"
-		"and %4, eax \n"
-		"xor %4, %3 \n"
-#endif
-		"fld tbyte ptr[%4] \n"
-		: "=r"(unused), "=r"(unused), __MCFCRT_LDBL_RET_CONS(ret)
-		: "0"(&x), "1"(&y)
-		: "ax"
-	);
-	return ret;
+	return x - fdiml(x, y);
 }

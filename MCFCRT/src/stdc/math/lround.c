@@ -3,109 +3,37 @@
 // Copyleft 2013 - 2016, LH_Mouse. All wrongs reserved.
 
 #include "../../env/_crtdef.h"
-#include "_constants.h"
+
+extern float truncf(float x);
+extern double trunc(double x);
+extern long double truncl(long double x);
 
 long lroundf(float x){
-	long ret;
-	uint64_t temp[2];
-	__asm__ volatile (
-		"fstcw word ptr[%1] \n"
-#ifdef _WIN64
-		"movsx rdx, dword ptr[%2] \n"
-		"sar rdx, 63 \n"
-		"xor %3, %4 \n"
-		"and %3, rdx \n"
-#else
-		"mov edx, dword ptr[%2] \n"
-		"sar edx, 31 \n"
-		"xor %3, %4 \n"
-		"and %3, edx \n"
-#endif
-		"xor %3, %4 \n"
-		"fld dword ptr[%2] \n"
-		"movzx eax, word ptr[%1] \n"
-		"mov ecx, eax \n"
-		"or ecx, 0x0C00 \n"
-		"fadd qword ptr[%3] \n"
-		"mov word ptr[%1], cx \n"
-		"fldcw word ptr[%1] \n"
-		"frndint \n"
-		"mov word ptr[%1], ax \n"
-		"fistp dword ptr[%0] \n"
-		"fldcw word ptr[%1] \n"
-		: "=m"(ret), "=m"(temp)
-		: "m"(x), "r"(&__MCFCRT_kMath_Neg_0_5), "r"(&__MCFCRT_kMath_Pos_0_5)
-		: "ax", "cx", "dx"
-	);
-	return ret;
+	if(x < 0){
+		return (long)truncf(x - 0.5f);
+	} else if(x > 0){
+		return (long)truncf(x + 0.5f);
+	} else {
+		return 0;
+	}
 }
 
 long lround(double x){
-	long ret;
-	uint64_t temp[2];
-	__asm__ volatile (
-		"fstcw word ptr[%1] \n"
-#ifdef _WIN64
-		"movsx rdx, dword ptr[%2 + 4] \n"
-		"sar rdx, 63 \n"
-		"xor %3, %4 \n"
-		"and %3, rdx \n"
-#else
-		"mov edx, dword ptr[%2 + 4] \n"
-		"sar edx, 31 \n"
-		"xor %3, %4 \n"
-		"and %3, edx \n"
-#endif
-		"xor %3, %4 \n"
-		"fld qword ptr[%2] \n"
-		"movzx eax, word ptr[%1] \n"
-		"mov ecx, eax \n"
-		"or ecx, 0x0C00 \n"
-		"fadd qword ptr[%3] \n"
-		"mov word ptr[%1], cx \n"
-		"fldcw word ptr[%1] \n"
-		"frndint \n"
-		"mov word ptr[%1], ax \n"
-		"fistp dword ptr[%0] \n"
-		"fldcw word ptr[%1] \n"
-		: "=m"(ret), "=m"(temp)
-		: "m"(x), "r"(&__MCFCRT_kMath_Neg_0_5), "r"(&__MCFCRT_kMath_Pos_0_5)
-		: "ax", "cx", "dx"
-	);
-	return ret;
+	if(x < 0){
+		return (long)trunc(x - 0.5);
+	} else if(x > 0){
+		return (long)trunc(x + 0.5);
+	} else {
+		return 0;
+	}
 }
 
 long lroundl(long double x){
-	long ret;
-	uint64_t temp[2];
-	__asm__ volatile (
-		"fstcw word ptr[%1] \n"
-#ifdef _WIN64
-		"movsx rdx, word ptr[%2 + 8] \n"
-		"sar rdx, 63 \n"
-		"xor %3, %4 \n"
-		"and %3, rdx \n"
-#else
-		"movsx edx, word ptr[%2 + 8] \n"
-		"sar edx, 31 \n"
-		"xor %3, %4 \n"
-		"and %3, edx \n"
-#endif
-		"xor %3, %4 \n"
-		"fld tbyte ptr[%2] \n"
-		"movzx eax, word ptr[%1] \n"
-		"mov ecx, eax \n"
-		"or ecx, 0x0C00 \n"
-		"fadd qword ptr[%3] \n"
-		"mov word ptr[%1], cx \n"
-		"fldcw word ptr[%1] \n"
-		"frndint \n"
-		"mov word ptr[%1], ax \n"
-		"fistp dword ptr[%0] \n"
-		"fldcw word ptr[%1] \n"
-		: "=m"(ret), "=m"(temp)
-		: "m"(x), "r"(&__MCFCRT_kMath_Neg_0_5), "r"(&__MCFCRT_kMath_Pos_0_5)
-		: "ax", "cx", "dx"
-	);
-	return ret;
+	if(x < 0){
+		return (long)truncl(x - 0.5l);
+	} else if(x > 0){
+		return (long)truncl(x + 0.5l);
+	} else {
+		return 0;
+	}
 }

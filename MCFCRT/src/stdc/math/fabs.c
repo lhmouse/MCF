@@ -4,30 +4,26 @@
 
 #include "../../env/_crtdef.h"
 #include "_asm.h"
-
-#ifdef _WIN64
-static alignas(16) const uint32_t kFloatMask [] = { 0x7FFFFFFF, 0x7FFFFFFF, 0x7FFFFFFF, 0x7FFFFFFF };
-static alignas(16) const uint64_t kDoubleMask[] = { 0x7FFFFFFFFFFFFFFF, 0x7FFFFFFFFFFFFFFF };
-#endif
+#include "_constants.h"
 
 float fabsf(float x){
 	register float ret;
 	__asm__ volatile (
 #ifdef _WIN64
-		"movaps xmm1, xmmword ptr[%2] \n"
+		"movss xmm1, dword ptr[%2] \n"
 		"andps xmm0, xmm1 \n"
+		: __MCFCRT_FLT_RET_CONS(ret)
+		: "0"(x), "m"(__MCFCRT_kI32Max_p4)
+		: "ax", "xmm1"
 #else
 		"mov eax, dword ptr[%1] \n"
 		"shl eax, 1 \n"
 		"shr eax, 1 \n"
 		"mov dword ptr[%1], eax \n"
 		"fld dword ptr[%1] \n"
-#endif
 		: __MCFCRT_FLT_RET_CONS(ret)
-#ifdef _WIN64
-		: "Yz"(x), "m"(kFloatMask)
-#else
 		: "m"(x)
+		: "ax"
 #endif
 	);
 	return ret;
@@ -37,20 +33,20 @@ double fabs(double x){
 	register double ret;
 	__asm__ volatile (
 #ifdef _WIN64
-		"movapd xmm1, xmmword ptr[%2] \n"
+		"movsd xmm1, qword ptr[%2] \n"
 		"andpd xmm0, xmm1 \n"
+		: __MCFCRT_DBL_RET_CONS(ret)
+		: "0"(x), "m"(__MCFCRT_kI64Max_p2)
+		: "ax", "xmm1"
 #else
 		"mov eax, dword ptr[%1 + 4] \n"
 		"shl eax, 1 \n"
 		"shr eax, 1 \n"
 		"mov dword ptr[%1 + 4], eax \n"
 		"fld qword ptr[%1] \n"
-#endif
 		: __MCFCRT_DBL_RET_CONS(ret)
-#ifdef _WIN64
-		: "Yz"(x), "m"(kDoubleMask)
-#else
 		: "m"(x)
+		: "ax"
 #endif
 	);
 	return ret;
@@ -59,21 +55,14 @@ double fabs(double x){
 long double fabsl(long double x){
 	register long double ret;
 	__asm__ volatile (
-#ifdef _WIN64
-		"movzx edx, word ptr[%1 + 8] \n"
-		"shl edx, 17 \n"
-		"shr edx, 17 \n"
-		"mov word ptr[%1 + 8], dx \n"
-#else
-		"movzx edx, word ptr[%1 + 8] \n"
-		"shl edx, 17 \n"
-		"shr edx, 17 \n"
-		"mov word ptr[%1 + 8], dx \n"
+		"movzx eax, word ptr[%1 + 8] \n"
+		"shl eax, 17 \n"
+		"shr eax, 17 \n"
+		"mov word ptr[%1 + 8], ax \n"
 		"fld tbyte ptr[%1] \n"
-#endif
 		: __MCFCRT_LDBL_RET_CONS(ret)
 		: "m"(x)
-		: "dx"
+		: "ax"
 	);
 	return ret;
 }

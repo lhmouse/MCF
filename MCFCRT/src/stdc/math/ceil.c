@@ -3,73 +3,14 @@
 // Copyleft 2013 - 2016, LH_Mouse. All wrongs reserved.
 
 #include "../../env/_crtdef.h"
-#include "_asm.h"
+#include "_fpu.h"
 
 float ceilf(float x){
-	register float ret;
-	uint16_t fcw;
-	__asm__ volatile (
-		"fstcw word ptr[%1] \n"
-		"fld dword ptr[%2] \n"
-		"movzx eax, word ptr[%1] \n"
-		"mov ecx, eax \n"
-		"and ecx, 0xF3FF \n"
-		"or ecx, 0x0800 \n"
-		"mov word ptr[%1], cx \n"
-		"fldcw word ptr[%1] \n"
-		"frndint \n"
-		"mov word ptr[%1], ax \n"
-		__MCFCRT_FLT_RET_ST("%2")
-		"fldcw word ptr[%1] \n"
-		: __MCFCRT_FLT_RET_CONS(ret), "=m"(fcw)
-		: "m"(x)
-		: "ax", "cx"
-	);
-	return ret;
+	return (float)__MCFCRT_fceil(x);
 }
-
 double ceil(double x){
-	register double ret;
-	uint16_t fcw;
-	__asm__ volatile (
-		"fstcw word ptr[%1] \n"
-		"fld qword ptr[%2] \n"
-		"movzx eax, word ptr[%1] \n"
-		"mov ecx, eax \n"
-		"and ecx, 0xF3FF \n"
-		"or ecx, 0x0800 \n"
-		"mov word ptr[%1], cx \n"
-		"fldcw word ptr[%1] \n"
-		"frndint \n"
-		"mov word ptr[%1], ax \n"
-		__MCFCRT_DBL_RET_ST("%2")
-		"fldcw word ptr[%1] \n"
-		: __MCFCRT_DBL_RET_CONS(ret), "=m"(fcw)
-		: "m"(x)
-		: "ax", "cx"
-	);
-	return ret;
+	return (double)__MCFCRT_fceil(x);
 }
-
 long double ceill(long double x){
-	register long double ret;
-	uint16_t fcw;
-	__asm__ volatile (
-		"fstcw word ptr[%1] \n"
-		"fld tbyte ptr[%2] \n"
-		"movzx eax, word ptr[%1] \n"
-		"mov ecx, eax \n"
-		"and ecx, 0xF3FF \n"
-		"or ecx, 0x0800 \n"
-		"mov word ptr[%1], cx \n"
-		"fldcw word ptr[%1] \n"
-		"frndint \n"
-		"mov word ptr[%1], ax \n"
-		__MCFCRT_LDBL_RET_ST("%2")
-		"fldcw word ptr[%1] \n"
-		: __MCFCRT_LDBL_RET_CONS(ret), "=m"(fcw)
-		: "m"(x)
-		: "ax", "cx"
-	);
-	return ret;
+	return __MCFCRT_fceil(x);
 }

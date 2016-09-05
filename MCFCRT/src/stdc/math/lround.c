@@ -3,37 +3,24 @@
 // Copyleft 2013 - 2016, LH_Mouse. All wrongs reserved.
 
 #include "../../env/_crtdef.h"
+#include "_fpu.h"
 
-extern float truncf(float x);
-extern double trunc(double x);
-extern long double truncl(long double x);
+static inline long real_lround(long double x){
+	if(x < 0){
+		return (long)__MCFCRT_ftrunc(x - 0.5l);
+	} else if(x > 0){
+		return (long)__MCFCRT_ftrunc(x + 0.5l);
+	} else {
+		return 0;
+	}
+}
 
 long lroundf(float x){
-	if(x < 0){
-		return (long)truncf(x - 0.5f);
-	} else if(x > 0){
-		return (long)truncf(x + 0.5f);
-	} else {
-		return 0;
-	}
+	return real_lround(x);
 }
-
 long lround(double x){
-	if(x < 0){
-		return (long)trunc(x - 0.5);
-	} else if(x > 0){
-		return (long)trunc(x + 0.5);
-	} else {
-		return 0;
-	}
+	return real_lround(x);
 }
-
 long lroundl(long double x){
-	if(x < 0){
-		return (long)truncl(x - 0.5l);
-	} else if(x > 0){
-		return (long)truncl(x + 0.5l);
-	} else {
-		return 0;
-	}
+	return real_lround(x);
 }

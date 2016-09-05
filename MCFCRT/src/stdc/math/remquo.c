@@ -28,12 +28,12 @@ static inline long double fpu_remquo(long double x, long double y, int *quo){
 	int fsw;
 	const long double rem = __MCFCRT_fremainder(&fsw, x, y);
 #if __FLOAT_WORD_ORDER__ == __ORDER_LITTLE_ENDIAN__
-	const int sign = (int8_t)((((const int8_t *)&x)[9] ^ ((const int8_t *)&y)[9]) & 0x80);
+	const int sign = ((const int8_t *)&x)[9] ^ ((const int8_t *)&y)[9];
 #else
-	const int sign = (int8_t)((((const int8_t *)&x)[0] ^ ((const int8_t *)&y)[0]) & 0x80);
+	const int sign = ((const int8_t *)&x)[0] ^ ((const int8_t *)&y)[0];
 #endif
 	const int bits = quo_table[(fsw >> 8) & 0xFF];
-	*quo = sign + bits;
+	*quo = (sign & -8) | bits;
 	return rem;
 }
 

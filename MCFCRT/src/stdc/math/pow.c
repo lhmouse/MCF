@@ -3,220 +3,46 @@
 // Copyleft 2013 - 2016, LH_Mouse. All wrongs reserved.
 
 #include "../../env/_crtdef.h"
-#include "../../env/bail.h"
-#include "_asm.h"
+#include "_fpu.h"
 
-// postive pow float unsigned
-static float ppowfu(float x, unsigned y){
+static inline long double fpu_pow(long double x, long double y){
 	if(y == 0){
-		return 1.0f;
+		return 1;
 	}
-	register float ret = x;
-	unsigned i = (unsigned)__builtin_clz(y);
-	unsigned mask = 0x80000000u >> i;
-	while(++i < 32){
-		ret *= ret;
-		mask >>= 1;
-		if((y & mask) != 0){
-			ret *= x;
+	if(y == 1){
+		return x;
+	}
+	if(x == 0){
+		return 0;
+	}
+	// x^y = 2^(y*log2(x))
+	long double ylog2x;
+	bool neg;
+	if(x > 0){
+		ylog2x = y * __MCFCRT_fyl2x(1.0l, x);
+		neg = false;
+	} else {
+		if(__MCFCRT_frndintany(y) != y){
+			__builtin_trap();
 		}
+		ylog2x = y * __MCFCRT_fyl2x(1.0l, -x);
+		int fsw;
+		neg = __MCFCRT_fmod(&fsw, y, 2.0l) != 0;
 	}
-	return ret;
-}
-static double ppowdu(double x, unsigned y){
-	if(y == 0){
-		return 1.0;
+	const long double i = __MCFCRT_frndintany(ylog2x), m = ylog2x - i;
+	const long double pr = __MCFCRT_fscale(1.0l, i) * (__MCFCRT_f2xm1(m) + 1.0l);
+	if(neg){
+		return -pr;
 	}
-	register double ret = x;
-	unsigned i = (unsigned)__builtin_clz(y);
-	unsigned mask = 0x80000000u >> i;
-	while(++i < 32){
-		ret *= ret;
-		mask >>= 1;
-		if((y & mask) != 0){
-			ret *= x;
-		}
-	}
-	return ret;
+	return pr;
 }
-static long double ppowlu(long double x, unsigned y){
-	if(y == 0){
-		return 1.0l;
-	}
-	register long double ret = x;
-	unsigned i = (unsigned)__builtin_clz(y);
-	unsigned mask = 0x80000000u >> i;
-	while(++i < 32){
-		ret *= ret;
-		mask >>= 1;
-		if((y & mask) != 0){
-			ret *= x;
-		}
-	}
-	return ret;
-}
-
-// postive pow float float
-static float ppowf(float x, float y){
-	register float ret;
-	__asm__ volatile (
-		"fld dword ptr[%2] \n"
-		"fld dword ptr[%1] \n"
-		"fyl2x \n"
-		"fld st \n"
-		"frndint \n"
-		"fsub st(1), st \n"
-		"fld1 \n"
-		"fscale \n"
-		"fstp st(1) \n"
-		"fxch st(1) \n"
-		"f2xm1 \n"
-		"fld1 \n"
-		"faddp st(1), st \n"
-		"fmulp st(1), st \n"
-		__MCFCRT_FLT_RET_ST("%1")
-		: __MCFCRT_FLT_RET_CONS(ret)
-		: "m"(x), "m"(y)
-	);
-	return ret;
-}
-static double ppowd(double x, double y){
-	register double ret;
-	__asm__ volatile (
-		"fld qword ptr[%2] \n"
-		"fld qword ptr[%1] \n"
-		"fyl2x \n"
-		"fld st \n"
-		"frndint \n"
-		"fsub st(1), st \n"
-		"fld1 \n"
-		"fscale \n"
-		"fstp st(1) \n"
-		"fxch st(1) \n"
-		"f2xm1 \n"
-		"fld1 \n"
-		"faddp st(1), st \n"
-		"fmulp st(1), st \n"
-		__MCFCRT_DBL_RET_ST("%1")
-		: __MCFCRT_DBL_RET_CONS(ret)
-		: "m"(x), "m"(y)
-	);
-	return ret;
-}
-static long double ppowl(long double x, long double y){
-	register long double ret;
-	__asm__ volatile (
-		"fld tbyte ptr[%2] \n"
-		"fld tbyte ptr[%1] \n"
-		"fyl2x \n"
-		"fld st \n"
-		"frndint \n"
-		"fsub st(1), st \n"
-		"fld1 \n"
-		"fscale \n"
-		"fstp st(1) \n"
-		"fxch st(1) \n"
-		"f2xm1 \n"
-		"fld1 \n"
-		"faddp st(1), st \n"
-		"fmulp st(1), st \n"
-		__MCFCRT_LDBL_RET_ST("%1")
-		: __MCFCRT_LDBL_RET_CONS(ret)
-		: "m"(x), "m"(y)
-	);
-	return ret;
-}
-
-#define PPOW(t_, x_, y_)	\
-	_Generic((t_)0,	\
-		float:   ppowf,	\
-		double:  ppowd,	\
-		default: ppowl)(x_, y_)
-
-#define PPOWU(t_, x_, y_)	\
-	_Generic((t_)0,	\
-		float:   ppowfu,	\
-		double:  ppowdu,	\
-		default: ppowlu)(x_, y_)
-
-#define POW_IMPL(t_)	\
-	if(y == 0){	\
-		return (t_)1.0;	\
-	}	\
-	if(x == 0){	\
-		return 0.0;	\
-	}	\
-	const t_ whole = _Generic((t_)0,	\
-		float:   __builtin_floorf,	\
-		double:  __builtin_floor,	\
-		default: __builtin_floorl)(y);	\
-	const t_ frac = y - whole;	\
-	if(x > 0){	\
-		if(y > (t_)INT_MAX){	\
-			return PPOW(t_, x, y);	\
-		} else if(y < (t_)INT_MIN){	\
-			return (t_)1.0 / PPOW(t_, x, -y);	\
-		} else {	\
-			t_ ret;	\
-			if(y > 0){	\
-				ret = PPOWU(t_, x, (unsigned)whole);	\
-			} else {	\
-				ret = (t_)1.0 / PPOWU(t_, x, (unsigned)-whole);	\
-			}	\
-			if(frac != 0){	\
-				ret *= PPOW(t_, x, frac);	\
-			}	\
-			return ret;	\
-		}	\
-	} else {	\
-		if(frac != 0){	\
-			_MCFCRT_Bail(L"只能求负数的整数次幂。");	\
-		}	\
-		if(y > (t_)INT_MAX){	\
-			if(_Generic((t_)0,	\
-				float:   __builtin_fmodf,	\
-				double:  __builtin_fmod,	\
-				default: __builtin_fmodl)(whole, 2.0) == 0.0)	\
-			{	\
-				return PPOW(t_, -x, whole);	\
-			} else {	\
-				return -PPOW(t_, -x, whole);	\
-			}	\
-		} else if(y < (t_)INT_MIN){	\
-			if(_Generic((t_)0,	\
-				float:   __builtin_fmodf,	\
-				double:  __builtin_fmod,	\
-				default: __builtin_fmodl)(whole, 2.0) == 0.0)	\
-			{	\
-				return (t_)1.0 / PPOW(t_, -x, whole);	\
-			} else {	\
-				return (t_)-1.0 / PPOW(t_, -x, whole);	\
-			}	\
-		} else {	\
-			if(whole > 0){	\
-				const unsigned idx = (unsigned)whole;	\
-				if(idx % 2 == 0){	\
-					return PPOWU(t_, -x, idx);	\
-				} else {	\
-					return -PPOWU(t_, -x, idx);	\
-				}	\
-			} else {	\
-				const unsigned idx = (unsigned)-whole;	\
-				if(idx % 2 == 0){	\
-					return (t_)1.0 / PPOWU(t_, -x, idx);	\
-				} else {	\
-					return (t_)-1.0 / PPOWU(t_, -x, idx);	\
-				}	\
-			}	\
-		}	\
-	}
 
 float powf(float x, float y){
-	POW_IMPL(float)
+	return (float)fpu_pow(x, y);
 }
 double pow(double x, double y){
-	POW_IMPL(double)
+	return (double)fpu_pow(x, y);
 }
 long double powl(long double x, long double y){
-	POW_IMPL(long double)
+	return fpu_pow(x, y);
 }

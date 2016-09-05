@@ -3,94 +3,64 @@
 // Copyleft 2013 - 2016, LH_Mouse. All wrongs reserved.
 
 #include "../../env/_crtdef.h"
-#include "_asm.h"
-#include "_constants.h"
+
+static inline long double fpu_fdim(long double x, long double y){
+	long double ret;
+	__asm__(
+		"fcom st(1) \n"
+		"fstsw ax \n"
+		"test ah, 0x41 \n"
+		"fldz \n"
+		"fxch st(2) \n"
+		"jnz 1f \n"
+		"	fsubr st(1) \n"
+		"	fxch st(2) \n"
+		"1: \n"
+		"fstp st \n"
+		"fstp st \n"
+		: "=&t"(ret)
+		: "0"(x), "u"(y)
+		: "st(1)"
+	);
+	return ret;
+}
 
 float fdimf(float x, float y){
-	register float ret;
-	__asm__ volatile (
 #ifdef _WIN64
-		"subss xmm0, %2 \n"
-		"xorps xmm2, xmm2 \n"
-		"cmpltss xmm2, xmm0 \n"
-		"andps xmm0, xmm2 \n"
-		: __MCFCRT_FLT_RET_CONS(ret)
+	float ret;
+	__asm__(
+		"movaps xmm2, xmm1 \n"
+		"cmpltps xmm1, xmm0 \n"
+		"andps xmm0, xmm1 \n"
+		"andps xmm2, xmm1 \n"
+		"subps xmm0, xmm2 \n"
+		: "=Yz"(ret)
 		: "0"(x), "x"(y)
-		: "ax", "xmm2"
-#else
-		"fld dword ptr[%1] \n"
-		"fld dword ptr[%2] \n"
-		"fsubp st(1), st \n"
-		"ftst \n"
-		"fstsw ax \n"
-		"fstp dword ptr[%1] \n"
-		"and ah, 0x41 \n"
-		"neg ah \n"
-		"sbb eax, eax \n"
-		"not eax \n"
-		"and dword ptr[%1], eax \n"
-		"fld dword ptr[%1] \n"
-		: __MCFCRT_FLT_RET_CONS(ret)
-		: "m"(x), "m"(y)
-		: "ax"
-#endif
+		: "xmm2"
 	);
 	return ret;
+#else
+	return (float)fpu_fdim(x, y);
+#endif
 }
-
 double fdim(double x, double y){
-	register double ret;
-	__asm__ volatile (
 #ifdef _WIN64
-		"subsd xmm0, %2 \n"
-		"xorpd xmm2, xmm2 \n"
-		"cmpltsd xmm2, xmm0 \n"
-		"andpd xmm0, xmm2 \n"
-		: __MCFCRT_DBL_RET_CONS(ret)
+	double ret;
+	__asm__(
+		"movapd xmm2, xmm1 \n"
+		"cmpltpd xmm1, xmm0 \n"
+		"andpd xmm0, xmm1 \n"
+		"andpd xmm2, xmm1 \n"
+		"subpd xmm0, xmm2 \n"
+		: "=Yz"(ret)
 		: "0"(x), "x"(y)
-		: "ax", "xmm2"
+		: "xmm2"
+	);
+	return ret;
 #else
-		"fld qword ptr[%1] \n"
-		"fld qword ptr[%2] \n"
-		"fsubp st(1), st \n"
-		"ftst \n"
-		"fstsw ax \n"
-		"fstp qword ptr[%1] \n"
-		"and ah, 0x41 \n"
-		"neg ah \n"
-		"sbb eax, eax \n"
-		"not eax \n"
-		"and dword ptr[%1], eax \n"
-		"and dword ptr[%1 + 4], eax \n"
-		"fld qword ptr[%1] \n"
-		: __MCFCRT_DBL_RET_CONS(ret)
-		: "m"(x), "m"(y)
-		: "ax"
+	return (double)fpu_fdim(x, y);
 #endif
-	);
-	return ret;
 }
-
 long double fdiml(long double x, long double y){
-	register long double ret;
-	__asm__ volatile (
-		"fld tbyte ptr[%1] \n"
-		"fld tbyte ptr[%2] \n"
-		"fsubp st(1), st \n"
-		"ftst \n"
-		"fstsw ax \n"
-		"fstp tbyte ptr[%1] \n"
-		"and ah, 0x41 \n"
-		"neg ah \n"
-		"sbb eax, eax \n"
-		"not eax \n"
-		"and dword ptr[%1], eax \n"
-		"and dword ptr[%1 + 4], eax \n"
-		"and word ptr[%1 + 8], ax \n"
-		"fld tbyte ptr[%1] \n"
-		: __MCFCRT_LDBL_RET_CONS(ret)
-		: "m"(x), "m"(y)
-		: "ax"
-	);
-	return ret;
+	return fpu_fdim(x, y);
 }

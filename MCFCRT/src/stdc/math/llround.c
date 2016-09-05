@@ -5,7 +5,7 @@
 #include "../../env/_crtdef.h"
 #include "_fpu.h"
 
-static inline long long real_llround(long double x){
+static inline long long fpu_llround(long double x){
 	if(x < 0){
 		return (long long)__MCFCRT_ftrunc(x - 0.5l);
 	} else if(x > 0){
@@ -16,11 +16,11 @@ static inline long long real_llround(long double x){
 }
 
 long long llroundf(float x){
-	return real_llround(x);
+	return fpu_llround(x);
 }
 long long llround(double x){
-	return real_llround(x);
+	return fpu_llround(x);
 }
 long long llroundl(long double x){
-	return real_llround(x);
+	return fpu_llround(x);
 }

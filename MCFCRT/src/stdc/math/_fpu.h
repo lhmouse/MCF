@@ -71,13 +71,22 @@ static inline long double __MCFCRT_ffloor(long double __x) _MCFCRT_NOEXCEPT {
 
 static inline long double __MCFCRT_fsqrt(long double __x) _MCFCRT_NOEXCEPT {
 	long double __ret;
-	__asm__("fsqrt \n" : "=&t"(__ret) : "0"(__x));
+	__asm__(
+		"fsqrt \n"
+		: "=&t"(__ret)
+		: "0"(__x)
+	);
 	return __ret;
 }
 
 static inline long double __MCFCRT_fpatan(long double __y, long double __x) _MCFCRT_NOEXCEPT {
 	long double __ret;
-	__asm__("fpatan \n" : "=&t"(__ret) : "0"(__x), "u"(__y));
+	__asm__(
+		"fpatan \n"
+		: "=&t"(__ret)
+		: "0"(__x), "u"(__y)
+		: "st(1)"
+	);
 	return __ret;
 }
 

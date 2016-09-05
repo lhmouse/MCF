@@ -5,16 +5,16 @@
 #include "../../env/_crtdef.h"
 #include "_fpu.h"
 
-static inline long double real_asin(long double x){
+static inline long double fpu_asin(long double x){
 	return __MCFCRT_fpatan(x, __MCFCRT_fsqrt(1.0l - x * x));
 }
 
 float asinf(float x){
-	return (float)real_asin(x);
+	return (float)fpu_asin(x);
 }
 double asin(double x){
-	return (double)real_asin(x);
+	return (double)fpu_asin(x);
 }
 long double asinl(long double x){
-	return real_asin(x);
+	return fpu_asin(x);
 }

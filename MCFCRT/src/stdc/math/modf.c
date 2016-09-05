@@ -3,19 +3,23 @@
 // Copyleft 2013 - 2016, LH_Mouse. All wrongs reserved.
 
 #include "../../env/_crtdef.h"
-
-extern float truncf(float x);
-extern double trunc(double x);
-extern long double truncl(long double x);
+#include "_fpu.h"
 
 float modff(float value, float *iptr){
-	return value - (*iptr = truncf(value));
+	const long double x = value;
+	const long double i = __MCFCRT_ftrunc(x);
+	*iptr = (float)i;
+	return (float)(x - i);
 }
-
 double modf(double value, double *iptr){
-	return value - (*iptr = trunc(value));
+	const long double x = value;
+	const long double i = __MCFCRT_ftrunc(x);
+	*iptr = (double)i;
+	return (double)(x - i);
 }
-
 long double modfl(long double value, long double *iptr){
-	return value - (*iptr = truncl(value));
+	const long double x = value;
+	const long double i = __MCFCRT_ftrunc(x);
+	*iptr = i;
+	return (x - i);
 }

@@ -4,18 +4,59 @@
 
 #include "../../env/_crtdef.h"
 
-extern float fdimf(float x, float y);
-extern double fdim(double x, double y);
-extern long double fdiml(long double x, long double y);
+static inline long double fpu_fmax(long double x, long double y){
+	long double ret;
+	__asm__(
+		"fcom st(1) \n"
+		"fstsw ax \n"
+		"test ah, 0x41 \n"
+		"jnz 1f \n"
+		"	fxch st(1) \n"
+		"1: \n"
+		"fstp st \n"
+		: "=&t"(ret)
+		: "0"(x), "u"(y)
+		: "st(1)"
+	);
+	return ret;
+}
 
 float fmaxf(float x, float y){
-	return x + fdimf(y, x);
+#ifdef _WIN64
+	float ret;
+	__asm__(
+		"movaps xmm2, xmm0 \n"
+		"cmpltps xmm0, xmm1 \n"
+		"xorps xmm1, xmm2 \n"
+		"andps xmm0, xmm1 \n"
+		"xorps xmm0, xmm2 \n"
+		: "=Yz"(ret)
+		: "0"(x), "x"(y)
+		: "xmm2"
+	);
+	return ret;
+#else
+	return (float)fpu_fmax(x, y);
+#endif
 }
-
 double fmax(double x, double y){
-	return x + fdim(y, x);
+#ifdef _WIN64
+	double ret;
+	__asm__(
+		"movapd xmm2, xmm0 \n"
+		"cmpltpd xmm0, xmm1 \n"
+		"xorpd xmm1, xmm2 \n"
+		"andpd xmm0, xmm1 \n"
+		"xorpd xmm0, xmm2 \n"
+		: "=Yz"(ret)
+		: "0"(x), "x"(y)
+		: "xmm2"
+	);
+	return ret;
+#else
+	return (double)fpu_fmax(x, y);
+#endif
 }
-
 long double fmaxl(long double x, long double y){
-	return x + fdiml(y, x);
+	return fpu_fmax(x, y);
 }

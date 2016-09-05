@@ -5,16 +5,16 @@
 #include "../../env/_crtdef.h"
 #include "_fpu.h"
 
-static inline long double real_acos(long double x){
+static inline long double fpu_acos(long double x){
 	return __MCFCRT_fpatan(__MCFCRT_fsqrt(1.0l - x * x), x);
 }
 
 float acosf(float x){
-	return (float)real_acos(x);
+	return (float)fpu_acos(x);
 }
 double acos(double x){
-	return (double)real_acos(x);
+	return (double)fpu_acos(x);
 }
 long double acosl(long double x){
-	return real_acos(x);
+	return fpu_acos(x);
 }

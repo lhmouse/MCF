@@ -6,17 +6,17 @@
 #include "_fpu.h"
 
 float logbf(float x){
-	long double exp;
-	__MCFCRT_fxtract(&exp, x);
-	return (float)exp;
+	long double n;
+	__MCFCRT_fxtract(&n, x);
+	return (float)n;
 }
 double logb(double x){
-	long double exp;
-	__MCFCRT_fxtract(&exp, x);
-	return (double)exp;
+	long double n;
+	__MCFCRT_fxtract(&n, x);
+	return (double)n;
 }
 long double logbl(long double x){
-	long double exp;
-	__MCFCRT_fxtract(&exp, x);
-	return exp;
+	long double n;
+	__MCFCRT_fxtract(&n, x);
+	return n;
 }

@@ -8,7 +8,7 @@
 static inline long double fpu_cos(long double x){
 	long double ret;
 	if(!__MCFCRT_fcos(&ret, x)){
-		__MCFCRT_fcos(&ret, __MCFCRT_fmod(x, 0x1p61l * 3.1415926535897932384626433832795029l));
+		__MCFCRT_fcos(&ret, __MCFCRT_fmod(x, 0x1p61l * 3.1415926535897932384626433832795l));
 	}
 	return ret;
 }

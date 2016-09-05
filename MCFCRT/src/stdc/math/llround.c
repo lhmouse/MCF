@@ -6,13 +6,13 @@
 #include "_fpu.h"
 
 static inline long long fpu_llround(long double x){
+	long long ret = 0;
 	if(x < 0){
-		return (long long)__MCFCRT_ftrunc(x - 0.5l);
+		__MCFCRT_fistpll(&ret, __MCFCRT_ftrunc(x - 0.5l));
 	} else if(x > 0){
-		return (long long)__MCFCRT_ftrunc(x + 0.5l);
-	} else {
-		return 0;
+		__MCFCRT_fistpll(&ret, __MCFCRT_ftrunc(x + 0.5l));
 	}
+	return ret;
 }
 
 long long llroundf(float x){

@@ -8,7 +8,7 @@
 static inline long double fpu_tan(long double x){
 	long double ret;
 	if(!__MCFCRT_ftan(&ret, x)){
-		__MCFCRT_ftan(&ret, __MCFCRT_fmod(x, 0x1p61l * 3.1415926535897932384626433832795029l));
+		__MCFCRT_ftan(&ret, __MCFCRT_fmod(x, 0x1p61l * 3.1415926535897932384626433832795l));
 	}
 	return ret;
 }

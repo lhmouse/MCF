@@ -3,74 +3,21 @@
 // Copyleft 2013 - 2016, LH_Mouse. All wrongs reserved.
 
 #include "../../env/_crtdef.h"
-#include "_asm.h"
+#include "_fpu.h"
+
+static inline long double fpu_exp(long double x){
+	// e^x = 2^(x log2e)
+	const long double xlog2e = x * __MCFCRT_fldl2e();
+	const long double i = __MCFCRT_frndintany(xlog2e), m = xlog2e - i;
+	return __MCFCRT_fscale(1.0l, i) * (__MCFCRT_f2xm1(m) + 1.0l);
+}
 
 float expf(float x){
-	register float ret;
-	__asm__ volatile (
-		"fldl2e \n"
-		"fmul dword ptr[%1] \n"
-		"fld st \n"
-		"frndint \n"
-		"fsub st(1), st \n"
-		"fld1 \n"
-		"fscale \n"
-		"fstp st(1) \n"
-		"fxch st(1) \n"
-		"f2xm1 \n"
-		"fld1 \n"
-		"faddp st(1), st \n"
-		"fmulp st(1), st \n"
-		__MCFCRT_FLT_RET_ST("%1")
-		: __MCFCRT_FLT_RET_CONS(ret)
-		: "m"(x)
-	);
-	return ret;
+	return (float)fpu_exp(x);
 }
-
 double exp(double x){
-	register double ret;
-	__asm__ volatile (
-		"fldl2e \n"
-		"fmul qword ptr[%1] \n"
-		"fld st \n"
-		"frndint \n"
-		"fsub st(1), st \n"
-		"fld1 \n"
-		"fscale \n"
-		"fstp st(1) \n"
-		"fxch st(1) \n"
-		"f2xm1 \n"
-		"fld1 \n"
-		"faddp st(1), st \n"
-		"fmulp st(1), st \n"
-		__MCFCRT_DBL_RET_ST("%1")
-		: __MCFCRT_DBL_RET_CONS(ret)
-		: "m"(x)
-	);
-	return ret;
+	return (double)fpu_exp(x);
 }
-
 long double expl(long double x){
-	register long double ret;
-	__asm__ volatile (
-		"fld tbyte ptr[%1] \n"
-		"fldl2e \n"
-		"fmulp st(1), st \n"
-		"fld st \n"
-		"frndint \n"
-		"fsub st(1), st \n"
-		"fld1 \n"
-		"fscale \n"
-		"fstp st(1) \n"
-		"fxch st(1) \n"
-		"f2xm1 \n"
-		"fld1 \n"
-		"faddp st(1), st \n"
-		"fmulp st(1), st \n"
-		__MCFCRT_LDBL_RET_ST("%1")
-		: __MCFCRT_LDBL_RET_CONS(ret)
-		: "m"(x)
-	);
-	return ret;
+	return fpu_exp(x);
 }

@@ -3,83 +3,25 @@
 // Copyleft 2013 - 2016, LH_Mouse. All wrongs reserved.
 
 #include "../../env/_crtdef.h"
-#include "_asm.h"
-#include "_constants.h"
+#include "_fpu.h"
+
+static inline long double fpu_frexp(long double x, int *exp){
+	if(x == 0){
+		*exp = 0;
+		return 0;
+	}
+	long double n;
+	const long double m = __MCFCRT_fxtract(&n, x);
+	__MCFCRT_fistp(exp, n + 1.0l);
+	return m * 0.5l;
+}
 
 float frexpf(float x, int *exp){
-	register float ret;
-	__asm__ volatile (
-		"fld dword ptr[%1] \n"
-		"ftst \n"
-		"fstsw ax \n"
-		"test ah, 0x40 \n"
-		"jz 1f \n"
-		"	fldz \n"
-		"	jmp 2f \n"
-		"1: \n"
-		"fxtract \n"
-		"fmul qword ptr[%3] \n"
-		"fld1 \n"
-		"faddp st(2), st \n"
-		"fxch st(1) \n"
-		"2: \n"
-		"fistp dword ptr[%2] \n"
-		__MCFCRT_FLT_RET_ST("%1")
-		: __MCFCRT_FLT_RET_CONS(ret)
-		: "m"(x), "r"(exp), "m"(__MCFCRT_kMath_Pos_0_5)
-		: "ax"
-	);
-	return ret;
+	return (float)fpu_frexp(x, exp);
 }
-
 double frexp(double x, int *exp){
-	register double ret;
-	__asm__ volatile (
-		"fld qword ptr[%1] \n"
-		"ftst \n"
-		"fstsw ax \n"
-		"test ah, 0x40 \n"
-		"jz 1f \n"
-		"	fldz \n"
-		"	jmp 2f \n"
-		"1: \n"
-		"fxtract \n"
-		"fmul qword ptr[%3] \n"
-		"fld1 \n"
-		"faddp st(2), st \n"
-		"fxch st(1) \n"
-		"2: \n"
-		"fistp dword ptr[%2] \n"
-		__MCFCRT_DBL_RET_ST("%1")
-		: __MCFCRT_DBL_RET_CONS(ret)
-		: "m"(x), "r"(exp), "m"(__MCFCRT_kMath_Pos_0_5)
-		: "ax"
-	);
-	return ret;
+	return (double)fpu_frexp(x, exp);
 }
-
 long double frexpl(long double x, int *exp){
-	register long double ret;
-	__asm__ volatile (
-		"fld tbyte ptr[%1] \n"
-		"ftst \n"
-		"fstsw ax \n"
-		"test ah, 0x40 \n"
-		"jz 1f \n"
-		"	fldz \n"
-		"	jmp 2f \n"
-		"1: \n"
-		"fxtract \n"
-		"fmul qword ptr[%3] \n"
-		"fld1 \n"
-		"faddp st(2), st \n"
-		"fxch st(1) \n"
-		"2: \n"
-		"fistp dword ptr[%2] \n"
-		__MCFCRT_LDBL_RET_ST("%1")
-		: __MCFCRT_LDBL_RET_CONS(ret)
-		: "m"(x), "r"(exp), "m"(__MCFCRT_kMath_Pos_0_5)
-		: "ax"
-	);
-	return ret;
+	return fpu_frexp(x, exp);
 }

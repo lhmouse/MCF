@@ -3,43 +3,18 @@
 // Copyleft 2013 - 2016, LH_Mouse. All wrongs reserved.
 
 #include "../../env/_crtdef.h"
-#include "_asm.h"
+#include "_fpu.h"
+
+static inline long double fpu_log(long double x){
+	return __MCFCRT_fyl2x(__MCFCRT_fldln2(), x);
+}
 
 float logf(float x){
-	register float ret;
-	__asm__ volatile (
-		"fldln2 \n"
-		"fld dword ptr[%1] \n"
-		"fyl2x \n"
-		__MCFCRT_FLT_RET_ST("%1")
-		: __MCFCRT_FLT_RET_CONS(ret)
-		: "m"(x)
-	);
-	return ret;
+	return (float)fpu_log(x);
 }
-
 double log(double x){
-	register double ret;
-	__asm__ volatile (
-		"fldln2 \n"
-		"fld qword ptr[%1] \n"
-		"fyl2x \n"
-		__MCFCRT_DBL_RET_ST("%1")
-		: __MCFCRT_DBL_RET_CONS(ret)
-		: "m"(x)
-	);
-	return ret;
+	return (double)fpu_log(x);
 }
-
 long double logl(long double x){
-	register long double ret;
-	__asm__ volatile (
-		"fldln2 \n"
-		"fld tbyte ptr[%1] \n"
-		"fyl2x \n"
-		__MCFCRT_LDBL_RET_ST("%1")
-		: __MCFCRT_LDBL_RET_CONS(ret)
-		: "m"(x)
-	);
-	return ret;
+	return fpu_log(x);
 }

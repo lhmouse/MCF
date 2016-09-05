@@ -3,46 +3,14 @@
 // Copyleft 2013 - 2016, LH_Mouse. All wrongs reserved.
 
 #include "../../env/_crtdef.h"
-#include "_asm.h"
+#include "_fpu.h"
 
-float scalblnf(float x, long n){
-	register float ret;
-	__asm__ volatile (
-		"fild dword ptr[%2] \n"
-		"fld dword ptr[%1] \n"
-		"fscale \n"
-		"fstp st(1) \n"
-		__MCFCRT_FLT_RET_ST("%1")
-		: __MCFCRT_FLT_RET_CONS(ret)
-		: "m"(x), "m"(n)
-	);
-	return ret;
+float scalblnf(float x, int n){
+	return (float)__MCFCRT_fscale(x, n);
 }
-
-double scalbln(double x, long n){
-	register double ret;
-	__asm__ volatile (
-		"fild dword ptr[%2] \n"
-		"fld qword ptr[%1] \n"
-		"fscale \n"
-		"fstp st(1) \n"
-		__MCFCRT_DBL_RET_ST("%1")
-		: __MCFCRT_DBL_RET_CONS(ret)
-		: "m"(x), "m"(n)
-	);
-	return ret;
+double scalbln(double x, int n){
+	return (double)__MCFCRT_fscale(x, n);
 }
-
-long double scalblnl(long double x, long n){
-	register long double ret;
-	__asm__ volatile (
-		"fild dword ptr[%2] \n"
-		"fld tbyte ptr[%1] \n"
-		"fscale \n"
-		"fstp st(1) \n"
-		__MCFCRT_LDBL_RET_ST("%1")
-		: __MCFCRT_LDBL_RET_CONS(ret)
-		: "m"(x), "m"(n)
-	);
-	return ret;
+long double scalblnl(long double x, int n){
+	return __MCFCRT_fscale(x, n);
 }

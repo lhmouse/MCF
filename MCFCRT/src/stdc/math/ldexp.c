@@ -3,19 +3,14 @@
 // Copyleft 2013 - 2016, LH_Mouse. All wrongs reserved.
 
 #include "../../env/_crtdef.h"
-
-extern float scalblnf(float x, long n);
-extern double scalbln(double x, long n);
-extern long double scalblnl(long double x, long n);
+#include "_fpu.h"
 
 float ldexpf(float x, int n){
-	return scalblnf(x, n);
+	return (float)__MCFCRT_fscale(x, n);
 }
-
 double ldexp(double x, int n){
-	return scalbln(x, n);
+	return (double)__MCFCRT_fscale(x, n);
 }
-
 long double ldexpl(long double x, int n){
-	return scalblnl(x, n);
+	return __MCFCRT_fscale(x, n);
 }

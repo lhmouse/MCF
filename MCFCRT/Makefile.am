@@ -152,7 +152,6 @@ mcfcrt_sources =	\
 	src/stdc/math/sqrt.c	\
 	src/stdc/math/tan.c	\
 	src/stdc/math/trunc.c	\
-	src/stdc/math/_constants.c	\
 	src/stdc/stdlib/abort.c	\
 	src/stdc/stdlib/abs.c	\
 	src/stdc/stdlib/calloc.c	\

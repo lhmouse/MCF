@@ -3,55 +3,18 @@
 // Copyleft 2013 - 2016, LH_Mouse. All wrongs reserved.
 
 #include "../../env/_crtdef.h"
-#include "_asm.h"
+#include "_fpu.h"
+
+static inline long double real_asin(long double x){
+	return __MCFCRT_fpatan(x, __MCFCRT_fsqrt(1.0l - x * x));
+}
 
 float asinf(float x){
-	register float ret;
-	__asm__ volatile (
-		"fld dword ptr[%1] \n"
-		"fld st \n"
-		"fmul st, st \n"
-		"fld1\n"
-		"fsubrp st(1), st \n"
-		"fsqrt \n"
-		"fpatan \n"
-		__MCFCRT_FLT_RET_ST("%1")
-		: __MCFCRT_FLT_RET_CONS(ret)
-		: "m"(x)
-	);
-	return ret;
+	return (float)real_asin(x);
 }
-
 double asin(double x){
-	register double ret;
-	__asm__ volatile (
-		"fld qword ptr[%1] \n"
-		"fld st \n"
-		"fmul st, st \n"
-		"fld1\n"
-		"fsubrp st(1), st \n"
-		"fsqrt \n"
-		"fpatan \n"
-		__MCFCRT_DBL_RET_ST("%1")
-		: __MCFCRT_DBL_RET_CONS(ret)
-		: "m"(x)
-	);
-	return ret;
+	return (double)real_asin(x);
 }
-
 long double asinl(long double x){
-	register long double ret;
-	__asm__ volatile (
-		"fld tbyte ptr[%1] \n"
-		"fld st \n"
-		"fmul st, st \n"
-		"fld1\n"
-		"fsubrp st(1), st \n"
-		"fsqrt \n"
-		"fpatan \n"
-		__MCFCRT_LDBL_RET_ST("%1")
-		: __MCFCRT_LDBL_RET_CONS(ret)
-		: "m"(x)
-	);
-	return ret;
+	return real_asin(x);
 }

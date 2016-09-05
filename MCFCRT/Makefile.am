@@ -133,7 +133,6 @@ mcfcrt_sources =	\
 	src/stdc/math/fmod.c	\
 	src/stdc/math/frexp.c	\
 	src/stdc/math/hypot.c	\
-	src/stdc/math/ilogb.c	\
 	src/stdc/math/ldexp.c	\
 	src/stdc/math/llround.c	\
 	src/stdc/math/log.c	\

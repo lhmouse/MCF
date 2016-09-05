@@ -226,7 +226,7 @@ static inline long double __MCFCRT_fyl2xp1(long double __y, long double __x) _MC
 	return __ret;
 }
 
-static inline long double __MCFCRT_fmod(long double __x, long double __y) _MCFCRT_NOEXCEPT {
+static inline long double __MCFCRT_fmod(int *__fsw, long double __x, long double __y) _MCFCRT_NOEXCEPT {
 	long double __ret;
 	__asm__(
 		"1: \n"
@@ -235,13 +235,13 @@ static inline long double __MCFCRT_fmod(long double __x, long double __y) _MCFCR
 		"	test ah, 4 \n"
 		"	jnz 1b \n"
 		"fstp st(1) \n"
-		: "=&t"(__ret)
+		: "=&t"(__ret), "=a"(*__fsw)
 		: "0"(__x), "u"(__y)
-		: "ax", "st(1)"
+		: "st(1)"
 	);
 	return __ret;
 }
-static inline long double __MCFCRT_fremainder(long double __x, long double __y) _MCFCRT_NOEXCEPT {
+static inline long double __MCFCRT_fremainder(int *__fsw, long double __x, long double __y) _MCFCRT_NOEXCEPT {
 	long double __ret;
 	__asm__(
 		"1: \n"
@@ -250,9 +250,9 @@ static inline long double __MCFCRT_fremainder(long double __x, long double __y) 
 		"	test ah, 4 \n"
 		"	jnz 1b \n"
 		"fstp st(1) \n"
-		: "=&t"(__ret)
+		: "=&t"(__ret), "=a"(*__fsw)
 		: "0"(__x), "u"(__y)
-		: "ax", "st(1)"
+		: "st(1)"
 	);
 	return __ret;
 }

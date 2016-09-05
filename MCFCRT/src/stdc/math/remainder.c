@@ -6,11 +6,14 @@
 #include "_fpu.h"
 
 float remainderf(float x, float y){
-	return (float)__MCFCRT_fremainder(x, y);
+	int fsw;
+	return (float)__MCFCRT_fremainder(&fsw, x, y);
 }
 double remainder(double x, double y){
-	return (double)__MCFCRT_fremainder(x, y);
+	int fsw;
+	return (double)__MCFCRT_fremainder(&fsw, x, y);
 }
 long double remainderl(long double x, long double y){
-	return __MCFCRT_fremainder(x, y);
+	int fsw;
+	return __MCFCRT_fremainder(&fsw, x, y);
 }

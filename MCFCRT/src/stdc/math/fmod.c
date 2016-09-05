@@ -6,11 +6,14 @@
 #include "_fpu.h"
 
 float fmodf(float x, float y){
-	return (float)__MCFCRT_fmod(x, y);
+	int fsw;
+	return (float)__MCFCRT_fmod(&fsw, x, y);
 }
 double fmod(double x, double y){
-	return (double)__MCFCRT_fmod(x, y);
+	int fsw;
+	return (double)__MCFCRT_fmod(&fsw, x, y);
 }
 long double fmodl(long double x, long double y){
-	return __MCFCRT_fmod(x, y);
+	int fsw;
+	return __MCFCRT_fmod(&fsw, x, y);
 }

@@ -5,6 +5,7 @@
 #include "../../env/_crtdef.h"
 #include "_fpu.h"
 
+__attribute__((__section__(".text")))
 static const uint8_t quo_table[256] = {
 	0, 4, 1, 5, 0, 4, 1, 5, 0, 4, 1, 5, 0, 4, 1, 5,
 	0, 4, 1, 5, 0, 4, 1, 5, 0, 4, 1, 5, 0, 4, 1, 5,

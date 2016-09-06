@@ -11,13 +11,13 @@
 
 float fabsf(float x){
 #ifdef _WIN64
-	static alignas(16) const uint32_t mask = 0x7FFFFFFFu;
+	static const uint32_t mmask = 0x7FFFFFFFu;
 	float ret;
 	__asm__(
 		"movss xmm1, dword ptr[%2] \n"
 		"andps xmm0, xmm1 \n"
 		: "=Yz"(ret)
-		: "0"(x), "m"(mask)
+		: "0"(x), "m"(mmask)
 		: "xmm1"
 	);
 	return ret;
@@ -27,13 +27,13 @@ float fabsf(float x){
 }
 double fabs(double x){
 #ifdef _WIN64
-	static alignas(16) const uint64_t mask = 0x7FFFFFFFFFFFFFFFu;
+	static const uint64_t mmask = 0x7FFFFFFFFFFFFFFFu;
 	double ret;
 	__asm__(
 		"movsd xmm1, qword ptr[%2] \n"
 		"andpd xmm0, xmm1 \n"
 		: "=Yz"(ret)
-		: "0"(x), "m"(mask)
+		: "0"(x), "m"(mmask)
 		: "xmm1"
 	);
 	return ret;

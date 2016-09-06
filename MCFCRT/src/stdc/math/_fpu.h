@@ -173,10 +173,8 @@ static inline long double __MCFCRT_fmod(int *__fsw, long double __x, long double
 		"	fstsw ax \n"
 		"	test ah, 0x04 \n"
 		"	jnz 1b \n"
-		"fstp st(1) \n"
 		: "=&t"(__ret), "=a"(*__fsw)
 		: "0"(__x), "u"(__y)
-		: "st(1)"
 	);
 	return __ret;
 }
@@ -188,10 +186,8 @@ static inline long double __MCFCRT_fremainder(int *__fsw, long double __x, long 
 		"	fstsw ax \n"
 		"	test ah, 0x04 \n"
 		"	jnz 1b \n"
-		"fstp st(1) \n"
 		: "=&t"(__ret), "=a"(*__fsw)
 		: "0"(__x), "u"(__y)
-		: "st(1)"
 	);
 	return __ret;
 }

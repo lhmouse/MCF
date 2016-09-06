@@ -18,10 +18,10 @@ static inline long double fpu_cbrt(long double x){
 		long double ylog2x;
 		bool neg;
 		if(xsign == __MCFCRT_FpuPositive){
-			ylog2x = 0.33333333333333333333333333333l * __MCFCRT_fyl2x(1.0l, x);
+			ylog2x = (1.0l / 3) * __MCFCRT_fyl2x(1.0l, x);
 			neg = false;
 		} else {
-			ylog2x = 0.33333333333333333333333333333l * __MCFCRT_fyl2x(1.0l, -x);
+			ylog2x = (1.0l / 3) * __MCFCRT_fyl2x(1.0l, -x);
 			neg = true;
 		}
 		const long double i = __MCFCRT_frndintany(ylog2x), m = ylog2x - i;

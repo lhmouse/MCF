@@ -10,25 +10,27 @@
 #undef cbrtl
 
 static inline long double fpu_cbrt(long double x){
-	if(x == 0){
+	const __MCFCRT_FpuSign xsign = __MCFCRT_ftest(x);
+	if(xsign == __MCFCRT_FpuZero){
 		return 0;
-	}
-	// x^(1/3) = 2^((1/3)*log2(x))
-	long double ylog2x;
-	bool neg;
-	if(x > 0){
-		ylog2x = 0.33333333333333333333333333333l * __MCFCRT_fyl2x(1.0l, x);
-		neg = false;
 	} else {
-		ylog2x = 0.33333333333333333333333333333l * __MCFCRT_fyl2x(1.0l, -x);
-		neg = true;
+		// x^(1/3) = 2^((1/3)*log2(x))
+		long double ylog2x;
+		bool neg;
+		if(xsign == __MCFCRT_FpuPositive){
+			ylog2x = 0.33333333333333333333333333333l * __MCFCRT_fyl2x(1.0l, x);
+			neg = false;
+		} else {
+			ylog2x = 0.33333333333333333333333333333l * __MCFCRT_fyl2x(1.0l, -x);
+			neg = true;
+		}
+		const long double i = __MCFCRT_frndintany(ylog2x), m = ylog2x - i;
+		long double ret = __MCFCRT_fscale(1.0l, i) * (__MCFCRT_f2xm1(m) + 1.0l);
+		if(neg){
+			ret = __MCFCRT_fneg(ret);
+		}
+		return ret;
 	}
-	const long double i = __MCFCRT_frndintany(ylog2x), m = ylog2x - i;
-	const long double pr = __MCFCRT_fscale(1.0l, i) * (__MCFCRT_f2xm1(m) + 1.0l);
-	if(neg){
-		return -pr;
-	}
-	return pr;
 }
 
 float cbrtf(float x){

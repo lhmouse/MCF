@@ -3,20 +3,11 @@
 // Copyleft 2013 - 2016, LH_Mouse. All wrongs reserved.
 
 #include "../../env/_crtdef.h"
+#include "_fpu.h"
 
 #undef fabsf
 #undef fabs
 #undef fabsl
-
-static inline long double fpu_fabs(long double x){
-	long double ret;
-	__asm__(
-		"fabs \n"
-		: "=&t"(ret)
-		: "0"(x)
-	);
-	return ret;
-}
 
 float fabsf(float x){
 #ifdef _WIN64
@@ -31,7 +22,7 @@ float fabsf(float x){
 	);
 	return ret;
 #else
-	return (float)fpu_fabs(x);
+	return (float)__MCFCRT_fabs(x);
 #endif
 }
 double fabs(double x){
@@ -47,9 +38,9 @@ double fabs(double x){
 	);
 	return ret;
 #else
-	return (double)fpu_fabs(x);
+	return (double)__MCFCRT_fabs(x);
 #endif
 }
 long double fabsl(long double x){
-	return fpu_fabs(x);
+	return __MCFCRT_fabs(x);
 }

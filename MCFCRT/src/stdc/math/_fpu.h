@@ -9,6 +9,58 @@
 
 _MCFCRT_EXTERN_C_BEGIN
 
+typedef enum __MCFCRT_tagFpuSign {
+	__MCFCRT_FpuPositive  = 0x00,
+	__MCFCRT_FpuNegative  = 0x01,
+	__MCFCRT_FpuZero      = 0x40,
+	__MCFCRT_FpuUnordered = 0x41,
+} __MCFCRT_FpuSign;
+
+static inline __MCFCRT_FpuSign __MCFCRT_ftest(long double __x) _MCFCRT_NOEXCEPT {
+	__MCFCRT_FpuSign __ret;
+	__asm__(
+		"ftst \n"
+		"fstsw ax \n"
+		"shr eax, 8 \n"
+		"and eax, 0x41 \n"
+		: "=a"(__ret)
+		: "t"(__x)
+	);
+	return __ret;
+}
+
+static inline bool __MCFCRT_fgetsign(long double __x) _MCFCRT_NOEXCEPT {
+	bool __ret;
+	__asm__(
+		"fxam \n"
+		"fstsw ax \n"
+		"shr eax, 9 \n"
+		"and eax, 0x01 \n"
+		: "=a"(__ret)
+		: "t"(__x)
+	);
+	return __ret;
+}
+
+static inline long double __MCFCRT_fabs(long double __x) _MCFCRT_NOEXCEPT {
+	long double __ret;
+	__asm__(
+		"fabs \n"
+		: "=&t"(__ret)
+		: "0"(__x)
+	);
+	return __ret;
+}
+static inline long double __MCFCRT_fneg(long double __x) _MCFCRT_NOEXCEPT {
+	long double __ret;
+	__asm__(
+		"fchs \n"
+		: "=&t"(__ret)
+		: "0"(__x)
+	);
+	return __ret;
+}
+
 static inline void __MCFCRT_fistp(int *__p, long double __x) _MCFCRT_NOEXCEPT {
 	__asm__(
 		"fistp dword ptr[%0] \n"
@@ -117,7 +169,7 @@ static inline bool __MCFCRT_fsin(long double *__ret, long double __x) _MCFCRT_NO
 	__asm__ goto (
 		"fsin \n"
 		"fstsw ax \n"
-		"test ah, 4 \n"
+		"test ah, 0x04 \n"
 		"jnz %l2 \n"
 		"fstp tbyte ptr[%0] \n"
 		:
@@ -133,7 +185,7 @@ static inline bool __MCFCRT_fcos(long double *__ret, long double __x) _MCFCRT_NO
 	__asm__ goto (
 		"fcos \n"
 		"fstsw ax \n"
-		"test ah, 4 \n"
+		"test ah, 0x04 \n"
 		"jnz %l2 \n"
 		"fstp tbyte ptr[%0] \n"
 		:
@@ -149,7 +201,7 @@ static inline bool __MCFCRT_ftan(long double *__ret, long double __x) _MCFCRT_NO
 	__asm__ goto (
 		"fptan \n"
 		"fstsw ax \n"
-		"test ah, 4 \n"
+		"test ah, 0x04 \n"
 		"jnz %l2 \n"
 		"fstp st \n"
 		"fstp tbyte ptr[%0] \n"
@@ -232,7 +284,7 @@ static inline long double __MCFCRT_fmod(int *__fsw, long double __x, long double
 		"1: \n"
 		"	fprem \n"
 		"	fstsw ax \n"
-		"	test ah, 4 \n"
+		"	test ah, 0x04 \n"
 		"	jnz 1b \n"
 		"fstp st(1) \n"
 		: "=&t"(__ret), "=a"(*__fsw)
@@ -247,7 +299,7 @@ static inline long double __MCFCRT_fremainder(int *__fsw, long double __x, long 
 		"1: \n"
 		"	fprem1 \n"
 		"	fstsw ax \n"
-		"	test ah, 4 \n"
+		"	test ah, 0x04 \n"
 		"	jnz 1b \n"
 		"fstp st(1) \n"
 		: "=&t"(__ret), "=a"(*__fsw)

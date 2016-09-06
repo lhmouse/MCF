@@ -154,6 +154,8 @@ mcfcrt_sources =	\
 	src/stdc/math/trunc.c	\
 	src/stdc/math/fma.c	\
 	src/stdc/math/cbrt.c	\
+	src/stdc/math/signbit.c	\
+	src/stdc/math/copysign.c	\
 	src/stdc/stdlib/abort.c	\
 	src/stdc/stdlib/abs.c	\
 	src/stdc/stdlib/calloc.c	\

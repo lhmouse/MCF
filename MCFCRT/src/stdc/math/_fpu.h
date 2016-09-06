@@ -263,10 +263,8 @@ static inline long double __MCFCRT_fscale(long double __x, long double __n) _MCF
 	long double __ret;
 	__asm__(
 		"fscale \n"
-		"fstp st(1) \n"
 		: "=&t"(__ret)
 		: "0"(__x), "u"(__n)
-		: "st(1)"
 	);
 	return __ret;
 }

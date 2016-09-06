@@ -6,10 +6,10 @@ extern "C" unsigned _MCFCRT_Main(void) noexcept {
 	using namespace MCF;
 
 	const DynamicLinkLibrary dll(L"MCFCRT-9.DLL"_wsv);
-	const auto f = dll.RequireProcAddress<double (*)(double, int)>("scalbn"_nsv);
+	const auto f = dll.RequireProcAddress<float (*)(float, float)>("fdimf"_nsv);
 
-	for(int i = -100; i <= 100; ++i){
-		const auto d = static_cast<float>(i / 10.0);
+	for(int i = -10; i <= 10; ++i){
+		const auto d = static_cast<float>(i);
 		std::printf("f(%f) = %.16f\n", (double)d, (double)f(d, 5));
 	}
 

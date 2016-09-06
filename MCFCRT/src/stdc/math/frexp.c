@@ -5,6 +5,10 @@
 #include "../../env/_crtdef.h"
 #include "_fpu.h"
 
+#undef frexpf
+#undef frexp
+#undef frexpl
+
 static inline long double fpu_frexp(long double x, int *exp){
 	if(x == 0){
 		*exp = 0;

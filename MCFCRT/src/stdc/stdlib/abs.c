@@ -4,17 +4,19 @@
 
 #include "../../env/_crtdef.h"
 
+#undef abs
+#undef labs
+#undef llabs
+
 int abs(int i){
-	register const uint32_t mask = (uint32_t)(i >> (sizeof(int) * __CHAR_BIT__ - 1));
+	register const unsigned mask = (unsigned)(i >> (sizeof(int) * CHAR_BIT - 1));
 	return (int)(((unsigned)i ^ mask) - mask);
 }
-
 long labs(long i){
-	register const unsigned long mask = (unsigned long)(i >> (sizeof(long) * __CHAR_BIT__ - 1));
+	register const unsigned long mask = (unsigned long)(i >> (sizeof(long) * CHAR_BIT - 1));
 	return (long)(((unsigned long)i ^ mask) - mask);
 }
-
 long long llabs(long long i){
-	register const unsigned long long mask = (unsigned long long)(i >> (sizeof(long long) * __CHAR_BIT__ - 1));
+	register const unsigned long long mask = (unsigned long long)(i >> (sizeof(long long) * CHAR_BIT - 1));
 	return (long long)(((unsigned long long)i ^ mask) - mask);
 }

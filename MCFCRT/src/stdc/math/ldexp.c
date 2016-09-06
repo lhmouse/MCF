@@ -5,6 +5,10 @@
 #include "../../env/_crtdef.h"
 #include "_fpu.h"
 
+#undef ldexpf
+#undef ldexp
+#undef ldexpl
+
 float ldexpf(float x, int n){
 	return (float)__MCFCRT_fscale(x, n);
 }

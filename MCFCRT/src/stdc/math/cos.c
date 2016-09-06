@@ -5,6 +5,10 @@
 #include "../../env/_crtdef.h"
 #include "_fpu.h"
 
+#undef cosf
+#undef cos
+#undef cosl
+
 static inline long double fpu_cos(long double x){
 	long double ret;
 	if(!__MCFCRT_fcos(&ret, x)){

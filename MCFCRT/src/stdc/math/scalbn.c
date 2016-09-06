@@ -5,6 +5,10 @@
 #include "../../env/_crtdef.h"
 #include "_fpu.h"
 
+#undef scalbnf
+#undef scalbn
+#undef scalbnl
+
 float scalbnf(float x, int n){
 	return (float)__MCFCRT_fscale(x, n);
 }

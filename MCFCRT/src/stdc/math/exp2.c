@@ -5,6 +5,10 @@
 #include "../../env/_crtdef.h"
 #include "_fpu.h"
 
+#undef exp2f
+#undef exp2
+#undef exp2l
+
 static inline long double fpu_exp2(long double x){
 	const long double i = __MCFCRT_frndintany(x), m = x - i;
 	return __MCFCRT_fscale(1.0l, i) * (__MCFCRT_f2xm1(m) + 1.0l);

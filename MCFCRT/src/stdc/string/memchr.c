@@ -6,6 +6,8 @@
 #include "../../ext/expect.h"
 #include <emmintrin.h>
 
+#undef memchr
+
 void *memchr(const void *s, int c, size_t n){
 	register const char *rp = s;
 	const char *const rend = rp + n;

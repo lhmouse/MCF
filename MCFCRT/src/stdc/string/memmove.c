@@ -4,6 +4,8 @@
 
 #include "_memcpy_inl.h"
 
+#undef memmove
+
 void *memmove(void *s1, const void *s2, size_t n){
 	if(s1 < s2){
 		__MCFCRT_CopyForward(s1, s2, n);

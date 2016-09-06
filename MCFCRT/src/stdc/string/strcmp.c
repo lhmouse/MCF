@@ -6,6 +6,8 @@
 #include "../../ext/expect.h"
 #include <emmintrin.h>
 
+#undef strcmp
+
 int strcmp(const char *s1, const char *s2){
 	register const char *rp1 = s1;
 	register const char *rp2 = s2;

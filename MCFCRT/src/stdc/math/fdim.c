@@ -4,6 +4,10 @@
 
 #include "../../env/_crtdef.h"
 
+#undef fdimf
+#undef fdim
+#undef fdiml
+
 static inline long double fpu_fdim(long double x, long double y){
 	long double ret;
 	__asm__(

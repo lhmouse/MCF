@@ -5,6 +5,10 @@
 #include "../../env/_crtdef.h"
 #include "_fpu.h"
 
+#undef powf
+#undef pow
+#undef powl
+
 static inline long double fpu_pow(long double x, long double y){
 	if(y == 0){
 		return 1;

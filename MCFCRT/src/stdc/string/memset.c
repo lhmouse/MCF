@@ -5,6 +5,8 @@
 #include "../../env/_crtdef.h"
 #include <intrin.h>
 
+#undef memset
+
 void *memset(void *s, int c, size_t n){
 	register char *wp = s;
 	char *const wend = wp + n;

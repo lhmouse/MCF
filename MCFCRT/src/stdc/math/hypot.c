@@ -5,6 +5,10 @@
 #include "../../env/_crtdef.h"
 #include "_fpu.h"
 
+#undef hypotf
+#undef hypot
+#undef hypotl
+
 static inline long double fpu_hypot(long double x, long double y){
 	return __MCFCRT_fsqrt(x * x + y * y);
 }

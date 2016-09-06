@@ -5,6 +5,10 @@
 #include "../../env/_crtdef.h"
 #include "_fpu.h"
 
+#undef tanf
+#undef tan
+#undef tanl
+
 static inline long double fpu_tan(long double x){
 	long double ret;
 	if(!__MCFCRT_ftan(&ret, x)){

@@ -6,6 +6,8 @@
 #include "../../ext/expect.h"
 #include <emmintrin.h>
 
+#undef wcsncmp
+
 int wcsncmp(const wchar_t *s1, const wchar_t *s2, size_t n){
 	register const wchar_t *rp1 = s1;
 	const wchar_t *const rend1 = rp1 + n;

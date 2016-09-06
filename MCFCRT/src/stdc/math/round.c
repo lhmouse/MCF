@@ -5,6 +5,10 @@
 #include "../../env/_crtdef.h"
 #include "_fpu.h"
 
+#undef roundf
+#undef round
+#undef roundl
+
 static inline long double fpu_round(long double x){
 	int ret = 0;
 	if(x < 0){

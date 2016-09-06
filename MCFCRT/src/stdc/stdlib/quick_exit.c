@@ -5,6 +5,8 @@
 #include "../../env/_crtdef.h"
 #include "../../env/crt_module.h"
 
+#undef quick_exit
+
 _Noreturn void quick_exit(int status){
 	_MCFCRT_ExitProcess((unsigned)status, _MCFCRT_kExitTypeQuick);
 }

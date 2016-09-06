@@ -4,6 +4,8 @@
 
 #include "_memcpy_inl.h"
 
+#undef memcpy
+
 void *memcpy(void *s1, const void *s2, size_t n){
 	__MCFCRT_CopyForward(s1, s2, n);
 	return s1;

@@ -5,6 +5,8 @@
 #include "../../env/_crtdef.h"
 #include "../../env/heap.h"
 
+#undef realloc
+
 __attribute__((__noinline__))
 void *realloc(void *p, size_t cb){
 	return _MCFCRT_realloc(p, cb);

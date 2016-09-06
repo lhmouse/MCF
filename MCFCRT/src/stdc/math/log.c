@@ -5,6 +5,10 @@
 #include "../../env/_crtdef.h"
 #include "_fpu.h"
 
+#undef logf
+#undef log
+#undef logl
+
 static inline long double fpu_log(long double x){
 	return __MCFCRT_fyl2x(__MCFCRT_fldln2(), x);
 }

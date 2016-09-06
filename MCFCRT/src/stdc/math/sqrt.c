@@ -5,6 +5,10 @@
 #include "../../env/_crtdef.h"
 #include "_fpu.h"
 
+#undef sqrtf
+#undef sqrt
+#undef sqrtl
+
 float sqrtf(float x){
 	return (float) __MCFCRT_fsqrt(x);
 }

@@ -5,6 +5,8 @@
 #include "../../env/_crtdef.h"
 #include "../../env/heap.h"
 
+#undef malloc
+
 __attribute__((__noinline__))
 void *malloc(size_t cb){
 	return _MCFCRT_malloc(cb);

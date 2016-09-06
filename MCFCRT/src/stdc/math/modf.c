@@ -5,6 +5,10 @@
 #include "../../env/_crtdef.h"
 #include "_fpu.h"
 
+#undef modff
+#undef modf
+#undef modfl
+
 float modff(float value, float *iptr){
 	const long double x = value;
 	const long double i = __MCFCRT_ftrunc(x);

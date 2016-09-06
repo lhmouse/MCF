@@ -5,6 +5,8 @@
 #include "../../env/_crtdef.h"
 #include "../../env/bail.h"
 
+#undef abort
+
 _Noreturn void abort(void){
 	_MCFCRT_Bail(L"应用程序调用了 abort()。");
 }

@@ -5,6 +5,10 @@
 #include "../../env/_crtdef.h"
 #include "_fpu.h"
 
+#undef truncf
+#undef trunc
+#undef truncl
+
 float truncf(float x){
 	return (float)__MCFCRT_ftrunc(x);
 }

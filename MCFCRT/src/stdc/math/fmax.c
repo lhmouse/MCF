@@ -4,6 +4,10 @@
 
 #include "../../env/_crtdef.h"
 
+#undef fmaxf
+#undef fmax
+#undef fmaxl
+
 static inline long double fpu_fmax(long double x, long double y){
 	long double ret;
 	__asm__(

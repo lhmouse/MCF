@@ -5,6 +5,10 @@
 #include "../../env/_crtdef.h"
 #include "_fpu.h"
 
+#undef expf
+#undef exp
+#undef expl
+
 static inline long double fpu_exp(long double x){
 	// e^x = 2^(x*log2(e))
 	const long double xlog2e = x * __MCFCRT_fldl2e();

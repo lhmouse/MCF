@@ -5,6 +5,10 @@
 #include "../../env/_crtdef.h"
 #include "_fpu.h"
 
+#undef logbf
+#undef logb
+#undef logbl
+
 float logbf(float x){
 	long double n;
 	__MCFCRT_fxtract(&n, x);

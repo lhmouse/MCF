@@ -5,6 +5,8 @@
 #include "../../env/_crtdef.h"
 #include "../../env/heap.h"
 
+#undef free
+
 __attribute__((__noinline__))
 void free(void *p){
 	_MCFCRT_free(p);

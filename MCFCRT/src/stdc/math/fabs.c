@@ -4,6 +4,10 @@
 
 #include "../../env/_crtdef.h"
 
+#undef fabsf
+#undef fabs
+#undef fabsl
+
 static inline long double fpu_fabs(long double x){
 	long double ret;
 	__asm__(

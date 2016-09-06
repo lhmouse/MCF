@@ -5,6 +5,8 @@
 #include "../../env/_crtdef.h"
 #include "../../env/heap.h"
 
+#undef calloc
+
 __attribute__((__noinline__))
 void *calloc(size_t nmemb, size_t size){
 	return _MCFCRT_calloc(nmemb, size);

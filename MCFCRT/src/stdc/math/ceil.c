@@ -5,6 +5,10 @@
 #include "../../env/_crtdef.h"
 #include "_fpu.h"
 
+#undef ceilf
+#undef ceil
+#undef ceill
+
 float ceilf(float x){
 	return (float)__MCFCRT_fceil(x);
 }

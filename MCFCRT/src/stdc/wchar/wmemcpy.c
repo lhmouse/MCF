@@ -4,6 +4,8 @@
 
 #include "../string/_memcpy_inl.h"
 
+#undef wmemcpy
+
 wchar_t *wmemcpy(wchar_t *restrict s1, const wchar_t *restrict s2, size_t n){
 	__MCFCRT_CopyForward(s1, s2, sizeof(wchar_t) * n);
 	return s1;

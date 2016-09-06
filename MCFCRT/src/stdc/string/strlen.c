@@ -6,6 +6,8 @@
 #include "../../ext/expect.h"
 #include <emmintrin.h>
 
+#undef strlen
+
 size_t strlen(const char *s){
 	register const char *rp = s;
 	// 如果 rp 是对齐到字的，就不用考虑越界的问题。

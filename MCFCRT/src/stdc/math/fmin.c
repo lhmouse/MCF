@@ -4,6 +4,10 @@
 
 #include "../../env/_crtdef.h"
 
+#undef fminf
+#undef fmin
+#undef fminl
+
 static inline long double fpu_fmin(long double x, long double y){
 	long double ret;
 	__asm__(

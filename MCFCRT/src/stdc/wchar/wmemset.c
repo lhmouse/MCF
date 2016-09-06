@@ -5,6 +5,8 @@
 #include "../../env/_crtdef.h"
 #include <intrin.h>
 
+#undef wmemset
+
 wchar_t *wmemset(wchar_t *s, wchar_t c, size_t n){
 	register wchar_t *wp = s;
 	wchar_t *const wend = wp + n;

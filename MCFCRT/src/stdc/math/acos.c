@@ -5,6 +5,10 @@
 #include "../../env/_crtdef.h"
 #include "_fpu.h"
 
+#undef acosf
+#undef acos
+#undef acosl
+
 static inline long double fpu_acos(long double x){
 	return __MCFCRT_fpatan(__MCFCRT_fsqrt(1.0l - x * x), x);
 }

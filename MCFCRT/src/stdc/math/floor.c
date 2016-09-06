@@ -5,6 +5,10 @@
 #include "../../env/_crtdef.h"
 #include "_fpu.h"
 
+#undef floorf
+#undef floor
+#undef floorl
+
 float floorf(float x){
 	return (float)__MCFCRT_ffloor(x);
 }

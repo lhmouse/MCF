@@ -6,6 +6,8 @@
 #include "../../ext/expect.h"
 #include <emmintrin.h>
 
+#undef wcslen
+
 size_t wcslen(const wchar_t *s){
 	register const wchar_t *rp = s;
 	// 如果 rp 是对齐到字的，就不用考虑越界的问题。

@@ -5,6 +5,10 @@
 #include "../../env/_crtdef.h"
 #include "_fpu.h"
 
+#undef atanf
+#undef atan
+#undef atanl
+
 float atanf(float x){
 	return (float) __MCFCRT_fpatan(x, 1.0l);
 }

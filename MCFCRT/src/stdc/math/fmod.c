@@ -5,6 +5,10 @@
 #include "../../env/_crtdef.h"
 #include "_fpu.h"
 
+#undef fmodf
+#undef fmod
+#undef fmodl
+
 float fmodf(float x, float y){
 	int fsw;
 	return (float)__MCFCRT_fmod(&fsw, x, y);

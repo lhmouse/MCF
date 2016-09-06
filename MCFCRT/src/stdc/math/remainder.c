@@ -5,6 +5,10 @@
 #include "../../env/_crtdef.h"
 #include "_fpu.h"
 
+#undef remainderf
+#undef remainder
+#undef remainderl
+
 float remainderf(float x, float y){
 	int fsw;
 	return (float)__MCFCRT_fremainder(&fsw, x, y);

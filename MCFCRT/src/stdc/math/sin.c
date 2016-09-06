@@ -5,6 +5,10 @@
 #include "../../env/_crtdef.h"
 #include "_fpu.h"
 
+#undef sinf
+#undef sin
+#undef sinl
+
 static inline long double fpu_sin(long double x){
 	long double ret;
 	if(!__MCFCRT_fsin(&ret, x)){

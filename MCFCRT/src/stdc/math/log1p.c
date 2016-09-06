@@ -10,8 +10,8 @@
 #undef log1pl
 
 static inline long double fpu_log1p(long double x){
-	// 1 - 2^0.5/2 = 0.29289321881345247559915563789515
-	if((-0.2928932188l <= x) && (x <= 0.2928932188l)){
+	// 1 - 2^(1/2)/2 = 0.29289321881345247559915563789515
+	if(__MCFCRT_fabs(x) <= 0.2928932188l){
 		return __MCFCRT_fyl2xp1(__MCFCRT_fldln2(), x);
 	}
 	return __MCFCRT_fyl2x(__MCFCRT_fldln2(), x + 1.0l);

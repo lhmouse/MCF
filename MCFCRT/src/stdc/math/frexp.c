@@ -13,11 +13,12 @@ static inline long double fpu_frexp(long double x, int *exp){
 	if(x == 0){
 		*exp = 0;
 		return 0;
+	} else {
+		long double n;
+		const long double m = __MCFCRT_fxtract(&n, x);
+		__MCFCRT_fistp(exp, n + 1.0l);
+		return m * 0.5l;
 	}
-	long double n;
-	const long double m = __MCFCRT_fxtract(&n, x);
-	__MCFCRT_fistp(exp, n + 1.0l);
-	return m * 0.5l;
 }
 
 float frexpf(float x, int *exp){

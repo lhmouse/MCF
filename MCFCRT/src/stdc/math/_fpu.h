@@ -10,10 +10,10 @@
 _MCFCRT_EXTERN_C_BEGIN
 
 typedef enum __MCFCRT_tagFpuSign {
-	__MCFCRT_FpuPositive  = 0x00,
-	__MCFCRT_FpuNegative  = 0x01,
-	__MCFCRT_FpuZero      = 0x40,
-	__MCFCRT_FpuUnordered = 0x41,
+	__MCFCRT_kFpuPositive  = 0x00,
+	__MCFCRT_kFpuNegative  = 0x01,
+	__MCFCRT_kFpuZero      = 0x40,
+	__MCFCRT_kFpuUnordered = 0x41,
 } __MCFCRT_FpuSign;
 
 static inline __MCFCRT_FpuSign __MCFCRT_ftest(long double __x) _MCFCRT_NOEXCEPT {

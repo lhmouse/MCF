@@ -18,13 +18,13 @@ static inline long double fpu_pow(long double x, long double y){
 	}
 
 	const __MCFCRT_FpuSign xsign = __MCFCRT_ftest(x);
-	if(xsign == __MCFCRT_FpuZero){
+	if(xsign == __MCFCRT_kFpuZero){
 		return 0;
 	} else {
 		// x^y = 2^(y*log2(x))
 		long double ylog2x;
 		bool neg;
-		if(xsign == __MCFCRT_FpuPositive){
+		if(xsign == __MCFCRT_kFpuPositive){
 			ylog2x = y * __MCFCRT_fyl2x(1.0l, x);
 			neg = false;
 		} else {

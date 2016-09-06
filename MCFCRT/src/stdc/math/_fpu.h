@@ -165,54 +165,81 @@ static inline long double __MCFCRT_fsqrt(long double __x) _MCFCRT_NOEXCEPT {
 	return __ret;
 }
 
-static inline bool __MCFCRT_fsin(long double *__ret, long double __x) _MCFCRT_NOEXCEPT {
-	__asm__ goto (
+static inline long double __MCFCRT_fmod(int *__fsw, long double __x, long double __y) _MCFCRT_NOEXCEPT {
+	long double __ret;
+	__asm__(
+		"1: \n"
+		"	fprem \n"
+		"	fstsw ax \n"
+		"	test ah, 0x04 \n"
+		"	jnz 1b \n"
+		"fstp st(1) \n"
+		: "=&t"(__ret), "=a"(*__fsw)
+		: "0"(__x), "u"(__y)
+		: "st(1)"
+	);
+	return __ret;
+}
+static inline long double __MCFCRT_fremainder(int *__fsw, long double __x, long double __y) _MCFCRT_NOEXCEPT {
+	long double __ret;
+	__asm__(
+		"1: \n"
+		"	fprem1 \n"
+		"	fstsw ax \n"
+		"	test ah, 0x04 \n"
+		"	jnz 1b \n"
+		"fstp st(1) \n"
+		: "=&t"(__ret), "=a"(*__fsw)
+		: "0"(__x), "u"(__y)
+		: "st(1)"
+	);
+	return __ret;
+}
+
+__attribute__((__cold__))
+static inline long double __MCFCRT_trigonometric_reduce(long double __x) _MCFCRT_NOEXCEPT {
+	int __fsw;
+	return __MCFCRT_fmod(&__fsw, __x, 0x1p61l * 3.1415926535897932384626433832795l);
+}
+
+static inline long double __MCFCRT_fsin(bool *__invalid, long double __x) _MCFCRT_NOEXCEPT {
+	long double __ret;
+	__asm__(
 		"fsin \n"
 		"fstsw ax \n"
-		"test ah, 0x04 \n"
-		"jnz %l2 \n"
-		"fstp tbyte ptr[%0] \n"
-		:
-		: "r"(__ret), "t"(__x)
-		: "st", "ax", "memory"
-		: __out_of_range
+		"shr eax, 10 \n"
+		"and eax, 1 \n"
+		: "=&t"(__ret), "=a"(*__invalid)
+		: "0"(__x)
 	);
-	return true;
-__out_of_range: __attribute__((__cold__));
-	return false;
+	return __ret;
 }
-static inline bool __MCFCRT_fcos(long double *__ret, long double __x) _MCFCRT_NOEXCEPT {
-	__asm__ goto (
+static inline long double __MCFCRT_fcos(bool *__invalid, long double __x) _MCFCRT_NOEXCEPT {
+	long double __ret;
+	__asm__(
 		"fcos \n"
 		"fstsw ax \n"
-		"test ah, 0x04 \n"
-		"jnz %l2 \n"
-		"fstp tbyte ptr[%0] \n"
-		:
-		: "r"(__ret), "t"(__x)
-		: "st", "ax", "memory"
-		: __out_of_range
+		"shr eax, 10 \n"
+		"and eax, 1 \n"
+		: "=&t"(__ret), "=a"(*__invalid)
+		: "0"(__x)
 	);
-	return true;
-__out_of_range: __attribute__((__cold__));
-	return false;
+	return __ret;
 }
-static inline bool __MCFCRT_ftan(long double *__ret, long double __x) _MCFCRT_NOEXCEPT {
-	__asm__ goto (
+static inline long double __MCFCRT_ftan(bool *__invalid, long double __x) _MCFCRT_NOEXCEPT {
+	long double __ret;
+	__asm__(
 		"fptan \n"
 		"fstsw ax \n"
-		"test ah, 0x04 \n"
-		"jnz %l2 \n"
-		"fstp st \n"
-		"fstp tbyte ptr[%0] \n"
-		:
-		: "r"(__ret), "t"(__x)
-		: "st", "ax", "memory"
-		: __out_of_range
+		"shr eax, 10 \n"
+		"and eax, 1 \n"
+		"jnz 1f \n"
+		"	fstp st \n"
+		"1: \n"
+		: "=&t"(__ret), "=a"(*__invalid)
+		: "0"(__x)
 	);
-	return true;
-__out_of_range: __attribute__((__cold__));
-	return false;
+	return __ret;
 }
 
 static inline long double __MCFCRT_fpatan(long double __y, long double __x) _MCFCRT_NOEXCEPT {
@@ -272,37 +299,6 @@ static inline long double __MCFCRT_fyl2xp1(long double __y, long double __x) _MC
 	__asm__(
 		"fyl2xp1 \n"
 		: "=&t"(__ret)
-		: "0"(__x), "u"(__y)
-		: "st(1)"
-	);
-	return __ret;
-}
-
-static inline long double __MCFCRT_fmod(int *__fsw, long double __x, long double __y) _MCFCRT_NOEXCEPT {
-	long double __ret;
-	__asm__(
-		"1: \n"
-		"	fprem \n"
-		"	fstsw ax \n"
-		"	test ah, 0x04 \n"
-		"	jnz 1b \n"
-		"fstp st(1) \n"
-		: "=&t"(__ret), "=a"(*__fsw)
-		: "0"(__x), "u"(__y)
-		: "st(1)"
-	);
-	return __ret;
-}
-static inline long double __MCFCRT_fremainder(int *__fsw, long double __x, long double __y) _MCFCRT_NOEXCEPT {
-	long double __ret;
-	__asm__(
-		"1: \n"
-		"	fprem1 \n"
-		"	fstsw ax \n"
-		"	test ah, 0x04 \n"
-		"	jnz 1b \n"
-		"fstp st(1) \n"
-		: "=&t"(__ret), "=a"(*__fsw)
 		: "0"(__x), "u"(__y)
 		: "st(1)"
 	);

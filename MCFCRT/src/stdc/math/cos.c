@@ -10,10 +10,10 @@
 #undef cosl
 
 static inline long double fpu_cos(long double x){
-	long double ret;
-	if(!__MCFCRT_fcos(&ret, x)){
-		int fsw;
-		__MCFCRT_fcos(&ret, __MCFCRT_fmod(&fsw, x, 0x1p61l * 3.1415926535897932384626433832795l));
+	bool invalid;
+	long double ret = __MCFCRT_fcos(&invalid, x);
+	if(invalid){
+		ret = __MCFCRT_fcos(&invalid, __MCFCRT_trigonometric_reduce(ret));
 	}
 	return ret;
 }

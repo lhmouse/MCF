@@ -222,6 +222,16 @@ static inline long double __MCFCRT_fcos(bool *__invalid, long double __x) _MCFCR
 	);
 	return __ret;
 }
+static inline void __MCFCRT_fsincos(bool *__invalid, long double *__sinx, long double *__cosx, long double __x) _MCFCRT_NOEXCEPT {
+	__asm__(
+		"fsincos \n"
+		"fstsw ax \n"
+		"shr eax, 10 \n"
+		"and eax, 1 \n"
+		: "=&t"(*__cosx), "=&u"(*__sinx), "=a"(*__invalid)
+		: "0"(__x)
+	);
+}
 static inline long double __MCFCRT_ftan(bool *__invalid, long double __x) _MCFCRT_NOEXCEPT {
 	long double __ret;
 	__asm__(

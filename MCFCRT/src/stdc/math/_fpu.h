@@ -200,51 +200,52 @@ static inline long double __MCFCRT_trigonometric_reduce(long double __x) _MCFCRT
 
 static inline long double __MCFCRT_fsin(bool *__invalid, long double __x) _MCFCRT_NOEXCEPT {
 	long double __ret;
+	int __fsw;
 	__asm__(
 		"fsin \n"
 		"fstsw ax \n"
-		"shr eax, 10 \n"
-		"and eax, 1 \n"
-		: "=&t"(__ret), "=a"(*__invalid)
+		: "=&t"(__ret), "=a"(__fsw)
 		: "0"(__x)
 	);
+	*__invalid = (__fsw >> 10) & 1;
 	return __ret;
 }
 static inline long double __MCFCRT_fcos(bool *__invalid, long double __x) _MCFCRT_NOEXCEPT {
 	long double __ret;
+	int __fsw;
 	__asm__(
 		"fcos \n"
 		"fstsw ax \n"
-		"shr eax, 10 \n"
-		"and eax, 1 \n"
-		: "=&t"(__ret), "=a"(*__invalid)
+		: "=&t"(__ret), "=a"(__fsw)
 		: "0"(__x)
 	);
+	*__invalid = (__fsw >> 10) & 1;
 	return __ret;
 }
 static inline void __MCFCRT_fsincos(bool *__invalid, long double *__sinx, long double *__cosx, long double __x) _MCFCRT_NOEXCEPT {
+	int __fsw;
 	__asm__(
 		"fsincos \n"
 		"fstsw ax \n"
-		"shr eax, 10 \n"
-		"and eax, 1 \n"
-		: "=&t"(*__cosx), "=&u"(*__sinx), "=a"(*__invalid)
+		: "=&t"(*__cosx), "=&u"(*__sinx), "=a"(__fsw)
 		: "0"(__x)
 	);
+	*__invalid = (__fsw >> 10) & 1;
 }
 static inline long double __MCFCRT_ftan(bool *__invalid, long double __x) _MCFCRT_NOEXCEPT {
 	long double __ret;
+	int __fsw;
 	__asm__(
 		"fptan \n"
 		"fstsw ax \n"
-		"shr eax, 10 \n"
-		"and eax, 1 \n"
+		"test ah, 0x04 \n"
 		"jnz 1f \n"
 		"	fstp st \n"
 		"1: \n"
-		: "=&t"(__ret), "=a"(*__invalid)
+		: "=&t"(__ret), "=a"(__fsw)
 		: "0"(__x)
 	);
+	*__invalid = (__fsw >> 10) & 1;
 	return __ret;
 }
 

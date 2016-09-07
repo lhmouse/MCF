@@ -192,60 +192,39 @@ static inline long double __MCFCRT_fremainder(unsigned *__fsw, long double __x, 
 	return __ret;
 }
 
-__attribute__((__cold__))
-static inline long double __MCFCRT_trigonometric_reduce(long double __x) _MCFCRT_NOEXCEPT {
-	unsigned __fsw;
-	return __MCFCRT_fmod(&__fsw, __x, 0x1p61l * 3.1415926535897932384626433832795l);
-}
-
-static inline long double __MCFCRT_fsin(bool *__invalid, long double __x) _MCFCRT_NOEXCEPT {
+static inline long double __MCFCRT_fsin_unsafe(long double __x) _MCFCRT_NOEXCEPT {
 	long double __ret;
-	unsigned __fsw;
 	__asm__(
 		"fsin \n"
-		"fstsw ax \n"
-		: "=&t"(__ret), "=a"(__fsw)
+		: "=&t"(__ret)
 		: "0"(__x)
 	);
-	*__invalid = (__fsw >> 10) & 1;
 	return __ret;
 }
-static inline long double __MCFCRT_fcos(bool *__invalid, long double __x) _MCFCRT_NOEXCEPT {
+static inline long double __MCFCRT_fcos_unsafe(long double __x) _MCFCRT_NOEXCEPT {
 	long double __ret;
-	unsigned __fsw;
 	__asm__(
 		"fcos \n"
-		"fstsw ax \n"
-		: "=&t"(__ret), "=a"(__fsw)
+		: "=&t"(__ret)
 		: "0"(__x)
 	);
-	*__invalid = (__fsw >> 10) & 1;
 	return __ret;
 }
-static inline void __MCFCRT_fsincos(bool *__invalid, long double *__sinx, long double *__cosx, long double __x) _MCFCRT_NOEXCEPT {
-	unsigned __fsw;
+static inline void __MCFCRT_fsincos_unsafe(long double *__sinx, long double *__cosx, long double __x) _MCFCRT_NOEXCEPT {
 	__asm__(
 		"fsincos \n"
-		"fstsw ax \n"
-		: "=&t"(*__cosx), "=&u"(*__sinx), "=a"(__fsw)
+		: "=&t"(*__cosx), "=&u"(*__sinx)
 		: "0"(__x)
 	);
-	*__invalid = (__fsw >> 10) & 1;
 }
-static inline long double __MCFCRT_ftan(bool *__invalid, long double __x) _MCFCRT_NOEXCEPT {
+static inline long double __MCFCRT_ftan_unsafe(long double __x) _MCFCRT_NOEXCEPT {
 	long double __ret;
-	unsigned __fsw;
 	__asm__(
 		"fptan \n"
-		"fstsw ax \n"
-		"test ah, 0x04 \n"
-		"jnz 1f \n"
-		"	fstp st \n"
-		"1: \n"
-		: "=&t"(__ret), "=a"(__fsw)
+		"fstp st \n"
+		: "=&t"(__ret)
 		: "0"(__x)
 	);
-	*__invalid = (__fsw >> 10) & 1;
 	return __ret;
 }
 

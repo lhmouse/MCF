@@ -10,11 +10,9 @@
 #undef tanl
 
 static inline long double fpu_tan(long double x){
-	bool invalid;
-	long double ret = __MCFCRT_ftan(&invalid, x);
-	if(invalid){
-		ret = __MCFCRT_ftan(&invalid, __MCFCRT_trigonometric_reduce(ret));
-	}
+	unsigned fsw;
+	const long double reduced = __MCFCRT_fremainder(&fsw, x, __MCFCRT_fldpi());
+	long double ret = __MCFCRT_ftan_unsafe(reduced);
 	return ret;
 }
 

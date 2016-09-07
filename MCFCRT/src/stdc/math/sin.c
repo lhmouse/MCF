@@ -10,10 +10,11 @@
 #undef sinl
 
 static inline long double fpu_sin(long double x){
-	bool invalid;
-	long double ret = __MCFCRT_fsin(&invalid, x);
-	if(invalid){
-		ret = __MCFCRT_fsin(&invalid, __MCFCRT_trigonometric_reduce(ret));
+	unsigned fsw;
+	const long double reduced = __MCFCRT_fremainder(&fsw, x, __MCFCRT_fldpi());
+	long double ret = __MCFCRT_fsin_unsafe(reduced);
+	if(fsw & 0x0200){
+		ret = __MCFCRT_fneg(ret);
 	}
 	return ret;
 }

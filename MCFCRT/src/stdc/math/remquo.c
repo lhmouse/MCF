@@ -30,15 +30,12 @@ static const uint8_t quo_table[256] = {
 };
 
 static inline long double fpu_remquo(long double x, long double y, int *quo){
-	int fsw;
+	unsigned fsw;
 	const long double rem = __MCFCRT_fremainder(&fsw, x, y);
-#if __FLOAT_WORD_ORDER__ == __ORDER_LITTLE_ENDIAN__
-	const int sign = ((const int8_t *)&x)[9] ^ ((const int8_t *)&y)[9];
-#else
-	const int sign = ((const int8_t *)&x)[0] ^ ((const int8_t *)&y)[0];
-#endif
+	const bool neg = ((__MCFCRT_ftest(x) == __MCFCRT_kFpuNegative) ^ (__MCFCRT_ftest(y) == __MCFCRT_kFpuNegative));
+	const int sign = -(neg << 3);
 	const int bits = quo_table[(fsw >> 8) & 0xFF];
-	*quo = (sign & -8) | bits;
+	*quo = sign | bits;
 	return rem;
 }
 

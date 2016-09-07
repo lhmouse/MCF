@@ -10,14 +10,14 @@
 #undef fmodl
 
 float fmodf(float x, float y){
-	int fsw;
+	unsigned fsw;
 	return (float)__MCFCRT_fmod(&fsw, x, y);
 }
 double fmod(double x, double y){
-	int fsw;
+	unsigned fsw;
 	return (double)__MCFCRT_fmod(&fsw, x, y);
 }
 long double fmodl(long double x, long double y){
-	int fsw;
+	unsigned fsw;
 	return __MCFCRT_fmod(&fsw, x, y);
 }

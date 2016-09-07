@@ -32,7 +32,7 @@ static inline long double fpu_pow(long double x, long double y){
 				__builtin_trap();
 			}
 			ylog2x = y * __MCFCRT_fyl2x(1.0l, -x);
-			int fsw;
+			unsigned fsw;
 			neg = __MCFCRT_fmod(&fsw, y, 2.0l) != 0;
 		}
 		const long double i = __MCFCRT_frndintany(ylog2x), m = ylog2x - i;

@@ -10,14 +10,14 @@
 #undef remainderl
 
 float remainderf(float x, float y){
-	int fsw;
+	unsigned fsw;
 	return (float)__MCFCRT_fremainder(&fsw, x, y);
 }
 double remainder(double x, double y){
-	int fsw;
+	unsigned fsw;
 	return (double)__MCFCRT_fremainder(&fsw, x, y);
 }
 long double remainderl(long double x, long double y){
-	int fsw;
+	unsigned fsw;
 	return __MCFCRT_fremainder(&fsw, x, y);
 }

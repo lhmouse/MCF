@@ -165,7 +165,7 @@ static inline long double __MCFCRT_fsqrt(long double __x) _MCFCRT_NOEXCEPT {
 	return __ret;
 }
 
-static inline long double __MCFCRT_fmod(int *__fsw, long double __x, long double __y) _MCFCRT_NOEXCEPT {
+static inline long double __MCFCRT_fmod(unsigned *__fsw, long double __x, long double __y) _MCFCRT_NOEXCEPT {
 	long double __ret;
 	__asm__(
 		"1: \n"
@@ -178,7 +178,7 @@ static inline long double __MCFCRT_fmod(int *__fsw, long double __x, long double
 	);
 	return __ret;
 }
-static inline long double __MCFCRT_fremainder(int *__fsw, long double __x, long double __y) _MCFCRT_NOEXCEPT {
+static inline long double __MCFCRT_fremainder(unsigned *__fsw, long double __x, long double __y) _MCFCRT_NOEXCEPT {
 	long double __ret;
 	__asm__(
 		"1: \n"
@@ -194,13 +194,13 @@ static inline long double __MCFCRT_fremainder(int *__fsw, long double __x, long 
 
 __attribute__((__cold__))
 static inline long double __MCFCRT_trigonometric_reduce(long double __x) _MCFCRT_NOEXCEPT {
-	int __fsw;
+	unsigned __fsw;
 	return __MCFCRT_fmod(&__fsw, __x, 0x1p61l * 3.1415926535897932384626433832795l);
 }
 
 static inline long double __MCFCRT_fsin(bool *__invalid, long double __x) _MCFCRT_NOEXCEPT {
 	long double __ret;
-	int __fsw;
+	unsigned __fsw;
 	__asm__(
 		"fsin \n"
 		"fstsw ax \n"
@@ -212,7 +212,7 @@ static inline long double __MCFCRT_fsin(bool *__invalid, long double __x) _MCFCR
 }
 static inline long double __MCFCRT_fcos(bool *__invalid, long double __x) _MCFCRT_NOEXCEPT {
 	long double __ret;
-	int __fsw;
+	unsigned __fsw;
 	__asm__(
 		"fcos \n"
 		"fstsw ax \n"
@@ -223,7 +223,7 @@ static inline long double __MCFCRT_fcos(bool *__invalid, long double __x) _MCFCR
 	return __ret;
 }
 static inline void __MCFCRT_fsincos(bool *__invalid, long double *__sinx, long double *__cosx, long double __x) _MCFCRT_NOEXCEPT {
-	int __fsw;
+	unsigned __fsw;
 	__asm__(
 		"fsincos \n"
 		"fstsw ax \n"
@@ -234,7 +234,7 @@ static inline void __MCFCRT_fsincos(bool *__invalid, long double *__sinx, long d
 }
 static inline long double __MCFCRT_ftan(bool *__invalid, long double __x) _MCFCRT_NOEXCEPT {
 	long double __ret;
-	int __fsw;
+	unsigned __fsw;
 	__asm__(
 		"fptan \n"
 		"fstsw ax \n"

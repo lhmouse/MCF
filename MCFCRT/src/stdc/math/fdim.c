@@ -29,15 +29,15 @@ static inline long double fpu_fdim(long double x, long double y){
 
 float fdimf(float x, float y){
 #ifdef _WIN64
-	float ret;
+	float ret, unused;
 	__asm__(
-		"movaps xmm2, %2 \n"
+		"movaps xmm2, %3 \n"
 		"cmpltps xmm2, xmm0 \n"
 		"andps xmm0, xmm2 \n"
-		"andps %2, xmm2 \n"
-		"subps xmm0, %2 \n"
-		: "=Yz"(ret)
-		: "0"(x), "x"(y)
+		"andps %3, xmm2 \n"
+		"subps xmm0, %3 \n"
+		: "=Yz"(ret), "=x"(unused)
+		: "0"(x), "1"(y)
 		: "xmm2"
 	);
 	return ret;
@@ -47,15 +47,15 @@ float fdimf(float x, float y){
 }
 double fdim(double x, double y){
 #ifdef _WIN64
-	double ret;
+	double ret, unused;
 	__asm__(
-		"movaps xmm2, %2 \n"
-		"cmpltps xmm2, xmm0 \n"
+		"movapd xmm2, %3 \n"
+		"cmpltpd xmm2, xmm0 \n"
 		"andpd xmm0, xmm2 \n"
-		"andpd %2, xmm2 \n"
-		"subpd xmm0, %2 \n"
-		: "=Yz"(ret)
-		: "0"(x), "x"(y)
+		"andpd %3, xmm2 \n"
+		"subpd xmm0, %3 \n"
+		: "=Yz"(ret), "=x"(unused)
+		: "0"(x), "1"(y)
 		: "xmm2"
 	);
 	return ret;

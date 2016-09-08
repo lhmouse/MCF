@@ -31,11 +31,11 @@ float fdimf(float x, float y){
 #ifdef _WIN64
 	float ret;
 	__asm__(
-		"movaps xmm2, xmm1 \n"
+		"movaps xmm2, %2 \n"
 		"cmpltps xmm2, xmm0 \n"
 		"andps xmm0, xmm2 \n"
-		"andps xmm1, xmm2 \n"
-		"subps xmm0, xmm1 \n"
+		"andps %2, xmm2 \n"
+		"subps xmm0, %2 \n"
 		: "=Yz"(ret)
 		: "0"(x), "x"(y)
 		: "xmm2"
@@ -49,11 +49,11 @@ double fdim(double x, double y){
 #ifdef _WIN64
 	double ret;
 	__asm__(
-		"movaps xmm2, xmm1 \n"
+		"movaps xmm2, %2 \n"
 		"cmpltps xmm2, xmm0 \n"
 		"andpd xmm0, xmm2 \n"
-		"andpd xmm1, xmm2 \n"
-		"subpd xmm0, xmm1 \n"
+		"andpd %2, xmm2 \n"
+		"subpd xmm0, %2 \n"
 		: "=Yz"(ret)
 		: "0"(x), "x"(y)
 		: "xmm2"

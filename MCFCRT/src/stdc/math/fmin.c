@@ -26,10 +26,10 @@ float fminf(float x, float y){
 	float ret;
 	__asm__(
 		"movaps xmm2, xmm0 \n"
-		"cmpltps xmm2, xmm1 \n"
-		"xorps xmm0, xmm1 \n"
+		"cmpltps xmm2, %2 \n"
+		"xorps xmm0, %2 \n"
 		"andps xmm0, xmm2 \n"
-		"xorps xmm0, xmm1 \n"
+		"xorps xmm0, %2 \n"
 		: "=Yz"(ret)
 		: "0"(x), "x"(y)
 		: "xmm2"
@@ -44,10 +44,10 @@ double fmin(double x, double y){
 	double ret;
 	__asm__(
 		"movapd xmm2, xmm0 \n"
-		"cmpltpd xmm2, xmm1 \n"
-		"xorpd xmm0, xmm1 \n"
+		"cmpltpd xmm2, %2 \n"
+		"xorpd xmm0, %2 \n"
 		"andpd xmm0, xmm2 \n"
-		"xorpd xmm0, xmm1 \n"
+		"xorpd xmm0, %2 \n"
 		: "=Yz"(ret)
 		: "0"(x), "x"(y)
 		: "xmm2"

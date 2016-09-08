@@ -12,9 +12,9 @@
 static inline long fpu_lround(long double x){
 	long ret = 0;
 	if(x < 0){
-		__MCFCRT_fistpl(&ret, __MCFCRT_ftrunc(x - 0.5l));
+		__MCFCRT_fisttpl(&ret, x - 0.5l);
 	} else if(x > 0){
-		__MCFCRT_fistpl(&ret, __MCFCRT_ftrunc(x + 0.5l));
+		__MCFCRT_fisttpl(&ret, x + 0.5l);
 	}
 	return ret;
 }

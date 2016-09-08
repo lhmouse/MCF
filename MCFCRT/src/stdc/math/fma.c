@@ -60,7 +60,8 @@ static inline long double fpu_fma(long double x, long double y, long double z){
 }
 
 float fmaf(float x, float y, float z){
-	return (float)fpu_fma(x, y, z);
+	// return (float)fpu_fma(x, y, z);
+	return (float)((double)x * (double)y + (double)z);
 }
 double fma(double x, double y, double z){
 	return (double)fpu_fma(x, y, z);

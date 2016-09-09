@@ -12,7 +12,7 @@
 static inline long double fpu_expm1(long double x){
 	// e^x = 2^(x*log2(e))
 	const long double xlog2e = x * __MCFCRT_fldl2e();
-	const long double i = __MCFCRT_frndintany(xlog2e), m = xlog2e - i;
+	const long double i = __MCFCRT_ftrunc(xlog2e), m = xlog2e - i;
 	if(i == 0){
 		return __MCFCRT_f2xm1(m);
 	}

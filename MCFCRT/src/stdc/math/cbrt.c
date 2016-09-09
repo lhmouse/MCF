@@ -10,22 +10,22 @@
 #undef cbrtl
 
 static inline long double fpu_cbrt(long double x){
-	const __MCFCRT_FpuSign xsign = __MCFCRT_ftest(x);
-	if(xsign == __MCFCRT_kFpuZero){
+	const __MCFCRT_FpuSign sgn = __MCFCRT_ftest(x);
+	if(sgn == __MCFCRT_kFpuZero){
 		return 0;
 	} else {
 		// x^(1/3) = 2^((1/3)*log2(x))
 		long double ylog2x;
 		bool neg;
-		if(xsign == __MCFCRT_kFpuPositive){
-			ylog2x = (1.0l / 3) * __MCFCRT_fyl2x(1.0l, x);
+		if(sgn == __MCFCRT_kFpuPositive){
+			ylog2x = (1.0l / 3) * __MCFCRT_fyl2x(__MCFCRT_fld1(), x);
 			neg = false;
 		} else {
-			ylog2x = (1.0l / 3) * __MCFCRT_fyl2x(1.0l, -x);
+			ylog2x = (1.0l / 3) * __MCFCRT_fyl2x(__MCFCRT_fld1(), -x);
 			neg = true;
 		}
 		const long double i = __MCFCRT_frndintany(ylog2x), m = ylog2x - i;
-		long double ret = __MCFCRT_fscale(1.0l, i) * (__MCFCRT_f2xm1(m) + 1.0l);
+		long double ret = __MCFCRT_fscale(__MCFCRT_fld1(), i) * (__MCFCRT_f2xm1(m) + __MCFCRT_fld1());
 		if(neg){
 			ret = __MCFCRT_fneg(ret);
 		}

@@ -14,7 +14,7 @@ static inline long double fpu_log1p(long double x){
 	if(__MCFCRT_fabs(x) <= 0.2928932188l){
 		return __MCFCRT_fyl2xp1(__MCFCRT_fldln2(), x);
 	}
-	return __MCFCRT_fyl2x(__MCFCRT_fldln2(), x + 1.0l);
+	return __MCFCRT_fyl2x(__MCFCRT_fldln2(), x + __MCFCRT_fld1());
 }
 
 float log1pf(float x){

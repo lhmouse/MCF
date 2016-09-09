@@ -10,11 +10,11 @@
 #undef atanl
 
 float atanf(float x){
-	return (float) __MCFCRT_fpatan(x, 1.0l);
+	return (float) __MCFCRT_fpatan(x, __MCFCRT_fld1());
 }
 double atan(double x){
-	return (double)__MCFCRT_fpatan(x, 1.0l);
+	return (double)__MCFCRT_fpatan(x, __MCFCRT_fld1());
 }
 long double atanl(long double x){
-	return __MCFCRT_fpatan(x, 1.0l);
+	return __MCFCRT_fpatan(x, __MCFCRT_fld1());
 }

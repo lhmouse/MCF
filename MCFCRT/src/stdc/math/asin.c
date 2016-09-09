@@ -10,7 +10,7 @@
 #undef asinl
 
 static inline long double fpu_asin(long double x){
-	return __MCFCRT_fpatan(x, __MCFCRT_fsqrt(1.0l - x * x));
+	return __MCFCRT_fpatan(x, __MCFCRT_fsqrt(__MCFCRT_fld1() - x * x));
 }
 
 float asinf(float x){

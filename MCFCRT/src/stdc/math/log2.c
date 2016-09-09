@@ -10,7 +10,7 @@
 #undef log2l
 
 static inline long double fpu_log2(long double x){
-	return __MCFCRT_fyl2x(1.0l, x);
+	return __MCFCRT_fyl2x(__MCFCRT_fld1(), x);
 }
 
 float log2f(float x){

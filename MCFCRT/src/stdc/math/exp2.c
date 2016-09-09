@@ -11,7 +11,7 @@
 
 static inline long double fpu_exp2(long double x){
 	const long double i = __MCFCRT_frndintany(x), m = x - i;
-	return __MCFCRT_fscale(1.0l, i) * (__MCFCRT_f2xm1(m) + 1.0l);
+	return __MCFCRT_fscale(__MCFCRT_fld1(), i) * (__MCFCRT_f2xm1(m) + __MCFCRT_fld1());
 }
 
 float exp2f(float x){

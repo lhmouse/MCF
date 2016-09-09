@@ -314,6 +314,22 @@ static inline long double __MCFCRT_fyl2xp1(long double __y, long double __x) _MC
 	return __ret;
 }
 
+static inline long double __MCFCRT_fldz(void) _MCFCRT_NOEXCEPT {
+	long double __ret;
+	__asm__(
+		"fldz \n"
+		: "=&t"(__ret)
+	);
+	return __ret;
+}
+static inline long double __MCFCRT_fld1(void) _MCFCRT_NOEXCEPT {
+	long double __ret;
+	__asm__(
+		"fld1 \n"
+		: "=&t"(__ret)
+	);
+	return __ret;
+}
 static inline long double __MCFCRT_fldl2e(void) _MCFCRT_NOEXCEPT {
 	long double __ret;
 	__asm__(

@@ -16,7 +16,7 @@ static inline long double fpu_expm1(long double x){
 	if(i == 0){
 		return __MCFCRT_f2xm1(m);
 	}
-	return __MCFCRT_fscale(1.0l, i) * (__MCFCRT_f2xm1(m) + 1.0l) - 1.0l;
+	return __MCFCRT_fscale(__MCFCRT_fld1(), i) * (__MCFCRT_f2xm1(m) + __MCFCRT_fld1()) - __MCFCRT_fld1();
 }
 
 float expm1f(float x){

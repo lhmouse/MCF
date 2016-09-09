@@ -10,7 +10,7 @@
 #undef acosl
 
 static inline long double fpu_acos(long double x){
-	return __MCFCRT_fpatan(__MCFCRT_fsqrt(1.0l - x * x), x);
+	return __MCFCRT_fpatan(__MCFCRT_fsqrt(__MCFCRT_fld1() - x * x), x);
 }
 
 float acosf(float x){

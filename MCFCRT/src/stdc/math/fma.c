@@ -28,7 +28,7 @@ typedef union x87reg_ {
 static inline void break_down(x87reg *restrict lo, x87reg *restrict hi, long double x){
 	hi->f = x;
 	const uint32_t flo = hi->flo;
-	const uint32_t exp = hi->exp;
+	const long     exp = hi->exp;
 	const bool     sgn = hi->sgn;
 	hi->flo = 0;
 
@@ -36,15 +36,20 @@ static inline void break_down(x87reg *restrict lo, x87reg *restrict hi, long dou
 		lo->f64 = 0;
 		lo->exp = 0;
 	} else {
-		static_assert(sizeof(unsigned long) * CHAR_BIT == 32, "Please fix this!");
-		const unsigned shn = (unsigned)__builtin_clzl(flo) + 32;
-		if(shn < exp){
-			lo->f64 = (uint64_t)flo << shn;
-			lo->exp = (exp - shn) & 0x7FFF;
-		} else {
-			lo->f64 = (uint64_t)flo << exp;
-			lo->exp = 0;
-		}
+		const long shn = _Generic(flo,
+			unsigned:           __builtin_clz,
+			unsigned long:      __builtin_clzl,
+			unsigned long long: __builtin_clzll)(flo) + 32;
+//		if(shn < exp){
+//			lo->f64 = (uint64_t)flo << shn;
+//			lo->exp = ((uint32_t)(exp - shn) << 17) >> 17;
+//		} else {
+//			lo->f64 = (uint64_t)flo << exp;
+//			lo->exp = 0;
+//		}
+		const long mask = (shn - exp) >> 31;
+		lo->f64 = (uint64_t)flo << (((shn ^ exp) & mask) ^ exp);
+		lo->exp = ((uint32_t)((exp - shn) & mask) << 17) >> 17;
 	}
 	lo->sgn = sgn;
 }

@@ -39,13 +39,6 @@ static inline void break_down(x87reg *restrict lo, x87reg *restrict hi, long dou
 		const long shn = _Generic(flo,
 			unsigned:      __builtin_clz,
 			unsigned long: __builtin_clzl)(flo) + 32;
-//		if(shn < exp){
-//			lo->f64 = (uint64_t)flo << shn;
-//			lo->exp = ((uint32_t)(exp - shn) << 17) >> 17;
-//		} else {
-//			lo->f64 = (uint64_t)flo << exp;
-//			lo->exp = 0;
-//		}
 		const long mask = (shn - exp) >> 31;
 		lo->f64 = (uint64_t)flo << (((shn ^ exp) & mask) ^ exp);
 		lo->exp = ((uint32_t)((exp - shn) & mask) << 17) >> 17;

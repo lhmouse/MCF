@@ -11,18 +11,18 @@
 
 // https://en.wikipedia.org/wiki/Extended_precision#x86_Extended_Precision_Format
 typedef union x87reg_ {
-	long double f;
 	struct __attribute__((__packed__)) {
-		uint64_t f64 : 64;
+		union {
+			uint64_t f64;
+			struct __attribute__((__packed__)) {
+				uint32_t flo;
+				uint32_t fhi;
+			};
+		};
 		uint16_t exp : 15;
 		uint16_t sgn :  1;
 	};
-	struct __attribute__((__packed__)) {
-		uint32_t flo : 32;
-		uint32_t fhi : 32;
-//		uint16_t exp : 15;
-//		uint16_t sgn :  1;
-	};
+	long double f;
 } x87reg;
 
 static inline void break_down(x87reg *restrict lo, x87reg *restrict hi, long double x){

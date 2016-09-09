@@ -11,9 +11,10 @@
 
 static inline long fpu_lround(long double x){
 	long ret = 0;
-	if(x < 0){
+	const __MCFCRT_FpuSign sgn = __MCFCRT_ftest(x);
+	if(sgn == __MCFCRT_kFpuNegative){
 		__MCFCRT_fisttpl(&ret, x - 0.5l);
-	} else if(x > 0){
+	} else if(sgn == __MCFCRT_kFpuPositive){
 		__MCFCRT_fisttpl(&ret, x + 0.5l);
 	}
 	return ret;

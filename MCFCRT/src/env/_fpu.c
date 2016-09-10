@@ -20,9 +20,9 @@
 #define EXCEPT_DM       (1ul << 1)       // 非规格化数异常。
 #define EXCEPT_IM       (1ul << 0)       // 无效操作异常。
 
-#define ROUNDING        (RND_ZERO)
+#define ROUNDING        (RND_NEAREST)
 #define PRECISION       (PRCS_EXTENDED)
-#define EXCEPT_MASK     (EXCEPT_PM | EXCEPT_DM)
+#define EXCEPT_MASK     (EXCEPT_PM | EXCEPT_UM | EXCEPT_DM)
 
 static const uint16_t kFpCsr = (ROUNDING << 10) | (PRECISION << 8) | (EXCEPT_MASK << 0);
 static const uint32_t kMxCsr = (ROUNDING << 13) |                    (EXCEPT_MASK << 7);

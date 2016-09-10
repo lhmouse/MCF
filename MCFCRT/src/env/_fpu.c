@@ -29,6 +29,7 @@ static const uint32_t kMxCsr = (ROUNDING << 13) |                    (EXCEPT_MAS
 
 void __MCFCRT_FpuInitialize(void){
 	__asm__ volatile (
+		"fnclex \n"
 		"fldcw word ptr[%0] \n"
 		"ldmxcsr dword ptr[%1] \n"
 		:

@@ -123,9 +123,8 @@ pkginclude_Random_HEADERS =	\
 
 pkginclude_Utilitiesdir = ${pkgincludedir}/Utilities
 pkginclude_Utilities_HEADERS =	\
-	src/Utilities/Argv.cpp	\
-	src/Utilities/Thunk.cpp	\
-	src/Utilities/Variant.cpp
+	src/Utilities/Argv.hpp	\
+	src/Utilities/Thunk.hpp
 
 pkginclude_Streamsdir = ${pkgincludedir}/Streams
 pkginclude_Streams_HEADERS =	\
@@ -196,7 +195,6 @@ mcf_sources =	\
 	src/Random/IsaacGenerator.cpp	\
 	src/Utilities/Argv.cpp	\
 	src/Utilities/Thunk.cpp	\
-	src/Utilities/Variant.cpp	\
 	src/Streams/AbstractInputStream.cpp	\
 	src/Streams/AbstractOutputStream.cpp	\
 	src/Streams/BufferInputStream.cpp	\

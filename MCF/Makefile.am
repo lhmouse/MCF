@@ -67,7 +67,6 @@ pkginclude_Core_HEADERS =	\
 	src/Core/MinMax.hpp	\
 	src/Core/Noncopyable.hpp	\
 	src/Core/Optional.hpp	\
-	src/Core/ParameterPackManipulators.hpp	\
 	src/Core/Random.hpp	\
 	src/Core/Rcnts.hpp	\
 	src/Core/ReconstructOrAssign.hpp	\

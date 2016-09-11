@@ -19,13 +19,13 @@ namespace MCF {
 namespace Impl_Function {
 	struct FunctorCopier {
 		template<typename FuncT>
-		FuncT *operator()(const FuncT &vFunc) const {
+		static FuncT *DoIt(const FuncT &vFunc){
 			return new auto(vFunc);
 		}
 	};
 	struct DummyFunctorCopier {
 		template<typename FuncT>
-		[[noreturn]] FuncT *operator()(const FuncT &) const {
+		[[noreturn]] static FuncT *DoIt(const FuncT &){
 			MCF_THROW(Exception, ERROR_CALL_NOT_IMPLEMENTED, Rcntws::View(L"Function: 该函数对象不允许复制构造。"));
 		}
 	};
@@ -75,11 +75,11 @@ namespace Impl_Function {
 	template<typename FuncT, typename RetT, typename ...ParamsT>
 	class Functor : public RefCountedFunctorBase<RetT, ParamsT...> {
 	private:
-		FuncT x_vFunc;
+		std::decay_t<FuncT> x_vFunc;
 
 	public:
-		explicit Functor(FuncT vFunc)
-			: x_vFunc(std::move(vFunc))
+		explicit Functor(FuncT &vFunc)
+			: x_vFunc(std::forward<FuncT>(vFunc))
 		{
 		}
 
@@ -88,7 +88,7 @@ namespace Impl_Function {
 			return Impl_MagicalInvoker::MagicalInvoker<RetT>()(x_vFunc, std::forward<ParamsT>(vParams)...);
 		}
 		Functor *VirtualNew() const override {
-			return std::conditional_t<std::is_copy_constructible<FuncT>::value, FunctorCopier, DummyFunctorCopier>()(*this);
+			return std::conditional_t<std::is_copy_constructible<std::decay_t<FuncT>>::value, FunctorCopier, DummyFunctorCopier>::DoIt(*this);
 		}
 	};
 }
@@ -149,7 +149,7 @@ public:
 				(std::is_convertible<decltype(Invoke(DeclVal<FuncT>(), DeclVal<ParamsT>()...)), RetT>::value || std::is_void<RetT>::value),
 			int> = 0>
 	Function(FuncT &&vFunc)
-		: Function(X_AdoptionTag(), new Impl_Function::Functor<std::decay_t<FuncT>, std::remove_cv_t<RetT>, ParamsT...>(std::forward<FuncT>(vFunc)))
+		: Function(X_AdoptionTag(), new Impl_Function::Functor<FuncT, std::remove_cv_t<RetT>, ParamsT...>(vFunc))
 	{
 	}
 	Function(const Function &rhs) noexcept

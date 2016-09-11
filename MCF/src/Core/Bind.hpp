@@ -24,18 +24,19 @@ namespace Impl_Bind {
 	template<typename ...ParamsAddT>
 	class ParamSelector {
 	private:
-		std::tuple<ParamsAddT &&...> x_tupParamsAdd;
+		std::tuple<ParamsAddT &...> x_tupParamsAdd;
 
 	public:
-		explicit ParamSelector(ParamsAddT &&...vParamsAdd) noexcept
-			: x_tupParamsAdd(std::forward<ParamsAddT>(vParamsAdd)...)
+		explicit ParamSelector(ParamsAddT &...vParamsAdd) noexcept
+			: x_tupParamsAdd(vParamsAdd...)
 		{
 		}
 
 	private:
 		template<std::size_t ...kParamIndicesT, typename LazyT>
 		decltype(auto) X_ForwardLazyParams(std::index_sequence<kParamIndicesT...>, const LazyT &vLazy) const {
-			return vLazy(std::forward<std::tuple_element_t<kParamIndicesT, decltype(x_tupParamsAdd)>>(std::get<kParamIndicesT>(x_tupParamsAdd))...);
+			return vLazy(std::forward<std::tuple_element_t<kParamIndicesT, std::tuple<ParamsAddT...>>>(
+			                                      std::get<kParamIndicesT>(x_tupParamsAdd))...);
 		}
 
 	public:
@@ -45,7 +46,8 @@ namespace Impl_Bind {
 		}
 		template<std::size_t kIndexT>
 		decltype(auto) operator()(const Placeholder<kIndexT> &) noexcept {
-			return std::forward<std::tuple_element_t<kIndexT - 1, decltype(x_tupParamsAdd)>>(std::get<kIndexT - 1>(x_tupParamsAdd));
+			return std::forward<std::tuple_element_t<kIndexT - 1, std::tuple<ParamsAddT...>>>(
+			                                std::get<kIndexT - 1>(x_tupParamsAdd));
 		}
 		template<typename ParamT>
 		decltype(auto) operator()(const RefWrapper<ParamT> &vParam) noexcept {
@@ -60,25 +62,25 @@ namespace Impl_Bind {
 	template<typename FuncT, bool kIsLazyT, typename ...ParamsT>
 	class BindResult {
 	private:
-		FuncT x_vFunc;
-		std::tuple<ParamsT...> x_tupParams;
+		std::decay_t<FuncT> x_vFunc;
+		std::tuple<std::decay_t<ParamsT>...> x_tupParams;
 
 	public:
-		BindResult(FuncT vFunc, ParamsT ...vParams)
-			: x_vFunc(std::move(vFunc)), x_tupParams(std::move(vParams)...)
+		BindResult(FuncT &vFunc, ParamsT &...vParams)
+			: x_vFunc(std::forward<FuncT>(vFunc)), x_tupParams(std::forward<ParamsT>(vParams)...)
 		{
 		}
 
 	private:
 		template<std::size_t ...kParamIndicesT, typename ...ParamsAddT>
-		decltype(auto) X_DispatchParams(std::index_sequence<kParamIndicesT...>, ParamsAddT &&...vParamsAdd) const {
-			return Invoke(x_vFunc, ParamSelector<ParamsAddT...>(std::forward<ParamsAddT>(vParamsAdd)...)(std::get<kParamIndicesT>(x_tupParams))...);
+		decltype(auto) X_DispatchParams(std::index_sequence<kParamIndicesT...>, ParamsAddT &...vParamsAdd) const {
+			return Invoke(x_vFunc, ParamSelector<ParamsAddT...>(vParamsAdd...)(std::get<kParamIndicesT>(x_tupParams))...);
 		}
 
 	public:
 		template<typename ...ParamsAddT>
 		decltype(auto) operator()(ParamsAddT &&...vParamsAdd) const {
-			return X_DispatchParams(std::index_sequence_for<ParamsT...>(), std::forward<ParamsAddT>(vParamsAdd)...);
+			return X_DispatchParams(std::index_sequence_for<ParamsT...>(), vParamsAdd...);
 		}
 	};
 }
@@ -139,12 +141,12 @@ constexpr Impl_Bind::Placeholder<49> _49;
 constexpr Impl_Bind::Placeholder<50> _50;
 
 template<typename FuncT, typename ...ParamsT>
-Impl_Bind::BindResult<std::decay_t<FuncT>, false, std::decay_t<ParamsT>...> Bind(FuncT &&vFunc, ParamsT &&...vParams){
-	return { std::forward<FuncT>(vFunc), std::forward<ParamsT>(vParams)... };
+decltype(auto) Bind(FuncT &&vFunc, ParamsT &&...vParams){
+	return Impl_Bind::BindResult<FuncT, false, ParamsT...>(vFunc, vParams...);
 }
 template<typename FuncT, typename ...ParamsT>
-Impl_Bind::BindResult<std::decay_t<FuncT>, true, std::decay_t<ParamsT>...> LazyBind(FuncT &&vFunc, ParamsT &&...vParams){
-	return { std::forward<FuncT>(vFunc), std::forward<ParamsT>(vParams)... };
+decltype(auto) LazyBind(FuncT &&vFunc, ParamsT &&...vParams){
+	return Impl_Bind::BindResult<FuncT, true, ParamsT...>(vFunc, vParams...);
 }
 
 }

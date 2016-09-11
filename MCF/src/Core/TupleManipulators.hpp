@@ -35,7 +35,6 @@ template<typename FunctionT, typename ...ElementsT>
 constexpr void AbsorbTuple(FunctionT &&vFunction, std::tuple<ElementsT...> vTuple){
 	Impl_TupleManipulators::Absorb<FunctionT>(vFunction, vTuple, std::index_sequence_for<ElementsT...>());
 }
-
 // ReverseAbsorbTuple(foo, std::make_tuple(1, 2, 3)); -> { foo(3); foo(2); foo(1); }
 template<typename FunctionT, typename ...ElementsT>
 constexpr void ReverseAbsorbTuple(FunctionT &&vFunction, std::tuple<ElementsT...> vTuple){
@@ -62,7 +61,6 @@ template<typename FunctionT, typename ...ElementsT>
 constexpr decltype(auto) SqueezeTuple(FunctionT &&vFunction, std::tuple<ElementsT...> vTuple){
 	return Impl_TupleManipulators::Squeeze<FunctionT>(vFunction, vTuple, std::index_sequence_for<ElementsT...>());
 }
-
 // ReverseSqueezeTuple(foo, std::make_tuple(1, 2, 3)); -> foo(3, 2, 1);
 template<typename FunctionT, typename ...ElementsT>
 constexpr decltype(auto) ReverseSqueezeTuple(FunctionT &&vFunction, std::tuple<ElementsT...> vTuple){

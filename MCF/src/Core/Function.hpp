@@ -201,7 +201,7 @@ public:
 	}
 
 	// 后置条件：GetRefCount() <= 1
-	void Fork(){
+	void Clone(){
 		const auto pFunctor = x_pFunctor;
 		if(!pFunctor || (pFunctor->GetRef() <= 1)){
 			return;

@@ -5,66 +5,70 @@
 #ifndef MCF_CORE_TUPLE_MANIPULATORS_HPP_
 #define MCF_CORE_TUPLE_MANIPULATORS_HPP_
 
-#include <tuple>
 #include <type_traits>
-#include <initializer_list>
+#include <utility>
+#include <tuple>
 
 namespace MCF {
 
 namespace Impl_TupleManipulators {
+	template<std::size_t ...kIndicesT>
+	struct IndexSequence {
+	};
+
+	template<std::size_t kCurrentT, std::size_t kIncrementT, std::size_t kCountT, std::size_t ...kGeneratedT>
+	struct IndexSequenceGenerator {
+		static constexpr decltype(auto) DoIt() noexcept {
+			return IndexSequenceGenerator<kCurrentT + kIncrementT, kIncrementT, kCountT - 1, kGeneratedT..., kCurrentT>::DoIt();
+		}
+	};
+	template<std::size_t kCurrentT, std::size_t kIncrementT, std::size_t ...kGeneratedT>
+	struct IndexSequenceGenerator<kCurrentT, kIncrementT, 0, kGeneratedT...> {
+		static constexpr decltype(auto) DoIt() noexcept {
+			return IndexSequence<kGeneratedT...>();
+		}
+	};
+
 	template<typename FunctionT, typename TupleT, std::size_t ...kIndicesT>
-	constexpr void Absorb(FunctionT &vFunction, TupleT &vTuple, std::index_sequence<kIndicesT...>){
-		(void)std::initializer_list<int>{
-			((void)static_cast<FunctionT &&>(vFunction)(
-				static_cast<std::tuple_element_t<kIndicesT, TupleT> &&>(
-				                        std::get<kIndicesT>(vTuple))), 1)...
-		};
+	constexpr void RealAbsorb(FunctionT &vFunction, TupleT &vTuple, const IndexSequence<kIndicesT...> &){
+		__attribute__((__unused__)) const int a[] =
+			{ ((void)std::forward<FunctionT>(vFunction)(std::get<kIndicesT>(std::forward<TupleT>(vTuple))), 1)... };
 	}
+
 	template<typename FunctionT, typename TupleT, std::size_t ...kIndicesT>
-	constexpr void ReverseAbsorb(FunctionT &vFunction, TupleT &vTuple, std::index_sequence<kIndicesT...>){
-		(void)std::initializer_list<int>{
-			((void)static_cast<FunctionT &&>(vFunction)(
-				static_cast<std::tuple_element_t<sizeof...(kIndicesT) - 1 - kIndicesT, TupleT> &&>(
-				                        std::get<sizeof...(kIndicesT) - 1 - kIndicesT>(vTuple))), 1)...
-		};
+	constexpr decltype(auto) RealSqueeze(FunctionT &vFunction, TupleT &vTuple, const IndexSequence<kIndicesT...> &){
+		return std::forward<FunctionT>(vFunction)(std::get<kIndicesT>(std::forward<TupleT>(vTuple))...);
 	}
 }
 
-// AbsorbTuple(foo, std::make_tuple(1, 2, 3)); -> { foo(1); foo(2); foo(3); }
-template<typename FunctionT, typename ...ElementsT>
-constexpr void AbsorbTuple(FunctionT &&vFunction, std::tuple<ElementsT...> vTuple){
-	Impl_TupleManipulators::Absorb<FunctionT>(vFunction, vTuple, std::index_sequence_for<ElementsT...>());
+// Absorb(foo, std::make_tuple(1, 2, 3)); -> { foo(1); foo(2); foo(3); }
+template<typename FunctionT, typename TupleT>
+constexpr void Absorb(FunctionT &&vFunction, TupleT &&vTuple){
+	constexpr auto kSize = std::tuple_size<std::decay_t<TupleT>>::value;
+	Impl_TupleManipulators::RealAbsorb<FunctionT, TupleT>(vFunction, vTuple,
+		Impl_TupleManipulators::IndexSequenceGenerator<0, 1, kSize>::DoIt());
 }
-// ReverseAbsorbTuple(foo, std::make_tuple(1, 2, 3)); -> { foo(3); foo(2); foo(1); }
-template<typename FunctionT, typename ...ElementsT>
-constexpr void ReverseAbsorbTuple(FunctionT &&vFunction, std::tuple<ElementsT...> vTuple){
-	Impl_TupleManipulators::ReverseAbsorb<FunctionT>(vFunction, vTuple, std::index_sequence_for<ElementsT...>());
-}
-
-namespace Impl_TupleManipulators {
-	template<typename FunctionT, typename TupleT, std::size_t ...kIndicesT>
-	constexpr decltype(auto) Squeeze(FunctionT &vFunction, TupleT &vTuple, std::index_sequence<kIndicesT...>){
-		return static_cast<FunctionT &&>(vFunction)(
-			static_cast<std::tuple_element_t<kIndicesT, TupleT> &&>(
-			                        std::get<kIndicesT>(vTuple))...);
-	}
-	template<typename FunctionT, typename TupleT, std::size_t ...kIndicesT>
-	constexpr decltype(auto) ReverseSqueeze(FunctionT &vFunction, TupleT &vTuple, std::index_sequence<kIndicesT...>){
-		return static_cast<FunctionT &&>(vFunction)(
-			static_cast<std::tuple_element_t<sizeof...(kIndicesT) - 1 - kIndicesT, TupleT> &&>(
-			                        std::get<sizeof...(kIndicesT) - 1 - kIndicesT>(vTuple))...);
-	}
+// ReverseAbsorb(foo, std::make_tuple(1, 2, 3)); -> { foo(3); foo(2); foo(1); }
+template<typename FunctionT, typename TupleT>
+constexpr void ReverseAbsorb(FunctionT &&vFunction, TupleT &&vTuple){
+	constexpr auto kSize = std::tuple_size<std::decay_t<TupleT>>::value;
+	Impl_TupleManipulators::RealAbsorb<FunctionT, TupleT>(vFunction, vTuple,
+		Impl_TupleManipulators::IndexSequenceGenerator<kSize - 1, (std::size_t)-1, kSize>::DoIt());
 }
 
-// SqueezeTuple(foo, std::make_tuple(1, 2, 3)); -> foo(1, 2, 3);
-template<typename FunctionT, typename ...ElementsT>
-constexpr decltype(auto) SqueezeTuple(FunctionT &&vFunction, std::tuple<ElementsT...> vTuple){
-	return Impl_TupleManipulators::Squeeze<FunctionT>(vFunction, vTuple, std::index_sequence_for<ElementsT...>());
+// Squeeze(foo, std::make_tuple(1, 2, 3)); -> { foo(1); foo(2); foo(3); }
+template<typename FunctionT, typename TupleT>
+constexpr decltype(auto) Squeeze(FunctionT &&vFunction, TupleT &&vTuple){
+	constexpr auto kSize = std::tuple_size<std::decay_t<TupleT>>::value;
+	return Impl_TupleManipulators::RealSqueeze<FunctionT, TupleT>(vFunction, vTuple,
+		Impl_TupleManipulators::IndexSequenceGenerator<0, 1, kSize>::DoIt());
 }
-// ReverseSqueezeTuple(foo, std::make_tuple(1, 2, 3)); -> foo(3, 2, 1);
-template<typename FunctionT, typename ...ElementsT>
-constexpr decltype(auto) ReverseSqueezeTuple(FunctionT &&vFunction, std::tuple<ElementsT...> vTuple){
-	return Impl_TupleManipulators::ReverseSqueeze<FunctionT>(vFunction, vTuple, std::index_sequence_for<ElementsT...>());
+// ReverseSqueeze(foo, std::make_tuple(1, 2, 3)); -> { foo(3); foo(2); foo(1); }
+template<typename FunctionT, typename TupleT>
+constexpr decltype(auto) ReverseSqueeze(FunctionT &&vFunction, TupleT &&vTuple){
+	constexpr auto kSize = std::tuple_size<std::decay_t<TupleT>>::value;
+	return Impl_TupleManipulators::RealSqueeze<FunctionT, TupleT>(vFunction, vTuple,
+		Impl_TupleManipulators::IndexSequenceGenerator<kSize - 1, (std::size_t)-1, kSize>::DoIt());
 }
 
 }

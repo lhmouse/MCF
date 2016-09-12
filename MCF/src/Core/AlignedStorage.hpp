@@ -29,12 +29,12 @@ template<std::size_t kElementCountT, typename ...ElementsT>
 struct AlignedStorage {
 	enum : std::size_t {
 		kElementCount     = kElementCountT,
-		kElementSize      = Impl_AlignedStorage::MaxHelper<kMinSizeT, sizeof(ElementsT)...>::kValue,
-		kElementAlignment = Impl_AlignedStorage::MaxHelper<kMinSizeT, alignof(ElementsT)...>::kValue,
+		kElementSize      = Impl_AlignedStorage::MaxHelper<sizeof(ElementsT)... >::kValue,
+		kElementAlignment = Impl_AlignedStorage::MaxHelper<alignof(ElementsT)...>::kValue,
 	};
 
 	static_assert(kElementCount > 0, "kElementCount must be greater than zero.");
-	static_assert(kElementCount <= (std::size_t)-1 / kElementSize, "kElementCount is too large.");
+	static_assert(kElementCount <= static_cast<std::size_t>(-1) / kElementSize, "kElementCount is too large.");
 
 	alignas(kElementAlignment) char a[kElementSize * kElementCount];
 };

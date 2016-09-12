@@ -1,8 +1,8 @@
 简介
 Introduction
 ===================
-MCF 是一个基于 C++14 的 Windows 框架。
-MCF is a C++14 framework for Windows application development.
+MCF 是一个基于 C++17 的 Windows 框架。
+MCF is a C++17 framework for Windows application development.
 
 MCF 遵循“无尘设计”的原则。
 其设计目标是将 C 和 C++ 的标准库连带 CRT 全部丢弃，然后重新设计，以期移除任何杂质和智障功能，包括区域和语言设置、标准输入输出流、线程和 thread_local 等。

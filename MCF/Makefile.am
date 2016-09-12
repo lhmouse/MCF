@@ -3,7 +3,7 @@ AUTOMAKE_OPTIONS = no-exeext foreign subdir-objects
 AM_CPPFLAGS = -Wall -Wextra -pedantic -pedantic-errors -Werror -Wno-error=unused-parameter -Winvalid-pch	\
 	-Wwrite-strings -Wconversion -Wsign-conversion -Wsuggest-attribute=noreturn -Wundef -Wshadow -Wstrict-aliasing=2 -Wstrict-overflow=5	\
 	-pipe -mfpmath=both -march=nocona -mno-stack-arg-probe -mno-accumulate-outgoing-args -mpush-args -masm=intel
-AM_CXXFLAGS = -include __pch.hpp -std=c++14 -Wzero-as-null-pointer-constant -Wnoexcept -Woverloaded-virtual -fnothrow-opt
+AM_CXXFLAGS = -include __pch.hpp -std=c++1z -Wzero-as-null-pointer-constant -Wnoexcept -Woverloaded-virtual -fnothrow-opt
 
 ## I think you GNU people should just STFU and stop confusing the linker.
 EXEEXT =
@@ -77,7 +77,8 @@ pkginclude_Core_HEADERS =	\
 	src/Core/TupleManipulators.hpp	\
 	src/Core/UniqueHandle.hpp	\
 	src/Core/Uuid.hpp	\
-	src/Core/WhiteHole.hpp
+	src/Core/WhiteHole.hpp	\
+	src/Core/Variant.hpp
 
 pkginclude_Threaddir = ${pkgincludedir}/Thread
 pkginclude_Thread_HEADERS =	\

@@ -17,10 +17,10 @@ namespace Impl_ConstructDestruct {
 
 }
 
-inline void *operator new(std::size_t, void *p, ::MCF::Impl_ConstructDestruct::Tag){
+inline void *operator new(std::size_t, void *p, const ::MCF::Impl_ConstructDestruct::Tag &){
 	return p;
 }
-inline void operator delete(void *, void *, ::MCF::Impl_ConstructDestruct::Tag) noexcept {
+inline void operator delete(void *, void *, const ::MCF::Impl_ConstructDestruct::Tag &) noexcept {
 }
 
 namespace MCF {
@@ -54,7 +54,7 @@ namespace Impl_ConstructDestruct {
 			(void)pStorage;
 
 #ifndef NDEBUG
-			__builtin_memset(pStorage, 0xCC, sizeof(ObjectT));
+			__builtin_memset(pStorage, 0xDD, sizeof(ObjectT));
 #endif
 			::new(pStorage, Tag()) ObjectT(std::forward<ParamsT>(vParams)...);
 		}
@@ -65,7 +65,7 @@ namespace Impl_ConstructDestruct {
 
 			pObject->~ObjectT();
 #ifndef NDEBUG
-			__builtin_memset(pStorage, 0xDD, sizeof(ObjectT));
+			__builtin_memset(pStorage, 0xEE, sizeof(ObjectT));
 #endif
 		}
 	};

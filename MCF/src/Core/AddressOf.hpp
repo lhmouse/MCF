@@ -9,7 +9,7 @@ namespace MCF {
 
 template<typename T>
 inline T *AddressOf(T &v) noexcept {
-	return const_cast<T *>(reinterpret_cast<const volatile T *>(&reinterpret_cast<const volatile char &>(v)));
+	return reinterpret_cast<T *>(const_cast<char *>(reinterpret_cast<const volatile char (&)[1]>(v)));
 }
 
 }

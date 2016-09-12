@@ -203,11 +203,10 @@ public:
 	// 后置条件：GetRefCount() <= 1
 	void Fork(){
 		const auto pFunctor = x_pFunctor;
-		if(!pFunctor){
-			if(pFunctor->GetRef() > 1){
-				Function(X_AdoptionTag(), pFunctor->VirtualNew()).Swap(*this);
-			}
+		if(!pFunctor || (pFunctor->GetRef() <= 1)){
+			return;
 		}
+		Function(X_AdoptionTag(), pFunctor->VirtualNew()).Swap(*this);
 	}
 
 	void Swap(Function &rhs) noexcept {
@@ -220,9 +219,9 @@ public:
 		return !IsNull();
 	}
 	std::remove_cv_t<RetT> operator()(ParamsT ...vParams) const {
-		MCF_DEBUG_CHECK(!IsNull());
-
-		return x_pFunctor->Dispatch(std::forward<ParamsT>(vParams)...); // 值形参当作右值引用传递。
+		const auto pFunctor = x_pFunctor;
+		MCF_DEBUG_CHECK(pFunctor);
+		return pFunctor->Dispatch(std::forward<ParamsT>(vParams)...); // 值形参当作右值引用传递。
 	}
 
 	friend void swap(Function &lhs, Function &rhs) noexcept {

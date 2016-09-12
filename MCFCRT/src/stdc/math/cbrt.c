@@ -14,14 +14,14 @@ static inline long double fpu_cbrt(long double x){
 	if(sgn == __MCFCRT_kFpuZero){
 		return 0;
 	} else {
-		// x^(1/3) = 2^((1/3)*log2(x))
+		// x^(1/3) = 2^(log2(x)/3)
 		long double ylog2x;
 		bool neg;
 		if(sgn == __MCFCRT_kFpuPositive){
-			ylog2x = (1.0l / 3) * __MCFCRT_fyl2x(__MCFCRT_fld1(), x);
+			ylog2x = __MCFCRT_fyl2x(__MCFCRT_fld1(), x) / 3;
 			neg = false;
 		} else {
-			ylog2x = (1.0l / 3) * __MCFCRT_fyl2x(__MCFCRT_fld1(), -x);
+			ylog2x = __MCFCRT_fyl2x(__MCFCRT_fld1(), -x) / 3;
 			neg = true;
 		}
 		const long double i = __MCFCRT_frndintany(ylog2x), m = ylog2x - i;

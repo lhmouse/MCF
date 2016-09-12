@@ -14,9 +14,9 @@ _MCFCRT_EXTERN_C_BEGIN
 
 __attribute__((__always_inline__))
 static inline void __MCFCRT_CopyForward(void *__s1, const void *__s2, _MCFCRT_STD size_t __n) _MCFCRT_NOEXCEPT {
-	register char *__wp = __s1;
+	register char *__wp = (char *)__s1;
 	char *const __wend = __wp + __n;
-	register const char *__rp = __s2;
+	register const char *__rp = (const char *)__s2;
 	if((size_t)(__wend - __wp) >= 256){
 		while(((_MCFCRT_STD uintptr_t)__wp & 15) != 0){
 			if(__wp == __wend){
@@ -71,7 +71,7 @@ static inline void __MCFCRT_CopyForward(void *__s1, const void *__s2, _MCFCRT_ST
 }
 __attribute__((__always_inline__))
 static inline void __MCFCRT_CopyBackward(void *__s1, const void *__s2, _MCFCRT_STD size_t __n) _MCFCRT_NOEXCEPT {
-	char *const __wbegin = __s1;
+	char *const __wbegin = (char *)__s1;
 	register char *__wp = __wbegin + __n;
 	register const char *__rp = (const char *)__s2 + __n;
 	if((size_t)(__wp - __wbegin) >= 256){

@@ -36,7 +36,7 @@ namespace Impl_Bind {
 	}
 	template<typename LazyParamTupleT, typename FunctionT, typename ...ParamsT>
 	decltype(auto) SelectParam(LazyParamTupleT &&tupLazyParams, const BindResult<true, FunctionT, ParamsT...> &vBindResult){
-		return Squeeze(vBindResult, std::forward<LazyParamTupleT>(tupLazyParams));
+		return Squeeze<>(vBindResult, std::forward<LazyParamTupleT>(tupLazyParams));
 	}
 
 	template<typename FunctionT, typename ParamTupleT, std::size_t ...kIndicesT, typename LazyParamTupleT>

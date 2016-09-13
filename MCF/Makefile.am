@@ -30,7 +30,6 @@ pkginclude_Core_HEADERS =	\
 	src/Core/_CheckedSizeArithmetic.hpp	\
 	src/Core/_Enumerator.hpp	\
 	src/Core/_ForwardedParam.hpp	\
-	src/Core/_MagicalInvoker.hpp	\
 	src/Core/_UniqueNtHandle.hpp	\
 	src/Core/_KernelObjectBase.hpp	\
 	src/Core/AddressOf.hpp	\

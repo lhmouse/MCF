@@ -9,7 +9,7 @@
 #include "Assert.hpp"
 #include "DeclVal.hpp"
 #include "Atomic.hpp"
-#include "_MagicalInvoker.hpp"
+#include "Invoke.hpp"
 #include "_ForwardedParam.hpp"
 #include <type_traits>
 #include <utility>
@@ -85,7 +85,7 @@ namespace Impl_Function {
 
 	public:
 		RetT Dispatch(Impl_ForwardedParam::ForwardedParam<ParamsT> ...vParams) const override {
-			return Impl_MagicalInvoker::MagicalInvoker<RetT>()(x_vFunc, std::forward<ParamsT>(vParams)...);
+			return DesignatedInvoke<RetT>(x_vFunc, std::forward<ParamsT>(vParams)...);
 		}
 		Functor *VirtualNew() const override {
 			return std::conditional_t<std::is_copy_constructible<std::decay_t<FuncT>>::value, FunctorCopier, DummyFunctorCopier>::DoIt(*this);

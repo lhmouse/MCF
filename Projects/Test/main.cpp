@@ -7,6 +7,6 @@ void foo(){
 }
 
 extern "C" unsigned _MCFCRT_Main(void) noexcept {
-	f();
+	foo();
 	return 0;
 }

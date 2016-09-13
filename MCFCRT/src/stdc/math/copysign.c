@@ -24,13 +24,13 @@ float copysignf(float x, float y){
 	float ret;
 	__asm__(
 		"movss xmm2, dword ptr[%3] \n"
-		"movss xmm3, dword ptr[%4] \n"
 		"andps xmm0, xmm2 \n"
-		"andps %2, xmm3 \n"
-		"orps xmm0, %2 \n"
+		"movss xmm2, dword ptr[%4] \n"
+		"andps xmm2, %2 \n"
+		"orps xmm0, xmm2 \n"
 		: "=Yz"(ret)
 		: "0"(x), "x"(y), "m"(mmask), "m"(smask)
-		: "xmm2", "xmm3"
+		: "xmm2"
 	);
 	return ret;
 #else
@@ -44,10 +44,10 @@ double copysign(double x, double y){
 	float ret;
 	__asm__(
 		"movsd xmm2, qword ptr[%3] \n"
-		"movsd xmm3, qword ptr[%4] \n"
 		"andpd xmm0, xmm2 \n"
-		"andpd %2, xmm3 \n"
-		"orpd xmm0, %2 \n"
+		"movsd xmm2, qword ptr[%4] \n"
+		"andpd xmm2, %2 \n"
+		"orpd xmm0, xmm2 \n"
 		: "=Yz"(ret)
 		: "0"(x), "x"(y), "m"(mmask), "m"(smask)
 		: "xmm2", "xmm3"

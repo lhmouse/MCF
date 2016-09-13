@@ -11,7 +11,9 @@
 
 namespace MCF {
 
-// TODO
+template<typename ...ElementsT>
+class Variant {
+};
 
 }
 

@@ -39,19 +39,19 @@ namespace Impl_Bind {
 		return Squeeze(vBindResult, std::forward<LazyParamTupleT>(tupLazyParams));
 	}
 
+	template<typename FunctionT, typename ParamTupleT, std::size_t ...kIndicesT, typename LazyParamTupleT>
+	decltype(auto) SelectParamAndInvoke(const FunctionT &vFunction, const ParamTupleT &tupParams, const std::index_sequence<kIndicesT...> &, LazyParamTupleT &&tupLazyParams) const {
+		return Invoke(vFunction, SelectParam<>(std::forward<LazyParamTupleT>(tupLazyParams), std::get<kIndicesT>(tupParams))...);
+	}
+
 	template<bool kIsLazyT, typename FunctionT, typename ...ParamsT>
 	struct BindResult {
 		std::decay_t<FunctionT> vFunction;
 		std::tuple<std::decay_t<ParamsT>...> tupParams;
 
-		template<std::size_t ...kIndicesT, typename LazyParamTupleT>
-		decltype(auto) SelectParamAndInvoke(const std::index_sequence<kIndicesT...> &, LazyParamTupleT &&tupLazyParams) const {
-			return Invoke(vFunction, SelectParam</* Disables ADL */>(std::forward<LazyParamTupleT>(tupLazyParams), std::get<kIndicesT>(tupParams))...);
-		}
-
 		template<typename ...LazyParamsT>
 		decltype(auto) operator()(LazyParamsT &&...vLazyParams) const {
-			return SelectParamAndInvoke(std::make_index_sequence<sizeof...(ParamsT)>(), std::forward_as_tuple(std::forward<LazyParamsT>(vLazyParams)...));
+			return SelectParamAndInvoke<>(vFunction, tupParams, std::make_index_sequence<sizeof...(ParamsT)>(), std::forward_as_tuple(std::forward<LazyParamsT>(vLazyParams)...));
 		}
 	};
 }

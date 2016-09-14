@@ -79,7 +79,7 @@ public:
 		if(x_eState == xkElementSet){
 			return std::exception_ptr();
 		} else if(x_eState == xkExceptionSet){
-			return *static_cast<const std::exception_ptr *>(static_cast<const void *>(x_vStorage));
+			return *reinterpret_cast<const std::exception_ptr *>(x_vStorage);
 		} else {
 			return MCF_MAKE_EXCEPTION_PTR(Exception, ERROR_NOT_READY, Rcntws::View(L"Optional: 尚未设定元素或异常对象。"));
 		}
@@ -87,18 +87,18 @@ public:
 
 	const ElementT *Get() const {
 		if(x_eState == xkElementSet){
-			return static_cast<const ElementT *>(static_cast<const void *>(x_vStorage));
+			return reinterpret_cast<const ElementT *>(x_vStorage);
 		} else if(x_eState == xkExceptionSet){
-			std::rethrow_exception(*static_cast<const std::exception_ptr *>(static_cast<const void *>(x_vStorage)));
+			std::rethrow_exception(*reinterpret_cast<const std::exception_ptr *>(x_vStorage));
 		} else {
 			return nullptr;
 		}
 	}
 	ElementT *Get(){
 		if(x_eState == xkElementSet){
-			return static_cast<ElementT *>(static_cast<void *>(x_vStorage));
+			return reinterpret_cast<ElementT *>(x_vStorage);
 		} else if(x_eState == xkExceptionSet){
-			std::rethrow_exception(*static_cast<const std::exception_ptr *>(static_cast<const void *>(x_vStorage)));
+			std::rethrow_exception(*reinterpret_cast<const std::exception_ptr *>(x_vStorage));
 		} else {
 			return nullptr;
 		}
@@ -120,10 +120,10 @@ public:
 
 	Optional &Reset() noexcept {
 		if(x_eState == xkElementSet){
-			Destruct(static_cast<ElementT *>(static_cast<void *>(x_vStorage)));
+			Destruct(reinterpret_cast<ElementT *>(x_vStorage));
 			x_eState = xkUnset;
 		} else if(x_eState == xkExceptionSet){
-			Destruct(static_cast<std::exception_ptr *>(static_cast<void *>(x_vStorage)));
+			Destruct(reinterpret_cast<std::exception_ptr *>(x_vStorage));
 			x_eState = xkUnset;
 		}
 		return *this;
@@ -132,10 +132,10 @@ public:
 		Reset();
 
 		if(rhs.x_eState == xkElementSet){
-			Reset(std::forward_as_tuple(*static_cast<const ElementT *>(static_cast<const void *>(rhs.x_vStorage))));
+			Reset(std::forward_as_tuple(*reinterpret_cast<const ElementT *>(rhs.x_vStorage)));
 			x_eState = xkUnset;
 		} else if(rhs.x_eState == xkExceptionSet){
-			Reset(*static_cast<const std::exception_ptr *>(static_cast<const void *>(rhs.x_vStorage)));
+			Reset(*reinterpret_cast<const std::exception_ptr *>(rhs.x_vStorage));
 			x_eState = xkUnset;
 		}
 		return *this;
@@ -144,10 +144,10 @@ public:
 		Reset();
 
 		if(rhs.x_eState == xkElementSet){
-			Reset(std::forward_as_tuple(std::move(*static_cast<ElementT *>(static_cast<void *>(rhs.x_vStorage)))));
+			Reset(std::forward_as_tuple(std::move(*reinterpret_cast<ElementT *>(rhs.x_vStorage))));
 			x_eState = xkUnset;
 		} else if(rhs.x_eState == xkExceptionSet){
-			Reset(std::move(*static_cast<std::exception_ptr *>(static_cast<void *>(rhs.x_vStorage))));
+			Reset(std::move(*reinterpret_cast<std::exception_ptr *>(rhs.x_vStorage)));
 			x_eState = xkUnset;
 		}
 		return *this;
@@ -156,14 +156,14 @@ public:
 	Optional &Reset(std::tuple<ParamsT...> tupParams) noexcept(std::is_nothrow_constructible<ElementT, ParamsT &&...>::value) {
 		Reset();
 
-		Squeeze([this](auto &&...vParams){ Construct(static_cast<ElementT *>(static_cast<void *>(x_vStorage)), std::forward<ParamsT>(vParams)...); }, std::move(tupParams));
+		Squeeze([this](auto &&...vParams){ Construct(reinterpret_cast<ElementT *>(x_vStorage), std::forward<ParamsT>(vParams)...); }, std::move(tupParams));
 		x_eState = xkElementSet;
 		return *this;
 	}
 	Optional &Reset(std::exception_ptr rhs) noexcept {
 		Reset();
 
-		Construct(static_cast<std::exception_ptr *>(static_cast<void *>(x_vStorage)), std::move(rhs));
+		Construct(reinterpret_cast<std::exception_ptr *>(x_vStorage), std::move(rhs));
 		x_eState = xkExceptionSet;
 		return *this;
 	}

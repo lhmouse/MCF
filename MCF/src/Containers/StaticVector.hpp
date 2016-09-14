@@ -92,7 +92,7 @@ public:
 	OutputIteratorT Extract(OutputIteratorT itOutput){
 		try {
 			for(std::size_t i = 0; i < x_uSize; ++i){
-				*itOutput = std::move(static_cast<Element *>(x_aStorage)[i]);
+				*itOutput = std::move(reinterpret_cast<Element *>(x_aStorage)[i]);
 				++itOutput;
 			}
 		} catch(...){
@@ -215,10 +215,10 @@ public:
 
 	// StaticVector 需求。
 	const Element *GetData() const noexcept {
-		return static_cast<const Element *>(x_aStorage);
+		return reinterpret_cast<const Element *>(x_aStorage);
 	}
 	Element *GetData() noexcept {
-		return static_cast<Element *>(x_aStorage);
+		return reinterpret_cast<Element *>(x_aStorage);
 	}
 	const Element *GetConstData() const noexcept {
 		return GetData();
@@ -231,19 +231,19 @@ public:
 	}
 
 	const Element *GetBegin() const noexcept {
-		return static_cast<const Element *>(x_aStorage);
+		return reinterpret_cast<const Element *>(x_aStorage);
 	}
 	Element *GetBegin() noexcept {
-		return static_cast<Element *>(x_aStorage);
+		return reinterpret_cast<Element *>(x_aStorage);
 	}
 	const Element *GetConstBegin() const noexcept {
 		return GetBegin();
 	}
 	const Element *GetEnd() const noexcept {
-		return static_cast<const Element *>(x_aStorage) + x_uSize;
+		return reinterpret_cast<const Element *>(x_aStorage) + x_uSize;
 	}
 	Element *GetEnd() noexcept {
-		return static_cast<Element *>(x_aStorage) + x_uSize;
+		return reinterpret_cast<Element *>(x_aStorage) + x_uSize;
 	}
 	const Element *GetConstEnd() const noexcept {
 		return GetEnd();
@@ -264,12 +264,12 @@ public:
 	const Element &UncheckedGet(std::size_t uIndex) const noexcept {
 		MCF_DEBUG_CHECK(uIndex < x_uSize);
 
-		return static_cast<const Element *>(x_aStorage)[uIndex];
+		return reinterpret_cast<const Element *>(x_aStorage)[uIndex];
 	}
 	Element &UncheckedGet(std::size_t uIndex) noexcept {
 		MCF_DEBUG_CHECK(uIndex < x_uSize);
 
-		return static_cast<Element *>(x_aStorage)[uIndex];
+		return reinterpret_cast<Element *>(x_aStorage)[uIndex];
 	}
 
 	template<typename ...ParamsT>
@@ -285,7 +285,7 @@ public:
 	Element *ResizeMore(std::size_t uDeltaSize, const ParamsT &...vParams){
 		const auto uOldSize = x_uSize;
 		Append(uDeltaSize, vParams...);
-		return static_cast<Element *>(x_aStorage) + uOldSize;
+		return reinterpret_cast<Element *>(x_aStorage) + uOldSize;
 	}
 
 	void Reserve(std::size_t uNewCapacity){
@@ -307,7 +307,7 @@ public:
 	Element &UncheckedPush(ParamsT &&...vParams) noexcept(std::is_nothrow_constructible<Element, ParamsT &&...>::value) {
 		MCF_DEBUG_CHECK(kCapacityT - x_uSize > 0);
 
-		const auto pElement = static_cast<Element *>(x_aStorage) + x_uSize;
+		const auto pElement = reinterpret_cast<Element *>(x_aStorage) + x_uSize;
 		DefaultConstruct(pElement, std::forward<ParamsT>(vParams)...);
 		++x_uSize;
 
@@ -317,7 +317,7 @@ public:
 		MCF_DEBUG_CHECK(uCount <= GetSize());
 
 		for(std::size_t i = 0; i < uCount; ++i){
-			Destruct(static_cast<Element *>(x_aStorage) + x_uSize - 1 - i);
+			Destruct(reinterpret_cast<Element *>(x_aStorage) + x_uSize - 1 - i);
 		}
 		x_uSize -= uCount;
 	}

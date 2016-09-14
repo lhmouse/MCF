@@ -45,7 +45,7 @@ private:
 		if(!pContainer->bConstructed){
 			return;
 		}
-		const auto pElement = static_cast<ElementT *>(pContainer->vStorage);
+		const auto pElement = reinterpret_cast<ElementT *>(pContainer->vStorage);
 		Destruct(pElement);
 	}
 
@@ -71,10 +71,10 @@ public:
 
 public:
 	ElementT *Get() const noexcept {
-		void *pStorage;
-		const bool bResult = ::_MCFCRT_TlsGet(x_hTlsKey.Get(), &pStorage);
+		void *pContainerRaw;
+		const bool bResult = ::_MCFCRT_TlsGet(x_hTlsKey.Get(), &pContainerRaw);
 		MCF_ASSERT_MSG(bResult, L"_MCFCRT_TlsGet() 失败。");
-		const auto pContainer = static_cast<X_TlsContainer *>(pStorage);
+		const auto pContainer = static_cast<X_TlsContainer *>(pContainerRaw);
 		if(!pContainer){
 			return nullptr;
 		}
@@ -82,20 +82,20 @@ public:
 		if(!pContainer->bConstructed){
 			return nullptr;
 		}
-		const auto pElement = static_cast<ElementT *>(pContainer->vStorage);
+		const auto pElement = reinterpret_cast<ElementT *>(pContainer->vStorage);
 		return pElement;
 	}
 	template<typename ...ParamsT>
 	ElementT *Require(ParamsT &&...vParams) const {
-		void *pStorage;
-		const bool bResult = ::_MCFCRT_TlsRequire(x_hTlsKey.Get(), &pStorage);
+		void *pContainerRaw;
+		const bool bResult = ::_MCFCRT_TlsRequire(x_hTlsKey.Get(), &pContainerRaw);
 		if(!bResult){
 			MCF_THROW(Exception, ::_MCFCRT_GetLastWin32Error(), Rcntws::View(L"ThreadLocal: _MCFCRT_TlsRequire() 失败。"));
 		}
-		const auto pContainer = static_cast<X_TlsContainer *>(pStorage);
+		const auto pContainer = static_cast<X_TlsContainer *>(pContainerRaw);
 		MCF_ASSERT(pContainer);
 
-		const auto pElement = static_cast<ElementT *>(pContainer->vStorage);
+		const auto pElement = reinterpret_cast<ElementT *>(pContainer->vStorage);
 		if(!pContainer->bConstructed){
 			DefaultConstruct(pElement, std::forward<ParamsT>(vParams)...);
 			pContainer->bConstructed = true;

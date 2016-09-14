@@ -34,7 +34,7 @@ private:
 	};
 
 	struct X_TlsContainer {
-		AlignedStorage<1, ElementT> vStorage;
+		AlignedStorage<ElementT> vStorage;
 		bool bConstructed;
 	};
 
@@ -45,7 +45,7 @@ private:
 		if(!pContainer->bConstructed){
 			return;
 		}
-		const auto pElement = static_cast<ElementT *>(static_cast<void *>(&(pContainer->vStorage)));
+		const auto pElement = static_cast<ElementT *>(pContainer->vStorage);
 		Destruct(pElement);
 	}
 
@@ -82,7 +82,7 @@ public:
 		if(!pContainer->bConstructed){
 			return nullptr;
 		}
-		const auto pElement = static_cast<ElementT *>(static_cast<void *>(&(pContainer->vStorage)));
+		const auto pElement = static_cast<ElementT *>(pContainer->vStorage);
 		return pElement;
 	}
 	template<typename ...ParamsT>
@@ -95,7 +95,7 @@ public:
 		const auto pContainer = static_cast<X_TlsContainer *>(pStorage);
 		MCF_ASSERT(pContainer);
 
-		const auto pElement = static_cast<ElementT *>(static_cast<void *>(&(pContainer->vStorage)));
+		const auto pElement = static_cast<ElementT *>(pContainer->vStorage);
 		if(!pContainer->bConstructed){
 			DefaultConstruct(pElement, std::forward<ParamsT>(vParams)...);
 			pContainer->bConstructed = true;

@@ -25,7 +25,7 @@ private:
 	};
 
 private:
-	AlignedStorage<1, ElementT, std::exception_ptr> x_vStorage;
+	AlignedStorage<ElementT, std::exception_ptr> x_vStorage;
 	X_State x_eState;
 
 public:
@@ -55,12 +55,10 @@ public:
 		Reset(std::move(rhs));
 	}
 	Optional &operator=(const Optional &rhs) noexcept(std::is_nothrow_copy_constructible<ElementT>::value) {
-		Reset(rhs);
-		return *this;
+		return Reset(rhs);
 	}
 	Optional &operator=(Optional &&rhs) noexcept(std::is_nothrow_move_constructible<ElementT>::value) {
-		Reset(std::move(rhs));
-		return *this;
+		return Reset(std::move(rhs));
 	}
 	~Optional(){
 		Reset();
@@ -81,43 +79,52 @@ public:
 		if(x_eState == xkElementSet){
 			return std::exception_ptr();
 		} else if(x_eState == xkExceptionSet){
-			const auto p = reinterpret_cast<const std::exception_ptr *>(&x_vStorage);
-			return *p;
+			return *static_cast<const std::exception_ptr *>(x_vStorage);
 		} else {
 			return MCF_MAKE_EXCEPTION_PTR(Exception, ERROR_NOT_READY, Rcntws::View(L"Optional: 尚未设定元素或异常对象。"));
 		}
 	}
 
-	const ElementT &Get() const {
+	const ElementT *Get() const {
 		if(x_eState == xkElementSet){
-			const auto p = reinterpret_cast<const ElementT *>(&x_vStorage);
-			return *p;
+			return static_cast<const ElementT *>(x_vStorage);
 		} else if(x_eState == xkExceptionSet){
-			const auto p = reinterpret_cast<const std::exception_ptr *>(&x_vStorage);
-			std::rethrow_exception(*p);
+			std::rethrow_exception(*static_cast<const std::exception_ptr *>(x_vStorage));
 		} else {
-			MCF_THROW(Exception, ERROR_NOT_READY, Rcntws::View(L"Optional: 尚未设定元素或异常对象。"));
+			return nullptr;
 		}
 	}
-	ElementT &Get(){
+	ElementT *Get(){
 		if(x_eState == xkElementSet){
-			const auto p = reinterpret_cast<ElementT *>(&x_vStorage);
-			return *p;
+			return static_cast<ElementT *>(x_vStorage);
 		} else if(x_eState == xkExceptionSet){
-			const auto p = reinterpret_cast<const std::exception_ptr *>(&x_vStorage);
-			std::rethrow_exception(*p);
+			std::rethrow_exception(*static_cast<const std::exception_ptr *>(x_vStorage));
 		} else {
-			MCF_THROW(Exception, ERROR_NOT_READY, Rcntws::View(L"Optional: 尚未设定元素或异常对象。"));
+			return nullptr;
 		}
+	}
+	const ElementT *Require() const {
+		const auto pElement = Get();
+		if(!pElement){
+			MCF_THROW(Exception, ERROR_NOT_READY, Rcntws::View(L"Optional: 尚未设定元素。"));
+		}
+		return *pElement;
+	}
+	ElementT *Require(){
+		const auto pElement = Get();
+		if(!pElement){
+			MCF_THROW(Exception, ERROR_NOT_READY, Rcntws::View(L"Optional: 尚未设定元素。"));
+		}
+		return *pElement;
 	}
 
 	Optional &Reset() noexcept {
 		if(x_eState == xkElementSet){
-			const auto p = reinterpret_cast<ElementT *>(&x_vStorage);
+			const auto p = static_cast<ElementT *>(x_vStorage);
 			Destruct(p);
 			x_eState = xkUnset;
 		} else if(x_eState == xkExceptionSet){
-			const auto p = reinterpret_cast<std::exception_ptr *>(&x_vStorage);
+			const auto p = static_cast<std::exception_ptr *>(x_vStorage);
 			Destruct(p);
 			x_eState = xkUnset;
 		}
@@ -127,10 +134,10 @@ public:
 		Reset();
 
 		if(rhs.x_eState == xkElementSet){
-			const auto p = reinterpret_cast<const ElementT *>(&rhs.x_vStorage);
+			const auto p = static_cast<const ElementT *>(&rhs.x_vStorage);
 			Reset(std::forward_as_tuple(*p));
 		} else if(rhs.x_eState == xkExceptionSet){
-			const auto p = reinterpret_cast<const std::exception_ptr *>(&rhs.x_vStorage);
+			const auto p = static_cast<const std::exception_ptr *>(&rhs.x_vStorage);
 			Reset(*p);
 		}
 		return *this;
@@ -139,10 +146,10 @@ public:
 		Reset();
 
 		if(rhs.x_eState == xkElementSet){
-			const auto p = reinterpret_cast<ElementT *>(&rhs.x_vStorage);
+			const auto p = static_cast<ElementT *>(&rhs.x_vStorage);
 			Reset(std::forward_as_tuple(std::move(*p)));
 		} else if(rhs.x_eState == xkExceptionSet){
-			const auto p = reinterpret_cast<std::exception_ptr *>(&rhs.x_vStorage);
+			const auto p = static_cast<std::exception_ptr *>(&rhs.x_vStorage);
 			Reset(std::move(*p));
 		}
 		return *this;
@@ -153,7 +160,7 @@ public:
 
 		SqueezeTuple(
 			[this](auto &&...vParams){
-				Construct(reinterpret_cast<ElementT *>(&x_vStorage), std::forward<ParamsT>(vParams)...);
+				Construct(static_cast<ElementT *>(x_vStorage), std::forward<ParamsT>(vParams)...);
 			},
 			std::move(vParamTuple));
 		x_eState = xkElementSet;
@@ -162,7 +169,7 @@ public:
 	Optional &Reset(std::exception_ptr rhs) noexcept {
 		Reset();
 
-		Construct(reinterpret_cast<std::exception_ptr *>(&x_vStorage), std::move(rhs));
+		Construct(static_cast<std::exception_ptr *>(x_vStorage), std::move(rhs));
 		x_eState = xkExceptionSet;
 		return *this;
 	}

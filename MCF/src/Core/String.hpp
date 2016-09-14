@@ -45,9 +45,6 @@ public:
 	using Enumerator      = Impl_Enumerator::Enumerator      <String>;
 
 public:
-	static const String kEmpty;
-
-public:
 	static void UnifyAppend(String<StringType::kUtf16> &u16sDst, const View &svSrc);
 	static void DeunifyAppend(String &strDst, const StringView<StringType::kUtf16> &u16svSrc);
 
@@ -875,9 +872,6 @@ public:
 		return end(rhs);
 	}
 };
-
-template<StringType kTypeT>
-const String<kTypeT> String<kTypeT>::kEmpty;
 
 namespace Impl_String {
 	static_assert(sizeof(wchar_t) == sizeof(char16_t), "wchar_t does not have the same size with char16_t.");

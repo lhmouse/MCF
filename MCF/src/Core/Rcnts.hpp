@@ -23,7 +23,10 @@ public:
 	using Char = CharT;
 
 private:
-	static constexpr CharT xkNull = { };
+	static const CharT *X_GetNullTerminator() noexcept {
+		static constexpr CharT kNull[1] = { };
+		return kNull;
+	}
 
 private:
 	static std::size_t X_Len(const Char *s) noexcept {
@@ -81,7 +84,7 @@ private:
 	void X_Dispose() noexcept {
 		const auto puRef = x_puRef;
 #ifndef NDEBUG
-		__builtin_memset(&x_puRef, 0xAA, sizeof(x_puRef));
+		__builtin_memset(&x_puRef,  0xAA, sizeof(x_puRef));
 		__builtin_memset(&x_pszStr, 0xBB, sizeof(x_pszStr));
 #endif
 		if(puRef){
@@ -100,7 +103,7 @@ private:
 
 public:
 	constexpr Rcnts() noexcept
-		: Rcnts(X_AdoptionTag(), nullptr, &xkNull)
+		: Rcnts(X_AdoptionTag(), nullptr, X_GetNullTerminator())
 	{
 	}
 	Rcnts(const Rcnts &rhs) noexcept
@@ -108,7 +111,7 @@ public:
 	{
 	}
 	Rcnts(Rcnts &&rhs) noexcept
-		: Rcnts(X_AdoptionTag(), std::exchange(rhs.x_puRef, nullptr), std::exchange(rhs.x_pszStr, &xkNull))
+		: Rcnts(X_AdoptionTag(), std::exchange(rhs.x_puRef, nullptr), std::exchange(rhs.x_pszStr, X_GetNullTerminator()))
 	{
 	}
 	Rcnts &operator=(const Rcnts &rhs) noexcept {
@@ -232,9 +235,6 @@ public:
 		lhs.Swap(rhs);
 	}
 };
-
-template<typename CharT>
-const CharT Rcnts<CharT>::xkNull;
 
 extern template class Rcnts<char>;
 extern template class Rcnts<wchar_t>;

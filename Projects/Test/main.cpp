@@ -149,8 +149,8 @@ public:
 #endif
 
 //template class MCF::Variant<int, long, double>;
-#include <MCF/Containers/List.hpp>
-template class MCF::List<int>;
+#include <MCF/Core/Optional.hpp>
+template class MCF::Optional<int>;
 
 extern "C" unsigned _MCFCRT_Main(void) noexcept {
 //	MCF::Variant<int, long, double> v;

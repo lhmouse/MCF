@@ -5,7 +5,7 @@ CPPFLAGS+=" -O3 -DNDEBUG -Wall -Wextra -pedantic -pedantic-errors -Wno-error=unu
 	-pipe -mfpmath=both -march=nocona -mno-stack-arg-probe -mno-accumulate-outgoing-args -mpush-args -masm=intel	\
 	-I../../release/mingw64/include"
 CFLAGS+=" -O3 -std=c11 -Wstrict-prototypes"
-LDFLAGS+=" -O3 -nostdlib -L../../release/mingw64/lib -lmcf -lmingwex -lgcc -lgcc_eh -lmcfcrt-pre-exe -lmcfcrt -lmsvcrt -lkernel32 -lntdll -Wl,-e@__MCFCRT_ExeStartup"
+LDFLAGS+=" -O3 -nostdlib -L../../release/mingw64/lib -static -lmcf -lmingwex -lgcc -lgcc_eh -static -lmcfcrt-pre-exe -static -lmcfcrt -lmsvcrt -lkernel32 -lntdll -Wl,--disable-runtime-pseudo-reloc,-e@__MCFCRT_ExeStartup"
 
 cp -fp ../../release/mingw64/bin/*.dll ./
 

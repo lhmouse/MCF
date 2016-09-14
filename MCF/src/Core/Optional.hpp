@@ -6,9 +6,9 @@
 #define MCF_CORE_OPTIONAL_HPP_
 
 #include "ConstructDestruct.hpp"
-#include "TupleManipulators.hpp"
 #include "AlignedStorage.hpp"
 #include "Exception.hpp"
+#include "TupleManipulators.hpp"
 #include <exception>
 #include <type_traits>
 #include <utility>
@@ -34,10 +34,10 @@ public:
 	{
 	}
 	template<typename ...ParamsT>
-	Optional(std::tuple<ParamsT...> vParamTuple) noexcept(std::is_nothrow_constructible<ElementT, ParamsT &&...>::value)
+	Optional(std::tuple<ParamsT...> tupParams) noexcept(std::is_nothrow_constructible<ElementT, ParamsT &&...>::value)
 		: Optional()
 	{
-		Reset(std::move(vParamTuple));
+		Reset(std::move(tupParams));
 	}
 	Optional(std::exception_ptr rhs) noexcept
 		: Optional()
@@ -79,7 +79,7 @@ public:
 		if(x_eState == xkElementSet){
 			return std::exception_ptr();
 		} else if(x_eState == xkExceptionSet){
-			return *static_cast<const std::exception_ptr *>(x_vStorage);
+			return *static_cast<const std::exception_ptr *>(static_cast<const void *>(x_vStorage));
 		} else {
 			return MCF_MAKE_EXCEPTION_PTR(Exception, ERROR_NOT_READY, Rcntws::View(L"Optional: 尚未设定元素或异常对象。"));
 		}
@@ -87,18 +87,18 @@ public:
 
 	const ElementT *Get() const {
 		if(x_eState == xkElementSet){
-			return static_cast<const ElementT *>(x_vStorage);
+			return static_cast<const ElementT *>(static_cast<const void *>(x_vStorage));
 		} else if(x_eState == xkExceptionSet){
-			std::rethrow_exception(*static_cast<const std::exception_ptr *>(x_vStorage));
+			std::rethrow_exception(*static_cast<const std::exception_ptr *>(static_cast<const void *>(x_vStorage)));
 		} else {
 			return nullptr;
 		}
 	}
 	ElementT *Get(){
 		if(x_eState == xkElementSet){
-			return static_cast<ElementT *>(x_vStorage);
+			return static_cast<ElementT *>(static_cast<void *>(x_vStorage));
 		} else if(x_eState == xkExceptionSet){
-			std::rethrow_exception(*static_cast<const std::exception_ptr *>(x_vStorage));
+			std::rethrow_exception(*static_cast<const std::exception_ptr *>(static_cast<const void *>(x_vStorage)));
 		} else {
 			return nullptr;
 		}
@@ -108,24 +108,22 @@ public:
 		if(!pElement){
 			MCF_THROW(Exception, ERROR_NOT_READY, Rcntws::View(L"Optional: 尚未设定元素。"));
 		}
-		return *pElement;
+		return pElement;
 	}
 	ElementT *Require(){
 		const auto pElement = Get();
 		if(!pElement){
 			MCF_THROW(Exception, ERROR_NOT_READY, Rcntws::View(L"Optional: 尚未设定元素。"));
 		}
-		return *pElement;
+		return pElement;
 	}
 
 	Optional &Reset() noexcept {
 		if(x_eState == xkElementSet){
-			const auto p = static_cast<ElementT *>(x_vStorage);
-			Destruct(p);
+			Destruct(static_cast<ElementT *>(static_cast<void *>(x_vStorage)));
 			x_eState = xkUnset;
 		} else if(x_eState == xkExceptionSet){
-			const auto p = static_cast<std::exception_ptr *>(x_vStorage);
-			Destruct(p);
+			Destruct(static_cast<std::exception_ptr *>(static_cast<void *>(x_vStorage)));
 			x_eState = xkUnset;
 		}
 		return *this;
@@ -134,11 +132,11 @@ public:
 		Reset();
 
 		if(rhs.x_eState == xkElementSet){
-			const auto p = static_cast<const ElementT *>(&rhs.x_vStorage);
-			Reset(std::forward_as_tuple(*p));
+			Reset(std::forward_as_tuple(*static_cast<const ElementT *>(static_cast<const void *>(rhs.x_vStorage))));
+			x_eState = xkUnset;
 		} else if(rhs.x_eState == xkExceptionSet){
-			const auto p = static_cast<const std::exception_ptr *>(&rhs.x_vStorage);
-			Reset(*p);
+			Reset(*static_cast<const std::exception_ptr *>(static_cast<const void *>(rhs.x_vStorage)));
+			x_eState = xkUnset;
 		}
 		return *this;
 	}
@@ -146,30 +144,26 @@ public:
 		Reset();
 
 		if(rhs.x_eState == xkElementSet){
-			const auto p = static_cast<ElementT *>(&rhs.x_vStorage);
-			Reset(std::forward_as_tuple(std::move(*p)));
+			Reset(std::forward_as_tuple(std::move(*static_cast<ElementT *>(static_cast<void *>(rhs.x_vStorage)))));
+			x_eState = xkUnset;
 		} else if(rhs.x_eState == xkExceptionSet){
-			const auto p = static_cast<std::exception_ptr *>(&rhs.x_vStorage);
-			Reset(std::move(*p));
+			Reset(std::move(*static_cast<std::exception_ptr *>(static_cast<void *>(rhs.x_vStorage))));
+			x_eState = xkUnset;
 		}
 		return *this;
 	}
 	template<typename ...ParamsT>
-	Optional &Reset(std::tuple<ParamsT...> vParamTuple) noexcept(std::is_nothrow_constructible<ElementT, ParamsT &&...>::value) {
+	Optional &Reset(std::tuple<ParamsT...> tupParams) noexcept(std::is_nothrow_constructible<ElementT, ParamsT &&...>::value) {
 		Reset();
 
-		SqueezeTuple(
-			[this](auto &&...vParams){
-				Construct(static_cast<ElementT *>(x_vStorage), std::forward<ParamsT>(vParams)...);
-			},
-			std::move(vParamTuple));
+		Squeeze([this](auto &&...vParams){ Construct(static_cast<ElementT *>(static_cast<void *>(x_vStorage)), std::forward<ParamsT>(vParams)...); }, std::move(tupParams));
 		x_eState = xkElementSet;
 		return *this;
 	}
 	Optional &Reset(std::exception_ptr rhs) noexcept {
 		Reset();
 
-		Construct(static_cast<std::exception_ptr *>(x_vStorage), std::move(rhs));
+		Construct(static_cast<std::exception_ptr *>(static_cast<void *>(x_vStorage)), std::move(rhs));
 		x_eState = xkExceptionSet;
 		return *this;
 	}

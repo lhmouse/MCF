@@ -237,7 +237,7 @@ MCF_1_dll_SOURCES =	\
 
 MCF_1_dll_LDFLAGS =	\
 	-shared -static -nostdlib	\
-	-Wl,-e@__MCFCRT_DllStartup,--subsystem,windows,--disable-runtime-pseudo-reloc,--disable-auto-import	\
+	-Wl,-e@__MCFCRT_DllStartup,--subsystem,windows,--disable-runtime-pseudo-reloc	\
 	-Wl,--export-all-symbols,--exclude-symbols,@__MCFCRT_DllStartup,--exclude-libs,ALL	\
 	-Wl,--disable-stdcall-fixup,--enable-auto-image-base,--out-implib,libMCF.dll.a
 

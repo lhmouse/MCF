@@ -288,9 +288,6 @@ public:
 
 	static_assert(noexcept(Deleter()(DeclVal<std::remove_cv_t<Element> *>())), "Deleter must not throw.");
 
-public:
-	static const IntrusivePtr kNull;
-
 private:
 	Element *x_pElement;
 
@@ -543,9 +540,6 @@ public:
 	}
 };
 
-template<typename ObjectT, class DeleterT>
-const IntrusivePtr<ObjectT, DeleterT> IntrusivePtr<ObjectT, DeleterT>::kNull;
-
 template<typename ObjectT, typename DeleterT = DefaultDeleter<ObjectT>, typename ...ParamsT>
 IntrusivePtr<ObjectT, DeleterT> MakeIntrusive(ParamsT &&...vParams){
 	static_assert(!std::is_array<ObjectT>::value, "ObjectT shall not be an array type.");
@@ -592,9 +586,6 @@ public:
 	using Deleter = DeleterT;
 
 	static_assert(noexcept(Deleter()(DeclVal<std::remove_cv_t<Element> *>())), "Deleter must not throw.");
-
-public:
-	static const IntrusiveWeakPtr kNull;
 
 private:
 	X_WeakView *x_pView;
@@ -781,9 +772,6 @@ public:
 		lhs.Swap(rhs);
 	}
 };
-
-template<typename ObjectT, class DeleterT>
-const IntrusiveWeakPtr<ObjectT, DeleterT> IntrusiveWeakPtr<ObjectT, DeleterT>::kNull;
 
 template<typename ObjectT, class DeleterT>
 IntrusiveWeakPtr<ObjectT, DeleterT> Weaken(const IntrusivePtr<ObjectT, DeleterT> &rhs) noexcept {

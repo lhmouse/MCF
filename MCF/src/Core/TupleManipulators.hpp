@@ -31,7 +31,7 @@ namespace Impl_TupleManipulators {
 
 	template<typename FunctionT, typename TupleT, std::size_t ...kIndicesT>
 	constexpr void RealAbsorb(FunctionT &vFunction, TupleT &vTuple, const IndexSequence<kIndicesT...> &){
-		((void)std::forward<FunctionT>(vFunction)(std::get<kIndicesT>(std::forward<TupleT>(vTuple))), ...);
+		(void)(..., (void)std::forward<FunctionT>(vFunction)(std::get<kIndicesT>(std::forward<TupleT>(vTuple))));
 	}
 
 	template<typename FunctionT, typename TupleT, std::size_t ...kIndicesT>

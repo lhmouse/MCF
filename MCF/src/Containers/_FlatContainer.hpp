@@ -70,7 +70,7 @@ namespace Impl_FlatContainer {
 		}
 		~FlatContainer(){
 			Clear();
-			Allocator()(const_cast<void *>(static_cast<const void *>(x_pStorage)));
+			Allocator()(static_cast<void *>(x_pStorage));
 		}
 
 	private:
@@ -180,13 +180,13 @@ namespace Impl_FlatContainer {
 					--pWrite;
 					Destruct(pWrite);
 				}
-				Allocator()(const_cast<void *>(static_cast<const void *>(pNewStorage)));
+				Allocator()(static_cast<void *>(pNewStorage));
 				throw;
 			}
 			for(std::size_t i = x_uSize; i > 0; --i){
 				Destruct(pOldStorage + i - 1);
 			}
-			Allocator()(const_cast<void *>(static_cast<const void *>(pOldStorage)));
+			Allocator()(static_cast<void *>(pOldStorage));
 
 			x_pStorage  = pNewStorage;
 			x_uCapacity = uElementsToAlloc;

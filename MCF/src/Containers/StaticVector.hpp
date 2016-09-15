@@ -92,7 +92,9 @@ public:
 	OutputIteratorT Extract(OutputIteratorT itOutput){
 		try {
 			for(std::size_t i = 0; i < x_uSize; ++i){
-				*itOutput = std::move(reinterpret_cast<Element *>(x_aStorage)[i]);
+				void *const pElementRaw = x_aStorage + i;
+				const auto pElement = static_cast<Element *>(pElementRaw);
+				*itOutput = std::move(*pElement);
 				++itOutput;
 			}
 		} catch(...){
@@ -215,10 +217,14 @@ public:
 
 	// StaticVector 需求。
 	const Element *GetData() const noexcept {
-		return reinterpret_cast<const Element *>(x_aStorage);
+		const void *const pElementRaw = x_aStorage;
+		const auto pElement = static_cast<const Element *>(pElementRaw);
+		return pElement;
 	}
 	Element *GetData() noexcept {
-		return reinterpret_cast<Element *>(x_aStorage);
+		void *const pElementRaw = x_aStorage;
+		const auto pElement = static_cast<Element *>(pElementRaw);
+		return pElement;
 	}
 	const Element *GetConstData() const noexcept {
 		return GetData();
@@ -231,45 +237,53 @@ public:
 	}
 
 	const Element *GetBegin() const noexcept {
-		return reinterpret_cast<const Element *>(x_aStorage);
+		const void *const pElementRaw = x_aStorage;
+		const auto pElement = static_cast<const Element *>(pElementRaw);
+		return pElement;
 	}
 	Element *GetBegin() noexcept {
-		return reinterpret_cast<Element *>(x_aStorage);
+		void *const pElementRaw = x_aStorage;
+		const auto pElement = static_cast<Element *>(pElementRaw);
+		return pElement;
 	}
 	const Element *GetConstBegin() const noexcept {
 		return GetBegin();
 	}
 	const Element *GetEnd() const noexcept {
-		return reinterpret_cast<const Element *>(x_aStorage) + x_uSize;
+		const void *const pElementRaw = x_aStorage + x_uSize;
+		const auto pElement = static_cast<const Element *>(pElementRaw);
+		return pElement;
 	}
 	Element *GetEnd() noexcept {
-		return reinterpret_cast<Element *>(x_aStorage) + x_uSize;
+		void *const pElementRaw = x_aStorage + x_uSize;
+		const auto pElement = static_cast<Element *>(pElementRaw);
+		return pElement;
 	}
 	const Element *GetConstEnd() const noexcept {
 		return GetEnd();
 	}
 
 	const Element &Get(std::size_t uIndex) const {
-		if(uIndex >= x_uSize){
+		if(uIndex >= GetSize()){
 			MCF_THROW(Exception, ERROR_ACCESS_DENIED, Rcntws::View(L"StaticVector: 下标越界。"));
 		}
 		return UncheckedGet(uIndex);
 	}
 	Element &Get(std::size_t uIndex){
-		if(uIndex >= x_uSize){
+		if(uIndex >= GetSize()){
 			MCF_THROW(Exception, ERROR_ACCESS_DENIED, Rcntws::View(L"StaticVector: 下标越界。"));
 		}
 		return UncheckedGet(uIndex);
 	}
 	const Element &UncheckedGet(std::size_t uIndex) const noexcept {
-		MCF_DEBUG_CHECK(uIndex < x_uSize);
+		MCF_DEBUG_CHECK(uIndex < GetSize());
 
-		return reinterpret_cast<const Element *>(x_aStorage)[uIndex];
+		return GetBegin()[uIndex];
 	}
 	Element &UncheckedGet(std::size_t uIndex) noexcept {
-		MCF_DEBUG_CHECK(uIndex < x_uSize);
+		MCF_DEBUG_CHECK(uIndex < GetSize());
 
-		return reinterpret_cast<Element *>(x_aStorage)[uIndex];
+		return GetBegin()[uIndex];
 	}
 
 	template<typename ...ParamsT>
@@ -285,7 +299,7 @@ public:
 	Element *ResizeMore(std::size_t uDeltaSize, const ParamsT &...vParams){
 		const auto uOldSize = x_uSize;
 		Append(uDeltaSize, vParams...);
-		return reinterpret_cast<Element *>(x_aStorage) + uOldSize;
+		return GetBegin() + uOldSize;
 	}
 
 	void Reserve(std::size_t uNewCapacity){
@@ -307,7 +321,8 @@ public:
 	Element &UncheckedPush(ParamsT &&...vParams) noexcept(std::is_nothrow_constructible<Element, ParamsT &&...>::value) {
 		MCF_DEBUG_CHECK(kCapacityT - x_uSize > 0);
 
-		const auto pElement = reinterpret_cast<Element *>(x_aStorage) + x_uSize;
+		void *const pElementRaw = x_aStorage + x_uSize;
+		const auto pElement = static_cast<Element *>(pElementRaw);
 		DefaultConstruct(pElement, std::forward<ParamsT>(vParams)...);
 		++x_uSize;
 
@@ -317,7 +332,9 @@ public:
 		MCF_DEBUG_CHECK(uCount <= GetSize());
 
 		for(std::size_t i = 0; i < uCount; ++i){
-			Destruct(reinterpret_cast<Element *>(x_aStorage) + x_uSize - 1 - i);
+			void *const pElementRaw = x_aStorage + x_uSize - 1 - i;
+			const auto pElement = static_cast<Element *>(pElementRaw);
+			Destruct(pElement);
 		}
 		x_uSize -= uCount;
 	}

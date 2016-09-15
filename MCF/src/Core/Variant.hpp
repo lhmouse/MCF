@@ -9,10 +9,30 @@
 #include "Exception.hpp"
 #include "ConstructDestruct.hpp"
 #include <type_traits>
+#include <utility>
 #include <tuple>
 #include <cstddef>
 
 namespace MCF {
+
+namespace Impl_Variant {
+	template<typename CvVoidT, typename VisitorT, typename... CvElementsT, std::size_t ...kIndicesT>
+	void VisitPointer(CvVoidT *pStorage, unsigned uActiveIndex, VisitorT &vVisitor, const std::index_sequence<kIndicesT...> &){
+		(void)(... && !((uActiveIndex == kIndicesT) &&
+			((void)std::forward<VisitorT>(vVisitor)(std::integral_constant<unsigned, kIndicesT>(), static_cast<CvElementsT *>(pStorage)), true)));
+	}
+
+	template<typename TargetT, typename FirstT, typename ...RestT>
+	struct IndexByType
+		: std::integral_constant<unsigned, IndexByType<TargetT, RestT...>::value + 1>
+	{
+	};
+	template<typename TargetT, typename ...RestT>
+	struct IndexByType<TargetT, TargetT, RestT...>
+		: std::integral_constant<unsigned, 0>
+	{
+	};
+}
 
 template<typename ...ElementsT>
 class Variant {
@@ -23,6 +43,18 @@ private:
 	AlignedStorage<ElementsT...> x_vStorage;
 	int x_nActiveIndex;
 
+private:
+	template<typename VisitorT>
+	void X_VisitPointer(VisitorT &&vVisitor) const {
+		Impl_Variant::VisitPointer<const void, VisitorT, const ElementsT...>(
+			&x_vStorage, static_cast<unsigned>(x_nActiveIndex), vVisitor, std::index_sequence_for<ElementsT...>());
+	}
+	template<typename VisitorT>
+	void X_VisitPointer(VisitorT &&vVisitor){
+		Impl_Variant::VisitPointer<void, VisitorT, ElementsT...>(
+			&x_vStorage, static_cast<unsigned>(x_nActiveIndex), vVisitor, std::index_sequence_for<ElementsT...>());
+	}
+
 public:
 	Variant() noexcept
 		: x_nActiveIndex(-1)
@@ -31,19 +63,19 @@ public:
 	Variant(const Variant &rhs) noexcept((std::is_nothrow_copy_constructible<ElementsT>::value && ...))
 		: Variant()
 	{
-		//
+		rhs.X_VisitPointer([this](auto k, auto p){ this->Set<k>(*p); });
 	}
 	Variant(Variant &&rhs) noexcept((std::is_nothrow_move_constructible<ElementsT>::value && ...))
 		: Variant()
 	{
-		//
+		rhs.X_VisitPointer([this](auto k, auto p){ this->Set<k>(std::move(*p)); });
 	}
-	Variant(const Variant &rhs) noexcept((std::is_nothrow_copy_constructible<ElementsT>::value && ...)) {
-		//
+	Variant &operator=(const Variant &rhs) noexcept((std::is_nothrow_copy_constructible<ElementsT>::value && ...)) {
+		rhs.X_VisitPointer([this](auto k, auto p){ this->Set<k>(*p); });
 		return *this;
 	}
-	Variant(Variant &&rhs) noexcept((std::is_nothrow_move_constructible<ElementsT>::value && ...)) {
-		//
+	Variant &operator=(Variant &&rhs) noexcept((std::is_nothrow_move_constructible<ElementsT>::value && ...)) {
+		rhs.X_VisitPointer([this](auto k, auto p){ this->Set<k>(std::move(*p)); });
 		return *this;
 	}
 	~Variant(){
@@ -55,83 +87,98 @@ public:
 		return x_nActiveIndex;
 	}
 	void Clear() noexcept {
-		int i = 0;
-		(... || ((x_nActiveIndex == i++) && (static_cast<void>(reinterpret_cast<ElementsT *>(&x_vStorage)->~ElementsT()), true)));
+		X_VisitPointer([&](auto, auto p){ Destruct<>(p); });
 		x_nActiveIndex = -1;
 	}
 	template<unsigned kIndexT>
 	const std::tuple_element_t<kIndexT, X_TypeTuple> *Get() const noexcept {
-		if(static_cast<unsigned>(x_nActiveIndex) != kIndexT){
+		const auto uActiveIndex = static_cast<unsigned>(x_nActiveIndex);
+		if(uActiveIndex != kIndexT){
 			return nullptr;
 		}
-		return reinterpret_cast<const std::tuple_element_t<kIndexT, X_TypeTuple> *>(&x_vStorage);
+		const void *const pElementRaw = &x_vStorage;
+		return static_cast<const std::tuple_element_t<kIndexT, X_TypeTuple> *>(pElementRaw);
 	}
 	template<unsigned kIndexT>
 	std::tuple_element_t<kIndexT, X_TypeTuple> *Get() noexcept {
-		if(static_cast<unsigned>(x_nActiveIndex) != kIndexT){
+		const auto uActiveIndex = static_cast<unsigned>(x_nActiveIndex);
+		if(uActiveIndex != kIndexT){
 			return nullptr;
 		}
-		return reinterpret_cast<std::tuple_element_t<kIndexT, X_TypeTuple> *>(&x_vStorage);
+		void *const pElementRaw = &x_vStorage;
+		return static_cast<std::tuple_element_t<kIndexT, X_TypeTuple> *>(pElementRaw);
 	}
-//	template<typename ElementT>
-//	const ElementT *Get() const noexcept {
-//		if(static_cast<unsigned>(x_nActiveIndex) != kIndexT){
-//			return nullptr;
-//		}
-//		return static_cast<const std::tuple_element_t<kIndexT, X_TypeTuple> *>(static_cast<const void *>(&x_vStorage));
-//	}
-//	template<typename ElementT>
-//	ElementT *Get() noexcept {
-//		if(static_cast<unsigned>(x_nActiveIndex) != kIndexT){
-//			return nullptr;
-//		}
-//		return static_cast<std::tuple_element_t<kIndexT, X_TypeTuple> *>(static_cast<void *>(&x_vStorage));
-//	}
+	template<typename ElementT>
+	const ElementT *Get() const noexcept {
+		return Get<Impl_Variant::IndexByType<std::decay_t<ElementT>, ElementsT...>::value>();
+	}
+	template<typename ElementT>
+	ElementT *Get() noexcept {
+		return Get<Impl_Variant::IndexByType<std::decay_t<ElementT>, ElementsT...>::value>();
+	}
 	template<unsigned kIndexT>
-	const std::tuple_element_t<kIndexT, X_TypeTuple> &Require() const noexcept {
+	const std::tuple_element_t<kIndexT, X_TypeTuple> &Require() const {
 		const auto pElement = Get<kIndexT>();
 		if(!pElement){
 			MCF_THROW(Exception, ERROR_NOT_READY, Rcntws::View(L"Variant: 未设定活动元素或活动元素类型不匹配。"));
 		}
-		return *pElement;
+		return pElement;
 	}
 	template<unsigned kIndexT>
-	std::tuple_element_t<kIndexT, X_TypeTuple> *Get() noexcept {
+	std::tuple_element_t<kIndexT, X_TypeTuple> *Require(){
 		const auto pElement = Get<kIndexT>();
 		if(!pElement){
 			MCF_THROW(Exception, ERROR_NOT_READY, Rcntws::View(L"Variant: 未设定活动元素或活动元素类型不匹配。"));
 		}
-		return *pElement;
+		return pElement;
 	}
 	template<typename ElementT>
-	const ElementT &Require() const noexcept {
+	const ElementT *Require() const {
 		const auto pElement = Get<ElementT>();
 		if(!pElement){
 			MCF_THROW(Exception, ERROR_NOT_READY, Rcntws::View(L"Variant: 未设定活动元素或活动元素类型不匹配。"));
 		}
-		return *pElement;
+		return pElement;
 	}
 	template<typename ElementT>
-	ElementT &Require() noexcept {
+	ElementT *Require(){
 		const auto pElement = Get<ElementT>();
 		if(!pElement){
 			MCF_THROW(Exception, ERROR_NOT_READY, Rcntws::View(L"Variant: 未设定活动元素或活动元素类型不匹配。"));
 		}
-		return *pElement;
+		return pElement;
+	}
+	template<unsigned kIndexT, typename ...ParamsT>
+	void Set(ParamsT &&...vParams){
+		Clear();
+
+		void *const pElementRaw = &x_vStorage;
+		const auto pElement = static_cast<std::tuple_element_t<kIndexT, X_TypeTuple> *>(pElementRaw);
+		Construct<>(pElement, std::forward<ParamsT>(vParams)...);
+		x_nActiveIndex = static_cast<int>(kIndexT);
 	}
 	template<typename ElementT>
 	void Set(ElementT &&vElement){
-		Clear();
-
-		//
+		Set<Impl_Variant::IndexByType<std::decay_t<ElementT>, ElementsT...>::value>(std::forward<ElementT>(vElement));
 	}
 
-	void Swap(Function &rhs) noexcept {
-		//
+	template<typename FunctionT>
+	void Visit(FunctionT &&vFunction) const {
+		X_VisitPointer([&](auto, auto p){ return std::forward<FunctionT>(vFunction)(*p); });
+	}
+	template<typename FunctionT>
+	void Visit(FunctionT &&vFunction){
+		X_VisitPointer([&](auto, auto p){ return std::forward<FunctionT>(vFunction)(*p); });
+	}
+
+	void Swap(Variant &rhs) noexcept((std::is_nothrow_move_constructible<ElementsT>::value && ...)) {
+		auto temp = std::move_if_noexcept(*this);
+		*this = std::move(rhs);
+		rhs = std::move(temp);
 	}
 
 public:
-	friend void swap(Function &lhs, Function &rhs) noexcept {
+	friend void swap(Variant &lhs, Variant &rhs) noexcept(noexcept(lhs.Swap(rhs))) {
 		lhs.Swap(rhs);
 	}
 };

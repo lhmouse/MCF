@@ -5,14 +5,14 @@
 #ifndef MCF_THREAD_THREAD_LOCAL_HPP_
 #define MCF_THREAD_THREAD_LOCAL_HPP_
 
-#include <MCFCRT/env/thread.h>
-#include <MCFCRT/env/last_error.h>
 #include "../Core/Assert.hpp"
 #include "../Core/UniqueHandle.hpp"
 #include "../Core/Exception.hpp"
 #include "../Core/AlignedStorage.hpp"
 #include "../Core/ConstructDestruct.hpp"
 #include "../Core/ReconstructOrAssign.hpp"
+#include <MCFCRT/env/thread.h>
+#include <MCFCRT/env/last_error.h>
 #include <type_traits>
 #include <cstddef>
 #include <cstdint>
@@ -38,25 +38,28 @@ private:
 		bool bConstructed;
 	};
 
-	static void X_ContainerDestructor(std::intptr_t nContext, void *pStorage) noexcept {
-		(void)nContext;
-
-		const auto pContainer = static_cast<X_TlsContainer *>(pStorage);
+	static unsigned long X_ContainerConstructor(std::intptr_t, void *pContainerRaw) noexcept {
+		const auto pContainer = static_cast<X_TlsContainer *>(pContainerRaw);
+		pContainer->bConstructed = false;
+		return 0;
+	}
+	static void X_ContainerDestructor(std::intptr_t, void *pContainerRaw) noexcept {
+		const auto pContainer = static_cast<X_TlsContainer *>(pContainerRaw);
 		if(!pContainer->bConstructed){
 			return;
 		}
-		const auto pElement = reinterpret_cast<ElementT *>(pContainer->vStorage);
+		void *const pElementRaw = &(pContainer->vStorage);
+		const auto pElement = static_cast<ElementT *>(pElementRaw);
 		Destruct(pElement);
 	}
 
 private:
 	static UniqueHandle<X_TlsKeyDeleter> X_AllocateTlsKey(){
-		auto hTemp = ::_MCFCRT_TlsAllocKey(sizeof(X_TlsContainer), nullptr, &X_ContainerDestructor, 0);
+		const auto hTemp = ::_MCFCRT_TlsAllocKey(sizeof(X_TlsContainer), nullptr, &X_ContainerDestructor, 0);
 		if(!hTemp){
 			MCF_THROW(Exception, ::_MCFCRT_GetLastWin32Error(), Rcntws::View(L"ThreadLocal: _MCFCRT_TlsAllocKey() 失败。"));
 		}
 		UniqueHandle<X_TlsKeyDeleter> hTlsKey(hTemp);
-
 		return hTlsKey;
 	}
 
@@ -82,7 +85,8 @@ public:
 		if(!pContainer->bConstructed){
 			return nullptr;
 		}
-		const auto pElement = reinterpret_cast<ElementT *>(pContainer->vStorage);
+		void *const pElementRaw = &(pContainer->vStorage);
+		const auto pElement = static_cast<ElementT *>(pElementRaw);
 		return pElement;
 	}
 	template<typename ...ParamsT>
@@ -95,7 +99,8 @@ public:
 		const auto pContainer = static_cast<X_TlsContainer *>(pContainerRaw);
 		MCF_ASSERT(pContainer);
 
-		const auto pElement = reinterpret_cast<ElementT *>(pContainer->vStorage);
+		void *const pElementRaw = &(pContainer->vStorage);
+		const auto pElement = static_cast<ElementT *>(pElementRaw);
 		if(!pContainer->bConstructed){
 			DefaultConstruct(pElement, std::forward<ParamsT>(vParams)...);
 			pContainer->bConstructed = true;

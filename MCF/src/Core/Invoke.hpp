@@ -29,12 +29,12 @@ namespace Impl_Invoke {
 	}
 	template<typename FunctionT, typename ObjectT, typename ...ParamsT>
 	constexpr decltype(auto) CheckMemberPointer(const std::true_type &, FunctionT pFunction, ObjectT &vObject, ParamsT &...vParams){
-		return CheckReflexivity<FunctionT, ObjectT, ParamsT...>(std::is_base_of<decltype(GetClassFromPointerToMember<>(pFunction)), std::decay_t<ObjectT>>(), pFunction, vObject, vParams...);
+		return CheckReflexivity<FunctionT, ObjectT, ParamsT...>(std::is_base_of<decltype(GetClassFromPointerToMember<>(pFunction)), std::decay_t<ObjectT>>::value, pFunction, vObject, vParams...);
 	}
 
 	template<typename FunctionT, typename ...ParamsT>
 	constexpr decltype(auto) RealInvoke(FunctionT &vFunction, ParamsT &...vParams){
-		return CheckMemberPointer<FunctionT, ParamsT...>(std::is_member_pointer<std::decay_t<FunctionT>>(), vFunction, vParams...);
+		return CheckMemberPointer<FunctionT, ParamsT...>(std::is_member_pointer<std::decay_t<FunctionT>>::value, vFunction, vParams...);
 	}
 }
 
@@ -55,7 +55,7 @@ namespace Impl_Invoke {
 
 	template<typename ReturnT, typename FunctionT, typename ...ParamsT>
 	constexpr decltype(auto) RealDesignatedInvoke(FunctionT &vFunction, ParamsT &...vParams){
-		return CheckVoidReturn<FunctionT, ParamsT...>(std::is_void<std::decay_t<ReturnT>>(), vFunction, vParams...);
+		return CheckVoidReturn<FunctionT, ParamsT...>(std::is_void<std::decay_t<ReturnT>>::value, vFunction, vParams...);
 	}
 }
 

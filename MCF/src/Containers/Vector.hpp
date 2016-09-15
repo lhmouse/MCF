@@ -92,7 +92,7 @@ public:
 	}
 	~Vector(){
 		Clear();
-		Allocator()(const_cast<void *>(static_cast<const void *>(x_pStorage)));
+		Allocator()(static_cast<void *>(x_pStorage));
 	}
 
 private:
@@ -290,26 +290,26 @@ public:
 	}
 
 	const Element &Get(std::size_t uIndex) const {
-		if(uIndex >= x_uSize){
+		if(uIndex >= GetSize()){
 			MCF_THROW(Exception, ERROR_ACCESS_DENIED, Rcntws::View(L"Vector: 下标越界。"));
 		}
 		return UncheckedGet(uIndex);
 	}
 	Element &Get(std::size_t uIndex){
-		if(uIndex >= x_uSize){
+		if(uIndex >= GetSize()){
 			MCF_THROW(Exception, ERROR_ACCESS_DENIED, Rcntws::View(L"Vector: 下标越界。"));
 		}
 		return UncheckedGet(uIndex);
 	}
 	const Element &UncheckedGet(std::size_t uIndex) const noexcept {
-		MCF_DEBUG_CHECK(uIndex < x_uSize);
+		MCF_DEBUG_CHECK(uIndex < GetSize());
 
-		return x_pStorage[uIndex];
+		return GetBegin()[uIndex];
 	}
 	Element &UncheckedGet(std::size_t uIndex) noexcept {
-		MCF_DEBUG_CHECK(uIndex < x_uSize);
+		MCF_DEBUG_CHECK(uIndex < GetSize());
 
-		return x_pStorage[uIndex];
+		return GetBegin()[uIndex];
 	}
 
 	template<typename ...ParamsT>
@@ -325,7 +325,7 @@ public:
 	Element *ResizeMore(std::size_t uDeltaSize, const ParamsT &...vParams){
 		const auto uOldSize = x_uSize;
 		Append(uDeltaSize, vParams...);
-		return x_pStorage + uOldSize;
+		return GetBegin() + uOldSize;
 	}
 
 	void Reserve(std::size_t uNewCapacity){
@@ -354,13 +354,13 @@ public:
 				--pWrite;
 				Destruct(pWrite);
 			}
-			Allocator()(const_cast<void *>(static_cast<const void *>(pNewStorage)));
+			Allocator()(static_cast<void *>(pNewStorage));
 			throw;
 		}
 		for(std::size_t i = x_uSize; i > 0; --i){
 			Destruct(pOldStorage + i - 1);
 		}
-		Allocator()(const_cast<void *>(static_cast<const void *>(pOldStorage)));
+		Allocator()(static_cast<void *>(pOldStorage));
 
 		x_pStorage  = pNewStorage;
 		x_uCapacity = uElementsToAlloc;

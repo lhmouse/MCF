@@ -5,28 +5,36 @@
 #ifndef MCF_CORE_ALIGNED_STORAGE_HPP_
 #define MCF_CORE_ALIGNED_STORAGE_HPP_
 
+#include <type_traits>
 #include <cstddef>
 
 namespace MCF {
 
 namespace Impl_AlignedStorage {
 	template<std::size_t kFirstT, std::size_t kSecondT>
-	struct MaxHelperBinary {
-		static constexpr std::size_t kValue = (kFirstT > kSecondT) ? kFirstT : kSecondT;
+	struct BinaryMax
+		: std::integral_constant<std::size_t, !(kFirstT < kSecondT) ? kFirstT : kSecondT>
+	{
 	};
 
-	template<std::size_t kFirstT, std::size_t ...kRemainingT>
-	struct MaxHelper {
-		static constexpr std::size_t kValue = MaxHelperBinary<kFirstT, MaxHelper<kRemainingT...>::kValue>::kValue;
+	template<std::size_t kFirstT, std::size_t ...kRestT>
+	struct Max
+		: std::integral_constant<std::size_t, BinaryMax<kFirstT, Max<kRestT...>::value>::value>
+	{
 	};
 	template<std::size_t kFirstT>
-	struct MaxHelper<kFirstT> {
-		static constexpr std::size_t kValue = kFirstT;
+	struct Max<kFirstT>
+		: std::integral_constant<std::size_t, kFirstT>
+	{
 	};
 }
 
 template<typename ...ElementsT>
-using AlignedStorage = alignas(Impl_AlignedStorage::MaxHelper<alignof(ElementsT)...>::kValue) unsigned char [Impl_AlignedStorage::MaxHelper<sizeof (ElementsT)...>::kValue];
+struct __attribute__((__may_alias__)) AlignedStorage {
+	static_assert((std::is_object<ElementsT>::value && ...), "Only object types are allowed.");
+
+	alignas(Impl_AlignedStorage::Max<alignof(ElementsT)...>::value) char a[Impl_AlignedStorage::Max<sizeof(ElementsT)...>::value];
+};
 
 }
 

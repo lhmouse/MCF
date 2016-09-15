@@ -60,6 +60,15 @@ public:
 		: x_nActiveIndex(-1)
 	{
 	}
+	template<typename ParamT,
+		std::enable_if_t<
+			!std::is_base_of<Variant, std::decay_t<ParamT>>::value,
+			int> = 0>
+	Variant(ParamT &&rhs)
+		: Variant()
+	{
+		Set(std::forward<ParamT>(rhs));
+	}
 	Variant(const Variant &rhs) noexcept((std::is_nothrow_copy_constructible<ElementsT>::value && ...))
 		: Variant()
 	{

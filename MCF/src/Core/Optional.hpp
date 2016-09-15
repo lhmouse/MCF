@@ -5,103 +5,58 @@
 #ifndef MCF_CORE_OPTIONAL_HPP_
 #define MCF_CORE_OPTIONAL_HPP_
 
-#include "ConstructDestruct.hpp"
-#include "AlignedStorage.hpp"
-#include "Exception.hpp"
-#include "TupleManipulators.hpp"
+#include "Variant.hpp"
 #include <exception>
-#include <type_traits>
-#include <utility>
 
 namespace MCF {
 
 template<typename ElementT>
 class Optional {
 private:
-	enum X_State : unsigned char {
-		xkUnset        = 0,
-		xkElementSet   = 1,
-		xkExceptionSet = 2,
-	};
-
-private:
-	AlignedStorage<ElementT, std::exception_ptr> x_vStorage;
-	X_State x_eState;
+	Variant<ElementT, std::exception_ptr> x_vData;
 
 public:
 	Optional() noexcept
-		: x_eState(xkUnset)
+		: x_vData()
 	{
 	}
-	template<typename ...ParamsT>
-	Optional(std::tuple<ParamsT...> tupParams) noexcept(std::is_nothrow_constructible<ElementT, ParamsT &&...>::value)
-		: Optional()
+	template<typename ParamT,
+		std::enable_if_t<
+			!std::is_base_of<Optional, std::decay_t<ParamT>>::value,
+			int> = 0>
+	Optional(ParamT &&rhs)
+		: x_vData(std::move(rhs))
 	{
-		Reset(std::move(tupParams));
 	}
 	Optional(std::exception_ptr rhs) noexcept
-		: Optional()
+		: x_vData(std::move(rhs))
 	{
-		Reset(std::move(rhs));
-	}
-	Optional(const Optional &rhs) noexcept(std::is_nothrow_copy_constructible<ElementT>::value)
-		: Optional()
-	{
-		Reset(rhs);
-	}
-	Optional(Optional &&rhs) noexcept(std::is_nothrow_move_constructible<ElementT>::value)
-		: Optional()
-	{
-		Reset(std::move(rhs));
-	}
-	Optional &operator=(const Optional &rhs) noexcept(std::is_nothrow_copy_constructible<ElementT>::value) {
-		return Reset(rhs);
-	}
-	Optional &operator=(Optional &&rhs) noexcept(std::is_nothrow_move_constructible<ElementT>::value) {
-		return Reset(std::move(rhs));
-	}
-	~Optional(){
-		Reset();
 	}
 
 public:
 	bool IsSet() const noexcept {
-		return x_eState != xkUnset;
+		return x_vData.GetActiveIndex() >= 0;
 	}
 	bool IsElementSet() const noexcept {
-		return x_eState == xkElementSet;
+		return x_vData.GetActiveIndex() == 0;
 	}
 	bool IsExceptionSet() const noexcept {
-		return x_eState == xkExceptionSet;
-	}
-
-	std::exception_ptr GetException() const noexcept {
-		if(x_eState == xkElementSet){
-			return std::exception_ptr();
-		} else if(x_eState == xkExceptionSet){
-			return *reinterpret_cast<const std::exception_ptr *>(x_vStorage);
-		} else {
-			return MCF_MAKE_EXCEPTION_PTR(Exception, ERROR_NOT_READY, Rcntws::View(L"Optional: 尚未设定元素或异常对象。"));
-		}
+		return x_vData.GetActiveIndex() == 1;
 	}
 
 	const ElementT *Get() const {
-		if(x_eState == xkElementSet){
-			return reinterpret_cast<const ElementT *>(x_vStorage);
-		} else if(x_eState == xkExceptionSet){
-			std::rethrow_exception(*reinterpret_cast<const std::exception_ptr *>(x_vStorage));
-		} else {
-			return nullptr;
+		const auto pException = x_vData.template Get<1>();
+		if(pException){
+			std::rethrow_exception(*pException);
 		}
+		return x_vData.template Get<0>();
 	}
 	ElementT *Get(){
-		if(x_eState == xkElementSet){
-			return reinterpret_cast<ElementT *>(x_vStorage);
-		} else if(x_eState == xkExceptionSet){
-			std::rethrow_exception(*reinterpret_cast<const std::exception_ptr *>(x_vStorage));
-		} else {
-			return nullptr;
+		const auto pException = x_vData.template Get<1>();
+		if(pException){
+			std::rethrow_exception(*pException);
 		}
+		return x_vData.template Get<0>();
 	}
 	const ElementT *Require() const {
 		const auto pElement = Get();
@@ -117,54 +72,24 @@ public:
 		}
 		return pElement;
 	}
+	std::exception_ptr GetException() const noexcept {
+		const auto pException = x_vData.template Get<1>();
+		if(!pException){
+			return { };
+		}
+		return *pException;
+	}
 
 	Optional &Reset() noexcept {
-		if(x_eState == xkElementSet){
-			Destruct(reinterpret_cast<ElementT *>(x_vStorage));
-			x_eState = xkUnset;
-		} else if(x_eState == xkExceptionSet){
-			Destruct(reinterpret_cast<std::exception_ptr *>(x_vStorage));
-			x_eState = xkUnset;
-		}
+		x_vData.Clear();
 		return *this;
 	}
-	Optional &Reset(const Optional &rhs) noexcept(std::is_nothrow_copy_constructible<ElementT>::value) {
-		Reset();
-
-		if(rhs.x_eState == xkElementSet){
-			Reset(std::forward_as_tuple(*reinterpret_cast<const ElementT *>(rhs.x_vStorage)));
-			x_eState = xkUnset;
-		} else if(rhs.x_eState == xkExceptionSet){
-			Reset(*reinterpret_cast<const std::exception_ptr *>(rhs.x_vStorage));
-			x_eState = xkUnset;
-		}
-		return *this;
-	}
-	Optional &Reset(Optional &&rhs) noexcept(std::is_nothrow_move_constructible<ElementT>::value) {
-		Reset();
-
-		if(rhs.x_eState == xkElementSet){
-			Reset(std::forward_as_tuple(std::move(*reinterpret_cast<ElementT *>(rhs.x_vStorage))));
-			x_eState = xkUnset;
-		} else if(rhs.x_eState == xkExceptionSet){
-			Reset(std::move(*reinterpret_cast<std::exception_ptr *>(rhs.x_vStorage)));
-			x_eState = xkUnset;
-		}
-		return *this;
-	}
-	template<typename ...ParamsT>
-	Optional &Reset(std::tuple<ParamsT...> tupParams) noexcept(std::is_nothrow_constructible<ElementT, ParamsT &&...>::value) {
-		Reset();
-
-		Squeeze([this](auto &&...vParams){ Construct(reinterpret_cast<ElementT *>(x_vStorage), std::forward<ParamsT>(vParams)...); }, std::move(tupParams));
-		x_eState = xkElementSet;
+	Optional &Reset(ElementT rhs){
+		x_vData.template Set<0>(std::move(rhs));
 		return *this;
 	}
 	Optional &Reset(std::exception_ptr rhs) noexcept {
-		Reset();
-
-		Construct(reinterpret_cast<std::exception_ptr *>(x_vStorage), std::move(rhs));
-		x_eState = xkExceptionSet;
+		x_vData.template Set<1>(std::move(rhs));
 		return *this;
 	}
 

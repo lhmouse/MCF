@@ -5,11 +5,12 @@
 #ifndef MCF_STREAMS_STANDARD_INPUT_STREAM_HPP_
 #define MCF_STREAMS_STANDARD_INPUT_STREAM_HPP_
 
+#include "../Config.hpp"
 #include "AbstractInputStream.hpp"
 
 namespace MCF {
 
-class StandardInputStream : public AbstractInputStream {
+class MCF_HAS_EXPORTED_RTTI StandardInputStream : public AbstractInputStream {
 public:
 	StandardInputStream() noexcept = default;
 	~StandardInputStream() override;

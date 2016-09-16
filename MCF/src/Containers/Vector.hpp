@@ -5,6 +5,7 @@
 #ifndef MCF_CONTAINERS_VECTOR_HPP_
 #define MCF_CONTAINERS_VECTOR_HPP_
 
+#include "../Config.hpp"
 #include "../Core/_CheckedSizeArithmetic.hpp"
 #include "../Core/_Enumerator.hpp"
 #include "../Core/DefaultAllocator.hpp"

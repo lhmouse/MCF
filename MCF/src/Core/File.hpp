@@ -5,6 +5,7 @@
 #ifndef MCF_CORE_FILE_HPP_
 #define MCF_CORE_FILE_HPP_
 
+#include "../Config.hpp"
 #include "StringView.hpp"
 #include "_UniqueNtHandle.hpp"
 #include "FunctionView.hpp"

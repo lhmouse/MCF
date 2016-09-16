@@ -5,6 +5,7 @@
 #ifndef MCF_THREAD_SEMAPHORE_HPP_
 #define MCF_THREAD_SEMAPHORE_HPP_
 
+#include "../Config.hpp"
 #include "../Core/Noncopyable.hpp"
 #include "Mutex.hpp"
 #include "ConditionVariable.hpp"

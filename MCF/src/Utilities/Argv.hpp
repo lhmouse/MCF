@@ -5,6 +5,7 @@
 #ifndef MCF_UTILITIES_ARGV_HPP_
 #define MCF_UTILITIES_ARGV_HPP_
 
+#include "../Config.hpp"
 #include "../SmartPointers/UniquePtr.hpp"
 #include "../Core/Noncopyable.hpp"
 #include "../Core/Assert.hpp"

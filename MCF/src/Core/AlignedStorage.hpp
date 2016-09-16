@@ -5,6 +5,7 @@
 #ifndef MCF_CORE_ALIGNED_STORAGE_HPP_
 #define MCF_CORE_ALIGNED_STORAGE_HPP_
 
+#include "../Config.hpp"
 #include <type_traits>
 #include <cstddef>
 

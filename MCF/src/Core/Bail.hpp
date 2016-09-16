@@ -5,12 +5,12 @@
 #ifndef MCF_CORE_BAIL_HPP_
 #define MCF_CORE_BAIL_HPP_
 
+#include "../Config.hpp"
 #include <MCFCRT/env/bail.h>
 
 namespace MCF {
 
-[[noreturn]]
-inline void Bail(const wchar_t *pwszDescription) noexcept {
+[[noreturn]] inline void Bail(const wchar_t *pwszDescription) noexcept {
 	::_MCFCRT_Bail(pwszDescription);
 }
 

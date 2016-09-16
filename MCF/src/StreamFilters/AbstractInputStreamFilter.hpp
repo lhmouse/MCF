@@ -5,12 +5,13 @@
 #ifndef MCF_STREAM_FILTERS_ABSTRACT_INPUT_STREAM_FILTER_HPP_
 #define MCF_STREAM_FILTERS_ABSTRACT_INPUT_STREAM_FILTER_HPP_
 
+#include "../Config.hpp"
 #include "../Streams/AbstractInputStream.hpp"
 #include "_BufferedInputStream.hpp"
 
 namespace MCF {
 
-class AbstractInputStreamFilter : public AbstractInputStream {
+class MCF_HAS_EXPORTED_RTTI AbstractInputStreamFilter : public AbstractInputStream {
 protected:
 	Impl_BufferedInputStream::BufferedInputStream y_vStream;
 

@@ -5,13 +5,14 @@
 #ifndef MCF_STREAMS_SHA256_OUTPUT_STREAM_HPP_
 #define MCF_STREAMS_SHA256_OUTPUT_STREAM_HPP_
 
+#include "../Config.hpp"
 #include "AbstractOutputStream.hpp"
 #include "../Core/Array.hpp"
 #include <cstdint>
 
 namespace MCF {
 
-class Sha256OutputStream : public AbstractOutputStream {
+class MCF_HAS_EXPORTED_RTTI Sha256OutputStream : public AbstractOutputStream {
 private:
 	int x_nChunkOffset;
 	std::uint8_t x_abyChunk[64];

@@ -5,6 +5,7 @@
 #ifndef MCF_CORE_COPY_MOVE_FILL_HPP_
 #define MCF_CORE_COPY_MOVE_FILL_HPP_
 
+#include "../Config.hpp"
 #include <iterator>
 #include <type_traits>
 #include <utility>
@@ -13,7 +14,7 @@
 namespace MCF {
 
 template<typename OutputIteratorT, typename InputIteratorT>
-inline OutputIteratorT
+OutputIteratorT
 	Copy(OutputIteratorT itOutputBegin,
 		InputIteratorT itInputBegin, std::common_type_t<InputIteratorT> itInputEnd)
 {
@@ -25,7 +26,7 @@ inline OutputIteratorT
 	return itOutputBegin;
 }
 template<typename OutputIteratorT, typename InputIteratorT>
-inline InputIteratorT
+InputIteratorT
 	CopyInto(OutputIteratorT itOutputBegin, std::common_type_t<OutputIteratorT> itOutputEnd,
 		InputIteratorT itInputBegin)
 {
@@ -37,7 +38,7 @@ inline InputIteratorT
 	return itInputBegin;
 }
 template<typename OutputIteratorT, typename InputIteratorT>
-inline std::pair<OutputIteratorT, InputIteratorT>
+std::pair<OutputIteratorT, InputIteratorT>
 	CopyN(OutputIteratorT itOutputBegin,
 		InputIteratorT itInputBegin, std::size_t uCount)
 {
@@ -50,7 +51,7 @@ inline std::pair<OutputIteratorT, InputIteratorT>
 }
 
 template<typename OutputIteratorT, typename InputIteratorT>
-inline OutputIteratorT
+OutputIteratorT
 	CopyBackward(OutputIteratorT itOutputEnd,
 		std::common_type_t<InputIteratorT> itInputBegin, InputIteratorT itInputEnd)
 {
@@ -62,7 +63,7 @@ inline OutputIteratorT
 	return itOutputEnd;
 }
 template<typename OutputIteratorT, typename InputIteratorT>
-inline InputIteratorT
+InputIteratorT
 	CopyIntoBackward(std::common_type_t<OutputIteratorT> itOutputBegin, OutputIteratorT itOutputEnd,
 		InputIteratorT itInputEnd)
 {
@@ -74,7 +75,7 @@ inline InputIteratorT
 	return itInputEnd;
 }
 template<typename OutputIteratorT, typename InputIteratorT>
-inline std::pair<OutputIteratorT, InputIteratorT>
+std::pair<OutputIteratorT, InputIteratorT>
 	CopyNBackward(OutputIteratorT itOutputEnd,
 		std::size_t uCount, InputIteratorT itInputEnd)
 {
@@ -87,7 +88,7 @@ inline std::pair<OutputIteratorT, InputIteratorT>
 }
 
 template<typename OutputIteratorT, typename InputIteratorT>
-inline OutputIteratorT
+OutputIteratorT
 	Move(OutputIteratorT itOutputBegin,
 		InputIteratorT itInputBegin, std::common_type_t<InputIteratorT> itInputEnd)
 {
@@ -99,7 +100,7 @@ inline OutputIteratorT
 	return itOutputBegin;
 }
 template<typename OutputIteratorT, typename InputIteratorT>
-inline InputIteratorT
+InputIteratorT
 	MoveInto(OutputIteratorT itOutputBegin, std::common_type_t<OutputIteratorT> itOutputEnd,
 		InputIteratorT itInputBegin)
 {
@@ -111,7 +112,7 @@ inline InputIteratorT
 	return itInputBegin;
 }
 template<typename OutputIteratorT, typename InputIteratorT>
-inline std::pair<OutputIteratorT, InputIteratorT>
+std::pair<OutputIteratorT, InputIteratorT>
 	MoveN(OutputIteratorT itOutputBegin,
 		InputIteratorT itInputBegin, std::size_t uCount)
 {
@@ -124,7 +125,7 @@ inline std::pair<OutputIteratorT, InputIteratorT>
 }
 
 template<typename OutputIteratorT, typename InputIteratorT>
-inline OutputIteratorT
+OutputIteratorT
 	MoveBackward(OutputIteratorT itOutputEnd,
 		std::common_type_t<InputIteratorT> itInputBegin, InputIteratorT itInputEnd)
 {
@@ -136,7 +137,7 @@ inline OutputIteratorT
 	return itOutputEnd;
 }
 template<typename OutputIteratorT, typename InputIteratorT>
-inline InputIteratorT
+InputIteratorT
 	MoveIntoBackward(std::common_type_t<OutputIteratorT> itOutputBegin, OutputIteratorT itOutputEnd,
 		InputIteratorT itInputEnd)
 {
@@ -148,7 +149,7 @@ inline InputIteratorT
 	return itInputEnd;
 }
 template<typename OutputIteratorT, typename InputIteratorT>
-inline std::pair<OutputIteratorT, InputIteratorT>
+std::pair<OutputIteratorT, InputIteratorT>
 	MoveNBackward(OutputIteratorT itOutputEnd,
 		std::size_t uCount, InputIteratorT itInputEnd)
 {
@@ -161,7 +162,7 @@ inline std::pair<OutputIteratorT, InputIteratorT>
 }
 
 template<typename OutputIteratorT, typename InputIteratorT>
-inline OutputIteratorT
+OutputIteratorT
 	ReverseCopy(OutputIteratorT itOutputBegin,
 		std::common_type_t<InputIteratorT> itInputBegin, InputIteratorT itInputEnd)
 {
@@ -173,7 +174,7 @@ inline OutputIteratorT
 	return itOutputBegin;
 }
 template<typename OutputIteratorT, typename InputIteratorT>
-inline InputIteratorT
+InputIteratorT
 	ReverseCopyInto(OutputIteratorT itOutputBegin, std::common_type_t<OutputIteratorT> itOutputEnd,
 		InputIteratorT itInputEnd)
 {
@@ -185,7 +186,7 @@ inline InputIteratorT
 	return itInputEnd;
 }
 template<typename OutputIteratorT, typename InputIteratorT>
-inline std::pair<OutputIteratorT, InputIteratorT>
+std::pair<OutputIteratorT, InputIteratorT>
 	ReverseCopyN(OutputIteratorT itOutputBegin,
 		std::size_t uCount, InputIteratorT itInputEnd)
 {
@@ -198,7 +199,7 @@ inline std::pair<OutputIteratorT, InputIteratorT>
 }
 
 template<typename OutputIteratorT, typename InputIteratorT>
-inline OutputIteratorT
+OutputIteratorT
 	ReverseCopyBackward(OutputIteratorT itOutputEnd,
 		InputIteratorT itInputBegin, std::common_type_t<InputIteratorT> itInputEnd)
 {
@@ -210,7 +211,7 @@ inline OutputIteratorT
 	return itOutputEnd;
 }
 template<typename OutputIteratorT, typename InputIteratorT>
-inline InputIteratorT
+InputIteratorT
 	ReverseCopyIntoBackward(std::common_type_t<OutputIteratorT> itOutputBegin, OutputIteratorT itOutputEnd,
 		InputIteratorT itInputBegin)
 {
@@ -222,7 +223,7 @@ inline InputIteratorT
 	return itInputBegin;
 }
 template<typename OutputIteratorT, typename InputIteratorT>
-inline std::pair<OutputIteratorT, InputIteratorT>
+std::pair<OutputIteratorT, InputIteratorT>
 	ReverseCopyNBackward(OutputIteratorT itOutputEnd,
 		InputIteratorT itInputBegin, std::size_t uCount)
 {
@@ -235,7 +236,7 @@ inline std::pair<OutputIteratorT, InputIteratorT>
 }
 
 template<typename OutputIteratorT, typename InputIteratorT>
-inline OutputIteratorT
+OutputIteratorT
 	ReverseMove(OutputIteratorT itOutputBegin,
 		std::common_type_t<InputIteratorT> itInputBegin, InputIteratorT itInputEnd)
 {
@@ -247,7 +248,7 @@ inline OutputIteratorT
 	return itOutputBegin;
 }
 template<typename OutputIteratorT, typename InputIteratorT>
-inline InputIteratorT
+InputIteratorT
 	ReverseMoveInto(OutputIteratorT itOutputBegin, std::common_type_t<OutputIteratorT> itOutputEnd,
 		InputIteratorT itInputEnd)
 {
@@ -259,7 +260,7 @@ inline InputIteratorT
 	return itInputEnd;
 }
 template<typename OutputIteratorT, typename InputIteratorT>
-inline std::pair<OutputIteratorT, InputIteratorT>
+std::pair<OutputIteratorT, InputIteratorT>
 	ReverseMoveN(OutputIteratorT itOutputBegin,
 		std::size_t uCount, InputIteratorT itInputEnd)
 {
@@ -272,7 +273,7 @@ inline std::pair<OutputIteratorT, InputIteratorT>
 }
 
 template<typename OutputIteratorT, typename InputIteratorT>
-inline OutputIteratorT
+OutputIteratorT
 	ReverseMoveBackward(OutputIteratorT itOutputEnd,
 		InputIteratorT itInputBegin, std::common_type_t<InputIteratorT> itInputEnd)
 {
@@ -284,7 +285,7 @@ inline OutputIteratorT
 	return itOutputEnd;
 }
 template<typename OutputIteratorT, typename InputIteratorT>
-inline InputIteratorT
+InputIteratorT
 	ReverseMoveIntoBackward(std::common_type_t<OutputIteratorT> itOutputBegin, OutputIteratorT itOutputEnd,
 		InputIteratorT itInputBegin)
 {
@@ -296,7 +297,7 @@ inline InputIteratorT
 	return itInputBegin;
 }
 template<typename OutputIteratorT, typename InputIteratorT>
-inline std::pair<OutputIteratorT, InputIteratorT>
+std::pair<OutputIteratorT, InputIteratorT>
 	ReverseMoveNBackward(OutputIteratorT itOutputEnd,
 		InputIteratorT itInputBegin, std::size_t uCount)
 {
@@ -309,7 +310,7 @@ inline std::pair<OutputIteratorT, InputIteratorT>
 }
 
 template<typename ValueT = void, typename OutputIteratorT, typename ...ParamsT>
-inline OutputIteratorT
+OutputIteratorT
 	Fill(OutputIteratorT itOutputBegin, std::common_type_t<OutputIteratorT> itOutputEnd,
 		const ParamsT &...vParams)
 {
@@ -320,7 +321,7 @@ inline OutputIteratorT
 	return itOutputBegin;
 }
 template<typename ValueT = void, typename OutputIteratorT, typename ...ParamsT>
-inline OutputIteratorT
+OutputIteratorT
 	FillN(OutputIteratorT itOutputBegin, std::size_t uCount,
 		const ParamsT &...vParams)
 {
@@ -331,7 +332,7 @@ inline OutputIteratorT
 	return itOutputBegin;
 }
 template<typename ValueT = void, typename OutputIteratorT, typename ...ParamsT>
-inline OutputIteratorT
+OutputIteratorT
 	FillBackward(std::common_type_t<OutputIteratorT> itOutputBegin, OutputIteratorT itOutputEnd,
 		const ParamsT &...vParams)
 {
@@ -342,7 +343,7 @@ inline OutputIteratorT
 	return itOutputEnd;
 }
 template<typename ValueT = void, typename OutputIteratorT, typename ...ParamsT>
-inline OutputIteratorT
+OutputIteratorT
 	FillNBackward(std::size_t uCount, OutputIteratorT itOutputEnd,
 		const ParamsT &...vParams)
 {

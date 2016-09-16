@@ -5,6 +5,7 @@
 #ifndef MCF_STREAMS_CRC32_OUTPUT_STREAM_HPP_
 #define MCF_STREAMS_CRC32_OUTPUT_STREAM_HPP_
 
+#include "../Config.hpp"
 #include "AbstractOutputStream.hpp"
 #include <cstdint>
 
@@ -12,7 +13,7 @@ namespace MCF {
 
 // 按照 IEEE 802.3 描述的算法，除数为 0xEDB88320。
 
-class Crc32OutputStream : public AbstractOutputStream {
+class MCF_HAS_EXPORTED_RTTI Crc32OutputStream : public AbstractOutputStream {
 private:
 	int x_nChunkOffset;
 	std::uint8_t x_abyChunk[8];

@@ -5,6 +5,8 @@
 #ifndef MCF_CORE_BLACK_HOLE_HPP_
 #define MCF_CORE_BLACK_HOLE_HPP_
 
+#include "../Config.hpp"
+
 namespace MCF {
 
 struct BlackHole {

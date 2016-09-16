@@ -5,6 +5,7 @@
 #ifndef MCF_CORE_CLOCKS_HPP_
 #define MCF_CORE_CLOCKS_HPP_
 
+#include "../Config.hpp"
 #include <MCFCRT/env/clocks.h>
 #include <cstdint>
 

@@ -5,6 +5,7 @@
 #ifndef MCF_CORE_RANDOM_HPP_
 #define MCF_CORE_RANDOM_HPP_
 
+#include "../Config.hpp"
 #include <MCFCRT/ext/random.h>
 #include <cstdint>
 

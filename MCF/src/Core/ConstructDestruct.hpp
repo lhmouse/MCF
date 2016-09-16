@@ -5,6 +5,7 @@
 #ifndef MCF_CORE_CONSTRUCT_DESTRUCT_HPP_
 #define MCF_CORE_CONSTRUCT_DESTRUCT_HPP_
 
+#include "../Config.hpp"
 #include <type_traits>
 #include <utility>
 #include <new>
@@ -72,20 +73,20 @@ namespace Impl_ConstructDestruct {
 }
 
 template<typename ObjectT, typename ...ParamsT>
-inline void Construct(ObjectT *pObject, ParamsT &&...vParams) noexcept(std::is_nothrow_constructible<ObjectT, ParamsT &&...>::value) {
+void Construct(ObjectT *pObject, ParamsT &&...vParams) noexcept(std::is_nothrow_constructible<ObjectT, ParamsT &&...>::value) {
 	Impl_ConstructDestruct::DirectConstructor<ObjectT>::Construct(pObject, std::forward<ParamsT>(vParams)...);
 }
 template<typename ObjectT, typename ...ParamsT>
-inline void DefaultConstruct(ObjectT *pObject, ParamsT &&...vParams) noexcept(std::is_nothrow_constructible<ObjectT, ParamsT &&...>::value) {
+void DefaultConstruct(ObjectT *pObject, ParamsT &&...vParams) noexcept(std::is_nothrow_constructible<ObjectT, ParamsT &&...>::value) {
 	Impl_ConstructDestruct::DirectConstructor<ObjectT>::DefaultConstruct(pObject, std::forward<ParamsT>(vParams)...);
 }
 template<typename ObjectT>
-inline void Destruct(ObjectT *pObject) noexcept(std::is_nothrow_destructible<ObjectT>::value) {
+void Destruct(ObjectT *pObject) noexcept(std::is_nothrow_destructible<ObjectT>::value) {
 	Impl_ConstructDestruct::DirectConstructor<ObjectT>::Destruct(pObject);
 }
 
 template<typename ObjectT, typename ...ParamsT>
-inline void ConstructArray(ObjectT *pBegin, std::size_t uCount, const ParamsT &...vParams) noexcept(std::is_nothrow_constructible<ObjectT, const ParamsT &...>::value) {
+void ConstructArray(ObjectT *pBegin, std::size_t uCount, const ParamsT &...vParams) noexcept(std::is_nothrow_constructible<ObjectT, const ParamsT &...>::value) {
 	static_assert(std::is_nothrow_destructible<ObjectT>::value, "ObjectT shall be nothrow destructible.");
 
 	auto pCur = pBegin;
@@ -103,7 +104,7 @@ inline void ConstructArray(ObjectT *pBegin, std::size_t uCount, const ParamsT &.
 	}
 }
 template<typename ObjectT, typename ...ParamsT>
-inline void DefaultConstructArray(ObjectT *pBegin, std::size_t uCount, const ParamsT &...vParams) noexcept(std::is_nothrow_constructible<ObjectT, const ParamsT &...>::value) {
+void DefaultConstructArray(ObjectT *pBegin, std::size_t uCount, const ParamsT &...vParams) noexcept(std::is_nothrow_constructible<ObjectT, const ParamsT &...>::value) {
 	static_assert(std::is_nothrow_destructible<ObjectT>::value, "ObjectT shall be nothrow destructible.");
 
 	auto pCur = pBegin;
@@ -121,7 +122,7 @@ inline void DefaultConstructArray(ObjectT *pBegin, std::size_t uCount, const Par
 	}
 }
 template<typename ObjectT>
-inline void DestructArray(ObjectT *pBegin, std::size_t uCount) noexcept {
+void DestructArray(ObjectT *pBegin, std::size_t uCount) noexcept {
 	static_assert(std::is_nothrow_destructible<ObjectT>::value, "ObjectT shall be nothrow destructible.");
 
 	auto pCur = pBegin + uCount;

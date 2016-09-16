@@ -5,6 +5,7 @@
 #ifndef MCF_CORE_STREAM_BUFFER_HPP_
 #define MCF_CORE_STREAM_BUFFER_HPP_
 
+#include "../Config.hpp"
 #include <iterator>
 #include <utility>
 #include <cstddef>

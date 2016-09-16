@@ -5,6 +5,8 @@
 #ifndef MCF_CORE_NONCOPYABLE_HPP_
 #define MCF_CORE_NONCOPYABLE_HPP_
 
+#include "../Config.hpp"
+
 namespace MCF {
 
 namespace Impl_Noncopyable {

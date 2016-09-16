@@ -5,11 +5,12 @@
 #ifndef MCF_STREAM_FILTERS_BASE64_OUTPUT_STREAM_FILTER_HPP_
 #define MCF_STREAM_FILTERS_BASE64_OUTPUT_STREAM_FILTER_HPP_
 
+#include "../Config.hpp"
 #include "AbstractOutputStreamFilter.hpp"
 
 namespace MCF {
 
-class Base64OutputStreamFilter : public AbstractOutputStreamFilter {
+class MCF_HAS_EXPORTED_RTTI Base64OutputStreamFilter : public AbstractOutputStreamFilter {
 private:
 	StreamBuffer x_sbufPlain;
 

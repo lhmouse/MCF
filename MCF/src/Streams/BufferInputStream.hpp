@@ -5,12 +5,13 @@
 #ifndef MCF_STREAMS_BUFFER_INPUT_STREAM_HPP_
 #define MCF_STREAMS_BUFFER_INPUT_STREAM_HPP_
 
+#include "../Config.hpp"
 #include "AbstractInputStream.hpp"
 #include "../Core/StreamBuffer.hpp"
 
 namespace MCF {
 
-class BufferInputStream : public AbstractInputStream {
+class MCF_HAS_EXPORTED_RTTI BufferInputStream : public AbstractInputStream {
 private:
 	StreamBuffer x_vBuffer;
 

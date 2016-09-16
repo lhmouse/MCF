@@ -5,11 +5,12 @@
 #ifndef MCF_STREAM_FILTERS_BUFFERING_OUTPUT_STREAM_FILTER_HPP_
 #define MCF_STREAM_FILTERS_BUFFERING_OUTPUT_STREAM_FILTER_HPP_
 
+#include "../Config.hpp"
 #include "AbstractOutputStreamFilter.hpp"
 
 namespace MCF {
 
-class BufferingOutputStreamFilter : public AbstractOutputStreamFilter {
+class MCF_HAS_EXPORTED_RTTI BufferingOutputStreamFilter : public AbstractOutputStreamFilter {
 public:
 	explicit BufferingOutputStreamFilter(PolyIntrusivePtr<AbstractOutputStream> pUnderlyingStream) noexcept
 		: AbstractOutputStreamFilter(std::move(pUnderlyingStream))

@@ -5,11 +5,12 @@
 #ifndef MCF_STREAMS_ZERO_INPUT_STREAM_HPP_
 #define MCF_STREAMS_ZERO_INPUT_STREAM_HPP_
 
+#include "../Config.hpp"
 #include "AbstractInputStream.hpp"
 
 namespace MCF {
 
-class ZeroInputStream : public AbstractInputStream {
+class MCF_HAS_EXPORTED_RTTI ZeroInputStream : public AbstractInputStream {
 public:
 	ZeroInputStream() noexcept = default;
 	~ZeroInputStream() override;

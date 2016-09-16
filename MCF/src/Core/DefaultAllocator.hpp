@@ -5,6 +5,7 @@
 #ifndef MCF_CORE_DEFAULT_ALLOCATOR_HPP_
 #define MCF_CORE_DEFAULT_ALLOCATOR_HPP_
 
+#include "../Config.hpp"
 #include <new>
 #include <cstddef>
 

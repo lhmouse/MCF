@@ -5,6 +5,7 @@
 #ifndef MCF_CORE_STRING_HPP_
 #define MCF_CORE_STRING_HPP_
 
+#include "../Config.hpp"
 #include "StringView.hpp"
 #include "_CheckedSizeArithmetic.hpp"
 #include "_Enumerator.hpp"

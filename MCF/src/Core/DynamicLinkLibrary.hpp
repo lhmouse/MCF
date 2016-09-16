@@ -5,6 +5,7 @@
 #ifndef MCF_CORE_DYNAMIC_LINK_LIBRARY_HPP_
 #define MCF_CORE_DYNAMIC_LINK_LIBRARY_HPP_
 
+#include "../Config.hpp"
 #include <type_traits>
 #include <cstdint>
 #include "UniqueHandle.hpp"
@@ -29,7 +30,6 @@ private:
 
 public:
 	DynamicLinkLibrary() noexcept = default;
-
 	explicit DynamicLinkLibrary(const WideStringView &wsvPath);
 
 public:

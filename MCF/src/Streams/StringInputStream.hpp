@@ -5,12 +5,13 @@
 #ifndef MCF_STREAMS_STRING_INPUT_STREAM_HPP_
 #define MCF_STREAMS_STRING_INPUT_STREAM_HPP_
 
+#include "../Config.hpp"
 #include "AbstractInputStream.hpp"
 #include "../Core/String.hpp"
 
 namespace MCF {
 
-class StringInputStream : public AbstractInputStream {
+class MCF_HAS_EXPORTED_RTTI StringInputStream : public AbstractInputStream {
 private:
 	NarrowString x_vString;
 	std::size_t x_uOffset;

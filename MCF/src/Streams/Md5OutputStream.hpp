@@ -5,13 +5,14 @@
 #ifndef MCF_STREAMS_MD5_OUTPUT_STREAM_HPP_
 #define MCF_STREAMS_MD5_OUTPUT_STREAM_HPP_
 
+#include "../Config.hpp"
 #include "AbstractOutputStream.hpp"
 #include "../Core/Array.hpp"
 #include <cstdint>
 
 namespace MCF {
 
-class Md5OutputStream : public AbstractOutputStream {
+class MCF_HAS_EXPORTED_RTTI Md5OutputStream : public AbstractOutputStream {
 private:
 	int x_nChunkOffset;
 	std::uint8_t x_abyChunk[64];

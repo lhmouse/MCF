@@ -5,6 +5,7 @@
 #ifndef MCF_CORE_MIN_MAX_HPP_
 #define MCF_CORE_MIN_MAX_HPP_
 
+#include "../Config.hpp"
 #include "Comparators.hpp"
 #include <utility>
 #include <type_traits>

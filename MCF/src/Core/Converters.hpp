@@ -5,6 +5,7 @@
 #ifndef MCF_CORE_CONVERTERS_HPP_
 #define MCF_CORE_CONVERTERS_HPP_
 
+#include "../Config.hpp"
 #include <utility>
 
 namespace MCF {

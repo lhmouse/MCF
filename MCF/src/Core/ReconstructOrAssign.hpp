@@ -5,6 +5,7 @@
 #ifndef MCF_CORE_RECONSTRUCT_OR_ASSIGN_HPP_
 #define MCF_CORE_RECONSTRUCT_OR_ASSIGN_HPP_
 
+#include "../Config.hpp"
 #include "ConstructDestruct.hpp"
 #include <type_traits>
 
@@ -31,9 +32,7 @@ namespace Impl_ReconstructOrAssign {
 }
 
 template<typename ObjectT, typename ...ParamsT>
-inline void ReconstructOrAssign(ObjectT *pObject, ParamsT &&...vParams)
-	noexcept(std::is_nothrow_destructible<ObjectT>::value && std::is_nothrow_constructible<ObjectT, ParamsT &&...>::value)
-{
+void ReconstructOrAssign(ObjectT *pObject, ParamsT &&...vParams) noexcept(std::is_nothrow_destructible<ObjectT>::value && std::is_nothrow_constructible<ObjectT, ParamsT &&...>::value) {
 	std::conditional_t<
 		std::is_nothrow_destructible<ObjectT>::value && std::is_nothrow_constructible<ObjectT, ParamsT &&...>::value,
 		Impl_ReconstructOrAssign::ToReconstruct, Impl_ReconstructOrAssign::ToAssign

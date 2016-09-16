@@ -5,12 +5,13 @@
 #ifndef MCF_STREAMS_OUTPUT_STREAM_ITERATOR_HPP_
 #define MCF_STREAMS_OUTPUT_STREAM_ITERATOR_HPP_
 
+#include "../Config.hpp"
 #include "AbstractOutputStream.hpp"
 #include <iterator>
 
 namespace MCF {
 
-class OutputStreamIterator : public std::iterator<std::output_iterator_tag, unsigned char> {
+class MCF_HAS_EXPORTED_RTTI OutputStreamIterator : public std::iterator<std::output_iterator_tag, unsigned char> {
 private:
 	AbstractOutputStream *x_pstrmOwner;
 

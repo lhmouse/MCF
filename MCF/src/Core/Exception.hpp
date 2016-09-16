@@ -5,6 +5,7 @@
 #ifndef MCF_CORE_EXCEPTION_HPP_
 #define MCF_CORE_EXCEPTION_HPP_
 
+#include "../Config.hpp"
 #include "Rcnts.hpp"
 #include "DeclVal.hpp"
 #include <MCFCRT/env/last_error.h>
@@ -47,7 +48,7 @@ namespace Impl_Exception {
 	};
 }
 
-class Exception : public virtual std::exception, public Impl_Exception::ExceptionContext {
+class MCF_HAS_EXPORTED_RTTI Exception : public virtual std::exception, public Impl_Exception::ExceptionContext {
 private:
 	unsigned long x_ulErrorCode;
 	Rcntws x_rcwsErrorMessage;
@@ -89,8 +90,7 @@ namespace Impl_Exception {
 	};
 
 	template<typename ExceptionT, typename ...ParamsT>
-	[[noreturn]]
-	DummyReturnType DebugThrow(
+	[[noreturn]] DummyReturnType DebugThrow(
 		const char *pszFile, unsigned long ulLine, const char *pszFunction, std::exception_ptr pNestedException,
 		ParamsT &&...vParams)
 	{

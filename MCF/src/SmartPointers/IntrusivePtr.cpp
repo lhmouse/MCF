@@ -8,7 +8,13 @@
 namespace MCF {
 
 namespace Impl_IntrusivePtr {
-	FixedSizeAllocator<kWeakViewSize> g_vViewAllocator;
+	namespace {
+		FixedSizeAllocator<kWeakViewSize> g_vViewAllocator;
+	}
+
+	FixedSizeAllocator<kWeakViewSize> &GetViewAllocator() noexcept {
+		return g_vViewAllocator;
+	}
 }
 
 }

@@ -5,6 +5,8 @@
 #ifndef MCF_CORE_DECL_VAL_HPP_
 #define MCF_CORE_DECL_VAL_HPP_
 
+#include "../Config.hpp"
+
 namespace MCF {
 
 template<typename T>

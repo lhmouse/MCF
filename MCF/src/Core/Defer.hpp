@@ -5,6 +5,7 @@
 #ifndef MCF_CORE_DEFER_HPP_
 #define MCF_CORE_DEFER_HPP_
 
+#include "../Config.hpp"
 #include <cstddef>
 #include <utility>
 #include <type_traits>
@@ -19,7 +20,7 @@ namespace Impl_Defer {
 		LvalueRefOrPrvalueT x_fnCallback;
 
 	public:
-		explicit DeferredCallback(LvalueRefOrPrvalueT &&fnCallback)
+		DeferredCallback(LvalueRefOrPrvalueT &&fnCallback)
 			: x_fnCallback(std::forward<LvalueRefOrPrvalueT>(fnCallback))
 		{
 		}
@@ -39,7 +40,7 @@ namespace Impl_Defer {
 		LvalueRefOrPrvalueT x_fnCallback;
 
 	public:
-		explicit DeferredCallbackOnNormalExit(LvalueRefOrPrvalueT &&fnCallback)
+		DeferredCallbackOnNormalExit(LvalueRefOrPrvalueT &&fnCallback)
 			: x_uOldExceptionCount(GetUncaughtExceptionCount())
 			, x_fnCallback(std::forward<LvalueRefOrPrvalueT>(fnCallback))
 		{
@@ -58,7 +59,7 @@ namespace Impl_Defer {
 		LvalueRefOrPrvalueT x_fnCallback;
 
 	public:
-		explicit DeferredCallbackOnException(LvalueRefOrPrvalueT &&fnCallback)
+		DeferredCallbackOnException(LvalueRefOrPrvalueT &&fnCallback)
 			: x_uOldExceptionCount(GetUncaughtExceptionCount())
 			, x_fnCallback(std::forward<LvalueRefOrPrvalueT>(fnCallback))
 		{
@@ -72,18 +73,18 @@ namespace Impl_Defer {
 }
 
 template<typename CallbackT>
-auto Defer(CallbackT &&vCallback){
-	return Impl_Defer::DeferredCallback<std::remove_cv_t<CallbackT>>(std::forward<CallbackT>(vCallback));
+Impl_Defer::DeferredCallback<std::remove_cv_t<CallbackT>> Defer(CallbackT &&vCallback){
+	return std::forward<CallbackT>(vCallback);
 }
 /*
 template<typename CallbackT>
-auto DeferOnNormalExit(CallbackT &&vCallback){
-	return Impl_Defer::DeferredCallbackOnNormalExit<std::remove_cv_t<CallbackT>>(std::forward<CallbackT>(vCallback));
+Impl_Defer::DeferredCallbackOnNormalExit<std::remove_cv_t<CallbackT>> DeferOnNormalExit(CallbackT &&vCallback){
+	return std::forward<CallbackT>(vCallback);
 }
 
 template<typename CallbackT>
-auto DeferOnException(CallbackT &&vCallback){
-	return Impl_Defer::DeferredCallbackOnException<std::remove_cv_t<CallbackT>>(std::forward<CallbackT>(vCallback));
+Impl_Defer::DeferredCallbackOnException<std::remove_cv_t<CallbackT>> DeferOnException(CallbackT &&vCallback){
+	return std::forward<CallbackT>(vCallback);
 }
 */
 }

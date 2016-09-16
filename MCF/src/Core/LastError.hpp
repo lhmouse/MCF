@@ -5,6 +5,7 @@
 #ifndef MCF_CORE_LAST_ERROR_HPP_
 #define MCF_CORE_LAST_ERROR_HPP_
 
+#include "../Config.hpp"
 #include <MCFCRT/env/last_error.h>
 #include "StringView.hpp"
 

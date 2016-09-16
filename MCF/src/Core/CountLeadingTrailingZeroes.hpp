@@ -5,6 +5,7 @@
 #ifndef MCF_CORE_COUNT_LEADING_TRAILING_ZEROES_HPP_
 #define MCF_CORE_COUNT_LEADING_TRAILING_ZEROES_HPP_
 
+#include "../Config.hpp"
 #include <cstdint>
 #include <climits>
 #include <cstddef>

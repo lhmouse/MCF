@@ -5,6 +5,7 @@
 #ifndef MCF_CORE_FUNCTION_VIEW_HPP_
 #define MCF_CORE_FUNCTION_VIEW_HPP_
 
+#include "../Config.hpp"
 #include "Assert.hpp"
 #include "AddressOf.hpp"
 #include "DeclVal.hpp"

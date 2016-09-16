@@ -5,12 +5,13 @@
 #ifndef MCF_STREAMS_STRING_OUTPUT_STREAM_HPP_
 #define MCF_STREAMS_STRING_OUTPUT_STREAM_HPP_
 
+#include "../Config.hpp"
 #include "AbstractOutputStream.hpp"
 #include "../Core/String.hpp"
 
 namespace MCF {
 
-class StringOutputStream : public AbstractOutputStream {
+class MCF_HAS_EXPORTED_RTTI StringOutputStream : public AbstractOutputStream {
 private:
 	NarrowString x_vString;
 

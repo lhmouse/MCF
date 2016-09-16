@@ -5,6 +5,7 @@
 #ifndef MCF_THREAD_CONDITION_VARIABLE_HPP_
 #define MCF_THREAD_CONDITION_VARIABLE_HPP_
 
+#include "../Config.hpp"
 #include <MCFCRT/env/condition_variable.h>
 #include "../Core/Noncopyable.hpp"
 #include "../Core/Assert.hpp"

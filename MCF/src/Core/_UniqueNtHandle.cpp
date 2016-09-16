@@ -7,6 +7,8 @@
 
 namespace MCF {
 
+template class UniqueHandle<Impl_UniqueNtHandle::NtHandleCloser>;
+
 namespace Impl_UniqueNtHandle {
 	void NtHandleCloser::operator()(Handle hObject) const noexcept {
 		const auto lStatus = ::NtClose(hObject);

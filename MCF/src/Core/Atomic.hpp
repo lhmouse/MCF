@@ -5,6 +5,7 @@
 #ifndef MCF_CORE_ATOMIC_HPP_
 #define MCF_CORE_ATOMIC_HPP_
 
+#include "../Config.hpp"
 #include <type_traits>
 #include <cstddef>
 #include "AddressOf.hpp"

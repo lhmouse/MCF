@@ -5,6 +5,7 @@
 #ifndef MCF_THREAD_THREAD_HPP_
 #define MCF_THREAD_THREAD_HPP_
 
+#include "../Config.hpp"
 #include <MCFCRT/env/thread.h>
 #include "../Core/Assert.hpp"
 #include "../Core/UniqueHandle.hpp"
@@ -26,7 +27,7 @@ private:
 		}
 	};
 
-	class X_AbstractControlBlock : public IntrusiveBase<X_AbstractControlBlock> {
+	class MCF_HAS_EXPORTED_RTTI X_AbstractControlBlock : public IntrusiveBase<X_AbstractControlBlock> {
 	private:
 		UniqueHandle<X_ThreadCloser> x_hThread;
 		std::uintptr_t x_uTid;

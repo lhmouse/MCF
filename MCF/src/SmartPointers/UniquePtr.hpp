@@ -5,6 +5,7 @@
 #ifndef MCF_SMART_POINTERS_UNIQUE_PTR_HPP_
 #define MCF_SMART_POINTERS_UNIQUE_PTR_HPP_
 
+#include "../Config.hpp"
 #include "../Core/Assert.hpp"
 #include "DefaultDeleter.hpp"
 #include <utility>

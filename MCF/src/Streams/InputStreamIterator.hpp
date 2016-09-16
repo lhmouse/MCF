@@ -5,12 +5,13 @@
 #ifndef MCF_STREAMS_INPUT_STREAM_ITERATOR_HPP_
 #define MCF_STREAMS_INPUT_STREAM_ITERATOR_HPP_
 
+#include "../Config.hpp"
 #include "AbstractInputStream.hpp"
 #include <iterator>
 
 namespace MCF {
 
-class InputStreamIterator : public std::iterator<std::input_iterator_tag, int> {
+class MCF_HAS_EXPORTED_RTTI InputStreamIterator : public std::iterator<std::input_iterator_tag, int> {
 private:
 	AbstractInputStream *x_pstrmOwner;
 

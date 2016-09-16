@@ -5,6 +5,7 @@
 #ifndef MCF_CORE_UNIQUE_HANDLE_HPP_
 #define MCF_CORE_UNIQUE_HANDLE_HPP_
 
+#include "../Config.hpp"
 #include "Assert.hpp"
 #include "DeclVal.hpp"
 #include <utility>

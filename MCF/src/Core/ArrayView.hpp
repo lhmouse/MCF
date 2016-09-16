@@ -5,6 +5,7 @@
 #ifndef MCF_CORE_ARRAY_VIEW_HPP_
 #define MCF_CORE_ARRAY_VIEW_HPP_
 
+#include "../Config.hpp"
 #include "_Enumerator.hpp"
 #include "Exception.hpp"
 #include "Assert.hpp"

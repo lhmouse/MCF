@@ -5,6 +5,7 @@
 #ifndef MCF_CORE_ARRAY_HPP_
 #define MCF_CORE_ARRAY_HPP_
 
+#include "../Config.hpp"
 #include "ArrayView.hpp"
 #include "Assert.hpp"
 #include "DeclVal.hpp"

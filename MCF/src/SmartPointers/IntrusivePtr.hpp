@@ -5,6 +5,7 @@
 #ifndef MCF_SMART_POINTERS_INTRUSIVE_PTR_HPP_
 #define MCF_SMART_POINTERS_INTRUSIVE_PTR_HPP_
 
+#include "../Config.hpp"
 #include "../Core/Assert.hpp"
 #include "../Core/Bail.hpp"
 #include "../Core/DeclVal.hpp"
@@ -29,9 +30,6 @@ template<typename ObjectT, class DeleterT = DefaultDeleter<ObjectT>>
 class IntrusiveWeakPtr;
 
 namespace Impl_IntrusivePtr {
-	template<class DeleterT>
-	class DeletableBase;
-
 	class RefCountBase {
 	private:
 		mutable Atomic<std::size_t> x_uRef;
@@ -106,19 +104,19 @@ namespace Impl_IntrusivePtr {
 		kWeakViewSize = sizeof(void *) * 4,
 	};
 
-	extern FixedSizeAllocator<kWeakViewSize> g_vViewAllocator;
+	extern FixedSizeAllocator<kWeakViewSize> &GetViewAllocator() noexcept;
 
 	template<typename OwnerT, class DeleterT>
 	class WeakViewTemplate final : public RefCountBase  {
 	public:
 		static void *operator new(std::size_t uSize){
-			static_assert(sizeof(WeakViewTemplate) <= g_vViewAllocator.kElementSize, "Please fix the declaration of g_vViewAllocator!");
+			static_assert(sizeof(WeakViewTemplate) <= GetViewAllocator().kElementSize, "Please fix this!");
 			MCF_DEBUG_CHECK(uSize == sizeof(WeakViewTemplate));
 
-			return g_vViewAllocator.Allocate();
+			return GetViewAllocator().Allocate();
 		}
 		static void operator delete(void *pRaw) noexcept {
-			g_vViewAllocator.Deallocate(pRaw);
+			GetViewAllocator().Deallocate(pRaw);
 		}
 
 	private:

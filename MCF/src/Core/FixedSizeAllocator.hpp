@@ -5,6 +5,7 @@
 #ifndef MCF_CORE_FIXED_SIZE_ALLOCATOR_HPP_
 #define MCF_CORE_FIXED_SIZE_ALLOCATOR_HPP_
 
+#include "../Config.hpp"
 #include "Atomic.hpp"
 #include "DefaultAllocator.hpp"
 #include <cstddef>

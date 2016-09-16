@@ -5,6 +5,7 @@
 #ifndef MCF_CORE_COUNT_OF_HPP_
 #define MCF_CORE_COUNT_OF_HPP_
 
+#include "../Config.hpp"
 #include <cstddef>
 
 namespace MCF {

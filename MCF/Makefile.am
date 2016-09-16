@@ -23,6 +23,7 @@ __pch.hpp.gch: __pch.hpp
 	${CXX} -x c++-header @DEFS@ ${AM_CPPFLAGS} ${CPPFLAGS} $$(echo "" "${AM_CXXFLAGS}" | sed "s/-include __pch\\.hpp//") ${CXXFLAGS} $< -o $@
 
 pkginclude_HEADERS =	\
+	src/Config.hpp	\
 	src/StdMCF.hpp
 
 pkginclude_Coredir = ${pkgincludedir}/Core

@@ -18,7 +18,11 @@ namespace Impl_UniqueNtHandle {
 		}
 		void operator()(Handle hObject) const noexcept;
 	};
+}
 
+extern template class UniqueHandle<Impl_UniqueNtHandle::NtHandleCloser>;
+
+namespace Impl_UniqueNtHandle {
 	using UniqueNtHandle = UniqueHandle<NtHandleCloser>;
 }
 

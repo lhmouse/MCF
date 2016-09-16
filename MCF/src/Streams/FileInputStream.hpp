@@ -5,6 +5,7 @@
 #ifndef MCF_STREAMS_FILE_INPUT_STREAM_HPP_
 #define MCF_STREAMS_FILE_INPUT_STREAM_HPP_
 
+#include "../Config.hpp"
 #include "AbstractInputStream.hpp"
 #include "../Core/File.hpp"
 
@@ -12,7 +13,7 @@ namespace MCF {
 
 // 性能警告：FileInputStream 不提供 I/O 缓冲。
 
-class FileInputStream : public AbstractInputStream {
+class MCF_HAS_EXPORTED_RTTI FileInputStream : public AbstractInputStream {
 private:
 	File x_vFile;
 	std::uint64_t x_u64Offset;

@@ -7,10 +7,10 @@ template class MCF::Variant<char, int, double>;
 extern "C" unsigned _MCFCRT_Main(void) noexcept {
 	MCF::Variant<char, int, double> v;
 	try {
-		v = 'a';
+		v = 12.34;
 		auto p = v.Require<double>();
 		std::printf("value = %f\n", *p);
-	} catch(std::exception &e){
+	} catch(MCF::Exception &e){
 		std::printf("exception caught: what = %s\n", e.what());
 	}
 	return 0;

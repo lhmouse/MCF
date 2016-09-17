@@ -1,17 +1,22 @@
 #include <MCF/StdMCF.hpp>
-#include <MCF/Core/Variant.hpp>
+#include <MCF/Core/Function.hpp>
 #include <cstdio>
 
-template class MCF::Variant<char, int, double>;
+template class MCF::Function<int (int)>;
+
+struct foo {
+	foo() = default;
+	foo(const foo &) = delete;
+	foo(foo &&) = default;
+
+	int operator()(int a) const {
+		return a * a;
+	}
+};
 
 extern "C" unsigned _MCFCRT_Main(void) noexcept {
-	MCF::Variant<char, int, double> v;
-	try {
-		v = 12.34;
-		auto p = v.Require<double>();
-		std::printf("value = %f\n", *p);
-	} catch(MCF::Exception &e){
-		std::printf("exception caught: what = %s\n", e.what());
-	}
+	auto f1 = MCF::Function<int (int)>(foo());
+	auto f2 = f1;
+	f2.Clone();
 	return 0;
 }

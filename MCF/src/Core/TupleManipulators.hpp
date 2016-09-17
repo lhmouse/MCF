@@ -13,10 +13,6 @@
 namespace MCF {
 
 namespace Impl_TupleManipulators {
-	template<std::size_t ...kIndicesT>
-	struct IndexSequence {
-	};
-
 	template<std::size_t kCurrentT, std::size_t kIncrementT, std::size_t kCountT, std::size_t ...kGeneratedT>
 	struct IndexSequenceGenerator {
 		static constexpr decltype(auto) DoIt() noexcept {
@@ -26,17 +22,17 @@ namespace Impl_TupleManipulators {
 	template<std::size_t kCurrentT, std::size_t kIncrementT, std::size_t ...kGeneratedT>
 	struct IndexSequenceGenerator<kCurrentT, kIncrementT, 0, kGeneratedT...> {
 		static constexpr decltype(auto) DoIt() noexcept {
-			return IndexSequence<kGeneratedT...>();
+			return std::index_sequence<kGeneratedT...>();
 		}
 	};
 
 	template<typename FunctionT, typename TupleT, std::size_t ...kIndicesT>
-	constexpr void RealAbsorb(FunctionT &vFunction, TupleT &vTuple, const IndexSequence<kIndicesT...> &){
+	constexpr void RealAbsorb(FunctionT &vFunction, TupleT &vTuple, const std::index_sequence<kIndicesT...> &){
 		(void)(..., (void)std::forward<FunctionT>(vFunction)(std::get<kIndicesT>(std::forward<TupleT>(vTuple))));
 	}
 
 	template<typename FunctionT, typename TupleT, std::size_t ...kIndicesT>
-	constexpr decltype(auto) RealSqueeze(FunctionT &vFunction, TupleT &vTuple, const IndexSequence<kIndicesT...> &){
+	constexpr decltype(auto) RealSqueeze(FunctionT &vFunction, TupleT &vTuple, const std::index_sequence<kIndicesT...> &){
 		return std::forward<FunctionT>(vFunction)(std::get<kIndicesT>(std::forward<TupleT>(vTuple))...);
 	}
 }

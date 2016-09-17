@@ -18,19 +18,6 @@
 namespace MCF {
 
 namespace Impl_Function {
-	struct FunctorCopier {
-		template<typename FuncT>
-		static FuncT *DoIt(const FuncT &vFunc){
-			return new auto(vFunc);
-		}
-	};
-	struct DummyFunctorCopier {
-		template<typename FuncT>
-		[[noreturn]] static FuncT *DoIt(const FuncT &){
-			MCF_THROW(Exception, ERROR_CALL_NOT_IMPLEMENTED, Rcntws::View(L"Function: 该函数对象不允许复制构造。"));
-		}
-	};
-
 	template<typename RetT, typename ...ParamsT>
 	class RefCountedFunctorBase {
 	private:
@@ -73,6 +60,15 @@ namespace Impl_Function {
 		}
 	};
 
+	template<typename T>
+	[[noreturn]] T *VirtualNewCopy(const std::false_type &, const T &){
+		MCF_THROW(Exception, ERROR_CALL_NOT_IMPLEMENTED, Rcntws::View(L"Function: 该函数对象不允许复制构造。"));
+	}
+	template<typename T>
+	T *VirtualNewCopy(const std::true_type &, const T &t){
+		return new T(t);
+	}
+
 	template<typename FuncT, typename RetT, typename ...ParamsT>
 	class Functor : public RefCountedFunctorBase<RetT, ParamsT...> {
 	private:
@@ -89,7 +85,7 @@ namespace Impl_Function {
 			return DesignatedInvoke<RetT>(x_vFunc, std::forward<ParamsT>(vParams)...);
 		}
 		Functor *VirtualNew() const override {
-			return std::conditional_t<std::is_copy_constructible<std::decay_t<FuncT>>::value, FunctorCopier, DummyFunctorCopier>::DoIt(*this);
+			return VirtualNewCopy<>(std::is_copy_constructible<std::decay_t<FuncT>>(), *this);
 		}
 	};
 }

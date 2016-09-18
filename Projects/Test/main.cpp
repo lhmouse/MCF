@@ -1,22 +1,8 @@
 #include <MCF/StdMCF.hpp>
-#include <MCF/Core/Function.hpp>
+#include <MCF/Core/TupleManipulators.hpp>
 #include <cstdio>
 
-template class MCF::Function<int (int)>;
-
-struct foo {
-	foo() = default;
-	foo(const foo &) = delete;
-	foo(foo &&) = default;
-
-	int operator()(int a) const {
-		return a * a;
-	}
-};
-
 extern "C" unsigned _MCFCRT_Main(void) noexcept {
-	auto f1 = MCF::Function<int (int)>(foo());
-	auto f2 = f1;
-	f2.Clone();
+	MCF::ReverseSqueeze([](auto ...i){ (std::printf("%d ", (int)i), ...); }, std::make_tuple(1,2,3,4,5));
 	return 0;
 }

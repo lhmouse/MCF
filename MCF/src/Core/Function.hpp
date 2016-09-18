@@ -61,12 +61,12 @@ namespace Impl_Function {
 	};
 
 	template<typename T>
-	[[noreturn]] T *VirtualNewCopy(const std::false_type &, const T &){
+	[[noreturn]] std::decay_t<T> *RealVirtualNew(const std::false_type &, T &&){
 		MCF_THROW(Exception, ERROR_CALL_NOT_IMPLEMENTED, Rcntws::View(L"Function: 该函数对象不允许复制构造。"));
 	}
 	template<typename T>
-	T *VirtualNewCopy(const std::true_type &, const T &t){
-		return new T(t);
+	std::decay_t<T> *RealVirtualNew(const std::true_type &, T &&t){
+		return new auto(std::forward<T>(t));
 	}
 
 	template<typename FuncT, typename RetT, typename ...ParamsT>
@@ -85,7 +85,7 @@ namespace Impl_Function {
 			return DesignatedInvoke<RetT>(x_vFunc, std::forward<ParamsT>(vParams)...);
 		}
 		Functor *VirtualNew() const override {
-			return VirtualNewCopy<>(std::is_copy_constructible<std::decay_t<FuncT>>(), *this);
+			return RealVirtualNew<>(std::is_copy_constructible<std::decay_t<FuncT>>(), *this);
 		}
 	};
 }

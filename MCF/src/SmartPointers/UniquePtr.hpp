@@ -238,19 +238,21 @@ UniquePtr<ObjectT, DeleterT> MakeUnique(ParamsT &&...vParams){
 
 template<typename DstT, typename SrcT, class DeleterT>
 UniquePtr<DstT, DeleterT> StaticPointerCast(UniquePtr<SrcT, DeleterT> &&pSrc) noexcept {
-	return UniquePtr<DstT, DeleterT>(static_cast<DstT *>(pSrc.Release()));
+	const auto pTest = static_cast<DstT *>(pSrc.Get());
+	pSrc.Release();
+	return UniquePtr<DstT, DeleterT>(pTest);
 }
-template<typename DstT, typename SrcT, class DeleterT>
-UniquePtr<DstT, DeleterT> ConstPointerCast(UniquePtr<SrcT, DeleterT> &&pSrc) noexcept {
-	return UniquePtr<DstT, DeleterT>(const_cast<DstT *>(pSrc.Release()));
-}
-
 template<typename DstT, typename SrcT, class DeleterT>
 UniquePtr<DstT, DeleterT> DynamicPointerCast(UniquePtr<SrcT, DeleterT> &&pSrc) noexcept {
 	const auto pTest = dynamic_cast<DstT *>(pSrc.Get());
-	if(!pTest){
-		return nullptr;
+	if(pTest){
+		pSrc.Release();
 	}
+	return UniquePtr<DstT, DeleterT>(pTest);
+}
+template<typename DstT, typename SrcT, class DeleterT>
+UniquePtr<DstT, DeleterT> ConstPointerCast(UniquePtr<SrcT, DeleterT> &&pSrc) noexcept {
+	const auto pTest = const_cast<DstT *>(pSrc.Get());
 	pSrc.Release();
 	return UniquePtr<DstT, DeleterT>(pTest);
 }

@@ -82,22 +82,18 @@ namespace Impl_IntrusivePtr {
 		}
 	};
 
-	template<typename DstT, typename SrcT, typename = DstT>
-	struct StaticCastOrDynamicCastHelper {
-		static DstT DoIt(SrcT &vSrc){
-			return dynamic_cast<DstT>(std::forward<SrcT>(vSrc));
-		}
-	};
 	template<typename DstT, typename SrcT>
-	struct StaticCastOrDynamicCastHelper<DstT, SrcT, decltype(static_cast<DstT>(DeclVal<SrcT>()))> {
-		static constexpr DstT DoIt(SrcT &vSrc) noexcept {
-			return static_cast<DstT>(std::forward<SrcT>(vSrc));
-		}
-	};
+	constexpr DstT RealStaticCastOrDynamicCast(SrcT &vSrc, decltype(static_cast<void>(static_cast<DstT>(DeclVal<SrcT>())), 1)) noexcept {
+		return static_cast<DstT>(std::forward<SrcT>(vSrc));
+	}
+	template<typename DstT, typename SrcT>
+	DstT RealStaticCastOrDynamicCast(SrcT &vSrc, char){
+		return dynamic_cast<DstT>(std::forward<SrcT>(vSrc));
+	}
 
 	template<typename DstT, typename SrcT>
 	constexpr DstT StaticCastOrDynamicCast(SrcT &&vSrc){
-		return StaticCastOrDynamicCastHelper<DstT, SrcT>::DoIt(vSrc);
+		return RealStaticCastOrDynamicCast<DstT, SrcT>(vSrc, 1);
 	}
 
 	enum : std::size_t {
@@ -110,7 +106,7 @@ namespace Impl_IntrusivePtr {
 	class WeakViewTemplate final : public RefCountBase  {
 	public:
 		static void *operator new(std::size_t uSize){
-			static_assert(sizeof(WeakViewTemplate) <= GetViewAllocator().kElementSize, "Please fix this!");
+			static_assert(sizeof(WeakViewTemplate) <= kWeakViewSize, "Please fix this!");
 			MCF_DEBUG_CHECK(uSize == sizeof(WeakViewTemplate));
 
 			return GetViewAllocator().Allocate();
@@ -548,19 +544,21 @@ IntrusivePtr<ObjectT, DeleterT> MakeIntrusive(ParamsT &&...vParams){
 
 template<typename DstT, typename SrcT, class DeleterT>
 IntrusivePtr<DstT, DeleterT> StaticPointerCast(IntrusivePtr<SrcT, DeleterT> pSrc) noexcept {
-	return IntrusivePtr<DstT, DeleterT>(static_cast<DstT *>(pSrc.Release()));
+	const auto pTest = static_cast<DstT *>(pSrc.Get());
+	pSrc.Release();
+	return IntrusivePtr<DstT, DeleterT>(pTest);
 }
-template<typename DstT, typename SrcT, class DeleterT>
-IntrusivePtr<DstT, DeleterT> ConstPointerCast(IntrusivePtr<SrcT, DeleterT> pSrc) noexcept {
-	return IntrusivePtr<DstT, DeleterT>(const_cast<DstT *>(pSrc.Release()));
-}
-
 template<typename DstT, typename SrcT, class DeleterT>
 IntrusivePtr<DstT, DeleterT> DynamicPointerCast(IntrusivePtr<SrcT, DeleterT> pSrc) noexcept {
 	const auto pTest = dynamic_cast<DstT *>(pSrc.Get());
-	if(!pTest){
-		return nullptr;
+	if(pTest){
+		pSrc.Release();
 	}
+	return IntrusivePtr<DstT, DeleterT>(pTest);
+}
+template<typename DstT, typename SrcT, class DeleterT>
+IntrusivePtr<DstT, DeleterT> ConstPointerCast(IntrusivePtr<SrcT, DeleterT> pSrc) noexcept {
+	const auto pTest = const_cast<DstT *>(pSrc.Get());
 	pSrc.Release();
 	return IntrusivePtr<DstT, DeleterT>(pTest);
 }
@@ -593,7 +591,7 @@ private:
 		if(!pElement){
 			return nullptr;
 		}
-		const auto pView = Impl_IntrusivePtr::StaticCastOrDynamicCast<const volatile Impl_IntrusivePtr::DeletableBase<DeleterT> *>(pElement)->X_RequireView();
+		const auto pView = static_cast<const volatile Impl_IntrusivePtr::DeletableBase<DeleterT> *>(pElement)->X_RequireView();
 		pView->AddRef();
 		return pView;
 	}

@@ -42,11 +42,11 @@ namespace Impl_Enumerator {
 		Element *x_pElement;
 
 	public:
-		explicit constexpr Enumerator() noexcept
+		constexpr Enumerator() noexcept
 			: x_pContainer(nullptr), x_pElement(nullptr)
 		{
 		}
-		explicit constexpr Enumerator(ContainerT &vContainer, Element *pElement) noexcept
+		constexpr Enumerator(ContainerT &vContainer, Element *pElement) noexcept
 			: x_pContainer(AddressOf(vContainer)), x_pElement(pElement)
 		{
 		}
@@ -120,11 +120,11 @@ namespace Impl_Enumerator {
 		const Element *x_pElement;
 
 	public:
-		explicit constexpr ConstEnumerator() noexcept
+		constexpr ConstEnumerator() noexcept
 			: x_pContainer(nullptr), x_pElement(nullptr)
 		{
 		}
-		explicit constexpr ConstEnumerator(const ContainerT &vContainer, const Element *pElement) noexcept
+		constexpr ConstEnumerator(const ContainerT &vContainer, const Element *pElement) noexcept
 			: x_pContainer(AddressOf(vContainer)), x_pElement(pElement)
 		{
 		}

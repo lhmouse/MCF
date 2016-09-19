@@ -9,7 +9,7 @@ namespace MCF {
 bool Event::Wait(std::uint64_t u64UntilFastMonoClock) const noexcept {
 	Mutex::UniqueLock vLock(x_mtxGuard);
 	while(!x_bSet){
-		if(!x_cvWaiter.Wait(vLock, u64UntilFastMonoClock)){
+		if(!x_cvWaiter.WaitOrAbandon(vLock, u64UntilFastMonoClock)){
 			return false;
 		}
 	}

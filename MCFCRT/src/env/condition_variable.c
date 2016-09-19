@@ -23,7 +23,7 @@ extern NTSTATUS NtReleaseKeyedEvent(HANDLE hKeyedEvent, void *pKey, BOOLEAN bAle
 __attribute__((__always_inline__))
 static inline bool ReallyWaitForConditionVariable(volatile uintptr_t *puControl,
 	_MCFCRT_ConditionVariableUnlockCallback pfnUnlockCallback, _MCFCRT_ConditionVariableRelockCallback pfnRelockCallback, intptr_t nContext,
-	bool bMayTimeOut, uint64_t u64UntilFastMonoClock)
+	bool bMayTimeOut, uint64_t u64UntilFastMonoClock, bool bRelockIfTimeOut)
 {
 	{
 //		uintptr_t uOld, uNew;
@@ -54,7 +54,9 @@ static inline bool ReallyWaitForConditionVariable(volatile uintptr_t *puControl,
 				} while(_MCFCRT_EXPECT_NOT(!__atomic_compare_exchange_n(puControl, &uOld, uNew, false, __ATOMIC_RELAXED, __ATOMIC_RELAXED)));
 			}
 			if(bDecremented){
-				(*pfnRelockCallback)(nContext, nUnlocked);
+				if(bRelockIfTimeOut){
+					(*pfnRelockCallback)(nContext, nUnlocked);
+				}
 				return false;
 			}
 			liTimeout.QuadPart = 0;
@@ -95,13 +97,19 @@ static inline size_t ReallySignalConditionVariable(volatile uintptr_t *puControl
 bool _MCFCRT_WaitForConditionVariable(_MCFCRT_ConditionVariable *pConditionVariable,
 	_MCFCRT_ConditionVariableUnlockCallback pfnUnlockCallback, _MCFCRT_ConditionVariableRelockCallback pfnRelockCallback, intptr_t nContext, uint64_t u64UntilFastMonoClock)
 {
-	const bool bSignaled = ReallyWaitForConditionVariable(&(pConditionVariable->__u), pfnUnlockCallback, pfnRelockCallback, nContext, true, u64UntilFastMonoClock);
+	const bool bSignaled = ReallyWaitForConditionVariable(&(pConditionVariable->__u), pfnUnlockCallback, pfnRelockCallback, nContext, true, u64UntilFastMonoClock, true);
+	return bSignaled;
+}
+bool _MCFCRT_WaitForConditionVariableOrAbandon(_MCFCRT_ConditionVariable *pConditionVariable,
+	_MCFCRT_ConditionVariableUnlockCallback pfnUnlockCallback, _MCFCRT_ConditionVariableRelockCallback pfnRelockCallback, intptr_t nContext, uint64_t u64UntilFastMonoClock)
+{
+	const bool bSignaled = ReallyWaitForConditionVariable(&(pConditionVariable->__u), pfnUnlockCallback, pfnRelockCallback, nContext, true, u64UntilFastMonoClock, false);
 	return bSignaled;
 }
 void _MCFCRT_WaitForConditionVariableForever(_MCFCRT_ConditionVariable *pConditionVariable,
 	_MCFCRT_ConditionVariableUnlockCallback pfnUnlockCallback, _MCFCRT_ConditionVariableRelockCallback pfnRelockCallback, intptr_t nContext)
 {
-	const bool bSignaled = ReallyWaitForConditionVariable(&(pConditionVariable->__u), pfnUnlockCallback, pfnRelockCallback, nContext, false, UINT64_MAX);
+	const bool bSignaled = ReallyWaitForConditionVariable(&(pConditionVariable->__u), pfnUnlockCallback, pfnRelockCallback, nContext, false, UINT64_MAX, true);
 	_MCFCRT_ASSERT(bSignaled);
 }
 size_t _MCFCRT_SignalConditionVariable(_MCFCRT_ConditionVariable *pConditionVariable, size_t uMaxCountToSignal){

@@ -34,6 +34,9 @@ public:
 	bool Wait(UniqueLockBase &vLock, std::uint64_t u64UntilFastMonoClock) noexcept {
 		return ::_MCFCRT_WaitForConditionVariable(&x_vConditionVariable, &X_UnlockCallback, &X_RelockCallback, reinterpret_cast<std::intptr_t>(&vLock), u64UntilFastMonoClock);
 	}
+	bool WaitOrAbandon(UniqueLockBase &vLock, std::uint64_t u64UntilFastMonoClock) noexcept {
+		return ::_MCFCRT_WaitForConditionVariableOrAbandon(&x_vConditionVariable, &X_UnlockCallback, &X_RelockCallback, reinterpret_cast<std::intptr_t>(&vLock), u64UntilFastMonoClock);
+	}
 	void Wait(UniqueLockBase &vLock) noexcept {
 		::_MCFCRT_WaitForConditionVariableForever(&x_vConditionVariable, &X_UnlockCallback, &X_RelockCallback, reinterpret_cast<std::intptr_t>(&vLock));
 	}

@@ -9,7 +9,7 @@ namespace MCF {
 bool Semaphore::Wait(std::uint64_t u64UntilFastMonoClock) noexcept {
 	Mutex::UniqueLock vLock(x_mtxGuard);
 	while(x_uCount == 0){
-		if(!x_cvWaiter.Wait(vLock, u64UntilFastMonoClock)){
+		if(!x_cvWaiter.WaitOrAbandon(vLock, u64UntilFastMonoClock)){
 			return false;
 		}
 	}

@@ -16,8 +16,8 @@ static inline long double fpu_frexp(long double x, int *exp){
 	} else {
 		long double n;
 		const long double m = __MCFCRT_fxtract(&n, x);
-		__MCFCRT_fistp(exp, n + __MCFCRT_fld1());
-		return m * 0.5l;
+		__MCFCRT_fistp(exp, n + 1);
+		return m / 2;
 	}
 }
 

@@ -11,7 +11,7 @@
 
 namespace MCF {
 
-class MCF_HAS_EXPORTED_RTTI OutputStreamIterator : public std::iterator<std::output_iterator_tag, unsigned char> {
+class OutputStreamIterator : public std::iterator<std::output_iterator_tag, unsigned char> {
 private:
 	AbstractOutputStream *x_pstrmOwner;
 

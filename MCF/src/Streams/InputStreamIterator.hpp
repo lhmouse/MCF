@@ -11,7 +11,7 @@
 
 namespace MCF {
 
-class MCF_HAS_EXPORTED_RTTI InputStreamIterator : public std::iterator<std::input_iterator_tag, int> {
+class InputStreamIterator : public std::iterator<std::input_iterator_tag, int> {
 private:
 	AbstractInputStream *x_pstrmOwner;
 

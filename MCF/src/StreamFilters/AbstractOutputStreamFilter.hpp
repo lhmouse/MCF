@@ -20,7 +20,7 @@ public:
 		: y_vStream(std::move(pUnderlyingStream))
 	{
 	}
-	virtual ~AbstractOutputStreamFilter() = 0;
+	~AbstractOutputStreamFilter() override = 0;
 
 	AbstractOutputStreamFilter(AbstractOutputStreamFilter &&) noexcept = default;
 	AbstractOutputStreamFilter &operator=(AbstractOutputStreamFilter &&) noexcept = default;
@@ -32,9 +32,9 @@ protected:
 	}
 
 public:
-	virtual void Put(unsigned char byData) = 0;
-	virtual void Put(const void *pData, std::size_t uSize) = 0;
-	virtual void Flush(bool bHard) = 0;
+	virtual void Put(unsigned char byData) override = 0;
+	virtual void Put(const void *pData, std::size_t uSize) override = 0;
+	virtual void Flush(bool bHard) override = 0;
 
 	const PolyIntrusivePtr<AbstractOutputStream> &GetUnderlyingStream() const noexcept {
 		return y_vStream.GetUnderlyingStream();

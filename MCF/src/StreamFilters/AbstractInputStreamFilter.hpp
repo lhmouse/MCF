@@ -20,7 +20,7 @@ public:
 		: y_vStream(std::move(pUnderlyingStream))
 	{
 	}
-	virtual ~AbstractInputStreamFilter() = 0;
+	~AbstractInputStreamFilter() override = 0;
 
 	AbstractInputStreamFilter(AbstractInputStreamFilter &&) noexcept = default;
 	AbstractInputStreamFilter &operator=(AbstractInputStreamFilter &&) noexcept = default;
@@ -32,12 +32,12 @@ protected:
 	}
 
 public:
-	virtual int Peek() = 0;
-	virtual int Get() = 0;
-	virtual bool Discard() = 0;
-	virtual std::size_t Peek(void *pData, std::size_t uSize) = 0;
-	virtual std::size_t Get(void *pData, std::size_t uSize) = 0;
-	virtual std::size_t Discard(std::size_t uSize) = 0;
+	virtual int Peek() override = 0;
+	virtual int Get() override = 0;
+	virtual bool Discard() override = 0;
+	virtual std::size_t Peek(void *pData, std::size_t uSize) override = 0;
+	virtual std::size_t Get(void *pData, std::size_t uSize) override = 0;
+	virtual std::size_t Discard(std::size_t uSize) override = 0;
 
 	const PolyIntrusivePtr<AbstractInputStream> &GetUnderlyingStream() const noexcept {
 		return y_vStream.GetUnderlyingStream();

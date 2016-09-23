@@ -43,7 +43,7 @@ pkginclude_Core_HEADERS =	\
 	src/Core/Bail.hpp	\
 	src/Core/BinaryOperations.hpp	\
 	src/Core/Bind.hpp	\
-	src/Core/BlackHole.hpp	\
+	src/Core/BlackWhiteHole.hpp	\
 	src/Core/Converters.hpp	\
 	src/Core/Clocks.hpp	\
 	src/Core/Clone.hpp	\
@@ -78,7 +78,6 @@ pkginclude_Core_HEADERS =	\
 	src/Core/TupleManipulators.hpp	\
 	src/Core/UniqueHandle.hpp	\
 	src/Core/Uuid.hpp	\
-	src/Core/WhiteHole.hpp	\
 	src/Core/Variant.hpp
 
 pkginclude_Threaddir = ${pkgincludedir}/Thread

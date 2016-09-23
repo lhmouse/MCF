@@ -6,7 +6,6 @@
 #define MCF_CORE_DEFER_HPP_
 
 #include "../Config.hpp"
-#include <cstddef>
 #include <utility>
 #include <type_traits>
 #include <exception>
@@ -14,79 +13,40 @@
 namespace MCF {
 
 namespace Impl_Defer {
-	template<typename LvalueRefOrPrvalueT>
-	class DeferredCallback {
-	private:
-		LvalueRefOrPrvalueT x_fnCallback;
+	template<typename CallbackT, typename PredictorT>
+	struct DeferredCallback {
+		std::decay_t<CallbackT> vCallback;
+		std::decay_t<PredictorT> vPredictor;
 
-	public:
-		DeferredCallback(LvalueRefOrPrvalueT &&fnCallback)
-			: x_fnCallback(std::forward<LvalueRefOrPrvalueT>(fnCallback))
-		{
-		}
 		~DeferredCallback() noexcept(false) {
-			x_fnCallback();
+			if(vPredictor()){
+				vCallback();
+			}
 		}
 	};
-/*
-	inline std::size_t GetUncaughtExceptionCount() noexcept {
-		return static_cast<std::size_t>(std::uncaught_exceptions()); // FIXME: 需要 c++1z 的支持。
+
+	template<typename CallbackT, typename PredictorT>
+	DeferredCallback<CallbackT, PredictorT> DeferCallback(CallbackT &&vCallback, PredictorT &&vPredictor){
+		return { std::forward<CallbackT>(vCallback), std::forward<PredictorT>(vPredictor) };
 	}
-
-	template<typename LvalueRefOrPrvalueT>
-	class DeferredCallbackOnNormalExit {
-	private:
-		std::size_t x_uOldExceptionCount;
-		LvalueRefOrPrvalueT x_fnCallback;
-
-	public:
-		DeferredCallbackOnNormalExit(LvalueRefOrPrvalueT &&fnCallback)
-			: x_uOldExceptionCount(GetUncaughtExceptionCount())
-			, x_fnCallback(std::forward<LvalueRefOrPrvalueT>(fnCallback))
-		{
-		}
-		~DeferredCallbackOnNormalExit() noexcept(false) {
-			if(GetUncaughtExceptionCount() <= x_uOldExceptionCount){
-				x_fnCallback();
-			}
-		}
-	};
-
-	template<typename LvalueRefOrPrvalueT>
-	class DeferredCallbackOnException {
-	private:
-		std::size_t x_uOldExceptionCount;
-		LvalueRefOrPrvalueT x_fnCallback;
-
-	public:
-		DeferredCallbackOnException(LvalueRefOrPrvalueT &&fnCallback)
-			: x_uOldExceptionCount(GetUncaughtExceptionCount())
-			, x_fnCallback(std::forward<LvalueRefOrPrvalueT>(fnCallback))
-		{
-		}
-		~DeferredCallbackOnException() noexcept(false) {
-			if(GetUncaughtExceptionCount() > x_uOldExceptionCount){
-				x_fnCallback();
-			}
-		}
-	};*/
 }
 
 template<typename CallbackT>
-Impl_Defer::DeferredCallback<std::remove_cv_t<CallbackT>> Defer(CallbackT &&vCallback){
-	return std::forward<CallbackT>(vCallback);
+decltype(auto) Defer(CallbackT &&vCallback){
+	return Impl_Defer::DeferCallback(std::forward<CallbackT>(vCallback),
+		[]{ return true; });
 }
-/*
 template<typename CallbackT>
-Impl_Defer::DeferredCallbackOnNormalExit<std::remove_cv_t<CallbackT>> DeferOnNormalExit(CallbackT &&vCallback){
-	return std::forward<CallbackT>(vCallback);
+decltype(auto) DeferOnNormalExit(CallbackT &&vCallback){
+	return Impl_Defer::DeferCallback(std::forward<CallbackT>(vCallback),
+		[c = std::uncaught_exceptions()]{ return std::uncaught_exceptions() <= c; });
+}
+template<typename CallbackT>
+decltype(auto) DeferOnException(CallbackT &&vCallback){
+	return Impl_Defer::DeferCallback(std::forward<CallbackT>(vCallback),
+		[c = std::uncaught_exceptions()]{ return std::uncaught_exceptions() > c; });
 }
 
-template<typename CallbackT>
-Impl_Defer::DeferredCallbackOnException<std::remove_cv_t<CallbackT>> DeferOnException(CallbackT &&vCallback){
-	return std::forward<CallbackT>(vCallback);
-}
-*/
 }
 
 #endif

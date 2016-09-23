@@ -1,12 +1,9 @@
 #include <MCF/StdMCF.hpp>
-#include <MCF/Core/BlackWhiteHole.hpp>
+#include <MCF/Streams/Crc32OutputStream.hpp>
 #include <cstdio>
 
 extern "C" unsigned _MCFCRT_Main(void) noexcept {
-	MCF::BlackHole bh;
-	MCF::WhiteHole wh;
-	int a = wh;
-	std::printf("a = %d\n", a);
-	bh = a;
+	MCF::Crc32OutputStream s;
+	s.AddRef();
 	return 0;
 }

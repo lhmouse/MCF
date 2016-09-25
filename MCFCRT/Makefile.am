@@ -33,16 +33,21 @@ __pch.hpp: ${srcdir}/src/env/_crtdef.hpp
 __pch.hpp.gch: __pch.hpp
 	${CXX} -x c++-header @DEFS@ ${AM_CPPFLAGS} ${CPPFLAGS} $$(echo "" "${AM_CXXFLAGS}" | sed "s/-include __pch\\.hpp//") ${CXXFLAGS} $< -o $@
 
+noinst_HEADERS = \
+	src/stdc/math/_fpu.h	\
+	src/stdc/string/_memcpy_inl.h
+
 pkginclude_predir = ${pkgincludedir}/pre
-pkginclude_pre_HEADERS =	\
+pkginclude_pre_HEADERS = \
 	src/pre/dll.h	\
 	src/pre/exe.h	\
 	src/pre/module.h
 
 pkginclude_envdir = ${pkgincludedir}/env
-pkginclude_env_HEADERS =	\
+pkginclude_env_HEADERS = \
 	src/env/_c11thread_inl.h	\
 	src/env/_crtdef.h	\
+	src/env/_crtdef.hpp	\
 	src/env/_fpu.h	\
 	src/env/_gthread_inl.h	\
 	src/env/_nt_timeout.h	\
@@ -66,7 +71,7 @@ pkginclude_env_HEADERS =	\
 	src/env/crt_module.h
 
 pkginclude_extdir = ${pkgincludedir}/ext
-pkginclude_ext_HEADERS =	\
+pkginclude_ext_HEADERS = \
 	src/ext/alloca.h	\
 	src/ext/assert.h	\
 	src/ext/div64.h	\
@@ -82,13 +87,13 @@ pkginclude_ext_HEADERS =	\
 	src/ext/wcpcpy.h	\
 	src/ext/pp.h
 
-mcfcrt_pre_sources =	\
+mcfcrt_pre_sources = \
 	src/pre/module.c	\
 	src/pre/atexit.c	\
 	src/pre/at_quick_exit.c	\
 	src/pre/libsupcxx_freeres.cpp
 
-mcfcrt_sources =	\
+mcfcrt_sources = \
 	src/ext/assert.c	\
 	src/ext/itoa.c	\
 	src/ext/itow.c	\
@@ -186,42 +191,43 @@ mcfcrt_sources =	\
 	src/stdc/stdlib/exit.c	\
 	src/stdc/stdlib/quick_exit.c
 
-bin_PROGRAMS =	\
+bin_PROGRAMS = \
 	MCFCRT-9.dll
 
-MCFCRT_9_dll_SOURCES =	\
+MCFCRT_9_dll_SOURCES = \
 	src/dll_startup.c	\
 	${mcfcrt_pre_sources}	\
 	${mcfcrt_sources}
 
-MCFCRT_9_dll_LDFLAGS =	\
+MCFCRT_9_dll_LDFLAGS = \
 	-shared -static -nostdlib	\
 	-Wl,-e@__MCFCRT_DllStartup,--subsystem,windows,--disable-runtime-pseudo-reloc	\
 	-Wl,--export-all-symbols,--exclude-symbols,@__MCFCRT_DllStartup,--exclude-libs,ALL	\
 	-Wl,--disable-stdcall-fixup,--enable-auto-image-base,--out-implib,libMCFCRT.dll.a
 
-MCFCRT_9_dll_LDADD =	\
+MCFCRT_9_dll_LDADD = \
 	-lkernel32 -lntdll
 
-lib_LIBRARIES =	\
+lib_LIBRARIES = \
 	libMCFCRT-pre-exe.a	\
 	libMCFCRT-pre-dll.a	\
 	libMCFCRT.dll.a	\
 	libMCFCRT.a
 
-libMCFCRT_pre_exe_a_SOURCES =	\
+libMCFCRT_pre_exe_a_SOURCES = \
 	src/pre/exe.c	\
 	${mcfcrt_pre_sources}
 
-libMCFCRT_pre_dll_a_SOURCES =	\
+libMCFCRT_pre_dll_a_SOURCES = \
 	src/pre/dll.c	\
 	${mcfcrt_pre_sources}
 
+libMCFCRT_dll_a_SOURCES =
 libMCFCRT.dll.a: MCFCRT-9.dll
 
-##libMCFCRT_a_SOURCES =	\
-##	${mcfcrt_sources}
-
+libMCFCRT_a_SOURCES =
 ## Due to Windows limitation we can't link this library statically.
+##libMCFCRT_a_SOURCES = \
+##	${mcfcrt_sources}
 libMCFCRT.a: MCFCRT-9.dll
 	cp --no-preserve=timestamps libMCFCRT.dll.a $@

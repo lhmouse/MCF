@@ -23,12 +23,12 @@ __pch.hpp: ${srcdir}/src/StdMCF.hpp
 __pch.hpp.gch: __pch.hpp
 	${CXX} -x c++-header @DEFS@ ${AM_CPPFLAGS} ${CPPFLAGS} $$(echo "" "${AM_CXXFLAGS}" | sed "s/-include __pch\\.hpp//") ${CXXFLAGS} $< -o $@
 
-pkginclude_HEADERS =	\
+pkginclude_HEADERS = \
 	src/Config.hpp	\
 	src/StdMCF.hpp
 
 pkginclude_Coredir = ${pkgincludedir}/Core
-pkginclude_Core_HEADERS =	\
+pkginclude_Core_HEADERS = \
 	src/Core/_CheckedSizeArithmetic.hpp	\
 	src/Core/_Enumerator.hpp	\
 	src/Core/_ForwardedParam.hpp	\
@@ -81,7 +81,7 @@ pkginclude_Core_HEADERS =	\
 	src/Core/Variant.hpp
 
 pkginclude_Threaddir = ${pkgincludedir}/Thread
-pkginclude_Thread_HEADERS =	\
+pkginclude_Thread_HEADERS = \
 	src/Thread/_UniqueLockTemplate.hpp	\
 	src/Thread/ConditionVariable.hpp	\
 	src/Thread/Event.hpp	\
@@ -99,14 +99,14 @@ pkginclude_Thread_HEADERS =	\
 	src/Thread/UniqueLockBase.hpp
 
 pkginclude_SmartPointersdir = ${pkgincludedir}/SmartPointers
-pkginclude_SmartPointers_HEADERS =	\
+pkginclude_SmartPointers_HEADERS = \
 	src/SmartPointers/DefaultDeleter.hpp	\
 	src/SmartPointers/IntrusivePtr.hpp	\
 	src/SmartPointers/PolyIntrusivePtr.hpp	\
 	src/SmartPointers/UniquePtr.hpp
 
 pkginclude_Containersdir = ${pkgincludedir}/Containers
-pkginclude_Containers_HEADERS =	\
+pkginclude_Containers_HEADERS = \
 	src/Containers/_FlatContainer.hpp	\
 	src/Containers/CircularQueue.hpp	\
 	src/Containers/FlatMap.hpp	\
@@ -118,17 +118,17 @@ pkginclude_Containers_HEADERS =	\
 	src/Containers/Vector.hpp
 
 pkginclude_Randomdir = ${pkgincludedir}/Random
-pkginclude_Random_HEADERS =	\
+pkginclude_Random_HEADERS = \
 	src/Random/FastGenerator.hpp	\
 	src/Random/IsaacGenerator.hpp
 
 pkginclude_Utilitiesdir = ${pkgincludedir}/Utilities
-pkginclude_Utilities_HEADERS =	\
+pkginclude_Utilities_HEADERS = \
 	src/Utilities/Argv.hpp	\
 	src/Utilities/Thunk.hpp
 
 pkginclude_Streamsdir = ${pkgincludedir}/Streams
-pkginclude_Streams_HEADERS =	\
+pkginclude_Streams_HEADERS = \
 	src/Streams/AbstractInputStream.hpp	\
 	src/Streams/AbstractOutputStream.hpp	\
 	src/Streams/BufferInputStream.hpp	\
@@ -155,7 +155,7 @@ pkginclude_Streams_HEADERS =	\
 	src/Streams/RandomInputStream.hpp
 
 pkginclude_StreamFiltersdir = ${pkgincludedir}/StreamFilters
-pkginclude_StreamFilters_HEADERS =	\
+pkginclude_StreamFilters_HEADERS = \
 	src/StreamFilters/_BufferedInputStream.hpp	\
 	src/StreamFilters/_BufferedOutputStream.hpp	\
 	src/StreamFilters/AbstractInputStreamFilter.hpp	\
@@ -169,7 +169,7 @@ pkginclude_StreamFilters_HEADERS =	\
 	src/StreamFilters/TextInputStreamFilter.hpp	\
 	src/StreamFilters/TextOutputStreamFilter.hpp
 
-mcf_sources =	\
+mcf_sources = \
 	src/Core/_KernelObjectBase.cpp	\
 	src/Core/_UniqueNtHandle.cpp	\
 	src/Core/DynamicLinkLibrary.cpp	\
@@ -232,26 +232,27 @@ mcf_sources =	\
 	src/StreamFilters/TextInputStreamFilter.cpp	\
 	src/StreamFilters/TextOutputStreamFilter.cpp
 
-bin_PROGRAMS =	\
+bin_PROGRAMS = \
 	MCF-1.dll
 
-MCF_1_dll_SOURCES =	\
+MCF_1_dll_SOURCES = \
 	${mcf_sources}
 
-MCF_1_dll_LDFLAGS =	\
+MCF_1_dll_LDFLAGS = \
 	-shared -static -nostdlib	\
 	-Wl,-e@__MCFCRT_DllStartup,--subsystem,windows,--disable-runtime-pseudo-reloc	\
 	-Wl,--export-all-symbols,--exclude-symbols,@__MCFCRT_DllStartup,--exclude-libs,ALL	\
 	-Wl,--disable-stdcall-fixup,--enable-auto-image-base,--out-implib,libMCF.dll.a
 
-MCF_1_dll_LDADD =	\
+MCF_1_dll_LDADD = \
 	-lsupc++ -lgcc -lgcc_eh -lmingwex -lMCFCRT-pre-dll -lMCFCRT -lmsvcrt -lkernel32 -lntdll
 
-lib_LIBRARIES =	\
+lib_LIBRARIES = \
 	libMCF.dll.a	\
 	libMCF.a
 
+libMCF_dll_a_SOURCES =
 libMCF.dll.a: MCF-1.dll
 
-libMCF_a_SOURCES =	\
+libMCF_a_SOURCES = \
 	${mcf_sources}

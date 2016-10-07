@@ -22,19 +22,21 @@ static inline long double fpu_pow(long double x, long double y){
 		return 0;
 	} else {
 		// x^y = 2^(y*log2(x))
-		long double ylog2x;
+		long double px = x;
 		bool neg;
-		if(sgn == __MCFCRT_kFpuPositive){
-			ylog2x = y * __MCFCRT_fyl2x(__MCFCRT_fld1(), x);
-			neg = false;
-		} else {
+		if(sgn == __MCFCRT_kFpuNegative){
 			if(__MCFCRT_frndintany(y) != y){
 				return __builtin_nansl("0x706F77");
 			}
-			ylog2x = y * __MCFCRT_fyl2x(__MCFCRT_fld1(), -x);
 			unsigned fsw;
-			neg = __MCFCRT_fmod(&fsw, y, 2.0l) != 0;
+			neg = __MCFCRT_fmod(&fsw, y, 2) != 0;
+		} else {
+			neg = false;
 		}
+		if(neg){
+			px = __MCFCRT_fneg(px);
+		}
+		const long double ylog2x = y * __MCFCRT_fyl2x(__MCFCRT_fld1(), px);
 		const long double i = __MCFCRT_frndintany(ylog2x), m = ylog2x - i;
 		long double ret = __MCFCRT_fscale(__MCFCRT_fld1(), i) * (__MCFCRT_f2xm1(m) + __MCFCRT_fld1());
 		if(neg){

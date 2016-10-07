@@ -257,7 +257,9 @@ std::size_t File::Read(void *pBuffer, std::size_t uBytesToRead, std::uint64_t u6
 			MCF_THROW(Exception, ::RtlNtStatusToDosError(lStatus), Rcntws::View(L"File: NtReadFile() 失败。"));
 		}
 		do {
-			lStatus = ::NtDelayExecution(true, nullptr);
+			::LARGE_INTEGER liTimeout;
+			liTimeout.QuadPart = INT64_MAX;
+			lStatus = ::NtDelayExecution(true, &liTimeout);
 			MCF_ASSERT(NT_SUCCESS(lStatus));
 		} while(bIoPending);
 	}
@@ -295,7 +297,9 @@ std::size_t File::Write(std::uint64_t u64Offset, const void *pBuffer, std::size_
 			MCF_THROW(Exception, ::RtlNtStatusToDosError(lStatus), Rcntws::View(L"File: NtWriteFile() 失败。"));
 		}
 		do {
-			lStatus = ::NtDelayExecution(true, nullptr);
+			::LARGE_INTEGER liTimeout;
+			liTimeout.QuadPart = INT64_MAX;
+			lStatus = ::NtDelayExecution(true, &liTimeout);
 			MCF_ASSERT(NT_SUCCESS(lStatus));
 		} while(bIoPending);
 	}

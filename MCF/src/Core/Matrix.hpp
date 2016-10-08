@@ -25,10 +25,10 @@ public:
 	Array<Element, kRows, kColumns> m_a;
 
 public:
-	const Array<Element, kColumns> &Get(std::size_t uRow) const noexcept {
+	const Array<Element, kColumns> &Get(std::size_t uRow) const {
 		return m_a.Get(uRow);
 	}
-	Array<Element, kColumns> &Get(std::size_t uRow) noexcept {
+	Array<Element, kColumns> &Get(std::size_t uRow){
 		return m_a.Get(uRow);
 	}
 	const Array<Element, kColumns> &UncheckedGet(std::size_t uRow) const noexcept {

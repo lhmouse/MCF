@@ -29,15 +29,15 @@ namespace Impl_Array {
 
 template<typename ElementT, std::size_t kSizeT, std::size_t ...kRemainingT>
 class Array : public Array<Array<ElementT, kRemainingT...>, kSizeT> {
-	static_assert(kSizeT > 0, "An array shall have a non-zero size.");
+	static_assert(kSizeT > 0, "An array shall have m_a non-zero size.");
 };
 
 template<typename ElementT, std::size_t kSizeT>
 class Array<ElementT, kSizeT> {
-	static_assert(kSizeT > 0, "An array shall have a non-zero size.");
+	static_assert(kSizeT > 0, "An array shall have m_a non-zero size.");
 
 public:
-	ElementT a[kSizeT];
+	ElementT m_a[kSizeT];
 
 public:
 	// 整体仿造容器，唯独没有 Clear()。
@@ -54,7 +54,7 @@ public:
 	template<typename OutputIteratorT>
 	OutputIteratorT Extract(OutputIteratorT itOutput){
 		for(std::size_t i = 0; i < kSizeT; ++i){
-			*itOutput = std::move(a[i]);
+			*itOutput = std::move(m_a[i]);
 			++itOutput;
 		}
 		return itOutput;
@@ -154,34 +154,34 @@ public:
 
 	void Swap(Array &rhs) noexcept(Impl_Array::IsNoexceptSwappableChecker<Element, kSizeT>()()) {
 		using std::swap;
-		swap(a, rhs.a);
+		swap(m_a, rhs.m_a);
 	}
 
 	// Array 需求。
 	const Element *GetData() const noexcept {
-		return a;
+		return m_a;
 	}
 	Element *GetData() noexcept {
-		return a;
+		return m_a;
 	}
 	static constexpr std::size_t GetSize() noexcept {
 		return kSizeT;
 	}
 
 	const Element *GetBegin() const noexcept {
-		return a;
+		return m_a;
 	}
 	Element *GetBegin() noexcept {
-		return a;
+		return m_a;
 	}
 	const Element *GetConstBegin() const noexcept {
 		return GetBegin();
 	}
 	const Element *GetEnd() const noexcept {
-		return a + kSizeT;
+		return m_a + kSizeT;
 	}
 	Element *GetEnd() noexcept {
-		return a + kSizeT;
+		return m_a + kSizeT;
 	}
 	const Element *GetConstEnd() const noexcept {
 		return GetEnd();
@@ -202,12 +202,12 @@ public:
 	const Element &UncheckedGet(std::size_t uIndex) const noexcept {
 		MCF_DEBUG_CHECK(uIndex < kSizeT);
 
-		return a[uIndex];
+		return m_a[uIndex];
 	}
 	Element &UncheckedGet(std::size_t uIndex) noexcept {
 		MCF_DEBUG_CHECK(uIndex < kSizeT);
 
-		return a[uIndex];
+		return m_a[uIndex];
 	}
 
 	const Element &operator[](std::size_t uIndex) const noexcept {

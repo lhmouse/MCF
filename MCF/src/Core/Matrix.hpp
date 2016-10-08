@@ -22,28 +22,28 @@ public:
 	};
 
 public:
-	Array<Element, kRows, kColumns> m_aStorage;
+	Array<Element, kRows, kColumns> m_a;
 
 public:
 	const Array<Element, kColumns> &Get(std::size_t uRow) const noexcept {
-		return m_aStorage.Get(uRow);
+		return m_a.Get(uRow);
 	}
 	Array<Element, kColumns> &Get(std::size_t uRow) noexcept {
-		return m_aStorage.Get(uRow);
+		return m_a.Get(uRow);
 	}
 	const Array<Element, kColumns> &UncheckedGet(std::size_t uRow) const noexcept {
-		return m_aStorage.UncheckedGet(uRow);
+		return m_a.UncheckedGet(uRow);
 	}
 	Array<Element, kColumns> &UncheckedGet(std::size_t uRow) noexcept {
-		return m_aStorage.UncheckedGet(uRow);
+		return m_a.UncheckedGet(uRow);
 	}
 
 public:
 	const Array<Element, kColumns> &operator[](std::size_t uRow) const noexcept {
-		return m_aStorage[uRow];
+		return m_a[uRow];
 	}
 	Array<Element, kColumns> &operator[](std::size_t uRow) noexcept {
-		return m_aStorage[uRow];
+		return m_a[uRow];
 	}
 
 	Matrix operator+() const {
@@ -52,7 +52,7 @@ public:
 		for(std::size_t r = 0; r < kRows; ++r){
 #pragma GCC ivdep
 			for(std::size_t c = 0; c < kColumns; ++c){
-				ret.m_aStorage[r][c] = +(m_aStorage[r][c]);
+				ret.m_a[r][c] = +(m_a[r][c]);
 			}
 		}
 		return ret;
@@ -63,7 +63,7 @@ public:
 		for(std::size_t r = 0; r < kRows; ++r){
 #pragma GCC ivdep
 			for(std::size_t c = 0; c < kColumns; ++c){
-				ret.m_aStorage[r][c] = -(m_aStorage[r][c]);
+				ret.m_a[r][c] = -(m_a[r][c]);
 			}
 		}
 		return ret;
@@ -74,7 +74,7 @@ public:
 		for(std::size_t r = 0; r < kRows; ++r){
 #pragma GCC ivdep
 			for(std::size_t c = 0; c < kColumns; ++c){
-				m_aStorage[r][c] += rhs.m_aStorage[r][c];
+				m_a[r][c] += rhs.m_a[r][c];
 			}
 		}
 		return *this;
@@ -84,7 +84,7 @@ public:
 		for(std::size_t r = 0; r < kRows; ++r){
 #pragma GCC ivdep
 			for(std::size_t c = 0; c < kColumns; ++c){
-				m_aStorage[r][c] -= rhs.m_aStorage[r][c];
+				m_a[r][c] -= rhs.m_a[r][c];
 			}
 		}
 		return *this;
@@ -95,7 +95,7 @@ public:
 		for(std::size_t r = 0; r < kRows; ++r){
 #pragma GCC ivdep
 			for(std::size_t c = 0; c < kColumns; ++c){
-				m_aStorage[r][c] *= rhs;
+				m_a[r][c] *= rhs;
 			}
 		}
 		return *this;
@@ -105,7 +105,7 @@ public:
 		for(std::size_t r = 0; r < kRows; ++r){
 #pragma GCC ivdep
 			for(std::size_t c = 0; c < kColumns; ++c){
-				m_aStorage[r][c] /= rhs;
+				m_a[r][c] /= rhs;
 			}
 		}
 		return *this;
@@ -142,7 +142,7 @@ public:
 			for(std::size_t c = 0; c < kOtherColumnsT; ++c){
 #pragma GCC ivdep
 				for(std::size_t i = 0; i < kColumnsT; ++i){
-					ret[r][c] += m_aStorage[r][i] * rhs[i][c];
+					ret[r][c] += m_a[r][i] * rhs[i][c];
 				}
 			}
 		}

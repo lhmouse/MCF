@@ -17,8 +17,9 @@ static uint64_t GetTimeZoneOffsetInMillisecondsOnce(void){
 		if(GetTimeZoneInformation(&vTzInfo) == TIME_ZONE_ID_INVALID){
 			_MCFCRT_Bail(L"GetTimeZoneInformation() 失败。");
 		}
-		*pInited = (uint64_t)(vTzInfo.Bias * -60000ll);
+		const uint64_t u64Value = (uint64_t)(vTzInfo.Bias * -60000ll);
 
+		pInited = __builtin_memcpy(&s_u64Value, &u64Value, sizeof(u64Value));
 		__atomic_store_n(&s_pu64Inited, pInited, __ATOMIC_RELEASE);
 	}
 	return *pInited;

@@ -85,7 +85,9 @@ pkginclude_ext_HEADERS = \
 	src/ext/thunk.h	\
 	src/ext/utf.h	\
 	src/ext/wcpcpy.h	\
-	src/ext/pp.h
+	src/ext/pp.h	\
+	src/ext/rawmemchr.h	\
+	src/ext/rawwmemchr.h
 
 mcfcrt_pre_sources = \
 	src/pre/module.c	\
@@ -102,6 +104,8 @@ mcfcrt_sources = \
 	src/ext/thunk.c	\
 	src/ext/utf.c	\
 	src/ext/wcpcpy.c	\
+	src/ext/rawmemchr.c	\
+	src/ext/rawwmemchr.c	\
 	src/env/_fpu.c	\
 	src/env/_nt_timeout.c	\
 	src/env/_seh_top.c	\

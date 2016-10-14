@@ -19,7 +19,7 @@ mkdir -p "$builddir"
   mkdir -p m4
   autoreconf -i)
 (mkdir -p "$builddir/MCFCRT" && cd "$builddir/MCFCRT" &&
-  ../../MCFCRT/configure --build="$build" --host="$build" --prefix="$prefix" &&
+  (test -f Makefile || ../../MCFCRT/configure --build="$build" --host="$build" --prefix="$prefix") &&
   make -j7 &&
   make install)
 
@@ -27,6 +27,6 @@ mkdir -p "$builddir"
   mkdir -p m4
   autoreconf -i)
 (mkdir -p "$builddir/MCF" && cd "$builddir/MCF" &&
-  ../../MCF/configure --build="$build" --host="$build" --prefix="$prefix" &&
+  (test -f Makefile || ../../MCF/configure --build="$build" --host="$build" --prefix="$prefix") &&
   make -j7 &&
   make install)

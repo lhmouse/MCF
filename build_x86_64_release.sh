@@ -8,7 +8,7 @@ mkdir -p "$prefix"
 export CPPFLAGS+="-I$prefix/include -DNDEBUG"
 export CFLAGS+="-O3 -ffunction-sections -fdata-sections"
 export CXXFLAGS+="-O3 -ffunction-sections -fdata-sections"
-export LDFLAGS+="-O3 -Wl,-s,--gc-sections,--print-gc-sections -L$prefix/lib"
+export LDFLAGS+="-O3 -Wl,-s,--gc-sections -L$prefix/lib"
 
 builddir="$(pwd)/.build_x86_64_release"
 build=x86_64-w64-mingw32
@@ -19,7 +19,7 @@ mkdir -p "$builddir"
   mkdir -p m4
   autoreconf -i)
 (mkdir -p "$builddir/MCFCRT" && cd "$builddir/MCFCRT" &&
-  ../../MCFCRT/configure --build="$build" --host="$build" --prefix="$prefix" &&
+  (test -f Makefile || ../../MCFCRT/configure --build="$build" --host="$build" --prefix="$prefix") &&
   make -j7 &&
   make install)
 
@@ -27,6 +27,6 @@ mkdir -p "$builddir"
   mkdir -p m4
   autoreconf -i)
 (mkdir -p "$builddir/MCF" && cd "$builddir/MCF" &&
-  ../../MCF/configure --build="$build" --host="$build" --prefix="$prefix" &&
+  (test -f Makefile || ../../MCF/configure --build="$build" --host="$build" --prefix="$prefix") &&
   make -j7 &&
   make install)

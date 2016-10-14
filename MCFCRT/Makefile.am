@@ -206,8 +206,9 @@ MCFCRT_9_dll_SOURCES = \
 MCFCRT_9_dll_LDFLAGS = \
 	-shared -static -nostdlib	\
 	-Wl,-e@__MCFCRT_DllStartup,--subsystem,windows,--disable-runtime-pseudo-reloc	\
-	-Wl,--export-all-symbols,--exclude-symbols,@__MCFCRT_DllStartup,--exclude-libs,ALL	\
-	-Wl,--disable-stdcall-fixup,--enable-auto-image-base,--out-implib,libMCFCRT.dll.a
+	-Wl,--export-all-symbols,--exclude-symbols,@__MCFCRT_DllStartup	\
+	-Wl,--disable-stdcall-fixup,--enable-auto-image-base,--out-implib,libMCFCRT.dll.a	\
+	-Wl,--whole-archive,-lgcc_eh,--no-whole-archive
 
 MCFCRT_9_dll_LDADD = \
 	-lkernel32 -lntdll

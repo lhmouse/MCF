@@ -241,11 +241,11 @@ MCF_1_dll_SOURCES = \
 MCF_1_dll_LDFLAGS = \
 	-shared -static -nostdlib	\
 	-Wl,-e@__MCFCRT_DllStartup,--subsystem,windows,--disable-runtime-pseudo-reloc	\
-	-Wl,--export-all-symbols,--exclude-symbols,@__MCFCRT_DllStartup,--exclude-libs,ALL	\
+	-Wl,--export-all-symbols,--exclude-symbols,@__MCFCRT_DllStartup	\
 	-Wl,--disable-stdcall-fixup,--enable-auto-image-base,--out-implib,libMCF.dll.a
 
 MCF_1_dll_LDADD = \
-	-lsupc++ -lgcc -lgcc_s -lmingwex -lMCFCRT-pre-dll -lMCFCRT -lmsvcrt -lkernel32 -lntdll
+	-lsupc++ -lgcc -lmingwex -lMCFCRT-pre-dll -lMCFCRT -lmsvcrt -lkernel32 -lntdll
 
 lib_LIBRARIES = \
 	libMCF.dll.a	\

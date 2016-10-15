@@ -62,24 +62,24 @@ extern const StaticConstructorDestructorProc __DTOR_LIST__[];
 extern void __MCFCRT_libsupcxx_freeres(void);
 
 static void CallStaticConstructors(void){
-	const StaticConstructorDestructorProc *const pfnBegin = __CTOR_LIST__ + 1;
+	const StaticConstructorDestructorProc *const ppfnBegin = __CTOR_LIST__ + 1;
 
-	const StaticConstructorDestructorProc *pfnCurrent = pfnBegin;
-	while(*pfnCurrent){
-		++pfnCurrent;
+	const StaticConstructorDestructorProc *ppfnCurrent = ppfnBegin;
+	while(*ppfnCurrent){
+		++ppfnCurrent;
 	}
-	while(pfnCurrent != pfnBegin){
-		--pfnCurrent;
-		(*pfnCurrent)();
+	while(ppfnCurrent != ppfnBegin){
+		--ppfnCurrent;
+		(**ppfnCurrent)();
 	}
 }
 static void CallStaticDestructors(void){
-	const StaticConstructorDestructorProc *const pfnBegin = __DTOR_LIST__ + 1;
+	const StaticConstructorDestructorProc *const ppfnBegin = __DTOR_LIST__ + 1;
 
-	const StaticConstructorDestructorProc *pfnCurrent = pfnBegin;
-	while(*pfnCurrent){
-		(*pfnCurrent)();
-		++pfnCurrent;
+	const StaticConstructorDestructorProc *ppfnCurrent = ppfnBegin;
+	while(*ppfnCurrent){
+		(**ppfnCurrent)();
+		++ppfnCurrent;
 	}
 }
 

@@ -8,7 +8,7 @@ mkdir -p "$prefix"
 export CPPFLAGS+=" -I$prefix/include"
 export CFLAGS+=" -Og -g"
 export CXXFLAGS+=" -Og -g"
-export LDFLAGS+=" -Og -Wl,--gc-sections -L$prefix/lib"
+export LDFLAGS+=" -Og -L$prefix/lib"
 
 builddir="$(pwd)/.build_x86_64_debug"
 build=x86_64-w64-mingw32

@@ -5,7 +5,7 @@ CPPFLAGS+=" -Og -g -Wall -Wextra -pedantic -pedantic-errors -Wno-error=unused-pa
 	-pipe -mfpmath=both -march=nocona -mno-stack-arg-probe -mno-accumulate-outgoing-args -mpush-args -masm=intel
 	-I../../debug/mingw32/include"
 CXXFLAGS+=" -Og -g -std=c++17 -Wzero-as-null-pointer-constant -Wnoexcept -Woverloaded-virtual -fnothrow-opt"
-LDFLAGS+=" -Og -g -nostdlib -L../../debug/mingw32/lib -DMCF_IMPORT_RTTI -lmcf -lsupc++ -lmcfcrt -lmingwex -lgcc -lmcfcrt-pre-exe -lmcfcrt -lmsvcrt -lkernel32 -lntdll -Wl,--disable-runtime-pseudo-reloc,-e@__MCFCRT_ExeStartup"
+LDFLAGS+=" -Og -Wl,--gc-sections -nostdlib -L../../debug/mingw32/lib -DMCF_IMPORT_RTTI -lmcf -lsupc++ -lmcfcrt -lmingwex -lgcc -lmcfcrt-pre-exe -lmcfcrt -lmsvcrt -lkernel32 -lntdll -Wl,--disable-runtime-pseudo-reloc,-e@__MCFCRT_ExeStartup"
 
 cp -fp ../../debug/mingw32/bin/*.dll ./
 

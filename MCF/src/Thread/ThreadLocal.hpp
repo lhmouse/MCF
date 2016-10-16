@@ -5,7 +5,6 @@
 #ifndef MCF_THREAD_THREAD_LOCAL_HPP_
 #define MCF_THREAD_THREAD_LOCAL_HPP_
 
-#include "../Config.hpp"
 #include "../Core/Assert.hpp"
 #include "../Core/UniqueHandle.hpp"
 #include "../Core/Exception.hpp"

@@ -5,7 +5,6 @@
 #ifndef MCF_CORE_RCNTS_HPP_
 #define MCF_CORE_RCNTS_HPP_
 
-#include "../Config.hpp"
 #include "_CheckedSizeArithmetic.hpp"
 #include "Atomic.hpp"
 #include "ConstructDestruct.hpp"

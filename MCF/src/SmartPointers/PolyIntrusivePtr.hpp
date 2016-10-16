@@ -5,18 +5,17 @@
 #ifndef MCF_SMART_POINTERS_POLY_INTRUSIVE_PTR_HPP_
 #define MCF_SMART_POINTERS_POLY_INTRUSIVE_PTR_HPP_
 
-#include "../Config.hpp"
 #include "IntrusivePtr.hpp"
 
 namespace MCF {
 
 namespace Impl_PolyIntrusivePtr {
-	class MCF_HAS_EXPORTED_RTTI Deletable : public IntrusiveBase<Deletable> {
+	class Deletable : public IntrusiveBase<Deletable> {
 	public:
 		~Deletable() override;
 	};
 
-	class MCF_HAS_EXPORTED_RTTI Unknown : public virtual Deletable {
+	class Unknown : public virtual Deletable {
 	public:
 		~Unknown() override;
 	};

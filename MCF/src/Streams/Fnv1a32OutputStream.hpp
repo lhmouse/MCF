@@ -5,7 +5,6 @@
 #ifndef MCF_STREAMS_FNV1A32_OUTPUT_STREAM_HPP_
 #define MCF_STREAMS_FNV1A32_OUTPUT_STREAM_HPP_
 
-#include "../Config.hpp"
 #include "AbstractOutputStream.hpp"
 #include <cstdint>
 
@@ -13,7 +12,7 @@ namespace MCF {
 
 // http://www.isthe.com/chongo/tech/comp/fnv/
 
-class MCF_HAS_EXPORTED_RTTI Fnv1a32OutputStream : public AbstractOutputStream {
+class Fnv1a32OutputStream : public AbstractOutputStream {
 private:
 	int x_nChunkOffset;
 	std::uint8_t x_abyChunk[8];

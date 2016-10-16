@@ -5,7 +5,6 @@
 #ifndef MCF_THREAD_KERNEL_MUTEX_HPP_
 #define MCF_THREAD_KERNEL_MUTEX_HPP_
 
-#include "../Config.hpp"
 #include "../Core/StringView.hpp"
 #include "../Core/_KernelObjectBase.hpp"
 #include "_UniqueLockTemplate.hpp"

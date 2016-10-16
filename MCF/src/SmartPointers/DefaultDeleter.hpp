@@ -5,7 +5,6 @@
 #ifndef MCF_SMART_POINTERS_DEFAULT_DELETER_HPP_
 #define MCF_SMART_POINTERS_DEFAULT_DELETER_HPP_
 
-#include "../Config.hpp"
 #include <type_traits>
 #include <cstddef>
 

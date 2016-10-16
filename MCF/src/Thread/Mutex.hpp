@@ -5,7 +5,6 @@
 #ifndef MCF_THREAD_MUTEX_HPP_
 #define MCF_THREAD_MUTEX_HPP_
 
-#include "../Config.hpp"
 #include "../Core/Noncopyable.hpp"
 #include "../Core/Assert.hpp"
 #include "../Core/Atomic.hpp"

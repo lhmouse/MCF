@@ -5,7 +5,6 @@
 #ifndef MCF_THREAD_KERNEL_EVENT_HPP_
 #define MCF_THREAD_KERNEL_EVENT_HPP_
 
-#include "../Config.hpp"
 #include "../Core/StringView.hpp"
 #include "../Core/_KernelObjectBase.hpp"
 #include <cstdint>

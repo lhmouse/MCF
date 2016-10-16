@@ -1,13 +1,15 @@
-// Õâ¸öÎÄ¼şÊÇ MCF µÄÒ»²¿·Ö¡£
-// ÓĞ¹Ø¾ßÌåÊÚÈ¨ËµÃ÷£¬Çë²ÎÔÄ MCFLicense.txt¡£
+// è¿™ä¸ªæ–‡ä»¶æ˜¯ MCF çš„ä¸€éƒ¨åˆ†ã€‚
+// æœ‰å…³å…·ä½“æˆæƒè¯´æ˜ï¼Œè¯·å‚é˜… MCFLicense.txtã€‚
 // Copyleft 2013 - 2016, LH_Mouse. All wrongs reserved.
+
+#include "_libsupcxx_cleanup.h"
 
 namespace __gnu_cxx {
 	__attribute__((__weak__))
 	void __freeres() noexcept;
 }
 
-extern "C" void __MCFCRT_libsupcxx_freeres() noexcept {
+extern "C" void __MCFCRT_libsupcxx_Cleanup() noexcept {
 	if(__gnu_cxx::__freeres){
 		__gnu_cxx::__freeres();
 	}

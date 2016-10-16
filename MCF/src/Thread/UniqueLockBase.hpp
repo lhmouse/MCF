@@ -5,7 +5,6 @@
 #ifndef MCF_THREAD_UNIQUE_LOCK_BASE_HPP_
 #define MCF_THREAD_UNIQUE_LOCK_BASE_HPP_
 
-#include "../Config.hpp"
 #include "../Core/Noncopyable.hpp"
 #include "../Core/Assert.hpp"
 #include <cstddef>
@@ -15,7 +14,7 @@ namespace MCF {
 
 class ConditionVariable;
 
-class MCF_HAS_EXPORTED_RTTI UniqueLockBase : MCF_NONCOPYABLE {
+class UniqueLockBase : MCF_NONCOPYABLE {
 	friend ConditionVariable;
 
 protected:

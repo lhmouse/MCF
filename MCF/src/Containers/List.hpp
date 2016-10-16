@@ -5,7 +5,6 @@
 #ifndef MCF_CONTAINERS_LIST_HPP_
 #define MCF_CONTAINERS_LIST_HPP_
 
-#include "../Config.hpp"
 #include "../Core/_Enumerator.hpp"
 #include "../Core/DefaultAllocator.hpp"
 #include "../Core/Assert.hpp"

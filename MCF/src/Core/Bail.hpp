@@ -5,7 +5,6 @@
 #ifndef MCF_CORE_BAIL_HPP_
 #define MCF_CORE_BAIL_HPP_
 
-#include "../Config.hpp"
 #include <MCFCRT/env/bail.h>
 
 namespace MCF {

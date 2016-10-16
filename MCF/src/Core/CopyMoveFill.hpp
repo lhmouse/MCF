@@ -5,7 +5,6 @@
 #ifndef MCF_CORE_COPY_MOVE_FILL_HPP_
 #define MCF_CORE_COPY_MOVE_FILL_HPP_
 
-#include "../Config.hpp"
 #include <iterator>
 #include <type_traits>
 #include <utility>

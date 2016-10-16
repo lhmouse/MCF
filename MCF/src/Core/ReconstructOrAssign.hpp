@@ -5,7 +5,6 @@
 #ifndef MCF_CORE_RECONSTRUCT_OR_ASSIGN_HPP_
 #define MCF_CORE_RECONSTRUCT_OR_ASSIGN_HPP_
 
-#include "../Config.hpp"
 #include "ConstructDestruct.hpp"
 #include <type_traits>
 

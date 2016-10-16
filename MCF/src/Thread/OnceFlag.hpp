@@ -5,7 +5,6 @@
 #ifndef MCF_THREAD_CALL_ONCE_HPP_
 #define MCF_THREAD_CALL_ONCE_HPP_
 
-#include "../Config.hpp"
 #include "../Core/Noncopyable.hpp"
 #include "../Core/Assert.hpp"
 #include <MCFCRT/env/once_flag.h>

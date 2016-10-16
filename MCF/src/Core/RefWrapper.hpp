@@ -5,7 +5,6 @@
 #ifndef MCF_CORE_REF_WRAPPER_HPP_
 #define MCF_CORE_REF_WRAPPER_HPP_
 
-#include "../Config.hpp"
 #include "AddressOf.hpp"
 #include <type_traits>
 #include <utility>

@@ -5,7 +5,6 @@
 #ifndef MCF_CONTAINERS_FLAT_MULTI_MAP_HPP_
 #define MCF_CONTAINERS_FLAT_MULTI_MAP_HPP_
 
-#include "../Config.hpp"
 #include "../Core/_Enumerator.hpp"
 #include "../Core/DefaultAllocator.hpp"
 #include "../Core/Comparators.hpp"

@@ -3,10 +3,13 @@
 // Copyleft 2013 - 2016, LH_Mouse. All wrongs reserved.
 
 #define __MCFCRT_MODULE_INLINE_OR_EXTERN     extern inline
+#include "_libsupcxx_cleanup.h"
 #include "module.h"
 #include "../env/mcfwin.h"
 #include "../env/mutex.h"
 #include "../env/heap.h"
+
+extern void _pei386_runtime_relocator(void);
 
 #define CALLBACKS_PER_BLOCK   64u
 
@@ -59,8 +62,6 @@ typedef void (*StaticConstructorDestructorProc)(void);
 extern const StaticConstructorDestructorProc __CTOR_LIST__[];
 extern const StaticConstructorDestructorProc __DTOR_LIST__[];
 
-extern void __MCFCRT_libsupcxx_freeres(void);
-
 static void CallStaticConstructors(void){
 	const StaticConstructorDestructorProc *const ppfnBegin = __CTOR_LIST__ + 1;
 
@@ -84,13 +85,14 @@ static void CallStaticDestructors(void){
 }
 
 bool __MCFCRT_ModuleInit(void){
+	_pei386_runtime_relocator();
 	CallStaticConstructors();
 	return true;
 }
 void __MCFCRT_ModuleUninit(void){
 	PumpAtModuleExit();
 	CallStaticDestructors();
-	__MCFCRT_libsupcxx_freeres();
+	__MCFCRT_libsupcxx_Cleanup();
 }
 
 bool _MCFCRT_AtModuleExit(_MCFCRT_AtModuleExitCallback pfnProc, intptr_t nContext){

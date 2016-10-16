@@ -5,12 +5,11 @@
 #ifndef MCF_STREAMS_NULL_OUTPUT_STREAM_HPP_
 #define MCF_STREAMS_NULL_OUTPUT_STREAM_HPP_
 
-#include "../Config.hpp"
 #include "AbstractOutputStream.hpp"
 
 namespace MCF {
 
-class MCF_HAS_EXPORTED_RTTI NullOutputStream : public AbstractOutputStream {
+class NullOutputStream : public AbstractOutputStream {
 public:
 	NullOutputStream() noexcept = default;
 	~NullOutputStream() override;

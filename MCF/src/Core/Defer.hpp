@@ -5,7 +5,6 @@
 #ifndef MCF_CORE_DEFER_HPP_
 #define MCF_CORE_DEFER_HPP_
 
-#include "../Config.hpp"
 #include <utility>
 #include <type_traits>
 #include <exception>

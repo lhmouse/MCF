@@ -24,7 +24,6 @@ __pch.hpp.gch: __pch.hpp
 	${CXX} -x c++-header @DEFS@ ${AM_CPPFLAGS} ${CPPFLAGS} $$(echo "" "${AM_CXXFLAGS}" | sed "s/-include __pch\\.hpp//") ${CXXFLAGS} $< -o $@
 
 pkginclude_HEADERS = \
-	src/Config.hpp	\
 	src/StdMCF.hpp
 
 pkginclude_Coredir = ${pkgincludedir}/Core
@@ -239,13 +238,13 @@ MCF_1_dll_SOURCES = \
 	${mcf_sources}
 
 MCF_1_dll_LDFLAGS = \
-	-shared -static -nostdlib	\
-	-Wl,-e@__MCFCRT_DllStartup,--subsystem,windows,--disable-runtime-pseudo-reloc	\
+	-shared -nostdlib	\
+	-Wl,-e@__MCFCRT_DllStartup,-subsystem,windows,--disable-runtime-pseudo-reloc,--disable-auto-import	\
 	-Wl,--export-all-symbols,--exclude-symbols,@__MCFCRT_DllStartup,--exclude-libs,ALL	\
 	-Wl,--disable-stdcall-fixup,--enable-auto-image-base,--out-implib,libMCF.dll.a
 
 MCF_1_dll_LDADD = \
-	-lsupc++ -lgcc -lgcc_eh -lmingwex -lMCFCRT-pre-dll -lMCFCRT -lmsvcrt -lkernel32 -lntdll
+	-lsupc++ -lgcc -lgcc_s -lmingwex -lMCFCRT-pre-dll -lMCFCRT -lmsvcrt -lkernel32 -lntdll
 
 lib_LIBRARIES = \
 	libMCF.dll.a	\

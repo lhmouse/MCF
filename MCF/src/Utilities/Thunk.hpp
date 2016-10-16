@@ -5,7 +5,6 @@
 #ifndef MCF_UTILITIES_THUNK_HPP_
 #define MCF_UTILITIES_THUNK_HPP_
 
-#include "../Config.hpp"
 #include <cstddef>
 #include "../SmartPointers/UniquePtr.hpp"
 

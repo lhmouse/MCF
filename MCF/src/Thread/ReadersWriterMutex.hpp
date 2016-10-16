@@ -5,7 +5,6 @@
 #ifndef MCF_THREAD_READER_WRITER_MUTEX_HPP_
 #define MCF_THREAD_READER_WRITER_MUTEX_HPP_
 
-#include "../Config.hpp"
 #include "Mutex.hpp"
 #include "../Core/Atomic.hpp"
 

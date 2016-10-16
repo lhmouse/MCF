@@ -5,7 +5,6 @@
 #ifndef MCF_RANDOM_ISAAC_GENERATOR_HPP_
 #define MCF_RANDOM_ISAAC_GENERATOR_HPP_
 
-#include "../Config.hpp"
 #include "../Core/Clocks.hpp"
 #include "../Core/Array.hpp"
 

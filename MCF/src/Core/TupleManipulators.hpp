@@ -5,7 +5,6 @@
 #ifndef MCF_CORE_TUPLE_MANIPULATORS_HPP_
 #define MCF_CORE_TUPLE_MANIPULATORS_HPP_
 
-#include "../Config.hpp"
 #include <type_traits>
 #include <utility>
 #include <tuple>

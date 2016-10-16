@@ -5,7 +5,6 @@
 #ifndef MCF_CORE_VARIANT_HPP_
 #define MCF_CORE_VARIANT_HPP_
 
-#include "../Config.hpp"
 #include "AlignedStorage.hpp"
 #include "Exception.hpp"
 #include "ConstructDestruct.hpp"

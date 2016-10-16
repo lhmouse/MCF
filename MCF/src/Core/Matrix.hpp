@@ -5,7 +5,6 @@
 #ifndef MCF_CORE_MATRIX_HPP_
 #define MCF_CORE_MATRIX_HPP_
 
-#include "../Config.hpp"
 #include "Array.hpp"
 #include <cstddef>
 

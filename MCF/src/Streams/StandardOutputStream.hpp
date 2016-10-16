@@ -5,12 +5,11 @@
 #ifndef MCF_STREAMS_STANDARD_OUTPUT_STREAM_HPP_
 #define MCF_STREAMS_STANDARD_OUTPUT_STREAM_HPP_
 
-#include "../Config.hpp"
 #include "AbstractOutputStream.hpp"
 
 namespace MCF {
 
-class MCF_HAS_EXPORTED_RTTI StandardOutputStream : public AbstractOutputStream {
+class StandardOutputStream : public AbstractOutputStream {
 public:
 	StandardOutputStream() noexcept = default;
 	~StandardOutputStream() override;

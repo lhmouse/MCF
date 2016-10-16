@@ -5,7 +5,6 @@
 #ifndef MCF_CORE_COMPARATORS_HPP_
 #define MCF_CORE_COMPARATORS_HPP_
 
-#include "../Config.hpp"
 
 namespace MCF {
 

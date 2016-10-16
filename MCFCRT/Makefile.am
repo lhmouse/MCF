@@ -35,7 +35,8 @@ __pch.hpp.gch: __pch.hpp
 
 noinst_HEADERS = \
 	src/stdc/math/_fpu.h	\
-	src/stdc/string/_memcpy_inl.h
+	src/stdc/string/_memcpy_inl.h	\
+	src/pre/_libsupcxx_cleanup.h
 
 pkginclude_predir = ${pkgincludedir}/pre
 pkginclude_pre_HEADERS = \
@@ -93,7 +94,8 @@ mcfcrt_pre_sources = \
 	src/pre/module.c	\
 	src/pre/atexit.c	\
 	src/pre/at_quick_exit.c	\
-	src/pre/libsupcxx_freeres.cpp
+	src/pre/_libsupcxx_cleanup.cpp	\
+	src/pre/_pei386_runtime_relocator.c
 
 mcfcrt_sources = \
 	src/ext/assert.c	\
@@ -205,7 +207,7 @@ MCFCRT_9_dll_SOURCES = \
 
 MCFCRT_9_dll_LDFLAGS = \
 	-shared -static -nostdlib	\
-	-Wl,-e@__MCFCRT_DllStartup,--subsystem,windows,--disable-runtime-pseudo-reloc	\
+	-Wl,-e@__MCFCRT_DllStartup,-subsystem,windows,--disable-runtime-pseudo-reloc,--disable-auto-import	\
 	-Wl,--export-all-symbols,--exclude-symbols,@__MCFCRT_DllStartup,--exclude-libs,ALL	\
 	-Wl,--disable-stdcall-fixup,--enable-auto-image-base,--out-implib,libMCFCRT.dll.a
 

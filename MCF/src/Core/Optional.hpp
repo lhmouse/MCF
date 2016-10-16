@@ -5,7 +5,6 @@
 #ifndef MCF_CORE_OPTIONAL_HPP_
 #define MCF_CORE_OPTIONAL_HPP_
 
-#include "../Config.hpp"
 #include "Variant.hpp"
 #include <exception>
 

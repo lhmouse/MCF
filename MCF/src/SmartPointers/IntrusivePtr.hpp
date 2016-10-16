@@ -5,7 +5,6 @@
 #ifndef MCF_SMART_POINTERS_INTRUSIVE_PTR_HPP_
 #define MCF_SMART_POINTERS_INTRUSIVE_PTR_HPP_
 
-#include "../Config.hpp"
 #include "../Core/Assert.hpp"
 #include "../Core/Bail.hpp"
 #include "../Core/DeclVal.hpp"

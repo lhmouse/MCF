@@ -67,23 +67,23 @@ static void ReprotectAllSections(const UnprotectedSection *restrict pProtectedSe
 
 #define WHY_DO_WE_NEED_INTEGER_PROMOTION(type_, ptr_, add_)      (*(type_ *)(ptr_) = (type_)(*(type_ *)(ptr_) + (type_)(add_)))
 
-static void RealRelocateV1(const DWORD *pdwTable, size_t uTableSize){
+static void RealRelocateV1(const DWORD *pdwTable, const DWORD *pdwTableEnd){
 	const IMAGE_DOS_HEADER *const pImageBase = _MCFCRT_GetModuleBase();
-	for(size_t i = 0; i < uTableSize; i += 2){
-		const DWORD dwAddend = pdwTable[i];
-		void *const pTarget = (char *)pImageBase + pdwTable[i + 1];
+	for(const DWORD *pdwBase = pdwTable; pdwBase < pdwTableEnd; pdwBase += 2){
+		const DWORD dwAddend = pdwBase[0];
+		void *const pTarget = (char *)pImageBase + pdwBase[1];
 
 		WHY_DO_WE_NEED_INTEGER_PROMOTION(DWORD, pTarget, dwAddend);
 	}
 }
 
-static void RealRelocateV2(const DWORD *pdwTable, size_t uTableSize){
+static void RealRelocateV2(const DWORD *pdwTable, const DWORD *pdwTableEnd){
 	const IMAGE_DOS_HEADER *const pImageBase = _MCFCRT_GetModuleBase();
-	for(size_t i = 0; i < uTableSize; i += 3){
-		const void *const pSymbol = (char *)pImageBase + pdwTable[i];
+	for(const DWORD *pdwBase = pdwTable; pdwBase < pdwTableEnd; pdwBase += 3){
+		const void *const pSymbol = (char *)pImageBase + pdwBase[0];
 		const ptrdiff_t nAddend = (char *)*(void **)pSymbol - (char *)pSymbol;
-		void *const pTarget = (char *)pImageBase + pdwTable[i + 1];
-		const DWORD dwFlags = pdwTable[i + 2];
+		void *const pTarget = (char *)pImageBase + pdwBase[1];
+		const DWORD dwFlags = pdwBase[2];
 
 		const unsigned uBlockSize = dwFlags & 0xFF;
 		if(uBlockSize == 8){
@@ -105,12 +105,12 @@ extern DWORD __RUNTIME_PSEUDO_RELOC_LIST_END__;
 
 void _pei386_runtime_relocator(void){
 	static bool s_bRelocated = false;
-	
+
 	if(s_bRelocated){
 		return;
 	}
 	s_bRelocated = true;
-	
+
 	const DWORD *const pdwBegin = &__RUNTIME_PSEUDO_RELOC_LIST__;
 	const DWORD *const pdwEnd   = &__RUNTIME_PSEUDO_RELOC_LIST_END__;
 	const size_t uDwordCount    = (size_t)(pdwEnd - pdwBegin);
@@ -135,9 +135,9 @@ void _pei386_runtime_relocator(void){
 	UnprotectAllSections(aUnprotected, pSectionTable, uSections);
 	{
 		if(uVersion == 0){
-			RealRelocateV1(pdwTable, (size_t)(pdwEnd - pdwTable));
+			RealRelocateV1(pdwTable, pdwEnd);
 		} else if(uVersion == 1){
-			RealRelocateV2(pdwTable, (size_t)(pdwEnd - pdwTable));
+			RealRelocateV2(pdwTable, pdwEnd);
 		} else {
 			_MCFCRT_Bail(L"_pei386_runtime_relocator() 失败：无法识别的重定位表。");
 		}

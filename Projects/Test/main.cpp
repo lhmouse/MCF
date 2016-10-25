@@ -1,16 +1,11 @@
-#include <MCF/Core/String.hpp>
-#include <MCFCRT/env/mcfwin.h>
 #include <cstdio>
 
 extern "C" unsigned _MCFCRT_Main(void) noexcept {
-	::RaiseException(1, 0, 0, nullptr);
-	try {
-		MCF::Utf8String s;
-		s.Push('\xFF');
-		MCF::Utf16String s2(s);
-	} catch(std::exception &e1){
-		auto &e = dynamic_cast<MCF::Exception &>(e1);
-		std::printf("MCF::Exception: code = %lu, msg = %s\n", e.GetErrorCode(), MCF::AnsiString(MCF::WideStringView(e.GetErrorMessage())).GetStr());
-	}
+	float f1 = 1.234, f2 = 1;
+	volatile auto pff = ::__builtin_copysignf;
+	std::printf("copysignf(f1, f2) = %f\n", pff(f1, f2));
+	double d1 = 5.678, d2 = -2;
+	volatile auto pfd = ::__builtin_copysign;
+	std::printf("copysign (d1, d2) = %f\n", pfd(d1, d2));
 	return 0;
 }

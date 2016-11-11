@@ -23,5 +23,5 @@ uint64_t _MCFCRT_GetRandomUint64(void){
 	return ((uint64_t)_MCFCRT_GetRandomUint32() << 32) | _MCFCRT_GetRandomUint32();
 }
 double _MCFCRT_GetRandomDouble(void){
-	return (double)((int64_t)_MCFCRT_GetRandomUint64() & 0x7FFFFFFFFFFFFFFFll) / 0x1p63;
+	return (double)(int64_t)(_MCFCRT_GetRandomUint64() >> 1) / 0x1p63;
 }

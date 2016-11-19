@@ -10,6 +10,7 @@
 namespace MCF {
 
 namespace Impl_PolyIntrusivePtr {
+	// 避免 Unknown 作非虚基类时的二义性。
 	class Deletable : public IntrusiveBase<Deletable> {
 	public:
 		~Deletable() override;

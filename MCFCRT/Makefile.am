@@ -34,9 +34,14 @@ __pch.hpp.gch: __pch.hpp
 	${CXX} -x c++-header @DEFS@ ${AM_CPPFLAGS} ${CPPFLAGS} $$(echo "" "${AM_CXXFLAGS}" | sed "s/-include __pch\\.hpp//") ${CXXFLAGS} $< -o $@
 
 noinst_HEADERS = \
+	src/env/_nt_timeout.h	\
 	src/stdc/math/_fpu.h	\
 	src/stdc/string/_memcpy_inl.h	\
 	src/pre/_libsupcxx_cleanup.h
+
+pkginclude_HEADERS = \
+	src/gthread.h	\
+	src/c11thread.h
 
 pkginclude_predir = ${pkgincludedir}/pre
 pkginclude_pre_HEADERS = \
@@ -51,7 +56,6 @@ pkginclude_env_HEADERS = \
 	src/env/_crtdef.hpp	\
 	src/env/_fpu.h	\
 	src/env/_gthread_inl.h	\
-	src/env/_nt_timeout.h	\
 	src/env/_seh_top.h	\
 	src/env/argv.h	\
 	src/env/avl_tree.h	\

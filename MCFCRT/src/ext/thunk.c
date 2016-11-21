@@ -67,16 +67,17 @@ static _MCFCRT_AvlRoot  g_avlThunksByFreeSize = nullptr;
 const void *_MCFCRT_AllocateThunk(const void *pInit, size_t uSize){
 	_MCFCRT_ASSERT(pInit);
 
+	size_t uThunkSize = uSize + 8;
+	uThunkSize = (uThunkSize + 0x0F) & (size_t)-0x10;
+	if(uThunkSize < uSize){
+		SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+		return nullptr;
+	}
+
 	unsigned char *pbyRaw;
 
 	_MCFCRT_WaitForMutexForever(&g_vThunkMutex, _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT);
 	{
-		size_t uThunkSize = uSize + 8;
-		uThunkSize = (uThunkSize + 0x0F) & (size_t)-0x10;
-		if(uThunkSize < uSize){
-			goto jBadAlloc;
-		}
-
 		_MCFCRT_AvlNodeHeader *pFreeSizeIndex = _MCFCRT_AvlGetLowerBound(&g_avlThunksByFreeSize, (intptr_t)uThunkSize, &FreeSizeComparatorNodeKey);
 		ThunkInfo *pInfo;
 		bool bNeedsCleanup;
@@ -87,13 +88,17 @@ const void *_MCFCRT_AllocateThunk(const void *pInit, size_t uSize){
 			// 如果没有足够大的 thunk，我们先分配一个新的 chunk。
 			pInfo = _MCFCRT_malloc(sizeof(ThunkInfo));
 			if(!pInfo){
-				goto jBadAlloc;
+				_MCFCRT_SignalMutex(&g_vThunkMutex);
+				SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+				return nullptr;
 			}
 			pInfo->uChunkSize = (uThunkSize + 0xFFFF) & (size_t)-0x10000;
 			pInfo->pChunk = VirtualAlloc(0, pInfo->uChunkSize, MEM_COMMIT | MEM_RESERVE, PAGE_READONLY);
 			if(!pInfo->pChunk){
 				_MCFCRT_free(pInfo);
-				goto jBadAlloc;
+				_MCFCRT_SignalMutex(&g_vThunkMutex);
+				SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+				return nullptr;
 			}
 			pInfo->pThunk     = pInfo->pChunk;
 			pInfo->uThunkSize = pInfo->uChunkSize;
@@ -118,7 +123,9 @@ const void *_MCFCRT_AllocateThunk(const void *pInit, size_t uSize){
 					VirtualFree(pInfo->pChunk, 0, MEM_RELEASE);
 					_MCFCRT_free(pInfo);
 				}
-				goto jBadAlloc;
+				_MCFCRT_SignalMutex(&g_vThunkMutex);
+				SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+				return nullptr;
 			}
 			pSpare->pChunk     = pInfo->pChunk;
 			pSpare->uChunkSize = pInfo->uChunkSize;
@@ -150,14 +157,8 @@ const void *_MCFCRT_AllocateThunk(const void *pInit, size_t uSize){
 	_MCFCRT_SignalMutex(&g_vThunkMutex);
 
 	return pbyRaw;
-
-jBadAlloc:
-	_MCFCRT_SignalMutex(&g_vThunkMutex);
-
-	SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-	return nullptr;
 }
-void _MCFCRT_DeallocateThunk(const void *pThunk, bool bPoison){
+void _MCFCRT_DeallocateThunk(const void *pThunk, bool bToPoison){
 	unsigned char *const pbyRaw = (void *)pThunk;
 	void *pPageToRelease;
 
@@ -170,9 +171,9 @@ void _MCFCRT_DeallocateThunk(const void *pThunk, bool bPoison){
 		}
 
 #ifndef NDEBUG
-		bPoison = true;
+		bToPoison = true;
 #endif
-		if(bPoison){
+		if(bToPoison){
 			// 由于其他 thunk 可能共享了当前内存页，所以不能设置为 PAGE_READWRITE。
 			DWORD dwOldProtect;
 			VirtualProtect(pbyRaw, pInfo->uThunkSize, PAGE_EXECUTE_READWRITE, &dwOldProtect);

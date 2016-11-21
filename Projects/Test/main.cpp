@@ -29,9 +29,9 @@ extern "C" unsigned _MCFCRT_Main(void) noexcept {
 	const auto s2  = (wchar_t *)((char *)p2.Get() + 22);
 	const auto s2e = (wchar_t *)((char *)p2.Get() + kStringSize);
 
-	std::memset(s1, 'a', (std::size_t)(s1e - s1));
+	std::wmemset(s1, 'a', (std::size_t)(s1e - s1));
 	s1e[-1] = 0;
-	std::memset(s2, 'a', (std::size_t)(s2e - s2));
+	std::wmemset(s2, 'a', (std::size_t)(s2e - s2));
 	s2e[-1] = 0;
 
 	const auto test = [&](WideStringView name){

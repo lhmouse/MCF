@@ -11,6 +11,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <climits>
+#include <cfloat>
 #include <cstring>
 
 #include <type_traits>

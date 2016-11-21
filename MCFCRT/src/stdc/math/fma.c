@@ -10,7 +10,7 @@
 #undef fmal
 
 // https://en.wikipedia.org/wiki/Extended_precision#x86_Extended_Precision_Format
-typedef union x87reg_ {
+typedef union tag_x87reg {
 	struct __attribute__((__packed__)) {
 		union {
 			uint64_t f64;

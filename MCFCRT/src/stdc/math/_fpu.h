@@ -180,6 +180,15 @@ static inline long double __MCFCRT_ffloor(long double __x) _MCFCRT_NOEXCEPT {
 	return __ret;
 }
 
+static inline long double __MCFCRT_fsquare(long double __x) _MCFCRT_NOEXCEPT {
+	long double __ret;
+	__asm__(
+		"fmul st \n"
+		: "=&t"(__ret)
+		: "0"(__x)
+	);
+	return __ret;
+}
 static inline long double __MCFCRT_fsqrt(long double __x) _MCFCRT_NOEXCEPT {
 	long double __ret;
 	__asm__(

@@ -4,32 +4,23 @@
 
 #include "../../env/_crtdef.h"
 #include "_fpu.h"
-#include "../../ext/expect.h"
 
 #undef hypotf
 #undef hypot
 #undef hypotl
 
 static inline long double fpu_hypot(long double x, long double y){
-	long double cx = __MCFCRT_fabs(x), cy = __MCFCRT_fabs(y);
-	if(cx < cy){
-		long double temp = cx;
-		cx = cy;
-		cy = temp;
-	}
-	int scale = 0;
-	if(cx >= 0x1p+8191l){
-		scale = -8192;
-	} else if((cx < __MCFCRT_fld1()) && (cy <= 0x1p-8191l)){
-		scale = 8192;
-	}
-	if(_MCFCRT_EXPECT(scale == 0)){
-		return __MCFCRT_fsqrt(__MCFCRT_fsquare(cx) +
-		                      __MCFCRT_fsquare(cy));
+	long double xn, xm, yn, ym;
+	xm = __MCFCRT_fxtract(&xn, x);
+	ym = __MCFCRT_fxtract(&yn, y);
+	if(xn > yn){
+		return __MCFCRT_fscale(__MCFCRT_fsqrt(__MCFCRT_fsquare(xm) +
+		                                      __MCFCRT_fsquare(__MCFCRT_fscale(y, -xn))),
+		                       xn);
 	} else {
-		return __MCFCRT_fscale(__MCFCRT_fsqrt(__MCFCRT_fsquare(__MCFCRT_fscale(cx, scale)) +
-		                                      __MCFCRT_fsquare(__MCFCRT_fscale(cy, scale))),
-		                       -scale);
+		return __MCFCRT_fscale(__MCFCRT_fsqrt(__MCFCRT_fsquare(__MCFCRT_fscale(x, -yn)) +
+		                                      __MCFCRT_fsquare(ym)),
+		                       yn);
 	}
 }
 

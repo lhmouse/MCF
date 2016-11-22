@@ -198,20 +198,20 @@ mcfcrt_sources = \
 	src/stdc/stdlib/quick_exit.c
 
 bin_PROGRAMS = \
-	MCFCRT-9.dll
+	MCFCRT-10.dll
 
-MCFCRT_9_dll_SOURCES = \
+MCFCRT_10_dll_SOURCES = \
 	src/dll_startup.c	\
 	${mcfcrt_pre_sources}	\
 	${mcfcrt_sources}
 
-MCFCRT_9_dll_LDFLAGS = \
+MCFCRT_10_dll_LDFLAGS = \
 	-shared -static -nostdlib	\
 	-Wl,-e@__MCFCRT_DllStartup,-subsystem,windows,--disable-runtime-pseudo-reloc,--disable-auto-import	\
 	-Wl,--export-all-symbols,--exclude-symbols,@__MCFCRT_DllStartup,--exclude-libs,ALL	\
 	-Wl,--disable-stdcall-fixup,--enable-auto-image-base,--out-implib,libMCFCRT.dll.a
 
-MCFCRT_9_dll_LDADD = \
+MCFCRT_10_dll_LDADD = \
 	-lkernel32 -lntdll
 
 lib_LIBRARIES = \
@@ -229,11 +229,11 @@ libMCFCRT_pre_dll_a_SOURCES = \
 	${mcfcrt_pre_sources}
 
 libMCFCRT_dll_a_SOURCES =
-libMCFCRT.dll.a: MCFCRT-9.dll
+libMCFCRT.dll.a: MCFCRT-10.dll
 
 libMCFCRT_a_SOURCES =
 ## Due to Windows limitation we can't link this library statically.
 ##libMCFCRT_a_SOURCES = \
 ##	${mcfcrt_sources}
-libMCFCRT.a: MCFCRT-9.dll
+libMCFCRT.a: MCFCRT-10.dll
 	cp --no-preserve=timestamps libMCFCRT.dll.a $@

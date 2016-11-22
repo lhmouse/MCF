@@ -1,12 +1,10 @@
 #include <MCF/StdMCF.hpp>
-#include <math.h>
-#include <iostream>
+#include <MCF/Containers/Vector.hpp>
+#include <MCF/Utilities/Thunk.hpp>
+#include <MCF/Core/Random.hpp>
 
 extern "C" unsigned _MCFCRT_Main(void) noexcept {
-	volatile auto pf = ::hypotl;
-	std::cout <<pf(LDBL_MAX / 2, LDBL_MAX / 2) <<std::endl
-	          <<pf(LDBL_MAX / 2, LDBL_MIN * 2) <<std::endl
-	          <<pf(LDBL_MIN * 2, LDBL_MAX / 2) <<std::endl
-	          <<pf(LDBL_MIN * 2, LDBL_MIN * 2) <<std::endl;
+	static const char data[4096] = { };
+	auto p = MCF::CreateThunk(data, MCF::GetRandomUint32() % sizeof(data));
 	return 0;
 }

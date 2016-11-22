@@ -20,8 +20,8 @@ static inline long double fpu_hypot(long double x, long double y){
 	int scale = 0;
 	if(cx >= 0x1p+8191l){
 		scale = -8192;
-	} else if((cx < 1) && (cy <= 0x1p-8191l)){
-		scale = +8192;
+	} else if((cx < __MCFCRT_fld1()) && (cy <= 0x1p-8191l)){
+		scale = 8192;
 	}
 	if(_MCFCRT_EXPECT(scale == 0)){
 		return __MCFCRT_fsqrt(__MCFCRT_fsquare(cx) +

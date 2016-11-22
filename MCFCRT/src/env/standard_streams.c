@@ -85,10 +85,11 @@ static inline DWORD SetEchoing(Stream *restrict pStream, bool bEchoing){
 	if(!GetConsoleMode(GetHandle(pStream), &dwConsoleMode)){
 		return GetLastError();
 	}
+	const DWORD dwMask = ENABLE_ECHO_INPUT | ENABLE_LINE_INPUT;
 	if(bEchoing){
-		dwConsoleMode |=  (DWORD)(ENABLE_ECHO_INPUT | ENABLE_LINE_INPUT);
+		dwConsoleMode |=  dwMask;
 	} else {
-		dwConsoleMode &= ~(DWORD)(ENABLE_ECHO_INPUT | ENABLE_LINE_INPUT);
+		dwConsoleMode &= ~dwMask;
 	}
 	if(!SetConsoleMode(GetHandle(pStream), dwConsoleMode)){
 		return GetLastError();

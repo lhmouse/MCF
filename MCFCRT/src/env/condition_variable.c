@@ -76,7 +76,6 @@ static inline bool ReallyWaitForConditionVariable(volatile uintptr_t *puControl,
 			} else {
 				uNew = uOld & ~MASK_THREADS_SPINNING;
 			}
-			uNew = uOld & ~MASK_THREADS_SPINNING;
 		} while(_MCFCRT_EXPECT_NOT(!__atomic_compare_exchange_n(puControl, &uOld, uNew, false, __ATOMIC_RELAXED, __ATOMIC_RELAXED)));
 	}
 	if(_MCFCRT_EXPECT_NOT(bSignaled)){

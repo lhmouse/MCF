@@ -15,6 +15,7 @@ extern NTSTATUS NtWaitForKeyedEvent(HANDLE hKeyedEvent, void *pKey, BOOLEAN bAle
 __attribute__((__dllimport__, __stdcall__))
 extern NTSTATUS NtReleaseKeyedEvent(HANDLE hKeyedEvent, void *pKey, BOOLEAN bAlertable, const LARGE_INTEGER *pliTimeout);
 
+#define MASK_WAITING            ((uintptr_t) 0x0001)
 #define MASK_THREADS_SPINNING   ((uintptr_t) 0x000C)
 #define MASK_THREADS_TRAPPED    ((uintptr_t)~0x000F)
 
@@ -30,19 +31,24 @@ static inline bool ReallyWaitForConditionVariable(volatile uintptr_t *puControl,
 	size_t uMaxSpinCount, bool bMayTimeOut, uint64_t u64UntilFastMonoClock, bool bRelockIfTimeOut)
 {
 	bool bSignaled, bSpinnable = false;
-	if(uMaxSpinCount != 0){
-		{
-			uintptr_t uOld, uNew;
-			uOld = __atomic_load_n(puControl, __ATOMIC_RELAXED);
-			do {
+	{
+		uintptr_t uOld, uNew;
+		uOld = __atomic_load_n(puControl, __ATOMIC_RELAXED);
+		do {
+			if(uMaxSpinCount != 0){
 				const size_t uThreadsSpinning = (uOld & MASK_THREADS_SPINNING) / THREAD_SPINNING_ONE;
 				bSpinnable = (uThreadsSpinning < THREAD_SPINNING_MAX);
-				if(!bSpinnable){
+			}
+			if(!bSpinnable){
+				const bool bNewWaiter = !(uOld & MASK_WAITING);
+				if(!bNewWaiter){
 					break;
 				}
-				uNew = uOld + THREAD_SPINNING_ONE;
-			} while(_MCFCRT_EXPECT_NOT(!__atomic_compare_exchange_n(puControl, &uOld, uNew, false, __ATOMIC_RELAXED, __ATOMIC_RELAXED)));
-		}
+				uNew = uOld | MASK_WAITING;
+			} else {
+				uNew = (uOld | MASK_WAITING) + THREAD_SPINNING_ONE;
+			}
+		} while(_MCFCRT_EXPECT_NOT(!__atomic_compare_exchange_n(puControl, &uOld, uNew, false, __ATOMIC_RELAXED, __ATOMIC_RELAXED)));
 	}
 	const intptr_t nUnlocked = (*pfnUnlockCallback)(nContext);
 	if(bSpinnable){
@@ -51,7 +57,7 @@ static inline bool ReallyWaitForConditionVariable(volatile uintptr_t *puControl,
 				uintptr_t uOld, uNew;
 				uOld = __atomic_load_n(puControl, __ATOMIC_RELAXED);
 				do {
-					bSignaled = !(uOld & MASK_THREADS_SPINNING);
+					bSignaled = !(uOld & MASK_WAITING);
 					if(!bSignaled){
 						break;
 					}
@@ -70,7 +76,7 @@ static inline bool ReallyWaitForConditionVariable(volatile uintptr_t *puControl,
 		uintptr_t uOld, uNew;
 		uOld = __atomic_load_n(puControl, __ATOMIC_RELAXED);
 		do {
-			bSignaled = !(uOld & MASK_THREADS_SPINNING);
+			bSignaled = !(uOld & MASK_WAITING);
 			if(!bSignaled){
 				uNew = uOld + THREAD_TRAPPED_ONE;
 			} else {
@@ -126,7 +132,7 @@ static inline size_t ReallySignalConditionVariable(volatile uintptr_t *puControl
 		uintptr_t uOld, uNew;
 		uOld = __atomic_load_n(puControl, __ATOMIC_RELAXED);
 		do {
-			uNew = uOld & ~MASK_THREADS_SPINNING;
+			uNew = uOld & ~(MASK_WAITING | MASK_THREADS_SPINNING);
 			const size_t uThreadsTrapped = (uOld & MASK_THREADS_TRAPPED) / THREAD_TRAPPED_ONE;
 			uCountToSignal = (uThreadsTrapped <= uMaxCountToSignal) ? uThreadsTrapped : uMaxCountToSignal;
 			uNew -= uCountToSignal * THREAD_TRAPPED_ONE;

@@ -118,9 +118,7 @@ static inline void RealSetAndSignalOnceFlag(volatile uintptr_t *puControl, bool 
 			_MCFCRT_ASSERT_MSG(!(uOld & MASK_FINISHED), L"一次性初始化标志已被使用。");
 
 			uNew = uOld & ~MASK_LOCKED;
-			if(bFinished){
-				uNew |= MASK_FINISHED;
-			}
+			uNew |= bFinished * MASK_FINISHED;
 			const size_t uThreadsTrapped = (uOld & MASK_THREADS_TRAPPED) / THREAD_TRAPPED_ONE;
 			uCountToSignal = (uThreadsTrapped <= uMaxCountToSignal) ? uThreadsTrapped : uMaxCountToSignal;
 			uNew -= uCountToSignal * THREAD_TRAPPED_ONE;

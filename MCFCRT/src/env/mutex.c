@@ -145,9 +145,7 @@ static inline void ReallySignalMutex(volatile uintptr_t *puControl){
 
 			uNew = uOld & ~(MASK_LOCKED | MASK_THREADS_SPINNING);
 			bSignalOne = (uOld & MASK_THREADS_TRAPPED) > 0;
-			if(bSignalOne){
-				uNew -= THREAD_TRAPPED_ONE;
-			}
+			uNew -= bSignalOne * THREAD_TRAPPED_ONE;
 		} while(_MCFCRT_EXPECT_NOT(!__atomic_compare_exchange_n(puControl, &uOld, uNew, false, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE)));
 	}
 	if(bSignalOne){

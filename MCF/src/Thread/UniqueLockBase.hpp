@@ -53,7 +53,7 @@ protected:
 	}
 
 private:
-	virtual bool X_DoTry(std::uint64_t u64MilliSeconds) const noexcept = 0;
+	virtual bool X_DoTry(std::uint64_t u64Milliseconds) const noexcept = 0;
 	virtual void X_DoLock() const noexcept = 0;
 	virtual void X_DoUnlock() const noexcept = 0;
 
@@ -65,10 +65,10 @@ public:
 		return y_uLockCount;
 	}
 
-	bool Try(std::uint64_t u64MilliSeconds = 0) noexcept {
+	bool Try(std::uint64_t u64Milliseconds = 0) noexcept {
 		const auto uOldCount = y_uLockCount;
 		if(uOldCount == 0){
-			if(!X_DoTry(u64MilliSeconds)){
+			if(!X_DoTry(u64Milliseconds)){
 				return false;
 			}
 		}

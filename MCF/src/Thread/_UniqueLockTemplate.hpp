@@ -42,7 +42,7 @@ namespace Impl_UniqueLockTemplate {
 		}
 
 	private:
-		bool X_DoTry(std::uint64_t u64MilliSeconds) const noexcept override;
+		bool X_DoTry(std::uint64_t u64Milliseconds) const noexcept override;
 		void X_DoLock() const noexcept override;
 		void X_DoUnlock() const noexcept override;
 

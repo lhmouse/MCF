@@ -194,8 +194,6 @@ mcf_sources = \
 	src/SmartPointers/PolyIntrusivePtr.cpp	\
 	src/Random/FastGenerator.cpp	\
 	src/Random/IsaacGenerator.cpp	\
-	src/Utilities/Argv.cpp	\
-	src/Utilities/Thunk.cpp	\
 	src/Streams/AbstractInputStream.cpp	\
 	src/Streams/AbstractOutputStream.cpp	\
 	src/Streams/BufferInputStream.cpp	\

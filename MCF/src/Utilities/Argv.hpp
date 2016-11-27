@@ -6,14 +6,14 @@
 #define MCF_UTILITIES_ARGV_HPP_
 
 #include "../SmartPointers/UniquePtr.hpp"
-#include "../Core/Noncopyable.hpp"
 #include "../Core/Assert.hpp"
 #include "../Core/StringView.hpp"
 #include <MCFCRT/env/argv.h>
+#include <MCFCRT/env/last_error.h>
 
 namespace MCF {
 
-class Argv : MCF_NONCOPYABLE {
+class Argv {
 private:
 	struct X_ArgItemDeleter {
 		constexpr ::_MCFCRT_ArgItem *operator()() const noexcept {
@@ -30,7 +30,17 @@ private:
 
 public:
 	// 如果传入空指针，就使用当前 GetCommandLineW() 的返回值。
-	explicit Argv(const wchar_t *pwszCommandLine = nullptr);
+	explicit Argv(const wchar_t *pwszCommandLine = nullptr){
+		if(pwszCommandLine){
+			if(!x_pArgv.Reset(::_MCFCRT_AllocArgv(&x_uArgc, pwszCommandLine))){
+				MCF_THROW(Exception, ::_MCFCRT_GetLastWin32Error(), Rcntws::View(L"_MCFCRT_AllocArgv() 失败。"));
+			}
+		} else {
+			if(!x_pArgv.Reset(::_MCFCRT_AllocArgvFromCommandLine(&x_uArgc))){
+				MCF_THROW(Exception, ::_MCFCRT_GetLastWin32Error(), Rcntws::View(L"_MCFCRT_AllocArgvFromCommandLine() 失败。"));
+			}
+		}
+	}
 
 public:
 	std::size_t GetSize() const noexcept {
@@ -73,9 +83,19 @@ public:
 		return WideStringView(x_pArgv[uIndex].__pwszStr, x_pArgv[uIndex].__uLen);
 	}
 
+	void Swap(Argv &rhs) noexcept {
+		using std::swap;
+		swap(x_uArgc, rhs.x_uArgc);
+		swap(x_pArgv, rhs.x_pArgv);
+	}
+
 public:
 	WideStringView operator[](std::size_t uIndex) const noexcept {
 		return UncheckedGet(uIndex);
+	}
+
+	friend void swap(Argv &lhs, Argv &rhs) noexcept {
+		lhs.Swap(rhs);
 	}
 };
 

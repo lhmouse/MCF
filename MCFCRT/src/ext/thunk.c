@@ -80,10 +80,10 @@ const void *_MCFCRT_AllocateThunk(const void *pInit, size_t uSize){
 	{
 		_MCFCRT_AvlNodeHeader *pFreeSizeIndex = _MCFCRT_AvlGetLowerBound(&g_avlThunksByFreeSize, (intptr_t)uThunkSize, &FreeSizeComparatorNodeKey);
 		ThunkInfo *pInfo;
-		bool bNeedsCleanup;
+		bool bInfoAllocated;
 		if(pFreeSizeIndex){
 			pInfo = GetInfoFromFreeSizeIndex(pFreeSizeIndex);
-			bNeedsCleanup = false;
+			bInfoAllocated = false;
 		} else {
 			// 如果没有足够大的 thunk，我们先分配一个新的 chunk。
 			pInfo = _MCFCRT_malloc(sizeof(ThunkInfo));
@@ -92,23 +92,29 @@ const void *_MCFCRT_AllocateThunk(const void *pInit, size_t uSize){
 				SetLastError(ERROR_NOT_ENOUGH_MEMORY);
 				return nullptr;
 			}
-			pInfo->uChunkSize = (uThunkSize + 0xFFFF) & (size_t)-0x10000;
-			pInfo->pChunk = VirtualAlloc(0, pInfo->uChunkSize, MEM_COMMIT | MEM_RESERVE, PAGE_READONLY);
-			if(!pInfo->pChunk){
+			size_t uChunkSize = (uThunkSize + 0xFFFF) & (size_t)-0x10000;
+			if(uChunkSize < uThunkSize){
+				uChunkSize = uThunkSize;
+			}
+			void *const pChunk = VirtualAlloc(0, uChunkSize, MEM_COMMIT | MEM_RESERVE, PAGE_READONLY);
+			if(!pChunk){
 				_MCFCRT_free(pInfo);
 				_MCFCRT_SignalMutex(&g_vThunkMutex);
 				SetLastError(ERROR_NOT_ENOUGH_MEMORY);
 				return nullptr;
 			}
-			pInfo->pThunk     = pInfo->pChunk;
-			pInfo->uThunkSize = pInfo->uChunkSize;
-			pInfo->uFreeSize  = pInfo->uChunkSize;
+			pInfo->pChunk     = pChunk;
+			pInfo->uChunkSize = uChunkSize;
+
+			pInfo->pThunk     = pChunk;
+			pInfo->uThunkSize = uChunkSize;
+			pInfo->uFreeSize  = uChunkSize;
 
 			_MCFCRT_AvlAttach(&g_avlThunksByThunk, &(pInfo->vThunkIndex), &ThunkComparatorNodes);
 			_MCFCRT_AvlAttach(&g_avlThunksByFreeSize, &(pInfo->vFreeSizeIndex), &FreeSizeComparatorNodes);
 
 			pFreeSizeIndex = &(pInfo->vFreeSizeIndex);
-			bNeedsCleanup = true;
+			bInfoAllocated = true;
 		}
 		_MCFCRT_ASSERT(pInfo->uFreeSize >= uThunkSize);
 
@@ -117,7 +123,7 @@ const void *_MCFCRT_AllocateThunk(const void *pInit, size_t uSize){
 			// 如果剩下的空间还很大，保存成一个新的空闲 thunk。
 			ThunkInfo *const pSpare = _MCFCRT_malloc(sizeof(ThunkInfo));
 			if(!pSpare){
-				if(bNeedsCleanup){
+				if(bInfoAllocated){
 					_MCFCRT_AvlDetach(&(pInfo->vThunkIndex));
 					_MCFCRT_AvlDetach(&(pInfo->vFreeSizeIndex));
 					VirtualFree(pInfo->pChunk, 0, MEM_RELEASE);

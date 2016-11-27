@@ -39,34 +39,34 @@ public:
 
 	const void *GetBaseAddress() const noexcept;
 
-	RawProc RawGetProcAddress(const NarrowStringView &nsvName) const;
-	RawProc RawRequireProcAddress(const NarrowStringView &nsvName) const;
-	RawProc RawGetProcAddress(unsigned uOrdinal) const;
-	RawProc RawRequireProcAddress(unsigned uOrdinal) const;
+	RawProc GetProcAddressRaw(const NarrowStringView &nsvName) const;
+	RawProc RequireProcAddressRaw(const NarrowStringView &nsvName) const;
+	RawProc GetProcAddressRaw(unsigned uOrdinal) const;
+	RawProc RequireProcAddressRaw(unsigned uOrdinal) const;
 
 	template<typename FunctionPointerT>
 	FunctionPointerT GetProcAddress(const NarrowStringView &nsvName) const {
 		static_assert(std::is_pointer<FunctionPointerT>::value, "FunctionPointerT shall be a pointer type");
 
-		return reinterpret_cast<FunctionPointerT>(RawGetProcAddress(nsvName));
+		return reinterpret_cast<FunctionPointerT>(GetProcAddressRaw(nsvName));
 	}
 	template<typename FunctionPointerT>
 	FunctionPointerT RequireProcAddress(const NarrowStringView &nsvName) const {
 		static_assert(std::is_pointer<FunctionPointerT>::value, "FunctionPointerT shall be a pointer type");
 
-		return reinterpret_cast<FunctionPointerT>(RawRequireProcAddress(nsvName));
+		return reinterpret_cast<FunctionPointerT>(RequireProcAddressRaw(nsvName));
 	}
 	template<typename FunctionPointerT>
 	FunctionPointerT GetProcAddress(unsigned uOrdinal) const {
 		static_assert(std::is_pointer<FunctionPointerT>::value, "FunctionPointerT shall be a pointer type");
 
-		return reinterpret_cast<FunctionPointerT>(RawGetProcAddress(uOrdinal));
+		return reinterpret_cast<FunctionPointerT>(GetProcAddressRaw(uOrdinal));
 	}
 	template<typename FunctionPointerT>
 	FunctionPointerT RequireProcAddress(unsigned uOrdinal) const {
 		static_assert(std::is_pointer<FunctionPointerT>::value, "FunctionPointerT shall be a pointer type");
 
-		return reinterpret_cast<FunctionPointerT>(RawRequireProcAddress(uOrdinal));
+		return reinterpret_cast<FunctionPointerT>(RequireProcAddressRaw(uOrdinal));
 	}
 
 	void Swap(DynamicLinkLibrary &rhs) noexcept {

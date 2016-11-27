@@ -51,7 +51,7 @@ const void *DynamicLinkLibrary::GetBaseAddress() const noexcept {
 	return x_hDll.Get();
 }
 
-DynamicLinkLibrary::RawProc DynamicLinkLibrary::RawGetProcAddress(const NarrowStringView &nsvName) const {
+DynamicLinkLibrary::RawProc DynamicLinkLibrary::GetProcAddressRaw(const NarrowStringView &nsvName) const {
 	if(!x_hDll){
 		MCF_THROW(Exception, ERROR_INVALID_HANDLE, Rcntws::View(L"DynamicLinkLibrary: 尚未加载任何动态库。"));
 	}
@@ -72,8 +72,8 @@ DynamicLinkLibrary::RawProc DynamicLinkLibrary::RawGetProcAddress(const NarrowSt
 	}
 	return pfnProcAddress;
 }
-DynamicLinkLibrary::RawProc DynamicLinkLibrary::RawRequireProcAddress(const NarrowStringView &nsvName) const {
-	const auto pfnRet = RawGetProcAddress(nsvName);
+DynamicLinkLibrary::RawProc DynamicLinkLibrary::RequireProcAddressRaw(const NarrowStringView &nsvName) const {
+	const auto pfnRet = GetProcAddressRaw(nsvName);
 	if(!pfnRet){
 		MCF_THROW(Exception, ERROR_PROC_NOT_FOUND, Rcntws::View(L"DynamicLinkLibrary: 指定的导出函数未找到。"));
 	}
@@ -81,7 +81,7 @@ DynamicLinkLibrary::RawProc DynamicLinkLibrary::RawRequireProcAddress(const Narr
 }
 
 
-DynamicLinkLibrary::RawProc DynamicLinkLibrary::RawGetProcAddress(unsigned uOrdinal) const {
+DynamicLinkLibrary::RawProc DynamicLinkLibrary::GetProcAddressRaw(unsigned uOrdinal) const {
 	if(!x_hDll){
 		MCF_THROW(Exception, ERROR_INVALID_HANDLE, Rcntws::View(L"DynamicLinkLibrary: 尚未加载任何动态库。"));
 	}
@@ -97,8 +97,8 @@ DynamicLinkLibrary::RawProc DynamicLinkLibrary::RawGetProcAddress(unsigned uOrdi
 	}
 	return pfnProcAddress;
 }
-DynamicLinkLibrary::RawProc DynamicLinkLibrary::RawRequireProcAddress(unsigned uOrdinal) const {
-	const auto pfnRet = RawGetProcAddress(uOrdinal);
+DynamicLinkLibrary::RawProc DynamicLinkLibrary::RequireProcAddressRaw(unsigned uOrdinal) const {
+	const auto pfnRet = GetProcAddressRaw(uOrdinal);
 	if(!pfnRet){
 		MCF_THROW(Exception, ERROR_PROC_NOT_FOUND, Rcntws::View(L"DynamicLinkLibrary: 指定的导出函数未找到。"));
 	}

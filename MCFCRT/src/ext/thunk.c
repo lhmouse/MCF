@@ -161,6 +161,7 @@ const void *_MCFCRT_AllocateThunk(const void *pInit, size_t uSize){
 void _MCFCRT_DeallocateThunk(const void *pThunk, bool bToPoison){
 	unsigned char *const pbyRaw = (void *)pThunk;
 	void *pPageToRelease;
+	void *pInfoToFree;
 
 	_MCFCRT_WaitForMutexForever(&g_vThunkMutex, _MCFCRT_MUTEX_SUGGESTED_SPIN_COUNT);
 	{
@@ -212,12 +213,13 @@ void _MCFCRT_DeallocateThunk(const void *pThunk, bool bToPoison){
 
 		if((pInfo->pThunk == pInfo->pChunk) && (pInfo->uThunkSize == pInfo->uChunkSize)){
 			pPageToRelease = pInfo->pChunk;
+			pInfoToFree = pInfo;
 
 			_MCFCRT_AvlDetach(&(pInfo->vThunkIndex));
 			_MCFCRT_AvlDetach(&(pInfo->vFreeSizeIndex));
-			_MCFCRT_free(pInfo);
 		} else {
 			pPageToRelease = nullptr;
+			pInfoToFree = nullptr;
 
 			_MCFCRT_AvlDetach(&(pInfo->vFreeSizeIndex));
 			pInfo->uFreeSize = pInfo->uThunkSize;
@@ -228,5 +230,8 @@ void _MCFCRT_DeallocateThunk(const void *pThunk, bool bToPoison){
 
 	if(pPageToRelease){
 		VirtualFree(pPageToRelease, 0, MEM_RELEASE);
+	}
+	if(pInfoToFree){
+		_MCFCRT_free(pInfoToFree);
 	}
 }

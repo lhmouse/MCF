@@ -1,18 +1,21 @@
 #include <MCF/StdMCF.hpp>
-#include <MCF/Containers/Vector.hpp>
 #include <MCF/Utilities/Thunk.hpp>
-#include <MCF/Core/Random.hpp>
+#include <cstdio>
+
+extern const char fn_begin __asm__("fn_begin"), fn_end __asm__("fn_end");
+
+__asm__(
+	"fn_begin: \n"
+	"	mov eax, ecx \n"
+	"	mul edx \n"
+	"	ret \n"
+	"fn_end: \n"
+	"	nop \n"
+);
 
 extern "C" unsigned _MCFCRT_Main(void) noexcept {
-	static const char data[4096] = { };
-	MCF::Vector<MCF::Thunk> v;
-	for(unsigned i = 0; i < 100000; ++i){
-		if((MCF::GetRandomUint32() % 3 == 1) && !v.IsEmpty()){
-			v.Pop();
-		} else {
-			auto t = MCF::Thunk(data, MCF::GetRandomUint32() % sizeof(data));
-			v.Push(std::move(t));
-		}
-	}
+	const auto t = MCF::Thunk(&fn_begin, static_cast<std::size_t>(&fn_end - &fn_begin));
+	const auto fn = t.Get<unsigned (__fastcall *)(unsigned, unsigned)>();
+	std::printf("val = %u\n", fn(3, 5));
 	return 0;
 }

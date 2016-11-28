@@ -7,6 +7,7 @@
 
 #include "../SmartPointers/UniquePtr.hpp"
 #include "../Core/Assert.hpp"
+#include "../Core/Exception.hpp"
 #include <type_traits>
 #include <MCFCRT/ext/thunk.h>
 #include <MCFCRT/env/last_error.h>

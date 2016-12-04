@@ -20,11 +20,11 @@ extern NTSTATUS NtReleaseKeyedEvent(HANDLE hKeyedEvent, void *pKey, BOOLEAN bAle
 #define MASK_THREADS_SPINNING   ((uintptr_t) 0x000C)
 #define MASK_THREADS_TRAPPED    ((uintptr_t)~0x000F)
 
-#define THREAD_SPINNING_ONE     ((uintptr_t)(MASK_THREADS_SPINNING & -MASK_THREADS_SPINNING))
-#define THREAD_SPINNING_MAX     ((uintptr_t)(MASK_THREADS_SPINNING / THREAD_SPINNING_ONE))
+#define THREADS_SPINNING_ONE    ((uintptr_t)(MASK_THREADS_SPINNING & -MASK_THREADS_SPINNING))
+#define THREADS_SPINNING_MAX    ((uintptr_t)(MASK_THREADS_SPINNING / THREADS_SPINNING_ONE))
 
-#define THREAD_TRAPPED_ONE      ((uintptr_t)(MASK_THREADS_TRAPPED & -MASK_THREADS_TRAPPED))
-#define THREAD_TRAPPED_MAX      ((uintptr_t)(MASK_THREADS_TRAPPED / THREAD_TRAPPED_ONE))
+#define THREADS_TRAPPED_ONE     ((uintptr_t)(MASK_THREADS_TRAPPED & -MASK_THREADS_TRAPPED))
+#define THREADS_TRAPPED_MAX     ((uintptr_t)(MASK_THREADS_TRAPPED / THREADS_TRAPPED_ONE))
 
 __attribute__((__always_inline__))
 static inline bool ReallyWaitForMutex(volatile uintptr_t *puControl, size_t uMaxSpinCount, bool bMayTimeOut, uint64_t u64UntilFastMonoClock){
@@ -37,13 +37,13 @@ static inline bool ReallyWaitForMutex(volatile uintptr_t *puControl, size_t uMax
 				bTaken = !(uOld & MASK_LOCKED);
 				if(!bTaken){
 					if(uMaxSpinCount != 0){
-						const size_t uThreadsSpinning = (uOld & MASK_THREADS_SPINNING) / THREAD_SPINNING_ONE;
-						bSpinnable = (uThreadsSpinning < THREAD_SPINNING_MAX);
+						const size_t uThreadsSpinning = (uOld & MASK_THREADS_SPINNING) / THREADS_SPINNING_ONE;
+						bSpinnable = (uThreadsSpinning < THREADS_SPINNING_MAX);
 					}
 					if(!bSpinnable){
 						break;
 					}
-					uNew = uOld + THREAD_SPINNING_ONE;
+					uNew = uOld + THREADS_SPINNING_ONE;
 				} else {
 					uNew = (uOld & ~MASK_THREADS_SPINNING) | MASK_LOCKED;
 				}
@@ -78,7 +78,7 @@ static inline bool ReallyWaitForMutex(volatile uintptr_t *puControl, size_t uMax
 			do {
 				bTaken = !(uOld & MASK_LOCKED);
 				if(!bTaken){
-					uNew = uOld + THREAD_TRAPPED_ONE;
+					uNew = uOld + THREADS_TRAPPED_ONE;
 				} else {
 					uNew = (uOld & ~MASK_THREADS_SPINNING) | MASK_LOCKED;
 				}
@@ -98,12 +98,12 @@ static inline bool ReallyWaitForMutex(volatile uintptr_t *puControl, size_t uMax
 					uintptr_t uOld, uNew;
 					uOld = __atomic_load_n(puControl, __ATOMIC_RELAXED);
 					do {
-						const size_t uThreadsTrapped = (uOld & MASK_THREADS_TRAPPED) / THREAD_TRAPPED_ONE;
+						const size_t uThreadsTrapped = (uOld & MASK_THREADS_TRAPPED) / THREADS_TRAPPED_ONE;
 						bDecremented = (uThreadsTrapped > 0);
 						if(!bDecremented){
 							break;
 						}
-						uNew = uOld - THREAD_TRAPPED_ONE;
+						uNew = uOld - THREADS_TRAPPED_ONE;
 					} while(_MCFCRT_EXPECT_NOT(!__atomic_compare_exchange_n(puControl, &uOld, uNew, false, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE)));
 				}
 				if(bDecremented){
@@ -131,7 +131,7 @@ static inline void ReallySignalMutex(volatile uintptr_t *puControl){
 
 			uNew = uOld & ~(MASK_LOCKED | MASK_THREADS_SPINNING);
 			bSignalOne = (uOld & MASK_THREADS_TRAPPED) > 0;
-			uNew -= bSignalOne * THREAD_TRAPPED_ONE;
+			uNew -= bSignalOne * THREADS_TRAPPED_ONE;
 		} while(_MCFCRT_EXPECT_NOT(!__atomic_compare_exchange_n(puControl, &uOld, uNew, false, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE)));
 	}
 	if(bSignalOne){

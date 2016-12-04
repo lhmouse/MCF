@@ -28,8 +28,8 @@ extern NTSTATUS NtReleaseKeyedEvent(HANDLE hKeyedEvent, void *pKey, BOOLEAN bAle
 #define MASK_FINISHED           ((uintptr_t)(                BSFB(0x01)))
 #define MASK_THREADS_TRAPPED    ((uintptr_t)(~BSUSR(0x01) & ~BSFB(0xFF)))
 
-#define THREAD_TRAPPED_ONE      ((uintptr_t)(MASK_THREADS_TRAPPED & -MASK_THREADS_TRAPPED))
-#define THREAD_TRAPPED_MAX      ((uintptr_t)(MASK_THREADS_TRAPPED / THREAD_TRAPPED_ONE))
+#define THREADS_TRAPPED_ONE     ((uintptr_t)(MASK_THREADS_TRAPPED & -MASK_THREADS_TRAPPED))
+#define THREADS_TRAPPED_MAX     ((uintptr_t)(MASK_THREADS_TRAPPED / THREADS_TRAPPED_ONE))
 
 __attribute__((__always_inline__))
 static inline _MCFCRT_OnceResult ReallyTryOnceFlag(volatile uintptr_t *puControl){
@@ -62,7 +62,7 @@ static inline _MCFCRT_OnceResult RealWaitForOnceFlag(volatile uintptr_t *puContr
 				}
 				bTaken = !(uOld & MASK_LOCKED);
 				if(!bTaken){
-					uNew = uOld + THREAD_TRAPPED_ONE;
+					uNew = uOld + THREADS_TRAPPED_ONE;
 				} else {
 					uNew = uOld + MASK_LOCKED; // uOld | MASK_LOCKED;
 				}
@@ -85,12 +85,12 @@ static inline _MCFCRT_OnceResult RealWaitForOnceFlag(volatile uintptr_t *puContr
 					uintptr_t uOld, uNew;
 					uOld = __atomic_load_n(puControl, __ATOMIC_RELAXED);
 					do {
-						const size_t uThreadsTrapped = (uOld & MASK_THREADS_TRAPPED) / THREAD_TRAPPED_ONE;
+						const size_t uThreadsTrapped = (uOld & MASK_THREADS_TRAPPED) / THREADS_TRAPPED_ONE;
 						bDecremented = (uThreadsTrapped > 0);
 						if(!bDecremented){
 							break;
 						}
-						uNew = uOld - THREAD_TRAPPED_ONE;
+						uNew = uOld - THREADS_TRAPPED_ONE;
 					} while(_MCFCRT_EXPECT_NOT(!__atomic_compare_exchange_n(puControl, &uOld, uNew, false, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE)));
 				}
 				if(bDecremented){
@@ -119,9 +119,9 @@ static inline void RealSetAndSignalOnceFlag(volatile uintptr_t *puControl, bool 
 
 			uNew = uOld & ~MASK_LOCKED;
 			uNew |= bFinished * MASK_FINISHED;
-			const size_t uThreadsTrapped = (uOld & MASK_THREADS_TRAPPED) / THREAD_TRAPPED_ONE;
+			const size_t uThreadsTrapped = (uOld & MASK_THREADS_TRAPPED) / THREADS_TRAPPED_ONE;
 			uCountToSignal = (uThreadsTrapped <= uMaxCountToSignal) ? uThreadsTrapped : uMaxCountToSignal;
-			uNew -= uCountToSignal * THREAD_TRAPPED_ONE;
+			uNew -= uCountToSignal * THREADS_TRAPPED_ONE;
 		} while(_MCFCRT_EXPECT_NOT(!__atomic_compare_exchange_n(puControl, &uOld, uNew, false, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE)));
 	}
 	for(size_t i = 0; i < uCountToSignal; ++i){

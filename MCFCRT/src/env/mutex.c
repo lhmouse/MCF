@@ -27,44 +27,30 @@ extern NTSTATUS NtReleaseKeyedEvent(HANDLE hKeyedEvent, void *pKey, BOOLEAN bAle
 #define THREAD_TRAPPED_MAX      ((uintptr_t)(MASK_THREADS_TRAPPED / THREAD_TRAPPED_ONE))
 
 __attribute__((__always_inline__))
-static inline bool ReallyTryMutex(volatile uintptr_t *puControl){
-	{
-		uintptr_t uOld, uNew;
-		uOld = __atomic_load_n(puControl, __ATOMIC_RELAXED);
-		if(_MCFCRT_EXPECT(!(uOld & MASK_LOCKED))){
-			uNew = uOld | MASK_LOCKED;
-			if(_MCFCRT_EXPECT(__atomic_compare_exchange_n(puControl, &uOld, uNew, false, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE))){
-				return true;
-			}
-		}
-	}
-	return false;
-}
-__attribute__((__always_inline__))
 static inline bool ReallyWaitForMutex(volatile uintptr_t *puControl, size_t uMaxSpinCount, bool bMayTimeOut, uint64_t u64UntilFastMonoClock){
 	for(;;){
 		bool bTaken, bSpinnable = false;
-		if(uMaxSpinCount != 0){
-			{
-				uintptr_t uOld, uNew;
-				uOld = __atomic_load_n(puControl, __ATOMIC_RELAXED);
-				do {
-					bTaken = !(uOld & MASK_LOCKED);
-					if(!bTaken){
+		{
+			uintptr_t uOld, uNew;
+			uOld = __atomic_load_n(puControl, __ATOMIC_RELAXED);
+			do {
+				bTaken = !(uOld & MASK_LOCKED);
+				if(!bTaken){
+					if(uMaxSpinCount != 0){
 						const size_t uThreadsSpinning = (uOld & MASK_THREADS_SPINNING) / THREAD_SPINNING_ONE;
 						bSpinnable = (uThreadsSpinning < THREAD_SPINNING_MAX);
-						if(!bSpinnable){
-							break;
-						}
-						uNew = uOld + THREAD_SPINNING_ONE;
-					} else {
-						uNew = (uOld & ~MASK_THREADS_SPINNING) | MASK_LOCKED;
 					}
-				} while(_MCFCRT_EXPECT_NOT(!__atomic_compare_exchange_n(puControl, &uOld, uNew, false, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE)));
-			}
-			if(_MCFCRT_EXPECT(bTaken)){
-				return true;
-			}
+					if(!bSpinnable){
+						break;
+					}
+					uNew = uOld + THREAD_SPINNING_ONE;
+				} else {
+					uNew = (uOld & ~MASK_THREADS_SPINNING) | MASK_LOCKED;
+				}
+			} while(_MCFCRT_EXPECT_NOT(!__atomic_compare_exchange_n(puControl, &uOld, uNew, false, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE)));
+		}
+		if(_MCFCRT_EXPECT(bTaken)){
+			return true;
 		}
 		if(bSpinnable){
 			for(size_t i = 0; i < uMaxSpinCount; ++i){
@@ -156,17 +142,11 @@ static inline void ReallySignalMutex(volatile uintptr_t *puControl){
 }
 
 bool _MCFCRT_WaitForMutex(_MCFCRT_Mutex *pMutex, size_t uMaxSpinCount, uint64_t u64UntilFastMonoClock){
-	bool bLocked = ReallyTryMutex(&(pMutex->__u));
-	if(_MCFCRT_EXPECT_NOT(!bLocked) && _MCFCRT_EXPECT_NOT(u64UntilFastMonoClock != 0)){
-		bLocked = ReallyWaitForMutex(&(pMutex->__u), uMaxSpinCount, true, u64UntilFastMonoClock);
-	}
+	const bool bLocked = ReallyWaitForMutex(&(pMutex->__u), uMaxSpinCount, true, u64UntilFastMonoClock);
 	return bLocked;
 }
 void _MCFCRT_WaitForMutexForever(_MCFCRT_Mutex *pMutex, size_t uMaxSpinCount){
-	bool bLocked = ReallyTryMutex(&(pMutex->__u));
-	if(_MCFCRT_EXPECT_NOT(!bLocked)){
-		bLocked = ReallyWaitForMutex(&(pMutex->__u), uMaxSpinCount, false, UINT64_MAX);
-	}
+	const bool bLocked = ReallyWaitForMutex(&(pMutex->__u), uMaxSpinCount, false, UINT64_MAX);
 	_MCFCRT_ASSERT(bLocked);
 }
 void _MCFCRT_SignalMutex(_MCFCRT_Mutex *pMutex){

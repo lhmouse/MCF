@@ -38,7 +38,7 @@ wchar_t *_MCFCRT_itow_X(wchar_t *pwcBuffer, uintptr_t uValue){
 }
 wchar_t *_MCFCRT_itow0d(wchar_t *pwcBuffer, intptr_t nValue, unsigned uMinDigits){
 	if(nValue < 0){
-		*(pwcBuffer++) = '-';
+		*(pwcBuffer++) = L'-';
 		nValue = -nValue;
 	}
 	return _MCFCRT_itow0u(pwcBuffer, (uintptr_t)nValue, uMinDigits);

@@ -1,21 +1,16 @@
 #include <MCF/StdMCF.hpp>
-#include <MCF/Utilities/Thunk.hpp>
 #include <cstdio>
 
-extern const char fn_begin __asm__("fn_begin"), fn_end __asm__("fn_end");
-
-__asm__(
-	"fn_begin: \n"
-	"	mov eax, ecx \n"
-	"	mul edx \n"
-	"	ret \n"
-	"fn_end: \n"
-	"	nop \n"
-);
+extern "C" char *_MCFCRT_atoi_d(std::intptr_t *pnValue, const char *pchBuffer) noexcept;
+extern "C" char *_MCFCRT_atoi0d(std::intptr_t *pnValue, const char *pchBuffer, unsigned uMaxDigits) noexcept;
 
 extern "C" unsigned _MCFCRT_Main(void) noexcept {
-	const auto t = MCF::Thunk(&fn_begin, static_cast<std::size_t>(&fn_end - &fn_begin));
-	const auto fn = t.Get<unsigned (__fastcall *)(unsigned, unsigned)>();
-	std::printf("val = %u\n", fn(3, 5));
+	char str[32] = "2147483647";
+	char *ep;
+	std::intptr_t value;
+	ep = _MCFCRT_atoi_d(&value, str);
+	std::printf("value = %td, chars_eaten = %td\n", value, ep - str);
+	ep = _MCFCRT_atoi0d(&value, str, 4);
+	std::printf("value = %td, chars_eaten = %td\n", value, ep - str);
 	return 0;
 }

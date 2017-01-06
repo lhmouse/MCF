@@ -79,6 +79,8 @@ pkginclude_ext_HEADERS = \
 	src/ext/expect.h	\
 	src/ext/itoa.h	\
 	src/ext/itow.h	\
+	src/ext/atoi.h	\
+	src/ext/wtoi.h	\
 	src/ext/mul64.h	\
 	src/ext/offset_of.h	\
 	src/ext/random.h	\
@@ -101,6 +103,8 @@ mcfcrt_sources = \
 	src/ext/assert.c	\
 	src/ext/itoa.c	\
 	src/ext/itow.c	\
+	src/ext/atoi.c	\
+	src/ext/wtoi.c	\
 	src/ext/random.c	\
 	src/ext/stpcpy.c	\
 	src/ext/thunk.c	\

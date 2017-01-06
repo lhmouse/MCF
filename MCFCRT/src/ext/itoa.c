@@ -4,18 +4,21 @@
 
 #include "itoa.h"
 
+__attribute__((__always_inline__))
 static inline char *ReallyItoaU(char *pchBuffer, uintptr_t uValue, unsigned uMinDigits, const char *pchTable, unsigned uRadix){
 	unsigned uDigitsOutput = 0;
+	uintptr_t uWord = uValue;
 	do {
-		const char chDigit = pchTable[uValue % uRadix];
-		uValue /= uRadix;
-		pchBuffer[uDigitsOutput++] = chDigit;
-	} while(uValue > 0);
-
-	while(uDigitsOutput < uMinDigits){
-		pchBuffer[uDigitsOutput++] = pchTable[0];
+		const unsigned uDigitValue = (unsigned)(uWord % uRadix);
+		uWord /= uRadix;
+		const char chDigit = pchTable[uDigitValue];
+		pchBuffer[uDigitsOutput] = chDigit;
+		++uDigitsOutput;
+	} while(uWord > 0);
+	while(uDigitsOutput + 1 <= uMinDigits){
+		pchBuffer[uDigitsOutput] = pchTable[0];
+		++uDigitsOutput;
 	}
-
 	for(unsigned i = 0, j = uDigitsOutput - 1; i < j; ++i, --j){
 		char ch = pchBuffer[i];
 		pchBuffer[i] = pchBuffer[j];
@@ -37,14 +40,17 @@ char *_MCFCRT_itoa_X(char *pchBuffer, uintptr_t uValue){
 	return _MCFCRT_itoa0X(pchBuffer, uValue, 0);
 }
 char *_MCFCRT_itoa0d(char *pchBuffer, intptr_t nValue, unsigned uMinDigits){
+	char *pchEnd;
 	if(nValue < 0){
-		*(pchBuffer++) = '-';
-		nValue = -nValue;
+		*pchBuffer = '-';
+		pchEnd = ReallyItoaU(pchBuffer + 1, (uintptr_t)-nValue, uMinDigits, "0123456789", 10);
+	} else {
+		pchEnd = ReallyItoaU(pchBuffer    , (uintptr_t) nValue, uMinDigits, "0123456789", 10);
 	}
-	return _MCFCRT_itoa0u(pchBuffer, (uintptr_t)nValue, uMinDigits);
+	return pchEnd;
 }
 char *_MCFCRT_itoa0u(char *pchBuffer, uintptr_t uValue, unsigned uMinDigits){
-	return ReallyItoaU(pchBuffer, uValue, uMinDigits, "0123456789", 10);
+	return ReallyItoaU(pchBuffer, uValue, uMinDigits, "0123456789"      , 10);
 }
 char *_MCFCRT_itoa0x(char *pchBuffer, uintptr_t uValue, unsigned uMinDigits){
 	return ReallyItoaU(pchBuffer, uValue, uMinDigits, "0123456789abcdef", 16);

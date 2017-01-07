@@ -13,7 +13,7 @@ float fabsf(float x){
 #ifdef _WIN64
 	static const uint32_t mmask = 0x7FFFFFFFu;
 	float ret;
-	__asm__(
+	__asm__ (
 		"movss xmm1, dword ptr[%2] \n"
 		"andps xmm0, xmm1 \n"
 		: "=Yz"(ret)
@@ -29,7 +29,7 @@ double fabs(double x){
 #ifdef _WIN64
 	static const uint64_t mmask = 0x7FFFFFFFFFFFFFFFu;
 	double ret;
-	__asm__(
+	__asm__ (
 		"movsd xmm1, qword ptr[%2] \n"
 		"andpd xmm0, xmm1 \n"
 		: "=Yz"(ret)

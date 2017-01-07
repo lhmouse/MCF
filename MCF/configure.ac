@@ -7,6 +7,8 @@ AC_PROG_CXX
 AM_PROG_AR
 AC_PROG_RANLIB
 
+AC_CHECK_LIB([z], [main], [], [echo "***** FIX THIS ERROR *****"; exit -2;])
+
 AM_INIT_AUTOMAKE
 
 AC_CONFIG_FILES([Makefile])

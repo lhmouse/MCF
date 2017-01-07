@@ -8,9 +8,9 @@
 
 wchar_t *wmemmove(wchar_t *restrict s1, const wchar_t *restrict s2, size_t n){
 	if(s1 < s2){
-		__MCFCRT_CopyForward(s1, s2, sizeof(wchar_t) * n);
+		__MCFCRT_CopyBytewiseForward(s1, s2, sizeof(wchar_t) * n);
 	} else {
-		__MCFCRT_CopyBackward(s1, s2, sizeof(wchar_t) * n);
+		__MCFCRT_CopyBytewiseBackward(s1, s2, sizeof(wchar_t) * n);
 	}
 	return s1;
 }

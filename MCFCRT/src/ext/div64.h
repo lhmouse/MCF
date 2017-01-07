@@ -11,7 +11,7 @@ _MCFCRT_EXTERN_C_BEGIN
 
 static inline _MCFCRT_STD int32_t __MCFCRT_idiv64_nonconstexpr(_MCFCRT_STD int32_t *restrict __rem_ret, _MCFCRT_STD int64_t __a, _MCFCRT_STD int32_t __b) _MCFCRT_NOEXCEPT {
 	_MCFCRT_STD int32_t __quo, __rem;
-	__asm__(
+	__asm__ (
 #ifdef _WIN64
 		"cqo \n"
 		"idiv rcx \n"
@@ -30,7 +30,7 @@ static inline _MCFCRT_STD int32_t __MCFCRT_idiv64_nonconstexpr(_MCFCRT_STD int32
 }
 static inline _MCFCRT_STD uint32_t __MCFCRT_udiv64_nonconstexpr(_MCFCRT_STD uint32_t *restrict __rem_ret, _MCFCRT_STD uint64_t __a, _MCFCRT_STD uint32_t __b) _MCFCRT_NOEXCEPT {
 	_MCFCRT_STD uint32_t __quo, __rem;
-	__asm__(
+	__asm__ (
 #ifdef _WIN64
 		"xor rdx, rdx \n"
 		"div rcx \n"

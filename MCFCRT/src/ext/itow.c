@@ -3,28 +3,31 @@
 // Copyleft 2013 - 2017, LH_Mouse. All wrongs reserved.
 
 #include "itow.h"
+#include "rep_movs.h"
 
 __attribute__((__always_inline__))
-static inline wchar_t *ReallyItowU(wchar_t *pwcBuffer, uintptr_t uValue, unsigned uMinDigits, const wchar_t *pwcTable, unsigned uRadix){
-	unsigned uDigitsOutput = 0;
+static inline wchar_t *Really_itow_u(wchar_t *restrict pwcBuffer, uintptr_t uValue, unsigned uMinDigits, const wchar_t *restrict pwcTable, unsigned uRadix){
+	wchar_t achTemp[64];
+	wchar_t *const pwcTempEnd = achTemp + 64;
+
+	unsigned uDigitsWritten = 0;
+	// Write digits in reverse order.
 	uintptr_t uWord = uValue;
 	do {
 		const unsigned uDigitValue = (unsigned)(uWord % uRadix);
 		uWord /= uRadix;
 		const wchar_t wcDigit = pwcTable[uDigitValue];
-		pwcBuffer[uDigitsOutput] = wcDigit;
-		++uDigitsOutput;
-	} while(uWord > 0);
-	while(uDigitsOutput + 1 <= uMinDigits){
-		pwcBuffer[uDigitsOutput] = pwcTable[0];
-		++uDigitsOutput;
+		++uDigitsWritten;
+		*(pwcTempEnd - uDigitsWritten) = wcDigit;
+	} while(uWord != 0);
+	// Pad it with zeroes unless it exceeds the minimum length.
+	while(uDigitsWritten < uMinDigits){
+		const wchar_t wcDigit = pwcTable[0];
+		++uDigitsWritten;
+		*(pwcTempEnd - uDigitsWritten) = wcDigit;
 	}
-	for(unsigned i = 0, j = uDigitsOutput - 1; i < j; ++i, --j){
-		wchar_t wc = pwcBuffer[i];
-		pwcBuffer[i] = pwcBuffer[j];
-		pwcBuffer[j] = wc;
-	}
-	return pwcBuffer + uDigitsOutput;
+	// Copy it to the correct location.
+	return _MCFCRT_rep_movsw(pwcBuffer, pwcTempEnd - uDigitsWritten, uDigitsWritten);
 }
 
 wchar_t *_MCFCRT_itow_d(wchar_t *pwcBuffer, intptr_t nValue){
@@ -43,18 +46,18 @@ wchar_t *_MCFCRT_itow0d(wchar_t *pwcBuffer, intptr_t nValue, unsigned uMinDigits
 	wchar_t *pwcEnd;
 	if(nValue < 0){
 		*pwcBuffer = L'-';
-		pwcEnd = ReallyItowU(pwcBuffer + 1, (uintptr_t)-nValue, uMinDigits, L"0123456789", 10);
+		pwcEnd = Really_itow_u(pwcBuffer + 1, (uintptr_t)-nValue, uMinDigits, L"0123456789", 10);
 	} else {
-		pwcEnd = ReallyItowU(pwcBuffer    , (uintptr_t) nValue, uMinDigits, L"0123456789", 10);
+		pwcEnd = Really_itow_u(pwcBuffer    , (uintptr_t) nValue, uMinDigits, L"0123456789", 10);
 	}
 	return pwcEnd;
 }
 wchar_t *_MCFCRT_itow0u(wchar_t *pwcBuffer, uintptr_t uValue, unsigned uMinDigits){
-	return ReallyItowU(pwcBuffer, uValue, uMinDigits, L"0123456789"      , 10);
+	return Really_itow_u(pwcBuffer, uValue, uMinDigits, L"0123456789"      , 10);
 }
 wchar_t *_MCFCRT_itow0x(wchar_t *pwcBuffer, uintptr_t uValue, unsigned uMinDigits){
-	return ReallyItowU(pwcBuffer, uValue, uMinDigits, L"0123456789abcdef", 16);
+	return Really_itow_u(pwcBuffer, uValue, uMinDigits, L"0123456789abcdef", 16);
 }
 wchar_t *_MCFCRT_itow0X(wchar_t *pwcBuffer, uintptr_t uValue, unsigned uMinDigits){
-	return ReallyItowU(pwcBuffer, uValue, uMinDigits, L"0123456789ABCDEF", 16);
+	return Really_itow_u(pwcBuffer, uValue, uMinDigits, L"0123456789ABCDEF", 16);
 }

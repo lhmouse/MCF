@@ -19,7 +19,7 @@ static inline _MCFCRT_STD int64_t __MCFCRT_imul64_nonconstexpr(_MCFCRT_STD int32
 #else
 		"imul ecx \n"
 		: "=A"(__product)
-		: "a"(__a), "c"(__b)
+		: "a"((_MCFCRT_STD int32_t)__a), "c"((_MCFCRT_STD int32_t)__b)
 #endif
 	);
 	return __product;
@@ -34,7 +34,7 @@ static inline _MCFCRT_STD uint64_t __MCFCRT_umul64_nonconstexpr(_MCFCRT_STD uint
 #else
 		"mul ecx \n"
 		: "=A"(__product)
-		: "a"(__a), "c"(__b)
+		: "a"((_MCFCRT_STD uint32_t)__a), "c"((_MCFCRT_STD uint32_t)__b)
 #endif
 	);
 	return __product;

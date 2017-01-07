@@ -12,7 +12,7 @@
 bool signbitf(float x){
 #ifdef _WIN64
 	bool ret;
-	__asm__(
+	__asm__ (
 		"movmskps eax, %1 \n"
 		"and eax, 1 \n"
 		: "=a"(ret)
@@ -26,7 +26,7 @@ bool signbitf(float x){
 bool signbit(double x){
 #ifdef _WIN64
 	bool ret;
-	__asm__(
+	__asm__ (
 		"movmskpd eax, %1 \n"
 		"and eax, 1 \n"
 		: "=a"(ret)

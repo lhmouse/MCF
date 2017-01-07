@@ -7,13 +7,13 @@
 
 #include "../../env/_crtdef.h"
 #include "../../ext/expect.h"
-#include <intrin.h>
+#include "../../ext/rep_movs.h"
 #include <emmintrin.h>
 
 _MCFCRT_EXTERN_C_BEGIN
 
 __attribute__((__always_inline__))
-static inline void __MCFCRT_CopyForward(void *__s1, const void *__s2, _MCFCRT_STD size_t __n) _MCFCRT_NOEXCEPT {
+static inline void __MCFCRT_CopyBytewiseForward(void *__s1, const void *__s2, _MCFCRT_STD size_t __n) _MCFCRT_NOEXCEPT {
 	register char *__wp = (char *)__s1;
 	char *const __wend = __wp + __n;
 	register const char *__rp = (const char *)__s2;
@@ -67,10 +67,10 @@ static inline void __MCFCRT_CopyForward(void *__s1, const void *__s2, _MCFCRT_ST
 #undef __MCFCRT_SSE2_FULL
 		}
 	}
-	__movsb((unsigned char *)__wp, (const unsigned char *)__rp, (size_t)(__wend - __wp));
+	_MCFCRT_rep_movsb(__wp, __rp, (size_t)(__wend - __wp));
 }
 __attribute__((__always_inline__))
-static inline void __MCFCRT_CopyBackward(void *__s1, const void *__s2, _MCFCRT_STD size_t __n) _MCFCRT_NOEXCEPT {
+static inline void __MCFCRT_CopyBytewiseBackward(void *__s1, const void *__s2, _MCFCRT_STD size_t __n) _MCFCRT_NOEXCEPT {
 	char *const __wbegin = (char *)__s1;
 	register char *__wp = __wbegin + __n;
 	register const char *__rp = (const char *)__s2 + __n;

@@ -3,74 +3,69 @@
 // Copyleft 2013 - 2017, LH_Mouse. All wrongs reserved.
 
 #include "wtoi.h"
+#include "rep_scas.h"
 
 __attribute__((__always_inline__))
-static inline wchar_t *ReallyWtoiU(uintptr_t *puValue, const wchar_t *pwcBuffer, unsigned uMaxDigits, uintptr_t uBound, const wchar_t *pwcTable, unsigned uRadix){
-	unsigned uDigitsInput = 0;
+static inline wchar_t *Really_wtoi_u(_MCFCRT_wtoi_result *peResult, uintptr_t *puValue, const wchar_t *pwcBuffer, unsigned uMaxDigits, uintptr_t uBound, const wchar_t *pwcDualTable, unsigned uRadix){
+	unsigned uDigitsRead = 0;
+	_MCFCRT_wtoi_result eResult = _MCFCRT_wtoi_result_no_digit;
+	// Parse digits.
 	uintptr_t uWord = 0;
-	while(uDigitsInput + 1 <= uMaxDigits){
-		wchar_t wcDigit = pwcBuffer[uDigitsInput];
-		if((L'a' <= wcDigit) && (wcDigit <= L'z')){
-			wcDigit = (wchar_t)(wcDigit - L'a' + L'A');
-		}
-		const wchar_t *pwcDigitFound = pwcTable;
-		unsigned uCounter = uRadix;
-		__asm__ (
-			"xor edx, edx \n"
-			"repne scasw \n"
-			"setz dl \n"
-			"add ecx, edx \n"
-			: "+D"(pwcDigitFound), "+c"(uCounter)
-			: "a"(wcDigit)
-			: "dx"
-		);
-		if(uCounter == 0){
+	while(uDigitsRead + 1 <= uMaxDigits){
+		const wchar_t wcDigit = pwcBuffer[uDigitsRead];
+		// Search for this digit in the table. Handle lower and upper cases universally.
+		const wchar_t *const pwcDigitInTable = _MCFCRT_rep_scasw(pwcDualTable, (uint16_t)wcDigit, uRadix * 2);
+		if(!pwcDigitInTable){
 			break;
 		}
-		const unsigned uDigitValue = uRadix - uCounter;
+		const unsigned uDigitValue = (unsigned)(pwcDigitInTable - pwcDualTable) / 2;
+		// Check for overflows.
 		const uintptr_t uThisBound = (uBound - uDigitValue) / uRadix;
 		if(uWord > uThisBound){
+			eResult = _MCFCRT_wtoi_result_would_overflow;
 			break;
 		}
 		uWord *= uRadix;
 		uWord += uDigitValue;
-		++uDigitsInput;
+		++uDigitsRead;
+		eResult = _MCFCRT_wtoi_result_success;
 	}
+	*peResult = eResult;
 	*puValue = uWord;
-	return (wchar_t *)pwcBuffer + uDigitsInput;
+	return (wchar_t *)pwcBuffer + uDigitsRead;
 }
 
-wchar_t *_MCFCRT_wtoi_d(intptr_t *pnValue, const wchar_t *pwcBuffer){
-	return _MCFCRT_wtoi0d(pnValue, pwcBuffer, UINT_MAX);
+wchar_t *_MCFCRT_wtoi_d(_MCFCRT_wtoi_result *peResult, intptr_t *pnValue, const wchar_t *pwcBuffer){
+	return _MCFCRT_wtoi0d(peResult, pnValue, pwcBuffer, UINT_MAX);
 }
-wchar_t *_MCFCRT_wtoi_u(uintptr_t *puValue, const wchar_t *pwcBuffer){
-	return _MCFCRT_wtoi0u(puValue, pwcBuffer, UINT_MAX);
+wchar_t *_MCFCRT_wtoi_u(_MCFCRT_wtoi_result *peResult, uintptr_t *puValue, const wchar_t *pwcBuffer){
+	return _MCFCRT_wtoi0u(peResult, puValue, pwcBuffer, UINT_MAX);
 }
-wchar_t *_MCFCRT_wtoi_x(uintptr_t *puValue, const wchar_t *pwcBuffer){
-	return _MCFCRT_wtoi0x(puValue, pwcBuffer, UINT_MAX);
+wchar_t *_MCFCRT_wtoi_x(_MCFCRT_wtoi_result *peResult, uintptr_t *puValue, const wchar_t *pwcBuffer){
+	return _MCFCRT_wtoi0x(peResult, puValue, pwcBuffer, UINT_MAX);
 }
-wchar_t *_MCFCRT_wtoi_X(uintptr_t *puValue, const wchar_t *pwcBuffer){
-	return _MCFCRT_wtoi0X(puValue, pwcBuffer, UINT_MAX);
+wchar_t *_MCFCRT_wtoi_X(_MCFCRT_wtoi_result *peResult, uintptr_t *puValue, const wchar_t *pwcBuffer){
+	return _MCFCRT_wtoi0X(peResult, puValue, pwcBuffer, UINT_MAX);
 }
-wchar_t *_MCFCRT_wtoi0d(intptr_t *pnValue, const wchar_t *pwcBuffer, unsigned uMaxDigits){
+wchar_t *_MCFCRT_wtoi0d(_MCFCRT_wtoi_result *peResult, intptr_t *pnValue, const wchar_t *pwcBuffer, unsigned uMaxDigits){
 	wchar_t *pwcEnd;
-	if(*pwcBuffer == '-'){
+	if(*pwcBuffer == L'-'){
 		uintptr_t uValue;
-		pwcEnd = ReallyWtoiU(&uValue, pwcBuffer + 1, uMaxDigits, -(uintptr_t)INTPTR_MIN, L"0123456789", 10);
+		pwcEnd = Really_wtoi_u(peResult, &uValue, pwcBuffer + 1, uMaxDigits, -(uintptr_t)INTPTR_MIN, L"0123456789", 10);
 		*pnValue = -(intptr_t)uValue;
 	} else {
 		uintptr_t uValue;
-		pwcEnd = ReallyWtoiU(&uValue, pwcBuffer    , uMaxDigits,  (uintptr_t)INTPTR_MAX, L"0123456789", 10);
-		*pnValue = (intptr_t)uValue;
+		pwcEnd = Really_wtoi_u(peResult, &uValue, pwcBuffer    , uMaxDigits,  (uintptr_t)INTPTR_MAX, L"0123456789", 10);
+		*pnValue =  (intptr_t)uValue;
 	}
 	return pwcEnd;
 }
-wchar_t *_MCFCRT_wtoi0u(uintptr_t *puValue, const wchar_t *pwcBuffer, unsigned uMaxDigits){
-	return ReallyWtoiU(puValue, pwcBuffer, uMaxDigits, UINTPTR_MAX, L"0123456789"      , 10);
+wchar_t *_MCFCRT_wtoi0u(_MCFCRT_wtoi_result *peResult, uintptr_t *puValue, const wchar_t *pwcBuffer, unsigned uMaxDigits){
+	return Really_wtoi_u(peResult, puValue, pwcBuffer, uMaxDigits, UINTPTR_MAX, L"0123456789"      , 10);
 }
-wchar_t *_MCFCRT_wtoi0x(uintptr_t *puValue, const wchar_t *pwcBuffer, unsigned uMaxDigits){
-	return ReallyWtoiU(puValue, pwcBuffer, uMaxDigits, UINTPTR_MAX, L"0123456789ABCDEF", 16);
+wchar_t *_MCFCRT_wtoi0x(_MCFCRT_wtoi_result *peResult, uintptr_t *puValue, const wchar_t *pwcBuffer, unsigned uMaxDigits){
+	return Really_wtoi_u(peResult, puValue, pwcBuffer, uMaxDigits, UINTPTR_MAX, L"0123456789ABCDEF", 16);
 }
-wchar_t *_MCFCRT_wtoi0X(uintptr_t *puValue, const wchar_t *pwcBuffer, unsigned uMaxDigits){
-	return ReallyWtoiU(puValue, pwcBuffer, uMaxDigits, UINTPTR_MAX, L"0123456789ABCDEF", 16);
+wchar_t *_MCFCRT_wtoi0X(_MCFCRT_wtoi_result *peResult, uintptr_t *puValue, const wchar_t *pwcBuffer, unsigned uMaxDigits){
+	return Really_wtoi_u(peResult, puValue, pwcBuffer, uMaxDigits, UINTPTR_MAX, L"0123456789ABCDEF", 16);
 }

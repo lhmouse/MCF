@@ -21,7 +21,7 @@ float copysignf(float x, float y){
 #ifdef _WIN64
 	static const uint32_t mmask = 0x7FFFFFFFu;
 	float ret;
-	__asm__(
+	__asm__ (
 		"movss xmm2, dword ptr[%3] \n"
 		"xorps xmm0, xmm1 \n"
 		"andps xmm0, xmm2 \n"
@@ -39,7 +39,7 @@ double copysign(double x, double y){
 #ifdef _WIN64
 	static const uint64_t mmask = 0x7FFFFFFFFFFFFFFFu;
 	double ret;
-	__asm__(
+	__asm__ (
 		"movsd xmm2, qword ptr[%3] \n"
 		"xorpd xmm0, xmm1 \n"
 		"andpd xmm0, xmm2 \n"

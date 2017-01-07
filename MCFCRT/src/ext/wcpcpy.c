@@ -5,7 +5,7 @@
 #include "wcpcpy.h"
 #include "expect.h"
 #include "assert.h"
-#include <intrin.h>
+#include "rep_movs.h"
 #include <emmintrin.h>
 
 wchar_t *_MCFCRT_wcpcpy(wchar_t *restrict dst, const wchar_t *restrict src){
@@ -37,7 +37,7 @@ wchar_t *_MCFCRT_wcpcpy(wchar_t *restrict dst, const wchar_t *restrict src){
 			uint32_t mask = (uint32_t)_mm_movemask_epi8(xt);	\
 			if(_MCFCRT_EXPECT_NOT(mask != 0)){	\
 				const unsigned tz = (unsigned)__builtin_ctz(mask);	\
-				__movsw((void *)wp, (const void *)rp, tz);	\
+				_MCFCRT_rep_movsw(wp, rp, tz);	\
 				wp += tz;	\
 				*wp = 0;	\
 				return wp;	\
@@ -90,7 +90,7 @@ wchar_t *_MCFCRT_wcppcpy(wchar_t *dst, wchar_t *end, const wchar_t *restrict src
 				uint32_t mask = (uint32_t)_mm_movemask_epi8(xt);	\
 				if(_MCFCRT_EXPECT_NOT(mask != 0)){	\
 					const unsigned tz = (unsigned)__builtin_ctz(mask);	\
-					__movsw((void *)wp, (const void *)rp, tz);	\
+					_MCFCRT_rep_movsw(wp, rp, tz);	\
 					wp += tz;	\
 					*wp = 0;	\
 					return wp;	\

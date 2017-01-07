@@ -10,7 +10,7 @@
 
 static inline long double fpu_fmin(long double x, long double y){
 	long double ret;
-	__asm__(
+	__asm__ (
 		"fcomi st(1) \n"
 		"fcmova st, st(1) \n"
 		"fstp st(1) \n"
@@ -24,7 +24,7 @@ static inline long double fpu_fmin(long double x, long double y){
 float fminf(float x, float y){
 #ifdef _WIN64
 	float ret;
-	__asm__(
+	__asm__ (
 		"movaps xmm2, xmm0 \n"
 		"cmpltps xmm2, %2 \n"
 		"xorps xmm0, %2 \n"
@@ -42,7 +42,7 @@ float fminf(float x, float y){
 double fmin(double x, double y){
 #ifdef _WIN64
 	double ret;
-	__asm__(
+	__asm__ (
 		"movapd xmm2, xmm0 \n"
 		"cmpltpd xmm2, %2 \n"
 		"xorpd xmm0, %2 \n"

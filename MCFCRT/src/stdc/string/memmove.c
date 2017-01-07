@@ -8,9 +8,9 @@
 
 void *memmove(void *s1, const void *s2, size_t n){
 	if(s1 < s2){
-		__MCFCRT_CopyForward(s1, s2, n);
+		__MCFCRT_CopyBytewiseForward(s1, s2, n);
 	} else {
-		__MCFCRT_CopyBackward(s1, s2, n);
+		__MCFCRT_CopyBytewiseBackward(s1, s2, n);
 	}
 	return s1;
 }

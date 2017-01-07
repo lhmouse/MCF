@@ -10,7 +10,7 @@
 
 static inline long double fpu_fdim(long double x, long double y){
 	long double ret;
-	__asm__(
+	__asm__ (
 		"fcomi st(1) \n"
 		"fldz \n"
 		"fcmova st, st(2) \n"
@@ -30,7 +30,7 @@ static inline long double fpu_fdim(long double x, long double y){
 float fdimf(float x, float y){
 #ifdef _WIN64
 	float ret, unused;
-	__asm__(
+	__asm__ (
 		"movaps xmm2, %3 \n"
 		"cmpltps xmm2, xmm0 \n"
 		"andps xmm0, xmm2 \n"
@@ -48,7 +48,7 @@ float fdimf(float x, float y){
 double fdim(double x, double y){
 #ifdef _WIN64
 	double ret, unused;
-	__asm__(
+	__asm__ (
 		"movapd xmm2, %3 \n"
 		"cmpltpd xmm2, xmm0 \n"
 		"andpd xmm0, xmm2 \n"
